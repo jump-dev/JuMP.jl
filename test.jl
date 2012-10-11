@@ -27,6 +27,13 @@ function PrintModel(m::Model)
     PrintCon(c)
     println("")
   end
+  for i in 1:m.cols
+    print(m.colLower[i])
+    print(" <= ")
+    print(m.names[i])
+    print(" <= ")
+    println(m.colUpper[i])
+  end
 end
 
 ###########################################################
@@ -62,6 +69,20 @@ function SetName(v::Variable,n::String)
 end
 function GetName(v::Variable)
   return v.m.names[v.col]
+end
+
+# Bound setter/getters
+function SetLower(v::Variable,lower::Number)
+  v.m.colLower[v.col] = convert(Float64,lower)
+end
+function SetUpper(v::Variable,upper::Number)
+  v.m.colUpper[v.col] = convert(Float64,upper)
+end
+function GetLower(v::Variable)
+  return v.m.colLower[v.col]
+end
+function GetUpper(v::Variable)
+  return v.m.colUpper[v.col]
 end
 
 ###########################################################
@@ -192,8 +213,6 @@ y = Variable(m,"y",0,1e10)
 
 m.objective = 5*x + 3*y
 AddConstraint(m, 1.0*x + 5*y <= 3.0)
-AddConstraint(m, 1.0*x >= 0.0)
-AddConstraint(m, 1.0*y >= 0.0)
 PrintModel(m)
 
 exit()
