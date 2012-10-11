@@ -179,11 +179,7 @@ end
 # AffExpr--AffExpr
 function (+)(lhs::AffExpr, rhs::AffExpr)
   ret = AffExpr(copy(lhs.data),lhs.constant)
-  # This cat stuff is confusing the hell out of me with all the type errors
-  for pair in rhs.data
-    push(ret.data, pair)
-  end
-  #ret.data = cat(1,ret.data,rhs.data)
+  ret.data = cat(1,ret.data,rhs.data)
   return ret
 end
 
