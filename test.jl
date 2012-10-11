@@ -14,21 +14,17 @@ type Model
 end
 
 # Default constructor
-Model(sense::String) = Model(Array(String,1),0,0,sense,Array(Constraint,1),0)
+Model(sense::String) = Model(Array(String,1),0,0,sense,Array(Constraint,0),0)
 
 # Pretty print
 function PrintModel(m::Model)
   print(strcat(m.sense," "))
   PrintExpr(m.objective)
   println("")
-  if m.numConstraints > 0
-    # need this stupid if because it can't seem to create
-    # empty Arrays, they always start with a #undef in position 1
-    for c in m.constraints
-      print("s.t. ")
-      PrintCon(c)
-      println("")
-    end
+  for c in m.constraints
+    print("s.t. ")
+    PrintCon(c)
+    println("")
   end
 end
 
@@ -101,12 +97,7 @@ type Constraint
 end
 
 function AddConstraint(m::Model, c::Constraint)
-  if m.numConstraints == 0
-    m.constraints[1] = c
-  else
-    push(m.constraints,c)
-  end
-  m.numConstraints += 1
+  push(m.constraints,c)
 end
 
 # Pretty printer
