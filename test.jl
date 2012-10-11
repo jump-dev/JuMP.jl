@@ -10,11 +10,12 @@ type Model
   sense
   constraints #::Array{Constraint} - can't figure out how
               # to use before define
-  numConstraints # See rant in PrintModel for why we need this
+  colLower
+  colUpper
 end
 
 # Default constructor
-Model(sense::String) = Model(Array(String,0),0,0,sense,Array(Constraint,0),0)
+Model(sense::String) = Model(Array(String,0),0,0,sense,Array(Constraint,0),Array(Float64,0),Array(Float64,0))
 
 # Pretty print
 function PrintModel(m::Model)
@@ -38,24 +39,20 @@ type Variable
 end
 
 # Constructor 1 - no name
-function Variable(m::Model)
+function Variable(m::Model,lower::Number,upper::Number)
   m.cols += 1
-  #if m.cols == 1
-  #  m.names[1] = ""
-  #else
-    push(m.names,"")
-  #end
+  push(m.names,"")
+  push(m.colLower,convert(Float64,lower))
+  push(m.colUpper,convert(Float64,upper))
   return Variable(m,m.cols)
 end
 
 # Constructor 2 - with name
-function Variable(m::Model,n::String)
+function Variable(m::Model,n::String,lower::Number,upper::Number)
   m.cols += 1
-  #if m.cols == 1
-  #  m.names[1] = n
-  #else
-    push(m.names,n)
-  #end
+  push(m.names,n)
+  push(m.colLower,convert(Float64,lower))
+  push(m.colUpper,convert(Float64,upper))
   return Variable(m,m.cols)
 end
 
@@ -190,8 +187,8 @@ end
 # Test script
 m = Model("max")
 
-x = Variable(m,"x")
-y = Variable(m,"y")
+x = Variable(m,"x",0,1e10)
+y = Variable(m,"y",0,1e10)
 
 m.objective = 5*x + 3*y
 AddConstraint(m, 1.0*x + 5*y <= 3.0)
