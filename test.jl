@@ -14,7 +14,7 @@ type Model
 end
 
 # Default constructor
-Model(sense::String) = Model(Array(String,1),0,0,sense,Array(Constraint,0),0)
+Model(sense::String) = Model(Array(String,0),0,0,sense,Array(Constraint,0),0)
 
 # Pretty print
 function PrintModel(m::Model)
@@ -40,22 +40,22 @@ end
 # Constructor 1 - no name
 function Variable(m::Model)
   m.cols += 1
-  if m.cols == 1
-    m.names[1] = ""
-  else
+  #if m.cols == 1
+  #  m.names[1] = ""
+  #else
     push(m.names,"")
-  end
+  #end
   return Variable(m,m.cols)
 end
 
 # Constructor 2 - with name
 function Variable(m::Model,n::String)
   m.cols += 1
-  if m.cols == 1
-    m.names[1] = n
-  else
+  #if m.cols == 1
+  #  m.names[1] = n
+  #else
     push(m.names,n)
-  end
+  #end
   return Variable(m,m.cols)
 end
 
