@@ -30,7 +30,7 @@ function PrintModel(m::Model)
   for i in 1:m.cols
     print(m.colLower[i])
     print(" <= ")
-    print(m.names[i])
+    print((m.names[i] == "" ? strcat("_col",i) : m.names[i]))
     print(" <= ")
     println(m.colUpper[i])
   end
@@ -68,7 +68,11 @@ function SetName(v::Variable,n::String)
   v.m.names[v.col] = n
 end
 function GetName(v::Variable)
-  return v.m.names[v.col]
+  #n = v.m.names[v.col]
+  #if n==""
+  #  n = strcat("_col",v.col)
+  #end
+  return (v.m.names[v.col] == "" ? strcat("_col",v.col) : v.m.names[v.col])
 end
 
 # Bound setter/getters
@@ -104,6 +108,25 @@ function PrintExpr(a::AffExpr)
   print(a.constant)
 end
 
+function ExprToString(a::AffExpr)
+  # This is "wrong" because it doesn't collect variables that
+  # might appear multiple times e.g. 1x + 1x + 2y = 2x + 2y
+  ret = ""
+  isFirst = 1
+  for pair in a.data
+    if isFirst == 1
+      ret = strcat(pair[2]," ",GetName(pair[1]))
+      isFirst = 0
+    else
+      ret = strcat(ret," + ",pair[2]," ",GetName(pair[1]))
+    end
+  end
+  if abs(a.constant) >= 0.000001
+    ret = strcat(ret," + ",a.constant)
+  end
+  return ret
+end
+
 ###########################################################
 # Constraint class
 # Basically an affine expression with a sense and two sides
@@ -122,6 +145,11 @@ end
 function PrintCon(c::Constraint)
   PrintExpr(c.lhs)
   print(strcat(" ",c.sense," 0"))
+  #print(ConToString(c))
+end
+
+function ConToString(c::Constraint)
+  return strcat(ExprToString(c.lhs-c.lhs.constant)," ",c.sense," ",-c.lhs.constant)
 end
 
 ###########################################################
@@ -196,6 +224,55 @@ function (>=)(lhs::AffExpr, rhs::Number)
 end
 
 ###########################################################
+function WriteLP(m::Model, fname::String)
+  f = open(fname, "w")
+  write(f,"\\*Julp-created LP*\\\n")
+  
+  # Objective
+  if m.sense == "max"
+    write(f,"Maximize\n")
+  else
+    write(f,"Minimize\n")
+  end
+  objStr = ExprToString(m.objective)
+  write(f,strcat(" obj: ", objStr, "\n"))
+  
+  # Constraints
+  write(f,"Subject To\n")
+  conCount = 0
+  for c in m.constraints
+    conCount += 1
+    write(f,strcat(" c",conCount,": ", ConToString(c),"\n"))
+  end
+
+  # Bounds
+  write(f,"Bounds\n")
+  for i in 1:m.cols
+    n = (m.names[i] == "" ? strcat("_col",i) : m.names[i])
+    if abs(m.colLower[i]) > 0.00001
+      write(f,strcat(" ",m.colLower[i]," <= ",n))
+      if abs(m.colUpper[i] - 1e10) > 0.00001 # need a "infinite" number?
+        write(f,strcat(" <= ",m.colUpper[i],"\n"))
+      else
+        write(f,"\n")
+      end
+    else
+      if abs(m.colUpper[i] - 1e10) > 0.00001 # need a "infinite" number?
+        write(f,strcat(" ",n," <= ",m.colUpper[i],"\n"))
+      end
+    end
+  end
+  
+  # Integer - to do
+
+
+  # Done
+  write(f,"End\n")
+  close(f)
+end
+
+
+###########################################################
 ###########################################################
 
 
@@ -204,12 +281,13 @@ end
 # Test script
 m = Model("max")
 
-x = Variable(m,"x",0,1e10)
-y = Variable(m,"y",0,1e10)
+x = Variable(m,"x",0,3)
+y = Variable(m,0,1e10)
 
 m.objective = 5*x + 3*y
 AddConstraint(m, 1.0*x + 5*y <= 3.0)
 PrintModel(m)
+WriteLP(m,"test.lp")
 
 exit()
 
