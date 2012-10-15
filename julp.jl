@@ -123,6 +123,11 @@ type AffExpr
   constant::Float64
 end
 
+# Basic constructor
+function AffExpr(data::Array{(Variable,Float64),1})
+  AffExpr(data,0.)
+end
+
 # Pretty printer
 function PrintExpr(a::AffExpr)
   for pair in a.data

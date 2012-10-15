@@ -2,6 +2,11 @@
 # Make a big dense matrix
 require("julp.jl")
 
+# Failed attempt at a macro
+macro lpsum(coefs,vars,counter, range)
+  :(Julp.AffExpr([($vars,$coefs) for $counter in $range]))
+end
+
 function doTest()
   N = 1000
   M = 100
@@ -12,26 +17,14 @@ function doTest()
   tic()
   m = Julp.Model("max")
   v = [ Julp.Variable(m,"x$j",0,1) for j=1:N ]
-  #v = Array(Julp.Variable,0)
-  #for j = 1:N
-  #  push(v,Julp.Variable(m,"x$j",0,1))
-  #end
 
-  # Need a default constructor for AffExpr!
-  m.objective = sum([ c[j]*v[j] for j=1:N ])
-  #m.objective = c[1]*v[1]
-  #for j = 2:N
-  #  m.objective = m.objective + c[j]*v[j]
-  #end
+  m.objective = Julp.AffExpr([(v[j],convert(Float64,c[j])) for j=1:N])
+  #m.objective = sum([ c[j]*v[j] for j=1:N ])
+  
 
   for i = 1:M
-    # Need a default constructor for AffExpr!
-    #lhs = Julp.AffExpr([(v[1],convert(Float64,A[i,1]))],  0.0)
-    #for j = 1:N
-      # Need to overload +=
-    #  lhs = lhs + v[j] * A[i,j]
-    #end
-    lhs = sum([v[j]*A[i,j] for j=1:N])
+    #lhs = sum([v[j]*A[i,j] for j=1:N])
+    lhs = Julp.AffExpr([(v[j],convert(Float64,A[i,j])) for j=1:N])
     Julp.AddConstraint(m, lhs <= b[i])
   end
   Julp.WriteLP(m,"dense.lp")
