@@ -139,7 +139,7 @@ function PrintExpr(a::AffExpr)
   print(a.constant)
 end
 
-function ExprToString(a::AffExpr)
+function ExprToStringOld(a::AffExpr)
   # This is "wrong" because it doesn't collect variables that
   # might appear multiple times e.g. 1x + 1x + 2y = 2x + 2y
   @assert length(a.data) > 0
@@ -160,6 +160,49 @@ function ExprToString(a::AffExpr)
     pair = a.data[length(a.data)]
     ret = "$(ret) + $(pair[2]) $(GetName(pair[1]))"
   end
+  if abs(a.constant) >= 0.000001
+    ret = strcat(ret," + ",a.constant)
+  end
+  return ret
+end
+
+function ExprToString(a::AffExpr)
+  @assert length(a.data) > 0
+  seen = zeros(Bool,a.data[1][1].m.cols)
+  nSeen = 0
+  precomputedStrings = Array(ASCIIString,length(a.data))
+  nCharacters = 0
+  for pair in a.data
+    thisstr = "$(pair[2]) $(GetName(pair[1]))"
+    precomputedStrings[nSeen+1] = thisstr
+    nCharacters += strlen(thisstr)
+    # TODO: check if already seen this variable using seen array
+    # if so, go back and update
+    nSeen += 1
+  end
+  nCharacters += 3*(length(a.data)-1) # " + " between each variable
+  
+  # tricky way to generate an empty string of fixed length
+  # there should be a built-in way to do this
+  ret = ""
+  ret.data = Array(Uint8,nCharacters)
+  curpos = 0
+  # C-style fun
+  for k in 1:(nSeen-1)
+    s = precomputedStrings[k]
+    for i in 1:strlen(s)
+      ret.data[curpos += 1] = s[i]
+    end
+    ret.data[curpos += 1] = ' '
+    ret.data[curpos += 1] = '+'
+    ret.data[curpos += 1] = ' '
+  end
+  s = precomputedStrings[nSeen]
+  for i in 1:strlen(s)
+    ret.data[curpos += 1] = s[i]
+  end
+  @assert curpos == nCharacters
+  
   if abs(a.constant) >= 0.000001
     ret = strcat(ret," + ",a.constant)
   end
