@@ -27,8 +27,12 @@ function doTest()
     lhs = Julp.AffExpr([(v[j],convert(Float64,A[i,j])) for j=1:N])
     Julp.AddConstraint(m, lhs <= b[i])
   end
+  toc()
+  println("In building the model in memory")
+  tic()
   Julp.WriteLP(m,"dense.lp")
   toc()
+  println("Total")
 end
 
 doTest()

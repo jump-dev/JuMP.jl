@@ -142,15 +142,19 @@ end
 function ExprToString(a::AffExpr)
   # This is "wrong" because it doesn't collect variables that
   # might appear multiple times e.g. 1x + 1x + 2y = 2x + 2y
-  ret = ""
-  isFirst = 1
-  for pair in a.data
-    if isFirst == 1
-      ret = strcat(pair[2]," ",GetName(pair[1]))
-      isFirst = 0
-    else
-      ret = strcat(ret," + ",pair[2]," ",GetName(pair[1]))
-    end
+  @assert length(a.data) > 0
+  ret = "$(a.data[1][2]) $(GetName(a.data[1][1]))"
+  upto = length(a.data)-mod(length(a.data),2)-1
+  for i in 2:2:upto
+    @assert i+1 <= length(a.data)
+    pair1 = a.data[i]
+    pair2 = a.data[i+1]
+    ret = "$(ret) + $(pair1[2]) $(GetName(pair1[1])) + $(pair2[2]) $(GetName(pair2[1]))"
+  end
+  if upto < length(a.data)
+    @assert upto + 1 == length(a.data)
+    pair = a.data[length(a.data)]
+    ret = "$(ret) + $(pair[2]) $(GetName(pair[1]))"
   end
   if abs(a.constant) >= 0.000001
     ret = strcat(ret," + ",a.constant)
@@ -271,10 +275,13 @@ function WriteLP(m::Model, fname::String)
   # Constraints
   write(f,"Subject To\n")
   conCount = 0
+  tic()
   for c in m.constraints
     conCount += 1
     write(f,strcat(" c",conCount,": ", ConToString(c),"\n"))
   end
+  toc()
+  print("In writing constraints\n")
 
   # Bounds
   write(f,"Bounds\n")
