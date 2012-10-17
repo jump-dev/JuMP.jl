@@ -144,7 +144,11 @@ function ExprToString(a::AffExpr)
   # might appear multiple times e.g. 1x + 1x + 2y = 2x + 2y
   @assert length(a.data) > 0
   ret = "$(a.data[1][2]) $(GetName(a.data[1][1]))"
-  upto = length(a.data)-mod(length(a.data),2)-1
+  if (mod(length(a.data),2) == 0)
+    upto = length(a.data)-1
+  else
+    upto = length(a.data)
+  end
   for i in 2:2:upto
     @assert i+1 <= length(a.data)
     pair1 = a.data[i]
