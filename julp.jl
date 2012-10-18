@@ -139,33 +139,6 @@ function PrintExpr(a::AffExpr)
   print(a.constant)
 end
 
-function ExprToStringOld(a::AffExpr)
-  # This is "wrong" because it doesn't collect variables that
-  # might appear multiple times e.g. 1x + 1x + 2y = 2x + 2y
-  @assert length(a.data) > 0
-  ret = "$(a.data[1][2]) $(GetName(a.data[1][1]))"
-  if (mod(length(a.data),2) == 0)
-    upto = length(a.data)-1
-  else
-    upto = length(a.data)
-  end
-  for i in 2:2:upto
-    @assert i+1 <= length(a.data)
-    pair1 = a.data[i]
-    pair2 = a.data[i+1]
-    ret = "$(ret) + $(pair1[2]) $(GetName(pair1[1])) + $(pair2[2]) $(GetName(pair2[1]))"
-  end
-  if upto < length(a.data)
-    @assert upto + 1 == length(a.data)
-    pair = a.data[length(a.data)]
-    ret = "$(ret) + $(pair[2]) $(GetName(pair[1]))"
-  end
-  if abs(a.constant) >= 0.000001
-    ret = strcat(ret," + ",a.constant)
-  end
-  return ret
-end
-
 function ExprToString(a::AffExpr)
   @assert length(a.data) > 0
   seen = zeros(Bool,a.data[1][1].m.cols)
@@ -175,7 +148,8 @@ function ExprToString(a::AffExpr)
     thisstr = "$(pair[2]) $(GetName(pair[1]))"
     precomputedStrings[nSeen+1] = thisstr
     # TODO: check if already seen this variable using seen array
-    # if so, go back and update
+    # if so, go back and update.
+    # maybe rows should be cleaned somewhere before this?
     nSeen += 1
   end
   ret = join(precomputedStrings[1:nSeen]," + ")
