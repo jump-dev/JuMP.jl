@@ -31,7 +31,7 @@ function ChainRule(expr,var)
   end
   if expr.args[1] == :^
     println("^ operator, diff it")
-    return :( $(expr.args[3]) * $(ChainRule(expr.args[2],var)) * ($(expr.args[2]) ^ ($(expr.args[3]) - 1)) )
+    return :( $(expr.args[3]) * $(ChainRule(expr.args[2],var)) * ($(expr.args[2]) ^ ($(expr.args[3] - 1))) )
   end
   if expr.args[1] == :+
     println("+ operator, add diff of terms")
