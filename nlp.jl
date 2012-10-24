@@ -68,10 +68,14 @@ function prepareExpression(expr)
   return expr
 end
 
-# TODO: once expression is fixed, we could compile an individual function to evaluate it really quickly. see if julia can do this.
+# dynamically evaluate expression
 function evalAt(expr,values)
-  global __vals = values # eval can only access global scope... should be a better way
-  eval(expr)
+  eval(quote __vals = $values; $expr end)
+end
+
+# compile a function that evaluates the expression!
+function generateFunction(expr)
+  eval(quote function(vals__); $expr end end)
 end
 
 out = ChainRule(lhs,x)
@@ -85,12 +89,34 @@ println(dx)
 println(dy)
 
 rosenbrock = prepareExpression(rosenbrock)
+rosenbrockf = generateFunction(rosenbrock)
 dx = prepareExpression(dx)
+dxf = generateFunction(dx)
 dy = prepareExpression(dy)
+dyf = generateFunction(dy)
 
 # (1,1) is global minimizer
 at = [1,1]
 println("Rosenbrock function at $at:")
 println("Obj: ",evalAt(rosenbrock,at))
+println("Obj: ",rosenbrockf(at))
 println("Grad: ",[evalAt(dx,at),evalAt(dy,at)])
+println("Grad: ",[dxf(at),dyf(at)])
+
+tic()
+for i in 1:1000
+  o = evalAt(rosenbrock,[i,i])
+  gx = evalAt(dx,[i,i])
+  gy = evalAt(dy,[i,i])
+end
+toc()
+
+tic()
+for i in 1:1000
+  o = rosenbrockf([i,i])
+  gx = dxf([i,i])
+  gy = dyf([i,i])
+end
+toc()
+
 
