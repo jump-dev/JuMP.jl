@@ -55,22 +55,23 @@ function ChainRule(expr,var)
   return 1
 end
 
-function substituteVariables(expr,values)
+function prepareExpression(expr)
   if typeof(expr) == Expr
     for i in 1:length(expr.args)
       if typeof(expr.args[i]) == Julp.Variable
-        expr.args[i] = values[expr.args[i].col]
+        expr.args[i] = :(__vals[$(expr.args[i].col)])
       elseif typeof(expr.args[i]) == Expr
-        substituteVariables(expr.args[i],values)
+        prepareExpression(expr.args[i])
       end
     end
   end
   return expr
 end
 
+# TODO: once expression is fixed, we could compile an individual function to evaluate it really quickly. see if julia can do this.
 function evalAt(expr,values)
-  sub = substituteVariables(copy(expr),values)
-  eval(sub)
+  global __vals = values # eval can only access global scope... should be a better way
+  eval(expr)
 end
 
 out = ChainRule(lhs,x)
@@ -82,6 +83,10 @@ dy = ChainRule(rosenbrock, y)
 println(rosenbrock)
 println(dx)
 println(dy)
+
+rosenbrock = prepareExpression(rosenbrock)
+dx = prepareExpression(dx)
+dy = prepareExpression(dy)
 
 # (1,1) is global minimizer
 at = [1,1]
