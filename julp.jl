@@ -101,6 +101,10 @@ function GetName(v::Variable)
   return (v.m.names[v.col] == "" ? strcat("_col",v.col) : v.m.names[v.col])
 end
 
+function show(io::IO,v::Variable)
+  print(io,GetName(v))
+end
+
 # Bound setter/getters
 function SetLower(v::Variable,lower::Number)
   v.m.colLower[v.col] = convert(Float64,lower)
