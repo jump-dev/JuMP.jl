@@ -9,9 +9,15 @@
 # By Iain Dunning and Miles Lubin
 ###########################################################
 
+macro SumExpr(expr)
+  x = Expr(:comprehension,convert(Vector{Any},[:($(expr.args[1].args[3]), convert(Float64,$(expr.args[1].args[2])) ),expr.args[2] ]),Any)
+  :(AffExpr($x))
+end
+
 module Julp
 
-import Base.*
+using Base
+import Base.(+),Base.(-),Base.(*),Base.(<=),Base.(>=),Base.(==)
 
 export
 # Objects
@@ -101,7 +107,7 @@ function GetName(v::Variable)
   return (v.m.names[v.col] == "" ? strcat("_col",v.col) : v.m.names[v.col])
 end
 
-function show(io::IO,v::Variable)
+function show(io,v::Variable)
   print(io,GetName(v))
 end
 
@@ -141,6 +147,19 @@ function PrintExpr(a::AffExpr)
     print(" + ")
   end
   print(a.constant)
+end
+
+function lpSum(terms::Array{AffExpr})
+  numTerms = sum([length(t.data) for t in terms])
+  data = Array((Variable,Float64),numTerms)
+  pos = 1
+  for t in terms
+    for v in t.data
+      data[pos] = v
+      pos+=1
+    end
+  end
+  return AffExpr(data,0.)
 end
 
 function ExprToString(a::AffExpr)
