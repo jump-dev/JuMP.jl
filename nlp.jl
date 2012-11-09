@@ -3,6 +3,69 @@
 
 require("julp.jl")
 
+
+function ChainRule(expr,var)
+  println("In ChainRule")
+  println(expr)
+  if typeof(expr) == Julp.Variable
+    println("Variable")
+    if expr == var
+      println("Symbol==Var, so is just 1")
+      return 1
+    else
+      println("Symbol!=Var, so zero")
+      return 0
+    end
+  end
+  if typeof(expr) <: Number
+    println("Constant, so zero")
+    return 0
+  end
+  if expr.args[1] == :^
+    println("^ operator, diff it")
+    return :( $(expr.args[3]) * $(ChainRule(expr.args[2],var)) * ($(expr.args[2]) ^ ($(expr.args[3] - 1))) )
+  end
+  if expr.args[1] == :+
+    println("+ operator, add diff of terms")
+    return :( $(ChainRule(expr.args[2],var)) + $(ChainRule(expr.args[3],var)) )
+  end
+  if expr.args[1] == :-
+    println("- operator, subtract diff of terms")
+    return :( $(ChainRule(expr.args[2],var)) - $(ChainRule(expr.args[3],var)) )
+  end
+  if expr.args[1] == :*
+    println("* operation")
+    @assert length(expr.args) == 3
+    return :( $(ChainRule(expr.args[2],var))*$(expr.args[3]) + $(expr.args[2])*$(ChainRule(expr.args[3],var)))
+  end
+
+  return 1
+end
+
+function prepareExpression(expr)
+  if typeof(expr) == Expr
+    for i in 1:length(expr.args)
+      if typeof(expr.args[i]) == Julp.Variable
+        expr.args[i] = :(__vals[$(expr.args[i].col)])
+      elseif typeof(expr.args[i]) == Expr
+        prepareExpression(expr.args[i])
+      end
+    end
+  end
+  return expr
+end
+
+# dynamically evaluate expression
+function evalAt(expr,values)
+  eval(quote __vals = $values; $expr end)
+end
+
+# compile a function that evaluates the expression!
+function generateFunction(expr)
+  eval(quote function(vals__); $expr end end)
+end
+
+
 function doStuff()
 
   m = Julp.Model("min")
@@ -19,67 +82,7 @@ function doStuff()
   lhs = con.args[1]
   println(lhs.args[2].args)
 
-  function ChainRule(expr,var)
-    println("In ChainRule")
-    println(expr)
-    if typeof(expr) == Julp.Variable
-      println("Variable")
-      if expr == var
-        println("Symbol==Var, so is just 1")
-        return 1
-      else
-        println("Symbol!=Var, so zero")
-        return 0
-      end
-    end
-    if typeof(expr) <: Number
-      println("Constant, so zero")
-      return 0
-    end
-    if expr.args[1] == :^
-      println("^ operator, diff it")
-      return :( $(expr.args[3]) * $(ChainRule(expr.args[2],var)) * ($(expr.args[2]) ^ ($(expr.args[3] - 1))) )
-    end
-    if expr.args[1] == :+
-      println("+ operator, add diff of terms")
-      return :( $(ChainRule(expr.args[2],var)) + $(ChainRule(expr.args[3],var)) )
-    end
-    if expr.args[1] == :-
-      println("- operator, subtract diff of terms")
-      return :( $(ChainRule(expr.args[2],var)) - $(ChainRule(expr.args[3],var)) )
-    end
-    if expr.args[1] == :*
-      println("* operation")
-      @assert length(expr.args) == 3
-      return :( $(ChainRule(expr.args[2],var))*$(expr.args[3]) + $(expr.args[2])*$(ChainRule(expr.args[3],var)))
-    end
-
-    return 1
-  end
-
-  function prepareExpression(expr)
-    if typeof(expr) == Expr
-      for i in 1:length(expr.args)
-        if typeof(expr.args[i]) == Julp.Variable
-          expr.args[i] = :(__vals[$(expr.args[i].col)])
-        elseif typeof(expr.args[i]) == Expr
-          prepareExpression(expr.args[i])
-        end
-      end
-    end
-    return expr
-  end
-
-  # dynamically evaluate expression
-  function evalAt(expr,values)
-    eval(quote __vals = $values; $expr end)
-  end
-
-  # compile a function that evaluates the expression!
-  function generateFunction(expr)
-    eval(quote function(vals__); $expr end end)
-  end
-
+  
   out = ChainRule(lhs,x)
   println(out)
   println("Rosenbrockin it")
