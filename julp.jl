@@ -9,10 +9,7 @@
 # By Iain Dunning and Miles Lubin
 ###########################################################
 
-macro SumExpr(expr)
-  x = Expr(:comprehension,convert(Vector{Any},[:($(expr.args[1].args[3]), convert(Float64,$(expr.args[1].args[2])) ),expr.args[2] ]),Any)
-  :(AffExpr($x))
-end
+
 
 module Julp
 
@@ -31,8 +28,16 @@ export
   SetName,GetName,SetLower,SetUpper,GetLower,GetUpper,
   PrintExpr,ExprToString,
   AddConstraint,PrintCon,ConToString,
-  WriteLP
-  
+  WriteLP,
+
+# Macros
+  @SumExpr
+
+macro SumExpr(expr)
+  local x = Expr(:comprehension,convert(Vector{Any},[:($(expr.args[1].args[3]), convert(Float64,$(expr.args[1].args[2])) ),expr.args[2] ]),Any)
+  esc(:(AffExpr($x)))
+end
+
 # Model class
 # Keeps track of all model and column info
 type Model
