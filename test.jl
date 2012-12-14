@@ -2,13 +2,13 @@ require("julp.jl")
 
 m = Julp.Model("max")
 
-x = Julp.Variable(m,"x",0,3)
-y = Julp.Variable(m,0,1e10)
-z = Julp.Variable(m,0,33)
+x = Julp.Variable(m, 0., 3.,    0,"x")
+y = Julp.Variable(m, 0., 1e10, 0)
+z = Julp.Variable(m, 0., 33.,  0)
 
-Julp.lpSum([1*x,2*y+z])
+#Julp.lpSum([1*x,2*y+z])
 
 m.objective = 5*x + 3*y
-Julp.AddConstraint(m, 1.0*x + 5*y <= 3.0)
-Julp.PrintModel(m)
-Julp.WriteLP(m,"test.lp")
+Julp.addConstraint(m, 1.0*x + 5*y <= 3.0)
+Julp.print(m)
+Julp.writeLP(m,"test.lp")

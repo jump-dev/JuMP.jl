@@ -9,12 +9,11 @@
 # By Iain Dunning and Miles Lubin
 ###########################################################
 
-
-
 module Julp
 
 using Base
 import Base.(+),Base.(-),Base.(*),Base.(<=),Base.(>=),Base.(==)
+import Base.print
 
 export
 # Objects
@@ -24,11 +23,9 @@ export
   Constraint,
 
 # Functions
-  PrintModel,
-  SetName,GetName,SetLower,SetUpper,GetLower,GetUpper,
-  PrintExpr,ExprToString,
-  AddConstraint,PrintCon,ConToString,
-  WriteLP,
+  print,exprToString,conToString,writeLP,
+  setName,getName,setLower,setUpper,getLower,getUpper,
+  addConstraint,
 
 # Macros
   @SumExpr
@@ -38,142 +35,124 @@ macro SumExpr(expr)
   esc(:(AffExpr($x)))
 end
 
+########################################################################
 # Model class
 # Keeps track of all model and column info
 type Model
-  names
-  cols
   objective
-  sense
-  constraints #::Array{Constraint} - can't figure out how
-              # to use before define
+  objSense
+  
+  constraints
+  
+  # Column data
+  numCols
+  colNames
   colLower
   colUpper
+  colCat
 end
 
+
 # Default constructor
-Model(sense::String) = Model(Array(String,0),0,0,sense,Array(Constraint,0),Array(Float64,0),Array(Float64,0))
+Model(sense::String) = Model(0,sense,Array(Constraint,0),
+							0,Array(String,0),Array(Float64,0),Array(Float64,0),Array(Int,0))
+
 
 # Pretty print
-function PrintModel(m::Model)
-  print(strcat(m.sense," "))
-  PrintExpr(m.objective)
+function print(m::Model)
+  print(strcat(m.objSense," "))
+  print(m.objective)
   println("")
   for c in m.constraints
     print("s.t. ")
-    PrintCon(c)
+    print(c)
     println("")
   end
-  for i in 1:m.cols
+  for i in 1:m.numCols
     print(m.colLower[i])
     print(" <= ")
-    print((m.names[i] == "" ? strcat("_col",i) : m.names[i]))
+    print((m.colNames[i] == "" ? strcat("_col",i) : m.colNames[i]))
     print(" <= ")
     println(m.colUpper[i])
   end
 end
 
-###########################################################
+########################################################################
 # Variable class
-# Doesn't actually do much, just a pointer back to the
-# model effectively
+# Doesn't actually do much, just a pointer back to the model
 type Variable
   m::Model
   col::Integer
 end
 
 # Constructor 1 - no name
-function Variable(m::Model,lower::Number,upper::Number)
-  m.cols += 1
-  push(m.names,"")
-  push(m.colLower,convert(Float64,lower))
-  push(m.colUpper,convert(Float64,upper))
-  return Variable(m,m.cols)
+function Variable(m::Model,lower::Number,upper::Number,cat::Int)
+  return Variable(m,lower,upper,cat,"")
 end
 
 # Constructor 2 - with name
-function Variable(m::Model,n::String,lower::Number,upper::Number)
-  m.cols += 1
-  push(m.names,n)
+function Variable(m::Model,lower::Number,upper::Number,cat::Int,name::String)
+  m.numCols += 1
+  push(m.colNames,name)
   push(m.colLower,convert(Float64,lower))
   push(m.colUpper,convert(Float64,upper))
-  return Variable(m,m.cols)
+  push(m.colCat, cat)
+  return Variable(m,m.numCols)
 end
 
 # Name setter/getters
-function SetName(v::Variable,n::String)
-  v.m.names[v.col] = n
+function getName(v::Variable,n::String)
+  v.m.colNames[v.col] = n
 end
-function GetName(v::Variable)
-  #n = v.m.names[v.col]
-  #if n==""
-  #  n = strcat("_col",v.col)
-  #end
-  return (v.m.names[v.col] == "" ? strcat("_col",v.col) : v.m.names[v.col])
+function getName(v::Variable)
+  return (v.m.colNames[v.col] == "" ? strcat("_col",v.col) : v.m.colNames[v.col])
 end
 
 function show(io,v::Variable)
-  print(io,GetName(v))
+  print(io,getName(v))
 end
 
 # Bound setter/getters
-function SetLower(v::Variable,lower::Number)
+function setLower(v::Variable,lower::Number)
   v.m.colLower[v.col] = convert(Float64,lower)
 end
-function SetUpper(v::Variable,upper::Number)
+function setUpper(v::Variable,upper::Number)
   v.m.colUpper[v.col] = convert(Float64,upper)
 end
-function GetLower(v::Variable)
+function getLower(v::Variable)
   return v.m.colLower[v.col]
 end
-function GetUpper(v::Variable)
+function getUpper(v::Variable)
   return v.m.colUpper[v.col]
 end
 
-###########################################################
+########################################################################
 # Affine Expression class
 # Holds a vector of tuples (Variable, double)
 type AffExpr
-  data::Array{(Variable,Float64),1}
+  vars::Array{Variable,1}
+  coeffs::Array{Float64,1}
   constant::Float64
 end
 
-# Basic constructor
-function AffExpr(data::Array{(Variable,Float64),1})
-  AffExpr(data,0.)
-end
-
 # Pretty printer
-function PrintExpr(a::AffExpr)
-  for pair in a.data
-    print(pair[2])
+function print(a::AffExpr)
+  for ind in 1:length(a.vars)
+    print(a.coeffs[ind])
     print("*")
-    print(GetName(pair[1]))
+    print(getName(a.vars[ind]))
     print(" + ")
   end
   print(a.constant)
 end
 
-function lpSum(terms::Array{AffExpr})
-  numTerms = sum([length(t.data) for t in terms])
-  data = Array((Variable,Float64),numTerms)
-  pos = 1
-  for t in terms
-    for v in t.data
-      data[pos] = v
-      pos+=1
-    end
-  end
-  return AffExpr(data,0.)
-end
-
-function ExprToString(a::AffExpr)
-  @assert length(a.data) > 0
-  seen = zeros(Bool,a.data[1][1].m.cols)
+function exprToString(a::AffExpr)
+  @assert length(a.vars) > 0
+  seen = zeros(Bool,a.vars[1].m.numCols)
   nSeen = 0
-  precomputedStrings = Array(ASCIIString,length(a.data))
-  for pair in a.data
-    thisstr = "$(pair[2]) $(GetName(pair[1]))"
+  precomputedStrings = Array(ASCIIString,length(a.vars))
+  for ind in 1:length(a.vars)
+    thisstr = "$(a.coeffs[ind]) $(getName(a.vars[ind]))"
     precomputedStrings[nSeen+1] = thisstr
     # TODO: check if already seen this variable using seen array
     # if so, go back and update.
@@ -188,7 +167,7 @@ function ExprToString(a::AffExpr)
   return ret
 end
 
-###########################################################
+#######################################################################
 # Constraint class
 # Basically an affine expression with a sense and two sides
 # If we don't allow range constraints, we can just keep a
@@ -198,19 +177,18 @@ type Constraint
   sense::String
 end
 
-function AddConstraint(m::Model, c::Constraint)
+function addConstraint(m::Model, c::Constraint)
   push(m.constraints,c)
 end
 
 # Pretty printer
-function PrintCon(c::Constraint)
-  PrintExpr(c.lhs)
+function print(c::Constraint)
+  print(c.lhs)
   print(strcat(" ",c.sense," 0"))
-  #print(ConToString(c))
 end
 
-function ConToString(c::Constraint)
-  return strcat(ExprToString(c.lhs-c.lhs.constant)," ",c.sense," ",-c.lhs.constant)
+function conToString(c::Constraint)
+  return strcat(exprToString(c.lhs-c.lhs.constant)," ",c.sense," ",-c.lhs.constant)
 end
 
 ###########################################################
@@ -218,57 +196,85 @@ end
 # Variable
 # Variable--Variable
 function (+)(lhs::Variable, rhs::Variable)
-  return AffExpr([(lhs,+1.0) (rhs,+1.0)], 0.0)
+  return AffExpr([lhs,rhs], [1.,1.], 0.)
 end
 function (-)(lhs::Variable, rhs::Variable)
-  return AffExpr([(lhs,+1.0) (rhs,-1.0)], 0.0)
+  return AffExpr([lhs,rhs], [1.,-1.], 0.)
 end
 # Variable--Number
 function (+)(lhs::Variable, rhs::Number)
-  return AffExpr([(lhs,+1.0)], +rhs)
+  return AffExpr([lhs], [1.], rhs)
 end
 function (-)(lhs::Variable, rhs::Number)
-  return AffExpr([(lhs,+1.0)], -rhs)
+  return AffExpr([lhs], [1.], -rhs)
 end
 function (*)(lhs::Variable, rhs::Number)
-  return AffExpr([(lhs,convert(Float64,rhs))], 0.0)
+  return AffExpr([lhs],[convert(Float64,rhs)], 0.0)
 end
 # Variable--AffExpr
 function (+)(lhs::Variable, rhs::AffExpr)
-  ret = AffExpr(copy(rhs.data),rhs.constant)
-  push(ret.data, (lhs,1.0))
+  ret = AffExpr(copy(rhs.vars),copy(rhs.coeffs),rhs.constant)
+  push(ret.vars, lhs)
+  push(ret.coeffs, 1.)
+  return ret
+end
+function (-)(lhs::Variable, rhs::AffExpr)
+  ret = AffExpr(copy(rhs.vars),copy(rhs.coeffs),rhs.constant)
+  for ind in 1:length(ret.coeffs)
+    ret.coeffs *= -1
+  end
+  ret.constant *= -1
+  push(ret.vars, lhs)
+  push(ret.coeffs, 1.)
   return ret
 end
 
 # Number
 # Number--Variable
 function (*)(lhs::Number, rhs::Variable)
-  return AffExpr([(rhs,convert(Float64,lhs))], 0.0)
+  return AffExpr([rhs],[convert(Float64,lhs)], 0.0)
 end
-# Number--Number (LOL!)
 # Number--AffExpr
 function (+)(lhs::Number, rhs::AffExpr)
-  return AffExpr(copy(rhs.data), rhs.constant+lhs)
+  ret = AffExpr(copy(rhs.vars),copy(rhs.coeffs),rhs.constant)
+  ret.constant += lhs
+  return ret
+end
+function (-)(lhs::Number, rhs::AffExpr)
+  ret = AffExpr(copy(rhs.vars),copy(rhs.coeffs),rhs.constant)
+  for ind in 1:length(ret.coeffs)
+    ret.coeffs *= -1
+  end
+  ret.constant = lhs - ret.constant
+  return ret
 end
 
 # AffExpr
 # AffExpr--Variable
 function (+)(lhs::AffExpr, rhs::Variable) 
-  ret = AffExpr(copy(lhs.data),lhs.constant)
-  push(ret.data, (rhs,1.0))
-  return ret
+  ret = AffExpr(copy(lhs.vars),copy(lhs.coeffs),lhs.constant)
+  push(ret.vars, rhs)
+  push(ret.coeffs, 1.)
+  return ret 
+end
+function (-)(lhs::AffExpr, rhs::Variable) 
+  ret = AffExpr(copy(lhs.vars),copy(lhs.coeffs),lhs.constant)
+  push(ret.vars, rhs)
+  push(ret.coeffs, -1.)
+  return ret 
 end
 # AffExpr--Number
 function (+)(lhs::AffExpr, rhs::Number)
-  return AffExpr(copy(lhs.data), lhs.constant+rhs)
+  return AffExpr(copy(lhs.vars),copy(lhs.coeffs), lhs.constant+rhs)
 end
 function (-)(lhs::AffExpr, rhs::Number)
-  return AffExpr(copy(lhs.data), lhs.constant-rhs)
+  return AffExpr(copy(lhs.vars),copy(lhs.coeffs), lhs.constant-rhs)
 end
 # AffExpr--AffExpr
 function (+)(lhs::AffExpr, rhs::AffExpr)
-  ret = AffExpr(copy(lhs.data),lhs.constant)
-  ret.data = cat(1,ret.data,rhs.data)
+  ret = AffExpr(copy(lhs.vars),copy(lhs.coeffs), lhs.constant)
+  ret.vars = cat(1,ret.vars,rhs.vars)
+  ret.coeffs = cat(1,ret.coeffs,rhs.coeffs)
   return ret
 end
 
@@ -284,18 +290,18 @@ function (>=)(lhs::AffExpr, rhs::Number)
   return Constraint(lhs-rhs,">=")
 end
 
-###########################################################
-function WriteLP(m::Model, fname::String)
+########################################################################
+function writeLP(m::Model, fname::String)
   f = open(fname, "w")
   write(f,"\\*Julp-created LP*\\\n")
   
   # Objective
-  if m.sense == "max"
+  if m.objSense == "max"
     write(f,"Maximize\n")
   else
     write(f,"Minimize\n")
   end
-  objStr = ExprToString(m.objective)
+  objStr = exprToString(m.objective)
   write(f,strcat(" obj: ", objStr, "\n"))
   
   # Constraints
@@ -304,15 +310,15 @@ function WriteLP(m::Model, fname::String)
   tic()
   for c in m.constraints
     conCount += 1
-    write(f,strcat(" c",conCount,": ", ConToString(c),"\n"))
+    write(f,strcat(" c",conCount,": ", conToString(c),"\n"))
   end
   toc()
   print("In writing constraints\n")
 
   # Bounds
   write(f,"Bounds\n")
-  for i in 1:m.cols
-    n = (m.names[i] == "" ? strcat("_col",i) : m.names[i])
+  for i in 1:m.numCols
+    n = (m.colNames[i] == "" ? strcat("_col",i) : m.colNames[i])
     if abs(m.colLower[i]) > 0.00001
       write(f,strcat(" ",m.colLower[i]," <= ",n))
       if abs(m.colUpper[i] - 1e10) > 0.00001 # need a "infinite" number?
