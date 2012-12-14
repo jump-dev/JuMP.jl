@@ -47,16 +47,16 @@ type Model
   
   # Column data
   numCols
-  colNames
-  colLower
-  colUpper
-  colCat
+  colNames::Vector{String}
+  colLower::Vector{Float64}
+  colUpper::Vector{Float64}
+  colCat::Vector{Int}
 end
 
 
 # Default constructor
 Model(sense::String) = Model(0,sense,Array(Constraint,0),
-							0,Array(String,0),Array(Float64,0),Array(Float64,0),Array(Int,0))
+							0,String[],Float64[],Float64[],Int[])
 
 # Pretty print
 function print(m::Model)
@@ -135,6 +135,10 @@ type AffExpr
   constant::Float64
 end
 
+function AffExpr()
+  return AffExpr(Variable[],Float64[],0.)
+end
+
 function setObjective(m::Model, a::AffExpr)
   m.objective = a
 end
@@ -172,6 +176,28 @@ function exprToString(a::AffExpr)
 end
 
 #######################################################################
+# QuadExpr class
+type QuadExpr
+  quadVars1::Vector{Variable}
+  quadVars2::Vector{Variable}
+  quadCoeffs::Vector{Float64}
+  aff::AffExpr
+end
+
+# Pretty printer
+function print(q::QuadExpr)
+  for ind in 1:length(q.quadVars1)
+    print(q.quadCoeffs[ind])
+    print("*")
+    print(getName(q.quadVars1[ind]))
+    print("*")
+    print(getName(q.quadVars2[ind]))
+    print(" + ")
+  end
+  print(q.aff)
+end
+
+#######################################################################
 # Constraint class
 # Basically an affine expression with a sense and two sides
 # If we don't allow range constraints, we can just keep a
@@ -205,15 +231,22 @@ end
 function (-)(lhs::Variable, rhs::Variable)
   return AffExpr([lhs,rhs], [1.,-1.], 0.)
 end
+function (*)(lhs::Variable, rhs::Variable)
+  return QuadExpr([lhs],[rhs], [1.], AffExpr(Variable[],Float64[],0.))
+end
 # Variable--Number
 function (+)(lhs::Variable, rhs::Number)
-  return AffExpr([lhs], [1.], rhs)
+  return AffExpr([lhs], [1.], convert(Float64,rhs))
 end
 function (-)(lhs::Variable, rhs::Number)
-  return AffExpr([lhs], [1.], -rhs)
+  return AffExpr([lhs], [1.], -convert(Float64,rhs))
 end
 function (*)(lhs::Variable, rhs::Number)
   return AffExpr([lhs],[convert(Float64,rhs)], 0.0)
+end
+function (^)(lhs::Variable, rhs::Number)
+  @assert rhs==2
+  return QuadExpr([lhs],[lhs], [2.], AffExpr(Variable[],Float64[],0.))
 end
 # Variable--AffExpr
 function (+)(lhs::Variable, rhs::AffExpr)
@@ -279,6 +312,55 @@ function (+)(lhs::AffExpr, rhs::AffExpr)
   ret = AffExpr(copy(lhs.vars),copy(lhs.coeffs), lhs.constant)
   ret.vars = cat(1,ret.vars,rhs.vars)
   ret.coeffs = cat(1,ret.coeffs,rhs.coeffs)
+  return ret
+end
+function (*)(lhs::AffExpr, rhs::AffExpr)
+  ret = QuadExpr(Variable[],Variable[],Float64[],AffExpr(Variable[],Float64[],0.))
+  
+  # Quadratic terms
+  for ind1 = 1:length(lhs.coeffs)
+    for ind2 = 1:length(rhs.coeffs)
+      v1 = lhs.vars[ind1]
+      v2 = rhs.vars[ind2]
+      c  = lhs.coeffs[ind1]*rhs.coeffs[ind2]
+      push(ret.quadVars1,v1)
+      push(ret.quadVars2,v2)
+      push(ret.quadCoeffs,c)
+    end
+  end
+  
+  # Expr 1 constant * Expr 2 terms
+  if lhs.constant != 0
+    for ind2 = 1:length(rhs.coeffs)
+      v2 = rhs.vars[ind2]
+      c  = lhs.constant*rhs.coeffs[ind2]
+      push(ret.aff.vars,v2)
+      push(ret.aff.coeffs,c)
+    end
+    ret.aff.constant += lhs.constant*rhs.constant
+  end
+  
+  # Expr 2 constant * Expr 1 terms
+  if rhs.constant != 0
+    for ind1 = 1:length(lhs.coeffs)
+      v1 = lhs.vars[ind1]
+      c  = rhs.constant*lhs.coeffs[ind1]
+      push(ret.aff.vars,v1)
+      push(ret.aff.coeffs,c)
+    end
+  end
+  
+  return ret
+end
+
+# QuadExpr
+# QuadExpr--QuadExpr
+function (+)(lhs::QuadExpr, rhs::QuadExpr)
+  ret = QuadExpr(Variable[],Variable[],Float64[],AffExpr())
+  ret.quadVars1 = cat(1,lhs.quadVars1,rhs.quadVars1)
+  ret.quadVars2 = cat(1,lhs.quadVars2,rhs.quadVars2)
+  ret.quadCoeffs = cat(1,lhs.quadCoeffs,rhs.quadCoeffs)
+  ret.aff = lhs.aff + rhs.aff
   return ret
 end
 
