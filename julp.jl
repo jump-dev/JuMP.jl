@@ -1,4 +1,4 @@
-###########################################################
+########################################################################
 # Julp 
 # A MILP modelling langauge for Julia
 #  Julia
@@ -7,7 +7,7 @@
 # =Julp.
 #
 # By Iain Dunning and Miles Lubin
-###########################################################
+########################################################################
 
 module Julp
 
@@ -25,14 +25,15 @@ export
 # Functions
   print,exprToString,conToString,writeLP,
   setName,getName,setLower,setUpper,getLower,getUpper,
-  addConstraint,
+  addConstraint,setObjective,
 
 # Macros
   @SumExpr
 
 macro SumExpr(expr)
-  local x = Expr(:comprehension,convert(Vector{Any},[:($(expr.args[1].args[3]), convert(Float64,$(expr.args[1].args[2])) ),expr.args[2] ]),Any)
-  esc(:(AffExpr($x)))
+  local coefarr = Expr(:comprehension,convert(Vector{Any},[:(convert(Float64,$(expr.args[1].args[2]))),expr.args[2]]),Any)
+  local vararr = Expr(:comprehension,convert(Vector{Any},[expr.args[1].args[3],expr.args[2]]),Any)
+  esc(:(AffExpr($vararr,$coefarr,0.)))
 end
 
 ########################################################################
@@ -56,7 +57,6 @@ end
 # Default constructor
 Model(sense::String) = Model(0,sense,Array(Constraint,0),
 							0,Array(String,0),Array(Float64,0),Array(Float64,0),Array(Int,0))
-
 
 # Pretty print
 function print(m::Model)
@@ -133,6 +133,10 @@ type AffExpr
   vars::Array{Variable,1}
   coeffs::Array{Float64,1}
   constant::Float64
+end
+
+function setObjective(m::Model, a::AffExpr)
+  m.objective = a
 end
 
 # Pretty printer

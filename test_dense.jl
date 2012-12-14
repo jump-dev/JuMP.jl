@@ -5,6 +5,7 @@ require("julp.jl")
 using Julp
 
 function doTest()
+  srand(10)
   N = 10000
   M = 1000
   A = randi(    10,M,N)
@@ -13,7 +14,7 @@ function doTest()
 
   tic()
   m = Model("max")
-  v = [ Variable(m,"x$j",0,1) for j=1:N ]
+  v = [ Variable(m,0,1,0,"x$j") for j=1:N ]
 
   #m.objective = Julp.AffExpr([(v[j],convert(Float64,c[j])) for j=1:N])
   #m.objective = sum([ c[j]*v[j] for j=1:N ])
@@ -25,12 +26,12 @@ function doTest()
     #lhs = Julp.AffExpr([(v[j],convert(Float64,A[i,j])) for j=1:N])
     #lhs = Julp.lpSum([ v[j] * A[i,j] for j = 1:N ])
     lhs = @SumExpr([ A[i,j]*v[j] for j = 1:N ])
-    AddConstraint(m, lhs <= b[i])
+    addConstraint(m, lhs <= b[i])
   end
   toc()
   println("In building the model in memory")
   tic()
-  WriteLP(m,"dense.lp")
+  writeLP(m,"dense.lp")
   toc()
   println("Total")
 end
