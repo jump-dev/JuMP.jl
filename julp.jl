@@ -23,12 +23,18 @@ export
   Constraint,
 
 # Functions
-  print,exprToString,conToString,writeLP,
+  print,exprToString,conToString,writeLP,writeMPS,
   setName,getName,setLower,setUpper,getLower,getUpper,
   addConstraint,setObjective,
 
+# Constants
+  Infinity,
+
 # Macros
   @SumExpr
+
+
+Infinity = 1e10
 
 macro SumExpr(expr)
   local coefarr = Expr(:comprehension,convert(Vector{Any},[:(convert(Float64,$(expr.args[1].args[2]))),expr.args[2]]),Any)
@@ -377,9 +383,90 @@ function (>=)(lhs::AffExpr, rhs::Number)
 end
 
 ########################################################################
+function writeMPS(m::Model, fname::String)
+  f = open(fname, "w")
+  
+  # Objective and constraint names
+  write(f,"ROWS\n")
+  write(f," N  obj\n")
+  for c in 1:length(m.constraints)
+    senseChar = "L"
+    if m.constraints[c].sense == "=="
+      senseChar = "E"
+    elseif m.constraints[c].sense == ">="
+      senseChar = "G"
+    end
+    write(f,strcat(" ",senseChar,"  CON",c,"\n"))
+  end
+  
+  # Build columnwise formulation
+  columnElt = Array(Vector{Float64},m.numCols)
+  columnIdx = Array(Vector{Int},m.numCols)
+  for col in 1:m.numCols
+    columnElt[col] = Array(Float64,0)
+    columnIdx[col] = Array(Int,0)
+  end
+  for c in 1:length(m.constraints)
+    for ind in 1:length(m.constraints[c].lhs.coeffs)
+      push(columnElt[m.constraints[c].lhs.vars[ind].col], m.constraints[c].lhs.coeffs[ind])
+      push(columnIdx[m.constraints[c].lhs.vars[ind].col], c)
+    end
+  end
+  for ind in 1:length(m.objective.coeffs)
+    push(columnElt[m.objective.vars[ind].col], m.objective.coeffs[ind])
+    push(columnIdx[m.objective.vars[ind].col], -1) #-1 marks obj
+  end
+  
+  # Output each column
+  write(f,"COLUMNS\n")
+  for col in 1:m.numCols
+    nnz = length(columnIdx[col])
+    strs = Array(ASCIIString,nnz)
+    for ind in 1:nnz
+      if (columnIdx[col][ind] == -1)
+        strs[ind] = "    x$(col)  obj  $(columnElt[col][ind])"
+      else
+	    strs[ind] = "    x$(col)  CON$(columnIdx[col][ind])  $(columnElt[col][ind])"
+	  end
+    end
+    write(f,join(strs,"\n"))
+    write(f,"\n")
+  end
+  
+  # RHSs
+  write(f,"RHS\n")
+  for c in 1:length(m.constraints)
+    write(f,"    rhs    CON$(c)    $(-m.constraints[c].lhs.constant)\n")
+  end
+  
+  # BOUNDS
+  write(f,"BOUNDS\n")
+  for col in 1:m.numCols
+    if m.colLower[col] == -Infinity && m.colUpper[col] == +Infinity
+      # Free
+      write(f,"  FR BOUND x$(col)\n")
+    elseif m.colLower[col] != -Infinity && m.colUpper[col] == +Infinity
+      # No upper, but a lower
+      write(f,"  PL BOUND x$(col) \n")
+      write(f,"  LO BOUND x$(col) $(m.colLower[col])\n")
+    elseif m.colLower[col] == -Infinity && m.colUpper[col] != +Infinity
+      # No lower, but a upper
+      write(f,"  MI BOUND x$(col) \n")
+      write(f,"  UP BOUND x$(col) $(m.colUpper[col])\n")
+    else
+      # Lower and upper
+      write(f,"  LO BOUND x$(col) $(m.colLower[col])\n")
+      write(f,"  UP BOUND x$(col) $(m.colUpper[col])\n")
+    end
+  end
+  
+  write(f,"ENDATA\n")
+  close(f)
+end
+
 function writeLP(m::Model, fname::String)
   f = open(fname, "w")
-  write(f,"\\*Julp-created LP*\\\n")
+  write(f,"NAME Julp-created LP \n")
   
   # Objective
   if m.objSense == "max"
