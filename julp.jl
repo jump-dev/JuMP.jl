@@ -27,14 +27,9 @@ export
   setName,getName,setLower,setUpper,getLower,getUpper,
   addConstraint,setObjective,
 
-# Constants
-  Infinity,
-
 # Macros
   @SumExpr
 
-
-Infinity = 1e10
 
 macro SumExpr(expr)
   local coefarr = Expr(:comprehension,convert(Vector{Any},[:(convert(Float64,$(expr.args[1].args[2]))),expr.args[2]]),Any)
@@ -48,6 +43,7 @@ end
 type Model
   objective
   objSense
+  objIsQuad
   
   constraints
   
@@ -61,7 +57,7 @@ end
 
 
 # Default constructor
-Model(sense::String) = Model(0,sense,Array(Constraint,0),
+Model(sense::String) = Model(0,sense,false,Array(Constraint,0),
 							0,String[],Float64[],Float64[],Int[])
 
 # Pretty print
@@ -147,6 +143,7 @@ end
 
 function setObjective(m::Model, a::AffExpr)
   m.objective = a
+  m.objIsQuad = false
 end
 
 # Pretty printer
@@ -188,6 +185,11 @@ type QuadExpr
   quadVars2::Vector{Variable}
   quadCoeffs::Vector{Float64}
   aff::AffExpr
+end
+
+function setObjective(m::Model, q::QuadExpr)
+  m.objective = q
+  m.objIsQuad = true
 end
 
 # Pretty printer
@@ -412,9 +414,16 @@ function writeMPS(m::Model, fname::String)
       push(columnIdx[m.constraints[c].lhs.vars[ind].col], c)
     end
   end
-  for ind in 1:length(m.objective.coeffs)
-    push(columnElt[m.objective.vars[ind].col], m.objective.coeffs[ind])
-    push(columnIdx[m.objective.vars[ind].col], -1) #-1 marks obj
+  if m.objIsQuad
+    for ind in 1:length(m.objective.aff.coeffs)
+      push(columnElt[m.objective.aff.vars[ind].col], m.objective.aff.coeffs[ind])
+      push(columnIdx[m.objective.aff.vars[ind].col], -1) #-1 marks obj
+    end
+  else
+    for ind in 1:length(m.objective.coeffs)
+      push(columnElt[m.objective.vars[ind].col], m.objective.coeffs[ind])
+      push(columnIdx[m.objective.vars[ind].col], -1) #-1 marks obj
+    end
   end
   
   # Output each column
@@ -442,14 +451,14 @@ function writeMPS(m::Model, fname::String)
   # BOUNDS
   write(f,"BOUNDS\n")
   for col in 1:m.numCols
-    if m.colLower[col] == -Infinity && m.colUpper[col] == +Infinity
+    if m.colLower[col] == -Inf && m.colUpper[col] == +Inf
       # Free
       write(f,"  FR BOUND x$(col)\n")
-    elseif m.colLower[col] != -Infinity && m.colUpper[col] == +Infinity
+    elseif m.colLower[col] != -Inf && m.colUpper[col] == +Inf
       # No upper, but a lower
       write(f,"  PL BOUND x$(col) \n")
       write(f,"  LO BOUND x$(col) $(m.colLower[col])\n")
-    elseif m.colLower[col] == -Infinity && m.colUpper[col] != +Infinity
+    elseif m.colLower[col] == -Inf && m.colUpper[col] != +Inf
       # No lower, but a upper
       write(f,"  MI BOUND x$(col) \n")
       write(f,"  UP BOUND x$(col) $(m.colUpper[col])\n")
@@ -460,6 +469,24 @@ function writeMPS(m::Model, fname::String)
     end
   end
   
+  # Quadratic objective
+  if m.objIsQuad
+    write(f,"QMATRIX\n")
+    qv1 = m.objective.quadVars1
+    qv2 = m.objective.quadVars2
+    qc  = m.objective.quadCoeffs
+    for ind = 1:length(qv1)
+      if qv1[ind].col == qv2[ind].col
+        # Diagonal element
+        write(f,"  x$(qv1[ind].col)  x$(qv2[ind].col)  $(2*qc[ind])\n")
+      else
+        # Off diagonal, and we're gonna assume no duplicates
+        write(f,"  x$(qv1[ind].col)  x$(qv2[ind].col)  $(  qc[ind])\n")
+        write(f,"  x$(qv2[ind].col)  x$(qv1[ind].col)  $(  qc[ind])\n")
+      end
+    end
+  end
+  
   write(f,"ENDATA\n")
   close(f)
 end
@@ -467,6 +494,11 @@ end
 function writeLP(m::Model, fname::String)
   f = open(fname, "w")
   write(f,"NAME Julp-created LP \n")
+  
+  if m.objIsQuad
+    print("Can't handle quad obj for LP yet\n")
+    return
+  end
   
   # Objective
   if m.objSense == "max"
