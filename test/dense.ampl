@@ -1,4 +1,4 @@
-printf "%f\n",time();
+printf "Time at start: %f\n",time();
 param N default 10000;
 param M default 1000;
 
@@ -15,4 +15,4 @@ subject to CON {i in 1..M}:
   sum {j in 1..N} A[j,i] * x[j] <= B[i];
 
 write mtest;
-printf "%f\n",time();
+printf "Time at end: %f\n",time();

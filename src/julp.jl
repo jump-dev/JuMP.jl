@@ -25,11 +25,11 @@ export
   setName,getName,setLower,setUpper,getLower,getUpper,
   addConstraint,setObjective,
 
-# Macros
-  @SumExpr
+# Macros and support functions
+  @sumExpr,
+  lpSum
 
-
-macro SumExpr(expr)
+macro sumExpr(expr)
   local coefarr = Expr(:comprehension,convert(Vector{Any},[:(convert(Float64,$(expr.args[1].args[2]))),expr.args[2]]),Any)
   local vararr = Expr(:comprehension,convert(Vector{Any},[expr.args[1].args[3],expr.args[2]]),Any)
   esc(:(AffExpr($vararr,$coefarr,0.)))
@@ -311,7 +311,7 @@ function (-)(lhs::AffExpr, rhs::Number)
 end
 # AffExpr--AffExpr
 function (+)(lhs::AffExpr, rhs::AffExpr)
-  ret = AffExpr(copy(lhs.vars),copy(lhs.coeffs), lhs.constant)
+  ret = AffExpr(copy(lhs.vars), copy(lhs.coeffs), lhs.constant)
   ret.vars = cat(1,ret.vars,rhs.vars)
   ret.coeffs = cat(1,ret.coeffs,rhs.coeffs)
   return ret
@@ -506,13 +506,13 @@ function writeLP(m::Model, fname::String)
   # Constraints
   write(f,"Subject To\n")
   conCount = 0
-  tic()
+  #tic()
   for c in m.constraints
     conCount += 1
     write(f,strcat(" c",conCount,": ", conToString(c),"\n"))
   end
-  toc()
-  print("In writing constraints\n")
+  #toc()
+  #print("In writing constraints\n")
 
   # Bounds
   write(f,"Bounds\n")
@@ -538,6 +538,16 @@ function writeLP(m::Model, fname::String)
   # Done
   write(f,"End\n")
   close(f)
+end
+
+###########################################################
+function lpSum(expr)
+  ret = AffExpr()
+  for j in expr
+	ret.vars   = cat(1, ret.vars,   j.vars)
+	ret.coeffs = cat(1, ret.coeffs, j.coeffs)
+  end
+  return ret
 end
 
 ###########################################################
