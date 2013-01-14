@@ -4,8 +4,8 @@ from pulp import *
 import random
 import time
 
-N = 1000
-M = 100
+N = 10000
+M = 1000
 A = []
 for i in range(M):
   A.append([])
@@ -28,7 +28,7 @@ m += lpSum(v[j] * c[j] for j in range(N))
 for i in range(M):
   m += lpSum(v[j] * A[i][j] for j in range(N)) <= b[i]
 
-m.writeLP("dense_py.lp")
+m.writeMPS("dense_py.mps")
 toc = time.time()
 
 print tic,toc,toc-tic
