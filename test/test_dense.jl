@@ -1,6 +1,6 @@
 # test_dense.jl
 # Make a big dense matrix
-require("julp.jl")
+require("../src/julp.jl")
 
 using Julp
 

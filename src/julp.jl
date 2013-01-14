@@ -11,9 +11,7 @@
 
 module Julp
 
-using Base
-import Base.(+),Base.(-),Base.(*),Base.(<=),Base.(>=),Base.(==)
-import Base.print
+importall Base
 
 export
 # Objects
@@ -95,10 +93,10 @@ end
 # Constructor 2 - with name
 function Variable(m::Model,lower::Number,upper::Number,cat::Int,name::String)
   m.numCols += 1
-  push(m.colNames,name)
-  push(m.colLower,convert(Float64,lower))
-  push(m.colUpper,convert(Float64,upper))
-  push(m.colCat, cat)
+  push!(m.colNames,name)
+  push!(m.colLower,convert(Float64,lower))
+  push!(m.colUpper,convert(Float64,upper))
+  push!(m.colCat, cat)
   return Variable(m,m.numCols)
 end
 
@@ -216,7 +214,7 @@ type Constraint
 end
 
 function addConstraint(m::Model, c::Constraint)
-  push(m.constraints,c)
+  push!(m.constraints,c)
 end
 
 # Pretty printer
@@ -252,15 +250,11 @@ end
 function (*)(lhs::Variable, rhs::Number)
   return AffExpr([lhs],[convert(Float64,rhs)], 0.0)
 end
-function (^)(lhs::Variable, rhs::Number)
-  @assert rhs==2
-  return QuadExpr([lhs],[lhs], [2.], AffExpr(Variable[],Float64[],0.))
-end
 # Variable--AffExpr
 function (+)(lhs::Variable, rhs::AffExpr)
   ret = AffExpr(copy(rhs.vars),copy(rhs.coeffs),rhs.constant)
-  push(ret.vars, lhs)
-  push(ret.coeffs, 1.)
+  push!(ret.vars, lhs)
+  push!(ret.coeffs, 1.)
   return ret
 end
 function (-)(lhs::Variable, rhs::AffExpr)
@@ -269,8 +263,8 @@ function (-)(lhs::Variable, rhs::AffExpr)
     ret.coeffs *= -1
   end
   ret.constant *= -1
-  push(ret.vars, lhs)
-  push(ret.coeffs, 1.)
+  push!(ret.vars, lhs)
+  push!(ret.coeffs, 1.)
   return ret
 end
 
@@ -298,14 +292,14 @@ end
 # AffExpr--Variable
 function (+)(lhs::AffExpr, rhs::Variable) 
   ret = AffExpr(copy(lhs.vars),copy(lhs.coeffs),lhs.constant)
-  push(ret.vars, rhs)
-  push(ret.coeffs, 1.)
+  push!(ret.vars, rhs)
+  push!(ret.coeffs, 1.)
   return ret 
 end
 function (-)(lhs::AffExpr, rhs::Variable) 
   ret = AffExpr(copy(lhs.vars),copy(lhs.coeffs),lhs.constant)
-  push(ret.vars, rhs)
-  push(ret.coeffs, -1.)
+  push!(ret.vars, rhs)
+  push!(ret.coeffs, -1.)
   return ret 
 end
 # AffExpr--Number
@@ -331,9 +325,9 @@ function (*)(lhs::AffExpr, rhs::AffExpr)
       v1 = lhs.vars[ind1]
       v2 = rhs.vars[ind2]
       c  = lhs.coeffs[ind1]*rhs.coeffs[ind2]
-      push(ret.quadVars1,v1)
-      push(ret.quadVars2,v2)
-      push(ret.quadCoeffs,c)
+      push!(ret.quadVars1,v1)
+      push!(ret.quadVars2,v2)
+      push!(ret.quadCoeffs,c)
     end
   end
   
@@ -342,8 +336,8 @@ function (*)(lhs::AffExpr, rhs::AffExpr)
     for ind2 = 1:length(rhs.coeffs)
       v2 = rhs.vars[ind2]
       c  = lhs.constant*rhs.coeffs[ind2]
-      push(ret.aff.vars,v2)
-      push(ret.aff.coeffs,c)
+      push!(ret.aff.vars,v2)
+      push!(ret.aff.coeffs,c)
     end
     ret.aff.constant += lhs.constant*rhs.constant
   end
@@ -353,8 +347,8 @@ function (*)(lhs::AffExpr, rhs::AffExpr)
     for ind1 = 1:length(lhs.coeffs)
       v1 = lhs.vars[ind1]
       c  = rhs.constant*lhs.coeffs[ind1]
-      push(ret.aff.vars,v1)
-      push(ret.aff.coeffs,c)
+      push!(ret.aff.vars,v1)
+      push!(ret.aff.coeffs,c)
     end
   end
   
@@ -410,19 +404,19 @@ function writeMPS(m::Model, fname::String)
   end
   for c in 1:length(m.constraints)
     for ind in 1:length(m.constraints[c].lhs.coeffs)
-      push(columnElt[m.constraints[c].lhs.vars[ind].col], m.constraints[c].lhs.coeffs[ind])
-      push(columnIdx[m.constraints[c].lhs.vars[ind].col], c)
+      push!(columnElt[m.constraints[c].lhs.vars[ind].col], m.constraints[c].lhs.coeffs[ind])
+      push!(columnIdx[m.constraints[c].lhs.vars[ind].col], c)
     end
   end
   if m.objIsQuad
     for ind in 1:length(m.objective.aff.coeffs)
-      push(columnElt[m.objective.aff.vars[ind].col], m.objective.aff.coeffs[ind])
-      push(columnIdx[m.objective.aff.vars[ind].col], -1) #-1 marks obj
+      push!(columnElt[m.objective.aff.vars[ind].col], m.objective.aff.coeffs[ind])
+      push!(columnIdx[m.objective.aff.vars[ind].col], -1) #-1 marks obj
     end
   else
     for ind in 1:length(m.objective.coeffs)
-      push(columnElt[m.objective.vars[ind].col], m.objective.coeffs[ind])
-      push(columnIdx[m.objective.vars[ind].col], -1) #-1 marks obj
+      push!(columnElt[m.objective.vars[ind].col], m.objective.coeffs[ind])
+      push!(columnIdx[m.objective.vars[ind].col], -1) #-1 marks obj
     end
   end
   
