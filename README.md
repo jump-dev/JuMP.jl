@@ -9,6 +9,8 @@ MILP modelling with Julia
     -----
     =Julp.
 
+# Usage Example
+
 Example code (so far)
 
     m = Model("max")
