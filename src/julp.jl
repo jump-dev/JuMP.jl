@@ -382,9 +382,11 @@ end
 function writeMPS(m::Model, fname::String)
   f = open(fname, "w")
   
+  numRows = length(m.constraints)
+  
   # Objective and constraint names
   write(f,"ROWS\n")
-  write(f," N  obj\n")
+  write(f," N  CON$(numRows+1)\n")
   for c in 1:length(m.constraints)
     senseChar = "L"
     if m.constraints[c].sense == "=="
@@ -396,7 +398,6 @@ function writeMPS(m::Model, fname::String)
   end
   #tic() 
   # load rows into SparseMatrixCSC
-  numRows = length(m.constraints)
   rowptr = Array(Int,numRows+2)
   nnz = 0
   for c in 1:numRows
@@ -414,7 +415,6 @@ function writeMPS(m::Model, fname::String)
       for ind in 1:length(coeffs)
           nnz += 1
           colval[nnz] = vars[ind].col
-          @assert colval[nnz] != 0
           rownzval[nnz] = coeffs[ind]
       end
   end
@@ -422,7 +422,6 @@ function writeMPS(m::Model, fname::String)
   for ind in 1:length(objaff.coeffs)
       nnz += 1
       colval[nnz] = objaff.vars[ind].col
-          @assert colval[nnz] != 0
       rownzval[nnz] = objaff.coeffs[ind]
   end
   rowptr[numRows+2] = nnz + 1
@@ -439,11 +438,7 @@ function writeMPS(m::Model, fname::String)
   write(f,"COLUMNS\n")
   for col in 1:m.numCols
     for ind in colmat.colptr[col]:(colmat.colptr[col+1]-1)
-      if (rowval[ind] != numRows+1)
-        write(f,"    x$(col)  CON$(rowval[ind])  $(nzval[ind])\n")
-      else
-        write(f,"    x$(col)  obj  $(nzval[ind])\n")
-	  end
+      write(f,"    x$(col)  CON$(rowval[ind])  $(nzval[ind])\n")
     end
   end
   
