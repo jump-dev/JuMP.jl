@@ -1,6 +1,7 @@
 param numFacility default 100;
 param numCustomer default 100;
 param numLocation default 1000;
+option presolve 0;
 
 param custLoc {a in 1..numCustomer} := 1 + floor(1000 * Uniform01());
 
