@@ -1,6 +1,7 @@
+printf "Time at start: %f\n",time();
 param numFacility default 100;
 param numCustomer default 100;
-param numLocation default 1000;
+param numLocation default 10000;
 option presolve 0;
 
 param custLoc {a in 1..numCustomer} := 1 + floor(1000 * Uniform01());
@@ -21,4 +22,4 @@ subject to SSUM:
   sum {i in 1..numLocation} s[i] == numFacility;
 
 write mpmedian;
-
+printf "Time at end: %f\n",time();
