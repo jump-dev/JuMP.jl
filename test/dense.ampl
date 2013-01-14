@@ -1,4 +1,6 @@
 printf "Time at start: %f\n",time();
+option presolve 0;
+
 param N default 10000;
 param M default 1000;
 

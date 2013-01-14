@@ -445,7 +445,10 @@ function writeMPS(m::Model, fname::String)
   # BOUNDS
   write(f,"BOUNDS\n")
   for col in 1:m.numCols
-    if m.colLower[col] == -Inf && m.colUpper[col] == +Inf
+    if m.colLower[col] == 0 && m.colUpper[col] > 0
+      # Default lower 0, and an upper
+      write(f,"  UP BOUND x$(col) $(m.colUpper[col])\n")
+    elseif m.colLower[col] == -Inf && m.colUpper[col] == +Inf
       # Free
       write(f,"  FR BOUND x$(col)\n")
     elseif m.colLower[col] != -Inf && m.colUpper[col] == +Inf
