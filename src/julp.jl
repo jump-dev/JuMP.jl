@@ -394,51 +394,62 @@ function writeMPS(m::Model, fname::String)
     end
     write(f,strcat(" ",senseChar,"  CON",c,"\n"))
   end
-  
-  # Build columnwise formulation
-  columnElt = Array(Vector{Float64},m.numCols)
-  columnIdx = Array(Vector{Int},m.numCols)
-  for col in 1:m.numCols
-    columnElt[col] = Array(Float64,0)
-    columnIdx[col] = Array(Int,0)
+  #tic() 
+  # load rows into SparseMatrixCSC
+  numRows = length(m.constraints)
+  rowptr = Array(Int,numRows+2)
+  nnz = 0
+  for c in 1:numRows
+      nnz += length(m.constraints[c].lhs.coeffs)
   end
-  for c in 1:length(m.constraints)
-    for ind in 1:length(m.constraints[c].lhs.coeffs)
-      push!(columnElt[m.constraints[c].lhs.vars[ind].col], m.constraints[c].lhs.coeffs[ind])
-      push!(columnIdx[m.constraints[c].lhs.vars[ind].col], c)
-    end
+  objaff = (m.objIsQuad) ? m.objective.aff : m.objective
+  nnz += length(objaff.coeffs)
+  colval = Array(Int,nnz)
+  rownzval = Array(Float64,nnz)
+  nnz = 0
+  for c in 1:numRows
+      rowptr[c] = nnz + 1
+      coeffs = m.constraints[c].lhs.coeffs
+      vars = m.constraints[c].lhs.vars
+      for ind in 1:length(coeffs)
+          nnz += 1
+          colval[nnz] = vars[ind].col
+          @assert colval[nnz] != 0
+          rownzval[nnz] = coeffs[ind]
+      end
   end
-  if m.objIsQuad
-    for ind in 1:length(m.objective.aff.coeffs)
-      push!(columnElt[m.objective.aff.vars[ind].col], m.objective.aff.coeffs[ind])
-      push!(columnIdx[m.objective.aff.vars[ind].col], -1) #-1 marks obj
-    end
-  else
-    for ind in 1:length(m.objective.coeffs)
-      push!(columnElt[m.objective.vars[ind].col], m.objective.coeffs[ind])
-      push!(columnIdx[m.objective.vars[ind].col], -1) #-1 marks obj
-    end
+  rowptr[numRows+1] = nnz + 1
+  for ind in 1:length(objaff.coeffs)
+      nnz += 1
+      colval[nnz] = objaff.vars[ind].col
+          @assert colval[nnz] != 0
+      rownzval[nnz] = objaff.coeffs[ind]
   end
-  
+  rowptr[numRows+2] = nnz + 1
+
+  rowmat = SparseMatrixCSC(m.numCols,numRows+1, rowptr, colval, rownzval)
+  colmat = rowmat'
+  colptr = colmat.colptr
+  rowval = colmat.rowval
+  nzval = colmat.nzval
+  #toc()
+  #println("time building column structure")
+    
   # Output each column
   write(f,"COLUMNS\n")
   for col in 1:m.numCols
-    nnz = length(columnIdx[col])
-    strs = Array(ASCIIString,nnz)
-    for ind in 1:nnz
-      if (columnIdx[col][ind] == -1)
-        strs[ind] = "    x$(col)  obj  $(columnElt[col][ind])"
+    for ind in colmat.colptr[col]:(colmat.colptr[col+1]-1)
+      if (rowval[ind] != numRows+1)
+        write(f,"    x$(col)  CON$(rowval[ind])  $(nzval[ind])\n")
       else
-	    strs[ind] = "    x$(col)  CON$(columnIdx[col][ind])  $(columnElt[col][ind])"
+        write(f,"    x$(col)  obj  $(nzval[ind])\n")
 	  end
     end
-    write(f,join(strs,"\n"))
-    write(f,"\n")
   end
   
   # RHSs
   write(f,"RHS\n")
-  for c in 1:length(m.constraints)
+  for c in 1:numRows
     write(f,"    rhs    CON$(c)    $(-m.constraints[c].lhs.constant)\n")
   end
   
