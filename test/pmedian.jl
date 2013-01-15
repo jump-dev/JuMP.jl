@@ -38,7 +38,7 @@ function doTest()
 	end
 	
 	# Subject to must allocate all facilities
-	addConstraint(m, @sumExpr([1.0*s[i] for i = 1:numLocation]) == 1 )	
+	addConstraint(m, @sumExpr([1.0*s[i] for i = 1:numLocation]) == numFacility )	
 	toc()
 
 	tic()
