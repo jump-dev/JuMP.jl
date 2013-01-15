@@ -4,10 +4,24 @@
 require("../src/julp.jl")
 using Julp
 
+using ArgParse
+
 function doTest()
+	
+	#s = ArgParseSettings()
+    #@add_arg_table s begin
+    #    "arg1"
+    #    "arg2"
+    #    "arg3"
+    #end
+    #parsed_args = parse_args(s)    
+	#numFacility::Int = int(parsed_args["arg1"])
+	#numCustomer::Int = int(parsed_args["arg2"])
+	#numLocation::Int = int(parsed_args["arg3"])
+	
 	numFacility = 100
 	numCustomer = 100
-	numLocation = 10000
+	numLocation = 1000
 	
 	customerLocations = [randi(numLocation) for a = 1:numCustomer ]
 	
