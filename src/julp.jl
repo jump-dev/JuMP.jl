@@ -391,14 +391,15 @@ function writeMPS(m::Model, fname::String)
   # Objective and constraint names
   write(f,"ROWS\n")
   write(f," N  obj\n")
-  for c in 1:length(m.constraints)
-    senseChar = "L"
+  for c in 1:numRows
+    senseChar = 'L'
     if m.constraints[c].sense == "=="
-      senseChar = "E"
+      senseChar = 'E'
     elseif m.constraints[c].sense == ">="
-      senseChar = "G"
+      senseChar = 'G'
     end
-    write(f,strcat(" ",senseChar,"  CON",c,"\n"))
+    #write(f,strcat(" ",senseChar,"  CON",c,"\n"))
+    @printf(f," %c  %s\n",senseChar,rownames[c])
   end
   #tic() 
   # load rows into SparseMatrixCSC
@@ -442,15 +443,16 @@ function writeMPS(m::Model, fname::String)
   write(f,"COLUMNS\n")
   for col in 1:m.numCols
     for ind in colmat.colptr[col]:(colmat.colptr[col+1]-1)
-      write(f,"    $(colnames[col])  $(rownames[rowval[ind]])  $(nzval[ind])\n")
-      #write(f,"    $(colnames[col])  $(rownames[rowval[ind]])  1.0\n")
+      #write(f,"    $(colnames[col])  $(rownames[rowval[ind]])  $(nzval[ind])\n")
+      @printf(f,"    %s  %s  %f\n",colnames[col],rownames[rowval[ind]],nzval[ind])
     end
   end
   
   # RHSs
   write(f,"RHS\n")
   for c in 1:numRows
-    write(f,"    rhs    CON$(c)    $(-m.constraints[c].lhs.constant)\n")
+    #write(f,"    rhs    CON$(c)    $(-m.constraints[c].lhs.constant)\n")
+    @printf(f,"    rhs    %s    %f\n",rownames[c],-m.constraints[c].lhs.constant)
   end
   
   # BOUNDS
@@ -458,22 +460,27 @@ function writeMPS(m::Model, fname::String)
   for col in 1:m.numCols
     if m.colLower[col] == 0 && m.colUpper[col] > 0
       # Default lower 0, and an upper
-      write(f,"  UP BOUND x$(col) $(m.colUpper[col])\n")
+      #write(f,"  UP BOUND x$(col) $(m.colUpper[col])\n")
+      @printf(f,"  UP BOUND %s %f\n", colnames[col], m.colUpper[col])
     elseif m.colLower[col] == -Inf && m.colUpper[col] == +Inf
       # Free
-      write(f,"  FR BOUND x$(col)\n")
+      #write(f,"  FR BOUND x$(col)\n")
+      @printf(f, "  FR BOUND %s\n", colnames[col])
     elseif m.colLower[col] != -Inf && m.colUpper[col] == +Inf
       # No upper, but a lower
-      write(f,"  PL BOUND x$(col) \n")
-      write(f,"  LO BOUND x$(col) $(m.colLower[col])\n")
+      #write(f,"  PL BOUND x$(col) \n")
+      #write(f,"  LO BOUND x$(col) $(m.colLower[col])\n")
+      @printf(f, "  PL BOUND %s\n  LO BOUND %s %f\n",colnames[col],colnames[col],m.colLower[col])
     elseif m.colLower[col] == -Inf && m.colUpper[col] != +Inf
       # No lower, but a upper
-      write(f,"  MI BOUND x$(col) \n")
-      write(f,"  UP BOUND x$(col) $(m.colUpper[col])\n")
+      #write(f,"  MI BOUND x$(col) \n")
+      #write(f,"  UP BOUND x$(col) $(m.colUpper[col])\n")
+      @printf(f,"  MI BOUND %s\n  UP BOUND %s %f\n",colnames[col],colnames[col],m.colUpper[col])
     else
       # Lower and upper
-      write(f,"  LO BOUND x$(col) $(m.colLower[col])\n")
-      write(f,"  UP BOUND x$(col) $(m.colUpper[col])\n")
+      #write(f,"  LO BOUND x$(col) $(m.colLower[col])\n")
+      #write(f,"  UP BOUND x$(col) $(m.colUpper[col])\n")
+      @printf(f, "  LO BOUND %s %f\n  UP BOUND %s %f\n",colnames[col],colnames[col],m.colLower[col],m.colUpper[col])
     end
   end
   
@@ -486,11 +493,14 @@ function writeMPS(m::Model, fname::String)
     for ind = 1:length(qv1)
       if qv1[ind].col == qv2[ind].col
         # Diagonal element
-        write(f,"  x$(qv1[ind].col)  x$(qv2[ind].col)  $(2*qc[ind])\n")
+        #write(f,"  x$(qv1[ind].col)  x$(qv2[ind].col)  $(2*qc[ind])\n")
+        @printf(f,"  %s %s  %f\n",colnames[qv1[ind].col],colnames[qv2[ind].col], 2qc[ind])
       else
         # Off diagonal, and we're gonna assume no duplicates
-        write(f,"  x$(qv1[ind].col)  x$(qv2[ind].col)  $(  qc[ind])\n")
-        write(f,"  x$(qv2[ind].col)  x$(qv1[ind].col)  $(  qc[ind])\n")
+        #write(f,"  x$(qv1[ind].col)  x$(qv2[ind].col)  $(  qc[ind])\n")
+        #write(f,"  x$(qv2[ind].col)  x$(qv1[ind].col)  $(  qc[ind])\n")
+        @printf(f, "  %s %s %f\n", colnames[qv1[ind].col],colnames[qv2[ind].col], qc[ind])
+        @printf(f, "  %s %s %f\n", colnames[qv2[ind].col],colnames[qv1[ind].col], qc[ind])
       end
     end
   end
