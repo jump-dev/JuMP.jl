@@ -383,10 +383,14 @@ function writeMPS(m::Model, fname::String)
   f = open(fname, "w")
   
   numRows = length(m.constraints)
+  # cache these strings
+  colnames = [ "x$(col)" for col in 1:m.numCols ]
+  rownames = [ "CON$(i)" for i in 1:(numRows) ]
+  push!(rownames, "obj")
   
   # Objective and constraint names
   write(f,"ROWS\n")
-  write(f," N  CON$(numRows+1)\n")
+  write(f," N  obj\n")
   for c in 1:length(m.constraints)
     senseChar = "L"
     if m.constraints[c].sense == "=="
@@ -438,7 +442,8 @@ function writeMPS(m::Model, fname::String)
   write(f,"COLUMNS\n")
   for col in 1:m.numCols
     for ind in colmat.colptr[col]:(colmat.colptr[col+1]-1)
-      write(f,"    x$(col)  CON$(rowval[ind])  $(nzval[ind])\n")
+      write(f,"    $(colnames[col])  $(rownames[rowval[ind]])  $(nzval[ind])\n")
+      #write(f,"    $(colnames[col])  $(rownames[rowval[ind]])  1.0\n")
     end
   end
   
