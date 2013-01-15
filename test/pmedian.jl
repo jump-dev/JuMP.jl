@@ -4,24 +4,13 @@
 require("../src/julp.jl")
 using Julp
 
-using ArgParse
-
-function doTest()
+function doTest(numFacility::Int,numCustomer::Int,numLocation::Int)
 	
-	#s = ArgParseSettings()
-    #@add_arg_table s begin
-    #    "arg1"
-    #    "arg2"
-    #    "arg3"
-    #end
-    #parsed_args = parse_args(s)    
-	#numFacility::Int = int(parsed_args["arg1"])
-	#numCustomer::Int = int(parsed_args["arg2"])
-	#numLocation::Int = int(parsed_args["arg3"])
 	
-	numFacility = 100
-	numCustomer = 100
-	numLocation = 1000
+	
+	#numFacility = 100
+	#numCustomer = 100
+	#numLocation = 1000
 	
 	customerLocations = [randi(numLocation) for a = 1:numCustomer ]
 	
@@ -60,7 +49,11 @@ function doTest()
 	toc()
 end
 
-doTest()
+numFacility = int(ARGS[1])
+numCustomer = int(ARGS[2])
+numLocation = int(ARGS[3])
+
+doTest(numFacility,numCustomer,numLocation)
 
 
 #m += lpSum( x[(a,i)] * abs(customerLocations[a]-i) for a in range(numCustomer) for i in range(numLocation) )
