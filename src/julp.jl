@@ -46,7 +46,7 @@ type Model
   constraints
   
   # Column data
-  numCols
+  numCols::Int
   colNames::Vector{String}
   colLower::Vector{Float64}
   colUpper::Vector{Float64}
@@ -369,10 +369,12 @@ end
 # Constraint
 # Constraint--Number
 function (<=)(lhs::AffExpr, rhs::Number)
-  return Constraint(lhs-rhs,"<=")
+  lhs.constant -= rhs #TODO: this is temporary, need to restructure
+  return Constraint(lhs,"<=")
 end
 function (==)(lhs::AffExpr, rhs::Number)
-  return Constraint(lhs-rhs,"==")
+  lhs.constant -= rhs
+  return Constraint(lhs,"==")
 end
 function (>=)(lhs::AffExpr, rhs::Number)
   return Constraint(lhs-rhs,">=")
@@ -384,13 +386,16 @@ function writeMPS(m::Model, fname::String)
   
   numRows = length(m.constraints)
   # cache these strings
-  colnames = [ "x$(col)" for col in 1:m.numCols ]
-  rownames = [ "CON$(i)" for i in 1:(numRows) ]
-  push!(rownames, "obj")
+  #colnames = [ "x$(col)" for col in 1:m.numCols ]
+  #colnames = [ convert(ASCIIString,@sprintf("x%d",col)) for col in 1:m.numCols ]
+  # 
+  #rownames = [ "CON$(i)" for i in 1:(numRows) ]
+  #rownames = [ @sprintf("CON%d",i) for i in 1:(numRows) ]
+  #push!(rownames, "obj")
   
   # Objective and constraint names
   write(f,"ROWS\n")
-  write(f," N  obj\n")
+  write(f," N  CON$(numRows+1)\n")
   for c in 1:numRows
     senseChar = 'L'
     if m.constraints[c].sense == "=="
@@ -399,7 +404,8 @@ function writeMPS(m::Model, fname::String)
       senseChar = 'G'
     end
     #write(f,strcat(" ",senseChar,"  CON",c,"\n"))
-    @printf(f," %c  %s\n",senseChar,rownames[c])
+    #@printf(f," %c  %s\n",senseChar,rownames[c])
+    @printf(f," %c  CON%d\n",senseChar,c)
   end
   #tic() 
   # load rows into SparseMatrixCSC
@@ -444,7 +450,8 @@ function writeMPS(m::Model, fname::String)
   for col in 1:m.numCols
     for ind in colmat.colptr[col]:(colmat.colptr[col+1]-1)
       #write(f,"    $(colnames[col])  $(rownames[rowval[ind]])  $(nzval[ind])\n")
-      @printf(f,"    %s  %s  %f\n",colnames[col],rownames[rowval[ind]],nzval[ind])
+      #@printf(f,"    %s  %s  %f\n",colnames[col],rownames[rowval[ind]],nzval[ind])
+      @printf(f,"    x%d  CON%d  %f\n",col,rowval[ind],nzval[ind])
     end
   end
   
@@ -452,7 +459,8 @@ function writeMPS(m::Model, fname::String)
   write(f,"RHS\n")
   for c in 1:numRows
     #write(f,"    rhs    CON$(c)    $(-m.constraints[c].lhs.constant)\n")
-    @printf(f,"    rhs    %s    %f\n",rownames[c],-m.constraints[c].lhs.constant)
+    #@printf(f,"    rhs    %s    %f\n",rownames[c],-m.constraints[c].lhs.constant)
+    @printf(f,"    rhs    CON%d    %f\n",c,-m.constraints[c].lhs.constant)
   end
   
   # BOUNDS
@@ -461,26 +469,27 @@ function writeMPS(m::Model, fname::String)
     if m.colLower[col] == 0 && m.colUpper[col] > 0
       # Default lower 0, and an upper
       #write(f,"  UP BOUND x$(col) $(m.colUpper[col])\n")
-      @printf(f,"  UP BOUND %s %f\n", colnames[col], m.colUpper[col])
+      #@printf(f,"  UP BOUND %s %f\n", colnames[col], m.colUpper[col])
+      @printf(f,"  UP BOUND x%d %f\n", col, m.colUpper[col])
     elseif m.colLower[col] == -Inf && m.colUpper[col] == +Inf
       # Free
       #write(f,"  FR BOUND x$(col)\n")
-      @printf(f, "  FR BOUND %s\n", colnames[col])
+      @printf(f, "  FR BOUND x%d\n", col)
     elseif m.colLower[col] != -Inf && m.colUpper[col] == +Inf
       # No upper, but a lower
       #write(f,"  PL BOUND x$(col) \n")
       #write(f,"  LO BOUND x$(col) $(m.colLower[col])\n")
-      @printf(f, "  PL BOUND %s\n  LO BOUND %s %f\n",colnames[col],colnames[col],m.colLower[col])
+      @printf(f, "  PL BOUND x%d\n  LO BOUND x%d %f\n",col,col,m.colLower[col])
     elseif m.colLower[col] == -Inf && m.colUpper[col] != +Inf
       # No lower, but a upper
       #write(f,"  MI BOUND x$(col) \n")
       #write(f,"  UP BOUND x$(col) $(m.colUpper[col])\n")
-      @printf(f,"  MI BOUND %s\n  UP BOUND %s %f\n",colnames[col],colnames[col],m.colUpper[col])
+      @printf(f,"  MI BOUND x%d\n  UP BOUND x%d %f\n",col,col,m.colUpper[col])
     else
       # Lower and upper
       #write(f,"  LO BOUND x$(col) $(m.colLower[col])\n")
       #write(f,"  UP BOUND x$(col) $(m.colUpper[col])\n")
-      @printf(f, "  LO BOUND %s %f\n  UP BOUND %s %f\n",colnames[col],colnames[col],m.colLower[col],m.colUpper[col])
+      @printf(f, "  LO BOUND x%d %f\n  UP BOUND x%d %f\n",col,col,m.colLower[col],m.colUpper[col])
     end
   end
   
@@ -494,13 +503,13 @@ function writeMPS(m::Model, fname::String)
       if qv1[ind].col == qv2[ind].col
         # Diagonal element
         #write(f,"  x$(qv1[ind].col)  x$(qv2[ind].col)  $(2*qc[ind])\n")
-        @printf(f,"  %s %s  %f\n",colnames[qv1[ind].col],colnames[qv2[ind].col], 2qc[ind])
+        @printf(f,"  x%d x%d  %f\n",qv1[ind].col,qv2[ind].col, 2qc[ind])
       else
         # Off diagonal, and we're gonna assume no duplicates
         #write(f,"  x$(qv1[ind].col)  x$(qv2[ind].col)  $(  qc[ind])\n")
         #write(f,"  x$(qv2[ind].col)  x$(qv1[ind].col)  $(  qc[ind])\n")
-        @printf(f, "  %s %s %f\n", colnames[qv1[ind].col],colnames[qv2[ind].col], qc[ind])
-        @printf(f, "  %s %s %f\n", colnames[qv2[ind].col],colnames[qv1[ind].col], qc[ind])
+        @printf(f, "  x%d x%d %f\n", qv1[ind].col,qv2[ind].col, qc[ind])
+        @printf(f, "  x%d x%d %f\n", qv2[ind].col,qv1[ind].col, qc[ind])
       end
     end
   end
