@@ -1,15 +1,13 @@
-# test_dense.jl
+# dense.jl
 # Make a big dense matrix
 
 require("../src/Julp.jl")
 using Julp
 
-function doTest()
+function doTest(N,M)
 
   # Generate data
   srand(10)
-  N = 10000
-  M = 1000
   A = randi(    10,M,N)
   b = N+randi(N*10,M)
   c = randi(    10,N)
@@ -34,15 +32,17 @@ function doTest()
   end
   
   toc() # End model construction time
-  println("Time to build the model in memory.\n")
+#  println("Time to build the model in memory.\n")
   
   tic()
   #writeLP(m,"dense.lp")
   writeMPS(m,"dense.mps")
   toc()
-  println("Time to write to file.")
+ # println("Time to write to file.")
   
 end
 
-doTest()
+N = int(ARGS[1])
+M = int(ARGS[2])
 
+doTest(N,M)

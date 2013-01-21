@@ -1,7 +1,7 @@
 printf "Time at start: %f\n",time();
 param numFacility default 100;
 param numCustomer default 100;
-param numLocation default 10000;
+param numLocation default 5000;
 option presolve 0;
 
 param custLoc {a in 1..numCustomer} := 1 + floor(1000 * Uniform01());

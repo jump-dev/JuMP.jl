@@ -6,7 +6,7 @@ import time
 
 numFacility = 100
 numCustomer = 100
-numLocation = 10000
+numLocation = 5000
 
 customerLocations = [random.randint(0,numLocation-1) for a in range(numCustomer)]
 

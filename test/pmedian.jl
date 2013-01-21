@@ -49,7 +49,8 @@ function doTest(numFacility::Int,numCustomer::Int,numLocation::Int)
 	toc()
 
 	tic()
-	writeMPS(m,"pmedian_jl.mps")
+	#writeMPS(m,"pmedian_jl.mps")
+	writeMPS(m,"/dev/null")
 	toc()
 end
 
