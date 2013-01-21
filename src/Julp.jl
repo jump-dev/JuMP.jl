@@ -29,7 +29,9 @@ export
   @sumExpr,
   lpSum
 
-macro sumExpr(expr)
+include("macros.jl")
+
+macro sumExprOld(expr)
   local coefarr = Expr(:comprehension,convert(Vector{Any},[:(convert(Float64,$(expr.args[1].args[2]))),expr.args[2]]),Any)
   local vararr = Expr(:comprehension,convert(Vector{Any},[expr.args[1].args[3],expr.args[2]]),Any)
   esc(:(AffExpr($vararr,$coefarr,0.)))

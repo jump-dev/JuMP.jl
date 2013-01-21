@@ -11,7 +11,7 @@ function doTest(numFacility::Int,numCustomer::Int,numLocation::Int)
 	#numFacility = 100
 	#numCustomer = 100
 	#numLocation = 1000
-	
+    srand(10)	
 	customerLocations = [randi(numLocation) for a = 1:numCustomer ]
 	
 	tic()
@@ -26,9 +26,10 @@ function doTest(numFacility::Int,numCustomer::Int,numLocation::Int)
 	x = [ Variable(m,0,1,0,@sprintf("x%d,%d",a,i)) for i = 1:numLocation, a = 1:numCustomer]
 	
 	# Objective: min distance
-	vars::Array{Variable,1} = reshape([x[i,a] for a = 1:numCustomer, i = 1:numLocation], (numCustomer*numLocation,))
-	coef::Array{Float64,1} = reshape([abs(customerLocations[a]-i) for a = 1:numCustomer, i = 1:numLocation], (numCustomer*numLocation,))
-	setObjective(m, AffExpr(vars, coef, 0.))
+	#vars::Array{Variable,1} = reshape([x[i,a] for a = 1:numCustomer, i = 1:numLocation], (numCustomer*numLocation,))
+	#coef::Array{Float64,1} = reshape([abs(customerLocations[a]-i) for a = 1:numCustomer, i = 1:numLocation], (numCustomer*numLocation,))
+	#setObjective(m, AffExpr(vars, coef, 0.))
+    setObjective(m, @sumExpr([abs(customerLocations[a]-i)*x[i,a] for a = 1:numCustomer, i = 1:numLocation]))
 	
 	# Constraints
 	
@@ -36,7 +37,8 @@ function doTest(numFacility::Int,numCustomer::Int,numLocation::Int)
 	  # Subject to linking x with s
 	  for i in 1:numLocation
 		#addConstraint(m, 1.0*x[i,a] + (-1.0*s[i]) <= 0 )
-		addConstraint(m, AffExpr([x[i,a],s[i]],[1.,-1.],0.) <= 0)
+		#addConstraint(m, AffExpr([x[i,a],s[i]],[1.,-1.],0.) <= 0)
+		addConstraint(m, @sumExpr(1x[i,a] + -1s[i]) <= 0)
 	  end
 	  # Subject to one of x must be 1
 	  addConstraint(m, @sumExpr([1.0*x[i,a] for i = 1:numLocation]) == 1 )
