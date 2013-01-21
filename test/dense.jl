@@ -1,7 +1,7 @@
 # test_dense.jl
 # Make a big dense matrix
 
-require("../src/julp.jl")
+require("../src/Julp.jl")
 using Julp
 
 function doTest()
@@ -45,3 +45,4 @@ function doTest()
 end
 
 doTest()
+

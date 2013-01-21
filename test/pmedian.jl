@@ -1,7 +1,7 @@
 # pmedian.jl
 # Solves the P-Median problem
 
-require("../src/julp.jl")
+require("../src/Julp.jl")
 using Julp
 
 function doTest(numFacility::Int,numCustomer::Int,numLocation::Int)
@@ -18,10 +18,12 @@ function doTest(numFacility::Int,numCustomer::Int,numLocation::Int)
 	m = Model("max")
 	
 	# Facility locations
-	s = [ Variable(m,0,1,0,"s$i") for i=1:numLocation ]
+	#s = [ Variable(m,0,1,0,"s$i") for i=1:numLocation ]
+	s = [ Variable(m,0,1,0,@sprintf("s%d",i)) for i=1:numLocation ]
 
 	# Aux. variable: x_a,i = 1 iff the closest facility to a is at i
-	x = [ Variable(m,0,1,0,"x$a,$i") for i = 1:numLocation, a = 1:numCustomer]
+	#x = [ Variable(m,0,1,0,"x$a,$i") for i = 1:numLocation, a = 1:numCustomer]
+	x = [ Variable(m,0,1,0,@sprintf("x%d,%d",a,i)) for i = 1:numLocation, a = 1:numCustomer]
 	
 	# Objective: min distance
 	vars::Array{Variable,1} = reshape([x[i,a] for a = 1:numCustomer, i = 1:numLocation], (numCustomer*numLocation,))
@@ -49,12 +51,13 @@ function doTest(numFacility::Int,numCustomer::Int,numLocation::Int)
 	toc()
 end
 
+@assert length(ARGS) == 3
+
 numFacility = int(ARGS[1])
 numCustomer = int(ARGS[2])
 numLocation = int(ARGS[3])
 
 doTest(numFacility,numCustomer,numLocation)
-
 
 #m += lpSum( x[(a,i)] * abs(customerLocations[a]-i) for a in range(numCustomer) for i in range(numLocation) )
 	#setObjective(m, @sumExpr(abs(customerLocations[a]-i) * x[i,a] for a = 1:numCustomer, i = 1:numLocation) )
