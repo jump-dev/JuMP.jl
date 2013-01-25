@@ -145,7 +145,7 @@ function addVars(m::Model, lower::Number, upper::Number, cat::Int, dims, name::S
 end
 
 # Name setter/getters
-function getName(v::Variable,n::String)
+function setName(v::Variable,n::String)
   v.m.colNames[v.col] = n
 end
 function getName(v::Variable)
