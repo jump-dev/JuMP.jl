@@ -20,10 +20,10 @@ are developed in Julia we will extend the functionality
 
     using Jump
 
-    m = Model(JUMP\_MAX)
+    m = Model(JUMP_MAX)
 
-    x = Variable(m, 0, 2, JUMP\_CONTINUOUS)
-    y = Variable(m, 0, 30, JUMP\_CONTINUOUS, "y")
+    x = Variable(m, 0, 2, JUMP_CONTINUOUS)
+    y = Variable(m, 0, 30, JUMP_CONTINUOUS, "y")
 
     setObjective(m, 5*x + 3*y)
     addConstraint(m, 1*x + 5*y <= 3.0)
