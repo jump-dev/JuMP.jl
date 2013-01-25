@@ -11,6 +11,10 @@
 
 module Julp
 
+# Currently we use CLP, but later we will want to make it so you can 
+# only include solvers you have.
+using Clp
+
 importall Base
 
 export
@@ -22,8 +26,8 @@ export
 
 # Functions
   print,exprToString,conToString,writeLP,writeMPS,
-  setName,getName,setLower,setUpper,getLower,getUpper,
-  addConstraint,setObjective,
+  setName,getName,setLower,setUpper,getLower,getUpper,getValue,
+  addConstraint,setObjective,solveClp,
 
 # Macros and support functions
   @sumExpr,
@@ -53,12 +57,16 @@ type Model
   colLower::Vector{Float64}
   colUpper::Vector{Float64}
   colCat::Vector{Int}
+  
+  # Solution data
+  objVal
+  colVal::Vector{Float64}
 end
 
 
 # Default constructor
 Model(sense::String) = Model(0,sense,false,Array(Constraint,0),
-							0,String[],Float64[],Float64[],Int[])
+							0,String[],Float64[],Float64[],Int[],0,Float64[])
 
 # Pretty print
 function print(m::Model)
@@ -110,7 +118,7 @@ function getName(v::Variable)
   return (v.m.colNames[v.col] == "" ? strcat("_col",v.col) : v.m.colNames[v.col])
 end
 
-function show(io,v::Variable)
+function show(io::IO, v::Variable)
   print(io,getName(v))
 end
 
@@ -126,6 +134,11 @@ function getLower(v::Variable)
 end
 function getUpper(v::Variable)
   return v.m.colUpper[v.col]
+end
+
+# Value getter
+function getValue(v::Variable)
+  return v.m.colVal[v.col]
 end
 
 ########################################################################
@@ -576,6 +589,7 @@ function writeLP(m::Model, fname::String)
 end
 
 ###########################################################
+# Deprecated
 function lpSum(expr)
   ret = AffExpr()
   for j in expr
@@ -584,6 +598,82 @@ function lpSum(expr)
   end
   return ret
 end
+
+###########################################################
+# Solvers
+function solveClp(m::Model)
+	if m.objIsQuad
+		error("Quadratic objectives are not fully supported yet")
+	end
+	
+	# We already have dense column lower and upper bounds
+	
+	# Create dense objective vector
+	f = zeros(m.numCols)
+	for ind in 1:length(m.objective.coeffs)
+		f[m.objective.vars[ind].col] = m.objective.coeffs[ind]
+	end
+	if m.objSense == "max"
+		f *= -1
+	end
+	
+	# Create row bounds
+	numRows = length(m.constraints)
+	rowlb = fill(-1e10, numRows)
+	rowub = fill(+1e10, numRows)
+	for c in 1:numRows
+		if m.constraints[c].sense == "<="
+			rowub[c] = -m.constraints[c].lhs.constant
+		elseif m.constraints[c].sense == ">="
+			rowlb[c] = -m.constraints[c].lhs.constant
+		else
+			rowub[c] = -m.constraints[c].lhs.constant
+			rowlb[c] = -m.constraints[c].lhs.constant
+		end
+	end
+	
+	# Create sparse A matrix
+	# First we build it row-wise, then use the efficient transpose
+	# Theory is, this is faster than us trying to do it ourselves
+	# Intialize storage
+  rowptr = Array(Int,numRows+1)
+  nnz = 0
+  for c in 1:numRows
+      nnz += length(m.constraints[c].lhs.coeffs)
+  end
+  colval = Array(Int,nnz)
+  rownzval = Array(Float64,nnz)
+  
+  # Fill it up
+  nnz = 0
+  for c in 1:numRows
+		rowptr[c] = nnz + 1
+		coeffs = m.constraints[c].lhs.coeffs
+		vars = m.constraints[c].lhs.vars
+		for ind in 1:length(coeffs)
+			nnz += 1
+			colval[nnz] = vars[ind].col
+			rownzval[nnz] = coeffs[ind]
+		end
+  end
+  rowptr[numRows+1] = nnz + 1
+  
+	# Build the object
+  rowmat = SparseMatrixCSC(m.numCols, numRows, rowptr, colval, rownzval)
+  A = rowmat'
+  
+  
+  # Ready to solve
+  solution = linprog(f, A, rowlb, rowub, m.colLower, m.colUpper)
+  
+  # Store solution values in model  
+  m.objVal = solution[1]
+  m.colVal = solution[2]
+  
+  # Return flag
+  return solution[3]
+end
+
 
 ###########################################################
 end
