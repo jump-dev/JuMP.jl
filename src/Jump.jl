@@ -137,10 +137,10 @@ end
 function addVars(m::Model, lower::Number, upper::Number, cat::Int, dims, name::String)
 	if typeof(dims) == Int
 		# Single dimension
-		return [ Variable(m, lower, upper, cat, strcat(name,i)) for i=1:dims ]
+		return [ Variable(m, lower, upper, cat, @sprintf("%s%d",name,i)) for i=1:dims ]
 	else
 		# Two dimensional - hopefully...
-		return [ Variable(m, lower, upper, cat, strcat(name,i,j)) for i=1:dims[1], j=1:dims[2] ]
+		return [ Variable(m, lower, upper, cat, @sprintf("%s%d%d",name,i,j)) for i=1:dims[1], j=1:dims[2] ]
 	end
 end
 
