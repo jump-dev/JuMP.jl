@@ -36,8 +36,32 @@ are developed in Julia we will extend the functionality
     println("x = ", getValue(x))
     println("y = ", getValue(y))
     
-# More advanced
+# Getting Speed
 
-You can see more examples in the ```test/``` folder.
+Using Julia's powerful metaprogramming features, we can turn easy-to-read
+statements into the a sparse internal representation very quickly. To 
+invoke this, use the @sumExpr command. Here are some examples:
+
+    addConstraint(m, @sumExpr(1x[i] + -1s[i]) <= 0)
+    
+    setObjective(m, @sumExpr([1.0*x[i] for i = 1:numLocation]) )
+    
+There are some restrictions on what can go inside the @sumExpr(...)
+ * You can build complicated expressions, but they must always simplify
+   down to Coefficient*Variable
+ * Variables must always have a coefficient, even if it is just 1
+ * No standalone constants
+ 
+# Full function listing
+
+ * ```Model(sense)```
+   * Construct a Model with the objective sense provided. There are two
+     constants exported by Jump, JUMP_MAXIMIZE and JUMP_MINIMIZE, that
+     you should use.
+ 
+ * print(Model)
+   * Displays the Model to the screen in a user-readable way
+
+
 
 
