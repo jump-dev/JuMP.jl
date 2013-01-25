@@ -24,7 +24,7 @@ export
 # Functions
   print,exprToString,conToString,writeLP,writeMPS,
   setName,getName,setLower,setUpper,getLower,getUpper,getValue,
-  addConstraint,setObjective,solveClp,
+  addConstraint,setObjective,solveClp,addVar,addVars,
 
 # Macros and support functions
   @sumExpr,
@@ -116,6 +116,32 @@ function Variable(m::Model,lower::Number,upper::Number,cat::Int,name::String)
   push!(m.colUpper,convert(Float64,upper))
   push!(m.colCat, cat)
   return Variable(m,m.numCols)
+end
+
+# Constructor 3 - as Model method
+function addVar(m::Model, lower::Number, upper::Number, cat::Int)
+  return Variable(m, lower, upper, cat)
+end
+function addVar(m::Model, lower::Number, upper::Number, cat::Int, name::String)
+  return Variable(m, lower, upper, cat, name)
+end
+function addVars(m::Model, lower::Number, upper::Number, cat::Int, dims)
+	if typeof(dims) == Int
+		# Single dimension
+		return [ Variable(m, lower, upper, cat, "") for i=1:dims ]
+	elseif typeof(dims) == tuple(Int,int)
+		# Two dimensional
+		return [ Variable(m, lower, upper, cat, "") for i=1:dims[1], j=1:dims[2]]
+	end
+end
+function addVars(m::Model, lower::Number, upper::Number, cat::Int, dims, name::String)
+	if typeof(dims) == Int
+		# Single dimension
+		return [ Variable(m, lower, upper, cat, strcat(name,i)) for i=1:dims ]
+	else
+		# Two dimensional - hopefully...
+		return [ Variable(m, lower, upper, cat, strcat(name,i,j)) for i=1:dims[1], j=1:dims[2] ]
+	end
 end
 
 # Name setter/getters

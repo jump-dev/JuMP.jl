@@ -1,7 +1,7 @@
 # pmedian.jl
 # Solves the P-Median problem
 
-require("../src/Jump.jl")
+require("../../src/Jump.jl")
 using Jump
 
 function doTest(numFacility::Int,numCustomer::Int,numLocation::Int)
@@ -12,7 +12,8 @@ function doTest(numFacility::Int,numCustomer::Int,numLocation::Int)
 	#numCustomer = 100
 	#numLocation = 1000
     srand(10)	
-	customerLocations = [randi(numLocation) for a = 1:numCustomer ]
+	#customerLocations = [randi(numLocation) for a = 1:numCustomer ]
+	customerLocations = [rand(1:numLocation) for a = 1:numCustomer ]
 	
 	tic()
 	m = Model("max")
@@ -20,10 +21,12 @@ function doTest(numFacility::Int,numCustomer::Int,numLocation::Int)
 	# Facility locations
 	#s = [ Variable(m,0,1,0,"s$i") for i=1:numLocation ]
 	s = [ Variable(m,0,1,0,@sprintf("s%d",i)) for i=1:numLocation ]
+	#s = addVars(m, 0, 1, JUMP_CONTINUOUS, numLocation, "s")
 
 	# Aux. variable: x_a,i = 1 iff the closest facility to a is at i
 	#x = [ Variable(m,0,1,0,"x$a,$i") for i = 1:numLocation, a = 1:numCustomer]
 	x = [ Variable(m,0,1,0,@sprintf("x%d,%d",a,i)) for i = 1:numLocation, a = 1:numCustomer]
+	#x = addVars(m,0,1,JUMP_CONTINUOUS, (numLocation, numCustomer), "x")
 	
 	# Objective: min distance
 	#vars::Array{Variable,1} = reshape([x[i,a] for a = 1:numCustomer, i = 1:numLocation], (numCustomer*numLocation,))

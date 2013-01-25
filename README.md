@@ -22,8 +22,8 @@ are developed in Julia we will extend the functionality
 
     m = Model(JUMP_MAX)
 
-    x = Variable(m, 0, 2, JUMP_CONTINUOUS)
-    y = Variable(m, 0, 30, JUMP_CONTINUOUS, "y")
+    x = addVar(m, 0,  2, JUMP_CONTINUOUS)
+    y = addVar(m, 0, 30, JUMP_CONTINUOUS, "y")
 
     setObjective(m, 5*x + 3*y)
     addConstraint(m, 1*x + 5*y <= 3.0)

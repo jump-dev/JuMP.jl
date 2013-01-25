@@ -10,13 +10,13 @@
 ########################################################################
 
 
-require("../src/Julp.jl")
-using Julp
+require("../src/Jump.jl")
+using Jump
 
 m = Model("max")
 
-
-x = [ Variable(m, 0, 1, 0, "x$i") for i=1:5 ]
+x = addVars(m, 0, 1, JUMP_CONTINUOUS, 5, "x")
+y = addVars(m, 0, 1, JUMP_CONTINUOUS, (5,5), "y")
 
 profit = [ 5, 3, 2, 7, 4 ]
 weight = [ 2, 8, 4, 2, 5 ]
