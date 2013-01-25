@@ -1,25 +1,43 @@
-Julp
+Jump
 ====
 
-MILP modelling with Julia
+Linear Programming, Quadratic Programming and Integer Programming 
+modelling with Julia. The goal is to have the speed of AMPL embedded in
+a fully functional language. Compare with PuLP/Pyomo/YALMIP/...
 
+    Julia + Mathematical Programming = JuMP
 
-    Julia
-    +  LP
-    -----
-    =Julp.
+# Installation
 
-# Usage Example
+You can install Jump through the Julia package manager:
+    Pkg.add("Jump")
+    
+Jump is currently dependent on the CLP package which provides a powerful
+open-source LP solver. As the infrastructure and interfaces for solvers
+are developed in Julia we will extend the functionality
 
-Example code (so far)
+# Simple Example
 
-    m = Model("max")
+    using Jump
 
-    x = Variable(m,"x",0,1e10)
-    y = Variable(m,"y",0,1e10)
+    m = Model(JUMP\_MAX)
 
-    m.objective = 5*x + 3*y
-    AddConstraint(m, 1.0*x + 5*y <= 3.0)
-    PrintModel(m)
+    x = Variable(m, 0, 2, JUMP\_CONTINUOUS)
+    y = Variable(m, 0, 30, JUMP\_CONTINUOUS, "y")
+
+    setObjective(m, 5*x + 3*y)
+    addConstraint(m, 1*x + 5*y <= 3.0)
+    
+    print(m)
+    
+    status = solveClp(m)
+    
+    println("Objective value: ", m.objVal)
+    println("x = ", getValue(x))
+    println("y = ", getValue(y))
+    
+# More advanced
+
+You can see more examples in the ```test/``` folder.
 
 

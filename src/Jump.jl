@@ -1,15 +1,12 @@
 ########################################################################
-# Julp 
-# A MILP modelling langauge for Julia
-#  Julia
-# +  LP
-# -----
-# =Julp.
+# Jump 
+# A MILP+QP modelling langauge for Julia
+# Julia + Mathematical Programming = Jump
 #
 # By Iain Dunning and Miles Lubin
 ########################################################################
 
-module Julp
+module Jump
 
 # Currently we use CLP, but later we will want to make it so you can 
 # only include solvers you have.
@@ -40,6 +37,17 @@ macro sumExprOld(expr)
   local vararr = Expr(:comprehension,convert(Vector{Any},[expr.args[1].args[3],expr.args[2]]),Any)
   esc(:(AffExpr($vararr,$coefarr,0.)))
 end
+
+########################################################################
+# Constants
+const JUMP_MAX = "max"
+const JUMP_MIN = "min"
+export JUMP_MAX, JUMP_MIN
+
+const JUMP_CONTINUOUS = 0
+const JUMP_INTEGER = 1
+const JUMP_BINARY = 2
+export JUMP_CONTINUOUS, JUMP_INTEGER, JUMP_BINARY
 
 ########################################################################
 # Model class

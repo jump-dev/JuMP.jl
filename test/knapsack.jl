@@ -1,6 +1,14 @@
-# Julp - LP for Julia
+########################################################################
+# Jump 
+# A MILP+QP modelling langauge for Julia
+# Julia + Mathematical Programming = Jump
+# By Iain Dunning and Miles Lubin
+#
 # knapsack.jl
-# A simple example of modelling in Julia
+# A simple knapsack-style problem.
+# 
+########################################################################
+
 
 require("../src/Julp.jl")
 using Julp

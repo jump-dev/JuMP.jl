@@ -1,8 +1,8 @@
 # pmedian.jl
 # Solves the P-Median problem
 
-require("../src/Julp.jl")
-using Julp
+require("../src/Jump.jl")
+using Jump
 
 function doTest(numFacility::Int,numCustomer::Int,numLocation::Int)
 	

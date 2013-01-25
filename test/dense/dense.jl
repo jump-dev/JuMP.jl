@@ -1,8 +1,8 @@
 # dense.jl
 # Make a big dense matrix
 
-require("../src/Julp.jl")
-using Julp
+require("../src/Jump.jl")
+using Jump
 
 function doTest(N,M)
 
