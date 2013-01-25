@@ -14,7 +14,8 @@ You can install Jump through the Julia package manager:
     
 Jump is currently dependent on the CLP package which provides a powerful
 open-source LP solver. As the infrastructure and interfaces for solvers
-are developed in Julia we will extend the functionality
+are developed in Julia we will extend the functionality. Check the Clp.jl
+README to see if your platform is supported.
 
 # Simple Example
 
@@ -25,8 +26,8 @@ are developed in Julia we will extend the functionality
     x = addVar(m, 0,  2, JUMP_CONTINUOUS)
     y = addVar(m, 0, 30, JUMP_CONTINUOUS, "y")
 
-    setObjective(m, 5*x + 3*y)
-    addConstraint(m, 1*x + 5*y <= 3.0)
+    setObjective(m, 5x + 3y)
+    addConstraint(m, 1x + 5y <= 3.0)
     
     print(m)
     
@@ -44,13 +45,15 @@ invoke this, use the @sumExpr command. Here are some examples:
 
     addConstraint(m, @sumExpr(1x[i] + -1s[i]) <= 0)
     
-    setObjective(m, @sumExpr([1.0*x[i] for i = 1:numLocation]) )
+    setObjective(m, @sumExpr([1.0x[i] for i = 1:numLocation]) )
     
 There are some restrictions on what can go inside the @sumExpr(...)
  * You can build complicated expressions, but they must always simplify
    down to Coefficient*Variable
  * Variables must always have a coefficient, even if it is just 1
  * No standalone constants
+ * Subtraction operators don't work yet! Negative numbers do, however. 
+   This will be fixed ASAP.
  
 # Full function listing
 
