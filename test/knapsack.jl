@@ -22,9 +22,8 @@ profit = [ 5, 3, 2, 7, 4 ]
 weight = [ 2, 8, 4, 2, 5 ]
 capacity = 10
 
-setObjective(m,  @sumExpr([ profit[i]*x[i] for i = 1:5 ]) )
+@setObjective(m, sum{profit[i]*x[i], i=1:5} )
 
-#addConstraint(m, @sumExpr([ weight[i]*x[i] for i = 1:5 ]) <= capacity)
 @addConstraint(m, sum{weight[i]*x[i], i=1:5} <= capacity)
 
 status = solveClp(m)

@@ -27,8 +27,9 @@ export
   addConstraint,setObjective,solveClp,addVar,addVars,
 
 # Macros and support functions
-  @sumExpr,
+  #@sumExpr, # deprecated
   @addConstraint,
+  @setObjective,
   addToExpression,
   lpSum
 

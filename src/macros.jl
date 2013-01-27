@@ -176,6 +176,15 @@ macro addConstraint(m, x)
         addConstraint($m, Constraint($aff, $(string(x.args[2]))))
     end)
 end
+
+macro setObjective(m, x)
+    aff = gensym()
+    esc(quote
+        $aff = AffExpr()
+        $(parseExpr(x, aff, 1.0))
+        setObjective(m, $aff)
+    end)
+end
         
 
 macro sumExpr(x)

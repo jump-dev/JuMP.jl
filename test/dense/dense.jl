@@ -16,7 +16,7 @@ function doTest(N,M)
   # Create a Model, its variables, and set the objective
   m = Model("max")
   v = [ Variable(m,0,1,0,"x$j") for j=1:N ]
-  setObjective( m, @sumExpr([c[j]*v[j] for j=1:N]) )
+  @setObjective( m, sum{c[j]*v[j], j=1:N} )
  
   # Create M constraints
   for i = 1:M
@@ -26,8 +26,6 @@ function doTest(N,M)
     # 2. Use a smarter sum that avoids temporary objects 
     # lhs = lpSum([A[i,j]*v[j] for j=1:N])
     # 3. Use macros to build the affine expression directly
-    #lhs = @sumExpr([ A[i,j]*v[j] for j = 1:N ])
-    #addConstraint(m, lhs <= b[i])
     @addConstraint(m, sum{A[i,j]*v[j], j = 1:N} <= b[i])
   end
   

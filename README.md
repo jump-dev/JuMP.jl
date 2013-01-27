@@ -41,20 +41,45 @@ README to see if your platform is supported.
 
 Using Julia's powerful metaprogramming features, we can turn easy-to-read
 statements into the a sparse internal representation very quickly. To 
-invoke this, use the @sumExpr command. Here are some examples:
+invoke this, use the @addConstraint (and @setObjective) macros. Here are some examples:
 
-    addConstraint(m, @sumExpr(1x[i] + -1s[i]) <= 0)
+    @addConstraint(m, x[i] - s[i] <= 0)
     
-    setObjective(m, @sumExpr([1.0x[i] for i = 1:numLocation]) )
+	@setObjective(m, sum{x[i], i=1:numLocation} )
     
-There are some restrictions on what can go inside the @sumExpr(...)
- * You can build complicated expressions, but they must always simplify
-   down to Coefficient*Variable
- * Variables must always have a coefficient, even if it is just 1
- * No standalone constants
- * Subtraction operators don't work yet! Negative numbers do, however. 
-   This will be fixed ASAP.
- 
+There are some restrictions on what can go inside the macros
+ * If there is a product between coefficients and variables, the variables
+   must appear last. That is, Coefficient times Variable is good, but 
+   Variable times Coefficient is bad.
+ * Addition, subtraction, distributive rule should all mostly work, 
+   but the parser has not been well tested. Please report any issues.
+
+The ``sum`` expression behaves as follows.
+``sum{expression, i = I1, j = I2, ...}`` is equivalent to
+``x = AffExpr()
+  for i = I1
+    for j = I2
+	  ...
+	    x += expression
+      ...
+	end
+  end
+``
+
+We also allow conditions:
+``sum{expression, i = I1, j = I2, ...; cond}`` is equivalent to
+``x = AffExpr()
+  for i = I1
+    for j = I2
+	  ...
+	    if cond
+		  x += expression
+		end
+      ...
+	end
+  end
+``
+
 # Full function listing
 
 `Model(sense)` 
