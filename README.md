@@ -40,7 +40,7 @@ README to see if your platform is supported.
 # Getting Speed
 
 Using Julia's powerful metaprogramming features, we can turn easy-to-read
-statements into the a sparse internal representation very quickly. To 
+statements into a sparse internal representation very quickly. To 
 invoke this, use the @addConstraint (and @setObjective) macros. Here are some examples:
 
     @addConstraint(m, x[i] - s[i] <= 0)
