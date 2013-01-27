@@ -55,30 +55,37 @@ There are some restrictions on what can go inside the macros
    but the parser has not been well tested. Please report any issues.
 
 The ``sum`` expression behaves as follows.
-``sum{expression, i = I1, j = I2, ...}`` is equivalent to
-``x = AffExpr()
-  for i = I1
-    for j = I2
-	  ...
-	    x += expression
-      ...
+	sum{expression, i = I1, j = I2, ...}
+
+is equivalent to
+
+	x = AffExpr()
+	for i = I1
+		for j = I2
+			...
+				x += expression
+			...
+		end
 	end
-  end
-``
+
 
 We also allow conditions:
-``sum{expression, i = I1, j = I2, ...; cond}`` is equivalent to
-``x = AffExpr()
-  for i = I1
-    for j = I2
-	  ...
-	    if cond
-		  x += expression
+
+	sum{expression, i = I1, j = I2, ...; cond} 
+
+is equivalent to
+
+	x = AffExpr()
+	for i = I1
+		for j = I2
+			...
+				if cond
+					x += expression
+				end
+			...
 		end
-      ...
 	end
-  end
-``
+
 
 # Full function listing
 
