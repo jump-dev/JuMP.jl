@@ -1,16 +1,15 @@
 # dense.jl
 # Make a big dense matrix
 
-require("../src/Jump.jl")
 using Jump
 
 function doTest(N,M)
 
   # Generate data
   srand(10)
-  A = randi(    10,M,N)
-  b = N+randi(N*10,M)
-  c = randi(    10,N)
+  A = rand(1:10,M,N)
+  b = N+rand(1:(N*10),M)
+  c = rand(1:10,N)
 
   tic() # Time model construction
   
@@ -27,8 +26,9 @@ function doTest(N,M)
     # 2. Use a smarter sum that avoids temporary objects 
     # lhs = lpSum([A[i,j]*v[j] for j=1:N])
     # 3. Use macros to build the affine expression directly
-    lhs = @sumExpr([ A[i,j]*v[j] for j = 1:N ])
-    addConstraint(m, lhs <= b[i])
+    #lhs = @sumExpr([ A[i,j]*v[j] for j = 1:N ])
+    #addConstraint(m, lhs <= b[i])
+    @addConstraint(m, sum{A[i,j]*v[j], j = 1:N} <= b[i])
   end
   
   toc() # End model construction time

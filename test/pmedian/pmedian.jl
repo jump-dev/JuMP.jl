@@ -40,12 +40,12 @@ function doTest(numFacility::Int,numCustomer::Int,numLocation::Int)
 	  for i in 1:numLocation
 		#addConstraint(m, 1.0*x[i,a] + (-1.0*s[i]) <= 0 )
 		#addConstraint(m, AffExpr([x[i,a],s[i]],[1.,-1.],0.) <= 0)
-		#addConstraint(m, @sumExpr(1x[i,a] + -1s[i]) <= 0)
-		@addConstraint(m, x[i,a] - s[i] <= 0)
+		addConstraint(m, @sumExpr(1x[i,a] + -1s[i]) <= 0)
+		#@addConstraint(m, x[i,a] - s[i] <= 0)
 	  end
 	  # Subject to one of x must be 1
-	  #addConstraint(m, @sumExpr([1.0*x[i,a] for i = 1:numLocation]) == 1 )
-	  @addConstraint(m, sum{x[i,a],i=1:numLocation} == 1 )
+	  addConstraint(m, @sumExpr([1.0*x[i,a] for i = 1:numLocation]) == 1 )
+	  #@addConstraint(m, sum{x[i,a],i=1:numLocation} == 1 )
 	end
 	
 	# Subject to must allocate all facilities
