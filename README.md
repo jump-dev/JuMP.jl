@@ -54,7 +54,7 @@ There are some restrictions on what can go inside the macros
  * Addition, subtraction, distributive rule should all mostly work, 
    but the parser has not been well tested. Please report any issues.
 
-The ``sum`` expression behaves as follows.
+The ``sum`` "operator" behaves as follows.
 	
 	sum{expression, i = I1, j = I2, ...}
 
