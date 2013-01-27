@@ -28,9 +28,10 @@ export
 
 # Macros and support functions
   @sumExpr,
+  @addConstraint,
+  addToExpression,
   lpSum
 
-include("macros.jl")
 
 macro sumExprOld(expr)
   local coefarr = Expr(:comprehension,convert(Vector{Any},[:(convert(Float64,$(expr.args[1].args[2]))),expr.args[2]]),Any)
@@ -708,6 +709,7 @@ function solveClp(m::Model)
   return solution[3]
 end
 
+include("macros.jl")
 
 ###########################################################
 end
