@@ -1,7 +1,7 @@
 # pmedian.jl
 # Solves the P-Median problem
 
-using Jump
+using MathProg
 
 function doTest(numFacility::Int,numCustomer::Int,numLocation::Int)
 	

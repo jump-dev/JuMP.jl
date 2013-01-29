@@ -1,10 +1,10 @@
-require("../src/Jump.jl")
-using Jump
+require("../src/MathProg.jl")
+using MathProg
 
-m = Model(JUMP_MAX)
+m = Model("max")
 
-x = addVar(m, 0,  2, JUMP_CONTINUOUS)
-y = addVar(m, 0, 30, JUMP_CONTINUOUS, "y")
+x = addVar(m, 0,  2, CONTINUOUS)
+y = addVar(m, 0, 30, CONTINUOUS, "y")
 
 setObjective(m, 5x + 3y)
 addConstraint(m, 1x + 5y <= 3.0)

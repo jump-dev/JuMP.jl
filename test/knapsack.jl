@@ -1,7 +1,6 @@
 ########################################################################
-# Jump 
+# MathProg 
 # A MILP+QP modelling langauge for Julia
-# Julia + Mathematical Programming = Jump
 # By Iain Dunning and Miles Lubin
 #
 # knapsack.jl
@@ -10,13 +9,13 @@
 ########################################################################
 
 
-require("../src/Jump.jl")
-using Jump
+require("../src/MathProg.jl")
+using MathProg
 
 m = Model("max")
 
-x = addVars(m, 0, 1, JUMP_CONTINUOUS, 5, "x")
-y = addVars(m, 0, 1, JUMP_CONTINUOUS, (5,5), "y")
+x = addVars(m, 0, 1, CONTINUOUS, 5, "x")
+y = addVars(m, 0, 1, CONTINUOUS, (5,5), "y")
 
 profit = [ 5, 3, 2, 7, 4 ]
 weight = [ 2, 8, 4, 2, 5 ]

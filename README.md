@@ -1,30 +1,30 @@
-Jump
-====
+MathProg.jl
+===========
 
 Linear Programming, Quadratic Programming and Integer Programming 
 modelling with Julia. The goal is to have the speed of AMPL embedded in
 a fully functional language. Compare with PuLP/Pyomo/YALMIP/...
 
-    Julia + Mathematical Programming = JuMP
+This package is not related to GNU MathProg.
 
 # Installation
 
-You can install Jump through the Julia package manager:
-    Pkg.add("Jump")
+You can install MathProg through the Julia package manager:
+    Pkg.add("MathProg")
     
-Jump is currently dependent on the CLP package which provides a powerful
+MathProg is currently dependent on the CLP package which provides a powerful
 open-source LP solver. As the infrastructure and interfaces for solvers
 are developed in Julia we will extend the functionality. Check the Clp.jl
 README to see if your platform is supported.
 
 # Simple Example
 
-    using Jump
+    using MathProg
 
-    m = Model(JUMP_MAX)
+    m = Model("max")
 
-    x = addVar(m, 0,  2, JUMP_CONTINUOUS)
-    y = addVar(m, 0, 30, JUMP_CONTINUOUS, "y")
+    x = addVar(m, 0,  2, CONTINUOUS)
+    y = addVar(m, 0, 30, CONTINUOUS, "y")
 
     setObjective(m, 5x + 3y)
     addConstraint(m, 1x + 5y <= 3.0)
@@ -91,9 +91,7 @@ is equivalent to
 # Full function listing
 
 `Model(sense)` 
- * Construct a Model with the objective sense provided. There are two
-   constants exported by Jump, JUMP_MAXIMIZE and JUMP_MINIMIZE, that
-   you should use.
+ * Construct a Model with the objective sense provided. Use either "max" or "min"
  
 
 `print(model)`
@@ -102,8 +100,8 @@ is equivalent to
 
 `addVar(model, lower, upper, category[, name])`
  * Add a variable to the model. `lower` and `upper` are the bounds on,
-   variable, and `category` should be one of JUMP_CONTINUOUS, JUMP_INTEGER,
-   or JUMP_BINARY. `name` is an optional string argument.
+   variable, and `category` should be one of CONTINUOUS, INTEGER,
+   or BINARY. `name` is an optional string argument.
 
 
 `addVars(model, lower, upper, category, dims[, name])`

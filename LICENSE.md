@@ -1,4 +1,4 @@
-The Jump Julia module is licensed under the MIT License:
+The MathProg Julia module is licensed under the MIT License:
 
 > Copyright (c) 2013: Iain Dunning and Miles Lubin
 >

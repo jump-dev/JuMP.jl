@@ -1,7 +1,7 @@
 # dense.jl
 # Make a big dense matrix
 
-using Jump
+using MathProg
 
 function doTest(N,M)
 
