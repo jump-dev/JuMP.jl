@@ -7,9 +7,10 @@
 
 module MathProg
 
-# Currently we use CLP, but later we will want to make it so you can 
-# only include solvers you have.
+# Currently we use CLP and CoinMP, but later we will want to make it so
+# you can only include solvers you have.
 using Clp
+using CoinMP
 
 importall Base
 
@@ -23,7 +24,7 @@ export
 # Functions
   print,exprToString,conToString,writeLP,writeMPS,
   setName,getName,setLower,setUpper,getLower,getUpper,getValue,
-  addConstraint,setObjective,solveClp,addVar,addVars,
+  addConstraint,setObjective,solve,solveClp,solveCoinMP,addVar,addVars,
 
 # Macros and support functions
   #@sumExpr, # deprecated
@@ -632,6 +633,23 @@ end
 
 ###########################################################
 # Solvers
+function solve(m::Model)
+	# Analyze model to see if any integers
+	anyInts = false
+	for j = 1:m.numCols
+		if m.colCat[j] == INTEGER || m.colCat[j] == BINARY
+			anyInts = true
+			break
+		end
+	end
+	
+	if anyInts
+		solveCoinMP(m)
+	else
+		solveClp(m)
+	end
+end
+
 function solveClp(m::Model)
 	if m.objIsQuad
 		error("Quadratic objectives are not fully supported yet")
@@ -696,6 +714,89 @@ function solveClp(m::Model)
   
   # Ready to solve
   solution = linprog(f, A, rowlb, rowub, m.colLower, m.colUpper)
+  
+  # Store solution values in model  
+  m.objVal = solution[1]
+  m.colVal = solution[2]
+  
+  # Return flag
+  return solution[3]
+end
+
+
+function solveCoinMP(m::Model)
+	if m.objIsQuad
+		error("Quadratic objectives are not fully supported yet")
+	end
+	
+	# We already have dense column lower and upper bounds
+	
+	# Create dense objective vector
+	f = zeros(m.numCols)
+	for ind in 1:length(m.objective.coeffs)
+		f[m.objective.vars[ind].col] = m.objective.coeffs[ind]
+	end
+	if m.objSense == "max"
+		f *= -1
+	end
+	
+	# Create row bounds
+	numRows = length(m.constraints)
+	rowlb = fill(-1e10, numRows)
+	rowub = fill(+1e10, numRows)
+	for c in 1:numRows
+		if m.constraints[c].sense == "<="
+			rowub[c] = -m.constraints[c].lhs.constant
+		elseif m.constraints[c].sense == ">="
+			rowlb[c] = -m.constraints[c].lhs.constant
+		else
+			rowub[c] = -m.constraints[c].lhs.constant
+			rowlb[c] = -m.constraints[c].lhs.constant
+		end
+	end
+	
+	# Create sparse A matrix
+	# First we build it row-wise, then use the efficient transpose
+	# Theory is, this is faster than us trying to do it ourselves
+	# Intialize storage
+  rowptr = Array(Int,numRows+1)
+  nnz = 0
+  for c in 1:numRows
+      nnz += length(m.constraints[c].lhs.coeffs)
+  end
+  colval = Array(Int,nnz)
+  rownzval = Array(Float64,nnz)
+  
+  # Fill it up
+  nnz = 0
+  for c in 1:numRows
+		rowptr[c] = nnz + 1
+		coeffs = m.constraints[c].lhs.coeffs
+		vars = m.constraints[c].lhs.vars
+		for ind in 1:length(coeffs)
+			nnz += 1
+			colval[nnz] = vars[ind].col
+			rownzval[nnz] = coeffs[ind]
+		end
+  end
+  rowptr[numRows+1] = nnz + 1
+  
+	# Build the object
+  rowmat = SparseMatrixCSC(m.numCols, numRows, rowptr, colval, rownzval)
+  A = rowmat'
+  
+  # Build vartype vector
+  vartype = zeros(m.numCols)
+  for j = 1:m.numCols
+		if m.colCat[j] == CONTINUOUS
+			vartype[j] = 1
+		else
+			vartype[j] = 2
+		end
+	end
+  
+  # Ready to solve
+  solution = mixintprog(f, A, rowlb, rowub, m.colLower, m.colUpper, vartype)
   
   # Store solution values in model  
   m.objVal = solution[1]

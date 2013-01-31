@@ -12,10 +12,11 @@ This package is not related to GNU MathProg.
 You can install MathProg through the Julia package manager:
     Pkg.add("MathProg")
     
-MathProg is currently dependent on the CLP package which provides a powerful
-open-source LP solver. As the infrastructure and interfaces for solvers
-are developed in Julia we will extend the functionality. Check the Clp.jl
-README to see if your platform is supported.
+MathProg is currently dependent on the Clp and CoinMP packages which 
+provide powerful open-source LP and MILP solvers. As the infrastructure
+and interfaces for solvers are developed in Julia we will extend the 
+functionality. Check the Clp.jl and CoinMP.jl README to see if your 
+platform is supported.
 
 # Simple Example
 
@@ -133,6 +134,11 @@ is equivalent to
 
 `writeMPS(model, filename)`
  * Writes the model out to MPS format, which should be readable by most solvers.
+
+`solve(model)`
+ * Solves the model. If any integer variables a present, it will use CoinMP, 
+   otherwise Clp is used. It returns a flag representing the solver status.
+   It also sets the objVal and colVal fields of the model.
 
 # Quadratic objective support
 
