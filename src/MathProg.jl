@@ -76,7 +76,7 @@ Model(sense::String) = Model(0,sense,false,Array(Constraint,0),
 
 # Pretty print
 function print(m::Model)
-  print(strcat(m.objSense," "))
+  print(string(m.objSense," "))
   print(m.objective)
   println("")
   for c in m.constraints
@@ -87,7 +87,7 @@ function print(m::Model)
   for i in 1:m.numCols
     print(m.colLower[i])
     print(" <= ")
-    print((m.colNames[i] == "" ? strcat("_col",i) : m.colNames[i]))
+    print((m.colNames[i] == "" ? string("_col",i) : m.colNames[i]))
     print(" <= ")
     println(m.colUpper[i])
   end
@@ -147,7 +147,7 @@ function setName(v::Variable,n::String)
   v.m.colNames[v.col] = n
 end
 function getName(v::Variable)
-  return (v.m.colNames[v.col] == "" ? strcat("_col",v.col) : v.m.colNames[v.col])
+  return (v.m.colNames[v.col] == "" ? string("_col",v.col) : v.m.colNames[v.col])
 end
 
 function show(io::IO, v::Variable)
@@ -218,7 +218,7 @@ function exprToString(a::AffExpr)
   ret = join(precomputedStrings[1:nSeen]," + ")
   
   if abs(a.constant) >= 0.000001
-    ret = strcat(ret," + ",a.constant)
+    ret = string(ret," + ",a.constant)
   end
   return ret
 end
@@ -267,11 +267,11 @@ end
 # Pretty printer
 function print(c::Constraint)
   print(c.lhs)
-  print(strcat(" ",c.sense," 0"))
+  print(string(" ",c.sense," 0"))
 end
 
 function conToString(c::Constraint)
-  return strcat(exprToString(c.lhs-c.lhs.constant)," ",c.sense," ",-c.lhs.constant)
+  return string(exprToString(c.lhs-c.lhs.constant)," ",c.sense," ",-c.lhs.constant)
 end
 
 ###########################################################
@@ -450,7 +450,7 @@ function writeMPS(m::Model, fname::String)
     elseif m.constraints[c].sense == ">="
       senseChar = 'G'
     end
-    #write(f,strcat(" ",senseChar,"  CON",c,"\n"))
+    #write(f,string(" ",senseChar,"  CON",c,"\n"))
     #@printf(f," %c  %s\n",senseChar,rownames[c])
     @printf(f," %c  CON%d\n",senseChar,c)
   end
@@ -581,7 +581,7 @@ function writeLP(m::Model, fname::String)
     write(f,"Minimize\n")
   end
   objStr = exprToString(m.objective)
-  write(f,strcat(" obj: ", objStr, "\n"))
+  write(f,string(" obj: ", objStr, "\n"))
   
   # Constraints
   write(f,"Subject To\n")
@@ -589,7 +589,7 @@ function writeLP(m::Model, fname::String)
   #tic()
   for c in m.constraints
     conCount += 1
-    write(f,strcat(" c",conCount,": ", conToString(c),"\n"))
+    write(f,string(" c",conCount,": ", conToString(c),"\n"))
   end
   #toc()
   #print("In writing constraints\n")
@@ -597,17 +597,17 @@ function writeLP(m::Model, fname::String)
   # Bounds
   write(f,"Bounds\n")
   for i in 1:m.numCols
-    n = (m.colNames[i] == "" ? strcat("_col",i) : m.colNames[i])
+    n = (m.colNames[i] == "" ? string("_col",i) : m.colNames[i])
     if abs(m.colLower[i]) > 0.00001
-      write(f,strcat(" ",m.colLower[i]," <= ",n))
+      write(f,string(" ",m.colLower[i]," <= ",n))
       if abs(m.colUpper[i] - 1e10) > 0.00001 # need a "infinite" number?
-        write(f,strcat(" <= ",m.colUpper[i],"\n"))
+        write(f,string(" <= ",m.colUpper[i],"\n"))
       else
         write(f,"\n")
       end
     else
       if abs(m.colUpper[i] - 1e10) > 0.00001 # need a "infinite" number?
-        write(f,strcat(" ",n," <= ",m.colUpper[i],"\n"))
+        write(f,string(" ",n," <= ",m.colUpper[i],"\n"))
       end
     end
   end
