@@ -789,9 +789,9 @@ function solveCoinMP(m::Model)
   vartype = zeros(m.numCols)
   for j = 1:m.numCols
 		if m.colCat[j] == CONTINUOUS
-			vartype[j] = 1
+			vartype[j] = CoinMP.CONTINUOUS
 		else
-			vartype[j] = 2
+			vartype[j] = CoinMP.INTEGER
 		end
 	end
   
