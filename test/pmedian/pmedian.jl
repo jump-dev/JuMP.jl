@@ -19,13 +19,15 @@ function doTest(numFacility::Int,numCustomer::Int,numLocation::Int)
 	
 	# Facility locations
 	#s = [ Variable(m,0,1,0,"s$i") for i=1:numLocation ]
-	s = [ Variable(m,0,1,0,@sprintf("s%d",i)) for i=1:numLocation ]
-	#s = addVars(m, 0, 1, JUMP_CONTINUOUS, numLocation, "s")
+	#s = [ Variable(m,0,1,0,@sprintf("s%d",i)) for i=1:numLocation ]
+	@addVars(m, 0 <= s[1:numLocation] <= 1)
+	#s = addVars(m, 0, 1, CONTINUOUS, numLocation, "s")
 
 	# Aux. variable: x_a,i = 1 iff the closest facility to a is at i
 	#x = [ Variable(m,0,1,0,"x$a,$i") for i = 1:numLocation, a = 1:numCustomer]
 	#x = [ Variable(m,0,1,0,@sprintf("x%d,%d",a,i)) for i = 1:numLocation, a = 1:numCustomer]
-	x = addVars(m,0,1,JUMP_CONTINUOUS, (numLocation, numCustomer), "x")
+	#x = addVars(m,0,1,CONTINUOUS, (numLocation, numCustomer), "x")
+	@addVars(m, 0 <= x[1:numLocation,1:numCustomer] <= 1)
 	
 	# Objective: min distance
 	#vars::Array{Variable,1} = reshape([x[i,a] for a = 1:numCustomer, i = 1:numLocation], (numCustomer*numLocation,))

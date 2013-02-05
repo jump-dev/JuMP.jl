@@ -191,4 +191,100 @@ macro sumExpr(x)
     esc(:(AffExpr($(topvar(x)),convert(Vector{Float64},$(topcoef(x))),0.)))
 end
 
+macro addVars(m, x, extra...)
+    if (x.head == :comparison)
+        # we have some bounds
+        if x.args[2] == :>=
+            if length(x.args) == 5
+                error("Use the form lb <= var <= ub instead of ub >= var >= lb")
+            end
+            @assert length(x.args) == 3
+            # lower bounds, no upper
+            lb = x.args[3]
+            ub = Inf
+            var = x.args[1]
+        elseif x.args[2] == :<=
+            if length(x.args) == 5
+                # lb <= x <= u
+                lb = x.args[1]
+                if (x.args[4] != :<=)
+                    error("Expected <= operator")
+                end
+                ub = x.args[5]
+                var = x.args[3]
+            else
+                # x <= u
+                ub = x.args[3]
+                lb = -Inf
+                var = x.args[1]
+            end
+        end
+    else
+        var = x
+        lb = -Inf
+        ub = Inf
+    end
+    t = MathProg.CONTINUOUS
+    for opt in extra
+        if opt == :Int
+            t = MathProg.INTEGER
+        elseif opt == :Bin
+            t = MathProg.BINARY
+        else
+            error("Unrecognized argument $t")
+        end
+    end
+    #println("lb: $lb ub: $ub var: $var")      
+    if isa(var,Symbol)
+        # easy case
+        return quote
+            $(esc(var)) = Variable($m,$lb,$ub,$t,$(string(var)))
+        end
+    else
+        @assert isa(var,Expr)
+        if var.head != :ref
+            error("Expected form var[...]")
+        end
+        varname = var.args[1]
+        idxvars = Symbol[]
+        idxsets = {}
+        arrcall = expr(:call,{:Array,Variable})
+        refcall = expr(:ref,{varname})
+        for s in var.args[2:end]
+            if s.head == :(=)
+                idxvar = s.args[1]
+                idxset = s.args[2]
+            else
+                idxvar = gensym()
+                idxset = s
+            end
+            push!(idxvars, idxvar)
+            push!(idxsets, idxset)
+            push!(arrcall.args, :(length($(idxset))))
+            push!(refcall.args, idxvar) 
+            if !isa(idxset,Expr) || idxset.head != :(:) || idxset.args[1] != 1
+                error("Expected $idxset to be a range starting at 1. (Syntax will be expanded in the future)")
+            end
+        end
+        code = :( $(refcall) = MathProg.Variable($m, $lb, $ub, $t) )
+        for (idxvar, idxset) in zip(reverse(idxvars),reverse(idxsets))
+            code = quote
+                for $(idxvar) in $idxset
+                    $code
+                end
+            end
+        end
+        code = quote 
+            $(varname) = MultivarDict($arrcall,$(string(varname)))
+            $code
+        end
+        return esc(code)
+    end
+end
+        
+        
+
+
+
+
 

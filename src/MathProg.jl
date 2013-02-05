@@ -20,6 +20,7 @@ export
   Variable,
   AffExpr,
   Constraint,
+  MultivarDict,
 
 # Functions
   print,exprToString,conToString,writeLP,writeMPS,
@@ -29,6 +30,7 @@ export
 # Macros and support functions
   #@sumExpr, # deprecated
   @addConstraint,
+  @addVars,
   @setObjective,
   addToExpression,
   lpSum
@@ -39,6 +41,8 @@ macro sumExprOld(expr)
   local vararr = Expr(:comprehension,convert(Vector{Any},[expr.args[1].args[3],expr.args[2]]),Any)
   esc(:(AffExpr($vararr,$coefarr,0.)))
 end
+
+include("multivardict.jl")
 
 ########################################################################
 # Constants
@@ -124,13 +128,7 @@ function addVar(m::Model, lower::Number, upper::Number, cat::Int, name::String)
   return Variable(m, lower, upper, cat, name)
 end
 function addVars(m::Model, lower::Number, upper::Number, cat::Int, dims)
-	if typeof(dims) == Int
-		# Single dimension
-		return [ Variable(m, lower, upper, cat, "") for i=1:dims ]
-	elseif typeof(dims) == tuple(Int,int)
-		# Two dimensional
-		return [ Variable(m, lower, upper, cat, "") for i=1:dims[1], j=1:dims[2]]
-	end
+  return addVars(m, lower, upper, cat, dims, "")
 end
 function addVars(m::Model, lower::Number, upper::Number, cat::Int, dims, name::String)
 	if typeof(dims) == Int
