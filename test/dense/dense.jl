@@ -16,7 +16,7 @@ function doTest(N,M)
   # Create a Model, its variables, and set the objective
   m = Model("max")
   #v = [ Variable(m,0,1,0,"x$j") for j=1:N ]
-  @addVars(m, 0 <= v[1:N] <= 1)
+  @defVar(m, 0 <= v[1:N] <= 1)
   @setObjective( m, sum{c[j]*v[j], j=1:N} )
  
   # Create M constraints

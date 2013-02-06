@@ -15,7 +15,7 @@ using MathProg
 m = Model("max")
 
 #x = addVars(m, 0, 1, INTEGER, 5, "x")
-@addVars(m, 0 <= x[1:5] <= 1, Int)
+@defVar(m, 0 <= x[1:5] <= 1, Int)
 
 profit = [ 5, 3, 2, 7, 4 ]
 weight = [ 2, 8, 4, 2, 5 ]

@@ -191,7 +191,7 @@ macro sumExpr(x)
     esc(:(AffExpr($(topvar(x)),convert(Vector{Float64},$(topcoef(x))),0.)))
 end
 
-macro addVars(m, x, extra...)
+macro defVar(m, x, extra...)
     if isa(x,Expr) && x.head == :comparison
         # we have some bounds
         if x.args[2] == :>=

@@ -30,7 +30,7 @@ export
 # Macros and support functions
   #@sumExpr, # deprecated
   @addConstraint,
-  @addVars,
+  @defVar,
   @setObjective,
   addToExpression,
   lpSum
