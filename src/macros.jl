@@ -192,7 +192,7 @@ macro sumExpr(x)
 end
 
 macro addVars(m, x, extra...)
-    if (x.head == :comparison)
+    if isa(x,Expr) && x.head == :comparison
         # we have some bounds
         if x.args[2] == :>=
             if length(x.args) == 5
@@ -237,9 +237,9 @@ macro addVars(m, x, extra...)
     #println("lb: $lb ub: $ub var: $var")      
     if isa(var,Symbol)
         # easy case
-        return quote
-            $(esc(var)) = Variable($m,$lb,$ub,$t,$(string(var)))
-        end
+        return esc(quote
+            $var = Variable($m,$lb,$ub,$t,$(string(var)))
+        end)
     else
         @assert isa(var,Expr)
         if var.head != :ref
