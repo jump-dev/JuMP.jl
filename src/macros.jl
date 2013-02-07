@@ -106,13 +106,13 @@ function parseCurly(x::Expr, aff::Symbol, constantCoef)
             end
         end
         for level in (length(x.args)-1):-1:3
-            code = expr(:for, {x.args[level],expr(:block,{code})})
+            code = expr(:for, {x.args[level],code})
             # for $(x.args[level]) $code end
         end
     else # no condition
         code = parseExpr(x.args[2], aff, constantCoef)
         for level in length(x.args):-1:3
-            code = expr(:for, {x.args[level],expr(:block,{code})})
+            code = expr(:for, {x.args[level],code})
             # for $(x.args[level]) $code end
         end
         len = gensym()
