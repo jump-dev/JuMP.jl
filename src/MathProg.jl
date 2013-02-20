@@ -428,6 +428,8 @@ end
 ########################################################################
 function writeMPS(m::Model, fname::String)
   f = open(fname, "w")
+
+  write(f,"NAME   MathProgModel\n")
   
   numRows = length(m.constraints)
   # cache these strings
@@ -496,7 +498,7 @@ function writeMPS(m::Model, fname::String)
     for ind in colmat.colptr[col]:(colmat.colptr[col+1]-1)
       #write(f,"    $(colnames[col])  $(rownames[rowval[ind]])  $(nzval[ind])\n")
       #@printf(f,"    %s  %s  %f\n",colnames[col],rownames[rowval[ind]],nzval[ind])
-      @printf(f,"    x%d  CON%d  %f\n",col,rowval[ind],nzval[ind])
+      @printf(f,"    VAR%d  CON%d  %f\n",col,rowval[ind],nzval[ind])
     end
   end
   
@@ -515,21 +517,21 @@ function writeMPS(m::Model, fname::String)
       # Default lower 0, and an upper
       #write(f,"  UP BOUND x$(col) $(m.colUpper[col])\n")
       #@printf(f,"  UP BOUND %s %f\n", colnames[col], m.colUpper[col])
-      @printf(f,"  UP BOUND x%d %f\n", col, m.colUpper[col])
+      @printf(f,"  UP BOUND VAR%d %f\n", col, m.colUpper[col])
     elseif m.colLower[col] == -Inf && m.colUpper[col] == +Inf
       # Free
       #write(f,"  FR BOUND x$(col)\n")
-      @printf(f, "  FR BOUND x%d\n", col)
+      @printf(f, "  FR BOUND VAR%d\n", col)
     elseif m.colLower[col] != -Inf && m.colUpper[col] == +Inf
       # No upper, but a lower
       #write(f,"  PL BOUND x$(col) \n")
       #write(f,"  LO BOUND x$(col) $(m.colLower[col])\n")
-      @printf(f, "  PL BOUND x%d\n  LO BOUND x%d %f\n",col,col,m.colLower[col])
+      @printf(f, "  PL BOUND VAR%d\n  LO BOUND VAR%d %f\n",col,col,m.colLower[col])
     elseif m.colLower[col] == -Inf && m.colUpper[col] != +Inf
       # No lower, but a upper
       #write(f,"  MI BOUND x$(col) \n")
       #write(f,"  UP BOUND x$(col) $(m.colUpper[col])\n")
-      @printf(f,"  MI BOUND x%d\n  UP BOUND x%d %f\n",col,col,m.colUpper[col])
+      @printf(f,"  MI BOUND VAR%d\n  UP BOUND VAR%d %f\n",col,col,m.colUpper[col])
     else
       # Lower and upper
       #write(f,"  LO BOUND x$(col) $(m.colLower[col])\n")
