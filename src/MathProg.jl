@@ -800,6 +800,9 @@ function solveCoinMP(m::Model)
   
   # Store solution values in model  
   m.objVal = solution[1]
+  if m.objSense == "max"
+      m.objVal *= -1
+  end
   m.colVal = solution[2]
   
   # Return flag
