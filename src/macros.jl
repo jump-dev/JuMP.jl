@@ -182,7 +182,7 @@ macro setObjective(m, x)
     esc(quote
         $aff = AffExpr()
         $(parseExpr(x, aff, 1.0))
-        setObjective(m, $aff)
+        setObjective($m, $aff)
     end)
 end
         
