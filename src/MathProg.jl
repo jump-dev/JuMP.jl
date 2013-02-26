@@ -717,7 +717,12 @@ function solveClp(m::Model)
   
   # Store solution values in model  
   m.objVal = solution[1]
-  m.colVal = solution[2]
+  if m.objSense == "max"
+      m.objVal *= -1
+  end
+  if solution[3] == 0
+    m.colVal = solution[2]
+  end
   
   # Return flag
   return solution[3]
@@ -803,7 +808,9 @@ function solveCoinMP(m::Model)
   if m.objSense == "max"
       m.objVal *= -1
   end
-  m.colVal = solution[2]
+  if solution[3] == 0
+    m.colVal = solution[2]
+  end
   
   # Return flag
   return solution[3]
