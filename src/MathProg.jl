@@ -808,7 +808,7 @@ function solveCoinMP(m::Model)
   if m.objSense == "max"
       m.objVal *= -1
   end
-  if solution[3] == 0
+  if solution[3] == "Optimal solution found"
     m.colVal = solution[2]
   end
   

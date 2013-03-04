@@ -122,11 +122,12 @@ function parseCurly(x::Expr, aff::Symbol, constantCoef)
         for level in length(x.args):-1:3
             push!(preblock.args,:($len *= length($(x.args[level].args[2]))))
         end
+        # TODO: use sizehint when we stop supporting 0.1
         push!(preblock.args,:(
-            grow!($aff.vars,div($len,1));
-            grow!($aff.vars,-div($len,1));
-            grow!($aff.coeffs,div($len,1));
-            grow!($aff.coeffs,-div($len,1))))
+            resize!($aff.vars,length($aff.vars)+div($len,1));
+            resize!($aff.vars,length($aff.vars)-div($len,1));
+            resize!($aff.coeffs,length($aff.coeffs)+div($len,1));
+            resize!($aff.coeffs,length($aff.coeffs)-div($len,1))))
         code = :($preblock;$code)
     end
 
