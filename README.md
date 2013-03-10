@@ -23,26 +23,67 @@ platform is supported.
     using MathProg
 
     m = Model("max")
+    @defVar(m, 0 <= x <= 2)
+    @defVar(m, 0 <= y <= 30)
 
-    x = addVar(m, 0,  2, CONTINUOUS)
-    y = addVar(m, 0, 30, CONTINUOUS, "y")
-
-    setObjective(m, 5x + 3y)
-    addConstraint(m, 1x + 5y <= 3.0)
+    @setObjective(m, 5x + 3y)
+    @addConstraint(m, 1x + 5y <= 3.0)
     
     print(m)
     
-    status = solveClp(m)
+    status = solve(m)
     
     println("Objective value: ", m.objVal)
     println("x = ", getValue(x))
     println("y = ", getValue(y))
+
+# Defining variables
+
+Variables are defined using the ``@defVar`` macro. The first argument must be a ``Model``.
+The second is an expression that declares the variable name and optinally allows specification
+of lower and upper bounds. The possible combinations are
+
+No bounds:
+
+	x
+
+Lower bound only:
+
+	x >= lb
+
+Upper bound only:
+
+	x <= ub
+
+Lower and upper bounds:
+
+	lb <= x <= ub
+
+Where ``x`` must be a valid symbol which will be assigned to in the local context.
+
+Integer and binary restrictions can optionally be specified with a third argument, ``Int`` or ``Bin``.
+
+Arrays of variable objects can created by appending brackets to the variable name.
+For example,
+
+	x[1:M,1:N] >= 0
+
+Will create an ``M`` by ``N`` array of variables. Currently only ranges starting at ``1`` are supported as index sets, but this will be extended in the future.
+
+Bounds can depend on variable indices:
+
+	x[i=1:10] >= i
+
+works as expected.
+
+The macro is just a wrapper for the ``Variable`` constuctor, which can be called directly by advanced users.
+
     
-# Getting Speed
+# Defining linear expressions
 
 Using Julia's powerful metaprogramming features, we can turn easy-to-read
 statements into a sparse internal representation very quickly. To 
-invoke this, use the @addConstraint (and @setObjective) macros. Here are some examples:
+invoke this, use the ``@addConstraint`` (and ``@setObjective``) macros. Here are some examples:
 
     @addConstraint(m, x[i] - s[i] <= 0)
     
@@ -89,7 +130,7 @@ is equivalent to
 	end
 
 
-# Full function listing
+# Function listing
 
 `Model(sense)` 
  * Construct a Model with the objective sense provided. Use either "max" or "min"
@@ -99,17 +140,12 @@ is equivalent to
  * Displays the Model to the screen in a user-readable way
 
 
-`addVar(model, lower, upper, category[, name])`
- * Add a variable to the model. `lower` and `upper` are the bounds on,
+`Variable(model, lower, upper, category[, name])`
+ * Create a new variable in the model. `lower` and `upper` are the bounds on,
    variable, and `category` should be one of CONTINUOUS, INTEGER,
-   or BINARY. `name` is an optional string argument.
+   or BINARY. `name` is an optional string argument. The ``@defVar`` macro should
+   typically be used instead of this.
 
-
-`addVars(model, lower, upper, category, dims[, name])`
- * Add multiple variables, returns them as a list of variables. Same as
-   above, except for dims. If dims is a single integer, it indexes the variables
-   from 1 to dims, e.g. `x[3]`. If dims is a tuple of two integers, e.g. (10,5) 
-   it indexes them along the two dimensions, e.g. `x[1,1]` to `x[10,5]`
 
 `setName(v,name)`,`getName(v)`
 
@@ -122,12 +158,13 @@ is equivalent to
 
 `setObjective(model, affexpr)`
  * Sets the objective to `affexpr`, where `affexpr` is any valid combination of 
-   variables and constants ("affine expression")
+   variables and constants ("affine expression"). This is the slow approach based
+   on operator overloading. Use ``@setObjective`` instead.
 
 `addConstraint(model, constraint)`
  * Adds a constraint, where `constraint` is of the form `affexpr <= number`, 
-   `affexpr == number`, or `affexpr >= number`. This is very limiting form
-   but will be extended soon.
+   `affexpr == number`, or `affexpr >= number`. This is the slow approach based on
+   operator overloading. Use ``@addConstraint`` instead.
 
 `writeLP(model, filename)`
  * Writes the model out to LP format, which should be readable by most solvers.

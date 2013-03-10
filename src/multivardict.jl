@@ -4,10 +4,6 @@ type MultivarDict{T,N}
   name::String
 end
 
-function ref(d::MultivarDict, vals...)
-    d.innerArray[vals...]
-end
+ref(d::MultivarDict, vals...) = ref(d.innerArray, vals...)
 
-function assign(d::MultivarDict, vals...)
-    assign(d.innerArray,vals...)
-end
+assign(d::MultivarDict, vals...) = assign(d.innerArray, vals...)
