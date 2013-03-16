@@ -552,7 +552,7 @@ end
 
 function writeLP(m::Model, fname::String)
   f = open(fname, "w")
-  write(f,"NAME Julp-created LP \n")
+  write(f, "NAME Julp-created LP \n")
   
   if m.objIsQuad
     print("Can't handle quad obj for LP yet\n")
@@ -565,34 +565,60 @@ function writeLP(m::Model, fname::String)
   else
     write(f,"Minimize\n")
   end
-  objStr = exprToString(m.objective)
-  write(f,string(" obj: ", objStr, "\n"))
+  objaff = (m.objIsQuad) ? m.objective.aff : m.objective
+  write(f, " obj: ")
+  nnz = length(objaff.coeffs)
+  for ind in 1:(nnz-1)
+    @printf(f, "%f VAR%d + ", objaff.coeffs[ind], objaff.vars[ind].col)
+  end
+  if nnz >= 1
+    @printf(f, "%f VAR%d\n", objaff.coeffs[nnz], objaff.vars[nnz].col)
+  end
   
   # Constraints
   write(f,"Subject To\n")
-  conCount = 0
-  #tic()
-  for c in m.constraints
-    conCount += 1
-    write(f,string(" c",conCount,": ", conToString(c),"\n"))
+  for i in length(m.constraints)
+    @printf(f, " c%d: ", i)
+
+    c = m.constraints[i]
+    nnz = length(c.lhs.coeffs)
+    for ind in 1:(nnz-1)
+      @printf(f, "%f VAR%d + ", c.lhs.coeffs[ind], c.lhs.vars[ind].col)
+    end
+    if nnz >= 1
+      @printf(f, "%f VAR%d", c.lhs.coeffs[nnz], c.lhs.vars[nnz].col)
+    end
+   
+    # Sense and RHS
+    if c.sense == "=="
+      @printf(f, " = %f\n", -c.lhs.constant)
+    elseif c.sense == "<="
+      @printf(f, " <= %f\n", -c.lhs.constant)
+    else
+      @printf(f, " >= %f\n", -c.lhs.constant)
+    end
   end
-  #toc()
-  #print("In writing constraints\n")
 
   # Bounds
   write(f,"Bounds\n")
-  for i in 1:m.numCols
-    n = (m.colNames[i] == "" ? string("_col",i) : m.colNames[i])
-    if abs(m.colLower[i]) > 0.00001
-      write(f,string(" ",m.colLower[i]," <= ",n))
-      if abs(m.colUpper[i] - 1e10) > 0.00001 # need a "infinite" number?
-        write(f,string(" <= ",m.colUpper[i],"\n"))
+  for i in 1:m.numCols    
+    if m.colLower[i] == -Inf
+      # No low bound
+      if m.colUpper[i] == +Inf
+        # Free
+        @printf(f, " VAR%d free\n", i)
       else
-        write(f,"\n")
+        # x <= finite
+        @printf(f, " -inf <= VAR%d <= %f\n", i, m.colUpper[i])
       end
     else
-      if abs(m.colUpper[i] - 1e10) > 0.00001 # need a "infinite" number?
-        write(f,string(" ",n," <= ",m.colUpper[i],"\n"))
+      # Low bound exists
+      if m.colUpper[i] == +Inf
+        # x >= finite
+        @printf(f, " %f <= VAR%d <= +inf\n", m.colLower[i], i)
+      else
+        # finite <= x <= finite
+        @printf(f, " %f <= VAR%d <= %f\n", m.colLower[i], i, m.colUpper[i])
       end
     end
   end
