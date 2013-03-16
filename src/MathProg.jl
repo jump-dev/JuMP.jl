@@ -576,6 +576,7 @@ function writeLP(m::Model, fname::String)
   end
   
   # Constraints
+  #gc_disable()
   write(f,"Subject To\n")
   for i in length(m.constraints)
     @printf(f, " c%d: ", i)
@@ -598,8 +599,10 @@ function writeLP(m::Model, fname::String)
       @printf(f, " >= %f\n", -c.lhs.constant)
     end
   end
+  #gc_enable()
 
   # Bounds
+  #gc_disable()
   write(f,"Bounds\n")
   for i in 1:m.numCols    
     if m.colLower[i] == -Inf
@@ -622,7 +625,9 @@ function writeLP(m::Model, fname::String)
       end
     end
   end
+  #gc_enable()
   
+
   # Integer - to do
 
 
