@@ -25,7 +25,7 @@ function comprehensioncoef(x::Expr)
     if x.head != :comprehension
         error("In expression $x expected comprehension")
     end
-    comp = expr(symbol("typed-comprehension"),{Float64,timescoef(x.args[1]),x.args[2:end]...})
+    comp = Expr(:typed_comprehension,Float64,timescoef(x.args[1]),x.args[2:end]...)
     containers = Expr[ ex.args[2] for ex in x.args[2:end] ]
     out = quote l = 1 end
     for c in containers
@@ -40,7 +40,7 @@ function comprehensionvar(x::Expr)
     if x.head != :comprehension
         error("In expression $x expected comprehension")
     end
-    comp = expr(symbol("typed-comprehension"),{Variable,timesvar(x.args[1]),x.args[2:end]...})
+    comp = Expr(:typed_comprehension,Variable,timesvar(x.args[1]),x.args[2:end]...)
     containers = Expr[ ex.args[2] for ex in x.args[2:end] ]
     out = quote l = 1 end
     for c in containers
@@ -53,7 +53,7 @@ end
 # parses top-level expression and returns expression for array of the coefficient terms
 function topcoef(x::Expr)
     if x.head == :call && x.args[1] == :+
-        return expr(:vcat,map(topcoef,x.args[2:end]))
+        return Expr(:vcat,map(topcoef,x.args[2:end])...)
     elseif x.head == :comprehension
         return comprehensioncoef(x)
     elseif x.head == :call && x.args[1] == :*
@@ -66,7 +66,7 @@ end
 
 function topvar(x::Expr)
     if x.head == :call && x.args[1] == :+
-        return expr(:vcat,map(topvar,x.args[2:end]))
+        return Expr(:vcat,map(topvar,x.args[2:end])...)
     elseif x.head == :comprehension
         return comprehensionvar(x)
     elseif x.head == :call && x.args[1] == :*
@@ -106,13 +106,13 @@ function parseCurly(x::Expr, aff::Symbol, constantCoef)
             end
         end
         for level in (length(x.args)-1):-1:3
-            code = expr(:for, {x.args[level],code})
+            code = Expr(:for, x.args[level],code)
             # for $(x.args[level]) $code end
         end
     else # no condition
         code = parseExpr(x.args[2], aff, constantCoef)
         for level in length(x.args):-1:3
-            code = expr(:for, {x.args[level],code})
+            code = Expr(:for, x.args[level],code)
             # for $(x.args[level]) $code end
         end
         len = gensym()
@@ -122,12 +122,9 @@ function parseCurly(x::Expr, aff::Symbol, constantCoef)
         for level in length(x.args):-1:3
             push!(preblock.args,:($len *= length($(x.args[level].args[2]))))
         end
-        # TODO: use sizehint when we stop supporting 0.1
         push!(preblock.args,:(
-            resize!($aff.vars,length($aff.vars)+div($len,1));
-            resize!($aff.vars,length($aff.vars)-div($len,1));
-            resize!($aff.coeffs,length($aff.coeffs)+div($len,1));
-            resize!($aff.coeffs,length($aff.coeffs)-div($len,1))))
+            sizehint($aff.vars,length($aff.vars)+$len);
+            sizehint($aff.coeffs,length($aff.coeffs)+$len)))
         code = :($preblock;$code)
     end
 
@@ -143,13 +140,13 @@ function parseExpr(x, aff::Symbol, constantCoef)
         end
     else
         if x.head == :call && x.args[1] == :+
-            expr(:block,{parseExpr(arg,aff,constantCoef) for arg in x.args[2:end]})
+            Expr(:block,[parseExpr(arg,aff,constantCoef) for arg in x.args[2:end]]...)
         elseif x.head == :call && x.args[1] == :-
             if length(x.args) == 2 # unary subtraction
                 parseExpr(x.args[2], aff, :(-1.0*$constantCoef))
             else # a - b - c ...
-                expr(:block,vcat(parseExpr(x.args[2], aff, constantCoef),
-                   {parseExpr(arg, aff, :(-1.0*$constantCoef)) for arg in x.args[3:end]}))
+                Expr(:block,vcat(parseExpr(x.args[2], aff, constantCoef),
+                   {parseExpr(arg, aff, :(-1.0*$constantCoef)) for arg in x.args[3:end]})...)
             end
         elseif x.head == :call && x.args[1] == :*
             coef = timescoef(x)
@@ -249,8 +246,8 @@ macro defVar(m, x, extra...)
         varname = var.args[1]
         idxvars = Symbol[]
         idxsets = {}
-        arrcall = expr(:call,{:Array,Variable})
-        refcall = expr(:ref,{varname})
+        arrcall = Expr(:call,:Array,Variable)
+        refcall = Expr(:ref,varname)
         for s in var.args[2:end]
             if s.head == :(=)
                 idxvar = s.args[1]
