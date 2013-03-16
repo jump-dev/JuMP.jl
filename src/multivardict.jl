@@ -4,6 +4,6 @@ type MultivarDict{T,N}
   name::String
 end
 
-ref(d::MultivarDict, vals...) = ref(d.innerArray, vals...)
+getindex(d::MultivarDict, vals...) = getindex(d.innerArray, vals...)
 
-assign(d::MultivarDict, vals...) = assign(d.innerArray, vals...)
+setindex!(d::MultivarDict, vals...) = setindex!(d.innerArray, vals...)
