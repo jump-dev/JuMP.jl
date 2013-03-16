@@ -432,15 +432,9 @@ function writeMPS(m::Model, fname::String)
   write(f,"NAME   MathProgModel\n")
   
   numRows = length(m.constraints)
-  # cache these strings
-  #colnames = [ "x$(col)" for col in 1:m.numCols ]
-  #colnames = [ convert(ASCIIString,@sprintf("x%d",col)) for col in 1:m.numCols ]
-  # 
-  #rownames = [ "CON$(i)" for i in 1:(numRows) ]
-  #rownames = [ @sprintf("CON%d",i) for i in 1:(numRows) ]
-  #push!(rownames, "obj")
   
-  # Objective and constraint names
+  # Objective and constraint names 
+  gc_disable()
   write(f,"ROWS\n")
   write(f," N  CON$(numRows+1)\n")
   for c in 1:numRows
@@ -450,12 +444,12 @@ function writeMPS(m::Model, fname::String)
     elseif m.constraints[c].sense == ">="
       senseChar = 'G'
     end
-    #write(f,string(" ",senseChar,"  CON",c,"\n"))
-    #@printf(f," %c  %s\n",senseChar,rownames[c])
     @printf(f," %c  CON%d\n",senseChar,c)
   end
-  #tic() 
-  # load rows into SparseMatrixCSC
+  gc_enable()
+
+  # Load rows into SparseMatrixCSC
+  gc_disable()
   rowptr = Array(Int,numRows+2)
   nnz = 0
   for c in 1:numRows
@@ -489,58 +483,51 @@ function writeMPS(m::Model, fname::String)
   colptr = colmat.colptr
   rowval = colmat.rowval
   nzval = colmat.nzval
-  #toc()
-  #println("time building column structure")
+  gc_enable()
     
   # Output each column
+  gc_disable()
   write(f,"COLUMNS\n")
   for col in 1:m.numCols
     for ind in colmat.colptr[col]:(colmat.colptr[col+1]-1)
-      #write(f,"    $(colnames[col])  $(rownames[rowval[ind]])  $(nzval[ind])\n")
-      #@printf(f,"    %s  %s  %f\n",colnames[col],rownames[rowval[ind]],nzval[ind])
       @printf(f,"    VAR%d  CON%d  %f\n",col,rowval[ind],nzval[ind])
     end
   end
+  gc_enable()
   
   # RHSs
+  gc_disable()
   write(f,"RHS\n")
   for c in 1:numRows
-    #write(f,"    rhs    CON$(c)    $(-m.constraints[c].lhs.constant)\n")
-    #@printf(f,"    rhs    %s    %f\n",rownames[c],-m.constraints[c].lhs.constant)
     @printf(f,"    rhs    CON%d    %f\n",c,-m.constraints[c].lhs.constant)
   end
+  gc_enable()
   
   # BOUNDS
+  gc_disable()
   write(f,"BOUNDS\n")
   for col in 1:m.numCols
     if m.colLower[col] == 0 && m.colUpper[col] > 0
       # Default lower 0, and an upper
-      #write(f,"  UP BOUND x$(col) $(m.colUpper[col])\n")
-      #@printf(f,"  UP BOUND %s %f\n", colnames[col], m.colUpper[col])
       @printf(f,"  UP BOUND VAR%d %f\n", col, m.colUpper[col])
     elseif m.colLower[col] == -Inf && m.colUpper[col] == +Inf
       # Free
-      #write(f,"  FR BOUND x$(col)\n")
       @printf(f, "  FR BOUND VAR%d\n", col)
     elseif m.colLower[col] != -Inf && m.colUpper[col] == +Inf
       # No upper, but a lower
-      #write(f,"  PL BOUND x$(col) \n")
-      #write(f,"  LO BOUND x$(col) $(m.colLower[col])\n")
       @printf(f, "  PL BOUND VAR%d\n  LO BOUND VAR%d %f\n",col,col,m.colLower[col])
     elseif m.colLower[col] == -Inf && m.colUpper[col] != +Inf
       # No lower, but a upper
-      #write(f,"  MI BOUND x$(col) \n")
-      #write(f,"  UP BOUND x$(col) $(m.colUpper[col])\n")
       @printf(f,"  MI BOUND VAR%d\n  UP BOUND VAR%d %f\n",col,col,m.colUpper[col])
     else
       # Lower and upper
-      #write(f,"  LO BOUND x$(col) $(m.colLower[col])\n")
-      #write(f,"  UP BOUND x$(col) $(m.colUpper[col])\n")
       @printf(f, "  LO BOUND x%d %f\n  UP BOUND x%d %f\n",col,col,m.colLower[col],m.colUpper[col])
     end
   end
+  gc_enable()
   
   # Quadratic objective
+  gc_disable()
   if m.objIsQuad
     write(f,"QMATRIX\n")
     qv1 = m.objective.quadVars1
@@ -549,12 +536,9 @@ function writeMPS(m::Model, fname::String)
     for ind = 1:length(qv1)
       if qv1[ind].col == qv2[ind].col
         # Diagonal element
-        #write(f,"  x$(qv1[ind].col)  x$(qv2[ind].col)  $(2*qc[ind])\n")
         @printf(f,"  x%d x%d  %f\n",qv1[ind].col,qv2[ind].col, 2qc[ind])
       else
         # Off diagonal, and we're gonna assume no duplicates
-        #write(f,"  x$(qv1[ind].col)  x$(qv2[ind].col)  $(  qc[ind])\n")
-        #write(f,"  x$(qv2[ind].col)  x$(qv1[ind].col)  $(  qc[ind])\n")
         @printf(f, "  x%d x%d %f\n", qv1[ind].col,qv2[ind].col, qc[ind])
         @printf(f, "  x%d x%d %f\n", qv2[ind].col,qv1[ind].col, qc[ind])
       end
@@ -563,6 +547,7 @@ function writeMPS(m::Model, fname::String)
   
   write(f,"ENDATA\n")
   close(f)
+  gc_enable()
 end
 
 function writeLP(m::Model, fname::String)
