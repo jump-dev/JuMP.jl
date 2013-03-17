@@ -81,8 +81,6 @@ Bounds can depend on variable indices:
 
 	@defVar(m, x[i=1:10] >= i )
 
-works as expected.
-
 The macro is just a wrapper for the ``Variable`` constuctor, which can be called directly by advanced users.
 
     
