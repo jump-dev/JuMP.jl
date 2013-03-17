@@ -23,11 +23,11 @@ platform is supported.
     using MathProg
 
     m = Model("max")
-    @defVar(m, 0 <= x <= 2)
-    @defVar(m, 0 <= y <= 30)
+    @defVar(m, 0 <= x <= 2 )
+    @defVar(m, 0 <= y <= 30 )
 
-    @setObjective(m, 5x + 3y)
-    @addConstraint(m, 1x + 5y <= 3.0)
+    @setObjective(m, 5x + 3y )
+    @addConstraint(m, 1x + 5y <= 3.0 )
     
     print(m)
     
@@ -69,7 +69,7 @@ For example,
 
 	@defVar(m, x[1:M,1:N] >= 0 )
 
-will create an ``M`` by ``N`` array of variables. Both ranges and arbitrary iterable sets are supported as index sets. Using ranges will generally be faster, as this avoids dictionary lookups. The following code
+will create an ``M`` by ``N`` array of variables. Both ranges and arbitrary iterable sets are supported as index sets. Currently we only support ranges of the form ``a:b`` where ``a`` is an explicit integer, not a variable. Using ranges will generally be faster, as this avoids dictionary lookups. The following code
 
 	s = ["Green","Blue"]
 	@defVar(m, x[-10:10,s] , Int)
@@ -79,7 +79,7 @@ works fine.
 
 Bounds can depend on variable indices:
 
-	x[i=1:10] >= i
+	@defVar(m, x[i=1:10] >= i )
 
 works as expected.
 
