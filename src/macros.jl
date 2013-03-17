@@ -264,10 +264,8 @@ macro defVar(m, x, extra...)
         code = :( $(refcall) = MathProg.Variable($(esc(m)), $(esc(lb)), $(esc(ub)), $t) )
         for (idxvar, idxset) in zip(reverse(idxvars),reverse(idxsets))
             code = quote
-                let
-                    for $(esc(idxvar)) in $(esc(idxset))
-                        $code
-                    end
+                for $(esc(idxvar)) in $(esc(idxset))
+                    $code
                 end
             end
         end

@@ -1,12 +1,4 @@
 # multivarate "dictionary" used for collections of variables/constraints
-type MultivarDict{T,N}
-  innerArray::Array{T,N}
-  name::String
-end
-
-getindex(d::MultivarDict, vals...) = getindex(d.innerArray, vals...)
-setindex!(d::MultivarDict, vals...) = setindex!(d.innerArray, vals...)
-
 
 # generate and instantiate a type which is indexed by the given index sets
 # the following types of index sets are allowed:
@@ -39,11 +31,10 @@ macro gendict(instancename,T,idxsets...)
             push!(typecode.args[3].args,:($(dictnames[i])::Dict))
             push!(builddicts.args, quote 
                 $(esc(dictnames[i])) = Dict(); 
-                let 
-                    for (j,k) in enumerate($(esc(idxsets[i])))
-                        $(esc(dictnames[i]))[k] = j
-                    end 
-                end end)
+                for (j,k) in enumerate($(esc(idxsets[i])))
+                    $(esc(dictnames[i]))[k] = j
+                end 
+                end)
         end
     end
     getidxlhs = :(getindex(d::$(typename)))
@@ -89,3 +80,11 @@ end
 
 export @gendict
 
+### Old code
+type MultivarDict{T,N}
+  innerArray::Array{T,N}
+  name::String
+end
+
+getindex(d::MultivarDict, vals...) = getindex(d.innerArray, vals...)
+setindex!(d::MultivarDict, vals...) = setindex!(d.innerArray, vals...)
