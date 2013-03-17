@@ -40,24 +40,25 @@ platform is supported.
 # Defining variables
 
 Variables are defined using the ``@defVar`` macro. The first argument must be a ``Model``.
+In the examples below we assume ``m`` is already defined.
 The second is an expression that declares the variable name and optinally allows specification
 of lower and upper bounds. The possible combinations are
 
 No bounds:
 
-	x
+	@defVar(m, x )
 
 Lower bound only:
 
-	x >= lb
+	@defVar(m, x >= lb )
 
 Upper bound only:
 
-	x <= ub
+	@defVar(m, x <= ub )
 
 Lower and upper bounds:
 
-	lb <= x <= ub
+	@defVar(m, lb <= x <= ub )
 
 Where ``x`` must be a valid symbol which will be assigned to in the local context.
 
@@ -66,9 +67,15 @@ Integer and binary restrictions can optionally be specified with a third argumen
 Arrays of variable objects can created by appending brackets to the variable name.
 For example,
 
-	x[1:M,1:N] >= 0
+	@defVar(m, x[1:M,1:N] >= 0 )
 
-Will create an ``M`` by ``N`` array of variables. Currently only ranges starting at ``1`` are supported as index sets, but this will be extended in the future.
+will create an ``M`` by ``N`` array of variables. Both ranges and arbitrary iterable sets are supported as index sets. Using ranges will generally be faster, as this avoids dictionary lookups. The following code
+
+	s = ["Green","Blue"]
+	@defVar(m, x[-10:10,s] , Int)
+	x[-4,"Green"]
+
+works fine.
 
 Bounds can depend on variable indices:
 

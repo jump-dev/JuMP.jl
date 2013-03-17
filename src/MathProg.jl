@@ -5,6 +5,10 @@
 # By Iain Dunning and Miles Lubin
 ########################################################################
 
+import Base.getindex
+import Base.setindex!
+
+
 module MathProg
 
 # Currently we use CLP and CoinMP, but later we will want to make it so

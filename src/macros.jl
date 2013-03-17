@@ -247,9 +247,9 @@ macro defVar(m, x, extra...)
         idxvars = Symbol[]
         idxsets = {}
         arrcall = Expr(:call,:Array,Variable)
-        refcall = Expr(:ref,varname)
+        refcall = Expr(:ref,esc(varname))
         for s in var.args[2:end]
-            if s.head == :(=)
+            if isa(s,Expr) && s.head == :(=)
                 idxvar = s.args[1]
                 idxset = s.args[2]
             else
@@ -258,25 +258,27 @@ macro defVar(m, x, extra...)
             end
             push!(idxvars, idxvar)
             push!(idxsets, idxset)
-            push!(arrcall.args, :(length($(idxset))))
-            push!(refcall.args, idxvar) 
-            if !isa(idxset,Expr) || idxset.head != :(:) || idxset.args[1] != 1
-                error("Expected $idxset to be a range starting at 1. (Syntax will be expanded in the future)")
-            end
+            push!(arrcall.args, :(length($(esc(idxset)))))
+            push!(refcall.args, esc(idxvar)) 
         end
-        code = :( $(refcall) = MathProg.Variable($m, $lb, $ub, $t) )
+        code = :( $(refcall) = MathProg.Variable($(esc(m)), $(esc(lb)), $(esc(ub)), $t) )
         for (idxvar, idxset) in zip(reverse(idxvars),reverse(idxsets))
             code = quote
-                for $(idxvar) in $idxset
-                    $code
+                let
+                    for $(esc(idxvar)) in $(esc(idxset))
+                        $code
+                    end
                 end
             end
         end
+        
+        mac = Expr(:macrocall,symbol("@gendict"),varname,:Variable,idxsets...)
         code = quote 
-            $(varname) = MultivarDict($arrcall,$(string(varname)))
+            #$(esc(varname)) = MultivarDict($arrcall,$(string(varname)))
+            $(esc(mac))
             $code
         end
-        return esc(code)
+        return code
     end
 end
         
