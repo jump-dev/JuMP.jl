@@ -2,7 +2,7 @@ MathProg.jl
 ===========
 
 Linear Programming, Quadratic Programming and Integer Programming 
-modelling with Julia. The goal is to have the speed of AMPL embedded in
+modeling with Julia. The goal is to have the speed of AMPL embedded in
 a fully functional language. Compare with PuLP/Pyomo/YALMIP/...
 
 This package is not related to GNU MathProg.
@@ -41,7 +41,7 @@ platform is supported.
 
 Variables are defined using the ``@defVar`` macro. The first argument must be a ``Model``.
 In the examples below we assume ``m`` is already defined.
-The second is an expression that declares the variable name and optinally allows specification
+The second is an expression that declares the variable name and optionally allows specification
 of lower and upper bounds. The possible combinations are
 
 No bounds:
@@ -158,8 +158,13 @@ is equivalent to
 
 `setUpper(v,upper)`,`getUpper(v)`
 
+ * Update variable options.
+
 `getValue(v)`
- * Update variable options, and retrieve the value of the variable after solution.
+
+ * Retrieve the optimal value of a variable after a solution. May also be
+   called with variable collections, in which cases it returns a collection of
+   solution values.
 
 `setObjective(model, affexpr)`
  * Sets the objective to `affexpr`, where `affexpr` is any valid combination of 
