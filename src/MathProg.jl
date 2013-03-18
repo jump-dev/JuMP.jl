@@ -46,7 +46,7 @@ macro sumExprOld(expr)
   esc(:(AffExpr($vararr,$coefarr,0.)))
 end
 
-include("multivardict.jl")
+include("MathProgDict.jl")
 
 ########################################################################
 # Constants

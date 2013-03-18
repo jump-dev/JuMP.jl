@@ -86,15 +86,4 @@ end
 getValue(x::MathProgDict) = map(getValue,x)
 endof(x::MathProgDict) = endof(x.innerArray)
 
-export @gendict, getValue
-
-
-
-### Old code
-type MultivarDict{T,N}
-  innerArray::Array{T,N}
-  name::String
-end
-
-getindex(d::MultivarDict, vals...) = getindex(d.innerArray, vals...)
-setindex!(d::MultivarDict, vals...) = setindex!(d.innerArray, vals...)
+export @gendict
