@@ -73,7 +73,6 @@ macro gendict(instancename,T,idxsets...)
             push!(geninstance.args[2].args, esc(dictnames[i]))
         end
     end
-    println(funcs)
     eval(Expr(:toplevel, typecode))
     eval(Expr(:toplevel, funcs))
 
