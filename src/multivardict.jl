@@ -49,8 +49,8 @@ macro gendict(instancename,T,idxsets...)
         varname = symbol(string("x",i))
         
         if isrange[i]
-            push!(getidxlhs.args,:($varname::Int))
-            push!(setidxlhs.args,:($varname::Int))
+            push!(getidxlhs.args,:($varname))
+            push!(setidxlhs.args,:($varname))
 
             push!(getidxrhs.args,:($varname+$(offset[i])))
             push!(setidxrhs.args,:($varname+$(offset[i])))
@@ -84,6 +84,7 @@ macro gendict(instancename,T,idxsets...)
 end
 
 getValue(x::MathProgDict) = map(getValue,x)
+endof(x::MathProgDict) = endof(x.innerArray)
 
 export @gendict, getValue
 
