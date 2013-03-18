@@ -246,7 +246,6 @@ macro defVar(m, x, extra...)
         varname = var.args[1]
         idxvars = Symbol[]
         idxsets = {}
-        arrcall = Expr(:call,:Array,Variable)
         refcall = Expr(:ref,esc(varname))
         for s in var.args[2:end]
             if isa(s,Expr) && s.head == :(=)
@@ -258,7 +257,6 @@ macro defVar(m, x, extra...)
             end
             push!(idxvars, idxvar)
             push!(idxsets, idxset)
-            push!(arrcall.args, :(length($(esc(idxset)))))
             push!(refcall.args, esc(idxvar)) 
         end
         code = :( $(refcall) = MathProg.Variable($(esc(m)), $(esc(lb)), $(esc(ub)), $t) )
@@ -272,7 +270,6 @@ macro defVar(m, x, extra...)
         
         mac = Expr(:macrocall,symbol("@gendict"),varname,:Variable,idxsets...)
         code = quote 
-            #$(esc(varname)) = MultivarDict($arrcall,$(string(varname)))
             $(esc(mac))
             $code
         end
