@@ -582,7 +582,7 @@ function writeLP(m::Model, fname::String)
   # Constraints
   #gc_disable()
   write(f,"Subject To\n")
-  for i in length(m.constraints)
+  for i in 1:length(m.constraints)
     @printf(f, " c%d: ", i)
 
     c = m.constraints[i]
