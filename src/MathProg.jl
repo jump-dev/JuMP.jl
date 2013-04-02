@@ -11,9 +11,11 @@ import Base.setindex!
 
 module MathProg
 
-# Currently we use CLP and CoinMP, but later we will want to make it so
-# you can only include solvers you have.
-using Clp
+using MathProgBase
+include(joinpath(Pkg.dir("MathProgBase"),"src","LinprogSolverInterface.jl"))
+using LinprogSolverInterface
+
+# Eventually we'll have a solver-independent interface for MIP solvers
 using CoinMP
 
 importall Base
@@ -75,12 +77,14 @@ type Model
   # Solution data
   objVal
   colVal::Vector{Float64}
+  # internal solver model object
+  internalModel
 end
 
 
 # Default constructor
 Model(sense::String) = Model(0,sense,false,Array(Constraint,0),
-							0,String[],Float64[],Float64[],Int[],0,Float64[])
+							0,String[],Float64[],Float64[],Int[],0,Float64[],nothing)
 
 # Pretty print
 function print(m::Model)
@@ -666,11 +670,11 @@ function solve(m::Model)
 	if anyInts
 		solveCoinMP(m)
 	else
-		solveClp(m)
+		solveLP(m)
 	end
 end
 
-function solveClp(m::Model)
+function solveLP(m::Model)
 	if m.objIsQuad
 		error("Quadratic objectives are not fully supported yet")
 	end
@@ -681,9 +685,6 @@ function solveClp(m::Model)
 	f = zeros(m.numCols)
 	for ind in 1:length(m.objective.coeffs)
 		f[m.objective.vars[ind].col] = m.objective.coeffs[ind]
-	end
-	if m.objSense == "max"
-		f *= -1
 	end
 	
 	# Create row bounds
@@ -733,19 +734,25 @@ function solveClp(m::Model)
   
   
   # Ready to solve
-  solution = linprog(f, A, rowlb, rowub, m.colLower, m.colUpper)
-  
-  # Store solution values in model  
-  m.objVal = solution[1]
-  if m.objSense == "max"
-      m.objVal *= -1
+  if MathProgBase.lpsolver == nothing
+    error("No LP solver installed. Please run Pkg.add(\"Clp\") and restart Julia.")
   end
-  if solution[3] == 0
-    m.colVal = solution[2]
+  m.internalModel = MathProgBase.lpsolver()
+  loadproblem(m.internalModel, A, m.colLower, m.colUpper, f, rowlb, rowub)
+  setsense(m.internalModel, m.objSense == "max" ? :Max : :Min)
+  optimize(m.internalModel)
+  stat = status(m.internalModel)
+
+  if stat != :Optimal
+    println("Warning: LP not solved to optimality, status: ", stat)
+  else
+    # store solution values in model
+    m.objVal = getobjval(m.internalModel)
+    m.colVal = getsolution(m.internalModel)
   end
-  
-  # Return flag
-  return solution[3]
+
+  return stat
+
 end
 
 
