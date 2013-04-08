@@ -17,6 +17,8 @@ using LinprogSolverInterface
 
 # Eventually we'll have a solver-independent interface for MIP solvers
 using CoinMP
+# MathProgBase is somewhat broken, we still need to include Clp
+using Clp
 
 importall Base
 
