@@ -748,6 +748,7 @@ function solveLP(m::Model)
   else
     # store solution values in model
     m.objVal = getobjval(m.internalModel)
+    m.objVal += m.objective.constant
     m.colVal = getsolution(m.internalModel)
   end
 
@@ -835,6 +836,7 @@ function solveCoinMP(m::Model)
   if m.objSense == "max"
       m.objVal *= -1
   end
+  m.objVal += m.objective.constant
   if solution[3] == "Optimal solution found"
     m.colVal = solution[2]
   end
