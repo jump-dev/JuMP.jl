@@ -739,7 +739,7 @@ function solveLP(m::Model)
   if MathProgBase.lpsolver == nothing
     error("No LP solver installed. Please run Pkg.add(\"Clp\") and restart Julia.")
   end
-  m.internalModel = MathProgBase.lpsolver()
+  m.internalModel = MathProgBase.lpsolver.model()
   loadproblem(m.internalModel, A, m.colLower, m.colUpper, f, rowlb, rowub)
   setsense(m.internalModel, m.objSense == "max" ? :Max : :Min)
   optimize(m.internalModel)
