@@ -12,13 +12,11 @@ import Base.setindex!
 module MathProg
 
 using MathProgBase
-include(joinpath(Pkg.dir("MathProgBase"),"src","LinprogSolverInterface.jl"))
+require(joinpath(Pkg.dir("MathProgBase"),"src","LinprogSolverInterface.jl"))
 using LinprogSolverInterface
 
 # Eventually we'll have a solver-independent interface for MIP solvers
 using CoinMP
-# MathProgBase is somewhat broken, we still need to include Clp
-using Clp
 
 importall Base
 
