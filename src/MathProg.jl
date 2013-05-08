@@ -110,7 +110,7 @@ end
 # Doesn't actually do much, just a pointer back to the model
 type Variable
   m::Model
-  col::Integer
+  col::Int
 end
 
 # Constructor 1 - no name
@@ -463,15 +463,17 @@ function writeMPS(m::Model, fname::String)
   for c in 1:numRows
       nnz += length(m.constraints[c].lhs.coeffs)
   end
-  objaff = (m.objIsQuad) ? m.objective.aff : m.objective
+  objaff::AffExpr = (m.objIsQuad) ? m.objective.aff : m.objective
   nnz += length(objaff.coeffs)
   colval = Array(Int,nnz)
   rownzval = Array(Float64,nnz)
   nnz = 0
   for c in 1:numRows
       rowptr[c] = nnz + 1
-      coeffs = m.constraints[c].lhs.coeffs
-      vars = m.constraints[c].lhs.vars
+      # TODO: type assertion shouldn't be necessary
+      constr::Constraint = m.constraints[c]
+      coeffs = constr.lhs.coeffs
+      vars = constr.lhs.vars
       for ind in 1:length(coeffs)
           nnz += 1
           colval[nnz] = vars[ind].col
@@ -573,7 +575,7 @@ function writeLP(m::Model, fname::String)
   else
     write(f,"Minimize\n")
   end
-  objaff = (m.objIsQuad) ? m.objective.aff : m.objective
+  objaff::AffExpr = (m.objIsQuad) ? m.objective.aff : m.objective
   write(f, " obj: ")
   nnz = length(objaff.coeffs)
   for ind in 1:(nnz-1)
@@ -589,7 +591,7 @@ function writeLP(m::Model, fname::String)
   for i in 1:length(m.constraints)
     @printf(f, " c%d: ", i)
 
-    c = m.constraints[i]
+    c::Constraint = m.constraints[i]
     nnz = length(c.lhs.coeffs)
     for ind in 1:(nnz-1)
       @printf(f, "%f VAR%d + ", c.lhs.coeffs[ind], c.lhs.vars[ind].col)
