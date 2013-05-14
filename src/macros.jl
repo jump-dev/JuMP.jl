@@ -239,9 +239,11 @@ macro defVar(m, x, extra...)
             $var = Variable($m,$lb,$ub,$t,$(string(var)))
         end)
     else
-        @assert isa(var,Expr)
+        if !isa(var,Expr)
+            error("Syntax error: Expected $var to be variable name.")
+        end
         if var.head != :ref
-            error("Expected form var[...]")
+            error("Syntax error: Expected $var to be of form var[...]")
         end
         varname = var.args[1]
         idxvars = Symbol[]
