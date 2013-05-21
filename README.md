@@ -13,13 +13,15 @@ You can install MathProg through the Julia package manager (version 0.2 prerelea
 
     Pkg.add("MathProg")
     
-MathProg is build on **[MathProgBase]** which provides solver-independent
+MathProg is built on **[MathProgBase]** which provides solver-independent
 LP and MILP functionality. See that package for how to select solvers.
-By default we install and use the Clp and CoinMP packages which 
-provide powerful open-source LP and MILP solvers. Check the Clp.jl 
-and CoinMP.jl READMEs for platform-specific installation instructions.
+By default we install and use the **[Clp]** and **[CoinMP]** packages which 
+link with powerful open-source LP and MILP solvers. Check the corresponding
+READMEs for platform-specific installation instructions.
 
 [MathProgBase]: https://github.com/mlubin/MathProgBase.jl
+[Clp]: https://github.com/mlubin/Clp.jl
+[CoinMP]: https://github.com/mlubin/CoinMP.jl
 
 # Simple Example
 
