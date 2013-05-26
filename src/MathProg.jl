@@ -360,6 +360,12 @@ end
 function (-)(lhs::AffExpr, rhs::Number)
   return AffExpr(copy(lhs.vars),copy(lhs.coeffs), lhs.constant-rhs)
 end
+function (/)(lhs::AffExpr, rhs::Number)
+  return AffExpr(copy(lhs.vars), lhs.coeffs/rhs, lhs.constant/rhs)
+end
+function (*)(lhs::AffExpr, rhs::Number)
+  return AffExpr(copy(lhs.vars), lhs.coeffs*rhs, lhs.constant*rhs)
+end
 # AffExpr--AffExpr
 function (+)(lhs::AffExpr, rhs::AffExpr)
   ret = AffExpr(copy(lhs.vars), copy(lhs.coeffs), lhs.constant)
