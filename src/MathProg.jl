@@ -3,6 +3,7 @@
 # A MILP+QP modelling langauge for Julia
 #
 # By Iain Dunning and Miles Lubin
+# http://www.github.com/IainNZ/MathProg.jl
 ########################################################################
 
 import Base.getindex
@@ -11,12 +12,10 @@ import Base.setindex!
 
 module MathProg
 
+# Use the standard solver interface for LPs and MIPs
 using MathProgBase
 require(joinpath(Pkg.dir("MathProgBase"),"src","LinprogSolverInterface.jl"))
 using LinprogSolverInterface
-
-# Eventually we'll have a solver-independent interface for MIP solvers
-using CoinMP
 
 importall Base
 
@@ -31,10 +30,9 @@ export
 # Functions
   print,exprToString,conToString,writeLP,writeMPS,
   setName,getName,setLower,setUpper,getLower,getUpper,getValue,
-  addConstraint,setObjective,solve,solveClp,solveCoinMP,addVar,addVars,
+  addConstraint,setObjective,solve,addVar,addVars,
 
 # Macros and support functions
-  #@sumExpr, # deprecated
   @addConstraint,
   @defVar,
   @setObjective,
