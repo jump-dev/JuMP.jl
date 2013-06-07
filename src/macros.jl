@@ -8,7 +8,7 @@ function timescoef(x::Expr)
     end
     x2 = copy(x)
     # just delete last argument
-    delete!(x2.args,length(x2.args))
+    splice!(x2.args,length(x2.args))
     return x2
 end
 # extracts last operand of *
