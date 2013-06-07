@@ -24,6 +24,7 @@ export
   Model,
   Variable,
   AffExpr,
+  QuadExpr,
   Constraint,
   MultivarDict,
 
@@ -236,6 +237,8 @@ type QuadExpr
   aff::AffExpr
 end
 
+QuadExpr() = QuadExpr(Variable[],Variable[],Float64[],AffExpr())
+
 function setObjective(m::Model, q::QuadExpr)
   m.objective = q
   m.objIsQuad = true
@@ -338,6 +341,9 @@ function (-)(lhs::Number, rhs::AffExpr)
   ret.constant = lhs - ret.constant
   return ret
 end
+(*)(lhs::Number, rhs::AffExpr) = (*)(rhs,lhs)
+# Number--QuadExpr
+(*)(lhs::Number, rhs::QuadExpr) = QuadExpr(copy(rhs.quadVars1),copy(rhs.quadVars2),lhs*rhs.quadCoeffs,lhs*rhs.aff)
 
 # AffExpr
 # AffExpr--Variable
@@ -682,13 +688,15 @@ end
 
 # prepare objective, constraint matrix, and row bounds
 function prepProblem(m::Model)
+
+    objaff::AffExpr = m.objIsQuad ? m.objective.aff : m.objective
     
     # We already have dense column lower and upper bounds
 
     # Create dense objective vector
     f = zeros(m.numCols)
-    for ind in 1:length(m.objective.coeffs)
-        f[m.objective.vars[ind].col] = m.objective.coeffs[ind]
+    for ind in 1:length(objaff.vars)
+        f[objaff.vars[ind].col] = objaff.coeffs[ind]
     end
 
     # Create row bounds
@@ -771,14 +779,14 @@ function solveLP(m::Model)
 end
 
 function solveMIP(m::Model)
-    if m.objIsQuad
+    if m.objIsQuad && string(MathProgBase.mipsolver) != "Gurobi"
         error("Quadratic objectives are not fully supported yet")
     end
 
     f, A, rowlb, rowub = prepProblem(m)
 
     # Build vartype vector
-    vartype = zeros(m.numCols)
+    vartype = zeros(Char,m.numCols)
     for j = 1:m.numCols
         if m.colCat[j] == CONTINUOUS
             vartype[j] = 'C'
@@ -799,6 +807,12 @@ function solveMIP(m::Model)
     end
     loadproblem(m.internalModel, A, m.colLower, m.colUpper, f, rowlb, rowub)
     setvartype(m.internalModel, vartype)
+    # undocumented support for quadratic MIPs with gurobi:
+    if m.objIsQuad
+        gurobisolver = getrawsolver(m.internalModel)
+        MathProgBase.mipsolver.add_qpterms!(gurobisolver, [v.col for v in m.objective.quadVars1], [v.col for v in m.objective.quadVars2], m.objective.quadCoeffs)
+    end
+
     optimize(m.internalModel)
     stat = status(m.internalModel)
 
@@ -810,7 +824,7 @@ function solveMIP(m::Model)
         if m.objSense == "max"
             m.objVal = -m.objVal
         end
-        m.objVal += m.objective.constant
+        m.objVal += !m.objIsQuad ? m.objective.constant : m.objective.aff.constant
         m.colVal = getsolution(m.internalModel)
     end
 
