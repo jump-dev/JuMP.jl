@@ -78,12 +78,13 @@ type Model
   colVal::Vector{Float64}
   # internal solver model object
   internalModel
+  solverOptions
 end
 
 
 # Default constructor
 Model(sense::String) = Model(0,sense,false,Array(Constraint,0),
-							0,String[],Float64[],Float64[],Int[],0,Float64[],nothing)
+							0,String[],Float64[],Float64[],Int[],0,Float64[],nothing,Dict())
 
 # Pretty print
 function print(m::Model)
@@ -759,7 +760,7 @@ function solveLP(m::Model)
     if MathProgBase.lpsolver == nothing
         error("No LP solver installed. Please run Pkg.add(\"Clp\") and restart Julia.")
     end
-    m.internalModel = MathProgBase.lpsolver.model()
+    m.internalModel = MathProgBase.lpsolver.model(;m.solverOptions...)
     loadproblem(m.internalModel, A, m.colLower, m.colUpper, f, rowlb, rowub)
     setsense(m.internalModel, m.objSense == "max" ? :Max : :Min)
     optimize(m.internalModel)
@@ -800,7 +801,7 @@ function solveMIP(m::Model)
         error("No MIP solver installed. Please run Pkg.add(\"CoinMP\") and restart Julia.")
     end
     
-    m.internalModel = MathProgBase.mipsolver.model()
+    m.internalModel = MathProgBase.mipsolver.model(;m.solverOptions...)
     # CoinMP doesn't support obj senses...
     if m.objSense == "max"
         f = -f
