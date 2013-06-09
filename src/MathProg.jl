@@ -113,71 +113,31 @@ type Variable
   col::Int
 end
 
-# Constructor 1 - no name
-function Variable(m::Model,lower::Number,upper::Number,cat::Int)
-  return Variable(m,lower,upper,cat,"")
-end
-
-# Constructor 2 - with name
 function Variable(m::Model,lower::Number,upper::Number,cat::Int,name::String)
   m.numCols += 1
-  push!(m.colNames,name)
-  push!(m.colLower,convert(Float64,lower))
-  push!(m.colUpper,convert(Float64,upper))
+  push!(m.colNames, name)
+  push!(m.colLower, convert(Float64,lower))
+  push!(m.colUpper, convert(Float64,upper))
   push!(m.colCat, cat)
-  return Variable(m,m.numCols)
+  return Variable(m, m.numCols)
 end
 
-# Constructor 3 - as Model method
-function addVar(m::Model, lower::Number, upper::Number, cat::Int)
-  return Variable(m, lower, upper, cat)
-end
-function addVar(m::Model, lower::Number, upper::Number, cat::Int, name::String)
-  return Variable(m, lower, upper, cat, name)
-end
-function addVars(m::Model, lower::Number, upper::Number, cat::Int, dims)
-  return addVars(m, lower, upper, cat, dims, "")
-end
-function addVars(m::Model, lower::Number, upper::Number, cat::Int, dims, name::String)
-	if typeof(dims) == Int
-		# Single dimension
-		return [ Variable(m, lower, upper, cat, @sprintf("%s%d",name,i)) for i=1:dims ]
-	else
-		# Two dimensional - hopefully...
-		return [ Variable(m, lower, upper, cat, @sprintf("%s%d%d",name,i,j)) for i=1:dims[1], j=1:dims[2] ]
-	end
-end
+Variable(m::Model,lower::Number,upper::Number,cat::Int) =
+  Variable(m,lower,upper,cat,"")
 
 # Name setter/getters
-function setName(v::Variable,n::String)
-  v.m.colNames[v.col] = n
-end
-function getName(v::Variable)
-  return (v.m.colNames[v.col] == "" ? string("_col",v.col) : v.m.colNames[v.col])
-end
-
-function show(io::IO, v::Variable)
-  print(io,getName(v))
-end
+setName(v::Variable,n::String) = (v.m.colNames[v.col] = n)
+getName(v::Variable) = (v.m.colNames[v.col] == "" ? string("_col",v.col) : v.m.colNames[v.col])
+show(io::IO, v::Variable) = print(io, getName(v))
 
 # Bound setter/getters
-function setLower(v::Variable,lower::Number)
-  v.m.colLower[v.col] = convert(Float64,lower)
-end
-function setUpper(v::Variable,upper::Number)
-  v.m.colUpper[v.col] = convert(Float64,upper)
-end
-function getLower(v::Variable)
-  return v.m.colLower[v.col]
-end
-function getUpper(v::Variable)
-  return v.m.colUpper[v.col]
-end
+setLower(v::Variable,lower::Number) = (v.m.colLower[v.col] = convert(Float64,lower))
+setUpper(v::Variable,upper::Number) = (v.m.colUpper[v.col] = convert(Float64,upper))
+getLower(v::Variable) = v.m.colLower[v.col]
+getUpper(v::Variable) = v.m.colUpper[v.col]
 
 # Value getter
-function getValue(v::Variable)
-  return v.m.colVal[v.col]
-end
+getValue(v::Variable) = v.m.colVal[v.col]
 
 ########################################################################
 # Affine Expression class

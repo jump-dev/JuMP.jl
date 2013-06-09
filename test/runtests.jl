@@ -8,5 +8,5 @@ println("Running tests:")
 
 for curtest in tests
     println(" Test: $(curtest)")
-    include(my_test)
+    include(curtest)
 end
