@@ -25,6 +25,7 @@ capacity = 10
 @addConstraint(m, sum{weight[i]*x[i], i=1:5} <= capacity)
 
 status = solve(m)
+print(m)
 
 println("Objective is: ",m.objVal)
 println("Solution is:")

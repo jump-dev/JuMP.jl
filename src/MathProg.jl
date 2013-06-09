@@ -29,7 +29,7 @@ export
   MultivarDict,
 
 # Functions
-  print,exprToStr,conToString,writeLP,writeMPS,
+  print,affToStr,quadToStr,conToString,writeLP,writeMPS,
   setName,getName,setLower,setUpper,getLower,getUpper,getValue,
   addConstraint,setObjective,solve,addVar,addVars,
 
@@ -54,8 +54,9 @@ export CONTINUOUS, INTEGER, BINARY
 # Keeps track of all model and column info
 type Model
   objective
-  objSense
+  quadobj
   objIsQuad
+  objSense
   
   constraints
   
@@ -76,8 +77,8 @@ end
 
 
 # Default constructor
-Model(sense::String) = Model(0,sense,false,Array(Constraint,0),
-							0,String[],Float64[],Float64[],Int[],0,Float64[],nothing,Dict())
+Model(sense::String) = Model(0,0,false,sense,Array(Constraint,0),
+                             0,String[],Float64[],Float64[],Int[],0,Float64[],nothing,Dict())
 
 # Pretty print
 function print(m::Model)
@@ -145,9 +146,9 @@ AffExpr() = AffExpr(Variable[],Float64[],0.)
 
 setObjective(m::Model, a::AffExpr) = (m.objective = a)
 
-print(io::IO, a::AffExpr) = print(io, exprToStr(a))
+print(io::IO, a::AffExpr) = print(io, affToStr(a))
 
-function exprToStr(a::AffExpr)
+function affToStr(a::AffExpr)
   if length(a.vars) == 0
     return string(a.constant)
   end
@@ -171,30 +172,30 @@ end
 #######################################################################
 # QuadExpr class
 type QuadExpr
-  quadVars1::Vector{Variable}
-  quadVars2::Vector{Variable}
-  quadCoeffs::Vector{Float64}
+  qvars1::Vector{Variable}
+  qvars2::Vector{Variable}
+  qcoeffs::Vector{Float64}
   aff::AffExpr
 end
 
 QuadExpr() = QuadExpr(Variable[],Variable[],Float64[],AffExpr())
 
 function setObjective(m::Model, q::QuadExpr)
-  m.objective = q
+  m.objective = q.aff
+  m.quadobj = q
   m.objIsQuad = true
 end
 
-# Pretty printer
-function print(q::QuadExpr)
-  for ind in 1:length(q.quadVars1)
-    print(q.quadCoeffs[ind])
-    print("*")
-    print(getName(q.quadVars1[ind]))
-    print("*")
-    print(getName(q.quadVars2[ind]))
-    print(" + ")
+print(io::IO, q::QuadExpr) = print(io, quadToStr(q))
+
+function quadToStr(q::QuadExpr)
+  ret = ""
+  for ind in 1:length(q.qvars1)
+    ret += string(q.qcoeffs[ind]," ",
+                  getName(q.qvars1[ind]),"*",
+                  getName(q.qvars2[ind])," + ")
   end
-  print(q.aff)
+  return string(ret, affToExpr(q.aff))
 end
 
 #######################################################################
@@ -223,6 +224,36 @@ end
 
 ###########################################################
 # Overloads
+#
+# Different objects that must all interact:
+# 1. Number
+# 2. Variable
+# 3. AffExpr
+# 4. QuadExpr
+# 5. Constraint (for comparison ops)
+# Both directions must be done, but to avoid doing both directions manually, 
+# we will map functions like (+)(AffExpr,Variable) to (+)(Variable, AffExpr)
+# by using the order of the list above. i.e. for (+)(lhs,rhs), if lhs is
+# higher on list then this is the canonical version. If rhs is higher, then
+# we say (+)(lhs,rhs) = (+)(rhs,lhs)
+# This doesn't always work - e.g. divide
+
+# Number
+# Number--Variable
+(+)(lhs::Number, rhs::Variable) = AffExpr([rhs],[+1.],convert(Float64,lhs))
+(-)(lhs::Number, rhs::Variable) = AffExpr([rhs],[-1.],convert(Float64,lhs))
+(*)(lhs::Number, rhs::Variable) = AffExpr([rhs],[convert(Float64,lhs)], 0.)
+(/)(lhs::Number, rhs::Variable) = error("Cannot divide by variable")
+# Number--AffExpr
+(+)(lhs::Number, rhs::AffExpr)  = AffExpr(copy(rhs.vars),copy(rhs.coeffs),lhs+rhs.constant)
+(-)(lhs::Number, rhs::AffExpr)  = AffExpr(copy(rhs.vars),    -rhs.coeffs ,lhs-rhs.constant)
+(*)(lhs::Number, rhs::AffExpr)  = AffExpr(copy(rhs.vars), lhs*rhs.coeffs ,lhs*rhs.constant)
+(/)(lhs::Number, rhs::AffExpr)  = error("Cannot divide by an affine expression")
+# Number--QuadExpr
+#(+)(lhs::Number, rhs::QuadExpr) = QuadExpr(
+(*)(lhs::Number, rhs::QuadExpr) = QuadExpr(copy(rhs.qvars1),copy(rhs.qvars2),lhs*rhs.qcoeffs,lhs*rhs.aff)
+
+
 # Variable
 # Variable--Variable
 function (+)(lhs::Variable, rhs::Variable)
@@ -261,30 +292,6 @@ function (-)(lhs::Variable, rhs::AffExpr)
   push!(ret.coeffs, 1.)
   return ret
 end
-
-# Number
-# Number--Variable
-function (*)(lhs::Number, rhs::Variable)
-  return AffExpr([rhs],[convert(Float64,lhs)], 0.0)
-end
-# Number--AffExpr
-function (+)(lhs::Number, rhs::AffExpr)
-  ret = AffExpr(copy(rhs.vars),copy(rhs.coeffs),rhs.constant)
-  ret.constant += lhs
-  return ret
-end
-function (-)(lhs::Number, rhs::AffExpr)
-  ret = AffExpr(copy(rhs.vars),copy(rhs.coeffs),rhs.constant)
-  for ind in 1:length(ret.coeffs)
-    ret.coeffs *= -1
-  end
-  ret.constant = lhs - ret.constant
-  return ret
-end
-(*)(lhs::Number, rhs::AffExpr) = (*)(rhs,lhs)
-# Number--QuadExpr
-(*)(lhs::Number, rhs::QuadExpr) = QuadExpr(copy(rhs.quadVars1),copy(rhs.quadVars2),lhs*rhs.quadCoeffs,lhs*rhs.aff)
-
 # AffExpr
 # AffExpr--Variable
 function (+)(lhs::AffExpr, rhs::Variable) 
@@ -328,9 +335,9 @@ function (*)(lhs::AffExpr, rhs::AffExpr)
       v1 = lhs.vars[ind1]
       v2 = rhs.vars[ind2]
       c  = lhs.coeffs[ind1]*rhs.coeffs[ind2]
-      push!(ret.quadVars1,v1)
-      push!(ret.quadVars2,v2)
-      push!(ret.quadCoeffs,c)
+      push!(ret.qvars1,v1)
+      push!(ret.qvars2,v2)
+      push!(ret.qcoeffs,c)
     end
   end
   
@@ -362,9 +369,9 @@ end
 # QuadExpr--QuadExpr
 function (+)(lhs::QuadExpr, rhs::QuadExpr)
   ret = QuadExpr(Variable[],Variable[],Float64[],AffExpr())
-  ret.quadVars1 = cat(1,lhs.quadVars1,rhs.quadVars1)
-  ret.quadVars2 = cat(1,lhs.quadVars2,rhs.quadVars2)
-  ret.quadCoeffs = cat(1,lhs.quadCoeffs,rhs.quadCoeffs)
+  ret.qvars1 = cat(1,lhs.quadVars1,rhs.quadVars1)
+  ret.qvars2 = cat(1,lhs.quadVars2,rhs.quadVars2)
+  ret.qcoeffs = cat(1,lhs.quadCoeffs,rhs.quadCoeffs)
   ret.aff = lhs.aff + rhs.aff
   return ret
 end
@@ -490,9 +497,9 @@ function writeMPS(m::Model, fname::String)
   gc_disable()
   if m.objIsQuad
     write(f,"QMATRIX\n")
-    qv1 = m.objective.quadVars1
-    qv2 = m.objective.quadVars2
-    qc  = m.objective.quadCoeffs
+    qv1 = m.objective.qvars1
+    qv2 = m.objective.qvars2
+    qc  = m.objective.qcoeffs
     for ind = 1:length(qv1)
       if qv1[ind].col == qv2[ind].col
         # Diagonal element
@@ -629,7 +636,7 @@ end
 # prepare objective, constraint matrix, and row bounds
 function prepProblem(m::Model)
 
-    objaff::AffExpr = m.objIsQuad ? m.objective.aff : m.objective
+    objaff::AffExpr = m.objective # TODO check
     
     # We already have dense column lower and upper bounds
 
@@ -723,6 +730,7 @@ function solveMIP(m::Model)
         error("Quadratic objectives are not fully supported yet")
     end
 
+
     f, A, rowlb, rowub = prepProblem(m)
 
     # Build vartype vector
@@ -750,7 +758,7 @@ function solveMIP(m::Model)
     # undocumented support for quadratic MIPs with gurobi:
     if m.objIsQuad
         gurobisolver = getrawsolver(m.internalModel)
-        MathProgBase.mipsolver.add_qpterms!(gurobisolver, [v.col for v in m.objective.quadVars1], [v.col for v in m.objective.quadVars2], m.objective.quadCoeffs)
+        MathProgBase.mipsolver.add_qpterms!(gurobisolver, [v.col for v in m.objective.qvars1], [v.col for v in m.objective.qvars2], m.objective.qcoeffs)
     end
 
     optimize(m.internalModel)
