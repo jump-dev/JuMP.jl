@@ -192,11 +192,11 @@ print(io::IO, q::QuadExpr) = print(io, quadToStr(q))
 function quadToStr(q::QuadExpr)
   ret = ""
   for ind in 1:length(q.qvars1)
-    ret += string(q.qcoeffs[ind]," ",
-                  getName(q.qvars1[ind]),"*",
-                  getName(q.qvars2[ind])," + ")
+    ret = string(ret, q.qcoeffs[ind]," ",
+                      getName(q.qvars1[ind]),"*",
+                      getName(q.qvars2[ind])," + ")
   end
-  return string(ret, affToExpr(q.aff))
+  return string(ret, affToStr(q.aff))
 end
 
 #######################################################################
@@ -368,13 +368,13 @@ end
 (*)(q::QuadExpr, a::AffExpr) = error("Cannot multiply a quadratic expression by an aff. expression")
 (/)(q::QuadExpr, a::AffExpr) = error("Cannot divide a quadratic expression by an aff. expression")
 # QuadExpr--QuadExpr
-(+)(q1::QuadExpr, q2::QuadExpr) = QuadExpr(vcat(q1.qvars1,  q2.qvars2),
+(+)(q1::QuadExpr, q2::QuadExpr) = QuadExpr(vcat(q1.qvars1,  q2.qvars1),
                                            vcat(q1.qvars2,  q2.qvars2),
-                                           vcat(q1.coeffs,  q2.coeffs),
+                                           vcat(q1.qcoeffs,  q2.qcoeffs),
                                            q1.aff + q2.aff)
 (-)(q1::QuadExpr, q2::QuadExpr) = QuadExpr(vcat(q1.qvars1,  q2.qvars2),
                                            vcat(q1.qvars2,  q2.qvars2),
-                                           vcat(q1.coeffs, -q2.coeffs),
+                                           vcat(q1.qcoeffs, -q2.qcoeffs),
                                            q1.aff - q2.aff)
 (*)(q1::QuadExpr, q2::QuadExpr) = error("Cannot multiply two quadratic expressions")
 (/)(q1::QuadExpr, q2::QuadExpr) = error("Cannot divide a quadratic expression by a quadratic expression")
