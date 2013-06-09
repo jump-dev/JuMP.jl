@@ -1,7 +1,7 @@
 require("MathProg")
 using MathProg
 
-tests = ["model.jl",
+tests = ["affexpr.jl",
          "variable.jl"]
 
 println("Running tests:")

@@ -8,7 +8,7 @@
 
 import Base.getindex
 import Base.setindex!
-
+import Base.print
 
 module MathProg
 
@@ -29,7 +29,7 @@ export
   MultivarDict,
 
 # Functions
-  print,exprToString,conToString,writeLP,writeMPS,
+  print,exprToStr,conToString,writeLP,writeMPS,
   setName,getName,setLower,setUpper,getLower,getUpper,getValue,
   addConstraint,setObjective,solve,addVar,addVars,
 
@@ -121,7 +121,7 @@ Variable(m::Model,lower::Number,upper::Number,cat::Int) =
 # Name setter/getters
 setName(v::Variable,n::String) = (v.m.colNames[v.col] = n)
 getName(v::Variable) = (v.m.colNames[v.col] == "" ? string("_col",v.col) : v.m.colNames[v.col])
-show(io::IO, v::Variable) = print(io, getName(v))
+print(io::IO, v::Variable) = print(io, getName(v))
 
 # Bound setter/getters
 setLower(v::Variable,lower::Number) = (v.m.colLower[v.col] = convert(Float64,lower))
@@ -141,37 +141,23 @@ type AffExpr
   constant::Float64
 end
 
-function AffExpr()
-  return AffExpr(Variable[],Float64[],0.)
-end
+AffExpr() = AffExpr(Variable[],Float64[],0.)
 
-function setObjective(m::Model, a::AffExpr)
-  m.objective = a
-  m.objIsQuad = false
-end
+setObjective(m::Model, a::AffExpr) = (m.objective = a)
 
-# Pretty printer
-function print(a::AffExpr)
-  for ind in 1:length(a.vars)
-    print(a.coeffs[ind])
-    print("*")
-    print(getName(a.vars[ind]))
-    print(" + ")
+print(io::IO, a::AffExpr) = print(io, exprToStr(a))
+
+function exprToStr(a::AffExpr)
+  if length(a.vars) == 0
+    return string(a.constant)
   end
-  print(a.constant)
-end
-
-function exprToString(a::AffExpr)
-  @assert length(a.vars) > 0
   seen = zeros(Bool,a.vars[1].m.numCols)
   nSeen = 0
   precomputedStrings = Array(ASCIIString,length(a.vars))
   for ind in 1:length(a.vars)
     thisstr = "$(a.coeffs[ind]) $(getName(a.vars[ind]))"
     precomputedStrings[nSeen+1] = thisstr
-    # TODO: check if already seen this variable using seen array
-    # if so, go back and update.
-    # maybe rows should be cleaned somewhere before this?
+    # TODO: collect like terms
     nSeen += 1
   end
   ret = join(precomputedStrings[1:nSeen]," + ")
