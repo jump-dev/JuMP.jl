@@ -352,15 +352,32 @@ end
 
 
 # QuadExpr
+# QuadExpr--Number
+(+)(lhs::QuadExpr, rhs::Number) = (+)(+rhs,lhs)
+(-)(lhs::QuadExpr, rhs::Number) = (+)(-rhs,lhs)
+(*)(lhs::QuadExpr, rhs::Number) = (*)(rhs,lhs)
+(/)(lhs::QuadExpr, rhs::Number) = (*)(1.0/rhs,lhs)
+# QuadExpr--Variable
+(+)(q::QuadExpr, v::Variable) = (+)(v,q)
+(-)(q::QuadExpr, v::Variable) = QuadExpr(copy(q.qvars1),copy(q.qvars2),copy(q.qcoeffs),q.aff-v)
+(*)(q::QuadExpr, v::Variable) = error("Cannot multiply a quadratic expression by a variable")
+(/)(q::QuadExpr, v::Variable) = error("Cannot divide a quadratic expression by a variable")
+# QuadExpr--AffExpr
+(+)(q::QuadExpr, a::AffExpr) = (+)(a,q)
+(-)(q::QuadExpr, a::AffExpr) = QuadExpr(copy(q.qvars1),copy(q.qvars2),copy(q.qcoeffs),q.aff-a)
+(*)(q::QuadExpr, a::AffExpr) = error("Cannot multiply a quadratic expression by an aff. expression")
+(/)(q::QuadExpr, a::AffExpr) = error("Cannot divide a quadratic expression by an aff. expression")
 # QuadExpr--QuadExpr
-function (+)(lhs::QuadExpr, rhs::QuadExpr)
-  ret = QuadExpr(Variable[],Variable[],Float64[],AffExpr())
-  ret.qvars1 = cat(1,lhs.quadVars1,rhs.quadVars1)
-  ret.qvars2 = cat(1,lhs.quadVars2,rhs.quadVars2)
-  ret.qcoeffs = cat(1,lhs.quadCoeffs,rhs.quadCoeffs)
-  ret.aff = lhs.aff + rhs.aff
-  return ret
-end
+(+)(q1::QuadExpr, q2::QuadExpr) = QuadExpr(vcat(q1.qvars1,  q2.qvars2),
+                                           vcat(q1.qvars2,  q2.qvars2),
+                                           vcat(q1.coeffs,  q2.coeffs),
+                                           q1.aff + q2.aff)
+(-)(q1::QuadExpr, q2::QuadExpr) = QuadExpr(vcat(q1.qvars1,  q2.qvars2),
+                                           vcat(q1.qvars2,  q2.qvars2),
+                                           vcat(q1.coeffs, -q2.coeffs),
+                                           q1.aff - q2.aff)
+(*)(q1::QuadExpr, q2::QuadExpr) = error("Cannot multiply two quadratic expressions")
+(/)(q1::QuadExpr, q2::QuadExpr) = error("Cannot divide a quadratic expression by a quadratic expression")
 
 # Constraint
 # Constraint--Number
