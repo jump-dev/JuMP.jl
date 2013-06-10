@@ -269,7 +269,11 @@ end
 (-)(lhs::Variable, rhs::AffExpr) = AffExpr(vcat(rhs.vars,lhs),vcat(-rhs.coeffs,1.),rhs.constant)
 function (*)(lhs::Variable, rhs::AffExpr)
   n = length(rhs.vars)
-  ret = QuadExpr([lhs for i=1:n],copy(rhs.vars),copy(rhs.coeffs),AffExpr([lhs], [rhs.constant], 0.))
+  if rhs.constant != 0.      
+    ret = QuadExpr([lhs for i=1:n],copy(rhs.vars),copy(rhs.coeffs),AffExpr([lhs], [rhs.constant], 0.))
+  else
+    ret = QuadExpr([lhs for i=1:n],copy(rhs.vars),copy(rhs.coeffs),AffExpr())
+  end
 end
 (/)(lhs::Variable, rhs::AffExpr) = error("Cannot divide a variable by an affine expression")
 # Variable--QuadExpr
