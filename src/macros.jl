@@ -122,7 +122,7 @@ function parseCurly(x::Expr, aff::Symbol, constantCoef)
         for level in (length(x.args)-1):-1:3
             preblock = Expr(:for, x.args[level],preblock)
         end
-        preblock = :($len = 1; $preblock;
+        preblock = :($len = 0; $preblock;
             sizehint($aff.vars,length($aff.vars)+$len);
             sizehint($aff.coeffs,length($aff.coeffs)+$len))
         code = :($preblock;$code)
