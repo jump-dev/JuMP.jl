@@ -22,8 +22,10 @@ end
 import Base.empty!
 
 function empty!(v::IndexedVector)
+    elts = v.elts
+    nzidx = v.nzidx
     for i in 1:v.nnz
-        v.elts[v.nzidx[i]] = 0
+        elts[nzidx[i]] = 0
     end
     v.nnz = 0
 end

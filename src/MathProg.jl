@@ -680,6 +680,8 @@ function prepProblem(m::Model)
     # Fill it up
     nnz = 0
     tmprow = IndexedVector(Float64,m.numCols)
+    tmpelts = tmprow.elts
+    tmpnzidx = tmprow.nzidx
     for c in 1:numRows
         rowptr[c] = nnz + 1
         coeffs = m.constraints[c].lhs.coeffs
@@ -690,9 +692,9 @@ function prepProblem(m::Model)
         end
         for i in 1:tmprow.nnz
             nnz += 1
-            idx = tmprow.nzidx[i]
+            idx = tmpnzidx[i]
             colval[nnz] = idx
-            rownzval[nnz] = tmprow.elts[idx]
+            rownzval[nnz] = tmpelts[idx]
         end
         empty!(tmprow)
     end
