@@ -41,6 +41,7 @@ export
   lpSum
 
 include("MathProgDict.jl")
+include("utils.jl")
 
 ########################################################################
 # Constants
@@ -678,15 +679,22 @@ function prepProblem(m::Model)
 
     # Fill it up
     nnz = 0
+    tmprow = IndexedVector(Float64,m.numCols)
     for c in 1:numRows
         rowptr[c] = nnz + 1
         coeffs = m.constraints[c].lhs.coeffs
         vars = m.constraints[c].lhs.vars
+        # collect duplicates
         for ind in 1:length(coeffs)
-            nnz += 1
-            colval[nnz] = vars[ind].col
-            rownzval[nnz] = coeffs[ind]
+            addelt(tmprow,vars[ind].col,coeffs[ind])
         end
+        for i in 1:tmprow.nnz
+            nnz += 1
+            idx = tmprow.nzidx[i]
+            colval[nnz] = idx
+            rownzval[nnz] = tmprow.elts[idx]
+        end
+        empty!(tmprow)
     end
     rowptr[numRows+1] = nnz + 1
 
