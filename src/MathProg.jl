@@ -41,6 +41,7 @@ export
   lpSum
 
 include("MathProgDict.jl")
+include("utils.jl")
 
 ########################################################################
 # Constants
@@ -682,15 +683,22 @@ function prepProblem(m::Model)
 
     # Fill it up
     nnz = 0
+    tmprow = IndexedVector(Float64,m.numCols)
     for c in 1:numRows
         rowptr[c] = nnz + 1
         coeffs = m.constraints[c].lhs.coeffs
         vars = m.constraints[c].lhs.vars
+        # collect duplicates
         for ind in 1:length(coeffs)
-            nnz += 1
-            colval[nnz] = vars[ind].col
-            rownzval[nnz] = coeffs[ind]
+            addelt(tmprow,vars[ind].col,coeffs[ind])
         end
+        for i in 1:tmprow.nnz
+            nnz += 1
+            idx = tmprow.nzidx[i]
+            colval[nnz] = idx
+            rownzval[nnz] = tmprow.elts[idx]
+        end
+        empty!(tmprow)
     end
     rowptr[numRows+1] = nnz + 1
 
@@ -765,7 +773,7 @@ function solveMIP(m::Model)
     # undocumented support for quadratic MIPs with gurobi:
     if m.objIsQuad
         gurobisolver = getrawsolver(m.internalModel)
-        MathProgBase.mipsolver.add_qpterms!(gurobisolver, [v.col for v in m.objective.qvars1], [v.col for v in m.objective.qvars2], m.objective.qcoeffs)
+        MathProgBase.mipsolver.add_qpterms!(gurobisolver, [v.col for v in m.quadobj.qvars1], [v.col for v in m.quadobj.qvars2], m.quadobj.qcoeffs)
     end
 
     optimize(m.internalModel)
@@ -779,7 +787,7 @@ function solveMIP(m::Model)
         if m.objSense == "max"
             m.objVal = -m.objVal
         end
-        m.objVal += !m.objIsQuad ? m.objective.constant : m.objective.aff.constant
+        m.objVal += m.objective.constant
         m.colVal = getsolution(m.internalModel)
     end
 
