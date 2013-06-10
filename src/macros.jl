@@ -118,13 +118,13 @@ function parseCurly(x::Expr, aff::Symbol, constantCoef)
         len = gensym()
         # precompute the number of elements to add
         # this is unncessary if we're just summing constants
-        preblock = quote $len = 1 end
-        for level in length(x.args):-1:3
-            push!(preblock.args,:($len *= length($(x.args[level].args[2]))))
+        preblock = :($len += length($(x.args[length(x.args)].args[2])))
+        for level in (length(x.args)-1):-1:3
+            preblock = Expr(:for, x.args[level],preblock)
         end
-        push!(preblock.args,:(
+        preblock = :($len = 1; $preblock;
             sizehint($aff.vars,length($aff.vars)+$len);
-            sizehint($aff.coeffs,length($aff.coeffs)+$len)))
+            sizehint($aff.coeffs,length($aff.coeffs)+$len))
         code = :($preblock;$code)
     end
 
