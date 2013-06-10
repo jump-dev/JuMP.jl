@@ -4,7 +4,8 @@ using Base.Test
 
 tests = ["affexpr.jl",
          "quadexpr.jl",
-         "variable.jl"]
+         "variable.jl",
+         "operator.jl"]
 
 println("Running tests:")
 
