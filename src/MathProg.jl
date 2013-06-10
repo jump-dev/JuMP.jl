@@ -761,7 +761,7 @@ function solveMIP(m::Model)
     # undocumented support for quadratic MIPs with gurobi:
     if m.objIsQuad
         gurobisolver = getrawsolver(m.internalModel)
-        MathProgBase.mipsolver.add_qpterms!(gurobisolver, [v.col for v in m.objective.qvars1], [v.col for v in m.objective.qvars2], m.objective.qcoeffs)
+        MathProgBase.mipsolver.add_qpterms!(gurobisolver, [v.col for v in m.quadobj.qvars1], [v.col for v in m.quadobj.qvars2], m.quadobj.qcoeffs)
     end
 
     optimize(m.internalModel)
@@ -775,7 +775,7 @@ function solveMIP(m::Model)
         if m.objSense == "max"
             m.objVal = -m.objVal
         end
-        m.objVal += !m.objIsQuad ? m.objective.constant : m.objective.aff.constant
+        m.objVal += m.objective.constant
         m.colVal = getsolution(m.internalModel)
     end
 
