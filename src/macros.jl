@@ -20,42 +20,10 @@ function timesvar(x::Expr)
     return x.args[end]
 end
 
-# returns expression for array of the coefficient terms in the comprehension
-function comprehensioncoef(x::Expr)
-    if x.head != :comprehension
-        error("In expression $x expected comprehension")
-    end
-    comp = Expr(:typed_comprehension,Float64,timescoef(x.args[1]),x.args[2:end]...)
-    containers = Expr[ ex.args[2] for ex in x.args[2:end] ]
-    out = quote l = 1 end
-    for c in containers
-        push!(out.args,:(l *= length($c)))
-    end
-    push!(out.args,:(reshape($comp,(l,))))
-    return out
-end
-
-# returns expression for array of the variable terms in the comprehension
-function comprehensionvar(x::Expr)
-    if x.head != :comprehension
-        error("In expression $x expected comprehension")
-    end
-    comp = Expr(:typed_comprehension,Variable,timesvar(x.args[1]),x.args[2:end]...)
-    containers = Expr[ ex.args[2] for ex in x.args[2:end] ]
-    out = quote l = 1 end
-    for c in containers
-        push!(out.args,:(l *= length($c)))
-    end
-    push!(out.args,:(reshape($comp,(l,))))
-    return out
-end
-
 # parses top-level expression and returns expression for array of the coefficient terms
 function topcoef(x::Expr)
     if x.head == :call && x.args[1] == :+
         return Expr(:vcat,map(topcoef,x.args[2:end])...)
-    elseif x.head == :comprehension
-        return comprehensioncoef(x)
     elseif x.head == :call && x.args[1] == :*
         println("timescoef of $x is $(timescoef(x))")
         return timescoef(x)
@@ -67,8 +35,6 @@ end
 function topvar(x::Expr)
     if x.head == :call && x.args[1] == :+
         return Expr(:vcat,map(topvar,x.args[2:end])...)
-    elseif x.head == :comprehension
-        return comprehensionvar(x)
     elseif x.head == :call && x.args[1] == :*
         return timesvar(x)
     else
@@ -184,10 +150,6 @@ macro setObjective(m, x)
     end)
 end
         
-
-macro sumExpr(x)
-    esc(:(AffExpr($(topvar(x)),convert(Vector{Float64},$(topcoef(x))),0.)))
-end
 
 macro defVar(m, x, extra...)
     if isa(x,Expr) && x.head == :comparison
