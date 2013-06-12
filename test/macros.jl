@@ -44,4 +44,7 @@ let
     @test conToString(m.constraints[end]) == "2.0 _col2 + 3.0 _col3 + 5.0 _col5 + 6.0 _col6 <= 1.0"
     @addConstraint(m, sum{ C[i,j]*x[i,j], i = 1:3, j = 1:3; i != j} == y)
     @test conToString(m.constraints[end]) == "2.0 _col2 + 3.0 _col3 + 4.0 _col4 + 6.0 _col6 + 7.0 _col7 + 8.0 _col8 + -1.0 y == -0.0"
+
+    @addConstraint(m, sum{ C[i,j]*x[i,j], i = 1:3, j = 1:i} == 0);
+    @test conToString(m.constraints[end]) == "1.0 _col1 + 4.0 _col4 + 5.0 _col5 + 7.0 _col7 + 8.0 _col8 + 9.0 _col9 == -0.0"
 end
