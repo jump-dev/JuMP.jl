@@ -265,8 +265,8 @@ end
 (*)(lhs::Variable, rhs::Variable) = QuadExpr([lhs],[rhs],[1.],AffExpr(Variable[],Float64[],0.))
 (/)(lhs::Variable, rhs::Variable) = error("Cannot divide a variable by a variable")
 # Variable--AffExpr
-(+)(lhs::Variable, rhs::AffExpr) = AffExpr(vcat(rhs.vars,lhs),vcat( rhs.coeffs,1.),rhs.constant)
-(-)(lhs::Variable, rhs::AffExpr) = AffExpr(vcat(rhs.vars,lhs),vcat(-rhs.coeffs,1.),rhs.constant)
+(+)(lhs::Variable, rhs::AffExpr) = AffExpr(vcat(rhs.vars,lhs),vcat( rhs.coeffs,1.), rhs.constant)
+(-)(lhs::Variable, rhs::AffExpr) = AffExpr(vcat(rhs.vars,lhs),vcat(-rhs.coeffs,1.),-rhs.constant)
 function (*)(lhs::Variable, rhs::AffExpr)
   n = length(rhs.vars)
   if rhs.constant != 0.      
