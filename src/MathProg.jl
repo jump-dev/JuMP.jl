@@ -221,7 +221,7 @@ function print(c::Constraint)
 end
 
 function conToString(c::Constraint)
-  return string(exprToString(c.lhs-c.lhs.constant)," ",c.sense," ",-c.lhs.constant)
+  return string(affToStr(c.lhs-c.lhs.constant)," ",c.sense," ",-c.lhs.constant)
 end
 
 ###########################################################

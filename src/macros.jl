@@ -1,4 +1,4 @@
-
+using Base.Meta
 
 # extracts left operands of *
 # a*b*c -> a*b
@@ -94,18 +94,18 @@ function parseCurly(x::Expr, aff::Symbol, constantCoef)
     end
 
     # we have a filter condition
-    if (isa(x.args[end],Expr) && x.args[end].head == :parameters)
-        cond = x.args[end]
+    if isexpr(x.args[2],:parameters)
+        cond = x.args[2]
         if length(cond.args) != 1
             error("No commas after semicolon allowed in sum expression, use && for multiple conditions")
         end
         # generate inner loop code first and then wrap in for loops
         code = quote
             if $(cond.args[1])
-                $(parseExpr(x.args[2], aff, constantCoef))
+                $(parseExpr(x.args[3], aff, constantCoef))
             end
         end
-        for level in (length(x.args)-1):-1:3
+        for level in length(x.args):-1:4
             code = Expr(:for, x.args[level],code)
             # for $(x.args[level]) $code end
         end
