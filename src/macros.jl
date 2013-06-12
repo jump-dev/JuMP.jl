@@ -20,28 +20,6 @@ function timesvar(x::Expr)
     return x.args[end]
 end
 
-# parses top-level expression and returns expression for array of the coefficient terms
-function topcoef(x::Expr)
-    if x.head == :call && x.args[1] == :+
-        return Expr(:vcat,map(topcoef,x.args[2:end])...)
-    elseif x.head == :call && x.args[1] == :*
-        println("timescoef of $x is $(timescoef(x))")
-        return timescoef(x)
-    else
-        error("Unable to parse expression $x")
-    end
-end
-
-function topvar(x::Expr)
-    if x.head == :call && x.args[1] == :+
-        return Expr(:vcat,map(topvar,x.args[2:end])...)
-    elseif x.head == :call && x.args[1] == :*
-        return timesvar(x)
-    else
-        error("Unable to parse expression $x")
-    end
-end
-
 function addToExpression(aff::AffExpr,c::Number,x::Variable)
     push!(aff.vars,x)
     push!(aff.coeffs,c)
