@@ -49,9 +49,7 @@ q2 = 8.0 * x * z + aff2
 # 2-2 Variable--Variable
 @test affToStr(w + x) == "1.0 w + 1.0 x"
 @test affToStr(w - x) == "1.0 w + -1.0 x"
-println("  TODO: Trailing + on quadToStr? Maybe ok cos of aff")
-println("        e.g. quadToStr(w * x) = 1.0 w*x + 0.0")
-@test quadToStr(w * x) == "1.0 w*x + 0.0"
+@test quadToStr(w * x) == "1.0 w*x"
 @test_fails w / x
 # 2-3 Variable--AffExpr
 @test affToStr(z + aff) == "7.1 x + 1.0 z + 2.5"

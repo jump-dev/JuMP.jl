@@ -123,6 +123,7 @@ Variable(m::Model,lower::Number,upper::Number,cat::Int) =
 # Name setter/getters
 setName(v::Variable,n::String) = (v.m.colNames[v.col] = n)
 getName(v::Variable) = (v.m.colNames[v.col] == "" ? string("_col",v.col) : v.m.colNames[v.col])
+getName(m::Model, col) = (m.colNames[col] == "" ? string("_col",col) : m.colNames[col])
 print(io::IO, v::Variable) = print(io, getName(v))
 show(io::IO, v::Variable) = print(io, getName(v))
 
@@ -155,16 +156,27 @@ function affToStr(a::AffExpr, showConstant=true)
   if length(a.vars) == 0
     return string(a.constant)
   end
-  seen = zeros(Bool,a.vars[1].m.numCols)
-  nSeen = 0
-  precomputedStrings = Array(ASCIIString,length(a.vars))
+
+  # Get reference to model
+  m = a.vars[1].m
+
+  # Collect like terms
+  indvec = IndexedVector(Float64,m.numCols)
   for ind in 1:length(a.vars)
-    thisstr = "$(a.coeffs[ind]) $(getName(a.vars[ind]))"
-    precomputedStrings[nSeen+1] = thisstr
-    # TODO: collect like terms
-    nSeen += 1
+    addelt(indvec, a.vars[ind].col, a.coeffs[ind])
   end
-  ret = join(precomputedStrings[1:nSeen]," + ")
+
+  # Stringify the terms
+  termStrings = Array(ASCIIString, length(a.vars))
+  numTerms = 0
+  for i in 1:indvec.nnz
+    idx = indvec.nzidx[i]
+    numTerms += 1
+    termStrings[numTerms] = "$(indvec.elts[idx]) $(getName(m,idx))"
+  end
+
+  # And then connect them up with +s
+  ret = join(termStrings[1:numTerms], " + ")
   
   if abs(a.constant) >= 0.000001 && showConstant
     ret = string(ret," + ",a.constant)
@@ -194,13 +206,19 @@ print(io::IO, q::QuadExpr) = print(io, quadToStr(q))
 show(io::IO, q::QuadExpr) = print(io, quadToStr(q))
 
 function quadToStr(q::QuadExpr)
-  ret = ""
+  
+  termStrings = Array(ASCIIString, length(q.qvars1))
   for ind in 1:length(q.qvars1)
-    ret = string(ret, q.qcoeffs[ind]," ",
-                      getName(q.qvars1[ind]),"*",
-                      getName(q.qvars2[ind])," + ")
+    termStrings[ind] = string(q.qcoeffs[ind]," ",
+                              getName(q.qvars1[ind]),"*",
+                              getName(q.qvars2[ind]))
   end
-  return string(ret, affToStr(q.aff))
+  ret = join(termStrings, " + ")
+  if q.aff.constant == 0 && length(q.aff.vars) == 0
+    return ret
+  else
+    return string(ret, " + ", affToStr(q.aff))
+  end
 end
 
 #######################################################################

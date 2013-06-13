@@ -2,8 +2,7 @@ require("MathProg")
 using MathProg
 using Base.Test
 
-tests = ["affexpr.jl",
-         "quadexpr.jl",
+tests = ["expr.jl",
          "variable.jl",
          "operator.jl",
          "macros.jl"]
