@@ -177,6 +177,7 @@ macro defVar(m, x, extra...)
         # easy case
         return esc(quote
             $var = Variable($m,$lb,$ub,$t,$(string(var)))
+            nothing
         end)
     else
         if !isa(var,Expr)
@@ -214,6 +215,7 @@ macro defVar(m, x, extra...)
         code = quote 
             $(esc(mac))
             $code
+            nothing
         end
         return code
     end
