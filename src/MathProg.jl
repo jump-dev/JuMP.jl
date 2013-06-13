@@ -78,8 +78,15 @@ end
 
 
 # Default constructor
-Model(sense::String) = Model(AffExpr(),0,false,sense,Array(Constraint,0),
-                             0,String[],Float64[],Float64[],Int[],0,Float64[],nothing,Dict())
+function Model(sense::String)
+  sense = lowercase(sense)
+  if (length(sense) != 3) ||
+     (sense != "max" && sense != "min")
+     error("Model sense must be \"max\" or \"min\"")
+  end
+  Model(AffExpr(),0,false,sense,Array(Constraint,0),
+        0,String[],Float64[],Float64[],Int[],0,Float64[],nothing,Dict())
+end
 
 # Pretty print
 function print(io::IO, m::Model)
