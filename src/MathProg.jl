@@ -9,6 +9,7 @@
 import Base.getindex
 import Base.setindex!
 import Base.print
+import Base.show
 
 module MathProg
 
@@ -29,7 +30,7 @@ export
   MultivarDict,
 
 # Functions
-  print,affToStr,quadToStr,conToString,writeLP,writeMPS,
+  print,show,affToStr,quadToStr,conToStr,writeLP,writeMPS,
   setName,getName,setLower,setUpper,getLower,getUpper,getValue,
   addConstraint,setObjective,solve,addVar,addVars,
 
@@ -78,27 +79,27 @@ end
 
 
 # Default constructor
-Model(sense::String) = Model(0,0,false,sense,Array(Constraint,0),
+Model(sense::String) = Model(AffExpr(),0,false,sense,Array(Constraint,0),
                              0,String[],Float64[],Float64[],Int[],0,Float64[],nothing,Dict())
 
 # Pretty print
-function print(m::Model)
-  print(string(m.objSense," "))
-  print(m.objective)
-  println("")
+function print(io::IO, m::Model)
+  println(io, string(m.objSense," ",affToStr(m.objective)))
+  println(io, "Subject to: ")
   for c in m.constraints
-    print("s.t. ")
-    print(c)
-    println("")
+    println(io, conToStr(c))
   end
   for i in 1:m.numCols
-    print(m.colLower[i])
-    print(" <= ")
-    print((m.colNames[i] == "" ? string("_col",i) : m.colNames[i]))
-    print(" <= ")
-    println(m.colUpper[i])
+    print(io, m.colLower[i])
+    print(io, " <= ")
+    print(io, (m.colNames[i] == "" ? string("_col",i) : m.colNames[i]))
+    print(io, " <= ")
+    println(io, m.colUpper[i])
   end
 end
+show(io::IO, m::Model) = print(m.objSense == "max" ? "Maximization problem" :
+                                                     "Minimization problem") 
+                                                     # What looks good here?
 
 ########################################################################
 # Variable class
@@ -124,6 +125,7 @@ Variable(m::Model,lower::Number,upper::Number,cat::Int) =
 setName(v::Variable,n::String) = (v.m.colNames[v.col] = n)
 getName(v::Variable) = (v.m.colNames[v.col] == "" ? string("_col",v.col) : v.m.colNames[v.col])
 print(io::IO, v::Variable) = print(io, getName(v))
+show(io::IO, v::Variable) = print(io, getName(v))
 
 # Bound setter/getters
 setLower(v::Variable,lower::Number) = (v.m.colLower[v.col] = convert(Float64,lower))
@@ -148,8 +150,9 @@ AffExpr() = AffExpr(Variable[],Float64[],0.)
 setObjective(m::Model, a::AffExpr) = (m.objective = a)
 
 print(io::IO, a::AffExpr) = print(io, affToStr(a))
+show(io::IO, a::AffExpr) = print(io, affToStr(a))
 
-function affToStr(a::AffExpr)
+function affToStr(a::AffExpr, showConstant=true)
   if length(a.vars) == 0
     return string(a.constant)
   end
@@ -164,7 +167,7 @@ function affToStr(a::AffExpr)
   end
   ret = join(precomputedStrings[1:nSeen]," + ")
   
-  if abs(a.constant) >= 0.000001
+  if abs(a.constant) >= 0.000001 && showConstant
     ret = string(ret," + ",a.constant)
   end
   return ret
@@ -189,6 +192,7 @@ function setObjective(m::Model, q::QuadExpr)
 end
 
 print(io::IO, q::QuadExpr) = print(io, quadToStr(q))
+show(io::IO, q::QuadExpr) = print(io, quadToStr(q))
 
 function quadToStr(q::QuadExpr)
   ret = ""
@@ -215,14 +219,9 @@ function addConstraint(m::Model, c::Constraint)
 end
 
 # Pretty printer
-function print(c::Constraint)
-  print(c.lhs)
-  print(string(" ",c.sense," 0"))
-end
-
-function conToString(c::Constraint)
-  return string(affToStr(c.lhs-c.lhs.constant)," ",c.sense," ",-c.lhs.constant)
-end
+print(io::IO, c::Constraint) = print(io, conToStr(c))
+show(io::IO, c::Constraint) = print(io, conToStr(c))
+conToStr(c::Constraint) = string(affToStr(c.lhs,false)," ",c.sense," ",-c.lhs.constant)
 
 ###########################################################
 # Overloads
