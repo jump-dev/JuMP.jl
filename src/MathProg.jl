@@ -38,8 +38,7 @@ export
   @addConstraint,
   @defVar,
   @setObjective,
-  addToExpression,
-  lpSum
+  addToExpression
 
 include("MathProgDict.jl")
 include("utils.jl")
@@ -613,18 +612,7 @@ function writeLP(m::Model, fname::String)
   close(f)
 end
 
-###########################################################
-# Deprecated
-function lpSum(expr)
-  ret = AffExpr()
-  for j in expr
-	ret.vars   = cat(1, ret.vars,   j.vars)
-	ret.coeffs = cat(1, ret.coeffs, j.coeffs)
-  end
-  return ret
-end
-
-###########################################################
+###############################################################################
 # Solvers
 function solve(m::Model)
 	# Analyze model to see if any integers
