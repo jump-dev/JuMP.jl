@@ -303,9 +303,9 @@ function (*)(lhs::AffExpr, rhs::AffExpr)
   # Quadratic terms
   n = length(lhs.coeffs)
   m = length(rhs.coeffs)
-  sizehint!(ret.qvars1, n*m)
-  sizehint!(ret.qvars2, n*m)
-  sizehint!(ret.qcoeffs, n*m)
+  sizehint(ret.qvars1, n*m)
+  sizehint(ret.qvars2, n*m)
+  sizehint(ret.qcoeffs, n*m)
   for i = 1:n
     for j = 1:m
       push!(ret.qvars1,  lhs.vars[i])
@@ -316,11 +316,14 @@ function (*)(lhs::AffExpr, rhs::AffExpr)
   
   # Try to preallocate space for aff
   if lhs.constant != 0 && rhs.constant != 0
-    sizehint!(ret.aff.vars, n+m)
+    sizehint(ret.aff.vars, n+m)
+    sizehint(ret.aff.coeffs, n+m)
   elseif lhs.constant != 0
-    sizehint!(ret.aff.vars, n)
+    sizehint(ret.aff.vars, n)
+    sizehint(ret.aff.coeffs, n)
   elseif rhs.constant != 0
-    sizehint!(ret.aff.vars, m)
+    sizehint(ret.aff.vars, m)
+    sizehint(ret.aff.coeffs, m)
   end
 
   # [LHS constant] * RHS
@@ -368,17 +371,17 @@ end
 (*)(q::QuadExpr, v::Variable) = error("Cannot multiply a quadratic expression by a variable")
 (/)(q::QuadExpr, v::Variable) = error("Cannot divide a quadratic expression by a variable")
 # QuadExpr--AffExpr
-(+)(q::QuadExpr, a::AffExpr) = (+)(a,q)
+(+)(q::QuadExpr, a::AffExpr) = QuadExpr(copy(q.qvars1),copy(q.qvars2),copy(q.qcoeffs),q.aff+a)
 (-)(q::QuadExpr, a::AffExpr) = QuadExpr(copy(q.qvars1),copy(q.qvars2),copy(q.qcoeffs),q.aff-a)
 (*)(q::QuadExpr, a::AffExpr) = error("Cannot multiply a quadratic expression by an aff. expression")
 (/)(q::QuadExpr, a::AffExpr) = error("Cannot divide a quadratic expression by an aff. expression")
 # QuadExpr--QuadExpr
-(+)(q1::QuadExpr, q2::QuadExpr) = QuadExpr(vcat(q1.qvars1,  q2.qvars1),
-                                           vcat(q1.qvars2,  q2.qvars2),
+(+)(q1::QuadExpr, q2::QuadExpr) = QuadExpr(vcat(q1.qvars1,   q2.qvars1),
+                                           vcat(q1.qvars2,   q2.qvars2),
                                            vcat(q1.qcoeffs,  q2.qcoeffs),
                                            q1.aff + q2.aff)
-(-)(q1::QuadExpr, q2::QuadExpr) = QuadExpr(vcat(q1.qvars1,  q2.qvars2),
-                                           vcat(q1.qvars2,  q2.qvars2),
+(-)(q1::QuadExpr, q2::QuadExpr) = QuadExpr(vcat(q1.qvars1,   q2.qvars1),
+                                           vcat(q1.qvars2,   q2.qvars2),
                                            vcat(q1.qcoeffs, -q2.qcoeffs),
                                            q1.aff - q2.aff)
 (*)(q1::QuadExpr, q2::QuadExpr) = error("Cannot multiply two quadratic expressions")
