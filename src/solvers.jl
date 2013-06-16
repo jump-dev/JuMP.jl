@@ -30,8 +30,8 @@ function prepProblem(m::Model)
 
     # Create row bounds
     numRows = length(m.constraints)
-    rowlb = fill(-1e10, numRows)
-    rowub = fill(+1e10, numRows)
+    rowlb = fill(-Inf, numRows)
+    rowub = fill(+Inf, numRows)
     for c in 1:numRows
         if m.constraints[c].sense == "<="
             rowub[c] = -m.constraints[c].lhs.constant
