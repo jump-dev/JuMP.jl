@@ -157,7 +157,10 @@ function solveMIP(m::Model)
 
     if stat != :Optimal
         println("Warning: MIP not solved to optimality, status: ", stat)
-    else
+    end
+    # It's possible that we have a feasible solution if we're not optimal
+    # TODO: Test this behavior on various solvers
+    try
         # store solution values in model
         m.objVal = getobjval(m.internalModel)
         if m.objSense == "max"
