@@ -103,6 +103,7 @@ There are some restrictions on what can go inside the macros
  * If there is a product between coefficients and variables, the variables
    must appear last. That is, Coefficient times Variable is good, but 
    Variable times Coefficient is bad.
+ * Division by constants is supported.
  * Addition, subtraction, distributive rule should all mostly work, 
    but the parser has not been well tested. Please report any issues.
 

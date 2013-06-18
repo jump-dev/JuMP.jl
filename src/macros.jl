@@ -96,6 +96,11 @@ function parseExpr(x, aff::Symbol, constantCoef)
             coef = timescoef(x)
             var = timesvar(x)
             parseExpr(var, aff, :($coef*$constantCoef))
+        elseif x.head == :call && x.args[1] == :/
+            @assert length(x.args) == 3
+            numerator = x.args[2]
+            denom = x.args[3]
+            parseExpr(numerator, aff, :((1/$denom)*$constantCoef))
         elseif x.head == :curly
             parseCurly(x,aff,constantCoef)
         else # at lowest level?
