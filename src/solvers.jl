@@ -99,7 +99,7 @@ function solveLP(m::Model)
     end
     m.internalModel = MathProgBase.lpsolver.model(;m.solverOptions...)
     loadproblem(m.internalModel, A, m.colLower, m.colUpper, f, rowlb, rowub)
-    setsense(m.internalModel, m.objSense == "max" ? :Max : :Min)
+    setsense(m.internalModel, m.objSense)
     optimize(m.internalModel)
     stat = status(m.internalModel)
 
@@ -141,7 +141,7 @@ function solveMIP(m::Model)
     
     m.internalModel = MathProgBase.mipsolver.model(;m.solverOptions...)
     # CoinMP doesn't support obj senses...
-    if m.objSense == "max"
+    if m.objSense == :Max
         f = -f
     end
     loadproblem(m.internalModel, A, m.colLower, m.colUpper, f, rowlb, rowub)
@@ -163,7 +163,7 @@ function solveMIP(m::Model)
     try
         # store solution values in model
         m.objVal = getobjval(m.internalModel)
-        if m.objSense == "max"
+        if m.objSense == :Max
             m.objVal = -m.objVal
         end
         m.objVal += m.objective.constant

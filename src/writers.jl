@@ -134,7 +134,7 @@ function writeLP(m::Model, fname::String)
   end
   
   # Objective
-  if m.objSense == "max"
+  if m.objSense == :Max
     write(f,"Maximize\n")
   else
     write(f,"Minimize\n")

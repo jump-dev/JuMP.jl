@@ -7,15 +7,13 @@ modPath = joinpath(Pkg.dir("MathProg"),"test","mod")
 # Test Model A
 #####################################################################
 # Build it
-modA = Model("max")
+modA = Model(:Max)
 @defVar(modA, x >= 0)
 @defVar(modA, y <= 5.5, Int)
 @defVar(modA, 2 <= z <= 4)
 @defVar(modA, 0 <= r[i=1:10] <= i)
-#@setObjective(modA, ((x + y)/2.0 + 3.0)/3.0 + z + r[3])
-@setObjective(modA, (1.0/2.0/3.0)*(x + y) + z + r[3] + 3.0/3.0)
-#@addConstraint(modA, sum{r[i],i=3:5} <= (2 - x)/2.0)
-@addConstraint(modA, sum{r[i],i=3:5} <= 0.5*(2-x))
+@setObjective(modA, ((x + y)/2.0 + 3.0)/3.0 + z + r[3])
+@addConstraint(modA, sum{r[i],i=3:5} <= (2 - x)/2.0)
 #@addConstraint(modA, y*(2+5.0) <= z + r[9])
 @addConstraint(modA, 7.0*y <= z + r[9])
 #####################################################################

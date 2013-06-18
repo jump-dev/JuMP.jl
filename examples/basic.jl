@@ -1,6 +1,6 @@
 using MathProg
 
-m = Model("max")
+m = Model(:Max)
 
 @defVar(m, 0 <= x <= 2)
 @defVar(m, 0 <= y <= 30)

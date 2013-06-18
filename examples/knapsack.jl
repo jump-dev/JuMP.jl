@@ -11,7 +11,7 @@
 
 using MathProg
 
-m = Model("max")
+m = Model(:Max)
 
 #x = addVars(m, 0, 1, INTEGER, 5, "x")
 @defVar(m, 0 <= x[1:5] <= 1, Int)

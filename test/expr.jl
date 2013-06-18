@@ -1,7 +1,7 @@
 # expr.jl
 # Test coverage for AffExpr and QuadExpr
 
-maff = Model("max")
+maff = Model(:Max)
 @defVar(maff, 0 <= x[1:5] <= 1)
 @defVar(maff, 0 <= LongName <= 99)
 # Test affToStr

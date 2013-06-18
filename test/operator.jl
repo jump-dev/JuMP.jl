@@ -1,7 +1,7 @@
 # operator.jl
 # Test coverage for all operator overloading
 
-m = Model("max")
+m = Model(:Max)
 @defVar(m, w)
 @defVar(m, x)
 @defVar(m, y)

@@ -27,7 +27,7 @@ READMEs for platform-specific installation instructions.
 
     using MathProg
 
-    m = Model("max")
+    m = Model(:Max)
     @defVar(m, 0 <= x <= 2 )
     @defVar(m, 0 <= y <= 30 )
 
@@ -144,7 +144,7 @@ is equivalent to
 # Function listing
 
 `Model(sense)` 
- * Construct a Model with the objective sense provided. Use either "max" or "min"
+ * Construct a Model with the objective sense provided. Use either ``:Max`` or ``:Min``
  
 
 `print(model)`

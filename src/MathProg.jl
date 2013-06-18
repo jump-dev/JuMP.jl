@@ -57,7 +57,7 @@ type Model
   objective
   quadobj
   objIsQuad
-  objSense
+  objSense::Symbol
   
   constraints
   
@@ -78,11 +78,9 @@ end
 
 
 # Default constructor
-function Model(sense::String)
-  sense = lowercase(sense)
-  if (length(sense) != 3) ||
-     (sense != "max" && sense != "min")
-     error("Model sense must be \"max\" or \"min\"")
+function Model(sense::Symbol)
+  if (sense != :Max && sense != :Min)
+     error("Model sense must be :Max or :Min")
   end
   Model(AffExpr(),0,false,sense,Array(Constraint,0),
         0,String[],Float64[],Float64[],Int[],0,Float64[],nothing,Dict())
@@ -103,7 +101,7 @@ function print(io::IO, m::Model)
     println(io, m.colUpper[i])
   end
 end
-show(io::IO, m::Model) = print(m.objSense == "max" ? "Maximization problem" :
+show(io::IO, m::Model) = print(m.objSense == :Max ? "Maximization problem" :
                                                      "Minimization problem") 
                                                      # What looks good here?
 
