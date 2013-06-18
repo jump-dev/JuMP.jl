@@ -1,3 +1,130 @@
 # model.jl
-# Test coverage for Model
+# Test coverage for Model - writing it to files, and solving
+
+modPath = joinpath(Pkg.dir("MathProg"),"test","mod")
+
+###############################################################################
+# Test Model A
+#####################################################################
+# Build it
+modA = Model("max")
+@defVar(modA, x >= 0)
+@defVar(modA, y <= 5.5, Int)
+@defVar(modA, 2 <= z <= 4)
+@defVar(modA, 0 <= r[i=1:10] <= i)
+#@setObjective(modA, ((x + y)/2.0 + 3.0)/3.0 + z + r[3])
+@setObjective(modA, (1.0/2.0/3.0)*(x + y) + z + r[3] + 3.0/3.0)
+#@addConstraint(modA, sum{r[i],i=3:5} <= (2 - x)/2.0)
+@addConstraint(modA, sum{r[i],i=3:5} <= 0.5*(2-x))
+#@addConstraint(modA, y*(2+5.0) <= z + r[9])
+@addConstraint(modA, 7.0*y <= z + r[9])
+#####################################################################
+# Test LP writer
+writeLP(modA, modPath * "A.lp")
+println("  !!LP test A: will fail once integer support added, update test!")
+modALP = ASCIIString[
+"NAME Julp-created LP",
+"Maximize",
+"obj: 0.166667 VAR1 + 0.166667 VAR2 + 1.000000 VAR3 + 1.000000 VAR6",
+"Subject To",
+"c1: 1.000000 VAR6 + 1.000000 VAR7 + 1.000000 VAR8 + 0.500000 VAR1 <= 1.000000",
+"c2: 7.000000 VAR2 + -1.000000 VAR3 + -1.000000 VAR12 <= -0.000000",
+"Bounds",
+"0.000000 <= VAR1 <= +inf",
+"-inf <= VAR2 <= 5.500000",
+"2.000000 <= VAR3 <= 4.000000",
+"0.000000 <= VAR4 <= 1.000000",
+"0.000000 <= VAR5 <= 2.000000",
+"0.000000 <= VAR6 <= 3.000000",
+"0.000000 <= VAR7 <= 4.000000",
+"0.000000 <= VAR8 <= 5.000000",
+"0.000000 <= VAR9 <= 6.000000",
+"0.000000 <= VAR10 <= 7.000000",
+"0.000000 <= VAR11 <= 8.000000",
+"0.000000 <= VAR12 <= 9.000000",
+"0.000000 <= VAR13 <= 10.000000",
+"End"]
+modAfp = open(modPath * "A.lp")
+lineInd = 1
+while !eof(modAfp)
+  line = readline(modAfp)
+  @test strip(line) == strip(modALP[lineInd])
+  lineInd += 1
+end
+close(modAfp)
+#####################################################################
+# Test MPS writer
+writeMPS(modA, modPath * "A.mps")
+println("  !!MPS test A: will fail once integer support added, update test!")
+modAMPS = ASCIIString[
+"NAME   MathProgModel",
+"ROWS",
+" N  CON3",
+" L  CON1",
+" L  CON2",
+"COLUMNS",
+"    VAR1  CON1  0.500000",
+"    VAR1  CON3  0.166667",
+"    VAR2  CON2  7.000000",
+"    VAR2  CON3  0.166667",
+"    VAR3  CON2  -1.000000",
+"    VAR3  CON3  1.000000",
+"    VAR6  CON1  1.000000",
+"    VAR6  CON3  1.000000",
+"    VAR7  CON1  1.000000",
+"    VAR8  CON1  1.000000",
+"    VAR12  CON2  -1.000000",
+"RHS",
+"    rhs    CON1    1.000000",
+"    rhs    CON2    -0.000000",
+"BOUNDS",
+"  UP BOUND VAR1 Inf",
+"  MI BOUND VAR2",
+"  UP BOUND VAR2 5.500000",
+"  LO BOUND x3 3.000000",
+"  UP BOUND x2 4.000000",
+"  UP BOUND VAR4 1.000000",
+"  UP BOUND VAR5 2.000000",
+"  UP BOUND VAR6 3.000000",
+"  UP BOUND VAR7 4.000000",
+"  UP BOUND VAR8 5.000000",
+"  UP BOUND VAR9 6.000000",
+"  UP BOUND VAR10 7.000000",
+"  UP BOUND VAR11 8.000000",
+"  UP BOUND VAR12 9.000000",
+"  UP BOUND VAR13 10.000000",
+"ENDATA"]
+modAfp = open(modPath * "A.mps")
+lineInd = 1
+while !eof(modAfp)
+  line = readline(modAfp)
+  @test chomp(line) == modAMPS[lineInd]
+  lineInd += 1
+end
+close(modAfp)
+#####################################################################
+# Test solution (MIP)
+status = solve(modA)
+@test status == :Optimal
+@test_approx_eq m.objVal (6 + 1.0/6)
+@test_approx_eq getValue(x) 0.0
+@test_approx_eq getValue(y) 1.0
+@test_approx_eq getValue(z) 4.0
+@test_approx_eq getValue(r)[1] 0.0
+@test_approx_eq getValue(r)[3] 1.0
+@test_approx_eq getValue(r)[9] 9.0
+@test_approx_eq getValue(r)[8] 0.0
+#####################################################################
+# Test solution (LP)
+m.colCat[2] = 0
+status = solve(modA)
+@test status == :Optimal  
+@test_approx_eq m.objVal (1.0 + 5.3095238095)
+@test_approx_eq getValue(x) 0.0
+@test_approx_eq getValue(y) 1.85714285714286
+@test_approx_eq getValue(z) 4.0
+@test_approx_eq getValue(r)[1] 0.0
+@test_approx_eq getValue(r)[3] 1.0
+@test_approx_eq getValue(r)[9] 9.0
+@test_approx_eq getValue(r)[8] 0.0
 

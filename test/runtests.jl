@@ -5,7 +5,8 @@ using Base.Test
 tests = ["expr.jl",
          "variable.jl",
          "operator.jl",
-         "macros.jl"]
+         "macros.jl",
+         "model.jl"]
 
 println("Running tests:")
 
