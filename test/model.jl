@@ -106,7 +106,7 @@ close(modAfp)
 # Test solution (MIP)
 status = solve(modA)
 @test status == :Optimal
-@test_approx_eq m.objVal (6 + 1.0/6)
+@test_approx_eq modA.objVal (6 + 1.0/6)
 @test_approx_eq getValue(x) 0.0
 @test_approx_eq getValue(y) 1.0
 @test_approx_eq getValue(z) 4.0
@@ -116,10 +116,10 @@ status = solve(modA)
 @test_approx_eq getValue(r)[8] 0.0
 #####################################################################
 # Test solution (LP)
-m.colCat[2] = 0
+modA.colCat[2] = 0
 status = solve(modA)
 @test status == :Optimal  
-@test_approx_eq m.objVal (1.0 + 5.3095238095)
+@test_approx_eq modA.objVal (1.0 + 5.3095238095)
 @test_approx_eq getValue(x) 0.0
 @test_approx_eq getValue(y) 1.85714285714286
 @test_approx_eq getValue(z) 4.0
