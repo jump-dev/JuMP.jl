@@ -124,13 +124,19 @@ function writeMPS(m::Model, fname::String)
   gc_enable()
 end
 
+###############################################################################
+# LP File Writer
+# We use the formatting defined at:
+#   http://lpsolve.sourceforge.net/5.0/CPLEX-format.htm
 function writeLP(m::Model, fname::String)
+
   f = open(fname, "w")
+
+  # Coin's LP reader likes models to have a name
   write(f, "NAME Julp-created LP \n")
   
   if m.objIsQuad
-    print("Can't handle quad obj for LP yet\n")
-    return
+    error("LP writer does not support quadratic objectives.\n")
   end
   
   # Objective
@@ -139,7 +145,7 @@ function writeLP(m::Model, fname::String)
   else
     write(f,"Minimize\n")
   end
-  objaff::AffExpr = (m.objIsQuad) ? m.objective.aff : m.objective
+  objaff::AffExpr = m.objective
   write(f, " obj: ")
   nnz = length(objaff.coeffs)
   for ind in 1:(nnz-1)
@@ -150,7 +156,6 @@ function writeLP(m::Model, fname::String)
   end
   
   # Constraints
-  #gc_disable()
   write(f,"Subject To\n")
   for i in 1:length(m.constraints)
     @printf(f, " c%d: ", i)
@@ -173,10 +178,8 @@ function writeLP(m::Model, fname::String)
       @printf(f, " >= %f\n", -c.lhs.constant)
     end
   end
-  #gc_enable()
 
   # Bounds
-  #gc_disable()
   write(f,"Bounds\n")
   for i in 1:m.numCols    
     if m.colLower[i] == -Inf
@@ -199,11 +202,14 @@ function writeLP(m::Model, fname::String)
       end
     end
   end
-  #gc_enable()
-  
 
-  # Integer - to do
-
+  # Integer - don't handle binaries specially
+  write(f,"General\n")
+  for i in 1:m.numCols
+    if m.colCat[i] != CONTINUOUS
+      @printf(f, " VAR%d\n", i)
+    end
+  end
 
   # Done
   write(f,"End\n")

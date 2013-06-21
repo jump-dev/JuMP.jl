@@ -19,7 +19,6 @@ modA = Model(:Max)
 #####################################################################
 # Test LP writer
 writeLP(modA, modPath * "A.lp")
-println("  !!LP test A: will fail once integer support added, update test!")
 modALP = ASCIIString[
 "NAME Julp-created LP",
 "Maximize",
@@ -41,6 +40,8 @@ modALP = ASCIIString[
 "0.000000 <= VAR11 <= 8.000000",
 "0.000000 <= VAR12 <= 9.000000",
 "0.000000 <= VAR13 <= 10.000000",
+"General",
+"VAR2",
 "End"]
 modAfp = open(modPath * "A.lp")
 lineInd = 1
