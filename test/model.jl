@@ -20,7 +20,6 @@ modA = Model(:Max)
 # Test LP writer
 writeLP(modA, modPath * "A.lp")
 modALP = ASCIIString[
-"NAME Julp-created LP",
 "Maximize",
 "obj: 0.166667 VAR1 + 0.166667 VAR2 + 1.000000 VAR3 + 1.000000 VAR6",
 "Subject To",
