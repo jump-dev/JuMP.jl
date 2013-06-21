@@ -1,6 +1,6 @@
 language: cpp
 compiler:
-    - clang
+    - gcc
 notifications:
     email: false
 before_install:
