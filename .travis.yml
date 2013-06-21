@@ -1,0 +1,20 @@
+language: cpp
+compiler:
+    - clang
+notifications:
+    email: false
+before_install:
+    - sudo add-apt-repository ppa:staticfloat/julia-deps -y
+    - sudo add-apt-repository ppa:staticfloat/julianightlies -y
+    - sudo apt-get update -qq -y
+    - sudo apt-get upgrade -y
+    - sudo apt-get install julia -y
+    - git config --global user.name "Travis User"
+    - git config --global user.email "travis@example.net"
+script:
+    - julia -e 'versioninfo(); Pkg.init();'
+    - julia -e 'Pkg.add("MathProgBase"); Pkg.add("CoinMP");'
+    - mkdir -p ~/.julia/MathProg
+    - cp -R ./* ~/.julia/MathProg/
+    - cd ~/.julia/MathProg/
+    - julia test/runtests.jl
