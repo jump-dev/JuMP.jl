@@ -7,6 +7,8 @@ a fully functional language. Compare with PuLP/Pyomo/YALMIP/...
 
 This package is not related to GNU MathProg.
 
+[![Build Status](https://travis-ci.org/IainNZ/MathProg.jl.png)](https://travis-ci.org/IainNZ/MathProg.jl)
+
 # Installation
 
 You can install MathProg through the Julia package manager (version 0.2 prerelease required):
