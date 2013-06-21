@@ -61,11 +61,23 @@ function writeMPS(m::Model, fname::String)
     
   # Output each column
   gc_disable()
+  inintegergroup = false
+  markno = 0
   write(f,"COLUMNS\n")
   for col in 1:m.numCols
+    if m.colCat[col] != CONTINUOUS && !inintegergroup
+      @printf(f,"    MARK%04d  'MARKER'  'INTORG'\n", markno)
+      inintegergroup = true; markno += 1
+    elseif m.colCat[col] == CONTINUOUS && inintegergroup
+      @printf(f,"    MARK%04d  'MARKER'  'INTEND'\n", markno)
+      inintegergroup = false; markno += 1
+    end
     for ind in colmat.colptr[col]:(colmat.colptr[col+1]-1)
       @printf(f,"    VAR%d  CON%d  %f\n",col,rowval[ind],nzval[ind])
     end
+  end
+  if inintegergroup
+    @printf(f,"    MARK%04d  'MARKER'  'INTEND'\n", markno)
   end
   gc_enable()
   
