@@ -132,9 +132,6 @@ function writeLP(m::Model, fname::String)
 
   f = open(fname, "w")
 
-  # Coin's LP reader likes models to have a name
-  write(f, "NAME Julp-created LP \n")
-  
   if m.objIsQuad
     error("LP writer does not support quadratic objectives.\n")
   end
