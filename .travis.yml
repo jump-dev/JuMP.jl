@@ -13,7 +13,7 @@ before_install:
     - git config --global user.email "travis@example.net"
 script:
     - julia -e 'versioninfo(); Pkg.init();'
-    - julia -e 'Pkg.add("MathProgBase"); Pkg.add("CoinMP");'
+    - julia -e 'Pkg.add("MathProgBase"); Pkg.add("CoinMP"); Pkg.add("Clp");'
     - mkdir -p ~/.julia/MathProg
     - cp -R ./* ~/.julia/MathProg/
     - cd ~/.julia/MathProg/
