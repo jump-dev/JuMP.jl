@@ -62,22 +62,21 @@ function writeMPS(m::Model, fname::String)
   # Output each column
   gc_disable()
   inintegergroup = false
-  markno = 0
   write(f,"COLUMNS\n")
   for col in 1:m.numCols
     if m.colCat[col] != CONTINUOUS && !inintegergroup
-      @printf(f,"    MARK%04d  'MARKER'  'INTORG'\n", markno)
-      inintegergroup = true; markno += 1
+      @printf(f,"    MARKER    'MARKER'                 'INTORG'\n")
+      inintegergroup = true
     elseif m.colCat[col] == CONTINUOUS && inintegergroup
-      @printf(f,"    MARK%04d  'MARKER'  'INTEND'\n", markno)
-      inintegergroup = false; markno += 1
+      @printf(f,"    MARKER    'MARKER'                 'INTEND'\n")
+      inintegergroup = false
     end
     for ind in colmat.colptr[col]:(colmat.colptr[col+1]-1)
       @printf(f,"    VAR%d  CON%d  %f\n",col,rowval[ind],nzval[ind])
     end
   end
   if inintegergroup
-    @printf(f,"    MARK%04d  'MARKER'  'INTEND'\n", markno)
+    @printf(f,"    MARKER    'MARKER'                 'INTEND'\n")
   end
   gc_enable()
   
@@ -93,9 +92,11 @@ function writeMPS(m::Model, fname::String)
   gc_disable()
   write(f,"BOUNDS\n")
   for col in 1:m.numCols
-    if m.colLower[col] == 0 && m.colUpper[col] > 0
-      # Default lower 0, and an upper
-      @printf(f,"  UP BOUND VAR%d %f\n", col, m.colUpper[col])
+    if m.colLower[col] == 0
+      if m.colUpper[col] != Inf
+        # Default lower 0, and an upper
+        @printf(f,"  UP BOUND VAR%d %f\n", col, m.colUpper[col])
+      end
     elseif m.colLower[col] == -Inf && m.colUpper[col] == +Inf
       # Free
       @printf(f, "  FR BOUND VAR%d\n", col)
@@ -107,7 +108,7 @@ function writeMPS(m::Model, fname::String)
       @printf(f,"  MI BOUND VAR%d\n  UP BOUND VAR%d %f\n",col,col,m.colUpper[col])
     else
       # Lower and upper
-      @printf(f, "  LO BOUND x%d %f\n  UP BOUND x%d %f\n",col,col,m.colLower[col],m.colUpper[col])
+      @printf(f, "  LO BOUND VAR%d %f\n  UP BOUND VAR%d %f\n",col,m.colLower[col],col,m.colUpper[col])
     end
   end
   gc_enable()

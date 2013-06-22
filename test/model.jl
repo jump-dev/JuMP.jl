@@ -53,7 +53,6 @@ close(modAfp)
 #####################################################################
 # Test MPS writer
 writeMPS(modA, modPath * "A.mps")
-println("  !!MPS test A: will fail once integer support added, update test!")
 modAMPS = ASCIIString[
 "NAME   MathProgModel",
 "ROWS",
@@ -63,8 +62,10 @@ modAMPS = ASCIIString[
 "COLUMNS",
 "    VAR1  CON1  0.500000",
 "    VAR1  CON3  0.166667",
+"    MARKER    'MARKER'                 'INTORG'",
 "    VAR2  CON2  7.000000",
 "    VAR2  CON3  0.166667",
+"    MARKER    'MARKER'                 'INTEND'",
 "    VAR3  CON2  -1.000000",
 "    VAR3  CON3  1.000000",
 "    VAR6  CON1  1.000000",
@@ -76,11 +77,10 @@ modAMPS = ASCIIString[
 "    rhs    CON1    1.000000",
 "    rhs    CON2    -0.000000",
 "BOUNDS",
-"  UP BOUND VAR1 Inf",
 "  MI BOUND VAR2",
 "  UP BOUND VAR2 5.500000",
-"  LO BOUND x3 3.000000",
-"  UP BOUND x2 4.000000",
+"  LO BOUND VAR3 2.000000",
+"  UP BOUND VAR3 4.000000",
 "  UP BOUND VAR4 1.000000",
 "  UP BOUND VAR5 2.000000",
 "  UP BOUND VAR6 3.000000",
@@ -125,4 +125,4 @@ status = solve(modA)
 @test_approx_eq getValue(r)[3] 1.0
 @test_approx_eq getValue(r)[9] 9.0
 @test_approx_eq getValue(r)[8] 0.0
-
+println("  !!TODO: test external solvers for reading LP and MPS files")
