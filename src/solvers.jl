@@ -1,24 +1,24 @@
 function solve(m::Model)
-	# Analyze model to see if any integers
-	anyInts = false
-	for j = 1:m.numCols
-		if m.colCat[j] == INTEGER || m.colCat[j] == BINARY
-			anyInts = true
-			break
-		end
-	end
+  # Analyze model to see if any integers
+  anyInts = false
+  for j = 1:m.numCols
+    if m.colCat[j] == INTEGER || m.colCat[j] == BINARY
+      anyInts = true
+      break
+    end
+  end
 	
-	if anyInts
-		solveMIP(m)
-	else
-		solveLP(m)
-	end
+  if anyInts
+   solveMIP(m)
+  else
+   solveLP(m)
+  end
 end
 
 # prepare objective, constraint matrix, and row bounds
 function prepProblem(m::Model)
 
-    objaff::AffExpr = m.objective # TODO check
+    objaff::AffExpr = m.obj.aff
     
     # We already have dense column lower and upper bounds
 
@@ -81,7 +81,7 @@ function prepProblem(m::Model)
 end
 
 function solveLP(m::Model)
-    if m.objIsQuad
+    if length(m.obj.qvars1) != 0
         error("Quadratic objectives are not fully supported yet")
     end
 
@@ -102,7 +102,7 @@ function solveLP(m::Model)
     else
         # store solution values in model
         m.objVal = getobjval(m.internalModel)
-        m.objVal += m.objective.constant
+        m.objVal += m.obj.aff.constant
         m.colVal = getsolution(m.internalModel)
     end
 
@@ -111,7 +111,7 @@ function solveLP(m::Model)
 end
 
 function solveMIP(m::Model)
-    if m.objIsQuad && string(MathProgBase.mipsolver) != "Gurobi"
+    if length(m.obj.qvars1) != 0 && string(MathProgBase.mipsolver) != "Gurobi"
         error("Quadratic objectives are not fully supported yet")
     end
 
@@ -141,9 +141,9 @@ function solveMIP(m::Model)
     loadproblem(m.internalModel, A, m.colLower, m.colUpper, f, rowlb, rowub)
     setvartype(m.internalModel, vartype)
     # undocumented support for quadratic MIPs with gurobi:
-    if m.objIsQuad
+    if length(m.obj.qvars1) != 0
         gurobisolver = getrawsolver(m.internalModel)
-        MathProgBase.mipsolver.add_qpterms!(gurobisolver, [v.col for v in m.quadobj.qvars1], [v.col for v in m.quadobj.qvars2], m.quadobj.qcoeffs)
+        MathProgBase.mipsolver.add_qpterms!(gurobisolver, [v.col for v in m.quadobj.qvars1], [v.col for v in m.obj.qvars2], m.obj.qcoeffs)
     end
 
     optimize(m.internalModel)
@@ -160,7 +160,7 @@ function solveMIP(m::Model)
         if m.objSense == :Max
             m.objVal = -m.objVal
         end
-        m.objVal += m.objective.constant
+        m.objVal += m.obj.aff.constant
         m.colVal = getsolution(m.internalModel)
     end
 

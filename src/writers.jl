@@ -31,7 +31,7 @@ function writeMPS(m::Model, fname::String)
   for c in 1:numRows
       nnz += length(m.linconstr[c].terms.coeffs)
   end
-  objaff::AffExpr = (m.objIsQuad) ? m.objective.aff : m.objective
+  objaff::AffExpr = m.obj.aff
   nnz += length(objaff.coeffs)
   colval = Array(Int,nnz)
   rownzval = Array(Float64,nnz)
@@ -119,11 +119,11 @@ function writeMPS(m::Model, fname::String)
   
   # Quadratic objective
   gc_disable()
-  if m.objIsQuad
+  if length(m.obj.qvars1) != 0
     write(f,"QMATRIX\n")
-    qv1 = m.objective.qvars1
-    qv2 = m.objective.qvars2
-    qc  = m.objective.qcoeffs
+    qv1 = m.obj.qvars1
+    qv2 = m.obj.qvars2
+    qc  = m.obj.qcoeffs
     for ind = 1:length(qv1)
       if qv1[ind].col == qv2[ind].col
         # Diagonal element
@@ -149,7 +149,7 @@ function writeLP(m::Model, fname::String)
 
   f = open(fname, "w")
 
-  if m.objIsQuad
+  if length(m.obj.qvars1) != 0
     error("LP writer does not support quadratic objectives.\n")
   end
   
@@ -159,7 +159,7 @@ function writeLP(m::Model, fname::String)
   else
     write(f,"Minimize\n")
   end
-  objaff::AffExpr = m.objective
+  objaff::AffExpr = m.obj.aff
   write(f, " obj: ")
   nnz = length(objaff.coeffs)
   for ind in 1:(nnz-1)

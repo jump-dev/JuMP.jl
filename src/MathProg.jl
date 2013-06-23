@@ -1,10 +1,10 @@
-########################################################################
+###############################################################################
 # MathProg 
 # A MILP+QP modelling langauge for Julia
 #
 # By Iain Dunning and Miles Lubin
 # http://www.github.com/IainNZ/MathProg.jl
-########################################################################
+###############################################################################
 
 import Base.getindex
 import Base.setindex!
@@ -43,20 +43,18 @@ export
 include("MathProgDict.jl")
 include("utils.jl")
 
-########################################################################
+###############################################################################
 # Constants
 const CONTINUOUS = 0
 const INTEGER = 1
 const BINARY = 2
 export CONTINUOUS, INTEGER, BINARY
 
-########################################################################
+###############################################################################
 # Model class
 # Keeps track of all model and column info
 type Model
-  objective
-  quadobj
-  objIsQuad
+  obj#::QuadExpr
   objSense::Symbol
   
   linconstr#::Vector{LinearConstraint}
@@ -82,13 +80,14 @@ function Model(sense::Symbol)
   if (sense != :Max && sense != :Min)
      error("Model sense must be :Max or :Min")
   end
-  Model(AffExpr(),0,false,sense,LinearConstraint[],
-        0,String[],Float64[],Float64[],Int[],0,Float64[],nothing,Dict())
+  Model(QuadExpr(),sense,LinearConstraint[],
+        0,String[],Float64[],Float64[],Int[],
+        0,Float64[],nothing,Dict())
 end
 
 # Pretty print
 function print(io::IO, m::Model)
-  println(io, string(m.objSense," ",affToStr(m.objective)))
+  println(io, string(m.objSense," ",quadToStr(m.obj)))
   println(io, "Subject to: ")
   for c in m.constraints
     println(io, conToStr(c))
@@ -105,7 +104,7 @@ show(io::IO, m::Model) = print(m.objSense == :Max ? "Maximization problem" :
                                                      "Minimization problem") 
                                                      # What looks good here?
 
-########################################################################
+###############################################################################
 # Variable class
 # Doesn't actually do much, just a pointer back to the model
 type Variable
@@ -141,7 +140,7 @@ getUpper(v::Variable) = v.m.colUpper[v.col]
 # Value getter
 getValue(v::Variable) = v.m.colVal[v.col]
 
-########################################################################
+###############################################################################
 # Affine Expression class
 # Holds a vector of tuples (Var, Coeff)
 type AffExpr
@@ -152,7 +151,7 @@ end
 
 AffExpr() = AffExpr(Variable[],Float64[],0.)
 
-setObjective(m::Model, a::AffExpr) = (m.objective = a)
+setObjective(m::Model, a::AffExpr) = (m.obj.aff = a)
 
 print(io::IO, a::AffExpr) = print(io, affToStr(a))
 show(io::IO, a::AffExpr) = print(io, affToStr(a))
@@ -189,7 +188,7 @@ function affToStr(a::AffExpr, showConstant=true)
   return ret
 end
 
-##########################################################################
+###############################################################################
 # QuadExpr class
 # Holds a vector of tuples (Var, Var, Coeff), as well as an AffExpr
 type QuadExpr
@@ -201,17 +200,16 @@ end
 
 QuadExpr() = QuadExpr(Variable[],Variable[],Float64[],AffExpr())
 
-function setObjective(m::Model, q::QuadExpr)
-  m.objective = q.aff
-  m.quadobj = q
-  m.objIsQuad = true
-end
+setObjective(m::Model, q::QuadExpr) = (m.obj = q)
 
 print(io::IO, q::QuadExpr) = print(io, quadToStr(q))
 show(io::IO, q::QuadExpr) = print(io, quadToStr(q))
 
 function quadToStr(q::QuadExpr)
-  
+  if length(q.qvars1) == 0
+    return affToStr(q.aff)
+  end
+
   termStrings = Array(ASCIIString, length(q.qvars1))
   for ind in 1:length(q.qvars1)
     termStrings[ind] = string(q.qcoeffs[ind]," ",
@@ -219,6 +217,7 @@ function quadToStr(q::QuadExpr)
                               getName(q.qvars2[ind]))
   end
   ret = join(termStrings, " + ")
+
   if q.aff.constant == 0 && length(q.aff.vars) == 0
     return ret
   else
