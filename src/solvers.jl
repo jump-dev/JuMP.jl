@@ -29,18 +29,12 @@ function prepProblem(m::Model)
     end
 
     # Create row bounds
-    numRows = length(m.constraints)
+    numRows = length(m.linconstr)
     rowlb = fill(-Inf, numRows)
     rowub = fill(+Inf, numRows)
     for c in 1:numRows
-        if m.constraints[c].sense == "<="
-            rowub[c] = -m.constraints[c].lhs.constant
-        elseif m.constraints[c].sense == ">="
-            rowlb[c] = -m.constraints[c].lhs.constant
-        else
-            rowub[c] = -m.constraints[c].lhs.constant
-            rowlb[c] = -m.constraints[c].lhs.constant
-        end
+        rowlb[c] = m.linconstr[c].lb
+        rowub[c] = m.linconstr[c].ub
     end
 
     # Create sparse A matrix
@@ -50,7 +44,7 @@ function prepProblem(m::Model)
     rowptr = Array(Int,numRows+1)
     nnz = 0
     for c in 1:numRows
-        nnz += length(m.constraints[c].lhs.coeffs)
+        nnz += length(m.linconstr[c].terms.coeffs)
     end
     colval = Array(Int,nnz)
     rownzval = Array(Float64,nnz)
@@ -62,8 +56,8 @@ function prepProblem(m::Model)
     tmpnzidx = tmprow.nzidx
     for c in 1:numRows
         rowptr[c] = nnz + 1
-        coeffs = m.constraints[c].lhs.coeffs
-        vars = m.constraints[c].lhs.vars
+        coeffs = m.linconstr[c].terms.coeffs
+        vars = m.linconstr[c].terms.vars
         # collect duplicates
         for ind in 1:length(coeffs)
             addelt(tmprow,vars[ind].col,coeffs[ind])

@@ -120,7 +120,7 @@ macro addConstraint(m, x)
     esc(quote
         $aff = AffExpr()
         $(parseExpr(lhs, aff, 1.0))
-        addConstraint($m, Constraint($aff, $(string(x.args[2]))))
+        addConstraint($m, $(x.args[2])($aff,0) )
     end)
 end
 

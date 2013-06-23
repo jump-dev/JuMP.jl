@@ -3,18 +3,22 @@ function writeMPS(m::Model, fname::String)
 
   write(f,"NAME   MathProgModel\n")
   
-  numRows = length(m.constraints)
+  numRows = length(m.linconstr)
   
   # Objective and constraint names 
   gc_disable()
   write(f,"ROWS\n")
   write(f," N  CON$(numRows+1)\n")
   for c in 1:numRows
-    senseChar = 'L'
-    if m.constraints[c].sense == "=="
+    rowsense = sense(m.linconstr[c])
+    if rowsense == :(<=)
+      senseChar = 'L'
+    elseif rowsense == :(==)
       senseChar = 'E'
-    elseif m.constraints[c].sense == ">="
+    elseif rowsense == :(>=)
       senseChar = 'G'
+    else
+      error("Range rows not yet supported in MPS output")
     end
     @printf(f," %c  CON%d\n",senseChar,c)
   end
@@ -25,7 +29,7 @@ function writeMPS(m::Model, fname::String)
   rowptr = Array(Int,numRows+2)
   nnz = 0
   for c in 1:numRows
-      nnz += length(m.constraints[c].lhs.coeffs)
+      nnz += length(m.linconstr[c].terms.coeffs)
   end
   objaff::AffExpr = (m.objIsQuad) ? m.objective.aff : m.objective
   nnz += length(objaff.coeffs)
@@ -35,9 +39,9 @@ function writeMPS(m::Model, fname::String)
   for c in 1:numRows
       rowptr[c] = nnz + 1
       # TODO: type assertion shouldn't be necessary
-      constr::Constraint = m.constraints[c]
-      coeffs = constr.lhs.coeffs
-      vars = constr.lhs.vars
+      constr::LinearConstraint = m.linconstr[c]
+      coeffs = constr.terms.coeffs
+      vars = constr.terms.vars
       for ind in 1:length(coeffs)
           nnz += 1
           colval[nnz] = vars[ind].col
@@ -84,7 +88,7 @@ function writeMPS(m::Model, fname::String)
   gc_disable()
   write(f,"RHS\n")
   for c in 1:numRows
-    @printf(f,"    rhs    CON%d    %f\n",c,-m.constraints[c].lhs.constant)
+    @printf(f,"    rhs    CON%d    %f\n",c,rhs(m.linconstr[c]))
   end
   gc_enable()
   
@@ -167,25 +171,28 @@ function writeLP(m::Model, fname::String)
   
   # Constraints
   write(f,"Subject To\n")
-  for i in 1:length(m.constraints)
+  for i in 1:length(m.linconstr)
     @printf(f, " c%d: ", i)
 
-    c::Constraint = m.constraints[i]
-    nnz = length(c.lhs.coeffs)
+    c::LinearConstraint = m.linconstr[i]
+    nnz = length(c.terms.coeffs)
     for ind in 1:(nnz-1)
-      @printf(f, "%f VAR%d + ", c.lhs.coeffs[ind], c.lhs.vars[ind].col)
+      @printf(f, "%f VAR%d + ", c.terms.coeffs[ind], c.terms.vars[ind].col)
     end
     if nnz >= 1
-      @printf(f, "%f VAR%d", c.lhs.coeffs[nnz], c.lhs.vars[nnz].col)
+      @printf(f, "%f VAR%d", c.terms.coeffs[nnz], c.terms.vars[nnz].col)
     end
    
     # Sense and RHS
-    if c.sense == "=="
-      @printf(f, " = %f\n", -c.lhs.constant)
-    elseif c.sense == "<="
-      @printf(f, " <= %f\n", -c.lhs.constant)
+    rowsense = sense(c)
+    if rowsense == :(==)
+      @printf(f, " = %f\n", rhs(c))
+    elseif rowsense == :<=
+      @printf(f, " <= %f\n", rhs(c))
+    elseif rowsense == :>=
+      @printf(f, " >= %f\n", rhs(c))
     else
-      @printf(f, " >= %f\n", -c.lhs.constant)
+      error("Range rows not yet supported in MPS output")
     end
   end
 

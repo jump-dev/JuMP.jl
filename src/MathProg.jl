@@ -59,7 +59,7 @@ type Model
   objIsQuad
   objSense::Symbol
   
-  constraints
+  linconstr#::Vector{LinearConstraint}
   
   # Column data
   numCols::Int
@@ -82,7 +82,7 @@ function Model(sense::Symbol)
   if (sense != :Max && sense != :Min)
      error("Model sense must be :Max or :Min")
   end
-  Model(AffExpr(),0,false,sense,Array(Constraint,0),
+  Model(AffExpr(),0,false,sense,LinearConstraint[],
         0,String[],Float64[],Float64[],Int[],0,Float64[],nothing,Dict())
 end
 
@@ -227,19 +227,54 @@ function quadToStr(q::QuadExpr)
 end
 
 ##########################################################################
-# Constraint class
-# Basically an affine expression with a sense and one side.
-type Constraint
-  lhs::AffExpr
-  sense::String
+# LinearConstraint class
+# An affine expression with lower bound (possibly -Inf) and upper bound (possibly Inf).
+type LinearConstraint
+  terms::AffExpr
+  lb::Float64
+  ub::Float64
 end
 
-addConstraint(m::Model, c::Constraint) = push!(m.constraints,c)
+addConstraint(m::Model, c::LinearConstraint) = push!(m.linconstr,c)
 
-print(io::IO, c::Constraint) = print(io, conToStr(c))
-show(io::IO, c::Constraint) = print(io, conToStr(c))
+print(io::IO, c::LinearConstraint) = print(io, conToStr(c))
+show(io::IO, c::LinearConstraint) = print(io, conToStr(c))
 
-conToStr(c::Constraint) = string(affToStr(c.lhs,false)," ",c.sense," ",-c.lhs.constant)
+function sense(c::LinearConstraint) 
+  if c.lb != -Inf
+    if c.ub != Inf
+      if c.ub == c.lb
+        return :(==)
+      else
+        return :range
+      end
+    else
+        return :>=
+    end
+  else
+    @assert c.ub != Inf
+    return :<=
+  end
+end
+
+function rhs(c::LinearConstraint)
+  s = sense(c)
+  @assert s != :range
+  if s == :<=
+    return c.ub
+  else
+    return c.lb
+  end
+end
+
+function conToStr(c::LinearConstraint)
+  s = sense(c)
+  if s == :range
+    return string(c.lb," <= ",affToStr(c.terms,false)," <= ",c.ub)
+  else
+    return string(affToStr(c.terms,false)," ",s," ",rhs(c))
+  end
+end
 
 ##########################################################################
 # Operator overloads

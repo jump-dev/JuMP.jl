@@ -161,17 +161,22 @@ end
 (*)(q1::QuadExpr, q2::QuadExpr) = error("Cannot multiply two quadratic expressions")
 (/)(q1::QuadExpr, q2::QuadExpr) = error("Cannot divide a quadratic expression by a quadratic expression")
 
-# Constraint
-# Constraint--Number
+# LinearConstraint
+# LinearConstraint--Number
 function (<=)(lhs::AffExpr, rhs::Number)
-  lhs.constant -= rhs #TODO: this is temporary, need to restructure
-  return Constraint(lhs,"<=")
+  rhs -= lhs.constant
+  lhs.constant = 0
+  return LinearConstraint(lhs,-Inf,rhs)
 end
 function (==)(lhs::AffExpr, rhs::Number)
-  lhs.constant -= rhs
-  return Constraint(lhs,"==")
+  rhs -= lhs.constant
+  lhs.constant = 0
+  return LinearConstraint(lhs,rhs,rhs)
 end
 function (>=)(lhs::AffExpr, rhs::Number)
-  return Constraint(lhs-rhs,">=")
+  rhs -= lhs.constant
+  lhs.constant = 0
+  return LinearConstraint(lhs,rhs,Inf)
 end
-
+# There's no easy way to allow operator overloads for range constraints.
+# Use macros instead.
