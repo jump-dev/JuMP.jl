@@ -26,7 +26,7 @@ export
   Variable,
   AffExpr,
   QuadExpr,
-  Constraint,
+  LinearConstraint,
   MultivarDict,
 
 # Functions
@@ -234,6 +234,9 @@ type LinearConstraint
   lb::Float64
   ub::Float64
 end
+
+LinearConstraint(terms::AffExpr,lb::Number,ub::Number) =
+  LinearConstraint(terms,float(lb),float(ub))
 
 addConstraint(m::Model, c::LinearConstraint) = push!(m.linconstr,c)
 

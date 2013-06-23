@@ -116,12 +116,31 @@ macro addConstraint(m, x)
         error("Expected comparison operator in constraint $x")
     end
     aff = gensym()
-    lhs = :($(x.args[1]) - $(x.args[3])) # move everything to the lhs
-    esc(quote
-        $aff = AffExpr()
-        $(parseExpr(lhs, aff, 1.0))
-        addConstraint($m, $(x.args[2])($aff,0) )
-    end)
+    if length(x.args) == 3 # simple comparison
+        lhs = :($(x.args[1]) - $(x.args[3])) # move everything to the lhs
+        esc(quote
+            $aff = AffExpr()
+            $(parseExpr(lhs, aff, 1.0))
+            addConstraint($m, $(x.args[2])($aff,0) )
+        end)
+    else
+        # ranged row
+        if length(x.args) != 5 || x.args[2] != :<= || x.args[4] != :<=
+            error("Only ranged rows of the form lb <= expr <= ub are supported")
+        end
+        lb = x.args[1]
+        ub = x.args[5]
+        esc(quote
+            $aff = AffExpr()
+            if !isa($lb,Number)
+                error(string("Expected ",$lb," to be a number"))
+            elseif !isa($ub,Number)
+                error(string("Expected ",$ub," to be a number"))
+            end
+            $(parseExpr(x.args[3],aff,1.0))
+            addConstraint($m, MathProg.LinearConstraint($aff,$lb,$ub))
+        end)
+    end
 end
 
 macro setObjective(m, x)
