@@ -151,7 +151,10 @@ end
 
 AffExpr() = AffExpr(Variable[],Float64[],0.)
 
-setObjective(m::Model, a::AffExpr) = (m.obj.aff = a)
+function setObjective(m::Model, a::AffExpr)
+  m.obj = QuadExpr()
+  m.obj.aff = a
+end
 
 print(io::IO, a::AffExpr) = print(io, affToStr(a))
 show(io::IO, a::AffExpr) = print(io, affToStr(a))

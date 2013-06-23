@@ -143,7 +143,7 @@ function solveMIP(m::Model)
     # undocumented support for quadratic MIPs with gurobi:
     if length(m.obj.qvars1) != 0
         gurobisolver = getrawsolver(m.internalModel)
-        MathProgBase.mipsolver.add_qpterms!(gurobisolver, [v.col for v in m.quadobj.qvars1], [v.col for v in m.obj.qvars2], m.obj.qcoeffs)
+        MathProgBase.mipsolver.add_qpterms!(gurobisolver, [v.col for v in m.obj.qvars1], [v.col for v in m.obj.qvars2], m.obj.qcoeffs)
     end
 
     optimize(m.internalModel)
