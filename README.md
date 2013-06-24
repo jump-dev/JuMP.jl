@@ -200,14 +200,14 @@ is equivalent to
 There is preliminary support (under development) for convex quadratic objectives. Currently, the only supported solver is ``Gurobi``; it must be set as the ``lpsolver`` or ``mipsolver`` when solving QPs or mixed-integer QPs, respectively. The ``@setObjective`` macro does not yet support quadratic terms, but you may use instead the (slower) operator overloading functionality and the ``setObjective`` function:
 
     MathProgBase.setlpsolver(:Gurobi)
-		m = Model(:Min)
+    m = Model(:Min)
     @defVar(m, 0 <= x <= 2 )
     @defVar(m, 0 <= y <= 30 )
 
     setObjective(m, x*x+ 2x*y + y*y )
     @addConstraint(m, x + y >= 1 )
     
-		print(m)
+    print(m)
     
     status = solve(m)
 
