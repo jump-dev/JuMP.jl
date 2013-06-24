@@ -87,5 +87,8 @@ getValue(x::MathProgDict) = map(getValue,x)
 endof(x::MathProgDict) = endof(x.innerArray)
 ndims(x::MathProgDict) = ndims(x.innerArray)
 size(x::MathProgDict,n) = size(x.innerArray,n)
+length(x::MathProgDict) = length(x.innerArray)
+abs(x::MathProgDict) = abs(x.innerArray)
+(-)(x::MathProgDict,y::Array) = x.innerArray-y
 
 export @gendict

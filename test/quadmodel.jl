@@ -1,6 +1,6 @@
 # This whole test only executes if we have Gurobi 
 if Pkg.installed("Gurobi") != nothing
-  MathProgBase.setmipsolver(Gurobi)
+  MathProgBase.setmipsolver(:Gurobi)
   modQ = Model(:Min)
 
   @defVar(modQ, 1.1*i <= x[i=1:3] <= 2.5*i, Int)
@@ -12,13 +12,10 @@ if Pkg.installed("Gurobi") != nothing
   
   status = solve(modQ)
   @test status == :Optimal
-  @test_approx_eq modQ.objVal 86.4
-  println(getValue(x))
-  #@test_approx_eq getValue(x) 0.0
-  #@test_approx_eq getValue(y) 1.0
-  println(modQ.colCat)
+  @test_approx_eq modQ.objVal 99.0
+  @test_approx_eq getValue(x) [2.0, 3.0, 4.0]
 
 
-  MathProgBase.setmipsolver(CoinMP)
+  MathProgBase.setmipsolver(:CoinMP)
 end
 
