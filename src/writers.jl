@@ -9,6 +9,7 @@ function writeMPS(m::Model, fname::String)
   gc_disable()
   write(f,"ROWS\n")
   write(f," N  CON$(numRows+1)\n")
+  hasrange = false
   for c in 1:numRows
     rowsense = sense(m.linconstr[c])
     if rowsense == :(<=)
@@ -18,7 +19,8 @@ function writeMPS(m::Model, fname::String)
     elseif rowsense == :(>=)
       senseChar = 'G'
     else
-      error("Range rows not yet supported in MPS output")
+      hasrange = true
+      senseChar = 'E'
     end
     @printf(f," %c  CON%d\n",senseChar,c)
   end
@@ -88,9 +90,27 @@ function writeMPS(m::Model, fname::String)
   gc_disable()
   write(f,"RHS\n")
   for c in 1:numRows
-    @printf(f,"    rhs    CON%d    %f\n",c,rhs(m.linconstr[c]))
+    rowsense = sense(m.linconstr[c])
+    if rowsense != :range
+      @printf(f,"    rhs    CON%d    %f\n",c,rhs(m.linconstr[c]))
+    else
+      @printf(f,"    rhs    CON%d    %f\n",c,m.linconstr[c].lb)
+    end
   end
   gc_enable()
+
+  # RANGES
+  if hasrange
+    gc_disable()
+    write(f,"RANGES\n")
+    for c in 1:numRows
+      rowsense = sense(m.linconstr[c])
+      if rowsense == :range
+        @printf(f,"    rhs    CON%d    %f\n",c,m.linconstr[c].ub-m.linconstr[c].lb)
+      end
+    end
+  end
+
   
   # BOUNDS
   gc_disable()
@@ -170,11 +190,7 @@ function writeLP(m::Model, fname::String)
   end
   
   # Constraints
-  write(f,"Subject To\n")
-  for i in 1:length(m.linconstr)
-    @printf(f, " c%d: ", i)
-
-    c::LinearConstraint = m.linconstr[i]
+  function writeconstrterms(c::LinearConstraint)
     nnz = length(c.terms.coeffs)
     for ind in 1:(nnz-1)
       @printf(f, "%f VAR%d + ", c.terms.coeffs[ind], c.terms.vars[ind].col)
@@ -182,17 +198,32 @@ function writeLP(m::Model, fname::String)
     if nnz >= 1
       @printf(f, "%f VAR%d", c.terms.coeffs[nnz], c.terms.vars[nnz].col)
     end
-   
-    # Sense and RHS
+  end
+  write(f,"Subject To\n")
+  constrcount = 1
+  for i in 1:length(m.linconstr)
+    @printf(f, " c%d: ", constrcount)
+
+    c::LinearConstraint = m.linconstr[i]
     rowsense = sense(c)
-    if rowsense == :(==)
-      @printf(f, " = %f\n", rhs(c))
-    elseif rowsense == :<=
-      @printf(f, " <= %f\n", rhs(c))
-    elseif rowsense == :>=
-      @printf(f, " >= %f\n", rhs(c))
+    if rowsense != :range
+      writeconstrterms(c)
+      if rowsense == :(==)
+        @printf(f, " = %f\n", rhs(c))
+      elseif rowsense == :<=
+        @printf(f, " <= %f\n", rhs(c))
+      else 
+        @assert rowsense == :>=
+        @printf(f, " >= %f\n", rhs(c))
+      end
+      constrcount += 1
     else
-      error("Range rows not yet supported in MPS output")
+      writeconstrterms(c)
+      @printf(f, " >= %f\n", c.lb)
+      @printf(f, " c%d: ", constrcount+1)
+      writeconstrterms(c)
+      @printf(f, " <= %f\n", c.ub)
+      constrcount += 2
     end
   end
 
