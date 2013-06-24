@@ -89,7 +89,7 @@ end
 function print(io::IO, m::Model)
   println(io, string(m.objSense," ",quadToStr(m.obj)))
   println(io, "Subject to: ")
-  for c in m.constraints
+  for c in m.linconstr
     println(io, conToStr(c))
   end
   for i in 1:m.numCols

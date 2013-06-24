@@ -197,5 +197,18 @@ is equivalent to
 
 # Quadratic objective support
 
-There is partial support for quadratic objectives. You can formulate problems with them, 
-and they can be written out to MPS files. More support to follow.
+There is preliminary support (under development) for convex quadratic objectives. Currently, the only supported solver is ``Gurobi``; it must be set as the ``lpsolver`` or ``mipsolver`` when solving QPs or mixed-integer QPs, respectively. The ``@setObjective`` macro does not yet support quadratic terms, but you may use instead the (slower) operator overloading functionality and the ``setObjective`` function:
+
+    MathProgBase.setlpsolver(:Gurobi)
+		m = Model(:Min)
+    @defVar(m, 0 <= x <= 2 )
+    @defVar(m, 0 <= y <= 30 )
+
+    setObjective(m, x*x+ 2x*y + y*y )
+    @addConstraint(m, x + y >= 1 )
+    
+		print(m)
+    
+    status = solve(m)
+
+QPs may also be written to MPS (but not LP) output.

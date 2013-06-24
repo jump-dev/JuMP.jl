@@ -81,8 +81,8 @@ function prepProblem(m::Model)
 end
 
 function solveLP(m::Model)
-    if length(m.obj.qvars1) != 0
-        error("Quadratic objectives are not fully supported yet")
+    if length(m.obj.qvars1) != 0 && string(MathProgBase.lpsolver) != "Gurobi" 
+        error("Quadratic objectives are currently only supported using Gurobi")
     end
 
     f, A, rowlb, rowub = prepProblem(m)  
@@ -94,6 +94,11 @@ function solveLP(m::Model)
     m.internalModel = MathProgBase.lpsolver.model(;m.solverOptions...)
     loadproblem(m.internalModel, A, m.colLower, m.colUpper, f, rowlb, rowub)
     setsense(m.internalModel, m.objSense)
+    if length(m.obj.qvars1) != 0
+        gurobisolver = getrawsolver(m.internalModel)
+        MathProgBase.lpsolver.add_qpterms!(gurobisolver, [v.col for v in m.obj.qvars1], [v.col for v in m.obj.qvars2], m.obj.qcoeffs)
+    end
+
     optimize(m.internalModel)
     stat = status(m.internalModel)
 
@@ -112,7 +117,7 @@ end
 
 function solveMIP(m::Model)
     if length(m.obj.qvars1) != 0 && string(MathProgBase.mipsolver) != "Gurobi"
-        error("Quadratic objectives are not fully supported yet")
+        error("Quadratic objectives are currently only supported using Gurobi")
     end
 
 
@@ -140,7 +145,6 @@ function solveMIP(m::Model)
     end
     loadproblem(m.internalModel, A, m.colLower, m.colUpper, f, rowlb, rowub)
     setvartype(m.internalModel, vartype)
-    # undocumented support for quadratic MIPs with gurobi:
     if length(m.obj.qvars1) != 0
         gurobisolver = getrawsolver(m.internalModel)
         MathProgBase.mipsolver.add_qpterms!(gurobisolver, [v.col for v in m.obj.qvars1], [v.col for v in m.obj.qvars2], m.obj.qcoeffs)
