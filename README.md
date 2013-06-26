@@ -50,9 +50,15 @@ println("x = ", getValue(x))
 println("y = ", getValue(y))
 ```
 
+See the [SimpleExample] wiki page for a detailed explanation, and for 
+more examples, see the [examples/] folder.
+
+[SimpleExample]: https://github.com/IainNZ/MathProg.jl/wiki/Simple-Example
+[examples/]: https://github.com/IainNZ/MathProg.jl/tree/master/examples
+
 # Quick Start Guide
 
-For a full user guide, please see the wiki.
+For a full user guide, please see the [wiki](https://github.com/IainNZ/MathProg.jl/wiki/MathProg.jl-Wiki).
 
 ### Defining Variables
 
@@ -69,7 +75,8 @@ and optionally allows specification of lower and upper bounds. For example:
 ```
 
 All these variations create a new local variable ``x``. For information about
-common operations on variables, e.g. changing their bounds, see here WIKI.
+common operations on variables, e.g. changing their bounds, see the
+[wiki](https://github.com/IainNZ/MathProg.jl/wiki/Variables).
 
 Integer and binary restrictions can optionally be specified with a third 
 argument, ``Int`` or ``Bin``.
