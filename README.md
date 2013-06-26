@@ -23,7 +23,8 @@ This will install MathProg's dependencies **[MathProgBase]** (which provides
 a generic solver interface) and the **[Clp]** and **[CoinMP]** packages which
 link with powerful open-source LP and MILP solvers, which use by default.
 
-For more installation information, see the corresponding READMEs for more instructions.
+For more information on these other packages, including installation details, 
+see the corresponding package READMEs.
 
 [MathProgBase]: https://github.com/mlubin/MathProgBase.jl
 [Clp]: https://github.com/mlubin/Clp.jl
