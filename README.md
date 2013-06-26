@@ -58,7 +58,7 @@ more examples, see the [examples/] folder.
 
 # Quick Start Guide
 
-For a full user guide, please see the [wiki](https://github.com/IainNZ/MathProg.jl/wiki/MathProg.jl-Wiki).
+For a full user guide, please see the [wiki](https://github.com/IainNZ/MathProg.jl/wiki).
 
 ### Defining Variables
 
