@@ -21,7 +21,7 @@ Pkg.add("MathProg")
 
 This will install MathProg's dependencies **[MathProgBase]** (which provides
 a generic solver interface) and the **[Clp]** and **[CoinMP]** packages which
-link with powerful open-source LP and MILP solvers, which use by default.
+link with powerful open-source LP and MILP solvers and are used by default.
 
 For more information on these other packages, including installation details, 
 see the corresponding package READMEs.
