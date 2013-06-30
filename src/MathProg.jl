@@ -29,8 +29,8 @@ export
   print,show,
   # Model related
   getNumVars, getNumConstraints, getObjectiveValue, getObjective,
-  setObjectiveSense, writeLP, writeMPS, setObjective, solve,
-  addConstraint, addVar, addVars, setLPSolver, setMIPSolver,
+  getObjectiveSense, setObjectiveSense, writeLP, writeMPS, setObjective,
+  addConstraint, addVar, addVars, setLPSolver, setMIPSolver, solve,
   # Variable
   setName, getName, setLower, setUpper, getLower, getUpper, getValue,
   # Expressions and constraints
@@ -88,7 +88,7 @@ getNumVars(m::Model) = m.numCols
 getNumConstraints(m::Model) = length(m.linconstr)
 getObjectiveValue(m::Model) = m.objVal
 getObjectiveSense(m::Model) = m.objSense
-setObjectiveSense(m::Model, newSense:::Symbol) = (m.objSense = newSense)
+setObjectiveSense(m::Model, newSense::Symbol) = (m.objSense = newSense)
 
 # Pretty print
 function print(io::IO, m::Model)

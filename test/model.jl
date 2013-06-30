@@ -135,3 +135,13 @@ status = solve(modA)
 @test_approx_eq getValue(r)[9] 9.0
 @test_approx_eq getValue(r)[8] 0.0
 println("  !!TODO: test external solvers for reading LP and MPS files")
+
+
+# Getter/setters
+@test getNumVars(modA) == 13
+@test getNumConstraints(modA) == 3
+@test_approx_eq getObjectiveValue(modA) 6.3095238095
+@test getObjectiveSense(modA) == :Max
+setObjectiveSense(modA, :Min)
+@test getObjectiveSense(modA) == :Min
+
