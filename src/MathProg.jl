@@ -30,10 +30,17 @@ export
   MultivarDict,
 
 # Functions
-  print,show,affToStr,quadToStr,conToStr,writeLP,writeMPS,
-  setName,getName,setLower,setUpper,getLower,getUpper,getValue,
-  addConstraint,setObjective,solve,addVar,addVars,
-
+  # Relevant to all
+  print,show,
+  # Model related
+  getNumVars, getNumConstraints, getObjectiveValue, getObjective,
+  setObjectiveSense, writeLP, writeMPS, setObjective, solve,
+  addConstraint, addVar, addVars,
+  # Variable
+  setName, getName, setLower, setUpper, getLower, getUpper, getValue,
+  # Expressions and constraints
+  affToStr, quadToStr, conToStr,
+  
 # Macros and support functions
   @addConstraint,
   @defVar,
