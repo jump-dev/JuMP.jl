@@ -74,7 +74,6 @@ type Model
   solverOptions
 end
 
-
 # Default constructor
 function Model(sense::Symbol)
   if (sense != :Max && sense != :Min)
@@ -84,6 +83,13 @@ function Model(sense::Symbol)
         0,String[],Float64[],Float64[],Int[],
         0,Float64[],nothing,Dict())
 end
+
+# Getters/setters
+getNumVars(m::Model) = m.numCols
+getNumConstraints(m::Model) = length(m.linconstr)
+getObjectiveValue(m::Model) = m.objVal
+getObjectiveSense(m::Model) = m.objSense
+setObjectiveSense(m::Model, newSense:::Symbol) = (m.objSense = newSense)
 
 # Pretty print
 function print(io::IO, m::Model)
