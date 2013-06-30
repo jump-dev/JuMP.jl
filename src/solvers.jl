@@ -1,3 +1,6 @@
+setLPSolver(s::Symbol) = MathProgBase.setlpsolver(s)
+setMIPSolver(s::Symbol) = MathProgBase.setmipsolver(s)
+
 function solve(m::Model)
   # Analyze model to see if any integers
   anyInts = false

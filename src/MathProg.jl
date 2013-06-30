@@ -22,12 +22,7 @@ importall Base
 
 export
 # Objects
-  Model,
-  Variable,
-  AffExpr,
-  QuadExpr,
-  LinearConstraint,
-  MultivarDict,
+  Model, Variable, AffExpr, QuadExpr, LinearConstraint, MultivarDict,
 
 # Functions
   # Relevant to all
@@ -35,17 +30,14 @@ export
   # Model related
   getNumVars, getNumConstraints, getObjectiveValue, getObjective,
   setObjectiveSense, writeLP, writeMPS, setObjective, solve,
-  addConstraint, addVar, addVars,
+  addConstraint, addVar, addVars, setLPSolver, setMIPSolver,
   # Variable
   setName, getName, setLower, setUpper, getLower, getUpper, getValue,
   # Expressions and constraints
   affToStr, quadToStr, conToStr,
   
 # Macros and support functions
-  @addConstraint,
-  @defVar,
-  @setObjective,
-  addToExpression
+  @addConstraint, @defVar, @setObjective, addToExpression
 
 include("MathProgDict.jl")
 include("utils.jl")
