@@ -13,7 +13,6 @@ using MathProg
 
 m = Model(:Max)
 
-#x = addVars(m, 0, 1, INTEGER, 5, "x")
 @defVar(m, 0 <= x[1:5] <= 1, Int)
 
 profit = [ 5, 3, 2, 7, 4 ]
@@ -27,8 +26,8 @@ capacity = 10
 status = solve(m)
 print(m)
 
-println("Objective is: ",m.objVal)
+println("Objective is: ", getObjectiveValue(m))
 println("Solution is:")
 for i = 1:5
-	println("x", i, " = ", getValue(x[i]))
+  println("x", i, " = ", getValue(x[i]))
 end

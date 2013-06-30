@@ -46,7 +46,7 @@ print(m)
     
 status = solve(m)
     
-println("Objective value: ", m.objVal)
+println("Objective value: ", getObjectiveValue(m))
 println("x = ", getValue(x))
 println("y = ", getValue(y))
 ```
