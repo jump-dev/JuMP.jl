@@ -88,7 +88,12 @@ getNumVars(m::Model) = m.numCols
 getNumConstraints(m::Model) = length(m.linconstr)
 getObjectiveValue(m::Model) = m.objVal
 getObjectiveSense(m::Model) = m.objSense
-setObjectiveSense(m::Model, newSense::Symbol) = (m.objSense = newSense)
+function setObjectiveSense(m::Model, newSense::Symbol)
+  if (newSense != :Max && newSense != :Min)
+    error("Model sense must be :Max or :Min")
+  end
+  m.objSense = newSense
+end
 
 # Pretty print
 function print(io::IO, m::Model)
