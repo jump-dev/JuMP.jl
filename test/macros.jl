@@ -38,7 +38,7 @@ let
     @test conToStr(m.linconstr[end]) == "0.5 x + 0.5 y == 1.0"
     @addConstraint(m, -1 <= x-y <= t) 
     @test conToStr(m.linconstr[end]) == "-1.0 <= 1.0 x + -1.0 y <= 10.0"
-    @test_fails @addConstraint(m, x <= t <= y)
+    @test_throws @addConstraint(m, x <= t <= y)
 end
 
 let

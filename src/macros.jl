@@ -154,7 +154,7 @@ end
         
 
 macro defVar(m, x, extra...)
-    if isa(x,Expr) && x.head == :comparison
+    if isexpr(x,:comparison)
         # we have some bounds
         if x.args[2] == :>=
             if length(x.args) == 5
@@ -204,10 +204,7 @@ macro defVar(m, x, extra...)
             nothing
         end)
     else
-        if !isa(var,Expr)
-            error("Syntax error: Expected $var to be variable name.")
-        end
-        if var.head != :ref
+        if !isexpr(var,:ref)
             error("Syntax error: Expected $var to be of form var[...]")
         end
         varname = var.args[1]
@@ -244,7 +241,28 @@ macro defVar(m, x, extra...)
         return code
     end
 end
+
+macro defConstrRef(var)
+    
+    if isa(var,Symbol)
+        # easy case
+        return esc(:(local $var))
+    else
+        if !isexpr(var,:ref)
+            error("Syntax error: Expected $var to be of form var[...]")
+        end
         
+        varname = var.args[1]
+        idxsets = var.args[2:end]
+                
+        mac = Expr(:macrocall,symbol("@gendict"),varname,:ConstraintRef,idxsets...)
+        code = quote 
+            $(esc(mac))
+            nothing
+        end
+        return code
+    end
+end
         
 
 

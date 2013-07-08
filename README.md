@@ -1,11 +1,11 @@
 MathProg.jl
 ===========
 
-MathProg.jl is a linear/integer/quadratic programming modelling language
+MathProg.jl is a linear/integer/quadratic programming modeling language
 embedded in the Julia language. It is currently connected to the COIN CLP and
 CBC solvers, GNU GLPK, and the Gurobi solver. One the best features of MathProg
 is its speed - benchmarking has shown that it can create problems at similar
-speeds to special-purpose modelling languages such as AMPL.
+speeds to special-purpose modeling languages such as AMPL.
 
 This package is not related to GNU MathProg.
 
@@ -109,7 +109,7 @@ Finally, bounds can depend on variable indices:
 ### Objective and Constraints
 
 MathProg allows users to use a natural notation to describe linear expressions.
-There are two ways to do so. The first is very similar to other modelling
+There are two ways to do so. The first is very similar to other modeling
 languages and has no restrictions. The second utilizes Julia's powerful
 metaprogramming features to get excellent performance even for large problems,
 but has some restrictions on how they can be used.

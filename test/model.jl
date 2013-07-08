@@ -9,39 +9,33 @@ modPath = joinpath(Pkg.dir("MathProg"),"test","mod")
 # Build it
 modA = Model(:Max)
 @defVar(modA, x >= 0)
-@defVar(modA, y <= 5.5, Int)
+@defVar(modA, y <= 5, Int)
 @defVar(modA, 2 <= z <= 4)
-@defVar(modA, 0 <= r[i=1:10] <= i)
+@defVar(modA, 0 <= r[i=3:6] <= i)
 @setObjective(modA, ((x + y)/2.0 + 3.0)/3.0 + z + r[3])
-@addConstraint(modA, -1 <= x+y <= 4)
-@addConstraint(modA, sum{r[i],i=3:5} <= (2 - x)/2.0)
-#@addConstraint(modA, y*(2+5.0) <= z + r[9])
-@addConstraint(modA, 7.0*y <= z + r[9])
+@defConstrRef constraints[1:3]
+constraints[1] = @addConstraint(modA, 2 <= x+y <= 4)
+constraints[2] = @addConstraint(modA, sum{r[i],i=3:5} <= (2 - x)/2.0)
+constraints[3] = @addConstraint(modA, 7.0*y <= z + r[6]/1.9)
 #####################################################################
 # Test LP writer
 writeLP(modA, modPath * "A.lp")
 modALP = ASCIIString[
 "Maximize",
-"obj: 0.166667 VAR1 + 0.166667 VAR2 + 1.000000 VAR3 + 1.000000 VAR6",
+"obj: 0.166667 VAR1 + 0.166667 VAR2 + 1.000000 VAR3 + 1.000000 VAR4",
 "Subject To",
-"c1: 1.000000 VAR1 + 1.000000 VAR2 >= -1.000000",
+"c1: 1.000000 VAR1 + 1.000000 VAR2 >= 2.000000",
 "c2: 1.000000 VAR1 + 1.000000 VAR2 <= 4.000000",
-"c3: 1.000000 VAR6 + 1.000000 VAR7 + 1.000000 VAR8 + 0.500000 VAR1 <= 1.000000",
-"c4: 7.000000 VAR2 + -1.000000 VAR3 + -1.000000 VAR12 <= 0.000000",
+"c3: 1.000000 VAR4 + 1.000000 VAR5 + 1.000000 VAR6 + 0.500000 VAR1 <= 1.000000",
+"c4: 7.000000 VAR2 + -1.000000 VAR3 + -0.526316 VAR7 <= 0.000000",
 "Bounds",
 "0.000000 <= VAR1 <= +inf",
-"-inf <= VAR2 <= 5.500000",
+"-inf <= VAR2 <= 5.000000",
 "2.000000 <= VAR3 <= 4.000000",
-"0.000000 <= VAR4 <= 1.000000",
-"0.000000 <= VAR5 <= 2.000000",
-"0.000000 <= VAR6 <= 3.000000",
-"0.000000 <= VAR7 <= 4.000000",
-"0.000000 <= VAR8 <= 5.000000",
-"0.000000 <= VAR9 <= 6.000000",
-"0.000000 <= VAR10 <= 7.000000",
-"0.000000 <= VAR11 <= 8.000000",
-"0.000000 <= VAR12 <= 9.000000",
-"0.000000 <= VAR13 <= 10.000000",
+"0.000000 <= VAR4 <= 3.000000",
+"0.000000 <= VAR5 <= 4.000000",
+"0.000000 <= VAR6 <= 5.000000",
+"0.000000 <= VAR7 <= 6.000000",
 "General",
 "VAR2",
 "End"]
@@ -66,40 +60,34 @@ modAMPS = ASCIIString[
 "COLUMNS",
 "    VAR1  CON1  1.000000",
 "    VAR1  CON2  0.500000",
-"    VAR1  CON4  0.166667",
+"    VAR1  CON4  -0.166667",
 "    MARKER    'MARKER'                 'INTORG'",
 "    VAR2  CON1  1.000000",
 "    VAR2  CON3  7.000000",
-"    VAR2  CON4  0.166667",
+"    VAR2  CON4  -0.166667",
 "    MARKER    'MARKER'                 'INTEND'",
 "    VAR3  CON3  -1.000000",
-"    VAR3  CON4  1.000000",
+"    VAR3  CON4  -1.000000",
+"    VAR4  CON2  1.000000",
+"    VAR4  CON4  -1.000000",
+"    VAR5  CON2  1.000000",
 "    VAR6  CON2  1.000000",
-"    VAR6  CON4  1.000000",
-"    VAR7  CON2  1.000000",
-"    VAR8  CON2  1.000000",
-"    VAR12  CON3  -1.000000",
+"    VAR7  CON3  -0.526316",
 "RHS",
-"    rhs    CON1    -1.000000",
+"    rhs    CON1    2.000000",
 "    rhs    CON2    1.000000",
 "    rhs    CON3    0.000000",
 "RANGES",
-"    rhs    CON1    5.000000",
+"    rhs    CON1    2.000000",
 "BOUNDS",
 "  MI BOUND VAR2",
-"  UP BOUND VAR2 5.500000",
+"  UP BOUND VAR2 5.000000",
 "  LO BOUND VAR3 2.000000",
 "  UP BOUND VAR3 4.000000",
-"  UP BOUND VAR4 1.000000",
-"  UP BOUND VAR5 2.000000",
-"  UP BOUND VAR6 3.000000",
-"  UP BOUND VAR7 4.000000",
-"  UP BOUND VAR8 5.000000",
-"  UP BOUND VAR9 6.000000",
-"  UP BOUND VAR10 7.000000",
-"  UP BOUND VAR11 8.000000",
-"  UP BOUND VAR12 9.000000",
-"  UP BOUND VAR13 10.000000",
+"  UP BOUND VAR4 3.000000",
+"  UP BOUND VAR5 4.000000",
+"  UP BOUND VAR6 5.000000",
+"  UP BOUND VAR7 6.000000",
 "ENDATA"]
 modAfp = open(modPath * "A.mps")
 lineInd = 1
@@ -113,34 +101,50 @@ close(modAfp)
 # Test solution (MIP)
 status = solve(modA)
 @test status == :Optimal
-@test_approx_eq modA.objVal (6 + 1.0/6)
-@test_approx_eq getValue(x) 0.0
+@test_approx_eq_eps modA.objVal (1.0+4.833334) 1e-6
+@test_approx_eq getValue(x) 1.0
 @test_approx_eq getValue(y) 1.0
 @test_approx_eq getValue(z) 4.0
-@test_approx_eq getValue(r)[1] 0.0
-@test_approx_eq getValue(r)[3] 1.0
-@test_approx_eq getValue(r)[9] 9.0
-@test_approx_eq getValue(r)[8] 0.0
+@test_approx_eq getValue(r)[3] 0.5
+@test_approx_eq getValue(r)[4] 0.0
+@test_approx_eq getValue(r)[5] 0.0
+@test_approx_eq getValue(r)[6] 6.0
 #####################################################################
 # Test solution (LP)
 modA.colCat[2] = 0
 status = solve(modA)
 @test status == :Optimal  
-@test_approx_eq modA.objVal (1.0 + 5.3095238095)
-@test_approx_eq getValue(x) 0.0
-@test_approx_eq getValue(y) 1.85714285714286
+@test_approx_eq_eps modA.objVal 5.844611528822055 1e-6
+@test_approx_eq getValue(x) 0.9774436090225564
+@test_approx_eq getValue(y) 1.0225563909774436
 @test_approx_eq getValue(z) 4.0
-@test_approx_eq getValue(r)[1] 0.0
-@test_approx_eq getValue(r)[3] 1.0
-@test_approx_eq getValue(r)[9] 9.0
-@test_approx_eq getValue(r)[8] 0.0
+@test_approx_eq getValue(r)[3] 0.5112781954887218
+@test_approx_eq getValue(r)[4] 0.0
+@test_approx_eq getValue(r)[5] 0.0
+@test_approx_eq getValue(r)[6] 6.0
+
+# reduced costs
+@test_approx_eq getDual(x) 0.0
+@test_approx_eq getDual(y) 0.0
+@test_approx_eq getDual(z) 1.0714285714285714
+@test_approx_eq getDual(r)[3] 0.0
+@test_approx_eq getDual(r)[4] -1.0
+@test_approx_eq getDual(r)[5] -1.0
+@test_approx_eq getDual(r)[6] 0.03759398496240601
+
+# row duals
+@test_approx_eq_eps getDual(constraints)[1] -0.333333 1e-6
+@test_approx_eq_eps getDual(constraints)[2] 1.0 1e-6
+@test_approx_eq_eps getDual(constraints)[3] 0.07142857142857142 1e-6
+
+
 println("  !!TODO: test external solvers for reading LP and MPS files")
 
 
 # Getter/setters
-@test getNumVars(modA) == 13
+@test getNumVars(modA) == 7
 @test getNumConstraints(modA) == 3
-@test_approx_eq getObjectiveValue(modA) 6.3095238095
+@test_approx_eq_eps getObjectiveValue(modA) 5.844611528822055 1e-6
 @test getObjectiveSense(modA) == :Max
 setObjectiveSense(modA, :Min)
 @test getObjectiveSense(modA) == :Min

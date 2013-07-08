@@ -84,6 +84,7 @@ macro gendict(instancename,T,idxsets...)
 end
 
 getValue(x::MathProgDict) = map(getValue,x)
+getDual(x::MathProgDict) = map(getDual,x)
 endof(x::MathProgDict) = endof(x.innerArray)
 ndims(x::MathProgDict) = ndims(x.innerArray)
 size(x::MathProgDict,n) = size(x.innerArray,n)

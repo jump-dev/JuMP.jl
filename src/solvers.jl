@@ -112,6 +112,8 @@ function solveLP(m::Model)
         m.objVal = getobjval(m.internalModel)
         m.objVal += m.obj.aff.constant
         m.colVal = getsolution(m.internalModel)
+        m.redCosts = getreducedcosts(m.internalModel)
+        m.linconstrDuals = getconstrduals(m.internalModel)
     end
 
     return stat

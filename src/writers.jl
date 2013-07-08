@@ -34,6 +34,13 @@ function writeMPS(m::Model, fname::String)
       nnz += length(m.linconstr[c].terms.coeffs)
   end
   objaff::AffExpr = m.obj.aff
+  objlincoef = objaff.coeffs
+  if m.objSense == :Max
+      println("Warning, MPS does not support maximization sense. Flipping objective coefficients.")
+      objlincoef = -objaff.coeffs
+  end
+
+
   nnz += length(objaff.coeffs)
   colval = Array(Int,nnz)
   rownzval = Array(Float64,nnz)
@@ -54,7 +61,7 @@ function writeMPS(m::Model, fname::String)
   for ind in 1:length(objaff.coeffs)
       nnz += 1
       colval[nnz] = objaff.vars[ind].col
-      rownzval[nnz] = objaff.coeffs[ind]
+      rownzval[nnz] = objlincoef[ind]
   end
   rowptr[numRows+2] = nnz + 1
 

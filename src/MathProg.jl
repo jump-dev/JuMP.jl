@@ -33,11 +33,13 @@ export
   addConstraint, addVar, addVars, setLPSolver, setMIPSolver, solve,
   # Variable
   setName, getName, setLower, setUpper, getLower, getUpper, getValue,
+  getDual,
   # Expressions and constraints
   affToStr, quadToStr, conToStr,
   
 # Macros and support functions
-  @addConstraint, @defVar, @setObjective, addToExpression
+  @addConstraint, @defVar, 
+  @defConstrRef, @setObjective, addToExpression
 
 include("MathProgDict.jl")
 include("utils.jl")
@@ -68,6 +70,8 @@ type Model
   # Solution data
   objVal
   colVal::Vector{Float64}
+  redCosts::Vector{Float64}
+  linconstrDuals::Vector{Float64}
   # internal solver model object
   internalModel
   solverOptions
@@ -80,7 +84,7 @@ function Model(sense::Symbol)
   end
   Model(QuadExpr(),sense,LinearConstraint[],
         0,String[],Float64[],Float64[],Int[],
-        0,Float64[],nothing,Dict())
+        0,Float64[],Float64[],Float64[],nothing,Dict())
 end
 
 # Getters/setters
@@ -147,8 +151,17 @@ setUpper(v::Variable,upper::Number) = (v.m.colUpper[v.col] = convert(Float64,upp
 getLower(v::Variable) = v.m.colLower[v.col]
 getUpper(v::Variable) = v.m.colUpper[v.col]
 
-# Value getter
+# Value setter/getter
+function setValue(v::Variable, val::Number)
+    if length(v.m.colVal) < v.col
+        resize!(v.m.colVal,v.m.numCols)
+    end
+    v.m.colVal[v.col] = val
+end
 getValue(v::Variable) = v.m.colVal[v.col]
+
+# Dual value (reduced cost) getter
+getDual(v::Variable) = v.m.redCosts[v.col]
 
 ###############################################################################
 # Affine Expression class
@@ -239,9 +252,14 @@ function quadToStr(q::QuadExpr)
 end
 
 ##########################################################################
+# MathProgConstraint
+# abstract base for constraint types
+abstract MathProgConstraint
+
+##########################################################################
 # LinearConstraint class
 # An affine expression with lower bound (possibly -Inf) and upper bound (possibly Inf).
-type LinearConstraint
+type LinearConstraint <: MathProgConstraint
   terms::AffExpr
   lb::Float64
   ub::Float64
@@ -250,7 +268,10 @@ end
 LinearConstraint(terms::AffExpr,lb::Number,ub::Number) =
   LinearConstraint(terms,float(lb),float(ub))
 
-addConstraint(m::Model, c::LinearConstraint) = push!(m.linconstr,c)
+function addConstraint(m::Model, c::LinearConstraint)
+  push!(m.linconstr,c)
+  return ConstraintRef{LinearConstraint}(m,length(m.linconstr))
+end
 
 print(io::IO, c::LinearConstraint) = print(io, conToStr(c))
 show(io::IO, c::LinearConstraint) = print(io, conToStr(c))
@@ -290,6 +311,16 @@ function conToStr(c::LinearConstraint)
     return string(affToStr(c.terms,false)," ",s," ",rhs(c))
   end
 end
+
+##########################################################################
+# ConstraintRef
+# Reference to a constraint for retrieving solution info
+immutable ConstraintRef{T<:MathProgConstraint}
+  m::Model
+  idx::Int
+end
+
+getDual(c::ConstraintRef{LinearConstraint}) = c.m.linconstrDuals[c.idx]
 
 ##########################################################################
 # Operator overloads
