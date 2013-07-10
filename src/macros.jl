@@ -45,26 +45,30 @@ function parseCurly(x::Expr, aff::Symbol, constantCoef)
         end
         # generate inner loop code first and then wrap in for loops
         code = quote
-            if $(cond.args[1])
+            if $(esc(cond.args[1]))
                 $(parseExpr(x.args[3], aff, constantCoef))
             end
         end
         for level in length(x.args):-1:4
-            code = Expr(:for, x.args[level],code)
-            # for $(x.args[level]) $code end
+            code = :(
+            for $(esc(x.args[level].args[1])) in $(esc(x.args[level].args[2]))
+                $code
+            end)
         end
     else # no condition
         code = parseExpr(x.args[2], aff, constantCoef)
         for level in length(x.args):-1:3
-            code = Expr(:for, x.args[level],code)
-            # for $(x.args[level]) $code end
+            code = :(
+            for $(esc(x.args[level].args[1])) in $(esc(x.args[level].args[2]))
+                $code
+            end)
         end
-        len = gensym()
+        len = :len
         # precompute the number of elements to add
         # this is unncessary if we're just summing constants
-        preblock = :($len += length($(x.args[length(x.args)].args[2])))
+        preblock = :($len += length($(esc(x.args[length(x.args)].args[2]))))
         for level in (length(x.args)-1):-1:3
-            preblock = Expr(:for, x.args[level],preblock)
+            preblock = Expr(:for, esc(x.args[level]),preblock)
         end
         preblock = :($len = 0; $preblock;
             sizehint($aff.vars,length($aff.vars)+$len);
@@ -79,9 +83,7 @@ end
 function parseExpr(x, aff::Symbol, constantCoef)
     if !isa(x,Expr)
         # at the lowest level
-        quote
-            addToExpression($aff, $constantCoef, $x)
-        end
+        :(addToExpression($aff, $(esc(constantCoef)), $(esc(x))))
     else
         if x.head == :call && x.args[1] == :+
             Expr(:block,[parseExpr(arg,aff,constantCoef) for arg in x.args[2:end]]...)
@@ -104,25 +106,23 @@ function parseExpr(x, aff::Symbol, constantCoef)
         elseif x.head == :curly
             parseCurly(x,aff,constantCoef)
         else # at lowest level?
-            quote
-                addToExpression($aff, $constantCoef, $x)
-            end
+            :(addToExpression($aff, $(esc(constantCoef)), $(esc(x))))
         end
     end
 end
 
 macro addConstraint(m, x)
+    m = esc(m)
     if (x.head != :comparison)
         error("Expected comparison operator in constraint $x")
     end
-    aff = gensym()
     if length(x.args) == 3 # simple comparison
         lhs = :($(x.args[1]) - $(x.args[3])) # move everything to the lhs
-        esc(quote
-            $aff = AffExpr()
-            $(parseExpr(lhs, aff, 1.0))
-            addConstraint($m, $(x.args[2])($aff,0) )
-        end)
+        quote
+            aff = AffExpr()
+            $(parseExpr(lhs, :aff, 1.0))
+            addConstraint($m, $(x.args[2])(aff,0) )
+        end
     else
         # ranged row
         if length(x.args) != 5 || x.args[2] != :<= || x.args[4] != :<=
@@ -130,30 +130,30 @@ macro addConstraint(m, x)
         end
         lb = x.args[1]
         ub = x.args[5]
-        esc(quote
-            $aff = AffExpr()
-            if !isa($lb,Number)
+        quote
+            aff = AffExpr()
+            if !isa($(esc(lb)),Number)
                 error(string("Expected ",$lb," to be a number"))
-            elseif !isa($ub,Number)
+            elseif !isa($(esc(ub)),Number)
                 error(string("Expected ",$ub," to be a number"))
             end
-            $(parseExpr(x.args[3],aff,1.0))
-            addConstraint($m, MathProg.LinearConstraint($aff,$lb,$ub))
-        end)
+            $(parseExpr(x.args[3],:aff,1.0))
+            addConstraint($m, LinearConstraint(aff,$(esc(lb)),$(esc(ub))))
+        end
     end
 end
 
 macro setObjective(m, x)
-    aff = gensym()
-    esc(quote
-        $aff = AffExpr()
-        $(parseExpr(x, aff, 1.0))
-        setObjective($m, $aff)
-    end)
+    quote
+        aff = AffExpr()
+        $(parseExpr(x, :aff, 1.0))
+        setObjective($(esc(m)), aff)
+    end
 end
         
 
 macro defVar(m, x, extra...)
+    m = esc(m)
     if isexpr(x,:comparison)
         # we have some bounds
         if x.args[2] == :>=
@@ -162,21 +162,21 @@ macro defVar(m, x, extra...)
             end
             @assert length(x.args) == 3
             # lower bounds, no upper
-            lb = x.args[3]
+            lb = esc(x.args[3])
             ub = Inf
             var = x.args[1]
         elseif x.args[2] == :<=
             if length(x.args) == 5
                 # lb <= x <= u
-                lb = x.args[1]
+                lb = esc(x.args[1])
                 if (x.args[4] != :<=)
                     error("Expected <= operator")
                 end
-                ub = x.args[5]
+                ub = esc(x.args[5])
                 var = x.args[3]
             else
                 # x <= u
-                ub = x.args[3]
+                ub = esc(x.args[3])
                 lb = -Inf
                 var = x.args[1]
             end
@@ -199,34 +199,34 @@ macro defVar(m, x, extra...)
     #println("lb: $lb ub: $ub var: $var")      
     if isa(var,Symbol)
         # easy case
-        return esc(quote
-            $var = Variable($m,$lb,$ub,$t,$(string(var)))
+        return quote
+            $(esc(var)) = Variable($m,$lb,$ub,$t,$(string(var)))
             nothing
-        end)
+        end
     else
         if !isexpr(var,:ref)
             error("Syntax error: Expected $var to be of form var[...]")
         end
-        varname = var.args[1]
-        idxvars = Symbol[]
+        varname = esc(var.args[1])
+        idxvars = {}
         idxsets = {}
-        refcall = Expr(:ref,esc(varname))
+        refcall = Expr(:ref,varname)
         for s in var.args[2:end]
             if isa(s,Expr) && s.head == :(=)
-                idxvar = s.args[1]
-                idxset = s.args[2]
+                idxvar = esc(s.args[1])
+                idxset = esc(s.args[2])
             else
                 idxvar = gensym()
-                idxset = s
+                idxset = esc(s)
             end
             push!(idxvars, idxvar)
             push!(idxsets, idxset)
-            push!(refcall.args, esc(idxvar)) 
+            push!(refcall.args, idxvar)
         end
-        code = :( $(refcall) = MathProg.Variable($(esc(m)), $(esc(lb)), $(esc(ub)), $t) )
+        code = :( $(refcall) = Variable($m, $lb, $ub, $t) )
         for (idxvar, idxset) in zip(reverse(idxvars),reverse(idxsets))
             code = quote
-                for $(esc(idxvar)) in $(esc(idxset))
+                for $idxvar in $idxset
                     $code
                 end
             end
@@ -234,7 +234,7 @@ macro defVar(m, x, extra...)
         
         mac = Expr(:macrocall,symbol("@gendict"),varname,:Variable,idxsets...)
         code = quote 
-            $(esc(mac))
+            $mac
             $code
             nothing
         end

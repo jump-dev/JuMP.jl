@@ -15,3 +15,5 @@ for curtest in tests
   println(" Test: $(curtest)")
   include(curtest)
 end
+
+# hygiene.jl should be run separately

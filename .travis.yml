@@ -18,3 +18,4 @@ script:
     - cp -R ./* ~/.julia/MathProg/
     - cd ~/.julia/MathProg/
     - julia test/runtests.jl
+    - julia test/hygiene.jl
