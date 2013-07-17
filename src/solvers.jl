@@ -28,7 +28,7 @@ function prepProblem(m::Model)
     # Create dense objective vector
     f = zeros(m.numCols)
     for ind in 1:length(objaff.vars)
-        f[objaff.vars[ind].col] = objaff.coeffs[ind]
+        f[objaff.vars[ind].col] += objaff.coeffs[ind]
     end
 
     # Create row bounds
