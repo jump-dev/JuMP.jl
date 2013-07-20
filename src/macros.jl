@@ -186,12 +186,12 @@ macro defVar(m, x, extra...)
         lb = -Inf
         ub = Inf
     end
-    t = MathProg.CONTINUOUS
+    t = JuMP.CONTINUOUS
     for opt in extra
         if opt == :Int
-            t = MathProg.INTEGER
+            t = JuMP.INTEGER
         elseif opt == :Bin
-            t = MathProg.BINARY
+            t = JuMP.BINARY
         else
             error("Unrecognized argument $t")
         end

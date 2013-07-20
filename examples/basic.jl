@@ -1,4 +1,4 @@
-using MathProg
+using JuMP
 
 m = Model(:Max)
 

@@ -1,4 +1,4 @@
-# MathProg 
+# JuMP
 # A MILP+QP modelling langauge for Julia
 # By Iain Dunning and Miles Lubin
 
@@ -15,7 +15,7 @@
 # 4 - Each cell has one value only
 # We will take the initial grid as a CSV file, where 0s are "blanks
 
-using MathProg
+using JuMP
 
 # Load data
 function LoadData(filepath)

@@ -1,9 +1,9 @@
 ###############################################################################
-# MathProg 
+# JuMP
 # A MILP+QP modelling langauge for Julia
 #
 # By Iain Dunning and Miles Lubin
-# http://www.github.com/IainNZ/MathProg.jl
+# http://www.github.com/IainNZ/JuMP.jl
 ###############################################################################
 
 import Base.getindex
@@ -11,7 +11,7 @@ import Base.setindex!
 import Base.print
 import Base.show
 
-module MathProg
+module JuMP
 
 # Use the standard solver interface for LPs and MIPs
 using MathProgBase

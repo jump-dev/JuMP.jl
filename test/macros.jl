@@ -22,7 +22,7 @@ sumexpr = :(sum{x[i,j] * y[i,j], i = 1:N, j = 1:M})
 @test sumexpr.args[3].head == :(=)
 @test sumexpr.args[4].head == :(=)
 
-# test MathProg's macros
+# test JuMP's macros
 
 let 
     m = Model(:Max)

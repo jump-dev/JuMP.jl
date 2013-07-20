@@ -1,25 +1,25 @@
-MathProg.jl
-===========
+JuMP
+====
 
-MathProg.jl is a linear/integer/quadratic programming modeling language
+JuMP is a linear/integer/quadratic programming modeling language
 embedded in the Julia language. It is currently connected to the COIN CLP and
-CBC solvers, GNU GLPK, and the Gurobi solver. One the best features of MathProg
+CBC solvers, GNU GLPK, and the Gurobi solver. One the best features of JuMP
 is its speed - benchmarking has shown that it can create problems at similar
 speeds to special-purpose modeling languages such as AMPL.
 
-This package is not related to GNU MathProg.
+This package is not related to GNU JuMP.
 
-[![Build Status](https://travis-ci.org/IainNZ/MathProg.jl.png)](https://travis-ci.org/IainNZ/MathProg.jl)
+[![Build Status](https://travis-ci.org/IainNZ/JuMP.jl.png)](https://travis-ci.org/IainNZ/JuMP.jl)
 
 # Installation
 
-You can install MathProg through the Julia package manager (version 0.2 prerelease required):
+You can install JuMP through the Julia package manager (version 0.2 prerelease required):
 
 ```jl
-Pkg.add("MathProg")
+Pkg.add("JuMP")
 ```
 
-This will install MathProg's dependencies **[MathProgBase]** (which provides
+This will install JuMP's dependencies **[MathProgBase]** (which provides
 a generic solver interface) and the **[Clp]** and **[CoinMP]** packages which
 link with powerful open-source LP and MILP solvers and are used by default.
 
@@ -33,7 +33,7 @@ see the corresponding package READMEs.
 # Simple Example
 
 ```jl
-using MathProg
+using JuMP
 
 m = Model(:Max)
 @defVar(m, 0 <= x <= 2 )
@@ -54,12 +54,12 @@ println("y = ", getValue(y))
 See the [SimpleExample] wiki page for a detailed explanation, and for 
 more examples, see the [examples/] folder.
 
-[SimpleExample]: https://github.com/IainNZ/MathProg.jl/wiki/Simple-Example
-[examples/]: https://github.com/IainNZ/MathProg.jl/tree/master/examples
+[SimpleExample]: https://github.com/IainNZ/JuMP.jl/wiki/Simple-Example
+[examples/]: https://github.com/IainNZ/JuMP.jl/tree/master/examples
 
 # Quick Start Guide
 
-For a full user guide, please see the [wiki](https://github.com/IainNZ/MathProg.jl/wiki).
+For a full user guide, please see the [wiki](https://github.com/IainNZ/JuMP.jl/wiki).
 
 ### Defining Variables
 
@@ -77,7 +77,7 @@ and optionally allows specification of lower and upper bounds. For example:
 
 All these variations create a new local variable ``x``. For information about
 common operations on variables, e.g. changing their bounds, see the
-[wiki](https://github.com/IainNZ/MathProg.jl/wiki/Variables).
+[wiki](https://github.com/IainNZ/JuMP.jl/wiki/Variables).
 
 Integer and binary restrictions can optionally be specified with a third 
 argument, ``Int`` or ``Bin``.
@@ -108,7 +108,7 @@ Finally, bounds can depend on variable indices:
 
 ### Objective and Constraints
 
-MathProg allows users to use a natural notation to describe linear expressions.
+JuMP allows users to use a natural notation to describe linear expressions.
 There are two ways to do so. The first is very similar to other modeling
 languages and has no restrictions. The second utilizes Julia's powerful
 metaprogramming features to get excellent performance even for large problems,
