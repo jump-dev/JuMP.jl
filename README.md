@@ -1,11 +1,13 @@
-JuMP
-====
+JuMP - Julia for Mathematical Programming
+=========================================
 
 JuMP is a linear/integer/quadratic programming modeling language
 embedded in the Julia language. It is currently connected to the COIN CLP and
 CBC solvers, GNU GLPK, and the Gurobi solver. One the best features of JuMP
 is its speed - benchmarking has shown that it can create problems at similar
 speeds to special-purpose modeling languages such as AMPL.
+
+JuMP was formerly known as MathProg.jl
 
 [![Build Status](https://travis-ci.org/IainNZ/JuMP.jl.png)](https://travis-ci.org/IainNZ/JuMP.jl)
 
