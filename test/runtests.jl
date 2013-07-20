@@ -1,5 +1,5 @@
-require("MathProg")
-using MathProg
+require("JuMP")
+using JuMP
 using Base.Test
 
 tests = ["quadmodel.jl",

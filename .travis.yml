@@ -14,8 +14,8 @@ before_install:
 script:
     - julia -e 'versioninfo(); Pkg.init();'
     - julia -e 'Pkg.add("MathProgBase"); Pkg.add("CoinMP"); Pkg.add("Clp");'
-    - mkdir -p ~/.julia/MathProg
-    - cp -R ./* ~/.julia/MathProg/
-    - cd ~/.julia/MathProg/
+    - mkdir -p ~/.julia/JuMP
+    - cp -R ./* ~/.julia/JuMP/
+    - cd ~/.julia/JuMP/
     - julia test/runtests.jl
     - julia test/hygiene.jl

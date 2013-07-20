@@ -1,5 +1,5 @@
 ########################################################################
-# MathProg 
+# JuMP
 # A MILP+QP modelling langauge for Julia
 # By Iain Dunning and Miles Lubin
 #
@@ -9,7 +9,7 @@
 ########################################################################
 
 
-using MathProg
+using JuMP
 
 m = Model(:Max)
 

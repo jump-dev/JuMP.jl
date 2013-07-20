@@ -1,7 +1,7 @@
 # model.jl
 # Test coverage for Model - writing it to files, and solving
 
-modPath = joinpath(Pkg.dir("MathProg"),"test","mod")
+modPath = joinpath(Pkg.dir("JuMP"),"test","mod")
 
 ###############################################################################
 # Test Model A

@@ -1,9 +1,9 @@
 ###############################################################################
-# MathProg 
+# JuMP
 # A MILP+QP modelling langauge for Julia
 #
 # By Iain Dunning and Miles Lubin
-# http://www.github.com/IainNZ/MathProg.jl
+# http://www.github.com/IainNZ/JuMP.jl
 ###############################################################################
 
 import Base.getindex
@@ -11,7 +11,7 @@ import Base.setindex!
 import Base.print
 import Base.show
 
-module MathProg
+module JuMP
 
 # Use the standard solver interface for LPs and MIPs
 using MathProgBase
@@ -41,7 +41,7 @@ export
   @addConstraint, @defVar, 
   @defConstrRef, @setObjective, addToExpression
 
-include("MathProgDict.jl")
+include("JuMPDict.jl")
 include("utils.jl")
 
 ###############################################################################
@@ -252,14 +252,14 @@ function quadToStr(q::QuadExpr)
 end
 
 ##########################################################################
-# MathProgConstraint
+# JuMPConstraint
 # abstract base for constraint types
-abstract MathProgConstraint
+abstract JuMPConstraint
 
 ##########################################################################
 # LinearConstraint class
 # An affine expression with lower bound (possibly -Inf) and upper bound (possibly Inf).
-type LinearConstraint <: MathProgConstraint
+type LinearConstraint <: JuMPConstraint
   terms::AffExpr
   lb::Float64
   ub::Float64
@@ -315,7 +315,7 @@ end
 ##########################################################################
 # ConstraintRef
 # Reference to a constraint for retrieving solution info
-immutable ConstraintRef{T<:MathProgConstraint}
+immutable ConstraintRef{T<:JuMPConstraint}
   m::Model
   idx::Int
 end

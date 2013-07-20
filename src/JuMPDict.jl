@@ -1,6 +1,6 @@
 # multivarate "dictionary" used for collections of variables/constraints
 
-abstract MathProgDict
+abstract JuMPDict
 
 # generate and instantiate a type which is indexed by the given index sets
 # the following types of index sets are allowed:
@@ -8,7 +8,7 @@ abstract MathProgDict
 # S -- general iterable set
 macro gendict(instancename,T,idxsets...)
     N = length(idxsets)
-    typename = symbol(string("MathProgDict",gensym()))
+    typename = symbol(string("JuMPDict",gensym()))
     isrange = Array(Bool,N)
     offset = Array(Int,N)
     dictnames = Array(Symbol,N)
@@ -26,7 +26,7 @@ macro gendict(instancename,T,idxsets...)
         end
     end
     #typecode = :(type $(esc(typename)); innerArray::Array{$T,$N}; name::String; end)
-    typecode = :(type $(typename){T} <: MathProgDict; innerArray::Array{T,$N}; name::String; end)
+    typecode = :(type $(typename){T} <: JuMPDict; innerArray::Array{T,$N}; name::String; end)
     builddicts = quote end
     for i in 1:N
         if !isrange[i]
@@ -83,13 +83,13 @@ macro gendict(instancename,T,idxsets...)
 
 end
 
-getValue(x::MathProgDict) = map(getValue,x)
-getDual(x::MathProgDict) = map(getDual,x)
-endof(x::MathProgDict) = endof(x.innerArray)
-ndims(x::MathProgDict) = ndims(x.innerArray)
-size(x::MathProgDict,n) = size(x.innerArray,n)
-length(x::MathProgDict) = length(x.innerArray)
-abs(x::MathProgDict) = abs(x.innerArray)
-(-)(x::MathProgDict,y::Array) = x.innerArray-y
+getValue(x::JuMPDict) = map(getValue,x)
+getDual(x::JuMPDict) = map(getDual,x)
+endof(x::JuMPDict) = endof(x.innerArray)
+ndims(x::JuMPDict) = ndims(x.innerArray)
+size(x::JuMPDict,n) = size(x.innerArray,n)
+length(x::JuMPDict) = length(x.innerArray)
+abs(x::JuMPDict) = abs(x.innerArray)
+(-)(x::JuMPDict,y::Array) = x.innerArray-y
 
 export @gendict
