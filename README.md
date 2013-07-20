@@ -1,5 +1,7 @@
-JuMP - Julia for Mathematical Programming
-=========================================
+JuMP
+====
+#### Julia for Mathematical Programming
+
 
 JuMP is a linear/integer/quadratic programming modeling language
 embedded in the Julia language. It is currently connected to the COIN CLP and
