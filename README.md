@@ -1,10 +1,5 @@
-<<<<<<< HEAD
 JuMP - Julia for Mathematical Programming
 =========================================
-=======
-JuMP
-====
->>>>>>> ac61be9a842ba92e849d318a4063d5093179c70d
 
 JuMP is a linear/integer/quadratic programming modeling language
 embedded in the Julia language. It is currently connected to the COIN CLP and
@@ -12,11 +7,7 @@ CBC solvers, GNU GLPK, and the Gurobi solver. One the best features of JuMP
 is its speed - benchmarking has shown that it can create problems at similar
 speeds to special-purpose modeling languages such as AMPL.
 
-<<<<<<< HEAD
 JuMP was formerly known as MathProg.jl
-=======
-This package is not related to GNU JuMP.
->>>>>>> ac61be9a842ba92e849d318a4063d5093179c70d
 
 [![Build Status](https://travis-ci.org/IainNZ/JuMP.jl.png)](https://travis-ci.org/IainNZ/JuMP.jl)
 
