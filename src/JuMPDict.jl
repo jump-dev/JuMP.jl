@@ -83,13 +83,17 @@ macro gendict(instancename,T,idxsets...)
 
 end
 
-getValue(x::JuMPDict) = map(getValue,x)
-getDual(x::JuMPDict) = map(getDual,x)
-endof(x::JuMPDict) = endof(x.innerArray)
-ndims(x::JuMPDict) = ndims(x.innerArray)
+# duck typing approach -- if eltype(innerArray) doesn't support accessor, will fail
+for accessor in (:getValue, :getDual, :getLower, :getUpper)
+    @eval $accessor(x::JuMPDict) = map($accessor,x)
+end
+
+# delegate zero-argument functions
+for f in (:endof, :ndims, :length, :abs)
+    @eval $f(x::JuMPDict) = $f(x.innerArray)
+end
 size(x::JuMPDict,n) = size(x.innerArray,n)
-length(x::JuMPDict) = length(x.innerArray)
-abs(x::JuMPDict) = abs(x.innerArray)
+
 (-)(x::JuMPDict,y::Array) = x.innerArray-y
 
 export @gendict
