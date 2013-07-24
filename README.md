@@ -84,7 +84,7 @@ common operations on variables, e.g. changing their bounds, see the
 Integer and binary restrictions can optionally be specified with a third 
 argument, ``Int`` or ``Bin``.
 
-To create an arrays of variables we appending brackets to the variable name.
+To create arrays of variables we append brackets to the variable name.
 For example
 
 ```jl
