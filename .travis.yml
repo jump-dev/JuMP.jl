@@ -13,7 +13,7 @@ before_install:
     - git config --global user.email "travis@example.net"
 script:
     - julia -e 'versioninfo(); Pkg.init();'
-    - julia -e 'Pkg.add("MathProgBase"); Pkg.add("CoinMP"); Pkg.add("Clp");'
+    - julia -e 'Pkg.add("MathProgBase"); Pkg.add("Cbc");'
     - mkdir -p ~/.julia/JuMP
     - cp -R ./* ~/.julia/JuMP/
     - cd ~/.julia/JuMP/
