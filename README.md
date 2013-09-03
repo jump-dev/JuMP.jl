@@ -22,7 +22,7 @@ Pkg.add("JuMP")
 ```
 
 This will install JuMP's dependencies **[MathProgBase]** (which provides
-a generic solver interface) and the **[Clp]** and **[CoinMP]** packages which
+a generic solver interface) and the **[Clp]** and **[Cbc]** packages which
 link with powerful open-source LP and MILP solvers and are used by default.
 
 For more information on these other packages, including installation details, 
@@ -30,7 +30,7 @@ see the corresponding package READMEs.
 
 [MathProgBase]: https://github.com/mlubin/MathProgBase.jl
 [Clp]: https://github.com/mlubin/Clp.jl
-[CoinMP]: https://github.com/mlubin/CoinMP.jl
+[Cbc]: https://github.com/mlubin/Cbc.jl
 
 # Simple Example
 

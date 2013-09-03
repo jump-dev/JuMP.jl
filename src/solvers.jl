@@ -140,7 +140,7 @@ function solveMIP(m::Model)
 
     # Ready to solve
     if MathProgBase.mipsolver == nothing
-        error("No MIP solver installed. Please run Pkg.add(\"CoinMP\") and restart Julia.")
+        error("No MIP solver installed. Please run Pkg.add(\"Cbc\") and restart Julia.")
     end
     
     m.internalModel = MathProgBase.mipsolver.model(;m.solverOptions...)
