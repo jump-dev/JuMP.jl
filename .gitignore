@@ -2,5 +2,5 @@
 *.lp
 *.mps
 .DS_Store
-*.sublime-project
+*.sublime*
 

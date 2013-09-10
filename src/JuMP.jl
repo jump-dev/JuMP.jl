@@ -318,7 +318,7 @@ end
 # An affine expression with lower bound (possibly -Inf) and upper bound (possibly Inf).
 type QuadConstraint <: JuMPConstraint
   terms::QuadExpr
-  sense
+  sense::Symbol
 end
 
 QuadConstraint(terms::QuadExpr) =
@@ -333,24 +333,7 @@ end
 print(io::IO, c::QuadConstraint) = print(io, conToStr(c))
 show(io::IO, c::QuadConstraint)  = print(io, conToStr(c))
 
-# without ub/lb, is it possible/practical to have varying senses?
-# Can either keep sense or flip signs on terms...see which works best w/ Gurobi
-function sense(c::QuadConstraint)
-  return :<=
-end
-
-# This makes no sense
-function rhs(c::QuadConstraint)
-  s = sense(c)
-  if s == :<=
-    return 0
-  end
-end
-
-function conToStr(c::QuadConstraint)
-  s = sense(c)
-  return string(quadToStr(c.terms), " ", s, " ", rhs(c))
-end
+conToStr(c::QuadConstraint) = string(quadToStr(c.terms), " ", c.sense, " 0")
 
 ##########################################################################
 # ConstraintRef
