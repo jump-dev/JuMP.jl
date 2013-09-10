@@ -84,8 +84,8 @@ function prepProblem(m::Model)
 end
 
 function solveLP(m::Model)
-    if length(m.obj.qvars1) != 0 && string(MathProgBase.lpsolver) != "Gurobi" 
-        error("Quadratic objectives are currently only supported using Gurobi")
+    if (length(m.obj.qvars1) != 0 || length(m.quadconstr) != 0) && string(MathProgBase.lpsolver) != "Gurobi" 
+        error("Quadratic objectives/constraints are currently only supported using Gurobi")
     end
 
     f, A, rowlb, rowub = prepProblem(m)  
@@ -101,6 +101,22 @@ function solveLP(m::Model)
         gurobisolver = getrawsolver(m.internalModel)
         MathProgBase.lpsolver.add_qpterms!(gurobisolver, [v.col for v in m.obj.qvars1], [v.col for v in m.obj.qvars2], m.obj.qcoeffs)
     end
+##########################################################################################
+# Add quadratic constraint to solver
+##########################################################################################
+    for k in 1:length(m.quadconstr)
+        qconstr = m.quadconstr[k]
+        gurobisolver = getrawsolver(m.internalModel)
+        MathProgBase.lpsolver.add_qconstr!(gurobisolver, 
+                                           [v.col for v in qconstr.terms.aff.vars], 
+                                           qconstr.terms.aff.coeffs, 
+                                           [v.col for v in qconstr.terms.qvars1], 
+                                           [v.col for v in qconstr.terms.qvars2], 
+                                           qconstr.terms.qcoeffs, 
+                                           qconstr.terms.sense, 
+                                           qconstr.terms.aff.constant)
+    end
+##########################################################################################
 
     optimize(m.internalModel)
     stat = status(m.internalModel)

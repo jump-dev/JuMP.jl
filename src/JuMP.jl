@@ -59,6 +59,7 @@ type Model
   objSense::Symbol
   
   linconstr#::Vector{LinearConstraint}
+  quadconstr
   
   # Column data
   numCols::Int
@@ -82,7 +83,7 @@ function Model(sense::Symbol)
   if (sense != :Max && sense != :Min)
      error("Model sense must be :Max or :Min")
   end
-  Model(QuadExpr(),sense,LinearConstraint[],
+  Model(QuadExpr(),sense,LinearConstraint[], QuadConstraint[],
         0,String[],Float64[],Float64[],Int[],
         0,Float64[],Float64[],Float64[],nothing,Dict())
 end
@@ -310,6 +311,45 @@ function conToStr(c::LinearConstraint)
   else
     return string(affToStr(c.terms,false)," ",s," ",rhs(c))
   end
+end
+
+##########################################################################
+# QuadConstraint class
+# An affine expression with lower bound (possibly -Inf) and upper bound (possibly Inf).
+type QuadConstraint <: JuMPConstraint
+  terms::QuadExpr
+  sense
+end
+
+QuadConstraint(terms::QuadExpr) =
+  QuadConstraint(terms)
+
+# What form do I need to put the quad constraint in for Gurobi to be happy?
+function addConstraint(m::Model, c::QuadConstraint)
+  push!(m.quadconstr,c)
+  return ConstraintRef{QuadConstraint}(m,length(m.quadconstr))
+end
+
+print(io::IO, c::QuadConstraint) = print(io, conToStr(c))
+show(io::IO, c::QuadConstraint)  = print(io, conToStr(c))
+
+# without ub/lb, is it possible/practical to have varying senses?
+# Can either keep sense or flip signs on terms...see which works best w/ Gurobi
+function sense(c::QuadConstraint)
+  return :<=
+end
+
+# This makes no sense
+function rhs(c::QuadConstraint)
+  s = sense(c)
+  if s == :<=
+    return 0
+  end
+end
+
+function conToStr(c::QuadConstraint)
+  s = sense(c)
+  return string(quadToStr(c.terms), " ", s, " ", rhs(c))
 end
 
 ##########################################################################
