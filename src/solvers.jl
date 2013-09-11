@@ -94,6 +94,7 @@ function solveLP(m::Model)
     if MathProgBase.lpsolver == nothing
         error("No LP solver installed. Please run Pkg.add(\"Clp\") and restart Julia.")
     end
+
     m.internalModel = MathProgBase.lpsolver.model(;m.solverOptions...)
     loadproblem(m.internalModel, A, m.colLower, m.colUpper, f, rowlb, rowub)
     setsense(m.internalModel, m.objSense)
@@ -108,14 +109,7 @@ function solveLP(m::Model)
     for k in 1:length(m.quadconstr)
         qconstr = m.quadconstr[k]
         gurobisolver = getrawsolver(m.internalModel)
-        println("got here fine")
-        if qconstr.sense == :<=
-            s = '<'
-        elseif qconstr.sense == :>=
-            s = '>' 
-        elseif qconstr.sense == :(==)
-            s = '='
-        else
+        if !((s = string(qconstr.sense)[1]) in ['<', '>', '='])
             error("Invalid sense for quadratic constraint")
         end
 
@@ -130,7 +124,7 @@ function solveLP(m::Model)
     end
 ##########################################################################################
 
-MathProgBase.lpsolver.update_model!(gurobisolver)
+    MathProgBase.lpsolver.update_model!(gurobisolver)
     optimize(m.internalModel)
     stat = status(m.internalModel)
 

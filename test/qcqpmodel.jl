@@ -33,7 +33,7 @@ if Pkg.installed("Gurobi") != nothing
     
     status = solve(modQ)
     @test status == :Optimal
-    @test_approx_eq_eps modQ.objVal 2/sqrt(2) 1e-6
+    @test_approx_eq_eps modQ.objVal -2/sqrt(2) 1e-6
     @test_approx_eq_eps (getValue(x) + getValue(y)) 2/sqrt(2) 1e-6
   end
   

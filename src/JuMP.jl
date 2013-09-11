@@ -326,6 +326,7 @@ end
 # What form do I need to put the quad constraint in for Gurobi to be happy?
 function addConstraint(m::Model, c::QuadConstraint)
   push!(m.quadconstr,c)
+  m.solverOptions[:QCPDual] = 1
   return ConstraintRef{QuadConstraint}(m,length(m.quadconstr))
 end
 
