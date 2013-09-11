@@ -28,9 +28,7 @@ if Pkg.installed("Gurobi") != nothing
     @defVar(modQ, -1 <= x <= 1 )
     @defVar(modQ, -1 <= y <= 1 )
     
-    println("got at least this far")
-
-    setObjective(modQ, -x-y )
+    @setObjective(modQ, -x - y)
     addConstraint(modQ, x*x + y*y <= 1 )
     
     status = solve(modQ)

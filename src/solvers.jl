@@ -101,23 +101,36 @@ function solveLP(m::Model)
         gurobisolver = getrawsolver(m.internalModel)
         MathProgBase.lpsolver.add_qpterms!(gurobisolver, [v.col for v in m.obj.qvars1], [v.col for v in m.obj.qvars2], m.obj.qcoeffs)
     end
+
 ##########################################################################################
 # Add quadratic constraint to solver
 ##########################################################################################
     for k in 1:length(m.quadconstr)
         qconstr = m.quadconstr[k]
         gurobisolver = getrawsolver(m.internalModel)
+        println("got here fine")
+        if qconstr.sense == :<=
+            s = '<'
+        elseif qconstr.sense == :>=
+            s = '>' 
+        elseif qconstr.sense == :(==)
+            s = '='
+        else
+            error("Invalid sense for quadratic constraint")
+        end
+
         MathProgBase.lpsolver.add_qconstr!(gurobisolver, 
                                            [v.col for v in qconstr.terms.aff.vars], 
                                            qconstr.terms.aff.coeffs, 
                                            [v.col for v in qconstr.terms.qvars1], 
                                            [v.col for v in qconstr.terms.qvars2], 
                                            qconstr.terms.qcoeffs, 
-                                           qconstr.terms.sense, 
-                                           qconstr.terms.aff.constant)
+                                           s, 
+                                           -qconstr.terms.aff.constant)
     end
 ##########################################################################################
 
+MathProgBase.lpsolver.update_model!(gurobisolver)
     optimize(m.internalModel)
     stat = status(m.internalModel)
 

@@ -321,8 +321,7 @@ type QuadConstraint <: JuMPConstraint
   sense::Symbol
 end
 
-QuadConstraint(terms::QuadExpr) =
-  QuadConstraint(terms)
+# QuadConstraint(terms::QuadExpr, sense::Symbol) = QuadConstraint(terms, sense)
 
 # What form do I need to put the quad constraint in for Gurobi to be happy?
 function addConstraint(m::Model, c::QuadConstraint)
