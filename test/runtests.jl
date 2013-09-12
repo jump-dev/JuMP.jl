@@ -2,15 +2,13 @@ require("JuMP")
 using JuMP
 using Base.Test
 
-tests = ["qcqpmodel.jl"]
-
-# tests = ["qcqpmodel.jl",
-#          "quadmodel.jl",
-#          "expr.jl",
-#          "variable.jl",
-#          "operator.jl",
-#          "macros.jl",
-#          "model.jl"]
+tests = ["qcqpmodel.jl",
+         "quadmodel.jl",
+         "expr.jl",
+         "variable.jl",
+         "operator.jl",
+         "macros.jl",
+         "model.jl"]
 
 println("Running tests:")
 
