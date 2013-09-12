@@ -18,10 +18,10 @@ function solve(m::Model)
   end
 end
 
-function quadraticGurobi(m::Model, solver)
+function quadraticGurobi(m::Model, solvermodule)
     if length(m.obj.qvars1) != 0
         gurobisolver = getrawsolver(m.internalModel)
-        solver.add_qpterms!(gurobisolver, [v.col for v in m.obj.qvars1], [v.col for v in m.obj.qvars2], m.obj.qcoeffs)
+        solvermodule.add_qpterms!(gurobisolver, [v.col for v in m.obj.qvars1], [v.col for v in m.obj.qvars2], m.obj.qcoeffs)
     end
 
 # Add quadratic constraint to solver
@@ -32,18 +32,18 @@ function quadraticGurobi(m::Model, solver)
             error("Invalid sense for quadratic constraint")
         end
 
-        solver.add_qconstr!(gurobisolver, 
-                                           [v.col for v in qconstr.terms.aff.vars], 
-                                           qconstr.terms.aff.coeffs, 
-                                           [v.col for v in qconstr.terms.qvars1], 
-                                           [v.col for v in qconstr.terms.qvars2], 
-                                           qconstr.terms.qcoeffs, 
-                                           s, 
-                                           -qconstr.terms.aff.constant)
+        solvermodule.add_qconstr!(gurobisolver, 
+                                  [v.col for v in qconstr.terms.aff.vars], 
+                                  qconstr.terms.aff.coeffs, 
+                                  [v.col for v in qconstr.terms.qvars1], 
+                                  [v.col for v in qconstr.terms.qvars2], 
+                                  qconstr.terms.qcoeffs, 
+                                  s, 
+                                  -qconstr.terms.aff.constant)
     end
 
     if length(m.quadconstr) > 0
-        solver.update_model!(gurobisolver)
+        solvermodule.update_model!(gurobisolver)
     end
 end
 
