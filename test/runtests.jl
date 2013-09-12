@@ -4,7 +4,8 @@ using Base.Test
 
 tests = ["qcqpmodel.jl"]
 
-# tests = ["quadmodel.jl",
+# tests = ["qcqpmodel.jl",
+#          "quadmodel.jl",
 #          "expr.jl",
 #          "variable.jl",
 #          "operator.jl",

@@ -124,7 +124,10 @@ function solveLP(m::Model)
     end
 ##########################################################################################
 
-    MathProgBase.lpsolver.update_model!(gurobisolver)
+    if string(MathProgBase.lpsolver) == "Gurobi" && length(m.quadconstr) > 0
+        MathProgBase.lpsolver.update_model!(gurobisolver)
+    end
+
     optimize(m.internalModel)
     stat = status(m.internalModel)
 
