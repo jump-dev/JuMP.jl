@@ -2,7 +2,8 @@ require("JuMP")
 using JuMP
 using Base.Test
 
-tests = ["quadmodel.jl",
+tests = ["qcqpmodel.jl",
+         "quadmodel.jl",
          "expr.jl",
          "variable.jl",
          "operator.jl",
