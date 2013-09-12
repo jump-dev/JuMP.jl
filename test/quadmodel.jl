@@ -38,5 +38,6 @@ if Pkg.installed("Gurobi") != nothing
   end
   
   MathProgBase.setlpsolver(cursolver)
+else 
+  println("WARNING: Gurobi not installed, cannot execute quadratic test")
 end
-

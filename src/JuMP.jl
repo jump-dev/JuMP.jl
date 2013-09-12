@@ -22,7 +22,7 @@ importall Base
 
 export
 # Objects
-  Model, Variable, AffExpr, QuadExpr, LinearConstraint, MultivarDict,
+  Model, Variable, AffExpr, QuadExpr, LinearConstraint, QuadConstraint, MultivarDict,
 
 # Functions
   # Relevant to all
@@ -59,6 +59,7 @@ type Model
   objSense::Symbol
   
   linconstr#::Vector{LinearConstraint}
+  quadconstr
   
   # Column data
   numCols::Int
@@ -82,7 +83,7 @@ function Model(sense::Symbol)
   if (sense != :Max && sense != :Min)
      error("Model sense must be :Max or :Min")
   end
-  Model(QuadExpr(),sense,LinearConstraint[],
+  Model(QuadExpr(),sense,LinearConstraint[], QuadConstraint[],
         0,String[],Float64[],Float64[],Int[],
         0,Float64[],Float64[],Float64[],nothing,Dict())
 end
@@ -311,6 +312,26 @@ function conToStr(c::LinearConstraint)
     return string(affToStr(c.terms,false)," ",s," ",rhs(c))
   end
 end
+
+##########################################################################
+# QuadConstraint class
+# An quadratic constraint. Right-hand side is implicitly taken to be zero; 
+# constraint is stored in the included QuadExpr.
+type QuadConstraint <: JuMPConstraint
+  terms::QuadExpr
+  sense::Symbol
+end
+
+function addConstraint(m::Model, c::QuadConstraint)
+  push!(m.quadconstr,c)
+  m.solverOptions[:QCPDual] = 1
+  return ConstraintRef{QuadConstraint}(m,length(m.quadconstr))
+end
+
+print(io::IO, c::QuadConstraint) = print(io, conToStr(c))
+show(io::IO, c::QuadConstraint)  = print(io, conToStr(c))
+
+conToStr(c::QuadConstraint) = string(quadToStr(c.terms), " ", c.sense, " 0")
 
 ##########################################################################
 # ConstraintRef

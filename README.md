@@ -196,3 +196,26 @@ print(m)
 
 status = solve(m)
 ```
+
+### Quadratic Constraints ###
+
+There is preliminary support for convex quadratic constraints. Currently the 
+only supported solver is ``Gurobi``; it must be set as the ``lpsolver`` or
+``mipsolver`` when solving QC programs. The ``@addConstraint`` macro does not 
+yet support quadratic expressions, but you may instead use the (slower) 
+operator overloading functionality via the ``addConstraint`` function:
+
+```jl
+MathProgBase.setlpsolver(:Gurobi)
+m = Model(:Min)
+@defVar(m, -1 <= x <= 1)
+@defVar(m, -1 <= y <= 1)
+
+@setObjective(m, x + y)
+addConstraint(m, x*x + y*y <= 1)
+
+print(m)
+
+status = solve(m)
+```
+

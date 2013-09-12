@@ -180,3 +180,10 @@ function (>=)(lhs::AffExpr, rhs::Number)
 end
 # There's no easy way to allow operator overloads for range constraints.
 # Use macros instead.
+
+# QuadConstraint
+# QuadConstraint--Number
+(<=) (lhs::QuadExpr, rhs::Number) = QuadConstraint( QuadExpr(copy(lhs.qvars1), copy(lhs.qvars2), lhs.qcoeffs,lhs.aff - rhs), :<=   )
+(==) (lhs::QuadExpr, rhs::Number) = QuadConstraint( QuadExpr(copy(lhs.qvars1), copy(lhs.qvars2), lhs.qcoeffs,lhs.aff - rhs), :(==) )
+(>=) (lhs::QuadExpr, rhs::Number) = QuadConstraint( QuadExpr(copy(lhs.qvars1), copy(lhs.qvars2), lhs.qcoeffs,lhs.aff - rhs), :>=   )
+# TODO: add QuadConstraint--AffExpr, QuadConstraint--QuadExpr, ...
