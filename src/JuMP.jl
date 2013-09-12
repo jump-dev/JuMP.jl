@@ -315,7 +315,8 @@ end
 
 ##########################################################################
 # QuadConstraint class
-# An affine expression with lower bound (possibly -Inf) and upper bound (possibly Inf).
+# An quadratic constraint. Right-hand side is implicitly taken to be zero; 
+# constrant is stored in the included QuadExpr.
 type QuadConstraint <: JuMPConstraint
   terms::QuadExpr
   sense::Symbol
