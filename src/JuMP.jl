@@ -22,7 +22,7 @@ importall Base
 
 export
 # Objects
-  Model, Variable, AffExpr, QuadExpr, LinearConstraint, MultivarDict,
+  Model, Variable, AffExpr, QuadExpr, LinearConstraint, QuadConstraint, MultivarDict,
 
 # Functions
   # Relevant to all
@@ -316,15 +316,12 @@ end
 ##########################################################################
 # QuadConstraint class
 # An quadratic constraint. Right-hand side is implicitly taken to be zero; 
-# constrant is stored in the included QuadExpr.
+# constraint is stored in the included QuadExpr.
 type QuadConstraint <: JuMPConstraint
   terms::QuadExpr
   sense::Symbol
 end
 
-# QuadConstraint(terms::QuadExpr, sense::Symbol) = QuadConstraint(terms, sense)
-
-# What form do I need to put the quad constraint in for Gurobi to be happy?
 function addConstraint(m::Model, c::QuadConstraint)
   push!(m.quadconstr,c)
   m.solverOptions[:QCPDual] = 1

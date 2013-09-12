@@ -97,15 +97,14 @@ function solveLP(m::Model)
 
     m.internalModel = MathProgBase.lpsolver.model(;m.solverOptions...)
     loadproblem(m.internalModel, A, m.colLower, m.colUpper, f, rowlb, rowub)
+
     setsense(m.internalModel, m.objSense)
     if length(m.obj.qvars1) != 0
         gurobisolver = getrawsolver(m.internalModel)
         MathProgBase.lpsolver.add_qpterms!(gurobisolver, [v.col for v in m.obj.qvars1], [v.col for v in m.obj.qvars2], m.obj.qcoeffs)
     end
 
-##########################################################################################
 # Add quadratic constraint to solver
-##########################################################################################
     for k in 1:length(m.quadconstr)
         qconstr = m.quadconstr[k]
         gurobisolver = getrawsolver(m.internalModel)
@@ -122,7 +121,6 @@ function solveLP(m::Model)
                                            s, 
                                            -qconstr.terms.aff.constant)
     end
-##########################################################################################
 
     if string(MathProgBase.lpsolver) == "Gurobi" && length(m.quadconstr) > 0
         MathProgBase.lpsolver.update_model!(gurobisolver)
@@ -180,9 +178,7 @@ function solveMIP(m::Model)
         MathProgBase.mipsolver.add_qpterms!(gurobisolver, [v.col for v in m.obj.qvars1], [v.col for v in m.obj.qvars2], m.obj.qcoeffs)
     end
 
-##########################################################################################
 # Add quadratic constraint to solver
-##########################################################################################
     for k in 1:length(m.quadconstr)
         qconstr = m.quadconstr[k]
         gurobisolver = getrawsolver(m.internalModel)
@@ -199,7 +195,6 @@ function solveMIP(m::Model)
                                            s, 
                                            -qconstr.terms.aff.constant)
     end
-##########################################################################################
 
     if string(MathProgBase.mipsolver) == "Gurobi" && length(m.quadconstr) > 0
         MathProgBase.mipsolver.update_model!(gurobisolver)
