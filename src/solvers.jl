@@ -18,10 +18,16 @@ function solve(m::Model)
   end
 end
 
-function quadraticGurobi(m::Model, solvermodule)
+function quadraticGurobi(m::Model, solvermodule, ismip = false)
+    # ugly hack for now until we get CoinMP to support setting objective senses
+    doflip = false
+    if ismip && m.objSense == :Max
+        doflip = true
+    end
+
     if length(m.obj.qvars1) != 0
         gurobisolver = getrawsolver(m.internalModel)
-        solvermodule.add_qpterms!(gurobisolver, [v.col for v in m.obj.qvars1], [v.col for v in m.obj.qvars2], m.obj.qcoeffs)
+        solvermodule.add_qpterms!(gurobisolver, [v.col for v in m.obj.qvars1], [v.col for v in m.obj.qvars2], !doflip ? m.obj.qcoeffs : -m.obj.qcoeffs)
     end
 
 # Add quadratic constraint to solver
@@ -180,7 +186,7 @@ function solveMIP(m::Model)
         if string(MathProgBase.mipsolver) != "Gurobi"
             error("Quadratic objectives/constraints are currently only supported using Gurobi")
         end
-        quadraticGurobi(m, MathProgBase.mipsolver)
+        quadraticGurobi(m, MathProgBase.mipsolver, true)
     end
 
     optimize(m.internalModel)
