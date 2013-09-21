@@ -165,13 +165,15 @@ getValue(v::Variable) = v.m.colVal[v.col]
 getDual(v::Variable) = v.m.redCosts[v.col]
 
 ###############################################################################
-# Affine Expression class
+# Generic affine expression class
 # Holds a vector of tuples (Var, Coeff)
-type AffExpr
-  vars::Array{Variable,1}
-  coeffs::Array{Float64,1}
-  constant::Float64
+type GenericAffExpr{CoefType,VarType}
+  vars::Array{VarType,1}
+  coeffs::Array{CoefType,1}
+  constant::CoefType
 end
+
+typealias AffExpr GenericAffExpr{Float64,Variable}
 
 AffExpr() = AffExpr(Variable[],Float64[],0.)
 

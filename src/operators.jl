@@ -15,11 +15,11 @@
 (-)(lhs::Number, rhs::Variable) = AffExpr([rhs],[-1.],convert(Float64,lhs))
 (*)(lhs::Number, rhs::Variable) = AffExpr([rhs],[convert(Float64,lhs)], 0.)
 (/)(lhs::Number, rhs::Variable) = error("Cannot divide by variable")
-# Number--AffExpr
-(+)(lhs::Number, rhs::AffExpr)  = AffExpr(copy(rhs.vars),copy(rhs.coeffs),lhs+rhs.constant)
-(-)(lhs::Number, rhs::AffExpr)  = AffExpr(copy(rhs.vars),    -rhs.coeffs ,lhs-rhs.constant)
-(*)(lhs::Number, rhs::AffExpr)  = AffExpr(copy(rhs.vars), lhs*rhs.coeffs ,lhs*rhs.constant)
-(/)(lhs::Number, rhs::AffExpr)  = error("Cannot divide by an affine expression")
+# Number--GenericAffExpr
+(+)(lhs::Number, rhs::GenericAffExpr)  = GenericAffExpr(copy(rhs.vars),copy(rhs.coeffs),lhs+rhs.constant)
+(-)(lhs::Number, rhs::GenericAffExpr)  = GenericAffExpr(copy(rhs.vars),    -rhs.coeffs ,lhs-rhs.constant)
+(*)(lhs::Number, rhs::GenericAffExpr)  = GenericAffExpr(copy(rhs.vars), lhs*rhs.coeffs ,lhs*rhs.constant)
+(/)(lhs::Number, rhs::GenericAffExpr)  = error("Cannot divide by an affine expression")
 # Number--QuadExpr
 (+)(lhs::Number, rhs::QuadExpr) = QuadExpr(copy(rhs.qvars1),copy(rhs.qvars2),copy(rhs.qcoeffs),lhs+rhs.aff)
 (-)(lhs::Number, rhs::QuadExpr) = QuadExpr(copy(rhs.qvars1),copy(rhs.qvars2),    -rhs.qcoeffs ,lhs-rhs.aff)
@@ -59,18 +59,18 @@ end
 
 # AffExpr
 # AffExpr--Number
-(+)(lhs::AffExpr, rhs::Number) = (+)(+rhs,lhs)
-(-)(lhs::AffExpr, rhs::Number) = (+)(-rhs,lhs)
-(*)(lhs::AffExpr, rhs::Number) = (*)(rhs,lhs)
-(/)(lhs::AffExpr, rhs::Number) = (*)(1.0/rhs,lhs)
+(+)(lhs::GenericAffExpr, rhs::Number) = (+)(+rhs,lhs)
+(-)(lhs::GenericAffExpr, rhs::Number) = (+)(-rhs,lhs)
+(*)(lhs::GenericAffExpr, rhs::Number) = (*)(rhs,lhs)
+(/)(lhs::GenericAffExpr, rhs::Number) = (*)(1.0/rhs,lhs)
 # AffExpr--Variable
 (+)(lhs::AffExpr, rhs::Variable) = (+)(rhs,lhs)
 (-)(lhs::AffExpr, rhs::Variable) = AffExpr(vcat(lhs.vars,rhs),vcat(+lhs.coeffs,-1.),lhs.constant)
 (*)(lhs::AffExpr, rhs::Variable) = (*)(rhs,lhs)
 (/)(lhs::AffExpr, rhs::Variable) = error("Cannot divide affine expression by a variable")
 # AffExpr--AffExpr
-(+)(lhs::AffExpr, rhs::AffExpr) = AffExpr(vcat(lhs.vars,rhs.vars),vcat(lhs.coeffs, rhs.coeffs),lhs.constant+rhs.constant)
-(-)(lhs::AffExpr, rhs::AffExpr) = AffExpr(vcat(lhs.vars,rhs.vars),vcat(lhs.coeffs,-rhs.coeffs),lhs.constant-rhs.constant)
+(+)(lhs::GenericAffExpr, rhs::GenericAffExpr) = GenericAffExpr(vcat(lhs.vars,rhs.vars),vcat(lhs.coeffs, rhs.coeffs),lhs.constant+rhs.constant)
+(-)(lhs::GenericAffExpr, rhs::GenericAffExpr) = GenericAffExpr(vcat(lhs.vars,rhs.vars),vcat(lhs.coeffs,-rhs.coeffs),lhs.constant-rhs.constant)
 function (*)(lhs::AffExpr, rhs::AffExpr)
   ret = QuadExpr(Variable[],Variable[],Float64[],AffExpr(Variable[],Float64[],0.))
 
