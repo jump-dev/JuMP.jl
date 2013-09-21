@@ -29,7 +29,7 @@ function empty!(v::IndexedVector)
     elts = v.elts
     nzidx = v.nzidx
     for i in 1:v.nnz
-        elts[nzidx[i]] = 0
+        elts[nzidx[i]] = zero(T)
     end
     v.nnz = 0
 end
