@@ -30,7 +30,7 @@ This will install JuMP's default solvers: **[Clp]** and **[Cbc]**. All Julia-sup
 [MathProgBase]: https://github.com/mlubin/MathProgBase.jl
 [Clp]: https://github.com/mlubin/Clp.jl
 [Cbc]: https://github.com/mlubin/Cbc.jl
-[matematical programming]: http://en.wikipedia.org/wiki/Mathematical_optimization
+[mathematical programming]: http://en.wikipedia.org/wiki/Mathematical_optimization
 [Julia]: http://julialang.org/
 
 # Supported problem classes
