@@ -7,12 +7,12 @@ end
 IndexedVector(T::Type,n::Integer) = IndexedVector(zeros(T,n),zeros(Int,n),0)
 
 function addelt{T}(v::IndexedVector{T},i::Integer,val::T)
-    if v.elts[i] == zero(T) # new index
+    if v.elts[i] == 0 # new index
         v.elts[i] = val
         v.nzidx[v.nnz += 1] = i
     else
         v.elts[i] += val
-        if v.elts[i] == zero(Int)
+        if v.elts[i] == 0
             # set to tiny value
             v.elts[i] = 1e-50
         end
