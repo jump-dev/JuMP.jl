@@ -25,7 +25,7 @@ end
 
 import Base.empty!
 
-function empty!(v::IndexedVector)
+function empty!{T}(v::IndexedVector{T})
     elts = v.elts
     nzidx = v.nzidx
     for i in 1:v.nnz
