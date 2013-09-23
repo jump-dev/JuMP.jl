@@ -7,7 +7,7 @@
 JuMP is a domain-specific modeling language
 for `mathematical programming <http://en.wikipedia.org/wiki/Mathematical_optimization>`_ 
 embedded in `Julia <http://julialang.org/>`_. 
-It it currently supports a number of open-source and commerical 
+It currently supports a number of open-source and commerical 
 solvers (COIN Clp, COIN Cbc, GNU GLPK, and Gurobi) via a generic solver-independent
 interface provided by the `MathProgBase <https://github.com/mlubin/MathProgBase.jl>`_ package. 
 One the best features of JuMP is its speed -
