@@ -149,3 +149,15 @@ println("  !!TODO: test external solvers for reading LP and MPS files")
 setObjectiveSense(modA, :Min)
 @test getObjectiveSense(modA) == :Min
 
+
+#####################################################################
+# Test binary variable handling
+let
+    modB = Model(:Max)
+    @defVar(modB, x, Bin)
+    @setObjective(modB, x)
+    @addConstraint(modB, x <= 10)
+    status = solve(modB)
+    @test status == :Optimal
+    @test_approx_eq getValue(x) 1.0
+end

@@ -1,6 +1,3 @@
-setLPSolver(s::Symbol) = MathProgBase.setlpsolver(s)
-setMIPSolver(s::Symbol) = MathProgBase.setmipsolver(s)
-
 function solve(m::Model)
   # Analyze model to see if any integers
   anyInts = false
@@ -16,6 +13,23 @@ function solve(m::Model)
   else
    solveLP(m)
   end
+end
+
+function gurobiCheck(m::Model, ismip = false)
+    solvermodule = ismip ? m.mipsolver.solvermodule : m.lpsolver.solvermodule 
+    if length(m.obj.qvars1) != 0 || length(m.quadconstr) != 0
+
+        if string(solvermodule) != "Gurobi"
+            error("Quadratic objectives/constraints are currently only supported using Gurobi")
+        end
+        if !ismip
+            # Gurobi by default will not compute duals
+            # if quadratic constraints are present.
+            push!(m.lpsolver.options,(:QCPDual,1))
+        end
+        return true
+    end
+    return false
 end
 
 function quadraticGurobi(m::Model, solvermodule, ismip = false)
@@ -122,18 +136,15 @@ function solveLP(m::Model)
     f, A, rowlb, rowub = prepProblem(m)  
 
     # Ready to solve
-    if MathProgBase.lpsolver == nothing
-        error("No LP solver installed. Please run Pkg.add(\"Clp\") and restart Julia.")
-    end
 
-    m.internalModel = MathProgBase.lpsolver.model(;m.solverOptions...)
+    callgurobi = gurobiCheck(m)
+
+    solvermodule = m.lpsolver.solvermodule
+    m.internalModel = solvermodule.model(;m.lpsolver.options...)
     loadproblem(m.internalModel, A, m.colLower, m.colUpper, f, rowlb, rowub)
 
-    if length(m.obj.qvars1) != 0 || length(m.quadconstr) != 0
-        if string(MathProgBase.lpsolver) != "Gurobi"
-            error("Quadratic objectives/constraints are currently only supported using Gurobi")
-        end
-        quadraticGurobi(m, MathProgBase.lpsolver)
+    if callgurobi
+        quadraticGurobi(m, solvermodule)
     end
 
     setsense(m.internalModel, m.objSense)
@@ -164,17 +175,21 @@ function solveMIP(m::Model)
     for j = 1:m.numCols
         if m.colCat[j] == CONTINUOUS
             vartype[j] = 'C'
+        elseif m.colCat[j] == BINARY
+            vartype[j] = 'I'
+            m.colLower[j] = 0
+            m.colUpper[j] = 1
         else
             vartype[j] = 'I'
         end
     end
 
     # Ready to solve
-    if MathProgBase.mipsolver == nothing
-        error("No MIP solver installed. Please run Pkg.add(\"Cbc\") and restart Julia.")
-    end
     
-    m.internalModel = MathProgBase.mipsolver.model(;m.solverOptions...)
+    callgurobi = gurobiCheck(m, true)
+   
+    solvermodule = m.mipsolver.solvermodule
+    m.internalModel = solvermodule.model(;m.mipsolver.options...)
     # CoinMP doesn't support obj senses...
     if m.objSense == :Max
         f = -f
@@ -182,11 +197,8 @@ function solveMIP(m::Model)
     loadproblem(m.internalModel, A, m.colLower, m.colUpper, f, rowlb, rowub)
     setvartype(m.internalModel, vartype)
 
-    if length(m.obj.qvars1) != 0 || length(m.quadconstr) != 0
-        if string(MathProgBase.mipsolver) != "Gurobi"
-            error("Quadratic objectives/constraints are currently only supported using Gurobi")
-        end
-        quadraticGurobi(m, MathProgBase.mipsolver, true)
+    if callgurobi
+        quadraticGurobi(m, solvermodule, true)
     end
 
     optimize(m.internalModel)

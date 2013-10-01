@@ -23,14 +23,15 @@ importall Base
 export
 # Objects
   Model, Variable, AffExpr, QuadExpr, LinearConstraint, QuadConstraint, MultivarDict,
-
+# Reexported from MathProgBase
+  LPSolver, MIPSolver,
 # Functions
   # Relevant to all
   print,show,
   # Model related
   getNumVars, getNumConstraints, getObjectiveValue, getObjective,
   getObjectiveSense, setObjectiveSense, writeLP, writeMPS, setObjective,
-  addConstraint, addVar, addVars, setLPSolver, setMIPSolver, solve,
+  addConstraint, addVar, addVars, solve,
   # Variable
   setName, getName, setLower, setUpper, getLower, getUpper, getValue,
   getDual,
@@ -75,17 +76,19 @@ type Model
   linconstrDuals::Vector{Float64}
   # internal solver model object
   internalModel
-  solverOptions
+  # Solver+option objects from MathProgBase
+  lpsolver::LPSolver
+  mipsolver::MIPSolver
 end
 
 # Default constructor
-function Model(sense::Symbol)
+function Model(sense::Symbol;lpsolver=LPSolver(),mipsolver=MIPSolver())
   if (sense != :Max && sense != :Min)
      error("Model sense must be :Max or :Min")
   end
   Model(QuadExpr(),sense,LinearConstraint[], QuadConstraint[],
         0,String[],Float64[],Float64[],Int[],
-        0,Float64[],Float64[],Float64[],nothing,Dict())
+        0,Float64[],Float64[],Float64[],nothing,lpsolver,mipsolver)
 end
 
 # Getters/setters
@@ -326,7 +329,6 @@ end
 
 function addConstraint(m::Model, c::QuadConstraint)
   push!(m.quadconstr,c)
-  m.solverOptions[:QCPDual] = 1
   return ConstraintRef{QuadConstraint}(m,length(m.quadconstr))
 end
 
