@@ -110,6 +110,9 @@ function print(io::IO, m::Model)
   for c in m.linconstr
     println(io, conToStr(c))
   end
+  for c in m.quadconstr
+    println(io, conToStr(c))
+  end
   for i in 1:m.numCols
     print(io, m.colLower[i])
     print(io, " <= ")
@@ -242,13 +245,28 @@ function quadToStr(q::QuadExpr)
     return affToStr(q.aff)
   end
 
-  termStrings = Array(ASCIIString, length(q.qvars1))
-  for ind in 1:length(q.qvars1)
-    termStrings[ind] = string(q.qcoeffs[ind]," ",
-                              getName(q.qvars1[ind]),"*",
-                              getName(q.qvars2[ind]))
+  termStrings = Array(ASCIIString, 2*length(q.qvars1))
+  if length(q.qvars1) > 0
+    if q.qcoeffs[1] < 0
+      termStrings[1] = "-"
+    else
+      termStrings[1] = ""
+    end
+    termStrings[2] = string(abs(q.qcoeffs[1])," ",
+                            getName(q.qvars1[1]),"*",
+                            getName(q.qvars2[1]))
+    for ind in 2:length(q.qvars1)
+      if q.qcoeffs[ind] < 0
+        termStrings[2*ind-1] = " - "
+      else 
+        termStrings[2*ind-1] = " + "
+      end
+      termStrings[2*ind] = string(abs(q.qcoeffs[ind])," ",
+                                  getName(q.qvars1[ind]),"*",
+                                  getName(q.qvars2[ind]))
+    end
   end
-  ret = join(termStrings, " + ")
+  ret = join(termStrings)
 
   if q.aff.constant == 0 && length(q.aff.vars) == 0
     return ret
