@@ -206,19 +206,34 @@ function affToStr(a::AffExpr, showConstant=true)
   end
 
   # Stringify the terms
-  termStrings = Array(ASCIIString, length(a.vars))
+  termStrings = Array(ASCIIString, 2*length(a.vars)-1)
+  if indvec.nnz > 0
+    idx = indvec.nzidx[1]
+    firstString = "$(indvec.elts[idx]) $(getName(m,idx))"
+  end
+
   numTerms = 0
-  for i in 1:indvec.nnz
-    idx = indvec.nzidx[i]
+  for i in 2:indvec.nnz
     numTerms += 1
-    termStrings[numTerms] = "$(indvec.elts[idx]) $(getName(m,idx))"
+    idx = indvec.nzidx[i]
+    if indvec.elts[idx] < 0
+      termStrings[2*numTerms-1] = " - "
+    else
+      termStrings[2*numTerms-1] = " + "
+    end
+    termStrings[2*numTerms] = "$(abs(indvec.elts[idx])) $(getName(m,idx))"
   end
 
   # And then connect them up with +s
-  ret = join(termStrings[1:numTerms], " + ")
+  # ret = join(termStrings[1:numTerms], " + ")
+  ret = join([firstString, termStrings[1:(2*numTerms)]])
   
   if abs(a.constant) >= 0.000001 && showConstant
-    ret = string(ret," + ",a.constant)
+    if a.constant < 0
+      ret = string(ret, " - ", abs(a.constant))
+    else
+      ret = string(ret, " + ", a.constant)
+    end
   end
   return ret
 end
@@ -271,7 +286,12 @@ function quadToStr(q::QuadExpr)
   if q.aff.constant == 0 && length(q.aff.vars) == 0
     return ret
   else
-    return string(ret, " + ", affToStr(q.aff))
+    aff = affToStr(q.aff)
+    if aff[1] == '-'
+      return string(ret, " - ", aff[2:end])
+    else
+      return string(ret, " + ", aff)
+    end
   end
 end
 
