@@ -1,9 +1,7 @@
 # This whole test only executes if we have Gurobi 
 if Pkg.installed("Gurobi") != nothing
-  cursolver = MathProgBase.mipsolver
-  MathProgBase.setmipsolver(:Gurobi)
   let
-    modQ = Model(:Min)
+    modQ = Model(:Min, mipsolver=MIPSolver(:Gurobi))
 
     @defVar(modQ, 1.1*i <= x[i=1:3] <= 2.5*i, Int)
     
@@ -20,7 +18,7 @@ if Pkg.installed("Gurobi") != nothing
 
   # test Maximization sense
   let
-    modQ = Model(:Max)
+    modQ = Model(:Max, mipsolver=MIPSolver(:Gurobi))
 
     @defVar(modQ, 1.1*i <= x[i=1:3] <= 2.5*i, Int)
     
@@ -35,12 +33,8 @@ if Pkg.installed("Gurobi") != nothing
     @test_approx_eq getValue(x) [2.0, 3.0, 4.0]
   end
 
-  MathProgBase.setmipsolver(cursolver)
-
-  cursolver = MathProgBase.lpsolver
-  MathProgBase.setlpsolver(:Gurobi)
   let
-    modQ = Model(:Min)
+    modQ = Model(:Min, lpsolver=LPSolver(:Gurobi))
     
     @defVar(modQ, 0.5 <= x <= 2 )
     @defVar(modQ, 0 <= y <= 30 )
@@ -54,7 +48,6 @@ if Pkg.installed("Gurobi") != nothing
     @test_approx_eq_eps (getValue(x) + getValue(y)) 1.0 1e-6
   end
   
-  MathProgBase.setlpsolver(cursolver)
 else 
   println("WARNING: Gurobi not installed, cannot execute quadratic test")
 end
