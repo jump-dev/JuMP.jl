@@ -39,18 +39,10 @@ Support for Clp and Cbc is provided via `CoinMP <https://projects.coin-or.org/Co
 Regarding the CoinMP binary itself, installation will differ by platform:
 
 * Linux - Only option is to build from source, which will happen automatically.
-* OSX - Downloads binary via the `Homebrew.jl <https://github.com/staticfloat/Homebrew.jl>`_ package.
+* OS X - Downloads binary via the `Homebrew.jl <https://github.com/staticfloat/Homebrew.jl>`_ package.
 * Windows - **Only 32-bit versions of Julia are supported by the COIN solvers at this time**. The 32-bit version of Julia can be used on 64-bit Windows with no issues. Binary download. Will require `Visual Studio 2012 redistributable <http://www.microsoft.com/en-us/download/details.aspx?id=30679>`_ if not already installed.
 
-Clp and Cbc, if available, are the default choice of solver in JuMP. To manually select Clp and/or Cbc as your LP/MIP solver, at the top of your code include the following::
-
-    using Cbc  # For MIPs
-    using Clp  # For LPs
-
-and at some point, before you call ``solve(model)``::
-
-    setMIPSolver(:Cbc)  # For MIPs
-    setLPSolver(:Clp)   # For LPs
+Clp and Cbc, if available, are the default choice of solver in JuMP. 
 
 Gurobi
 ++++++
@@ -64,15 +56,8 @@ Gurobi
 
 .. warning::
    If you are using 64-bit Gurobi, you must use 64-bit Julia (and similarily with 32-bit Gurobi).
-   
-To use Gurobi in your Julia programs::
-
-    using Gurobi
-    # ... code...
-    # ... building model ...
-    setMIPSolver(:Gurobi)  # For MIPs
-    setLPSolver(:Gurobi)  # For LPs
-    # Gurobi will automatically be used for QCQPs if available.
+  
+The Gurobi package README contains examples of how to use Gurobi within JuMP.
 
 GLPK
 ++++

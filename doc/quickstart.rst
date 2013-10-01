@@ -23,7 +23,8 @@ of the objective::
     m = Model(:Min)  # Alternatively, :Max
 
 All variables and constraints are associated with a ``Model`` objects. For
-a list of all functions related to ``Model``, see :ref:`ref-model`.
+a list of all functions related to ``Model``, including how to change the 
+default solver and set solver parameters, see :ref:`ref-model`.
 
 
 Defining Variables
