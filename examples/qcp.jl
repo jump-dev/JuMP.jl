@@ -1,3 +1,11 @@
+# JuMP
+# A MILP+QP modelling langauge for Julia
+# By Iain Dunning and Miles Lubin
+
+# qcp.jl
+# A simple quadratically constrained probgram
+# Based on http://www.gurobi.com/documentation/5.5/example-tour/node25
+
 using JuMP
 
 if Pkg.installed("Gurobi") == nothing
