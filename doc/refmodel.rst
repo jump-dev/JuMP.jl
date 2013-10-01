@@ -36,3 +36,23 @@ Methods
 
 * ``writeLP(m::Model, filename::String)`` - write the model to ``filename`` in the LP file format.
 * ``writeMPS(m::Model, filename::String)`` - write the model to ``filename`` in the MPS file format.
+
+
+Quadratic Objectives
+^^^^^^^^^^^^^^^^^^^^
+
+Quadratic objectives are supported by JuMP but currently the only supported
+solver is ``Gurobi``. The other issue is that the ``@setObjective`` macro
+**does not yet support quadratic terms**, but you may use instead the (slower)
+``setObjective`` function::
+
+    m = Model(:Min)
+    @defVar(m, 0 <= x <= 2 )
+    @defVar(m, 0 <= y <= 30 )
+
+    setObjective(m, x*x+ 2x*y + y*y )  # Cannot use macro
+    @addConstraint(m, x + y >= 1 )
+      
+    print(m)
+
+    status = solve(m)

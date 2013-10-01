@@ -5,7 +5,7 @@ Quick Start Guide
 -----------------
 
 This quick start guide will introduce the main concepts of JuMP.
-If you are familiar with another modelling language embedded in a high-level
+If you are familiar with another modeling language embedded in a high-level
 language such as PuLP (Python) or a solver-specific interface you will find
 most of this familiar, with the exception of *macros*. A deep understanding
 of macros is not essential, but if you would like to know more please see
@@ -130,3 +130,7 @@ which is equivalent to::
             ...
         end
     end
+
+
+.. Walks through a simple example
+.. include:: example.rst

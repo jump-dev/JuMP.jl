@@ -36,66 +36,11 @@ If you are new to Julia or want more details, read on to the next section.
 .. Outlines key functionality of JuMP
 .. include:: quickstart.rst
 
-.. Walks through a simple example
-.. include:: example.rst
-
 .. Beginning of Reference section
 .. First up, Model
 .. include:: refmodel.rst
 .. Variable
 .. include:: refvariable.rst
-
-
-.. _jump-function-list:
-
-Quadratic Objectives
-^^^^^^^^^^^^^^^^^^^^
-
-There is preliminary support for convex quadratic objectives. Currently the
-only supported solver is ``Gurobi``; it must be set as the ``lpsolver`` or 
-``mipsolver`` when solving QPs or mixed-integer QPs, respectively. The 
-``@setObjective`` macro does not yet support quadratic terms, but you may
-use instead the (slower) operator overloading functionality and the 
-``setObjective`` function::
-
-    MathProgBase.setlpsolver(:Gurobi)
-    m = Model(:Min)
-    @defVar(m, 0 <= x <= 2 )
-    @defVar(m, 0 <= y <= 30 )
-
-    setObjective(m, x*x+ 2x*y + y*y )
-    @addConstraint(m, x + y >= 1 )
-      
-    print(m)
-
-    status = solve(m)
-
-Quadratic Constraints
-^^^^^^^^^^^^^^^^^^^^^
-
-There is preliminary support for convex quadratic constraints. Currently the 
-only supported solver is ``Gurobi``; it must be set as the ``lpsolver`` or
-``mipsolver`` when solving QC programs. The ``@addConstraint`` macro does not 
-yet support quadratic expressions, but you may instead use the (slower) 
-operator overloading functionality via the ``addConstraint`` function::
-
-    MathProgBase.setlpsolver(:Gurobi)
-    m = Model(:Min)
-    @defVar(m, -1 <= x <= 1)
-    @defVar(m, -1 <= y <= 1)
-
-    @setObjective(m, x + y)
-    addConstraint(m, x*x + y*y <= 1)
-
-    print(m)
-
-    status = solve(m)
-
-    
-----------------------------------------------------
-Expressions, constraints, and the objective function
-----------------------------------------------------
-
-Macros vs operator overloading @addConstraint duals @setObjective
-
+.. Expressions, Constraints
+.. include:: refexpr.rst
 
