@@ -19,10 +19,10 @@ end
 # Maximization problem
 m = Model(:Max, lpsolver=LPSolver(:Gurobi))
 
-# No variable bounds
+# Need nonnegativity for (rotated) second-order cone
 @defVar(m, x)
-@defVar(m, y)
-@defVar(m, z)
+@defVar(m, y >= 0)
+@defVar(m, z >= 0)
 
 # Maximize x
 @setObjective(m, x)
