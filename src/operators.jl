@@ -162,7 +162,27 @@ end
 (/)(q1::QuadExpr, q2::QuadExpr) = error("Cannot divide a quadratic expression by a quadratic expression")
 
 # LinearConstraint
-# LinearConstraint--Number
+# Number--???
+(<=)(lhs::Number, rhs::Variable) = (>=)(rhs, lhs)
+(==)(lhs::Number, rhs::Variable) = (==)(rhs, lhs)
+(>=)(lhs::Number, rhs::Variable) = (<=)(rhs, lhs)
+
+(<=)(lhs::Number, rhs::AffExpr) = (>=)(rhs, lhs)
+(==)(lhs::Number, rhs::AffExpr) = (==)(rhs, lhs)
+(>=)(lhs::Number, rhs::AffExpr) = (<=)(rhs, lhs)
+# Variable--???
+(<=)(lhs::Variable, rhs::Number) = (<=)(lhs - rhs, 0.0)
+(==)(lhs::Variable, rhs::Number) = (==)(lhs - rhs, 0.0)
+(>=)(lhs::Variable, rhs::Number) = (<=)(lhs - rhs, 0.0)
+
+(<=)(lhs::Variable, rhs::Variable) = (<=)(lhs - rhs, 0.0)
+(==)(lhs::Variable, rhs::Variable) = (==)(lhs - rhs, 0.0)
+(>=)(lhs::Variable, rhs::Variable) = (<=)(lhs - rhs, 0.0)
+
+(<=)(lhs::Variable, rhs::AffExpr) = (<=)(lhs - rhs, 0.0)
+(==)(lhs::Variable, rhs::AffExpr) = (==)(lhs - rhs, 0.0)
+(>=)(lhs::Variable, rhs::AffExpr) = (<=)(lhs - rhs, 0.0)
+# AffExpr--???
 function (<=)(lhs::AffExpr, rhs::Number)
   rhs -= lhs.constant
   lhs.constant = 0
@@ -178,6 +198,13 @@ function (>=)(lhs::AffExpr, rhs::Number)
   lhs.constant = 0
   return LinearConstraint(lhs,rhs,Inf)
 end
+(<=)(lhs::AffExpr, rhs::Variable) = (<=)(lhs-rhs, 0.0)
+(==)(lhs::AffExpr, rhs::Variable) = (==)(lhs-rhs, 0.0)
+(>=)(lhs::AffExpr, rhs::Variable) = (>=)(lhs-rhs, 0.0)
+(<=)(lhs::AffExpr, rhs::AffExpr) = (<=)(lhs-rhs, 0.0)
+(==)(lhs::AffExpr, rhs::AffExpr) = (==)(lhs-rhs, 0.0)
+(>=)(lhs::AffExpr, rhs::AffExpr) = (>=)(lhs-rhs, 0.0)
+
 # There's no easy way to allow operator overloads for range constraints.
 # Use macros instead.
 
