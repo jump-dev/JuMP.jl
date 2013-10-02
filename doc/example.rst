@@ -34,7 +34,7 @@ argument, the model sense. The two options are ``:Max`` and ``:Min`::
     m = Model(:Max)
 
 .. note::
-   Your model doesn't have to be called m - its just a name. 
+   Your model doesn't have to be called m - it's just a name. 
    
 .. hint:: 
    The colon ``:`` operator defines a `symbol <http://docs.julialang.org/en/latest/manual/metaprogramming/#symbols>`_.

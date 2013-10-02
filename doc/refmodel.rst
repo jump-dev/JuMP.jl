@@ -25,7 +25,7 @@ and ``mipsolver``, which can be used to change the default solver behavior.
 
 where ``solvername`` is one of the suppored solvers (``:Clp``, ``:GLPK``, and ``:Gurobi``). All options are solver-dependent; see corresponding solver packages for more information. 
 
-``mipsolver`` must be a ``MIPSolver`` object, which is built similarly to ``LPSolver``. The currently supported solvers are ``:Clp``, ``:GLPK``, and ``:Gurobi``.
+``mipsolver`` must be a ``MIPSolver`` object, which is built similarly to ``LPSolver``. The currently supported solvers are ``:Cbc``, ``:GLPK``, and ``:Gurobi``.
 
 .. note::
     Currently, the ``mipsolver`` solver is used for any problem with integer variables present. The ``lpsolver`` solver is used for all other problems, including those with continuous variables and quadratic objectives and/or constraints.
@@ -41,8 +41,8 @@ Methods
 
 **General**
 
-* ``getNumVars(m::Model)`` - returns the number of variables associated with the ``Model m``
-* ``getNumConstraints(m::Model)`` - returns the number of constraints associated with the ``Model m``
+* ``getNumVars(m::Model)`` - returns the number of variables associated with the ``Model m``.
+* ``getNumConstraints(m::Model)`` - returns the number of constraints associated with the ``Model m``.
 
 **Objective**
 
