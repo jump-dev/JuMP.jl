@@ -19,15 +19,15 @@ JuMP is [![Build Status](https://travis-ci.org/IainNZ/JuMP.jl.png)](https://trav
 
 *JuMP was formerly known as MathProg.jl*
 
-# Installation
+## Installation
 
 JuMP can be installed through the Julia package manager (version 0.2 required)
 
-```
-    julia> Pkg.add("JuMP")
+```julia
+julia> Pkg.add("JuMP")
 ```
 
-For full installation instructions, in particular solvers, see the [installation guide](https://jump.readthedocs.org/en/latest/jump.html#installation-guide)
+For full installation instructions, including how to install solvers, see the [installation guide](https://jump.readthedocs.org/en/latest/jump.html#installation-guide)
 
 [mathematical programming]: http://en.wikipedia.org/wiki/Mathematical_optimization
 [Julia]: http://julialang.org/
@@ -36,23 +36,23 @@ For full installation instructions, in particular solvers, see the [installation
 [GNU GLPK]: http://www.gnu.org/software/glpk/
 [Gurobi]: http://www.gurobi.com/
 
-# Supported problem classes
+## Supported problem classes
 
 Mathematical programming encompasses a large variety of problem classes. 
 We list below what is currently supported. See the documentation for more information. 
 
-### Objective types 
+**Objective types**
 
 * Linear
 * Convex Quadratic (Gurobi only)
 
-### Constraint types
+**Constraint types**
 
 * Linear
 * Convex Quadratic (Gurobi only)
 * Second-order Conic (Gurobi only)
 
-### Variable types
+**Variable types**
 
 * Continous
 * Integer-valued
