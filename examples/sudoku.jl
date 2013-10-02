@@ -1,7 +1,8 @@
+#############################################################################
 # JuMP
-# A MILP+QP modelling langauge for Julia
-# By Iain Dunning and Miles Lubin
-
+# An algebraic modelling langauge for Julia
+# See http://github.com/IainNZ/JuMP.jl
+#############################################################################
 # sudoku.jl
 # A sudoku solver that uses a MIP to find solutions
 
@@ -14,6 +15,7 @@
 # and the obvious one that
 # 4 - Each cell has one value only
 # We will take the initial grid as a CSV file, where 0s are "blanks
+#############################################################################
 
 using JuMP
 
@@ -93,7 +95,7 @@ end
 
 # Initialization
 if length(ARGS) != 1
-  error("Expected one argument: the initial solution")
+  error("Expected one argument: the initial solution, e.g. julia sudoku.jl sudoku.csv")
 end
 
 # Solve

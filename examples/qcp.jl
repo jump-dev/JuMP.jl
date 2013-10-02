@@ -1,34 +1,44 @@
+#############################################################################
 # JuMP
-# A MILP+QP modelling langauge for Julia
-# By Iain Dunning and Miles Lubin
-
+# An algebraic modelling langauge for Julia
+# See http://github.com/IainNZ/JuMP.jl
+#############################################################################
 # qcp.jl
+#
 # A simple quadratically constrained probgram
 # Based on http://www.gurobi.com/documentation/5.5/example-tour/node25
+#############################################################################
 
 using JuMP
 
+# Only solver supported that can solve QCPs so far is Gurobi.
 if Pkg.installed("Gurobi") == nothing
   error("Must have Gurobi available for quadratic constraints")
 end
 
-MathProgBase.setlpsolver(:Gurobi)
+# Maximization problem
+m = Model(:Max, lpsolver=LPSolver(:Gurobi))
 
-m = Model(:Max)
-
+# No variable bounds
 @defVar(m, x)
 @defVar(m, y)
 @defVar(m, z)
 
+# Maximize x
 @setObjective(m, x)
-# addConstraint(m, x + y + z == 1)
+
+# Subject to 1 linear and 2 nonlinear constraints
+addConstraint(m, x + y + z == 1)
 addConstraint(m, x*x + y*y - z*z <= 0)
 addConstraint(m, x*x - y*z <= 0)
 
+# Print the model to check correctness
 print(m)
 
+# Solve with Gurobi
 status = solve(m)
 
+# Solution
 println("Objective value: ", getObjectiveValue(m))
 println("x = ", getValue(x))
 println("y = ", getValue(y))

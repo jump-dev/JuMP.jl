@@ -1,14 +1,28 @@
+#############################################################################
 # JuMP
-# A MILP+QP modelling langauge for Julia
-# By Iain Dunning and Miles Lubin
-
+# An algebraic modelling langauge for Julia
+# See http://github.com/IainNZ/JuMP.jl
+#############################################################################
 # diet.jl
-# Solve the classic "diet" problem.
-# Based on http://www.gurobi.com/documentation/5.6/example-tour/diet_cpp_cpp
+#
+# Solve the classic "diet problem".
+# Based on 
+#  http://www.gurobi.com/documentation/5.6/example-tour/diet_cpp_cpp
+#############################################################################
 
 using JuMP
-using Gurobi
-setLPSolver(:Gurobi)
+
+function PrintSolution(status, foods, buy)
+  println("RESULTS:")
+  if status == :Optimal
+    for i = 1:length(foods)
+      println("  $(foods[i]) = $(getValue(buy[i]))")
+    end
+  else
+    println("  No solution")
+  end
+  println("")
+end
 
 function SolveDiet()
   
@@ -50,28 +64,16 @@ function SolveDiet()
   end
 
   # Solve
+  println("Solving original problem...")
   status = solve(m)
-  println("RESULTS:")
-  if status == :Optimal
-    for i = 1:numFoods
-      println("  $(foods[i]) = $(getValue(buy[i]))")
-    end
-  else
-    println("  No solution")
-  end
-
+  PrintSolution(status, foods, buy)
+  
   # Limit dairy
   @addConstraint(m, buy[8] + buy[9] <= 6)
+  println("Solving dairy-limited problem...")
   status = solve(m)
-  println("RESULTS:")
-  if status == :Optimal
-    for i = 1:numFoods
-      println("  $(foods[i]) = $(getValue(buy[i]))")
-    end
-  else
-    println("  No solution")
-  end
-   
+  PrintSolution(status, foods, buy)
+
 end
 
 SolveDiet()
