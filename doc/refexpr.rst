@@ -42,5 +42,27 @@ Methods
 * ``addConstraint(m::Model, con)`` - general way to add linear and quadratic
   constraints.
 
-Both ``@addConstraint`` and ``addConstraint`` return a.
+Constraint References
+^^^^^^^^^^^^^^^^^^^^^
 
+In order to manipulate constraints after creation, it is necessary to maintain
+a reference. For linear constarints both ``@addConstraint`` and ``addConstraint``
+return an object of type ``ConstraintRef{LinearConstraint}``. To facilitate
+the storage of these we provide the convenience macro, e.g.::
+
+    @defConstrRef constraintName[1:3]
+
+That behaves like ``@defVar``. You can then iterate over constraints and store
+references in this structure, e.g.::
+
+    @defVar(m, x[1:5] >= 0)
+    @defConstrRef myCons[1:5]
+    for i = 1:5
+      myCons[i] = @addConstraint(m, x[i] >= i)
+    end
+
+To obtain the dual of a constraint, call ``getDual`` on the constraint reference::
+    
+    println(getDual(myCons[1]))
+
+Dual information is unavaible for MIPs and QCQPs.

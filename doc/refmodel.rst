@@ -7,14 +7,13 @@ Models
 Constructor
 ^^^^^^^^^^^
 
-``Model`` is a type defined by JuMP. It has one constructor that takes 
+``Model`` is a type defined by JuMP. All variables and constraints are 
+associated with a ``Model`` object. It has one constructor that takes 
 required one argument, the objective sense. The objective sense must be 
 one of the symbols ``:Min`` and ``:Max``::
 
     m = Model(:Min)
     m = Model(:Max)
-
-All variables and constraints are associated with a ``Model`` object.
 
 The constructor also accepts two optional keyword arguments, ``lpsolver``,
 and ``mipsolver``, which can be used to change the default solver behavior.
@@ -28,12 +27,12 @@ where ``solvername`` is one of the suppored solvers (``:Clp``, ``:GLPK``, and ``
 ``mipsolver`` must be a ``MIPSolver`` object, which is built similarly to ``LPSolver``. The currently supported solvers are ``:Cbc``, ``:GLPK``, and ``:Gurobi``.
 
 .. note::
-    Currently, the ``mipsolver`` solver is used for any problem with integer variables present. The ``lpsolver`` solver is used for all other problems, including those with continuous variables and quadratic objectives and/or constraints.
+    Currently, the ``mipsolver`` solver is used for any problem with integer variables present. The ``lpsolver`` solver is used for all other problems, including those with continuous variables and **quadratic objectives and/or constraints**.
 
 As an example, we can create a ``Model`` object that will use GLPK's
 exact solver for LPs as follows::
     
-    m = Model(:Min,lpsolver=LPSolver(:GLPK,GLPKmethod=:Exact))
+    m = Model(:Min,lpsolver=LPSolver(:GLPK, GLPKmethod=:Exact))
 
 
 Methods
