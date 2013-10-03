@@ -8,9 +8,9 @@ Constructor
 ^^^^^^^^^^^
 
 ``Model`` is a type defined by JuMP. All variables and constraints are 
-associated with a ``Model`` object. It has one constructor that takes 
-required one argument, the objective sense. The objective sense must be 
-one of the symbols ``:Min`` and ``:Max``::
+associated with a ``Model`` object. It has a constructor that takes 
+one required argument, the objective sense. The objective sense must be 
+one of the symbols ``:Min`` or ``:Max``::
 
     m = Model(:Min)
     m = Model(:Max)
@@ -32,7 +32,7 @@ where ``solvername`` is one of the suppored solvers (``:Clp``, ``:GLPK``, and ``
 As an example, we can create a ``Model`` object that will use GLPK's
 exact solver for LPs as follows::
     
-    m = Model(:Min,lpsolver=LPSolver(:GLPK, GLPKmethod=:Exact))
+    m = Model(:Min, lpsolver = LPSolver(:GLPK, GLPKmethod=:Exact))
 
 
 Methods

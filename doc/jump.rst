@@ -44,3 +44,11 @@ If you are new to Julia or want more details, read on to the next section.
 .. Expressions, Constraints
 .. include:: refexpr.rst
 
+----------
+References
+----------
+
+Further discussion of the design of JuMP in the context of existing domain-specific languages for mathematical programming, together with extensive benchmarks, is given in [1]_.   
+
+
+.. [1] M. Lubin and I. Dunning, "Computing in Operations Research using Julia", May 2013, under review. `Preprint <http://www.optimization-online.org/DB_HTML/2013/05/3883.html>`_

@@ -65,4 +65,4 @@ To obtain the dual of a constraint, call ``getDual`` on the constraint reference
     
     println(getDual(myCons[1]))
 
-Dual information is unavaible for MIPs and QCQPs.
+Dual information is unavaible for MIPs and has not yet been implemented for quadratic constraints.
