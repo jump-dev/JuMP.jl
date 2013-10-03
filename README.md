@@ -57,3 +57,9 @@ We list below what is currently supported. See the documentation for more inform
 * Continous
 * Integer-valued
 
+## Bug reports and support
+
+Please report any issues via the Github **[issue tracker]**. All types of issues are welcome and encouraged; this includes bug reports, documentation typos, "how do I do this?" questions, feature requests, etc.
+
+
+[issue tracker]: https://github.com/IainNZ/JuMP.jl/issues
