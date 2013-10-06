@@ -20,7 +20,6 @@ q2 = 8.0 * x * z + aff2
 # 2. Variable
 # 3. AffExpr
 # 4. QuadExpr
-# 5. Constraint (for comparison ops)
 
 # 1. Number tests
 # 1-1 Number--Number - nope!
@@ -29,6 +28,9 @@ q2 = 8.0 * x * z + aff2
 @test affToStr(3.16 - w) == "-1.0 w + 3.16"
 @test affToStr(5.23 * w) == "5.23 w"
 @test_throws 2.94 / w
+@test conToStr(2.1 <= w) == "1.0 w >= 2.1"
+@test conToStr(2.1 == w) == "1.0 w == 2.1"
+@test conToStr(2.1 >= w) == "1.0 w <= 2.1"
 # 1-3 Number--AffExpr
 @test affToStr(1.5 + aff) == "7.1 x + 4.0"
 @test affToStr(1.5 - aff) == "-7.1 x - 1.0"

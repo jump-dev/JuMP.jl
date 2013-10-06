@@ -173,15 +173,15 @@ end
 # Variable--???
 (<=)(lhs::Variable, rhs::Number) = (<=)(lhs - rhs, 0.0)
 (==)(lhs::Variable, rhs::Number) = (==)(lhs - rhs, 0.0)
-(>=)(lhs::Variable, rhs::Number) = (<=)(lhs - rhs, 0.0)
+(>=)(lhs::Variable, rhs::Number) = (>=)(lhs - rhs, 0.0)
 
 (<=)(lhs::Variable, rhs::Variable) = (<=)(lhs - rhs, 0.0)
 (==)(lhs::Variable, rhs::Variable) = (==)(lhs - rhs, 0.0)
-(>=)(lhs::Variable, rhs::Variable) = (<=)(lhs - rhs, 0.0)
+(>=)(lhs::Variable, rhs::Variable) = (>=)(lhs - rhs, 0.0)
 
 (<=)(lhs::Variable, rhs::AffExpr) = (<=)(lhs - rhs, 0.0)
 (==)(lhs::Variable, rhs::AffExpr) = (==)(lhs - rhs, 0.0)
-(>=)(lhs::Variable, rhs::AffExpr) = (<=)(lhs - rhs, 0.0)
+(>=)(lhs::Variable, rhs::AffExpr) = (>=)(lhs - rhs, 0.0)
 # AffExpr--???
 function (<=)(lhs::AffExpr, rhs::Number)
   rhs -= lhs.constant
