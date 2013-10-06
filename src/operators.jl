@@ -183,21 +183,9 @@ end
 (==)(lhs::Variable, rhs::AffExpr) = (==)(lhs - rhs, 0.0)
 (>=)(lhs::Variable, rhs::AffExpr) = (>=)(lhs - rhs, 0.0)
 # AffExpr--???
-function (<=)(lhs::AffExpr, rhs::Number)
-  rhs -= lhs.constant
-  lhs.constant = 0
-  return LinearConstraint(lhs,-Inf,rhs)
-end
-function (==)(lhs::AffExpr, rhs::Number)
-  rhs -= lhs.constant
-  lhs.constant = 0
-  return LinearConstraint(lhs,rhs,rhs)
-end
-function (>=)(lhs::AffExpr, rhs::Number)
-  rhs -= lhs.constant
-  lhs.constant = 0
-  return LinearConstraint(lhs,rhs,Inf)
-end
+(<=)(lhs::AffExpr, rhs::Number) = LinearConstraint(lhs,            -Inf,rhs-lhs.constant)
+(==)(lhs::AffExpr, rhs::Number) = LinearConstraint(lhs,rhs-lhs.constant,rhs-lhs.constant)
+(>=)(lhs::AffExpr, rhs::Number) = LinearConstraint(lhs,rhs-lhs.constant,             Inf)
 (<=)(lhs::AffExpr, rhs::Variable) = (<=)(lhs-rhs, 0.0)
 (==)(lhs::AffExpr, rhs::Variable) = (==)(lhs-rhs, 0.0)
 (>=)(lhs::AffExpr, rhs::Variable) = (>=)(lhs-rhs, 0.0)
