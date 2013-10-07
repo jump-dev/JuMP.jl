@@ -170,6 +170,9 @@ end
 (<=)(lhs::Number, rhs::AffExpr) = (>=)(rhs, lhs)
 (==)(lhs::Number, rhs::AffExpr) = (==)(rhs, lhs)
 (>=)(lhs::Number, rhs::AffExpr) = (<=)(rhs, lhs)
+(<=)(lhs::Number, rhs::QuadExpr) = (>=)(rhs, lhs)
+(==)(lhs::Number, rhs::QuadExpr) = (==)(rhs, lhs)
+(>=)(lhs::Number, rhs::QuadExpr) = (<=)(rhs, lhs)
 # Variable--???
 (<=)(lhs::Variable, rhs::Number) = (<=)(lhs - rhs, 0.0)
 (==)(lhs::Variable, rhs::Number) = (==)(lhs - rhs, 0.0)
@@ -182,6 +185,9 @@ end
 (<=)(lhs::Variable, rhs::AffExpr) = (<=)(lhs - rhs, 0.0)
 (==)(lhs::Variable, rhs::AffExpr) = (==)(lhs - rhs, 0.0)
 (>=)(lhs::Variable, rhs::AffExpr) = (>=)(lhs - rhs, 0.0)
+(<=)(lhs::Variable, rhs::QuadExpr) = (<=)(lhs - rhs, 0.0)
+(==)(lhs::Variable, rhs::QuadExpr) = (==)(lhs - rhs, 0.0)
+(>=)(lhs::Variable, rhs::QuadExpr) = (>=)(lhs - rhs, 0.0)
 # AffExpr--???
 (<=)(lhs::AffExpr, rhs::Number) = LinearConstraint(lhs,            -Inf,rhs-lhs.constant)
 (==)(lhs::AffExpr, rhs::Number) = LinearConstraint(lhs,rhs-lhs.constant,rhs-lhs.constant)
@@ -192,13 +198,24 @@ end
 (<=)(lhs::AffExpr, rhs::AffExpr) = (<=)(lhs-rhs, 0.0)
 (==)(lhs::AffExpr, rhs::AffExpr) = (==)(lhs-rhs, 0.0)
 (>=)(lhs::AffExpr, rhs::AffExpr) = (>=)(lhs-rhs, 0.0)
+(<=) (lhs::AffExpr, rhs::QuadExpr) = (<=)(lhs-rhs, 0)
+(==) (lhs::AffExpr, rhs::QuadExpr) = (==)(lhs-rhs, 0)
+(>=) (lhs::AffExpr, rhs::QuadExpr) = (>=)(lhs-rhs, 0)
 
 # There's no easy way to allow operator overloads for range constraints.
 # Use macros instead.
 
 # QuadConstraint
 # QuadConstraint--Number
-(<=) (lhs::QuadExpr, rhs::Number) = QuadConstraint( QuadExpr(copy(lhs.qvars1), copy(lhs.qvars2), lhs.qcoeffs,lhs.aff - rhs), :<=   )
-(==) (lhs::QuadExpr, rhs::Number) = QuadConstraint( QuadExpr(copy(lhs.qvars1), copy(lhs.qvars2), lhs.qcoeffs,lhs.aff - rhs), :(==) )
-(>=) (lhs::QuadExpr, rhs::Number) = QuadConstraint( QuadExpr(copy(lhs.qvars1), copy(lhs.qvars2), lhs.qcoeffs,lhs.aff - rhs), :>=   )
-# TODO: add QuadConstraint--AffExpr, QuadConstraint--QuadExpr, ...
+(<=) (lhs::QuadExpr, rhs::Number)   = QuadConstraint( QuadExpr(copy(lhs.qvars1), copy(lhs.qvars2), lhs.qcoeffs,lhs.aff - rhs), :<=   )
+(==) (lhs::QuadExpr, rhs::Number)   = QuadConstraint( QuadExpr(copy(lhs.qvars1), copy(lhs.qvars2), lhs.qcoeffs,lhs.aff - rhs), :(==) )
+(>=) (lhs::QuadExpr, rhs::Number)   = QuadConstraint( QuadExpr(copy(lhs.qvars1), copy(lhs.qvars2), lhs.qcoeffs,lhs.aff - rhs), :>=   )
+(<=) (lhs::QuadExpr, rhs::Variable) = (<=)(lhs-rhs, 0)
+(==) (lhs::QuadExpr, rhs::Variable) = (==)(lhs-rhs, 0)
+(>=) (lhs::QuadExpr, rhs::Variable) = (>=)(lhs-rhs, 0)
+(<=) (lhs::QuadExpr, rhs::AffExpr)  = (<=)(lhs-rhs, 0)
+(==) (lhs::QuadExpr, rhs::AffExpr)  = (==)(lhs-rhs, 0)
+(>=) (lhs::QuadExpr, rhs::AffExpr)  = (>=)(lhs-rhs, 0)
+(<=) (lhs::QuadExpr, rhs::QuadExpr) = (<=)(lhs-rhs, 0)
+(==) (lhs::QuadExpr, rhs::QuadExpr) = (==)(lhs-rhs, 0)
+(>=) (lhs::QuadExpr, rhs::QuadExpr) = (>=)(lhs-rhs, 0)

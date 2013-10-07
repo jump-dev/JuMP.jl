@@ -46,6 +46,9 @@ q2 = 8.0 * x * z + aff2
 @test quadToStr(1.5 - q) == "-2.5 z*y - 7.1 x - 1.0"
 @test quadToStr(2.0 * q) == "5.0 z*y + 14.2 x + 5.0"
 @test_throws 2.0 / q
+@test conToStr(1.0 <= q) == "2.5 z*y + 7.1 x + 1.5 >= 0"
+@test conToStr(1.0 == q) == "2.5 z*y + 7.1 x + 1.5 == 0"
+@test conToStr(1.0 >= q) == "2.5 z*y + 7.1 x + 1.5 <= 0"
 
 # 2. Variable tests
 # 2-1 Variable--Number
@@ -56,6 +59,9 @@ q2 = 8.0 * x * z + aff2
 @test conToStr(w <= 1.0) == "1.0 w <= 1.0"
 @test conToStr(w == 1.0) == "1.0 w == 1.0"
 @test conToStr(w >= 1.0) == "1.0 w >= 1.0"
+@test conToStr(x*y <= 1.0) == "1.0 x*y - 1.0 <= 0"
+@test conToStr(x*y == 1.0) == "1.0 x*y - 1.0 == 0"
+@test conToStr(x*y >= 1.0) == "1.0 x*y - 1.0 >= 0"
 # 2-2 Variable--Variable
 @test affToStr(w + x) == "1.0 w + 1.0 x"
 @test affToStr(w - x) == "1.0 w - 1.0 x"
@@ -64,6 +70,9 @@ q2 = 8.0 * x * z + aff2
 @test conToStr(w <= x) == "1.0 w - 1.0 x <= 0.0"
 @test conToStr(w == x) == "1.0 w - 1.0 x == 0.0"
 @test conToStr(w >= x) == "1.0 w - 1.0 x >= 0.0"
+@test conToStr(y*z <= x) == "1.0 y*z - 1.0 x <= 0"
+@test conToStr(y*z == x) == "1.0 y*z - 1.0 x == 0"
+@test conToStr(y*z >= x) == "1.0 y*z - 1.0 x >= 0"
 # 2-3 Variable--AffExpr
 @test affToStr(z + aff) == "7.1 x + 1.0 z + 2.5"
 @test affToStr(z - aff) == "-7.1 x + 1.0 z - 2.5"
@@ -77,6 +86,9 @@ q2 = 8.0 * x * z + aff2
 @test quadToStr(w - q) == "-2.5 z*y - 7.1 x + 1.0 w - 2.5"
 @test_throws w*q
 @test_throws w/q
+@test conToStr(w <= q) == "-2.5 z*y - 7.1 x + 1.0 w - 2.5 <= 0"
+@test conToStr(w == q) == "-2.5 z*y - 7.1 x + 1.0 w - 2.5 == 0"
+@test conToStr(w >= q) == "-2.5 z*y - 7.1 x + 1.0 w - 2.5 >= 0"
 
 # 3. AffExpr tests
 # 3-1 AffExpr--Number
@@ -87,6 +99,7 @@ q2 = 8.0 * x * z + aff2
 @test conToStr(aff <= 1.0) == "7.1 x <= -1.5"
 @test conToStr(aff == 1.0) == "7.1 x == -1.5"
 @test conToStr(aff >= 1.0) == "7.1 x >= -1.5"
+
 # 3-2 AffExpr--Variable
 @test affToStr(aff + z) == "7.1 x + 1.0 z + 2.5"
 @test affToStr(aff - z) == "7.1 x - 1.0 z + 2.5"
@@ -95,6 +108,8 @@ q2 = 8.0 * x * z + aff2
 @test conToStr(aff <= z) == "7.1 x - 1.0 z <= -2.5"
 @test conToStr(aff == z) == "7.1 x - 1.0 z == -2.5"
 @test conToStr(aff >= z) == "7.1 x - 1.0 z >= -2.5"
+
+
 # 3-3 AffExpr--AffExpr
 @test affToStr(aff + aff2) == "7.1 x + 1.2 y + 3.7"
 @test affToStr(aff - aff2) == "7.1 x - 1.2 y + 1.3"
@@ -108,6 +123,9 @@ q2 = 8.0 * x * z + aff2
 @test quadToStr(aff2 - q) == "-2.5 z*y + 1.2 y - 7.1 x - 1.3"
 @test_throws aff2 * q
 @test_throws aff2 / q
+@test conToStr(aff2 <= q) == "-2.5 z*y + 1.2 y - 7.1 x - 1.3 <= 0"
+@test conToStr(aff2 == q) == "-2.5 z*y + 1.2 y - 7.1 x - 1.3 == 0"
+@test conToStr(aff2 >= q) == "-2.5 z*y + 1.2 y - 7.1 x - 1.3 >= 0"
 
 # 4. QuadExpr
 # 4-1 QuadExpr--Number
@@ -115,18 +133,30 @@ q2 = 8.0 * x * z + aff2
 @test quadToStr(q - 1.5) == "2.5 z*y + 7.1 x + 1.0"
 @test quadToStr(q * 2.0) == "5.0 z*y + 14.2 x + 5.0"
 @test quadToStr(q / 2.0) == "1.25 z*y + 3.55 x + 1.25"
+@test conToStr(q >= 1.0) == "2.5 z*y + 7.1 x + 1.5 >= 0"
+@test conToStr(q == 1.0) == "2.5 z*y + 7.1 x + 1.5 == 0"
+@test conToStr(q <= 1.0) == "2.5 z*y + 7.1 x + 1.5 <= 0"
 # 4-2 QuadExpr--Variable
 @test quadToStr(q + w) == "2.5 z*y + 7.1 x + 1.0 w + 2.5"
 @test quadToStr(q - w) == "2.5 z*y + 7.1 x - 1.0 w + 2.5"
 @test_throws w*q
 @test_throws w/q
+@test conToStr(q <= w) == "2.5 z*y + 7.1 x - 1.0 w + 2.5 <= 0"
+@test conToStr(q == w) == "2.5 z*y + 7.1 x - 1.0 w + 2.5 == 0"
+@test conToStr(q >= w) == "2.5 z*y + 7.1 x - 1.0 w + 2.5 >= 0"
 # 4-3 QuadExpr--AffExpr
 @test quadToStr(q + aff2) == "2.5 z*y + 7.1 x + 1.2 y + 3.7"
 @test quadToStr(q - aff2) == "2.5 z*y + 7.1 x - 1.2 y + 1.3"
 @test_throws q * aff2
 @test_throws q / aff2
+@test conToStr(q <= aff2) == "2.5 z*y + 7.1 x - 1.2 y + 1.3 <= 0"
+@test conToStr(q == aff2) == "2.5 z*y + 7.1 x - 1.2 y + 1.3 == 0"
+@test conToStr(q >= aff2) == "2.5 z*y + 7.1 x - 1.2 y + 1.3 >= 0"
 # 4-4 QuadExpr--QuadExpr
 @test quadToStr(q + q2) == "2.5 z*y + 8.0 z*x + 7.1 x + 1.2 y + 3.7"
 @test quadToStr(q - q2) == "2.5 z*y - 8.0 z*x + 7.1 x - 1.2 y + 1.3"
 @test_throws q * q2
 @test_throws q / q2
+@test conToStr(q <= q2) == "2.5 z*y - 8.0 z*x + 7.1 x - 1.2 y + 1.3 <= 0"
+@test conToStr(q == q2) == "2.5 z*y - 8.0 z*x + 7.1 x - 1.2 y + 1.3 == 0"
+@test conToStr(q >= q2) == "2.5 z*y - 8.0 z*x + 7.1 x - 1.2 y + 1.3 >= 0"
