@@ -8,6 +8,7 @@ function registergurobicallback(m::Model, grb::GurobiSolver)
     end
     function gurobicallback(cbdata::CallbackData, where::Cint)
         if where == CB_MIPSOL
+            m.colVal = cbget_mipsol_sol(cbdata, where)
             m.mipsolcallback(cbdata)
         end
     end
