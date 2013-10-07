@@ -17,7 +17,6 @@ end
 
 function gurobiCheck(m::Model, ismip = false)
     solvermodule = ismip ? m.mipsolver.solvermodule : m.lpsolver.solvermodule 
-    registergurobicallback(m, solvermodule)
     if length(m.obj.qvars1) != 0 || length(m.quadconstr) != 0
 
         if string(solvermodule) != "Gurobi"
@@ -200,6 +199,9 @@ function solveMIP(m::Model)
 
     if callgurobi
         quadraticGurobi(m, solvermodule, true)
+    end
+    if string(solvermodule) == "Gurobi"
+        registergurobicallback(m, m.internalModel)
     end
 
     optimize(m.internalModel)
