@@ -45,4 +45,20 @@ macro addLazyConstraint(cbdata, x)
     end
 end
 
+function addLazyConstraint(cbdata::CallbackData, constr::Constraint)
+    sens = sense(constr)
+    local csense::Char
+    if sens == :(==)
+        csense = '='
+    elseif sens == :(<=)
+        csense = '<'
+    else
+        csense = '>'
+    end
+    cblazy(cbdata, Cint[v.col for v in constr.terms.vars], constr.terms.coeffs, csense, rhs(constr))
+
+
+end
+
+export addLazyConstraint, @addLazyConstraint, setmipsolcallback
 
