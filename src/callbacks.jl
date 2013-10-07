@@ -3,7 +3,7 @@ using Gurobi
 setmipsolcallback(m::Model, f::Function) = (m.mipsolcallback = f)
 
 function registergurobicallback(m::Model, grb::GurobiSolver)
-    if !isa(mipsolcallback, Function)
+    if !isa(m.mipsolcallback, Function)
         return
     end
     function gurobicallback(cbdata::CallbackData, where::Cint)
@@ -45,7 +45,7 @@ macro addLazyConstraint(cbdata, x)
     end
 end
 
-function addLazyConstraint(cbdata::CallbackData, constr::Constraint)
+function addLazyConstraint(cbdata::CallbackData, constr::LinearConstraint)
     sens = sense(constr)
     local csense::Char
     if sens == :(==)
