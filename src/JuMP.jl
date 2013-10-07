@@ -79,6 +79,8 @@ type Model
   # Solver+option objects from MathProgBase
   lpsolver::LPSolver
   mipsolver::MIPSolver
+  # callback
+  mipsolcallback
 end
 
 # Default constructor
@@ -88,7 +90,7 @@ function Model(sense::Symbol;lpsolver=LPSolver(),mipsolver=MIPSolver())
   end
   Model(QuadExpr(),sense,LinearConstraint[], QuadConstraint[],
         0,String[],Float64[],Float64[],Int[],
-        0,Float64[],Float64[],Float64[],nothing,lpsolver,mipsolver)
+        0,Float64[],Float64[],Float64[],nothing,lpsolver,mipsolver,nothing)
 end
 
 # Getters/setters
@@ -394,6 +396,8 @@ include("writers.jl")
 include("solvers.jl")
 # Macros - @defVar, sum{}, etc.
 include("macros.jl")
+
+include("callbacks.jl")
 
 ##########################################################################
 end
