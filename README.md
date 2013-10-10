@@ -15,7 +15,7 @@ Our **documentation**, including installation guide, quick-start guide, and
 reference material is available [here](https://jump.readthedocs.org/en/latest/jump.html#installation-guide).
 
 We have a comprehensive test suite: the current status of the development version of
-JuMP is [![Build Status](https://travis-ci.org/IainNZ/JuMP.jl.png)](https://travis-ci.org/IainNZ/JuMP.jl)
+JuMP is [![Build Status](https://travis-ci.org/IainNZ/JuMP.jl.png?branch=master)](https://travis-ci.org/IainNZ/JuMP.jl)
 
 *JuMP was formerly known as MathProg.jl*
 
