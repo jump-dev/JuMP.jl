@@ -5,7 +5,7 @@ JuMP --- Julia for Mathematical Programming
 .. module:: JuMP
    :synopsis: Julia for Mathematical Programming
 
-JuMP is a domain-specific modeling language for 
+`JuMP <https://github.com/JuliaOpt/JuMP.jl>`_ is a domain-specific modeling language for 
 `mathematical programming <http://en.wikipedia.org/wiki/Mathematical_optimization>`_ 
 embedded in `Julia <http://julialang.org/>`_. It currently supports a number
 of open-source and commerical solvers (`COIN Clp <https://projects.coin-or.org/Clp>`_,

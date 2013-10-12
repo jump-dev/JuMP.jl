@@ -1,4 +1,9 @@
-###########################################################
+#############################################################################
+# JuMP
+# An algebraic modelling langauge for Julia
+# See http://github.com/JuliaOpt/JuMP.jl
+#############################################################################
+
 # Overloads
 #
 # Different objects that must all interact:
@@ -6,7 +11,6 @@
 # 2. Variable
 # 3. AffExpr
 # 4. QuadExpr
-# 5. Constraint (for comparison ops)
 
 # Number
 # Number--Number obviously already taken care of!

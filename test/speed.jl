@@ -1,7 +1,7 @@
 #############################################################################
 # JuMP
 # An algebraic modelling langauge for Julia
-# See http://github.com/IainNZ/JuMP.jl
+# See http://github.com/JuliaOpt/JuMP.jl
 #############################################################################
 # speed.jl
 #
@@ -10,7 +10,7 @@
 # 
 # Post past results here
 # -------------------------
-# 2013/10/05  Iain's Dell Laptop
+# 2013/10/05  Iain's Dell Laptop     ee443c8d6a779ff74373178dbd6086b1912c5f5e
 # Run 1
 # PMEDIAN BUILD MIN=0.37519394   MED=0.72586158
 # PMEDIAN WRITE MIN=1.551488986  MED=1.62851847

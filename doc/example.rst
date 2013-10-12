@@ -4,7 +4,7 @@ Simple Example
 ^^^^^^^^^^^^^^
 
 In this section we will construct a simple model and explain every step along the way.
-The are more complex examples in the ``JuMP/examples/`` `folder <https://github.com/IainNZ/JuMP.jl/tree/master/examples>`_. Here is the code we will walk through::
+The are more complex examples in the ``JuMP/examples/`` `folder <https://github.com/JuliaOpt/JuMP.jl/tree/master/examples>`_. Here is the code we will walk through::
 
     using JuMP
 

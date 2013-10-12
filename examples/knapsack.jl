@@ -1,7 +1,7 @@
 #############################################################################
 # JuMP
 # An algebraic modelling langauge for Julia
-# See http://github.com/IainNZ/JuMP.jl
+# See http://github.com/JuliaOpt/JuMP.jl
 #############################################################################
 # knapsack.jl
 #

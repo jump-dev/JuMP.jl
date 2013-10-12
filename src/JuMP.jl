@@ -1,10 +1,8 @@
-###############################################################################
+#############################################################################
 # JuMP
-# A MILP+QP modelling langauge for Julia
-#
-# By Iain Dunning and Miles Lubin
-# http://www.github.com/IainNZ/JuMP.jl
-###############################################################################
+# An algebraic modelling langauge for Julia
+# See http://github.com/JuliaOpt/JuMP.jl
+#############################################################################
 
 import Base.getindex
 import Base.setindex!
