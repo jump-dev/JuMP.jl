@@ -16,6 +16,7 @@ function solve(m::Model)
 end
 
 function gurobiCheck(m::Model, ismip = false)
+    return false
     solvermodule = ismip ? m.mipsolver.solvermodule : m.lpsolver.solvermodule 
     if length(m.obj.qvars1) != 0 || length(m.quadconstr) != 0
 
@@ -32,16 +33,11 @@ function gurobiCheck(m::Model, ismip = false)
     return false
 end
 
-function quadraticGurobi(m::Model, solvermodule, ismip = false)
-    # ugly hack for now until we get CoinMP to support setting objective senses
-    doflip = false
-    if ismip && m.objSense == :Max
-        doflip = true
-    end
+function quadraticGurobi(m::Model, solvermodule)
 
     if length(m.obj.qvars1) != 0
         gurobisolver = getrawsolver(m.internalModel)
-        solvermodule.add_qpterms!(gurobisolver, [v.col for v in m.obj.qvars1], [v.col for v in m.obj.qvars2], !doflip ? m.obj.qcoeffs : -m.obj.qcoeffs)
+        solvermodule.add_qpterms!(gurobisolver, [v.col for v in m.obj.qvars1], [v.col for v in m.obj.qvars2], m.obj.qcoeffs)
     end
 
 # Add quadratic constraint to solver
@@ -139,17 +135,14 @@ function solveLP(m::Model)
 
     callgurobi = gurobiCheck(m)
 
-    solvermodule = m.lpsolver.solvermodule
-    m.internalModel = solvermodule.model(;m.lpsolver.options...)
-    loadproblem(m.internalModel, A, m.colLower, m.colUpper, f, rowlb, rowub)
+    m.internalModel = model(m.lpsolver)
+    loadproblem!(m.internalModel, A, m.colLower, m.colUpper, f, rowlb, rowub, m.objSense)
 
     if callgurobi
         quadraticGurobi(m, solvermodule)
     end
 
-    setsense(m.internalModel, m.objSense)
-
-    optimize(m.internalModel)
+    optimize!(m.internalModel)
     stat = status(m.internalModel)
 
     if stat != :Optimal
@@ -188,20 +181,16 @@ function solveMIP(m::Model)
     
     callgurobi = gurobiCheck(m, true)
    
-    solvermodule = m.mipsolver.solvermodule
-    m.internalModel = solvermodule.model(;m.mipsolver.options...)
-    # CoinMP doesn't support obj senses...
-    if m.objSense == :Max
-        f = -f
-    end
-    loadproblem(m.internalModel, A, m.colLower, m.colUpper, f, rowlb, rowub)
-    setvartype(m.internalModel, vartype)
+    m.internalModel = model(m.mipsolver)
+    
+    loadproblem!(m.internalModel, A, m.colLower, m.colUpper, f, rowlb, rowub, m.objSense)
+    setvartype!(m.internalModel, vartype)
 
     if callgurobi
-        quadraticGurobi(m, solvermodule, true)
+        quadraticGurobi(m, solvermodule)
     end
 
-    optimize(m.internalModel)
+    optimize!(m.internalModel)
     stat = status(m.internalModel)
 
     if stat != :Optimal
@@ -212,9 +201,6 @@ function solveMIP(m::Model)
     try
         # store solution values in model
         m.objVal = getobjval(m.internalModel)
-        if m.objSense == :Max
-            m.objVal = -m.objVal
-        end
         m.objVal += m.obj.aff.constant
         m.colVal = getsolution(m.internalModel)
     end
