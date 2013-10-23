@@ -18,13 +18,13 @@ one of the symbols ``:Min`` or ``:Max``::
 The constructor also accepts two optional keyword arguments, ``lpsolver``,
 and ``mipsolver``, which can be used to change the default solver behavior.
 
-``lpsolver`` must be an ``LPSolver`` object, which is constructed as follows::
+``lpsolver`` must be an ``AbstractMathProgSolver`` object, which is constructed as follows::
 
-    solver = LPSolver(solvername, Option1=Value1, Option2=Value2, ...)
+    solver = solvername(Option1=Value1, Option2=Value2, ...)
 
-where ``solvername`` is one of the suppored solvers (``:Clp``, ``:GLPK``, and ``:Gurobi``). All options are solver-dependent; see corresponding solver packages for more information. 
+where ``solvername`` is one of the suppored LP solvers (``ClpSolver``, ``GLPKSolverLP``, and ``GurobiSolver``). To use these objects, the corresponding modules (``Clp``, ``GLPKMathProgInterface``, and ``Gurobi``, respectively) must be first loaded. All options are solver-dependent; see corresponding solver packages for more information. 
 
-``mipsolver`` must be a ``MIPSolver`` object, which is built similarly to ``LPSolver``. The currently supported solvers are ``:Cbc``, ``:GLPK``, and ``:Gurobi``.
+``mipsolver`` must also be an ``AbstractMathProgSolver`` object which supports integer variables. The currently supported solvers are ``CbcSolver`` (in the ``Cbc`` package), ``GLPKSolverMIP`` (in the ``GLPKMathProgInterface`` package), and ``GurobiSolver`` (in the ``Gurobi`` package).
 
 .. note::
     Currently, the ``mipsolver`` solver is used for any problem with integer variables present. The ``lpsolver`` solver is used for all other problems, including those with continuous variables and **quadratic objectives and/or constraints**.
@@ -32,7 +32,7 @@ where ``solvername`` is one of the suppored solvers (``:Clp``, ``:GLPK``, and ``
 As an example, we can create a ``Model`` object that will use GLPK's
 exact solver for LPs as follows::
     
-    m = Model(:Min, lpsolver = LPSolver(:GLPK, GLPKmethod=:Exact))
+    m = Model(:Min, lpsolver = GLPKSolverLP(method=:Exact))
 
 
 Methods

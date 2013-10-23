@@ -1,3 +1,7 @@
+if Pkg.installed("Gurobi") != nothing
+  eval(Expr(:using,:Gurobi))
+end
+
 function solve(m::Model)
   # Analyze model to see if any integers
   anyInts = false
@@ -16,11 +20,10 @@ function solve(m::Model)
 end
 
 function gurobiCheck(m::Model, ismip = false)
-    return false
-    solvermodule = ismip ? m.mipsolver.solvermodule : m.lpsolver.solvermodule 
+    solver = ismip ? m.mipsolver : m.lpsolver
     if length(m.obj.qvars1) != 0 || length(m.quadconstr) != 0
 
-        if string(solvermodule) != "Gurobi"
+        if !isa(solver,GurobiSolver)
             error("Quadratic objectives/constraints are currently only supported using Gurobi")
         end
         if !ismip
@@ -33,11 +36,11 @@ function gurobiCheck(m::Model, ismip = false)
     return false
 end
 
-function quadraticGurobi(m::Model, solvermodule)
+function quadraticGurobi(m::Model)
 
     if length(m.obj.qvars1) != 0
         gurobisolver = getrawsolver(m.internalModel)
-        solvermodule.add_qpterms!(gurobisolver, [v.col for v in m.obj.qvars1], [v.col for v in m.obj.qvars2], m.obj.qcoeffs)
+        add_qpterms!(gurobisolver, Cint[v.col for v in m.obj.qvars1], Cint[v.col for v in m.obj.qvars2], m.obj.qcoeffs)
     end
 
 # Add quadratic constraint to solver
@@ -48,18 +51,18 @@ function quadraticGurobi(m::Model, solvermodule)
             error("Invalid sense for quadratic constraint")
         end
 
-        solvermodule.add_qconstr!(gurobisolver, 
-                                  [v.col for v in qconstr.terms.aff.vars], 
+        add_qconstr!(gurobisolver, 
+                                  Cint[v.col for v in qconstr.terms.aff.vars], 
                                   qconstr.terms.aff.coeffs, 
-                                  [v.col for v in qconstr.terms.qvars1], 
-                                  [v.col for v in qconstr.terms.qvars2], 
+                                  Cint[v.col for v in qconstr.terms.qvars1], 
+                                  Cint[v.col for v in qconstr.terms.qvars2], 
                                   qconstr.terms.qcoeffs, 
                                   s, 
                                   -qconstr.terms.aff.constant)
     end
 
     if length(m.quadconstr) > 0
-        solvermodule.update_model!(gurobisolver)
+        update_model!(gurobisolver)
     end
 end
 
@@ -139,7 +142,7 @@ function solveLP(m::Model)
     loadproblem!(m.internalModel, A, m.colLower, m.colUpper, f, rowlb, rowub, m.objSense)
 
     if callgurobi
-        quadraticGurobi(m, solvermodule)
+        quadraticGurobi(m)
     end
 
     optimize!(m.internalModel)
@@ -187,7 +190,7 @@ function solveMIP(m::Model)
     setvartype!(m.internalModel, vartype)
 
     if callgurobi
-        quadraticGurobi(m, solvermodule)
+        quadraticGurobi(m)
     end
 
     optimize!(m.internalModel)
