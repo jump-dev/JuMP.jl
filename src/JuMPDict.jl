@@ -25,8 +25,8 @@ macro gendict(instancename,T,idxsets...)
             dictnames[i] = gensym()
         end
     end
-    #typecode = :(type $(esc(typename)); innerArray::Array{$T,$N}; name::String; end)
-    typecode = :(type $(typename){T} <: JuMPDict; innerArray::Array{T,$N}; name::String; end)
+    typecode = :(type $(typename){T} <: JuMPDict; innerArray::Array{T,$N}; name::String;
+        indexsets end)
     builddicts = quote end
     for i in 1:N
         if !isrange[i]
@@ -44,7 +44,7 @@ macro gendict(instancename,T,idxsets...)
     getidxrhs = :(getindex(d.innerArray))
     setidxrhs = :(setindex!(d.innerArray,val))
     maplhs = :(mapvals(f,d::$(typename)))
-    maprhs = :($(typename)(map(f,d.innerArray),d.name))
+    maprhs = :($(typename)(map(f,d.innerArray),d.name,d.indexsets))
     for i in 1:N
         varname = symbol(string("x",i))
         
@@ -64,9 +64,8 @@ macro gendict(instancename,T,idxsets...)
         end
     end
 
-    #funcs = :($(esc(getidxlhs)) = $(esc(getidxrhs)); $(esc(setidxlhs)) = $(esc(setidxrhs)))
     funcs = :($getidxlhs = $getidxrhs; $setidxlhs = $setidxrhs; $maplhs = $maprhs)
-    geninstance = :($(esc(instancename)) = $(typename)(Array($T),$(string(instancename))))
+    geninstance = :($(esc(instancename)) = $(typename)(Array($T),$(string(instancename)),$(esc(Expr(:tuple,idxsets...)))))
     for i in 1:N
         push!(geninstance.args[2].args[2].args, :(length($(esc(idxsets[i])))))
         if !isrange[i]
