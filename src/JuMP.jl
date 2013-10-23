@@ -13,8 +13,8 @@ module JuMP
 
 # Use the standard solver interface for LPs and MIPs
 using MathProgBase
-require(joinpath(Pkg.dir("MathProgBase"),"src","LinprogSolverInterface.jl"))
-using LinprogSolverInterface
+require(joinpath(Pkg.dir("MathProgBase"),"src","MathProgSolverInterface.jl"))
+using MathProgSolverInterface
 
 importall Base
 
@@ -75,12 +75,12 @@ type Model
   # internal solver model object
   internalModel
   # Solver+option objects from MathProgBase
-  lpsolver::LPSolver
-  mipsolver::MIPSolver
+  lpsolver::AbstractMathProgSolver
+  mipsolver::AbstractMathProgSolver
 end
 
 # Default constructor
-function Model(sense::Symbol;lpsolver=LPSolver(),mipsolver=MIPSolver())
+function Model(sense::Symbol;lpsolver=MathProgBase.defaultLPsolver,mipsolver=MathProgBase.defaultMIPsolver)
   if (sense != :Max && sense != :Min)
      error("Model sense must be :Max or :Min")
   end
