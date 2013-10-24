@@ -204,7 +204,7 @@ function affToStr(a::AffExpr, showConstant=true)
   end
 
   # Stringify the terms
-  termStrings = Array(ASCIIString, 2*length(a.vars)-1)
+  termStrings = Array(UTF8String, 2*length(a.vars)-1)
   if indvec.nnz > 0
     idx = indvec.nzidx[1]
     firstString = "$(indvec.elts[idx]) $(getName(m,idx))"
@@ -258,25 +258,31 @@ function quadToStr(q::QuadExpr)
     return affToStr(q.aff)
   end
 
-  termStrings = Array(ASCIIString, 2*length(q.qvars1))
+  termStrings = Array(UTF8String, 2*length(q.qvars1))
   if length(q.qvars1) > 0
     if q.qcoeffs[1] < 0
       termStrings[1] = "-"
     else
       termStrings[1] = ""
     end
-    termStrings[2] = string(abs(q.qcoeffs[1])," ",
-                            getName(q.qvars1[1]),"*",
-                            getName(q.qvars2[1]))
-    for ind in 2:length(q.qvars1)
-      if q.qcoeffs[ind] < 0
-        termStrings[2*ind-1] = " - "
-      else 
-        termStrings[2*ind-1] = " + "
+    for ind in 1:length(q.qvars1)
+      if ind >= 2
+        if q.qcoeffs[ind] < 0
+          termStrings[2*ind-1] = " - "
+        else 
+          termStrings[2*ind-1] = " + "
+        end
       end
-      termStrings[2*ind] = string(abs(q.qcoeffs[ind])," ",
-                                  getName(q.qvars1[ind]),"*",
-                                  getName(q.qvars2[ind]))
+      if q.qvars1[ind].col == q.qvars2[ind].col
+        # Squared term
+        termStrings[2*ind] = string(abs(q.qcoeffs[ind])," ",
+                                    getName(q.qvars1[ind]),"²")
+      else
+        # Normal term
+        termStrings[2*ind] = string(abs(q.qcoeffs[ind])," ",
+                                    getName(q.qvars1[ind]),"*",
+                                    getName(q.qvars2[ind]))
+      end
     end
   end
   ret = join(termStrings)

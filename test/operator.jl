@@ -16,6 +16,8 @@ q = 2.5 * y * z + aff
 @test quadToStr(q) == "2.5 z*y + 7.1 x + 2.5"
 q2 = 8.0 * x * z + aff2
 @test quadToStr(q2) == "8.0 z*x + 1.2 y + 1.2"
+q3 = 2.0 * x * x + 1.0 * y * y + z + 3.0
+@test quadToStr(q3) == "2.0 x² + 1.0 y² + 1.0 z + 3.0"
 
 # Different objects that must all interact:
 # 1. Number
