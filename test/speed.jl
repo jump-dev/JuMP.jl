@@ -9,8 +9,9 @@
 # Examples taken from the Lubin, Dunning paper.
 # 
 # Post past results here
-# -------------------------
-# 2013/10/05  Iain's Dell Laptop     ee443c8d6a779ff74373178dbd6086b1912c5f5e
+# ---------------------------------------------------------------------------
+# Iain's Dell Laptop
+# 2013/10/05  ee443c8d6a779ff74373178dbd6086b1912c5f5e
 # Run 1
 # PMEDIAN BUILD MIN=0.37519394   MED=0.72586158
 # PMEDIAN WRITE MIN=1.551488986  MED=1.62851847
@@ -21,6 +22,19 @@
 # PMEDIAN WRITE MIN=1.55169788   MED=1.580791808
 # CONT5 BUILD   MIN=0.248255523  MED=0.454527841
 # CONT5 WRITE   MIN=1.60369395   MED=1.638122135
+# ---------------------------------------------------------------------------
+# Iain's Desktop
+# 2013/10/23  d8c64fd341801a5c266597df4ec52377f42a5260
+# Run 1
+# PMEDIAN BUILD MIN=0.267263966  MED=0.272618701
+# PMEDIAN WRITE MIN=1.263382472  MED=1.26997836
+# CONT5 BUILD   MIN=0.118468756  MED=0.18796253
+# CONT5 WRITE   MIN=1.309088036  MED=1.325527758
+# Run 2
+# PMEDIAN BUILD MIN=0.271933082  MED=0.274442777
+# PMEDIAN WRITE MIN=1.29212427   MED=1.30086527
+# CONT5 BUILD   MIN=0.123911798  MED=0.193959468
+# CONT5 WRITE   MIN=1.293636495  MED=1.305372909
 #############################################################################
 
 using JuMP
@@ -125,8 +139,8 @@ function RunTests()
   end
   sort!(pmedian_build)
   sort!(pmedian_write)
-  print("PMEDIAN BUILD MIN=",min(pmedian_build),"  MED=",pmedian_build[5],"\n")
-  print("PMEDIAN WRITE MIN=",min(pmedian_write),"  MED=",pmedian_write[5],"\n")
+  print("PMEDIAN BUILD MIN=",minimum(pmedian_build),"  MED=",pmedian_build[5],"\n")
+  print("PMEDIAN WRITE MIN=",minimum(pmedian_write),"  MED=",pmedian_write[5],"\n")
 
   # Cont5
   cont5_build = Float64[]
@@ -138,8 +152,8 @@ function RunTests()
   end
   sort!(cont5_build)
   sort!(cont5_write)
-  print("CONT5 BUILD   MIN=",min(cont5_build),"  MED=",cont5_build[5],"\n")
-  print("CONT5 WRITE   MIN=",min(cont5_write),"  MED=",cont5_write[5],"\n")
+  print("CONT5 BUILD   MIN=",minimum(cont5_build),"  MED=",cont5_build[5],"\n")
+  print("CONT5 WRITE   MIN=",minimum(cont5_write),"  MED=",cont5_write[5],"\n")
 
 end
 
