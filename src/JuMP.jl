@@ -383,6 +383,10 @@ end
 
 getDual(c::ConstraintRef{LinearConstraint}) = c.m.linconstrDuals[c.idx]
 
+print(io::IO, c::ConstraintRef{LinearConstraint}) = print(io, conToStr(c.m.linconstr[c.idx]))
+print(io::IO, c::ConstraintRef{QuadConstraint}) = print(io, conToStr(c.m.quadconstr[c.idx]))
+show{T}(io::IO, c::ConstraintRef{T}) = print(io, c)
+
 ##########################################################################
 # Operator overloads
 include("operators.jl")
