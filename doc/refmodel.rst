@@ -22,7 +22,7 @@ and ``mipsolver``, which can be used to change the default solver behavior.
 
     solver = solvername(Option1=Value1, Option2=Value2, ...)
 
-where ``solvername`` is one of the suppored LP solvers (``ClpSolver``, ``GLPKSolverLP``, and ``GurobiSolver``). To use these objects, the corresponding modules (``Clp``, ``GLPKMathProgInterface``, and ``Gurobi``, respectively) must be first loaded. All options are solver-dependent; see corresponding solver packages for more information. 
+where ``solvername`` is one of the supported LP solvers (``ClpSolver``, ``GLPKSolverLP``, and ``GurobiSolver``). To use these objects, the corresponding modules (``Clp``, ``GLPKMathProgInterface``, and ``Gurobi``, respectively) must be first loaded. All options are solver-dependent; see corresponding solver packages for more information. 
 
 ``mipsolver`` must also be an ``AbstractMathProgSolver`` object which supports integer variables. The currently supported solvers are ``CbcSolver`` (in the ``Cbc`` package), ``GLPKSolverMIP`` (in the ``GLPKMathProgInterface`` package), and ``GurobiSolver`` (in the ``Gurobi`` package).
 

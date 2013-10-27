@@ -63,7 +63,7 @@ Methods
 **Values After Solution**
 
 * ``getValue(x)`` - Get the value of this variable in the solution. If ``x`` is a single variable, this will simply return a number. If ``x`` is indexable then it will return an indexable dictionary of values.
-* ``getDual(x)`` - Get the reduced cost of this variable in the solution. Similar behaviour to ``getValue`` for indexable variables.
+* ``getDual(x)`` - Get the reduced cost of this variable in the solution. Similar behavior to ``getValue`` for indexable variables.
 
 **Names**
 
