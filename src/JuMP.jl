@@ -216,28 +216,32 @@ function affToStr(a::AffExpr, showConstant=true)
     addelt(indvec, a.vars[ind].col, a.coeffs[ind])
   end
 
-  # Stringify the terms
-  termStrings = Array(UTF8String, 2*length(a.vars)-1)
-  if indvec.nnz > 0
-    idx = indvec.nzidx[1]
-    firstString = "$(indvec.elts[idx]) $(getName(m,idx))"
-  end
-
-  numTerms = 0
-  for i in 2:indvec.nnz
-    numTerms += 1
+  elm = 0
+  termStrings = Array(UTF8String, 2*length(a.vars))
+  for i in 1:indvec.nnz
     idx = indvec.nzidx[i]
-    if indvec.elts[idx] < 0
-      termStrings[2*numTerms-1] = " - "
-    else
-      termStrings[2*numTerms-1] = " + "
+    if abs(indvec.elts[idx]) > 1e-20
+      if elm == 0
+        elm += 1
+        termStrings[1] = "$(indvec.elts[idx]) $(getName(m,idx))"
+      else 
+        if indvec.elts[idx] < 0
+          termStrings[2*elm] = " - "
+        else
+          termStrings[2*elm] = " + "
+        end
+        termStrings[2*elm+1] = "$(abs(indvec.elts[idx])) $(getName(m,idx))"
+        elm += 1
+      end
     end
-    termStrings[2*numTerms] = "$(abs(indvec.elts[idx])) $(getName(m,idx))"
   end
 
-  # And then connect them up with +s
-  # ret = join(termStrings[1:numTerms], " + ")
-  ret = join([firstString, termStrings[1:(2*numTerms)]])
+  if elm == 0
+    ret = "0.0"
+  else
+    # And then connect them up with +s
+    ret = join(termStrings[1:(2*elm-1)])
+  end
   
   if abs(a.constant) >= 0.000001 && showConstant
     if a.constant < 0
