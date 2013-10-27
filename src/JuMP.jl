@@ -21,8 +21,6 @@ importall Base
 export
 # Objects
   Model, Variable, AffExpr, QuadExpr, LinearConstraint, QuadConstraint, MultivarDict,
-# Reexported from MathProgBase
-  LPSolver, MIPSolver,
 # Functions
   # Relevant to all
   print,show,
