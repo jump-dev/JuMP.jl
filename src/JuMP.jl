@@ -156,15 +156,26 @@ getUpper(v::Variable) = v.m.colUpper[v.col]
 
 # Value setter/getter
 function setValue(v::Variable, val::Number)
-    if length(v.m.colVal) < v.col
-        resize!(v.m.colVal,v.m.numCols)
-    end
-    v.m.colVal[v.col] = val
+  if length(v.m.colVal) < v.col
+    resize!(v.m.colVal,v.m.numCols)
+  end
+  v.m.colVal[v.col] = val
 end
-getValue(v::Variable) = v.m.colVal[v.col]
+
+function getValue(v::Variable) 
+  if length(v.m.colVal) != getNumVars(v.m)
+    error("Variable values not available. Check that the model was properly solved.")
+  end
+  return v.m.colVal[v.col]
+end
 
 # Dual value (reduced cost) getter
-getDual(v::Variable) = v.m.redCosts[v.col]
+function getDual(v::Variable) 
+  if length(v.m.redCosts) != getNumVars(v.m)
+    error("Variable bound duals (reduced costs) not available. Check that the model was properly solved and no integer variables are present.")
+  end
+  return v.m.redCosts[v.col]
+end
 
 ###############################################################################
 # Generic affine expression class
@@ -385,7 +396,12 @@ immutable ConstraintRef{T<:JuMPConstraint}
   idx::Int
 end
 
-getDual(c::ConstraintRef{LinearConstraint}) = c.m.linconstrDuals[c.idx]
+function getDual(c::ConstraintRef{LinearConstraint}) 
+  if length(c.m.linconstrDuals) != getNumConstraints(c.m)
+    error("Dual solution not available. Check that the model was properly solved and no integer variables are present.")
+  end
+  return c.m.linconstrDuals[c.idx]
+end
 
 print(io::IO, c::ConstraintRef{LinearConstraint}) = print(io, conToStr(c.m.linconstr[c.idx]))
 print(io::IO, c::ConstraintRef{QuadConstraint}) = print(io, conToStr(c.m.quadconstr[c.idx]))
