@@ -200,7 +200,11 @@ show(io::IO, a::AffExpr) = print(io, affToStr(a))
 
 function affToStr(a::AffExpr, showConstant=true)
   if length(a.vars) == 0
-    return string(a.constant)
+    if showConstant
+      return string(a.constant)
+    else
+      return "0.0"
+    end
   end
 
   # Get reference to model
