@@ -29,7 +29,7 @@ programs, you just need to say::
     using JuMP
 
 Models are created with the ``Model()`` function. This function takes one
-argument, the model sense. The two options are ``:Max`` and ``:Min`::
+argument, the model sense. The two options are ``:Max`` and ``:Min``::
 
     m = Model(:Max)
 
@@ -63,14 +63,19 @@ constraints using ``==`` and greater-than-or-equal-to constraints with ``>=``::
     @addConstraint(m, 1x + 5y <= 3.0 )
 
 If you want to see what your model looks like in a human-readable format,
-the ``print`` function is defined for models.::
+the ``print`` function is defined for models.
+
+::
 
     print(m)
 
 Models are solved with the ``solve()`` function. This function will not raise
 an error if your model is infeasible - instead it will return a flag. In this 
 case, the model is feasible so the value of ``status`` will be ``:Optimal``, 
-where ``:`` again denotes a symbol. See SECTIONREF for all options.::
+where ``:`` again denotes a symbol. The possible values of ``status``
+are described in the `MathProgBase documentation <http://mathprogbasejl.readthedocs.org/en/latest/mathprogbase.html>`_.
+
+::
 
     status = solve(m)
 
@@ -81,7 +86,9 @@ value is simple::
 
 To get the value from a variable, we call the ``getValue()`` function. If ``x``
 is not a single variable, but instead a range of variables, ``getValue()`` will
-return a list. In this case, however, it will just return a single value.::
+return a list. In this case, however, it will just return a single value.
+
+::
     
     println("x = ", getValue(x))
     println("y = ", getValue(y))
