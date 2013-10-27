@@ -29,6 +29,12 @@ function addToExpression(aff::AffExpr,c::Number,x::Number)
     aff.constant += c*x
 end
 
+function addToExpression(aff::AffExpr,c::Number,x::AffExpr)
+    append!(aff.vars, x.vars)
+    append!(aff.coeffs, c*x.coeffs)
+    aff.constant += c*x.constant
+end
+
 function parseCurly(x::Expr, aff::Symbol, constantCoef)
     if (x.args[1] != :sum)
         error("Expected sum outside curly braces")

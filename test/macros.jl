@@ -54,3 +54,14 @@ let
     @addConstraint(m, sum{ C[i,j]*x[i,j], i = 1:3, j = 1:i} == 0);
     @test conToStr(m.linconstr[end]) == "1.0 _col1 + 4.0 _col4 + 5.0 _col5 + 7.0 _col7 + 8.0 _col8 + 9.0 _col9 == 0.0"
 end
+
+let
+    m = Model(:Max)
+    @defVar(m, x)
+    @defVar(m, y)
+    temp = x + 2y + 1
+    @addConstraint(m, 3*temp - x - 2 >= 0)
+    @test conToStr(m.linconstr[end]) == "6.0 y + 2.0 x >= -1.0"
+end
+
+
