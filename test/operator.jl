@@ -68,6 +68,7 @@ q3 = 2.0 * x * x + 1.0 * y * y + z + 3.0
 @test affToStr(w + x) == "1.0 w + 1.0 x"
 @test affToStr(w - x) == "1.0 w - 1.0 x"
 @test quadToStr(w * x) == "1.0 w*x"
+@test affToStr(x - x) == "0.0"
 @test_throws w / x
 @test conToStr(w <= x) == "1.0 w - 1.0 x <= 0.0"
 @test conToStr(w == x) == "1.0 w - 1.0 x == 0.0"
@@ -75,6 +76,9 @@ q3 = 2.0 * x * x + 1.0 * y * y + z + 3.0
 @test conToStr(y*z <= x) == "1.0 y*z - 1.0 x <= 0"
 @test conToStr(y*z == x) == "1.0 y*z - 1.0 x == 0"
 @test conToStr(y*z >= x) == "1.0 y*z - 1.0 x >= 0"
+@test conToStr(x <= x) == "0.0 <= 0.0"
+@test conToStr(x == x) == "0.0 == 0.0"
+@test conToStr(x >= x) == "0.0 >= 0.0"
 # 2-3 Variable--AffExpr
 @test affToStr(z + aff) == "7.1 x + 1.0 z + 2.5"
 @test affToStr(z - aff) == "-7.1 x + 1.0 z - 2.5"
@@ -83,6 +87,9 @@ q3 = 2.0 * x * x + 1.0 * y * y + z + 3.0
 @test conToStr(z <= aff) == "-7.1 x + 1.0 z <= 2.5"
 @test conToStr(z == aff) == "-7.1 x + 1.0 z == 2.5"
 @test conToStr(z >= aff) == "-7.1 x + 1.0 z >= 2.5"
+@test conToStr(7.1 * x - aff <= 0) == "0.0 <= 2.5"
+@test conToStr(7.1 * x - aff == 0) == "0.0 == 2.5"
+@test conToStr(7.1 * x - aff >= 0) == "0.0 >= 2.5"
 # 2-4 Variable--QuadExpr
 @test quadToStr(w + q) == "2.5 z*y + 7.1 x + 1.0 w + 2.5"
 @test quadToStr(w - q) == "-2.5 z*y - 7.1 x + 1.0 w - 2.5"
@@ -110,6 +117,9 @@ q3 = 2.0 * x * x + 1.0 * y * y + z + 3.0
 @test conToStr(aff <= z) == "7.1 x - 1.0 z <= -2.5"
 @test conToStr(aff == z) == "7.1 x - 1.0 z == -2.5"
 @test conToStr(aff >= z) == "7.1 x - 1.0 z >= -2.5"
+@test conToStr(aff - 7.1 * x <= 0) == "0.0 <= -2.5"
+@test conToStr(aff - 7.1 * x == 0) == "0.0 == -2.5"
+@test conToStr(aff - 7.1 * x >= 0) == "0.0 >= -2.5"
 
 
 # 3-3 AffExpr--AffExpr
@@ -120,6 +130,9 @@ q3 = 2.0 * x * x + 1.0 * y * y + z + 3.0
 @test conToStr(aff <= aff2) == "7.1 x - 1.2 y <= -1.3"
 @test conToStr(aff == aff2) == "7.1 x - 1.2 y == -1.3"
 @test conToStr(aff >= aff2) == "7.1 x - 1.2 y >= -1.3"
+@test conToStr(aff-aff <= 0) == "0.0 <= 0.0"
+@test conToStr(aff-aff == 0) == "0.0 == 0.0"
+@test conToStr(aff-aff >= 0) == "0.0 >= 0.0"
 # 3-4 AffExpr--QuadExpr
 @test quadToStr(aff2 + q) == "2.5 z*y + 1.2 y + 7.1 x + 3.7"
 @test quadToStr(aff2 - q) == "-2.5 z*y + 1.2 y - 7.1 x - 1.3"
