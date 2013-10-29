@@ -14,10 +14,12 @@ using JuMP
 # Only solver supported that can solve QCPs so far is Gurobi.
 if Pkg.installed("Gurobi") == nothing
   error("Must have Gurobi available for quadratic constraints")
+else
+  using Gurobi
 end
 
 # Maximization problem
-m = Model(:Max, lpsolver=LPSolver(:Gurobi))
+m = Model(:Max, lpsolver=GurobiSolver())
 
 # Need nonnegativity for (rotated) second-order cone
 @defVar(m, x)
