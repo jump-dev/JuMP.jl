@@ -163,7 +163,7 @@ function setValue(v::Variable, val::Number)
 end
 
 function getValue(v::Variable) 
-  if length(v.m.colVal) != getNumVars(v.m)
+  if length(v.m.colVal) < getNumVars(v.m)
     error("Variable values not available. Check that the model was properly solved.")
   end
   return v.m.colVal[v.col]
@@ -171,7 +171,7 @@ end
 
 # Dual value (reduced cost) getter
 function getDual(v::Variable) 
-  if length(v.m.redCosts) != getNumVars(v.m)
+  if length(v.m.redCosts) < getNumVars(v.m)
     error("Variable bound duals (reduced costs) not available. Check that the model was properly solved and no integer variables are present.")
   end
   return v.m.redCosts[v.col]
