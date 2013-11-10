@@ -72,9 +72,8 @@ type Model
   linconstrDuals::Vector{Float64}
   # internal solver model object
   internalModel
-  # Solver+option objects from MathProgBase
-  lpsolver::AbstractMathProgSolver
-  mipsolver::AbstractMathProgSolver
+  # Solver+option object from MathProgBase
+  solver::AbstractMathProgSolver
   # true if we haven't solved yet
   firstsolve::Bool
 end
@@ -89,7 +88,7 @@ function Model(sense::Symbol;lpsolver=MathProgBase.defaultLPsolver,mipsolver=Mat
     # use default solvers
     Model(QuadExpr(),sense,LinearConstraint[], QuadConstraint[],
           0,String[],Float64[],Float64[],Int[],
-          0,Float64[],Float64[],Float64[],nothing,MathProgBase.defaultLPsolver,MathProgBase.defaultMIPsolver,true)
+          0,Float64[],Float64[],Float64[],nothing,MathProgBase.MissingSolver("",Symbol[]),true)
   else
     if !isa(solver,AbstractMathProgSolver)
       error("solver argument ($solver) must be an AbstractMathProgSolver")
@@ -97,7 +96,7 @@ function Model(sense::Symbol;lpsolver=MathProgBase.defaultLPsolver,mipsolver=Mat
     # user-provided solver must support problem class
     Model(QuadExpr(),sense,LinearConstraint[], QuadConstraint[],
           0,String[],Float64[],Float64[],Int[],
-          0,Float64[],Float64[],Float64[],nothing,solver,solver,true)
+          0,Float64[],Float64[],Float64[],nothing,solver,true)
   end
 end
 
@@ -110,7 +109,7 @@ function Model(;solver=nothing,lpsolver=MathProgBase.defaultLPsolver,mipsolver=M
     # use default solvers
     Model(QuadExpr(),:Min,LinearConstraint[], QuadConstraint[],
           0,String[],Float64[],Float64[],Int[],
-          0,Float64[],Float64[],Float64[],nothing,MathProgBase.defaultLPsolver,MathProgBase.defaultMIPsolver,true)
+          0,Float64[],Float64[],Float64[],nothing,MathProgBase.MissingSolver("",Symbol[]),true)
   else
     if !isa(solver,AbstractMathProgSolver)
       error("solver argument ($solver) must be an AbstractMathProgSolver")
@@ -118,7 +117,7 @@ function Model(;solver=nothing,lpsolver=MathProgBase.defaultLPsolver,mipsolver=M
     # user-provided solver must support problem class
     Model(QuadExpr(),:Min,LinearConstraint[], QuadConstraint[],
           0,String[],Float64[],Float64[],Int[],
-          0,Float64[],Float64[],Float64[],nothing,solver,solver,true)
+          0,Float64[],Float64[],Float64[],nothing,solver,true)
   end
 end
 

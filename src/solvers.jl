@@ -13,23 +13,37 @@ function solve(m::Model)
   end
 	
   if anyInts
-   solveMIP(m)
+    if isa(m.solver,MathProgBase.MissingSolver)
+      m.solver = MathProgBase.defaultMIPsolver
+      s = solveMIP(m)
+      # Clear solver in case we change problem types
+      m.solver = MathProgBase.MissingSolver("",Symbol[])
+      return s
+    else
+      solveMIP(m)
+    end
   else
-   solveLP(m)
+    if isa(m.solver,MathProgBase.MissingSolver)
+      m.solver = MathProgBase.defaultLPsolver
+      s = solveLP(m)
+      m.solver = MathProgBase.MissingSolver("",Symbol[])
+      return s
+    else
+      solveLP(m)
+    end
   end
 end
 
 function gurobiCheck(m::Model, ismip = false)
-    solver = ismip ? m.mipsolver : m.lpsolver
     if length(m.obj.qvars1) != 0 || length(m.quadconstr) != 0
 
-        if !isa(solver,GurobiSolver)
+        if !isa(m.solver,GurobiSolver)
             error("Quadratic objectives/constraints are currently only supported using Gurobi")
         end
         if !ismip
             # Gurobi by default will not compute duals
             # if quadratic constraints are present.
-            push!(m.lpsolver.options,(:QCPDual,1))
+            push!(m.solver.options,(:QCPDual,1))
         end
         return true
     end
@@ -138,7 +152,7 @@ function solveLP(m::Model)
 
     callgurobi = gurobiCheck(m)
 
-    m.internalModel = model(m.lpsolver)
+    m.internalModel = model(m.solver)
     loadproblem!(m.internalModel, A, m.colLower, m.colUpper, f, rowlb, rowub, m.objSense)
 
     if callgurobi
@@ -184,7 +198,7 @@ function solveMIP(m::Model)
     
     callgurobi = gurobiCheck(m, true)
    
-    m.internalModel = model(m.mipsolver)
+    m.internalModel = model(m.solver)
     
     loadproblem!(m.internalModel, A, m.colLower, m.colUpper, f, rowlb, rowub, m.objSense)
     setvartype!(m.internalModel, vartype)
