@@ -161,3 +161,34 @@ let
     @test status == :Optimal
     @test_approx_eq getValue(x) 1.0
 end
+
+
+#####################################################################
+# Test model copying
+let
+    source = Model()
+    @defVar(source, 2 <= x <= 5)
+    @defVar(source, 0 <= y <= 1, Int)
+    @setObjective(source, Max, 3*x + 1*y)
+    @addConstraint(source, x + 2.0*y <= 6)
+    addConstraint(source, x*x <= 1)
+
+    dest = copy(source)
+
+    # Obj
+    @setObjective(source, Max, 1x)
+    @test length(source.obj.aff.coeffs) == 1
+    @test length(dest.obj.aff.coeffs) == 2
+    @setObjective(dest, Max, 1x)
+    @test length(source.obj.aff.coeffs) == 1
+    @test length(dest.obj.aff.coeffs) == 1
+    @setObjective(dest, Max, 3*x + 1*y)
+    @test length(source.obj.aff.coeffs) == 1
+    @test length(dest.obj.aff.coeffs) == 2
+
+    # Constraints
+    source.linconstr[1].ub = 5.0
+    @test dest.linconstr[1].ub == 6.0
+    source.quadconstr[1].sense == :(>=)
+    @test dest.quadconstr[1].sense == :(<=)
+end    
