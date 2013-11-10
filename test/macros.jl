@@ -57,6 +57,17 @@ end
 
 let
     m = Model()
+    @defVar(m, x[1:3,1:3])
+    C = [1 2 3; 4 5 6; 7 8 9]
+    con = @addConstraint(m, sum{ C[i,j]*x[i,j], i = 1:3, j = 1:3; i != j} == 0)
+    @test conToStr(m.linconstr[end]) == "2.0 _col2 + 3.0 _col3 + 4.0 _col4 + 6.0 _col6 + 7.0 _col7 + 8.0 _col8 == 0.0"
+
+    @defVar(m, y, [con], [-1.0])
+    @test conToStr(m.linconstr[end]) == "2.0 _col2 + 3.0 _col3 + 4.0 _col4 + 6.0 _col6 + 7.0 _col7 + 8.0 _col8 - 1.0 y == 0.0"
+end
+
+let
+    m = Model()
     @defVar(m, x)
     @defVar(m, y)
     temp = x + 2y + 1

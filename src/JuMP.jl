@@ -75,6 +75,8 @@ type Model
   # Solver+option objects from MathProgBase
   lpsolver::AbstractMathProgSolver
   mipsolver::AbstractMathProgSolver
+  # true if we haven't solved yet
+  firstsolve::Bool
 end
 
 # Default constructor
@@ -87,7 +89,7 @@ function Model(sense::Symbol;lpsolver=MathProgBase.defaultLPsolver,mipsolver=Mat
     # use default solvers
     Model(QuadExpr(),sense,LinearConstraint[], QuadConstraint[],
           0,String[],Float64[],Float64[],Int[],
-          0,Float64[],Float64[],Float64[],nothing,MathProgBase.defaultLPsolver,MathProgBase.defaultMIPsolver)
+          0,Float64[],Float64[],Float64[],nothing,MathProgBase.defaultLPsolver,MathProgBase.defaultMIPsolver,true)
   else
     if !isa(solver,AbstractMathProgSolver)
       error("solver argument ($solver) must be an AbstractMathProgSolver")
@@ -95,7 +97,7 @@ function Model(sense::Symbol;lpsolver=MathProgBase.defaultLPsolver,mipsolver=Mat
     # user-provided solver must support problem class
     Model(QuadExpr(),sense,LinearConstraint[], QuadConstraint[],
           0,String[],Float64[],Float64[],Int[],
-          0,Float64[],Float64[],Float64[],nothing,solver,solver)
+          0,Float64[],Float64[],Float64[],nothing,solver,solver,true)
   end
 end
 
@@ -108,7 +110,7 @@ function Model(;solver=nothing,lpsolver=MathProgBase.defaultLPsolver,mipsolver=M
     # use default solvers
     Model(QuadExpr(),:Min,LinearConstraint[], QuadConstraint[],
           0,String[],Float64[],Float64[],Int[],
-          0,Float64[],Float64[],Float64[],nothing,MathProgBase.defaultLPsolver,MathProgBase.defaultMIPsolver)
+          0,Float64[],Float64[],Float64[],nothing,MathProgBase.defaultLPsolver,MathProgBase.defaultMIPsolver,true)
   else
     if !isa(solver,AbstractMathProgSolver)
       error("solver argument ($solver) must be an AbstractMathProgSolver")
@@ -116,7 +118,7 @@ function Model(;solver=nothing,lpsolver=MathProgBase.defaultLPsolver,mipsolver=M
     # user-provided solver must support problem class
     Model(QuadExpr(),:Min,LinearConstraint[], QuadConstraint[],
           0,String[],Float64[],Float64[],Int[],
-          0,Float64[],Float64[],Float64[],nothing,solver,solver)
+          0,Float64[],Float64[],Float64[],nothing,solver,solver,true)
   end
 end
 
@@ -173,6 +175,8 @@ end
 
 Variable(m::Model,lower::Number,upper::Number,cat::Int) =
   Variable(m,lower,upper,cat,"")
+
+
 
 # Name setter/getters
 setName(v::Variable,n::String) = (v.m.colNames[v.col] = n)
@@ -463,6 +467,24 @@ end
 print(io::IO, c::ConstraintRef{LinearConstraint}) = print(io, conToStr(c.m.linconstr[c.idx]))
 print(io::IO, c::ConstraintRef{QuadConstraint}) = print(io, conToStr(c.m.quadconstr[c.idx]))
 show{T}(io::IO, c::ConstraintRef{T}) = print(io, c)
+
+# add variable to existing constraints
+function Variable(m::Model,lower::Number,upper::Number,cat::Int,
+  constraints::Vector{ConstraintRef{LinearConstraint}},coefficients::Vector{Float64};
+  name::String="")
+    
+  v = Variable(m, lower, upper, cat, name)
+  # add to existing constraints
+  @assert length(constraints) == length(coefficients)
+  for i in 1:length(constraints)
+    c::LinearConstraint = m.linconstr[constraints[i].idx]
+    coef = coefficients[i]
+    push!(c.terms.vars,v)
+    push!(c.terms.coeffs,coef)
+  end
+
+  return v
+end
 
 ##########################################################################
 # Operator overloads

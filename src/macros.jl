@@ -207,15 +207,32 @@ macro defVar(m, x, extra...)
         ub = Inf
     end
     t = JuMP.CONTINUOUS
-    for opt in extra
-        if opt == :Int
-            t = JuMP.INTEGER
-        elseif opt == :Bin
-            t = JuMP.BINARY
-        else
-            error("Unrecognized argument $t")
+    if length(extra) > 0
+        gottype = 0
+        if extra[1] == :Int || extra[1] == :Bin
+            gottype = 1
+            if extra[1] == :Int
+                t = JuMP.INTEGER
+            else
+                t = JuMP.BINARY
+            end
+        end
+        if length(extra) - gottype == 2
+            # adding variable to existing constraints
+            cols = esc(extra[1+gottype])
+            coeffs = esc(extra[2+gottype])
+            if !isa(var,Symbol)
+                error("Cannot create multiple variables when adding to existing constraints")
+            end
+            return quote
+                $(esc(var)) = Variable($m,$lb,$ub,$t,$cols,$coeffs,name=$(string(var)))
+                nothing
+            end
+        elseif length(extra) - gottype != 0
+            error("Syntax error in defVar")
         end
     end
+
     #println("lb: $lb ub: $ub var: $var")      
     if isa(var,Symbol)
         # easy case
