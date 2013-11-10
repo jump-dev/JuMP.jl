@@ -62,7 +62,7 @@ let
     con = @addConstraint(m, sum{ C[i,j]*x[i,j], i = 1:3, j = 1:3; i != j} == 0)
     @test conToStr(m.linconstr[end]) == "2.0 _col2 + 3.0 _col3 + 4.0 _col4 + 6.0 _col6 + 7.0 _col7 + 8.0 _col8 == 0.0"
 
-    @defVar(m, y, [con], [-1.0])
+    @defVar(m, y, 0, [con], [-1.0])
     @test conToStr(m.linconstr[end]) == "2.0 _col2 + 3.0 _col3 + 4.0 _col4 + 6.0 _col6 + 7.0 _col7 + 8.0 _col8 - 1.0 y == 0.0"
 end
 

@@ -217,15 +217,16 @@ macro defVar(m, x, extra...)
                 t = JuMP.BINARY
             end
         end
-        if length(extra) - gottype == 2
+        if length(extra) - gottype == 3
             # adding variable to existing constraints
-            cols = esc(extra[1+gottype])
-            coeffs = esc(extra[2+gottype])
+            objcoef = esc(extra[1+gottype])
+            cols = esc(extra[2+gottype])
+            coeffs = esc(extra[3+gottype])
             if !isa(var,Symbol)
                 error("Cannot create multiple variables when adding to existing constraints")
             end
             return quote
-                $(esc(var)) = Variable($m,$lb,$ub,$t,$cols,$coeffs,name=$(string(var)))
+                $(esc(var)) = Variable($m,$lb,$ub,$t,$objcoef,$cols,$coeffs,name=$(string(var)))
                 nothing
             end
         elseif length(extra) - gottype != 0

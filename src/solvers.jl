@@ -150,14 +150,25 @@ function solveLP(m::Model)
 
     # Ready to solve
 
-    callgurobi = gurobiCheck(m)
-
-    m.internalModel = model(m.solver)
-    loadproblem!(m.internalModel, A, m.colLower, m.colUpper, f, rowlb, rowub, m.objSense)
-
-    if callgurobi
-        quadraticGurobi(m)
+    if !m.firstsolve
+        try
+            setvarLB!(m.internalModel, m.colLower)
+            setvarUB!(m.internalModel, m.colUpper)
+            setobj!(m.internalModel, f)
+        catch
+            warn("LP solver does not appear to support hot-starts. Problem will be solved from scratch.")
+            firstsolve = true
+        end
     end
+    if m.firstsolve
+        callgurobi = gurobiCheck(m)
+        m.internalModel = model(m.solver)
+        loadproblem!(m.internalModel, A, m.colLower, m.colUpper, f, rowlb, rowub, m.objSense)
+
+        if callgurobi
+            quadraticGurobi(m)
+        end
+    end 
 
     optimize!(m.internalModel)
     stat = status(m.internalModel)
@@ -171,6 +182,7 @@ function solveLP(m::Model)
         m.colVal = getsolution(m.internalModel)
         m.redCosts = getreducedcosts(m.internalModel)
         m.linconstrDuals = getconstrduals(m.internalModel)
+        firstsolve = false
     end
 
     return stat
@@ -202,6 +214,14 @@ function solveMIP(m::Model)
     
     loadproblem!(m.internalModel, A, m.colLower, m.colUpper, f, rowlb, rowub, m.objSense)
     setvartype!(m.internalModel, vartype)
+
+    if !all(m.colVal .== NaN)
+        try
+            setwarmstart!(m.internalModel, m.colVal)
+        catch
+            Base.warn_once("MIP solver does not appear to support warm start solution.")
+        end
+    end
 
     if callgurobi
         quadraticGurobi(m)
