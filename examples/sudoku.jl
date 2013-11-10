@@ -32,7 +32,7 @@ end
 
 # Solve model
 function SolveModel(initgrid)
-  m = Model(:Max)  # Feasibility problem, so sense not important
+  m = Model()
 
   @defVar(m, 0 <= x[1:9, 1:9, 1:9] <= 1, Int)
 

@@ -7,12 +7,12 @@ modPath = joinpath(Pkg.dir("JuMP"),"test","mod")
 # Test Model A
 #####################################################################
 # Build it
-modA = Model(:Max)
+modA = Model()
 @defVar(modA, x >= 0)
 @defVar(modA, y <= 5, Int)
 @defVar(modA, 2 <= z <= 4)
 @defVar(modA, 0 <= r[i=3:6] <= i)
-@setObjective(modA, ((x + y)/2.0 + 3.0)/3.0 + z + r[3])
+@setObjective(modA, Max, ((x + y)/2.0 + 3.0)/3.0 + z + r[3])
 @defConstrRef constraints[1:3]
 constraints[1] = @addConstraint(modA, 2 <= x+y <= 4)
 constraints[2] = @addConstraint(modA, sum{r[i],i=3:5} <= (2 - x)/2.0)
@@ -153,9 +153,9 @@ setObjectiveSense(modA, :Min)
 #####################################################################
 # Test binary variable handling
 let
-    modB = Model(:Max)
+    modB = Model()
     @defVar(modB, x, Bin)
-    @setObjective(modB, x)
+    @setObjective(modB, Max, x)
     @addConstraint(modB, x <= 10)
     status = solve(modB)
     @test status == :Optimal

@@ -14,12 +14,12 @@
 
 using JuMP
 
-m = Model(:Max)
+m = Model()
 
 @defVar(m, 0 <= x <= 2)
 @defVar(m, 0 <= y <= 30)
 
-@setObjective(m, 5x + 3y)
+@setObjective(m, Max, 5x + 3y)
 @addConstraint(m, 1x + 5y <= 3.0)
     
 print(m)

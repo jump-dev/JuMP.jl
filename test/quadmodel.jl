@@ -1,10 +1,10 @@
 using Gurobi
 let
-modQ = Model(:Min, mipsolver=GurobiSolver())
+modQ = Model(solver=GurobiSolver())
 
 @defVar(modQ, 1.1*i <= x[i=1:3] <= 2.5*i, Int)
 
-setObjective(modQ, 3*x[1]*x[2] + x[2]*x[2] + 9*x[3]*x[1])
+setObjective(modQ, :Min, 3*x[1]*x[2] + x[2]*x[2] + 9*x[3]*x[1])
 
 @addConstraint(modQ, x[2] <= 1.7*x[3])
 @addConstraint(modQ, x[2] >= 0.5*x[1])
@@ -17,11 +17,11 @@ end
 
 # test Maximization sense
 let
-modQ = Model(:Max, mipsolver=GurobiSolver())
+modQ = Model(solver=GurobiSolver())
 
 @defVar(modQ, 1.1*i <= x[i=1:3] <= 2.5*i, Int)
 
-setObjective(modQ, -3*x[1]*x[2] - x[2]*x[2] - 9*x[3]*x[1])
+setObjective(modQ, :Max, -3*x[1]*x[2] - x[2]*x[2] - 9*x[3]*x[1])
 
 @addConstraint(modQ, x[2] <= 1.7*x[3])
 @addConstraint(modQ, x[2] >= 0.5*x[1])
@@ -33,12 +33,12 @@ status = solve(modQ)
 end
 
 let
-modQ = Model(:Min, lpsolver=GurobiSolver())
+modQ = Model(solver=GurobiSolver())
 
 @defVar(modQ, 0.5 <= x <= 2 )
 @defVar(modQ, 0 <= y <= 30 )
 
-setObjective(modQ, (x+y)*(x+y) )
+setObjective(modQ, :Min, (x+y)*(x+y) )
 @addConstraint(modQ, x + y >= 1 )
 
 status = solve(modQ)

@@ -2,7 +2,7 @@
 # Test coverage for Variable
 
 # Constructors
-mcon = Model(:Min)
+mcon = Model()
 @defVar(mcon, nobounds)
 @defVar(mcon, lbonly >= 0)
 @defVar(mcon, ubonly <= 1)
@@ -17,7 +17,7 @@ s = ["Green","Blue"]
 
 # Test setters/getters
 # Name
-m = Model(:Max)
+m = Model()
 @defVar(m, 0 <= x <= 2)
 @test getName(x) == "x"
 setName(x, "x2")

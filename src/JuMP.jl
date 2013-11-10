@@ -78,13 +78,46 @@ type Model
 end
 
 # Default constructor
-function Model(sense::Symbol;lpsolver=MathProgBase.defaultLPsolver,mipsolver=MathProgBase.defaultMIPsolver)
-  if (sense != :Max && sense != :Min)
-     error("Model sense must be :Max or :Min")
+function Model(sense::Symbol;lpsolver=MathProgBase.defaultLPsolver,mipsolver=MathProgBase.defaultMIPsolver,solver=nothing)
+  Base.warn_once("Model(:$sense) syntax is deprecated. The sense should be passed to setObjective, e.g. @setObjective(model, :$sense, ...)")
+  if lpsolver != MathProgBase.defaultLPsolver || mipsolver != MathProgBase.defaultMIPsolver
+    error("lpsolver and mipsolver keywords have been merged. Use 'solver' instead, for example, Model(solver=ClpSolver())")
   end
-  Model(QuadExpr(),sense,LinearConstraint[], QuadConstraint[],
-        0,String[],Float64[],Float64[],Int[],
-        0,Float64[],Float64[],Float64[],nothing,lpsolver,mipsolver)
+  if solver == nothing
+    # use default solvers
+    Model(QuadExpr(),sense,LinearConstraint[], QuadConstraint[],
+          0,String[],Float64[],Float64[],Int[],
+          0,Float64[],Float64[],Float64[],nothing,MathProgBase.defaultLPsolver,MathProgBase.defaultMIPsolver)
+  else
+    if !isa(solver,AbstractMathProgSolver)
+      error("solver argument ($solver) must be an AbstractMathProgSolver")
+    end
+    # user-provided solver must support problem class
+    Model(QuadExpr(),sense,LinearConstraint[], QuadConstraint[],
+          0,String[],Float64[],Float64[],Int[],
+          0,Float64[],Float64[],Float64[],nothing,solver,solver)
+  end
+end
+
+function Model(;solver=nothing,lpsolver=MathProgBase.defaultLPsolver,mipsolver=MathProgBase.defaultMIPsolver)
+  if lpsolver != MathProgBase.defaultLPsolver || mipsolver != MathProgBase.defaultMIPsolver
+    error("lpsolver and mipsolver keywords have been merged. Use 'solver' instead, for example, Model(solver=ClpSolver())")
+  end
+  
+  if solver == nothing
+    # use default solvers
+    Model(QuadExpr(),:Min,LinearConstraint[], QuadConstraint[],
+          0,String[],Float64[],Float64[],Int[],
+          0,Float64[],Float64[],Float64[],nothing,MathProgBase.defaultLPsolver,MathProgBase.defaultMIPsolver)
+  else
+    if !isa(solver,AbstractMathProgSolver)
+      error("solver argument ($solver) must be an AbstractMathProgSolver")
+    end
+    # user-provided solver must support problem class
+    Model(QuadExpr(),:Min,LinearConstraint[], QuadConstraint[],
+          0,String[],Float64[],Float64[],Int[],
+          0,Float64[],Float64[],Float64[],nothing,solver,solver)
+  end
 end
 
 # Getters/setters
@@ -191,6 +224,13 @@ typealias AffExpr GenericAffExpr{Float64,Variable}
 AffExpr() = AffExpr(Variable[],Float64[],0.)
 
 function setObjective(m::Model, a::AffExpr)
+  Base.warn_once("Calling setObjective without specifying an objective sense is deprecated. Use setObjective(model, sense, expr) (or @setObjective(model, sense, expr)).")
+  m.obj = QuadExpr()
+  m.obj.aff = a
+end
+
+function setObjective(m::Model, sense::Symbol, a::AffExpr)
+  setObjectiveSense(m, sense)
   m.obj = QuadExpr()
   m.obj.aff = a
 end
@@ -265,7 +305,16 @@ end
 
 QuadExpr() = QuadExpr(Variable[],Variable[],Float64[],AffExpr())
 
-setObjective(m::Model, q::QuadExpr) = (m.obj = q)
+function setObjective(m::Model, q::QuadExpr)
+  Base.warn_once("Calling setObjective without specifying an objective sense is deprecated. Use setObjective(model, sense, expr).")
+  m.obj = q
+end
+
+function setObjective(m::Model, sense::Symbol, q::QuadExpr)
+  m.obj = q
+  setObjectiveSense(m, sense)
+end
+
 
 print(io::IO, q::QuadExpr) = print(io, quadToStr(q))
 show(io::IO, q::QuadExpr) = print(io, quadToStr(q))

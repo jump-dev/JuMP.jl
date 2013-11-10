@@ -1,11 +1,11 @@
 using Gurobi
 let
-modQ = Model(:Min,lpsolver=GurobiSolver())
+modQ = Model(solver=GurobiSolver())
 
 @defVar(modQ, -2 <= x <= 2 )
 @defVar(modQ, -2 <= y <= 2 )
 
-@setObjective(modQ, x - y )
+@setObjective(modQ, Min, x - y )
 addConstraint(modQ, x + x*x + x*y + y*y <= 1 )
 
 status = solve(modQ)
@@ -15,12 +15,12 @@ status = solve(modQ)
 end
 
 let
-modQ = Model(:Min,mipsolver=GurobiSolver())
+modQ = Model(solver=GurobiSolver())
 
 @defVar(modQ, -2 <= x <= 2, Int )
 @defVar(modQ, -2 <= y <= 2, Int )
 
-@setObjective(modQ, x - y )
+@setObjective(modQ, Min, x - y )
 addConstraint(modQ, x + x*x + x*y + y*y <= 1 )
 
 status = solve(modQ)

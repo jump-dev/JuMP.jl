@@ -3,7 +3,7 @@
 using JuMP
 using Base.Test
 
-m = Model(:Max)
+m = Model()
 @defVar(m, w)
 @defVar(m, x)
 @defVar(m, y)

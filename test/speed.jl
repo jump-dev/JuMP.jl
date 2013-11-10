@@ -44,7 +44,7 @@ function pMedian(numFacility::Int,numCustomer::Int,numLocation::Int,useMPS)
   customerLocations = [rand(1:numLocation) for a = 1:numCustomer ]
 
   tic()
-  m = Model(:Max)
+  m = Model()
 
   # Facility locations
   @defVar(m, 0 <= s[1:numLocation] <= 1)
@@ -53,7 +53,7 @@ function pMedian(numFacility::Int,numCustomer::Int,numLocation::Int,useMPS)
   @defVar(m, 0 <= x[1:numLocation,1:numCustomer] <= 1)
 
   # Objective: min distance
-  @setObjective(m, sum{abs(customerLocations[a]-i)*x[i,a], a = 1:numCustomer, i = 1:numLocation} )
+  @setObjective(m, Max, sum{abs(customerLocations[a]-i)*x[i,a], a = 1:numCustomer, i = 1:numLocation} )
 
   # Constraints
   for a in 1:numCustomer
@@ -92,10 +92,10 @@ function cont5(n,useMPS)
   yt = [0.5*(1 - (j*dx)^2) for j=0:n]
 	
   tic()
-  mod = Model(:Min)
+  mod = Model()
   @defVar(mod,  0 <= y[0:m,0:n] <= 1)
   @defVar(mod, -1 <= u[1:m] <= 1)
-  @setObjective(mod, y[0,0])
+  @setObjective(mod, Min, y[0,0])
 
   # PDE
   for i = 0:m1

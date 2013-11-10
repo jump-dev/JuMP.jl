@@ -48,7 +48,7 @@ function SolveDiet()
                      330  8 10 180]
 
   # Build model
-  m = Model(:Min)
+  m = Model()
  
   # Variables for nutrition info
   @defVar(m, minNutrition[i] <= nutrition[i=1:numCategories] <= maxNutrition[i])
@@ -56,7 +56,7 @@ function SolveDiet()
   @defVar(m, buy[i=1:numFoods] >= 0)
  
   # Objective - minimize cost
-  @setObjective(m, sum{cost[i]*buy[i], i=1:numFoods})
+  @setObjective(m, Min, sum{cost[i]*buy[i], i=1:numFoods})
 
   # Nutrition constraints
   for j = 1:numCategories

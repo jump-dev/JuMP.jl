@@ -14,7 +14,7 @@ using JuMP
 
 function SolveUrban()
 
-  m = Model(:Max)
+  m = Model()
 
   # x is indexed by row and column
   @defVar(m, 0 <= x[1:5,1:5] <= 1, Int)
@@ -26,7 +26,7 @@ function SolveUrban()
   @defVar(m, 0 <= y[rowcol,points,i=1:5] <= 1, Int)
 
   # Objective - combine the positive and negative parts
-  @setObjective(m, sum{
+  @setObjective(m, Max, sum{
     3*(y["R", 3,i] + y["C", 3,i]) 
   + 1*(y["R", 4,i] + y["C", 4,i]) 
   + 1*(y["R", 5,i] + y["C", 5,i]) 

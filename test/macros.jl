@@ -25,7 +25,7 @@ sumexpr = :(sum{x[i,j] * y[i,j], i = 1:N, j = 1:M})
 # test JuMP's macros
 
 let 
-    m = Model(:Max)
+    m = Model()
     @defVar(m, w)
     @defVar(m, x)
     @defVar(m, y)
@@ -42,7 +42,7 @@ let
 end
 
 let
-    m = Model(:Max)
+    m = Model()
     @defVar(m, x[1:3,1:3])
     @defVar(m, y)
     C = [1 2 3; 4 5 6; 7 8 9]
@@ -56,7 +56,7 @@ let
 end
 
 let
-    m = Model(:Max)
+    m = Model()
     @defVar(m, x)
     @defVar(m, y)
     temp = x + 2y + 1

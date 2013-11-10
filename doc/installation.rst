@@ -51,9 +51,6 @@ Gurobi
 
     julia> Pkg.add("Gurobi")
 
-.. note::
-   Previously versions of Gurobi.jl required adding environmental variables but it should now "just work" out-of-the-box.
-
 .. warning::
    If you are using 64-bit Gurobi, you must use 64-bit Julia (and similarly with 32-bit Gurobi).
   

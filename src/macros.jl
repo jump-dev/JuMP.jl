@@ -149,11 +149,25 @@ macro addConstraint(m, x)
     end
 end
 
-macro setObjective(m, x)
-    quote
-        aff = AffExpr()
-        $(parseExpr(x, :aff, 1.0))
-        setObjective($(esc(m)), aff)
+macro setObjective(m, args...)
+    if length(args) == 1
+        x = args[1]
+        quote
+            aff = AffExpr()
+            $(parseExpr(x, :aff, 1.0))
+            setObjective($(esc(m)), aff)
+        end
+    else
+        @assert length(args) == 2
+        sense, x = args
+        if sense == :Min || sense == :Max
+            sense = Expr(:quote,sense)
+        end
+        quote
+            aff = AffExpr()
+            $(parseExpr(x, :aff, 1.0))
+            setObjective($(esc(m)), $(esc(sense)), aff)
+        end
     end
 end
         
