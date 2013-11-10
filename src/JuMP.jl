@@ -27,7 +27,7 @@ export
   # Model related
   getNumVars, getNumConstraints, getObjectiveValue, getObjective,
   getObjectiveSense, setObjectiveSense, writeLP, writeMPS, setObjective,
-  addConstraint, addVar, addVars, solve,
+  addConstraint, addVar, addVars, solve, copy,
   # Variable
   setName, getName, setLower, setUpper, getLower, getUpper, getValue,
   getDual,
@@ -154,6 +154,30 @@ end
 show(io::IO, m::Model) = print(m.objSense == :Max ? "Maximization problem" :
                                                      "Minimization problem") 
                                                      # What looks good here?
+
+# Deep copy the model
+function copy(source::Model)
+  
+  dest = Model()
+  dest.solver = source.solver  # The two models are linked by this
+  
+  # Objective
+  dest.obj = copy(source.obj, dest)
+  dest.objSense = source.objSense
+
+  # Constraints
+  dest.linconstr = [copy(c, dest) for c in source.linconstr]
+  dest.quadconstr = [copy(c, dest) for c in source.quadconstr]
+
+  # Variables
+  dest.numCols = source.numCols
+  dest.colNames = source.colNames[:]
+  dest.colLower = source.colLower[:]
+  dest.colUpper = source.colUpper[:]
+  dest.colCat = source.colCat[:]
+
+  return dest
+end
 
 ###############################################################################
 # Variable class
@@ -294,6 +318,13 @@ function affToStr(a::AffExpr, showConstant=true)
   return ret
 end
 
+# Copy utility function, not exported
+function copy(a::AffExpr, new_model::Model)
+  return AffExpr([Variable(new_model, v.col) for v in a.vars],
+                 a.coeffs[:], a.constant)
+end
+
+
 ###############################################################################
 # QuadExpr class
 # Holds a vector of tuples (Var, Var, Coeff), as well as an AffExpr
@@ -366,6 +397,13 @@ function quadToStr(q::QuadExpr)
   end
 end
 
+# Copy utility function, not exported
+function copy(q::QuadExpr, new_model::Model)
+  return QuadExpr([Variable(new_model, v.col) for v in q.qvars1],
+                  [Variable(new_model, v.col) for v in q.qvars2],
+                  q.qcoeffs[:], copy(q.aff, new_model))
+end
+
 ##########################################################################
 # JuMPConstraint
 # abstract base for constraint types
@@ -436,6 +474,11 @@ function conToStr(c::LinearConstraint)
   end
 end
 
+# Copy utility function, not exported
+function copy(c::LinearConstraint, new_model::Model)
+  return LinearConstraint(copy(c.terms, new_model), c.lb, c.ub)
+end
+
 ##########################################################################
 # QuadConstraint class
 # An quadratic constraint. Right-hand side is implicitly taken to be zero; 
@@ -458,6 +501,11 @@ print(io::IO, c::QuadConstraint) = print(io, conToStr(c))
 show(io::IO, c::QuadConstraint)  = print(io, conToStr(c))
 
 conToStr(c::QuadConstraint) = string(quadToStr(c.terms), " ", c.sense, " 0")
+
+# Copy utility function, not exported
+function copy(c::QuadConstraint, new_model::Model)
+  return QuadConstraint(copy(c.terms, new_model), c.sense)
+end
 
 ##########################################################################
 # ConstraintRef
