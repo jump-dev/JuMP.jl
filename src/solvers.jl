@@ -162,7 +162,7 @@ function solveLP(m::Model)
             setobj!(m.internalModel, f)
         catch
             warn("LP solver does not appear to support hot-starts. Problem will be solved from scratch.")
-            firstsolve = true
+            m.firstsolve = true
         end
     end
     if m.firstsolve
@@ -188,7 +188,7 @@ function solveLP(m::Model)
         m.colVal = getsolution(m.internalModel)
         m.redCosts = getreducedcosts(m.internalModel)
         m.linconstrDuals = getconstrduals(m.internalModel)
-        firstsolve = false
+        m.firstsolve = false
     end
 
     return stat
