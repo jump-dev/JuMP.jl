@@ -1,8 +1,4 @@
-using JuMP
-using Base.Test
-using Gurobi
-
-m = Model(solver=GurobiSolver(Presolve=0))   # ClpSolver(LogLevel=1,PresolveType=1))
+m = Model()
 @defVar(m, 0 <= x <= 3)
 @defVar(m, 1 <= y <= 3)
 @setObjective(m, :Max, 1.1x + 1.0y)

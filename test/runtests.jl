@@ -6,7 +6,8 @@ tests = ["expr.jl",
          "variable.jl",
          "operator.jl",
          "macros.jl",
-         "model.jl"]
+         "model.jl",
+         "probmod.jl"]
 
 println("Running tests:")
 
