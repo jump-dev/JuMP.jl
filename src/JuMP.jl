@@ -32,7 +32,7 @@ export
   setName, getName, setLower, setUpper, getLower, getUpper, getValue,
   getDual,
   # Expressions and constraints
-  affToStr, quadToStr, conToStr,
+  affToStr, quadToStr, conToStr, chgConstrRHS,
   
 # Macros and support functions
   @addConstraint, @defVar, 
@@ -520,6 +520,22 @@ function getDual(c::ConstraintRef{LinearConstraint})
     error("Dual solution not available. Check that the model was properly solved and no integer variables are present.")
   end
   return c.m.linconstrDuals[c.idx]
+end
+
+function chgConstrRHS(c::ConstraintRef{LinearConstraint}, rhs::Number)
+  constr = c.m.linconstr[c.idx]
+  sen = sense(constr)
+  if sen == :range
+    error("Modifying range constraints is currently unsupported.")
+  elseif sen == :(==)
+    constr.lb = float(rhs)
+    constr.ub = float(rhs)
+  elseif sen == :>=
+    constr.lb = float(rhs)
+  else
+    @assert sen == :<=
+    constr.ub = float(rhs)
+  end
 end
 
 print(io::IO, c::ConstraintRef{LinearConstraint}) = print(io, conToStr(c.m.linconstr[c.idx]))

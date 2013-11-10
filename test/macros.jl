@@ -64,6 +64,9 @@ let
 
     @defVar(m, y, 0, [con], [-1.0])
     @test conToStr(m.linconstr[end]) == "2.0 _col2 + 3.0 _col3 + 4.0 _col4 + 6.0 _col6 + 7.0 _col7 + 8.0 _col8 - 1.0 y == 0.0"
+
+    chgConstrRHS(con, 3)
+    @test conToStr(m.linconstr[end]) == "2.0 _col2 + 3.0 _col3 + 4.0 _col4 + 6.0 _col6 + 7.0 _col7 + 8.0 _col8 - 1.0 y == 3.0"
 end
 
 let
