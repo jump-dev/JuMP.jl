@@ -81,7 +81,7 @@ function quadraticGurobi(m::Model)
 end
 
 # prepare objective, constraint matrix, and row bounds
-function prepProblem(m::Model)
+function prepProblemBounds(m::Model)
 
     objaff::AffExpr = m.obj.aff
     
@@ -101,11 +101,17 @@ function prepProblem(m::Model)
         rowlb[c] = m.linconstr[c].lb
         rowub[c] = m.linconstr[c].ub
     end
+    return f, rowlb, rowub
+end
+
+# prepare column-wise constraint matrix
+function prepConstrMatrix(m::Model)
 
     # Create sparse A matrix
     # First we build it row-wise, then use the efficient transpose
     # Theory is, this is faster than us trying to do it ourselves
     # Intialize storage
+    numRows = length(m.linconstr)
     rowptr = Array(Int,numRows+1)
     nnz = 0
     for c in 1:numRows
@@ -140,24 +146,35 @@ function prepProblem(m::Model)
     # Build the object
     rowmat = SparseMatrixCSC(m.numCols, numRows, rowptr, colval, rownzval)
     A = rowmat'
-
-    return f, A, rowlb, rowub
-
 end
 
 function solveLP(m::Model)
-    f, A, rowlb, rowub = prepProblem(m)  
+    f, rowlb, rowub = prepProblemBounds(m)  
 
     # Ready to solve
 
-    callgurobi = gurobiCheck(m)
-
-    m.internalModel = model(m.solver)
-    loadproblem!(m.internalModel, A, m.colLower, m.colUpper, f, rowlb, rowub, m.objSense)
-
-    if callgurobi
-        quadraticGurobi(m)
+    if !m.firstsolve
+        try
+            setvarLB!(m.internalModel, m.colLower)
+            setvarUB!(m.internalModel, m.colUpper)
+            setconstrLB!(m.internalModel, rowlb)
+            setconstrUB!(m.internalModel, rowub)
+            setobj!(m.internalModel, f)
+        catch
+            warn("LP solver does not appear to support hot-starts. Problem will be solved from scratch.")
+            m.firstsolve = true
+        end
     end
+    if m.firstsolve
+        A = prepConstrMatrix(m)
+        callgurobi = gurobiCheck(m)
+        m.internalModel = model(m.solver)
+        loadproblem!(m.internalModel, A, m.colLower, m.colUpper, f, rowlb, rowub, m.objSense)
+
+        if callgurobi
+            quadraticGurobi(m)
+        end
+    end 
 
     optimize!(m.internalModel)
     stat = status(m.internalModel)
@@ -171,6 +188,7 @@ function solveLP(m::Model)
         m.colVal = getsolution(m.internalModel)
         m.redCosts = getreducedcosts(m.internalModel)
         m.linconstrDuals = getconstrduals(m.internalModel)
+        m.firstsolve = false
     end
 
     return stat
@@ -178,7 +196,8 @@ function solveLP(m::Model)
 end
 
 function solveMIP(m::Model)
-    f, A, rowlb, rowub = prepProblem(m)
+    f, rowlb, rowub = prepProblemBounds(m)
+    A = prepConstrMatrix(m)
 
     # Build vartype vector
     vartype = zeros(Char,m.numCols)
@@ -202,6 +221,14 @@ function solveMIP(m::Model)
     
     loadproblem!(m.internalModel, A, m.colLower, m.colUpper, f, rowlb, rowub, m.objSense)
     setvartype!(m.internalModel, vartype)
+
+    if !all(m.colVal .== NaN)
+        try
+            setwarmstart!(m.internalModel, m.colVal)
+        catch
+            Base.warn_once("MIP solver does not appear to support warm start solution.")
+        end
+    end
 
     if callgurobi
         quadraticGurobi(m)

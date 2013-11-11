@@ -32,7 +32,7 @@ export
   setName, getName, setLower, setUpper, getLower, getUpper, getValue,
   getDual,
   # Expressions and constraints
-  affToStr, quadToStr, conToStr,
+  affToStr, quadToStr, conToStr, chgConstrRHS,
   
 # Macros and support functions
   @addConstraint, @defVar, 
@@ -193,6 +193,7 @@ function Variable(m::Model,lower::Number,upper::Number,cat::Int,name::String)
   push!(m.colLower, convert(Float64,lower))
   push!(m.colUpper, convert(Float64,upper))
   push!(m.colCat, cat)
+  push!(m.colVal,NaN)
   return Variable(m, m.numCols)
 end
 
@@ -216,9 +217,6 @@ getUpper(v::Variable) = v.m.colUpper[v.col]
 
 # Value setter/getter
 function setValue(v::Variable, val::Number)
-  if length(v.m.colVal) < v.col
-    resize!(v.m.colVal,v.m.numCols)
-  end
   v.m.colVal[v.col] = val
 end
 
@@ -425,6 +423,15 @@ LinearConstraint(terms::AffExpr,lb::Number,ub::Number) =
 
 function addConstraint(m::Model, c::LinearConstraint)
   push!(m.linconstr,c)
+  if !m.firstsolve
+    # TODO: we don't check for duplicates here
+    try
+      addconstr!(m.internalModel,[v.idx for v in c.terms.vars],c.terms.coeffs,c.lb,c.ub)
+    catch
+      Base.warn_once("Solver does not appear to support adding constraints to an existing model. Hot-start is disabled.")
+      m.firstsolve = true
+    end
+  end
   return ConstraintRef{LinearConstraint}(m,length(m.linconstr))
 end
 
@@ -483,6 +490,10 @@ end
 
 function addConstraint(m::Model, c::QuadConstraint)
   push!(m.quadconstr,c)
+  if !m.firstsolve
+    # we don't (yet) support hot-starting QCQP solutions
+    m.firstsolve = true
+  end
   return ConstraintRef{QuadConstraint}(m,length(m.quadconstr))
 end
 
@@ -511,12 +522,28 @@ function getDual(c::ConstraintRef{LinearConstraint})
   return c.m.linconstrDuals[c.idx]
 end
 
+function chgConstrRHS(c::ConstraintRef{LinearConstraint}, rhs::Number)
+  constr = c.m.linconstr[c.idx]
+  sen = sense(constr)
+  if sen == :range
+    error("Modifying range constraints is currently unsupported.")
+  elseif sen == :(==)
+    constr.lb = float(rhs)
+    constr.ub = float(rhs)
+  elseif sen == :>=
+    constr.lb = float(rhs)
+  else
+    @assert sen == :<=
+    constr.ub = float(rhs)
+  end
+end
+
 print(io::IO, c::ConstraintRef{LinearConstraint}) = print(io, conToStr(c.m.linconstr[c.idx]))
 print(io::IO, c::ConstraintRef{QuadConstraint}) = print(io, conToStr(c.m.quadconstr[c.idx]))
 show{T}(io::IO, c::ConstraintRef{T}) = print(io, c)
 
 # add variable to existing constraints
-function Variable(m::Model,lower::Number,upper::Number,cat::Int,
+function Variable(m::Model,lower::Number,upper::Number,cat::Int,objcoef::Number,
   constraints::Vector{ConstraintRef{LinearConstraint}},coefficients::Vector{Float64};
   name::String="")
     
@@ -528,6 +555,17 @@ function Variable(m::Model,lower::Number,upper::Number,cat::Int,
     coef = coefficients[i]
     push!(c.terms.vars,v)
     push!(c.terms.coeffs,coef)
+  end
+  push!(m.obj.aff.vars, v)
+  push!(m.obj.aff.coeffs,objcoef)
+
+  if !m.firstsolve
+    try
+      addvar!(m.internalModel,Int[c.idx for c in constraints],coefficients,float(lower),float(upper),float(objcoef))
+    catch
+      Base.warn_once("Solver does not appear to support adding variables to an existing model. Hot-start is disabled.")
+      m.firstsolve = true
+    end
   end
 
   return v

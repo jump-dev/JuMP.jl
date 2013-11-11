@@ -13,6 +13,8 @@ The primary way to create variables is with the ``@defVar`` macro.
 The first argument will always be a ``Model``. In the examples below we assume
 ``m`` is already defined. The second argument is an expression that declares
 the variable name and optionally allows specification of lower and upper bounds.
+Adding variables "column-wise", e.g., as in column generation, is supported as well;
+see the syntax discussed in the :ref:`probmod` section.
 
 ::
 
@@ -60,9 +62,10 @@ Methods
 * ``setLower(x::Variable, lower::Number)``, ``getLower(x::Variable)`` - Set/get the lower bound of a variable.
 * ``setUpper(x::Variable, upper::Number)``, ``getUpper(x::Variable)`` - Set/get the upper bound of a variable.
 
-**Values After Solution**
+**Values**
 
 * ``getValue(x)`` - Get the value of this variable in the solution. If ``x`` is a single variable, this will simply return a number. If ``x`` is indexable then it will return an indexable dictionary of values.
+* ``setValue(x,v)`` - Provide an initial value ``v`` for this variable that can be used by supporting MILP solvers. If ``v`` is ``NaN``, the solver may attempt to fill in this value to construct a feasible solution.
 * ``getDual(x)`` - Get the reduced cost of this variable in the solution. Similar behavior to ``getValue`` for indexable variables.
 
 **Names**
