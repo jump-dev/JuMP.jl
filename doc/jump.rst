@@ -43,6 +43,8 @@ If you are new to Julia or want more details, read on to the next section.
 .. include:: refvariable.rst
 .. Expressions, Constraints
 .. include:: refexpr.rst
+.. Problem modification
+.. include:: probmod.rst
 
 ----------
 References
