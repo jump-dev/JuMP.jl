@@ -13,8 +13,8 @@ The primary way to create variables is with the ``@defVar`` macro.
 The first argument will always be a ``Model``. In the examples below we assume
 ``m`` is already defined. The second argument is an expression that declares
 the variable name and optionally allows specification of lower and upper bounds.
-If you are trying to add variables as populated columns, e.g. in column generation,
-see the :ref:`probmod` section.
+Adding variables "column-wise", e.g., as in column generation, is supported as well;
+see the syntax discussed in the :ref:`probmod` section.
 
 ::
 

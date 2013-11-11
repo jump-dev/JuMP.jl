@@ -7,7 +7,7 @@ Problem Modification
 It can be useful to modify models after they have been created and solved, for
 example when we are solving many similar models in succession or generating the
 model dynamically (e.g. column generation). Additionally it is sometimes
-desireable for the solver to re-start from the last solution to reduce running
+desirable for the solver to re-start from the last solution to reduce running
 times for successive solves ("hot-start"). Where available, JuMP exposes this
 functionality.
 
@@ -38,7 +38,7 @@ one can set the bounds on that variable to zero, e.g.::
     setUpper(x, 0.0)
 
 While bound updates are applied immediately in JuMP, variable bound changes are not
-trasmitted to the solver until ``solve`` is called again.
+transmitted to the solver until ``solve`` is called again.
 
 To add variables that appear in existing constraints, e.g. in column generation,
 there is an alternative form of the ``defVar`` macro::
