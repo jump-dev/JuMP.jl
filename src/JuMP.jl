@@ -147,7 +147,12 @@ function print(io::IO, m::Model)
     print(io, " <= ")
     print(io, (m.colNames[i] == "" ? string("_col",i) : m.colNames[i]))
     print(io, " <= ")
-    println(io, m.colUpper[i])
+    # println(io, m.colUpper[i])
+    print(io, m.colUpper[i])
+    print(io, ", ")
+    print(io, m.colNames[i])
+    print(io, "\u2208")
+    println(io, m.colCat[i] == INTEGER ? "\u2124" : "\u211d")
   end
 end
 show(io::IO, m::Model) = print(m.objSense == :Max ? "Maximization problem" :
