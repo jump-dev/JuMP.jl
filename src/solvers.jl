@@ -218,7 +218,7 @@ function solveMIP(m::Model)
     loadproblem!(m.internalModel, A, m.colLower, m.colUpper, f, rowlb, rowub, m.objSense)
     setvartype!(m.internalModel, vartype)
 
-    if !all(m.colVal .== NaN)
+    if !all(isnan(m.colVal))
         try
             setwarmstart!(m.internalModel, m.colVal)
         catch
