@@ -146,6 +146,11 @@ function print(io::IO, m::Model)
     if m.colCat[i] == INTEGER && m.colLower[i] == 0 && m.colUpper[i] == 1
       print(io, (m.colNames[i] == "" ? string("_col",i) : m.colNames[i]))
       println(" \u220a {0,1}")
+    elseif m.colLower[i] == -Inf && m.colUpper[i] == Inf
+      if m.colCat[i] == INTEGER
+        print(io, (m.colNames[i] == "" ? string("_col",i) : m.colNames[i]))
+        println(io, "\u220a\u2124")
+      end
     elseif m.colLower[i] == -Inf
       print(io, (m.colNames[i] == "" ? string("_col",i) : m.colNames[i]))
       print(io, " \u2264 $(m.colUpper[i])")
