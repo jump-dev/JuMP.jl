@@ -144,7 +144,9 @@ macro addConstraint(m, x)
                 error(string("Expected ",$ub," to be a number"))
             end
             $(parseExpr(x.args[3],:aff,1.0))
-            addConstraint($m, LinearConstraint(aff,$(esc(lb)),$(esc(ub))))
+            addConstraint($m, 
+                LinearConstraint(aff,$(esc(lb))-aff.constant,
+                    $(esc(ub))-aff.constant))
         end
     end
 end
