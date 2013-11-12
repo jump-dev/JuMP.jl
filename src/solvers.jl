@@ -6,7 +6,7 @@ function solve(m::Model)
   # Analyze model to see if any integers
   anyInts = false
   for j = 1:m.numCols
-    if m.colCat[j] == INTEGER || m.colCat[j] == BINARY
+    if m.colCat[j] == INTEGER
       anyInts = true
       break
     end
@@ -204,10 +204,6 @@ function solveMIP(m::Model)
     for j = 1:m.numCols
         if m.colCat[j] == CONTINUOUS
             vartype[j] = 'C'
-        elseif m.colCat[j] == BINARY
-            vartype[j] = 'I'
-            m.colLower[j] = 0
-            m.colUpper[j] = 1
         else
             vartype[j] = 'I'
         end

@@ -45,8 +45,7 @@ include("utils.jl")
 # Constants
 const CONTINUOUS = 0
 const INTEGER = 1
-const BINARY = 2
-export CONTINUOUS, INTEGER, BINARY
+export CONTINUOUS, INTEGER
 
 ###############################################################################
 # Model class

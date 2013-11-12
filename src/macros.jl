@@ -216,7 +216,12 @@ macro defVar(m, x, extra...)
             if extra[1] == :Int
                 t = JuMP.INTEGER
             else
-                t = JuMP.BINARY
+                if lb != -Inf || ub != Inf
+                    error("Bounds may not be specified for binary variables. These are always taken to have a lower bound of 0 and upper bound of 1.")
+                end
+                t = JuMP.INTEGER
+                lb = 0.0
+                ub = 1.0
             end
         end
         if length(extra) - gottype == 3

@@ -19,6 +19,7 @@ s = ["Green","Blue"]
 # Name
 m = Model()
 @defVar(m, 0 <= x <= 2)
+@defVar(m, y, Bin)
 @test getName(x) == "x"
 setName(x, "x2")
 @test getName(x) == "x2"
@@ -32,3 +33,5 @@ setLower(x, 1)
 @test getLower(x) == 1
 setUpper(x, 3)
 @test getUpper(x) == 3
+@test getLower(y) == 0
+@test getUpper(y) == 1
