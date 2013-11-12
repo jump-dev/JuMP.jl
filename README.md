@@ -12,7 +12,7 @@ such as AMPL while maintaing the expressiveness of a generic high-level
 programming language.
 
 Our **documentation**, including installation guide, quick-start guide, and
-reference material is available [here](https://jump.readthedocs.org/en/latest/jump.html#installation-guide).
+reference material is available [here](https://jump.readthedocs.org/en/release-0.1/jump.html#installation-guide).
 
 We have a comprehensive test suite: the current status of the development version of
 JuMP is [![Build Status](https://travis-ci.org/JuliaOpt/JuMP.jl.png?branch=master)](https://travis-ci.org/JuliaOpt/JuMP.jl)
