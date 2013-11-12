@@ -29,8 +29,8 @@ export
   getObjectiveSense, setObjectiveSense, writeLP, writeMPS, setObjective,
   addConstraint, addVar, addVars, solve, copy,
   # Variable
-  setName, getName, setLower, setUpper, getLower, getUpper, getValue,
-  getDual,
+  setName, getName, setLower, setUpper, getLower, getUpper,
+  getValue, setValue, getDual,
   # Expressions and constraints
   affToStr, quadToStr, conToStr, chgConstrRHS,
   
@@ -143,11 +143,28 @@ function print(io::IO, m::Model)
     println(io, conToStr(c))
   end
   for i in 1:m.numCols
-    print(io, m.colLower[i])
-    print(io, " <= ")
-    print(io, (m.colNames[i] == "" ? string("_col",i) : m.colNames[i]))
-    print(io, " <= ")
-    println(io, m.colUpper[i])
+    if m.colCat[i] == INTEGER && m.colLower[i] == 0 && m.colUpper[i] == 1
+      print(io, (m.colNames[i] == "" ? string("_col",i) : m.colNames[i]))
+      println(" \u220a {0,1}")
+    elseif m.colLower[i] == -Inf && m.colUpper[i] == Inf
+      if m.colCat[i] == INTEGER
+        print(io, (m.colNames[i] == "" ? string("_col",i) : m.colNames[i]))
+        println(io, "\u220a\u2124")
+      end
+    elseif m.colLower[i] == -Inf
+      print(io, (m.colNames[i] == "" ? string("_col",i) : m.colNames[i]))
+      print(io, " \u2264 $(m.colUpper[i])")
+      println(io, m.colCat[i] == INTEGER ? ", $(m.colNames[i])\u220a\u2124" : "")
+    elseif m.colUpper[i] == Inf
+      print(io, (m.colNames[i] == "" ? string("_col",i) : m.colNames[i]))
+      print(io, " \u2265 $(m.colLower[i])")
+      println(io, m.colCat[i] == INTEGER ? ", $(m.colNames[i])\u220a\u2124" : "")
+    else
+      print(io, "$(m.colLower[i]) \u2264 ")
+      print(io, (m.colNames[i] == "" ? string("_col",i) : m.colNames[i]))
+      print(io, " \u2264 $(m.colUpper[i])")
+      println(io, m.colCat[i] == INTEGER ? ", $(m.colNames[i])\u220a\u2124" : "")
+    end
   end
 end
 show(io::IO, m::Model) = print(m.objSense == :Max ? "Maximization problem" :
