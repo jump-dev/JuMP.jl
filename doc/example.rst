@@ -4,15 +4,15 @@ Simple Example
 ^^^^^^^^^^^^^^
 
 In this section we will construct a simple model and explain every step along the way.
-The are more complex examples in the ``JuMP/examples/`` `folder <https://github.com/IainNZ/JuMP.jl/tree/master/examples>`_. Here is the code we will walk through::
+The are more complex examples in the ``JuMP/examples/`` `folder <https://github.com/JuliaOpt/JuMP.jl/tree/master/examples>`_. Here is the code we will walk through::
 
     using JuMP
 
-    m = Model(:Max)
+    m = Model()
     @defVar(m, 0 <= x <= 2 )
     @defVar(m, 0 <= y <= 30 )
 
-    @setObjective(m, 5x + 3*y )
+    @setObjective(m, Max, 5x + 3*y )
     @addConstraint(m, 1x + 5y <= 3.0 )
         
     print(m)
@@ -28,16 +28,12 @@ programs, you just need to say::
 
     using JuMP
 
-Models are created with the ``Model()`` function. This function takes one
-argument, the model sense. The two options are ``:Max`` and ``:Min`::
+Models are created with the ``Model()`` function::
 
-    m = Model(:Max)
+    m = Model()
 
 .. note::
    Your model doesn't have to be called m - it's just a name. 
-   
-.. hint:: 
-   The colon ``:`` operator defines a `symbol <http://docs.julialang.org/en/latest/manual/metaprogramming/#symbols>`_.
    
 There are a few options for defining a variable, depending on whether you want
 to have lower bounds, upper bounds, both bounds, or even no bounds. The following
@@ -49,12 +45,13 @@ with this model and cannot be used in another model.::
     @defVar(m, 0 <= y <= 30 )
 
 Next we'll set our objective. Note again the ``m``, so we know which model's
-objective we are setting! Note also that we don't have a multiplication ``*``
+objective we are setting! The objective sense, ``Max`` or ``Min``, should
+be provided as the second argument. Note also that we don't have a multiplication ``*``
 symbol between 5 and our variable ``x`` - Julia is smart enough to not need it!
 Feel free to stick with ``*`` if it makes you feel more comfortable, as we have
 done with ``3*y``::
 
-    @setObjective(m, 5x + 3*y )
+    @setObjective(m, Max, 5x + 3*y )
 
 Adding constraints is a lot like setting the objective. Here we create a
 less-than-or-equal-to constraint using ``<=``, but we can also create equality
@@ -63,14 +60,19 @@ constraints using ``==`` and greater-than-or-equal-to constraints with ``>=``::
     @addConstraint(m, 1x + 5y <= 3.0 )
 
 If you want to see what your model looks like in a human-readable format,
-the ``print`` function is defined for models.::
+the ``print`` function is defined for models.
+
+::
 
     print(m)
 
 Models are solved with the ``solve()`` function. This function will not raise
 an error if your model is infeasible - instead it will return a flag. In this 
 case, the model is feasible so the value of ``status`` will be ``:Optimal``, 
-where ``:`` again denotes a symbol. See SECTIONREF for all options.::
+where ``:`` again denotes a symbol. The possible values of ``status``
+are described in the `MathProgBase documentation <http://mathprogbasejl.readthedocs.org/en/latest/mathprogbase.html>`_.
+
+::
 
     status = solve(m)
 
@@ -81,7 +83,9 @@ value is simple::
 
 To get the value from a variable, we call the ``getValue()`` function. If ``x``
 is not a single variable, but instead a range of variables, ``getValue()`` will
-return a list. In this case, however, it will just return a single value.::
+return a list. In this case, however, it will just return a single value.
+
+::
     
     println("x = ", getValue(x))
     println("y = ", getValue(y))

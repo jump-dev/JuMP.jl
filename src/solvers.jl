@@ -1,47 +1,60 @@
+if Pkg.installed("Gurobi") != nothing
+  eval(Expr(:using,:Gurobi))
+end
+
 function solve(m::Model)
   # Analyze model to see if any integers
   anyInts = false
   for j = 1:m.numCols
-    if m.colCat[j] == INTEGER || m.colCat[j] == BINARY
+    if m.colCat[j] == INTEGER
       anyInts = true
       break
     end
   end
 	
   if anyInts
-   solveMIP(m)
+    if isa(m.solver,MathProgBase.MissingSolver)
+      m.solver = MathProgBase.defaultMIPsolver
+      s = solveMIP(m)
+      # Clear solver in case we change problem types
+      m.solver = MathProgBase.MissingSolver("",Symbol[])
+      return s
+    else
+      solveMIP(m)
+    end
   else
-   solveLP(m)
+    if isa(m.solver,MathProgBase.MissingSolver)
+      m.solver = MathProgBase.defaultLPsolver
+      s = solveLP(m)
+      m.solver = MathProgBase.MissingSolver("",Symbol[])
+      return s
+    else
+      solveLP(m)
+    end
   end
 end
 
 function gurobiCheck(m::Model, ismip = false)
-    solvermodule = ismip ? m.mipsolver.solvermodule : m.lpsolver.solvermodule 
     if length(m.obj.qvars1) != 0 || length(m.quadconstr) != 0
 
-        if string(solvermodule) != "Gurobi"
+        if !isa(m.solver,GurobiSolver)
             error("Quadratic objectives/constraints are currently only supported using Gurobi")
         end
         if !ismip
             # Gurobi by default will not compute duals
             # if quadratic constraints are present.
-            push!(m.lpsolver.options,(:QCPDual,1))
+            push!(m.solver.options,(:QCPDual,1))
         end
         return true
     end
     return false
 end
 
-function quadraticGurobi(m::Model, solvermodule, ismip = false)
-    # ugly hack for now until we get CoinMP to support setting objective senses
-    doflip = false
-    if ismip && m.objSense == :Max
-        doflip = true
-    end
+function quadraticGurobi(m::Model)
 
     if length(m.obj.qvars1) != 0
         gurobisolver = getrawsolver(m.internalModel)
-        solvermodule.add_qpterms!(gurobisolver, [v.col for v in m.obj.qvars1], [v.col for v in m.obj.qvars2], !doflip ? m.obj.qcoeffs : -m.obj.qcoeffs)
+        add_qpterms!(gurobisolver, Cint[v.col for v in m.obj.qvars1], Cint[v.col for v in m.obj.qvars2], m.obj.qcoeffs)
     end
 
 # Add quadratic constraint to solver
@@ -52,23 +65,23 @@ function quadraticGurobi(m::Model, solvermodule, ismip = false)
             error("Invalid sense for quadratic constraint")
         end
 
-        solvermodule.add_qconstr!(gurobisolver, 
-                                  [v.col for v in qconstr.terms.aff.vars], 
+        add_qconstr!(gurobisolver, 
+                                  Cint[v.col for v in qconstr.terms.aff.vars], 
                                   qconstr.terms.aff.coeffs, 
-                                  [v.col for v in qconstr.terms.qvars1], 
-                                  [v.col for v in qconstr.terms.qvars2], 
+                                  Cint[v.col for v in qconstr.terms.qvars1], 
+                                  Cint[v.col for v in qconstr.terms.qvars2], 
                                   qconstr.terms.qcoeffs, 
                                   s, 
                                   -qconstr.terms.aff.constant)
     end
 
     if length(m.quadconstr) > 0
-        solvermodule.update_model!(gurobisolver)
+        update_model!(gurobisolver)
     end
 end
 
 # prepare objective, constraint matrix, and row bounds
-function prepProblem(m::Model)
+function prepProblemBounds(m::Model)
 
     objaff::AffExpr = m.obj.aff
     
@@ -88,11 +101,17 @@ function prepProblem(m::Model)
         rowlb[c] = m.linconstr[c].lb
         rowub[c] = m.linconstr[c].ub
     end
+    return f, rowlb, rowub
+end
+
+# prepare column-wise constraint matrix
+function prepConstrMatrix(m::Model)
 
     # Create sparse A matrix
     # First we build it row-wise, then use the efficient transpose
     # Theory is, this is faster than us trying to do it ourselves
     # Intialize storage
+    numRows = length(m.linconstr)
     rowptr = Array(Int,numRows+1)
     nnz = 0
     for c in 1:numRows
@@ -127,29 +146,37 @@ function prepProblem(m::Model)
     # Build the object
     rowmat = SparseMatrixCSC(m.numCols, numRows, rowptr, colval, rownzval)
     A = rowmat'
-
-    return f, A, rowlb, rowub
-
 end
 
 function solveLP(m::Model)
-    f, A, rowlb, rowub = prepProblem(m)  
+    f, rowlb, rowub = prepProblemBounds(m)  
 
     # Ready to solve
 
-    callgurobi = gurobiCheck(m)
-
-    solvermodule = m.lpsolver.solvermodule
-    m.internalModel = solvermodule.model(;m.lpsolver.options...)
-    loadproblem(m.internalModel, A, m.colLower, m.colUpper, f, rowlb, rowub)
-
-    if callgurobi
-        quadraticGurobi(m, solvermodule)
+    if !m.firstsolve
+        try
+            setvarLB!(m.internalModel, m.colLower)
+            setvarUB!(m.internalModel, m.colUpper)
+            setconstrLB!(m.internalModel, rowlb)
+            setconstrUB!(m.internalModel, rowub)
+            setobj!(m.internalModel, f)
+        catch
+            warn("LP solver does not appear to support hot-starts. Problem will be solved from scratch.")
+            m.firstsolve = true
+        end
     end
+    if m.firstsolve
+        A = prepConstrMatrix(m)
+        callgurobi = gurobiCheck(m)
+        m.internalModel = model(m.solver)
+        loadproblem!(m.internalModel, A, m.colLower, m.colUpper, f, rowlb, rowub, m.objSense)
 
-    setsense(m.internalModel, m.objSense)
+        if callgurobi
+            quadraticGurobi(m)
+        end
+    end 
 
-    optimize(m.internalModel)
+    optimize!(m.internalModel)
     stat = status(m.internalModel)
 
     if stat != :Optimal
@@ -161,6 +188,7 @@ function solveLP(m::Model)
         m.colVal = getsolution(m.internalModel)
         m.redCosts = getreducedcosts(m.internalModel)
         m.linconstrDuals = getconstrduals(m.internalModel)
+        m.firstsolve = false
     end
 
     return stat
@@ -168,17 +196,14 @@ function solveLP(m::Model)
 end
 
 function solveMIP(m::Model)
-    f, A, rowlb, rowub = prepProblem(m)
+    f, rowlb, rowub = prepProblemBounds(m)
+    A = prepConstrMatrix(m)
 
     # Build vartype vector
     vartype = zeros(Char,m.numCols)
     for j = 1:m.numCols
         if m.colCat[j] == CONTINUOUS
             vartype[j] = 'C'
-        elseif m.colCat[j] == BINARY
-            vartype[j] = 'I'
-            m.colLower[j] = 0
-            m.colUpper[j] = 1
         else
             vartype[j] = 'I'
         end
@@ -188,23 +213,27 @@ function solveMIP(m::Model)
     
     callgurobi = gurobiCheck(m, true)
    
-    solvermodule = m.mipsolver.solvermodule
-    m.internalModel = solvermodule.model(;m.mipsolver.options...)
-    # CoinMP doesn't support obj senses...
-    if m.objSense == :Max
-        f = -f
+    m.internalModel = model(m.solver)
+    
+    loadproblem!(m.internalModel, A, m.colLower, m.colUpper, f, rowlb, rowub, m.objSense)
+    setvartype!(m.internalModel, vartype)
+
+    if !all(isnan(m.colVal))
+        try
+            setwarmstart!(m.internalModel, m.colVal)
+        catch
+            Base.warn_once("MIP solver does not appear to support warm start solution.")
+        end
     end
-    loadproblem(m.internalModel, A, m.colLower, m.colUpper, f, rowlb, rowub)
-    setvartype(m.internalModel, vartype)
 
     if callgurobi
-        quadraticGurobi(m, solvermodule, true)
+        quadraticGurobi(m)
     end
     if string(solvermodule) == "Gurobi"
         registergurobicallback(m, m.internalModel)
     end
 
-    optimize(m.internalModel)
+    optimize!(m.internalModel)
     stat = status(m.internalModel)
 
     if stat != :Optimal
@@ -215,9 +244,6 @@ function solveMIP(m::Model)
     try
         # store solution values in model
         m.objVal = getobjval(m.internalModel)
-        if m.objSense == :Max
-            m.objVal = -m.objVal
-        end
         m.objVal += m.obj.aff.constant
         m.colVal = getsolution(m.internalModel)
     end

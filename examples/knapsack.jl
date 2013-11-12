@@ -1,7 +1,7 @@
 #############################################################################
 # JuMP
 # An algebraic modelling langauge for Julia
-# See http://github.com/IainNZ/JuMP.jl
+# See http://github.com/JuliaOpt/JuMP.jl
 #############################################################################
 # knapsack.jl
 #
@@ -14,7 +14,7 @@
 using JuMP
 
 # Maximization problem
-m = Model(:Max)
+m = Model()
 
 @defVar(m, x[1:5], Bin)
 
@@ -23,7 +23,7 @@ weight = [ 2, 8, 4, 2, 5 ]
 capacity = 10
 
 # Objective: maximize profit
-@setObjective(m, sum{profit[i]*x[i], i=1:5} )
+@setObjective(m, Max, sum{profit[i]*x[i], i=1:5} )
 
 # Constraint: can carry all
 @addConstraint(m, sum{weight[i]*x[i], i=1:5} <= capacity)

@@ -1,7 +1,7 @@
 #############################################################################
 # JuMP
 # An algebraic modelling langauge for Julia
-# See http://github.com/IainNZ/JuMP.jl
+# See http://github.com/JuliaOpt/JuMP.jl
 #############################################################################
 # qcp.jl
 #
@@ -14,10 +14,12 @@ using JuMP
 # Only solver supported that can solve QCPs so far is Gurobi.
 if Pkg.installed("Gurobi") == nothing
   error("Must have Gurobi available for quadratic constraints")
+else
+  using Gurobi
 end
 
 # Maximization problem
-m = Model(:Max, lpsolver=LPSolver(:Gurobi))
+m = Model(solver=GurobiSolver())
 
 # Need nonnegativity for (rotated) second-order cone
 @defVar(m, x)
@@ -25,7 +27,7 @@ m = Model(:Max, lpsolver=LPSolver(:Gurobi))
 @defVar(m, z >= 0)
 
 # Maximize x
-@setObjective(m, x)
+@setObjective(m, Max, x)
 
 # Subject to 1 linear and 2 nonlinear constraints
 addConstraint(m, x + y + z == 1)

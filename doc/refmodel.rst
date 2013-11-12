@@ -8,31 +8,27 @@ Constructor
 ^^^^^^^^^^^
 
 ``Model`` is a type defined by JuMP. All variables and constraints are 
-associated with a ``Model`` object. It has a constructor that takes 
-one required argument, the objective sense. The objective sense must be 
-one of the symbols ``:Min`` or ``:Max``::
+associated with a ``Model`` object. It has a constructor that has no 
+required arguments::
 
-    m = Model(:Min)
-    m = Model(:Max)
+    m = Model()
 
-The constructor also accepts two optional keyword arguments, ``lpsolver``,
-and ``mipsolver``, which can be used to change the default solver behavior.
+The constructor also accepts an optional keyword argument, ``solver``,
+which can be used to change the default solver behavior.
 
-``lpsolver`` must be an ``LPSolver`` object, which is constructed as follows::
+``solver`` must be an ``AbstractMathProgSolver`` object, which is constructed as follows::
 
-    solver = LPSolver(solvername, Option1=Value1, Option2=Value2, ...)
+    solver = solvername(Option1=Value1, Option2=Value2, ...)
 
-where ``solvername`` is one of the suppored solvers (``:Clp``, ``:GLPK``, and ``:Gurobi``). All options are solver-dependent; see corresponding solver packages for more information. 
-
-``mipsolver`` must be a ``MIPSolver`` object, which is built similarly to ``LPSolver``. The currently supported solvers are ``:Cbc``, ``:GLPK``, and ``:Gurobi``.
+where ``solvername`` is one of the supported LP solvers (``ClpSolver``, ``GLPKSolverLP``, and ``GurobiSolver``) or MIP solvers (``CbcSolver``, ``GLPKSolverMIP``, and ``GurobiSolver``).  To use these objects, the corresponding modules (``Clp``, ``Cbc``, ``GLPKMathProgInterface``, and ``Gurobi``) must be first loaded. All options are solver-dependent; see corresponding solver packages for more information. 
 
 .. note::
-    Currently, the ``mipsolver`` solver is used for any problem with integer variables present. The ``lpsolver`` solver is used for all other problems, including those with continuous variables and **quadratic objectives and/or constraints**.
+    Be sure that the solver provided supports the problem class of the model. For example ``ClpSolver`` and ``GLPKSolverLP`` support only linear programming problems. ``CbcSolver`` and ``GLPKSolverMIP`` support only mixed-integer programming problems. ``GurobiSolver`` supports both classes as well as problems with quadratic objectives and/or constraints.
 
 As an example, we can create a ``Model`` object that will use GLPK's
 exact solver for LPs as follows::
     
-    m = Model(:Min, lpsolver = LPSolver(:GLPK, GLPKmethod=:Exact))
+    m = Model(solver = GLPKSolverLP(method=:Exact))
 
 
 Methods
@@ -46,7 +42,7 @@ Methods
 **Objective**
 
 * ``getObjective(m::Model)`` - returns the objective function as a ``QuadExpr``.
-* ``setObjective(m::Model, a::AffExpr)``, ``setObjective(m::Model, q::QuadExpr)`` - sets the objective function to ``a`` and ``q`` respectively.
+* ``setObjective(m::Model, sense::Symbol, a::AffExpr)``, ``setObjective(m::Model, sense::Symbol, q::QuadExpr)`` - sets the objective function to ``a`` and ``q`` respectively, with given objective sense, which must be either ``:Min`` or ``:Max``.
 * ``getObjectiveSense(m::Model)`` - returns objective sense, either ``:Min`` or ``:Max``.
 * ``setObjectiveSense(m::Model, newSense::Symbol)`` - sets the objective sense (``newSense`` is either ``:Min`` or ``:Max``).
 * ``getObjectiveValue(m::Model)`` - returns objective value after a call to ``solve``.
@@ -65,13 +61,14 @@ solver is ``Gurobi``. The other issue is that the ``@setObjective`` macro
 **does not yet support quadratic terms**, but you may use instead the (slower)
 ``setObjective`` function::
 
-    m = Model(:Min)
+    m = Model()
     @defVar(m, 0 <= x <= 2 )
     @defVar(m, 0 <= y <= 30 )
 
-    setObjective(m, x*x+ 2x*y + y*y )  # Cannot use macro
+    setObjective(m, :Min, x*x+ 2x*y + y*y )  # Cannot use macro
     @addConstraint(m, x + y >= 1 )
       
     print(m)
 
     status = solve(m)
+

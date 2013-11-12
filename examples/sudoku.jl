@@ -1,11 +1,11 @@
 #############################################################################
 # JuMP
 # An algebraic modelling langauge for Julia
-# See http://github.com/IainNZ/JuMP.jl
+# See http://github.com/JuliaOpt/JuMP.jl
 #############################################################################
 # sudoku.jl
 # A sudoku solver that uses a MIP to find solutions
-
+#
 # We have binary variables x[i,j,k] which, if = 1, say that cell (i,j)
 # contains the number k
 # The constraints are:
@@ -32,7 +32,7 @@ end
 
 # Solve model
 function SolveModel(initgrid)
-  m = Model(:Max)  # Feasibility problem, so sense not important
+  m = Model()
 
   @defVar(m, 0 <= x[1:9, 1:9, 1:9] <= 1, Int)
 

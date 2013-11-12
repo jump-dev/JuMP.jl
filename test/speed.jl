@@ -1,7 +1,7 @@
 #############################################################################
 # JuMP
 # An algebraic modelling langauge for Julia
-# See http://github.com/IainNZ/JuMP.jl
+# See http://github.com/JuliaOpt/JuMP.jl
 #############################################################################
 # speed.jl
 #
@@ -9,8 +9,9 @@
 # Examples taken from the Lubin, Dunning paper.
 # 
 # Post past results here
-# -------------------------
-# 2013/10/05  Iain's Dell Laptop
+# ---------------------------------------------------------------------------
+# Iain's Dell Laptop
+# 2013/10/05  ee443c8d6a779ff74373178dbd6086b1912c5f5e
 # Run 1
 # PMEDIAN BUILD MIN=0.37519394   MED=0.72586158
 # PMEDIAN WRITE MIN=1.551488986  MED=1.62851847
@@ -21,6 +22,25 @@
 # PMEDIAN WRITE MIN=1.55169788   MED=1.580791808
 # CONT5 BUILD   MIN=0.248255523  MED=0.454527841
 # CONT5 WRITE   MIN=1.60369395   MED=1.638122135
+# 2013/11/10  042144bf304af0c6f672c87040edf3cffa5890a3
+# Run 1
+# PMEDIAN BUILD MIN=0.386472824  MED=0.577460239
+# PMEDIAN WRITE MIN=1.487720674  MED=1.573461681
+# CONT5 BUILD   MIN=0.237566804  MED=0.43350331
+# CONT5 WRITE   MIN=1.554705597  MED=1.566282347
+# ---------------------------------------------------------------------------
+# Iain's Desktop
+# 2013/10/23  d8c64fd341801a5c266597df4ec52377f42a5260
+# Run 1
+# PMEDIAN BUILD MIN=0.267263966  MED=0.272618701
+# PMEDIAN WRITE MIN=1.263382472  MED=1.26997836
+# CONT5 BUILD   MIN=0.118468756  MED=0.18796253
+# CONT5 WRITE   MIN=1.309088036  MED=1.325527758
+# Run 2
+# PMEDIAN BUILD MIN=0.271933082  MED=0.274442777
+# PMEDIAN WRITE MIN=1.29212427   MED=1.30086527
+# CONT5 BUILD   MIN=0.123911798  MED=0.193959468
+# CONT5 WRITE   MIN=1.293636495  MED=1.305372909
 #############################################################################
 
 using JuMP
@@ -30,7 +50,7 @@ function pMedian(numFacility::Int,numCustomer::Int,numLocation::Int,useMPS)
   customerLocations = [rand(1:numLocation) for a = 1:numCustomer ]
 
   tic()
-  m = Model(:Max)
+  m = Model()
 
   # Facility locations
   @defVar(m, 0 <= s[1:numLocation] <= 1)
@@ -39,7 +59,7 @@ function pMedian(numFacility::Int,numCustomer::Int,numLocation::Int,useMPS)
   @defVar(m, 0 <= x[1:numLocation,1:numCustomer] <= 1)
 
   # Objective: min distance
-  @setObjective(m, sum{abs(customerLocations[a]-i)*x[i,a], a = 1:numCustomer, i = 1:numLocation} )
+  @setObjective(m, Max, sum{abs(customerLocations[a]-i)*x[i,a], a = 1:numCustomer, i = 1:numLocation} )
 
   # Constraints
   for a in 1:numCustomer
@@ -78,10 +98,10 @@ function cont5(n,useMPS)
   yt = [0.5*(1 - (j*dx)^2) for j=0:n]
 	
   tic()
-  mod = Model(:Min)
+  mod = Model()
   @defVar(mod,  0 <= y[0:m,0:n] <= 1)
   @defVar(mod, -1 <= u[1:m] <= 1)
-  @setObjective(mod, y[0,0])
+  @setObjective(mod, Min, y[0,0])
 
   # PDE
   for i = 0:m1
@@ -125,8 +145,8 @@ function RunTests()
   end
   sort!(pmedian_build)
   sort!(pmedian_write)
-  print("PMEDIAN BUILD MIN=",min(pmedian_build),"  MED=",pmedian_build[5],"\n")
-  print("PMEDIAN WRITE MIN=",min(pmedian_write),"  MED=",pmedian_write[5],"\n")
+  print("PMEDIAN BUILD MIN=",minimum(pmedian_build),"  MED=",pmedian_build[5],"\n")
+  print("PMEDIAN WRITE MIN=",minimum(pmedian_write),"  MED=",pmedian_write[5],"\n")
 
   # Cont5
   cont5_build = Float64[]
@@ -138,8 +158,8 @@ function RunTests()
   end
   sort!(cont5_build)
   sort!(cont5_write)
-  print("CONT5 BUILD   MIN=",min(cont5_build),"  MED=",cont5_build[5],"\n")
-  print("CONT5 WRITE   MIN=",min(cont5_write),"  MED=",cont5_write[5],"\n")
+  print("CONT5 BUILD   MIN=",minimum(cont5_build),"  MED=",cont5_build[5],"\n")
+  print("CONT5 WRITE   MIN=",minimum(cont5_write),"  MED=",cont5_write[5],"\n")
 
 end
 

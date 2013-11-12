@@ -17,10 +17,9 @@ the concepts novel but the general appearance will still be familiar.
 Creating a Model
 ^^^^^^^^^^^^^^^^
 
-**Models** are Julia objects. When they are created you can define the sense
-of the objective::
+**Models** are Julia objects. They are created by calling the constructor::
 
-    m = Model(:Min)  # Alternatively, :Max
+    m = Model()
 
 All variables and constraints are associated with a ``Model`` object. For
 a list of all functions related to ``Model``, including how to change the 
@@ -81,14 +80,18 @@ but has some restrictions on how they can be used.
 To add constraints in the first way, use the ``addConstraint()`` and ``setObjective()``
 functions, e.g.::
 
-    setObjective(m, 5x + 22y + (x+y)/2)
+    setObjective(m, :Max, 5x + 22y + (x+y)/2) # or :Min
     addConstraint(m, y + z == 4)  # Other options: <= and >=
 
 The second way is visually very similar, and uses the ``@addConstraint`` and ``@setObjective``
 macros, e.g.::
 
     @addConstraint(m, x[i] - s[i] <= 0)  
-    @setObjective(m, sum{x[i], i=1:numLocation} )
+    @setObjective(m, Max, sum{x[i], i=1:numLocation} )
+
+.. note::
+    The ``sense`` passed to ``setObjective`` must be a `symbol <http://docs.julialang.org/en/latest/manual/metaprogramming/#symbols>`_ type: ``:Min`` or ``:Max``.
+    The ``@setObjective`` macro accepts ``:Min`` and ``:Max``, as well as ``Min`` and ``Max`` (without the colon) directly.
     
 There is one key restriction on the form of the expression in the second case:
 *if there is a product between coefficients and variables, the variables must appear last*. 

@@ -7,7 +7,6 @@ before_install:
     - sudo add-apt-repository ppa:staticfloat/julia-deps -y
     - sudo add-apt-repository ppa:staticfloat/julianightlies -y
     - sudo apt-get update -qq -y
-    - sudo apt-get upgrade -y
     - sudo apt-get install julia -y
     - git config --global user.name "Travis User"
     - git config --global user.email "travis@example.net"

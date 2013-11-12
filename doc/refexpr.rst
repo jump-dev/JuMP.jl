@@ -19,7 +19,7 @@ constraint for ``AffExpr`` is ``LinearConstraint`` which is defined by an
 ``AffExpr`` and a lower and upper bound. If a solver interface does not
 support range constraints, this will automatically translated into two
 constraints at solve time. Constructing constraints manually is not an
-expected behaviour and won't add the constraint to a model automatically.
+expected behavior and won't add the constraint to a model automatically.
 See below for the correct methods.
 
 
@@ -46,7 +46,7 @@ Constraint References
 ^^^^^^^^^^^^^^^^^^^^^
 
 In order to manipulate constraints after creation, it is necessary to maintain
-a reference. For linear constarints both ``@addConstraint`` and ``addConstraint``
+a reference. For linear constraints both ``@addConstraint`` and ``addConstraint``
 return an object of type ``ConstraintRef{LinearConstraint}``. To facilitate
 the storage of these we provide the convenience macro, e.g.::
 
@@ -65,4 +65,4 @@ To obtain the dual of a constraint, call ``getDual`` on the constraint reference
     
     println(getDual(myCons[1]))
 
-Dual information is unavaible for MIPs and has not yet been implemented for quadratic constraints.
+Dual information is unavailable for MIPs and has not yet been implemented for quadratic constraints.

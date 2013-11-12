@@ -9,7 +9,7 @@ This guide will briefly guide you through installing Julia, JuMP and[a] solver[s
 Getting Julia
 ^^^^^^^^^^^^^
 
-At the time of writing this documention Julia is just about to release version ``0.2``. You should download this version instead of the previous version (``0.1.2``) which is not supported by JuMP or the majority of packages. You can easily build from source on OSX and Linux, but the binaries will work well for most people.
+At the time of writing this documentation Julia is just about to release version ``0.2``. You should download this version instead of the previous version (``0.1.2``) which is not supported by JuMP or the majority of packages. You can easily build from source on OSX and Linux, but the binaries will work well for most people.
 
 Download links and more detailed instructions are available on the `Julia website <http://julialang.org>`_.
 
@@ -47,15 +47,12 @@ Clp and Cbc, if available, are the default choice of solver in JuMP.
 Gurobi
 ++++++
 
-`Gurobi <http://gurobi.com>`_ is an excellent high-performance commerical solver. It supports quadratic objectives and constraints, and is currently the only solver supported by Julia/JuMP with that functionality. Install Gurobi as you normally would and then add the `Gurobi.jl <https://github.com/lindahua/Gurobi.jl>`_ package::
+`Gurobi <http://gurobi.com>`_ is an excellent high-performance commercial solver. It supports quadratic objectives and constraints, and is currently the only solver supported by Julia/JuMP with that functionality. Install Gurobi as you normally would and then add the `Gurobi.jl <https://github.com/lindahua/Gurobi.jl>`_ package::
 
     julia> Pkg.add("Gurobi")
 
-.. note::
-   Previously versions of Gurobi.jl required adding environmental variables but it should now "just work" out-of-the-box.
-
 .. warning::
-   If you are using 64-bit Gurobi, you must use 64-bit Julia (and similarily with 32-bit Gurobi).
+   If you are using 64-bit Gurobi, you must use 64-bit Julia (and similarly with 32-bit Gurobi).
   
 The Gurobi package README contains examples of how to use Gurobi within JuMP.
 

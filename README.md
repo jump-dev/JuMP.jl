@@ -5,17 +5,17 @@ JuMP
 JuMP is a domain-specific modeling language for **[mathematical programming]**
 embedded in **[Julia]**. It currently supports a number of open-source and
 commercial solvers ([COIN Clp], [COIN Cbc], [GNU GLPK], [Gurobi]) via a 
-[generic solver-independent interface](https://github.com/mlubin/MathProgBase.jl). 
+[generic solver-independent interface](https://github.com/JuliaOpt/MathProgBase.jl). 
 One the best features of JuMP is its speed - benchmarking has shown that it
 can create problems at similar speeds to special-purpose modeling languages
 such as AMPL while maintaing the expressiveness of a generic high-level 
 programming language.
 
 Our **documentation**, including installation guide, quick-start guide, and
-reference material is available [here](https://jump.readthedocs.org/en/latest/jump.html#installation-guide).
+reference material is available [here](https://jump.readthedocs.org/en/v0.1.1/jump.html#installation-guide).
 
 We have a comprehensive test suite: the current status of the development version of
-JuMP is [![Build Status](https://travis-ci.org/IainNZ/JuMP.jl.png)](https://travis-ci.org/IainNZ/JuMP.jl)
+JuMP is [![Build Status](https://travis-ci.org/JuliaOpt/JuMP.jl.png?branch=master)](https://travis-ci.org/JuliaOpt/JuMP.jl)
 
 *JuMP was formerly known as MathProg.jl*
 
@@ -27,7 +27,7 @@ JuMP can be installed through the Julia package manager (version 0.2 required)
 julia> Pkg.add("JuMP")
 ```
 
-For full installation instructions, including how to install solvers, see the [installation guide](https://jump.readthedocs.org/en/latest/jump.html#installation-guide)
+For full installation instructions, including how to install solvers, see the [installation guide](https://jump.readthedocs.org/en/v0.1.1/jump.html#installation-guide).
 
 [mathematical programming]: http://en.wikipedia.org/wiki/Mathematical_optimization
 [Julia]: http://julialang.org/
@@ -62,4 +62,4 @@ We list below what is currently supported. See the documentation for more inform
 Please report any issues via the Github **[issue tracker]**. All types of issues are welcome and encouraged; this includes bug reports, documentation typos, "how do I do this?" questions, feature requests, etc.
 
 
-[issue tracker]: https://github.com/IainNZ/JuMP.jl/issues
+[issue tracker]: https://github.com/JuliaOpt/JuMP.jl/issues

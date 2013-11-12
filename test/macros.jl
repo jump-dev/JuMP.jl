@@ -25,7 +25,7 @@ sumexpr = :(sum{x[i,j] * y[i,j], i = 1:N, j = 1:M})
 # test JuMP's macros
 
 let 
-    m = Model(:Max)
+    m = Model()
     @defVar(m, w)
     @defVar(m, x)
     @defVar(m, y)
@@ -38,11 +38,13 @@ let
     @test conToStr(m.linconstr[end]) == "0.5 x + 0.5 y == 1.0"
     @addConstraint(m, -1 <= x-y <= t) 
     @test conToStr(m.linconstr[end]) == "-1.0 <= 1.0 x - 1.0 y <= 10.0"
+    @addConstraint(m, -1 <= x+1 <= 1)
+    @test conToStr(m.linconstr[end]) == "-2.0 <= 1.0 x <= 0.0"
     @test_throws @addConstraint(m, x <= t <= y)
 end
 
 let
-    m = Model(:Max)
+    m = Model()
     @defVar(m, x[1:3,1:3])
     @defVar(m, y)
     C = [1 2 3; 4 5 6; 7 8 9]
@@ -54,3 +56,28 @@ let
     @addConstraint(m, sum{ C[i,j]*x[i,j], i = 1:3, j = 1:i} == 0);
     @test conToStr(m.linconstr[end]) == "1.0 _col1 + 4.0 _col4 + 5.0 _col5 + 7.0 _col7 + 8.0 _col8 + 9.0 _col9 == 0.0"
 end
+
+let
+    m = Model()
+    @defVar(m, x[1:3,1:3])
+    C = [1 2 3; 4 5 6; 7 8 9]
+    con = @addConstraint(m, sum{ C[i,j]*x[i,j], i = 1:3, j = 1:3; i != j} == 0)
+    @test conToStr(m.linconstr[end]) == "2.0 _col2 + 3.0 _col3 + 4.0 _col4 + 6.0 _col6 + 7.0 _col7 + 8.0 _col8 == 0.0"
+
+    @defVar(m, y, 0, [con], [-1.0])
+    @test conToStr(m.linconstr[end]) == "2.0 _col2 + 3.0 _col3 + 4.0 _col4 + 6.0 _col6 + 7.0 _col7 + 8.0 _col8 - 1.0 y == 0.0"
+
+    chgConstrRHS(con, 3)
+    @test conToStr(m.linconstr[end]) == "2.0 _col2 + 3.0 _col3 + 4.0 _col4 + 6.0 _col6 + 7.0 _col7 + 8.0 _col8 - 1.0 y == 3.0"
+end
+
+let
+    m = Model()
+    @defVar(m, x)
+    @defVar(m, y)
+    temp = x + 2y + 1
+    @addConstraint(m, 3*temp - x - 2 >= 0)
+    @test conToStr(m.linconstr[end]) == "6.0 y + 2.0 x >= -1.0"
+end
+
+

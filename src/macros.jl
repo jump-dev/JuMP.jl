@@ -29,6 +29,12 @@ function addToExpression(aff::AffExpr,c::Number,x::Number)
     aff.constant += c*x
 end
 
+function addToExpression(aff::AffExpr,c::Number,x::AffExpr)
+    append!(aff.vars, x.vars)
+    append!(aff.coeffs, c*x.coeffs)
+    aff.constant += c*x.constant
+end
+
 function parseCurly(x::Expr, aff::Symbol, constantCoef)
     if (x.args[1] != :sum)
         error("Expected sum outside curly braces")
@@ -138,16 +144,32 @@ macro addConstraint(m, x)
                 error(string("Expected ",$ub," to be a number"))
             end
             $(parseExpr(x.args[3],:aff,1.0))
-            addConstraint($m, LinearConstraint(aff,$(esc(lb)),$(esc(ub))))
+            addConstraint($m, 
+                LinearConstraint(aff,$(esc(lb))-aff.constant,
+                    $(esc(ub))-aff.constant))
         end
     end
 end
 
-macro setObjective(m, x)
-    quote
-        aff = AffExpr()
-        $(parseExpr(x, :aff, 1.0))
-        setObjective($(esc(m)), aff)
+macro setObjective(m, args...)
+    if length(args) == 1
+        x = args[1]
+        quote
+            aff = AffExpr()
+            $(parseExpr(x, :aff, 1.0))
+            setObjective($(esc(m)), aff)
+        end
+    else
+        @assert length(args) == 2
+        sense, x = args
+        if sense == :Min || sense == :Max
+            sense = Expr(:quote,sense)
+        end
+        quote
+            aff = AffExpr()
+            $(parseExpr(x, :aff, 1.0))
+            setObjective($(esc(m)), $(esc(sense)), aff)
+        end
     end
 end
         
@@ -187,15 +209,38 @@ macro defVar(m, x, extra...)
         ub = Inf
     end
     t = JuMP.CONTINUOUS
-    for opt in extra
-        if opt == :Int
-            t = JuMP.INTEGER
-        elseif opt == :Bin
-            t = JuMP.BINARY
-        else
-            error("Unrecognized argument $t")
+    if length(extra) > 0
+        gottype = 0
+        if extra[1] == :Int || extra[1] == :Bin
+            gottype = 1
+            if extra[1] == :Int
+                t = JuMP.INTEGER
+            else
+                if lb != -Inf || ub != Inf
+                    error("Bounds may not be specified for binary variables. These are always taken to have a lower bound of 0 and upper bound of 1.")
+                end
+                t = JuMP.INTEGER
+                lb = 0.0
+                ub = 1.0
+            end
+        end
+        if length(extra) - gottype == 3
+            # adding variable to existing constraints
+            objcoef = esc(extra[1+gottype])
+            cols = esc(extra[2+gottype])
+            coeffs = esc(extra[3+gottype])
+            if !isa(var,Symbol)
+                error("Cannot create multiple variables when adding to existing constraints")
+            end
+            return quote
+                $(esc(var)) = Variable($m,$lb,$ub,$t,$objcoef,$cols,$coeffs,name=$(string(var)))
+                nothing
+            end
+        elseif length(extra) - gottype != 0
+            error("Syntax error in defVar")
         end
     end
+
     #println("lb: $lb ub: $ub var: $var")      
     if isa(var,Symbol)
         # easy case
