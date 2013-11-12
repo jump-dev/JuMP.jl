@@ -211,5 +211,5 @@ let
 
     str = string(modC)
 
-    @test str == "Max 1.0 a - 1.0 b + 2.0 a1 - 10.0 x\nSubject to: \n1.0 a + 1.0 b - 10.0 c - 2.0 x + 1.0 c1 <= 1.0\na ≥ 1.0\nb ≤ 1.0\n-1.0 ≤ c ≤ 1.0\na1 ≥ 1.0, a1∊ℤ\nb1 ≤ 1.0, b1∊ℤ\n-1.0 ≤ c1 ≤ 1.0, c1∊ℤ\nxz∊ℤ\n"
+    @test str == "Max 1.0 a - 1.0 b + 2.0 a1 - 10.0 x\nSubject to: \n1.0 a + 1.0 b - 10.0 c - 2.0 x + 1.0 c1 <= 1.0\na ≥ 1.0\nb ≤ 1.0\n-1.0 ≤ c ≤ 1.0\na1 ≥ 1.0, a1 integer\nb1 ≤ 1.0, b1 integer\n-1.0 ≤ c1 ≤ 1.0, c1 integer\nx binary\ny free\nz free integer\n"
 end

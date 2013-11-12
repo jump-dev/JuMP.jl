@@ -145,25 +145,33 @@ function print(io::IO, m::Model)
   for i in 1:m.numCols
     if m.colCat[i] == INTEGER && m.colLower[i] == 0 && m.colUpper[i] == 1
       print(io, (m.colNames[i] == "" ? string("_col",i) : m.colNames[i]))
-      println(" \u220a {0,1}")
+      # println(" \u220a {0,1}")
+      println(io, " binary")
     elseif m.colLower[i] == -Inf && m.colUpper[i] == Inf
       if m.colCat[i] == INTEGER
         print(io, (m.colNames[i] == "" ? string("_col",i) : m.colNames[i]))
-        println(io, "\u220a\u2124")
+        # println(io, "\u220a\u2124")
+        println(io, " free integer")
+      else
+        print(io, (m.colNames[i] == "" ? string("_col",i) : m.colNames[i]))
+        println(io, " free")
       end
     elseif m.colLower[i] == -Inf
       print(io, (m.colNames[i] == "" ? string("_col",i) : m.colNames[i]))
       print(io, " \u2264 $(m.colUpper[i])")
-      println(io, m.colCat[i] == INTEGER ? ", $(m.colNames[i])\u220a\u2124" : "")
+      # println(io, m.colCat[i] == INTEGER ? ", $(m.colNames[i])\u220a\u2124" : "")
+      println(io, m.colCat[i] == INTEGER ? ", $(m.colNames[i]) integer" : "")
     elseif m.colUpper[i] == Inf
       print(io, (m.colNames[i] == "" ? string("_col",i) : m.colNames[i]))
       print(io, " \u2265 $(m.colLower[i])")
-      println(io, m.colCat[i] == INTEGER ? ", $(m.colNames[i])\u220a\u2124" : "")
+      # println(io, m.colCat[i] == INTEGER ? ", $(m.colNames[i])\u220a\u2124" : "")
+      println(io, m.colCat[i] == INTEGER ? ", $(m.colNames[i]) integer" : "")
     else
       print(io, "$(m.colLower[i]) \u2264 ")
       print(io, (m.colNames[i] == "" ? string("_col",i) : m.colNames[i]))
       print(io, " \u2264 $(m.colUpper[i])")
-      println(io, m.colCat[i] == INTEGER ? ", $(m.colNames[i])\u220a\u2124" : "")
+      # println(io, m.colCat[i] == INTEGER ? ", $(m.colNames[i])\u220a\u2124" : "")
+      println(io, m.colCat[i] == INTEGER ? ", $(m.colNames[i]) integer" : "")
     end
   end
 end
