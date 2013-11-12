@@ -1,8 +1,9 @@
 # TSP
 
 using JuMP
+using Gurobi
 
-m = Model(:Min, mipsolver=MIPSolver(:Gurobi,LazyConstraints=1))
+m = Model(solver=GurobiSolver(LazyConstraints=1))
 
 n = 6
 cities = [ 50 200;
@@ -23,7 +24,7 @@ end
 
 @defVar(m, x[1:n,1:n], Bin)
 
-@setObjective(m, sum{dist[i,j]*x[i,j], i=1:n,j=i:n})
+@setObjective(m, Min, sum{dist[i,j]*x[i,j], i=1:n,j=i:n})
 
 
 # Make symmetric

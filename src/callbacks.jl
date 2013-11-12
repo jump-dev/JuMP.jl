@@ -2,7 +2,7 @@ using Gurobi
 
 setmipsolcallback(m::Model, f::Function) = (m.mipsolcallback = f)
 
-function registergurobicallback(m::Model, grb::GurobiSolver)
+function registergurobicallback(m::Model, grb::Gurobi.GurobiMathProgModel)
     if !isa(m.mipsolcallback, Function)
         return
     end
