@@ -29,8 +29,8 @@ export
   getObjectiveSense, setObjectiveSense, writeLP, writeMPS, setObjective,
   addConstraint, addVar, addVars, solve, copy,
   # Variable
-  setName, getName, setLower, setUpper, getLower, getUpper, getValue,
-  getDual,
+  setName, getName, setLower, setUpper, getLower, getUpper,
+  getValue, setValue, getDual,
   # Expressions and constraints
   affToStr, quadToStr, conToStr, chgConstrRHS,
   
