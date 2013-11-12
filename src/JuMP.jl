@@ -150,7 +150,7 @@ function print(io::IO, m::Model)
     print(io, m.colUpper[i])
     print(io, ", ")
     print(io, m.colNames[i])
-    print(io, "\u2208")
+    print(io, "\u220a")
     println(io, m.colCat[i] == INTEGER ? "\u2124" : "\u211d")
   end
 end
