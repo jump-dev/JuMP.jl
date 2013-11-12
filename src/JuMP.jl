@@ -143,15 +143,16 @@ function print(io::IO, m::Model)
     println(io, conToStr(c))
   end
   for i in 1:m.numCols
-    print(io, m.colLower[i])
-    print(io, " <= ")
+    print(io, m.colLower[i] == -Inf ? "" : "$(m.colLower[i]) \u2264")
+    # print(io, " \u2264 ")
     print(io, (m.colNames[i] == "" ? string("_col",i) : m.colNames[i]))
-    print(io, " <= ")
-    print(io, m.colUpper[i])
-    print(io, ", ")
-    print(io, m.colNames[i])
-    print(io, "\u220a")
-    println(io, m.colCat[i] == INTEGER ? "\u2124" : "\u211d")
+    # print(io, " \u2264 ")
+    print(io, m.colUpper[i] == Inf ? "" : "\u2264 $(m.colUpper[i])")
+    println(io, m.colCat[i] == INTEGER ? ", $(m.colNames[i])\u220a\u2124" : "")
+    # print(io, ", ")
+    # print(io, m.colNames[i])
+    # print(io, "\u220a")
+    # println(io, m.colCat[i] == INTEGER ? "\u2124" : "\u211d")
   end
 end
 show(io::IO, m::Model) = print(m.objSense == :Max ? "Maximization problem" :
