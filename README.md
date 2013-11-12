@@ -15,13 +15,13 @@ Our documentation includes an installation guide, quick-start guide, and referen
 
 **Latest Release**: 0.1.1 (via ``Pkg.add``) 
   * [documentation](https://jump.readthedocs.org/en/release-0.1/jump.html#installation-guide) 
-  * [examples](https://github.com/JuliaOpt/JuMP.jl/tree/release-0.1/examples]) 
+  * [examples](https://github.com/JuliaOpt/JuMP.jl/tree/release-0.1/examples) 
   * Testing status: [![Build Status](https://travis-ci.org/JuliaOpt/JuMP.jl.png?branch=release-0.1)](https://travis-ci.org/JuliaOpt/JuMP.jl)
 
 
 **Development version**: 
   * [documentation](https://jump.readthedocs.org/en/latest/jump.html#installation-guide)
-  * [examples](https://github.com/JuliaOpt/JuMP.jl/tree/master/examples]) 
+  * [examples](https://github.com/JuliaOpt/JuMP.jl/tree/master/examples) 
   * Testing status: [![Build Status](https://travis-ci.org/JuliaOpt/JuMP.jl.png?branch=master)](https://travis-ci.org/JuliaOpt/JuMP.jl)
   * Changes: see [NEWS](https://github.com/JuliaOpt/JuMP.jl/tree/master/NEWS.md)
 
