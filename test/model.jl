@@ -191,4 +191,23 @@ let
     @test dest.linconstr[1].ub == 6.0
     source.quadconstr[1].sense == :(>=)
     @test dest.quadconstr[1].sense == :(<=)
-end    
+end  
+
+#####################################################################
+# Test model printing
+let
+    modC = Model()
+    @defVar(modC, a>=1)
+    @defVar(modC, b<=1)
+    @defVar(modC, -1<=c<=1)
+    @defVar(modC, a1>=1,Int)
+    @defVar(modC, b1<=1,Int)
+    @defVar(modC, -1<=c1<=1,Int)
+    @defVar(modC, x, Bin)
+    @setObjective(modC, Max, a - b + 2a1 - 10x)
+    @addConstraint(modC, a + b - 10c - 2x + c1 <= 1)
+
+    str = string(modC)
+
+    @test str == "Max 1.0 a - 1.0 b + 2.0 a1 - 10.0 x\nSubject to: \n1.0 a + 1.0 b - 10.0 c - 2.0 x + 1.0 c1 <= 1.0\na ≥ 1.0\nb ≤ 1.0\n-1.0 ≤ c ≤ 1.0\na1 ≥ 1.0, a1∊ℤ\nb1 ≤ 1.0, b1∊ℤ\n-1.0 ≤ c1 ≤ 1.0, c1∊ℤ\nx"
+end

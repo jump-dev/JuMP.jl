@@ -143,16 +143,23 @@ function print(io::IO, m::Model)
     println(io, conToStr(c))
   end
   for i in 1:m.numCols
-    print(io, m.colLower[i] == -Inf ? "" : "$(m.colLower[i]) \u2264")
-    # print(io, " \u2264 ")
-    print(io, (m.colNames[i] == "" ? string("_col",i) : m.colNames[i]))
-    # print(io, " \u2264 ")
-    print(io, m.colUpper[i] == Inf ? "" : "\u2264 $(m.colUpper[i])")
-    println(io, m.colCat[i] == INTEGER ? ", $(m.colNames[i])\u220a\u2124" : "")
-    # print(io, ", ")
-    # print(io, m.colNames[i])
-    # print(io, "\u220a")
-    # println(io, m.colCat[i] == INTEGER ? "\u2124" : "\u211d")
+    if m.colCat[i] == INTEGER && m.colLower[i] == 0 && m.colUpper[i] == 1
+      print(io, (m.colNames[i] == "" ? string("_col",i) : m.colNames[i]))
+      println(" \u220a {0,1}")
+    elseif m.colLower[i] == -Inf
+      print(io, (m.colNames[i] == "" ? string("_col",i) : m.colNames[i]))
+      print(io, " \u2264 $(m.colUpper[i])")
+      println(io, m.colCat[i] == INTEGER ? ", $(m.colNames[i])\u220a\u2124" : "")
+    elseif m.colUpper[i] == Inf
+      print(io, (m.colNames[i] == "" ? string("_col",i) : m.colNames[i]))
+      print(io, " \u2265 $(m.colLower[i])")
+      println(io, m.colCat[i] == INTEGER ? ", $(m.colNames[i])\u220a\u2124" : "")
+    else
+      print(io, "$(m.colLower[i]) \u2264 ")
+      print(io, (m.colNames[i] == "" ? string("_col",i) : m.colNames[i]))
+      print(io, " \u2264 $(m.colUpper[i])")
+      println(io, m.colCat[i] == INTEGER ? ", $(m.colNames[i])\u220a\u2124" : "")
+    end
   end
 end
 show(io::IO, m::Model) = print(m.objSense == :Max ? "Maximization problem" :
