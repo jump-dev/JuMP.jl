@@ -243,9 +243,10 @@ type GenericAffExpr{CoefType,VarType}
   coeffs::Array{CoefType,1}
   constant::CoefType
 end
+print(io::IO, a::GenericAffExpr) = print(io, affToStr(a))
+show(io::IO, a::GenericAffExpr) = print(io, affToStr(a))
 
 typealias AffExpr GenericAffExpr{Float64,Variable}
-
 AffExpr() = AffExpr(Variable[],Float64[],0.)
 
 function setObjective(m::Model, a::AffExpr)
@@ -259,9 +260,6 @@ function setObjective(m::Model, sense::Symbol, a::AffExpr)
   m.obj = QuadExpr()
   m.obj.aff = a
 end
-
-print(io::IO, a::AffExpr) = print(io, affToStr(a))
-show(io::IO, a::AffExpr) = print(io, affToStr(a))
 
 function affToStr(a::AffExpr, showConstant=true)
   if length(a.vars) == 0
