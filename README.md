@@ -8,7 +8,7 @@ commercial solvers ([COIN Clp], [COIN Cbc], [GNU GLPK], [Gurobi]) via a
 [generic solver-independent interface](https://github.com/JuliaOpt/MathProgBase.jl). 
 One the best features of JuMP is its speed - benchmarking has shown that it
 can create problems at similar speeds to special-purpose modeling languages
-such as AMPL while maintaing the expressiveness of a generic high-level 
+such as AMPL while maintaining the expressiveness of a generic high-level 
 programming language.
 
 Our documentation includes an installation guide, quick-start guide, and reference manual. 
@@ -62,7 +62,7 @@ We list below what is currently supported. See the documentation for more inform
 
 **Variable types**
 
-* Continous
+* Continuous
 * Integer-valued
 
 ## Bug reports and support
