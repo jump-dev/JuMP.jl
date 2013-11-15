@@ -8,14 +8,22 @@ commercial solvers ([COIN Clp], [COIN Cbc], [GNU GLPK], [Gurobi]) via a
 [generic solver-independent interface](https://github.com/JuliaOpt/MathProgBase.jl). 
 One the best features of JuMP is its speed - benchmarking has shown that it
 can create problems at similar speeds to special-purpose modeling languages
-such as AMPL while maintaing the expressiveness of a generic high-level 
+such as AMPL while maintaining the expressiveness of a generic high-level 
 programming language.
 
-Our **documentation**, including installation guide, quick-start guide, and
-reference material is available [here](https://jump.readthedocs.org/en/v0.1.1/jump.html#installation-guide).
+Our documentation includes an installation guide, quick-start guide, and reference manual. 
 
-We have a comprehensive test suite: the current status of the development version of
-JuMP is [![Build Status](https://travis-ci.org/JuliaOpt/JuMP.jl.png?branch=master)](https://travis-ci.org/JuliaOpt/JuMP.jl)
+**Latest Release**: 0.1.1 (via ``Pkg.add``) 
+  * [documentation](https://jump.readthedocs.org/en/release-0.1/jump.html#installation-guide) 
+  * [examples](https://github.com/JuliaOpt/JuMP.jl/tree/release-0.1/examples) 
+  * Testing status: [![Build Status](https://travis-ci.org/JuliaOpt/JuMP.jl.png?branch=release-0.1)](https://travis-ci.org/JuliaOpt/JuMP.jl)
+
+
+**Development version**: 
+  * [documentation](https://jump.readthedocs.org/en/latest/jump.html#installation-guide)
+  * [examples](https://github.com/JuliaOpt/JuMP.jl/tree/master/examples) 
+  * Testing status: [![Build Status](https://travis-ci.org/JuliaOpt/JuMP.jl.png?branch=master)](https://travis-ci.org/JuliaOpt/JuMP.jl)
+  * Changes: see [NEWS](https://github.com/JuliaOpt/JuMP.jl/tree/master/NEWS.md)
 
 *JuMP was formerly known as MathProg.jl*
 
@@ -27,7 +35,7 @@ JuMP can be installed through the Julia package manager (version 0.2 required)
 julia> Pkg.add("JuMP")
 ```
 
-For full installation instructions, including how to install solvers, see the [installation guide](https://jump.readthedocs.org/en/v0.1.1/jump.html#installation-guide).
+For full installation instructions, including how to install solvers, see the documentation linked above. 
 
 [mathematical programming]: http://en.wikipedia.org/wiki/Mathematical_optimization
 [Julia]: http://julialang.org/
@@ -54,7 +62,7 @@ We list below what is currently supported. See the documentation for more inform
 
 **Variable types**
 
-* Continous
+* Continuous
 * Integer-valued
 
 ## Bug reports and support
