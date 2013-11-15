@@ -229,9 +229,7 @@ function solveMIP(m::Model)
     if callgurobi
         quadraticGurobi(m)
     end
-    if isa(m.solver, GurobiSolver)
-        registergurobicallback(m, m.internalModel)
-    end
+    registercallbacks(m)
 
     optimize!(m.internalModel)
     stat = status(m.internalModel)

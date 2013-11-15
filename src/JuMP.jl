@@ -76,7 +76,7 @@ type Model
   # true if we haven't solved yet
   firstsolve::Bool
   # callback
-  mipsolcallback
+  lazycallback
 end
 
 # Default constructor

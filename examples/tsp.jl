@@ -46,7 +46,7 @@ for j = 1:n
 end
 
 using Gurobi
-function subtour(cb::Gurobi.CallbackData)
+function subtour(cb)
   println("In subtour")
   cur_sol = getValue(x)
   println(cur_sol)
@@ -108,7 +108,7 @@ function subtour(cb::Gurobi.CallbackData)
 
 end
 
-setmipsolcallback(m, subtour)
+setlazycallback(m, subtour)
 solve(m)
 
 println(getValue(x))

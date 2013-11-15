@@ -1,20 +1,17 @@
-using Gurobi
+setlazycallback(m::Model, f::Function) = (m.lazycallback = f)
 
-setmipsolcallback(m::Model, f::Function) = (m.mipsolcallback = f)
-
-function registergurobicallback(m::Model, grb::Gurobi.GurobiMathProgModel)
-    if !isa(m.mipsolcallback, Function)
-        return
-    end
-    function gurobicallback(cbdata::CallbackData, where::Cint)
-        if where == CB_MIPSOL
-            m.colVal = cbget_mipsol_sol(cbdata, where)
-            m.mipsolcallback(cbdata)
+function registercallbacks(m::Model)
+    if isa(m.lazycallback, Function)
+        function lazycallback(d::MathProgCallbackData)
+            m.colVal = cbgetmipsolution(d)
+            m.lazycallback(d)
         end
+        #try
+            setlazycallback!(m.internalModel, lazycallback)
+        #catch
+        #    error("Solver does not support lazy callbacks")
+        #end
     end
-
-    set_callback_func!(grb.inner, gurobicallback)
-
 end
 
 macro addLazyConstraint(cbdata, x)
@@ -29,36 +26,16 @@ macro addLazyConstraint(cbdata, x)
             $(parseExpr(lhs, :aff, 1.0))
             constr = $(x.args[2])(aff,0)
             # don't check for duplicates yet
-            sens = sense(constr)
-            local csense::Char
-            if sens == :(==)
-                csense = '='
-            elseif sens == :(<=)
-                csense = '<'
-            else
-                csense = '>'
-            end
-            cblazy($cbdata, Cint[v.col for v in aff.vars], aff.coeffs, csense, rhs(constr))
+            cbaddlazy!($cbdata, Cint[v.col for v in aff.vars], aff.coeffs, sense(constr), rhs(constr))
         end
     else
         error("Syntax error (ranged constraints not permitted in callbacks)")
     end
 end
 
-function addLazyConstraint(cbdata::CallbackData, constr::LinearConstraint)
-    sens = sense(constr)
-    local csense::Char
-    if sens == :(==)
-        csense = '='
-    elseif sens == :(<=)
-        csense = '<'
-    else
-        csense = '>'
-    end
-    cblazy(cbdata, Cint[v.col for v in constr.terms.vars], constr.terms.coeffs, csense, rhs(constr))
-
-
+function addLazyConstraint(cbdata::MathProgCallbackData, constr::LinearConstraint)
+    cbaddlazy!(cbdata, Cint[v.col for v in constr.terms.vars], constr.terms.coeffs, sense(constr), rhs(constr))
 end
 
-export addLazyConstraint, @addLazyConstraint, setmipsolcallback
+export addLazyConstraint, @addLazyConstraint, setlazycallback
 
