@@ -11,6 +11,7 @@ before_install:
     - sudo add-apt-repository ppa:staticfloat/julianightlies -y
     - sudo apt-get update -qq -y
     - sudo apt-get install julia -y
+    - sudo apt-get install libgmp-dev -y
     - git config --global user.name "Travis User"
     - git config --global user.email "travis@example.net"
 script:
