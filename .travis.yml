@@ -3,16 +3,20 @@ compiler:
     - gcc
 notifications:
     email: false
+env:
+    - PKGADD="Cbc;Clp"
+    - PKGADD="GLPKMathProgInterface"
 before_install:
     - sudo add-apt-repository ppa:staticfloat/julia-deps -y
     - sudo add-apt-repository ppa:staticfloat/julianightlies -y
     - sudo apt-get update -qq -y
     - sudo apt-get install julia -y
+    - sudo apt-get install libgmp-dev -y
     - git config --global user.name "Travis User"
     - git config --global user.email "travis@example.net"
 script:
     - julia -e 'versioninfo(); Pkg.init();'
-    - julia -e 'Pkg.add("MathProgBase"); Pkg.add("Cbc"); Pkg.add("Clp")'
+    - julia -e 'for p in split(ENV["PKGADD"],";") Pkg.add(p) end'
     - mkdir -p ~/.julia/JuMP
     - cp -R ./* ~/.julia/JuMP/
     - cd ~/.julia/JuMP/
