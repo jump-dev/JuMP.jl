@@ -6,8 +6,8 @@ Solver Callbacks
 
 Many solvers offer the ability to modify the solve process. Examples include
 changing branching decisions in branch-and-bound, adding custom cuts, providing
-solvers with integer solutions, or adding new constraints only when the current
-solution violates them (lazy constraints).
+solvers with integer solutions, or adding new constraints only when they are
+violated by the current solution (lazy constraints).
 
 Solver-independent modelling languages do not, in general, provide a way to
 provide callbacks that will work with any solver. However, JuMP does provide
@@ -19,19 +19,21 @@ Lazy Constraints
 
 Lazy constraints are useful when the full set of constraints is too large to
 explicitly include in the initial formulation. When a MIP solver reaches a new
-solution, either with a heuristic or by solving a problem at a node in the
-branch-and-bound tree, it will give the user to provide constraint(s) that
-would make the current solution infeasible.
+solution, for example with a heuristic or by solving a problem at a node in the
+branch-and-bound tree, it will give the user the chance to provide constraint(s)
+that would make the current solution infeasible.
 
 There are three important steps to providing a lazy constraint callback. First we
 must write a function that will analyze the current solution that takes a 
-single argument, e.g. ``function myLazyCutGenerator(cb)``, that is reference
-to the callback management code inside JuMP. Next, you will do whatever
+single argument, e.g. ``function myLazyCutGenerator(cb)``, where cb is a reference
+to the callback management code inside JuMP. Next you will do whatever
 analysis of the solution you need to inside your function to generate the new
-constraint before adding it to the model with the JuMP function 
-``addLazyConstraint(cb, myconstraint)``. Finally we notify JuMP that this
-function should be used for lazy constraint generation using the
-``setlazycallback(m, myLazyCutGenerator)`` function before we call ``solve(m)``.
+constraint before adding it to the model with the JuMP function
+``addLazyConstraint(cb, myconstraint)`` or the macro version
+``@addLazyConstraint(cb, myconstraint)`` (same limitations as addConstraint).
+Finally we notify JuMP that this function should be used for lazy constraint
+generation using the ``setlazycallback(m, myLazyCutGenerator)`` function 
+before we call ``solve(m)``.
 
 The following is a simple example to make this more clear. In this two-dimensional
 problem we have a set of box constraints explicitly provided and a set of two
@@ -78,14 +80,14 @@ will be either (0,2) or (2,2), and the final solution will be (1,2)::
         if y_val - x_val > 1 + TOL
             # Cut off this solution
             println("Solution was in top left, cut it off")
-            # Use the original variables
-            addLazyConstraint(cb, y - x <= 1)
+            # Use the original variables, but not m - cb instead
+            @addLazyConstraint(cb, y - x <= 1)
         # Check top right
         elseif y_val + x_val > 3 + TOL
             # Cut off this solution
             println("Solution was in top right, cut it off")
-            # Use the original variables
-            addLazyConstraint(cb, y + x <= 3)
+            # Use the original variables, but not m - cb instead
+            @addLazyConstraint(cb, y + x <= 3)
         end
     end  # End of callback function
 
@@ -113,9 +115,9 @@ Code Design Considerations
 ^^^^^^^^^^^^^^^^^^^^^^^^^^
 
 In the above example the callback function is defined in the same scope as
-the model and variable definitions. If we defined the function in some other
-scope, or even file, we would not be able to access them. The proposed
-solution to this design problem is to seperate the logic of analyzing the
+the model and variable definitions, allowing us to access them. If we defined
+the function in some other scope, or even file, we would not be able to access them directly.
+The proposed solution to this design problem is to seperate the logic of analyzing the
 current solution values from the callback itself. This has many benefits,
 including writing unit tests for the callback function to check its
 correctness. The callback function pased to JuMP is then simply a stub
@@ -144,8 +146,10 @@ previous example, consider the following code::
         end
     end
 
+    # A unit test for the cornerChecker function
     function test_cornerChecker()
-        # Test the four corners
+        # Test the four corners - only two should produce cuts
+        
         newcut, x_coeff, y_coeff, rhs = cornerChecker(0, 0)
         @test !newcut
 
@@ -182,7 +186,7 @@ previous example, consider the following code::
             newcut, x_coeff, y_coeff, rhs = cornerChecker(x_val, y_val)
 
             if newcut
-                addLazyConstraint(cb, x_coeff*x + y_coeff*y <= rhs)
+                @addLazyConstraint(cb, x_coeff*x + y_coeff*y <= rhs)
             end
         end  # End of callback function
 

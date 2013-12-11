@@ -31,8 +31,9 @@ function cornerChecker(x_val, y_val)
     end
 end
 
+# A unit test for the cornerChecker function
 function test_cornerChecker()
-    # Test the four corners
+    # Test the four corners - only two should produce cuts
     newcut, x_coeff, y_coeff, rhs = cornerChecker(0, 0)
     @test !newcut
 
@@ -69,7 +70,7 @@ function solveProblem()
         newcut, x_coeff, y_coeff, rhs = cornerChecker(x_val, y_val)
 
         if newcut
-            addLazyConstraint(cb, x_coeff*x + y_coeff*y <= rhs)
+            @addLazyConstraint(cb, x_coeff*x + y_coeff*y <= rhs)
         end
     end  # End of callback function
 

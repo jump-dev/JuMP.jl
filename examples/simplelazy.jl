@@ -50,13 +50,13 @@ function corners(cb)
         # Cut off this solution
         println("Solution was in top left, cut it off")
         # Use the original variables
-        addLazyConstraint(cb, y - x <= 1)
+        @addLazyConstraint(cb, y - x <= 1)
     # Check top right
     elseif y_val + x_val > 3 + TOL
         # Cut off this solution
         println("Solution was in top right, cut it off")
         # Use the original variables
-        addLazyConstraint(cb, y + x <= 3)
+        @addLazyConstraint(cb, y + x <= 3)
     end
 end  # End of callback function
 
