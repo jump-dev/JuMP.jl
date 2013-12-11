@@ -1,3 +1,14 @@
+#############################################################################
+# JuMP
+# An algebraic modelling langauge for Julia
+# See http://github.com/JuliaOpt/JuMP.jl
+#############################################################################
+# simplelazy.jl
+#
+# Solve a simple problem using lazy constraints. See documentation for more
+# details about callbacks.
+#############################################################################
+
 using JuMP
 using Gurobi
 
