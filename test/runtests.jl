@@ -22,7 +22,7 @@ if Pkg.installed("Gurobi") != nothing
     println(" Test: $(curtest)")
     include(curtest)
   end
-elseif Pkg.install("Cplex") != nothing
+elseif Pkg.installed("Cplex") != nothing
   cplextests = ["callback.jl"]
   for curtest in cplextests
     println(" Test: $(curtest)")
