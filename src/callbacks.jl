@@ -3,7 +3,7 @@ setlazycallback(m::Model, f::Function) = (m.lazycallback = f)
 function registercallbacks(m::Model)
     if isa(m.lazycallback, Function)
         function lazycallback(d::MathProgCallbackData)
-            m.colVal = cbgetmipsolution(d)
+            cbgetmipsolution(d,m.colVal)
             m.lazycallback(d)
         end
         #try
