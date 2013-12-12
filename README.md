@@ -13,10 +13,10 @@ programming language.
 
 Our documentation includes an installation guide, quick-start guide, and reference manual. 
 
-**Latest Release**: 0.1.2 (via ``Pkg.add``) 
-  * [documentation](https://jump.readthedocs.org/en/release-0.1/jump.html#installation-guide) 
-  * [examples](https://github.com/JuliaOpt/JuMP.jl/tree/release-0.1/examples) 
-  * Testing status: [![Build Status](https://travis-ci.org/JuliaOpt/JuMP.jl.png?branch=release-0.1)](https://travis-ci.org/JuliaOpt/JuMP.jl)
+**Latest Release**: 0.2.0 (via ``Pkg.add``) 
+  * [documentation](https://jump.readthedocs.org/en/release-0.2/jump.html#installation-guide) 
+  * [examples](https://github.com/JuliaOpt/JuMP.jl/tree/release-0.2/examples) 
+  * Testing status: [![Build Status](https://travis-ci.org/JuliaOpt/JuMP.jl.png?branch=release-0.2)](https://travis-ci.org/JuliaOpt/JuMP.jl)
 
 
 **Development version**: 
@@ -37,12 +37,7 @@ julia> Pkg.add("JuMP")
 
 For full installation instructions, including how to install solvers, see the documentation linked above. 
 
-[mathematical programming]: http://en.wikipedia.org/wiki/Mathematical_optimization
-[Julia]: http://julialang.org/
-[COIN Clp]: https://github.com/mlubin/Clp.jl
-[COIN Cbc]: https://github.com/mlubin/Cbc.jl
-[GNU GLPK]: http://www.gnu.org/software/glpk/
-[Gurobi]: http://www.gurobi.com/
+
 
 ## Supported problem classes
 
@@ -65,9 +60,21 @@ We list below what is currently supported. See the documentation for more inform
 * Continuous
 * Integer-valued
 
+## Solver-independent callbacks
+
+JuMP supports solver-indepenent callbacks that allow you to modify aspects of solver behaviour.
+We currently support lazy constraint generation callbacks, which are available with both Gurobi
+and CPLEX.
+
 ## Bug reports and support
 
 Please report any issues via the Github **[issue tracker]**. All types of issues are welcome and encouraged; this includes bug reports, documentation typos, "how do I do this?" questions, feature requests, etc.
 
 
 [issue tracker]: https://github.com/JuliaOpt/JuMP.jl/issues
+[mathematical programming]: http://en.wikipedia.org/wiki/Mathematical_optimization
+[Julia]: http://julialang.org/
+[COIN Clp]: https://github.com/mlubin/Clp.jl
+[COIN Cbc]: https://github.com/mlubin/Cbc.jl
+[GNU GLPK]: http://www.gnu.org/software/glpk/
+[Gurobi]: http://www.gurobi.com/

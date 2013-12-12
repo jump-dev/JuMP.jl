@@ -1,7 +1,7 @@
 JuMP release notes
 ==================
 
-Version 0.2.0 (UNRELEASED)
+Version 0.2.0 (December 12, 2013)
 --------------------------
 
   * Breaking change: Objective sense is specified in setObjective
@@ -10,6 +10,8 @@ Version 0.2.0 (UNRELEASED)
     single ``solver`` option.
   * Problem modification with efficient LP restarts and MIP warm-starts.
   * Relatedly, column-wise modeling now supported.
+  * Solver-independent callbacks supported. Currently we support only
+    a "lazy constraint" callback, which works with Gurobi and CPLEX.
 
 Version 0.1.2 (November 16, 2013)
 ---------------------------------
