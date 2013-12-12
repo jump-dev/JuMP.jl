@@ -75,6 +75,8 @@ type Model
   solver::AbstractMathProgSolver
   # true if we haven't solved yet
   firstsolve::Bool
+  # callback
+  lazycallback
 end
 
 # Default constructor
@@ -87,7 +89,7 @@ function Model(sense::Symbol;lpsolver=MathProgBase.defaultLPsolver,mipsolver=Mat
     # use default solvers
     Model(QuadExpr(),sense,LinearConstraint[], QuadConstraint[],
           0,String[],Float64[],Float64[],Int[],
-          0,Float64[],Float64[],Float64[],nothing,MathProgBase.MissingSolver("",Symbol[]),true)
+          0,Float64[],Float64[],Float64[],nothing,MathProgBase.MissingSolver("",Symbol[]),true,nothing)
   else
     if !isa(solver,AbstractMathProgSolver)
       error("solver argument ($solver) must be an AbstractMathProgSolver")
@@ -95,7 +97,7 @@ function Model(sense::Symbol;lpsolver=MathProgBase.defaultLPsolver,mipsolver=Mat
     # user-provided solver must support problem class
     Model(QuadExpr(),sense,LinearConstraint[], QuadConstraint[],
           0,String[],Float64[],Float64[],Int[],
-          0,Float64[],Float64[],Float64[],nothing,solver,true)
+          0,Float64[],Float64[],Float64[],nothing,solver,true,nothing)
   end
 end
 
@@ -108,7 +110,7 @@ function Model(;solver=nothing,lpsolver=MathProgBase.defaultLPsolver,mipsolver=M
     # use default solvers
     Model(QuadExpr(),:Min,LinearConstraint[], QuadConstraint[],
           0,String[],Float64[],Float64[],Int[],
-          0,Float64[],Float64[],Float64[],nothing,MathProgBase.MissingSolver("",Symbol[]),true)
+          0,Float64[],Float64[],Float64[],nothing,MathProgBase.MissingSolver("",Symbol[]),true,nothing)
   else
     if !isa(solver,AbstractMathProgSolver)
       error("solver argument ($solver) must be an AbstractMathProgSolver")
@@ -116,7 +118,7 @@ function Model(;solver=nothing,lpsolver=MathProgBase.defaultLPsolver,mipsolver=M
     # user-provided solver must support problem class
     Model(QuadExpr(),:Min,LinearConstraint[], QuadConstraint[],
           0,String[],Float64[],Float64[],Int[],
-          0,Float64[],Float64[],Float64[],nothing,solver,true)
+          0,Float64[],Float64[],Float64[],nothing,solver,true,nothing)
   end
 end
 
@@ -602,6 +604,8 @@ include("writers.jl")
 include("solvers.jl")
 # Macros - @defVar, sum{}, etc.
 include("macros.jl")
+
+include("callbacks.jl")
 
 ##########################################################################
 end

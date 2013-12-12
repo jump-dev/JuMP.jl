@@ -17,7 +17,7 @@ for curtest in tests
 end
 
 if Pkg.installed("Gurobi") != nothing
-  gurobitests = ["qcqpmodel.jl", "quadmodel.jl"]
+  gurobitests = ["qcqpmodel.jl", "quadmodel.jl", "callback.jl"]
   for curtest in gurobitests
     println(" Test: $(curtest)")
     include(curtest)

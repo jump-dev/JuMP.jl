@@ -45,6 +45,8 @@ If you are new to Julia or want more details, read on to the next section.
 .. include:: refexpr.rst
 .. Problem modification
 .. include:: probmod.rst
+.. Callbacks
+.. include:: callbacks.rst
 
 ----------
 References
