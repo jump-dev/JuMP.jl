@@ -21,7 +21,8 @@ Lazy constraints are useful when the full set of constraints is too large to
 explicitly include in the initial formulation. When a MIP solver reaches a new
 solution, for example with a heuristic or by solving a problem at a node in the
 branch-and-bound tree, it will give the user the chance to provide constraint(s)
-that would make the current solution infeasible.
+that would make the current solution infeasible. For some more information about
+lazy constraints, see this blog post by `Paul Rubin <http://orinanobworld.blogspot.com/2012/08/user-cuts-versus-lazy-constraints.html>`_.
 
 There are three important steps to providing a lazy constraint callback. First we
 must write a function that will analyze the current solution that takes a 
@@ -149,7 +150,7 @@ previous example, consider the following code::
     # A unit test for the cornerChecker function
     function test_cornerChecker()
         # Test the four corners - only two should produce cuts
-        
+
         newcut, x_coeff, y_coeff, rhs = cornerChecker(0, 0)
         @test !newcut
 
