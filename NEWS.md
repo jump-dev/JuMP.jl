@@ -12,7 +12,7 @@ Version 0.2.0 (December 15, 2013)
   * Relatedly, column-wise modeling now supported.
   * Solver-independent callbacks supported. Currently we support only
     a "lazy constraint" callback, which works with Gurobi, CPLEX, and GLPK.
-	More callbacks coming soon.
+    More callbacks coming soon.
 
 Version 0.1.2 (November 16, 2013)
 ---------------------------------
