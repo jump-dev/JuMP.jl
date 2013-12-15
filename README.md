@@ -62,9 +62,9 @@ We list below what is currently supported. See the documentation for more inform
 
 ## Solver-independent callbacks
 
-JuMP supports solver-indepenent callbacks that allow you to modify aspects of solver behaviour.
-We currently support lazy constraint generation callbacks, which are available with both Gurobi
-and CPLEX.
+JuMP supports solver-indepenent callbacks that allow you to modify aspects of solver behavior.
+We currently support lazy constraint generation callbacks, which are available with
+Gurobi, CPLEX, and GLPK.
 
 ## Bug reports and support
 
