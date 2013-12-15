@@ -64,7 +64,7 @@ Installing `GLPK <https://github.com/carlobaldassi/GLPK.jl>`_ is a bit more invo
 CPLEX
 +++++
 
-`CPLEX <http://www-01.ibm.com/software/commerce/optimization/cplex-optimizer/>` is a leading commercial solver. An experimental interface is available via the `CPLEXLink <https://github.com/joehuchette/CPLEXLink.jl>` package. Note that this interface requires using CPLEX as a shared library, which is unsupported by the CPLEX developers.
+`CPLEX <http://www-01.ibm.com/software/commerce/optimization/cplex-optimizer/>`_ is a leading commercial solver. An experimental interface is available via the `CPLEXLink <https://github.com/joehuchette/CPLEXLink.jl>`_ package. Note that this interface requires using CPLEX as a shared library, which is unsupported by the CPLEX developers.
 
 
 
