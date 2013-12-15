@@ -22,14 +22,19 @@ if Pkg.installed("Gurobi") != nothing
     println(" Test: $(curtest)")
     include(curtest)
   end
-elseif Pkg.installed("CPLEX") != nothing
-  cplextests = ["callback.jl"]
-  for curtest in cplextests
+else
+  println("WARNING: Gurobi not installed, cannot execute corresponding tests")
+end
+
+
+callbacktests = ["callback.jl"]
+if Pkg.installed("Gurobi") != nothing || Pkg.installed("CPLEX") != nothing || Pkg.installed("GLPKMathProgInterface") != nothing
+  for curtest in callbacktests
     println(" Test: $(curtest)")
     include(curtest)
   end  
 else
-  println("WARNING: Gurobi not installed, cannot execute corresponding tests")
+  println("WARNING: Solver supporting callbacks not installed, cannot execute corresponding tests")
 end
 
 # hygiene.jl should be run separately
