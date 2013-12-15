@@ -30,7 +30,7 @@ Solver support in Julia is currently provided by writing a solver-specific packa
 COIN-OR Clp and Cbc
 +++++++++++++++++++
 
-Support for Clp and Cbc is provided via `CoinMP <https://projects.coin-or.org/CoinMP>`_ and the `Cbc.jl <https://github.com/mlubin/Cbc.jl>`_ and `Clp.jl <https://github.com/mlubin/Clp.jl>`_ packages. You can install these solvers through the package manager::
+Support for Clp and Cbc is provided via `CoinMP <https://projects.coin-or.org/CoinMP>`_ and the `Cbc.jl <https://github.com/JuliaOpt/Cbc.jl>`_ and `Clp.jl <https://github.com/JuliaOpt/Clp.jl>`_ packages. You can install these solvers through the package manager::
 
     julia> Pkg.add("Cbc")
     julia> Pkg.add("Clp")  # Clp depends on Cbc, so installing Clp first
@@ -47,7 +47,7 @@ Clp and Cbc, if available, are the default choice of solver in JuMP.
 Gurobi
 ++++++
 
-`Gurobi <http://gurobi.com>`_ is an excellent high-performance commercial solver. It supports quadratic objectives and constraints, and is currently the only solver supported by Julia/JuMP with that functionality. Install Gurobi as you normally would and then add the `Gurobi.jl <https://github.com/lindahua/Gurobi.jl>`_ package::
+`Gurobi <http://gurobi.com>`_ is an excellent high-performance commercial solver. It supports quadratic objectives and constraints, and is currently the only solver supported by Julia/JuMP with that functionality. Install Gurobi as you normally would and then add the `Gurobi.jl <https://github.com/JuliaOpt/Gurobi.jl>`_ package::
 
     julia> Pkg.add("Gurobi")
 
@@ -59,7 +59,7 @@ The Gurobi package README contains examples of how to use Gurobi within JuMP.
 GLPK
 ++++
 
-Installing `GLPK <https://github.com/carlobaldassi/GLPK.jl>`_ is a bit more involved than can be covered here - see the `documentation <https://gplkjl.readthedocs.org/en/latest/glpk.html>`_ for more information.
+Installing `GLPK <https://github.com/JuliaOpt/GLPK.jl>`_ is a bit more involved than can be covered here - see the `documentation <https://gplkjl.readthedocs.org/en/latest/glpk.html>`_ for more information.
 
 CPLEX
 +++++
