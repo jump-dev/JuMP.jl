@@ -12,7 +12,7 @@ violated by the current solution (lazy constraints).
 Solver-independent modelling languages do not, in general, provide a way to
 provide callbacks that will work with any solver. However, JuMP does provide
 limited support for this functionality. Currently we have cross-solver support
-for adding "lazy constraints" for the Gurobi and CPLEX solvers.
+for adding "lazy constraints" for the Gurobi, CPLEX, and GLPK solvers.
 
 Lazy Constraints
 ^^^^^^^^^^^^^^^^

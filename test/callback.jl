@@ -23,8 +23,8 @@ if Pkg.installed("Gurobi") != nothing
   end
 end
 
-if Pkg.installed("CPLEX") != nothing
-  using CPLEX
+if Pkg.installed("CPLEXLink") != nothing
+  using CPLEXLink
 
   let
     mod = Model(solver=CplexSolver())

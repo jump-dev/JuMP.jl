@@ -28,7 +28,7 @@ end
 
 
 callbacktests = ["callback.jl"]
-if Pkg.installed("Gurobi") != nothing || Pkg.installed("CPLEX") != nothing || Pkg.installed("GLPKMathProgInterface") != nothing
+if Pkg.installed("Gurobi") != nothing || Pkg.installed("CPLEXLink") != nothing || Pkg.installed("GLPKMathProgInterface") != nothing
   for curtest in callbacktests
     println(" Test: $(curtest)")
     include(curtest)

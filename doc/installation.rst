@@ -9,7 +9,7 @@ This guide will briefly guide you through installing Julia, JuMP and[a] solver[s
 Getting Julia
 ^^^^^^^^^^^^^
 
-At the time of writing this documentation Julia is just about to release version ``0.2``. You should download this version instead of the previous version (``0.1.2``) which is not supported by JuMP or the majority of packages. You can easily build from source on OSX and Linux, but the binaries will work well for most people.
+At the time of writing this documentation the latest release of Julia is version ``0.2``, which is the version required by JuMP. You can easily build from source on OSX and Linux, but the binaries will work well for most people.
 
 Download links and more detailed instructions are available on the `Julia website <http://julialang.org>`_.
 
@@ -25,7 +25,7 @@ This command checks `METADATA.jl <https://github.com/JuliaLang/METADATA.jl/tree/
 Getting Solvers
 ^^^^^^^^^^^^^^^
 
-Solver support in Julia is currently provided by writing a solver-specific package that provides a very thin wrapper around the solver's C interface and providing a standard interface that JuMP can call. If you are interested in providing an interface to your solver, please get in touch. We currently have interfaces for COIN-OR, Gurobi, and GNU GLPK.
+Solver support in Julia is currently provided by writing a solver-specific package that provides a very thin wrapper around the solver's C interface and providing a standard interface that JuMP can call. If you are interested in providing an interface to your solver, please get in touch. We currently have interfaces for COIN-OR, Gurobi, GNU GLPK, and CPLEX.
 
 COIN-OR Clp and Cbc
 +++++++++++++++++++
@@ -60,6 +60,11 @@ GLPK
 ++++
 
 Installing `GLPK <https://github.com/carlobaldassi/GLPK.jl>`_ is a bit more involved than can be covered here - see the `documentation <https://gplkjl.readthedocs.org/en/latest/glpk.html>`_ for more information.
+
+CPLEX
++++++
+
+`CPLEX <http://www-01.ibm.com/software/commerce/optimization/cplex-optimizer/>` is a leading commercial solver. An experimental interface is available via the `CPLEXLink <https://github.com/joehuchette/CPLEXLink.jl>` package. Note that this interface requires using CPLEX as a shared library, which is unsupported by the CPLEX developers.
 
 
 
