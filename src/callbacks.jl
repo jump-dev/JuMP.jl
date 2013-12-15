@@ -25,16 +25,18 @@ macro addLazyConstraint(cbdata, x)
             aff = AffExpr()
             $(parseExpr(lhs, :aff, 1.0))
             constr = $(x.args[2])(aff,0)
-            # don't check for duplicates yet
-            cbaddlazy!($cbdata, Cint[v.col for v in aff.vars], aff.coeffs, sense(constr), rhs(constr))
+            addLazyConstraint($cbdata, constr)
         end
     else
         error("Syntax error (ranged constraints not permitted in callbacks)")
     end
 end
 
+const sensemap = [:(<=) => '<', :(==) => '=', :(>=) => '>']
+
 function addLazyConstraint(cbdata::MathProgCallbackData, constr::LinearConstraint)
-    cbaddlazy!(cbdata, Cint[v.col for v in constr.terms.vars], constr.terms.coeffs, sense(constr), rhs(constr))
+    # don't check for duplicates yet
+    cbaddlazy!(cbdata, Cint[v.col for v in constr.terms.vars], constr.terms.coeffs, sensemap[sense(constr)], rhs(constr))
 end
 
 export addLazyConstraint, @addLazyConstraint, setlazycallback
