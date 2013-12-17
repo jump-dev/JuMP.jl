@@ -9,7 +9,7 @@ changing branching decisions in branch-and-bound, adding custom cuts, providing
 solvers with integer solutions, or adding new constraints only when they are
 violated by the current solution (lazy constraints).
 
-Solver-independent modelling languages do not, in general, provide a way to
+Solver-independent modeling languages do not, in general, provide a way to
 provide callbacks that will work with any solver. However, JuMP does provide
 limited support for this functionality. Currently we have cross-solver support
 for adding "lazy constraints" for the Gurobi, CPLEX, and GLPK solvers.
@@ -118,10 +118,10 @@ Code Design Considerations
 In the above example the callback function is defined in the same scope as
 the model and variable definitions, allowing us to access them. If we defined
 the function in some other scope, or even file, we would not be able to access them directly.
-The proposed solution to this design problem is to seperate the logic of analyzing the
+The proposed solution to this design problem is to separate the logic of analyzing the
 current solution values from the callback itself. This has many benefits,
 including writing unit tests for the callback function to check its
-correctness. The callback function pased to JuMP is then simply a stub
+correctness. The callback function passed to JuMP is then simply a stub
 that extracts the current solution and any other relevant information
 and passes that to the constraint generation logic. To apply this to our
 previous example, consider the following code::
