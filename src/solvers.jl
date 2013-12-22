@@ -180,14 +180,31 @@ function solveLP(m::Model)
     stat = status(m.internalModel)
 
     if stat != :Optimal
-        println("Warning: LP not solved to optimality, status: ", stat)
+        warn("LP not solved to optimality, status: ", stat)
+        if stat == :Infeasible
+            try
+                m.linconstrDuals = getinfeasibilityray(m)
+            catch
+                println("Infeasibility ray (Farkas proof) not available")
+            end
+        elseif stat == :Unbounded
+            try
+                m.colVal = getunboundedray(m)
+            catch
+                println("Unbounded ray not available")
+            end
+        end
     else
         # store solution values in model
         m.objVal = getobjval(m.internalModel)
         m.objVal += m.obj.aff.constant
         m.colVal = getsolution(m.internalModel)
-        m.redCosts = getreducedcosts(m.internalModel)
-        m.linconstrDuals = getconstrduals(m.internalModel)
+        try
+            m.redCosts = getreducedcosts(m.internalModel)
+            m.linconstrDuals = getconstrduals(m.internalModel)
+        catch
+            warn("Dual solutions not available")
+        end
         m.firstsolve = false
     end
 

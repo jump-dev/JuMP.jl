@@ -64,7 +64,9 @@ Methods
 
 **Values**
 
-* ``getValue(x)`` - Get the value of this variable in the solution. If ``x`` is a single variable, this will simply return a number. If ``x`` is indexable then it will return an indexable dictionary of values.
+* ``getValue(x)`` - Get the value of this variable in the solution. If ``x`` is a single variable, this will simply return a number. 
+  If ``x`` is indexable then it will return an indexable dictionary of values. When the model is unbounded, ``getValue`` will 
+  instead return the corresponding components of an unbounded ray, if available from the solver.
 * ``setValue(x,v)`` - Provide an initial value ``v`` for this variable that can be used by supporting MILP solvers. If ``v`` is ``NaN``, the solver may attempt to fill in this value to construct a feasible solution.
 * ``getDual(x)`` - Get the reduced cost of this variable in the solution. Similar behavior to ``getValue`` for indexable variables.
 

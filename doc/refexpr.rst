@@ -66,3 +66,6 @@ To obtain the dual of a constraint, call ``getDual`` on the constraint reference
     println(getDual(myCons[1]))
 
 Dual information is unavailable for MIPs and has not yet been implemented for quadratic constraints.
+
+When an LP model is infeasible, ``getDual`` will return the corresponding component of the
+infeasibility ray (Farkas proof), if available from the solver.
