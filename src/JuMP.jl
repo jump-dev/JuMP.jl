@@ -230,7 +230,14 @@ Variable(m::Model,lower::Number,upper::Number,cat::Int) =
 
 # Name setter/getters
 setName(v::Variable,n::String) = (v.m.colNames[v.col] = n)
-getName(v::Variable) = (v.m.colNames[v.col] == "" ? string("_col",v.col) : v.m.colNames[v.col])
+
+function getName(v::Variable) 
+  if length(v.m.colNames) > 0
+    return (v.m.colNames[v.col] == "" ? string("_col",v.col) : v.m.colNames[v.col])
+  end
+  nothing
+end
+
 getName(m::Model, col) = (m.colNames[col] == "" ? string("_col",col) : m.colNames[col])
 print(io::IO, v::Variable) = print(io, getName(v))
 show(io::IO, v::Variable) = print(io, getName(v))
