@@ -6,9 +6,11 @@ notifications:
 env:
     - PKGADD="Cbc;Clp"
     - PKGADD="GLPKMathProgInterface"
+    - JULIAVERSION="julianightlies"
+    - JULIAVERSION="juliareleases"
 before_install:
     - sudo add-apt-repository ppa:staticfloat/julia-deps -y
-    - sudo add-apt-repository ppa:staticfloat/julianightlies -y
+    - sudo add-apt-repository ppa:staticfloat/${JULIAVERSION} -y
     - sudo apt-get update -qq -y
     - sudo apt-get install julia -y
     - sudo apt-get install libgmp-dev -y
