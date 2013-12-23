@@ -180,16 +180,16 @@ function solveLP(m::Model)
     stat = status(m.internalModel)
 
     if stat != :Optimal
-        warn("LP not solved to optimality, status: ", stat)
+        warn("LP not solved to optimality, status: $stat")
         if stat == :Infeasible
             try
-                m.linconstrDuals = getinfeasibilityray(m)
+                m.linconstrDuals = getinfeasibilityray(m.internalModel)
             catch
                 println("Infeasibility ray (Farkas proof) not available")
             end
         elseif stat == :Unbounded
             try
-                m.colVal = getunboundedray(m)
+                m.colVal = getunboundedray(m.internalModel)
             catch
                 println("Unbounded ray not available")
             end

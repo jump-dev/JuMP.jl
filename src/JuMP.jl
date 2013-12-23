@@ -445,11 +445,15 @@ abstract JuMPConstraint
 # An affine expression with lower bound (possibly -Inf) and upper bound (possibly Inf).
 type LinearConstraint <: JuMPConstraint
   terms::AffExpr
-  lb::Real
-  ub::Real
-
-  LinearConstraint(terms::AffExpr, lb::Real, ub::Real) = new(terms, float(lb), float(ub))
+  lb::Float64
+  ub::Float64
 end
+
+if VERSION.major == 0 && VERSION.minor < 3
+    LinearConstraint(terms::AffExpr,lb::Number,ub::Number) =
+        LinearConstraint(terms,float(lb),float(ub))
+end
+
 
 function addConstraint(m::Model, c::LinearConstraint)
   push!(m.linconstr,c)
