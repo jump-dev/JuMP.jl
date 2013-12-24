@@ -16,6 +16,4 @@ q1 = x[1]*x[2] + 27.2*LongName + 5
 @test quadToStr(q1) == "1.0 _col1*_col2 + 27.2 LongName + 5.0"
 # Test like term collection
 q2 = x[1]*x[2] + x[2]*x[1]
-println("  TODO: Collect like terms before print")
-println("        e.g. $q2")
-#@test quadToStr(q2) == "2.0 _col1*_col2"
+@test quadToStr(q2) == "2.0 _col1*_col2"

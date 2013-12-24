@@ -387,30 +387,42 @@ function quadToStr(q::QuadExpr)
     return affToStr(q.aff)
   end
 
-  termStrings = Array(UTF8String, 2*length(q.qvars1))
-  if length(q.qvars1) > 0
-    if q.qcoeffs[1] < 0
+  m::Model = q.qvars1[1].m
+  # canonicalize and merge duplicates
+  for ind in 1:length(q.qvars1)
+      if q.qvars2[ind].col < q.qvars1[ind].col
+          q.qvars1[ind],q.qvars2[ind] = q.qvars2[ind],q.qvars1[ind]
+      end
+  end
+  Q = sparse([v.col for v in q.qvars1], [v.col for v in q.qvars2], q.qcoeffs)
+  I,J,V = findnz(Q)
+
+  termStrings = Array(UTF8String, 2*nnz(Q))
+  if nnz(Q) > 0
+    if V[1] < 0
       termStrings[1] = "-"
     else
       termStrings[1] = ""
     end
-    for ind in 1:length(q.qvars1)
+    for ind in 1:nnz(Q)
       if ind >= 2
-        if q.qcoeffs[ind] < 0
+        if V[ind] < 0
           termStrings[2*ind-1] = " - "
         else 
           termStrings[2*ind-1] = " + "
         end
       end
-      if q.qvars1[ind].col == q.qvars2[ind].col
+      x = Variable(m,I[ind])
+      if I[ind] == J[ind]
         # Squared term
-        termStrings[2*ind] = string(abs(q.qcoeffs[ind])," ",
-                                    getName(q.qvars1[ind]),"²")
+        termStrings[2*ind] = string(abs(V[ind])," ",
+                                    getName(x),"²")
       else
         # Normal term
-        termStrings[2*ind] = string(abs(q.qcoeffs[ind])," ",
-                                    getName(q.qvars1[ind]),"*",
-                                    getName(q.qvars2[ind]))
+        y = Variable(m,J[ind])
+        termStrings[2*ind] = string(abs(V[ind])," ",
+                                    getName(x),"*",
+                                    getName(y))
       end
     end
   end
