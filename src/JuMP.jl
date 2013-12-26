@@ -472,7 +472,7 @@ function addConstraint(m::Model, c::LinearConstraint)
   if !m.firstsolve
     # TODO: we don't check for duplicates here
     try
-      addconstr!(m.internalModel,[v.idx for v in c.terms.vars],c.terms.coeffs,c.lb,c.ub)
+      addconstr!(m.internalModel,[v.col for v in c.terms.vars],c.terms.coeffs,c.lb,c.ub)
     catch
       Base.warn_once("Solver does not appear to support adding constraints to an existing model. Hot-start is disabled.")
       m.firstsolve = true
