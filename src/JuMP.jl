@@ -75,8 +75,9 @@ type Model
   solver::AbstractMathProgSolver
   # true if we haven't solved yet
   firstsolve::Bool
-  # callback
+  # callbacks
   lazycallback
+  cutcallback
 end
 
 # Default constructor
@@ -89,7 +90,8 @@ function Model(sense::Symbol;lpsolver=MathProgBase.defaultLPsolver,mipsolver=Mat
     # use default solvers
     Model(QuadExpr(),sense,LinearConstraint[], QuadConstraint[],
           0,String[],Float64[],Float64[],Int[],
-          0,Float64[],Float64[],Float64[],nothing,MathProgBase.MissingSolver("",Symbol[]),true,nothing)
+          0,Float64[],Float64[],Float64[],nothing,MathProgBase.MissingSolver("",Symbol[]),true,
+          nothing,nothing)
   else
     if !isa(solver,AbstractMathProgSolver)
       error("solver argument ($solver) must be an AbstractMathProgSolver")
@@ -97,7 +99,8 @@ function Model(sense::Symbol;lpsolver=MathProgBase.defaultLPsolver,mipsolver=Mat
     # user-provided solver must support problem class
     Model(QuadExpr(),sense,LinearConstraint[], QuadConstraint[],
           0,String[],Float64[],Float64[],Int[],
-          0,Float64[],Float64[],Float64[],nothing,solver,true,nothing)
+          0,Float64[],Float64[],Float64[],nothing,solver,true,
+          nothing,nothing)
   end
 end
 
@@ -110,7 +113,8 @@ function Model(;solver=nothing,lpsolver=MathProgBase.defaultLPsolver,mipsolver=M
     # use default solvers
     Model(QuadExpr(),:Min,LinearConstraint[], QuadConstraint[],
           0,String[],Float64[],Float64[],Int[],
-          0,Float64[],Float64[],Float64[],nothing,MathProgBase.MissingSolver("",Symbol[]),true,nothing)
+          0,Float64[],Float64[],Float64[],nothing,MathProgBase.MissingSolver("",Symbol[]),true,
+          nothing,nothing)
   else
     if !isa(solver,AbstractMathProgSolver)
       error("solver argument ($solver) must be an AbstractMathProgSolver")
@@ -118,7 +122,8 @@ function Model(;solver=nothing,lpsolver=MathProgBase.defaultLPsolver,mipsolver=M
     # user-provided solver must support problem class
     Model(QuadExpr(),:Min,LinearConstraint[], QuadConstraint[],
           0,String[],Float64[],Float64[],Int[],
-          0,Float64[],Float64[],Float64[],nothing,solver,true,nothing)
+          0,Float64[],Float64[],Float64[],nothing,solver,true,
+          nothing,nothing)
   end
 end
 
@@ -186,6 +191,8 @@ function copy(source::Model)
   
   dest = Model()
   dest.solver = source.solver  # The two models are linked by this
+  dest.lazycallback = source.lazycallback
+  dest.cutcallback = source.cutcallback
   
   # Objective
   dest.obj = copy(source.obj, dest)
