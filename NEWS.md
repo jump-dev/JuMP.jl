@@ -8,6 +8,7 @@ Version 0.3.0 (development version)
    components of an unbounded ray when a model is unbounded, if supported
    by the selected solver. getDual() will return an infeasibility ray (Farkas proof)
    if a model is infeasible and the selected solver supports this feature.
+ * Solver-independent callbacks for user generated cuts.
 
 Version 0.2.0 (December 15, 2013)
 ---------------------------------
