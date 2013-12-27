@@ -26,14 +26,14 @@ lazy constraints, see this blog post by `Paul Rubin <http://orinanobworld.blogsp
 
 There are three important steps to providing a lazy constraint callback. First we
 must write a function that will analyze the current solution that takes a 
-single argument, e.g. ``function myLazyCutGenerator(cb)``, where cb is a reference
+single argument, e.g. ``function myLazyConGenerator(cb)``, where cb is a reference
 to the callback management code inside JuMP. Next you will do whatever
 analysis of the solution you need to inside your function to generate the new
 constraint before adding it to the model with the JuMP function
 ``addLazyConstraint(cb, myconstraint)`` or the macro version
 ``@addLazyConstraint(cb, myconstraint)`` (same limitations as addConstraint).
 Finally we notify JuMP that this function should be used for lazy constraint
-generation using the ``setlazycallback(m, myLazyCutGenerator)`` function 
+generation using the ``setlazycallback(m, myLazyConGenerator)`` function 
 before we call ``solve(m)``.
 
 The following is a simple example to make this more clear. In this two-dimensional
@@ -112,19 +112,92 @@ The code should print something like (amongst the output from Gurobi)::
 
 This code can also be found in ``/JuMP/examples/simplelazy.jl``.
 
+
+User Cuts
+^^^^^^^^^
+
+User cuts, or simply cuts, provide a way for the user to tighten the LP relaxation using problem-specific knowledge that the solver cannot or is unable to infer from the model. Just like with lazy constraints, when a MIP solver reaches a new node in the branch-and-bound tree, it will give the user the chance to provide cuts to make the current relaxed (fractional) solution infeasible in the hopes of obtaining an integer solution. For more details about the difference between user cuts and lazy constraints see the aforementioned `blog post <http://orinanobworld.blogspot.com/2012/08/user-cuts-versus-lazy-constraints.html>`_.
+
+Your user cuts should not change the set of integer feasible solutions. Equivalently, your cuts can only remove fractional solutions - that is, "tighten" the LP relaxation of the MILP. If you add a cut that removes an integer solution, the solver may return an incorrect solution.
+
+Adding a user cut callback is similar to adding a lazy constraint callback. First we
+must write a function that will analyze the current solution that takes a 
+single argument, e.g. ``function myUserCutGenerator(cb)``, where cb is a reference
+to the callback management code inside JuMP. Next you will do whatever
+analysis of the solution you need to inside your function to generate the new
+constraint before adding it to the model with the JuMP function
+``addUserCut(cb, myconstraint)`` or the macro version
+``@addUserCut(cb, myconstraint)`` (same limitations as addConstraint).
+Finally we notify JuMP that this function should be used for lazy constraint
+generation using the ``setcutcallback(m, myUserCutGenerator)`` function 
+before we call ``solve(m)``.
+
+Consider the following example which is related to the lazy constraint example. The problem is two-dimensional, and the objective sense prefers solution in the top-right of a 2-by-2 square. There is a single constraint that cuts off the top-right corner to make the LP relaxation solution fractional. We will exploit our knowledge of the problem structure to add a user cut that will make the LP relaxation integer, and thus solve the problem at the root node::
+
+    using JuMP
+    using Gurobi
+
+    # We will use Gurobi, which requires that we manually set the attribute
+    # PreCrush to 1 if we have user cuts. We will also disable PreSolve, Cuts,
+    # and Heuristics so only our cut will be used
+    m = Model(solver=GurobiSolver(PreCrush=1, Cuts=0, Presolve=0, Heuristics=0.0))
+
+    # Define our variables to be inside a box, and integer
+    @defVar(m, 0 <= x <= 2, Int)
+    @defVar(m, 0 <= y <= 2, Int)
+
+    # Optimal solution is trying to go towards top-right corner (2.0, 2.0)
+    @setObjective(m, Max, x + 2y)
+
+    # We have one constraint that cuts off the top right corner
+    @addConstraint(m, y + x <= 3.5)
+
+    # Optimal solution of relaxed problem will be (1.5, 2.0)
+    # We can add a user cut that will cut of this fractional solution.
+
+    # We now define our callback function that takes one argument,
+    # the callback handle. Note that we can access m, x, and y because
+    # this function is defined inside the same scope
+    function mycutgenerator(cb)
+        x_val = getValue(x)
+        y_val = getValue(y)
+        println("In callback function, x=$x_val, y=$y_val")
+
+        # Allow for some impreciseness in the solution
+        TOL = 1e-6
+        
+        # Check top right
+        if y_val + x_val > 3 + TOL
+            # Cut off this solution
+            println("Fractional solution was in top right, cut it off")
+            # Use the original variables
+            @addUserCut(cb, y + x <= 3)
+        end
+    end  # End of callback function
+
+    # Tell JuMP/Gurobi to use our callback function
+    setcutcallback(m, mycutgenerator)
+
+    # Solve the problem
+    solve(m)
+
+    # Print our final solution
+    println("Final solution: [ $(getValue(x)), $(getValue(y)) ]")
+
+The code should print something like (amongst the output from Gurobi)::
+    
+    In callback function, x=1.5, y=2.0
+    Fractional solution was in top right, cut it off
+    In callback function, x=1.0, y=2.0
+    Final solution: [ 1.0, 2.0 ]
+
+This code can also be found in ``/JuMP/examples/simpleusercut.jl``.
+
+
 Code Design Considerations
 ^^^^^^^^^^^^^^^^^^^^^^^^^^
 
-In the above example the callback function is defined in the same scope as
-the model and variable definitions, allowing us to access them. If we defined
-the function in some other scope, or even file, we would not be able to access them directly.
-The proposed solution to this design problem is to separate the logic of analyzing the
-current solution values from the callback itself. This has many benefits,
-including writing unit tests for the callback function to check its
-correctness. The callback function passed to JuMP is then simply a stub
-that extracts the current solution and any other relevant information
-and passes that to the constraint generation logic. To apply this to our
-previous example, consider the following code::
+In the above examples the callback function is defined in the same scope as the model and variable definitions, allowing us to access them. If we defined the function in some other scope, or even file, we would not be able to access them directly. The proposed solution to this design problem is to separate the logic of analyzing the current solution values from the callback itself. This has many benefits, including writing unit tests for the callback function to check its correctness. The callback function passed to JuMP is then simply a stub that extracts the current solution and any other relevant information and passes that to the constraint generation logic. To apply this to our previous lazy constraint example, consider the following code::
 
     using JuMP
     using Gurobi
