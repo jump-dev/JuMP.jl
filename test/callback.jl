@@ -2,9 +2,11 @@
 # TODO: Put this inside macro
 if Pkg.installed("Gurobi") != nothing  
   using Gurobi
-elseif Pkg.installed("CPLEXLink") != nothing
+end
+if Pkg.installed("CPLEXLink") != nothing
   using CPLEXLink
-elseif Pkg.installed("GLPKMathProgInterface") != nothing
+end
+if Pkg.installed("GLPKMathProgInterface") != nothing
   using GLPKMathProgInterface
 end
 
