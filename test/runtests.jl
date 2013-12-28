@@ -7,7 +7,8 @@ tests = ["expr.jl",
          "operator.jl",
          "macros.jl",
          "model.jl",
-         "probmod.jl"]
+         "probmod.jl",
+         "callback.jl"]
 
 println("Running tests:")
 
@@ -24,17 +25,6 @@ if Pkg.installed("Gurobi") != nothing
   end
 else
   println("WARNING: Gurobi not installed, cannot execute corresponding tests")
-end
-
-
-callbacktests = ["callback.jl"]
-if Pkg.installed("Gurobi") != nothing || Pkg.installed("CPLEXLink") != nothing || Pkg.installed("GLPKMathProgInterface") != nothing
-  for curtest in callbacktests
-    println(" Test: $(curtest)")
-    include(curtest)
-  end  
-else
-  println("WARNING: Solver supporting callbacks not installed, cannot execute corresponding tests")
 end
 
 # hygiene.jl should be run separately
