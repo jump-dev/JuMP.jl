@@ -2,6 +2,10 @@ if Pkg.installed("Gurobi") != nothing
   eval(Expr(:using,:Gurobi))
 end
 
+if Pkg.installed("CPLEXLink") != nothing
+  eval(Expr(:using,:CPLEXLink))
+end
+
 function solve(m::Model)
   # Analyze model to see if any integers
   anyInts = false
@@ -34,13 +38,22 @@ function solve(m::Model)
   end
 end
 
-function gurobiCheck(m::Model, ismip = false)
+function quadCheck(m::Model, ismip = false)
     if length(m.obj.qvars1) != 0 || length(m.quadconstr) != 0
-
-        if !isa(m.solver,GurobiSolver)
-            error("Quadratic objectives/constraints are currently only supported using Gurobi")
+        if isdefined(:(GurobiSolver))
+            GurobiCheck  = isa(m.solver,GurobiSolver)
+        else
+            GurobiCheck  = false
         end
-        if !ismip
+        if isdefined(:(CplexSolver))
+            CplexCheck  = isa(m.solver,CplexSolver)
+        else
+            CplexCheck  = false
+        end
+        if !GurobiCheck && !CplexCheck
+            error("Quadratic objectives/constraints are currently only supported using Gurobi or CPLEXLink")
+        end
+        if !ismip && isa(m.solver,GurobiSolver)
             # Gurobi by default will not compute duals
             # if quadratic constraints are present.
             push!(m.solver.options,(:QCPDual,1))
@@ -50,34 +63,21 @@ function gurobiCheck(m::Model, ismip = false)
     return false
 end
 
-function quadraticGurobi(m::Model)
+function addQuadratics(m::Model)
 
     if length(m.obj.qvars1) != 0
-        gurobisolver = getrawsolver(m.internalModel)
-        add_qpterms!(gurobisolver, Cint[v.col for v in m.obj.qvars1], Cint[v.col for v in m.obj.qvars2], m.obj.qcoeffs)
+      setquadobj!(m.internalModel, Cint[v.col for v in m.obj.qvars1], Cint[v.col for v in m.obj.qvars2], m.obj.qcoeffs)
     end
 
 # Add quadratic constraint to solver
     for k in 1:length(m.quadconstr)
         qconstr = m.quadconstr[k]
-        gurobisolver = getrawsolver(m.internalModel)
         if !((s = string(qconstr.sense)[1]) in ['<', '>', '='])
-            error("Invalid sense for quadratic constraint")
+          error("Invalid sense for quadratic constraint")
         end
-
-        add_qconstr!(gurobisolver, 
-                                  Cint[v.col for v in qconstr.terms.aff.vars], 
-                                  qconstr.terms.aff.coeffs, 
-                                  Cint[v.col for v in qconstr.terms.qvars1], 
-                                  Cint[v.col for v in qconstr.terms.qvars2], 
-                                  qconstr.terms.qcoeffs, 
-                                  s, 
-                                  -qconstr.terms.aff.constant)
+        addquadconstr!(m.internalModel, Cint[v.col for v in qconstr.terms.aff.vars], qconstr.terms.aff.coeffs, Cint[v.col for v in qconstr.terms.qvars1], Cint[v.col for v in qconstr.terms.qvars2], qconstr.terms.qcoeffs, s, -qconstr.terms.aff.constant)
     end
-
-    if length(m.quadconstr) > 0
-        update_model!(gurobisolver)
-    end
+    writeproblem(m.internalModel, "out.lp")
 end
 
 # prepare objective, constraint matrix, and row bounds
@@ -167,12 +167,12 @@ function solveLP(m::Model)
     end
     if m.firstsolve
         A = prepConstrMatrix(m)
-        callgurobi = gurobiCheck(m)
+        hasQuad = quadCheck(m)
         m.internalModel = model(m.solver)
         loadproblem!(m.internalModel, A, m.colLower, m.colUpper, f, rowlb, rowub, m.objSense)
 
-        if callgurobi
-            quadraticGurobi(m)
+        if hasQuad
+            addQuadratics(m)
         end
     end 
 
@@ -228,7 +228,7 @@ function solveMIP(m::Model)
 
     # Ready to solve
     
-    callgurobi = gurobiCheck(m, true)
+    hasQuad = quadCheck(m, true)
    
     m.internalModel = model(m.solver)
     
@@ -243,8 +243,8 @@ function solveMIP(m::Model)
         end
     end
 
-    if callgurobi
-        quadraticGurobi(m)
+    if hasQuad
+        addQuadratics(m)
     end
     registercallbacks(m)
 
