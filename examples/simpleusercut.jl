@@ -13,8 +13,8 @@ using JuMP
 using Gurobi
 
 # We will use Gurobi, which requires that we manually set the attribute
-# PreCrush to 1 if we have user cuts. We will also disable PreSolve
-# and Cuts so only our cut will be used
+# PreCrush to 1 if we have user cuts. We will also disable PreSolve, Cuts,
+# and Heuristics so only our cut will be used
 m = Model(solver=GurobiSolver(PreCrush=1, Cuts=0, Presolve=0, Heuristics=0.0))
 
 # Define our variables to be inside a box, and integer
