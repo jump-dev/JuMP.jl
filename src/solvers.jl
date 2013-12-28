@@ -77,7 +77,6 @@ function addQuadratics(m::Model)
         end
         addquadconstr!(m.internalModel, Cint[v.col for v in qconstr.terms.aff.vars], qconstr.terms.aff.coeffs, Cint[v.col for v in qconstr.terms.qvars1], Cint[v.col for v in qconstr.terms.qvars2], qconstr.terms.qcoeffs, s, -qconstr.terms.aff.constant)
     end
-    writeproblem(m.internalModel, "out.lp")
 end
 
 # prepare objective, constraint matrix, and row bounds
