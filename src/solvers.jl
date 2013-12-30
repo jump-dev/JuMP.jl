@@ -1,11 +1,3 @@
-if Pkg.installed("Gurobi") != nothing
-  eval(Expr(:using,:Gurobi))
-end
-
-if Pkg.installed("CPLEXLink") != nothing
-  eval(Expr(:using,:CPLEXLink))
-end
-
 function solve(m::Model)
   # Analyze model to see if any integers
   anyInts = false
@@ -40,17 +32,8 @@ end
 
 function quadCheck(m::Model, ismip = false)
     if length(m.obj.qvars1) != 0 || length(m.quadconstr) != 0
-        if isdefined(:(GurobiSolver))
-            GurobiCheck  = isa(m.solver,GurobiSolver)
-        else
-            GurobiCheck  = false
-        end
-        if isdefined(:(CplexSolver))
-            CplexCheck  = isa(m.solver,CplexSolver)
-        else
-            CplexCheck  = false
-        end
-        if !GurobiCheck && !CplexCheck
+        solverType = string(typeof(m.solver))
+        if solverType != "GurobiSolver" && solverType != "CplexSolver"
             error("Quadratic objectives/constraints are currently only supported using Gurobi or CPLEXLink")
         end
         if !ismip && isa(m.solver,GurobiSolver)
