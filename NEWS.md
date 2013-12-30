@@ -1,8 +1,16 @@
 JuMP release notes
 ==================
 
+Version 0.3.0 (development version)
+-----------------------------------
+
+ * Unbounded/infeasibility rays: getValue() will return the corresponding
+   components of an unbounded ray when a model is unbounded, if supported
+   by the selected solver. getDual() will return an infeasibility ray (Farkas proof)
+   if a model is infeasible and the selected solver supports this feature.
+
 Version 0.2.0 (December 15, 2013)
---------------------------
+---------------------------------
 
   * **Breaking change**: Objective sense is specified in setObjective
     instead of in the Model constructor.
