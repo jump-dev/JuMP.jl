@@ -36,7 +36,7 @@ function quadCheck(m::Model, ismip = false)
         if solverType != "GurobiSolver" && solverType != "CplexSolver"
             error("Quadratic objectives/constraints are currently only supported using Gurobi or CPLEXLink")
         end
-        if !ismip && isa(m.solver,GurobiSolver)
+        if !ismip && solverType == "GurobiSolver"
             # Gurobi by default will not compute duals
             # if quadratic constraints are present.
             push!(m.solver.options,(:QCPDual,1))
