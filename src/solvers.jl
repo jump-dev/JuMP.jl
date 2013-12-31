@@ -49,7 +49,7 @@ end
 function addQuadratics(m::Model)
 
     if length(m.obj.qvars1) != 0
-      setquadobj!(m.internalModel, Cint[v.col for v in m.obj.qvars1], Cint[v.col for v in m.obj.qvars2], m.obj.qcoeffs)
+      setquadobjterms!(m.internalModel, Cint[v.col for v in m.obj.qvars1], Cint[v.col for v in m.obj.qvars2], m.obj.qcoeffs)
     end
 
 # Add quadratic constraint to solver
