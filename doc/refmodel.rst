@@ -56,10 +56,10 @@ Methods
 Quadratic Objectives
 ^^^^^^^^^^^^^^^^^^^^
 
-Quadratic objectives are supported by JuMP but currently the only supported
-solver is ``Gurobi``. The other issue is that the ``@setObjective`` macro
-**does not yet support quadratic terms**, but you may use instead the (slower)
-``setObjective`` function::
+Quadratic objectives are supported by JuMP using a solver which implements the
+corresponding extensions of the MathProgBase interface, but currently the 
+``@setObjective`` macro **does not yet support quadratic terms**. Instead you
+may use the (slower) ``setObjective`` function::
 
     m = Model()
     @defVar(m, 0 <= x <= 2 )

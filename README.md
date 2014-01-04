@@ -47,13 +47,13 @@ We list below what is currently supported. See the documentation for more inform
 **Objective types**
 
 * Linear
-* Convex Quadratic (Gurobi only)
+* Convex Quadratic
 
 **Constraint types**
 
 * Linear
-* Convex Quadratic (Gurobi only)
-* Second-order Conic (Gurobi only)
+* Convex Quadratic
+* Second-order Conic
 
 **Variable types**
 
