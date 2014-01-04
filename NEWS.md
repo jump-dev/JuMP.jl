@@ -9,6 +9,7 @@ Version 0.3.0 (development version)
    by the selected solver. getDual() will return an infeasibility ray (Farkas proof)
    if a model is infeasible and the selected solver supports this feature.
  * Solver-independent callbacks for user generated cuts.
+ * Use new interface for solver-independent QCQP.
 
 Version 0.2.0 (December 15, 2013)
 ---------------------------------
