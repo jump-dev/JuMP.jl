@@ -13,9 +13,9 @@ using JuMP
 
 # Only solver supported that can solve QCPs so far is Gurobi.
 if Pkg.installed("Gurobi") == nothing
-  error("Must have Gurobi available for quadratic constraints")
+    error("Must have Gurobi available for quadratic constraints")
 else
-  using Gurobi
+    using Gurobi
 end
 
 # Maximization problem

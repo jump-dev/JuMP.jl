@@ -46,12 +46,12 @@
 (+)(lhs::Variable, rhs::AffExpr) = AffExpr(vcat(rhs.vars,lhs),vcat( rhs.coeffs,1.), rhs.constant)
 (-)(lhs::Variable, rhs::AffExpr) = AffExpr(vcat(rhs.vars,lhs),vcat(-rhs.coeffs,1.),-rhs.constant)
 function (*)(lhs::Variable, rhs::AffExpr)
-  n = length(rhs.vars)
-  if rhs.constant != 0.      
-    ret = QuadExpr([lhs for i=1:n],copy(rhs.vars),copy(rhs.coeffs),AffExpr([lhs], [rhs.constant], 0.))
-  else
-    ret = QuadExpr([lhs for i=1:n],copy(rhs.vars),copy(rhs.coeffs),AffExpr())
-  end
+    n = length(rhs.vars)
+    if rhs.constant != 0.      
+        ret = QuadExpr([lhs for i=1:n],copy(rhs.vars),copy(rhs.coeffs),AffExpr([lhs], [rhs.constant], 0.))
+    else
+        ret = QuadExpr([lhs for i=1:n],copy(rhs.vars),copy(rhs.coeffs),AffExpr())
+    end
 end
 (/)(lhs::Variable, rhs::AffExpr) = error("Cannot divide a variable by an affine expression")
 # Variable--QuadExpr
@@ -76,58 +76,58 @@ end
 (+)(lhs::GenericAffExpr, rhs::GenericAffExpr) = GenericAffExpr(vcat(lhs.vars,rhs.vars),vcat(lhs.coeffs, rhs.coeffs),lhs.constant+rhs.constant)
 (-)(lhs::GenericAffExpr, rhs::GenericAffExpr) = GenericAffExpr(vcat(lhs.vars,rhs.vars),vcat(lhs.coeffs,-rhs.coeffs),lhs.constant-rhs.constant)
 function (*)(lhs::AffExpr, rhs::AffExpr)
-  ret = QuadExpr(Variable[],Variable[],Float64[],AffExpr(Variable[],Float64[],0.))
+    ret = QuadExpr(Variable[],Variable[],Float64[],AffExpr(Variable[],Float64[],0.))
 
-  # Quadratic terms
-  n = length(lhs.coeffs)
-  m = length(rhs.coeffs)
-  sizehint(ret.qvars1, n*m)
-  sizehint(ret.qvars2, n*m)
-  sizehint(ret.qcoeffs, n*m)
-  for i = 1:n
-    for j = 1:m
-      push!(ret.qvars1,  lhs.vars[i])
-      push!(ret.qvars2,  rhs.vars[j])
-      push!(ret.qcoeffs, lhs.coeffs[i]*rhs.coeffs[j])
+    # Quadratic terms
+    n = length(lhs.coeffs)
+    m = length(rhs.coeffs)
+    sizehint(ret.qvars1, n*m)
+    sizehint(ret.qvars2, n*m)
+    sizehint(ret.qcoeffs, n*m)
+    for i = 1:n
+        for j = 1:m
+            push!(ret.qvars1,  lhs.vars[i])
+            push!(ret.qvars2,  rhs.vars[j])
+            push!(ret.qcoeffs, lhs.coeffs[i]*rhs.coeffs[j])
+        end
     end
-  end
-  
-  # Try to preallocate space for aff
-  if lhs.constant != 0 && rhs.constant != 0
-    sizehint(ret.aff.vars, n+m)
-    sizehint(ret.aff.coeffs, n+m)
-  elseif lhs.constant != 0
-    sizehint(ret.aff.vars, n)
-    sizehint(ret.aff.coeffs, n)
-  elseif rhs.constant != 0
-    sizehint(ret.aff.vars, m)
-    sizehint(ret.aff.coeffs, m)
-  end
+    
+    # Try to preallocate space for aff
+    if lhs.constant != 0 && rhs.constant != 0
+        sizehint(ret.aff.vars, n+m)
+        sizehint(ret.aff.coeffs, n+m)
+    elseif lhs.constant != 0
+        sizehint(ret.aff.vars, n)
+        sizehint(ret.aff.coeffs, n)
+    elseif rhs.constant != 0
+        sizehint(ret.aff.vars, m)
+        sizehint(ret.aff.coeffs, m)
+    end
 
-  # [LHS constant] * RHS
-  if lhs.constant != 0
-    c = lhs.constant
-    for j = 1:m
-      push!(ret.aff.vars,   rhs.vars[j])
-      push!(ret.aff.coeffs, rhs.coeffs[j] * c)
+    # [LHS constant] * RHS
+    if lhs.constant != 0
+        c = lhs.constant
+        for j = 1:m
+            push!(ret.aff.vars,   rhs.vars[j])
+            push!(ret.aff.coeffs, rhs.coeffs[j] * c)
+        end
+        ret.aff.constant += c * rhs.constant
     end
-    ret.aff.constant += c * rhs.constant
-  end
-  
-  # Expr 2 constant * Expr 1 terms
-  if rhs.constant != 0
-    c = rhs.constant
-    for i = 1:m
-      push!(ret.aff.vars,   lhs.vars[i])
-      push!(ret.aff.coeffs, lhs.coeffs[i] * c)
+    
+    # Expr 2 constant * Expr 1 terms
+    if rhs.constant != 0
+        c = rhs.constant
+        for i = 1:m
+            push!(ret.aff.vars,   lhs.vars[i])
+            push!(ret.aff.coeffs, lhs.coeffs[i] * c)
+        end
+        # Don't do the following line
+        #ret.aff.constant += c * lhs.constant
+        # If lhs.constant is 0, its a waste of time
+        # If lhs.constant is non-zero, its already done
     end
-    # Don't do the following line
-    #ret.aff.constant += c * lhs.constant
-    # If lhs.constant is 0, its a waste of time
-    # If lhs.constant is non-zero, its already done
-  end
-  
-  return ret
+    
+    return ret
 end
 (/)(lhs::AffExpr, rhs::AffExpr) = error("Cannot divide aff. expression by aff. expression")
 # AffExpr--QuadExpr
@@ -155,13 +155,13 @@ end
 (/)(q::QuadExpr, a::AffExpr) = error("Cannot divide a quadratic expression by an aff. expression")
 # QuadExpr--QuadExpr
 (+)(q1::QuadExpr, q2::QuadExpr) = QuadExpr(vcat(q1.qvars1,   q2.qvars1),
-                                           vcat(q1.qvars2,   q2.qvars2),
-                                           vcat(q1.qcoeffs,  q2.qcoeffs),
-                                           q1.aff + q2.aff)
+                                                                                     vcat(q1.qvars2,   q2.qvars2),
+                                                                                     vcat(q1.qcoeffs,  q2.qcoeffs),
+                                                                                     q1.aff + q2.aff)
 (-)(q1::QuadExpr, q2::QuadExpr) = QuadExpr(vcat(q1.qvars1,   q2.qvars1),
-                                           vcat(q1.qvars2,   q2.qvars2),
-                                           vcat(q1.qcoeffs, -q2.qcoeffs),
-                                           q1.aff - q2.aff)
+                                                                                     vcat(q1.qvars2,   q2.qvars2),
+                                                                                     vcat(q1.qcoeffs, -q2.qcoeffs),
+                                                                                     q1.aff - q2.aff)
 (*)(q1::QuadExpr, q2::QuadExpr) = error("Cannot multiply two quadratic expressions")
 (/)(q1::QuadExpr, q2::QuadExpr) = error("Cannot divide a quadratic expression by a quadratic expression")
 

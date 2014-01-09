@@ -34,5 +34,5 @@ status = solve(m)
 println("Objective is: ", getObjectiveValue(m))
 println("Solution is:")
 for i = 1:5
-  println("x", i, " = ", getValue(x[i]))
+    println("x", i, " = ", getValue(x[i]))
 end
