@@ -34,20 +34,20 @@ m = Model(solver=GurobiSolver(PreCrush=1, Cuts=0, Presolve=0, Heuristics=0.0))
 # the callback handle. Note that we can access m, x, and y because
 # this function is defined inside the same scope
 function mycutgenerator(cb)
-    x_val = getValue(x)
-    y_val = getValue(y)
-    println("In callback function, x=$x_val, y=$y_val")
+  x_val = getValue(x)
+  y_val = getValue(y)
+  println("In callback function, x=$x_val, y=$y_val")
 
-    # Allow for some impreciseness in the solution
-    TOL = 1e-6
+  # Allow for some impreciseness in the solution
+  TOL = 1e-6
     
-    # Check top right
-    if y_val + x_val > 3 + TOL
-        # Cut off this solution
-        println("Fractional solution was in top right, cut it off")
-        # Use the original variables
-        @addUserCut(cb, y + x <= 3)
-    end
+  # Check top right
+  if y_val + x_val > 3 + TOL
+    # Cut off this solution
+    println("Fractional solution was in top right, cut it off")
+    # Use the original variables
+    @addUserCut(cb, y + x <= 3)
+  end
 end  # End of callback function
 
 # Tell JuMP/Gurobi to use our callback function
