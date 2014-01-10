@@ -194,6 +194,21 @@ The code should print something like (amongst the output from Gurobi)::
 This code can also be found in ``/JuMP/examples/simpleusercut.jl``.
 
 
+Querying Solver Progress
+^^^^^^^^^^^^^^^^^^^^^^^^
+
+All JuMP callback methods must take a single argument, called ``cb`` by convention.
+``cb`` is a handle to the internal callback system used by the underlying solver, and
+allows the user to query solver state. There are a variety of methods available which
+are listed in the `MathProgBase documentation <http://mathprogbasejl.readthedocs.org/en/latest/mathprogbase.html#mip-callbacks>`_
+including::
+
+    cbgetobj(cb)
+    cbgetbestbound(cb)
+    cbgetexplorednodes(cb)
+    cbgetstate(cb)
+
+
 Code Design Considerations
 ^^^^^^^^^^^^^^^^^^^^^^^^^^
 
