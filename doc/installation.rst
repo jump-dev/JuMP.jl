@@ -22,6 +22,10 @@ Once you've installed Julia, installing JuMP is simple. Julia has a git-based pa
 
 This command checks `METADATA.jl <https://github.com/JuliaLang/METADATA.jl/tree/devel>`_ to determine what the most recent version of JuMP is and then downloads it from its repository on GitHub.
 
+To start using JuMP (after installing a solver), it should be imported into the local scope::
+
+    julia> using JuMP
+
 Getting Solvers
 ^^^^^^^^^^^^^^^
 
