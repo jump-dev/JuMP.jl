@@ -442,8 +442,10 @@ type LinearConstraint <: JuMPConstraint
   ub::Float64
 end
 
-LinearConstraint(terms::AffExpr,lb::Number,ub::Number) =
-  LinearConstraint(terms,float(lb),float(ub))
+if VERSION.major == 0 && VERSION.minor < 3
+    LinearConstraint(terms::AffExpr,lb::Number,ub::Number) =
+        LinearConstraint(terms,float(lb),float(ub))
+end
 
 function addConstraint(m::Model, c::LinearConstraint)
   push!(m.linconstr,c)
