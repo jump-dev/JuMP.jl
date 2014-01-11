@@ -8,6 +8,10 @@ function solve(m::Model)
         end
     end
 
+    if isa(m.solver,MathProgBase.MissingSolver) &&
+      (length(m.obj.qvars1) > 0 || length(m.quadconstr) > 0)
+        m.solver = MathProgBase.defaultQPsolver
+    end
     if anyInts
         if isa(m.solver,MathProgBase.MissingSolver)
             m.solver = MathProgBase.defaultMIPsolver
@@ -28,22 +32,6 @@ function solve(m::Model)
             solveLP(m)
         end
     end
-end
-
-function quadCheck(m::Model, ismip = false)
-    if length(m.obj.qvars1) != 0 || length(m.quadconstr) != 0
-        solverType = string(typeof(m.solver))
-        if solverType != "GurobiSolver" && solverType != "CplexSolver"
-            error("Quadratic objectives/constraints are currently only supported using Gurobi or CPLEXLink")
-        end
-        if !ismip && solverType == "GurobiSolver"
-            # Gurobi by default will not compute duals
-            # if quadratic constraints are present.
-            push!(m.solver.options,(:QCPDual,1))
-        end
-        return true
-    end
-    return false
 end
 
 function addQuadratics(m::Model)
@@ -150,13 +138,10 @@ function solveLP(m::Model)
     end
     if m.firstsolve
         A = prepConstrMatrix(m)
-        hasQuad = quadCheck(m)
         m.internalModel = model(m.solver)
         loadproblem!(m.internalModel, A, m.colLower, m.colUpper, f, rowlb, rowub, m.objSense)
 
-        if hasQuad
-            addQuadratics(m)
-        end
+        addQuadratics(m)
     end 
 
     optimize!(m.internalModel)
@@ -210,8 +195,6 @@ function solveMIP(m::Model)
 
     # Ready to solve
         
-    hasQuad = quadCheck(m, true)
-     
     m.internalModel = model(m.solver)
         
     loadproblem!(m.internalModel, A, m.colLower, m.colUpper, f, rowlb, rowub, m.objSense)
@@ -225,9 +208,7 @@ function solveMIP(m::Model)
         end
     end
 
-    if hasQuad
-        addQuadratics(m)
-    end
+    addQuadratics(m)
     registercallbacks(m)
 
     optimize!(m.internalModel)
