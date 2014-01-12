@@ -423,13 +423,13 @@ function quadToStr(q::QuadExpr)
             if I[ind] == J[ind]
                 # Squared term
                 termStrings[2*ind] = string(abs(V[ind])," ",
-                                                                        getName(x),"²")
+                                            getName(x),"²")
             else
                 # Normal term
                 y = Variable(m,J[ind])
                 termStrings[2*ind] = string(abs(V[ind])," ",
-                                                                        getName(x),"*",
-                                                                        getName(y))
+                                            getName(x),"*",
+                                            getName(y))
             end
         end
     end
@@ -450,8 +450,8 @@ end
 # Copy utility function, not exported
 function copy(q::QuadExpr, new_model::Model)
     return QuadExpr([Variable(new_model, v.col) for v in q.qvars1],
-                                    [Variable(new_model, v.col) for v in q.qvars2],
-                                    q.qcoeffs[:], copy(q.aff, new_model))
+                    [Variable(new_model, v.col) for v in q.qvars2],
+                    q.qcoeffs[:], copy(q.aff, new_model))
 end
 
 ##########################################################################
@@ -469,8 +469,8 @@ type LinearConstraint <: JuMPConstraint
 end
 
 if VERSION.major == 0 && VERSION.minor < 3
-        LinearConstraint(terms::AffExpr,lb::Number,ub::Number) =
-                LinearConstraint(terms,float(lb),float(ub))
+    LinearConstraint(terms::AffExpr,lb::Number,ub::Number) =
+        LinearConstraint(terms,float(lb),float(ub))
 end
 
 
