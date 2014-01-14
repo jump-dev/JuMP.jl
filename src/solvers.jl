@@ -171,7 +171,7 @@ function solveLP(m::Model)
             m.redCosts = getreducedcosts(m.internalModel)
             m.linconstrDuals = getconstrduals(m.internalModel)
         catch
-            warn("Dual solutions not available")
+            Base.warn_once("Dual solutions not available")
         end
         m.firstsolve = false
     end
