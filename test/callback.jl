@@ -17,7 +17,7 @@ function callback_test(solvername, lazysolver, cutsolver)
                 @addLazyConstraint(cb, y + x <= 3)
             end
         end
-        setlazycallback(mod, corners)
+        setLazyCallback(mod, corners)
         solve(mod)
         @test_approx_eq_eps getValue(x) 1.0 1e-6
         @test_approx_eq_eps getValue(y) 2.0 1e-6
@@ -39,7 +39,7 @@ function callback_test(solvername, lazysolver, cutsolver)
                 @addUserCut(cb, y + x <= 3)
             end
         end
-        setcutcallback(mod, mycutgenerator)
+        setCutCallback(mod, mycutgenerator)
         solve(mod)
         @test_approx_eq_eps getValue(x) 1.0 1e-6
         @test_approx_eq_eps getValue(y) 2.0 1e-6
