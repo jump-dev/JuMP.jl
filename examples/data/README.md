@@ -1,0 +1,1 @@
+The ``noswot.mps`` example is from the [MIPLIB 3.0 benchmark collection](http://www.caam.rice.edu/~bixby/miplib/miplib.html). License information can be found [here](http://softlib.rice.edu/mipliblic.html).
