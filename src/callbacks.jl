@@ -1,6 +1,8 @@
-export setlazycallback, setcutcallback
-setlazycallback(m::Model, f::Function) = (m.lazycallback = f)
-setcutcallback(m::Model, f::Function) = (m.cutcallback = f)
+export setLazyCallback, setCutCallback
+export setlazycallback
+@Base.deprecate setlazycallback setLazyCallback
+setLazyCallback(m::Model, f::Function) = (m.lazycallback = f)
+setCutCallback(m::Model, f::Function) = (m.cutcallback = f)
 
 function registercallbacks(m::Model)
     if isa(m.lazycallback, Function)

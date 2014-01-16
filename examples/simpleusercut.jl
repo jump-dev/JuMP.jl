@@ -51,7 +51,7 @@ function mycutgenerator(cb)
 end  # End of callback function
 
 # Tell JuMP/Gurobi to use our callback function
-setcutcallback(m, mycutgenerator)
+setCutCallback(m, mycutgenerator)
 
 # Solve the problem
 solve(m)

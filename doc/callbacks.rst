@@ -33,7 +33,7 @@ constraint before adding it to the model with the JuMP function
 ``addLazyConstraint(cb, myconstraint)`` or the macro version
 ``@addLazyConstraint(cb, myconstraint)`` (same limitations as addConstraint).
 Finally we notify JuMP that this function should be used for lazy constraint
-generation using the ``setlazycallback(m, myLazyConGenerator)`` function 
+generation using the ``setLazyCallback(m, myLazyConGenerator)`` function 
 before we call ``solve(m)``.
 
 The following is a simple example to make this more clear. In this two-dimensional
@@ -93,7 +93,7 @@ will be either (0,2) or (2,2), and the final solution will be (1,2)::
     end  # End of callback function
 
     # Tell JuMP/Gurobi to use our callback function
-    setlazycallback(m, corners)
+    setLazyCallback(m, corners)
 
     # Solve the problem
     solve(m)
@@ -129,7 +129,7 @@ constraint before adding it to the model with the JuMP function
 ``addUserCut(cb, myconstraint)`` or the macro version
 ``@addUserCut(cb, myconstraint)`` (same limitations as addConstraint).
 Finally we notify JuMP that this function should be used for lazy constraint
-generation using the ``setcutcallback(m, myUserCutGenerator)`` function 
+generation using the ``setCutCallback(m, myUserCutGenerator)`` function 
 before we call ``solve(m)``.
 
 Consider the following example which is related to the lazy constraint example. The problem is two-dimensional, and the objective sense prefers solution in the top-right of a 2-by-2 square. There is a single constraint that cuts off the top-right corner to make the LP relaxation solution fractional. We will exploit our knowledge of the problem structure to add a user cut that will make the LP relaxation integer, and thus solve the problem at the root node::
@@ -176,7 +176,7 @@ Consider the following example which is related to the lazy constraint example. 
     end  # End of callback function
 
     # Tell JuMP/Gurobi to use our callback function
-    setcutcallback(m, mycutgenerator)
+    setCutCallback(m, mycutgenerator)
 
     # Solve the problem
     solve(m)
@@ -279,7 +279,7 @@ In the above examples the callback function is defined in the same scope as the 
             end
         end  # End of callback function
 
-        setlazycallback(m, corners)
+        setLazyCallback(m, corners)
         solve(m)
         println("Final solution: [ $(getValue(x)), $(getValue(y)) ]")
     end
