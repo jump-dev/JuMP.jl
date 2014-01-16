@@ -5,7 +5,6 @@ notifications:
     email: false
 env:
     matrix: 
-        - PKGADD="Cbc;Clp" JULIAVERSION="julianightlies" 
         - PKGADD="Cbc;Clp" JULIAVERSION="juliareleases" 
         - PKGADD="GLPKMathProgInterface" JULIAVERSION="julianightlies" 
         - PKGADD="GLPKMathProgInterface" JULIAVERSION="juliareleases" 
