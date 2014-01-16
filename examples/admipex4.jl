@@ -53,6 +53,7 @@ function mycutgenerator(cb) # valid cuts from admipex4.c in the CPLEX examples
     x_val = getValue(x)
     @addUserCut(cb, x[62]-x[63] <= 0)
     @addUserCut(cb, x[63]-x[64] <= 0)
+    @addUserCut(cb, x[64]-x[65] <= 0)
     @addUserCut(cb, 2.08x[52] + 2.98x[62] +   3.47x[72] + 2.24x[82] +  2.08x[92] + 0.25x[51] + 0.25x[61] + 0.25x[71] + 0.25x[81] + 0.25x[91] <= 20.25)
     @addUserCut(cb, 2.08x[54] + 2.98x[64] +   3.47x[74] + 2.24x[84] +  2.08x[94] + 0.25x[53] + 0.25x[63] + 0.25x[73] + 0.25x[83] + 0.25x[93] <= 20.25)
     @addUserCut(cb, 2.08x[56] + 2.98x[66] + 3.4722x[76] + 2.24x[86] +  2.08x[96] + 0.25x[55] + 0.25x[65] + 0.25x[75] + 0.25x[85] + 0.25x[95] <= 20.25)
@@ -61,7 +62,7 @@ function mycutgenerator(cb) # valid cuts from admipex4.c in the CPLEX examples
 end  # End of callback function
 
 # # Tell JuMP/CPLEX to use our callback function
-setcutcallback(mod, mycutgenerator)
+setCutCallback(mod, mycutgenerator)
 
 stat = solve(mod)
 println("Solve status: ", stat)
