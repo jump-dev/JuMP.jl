@@ -3,12 +3,12 @@
 # An algebraic modelling langauge for Julia
 # See http://github.com/JuliaOpt/JuMP.jl
 #############################################################################
-# admipex4.jl
+# noswot.jl
 #
 # Solve a nontrivial MIP problem with user cuts. The jump model is populated
 # from an .MPS file by using MathProgBase to construct another model and 
-# copying the data over to the JuMP model. Modified from the admipex4 
-# example in the CPLEX example suite (originally found in MIPLIB).
+# copying the data over to the JuMP model. The problem comes from the 
+# MIPLIB 3.0 benchmark collection.
 #############################################################################
 
 using JuMP
@@ -49,8 +49,9 @@ for i in 1:At.m
 end
 @setObjective(mod, :Min, sum{ c[i]*x[i], i=1:n })
 
-function mycutgenerator(cb) # valid cuts from admipex4.c in the CPLEX examples
+function mycutgenerator(cb) # valid cuts
     x_val = getValue(x)
+    println("in callback")
     @addUserCut(cb, x[62]-x[63] <= 0)
     @addUserCut(cb, x[63]-x[64] <= 0)
     @addUserCut(cb, x[64]-x[65] <= 0)
