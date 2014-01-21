@@ -1,7 +1,7 @@
 JuMP release notes
 ==================
 
-Version 0.3.0 (development version)
+Version 0.3.0 (January 21, 2014)
 -----------------------------------
 
  * Unbounded/infeasibility rays: getValue() will return the corresponding
