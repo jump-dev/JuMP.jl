@@ -13,10 +13,10 @@ programming language.
 
 Our documentation includes an installation guide, quick-start guide, and reference manual. 
 
-**Latest Release**: 0.2.0 (via ``Pkg.add``) 
-  * [documentation](https://jump.readthedocs.org/en/release-0.2/jump.html#installation-guide) 
-  * [examples](https://github.com/JuliaOpt/JuMP.jl/tree/release-0.2/examples) 
-  * Testing status: [![Build Status](https://travis-ci.org/JuliaOpt/JuMP.jl.png?branch=release-0.2)](https://travis-ci.org/JuliaOpt/JuMP.jl)
+**Latest Release**: 0.3.0 (via ``Pkg.add``) 
+  * [documentation](https://jump.readthedocs.org/en/release-0.3/jump.html#installation-guide) 
+  * [examples](https://github.com/JuliaOpt/JuMP.jl/tree/release-0.3/examples) 
+  * Testing status: [![Build Status](https://travis-ci.org/JuliaOpt/JuMP.jl.png?branch=release-0.3)](https://travis-ci.org/JuliaOpt/JuMP.jl)
 
 
 **Development version**: 
