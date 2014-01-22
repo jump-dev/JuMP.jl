@@ -4,12 +4,14 @@ JuMP
 
 JuMP is a domain-specific modeling language for **[mathematical programming]**
 embedded in **[Julia]**. It currently supports a number of open-source and
-commercial solvers ([COIN Clp], [COIN Cbc], [GNU GLPK], [Gurobi]) via a 
+commercial solvers ([COIN Clp], [COIN Cbc], [GNU GLPK], [Gurobi], [MOSEK], [CPLEX]) via a 
 [generic solver-independent interface](https://github.com/JuliaOpt/MathProgBase.jl). 
 One the best features of JuMP is its speed - benchmarking has shown that it
 can create problems at similar speeds to special-purpose modeling languages
 such as AMPL while maintaining the expressiveness of a generic high-level 
-programming language.
+programming language. JuMP communicates with solvers in-memory, 
+avoiding the need to write intermediary files and enabling access to advanced
+features such as efficient LP re-solves and callbacks for mixed-integer programming.
 
 Our documentation includes an installation guide, quick-start guide, and reference manual. 
 
@@ -60,12 +62,6 @@ We list below what is currently supported. See the documentation for more inform
 * Continuous
 * Integer-valued
 
-## Solver-independent callbacks
-
-JuMP supports solver-indepenent callbacks that allow you to modify aspects of solver behavior.
-We currently support lazy constraint generation callbacks, which are available with
-Gurobi, CPLEX, and GLPK.
-
 ## Bug reports and support
 
 Please report any issues via the Github **[issue tracker]**. All types of issues are welcome and encouraged; this includes bug reports, documentation typos, "how do I do this?" questions, feature requests, etc.
@@ -78,3 +74,5 @@ Please report any issues via the Github **[issue tracker]**. All types of issues
 [COIN Cbc]: https://github.com/mlubin/Cbc.jl
 [GNU GLPK]: http://www.gnu.org/software/glpk/
 [Gurobi]: http://www.gurobi.com/
+[MOSEK]: http://mosek.com/
+[CPLEX]: http://www-01.ibm.com/software/commerce/optimization/cplex-optimizer/
