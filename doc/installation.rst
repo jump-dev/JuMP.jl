@@ -51,19 +51,19 @@ Clp and Cbc, if available, are the default choice of solver in JuMP.
 Gurobi
 ++++++
 
-`Gurobi <http://gurobi.com>`_ is an excellent high-performance commercial solver. It supports quadratic objectives and constraints. Install Gurobi as you normally would and then add the `Gurobi.jl <https://github.com/JuliaOpt/Gurobi.jl>`_ package::
+Support for `Gurobi <http://gurobi.com>`_, a high-performance commercial solver, is provided by the `Gurobi.jl <https://github.com/JuliaOpt/Gurobi.jl>`_ package. First install Gurobi itself and set up a license, then run::
 
     julia> Pkg.add("Gurobi")
 
 .. warning::
    If you are using 64-bit Gurobi, you must use 64-bit Julia (and similarly with 32-bit Gurobi).
   
-The Gurobi package README contains examples of how to use Gurobi within JuMP.
+The Gurobi package README contains examples of how to use Gurobi within JuMP. Gurobi supports quadratic objectives and constraints.
 
 GLPK
 ++++
 
-Installing `GLPK <https://github.com/JuliaOpt/GLPK.jl>`_ is a bit more involved than can be covered here - see the `documentation <https://gplkjl.readthedocs.org/en/latest/glpk.html>`_ for more information.
+JuMP can use `GLPK <http://www.gnu.org/software/glpk/>`_, an open-source MILP solver, via the `GLPKMathProgInterface <https://github.com/JuliaOpt/GLPKMathProgInterface.jl>`_ package. 
 
 CPLEX
 +++++
