@@ -58,17 +58,39 @@ Support for `Gurobi <http://gurobi.com>`_, a high-performance commercial solver,
 .. warning::
    If you are using 64-bit Gurobi, you must use 64-bit Julia (and similarly with 32-bit Gurobi).
   
-The Gurobi package README contains examples of how to use Gurobi within JuMP. Gurobi supports quadratic objectives and constraints.
+To use within a JuMP model ``m``, run::
+
+    using JuMP
+    using Gurobi
+
+    m = Model(solver=GurobiSolver())
+    
+The Gurobi package README contains additional examples of how to use Gurobi within JuMP. Gurobi supports quadratic objectives and constraints.
 
 GLPK
 ++++
 
-JuMP can use `GLPK <http://www.gnu.org/software/glpk/>`_, an open-source MILP solver, via the `GLPKMathProgInterface <https://github.com/JuliaOpt/GLPKMathProgInterface.jl>`_ package. 
+JuMP can use `GLPK <http://www.gnu.org/software/glpk/>`_, an open-source MILP solver, via the `GLPKMathProgInterface <https://github.com/JuliaOpt/GLPKMathProgInterface.jl>`_ package.
+
+To use GLPK within a JuMP model ``m``, run::
+
+    using JuMP
+    using GLPKMathProgInterface
+
+    m = Model(solver=GLPKSolverMIP()) # or GLPKSolverLP() for LPs
+
 
 CPLEX
 +++++
 
 `CPLEX <http://www-01.ibm.com/software/commerce/optimization/cplex-optimizer/>`_ is a leading commercial solver. An experimental interface is available via the `CPLEXLink <https://github.com/joehuchette/CPLEXLink.jl>`_ package. It supports quadratic objectives and constraints. Note that this interface requires using CPLEX as a shared library, which is unsupported by the CPLEX developers.
+
+To use CPLEX within a JuMP model ``m``, run::
+
+    using JuMP
+    using CPLEXLink
+
+    m = Model(solver=CplexSolver())
 
 
 
