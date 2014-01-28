@@ -20,10 +20,10 @@ which can be used to change the default solver behavior.
 
     solver = solvername(Option1=Value1, Option2=Value2, ...)
 
-where ``solvername`` is one of the supported LP solvers (``ClpSolver``, ``GLPKSolverLP``, and ``GurobiSolver``) or MIP solvers (``CbcSolver``, ``GLPKSolverMIP``, and ``GurobiSolver``).  To use these objects, the corresponding modules (``Clp``, ``Cbc``, ``GLPKMathProgInterface``, and ``Gurobi``) must be first loaded. All options are solver-dependent; see corresponding solver packages for more information. 
+where ``solvername`` is one of the supported solvers. See the :ref:`solver table <jump-solvertable>` for the list of available solvers and corresponding parameter names.  All options are solver-dependent; see corresponding solver packages for more information. 
 
 .. note::
-    Be sure that the solver provided supports the problem class of the model. For example ``ClpSolver`` and ``GLPKSolverLP`` support only linear programming problems. ``CbcSolver`` and ``GLPKSolverMIP`` support only mixed-integer programming problems. ``GurobiSolver`` supports both classes as well as problems with quadratic objectives and/or constraints.
+    Be sure that the solver provided supports the problem class of the model. For example ``ClpSolver`` and ``GLPKSolverLP`` support only linear programming problems. ``CbcSolver`` and ``GLPKSolverMIP`` support only mixed-integer programming problems.
 
 As an example, we can create a ``Model`` object that will use GLPK's
 exact solver for LPs as follows::
