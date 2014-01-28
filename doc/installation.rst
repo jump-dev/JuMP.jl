@@ -51,7 +51,7 @@ Clp and Cbc, if available, are the default choice of solver in JuMP.
 Gurobi
 ++++++
 
-Support for `Gurobi <http://gurobi.com>`_, a high-performance commercial solver, is provided by the `Gurobi.jl <https://github.com/JuliaOpt/Gurobi.jl>`_ package. First install Gurobi itself and set up a license, then run::
+Support for `Gurobi <http://gurobi.com>`_, a commercial solver, is provided by the `Gurobi.jl <https://github.com/JuliaOpt/Gurobi.jl>`_ package. First install Gurobi itself and set up a license, then run::
 
     julia> Pkg.add("Gurobi")
 
@@ -79,11 +79,21 @@ To use GLPK within a JuMP model ``m``, run::
 
     m = Model(solver=GLPKSolverMIP()) # or GLPKSolverLP() for LPs
 
+MOSEK
++++++
+
+`MOSEK <http://www.mosek.com/>`_ is a commercial solver. The Julia interface, `Mosek.jl <https://github.com/JuliaOpt/Mosek.jl>`_ is fully supported by the MOSEK team. To use Mosek within a JuMP model ``m``, run::
+
+    using JuMP
+    using Mosek
+
+    m = Model(solver=MosekSolver())
+
 
 CPLEX
 +++++
 
-`CPLEX <http://www-01.ibm.com/software/commerce/optimization/cplex-optimizer/>`_ is a leading commercial solver. An experimental interface is available via the `CPLEXLink <https://github.com/joehuchette/CPLEXLink.jl>`_ package. It supports quadratic objectives and constraints. Note that this interface requires using CPLEX as a shared library, which is unsupported by the CPLEX developers.
+`CPLEX <http://www-01.ibm.com/software/commerce/optimization/cplex-optimizer/>`_ is a commercial solver. An experimental interface is available via the `CPLEXLink <https://github.com/joehuchette/CPLEXLink.jl>`_ package. It supports quadratic objectives and constraints. Note that this interface requires using CPLEX as a shared library, which is unsupported by the CPLEX developers.
 
 To use CPLEX within a JuMP model ``m``, run::
 
