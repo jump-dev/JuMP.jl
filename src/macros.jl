@@ -268,8 +268,9 @@ macro defVar(m, x, extra...)
             push!(idxsets, idxset)
             push!(refcall.args, esc(idxvar))
         end
-        tup = Expr(:tuple,[esc(x) for x in idxvars]...)
+        tup = Expr(:tuple, [esc(x) for x in idxvars]...)
         code = :( $(refcall) = Variable($m, $lb, $ub, $t, $(string(var.args[1]))*string($tup) ) )
+        # code = :( $(refcall) = Variable($m, $lb, $ub, $t) )
         for (idxvar, idxset) in zip(reverse(idxvars),reverse(idxsets))
             code = quote
                 for $(esc(idxvar)) in $idxset
@@ -279,9 +280,11 @@ macro defVar(m, x, extra...)
         end
         
         mac = Expr(:macrocall,symbol("@gendict"),varname,:Variable,idxsets...)
+        addDict = :( push!($(m).dictList, JuMPDictDescriptor($(string(var.args[1])), $idxsets)) )
         code = quote 
             $mac
             $code
+            $addDict
             nothing
         end
         return code
