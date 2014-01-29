@@ -2,6 +2,7 @@
 function qcqp_test(solvername, solverobj)
     println(string("  Running ", solvername))
     let
+        println("    Test 1")
         modQ = Model(solver=solverobj)
         @defVar(modQ, -2 <= x <= 2 )
         @defVar(modQ, -2 <= y <= 2 )
@@ -16,6 +17,7 @@ function qcqp_test(solvername, solverobj)
     end
 
     let
+        println("    Test 2")
         modQ = Model(solver=solverobj)
 
         @defVar(modQ, -2 <= x <= 2, Int )
@@ -35,7 +37,7 @@ end
 
 if Pkg.installed("Gurobi") != nothing  
     using Gurobi
-    qcqp_test("Gurobi", GurobiSolver())
+    qcqp_test("Gurobi", GurobiSolver(OutputFlag=0))
 end
 if Pkg.installed("CPLEXLink") != nothing
     using CPLEXLink
