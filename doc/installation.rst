@@ -75,6 +75,11 @@ Installation of the binaries will differ by platform:
 
 Clp and Cbc, if available, are the default choice of solver in JuMP. Cbc does *not* support MIP callbacks.
 
+GLPK
+++++
+
+GLPK binaries are provided on OS X and Windows (32- and 64-bit) by default. On Linux, it will be compiled from source. Note that ``GLPKSolverLP`` should be used for continuous problems and ``GLPKSolverMIP`` for problems with integer variables. GLPK *does* support MIP callbacks.
+
 Gurobi
 ++++++
 
