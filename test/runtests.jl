@@ -17,14 +17,16 @@ for curtest in tests
     include(curtest)
 end
 
-if Pkg.installed("Gurobi") != nothing || Pkg.installed("CPLEXLink") != nothing
+if Pkg.installed("Gurobi") != nothing || 
+   Pkg.installed("CPLEXLink") != nothing ||
+   Pkg.installed("Mosek") != nothing
     quadtests = ["qcqpmodel.jl", "quadmodel.jl"]
     for curtest in quadtests
         println(" Test: $(curtest)")
         include(curtest)
     end
 else
-    println("WARNING: Gurobi or CPLEXLink not installed, cannot execute corresponding tests")
+    println("WARNING: Neither Gurobi nor CPLEXLink nor Mosek installed, cannot execute corresponding tests")
 end
 
 # hygiene.jl should be run separately
