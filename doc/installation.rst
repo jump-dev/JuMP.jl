@@ -29,68 +29,72 @@ To start using JuMP (after installing a solver), it should be imported into the 
 Getting Solvers
 ^^^^^^^^^^^^^^^
 
-Solver support in Julia is currently provided by writing a solver-specific package that provides a very thin wrapper around the solver's C interface and providing a standard interface that JuMP can call. If you are interested in providing an interface to your solver, please get in touch. We currently have interfaces for COIN-OR, Gurobi, GNU GLPK, and CPLEX.
+Solver support in Julia is currently provided by writing a solver-specific package that provides a very thin wrapper around the solver's C interface and providing a standard interface that JuMP can call. If you are interested in providing an interface to your solver, please get in touch. The table below lists the currently supported solvers and their capabilities. 
+
+
+
+.. _jump-solvertable:
+
++----------------------------------------------------------------------------------+---------------------------------------------------------------------------------+---------------------+-------------+----+------+-----+
+| Solver                                                                           | Julia Package                                                                   | ``solver=``         | License     | LP | SOCP | MIP |
++==================================================================================+=================================================================================+=====================+=============+====+======+=====+
+| `Cbc <https://projects.coin-or.org/Cbc>`_                                        | `Cbc.jl <https://github.com/JuliaOpt/Cbc.jl>`_                                  | ``CbcSolver()``     |     EPL     |    |      |  X  |
++----------------------------------------------------------------------------------+---------------------------------------------------------------------------------+---------------------+-------------+----+------+-----+
+| `Clp <https://projects.coin-or.org/Clp>`_                                        | `Clp.jl <https://github.com/JuliaOpt/Clp.jl>`_                                  | ``ClpSolver()``     |      EPL    | X  |      |     |
++----------------------------------------------------------------------------------+---------------------------------------------------------------------------------+---------------------+-------------+----+------+-----+
+| `CPLEX <http://www-01.ibm.com/software/commerce/optimization/cplex-optimizer/>`_ | `CPLEXLink <https://github.com/joehuchette/CPLEXLink.jl>`_                      | ``CplexSolver()``   |  Comm.      | X  |  X   | X   |
++----------------------------------------------------------------------------------+---------------------------------------------------------------------------------+---------------------+-------------+----+------+-----+
+| `GLPK <http://www.gnu.org/software/glpk/>`_                                      | `GLPKMath... <https://github.com/JuliaOpt/GLPKMathProgInterface.jl>`_           | ``GLPKSolverLP()``  |             |    |      |     |
+|                                                                                  |                                                                                 | ``GLPKSolverMIP()`` |     GPL     | X  |      |  X  |
++----------------------------------------------------------------------------------+---------------------------------------------------------------------------------+---------------------+-------------+----+------+-----+
+| `Gurobi <http://gurobi.com>`_                                                    | `Gurobi.jl <https://github.com/JuliaOpt/Gurobi.jl>`_                            | ``GurobiSolver()``  | Comm.       | X  |   X  |  X  |
++----------------------------------------------------------------------------------+---------------------------------------------------------------------------------+---------------------+-------------+----+------+-----+
+| `MOSEK <http://www.mosek.com/>`_                                                 | `Mosek.jl <https://github.com/JuliaOpt/Mosek.jl>`_                              | ``MosekSolver()``   | Comm.       | X  |   X  |  X  |                       
++----------------------------------------------------------------------------------+---------------------------------------------------------------------------------+---------------------+-------------+----+------+-----+
+
+To install Gurobi, for example, and use it with a JuMP model ``m``, run::
+    
+    Pkg.add("Gurobi")
+    using JuMP
+    using Gurobi
+
+    m = Model(solver=GurobiSolver())
+
+Setting solver options is discussed in the :ref:`Model <ref-model>` section.
+
+Solver-specific notes follow below.
 
 COIN-OR Clp and Cbc
 +++++++++++++++++++
 
-Support for Clp and Cbc is provided via `CoinMP <https://projects.coin-or.org/CoinMP>`_ and the `Cbc.jl <https://github.com/JuliaOpt/Cbc.jl>`_ and `Clp.jl <https://github.com/JuliaOpt/Clp.jl>`_ packages. You can install these solvers through the package manager::
-
-    julia> Pkg.add("Cbc")
-    julia> Pkg.add("Clp")  # Clp depends on Cbc, so installing Clp first
-                           # will install both.
-
-Regarding the CoinMP binary itself, installation will differ by platform:
+Installation of the binaries will differ by platform:
 
 * Linux - Only option is to build from source, which will happen automatically.
 * OS X - Downloads binary via the `Homebrew.jl <https://github.com/staticfloat/Homebrew.jl>`_ package.
 * Windows - **Only 32-bit versions of Julia are supported by the COIN solvers at this time**. The 32-bit version of Julia can be used on 64-bit Windows with no issues. Binary download. Will require `Visual Studio 2012 redistributable <http://www.microsoft.com/en-us/download/details.aspx?id=30679>`_ if not already installed.
 
-Clp and Cbc, if available, are the default choice of solver in JuMP. 
-
-Gurobi
-++++++
-
-Support for `Gurobi <http://gurobi.com>`_, a high-performance commercial solver, is provided by the `Gurobi.jl <https://github.com/JuliaOpt/Gurobi.jl>`_ package. First install Gurobi itself and set up a license, then run::
-
-    julia> Pkg.add("Gurobi")
-
-.. warning::
-   If you are using 64-bit Gurobi, you must use 64-bit Julia (and similarly with 32-bit Gurobi).
-  
-To use within a JuMP model ``m``, run::
-
-    using JuMP
-    using Gurobi
-
-    m = Model(solver=GurobiSolver())
-    
-The Gurobi package README contains additional examples of how to use Gurobi within JuMP. Gurobi supports quadratic objectives and constraints.
+Clp and Cbc, if available, are the default choice of solver in JuMP. Cbc does *not* support MIP callbacks.
 
 GLPK
 ++++
 
-JuMP can use `GLPK <http://www.gnu.org/software/glpk/>`_, an open-source MILP solver, via the `GLPKMathProgInterface <https://github.com/JuliaOpt/GLPKMathProgInterface.jl>`_ package.
+GLPK binaries are provided on OS X and Windows (32- and 64-bit) by default. On Linux, it will be compiled from source. Note that ``GLPKSolverLP`` should be used for continuous problems and ``GLPKSolverMIP`` for problems with integer variables. GLPK *does* support MIP callbacks.
 
-To use GLPK within a JuMP model ``m``, run::
+Gurobi
+++++++
 
-    using JuMP
-    using GLPKMathProgInterface
+Requires a working installation of Gurobi with an activated license (free for academic use).
 
-    m = Model(solver=GLPKSolverMIP()) # or GLPKSolverLP() for LPs
+.. warning::
+   If you are using 64-bit Gurobi, you must use 64-bit Julia (and similarly with 32-bit Gurobi).
+  
+MOSEK
++++++
 
+Requires a license (free for academic use). Mosek does not support the MIP callbacks used in JuMP.
+The Mosek interface was contributed by the Mosek team. (Thanks!)
 
 CPLEX
 +++++
 
-`CPLEX <http://www-01.ibm.com/software/commerce/optimization/cplex-optimizer/>`_ is a leading commercial solver. An experimental interface is available via the `CPLEXLink <https://github.com/joehuchette/CPLEXLink.jl>`_ package. It supports quadratic objectives and constraints. Note that this interface requires using CPLEX as a shared library, which is unsupported by the CPLEX developers.
-
-To use CPLEX within a JuMP model ``m``, run::
-
-    using JuMP
-    using CPLEXLink
-
-    m = Model(solver=CplexSolver())
-
-
-
+Requires a working installation of CPLEX with a license (free for faculty members and graduate teaching assistants). The `CPLEXLink <https://github.com/joehuchette/CPLEXLink.jl>`_ interface is experimental; it requires using CPLEX as a shared library, which is unsupported by the CPLEX developers. Special installation steps are required on OS X.
