@@ -11,15 +11,8 @@
 
 using JuMP
 
-# Only solver supported that can solve QCPs so far is Gurobi.
-if Pkg.installed("Gurobi") == nothing
-    error("Must have Gurobi available for quadratic constraints")
-else
-    using Gurobi
-end
-
-# Maximization problem
-m = Model(solver=GurobiSolver())
+# Will require either Gurobi.jl, CPLEXLink.jl, or Mosek.jl to run
+m = Model()
 
 # Need nonnegativity for (rotated) second-order cone
 @defVar(m, x)
