@@ -54,7 +54,7 @@ function test_cornerChecker()
 end
 
 function solveProblem()
-    m = Model(solver=GurobiSolver(LazyConstraints=1))
+    m = Model(solver=GurobiSolver())
 
     @defVar(m, 0 <= x <= 2, Int)
     @defVar(m, 0 <= y <= 2, Int)

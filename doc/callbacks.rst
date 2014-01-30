@@ -44,9 +44,8 @@ will be either (0,2) or (2,2), and the final solution will be (1,2)::
     using JuMP
     using Gurobi
 
-    # We will use Gurobi, which requires that we manually set the attribute
-    # LazyConstraints to 1 if we use lazy constraint generation
-    m = Model(solver=GurobiSolver(LazyConstraints=1))
+    # We will use Gurobi
+    m = Model(solver=GurobiSolver())
 
     # Define our variables to be inside a box, and integer
     @defVar(m, 0 <= x <= 2, Int)
@@ -259,7 +258,7 @@ In the above examples the callback function is defined in the same scope as the 
     end
 
     function solveProblem()
-        m = Model(solver=GurobiSolver(LazyConstraints=1))
+        m = Model(solver=GurobiSolver())
 
         @defVar(m, 0 <= x <= 2, Int)
         @defVar(m, 0 <= y <= 2, Int)

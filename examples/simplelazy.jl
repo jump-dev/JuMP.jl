@@ -12,9 +12,8 @@
 using JuMP
 using Gurobi
 
-# We will use Gurobi, which requires that we manually set the attribute
-# LazyConstraint to 1 if we use lazy constraint generation
-m = Model(solver=GurobiSolver(LazyConstraints=1))
+# We will use Gurobi
+m = Model(solver=GurobiSolver())
 
 # Define our variables to be inside a box, and integer
 @defVar(m, 0 <= x <= 2, Int)

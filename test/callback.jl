@@ -50,7 +50,7 @@ end
 
 if Pkg.installed("Gurobi") != nothing  
     using Gurobi
-    callback_test("Gurobi", GurobiSolver(LazyConstraints=1, OutputFlag=0), GurobiSolver(PreCrush=1, Cuts=0, Presolve=0, Heuristics=0.0, OutputFlag=0)) 
+    callback_test("Gurobi", GurobiSolver(OutputFlag=0), GurobiSolver(PreCrush=1, Cuts=0, Presolve=0, Heuristics=0.0, OutputFlag=0)) 
 end
 if Pkg.installed("CPLEX") != nothing
     using CPLEX
