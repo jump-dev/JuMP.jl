@@ -19,7 +19,7 @@ mod = Model(solver=GurobiSolver(PreCrush=1, Cuts=0, Presolve=0, Heuristics=0.0, 
 m_internal = MathProgBase.model(GurobiSolver())
 
 ## Uncomment the following three lines to solve using CPLEX
-# using CPLEXLink
+# using CPLEX
 # mod = Model(solver=CplexSolver(CPX_PARAM_PRELINEAR=0, CPX_PARAM_PREIND=0, CPX_PARAM_ADVIND=0, CPX_PARAM_MIPSEARCH=1,CPX_PARAM_MIPCBREDLP=0))
 # m_internal = MathProgBase.model(CplexSolver())
 

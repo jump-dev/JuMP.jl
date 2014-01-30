@@ -58,9 +58,9 @@ if Pkg.installed("Gurobi") != nothing
     using Gurobi
     qp_test("Gurobi", GurobiSolver(OutputFlag=0))
 end
-if Pkg.installed("CPLEXLink") != nothing
-    using CPLEXLink
-    qp_test("CPLEXLink", CplexSolver())
+if Pkg.installed("CPLEX") != nothing
+    using CPLEX
+    qp_test("CPLEX", CplexSolver())
 end
 if Pkg.installed("Mosek") != nothing
     using Mosek
