@@ -18,7 +18,7 @@ for curtest in tests
 end
 
 if Pkg.installed("Gurobi") != nothing || 
-   Pkg.installed("CPLEXLink") != nothing ||
+   Pkg.installed("CPLEX") != nothing ||
    Pkg.installed("Mosek") != nothing
     quadtests = ["qcqpmodel.jl", "quadmodel.jl"]
     for curtest in quadtests
@@ -26,7 +26,7 @@ if Pkg.installed("Gurobi") != nothing ||
         include(curtest)
     end
 else
-    println("WARNING: Neither Gurobi nor CPLEXLink nor Mosek installed, cannot execute corresponding tests")
+    println("WARNING: Neither Gurobi nor CPLEX nor Mosek installed, cannot execute corresponding tests")
 end
 
 # hygiene.jl should be run separately

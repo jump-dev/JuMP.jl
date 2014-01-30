@@ -11,7 +11,7 @@
 
 using JuMP
 
-# Will require either Gurobi.jl, CPLEXLink.jl, or Mosek.jl to run
+# Will require either Gurobi.jl, CPLEX.jl, or Mosek.jl to run
 m = Model()
 
 # Need nonnegativity for (rotated) second-order cone
