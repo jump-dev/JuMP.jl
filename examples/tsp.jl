@@ -106,7 +106,7 @@ function solveTSP(n, cities)
 
     # Create a model that will use Gurobi to solve
     # We need to tell Gurobi we are using lazy constraints
-    m = Model(solver=GurobiSolver(LazyConstraints=1))
+    m = Model(solver=GurobiSolver())
 
     # x[i,j] is 1 iff we travel between i and j, 0 otherwise
     # Although we define all n^2 variables, we will only use
