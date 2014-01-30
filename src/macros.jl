@@ -278,9 +278,9 @@ macro defVar(m, x, extra...)
                 end
             end
         end
-        
+       
         mac = Expr(:macrocall,symbol("@gendict"),varname,:Variable,idxsets...)
-        addDict = :( push!($(m).dictList, JuMPDictDescriptor($(string(var.args[1])), $idxsets)) )
+        addDict = :( push!($(m).dictList, $varname) )
         code = quote 
             $mac
             $code

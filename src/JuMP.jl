@@ -48,14 +48,6 @@ const INTEGER = 1
 export CONTINUOUS, INTEGER
 
 ###############################################################################
-# JuMPDict descriptor type
-# Tracks name of and 
-type JuMPDictDescriptor
-    name::String
-    indexsets
-end
-
-###############################################################################
 # Model class
 # Keeps track of all model and column info
 type Model
@@ -88,7 +80,7 @@ type Model
     cutcallback
 
     # JuMPDict list
-    dictList::Vector{JuMPDictDescriptor}
+    dictList::Vector
 end
 
 # Default constructor
@@ -102,7 +94,7 @@ function Model(sense::Symbol;lpsolver=MathProgBase.defaultLPsolver,mipsolver=Mat
         Model(QuadExpr(),sense,LinearConstraint[], QuadConstraint[],
               0,String[],Float64[],Float64[],Int[],
               0,Float64[],Float64[],Float64[],nothing,MathProgBase.MissingSolver("",Symbol[]),true,
-              nothing,nothing,JuMPDictDescriptor[])
+              nothing,nothing,JuMPDict[])
     else
         if !isa(solver,AbstractMathProgSolver)
             error("solver argument ($solver) must be an AbstractMathProgSolver")
@@ -111,7 +103,7 @@ function Model(sense::Symbol;lpsolver=MathProgBase.defaultLPsolver,mipsolver=Mat
         Model(QuadExpr(),sense,LinearConstraint[], QuadConstraint[],
               0,String[],Float64[],Float64[],Int[],
               0,Float64[],Float64[],Float64[],nothing,solver,true,
-              nothing,nothing,JuMPDictDescriptor[])
+              nothing,nothing,JuMPDict[])
     end
 end
 
@@ -125,7 +117,7 @@ function Model(;solver=nothing,lpsolver=MathProgBase.defaultLPsolver,mipsolver=M
         Model(QuadExpr(),:Min,LinearConstraint[], QuadConstraint[],
               0,String[],Float64[],Float64[],Int[],
               0,Float64[],Float64[],Float64[],nothing,MathProgBase.MissingSolver("",Symbol[]),true,
-              nothing,nothing,JuMPDictDescriptor[])
+              nothing,nothing,JuMPDict[])
     else
         if !isa(solver,AbstractMathProgSolver)
             error("solver argument ($solver) must be an AbstractMathProgSolver")
@@ -134,7 +126,7 @@ function Model(;solver=nothing,lpsolver=MathProgBase.defaultLPsolver,mipsolver=M
         Model(QuadExpr(),:Min,LinearConstraint[], QuadConstraint[],
               0,String[],Float64[],Float64[],Int[],
               0,Float64[],Float64[],Float64[],nothing,solver,true,
-              nothing,nothing,JuMPDictDescriptor[])
+              nothing,nothing,JuMPDict[])
     end
 end
 
