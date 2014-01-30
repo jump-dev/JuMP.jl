@@ -42,7 +42,7 @@ Solver support in Julia is currently provided by writing a solver-specific packa
 +----------------------------------------------------------------------------------+---------------------------------------------------------------------------------+---------------------+-------------+----+------+-----+
 | `Clp <https://projects.coin-or.org/Clp>`_                                        | `Clp.jl <https://github.com/JuliaOpt/Clp.jl>`_                                  | ``ClpSolver()``     |      EPL    | X  |      |     |
 +----------------------------------------------------------------------------------+---------------------------------------------------------------------------------+---------------------+-------------+----+------+-----+
-| `CPLEX <http://www-01.ibm.com/software/commerce/optimization/cplex-optimizer/>`_ | `CPLEXLink <https://github.com/joehuchette/CPLEXLink.jl>`_                      | ``CplexSolver()``   |  Comm.      | X  |  X   | X   |
+| `CPLEX <http://www-01.ibm.com/software/commerce/optimization/cplex-optimizer/>`_ | `CPLEX <https://github.com/joehuchette/CPLEX.jl>`_                      | ``CplexSolver()``   |  Comm.      | X  |  X   | X   |
 +----------------------------------------------------------------------------------+---------------------------------------------------------------------------------+---------------------+-------------+----+------+-----+
 | `GLPK <http://www.gnu.org/software/glpk/>`_                                      | `GLPKMath... <https://github.com/JuliaOpt/GLPKMathProgInterface.jl>`_           | ``GLPKSolverLP()``  |             |    |      |     |
 |                                                                                  |                                                                                 | ``GLPKSolverMIP()`` |     GPL     | X  |      |  X  |
@@ -97,4 +97,4 @@ The Mosek interface was contributed by the Mosek team. (Thanks!)
 CPLEX
 +++++
 
-Requires a working installation of CPLEX with a license (free for faculty members and graduate teaching assistants). The `CPLEXLink <https://github.com/joehuchette/CPLEXLink.jl>`_ interface is experimental; it requires using CPLEX as a shared library, which is unsupported by the CPLEX developers. Special installation steps are required on OS X.
+Requires a working installation of CPLEX with a license (free for faculty members and graduate teaching assistants). The `CPLEX <https://github.com/joehuchette/CPLEX.jl>`_ interface is experimental; it requires using CPLEX as a shared library, which is unsupported by the CPLEX developers. Special installation steps are required on OS X.

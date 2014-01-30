@@ -52,9 +52,9 @@ if Pkg.installed("Gurobi") != nothing
     using Gurobi
     callback_test("Gurobi", GurobiSolver(LazyConstraints=1, OutputFlag=0), GurobiSolver(PreCrush=1, Cuts=0, Presolve=0, Heuristics=0.0, OutputFlag=0)) 
 end
-if Pkg.installed("CPLEXLink") != nothing
-    using CPLEXLink
-    callback_test("CPLEXLink", CplexSolver(), CplexSolver()) 
+if Pkg.installed("CPLEX") != nothing
+    using CPLEX
+    callback_test("CPLEX", CplexSolver(), CplexSolver()) 
 end
 if Pkg.installed("GLPKMathProgInterface") != nothing
     using GLPKMathProgInterface
