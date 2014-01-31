@@ -142,30 +142,15 @@ function setObjectiveSense(m::Model, newSense::Symbol)
     m.objSense = newSense
 end
 
-macro fill_names(m, cur, name, indexsets)
-    m = esc(m)
-    cur = esc(cur)
-    name = esc(name)
-    refcall = :( $m.colNames[$cur] )
-    idxvars = {}
-    idxsets = {}
-    for s in indexsets.args
-        if isa(s,Expr) && s.head == :(=)
-            idxvar = s.args[1]
-            idxset = s.args[2]
-        else
-            idxvar = gensym()
-            idxset = s
-        end
-        push!(idxvars, idxvar)
-        push!(idxsets, idxset)
-    end
+function fill_names(m, cur, name, indexsets)
+
     tup = Expr(:tuple, [x for x in idxvars]...)
     code =  quote
                 $(refcall) = $(name)*string($tup)
                 # $(refcall) = $(name)
                 $cur += 1
             end
+
     for (idxvar, idxset) in zip(reverse(idxvars),reverse(idxsets))
         code =  quote
                     for $idxvar in $idxset
@@ -183,11 +168,13 @@ function fill_var_names(m)
         if m.colNames[cur] == ""
             cnt += 1
             dict = m.dictList[cnt]
-            println("dict.indexsets=$(dict.indexsets)")
-            println("cur=$cur")
-            println("dict.name=$(dict.name)")
-            @fill_names(m, cur, dict.name, dict.indexsets)
-            println("cur=$cur")
+            idxvars = {}
+            idxsets = {}
+            for s in indexsets
+                push!(idxvars, gensym())
+                push!(idxsets, s)
+            end
+            
         else
             cur += 1
         end
