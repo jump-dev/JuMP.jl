@@ -8,6 +8,8 @@ import Base.getindex
 import Base.setindex!
 import Base.print
 import Base.show
+import Base.push!
+import Base.append!
 
 module JuMP
 
@@ -32,7 +34,7 @@ export
     setName, getName, setLower, setUpper, getLower, getUpper,
     getValue, setValue, getDual,
     # Expressions and constraints
-    affToStr, quadToStr, conToStr, chgConstrRHS,
+    affToStr, quadToStr, conToStr, chgConstrRHS, append, push,
     
 # Macros and support functions
     @addConstraint, @defVar, 
@@ -362,6 +364,18 @@ function copy(a::AffExpr, new_model::Model)
                                  a.coeffs[:], a.constant)
 end
 
+# More efficient ways to grow an affine expression
+# Add a single term to an affine expression
+function push!{T,S}(aff::GenericAffExpr{T,S}, new_coeff::T, new_var::S)
+    push!(aff.vars, new_var)
+    push!(aff.coeffs, new_coeff)
+end
+# Add an affine expression to an existing affine expression
+function append!{T,S}(aff::GenericAffExpr{T,S}, other::GenericAffExpr{T,S})
+    append!(aff.vars, other.vars)
+    append!(aff.coeffs, other.coeffs)
+    aff.constant += other.constant  # Not efficient if CoefType isn't immutable
+end
 
 ###############################################################################
 # QuadExpr class
