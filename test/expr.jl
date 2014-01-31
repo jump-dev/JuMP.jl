@@ -10,6 +10,9 @@ a1 = x[1] + LongName + 5
 # Test like term collection
 a2 = 2*(x[2] + LongName + x[2]) + 0
 @test affToStr(a2) == "4.0 _col2 + 2.0 LongName"
+# Test append functionality
+append!(a1, 5.0, x[2])
+@test affToStr(a1) == "1.0 _col1 + 1.0 LongName + 5.0 _col2 + 5.0"
 
 # Test quadToStr
 q1 = x[1]*x[2] + 27.2*LongName + 5

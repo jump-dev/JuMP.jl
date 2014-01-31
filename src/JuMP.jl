@@ -362,6 +362,11 @@ function copy(a::AffExpr, new_model::Model)
                                  a.coeffs[:], a.constant)
 end
 
+# Convenience function to grow an affine expression
+function append!{T,S}(aff::GenericAffExpr{T,S}, new_coeff::T, new_var::S)
+    push!(aff.vars, new_var)
+    push!(aff.coeffs, new_coeff)
+end
 
 ###############################################################################
 # QuadExpr class
