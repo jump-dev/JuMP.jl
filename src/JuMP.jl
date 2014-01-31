@@ -145,8 +145,7 @@ end
 macro fill_names(m, cur, name, indexsets)
     m = esc(m)
     cur = esc(cur)
-    # refcall = Expr(:ref,m)
-    # push!(refcall.args, esc(cur))
+    name = esc(name)
     refcall = :( $m.colNames[$cur] )
     idxvars = {}
     idxsets = {}
@@ -156,13 +155,12 @@ macro fill_names(m, cur, name, indexsets)
             idxset = s.args[2]
         else
             idxvar = gensym()
-            idxset =    s
+            idxset = s
         end
         push!(idxvars, idxvar)
         push!(idxsets, idxset)
     end
     tup = Expr(:tuple, [x for x in idxvars]...)
-    # tup = :( tuple([x for x in $idxvars]) )
     code =  quote
                 $(refcall) = $(name)*string($tup)
                 # $(refcall) = $(name)
@@ -184,11 +182,11 @@ function fill_var_names(m)
     while cur <= m.numCols
         if m.colNames[cur] == ""
             cnt += 1
-            println("cnt=$cnt")
             dict = m.dictList[cnt]
-            println(dict.indexsets)
+            println("dict.indexsets=$(dict.indexsets)")
             println("cur=$cur")
-            @fill_names(m, cnt, dict.name, dict.indexsets)
+            println("dict.name=$(dict.name)")
+            @fill_names(m, cur, dict.name, dict.indexsets)
             println("cur=$cur")
         else
             cur += 1
