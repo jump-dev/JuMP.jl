@@ -32,7 +32,7 @@ export
     setName, getName, setLower, setUpper, getLower, getUpper,
     getValue, setValue, getDual,
     # Expressions and constraints
-    affToStr, quadToStr, conToStr, chgConstrRHS,
+    affToStr, quadToStr, conToStr, chgConstrRHS, append,
     
 # Macros and support functions
     @addConstraint, @defVar, 
