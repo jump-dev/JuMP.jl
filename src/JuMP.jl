@@ -8,6 +8,7 @@ import Base.getindex
 import Base.setindex!
 import Base.print
 import Base.show
+import Base.append!
 
 module JuMP
 
