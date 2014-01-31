@@ -142,88 +142,61 @@ function setObjectiveSense(m::Model, newSense::Symbol)
     m.objSense = newSense
 end
 
-# function fill_var_names(m::Model)
-#     cnt = 0
-#     cur = 1
-#     while cur <= m.numCols
-#         if m.colNames[cur] == ""
-#             # parse next vector variable
-#             cnt += 1
-#             myname = m.dictList[cnt].name
-#             idxvars = {}
-#             idxsets = {}
-#             refcall = Expr(:tuple) # instead of this, can try ``tup`` from @defVar
-#             for s in m.dictList[cnt].indexsets
-#                 tmp = gensym()
-#                 push!(idxvars, tmp)
-#                 push!(idxsets, s.args...)  
-#                 push!(refcall.args, esc(tmp))
-#             end
-#             code =  quote
-#                         $m.colNames[$cur] =$myname*string($(refcall.args))
-#                         println("doing this")
-#                         $cur += 1 
-#                     end
-#             # for (idxvar, idxset) in zip(reverse(idxvars),reverse(idxsets))
-#             #     code =  quote
-#             #                 for $((idxvar)) in $idxset
-#             #                     $code
-#             #                 end
-#             #             end
-#             # end
-#             println(code)
-#         else
-#             # cur += 1
-#         end
-#     end
-#     return code
-# end
-
-macro fill_var_names(m)
-    code =  quote
-        cnt = 0
-        cur = 1
-        # while cur <= $m.numCols
-        #     if $m.colNames[cur] == ""
-        #         # parse next vector variable
-        #         cnt += 1
-        #         myname = $m.dictList[cnt].name
-        #         idxvars = {}
-        #         idxsets = {}
-        #         refcall = Expr(:tuple) # instead of this, can try ``tup`` from @defVar
-        #         for s in m.dictList[cnt].indexsets
-        #             tmp = gensym()
-        #             push!(idxvars, tmp)
-        #             push!(idxsets, s.args...)  
-        #             push!(refcall.args, esc(tmp))
-        #         end
-        #         # code =  quote
-        #         #             $m.colNames[$cur] =$myname*string($(refcall.args))
-        #         #             println("doing this")
-        #         #             $cur += 1 
-        #         #         end
-        #         $m.colNames[$cur] =$myname*string($(refcall.args))
-        #         println("doing this")
-        #         $cur += 1 
-        #         # for (idxvar, idxset) in zip(reverse(idxvars),reverse(idxsets))
-        #         #     code =  quote
-        #         #                 for $((idxvar)) in $idxset
-        #         #                     $code
-        #         #                 end
-        #         #             end
-        #         # end
-        #         println(code)
-        #     else
-        #         cur += 1
-        #     end
-        # end
+macro fill_names(m, cur, name, indexsets...)
+    # refcall = Expr(:ref,m)
+    # push!(refcall.args, esc(cur))
+    refcall = :( m.colNames[cur] )
+    idxvars = {}
+    idxsets = {}
+    for s in indexsets
+        if isa(s,Expr) && s.head == :(=)
+            idxvar = s.args[1]
+            idxset = s.args[2]
+        else
+            idxvar = gensym()
+            idxset =    s
+        end
+        push!(idxvars, idxvar)
+        push!(idxsets, idxset)
     end
+    # tup = Expr(:tuple, [esc(x) for x in esc(idxvars)]...)
+    tup = :( tuple([esc(x) for x in idxvars]) )
+    code =  quote
+                # $(refcall) = $(name)*string($tup)
+                $(refcall) = $(name)
+                cur += 1
+            end
+    for (idxvar, idxset) in zip(reverse(idxvars),reverse(idxsets))
+        code =  quote
+                    for $idxvar in $idxset
+                        $code
+                    end
+                end
+    end   
+    println(code)
     return code
+end
+
+function fill_var_names(m)
+    cnt, cur = 0, 1
+    while cur <= m.numCols
+        if m.colNames[cur] == ""
+            cnt += 1
+            println("cnt=$cnt")
+            dict = m.dictList[cnt]
+            println(dict.indexsets)
+            println("cur=$cur")
+            @fill_names(m, cnt, dict.name, dict.indexsets)
+            println("cur=$cur")
+        else
+            cur += 1
+        end
+    end
 end
 
 # Pretty print
 function print(io::IO, m::Model)
-    (length(m.dictList) > 0) && @fill_var_names(m)
+    (length(m.dictList) > 0) && fill_var_names(m)
 
     println(io, string(m.objSense," ",quadToStr(m.obj)))
     println(io, "Subject to: ")
