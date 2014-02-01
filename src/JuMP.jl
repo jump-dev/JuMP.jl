@@ -81,6 +81,7 @@ type Model
 
     # JuMPDict list
     dictList::Vector
+    unnamed::Bool
 end
 
 # Default constructor
@@ -94,7 +95,7 @@ function Model(sense::Symbol;lpsolver=MathProgBase.defaultLPsolver,mipsolver=Mat
         Model(QuadExpr(),sense,LinearConstraint[], QuadConstraint[],
               0,String[],Float64[],Float64[],Int[],
               0,Float64[],Float64[],Float64[],nothing,MathProgBase.MissingSolver("",Symbol[]),true,
-              nothing,nothing,JuMPDict[])
+              nothing,nothing,JuMPDict[],false)
     else
         if !isa(solver,AbstractMathProgSolver)
             error("solver argument ($solver) must be an AbstractMathProgSolver")
@@ -103,7 +104,7 @@ function Model(sense::Symbol;lpsolver=MathProgBase.defaultLPsolver,mipsolver=Mat
         Model(QuadExpr(),sense,LinearConstraint[], QuadConstraint[],
               0,String[],Float64[],Float64[],Int[],
               0,Float64[],Float64[],Float64[],nothing,solver,true,
-              nothing,nothing,JuMPDict[])
+              nothing,nothing,JuMPDict[],false)
     end
 end
 
@@ -117,7 +118,7 @@ function Model(;solver=nothing,lpsolver=MathProgBase.defaultLPsolver,mipsolver=M
         Model(QuadExpr(),:Min,LinearConstraint[], QuadConstraint[],
               0,String[],Float64[],Float64[],Int[],
               0,Float64[],Float64[],Float64[],nothing,MathProgBase.MissingSolver("",Symbol[]),true,
-              nothing,nothing,JuMPDict[])
+              nothing,nothing,JuMPDict[],false)
     else
         if !isa(solver,AbstractMathProgSolver)
             error("solver argument ($solver) must be an AbstractMathProgSolver")
@@ -126,7 +127,7 @@ function Model(;solver=nothing,lpsolver=MathProgBase.defaultLPsolver,mipsolver=M
         Model(QuadExpr(),:Min,LinearConstraint[], QuadConstraint[],
               0,String[],Float64[],Float64[],Int[],
               0,Float64[],Float64[],Float64[],nothing,solver,true,
-              nothing,nothing,JuMPDict[])
+              nothing,nothing,JuMPDict[],false)
     end
 end
 
@@ -142,48 +143,39 @@ function setObjectiveSense(m::Model, newSense::Symbol)
     m.objSense = newSense
 end
 
-function fill_names(m, cur, name, indexsets)
-
-    tup = Expr(:tuple, [x for x in idxvars]...)
-    code =  quote
-                $(refcall) = $(name)*string($tup)
-                # $(refcall) = $(name)
-                $cur += 1
-            end
-
-    for (idxvar, idxset) in zip(reverse(idxvars),reverse(idxsets))
-        code =  quote
-                    for $idxvar in $idxset
-                        $code
-                    end
-                end
-    end   
-    println(code)
-    return code
+function fillName(ind, name, indexsets, lengths)
+    N = length(indexsets)
+    cprod = cumprod([lengths...])
+    return string("$name[", [ "$(indexsets[i][mod1(int(ceil(ind / cprod[i-1])),cprod[i-1])])," for i=N:-1:2 ]..., "$(indexsets[1][mod1(ind,lengths[1])])]")
 end
 
-function fill_var_names(m)
+function fillVarNames(m)
     cnt, cur = 0, 1
     while cur <= m.numCols
         if m.colNames[cur] == ""
             cnt += 1
             dict = m.dictList[cnt]
-            idxvars = {}
-            idxsets = {}
-            for s in indexsets
-                push!(idxvars, gensym())
-                push!(idxsets, s)
+            idxsets = reverse(m.dictList[cnt].indexsets)
+            name = m.dictList[cnt].name
+            lengths = map(length, idxsets)
+            num_elems = prod(lengths)
+            for i in 1:num_elems
+                if m.colNames[cur] == ""
+                    m.colNames[cur] = fillName(i, name, idxsets, lengths)
+                end
+                cur += 1
             end
-            
         else
             cur += 1
         end
     end
+    m.unnamed = false
+    m.dictList = JuMPDict[]
 end
 
 # Pretty print
 function print(io::IO, m::Model)
-    (length(m.dictList) > 0) && fill_var_names(m)
+    m.unnamed && fillVarNames(m)
 
     println(io, string(m.objSense," ",quadToStr(m.obj)))
     println(io, "Subject to: ")
@@ -284,12 +276,16 @@ setName(v::Variable,n::String) = (v.m.colNames[v.col] = n)
 
 function getName(v::Variable) 
     if length(v.m.colNames) > 0
-        return (v.m.colNames[v.col] == "" ? string("_col",v.col) : v.m.colNames[v.col])
+        v.m.unnamed && fillVarNames(v.m)
+        return v.m.colNames[v.col]
     end
     nothing
 end
 
-getName(m::Model, col) = (m.colNames[col] == "" ? string("_col",col) : m.colNames[col])
+function getName(m::Model, col)
+    (v.m.colNames[col] == "") && v.m.unnamed && fillVarNames(m)
+    return m.colNames[col]
+end
 print(io::IO, v::Variable) = print(io, getName(v))
 show(io::IO, v::Variable) = print(io, getName(v))
 
