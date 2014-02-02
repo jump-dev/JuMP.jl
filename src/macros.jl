@@ -281,12 +281,10 @@ macro defVar(m, x, extra...)
        
         mac = Expr(:macrocall,symbol("@gendict"),varname,:Variable,idxsets...)
         addDict = :( push!($(m).dictList, $varname) )
-        markUnnamed = :( $(m).unnamed = true )
         code = quote 
             $mac
             $code
             $addDict
-            $markUnnamed
             nothing
         end
         return code

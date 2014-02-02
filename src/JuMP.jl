@@ -81,7 +81,6 @@ type Model
 
     # JuMPDict list
     dictList::Vector
-    unnamed::Bool
 end
 
 # Default constructor
@@ -95,7 +94,7 @@ function Model(sense::Symbol;lpsolver=MathProgBase.defaultLPsolver,mipsolver=Mat
         Model(QuadExpr(),sense,LinearConstraint[], QuadConstraint[],
               0,String[],Float64[],Float64[],Int[],
               0,Float64[],Float64[],Float64[],nothing,MathProgBase.MissingSolver("",Symbol[]),true,
-              nothing,nothing,JuMPDict[],false)
+              nothing,nothing,JuMPDict[])
     else
         if !isa(solver,AbstractMathProgSolver)
             error("solver argument ($solver) must be an AbstractMathProgSolver")
@@ -104,7 +103,7 @@ function Model(sense::Symbol;lpsolver=MathProgBase.defaultLPsolver,mipsolver=Mat
         Model(QuadExpr(),sense,LinearConstraint[], QuadConstraint[],
               0,String[],Float64[],Float64[],Int[],
               0,Float64[],Float64[],Float64[],nothing,solver,true,
-              nothing,nothing,JuMPDict[],false)
+              nothing,nothing,JuMPDict[])
     end
 end
 
@@ -118,7 +117,7 @@ function Model(;solver=nothing,lpsolver=MathProgBase.defaultLPsolver,mipsolver=M
         Model(QuadExpr(),:Min,LinearConstraint[], QuadConstraint[],
               0,String[],Float64[],Float64[],Int[],
               0,Float64[],Float64[],Float64[],nothing,MathProgBase.MissingSolver("",Symbol[]),true,
-              nothing,nothing,JuMPDict[],false)
+              nothing,nothing,JuMPDict[])
     else
         if !isa(solver,AbstractMathProgSolver)
             error("solver argument ($solver) must be an AbstractMathProgSolver")
@@ -127,7 +126,7 @@ function Model(;solver=nothing,lpsolver=MathProgBase.defaultLPsolver,mipsolver=M
         Model(QuadExpr(),:Min,LinearConstraint[], QuadConstraint[],
               0,String[],Float64[],Float64[],Int[],
               0,Float64[],Float64[],Float64[],nothing,solver,true,
-              nothing,nothing,JuMPDict[],false)
+              nothing,nothing,JuMPDict[])
     end
 end
 
@@ -169,13 +168,17 @@ function fillVarNames(m)
             cur += 1
         end
     end
-    m.unnamed = false
     m.dictList = JuMPDict[]
 end
 
 # Pretty print
 function print(io::IO, m::Model)
-    m.unnamed && fillVarNames(m)
+    for i in 1:m.numCols
+        if m.colNames[i] == ""
+            fillVarNames(m)
+            break
+        end
+    end
 
     println(io, string(m.objSense," ",quadToStr(m.obj)))
     println(io, "Subject to: ")
@@ -276,14 +279,21 @@ setName(v::Variable,n::String) = (v.m.colNames[v.col] = n)
 
 function getName(v::Variable) 
     if length(v.m.colNames) > 0
-        v.m.unnamed && fillVarNames(v.m)
+        for i in 1:v.m.numCols
+            if v.m.colNames[i] == ""
+                fillVarNames(v.m)
+                break
+            end
+        end
         return v.m.colNames[v.col]
     end
     nothing
 end
 
 function getName(m::Model, col)
-    (v.m.colNames[col] == "") && v.m.unnamed && fillVarNames(m)
+    if v.m.colNames[col] == ""
+        fillVarNames(m)
+    end
     return m.colNames[col]
 end
 print(io::IO, v::Variable) = print(io, getName(v))
