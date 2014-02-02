@@ -43,7 +43,7 @@ Methods
   constraints.
 * ``push!(aff::AffExpr, new_coeff::Float64, new_var::Variable)`` - efficient
   way to grow an affine expression by one term. For example, to add ``5x`` to
-  an existing expression ``aff``, use ``push!(aff, 5.0, x)``. This is more
+  an existing expression ``aff``, use ``push!(aff, 5.0, x)``. This is
   signficantly more efficient than ``aff += 5.0*x``.
 * ``append!(aff::AffExpr, other::AffExpr)`` - efficiently append the terms of
   an affine expression to an existing affine expression. For example, given
