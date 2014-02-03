@@ -29,7 +29,6 @@ setName(x, "")
 @defVar(m, w[3:9,["red","blue","green"]])
 rng = 2:5
 @defVar(m, v[rng,rng,rng,rng,rng,rng,rng])
-println("getName = $(getName(z[1,3]))")
 @test getName(z[1,3]) == "z[1,3]"
 @test getName(z[2,4]) == "z[2,4]"
 @test getName(z[2,5]) == "z[2,5]"
