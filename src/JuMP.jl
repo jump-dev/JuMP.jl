@@ -265,22 +265,15 @@ setName(v::Variable,n::String) = (v.m.colNames[v.col] = n)
 
 function getName(v::Variable) 
     if length(v.m.colNames) > 0
-        for i in 1:v.m.numCols
-            if v.m.colNames[i] == ""
-                fillVarNames(v.m)
-                break
-            end
-        end
-        return v.m.colNames[v.col]
+        v.m.colNames[v.col] == "" && fillVarNames(v.m)
+        return ( v.m.colNames[v.col] == "" ? "_col$(v.col)" : v.m.colNames[v.col] )
     end
     nothing
 end
 
 function getName(m::Model, col)
-    if v.m.colNames[col] == ""
-        fillVarNames(m)
-    end
-    return m.colNames[col]
+    m.colNames[col] == "" && fillVarNames(m)
+    return ( m.colNames[col] == "" ? "_col$(col)" : m.colNames[col] )
 end
 print(io::IO, v::Variable) = print(io, getName(v))
 show(io::IO, v::Variable) = print(io, getName(v))
