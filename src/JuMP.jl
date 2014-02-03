@@ -142,34 +142,20 @@ function setObjectiveSense(m::Model, newSense::Symbol)
     m.objSense = newSense
 end
 
-function fillName(ind, name, indexsets, lengths)
-    N = length(indexsets)
-    cprod = cumprod([lengths...])
-    return string("$name[", [ "$(indexsets[i][int(ceil(mod1(ind,cprod[i]) / cprod[i-1]))])," for i=N:-1:2 ]..., "$(indexsets[1][mod1(ind,lengths[1])])]")
-end
-
 function fillVarNames(m)
-    cnt, cur = 0, 1
-    while cur <= m.numCols
-        if m.colNames[cur] == ""
-            cnt += 1
-            dict = m.dictList[cnt]
-            idxsets = reverse(dict.indexsets)
-            name = dict.name
-            lengths = map(length, idxsets)
-            num_elems = prod(lengths)
-            for i in 1:num_elems
-                if m.colNames[cur] == ""
-                    m.colNames[cur] = fillName(i, name, idxsets, lengths)
-                end
-                cur += 1
-            end
-        else
-            cur += 1
+    for dict in m.dictList
+        idxsets = dict.indexsets
+        lengths = map(length, idxsets)
+        N = length(idxsets)
+        name = dict.name
+        cprod = cumprod([lengths...])
+        for (ind,var) in enumerate(dict.innerArray)
+            setName(var,string("$name[$(idxsets[1][mod1(ind,lengths[1])])", [ ",$(idxsets[i][int(ceil(mod1(ind,cprod[i]) / cprod[i-1]))])" for i=2:N ]..., "]"))
         end
     end
     m.dictList = JuMPDict[]
 end
+
 
 # Pretty print
 function print(io::IO, m::Model)
