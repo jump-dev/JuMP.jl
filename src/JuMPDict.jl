@@ -1,3 +1,4 @@
+using Base.Meta
 # multivarate "dictionary" used for collections of variables/constraints
 
 abstract JuMPDict
@@ -13,7 +14,7 @@ macro gendict(instancename,T,idxsets...)
     offset = Array(Int,N)
     dictnames = Array(Symbol,N)
     for i in 1:N
-        if isa(idxsets[i],Expr) && idxsets[i].head == :(:)
+        if isexpr(idxsets[i],:(:)) && length(idxsets[i].args) == 2 # don't yet optimize ranges with steps
             isrange[i] = true
             if isa(idxsets[i].args[1],Int)
                 offset[i] = 1 - idxsets[i].args[1]
