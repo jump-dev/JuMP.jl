@@ -3,4 +3,5 @@
 *.mps
 .DS_Store
 *.sublime*
+*.opf
 

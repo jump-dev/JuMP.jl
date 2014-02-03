@@ -8,6 +8,8 @@ import Base.getindex
 import Base.setindex!
 import Base.print
 import Base.show
+import Base.push!
+import Base.append!
 
 module JuMP
 
@@ -63,7 +65,7 @@ type Model
     colLower::Vector{Float64}
     colUpper::Vector{Float64}
     colCat::Vector{Int}
-    
+
     # Solution data
     objVal
     colVal::Vector{Float64}
@@ -78,6 +80,9 @@ type Model
     # callbacks
     lazycallback
     cutcallback
+
+    # JuMPDict list
+    dictList::Vector
 end
 
 # Default constructor
@@ -91,7 +96,7 @@ function Model(sense::Symbol;lpsolver=MathProgBase.defaultLPsolver,mipsolver=Mat
         Model(QuadExpr(),sense,LinearConstraint[], QuadConstraint[],
               0,String[],Float64[],Float64[],Int[],
               0,Float64[],Float64[],Float64[],nothing,MathProgBase.MissingSolver("",Symbol[]),true,
-              nothing,nothing)
+              nothing,nothing,JuMPDict[])
     else
         if !isa(solver,AbstractMathProgSolver)
             error("solver argument ($solver) must be an AbstractMathProgSolver")
@@ -100,7 +105,7 @@ function Model(sense::Symbol;lpsolver=MathProgBase.defaultLPsolver,mipsolver=Mat
         Model(QuadExpr(),sense,LinearConstraint[], QuadConstraint[],
               0,String[],Float64[],Float64[],Int[],
               0,Float64[],Float64[],Float64[],nothing,solver,true,
-              nothing,nothing)
+              nothing,nothing,JuMPDict[])
     end
 end
 
@@ -114,7 +119,7 @@ function Model(;solver=nothing,lpsolver=MathProgBase.defaultLPsolver,mipsolver=M
         Model(QuadExpr(),:Min,LinearConstraint[], QuadConstraint[],
               0,String[],Float64[],Float64[],Int[],
               0,Float64[],Float64[],Float64[],nothing,MathProgBase.MissingSolver("",Symbol[]),true,
-              nothing,nothing)
+              nothing,nothing,JuMPDict[])
     else
         if !isa(solver,AbstractMathProgSolver)
             error("solver argument ($solver) must be an AbstractMathProgSolver")
@@ -123,7 +128,7 @@ function Model(;solver=nothing,lpsolver=MathProgBase.defaultLPsolver,mipsolver=M
         Model(QuadExpr(),:Min,LinearConstraint[], QuadConstraint[],
               0,String[],Float64[],Float64[],Int[],
               0,Float64[],Float64[],Float64[],nothing,solver,true,
-              nothing,nothing)
+              nothing,nothing,JuMPDict[])
     end
 end
 
@@ -139,8 +144,30 @@ function setObjectiveSense(m::Model, newSense::Symbol)
     m.objSense = newSense
 end
 
+function fillVarNames(m)
+    for dict in m.dictList
+        idxsets = dict.indexsets
+        lengths = map(length, idxsets)
+        N = length(idxsets)
+        name = dict.name
+        cprod = cumprod([lengths...])
+        for (ind,var) in enumerate(dict.innerArray)
+            setName(var,string("$name[$(idxsets[1][mod1(ind,lengths[1])])", [ ",$(idxsets[i][int(ceil(mod1(ind,cprod[i]) / cprod[i-1]))])" for i=2:N ]..., "]"))
+        end
+    end
+    m.dictList = JuMPDict[]
+end
+
+
 # Pretty print
 function print(io::IO, m::Model)
+    for i in 1:m.numCols
+        if m.colNames[i] == ""
+            fillVarNames(m)
+            break
+        end
+    end
+
     println(io, string(m.objSense," ",quadToStr(m.obj)))
     println(io, "Subject to: ")
     for c in m.linconstr
@@ -240,12 +267,16 @@ setName(v::Variable,n::String) = (v.m.colNames[v.col] = n)
 
 function getName(v::Variable) 
     if length(v.m.colNames) > 0
-        return (v.m.colNames[v.col] == "" ? string("_col",v.col) : v.m.colNames[v.col])
+        v.m.colNames[v.col] == "" && fillVarNames(v.m)
+        return ( v.m.colNames[v.col] == "" ? "_col$(v.col)" : v.m.colNames[v.col] )
     end
     nothing
 end
 
-getName(m::Model, col) = (m.colNames[col] == "" ? string("_col",col) : m.colNames[col])
+function getName(m::Model, col)
+    m.colNames[col] == "" && fillVarNames(m)
+    return ( m.colNames[col] == "" ? "_col$(col)" : m.colNames[col] )
+end
 print(io::IO, v::Variable) = print(io, getName(v))
 show(io::IO, v::Variable) = print(io, getName(v))
 
@@ -362,6 +393,18 @@ function copy(a::AffExpr, new_model::Model)
                                  a.coeffs[:], a.constant)
 end
 
+# More efficient ways to grow an affine expression
+# Add a single term to an affine expression
+function push!{T,S}(aff::GenericAffExpr{T,S}, new_coeff::T, new_var::S)
+    push!(aff.vars, new_var)
+    push!(aff.coeffs, new_coeff)
+end
+# Add an affine expression to an existing affine expression
+function append!{T,S}(aff::GenericAffExpr{T,S}, other::GenericAffExpr{T,S})
+    append!(aff.vars, other.vars)
+    append!(aff.coeffs, other.coeffs)
+    aff.constant += other.constant  # Not efficient if CoefType isn't immutable
+end
 
 ###############################################################################
 # QuadExpr class

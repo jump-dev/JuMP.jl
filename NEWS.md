@@ -1,8 +1,15 @@
 JuMP release notes
 ==================
 
+Version 0.3.1 (January 30, 2014)
+--------------------------------
+
+ * Documentation updates
+   - Support for MOSEK
+   - CPLEXLink renamed to CPLEX
+
 Version 0.3.0 (January 21, 2014)
------------------------------------
+--------------------------------
 
  * Unbounded/infeasibility rays: getValue() will return the corresponding
    components of an unbounded ray when a model is unbounded, if supported

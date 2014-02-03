@@ -49,12 +49,12 @@ let
     @defVar(m, y)
     C = [1 2 3; 4 5 6; 7 8 9]
     @addConstraint(m, sum{ C[i,j]*x[i,j], i = 1:2, j = 2:3 } <= 1)
-    @test conToStr(m.linconstr[end]) == "2.0 _col2 + 3.0 _col3 + 5.0 _col5 + 6.0 _col6 <= 1.0"
+    @test conToStr(m.linconstr[end]) == "2.0 x[1,2] + 3.0 x[1,3] + 5.0 x[2,2] + 6.0 x[2,3] <= 1.0"
     @addConstraint(m, sum{ C[i,j]*x[i,j], i = 1:3, j = 1:3; i != j} == y)
-    @test conToStr(m.linconstr[end]) == "2.0 _col2 + 3.0 _col3 + 4.0 _col4 + 6.0 _col6 + 7.0 _col7 + 8.0 _col8 - 1.0 y == 0.0"
+    @test conToStr(m.linconstr[end]) == "2.0 x[1,2] + 3.0 x[1,3] + 4.0 x[2,1] + 6.0 x[2,3] + 7.0 x[3,1] + 8.0 x[3,2] - 1.0 y == 0.0"
 
     @addConstraint(m, sum{ C[i,j]*x[i,j], i = 1:3, j = 1:i} == 0);
-    @test conToStr(m.linconstr[end]) == "1.0 _col1 + 4.0 _col4 + 5.0 _col5 + 7.0 _col7 + 8.0 _col8 + 9.0 _col9 == 0.0"
+    @test conToStr(m.linconstr[end]) == "1.0 x[1,1] + 4.0 x[2,1] + 5.0 x[2,2] + 7.0 x[3,1] + 8.0 x[3,2] + 9.0 x[3,3] == 0.0"
 end
 
 let
@@ -62,13 +62,13 @@ let
     @defVar(m, x[1:3,1:3])
     C = [1 2 3; 4 5 6; 7 8 9]
     con = @addConstraint(m, sum{ C[i,j]*x[i,j], i = 1:3, j = 1:3; i != j} == 0)
-    @test conToStr(m.linconstr[end]) == "2.0 _col2 + 3.0 _col3 + 4.0 _col4 + 6.0 _col6 + 7.0 _col7 + 8.0 _col8 == 0.0"
+    @test conToStr(m.linconstr[end]) == "2.0 x[1,2] + 3.0 x[1,3] + 4.0 x[2,1] + 6.0 x[2,3] + 7.0 x[3,1] + 8.0 x[3,2] == 0.0"
 
     @defVar(m, y, 0, [con], [-1.0])
-    @test conToStr(m.linconstr[end]) == "2.0 _col2 + 3.0 _col3 + 4.0 _col4 + 6.0 _col6 + 7.0 _col7 + 8.0 _col8 - 1.0 y == 0.0"
+    @test conToStr(m.linconstr[end]) == "2.0 x[1,2] + 3.0 x[1,3] + 4.0 x[2,1] + 6.0 x[2,3] + 7.0 x[3,1] + 8.0 x[3,2] - 1.0 y == 0.0"
 
     chgConstrRHS(con, 3)
-    @test conToStr(m.linconstr[end]) == "2.0 _col2 + 3.0 _col3 + 4.0 _col4 + 6.0 _col6 + 7.0 _col7 + 8.0 _col8 - 1.0 y == 3.0"
+    @test conToStr(m.linconstr[end]) == "2.0 x[1,2] + 3.0 x[1,3] + 4.0 x[2,1] + 6.0 x[2,3] + 7.0 x[3,1] + 8.0 x[3,2] - 1.0 y == 3.0"
 end
 
 let
@@ -80,4 +80,22 @@ let
     @test conToStr(m.linconstr[end]) == "6.0 y + 2.0 x >= -1.0"
 end
 
+# test ranges in @defVar
+let
+    m = Model()
+    @defVar(m, x[1:5])
+    @defVar(m, y[3:2:9])
+    @defVar(m, z[4:3:8])
+    @defVar(m, w[6:5])
 
+    @test length(x) == 5
+    @test length(y) == 4
+    @test length(z) == 2
+    @test length(w) == 0
+
+    @test x[end].col == x[5].col
+    @test y[3].m == y[5].m == y[7].m == y[9].m # just make sure indexing works alright
+    @test_throws z[8].col
+    @test_throws w[end]
+
+end

@@ -42,7 +42,7 @@ Solver support in Julia is currently provided by writing a solver-specific packa
 +----------------------------------------------------------------------------------+---------------------------------------------------------------------------------+---------------------+-------------+----+------+-----+
 | `Clp <https://projects.coin-or.org/Clp>`_                                        | `Clp.jl <https://github.com/JuliaOpt/Clp.jl>`_                                  | ``ClpSolver()``     |      EPL    | X  |      |     |
 +----------------------------------------------------------------------------------+---------------------------------------------------------------------------------+---------------------+-------------+----+------+-----+
-| `CPLEX <http://www-01.ibm.com/software/commerce/optimization/cplex-optimizer/>`_ | `CPLEX <https://github.com/joehuchette/CPLEX.jl>`_                      | ``CplexSolver()``   |  Comm.      | X  |  X   | X   |
+| `CPLEX <http://www-01.ibm.com/software/commerce/optimization/cplex-optimizer/>`_ | `CPLEX.jl <https://github.com/joehuchette/CPLEX.jl>`_                           | ``CplexSolver()``   |  Comm.      | X  |  X   | X   |
 +----------------------------------------------------------------------------------+---------------------------------------------------------------------------------+---------------------+-------------+----+------+-----+
 | `GLPK <http://www.gnu.org/software/glpk/>`_                                      | `GLPKMath... <https://github.com/JuliaOpt/GLPKMathProgInterface.jl>`_           | ``GLPKSolverLP()``  |             |    |      |     |
 |                                                                                  |                                                                                 | ``GLPKSolverMIP()`` |     GPL     | X  |      |  X  |
@@ -78,12 +78,12 @@ Clp and Cbc, if available, are the default choice of solver in JuMP. Cbc does *n
 GLPK
 ++++
 
-GLPK binaries are provided on OS X and Windows (32- and 64-bit) by default. On Linux, it will be compiled from source. Note that ``GLPKSolverLP`` should be used for continuous problems and ``GLPKSolverMIP`` for problems with integer variables. GLPK *does* support MIP callbacks.
+GLPK binaries are provided on OS X and Windows (32- and 64-bit) by default. On Linux, it will be compiled from source. Note that ``GLPKSolverLP`` should be used for continuous problems and ``GLPKSolverMIP`` for problems with integer variables. GLPK supports MIP callbacks.
 
 Gurobi
 ++++++
 
-Requires a working installation of Gurobi with an activated license (free for academic use).
+Requires a working installation of Gurobi with an activated license (free for academic use). Gurobi supports MIP callbacks.
 
 .. warning::
    If you are using 64-bit Gurobi, you must use 64-bit Julia (and similarly with 32-bit Gurobi).
@@ -97,4 +97,4 @@ The Mosek interface was contributed by the Mosek team. (Thanks!)
 CPLEX
 +++++
 
-Requires a working installation of CPLEX with a license (free for faculty members and graduate teaching assistants). The `CPLEX <https://github.com/joehuchette/CPLEX.jl>`_ interface is experimental; it requires using CPLEX as a shared library, which is unsupported by the CPLEX developers. Special installation steps are required on OS X.
+Requires a working installation of CPLEX with a license (free for faculty members and graduate teaching assistants). The `CPLEX.jl <https://github.com/joehuchette/CPLEX.jl>`_ interface is experimental; it requires using CPLEX as a shared library, which is unsupported by the CPLEX developers. Special installation steps are required on OS X. CPLEX supports MIP callbacks.
