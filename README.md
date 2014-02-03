@@ -16,7 +16,7 @@ features** such as efficient LP re-solves and callbacks for mixed-integer progra
 
 Our documentation includes an installation guide, quick-start guide, and reference manual. 
 
-**Latest Release**: 0.3.0 (via ``Pkg.add``) 
+**Latest Release**: 0.3.1 (via ``Pkg.add``) 
   * [documentation](https://jump.readthedocs.org/en/release-0.3/jump.html#installation-guide) 
   * [examples](https://github.com/JuliaOpt/JuMP.jl/tree/release-0.3/examples) 
   * Testing status: [![Build Status](https://travis-ci.org/JuliaOpt/JuMP.jl.png?branch=release-0.3)](https://travis-ci.org/JuliaOpt/JuMP.jl)

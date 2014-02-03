@@ -41,6 +41,15 @@ Methods
   Uses macros and thus does not yet support quadratic constraints.
 * ``addConstraint(m::Model, con)`` - general way to add linear and quadratic
   constraints.
+* ``push!(aff::AffExpr, new_coeff::Float64, new_var::Variable)`` - efficient
+  way to grow an affine expression by one term. For example, to add ``5x`` to
+  an existing expression ``aff``, use ``push!(aff, 5.0, x)``. This is
+  signficantly more efficient than ``aff += 5.0*x``.
+* ``append!(aff::AffExpr, other::AffExpr)`` - efficiently append the terms of
+  an affine expression to an existing affine expression. For example, given
+  ``aff = 5.0*x`` and ``other = 7.0*y + 3.0*z``, we can grow ``aff`` using
+  ``append!(aff, other)`` which results in ``aff`` equaling ``5x + 7y + 3z``.
+  This is signficantly more efficient than using ``aff += other``.
 
 Constraint References
 ^^^^^^^^^^^^^^^^^^^^^
