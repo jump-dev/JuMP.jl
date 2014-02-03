@@ -80,4 +80,22 @@ let
     @test conToStr(m.linconstr[end]) == "6.0 y + 2.0 x >= -1.0"
 end
 
+# test ranges in @defVar
+let
+    m = Model()
+    @defVar(m, x[1:5])
+    @defVar(m, y[3:2:9])
+    @defVar(m, z[4:3:8])
+    @defVar(m, w[6:5])
 
+    @test length(x) == 5
+    @test length(y) == 4
+    @test length(z) == 2
+    @test length(w) == 0
+
+    @test x[end].col == x[5].col
+    @test y[3].m == y[5].m == y[7].m == y[9].m # just make sure indexing works alright
+    @test_throws z[8].col
+    @test_throws w[end]
+
+end
