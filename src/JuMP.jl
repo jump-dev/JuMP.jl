@@ -145,7 +145,7 @@ end
 function fillName(ind, name, indexsets, lengths)
     N = length(indexsets)
     cprod = cumprod([lengths...])
-    return string("$name[", [ "$(indexsets[i][mod1(int(ceil(ind / cprod[i-1])),cprod[i-1])])," for i=N:-1:2 ]..., "$(indexsets[1][mod1(ind,lengths[1])])]")
+    return string("$name[", [ "$(indexsets[i][int(ceil(mod1(ind,cprod[i]) / cprod[i-1]))])," for i=N:-1:2 ]..., "$(indexsets[1][mod1(ind,lengths[1])])]")
 end
 
 function fillVarNames(m)
@@ -154,8 +154,8 @@ function fillVarNames(m)
         if m.colNames[cur] == ""
             cnt += 1
             dict = m.dictList[cnt]
-            idxsets = reverse(m.dictList[cnt].indexsets)
-            name = m.dictList[cnt].name
+            idxsets = reverse(dict.indexsets)
+            name = dict.name
             lengths = map(length, idxsets)
             num_elems = prod(lengths)
             for i in 1:num_elems
