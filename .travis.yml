@@ -17,10 +17,7 @@ before_install:
     - git config --global user.name "Travis User"
     - git config --global user.email "travis@example.net"
 script:
-    - julia -e 'versioninfo(); Pkg.init();'
+    - julia -e 'Pkg.init(); run(`ln -s $(pwd()) $(Pkg.dir("JuMP"))`); Pkg.pin("JuMP"); Pkg.resolve()'
     - julia -e 'for p in split(ENV["PKGADD"],";") Pkg.add(p) end'
-    - mkdir -p ~/.julia/JuMP
-    - cp -R ./* ~/.julia/JuMP/
-    - cd ~/.julia/JuMP/
     - julia test/runtests.jl
     - julia test/hygiene.jl
