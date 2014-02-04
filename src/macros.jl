@@ -258,7 +258,7 @@ macro defVar(m, x, extra...)
         refcall = Expr(:ref,varname)
         for s in var.args[2:end]
             if isa(s,Expr) && s.head == :(=)
-                idxvar = esc(s.args[1])
+                idxvar = s.args[1]
                 idxset = esc(s.args[2])
             else
                 idxvar = gensym()
@@ -266,21 +266,25 @@ macro defVar(m, x, extra...)
             end
             push!(idxvars, idxvar)
             push!(idxsets, idxset)
-            push!(refcall.args, idxvar)
+            push!(refcall.args, esc(idxvar))
         end
+        tup = Expr(:tuple, [esc(x) for x in idxvars]...)
+        # code = :( $(refcall) = Variable($m, $lb, $ub, $t, $(string(var.args[1]))*string($tup) ) )
         code = :( $(refcall) = Variable($m, $lb, $ub, $t) )
         for (idxvar, idxset) in zip(reverse(idxvars),reverse(idxsets))
             code = quote
-                for $idxvar in $idxset
+                for $(esc(idxvar)) in $idxset
                     $code
                 end
             end
         end
-        
+       
         mac = Expr(:macrocall,symbol("@gendict"),varname,:Variable,idxsets...)
+        addDict = :( push!($(m).dictList, $varname) )
         code = quote 
             $mac
             $code
+            $addDict
             nothing
         end
         return code
