@@ -161,12 +161,7 @@ end
 
 # Pretty print
 function print(io::IO, m::Model)
-    for i in 1:m.numCols
-        if m.colNames[i] == ""
-            fillVarNames(m)
-            break
-        end
-    end
+    (length(m.dictList) != 0) && fillVarNames(m)
 
     println(io, string(m.objSense," ",quadToStr(m.obj)))
     println(io, "Subject to: ")
