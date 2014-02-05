@@ -10,6 +10,7 @@ import Base.print
 import Base.show
 import Base.push!
 import Base.append!
+import Base.writemime
 
 module JuMP
 
@@ -155,7 +156,7 @@ function fillVarNames(m)
             setName(var,string("$name[$(idxsets[1][mod1(ind,lengths[1])])", [ ",$(idxsets[i][int(ceil(mod1(ind,cprod[i]) / cprod[i-1]))])" for i=2:N ]..., "]"))
         end
     end
-    m.dictList = JuMPDict[]
+    #m.dictList = JuMPDict[]
 end
 
 
@@ -207,6 +208,50 @@ end
 show(io::IO, m::Model) = print(m.objSense == :Max ? "Maximization problem" :
                                                     "Minimization problem") 
                                                     # What looks good here?
+
+function writemime(io::IO, ::MIME"text/latex", m::Model)
+    #(length(m.dictList) != 0) && fillVarNames(m)
+  
+    println(io, "\$\$")  # Begin MathJax mode
+    println(io, "\\begin{alignat*}{1}")
+    # Objective
+    print(io, m.objSense == :Max ? "\\max \\quad &" : "\\min \\quad &")
+    print(io, quadToStr(m.obj))
+    println(io, "\\\\")
+    # Constraints
+    print(io, "\\text{Subject to} \\quad")
+    for c in m.linconstr
+        println(io, "& $(conToStr(c,true)) \\\\")
+    end
+    # Bounds
+    in_dictlist = zeros(Bool, m.numCols)
+    for dict in m.dictList
+        # Check that bounds are same throughout
+        colLow = m.colLower[dict.innerArray[1].col]
+        colUp  = m.colUpper[dict.innerArray[1].col]
+        all_same = true
+        for vi in dict.innerArray[2:end]
+            v = dict.innerArray[vi]
+            all_same &= m.colLower[v.col] != colLow
+            all_same &= m.colUpper[v.col] != colUp
+            !all_same && break
+        end
+    end
+    for i in 1:m.numCols
+        in_dictlist[i] && continue
+        print(io, "& ")
+        print(io, m.colLower[i] == -Inf ? "-\\inf" : m.colLower[i])
+        print(io, " \\leq ")
+        print(io, (m.colNames[i] == "" ? string("\\_col",i) : m.colNames[i]))
+        print(io, in_dictlist[i])
+        print(io, " \\leq ")
+        print(io, m.colUpper[i] == Inf ? "\\inf" : m.colUpper[i])
+        println(io, " \\\\")
+    end
+    print(io, "\\end{alignat*}\n\$\$")
+end
+
+
 
 # Deep copy the model
 function copy(source::Model)
