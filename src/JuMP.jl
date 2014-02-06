@@ -204,9 +204,8 @@ function print(io::IO, m::Model)
         end
     end
 end
-show(io::IO, m::Model) = print(m.objSense == :Max ? "Maximization problem" :
-                                                    "Minimization problem") 
-                                                    # What looks good here?
+show(io::IO, m::Model) = print(io, m.objSense == :Max ? "Maximization problem" :
+                                                        "Minimization problem")
 
 # Deep copy the model
 function copy(source::Model)
