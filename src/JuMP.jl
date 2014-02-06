@@ -210,7 +210,9 @@ function show(io::IO, m::Model)
     println(io, " problem with:")
     println(io, " * $(length(m.linconstr)) linear constraints")
     nquad = length(m.quadconstr)
-    println(io, " * $(nquad) quadratic constraints")
+    if nquad > 0
+        println(io, " * $(nquad) quadratic constraints")
+    end
     print(io, " * $(m.numCols) variables")  
     nint = sum(m.colCat .== INTEGER)
     println(io, nint == 0 ? "" : " ($nint integer)")
