@@ -204,8 +204,24 @@ function print(io::IO, m::Model)
         end
     end
 end
-show(io::IO, m::Model) = print(io, m.objSense == :Max ? "Maximization problem" :
-                                                        "Minimization problem")
+
+function show(io::IO, m::Model)
+    print(io, m.objSense == :Max ? "Maximization" : (m.objSense == :Min ? "Minimization" : "Feasibility"))
+    println(io, " problem with:")
+    println(io, " * $(length(m.linconstr)) linear constraints")
+    nquad = length(m.quadconstr)
+    println(io, " * $(nquad) quadratic constraints")
+    print(io, " * $(m.numCols) variables")  
+    nint = sum(m.colCat .== INTEGER)
+    println(io, nint == 0 ? "" : " ($nint integer)")
+    print(io, "Solver set to ")
+    if typeof(m.solver) == MissingSolver
+        solver = nquad > 0 ? string(MathProgBase.defaultQPsolver) : (nint > 0 ? string(MathProgBase.defaultMIPsolver) : string(MathProgBase.defaultLPsolver))
+    else
+        solver = string(m.solver)
+    end
+    println(io, split(solver, "Solver")[1])
+end
 
 # Deep copy the model
 function copy(source::Model)
