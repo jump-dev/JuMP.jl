@@ -100,3 +100,67 @@ end
 (-)(x::JuMPDict,y::Array) = x.innerArray-y
 
 export @gendict
+
+
+function pretty(dict::JuMPDict, mode=:Con)
+    m = dict.innerArray[1].m
+
+    dimensions = length(dict.indexsets)
+    if dimensions >= 5
+        return ""  # Not enough indices!
+    end
+
+    # Check that bounds are same throughout
+    colLow = m.colLower[dict.innerArray[1].col]
+    colUp  = m.colUpper[dict.innerArray[1].col]
+    all_same = true
+    for v in dict.innerArray[2:end]
+        all_same &= m.colLower[v.col] == colLow
+        all_same &= m.colUpper[v.col] == colUp
+        !all_same && break
+    end
+    if !all_same
+        return ""  # The variables have different bounds, so can't handle
+    end
+
+    dim_names = ("i","j","k","l")
+
+    # First, the central bit of the expression
+    name_and_indices = "$(dict.name)"
+    name_and_indices *= (mode == :Con) ? "[i" : "_{i"
+    for dim = 2:dimensions
+        name_and_indices *= ",$(dim_names[dim])"
+    end
+    name_and_indices *= (mode == :Con) ? "]" : "}"
+
+    # Then the tail list of sets
+    tail_str = (mode == :Con) ? ", for all " : "\\quad  \\forall "
+    for dim = 1:dimensions
+        tail_str *= "$(dim_names[dim])"
+        tail_str *= (mode == :Con) ? " in {" : " \\in \\{ "
+        tail_str *= "$(dict.indexsets[dim][1])..$(dict.indexsets[dim][end])"
+        tail_str *= (mode == :Con) ? "}" : " \\}"
+        if dim != dimensions
+            tail_str *= ", "
+        end
+    end
+    
+    colCat = m.colCat[dict.innerArray[1].col]
+    greater = (mode == :Con) ? "\u2265" : "\\geq"
+    less = (mode == :Con) ? "\u2264" : "\\leq"
+    if colCat == INTEGER && colLow == 0 && colUp == 1
+        return name_and_indices * tail_str * ", binary"
+    elseif colLow == -Inf && colUp == Inf
+        return name_and_indices * tail_str * 
+                (colCat == INTEGER ? ", integer" : ", free")
+    elseif colLow == -Inf
+        return name_and_indices * " $less $colUp" * tail_str * 
+            (colCat == INTEGER ? ", integer" : "")
+    elseif colUp == Inf
+        return name_and_indices * " $greater $colLow" * tail_str * 
+            (colCat == INTEGER ? ", integer" : "")
+    else
+        return "$colLow $less " * name_and_indices * " $less $colUp" * tail_str * 
+            (colCat == INTEGER ? ", integer" : "")
+    end
+end

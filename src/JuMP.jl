@@ -173,43 +173,16 @@ function print(io::IO, m::Model)
         println(io, conToStr(c))
     end
 
+    # Handle special cases
     in_dictlist = zeros(Bool, m.numCols)
     for dict in m.dictList
-        # Check that bounds are same throughout
-        colLow = m.colLower[dict.innerArray[1].col]
-        colUp  = m.colUpper[dict.innerArray[1].col]
-        all_same = true
-        for v in dict.innerArray[2:end]
-            all_same &= m.colLower[v.col] == colLow
-            all_same &= m.colUpper[v.col] == colUp
-            !all_same && break
-        end
-        !all_same && continue
-        # If they are the same, we will handle this one differently
-        dimensions = length(dict.indexsets)
-        dimensions >= 5 && continue  # Not enough indices!
-        out_str = "$colLow \u2264 $(dict.name)[i"
-        dim_names = ["i","j","k","l"]
-        for dim = 2:dimensions
-            out_str *= ",$(dim_names[dim])"
-        end
-        out_str *= "] \u2264 $colUp, for all "
-        for dim = 1:dimensions
-            if typeof(dict.indexsets[dim]) <: Range || typeof(dict.indexsets[dim]) <: Range1
-                # Numeric range
-                out_str *= "$(dim_names[dim]) in {$(first(dict.indexsets[dim]))..$(last(dict.indexsets[dim]))}"
-            else
-                # Arbitrary set
-                out_str *= "$(dim_names[dim]) in {$(dict.indexsets[dim][1])..$(dict.indexsets[dim][end])}"
+        out_str = pretty(dict, :Con)
+        if out_str != ""
+            println(io, out_str)
+            # Don't repeat this variable
+            for v in dict.innerArray
+                in_dictlist[v.col] = true
             end
-            if dim != dimensions
-                out_str *= ", "
-            end
-        end
-        println(io, out_str)        
-        # Don't repeat this variable
-        for v in dict.innerArray
-            in_dictlist[v.col] = true
         end
     end
 
@@ -265,31 +238,18 @@ function writemime(io::IO, ::MIME"text/latex", m::Model)
     for c in m.linconstr
         println(io, "& $(conToStr(c,true)) \\\\")
     end
-    # Bounds
+    
+    # Handle special cases
     in_dictlist = zeros(Bool, m.numCols)
     for dict in m.dictList
-        # Check that bounds are same throughout
-        colLow = m.colLower[dict.innerArray[1].col]
-        colUp  = m.colUpper[dict.innerArray[1].col]
-        all_same = true
-        for v in dict.innerArray[2:end]
-            all_same &= m.colLower[v.col] == colLow
-            all_same &= m.colUpper[v.col] == colUp
-            !all_same && break
-        end
-        !all_same && continue
-        # If they are the same, we will handle this one differently
-        print(io, "& ")
-        print(io, colLow == -Inf ? "-\\inf" : colLow)
-        print(io, " \\leq ")
-        print(io, string(dict.name, "_i"))
-        print(io, " \\leq ")
-        print(io, colUp == Inf ? "\\inf" : colUp)
-        print(io, "  \\quad  \\forall i \\in \\{ $(first(dict.indexsets[1])) \\dots $(last(dict.indexsets[1])) \\}")
-        println(io, " \\\\")
-        # Don't repeat this variable
-        for v in dict.innerArray
-            in_dictlist[v.col] = true
+        out_str = pretty(dict, :IJulia)
+        if out_str != ""
+            print(io, "& ")
+            println(io, out_str)
+            # Don't repeat this variable
+            for v in dict.innerArray
+                in_dictlist[v.col] = true
+            end
         end
     end
     for i in 1:m.numCols
