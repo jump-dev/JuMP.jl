@@ -112,8 +112,9 @@ function writemime(io::IO, ::MIME"text/latex", m::Model)
     for i in 1:m.numCols
         in_dictlist[i] && continue
         print(io, "& ")
-        println(io, boundstring(m.colNames[i], m.colLower[i], m.colUpper[i],
-                                m.colCat[i], "", :IJulia))
+        print(io, boundstring(m.colNames[i], m.colLower[i], m.colUpper[i],
+                              m.colCat[i], "", :IJulia))
+        println(io, "\\\\")
     end
     print(io, "\\end{alignat*}\n\$\$")
 end
@@ -292,7 +293,7 @@ function writemime(io::IO, ::MIME"text/latex", dict::JuMPDict)
     # Best case: bounds and all dims
     str = dictstring(dict::JuMPDict, :IJulia)
     if str != ""
-        print(io, str)    
+        print(io, "\\( $str \\)")
         return
     end
     # Maybe too many dims?
@@ -303,6 +304,6 @@ function writemime(io::IO, ::MIME"text/latex", dict::JuMPDict)
         return
     end
     # Must have been inconsistent bounds - just don't print them
-    name_and_indices, tail_str = dictnameindices(dict, :REPL)
-    print(io, "\$\$ \\dots \\leq $(name_and_indices) \\leq \\dots$(tail_str) \$\$")
+    name_and_indices, tail_str = dictnameindices(dict, :IJulia)
+    print(io, "\\( \\dots \\leq $(name_and_indices) \\leq \\dots$(tail_str) \\)")
 end
