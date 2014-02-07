@@ -145,128 +145,6 @@ function setObjectiveSense(m::Model, newSense::Symbol)
     m.objSense = newSense
 end
 
-function fillVarNames(m)
-    for dict in m.dictList
-        idxsets = dict.indexsets
-        lengths = map(length, idxsets)
-        N = length(idxsets)
-        name = dict.name
-        cprod = cumprod([lengths...])
-        for (ind,var) in enumerate(dict.innerArray)
-            setName(var,string("$name[$(idxsets[1][mod1(ind,lengths[1])])", [ ",$(idxsets[i][int(ceil(mod1(ind,cprod[i]) / cprod[i-1]))])" for i=2:N ]..., "]"))
-        end
-    end
-    #m.dictList = JuMPDict[]
-end
-
-
-# Pretty print
-function print(io::IO, m::Model)
-    (length(m.dictList) != 0) && fillVarNames(m)
-
-    println(io, string(m.objSense," ",quadToStr(m.obj)))
-    println(io, "Subject to: ")
-    for c in m.linconstr
-        println(io, conToStr(c))
-    end
-    for c in m.quadconstr
-        println(io, conToStr(c))
-    end
-
-    # Handle special cases
-    in_dictlist = zeros(Bool, m.numCols)
-    for dict in m.dictList
-        out_str = pretty(dict, :Con)
-        if out_str != ""
-            println(io, out_str)
-            # Don't repeat this variable
-            for v in dict.innerArray
-                in_dictlist[v.col] = true
-            end
-        end
-    end
-
-    for i in 1:m.numCols
-        in_dictlist[i] && continue
-        if m.colCat[i] == INTEGER && m.colLower[i] == 0 && m.colUpper[i] == 1
-            print(io, (m.colNames[i] == "" ? string("_col",i) : m.colNames[i]))
-            # println(" \u220a {0,1}")
-            println(io, " binary")
-        elseif m.colLower[i] == -Inf && m.colUpper[i] == Inf
-            if m.colCat[i] == INTEGER
-                print(io, (m.colNames[i] == "" ? string("_col",i) : m.colNames[i]))
-                # println(io, "\u220a\u2124")
-                println(io, " free integer")
-            else
-                print(io, (m.colNames[i] == "" ? string("_col",i) : m.colNames[i]))
-                println(io, " free")
-            end
-        elseif m.colLower[i] == -Inf
-            print(io, (m.colNames[i] == "" ? string("_col",i) : m.colNames[i]))
-            print(io, " \u2264 $(m.colUpper[i])")
-            # println(io, m.colCat[i] == INTEGER ? ", $(m.colNames[i])\u220a\u2124" : "")
-            println(io, m.colCat[i] == INTEGER ? ", $(m.colNames[i]) integer" : "")
-        elseif m.colUpper[i] == Inf
-            print(io, (m.colNames[i] == "" ? string("_col",i) : m.colNames[i]))
-            print(io, " \u2265 $(m.colLower[i])")
-            # println(io, m.colCat[i] == INTEGER ? ", $(m.colNames[i])\u220a\u2124" : "")
-            println(io, m.colCat[i] == INTEGER ? ", $(m.colNames[i]) integer" : "")
-        else
-            print(io, "$(m.colLower[i]) \u2264 ")
-            print(io, (m.colNames[i] == "" ? string("_col",i) : m.colNames[i]))
-            print(io, " \u2264 $(m.colUpper[i])")
-            # println(io, m.colCat[i] == INTEGER ? ", $(m.colNames[i])\u220a\u2124" : "")
-            println(io, m.colCat[i] == INTEGER ? ", $(m.colNames[i]) integer" : "")
-        end
-    end
-end
-show(io::IO, m::Model) = print(m.objSense == :Max ? "Maximization problem" :
-                                                    "Minimization problem") 
-                                                    # What looks good here?
-
-function writemime(io::IO, ::MIME"text/latex", m::Model)
-    #(length(m.dictList) != 0) && fillVarNames(m)
-  
-    println(io, "\$\$")  # Begin MathJax mode
-    println(io, "\\begin{alignat*}{1}")
-    # Objective
-    print(io, m.objSense == :Max ? "\\max \\quad &" : "\\min \\quad &")
-    print(io, quadToStr(m.obj))
-    println(io, "\\\\")
-    # Constraints
-    print(io, "\\text{Subject to} \\quad")
-    for c in m.linconstr
-        println(io, "& $(conToStr(c,true)) \\\\")
-    end
-    
-    # Handle special cases
-    in_dictlist = zeros(Bool, m.numCols)
-    for dict in m.dictList
-        out_str = pretty(dict, :IJulia)
-        if out_str != ""
-            print(io, "& ")
-            println(io, out_str)
-            # Don't repeat this variable
-            for v in dict.innerArray
-                in_dictlist[v.col] = true
-            end
-        end
-    end
-    for i in 1:m.numCols
-        in_dictlist[i] && continue
-        print(io, "& ")
-        print(io, m.colLower[i] == -Inf ? "-\\inf" : m.colLower[i])
-        print(io, " \\leq ")
-        print(io, (m.colNames[i] == "" ? string("\\_col",i) : m.colNames[i]))
-        print(io, " \\leq ")
-        print(io, m.colUpper[i] == Inf ? "\\inf" : m.colUpper[i])
-        println(io, " \\\\")
-    end
-    print(io, "\\end{alignat*}\n\$\$")
-end
-
-
-
 # Deep copy the model
 function copy(source::Model)
     
@@ -730,8 +608,10 @@ include("writers.jl")
 include("solvers.jl")
 # Macros - @defVar, sum{}, etc.
 include("macros.jl")
-
+# Callbacks - lazy, cuts, ...
 include("callbacks.jl")
+# Pretty-printing, including IJulia
+include("print.jl")
 
 ##########################################################################
 end
