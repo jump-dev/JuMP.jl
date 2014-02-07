@@ -21,7 +21,7 @@ export
     # Model related
     getNumVars, getNumConstraints, getObjectiveValue, getObjective,
     getObjectiveSense, setObjectiveSense, writeLP, writeMPS, setObjective,
-    addConstraint, addVar, addVars, solve, copy,
+    addConstraint, addVar, addVars, addSOS1, addSOS2, solve, copy,
     # Variable
     setName, getName, setLower, setUpper, getLower, getUpper,
     getValue, setValue, getDual,
@@ -50,6 +50,7 @@ type Model
     
     linconstr#::Vector{LinearConstraint}
     quadconstr
+    sosconstr
     
     # Column data
     numCols::Int
@@ -88,7 +89,7 @@ end
 function Model(;solver=nothing)
     if solver == nothing
         # use default solvers
-        Model(QuadExpr(),:Min,LinearConstraint[], QuadConstraint[],
+        Model(QuadExpr(),:Min,LinearConstraint[], QuadConstraint[],SOSConstraint[],
               0,String[],Float64[],Float64[],Int[],
               0,Float64[],Float64[],Float64[],nothing,MathProgBase.MissingSolver("",Symbol[]),true,
               nothing,nothing,nothing,JuMPDict[],Dict{Symbol,Any}())
@@ -97,7 +98,7 @@ function Model(;solver=nothing)
             error("solver argument ($solver) must be an AbstractMathProgSolver")
         end
         # user-provided solver must support problem class
-        Model(QuadExpr(),:Min,LinearConstraint[], QuadConstraint[],
+        Model(QuadExpr(),:Min,LinearConstraint[], QuadConstraint[],SOSConstraint[],
               0,String[],Float64[],Float64[],Int[],
               0,Float64[],Float64[],Float64[],nothing,solver,true,
               nothing,nothing,nothing,JuMPDict[],Dict{Symbol,Any}())
@@ -168,8 +169,6 @@ end
 Variable(m::Model,lower::Number,upper::Number,cat::Int) =
     Variable(m,lower,upper,cat,"")
 
-
-
 # Name setter/getters
 setName(v::Variable,n::String) = (v.m.colNames[v.col] = n)
 
@@ -225,6 +224,8 @@ typealias AffExpr GenericAffExpr{Float64,Variable}
 AffExpr() = AffExpr(Variable[],Float64[],0.)
 
 isempty(a::AffExpr) = (length(a.vars) == 0 && a.constant == 0.)
+
+convert(::Type{AffExpr}, v::Variable) = AffExpr([v], [1.], 0.)
 
 function setObjective(m::Model, sense::Symbol, a::AffExpr)
     setObjectiveSense(m, sense)
@@ -345,6 +346,62 @@ end
 function copy(c::LinearConstraint, new_model::Model)
     return LinearConstraint(copy(c.terms, new_model), c.lb, c.ub)
 end
+
+##########################################################################
+# SOSConstraint class
+# An SOS constraint.
+type SOSConstraint <: JuMPConstraint
+    terms::Vector{Variable}
+    weights::Vector{Float64}
+    sostype::Symbol
+end
+
+function constructSOS(coll::Vector{AffExpr})
+    nvar = length(coll)
+    vars = Array(Variable, nvar)
+    weight = Array(Float64, nvar)
+    for i in 1:length(coll)
+        if (length(coll[i].vars) != 1) || (coll[i].constant != 0)
+            error("Must specify collection in terms of single variables")
+        end
+        vars[i] = coll[i].vars[1]
+        weight[i] = coll[i].coeffs[1]
+    end
+    return vars, weight
+end
+
+addSOS1(m::Model, coll) = addSOS1(m, convert(Vector{AffExpr}, coll))
+
+function addSOS1(m::Model, coll::Vector{AffExpr})
+    vars, weight = constructSOS(coll)
+    push!(m.sosconstr, SOSConstraint(vars, weight, :SOS1))
+    return ConstraintRef{SOSConstraint}(m,length(m.sosconstr))
+end
+
+addSOS2(m::Model, coll) = addSOS2(m, convert(Vector{AffExpr}, coll))
+
+function addSOS2(m::Model, coll::Vector{AffExpr})
+    vars, weight = constructSOS(coll)
+    push!(m.sosconstr, SOSConstraint(vars, weight, :SOS2))
+    return ConstraintRef{SOSConstraint}(m,length(m.sosconstr))
+end
+
+function conToStr(c::SOSConstraint) 
+    nvar = length(c.terms)
+    termStrings = Array(UTF8String, nvar+2)
+    termStrings[1] = "$(c.sostype): {"
+    if nvar > 0
+        termStrings[2] = "$(c.weights[1]) $(c.terms[1])"
+        for i in 2:nvar
+            termStrings[i+1] = ", $(c.weights[i]) $(c.terms[i])"
+        end
+    end
+    termStrings[end] = "}"
+    return join(termStrings)
+end
+
+print(io::IO, c::SOSConstraint) = print(io, conToStr(c))
+show(io::IO, c::SOSConstraint)  = print(io, conToStr(c))
 
 ##########################################################################
 # QuadConstraint class
