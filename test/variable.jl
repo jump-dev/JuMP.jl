@@ -44,3 +44,45 @@ setUpper(x, 3)
 @test getUpper(x) == 3
 @test getLower(y) == 0
 @test getUpper(y) == 1
+
+# Test long-form bounds printing code in print.jl
+mprint = Model()
+@defVar(mprint, 0 <= a[3:6] <= 5)
+@test JuMP.dictstring(a, :REPL)   == "0.0 ≤ a[i] ≤ 5.0, for all i in {3..6}"
+@test JuMP.dictstring(a, :IJulia) == "0.0 \\leq a_{i} \\leq 5.0 \\quad \\forall i \\in \\{ 3..6 \\}"
+@defVar(mprint, b[-2:3] >= 2)
+@test JuMP.dictstring(b, :REPL)   == "b[i] ≥ 2.0, for all i in {-2..3}"
+@test JuMP.dictstring(b, :IJulia) == "b_{i} \\geq 2.0 \\quad \\forall i \\in \\{ -2..3 \\}"
+@defVar(mprint, c[-2:3] <= 7.0)
+@test JuMP.dictstring(c, :REPL)   == "c[i] ≤ 7.0, for all i in {-2..3}"
+@test JuMP.dictstring(c, :IJulia) == "c_{i} \\leq 7.0 \\quad \\forall i \\in \\{ -2..3 \\}"
+@defVar(mprint, 0 <= d[-5:2] <= 5, Int)
+@test JuMP.dictstring(d, :REPL)   == "0.0 ≤ d[i] ≤ 5.0, for all i in {-5..2}, integer"
+@test JuMP.dictstring(d, :IJulia) == "0.0 \\leq d_{i} \\leq 5.0 \\quad \\forall i \\in \\{ -5..2 \\}, integer"
+@defVar(mprint, e[-5:2], Bin)
+@test JuMP.dictstring(e, :REPL)   == "e[i], for all i in {-5..2}, binary"
+@test JuMP.dictstring(e, :IJulia) == "e_{i} \\quad \\forall i \\in \\{ -5..2 \\}, binary"
+@defVar(mprint, f[6:9] >= 3, Int)
+@test JuMP.dictstring(f, :REPL)   == "f[i] ≥ 3.0, for all i in {6..9}, integer"
+@test JuMP.dictstring(f, :IJulia) == "f_{i} \\geq 3.0 \\quad \\forall i \\in \\{ 6..9 \\}, integer"
+@defVar(mprint, g[1:5:3] >= 0)
+@test JuMP.dictstring(g, :REPL)   == "g[i] ≥ 0.0, for all i in {1}"
+@test JuMP.dictstring(g, :IJulia) == "g_{i} \\geq 0.0 \\quad \\forall i \\in \\{ 1 \\}"
+@defVar(mprint, h[0:2:2] >= 0)
+@test JuMP.dictstring(h, :REPL)   == "h[i] ≥ 0.0, for all i in {0,2}"
+@test JuMP.dictstring(h, :IJulia) == "h_{i} \\geq 0.0 \\quad \\forall i \\in \\{ 0,2 \\}"
+@defVar(mprint, i[0:2:4] >= 0)
+@test JuMP.dictstring(i, :REPL)   == "i[i] ≥ 0.0, for all i in {0,2,4}"
+@test JuMP.dictstring(i, :IJulia) == "i_{i} \\geq 0.0 \\quad \\forall i \\in \\{ 0,2,4 \\}"
+@defVar(mprint, j[1:2:20] >= 0)
+@test JuMP.dictstring(j, :REPL)   == "j[i] ≥ 0.0, for all i in {1,3..17,19}"
+@test JuMP.dictstring(j, :IJulia) == "j_{i} \\geq 0.0 \\quad \\forall i \\in \\{ 1,3..17,19 \\}"
+@defVar(mprint, k[[:a,:b,:c]] >= 0)
+@test JuMP.dictstring(k, :REPL)   == "k[i] ≥ 0.0, for all i in {a,b,c}"
+@test JuMP.dictstring(k, :IJulia) == "k_{i} \\geq 0.0 \\quad \\forall i \\in \\{ a,b,c \\}"
+@defVar(mprint, l[[:apple,:banana,:carrot,:diamonds]] >= 0)
+@test JuMP.dictstring(l, :REPL)   == "l[i] ≥ 0.0, for all i in {apple,banana..}"
+@test JuMP.dictstring(l, :IJulia) == "l_{i} \\geq 0.0 \\quad \\forall i \\in \\{ apple,banana.. \\}"
+@defVar(mprint, m[1:5,2:2:6,[:cats,:dogs,:dinosaurs],["gah",5.0,2,:symbol]] >= 0)
+@test JuMP.dictstring(m, :REPL)   == "m[i,j,k,l] ≥ 0.0, for all i in {1..5}, j in {2,4,6}, k in {cats,dogs..}, l in {gah,5.0,2..}"
+@test JuMP.dictstring(m, :IJulia) == "m_{i,j,k,l} \\geq 0.0 \\quad \\forall i \\in \\{ 1..5 \\}, j \\in \\{ 2,4,6 \\}, k \\in \\{ cats,dogs.. \\}, l \\in \\{ gah,5.0,2.. \\}"

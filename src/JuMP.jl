@@ -209,8 +209,6 @@ function getName(m::Model, col)
     m.colNames[col] == "" && fillVarNames(m)
     return ( m.colNames[col] == "" ? "_col$(col)" : m.colNames[col] )
 end
-print(io::IO, v::Variable) = print(io, getName(v))
-show(io::IO, v::Variable) = print(io, getName(v))
 
 # Bound setter/getters
 setLower(v::Variable,lower::Number) = (v.m.colLower[v.col] = convert(Float64,lower))
