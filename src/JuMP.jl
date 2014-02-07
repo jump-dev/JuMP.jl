@@ -252,6 +252,8 @@ show(io::IO, a::GenericAffExpr) = print(io, affToStr(a))
 typealias AffExpr GenericAffExpr{Float64,Variable}
 AffExpr() = AffExpr(Variable[],Float64[],0.)
 
+isempty(a::AffExpr) = (length(a.vars) == 0 && a.constant == 0.)
+
 function setObjective(m::Model, a::AffExpr)
     Base.warn_once("Calling setObjective without specifying an objective sense is deprecated. Use setObjective(model, sense, expr) (or @setObjective(model, sense, expr)).")
     m.obj = QuadExpr()
@@ -349,6 +351,8 @@ type QuadExpr
 end
 
 QuadExpr() = QuadExpr(Variable[],Variable[],Float64[],AffExpr())
+
+isempty(q::QuadExpr) = (length(q.qvars1) == 0 && isempty(q.aff))
 
 function setObjective(m::Model, q::QuadExpr)
     Base.warn_once("Calling setObjective without specifying an objective sense is deprecated. Use setObjective(model, sense, expr).")

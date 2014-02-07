@@ -118,9 +118,26 @@ function writemime(io::IO, ::MIME"text/latex", m::Model)
     print(io, "\\end{alignat*}\n\$\$")
 end
 
-show(io::IO, m::Model) = print(m.objSense == :Max ? "Maximization problem" :
-                                                    "Minimization problem") 
-                                                    # What looks good here?
+# Default REPL
+function show(io::IO, m::Model)
+    print(io, m.objSense == :Max ? "Maximization" : ((m.objSense == :Min && !isempty(m.obj)) ? "Minimization" : "Feasibility"))
+    println(io, " problem with:")
+    println(io, " * $(length(m.linconstr)) linear constraints")
+    nquad = length(m.quadconstr)
+    if nquad > 0
+        println(io, " * $(nquad) quadratic constraints")
+    end
+    print(io, " * $(m.numCols) variables")  
+    nint = sum(m.colCat .== INTEGER)
+    println(io, nint == 0 ? "" : " ($nint integer)")
+    print(io, "Solver set to ")
+    if typeof(m.solver) == MissingSolver
+        solver = nquad > 0 ? string(MathProgBase.defaultQPsolver) : (nint > 0 ? string(MathProgBase.defaultMIPsolver) : string(MathProgBase.defaultLPsolver))
+    else
+        solver = string(m.solver)
+    end
+    println(io, split(solver, "Solver")[1])
+end
 
 #############################################################################
 #### type VARIABLE
