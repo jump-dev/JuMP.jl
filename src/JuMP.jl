@@ -58,6 +58,7 @@ type Model
     
     linconstr#::Vector{LinearConstraint}
     quadconstr
+    sosconstr
     
     # Column data
     numCols::Int
@@ -93,7 +94,7 @@ function Model(sense::Symbol;lpsolver=MathProgBase.defaultLPsolver,mipsolver=Mat
     end
     if solver == nothing
         # use default solvers
-        Model(QuadExpr(),sense,LinearConstraint[], QuadConstraint[],
+        Model(QuadExpr(),sense,LinearConstraint[], QuadConstraint[],SOSConstraint[],
               0,String[],Float64[],Float64[],Int[],
               0,Float64[],Float64[],Float64[],nothing,MathProgBase.MissingSolver("",Symbol[]),true,
               nothing,nothing,JuMPDict[])
@@ -102,7 +103,7 @@ function Model(sense::Symbol;lpsolver=MathProgBase.defaultLPsolver,mipsolver=Mat
             error("solver argument ($solver) must be an AbstractMathProgSolver")
         end
         # user-provided solver must support problem class
-        Model(QuadExpr(),sense,LinearConstraint[], QuadConstraint[],
+        Model(QuadExpr(),sense,LinearConstraint[], QuadConstraint[],SOSConstraint[],
               0,String[],Float64[],Float64[],Int[],
               0,Float64[],Float64[],Float64[],nothing,solver,true,
               nothing,nothing,JuMPDict[])
@@ -116,7 +117,7 @@ function Model(;solver=nothing,lpsolver=MathProgBase.defaultLPsolver,mipsolver=M
     
     if solver == nothing
         # use default solvers
-        Model(QuadExpr(),:Min,LinearConstraint[], QuadConstraint[],
+        Model(QuadExpr(),:Min,LinearConstraint[], QuadConstraint[],SOSConstraint[],
               0,String[],Float64[],Float64[],Int[],
               0,Float64[],Float64[],Float64[],nothing,MathProgBase.MissingSolver("",Symbol[]),true,
               nothing,nothing,JuMPDict[])
@@ -125,7 +126,7 @@ function Model(;solver=nothing,lpsolver=MathProgBase.defaultLPsolver,mipsolver=M
             error("solver argument ($solver) must be an AbstractMathProgSolver")
         end
         # user-provided solver must support problem class
-        Model(QuadExpr(),:Min,LinearConstraint[], QuadConstraint[],
+        Model(QuadExpr(),:Min,LinearConstraint[], QuadConstraint[],SOSConstraint[],
               0,String[],Float64[],Float64[],Int[],
               0,Float64[],Float64[],Float64[],nothing,solver,true,
               nothing,nothing,JuMPDict[])
@@ -590,6 +591,22 @@ end
 function copy(c::LinearConstraint, new_model::Model)
     return LinearConstraint(copy(c.terms, new_model), c.lb, c.ub)
 end
+
+##########################################################################
+# SOSConstraint class
+# An SOS constraint.
+type SOSConstraint <: JuMPConstraint
+    terms::Vector{Variable}
+    weights::Vector{Real}
+    sostype::Symbol
+end
+
+function addSOS(m::Model, terms::Vector{Variable}, weights::Vector{Real}, sostype::Symbol)
+
+end
+
+# want something like @addSOS(3x, 4y, 5z)
+# macro addSOS(x)
 
 ##########################################################################
 # QuadConstraint class
