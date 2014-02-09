@@ -8,8 +8,7 @@ module JuMP
 
 # Use the standard solver interface for LPs and MIPs
 using MathProgBase
-require(joinpath(Pkg.dir("MathProgBase"),"src","MathProgSolverInterface.jl"))
-using MathProgSolverInterface
+using MathProgBase.MathProgSolverInterface
 
 importall Base
 
