@@ -78,34 +78,7 @@ type Model
 end
 
 # Default constructor
-function Model(sense::Symbol;lpsolver=MathProgBase.defaultLPsolver,mipsolver=MathProgBase.defaultMIPsolver,solver=nothing)
-    Base.warn_once("Model(:$sense) syntax is deprecated. The sense should be passed to setObjective, e.g. @setObjective(model, :$sense, ...)")
-    if lpsolver != MathProgBase.defaultLPsolver || mipsolver != MathProgBase.defaultMIPsolver
-        error("lpsolver and mipsolver keywords have been merged. Use 'solver' instead, for example, Model(solver=ClpSolver())")
-    end
-    if solver == nothing
-        # use default solvers
-        Model(QuadExpr(),sense,LinearConstraint[], QuadConstraint[],
-              0,String[],Float64[],Float64[],Int[],
-              0,Float64[],Float64[],Float64[],nothing,MathProgBase.MissingSolver("",Symbol[]),true,
-              nothing,nothing,JuMPDict[])
-    else
-        if !isa(solver,AbstractMathProgSolver)
-            error("solver argument ($solver) must be an AbstractMathProgSolver")
-        end
-        # user-provided solver must support problem class
-        Model(QuadExpr(),sense,LinearConstraint[], QuadConstraint[],
-              0,String[],Float64[],Float64[],Int[],
-              0,Float64[],Float64[],Float64[],nothing,solver,true,
-              nothing,nothing,JuMPDict[])
-    end
-end
-
-function Model(;solver=nothing,lpsolver=MathProgBase.defaultLPsolver,mipsolver=MathProgBase.defaultMIPsolver)
-    if lpsolver != MathProgBase.defaultLPsolver || mipsolver != MathProgBase.defaultMIPsolver
-        error("lpsolver and mipsolver keywords have been merged. Use 'solver' instead, for example, Model(solver=ClpSolver())")
-    end
-    
+function Model(;solver=nothing)
     if solver == nothing
         # use default solvers
         Model(QuadExpr(),:Min,LinearConstraint[], QuadConstraint[],
@@ -243,12 +216,6 @@ AffExpr() = AffExpr(Variable[],Float64[],0.)
 
 isempty(a::AffExpr) = (length(a.vars) == 0 && a.constant == 0.)
 
-function setObjective(m::Model, a::AffExpr)
-    Base.warn_once("Calling setObjective without specifying an objective sense is deprecated. Use setObjective(model, sense, expr) (or @setObjective(model, sense, expr)).")
-    m.obj = QuadExpr()
-    m.obj.aff = a
-end
-
 function setObjective(m::Model, sense::Symbol, a::AffExpr)
     setObjectiveSense(m, sense)
     m.obj = QuadExpr()
@@ -342,11 +309,6 @@ end
 QuadExpr() = QuadExpr(Variable[],Variable[],Float64[],AffExpr())
 
 isempty(q::QuadExpr) = (length(q.qvars1) == 0 && isempty(q.aff))
-
-function setObjective(m::Model, q::QuadExpr)
-    Base.warn_once("Calling setObjective without specifying an objective sense is deprecated. Use setObjective(model, sense, expr).")
-    m.obj = q
-end
 
 function setObjective(m::Model, sense::Symbol, q::QuadExpr)
     m.obj = q
