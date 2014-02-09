@@ -4,14 +4,6 @@
 # See http://github.com/JuliaOpt/JuMP.jl
 #############################################################################
 
-import Base.getindex
-import Base.setindex!
-import Base.print
-import Base.show
-import Base.push!
-import Base.append!
-import Base.writemime
-
 module JuMP
 
 # Use the standard solver interface for LPs and MIPs
