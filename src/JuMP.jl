@@ -372,15 +372,16 @@ function quadToStr(q::QuadExpr)
     end
     Q = sparse([v.col for v in q.qvars1], [v.col for v in q.qvars2], q.qcoeffs)
     I,J,V = findnz(Q)
+    Qnnz = length(Q.nzval) # replace with nfilled() when support for 0.2 is dropped
 
-    termStrings = Array(UTF8String, 2*nnz(Q))
-    if nnz(Q) > 0
+    termStrings = Array(UTF8String, 2*Qnnz)
+    if Qnnz > 0
         if V[1] < 0
             termStrings[1] = "-"
         else
             termStrings[1] = ""
         end
-        for ind in 1:nnz(Q)
+        for ind in 1:Qnnz
             if ind >= 2
                 if V[ind] < 0
                     termStrings[2*ind-1] = " - "
