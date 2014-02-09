@@ -10,6 +10,7 @@ import Base.print
 import Base.show
 import Base.push!
 import Base.append!
+import Base.writemime
 
 module JuMP
 
@@ -144,87 +145,6 @@ function setObjectiveSense(m::Model, newSense::Symbol)
     m.objSense = newSense
 end
 
-function fillVarNames(m)
-    for dict in m.dictList
-        idxsets = dict.indexsets
-        lengths = map(length, idxsets)
-        N = length(idxsets)
-        name = dict.name
-        cprod = cumprod([lengths...])
-        for (ind,var) in enumerate(dict.innerArray)
-            setName(var,string("$name[$(idxsets[1][mod1(ind,lengths[1])])", [ ",$(idxsets[i][int(ceil(mod1(ind,cprod[i]) / cprod[i-1]))])" for i=2:N ]..., "]"))
-        end
-    end
-    m.dictList = JuMPDict[]
-end
-
-
-# Pretty print
-function print(io::IO, m::Model)
-    (length(m.dictList) != 0) && fillVarNames(m)
-
-    println(io, string(m.objSense," ",quadToStr(m.obj)))
-    println(io, "Subject to: ")
-    for c in m.linconstr
-        println(io, conToStr(c))
-    end
-    for c in m.quadconstr
-        println(io, conToStr(c))
-    end
-    for i in 1:m.numCols
-        if m.colCat[i] == INTEGER && m.colLower[i] == 0 && m.colUpper[i] == 1
-            print(io, (m.colNames[i] == "" ? string("_col",i) : m.colNames[i]))
-            # println(" \u220a {0,1}")
-            println(io, " binary")
-        elseif m.colLower[i] == -Inf && m.colUpper[i] == Inf
-            if m.colCat[i] == INTEGER
-                print(io, (m.colNames[i] == "" ? string("_col",i) : m.colNames[i]))
-                # println(io, "\u220a\u2124")
-                println(io, " free integer")
-            else
-                print(io, (m.colNames[i] == "" ? string("_col",i) : m.colNames[i]))
-                println(io, " free")
-            end
-        elseif m.colLower[i] == -Inf
-            print(io, (m.colNames[i] == "" ? string("_col",i) : m.colNames[i]))
-            print(io, " \u2264 $(m.colUpper[i])")
-            # println(io, m.colCat[i] == INTEGER ? ", $(m.colNames[i])\u220a\u2124" : "")
-            println(io, m.colCat[i] == INTEGER ? ", $(m.colNames[i]) integer" : "")
-        elseif m.colUpper[i] == Inf
-            print(io, (m.colNames[i] == "" ? string("_col",i) : m.colNames[i]))
-            print(io, " \u2265 $(m.colLower[i])")
-            # println(io, m.colCat[i] == INTEGER ? ", $(m.colNames[i])\u220a\u2124" : "")
-            println(io, m.colCat[i] == INTEGER ? ", $(m.colNames[i]) integer" : "")
-        else
-            print(io, "$(m.colLower[i]) \u2264 ")
-            print(io, (m.colNames[i] == "" ? string("_col",i) : m.colNames[i]))
-            print(io, " \u2264 $(m.colUpper[i])")
-            # println(io, m.colCat[i] == INTEGER ? ", $(m.colNames[i])\u220a\u2124" : "")
-            println(io, m.colCat[i] == INTEGER ? ", $(m.colNames[i]) integer" : "")
-        end
-    end
-end
-
-function show(io::IO, m::Model)
-    print(io, m.objSense == :Max ? "Maximization" : ((m.objSense == :Min && !isempty(m.obj)) ? "Minimization" : "Feasibility"))
-    println(io, " problem with:")
-    println(io, " * $(length(m.linconstr)) linear constraints")
-    nquad = length(m.quadconstr)
-    if nquad > 0
-        println(io, " * $(nquad) quadratic constraints")
-    end
-    print(io, " * $(m.numCols) variables")  
-    nint = sum(m.colCat .== INTEGER)
-    println(io, nint == 0 ? "" : " ($nint integer)")
-    print(io, "Solver set to ")
-    if typeof(m.solver) == MissingSolver
-        solver = nquad > 0 ? string(MathProgBase.defaultQPsolver) : (nint > 0 ? string(MathProgBase.defaultMIPsolver) : string(MathProgBase.defaultLPsolver))
-    else
-        solver = string(m.solver)
-    end
-    println(io, split(solver, "Solver")[1])
-end
-
 # Deep copy the model
 function copy(source::Model)
     
@@ -289,8 +209,6 @@ function getName(m::Model, col)
     m.colNames[col] == "" && fillVarNames(m)
     return ( m.colNames[col] == "" ? "_col$(col)" : m.colNames[col] )
 end
-print(io::IO, v::Variable) = print(io, getName(v))
-show(io::IO, v::Variable) = print(io, getName(v))
 
 # Bound setter/getters
 setLower(v::Variable,lower::Number) = (v.m.colLower[v.col] = convert(Float64,lower))
@@ -692,8 +610,10 @@ include("writers.jl")
 include("solvers.jl")
 # Macros - @defVar, sum{}, etc.
 include("macros.jl")
-
+# Callbacks - lazy, cuts, ...
 include("callbacks.jl")
+# Pretty-printing, including IJulia
+include("print.jl")
 
 ##########################################################################
 end
