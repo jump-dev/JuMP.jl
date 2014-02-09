@@ -1,0 +1,17 @@
+language: cpp
+compiler:
+  - clang
+notifications:
+  email: false
+env:
+  matrix: 
+    - JULIAVERSION="juliareleases" 
+    - JULIAVERSION="julianightlies" 
+before_install:
+  - sudo add-apt-repository ppa:staticfloat/julia-deps -y
+  - sudo add-apt-repository ppa:staticfloat/${JULIAVERSION} -y
+  - sudo apt-get update -qq -y
+  - sudo apt-get install libpcre3-dev julia -y
+script:
+  - julia -e 'Pkg.init(); run(`ln -s $(pwd()) $(Pkg.dir("ReverseDiffSparse"))`); Pkg.pin("ReverseDiffSparse"); Pkg.resolve()'
+  - julia -e 'using ReverseDiffSparse; @assert isdefined(:ReverseDiffSparse); @assert typeof(ReverseDiffSparse) === Module'
