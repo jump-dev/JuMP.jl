@@ -50,6 +50,25 @@ function addQuadratics(m::Model)
     end
 end
 
+function addSOS(m::Model)
+    try
+        for i in 1:length(m.sosconstr)
+            sos = m.sosconstr[i]
+            if sos.sostype == :SOS1
+                addsos1!(m.internalModel, Int[v.col for v in sos.terms], sos.weights)
+            elseif sos.sostype == :SOS2
+                addsos2!(m.internalModel, Int[v.col for v in sos.terms], sos.weights)
+            end
+        end
+    catch
+        Base.warn_once("Current solver does not support SOS1 constraints, adding manually")
+        for i in 1:length(m.sosconstr)
+            nvar = length(m.sosconstr[i].vars)
+            addconstr!(m.internalModel, vars, ones(nvar), zeros(nvar), ones(nvar))
+        end
+    end
+end
+
 # prepare objective, constraint matrix, and row bounds
 function prepProblemBounds(m::Model)
 
@@ -208,22 +227,7 @@ function solveMIP(m::Model)
         end
     end
 
-    # try
-        for i in 1:length(m.sosconstr)
-            sos = m.sosconstr[i]
-            if sos.sostype == :SOS1
-                addsos1!(m.internalModel, Int[v.col for v in sos.terms], sos.weights)
-            elseif sos.sostype == :SOS2
-                addsos2!(m.internalModel, Int[v.col for v in sos.terms], sos.weights)
-            end
-        end
-    # catch
-    #     Base.warn_once("Current solver does not support SOS1 constraints, adding manually")
-    #     for i in 1:length(m.sosconstr)
-    #         nvar = length(m.sosconstr[i].vars)
-    #         addconstr!(m.internalModel, vars, ones(nvar), zeros(nvar), ones(nvar))
-    #     end
-    # end
+    addSOS(m)
 
     addQuadratics(m)
     registercallbacks(m)
