@@ -29,7 +29,7 @@ export
     # Model related
     getNumVars, getNumConstraints, getObjectiveValue, getObjective,
     getObjectiveSense, setObjectiveSense, writeLP, writeMPS, setObjective,
-    addConstraint, addVar, addVars, solve, copy,
+    addConstraint, addVar, addVars, addSOS1, addSOS2, solve, copy,
     # Variable
     setName, getName, setLower, setUpper, getLower, getUpper,
     getValue, setValue, getDual,
@@ -172,6 +172,9 @@ function print(io::IO, m::Model)
     for c in m.quadconstr
         println(io, conToStr(c))
     end
+    for c in m.sosconstr
+        println(io, conToStr(c))
+    end
     for i in 1:m.numCols
         if m.colCat[i] == INTEGER && m.colLower[i] == 0 && m.colUpper[i] == 1
             print(io, (m.colNames[i] == "" ? string("_col",i) : m.colNames[i]))
@@ -214,6 +217,10 @@ function show(io::IO, m::Model)
     if nquad > 0
         println(io, " * $(nquad) quadratic constraints")
     end
+    nsos = length(m.sosconstr)
+    if nsos > 0
+        println(io, " * $(nsos) SOS constraints")
+    end
     print(io, " * $(m.numCols) variables")  
     nint = sum(m.colCat .== INTEGER)
     println(io, nint == 0 ? "" : " ($nint integer)")
@@ -223,7 +230,7 @@ function show(io::IO, m::Model)
     else
         solver = string(m.solver)
     end
-    println(io, split(solver, "Solver")[1])
+    print(io, split(solver, "Solver")[1])
 end
 
 # Deep copy the model
@@ -272,8 +279,6 @@ end
 
 Variable(m::Model,lower::Number,upper::Number,cat::Int) =
     Variable(m,lower,upper,cat,"")
-
-
 
 # Name setter/getters
 setName(v::Variable,n::String) = (v.m.colNames[v.col] = n)
@@ -334,6 +339,8 @@ typealias AffExpr GenericAffExpr{Float64,Variable}
 AffExpr() = AffExpr(Variable[],Float64[],0.)
 
 isempty(a::AffExpr) = (length(a.vars) == 0 && a.constant == 0.)
+
+convert(::Type{AffExpr}, v::Variable) = AffExpr([v], [1.], 0.)
 
 function setObjective(m::Model, a::AffExpr)
     Base.warn_once("Calling setObjective without specifying an objective sense is deprecated. Use setObjective(model, sense, expr) (or @setObjective(model, sense, expr)).")
@@ -597,16 +604,56 @@ end
 # An SOS constraint.
 type SOSConstraint <: JuMPConstraint
     terms::Vector{Variable}
-    weights::Vector{Real}
+    weights::Vector{Float64}
     sostype::Symbol
 end
 
-function addSOS(m::Model, terms::Vector{Variable}, weights::Vector{Real}, sostype::Symbol)
-
+function constructSOS(coll::Vector{AffExpr})
+    nvar = length(coll)
+    vars = Array(Variable, nvar)
+    weight = Array(Float64, nvar)
+    for i in 1:length(coll)
+        if (length(coll[i].vars) != 1) || (coll[i].constant != 0)
+            error("Must specify collection in terms of single variables")
+        end
+        vars[i] = coll[i].vars[1]
+        weight[i] = coll[i].coeffs[1]
+    end
+    return vars, weight
 end
 
-# want something like @addSOS(3x, 4y, 5z)
-# macro addSOS(x)
+addSOS1(m::Model, coll) = addSOS1(m, convert(Vector{AffExpr}, coll))
+
+function addSOS1(m::Model, coll::Vector{AffExpr})
+    vars, weight = constructSOS(coll)
+    push!(m.sosconstr, SOSConstraint(vars, weight, :SOS1))
+    return ConstraintRef{SOSConstraint}(m,length(m.sosconstr))
+end
+
+addSOS2(m::Model, coll) = addSOS2(m, convert(Vector{AffExpr}, coll))
+
+function addSOS2(m::Model, coll::Vector{AffExpr})
+    vars, weight = constructSOS(coll)
+    push!(m.sosconstr, SOSConstraint(vars, weight, :SOS2))
+    return ConstraintRef{SOSConstraint}(m,length(m.sosconstr))
+end
+
+function conToStr(c::SOSConstraint) 
+    nvar = length(c.terms)
+    termStrings = Array(UTF8String, nvar+2)
+    termStrings[1] = "$(c.sostype): {"
+    if nvar > 0
+        termStrings[2] = "$(c.weights[1]) $(c.terms[1])"
+        for i in 2:nvar
+            termStrings[i+1] = ", $(c.weights[i]) $(c.terms[i])"
+        end
+    end
+    termStrings[end] = "}"
+    return join(termStrings)
+end
+
+print(io::IO, c::SOSConstraint) = print(io, conToStr(c))
+show(io::IO, c::SOSConstraint)  = print(io, conToStr(c))
 
 ##########################################################################
 # QuadConstraint class
@@ -669,6 +716,7 @@ end
 
 print(io::IO, c::ConstraintRef{LinearConstraint}) = print(io, conToStr(c.m.linconstr[c.idx]))
 print(io::IO, c::ConstraintRef{QuadConstraint}) = print(io, conToStr(c.m.quadconstr[c.idx]))
+print(io::IO, c::ConstraintRef{SOSConstraint}) = print(io, conToStr(c.m.sosconstr[c.idx]))
 show{T}(io::IO, c::ConstraintRef{T}) = print(io, c)
 
 # add variable to existing constraints

@@ -1,6 +1,11 @@
 JuMP release notes
 ==================
 
+Unversioned
+-----------
+
+  * Support for SOS1 and SOS2 constraints.
+
 Version 0.3.1 (January 30, 2014)
 --------------------------------
 
