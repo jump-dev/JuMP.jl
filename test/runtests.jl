@@ -8,7 +8,8 @@ tests = ["expr.jl",
          "macros.jl",
          "model.jl",
          "probmod.jl",
-         "callback.jl"]
+         "callback.jl",
+         "sosmodel.jl"]
 
 println("Running tests:")
 
