@@ -15,3 +15,4 @@ before_install:
 script:
   - julia -e 'Pkg.init(); run(`ln -s $(pwd()) $(Pkg.dir("ReverseDiffSparse"))`); Pkg.pin("ReverseDiffSparse"); Pkg.resolve()'
   - julia -e 'using ReverseDiffSparse; @assert isdefined(:ReverseDiffSparse); @assert typeof(ReverseDiffSparse) === Module'
+  - julia test/runtests.jl

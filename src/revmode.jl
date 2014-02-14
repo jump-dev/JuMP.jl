@@ -278,9 +278,7 @@ function genfgrad(x::SymbolicOutput)
     out = Expr(:block)
     # load data into local scope
     for i in 1:length(x.inputnames)
-        if !isa(x.inputvals[i], Placeholder)
-            push!( out.args, :( $(x.inputnames[i]) = $(x.inputvals[i]) ))
-        end
+        push!( out.args, :( $(x.inputnames[i]) = $(x.inputvals[i]) ))
     end
     fval = forwardpass(x.tree, out)
     push!( out.args, :( beginreverse = nothing ) ) # for debugging, indicate start of reverse pass instructions
