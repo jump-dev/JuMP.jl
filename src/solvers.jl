@@ -61,10 +61,15 @@ function addSOS(m::Model)
             end
         end
     catch
-        Base.warn_once("Current solver does not support SOS1 constraints, adding manually")
         for i in 1:length(m.sosconstr)
-            nvar = length(m.sosconstr[i].vars)
-            addconstr!(m.internalModel, vars, ones(nvar), zeros(nvar), ones(nvar))
+            sos = m.sosconstr[i]
+            nvar = length(sos.vars)
+            if sos.sostype == :SOS1
+                Base.warn_once("Current solver does not support SOS1 constraints, adding manually")
+                addconstr!(m.internalModel, [1:nvars], ones(nvars), 0., 1.)
+            elseif sos.sostype == :SOS2
+                error("Current solver does not support SOS2 constraints")
+            end
         end
     end
 end
