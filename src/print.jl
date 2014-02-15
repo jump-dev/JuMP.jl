@@ -59,6 +59,9 @@ function print(io::IO, m::Model)
     # Handle special case of indexed variables
     in_dictlist = zeros(Bool, m.numCols)
     for dict in m.dictList
+        if length(dict) == 0
+            continue
+        end
         out_str = dictstring(dict, :REPL)
         if out_str != ""
             println(io, out_str)
