@@ -200,6 +200,8 @@ Integer programming solvers frequently include heuristics that run at the nodes 
 
 The user heuristic callback is somewhat different from the previous two heuristics. The general concept is that we can create multiple partial solutions and submit them back to the solver - each solution must be submitted before a new solution is constructed. As before we provide a function that analyzes the current solution and takes a single argument, e.g. ``function myHeuristic(cb)``, where cb is a reference to the callback management code inside JuMP. You can build your solutions using ``setSolutionValue!(cb, x, value)`` and submit them with ``addSolution(cb)``. Note that ``addSolution`` will not "wipe" the previous (partial) solution - you must override it a variable takes a value different from the previous partial solution. Notify JuMP that this function should be used as a heuristic using the ``setHeuristicCallback(m, myHeuristic)`` function before calling ``solve(m)``.
 
+There is some solver dependent behaviour - you should check your solver documentation for details. For example Gurobi can use partial solutions to complete full solutions. GLPK does not handle partial solutions, so variables you do not manually set will default to their value at the current node. Additionally, GLPK will not check the feasibility of your heuristic solution.
+
 Consider the following example, which is the same problem as seen in the user cuts section. The heuristic simply rounds the fractional variable to generate integer solutions.::
 
     using JuMP
