@@ -72,6 +72,7 @@ type Model
     # callbacks
     lazycallback
     cutcallback
+    heurcallback
 
     # JuMPDict list
     dictList::Vector
@@ -84,7 +85,7 @@ function Model(;solver=nothing)
         Model(QuadExpr(),:Min,LinearConstraint[], QuadConstraint[],
               0,String[],Float64[],Float64[],Int[],
               0,Float64[],Float64[],Float64[],nothing,MathProgBase.MissingSolver("",Symbol[]),true,
-              nothing,nothing,JuMPDict[])
+              nothing,nothing,nothing,JuMPDict[])
     else
         if !isa(solver,AbstractMathProgSolver)
             error("solver argument ($solver) must be an AbstractMathProgSolver")
@@ -93,7 +94,7 @@ function Model(;solver=nothing)
         Model(QuadExpr(),:Min,LinearConstraint[], QuadConstraint[],
               0,String[],Float64[],Float64[],Int[],
               0,Float64[],Float64[],Float64[],nothing,solver,true,
-              nothing,nothing,JuMPDict[])
+              nothing,nothing,nothing,JuMPDict[])
     end
 end
 
@@ -115,7 +116,8 @@ function copy(source::Model)
     dest = Model()
     dest.solver = source.solver  # The two models are linked by this
     dest.lazycallback = source.lazycallback
-    dest.cutcallback = source.cutcallback
+    dest.cutcallback  = source.cutcallback
+    dest.heurcallback = source.heurcallback
     
     # Objective
     dest.obj = copy(source.obj, dest)
