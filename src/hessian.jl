@@ -172,14 +172,14 @@ function gen_hessian_sparse_raw(s::SymbolicOutput)
         for i in 1:length(x)
             dualvec[i] = Dual(placevalues[i], zero(T))
         end
-        rowval = output_matrix.rowval
-        nzidx = output_matrix.nzval
+        rowval = nzstruct.rowval
+        nzidx = nzstruct.nzval
         for i in 1:length(placevalues)
             dualvec[i] = Dual(placevalues[i], one(T))
             fill!(dualout, dual(zero(T)))
             fgrad(dualvec, placeindex_in, dualout, IdentityArray())
             dualvec[i] = Dual(placevalues[i], zero(T))
-            for idx in output_matrix.colptr[i]:(output_matrix.colptr[i+1]-1)
+            for idx in nzstruct.colptr[i]:(nzstruct.colptr[i+1]-1)
                 output_vec[nzidx[idx]] += epsilon(dualout[rowval[idx]])
             end
         end
