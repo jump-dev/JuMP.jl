@@ -22,7 +22,7 @@ exact(x,y,z,q) = [ -y^2*sin(x*y) cos(x*y)-x*y*sin(x*y) 0 0
 @test_approx_eq hfunc(val) exact(val...)
 test_sparsity(sp, exact(val...))
 
-sparsemat, sparsefunc = gen_hessian_sparse(ex)
+sparsemat, sparsefunc = gen_hessian_sparse_mat(ex)
 sparsefunc(val, sparsemat)
 @test_approx_eq sparsemat tril(exact(val...))
 
@@ -41,7 +41,7 @@ val = rand(5)
 @test_approx_eq hfunc(val) exact(val)
 test_sparsity(sp, exact(val))
 
-sparsemat, sparsefunc = gen_hessian_sparse(ex)
+sparsemat, sparsefunc = gen_hessian_sparse_mat(ex)
 sparsefunc(val, sparsemat)
 @test_approx_eq sparsemat tril(exact(val))
 

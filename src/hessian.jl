@@ -135,7 +135,7 @@ end
 
 # returns sparse matrix containing hessian structure, and
 # function to evaluate the hessian into a given sparse matrix
-function gen_hessian_sparse(s::SymbolicOutput)
+function gen_hessian_sparse_mat(s::SymbolicOutput)
     fgrad = eval(genfgrad(s))
     I,J = compute_hessian_sparsity_IJ(s)
     structuremat = sparse(I,J,ones(length(I)))
@@ -163,7 +163,32 @@ function gen_hessian_sparse(s::SymbolicOutput)
     return structuremat, evalhessian
 end
 
-export gen_hessian_dense, gen_hessian_sparse
+function gen_hessian_sparse_raw(s::SymbolicOutput)
+    fgrad = eval(genfgrad(s))
+
+    function evalhessian{T}(placevalues::Vector{T}, placeindex_in::Vector{Int},output_vec::Vector{T}, nzstruct::SparseMatrixCSC{Int,Int})
+        dualvec = Array(Dual{T}, length(placevalues))
+        dualout = Array(Dual{T}, length(placevalues))
+        for i in 1:length(x)
+            dualvec[i] = Dual(placevalues[i], zero(T))
+        end
+        rowval = output_matrix.rowval
+        nzidx = output_matrix.nzval
+        for i in 1:length(placevalues)
+            dualvec[i] = Dual(placevalues[i], one(T))
+            fill!(dualout, dual(zero(T)))
+            fgrad(dualvec, placeindex_in, dualout, IdentityArray())
+            dualvec[i] = Dual(placevalues[i], zero(T))
+            for idx in output_matrix.colptr[i]:(output_matrix.colptr[i+1]-1)
+                output_vec[nzidx[idx]] += epsilon(dualout[rowval[idx]])
+            end
+        end
+        return nothing
+    end
+    return evalhessian
+end
+
+export gen_hessian_dense, gen_hessian_sparse_mat, gen_hessian_sparse_raw
 
             
 
