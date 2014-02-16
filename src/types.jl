@@ -15,6 +15,8 @@ immutable BasicPlaceholder <: Placeholder
     idx::Int
 end
 
+getindex(x::BasicPlaceholder) = x.idx
+
 function placeholders(n::Int)
     v = Array(BasicPlaceholder, n)
     for i in 1:n

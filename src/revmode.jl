@@ -181,7 +181,7 @@ end
 
 forwardpass(x, expr_out) = :(forwardvalue($x, __placevalues, __placeindex_in))
 
-forwardvalue(x::Placeholder, placevalues, placeindex_in) = placevalues[placeindex_in[x.idx]]
+forwardvalue(x::Placeholder, placevalues, placeindex_in) = placevalues[placeindex_in[getindex(x)]]
 forwardvalue(x, placevalues, placeindex_in) = x
 
 function revpass(x::ExprNode, expr_out)
@@ -271,7 +271,7 @@ end
 
 revpass(x, expr_out) = nothing
 
-saverevvalue(x::Placeholder, val, output, placeindex_out) = (output[placeindex_out[x.idx]] += val)
+saverevvalue(x::Placeholder, val, output, placeindex_out) = (output[placeindex_out[getindex(x)]] += val)
 saverevvalue(x, val, output, placeindex_out) = nothing
 
 function genfgrad(x::SymbolicOutput)
