@@ -64,7 +64,8 @@ function addSOS(m::Model)
     catch
         for i in 1:length(m.sosconstr)
             sos = m.sosconstr[i]
-            nvar = length(indices)
+            indices = Int[v.col for v in sos.terms]
+            nvars = length(indices)
             if sos.sostype == :SOS1
                 Base.warn_once("Current solver does not support SOS1 constraints, adding manually")
                 for i in 1:nvars

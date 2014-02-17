@@ -39,7 +39,8 @@ if Pkg.installed("CPLEX") != nothing
     using CPLEX
     sos_test("CPLEX", CplexSolver())
 end
-# if Pkg.installed("Cbc") != nothing
-#     using Mosek
-#     sos_test("Cbc", CbcSolver())
-# end
+
+if Pkg.installed("Cbc") != nothing
+    using Cbc
+    sos_test("Cbc", CbcSolver())
+end
