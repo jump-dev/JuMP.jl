@@ -94,7 +94,7 @@ function writemime(io::IO, ::MIME"text/latex", m::Model)
     # Constraints
     print(io, "\\text{Subject to} \\quad")
     for c in m.linconstr
-        println(io, "& $(conToStr(c,true)) \\\\")
+        println(io, "& $(conToStr(c)) \\\\")
     end
     for c in m.quadconstr
         println(io, conToStr(c))
