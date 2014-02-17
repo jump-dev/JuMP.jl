@@ -140,7 +140,7 @@ function show(io::IO, m::Model)
     else
         solver = string(m.solver)
     end
-    println(io, split(solver, "Solver")[1])
+    print(io, split(solver, "Solver")[1])
 end
 
 #############################################################################
@@ -269,10 +269,142 @@ function dictnameindices(dict::JuMPDict, mode=:REPL)
     return name_and_indices, tail_str
 end
 
+##########
+# Variable
 show(io::IO, v::Variable) = print(io, getName(v))
 print(io::IO, v::Variable) = print(io, getName(v))
 writemime(io::IO, ::MIME"text/latex", v::Variable) = print(io, getName(v))
 
+#########
+# AffExpr
+print(io::IO, a::GenericAffExpr) = print(io, affToStr(a))
+show(io::IO, a::GenericAffExpr) = print(io, affToStr(a))
+
+
+function affToStr(a::AffExpr, showConstant=true)
+    if length(a.vars) == 0
+        if showConstant
+            return string(a.constant)
+        else
+            return "0.0"
+        end
+    end
+
+    # Get reference to model
+    m = a.vars[1].m
+
+    checkNameStatus(m)
+
+    # Collect like terms
+    indvec = IndexedVector(Float64,m.numCols)
+    for ind in 1:length(a.vars)
+        addelt(indvec, a.vars[ind].col, a.coeffs[ind])
+    end
+
+    elm = 0
+    termStrings = Array(UTF8String, 2*length(a.vars))
+    for i in 1:indvec.nnz
+        idx = indvec.nzidx[i]
+        if abs(indvec.elts[idx]) > 1e-20
+            if elm == 0
+                elm += 1
+                termStrings[1] = "$(indvec.elts[idx]) $(getName(m,idx))"
+            else 
+                if indvec.elts[idx] < 0
+                    termStrings[2*elm] = " - "
+                else
+                    termStrings[2*elm] = " + "
+                end
+                termStrings[2*elm+1] = "$(abs(indvec.elts[idx])) $(getName(m,idx))"
+                elm += 1
+            end
+        end
+    end
+
+    if elm == 0
+        ret = "0.0"
+    else
+        # And then connect them up with +s
+        ret = join(termStrings[1:(2*elm-1)])
+    end
+    
+    if abs(a.constant) >= 0.000001 && showConstant
+        if a.constant < 0
+            ret = string(ret, " - ", abs(a.constant))
+        else
+            ret = string(ret, " + ", a.constant)
+        end
+    end
+    return ret
+end
+
+##########
+# QuadExpr
+##########
+print(io::IO, q::QuadExpr) = print(io, quadToStr(q))
+show(io::IO, q::QuadExpr) = print(io, quadToStr(q))
+
+function quadToStr(q::QuadExpr)
+    if length(q.qvars1) == 0
+        return affToStr(q.aff)
+    end
+
+    m::Model = q.qvars1[1].m
+    # canonicalize and merge duplicates
+    for ind in 1:length(q.qvars1)
+            if q.qvars2[ind].col < q.qvars1[ind].col
+                    q.qvars1[ind],q.qvars2[ind] = q.qvars2[ind],q.qvars1[ind]
+            end
+    end
+    Q = sparse([v.col for v in q.qvars1], [v.col for v in q.qvars2], q.qcoeffs)
+    I,J,V = findnz(Q)
+    Qnnz = length(Q.nzval) # replace with nfilled() when support for 0.2 is dropped
+
+    termStrings = Array(UTF8String, 2*Qnnz)
+    if Qnnz > 0
+        if V[1] < 0
+            termStrings[1] = "-"
+        else
+            termStrings[1] = ""
+        end
+        for ind in 1:Qnnz
+            if ind >= 2
+                if V[ind] < 0
+                    termStrings[2*ind-1] = " - "
+                else 
+                    termStrings[2*ind-1] = " + "
+                end
+            end
+            x = Variable(m,I[ind])
+            if I[ind] == J[ind]
+                # Squared term
+                termStrings[2*ind] = string(abs(V[ind])," ",
+                                            getName(x),"²")
+            else
+                # Normal term
+                y = Variable(m,J[ind])
+                termStrings[2*ind] = string(abs(V[ind])," ",
+                                            getName(x),"*",
+                                            getName(y))
+            end
+        end
+    end
+    ret = join(termStrings)
+
+    if q.aff.constant == 0 && length(q.aff.vars) == 0
+        return ret
+    else
+        aff = affToStr(q.aff)
+        if aff[1] == '-'
+            return string(ret, " - ", aff[2:end])
+        else
+            return string(ret, " + ", aff)
+        end
+    end
+end
+
+##########
+# JuMPDict
 show(io::IO, dict::JuMPDict) = print(io, dict)
 function print(io::IO, dict::JuMPDict)
     # Best case: bounds and all dims
@@ -310,3 +442,31 @@ function writemime(io::IO, ::MIME"text/latex", dict::JuMPDict)
     name_and_indices, tail_str = dictnameindices(dict, :IJulia)
     print(io, "\\( \\dots \\leq $(name_and_indices) \\leq \\dots$(tail_str) \\)")
 end
+
+###################
+# Linear Constraint
+print(io::IO, c::LinearConstraint) = print(io, conToStr(c))
+show(io::IO, c::LinearConstraint) = print(io, conToStr(c))
+
+function conToStr(c::LinearConstraint)
+    s = sense(c)
+    if s == :range
+        return string(c.lb," <= ",affToStr(c.terms,false)," <= ",c.ub)
+    else
+        return string(affToStr(c.terms,false)," ",s," ",rhs(c))
+    end
+end
+
+#################
+# Quad Constraint
+print(io::IO, c::QuadConstraint) = print(io, conToStr(c))
+show(io::IO, c::QuadConstraint)  = print(io, conToStr(c))
+
+conToStr(c::QuadConstraint) = string(quadToStr(c.terms), " ", c.sense, " 0")
+
+################
+# Constraint Ref
+
+print(io::IO, c::ConstraintRef{LinearConstraint}) = print(io, conToStr(c.m.linconstr[c.idx]))
+print(io::IO, c::ConstraintRef{QuadConstraint}) = print(io, conToStr(c.m.quadconstr[c.idx]))
+show{T}(io::IO, c::ConstraintRef{T}) = print(io, c)
