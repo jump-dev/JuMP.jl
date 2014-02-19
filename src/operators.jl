@@ -225,7 +225,7 @@ end
 (>=) (lhs::QuadExpr, rhs::QuadExpr) = (>=)(lhs-rhs, 0)
 
 #Vectorization Stuff
-function *(lhs::JuMPDict, rhs::Array{Int64,1})
+function *(lhs::JuMPDict, rhs::Vector)
 	@assert length(lhs.indexsets) == 1
 	@assert length(lhs.indexsets[1]) == length(rhs)
 	warn("Product Ambigious for 1D Vectors. Assuming Inner Product.")
@@ -236,8 +236,7 @@ function *(lhs::JuMPDict, rhs::Array{Int64,1})
 	return out
 end
 
-#Vectorization Stuff
-function *(lhs::Array{Int64,1}, rhs::JuMPDict)
+function *(lhs::Vector, rhs::JuMPDict)
 	@assert length(rhs.indexsets) == 1
 	@assert length(rhs.indexsets[1]) == length(lhs)
 	warn("Product Ambigious for 1D Vectors. Assuming Inner Product.")
@@ -246,4 +245,14 @@ function *(lhs::Array{Int64,1}, rhs::JuMPDict)
 		out += lhs[i] * rhs.innerArray[i]
 	end
 	return out
+end
+
+#The lhs should be of the type "Array{Real,2}", but not having it be Float64 kills it, for some reason. #magic
+function *(lhs::Array{Float64,2},rhs::JuMPDict)
+    @assert length(rhs.indexsets[1]) == size(lhs,2)
+    out = 0
+    for i = 1:length(lhs)
+        out += lhs[i] * rhs.innerArray[i]
+    end
+    return out
 end
