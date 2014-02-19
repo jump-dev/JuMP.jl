@@ -249,10 +249,14 @@ end
 
 #The lhs should be of the type "Array{Real,2}", but not having it be Float64 kills it, for some reason. #magic
 function *(lhs::Array{Float64,2},rhs::JuMPDict)
-    @assert length(rhs.indexsets[1]) == size(lhs,2)
-    out = 0
-    for i = 1:length(lhs)
-        out += lhs[i] * rhs.innerArray[i]
+    if length(rhs.indexsets)==1 && size(lhs,1) == 1 #inner product
+        @assert length(rhs.indexsets[1]) == size(lhs,2) #Inner Dims agree
+        out = 0
+        for i = 1:length(lhs)
+            out += lhs[i] * rhs.innerArray[i]
+        end
+        return out
+    else
+        error("Block Matrix operations not yet supported.")
     end
-    return out
 end
