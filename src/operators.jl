@@ -223,3 +223,27 @@ end
 (<=) (lhs::QuadExpr, rhs::QuadExpr) = (<=)(lhs-rhs, 0)
 (==) (lhs::QuadExpr, rhs::QuadExpr) = (==)(lhs-rhs, 0)
 (>=) (lhs::QuadExpr, rhs::QuadExpr) = (>=)(lhs-rhs, 0)
+
+#Vectorization Stuff
+function *(lhs::JuMPDict, rhs::Array{Int64,1})
+	@assert length(lhs.indexsets) == 1
+	@assert length(lhs.indexsets[1]) == length(rhs)
+	warn("Product Ambigious for 1D Vectors. Assuming Inner Product.")
+	out = 0
+	for i = 1:length(rhs)
+		out += rhs[i] * lhs.innerArray[i]
+	end
+	return out
+end
+
+#Vectorization Stuff
+function *(lhs::Array{Int64,1}, rhs::JuMPDict)
+	@assert length(rhs.indexsets) == 1
+	@assert length(rhs.indexsets[1]) == length(lhs)
+	warn("Product Ambigious for 1D Vectors. Assuming Inner Product.")
+	out = 0
+	for i = 1:length(lhs)
+		out += lhs[i] * rhs.innerArray[i]
+	end
+	return out
+end
