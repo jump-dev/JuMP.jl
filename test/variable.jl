@@ -59,9 +59,9 @@ mprint = Model()
 @defVar(mprint, 0 <= d[-5:2] <= 5, Int)
 @test JuMP.dictstring(d, :REPL)   == "0.0 ≤ d[i] ≤ 5.0, for all i in {-5..2}, integer"
 @test JuMP.dictstring(d, :IJulia) == "0.0 \\leq d_{i} \\leq 5.0 \\quad \\forall i \\in \\{ -5..2 \\}, integer"
-@defVar(mprint, e[-5:2], Bin)
-@test JuMP.dictstring(e, :REPL)   == "e[i], for all i in {-5..2}, binary"
-@test JuMP.dictstring(e, :IJulia) == "e_{i} \\quad \\forall i \\in \\{ -5..2 \\}, binary"
+@defVar(mprint, z[-5:2], Bin)
+@test JuMP.dictstring(z, :REPL)   == "z[i], for all i in {-5..2}, binary"
+@test JuMP.dictstring(z, :IJulia) == "z_{i} \\quad \\forall i \\in \\{ -5..2 \\}, binary"
 @defVar(mprint, f[6:9] >= 3, Int)
 @test JuMP.dictstring(f, :REPL)   == "f[i] ≥ 3.0, for all i in {6..9}, integer"
 @test JuMP.dictstring(f, :IJulia) == "f_{i} \\geq 3.0 \\quad \\forall i \\in \\{ 6..9 \\}, integer"

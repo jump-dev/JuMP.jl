@@ -4,7 +4,7 @@
 # Check for changes in Julia's expression parsing
 sumexpr = :(sum{x[i,j] * y[i,j], i = 1:N, j = 1:M; i != j})
 if VERSION >= v"0.3.0-"
-    @test string(sumexpr) == "sum{Expr(parameters, i != j),x[i,j] * y[i,j],i = 1:N,j = 1:M}"
+    @test string(sumexpr) == ":(sum{Expr(:parameters, :(i != j)),x[i,j] * y[i,j],i = 1:N,j = 1:M})"
 end
 @test sumexpr.head == :curly
 @test length(sumexpr.args) == 5
@@ -17,7 +17,7 @@ end
 
 sumexpr = :(sum{x[i,j] * y[i,j], i = 1:N, j = 1:M})
 if VERSION >= v"0.3.0-"
-    @test string(sumexpr) == "sum{x[i,j] * y[i,j],i = 1:N,j = 1:M}"
+    @test string(sumexpr) == ":(sum{x[i,j] * y[i,j],i = 1:N,j = 1:M})"
 end
 @test sumexpr.head == :curly
 @test length(sumexpr.args) == 4
