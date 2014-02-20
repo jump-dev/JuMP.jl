@@ -193,6 +193,73 @@ The code should print something like (amongst the output from Gurobi)::
 This code can also be found in ``/JuMP/examples/simpleusercut.jl``.
 
 
+User Heuristics
+^^^^^^^^^^^^^^^
+
+Integer programming solvers frequently include heuristics that run at the nodes of the branch-and-bound tree. They aim to find integer solutions quicker than plain branch-and-bound would to tighten the bound, allowing us to fathom nodes quicker and to tighten the integrality gap. Some heuristics take integer solutions and explore their "local neighbourhood" (e.g. flipping binary variables, fix some variables and solve a smaller MILP, ...) and others take fractional solutions and attempt to round them in an intelligent way. You may want to add a heuristic of your own if you have some special insight into the problem structure that the solver is not aware of, e.g. you can consistently take fractional solutions and intelligently guess integer solutions from them.
+
+The user heuristic callback is somewhat different from the previous two heuristics. The general concept is that we can create multiple partial solutions and submit them back to the solver - each solution must be submitted before a new solution is constructed. As before we provide a function that analyzes the current solution and takes a single argument, e.g. ``function myHeuristic(cb)``, where cb is a reference to the callback management code inside JuMP. You can build your solutions using ``setSolutionValue!(cb, x, value)`` and submit them with ``addSolution(cb)``. Note that ``addSolution`` will not "wipe" the previous (partial) solution - you must override it a variable takes a value different from the previous partial solution. Notify JuMP that this function should be used as a heuristic using the ``setHeuristicCallback(m, myHeuristic)`` function before calling ``solve(m)``.
+
+There is some solver dependent behaviour - you should check your solver documentation for details. For example Gurobi can use partial solutions to complete full solutions. GLPK does not handle partial solutions, so variables you do not manually set will default to their value at the current node. Additionally, GLPK will not check the feasibility of your heuristic solution.
+
+Consider the following example, which is the same problem as seen in the user cuts section. The heuristic simply rounds the fractional variable to generate integer solutions.::
+
+    using JuMP
+    using Gurobi
+
+    # We will use Gurobi and disable PreSolve, Cuts, and (in-built) Heuristics so 
+    # only our heuristic will be used
+    m = Model(solver=GurobiSolver(Cuts=0, Presolve=0, Heuristics=0.0))
+
+    # Define our variables to be inside a box, and integer
+    @defVar(m, 0 <= x <= 2, Int)
+    @defVar(m, 0 <= y <= 2, Int)
+
+    # Optimal solution is trying to go towards top-right corner (2.0, 2.0)
+    @setObjective(m, Max, x + 2y)
+
+    # We have one constraint that cuts off the top right corner
+    @addConstraint(m, y + x <= 3.5)
+
+    # Optimal solution of relaxed problem will be (1.5, 2.0)
+    
+    # We now define our callback function that takes one argument,
+    # the callback handle. Note that we can access m, x, and y because
+    # this function is defined inside the same scope
+    function myheuristic(cb)
+        x_val = getValue(x)
+        y_val = getValue(y)
+        println("In callback function, x=$x_val, y=$y_val")
+
+        setSolutionValue!(cb, x, floor(x_val))
+        # Leave y undefined - solver should handle as it sees fit. In the case
+        # of Gurobi it will try to figure out what it should be.
+        addSolution(cb)
+
+        # Submit a second solution
+        setSolutionValue!(cb, x, ceil(x_val))
+        addSolution(cb)
+    end  # End of callback function
+
+    # Tell JuMP/Gurobi to use our callback function
+    setHeuristicCallback(m, myheuristic)
+
+    # Solve the problem
+    solve(m)
+
+    # Print our final solution
+    println("Final solution: [ $(getValue(x)), $(getValue(y)) ]")
+
+The code should print something like::
+    
+    In callback function, x=1.5, y=2.0
+         0     0    5.50000    0    1          -    5.50000     -      -    0s
+    H    1     0                       5.0000000    5.50000  10.0%   0.0    0s
+
+where the ``H`` denotes a solution found with a heuristic - our heuristic in this case. This code can also be found in ``/JuMP/examples/simpleheur.jl``.
+
+
+
 Querying Solver Progress
 ^^^^^^^^^^^^^^^^^^^^^^^^
 
