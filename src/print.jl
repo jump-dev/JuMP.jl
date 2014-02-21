@@ -201,6 +201,28 @@ function dictstring(dict::JuMPDict, mode=:REPL)
     return boundstring(name_and_indices, colLow, colUp, colCat, tail_str, mode)
 end
 
+# fillranges
+# Not exported. Constructs the description of an arbitrary range. Output looks
+# something like {2,4..18,20}
+function fillranges(idx)
+    r_first = first(idx)
+    r_end   = last(idx)
+    str = ""
+    if length(idx) == 1
+        str *= "$r_first"
+    elseif length(idx) == 2
+        str *= "$r_first,$r_end"
+    elseif length(idx) == 3
+        r_second = idx[2]
+        str *= "$r_first,$r_second,$r_end"
+    else
+        r_second = idx[2]
+        r_penult = idx[end-1]
+        str *= "$r_first,$r_second..$r_penult,$r_end"
+    end
+    return str
+end
+
 # dictnameindices
 # Not exported. Builds the x[i,j,k,l] part and the "for all" parts. This is also
 # used for printing JuMPDict so thats why its seperated out from dictstring
@@ -225,40 +247,41 @@ function dictnameindices(dict::JuMPDict, mode=:REPL)
             # Range with increments of 1, easy
             tail_str *= "$(dict.indexsets[dim][1])..$(dict.indexsets[dim][end])"
         elseif typeof(dict.indexsets[dim]) <: Range
-            # Range with increment that might not be 1
-            r_first = first(dict.indexsets[dim])
-            r_end   = last(dict.indexsets[dim])
-            if length(dict.indexsets[dim]) == 1
-                tail_str *= "$r_first"
-            elseif length(dict.indexsets[dim]) == 2
-                tail_str *= "$r_first,$r_end"
-            elseif length(dict.indexsets[dim]) == 3
-                r_second = dict.indexsets[dim][2]
-                tail_str *= "$r_first,$r_second,$r_end"
-            else
-                r_second = dict.indexsets[dim][2]
-                r_penult = dict.indexsets[dim][end-1]
-                tail_str *= "$r_first,$r_second..$r_penult,$r_end"
-            end
+            tail_str *= fillranges(dict.indexsets[dim])
         else
-            # Arbitrary set
-            MAXCHAR = 15
-            cur_str = ""
-            for i in dict.indexsets[dim]
-                str_i = string(i)
-                if length(str_i) + length(cur_str) >= MAXCHAR
-                    # Stop here
-                    cur_str *= ".."
-                    break
-                else
-                    # It will fit
-                    if length(cur_str) > 0
-                        cur_str *= ","
+            try # try to detect ranges in disguise
+                elem = dict.indexsets[dim][1]
+                off = dict.indexsets[dim][2] - elem
+                for k in dict.indexsets[dim][2:end]
+                    if (k - elem) != off
+                        error("Internal error")
                     end
-                    cur_str *= str_i 
+                    elem = k
                 end
+                if off == 1
+                    tail_str *= "$(dict.indexsets[dim][1])..$(dict.indexsets[dim][end])"
+                else
+                    tail_str *= fillranges(dict.indexsets[dim])
+                end
+            catch # Arbitrary set
+                MAXCHAR = 15
+                cur_str = ""
+                for i in dict.indexsets[dim]
+                    str_i = string(i)
+                    if length(str_i) + length(cur_str) >= MAXCHAR
+                        # Stop here
+                        cur_str *= ".."
+                        break
+                    else
+                        # It will fit
+                        if length(cur_str) > 0
+                            cur_str *= ","
+                        end
+                        cur_str *= str_i 
+                    end
+                end
+                tail_str *= cur_str
             end
-            tail_str *= cur_str
         end
         tail_str *= (mode == :REPL) ? "}" : " \\}"
         if dim != dimensions
