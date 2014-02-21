@@ -11,7 +11,7 @@ end
 
 x,y,z,q = placeholders(4)
 
-ex = @process sin(x*y) + exp(z+2q)
+ex = @processNLExpr sin(x*y) + exp(z+2q)
 sp = compute_hessian_sparsity_IJ(ex)
 hfunc = gen_hessian_dense(ex)
 val = [3.0, 4.0, 5.0, 6.0]
@@ -28,7 +28,7 @@ sparsefunc(val, sparsemat)
 
 x = placeholders(5)
 
-ex = @process  sum{ x[i]^2, i =1:5 } + sin(x[1]*x[2])
+ex = @processNLExpr  sum{ x[i]^2, i =1:5 } + sin(x[1]*x[2])
 sp = compute_hessian_sparsity_IJ(ex)
 hfunc = gen_hessian_dense(ex)
 exact(x) = [ -x[2]^2*sin(x[1]*x[2]) cos(x[1]*x[2])-x[1]*x[2]*sin(x[1]*x[2]) 0 0 0

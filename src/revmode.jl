@@ -57,16 +57,16 @@ function quoteTree(x::Expr, datalist::Dict, iterstack)
         var = x.args[1]
         datalist[var] = var
 
-        return Expr(:tuple, quot(x),Expr(:block, iterstack..., :(isa($x,Placeholder))))
+        return Expr(:tuple, quot(x),Expr(:block, iterstack..., :(isa($x,ReverseDiffSparse.Placeholder))))
     end
 end
 
 function quoteTree(x::Symbol, datalist, iterstack)
     datalist[x] = x
-    return Expr(:tuple,quot(x),Expr(:block, iterstack..., :(isa($x,Placeholder))))
+    return Expr(:tuple,quot(x),Expr(:block, iterstack..., :(isa($x,ReverseDiffSparse.Placeholder))))
 end
 
-quoteTree(x, datalist, iterstack) = Expr(:tuple,x,:(isa($x,Placeholder)))
+quoteTree(x, datalist, iterstack) = Expr(:tuple,x,:(isa($x,ReverseDiffSparse.Placeholder)))
 
 type SymbolicOutput
     tree
@@ -74,7 +74,7 @@ type SymbolicOutput
     inputvals
 end
 
-macro process(x)
+macro processNLExpr(x)
     datalist = Dict()
     iterstack = {}
     tree = esc(quoteTree(x, datalist, iterstack))
@@ -87,7 +87,7 @@ macro process(x)
     return :(SymbolicOutput(genExprGraph(inferInput($tree)), $inputnames, $inputvals))
 end
 
-export @process
+export @processNLExpr
 
 # turn each node in the expression tree into an ExprNode
 # this expression is kth argument in parent expression
