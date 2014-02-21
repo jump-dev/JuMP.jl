@@ -75,6 +75,12 @@ type Model
 
     # JuMPDict list
     dictList::Vector
+
+    # Extension dictionary - e.g. for robust
+    # Extensions should define a type to hold information particular to
+    # their functionality, and store an instance of the type in this
+    # dictionary keyed on an extension-specific symbol
+    ext::Dict{Symbol,Any}
 end
 
 # Default constructor
@@ -84,7 +90,7 @@ function Model(;solver=nothing)
         Model(QuadExpr(),:Min,LinearConstraint[], QuadConstraint[],
               0,String[],Float64[],Float64[],Int[],
               0,Float64[],Float64[],Float64[],nothing,MathProgBase.MissingSolver("",Symbol[]),true,
-              nothing,nothing,JuMPDict[])
+              nothing,nothing,JuMPDict[],Dict{Symbol,Any}())
     else
         if !isa(solver,AbstractMathProgSolver)
             error("solver argument ($solver) must be an AbstractMathProgSolver")
@@ -93,7 +99,7 @@ function Model(;solver=nothing)
         Model(QuadExpr(),:Min,LinearConstraint[], QuadConstraint[],
               0,String[],Float64[],Float64[],Int[],
               0,Float64[],Float64[],Float64[],nothing,solver,true,
-              nothing,nothing,JuMPDict[])
+              nothing,nothing,JuMPDict[],Dict{Symbol,Any}())
     end
 end
 
@@ -116,6 +122,10 @@ function copy(source::Model)
     dest.solver = source.solver  # The two models are linked by this
     dest.lazycallback = source.lazycallback
     dest.cutcallback = source.cutcallback
+    dest.ext = source.ext  # Should probably be deep copy
+    if length(source.ext) >= 1
+        Base.warn_once("Copying model with extensions - not deep copying extension-specific information.")
+    end
     
     # Objective
     dest.obj = copy(source.obj, dest)
