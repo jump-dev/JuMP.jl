@@ -86,3 +86,12 @@ mprint = Model()
 @defVar(mprint, m[1:5,2:2:6,[:cats,:dogs,:dinosaurs],["gah",5.0,2,:symbol]] >= 0)
 @test JuMP.dictstring(m, :REPL)   == "m[i,j,k,l] ≥ 0.0, for all i in {1..5}, j in {2,4,6}, k in {cats,dogs..}, l in {gah,5.0,2..}"
 @test JuMP.dictstring(m, :IJulia) == "m_{i,j,k,l} \\geq 0.0 \\quad \\forall i \\in \\{ 1..5 \\}, j \\in \\{ 2,4,6 \\}, k \\in \\{ cats,dogs.. \\}, l \\in \\{ gah,5.0,2.. \\}"
+idx1 = [[1:10]]
+idx2 = [[2:2:20]]
+idx3 = [[2:2:20],21]
+@defVar(mprint, p[idx1,idx2])
+@test JuMP.dictstring(p, :REPL)   == "p[i,j], for all i in {1..10}, j in {2,4..18,20} free"
+@test JuMP.dictstring(p, :IJulia) == "p_{i,j} \\quad \\forall i \\in \\{ 1..10 \\}, j \\in \\{ 2,4..18,20 \\} free"
+@defVar(mprint, q[idx2,idx3])
+@test JuMP.dictstring(q, :REPL)   == "q[i,j], for all i in {2,4..18,20}, j in {2,4,6,8,10,12..} free"
+@test JuMP.dictstring(q, :IJulia) == "q_{i,j} \\quad \\forall i \\in \\{ 2,4..18,20 \\}, j \\in \\{ 2,4,6,8,10,12.. \\} free"
