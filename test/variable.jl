@@ -59,9 +59,9 @@ mprint = Model()
 @defVar(mprint, 0 <= d[-5:2] <= 5, Int)
 @test JuMP.dictstring(d, :REPL)   == "0.0 ≤ d[i] ≤ 5.0, for all i in {-5..2}, integer"
 @test JuMP.dictstring(d, :IJulia) == "0.0 \\leq d_{i} \\leq 5.0 \\quad \\forall i \\in \\{ -5..2 \\}, integer"
-@defVar(mprint, e[-5:2], Bin)
-@test JuMP.dictstring(e, :REPL)   == "e[i], for all i in {-5..2}, binary"
-@test JuMP.dictstring(e, :IJulia) == "e_{i} \\quad \\forall i \\in \\{ -5..2 \\}, binary"
+@defVar(mprint, z[-5:2], Bin)
+@test JuMP.dictstring(z, :REPL)   == "z[i], for all i in {-5..2}, binary"
+@test JuMP.dictstring(z, :IJulia) == "z_{i} \\quad \\forall i \\in \\{ -5..2 \\}, binary"
 @defVar(mprint, f[6:9] >= 3, Int)
 @test JuMP.dictstring(f, :REPL)   == "f[i] ≥ 3.0, for all i in {6..9}, integer"
 @test JuMP.dictstring(f, :IJulia) == "f_{i} \\geq 3.0 \\quad \\forall i \\in \\{ 6..9 \\}, integer"
@@ -86,3 +86,12 @@ mprint = Model()
 @defVar(mprint, m[1:5,2:2:6,[:cats,:dogs,:dinosaurs],["gah",5.0,2,:symbol]] >= 0)
 @test JuMP.dictstring(m, :REPL)   == "m[i,j,k,l] ≥ 0.0, for all i in {1..5}, j in {2,4,6}, k in {cats,dogs..}, l in {gah,5.0,2..}"
 @test JuMP.dictstring(m, :IJulia) == "m_{i,j,k,l} \\geq 0.0 \\quad \\forall i \\in \\{ 1..5 \\}, j \\in \\{ 2,4,6 \\}, k \\in \\{ cats,dogs.. \\}, l \\in \\{ gah,5.0,2.. \\}"
+idx1 = [[1:10]]
+idx2 = [[2:2:20]]
+idx3 = [[2:2:20],21]
+@defVar(mprint, p[idx1,idx2])
+@test JuMP.dictstring(p, :REPL)   == "p[i,j], for all i in {1..10}, j in {2,4..18,20} free"
+@test JuMP.dictstring(p, :IJulia) == "p_{i,j} \\quad \\forall i \\in \\{ 1..10 \\}, j \\in \\{ 2,4..18,20 \\} free"
+@defVar(mprint, q[idx2,idx3])
+@test JuMP.dictstring(q, :REPL)   == "q[i,j], for all i in {2,4..18,20}, j in {2,4,6,8,10,12..} free"
+@test JuMP.dictstring(q, :IJulia) == "q_{i,j} \\quad \\forall i \\in \\{ 2,4..18,20 \\}, j \\in \\{ 2,4,6,8,10,12.. \\} free"
