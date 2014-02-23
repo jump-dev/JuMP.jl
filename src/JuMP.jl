@@ -283,35 +283,19 @@ end
 abstract JuMPConstraint
 
 ##########################################################################
-# LinearConstraint class
-# An affine expression with lower bound (possibly -Inf) and upper bound (possibly Inf).
-type LinearConstraint <: JuMPConstraint
-    terms::AffExpr
+# Generic constraint type with lower and upper bound
+type GenericRangeConstraint{TermsType} <: JuMPConstraint
+    terms::TermsType
     lb::Float64
     ub::Float64
 end
 
 if VERSION.major == 0 && VERSION.minor < 3
-    LinearConstraint(terms::AffExpr,lb::Number,ub::Number) =
-        LinearConstraint(terms,float(lb),float(ub))
+    GenericRangeConstraint(terms, lb::Number, ub::Number) =
+        GenericRangeConstraint(terms,float(lb),float(ub))
 end
 
-
-function addConstraint(m::Model, c::LinearConstraint)
-    push!(m.linconstr,c)
-    if !m.firstsolve
-        # TODO: we don't check for duplicates here
-        try
-            addconstr!(m.internalModel,[v.col for v in c.terms.vars],c.terms.coeffs,c.lb,c.ub)
-        catch
-            Base.warn_once("Solver does not appear to support adding constraints to an existing model. Hot-start is disabled.")
-            m.firstsolve = true
-        end
-    end
-    return ConstraintRef{LinearConstraint}(m,length(m.linconstr))
-end
-
-function sense(c::LinearConstraint) 
+function sense(c::GenericRangeConstraint) 
     if c.lb != -Inf
         if c.ub != Inf
             if c.ub == c.lb
@@ -328,7 +312,7 @@ function sense(c::LinearConstraint)
     end
 end
 
-function rhs(c::LinearConstraint)
+function rhs(c::GenericRangeConstraint)
     s = sense(c)
     @assert s != :range
     if s == :<=
@@ -336,6 +320,25 @@ function rhs(c::LinearConstraint)
     else
         return c.lb
     end
+end
+
+##########################################################################
+# LinearConstraint is an affine expression with lower bound (possibly
+# -Inf) and upper bound (possibly Inf).
+typealias LinearConstraint GenericRangeConstraint{AffExpr}
+
+function addConstraint(m::Model, c::LinearConstraint)
+    push!(m.linconstr,c)
+    if !m.firstsolve
+        # TODO: we don't check for duplicates here
+        try
+            addconstr!(m.internalModel,[v.col for v in c.terms.vars],c.terms.coeffs,c.lb,c.ub)
+        catch
+            Base.warn_once("Solver does not appear to support adding constraints to an existing model. Hot-start is disabled.")
+            m.firstsolve = true
+        end
+    end
+    return ConstraintRef{LinearConstraint}(m,length(m.linconstr))
 end
 
 # Copy utility function, not exported
