@@ -492,4 +492,5 @@ conToStr(c::QuadConstraint) = string(quadToStr(c.terms), " ", c.sense, " 0")
 
 print(io::IO, c::ConstraintRef{LinearConstraint}) = print(io, conToStr(c.m.linconstr[c.idx]))
 print(io::IO, c::ConstraintRef{QuadConstraint}) = print(io, conToStr(c.m.quadconstr[c.idx]))
+print(io::IO, c::ConstraintRef{SOSConstraint}) = print(io, conToStr(c.m.sosconstr[c.idx]))
 show{T}(io::IO, c::ConstraintRef{T}) = print(io, c)

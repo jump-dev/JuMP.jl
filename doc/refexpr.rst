@@ -41,6 +41,14 @@ Methods
   Uses macros and thus does not yet support quadratic constraints.
 * ``addConstraint(m::Model, con)`` - general way to add linear and quadratic
   constraints.
+* ``addSOS1(m::Model, coll::Vector{AffExpr})`` - adds special ordered set constraint
+  of type 1 (SOS1). Specify the set as a vector of weighted variables, e.g. ``coll = [3x, y, 2z]``.
+  Note that solvers expect the weights to be unique. See 
+  `here <http://lpsolve.sourceforge.net/5.5/SOS.htm>`_ for more details.
+* ``addSOS2(m::Model, coll::Vector{AffExpr})`` - adds special ordered set constraint
+  of type 2 (SOS2). Specify the set as a vector of weighted variables, e.g. ``coll = [3x, y, 2z]``.
+  Note that solvers expect the weights to be unique. 
+  See `here <http://lpsolve.sourceforge.net/5.5/SOS.htm>`_ for more details.
 * ``push!(aff::AffExpr, new_coeff::Float64, new_var::Variable)`` - efficient
   way to grow an affine expression by one term. For example, to add ``5x`` to
   an existing expression ``aff``, use ``push!(aff, 5.0, x)``. This is
