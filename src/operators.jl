@@ -260,3 +260,34 @@ function *(lhs::Array{Float64,2},rhs::JuMPDict)
         error("Block Matrix operations not yet supported.")
     end
 end
+
+function bigdot(lhs::Array{Float64,2},rhs::JuMPDict)
+    out = 0
+    matsize = size(lhs)
+    @assert length(matsize) == length(rhs.indexsets)
+
+    for i = 1:matsize[1]
+        for j = 1:matsize[2]
+            out += lhs[i,j] * rhs.innerArray[i,j]
+        end
+    end
+
+
+    return out
+end
+
+function bigdot(lhs::Array{Float64,3},rhs::JuMPDict)
+    out = 0
+    matsize = size(lhs)
+    @assert length(matsize) == length(rhs.indexsets)
+
+    for i = 1:matsize[1]
+        for j = 1:matsize[2]
+            for k = 1:matsize[3]
+                out += lhs[i,j,k] * rhs.innerArray[i,j,k]
+            end
+        end
+    end
+
+    return out
+end
