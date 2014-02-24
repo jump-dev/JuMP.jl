@@ -50,6 +50,37 @@ function addQuadratics(m::Model)
     end
 end
 
+function addSOS(m::Model)
+    try
+        for i in 1:length(m.sosconstr)
+            sos = m.sosconstr[i]
+            indices = Int[v.col for v in sos.terms]
+            if sos.sostype == :SOS1
+                addsos1!(m.internalModel, indices, sos.weights)
+            elseif sos.sostype == :SOS2
+                addsos2!(m.internalModel, indices, sos.weights)
+            end
+        end
+    catch
+        for i in 1:length(m.sosconstr)
+            sos = m.sosconstr[i]
+            indices = Int[v.col for v in sos.terms]
+            nvars = length(indices)
+            if sos.sostype == :SOS1
+                Base.warn_once("Current solver does not support SOS1 constraints, adding manually")
+                for i in 1:nvars
+                    if m.colCat[sos.terms[i].col] != INTEGER
+                        error("JuMP currently does not support SOS fallback with continuous variables")
+                    end
+                end
+                addconstr!(m.internalModel, indices, ones(nvars), 0., 1.)
+            elseif sos.sostype == :SOS2
+                error("Current solver does not support SOS2 constraints")
+            end
+        end
+    end
+end
+
 # prepare objective, constraint matrix, and row bounds
 function prepProblemBounds(m::Model)
 
@@ -207,6 +238,8 @@ function solveMIP(m::Model)
             Base.warn_once("MIP solver does not appear to support warm start solution.")
         end
     end
+
+    addSOS(m)
 
     addQuadratics(m)
     registercallbacks(m)
