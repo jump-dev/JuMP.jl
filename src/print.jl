@@ -428,10 +428,10 @@ end
 
 ##########
 # JuMPDict
-show(io::IO, dict::JuMPDict) = print(io, dict)
-function print(io::IO, dict::JuMPDict)
+show(io::IO, dict::JuMPDict{Variable}) = print(io, dict)
+function print(io::IO, dict::JuMPDict{Variable})
     # Best case: bounds and all dims
-    str = dictstring(dict::JuMPDict, :REPL)
+    str = dictstring(dict, :REPL)
     if str != ""
         print(io, str)    
         return
@@ -447,7 +447,7 @@ function print(io::IO, dict::JuMPDict)
     name_and_indices, tail_str = dictnameindices(dict, :REPL)
     print(io, ".. \u2264 $(name_and_indices) \u2264 ..$(tail_str)")
 end
-function writemime(io::IO, ::MIME"text/latex", dict::JuMPDict)
+function writemime(io::IO, ::MIME"text/latex", dict::JuMPDict{Variable})
     # Best case: bounds and all dims
     str = dictstring(dict::JuMPDict, :IJulia)
     if str != ""
