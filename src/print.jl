@@ -467,11 +467,11 @@ function writemime(io::IO, ::MIME"text/latex", dict::JuMPDict)
 end
 
 ###################
-# Linear Constraint
-print(io::IO, c::LinearConstraint) = print(io, conToStr(c))
-show(io::IO, c::LinearConstraint) = print(io, conToStr(c))
+# Linear Constraint (or rather, the general version of it)
+print(io::IO, c::GenericRangeConstraint) = print(io, conToStr(c))
+show(io::IO,  c::GenericRangeConstraint) = print(io, conToStr(c))
 
-function conToStr(c::LinearConstraint)
+function conToStr(c::GenericRangeConstraint)
     s = sense(c)
     if s == :range
         return string(c.lb," <= ",affToStr(c.terms,false)," <= ",c.ub)
