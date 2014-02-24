@@ -18,7 +18,7 @@ function compute_hessian_sparsity(s::SymbolicOutput)
             $code
         end
     end
-
+    
     clist = Dict()
     eval(fexpr)(clist)
     edgelist = {}
@@ -57,7 +57,7 @@ function compute_hessian_sparsity(x::ExprNode, linear_so_far, expr_out)
     if isexpr(x.ex, :call)
         # is this a linear operator?
         if linear_so_far == 1 
-            if x.ex.args[1] == :(+) || x.ex.args[1] == :(-) || (x.ex.args[1] == :(*) && sum([isa(t,ExprNode) for t in x.ex.args[2]]) <= 1) 
+            if x.ex.args[1] == :(+) || x.ex.args[1] == :(-) || (x.ex.args[1] == :(*) && sum([isa(t,ExprNode) for t in x.ex.args[2:end]]) <= 1) 
                 # we're still at the top
                 # give the same color to the children
                 for i in 2:length(x.ex.args)
@@ -95,7 +95,9 @@ function compute_hessian_sparsity(x::ExprNode, linear_so_far, expr_out)
         # we must be at an input expression
         # add this placeholder to the set of nodes with this color
         # (placeholders can have multiple colors if they appear multiple times in the graph)
-        push!(expr_out.args, :( push!(colorlist[mycolor], $(x.ex)) ))
+        if !linear_so_far
+            push!(expr_out.args, :( push!(colorlist[mycolor], $(x.ex)) ))
+        end
     end
     
 end
@@ -132,6 +134,29 @@ function gen_hessian_dense(s::SymbolicOutput)
         hessian(x,H)
     end
 end
+
+# returns a function that computes a hessian-matrix product
+function gen_hessian_matmat(s::SymbolicOutput)
+    gradexpr = genfgrad(s)
+    fgrad = eval(gradexpr)
+    function hessian_matmat!{T}(S, x::Vector{T})
+        @assert length(x) == size(S,1)
+        dualvec = Array(Dual{T}, length(x))
+        dualout = Array(Dual{T}, length(x))
+        for k in 1:size(S,2)
+            for i in 1:length(x)
+                dualvec[i] = Dual(x[i], S[i,k])
+            end
+            fill!(dualout, dual(zero(T)))
+            fgrad(dualvec, IdentityArray(), dualout, IdentityArray())
+            for i in 1:length(x)
+                S[i,k] = epsilon(dualout[i])
+            end
+        end
+        return S
+    end
+end
+
 
 # returns sparse matrix containing hessian structure, and
 # function to evaluate the hessian into a given sparse matrix
