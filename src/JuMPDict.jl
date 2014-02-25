@@ -1,7 +1,7 @@
 using Base.Meta
 # multivarate "dictionary" used for collections of variables/constraints
 
-abstract JuMPDict
+abstract JuMPDict{T}
 
 # generate and instantiate a type which is indexed by the given index sets
 # the following types of index sets are allowed:
@@ -26,7 +26,7 @@ macro gendict(instancename,T,idxsets...)
             dictnames[i] = gensym()
         end
     end
-    typecode = :(type $(typename){T} <: JuMPDict; innerArray::Array{T,$N}; name::String;
+    typecode = :(type $(typename){T} <: JuMPDict{T}; innerArray::Array{T,$N}; name::String;
                         indexsets end)
     builddicts = quote end
     for i in 1:N

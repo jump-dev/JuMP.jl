@@ -21,7 +21,7 @@ export
     # Model related
     getNumVars, getNumConstraints, getObjectiveValue, getObjective,
     getObjectiveSense, setObjectiveSense, writeLP, writeMPS, setObjective,
-    addConstraint, addVar, addVars, solve, copy,
+    addConstraint, addVar, addVars, addSOS1, addSOS2, solve, copy,
     # Variable
     setName, getName, setLower, setUpper, getLower, getUpper,
     getValue, setValue, getDual,
@@ -53,6 +53,7 @@ type Model
     
     linconstr#::Vector{LinearConstraint}
     quadconstr
+    sosconstr
     
     # Column data
     numCols::Int
@@ -75,28 +76,35 @@ type Model
     # callbacks
     lazycallback
     cutcallback
+    heurcallback
 
     # JuMPDict list
     dictList::Vector
+
+    # Extension dictionary - e.g. for robust
+    # Extensions should define a type to hold information particular to
+    # their functionality, and store an instance of the type in this
+    # dictionary keyed on an extension-specific symbol
+    ext::Dict{Symbol,Any}
 end
 
 # Default constructor
 function Model(;solver=nothing)
     if solver == nothing
         # use default solvers
-        Model(QuadExpr(),:Min,LinearConstraint[], QuadConstraint[],
+        Model(QuadExpr(),:Min,LinearConstraint[], QuadConstraint[],SOSConstraint[],
               0,String[],Float64[],Float64[],Int[],
               0,Float64[],Float64[],Float64[],nothing,MathProgBase.MissingSolver("",Symbol[]),true,
-              nothing,nothing,JuMPDict[])
+              nothing,nothing,nothing,JuMPDict[],Dict{Symbol,Any}())
     else
         if !isa(solver,AbstractMathProgSolver)
             error("solver argument ($solver) must be an AbstractMathProgSolver")
         end
         # user-provided solver must support problem class
-        Model(QuadExpr(),:Min,LinearConstraint[], QuadConstraint[],
+        Model(QuadExpr(),:Min,LinearConstraint[], QuadConstraint[],SOSConstraint[],
               0,String[],Float64[],Float64[],Int[],
               0,Float64[],Float64[],Float64[],nothing,solver,true,
-              nothing,nothing,JuMPDict[])
+              nothing,nothing,nothing,JuMPDict[],Dict{Symbol,Any}())
     end
 end
 
@@ -118,7 +126,12 @@ function copy(source::Model)
     dest = Model()
     dest.solver = source.solver  # The two models are linked by this
     dest.lazycallback = source.lazycallback
-    dest.cutcallback = source.cutcallback
+    dest.cutcallback  = source.cutcallback
+    dest.heurcallback = source.heurcallback
+    dest.ext = source.ext  # Should probably be deep copy
+    if length(source.ext) >= 1
+        Base.warn_once("Copying model with extensions - not deep copying extension-specific information.")
+    end
     
     # Objective
     dest.obj = copy(source.obj, dest)
@@ -158,8 +171,6 @@ end
 
 Variable(m::Model,lower::Number,upper::Number,cat::Int) =
     Variable(m,lower,upper,cat,"")
-
-
 
 # Name setter/getters
 setName(v::Variable,n::String) = (v.m.colNames[v.col] = n)
@@ -216,6 +227,8 @@ typealias AffExpr GenericAffExpr{Float64,Variable}
 AffExpr() = AffExpr(Variable[],Float64[],0.)
 
 isempty(a::AffExpr) = (length(a.vars) == 0 && a.constant == 0.)
+
+convert(::Type{AffExpr}, v::Variable) = AffExpr([v], [1.], 0.)
 
 function setObjective(m::Model, sense::Symbol, a::AffExpr)
     setObjectiveSense(m, sense)
@@ -274,35 +287,19 @@ end
 abstract JuMPConstraint
 
 ##########################################################################
-# LinearConstraint class
-# An affine expression with lower bound (possibly -Inf) and upper bound (possibly Inf).
-type LinearConstraint <: JuMPConstraint
-    terms::AffExpr
+# Generic constraint type with lower and upper bound
+type GenericRangeConstraint{TermsType} <: JuMPConstraint
+    terms::TermsType
     lb::Float64
     ub::Float64
 end
 
 if VERSION.major == 0 && VERSION.minor < 3
-    LinearConstraint(terms::AffExpr,lb::Number,ub::Number) =
-        LinearConstraint(terms,float(lb),float(ub))
+    GenericRangeConstraint(terms, lb::Number, ub::Number) =
+        GenericRangeConstraint(terms,float(lb),float(ub))
 end
 
-
-function addConstraint(m::Model, c::LinearConstraint)
-    push!(m.linconstr,c)
-    if !m.firstsolve
-        # TODO: we don't check for duplicates here
-        try
-            addconstr!(m.internalModel,[v.col for v in c.terms.vars],c.terms.coeffs,c.lb,c.ub)
-        catch
-            Base.warn_once("Solver does not appear to support adding constraints to an existing model. Hot-start is disabled.")
-            m.firstsolve = true
-        end
-    end
-    return ConstraintRef{LinearConstraint}(m,length(m.linconstr))
-end
-
-function sense(c::LinearConstraint) 
+function sense(c::GenericRangeConstraint) 
     if c.lb != -Inf
         if c.ub != Inf
             if c.ub == c.lb
@@ -319,7 +316,7 @@ function sense(c::LinearConstraint)
     end
 end
 
-function rhs(c::LinearConstraint)
+function rhs(c::GenericRangeConstraint)
     s = sense(c)
     @assert s != :range
     if s == :<=
@@ -329,10 +326,85 @@ function rhs(c::LinearConstraint)
     end
 end
 
+##########################################################################
+# LinearConstraint is an affine expression with lower bound (possibly
+# -Inf) and upper bound (possibly Inf).
+typealias LinearConstraint GenericRangeConstraint{AffExpr}
+
+function addConstraint(m::Model, c::LinearConstraint)
+    push!(m.linconstr,c)
+    if !m.firstsolve
+        # TODO: we don't check for duplicates here
+        try
+            addconstr!(m.internalModel,[v.col for v in c.terms.vars],c.terms.coeffs,c.lb,c.ub)
+        catch
+            Base.warn_once("Solver does not appear to support adding constraints to an existing model. Hot-start is disabled.")
+            m.firstsolve = true
+        end
+    end
+    return ConstraintRef{LinearConstraint}(m,length(m.linconstr))
+end
+
 # Copy utility function, not exported
 function copy(c::LinearConstraint, new_model::Model)
     return LinearConstraint(copy(c.terms, new_model), c.lb, c.ub)
 end
+
+##########################################################################
+# SOSConstraint class
+# An SOS constraint.
+type SOSConstraint <: JuMPConstraint
+    terms::Vector{Variable}
+    weights::Vector{Float64}
+    sostype::Symbol
+end
+
+function constructSOS(coll::Vector{AffExpr})
+    nvar = length(coll)
+    vars = Array(Variable, nvar)
+    weight = Array(Float64, nvar)
+    for i in 1:length(coll)
+        if (length(coll[i].vars) != 1) || (coll[i].constant != 0)
+            error("Must specify collection in terms of single variables")
+        end
+        vars[i] = coll[i].vars[1]
+        weight[i] = coll[i].coeffs[1]
+    end
+    return vars, weight
+end
+
+addSOS1(m::Model, coll) = addSOS1(m, convert(Vector{AffExpr}, coll))
+
+function addSOS1(m::Model, coll::Vector{AffExpr})
+    vars, weight = constructSOS(coll)
+    push!(m.sosconstr, SOSConstraint(vars, weight, :SOS1))
+    return ConstraintRef{SOSConstraint}(m,length(m.sosconstr))
+end
+
+addSOS2(m::Model, coll) = addSOS2(m, convert(Vector{AffExpr}, coll))
+
+function addSOS2(m::Model, coll::Vector{AffExpr})
+    vars, weight = constructSOS(coll)
+    push!(m.sosconstr, SOSConstraint(vars, weight, :SOS2))
+    return ConstraintRef{SOSConstraint}(m,length(m.sosconstr))
+end
+
+function conToStr(c::SOSConstraint) 
+    nvar = length(c.terms)
+    termStrings = Array(UTF8String, nvar+2)
+    termStrings[1] = "$(c.sostype): {"
+    if nvar > 0
+        termStrings[2] = "$(c.weights[1]) $(c.terms[1])"
+        for i in 2:nvar
+            termStrings[i+1] = ", $(c.weights[i]) $(c.terms[i])"
+        end
+    end
+    termStrings[end] = "}"
+    return join(termStrings)
+end
+
+print(io::IO, c::SOSConstraint) = print(io, conToStr(c))
+show(io::IO, c::SOSConstraint)  = print(io, conToStr(c))
 
 ##########################################################################
 # QuadConstraint class

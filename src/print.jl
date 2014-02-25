@@ -428,10 +428,10 @@ end
 
 ##########
 # JuMPDict
-show(io::IO, dict::JuMPDict) = print(io, dict)
-function print(io::IO, dict::JuMPDict)
+show(io::IO, dict::JuMPDict{Variable}) = print(io, dict)
+function print(io::IO, dict::JuMPDict{Variable})
     # Best case: bounds and all dims
-    str = dictstring(dict::JuMPDict, :REPL)
+    str = dictstring(dict, :REPL)
     if str != ""
         print(io, str)    
         return
@@ -447,7 +447,7 @@ function print(io::IO, dict::JuMPDict)
     name_and_indices, tail_str = dictnameindices(dict, :REPL)
     print(io, ".. \u2264 $(name_and_indices) \u2264 ..$(tail_str)")
 end
-function writemime(io::IO, ::MIME"text/latex", dict::JuMPDict)
+function writemime(io::IO, ::MIME"text/latex", dict::JuMPDict{Variable})
     # Best case: bounds and all dims
     str = dictstring(dict::JuMPDict, :IJulia)
     if str != ""
@@ -467,11 +467,11 @@ function writemime(io::IO, ::MIME"text/latex", dict::JuMPDict)
 end
 
 ###################
-# Linear Constraint
-print(io::IO, c::LinearConstraint) = print(io, conToStr(c))
-show(io::IO, c::LinearConstraint) = print(io, conToStr(c))
+# Linear Constraint (or rather, the general version of it)
+print(io::IO, c::GenericRangeConstraint) = print(io, conToStr(c))
+show(io::IO,  c::GenericRangeConstraint) = print(io, conToStr(c))
 
-function conToStr(c::LinearConstraint)
+function conToStr(c::GenericRangeConstraint)
     s = sense(c)
     if s == :range
         return string(c.lb," <= ",affToStr(c.terms,false)," <= ",c.ub)
@@ -492,4 +492,5 @@ conToStr(c::QuadConstraint) = string(quadToStr(c.terms), " ", c.sense, " 0")
 
 print(io::IO, c::ConstraintRef{LinearConstraint}) = print(io, conToStr(c.m.linconstr[c.idx]))
 print(io::IO, c::ConstraintRef{QuadConstraint}) = print(io, conToStr(c.m.quadconstr[c.idx]))
+print(io::IO, c::ConstraintRef{SOSConstraint}) = print(io, conToStr(c.m.sosconstr[c.idx]))
 show{T}(io::IO, c::ConstraintRef{T}) = print(io, c)

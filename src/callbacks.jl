@@ -1,8 +1,9 @@
-export setLazyCallback, setCutCallback
+export setLazyCallback, setCutCallback, setHeuristicCallback
 export setlazycallback
 @Base.deprecate setlazycallback setLazyCallback
 setLazyCallback(m::Model, f::Function) = (m.lazycallback = f)
 setCutCallback(m::Model, f::Function) = (m.cutcallback = f)
+setHeuristicCallback(m::Model, f::Function) = (m.heurcallback = f)
 
 function registercallbacks(m::Model)
     if isa(m.lazycallback, Function)
@@ -34,6 +35,21 @@ function registercallbacks(m::Model)
         end
         #
             setcutcallback!(m.internalModel, cutcallback)
+        #
+    end
+    if isa(m.heurcallback, Function)
+        function heurcallback(d::MathProgCallbackData)
+            state = cbgetstate(d)
+            if state == :MIPSol  # This shouldn't happen right?
+                println("Is this ever called?")
+                cbgetmipsolution(d,m.colVal)
+            else
+                cbgetlpsolution(d,m.colVal)
+            end
+            m.heurcallback(d)
+        end
+        #
+            setheuristiccallback!(m.internalModel, heurcallback)
         #
     end
 end
@@ -92,4 +108,12 @@ end
 
 function addUserCut(cbdata::MathProgCallbackData, constr::LinearConstraint)
     cbaddcut!(cbdata, Cint[v.col for v in constr.terms.vars], constr.terms.coeffs, sensemap[sense(constr)], rhs(constr))
+end
+
+## User heuristic
+export addSolution, setSolutionValue!
+
+addSolution(cbdata::MathProgCallbackData) = cbaddsolution!(cbdata)
+function setSolutionValue!(cbdata::MathProgCallbackData, v::Variable, x)
+    cbsetsolutionvalue!(cbdata, convert(Cint, v.col), x)
 end

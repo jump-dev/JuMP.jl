@@ -1,12 +1,18 @@
 JuMP release notes
 ==================
 
+Unversioned
+-----------
+
+  * Support for SOS1 and SOS2 constraints.
+  * Solver-independent callback for user heuristics.
+  * Developers: support for extensions to JuMP. See definition of Model in ``src/JuMP.jl`` for more details.
+
 Version 0.3.2 (February 17, 2014)
 ---------------------------------
 
  * Improved model printing
    - Preliminary support for IJulia output
-
 
 Version 0.3.1 (January 30, 2014)
 --------------------------------
