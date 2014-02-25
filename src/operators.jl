@@ -225,69 +225,47 @@ end
 (>=) (lhs::QuadExpr, rhs::QuadExpr) = (>=)(lhs-rhs, 0)
 
 #Vectorization Stuff
-function *{T<:Real}(lhs::JuMPDict{Variable}, rhs::Vector{T})
-	@assert length(lhs.indexsets) == 1
-	@assert length(lhs.indexsets[1]) == length(rhs)
-	warn("Product Ambigious for 1D Vectors. Assuming Inner Product.")
-	out = 0
-	for i = 1:length(rhs)
-		out += rhs[i] * lhs.innerArray[i]
-	end
-	return out
+function dot{T<:Real}(lhs::JuMPDict{Variable}, rhs::Vector{T})
+    @assert length(lhs.indexsets) == 1
+    @assert length(lhs.indexsets[1]) == length(rhs)
+    return AffExpr(lhs.innerArray, rhs, 0.0)
 end
-
-function *{T<:Real}(lhs::Vector{T}, rhs::JuMPDict{Variable})
-	@assert length(rhs.indexsets) == 1
-	@assert length(rhs.indexsets[1]) == length(lhs)
-	warn("Product Ambigious for 1D Vectors. Assuming Inner Product.")
-	out = 0
-	for i = 1:length(lhs)
-		out += lhs[i] * rhs.innerArray[i]
-	end
-	return out
-end
-
-#The lhs should be of the type "Array{Real,2}", but not having it be Float64 kills it, for some reason. #magic
-function *{T<:Real}(lhs::Array{T,2},rhs::JuMPDict{Variable})
-    if length(rhs.indexsets)==1 && size(lhs,1) == 1 #inner product
-        @assert length(rhs.indexsets[1]) == size(lhs,2) #Inner Dims agree
-        out = 0
-        for i = 1:length(lhs)
-            out += lhs[i] * rhs.innerArray[i]
-        end
-        return out
-    else
-        error("Block Matrix operations not yet supported.")
-    end
-end
+dot{T<:Real}(lhs::Vector{T}, rhs::JuMPDict{Variable}) = dot(rhs,lhs)
 
 function bigdot{T<:Real}(lhs::Array{T,2},rhs::JuMPDict{Variable})
-    out = 0
     matsize = size(lhs)
     @assert length(matsize) == length(rhs.indexsets)
+
+    coeffs = Float64[]; sizehint(coeffs, matsize[1]*matsize[2])
+    vars  = Variable[]; sizehint(vars,   matsize[1]*matsize[2])
 
     for i = 1:matsize[1]
         for j = 1:matsize[2]
-            out += lhs[i,j] * rhs.innerArray[i,j]
+            push!(coeffs, lhs[i,j])
+            push!(vars,   rhs.innerArray[i,j])
         end
     end
 
-
-    return out
+    return AffExpr(vars, coeffs, 0.0)
 end
+bigdot{T<:Real}(lhs::JuMPDict{Variable},rhs::Array{T,2}) = bigdot(rhs,lhs)
 
 function bigdot{T<:Real}(lhs::Array{T,3},rhs::JuMPDict{Variable})
-    out = 0
     matsize = size(lhs)
     @assert length(matsize) == length(rhs.indexsets)
+
+    coeffs = Float64[]; sizehint(coeffs, matsize[1]*matsize[2]*matsize[3])
+    vars  = Variable[]; sizehint(vars,   matsize[1]*matsize[2]*matsize[3])
 
     for i = 1:matsize[1]
         for j = 1:matsize[2]
             for k = 1:matsize[3]
-                out += lhs[i,j,k] * rhs.innerArray[i,j,k]
+                push!(coeffs, lhs[i,j,k])
+                push!(vars,   rhs.innerArray[i,j,k])
             end
         end
     end
 
-    return out
+    return AffExpr(vars, coeffs, 0.0)
 end
+bigdot{T<:Real}(lhs::JuMPDict{Variable},rhs::Array{T,3}) = bigdot(rhs,lhs)

@@ -15,8 +15,8 @@ tic()
 @addConstraint(m,sum{c[i]*z[i],i=1:n}<=1)
 println("Vector with sum{}: $(toq())")
 tic()
-@addConstraint(m,c*z <= 1)
-println("Vector with * : $(toq())")
+@addConstraint(m,dot(c,z) <= 1)
+println("Vector with dot() : $(toq())")
 
 #2D Matrix
 tic()
