@@ -386,23 +386,6 @@ function addSOS2(m::Model, coll::Vector{AffExpr})
     return ConstraintRef{SOSConstraint}(m,length(m.sosconstr))
 end
 
-function conToStr(c::SOSConstraint) 
-    nvar = length(c.terms)
-    termStrings = Array(UTF8String, nvar+2)
-    termStrings[1] = "$(c.sostype): {"
-    if nvar > 0
-        termStrings[2] = "$(c.weights[1]) $(c.terms[1])"
-        for i in 2:nvar
-            termStrings[i+1] = ", $(c.weights[i]) $(c.terms[i])"
-        end
-    end
-    termStrings[end] = "}"
-    return join(termStrings)
-end
-
-print(io::IO, c::SOSConstraint) = print(io, conToStr(c))
-show(io::IO, c::SOSConstraint)  = print(io, conToStr(c))
-
 ##########################################################################
 # QuadConstraint class
 # An quadratic constraint. Right-hand side is implicitly taken to be zero; 
