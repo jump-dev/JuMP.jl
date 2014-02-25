@@ -44,7 +44,8 @@ Methods
 * ``addSOS1(m::Model, coll::Vector{AffExpr})`` - adds special ordered set constraint
   of type 1 (SOS1). Specify the set as a vector of weighted variables, e.g. ``coll = [3x, y, 2z]``.
   Note that solvers expect the weights to be unique. See 
-  `here <http://lpsolve.sourceforge.net/5.5/SOS.htm>`_ for more details.
+  `here <http://lpsolve.sourceforge.net/5.5/SOS.htm>`_ for more details. If there is no inherent
+  weighting in your model, an SOS constraint is probably unnecessary.
 * ``addSOS2(m::Model, coll::Vector{AffExpr})`` - adds special ordered set constraint
   of type 2 (SOS2). Specify the set as a vector of weighted variables, e.g. ``coll = [3x, y, 2z]``.
   Note that solvers expect the weights to be unique. 
