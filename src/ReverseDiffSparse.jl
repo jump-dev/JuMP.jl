@@ -8,5 +8,6 @@ using Base.Meta
 include("types.jl")
 include("revmode.jl")
 include("hessian.jl")
+include("coloring.jl")
 
 end # module

@@ -26,6 +26,10 @@ sparsemat, sparsefunc = gen_hessian_sparse_mat(ex)
 sparsefunc(val, sparsemat)
 @test_approx_eq sparsemat tril(exact(val...))
 
+sparsemat, sparsefunc_color = gen_hessian_sparse_color(ex)
+sparsefunc_color(val, sparsemat)
+@test_approx_eq sparsemat tril(exact(val...))
+
 x = placeholders(5)
 
 ex = @processNLExpr  sum{ x[i]^2, i =1:5 } + sin(x[1]*x[2])
@@ -43,6 +47,10 @@ test_sparsity(sp, exact(val))
 
 sparsemat, sparsefunc = gen_hessian_sparse_mat(ex)
 sparsefunc(val, sparsemat)
+@test_approx_eq sparsemat tril(exact(val))
+
+sparsemat, sparsefunc_color = gen_hessian_sparse_color(ex)
+sparsefunc_color(val, sparsemat)
 @test_approx_eq sparsemat tril(exact(val))
 
 println("Passed tests")

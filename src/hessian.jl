@@ -213,7 +213,7 @@ function gen_hessian_sparse_raw(s::SymbolicOutput)
     return evalhessian
 end
 
-export gen_hessian_dense, gen_hessian_sparse_mat, gen_hessian_sparse_raw
+export gen_hessian_dense, gen_hessian_sparse_mat, gen_hessian_sparse_raw, gen_hessian_matmat
 
             
 
