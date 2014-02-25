@@ -367,6 +367,9 @@ function constructSOS(coll::Vector{AffExpr})
         if (length(coll[i].vars) != 1) || (coll[i].constant != 0)
             error("Must specify collection in terms of single variables")
         end
+        if coll[i].vars[1].m.colCat[coll[i].vars[1].col] == CONTINUOUS
+            error("SOS constraints cannot handle continuous variables")
+        end
         vars[i] = coll[i].vars[1]
         weight[i] = coll[i].coeffs[1]
     end
@@ -388,23 +391,6 @@ function addSOS2(m::Model, coll::Vector{AffExpr})
     push!(m.sosconstr, SOSConstraint(vars, weight, :SOS2))
     return ConstraintRef{SOSConstraint}(m,length(m.sosconstr))
 end
-
-function conToStr(c::SOSConstraint) 
-    nvar = length(c.terms)
-    termStrings = Array(UTF8String, nvar+2)
-    termStrings[1] = "$(c.sostype): {"
-    if nvar > 0
-        termStrings[2] = "$(c.weights[1]) $(c.terms[1])"
-        for i in 2:nvar
-            termStrings[i+1] = ", $(c.weights[i]) $(c.terms[i])"
-        end
-    end
-    termStrings[end] = "}"
-    return join(termStrings)
-end
-
-print(io::IO, c::SOSConstraint) = print(io, conToStr(c))
-show(io::IO, c::SOSConstraint)  = print(io, conToStr(c))
 
 ##########################################################################
 # QuadConstraint class
