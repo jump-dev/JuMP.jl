@@ -1,6 +1,5 @@
-using JuMP
+function test(n::Int)
 m = Model()
-n = 100
 a = rand(n,n)
 @defVar(m,x[1:n,1:n])
 b = rand(n,n,n)
@@ -34,4 +33,5 @@ println("3D Matrix with sum{}: $(toq())")
 tic()
 @addConstraint(m,bigdot(b,y)<=1)
 println("3D Matrix with bigdot(): $(toq())")
-
+return 0
+end

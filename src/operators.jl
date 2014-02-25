@@ -225,7 +225,7 @@ end
 (>=) (lhs::QuadExpr, rhs::QuadExpr) = (>=)(lhs-rhs, 0)
 
 #Vectorization Stuff
-function *(lhs::JuMPDict, rhs::Vector)
+function *{T<:Real}(lhs::JuMPDict{Variable}, rhs::Vector{T})
 	@assert length(lhs.indexsets) == 1
 	@assert length(lhs.indexsets[1]) == length(rhs)
 	warn("Product Ambigious for 1D Vectors. Assuming Inner Product.")
@@ -236,7 +236,7 @@ function *(lhs::JuMPDict, rhs::Vector)
 	return out
 end
 
-function *(lhs::Vector, rhs::JuMPDict)
+function *{T<:Real}(lhs::Vector{T}, rhs::JuMPDict{Variable})
 	@assert length(rhs.indexsets) == 1
 	@assert length(rhs.indexsets[1]) == length(lhs)
 	warn("Product Ambigious for 1D Vectors. Assuming Inner Product.")
@@ -248,7 +248,7 @@ function *(lhs::Vector, rhs::JuMPDict)
 end
 
 #The lhs should be of the type "Array{Real,2}", but not having it be Float64 kills it, for some reason. #magic
-function *(lhs::Array{Float64,2},rhs::JuMPDict)
+function *{T<:Real}(lhs::Array{T,2},rhs::JuMPDict{Variable})
     if length(rhs.indexsets)==1 && size(lhs,1) == 1 #inner product
         @assert length(rhs.indexsets[1]) == size(lhs,2) #Inner Dims agree
         out = 0
@@ -261,7 +261,7 @@ function *(lhs::Array{Float64,2},rhs::JuMPDict)
     end
 end
 
-function bigdot(lhs::Array{Float64,2},rhs::JuMPDict)
+function bigdot{T<:Real}(lhs::Array{T,2},rhs::JuMPDict{Variable})
     out = 0
     matsize = size(lhs)
     @assert length(matsize) == length(rhs.indexsets)
@@ -276,7 +276,7 @@ function bigdot(lhs::Array{Float64,2},rhs::JuMPDict)
     return out
 end
 
-function bigdot(lhs::Array{Float64,3},rhs::JuMPDict)
+function bigdot{T<:Real}(lhs::Array{T,3},rhs::JuMPDict{Variable})
     out = 0
     matsize = size(lhs)
     @assert length(matsize) == length(rhs.indexsets)
