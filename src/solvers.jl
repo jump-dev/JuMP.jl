@@ -46,6 +46,13 @@ function addQuadratics(m::Model)
         if !((s = string(qconstr.sense)[1]) in ['<', '>', '='])
             error("Invalid sense for quadratic constraint")
         end
+        terms = qconstr.terms
+        firstmodel = terms.qvars1[1].m
+        for ind in 1:length(terms.qvars1)
+            if terms.qvars1[ind].m != firstmodel || terms.qvars2[ind].m != firstmodel
+                error("Variable not owned by model present in constraints")
+            end
+        end
         addquadconstr!(m.internalModel, Cint[v.col for v in qconstr.terms.aff.vars], qconstr.terms.aff.coeffs, Cint[v.col for v in qconstr.terms.qvars1], Cint[v.col for v in qconstr.terms.qvars2], qconstr.terms.qcoeffs, s, -qconstr.terms.aff.constant)
     end
 end
@@ -127,7 +134,11 @@ function prepConstrMatrix(m::Model)
         coeffs = m.linconstr[c].terms.coeffs
         vars = m.linconstr[c].terms.vars
         # collect duplicates
+        firstmodel = vars[1].m
         for ind in 1:length(coeffs)
+            if vars[ind].m != firstmodel
+                error("Variable not owned by model present in constraints")
+            end
             addelt(tmprow,vars[ind].col,coeffs[ind])
         end
         for i in 1:tmprow.nnz

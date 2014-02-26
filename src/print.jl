@@ -306,7 +306,6 @@ writemime(io::IO, ::MIME"text/latex", v::Variable) = print(io, getName(v))
 print(io::IO, a::GenericAffExpr) = print(io, affToStr(a))
 show(io::IO, a::GenericAffExpr) = print(io, affToStr(a))
 
-
 function affToStr(a::AffExpr, showConstant=true)
     if length(a.vars) == 0
         if showConstant
@@ -316,33 +315,40 @@ function affToStr(a::AffExpr, showConstant=true)
         end
     end
 
-    # Get reference to model
-    m = a.vars[1].m
-
-    checkNameStatus(m)
+    # Get reference to models
+    moddict = Dict{Model,IndexedVector}()
+    for var in a.vars
+        mod = var.m
+        if !haskey(moddict, mod)
+            checkNameStatus(mod)
+            moddict[var.m] = IndexedVector(Float64,mod.numCols)
+        end
+    end
 
     # Collect like terms
-    indvec = IndexedVector(Float64,m.numCols)
     for ind in 1:length(a.vars)
-        addelt(indvec, a.vars[ind].col, a.coeffs[ind])
+        addelt(moddict[a.vars[ind].m], a.vars[ind].col, a.coeffs[ind])
     end
 
     elm = 0
     termStrings = Array(UTF8String, 2*length(a.vars))
-    for i in 1:indvec.nnz
-        idx = indvec.nzidx[i]
-        if abs(indvec.elts[idx]) > 1e-20
-            if elm == 0
-                elm += 1
-                termStrings[1] = "$(indvec.elts[idx]) $(getName(m,idx))"
-            else 
-                if indvec.elts[idx] < 0
-                    termStrings[2*elm] = " - "
-                else
-                    termStrings[2*elm] = " + "
+    for m in keys(moddict)
+        indvec = moddict[m]
+        for i in 1:indvec.nnz
+            idx = indvec.nzidx[i]
+            if abs(indvec.elts[idx]) > 1e-20
+                if elm == 0
+                    elm += 1
+                    termStrings[1] = "$(indvec.elts[idx]) $(getName(m,idx))"
+                else 
+                    if indvec.elts[idx] < 0
+                        termStrings[2*elm] = " - "
+                    else
+                        termStrings[2*elm] = " + "
+                    end
+                    termStrings[2*elm+1] = "$(abs(indvec.elts[idx])) $(getName(m,idx))"
+                    elm += 1
                 end
-                termStrings[2*elm+1] = "$(abs(indvec.elts[idx])) $(getName(m,idx))"
-                elm += 1
             end
         end
     end
@@ -375,9 +381,11 @@ function quadToStr(q::QuadExpr)
         return affToStr(q.aff)
     end
 
-    m::Model = q.qvars1[1].m
     # canonicalize and merge duplicates
     for ind in 1:length(q.qvars1)
+            if q.qvars1[ind].m != q.qvars2[ind].m
+                error("You cannot have a quadratic term with variables from different models")
+            end
             if q.qvars2[ind].col < q.qvars1[ind].col
                     q.qvars1[ind],q.qvars2[ind] = q.qvars2[ind],q.qvars1[ind]
             end
@@ -401,14 +409,14 @@ function quadToStr(q::QuadExpr)
                     termStrings[2*ind-1] = " + "
                 end
             end
-            x = Variable(m,I[ind])
+            x = Variable(q.qvars1[ind].m,I[ind])
             if I[ind] == J[ind]
                 # Squared term
                 termStrings[2*ind] = string(abs(V[ind])," ",
                                             getName(x),"²")
             else
                 # Normal term
-                y = Variable(m,J[ind])
+                y = Variable(q.qvars1[ind].m,J[ind])
                 termStrings[2*ind] = string(abs(V[ind])," ",
                                             getName(x),"*",
                                             getName(y))

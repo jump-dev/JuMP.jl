@@ -212,3 +212,17 @@ let
     str = string(modC)
     @test str == "Max 1.0 a - 1.0 b + 2.0 a1 - 10.0 x\nSubject to \n1.0 a + 1.0 b - 10.0 c - 2.0 x + 1.0 c1 <= 1.0\na ≥ 1.0\nb ≤ 1.0\n-1.0 ≤ c ≤ 1.0\na1 ≥ 1.0, integer\nb1 ≤ 1.0, integer\n-1.0 ≤ c1 ≤ 1.0, integer\nx, binary\ny free\nz free, integer\n"
 end
+
+#####################################################################
+# Test variable/model "hygiene"
+let 
+    modA = Model()
+    modB = Model()
+    @defVar(modA, x)
+    @defVar(modB, y)
+    @addConstraint(modA, x+y == 1)
+    @test_throws solve(modA)
+
+    addConstraint(modB, x*y >= 1)
+    @test_throws solve(modB)
+end
