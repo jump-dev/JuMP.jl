@@ -158,8 +158,7 @@ function gen_hessian_matmat(s::SymbolicOutput)
 end
 
 function gen_hessian_matmat_parametric(s::SymbolicOutput)
-    gradexpr = genfgrad_parametric(s)
-    fgrad = eval(gradexpr)
+    fgrad = genfgrad_parametric(s)
     # S uses canonical indices
     function hessian_matmat_p!{T}(S, x::Vector{T}, inputvals, fromcanonical, tocanonical)
         N = size(S,1)

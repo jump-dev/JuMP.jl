@@ -372,7 +372,7 @@ function genfgrad_parametric(x::SymbolicOutput)
         end
     end
 
-    return fexpr
+    return eval(fexpr)
 
 end
 
@@ -388,4 +388,4 @@ function genfgrad_simple(x::SymbolicOutput)
     return (xvals, out) -> (fill!(out, 0.0); f(xvals, IdentityArray(), out, IdentityArray()))
 end
 
-export genfgrad, genfgrad_simple
+export genfgrad, genfgrad_simple, genfgrad_parametric
