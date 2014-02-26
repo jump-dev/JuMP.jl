@@ -228,14 +228,14 @@ end
 function dot{T<:Real}(lhs::JuMPDict{Variable}, rhs::Vector{T})
     @assert length(lhs.indexsets) == 1
     @assert length(lhs.indexsets[1]) == length(rhs)
-    return AffExpr(lhs.innerArray, rhs, 0.0)
+    return AffExpr(lhs.innerArray, float(rhs), 0.0)
 end
 dot{T<:Real}(lhs::Vector{T}, rhs::JuMPDict{Variable}) = dot(rhs,lhs)
 
 function bigdot{T<:Real}(lhs::Array{T,2},rhs::JuMPDict{Variable})
     matsize = size(lhs)
     @assert length(matsize) == length(rhs.indexsets)
-
+    lhs = float(lhs)
     coeffs = Float64[]; sizehint(coeffs, matsize[1]*matsize[2])
     vars  = Variable[]; sizehint(vars,   matsize[1]*matsize[2])
 
@@ -256,7 +256,7 @@ function bigdot{T<:Real}(lhs::Array{T,3},rhs::JuMPDict{Variable})
 
     coeffs = Float64[]; sizehint(coeffs, matsize[1]*matsize[2]*matsize[3])
     vars  = Variable[]; sizehint(vars,   matsize[1]*matsize[2]*matsize[3])
-
+    lhs = float(lhs)
     for i = 1:matsize[1]
         for j = 1:matsize[2]
             for k = 1:matsize[3]
