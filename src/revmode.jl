@@ -56,6 +56,20 @@ function quoteTree(x::Expr, datalist::Dict, iterstack)
         # NOTE: this assumes the values of the array will not change!
         var = x.args[1]
         datalist[var] = var
+        for idxvar in x.args[2:end]
+            isa(idxvar, Symbol) || continue
+            # if this isn't a local index variable, we need to save it
+            found = false
+            for eq in iterstack
+                if eq.args[1] == idxvar
+                    found = true
+                    break
+                end
+            end
+            if !found
+                datalist[idxvar] = idxvar
+            end
+        end
 
         return Expr(:tuple, quot(x),Expr(:block, iterstack..., :(isa($x,ReverseDiffSparse.Placeholder))))
     end
@@ -68,13 +82,38 @@ end
 
 quoteTree(x, datalist, iterstack) = Expr(:tuple,x,:(isa($x,ReverseDiffSparse.Placeholder)))
 
+addToVarList!(l,x::Placeholder) = push!(l,getindex(x))
+addToVarList!(l,x) = nothing
+
+function genVarList(x::Expr, arrname)
+    if x.head == :curly && x.args[1] == :sum
+        code = genVarList(x.args[2],arrname)
+        for level in length(x.args):-1:3
+            code = Expr(:for, esc(copy(x.args[level])),code)
+        end
+        return code
+    elseif x.head == :call
+        return Expr(:block,[genVarList(y,arrname) for y in x.args[2:end]]...)
+    else
+        return :(addToVarList!($arrname,$(esc(x))))
+    end
+end
+
+genVarList(x::Number,arrname) = nothing
+genVarList(x::Symbol,arrname) = :(addToVarList!($arrname,$(esc(x))))
+
 type SymbolicOutput
     tree
     inputnames
     inputvals
+    indexlist # indices of placeholders as they appear in the expression
+              # useful when multiple expressions have the same structure
+    mapfromcanonical
+    maptocanonical
 end
 
 macro processNLExpr(x)
+    indexlist = :(idxlist = Int[]; $(genVarList(x, :idxlist)); idxlist)
     datalist = Dict()
     iterstack = {}
     tree = esc(quoteTree(x, datalist, iterstack))
@@ -84,7 +123,19 @@ macro processNLExpr(x)
         push!(inputnames.args, quot(k))
         push!(inputvals.args, esc(v))
     end
-    return :(SymbolicOutput(genExprGraph(inferInput($tree)), $inputnames, $inputvals))
+    return :(SymbolicOutput(genExprGraph(inferInput($tree)), $inputnames, $inputvals,$indexlist))
+end
+
+function SymbolicOutput(tree, inputnames, inputvals, indexlist)
+    # compute canonical indices and maps
+    unq = unique(indexlist)
+    nidx = length(unq)
+    # canonical is 1:nidx
+    maptocanonical = Dict{Int,Int}()
+    for k in 1:nidx
+        maptocanonical[unq[k]] = k
+    end
+    return SymbolicOutput(tree, inputnames, inputvals, indexlist, unq, maptocanonical)
 end
 
 export @processNLExpr
@@ -289,7 +340,33 @@ function genfgrad(x::SymbolicOutput)
     # placeindex_out[i] specifies the the index in which to output
     # the partial derivative wrt the ith placeholder
     fexpr = quote
-        function $(fname){T}(__placevalues::Vector{T},__placeindex_in, __output, __placeindex_out)
+        function $(fname){T}(__placevalues::Vector{T}, __placeindex_in, __output, __placeindex_out)
+            $out
+            return $fval
+        end
+    end
+
+    return fexpr
+
+end
+
+# gradient evaluation parametric on "inputvals"
+function genfgrad_parametric(x::SymbolicOutput)
+    out = Expr(:block)
+    # load data into local scope
+    for i in 1:length(x.inputnames)
+        push!( out.args, :( $(x.inputnames[i]) = __inputvals[$i] ))
+    end
+    fval = forwardpass(x.tree, out)
+    push!( out.args, :( beginreverse = nothing ) ) # for debugging, indicate start of reverse pass instructions
+    revpass(x.tree,out)
+    fname = gensym()
+    # placeindex_in[i] specifies the index of the value of the ith
+    # placeholder in placevalues.
+    # placeindex_out[i] specifies the the index in which to output
+    # the partial derivative wrt the ith placeholder
+    fexpr = quote
+        function $(fname){T}(__placevalues::Vector{T}, __placeindex_in, __output, __placeindex_out, __inputvals)
             $out
             return $fval
         end

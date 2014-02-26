@@ -109,7 +109,7 @@ function acyclic_coloring(IJ)
         end
     end
 
-    return color, S, num_colors
+    return color, S, num_colors, length(IJ_nodiag)+num_vertices(g)
 end
 
 
@@ -156,7 +156,7 @@ end
 
 
 
-function indirect_recover(hessian_matmat!, color, S, num_colors, x)
+function indirect_recover(hessian_matmat!, color, S, num_colors, x, inputvals, fromcanonical, tocanonical, V; structure=false)
     nnz = length(S)
     N = length(color)
     
@@ -202,20 +202,28 @@ function indirect_recover(hessian_matmat!, color, S, num_colors, x)
         R[i,color[i]] = 1
     end
 
-    hessian_matmat!(R,x)
+    if !structure
+        hessian_matmat!(R,x, inputvals, fromcanonical, tocanonical)
+    end
     
     # now, recover
     stored_values = zeros(N)
-    I = zeros(Int, nnz+N)
-    J = zeros(Int, nnz+N)
-    V = zeros(nnz+N)
+    if structure
+        I = zeros(Int, nnz+N)
+        J = zeros(Int, nnz+N)
+    else
+        @assert length(V) == nnz+N
+    end
     
     k = 0
     for i in 1:N
         k += 1
-        I[k] = i
-        J[k] = i
-        V[k] = R[i,color[i]]
+        if structure
+            I[k] = i
+            J[k] = i
+        else
+            V[k] = R[i,color[i]]
+        end
     end
 
     for t in values(trees)
@@ -229,10 +237,13 @@ function indirect_recover(hessian_matmat!, color, S, num_colors, x)
             j = first(ni.neighbors)
 
             k += 1
-            I[k] = i
-            J[k] = j
-            V[k] = R[i,color[j]] - stored_values[i]
-            stored_values[j] += V[k]
+            if structure
+                I[k] = i
+                J[k] = j
+            else
+                V[k] = R[i,color[j]] - stored_values[i]
+                stored_values[j] += V[k]
+            end
             
             nj = t.nodes[j]
             delete!(nj.neighbors, i)
@@ -249,36 +260,51 @@ function indirect_recover(hessian_matmat!, color, S, num_colors, x)
 
     @assert k == nnz + N
 
-    return sparse(I,J,V)
+    if structure
+        return I,J
+    else
+        return V
+    end
 
 end
 
 export acyclic_coloring, indirect_recover
 
-
-function gen_hessian_sparse_color(s::SymbolicOutput)
+function gen_hessian_sparse_color_parametric(s::SymbolicOutput)
     I,J = compute_hessian_sparsity_IJ(s)
-    structuremat = sparse(I,J,ones(length(I)))
-    fill!(structuremat.nzval, 0.0)
 
-    hessian_matmat! = gen_hessian_matmat(s)
+    hessian_matmat! = gen_hessian_matmat_parametric(s)
+    color, S, num_colors = acyclic_coloring((I,J))
     
-    function eval_h(x,output_matrix)
-        color, S, num_colors = acyclic_coloring((I,J))
-        Hmat = indirect_recover(hessian_matmat!, color, S, num_colors, x)
+    I,J = indirect_recover(hessian_matmat!, color, S, num_colors, nothing, s.inputvals, s.mapfromcanonical, s.maptocanonical, nothing, structure=true)
+    
+    function eval_h(x,output_values, ex::SymbolicOutput)
+        indirect_recover(hessian_matmat!, color, S, num_colors, x, ex.inputvals, ex.mapfromcanonical, ex.maptocanonical, output_values)
         # for now, we're inefficient
-        copy!(output_matrix.nzval, Hmat.nzval)
-        copy!(output_matrix.colptr, Hmat.colptr)
-        copy!(output_matrix.rowval, Hmat.rowval)
+        #copy!(output_matrix.nzval, Hmat.nzval)
+        #copy!(output_matrix.colptr, Hmat.colptr)
+        #copy!(output_matrix.rowval, Hmat.rowval)
     end
 
-    return structuremat, eval_h
+    return I,J, eval_h
 
 
 end
 
-export gen_hessian_sparse_color
+export gen_hessian_sparse_color_parametric
 
+function to_H(s::SymbolicOutput, I, J, V, n)
+    I2 = similar(I)
+    J2 = similar(J)
+    for k in 1:length(I)
+        I2[k] = s.mapfromcanonical[I[k]]
+        J2[k] = s.mapfromcanonical[J[k]]
+    end
+    return sparse(I2,J2,V, n, n)
+
+end
+
+export to_H
 
 
 

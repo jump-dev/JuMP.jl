@@ -2,7 +2,6 @@
 
 # Idea: detect partially separable structure
 # e.g., f(x) = sum f_i(x)
-# TODO: consider linearity also: x+2y
 
 function compute_hessian_sparsity(s::SymbolicOutput)
     code = quote end
@@ -46,8 +45,9 @@ function compute_hessian_sparsity_IJ(s::SymbolicOutput)
         if j > i
             continue # ignore upper triangle
         else
-            push!(I,i)
-            push!(J,j)
+            # convert to canonical
+            push!(I,s.maptocanonical[i])
+            push!(J,s.maptocanonical[j])
         end
     end
     return I,J
@@ -104,7 +104,7 @@ end
 
 compute_hessian_sparsity(x, linear_so_var, expr_out) = nothing
 
-export compute_hessian_sparsity, compute_hessian_sparsity_IJ
+export compute_hessian_sparsity_IJ
 
 # returns a function that computes a dense hessian matrix
 function gen_hessian_dense(s::SymbolicOutput)
@@ -157,6 +157,29 @@ function gen_hessian_matmat(s::SymbolicOutput)
     end
 end
 
+function gen_hessian_matmat_parametric(s::SymbolicOutput)
+    gradexpr = genfgrad_parametric(s)
+    fgrad = eval(gradexpr)
+    # S uses canonical indices
+    function hessian_matmat_p!{T}(S, x::Vector{T}, inputvals, fromcanonical, tocanonical)
+        N = size(S,1)
+        @assert length(x) >= N
+        dualvec = Array(Dual{T}, N)
+        dualout = Array(Dual{T}, N)
+        for k in 1:size(S,2)
+            for i in 1:N
+                dualvec[i] = Dual(x[fromcanonical[i]], S[i,k])
+            end
+            fill!(dualout, dual(zero(T)))
+            fgrad(dualvec, tocanonical, dualout, tocanonical,inputvals)
+            for i in 1:N
+                S[i,k] = epsilon(dualout[i])
+            end
+        end
+        return S
+    end
+end
+
 
 # returns sparse matrix containing hessian structure, and
 # function to evaluate the hessian into a given sparse matrix
@@ -191,7 +214,7 @@ end
 function gen_hessian_sparse_raw(s::SymbolicOutput)
     fgrad = eval(genfgrad(s))
 
-    function evalhessian{T}(placevalues::Vector{T}, placeindex_in::Vector{Int},output_vec::Vector{T}, nzstruct::SparseMatrixCSC{Int,Int})
+    function evalhessian{T}(placevalues::Vector{T}, output_vec::Vector{T}, nzstruct::SparseMatrixCSC{Int,Int})
         dualvec = Array(Dual{T}, length(placevalues))
         dualout = Array(Dual{T}, length(placevalues))
         for i in 1:length(x)
@@ -202,7 +225,7 @@ function gen_hessian_sparse_raw(s::SymbolicOutput)
         for i in 1:length(placevalues)
             dualvec[i] = Dual(placevalues[i], one(T))
             fill!(dualout, dual(zero(T)))
-            fgrad(dualvec, placeindex_in, dualout, IdentityArray())
+            fgrad(dualvec, IdentityArray(), dualout, IdentityArray())
             dualvec[i] = Dual(placevalues[i], zero(T))
             for idx in nzstruct.colptr[i]:(nzstruct.colptr[i+1]-1)
                 output_vec[nzidx[idx]] += epsilon(dualout[rowval[idx]])
