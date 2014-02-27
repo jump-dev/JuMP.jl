@@ -27,6 +27,9 @@ export
     getValue, setValue, getDual,
     # Expressions and constraints
     affToStr, quadToStr, conToStr, chgConstrRHS,
+
+    #Matrix stuff
+    bigdot,
     
 # Macros and support functions
     @addConstraint, @defVar, 

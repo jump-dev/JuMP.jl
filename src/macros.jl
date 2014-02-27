@@ -35,6 +35,30 @@ function addToExpression(aff::AffExpr,c::Number,x::AffExpr)
     aff.constant += c*x.constant
 end
 
+#dot product (c*x), c::Vector
+function addToExpression(aff::AffExpr,lhs::Vector,rhs::JuMPDict)
+    @assert length(rhs.indexsets) == 1 #JuMPDict is not a matrix
+    @assert length(rhs.indexsets[1]) == length(lhs) #JuMPDict has the correct number of elements
+    warn("Product Ambigious for 1D Vectors. Assuming Inner Product.")
+    for i = 1:length(lhs)
+        push!(aff.vars,rhs.innerArray[i])
+        push!(aff.coeffs,lhs[i])
+    end
+end
+
+#dot product (c*x), c::Array(1,n)
+function addToExpression(aff::AffExpr,lhs::Array{Float64,2},rhs::JuMPDict)
+    if length(rhs.indexsets) == 1 && size(lhs,1) == 1 #The JuMPDict is a column vector
+        @assert length(rhs.indexsets[1]) == size(lhs,2) #inner dims agree
+        for i = 1:length(lhs)
+            push!(aff.vars,rhs.innerArray[i])
+            push!(aff.coeffs,lhs[i])
+        end
+    else
+        error("Block Matrix Operations not yet Supported")
+    end
+end
+
 function parseCurly(x::Expr, aff::Symbol, constantCoef)
     if (x.args[1] != :sum)
         error("Expected sum outside curly braces")
