@@ -248,7 +248,7 @@ function dot{T<:Real}(lhs::Array{T,2},rhs::JuMPDict{Variable})
 
     return AffExpr(vars, coeffs, 0.0)
 end
-dot{T<:Real}(lhs::JuMPDict{Variable},rhs::Array{T,2}) = bigdot(rhs,lhs)
+dot{T<:Real}(lhs::JuMPDict{Variable},rhs::Array{T,2}) = dot(rhs,lhs)
 
 function dot{T<:Real}(lhs::Array{T,3},rhs::JuMPDict{Variable})
     matsize = size(lhs)
@@ -268,4 +268,4 @@ function dot{T<:Real}(lhs::Array{T,3},rhs::JuMPDict{Variable})
 
     return AffExpr(vars, coeffs, 0.0)
 end
-dot{T<:Real}(lhs::JuMPDict{Variable},rhs::Array{T,3}) = bigdot(rhs,lhs)
+dot{T<:Real}(lhs::JuMPDict{Variable},rhs::Array{T,3}) = dot(rhs,lhs)
