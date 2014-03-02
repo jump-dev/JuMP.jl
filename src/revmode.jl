@@ -172,10 +172,11 @@ genExprGraph(t, parent, k) = t[2] ? ExprNode(t[1], [(parent,k)], nothing, nothin
 
 function collapse(t::(Expr,Any))
     x,input = t
-    Expr(x.head, x.args[1], [collapse(y) for y in x.args[2:end]]...)
+    Expr(x.head, [collapse(y) for y in x.args[1:end]]...)
 end
 
 collapse(t::(Any,Any)) = t[1]
+collapse(t) = t
 
 function inferInput(t::(Expr,Any))
     x,input = t

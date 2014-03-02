@@ -27,14 +27,16 @@ function acyclic_coloring(IJ, nel)
     num_colors = 0
     forbiddenColors = Int[]
     firstNeighbor = Array((Int,Int),0)
-    firstVisitToTree = [(i,j) => (0,0) for (i,j) in IJ_nodiag]
+    firstVisitToTree = [normalize(i,j) => (0,0) for (i,j) in IJ_nodiag]
     color = fill(0, nel)
     colored(i) = (color[i] != 0)
     # disjoint set forest of edges in the graph
-    S = DisjointSets{(Int,Int)}(IJ_nodiag)
+    S = DisjointSets{(Int,Int)}(collect(keys(firstVisitToTree)))
 
     function prevent_cycle(v,w,x)
-        e = find_root(S, normalize(w,x))
+        er = find_root(S, normalize(w,x))
+        # reverse lookup, this isn't ideal
+        e = reverse_dict_lookup(S.intmap,er)
         p,q = firstVisitToTree[e]
         if p != v
             firstVisitToTree[e] = normalize(v,w)
