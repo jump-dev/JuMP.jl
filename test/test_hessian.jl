@@ -70,4 +70,10 @@ for i in 1:5
 end
 
 
+# test linear expressions
+x,y = placeholders(2)
+ex = @processNLExpr 2x + y
+I, J, sparsefunc_color = gen_hessian_sparse_color_parametric(ex)
+@assert length(I) == length(J) == 0
+
 println("Passed tests")

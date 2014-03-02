@@ -272,6 +272,11 @@ export acyclic_coloring, indirect_recover
 
 function gen_hessian_sparse_color_parametric(s::SymbolicOutput)
     I,J = compute_hessian_sparsity_IJ(s)
+    if length(I) == 0
+        # expression is actually linear, return dummy function
+        return I,J, (x,output_values,ex) -> nothing
+    end
+
 
     hessian_matmat! = gen_hessian_matmat_parametric(s)
     color, S, num_colors = acyclic_coloring((I,J))
