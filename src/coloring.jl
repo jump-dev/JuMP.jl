@@ -49,9 +49,7 @@ function acyclic_coloring(IJ)
         if p != v
             firstNeighbor[color[w]] = normalize(v,w)
         else
-            e1 = find_root(S, normalize(v,w))
-            e2 = find_root(S, normalize(p,q))
-            union!(S, e1, e2)
+            union!(S, normalize(v,w), normalize(p,q))
         end
     end
 
@@ -59,7 +57,7 @@ function acyclic_coloring(IJ)
         e1 = find_root(S, normalize(v,w))
         e2 = find_root(S, normalize(w,x))
         if e1 != e2
-            union!(S, e1, e2)
+            union!(S, normalize(v,w), normalize(w,x))
         end
     end
 
@@ -272,6 +270,9 @@ export acyclic_coloring, indirect_recover
 
 function gen_hessian_sparse_color_parametric(s::SymbolicOutput)
     I,J = compute_hessian_sparsity_IJ(s)
+    # remove duplicates
+    M = sparse(I,J,ones(length(I)))
+    I,J = findn(M)
     if length(I) == 0
         # expression is actually linear, return dummy function
         return I,J, (x,output_values,ex) -> nothing
