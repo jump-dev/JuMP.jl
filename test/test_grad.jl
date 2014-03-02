@@ -25,15 +25,22 @@ fval = fg(xvals, out)
 @test_approx_eq fval xvals[1]^2
 @test_approx_eq out[1] 2*xvals[1]
 
+ex = @processNLExpr x[1]/x[2]
+fg = genfgrad_simple(ex)
+fval = fg(xvals, out)
+@test_approx_eq fval xvals[1]/xvals[2]
+@test_approx_eq out[1] 1/xvals[2]
+@test_approx_eq out[2] -xvals[1]/xvals[2]^2
 
-ex = @processNLExpr exp(sin(x[1]*x[2])) 
+ex = @processNLExpr exp(sin(x[1]*x[2]/x[3])) 
 fg = genfgrad_simple(ex)
 xvals = [3.4,2.1,6.7]
 fval = fg(xvals, out)
-q = xvals[1]*xvals[2] 
+q = xvals[1]*xvals[2]/xvals[3] 
 @test_approx_eq fval exp(sin(q)) 
-@test_approx_eq out[1] xvals[2]*cos(q)*exp(sin(q)) 
-@test_approx_eq out[2] xvals[1]*cos(q)*exp(sin(q)) 
+@test_approx_eq out[1] xvals[2]*cos(q)*exp(sin(q))/xvals[3] 
+@test_approx_eq out[2] xvals[1]*cos(q)*exp(sin(q))/xvals[3] 
+@test_approx_eq out[3] -xvals[1]*xvals[2]*cos(q)*exp(sin(q))/xvals[3]^2
 
 ex = @processNLExpr exp(sin(x[1]*x[2]+x[3]^2)) + 2x[1]*x[1]
 fg = genfgrad_simple(ex)

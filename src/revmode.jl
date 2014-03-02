@@ -286,6 +286,17 @@ function revpass(x::ExprNode, expr_out)
                 push!(expr_out.args,
                   :( $(x.deriv) += $(p.deriv)*$base^($(x.value))*log($base) ))
             end
+        elseif f == :(/)
+            if k == 2 # numerator
+                denom = getvalue(p.ex.args[3])
+                push!(expr_out.args,
+                  :( $(x.deriv) += $(p.deriv)/$denom ))
+            else
+                @assert k == 3 # denominator
+                numer = getvalue(p.ex.args[2])
+                push!(expr_out.args,
+                  :( $(x.deriv) += -1*$(p.deriv)*$numer*($(x.value))^(-2) ))
+            end
         else
             # try one of the derivative rules
             haskey(rules, f) || error("Unrecognized function $f")
