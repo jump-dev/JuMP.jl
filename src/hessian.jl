@@ -65,16 +65,16 @@ function compute_hessian_sparsity(x::ExprNode, linear_so_far, expr_out)
                 end
             else
                 # this is a new f_i, make a new color
-                for i in 2:length(x.ex.args)
-                    code = quote
-                        mycolor = gensym()
-                        colorlist[mycolor] = Set()
-                    end
-                    compute_hessian_sparsity(x.ex.args[i], false, code)
-                    push!(expr_out.args, quote let 
-                                $code 
-                            end end)
+                code = quote
+                    mycolor = gensym()
+                    colorlist[mycolor] = Set()
                 end
+                for i in 2:length(x.ex.args)
+                    compute_hessian_sparsity(x.ex.args[i], false, code)
+                end
+                push!(expr_out.args, quote let 
+                            $code 
+                        end end)
             end
         else
             # give the same color to the children

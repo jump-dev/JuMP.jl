@@ -2,9 +2,8 @@ using Graphs
 using DataStructures
 
 
-function gen_adjlist(IJ)
-    N = maximum([i for (i,j) in IJ])
-    g = simple_adjlist(N, is_directed=false)
+function gen_adjlist(IJ,nel)
+    g = simple_adjlist(nel, is_directed=false)
     for (i,j) in IJ
         i == j && continue
         add_edge!(g, i, j)
@@ -21,15 +20,15 @@ normalize(e) = normalize(e...)
 # acyclic coloring algorithm of Gebremdehin, Tarafdar, Manne, and Pothen
 # "New Acyclic and Star Coloring Algorithms with Application to Computing Hessians"
 # SIAM J. Sci. Comput. 2007
-function acyclic_coloring(IJ)
+function acyclic_coloring(IJ, nel)
     IJ = collect(zip(IJ...))
     IJ_nodiag = collect(filter(ij -> ij[1] != ij[2], IJ))
-    g = gen_adjlist(IJ)
+    g = gen_adjlist(IJ, nel)
     num_colors = 0
     forbiddenColors = Int[]
     firstNeighbor = Array((Int,Int),0)
     firstVisitToTree = [(i,j) => (0,0) for (i,j) in IJ_nodiag]
-    color = fill(0, num_vertices(g))
+    color = fill(0, nel)
     colored(i) = (color[i] != 0)
     # disjoint set forest of edges in the graph
     S = DisjointSets{(Int,Int)}(IJ_nodiag)
@@ -280,7 +279,7 @@ function gen_hessian_sparse_color_parametric(s::SymbolicOutput)
 
 
     hessian_matmat! = gen_hessian_matmat_parametric(s)
-    color, S, num_colors = acyclic_coloring((I,J))
+    color, S, num_colors = acyclic_coloring((I,J),length(s.mapfromcanonical))
     
     I,J = indirect_recover(hessian_matmat!, color, S, num_colors, nothing, s.inputvals, s.mapfromcanonical, s.maptocanonical, nothing, structure=true)
     

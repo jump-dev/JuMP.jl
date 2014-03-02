@@ -76,4 +76,15 @@ ex = @processNLExpr 2x + y
 I, J, sparsefunc_color = gen_hessian_sparse_color_parametric(ex)
 @assert length(I) == length(J) == 0
 
+# constant expressions
+a = 10
+ex = @processNLExpr (1/a+a)*x^2*y
+I, J, sparsefunc_color = gen_hessian_sparse_color_parametric(ex)
+exact(x,y) = [2y*(1/a+a) 0; 2x*(1/a+a) 0]
+val = [4.5,2.3]
+V = zeros(length(I))
+sparsefunc_color(val, V, ex)
+@test_approx_eq to_H(ex, I, J, V, 2) tril(exact(val...))
+
+
 println("Passed tests")

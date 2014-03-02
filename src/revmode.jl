@@ -142,12 +142,12 @@ export @processNLExpr
 
 # turn each node in the expression tree into an ExprNode
 # this expression is kth argument in parent expression
-genExprGraph(x::(Expr,Any)) = genExprGraph(x, nothing, nothing)
+genExprGraph(x::(Any,Any)) = genExprGraph(x, nothing, nothing)
 
 function genExprGraph(t::(Expr,Any), parent, k)
     x,input = t
     if !input
-        return x # collapse expressions that don't depend on the input
+        return collapse(t) # collapse expressions that don't depend on the input
     end
     parentarr = parent === nothing ? [] : [(parent,k)]
     if isexpr(x, :call)
@@ -169,6 +169,13 @@ end
 
 genExprGraph{T<:Number}(x::(T,Any), parent, k) = x[1]
 genExprGraph(t, parent, k) = t[2] ? ExprNode(t[1], [(parent,k)], nothing, nothing) : t[1]
+
+function collapse(t::(Expr,Any))
+    x,input = t
+    Expr(x.head, x.args[1], [collapse(y) for y in x.args[2:end]]...)
+end
+
+collapse(t::(Any,Any)) = t[1]
 
 function inferInput(t::(Expr,Any))
     x,input = t
