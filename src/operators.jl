@@ -242,13 +242,13 @@ function dot{T<:Real}(lhs::Array{T}, rhs::JuMP.JuMPDict{Variable})
         # 2D JuMPDict
         @assert length(rhs.indexsets[1]) == sz[1] &&
                 length(rhs.indexsets[2]) == sz[2]
-        return AffExpr(vec(rhs.innerArray), vec(lhs), 0.0)
+        return AffExpr(vec(rhs.innerArray), vec(float(lhs)), 0.0)
     elseif length(rhs.indexsets) == 3
         #3D JuMPDict
         @assert length(rhs.indexsets[1]) == sz[1] &&
                 length(rhs.indexsets[2]) == sz[2] &&
                 length(rhs.indexsets[3]) == sz[2]
-        return AffExpr(vec(rhs.innerArray),vec(lhs),0.0)
+        return AffExpr(vec(rhs.innerArray),vec(float(lhs)),0.0)
     else
         error("Dot products of higher than 3D not supported.")
     end
