@@ -225,47 +225,79 @@ end
 (>=) (lhs::QuadExpr, rhs::QuadExpr) = (>=)(lhs-rhs, 0)
 
 #Vectorization Stuff
-function dot{T<:Real}(lhs::JuMPDict{Variable}, rhs::Vector{T})
-    @assert length(lhs.indexsets) == 1
-    @assert length(lhs.indexsets[1]) == length(rhs)
-    return AffExpr(lhs.innerArray, float(rhs), 0.0)
-end
-dot{T<:Real}(lhs::Vector{T}, rhs::JuMPDict{Variable}) = dot(rhs,lhs)
-
-function dot{T<:Real}(lhs::Array{T,2},rhs::JuMPDict{Variable})
-    matsize = size(lhs)
-    @assert length(matsize) == length(rhs.indexsets)
-    lhs = float(lhs)
-    coeffs = Float64[]; sizehint(coeffs, matsize[1]*matsize[2])
-    vars  = Variable[]; sizehint(vars,   matsize[1]*matsize[2])
-
-    for i = 1:matsize[1]
-        for j = 1:matsize[2]
-            push!(coeffs, lhs[i,j])
-            push!(vars,   rhs.innerArray[i,j])
+function dot{T<:Real}(lhs::Array{T}, rhs::JuMP.JuMPDict{Variable})
+    sz = size(lhs)
+    if length(rhs.indexsets) == 1
+        # Single dimension version
+        if length(sz) == 2
+            @assert sz[1] == 1 || sz[2] == 1
+            @assert sz[1] == 1 && sz[2] == length(rhs.indexsets[1]) ||
+                   sz[2] == 1 && sz[1] == length(rhs.indexsets[1])
+            return AffExpr(rhs.innerArray, float(lhs[:]), 0.0)
+        elseif length(sz) == 1
+            @assert sz[1] == length(rhs.indexsets[1])
+            return AffExpr(rhs.innerArray,float(lhs),0.0)
         end
+    elseif length(rhs.indexsets) == 2
+        # 2D JuMPDict
+        @assert length(rhs.indexsets[1]) == sz[1] &&
+                length(rhs.indexsets[2]) == sz[2]
+        return AffExpr(vec(rhs.innerArray), vec(lhs), 0.0)
+    elseif length(rhs.indexsets) == 3
+        #3D JuMPDict
+        @assert length(rhs.indexsets[1]) == sz[1] &&
+                length(rhs.indexsets[2]) == sz[2] &&
+                length(rhs.indexsets[3]) == sz[2]
+        return AffExpr(vec(rhs.innerArray),vec(lhs),0.0)
+    else
+        error("Dot products of higher than 3D not supported.")
     end
 
-    return AffExpr(vars, coeffs, 0.0)
 end
-dot{T<:Real}(lhs::JuMPDict{Variable},rhs::Array{T,2}) = dot(rhs,lhs)
+dot{T<:Real}(lhs::JuMPDict{Variable},rhs::Array{T}) = dot(rhs,lhs)
 
-function dot{T<:Real}(lhs::Array{T,3},rhs::JuMPDict{Variable})
-    matsize = size(lhs)
-    @assert length(matsize) == length(rhs.indexsets)
 
-    coeffs = Float64[]; sizehint(coeffs, matsize[1]*matsize[2]*matsize[3])
-    vars  = Variable[]; sizehint(vars,   matsize[1]*matsize[2]*matsize[3])
-    lhs = float(lhs)
-    for i = 1:matsize[1]
-        for j = 1:matsize[2]
-            for k = 1:matsize[3]
-                push!(coeffs, lhs[i,j,k])
-                push!(vars,   rhs.innerArray[i,j,k])
-            end
-        end
-    end
+# function dot{T<:Real}(lhs::JuMPDict{Variable}, rhs::Vector{T})
+#     @assert length(lhs.indexsets) == 1
+#     @assert length(lhs.indexsets[1]) == length(rhs)
+#     return AffExpr(lhs.innerArray, float(rhs), 0.0)
+# end
+# dot{T<:Real}(lhs::Vector{T}, rhs::JuMPDict{Variable}) = dot(rhs,lhs)
 
-    return AffExpr(vars, coeffs, 0.0)
-end
-dot{T<:Real}(lhs::JuMPDict{Variable},rhs::Array{T,3}) = dot(rhs,lhs)
+# function dot{T<:Real}(lhs::Array{T,2},rhs::JuMPDict{Variable})
+#     matsize = size(lhs)
+#     @assert length(matsize) == length(rhs.indexsets)
+#     lhs = float(lhs)
+#     coeffs = Float64[]; sizehint(coeffs, matsize[1]*matsize[2])
+#     vars  = Variable[]; sizehint(vars,   matsize[1]*matsize[2])
+
+#     for i = 1:matsize[1]
+#         for j = 1:matsize[2]
+#             push!(coeffs, lhs[i,j])
+#             push!(vars,   rhs.innerArray[i,j])
+#         end
+#     end
+
+#     return AffExpr(vars, coeffs, 0.0)
+# end
+# dot{T<:Real}(lhs::JuMPDict{Variable},rhs::Array{T,2}) = dot(rhs,lhs)
+
+# function dot{T<:Real}(lhs::Array{T,3},rhs::JuMPDict{Variable})
+#     matsize = size(lhs)
+#     @assert length(matsize) == length(rhs.indexsets)
+
+#     coeffs = Float64[]; sizehint(coeffs, matsize[1]*matsize[2]*matsize[3])
+#     vars  = Variable[]; sizehint(vars,   matsize[1]*matsize[2]*matsize[3])
+#     lhs = float(lhs)
+#     for i = 1:matsize[1]
+#         for j = 1:matsize[2]
+#             for k = 1:matsize[3]
+#                 push!(coeffs, lhs[i,j,k])
+#                 push!(vars,   rhs.innerArray[i,j,k])
+#             end
+#         end
+#     end
+
+#     return AffExpr(vars, coeffs, 0.0)
+# end
+# dot{T<:Real}(lhs::JuMPDict{Variable},rhs::Array{T,3}) = dot(rhs,lhs)
