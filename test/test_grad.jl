@@ -111,7 +111,7 @@ fg = genfgrad_simple(ex)
 xvals = rand(5)
 out = zeros(5)
 fval = fg(xvals, out)
-@test_approx_eq fval prod(x)
-@test_approx_eq out prod(x)./x
+@test_approx_eq fval prod(xvals)
+@test_approx_eq out prod(xvals)./xvals
 
 println("Passed tests")
