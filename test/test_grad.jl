@@ -103,4 +103,15 @@ deriv = [vals[11:20],vals[1:10]]
 deriv[1] += cos(vals[1])
 @test_approx_eq out deriv
 
+
+# prod syntax
+x = placeholders(5)
+ex = @processNLExpr prod{x[i], i = 1:5}
+fg = genfgrad_simple(ex)
+xvals = rand(5)
+out = zeros(5)
+fval = fg(xvals, out)
+@test_approx_eq fval prod(x)
+@test_approx_eq out prod(x)./x
+
 println("Passed tests")

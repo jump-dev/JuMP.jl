@@ -29,8 +29,8 @@ function quoteTree(x::Expr, datalist::Dict, iterstack)
         end
         return Expr(:tuple,code,nothing)
     elseif isexpr(x, :curly)
-        @assert x.args[1] == :sum # special sum syntax
-        code = :(Expr(:curly,:sum))
+        @assert x.args[1] == :sum || x.args[1] == :prod # special sum syntax
+        code = :(Expr(:curly,$(quot(x.args[1]))))
         for ex in x.args[3:end]
             var,set = ex.args[1:2]
             push!(iterstack, :($var = first($set)))
@@ -86,7 +86,7 @@ addToVarList!(l,x::Placeholder) = push!(l,getindex(x))
 addToVarList!(l,x) = nothing
 
 function genVarList(x::Expr, arrname)
-    if x.head == :curly && x.args[1] == :sum
+    if x.head == :curly
         code = genVarList(x.args[2],arrname)
         for level in length(x.args):-1:3
             code = Expr(:for, esc(copy(x.args[level])),code)
@@ -157,7 +157,7 @@ function genExprGraph(t::(Expr,Any), parent, k)
         end
         return thisnode
     elseif isexpr(x, :curly)
-        @assert x.args[1] == :sum
+        @assert (x.args[1] == :sum) || (x.args[1] == :prod)
         thisnode = ExprNode(x, parentarr, nothing, nothing)
         x.args[2] = genExprGraph(x.args[2], thisnode, nothing)
         return thisnode
@@ -218,12 +218,21 @@ function forwardpass(x::ExprNode, expr_out)
         push!(expr_out.args, :( $(x.value) = $fcall ))
         return x.value
     elseif isexpr(x.ex, :curly)
-        @assert x.ex.args[1] == :sum
+        oper = x.ex.args[1]
+        @assert oper == :sum || oper == :prod
         # compute value of this node, need to use a loop
-        push!(expr_out.args, :( $(x.value) = zero(T) ))
+        if oper == :sum
+            push!(expr_out.args, :( $(x.value) = zero(T) ))
+        else # :prod
+            push!(expr_out.args, :( $(x.value) = one(T) ))
+        end
         code = quote end
         valexpr = forwardpass(x.ex.args[2], code)
-        code = :( $code; $(x.value) += $valexpr )
+        if oper == :sum
+            code = :( $code; $(x.value) += $valexpr )
+        else # :prod
+            code = :( $code; $(x.value) *= $valexpr )
+        end
         for level in length(x.ex.args):-1:3
             code = Expr(:for, x.ex.args[level],code)
         end
@@ -266,6 +275,9 @@ function revpass(x::ExprNode, expr_out)
         f = p.ex.args[1]
         if f == :(+) || (isexpr(p.ex,:curly) && f == :sum)
             push!(expr_out.args, :( $(x.deriv) += $(p.deriv) ))
+        elseif isexpr(p.ex,:curly) && f == :prod
+            # potentially numerically unstable if x.value ~= 0
+            push!(expr_out.args, :( $(x.deriv) += $(p.deriv)*$(p.value)/$(x.value) ))
         elseif f == :(-)
             if length(p.ex.args) > 2 && k == 2
                 push!(expr_out.args, :( $(x.deriv) += $(p.deriv) ))
@@ -320,7 +332,7 @@ function revpass(x::ExprNode, expr_out)
             revpass(x.ex.args[i], expr_out)
         end
     elseif isexpr(x.ex,:curly)
-        @assert x.ex.args[1] == :sum
+        @assert x.ex.args[1] == :sum || x.ex.args[1] == :prod
         if !isa(x.ex.args[2],ExprNode) # expression inside sum doesn't depend on input
             return
         end
