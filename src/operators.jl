@@ -223,3 +223,8 @@ end
 (<=) (lhs::QuadExpr, rhs::QuadExpr) = (<=)(lhs-rhs, 0)
 (==) (lhs::QuadExpr, rhs::QuadExpr) = (==)(lhs-rhs, 0)
 (>=) (lhs::QuadExpr, rhs::QuadExpr) = (>=)(lhs-rhs, 0)
+
+
+# High-level operators
+sum{T<:Real}(j::JuMPDict{T}) = sum(j.innerArray)
+sum(j::JuMPDict{Variable}) = AffExpr(vec(j.innerArray), ones(length(j.innerArray)), 0.0)
