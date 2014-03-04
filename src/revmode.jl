@@ -71,7 +71,7 @@ function quoteTree(x::Expr, datalist::Dict, iterstack)
             end
         end
 
-        return Expr(:tuple, quot(x),Expr(:block, iterstack..., :(isa($x,ReverseDiffSparse.Placeholder))))
+        return Expr(:tuple, quot(x),Expr(:block, iterstack..., :(eltype($var) <: ReverseDiffSparse.Placeholder || eltype($var) == Any)))
     end
 end
 
