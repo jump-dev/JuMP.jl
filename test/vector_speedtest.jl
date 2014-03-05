@@ -23,7 +23,7 @@ tic()
 @addConstraint(m,sum{a[i,j]*x[i,j],i=1:n,j=1:n}<=1)
 println("2D Matrix with sum{}: $(toq())")
 tic()
-@addConstraint(m,bigdot(a,x)<=1)
+@addConstraint(m,dot(a,x)<=1)
 println("2D Matrix with bigdot(): $(toq())")
 
 #3D Matrix
@@ -31,7 +31,7 @@ tic()
 @addConstraint(m,sum{b[i,j,k]*y[i,j,k],i=1:n,j=1:n,k=1:n}<=1)
 println("3D Matrix with sum{}: $(toq())")
 tic()
-@addConstraint(m,bigdot(b,y)<=1)
-println("3D Matrix with bigdot(): $(toq())")
+@addConstraint(m,dot(b,y)<=1)
+println("3D Matrix with dot(): $(toq())")
 return 0
 end
