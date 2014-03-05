@@ -9,7 +9,8 @@ tests = ["expr.jl",
          "model.jl",
          "probmod.jl",
          "callback.jl",
-         "sosmodel.jl"]
+         "sosmodel.jl",
+         "vector_validity.jl"]
 
 println("Running tests:")
 

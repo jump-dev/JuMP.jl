@@ -175,10 +175,3 @@ q3 = 2.0 * x * x + 1.0 * y * y + z + 3.0
 @test conToStr(q <= q2) == "-8.0 x*z + 2.5 y*z + 7.1 x - 1.2 y + 1.3 <= 0"
 @test conToStr(q == q2) == "-8.0 x*z + 2.5 y*z + 7.1 x - 1.2 y + 1.3 == 0"
 @test conToStr(q >= q2) == "-8.0 x*z + 2.5 y*z + 7.1 x - 1.2 y + 1.3 >= 0"
-
-
-# Higher-level operators
-@defVar(m, matrix[1:3,1:3])
-@test affToStr(sum(matrix)) == "1.0 matrix[1,1] + 1.0 matrix[2,1] + 1.0 matrix[3,1] + 1.0 matrix[1,2] + 1.0 matrix[2,2] + 1.0 matrix[3,2] + 1.0 matrix[1,3] + 1.0 matrix[2,3] + 1.0 matrix[3,3]"
-@setObjective(m, Min, sum(matrix))
-@test quadToStr(m.obj) == "1.0 matrix[1,1] + 1.0 matrix[2,1] + 1.0 matrix[3,1] + 1.0 matrix[1,2] + 1.0 matrix[2,2] + 1.0 matrix[3,2] + 1.0 matrix[1,3] + 1.0 matrix[2,3] + 1.0 matrix[3,3]"
