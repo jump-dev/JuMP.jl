@@ -224,7 +224,35 @@ end
 (==) (lhs::QuadExpr, rhs::QuadExpr) = (==)(lhs-rhs, 0)
 (>=) (lhs::QuadExpr, rhs::QuadExpr) = (>=)(lhs-rhs, 0)
 
+#Vectorization Stuff
+function dot{T<:Real}(lhs::Array{T}, rhs::JuMP.JuMPDict{Variable})
+    sz = size(lhs)
+    if length(rhs.indexsets) == 1
+        # Single dimension version
+        if length(sz) == 2
+            @assert sz[1] == 1 || sz[2] == 1
+            @assert sz[1] == 1 && sz[2] == length(rhs.indexsets[1]) ||
+                   sz[2] == 1 && sz[1] == length(rhs.indexsets[1])
+            return AffExpr(rhs.innerArray, float(lhs[:]), 0.0)
+        elseif length(sz) == 1
+            @assert sz[1] == length(rhs.indexsets[1])
+            return AffExpr(rhs.innerArray,float(lhs),0.0)
+        end
+    elseif length(rhs.indexsets) == 2
+        # 2D JuMPDict
+        @assert length(rhs.indexsets[1]) == sz[1] &&
+                length(rhs.indexsets[2]) == sz[2]
+        return AffExpr(vec(rhs.innerArray), vec(float(lhs)), 0.0)
+    elseif length(rhs.indexsets) == 3
+        #3D JuMPDict
+        @assert length(rhs.indexsets[1]) == sz[1] &&
+                length(rhs.indexsets[2]) == sz[2] &&
+                length(rhs.indexsets[3]) == sz[3]
+        return AffExpr(vec(rhs.innerArray),vec(float(lhs)),0.0)
+    else
+        error("Dot products of matrices higher than 3D not supported.")
+    end
 
-# High-level operators
-sum{T<:Real}(j::JuMPDict{T}) = sum(j.innerArray)
-sum(j::JuMPDict{Variable}) = AffExpr(vec(j.innerArray), ones(length(j.innerArray)), 0.0)
+end
+dot{T<:Real}(lhs::JuMPDict{Variable},rhs::Array{T}) = dot(rhs,lhs)
+

@@ -203,8 +203,6 @@ function getValue(v::Variable)
     return v.m.colVal[v.col]
 end
 
-getValue(arr::Array{Variable}) = map(getValue, arr)
-
 # Dual value (reduced cost) getter
 function getDual(v::Variable) 
     if length(v.m.redCosts) < getNumVars(v.m)
