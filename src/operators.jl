@@ -167,62 +167,36 @@ end
 
 # LinearConstraint
 # Number--???
-(<=)(lhs::Number, rhs::Variable) = (>=)(rhs, lhs)
-(==)(lhs::Number, rhs::Variable) = (==)(rhs, lhs)
-(>=)(lhs::Number, rhs::Variable) = (<=)(rhs, lhs)
-
-(<=)(lhs::Number, rhs::AffExpr) = (>=)(rhs, lhs)
-(==)(lhs::Number, rhs::AffExpr) = (==)(rhs, lhs)
-(>=)(lhs::Number, rhs::AffExpr) = (<=)(rhs, lhs)
-(<=)(lhs::Number, rhs::QuadExpr) = (>=)(rhs, lhs)
-(==)(lhs::Number, rhs::QuadExpr) = (==)(rhs, lhs)
-(>=)(lhs::Number, rhs::QuadExpr) = (<=)(rhs, lhs)
-# Variable--???
-(<=)(lhs::Variable, rhs::Number) = (<=)(lhs - rhs, 0.0)
-(==)(lhs::Variable, rhs::Number) = (==)(lhs - rhs, 0.0)
-(>=)(lhs::Variable, rhs::Number) = (>=)(lhs - rhs, 0.0)
-
-(<=)(lhs::Variable, rhs::Variable) = (<=)(lhs - rhs, 0.0)
-(==)(lhs::Variable, rhs::Variable) = (==)(lhs - rhs, 0.0)
-(>=)(lhs::Variable, rhs::Variable) = (>=)(lhs - rhs, 0.0)
-
-(<=)(lhs::Variable, rhs::AffExpr) = (<=)(lhs - rhs, 0.0)
-(==)(lhs::Variable, rhs::AffExpr) = (==)(lhs - rhs, 0.0)
-(>=)(lhs::Variable, rhs::AffExpr) = (>=)(lhs - rhs, 0.0)
-(<=)(lhs::Variable, rhs::QuadExpr) = (<=)(lhs - rhs, 0.0)
-(==)(lhs::Variable, rhs::QuadExpr) = (==)(lhs - rhs, 0.0)
-(>=)(lhs::Variable, rhs::QuadExpr) = (>=)(lhs - rhs, 0.0)
+for (sgn, osgn) in ( (:<=,:>=), (:(==),:(==)), (:>=,:<=) )
+    @eval $(sgn)(lhs::Number, rhs::Variable) = $(osgn)(rhs, lhs)
+    @eval $(sgn)(lhs::Number, rhs::AffExpr)  = $(osgn)(rhs, lhs)
+    @eval $(sgn)(lhs::Number, rhs::QuadExpr) = $(osgn)(rhs, lhs)
+    # Variable--???
+    @eval $(sgn)(lhs::Variable, rhs::Number)   = $(sgn)(lhs - rhs, 0.0)
+    @eval $(sgn)(lhs::Variable, rhs::Variable) = $(sgn)(lhs - rhs, 0.0)
+    @eval $(sgn)(lhs::Variable, rhs::AffExpr)  = $(sgn)(lhs - rhs, 0.0)
+    @eval $(sgn)(lhs::Variable, rhs::QuadExpr) = $(sgn)(lhs - rhs, 0.0)
+end
 # AffExpr--???
 (<=)(lhs::AffExpr, rhs::Number) = LinearConstraint(lhs,            -Inf,rhs-lhs.constant)
 (==)(lhs::AffExpr, rhs::Number) = LinearConstraint(lhs,rhs-lhs.constant,rhs-lhs.constant)
 (>=)(lhs::AffExpr, rhs::Number) = LinearConstraint(lhs,rhs-lhs.constant,             Inf)
-(<=)(lhs::AffExpr, rhs::Variable) = (<=)(lhs-rhs, 0.0)
-(==)(lhs::AffExpr, rhs::Variable) = (==)(lhs-rhs, 0.0)
-(>=)(lhs::AffExpr, rhs::Variable) = (>=)(lhs-rhs, 0.0)
-(<=)(lhs::AffExpr, rhs::AffExpr) = (<=)(lhs-rhs, 0.0)
-(==)(lhs::AffExpr, rhs::AffExpr) = (==)(lhs-rhs, 0.0)
-(>=)(lhs::AffExpr, rhs::AffExpr) = (>=)(lhs-rhs, 0.0)
-(<=) (lhs::AffExpr, rhs::QuadExpr) = (<=)(lhs-rhs, 0)
-(==) (lhs::AffExpr, rhs::QuadExpr) = (==)(lhs-rhs, 0)
-(>=) (lhs::AffExpr, rhs::QuadExpr) = (>=)(lhs-rhs, 0)
-
+for sgn in (:<=, :(==), :>=)
+    @eval $(sgn)(lhs::AffExpr, rhs::Variable) = $(sgn)(lhs-rhs, 0.0)
+    @eval $(sgn)(lhs::AffExpr, rhs::AffExpr)  = $(sgn)(lhs-rhs, 0.0)
+    @eval $(sgn)(lhs::AffExpr, rhs::QuadExpr) = $(sgn)(lhs-rhs, 0)
+end
 # There's no easy way to allow operator overloads for range constraints.
 # Use macros instead.
 
 # QuadConstraint
 # QuadConstraint--Number
-(<=) (lhs::QuadExpr, rhs::Number)   = QuadConstraint( QuadExpr(copy(lhs.qvars1), copy(lhs.qvars2), lhs.qcoeffs,lhs.aff - rhs), :<=   )
-(==) (lhs::QuadExpr, rhs::Number)   = QuadConstraint( QuadExpr(copy(lhs.qvars1), copy(lhs.qvars2), lhs.qcoeffs,lhs.aff - rhs), :(==) )
-(>=) (lhs::QuadExpr, rhs::Number)   = QuadConstraint( QuadExpr(copy(lhs.qvars1), copy(lhs.qvars2), lhs.qcoeffs,lhs.aff - rhs), :>=   )
-(<=) (lhs::QuadExpr, rhs::Variable) = (<=)(lhs-rhs, 0)
-(==) (lhs::QuadExpr, rhs::Variable) = (==)(lhs-rhs, 0)
-(>=) (lhs::QuadExpr, rhs::Variable) = (>=)(lhs-rhs, 0)
-(<=) (lhs::QuadExpr, rhs::AffExpr)  = (<=)(lhs-rhs, 0)
-(==) (lhs::QuadExpr, rhs::AffExpr)  = (==)(lhs-rhs, 0)
-(>=) (lhs::QuadExpr, rhs::AffExpr)  = (>=)(lhs-rhs, 0)
-(<=) (lhs::QuadExpr, rhs::QuadExpr) = (<=)(lhs-rhs, 0)
-(==) (lhs::QuadExpr, rhs::QuadExpr) = (==)(lhs-rhs, 0)
-(>=) (lhs::QuadExpr, rhs::QuadExpr) = (>=)(lhs-rhs, 0)
+for sgn in (:<=, :(==), :>=)
+    @eval $(sgn)(lhs::QuadExpr, rhs::Number)   = QuadConstraint( QuadExpr(copy(lhs.qvars1), copy(lhs.qvars2), lhs.qcoeffs,lhs.aff - rhs), $(quot(sgn)))
+    @eval $(sgn)(lhs::QuadExpr, rhs::Variable) = $(sgn)(lhs-rhs, 0)
+    @eval $(sgn)(lhs::QuadExpr, rhs::AffExpr)  = $(sgn)(lhs-rhs, 0)
+    @eval $(sgn)(lhs::QuadExpr, rhs::QuadExpr) = $(sgn)(lhs-rhs, 0)
+end
 
 
 # High-level operators
@@ -260,3 +234,12 @@ function dot{T<:Real}(lhs::Array{T}, rhs::JuMP.JuMPDict{Variable})
 
 end
 dot{T<:Real}(lhs::JuMPDict{Variable},rhs::Array{T}) = dot(rhs,lhs)
+
+############################################
+# JuMPDict comparison operators (all errors)
+for sgn in (:<=, :(==), :>=)
+    for term in (:Real, :Variable, :AffExpr)
+        @eval $(sgn)(a::JuMPDict, b::$(term)) = error("Cannot construct constraint with a JuMPDict term")
+        @eval $(sgn)(a::$(term), b::JuMPDict) = error("Cannot construct constraint with a JuMPDict term")
+    end
+end
