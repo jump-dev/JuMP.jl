@@ -35,6 +35,8 @@ function addToExpression(aff::AffExpr,c::Number,x::AffExpr)
     aff.constant += c*x.constant
 end
 
+addToExpression(aff, c, x) = error("Invalid syntax; cannot construct an affine expression")
+
 function parseCurly(x::Expr, aff::Symbol, constantCoef)
     if (x.args[1] != :sum)
         error("Expected sum outside curly braces")
