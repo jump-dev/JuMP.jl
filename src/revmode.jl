@@ -18,8 +18,6 @@ for (funsym, exp) in Calculus.derivative_rules
     rules[funsym] = arg -> replace_x(exp,arg) 
 end
 
-#isinput(x) = isa(x, Placeholder)
-
 function quoteTree(x::Expr, datalist::Dict, iterstack)
     if isexpr(x, :call)
         quoted = quot(x.args[1]) # this leaves the function names as symbols, instead of resolving them
@@ -27,30 +25,33 @@ function quoteTree(x::Expr, datalist::Dict, iterstack)
         for y in x.args[2:end]
             push!(code.args,quoteTree(y, datalist, iterstack))
         end
-        return Expr(:tuple,code,nothing)
+        return code
     elseif isexpr(x, :curly)
         @assert x.args[1] == :sum || x.args[1] == :prod # special sum syntax
         code = :(Expr(:curly,$(quot(x.args[1]))))
-        for ex in x.args[3:end]
-            var,set = ex.args[1:2]
-            push!(iterstack, :($var = first($set)))
+        idxstart = 3
+        if isexpr(x.args[2], :parameter)
+            idxstart = 4
         end
-        push!(code.args,quoteTree(x.args[2],datalist,iterstack))
+        for ex in x.args[idxstart:end]
+            # iteration variables
+            push!(iterstack, ex.args[1])
+        end
+        if idxstart == 4
+            push!(code.args,quoteTree(x.args[2],datalist,iterstack))
+        end
+        # body of expression
+        push!(code.args,quoteTree(x.args[idxstart-1],datalist,iterstack))
         # store iteration sets
-        for ex in x.args[3:end]
-            @assert isexpr(ex,:(=)) || isexpr(ex,:in)
-            itrset = symbol(string("iterset",string(gensym())))
-            datalist[itrset] = ex.args[2]
-            ex.args[2] = itrset
-            push!(code.args, quot(ex))
+        for ex in x.args[end:-1:idxstart]
             pop!(iterstack)
+            @assert isexpr(ex,:(=)) || isexpr(ex,:in)
+            #itrset = symbol(string("iterset",string(gensym())))
+            ex.args[2] = quoteTree(ex.args[2], datalist, iterstack)
+            push!(code.args, :(Expr(:(=), $(quot(ex.args[1])), $(ex.args[2]))))
         end
-        return Expr(:tuple,code,nothing)
-    else
-        if !isexpr(x, :ref)
-            error("Unrecognized expression $x")
-        end
-        
+        return code
+    elseif isexpr(x, :ref)
         # for symbolic expressions, leave them in the tree but collect the values separately.
         # if an array reference, just store the array object and not each element
         # NOTE: this assumes the values of the array will not change!
@@ -59,28 +60,32 @@ function quoteTree(x::Expr, datalist::Dict, iterstack)
         for idxvar in x.args[2:end]
             isa(idxvar, Symbol) || continue
             # if this isn't a local index variable, we need to save it
-            found = false
-            for eq in iterstack
-                if eq.args[1] == idxvar
-                    found = true
-                    break
-                end
-            end
-            if !found
+            if !(idxvar in iterstack)
                 datalist[idxvar] = idxvar
             end
         end
 
-        return Expr(:tuple, quot(x),Expr(:block, iterstack..., :(eltype($var) <: ReverseDiffSparse.Placeholder || eltype($var) == Any)))
+        return quot(x)
+    else # ranges
+        if !isexpr(x, :(:))
+            error("Unrecognized expression $x")
+        end
+        code = :(Expr(:(:)))
+        for y in x.args[1:end]
+            push!(code.args,quoteTree(y, datalist, iterstack))
+        end
+        return code
     end
 end
 
 function quoteTree(x::Symbol, datalist, iterstack)
-    datalist[x] = x
-    return Expr(:tuple,quot(x),Expr(:block, iterstack..., :(isa($x,ReverseDiffSparse.Placeholder))))
+    if !(x in iterstack)
+        datalist[x] = x
+    end
+    return quot(x)
 end
 
-quoteTree(x, datalist, iterstack) = Expr(:tuple,x,:(isa($x,ReverseDiffSparse.Placeholder)))
+quoteTree(x, datalist, iterstack) = x
 
 addToVarList!(l,x::Placeholder) = push!(l,getindex(x))
 addToVarList!(l,x) = nothing
@@ -123,7 +128,7 @@ macro processNLExpr(x)
         push!(inputnames.args, quot(k))
         push!(inputvals.args, esc(v))
     end
-    return :(SymbolicOutput(genExprGraph(inferInput($tree)), $inputnames, $inputvals,$indexlist))
+    return :(SymbolicOutput(genExprGraph($tree), $inputnames, $inputvals,$indexlist))
 end
 
 function SymbolicOutput(tree, inputnames, inputvals, indexlist)
@@ -142,13 +147,9 @@ export @processNLExpr
 
 # turn each node in the expression tree into an ExprNode
 # this expression is kth argument in parent expression
-genExprGraph(x::(Any,Any)) = genExprGraph(x, nothing, nothing)
+genExprGraph(x) = genExprGraph(x, nothing, nothing)
 
-function genExprGraph(t::(Expr,Any), parent, k)
-    x,input = t
-    if !input
-        return collapse(t) # collapse expressions that don't depend on the input
-    end
+function genExprGraph(x::Expr, parent, k)
     parentarr = parent === nothing ? [] : [(parent,k)]
     if isexpr(x, :call)
         thisnode = ExprNode(x, parentarr, nothing, nothing)
@@ -167,40 +168,8 @@ function genExprGraph(t::(Expr,Any), parent, k)
     end
 end
 
-genExprGraph{T<:Number}(x::(T,Any), parent, k) = x[1]
-genExprGraph(t, parent, k) = t[2] ? ExprNode(t[1], [(parent,k)], nothing, nothing) : t[1]
-
-function collapse(t::(Expr,Any))
-    x,input = t
-    Expr(x.head, [collapse(y) for y in x.args[1:end]]...)
-end
-
-collapse(t::(Any,Any)) = t[1]
-collapse(t) = t
-
-function inferInput(t::(Expr,Any))
-    x,input = t
-    if input != nothing
-        return t
-    end
-    if isexpr(x, :call)
-        inp = false
-        for i in 2:length(x.args)
-            x.args[i] = inferInput(x.args[i])
-            inp |= x.args[i][2]
-        end
-        return (x,inp)
-    elseif isexpr(x, :curly)
-        x.args[2] = inferInput(x.args[2])
-        return (x, true) # don't optimize out sum{}, since we need to evaluate it manually
-    else
-        error("Unexpected")
-    end
-end
-
-inferInput{T<:Number}(x::(T,Any)) = (x[1],false)
-inferInput(x) = x
-
+genExprGraph{T<:Number}(x::T, parent, k) = x
+genExprGraph(x, parent, k) = ExprNode(x, [(parent,k)], nothing, nothing)
 
 function forwardpass(x::ExprNode, expr_out)
     @assert isexpr(expr_out, :block)
@@ -250,7 +219,7 @@ end
 forwardpass(x, expr_out) = :(forwardvalue($x, __placevalues, __placeindex_in))
 
 forwardvalue(x::Placeholder, placevalues, placeindex_in) = placevalues[placeindex_in[getindex(x)]]
-forwardvalue(x, placevalues, placeindex_in) = x
+forwardvalue(x, placevalues, placeindex_in) = float(x)
 
 function revpass(x::ExprNode, expr_out)
     @assert isexpr(expr_out, :block)

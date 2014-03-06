@@ -114,4 +114,26 @@ fval = fg(xvals, out)
 @test_approx_eq fval prod(xvals)
 @test_approx_eq out prod(xvals)./xvals
 
+# nested sums
+S = Array(Vector{Int},3)
+S[1] = [1,2,3]
+S[2] = [3,4,5]
+S[3] = [5,6,7]
+x = placeholders(7)
+ex = @processNLExpr sum{ sum{ x[k], k in S[i] }, i in 1:3 }
+fg = genfgrad_simple(ex)
+xvals = rand(7)
+out = zeros(7)
+fval = fg(xvals, out)
+@test_approx_eq out [1.0,1.0,2.0,1.0,2.0,1.0,1.0]
+
+R = [x[1],x[2]]
+ex = @processNLExpr sum{ z, z in R }
+out = zeros(7)
+fg = genfgrad_simple(ex)
+fval = fg(xvals, out)
+@test_approx_eq out [1.0,1.0,0.0,0.0,0.0,0.0,0.0]
+
+
+
 println("Passed tests")

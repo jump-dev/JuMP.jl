@@ -96,7 +96,10 @@ function compute_hessian_sparsity(x::ExprNode, linear_so_far, expr_out)
         # add this placeholder to the set of nodes with this color
         # (placeholders can have multiple colors if they appear multiple times in the graph)
         if !linear_so_far
-            push!(expr_out.args, :( push!(colorlist[mycolor], $(x.ex)) ))
+            push!(expr_out.args, :( 
+                if isa($(x.ex),Placeholder)
+                    push!(colorlist[mycolor], $(x.ex))
+                end))
         end
     end
     
