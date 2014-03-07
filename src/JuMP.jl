@@ -21,7 +21,7 @@ export
     # Model related
     getNumVars, getNumConstraints, getObjectiveValue, getObjective,
     getObjectiveSense, setObjectiveSense, writeLP, writeMPS, setObjective,
-    addConstraint, addVar, addVars, addSOS1, addSOS2, solve, presolve, copy,
+    addConstraint, addVar, addVars, addSOS1, addSOS2, solve, copy,
     getSolverModel,
     # Variable
     setName, getName, setLower, setUpper, getLower, getUpper,
