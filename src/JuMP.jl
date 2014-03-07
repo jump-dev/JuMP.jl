@@ -69,7 +69,7 @@ type Model
     # Solver+option object from MathProgBase
     solver::AbstractMathProgSolver
     # true if we haven't solved yet
-    firstsolve::Bool
+    nointernal::Bool
     # callbacks
     lazycallback
     cutcallback
@@ -332,13 +332,13 @@ typealias LinearConstraint GenericRangeConstraint{AffExpr}
 
 function addConstraint(m::Model, c::LinearConstraint)
     push!(m.linconstr,c)
-    if !m.firstsolve
+    if !m.nointernal
         # TODO: we don't check for duplicates here
         try
             addconstr!(m.internalModel,[v.col for v in c.terms.vars],c.terms.coeffs,c.lb,c.ub)
         catch
             Base.warn_once("Solver does not appear to support adding constraints to an existing model. Hot-start is disabled.")
-            m.firstsolve = true
+            m.nointernal = true
         end
     end
     return ConstraintRef{LinearConstraint}(m,length(m.linconstr))
@@ -402,9 +402,9 @@ end
 
 function addConstraint(m::Model, c::QuadConstraint)
     push!(m.quadconstr,c)
-    if !m.firstsolve
+    if !m.nointernal
         # we don't (yet) support hot-starting QCQP solutions
-        m.firstsolve = true
+        m.nointernal = true
     end
     return ConstraintRef{QuadConstraint}(m,length(m.quadconstr))
 end
@@ -462,12 +462,12 @@ function Variable(m::Model,lower::Number,upper::Number,cat::Int,objcoef::Number,
     push!(m.obj.aff.vars, v)
     push!(m.obj.aff.coeffs,objcoef)
 
-    if !m.firstsolve
+    if !m.nointernal
         try
             addvar!(m.internalModel,Int[c.idx for c in constraints],coefficients,float(lower),float(upper),float(objcoef))
         catch
             Base.warn_once("Solver does not appear to support adding variables to an existing model. Hot-start is disabled.")
-            m.firstsolve = true
+            m.nointernal = true
         end
     end
 

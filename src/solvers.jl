@@ -34,6 +34,38 @@ function solve(m::Model)
     end
 end
 
+function presolve(m::Model)
+    anyInts = false
+    for j = 1:m.numCols
+        if m.colCat[j] == INTEGER
+            anyInts = true
+            break
+        end
+    end
+
+    if isa(m.solver,MathProgBase.MissingSolver) &&
+      (length(m.obj.qvars1) > 0 || length(m.quadconstr) > 0)
+        m.solver = MathProgBase.defaultQPsolver
+    end
+    if anyInts
+        if isa(m.solver,MathProgBase.MissingSolver)
+            m.solver = MathProgBase.defaultMIPsolver
+            s = solveMIP(m; presolve=true)
+            return s
+        else
+            solveMIP(m)
+        end
+    else
+        if isa(m.solver,MathProgBase.MissingSolver)
+            m.solver = MathProgBase.defaultLPsolver
+            s = solveLP(m; presolve=true)
+            return s
+        else
+            solveLP(m)
+        end
+    end
+end
+
 function addQuadratics(m::Model)
 
     if length(m.obj.qvars1) != 0
@@ -156,12 +188,12 @@ function prepConstrMatrix(m::Model)
     A = rowmat'
 end
 
-function solveLP(m::Model)
+function solveLP(m::Model; presolve=false)
     f, rowlb, rowub = prepProblemBounds(m)  
 
     # Ready to solve
 
-    if !m.firstsolve
+    if !m.nointernal
         try
             setvarLB!(m.internalModel, m.colLower)
             setvarUB!(m.internalModel, m.colUpper)
@@ -170,10 +202,10 @@ function solveLP(m::Model)
             setobj!(m.internalModel, f)
         catch
             warn("LP solver does not appear to support hot-starts. Problem will be solved from scratch.")
-            m.firstsolve = true
+            m.nointernal = true
         end
     end
-    if m.firstsolve
+    if m.nointernal
         A = prepConstrMatrix(m)
         m.internalModel = model(m.solver)
         loadproblem!(m.internalModel, A, m.colLower, m.colUpper, f, rowlb, rowub, m.objSense)
@@ -181,10 +213,17 @@ function solveLP(m::Model)
         addQuadratics(m)
     end 
 
-    optimize!(m.internalModel)
-    stat = status(m.internalModel)
+    if !presolve
+        optimize!(m.internalModel)
+        stat = status(m.internalModel)
+    else
+        m.nointernal = false
+        stat = :NotSolved
+    end
 
-    if stat != :Optimal
+    if stat == :NotSolved
+        # do nothing
+    elseif stat != :Optimal
         warn("LP not solved to optimality, status: $stat")
         if stat == :Infeasible
             try
@@ -210,13 +249,13 @@ function solveLP(m::Model)
         catch
             Base.warn_once("Dual solutions not available")
         end
-        m.firstsolve = false
+        m.nointernal = false
     end
 
     return stat
 end
 
-function solveMIP(m::Model)
+function solveMIP(m::Model; presolve=false)
     f, rowlb, rowub = prepProblemBounds(m)
     A = prepConstrMatrix(m)
 
@@ -231,38 +270,50 @@ function solveMIP(m::Model)
     end
 
     # Ready to solve
+    
+    if m.nointernal 
+        m.internalModel = model(m.solver)
         
-    m.internalModel = model(m.solver)
-        
-    loadproblem!(m.internalModel, A, m.colLower, m.colUpper, f, rowlb, rowub, m.objSense)
-    setvartype!(m.internalModel, vartype)
+        loadproblem!(m.internalModel, A, m.colLower, m.colUpper, f, rowlb, rowub, m.objSense)
+        setvartype!(m.internalModel, vartype)
 
-    if !all(isnan(m.colVal))
+        if !all(isnan(m.colVal))
+            try
+                setwarmstart!(m.internalModel, m.colVal)
+            catch
+                Base.warn_once("MIP solver does not appear to support warm start solution.")
+            end
+        end
+
+        addSOS(m)
+
+        addQuadratics(m)
+        registercallbacks(m)
+
+        m.nointernal = false
+    end
+
+    if !presolve
+        optimize!(m.internalModel)
+        stat = status(m.internalModel)
+    else
+        stat = :NotSolved
+    end
+
+    if stat == :NotSolved
+        # do nothing
+    else
+        # It's possible that we have a feasible solution if we're not optimal
+        # TODO: Test this behavior on various solvers
         try
-            setwarmstart!(m.internalModel, m.colVal)
-        catch
-            Base.warn_once("MIP solver does not appear to support warm start solution.")
+            # store solution values in model
+            m.objVal = getobjval(m.internalModel)
+            m.objVal += m.obj.aff.constant
+            m.colVal = getsolution(m.internalModel)
         end
     end
-
-    addSOS(m)
-
-    addQuadratics(m)
-    registercallbacks(m)
-
-    optimize!(m.internalModel)
-    stat = status(m.internalModel)
-
     if stat != :Optimal
         println("Warning: MIP not solved to optimality, status: ", stat)
-    end
-    # It's possible that we have a feasible solution if we're not optimal
-    # TODO: Test this behavior on various solvers
-    try
-        # store solution values in model
-        m.objVal = getobjval(m.internalModel)
-        m.objVal += m.obj.aff.constant
-        m.colVal = getsolution(m.internalModel)
     end
 
     return stat
