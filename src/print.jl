@@ -178,6 +178,9 @@ end
 # string and these variables should be printed one-by-one. Mode should be
 # :REPL or :IJulia
 function dictstring(dict::JuMPDict, mode=:REPL)
+
+    length(dict.innerArray) > 0 || return ""
+
     m = dict.innerArray[1].m
 
     dimensions = length(dict.indexsets)
@@ -447,6 +450,8 @@ function print(io::IO, dict::JuMPDict{Variable})
         print(io, str)    
         return
     end
+    # Easy case: empty JuMPDict
+    isempty(dict.innerArray) && return nothing
     # Maybe too many dims?
     dimensions = length(dict.indexsets)
     if dimensions >= 5
