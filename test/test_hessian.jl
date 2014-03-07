@@ -86,5 +86,13 @@ V = zeros(length(I))
 sparsefunc_color(val, V, ex)
 @test_approx_eq to_H(ex, I, J, V, 2) tril(exact(val...))
 
+# prod{}
+x = placeholders(2)
+ex = @processNLExpr prod{x[i], i = 1:2}
+I, J, sparsefunc_color = gen_hessian_sparse_color_parametric(ex)
+V = zeros(length(I))
+sparsefunc_color(val, V, ex)
+@test_approx_eq to_H(ex, I, J, V, 2) tril([ 0.0 1.0; 1.0 0.0 ])
+
 
 println("Passed tests")

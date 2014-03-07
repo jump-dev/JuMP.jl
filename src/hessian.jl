@@ -57,7 +57,7 @@ function compute_hessian_sparsity(x::ExprNode, linear_so_far, expr_out)
     if isexpr(x.ex, :call)
         # is this a linear operator?
         if linear_so_far == 1 
-            if x.ex.args[1] == (+) || x.ex.args[1] == (-) || (x.ex.args[1] == (*) && sum([isa(t,ExprNode) for t in x.ex.args[2:end]]) <= 1) 
+            if x.ex.args[1] == (+) || x.ex.args[1] == (-) || (x.ex.args[1] == (*) && sum([isa(t,ExprNode) for t in x.ex.args[2:end]]) <= 1) # TODO: doesn't catch multiplication by symbolic constants
                 # we're still at the top
                 # give the same color to the children
                 for i in 2:length(x.ex.args)
@@ -83,14 +83,22 @@ function compute_hessian_sparsity(x::ExprNode, linear_so_far, expr_out)
             end
         end
     elseif isexpr(x.ex, :curly)
-        @assert x.ex.args[1] == :sum
-        # we are a linear operator
-        code = quote end
-        compute_hessian_sparsity(x.ex.args[2], linear_so_far, code)
-        for level in length(x.ex.args):-1:3
-            code = Expr(:for, x.ex.args[level],code)
+        if x.ex.args[1] == :sum || !linear_so_far
+            code = quote end
+            compute_hessian_sparsity(curlyexpr(x.ex), linear_so_far, code)
+            push!(expr_out.args, gencurlyloop(x.ex,code))
+        else
+            @assert x.ex.args[1] == :prod
+            # new color
+            code = quote end
+            compute_hessian_sparsity(curlyexpr(x.ex), false, code)
+            push!(expr_out.args, 
+                quote let
+                        mycolor = gensym()
+                        colorlist[mycolor] = Set()
+                        $(gencurlyloop(x.ex, code))
+                end end)
         end
-        push!(expr_out.args, code)
     else
         # we must be at an input expression
         # add this placeholder to the set of nodes with this color
@@ -105,7 +113,7 @@ function compute_hessian_sparsity(x::ExprNode, linear_so_far, expr_out)
     
 end
 
-compute_hessian_sparsity(x, linear_so_var, expr_out) = nothing
+compute_hessian_sparsity(x, linear_so_far, expr_out) = nothing
 
 export compute_hessian_sparsity_IJ
 

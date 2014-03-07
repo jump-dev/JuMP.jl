@@ -18,6 +18,30 @@ for (funsym, exp) in Calculus.derivative_rules
     rules[eval(funsym)] = arg -> replace_x(exp,arg) 
 end
 
+curlyexpr(x::Expr) = isexpr(x.args[2],:parameters) ? x.args[3] : x.args[2]
+function gencurlyloop(x::Expr, code; escape=false)
+    idxstart = 3
+    if isexpr(x.args[2], :parameters)
+        cond = escape ? esc(x.args[2].args[1]) : x.args[2].args[1]
+        code = :(
+        if $cond
+            $code
+        end)
+        idxstart = 4
+    end
+
+    for level in length(x.args):-1:idxstart
+        if escape
+            code = Expr(:for, esc(x.args[level]),code)
+        else
+            code = Expr(:for, x.args[level],code)
+        end
+    end
+    return code
+end
+
+
+
 function quoteTree(x::Expr, datalist::Dict, iterstack)
     if isexpr(x, :call)
         # evaluate, don't quote the function name
@@ -41,7 +65,7 @@ function quoteTree(x::Expr, datalist::Dict, iterstack)
             push!(iterstack, ex.args[1])
         end
         if idxstart == 4
-            push!(code.args,Expr(:parameters,quoteTree(x.args[2].args[1],datalist,iterstack)))
+            push!(code.args,:(Expr(:parameters,$(quoteTree(x.args[2].args[1],datalist,iterstack)))))
         end
         # body of expression
         push!(code.args,quoteTree(x.args[idxstart-1],datalist,iterstack))
@@ -50,8 +74,8 @@ function quoteTree(x::Expr, datalist::Dict, iterstack)
             pop!(iterstack)
             @assert isexpr(ex,:(=)) || isexpr(ex,:in)
             #itrset = symbol(string("iterset",string(gensym())))
-            ex.args[2] = quoteTree(ex.args[2], datalist, iterstack)
-            push!(code.args, :(Expr(:(=), $(quot(ex.args[1])), $(ex.args[2]))))
+            rhs = quoteTree(ex.args[2], datalist, iterstack)
+            push!(code.args, :(Expr(:(=), $(quot(ex.args[1])), $rhs)))
         end
         return code
     elseif isexpr(x, :ref)
@@ -95,11 +119,8 @@ addToVarList!(l,x) = nothing
 
 function genVarList(x::Expr, arrname)
     if x.head == :curly
-        code = genVarList(x.args[2],arrname)
-        for level in length(x.args):-1:3
-            code = Expr(:for, esc(copy(x.args[level])),code)
-        end
-        return code
+        code = genVarList(curlyexpr(x),arrname)
+        return gencurlyloop(x,code, escape=true)
     elseif x.head == :call
         return Expr(:block,[genVarList(y,arrname) for y in x.args[2:end]]...)
     else
@@ -123,8 +144,7 @@ end
 macro processNLExpr(x)
     indexlist = :(idxlist = Int[]; $(genVarList(x, :idxlist)); idxlist)
     datalist = Dict()
-    iterstack = {}
-    tree = esc(quoteTree(x, datalist, iterstack))
+    tree = esc(quoteTree(x, datalist, {}))
     inputnames = Expr(:tuple)
     inputvals = Expr(:tuple)
     for (k,v) in datalist
@@ -163,7 +183,11 @@ function genExprGraph(x::Expr, parent, k)
     elseif isexpr(x, :curly)
         @assert (x.args[1] == :sum) || (x.args[1] == :prod)
         thisnode = ExprNode(x, parentarr, nothing, nothing)
-        x.args[2] = genExprGraph(x.args[2], thisnode, nothing)
+        if isexpr(x.args[2], :parameters) # filter conditions
+            x.args[3] = genExprGraph(x.args[3], thisnode, nothing)
+        else
+            x.args[2] = genExprGraph(x.args[2], thisnode, nothing)
+        end
         return thisnode
     else
         @assert isexpr(x, :ref)
@@ -199,16 +223,16 @@ function forwardpass(x::ExprNode, expr_out)
             push!(expr_out.args, :( $(x.value) = one(T) ))
         end
         code = quote end
-        valexpr = forwardpass(x.ex.args[2], code)
+
+        valexpr = forwardpass(curlyexpr(x.ex), code)
+
         if oper == :sum
             code = :( $code; $(x.value) += $valexpr )
         else # :prod
             code = :( $code; $(x.value) *= $valexpr )
         end
-        for level in length(x.ex.args):-1:3
-            code = Expr(:for, x.ex.args[level],code)
-        end
-        push!(expr_out.args, code)
+
+        push!(expr_out.args, gencurlyloop(x.ex, code))
         return x.value
     elseif isa(x.ex, Expr) || isa(x.ex, Symbol)
         # some other symbolic value, to evaluate at runtime
@@ -305,18 +329,17 @@ function revpass(x::ExprNode, expr_out)
         end
     elseif isexpr(x.ex,:curly)
         @assert x.ex.args[1] == :sum || x.ex.args[1] == :prod
-        if !isa(x.ex.args[2],ExprNode) # expression inside sum doesn't depend on input
+        exprbody = curlyexpr(x.ex)
+        if !isa(exprbody,ExprNode) # expression inside sum doesn't depend on input
             return
         end
         # need to do a mini forward pass here for each child, because we reuse the nodes
-        cleargraph(x.ex.args[2])
+        cleargraph(exprbody)
         code = quote end
-        forwardpass(x.ex.args[2], code)
-        revpass(x.ex.args[2], code)
-        for level in length(x.ex.args):-1:3
-            code = Expr(:for, x.ex.args[level],code)
-        end
-        push!(expr_out.args, code)
+        forwardpass(exprbody, code)
+        revpass(exprbody, code)
+ 
+        push!(expr_out.args, gencurlyloop(x.ex,code))
     else
         push!(expr_out.args, :( saverevvalue($(x.ex), $(x.deriv), __output, __placeindex_out) ))
     end
