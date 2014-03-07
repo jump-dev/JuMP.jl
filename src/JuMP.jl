@@ -22,6 +22,7 @@ export
     getNumVars, getNumConstraints, getObjectiveValue, getObjective,
     getObjectiveSense, setObjectiveSense, writeLP, writeMPS, setObjective,
     addConstraint, addVar, addVars, addSOS1, addSOS2, solve, presolve, copy,
+    getSolverModel,
     # Variable
     setName, getName, setLower, setUpper, getLower, getUpper,
     getValue, setValue, getDual,
@@ -147,6 +148,8 @@ function copy(source::Model)
 
     return dest
 end
+
+getSolverModel(m::Model) = m.internalModel.inner
 
 ###############################################################################
 # Variable class
