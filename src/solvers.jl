@@ -200,10 +200,16 @@ function solveLP(m::Model; presolve=false)
             setconstrLB!(m.internalModel, rowlb)
             setconstrUB!(m.internalModel, rowub)
             setobj!(m.internalModel, f)
-            setvartype!(m.internalModel, fill('C',m.numCols))
         catch
             warn("LP solver does not appear to support hot-starts. Problem will be solved from scratch.")
             m.nointernal = true
+        end
+        all_cont = true
+        try # this fails for LPs for some unfathomable reason...but if it's an LP, we're good anyway
+            all_cont = mapreduce(x->isequal('C',x), &, MathProgBase.getvartype(m.internalModel))
+        end
+        if !all_cont
+            setvartype!(m.internalModel, fill('C',m.numCols))
         end
     end
     if m.nointernal
