@@ -394,7 +394,6 @@ end
 addSOS2(m::Model, coll) = addSOS2(m, convert(Vector{AffExpr}, coll))
 
 function addSOS2(m::Model, coll::Vector{AffExpr})
-    m.nointernal || error("JuMP does not currently support adding constraints to internally build model; consider starting from scratch")
     vars, weight = constructSOS(coll)
     push!(m.sosconstr, SOSConstraint(vars, weight, :SOS2))
     if !m.nointernal
@@ -418,7 +417,6 @@ type QuadConstraint <: JuMPConstraint
 end
 
 function addConstraint(m::Model, c::QuadConstraint)
-    m.nointernal || error("JuMP does not currently support adding constraints to internally build model; consider starting from scratch")
     push!(m.quadconstr,c)
     if !m.nointernal
         # we don't (yet) support hot-starting QCQP solutions
