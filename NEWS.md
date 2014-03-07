@@ -8,6 +8,7 @@ Unversioned
   * Solver-independent callback for user heuristics.
   * ``dot`` and ``sum`` implemented for ``JuMPDict`` objects. Now you can say ``@addConstraint(m, dot(a,x) <= b)``.
   * Developers: support for extensions to JuMP. See definition of Model in ``src/JuMP.jl`` for more details.
+  * Solver-level model construction, independent of optimization.
 
 Version 0.3.2 (February 17, 2014)
 ---------------------------------

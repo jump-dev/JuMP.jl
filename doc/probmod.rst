@@ -91,3 +91,10 @@ Modifying objective
 
 To change the objective, simply call ``@setObjective`` again - the previous objective
 function and sense will be replaced.
+
+Constructing internal model
+^^^^^^^^^^^^^^^^^^^^^^^^^^^
+
+It is possible to construct the model at the solver level before optimizing. To do this, 
+pass the optional keywork argument ``load_model_only=true`` to ``solve``. It is then possible
+to access the raw solver model via the ``getSolverModel(m::Model)`` function.

@@ -1,4 +1,4 @@
-function solve(m::Model)
+function solve(m::Model; load_model_only=false)
     # Analyze model to see if any integers
     anyInts = false
     for j = 1:m.numCols
@@ -15,21 +15,22 @@ function solve(m::Model)
     if anyInts
         if isa(m.solver,MathProgBase.MissingSolver)
             m.solver = MathProgBase.defaultMIPsolver
-            s = solveMIP(m)
+            s = solveMIP(m; load_model_only=load_model_only)
             # Clear solver in case we change problem types
             m.solver = MathProgBase.MissingSolver("",Symbol[])
+            m.internalModelLoaded = false
             return s
         else
-            solveMIP(m)
+            solveMIP(m; load_model_only=load_model_only)
         end
     else
         if isa(m.solver,MathProgBase.MissingSolver)
             m.solver = MathProgBase.defaultLPsolver
-            s = solveLP(m)
+            s = solveLP(m, load_model_only=load_model_only)
             m.solver = MathProgBase.MissingSolver("",Symbol[])
             return s
         else
-            solveLP(m)
+            solveLP(m; load_model_only=load_model_only)
         end
     end
 end
@@ -156,12 +157,12 @@ function prepConstrMatrix(m::Model)
     A = rowmat'
 end
 
-function solveLP(m::Model)
+function solveLP(m::Model; load_model_only=false)
     f, rowlb, rowub = prepProblemBounds(m)  
 
     # Ready to solve
 
-    if !m.firstsolve
+    if m.internalModelLoaded
         try
             setvarLB!(m.internalModel, m.colLower)
             setvarUB!(m.internalModel, m.colUpper)
@@ -170,21 +171,34 @@ function solveLP(m::Model)
             setobj!(m.internalModel, f)
         catch
             warn("LP solver does not appear to support hot-starts. Problem will be solved from scratch.")
-            m.firstsolve = true
+            m.internalModelLoaded = false
+        end
+        all_cont = true
+        try # this fails for LPs for some unfathomable reason...but if it's an LP, we're good anyway
+            all_cont = mapreduce(x->isequal('C',x), &, MathProgBase.getvartype(m.internalModel))
+        end
+        if !all_cont
+            setvartype!(m.internalModel, fill('C',m.numCols))
         end
     end
-    if m.firstsolve
+    if !m.internalModelLoaded
         A = prepConstrMatrix(m)
         m.internalModel = model(m.solver)
         loadproblem!(m.internalModel, A, m.colLower, m.colUpper, f, rowlb, rowub, m.objSense)
-
         addQuadratics(m)
+        m.internalModelLoaded = true
     end 
 
-    optimize!(m.internalModel)
-    stat = status(m.internalModel)
+    if !load_model_only
+        optimize!(m.internalModel)
+        stat = status(m.internalModel)
+    else
+        stat = :NotSolved
+    end
 
-    if stat != :Optimal
+    if stat == :NotSolved
+        # do nothing
+    elseif stat != :Optimal
         warn("LP not solved to optimality, status: $stat")
         if stat == :Infeasible
             try
@@ -210,13 +224,12 @@ function solveLP(m::Model)
         catch
             Base.warn_once("Dual solutions not available")
         end
-        m.firstsolve = false
     end
 
     return stat
 end
 
-function solveMIP(m::Model)
+function solveMIP(m::Model; load_model_only=false)
     f, rowlb, rowub = prepProblemBounds(m)
     A = prepConstrMatrix(m)
 
@@ -231,11 +244,33 @@ function solveMIP(m::Model)
     end
 
     # Ready to solve
+    
+    if m.internalModelLoaded
+        try
+            setvarLB!(m.internalModel, m.colLower)
+            setvarUB!(m.internalModel, m.colUpper)
+            setconstrLB!(m.internalModel, rowlb)
+            setconstrUB!(m.internalModel, rowub)
+            setobj!(m.internalModel, f)
+            setvartype!(m.internalModel, vartype)
+        catch
+            warn("LP solver does not appear to support hot-starts. Problem will be solved from scratch.")
+            m.internalModelLoaded = false
+        end
+    end
+    if !m.internalModelLoaded
+        m.internalModel = model(m.solver)
         
-    m.internalModel = model(m.solver)
-        
-    loadproblem!(m.internalModel, A, m.colLower, m.colUpper, f, rowlb, rowub, m.objSense)
-    setvartype!(m.internalModel, vartype)
+        loadproblem!(m.internalModel, A, m.colLower, m.colUpper, f, rowlb, rowub, m.objSense)
+        setvartype!(m.internalModel, vartype)
+
+        addSOS(m)
+
+        addQuadratics(m)
+        registercallbacks(m)
+
+        m.internalModelLoaded = true
+    end
 
     if !all(isnan(m.colVal))
         try
@@ -245,24 +280,27 @@ function solveMIP(m::Model)
         end
     end
 
-    addSOS(m)
+    if !load_model_only
+        optimize!(m.internalModel)
+        stat = status(m.internalModel)
+    else
+        stat = :NotSolved
+    end
 
-    addQuadratics(m)
-    registercallbacks(m)
-
-    optimize!(m.internalModel)
-    stat = status(m.internalModel)
-
+    if stat == :NotSolved
+        # do nothing
+    else
+        # It's possible that we have a feasible solution if we're not optimal
+        # TODO: Test this behavior on various solvers
+        try
+            # store solution values in model
+            m.objVal = getobjval(m.internalModel)
+            m.objVal += m.obj.aff.constant
+            m.colVal = getsolution(m.internalModel)
+        end
+    end
     if stat != :Optimal
         println("Warning: MIP not solved to optimality, status: ", stat)
-    end
-    # It's possible that we have a feasible solution if we're not optimal
-    # TODO: Test this behavior on various solvers
-    try
-        # store solution values in model
-        m.objVal = getobjval(m.internalModel)
-        m.objVal += m.obj.aff.constant
-        m.colVal = getsolution(m.internalModel)
     end
 
     return stat
