@@ -61,7 +61,7 @@ function presolve(m::Model)
             s = solveLP(m; presolve=true)
             return s
         else
-            solveLP(m)
+            solveLP(m; presolve=true)
         end
     end
 end
