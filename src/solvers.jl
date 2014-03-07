@@ -28,7 +28,6 @@ function solve(m::Model; load_model_only=false)
             m.solver = MathProgBase.defaultLPsolver
             s = solveLP(m, load_model_only=load_model_only)
             m.solver = MathProgBase.MissingSolver("",Symbol[])
-            m.loaded_internalModel = false
             return s
         else
             solveLP(m; load_model_only=load_model_only)
