@@ -168,23 +168,22 @@ end
 # LinearConstraint
 # Number--???
 for (sgn, osgn) in ( (:<=,:>=), (:(==),:(==)), (:>=,:<=) )
-    @eval $(sgn)(lhs::Number, rhs::Variable) = $(osgn)(rhs, lhs)
-    @eval $(sgn)(lhs::Number, rhs::AffExpr)  = $(osgn)(rhs, lhs)
-    @eval $(sgn)(lhs::Number, rhs::QuadExpr) = $(osgn)(rhs, lhs)
+    for typ in (:Variable, :AffExpr, :QuadExpr)
+        @eval $(sgn)(lhs::Number, rhs::$(typ)) = $(osgn)(rhs, lhs)
+    end
     # Variable--???
-    @eval $(sgn)(lhs::Variable, rhs::Number)   = $(sgn)(lhs - rhs, 0.0)
-    @eval $(sgn)(lhs::Variable, rhs::Variable) = $(sgn)(lhs - rhs, 0.0)
-    @eval $(sgn)(lhs::Variable, rhs::AffExpr)  = $(sgn)(lhs - rhs, 0.0)
-    @eval $(sgn)(lhs::Variable, rhs::QuadExpr) = $(sgn)(lhs - rhs, 0.0)
+    for typ in (:Number, :Variable, :AffExpr, :QuadExpr)
+        @eval $(sgn)(lhs::Variable, rhs::$(typ)) = $(sgn)(lhs-rhs, 0.0)
+    end
 end
 # AffExpr--???
 (<=)(lhs::AffExpr, rhs::Number) = LinearConstraint(lhs,            -Inf,rhs-lhs.constant)
 (==)(lhs::AffExpr, rhs::Number) = LinearConstraint(lhs,rhs-lhs.constant,rhs-lhs.constant)
 (>=)(lhs::AffExpr, rhs::Number) = LinearConstraint(lhs,rhs-lhs.constant,             Inf)
 for sgn in (:<=, :(==), :>=)
-    @eval $(sgn)(lhs::AffExpr, rhs::Variable) = $(sgn)(lhs-rhs, 0.0)
-    @eval $(sgn)(lhs::AffExpr, rhs::AffExpr)  = $(sgn)(lhs-rhs, 0.0)
-    @eval $(sgn)(lhs::AffExpr, rhs::QuadExpr) = $(sgn)(lhs-rhs, 0)
+    for typ in (:Variable, :AffExpr, :QuadExpr)
+        @eval $(sgn)(lhs::AffExpr, rhs::$(typ)) = $(sgn)(lhs-rhs, 0.0)
+    end
 end
 # There's no easy way to allow operator overloads for range constraints.
 # Use macros instead.
@@ -192,10 +191,11 @@ end
 # QuadConstraint
 # QuadConstraint--Number
 for sgn in (:<=, :(==), :>=)
-    @eval $(sgn)(lhs::QuadExpr, rhs::Number)   = QuadConstraint( QuadExpr(copy(lhs.qvars1), copy(lhs.qvars2), lhs.qcoeffs,lhs.aff - rhs), $(quot(sgn)))
-    @eval $(sgn)(lhs::QuadExpr, rhs::Variable) = $(sgn)(lhs-rhs, 0)
-    @eval $(sgn)(lhs::QuadExpr, rhs::AffExpr)  = $(sgn)(lhs-rhs, 0)
-    @eval $(sgn)(lhs::QuadExpr, rhs::QuadExpr) = $(sgn)(lhs-rhs, 0)
+    @eval $(sgn)(lhs::QuadExpr, rhs::Number) = 
+        QuadConstraint( QuadExpr(copy(lhs.qvars1), copy(lhs.qvars2), lhs.qcoeffs,lhs.aff - rhs), $(quot(sgn)))
+    for typ in (:Variable, :AffExpr, :QuadExpr)
+        @eval $(sgn)(lhs::QuadExpr, rhs::$(typ)) = $(sgn)(lhs-rhs, 0)
+    end
 end
 
 
