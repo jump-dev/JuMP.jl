@@ -294,8 +294,6 @@ function solveMIP(m::Model; presolve=false)
         addQuadratics(m)
         registercallbacks(m)
 
-        println("first I was in here")
-
         m.nointernal = false
     end
 
