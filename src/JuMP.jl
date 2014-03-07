@@ -331,7 +331,6 @@ end
 typealias LinearConstraint GenericRangeConstraint{AffExpr}
 
 function addConstraint(m::Model, c::LinearConstraint)
-    m.nointernal || error("JuMP does not currently support adding constraints to internally build model; consider starting from scratch")
     push!(m.linconstr,c)
     if !m.nointernal
         # TODO: we don't check for duplicates here
@@ -379,9 +378,16 @@ end
 addSOS1(m::Model, coll) = addSOS1(m, convert(Vector{AffExpr}, coll))
 
 function addSOS1(m::Model, coll::Vector{AffExpr})
-    m.nointernal || error("JuMP does not currently support adding constraints to internally build model; consider starting from scratch")
     vars, weight = constructSOS(coll)
     push!(m.sosconstr, SOSConstraint(vars, weight, :SOS1))
+    if !m.nointernal
+        try
+            addsos1!(m.internalModel, Int[v.col for v in vars], weight)
+        catch
+            Base.warn_once("Solver does not appear to support adding constraints to an existing model. Hot-start is disabled.")
+            m.nointernal = true
+        end
+    end
     return ConstraintRef{SOSConstraint}(m,length(m.sosconstr))
 end
 
@@ -391,6 +397,14 @@ function addSOS2(m::Model, coll::Vector{AffExpr})
     m.nointernal || error("JuMP does not currently support adding constraints to internally build model; consider starting from scratch")
     vars, weight = constructSOS(coll)
     push!(m.sosconstr, SOSConstraint(vars, weight, :SOS2))
+    if !m.nointernal
+        try
+            addsos2!(m.internalModel, Int[v.col for v in vars], weight)
+        catch
+            Base.warn_once("Solver does not appear to support adding constraints to an existing model. Hot-start is disabled.")
+            m.nointernal = true
+        end
+    end
     return ConstraintRef{SOSConstraint}(m,length(m.sosconstr))
 end
 
@@ -408,6 +422,7 @@ function addConstraint(m::Model, c::QuadConstraint)
     push!(m.quadconstr,c)
     if !m.nointernal
         # we don't (yet) support hot-starting QCQP solutions
+        Base.warn_once("JuMP does not yet support adding quadratic constraints to an existing model. Hot-start is disabled.")
         m.nointernal = true
     end
     return ConstraintRef{QuadConstraint}(m,length(m.quadconstr))
