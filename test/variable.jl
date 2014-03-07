@@ -95,3 +95,6 @@ idx3 = [[2:2:20],21]
 @defVar(mprint, q[idx2,idx3])
 @test JuMP.dictstring(q, :REPL)   == "q[i,j], for all i in {2,4..18,20}, j in {2,4,6,8,10,12..} free"
 @test JuMP.dictstring(q, :IJulia) == "q_{i,j} \\quad \\forall i \\in \\{ 2,4..18,20 \\}, j \\in \\{ 2,4,6,8,10,12.. \\} free"
+# test empty JuMPDict printing (issue #124)
+@defVar(mprint, xx[1:0])
+@test JuMP.dictstring(xx, :REPL) == JuMP.dictstring(xx, :IJulia) == ""
