@@ -200,6 +200,7 @@ function solveLP(m::Model; presolve=false)
             setconstrLB!(m.internalModel, rowlb)
             setconstrUB!(m.internalModel, rowub)
             setobj!(m.internalModel, f)
+            setvartype!(m.internalModel, fill('C',m.numCols))
         catch
             warn("LP solver does not appear to support hot-starts. Problem will be solved from scratch.")
             m.nointernal = true
@@ -209,15 +210,14 @@ function solveLP(m::Model; presolve=false)
         A = prepConstrMatrix(m)
         m.internalModel = model(m.solver)
         loadproblem!(m.internalModel, A, m.colLower, m.colUpper, f, rowlb, rowub, m.objSense)
-
         addQuadratics(m)
+        m.nointernal = false
     end 
 
     if !presolve
         optimize!(m.internalModel)
         stat = status(m.internalModel)
     else
-        m.nointernal = false
         stat = :NotSolved
     end
 
@@ -249,7 +249,6 @@ function solveLP(m::Model; presolve=false)
         catch
             Base.warn_once("Dual solutions not available")
         end
-        m.nointernal = false
     end
 
     return stat
@@ -271,26 +270,41 @@ function solveMIP(m::Model; presolve=false)
 
     # Ready to solve
     
-    if m.nointernal 
+    if !m.nointernal
+        try
+            setvarLB!(m.internalModel, m.colLower)
+            setvarUB!(m.internalModel, m.colUpper)
+            setconstrLB!(m.internalModel, rowlb)
+            setconstrUB!(m.internalModel, rowub)
+            setobj!(m.internalModel, f)
+            setvartype!(m.internalModel, vartype)
+        catch
+            warn("LP solver does not appear to support hot-starts. Problem will be solved from scratch.")
+            m.nointernal = true
+        end
+    end
+    if m.nointernal
         m.internalModel = model(m.solver)
         
         loadproblem!(m.internalModel, A, m.colLower, m.colUpper, f, rowlb, rowub, m.objSense)
         setvartype!(m.internalModel, vartype)
-
-        if !all(isnan(m.colVal))
-            try
-                setwarmstart!(m.internalModel, m.colVal)
-            catch
-                Base.warn_once("MIP solver does not appear to support warm start solution.")
-            end
-        end
 
         addSOS(m)
 
         addQuadratics(m)
         registercallbacks(m)
 
+        println("first I was in here")
+
         m.nointernal = false
+    end
+
+    if !all(isnan(m.colVal))
+        try
+            setwarmstart!(m.internalModel, m.colVal)
+        catch
+            Base.warn_once("MIP solver does not appear to support warm start solution.")
+        end
     end
 
     if !presolve
