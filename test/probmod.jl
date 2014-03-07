@@ -9,7 +9,7 @@ solve(m)
 
 # Test adding a variable
 @defVar(m, 0 <= z <= 5, 100.0, [maincon], [1.0])
-@test m.loaded_internalModel
+@test m.internalModelLoaded
 solve(m)
 @test_approx_eq_eps getValue(x) 0.0 1e-6
 @test_approx_eq_eps getValue(y) 1.0 1e-6
@@ -23,7 +23,7 @@ solve(m)
 @test_approx_eq_eps getValue(x) 1.0 1e-6
 @test_approx_eq_eps getValue(y) 0.0 1e-6
 @test_approx_eq_eps getValue(z) 2.0 1e-6
-m.loaded_internalModel = false
+m.internalModelLoaded = false
 
 # Test changing problem type
 setUpper(z, 1.5)

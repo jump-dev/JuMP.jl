@@ -69,7 +69,7 @@ type Model
     # Solver+option object from MathProgBase
     solver::AbstractMathProgSolver
     # true if we haven't solved yet
-    loaded_internalModel::Bool
+    internalModelLoaded::Bool
     # callbacks
     lazycallback
     cutcallback
@@ -332,13 +332,13 @@ typealias LinearConstraint GenericRangeConstraint{AffExpr}
 
 function addConstraint(m::Model, c::LinearConstraint)
     push!(m.linconstr,c)
-    if m.loaded_internalModel 
+    if m.internalModelLoaded 
         # TODO: we don't check for duplicates here
         try
             addconstr!(m.internalModel,[v.col for v in c.terms.vars],c.terms.coeffs,c.lb,c.ub)
         catch
             Base.warn_once("Solver does not appear to support adding constraints to an existing model. Hot-start is disabled.")
-            m.loaded_internalModel = false
+            m.internalModelLoaded = false
         end
     end
     return ConstraintRef{LinearConstraint}(m,length(m.linconstr))
@@ -380,12 +380,12 @@ addSOS1(m::Model, coll) = addSOS1(m, convert(Vector{AffExpr}, coll))
 function addSOS1(m::Model, coll::Vector{AffExpr})
     vars, weight = constructSOS(coll)
     push!(m.sosconstr, SOSConstraint(vars, weight, :SOS1))
-    if m.loaded_internalModel
+    if m.internalModelLoaded
         try
             addsos1!(m.internalModel, Int[v.col for v in vars], weight)
         catch
             Base.warn_once("Solver does not appear to support adding constraints to an existing model. Hot-start is disabled.")
-            m.loaded_internalModel = false
+            m.internalModelLoaded = false
         end
     end
     return ConstraintRef{SOSConstraint}(m,length(m.sosconstr))
@@ -396,12 +396,12 @@ addSOS2(m::Model, coll) = addSOS2(m, convert(Vector{AffExpr}, coll))
 function addSOS2(m::Model, coll::Vector{AffExpr})
     vars, weight = constructSOS(coll)
     push!(m.sosconstr, SOSConstraint(vars, weight, :SOS2))
-    if m.loaded_internalModel
+    if m.internalModelLoaded
         try
             addsos2!(m.internalModel, Int[v.col for v in vars], weight)
         catch
             Base.warn_once("Solver does not appear to support adding constraints to an existing model. Hot-start is disabled.")
-            m.loaded_internalModel = false
+            m.internalModelLoaded = false
         end
     end
     return ConstraintRef{SOSConstraint}(m,length(m.sosconstr))
@@ -418,10 +418,10 @@ end
 
 function addConstraint(m::Model, c::QuadConstraint)
     push!(m.quadconstr,c)
-    if m.loaded_internalModel
+    if m.internalModelLoaded
         # we don't (yet) support hot-starting QCQP solutions
         Base.warn_once("JuMP does not yet support adding quadratic constraints to an existing model. Hot-start is disabled.")
-        m.loaded_internalModel = false
+        m.internalModelLoaded = false
     end
     return ConstraintRef{QuadConstraint}(m,length(m.quadconstr))
 end
@@ -479,12 +479,12 @@ function Variable(m::Model,lower::Number,upper::Number,cat::Int,objcoef::Number,
     push!(m.obj.aff.vars, v)
     push!(m.obj.aff.coeffs,objcoef)
 
-    if m.loaded_internalModel
+    if m.internalModelLoaded
         try
             addvar!(m.internalModel,Int[c.idx for c in constraints],coefficients,float(lower),float(upper),float(objcoef))
         catch
             Base.warn_once("Solver does not appear to support adding variables to an existing model. Hot-start is disabled.")
-            m.loaded_internalModel = false
+            m.internalModelLoaded = false
         end
     end
 

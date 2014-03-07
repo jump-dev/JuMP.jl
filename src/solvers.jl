@@ -18,7 +18,7 @@ function solve(m::Model; load_model_only=false)
             s = solveMIP(m; load_model_only=load_model_only)
             # Clear solver in case we change problem types
             m.solver = MathProgBase.MissingSolver("",Symbol[])
-            m.loaded_internalModel = false
+            m.internalModelLoaded = false
             return s
         else
             solveMIP(m; load_model_only=load_model_only)
@@ -162,7 +162,7 @@ function solveLP(m::Model; load_model_only=false)
 
     # Ready to solve
 
-    if m.loaded_internalModel
+    if m.internalModelLoaded
         try
             setvarLB!(m.internalModel, m.colLower)
             setvarUB!(m.internalModel, m.colUpper)
@@ -171,7 +171,7 @@ function solveLP(m::Model; load_model_only=false)
             setobj!(m.internalModel, f)
         catch
             warn("LP solver does not appear to support hot-starts. Problem will be solved from scratch.")
-            m.loaded_internalModel = false
+            m.internalModelLoaded = false
         end
         all_cont = true
         try # this fails for LPs for some unfathomable reason...but if it's an LP, we're good anyway
@@ -181,12 +181,12 @@ function solveLP(m::Model; load_model_only=false)
             setvartype!(m.internalModel, fill('C',m.numCols))
         end
     end
-    if !m.loaded_internalModel
+    if !m.internalModelLoaded
         A = prepConstrMatrix(m)
         m.internalModel = model(m.solver)
         loadproblem!(m.internalModel, A, m.colLower, m.colUpper, f, rowlb, rowub, m.objSense)
         addQuadratics(m)
-        m.loaded_internalModel = true
+        m.internalModelLoaded = true
     end 
 
     if !load_model_only
@@ -245,7 +245,7 @@ function solveMIP(m::Model; load_model_only=false)
 
     # Ready to solve
     
-    if m.loaded_internalModel
+    if m.internalModelLoaded
         try
             setvarLB!(m.internalModel, m.colLower)
             setvarUB!(m.internalModel, m.colUpper)
@@ -255,10 +255,10 @@ function solveMIP(m::Model; load_model_only=false)
             setvartype!(m.internalModel, vartype)
         catch
             warn("LP solver does not appear to support hot-starts. Problem will be solved from scratch.")
-            m.loaded_internalModel = false
+            m.internalModelLoaded = false
         end
     end
-    if !m.loaded_internalModel
+    if !m.internalModelLoaded
         m.internalModel = model(m.solver)
         
         loadproblem!(m.internalModel, A, m.colLower, m.colUpper, f, rowlb, rowub, m.objSense)
@@ -269,7 +269,7 @@ function solveMIP(m::Model; load_model_only=false)
         addQuadratics(m)
         registercallbacks(m)
 
-        m.loaded_internalModel = true
+        m.internalModelLoaded = true
     end
 
     if !all(isnan(m.colVal))
