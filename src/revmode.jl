@@ -139,6 +139,7 @@ type SymbolicOutput
               # useful when multiple expressions have the same structure
     mapfromcanonical
     maptocanonical
+    hashval # for identifying expressions with identical trees
 end
 
 macro processNLExpr(x)
@@ -151,10 +152,10 @@ macro processNLExpr(x)
         push!(inputnames.args, quot(k))
         push!(inputvals.args, esc(v))
     end
-    return :(SymbolicOutput(genExprGraph($tree), $inputnames, $inputvals,$indexlist))
+    return :(SymbolicOutput(genExprGraph($tree), $inputnames, $inputvals,$indexlist, $(hash(x))))
 end
 
-function SymbolicOutput(tree, inputnames, inputvals, indexlist)
+function SymbolicOutput(tree, inputnames, inputvals, indexlist, hashval)
     # compute canonical indices and maps
     unq = unique(indexlist)
     nidx = length(unq)
@@ -163,7 +164,7 @@ function SymbolicOutput(tree, inputnames, inputvals, indexlist)
     for k in 1:nidx
         maptocanonical[unq[k]] = k
     end
-    return SymbolicOutput(tree, inputnames, inputvals, indexlist, unq, maptocanonical)
+    return SymbolicOutput(tree, inputnames, inputvals, indexlist, unq, maptocanonical, hashval)
 end
 
 export @processNLExpr
@@ -402,6 +403,32 @@ function genfgrad_parametric(x::SymbolicOutput)
 
 end
 
+# expression evaluation parametric on "inputvals"
+# forward pass only
+function genfval_parametric(x::SymbolicOutput)
+    out = Expr(:block)
+    # load data into local scope
+    for i in 1:length(x.inputnames)
+        push!( out.args, :( $(x.inputnames[i]) = __inputvals[$i] ))
+    end
+    fval = forwardpass(x.tree, out)
+    fname = gensym()
+    fexpr = quote
+        function $(fname){T}(__placevalues::Vector{T}, __placeindex_in, __inputvals)
+            $out
+            return $fval
+        end
+    end
+
+    return eval(fexpr)
+end
+
+function genfval_simple(x::SymbolicOutput)
+    fexpr = genfval_parametric(x)
+    f = eval(fexpr)
+    return xvals -> f(xvals, IdentityArray(), x.inputvals)
+end
+
 type IdentityArray
 end
 
@@ -414,4 +441,4 @@ function genfgrad_simple(x::SymbolicOutput)
     return (xvals, out) -> (fill!(out, 0.0); f(xvals, IdentityArray(), out, IdentityArray()))
 end
 
-export genfgrad, genfgrad_simple, genfgrad_parametric
+export genfgrad, genfgrad_simple, genfgrad_parametric, genfval_parametric, genfval_simple

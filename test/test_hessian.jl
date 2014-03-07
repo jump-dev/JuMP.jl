@@ -55,20 +55,17 @@ V = zeros(length(I))
 sparsefunc_color(val, V, ex)
 @test_approx_eq to_H(ex, I, J, V, 5) tril(exact(val))
 
-constr = {}
+# Expr list
+exlist = ExprList()
 for i in 1:5
-    push!(constr,@processNLExpr x[i]^2)
-    #println(constr[end])
+    push!(exlist,@processNLExpr x[i]^3/6)
 end
 
-I,J, sparsefunc_color = gen_hessian_sparse_color_parametric(constr[1])
+I,J = prep_sparse_hessians(exlist)
 V = zeros(length(I))
-exact(i) = (x = zeros(5); x[i] = 2; diagm(x))
-for i in 1:5
-    sparsefunc_color(val, V, constr[i])
-    @test_approx_eq to_H(constr[i], I, J, V, 5) exact(i)
-end
-
+lambda = rand(5)
+eval_hess!(V, exlist, val, lambda)
+@test_approx_eq sparse(I,J,V) diagm(lambda.*val)
 
 # test linear expressions
 x,y = placeholders(2)
