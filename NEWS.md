@@ -1,14 +1,14 @@
 JuMP release notes
 ==================
 
-Unversioned
------------
+Version 0.4.0 (March 10, 2014)
+------------------------------
 
   * Support for SOS1 and SOS2 constraints.
   * Solver-independent callback for user heuristics.
   * ``dot`` and ``sum`` implemented for ``JuMPDict`` objects. Now you can say ``@addConstraint(m, dot(a,x) <= b)``.
   * Developers: support for extensions to JuMP. See definition of Model in ``src/JuMP.jl`` for more details.
-  * Solver-level model construction, independent of optimization.
+  * Option to construct the low-level model before optimizing.
 
 Version 0.3.2 (February 17, 2014)
 ---------------------------------

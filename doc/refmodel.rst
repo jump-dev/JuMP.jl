@@ -38,6 +38,7 @@ Methods
 
 * ``getNumVars(m::Model)`` - returns the number of variables associated with the ``Model m``.
 * ``getNumConstraints(m::Model)`` - returns the number of constraints associated with the ``Model m``.
+* ``getSolverModel(m::Model)`` - returns the internal low-level ``AbstractMathProgModel`` object which can be used to access any functionality that is not exposed by JuMP. See the MathProgBase `documentation <http://mathprogbasejl.readthedocs.org/en/latest/mathprogbase.html#low-level-interface>`_.
 
 **Objective**
 

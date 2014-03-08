@@ -20,14 +20,6 @@ modify problems exposed by the solver if possible, and will still work even if
 the solver does not support this functionality by passing the complete problem
 to the solver every time.
 
-Changing problem class will trigger a fresh model construction, e.g.
-changing between an LP and MILP. This restriction is partially to support the
-variety of different solvers capabilities.
-
-Modifying and resolving a MILP does currently trigger a fresh model construction,
-but JuMP will provide the last solution as a "warm-start" solution if supported
-by the solver.
-
 Modifying variables
 ^^^^^^^^^^^^^^^^^^^
 
@@ -92,9 +84,12 @@ Modifying objective
 To change the objective, simply call ``@setObjective`` again - the previous objective
 function and sense will be replaced.
 
-Constructing internal model
-^^^^^^^^^^^^^^^^^^^^^^^^^^^
+Accessing the low-level model
+^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
 
-It is possible to construct the model at the solver level before optimizing. To do this, 
+It is possible to construct the internal low-level model before optimizing. To do this, 
 pass the optional keywork argument ``load_model_only=true`` to ``solve``. It is then possible
-to access the raw solver model via the ``getSolverModel(m::Model)`` function.
+to obtain this model by using the ``getSolverModel`` function. This may be useful when
+it is necessary to access some functionality that is not exposed by JuMP, for example, to
+add a "branching" callback to a CPLEX model. When you are ready to optimize, simply
+call ``solve`` again without the keyword argument.
