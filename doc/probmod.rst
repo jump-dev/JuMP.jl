@@ -88,7 +88,7 @@ Accessing the low-level model
 ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
 
 It is possible to construct the internal low-level model before optimizing. To do this, 
-pass the optional keywork argument ``load_model_only=true`` to ``solve``. It is then possible
+pass the optional keyword argument ``load_model_only=true`` to ``solve``. It is then possible
 to obtain this model by using the ``getSolverModel`` function. This may be useful when
 it is necessary to access some functionality that is not exposed by JuMP, for example, to
 add a "branching" callback to a CPLEX model. When you are ready to optimize, simply
