@@ -99,4 +99,6 @@ end
 
 (-)(x::JuMPDict,y::Array) = x.innerArray-y
 
+full(x::JuMPDict) = x
+
 export @gendict
