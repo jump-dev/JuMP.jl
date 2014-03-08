@@ -69,7 +69,6 @@ type Model
     internalModel
     # Solver+option object from MathProgBase
     solver::AbstractMathProgSolver
-    # true if we haven't solved yet
     internalModelLoaded::Bool
     # callbacks
     lazycallback
