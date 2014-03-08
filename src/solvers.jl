@@ -1,4 +1,4 @@
-function solve(m::Model; load_model_only=false)
+function solve(m::Model; load_model_only=false, suppress_warnings=false)
     # Analyze model to see if any integers
     anyInts = false
     for j = 1:m.numCols
@@ -15,22 +15,22 @@ function solve(m::Model; load_model_only=false)
     if anyInts
         if isa(m.solver,MathProgBase.MissingSolver)
             m.solver = MathProgBase.defaultMIPsolver
-            s = solveMIP(m; load_model_only=load_model_only)
+            s = solveMIP(m; load_model_only=load_model_only, suppress_warnings=suppress_warnings)
             # Clear solver in case we change problem types
             m.solver = MathProgBase.MissingSolver("",Symbol[])
             m.internalModelLoaded = false
             return s
         else
-            solveMIP(m; load_model_only=load_model_only)
+            solveMIP(m; load_model_only=load_model_only, suppress_warnings=suppress_warnings)
         end
     else
         if isa(m.solver,MathProgBase.MissingSolver)
             m.solver = MathProgBase.defaultLPsolver
-            s = solveLP(m, load_model_only=load_model_only)
+            s = solveLP(m, load_model_only=load_model_only, suppress_warnings=suppress_warnings)
             m.solver = MathProgBase.MissingSolver("",Symbol[])
             return s
         else
-            solveLP(m; load_model_only=load_model_only)
+            solveLP(m; load_model_only=load_model_only, suppress_warnings=suppress_warnings)
         end
     end
 end
@@ -157,7 +157,7 @@ function prepConstrMatrix(m::Model)
     A = rowmat'
 end
 
-function solveLP(m::Model; load_model_only=false)
+function solveLP(m::Model; load_model_only=false, suppress_warnings=false)
     f, rowlb, rowub = prepProblemBounds(m)  
 
     # Ready to solve
@@ -170,7 +170,7 @@ function solveLP(m::Model; load_model_only=false)
             setconstrUB!(m.internalModel, rowub)
             setobj!(m.internalModel, f)
         catch
-            warn("LP solver does not appear to support hot-starts. Problem will be solved from scratch.")
+            !suppress_warnings && warn("LP solver does not appear to support hot-starts. Problem will be solved from scratch.")
             m.internalModelLoaded = false
         end
         all_cont = true
@@ -199,18 +199,18 @@ function solveLP(m::Model; load_model_only=false)
     if stat == :NotSolved
         # do nothing
     elseif stat != :Optimal
-        warn("LP not solved to optimality, status: $stat")
+        !suppress_warnings && warn("LP not solved to optimality, status: $stat")
         if stat == :Infeasible
             try
                 m.linconstrDuals = getinfeasibilityray(m.internalModel)
             catch
-                println("Infeasibility ray (Farkas proof) not available")
+                !suppress_warnings && println("Infeasibility ray (Farkas proof) not available")
             end
         elseif stat == :Unbounded
             try
                 m.colVal = getunboundedray(m.internalModel)
             catch
-                println("Unbounded ray not available")
+                !suppress_warnings && println("Unbounded ray not available")
             end
         end
     else
@@ -222,14 +222,14 @@ function solveLP(m::Model; load_model_only=false)
             m.redCosts = getreducedcosts(m.internalModel)
             m.linconstrDuals = getconstrduals(m.internalModel)
         catch
-            Base.warn_once("Dual solutions not available")
+            !suppress_warnings && Base.warn_once("Dual solutions not available")
         end
     end
 
     return stat
 end
 
-function solveMIP(m::Model; load_model_only=false)
+function solveMIP(m::Model; load_model_only=false, suppress_warnings=false)
     f, rowlb, rowub = prepProblemBounds(m)
     A = prepConstrMatrix(m)
 
@@ -254,7 +254,7 @@ function solveMIP(m::Model; load_model_only=false)
             setobj!(m.internalModel, f)
             setvartype!(m.internalModel, vartype)
         catch
-            warn("LP solver does not appear to support hot-starts. Problem will be solved from scratch.")
+            !suppress_warnings && warn("LP solver does not appear to support hot-starts. Problem will be solved from scratch.")
             m.internalModelLoaded = false
         end
     end
@@ -276,7 +276,7 @@ function solveMIP(m::Model; load_model_only=false)
         try
             setwarmstart!(m.internalModel, m.colVal)
         catch
-            Base.warn_once("MIP solver does not appear to support warm start solution.")
+            !suppress_warnings && Base.warn_once("MIP solver does not appear to support warm start solution.")
         end
     end
 
@@ -300,7 +300,7 @@ function solveMIP(m::Model; load_model_only=false)
         end
     end
     if stat != :Optimal
-        println("Warning: MIP not solved to optimality, status: ", stat)
+        !suppress_warnings && println("Warning: MIP not solved to optimality, status: ", stat)
     end
 
     return stat
