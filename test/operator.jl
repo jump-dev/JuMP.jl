@@ -178,7 +178,44 @@ q3 = 2.0 * x * x + 1.0 * y * y + z + 3.0
 
 
 # Higher-level operators
-@defVar(m, matrix[1:3,1:3])
-@test affToStr(sum(matrix)) == "1.0 matrix[1,1] + 1.0 matrix[2,1] + 1.0 matrix[3,1] + 1.0 matrix[1,2] + 1.0 matrix[2,2] + 1.0 matrix[3,2] + 1.0 matrix[1,3] + 1.0 matrix[2,3] + 1.0 matrix[3,3]"
-@setObjective(m, Min, sum(matrix))
-@test quadToStr(m.obj) == "1.0 matrix[1,1] + 1.0 matrix[2,1] + 1.0 matrix[3,1] + 1.0 matrix[1,2] + 1.0 matrix[2,2] + 1.0 matrix[3,2] + 1.0 matrix[1,3] + 1.0 matrix[2,3] + 1.0 matrix[3,3]"
+# sum
+let
+    sum_m = Model()
+    @defVar(sum_m, 0 <= matrix[1:3,1:3] <= 1)
+    # sum(j::JuMPDict{Variable}) 
+    @test affToStr(sum(matrix)) == "1.0 matrix[1,1] + 1.0 matrix[2,1] + 1.0 matrix[3,1] + 1.0 matrix[1,2] + 1.0 matrix[2,2] + 1.0 matrix[3,2] + 1.0 matrix[1,3] + 1.0 matrix[2,3] + 1.0 matrix[3,3]"
+    # sum(j::JuMPDict{Variable}) in a macro
+    @setObjective(sum_m, Max, sum(matrix))
+    @test quadToStr(sum_m.obj) == "1.0 matrix[1,1] + 1.0 matrix[2,1] + 1.0 matrix[3,1] + 1.0 matrix[1,2] + 1.0 matrix[2,2] + 1.0 matrix[3,2] + 1.0 matrix[1,3] + 1.0 matrix[2,3] + 1.0 matrix[3,3]"
+    solve(sum_m)
+    # sum{T<:Real}(j::JuMPDict{T})
+    @test_approx_eq_eps sum(getValue(matrix)) 9.0 1e-6
+    # sum(j::Array{Variable})
+    @test affToStr(sum(matrix[1:3,1:3])) == affToStr(sum(matrix))
+    # sum(affs::Array{AffExpr})
+    @test affToStr(sum([2.0*matrix[i,j] for i in 1:3, j in 1:3])) == "2.0 matrix[1,1] + 2.0 matrix[2,1] + 2.0 matrix[3,1] + 2.0 matrix[1,2] + 2.0 matrix[2,2] + 2.0 matrix[3,2] + 2.0 matrix[1,3] + 2.0 matrix[2,3] + 2.0 matrix[3,3]"
+end
+
+# dot
+let
+    dot_m = Model()
+    @defVar(dot_m, 0 <= x[1:3] <= 1)
+    c = [1:3]
+    @test affToStr(dot(c,x)) == "1.0 x[1] + 2.0 x[2] + 3.0 x[3]"
+    @test affToStr(dot(x,c)) == "1.0 x[1] + 2.0 x[2] + 3.0 x[3]"
+
+    A = [1 3 ; 2 4]
+    @defVar(dot_m, 1 <= y[1:2,1:2] <= 1)
+    @test affToStr(dot(A,y)) == "1.0 y[1,1] + 2.0 y[2,1] + 3.0 y[1,2] + 4.0 y[2,2]"
+    @test affToStr(dot(y,A)) == "1.0 y[1,1] + 2.0 y[2,1] + 3.0 y[1,2] + 4.0 y[2,2]"
+
+    B = ones(2,2,2)
+    @defVar(dot_m, 0 <= z[1:2,1:2,1:2] <= 1)
+    @test affToStr(dot(B,z)) == "1.0 z[1,1,1] + 1.0 z[2,1,1] + 1.0 z[1,2,1] + 1.0 z[2,2,1] + 1.0 z[1,1,2] + 1.0 z[2,1,2] + 1.0 z[1,2,2] + 1.0 z[2,2,2]"
+    @test affToStr(dot(z,B)) == "1.0 z[1,1,1] + 1.0 z[2,1,1] + 1.0 z[1,2,1] + 1.0 z[2,2,1] + 1.0 z[1,1,2] + 1.0 z[2,1,2] + 1.0 z[1,2,2] + 1.0 z[2,2,2]"
+
+    @setObjective(dot_m, Max, dot(x, ones(3)) - dot(y, ones(2,2)) )
+    solve(dot_m)
+    @test_approx_eq_eps dot(c, getValue(x))   6.0  1e-6
+    @test_approx_eq_eps dot(A, getValue(y))  10.0  1e-6
+end
