@@ -162,7 +162,7 @@ getSolverModel(m::Model) = m.internalModel.inner
 ###############################################################################
 # Variable class
 # Doesn't actually do much, just a pointer back to the model
-type Variable <: Placeholder
+type Variable <: ReverseDiffSparse.Placeholder
     m::Model
     col::Int
 end
