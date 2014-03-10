@@ -1,4 +1,7 @@
 function solve(m::Model; load_model_only=false, suppress_warnings=false)
+    if m.nlpdata != nothing
+        return solveIpopt(m, suppress_warnings=suppress_warnings)
+    end
     # Analyze model to see if any integers
     anyInts = false
     for j = 1:m.numCols

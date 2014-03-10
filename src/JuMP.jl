@@ -10,6 +10,8 @@ module JuMP
 using MathProgBase
 using MathProgBase.MathProgSolverInterface
 
+using ReverseDiffSparse
+
 importall Base
 
 export
@@ -31,7 +33,8 @@ export
     
 # Macros and support functions
     @addConstraint, @defVar, 
-    @defConstrRef, @setObjective, addToExpression
+    @defConstrRef, @setObjective, addToExpression,
+    @setNLObjective, @addNLConstraint
 
 include("JuMPDict.jl")
 include("utils.jl")
@@ -78,6 +81,8 @@ type Model
     # JuMPDict list
     dictList::Vector
 
+    nlpdata#::NLPData
+
     # Extension dictionary - e.g. for robust
     # Extensions should define a type to hold information particular to
     # their functionality, and store an instance of the type in this
@@ -92,7 +97,7 @@ function Model(;solver=nothing)
         Model(QuadExpr(),:Min,LinearConstraint[], QuadConstraint[],SOSConstraint[],
               0,String[],Float64[],Float64[],Int[],
               0,Float64[],Float64[],Float64[],nothing,MathProgBase.MissingSolver("",Symbol[]),false,
-              nothing,nothing,nothing,JuMPDict[],Dict{Symbol,Any}())
+              nothing,nothing,nothing,JuMPDict[],nothing,Dict{Symbol,Any}())
     else
         if !isa(solver,AbstractMathProgSolver)
             error("solver argument ($solver) must be an AbstractMathProgSolver")
@@ -101,7 +106,7 @@ function Model(;solver=nothing)
         Model(QuadExpr(),:Min,LinearConstraint[], QuadConstraint[],SOSConstraint[],
               0,String[],Float64[],Float64[],Int[],
               0,Float64[],Float64[],Float64[],nothing,solver,false,
-              nothing,nothing,nothing,JuMPDict[],Dict{Symbol,Any}())
+              nothing,nothing,nothing,JuMPDict[],nothing,Dict{Symbol,Any}())
     end
 end
 
@@ -145,6 +150,10 @@ function copy(source::Model)
     dest.colUpper = source.colUpper[:]
     dest.colCat = source.colCat[:]
 
+    if source.nlpdata != nothing
+        dest.nlpdata = copy(source.nlpdata)
+    end
+
     return dest
 end
 
@@ -153,10 +162,12 @@ getSolverModel(m::Model) = m.internalModel.inner
 ###############################################################################
 # Variable class
 # Doesn't actually do much, just a pointer back to the model
-type Variable
+type Variable <: Placeholder
     m::Model
     col::Int
 end
+
+getindex(x::Variable) = x.col
 
 function Variable(m::Model,lower::Number,upper::Number,cat::Int,name::String)
     m.numCols += 1
@@ -506,6 +517,8 @@ include("macros.jl")
 include("callbacks.jl")
 # Pretty-printing, including IJulia
 include("print.jl")
+# Nonlinear-specific code
+include("nlp.jl")
 
 ##########################################################################
 end

@@ -13,11 +13,17 @@ before_install:
     - sudo add-apt-repository ppa:staticfloat/${JULIAVERSION} -y
     - sudo apt-get update -qq -y
     - sudo apt-get install julia -y
+    - sudo apt-get install gfortran liblapack-dev
     - sudo apt-get install libgmp-dev -y
     - git config --global user.name "Travis User"
     - git config --global user.email "travis@example.net"
 script:
-    - julia -e 'Pkg.init(); run(`ln -s $(pwd()) $(Pkg.dir("JuMP"))`); Pkg.pin("JuMP"); Pkg.resolve()'
+    - julia -e 'Pkg.init(); Pkg.clone("https://github.com/mlubin/ReverseDiffSparse.jl.git")'
+    - if [ $JULIAVERSION = "julianightlies" ]; then julia -e 'Pkg.add("Ipopt")'; fi
+    - julia -e 'run(`ln -s $(pwd()) $(Pkg.dir("JuMP"))`); Pkg.pin("JuMP"); Pkg.resolve()'
     - julia -e 'for p in split(ENV["PKGADD"],";") Pkg.add(p) end'
     - julia test/runtests.jl
     - julia test/hygiene.jl
+    - julia test/hockschittkowski/runhs.jl
+
+
