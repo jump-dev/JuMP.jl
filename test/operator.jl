@@ -219,3 +219,15 @@ let
     @test_approx_eq_eps dot(c, getValue(x))   6.0  1e-6
     @test_approx_eq_eps dot(A, getValue(y))  10.0  1e-6
 end
+
+let
+    slice_m = Model()
+    C = [:cat,:dog]
+    @defVar(slice_m, x[-1:1,C])
+    catcoef = [1,2,3]
+    dogcoef = [3,4,5]
+
+    @test affToStr(dot(catcoef, x[:,:cat])) == "1.0 x[-1,cat] + 2.0 x[0,cat] + 3.0 x[1,cat]"
+    @test affToStr(dot(dogcoef, x[:,:dog])) == "3.0 x[-1,dog] + 4.0 x[0,dog] + 5.0 x[1,dog]"
+end
+
