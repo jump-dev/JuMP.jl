@@ -46,16 +46,18 @@ If you are new to Julia or want more details, read on to the next section.
 .. include:: refvariable.rst
 .. Expressions, Constraints
 .. include:: refexpr.rst
+.. Nonlinear
+.. include:: nlp.rst
 .. Problem modification
 .. include:: probmod.rst
 .. Callbacks
 .. include:: callbacks.rst
 
-----------
-References
-----------
+-----------
+Citing JuMP
+-----------
 
-Further discussion of the design of JuMP in the context of existing domain-specific languages for mathematical programming, together with extensive benchmarks, is given in [1]_.   
+Further discussion of the design of JuMP in the context of existing domain-specific languages for mathematical programming, together with extensive benchmarks, is given in [1]_. If you find JuMP useful in your work, we request that you cite this paper.
 
 
-.. [1] M. Lubin and I. Dunning, "Computing in Operations Research using Julia", May 2013, under review. `Preprint <http://www.optimization-online.org/DB_HTML/2013/05/3883.html>`_
+.. [1] M. Lubin and I. Dunning, "Computing in Operations Research using Julia", 2013. `arXiv:1312.1431 <http://arxiv.org/abs/1312.1431>`_

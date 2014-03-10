@@ -30,4 +30,10 @@ else
     println("WARNING: Neither Gurobi nor CPLEX nor Mosek installed, cannot execute corresponding tests")
 end
 
+if Pkg.installed("Ipopt") != nothing
+    println(" Test: nonlinear.jl")
+    include("nonlinear.jl")
+end
+
 # hygiene.jl should be run separately
+# hockschittkowski/runhs.jl has additional nonlinear tests
