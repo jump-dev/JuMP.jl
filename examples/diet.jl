@@ -56,7 +56,7 @@ function SolveDiet()
     @defVar(m, buy[i=1:numFoods] >= 0)
  
     # Objective - minimize cost
-    @setObjective(m, Min, sum{cost[i]*buy[i], i=1:numFoods})
+    @setObjective(m, Min, dot(cost, buy))
 
     # Nutrition constraints
     for j = 1:numCategories

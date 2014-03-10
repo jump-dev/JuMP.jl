@@ -251,8 +251,8 @@ end
 dot{T<:Real}(lhs::JuMPDict{Variable},rhs::Array{T}) = dot(rhs,lhs)
 dot{T<:Real}(lhs::Array{T}, rhs::JuMPDict{Float64}) = dot(vec(lhs), vec(rhs.innerArray))
 dot{T<:Real}(lhs::JuMPDict{Float64}, rhs::Array{T}) = dot(vec(rhs), vec(lhs.innerArray))
-dot{T<:Real}(lhs::Array{T}, rhs::Array{Variable}) = AffExpr(vec(rhs), vec(float(lhs)), 0.0)
-dot{T<:Real}(rhs::Array{Variable}, lhs::Array{T}) = AffExpr(vec(rhs), vec(float(lhs)), 0.0)
+dot{T<:Real}(lhs::Array{T}, rhs::Array{Variable})   = AffExpr(vec(rhs), vec(float(lhs)), 0.0)
+dot{T<:Real}(rhs::Array{Variable}, lhs::Array{T})   = AffExpr(vec(rhs), vec(float(lhs)), 0.0)
 
 
 #############################################################################

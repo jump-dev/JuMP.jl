@@ -59,8 +59,15 @@ Methods
 
 **Bounds**
 
-* ``setLower(x::Variable, lower::Number)``, ``getLower(x::Variable)`` - Set/get the lower bound of a variable.
-* ``setUpper(x::Variable, upper::Number)``, ``getUpper(x::Variable)`` - Set/get the upper bound of a variable.
+* ``setLower(x::Variable, lower)``, ``getLower(x::Variable)`` - Set/get the lower bound of a variable.
+* ``setUpper(x::Variable, upper)``, ``getUpper(x::Variable)`` - Set/get the upper bound of a variable.
+
+
+**Helper functions**
+
+* ``sum(x)`` - Operates on arrays of variables, efficiently produces an affine expression. Available in macros.
+* ``dot(x, coeffs)`` - Performs a generalized "dot product" for arrays of variables and coefficients up to three dimensions, or equivalently the sum of the elements of the Hadamard product. Available in macros, and also as ``dot(coeffs, x)``.
+
 
 **Values**
 
@@ -69,6 +76,7 @@ Methods
   instead return the corresponding components of an unbounded ray, if available from the solver.
 * ``setValue(x,v)`` - Provide an initial value ``v`` for this variable that can be used by supporting MILP solvers. If ``v`` is ``NaN``, the solver may attempt to fill in this value to construct a feasible solution.
 * ``getDual(x)`` - Get the reduced cost of this variable in the solution. Similar behavior to ``getValue`` for indexable variables.
+
 
 **Names**
 
