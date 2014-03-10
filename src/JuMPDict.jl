@@ -33,7 +33,7 @@ macro gendict(instancename,T,idxsets...)
         if !isrange[i]
             push!(typecode.args[3].args,:($(dictnames[i])::Dict))
             push!(builddicts.args, quote 
-                $(esc(dictnames[i])) = Dict(); 
+                $(esc(dictnames[i])) = Dict{eltype($(esc(idxsets[i]))),Int}(); 
                 for (j,k) in enumerate($(esc(idxsets[i])))
                     $(esc(dictnames[i]))[k] = j
                 end 
