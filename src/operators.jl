@@ -154,14 +154,10 @@ end
 (*)(q::QuadExpr, a::AffExpr) = error("Cannot multiply a quadratic expression by an aff. expression")
 (/)(q::QuadExpr, a::AffExpr) = error("Cannot divide a quadratic expression by an aff. expression")
 # QuadExpr--QuadExpr
-(+)(q1::QuadExpr, q2::QuadExpr) = QuadExpr(vcat(q1.qvars1,   q2.qvars1),
-                                                                                     vcat(q1.qvars2,   q2.qvars2),
-                                                                                     vcat(q1.qcoeffs,  q2.qcoeffs),
-                                                                                     q1.aff + q2.aff)
-(-)(q1::QuadExpr, q2::QuadExpr) = QuadExpr(vcat(q1.qvars1,   q2.qvars1),
-                                                                                     vcat(q1.qvars2,   q2.qvars2),
-                                                                                     vcat(q1.qcoeffs, -q2.qcoeffs),
-                                                                                     q1.aff - q2.aff)
+(+)(q1::QuadExpr, q2::QuadExpr) = QuadExpr( vcat(q1.qvars1, q2.qvars1),     vcat(q1.qvars2, q2.qvars2),
+                                            vcat(q1.qcoeffs, q2.qcoeffs),   q1.aff + q2.aff)
+(-)(q1::QuadExpr, q2::QuadExpr) = QuadExpr( vcat(q1.qvars1, q2.qvars1),     vcat(q1.qvars2, q2.qvars2),
+                                            vcat(q1.qcoeffs, -q2.qcoeffs),  q1.aff - q2.aff)
 (*)(q1::QuadExpr, q2::QuadExpr) = error("Cannot multiply two quadratic expressions")
 (/)(q1::QuadExpr, q2::QuadExpr) = error("Cannot divide a quadratic expression by a quadratic expression")
 
@@ -198,45 +194,70 @@ for sgn in (:<=, :(==), :>=)
     end
 end
 
-
+#############################################################################
 # High-level operators
+# Currently supported
+#  - sum
+#  - dot
+#############################################################################
+
 sum{T<:Real}(j::JuMPDict{T}) = sum(j.innerArray)
 sum(j::JuMPDict{Variable}) = AffExpr(vec(j.innerArray), ones(length(j.innerArray)), 0.0)
+sum(j::Array{Variable}) = AffExpr(vec(j), ones(length(j)), 0.0)
+function sum(affs::Array{AffExpr})
+    n = 0
+    for aff in affs
+        n += length(aff.vars)
+    end
+    new_aff = AffExpr()
+    sizehint(new_aff.vars, n)
+    sizehint(new_aff.coeffs, n)
+    for aff in affs
+        for i in 1:length(aff.vars)
+            push!(new_aff.vars,   aff.vars[i])
+            push!(new_aff.coeffs, aff.coeffs[i])
+        end
+        new_aff.constant += aff.constant
+    end
+    return new_aff
+end
 
-#Vectorization Stuff
-function dot{T<:Real}(lhs::Array{T}, rhs::JuMP.JuMPDict{Variable})
+
+function dot{T<:Real}(lhs::Array{T}, rhs::JuMPDict{Variable})
     sz = size(lhs)
     if length(rhs.indexsets) == 1
         # Single dimension version
         if length(sz) == 2
             @assert sz[1] == 1 || sz[2] == 1
             @assert sz[1] == 1 && sz[2] == length(rhs.indexsets[1]) ||
-                   sz[2] == 1 && sz[1] == length(rhs.indexsets[1])
-            return AffExpr(rhs.innerArray, float(lhs[:]), 0.0)
+                    sz[2] == 1 && sz[1] == length(rhs.indexsets[1])
         elseif length(sz) == 1
             @assert sz[1] == length(rhs.indexsets[1])
-            return AffExpr(rhs.innerArray,float(lhs),0.0)
         end
     elseif length(rhs.indexsets) == 2
         # 2D JuMPDict
         @assert length(rhs.indexsets[1]) == sz[1] &&
                 length(rhs.indexsets[2]) == sz[2]
-        return AffExpr(vec(rhs.innerArray), vec(float(lhs)), 0.0)
     elseif length(rhs.indexsets) == 3
         #3D JuMPDict
         @assert length(rhs.indexsets[1]) == sz[1] &&
                 length(rhs.indexsets[2]) == sz[2] &&
                 length(rhs.indexsets[3]) == sz[3]
-        return AffExpr(vec(rhs.innerArray),vec(float(lhs)),0.0)
     else
         error("Dot products of matrices higher than 3D not supported.")
     end
-
+    dot(lhs,rhs.innerArray)
 end
 dot{T<:Real}(lhs::JuMPDict{Variable},rhs::Array{T}) = dot(rhs,lhs)
+dot{T<:Real}(lhs::Array{T}, rhs::JuMPDict{Float64}) = dot(vec(lhs), vec(rhs.innerArray))
+dot{T<:Real}(lhs::JuMPDict{Float64}, rhs::Array{T}) = dot(vec(rhs), vec(lhs.innerArray))
+dot{T<:Real}(lhs::Array{T}, rhs::Array{Variable}) = AffExpr(vec(rhs), vec(float(lhs)), 0.0)
+dot{T<:Real}(rhs::Array{Variable}, lhs::Array{T}) = AffExpr(vec(rhs), vec(float(lhs)), 0.0)
 
-############################################
+
+#############################################################################
 # JuMPDict comparison operators (all errors)
+
 for sgn in (:<=, :(==), :>=)
     for term in (:Real, :Variable, :AffExpr)
         @eval $(sgn)(a::JuMPDict, b::$(term)) = error("Cannot construct constraint with a JuMPDict term")
