@@ -3,6 +3,8 @@ using Base.Meta
 
 abstract JuMPDict{T}
 
+typealias IntDict{T} Dict{T,Int}
+
 # generate and instantiate a type which is indexed by the given index sets
 # the following types of index sets are allowed:
 # 0:K -- range with compile-time starting index
@@ -31,7 +33,7 @@ macro gendict(instancename,T,idxsets...)
     builddicts = quote end
     for i in 1:N
         if !isrange[i]
-            push!(typecode.args[3].args,:($(dictnames[i])::Dict))
+            push!(typecode.args[3].args,:($(dictnames[i])::IntDict))
             push!(builddicts.args, quote 
                 $(esc(dictnames[i])) = Dict{eltype($(esc(idxsets[i]))),Int}(); 
                 for (j,k) in enumerate($(esc(idxsets[i])))
