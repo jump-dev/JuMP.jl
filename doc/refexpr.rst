@@ -59,6 +59,7 @@ Methods
   ``aff = 5.0*x`` and ``other = 7.0*y + 3.0*z``, we can grow ``aff`` using
   ``append!(aff, other)`` which results in ``aff`` equaling ``5x + 7y + 3z``.
   This is signficantly more efficient than using ``aff += other``.
+* ``sum(affs::Array{AffExpr})`` - efficiently sum an array of affine expressions.
 
 Constraint References
 ^^^^^^^^^^^^^^^^^^^^^
