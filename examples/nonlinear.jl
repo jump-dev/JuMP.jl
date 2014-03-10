@@ -18,6 +18,20 @@ let
 end
 
 # clnlbeam
+# Based on AMPL model
+# Copyright (C) 2001 Princeton University
+# All Rights Reserved
+#
+# Permission to use, copy, modify, and distribute this software and
+# its documentation for any purpose and without fee is hereby
+# granted, provided that the above copyright notice appear in all
+# copies and that the copyright notice and this
+# permission notice appear in all supporting documentation.                     
+
+#   Source:
+#   H. Maurer and H.D. Mittelman,
+#   "The non-linear beam via optimal control with bound state variables",
+#   Optimal Control Applications and Methods 12, pp. 19-31, 1991.
 let
     N     = 1000
     ni    = N
