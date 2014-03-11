@@ -91,7 +91,7 @@ end
 function prepProblemBounds(m::Model)
 
     objaff::AffExpr = m.obj.aff
-        
+
     # We already have dense column lower and upper bounds
 
     # Create dense objective vector
@@ -108,7 +108,7 @@ function prepProblemBounds(m::Model)
         rowlb[c] = m.linconstr[c].lb
         rowub[c] = m.linconstr[c].ub
     end
-    
+
     return f, rowlb, rowub
 end
 
@@ -161,7 +161,7 @@ function prepConstrMatrix(m::Model)
 end
 
 function solveLP(m::Model; load_model_only=false, suppress_warnings=false)
-    f, rowlb, rowub = prepProblemBounds(m)  
+    f, rowlb, rowub = prepProblemBounds(m)
 
     # Ready to solve
 
@@ -190,7 +190,7 @@ function solveLP(m::Model; load_model_only=false, suppress_warnings=false)
         loadproblem!(m.internalModel, A, m.colLower, m.colUpper, f, rowlb, rowub, m.objSense)
         addQuadratics(m)
         m.internalModelLoaded = true
-    end 
+    end
 
     if !load_model_only
         optimize!(m.internalModel)
@@ -247,7 +247,7 @@ function solveMIP(m::Model; load_model_only=false, suppress_warnings=false)
     end
 
     # Ready to solve
-    
+
     if m.internalModelLoaded
         try
             setvarLB!(m.internalModel, m.colLower)
@@ -263,7 +263,7 @@ function solveMIP(m::Model; load_model_only=false, suppress_warnings=false)
     end
     if !m.internalModelLoaded
         m.internalModel = model(m.solver)
-        
+
         loadproblem!(m.internalModel, A, m.colLower, m.colUpper, f, rowlb, rowub, m.objSense)
         setvartype!(m.internalModel, vartype)
 
