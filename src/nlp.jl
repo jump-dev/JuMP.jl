@@ -20,7 +20,7 @@ if Pkg.installed("Ipopt") != nothing
     eval(Expr(:using,:Ipopt))
 end
 
-function solveIpopt(m::Model; suppress_warnings=false)
+function solveIpopt(m::Model; options::Dict=Dict(), suppress_warnings=false)
     if Pkg.installed("Ipopt") === nothing
         error("Cannot solve nonlinear instances without Ipopt solver. Please run Pkg.add(\"Ipopt\").")
     end
@@ -324,6 +324,12 @@ function solveIpopt(m::Model; suppress_warnings=false)
         prob.x = lpsol.sol
     end
 
+    # pass solver options to IPopt
+    if !isempty(options)
+        for (key,value) in options
+            addOption(prob, key, value)
+        end
+    end
     status = Ipopt.ApplicationReturnStatus[solveProblem(prob)]
     m.colVal = prob.x
     m.objVal = objscale*prob.obj_val
