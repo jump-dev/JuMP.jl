@@ -20,7 +20,7 @@ if Pkg.installed("Ipopt") != nothing
     eval(Expr(:using,:Ipopt))
 end
 
-function solveIpopt(m::Model; suppress_warnings=false)
+function solveIpopt(m::Model; options::Dict=Dict(), suppress_warnings=false)
     if Pkg.installed("Ipopt") === nothing
         error("Cannot solve nonlinear instances without Ipopt solver. Please run Pkg.add(\"Ipopt\").")
     end
@@ -73,7 +73,7 @@ function solveIpopt(m::Model; suppress_warnings=false)
     end
     #println("Prep time: $tprep")
     tf, tgf, tg, tjg, th = zeros(5)
-    
+
     if has_nlobj
         fg = genfgrad_simple(nldata.nlobj)
         f = genfval_simple(nldata.nlobj)
@@ -98,7 +98,7 @@ function solveIpopt(m::Model; suppress_warnings=false)
         # linear and quadratic
         function eval_f(x)
             tic()
-            v = dot(linobj,x) + m.obj.aff.constant 
+            v = dot(linobj,x) + m.obj.aff.constant
             qobj::QuadExpr = m.obj
             for k in 1:length(qobj.qvars1)
                 v += qobj.qcoeffs[k]*x[qobj.qvars1[k].col]*x[qobj.qvars2[k].col]
@@ -143,7 +143,7 @@ function solveIpopt(m::Model; suppress_warnings=false)
             idx += 1
         end
         eval_g!(sub(g,idx:length(g)), nldata.nlconstrlist, x)
-        
+
         tg += toq()
         #print("x = ");show(x);println()
         #println(size(A,1), " g(x) = ");show(g);println()
@@ -215,7 +215,7 @@ function solveIpopt(m::Model; suppress_warnings=false)
                 end
             end
             eval_jac_g!(sub(values,idx:length(values)), nldata.nlconstrlist, x)
-            
+
             tjg += toq()
             #print("x = ");show(x);println()
             #print("V ");show(values);println()
@@ -274,7 +274,7 @@ function solveIpopt(m::Model; suppress_warnings=false)
 
             rows[idx:end] = constrhessI
             cols[idx:end] = constrhessJ
-        
+
         else
             tic()
             hfunc(x, sub(values, 1:length(hI)), nldata.nlobj)
@@ -322,6 +322,12 @@ function solveIpopt(m::Model; suppress_warnings=false)
         lpsol = linprog(zeros(m.numCols), A, linrowlb, linrowub, m.colLower, m.colUpper)
         @assert lpsol.status == :Optimal
         prob.x = lpsol.sol
+    end
+    # pass solver options to IPopt
+    if !isempty(options)
+        for (key,value) in options
+            addOption(prob, key, value)
+        end
     end
 
     status = Ipopt.ApplicationReturnStatus[solveProblem(prob)]
