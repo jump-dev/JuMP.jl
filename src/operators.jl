@@ -20,10 +20,10 @@
 (*)(lhs::Number, rhs::Variable) = AffExpr([rhs],[convert(Float64,lhs)], 0.)
 (/)(lhs::Number, rhs::Variable) = error("Cannot divide by variable")
 # Number--GenericAffExpr
-(+)(lhs::Number, rhs::GenericAffExpr)  = GenericAffExpr(copy(rhs.vars),copy(rhs.coeffs),lhs+rhs.constant)
-(-)(lhs::Number, rhs::GenericAffExpr)  = GenericAffExpr(copy(rhs.vars),    -rhs.coeffs ,lhs-rhs.constant)
-(*)(lhs::Number, rhs::GenericAffExpr)  = GenericAffExpr(copy(rhs.vars), lhs*rhs.coeffs ,lhs*rhs.constant)
-(/)(lhs::Number, rhs::GenericAffExpr)  = error("Cannot divide by an affine expression")
+(+)(lhs::Number, rhs::GenericAffExpr) = GenericAffExpr(copy(rhs.vars),copy(rhs.coeffs),lhs+rhs.constant)
+(-)(lhs::Number, rhs::GenericAffExpr) = GenericAffExpr(copy(rhs.vars),    -rhs.coeffs ,lhs-rhs.constant)
+(*)(lhs::Number, rhs::GenericAffExpr) = GenericAffExpr(copy(rhs.vars),[lhs*rhs.coeffs[i] for i=1:length(rhs.coeffs)],lhs*rhs.constant)
+(/)(lhs::Number, rhs::GenericAffExpr) = error("Cannot divide by an affine expression")
 # Number--QuadExpr
 (+)(lhs::Number, rhs::QuadExpr) = QuadExpr(copy(rhs.qvars1),copy(rhs.qvars2),copy(rhs.qcoeffs),lhs+rhs.aff)
 (-)(lhs::Number, rhs::QuadExpr) = QuadExpr(copy(rhs.qvars1),copy(rhs.qvars2),    -rhs.qcoeffs ,lhs-rhs.aff)
@@ -61,7 +61,8 @@ end
 (/)(v::Variable, q::QuadExpr) = error("Cannot divide a variable by a quadratic expression")
 
 
-# AffExpr
+# AffExpr (GenericAffExpr)
+(-)(lhs::GenericAffExpr) = GenericAffExpr(lhs.vars, -lhs.coeffs, -lhs.constant)
 # AffExpr--Number
 (+)(lhs::GenericAffExpr, rhs::Number) = (+)(+rhs,lhs)
 (-)(lhs::GenericAffExpr, rhs::Number) = (+)(-rhs,lhs)
