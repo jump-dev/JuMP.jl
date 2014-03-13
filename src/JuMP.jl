@@ -157,7 +157,7 @@ function copy(source::Model)
     return dest
 end
 
-getSolverModel(m::Model) = m.internalModel.inner
+getSolverModel(m::Model) = MathProgBase.getrawsolver(m.internalModel)
 
 ###############################################################################
 # Variable class
