@@ -44,10 +44,10 @@ for i in 1:n
     vtypes[i] == 'I' ? mod.colCat[x[i].col] = INTEGER : nothing # change vartype to integer when appropriate
 end
 At = A' # transpose to get useful row-wise sparse representation
-for i in 1:At.m
+for i in 1:At.n
     @addConstraint( mod, l[i] <= sum{ At.nzval[idx]*x[At.rowval[idx]], idx = At.colptr[i]:(At.colptr[i+1]-1) } <= u[i] )
 end
-@setObjective(mod, :Min, sum{ c[i]*x[i], i=1:n })
+@setObjective(mod, Min, sum{ c[i]*x[i], i=1:n })
 
 function mycutgenerator(cb) # valid cuts
     x_val = getValue(x)
