@@ -376,8 +376,8 @@ end
 ##########
 # QuadExpr
 ##########
-print(io::IO, q::QuadExpr) = print(io, quadToStr(q))
-show(io::IO, q::QuadExpr) = print(io, quadToStr(q))
+print(io::IO, q::GenericQuadExpr) = print(io, quadToStr(q))
+show(io::IO, q::GenericQuadExpr)  = print(io, quadToStr(q))
 
 function quadToStr(q::QuadExpr)
     if length(q.qvars1) == 0
