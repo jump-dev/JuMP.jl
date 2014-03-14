@@ -270,12 +270,13 @@ end
 ###############################################################################
 # QuadExpr class
 # Holds a vector of tuples (Var, Var, Coeff), as well as an AffExpr
-type QuadExpr
-    qvars1::Vector{Variable}
-    qvars2::Vector{Variable}
-    qcoeffs::Vector{Float64}
-    aff::AffExpr
+type GenericQuadExpr{CoefType,VarType}
+    qvars1::Vector{VarType}
+    qvars2::Vector{VarType}
+    qcoeffs::Vector{CoefType}
+    aff::GenericAffExpr{CoefType,VarType}
 end
+typealias QuadExpr GenericQuadExpr{Float64,Variable}
 
 QuadExpr() = QuadExpr(Variable[],Variable[],Float64[],AffExpr())
 
@@ -421,13 +422,17 @@ function addSOS2(m::Model, coll::Vector{AffExpr})
 end
 
 ##########################################################################
-# QuadConstraint class
-# An quadratic constraint. Right-hand side is implicitly taken to be zero; 
-# constraint is stored in the included QuadExpr.
-type QuadConstraint <: JuMPConstraint
-    terms::QuadExpr
+# Generic constraint type for quadratic expressions
+# Right-hand side is implicitly taken to be zero, constraint is stored in
+# the included QuadExpr.
+type GenericQuadConstraint{QuadType} <: JuMPConstraint
+    terms::QuadType
     sense::Symbol
 end
+
+##########################################################################
+# QuadConstraint class
+typealias QuadConstraint GenericQuadConstraint{QuadExpr}
 
 function addConstraint(m::Model, c::QuadConstraint)
     push!(m.quadconstr,c)

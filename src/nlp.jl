@@ -127,8 +127,11 @@ function solveIpopt(m::Model; options::Dict=Dict(), suppress_warnings=false)
     function eval_g(x, g)
         tic()
         fill!(sub(g,1:size(A,1)), 0.0)
-        A_mul_B!(sub(g,1:size(A,1)),A,x)
-        #g[1:size(A,1)] = A*x
+        if VERSION < v"0.3-"
+            g[1:size(A,1)] = A*x
+        else
+            A_mul_B!(sub(g,1:size(A,1)),A,x)
+        end
         idx = size(A,1)+1
         for c::QuadConstraint in m.quadconstr
             aff = c.terms.aff
