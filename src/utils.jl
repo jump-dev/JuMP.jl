@@ -7,18 +7,20 @@ end
 IndexedVector(T::Type,n::Integer) = IndexedVector(zeros(T,n),zeros(Int,n),0)
 
 function addelt{T}(v::IndexedVector{T},i::Integer,val::T)
-    if v.elts[i] == zero(T) # new index
-        v.elts[i] = val
-        v.nzidx[v.nnz += 1] = i
-    else
-        v.elts[i] += val
-        if v.elts[i] == zero(T)
-            # set to tiny value.
+    if val != zero(T)
+        if v.elts[i] == zero(T) # new index
+            v.elts[i] = val
+            v.nzidx[v.nnz += 1] = i
+        else
+            v.elts[i] += val
+            if v.elts[i] == zero(T)
+                # set to tiny value.
 
-            # if two instances of T can sum to zero(T),
-            # type must also implement one().
-            # if not, code will never be reached
-            v.elts[i] = 1e-50*one(T)
+                # if two instances of T can sum to zero(T),
+                # type must also implement one().
+                # if not, code will never be reached
+                v.elts[i] = 1e-50*one(T)
+            end
         end
     end
 end
