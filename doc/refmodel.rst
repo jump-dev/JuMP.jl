@@ -54,6 +54,28 @@ Methods
 * ``writeLP(m::Model, filename::String)`` - write the model to ``filename`` in the LP file format.
 * ``writeMPS(m::Model, filename::String)`` - write the model to ``filename`` in the MPS file format.
 
+Solve status
+^^^^^^^^^^^^
+
+The call ``status = solve(m)`` returns a symbol recording the status of the optimization process, as reported by the solver. Typical values are listed in the table below, although this the codes are solver-dependent. For instance, certain solvers prove infeasibility or unboundedness during presolve, but do not report which of the two cases holds. See your solver interface documentation (as linked to in the :ref:`jump-solvertable`) for more information.
+
+.. _jump-statustable:
++-----------------+-----------------------------------------+
+| Status          | Meaning                                 |
++=================+=========================================+
+| ``:Optimal``    | Solved to optimality                    |
++-----------------+-----------------------------------------+
+| ``:Unbounded``  | Problem is unbounded                    |
++-----------------+-----------------------------------------+
+| ``:Infeasible`` | Problem is infeasible                   |
++-----------------+-----------------------------------------+
+| ``:UserLimit``  | Iteration limit or timeout              |
++-----------------+-----------------------------------------+
+| ``:Error``      | Solver exited with an error             |
++-----------------+-----------------------------------------+
+| ``:NotSolved``  | Model built in memory but not optimized |
++-----------------+-----------------------------------------+
+
 
 Quadratic Objectives
 ^^^^^^^^^^^^^^^^^^^^
