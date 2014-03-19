@@ -39,17 +39,17 @@ function SolveModel(initgrid)
     for val in 1:9
         for dim1 in 1:9
             # Constraint 1 - Each row...
-            @addConstraint(m, sum{x[dim1, dim2, val], dim2=1:9} == 1)
+            @addConstraint(m, sum(x[dim1, :, val]) == 1)
             # Constraint 2 - Each column...
-            @addConstraint(m, sum{x[dim2, dim1, val], dim2=1:9} == 1)
+            @addConstraint(m, sum(x[:, dim1, val]) == 1)
         end
     end
 
     # Constraint 3 - Each sub-grid...
-    for i in 0:3:6
-        for j in 0:3:6
-            for val in 1:9
-                @addConstraint(m, sum{x[i+off1, j+off2, val], off1=1:3, off2=1:3} == 1)
+    for val in 1:9
+        for i in 1:3:7
+            for j in 1:3:7
+                @addConstraint(m, sum(x[i:i+2, j:j+2, val]) == 1)
             end
         end
     end
@@ -57,7 +57,7 @@ function SolveModel(initgrid)
     # Constraint 4 - Cells...
     for row in 1:9
         for col in 1:9
-            @addConstraint(m, sum{x[row, col, val], val=1:9} == 1)
+            @addConstraint(m, sum(x[row, col, :]) == 1)
         end
     end
 
@@ -79,13 +79,9 @@ function SolveModel(initgrid)
     else
         mipSol = getValue(x)
         sol = zeros(Int,9,9)
-        for row in 1:9
-            for col in 1:9
-                for val in 1:9
-                    if mipSol[row, col, val] >= 0.9
-                        sol[row, col] = val
-                    end
-                end
+        for row in 1:9, col in 1:9, val in 1:9
+            if mipSol[row, col, val] >= 0.9
+                sol[row, col] = val
             end
         end
         return sol
