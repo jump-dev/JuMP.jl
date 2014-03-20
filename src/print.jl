@@ -12,6 +12,14 @@
 # the speed of code materially that doesn't use it.
 #############################################################################
 
+# Helper function that rounds carefully for the purposes of printing
+# e.g.   5.3  =>  5.3
+#        1.0  =>  1
+function string_intclamp(f::Float64)
+    str = string(f)
+    length(str) >= 2 && str[end-1:end] == ".0" ? str[1:end-2] : str
+end
+
 #############################################################################
 #### type MODEL
 
@@ -164,11 +172,11 @@ function boundstring(var_name, colLow, colUp, colCat, iterate_over="", mode=:REP
         return "$(var_name)$(iterate_over) free" * 
                 (colCat == INTEGER ? ", integer" : "")
     elseif colLow == -Inf
-        return "$var_name $less $(colUp)$(iterate_over)$(int_str)"
+        return "$var_name $less $(string_intclamp(colUp))$(iterate_over)$(int_str)"
     elseif colUp == Inf
-        return "$var_name $greater $(colLow)$(iterate_over)$(int_str)"
+        return "$var_name $greater $(string_intclamp(colLow))$(iterate_over)$(int_str)"
     else  # both bounds
-        return "$colLow $less $var_name $less $(colUp)$(iterate_over)$(int_str)"
+        return "$(string_intclamp(colLow)) $less $var_name $less $(string_intclamp(colUp))$(iterate_over)$(int_str)"
     end
 end
 
@@ -312,9 +320,9 @@ show(io::IO, a::GenericAffExpr) = print(io, affToStr(a))
 function affToStr(a::AffExpr, showConstant=true)
     if length(a.vars) == 0
         if showConstant
-            return string(a.constant)
+            return string_intclamp(a.constant)
         else
-            return "0.0"
+            return "0"
         end
     end
 
@@ -339,17 +347,34 @@ function affToStr(a::AffExpr, showConstant=true)
         indvec = moddict[m]
         for i in 1:indvec.nnz
             idx = indvec.nzidx[i]
-            if abs(indvec.elts[idx]) > 1e-20
+            if abs(abs(indvec.elts[idx])-1) < 1e-20
                 if elm == 0
                     elm += 1
-                    termStrings[1] = "$(indvec.elts[idx]) $(getName(m,idx))"
+                    if indvec.elts[idx] < 0
+                        termStrings[1] = "-$(getName(m,idx))"
+                    else
+                        termStrings[1] = "$(getName(m,idx))"
+                    end
                 else 
                     if indvec.elts[idx] < 0
                         termStrings[2*elm] = " - "
                     else
                         termStrings[2*elm] = " + "
                     end
-                    termStrings[2*elm+1] = "$(abs(indvec.elts[idx])) $(getName(m,idx))"
+                    termStrings[2*elm+1] = "$(getName(m,idx))"
+                    elm += 1
+                end
+            elseif abs(indvec.elts[idx]) > 1e-20
+                if elm == 0
+                    elm += 1
+                    termStrings[1] = "$(string_intclamp(indvec.elts[idx])) $(getName(m,idx))"
+                else 
+                    if indvec.elts[idx] < 0
+                        termStrings[2*elm] = " - "
+                    else
+                        termStrings[2*elm] = " + "
+                    end
+                    termStrings[2*elm+1] = "$(string_intclamp(abs(indvec.elts[idx]))) $(getName(m,idx))"
                     elm += 1
                 end
             end
@@ -357,7 +382,7 @@ function affToStr(a::AffExpr, showConstant=true)
     end
 
     if elm == 0
-        ret = "0.0"
+        ret = "0"
     else
         # And then connect them up with +s
         ret = join(termStrings[1:(2*elm-1)])
@@ -365,9 +390,9 @@ function affToStr(a::AffExpr, showConstant=true)
     
     if abs(a.constant) >= 0.000001 && showConstant
         if a.constant < 0
-            ret = string(ret, " - ", abs(a.constant))
+            ret = string(ret, " - ", string_intclamp(abs(a.constant)))
         else
-            ret = string(ret, " + ", a.constant)
+            ret = string(ret, " + ", string_intclamp(a.constant))
         end
     end
     return ret
@@ -415,14 +440,21 @@ function quadToStr(q::QuadExpr)
             x = Variable(q.qvars1[ind].m,I[ind])
             if I[ind] == J[ind]
                 # Squared term
-                termStrings[2*ind] = string(abs(V[ind])," ",
-                                            getName(x),"²")
+                if abs(V[ind]) == 1.0
+                    termStrings[2*ind] = string(getName(x),"²")
+                else
+                    termStrings[2*ind] = string(string_intclamp(abs(V[ind]))," ",
+                                                getName(x),"²")
+                end
             else
                 # Normal term
                 y = Variable(q.qvars1[ind].m,J[ind])
-                termStrings[2*ind] = string(abs(V[ind])," ",
-                                            getName(x),"*",
-                                            getName(y))
+                if abs(V[ind]) == 1.0
+                    termStrings[2*ind] = string(getName(x),"*",getName(y))
+                else
+                    termStrings[2*ind] = string(string_intclamp(abs(V[ind]))," ",
+                                                getName(x),"*",getName(y))
+                end
             end
         end
     end
@@ -490,9 +522,9 @@ show(io::IO,  c::GenericRangeConstraint) = print(io, conToStr(c))
 function conToStr(c::GenericRangeConstraint)
     s = sense(c)
     if s == :range
-        return string(c.lb," <= ",affToStr(c.terms,false)," <= ",c.ub)
+        return string(string_intclamp(c.lb)," <= ",affToStr(c.terms,false)," <= ",string_intclamp(c.ub))
     else
-        return string(affToStr(c.terms,false)," ",s," ",rhs(c))
+        return string(affToStr(c.terms,false)," ",s," ",string_intclamp(rhs(c)))
     end
 end
 
