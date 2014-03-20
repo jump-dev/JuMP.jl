@@ -13,3 +13,4 @@ The JuMP Julia module is licensed under the **[LGPL]** version 3:
     MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
     GNU General Public License for more details.
 
+This distribution of JuMP also contains data files that are *not* LGPL licensed. See examples/data/README.md for more information. These are solely used as examples and may be removed from the distribution without affecting any functionality.
