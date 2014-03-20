@@ -77,7 +77,9 @@ if Pkg.installed("Gurobi") != nothing
 end
 if Pkg.installed("CPLEX") != nothing
     using CPLEX
-    callback_test("CPLEX", CplexSolver(), CplexSolver(), CplexSolver()) 
+    callback_test("CPLEX", CplexSolver(CPX_PARAM_PRELINEAR=0, CPX_PARAM_PREIND=0, CPX_PARAM_ADVIND=0, CPX_PARAM_MIPSEARCH=1,CPX_PARAM_MIPCBREDLP=0),
+                           CplexSolver(CPX_PARAM_PRELINEAR=0, CPX_PARAM_PREIND=0, CPX_PARAM_ADVIND=0, CPX_PARAM_MIPSEARCH=1,CPX_PARAM_MIPCBREDLP=0),
+                           CplexSolver(CPX_PARAM_PRELINEAR=0, CPX_PARAM_PREIND=0, CPX_PARAM_ADVIND=0, CPX_PARAM_MIPSEARCH=1,CPX_PARAM_MIPCBREDLP=0)) 
 end
 if Pkg.installed("GLPKMathProgInterface") != nothing
     using GLPKMathProgInterface

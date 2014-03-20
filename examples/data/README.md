@@ -13,3 +13,5 @@ Copyright Notice
 5. RICE UNIVERSITY NOR ANY OF THEIR EMPLOYEES MAKE ANY WARRANTY, EXPRESS OR IMPLIED, OR ASSUME ANY LEGAL LIABILITY OR RESPONSIBILITY FOR THE ACCURACY, COMPLETENESS, OR USEFULNESS OF ANY INFORMATION, APPARATUS, PRODUCT, OR PROCESS DISCLOSED AND COVERED BY A LICENSE GRANTED UNDER THIS LICENSE AGREEMENT, OR REPRESENT THAT ITS USE WOULD NOT INFRINGE PRIVATELY OWNED RIGHTS.
 
 6. IN NO EVENT WILL RICE UNIVERSITY BE LIABLE FOR ANY DAMAGES, INCLUDING DIRECT, INCIDENTAL, SPECIAL, OR CONSEQUENTIAL DAMAGES RESULTING FROM EXERCISE OF THIS LICENSE AGREEMENT OR THE USE OF THE LICENSED SOFTWARE.
+
+The ``bnatt350.mps`` example is from the [MIPLIB 2010 benchmark collection](http://miplib.zib.de/miplib2010/bnatt350.php). It derives from "Integer programming-based methods for attractor detection and control of Boolean networks" (T. Akutsu and M. Hayashida and T. Tamura, Proceedings of The combined 48th IEEE Conference on Decision and Control and 28th Chinese Control Conference, 2009), and is distributed with permission of the author. The ``bnatt350.sol`` solution file is distributed with permission of the MIPLIB 2010 maintainers.
