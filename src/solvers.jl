@@ -169,6 +169,7 @@ function solveLP(m::Model; load_model_only=false, suppress_warnings=false)
             setconstrLB!(m.internalModel, rowlb)
             setconstrUB!(m.internalModel, rowub)
             setobj!(m.internalModel, f)
+            setsense!(m.internalModel, m.objSense)
         catch
             !suppress_warnings && warn("LP solver does not appear to support hot-starts. Problem will be solved from scratch.")
             m.internalModelLoaded = false
@@ -252,6 +253,7 @@ function solveMIP(m::Model; load_model_only=false, suppress_warnings=false)
             setconstrLB!(m.internalModel, rowlb)
             setconstrUB!(m.internalModel, rowub)
             setobj!(m.internalModel, f)
+            setsense!(m.internalModel, m.objSense)
             setvartype!(m.internalModel, vartype)
         catch
             !suppress_warnings && warn("LP solver does not appear to support hot-starts. Problem will be solved from scratch.")
