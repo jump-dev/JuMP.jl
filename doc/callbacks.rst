@@ -4,15 +4,14 @@
 Solver Callbacks
 ----------------
 
-Many solvers offer the ability to modify the solve process. Examples include
-changing branching decisions in branch-and-bound, adding custom cuts, providing
-solvers with integer solutions, or adding new constraints only when they are
-violated by the current solution (lazy constraints).
+Many mixed-integer programming solvers offer the ability to modify the solve process. 
+Examples include changing branching decisions in branch-and-bound, adding custom cutting planes, providing custom heuristics to find feasible solutions, or implementing on-demand separators to add new constraints only when they are violated by the current solution (also known as lazy constraints).
 
-Solver-independent modeling languages do not, in general, provide a way to
-provide callbacks that will work with any solver. However, JuMP does provide
-limited support for this functionality. Currently we have cross-solver support
-for adding "lazy constraints" for the Gurobi, CPLEX, and GLPK solvers.
+While historically this functionality has been limited to solver-specific interfaces,
+JuMP provides *solver-independent* support for a number of commonly used solver callbacks. Currently, we support lazy constraints, user-provided cuts, and user-provided 
+heuristics for the Gurobi, CPLEX, and GLPK solvers. We do not yet support any
+other class of callbacks, but they may be accessible by using the solver's
+low-level interface.
 
 Lazy Constraints
 ^^^^^^^^^^^^^^^^
@@ -196,11 +195,11 @@ This code can also be found in ``/JuMP/examples/simpleusercut.jl``.
 User Heuristics
 ^^^^^^^^^^^^^^^
 
-Integer programming solvers frequently include heuristics that run at the nodes of the branch-and-bound tree. They aim to find integer solutions quicker than plain branch-and-bound would to tighten the bound, allowing us to fathom nodes quicker and to tighten the integrality gap. Some heuristics take integer solutions and explore their "local neighbourhood" (e.g. flipping binary variables, fix some variables and solve a smaller MILP, ...) and others take fractional solutions and attempt to round them in an intelligent way. You may want to add a heuristic of your own if you have some special insight into the problem structure that the solver is not aware of, e.g. you can consistently take fractional solutions and intelligently guess integer solutions from them.
+Integer programming solvers frequently include heuristics that run at the nodes of the branch-and-bound tree. They aim to find integer solutions quicker than plain branch-and-bound would to tighten the bound, allowing us to fathom nodes quicker and to tighten the integrality gap. Some heuristics take integer solutions and explore their "local neighborhood" (e.g. flipping binary variables, fix some variables and solve a smaller MILP, ...) and others take fractional solutions and attempt to round them in an intelligent way. You may want to add a heuristic of your own if you have some special insight into the problem structure that the solver is not aware of, e.g. you can consistently take fractional solutions and intelligently guess integer solutions from them.
 
 The user heuristic callback is somewhat different from the previous two heuristics. The general concept is that we can create multiple partial solutions and submit them back to the solver - each solution must be submitted before a new solution is constructed. As before we provide a function that analyzes the current solution and takes a single argument, e.g. ``function myHeuristic(cb)``, where cb is a reference to the callback management code inside JuMP. You can build your solutions using ``setSolutionValue!(cb, x, value)`` and submit them with ``addSolution(cb)``. Note that ``addSolution`` will "wipe" the previous (partial) solution. Notify JuMP that this function should be used as a heuristic using the ``setHeuristicCallback(m, myHeuristic)`` function before calling ``solve(m)``.
 
-There is some unavoidable (for performance reasons) solver-dependent behaviour - you should check your solver documentation for details. For example: GLPK will not check the feasibility of your heuristic solution. If you need to submit many heuristic solutions in one callback, there may be performance impacts from the "wiping" behaviour of ``addSolution`` - please file an issue and we can address this issue.
+There is some unavoidable (for performance reasons) solver-dependent behavior - you should check your solver documentation for details. For example: GLPK will not check the feasibility of your heuristic solution. If you need to submit many heuristic solutions in one callback, there may be performance impacts from the "wiping" behavior of ``addSolution`` - please file an issue and we can address this issue.
 
 Consider the following example, which is the same problem as seen in the user cuts section. The heuristic simply rounds the fractional variable to generate integer solutions.::
 

@@ -54,12 +54,15 @@ Methods
 * ``writeLP(m::Model, filename::String)`` - write the model to ``filename`` in the LP file format.
 * ``writeMPS(m::Model, filename::String)`` - write the model to ``filename`` in the MPS file format.
 
+.. _solvestatus:
+
 Solve status
 ^^^^^^^^^^^^
 
 The call ``status = solve(m)`` returns a symbol recording the status of the optimization process, as reported by the solver. Typical values are listed in the table below, although the code can take solver-dependent values. For instance, certain solvers prove infeasibility or unboundedness during presolve, but do not report which of the two cases holds. See your solver interface documentation (as linked to in the :ref:`solver table <jump-solvertable>`) for more information.
 
 .. _jump-statustable:
+
 +-----------------+-----------------------------------------+
 | Status          | Meaning                                 |
 +=================+=========================================+

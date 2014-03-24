@@ -18,7 +18,7 @@ that it can create problems at similar speeds to special-purpose modeling
 languages such as `AMPL <http://www.ampl.com/>`_ while maintaining the expressiveness
 of a generic high-level programming language. JuMP communicates with solvers in-memory, 
 avoiding the need to write intermediary files and enabling access to **advanced
-features** such as efficient LP re-solves and callbacks for mixed-integer programming.
+features** such as :ref:`efficient LP re-solves <probmod>` and :ref:`callbacks for mixed-integer programming <callbacks>`.
 
 If you are familiar with Julia you can get started quickly by using the
 package manager to install JuMP::
@@ -29,29 +29,23 @@ And a solver, e.g.::
 
     julia> Pkg.add("Clp")  # Will install Cbc as well
 
-Then read the :ref:`quick-start` and/or see a :ref:`simple-example`. We also
-have details of the functions and types defined by JuMP.
-If you are new to Julia or want more details, read on to the next section.
+Then read the :ref:`quick-start` and/or see a :ref:`simple-example`.
+The subsequent sections detail the complete functionality of JuMP.
 
-.. Full installation guide, with solvers
-.. include:: installation.rst
+Contents
+--------
 
-.. Outlines key functionality of JuMP
-.. include:: quickstart.rst
+.. toctree::
+    :maxdepth: 2
 
-.. Beginning of Reference section
-.. First up, Model
-.. include:: refmodel.rst
-.. Variable
-.. include:: refvariable.rst
-.. Expressions, Constraints
-.. include:: refexpr.rst
-.. Nonlinear
-.. include:: nlp.rst
-.. Problem modification
-.. include:: probmod.rst
-.. Callbacks
-.. include:: callbacks.rst
+    installation.rst
+    quickstart.rst
+    refmodel.rst
+    refvariable.rst
+    refexpr.rst
+    nlp.rst
+    probmod.rst
+    callbacks.rst
 
 -----------
 Citing JuMP

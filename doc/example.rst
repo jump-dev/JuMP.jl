@@ -70,7 +70,7 @@ Models are solved with the ``solve()`` function. This function will not raise
 an error if your model is infeasible - instead it will return a flag. In this 
 case, the model is feasible so the value of ``status`` will be ``:Optimal``, 
 where ``:`` again denotes a symbol. The possible values of ``status``
-are described in the `MathProgBase documentation <http://mathprogbasejl.readthedocs.org/en/latest/mathprogbase.html>`_.
+are described :ref:`here <solvestatus>`.
 
 ::
 
