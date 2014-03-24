@@ -18,7 +18,7 @@ On ubuntu, you'll need the following packages installed:
 
 To install the required Sphinx theme, run:
 
-    pip install sphinx_rtd_theme
+    $ pip install sphinx_rtd_theme
 
 Then run
 
