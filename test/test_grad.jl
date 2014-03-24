@@ -142,6 +142,20 @@ fg = genfgrad_simple(ex)
 fval = fg(xvals, out)
 @test_approx_eq out [1.0,1.0,0.0,0.0,0.0,0.0,0.0]
 
+# dot syntax
+type MyType
+    x
+    y
+end
+t = MyType([1.0,2.0],x)
+
+ex = @processNLExpr sum{ t.x[i]*t.y[i], i = 1:2 }
+out = zeros(2)
+fg = genfgrad_simple(ex)
+fval = fg(xvals[1:2], out)
+@test_approx_eq fval xvals[1]+2xvals[2]
+@test_approx_eq out [1.0,2.0]
+
 
 
 println("Passed tests")

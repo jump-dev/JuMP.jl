@@ -82,8 +82,7 @@ function quoteTree(x::Expr, datalist::Dict, iterstack)
         # for symbolic expressions, leave them in the tree but collect the values separately.
         # if an array reference, just store the array object and not each element
         # NOTE: this assumes the values of the array will not change!
-        var = x.args[1]
-        datalist[var] = var
+        quoteTree(x.args[1], datalist, iterstack)
         for idxvar in x.args[2:end]
             isa(idxvar, Symbol) || continue
             # if this isn't a local index variable, we need to save it
@@ -93,8 +92,10 @@ function quoteTree(x::Expr, datalist::Dict, iterstack)
         end
 
         return quot(x)
+    elseif isexpr(x, :quote)
+            return x
     else
-        if !(isexpr(x, :(:)) || isexpr(x, :comparison) || isexpr(x, :&&) || isexpr(x, :||))
+        if !(x.head in (:(:), :comparison, :&&, :||, :(.)))
             error("Unrecognized expression $x")
         end
         code = :(Expr($(quot(x.head))))
