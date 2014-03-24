@@ -16,6 +16,10 @@ On ubuntu, you'll need the following packages installed:
     texlive
     texlive-latex-extra
 
+To install the required Sphinx theme, run:
+
+    pip install sphinx_rtd_theme
+
 Then run
 
     $ make helpdb.jl
