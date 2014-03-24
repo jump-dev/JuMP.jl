@@ -157,5 +157,14 @@ fval = fg(xvals[1:2], out)
 @test_approx_eq out [1.0,2.0]
 
 
+# ref syntax
+x = placeholders(2)
+k = 2
+ex = @processNLExpr 3x[k-1] + x[k+2-2]
+fg = genfgrad_simple(ex)
+fval = fg(xvals[1:2], out)
+@test_approx_eq fval 3xvals[1] + xvals[2]
+@test_approx_eq out [3.0,1.0]
+
 
 println("Passed tests")

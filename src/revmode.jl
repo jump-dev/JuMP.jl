@@ -84,11 +84,7 @@ function quoteTree(x::Expr, datalist::Dict, iterstack)
         # NOTE: this assumes the values of the array will not change!
         quoteTree(x.args[1], datalist, iterstack)
         for idxvar in x.args[2:end]
-            isa(idxvar, Symbol) || continue
-            # if this isn't a local index variable, we need to save it
-            if !(idxvar in iterstack)
-                datalist[idxvar] = idxvar
-            end
+            quoteTree(idxvar, datalist, iterstack)
         end
 
         return quot(x)
