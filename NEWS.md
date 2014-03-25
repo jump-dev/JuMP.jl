@@ -5,7 +5,7 @@ Version 0.4.1 (March 24, 2014)
 ------------------------------
 
   * Fix bug where change in objective sense was ignored when re-solving a model.
-  * Fix issue with handling zero coefficients in AffExpr
+  * Fix issue with handling zero coefficients in AffExpr.
 
 Version 0.4.0 (March 10, 2014)
 ------------------------------
