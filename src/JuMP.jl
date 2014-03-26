@@ -226,7 +226,8 @@ function getDual(v::Variable)
     return v.m.redCosts[v.col]
 end
 
-zero(v::Variable) = AffExpr(Variable[],Float64[],0.0)
+convert(::Type{Variable}, v::Variable) = v
+convert(::Type{Variable}, v) = convert(AffExpr,v)
 
 ###############################################################################
 # Generic affine expression class
@@ -243,6 +244,7 @@ AffExpr() = AffExpr(Variable[],Float64[],0.)
 isempty(a::AffExpr) = (length(a.vars) == 0 && a.constant == 0.)
 
 convert(::Type{AffExpr}, v::Variable) = AffExpr([v], [1.], 0.)
+convert(::Type{AffExpr}, v::Real) = AffExpr(Variable[], Float64[], v)
 
 function setObjective(m::Model, sense::Symbol, a::AffExpr)
     setObjectiveSense(m, sense)
@@ -268,8 +270,6 @@ function append!{T,S}(aff::GenericAffExpr{T,S}, other::GenericAffExpr{T,S})
     append!(aff.coeffs, other.coeffs)
     aff.constant += other.constant  # Not efficient if CoefType isn't immutable
 end
-
-zero(v::AffExpr) = AffExpr(Variable[],Float64[],0.0)
 
 ###############################################################################
 # QuadExpr class
