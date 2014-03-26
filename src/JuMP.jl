@@ -227,7 +227,6 @@ function getDual(v::Variable)
 end
 
 zero(v::Variable) = AffExpr(Variable[],Float64[],0.0)
-one(v::Variable)  = AffExpr(Variable[],Float64[],1.0)
 
 ###############################################################################
 # Generic affine expression class
@@ -271,7 +270,6 @@ function append!{T,S}(aff::GenericAffExpr{T,S}, other::GenericAffExpr{T,S})
 end
 
 zero(v::AffExpr) = AffExpr(Variable[],Float64[],0.0)
-one(v::AffExpr)  = AffExpr(Variable[],Float64[],1.0)
 
 ###############################################################################
 # QuadExpr class
@@ -301,7 +299,6 @@ function copy(q::QuadExpr, new_model::Model)
 end
 
 zero(v::QuadExpr) = QuadExpr(Variable[],Variable[],Float64[],zero(AffExpr()))
-one(v::QuadExpr)  = QuadExpr(Variable[],Variable[],Float64[],one(AffExpr()))
 
 ##########################################################################
 # JuMPConstraint
