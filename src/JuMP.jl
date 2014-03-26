@@ -226,6 +226,9 @@ function getDual(v::Variable)
     return v.m.redCosts[v.col]
 end
 
+zero(v::Variable) = AffExpr(Variable[],Float64[],0.0)
+one(v::Variable)  = AffExpr(Variable[],Float64[],1.0)
+
 ###############################################################################
 # Generic affine expression class
 # Holds a vector of tuples (Var, Coeff)
@@ -267,6 +270,9 @@ function append!{T,S}(aff::GenericAffExpr{T,S}, other::GenericAffExpr{T,S})
     aff.constant += other.constant  # Not efficient if CoefType isn't immutable
 end
 
+zero(v::AffExpr) = AffExpr(Variable[],Float64[],0.0)
+one(v::AffExpr)  = AffExpr(Variable[],Float64[],1.0)
+
 ###############################################################################
 # QuadExpr class
 # Holds a vector of tuples (Var, Var, Coeff), as well as an AffExpr
@@ -293,6 +299,9 @@ function copy(q::QuadExpr, new_model::Model)
                     [Variable(new_model, v.col) for v in q.qvars2],
                     q.qcoeffs[:], copy(q.aff, new_model))
 end
+
+zero(v::QuadExpr) = QuadExpr(Variable[],Variable[],Float64[],zero(AffExpr()))
+one(v::QuadExpr)  = QuadExpr(Variable[],Variable[],Float64[],one(AffExpr()))
 
 ##########################################################################
 # JuMPConstraint
