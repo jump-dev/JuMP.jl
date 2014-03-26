@@ -539,16 +539,20 @@ conToStr(c::QuadConstraint) = string(quadToStr(c.terms), " ", c.sense, " 0")
 # SOS Constraint
 function conToStr(c::SOSConstraint) 
     nvar = length(c.terms)
-    termStrings = Array(UTF8String, nvar+2)
-    termStrings[1] = "$(c.sostype): {"
-    if nvar > 0
-        termStrings[2] = "$(c.weights[1]) $(c.terms[1])"
-        for i in 2:nvar
-            termStrings[i+1] = ", $(c.weights[i]) $(c.terms[i])"
-        end
+    termStrings = Array(UTF8String, nvar)
+    # termStrings = Array(UTF8String, nvar+2)
+    # termStrings[1] = "$(c.sostype): {"
+    for i in 1:nvar
+        termStrings[i] = "$(c.weights[i]) $(c.terms[i])"
     end
-    termStrings[end] = "}"
-    return join(termStrings)
+    # if nvar > 0
+    #     termStrings[2] = "$(c.weights[1]) $(c.terms[1])"
+    #     for i in 2:nvar
+    #         termStrings[i+1] = ", $(c.weights[i]) $(c.terms[i])"
+    #     end
+    # end
+    # termStrings[end] = "}"
+    return string("$(c.sostype): {", join(termStrings,", "), "}")
 end
 
 print(io::IO, c::SOSConstraint) = print(io, conToStr(c))

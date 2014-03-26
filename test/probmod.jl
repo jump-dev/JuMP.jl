@@ -49,7 +49,7 @@ let
     @addConstraint(m, x + y == 1)
     @setObjective(m, Max, y)
     solve(m; load_model_only=true)
-    @assert getSolverModel(m) != nothing
+    @assert getInternalModel(m) != nothing
     @assert m.internalModelLoaded == true
     stat = solve(m)
     @test stat == :Optimal  
