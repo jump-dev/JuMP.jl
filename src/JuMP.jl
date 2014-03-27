@@ -226,8 +226,7 @@ function getDual(v::Variable)
     return v.m.redCosts[v.col]
 end
 
-convert(::Type{Variable}, v::Variable) = v
-convert(::Type{Variable}, v) = convert(AffExpr,v)
+zero(v::Variable) = AffExpr(Variable[],Float64[],0.0)
 
 ###############################################################################
 # Generic affine expression class
