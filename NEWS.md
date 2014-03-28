@@ -1,6 +1,11 @@
 JuMP release notes
 ==================
 
+Unversioned
+-----------
+
+  * ``getValue`` for ``AffExpr`` and ``QuadExpr``
+
 Version 0.4.1 (March 24, 2014)
 ------------------------------
 

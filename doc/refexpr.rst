@@ -60,6 +60,7 @@ Methods
   ``append!(aff, other)`` which results in ``aff`` equaling ``5x + 7y + 3z``.
   This is signficantly more efficient than using ``aff += other``.
 * ``sum(affs::Array{AffExpr})`` - efficiently sum an array of affine expressions.
+* ``getValue(expr)`` - evaluate an ``AffExpr`` or ``QuadExpr``, given the current solution values.
 
 Constraint References
 ^^^^^^^^^^^^^^^^^^^^^
