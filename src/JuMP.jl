@@ -270,6 +270,8 @@ function append!{T,S}(aff::GenericAffExpr{T,S}, other::GenericAffExpr{T,S})
     aff.constant += other.constant  # Not efficient if CoefType isn't immutable
 end
 
+getValue(a::AffExpr) = a.constant + dot(a.coeffs, map(getValue, a.vars))
+
 ###############################################################################
 # QuadExpr class
 # Holds a vector of tuples (Var, Var, Coeff), as well as an AffExpr
@@ -298,6 +300,8 @@ function copy(q::QuadExpr, new_model::Model)
 end
 
 zero(v::QuadExpr) = QuadExpr(Variable[],Variable[],Float64[],zero(AffExpr()))
+
+getValue(q::QuadExpr) = getValue(q.aff) + dot(q.qcoeffs, map(getValue, q.qvars1).*map(getValue, q.qvars2))
 
 ##########################################################################
 # JuMPConstraint

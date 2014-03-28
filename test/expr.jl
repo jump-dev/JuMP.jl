@@ -22,3 +22,15 @@ q1 = x[1]*x[2] + 27.2*LongName + 5
 # Test like term collection
 q2 = x[1]*x[2] + x[2]*x[1]
 @test quadToStr(q2) == "2 x[1]*x[2]"
+
+# Test getValue(AffExpr), getValue(QuadExpr)
+let
+    m = Model()
+    @defVar(m, 1 <= x[1:3] <= 2)
+    @addConstraint(m, x[1] + x[3] == 3)
+    @setObjective(m, Max, x[2]+x[3])
+    stat = solve(m)
+    @test stat == :Optimal
+    @test getValue(x[1]-x[2]+2x[3]-1.0) == 2.0
+    @test getValue(x[1]*x[1]-2x[2]*x[1]+3x[2]+1) == 4.0
+end
