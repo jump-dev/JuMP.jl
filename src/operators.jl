@@ -32,6 +32,7 @@
 
 
 # Variable
+(+)(lhs::Variable) = lhs
 (-)(lhs::Variable) = AffExpr([lhs],[-1.0],0.0)
 # Variable--Number
 (+)(lhs::Variable, rhs::Number) = (+)( rhs,lhs)
@@ -63,6 +64,7 @@ end
 
 
 # AffExpr (GenericAffExpr)
+(+)(lhs::GenericAffExpr) = lhs
 (-)(lhs::GenericAffExpr) = GenericAffExpr(lhs.vars, -lhs.coeffs, -lhs.constant)
 # AffExpr--Number
 (+)(lhs::GenericAffExpr, rhs::Number) = (+)(+rhs,lhs)
@@ -140,6 +142,8 @@ end
 
 
 # QuadExpr
+(+)(lhs::QuadExpr) = lhs
+(-)(lhs::QuadExpr) = 0.0-lhs
 # QuadExpr--Number
 (+)(lhs::QuadExpr, rhs::Number) = (+)(+rhs,lhs)
 (-)(lhs::QuadExpr, rhs::Number) = (+)(-rhs,lhs)
