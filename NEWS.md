@@ -5,6 +5,7 @@ Unversioned
 -----------
 
   * ``getValue`` for ``AffExpr`` and ``QuadExpr``
+  * ``getSolverModel`` replaced by ``getInternalModel``, which returns the internal MathProgBase level model
 
 Version 0.4.1 (March 24, 2014)
 ------------------------------
