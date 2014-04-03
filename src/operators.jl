@@ -15,9 +15,9 @@
 # Number
 # Number--Number obviously already taken care of!
 # Number--Variable
-(+)(lhs::Number, rhs::Variable) = AffExpr([rhs],[+1.],convert(Float64,lhs))
-(-)(lhs::Number, rhs::Variable) = AffExpr([rhs],[-1.],convert(Float64,lhs))
-(*)(lhs::Number, rhs::Variable) = AffExpr([rhs],[convert(Float64,lhs)], 0.)
+(+)(lhs::Number, rhs::Variable) = AffExpr(Variable[rhs],[+1.],convert(Float64,lhs))
+(-)(lhs::Number, rhs::Variable) = AffExpr(Variable[rhs],[-1.],convert(Float64,lhs))
+(*)(lhs::Number, rhs::Variable) = AffExpr(Variable[rhs],[convert(Float64,lhs)], 0.)
 (/)(lhs::Number, rhs::Variable) = error("Cannot divide by variable")
 # Number--GenericAffExpr
 (+)(lhs::Number, rhs::GenericAffExpr) = GenericAffExpr(copy(rhs.vars),copy(rhs.coeffs),lhs+rhs.constant)
@@ -33,26 +33,26 @@
 
 # Variable
 (+)(lhs::Variable) = lhs
-(-)(lhs::Variable) = AffExpr([lhs],[-1.0],0.0)
+(-)(lhs::Variable) = AffExpr(Variable[lhs],[-1.0],0.0)
 # Variable--Number
 (+)(lhs::Variable, rhs::Number) = (+)( rhs,lhs)
 (-)(lhs::Variable, rhs::Number) = (+)(-rhs,lhs)
 (*)(lhs::Variable, rhs::Number) = (*)(rhs,lhs)
 (/)(lhs::Variable, rhs::Number) = (*)(1./rhs,lhs)
 # Variable--Variable
-(+)(lhs::Variable, rhs::Variable) = AffExpr([lhs,rhs], [1.,+1.], 0.)
-(-)(lhs::Variable, rhs::Variable) = AffExpr([lhs,rhs], [1.,-1.], 0.)
-(*)(lhs::Variable, rhs::Variable) = QuadExpr([lhs],[rhs],[1.],AffExpr(Variable[],Float64[],0.))
+(+)(lhs::Variable, rhs::Variable) = AffExpr(Variable[lhs,rhs], [1.,+1.], 0.)
+(-)(lhs::Variable, rhs::Variable) = AffExpr(Variable[lhs,rhs], [1.,-1.], 0.)
+(*)(lhs::Variable, rhs::Variable) = QuadExpr(Variable[lhs],Variable[rhs],[1.],AffExpr(Variable[],Float64[],0.))
 (/)(lhs::Variable, rhs::Variable) = error("Cannot divide a variable by a variable")
 # Variable--AffExpr
-(+)(lhs::Variable, rhs::AffExpr) = AffExpr(vcat(rhs.vars,lhs),vcat( rhs.coeffs,1.), rhs.constant)
-(-)(lhs::Variable, rhs::AffExpr) = AffExpr(vcat(rhs.vars,lhs),vcat(-rhs.coeffs,1.),-rhs.constant)
+(+)(lhs::Variable, rhs::AffExpr) = AffExpr(concat(rhs.vars,lhs),vcat( rhs.coeffs,1.), rhs.constant)
+(-)(lhs::Variable, rhs::AffExpr) = AffExpr(concat(rhs.vars,lhs),vcat(-rhs.coeffs,1.),-rhs.constant)
 function (*)(lhs::Variable, rhs::AffExpr)
     n = length(rhs.vars)
     if rhs.constant != 0.      
-        ret = QuadExpr([lhs for i=1:n],copy(rhs.vars),copy(rhs.coeffs),AffExpr([lhs], [rhs.constant], 0.))
+        ret = QuadExpr(Variable[lhs for i=1:n],copy(rhs.vars),copy(rhs.coeffs),AffExpr(Variable[lhs], [rhs.constant], 0.))
     else
-        ret = QuadExpr([lhs for i=1:n],copy(rhs.vars),copy(rhs.coeffs),AffExpr())
+        ret = QuadExpr(Variable[lhs for i=1:n],copy(rhs.vars),copy(rhs.coeffs),AffExpr())
     end
 end
 (/)(lhs::Variable, rhs::AffExpr) = error("Cannot divide a variable by an affine expression")
@@ -77,12 +77,12 @@ function (^)(lhs::Union(Variable,AffExpr), rhs::Number)
 end
 # AffExpr--Variable
 (+)(lhs::AffExpr, rhs::Variable) = (+)(rhs,lhs)
-(-)(lhs::AffExpr, rhs::Variable) = AffExpr(vcat(lhs.vars,rhs),vcat(+lhs.coeffs,-1.),lhs.constant)
+(-)(lhs::AffExpr, rhs::Variable) = AffExpr(concat(lhs.vars,rhs),vcat(+lhs.coeffs,-1.0),lhs.constant)
 (*)(lhs::AffExpr, rhs::Variable) = (*)(rhs,lhs)
 (/)(lhs::AffExpr, rhs::Variable) = error("Cannot divide affine expression by a variable")
 # AffExpr--AffExpr
-(+)(lhs::GenericAffExpr, rhs::GenericAffExpr) = GenericAffExpr(vcat(lhs.vars,rhs.vars),vcat(lhs.coeffs, rhs.coeffs),lhs.constant+rhs.constant)
-(-)(lhs::GenericAffExpr, rhs::GenericAffExpr) = GenericAffExpr(vcat(lhs.vars,rhs.vars),vcat(lhs.coeffs,-rhs.coeffs),lhs.constant-rhs.constant)
+(+)(lhs::GenericAffExpr, rhs::GenericAffExpr) = GenericAffExpr(concat(lhs.vars,rhs.vars),vcat(lhs.coeffs, rhs.coeffs),lhs.constant+rhs.constant)
+(-)(lhs::GenericAffExpr, rhs::GenericAffExpr) = GenericAffExpr(concat(lhs.vars,rhs.vars),vcat(lhs.coeffs,-rhs.coeffs),lhs.constant-rhs.constant)
 function (*)(lhs::AffExpr, rhs::AffExpr)
     ret = QuadExpr(Variable[],Variable[],Float64[],AffExpr(Variable[],Float64[],0.))
 
@@ -164,10 +164,10 @@ end
 (*)(q::QuadExpr, a::AffExpr) = error("Cannot multiply a quadratic expression by an aff. expression")
 (/)(q::QuadExpr, a::AffExpr) = error("Cannot divide a quadratic expression by an aff. expression")
 # QuadExpr--QuadExpr
-(+)(q1::QuadExpr, q2::QuadExpr) = QuadExpr( vcat(q1.qvars1, q2.qvars1),     vcat(q1.qvars2, q2.qvars2),
-                                            vcat(q1.qcoeffs, q2.qcoeffs),   q1.aff + q2.aff)
-(-)(q1::QuadExpr, q2::QuadExpr) = QuadExpr( vcat(q1.qvars1, q2.qvars1),     vcat(q1.qvars2, q2.qvars2),
-                                            vcat(q1.qcoeffs, -q2.qcoeffs),  q1.aff - q2.aff)
+(+)(q1::QuadExpr, q2::QuadExpr) = QuadExpr( concat(q1.qvars1, q2.qvars1), concat(q1.qvars2, q2.qvars2),
+                                            vcat(q1.qcoeffs, q2.qcoeffs),         q1.aff + q2.aff)
+(-)(q1::QuadExpr, q2::QuadExpr) = QuadExpr( concat(q1.qvars1, q2.qvars1), concat(q1.qvars2, q2.qvars2),
+                                            vcat(q1.qcoeffs, -q2.qcoeffs),        q1.aff - q2.aff)
 (*)(q1::QuadExpr, q2::QuadExpr) = error("Cannot multiply two quadratic expressions")
 (/)(q1::QuadExpr, q2::QuadExpr) = error("Cannot divide a quadratic expression by a quadratic expression")
 

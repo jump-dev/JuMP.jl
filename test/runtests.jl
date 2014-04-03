@@ -35,5 +35,10 @@ if Pkg.installed("Ipopt") != nothing
     include("nonlinear.jl")
 end
 
+if Pkg.installed("Mosek") != nothing
+    println(" Test: sdp.jl")
+    include("sdp.jl")
+end
+
 # hygiene.jl should be run separately
 # hockschittkowski/runhs.jl has additional nonlinear tests

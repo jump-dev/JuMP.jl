@@ -33,4 +33,3 @@ function Base.empty!{T}(v::IndexedVector{T})
     end
     v.nnz = 0
 end
-

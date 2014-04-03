@@ -88,6 +88,7 @@ type Model
     indexedVector::IndexedVector{Float64}
 
     nlpdata#::NLPData
+    sdpdata
 
     # Extension dictionary - e.g. for robust
     # Extensions should define a type to hold information particular to
@@ -116,7 +117,7 @@ function Model(;solver=nothing)
         Model(QuadExpr(),:Min,LinearConstraint[], QuadConstraint[],SOSConstraint[],
               0,String[],Float64[],Float64[],Int[],
               0,Float64[],Float64[],Float64[],nothing,solver,false,
-              nothing,nothing,nothing,JuMPDict[],nothing,IndexedVector(Float64,0),nothing,Dict{Symbol,Any}())
+              nothing,nothing,nothing,JuMPDict[],nothing,IndexedVector(Float64,0),nothing,nothing,Dict{Symbol,Any}())
     end
 end
 
@@ -182,6 +183,12 @@ end
 ReverseDiffSparse.getplaceindex(x::Variable) = x.col
 Base.isequal(x::Variable,y::Variable) = isequal(x.col,y.col) && isequal(x.m,y.m)
 
+getindex(x::Variable) = x.col
+getindex(x::Variable,idx::Int) = (idx == 1 ? x : throw(BoundsError()))
+getindex(x::Variable,idx::Int,idy::Int) = ((idx,idy) == (1,1) ? x : throw(BoundsError()))
+
+isequal(x::Variable,y::Variable) = isequal(x.col,y.col) && isequal(x.m,y.m)
+
 function Variable(m::Model,lower::Number,upper::Number,cat::Int,name::String)
     m.numCols += 1
     push!(m.colNames, name)
@@ -194,6 +201,9 @@ end
 
 Variable(m::Model,lower::Number,upper::Number,cat::Int) =
     Variable(m,lower,upper,cat,"")
+
+size(v::Variable) = (1,)
+size(v::Variable,sl::Int) = 1
 
 # Name setter/getters
 setName(v::Variable,n::String) = (v.m.colNames[v.col] = n)
@@ -245,12 +255,22 @@ end
 
 typealias AffExpr GenericAffExpr{Float64,Variable}
 AffExpr() = AffExpr(Variable[],Float64[],0.0)
+AffExpr(v::Real) = AffExpr(Variable[],Float64[],convert(Float64,v))
+AffExpr(v::Variable) = AffExpr(concat(v),[1.0],0.0)
+
+getindex(x::AffExpr,idx::Int) = (idx == 1 ? x : throw(BoundsError()))
+getindex(x::AffExpr,idx::Int,idy::Int) = ((idx,idy) == (1,1) ? x : throw(BoundsError()))
+isequal(x::AffExpr,y::AffExpr) = isequal(x.vars,y.vars) && isequal(x.coeffs,y.coeffs) && isequal(x.constant,y.constant)
 
 Base.isempty(a::AffExpr) = (length(a.vars) == 0 && a.constant == 0.)
 Base.convert(::Type{AffExpr}, v::Variable) = AffExpr([v], [1.], 0.)
 Base.convert(::Type{AffExpr}, v::Real) = AffExpr(Variable[], Float64[], v)
 Base.zero(::Type{AffExpr}) = AffExpr(Variable[],Float64[],0.)
 Base.zero(a::AffExpr) = zero(typeof(a))
+
+copy(a::AffExpr) = AffExpr(copy(a.vars),copy(a.coeffs),copy(a.constant))
+
+zero(::Type{AffExpr}) = AffExpr(Variable[],Float64[],0.)
 
 function setObjective(m::Model, sense::Symbol, a::AffExpr)
     setObjectiveSense(m, sense)
@@ -295,6 +315,8 @@ type GenericQuadExpr{CoefType,VarType}
     aff::GenericAffExpr{CoefType,VarType}
 end
 typealias QuadExpr GenericQuadExpr{Float64,Variable}
+
+isequal(x::QuadExpr,y::QuadExpr) = isequal(x.vars1,y.vars1) && isequal(x.vars2,y.vars2) && isequal(x.qcoeffs,y.qcoeffs) && isequal(x.aff,y.aff)
 
 QuadExpr() = QuadExpr(Variable[],Variable[],Float64[],AffExpr())
 
@@ -553,6 +575,14 @@ include("callbacks.jl")
 include("print.jl")
 # Nonlinear-specific code
 include("nlp.jl")
+# SDP-specific (type) code
+include("sdp.jl")
+# SDP-specific operators
+include("sdp_operators.jl")
+# SDP-specific solve code
+include("sdp_solve.jl")
+# concatenation helpers, mostly
+include("sdp_utils.jl")
 
 ##########################################################################
 end
