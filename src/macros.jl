@@ -248,7 +248,7 @@ macro defVar(m, x, extra...)
         idxsets = {}
         refcall = Expr(:ref,varname)
         for s in var.args[2:end]
-            if isa(s,Expr) && s.head == :(=)
+            if isa(s,Expr) && (s.head == :(=) || s.head == :in)
                 idxvar = s.args[1]
                 idxset = esc(s.args[2])
             else
