@@ -46,7 +46,7 @@ macro gendict(instancename,T,idxsets...)
     setidxlhs = :(setindex!(d::$(typename),val))
     getidxrhs = :(getindex(d.innerArray))
     setidxrhs = :(setindex!(d.innerArray,val))
-    maplhs = :(mapvals(f,d::$(typename)))
+    maplhs = :(map(f::Function,d::$(typename)))
     maprhs = :($(typename)(map(f,d.innerArray),d.name,d.indexsets))
     for i in 1:N
         varname = symbol(string("x",i))
@@ -87,7 +87,7 @@ end
 
 # duck typing approach -- if eltype(innerArray) doesn't support accessor, will fail
 for accessor in (:getValue, :getDual, :getLower, :getUpper)
-    @eval $accessor(x::JuMPDict) = mapvals($accessor,x)
+    @eval $accessor(x::JuMPDict) = map($accessor,x)
 end
 
 # delegate zero-argument functions
