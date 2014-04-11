@@ -238,12 +238,12 @@ type GenericAffExpr{CoefType,VarType}
 end
 
 typealias AffExpr GenericAffExpr{Float64,Variable}
-AffExpr() = AffExpr(Variable[],Float64[],0.)
+AffExpr() = AffExpr(Variable[],Float64[],0.0)
 
 isempty(a::AffExpr) = (length(a.vars) == 0 && a.constant == 0.)
-
 convert(::Type{AffExpr}, v::Variable) = AffExpr([v], [1.], 0.)
 convert(::Type{AffExpr}, v::Real) = AffExpr(Variable[], Float64[], v)
+zero(::Type{AffExpr}) = AffExpr(Variable[],Float64[],0.)
 
 function setObjective(m::Model, sense::Symbol, a::AffExpr)
     setObjectiveSense(m, sense)

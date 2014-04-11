@@ -210,26 +210,16 @@ end
 sum{T<:Real}(j::JuMPDict{T}) = sum(j.innerArray)
 sum(j::JuMPDict{Variable}) = AffExpr(vec(j.innerArray), ones(length(j.innerArray)), 0.0)
 sum(j::Array{Variable}) = AffExpr(vec(j), ones(length(j)), 0.0)
-function sum(affs::Array{AffExpr})
-    n = 0
+function sum{S,T}(affs::Array{GenericAffExpr{S,T}})
+    new_aff = GenericAffExpr{S,T}()
     for aff in affs
-        n += length(aff.vars)
-    end
-    new_aff = AffExpr()
-    sizehint(new_aff.vars, n)
-    sizehint(new_aff.coeffs, n)
-    for aff in affs
-        for i in 1:length(aff.vars)
-            push!(new_aff.vars,   aff.vars[i])
-            push!(new_aff.coeffs, aff.coeffs[i])
-        end
-        new_aff.constant += aff.constant
+        append!(new_aff, aff)
     end
     return new_aff
 end
 
 
-function dot{T<:Real}(lhs::Array{T}, rhs::JuMPDict{Variable})
+function dot{T,S}(lhs::Array{T}, rhs::JuMPDict{S})
     sz = size(lhs)
     if length(rhs.indexsets) == 1
         # Single dimension version
@@ -254,7 +244,8 @@ function dot{T<:Real}(lhs::Array{T}, rhs::JuMPDict{Variable})
     end
     dot(lhs,rhs.innerArray)
 end
-dot{T<:Real}(lhs::JuMPDict{Variable},rhs::Array{T}) = dot(rhs,lhs)
+dot{S,T}(lhs::JuMPDict{S},rhs::Array{T}) = dot(rhs,lhs)
+
 dot{T<:Real}(lhs::Array{T}, rhs::JuMPDict{Float64}) = dot(vec(lhs), vec(rhs.innerArray))
 dot{T<:Real}(lhs::JuMPDict{Float64}, rhs::Array{T}) = dot(vec(rhs), vec(lhs.innerArray))
 dot{T<:Real}(lhs::Array{T}, rhs::Array{Variable})   = AffExpr(vec(rhs), vec(float(lhs)), 0.0)
