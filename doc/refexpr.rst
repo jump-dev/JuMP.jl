@@ -39,6 +39,8 @@ Methods
 
 * ``@addConstraint(m::Model, con)`` - efficient way to add linear constraints.
   Uses macros and thus does not yet support quadratic constraints.
+* ``@addConstraint(m::Model, ref, con)`` - efficient way to add groups of linear constraints.
+  See Constraint Reference section for details.
 * ``addConstraint(m::Model, con)`` - general way to add linear and quadratic
   constraints.
 * ``addSOS1(m::Model, coll::Vector{AffExpr})`` - adds special ordered set constraint
@@ -80,6 +82,18 @@ references in this structure, e.g.::
     for i = 1:5
       myCons[i] = @addConstraint(m, x[i] >= i)
     end
+
+You may specify groups of linear constraints using the ``@addConstraint`` macro. The syntax is 
+similar to ``@defVar``: use ``@addConstraint(m,ref,con)``, where ``m`` is the model, ``ref`` is a constraint
+reference object that may be indexed into in the same way as a variable, and ``con`` is a constraint that 
+may depend on indexing in ``ref``. For example::
+
+    @defVar(m, x[1:3])
+    @defVar(m, y[2:2:6])
+    @addConstraint(m, ref[i=1:3,j=6:-2:2], x[i] - y[j] == 1)
+
+adds 9 constraints to ``m`` of the expected form. You may index into ``ref`` in the same way as a variable, and so
+``ref[2,4]`` returns a ``ConstraintRef`` to the constraint ``x[2] - y[4] == 1``.
 
 To obtain the dual of a constraint, call ``getDual`` on the constraint reference::
     

@@ -17,6 +17,7 @@ importall Base
 export
 # Objects
     Model, Variable, AffExpr, QuadExpr, LinearConstraint, QuadConstraint, MultivarDict,
+    ConstraintRef,
 # Functions
     # Relevant to all
     print,show,
