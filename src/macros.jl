@@ -119,37 +119,114 @@ function parseExpr(x, aff::Symbol, constantCoef)
     end
 end
 
-macro addConstraint(m, x)
+macro addConstraint(m, x, extra...)
     m = esc(m)
-    if (x.head != :comparison)
-        error("Expected comparison operator in constraint $x")
-    end
-    if length(x.args) == 3 # simple comparison
-        lhs = :($(x.args[1]) - $(x.args[3])) # move everything to the lhs
-        quote
-            aff = AffExpr()
-            $(parseExpr(lhs, :aff, 1.0))
-            addConstraint($m, $(x.args[2])(aff,0) )
+    if length(extra) == 1
+        c, x = x, extra[1]
+        if (x.head != :comparison)
+            error("Expected comparison operator in constraint $x")
+        end
+        if isa(c,Symbol)
+            refcall = esc(c)
+        else
+            if !isexpr(c,:ref)
+                error("Syntax error: Expected $c to be of form constr[...]")
+            end
+            cname = esc(c.args[1])
+            idxvars = {}
+            idxsets = {}
+            refcall = Expr(:ref,cname)
+            for s in c.args[2:end]
+                if isa(s,Expr) && (s.head == :(=) || s.head == :in)
+                    idxvar = s.args[1]
+                    idxset = esc(s.args[2])
+                else
+                    idxvar = gensym()
+                    idxset = esc(s)
+                end
+                push!(idxvars, idxvar)
+                push!(idxsets, idxset)
+                push!(refcall.args, esc(idxvar))
+            end  
+        end
+        if length(x.args) == 3 # simple comparison
+            lhs = :($(x.args[1]) - $(x.args[3])) # move everything to the lhs
+            code = quote
+                aff = AffExpr()
+                $(parseExpr(lhs, :aff, 1.0))
+                $(refcall) = addConstraint($m, $(x.args[2])(aff,0) )
+            end
+        else
+            # ranged row
+            if length(x.args) != 5 || x.args[2] != :<= || x.args[4] != :<=
+                error("Only ranged rows of the form lb <= expr <= ub are supported")
+            end
+            lb = x.args[1]
+            ub = x.args[5]
+            code = quote
+                aff = AffExpr()
+                if !isa($(esc(lb)),Number)
+                    error(string("Expected ",$lb," to be a number"))
+                elseif !isa($(esc(ub)),Number)
+                    error(string("Expected ",$ub," to be a number"))
+                end
+                $(parseExpr(x.args[3],:aff,1.0))
+                $(refcall) = addConstraint($m, 
+                    LinearConstraint(aff,$(esc(lb))-aff.constant,
+                        $(esc(ub))-aff.constant))
+            end
+        end
+        if isa(c,Symbol)
+            # easy case
+            return code
+        else  
+            for (idxvar, idxset) in zip(reverse(idxvars),reverse(idxsets))
+                code = quote
+                    for $(esc(idxvar)) in $idxset
+                        $code
+                    end
+                end
+            end
+            mac = Expr(:macrocall,symbol("@gendict"),cname,:(ConstraintRef{LinearConstraint}),idxsets...)
+            return quote 
+                $mac
+                $code
+                nothing
+            end
+        end
+    elseif length(extra) == 0 # the old @addConstraint
+        if (x.head != :comparison)
+            error("Expected comparison operator in constraint $x")
+        end
+        if length(x.args) == 3 # simple comparison
+            lhs = :($(x.args[1]) - $(x.args[3])) # move everything to the lhs
+            return quote
+                aff = AffExpr()
+                $(parseExpr(lhs, :aff, 1.0))
+                addConstraint($m, $(x.args[2])(aff,0) )
+            end
+        else
+            # ranged row
+            if length(x.args) != 5 || x.args[2] != :<= || x.args[4] != :<=
+                error("Only ranged rows of the form lb <= expr <= ub are supported")
+            end
+            lb = x.args[1]
+            ub = x.args[5]
+            return quote
+                aff = AffExpr()
+                if !isa($(esc(lb)),Number)
+                    error(string("Expected ",$lb," to be a number"))
+                elseif !isa($(esc(ub)),Number)
+                    error(string("Expected ",$ub," to be a number"))
+                end
+                $(parseExpr(x.args[3],:aff,1.0))
+                addConstraint($m, 
+                    LinearConstraint(aff,$(esc(lb))-aff.constant,
+                        $(esc(ub))-aff.constant))
+            end
         end
     else
-        # ranged row
-        if length(x.args) != 5 || x.args[2] != :<= || x.args[4] != :<=
-            error("Only ranged rows of the form lb <= expr <= ub are supported")
-        end
-        lb = x.args[1]
-        ub = x.args[5]
-        quote
-            aff = AffExpr()
-            if !isa($(esc(lb)),Number)
-                error(string("Expected ",$lb," to be a number"))
-            elseif !isa($(esc(ub)),Number)
-                error(string("Expected ",$ub," to be a number"))
-            end
-            $(parseExpr(x.args[3],:aff,1.0))
-            addConstraint($m, 
-                LinearConstraint(aff,$(esc(lb))-aff.constant,
-                    $(esc(ub))-aff.constant))
-        end
+        error("Too many arguments to addConstraint")
     end
 end
 
@@ -260,7 +337,6 @@ macro defVar(m, x, extra...)
             push!(refcall.args, esc(idxvar))
         end
         tup = Expr(:tuple, [esc(x) for x in idxvars]...)
-        # code = :( $(refcall) = Variable($m, $lb, $ub, $t, $(string(var.args[1]))*string($tup) ) )
         code = :( $(refcall) = Variable($m, $lb, $ub, $t) )
         for (idxvar, idxset) in zip(reverse(idxvars),reverse(idxsets))
             code = quote

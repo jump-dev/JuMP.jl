@@ -103,3 +103,16 @@ let
     @test_throws w[end]
 
 end
+
+# test @addConstraint(a,b,c)
+let
+    m = Model()
+    @defVar(m, x[1:5])
+    @defVar(m, y[2:2:6])
+
+    @addConstraint(m, c, x[4] - y[4] == 1)
+    @test conToStr(m.linconstr[c.idx]) == "x[4] - y[4] == 1"
+
+    @addConstraint(m, d[i=1:5,j=6:-2:2], x[i] - y[j] == 2)
+    @test conToStr(m.linconstr[d[4,4].idx]) == "x[4] - y[4] == 2"
+end

@@ -36,30 +36,16 @@ function SolveModel(initgrid)
 
     @defVar(m, 0 <= x[1:9, 1:9, 1:9] <= 1, Int)
 
-    for val in 1:9
-        for dim1 in 1:9
-            # Constraint 1 - Each row...
-            @addConstraint(m, sum(x[dim1, :, val]) == 1)
-            # Constraint 2 - Each column...
-            @addConstraint(m, sum(x[:, dim1, val]) == 1)
-        end
-    end
+    # Constraint 1 - Each row...
+    @addConstraint(m, row[i=1:9,val=1:9], sum(x[i,:,val]) == 1)
+    # Constraint 2 - Each column...
+    @addConstraint(m, col[j=1:9,val=1:9], sum(x[:,j,val]) == 1)
 
     # Constraint 3 - Each sub-grid...
-    for val in 1:9
-        for i in 1:3:7
-            for j in 1:3:7
-                @addConstraint(m, sum(x[i:i+2, j:j+2, val]) == 1)
-            end
-        end
-    end
+    @addConstraint(m, subgrid[i=1:3:7,j=1:3:7,val=1:9], sum(x[i:i+2,j:j+2,val]) == 1)
 
     # Constraint 4 - Cells...
-    for row in 1:9
-        for col in 1:9
-            @addConstraint(m, sum(x[row, col, :]) == 1)
-        end
-    end
+    @addConstraint(m, cells[i=1:9,j=1:9], sum(x[i,j,:]) == 1)
 
     # Initial solution
     for row in 1:9
