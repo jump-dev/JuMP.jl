@@ -302,7 +302,8 @@ function copy(q::QuadExpr, new_model::Model)
                     q.qcoeffs[:], copy(q.aff, new_model))
 end
 
-zero(v::QuadExpr) = QuadExpr(Variable[],Variable[],Float64[],zero(AffExpr()))
+zero(::Type{QuadExpr}) = QuadExpr(Variable[],Variable[],Float64[],zero(AffExpr))
+zero(v::QuadExpr) = zero(typeof(v))
 
 getValue(q::QuadExpr) = getValue(q.aff) + dot(q.qcoeffs, map(getValue, q.qvars1).*map(getValue, q.qvars2))
 
