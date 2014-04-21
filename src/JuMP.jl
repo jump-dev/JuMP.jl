@@ -227,7 +227,8 @@ function getDual(v::Variable)
     return v.m.redCosts[v.col]
 end
 
-zero(v::Variable) = AffExpr(Variable[],Float64[],0.0)
+zero(v::Type{Variable}) = AffExpr(Variable[],Float64[],0.0)
+zero(v::Variable) = zero(typeof(v))
 
 ###############################################################################
 # Generic affine expression class
@@ -245,6 +246,7 @@ isempty(a::AffExpr) = (length(a.vars) == 0 && a.constant == 0.)
 convert(::Type{AffExpr}, v::Variable) = AffExpr([v], [1.], 0.)
 convert(::Type{AffExpr}, v::Real) = AffExpr(Variable[], Float64[], v)
 zero(::Type{AffExpr}) = AffExpr(Variable[],Float64[],0.)
+zero(a::AffExpr) = zero(typeof(a))
 
 function setObjective(m::Model, sense::Symbol, a::AffExpr)
     setObjectiveSense(m, sense)
