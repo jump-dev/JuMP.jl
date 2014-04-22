@@ -71,7 +71,6 @@ function solveIpopt(m::Model; options::Dict=Dict(), suppress_warnings=false)
             error("Unrecognized quadratic constraint sense $(c.sense)")
         end
     end
-    #println("Prep time: $tprep")
     tf, tgf, tg, tjg, th = zeros(5)
     
     if has_nlobj
@@ -312,8 +311,20 @@ function solveIpopt(m::Model; options::Dict=Dict(), suppress_warnings=false)
     end
     #print("LB: ");show([linrowlb,nlrowlb]);println()
     #print("UB: ");show([linrowub,nlrowub]);println()
+
+    numconstr = length(m.linconstr)+length(m.quadconstr)+n_nlconstr
+    # call functions once to pre-compile
+    eval_f(m.colVal)
+    eval_g(m.colVal, Array(Float64,numconstr))
+    eval_grad_f(m.colVal, Array(Float64,m.numCols))
+    eval_jac_g(m.colVal, :Values, Int32[], Int32[], Array(Float64,nnz_jac))
+    eval_h(m.colVal, :Values, Int32[], Int32[], 1.0, ones(numconstr), Array(Float64,nnz_hess))
+    # reset timers
+    tf, tgf, tg, tjg, th = zeros(5)
+
+
     tprep = toq()
-    prob = createProblem(m.numCols, m.colLower, m.colUpper, length(m.linconstr)+length(m.quadconstr)+n_nlconstr,
+    prob = createProblem(m.numCols, m.colLower, m.colUpper, numconstr,
         [linrowlb,quadrowlb,nlrowlb], [linrowub,quadrowub,nlrowub], nnz_jac, nnz_hess,
         eval_f, eval_g, eval_grad_f, eval_jac_g, eval_h)
 
@@ -337,6 +348,7 @@ function solveIpopt(m::Model; options::Dict=Dict(), suppress_warnings=false)
     m.colVal = prob.x
     m.objVal = objscale*prob.obj_val
 
+    #println("Prep time: $tprep")
     #println("feval $tf\nfgrad $tgf\ngeval $tg\njaceval $tjg\nhess $th")
 
     # translate status

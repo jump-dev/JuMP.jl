@@ -28,7 +28,7 @@ end
 
 @setNLObjective(m, Min, 
     sum{ log(x[j] - 2)^2 + log(10 - x[j])^2, j=1:10} -
-    (x[1]*x[2]*x[3]*x[4]*x[5]*x[6]*x[7]*x[8]*x[9]*x[10]) ^ 0.2
+    prod{x[i],i=1:10} ^ 0.2
 )
 
 solve(m)
