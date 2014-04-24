@@ -281,12 +281,15 @@ function indirect_recover(hessian_matmat!, nnz, twocolorgraphs, vertexmap, color
     
     # diagonal entries
     k = 0
-    for i in 1:N
-        k += 1
-        if structure
+    if structure
+        for i in 1:N
+            k += 1
             I[k] = i
             J[k] = i
-        else
+        end
+    else
+        for i in 1:N
+            k += 1
             V[k] = R[i,color[i]]
         end
     end
