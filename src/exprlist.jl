@@ -27,8 +27,9 @@ function appendToIJ!(I,J,hI,hJ,x::SymbolicOutput)
     @assert length(hI) == length(hJ)
     mp = x.mapfromcanonical
     for k in 1:length(hI)
-        push!(I,mp[hI[k]])
-        push!(J,mp[hJ[k]])
+        i,j = normalize(mp[hI[k]],mp[hJ[k]])
+        push!(I,i)
+        push!(J,j)
     end
 end
 
@@ -146,7 +147,7 @@ function eval_hess!(V::AbstractVector, l::ExprList, xval, lambda)
     idx = 1
     for (i,x) in enumerate(l.exprs)
         nnz = length(l.hessIJ[i][1])
-        subarr = sub(V,idx:(idx+nnz-1)) 
+        subarr = sub(V,idx:(idx+nnz-1))
         l.hessfuncs[i](xval, subarr, x)
         scale!(subarr, lambda[i])
         idx += nnz

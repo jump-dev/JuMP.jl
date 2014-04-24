@@ -1,5 +1,9 @@
 # compute hessian sparsity pattern given expression graph
 
+# convert to lower triangular indices
+normalize(i,j) = (j > i) ? (j,i) : (i,j)
+normalize(e) = normalize(e...)
+
 # Idea: detect partially separable structure
 # e.g., f(x) = sum f_i(x)
 
