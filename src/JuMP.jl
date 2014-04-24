@@ -537,6 +537,8 @@ include("callbacks.jl")
 include("print.jl")
 # Nonlinear-specific code
 include("nlp.jl")
+# Presolve
+include("presolve.jl")
 
 ##########################################################################
 end
