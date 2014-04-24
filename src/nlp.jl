@@ -246,8 +246,14 @@ function solveIpopt(m::Model; options::Dict=Dict(), suppress_warnings=false)
         qobj::QuadExpr = m.obj
         if mode == :Structure
             for i in 1:length(hI)
-                rows[i] = nldata.nlobj.mapfromcanonical[hI[i]]
-                cols[i] = nldata.nlobj.mapfromcanonical[hJ[i]]
+                # not guaranteed to be lower-triangular
+                ix1 = nldata.nlobj.mapfromcanonical[hI[i]]
+                ix2 = nldata.nlobj.mapfromcanonical[hJ[i]]
+                if ix2 > ix1
+                    ix1, ix2 = ix2, ix1
+                end
+                rows[i] = ix1
+                cols[i] = ix2
             end
             idx = length(hI)+1
             for k in 1:length(qobj.qvars1)
