@@ -61,7 +61,7 @@ function compute_hessian_sparsity(x::ExprNode, linear_so_far, expr_out)
     if isexpr(x.ex, :call)
         # is this a linear operator?
         if linear_so_far == 1 
-            if x.ex.args[1] == (+) || x.ex.args[1] == (-) || (x.ex.args[1] == (*) && sum([isa(t,ExprNode) for t in x.ex.args[2:end]]) <= 1) # TODO: doesn't catch multiplication by symbolic constants
+            if x.ex.args[1] == :(+) || x.ex.args[1] == :(-) || (x.ex.args[1] == :(*) && sum([isa(t,ExprNode) for t in x.ex.args[2:end]]) <= 1) # TODO: doesn't catch multiplication by symbolic constants
                 # we're still at the top
                 # give the same color to the children
                 for i in 2:length(x.ex.args)

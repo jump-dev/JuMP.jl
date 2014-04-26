@@ -15,7 +15,7 @@ for (funsym, exp) in Calculus.derivative_rules
     # remove xp from expression -- Calculus uses it for the chain rule
     exp = remove_xp(exp)
     # return a function that returns an expression with the given expression replacing the symbol x
-    rules[eval(funsym)] = arg -> replace_x(exp,arg) 
+    rules[funsym] = arg -> replace_x(exp,arg)
 end
 
 curlyexpr(x::Expr) = isexpr(x.args[2],:parameters) ? x.args[3] : x.args[2]
@@ -44,8 +44,8 @@ end
 
 function quoteTree(x::Expr, datalist::Dict, iterstack)
     if isexpr(x, :call)
-        # evaluate, don't quote the function name
-        code = :(Expr(:call,$(x.args[1])))
+        # quote the function name
+        code = :(Expr(:call,$(quot(x.args[1]))))
         for y in x.args[2:end]
             push!(code.args,quoteTree(y, datalist, iterstack))
         end
@@ -267,18 +267,18 @@ function revpass(x::ExprNode, expr_out)
     # x.deriv = sum_{p in parents} p.deriv*(\partial f_p / \partial x)
     for (p, k) in x.parents
         f = p.ex.args[1]
-        if f == (+) || (isexpr(p.ex,:curly) && f == :sum)
+        if f == :(+) || (isexpr(p.ex,:curly) && f == :sum)
             push!(expr_out.args, :( $(x.deriv) += $(p.deriv) ))
         elseif isexpr(p.ex,:curly) && f == :prod
             # potentially numerically unstable if x.value ~= 0
             push!(expr_out.args, :( $(x.deriv) += $(p.deriv)*$(p.value)/$(x.value) ))
-        elseif f == (-)
+        elseif f == :(-)
             if length(p.ex.args) > 2 && k == 2
                 push!(expr_out.args, :( $(x.deriv) += $(p.deriv) ))
             else
                 push!(expr_out.args, :( $(x.deriv) -= $(p.deriv) ))
             end
-        elseif f == (*)
+        elseif f == :(*)
             prd = gensym()
             push!(expr_out.args, :( $prd = $oneval ))
             for i in 2:length(p.ex.args)
@@ -289,7 +289,7 @@ function revpass(x::ExprNode, expr_out)
                 end
             end
             push!(expr_out.args, :( $(x.deriv) += $(p.deriv)*$prd ) )
-        elseif f == (^)
+        elseif f == :(^)
             if k == 2 # base
                 exponent = getvalue(p.ex.args[3])
                 push!(expr_out.args, 
@@ -300,7 +300,7 @@ function revpass(x::ExprNode, expr_out)
                 push!(expr_out.args,
                   :( $(x.deriv) += $(p.deriv)*$base^($(x.value))*log($base) ))
             end
-        elseif f == (/)
+        elseif f == :(/)
             if k == 2 # numerator
                 denom = getvalue(p.ex.args[3])
                 push!(expr_out.args,
