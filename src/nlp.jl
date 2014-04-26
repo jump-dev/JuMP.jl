@@ -95,6 +95,7 @@ function solveIpopt(m::Model; options::Dict=Dict(), suppress_warnings=false)
         end
     else
         # linear and quadratic
+        m.colVal = copy(m.colVal) # temporary workaround for julia issue #6645
         function eval_f(x)
             tic()
             v = dot(linobj,x) + m.obj.aff.constant 
