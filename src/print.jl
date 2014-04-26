@@ -338,7 +338,7 @@ function affToStr(a::AffExpr, showConstant=true)
 
     # Collect like terms
     for ind in 1:length(a.vars)
-        addelt(moddict[a.vars[ind].m], a.vars[ind].col, a.coeffs[ind])
+        addelt!(moddict[a.vars[ind].m], a.vars[ind].col, a.coeffs[ind])
     end
 
     elm = 0

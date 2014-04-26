@@ -141,7 +141,7 @@ function prepConstrMatrix(m::Model)
             if vars[ind].m != m
                 error("Variable not owned by model present in constraints")
             end
-            addelt(tmprow,vars[ind].col,coeffs[ind])
+            addelt!(tmprow,vars[ind].col,coeffs[ind])
         end
         for i in 1:tmprow.nnz
             nnz += 1
