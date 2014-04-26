@@ -71,6 +71,10 @@ end
 (-)(lhs::GenericAffExpr, rhs::Number) = (+)(-rhs,lhs)
 (*)(lhs::GenericAffExpr, rhs::Number) = (*)(rhs,lhs)
 (/)(lhs::GenericAffExpr, rhs::Number) = (*)(1.0/rhs,lhs)
+function (^)(lhs::Union(Variable,AffExpr), rhs::Number)
+    rhs == 2 || error("Only exponents of 2 are currently supported")
+    return lhs*lhs
+end
 # AffExpr--Variable
 (+)(lhs::AffExpr, rhs::Variable) = (+)(rhs,lhs)
 (-)(lhs::AffExpr, rhs::Variable) = AffExpr(vcat(lhs.vars,rhs),vcat(+lhs.coeffs,-1.),lhs.constant)
