@@ -129,7 +129,7 @@ else
     end
 end
 
-function generate_2color_subgraphs(g,color)
+function recovery_preprocess(g,color)
     twocoloredges = Dict{Set{Int},Vector{(Int,Int)}}()
     twocolorvertices = Dict{Set{Int},Set{Int}}()
     for e in edges(g)
@@ -167,104 +167,47 @@ function generate_2color_subgraphs(g,color)
         push!(vertexmap, vmap)
     end
 
-    return twocolorgraphs, vertexmap
-
-end
-
-type DFSRecoveryVisitor <: AbstractGraphVisitor
-    color::Vector{Int} # color of each original vertex
-    R::Matrix{Float64} # compressed Hessian product
-    I::Vector{Int} # row indices
-    J::Vector{Int} # col indices
-    V#::AbstractVector{Float64} # output values
-    k::Int # nnz counter
-    structure::Bool # structure or values
-    # these fields change with each subgraph
-    g::SimpleGraph # two-color subgraph
-    parent::Vector{Int}
-    recovered_values::Vector{Float64} # recovered values of edges on this subgraph
-    vmap::Vector{Int} # map from two-color vertex indices to original indices
-
-    function DFSRecoveryVisitor(color, R, I, J, V, k, structure)
-        vis = new(color, R, I, J, V, k, structure)
-        @assert pointer(V) == pointer(vis.V) # julia issue #6617
-        vis.parent = zeros(length(color))
-        if structure
-            vis.recovered_values = zeros(length(I))
-        else
-            vis.recovered_values = zeros(length(V))
+    # list the vertices in postorder
+    postorder = [reverse!(topological_sort_by_dfs(s)) for s in twocolorgraphs]
+    # identify each vertex's parent in the tree
+    parents = Array(Vector{Int},0)
+    for i in 1:length(twocolorgraphs)
+        s = twocolorgraphs[i]
+        parent = zeros(num_vertices(s))
+        s = twocolorgraphs[i]
+        seen = falses(num_vertices(s))
+        for k in 1:num_vertices(s)
+            v = postorder[i][k]
+            seen[v] = true
+            # find the neighbor that we haven't seen
+            notseen = 0
+            numseen = 0
+            for w in out_neighbors(v,s)
+                if seen[w]
+                    numseen += 1
+                else
+                    notseen = w
+                end
+            end
+            if numseen == length(out_neighbors(v,s)) - 1
+                parent[v] = notseen
+            else
+                (numseen == length(out_neighbors(v,s))) || error("Error processing tree, invalid ordering")
+            end
         end
-        return vis
+        push!(parents, parent)
     end
-end
 
-function initialize!(vis::DFSRecoveryVisitor,newG,vmap)
-    vis.g = newG
-    vis.vmap = vmap
-    E = num_edges(vis.g)
-    V = num_vertices(vis.g)
-    vis.parent[1:V] = 0
-    vis.recovered_values[1:E] = 0
-end
 
-import Graphs: close_vertex!, examine_neighbor!
-
-# called when all of v's neighbors have been explored, so this is postorder
-function close_vertex!(vis::DFSRecoveryVisitor, v)
-    p = vis.parent[vertex_index(v)]
-    if p == 0 # root of the tree
-        return
-    end
-    #println("Closing vertex $(vis.vmap[v]), parent $(vis.vmap[p])")
-    @assert p > 0
-    # we're recovering the value corresponding to the edge that points to the parent
-    s = 0.0
-    paridx = 0
-    for e in out_edges(v,vis.g)
-        w = target(e)
-        if w != p
-            s += vis.recovered_values[edge_index(e)]
-        else
-            paridx = edge_index(e)
-        end
-    end
-    i = vis.vmap[vertex_index(v)]
-    j = vis.vmap[p]
-    
-    vis.k += 1
-    
-    if vis.structure
-        i,j = normalize(i,j)
-        vis.I[vis.k] = i
-        vis.J[vis.k] = j
-    else
-        val = vis.R[i,vis.color[j]] - s
-        vis.recovered_values[paridx] = val
-        vis.V[vis.k] = val
-    end
+    return (twocolorgraphs, vertexmap, postorder, parents)
 
 end
 
-function examine_neighbor!{V}(
-    vis::DFSRecoveryVisitor,
-    u::V,
-    v::V,
-    vcolor::Int,
-    ecolor::Int)
-    
-    #println("Exploring edge $(vis.vmap[u]) -> $(vis.vmap[v]): $vcolor $ecolor")
-    if vcolor == 1 && ecolor == 0
-        error("Invalid input, found cycle in two-color subtree!")
-    end
-    if ecolor == 1
-        return # already saw this edge
-    end
-    # set u as parent of v
-    vis.parent[vertex_index(v)] = vertex_index(u)
-end
-
-function indirect_recover(hessian_matmat!, nnz, twocolorgraphs, vertexmap, color, num_colors, x, inputvals, fromcanonical, tocanonical, R, V; structure=false)
+function indirect_recover(hessian_matmat!, nnz, twocolor, stored_values, color, num_colors, x, inputvals, fromcanonical, tocanonical, R, V; structure=false)
     N = length(color)
+    
+    (twocolorgraphs, vertexmap, postorder, parents) = twocolor
+
 
     # generate vectors for hessian-vec product
     #R = zeros(N,num_colors)
@@ -301,30 +244,47 @@ function indirect_recover(hessian_matmat!, nnz, twocolorgraphs, vertexmap, color
             V[k] = R[i,color[i]]
         end
     end
-    
-    vis = DFSRecoveryVisitor(color, R, I, J, V, k, structure)
 
-    vcmap = zeros(Int,N)
-    ecmap = zeros(Int,nnz)
+    for t in 1:length(twocolorgraphs)
+        s = twocolorgraphs[t]
+        vmap = vertexmap[t]
+        order = postorder[t]
+        parent = parents[t]
+        stored_values[1:num_vertices(s)] = 0.0
 
-    # post-order depth-first search on connected components of each two-color subgraph
-    for (s,vmap) in zip(twocolorgraphs, vertexmap)
-        #println("G: $s")
-        #println(edges(s))
-        #println("Vmap: $vmap")
-        
-        vcmap[1:num_vertices(s)] = 0
-        ecmap[1:num_edges(s)] = 0
-        initialize!(vis, s, vmap)
-        for v in vertices(s)
-            if vcmap[vertex_index(v,s)] == 0
-                # new connected component
-                traverse_graph(s, DepthFirst(), v, vis, vertexcolormap=vcmap, edgecolormap=ecmap)
+        if structure
+            for z in 1:num_vertices(s)
+                v = order[z]
+                p = parent[v]
+                (p == 0) && continue
+                i = vmap[v]
+                j = vmap[p]
+                i,j = normalize(i,j)
+                k += 1
+                I[k] = i
+                J[k] = j
+            end
+        else
+            for z in 1:num_vertices(s)
+                v = order[z]
+                p = parent[v]
+                (p == 0) && continue
+                
+                i = vmap[v]
+                j = vmap[p]
+
+                value = R[i,color[j]] - stored_values[p]
+                stored_values[p] += value
+
+                k += 1
+                V[k] = value
             end
         end
     end
+    
+    
 
-    @assert vis.k == nnz + N
+    @assert k == nnz + N
 
     if structure
         return I,J
@@ -355,12 +315,13 @@ function gen_hessian_sparse_color_parametric(s::SymbolicOutput)
 
     R = Array(Float64,num_vertices(g),num_colors)
     
-    twocolorgraphs, vertexmap = generate_2color_subgraphs(g, color)
+    twocolor = recovery_preprocess(g, color)
+    stored_values = Array(Float64,num_vertices(g))
 
-    I,J = indirect_recover(hessian_matmat!, num_edges(g), twocolorgraphs, vertexmap, color, num_colors, nothing, s.inputvals, s.mapfromcanonical, s.maptocanonical, R, Float64[]; structure=true)
+    I,J = indirect_recover(hessian_matmat!, num_edges(g), twocolor, stored_values, color, num_colors, nothing, s.inputvals, s.mapfromcanonical, s.maptocanonical, R, Float64[]; structure=true)
     
     function eval_h(x,output_values, ex::SymbolicOutput)
-        indirect_recover(hessian_matmat!, num_edges(g), twocolorgraphs, vertexmap, color, num_colors, x, ex.inputvals, ex.mapfromcanonical, ex.maptocanonical, R, output_values)
+        indirect_recover(hessian_matmat!, num_edges(g), twocolor, stored_values, color, num_colors, x, ex.inputvals, ex.mapfromcanonical, ex.maptocanonical, R, output_values)
     end
 
     return I,J, eval_h
