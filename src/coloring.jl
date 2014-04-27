@@ -346,24 +346,26 @@ export to_H
 
 # Topological sort using DFS -- copied from Graphs.jl until 0.3 is released...
 
-type TopologicalSortVisitor{V} <: AbstractGraphVisitor
+type MyTopologicalSortVisitor{V} <: AbstractGraphVisitor
     vertices::Vector{V}
 
-    function TopologicalSortVisitor(n::Int)
+    function MyTopologicalSortVisitor(n::Int)
         vs = Array(Int, 0)
         sizehint(vs, n)
         new(vs)
     end
 end
 
+import Graphs: examine_neighbor!, close_vertex!
 
-function examine_neighbor!{V}(visitor::TopologicalSortVisitor{V}, u::V, v::V, vcolor::Int, ecolor::Int)
+
+function examine_neighbor!{V}(visitor::MyTopologicalSortVisitor{V}, u::V, v::V, vcolor::Int, ecolor::Int)
     if vcolor == 1 && ecolor == 0
         throw(ArgumentError("The input graph contains at least one loop."))
     end
 end
 
-function close_vertex!{V}(visitor::TopologicalSortVisitor{V}, v::V)
+function close_vertex!{V}(visitor::MyTopologicalSortVisitor{V}, v::V)
     push!(visitor.vertices, v)
 end
 
@@ -371,7 +373,7 @@ function reverse_topological_sort_by_dfs{V}(graph::AbstractGraph{V})
     @graph_requires graph vertex_list incidence_list vertex_map
 
     cmap = zeros(Int, num_vertices(graph))
-    visitor = TopologicalSortVisitor{V}(num_vertices(graph))
+    visitor = MyTopologicalSortVisitor{V}(num_vertices(graph))
 
     for s in vertices(graph)
         if cmap[vertex_index(s, graph)] == 0
