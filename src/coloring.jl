@@ -203,12 +203,9 @@ function recovery_preprocess(g,color)
 
 end
 
-function indirect_recover(hessian_matmat!, nnz, twocolor, stored_values, color, num_colors, x, inputvals, fromcanonical, tocanonical, R, V; structure=false)
+function indirect_recover(hessian_matmat!, nnz, twocolorgraphs, vertexmap, postorder, parents, stored_values, color, num_colors, x, inputvals, fromcanonical, tocanonical, R, V; structure=false)
     N = length(color)
     
-    (twocolorgraphs, vertexmap, postorder, parents) = twocolor
-
-
     # generate vectors for hessian-vec product
     #R = zeros(N,num_colors)
     fill!(R,0.0)
@@ -281,6 +278,7 @@ function indirect_recover(hessian_matmat!, nnz, twocolor, stored_values, color, 
             end
         end
     end
+
     
     
 
@@ -315,13 +313,14 @@ function gen_hessian_sparse_color_parametric(s::SymbolicOutput)
 
     R = Array(Float64,num_vertices(g),num_colors)
     
-    twocolor = recovery_preprocess(g, color)
+    (twocolorgraphs, vertexmap, postorder, parents) = recovery_preprocess(g, color)
+
     stored_values = Array(Float64,num_vertices(g))
 
-    I,J = indirect_recover(hessian_matmat!, num_edges(g), twocolor, stored_values, color, num_colors, nothing, s.inputvals, s.mapfromcanonical, s.maptocanonical, R, Float64[]; structure=true)
+    I,J = indirect_recover(hessian_matmat!, num_edges(g), twocolorgraphs, vertexmap, postorder, parents, stored_values, color, num_colors, nothing, s.inputvals, s.mapfromcanonical, s.maptocanonical, R, Float64[]; structure=true)
     
     function eval_h(x,output_values, ex::SymbolicOutput)
-        indirect_recover(hessian_matmat!, num_edges(g), twocolor, stored_values, color, num_colors, x, ex.inputvals, ex.mapfromcanonical, ex.maptocanonical, R, output_values)
+        indirect_recover(hessian_matmat!, num_edges(g), twocolorgraphs, vertexmap, postorder, parents, stored_values, color, num_colors, x, ex.inputvals, ex.mapfromcanonical, ex.maptocanonical, R, output_values)
     end
 
     return I,J, eval_h
