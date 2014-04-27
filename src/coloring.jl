@@ -273,7 +273,7 @@ function indirect_recover(hessian_matmat!, nnz, twocolor, stored_values, color, 
                 i = vmap[v]
                 j = vmap[p]
 
-                value = R[i,color[j]] - stored_values[p]
+                value = R[i,color[j]] - stored_values[v]
                 stored_values[p] += value
 
                 k += 1
