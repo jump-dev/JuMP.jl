@@ -104,7 +104,7 @@ function eval_g!(out::AbstractVector, l::ExprList, xval)
     @assert length(l.valfuncs) == length(l.exprs)
 
     for i in 1:length(l.exprs)
-        out[i] = l.valfuncs[i](xval, IdentityArray(), l.exprs[i].inputvals)
+        out[i] = l.valfuncs[i](xval, IdentityArray(), l.exprs[i].inputvals...)
     end
 end
 
@@ -115,7 +115,7 @@ function eval_jac_g!(V::AbstractVector, l::ExprList, xval)
     idx = 1
     for (i,x) in enumerate(l.exprs)
         k = length(x.maptocanonical)
-        l.gradfuncs[i](xval, IdentityArray(), sub(V, idx:(idx+k-1)), x.maptocanonical, x.inputvals)
+        l.gradfuncs[i](xval, IdentityArray(), sub(V, idx:(idx+k-1)), x.maptocanonical, x.inputvals...)
         idx += k
     end
 

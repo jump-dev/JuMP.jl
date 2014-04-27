@@ -185,7 +185,7 @@ function gen_hessian_matmat_parametric(s::SymbolicOutput)
                 dualvec[i] = Dual(x[fromcanonical[i]], S[i,k])
             end
             fill!(dualout, dual(zero(T)))
-            fgrad(dualvec, tocanonical, dualout, tocanonical,inputvals)
+            fgrad(dualvec, tocanonical, dualout, tocanonical,inputvals...)
             for i in 1:N
                 S[i,k] = epsilon(dualout[i])
             end

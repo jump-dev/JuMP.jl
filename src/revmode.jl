@@ -377,10 +377,6 @@ end
 # gradient evaluation parametric on "inputvals"
 function genfgrad_parametric(x::SymbolicOutput)
     out = Expr(:block)
-    # load data into local scope
-    for i in 1:length(x.inputnames)
-        push!( out.args, :( $(x.inputnames[i]) = __inputvals[$i] ))
-    end
     fval = forwardpass(x.tree, out)
     push!( out.args, :( beginreverse = nothing ) ) # for debugging, indicate start of reverse pass instructions
     revpass(x.tree,out)
@@ -390,10 +386,14 @@ function genfgrad_parametric(x::SymbolicOutput)
     # placeindex_out[i] specifies the the index in which to output
     # the partial derivative wrt the ith placeholder
     fexpr = quote
-        function $(fname){T}(__placevalues::Vector{T}, __placeindex_in, __output, __placeindex_out, __inputvals)
+        function $(fname){T}(__placevalues::Vector{T}, __placeindex_in, __output, __placeindex_out)
             $out
             return $fval
         end
+    end
+    # add arguments for inputnames -- local data
+    for i in 1:length(x.inputnames)
+        push!(fexpr.args[2].args[1].args,x.inputnames[i])
     end
 
     return eval(fexpr)
@@ -404,17 +404,17 @@ end
 # forward pass only
 function genfval_parametric(x::SymbolicOutput)
     out = Expr(:block)
-    # load data into local scope
-    for i in 1:length(x.inputnames)
-        push!( out.args, :( $(x.inputnames[i]) = __inputvals[$i] ))
-    end
     fval = forwardpass(x.tree, out)
     fname = gensym()
     fexpr = quote
-        function $(fname){T}(__placevalues::Vector{T}, __placeindex_in, __inputvals)
+        function $(fname){T}(__placevalues::Vector{T}, __placeindex_in)
             $out
             return $fval
         end
+    end
+    # add arguments for inputnames -- local data
+    for i in 1:length(x.inputnames)
+        push!(fexpr.args[2].args[1].args,x.inputnames[i])
     end
 
     return eval(fexpr)
@@ -423,7 +423,7 @@ end
 function genfval_simple(x::SymbolicOutput)
     fexpr = genfval_parametric(x)
     f = eval(fexpr)
-    return xvals -> f(xvals, IdentityArray(), x.inputvals)
+    return xvals -> f(xvals, IdentityArray(), x.inputvals...)
 end
 
 type IdentityArray
