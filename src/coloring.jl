@@ -222,8 +222,8 @@ function indirect_recover(hessian_matmat!, nnz, twocolorgraphs, vertexmap, posto
         I = zeros(Int, nnz+N)
         J = zeros(Int, nnz+N)
     else
-        I = Int[]
-        J = Int[]
+        #I = Int[]
+        #J = Int[]
         @assert length(V) == nnz+N
     end
     
