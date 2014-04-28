@@ -26,7 +26,7 @@ sparsemat, sparsefunc = gen_hessian_sparse_mat(ex)
 sparsefunc(val, sparsemat)
 @test_approx_eq sparsemat tril(exact(val...))
 
-I,J, sparsefunc_color = gen_hessian_sparse_color_parametric(ex)
+I,J, sparsefunc_color = gen_hessian_sparse_color_parametric(ex, 4)
 V = zeros(length(I))
 sparsefunc_color(val, V, ex)
 @test_approx_eq to_H(ex, I, J, V, 4) tril(exact(val...))
@@ -50,7 +50,7 @@ sparsemat, sparsefunc = gen_hessian_sparse_mat(ex)
 sparsefunc(val, sparsemat)
 @test_approx_eq sparsemat tril(exact(val))
 
-I, J, sparsefunc_color = gen_hessian_sparse_color_parametric(ex)
+I, J, sparsefunc_color = gen_hessian_sparse_color_parametric(ex,5)
 V = zeros(length(I))
 sparsefunc_color(val, V, ex)
 @test_approx_eq to_H(ex, I, J, V, 5) tril(exact(val))
@@ -61,7 +61,7 @@ for i in 1:5
     push!(exlist,@processNLExpr x[i]^3/6)
 end
 
-I,J = prep_sparse_hessians(exlist)
+I,J = prep_sparse_hessians(exlist,5)
 V = zeros(length(I))
 lambda = rand(5)
 eval_hess!(V, exlist, val, lambda)
@@ -70,13 +70,13 @@ eval_hess!(V, exlist, val, lambda)
 # test linear expressions
 x,y = placeholders(2)
 ex = @processNLExpr 2x + y
-I, J, sparsefunc_color = gen_hessian_sparse_color_parametric(ex)
+I, J, sparsefunc_color = gen_hessian_sparse_color_parametric(ex,2)
 @assert length(I) == length(J) == 0
 
 # constant expressions
 a = 10
 ex = @processNLExpr (1/a+a)*x^2*y
-I, J, sparsefunc_color = gen_hessian_sparse_color_parametric(ex)
+I, J, sparsefunc_color = gen_hessian_sparse_color_parametric(ex,2)
 exact(x,y) = [2y*(1/a+a) 0; 2x*(1/a+a) 0]
 val = [4.5,2.3]
 V = zeros(length(I))
@@ -86,7 +86,7 @@ sparsefunc_color(val, V, ex)
 # prod{}
 x = placeholders(2)
 ex = @processNLExpr prod{x[i], i = 1:2}
-I, J, sparsefunc_color = gen_hessian_sparse_color_parametric(ex)
+I, J, sparsefunc_color = gen_hessian_sparse_color_parametric(ex,2)
 V = zeros(length(I))
 sparsefunc_color(val, V, ex)
 @test_approx_eq to_H(ex, I, J, V, 2) tril([ 0.0 1.0; 1.0 0.0 ])
@@ -94,7 +94,7 @@ sparsefunc_color(val, V, ex)
 x = placeholders(3)
 val = [4.5,2.3,6.5]
 ex = @processNLExpr prod{x[i], i = 1:3}
-I, J, sparsefunc_color = gen_hessian_sparse_color_parametric(ex)
+I, J, sparsefunc_color = gen_hessian_sparse_color_parametric(ex,3)
 V = zeros(length(I))
 sparsefunc_color(val, V, ex)
 @test_approx_eq full(to_H(ex, I, J, V, 3)) [0 0 0; val[3] 0 0; val[2] val[1] 0]
@@ -102,7 +102,7 @@ sparsefunc_color(val, V, ex)
 x = placeholders(4)
 val = [4.5,2.3,6.5,3.2]
 ex = @processNLExpr prod{x[i], i = 1:4}
-I, J, sparsefunc_color = gen_hessian_sparse_color_parametric(ex)
+I, J, sparsefunc_color = gen_hessian_sparse_color_parametric(ex,4)
 V = zeros(length(I))
 sparsefunc_color(val, V, ex)
 @test_approx_eq full(to_H(ex, I, J, V, 4)) [0 0 0 0; val[3]*val[4] 0 0 0; val[2]*val[4] val[1]*val[4] 0 0; val[2]*val[3] val[1]*val[3] val[1]*val[2] 0]
@@ -110,7 +110,7 @@ sparsefunc_color(val, V, ex)
 # hs071
 x = placeholders(4)
 ex = @processNLExpr x[1]*x[4]*(x[1]+x[2]+x[3]) + x[3]
-I, J, sparsefunc_color = gen_hessian_sparse_color_parametric(ex)
+I, J, sparsefunc_color = gen_hessian_sparse_color_parametric(ex,4)
 exact(x) = [
 2x[4] 0 0 0;
 x[4] 0 0 0;
@@ -125,7 +125,7 @@ exlist = ExprList()
 push!(exlist, @processNLExpr x[1]*x[2]*x[3]*x[4])
 #push!(exlist, @processNLExpr sum{x[i]^2,i=1:4})
 
-I,J = prep_sparse_hessians(exlist)
+I,J = prep_sparse_hessians(exlist,4)
 V = zeros(length(I))
 lambda = 2.0
 eval_hess!(V, exlist, val, lambda)

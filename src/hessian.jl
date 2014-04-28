@@ -172,26 +172,28 @@ function gen_hessian_matmat(s::SymbolicOutput)
     end
 end
 
+function hessian_matmat_parametric!{T,Q}(S, x::Vector{T}, dualvec::Vector{Dual{T}}, dualout::Vector{Dual{T}}, inputvals::Q, fromcanonical, tocanonical, fgrad)
+    # S uses canonical indices
+    N = size(S,1)
+    @assert length(x) >= N
+    for k in 1:size(S,2)
+        for i in 1:N
+            r = fromcanonical[i]
+            dualvec[r] = Dual(x[r], S[i,k])
+            dualout[r] = zero(Dual{T})
+        end
+        fgrad(dualvec, IdentityArray(), dualout, IdentityArray(),inputvals...)
+        for i in 1:N
+            S[i,k] = epsilon(dualout[fromcanonical[i]])
+        end
+    end
+    return S
+end
+
+
 function gen_hessian_matmat_parametric(s::SymbolicOutput)
     fgrad = genfgrad_parametric(s)
-    # S uses canonical indices
-    function hessian_matmat_p!{T}(S, x::Vector{T}, inputvals, fromcanonical, tocanonical)
-        N = size(S,1)
-        @assert length(x) >= N
-        dualvec = Array(Dual{T}, N)
-        dualout = Array(Dual{T}, N)
-        for k in 1:size(S,2)
-            for i in 1:N
-                dualvec[i] = Dual(x[fromcanonical[i]], S[i,k])
-            end
-            fill!(dualout, dual(zero(T)))
-            fgrad(dualvec, tocanonical, dualout, tocanonical,inputvals...)
-            for i in 1:N
-                S[i,k] = epsilon(dualout[i])
-            end
-        end
-        return S
-    end
+    return (S, x, dualvec, dualout, inputvals, fromcanonical, tocanonical) -> hessian_matmat_parametric!(S, x, dualvec, dualout, inputvals, fromcanonical, tocanonical, fgrad)
 end
 
 

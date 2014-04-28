@@ -34,7 +34,7 @@ function appendToIJ!(I,J,hI,hJ,x::SymbolicOutput)
 end
 
 # returns sparsity pattern of combined hessian, with duplicates
-function prep_sparse_hessians(l::ExprList)
+function prep_sparse_hessians(l::ExprList, num_total_vars)
     @assert length(l.referenceExpr) == 0
     @assert length(l.valfuncs) == 0
     @assert length(l.gradfuncs) == 0
@@ -53,7 +53,7 @@ function prep_sparse_hessians(l::ExprList)
             l.referenceExpr[x.hashval] = i
             f = genfval_parametric(x)
             gf = genfgrad_parametric(x)
-            hI, hJ, hf = gen_hessian_sparse_color_parametric(x)
+            hI, hJ, hf = gen_hessian_sparse_color_parametric(x, num_total_vars)
             push!(l.valfuncs, f)
             push!(l.gradfuncs, gf)
             push!(l.hessfuncs, hf)
