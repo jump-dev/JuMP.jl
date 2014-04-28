@@ -115,7 +115,7 @@ function eval_jac_g!(V::AbstractVector, l::ExprList, xval)
     idx = 1
     for (i,x) in enumerate(l.exprs)
         k = length(x.maptocanonical)
-        l.gradfuncs[i](xval, IdentityArray(), sub(V, idx:(idx+k-1)), x.maptocanonical, x.inputvals...)
+        l.gradfuncs[i](xval, IdentityArray(), subarr(V, idx:(idx+k-1)), x.maptocanonical, x.inputvals...)
         idx += k
     end
 
@@ -147,9 +147,9 @@ function eval_hess!(V::AbstractVector, l::ExprList, xval, lambda)
     idx = 1
     for (i,x) in enumerate(l.exprs)
         nnz = length(l.hessIJ[i][1])
-        subarr = sub(V,idx:(idx+nnz-1))
-        l.hessfuncs[i](xval, subarr, x)
-        scale!(subarr, lambda[i])
+        Vsub = subarr(V,idx:(idx+nnz-1))
+        l.hessfuncs[i](xval, Vsub, x)
+        scale!(Vsub, lambda[i])
         idx += nnz
     end
 
