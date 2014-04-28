@@ -11,6 +11,12 @@ using MathProgBase
 using MathProgBase.MathProgSolverInterface
 
 using ReverseDiffSparse
+if Pkg.installed("ArrayViews") != nothing
+    eval(Expr(:import,:ArrayViews))
+    const subarr = ArrayViews.view
+else
+    const subarr = Base.sub
+end
 
 importall Base
 

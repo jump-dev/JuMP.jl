@@ -126,11 +126,11 @@ function solveIpopt(m::Model; options::Dict=Dict(), suppress_warnings=false)
 
     function eval_g(x, g)
         tic()
-        fill!(sub(g,1:size(A,1)), 0.0)
+        fill!(subarr(g,1:size(A,1)), 0.0)
         if VERSION < v"0.3-"
             g[1:size(A,1)] = A*x
         else
-            A_mul_B!(sub(g,1:size(A,1)),A,x)
+            A_mul_B!(subarr(g,1:size(A,1)),A,x)
         end
         idx = size(A,1)+1
         for c::QuadConstraint in m.quadconstr
@@ -145,7 +145,7 @@ function solveIpopt(m::Model; options::Dict=Dict(), suppress_warnings=false)
             g[idx] = v
             idx += 1
         end
-        eval_g!(sub(g,idx:length(g)), nldata.nlconstrlist, x)
+        eval_g!(subarr(g,idx:length(g)), nldata.nlconstrlist, x)
         
         tg += toq()
         #print("x = ");show(x);println()
@@ -217,7 +217,7 @@ function solveIpopt(m::Model; options::Dict=Dict(), suppress_warnings=false)
                     idx += 2
                 end
             end
-            eval_jac_g!(sub(values,idx:length(values)), nldata.nlconstrlist, x)
+            eval_jac_g!(subarr(values,idx:length(values)), nldata.nlconstrlist, x)
             
             tjg += toq()
             #print("x = ");show(x);println()
@@ -286,8 +286,8 @@ function solveIpopt(m::Model; options::Dict=Dict(), suppress_warnings=false)
         
         else
             tic()
-            hfunc(x, sub(values, 1:length(hI)), nldata.nlobj)
-            scale!(sub(values, 1:length(hI)), objscale*obj_factor)
+            hfunc(x, subarr(values, 1:length(hI)), nldata.nlobj)
+            scale!(subarr(values, 1:length(hI)), objscale*obj_factor)
             # quadratic objective
             idx = 1+length(hI)
             for k in 1:length(qobj.qvars1)
@@ -311,7 +311,7 @@ function solveIpopt(m::Model; options::Dict=Dict(), suppress_warnings=false)
                 end
             end
 
-            eval_hess!(sub(values, idx:length(values)), nldata.nlconstrlist, x, sub(lambda, (length(m.linconstr)+length(m.quadconstr)+1):length(lambda)))
+            eval_hess!(subarr(values, idx:length(values)), nldata.nlconstrlist, x, subarr(lambda, (length(m.linconstr)+length(m.quadconstr)+1):length(lambda)))
             th += toq()
 
         end
