@@ -129,6 +129,14 @@ else
     end
 end
 
+immutable RecoveryInfo
+    twocolorgraphs::Vector{SimpleGraph}
+    vertexmap::Vector{Vector{Int}}
+    postorder::Vector{Vector{Int}}
+    parents::Vector{Vector{Int}}
+    color::Vector{Int}
+end
+
 function recovery_preprocess(g,color)
     twocoloredges = Dict{Set{Int},Vector{(Int,Int)}}()
     twocolorvertices = Dict{Set{Int},Set{Int}}()
@@ -199,96 +207,97 @@ function recovery_preprocess(g,color)
     end
 
 
-    return (twocolorgraphs, vertexmap, postorder, parents)
+    return RecoveryInfo(twocolorgraphs, vertexmap, postorder, parents, color)
 
 end
 
-function indirect_recover(hessian_matmat!, nnz, twocolorgraphs, vertexmap, postorder, parents, stored_values, color, num_colors, x, inputvals, fromcanonical, tocanonical, R, dualvec, dualout, V; structure=false)
-    N = length(color)
+function indirect_recover_structure(hessian_matmat!, nnz, rinfo::RecoveryInfo)
+    N = length(rinfo.color)
     
-    # generate vectors for hessian-vec product
-    #R = zeros(N,num_colors)
-    fill!(R,0.0)
-    for i in 1:N
-        R[i,color[i]] = 1
-    end
-
-    if !structure
-        hessian_matmat!(R,x, dualvec, dualout, inputvals, fromcanonical, tocanonical)
-    end
-    
-    # now, recover
-    if structure
-        I = zeros(Int, nnz+N)
-        J = zeros(Int, nnz+N)
-    else
-        #I = Int[]
-        #J = Int[]
-        @assert length(V) == nnz+N
-    end
+    I = zeros(Int, nnz+N)
+    J = zeros(Int, nnz+N)
     
     # diagonal entries
     k = 0
-    if structure
-        for i in 1:N
+    for i in 1:N
+        k += 1
+        I[k] = i
+        J[k] = i
+    end
+
+    for t in 1:length(rinfo.twocolorgraphs)
+        s = rinfo.twocolorgraphs[t]
+        vmap = rinfo.vertexmap[t]
+        order = rinfo.postorder[t]
+        parent = rinfo.parents[t]
+
+        for z in 1:num_vertices(s)
+            v = order[z]
+            p = parent[v]
+            (p == 0) && continue
+            i = vmap[v]
+            j = vmap[p]
+            i,j = normalize(i,j)
             k += 1
             I[k] = i
-            J[k] = i
+            J[k] = j
         end
-    else
-        for i in 1:N
-            k += 1
-            V[k] = R[i,color[i]]
-        end
+
     end
-
-    for t in 1:length(twocolorgraphs)
-        s = twocolorgraphs[t]
-        vmap = vertexmap[t]
-        order = postorder[t]
-        parent = parents[t]
-        stored_values[1:num_vertices(s)] = 0.0
-
-        if structure
-            for z in 1:num_vertices(s)
-                v = order[z]
-                p = parent[v]
-                (p == 0) && continue
-                i = vmap[v]
-                j = vmap[p]
-                i,j = normalize(i,j)
-                k += 1
-                I[k] = i
-                J[k] = j
-            end
-        else
-            for z in 1:num_vertices(s)
-                v = order[z]
-                p = parent[v]
-                (p == 0) && continue
-                
-                i = vmap[v]
-                j = vmap[p]
-
-                value = R[i,color[j]] - stored_values[v]
-                stored_values[p] += value
-
-                k += 1
-                V[k] = value
-            end
-        end
-    end
-
-    
-    
 
     @assert k == nnz + N
 
-    if structure
-        return I,J
-    else
-        return V
+    return I,J
+end
+
+function indirect_recover(hessian_matmat!, nnz, rinfo::RecoveryInfo, stored_values, x, inputvals, fromcanonical, R, dualvec, dualout, V)
+    N = length(rinfo.color)
+    
+    #R = zeros(N,num_colors)
+    fill!(R,0.0)
+    for i in 1:N
+        R[i,rinfo.color[i]] = 1
     end
+
+    hessian_matmat!(R,x, dualvec, dualout, inputvals, fromcanonical)
+    
+    # now, recover
+    @assert length(V) == nnz+N
+    
+    # diagonal entries
+    k = 0
+
+    for i in 1:N
+        k += 1
+        V[k] = R[i,rinfo.color[i]]
+    end
+
+    for t in 1:length(rinfo.twocolorgraphs)
+        s = rinfo.twocolorgraphs[t]
+        vmap = rinfo.vertexmap[t]
+        order = rinfo.postorder[t]
+        parent = rinfo.parents[t]
+        stored_values[1:num_vertices(s)] = 0.0
+
+        for z in 1:num_vertices(s)
+            v = order[z]
+            p = parent[v]
+            (p == 0) && continue
+            
+            i = vmap[v]
+            j = vmap[p]
+
+            value = R[i,rinfo.color[j]] - stored_values[v]
+            stored_values[p] += value
+
+            k += 1
+            V[k] = value
+        end
+    end
+
+    @assert k == nnz + N
+
+    return V
 
 end
 
@@ -315,16 +324,19 @@ function gen_hessian_sparse_color_parametric(s::SymbolicOutput, num_total_vars)
 
     R = Array(Float64,num_vertices(g),num_colors)
     
-    (twocolorgraphs, vertexmap, postorder, parents) = recovery_preprocess(g, color)
+    rinfo = recovery_preprocess(g, color)
 
     stored_values = Array(Float64,num_vertices(g))
+    # vectors for hessian-vec product
     dualvec = Array(Dual{Float64}, num_total_vars)
     dualout = Array(Dual{Float64}, num_total_vars)
 
-    I,J = indirect_recover(hessian_matmat!, num_edges(g), twocolorgraphs, vertexmap, postorder, parents, stored_values, color, num_colors, nothing, s.inputvals, s.mapfromcanonical, s.maptocanonical, R, dualvec, dualout, Float64[]; structure=true)
+    I,J = indirect_recover_structure(hessian_matmat!, num_edges(g), rinfo)
+
+    nnz = num_edges(g)
     
     function eval_h(x,output_values, ex::SymbolicOutput)
-        indirect_recover(hessian_matmat!, num_edges(g), twocolorgraphs, vertexmap, postorder, parents, stored_values, color, num_colors, x, ex.inputvals, ex.mapfromcanonical, ex.maptocanonical, R, dualvec, dualout, output_values)
+        indirect_recover(hessian_matmat!, nnz, rinfo, stored_values, x, ex.inputvals, ex.mapfromcanonical, R, dualvec, dualout, output_values)
     end
 
     return I,J, eval_h

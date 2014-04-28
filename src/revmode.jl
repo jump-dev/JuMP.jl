@@ -134,7 +134,7 @@ type SymbolicOutput
     inputvals
     indexlist # indices of placeholders as they appear in the expression
               # useful when multiple expressions have the same structure
-    mapfromcanonical
+    mapfromcanonical::Vector{Int}
     maptocanonical
     hashval # for identifying expressions with identical trees
 end

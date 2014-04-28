@@ -13,7 +13,7 @@ type ExprList
     valfuncs::Vector{Function}
     gradfuncs::Vector{Function}
     hessfuncs::Vector{Function}
-    hessIJ::Vector{Tuple}
+    hessIJ::Vector{(Vector{Int},Vector{Int})}
 end
 
 
