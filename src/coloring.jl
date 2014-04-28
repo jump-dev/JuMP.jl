@@ -211,7 +211,7 @@ function recovery_preprocess(g,color)
 
 end
 
-function indirect_recover_structure(hessian_matmat!, nnz, rinfo::RecoveryInfo)
+function indirect_recover_structure(nnz, rinfo::RecoveryInfo)
     N = length(rinfo.color)
     
     I = zeros(Int, nnz+N)
@@ -331,7 +331,7 @@ function gen_hessian_sparse_color_parametric(s::SymbolicOutput, num_total_vars)
     dualvec = Array(Dual{Float64}, num_total_vars)
     dualout = Array(Dual{Float64}, num_total_vars)
 
-    I,J = indirect_recover_structure(hessian_matmat!, num_edges(g), rinfo)
+    I,J = indirect_recover_structure(num_edges(g), rinfo)
 
     nnz = num_edges(g)
     
