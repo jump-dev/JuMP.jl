@@ -17,7 +17,7 @@ type ExprList
 end
 
 
-ExprList() = ExprList(SymbolicOutput[],Dict(), Function[], Function[], Function[], Tuple[])
+ExprList() = ExprList(SymbolicOutput[],Dict(), Function[], Function[], Function[], Array((Vector{Int},Vector{Int}),0))
 
 import Base: push!, getindex
 push!(l::ExprList, s::SymbolicOutput) = push!(l.exprs, s)
