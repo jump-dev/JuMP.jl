@@ -48,7 +48,7 @@ function solveIpopt(m::Model; options::Dict=Dict(), suppress_warnings=false)
     nlrowub = Float64[]
     n_nlconstr = length(nldata.nlconstr)
 
-    constrhessI, constrhessJ = prep_sparse_hessians(nldata.nlconstrlist)
+    constrhessI, constrhessJ = prep_sparse_hessians(nldata.nlconstrlist, m.numCols)
     jacI, jacJ = jac_nz(nldata.nlconstrlist)
     nnz_jac = length(A.nzval) + length(jacI)
     nnz_hess = length(constrhessI)
@@ -226,7 +226,7 @@ function solveIpopt(m::Model; options::Dict=Dict(), suppress_warnings=false)
     end
 
     if has_nlobj
-        hI, hJ, hfunc = gen_hessian_sparse_color_parametric(nldata.nlobj)
+        hI, hJ, hfunc = gen_hessian_sparse_color_parametric(nldata.nlobj, m.numCols)
         nnz_hess += length(hI)
     else
         hI = []
