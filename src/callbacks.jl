@@ -52,6 +52,9 @@ function registercallbacks(m::Model)
             setheuristiccallback!(m.internalModel, heurcallback)
         #
     end
+
+    # prepare storage for callbacks
+    m.indexedVector = IndexedVector(Float64, m.numCols)
 end
 
 
@@ -81,8 +84,13 @@ macro addLazyConstraint(cbdata, x)
 end
 
 function addLazyConstraint(cbdata::MathProgCallbackData, constr::LinearConstraint)
-    # don't check for duplicates yet
-    cbaddlazy!(cbdata, Cint[v.col for v in constr.terms.vars], constr.terms.coeffs, sensemap[sense(constr)], rhs(constr))
+    if length(constr.terms.vars) == 0
+        cbaddlazy!(cbdata, Cint[], Float64[], sensemap[sense(constr)], rhs(constr))
+        return
+    end
+    m::Model = constr.terms.vars[1].m
+    indices, coeffs = merge_duplicates(Cint, constr.terms, m.indexedVector, m)
+    cbaddlazy!(cbdata, indices, coeffs, sensemap[sense(constr)], rhs(constr))
 end
 
 ## User cuts
@@ -107,7 +115,13 @@ macro addUserCut(cbdata, x)
 end
 
 function addUserCut(cbdata::MathProgCallbackData, constr::LinearConstraint)
-    cbaddcut!(cbdata, Cint[v.col for v in constr.terms.vars], constr.terms.coeffs, sensemap[sense(constr)], rhs(constr))
+    if length(constr.terms.vars) == 0
+        cbaddcut!(cbdata, Cint[], Float64[], sensemap[sense(constr)], rhs(constr))
+        return
+    end
+    m::Model = constr.terms.vars[1].m
+    indices, coeffs = merge_duplicates(Cint, constr.terms, m.indexedVector, m)
+    cbaddcut!(cbdata, indices, coeffs, sensemap[sense(constr)], rhs(constr))
 end
 
 ## User heuristic

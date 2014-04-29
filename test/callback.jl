@@ -12,7 +12,7 @@ function callback_test(solvername, lazysolver, cutsolver, heursolver)
             TOL = 1e-6
             # Check top right
             if y_val + x_val > 3 + TOL
-                @addLazyConstraint(cb, y + x <= 3)
+                @addLazyConstraint(cb, y + 0.5x + 0.5x <= 3)
             end
         end
         setLazyCallback(mod, corners)

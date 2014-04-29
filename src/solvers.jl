@@ -138,7 +138,7 @@ function prepConstrMatrix(m::Model)
         vars = m.linconstr[c].terms.vars
         # collect duplicates
         for ind in 1:length(coeffs)
-            if vars[ind].m != m
+            if !is(vars[ind].m, m)
                 error("Variable not owned by model present in constraints")
             end
             addelt!(tmprow,vars[ind].col,coeffs[ind])
@@ -307,4 +307,26 @@ function solveMIP(m::Model; load_model_only=false, suppress_warnings=false)
     end
 
     return stat
+end
+
+# currently used only in callbacks
+# returns (unsorted) column indices and coefficient terms for merged vector
+# assume that v is zero'd and has the right size (total number of variables in the model)
+function merge_duplicates{CoefType,IntType<:Integer}(::Type{IntType},aff::GenericAffExpr{CoefType,Variable}, v::IndexedVector{CoefType}, m::Model)
+    for ind in 1:length(aff.coeffs)
+        var = aff.vars[ind]
+        is(var.m, m) || error("Variable does not belong to this model")
+        addelt!(v, aff.vars[ind].col, aff.coeffs[ind])
+    end
+    indices = Array(IntType,v.nnz)
+    coeffs = Array(CoefType,v.nnz)
+    for i in 1:v.nnz
+        idx = v.nzidx[i]
+        indices[i] = idx
+        coeffs[i] = v.elts[i]
+    end
+    empty!(v)
+
+    return indices, coeffs
+
 end

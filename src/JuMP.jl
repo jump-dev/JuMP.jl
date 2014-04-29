@@ -87,6 +87,8 @@ type Model
 
     # JuMPDict list
     dictList::Vector
+    # storage vector for merging duplicate terms
+    indexedVector::IndexedVector{Float64}
 
     nlpdata#::NLPData
 
@@ -104,7 +106,7 @@ function Model(;solver=nothing)
         Model(QuadExpr(),:Min,LinearConstraint[], QuadConstraint[],SOSConstraint[],
               0,String[],Float64[],Float64[],Int[],
               0,Float64[],Float64[],Float64[],nothing,MathProgBase.MissingSolver("",Symbol[]),false,
-              nothing,nothing,nothing,JuMPDict[],nothing,Dict{Symbol,Any}())
+              nothing,nothing,nothing,JuMPDict[],IndexedVector(Float64,0),nothing,Dict{Symbol,Any}())
     else
         if !isa(solver,AbstractMathProgSolver)
             error("solver argument ($solver) must be an AbstractMathProgSolver")
@@ -113,7 +115,7 @@ function Model(;solver=nothing)
         Model(QuadExpr(),:Min,LinearConstraint[], QuadConstraint[],SOSConstraint[],
               0,String[],Float64[],Float64[],Int[],
               0,Float64[],Float64[],Float64[],nothing,solver,false,
-              nothing,nothing,nothing,JuMPDict[],nothing,Dict{Symbol,Any}())
+              nothing,nothing,nothing,JuMPDict[],IndexedVector(Float64,0),nothing,Dict{Symbol,Any}())
     end
 end
 
