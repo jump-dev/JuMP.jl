@@ -14,6 +14,8 @@ programming language. JuMP communicates with solvers in-memory,
 avoiding the need to write intermediary files and enabling access to **advanced
 features** such as efficient LP re-solves and callbacks for mixed-integer programming.
 
+JuMP has recently enabled support for nonlinear programming for functions that can be expressed in closed algebraic form. JuMP computes exact sparse second-order derivatives needed by efficient interior-point solvers. Currently, [Ipopt] is the only supported solver, with more coming soon. 
+
 Our documentation includes an installation guide, quick-start guide, and reference manual. 
 
 **Latest Release**: 0.4.1 (via ``Pkg.add``) 
@@ -51,12 +53,14 @@ We list below what is currently supported. See the documentation for more inform
 
 * Linear
 * Convex Quadratic
+* Nonlinear (convex and nonconvex)
 
 **Constraint types**
 
 * Linear
 * Convex Quadratic
 * Second-order Conic
+* Nonlinear (convex and nonconvex)
 
 **Variable types**
 
@@ -65,7 +69,7 @@ We list below what is currently supported. See the documentation for more inform
 
 ## Bug reports and support
 
-Please report any issues via the Github **[issue tracker]**. All types of issues are welcome and encouraged; this includes bug reports, documentation typos, "how do I do this?" questions, feature requests, etc.
+Please report any issues via the Github **[issue tracker]**. All types of issues are welcome and encouraged; this includes bug reports, documentation typos, feature requests, etc. The **[julia-opt]** mailing list is appropriate for general discussion, including "how do I do this?" questions.
 
 
 [issue tracker]: https://github.com/JuliaOpt/JuMP.jl/issues
@@ -77,3 +81,5 @@ Please report any issues via the Github **[issue tracker]**. All types of issues
 [Gurobi]: http://www.gurobi.com/
 [MOSEK]: http://mosek.com/
 [CPLEX]: http://www-01.ibm.com/software/commerce/optimization/cplex-optimizer/
+[Ipopt]: https://projects.coin-or.org/Ipopt
+[julia-opt]: https://groups.google.com/forum/#!forum/julia-opt

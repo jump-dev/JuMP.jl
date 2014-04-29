@@ -20,6 +20,8 @@ of a generic high-level programming language. JuMP communicates with solvers in-
 avoiding the need to write intermediary files and enabling access to **advanced
 features** such as :ref:`efficient LP re-solves <probmod>` and :ref:`callbacks for mixed-integer programming <callbacks>`.
 
+JuMP has recently enabled support for nonlinear programming for functions that can be expressed in closed algebraic form. JuMP computes exact sparse second-order derivatives needed by efficient interior-point solvers.
+
 If you are familiar with Julia you can get started quickly by using the
 package manager to install JuMP::
 
