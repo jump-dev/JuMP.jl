@@ -223,28 +223,7 @@ function sum{S,T}(affs::Array{GenericAffExpr{S,T}})
 end
 
 function dot{T,S}(lhs::Array{T}, rhs::JuMPDict{S})
-    sz = size(lhs)
-    if length(rhs.indexsets) == 1
-        # Single dimension version
-        if length(sz) == 2
-            @assert sz[1] == 1 || sz[2] == 1
-            @assert sz[1] == 1 && sz[2] == length(rhs.indexsets[1]) ||
-                    sz[2] == 1 && sz[1] == length(rhs.indexsets[1])
-        elseif length(sz) == 1
-            @assert sz[1] == length(rhs.indexsets[1])
-        end
-    elseif length(rhs.indexsets) == 2
-        # 2D JuMPDict
-        @assert length(rhs.indexsets[1]) == sz[1] &&
-                length(rhs.indexsets[2]) == sz[2]
-    elseif length(rhs.indexsets) == 3
-        #3D JuMPDict
-        @assert length(rhs.indexsets[1]) == sz[1] &&
-                length(rhs.indexsets[2]) == sz[2] &&
-                length(rhs.indexsets[3]) == sz[3]
-    else
-        error("Dot products of matrices higher than 3D not supported.")
-    end
+    size(lhs) == size(rhs.innerArray) || error("Incompatible dimensions")
     dot(lhs,rhs.innerArray)
 end
 dot{S,T}(lhs::JuMPDict{S},rhs::Array{T}) = dot(rhs,lhs)
@@ -255,8 +234,13 @@ dot{T<:Real}(lhs::Array{T}, rhs::Array{Variable})   = AffExpr(vec(rhs), vec(floa
 dot{T<:Real}(rhs::Array{Variable}, lhs::Array{T})   = AffExpr(vec(rhs), vec(float(lhs)), 0.0)
 
 function dot(lhs::JuMPDict{Variable},rhs::JuMPDict{Variable})
-    size(lhs.innerArray) == size(rhs.innerArray) || error("Incompatible number of dimensions") 
-    return QuadExpr(lhs.innerArray[:], rhs.innerArray[:], ones(length(lhs.innerArray)), 0.0)
+    size(lhs.innerArray) == size(rhs.innerArray) || error("Incompatible dimensions") 
+    return QuadExpr(vec(lhs.innerArray), vec(rhs.innerArray), ones(length(lhs.innerArray)), AffExpr())
+end
+
+function dot(lhs::JuMPDict{Float64},rhs::JuMPDict{Float64})
+    size(lhs.innerArray) == size(rhs.innerArray) || error("Incompatible dimensions") 
+    return sum(lhs.innerArray .* rhs.innerArray)
 end
 
 #############################################################################

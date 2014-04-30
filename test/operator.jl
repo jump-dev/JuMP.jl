@@ -214,14 +214,22 @@ let
     @test affToStr(dot(B,z)) == "z[1,1,1] + z[2,1,1] + z[1,2,1] + z[2,2,1] + z[1,1,2] + z[2,1,2] + z[1,2,2] + z[2,2,2]"
     @test affToStr(dot(z,B)) == "z[1,1,1] + z[2,1,1] + z[1,2,1] + z[2,2,1] + z[1,1,2] + z[2,1,2] + z[1,2,2] + z[2,2,2]"
 
-    @defVar(m, v[1:3,1:4])
-    @defVar(m, w[3:2:7,7:-2:1])
-    @test quadToStr(dot(v,w)) == "v[1,1]*w[3,7] + v[1,2]*w[3,5] + v[1,3]*w[3,3] + v[1,4]*w[3,1] + v[2,1]*w[5,7] + v[2,2]*w[5,5] + v[2,3]*w[5,3] + v[2,4]*w[5,1] + v[3,1]*w[7,7] + v[3,2]*w[7,5] + v[3,3]*w[7,3] + v[3,4]*w[7,1]"
-
     @setObjective(dot_m, Max, dot(x, ones(3)) - dot(y, ones(2,2)) )
     solve(dot_m)
     @test_approx_eq_eps dot(c, getValue(x))   6  1e-6
     @test_approx_eq_eps dot(A, getValue(y))  10  1e-6
+end
+
+let
+    dot_m = Model()
+    @defVar(dot_m, 0 <= v[1:3,1:4] <= 1)
+    @defVar(dot_m, 0 <= w[3:2:7,7:-2:1] <= 1)
+    @test quadToStr(dot(v,w)) == "v[1,1]*w[3,7] + v[1,2]*w[3,5] + v[1,3]*w[3,3] + v[1,4]*w[3,1] + v[2,1]*w[5,7] + v[2,2]*w[5,5] + v[2,3]*w[5,3] + v[2,4]*w[5,1] + v[3,1]*w[7,7] + v[3,2]*w[7,5] + v[3,3]*w[7,3] + v[3,4]*w[7,1]"
+
+    @addConstraint(dot_m, sum(v) + sum(w) == 2)
+    @setObjective(dot_m, :Max, v[2,3] + w[5,3])
+    solve(dot_m)
+    @test dot(getValue(v),getValue(w)) == 1.0
 end
 
 let

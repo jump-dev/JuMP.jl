@@ -8,6 +8,7 @@ Unversioned
   * ``getValue`` for ``AffExpr`` and ``QuadExpr``
   * **Breaking change**: ``getSolverModel`` replaced by ``getInternalModel``, which returns the internal MathProgBase-level model
   * Groups of constraints can be specified with ``@addConstraint`` (see documentation for details). This is not a breaking change.
+  * ``dot(::JuMPDict,::JuMPDict)`` implemented.
 
 Version 0.4.1 (March 24, 2014)
 ------------------------------
