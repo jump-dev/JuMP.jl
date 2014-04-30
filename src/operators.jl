@@ -222,7 +222,6 @@ function sum{S,T}(affs::Array{GenericAffExpr{S,T}})
     return new_aff
 end
 
-
 function dot{T,S}(lhs::Array{T}, rhs::JuMPDict{S})
     sz = size(lhs)
     if length(rhs.indexsets) == 1
@@ -255,6 +254,10 @@ dot{T<:Real}(lhs::JuMPDict{Float64}, rhs::Array{T}) = dot(vec(rhs), vec(lhs.inne
 dot{T<:Real}(lhs::Array{T}, rhs::Array{Variable})   = AffExpr(vec(rhs), vec(float(lhs)), 0.0)
 dot{T<:Real}(rhs::Array{Variable}, lhs::Array{T})   = AffExpr(vec(rhs), vec(float(lhs)), 0.0)
 
+function dot(lhs::JuMPDict{Variable},rhs::JuMPDict{Variable})
+    size(lhs.innerArray) == size(rhs.innerArray) || error("Incompatible number of dimensions") 
+    return QuadExpr(lhs.innerArray[:], rhs.innerArray[:], ones(length(lhs.innerArray)), 0.0)
+end
 
 #############################################################################
 # JuMPDict comparison operators (all errors)
