@@ -185,7 +185,7 @@ end
 # summarizes the variables into one line. If not, it will return an empty
 # string and these variables should be printed one-by-one. Mode should be
 # :REPL or :IJulia
-function dictstring(dict::JuMPDict, mode=:REPL)
+function dictstring(dict::JuMPDict{Variable}, mode=:REPL)
 
     length(dict.innerArray) > 0 || return ""
 
@@ -240,7 +240,7 @@ end
 # dictnameindices
 # Not exported. Builds the x[i,j,k,l] part and the "for all" parts. This is also
 # used for printing JuMPDict so thats why its seperated out from dictstring
-function dictnameindices(dict::JuMPDict, mode=:REPL)
+function dictnameindices(dict::JuMPDict{Variable}, mode=:REPL)
     dimensions = length(dict.indexsets)
     dim_names = ("i","j","k","l")
 
@@ -472,8 +472,8 @@ function quadToStr(q::QuadExpr)
     end
 end
 
-##########
-# JuMPDict
+#############################################################################
+# JuMPDict for variables
 show(io::IO, dict::JuMPDict{Variable}) = print(io, dict)
 function print(io::IO, dict::JuMPDict{Variable})
     # Best case: bounds and all dims
@@ -513,6 +513,61 @@ function writemime(io::IO, ::MIME"text/latex", dict::JuMPDict{Variable})
     name_and_indices, tail_str = dictnameindices(dict, :IJulia)
     print(io, "\\( \\dots \\leq $(name_and_indices) \\leq \\dots$(tail_str) \\)")
 end
+
+#############################################################################
+# JuMPDict for values
+show(io::IO, dict::JuMPDict{Float64}) = print(io, dict)
+function print(io::IO, dict::JuMPDict{Float64})
+    println(io, dict.name)
+    print_values(io, dict, 1, {}, "")
+end
+
+function print_values(io::IO, dict::JuMPDict{Float64}, depth::Int, 
+                        parent_index::Vector{Any}, parent_str::String)
+    dims = length(dict.indexsets)
+    indexset = dict.indexsets[depth]
+
+    # Turn index set into strings
+    index_strs = map(string, indexset)
+
+    # Determine longest index so we can align columns
+    max_index_len = 0
+    for index_str in index_strs
+        max_index_len = max(max_index_len, strwidth(index_str))
+    end
+
+    # If have recursed, we need to prepend the parent's index strings
+    # accumulated, as well as white space so the alignment works.
+    for i = 1:length(index_strs)
+        index_strs[i] = parent_str * lpad(index_strs[i],max_index_len," ")
+    end
+
+    # Create a string for the number of spaces we need to indent
+    indent = " "^(2*(depth-1))
+
+    # Determine the need to recurse
+    if depth == dims
+        # Deepest level
+        for i = 1:length(indexset)
+            value = length(parent_index) == 0 ? 
+                        dict[indexset[i]] :
+                        dict[parent_index...,indexset[i]]
+            println(io, indent * "[" * index_strs[i] * "] = ", value)
+        end
+    else
+        # At least one more layer to go
+        for i = 1:length(indexset)
+            index = indexset[i]
+            # Print the ":" version of indices we will recurse over
+            println(io, indent * "[" * index_strs[i] * ",:"^(dims-depth) * "]")
+            print_values(io, dict, depth+1,
+                 length(parent_index) == 0 ? {index} : {parent_index...,index},
+                index_strs[i] * ",")
+        end
+    end
+end
+
+
 
 ###################
 # Linear Constraint (or rather, the general version of it)
