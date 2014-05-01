@@ -106,6 +106,4 @@ solve(valmod)
 buf = IOBuffer()
 println(buf, getValue(foobar))
 result = takebuf_string(buf)
-dump(result)
-println(result)
 @test result == "foobar\n[ 9,:,:]\n  [ 9, Apple,:]\n    [ 9, Apple,-1] = -9.0\n    [ 9, Apple, 0] = 0.0\n    [ 9, Apple, 1] = 9.0\n  [ 9,     5,:]\n    [ 9,     5,-1] = -9.0\n    [ 9,     5, 0] = 0.0\n    [ 9,     5, 1] = 9.0\n  [ 9,Banana,:]\n    [ 9,Banana,-1] = -9.0\n    [ 9,Banana, 0] = 0.0\n    [ 9,Banana, 1] = 9.0\n[10,:,:]\n  [10, Apple,:]\n    [10, Apple,-1] = -10.0\n    [10, Apple, 0] = 0.0\n    [10, Apple, 1] = 10.0\n  [10,     5,:]\n    [10,     5,-1] = -10.0\n    [10,     5, 0] = 0.0\n    [10,     5, 1] = 10.0\n  [10,Banana,:]\n    [10,Banana,-1] = -10.0\n    [10,Banana, 0] = 0.0\n    [10,Banana, 1] = 10.0\n\n"
