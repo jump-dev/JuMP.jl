@@ -13,7 +13,7 @@ function qp_test(solvername, solverobj)
 
         status = solve(modQ)
         @test status == :Optimal
-        @test_approx_eq_eps modQ.objVal 247.0 1e-6
+        @test_approx_eq_eps modQ.objVal 247.0 1e-5
         @test_approx_eq_eps getValue(x) [2.0, 3.0, 4.0] 1e-6
     end
 
@@ -31,7 +31,7 @@ function qp_test(solvername, solverobj)
 
         status = solve(modQ)
         @test status == :Optimal
-        @test_approx_eq_eps modQ.objVal -247.0 1e-6
+        @test_approx_eq_eps modQ.objVal -247.0 1e-5
         @test_approx_eq_eps getValue(x) [2.0, 3.0, 4.0] 1e-6
     end
 
