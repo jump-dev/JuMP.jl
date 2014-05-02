@@ -1,14 +1,14 @@
 JuMP release notes
 ==================
 
-Unversioned
------------
+Version 0.5.0 (May 2, 2014)
+---------------------------
 
   * Support for nonlinear optimization with exact, sparse second-order derivatives automatically computed. Ipopt is currently the only solver supported.
   * ``getValue`` for ``AffExpr`` and ``QuadExpr``
   * **Breaking change**: ``getSolverModel`` replaced by ``getInternalModel``, which returns the internal MathProgBase-level model
   * Groups of constraints can be specified with ``@addConstraint`` (see documentation for details). This is not a breaking change.
-  * ``dot(::JuMPDict,::JuMPDict)`` implemented.
+  * ``dot(::JuMPDict{Variable},::JuMPDict{Variable})`` now returns the corresponding quadratic expression.
 
 Version 0.4.1 (March 24, 2014)
 ------------------------------
