@@ -88,6 +88,9 @@ Methods
 * ``setValue(x,v)`` - Provide an initial value ``v`` for this variable that can be used by supporting MILP solvers. If ``v`` is ``NaN``, the solver may attempt to fill in this value to construct a feasible solution.
 * ``getDual(x)`` - Get the reduced cost of this variable in the solution. Similar behavior to ``getValue`` for indexable variables.
 
+.. note::
+    The ``getValue`` function always returns a floating-point value, even when a variable is constrained to take integer values, as most solvers only guarantee integrality up to a particular numerical tolerance. The built-in ``iround`` function should be used to obtain integer values, e.g., by calling ``iround(getValue(x))``. 
+
 
 **Names**
 
