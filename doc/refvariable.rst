@@ -54,6 +54,17 @@ Finally, variables can be constructed manually, one-by-one::
 
 but this is not considered idiomatic JuMP code.
 
+.. note::
+    ``@defVar`` is equivalent to a simple assignment ``x = ...`` in Julia and therefore redefines variables without warning. The following code may lead to unexpected results::
+    
+    @defVar(m, x[1:10,1:10])
+    @defVar(m, x[1:5])
+
+    After the second line, the Julia variable ``x`` refers to a set of variables indexed
+    by the range ``1:5``.
+    The reference to the first set of variables has been lost, although they will remain
+    in the model.
+
 Methods
 ^^^^^^^
 

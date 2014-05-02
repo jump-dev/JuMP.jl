@@ -9,7 +9,7 @@ This guide will briefly guide you through installing Julia, JuMP and[a] solver[s
 Getting Julia
 ^^^^^^^^^^^^^
 
-At the time of writing this documentation the latest release of Julia is version ``0.2``, which is the version required by JuMP. You can easily build from source on OSX and Linux, but the binaries will work well for most people.
+At the time of writing this documentation the latest release of Julia is version ``0.2``, which is the version required by JuMP. You can easily build from source on OS X and Linux, but the binaries will work well for most people.
 
 Download links and more detailed instructions are available on the `Julia website <http://julialang.org>`_.
 
@@ -20,7 +20,7 @@ Once you've installed Julia, installing JuMP is simple. Julia has a git-based pa
 
     julia> Pkg.add("JuMP")
 
-This command checks `METADATA.jl <https://github.com/JuliaLang/METADATA.jl/tree/devel>`_ to determine what the most recent version of JuMP is and then downloads it from its repository on GitHub.
+This command checks `METADATA.jl <https://github.com/JuliaLang/METADATA.jl>`_ to determine what the most recent version of JuMP is and then downloads it from its repository on GitHub.
 
 To start using JuMP (after installing a solver), it should be imported into the local scope::
 
@@ -35,22 +35,21 @@ Solver support in Julia is currently provided by writing a solver-specific packa
 
 .. _jump-solvertable:
 
-+----------------------------------------------------------------------------------+---------------------------------------------------------------------------------+---------------------+-------------+----+------+-----+
-| Solver                                                                           | Julia Package                                                                   | ``solver=``         | License     | LP | SOCP | MIP |
-+==================================================================================+=================================================================================+=====================+=============+====+======+=====+
-| `Cbc <https://projects.coin-or.org/Cbc>`_                                        | `Cbc.jl <https://github.com/JuliaOpt/Cbc.jl>`_                                  | ``CbcSolver()``     |     EPL     |    |      |  X  |
-+----------------------------------------------------------------------------------+---------------------------------------------------------------------------------+---------------------+-------------+----+------+-----+
-| `Clp <https://projects.coin-or.org/Clp>`_                                        | `Clp.jl <https://github.com/JuliaOpt/Clp.jl>`_                                  | ``ClpSolver()``     |      EPL    | X  |      |     |
-+----------------------------------------------------------------------------------+---------------------------------------------------------------------------------+---------------------+-------------+----+------+-----+
-| `CPLEX <http://www-01.ibm.com/software/commerce/optimization/cplex-optimizer/>`_ | `CPLEX.jl <https://github.com/joehuchette/CPLEX.jl>`_                           | ``CplexSolver()``   |  Comm.      | X  |  X   | X   |
-+----------------------------------------------------------------------------------+---------------------------------------------------------------------------------+---------------------+-------------+----+------+-----+
-| `GLPK <http://www.gnu.org/software/glpk/>`_                                      | `GLPKMath... <https://github.com/JuliaOpt/GLPKMathProgInterface.jl>`_           | ``GLPKSolverLP()``  |             |    |      |     |
-|                                                                                  |                                                                                 | ``GLPKSolverMIP()`` |     GPL     | X  |      |  X  |
-+----------------------------------------------------------------------------------+---------------------------------------------------------------------------------+---------------------+-------------+----+------+-----+
-| `Gurobi <http://gurobi.com>`_                                                    | `Gurobi.jl <https://github.com/JuliaOpt/Gurobi.jl>`_                            | ``GurobiSolver()``  | Comm.       | X  |   X  |  X  |
-+----------------------------------------------------------------------------------+---------------------------------------------------------------------------------+---------------------+-------------+----+------+-----+
-| `MOSEK <http://www.mosek.com/>`_                                                 | `Mosek.jl <https://github.com/JuliaOpt/Mosek.jl>`_                              | ``MosekSolver()``   | Comm.       | X  |   X  |  X  |                       
-+----------------------------------------------------------------------------------+---------------------------------------------------------------------------------+---------------------+-------------+----+------+-----+
++----------------------------------------------------------------------------------+---------------------------------------------------------------------------------+-----------------------------+-------------+----+------+-----+
+| Solver                                                                           | Julia Package                                                                   | ``solver=``                 | License     | LP | SOCP | MIP |
++==================================================================================+=================================================================================+=============================+=============+====+======+=====+
+| `Cbc <https://projects.coin-or.org/Cbc>`_                                        | `Cbc.jl <https://github.com/JuliaOpt/Cbc.jl>`_                                  | ``CbcSolver()``             |     EPL     |    |      |  X  |
++----------------------------------------------------------------------------------+---------------------------------------------------------------------------------+-----------------------------+-------------+----+------+-----+
+| `Clp <https://projects.coin-or.org/Clp>`_                                        | `Clp.jl <https://github.com/JuliaOpt/Clp.jl>`_                                  | ``ClpSolver()``             |      EPL    | X  |      |     |
++----------------------------------------------------------------------------------+---------------------------------------------------------------------------------+-----------------------------+-------------+----+------+-----+
+| `CPLEX <http://www-01.ibm.com/software/commerce/optimization/cplex-optimizer/>`_ | `CPLEX.jl <https://github.com/joehuchette/CPLEX.jl>`_                           | ``CplexSolver()``           |  Comm.      | X  |  X   | X   |
++----------------------------------------------------------------------------------+---------------------------------------------------------------------------------+-----------------------------+-------------+----+------+-----+
+| `GLPK <http://www.gnu.org/software/glpk/>`_                                      | `GLPKMath... <https://github.com/JuliaOpt/GLPKMathProgInterface.jl>`_           |  ``GLPKSolver[LP|MIP]()``   |  GPL        | X  |      | X   |
++----------------------------------------------------------------------------------+---------------------------------------------------------------------------------+-----------------------------+-------------+----+------+-----+
+| `Gurobi <http://gurobi.com>`_                                                    | `Gurobi.jl <https://github.com/JuliaOpt/Gurobi.jl>`_                            | ``GurobiSolver()``          | Comm.       | X  |   X  |  X  |
++----------------------------------------------------------------------------------+---------------------------------------------------------------------------------+-----------------------------+-------------+----+------+-----+
+| `MOSEK <http://www.mosek.com/>`_                                                 | `Mosek.jl <https://github.com/JuliaOpt/Mosek.jl>`_                              | ``MosekSolver()``           | Comm.       | X  |   X  |  X  |                       
++----------------------------------------------------------------------------------+---------------------------------------------------------------------------------+-----------------------------+-------------+----+------+-----+
 
 To install Gurobi, for example, and use it with a JuMP model ``m``, run::
     
@@ -61,6 +60,8 @@ To install Gurobi, for example, and use it with a JuMP model ``m``, run::
     m = Model(solver=GurobiSolver())
 
 Setting solver options is discussed in the :ref:`Model <ref-model>` section.
+
+The nonlinear modeling functionality does not (yet) use the same interface as above; currently `Ipopt <https://projects.coin-or.org/Ipopt>`_ is the only supported solver and is used by default when solving a nonlinear model. See the :ref:`nonlinear modeling <nonlinear>` section for more details.
 
 Solver-specific notes follow below.
 

@@ -45,9 +45,9 @@ Contents
     refmodel.rst
     refvariable.rst
     refexpr.rst
-    nlp.rst
     probmod.rst
     callbacks.rst
+    nlp.rst
 
 -----------
 Citing JuMP

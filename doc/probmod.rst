@@ -49,7 +49,7 @@ of numbers. To give an example, consider the following code snippet::
   @defVar(m, 0 <= x <= 1)
   @defVar(m, 0 <= y <= 1)
   @setObjective(m, Max, 5x + 1y)
-  con = @addConstraint(m, x + y <= 1)
+  @addConstraint(m, con, x + y <= 1)
   solve(m)  # x = 1, y = 0
   @defVar(m, 0 <= z <= 1, 10.0, [con], [1.0])
   # The constraint is now x + y + z <= 1
@@ -60,7 +60,7 @@ In some situations you may be adding all variables in this way. To do so, first
 define a set of empty constraints, e.g. ::
 
   m = Model()
-  con = @addConstraint(m, 0 <= 1)
+  @addConstraint(m, con, 0 <= 1)
   @setObjective(m, Max, 0)
   @defVar(m, 0 <= x <= 1, 5, [con], [1.0])
   @defVar(m, 0 <= y <= 1, 1, [con], [1.0])
@@ -73,23 +73,14 @@ Modifying constraints
 JuMP does not currently support changing constraint coefficients. For less-than
 and greater-than constraints, the right-hand-side can be changed, e.g.::
 
-    mycon = @addConstraint(m, x + y <= 4)
+    @addConstraint(m, mycon, x + y <= 4)
     solve(m)
     chgConstrRHS(mycon, 3)  # Now x + y <= 3
     solve(m)  # Hot-start for LPs
 
-Modifying objective
-^^^^^^^^^^^^^^^^^^^
+Modifying the objective
+^^^^^^^^^^^^^^^^^^^^^^^
 
 To change the objective, simply call ``@setObjective`` again - the previous objective
 function and sense will be replaced.
 
-Accessing the low-level model
-^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
-
-It is possible to construct the internal low-level model before optimizing. To do this, 
-pass the optional keyword argument ``load_model_only=true`` to ``solve``. It is then possible
-to obtain this model by using the ``getInternalModel`` function. This may be useful when
-it is necessary to access some functionality that is not exposed by JuMP, for example, to
-add a "branching" callback to a CPLEX model. When you are ready to optimize, simply
-call ``solve`` again without the keyword argument.

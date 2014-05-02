@@ -55,12 +55,12 @@ Methods
 * ``push!(aff::AffExpr, new_coeff::Float64, new_var::Variable)`` - efficient
   way to grow an affine expression by one term. For example, to add ``5x`` to
   an existing expression ``aff``, use ``push!(aff, 5.0, x)``. This is
-  signficantly more efficient than ``aff += 5.0*x``.
+  significantly more efficient than ``aff += 5.0*x``.
 * ``append!(aff::AffExpr, other::AffExpr)`` - efficiently append the terms of
   an affine expression to an existing affine expression. For example, given
   ``aff = 5.0*x`` and ``other = 7.0*y + 3.0*z``, we can grow ``aff`` using
   ``append!(aff, other)`` which results in ``aff`` equaling ``5x + 7y + 3z``.
-  This is signficantly more efficient than using ``aff += other``.
+  This is significantly more efficient than using ``aff += other``.
 * ``sum(affs::Array{AffExpr})`` - efficiently sum an array of affine expressions.
 * ``getValue(expr)`` - evaluate an ``AffExpr`` or ``QuadExpr``, given the current solution values.
 
@@ -68,13 +68,35 @@ Constraint References
 ^^^^^^^^^^^^^^^^^^^^^
 
 In order to manipulate constraints after creation, it is necessary to maintain
-a reference. For linear constraints both ``@addConstraint`` and ``addConstraint``
-return an object of type ``ConstraintRef{LinearConstraint}``. To facilitate
-the storage of these we provide the convenience macro, e.g.::
+a reference. The simplest way to do this is to use the special three-argument
+named constraint syntax for ``@addConstraint``, which additionally allows you
+to create groups of constraints indexed by sets analogously to ``@defVar``.
+For example::
+
+    @defVar(m, x[1:3])
+    @defVar(m, y[2:2:6])
+    @addConstraint(m, xyconstr[i=1:3,j=6:-2:2], x[i] - y[j] == 1)
+
+adds 9 constraints to the model ``m`` of the expected form. The variable ``xyconstr``
+is a collection of ``ConstraintRef{LinearConstraint}`` instances indexed
+by the ranges ``1:3`` and ``6:-2:2`` (the ordered tuple ``(6,4,2)``), so, for example
+``xyconstr[2,4]`` is a reference to the constraint ``x[2] - y[4] == 1``.
+
+To obtain the dual of a constraint, call ``getDual`` on the constraint reference::
+    
+    println(getDual(xyconstr[1,6]))
+
+When an LP model is infeasible, ``getDual`` will return the corresponding component of the
+infeasibility ray (Farkas proof), if available from the solver.
+
+Dual information is unavailable for MIPs and has not yet been implemented for quadratic constraints.
+
+For users who prefer to generate constraints in an explicit loop, we also
+provide the ``@defConstrRef`` convenience macro, e.g.::
 
     @defConstrRef constraintName[1:3]
 
-That behaves like ``@defVar``. You can then iterate over constraints and store
+You can then iterate over constraints and store
 references in this structure, e.g.::
 
     @defVar(m, x[1:5] >= 0)
@@ -83,23 +105,3 @@ references in this structure, e.g.::
       myCons[i] = @addConstraint(m, x[i] >= i)
     end
 
-You may specify groups of linear constraints using the ``@addConstraint`` macro. The syntax is 
-similar to ``@defVar``: use ``@addConstraint(m,ref,con)``, where ``m`` is the model, ``ref`` is a constraint
-reference object that may be indexed into in the same way as a variable, and ``con`` is a constraint that 
-may depend on indexing in ``ref``. For example::
-
-    @defVar(m, x[1:3])
-    @defVar(m, y[2:2:6])
-    @addConstraint(m, ref[i=1:3,j=6:-2:2], x[i] - y[j] == 1)
-
-adds 9 constraints to ``m`` of the expected form. You may index into ``ref`` in the same way as a variable, and so
-``ref[2,4]`` returns a ``ConstraintRef`` to the constraint ``x[2] - y[4] == 1``.
-
-To obtain the dual of a constraint, call ``getDual`` on the constraint reference::
-    
-    println(getDual(myCons[1]))
-
-Dual information is unavailable for MIPs and has not yet been implemented for quadratic constraints.
-
-When an LP model is infeasible, ``getDual`` will return the corresponding component of the
-infeasibility ray (Farkas proof), if available from the solver.
