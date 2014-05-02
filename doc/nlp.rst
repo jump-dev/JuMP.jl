@@ -1,7 +1,7 @@
 .. _nonlinear:
 
 ------------------
-Nonlinear modeling
+Nonlinear Modeling
 ------------------
 
 .. note::
