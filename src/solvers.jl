@@ -322,7 +322,7 @@ function merge_duplicates{CoefType,IntType<:Integer}(::Type{IntType},aff::Generi
     for i in 1:v.nnz
         idx = v.nzidx[i]
         indices[i] = idx
-        coeffs[i] = v.elts[i]
+        coeffs[i] = v.elts[idx]
     end
     empty!(v)
 
