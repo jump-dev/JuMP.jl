@@ -1,6 +1,11 @@
 JuMP release notes
 ==================
 
+Version 0.5.1 (May 5, 2014)
+---------------------------
+
+  * Fix a bug in coefficient handling inside lazy constraints and user cuts
+
 Version 0.5.0 (May 2, 2014)
 ---------------------------
 

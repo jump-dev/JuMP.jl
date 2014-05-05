@@ -18,7 +18,7 @@ JuMP has recently enabled support for nonlinear programming for functions that c
 
 Our documentation includes an installation guide, quick-start guide, and reference manual. 
 
-**Latest Release**: 0.5.0 (via ``Pkg.add``)
+**Latest Release**: 0.5.1 (via ``Pkg.add``)
   * [documentation](https://jump.readthedocs.org/en/release-0.5)
   * [examples](https://github.com/JuliaOpt/JuMP.jl/tree/release-0.5/examples)
   * Testing status: [![Build Status](https://travis-ci.org/JuliaOpt/JuMP.jl.png?branch=release-0.5)](https://travis-ci.org/JuliaOpt/JuMP.jl) [![Build status](https://ci.appveyor.com/api/projects/status/val81xkp6y6uiw8g/branch/release-0.5)](https://ci.appveyor.com/project/mlubin/jump-jl) [![PackageEvaluator.jl](http://iainnz.github.io/packages.julialang.org/badges/JuMP_0.2.svg)](http://iainnz.github.io/packages.julialang.org/?pkg=JuMP&ver=0.2)
