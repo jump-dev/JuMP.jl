@@ -1,6 +1,11 @@
 JuMP release notes
 ==================
 
+Unversioned
+-----------
+
+  * ``setPresolve(m::Model, f::Function)`` added to set a function of the signature ``presolve(m::Model)`` to be called directly before optimization.
+
 Version 0.5.1 (May 5, 2014)
 ---------------------------
 

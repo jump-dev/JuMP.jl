@@ -40,6 +40,7 @@ Methods
 * ``getNumConstraints(m::Model)`` - returns the number of constraints associated with the ``Model m``.
 * ``getInternalModel(m::Model)`` - returns the internal low-level ``AbstractMathProgModel`` object which can be used to access any functionality that is not exposed by JuMP. See the MathProgBase `documentation <http://mathprogbasejl.readthedocs.org/en/latest/mathprogbase.html#low-level-interface>`_.
 * ``solve(m::Model; load_model_only=false, suppress_warnings=false)`` - solves the model using the selected solver (or a default for the problem class), and takes two optional arguments that are disabled by default. For the details of ``load_model_only`` see :ref:`probmod`. Setting ``suppress_warnings`` to ``true`` will suppress all JuMP-specific output (e.g. warnings about infeasibility and lack of dual information) but will not suppress solver output (which should be done by passing options to the solver).
+* ``setPresolve(m::Model)`` - sets a function to be called immediately before optimization. The function must be of the signature ``foo(m::Model)``.
 
 **Objective**
 
