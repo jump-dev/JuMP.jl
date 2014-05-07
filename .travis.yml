@@ -22,7 +22,8 @@ script:
     - if [ $JULIAVERSION = "julianightlies" ]; then julia -e 'Pkg.add("Ipopt")'; fi
     - julia -e 'run(`ln -s $(pwd()) $(Pkg.dir("JuMP"))`); Pkg.pin("JuMP"); Pkg.resolve()'
     - julia -e 'for p in split(ENV["PKGADD"],";") Pkg.add(p) end'
-    - julia test/runtests.jl
+    - if [ $JULIAVERSION = "julianightlies" ]; then julia --code-coverage test/runtests.jl
+    - if [ $JULIAVERSION = "juliareleases" ]; then julia --code-coverage test/runtests.jl
     - julia test/hygiene.jl
     - julia test/hockschittkowski/runhs.jl
     - if [ $JULIAVERSION = "julianightlies" ]; then julia -e 'Pkg.add("Coverage"); using Coverage; Coveralls.submit(Coveralls.process_folder())'
