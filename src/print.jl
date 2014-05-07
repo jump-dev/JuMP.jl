@@ -441,10 +441,10 @@ function quadToStr(q::QuadExpr)
             if I[ind] == J[ind]
                 # Squared term
                 if abs(V[ind]) == 1.0
-                    termStrings[2*ind] = string(getName(x),"²")
+                    termStrings[2*ind] = string(getName(x),"\u00B2")
                 else
                     termStrings[2*ind] = string(string_intclamp(abs(V[ind]))," ",
-                                                getName(x),"²")
+                                                getName(x),"\u00B2")
                 end
             else
                 # Normal term
