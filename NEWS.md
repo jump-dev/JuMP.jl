@@ -4,7 +4,8 @@ JuMP release notes
 Unversioned
 -----------
 
-  * ``setPresolve(m::Model, f::Function)`` added to set a function of the signature ``presolve(m::Model)`` to be called directly before optimization.
+  * ``buildInternalModel(m::Model)`` added to build solver-level model in memory without optimizing.
+  * Deprecate ``load_model_only`` keyword argument to ``solve``.
 
 Version 0.5.1 (May 5, 2014)
 ---------------------------

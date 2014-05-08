@@ -1,4 +1,5 @@
 function solve(m::Model;IpoptOptions::Dict=Dict(),load_model_only=false, suppress_warnings=false)
+    load_model_only == true && warn("load_model_only keyword is deprecated; use the buildInternalModel function instead")
     if m.nlpdata != nothing
         return solveIpopt(m, options=IpoptOptions, suppress_warnings=suppress_warnings)
     end
@@ -308,6 +309,54 @@ function solveMIP(m::Model; load_model_only=false, suppress_warnings=false)
     end
 
     return stat
+end
+
+function buildInternalModel(m::Model)
+    vartype = zeros(Char,m.numCols)
+    anyInts = false
+    for j = 1:m.numCols
+        if m.colCat[j] == CONTINUOUS
+            vartype[j] = 'C'
+        else
+            vartype[j] = 'I'
+            anyInts = true
+        end
+    end
+
+    if isa(m.solver,MathProgBase.MissingSolver) &&
+      (length(m.obj.qvars1) > 0 || length(m.quadconstr) > 0)
+        m.solver = MathProgBase.defaultQPsolver
+    end
+    if anyInts
+        if isa(m.solver,MathProgBase.MissingSolver)
+            m.solver = MathProgBase.defaultMIPsolver
+        end
+    else
+        if isa(m.solver,MathProgBase.MissingSolver)
+            m.solver = MathProgBase.defaultLPsolver
+        end
+    end
+    m.internalModel = model(m.solver)
+
+    f, rowlb, rowub = prepProblemBounds(m)
+    A = prepConstrMatrix(m)
+    loadproblem!(m.internalModel, A, m.colLower, m.colUpper, f, rowlb, rowub, m.objSense)
+    addQuadratics(m)
+
+    if anyInts # do MIP stuff
+        setvartype!(m.internalModel, vartype)
+        addSOS(m)
+        registercallbacks(m)
+        if !all(isnan(m.colVal))
+            try
+                setwarmstart!(m.internalModel, m.colVal)
+            catch
+                !suppress_warnings && Base.warn_once("Solver does not appear to support providing initial feasible solutions.")
+            end
+        end
+    end
+    m.internalModelLoaded = true
+    nothing
 end
 
 # currently used only in callbacks

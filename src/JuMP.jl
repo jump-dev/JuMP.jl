@@ -31,7 +31,7 @@ export
     getNumVars, getNumConstraints, getObjectiveValue, getObjective,
     getObjectiveSense, setObjectiveSense, writeLP, writeMPS, setObjective,
     addConstraint, addVar, addVars, addSOS1, addSOS2, solve, copy,
-    getInternalModel, setPresolve,
+    getInternalModel, setPresolve, buildInternalModel,
     # Variable
     setName, getName, setLower, setUpper, getLower, getUpper,
     getValue, setValue, getDual,

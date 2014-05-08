@@ -39,8 +39,8 @@ Methods
 * ``getNumVars(m::Model)`` - returns the number of variables associated with the ``Model m``.
 * ``getNumConstraints(m::Model)`` - returns the number of constraints associated with the ``Model m``.
 * ``getInternalModel(m::Model)`` - returns the internal low-level ``AbstractMathProgModel`` object which can be used to access any functionality that is not exposed by JuMP. See the MathProgBase `documentation <http://mathprogbasejl.readthedocs.org/en/latest/mathprogbase.html#low-level-interface>`_.
-* ``solve(m::Model; load_model_only=false, suppress_warnings=false)`` - solves the model using the selected solver (or a default for the problem class), and takes two optional arguments that are disabled by default. For the details of ``load_model_only`` see :ref:`probmod`. Setting ``suppress_warnings`` to ``true`` will suppress all JuMP-specific output (e.g. warnings about infeasibility and lack of dual information) but will not suppress solver output (which should be done by passing options to the solver).
-* ``setPresolve(m::Model, f::Function)`` - sets a function ``f`` to be called immediately before optimization. The function must be of the signature ``f(m::Model)``.
+* ``solve(m::Model;  suppress_warnings=false)`` - solves the model using the selected solver (or a default for the problem class), and takes two optional arguments that are disabled by default. Setting ``suppress_warnings`` to ``true`` will suppress all JuMP-specific output (e.g. warnings about infeasibility and lack of dual information) but will not suppress solver output (which should be done by passing options to the solver).
+* ``buildInternalModel(m::Model)`` - builds the model in memory at the solver level without optimizing. 
 
 **Objective**
 
@@ -104,8 +104,7 @@ Accessing the low-level model
 ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
 
 It is possible to construct the internal low-level model before optimizing. To do this, 
-pass the optional keyword argument ``load_model_only=true`` to ``solve``. It is then possible
+call the ``buildInternalModel`` function. It is then possible
 to obtain this model by using the ``getInternalModel`` function. This may be useful when
-it is necessary to access some functionality that is not exposed by JuMP, for example, to
-add a "branching" callback to a CPLEX model. When you are ready to optimize, simply
-call ``solve`` again without the keyword argument.
+it is necessary to access some functionality that is not exposed by JuMP. When you are ready to optimize, 
+simply call ``solve`` in the normal fashion.
