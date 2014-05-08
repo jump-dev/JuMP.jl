@@ -104,6 +104,13 @@ let
 
 end
 
+# unicode comparisons
+if VERSION > v"0.3.0-"
+    let
+        eval(parse("m = Model(); @defVar(m, 0 ≤ x ≤ 1); @defVar(m, y ≥ 2); @defVar(m, z ≤ 3); @test m.colUpper == [1.0, Inf,  3.0]; @test m.colLower == [0.0, 2.0, -Inf]; @addConstraint(m, 0 ≤ x + y ≤ 1); @addConstraint(m, x + z ≤ 2); @addConstraint(m, y + z ≥ 3); @test m.linconstr[1].lb == 0.0; @test m.linconstr[1].ub == 1.0; @test m.linconstr[2].lb == -Inf; @test m.linconstr[2].ub == 2.0; @test m.linconstr[3].lb == 3.0; @test m.linconstr[3].ub == Inf"))
+    end
+end
+
 # test @addConstraint(a,b,c)
 let
     m = Model()
