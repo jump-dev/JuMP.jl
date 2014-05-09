@@ -38,7 +38,7 @@ end
 addToExpression(aff, c, x) = error("Cannot construct an affine expression with a term of type $(typeof(x))")
 
 function parseCurly(x::Expr, aff::Symbol, constantCoef)
-    if (x.args[1] != :sum)
+    if (x.args[1] != :sum && x.args[1] != :∑)
         error("Expected sum outside curly braces")
     end
     if length(x.args) < 3
@@ -158,7 +158,7 @@ macro addConstraint(m, x, extra...)
             end
         else
             # ranged row
-            if length(x.args) != 5 || x.args[2] != :<= || x.args[4] != :<=
+            if length(x.args) != 5 || (x.args[2] != :<= && x.args[2] != :≤) || (x.args[4] != :<= && x.args[4] != :≤)
                 error("Only ranged rows of the form lb <= expr <= ub are supported")
             end
             lb = x.args[1]
@@ -207,7 +207,7 @@ macro addConstraint(m, x, extra...)
             end
         else
             # ranged row
-            if length(x.args) != 5 || x.args[2] != :<= || x.args[4] != :<=
+            if length(x.args) != 5 || (x.args[2] != :<= && x.args[2] != :≤) || (x.args[4] != :<= && x.args[4] != :≤)
                 error("Only ranged rows of the form lb <= expr <= ub are supported")
             end
             lb = x.args[1]
@@ -246,7 +246,7 @@ macro defVar(m, x, extra...)
     m = esc(m)
     if isexpr(x,:comparison)
         # we have some bounds
-        if x.args[2] == :>=
+        if x.args[2] == :>= || x.args[2] == :≥
             if length(x.args) == 5
                 error("Use the form lb <= var <= ub instead of ub >= var >= lb")
             end
@@ -255,11 +255,11 @@ macro defVar(m, x, extra...)
             lb = esc(x.args[3])
             ub = Inf
             var = x.args[1]
-        elseif x.args[2] == :<=
+        elseif x.args[2] == :<= || x.args[2] == :≤
             if length(x.args) == 5
                 # lb <= x <= u
                 lb = esc(x.args[1])
-                if (x.args[4] != :<=)
+                if (x.args[4] != :<= && x.args[4] != :≤)
                     error("Expected <= operator")
                 end
                 ub = esc(x.args[5])
@@ -407,11 +407,11 @@ macro addNLConstraint(m, x)
         if op == :(==)
             lb = 0.0
             ub = 0.0
-        elseif op == :(<=)
+        elseif op == :(<=) || op == :(≤)
             lb = -Inf
             ub = 0.0
         else
-            @assert op == :(>=)
+            @assert op == :(>=) || op == :(≥)
             lb = 0.0
             ub = Inf
         end
