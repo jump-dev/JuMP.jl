@@ -1,6 +1,11 @@
 JuMP release notes
 ==================
 
+Version 0.5.2 (May 9, 2014)
+---------------------------
+
+  * Fix compatibility with Julia 0.3 prerelease
+
 Version 0.5.1 (May 5, 2014)
 ---------------------------
 
