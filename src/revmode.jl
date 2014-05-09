@@ -51,7 +51,7 @@ function quoteTree(x::Expr, datalist::Dict, iterstack)
         end
         return code
     elseif isexpr(x, :curly)
-        @assert x.args[1] == :sum || x.args[1] == :prod # special sum syntax
+        @assert issum(x.args[1]) || isprod(x.args[1]) # special sum/prod syntax
         code = :(Expr(:curly,$(quot(x.args[1]))))
         idxstart = 3
         if isexpr(x.args[2], :parameters)
@@ -179,7 +179,7 @@ function genExprGraph(x::Expr, parent, k)
         end
         return thisnode
     elseif isexpr(x, :curly)
-        @assert (x.args[1] == :sum) || (x.args[1] == :prod)
+        @assert issum(x.args[1]) || isprod(x.args[1])
         thisnode = ExprNode(x, parentarr, nothing, nothing)
         if isexpr(x.args[2], :parameters) # filter conditions
             x.args[3] = genExprGraph(x.args[3], thisnode, nothing)
@@ -213,9 +213,9 @@ function forwardpass(x::ExprNode, expr_out)
         return x.value
     elseif isexpr(x.ex, :curly)
         oper = x.ex.args[1]
-        @assert oper == :sum || oper == :prod
+        @assert issum(oper) || isprod(oper)
         # compute value of this node, need to use a loop
-        if oper == :sum
+        if issum(oper)
             push!(expr_out.args, :( $(x.value) = zero(T) ))
         else # :prod
             push!(expr_out.args, :( $(x.value) = one(T) ))
@@ -224,7 +224,7 @@ function forwardpass(x::ExprNode, expr_out)
 
         valexpr = forwardpass(curlyexpr(x.ex), code)
 
-        if oper == :sum
+        if issum(oper)
             code = :( $code; $(x.value) += $valexpr )
         else # :prod
             code = :( $code; $(x.value) *= $valexpr )
@@ -267,9 +267,9 @@ function revpass(x::ExprNode, expr_out)
     # x.deriv = sum_{p in parents} p.deriv*(\partial f_p / \partial x)
     for (p, k) in x.parents
         f = p.ex.args[1]
-        if f == :(+) || (isexpr(p.ex,:curly) && f == :sum)
+        if f == :(+) || (isexpr(p.ex,:curly) && issum(f))
             push!(expr_out.args, :( $(x.deriv) += $(p.deriv) ))
-        elseif isexpr(p.ex,:curly) && f == :prod
+        elseif isexpr(p.ex,:curly) && isprod(f)
             # potentially numerically unstable if x.value ~= 0
             push!(expr_out.args, :( $(x.deriv) += $(p.deriv)*$(p.value)/$(x.value) ))
         elseif f == :(-)
@@ -326,7 +326,7 @@ function revpass(x::ExprNode, expr_out)
             revpass(x.ex.args[i], expr_out)
         end
     elseif isexpr(x.ex,:curly)
-        @assert x.ex.args[1] == :sum || x.ex.args[1] == :prod
+        @assert issum(x.ex.args[1]) || isprod(x.ex.args[1])
         exprbody = curlyexpr(x.ex)
         if !isa(exprbody,ExprNode) # expression inside sum doesn't depend on input
             return

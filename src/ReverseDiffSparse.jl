@@ -10,6 +10,9 @@ else
     const subarr = Base.sub
 end
 
+issum(s::Symbol) = (s == :sum) || (s == :∑)
+isprod(s::Symbol) = (s == :prod) || (s == :∏)
+
 # package code goes here
 include("types.jl")
 include("revmode.jl")

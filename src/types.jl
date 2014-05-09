@@ -49,7 +49,6 @@ function cleargraph(x::ExprNode)
             cleargraph(x.ex.args[i])
         end
     elseif isexpr(x.ex,:curly)
-        @assert x.ex.args[1] == :sum
         cleargraph(x.ex.args[2])
     end
 end

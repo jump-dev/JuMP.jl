@@ -87,7 +87,7 @@ function compute_hessian_sparsity(x::ExprNode, linear_so_far, expr_out)
             end
         end
     elseif isexpr(x.ex, :curly)
-        if x.ex.args[1] == :sum || !linear_so_far
+        if issum(x.ex.args[1]) || !linear_so_far
             code = quote end
             compute_hessian_sparsity(curlyexpr(x.ex), linear_so_far, code)
             push!(expr_out.args, gencurlyloop(x.ex,code))
