@@ -7,6 +7,12 @@ Unversioned
   * ``buildInternalModel(m::Model)`` added to build solver-level model in memory without optimizing.
   * Deprecate ``load_model_only`` keyword argument to ``solve``.
 
+Version 0.5.2 (May 9, 2014)
+---------------------------
+
+  * Fix compatibility with Julia 0.3 prerelease
+
+
 Version 0.5.1 (May 5, 2014)
 ---------------------------
 
