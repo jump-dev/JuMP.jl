@@ -368,11 +368,11 @@ macro defVar(m, x, extra...)
         end
        
         mac = Expr(:macrocall,symbol("@gendict"),varname,:Variable,idxsets...)
-        addDict = :( push!($(m).dictList, $varname) )
         code = quote 
             $mac
             $code
-            $addDict
+            push!($(m).dictList, $varname)
+            $varname
         end
         return code
     end
