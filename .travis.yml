@@ -26,6 +26,7 @@ script:
     - if [ $JULIAVERSION = "juliareleases" ]; then julia test/runtests.jl; fi
     - julia test/hygiene.jl
     - julia test/hockschittkowski/runhs.jl
-    - if [ $JULIAVERSION = "julianightlies" ]; then julia -e 'Pkg.add("Coverage"); using Coverage; Coveralls.submit(Coveralls.process_folder())'; fi
+after_success:
+    - if [ $JULIAVERSION = "julianightlies" ]; then julia -e 'cd(Pkg.dir("JuMP")); Pkg.add("Coverage"); using Coverage; Coveralls.submit(Coveralls.process_folder())'; fi
 
 
