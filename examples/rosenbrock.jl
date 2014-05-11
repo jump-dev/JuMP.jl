@@ -1,5 +1,4 @@
 using JuMP
-using Base.Test
 # rosenbrock
 
 let
