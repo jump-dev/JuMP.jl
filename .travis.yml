@@ -18,6 +18,7 @@ before_install:
     - git config --global user.name "Travis User"
     - git config --global user.email "travis@example.net"
 script:
+    - julia -e 'versioninfo()'
     - julia -e 'Pkg.init()'
     - if [ $JULIAVERSION = "julianightlies" ]; then julia -e 'Pkg.add("Ipopt")'; fi
     - julia -e 'run(`ln -s $(pwd()) $(Pkg.dir("JuMP"))`); Pkg.pin("JuMP"); Pkg.resolve()'
