@@ -38,7 +38,7 @@ end
 addToExpression(aff, c, x) = error("Cannot construct an affine expression with a term of type $(typeof(x))")
 
 function parseCurly(x::Expr, aff::Symbol, constantCoef)
-    if (x.args[1] != :sum && x.args[1] != :∑)
+    if !(x.args[1] == :sum || x.args[1] == :∑ || x.args[1] == :Σ) # allow either N-ARY SUMMATION or GREEK CAPITAL LETTER SIGMA
         error("Expected sum outside curly braces")
     end
     if length(x.args) < 3
