@@ -178,7 +178,7 @@ function solveLP(m::Model; load_model_only=false, suppress_warnings=false)
         end
         all_cont = true
         try # this fails for LPs for some unfathomable reason...but if it's an LP, we're good anyway
-            all_cont = mapreduce(x->isequal('C',x), &, MathProgBase.getvartype(m.internalModel))
+            all_cont = all(x->isequal('C',x), MathProgBase.getvartype(m.internalModel))
         end
         if !all_cont
             setvartype!(m.internalModel, fill('C',m.numCols))
