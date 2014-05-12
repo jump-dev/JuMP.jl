@@ -244,87 +244,111 @@ end
 
 macro defVar(m, x, extra...)
     m = esc(m)
+    # Identify the variable bounds. Four (legal) possibilities are "x >= lb",
+    # "x <= ub", "lb <= x <= ub", or just plain "x"
     if isexpr(x,:comparison)
-        # we have some bounds
+        # We have some bounds
         if x.args[2] == :>= || x.args[2] == :≥
-            if length(x.args) == 5
-                error("Use the form lb <= var <= ub instead of ub >= var >= lb")
-            end
+            # x >= lb
+            var = x.args[1]
+            length(x.args) == 5 &&
+                error("in @defVar ($var): use the form lb <= $var <= ub instead of ub >= $var >= lb")
             @assert length(x.args) == 3
-            # lower bounds, no upper
             lb = esc(x.args[3])
             ub = Inf
-            var = x.args[1]
         elseif x.args[2] == :<= || x.args[2] == :≤
             if length(x.args) == 5
                 # lb <= x <= u
-                lb = esc(x.args[1])
-                if (x.args[4] != :<= && x.args[4] != :≤)
-                    error("Expected <= operator")
-                end
-                ub = esc(x.args[5])
                 var = x.args[3]
+                (x.args[4] != :<= && x.args[4] != :≤) &&
+                    error("in @defVar ($var): expected <= operator after variable name")
+                lb = esc(x.args[1])
+                ub = esc(x.args[5])
             else
-                # x <= u
+                # x <= ub
+                var = x.args[1]
+                # NB: May also be lb <= x, which we do not support
+                #     We handle this later in the macro
+                @assert length(x.args) == 3
                 ub = esc(x.args[3])
                 lb = -Inf
-                var = x.args[1]
             end
+        else
+            # Its a comparsion, but not using <= ... <=
+            error("in @defVar ($(string(x))): use the form lb <= ... <= ub")
         end
     else
+        # No bounds provided - free variable
+        # If it isn't, e.g. something odd like f(x), we'll handle later
         var = x
         lb = -Inf
         ub = Inf
     end
+
+    # Determine variable type (if present), as well as variables being 
+    # added as complete columns. 
+    # Types: default is continuous (reals), alternatives are Int and Bin.
+    # ColGen: format is @defVar(..., [type], objcoef, constrrefs, values)
     t = JuMP.CONTINUOUS
     if length(extra) > 0
         gottype = 0
+        # Try to detect an acceptable variable type
         if extra[1] == :Int || extra[1] == :Bin
             gottype = 1
             if extra[1] == :Int
                 t = JuMP.INTEGER
             else
-                if lb != -Inf || ub != Inf
-                    error("Bounds may not be specified for binary variables. These are always taken to have a lower bound of 0 and upper bound of 1.")
+                # Bin is internally just an integer variable
+                # So if Bin, either no bounds at all, or must be 0 <= x <= 1
+                if (lb != -Inf || ub != Inf) && !(lb == 0.0 && ub == 1.0)
+                    error("in @defVar ($var): bounds other than [0, 1] may not be specified for binary variables.\nThese are always taken to have a lower bound of 0 and upper bound of 1.")
                 end
                 t = JuMP.INTEGER
                 lb = 0.0
                 ub = 1.0
             end
         end
+        # Try to detect the case where someone meant to do Int or Bin,
+        # but did something else instead
+        length(extra) == 1 && gottype == 0 &&
+            error("in @defVar ($var): provided variable type must be Int or Bin")
+        # Handle the column generation functionality
         if length(extra) - gottype == 3
-            # adding variable to existing constraints
+            !isa(var,Symbol) &&
+                error("in @defVar ($var): can only create one variable at a time when adding to existing constraints.")
+
             objcoef = esc(extra[1+gottype])
-            cols = esc(extra[2+gottype])
-            coeffs = esc(extra[3+gottype])
-            if !isa(var,Symbol)
-                error("Cannot create multiple variables when adding to existing constraints")
-            end
+            cols    = esc(extra[2+gottype])
+            coeffs  = esc(extra[3+gottype])
             return quote
                 $(esc(var)) = Variable($m,$lb,$ub,$t,$objcoef,$cols,$coeffs,name=$(string(var)))
                 nothing
             end
-        elseif length(extra) - gottype != 0
-            error("Syntax error in defVar")
         end
+        gottype == 0 &&
+            error("in @defVar ($var): syntax error")
     end
 
-    #println("lb: $lb ub: $ub var: $var")      
+    # We now build the code to generate the variables (and possibly the JuMPDict
+    # to contain them)
     if isa(var,Symbol)
-        # easy case
+        # Easy case - a single variable
         return quote
             $(esc(var)) = Variable($m,$lb,$ub,$t,$(string(var)))
-            nothing
         end
     else
-        if !isexpr(var,:ref)
-            error("Syntax error: Expected $var to be of form var[...]")
-        end
+        # An indexed set of variables
+        # Check for malformed expression
+        !isexpr(var,:ref) &&
+            error("in @defVar ($var): expected $var to be of form var[...]")
+
         varname = esc(var.args[1])
         idxvars = {}
         idxsets = {}
         refcall = Expr(:ref,varname)
+        # Iterate over each index set s
         for s in var.args[2:end]
+            # Is the user providing an index variable, e.g. i=1:5?
             if isa(s,Expr) && (s.head == :(=) || s.head == :in)
                 idxvar = s.args[1]
                 idxset = esc(s.args[2])
@@ -336,6 +360,7 @@ macro defVar(m, x, extra...)
             push!(idxsets, idxset)
             push!(refcall.args, esc(idxvar))
         end
+        
         tup = Expr(:tuple, [esc(x) for x in idxvars]...)
         code = :( $(refcall) = Variable($m, $lb, $ub, $t) )
         for (idxvar, idxset) in zip(reverse(idxvars),reverse(idxsets))
@@ -347,12 +372,11 @@ macro defVar(m, x, extra...)
         end
        
         mac = Expr(:macrocall,symbol("@gendict"),varname,:Variable,idxsets...)
-        addDict = :( push!($(m).dictList, $varname) )
         code = quote 
             $mac
             $code
-            $addDict
-            nothing
+            push!($(m).dictList, $varname)
+            $varname
         end
         return code
     end
