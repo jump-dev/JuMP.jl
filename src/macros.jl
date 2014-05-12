@@ -273,9 +273,13 @@ macro defVar(m, x, extra...)
                 ub = esc(x.args[3])
                 lb = -Inf
             end
+        else
+            # Its a comparsion, but not using <= ... <=
+            error("in @defVar ($(string(x))): use the form lb <= ... <= ub")
         end
     else
         # No bounds provided - free variable
+        # If it isn't, e.g. something odd like f(x), we'll handle later
         var = x
         lb = -Inf
         ub = Inf
