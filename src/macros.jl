@@ -166,6 +166,11 @@ macro addConstraint(m, x, extra...)
     # Build the constraint
     if length(x.args) == 3
         # Simple comparison - move everything to the LHS
+        if !((x.args[2] == :<=) || (x.args[2] == :≤) ||
+             (x.args[2] == :>=) || (x.args[2] == :≥) ||
+             (x.args[2] == :(==)))
+            error("in @addConstraint ($(string(x))): expected comparison operator (<=, >=, or ==).")
+        end
         lhs = :($(x.args[1]) - $(x.args[3])) 
         code = quote
             aff = AffExpr()
