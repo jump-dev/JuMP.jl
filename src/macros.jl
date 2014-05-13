@@ -20,14 +20,9 @@ function timesvar(x::Expr)
     return x.args[end]
 end
 
-function addToExpression(aff::AffExpr,c::Number,x::Variable)
-    push!(aff.vars,x)
-    push!(aff.coeffs,c)
-end
+addToExpression(aff::AffExpr,c::Number,x::Variable) = push!(aff,c,x)
 
-function addToExpression(aff::AffExpr,c::Number,x::Number)
-    aff.constant += c*x
-end
+addToExpression(aff::AffExpr,c::Number,x::Number) = (aff.constant += c*x)
 
 function addToExpression(aff::AffExpr,c::Number,x::AffExpr)
     append!(aff.vars, x.vars)
@@ -35,7 +30,12 @@ function addToExpression(aff::AffExpr,c::Number,x::AffExpr)
     aff.constant += c*x.constant
 end
 
+addToExpression(aff::AffExpr, c, x::QuadExpr) =
+    error("Macros (@addConstraint, @setObjective) do not support quadratic expressions.\n"*
+          "       Use addConstraint/setObjective instead")
+
 addToExpression(aff, c, x) = error("Cannot construct an affine expression with a term of type $(typeof(x))")
+
 
 function parseCurly(x::Expr, aff::Symbol, constantCoef)
     if !(x.args[1] == :sum || x.args[1] == :∑ || x.args[1] == :Σ) # allow either N-ARY SUMMATION or GREEK CAPITAL LETTER SIGMA
@@ -121,116 +121,115 @@ end
 
 macro addConstraint(m, x, extra...)
     m = esc(m)
-    if length(extra) == 1
-        c, x = x, extra[1]
-        if (x.head != :comparison)
-            error("Expected comparison operator in constraint $x")
+    # Two formats:
+    # - @addConstraint(m, a*x <= 5)
+    # - @addConstraint(m, myref[a=1:5], a*x <= 5)
+    length(extra) > 1 && error("in @addConstraint: too many arguments.")
+    # Canonicalize the arguments
+    c = length(extra) == 1 ? x        : nothing
+    x = length(extra) == 1 ? extra[1] : x
+
+    (x.head != :comparison) &&
+        error("in @addConstraint ($(string(x))): expected comparison operator (<=, >=, or ==).")
+
+    # Strategy: build up the code for non-macro addconstraint, and if needed
+    # we will wrap in loops to assign to the ConstraintRefs
+
+    # Build up machinery for looping over index sets, if needed
+    refcall = gensym()  # Default
+    if isa(c,Symbol)
+        # Just creating a simple ConstraintRefs (not indexed)
+        refcall = esc(c)
+    elseif isexpr(c,:ref)
+        # Creating an indexed set of ConstraintRefs
+        cname = esc(c.args[1])
+        idxvars = {}
+        idxsets = {}
+        refcall = Expr(:ref,cname)
+        for s in c.args[2:end]
+            if isa(s,Expr) && (s.head == :(=) || s.head == :in)
+                idxvar = s.args[1]
+                idxset = esc(s.args[2])
+            else
+                idxvar = gensym()
+                idxset = esc(s)
+            end
+            push!(idxvars, idxvar)
+            push!(idxsets, idxset)
+            push!(refcall.args, esc(idxvar))
         end
-        if isa(c,Symbol)
-            refcall = esc(c)
-        else
-            if !isexpr(c,:ref)
-                error("Syntax error: Expected $c to be of form constr[...]")
-            end
-            cname = esc(c.args[1])
-            idxvars = {}
-            idxsets = {}
-            refcall = Expr(:ref,cname)
-            for s in c.args[2:end]
-                if isa(s,Expr) && (s.head == :(=) || s.head == :in)
-                    idxvar = s.args[1]
-                    idxset = esc(s.args[2])
-                else
-                    idxvar = gensym()
-                    idxset = esc(s)
-                end
-                push!(idxvars, idxvar)
-                push!(idxsets, idxset)
-                push!(refcall.args, esc(idxvar))
-            end  
+    elseif c != nothing
+        # Something in there, but we don't know what
+        error("in @addConstraint ($(string(x))): expected $(string(c)) to be of form constr[...]")
+    end
+
+    # Build the constraint
+    if length(x.args) == 3
+        # Simple comparison - move everything to the LHS
+        if !((x.args[2] == :<=) || (x.args[2] == :≤) ||
+             (x.args[2] == :>=) || (x.args[2] == :≥) ||
+             (x.args[2] == :(==)))
+            error("in @addConstraint ($(string(x))): expected comparison operator (<=, >=, or ==).")
         end
-        if length(x.args) == 3 # simple comparison
-            lhs = :($(x.args[1]) - $(x.args[3])) # move everything to the lhs
-            code = quote
-                aff = AffExpr()
-                $(parseExpr(lhs, :aff, 1.0))
-                $(refcall) = addConstraint($m, $(x.args[2])(aff,0) )
-            end
-        else
-            # ranged row
-            if length(x.args) != 5 || (x.args[2] != :<= && x.args[2] != :≤) || (x.args[4] != :<= && x.args[4] != :≤)
-                error("Only ranged rows of the form lb <= expr <= ub are supported")
-            end
-            lb = x.args[1]
-            ub = x.args[5]
-            code = quote
-                aff = AffExpr()
-                if !isa($(esc(lb)),Number)
-                    error(string("Expected ",$lb," to be a number"))
-                elseif !isa($(esc(ub)),Number)
-                    error(string("Expected ",$ub," to be a number"))
-                end
-                $(parseExpr(x.args[3],:aff,1.0))
-                $(refcall) = addConstraint($m, 
-                    LinearConstraint(aff,$(esc(lb))-aff.constant,
-                        $(esc(ub))-aff.constant))
-            end
+        lhs = :($(x.args[1]) - $(x.args[3])) 
+        code = quote
+            aff = AffExpr()
+            $(parseExpr(lhs, :aff, 1.0))
+            $(refcall) = addConstraint($m, $(x.args[2])(aff,0) )
         end
-        if isa(c,Symbol)
-            # easy case
-            return code
-        else  
-            for (idxvar, idxset) in zip(reverse(idxvars),reverse(idxsets))
-                code = quote
-                    for $(esc(idxvar)) in $idxset
-                        $code
-                    end
-                end
-            end
-            mac = Expr(:macrocall,symbol("@gendict"),cname,:(ConstraintRef{LinearConstraint}),idxsets...)
-            return quote 
-                $mac
-                $code
-                nothing
-            end
+    elseif length(x.args) == 5
+        # Ranged row
+        if (x.args[2] != :<= && x.args[2] != :≤) || (x.args[4] != :<= && x.args[4] != :≤)
+            error("in @addConstraint ($(string(x))): only ranged rows of the form lb <= expr <= ub are supported.")
         end
-    elseif length(extra) == 0 # the old @addConstraint
-        if (x.head != :comparison)
-            error("Expected comparison operator in constraint $x")
-        end
-        if length(x.args) == 3 # simple comparison
-            lhs = :($(x.args[1]) - $(x.args[3])) # move everything to the lhs
-            return quote
-                aff = AffExpr()
-                $(parseExpr(lhs, :aff, 1.0))
-                addConstraint($m, $(x.args[2])(aff,0) )
+        lb = x.args[1]
+        ub = x.args[5]
+        code = quote
+            aff = AffExpr()
+            if !isa($(esc(lb)),Number)
+                error(string("in @addConstraint ($(string(x))): expected ",$lb," to be a number."))
+            elseif !isa($(esc(ub)),Number)
+                error(string("in @addConstraint ($(string(x))): expected ",$ub," to be a number."))
             end
-        else
-            # ranged row
-            if length(x.args) != 5 || (x.args[2] != :<= && x.args[2] != :≤) || (x.args[4] != :<= && x.args[4] != :≤)
-                error("Only ranged rows of the form lb <= expr <= ub are supported")
-            end
-            lb = x.args[1]
-            ub = x.args[5]
-            return quote
-                aff = AffExpr()
-                if !isa($(esc(lb)),Number)
-                    error(string("Expected ",$lb," to be a number"))
-                elseif !isa($(esc(ub)),Number)
-                    error(string("Expected ",$ub," to be a number"))
-                end
-                $(parseExpr(x.args[3],:aff,1.0))
-                addConstraint($m, 
-                    LinearConstraint(aff,$(esc(lb))-aff.constant,
-                        $(esc(ub))-aff.constant))
-            end
+            $(parseExpr(x.args[3],:aff,1.0))
+            $(refcall) = addConstraint($m, 
+                LinearConstraint(aff,$(esc(lb))-aff.constant,
+                    $(esc(ub))-aff.constant))
         end
     else
-        error("Too many arguments to addConstraint")
+        # Unknown
+        error("in @addConstraint ($(string(x))): constraints must be in one of the following forms:\n" *
+              "       expr1 <= expr2\n" * "       expr1 >= expr2\n" *
+              "       expr1 == expr2\n" * "       lb <= expr <= ub")
+    end
+
+    # Combine indexing (if needed) with constraint code
+    if isa(c,Symbol) || c == nothing
+        # No indexing
+        return code
+    else
+        for (idxvar, idxset) in zip(reverse(idxvars),reverse(idxsets))
+            code = quote
+                for $(esc(idxvar)) in $idxset
+                    $code
+                end
+            end
+        end
+        mac = Expr(:macrocall,symbol("@gendict"),cname,:(ConstraintRef{LinearConstraint}),idxsets...)
+        return quote 
+            $mac
+            $code
+            nothing
+        end
     end
 end
 
-macro setObjective(m, sense, x)
+macro setObjective(m, args...)
+    if length(args) != 2
+        # Either just an objective sene, or just an expression.
+        error("in @setObjective: needs two arguments: objective sense (Max or Min) and expression.")
+    end
+    sense, x = args
     if sense == :Min || sense == :Max
         sense = Expr(:quote,sense)
     end
@@ -252,7 +251,7 @@ macro defVar(m, x, extra...)
             # x >= lb
             var = x.args[1]
             length(x.args) == 5 &&
-                error("in @defVar ($var): use the form lb <= $var <= ub instead of ub >= $var >= lb")
+                error("in @defVar ($var): use the form lb <= $var <= ub instead of ub >= $var >= lb.")
             @assert length(x.args) == 3
             lb = esc(x.args[3])
             ub = Inf
@@ -261,7 +260,7 @@ macro defVar(m, x, extra...)
                 # lb <= x <= u
                 var = x.args[3]
                 (x.args[4] != :<= && x.args[4] != :≤) &&
-                    error("in @defVar ($var): expected <= operator after variable name")
+                    error("in @defVar ($var): expected <= operator after variable name.")
                 lb = esc(x.args[1])
                 ub = esc(x.args[5])
             else
@@ -275,7 +274,7 @@ macro defVar(m, x, extra...)
             end
         else
             # Its a comparsion, but not using <= ... <=
-            error("in @defVar ($(string(x))): use the form lb <= ... <= ub")
+            error("in @defVar ($(string(x))): use the form lb <= ... <= ub.")
         end
     else
         # No bounds provided - free variable
