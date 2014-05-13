@@ -233,7 +233,7 @@ end
 macro setObjective(m, args...)
     if length(args) != 2
         # Either just an objective sene, or just an expression.
-        error("in @setObjective: need objective (Max or Min) and expression.")
+        error("in @setObjective: needs two arguments: objective sense (Max or Min) and expression.")
     end
     sense, x = args
     if sense == :Min || sense == :Max
