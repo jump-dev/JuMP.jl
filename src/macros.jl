@@ -20,14 +20,9 @@ function timesvar(x::Expr)
     return x.args[end]
 end
 
-function addToExpression(aff::AffExpr,c::Number,x::Variable)
-    push!(aff.vars,x)
-    push!(aff.coeffs,c)
-end
+addToExpression(aff::AffExpr,c::Number,x::Variable) = push!(aff,c,x)
 
-function addToExpression(aff::AffExpr,c::Number,x::Number)
-    aff.constant += c*x
-end
+addToExpression(aff::AffExpr,c::Number,x::Number) = (aff.constant += c*x)
 
 function addToExpression(aff::AffExpr,c::Number,x::AffExpr)
     append!(aff.vars, x.vars)
@@ -35,7 +30,12 @@ function addToExpression(aff::AffExpr,c::Number,x::AffExpr)
     aff.constant += c*x.constant
 end
 
+addToExpression(aff::AffExpr, c, x::QuadExpr) =
+    error("Macros (@addConstraint, @setObjective) do not support quadratic expressions.\n"*
+          "       Use addConstraint/setObjective instead")
+
 addToExpression(aff, c, x) = error("Cannot construct an affine expression with a term of type $(typeof(x))")
+
 
 function parseCurly(x::Expr, aff::Symbol, constantCoef)
     if !(x.args[1] == :sum || x.args[1] == :∑ || x.args[1] == :Σ) # allow either N-ARY SUMMATION or GREEK CAPITAL LETTER SIGMA
@@ -230,7 +230,12 @@ macro addConstraint(m, x, extra...)
     end
 end
 
-macro setObjective(m, sense, x)
+macro setObjective(m, args...)
+    if length(args) != 2
+        # Either just an objective sene, or just an expression.
+        error("in @setObjective: need objective (Max or Min) and expression.")
+    end
+    sense, x = args
     if sense == :Min || sense == :Max
         sense = Expr(:quote,sense)
     end
