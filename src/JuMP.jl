@@ -199,19 +199,11 @@ Variable(m::Model,lower::Number,upper::Number,cat::Int) =
 
 # Name setter/getters
 setName(v::Variable,n::String) = (v.m.colNames[v.col] = n)
-
-function getName(v::Variable) 
-    if length(v.m.colNames) > 0
-        v.m.colNames[v.col] == "" && fillVarNames(v.m)
-        return ( v.m.colNames[v.col] == "" ? "_col$(v.col)" : v.m.colNames[v.col] )
-    end
-    nothing
-end
-
 function getName(m::Model, col)
     m.colNames[col] == "" && fillVarNames(m)
     return ( m.colNames[col] == "" ? "_col$(col)" : m.colNames[col] )
 end
+getName(v::Variable) = getName(v.m, v.col)
 
 # Bound setter/getters
 setLower(v::Variable,lower::Number) = (v.m.colLower[v.col] = convert(Float64,lower))
@@ -225,8 +217,8 @@ function setValue(v::Variable, val::Number)
 end
 
 function getValue(v::Variable) 
-    if length(v.m.colVal) < getNumVars(v.m)
-        error("Variable values not available. Check that the model was properly solved.")
+    if v.m.colVal[v.col] == NaN
+        warn("Variable $(getName(v))'s value not defined. Check that the model was properly solved.")
     end
     return v.m.colVal[v.col]
 end

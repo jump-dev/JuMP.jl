@@ -3,6 +3,18 @@
 
 modPath = joinpath(Pkg.dir("JuMP"),"test","mod")
 
+# Check error cases
+let
+    @test_throws Model(solver=:Foo)
+    modErr = Model()
+    @test_throws setObjectiveSense(modErr, :Maximum)
+    @defVar(modErr, errVar)
+    @test isnan(getValue(errVar))
+    @test_throws getDual(errVar)
+end
+
+
+
 ###############################################################################
 # Test Model A
 #####################################################################
