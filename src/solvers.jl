@@ -204,6 +204,7 @@ function solveLP(m::Model; load_model_only=false, suppress_warnings=false)
         # do nothing
     elseif stat != :Optimal
         !suppress_warnings && warn("Not solved to optimality, status: $stat")
+        fill!(m.colVal, NaN)
         if stat == :Infeasible
             try
                 m.linconstrDuals = getinfeasibilityray(m.internalModel)
@@ -301,11 +302,18 @@ function solveMIP(m::Model; load_model_only=false, suppress_warnings=false)
             # store solution values in model
             m.objVal = getobjval(m.internalModel)
             m.objVal += m.obj.aff.constant
+        catch
+            m.objVal = NaN
+        end
+        try
             m.colVal = getsolution(m.internalModel)
+        catch
+            fill!(m.colVal, NaN)
         end
     end
     if stat != :Optimal
         !suppress_warnings && warn("Not solved to optimality, status: ", string(stat))
+        fill!(m.colVal, NaN)
     end
 
     return stat
