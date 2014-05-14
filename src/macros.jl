@@ -224,6 +224,33 @@ macro addConstraint(m, x, extra...)
     end
 end
 
+macro addConstraints(m, x)
+    x.head == :block || error("Invalid syntax for @addConstraints")
+    @assert x.args[1].head == :line
+    code = quote end
+    for it in x.args
+        if it.head == :line
+            # do nothing
+        elseif it.head == :comparison # regular constraint
+            mac = Expr(:macrocall,symbol("@addConstraint"), esc(m), esc(it))
+            code = quote
+                    $code
+                    $mac
+                    end
+        elseif it.head == :tuple # constraint ref
+            mac = Expr(:macrocall,symbol("@addConstraint"), esc(m), esc(it.args[1]), esc(it.args[2]))
+            code = quote
+                    $code
+                    $mac
+                    end
+        end
+    end
+    return quote 
+            $code 
+            nothing
+            end
+end
+
 macro setObjective(m, args...)
     if length(args) != 2
         # Either just an objective sene, or just an expression.

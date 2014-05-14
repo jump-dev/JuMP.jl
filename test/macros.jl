@@ -123,3 +123,20 @@ let
     @addConstraint(m, d[i=1:5,j=6:-2:2], x[i] - y[j] == 2)
     @test conToStr(m.linconstr[d[4,4].idx]) == "x[4] - y[4] == 2"
 end
+
+# test @addConstraints
+let
+    m = Model()
+    @defVar(m, x)
+    @defVar(m, y[1:3])
+
+    @addConstraints m begin
+        x + y[1] == 1
+        ref[i=1:3], y[1] + y[i] >= i
+    end
+
+    @test conToStr(m.linconstr[1]) == "x + y[1] == 1"
+    @test conToStr(m.linconstr[2]) == "2 y[1] >= 1"
+    @test conToStr(m.linconstr[3]) == "y[1] + y[2] >= 2"
+    @test conToStr(m.linconstr[4]) == "y[1] + y[3] >= 3"
+end
