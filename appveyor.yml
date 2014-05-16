@@ -1,11 +1,11 @@
 environment:
   matrix:
-  - JULIAVERSION: "x86/0.3/julia-0.3.0-prerelease-win32.exe"
-# Add more lines here to test multiple Julia versions
+  - JULIAVERSION: "win32"
+  - JULIAVERSION: "win64"
 
 install:
 # Download most recent Julia Windows binary
-  - ps: (new-object net.webclient).DownloadFile($("http://s3.amazonaws.com/julialang/bin/winnt/"+$env:JULIAVERSION), "C:\projects\julia-binary.exe")
+  - ps: (new-object net.webclient).DownloadFile($("http://status.julialang.org/download/"+$env:JULIAVERSION), "C:\projects\julia-binary.exe")
 # Run installer silently, output to C:\projects\julia
   - C:\projects\julia-binary.exe /S /D=C:\projects\julia
 
