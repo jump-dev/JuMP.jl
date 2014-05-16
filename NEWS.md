@@ -6,6 +6,7 @@ Unversioned
 
   * ``buildInternalModel(m::Model)`` added to build solver-level model in memory without optimizing.
   * Deprecate ``load_model_only`` keyword argument to ``solve``.
+  * Add groups of constraints with ``@addConstraints`` macro.
 
 Version 0.5.2 (May 9, 2014)
 ---------------------------
