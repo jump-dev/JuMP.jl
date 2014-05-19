@@ -9,11 +9,10 @@
 # We have binary variables x[i,j,k] which, if = 1, say that cell (i,j)
 # contains the number k
 # The constraints are:
-# 1 - Each row contains each number exactly once
-# 2 - Each column contains each number exactly once
-# 3 - Each 3x3 subgrid contains each number exactly once
-# and the obvious one that
-# 4 - Each cell has one value only
+# 1 - Each cell has one value only
+# 2 - Each row contains each number exactly once
+# 3 - Each column contains each number exactly once
+# 4 - Each 3x3 subgrid contains each number exactly once
 # We will take the initial grid as a CSV file, where 0s are "blanks
 #############################################################################
 
@@ -34,25 +33,23 @@ end
 function SolveModel(initgrid)
     m = Model()
 
-    @defVar(m, 0 <= x[1:9, 1:9, 1:9] <= 1, Int)
+    @defVar(m, x[1:9, 1:9, 1:9], Bin)
 
-    # Constraint 1 - Each row...
-    @addConstraint(m, row[i=1:9,val=1:9], sum(x[i,:,val]) == 1)
-    # Constraint 2 - Each column...
-    @addConstraint(m, col[j=1:9,val=1:9], sum(x[:,j,val]) == 1)
-
-    # Constraint 3 - Each sub-grid...
-    @addConstraint(m, subgrid[i=1:3:7,j=1:3:7,val=1:9], sum(x[i:i+2,j:j+2,val]) == 1)
-
-    # Constraint 4 - Cells...
-    @addConstraint(m, cells[i=1:9,j=1:9], sum(x[i,j,:]) == 1)
+    @addConstraints m begin
+        # Constraint 1 - Only one value appears in each cell
+        # Constraint 2 - Each value appears in each row once only
+        # Constraint 3 - Each value appears in each column once only
+        cell[i=1:9, j=1:9], sum(x[i,j,:]) == 1
+         row[i=1:9, k=1:9], sum(x[i,:,k]) == 1
+         col[j=1:9, k=1:9], sum(x[:,j,k]) == 1
+        # Constraint 4 - Each value appears in each 3x3 subgrid once only
+        subgrid[i=1:3:7,j=1:3:7,val=1:9], sum(x[i:i+2,j:j+2,val]) == 1
+    end
 
     # Initial solution
-    for row in 1:9
-        for col in 1:9
-            if initgrid[row,col] != 0
-                @addConstraint(m, x[row, col, initgrid[row, col]] == 1)
-            end
+    for row in 1:9, col in 1:9
+        if initgrid[row,col] != 0
+            @addConstraint(m, x[row, col, initgrid[row, col]] == 1)
         end
     end
 
