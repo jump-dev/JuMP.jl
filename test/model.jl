@@ -114,35 +114,35 @@ close(modAfp)
 status = solve(modA)
 @test status == :Optimal
 @test_approx_eq_eps modA.objVal (1.0+4.833334) 1e-6
-@test_approx_eq getValue(x) 1.0
-@test_approx_eq getValue(y) 1.0
-@test_approx_eq getValue(z) 4.0
-@test_approx_eq getValue(r)[3] 0.5
-@test_approx_eq getValue(r)[4] 0.0
-@test_approx_eq getValue(r)[5] 0.0
-@test_approx_eq getValue(r)[6] 6.0
+@test_approx_eq_eps getValue(x) 1.0 1e-6
+@test_approx_eq_eps getValue(y) 1.0 1e-6
+@test_approx_eq_eps getValue(z) 4.0 1e-6
+@test_approx_eq_eps getValue(r)[3] 0.5 1e-6
+@test_approx_eq_eps getValue(r)[4] 0.0 1e-6
+@test_approx_eq_eps getValue(r)[5] 0.0 1e-6
+@test_approx_eq_eps getValue(r)[6] 6.0 1e-6
 #####################################################################
 # Test solution (LP)
 modA.colCat[2] = 0
 status = solve(modA)
 @test status == :Optimal  
 @test_approx_eq_eps modA.objVal 5.844611528822055 1e-6
-@test_approx_eq getValue(x) 0.9774436090225564
-@test_approx_eq getValue(y) 1.0225563909774436
-@test_approx_eq getValue(z) 4.0
-@test_approx_eq getValue(r)[3] 0.5112781954887218
-@test_approx_eq getValue(r)[4] 0.0
-@test_approx_eq getValue(r)[5] 0.0
-@test_approx_eq getValue(r)[6] 6.0
+@test_approx_eq_eps getValue(x) 0.9774436090225564 1e-6
+@test_approx_eq_eps getValue(y) 1.0225563909774436 1e-6
+@test_approx_eq_eps getValue(z) 4.0 1e-6
+@test_approx_eq_eps getValue(r)[3] 0.5112781954887218 1e-6
+@test_approx_eq_eps getValue(r)[4] 0.0 1e-6
+@test_approx_eq_eps getValue(r)[5] 0.0 1e-6
+@test_approx_eq_eps getValue(r)[6] 6.0 1e-6
 
 # reduced costs
-@test_approx_eq getDual(x) 0.0
-@test_approx_eq getDual(y) 0.0
-@test_approx_eq getDual(z) 1.0714285714285714
-@test_approx_eq getDual(r)[3] 0.0
-@test_approx_eq getDual(r)[4] -1.0
-@test_approx_eq getDual(r)[5] -1.0
-@test_approx_eq getDual(r)[6] 0.03759398496240601
+@test_approx_eq_eps getDual(x) 0.0 1e-6
+@test_approx_eq_eps getDual(y) 0.0 1e-6
+@test_approx_eq_eps getDual(z) 1.0714285714285714 1e-6
+@test_approx_eq_eps getDual(r)[3] 0.0 1e-6
+@test_approx_eq_eps getDual(r)[4] -1.0 1e-6
+@test_approx_eq_eps getDual(r)[5] -1.0 1e-6
+@test_approx_eq_eps getDual(r)[6] 0.03759398496240601 1e-6
 
 # row duals
 @test_approx_eq_eps getDual(constraints)[1] -0.333333 1e-6
@@ -171,7 +171,7 @@ let
     @addConstraint(modB, x <= 10)
     status = solve(modB)
     @test status == :Optimal
-    @test_approx_eq getValue(x) 1.0
+    @test_approx_eq_eps getValue(x) 1.0 1e-6
 end
 
 
