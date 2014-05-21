@@ -176,7 +176,7 @@ type Variable <: ReverseDiffSparse.Placeholder
     col::Int
 end
 
-getindex(x::Variable) = x.col
+ReverseDiffSparse.getplaceindex(x::Variable) = x.col
 isequal(x::Variable,y::Variable) = isequal(x.col,y.col) && isequal(x.m,y.m)
 
 function Variable(m::Model,lower::Number,upper::Number,cat::Int,name::String)
