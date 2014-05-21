@@ -8,6 +8,11 @@ Unversioned
   * Deprecate ``load_model_only`` keyword argument to ``solve``.
   * Add groups of constraints with ``@addConstraints`` macro.
 
+Version 0.5.3 (May 21, 2014)
+----------------------------
+
+  * Update for breaking change in ReverseDiffSparse
+
 Version 0.5.2 (May 9, 2014)
 ---------------------------
 
