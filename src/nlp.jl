@@ -16,7 +16,7 @@ function initNLP(m::Model)
     end
 end
 
-if Pkg.installed("Ipopt") != nothing
+if isdir(Pkg.dir("Ipopt"))
     eval(Expr(:using,:Ipopt))
 end
 
