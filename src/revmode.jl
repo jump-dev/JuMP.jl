@@ -111,7 +111,7 @@ end
 
 quoteTree(x, datalist, iterstack) = x
 
-addToVarList!(l,x::Placeholder) = push!(l,getindex(x))
+addToVarList!(l,x::Placeholder) = push!(l,getplaceindex(x))
 addToVarList!(l,x) = nothing
 
 function genVarList(x::Expr, arrname)
@@ -243,7 +243,7 @@ end
 
 forwardpass(x, expr_out) = :(forwardvalue($x, __placevalues, __placeindex_in))
 
-forwardvalue(x::Placeholder, placevalues, placeindex_in) = placevalues[placeindex_in[getindex(x)]]
+forwardvalue(x::Placeholder, placevalues, placeindex_in) = placevalues[placeindex_in[getplaceindex(x)]]
 forwardvalue(x, placevalues, placeindex_in) = float(x)
 
 function revpass(x::ExprNode, expr_out)
@@ -346,7 +346,7 @@ end
 
 revpass(x, expr_out) = nothing
 
-saverevvalue(x::Placeholder, val, output, placeindex_out) = (output[placeindex_out[getindex(x)]] += val)
+saverevvalue(x::Placeholder, val, output, placeindex_out) = (output[placeindex_out[getplaceindex(x)]] += val)
 saverevvalue(x, val, output, placeindex_out) = nothing
 
 function genfgrad(x::SymbolicOutput)
@@ -429,8 +429,7 @@ end
 type IdentityArray
 end
 
-import Base.getindex
-getindex(::IdentityArray,i) = i
+Base.getindex(::IdentityArray,i) = i
 
 function genfgrad_simple(x::SymbolicOutput)
     fexpr = genfgrad(x)

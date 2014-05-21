@@ -19,9 +19,8 @@ end
 
 ExprList() = ExprList(SymbolicOutput[],Dict(), Function[], Function[], Function[], Array((Vector{Int},Vector{Int}),0))
 
-import Base: push!, getindex
-push!(l::ExprList, s::SymbolicOutput) = push!(l.exprs, s)
-getindex(l::ExprList, i) = l.exprs[i]
+Base.push!(l::ExprList, s::SymbolicOutput) = push!(l.exprs, s)
+Base.getindex(l::ExprList, i) = l.exprs[i]
 
 function appendToIJ!(I,J,hI,hJ,x::SymbolicOutput)
     @assert length(hI) == length(hJ)

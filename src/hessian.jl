@@ -44,8 +44,8 @@ function compute_hessian_sparsity_IJ(s::SymbolicOutput)
     J = Array(Int,0)
     for k in 1:length(edgelist)
         x,y = edgelist[k]
-        i = getindex(x)
-        j = getindex(y)
+        i = getplaceindex(x)
+        j = getplaceindex(y)
         if j > i
             continue # ignore upper triangle
         else
