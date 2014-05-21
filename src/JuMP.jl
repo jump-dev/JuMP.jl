@@ -102,13 +102,17 @@ type Model
     ext::Dict{Symbol,Any}
 end
 
+# dummy solver
+type UnsetSolver <: MathProgBase.AbstractMathProgSolver
+end
+
 # Default constructor
 function Model(;solver=nothing)
     if solver == nothing
         # use default solvers
         Model(QuadExpr(),:Min,LinearConstraint[], QuadConstraint[],SOSConstraint[],
               0,String[],Float64[],Float64[],Int[],
-              0,Float64[],Float64[],Float64[],nothing,MathProgBase.MissingSolver("",Symbol[]),false,
+              0,Float64[],Float64[],Float64[],nothing,UnsetSolver(),false,
               nothing,nothing,nothing,JuMPDict[],nothing,IndexedVector(Float64,0),nothing,Dict{Symbol,Any}())
     else
         if !isa(solver,AbstractMathProgSolver)

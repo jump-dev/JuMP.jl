@@ -12,26 +12,26 @@ function solve(m::Model;IpoptOptions::Dict=Dict(),load_model_only=false, suppres
         end
     end
 
-    if isa(m.solver,MathProgBase.MissingSolver) &&
+    if isa(m.solver,UnsetSolver) &&
       (length(m.obj.qvars1) > 0 || length(m.quadconstr) > 0)
         m.solver = MathProgBase.defaultQPsolver
     end
     if anyInts
-        if isa(m.solver,MathProgBase.MissingSolver)
+        if isa(m.solver,UnsetSolver)
             m.solver = MathProgBase.defaultMIPsolver
             s = solveMIP(m; load_model_only=load_model_only, suppress_warnings=suppress_warnings)
             # Clear solver in case we change problem types
-            m.solver = MathProgBase.MissingSolver("",Symbol[])
+            m.solver = UnsetSolver()
             m.internalModelLoaded = false
             return s
         else
             solveMIP(m; load_model_only=load_model_only, suppress_warnings=suppress_warnings)
         end
     else
-        if isa(m.solver,MathProgBase.MissingSolver)
+        if isa(m.solver,UnsetSolver)
             m.solver = MathProgBase.defaultLPsolver
             s = solveLP(m, load_model_only=load_model_only, suppress_warnings=suppress_warnings)
-            m.solver = MathProgBase.MissingSolver("",Symbol[])
+            m.solver = UnsetSolver()
             return s
         else
             solveLP(m; load_model_only=load_model_only, suppress_warnings=suppress_warnings)
@@ -332,16 +332,16 @@ function buildInternalModel(m::Model)
         end
     end
 
-    if isa(m.solver,MathProgBase.MissingSolver) &&
+    if isa(m.solver,UnsetSolver) &&
       (length(m.obj.qvars1) > 0 || length(m.quadconstr) > 0)
         m.solver = MathProgBase.defaultQPsolver
     end
     if anyInts
-        if isa(m.solver,MathProgBase.MissingSolver)
+        if isa(m.solver,UnsetSolver)
             m.solver = MathProgBase.defaultMIPsolver
         end
     else
-        if isa(m.solver,MathProgBase.MissingSolver)
+        if isa(m.solver,UnsetSolver)
             m.solver = MathProgBase.defaultLPsolver
         end
     end
