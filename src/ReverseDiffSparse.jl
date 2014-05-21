@@ -10,7 +10,7 @@ else
     const subarr = Base.sub
 end
 
-issum(s::Symbol) = (s == :sum) || (s == :∑)
+issum(s::Symbol) = (s == :sum) || (s == :∑) || (s == :Σ)
 isprod(s::Symbol) = (s == :prod) || (s == :∏)
 
 # package code goes here
