@@ -146,7 +146,7 @@ function show(io::IO, m::Model)
     nint = sum(m.colCat .== INTEGER)
     println(io, nint == 0 ? "" : " ($nint integer)")
     print(io, "Solver set to ")
-    if typeof(m.solver) == MissingSolver
+    if isa(m.solver, UnsetSolver)
         solver = nquad > 0 ? string(MathProgBase.defaultQPsolver) : (nint > 0 ? string(MathProgBase.defaultMIPsolver) : string(MathProgBase.defaultLPsolver))
     else
         solver = string(m.solver)
