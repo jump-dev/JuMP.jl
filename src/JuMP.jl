@@ -11,7 +11,7 @@ using MathProgBase
 using MathProgBase.MathProgSolverInterface
 
 using ReverseDiffSparse
-if Pkg.installed("ArrayViews") != nothing
+if isdir(Pkg.dir("ArrayViews")) != nothing
     eval(Expr(:import,:ArrayViews))
     const subarr = ArrayViews.view
 else
