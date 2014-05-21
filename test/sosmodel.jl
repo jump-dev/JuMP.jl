@@ -69,7 +69,7 @@ if Pkg.installed("CPLEX") != nothing
     sos_test("CPLEX", CplexSolver())
 end
 
-if Pkg.installed("GLPK") != nothing
+if Pkg.installed("GLPKMathProgInterface") != nothing
     using GLPK, GLPKMathProgInterface
     sos_test1("GLPK", GLPKSolverMIP())
 end
