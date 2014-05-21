@@ -3,7 +3,7 @@ module ReverseDiffSparse
 import Calculus
 using DualNumbers
 using Base.Meta
-if Pkg.installed("ArrayViews") != nothing
+if isdir(Pkg.dir("ArrayViews"))
     eval(Expr(:import,:ArrayViews))
     const subarr = ArrayViews.view
 else
