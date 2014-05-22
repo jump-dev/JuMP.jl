@@ -216,9 +216,9 @@ function forwardpass(x::ExprNode, expr_out)
         @assert issum(oper) || isprod(oper)
         # compute value of this node, need to use a loop
         if issum(oper)
-            push!(expr_out.args, :( $(x.value) = zero(T) ))
+            push!(expr_out.args, :( $(x.value) = zero(__T) ))
         else # :prod
-            push!(expr_out.args, :( $(x.value) = one(T) ))
+            push!(expr_out.args, :( $(x.value) = one(__T) ))
         end
         code = quote end
 
@@ -250,8 +250,8 @@ function revpass(x::ExprNode, expr_out)
     @assert isexpr(expr_out, :block)
     # compute the partial drivative wrt. each expression down the graph
     x.deriv = gensym()
-    oneval = :( one(T) )
-    zeroval = :( zero(T) )
+    oneval = :( one(__T) )
+    zeroval = :( zero(__T) )
     if length(x.parents) == 0
         push!(expr_out.args, :( $(x.deriv) = $oneval ) )
     else
@@ -364,7 +364,7 @@ function genfgrad(x::SymbolicOutput)
     # placeindex_out[i] specifies the the index in which to output
     # the partial derivative wrt the ith placeholder
     fexpr = quote
-        function $(fname){T}(__placevalues::Vector{T}, __placeindex_in, __output, __placeindex_out)
+        function $(fname){__T}(__placevalues::Vector{__T}, __placeindex_in, __output, __placeindex_out)
             $out
             return $fval
         end
@@ -386,7 +386,7 @@ function genfgrad_parametric(x::SymbolicOutput)
     # placeindex_out[i] specifies the the index in which to output
     # the partial derivative wrt the ith placeholder
     fexpr = quote
-        function $(fname){T}(__placevalues::Vector{T}, __placeindex_in, __output, __placeindex_out)
+        function $(fname){__T}(__placevalues::Vector{__T}, __placeindex_in, __output, __placeindex_out)
             $out
             return $fval
         end
@@ -407,7 +407,7 @@ function genfval_parametric(x::SymbolicOutput)
     fval = forwardpass(x.tree, out)
     fname = gensym()
     fexpr = quote
-        function $(fname){T}(__placevalues::Vector{T}, __placeindex_in)
+        function $(fname){__T}(__placevalues::Vector{__T}, __placeindex_in)
             $out
             return $fval
         end
