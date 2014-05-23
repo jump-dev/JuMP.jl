@@ -42,11 +42,11 @@ macro gendict(instancename,T,idxsets...)
             end)
         end
     end
-    getidxlhs = :(getindex(d::$(typename)))
+    getidxlhs = :(Base.getindex(d::$(typename)))
     setidxlhs = :(setindex!(d::$(typename),val))
-    getidxrhs = :(getindex(d.innerArray))
+    getidxrhs = :(Base.getindex(d.innerArray))
     setidxrhs = :(setindex!(d.innerArray,val))
-    maplhs = :(map(f::Function,d::$(typename)))
+    maplhs = :(Base.map(f::Function,d::$(typename)))
     maprhs = :($(typename)(map(f,d.innerArray),d.name,d.indexsets))
     for i in 1:N
         varname = symbol(string("x",i))
@@ -91,18 +91,18 @@ for accessor in (:getValue, :getDual, :getLower, :getUpper)
 end
 
 # delegate zero-argument functions
-for f in (:endof, :ndims, :length, :abs)
+for f in (:(Base.endof), :(Base.ndims), :(Base.length), :(Base.abs))
     @eval $f(x::JuMPDict) = $f(x.innerArray)
 end
 # delegate one-argument functions
-for f in (:size,)
+for f in (:(Base.size),)
     @eval $f(x::JuMPDict,k) = $f(x.innerArray,k)
 end
 
 (-)(x::JuMPDict,y::Array) = x.innerArray-y
 
-eltype{T}(x::JuMPDict{T}) = T
+Base.eltype{T}(x::JuMPDict{T}) = T
 
-full(x::JuMPDict) = x
+Base.full(x::JuMPDict) = x
 
 export @gendict

@@ -211,10 +211,10 @@ end
 #  - dot
 #############################################################################
 
-sum{T<:Real}(j::JuMPDict{T}) = sum(j.innerArray)
-sum(j::JuMPDict{Variable}) = AffExpr(vec(j.innerArray), ones(length(j.innerArray)), 0.0)
-sum(j::Array{Variable}) = AffExpr(vec(j), ones(length(j)), 0.0)
-function sum{S,T}(affs::Array{GenericAffExpr{S,T}})
+Base.sum{T<:Real}(j::JuMPDict{T}) = sum(j.innerArray)
+Base.sum(j::JuMPDict{Variable}) = AffExpr(vec(j.innerArray), ones(length(j.innerArray)), 0.0)
+Base.sum(j::Array{Variable}) = AffExpr(vec(j), ones(length(j)), 0.0)
+function Base.sum{S,T}(affs::Array{GenericAffExpr{S,T}})
     new_aff = GenericAffExpr{S,T}()
     for aff in affs
         append!(new_aff, aff)
@@ -222,23 +222,23 @@ function sum{S,T}(affs::Array{GenericAffExpr{S,T}})
     return new_aff
 end
 
-function dot{T,S}(lhs::Array{T}, rhs::JuMPDict{S})
+function Base.dot{T,S}(lhs::Array{T}, rhs::JuMPDict{S})
     size(lhs) == size(rhs.innerArray) || error("Incompatible dimensions")
     dot(lhs,rhs.innerArray)
 end
-dot{S,T}(lhs::JuMPDict{S},rhs::Array{T}) = dot(rhs,lhs)
+Base.dot{S,T}(lhs::JuMPDict{S},rhs::Array{T}) = dot(rhs,lhs)
 
-dot{T<:Real}(lhs::Array{T}, rhs::JuMPDict{Float64}) = dot(vec(lhs), vec(rhs.innerArray))
-dot{T<:Real}(lhs::JuMPDict{Float64}, rhs::Array{T}) = dot(vec(rhs), vec(lhs.innerArray))
-dot{T<:Real}(lhs::Array{T}, rhs::Array{Variable})   = AffExpr(vec(rhs), vec(float(lhs)), 0.0)
-dot{T<:Real}(rhs::Array{Variable}, lhs::Array{T})   = AffExpr(vec(rhs), vec(float(lhs)), 0.0)
+Base.dot{T<:Real}(lhs::Array{T}, rhs::JuMPDict{Float64}) = dot(vec(lhs), vec(rhs.innerArray))
+Base.dot{T<:Real}(lhs::JuMPDict{Float64}, rhs::Array{T}) = dot(vec(rhs), vec(lhs.innerArray))
+Base.dot{T<:Real}(lhs::Array{T}, rhs::Array{Variable})   = AffExpr(vec(rhs), vec(float(lhs)), 0.0)
+Base.dot{T<:Real}(rhs::Array{Variable}, lhs::Array{T})   = AffExpr(vec(rhs), vec(float(lhs)), 0.0)
 
-function dot(lhs::JuMPDict{Variable},rhs::JuMPDict{Variable})
+function Base.dot(lhs::JuMPDict{Variable},rhs::JuMPDict{Variable})
     size(lhs.innerArray) == size(rhs.innerArray) || error("Incompatible dimensions") 
     return QuadExpr(vec(lhs.innerArray), vec(rhs.innerArray), ones(length(lhs.innerArray)), AffExpr())
 end
 
-function dot(lhs::JuMPDict{Float64},rhs::JuMPDict{Float64})
+function Base.dot(lhs::JuMPDict{Float64},rhs::JuMPDict{Float64})
     size(lhs.innerArray) == size(rhs.innerArray) || error("Incompatible dimensions") 
     return sum(lhs.innerArray .* rhs.innerArray)
 end

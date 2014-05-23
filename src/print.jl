@@ -52,7 +52,7 @@ function fillVarNames(m::Model)
 end
 
 # REPL printing
-function print(io::IO, m::Model)
+function Base.print(io::IO, m::Model)
     checkNameStatus(m)
 
     println(io, string(m.objSense," ",quadToStr(m.obj)))
@@ -92,7 +92,7 @@ function print(io::IO, m::Model)
 end
 
 # IJulia printing
-function writemime(io::IO, ::MIME"text/latex", m::Model)
+function Base.writemime(io::IO, ::MIME"text/latex", m::Model)
     checkNameStatus(m)
   
     println(io, "\$\$")  # Begin MathJax mode
@@ -134,7 +134,7 @@ function writemime(io::IO, ::MIME"text/latex", m::Model)
 end
 
 # Default REPL
-function show(io::IO, m::Model)
+function Base.show(io::IO, m::Model)
     print(io, m.objSense == :Max ? "Maximization" : ((m.objSense == :Min && !isempty(m.obj)) ? "Minimization" : "Feasibility"))
     println(io, " problem with:")
     println(io, " * $(length(m.linconstr)) linear constraints")
@@ -308,14 +308,14 @@ end
 
 ##########
 # Variable
-show(io::IO, v::Variable) = print(io, getName(v))
-print(io::IO, v::Variable) = print(io, getName(v))
-writemime(io::IO, ::MIME"text/latex", v::Variable) = print(io, getName(v))
+Base.show(io::IO, v::Variable) = print(io, getName(v))
+Base.print(io::IO, v::Variable) = print(io, getName(v))
+Base.writemime(io::IO, ::MIME"text/latex", v::Variable) = print(io, getName(v))
 
 #########
 # AffExpr
-print(io::IO, a::GenericAffExpr) = print(io, affToStr(a))
-show(io::IO, a::GenericAffExpr) = print(io, affToStr(a))
+Base.print(io::IO, a::GenericAffExpr) = print(io, affToStr(a))
+Base.show(io::IO, a::GenericAffExpr) = print(io, affToStr(a))
 
 function affToStr(a::AffExpr, showConstant=true)
     if length(a.vars) == 0
@@ -401,8 +401,8 @@ end
 ##########
 # QuadExpr
 ##########
-print(io::IO, q::GenericQuadExpr) = print(io, quadToStr(q))
-show(io::IO, q::GenericQuadExpr)  = print(io, quadToStr(q))
+Base.print(io::IO, q::GenericQuadExpr) = print(io, quadToStr(q))
+Base.show(io::IO, q::GenericQuadExpr)  = print(io, quadToStr(q))
 
 function quadToStr(q::QuadExpr)
     if length(q.qvars1) == 0
@@ -474,8 +474,8 @@ end
 
 #############################################################################
 # JuMPDict for variables
-show(io::IO, dict::JuMPDict{Variable}) = print(io, dict)
-function print(io::IO, dict::JuMPDict{Variable})
+Base.show(io::IO, dict::JuMPDict{Variable}) = print(io, dict)
+function Base.print(io::IO, dict::JuMPDict{Variable})
     # Best case: bounds and all dims
     str = dictstring(dict, :REPL)
     if str != ""
@@ -495,7 +495,7 @@ function print(io::IO, dict::JuMPDict{Variable})
     name_and_indices, tail_str = dictnameindices(dict, :REPL)
     print(io, ".. \u2264 $(name_and_indices) \u2264 ..$(tail_str)")
 end
-function writemime(io::IO, ::MIME"text/latex", dict::JuMPDict{Variable})
+function Base.writemime(io::IO, ::MIME"text/latex", dict::JuMPDict{Variable})
     # Best case: bounds and all dims
     str = dictstring(dict::JuMPDict, :IJulia)
     if str != ""
@@ -516,8 +516,8 @@ end
 
 #############################################################################
 # JuMPDict for values
-show(io::IO, dict::JuMPDict{Float64}) = print(io, dict)
-function print(io::IO, dict::JuMPDict{Float64})
+Base.show(io::IO, dict::JuMPDict{Float64}) = print(io, dict)
+function Base.print(io::IO, dict::JuMPDict{Float64})
     println(io, dict.name)
     print_values(io, dict, 1, {}, "")
 end
@@ -571,8 +571,8 @@ end
 
 ###################
 # Linear Constraint (or rather, the general version of it)
-print(io::IO, c::GenericRangeConstraint) = print(io, conToStr(c))
-show(io::IO,  c::GenericRangeConstraint) = print(io, conToStr(c))
+Base.print(io::IO, c::GenericRangeConstraint) = print(io, conToStr(c))
+Base.show(io::IO,  c::GenericRangeConstraint) = print(io, conToStr(c))
 
 function conToStr(c::GenericRangeConstraint)
     s = sense(c)
@@ -585,8 +585,8 @@ end
 
 #################
 # Quad Constraint
-print(io::IO, c::QuadConstraint) = print(io, conToStr(c))
-show(io::IO, c::QuadConstraint)  = print(io, conToStr(c))
+Base.print(io::IO, c::QuadConstraint) = print(io, conToStr(c))
+Base.show(io::IO, c::QuadConstraint)  = print(io, conToStr(c))
 
 conToStr(c::QuadConstraint) = string(quadToStr(c.terms), " ", c.sense, " 0")
 
@@ -610,14 +610,14 @@ function conToStr(c::SOSConstraint)
     return string("$(c.sostype): {", join(termStrings,", "), "}")
 end
 
-print(io::IO, c::SOSConstraint) = print(io, conToStr(c))
-show(io::IO, c::SOSConstraint)  = print(io, conToStr(c))
+Base.print(io::IO, c::SOSConstraint) = print(io, conToStr(c))
+Base.show(io::IO, c::SOSConstraint)  = print(io, conToStr(c))
 
 
 ################
 # Constraint Ref
 
-print(io::IO, c::ConstraintRef{LinearConstraint}) = print(io, conToStr(c.m.linconstr[c.idx]))
-print(io::IO, c::ConstraintRef{QuadConstraint}) = print(io, conToStr(c.m.quadconstr[c.idx]))
-print(io::IO, c::ConstraintRef{SOSConstraint}) = print(io, conToStr(c.m.sosconstr[c.idx]))
-show{T}(io::IO, c::ConstraintRef{T}) = print(io, c)
+Base.print(io::IO, c::ConstraintRef{LinearConstraint}) = print(io, conToStr(c.m.linconstr[c.idx]))
+Base.print(io::IO, c::ConstraintRef{QuadConstraint}) = print(io, conToStr(c.m.quadconstr[c.idx]))
+Base.print(io::IO, c::ConstraintRef{SOSConstraint}) = print(io, conToStr(c.m.sosconstr[c.idx]))
+Base.show{T}(io::IO, c::ConstraintRef{T}) = print(io, c)

@@ -7,49 +7,49 @@ setHeuristicCallback(m::Model, f::Function) = (m.heurcallback = f)
 
 function registercallbacks(m::Model)
     if isa(m.lazycallback, Function)
-        function lazycallback(d::MathProgCallbackData)
-            state = cbgetstate(d)
+        function lazycallback(d::MathProgBase.MathProgCallbackData)
+            state = MathProgBase.cbgetstate(d)
             if state == :MIPSol
-                cbgetmipsolution(d,m.colVal)
+                MathProgBase.cbgetmipsolution(d,m.colVal)
             else
-                cbgetlpsolution(d,m.colVal)
+                MathProgBase.cbgetlpsolution(d,m.colVal)
             end
             m.lazycallback(d)
         end
         #try
-            setlazycallback!(m.internalModel, lazycallback)
+            MathProgBase.setlazycallback!(m.internalModel, lazycallback)
         #catch
         #  error("Solver does not support lazy callbacks")
         #end
     end
     if isa(m.cutcallback, Function)
-        function cutcallback(d::MathProgCallbackData)
-            state = cbgetstate(d)
+        function cutcallback(d::MathProgBase.MathProgCallbackData)
+            state = MathProgBase.cbgetstate(d)
             if state == :MIPSol  # This shouldn't happen right?
                 println("Is this ever called?")
-                cbgetmipsolution(d,m.colVal)
+                MathProgBase.cbgetmipsolution(d,m.colVal)
             else
-                cbgetlpsolution(d,m.colVal)
+                MathProgBase.cbgetlpsolution(d,m.colVal)
             end
             m.cutcallback(d)
         end
         #
-            setcutcallback!(m.internalModel, cutcallback)
+            MathProgBase.setcutcallback!(m.internalModel, cutcallback)
         #
     end
     if isa(m.heurcallback, Function)
-        function heurcallback(d::MathProgCallbackData)
-            state = cbgetstate(d)
+        function heurcallback(d::MathProgBase.MathProgCallbackData)
+            state = MathProgBase.cbgetstate(d)
             if state == :MIPSol  # This shouldn't happen right?
                 println("Is this ever called?")
-                cbgetmipsolution(d,m.colVal)
+                MathProgBase.cbgetmipsolution(d,m.colVal)
             else
-                cbgetlpsolution(d,m.colVal)
+                MathProgBase.cbgetlpsolution(d,m.colVal)
             end
             m.heurcallback(d)
         end
         #
-            setheuristiccallback!(m.internalModel, heurcallback)
+            MathProgBase.setheuristiccallback!(m.internalModel, heurcallback)
         #
     end
 
@@ -83,14 +83,14 @@ macro addLazyConstraint(cbdata, x)
     end
 end
 
-function addLazyConstraint(cbdata::MathProgCallbackData, constr::LinearConstraint)
+function addLazyConstraint(cbdata::MathProgBase.MathProgCallbackData, constr::LinearConstraint)
     if length(constr.terms.vars) == 0
-        cbaddlazy!(cbdata, Cint[], Float64[], sensemap[sense(constr)], rhs(constr))
+        MathProgBase.cbaddlazy!(cbdata, Cint[], Float64[], sensemap[sense(constr)], rhs(constr))
         return
     end
     m::Model = constr.terms.vars[1].m
     indices, coeffs = merge_duplicates(Cint, constr.terms, m.indexedVector, m)
-    cbaddlazy!(cbdata, indices, coeffs, sensemap[sense(constr)], rhs(constr))
+    MathProgBase.cbaddlazy!(cbdata, indices, coeffs, sensemap[sense(constr)], rhs(constr))
 end
 
 ## User cuts
@@ -114,20 +114,20 @@ macro addUserCut(cbdata, x)
     end
 end
 
-function addUserCut(cbdata::MathProgCallbackData, constr::LinearConstraint)
+function addUserCut(cbdata::MathProgBase.MathProgCallbackData, constr::LinearConstraint)
     if length(constr.terms.vars) == 0
-        cbaddcut!(cbdata, Cint[], Float64[], sensemap[sense(constr)], rhs(constr))
+        MathProgBase.cbaddcut!(cbdata, Cint[], Float64[], sensemap[sense(constr)], rhs(constr))
         return
     end
     m::Model = constr.terms.vars[1].m
     indices, coeffs = merge_duplicates(Cint, constr.terms, m.indexedVector, m)
-    cbaddcut!(cbdata, indices, coeffs, sensemap[sense(constr)], rhs(constr))
+    MathProgBase.cbaddcut!(cbdata, indices, coeffs, sensemap[sense(constr)], rhs(constr))
 end
 
 ## User heuristic
 export addSolution, setSolutionValue!
 
-addSolution(cbdata::MathProgCallbackData) = cbaddsolution!(cbdata)
-function setSolutionValue!(cbdata::MathProgCallbackData, v::Variable, x)
-    cbsetsolutionvalue!(cbdata, convert(Cint, v.col), x)
+addSolution(cbdata::MathProgBase.MathProgCallbackData) = MathProgBase.cbaddsolution!(cbdata)
+function setSolutionValue!(cbdata::MathProgBase.MathProgCallbackData, v::Variable, x)
+    MathProgBase.cbsetsolutionvalue!(cbdata, convert(Cint, v.col), x)
 end
