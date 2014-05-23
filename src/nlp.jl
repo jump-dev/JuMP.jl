@@ -8,7 +8,7 @@ end
 
 NLPData() = NLPData(nothing, NonlinearConstraint[], ExprList())
 
-copy(::NLPData) = error("Copying nonlinear problems not yet implemented")
+Base.copy(::NLPData) = error("Copying nonlinear problems not yet implemented")
 
 function initNLP(m::Model)
     if m.nlpdata === nothing
@@ -340,7 +340,7 @@ function solveIpopt(m::Model; options::Dict=Dict(), suppress_warnings=false)
     else
         # solve LP to find feasible point
         # do we need an iterior point?
-        lpsol = linprog(zeros(m.numCols), A, linrowlb, linrowub, m.colLower, m.colUpper)
+        lpsol = MathProgBase.linprog(zeros(m.numCols), A, linrowlb, linrowub, m.colLower, m.colUpper)
         @assert lpsol.status == :Optimal
         prob.x = lpsol.sol
     end

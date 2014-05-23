@@ -6,9 +6,7 @@
 
 module JuMP
 
-# Use the standard solver interface for LPs and MIPs
-using MathProgBase
-using MathProgBase.MathProgSolverInterface
+import MathProgBase
 
 using ReverseDiffSparse
 if isdir(Pkg.dir("ArrayViews"))
@@ -18,19 +16,15 @@ else
     const subarr = Base.sub
 end
 
-importall Base
-
 export
 # Objects
     Model, Variable, AffExpr, QuadExpr, LinearConstraint, QuadConstraint, MultivarDict,
     ConstraintRef,
 # Functions
-    # Relevant to all
-    print,show,
     # Model related
     getNumVars, getNumConstraints, getObjectiveValue, getObjective,
     getObjectiveSense, setObjectiveSense, writeLP, writeMPS, setObjective,
-    addConstraint, addSOS1, addSOS2, solve, copy,
+    addConstraint, addSOS1, addSOS2, solve,
     getInternalModel, setPresolve, buildInternalModel,
     # Variable
     setName, getName, setLower, setUpper, getLower, getUpper,
@@ -78,7 +72,7 @@ type Model
     # internal solver model object
     internalModel
     # Solver+option object from MathProgBase
-    solver::AbstractMathProgSolver
+    solver::MathProgBase.AbstractMathProgSolver
     internalModelLoaded::Bool
     # callbacks
     lazycallback
@@ -115,7 +109,7 @@ function Model(;solver=nothing)
               0,Float64[],Float64[],Float64[],nothing,UnsetSolver(),false,
               nothing,nothing,nothing,JuMPDict[],nothing,IndexedVector(Float64,0),nothing,Dict{Symbol,Any}())
     else
-        if !isa(solver,AbstractMathProgSolver)
+        if !isa(solver,MathProgBase.AbstractMathProgSolver)
             error("solver argument ($solver) must be an AbstractMathProgSolver")
         end
         # user-provided solver must support problem class
@@ -139,7 +133,7 @@ function setObjectiveSense(m::Model, newSense::Symbol)
 end
 
 # Deep copy the model
-function copy(source::Model)
+function Base.copy(source::Model)
     
     dest = Model()
     dest.solver = source.solver  # The two models are linked by this
@@ -186,7 +180,7 @@ type Variable <: ReverseDiffSparse.Placeholder
 end
 
 ReverseDiffSparse.getplaceindex(x::Variable) = x.col
-isequal(x::Variable,y::Variable) = isequal(x.col,y.col) && isequal(x.m,y.m)
+Base.isequal(x::Variable,y::Variable) = isequal(x.col,y.col) && isequal(x.m,y.m)
 
 function Variable(m::Model,lower::Number,upper::Number,cat::Int,name::String)
     m.numCols += 1
@@ -237,8 +231,8 @@ function getDual(v::Variable)
     return v.m.redCosts[v.col]
 end
 
-zero(v::Type{Variable}) = AffExpr(Variable[],Float64[],0.0)
-zero(v::Variable) = zero(typeof(v))
+Base.zero(v::Type{Variable}) = AffExpr(Variable[],Float64[],0.0)
+Base.zero(v::Variable) = zero(typeof(v))
 
 ###############################################################################
 # Generic affine expression class
@@ -252,11 +246,11 @@ end
 typealias AffExpr GenericAffExpr{Float64,Variable}
 AffExpr() = AffExpr(Variable[],Float64[],0.0)
 
-isempty(a::AffExpr) = (length(a.vars) == 0 && a.constant == 0.)
-convert(::Type{AffExpr}, v::Variable) = AffExpr([v], [1.], 0.)
-convert(::Type{AffExpr}, v::Real) = AffExpr(Variable[], Float64[], v)
-zero(::Type{AffExpr}) = AffExpr(Variable[],Float64[],0.)
-zero(a::AffExpr) = zero(typeof(a))
+Base.isempty(a::AffExpr) = (length(a.vars) == 0 && a.constant == 0.)
+Base.convert(::Type{AffExpr}, v::Variable) = AffExpr([v], [1.], 0.)
+Base.convert(::Type{AffExpr}, v::Real) = AffExpr(Variable[], Float64[], v)
+Base.zero(::Type{AffExpr}) = AffExpr(Variable[],Float64[],0.)
+Base.zero(a::AffExpr) = zero(typeof(a))
 
 function setObjective(m::Model, sense::Symbol, a::AffExpr)
     setObjectiveSense(m, sense)
@@ -265,19 +259,19 @@ function setObjective(m::Model, sense::Symbol, a::AffExpr)
 end
 
 # Copy utility function, not exported
-function copy(a::AffExpr, new_model::Model)
+function Base.copy(a::AffExpr, new_model::Model)
     return AffExpr([Variable(new_model, v.col) for v in a.vars],
                                  a.coeffs[:], a.constant)
 end
 
 # More efficient ways to grow an affine expression
 # Add a single term to an affine expression
-function push!{T,S}(aff::GenericAffExpr{T,S}, new_coeff::T, new_var::S)
+function Base.push!{T,S}(aff::GenericAffExpr{T,S}, new_coeff::T, new_var::S)
     push!(aff.vars, new_var)
     push!(aff.coeffs, new_coeff)
 end
 # Add an affine expression to an existing affine expression
-function append!{T,S}(aff::GenericAffExpr{T,S}, other::GenericAffExpr{T,S})
+function Base.append!{T,S}(aff::GenericAffExpr{T,S}, other::GenericAffExpr{T,S})
     append!(aff.vars, other.vars)
     append!(aff.coeffs, other.coeffs)
     aff.constant += other.constant  # Not efficient if CoefType isn't immutable
@@ -298,22 +292,22 @@ typealias QuadExpr GenericQuadExpr{Float64,Variable}
 
 QuadExpr() = QuadExpr(Variable[],Variable[],Float64[],AffExpr())
 
-isempty(q::QuadExpr) = (length(q.qvars1) == 0 && isempty(q.aff))
+Base.isempty(q::QuadExpr) = (length(q.qvars1) == 0 && isempty(q.aff))
 
 function setObjective(m::Model, sense::Symbol, q::QuadExpr)
     m.obj = q
     setObjectiveSense(m, sense)
 end
 
-# Copy utility function, not exported
-function copy(q::QuadExpr, new_model::Model)
+# Copy utility function
+function Base.copy(q::QuadExpr, new_model::Model)
     return QuadExpr([Variable(new_model, v.col) for v in q.qvars1],
                     [Variable(new_model, v.col) for v in q.qvars2],
                     q.qcoeffs[:], copy(q.aff, new_model))
 end
 
-zero(::Type{QuadExpr}) = QuadExpr(Variable[],Variable[],Float64[],zero(AffExpr))
-zero(v::QuadExpr) = zero(typeof(v))
+Base.zero(::Type{QuadExpr}) = QuadExpr(Variable[],Variable[],Float64[],zero(AffExpr))
+Base.zero(v::QuadExpr) = zero(typeof(v))
 
 getValue(q::QuadExpr) = getValue(q.aff) + dot(q.qcoeffs, map(getValue, q.qvars1).*map(getValue, q.qvars2))
 
@@ -372,7 +366,7 @@ function addConstraint(m::Model, c::LinearConstraint)
     if m.internalModelLoaded 
         # TODO: we don't check for duplicates here
         try
-            addconstr!(m.internalModel,[v.col for v in c.terms.vars],c.terms.coeffs,c.lb,c.ub)
+            MathProgBase.addconstr!(m.internalModel,[v.col for v in c.terms.vars],c.terms.coeffs,c.lb,c.ub)
         catch
             Base.warn_once("Solver does not appear to support adding constraints to an existing model. Hot-start is disabled.")
             m.internalModelLoaded = false
@@ -382,7 +376,7 @@ function addConstraint(m::Model, c::LinearConstraint)
 end
 
 # Copy utility function, not exported
-function copy(c::LinearConstraint, new_model::Model)
+function Base.copy(c::LinearConstraint, new_model::Model)
     return LinearConstraint(copy(c.terms, new_model), c.lb, c.ub)
 end
 
@@ -419,7 +413,7 @@ function addSOS1(m::Model, coll::Vector{AffExpr})
     push!(m.sosconstr, SOSConstraint(vars, weight, :SOS1))
     if m.internalModelLoaded
         try
-            addsos1!(m.internalModel, Int[v.col for v in vars], weight)
+            MathProgBase.addsos1!(m.internalModel, Int[v.col for v in vars], weight)
         catch
             Base.warn_once("Solver does not appear to support adding constraints to an existing model. Hot-start is disabled.")
             m.internalModelLoaded = false
@@ -435,7 +429,7 @@ function addSOS2(m::Model, coll::Vector{AffExpr})
     push!(m.sosconstr, SOSConstraint(vars, weight, :SOS2))
     if m.internalModelLoaded
         try
-            addsos2!(m.internalModel, Int[v.col for v in vars], weight)
+            MathProgBase.addsos2!(m.internalModel, Int[v.col for v in vars], weight)
         catch
             Base.warn_once("Solver does not appear to support adding constraints to an existing model. Hot-start is disabled.")
             m.internalModelLoaded = false
@@ -467,8 +461,8 @@ function addConstraint(m::Model, c::QuadConstraint)
     return ConstraintRef{QuadConstraint}(m,length(m.quadconstr))
 end
 
-# Copy utility function, not exported
-function copy(c::QuadConstraint, new_model::Model)
+# Copy utility function
+function Base.copy(c::QuadConstraint, new_model::Model)
     return QuadConstraint(copy(c.terms, new_model), c.sense)
 end
 
@@ -522,7 +516,7 @@ function Variable(m::Model,lower::Number,upper::Number,cat::Int,objcoef::Number,
 
     if m.internalModelLoaded
         try
-            addvar!(m.internalModel,Int[c.idx for c in constraints],coefficients,float(lower),float(upper),float(objcoef))
+            MathProgBase.addvar!(m.internalModel,Int[c.idx for c in constraints],coefficients,float(lower),float(upper),float(objcoef))
         catch
             Base.warn_once("Solver does not appear to support adding variables to an existing model. Hot-start is disabled.")
             m.internalModelLoaded = false

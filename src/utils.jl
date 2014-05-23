@@ -25,7 +25,7 @@ function addelt!{T}(v::IndexedVector{T},i::Integer,val::T)
     end
 end
 
-function empty!{T}(v::IndexedVector{T})
+function Base.empty!{T}(v::IndexedVector{T})
     elts = v.elts
     nzidx = v.nzidx
     for i in 1:v.nnz
