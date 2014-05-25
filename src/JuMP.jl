@@ -277,7 +277,13 @@ function Base.append!{T,S}(aff::GenericAffExpr{T,S}, other::GenericAffExpr{T,S})
     aff.constant += other.constant  # Not efficient if CoefType isn't immutable
 end
 
-getValue(a::AffExpr) = a.constant + dot(a.coeffs, map(getValue, a.vars))
+function getValue(a::AffExpr)
+    ret = a.constant
+    for it in 1:length(a.vars)
+        ret += a.coeffs[it] * getValue(a.vars[it])
+    end
+    return ret
+end
 
 ###############################################################################
 # QuadExpr class
@@ -309,7 +315,13 @@ end
 Base.zero(::Type{QuadExpr}) = QuadExpr(Variable[],Variable[],Float64[],zero(AffExpr))
 Base.zero(v::QuadExpr) = zero(typeof(v))
 
-getValue(q::QuadExpr) = getValue(q.aff) + dot(q.qcoeffs, map(getValue, q.qvars1).*map(getValue, q.qvars2))
+function getValue(a::QuadExpr)
+    ret = getValue(a.aff)
+    for it in 1:length(a.qvars1)
+        ret += a.qcoeffs[it] * getValue(a.qvars1[it]) * getValue(a.qvars2[it])
+    end
+    return ret
+end
 
 ##########################################################################
 # JuMPConstraint
