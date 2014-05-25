@@ -7,6 +7,7 @@
 module JuMP
 
 import MathProgBase
+import Base: size, copy
 
 using ReverseDiffSparse
 if isdir(Pkg.dir("ArrayViews"))
@@ -108,7 +109,7 @@ function Model(;solver=nothing)
         Model(QuadExpr(),:Min,LinearConstraint[], QuadConstraint[],SOSConstraint[],
               0,String[],Float64[],Float64[],Int[],
               0,Float64[],Float64[],Float64[],nothing,UnsetSolver(),false,
-              nothing,nothing,nothing,JuMPDict[],nothing,IndexedVector(Float64,0),nothing,Dict{Symbol,Any}())
+              nothing,nothing,nothing,JuMPDict[],nothing,IndexedVector(Float64,0),nothing,nothing,Dict{Symbol,Any}())
     else
         if !isa(solver,MathProgBase.AbstractMathProgSolver)
             error("solver argument ($solver) must be an AbstractMathProgSolver")

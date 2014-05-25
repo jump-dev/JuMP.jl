@@ -33,7 +33,7 @@ function parseScalarExpr(m::Model, d::ScalarExpr; debug=false)
     matcoefidx = Array(Int, length(keys(matdict)))
     for (it,key) in enumerate(keys(matdict))
         matvaridx[it] = key
-        idx = addsdpmatrix!(m.internalModel,matdict[key])
+        idx = MathProgBase.addsdpmatrix!(m.internalModel,matdict[key])
         matcoefidx[it] = idx
     end
     return scalvaridx, scalcoefidx, matvaridx, matcoefidx, bnd_offset
@@ -76,18 +76,18 @@ function addPrimalConstraint(m::Model,c::PrimalConstraint; debug=true)
         println("lb = $(c.lb-bnd_offset)")
         println("ub = $(c.ub-bnd_offset)")
     end
-    addsdpconstr!(m.internalModel,
-                 matvaridx,
-                 matcoefidx,
-                 scalvaridx,
-                 scalcoefidx,
-                 c.lb-bnd_offset,
-                 c.ub-bnd_offset)
+    MathProgBase.addsdpconstr!(m.internalModel,
+                               matvaridx,
+                               matcoefidx,
+                               scalvaridx,
+                               scalcoefidx,
+                               c.lb-bnd_offset,
+                               c.ub-bnd_offset)
     return nothing
 end
 
 function addInternalVar(m::Model, dim::Int64)
-    idx = addsdpvar!(m.internalModel, dim)
+    idx = MathProgBase.addsdpvar!(m.internalModel, dim)
     var = SDPVar(m,length(m.sdpdata.sdpvar)+1,dim)
     push!(m.sdpdata.sdpvar, var)
     push!(m.sdpdata.lb, 0.0)
@@ -136,7 +136,7 @@ function addDualConstraint(m::Model, d::DualConstraint)
         for i in 1:n, j in i:n
             con = d.terms.constant[i,j]
             coef = map(x->x[i,j], d.terms.coeffs)
-            addconstr!(m.internalModel,[v.col for v in d.terms.vars],coef,-con,-con)
+            MathProgBase.addconstr!(m.internalModel,[v.col for v in d.terms.vars],coef,-con,-con)
         end
     elseif d.sense == :(>=)
         _internalvar = addInternalVar(m,n)
@@ -160,20 +160,20 @@ function addDualConstraint(m::Model, d::DualConstraint)
         for i in 1:n, j in i:n
             con = d.terms.constant[i,j]
             coef = map(x->x[i,j], d.terms.coeffs)
-            addconstr!(m.internalModel,[v.col for v in d.terms.vars],coef,-con,Inf)
+            MathProgBase.addconstr!(m.internalModel,[v.col for v in d.terms.vars],coef,-con,Inf)
         end
     elseif d.sense == :(.<=)
         _internalvar = addInternalVar(m,n)  
         for i in 1:n, j in i:n
             con = d.terms.constant[i,j]
             coef = map(x->x[i,j], d.terms.coeffs)
-            addconstr!(m.internalModel,[v.col for v in d.terms.vars],coef,-Inf,-con)
+            MathProgBase.addconstr!(m.internalModel,[v.col for v in d.terms.vars],coef,-Inf,-con)
         end
     end
 end
 
 function addInternalScalarVar(m::Model, lb::Float64, ub::Float64)
-    addvar!(m.internalModel, lb, ub, 0.0)
+    MathProgBase.addvar!(m.internalModel, lb, ub, 0.0)
     # return numvar(m.internalModel) #Mosek.getnumvar(m.internalModel.task)
     return Mosek.getnumvar(m.internalModel.task)
 end
@@ -181,14 +181,14 @@ end
 addabs(m::Model, v::Variable) = addabs(m, convert(AffExpr,v))
 function addabs(m::Model, aff::AffExpr)
     idx = addInternalScalarVar(m, 0.0, Inf)
-    addconstr!(m.internalModel, vcat([x.col for x in aff.vars], idx),
-                                vcat(aff.coeffs, -1.0),
-                                -Inf,
-                                0.0)
-    addconstr!(m.internalModel, vcat([x.col for x in aff.vars], idx),
-                                vcat(aff.coeffs, 1.0),
-                                0.0,
-                                Inf)
+    MathProgBase.addconstr!(m.internalModel, vcat([x.col for x in aff.vars], idx),
+                                             vcat(aff.coeffs, -1.0),
+                                             -Inf,
+                                             0.0)
+    MathProgBase.addconstr!(m.internalModel, vcat([x.col for x in aff.vars], idx),
+                                             vcat(aff.coeffs, 1.0),
+                                             0.0,
+                                             Inf)
     return idx
 end
 
@@ -208,36 +208,36 @@ function addnorm2(m::Model, ex::MatrixExpr)
             end
             _internalvar = addInternalScalarVar(m, -Inf, Inf)
             push!(varlist, _internalvar)
-            addconstr!(m.internalModel,
-                       vcat(Int[x.col for x in elem.vars], _internalvar), 
-                       vcat(elem.coeffs, -1.0), 
-                       -elem.constant, 
-                       -elem.constant)
+            MathProgBase.addconstr!(m.internalModel,
+                                    vcat(Int[x.col for x in elem.vars], _internalvar), 
+                                    vcat(elem.coeffs, -1.0), 
+                                    -elem.constant, 
+                                    -elem.constant)
         elseif isa(elem, MatrixFuncVar) || isa(elem, ScalarExpr)
             _internalvar = addInternalScalarVar(m, -Inf, Inf)
             push!(varlist, _internalvar)
             scalvaridx, scalcoefidx, matvaridx, matcoefidx, bnd_offset = 
                 parseScalarExpr(m,elem)
-            addsdpconstr!(m.internalModel,
-                         matvaridx,
-                         matcoefidx,
-                         vcat(scalvaridx, _internalvar),
-                         vcat(scalcoefidx, -1.0),
-                         -bnd_offset,
-                         -bnd_offset)
+            MathProgBase.addsdpconstr!(m.internalModel,
+                                       matvaridx,
+                                       matcoefidx,
+                                       vcat(scalvaridx, _internalvar),
+                                       vcat(scalcoefidx, -1.0),
+                                       -bnd_offset,
+                                       -bnd_offset)
 
         else 
             error("Unrecognized element of type $(typeof(elem))")
         end
     end
     _internalvar = addInternalScalarVar(m, 0.0, Inf)
-    addquadconstr!(m.internalModel, Int[],
-                                    Float64[],
-                                    vcat(varlist, _internalvar),
-                                    vcat(varlist, _internalvar),
-                                    vcat(fill(1.0, length(varlist)), -1.0),
-                                    '<',
-                                    0.0)
+    MathProgBase.addquadconstr!(m.internalModel, Int[],
+                                                 Float64[],
+                                                 vcat(varlist, _internalvar),
+                                                 vcat(varlist, _internalvar),
+                                                 vcat(fill(1.0, length(varlist)), -1.0),
+                                                 '<',
+                                                 0.0)
     return _internalvar
 end
 
@@ -256,36 +256,36 @@ function addnormfrob(m::Model, ex::MatrixExpr)
             end
             _internalvar = addInternalScalarVar(m, -Inf, Inf)
             push!(varlist, _internalvar)
-            addconstr!(m.internalModel,
-                       vcat(Int[x.col for x in elem.vars], _internalvar), 
-                       vcat(elem.coeffs, -1.0), 
-                       -elem.constant, 
-                       -elem.constant)
+            MathProgBase.addconstr!(m.internalModel,
+                                    vcat(Int[x.col for x in elem.vars], _internalvar), 
+                                    vcat(elem.coeffs, -1.0), 
+                                    -elem.constant, 
+                                    -elem.constant)
         elseif isa(elem, MatrixFuncVar) || isa(elem, ScalarExpr)
             _internalvar = addInternalScalarVar(m, -Inf, Inf)
             push!(varlist, _internalvar)
             scalvaridx, scalcoefidx, matvaridx, matcoefidx, bnd_offset = 
                 parseScalarExpr(m,elem)
-            addsdpconstr!(m.internalModel,
-                         matvaridx,
-                         matcoefidx,
-                         vcat(scalvaridx, _internalvar),
-                         vcat(scalcoefidx, -1.0),
-                         -bnd_offset,
-                         -bnd_offset)
+            MathProgBase.addsdpconstr!(m.internalModel,
+                                       matvaridx,
+                                       matcoefidx,
+                                       vcat(scalvaridx, _internalvar),
+                                       vcat(scalcoefidx, -1.0),
+                                       -bnd_offset,
+                                       -bnd_offset)
 
         else 
             error("Unrecognized element of type $(typeof(elem))")
         end
     end
     _internalvar = addInternalScalarVar(m, 0.0, Inf)
-    addquadconstr!(m.internalModel, Int[],
-                                    Float64[],
-                                    vcat(varlist, _internalvar),
-                                    vcat(varlist, _internalvar),
-                                    vcat(fill(1.0, length(varlist)), -1.0),
-                                    '<',
-                                    0.0)
+    MathProgBase.addquadconstr!(m.internalModel, Int[],
+                                                 Float64[],
+                                                 vcat(varlist, _internalvar),
+                                                 vcat(varlist, _internalvar),
+                                                 vcat(fill(1.0, length(varlist)), -1.0),
+                                                 '<',
+                                                 0.0)
     return _internalvar
 end
 
@@ -295,10 +295,10 @@ function setupSDPVar(m::Model, it::Int64)
         lb    = m.sdpdata.lb[it]
         ub    = m.sdpdata.ub[it]
         sinfo = m.sdpdata.solverinfo[it]
-        sinfo.id = addsdpvar!(m.internalModel, var.dim)
+        sinfo.id = MathProgBase.addsdpvar!(m.internalModel, var.dim)
         if lb == 0.0 || all(x->(x==0),lb)
             sinfo.psd = true
-            sinfo.offset = spzeros(size(var)...)
+            sinfo.offset = spzeros(Base.size(var)...)
             if ub == Inf || all(x->(x==Inf),ub) # X >= 0
                 # do nothing
             else
@@ -340,12 +340,12 @@ function solveSDP(m::Model)
     sdp = m.sdpdata
     # make this solver-independent when CSDP is working
     m.solver = Mosek.MosekSolver()
-    m.internalModel = model(m.solver)
+    m.internalModel = MathProgBase.model(m.solver)
 
     # add linear (scalar) constraints
     f, rowlb, rowub = prepProblemBounds(m)
     A = prepConstrMatrix(m)
-    loadproblem!(m.internalModel, A, m.colLower, m.colUpper, f, rowlb, rowub, m.objSense)
+    MathProgBase.loadproblem!(m.internalModel, A, m.colLower, m.colUpper, f, rowlb, rowub, m.objSense)
 
     for it in 1:length(sdp.sdpvar)
         setupSDPVar(m, it)
@@ -387,17 +387,17 @@ function solveSDP(m::Model)
         sgn = sdp.solverinfo[it].psd ? +1.0 : -1.0
         mat = var.expr.pre[1]
         if isa(var.expr.pre[1], UniformScaling)
-            idx = addsdpmatrix!(m.internalModel, sgn*mat.λ*speye(size(var.expr.elem[1])...))
+            idx = MathProgBase.addsdpmatrix!(m.internalModel, sgn*mat.λ*speye(size(var.expr.elem[1])...))
         else
-            idx = addsdpmatrix!(m.internalModel, sgn*mat) # TODO: deal with post case as well
+            idx = MathProgBase.addsdpmatrix!(m.internalModel, sgn*mat) # TODO: deal with post case as well
         end
         push!(matcoefidx, idx)
         push!(matvaridx, sdp.solverinfo[it].id)
     end
-    setsdpobj!(m.internalModel, matvaridx, matcoefidx)
+    MathProgBase.setsdpobj!(m.internalModel, matvaridx, matcoefidx)
 
-    setobj!(m.internalModel, vcat(scalcost+f, auxcoef))
-    setsense!(m.internalModel,m.objSense)
+    MathProgBase.setobj!(m.internalModel, vcat(scalcost+f, auxcoef))
+    MathProgBase.setsense!(m.internalModel,m.objSense)
 
     # add quadratic terms
     addQuadratics(m)
@@ -417,8 +417,8 @@ function solveSDP(m::Model)
         addDualConstraint(m,d)
     end
 
-    optimize!(m.internalModel)
-    stat = status(m.internalModel)
+    MathProgBase.optimize!(m.internalModel)
+    stat = MathProgBase.status(m.internalModel)
 
     if stat == :NotSolved
         # do nothing
