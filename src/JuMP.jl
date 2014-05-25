@@ -7,7 +7,7 @@
 module JuMP
 
 import MathProgBase
-import Base: size, copy
+import Base: size, copy, zero, one, isequal, issym
 
 using ReverseDiffSparse
 if isdir(Pkg.dir("ArrayViews"))
@@ -264,7 +264,7 @@ getindex(x::AffExpr,idx::Int,idy::Int) = ((idx,idy) == (1,1) ? x : throw(BoundsE
 isequal(x::AffExpr,y::AffExpr) = isequal(x.vars,y.vars) && isequal(x.coeffs,y.coeffs) && isequal(x.constant,y.constant)
 
 Base.isempty(a::AffExpr) = (length(a.vars) == 0 && a.constant == 0.)
-Base.convert(::Type{AffExpr}, v::Variable) = AffExpr([v], [1.], 0.)
+Base.convert(::Type{AffExpr}, v::Variable) = AffExpr(Variable[v], [1.0], 0.)
 Base.convert(::Type{AffExpr}, v::Real) = AffExpr(Variable[], Float64[], v)
 Base.zero(::Type{AffExpr}) = AffExpr(Variable[],Float64[],0.)
 Base.zero(a::AffExpr) = zero(typeof(a))

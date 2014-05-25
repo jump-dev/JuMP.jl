@@ -85,24 +85,6 @@ getValue(d::SDPVar) = d.m.sdpdata.sdpval[d.index]
 
 getLower(d::SDPVar) = d.m.sdpdata.lb[d.index]
 getUpper(d::SDPVar) = d.m.sdpdata.ub[d.index]
-function setLower(d::SDPVar,lb::Real)
-    (lb == 0.0 || isinf(lb)) && error("Only zero or infinite scalar bound is allowed")
-    d.m.sdpdata.lb[d.index] = lb
-end
-function setLower{T<:Number}(d::SDPVar,lb::AbstractArray{T,2})
-    size(d) == size(lb) || error("Bound must be same size as matrix variable")
-    issym(lb) || error("Bound must be symmetric")
-    d.m.sdpdata.lb[d.index] = lb
-end
-function setUpper(d::SDPVar,ub::Real)
-    (ub == 0.0 || isinf(ub)) && error("Only zero or infinite scalar bound is allowed")
-    d.m.sdpdata.ub[d.index] = ub
-end
-function setUpper{T<:Number}(d::SDPVar,ub::AbstractArray{T,2})
-    size(d) == size(ub) || error("Bound must be same size as matrix variable")
-    issym(ub) || error("Bound must be symmetric")
-    d.m.sdpdata.ub[d.index] = ub
-end
 
 getName(d::SDPVar) = d.m.sdpdata.varname[d.index]
 setName(d::SDPVar, name::String) = (d.m.sdpdata.varname[d.index] = name)
@@ -253,30 +235,6 @@ getValue(d::MatrixVar) = reshape(d.m.sdpdata.sdpval[d.index], size(d))
 
 getLower(d::MatrixVar) = d.m.sdpdata.lb[d.index]
 getUpper(d::MatrixVar) = d.m.sdpdata.ub[d.index]
-function setLower(d::MatrixVar,lb::Real)
-    (lb == 0.0 || isinf(lb)) && error("Only zero or infinite scalar bound is allowed")
-    d.m.sdpdata.lb[d.index] = lb
-    rng = d.m.sdpdata.solverinfo[d.id].id
-    d.m.colLower[rng] = lb
-end
-function setLower{T<:Number}(d::MatrixVar,lb::AbstractArray{T,2})
-    size(d) == size(lb) || error("Bound must be same size as matrix variable")
-    d.m.sdpdata.lb[d.index] = lb
-    rng = d.m.sdpdata.solverinfo[d.id].id
-    d.m.colLower[rng] = lb
-end
-function setUpper(d::MatrixVar,ub::Real)
-    (ub == 0.0 || isinf(ub)) && error("Only zero or infinite scalar bound is allowed")
-    d.m.sdpdata.ub[d.index] = ub
-    rng = d.m.sdpdata.solverinfo[d.id].id
-    d.m.colUpper[rng] = ub
-end
-function setUpper{T<:Number}(d::MatrixVar,ub::AbstractArray{T,2})
-    size(d) == size(ub) || error("Bound must be same size as matrix variable")
-    d.m.sdpdata.ub[d.index] = ub
-    rng = d.m.sdpdata.solverinfo[d.id].id
-    d.m.colUpper[rng] = ub
-end
 
 getName(d::MatrixVar) = d.m.sdpdata.varname[d.index]
 setName(d::MatrixVar, name::String) = (d.m.sdpdata.varname[d.index] = name)

@@ -523,6 +523,8 @@ for sgn in (:<=, :(==), :>=, :(.<=), :(.>=))
         end
         # MatrixVar--AbstractArray{T}
         $(sgn){T<:Number}(lhs::MatrixVar, rhs::AbstractArray{T}) = MatrixConstraint(lhs-rhs, $(quot(sgn)))
+        # MatrixVar--MatrixVar
+        $(sgn)(lhs::MatrixVar, rhs::MatrixVar) = MatrixConstraint(lhs-rhs, $(quot(sgn)))
         # MatrixVar--SDPVar
         $(sgn)(lhs::MatrixVar, rhs::SDPVar) = MatrixConstraint(lhs-rhs, $(quot(sgn)))
         # MatrixVar--MatrixExpr

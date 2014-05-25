@@ -53,35 +53,22 @@ B[1:2,1:2] = -1.5*ones(2,2)
 @test getLower(Z) == -Inf
 @test getUpper(Z) == ones(4,4)
 
-# Test: * setLower(x::SDPVar), setUpper
-@test setLower(X) == eye(3,3)
-@test setLower(X) == Inf
-@test getLower(X) == eye(3,3)
-@test getLower(X) == Inf
-@test setLower(Y) == -Inf
-@test setUpper(Y) == 2*ones(5,5)
-@test getLower(Y) == -Inf
-@test getUpper(Y) == 2*ones(5,5)
-@test_throws setUpper(X, ones(2,2))
-@test_throws setUpper(X, 1.0)
-@test_throws setUpper(X, rand(3,3))
-
 # Test * getName(x::SDPVar), setName
 @test getName(X) == "X"
 setName(X, "my new name")
 @test getName(X) == "my new name"
 
 # Test: * @defSDPVar
-@test_throws @defSDPVar(m, psd[2] <= rand(2,2))
-@test_throws @defSDPVar(m, -Inf <= unbounded[3] <= Inf)
-@test_throws @defSDPVar(m, ones(4,4) <= constant[4] <= ones(4,4))
-@test_throws @defSDPVar(m, rand(5,5) <= nonsymmetric[5] <= rand(5,5))
-@test_throws @defSDPVar(m, -1.0 <= nonzero[6] <= 1.0)
-@defSDPVar
+@test_throws Exception @defSDPVar(m, psd[2] <= rand(2,2))
+@test_throws Exception @defSDPVar(m, -Inf <= unbounded[3] <= Inf)
+@test_throws Exception @defSDPVar(m, ones(4,4) <= constant[4] <= ones(4,4))
+@test_throws Exception @defSDPVar(m, rand(5,5) <= nonsymmetric[5] <= rand(5,5))
+@test_throws Exception @defSDPVar(m, -1.0 <= nonzero[6] <= 1.0)
 
 ###########
 # Operators
 ###########
+const 𝕀 = UniformScaling(1)
 
 # Number--Number
 # Number--Variable
@@ -1552,16 +1539,16 @@ let
     @test isequal(expr2.normexpr, norm(2Y-ones(2)))
     @test_throws MethodError norm(2Y-ones(2)) * (x+1)
     @test_throws MethodError norm(2Y-ones(2)) / (x+1)
-    con1 = (expr >= (x+1))
-    @test isequal(con1.terms, expr-(x+1))
+    con1 = (expr1 >= (x+1))
+    @test isequal(con1.terms, expr1-(x+1))
     @test con1.lb == 0.0
     @test con1.ub == Inf
-    con2 = (expr <= (x+1))
-    @test isequal(con2.terms, expr-(x+1))
+    con2 = (expr1 <= (x+1))
+    @test isequal(con2.terms, expr1-(x+1))
     @test con2.lb == -Inf
     @test con2.ub ==  0.0
-    con3 = (expr == (x+1))
-    @test isequal(con3.terms, expr-(x+1))
+    con3 = (expr1 == (x+1))
+    @test isequal(con3.terms, expr1-(x+1))
     @test con3.lb == 0.0
     @test con3.ub == 0.0
 end
@@ -1729,16 +1716,16 @@ let
     @test isequal(expr2.normexpr, 2norm(2Y-ones(2)))
     @test_throws MethodError (-2 - y - 3trace(X) + 2norm(2Y-ones(2))) * (x+1)
     @test_throws MethodError (-2 - y - 3trace(X) + 2norm(2Y-ones(2))) / (x+1)
-    con1 = (expr >=  (x+1))
-    @test isequal(con1.terms, expr-(x+1))
+    con1 = (expr1 >=  (x+1))
+    @test isequal(con1.terms, expr1-(x+1))
     @test con1.lb == 0.0
     @test con1.ub == Inf
-    con2 = (expr <= (x+1))
-    @test isequal(con2.terms, expr-(x+1))
+    con2 = (expr1 <= (x+1))
+    @test isequal(con2.terms, expr1-(x+1))
     @test con2.lb == -Inf
     @test con2.ub ==  0.0
-    con3 = (expr == (x+1))
-    @test isequal(con3.terms, expr-(x+1))
+    con3 = (expr1 == (x+1))
+    @test isequal(con3.terms, expr1-(x+1))
     @test con3.lb == 0.0
     @test con3.ub == 0.0
 end
