@@ -61,25 +61,25 @@ type SDPVar <: SDPMatrix
     dim::Int64
 end
 
-transpose(a::SDPVar)  = a
-ctranspose(a::SDPVar) = a
-conj(a::SDPVar) = a
+Base.transpose(a::SDPVar)  = a
+Base.ctranspose(a::SDPVar) = a
+Base.conj(a::SDPVar) = a
 
-size(d::SDPVar) = (d.dim,d.dim)
-size(d::SDPVar, slice::Int64) = (0 <= slice <= 2) ? d.dim : 1
-ndims(d::SDPVar) = 2
-eye(d::SDPVar)  = eye(d.dim)
-issym(d::SDPVar) = true
-isequal(a::SDPVar, b::SDPVar) = isequal(a.m,b.m) && isequal(a.index,b.index)
+Base.size(d::SDPVar) = (d.dim,d.dim)
+Base.size(d::SDPVar, slice::Int64) = (0 <= slice <= 2) ? d.dim : 1
+Base.ndims(d::SDPVar) = 2
+Base.eye(d::SDPVar)  = eye(d.dim)
+Base.issym(d::SDPVar) = true
+Base.isequal(a::SDPVar, b::SDPVar) = isequal(a.m,b.m) && isequal(a.index,b.index)
 
-function diagm(d::SDPVar)
+function Base.diagm(d::SDPVar)
     m,n = size(d)
     return DualExpr(MatrixFuncVar[d[it,it] for it in 1:m],
                    SparseMatrixCSC[sparse([it],[it],[1.0],m,n) for it in 1:m],
                    spzeros(m,n))
 #    return mapreduce(it->d[it,it]*sparse([it],[it],[1.0],m,n), +, 1:m)
 end
-spdiagm(d::SDPVar) = diagm(d)
+Base.spdiagm(d::SDPVar) = diagm(d)
 
 getValue(d::SDPVar) = d.m.sdpdata.sdpval[d.index] 
 
@@ -107,16 +107,16 @@ end
 getName(d::SDPVar) = d.m.sdpdata.varname[d.index]
 setName(d::SDPVar, name::String) = (d.m.sdpdata.varname[d.index] = name)
 
-trace(c::SDPVar)  = trace(convert(MatrixExpr, c))
-dot(c::SDPVar,d::AbstractArray) = trace(c*d)
-dot(c::AbstractArray,d::SDPVar) = trace(c*d)
-norm(c::SDPVar)   = norm(convert(MatrixExpr, c))
-sum(c::SDPVar)    = sum(convert(MatrixExpr, c))
+Base.trace(c::SDPVar)  = trace(convert(MatrixExpr, c))
+Base.dot(c::SDPVar,d::AbstractArray) = trace(c*d)
+Base.dot(c::AbstractArray,d::SDPVar) = trace(c*d)
+Base.norm(c::SDPVar)   = norm(convert(MatrixExpr, c))
+Base.sum(c::SDPVar)    = sum(convert(MatrixExpr, c))
 
-show(io::IO,d::SDPVar)  = print(io, "$(d.m.sdpdata.varname[d.index])")
-print(io::IO,d::SDPVar) = println(io, "$(d.m.sdpdata.varname[d.index]) ∈ 𝒮₊($(d.dim))")
+Base.show(io::IO,d::SDPVar)  = print(io, "$(d.m.sdpdata.varname[d.index])")
+Base.print(io::IO,d::SDPVar) = println(io, "$(d.m.sdpdata.varname[d.index]) ∈ 𝒮₊($(d.dim))")
 
-getindex(d::SDPVar, x::Int64, y::Int64) = 
+Base.getindex(d::SDPVar, x::Int64, y::Int64) = 
     MatrixFuncVar(MatrixExpr(concat(d),concat(sparse([x,y],[y,x],[0.5,0.5],d.dim,d.dim)),concat(𝕀),spzeros(d.dim,d.dim)),:ref)
 
 macro defSDPVar(m, x, extra...)
@@ -171,8 +171,8 @@ macro defSDPVar(m, x, extra...)
         code = quote
             issym($lb) || error("Lower bound is not symmetric")
             issym($ub) || error("Upper bound is not symmetric")
-            (isa($lb,AbstractArray) && !($sz == size($lb,1))) && error("Lower bound is not of same size as variable")
-            (isa($ub,AbstractArray) && !($sz == size($ub,1))) && error("Upper bound is not of same size as variable")
+            (isa($lb,AbstractArray) && !($sz == Base.size($lb,1))) && error("Lower bound is not of same size as variable")
+            (isa($ub,AbstractArray) && !($sz == Base.size($ub,1))) && error("Upper bound is not of same size as variable")
             isa($lb,Number) && !($lb == 0.0 || $lb == -Inf) && error("Bounds must be of same size as variable")
             isa($ub,Number) && !($ub == 0.0 || $ub ==  Inf) && error("Bounds must be of same size as variable")
             $lb == -Inf && $ub == Inf && error("Replace unrestricted SDP variable with regular, scalar variables")
@@ -219,27 +219,27 @@ function MatrixVar(m::Model, sz::(Int,Int), lb, ub, varname::String)
     return MatrixVar(m, length(sdp.sdpvar)+1, sz)
 end
 
-transpose(a::MatrixVar)  = MatrixVar(a.m,a.index,reverse(a.dim))
-ctranspose(a::MatrixVar) = MatrixVar(a.m,a.index,reverse(a.dim))
-conj(a::MatrixVar) = a
+Base.transpose(a::MatrixVar)  = MatrixVar(a.m,a.index,reverse(a.dim))
+Base.ctranspose(a::MatrixVar) = MatrixVar(a.m,a.index,reverse(a.dim))
+Base.conj(a::MatrixVar) = a
 
-size(a::MatrixVar) = a.dim
-size(d::MatrixVar, slice::Int64) = (0 <= slice <= 2) ? d.dim[slice] : 1
-ndims(d::MatrixVar) = 2
-eye(d::MatrixVar)  = eye(d.dim[1],d.dim[2])
-issym(d::MatrixVar) = (d.dim == (1,1))
-isequal(a::MatrixVar, b::MatrixVar) = (a.m == b.m) && isequal(a.index,b.index) && isequal(a.dim,b.dim)
+Base.size(a::MatrixVar) = a.dim
+Base.size(d::MatrixVar, slice::Int64) = (0 <= slice <= 2) ? d.dim[slice] : 1
+Base.ndims(d::MatrixVar) = 2
+Base.eye(d::MatrixVar)  = eye(d.dim[1],d.dim[2])
+Base.issym(d::MatrixVar) = (d.dim == (1,1))
+Base.isequal(a::MatrixVar, b::MatrixVar) = (a.m == b.m) && isequal(a.index,b.index) && isequal(a.dim,b.dim)
 
-function dot{T<:Number}(a::Array{T},b::MatrixVar)
+function Base.dot{T<:Number}(a::Array{T},b::MatrixVar)
     (size(a,1) == size(b,1) && size(a,2) == size(b,2)) || error("Incompatible dimensions")
     return AffExpr(Variable[b[it] for it in 1:length(a)],
                    Float64[a[it] for it in 1:length(a)],
                    0.0)
     # return mapreduce(it->a[it]*b[it], +, 1:length(a))
 end
-dot{T<:Number}(a::MatrixVar,b::Array{T}) = dot(b,a)
+Base.dot{T<:Number}(a::MatrixVar,b::Array{T}) = dot(b,a)
 
-function diagm(d::MatrixVar)
+function Base.diagm(d::MatrixVar)
     m,n = size(d)
     m == n || error("Cannot construct diagonal of nonsquare matrix")
     return DualExpr(Variable[d[it,it] for it in 1:m],
@@ -247,7 +247,7 @@ function diagm(d::MatrixVar)
                spzeros(m,n))
     # return mapreduce(it->d[it,it]*sparse([it],[it],[1.0],m,n), +, 1:m)
 end
-spdiagm(d::MatrixVar) = diagm(d)
+Base.spdiagm(d::MatrixVar) = diagm(d)
 
 getValue(d::MatrixVar) = reshape(d.m.sdpdata.sdpval[d.index], size(d))
 
@@ -281,22 +281,22 @@ end
 getName(d::MatrixVar) = d.m.sdpdata.varname[d.index]
 setName(d::MatrixVar, name::String) = (d.m.sdpdata.varname[d.index] = name)
 
-show(io::IO,d::MatrixVar)  = print(io, "$(d.m.sdpdata.varname[d.index])")
-print(io::IO,d::MatrixVar) = println(io, "$(d.m.sdpdata.varname[d.index]) ∈ ℝ($(d.dim[1])×$(d.dim[2]))")
+Base.show(io::IO,d::MatrixVar)  = print(io, "$(d.m.sdpdata.varname[d.index])")
+Base.print(io::IO,d::MatrixVar) = println(io, "$(d.m.sdpdata.varname[d.index]) ∈ ℝ($(d.dim[1])×$(d.dim[2]))")
 
-function getindex(d::MatrixVar, x::Int)
+function Base.getindex(d::MatrixVar, x::Int)
     rng = d.m.sdpdata.solverinfo[d.index].id
     Variable(d.m, rng[x])
 end
 
-function getindex(d::MatrixVar, x::Int, y::Int)
+function Base.getindex(d::MatrixVar, x::Int, y::Int)
     sx,sy = d.dim
     rng   = d.m.sdpdata.solverinfo[d.index].id
     off = (y-1)*sx + x
     return Variable(d.m, rng[off])
 end
 
-function getindex(d::MatrixVar, x::Int, y::Range{Int})
+function Base.getindex(d::MatrixVar, x::Int, y::Range{Int})
     sx,sy = d.dim
     rng   = d.m.sdpdata.solverinfo[d.index].id
     arr = Array(Variable, 1, length(y))
@@ -307,7 +307,7 @@ function getindex(d::MatrixVar, x::Int, y::Range{Int})
     return arr
 end
 
-function getindex(d::MatrixVar, x::Range{Int}, y::Int)
+function Base.getindex(d::MatrixVar, x::Range{Int}, y::Int)
     sx,sy = d.dim
     rng   = d.m.sdpdata.solverinfo[d.index].id
     arr = Array(Variable, length(x))
@@ -374,8 +374,8 @@ macro defMatrixVar(m, x, extra...)
     else
         varname = esc(var.args[1])
         code = quote
-            (isa($lb,AbstractArray) && !($sx == size($lb,1) && $sy == size($lb,2))) && error("Lower bound is not of same size as variable")
-            (isa($ub,AbstractArray) && !($sx == size($ub,1) && $sy == size($ub,2))) && error("Upper bound is not of same size as variable")
+            (isa($lb,AbstractArray) && !($sx == Base.size($lb,1) && $sy == Base.size($lb,2))) && error("Lower bound is not of same size as variable")
+            (isa($ub,AbstractArray) && !($sx == Base.size($ub,1) && $sy == Base.size($ub,2))) && error("Upper bound is not of same size as variable")
             isa($lb,Number) && !($lb == 0.0 || $lb == -Inf) && error("Bounds must be of same size as variable")
             isa($ub,Number) && !($ub == 0.0 || $ub ==  Inf) && error("Bounds must be of same size as variable")
             $lb == $ub && error("Replace with constant matrix")
@@ -443,15 +443,15 @@ function blocksize(array::Array)
     return sum(sy[:,1]), sum(sx[1,:])
 end
 
-size(b::BlockMatrix) = b.sz
+Base.size(b::BlockMatrix) = b.sz
 blocksize(b::BlockMatrix) = size(b.elem)
 
-transpose(b::BlockMatrix)  = BlockMatrix(transpose(map(transpose,b.elem)))
-ctranspose(b::BlockMatrix) = BlockMatrix(transpose(map(transpose,b.elem)))
+Base.transpose(b::BlockMatrix)  = BlockMatrix(transpose(map(transpose,b.elem)))
+Base.ctranspose(b::BlockMatrix) = BlockMatrix(transpose(map(transpose,b.elem)))
 
-isequal(a::BlockMatrix, b::BlockMatrix) = isequal(a.elem,b.elem)
+Base.isequal(a::BlockMatrix, b::BlockMatrix) = isequal(a.elem,b.elem)
 
-function issym(d::BlockMatrix)
+function Base.issym(d::BlockMatrix)
     m,n = size(d.elem)
     m == n || return false
     for i in 1:n # check that diagonal is symmetric
@@ -467,14 +467,14 @@ function issym(d::BlockMatrix)
     return true
 end
 
-size(::Variable) = (1,)
-size(::Variable,::Int) = 1
-size(::AffExpr) = (1,1)
-size(::AffExpr,::Int) = 1
-size(::QuadExpr) = (1,)
-size(::QuadExpr,::Int) = 1
+Base.size(::Variable) = (1,)
+Base.size(::Variable,::Int) = 1
+Base.size(::AffExpr) = (1,1)
+Base.size(::AffExpr,::Int) = 1
+Base.size(::QuadExpr) = (1,)
+Base.size(::QuadExpr,::Int) = 1
 
-function getindex(d::BlockMatrix, x::Int64, y::Int64)
+function Base.getindex(d::BlockMatrix, x::Int64, y::Int64)
     m,n = size(d)
     curr = 0
     it = 1
@@ -535,32 +535,34 @@ end
 MatrixExpr{T<:Number}(elem::Vector,pre::Array,post::Array,constant::AbstractArray{T}) = 
     MatrixExpr(elem,pre,post,transpose(transpose(constant)))
 
-size(d::MatrixExpr) = (size(d.constant,1),size(d.constant,2))
-size(d::MatrixExpr, slice::Int64) = (0 <= slice <= 2) ? size(d)[slice] : 1
-ndims(d::MatrixExpr) = 2
-eye(d::MatrixExpr)  = eye(size(d)...)
+Base.size(d::MatrixExpr) = (size(d.constant,1),size(d.constant,2))
+Base.size(d::MatrixExpr, slice::Int64) = (0 <= slice <= 2) ? size(d)[slice] : 1
+Base.ndims(d::MatrixExpr) = 2
+Base.eye(d::MatrixExpr)  = eye(size(d)...)
 
-convert(::Type{MatrixExpr}, v::SDPVar)    = MatrixExpr(concat(v), concat(𝕀), concat(𝕀), spzeros(v.dim,v.dim))
-convert(::Type{MatrixExpr}, v::MatrixVar) = MatrixExpr(concat(v), concat(𝕀), concat(𝕀), spzeros(v.dim...))
+Base.convert(::Type{MatrixExpr}, v::SDPVar)    = MatrixExpr(concat(v), concat(𝕀), concat(𝕀), spzeros(v.dim,v.dim))
+Base.convert(::Type{MatrixExpr}, v::MatrixVar) = MatrixExpr(concat(v), concat(𝕀), concat(𝕀), spzeros(v.dim...))
 
-transpose(d::MatrixExpr)  = MatrixExpr(map(transpose, d.elem), map(transpose, d.post), map(transpose, d.pre), transpose(d.constant))
-ctranspose(d::MatrixExpr) = MatrixExpr(map(transpose, d.elem), map(transpose, d.post), map(transpose, d.pre), transpose(d.constant))
+Base.transpose(d::MatrixExpr)  = MatrixExpr(map(transpose, d.elem), map(transpose, d.post), map(transpose, d.pre), transpose(d.constant))
+Base.ctranspose(d::MatrixExpr) = MatrixExpr(map(transpose, d.elem), map(transpose, d.post), map(transpose, d.pre), transpose(d.constant))
 
-isequal(a::MatrixExpr, b::MatrixExpr) = isequal(a.elem,b.elem) && isequal(a.pre,b.pre) && isequal(a.post,b.post) && isequal(a.constant,b.constant)
+Base.isequal(a::MatrixExpr, b::MatrixExpr) = isequal(a.elem,b.elem) && isequal(a.pre,b.pre) && isequal(a.post,b.post) && isequal(a.constant,b.constant)
 
-trace(c::MatrixExpr) = MatrixFuncVar(c, :trace)
-norm(c::MatrixExpr)  = MatrixFuncVar(c, :norm)
-sum(c::MatrixExpr)   = MatrixFuncVar(c, :sum)
+Base.trace(c::MatrixExpr) = MatrixFuncVar(c, :trace)
+Base.norm(c::MatrixExpr)  = MatrixFuncVar(c, :norm)
+Base.sum(c::MatrixExpr)   = MatrixFuncVar(c, :sum)
 
-issym(d::MatrixExpr) = issym(d.constant) && all(issym, d.elem)
+Base.issym(d::MatrixExpr) = issym(d.constant) && all(issym, d.elem)
 
-function getindex(d::MatrixExpr, x::Int64)
+Base.copy(d::MatrixExpr) = MatrixExpr(copy(d.elem), copy(d.pre), copy(d.post), copy(d.constant))
+
+function Base.getindex(d::MatrixExpr, x::Int64)
     m = size(d,1)
     idx,idy = rem(x-1,m)+1, div(x-1,m)+1
     return getindex(d, idx, idy)
 end
 
-function getindex(d::MatrixExpr, x::Int64, y::Int64)
+function Base.getindex(d::MatrixExpr, x::Int64, y::Int64)
     m,n = size(d)
     refer = ScalarExpr(d.constant[x,y])
     for it in 1:length(d.elem)
@@ -582,7 +584,7 @@ function getindex(d::MatrixExpr, x::Int64, y::Int64)
     return refer
 end
 
-function getindex(d::MatrixExpr, x::Int, y::Range{Int})
+function Base.getindex(d::MatrixExpr, x::Int, y::Range{Int})
     sx,sy = size(d)
     arr = Array(AffExpr, 1, length(y))
     for (it,val) in enumerate(y)
@@ -591,7 +593,7 @@ function getindex(d::MatrixExpr, x::Int, y::Range{Int})
     return arr
 end
 
-function getindex(d::MatrixExpr, x::Range{Int}, y::Int)
+function Base.getindex(d::MatrixExpr, x::Range{Int}, y::Int)
     sx,sy = size(d)
     arr = Array(AffExpr, length(x))
     for (it,val) in enumerate(x)
@@ -617,8 +619,8 @@ function getnames(c::MatrixExpr,d::Set)
     return d
 end
 
-show(io::IO,d::MatrixExpr)  = print(io, "Matrix expression")
-function print(io::IO,d::MatrixExpr)
+Base.show(io::IO,d::MatrixExpr)  = print(io, "Matrix expression")
+function Base.print(io::IO,d::MatrixExpr)
     n = getnames(d,Set())
     str = join([chomp(string(v)) for v in n], ", ")
     println(io, string("Matrix expression in ", str))
@@ -633,10 +635,10 @@ type MatrixFuncVar
     func::Symbol
 end
 
-isequal(x::MatrixFuncVar,y::MatrixFuncVar) = isequal(x.expr,y.expr) && isequal(x.func,y.func)
+Base.isequal(x::MatrixFuncVar,y::MatrixFuncVar) = isequal(x.expr,y.expr) && isequal(x.func,y.func)
 
-size(::MatrixFuncVar) = 1
-size(::MatrixFuncVar,::Int) = 1
+Base.size(::MatrixFuncVar) = 1
+Base.size(::MatrixFuncVar,::Int) = 1
 
 function getValue(v::MatrixFuncVar)
     if v.func == :trace
@@ -668,21 +670,21 @@ type NormExpr
     form::Vector{Symbol}
 end
 
-isequal(x::NormExpr,y::NormExpr) = isequal(x.vars,y.vars) && isequal(x.coeffs,y.coeffs) && isequal(x.form,y.form)
+Base.isequal(x::NormExpr,y::NormExpr) = isequal(x.vars,y.vars) && isequal(x.coeffs,y.coeffs) && isequal(x.form,y.form)
 
 NormExpr() = NormExpr(Union(AffExpr,MatrixExpr)[], Float64[], Symbol[])
 NormExpr(form::Symbol) = NormExpr(Union(AffExpr,MatrixExpr)[], [form])
 
-abs(d::Variable) = NormExpr(concat(convert(AffExpr,d)), [1.0], [:abs])
-abs(d::AffExpr)  = NormExpr(concat(d), [1.0], [:abs], AffExpr())
+Base.abs(d::Variable) = NormExpr(concat(convert(AffExpr,d)), [1.0], [:abs])
+Base.abs(d::AffExpr)  = NormExpr(concat(d), [1.0], [:abs], AffExpr())
 
-norm(d::MatrixVar)  = NormExpr(concat(convert(MatrixExpr,d)), [1.0], [:norm2])
-norm(d::MatrixExpr) = NormExpr(concat(d), [1.0], [:norm2])
+Base.norm(d::MatrixVar)  = NormExpr(concat(convert(MatrixExpr,d)), [1.0], [:norm2])
+Base.norm(d::MatrixExpr) = NormExpr(concat(d), [1.0], [:norm2])
 
-vecnorm(d::MatrixVar)  = NormExpr(concat(convert(MatrixExpr,d)), [1.0], [:normfrob])
-vecnorm(d::MatrixExpr) = NormExpr(concat(d), [1.0], [:normfrob])
+Base.vecnorm(d::MatrixVar)  = NormExpr(concat(convert(MatrixExpr,d)), [1.0], [:normfrob])
+Base.vecnorm(d::MatrixExpr) = NormExpr(concat(d), [1.0], [:normfrob])
 
-copy(d::NormExpr) = NormExpr(copy(d.vars), copy(d.coeffs), copy(d.form))
+Base.copy(d::NormExpr) = NormExpr(copy(d.vars), copy(d.coeffs), copy(d.form))
 
 function getValue(d::NormExpr)
     ret = 0.0
@@ -711,8 +713,8 @@ function exprToStr(c::NormExpr)
     return string("Norm expression in ", str)
 end
 
-show(io::IO, d::NormExpr)  = print(io, "Norm expression")
-print(io::IO, d::NormExpr) = print(io, exprToStr(d))
+Base.show(io::IO, d::NormExpr)  = print(io, "Norm expression")
+Base.print(io::IO, d::NormExpr) = print(io, exprToStr(d))
 
 ###############################################################################
 # Scalar Expression class
@@ -723,22 +725,22 @@ type ScalarExpr
     normexpr::NormExpr
 end
 
-isequal(x::ScalarExpr,y::ScalarExpr) = isequal(x.matvars,y.matvars) && isequal(x.aff,y.aff) && isequal(x.normexpr,y.normexpr)
+Base.isequal(x::ScalarExpr,y::ScalarExpr) = isequal(x.matvars,y.matvars) && isequal(x.aff,y.aff) && isequal(x.normexpr,y.normexpr)
 
 ScalarExpr() = ScalarExpr(MatrixFuncVar[], AffExpr(), NormExpr())
 ScalarExpr(v::Number) = ScalarExpr(MatrixFuncVar[], AffExpr(v), NormExpr())
 
-convert(::Type{ScalarExpr}, v::MatrixFuncVar) = ScalarExpr(concat(v), AffExpr(), NormExpr())
-convert(::Type{ScalarExpr}, v::AffExpr) = ScalarExpr(MatrixFuncVar[], v, NormExpr())
-convert(::Type{ScalarExpr}, v::NormExpr) = ScalarExpr(MatrixFuncVar[], AffExpr(), v)
+Base.convert(::Type{ScalarExpr}, v::MatrixFuncVar) = ScalarExpr(concat(v), AffExpr(), NormExpr())
+Base.convert(::Type{ScalarExpr}, v::AffExpr) = ScalarExpr(MatrixFuncVar[], v, NormExpr())
+Base.convert(::Type{ScalarExpr}, v::NormExpr) = ScalarExpr(MatrixFuncVar[], AffExpr(), v)
 
-function convert(::Type{ScalarExpr}, v::MatrixExpr)
+function Base.convert(::Type{ScalarExpr}, v::MatrixExpr)
     size(v) == (1,1) || error("Cannot coerce matrix expression to scalar expression")
     return v[1]
 end
 
-size(::ScalarExpr) = 1
-size(::ScalarExpr,::Int) = 1
+Base.size(::ScalarExpr) = 1
+Base.size(::ScalarExpr,::Int) = 1
 
 getValue(v::ScalarExpr) = getValue(v.aff) + mapreduce(getValue, +, v.matvars) + getValue(v.normexpr)
 
@@ -778,8 +780,8 @@ function exprToStr(a::ScalarExpr)
     return string("Scalar expression in ", str)
 end
 
-show(io::IO, c::ScalarExpr)  = print(io, "Scalar expression")
-print(io::IO, c::ScalarExpr) = print(io, exprToStr(c))
+Base.show(io::IO, c::ScalarExpr)  = print(io, "Scalar expression")
+Base.print(io::IO, c::ScalarExpr) = print(io, exprToStr(c))
 
 ###############################################################################
 # Dual Expression class
@@ -787,16 +789,16 @@ print(io::IO, c::ScalarExpr) = print(io, exprToStr(c))
 # and yᵢ are scalar variables. Used in dual SDP constraints.
 typealias DualExpr JuMP.GenericAffExpr{AbstractArray{Float64,2},Union(Variable,MatrixFuncVar)}
 
-isequal(x::DualExpr,y::DualExpr) = isequal(x.vars,y.vars) && isequal(x.coeffs,y.coeffs) && (x.constant == y.constant)
+Base.isequal(x::DualExpr,y::DualExpr) = isequal(x.vars,y.vars) && isequal(x.coeffs,y.coeffs) && (x.constant == y.constant)
 
 DualExpr(n::Integer) = DualExpr({},AbstractArray[],spzeros(n,n))
 
-size(d::DualExpr) = size(d.constant)
-size(d::DualExpr, slice::Int64) = size(d.constant,slice)
+Base.size(d::DualExpr) = size(d.constant)
+Base.size(d::DualExpr, slice::Int64) = size(d.constant,slice)
 
-issym(d::DualExpr) =  issym(d.constant) && all(issym, d.coeffs)
+Base.issym(d::DualExpr) =  issym(d.constant) && all(issym, d.coeffs)
 
-function getindex(d::DualExpr, x::Int, y::Int)
+function Base.getindex(d::DualExpr, x::Int, y::Int)
     m,n = size(d)
     ret = ScalarExpr(d.constant[x,y])
     for it in 1:m
@@ -820,8 +822,8 @@ function getnames(c::DualExpr)
     return d
 end
 
-show(io::IO, c::DualExpr)  = print(io, "Dual expression in ", join(getnames(c),", "))
-print(io::IO, c::DualExpr) = println(io, "Dual expression in ", join(getnames(c),", "))
+Base.show(io::IO, c::DualExpr)  = print(io, "Dual expression in ", join(getnames(c),", "))
+Base.print(io::IO, c::DualExpr) = println(io, "Dual expression in ", join(getnames(c),", "))
 
 ###############################################################################
 # Primal Constraint class
@@ -843,8 +845,8 @@ function conToStr(c::PrimalConstraint)
     return string("Primal constraint in ", str) 
 end
 
-show(io::IO, c::ConstraintRef{PrimalConstraint})  = print(io, conToStr(c.m.sdpdata.primalconstr[c.idx]))
-print(io::IO, c::ConstraintRef{PrimalConstraint}) = print(io, conToStr(c.m.sdpdata.primalconstr[c.idx]))
+Base.show(io::IO, c::ConstraintRef{PrimalConstraint})  = print(io, conToStr(c.m.sdpdata.primalconstr[c.idx]))
+Base.print(io::IO, c::ConstraintRef{PrimalConstraint}) = print(io, conToStr(c.m.sdpdata.primalconstr[c.idx]))
 
 ###############################################################################
 # Dual Constraint class
@@ -863,8 +865,8 @@ end
 
 conToStr(c::DualConstraint) = string("Dual constraint in ", join(getnames(c.terms),", ")) 
 
-show(io::IO, c::ConstraintRef{DualConstraint})  = print(io, conToStr(c.m.sdpdata.dualconstr[c.idx]))
-print(io::IO, c::ConstraintRef{DualConstraint}) = print(io, conToStr(c.m.sdpdata.dualconstr[c.idx]))
+Base.show(io::IO, c::ConstraintRef{DualConstraint})  = print(io, conToStr(c.m.sdpdata.dualconstr[c.idx]))
+Base.print(io::IO, c::ConstraintRef{DualConstraint}) = print(io, conToStr(c.m.sdpdata.dualconstr[c.idx]))
 
 ###############################################################################
 # Matrix Constraint class
@@ -889,5 +891,5 @@ function conToStr(c::MatrixConstraint)
     return string("SDP matrix constraint in ", str) 
 end
 
-show(io::IO, c::ConstraintRef{MatrixConstraint})  = print(io, conToStr(c.m.sdpdata.matrixconstr[c.idx]))
-print(io::IO, c::ConstraintRef{MatrixConstraint}) = print(io, conToStr(c.m.sdpdata.matrixconstr[c.idx]))
+Base.show(io::IO, c::ConstraintRef{MatrixConstraint})  = print(io, conToStr(c.m.sdpdata.matrixconstr[c.idx]))
+Base.print(io::IO, c::ConstraintRef{MatrixConstraint}) = print(io, conToStr(c.m.sdpdata.matrixconstr[c.idx]))

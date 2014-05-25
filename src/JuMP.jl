@@ -7,6 +7,7 @@
 module JuMP
 
 import MathProgBase
+import Base: size, copy
 
 using ReverseDiffSparse
 if isdir(Pkg.dir("ArrayViews"))

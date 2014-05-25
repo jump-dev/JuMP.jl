@@ -660,7 +660,7 @@ for ltype in (:AbstractArray, :Variable, :AffExpr, :MatrixVar, :MatrixExpr, :Mat
     end
 end
 
-function dot(x::AbstractArray, y::MatrixExpr)
+function Base.dot(x::AbstractArray, y::MatrixExpr)
     (size(x,1) == size(y,1) && size(x,2) == size(y,2)) || error("Incompatible sizes")
     ret = ScalarExpr()
     for i in 1:size(x,1), j in 1:size(x,2)
@@ -668,6 +668,6 @@ function dot(x::AbstractArray, y::MatrixExpr)
     end
     return ret
 end
-dot(x::MatrixExpr, y::AbstractArray) = dot(y,x)
-dot(x::MatrixVar,y::AbstractArray) = dot(convert(MatrixExpr,x),y)
-dot(x::AbstractArray, y::MatrixVar) = dot(y,x)
+Base.dot(x::MatrixExpr, y::AbstractArray) = dot(y,x)
+Base.dot(x::MatrixVar,y::AbstractArray) = dot(convert(MatrixExpr,x),y)
+Base.dot(x::AbstractArray, y::MatrixVar) = dot(y,x)
