@@ -39,7 +39,7 @@ function parseScalarExpr(m::Model, d::ScalarExpr; debug=false)
     return scalvaridx, scalcoefidx, matvaridx, matcoefidx, bnd_offset
 end
 
-function addPrimalConstraint(m::Model,c::PrimalConstraint; debug=true)
+function addPrimalConstraint(m::Model,c::PrimalConstraint; debug=false)
     scalvaridx, scalcoefidx, matvaridx, matcoefidx, bnd_offset = 
         parseScalarExpr(m, c.terms;debug=debug)
 
