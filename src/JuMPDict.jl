@@ -67,7 +67,12 @@ macro gendict(instancename,T,idxsets...)
         end
     end
 
-    funcs = :($getidxlhs = $getidxrhs; $setidxlhs = $setidxrhs; $maplhs = $maprhs)
+    badgetidxlhs = :(Base.getindex(d::$(typename),wrong...))
+    badgetidxrhs = :(error("Wrong number of indices for ",d.name,
+                           ", expected ",length(d.indexsets)))
+
+    funcs = :($getidxlhs = $getidxrhs; $setidxlhs = $setidxrhs;
+              $maplhs = $maprhs; $badgetidxlhs = $badgetidxrhs)
     geninstance = :($(esc(instancename)) = $(typename)(Array($T),$(string(instancename)),$(esc(Expr(:tuple,idxsets...)))))
     for i in 1:N
         push!(geninstance.args[2].args[2].args, :(length($(esc(idxsets[i])))))
