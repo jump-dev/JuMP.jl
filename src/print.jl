@@ -420,7 +420,7 @@ function quadToStr(q::QuadExpr)
     end
     Q = sparse([v.col for v in q.qvars1], [v.col for v in q.qvars2], q.qcoeffs)
     I,J,V = findnz(Q)
-    Qnnz = length(Q.nzval) # replace with nfilled() when support for 0.2 is dropped
+    Qnnz = length(V)
 
     termStrings = Array(UTF8String, 2*Qnnz)
     if Qnnz > 0
