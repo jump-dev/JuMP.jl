@@ -7,6 +7,7 @@ Unversioned
   * ``buildInternalModel(m::Model)`` added to build solver-level model in memory without optimizing.
   * Deprecate ``load_model_only`` keyword argument to ``solve``.
   * Add groups of constraints with ``@addConstraints`` macro.
+  * Unicode operators now supported, including ``∑`` for ``sum``, ``∏`` for ``prod``, and ``≤``/``≥`` (requires Julia 0.3)
 
 Version 0.5.3 (May 21, 2014)
 ----------------------------
