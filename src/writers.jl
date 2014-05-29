@@ -31,13 +31,13 @@ function writeMPS(m::Model, fname::String)
     rowptr = Array(Int,numRows+2)
     nnz = 0
     for c in 1:numRows
-            nnz += length(m.linconstr[c].terms.coeffs)
+        nnz += length(m.linconstr[c].terms.coeffs)
     end
     objaff::AffExpr = m.obj.aff
     objlincoef = objaff.coeffs
     if m.objSense == :Max
-            println("Warning, MPS does not support maximization sense. Flipping objective coefficients.")
-            objlincoef = -objaff.coeffs
+        println("Warning, MPS does not support maximization sense. Flipping objective coefficients.")
+        objlincoef = -objaff.coeffs
     end
 
 
@@ -46,22 +46,22 @@ function writeMPS(m::Model, fname::String)
     rownzval = Array(Float64,nnz)
     nnz = 0
     for c in 1:numRows
-            rowptr[c] = nnz + 1
-            # TODO: type assertion shouldn't be necessary
-            constr::LinearConstraint = m.linconstr[c]
-            coeffs = constr.terms.coeffs
-            vars = constr.terms.vars
-            for ind in 1:length(coeffs)
-                    nnz += 1
-                    colval[nnz] = vars[ind].col
-                    rownzval[nnz] = coeffs[ind]
-            end
+        rowptr[c] = nnz + 1
+        # TODO: type assertion shouldn't be necessary
+        constr::LinearConstraint = m.linconstr[c]
+        coeffs = constr.terms.coeffs
+        vars = constr.terms.vars
+        for ind in 1:length(coeffs)
+            nnz += 1
+            colval[nnz] = vars[ind].col
+            rownzval[nnz] = coeffs[ind]
+        end
     end
     rowptr[numRows+1] = nnz + 1
     for ind in 1:length(objaff.coeffs)
-            nnz += 1
-            colval[nnz] = objaff.vars[ind].col
-            rownzval[nnz] = objlincoef[ind]
+        nnz += 1
+        colval[nnz] = objaff.vars[ind].col
+        rownzval[nnz] = objlincoef[ind]
     end
     rowptr[numRows+2] = nnz + 1
 
@@ -85,7 +85,9 @@ function writeMPS(m::Model, fname::String)
             inintegergroup = false
         end
         for ind in colmat.colptr[col]:(colmat.colptr[col+1]-1)
-            @printf(f,"    VAR%d  CON%d  %f\n",col,rowval[ind],nzval[ind])
+            @printf(f,"    VAR%d  CON%d  ",col,rowval[ind])
+            print_shortest(f,nzval[ind])
+            println(f)
         end
     end
     if inintegergroup
@@ -99,10 +101,13 @@ function writeMPS(m::Model, fname::String)
     for c in 1:numRows
         rowsense = sense(m.linconstr[c])
         if rowsense != :range
-            @printf(f,"    rhs    CON%d    %f\n",c,rhs(m.linconstr[c]))
+            @printf(f,"    rhs    CON%d    ",c)
+            print_shortest(f,rhs(m.linconstr[c]))
         else
-            @printf(f,"    rhs    CON%d    %f\n",c,m.linconstr[c].lb)
+            @printf(f,"    rhs    CON%d    ",c)
+            print_shortest(f,m.linconstr[c].lb)
         end
+        println(f)
     end
     gc_enable()
 
@@ -113,7 +118,9 @@ function writeMPS(m::Model, fname::String)
         for c in 1:numRows
             rowsense = sense(m.linconstr[c])
             if rowsense == :range
-                @printf(f,"    rhs    CON%d    %f\n",c,m.linconstr[c].ub-m.linconstr[c].lb)
+                @printf(f,"    rhs    CON%d    ",c)
+                print_shortest(f,m.linconstr[c].ub-m.linconstr[c].lb)
+                println(f)
             end
         end
     end
@@ -126,20 +133,31 @@ function writeMPS(m::Model, fname::String)
         if m.colLower[col] == 0
             if m.colUpper[col] != Inf
                 # Default lower 0, and an upper
-                @printf(f,"  UP BOUND VAR%d %f\n", col, m.colUpper[col])
+                @printf(f,"  UP BOUND VAR%d ", col)
+                print_shortest(f, m.colUpper[col])
+                println(f)
             end
         elseif m.colLower[col] == -Inf && m.colUpper[col] == +Inf
             # Free
             @printf(f, "  FR BOUND VAR%d\n", col)
         elseif m.colLower[col] != -Inf && m.colUpper[col] == +Inf
             # No upper, but a lower
-            @printf(f, "  PL BOUND VAR%d\n  LO BOUND VAR%d %f\n",col,col,m.colLower[col])
+            @printf(f, "  PL BOUND VAR%d\n  LO BOUND VAR%d ",col,col)
+            print_shortest(f,m.colLower[col])
+            println(f)
         elseif m.colLower[col] == -Inf && m.colUpper[col] != +Inf
             # No lower, but a upper
-            @printf(f,"  MI BOUND VAR%d\n  UP BOUND VAR%d %f\n",col,col,m.colUpper[col])
+            @printf(f,"  MI BOUND VAR%d\n  UP BOUND VAR%d ",col,col)
+            print_shortest(f,m.colUpper[col])
+            println(f)
         else
             # Lower and upper
-            @printf(f, "  LO BOUND VAR%d %f\n  UP BOUND VAR%d %f\n",col,m.colLower[col],col,m.colUpper[col])
+            @printf(f, "  LO BOUND VAR%d ",col)
+            print_shortest(f,m.colLower[col])
+            println(f)
+            @printf(f, "  UP BOUND VAR%d ",col)
+            print_shortest(f,m.colUpper[col])
+            println(f)
         end
     end
     gc_enable()
@@ -154,11 +172,17 @@ function writeMPS(m::Model, fname::String)
         for ind = 1:length(qv1)
             if qv1[ind].col == qv2[ind].col
                 # Diagonal element
-                @printf(f,"  x%d x%d  %f\n",qv1[ind].col,qv2[ind].col, 2qc[ind])
+                @printf(f,"  x%d x%d  ", qv1[ind].col,qv2[ind].col)
+                print_shortest(f,2qc[ind])
+                println(f)
             else
                 # Off diagonal, and we're gonna assume no duplicates
-                @printf(f, "  x%d x%d %f\n", qv1[ind].col,qv2[ind].col, qc[ind])
-                @printf(f, "  x%d x%d %f\n", qv2[ind].col,qv1[ind].col, qc[ind])
+                @printf(f, "  x%d x%d ", qv1[ind].col,qv2[ind].col)
+                print_shortest(f, qc[ind])
+                println(f)
+                @printf(f, "  x%d x%d ", qv2[ind].col,qv1[ind].col)
+                print_shortest(f, qc[ind])
+                println(f)
             end
         end
     end
@@ -190,20 +214,24 @@ function writeLP(m::Model, fname::String)
     write(f, " obj: ")
     nnz = length(objaff.coeffs)
     for ind in 1:(nnz-1)
-        @printf(f, "%f VAR%d + ", objaff.coeffs[ind], objaff.vars[ind].col)
+        print_shortest(f, objaff.coeffs[ind])
+        @printf(f, " VAR%d + ", objaff.vars[ind].col)
     end
     if nnz >= 1
-        @printf(f, "%f VAR%d\n", objaff.coeffs[nnz], objaff.vars[nnz].col)
+        print_shortest(f, objaff.coeffs[nnz])
+        @printf(f, " VAR%d\n", objaff.vars[nnz].col)
     end
     
     # Constraints
     function writeconstrterms(c::LinearConstraint)
         nnz = length(c.terms.coeffs)
         for ind in 1:(nnz-1)
-            @printf(f, "%f VAR%d + ", c.terms.coeffs[ind], c.terms.vars[ind].col)
+            print_shortest(f, c.terms.coeffs[ind])
+            @printf(f, " VAR%d + ", c.terms.vars[ind].col)
         end
         if nnz >= 1
-            @printf(f, "%f VAR%d", c.terms.coeffs[nnz], c.terms.vars[nnz].col)
+            print_shortest(f, c.terms.coeffs[nnz])
+            @printf(f, " VAR%d", c.terms.vars[nnz].col)
         end
     end
     write(f,"Subject To\n")
@@ -216,20 +244,30 @@ function writeLP(m::Model, fname::String)
         if rowsense != :range
             writeconstrterms(c)
             if rowsense == :(==)
-                @printf(f, " = %f\n", rhs(c))
+                @printf(f, " = ")
+                print_shortest(f, rhs(c))
+                println(f)
             elseif rowsense == :<=
-                @printf(f, " <= %f\n", rhs(c))
+                @printf(f, " <= ")
+                print_shortest(f, rhs(c))
+                println(f)
             else 
                 @assert rowsense == :>=
-                @printf(f, " >= %f\n", rhs(c))
+                @printf(f, " >= ")
+                print_shortest(f, rhs(c))
+                println(f)
             end
             constrcount += 1
         else
             writeconstrterms(c)
-            @printf(f, " >= %f\n", c.lb)
+            @printf(f, " >= ")
+            print_shortest(f, c.lb)
+            println(f)
             @printf(f, " c%d: ", constrcount+1)
             writeconstrterms(c)
-            @printf(f, " <= %f\n", c.ub)
+            @printf(f, " <= ")
+            print_shortest(f, c.ub)
+            println(f)
             constrcount += 2
         end
     end
@@ -244,16 +282,24 @@ function writeLP(m::Model, fname::String)
                 @printf(f, " VAR%d free\n", i)
             else
                 # x <= finite
-                @printf(f, " -inf <= VAR%d <= %f\n", i, m.colUpper[i])
+                @printf(f, " -inf <= VAR%d <= ", i)
+                print_shortest(f, m.colUpper[i])
+                println(f)
             end
         else
             # Low bound exists
             if m.colUpper[i] == +Inf
                 # x >= finite
-                @printf(f, " %f <= VAR%d <= +inf\n", m.colLower[i], i)
+                @printf(f, " ")
+                print_shortest(f, m.colLower[i])
+                @printf(f," <= VAR%d <= +inf\n", i)
             else
                 # finite <= x <= finite
-                @printf(f, " %f <= VAR%d <= %f\n", m.colLower[i], i, m.colUpper[i])
+                @printf(f, " ")
+                print_shortest(f, m.colLower[i])
+                @printf(f, " <= VAR%d <= ", i)
+                print_shortest(f, m.colUpper[i])
+                println(f)
             end
         end
     end
