@@ -486,22 +486,16 @@ end
 for sgn in (:<=, :(==), :>=, :(.<=), :(.>=))
     @eval begin 
         # Number
-        # Number--MatrixVar
-        function $(sgn)(lhs::Number, rhs::MatrixVar)
-            lhs == 0.0 || error("Cannot use scalar bound unless it is zero")
-            MatrixConstraint(-rhs, $(quot(sgn)))
+        for rtype in [:MatrixVar, :SDPVar, :MatrixExpr]
+            @eval begin
+                function $(sgn)(lhs::Number, rhs::MatrixVar)
+                    lhs == 0.0 || error("Cannot use scalar bound unless it is zero")
+                    MatrixConstraint(-rhs, $(quot(sgn)))
+                end
+            end
         end
-        # Number--SDPVar
-        function $(sgn)(lhs::Number, rhs::SDPVar)
-            lhs == 0.0 || error("Cannot use scalar bound unless it is zero")
-            MatrixConstraint(-rhs, $(quot(sgn)))
-        end    
-        # Number--MatrixExpr
-        function $(sgn)(lhs::Number, rhs::MatrixExpr)
-            lhs == 0.0 || error("Cannot use scalar bound unless it is zero")
-            MatrixConstraint(-rhs, $(quot(sgn)))
-        end
-    # Number--DualExpr
+
+        # Number--DualExpr
         function $(sgn)(lhs::Number,rhs::DualExpr)
             lhs == 0.0 || error("Cannot use scalar bound unless it is zero")
             DualConstraint(-rhs, $(quot(sgn)))

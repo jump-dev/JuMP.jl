@@ -66,6 +66,15 @@ setName(X, "my new name")
 @test_throws Exception @defSDPVar(m, -1.0 <= nonzero[6] <= 1.0)
 
 ###########
+# 
+###########
+# transpose
+# size
+# issym
+# getindex
+# hcat, vcat, hvcat 
+
+###########
 # Operators
 ###########
 const 𝕀 = UniformScaling(1)
