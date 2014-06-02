@@ -3,7 +3,16 @@ using Base.Meta
 
 abstract JuMPDict{T}
 
-typealias IntDict{T} Dict{T,Int}
+type JuMPDict{T,N}
+    tupledict::Dict{NTuple{N},T}
+    name::String
+end
+
+JuMPDict{T,N}(name::String) =
+    JuMPDict{T,N}(Dict{NTuple{N},T}(), name)
+
+Base.getindex(d::JuMPDict, t...) = d.tupledict[t]
+Base.setindex!(d::JuMPDict, value, t...) = (d.tupledict[t] = value)
 
 # generate and instantiate a type which is indexed by the given index sets
 # the following types of index sets are allowed:
@@ -11,10 +20,17 @@ typealias IntDict{T} Dict{T,Int}
 # S -- general iterable set
 macro gendict(instancename,T,idxsets...)
     N = length(idxsets)
-    typename = symbol(string("JuMPDict",gensym()))
-    isrange = Array(Bool,N)
+    allranges = all([isexpr(s,:(:)) for s in idxsets])
+    if allranges
+        # JuMPArray
+    else
+        # JuMPDict
+        return quote
+            $(esc(instancename)) = JuMPDict{$T,$N}($instancename)
+        end
+
+    end
     offset = Array(Int,N)
-    dictnames = Array(Symbol,N)
     for i in 1:N
         if isexpr(idxsets[i],:(:)) && length(idxsets[i].args) == 2 # don't yet optimize ranges with steps
             isrange[i] = true
