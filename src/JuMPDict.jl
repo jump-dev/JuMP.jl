@@ -49,12 +49,17 @@ macro gendict(instancename,T,idxsets...)
     if all(isrange)
         if hasstep # ...convert UnitRange -> StepRange
             for i in 1:N
-                push!(idxsets[i].args, idxsets[i].args[2])
-                idxsets[i].args[2] = 1
+                if length(idxsets[i].args) == 2
+                    push!(idxsets[i].args, idxsets[i].args[2])
+                    idxsets[i].args[2] = 1
+                end
             end
-        quote
-            JuMPArray()
         end
+        geninstance = :($(esc(instancename)) = JuMPArray(Array($T),$(string(instancename)),$(esc(Expr(:tuple,idxsets...)))))
+        for i in 1:N
+            push!(geninstance.args[2].args[2].args, :(length($(esc(idxsets[i])))))
+        end
+        return geninstance
     end
 
     typecode = :(type $(typename){T} <: JuMPDict{T}; innerArray::Array{T,$N}; name::String;
@@ -135,7 +140,7 @@ end
 
 (-)(x::JuMPContainer,y::Array) = x.innerArray-y
 
-Base.eltype{T}(x::JuMPContainer{T}) = T
+Base.eltype{T}    (x::JuMPDict{T}) = T
 
 Base.full(x::JuMPContainer) = x
 
