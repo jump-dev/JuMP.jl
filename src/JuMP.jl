@@ -38,6 +38,7 @@ export
     @setNLObjective, @addNLConstraint
 
 include("JuMPDict.jl")
+#include("JuMPArray.jl")
 include("utils.jl")
 
 ###############################################################################
