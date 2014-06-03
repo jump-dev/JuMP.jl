@@ -266,7 +266,24 @@ macro setObjective(m, args...)
         setObjective($(esc(m)), $(esc(sense)), aff)
     end
 end
-        
+
+function hasdependentsets(idxvars, idxsets)
+    # check if any index set depends on a previous index var
+    for i in 2:length(idxsets)
+        for v in idxvars[1:(i-1)]
+            if dependson(idxsets[i],v)
+                return true
+            end
+        end
+    end
+    return false
+
+end
+
+dependson(ex::Expr,s::Symbol) = any([dependson(a,s) for a in ex.args])
+dependson(ex::Symbol,s::Symbol) = (ex == s)
+dependson(ex,s::Symbol) = false
+
 
 macro defVar(m, x, extra...)
     m = esc(m)
@@ -368,10 +385,10 @@ macro defVar(m, x, extra...)
         !isexpr(var,:ref) &&
             error("in @defVar ($var): expected $var to be of form var[...]")
 
-        varname = esc(var.args[1])
+        varname = var.args[1]
         idxvars = {}
         idxsets = {}
-        refcall = Expr(:ref,varname)
+        refcall = Expr(:ref,esc(varname))
         # Iterate over each index set s
         for s in var.args[2:end]
             # Is the user providing an index variable, e.g. i=1:5?
@@ -397,12 +414,18 @@ macro defVar(m, x, extra...)
             end
         end
        
-        mac = Expr(:macrocall,symbol("@gendict"),varname,:Variable,idxsets...)
+        if hasdependentsets(idxvars,idxsets)
+            # force a JuMPDict
+            N = length(idxsets)
+            mac = :($(esc(varname)) = JuMPDict{Variable,$N}(Dict{NTuple{$N},Variable}(),$(quot(varname))))
+        else
+            mac = Expr(:macrocall,symbol("@gendict"),esc(varname),:Variable,idxsets...)
+        end
         code = quote 
             $mac
             $code
-            push!($(m).dictList, $varname)
-            $varname
+            push!($(m).dictList, $(esc(varname)))
+            $(esc(varname))
         end
         return code
     end

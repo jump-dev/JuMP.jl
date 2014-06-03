@@ -40,14 +40,25 @@ end
 
 function fillVarNames(m::Model)
     for dict in m.dictList
-        idxsets = dict.indexsets
-        lengths = map(length, idxsets)
-        N = length(idxsets)
-        name = dict.name
-        cprod = cumprod([lengths...])
-        for (ind,var) in enumerate(dict.innerArray)
-            setName(var,string("$name[$(idxsets[1][mod1(ind,lengths[1])])", [ ",$(idxsets[i][int(ceil(mod1(ind,cprod[i]) / cprod[i-1]))])" for i=2:N ]..., "]"))
-        end
+        fillVarNames(dict)
+    end
+end
+
+function fillVarNames(v::JuMPArray{Variable})
+    idxsets = v.indexsets
+    lengths = map(length, idxsets)
+    N = length(idxsets)
+    name = v.name
+    cprod = cumprod([lengths...])
+    for (ind,var) in enumerate(v.innerArray)
+        setName(var,string("$name[$(idxsets[1][mod1(ind,lengths[1])])", [ ",$(idxsets[i][int(ceil(mod1(ind,cprod[i]) / cprod[i-1]))])" for i=2:N ]..., "]"))
+    end
+end
+
+function fillVarNames(v::JuMPDict{Variable})
+    name = v.name
+    for (ind,var) in v.tupledict
+        setName(var,string("$name[", join([string(i) for i in ind],","), "]"))
     end
 end
 

@@ -1,6 +1,6 @@
 type JuMPArray{T,N,R<:OrdinalRange} <: JuMPContainer
     innerArray::Array{T,N}
-    name::String
+    name::Symbol
     indexsets::NTuple{N,R}
 end
 
