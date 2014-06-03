@@ -1,14 +1,23 @@
-type JuMPArray{T,N,R<:OrdinalRange} <: JuMPContainer
+immutable JuMPArray{T,N,R<:OrdinalRange} <: JuMPContainer
     innerArray::Array{T,N}
     name::Symbol
     indexsets::NTuple{N,R}
 end
 
-function Base.getindex{T,N}(d::JuMPArray{T,N,UnitRange{Int}},indices::Int...)
+function Base.getindex{T}(d::JuMPArray{T,1,UnitRange{Int}},index::Real)
+    @inbounds return d.innerArray[index - start(d.indexsets[1])+1]
+end
+
+function Base.getindex{T}(d::JuMPArray{T,2,UnitRange{Int}},ix1::Real,ix2::Real)
+    @inbounds return d.innerArray[ix1 - start(d.indexsets[1])+1, ix2 - start(d.indexsets[2])+1]
+end
+
+
+function Base.getindex{T,N}(d::JuMPArray{T,N,UnitRange{Int}},indices::Real...)
     length(indices) == N || error("Wrong number of indices for ",d.name,", expected ",length(d.indexsets))
     idx = Array(Int, N)
     for i in 1:N
-        idx[i] = indices[i] - start(d.indexsets[i]) + 1
+        idx[i] = Base.to_index(indices[i]) - start(d.indexsets[i]) + 1
     end
     return d.innerArray[idx...]
 end
