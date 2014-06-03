@@ -45,13 +45,11 @@ macro gendict(instancename,T,idxsets...)
             push!(geninstance.args[2].args[2].args, :(length($(esc(idxsets[i])))))
         end
         return geninstance
-
     else
         # JuMPDict
         return :(
             $(esc(instancename)) = JuMPDict{$T,$N}(Dict{NTuple{$N},$T}(),$(quot(instancename)))
         )
-
     end
 end
 
