@@ -1,3 +1,5 @@
+# This code is unused for now. See issue #192
+
 immutable JuMPArray{T,N,R<:OrdinalRange} <: JuMPContainer
     innerArray::Array{T,N}
     name::Symbol
