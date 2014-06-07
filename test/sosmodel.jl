@@ -60,6 +60,21 @@ function sos_test1(solvername, solverobj)
     end
 end
 
+# Issue 195
+function sos_test2(solvername, solverobj)
+    println(string("  Running ", solvername))
+    let
+        println("    Test 2")
+        modS = Model(solver=solverobj)
+        @defVar(modS, y[1:5] >= 0, Int)
+
+        a = [1,2,3]
+        addSOS1(modS, [a[i]y[i] for i in 1:3])
+
+        @test_throws solve(modS)
+    end
+end
+
 if Pkg.installed("Gurobi") != nothing  
     using Gurobi
     sos_test("Gurobi", GurobiSolver(OutputFlag=0))
@@ -72,4 +87,5 @@ end
 if Pkg.installed("GLPKMathProgInterface") != nothing
     using GLPK, GLPKMathProgInterface
     sos_test1("GLPK", GLPKSolverMIP())
+    sos_test2("GLPK", GLPKSolverMIP())
 end

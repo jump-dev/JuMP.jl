@@ -79,7 +79,11 @@ function addSOS(m::Model)
             nvars = length(indices)
             if sos.sostype == :SOS1
                 Base.warn_once("Current solver does not support SOS1 constraints, adding manually")
-                MathProgBase.addconstr!(m.internalModel, indices, ones(nvars), 0., 1.)
+                for j in indices
+                    (m.colLower[j] == 0.0 && m.colUpper[j] == 1.0) || 
+                        error("Manual SOS constraints can only involve binary variables")
+                end
+                MathProgBase.addconstr!(m.internalModel, indices, ones(nvars), 0.0, 1.0)
             elseif sos.sostype == :SOS2
                 error("Current solver does not support SOS2 constraints")
             end
