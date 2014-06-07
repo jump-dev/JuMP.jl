@@ -285,6 +285,8 @@ function getValue(a::AffExpr)
     return ret
 end
 
+getValue(arr::Array{AffExpr}) = map(getValue, arr)
+
 ###############################################################################
 # QuadExpr class
 # Holds a vector of tuples (Var, Var, Coeff), as well as an AffExpr
@@ -322,6 +324,8 @@ function getValue(a::QuadExpr)
     end
     return ret
 end
+
+getValue(arr::Array{QuadExpr}) = map(getValue, arr)
 
 ##########################################################################
 # JuMPConstraint
