@@ -187,9 +187,9 @@ macro addConstraint(m, x, extra...)
         code = quote
             aff = AffExpr()
             if !isa($(esc(lb)),Number)
-                error(string("in @addConstraint ($(string(x))): expected ",$lb," to be a number."))
+                error(string("in @addConstraint (",$(string(x)),"): expected ",$(string(lb))," to be a number."))
             elseif !isa($(esc(ub)),Number)
-                error(string("in @addConstraint ($(string(x))): expected ",$ub," to be a number."))
+                error(string("in @addConstraint (",$(string(x)),"): expected ",$(string(ub))," to be a number."))
             end
             $(parseExpr(x.args[3],:aff,1.0))
             $(refcall) = addConstraint($m, 
