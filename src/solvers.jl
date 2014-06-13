@@ -364,7 +364,7 @@ function buildInternalModel(m::Model)
             try
                 MathProgBase.setwarmstart!(m.internalModel, m.colVal)
             catch
-                !suppress_warnings && Base.warn_once("Solver does not appear to support providing initial feasible solutions.")
+                Base.warn_once("Solver does not appear to support providing initial feasible solutions.")
             end
         end
     end
