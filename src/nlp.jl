@@ -331,7 +331,7 @@ function solveIpopt(m::Model; options::Dict=Dict(), suppress_warnings=false)
 
 
     tprep = toq()
-    prob = createProblem(m.numCols, m.colLower, m.colUpper, numconstr,
+    prob = Ipopt.createProblem(m.numCols, m.colLower, m.colUpper, numconstr,
         [linrowlb,quadrowlb,nlrowlb], [linrowub,quadrowub,nlrowub], nnz_jac, nnz_hess,
         eval_f, eval_g, eval_grad_f, eval_jac_g, eval_h)
 
