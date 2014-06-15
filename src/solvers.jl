@@ -3,6 +3,9 @@ function solve(m::Model;IpoptOptions::Dict=Dict(),load_model_only=false, suppres
     if m.nlpdata != nothing
         return solveIpopt(m, options=IpoptOptions, suppress_warnings=suppress_warnings)
     end
+    if m.sdpdata != nothing
+        return solveSDP(m)
+    end
     # Analyze model to see if any integers
     anyInts = false
     for j = 1:m.numCols

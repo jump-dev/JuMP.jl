@@ -45,6 +45,7 @@ Contents
     refmodel.rst
     refvariable.rst
     refexpr.rst
+    sdp.rst
     probmod.rst
     callbacks.rst
     nlp.rst
