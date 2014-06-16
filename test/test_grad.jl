@@ -172,5 +172,13 @@ ex = @processNLExpr x[1]+T
 fg = genfgrad_simple(ex)
 fval = fg(xvals[1:2], out)
 
+# very simple expressions
+x = placeholders(1)[1]
+ex = @processNLExpr x
+fg = genfgrad_simple(ex)
+fval = fg([2.0], out)
+@test_approx_eq fval 2.0
+@test_approx_eq out[1] 1.0
+
 
 println("Passed tests")

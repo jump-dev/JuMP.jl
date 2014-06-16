@@ -142,6 +142,10 @@ end
 macro processNLExpr(x)
     indexlist = :(idxlist = Int[]; $(genVarList(x, :idxlist)); idxlist)
     datalist = Dict()
+    # in the corner case that x is just a symbol, promote it to an expr
+    if isa(x, Symbol)
+        x = Expr(:call,:+,x,0)
+    end
     tree = esc(quoteTree(x, datalist, {}))
     inputnames = Expr(:tuple)
     inputvals = Expr(:tuple)
