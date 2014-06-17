@@ -55,7 +55,15 @@ end
 function Base.print(io::IO, m::Model)
     checkNameStatus(m)
 
-    println(io, string(m.objSense," ",quadToStr(m.obj)))
+    nlp = m.nlpdata
+
+    qobj_str = quadToStr(m.obj)
+    if m.nlpdata != nothing && nlp.nlobj != nothing
+        qobj_str = (qobj_str == "0" ? "" : qobj_str*" + ")
+        println(io, string(m.objSense," ",qobj_str,"(nonlinear expression)"))
+    else
+        println(io, string(m.objSense," ",qobj_str))
+    end
     println(io, "Subject to ")
     for c in m.linconstr
         println(io, conToStr(c))
@@ -65,6 +73,13 @@ function Base.print(io::IO, m::Model)
     end
     for c in m.sosconstr
         println(io, conToStr(c))
+    end
+    if nlp != nothing && length(nlp.nlconstr) > 0
+        if length(nlp.nlconstr) == 1
+            println(io, "1 nonlinear constraint")
+        else
+            println(io, "$(length(m.nlpdata.nlconstr)) nonlinear constraints")
+        end
     end
 
     # Handle special case of indexed variables
@@ -141,6 +156,10 @@ function Base.show(io::IO, m::Model)
     nquad = length(m.quadconstr)
     if nquad > 0
         println(io, " * $(nquad) quadratic constraints")
+    end
+    nlp = m.nlpdata
+    if nlp != nothing && length(nlp.nlconstr) > 0
+        println(io, " * $(length(nlp.nlconstr)) nonlinear constraints")
     end
     print(io, " * $(m.numCols) variables")  
     nint = sum(m.colCat .== INTEGER)
