@@ -176,9 +176,13 @@ function solveLP(m::Model; load_model_only=false, suppress_warnings=false)
             MathProgBase.setconstrUB!(m.internalModel, rowub)
             MathProgBase.setobj!(m.internalModel, f)
             MathProgBase.setsense!(m.internalModel, m.objSense)
-        catch
-            !suppress_warnings && Base.warn_once("Solver does not appear to support hot-starts. Problem will be solved from scratch.")
-            m.internalModelLoaded = false
+        catch err
+            if isa(err, ErrorException) && err.msg == "Not Implemented"
+                !suppress_warnings && Base.warn_once("Solver does not appear to support hot-starts. Problem will be solved from scratch.")
+                m.internalModelLoaded = false
+            else
+                rethrow()
+            end
         end
         all_cont = true
         try # this fails for LPs for some unfathomable reason...but if it's an LP, we're good anyway

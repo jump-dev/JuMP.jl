@@ -383,9 +383,13 @@ function addConstraint(m::Model, c::LinearConstraint)
         # TODO: we don't check for duplicates here
         try
             MathProgBase.addconstr!(m.internalModel,[v.col for v in c.terms.vars],c.terms.coeffs,c.lb,c.ub)
-        catch
-            Base.warn_once("Solver does not appear to support adding constraints to an existing model. Hot-start is disabled.")
-            m.internalModelLoaded = false
+        catch err
+            if isa(err, ErrorException) && err.msg == "Not Implemented"
+                Base.warn_once("Solver does not appear to support adding constraints to an existing model. Hot-start is disabled.")
+                m.internalModelLoaded = false
+            else
+                rethrow()
+            end
         end
     end
     return ConstraintRef{LinearConstraint}(m,length(m.linconstr))
