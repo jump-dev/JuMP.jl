@@ -380,9 +380,9 @@ typealias LinearConstraint GenericRangeConstraint{AffExpr}
 function addConstraint(m::Model, c::LinearConstraint)
     push!(m.linconstr,c)
     if m.internalModelLoaded 
-        # TODO: we don't check for duplicates here
         try
-            MathProgBase.addconstr!(m.internalModel,[v.col for v in c.terms.vars],c.terms.coeffs,c.lb,c.ub)
+            indices, coeffs = merge_duplicates(Cint, c.terms, m.indexedVector, m)
+            MathProgBase.addconstr!(m.internalModel,indices, coeffs,c.lb,c.ub)
         catch err
             if isa(err, ErrorException) && err.msg == "Not Implemented"
                 Base.warn_once("Solver does not appear to support adding constraints to an existing model. Hot-start is disabled.")

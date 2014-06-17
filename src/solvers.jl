@@ -376,10 +376,10 @@ function buildInternalModel(m::Model)
     nothing
 end
 
-# currently used only in callbacks
 # returns (unsorted) column indices and coefficient terms for merged vector
-# assume that v is zero'd and has the right size (total number of variables in the model)
+# assume that v is zero'd
 function merge_duplicates{CoefType,IntType<:Integer}(::Type{IntType},aff::GenericAffExpr{CoefType,Variable}, v::IndexedVector{CoefType}, m::Model)
+    resize!(v, m.numCols)
     for ind in 1:length(aff.coeffs)
         var = aff.vars[ind]
         is(var.m, m) || error("Variable does not belong to this model")
