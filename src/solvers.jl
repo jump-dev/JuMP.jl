@@ -226,6 +226,20 @@ function solveLP(m::Model; load_model_only=false, suppress_warnings=false)
             catch
                 !suppress_warnings && warn("Unbounded ray not available")
             end
+        else
+            # try to get solutions anyway
+            try
+                m.colVal = MathProgBase.getsolution(m.internalModel)
+            catch
+                fill!(m.colVal, NaN)
+            end
+            try
+                # store solution values in model
+                m.objVal = MathProgBase.getobjval(m.internalModel)
+                m.objVal += m.obj.aff.constant
+            catch
+                m.objVal = NaN
+            end
         end
     else
         # store solution values in model
