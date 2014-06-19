@@ -75,17 +75,33 @@ function sos_test2(solvername, solverobj)
     end
 end
 
+function sos_test_cont(solvername, solverobj)
+    m = Model(solver=solverobj)
+    ub = [1,1,2]
+    @defVar(m, x[i=1:3] <= ub[i])
+    @setObjective(m, Max, 2x[1]+x[2]+x[3])
+    addSOS1(m, [x[1],2x[2]])
+    addSOS1(m, [x[1],2x[3]])
+
+    solve(m)
+    @test getValue(x)[:] == [0.0,1.0,2.0]
+    @test getObjectiveValue(m) == 3.0
+end
+
 if Pkg.installed("Gurobi") != nothing  
     using Gurobi
     sos_test("Gurobi", GurobiSolver(OutputFlag=0))
+    sos_test_cont("Gurobi", GurobiSolver(OutputFlag=0))
 end
 if Pkg.installed("CPLEX") != nothing
     using CPLEX
     sos_test("CPLEX", CplexSolver())
+    sos_test_cont("Gurobi", GurobiSolver(OutputFlag=0))
 end
 
 if Pkg.installed("GLPKMathProgInterface") != nothing
     using GLPK, GLPKMathProgInterface
     sos_test1("GLPK", GLPKSolverMIP())
     sos_test2("GLPK", GLPKSolverMIP())
+    @test_throws sos_test_cont("GLPK", GLPKSolverMIP())
 end

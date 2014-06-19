@@ -197,6 +197,7 @@ function solveLP(m::Model; load_model_only=false, suppress_warnings=false)
         m.internalModel = MathProgBase.model(m.solver)
         MathProgBase.loadproblem!(m.internalModel, A, m.colLower, m.colUpper, f, rowlb, rowub, m.objSense)
         addQuadratics(m)
+        addSOS(m)
         m.internalModelLoaded = true
     end 
 

@@ -417,9 +417,6 @@ function constructSOS(coll::Vector{AffExpr})
         if (length(coll[i].vars) != 1) || (coll[i].constant != 0)
             error("Must specify collection in terms of single variables")
         end
-        if coll[i].vars[1].m.colCat[coll[i].vars[1].col] == CONTINUOUS
-            error("SOS constraints cannot handle continuous variables")
-        end
         vars[i] = coll[i].vars[1]
         weight[i] = coll[i].coeffs[1]
     end
