@@ -1,9 +1,19 @@
 export setLazyCallback, setCutCallback, setHeuristicCallback
 export setlazycallback
 @Base.deprecate setlazycallback setLazyCallback
-setLazyCallback(m::Model, f::Function) = (m.lazycallback = f)
-setCutCallback(m::Model, f::Function) = (m.cutcallback = f)
-setHeuristicCallback(m::Model, f::Function) = (m.heurcallback = f)
+function setLazyCallback(m::Model, f::Function)
+    m.internalModelLoaded = false
+    m.lazycallback = f
+end
+function setCutCallback(m::Model, f::Function)
+    m.internalModelLoaded = false
+    m.cutcallback = f
+end
+function setHeuristicCallback(m::Model, f::Function)
+    m.internalModelLoaded = false
+    m.heurcallback = f
+end
+
 
 function registercallbacks(m::Model)
     if isa(m.lazycallback, Function)

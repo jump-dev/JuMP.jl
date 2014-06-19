@@ -13,8 +13,6 @@ let
     @test_throws getDual(errVar)
 end
 
-
-
 ###############################################################################
 # Test Model A
 #####################################################################
@@ -161,7 +159,6 @@ println("  !!TODO: test external solvers for reading LP and MPS files")
 setObjectiveSense(modA, :Min)
 @test getObjectiveSense(modA) == :Min
 
-
 #####################################################################
 # Test binary variable handling
 let
@@ -173,7 +170,6 @@ let
     @test status == :Optimal
     @test_approx_eq_eps getValue(x) 1.0 1e-6
 end
-
 
 #####################################################################
 # Test model copying
@@ -201,7 +197,7 @@ let
     # Constraints
     source.linconstr[1].ub = 5.0
     @test dest.linconstr[1].ub == 6.0
-    source.quadconstr[1].sense == :(>=)
+    source.quadconstr[1].sense = :(>=)
     @test dest.quadconstr[1].sense == :(<=)
 end  
 
