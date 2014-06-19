@@ -45,6 +45,8 @@ function addQuadratics(m::Model)
 
     if length(m.obj.qvars1) != 0
         assert_isfinite(m.obj)
+        verify_ownership(m, m.obj.qvars1)
+        verify_ownership(m, m.obj.qvars2)
         MathProgBase.setquadobjterms!(m.internalModel, Cint[v.col for v in m.obj.qvars1], Cint[v.col for v in m.obj.qvars2], m.obj.qcoeffs)
     end
 
@@ -82,6 +84,7 @@ function prepProblemBounds(m::Model)
 
     objaff::AffExpr = m.obj.aff
     assert_isfinite(objaff)
+    verify_ownership(m, objaff.vars)
         
     # We already have dense column lower and upper bounds
 

@@ -234,6 +234,8 @@ end
 Base.zero(v::Type{Variable}) = AffExpr(Variable[],Float64[],0.0)
 Base.zero(v::Variable) = zero(typeof(v))
 
+verify_ownership(m::Model, vec::Vector{Variable}) = all(v->isequal(v.m,m), vec)
+
 ###############################################################################
 # Generic affine expression class
 # Holds a vector of tuples (Var, Coeff)
@@ -318,6 +320,17 @@ end
 
 function setObjective(m::Model, sense::Symbol, q::QuadExpr)
     m.obj = q
+    if m.internalModelLoaded
+        try
+            verify_ownership(m, m.obj.qvars1)
+            verify_ownership(m, m.obj.qvars2)
+            MathProgBase.setquadobjterms!(m.internalModel, Cint[v.col for v in m.obj.qvars1], Cint[v.col for v in m.obj.qvars2], m.obj.qcoeffs)
+        catch
+            # we don't (yet) support hot-starting QCQP solutions
+            Base.warn_once("JuMP does not yet support adding a quadratic objective to an existing model. Hot-start is disabled.")
+            m.internalModelLoaded = false
+        end
+    end
     setObjectiveSense(m, sense)
 end
 
@@ -419,7 +432,7 @@ type SOSConstraint <: JuMPConstraint
     sostype::Symbol
 end
 
-function constructSOS(coll::Vector{AffExpr})
+function constructSOS(m::Model, coll::Vector{AffExpr})
     nvar = length(coll)
     vars = Array(Variable, nvar)
     weight = Array(Float64, nvar)
@@ -428,6 +441,7 @@ function constructSOS(coll::Vector{AffExpr})
             error("Must specify collection in terms of single variables")
         end
         vars[i] = coll[i].vars[1]
+        vars[i].m == m || error("Variable in constraint is not owned by the model")
         weight[i] = coll[i].coeffs[1]
     end
     return vars, weight
@@ -436,7 +450,7 @@ end
 addSOS1(m::Model, coll) = addSOS1(m, convert(Vector{AffExpr}, coll))
 
 function addSOS1(m::Model, coll::Vector{AffExpr})
-    vars, weight = constructSOS(coll)
+    vars, weight = constructSOS(m,coll)
     push!(m.sosconstr, SOSConstraint(vars, weight, :SOS1))
     if m.internalModelLoaded
         idx = Int[v.col for v in vars]
@@ -453,7 +467,7 @@ end
 addSOS2(m::Model, coll) = addSOS2(m, convert(Vector{AffExpr}, coll))
 
 function addSOS2(m::Model, coll::Vector{AffExpr})
-    vars, weight = constructSOS(coll)
+    vars, weight = constructSOS(m,coll)
     push!(m.sosconstr, SOSConstraint(vars, weight, :SOS2))
     if m.internalModelLoaded
         idx = Int[v.col for v in vars]
@@ -482,10 +496,33 @@ typealias QuadConstraint GenericQuadConstraint{QuadExpr}
 
 function addConstraint(m::Model, c::QuadConstraint)
     push!(m.quadconstr,c)
-    if m.internalModelLoaded
-        # we don't (yet) support hot-starting QCQP solutions
-        Base.warn_once("JuMP does not yet support adding quadratic constraints to an existing model. Hot-start is disabled.")
-        m.internalModelLoaded = false
+    if m.internalModelLoaded 
+        if method_exists(MathProgBase.addquadconstr!, (typeof(m.internalModel),
+                                                       Vector{Cint},
+                                                       Vector{Float64},
+                                                       Vector{Cint},
+                                                       Vector{Cint},
+                                                       Vector{Float64},
+                                                       Char,
+                                                       Float64))
+            if !((s = string(c.sense)[1]) in ['<', '>', '='])
+                error("Invalid sense for quadratic constraint")
+            end
+            terms = c.terms
+            verify_ownership(m, terms.qvars1)
+            verify_ownership(m, terms.qvars2)
+            MathProgBase.addquadconstr!(m.internalModel, 
+                                        Cint[v.col for v in c.terms.aff.vars], 
+                                        c.terms.aff.coeffs, 
+                                        Cint[v.col for v in c.terms.qvars1], 
+                                        Cint[v.col for v in c.terms.qvars2], 
+                                        c.terms.qcoeffs, 
+                                        s, 
+                                        -c.terms.aff.constant)
+        else
+            Base.warn_once("Solver does not appear to support adding quadratic constraints to an existing model. Hot-start is disabled.")
+            m.internalModelLoaded = false
+        end
     end
     return ConstraintRef{QuadConstraint}(m,length(m.quadconstr))
 end
