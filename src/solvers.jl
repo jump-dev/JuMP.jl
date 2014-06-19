@@ -4,11 +4,13 @@ function solve(m::Model;IpoptOptions::Dict=Dict(),load_model_only=false, suppres
         return solveIpopt(m, options=IpoptOptions, suppress_warnings=suppress_warnings)
     end
     # Analyze model to see if any integers
-    anyInts = false
-    for j = 1:m.numCols
-        if m.colCat[j] == INTEGER
-            anyInts = true
-            break
+    anyInts = (length(m.sosconstr) > 0)
+    if !anyInts
+        for j = 1:m.numCols
+            if m.colCat[j] == INTEGER
+                anyInts = true
+                break
+            end
         end
     end
 
@@ -64,31 +66,13 @@ function addQuadratics(m::Model)
 end
 
 function addSOS(m::Model)
-    try
-        for i in 1:length(m.sosconstr)
-            sos = m.sosconstr[i]
-            indices = Int[v.col for v in sos.terms]
-            if sos.sostype == :SOS1
-                MathProgBase.addsos1!(m.internalModel, indices, sos.weights)
-            elseif sos.sostype == :SOS2
-                MathProgBase.addsos2!(m.internalModel, indices, sos.weights)
-            end
-        end
-    catch
-        for i in 1:length(m.sosconstr)
-            sos = m.sosconstr[i]
-            indices = Int[v.col for v in sos.terms]
-            nvars = length(indices)
-            if sos.sostype == :SOS1
-                Base.warn_once("Current solver does not support SOS1 constraints, adding manually")
-                for j in indices
-                    (m.colLower[j] == 0.0 && m.colUpper[j] == 1.0) || 
-                        error("Manual SOS constraints can only involve binary variables")
-                end
-                MathProgBase.addconstr!(m.internalModel, indices, ones(nvars), 0.0, 1.0)
-            elseif sos.sostype == :SOS2
-                error("Current solver does not support SOS2 constraints")
-            end
+    for i in 1:length(m.sosconstr)
+        sos = m.sosconstr[i]
+        indices = Int[v.col for v in sos.terms]
+        if sos.sostype == :SOS1
+            MathProgBase.addsos1!(m.internalModel, indices, sos.weights)
+        elseif sos.sostype == :SOS2
+            MathProgBase.addsos2!(m.internalModel, indices, sos.weights)
         end
     end
 end
@@ -173,29 +157,25 @@ function solveLP(m::Model; load_model_only=false, suppress_warnings=false)
     f, rowlb, rowub = prepProblemBounds(m)  
 
     # Ready to solve
-
+    hasQuads = (length(m.quadconstr) > 0) || (length(m.obj.qvars1) > 0)
     if m.internalModelLoaded
-        try
+        if applicable(MathProgBase.setvarLB!, m.internalModel, m.colLower) &&
+           applicable(MathProgBase.setvarUB!, m.internalModel, m.colUpper) &&
+           applicable(MathProgBase.setconstrLB!, m.internalModel, rowlb) &&
+           applicable(MathProgBase.setconstrUB!, m.internalModel, rowub) &&
+           applicable(MathProgBase.setobj!, m.internalModel, f) &&
+           applicable(MathProgBase.setsense!, m.internalModel, m.objSense) &&
+           applicable(MathProgBase.setvartype!, m.internalModel, ['C'])            
             MathProgBase.setvarLB!(m.internalModel, m.colLower)
             MathProgBase.setvarUB!(m.internalModel, m.colUpper)
             MathProgBase.setconstrLB!(m.internalModel, rowlb)
             MathProgBase.setconstrUB!(m.internalModel, rowub)
             MathProgBase.setobj!(m.internalModel, f)
             MathProgBase.setsense!(m.internalModel, m.objSense)
-        catch err
-            if isa(err, ErrorException) && err.msg == "Not Implemented"
-                !suppress_warnings && Base.warn_once("Solver does not appear to support hot-starts. Problem will be solved from scratch.")
-                m.internalModelLoaded = false
-            else
-                rethrow()
-            end
-        end
-        all_cont = true
-        try # this fails for LPs for some unfathomable reason...but if it's an LP, we're good anyway
-            all_cont = all(x->isequal('C',x), MathProgBase.getvartype(m.internalModel))
-        end
-        if !all_cont
             MathProgBase.setvartype!(m.internalModel, fill('C',m.numCols))
+        else
+            !suppress_warnings && Base.warn_once("Solver does not appear to support hot-starts. Problem will be solved from scratch.")
+            m.internalModelLoaded = false
         end
     end
     if !m.internalModelLoaded
@@ -203,7 +183,6 @@ function solveLP(m::Model; load_model_only=false, suppress_warnings=false)
         m.internalModel = MathProgBase.model(m.solver)
         MathProgBase.loadproblem!(m.internalModel, A, m.colLower, m.colUpper, f, rowlb, rowub, m.objSense)
         addQuadratics(m)
-        addSOS(m)
         m.internalModelLoaded = true
     end 
 
@@ -219,26 +198,27 @@ function solveLP(m::Model; load_model_only=false, suppress_warnings=false)
         # do nothing
     elseif stat != :Optimal
         !suppress_warnings && warn("Not solved to optimality, status: $stat")
-        fill!(m.colVal, NaN)
+        m.colVal = fill(NaN, m.numCols)
         m.objVal = NaN
         if stat == :Infeasible
-            try
+            if !hasQuads && applicable(MathProgBase.getinfeasibilityray, m.internalModel)
                 m.linconstrDuals = MathProgBase.getinfeasibilityray(m.internalModel)
-            catch
+            else
                 !suppress_warnings && warn("Infeasibility ray (Farkas proof) not available")
+                m.linconstrDuals = fill(NaN, length(m.linconstr))
             end
         elseif stat == :Unbounded
-            try
+            if !hasQuads && applicable(MathProgBase.getunboundedray, m.internalModel)
                 m.colVal = MathProgBase.getunboundedray(m.internalModel)
-            catch
+            else
                 !suppress_warnings && warn("Unbounded ray not available")
+                m.colVal = fill(NaN, numCols)
             end
         else
-            # try to get solutions anyway
-            try
+            try # guess try/catch is necessary because we're not sure what return status we have
                 m.colVal = MathProgBase.getsolution(m.internalModel)
             catch
-                fill!(m.colVal, NaN)
+                m.colVal = fill(NaN, m.numCols)
             end
             try
                 # store solution values in model
@@ -253,11 +233,14 @@ function solveLP(m::Model; load_model_only=false, suppress_warnings=false)
         m.objVal = MathProgBase.getobjval(m.internalModel)
         m.objVal += m.obj.aff.constant
         m.colVal = MathProgBase.getsolution(m.internalModel)
-        try
+        if !hasQuads && applicable(MathProgBase.getreducedcosts, m.internalModel) &&
+                        applicable(MathProgBase.getconstrduals,  m.internalModel)
             m.redCosts = MathProgBase.getreducedcosts(m.internalModel)
             m.linconstrDuals = MathProgBase.getconstrduals(m.internalModel)
-        catch
+        else
             !suppress_warnings && warn("Dual solutions not available")
+            m.redCosts = fill(NaN, length(m.linconstr))
+            m.linconstrDuals = fill(NaN, length(m.linconstr))
         end
     end
 
@@ -281,7 +264,13 @@ function solveMIP(m::Model; load_model_only=false, suppress_warnings=false)
     # Ready to solve
     
     if m.internalModelLoaded
-        try
+        if applicable(MathProgBase.setvarLB!, m.internalModel, m.colLower) &&
+           applicable(MathProgBase.setvarUB!, m.internalModel, m.colUpper) &&
+           applicable(MathProgBase.setconstrLB!, m.internalModel, rowlb) &&
+           applicable(MathProgBase.setconstrUB!, m.internalModel, rowub) &&
+           applicable(MathProgBase.setobj!, m.internalModel, f) &&
+           applicable(MathProgBase.setsense!, m.internalModel, m.objSense) &&
+           applicable(MathProgBase.setvartype!, m.internalModel, vartype)
             MathProgBase.setvarLB!(m.internalModel, m.colLower)
             MathProgBase.setvarUB!(m.internalModel, m.colUpper)
             MathProgBase.setconstrLB!(m.internalModel, rowlb)
@@ -289,7 +278,8 @@ function solveMIP(m::Model; load_model_only=false, suppress_warnings=false)
             MathProgBase.setobj!(m.internalModel, f)
             MathProgBase.setsense!(m.internalModel, m.objSense)
             MathProgBase.setvartype!(m.internalModel, vartype)
-        catch
+        else
+            !suppress_warnings && Base.warn_once("Solver does not appear to support hot-starts. Problem will be solved from scratch.")
             m.internalModelLoaded = false
         end
     end
@@ -308,9 +298,9 @@ function solveMIP(m::Model; load_model_only=false, suppress_warnings=false)
     end
 
     if !all(isnan(m.colVal))
-        try
+        if applicable(MathProgBase.setwarmstart!, m.colVal)
             MathProgBase.setwarmstart!(m.internalModel, m.colVal)
-        catch
+        else
             !suppress_warnings && Base.warn_once("Solver does not appear to support providing initial feasible solutions.")
         end
     end
@@ -338,12 +328,12 @@ function solveMIP(m::Model; load_model_only=false, suppress_warnings=false)
         try
             m.colVal = MathProgBase.getsolution(m.internalModel)
         catch
-            fill!(m.colVal, NaN)
+            m.colVal = fill(NaN, m.numCols)
         end
     end
     if stat != :Optimal
         !suppress_warnings && warn("Not solved to optimality, status: ", string(stat))
-        fill!(m.colVal, NaN)
+        m.colVal = fill(NaN, m.numCols)
     end
 
     return stat
@@ -386,9 +376,9 @@ function buildInternalModel(m::Model)
         addSOS(m)
         registercallbacks(m)
         if !all(isnan(m.colVal))
-            try
+            if applicable(MathProgBase.setwarmstart!, m.internalModel)
                 MathProgBase.setwarmstart!(m.internalModel, m.colVal)
-            catch
+            else
                 Base.warn_once("Solver does not appear to support providing initial feasible solutions.")
             end
         end

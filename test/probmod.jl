@@ -115,6 +115,70 @@ let
     @test_approx_eq_eps getValue(z) 1.0 1e-6
 end
 
+function methods_test(solvername, solverobj, supp)
+    mod = Model(solver=solverobj)
+    @defVar(mod, x >= 0)
+    @addConstraint(mod, 2x == 2)
+    solve(mod)
+    internal_mod = getInternalModel(mod)
+    for (it,(meth, args)) in enumerate(mpb_methods)
+        if supp[it]
+            @test applicable(meth, internal_mod, args...)
+            @test method_exists(meth, map(typeof, tuple(internal_mod, args...)))
+        end
+    end
+end
+
+# test there were no regressions in applicable
+const mpb_methods = [(MathProgBase.addconstr!,   ([1],[1.0],1.0,1.0)),
+                     (MathProgBase.addsos1!,     ([1],[1.0])),
+                     (MathProgBase.addsos2!,     ([1],[1.0])),
+                     (MathProgBase.addvar!,      ([1],[1.0],1.0,1.0,1.0)),
+                     (MathProgBase.setvarLB!,    ([1.0],)),
+                     (MathProgBase.setvarUB!,    ([1.0],)),
+                     (MathProgBase.setconstrLB!, ([1.0],)),
+                     (MathProgBase.setconstrUB!, ([1.0],)),
+                     (MathProgBase.setobj!,      ([1.0],)),
+                     (MathProgBase.setsense!,    (:Min,)),
+                     (MathProgBase.setvartype!,  (['C'],)),
+                     (MathProgBase.getinfeasibilityray, ()),
+                     (MathProgBase.getunboundedray, ()),
+                     (MathProgBase.getreducedcosts, ()),
+                     (MathProgBase.getconstrduals, ()),
+                     (MathProgBase.setwarmstart!, ([1.0]))]
+
+if Pkg.installed("Gurobi") != nothing
+    using Gurobi
+    supp = (true,true,true,true,true,true,true,true,true,true,true,true,true,true,true,true)
+    methods_test("Gurobi", GurobiSolver(), supp)
+end
+
+if Pkg.installed("CPLEX") != nothing
+    using CPLEX
+    supp = (true,true,true,true,true,true,true,true,true,true,true,true,true,true,true,true)
+    methods_test("CPLEX", CplexSolver(), supp)
+end
+if Pkg.installed("Clp") != nothing
+    using Clp
+    supp = (true,false,false,true,true,true,true,true,true,true,true,true,true,true,true,false)
+    methods_test("Clp", ClpSolver(), supp)
+end
+if Pkg.installed("Cbc") != nothing
+    # no-op, since Cbc doesn't support any
+end
+if Pkg.installed("GLPK") != nothing
+    using GLPKMathProgInterface
+    supp = (true,false,false,true,true,true,true,true,true,true,false,true,true,true,true,false)
+    methods_test("GLPK", GLPKSolverLP(), supp)
+    supp = (true,false,false, true,true,true,true,true,true,true,true,false,false,false,false,false)
+    methods_test("GLPK", GLPKSolverMIP(), supp)
+end
+if Pkg.installed("Mosek") != nothing
+    using Mosek
+    supp = (true,false,false,true,true,true,true,true,true,true,true,true,true,true,true,false)
+    methods_test("Mosek", MosekSolver(), supp)
+end
+
 let
     m = Model()
     @defVar(m, x >= 0)
