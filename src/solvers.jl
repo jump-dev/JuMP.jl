@@ -160,6 +160,8 @@ function prepConstrMatrix(m::Model)
 
     # Build the object
     rowmat = SparseMatrixCSC(m.numCols, numRows, rowptr, colval, rownzval)
+    # Note that rowmat doesn't have sorted indices, so technically doesn't
+    # follow SparseMatrixCSC format. But it's safe to take the transpose.
     A = rowmat'
 end
 
