@@ -302,7 +302,7 @@ function solveMIP(m::Model; load_model_only=false, suppress_warnings=false)
         end
     end
     if stat != :Optimal
-        !suppress_warnings && warn("Not solved to optimality, status: ", stat)
+        !suppress_warnings && warn("Not solved to optimality, status: $stat")
     end
 
     return stat
