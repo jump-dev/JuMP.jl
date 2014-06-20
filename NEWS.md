@@ -9,6 +9,13 @@ Unversioned
   * Add groups of constraints with ``@addConstraints`` macro.
   * Unicode operators now supported, including ``∑`` for ``sum``, ``∏`` for ``prod``, and ``≤``/``≥`` (requires Julia 0.3)
 
+Version 0.5.4 (June 19, 2014)
+----------------------------
+
+  * Update for breaking change in MathProgBase which reduces loading times for ``using JuMP``
+  * Fix error when MIPs not solved to optimality
+
+
 Version 0.5.3 (May 21, 2014)
 ----------------------------
 
