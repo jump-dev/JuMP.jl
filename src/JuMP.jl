@@ -252,6 +252,13 @@ Base.convert(::Type{AffExpr}, v::Real) = AffExpr(Variable[], Float64[], v)
 Base.zero(::Type{AffExpr}) = AffExpr(Variable[],Float64[],0.)
 Base.zero(a::AffExpr) = zero(typeof(a))
 
+function assert_isfinite(a::GenericAffExpr)
+    coeffs = a.coeffs
+    for i in 1:length(a.vars)
+        isfinite(coeffs[i]) || error("Invalid coefficient $(coeffs[i]) on variable $(a.vars[i])")
+    end
+end
+
 function setObjective(m::Model, sense::Symbol, a::AffExpr)
     setObjectiveSense(m, sense)
     m.obj = QuadExpr()
@@ -301,6 +308,13 @@ typealias QuadExpr GenericQuadExpr{Float64,Variable}
 QuadExpr() = QuadExpr(Variable[],Variable[],Float64[],AffExpr())
 
 Base.isempty(q::QuadExpr) = (length(q.qvars1) == 0 && isempty(q.aff))
+
+function assert_isfinite(q::GenericQuadExpr)
+    assert_isfinite(q.aff)
+    for i in 1:length(q.qcoeffs)
+        isfinite(q.qcoeffs[i]) || error("Invalid coefficient $(q.qcoeffs[i]) on quadratic term $(q.qvars1[i])*$(q.qvars2[i])")
+    end
+end
 
 function setObjective(m::Model, sense::Symbol, q::QuadExpr)
     m.obj = q
