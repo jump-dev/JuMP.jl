@@ -42,6 +42,7 @@ end
 function addQuadratics(m::Model)
 
     if length(m.obj.qvars1) != 0
+        assert_isfinite(m.obj)
         MathProgBase.setquadobjterms!(m.internalModel, Cint[v.col for v in m.obj.qvars1], Cint[v.col for v in m.obj.qvars2], m.obj.qcoeffs)
     end
 
@@ -51,7 +52,8 @@ function addQuadratics(m::Model)
         if !((s = string(qconstr.sense)[1]) in ['<', '>', '='])
             error("Invalid sense for quadratic constraint")
         end
-        terms = qconstr.terms
+        terms::QuadExpr = qconstr.terms
+        assert_isfinite(terms)
         for ind in 1:length(terms.qvars1)
             if (terms.qvars1[ind].m != m) || (terms.qvars2[ind].m != m)
                 error("Variable not owned by model present in constraints")
@@ -95,6 +97,7 @@ end
 function prepProblemBounds(m::Model)
 
     objaff::AffExpr = m.obj.aff
+    assert_isfinite(objaff)
         
     # We already have dense column lower and upper bounds
 
@@ -139,6 +142,7 @@ function prepConstrMatrix(m::Model)
     tmpnzidx = tmprow.nzidx
     for c in 1:numRows
         rowptr[c] = nnz + 1
+        assert_isfinite(m.linconstr[c].terms)
         coeffs = m.linconstr[c].terms.coeffs
         vars = m.linconstr[c].terms.vars
         # collect duplicates

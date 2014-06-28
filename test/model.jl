@@ -251,3 +251,18 @@ let
     str = string(mod)
     @test str == "Min (nonlinear expression)\nSubject to \n3 nonlinear constraints\nx[i], for all i in {1..5} free\n"
 end
+
+
+######################################################################
+# Test NaN checking
+let
+    mod = Model()
+    @defVar(mod, x)
+    @setObjective(mod, Min, NaN*x)
+    @test_throws solve(mod)
+    setObjective(mod, :Min, NaN*x^2)
+    @test_throws solve(mod)
+    @setObjective(mod, Min, x)
+    @addConstraint(mod, Min, NaN*x == 0)
+    @test_throws solve(mod)
+end
