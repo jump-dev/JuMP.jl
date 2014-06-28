@@ -96,7 +96,7 @@ end
 if Pkg.installed("CPLEX") != nothing
     using CPLEX
     sos_test("CPLEX", CplexSolver())
-    sos_test_cont("Gurobi", GurobiSolver(OutputFlag=0))
+    sos_test_cont("CPLEX", CplexSolver())
 end
 
 if Pkg.installed("GLPKMathProgInterface") != nothing
