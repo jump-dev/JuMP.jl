@@ -394,16 +394,12 @@ typealias LinearConstraint GenericRangeConstraint{AffExpr}
 function addConstraint(m::Model, c::LinearConstraint)
     push!(m.linconstr,c)
     if m.internalModelLoaded 
-        try
+        if method_exists(MathProgBase.addconstr!, (typeof(m.internalModel),Vector{Int},Vector{Float64},Float64,Float64))
             indices, coeffs = merge_duplicates(Cint, c.terms, m.indexedVector, m)
-            MathProgBase.addconstr!(m.internalModel,indices, coeffs,c.lb,c.ub)
-        catch err
-            if isa(err, ErrorException) && err.msg == "Not Implemented"
-                Base.warn_once("Solver does not appear to support adding constraints to an existing model. Hot-start is disabled.")
-                m.internalModelLoaded = false
-            else
-                rethrow()
-            end
+            MathProgBase.addconstr!(m.internalModel,indices,coeffs,c.lb,c.ub)
+        else
+            Base.warn_once("Solver does not appear to support adding constraints to an existing model. Hot-start is disabled.")
+            m.internalModelLoaded = false
         end
     end
     return ConstraintRef{LinearConstraint}(m,length(m.linconstr))
@@ -443,9 +439,10 @@ function addSOS1(m::Model, coll::Vector{AffExpr})
     vars, weight = constructSOS(coll)
     push!(m.sosconstr, SOSConstraint(vars, weight, :SOS1))
     if m.internalModelLoaded
-        try
-            MathProgBase.addsos1!(m.internalModel, Int[v.col for v in vars], weight)
-        catch
+        idx = Int[v.col for v in vars]
+        if applicable(MathProgBase.addsos1!, m.internalModel, idx, weight)
+            MathProgBase.addsos1!(m.internalModel, idx, weight)
+        else
             Base.warn_once("Solver does not appear to support adding constraints to an existing model. Hot-start is disabled.")
             m.internalModelLoaded = false
         end
@@ -459,9 +456,10 @@ function addSOS2(m::Model, coll::Vector{AffExpr})
     vars, weight = constructSOS(coll)
     push!(m.sosconstr, SOSConstraint(vars, weight, :SOS2))
     if m.internalModelLoaded
-        try
-            MathProgBase.addsos2!(m.internalModel, Int[v.col for v in vars], weight)
-        catch
+        idx = Int[v.col for v in vars]
+        if applicable(MathProgBase.addsos2!, m.internalModel, idx, weight)
+            MathProgBase.addsos2!(m.internalModel, idx, weight)
+        else
             Base.warn_once("Solver does not appear to support adding constraints to an existing model. Hot-start is disabled.")
             m.internalModelLoaded = false
         end
@@ -546,9 +544,9 @@ function Variable(m::Model,lower::Number,upper::Number,cat::Int,objcoef::Number,
     push!(m.obj.aff.coeffs,objcoef)
 
     if m.internalModelLoaded
-        try
+        if method_exists(MathProgBase.addvar!, (typeof(m.internalModel),Vector{Int},Vector{Float64},Float64,Float64,Float64))
             MathProgBase.addvar!(m.internalModel,Int[c.idx for c in constraints],coefficients,float(lower),float(upper),float(objcoef))
-        catch
+        else
             Base.warn_once("Solver does not appear to support adding variables to an existing model. Hot-start is disabled.")
             m.internalModelLoaded = false
         end

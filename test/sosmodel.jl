@@ -24,54 +24,13 @@ function sos_test(solvername, solverobj)
         addSOS1(modS, [a[i]x[i] for i in 1:3])
         addSOS2(modS, [b[i]y[i] for i in 1:5])
 
+        @test_throws addSOS1(modS, [x[1], x[1]+x[2]])
+
         status = solve(modS)
         @test status == :Optimal
         @test modS.objVal == 15.
         @test getValue(z) == 3.
         @test getValue(w) == 12. 
-    end
-end
-
-function sos_test1(solvername, solverobj)
-    println(string("  Running ", solvername))
-    let
-        println("    Test 1")
-        modS = Model(solver=solverobj)
-
-        @defVar(modS, x[1:3], Bin)
-        @defVar(modS, y[1:5], Bin)
-        @defVar(modS, z)
-
-        @setObjective(modS, Max, z)
-
-        a = [1,2,3]
-
-        @addConstraint(modS, z == sum{a[i]*x[i], i=1:3})
-
-        @test_throws constructSOS([x[1]+y[1]])
-        @test_throws constructSOS([1z])
-
-        addSOS1(modS, [a[i]x[i] for i in 1:3])
-
-        status = solve(modS)
-        @test status == :Optimal
-        @test modS.objVal == 3.
-        @test getValue(z) == 3.
-    end
-end
-
-# Issue 195
-function sos_test2(solvername, solverobj)
-    println(string("  Running ", solvername))
-    let
-        println("    Test 2")
-        modS = Model(solver=solverobj)
-        @defVar(modS, y[1:5] >= 0, Int)
-
-        a = [1,2,3]
-        addSOS1(modS, [a[i]y[i] for i in 1:3])
-
-        @test_throws solve(modS)
     end
 end
 
@@ -97,11 +56,4 @@ if Pkg.installed("CPLEX") != nothing
     using CPLEX
     sos_test("CPLEX", CplexSolver())
     sos_test_cont("CPLEX", CplexSolver())
-end
-
-if Pkg.installed("GLPKMathProgInterface") != nothing
-    using GLPK, GLPKMathProgInterface
-    sos_test1("GLPK", GLPKSolverMIP())
-    sos_test2("GLPK", GLPKSolverMIP())
-    @test_throws sos_test_cont("GLPK", GLPKSolverMIP())
 end
