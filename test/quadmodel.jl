@@ -50,6 +50,38 @@ function qp_test(solvername, solverobj)
         @test_approx_eq_eps modQ.objVal 1.0 1e-6
         @test_approx_eq_eps (getValue(x) + getValue(y)) 1.0 1e-6
     end
+
+    # test problem modification (quad constraint)
+    let
+        println("    Test 4")
+        modQ = Model(solver=solverobj)
+        @defVar(modQ, x >= 0)
+        addConstraint(modQ, x*x >= 1)
+        @setObjective(modQ, Min, x)
+        stat = solve(modQ)
+        @test getObjectiveValue(modQ) == 1.0
+
+        addConstraint(modQ, 2x*x >= 4)
+        @test modQ.internalModelLoaded
+        stat = solve(modQ)
+        @test_approx_eq getObjectiveValue(modQ) sqrt(2.0)
+    end
+
+    # test problem modification (quad objective)
+    let
+        println("    Test 5")
+        modQ = Model(solver=solverobj)
+        @defVar(modQ,   0 <= x <= 1)
+        @defVar(modQ, 1/2 <= y <= 1)
+        setObjective(modQ, :Min, x*x - y)
+        stat = solve(modQ)
+        @test getObjectiveValue(modQ) == -1.0
+
+        setObjective(modQ, :Min, y*y - x)
+        @test modQ.internalModelLoaded == true
+        stat = solve(modQ)
+        @test getObjectiveValue(modQ) == -0.75
+    end
 end
 
 

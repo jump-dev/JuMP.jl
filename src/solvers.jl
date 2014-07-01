@@ -160,7 +160,7 @@ function solveLP(m::Model; load_model_only=false, suppress_warnings=false)
     f, rowlb, rowub = prepProblemBounds(m)  
 
     # Ready to solve
-    hasQuads = (length(m.quadconstr) > 0) || (length(m.obj.qvars1) > 0)
+    noQuads = (length(m.quadconstr) == 0) && (length(m.obj.qvars1) == 0)
     if m.internalModelLoaded
         if applicable(MathProgBase.setvarLB!, m.internalModel, m.colLower) &&
            applicable(MathProgBase.setvarUB!, m.internalModel, m.colUpper) &&
@@ -204,17 +204,17 @@ function solveLP(m::Model; load_model_only=false, suppress_warnings=false)
         m.colVal = fill(NaN, m.numCols)
         m.objVal = NaN
         if stat == :Infeasible
-            if !hasQuads && applicable(MathProgBase.getinfeasibilityray, m.internalModel)
+            if noQuads && applicable(MathProgBase.getinfeasibilityray, m.internalModel)
                 m.linconstrDuals = MathProgBase.getinfeasibilityray(m.internalModel)
             else
-                !suppress_warnings && warn("Infeasibility ray (Farkas proof) not available")
+                noQuads && !suppress_warnings && warn("Infeasibility ray (Farkas proof) not available")
                 m.linconstrDuals = fill(NaN, length(m.linconstr))
             end
         elseif stat == :Unbounded
-            if !hasQuads && applicable(MathProgBase.getunboundedray, m.internalModel)
+            if noQuads && applicable(MathProgBase.getunboundedray, m.internalModel)
                 m.colVal = MathProgBase.getunboundedray(m.internalModel)
             else
-                !suppress_warnings && warn("Unbounded ray not available")
+                noQuads && !suppress_warnings && warn("Unbounded ray not available")
                 m.colVal = fill(NaN, numCols)
             end
         else
@@ -236,12 +236,12 @@ function solveLP(m::Model; load_model_only=false, suppress_warnings=false)
         m.objVal = MathProgBase.getobjval(m.internalModel)
         m.objVal += m.obj.aff.constant
         m.colVal = MathProgBase.getsolution(m.internalModel)
-        if !hasQuads && applicable(MathProgBase.getreducedcosts, m.internalModel) &&
-                        applicable(MathProgBase.getconstrduals,  m.internalModel)
+        if noQuads && applicable(MathProgBase.getreducedcosts, m.internalModel) &&
+                      applicable(MathProgBase.getconstrduals,  m.internalModel)
             m.redCosts = MathProgBase.getreducedcosts(m.internalModel)
             m.linconstrDuals = MathProgBase.getconstrduals(m.internalModel)
         else
-            !suppress_warnings && warn("Dual solutions not available")
+            noQuads && !suppress_warnings && warn("Dual solutions not available")
             m.redCosts = fill(NaN, length(m.linconstr))
             m.linconstrDuals = fill(NaN, length(m.linconstr))
         end
