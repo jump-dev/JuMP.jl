@@ -18,7 +18,7 @@ end
 
 export
 # Objects
-    Model, Variable, AffExpr, QuadExpr, LinearConstraint, QuadConstraint, MultivarDict,
+    Model, Variable, AffExpr, QuadExpr, LinearConstraint, QuadConstraint,
     ConstraintRef,
 # Functions
     # Model related
