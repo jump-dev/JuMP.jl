@@ -102,8 +102,25 @@ function quoteTree(x::Expr, datalist::Dict, iterstack)
     end
 end
 
+# check if x is an iteration variable.
+# note that multiple iteration variables may be
+# present per iteration set, e.g., "(i,j) in S"
+function initerstack(x::Symbol, iterstack)
+    for v in iterstack
+        if isa(v,Symbol)
+            x == v && return true
+        elseif isexpr(v,:tuple)
+            (x in v.args) && return true
+        else
+            error("Unrecognized iteration variables $x")
+        end
+    end
+    return false
+end
+
+
 function quoteTree(x::Symbol, datalist, iterstack)
-    if !(x in iterstack)
+    if !initerstack(x,iterstack)
         datalist[x] = x
     end
     return quot(x)

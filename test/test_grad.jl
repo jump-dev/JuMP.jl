@@ -180,5 +180,15 @@ fval = fg([2.0], out)
 @test_approx_eq fval 2.0
 @test_approx_eq out[1] 1.0
 
+# expanded indices using tuples
+x = placeholders(2)
+I = [(1,2)]
+ex = @processNLExpr sum{ x[i]*x[j], (i,j) in I }
+fg = genfgrad_simple(ex)
+fval = fg([2.0,3.0], out)
+@test_approx_eq fval 6.0
+@test_approx_eq out[1] 3.0
+@test_approx_eq out[2] 2.0
+
 
 println("Passed tests")
