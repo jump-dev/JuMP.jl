@@ -321,11 +321,11 @@ end
 function setObjective(m::Model, sense::Symbol, q::QuadExpr)
     m.obj = q
     if m.internalModelLoaded
-        try
+        if method_exists(MathProgBase.setquadobjterms!, (typeof(m.internalModel), Vector{Cint}, Vector{Cint}, Vector{Float64}))
             verify_ownership(m, m.obj.qvars1)
             verify_ownership(m, m.obj.qvars2)
             MathProgBase.setquadobjterms!(m.internalModel, Cint[v.col for v in m.obj.qvars1], Cint[v.col for v in m.obj.qvars2], m.obj.qcoeffs)
-        catch
+        else
             # we don't (yet) support hot-starting QCQP solutions
             Base.warn_once("JuMP does not yet support adding a quadratic objective to an existing model. Hot-start is disabled.")
             m.internalModelLoaded = false
