@@ -12,79 +12,44 @@
 # 3. AffExpr
 # 4. QuadExpr
 
-# Number
-# Number--Number obviously already taken care of!
-# Number--Variable
-(+)(lhs::Number, rhs::Variable) = AffExpr([rhs],[+1.],convert(Float64,lhs))
-(-)(lhs::Number, rhs::Variable) = AffExpr([rhs],[-1.],convert(Float64,lhs))
-(*)(lhs::Number, rhs::Variable) = AffExpr([rhs],[convert(Float64,lhs)], 0.)
-(/)(lhs::Number, rhs::Variable) = error("Cannot divide by variable")
-# Number--GenericAffExpr
-(+)(lhs::Number, rhs::GenericAffExpr) = GenericAffExpr(copy(rhs.vars),copy(rhs.coeffs),lhs+rhs.constant)
-(-)(lhs::Number, rhs::GenericAffExpr) = GenericAffExpr(copy(rhs.vars),    -rhs.coeffs ,lhs-rhs.constant)
-(*)(lhs::Number, rhs::GenericAffExpr) = GenericAffExpr(copy(rhs.vars),[lhs*rhs.coeffs[i] for i=1:length(rhs.coeffs)],lhs*rhs.constant)
-(/)(lhs::Number, rhs::GenericAffExpr) = error("Cannot divide by an affine expression")
-# Number--QuadExpr
-(+)(lhs::Number, rhs::QuadExpr) = QuadExpr(copy(rhs.qvars1),copy(rhs.qvars2),copy(rhs.qcoeffs),lhs+rhs.aff)
-(-)(lhs::Number, rhs::QuadExpr) = QuadExpr(copy(rhs.qvars1),copy(rhs.qvars2),    -rhs.qcoeffs ,lhs-rhs.aff)
-(*)(lhs::Number, rhs::QuadExpr) = QuadExpr(copy(rhs.qvars1),copy(rhs.qvars2), lhs*rhs.qcoeffs ,lhs*rhs.aff)
-(/)(lhs::Number, rhs::QuadExpr) = error("Cannot divide by a quadratic expression")
-
-
-# Variable
-(+)(lhs::Variable) = lhs
-(-)(lhs::Variable) = AffExpr([lhs],[-1.0],0.0)
-# Variable--Number
-(+)(lhs::Variable, rhs::Number) = (+)( rhs,lhs)
-(-)(lhs::Variable, rhs::Number) = (+)(-rhs,lhs)
-(*)(lhs::Variable, rhs::Number) = (*)(rhs,lhs)
-(/)(lhs::Variable, rhs::Number) = (*)(1./rhs,lhs)
-# Variable--Variable
-(+)(lhs::Variable, rhs::Variable) = AffExpr([lhs,rhs], [1.,+1.], 0.)
-(-)(lhs::Variable, rhs::Variable) = AffExpr([lhs,rhs], [1.,-1.], 0.)
-(*)(lhs::Variable, rhs::Variable) = QuadExpr([lhs],[rhs],[1.],AffExpr(Variable[],Float64[],0.))
-(/)(lhs::Variable, rhs::Variable) = error("Cannot divide a variable by a variable")
-# Variable--AffExpr
-(+)(lhs::Variable, rhs::AffExpr) = AffExpr(vcat(rhs.vars,lhs),vcat( rhs.coeffs,1.), rhs.constant)
-(-)(lhs::Variable, rhs::AffExpr) = AffExpr(vcat(rhs.vars,lhs),vcat(-rhs.coeffs,1.),-rhs.constant)
-function (*)(lhs::Variable, rhs::AffExpr)
-    n = length(rhs.vars)
-    if rhs.constant != 0.      
-        ret = QuadExpr([lhs for i=1:n],copy(rhs.vars),copy(rhs.coeffs),AffExpr([lhs], [rhs.constant], 0.))
-    else
-        ret = QuadExpr([lhs for i=1:n],copy(rhs.vars),copy(rhs.coeffs),AffExpr())
+#########
+# Generic
+#########
+Base.promote_rule{T,S}(::Type{T},::Type{GenericAffExpr {T,S}}) = GenericAffExpr {T,S}
+Base.promote_rule{T,S}(::Type{T},::Type{GenericQuadExpr{T,S}}) = GenericQuadExpr{T,S}
+Base.promote_rule{T,S}(::Type{S},::Type{GenericAffExpr {T,S}}) = GenericAffExpr {T,S}
+Base.promote_rule{T,S}(::Type{S},::Type{GenericQuadExpr{T,S}}) = GenericQuadExpr{T,S}
+Base.convert{T,S}(::Type{GenericAffExpr{T,S}}, x::T) = GenericAffExpr(S[],  T[], x)
+Base.convert{T,S}(::Type{GenericAffExpr{T,S}}, x::S) = GenericAffExpr(S[x], T[one(T)], zero(T))
+Base.convert{T,S}(::Type{GenericQuadExpr{T,S}}, x::T) = GenericQuadExpr(S[], S[], T[], convert(GenericAffExpr, x))
+Base.convert{T,S}(::Type{GenericQuadExpr{T,S}}, x::S) = GenericQuadExpr(S[], S[], T[], convert(GenericAffExpr, x))
+Base.convert{T,S}(::Type{GenericQuadExpr{T,S}}, x::GenericAffExpr{T,S}) = GenericQuadExpr(S[], S[], T[], x)
+jtypes = [:GenericAffExpr,:GenericQuadExpr]
+for type1 in jtypes
+    @eval begin
+        (+)(x::$(type1)) = x
+        (-)(x::$(type1)) = zero(x) - x
+    end
+    for op in (:+, :-, :*, :/)
+        @eval begin
+            $(op){T,V}(lhs::T, rhs::$type1{T,V}) = $(op)(promote(lhs,rhs)...)
+            # $(op){T,V}(lhs::$type1{T,V}, rhs::T) = $(op)(promote(lhs,rhs)...)
+        end
+        for type2 in jtypes
+            @eval begin
+                $(op){T,V}(lhs::$(type1){T,V}, rhs::$(type2){T,V}) = $(op)(promote(lhs,rhs)...)
+                $(op){T,V}(lhs::$(type2){T,V}, rhs::$(type1){T,V}) = $(op)(promote(lhs,rhs)...)
+            end
+        end
     end
 end
-(/)(lhs::Variable, rhs::AffExpr) = error("Cannot divide a variable by an affine expression")
-# Variable--QuadExpr
-(+)(v::Variable, q::QuadExpr) = QuadExpr(copy(q.qvars1),copy(q.qvars2),copy(q.qcoeffs),v+q.aff)
-(-)(v::Variable, q::QuadExpr) = QuadExpr(copy(q.qvars1),copy(q.qvars2),    -q.qcoeffs ,v-q.aff)
-(*)(v::Variable, q::QuadExpr) = error("Cannot multiply a variable by a quadratic expression")
-(/)(v::Variable, q::QuadExpr) = error("Cannot divide a variable by a quadratic expression")
 
-
-# AffExpr (GenericAffExpr)
-(+)(lhs::GenericAffExpr) = lhs
-(-)(lhs::GenericAffExpr) = GenericAffExpr(lhs.vars, -lhs.coeffs, -lhs.constant)
-# AffExpr--Number
-(+)(lhs::GenericAffExpr, rhs::Number) = (+)(+rhs,lhs)
-(-)(lhs::GenericAffExpr, rhs::Number) = (+)(-rhs,lhs)
-(*)(lhs::GenericAffExpr, rhs::Number) = (*)(rhs,lhs)
-(/)(lhs::GenericAffExpr, rhs::Number) = (*)(1.0/rhs,lhs)
-function (^)(lhs::Union(Variable,AffExpr), rhs::Number)
-    rhs == 2 || error("Only exponents of 2 are currently supported")
-    return lhs*lhs
-end
-# AffExpr--Variable
-(+)(lhs::AffExpr, rhs::Variable) = (+)(rhs,lhs)
-(-)(lhs::AffExpr, rhs::Variable) = AffExpr(vcat(lhs.vars,rhs),vcat(+lhs.coeffs,-1.),lhs.constant)
-(*)(lhs::AffExpr, rhs::Variable) = (*)(rhs,lhs)
-(/)(lhs::AffExpr, rhs::Variable) = error("Cannot divide affine expression by a variable")
 # AffExpr--AffExpr
-(+){T<:GenericAffExpr}(lhs::T, rhs::T) = GenericAffExpr(vcat(lhs.vars,rhs.vars),vcat(lhs.coeffs, rhs.coeffs),lhs.constant+rhs.constant)
-(-){T<:GenericAffExpr}(lhs::T, rhs::T) = GenericAffExpr(vcat(lhs.vars,rhs.vars),vcat(lhs.coeffs,-rhs.coeffs),lhs.constant-rhs.constant)
-function (*)(lhs::AffExpr, rhs::AffExpr)
-    ret = QuadExpr(Variable[],Variable[],Float64[],AffExpr(Variable[],Float64[],0.))
+(+){T<:GenericAffExpr}(lhs::T, rhs::T) = T(vcat(lhs.vars,rhs.vars),vcat(lhs.coeffs, rhs.coeffs),lhs.constant+rhs.constant)
+(-){T<:GenericAffExpr}(lhs::T, rhs::T) = T(vcat(lhs.vars,rhs.vars),vcat(lhs.coeffs,-rhs.coeffs),lhs.constant-rhs.constant)
+function (*){T<:GenericAffExpr}(lhs::T, rhs::T)
+    ret = zero(T)
+    zero_c = zero(ret.constant)
 
     # Quadratic terms
     n = length(lhs.coeffs)
@@ -101,19 +66,19 @@ function (*)(lhs::AffExpr, rhs::AffExpr)
     end
     
     # Try to preallocate space for aff
-    if lhs.constant != 0 && rhs.constant != 0
+    if lhs.constant != zero_c && rhs.constant != zero_c
         sizehint(ret.aff.vars, n+m)
         sizehint(ret.aff.coeffs, n+m)
-    elseif lhs.constant != 0
+    elseif lhs.constant != zero_c
         sizehint(ret.aff.vars, n)
         sizehint(ret.aff.coeffs, n)
-    elseif rhs.constant != 0
+    elseif rhs.constant != zero_c
         sizehint(ret.aff.vars, m)
         sizehint(ret.aff.coeffs, m)
     end
 
     # [LHS constant] * RHS
-    if lhs.constant != 0
+    if lhs.constant != zero_c
         c = lhs.constant
         for j = 1:m
             push!(ret.aff.vars,   rhs.vars[j])
@@ -123,53 +88,37 @@ function (*)(lhs::AffExpr, rhs::AffExpr)
     end
     
     # Expr 2 constant * Expr 1 terms
-    if rhs.constant != 0
+    if rhs.constant != zero_c
         c = rhs.constant
         for i = 1:m
             push!(ret.aff.vars,   lhs.vars[i])
             push!(ret.aff.coeffs, lhs.coeffs[i] * c)
         end
-        # Don't do the following line
-        #ret.aff.constant += c * lhs.constant
-        # If lhs.constant is 0, its a waste of time
-        # If lhs.constant is non-zero, its already done
     end
     
     return ret
 end
-(/)(lhs::AffExpr, rhs::AffExpr) = error("Cannot divide aff. expression by aff. expression")
-# AffExpr--QuadExpr
-(+)(a::AffExpr, q::QuadExpr) = QuadExpr(copy(q.qvars1),copy(q.qvars2),copy(q.qcoeffs),a+q.aff)
-(-)(a::AffExpr, q::QuadExpr) = QuadExpr(copy(q.qvars1),copy(q.qvars2),    -q.qcoeffs ,a-q.aff)
-(*)(a::AffExpr, q::QuadExpr) = error("Cannot multiply an aff. expression by a quadratic expression")
-(/)(a::AffExpr, q::QuadExpr) = error("Cannot divide an aff. expression by a quadratic expression")
+(/){T,S}(lhs::GenericAffExpr{T,S}, rhs::GenericAffExpr{T,S}) = 
+    error("Cannot divide aff. expression by aff. expression")
 
-
-# QuadExpr
-(+)(lhs::QuadExpr) = lhs
-(-)(lhs::QuadExpr) = 0.0-lhs
-# QuadExpr--Number
-(+)(lhs::QuadExpr, rhs::Number) = (+)(+rhs,lhs)
-(-)(lhs::QuadExpr, rhs::Number) = (+)(-rhs,lhs)
-(*)(lhs::QuadExpr, rhs::Number) = (*)(rhs,lhs)
-(/)(lhs::QuadExpr, rhs::Number) = (*)(1.0/rhs,lhs)
-# QuadExpr--Variable
-(+)(q::QuadExpr, v::Variable) = (+)(v,q)
-(-)(q::QuadExpr, v::Variable) = QuadExpr(copy(q.qvars1),copy(q.qvars2),copy(q.qcoeffs),q.aff-v)
-(*)(q::QuadExpr, v::Variable) = error("Cannot multiply a quadratic expression by a variable")
-(/)(q::QuadExpr, v::Variable) = error("Cannot divide a quadratic expression by a variable")
-# QuadExpr--AffExpr
-(+)(q::QuadExpr, a::AffExpr) = QuadExpr(copy(q.qvars1),copy(q.qvars2),copy(q.qcoeffs),q.aff+a)
-(-)(q::QuadExpr, a::AffExpr) = QuadExpr(copy(q.qvars1),copy(q.qvars2),copy(q.qcoeffs),q.aff-a)
-(*)(q::QuadExpr, a::AffExpr) = error("Cannot multiply a quadratic expression by an aff. expression")
-(/)(q::QuadExpr, a::AffExpr) = error("Cannot divide a quadratic expression by an aff. expression")
 # QuadExpr--QuadExpr
-(+)(q1::QuadExpr, q2::QuadExpr) = QuadExpr( vcat(q1.qvars1, q2.qvars1),     vcat(q1.qvars2, q2.qvars2),
-                                            vcat(q1.qcoeffs, q2.qcoeffs),   q1.aff + q2.aff)
-(-)(q1::QuadExpr, q2::QuadExpr) = QuadExpr( vcat(q1.qvars1, q2.qvars1),     vcat(q1.qvars2, q2.qvars2),
-                                            vcat(q1.qcoeffs, -q2.qcoeffs),  q1.aff - q2.aff)
-(*)(q1::QuadExpr, q2::QuadExpr) = error("Cannot multiply two quadratic expressions")
-(/)(q1::QuadExpr, q2::QuadExpr) = error("Cannot divide a quadratic expression by a quadratic expression")
+(+){T<:GenericQuadExpr}(q1::T, q2::T) = T(vcat(q1.qvars1,  q2.qvars1),  vcat(q1.qvars2, q2.qvars2), 
+                                          vcat(q1.qcoeffs, q2.qcoeffs), q1.aff + q2.aff)
+(-){T<:GenericQuadExpr}(q1::T, q2::T) = T(vcat(q1.qvars1,   q2.qvars1),   vcat(q1.qvars2, q2.qvars2),
+                                          vcat(q1.qcoeffs, -q2.qcoeffs),  q1.aff - q2.aff)
+(*){T<:GenericQuadExpr}(q1::T, q2::T) = error("Cannot multiply two quadratic expressions")
+(/){T<:GenericQuadExpr}(q1::T, q2::T) = error("Cannot divide a quadratic expression by a quadratic expression")
+
+
+###################
+# Variable-specific
+###################
+Base.promote_rule{T<:Number}(::Type{T},::Type{Variable}) = AffExpr
+# Variable--Variable
+(+)(lhs::Variable, rhs::Variable) = AffExpr([lhs,rhs], [1.0,+1.0], 0.0)
+(-)(lhs::Variable, rhs::Variable) = AffExpr([lhs,rhs], [1.0,-1.0], 0.0)
+(*)(lhs::Variable, rhs::Variable) = QuadExpr([lhs],[rhs],[1.0],AffExpr(Variable[],Float64[],0.0))
+(/)(lhs::Variable, rhs::Variable) = error("Cannot divide a variable by a variable")
 
 # LinearConstraint
 # Number--???

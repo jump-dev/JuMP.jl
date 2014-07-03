@@ -248,11 +248,13 @@ end
 typealias AffExpr GenericAffExpr{Float64,Variable}
 AffExpr() = AffExpr(Variable[],Float64[],0.0)
 
-Base.isempty(a::AffExpr) = (length(a.vars) == 0 && a.constant == 0.)
-Base.convert(::Type{AffExpr}, v::Variable) = AffExpr([v], [1.], 0.)
+Base.isempty{T,S}(a::GenericAffExpr{T,S}) = (length(a.vars) == 0 && a.constant == zero(T))
+Base.convert(::Type{AffExpr}, v::Variable) = AffExpr([v], [1.0], 0.0)
 Base.convert(::Type{AffExpr}, v::Real) = AffExpr(Variable[], Float64[], v)
-Base.zero(::Type{AffExpr}) = AffExpr(Variable[],Float64[],0.)
-Base.zero(a::AffExpr) = zero(typeof(a))
+Base.zero{T,S}(::Type{GenericAffExpr{T,S}}) = GenericAffExpr(T[], S[], zero(T))
+Base.zero(a::GenericAffExpr) = zero(typeof(a))
+Base.one{T,S}(a::Type{GenericAffExpr{T,S}}) = one(T)
+Base.one(a::GenericAffExpr) = one(typeof(a))
 
 function assert_isfinite(a::GenericAffExpr)
     coeffs = a.coeffs
