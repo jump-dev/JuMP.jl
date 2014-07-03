@@ -34,6 +34,7 @@
 # Variable
 (+)(lhs::Variable) = lhs
 (-)(lhs::Variable) = AffExpr([lhs],[-1.0],0.0)
+(*)(lhs::Variable) = lhs
 # Variable--Number
 (+)(lhs::Variable, rhs::Number) = (+)( rhs,lhs)
 (-)(lhs::Variable, rhs::Number) = (+)(-rhs,lhs)

@@ -140,3 +140,15 @@ let
     @test conToStr(m.linconstr[3]) == "y[1] + y[2] >= 2"
     @test conToStr(m.linconstr[4]) == "y[1] + y[3] >= 3"
 end
+
+# test communitivity in sum{} in @addConstraint
+let
+    m = Model()
+    @defVar(m, x[1:3])
+    c = [5.4, 3.2, 4]
+    @addConstraint(m, sum{x[i]*c[i], i=1:3} == 1)
+    @addConstraint(m, sum{x[i]*c[i], i=1:3; isodd(i)} == 1)
+
+    @test conToStr(m.linconstr[1]) == "5.4 x[1] + 3.2 x[2] + 4 x[3] == 1"
+    @test conToStr(m.linconstr[2]) == "5.4 x[1] + 4 x[3] == 1"
+end 

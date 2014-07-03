@@ -20,10 +20,12 @@ function timesvar(x::Expr)
     return x.args[end]
 end
 
+addToExpression(aff::AffExpr,x::Variable,c::Number) = addToExpression(aff,c,x)
 addToExpression(aff::AffExpr,c::Number,x::Variable) = push!(aff,c,x)
 
 addToExpression(aff::AffExpr,c::Number,x::Number) = (aff.constant += c*x)
 
+addToExpression(aff::AffExpr,x::AffExpr,c::Number) = addToExpression(aff,c,x)
 function addToExpression(aff::AffExpr,c::Number,x::AffExpr)
     append!(aff.vars, x.vars)
     append!(aff.coeffs, c*x.coeffs)
