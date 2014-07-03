@@ -174,7 +174,7 @@ setPresolve(m::Model, f::Function) = (m.presolve = f)
 ###############################################################################
 # Variable class
 # Doesn't actually do much, just a pointer back to the model
-type Variable <: ReverseDiffSparse.Placeholder
+immutable Variable <: ReverseDiffSparse.Placeholder
     m::Model
     col::Int
 end
