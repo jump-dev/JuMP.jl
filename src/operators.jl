@@ -148,13 +148,13 @@ for op in (:+, :-, :*, :/)
         $(op)(lhs::QuadExpr,rhs::Variable) = $(op)(promote(lhs,rhs)...)
     end
 end
-(+){T<:Number}(lhs::Variable,rhs::T) = AffExpr([lhs],[  1.0], rhs)
-(+){T<:Number}(lhs::T,rhs::Variable) = AffExpr([rhs],[  1.0], lhs)
-(-){T<:Number}(lhs::Variable,rhs::T) = AffExpr([lhs],[  1.0],-rhs)
-(-){T<:Number}(lhs::T,rhs::Variable) = AffExpr([rhs],[ -1.0], lhs)
-(*){T<:Number}(lhs::Variable,rhs::T) = AffExpr([lhs],[  rhs], 0.0)
-(*){T<:Number}(lhs::T,rhs::Variable) = AffExpr([rhs],[  lhs], 0.0)
-(/){T<:Number}(lhs::Variable,rhs::T) = AffExpr([lhs],[1/rhs], 0.0)
+(+){T<:Number}(lhs::Variable,rhs::T) = AffExpr([lhs],Float64[  1.0],convert(Float64, rhs))
+(+){T<:Number}(lhs::T,rhs::Variable) = AffExpr([rhs],Float64[  1.0],convert(Float64, lhs))
+(-){T<:Number}(lhs::Variable,rhs::T) = AffExpr([lhs],Float64[  1.0],convert(Float64,-rhs))
+(-){T<:Number}(lhs::T,rhs::Variable) = AffExpr([rhs],Float64[ -1.0],convert(Float64, lhs))
+(*){T<:Number}(lhs::Variable,rhs::T) = AffExpr([lhs],Float64[  rhs],0.0)
+(*){T<:Number}(lhs::T,rhs::Variable) = AffExpr([rhs],Float64[  lhs],0.0)
+(/){T<:Number}(lhs::Variable,rhs::T) = AffExpr([lhs],Float64[1/rhs],0.0)
 (/){T<:Number}(lhs::T,rhs::Variable) = error("Invalid division operation")
 
 # LinearConstraint
