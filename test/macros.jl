@@ -81,7 +81,7 @@ let
     @defVar(m, y)
     temp = x + 2y + 1
     @addConstraint(m, 3*temp - x - 2 >= 0)
-    @test conToStr(m.linconstr[end]) == "6 y + 2 x >= -1"
+    @test conToStr(m.linconstr[end]) == "2 x + 6 y >= -1"
 end
 
 # test ranges in @defVar

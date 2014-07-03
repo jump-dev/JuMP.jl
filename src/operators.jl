@@ -19,37 +19,53 @@ Base.promote_rule{T,S}(::Type{T},::Type{GenericAffExpr {T,S}}) = GenericAffExpr 
 Base.promote_rule{T,S}(::Type{T},::Type{GenericQuadExpr{T,S}}) = GenericQuadExpr{T,S}
 Base.promote_rule{T,S}(::Type{S},::Type{GenericAffExpr {T,S}}) = GenericAffExpr {T,S}
 Base.promote_rule{T,S}(::Type{S},::Type{GenericQuadExpr{T,S}}) = GenericQuadExpr{T,S}
+Base.promote_rule{T,S}(::Type{GenericAffExpr{T,S}},::Type{GenericQuadExpr{T,S}}) = GenericQuadExpr{T,S}
 Base.convert{T,S}(::Type{GenericAffExpr{T,S}}, x::T) = GenericAffExpr(S[],  T[], x)
 Base.convert{T,S}(::Type{GenericAffExpr{T,S}}, x::S) = GenericAffExpr(S[x], T[one(T)], zero(T))
-Base.convert{T,S}(::Type{GenericQuadExpr{T,S}}, x::T) = GenericQuadExpr(S[], S[], T[], convert(GenericAffExpr, x))
-Base.convert{T,S}(::Type{GenericQuadExpr{T,S}}, x::S) = GenericQuadExpr(S[], S[], T[], convert(GenericAffExpr, x))
+Base.convert{T,S}(::Type{GenericQuadExpr{T,S}}, x::T) = GenericQuadExpr(S[], S[], T[], convert(GenericAffExpr{T,S}, x))
+Base.convert{T,S}(::Type{GenericQuadExpr{T,S}}, x::S) = GenericQuadExpr(S[], S[], T[], convert(GenericAffExpr{T,S}, x))
 Base.convert{T,S}(::Type{GenericQuadExpr{T,S}}, x::GenericAffExpr{T,S}) = GenericQuadExpr(S[], S[], T[], x)
-jtypes = [:GenericAffExpr,:GenericQuadExpr]
-for type1 in jtypes
+for type1 in [:GenericAffExpr,:GenericQuadExpr]
     @eval begin
         (+)(x::$(type1)) = x
         (-)(x::$(type1)) = zero(x) - x
     end
-    for op in (:+, :-, :*, :/)
+    for op in (:+, :-)
         @eval begin
-            $(op){T,V}(lhs::T, rhs::$type1{T,V}) = $(op)(promote(lhs,rhs)...)
-            # $(op){T,V}(lhs::$type1{T,V}, rhs::T) = $(op)(promote(lhs,rhs)...)
+            $(op){T,S,V}(lhs::V, rhs::$type1{T,S}) = $(op)(promote(convert(T,lhs),rhs)...)
+            $(op){T,S}  (lhs::S, rhs::$type1{T,S}) = $(op)(promote(lhs,rhs)...)
+            $(op){T,S,V}(lhs::$type1{T,S}, rhs::V) = $(op)(promote(lhs,convert(T,rhs))...)
+            $(op){T,S}  (lhs::$type1{T,S}, rhs::S) = $(op)(promote(lhs,rhs)...)
         end
-        for type2 in jtypes
-            @eval begin
-                $(op){T,V}(lhs::$(type1){T,V}, rhs::$(type2){T,V}) = $(op)(promote(lhs,rhs)...)
-                $(op){T,V}(lhs::$(type2){T,V}, rhs::$(type1){T,V}) = $(op)(promote(lhs,rhs)...)
-            end
+    end
+    for op in (:*, :/)
+        @eval begin
+            $(op){T,S}(lhs::S, rhs::$type1{T,S}) = $(op)(promote(lhs,rhs)...)
+            $(op){T,S}(lhs::$type1{T,S}, rhs::S) = $(op)(promote(lhs,rhs)...)
         end
+    end
+end
+(*){T,S,V}(lhs::V, rhs::GenericAffExpr{T,S}) = GenericAffExpr(copy(rhs.vars),lhs.*rhs.coeffs,lhs*rhs.constant)
+(*){T,S,V}(lhs::GenericAffExpr{T,S}, rhs::V) = GenericAffExpr(copy(lhs.vars),lhs.coeffs.*rhs,lhs.constant*rhs)
+(/){T,S,V}(lhs::V, rhs::GenericAffExpr{T,S}) = error("Invalid division operation")
+(/){T,S,V}(lhs::GenericAffExpr{T,S}, rhs::V) = GenericAffExpr(copy(lhs.vars),lhs.coeffs./rhs,lhs.constant/rhs)
+(*){T,S,V}(lhs::V, rhs::GenericQuadExpr{T,S}) = GenericQuadExpr(copy(rhs.qvars1),copy(rhs.qvars2),lhs.*rhs.qcoeffs,lhs*rhs.aff)
+(*){T,S,V}(lhs::GenericQuadExpr{T,S}, rhs::V) = GenericQuadExpr(copy(lhs.qvars1),copy(lhs.qvars2),lhs.qcoeffs.*rhs,lhs.aff*rhs)
+(/){T,S,V}(lhs::V, rhs::GenericQuadExpr{T,S}) = error("Invalid division operation")
+(/){T,S,V}(lhs::GenericQuadExpr{T,S}, rhs::V) = GenericQuadExpr(copy(lhs.qvars1),copy(lhs.qvars2),lhs.qcoeffs./rhs,lhs.aff/rhs)
+for op in (:+, :-, :*, :/)
+    @eval begin
+        $(op){T,S}(lhs::GenericAffExpr{T,S},rhs::GenericQuadExpr{T,S}) = $(op)(promote(lhs,rhs)...)
+        $(op){T,S}(lhs::GenericQuadExpr{T,S},rhs::GenericAffExpr{T,S}) = $(op)(promote(lhs,rhs)...)
     end
 end
 
 # AffExpr--AffExpr
 (+){T<:GenericAffExpr}(lhs::T, rhs::T) = T(vcat(lhs.vars,rhs.vars),vcat(lhs.coeffs, rhs.coeffs),lhs.constant+rhs.constant)
 (-){T<:GenericAffExpr}(lhs::T, rhs::T) = T(vcat(lhs.vars,rhs.vars),vcat(lhs.coeffs,-rhs.coeffs),lhs.constant-rhs.constant)
-function (*){T<:GenericAffExpr}(lhs::T, rhs::T)
-    ret = zero(T)
-    zero_c = zero(ret.constant)
+function (*){T,S}(lhs::GenericAffExpr{T,S}, rhs::GenericAffExpr{T,S})
+    ret = zero(GenericQuadExpr{T,S})
+    zero_c = zero(T)
 
     # Quadratic terms
     n = length(lhs.coeffs)
@@ -114,11 +130,32 @@ end
 # Variable-specific
 ###################
 Base.promote_rule{T<:Number}(::Type{T},::Type{Variable}) = AffExpr
+Base.convert{T<:Number}(::Type{AffExpr}, v::T) = AffExpr(Variable[], Float64[], convert(Float64,v))
+Base.convert{T<:Number}(::Type{QuadExpr}, v::T) = QuadExpr(Variable[], Variable[], Float64[], convert(AffExpr,v))
 # Variable--Variable
+(+)(x::Variable) = x
+(-)(x::Variable) = AffExpr([x],[-1.0],0.0)
 (+)(lhs::Variable, rhs::Variable) = AffExpr([lhs,rhs], [1.0,+1.0], 0.0)
 (-)(lhs::Variable, rhs::Variable) = AffExpr([lhs,rhs], [1.0,-1.0], 0.0)
 (*)(lhs::Variable, rhs::Variable) = QuadExpr([lhs],[rhs],[1.0],AffExpr(Variable[],Float64[],0.0))
 (/)(lhs::Variable, rhs::Variable) = error("Cannot divide a variable by a variable")
+
+for op in (:+, :-, :*, :/)
+    @eval begin
+        $(op)(lhs::Variable,rhs::AffExpr) = $(op)(promote(lhs,rhs)...)
+        $(op)(lhs::AffExpr,rhs::Variable) = $(op)(promote(lhs,rhs)...)
+        $(op)(lhs::Variable,rhs::QuadExpr) = $(op)(promote(lhs,rhs)...)
+        $(op)(lhs::QuadExpr,rhs::Variable) = $(op)(promote(lhs,rhs)...)
+    end
+end
+(+){T<:Number}(lhs::Variable,rhs::T) = AffExpr([lhs],[  1.0], rhs)
+(+){T<:Number}(lhs::T,rhs::Variable) = AffExpr([rhs],[  1.0], lhs)
+(-){T<:Number}(lhs::Variable,rhs::T) = AffExpr([lhs],[  1.0],-rhs)
+(-){T<:Number}(lhs::T,rhs::Variable) = AffExpr([rhs],[ -1.0], lhs)
+(*){T<:Number}(lhs::Variable,rhs::T) = AffExpr([lhs],[  rhs], 0.0)
+(*){T<:Number}(lhs::T,rhs::Variable) = AffExpr([rhs],[  lhs], 0.0)
+(/){T<:Number}(lhs::Variable,rhs::T) = AffExpr([lhs],[1/rhs], 0.0)
+(/){T<:Number}(lhs::T,rhs::Variable) = error("Invalid division operation")
 
 # LinearConstraint
 # Number--???

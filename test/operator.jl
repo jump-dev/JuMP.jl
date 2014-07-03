@@ -80,24 +80,24 @@ q3 = 2 * x * x + 1 * y * y + z + 3
 @test conToStr(x == x) == "0 == 0"
 @test conToStr(x >= x) == "0 >= 0"
 # 2-3 Variable--AffExpr
-@test affToStr(z + aff) == "7.1 x + z + 2.5"
-@test affToStr(z - aff) == "-7.1 x + z - 2.5"
+@test affToStr(z + aff)  == "z + 7.1 x + 2.5"
+@test affToStr(z - aff)  == "z - 7.1 x - 2.5"
 @test quadToStr(z * aff) == "7.1 x*z + 2.5 z"
 @test_throws z / aff
-@test conToStr(z <= aff) == "-7.1 x + z <= 2.5"
-@test conToStr(z == aff) == "-7.1 x + z == 2.5"
-@test conToStr(z >= aff) == "-7.1 x + z >= 2.5"
+@test conToStr(z <= aff) == "z - 7.1 x <= 2.5"
+@test conToStr(z == aff) == "z - 7.1 x == 2.5"
+@test conToStr(z >= aff) == "z - 7.1 x >= 2.5"
 @test conToStr(7.1 * x - aff <= 0) == "0 <= 2.5"
 @test conToStr(7.1 * x - aff == 0) == "0 == 2.5"
 @test conToStr(7.1 * x - aff >= 0) == "0 >= 2.5"
 # 2-4 Variable--QuadExpr
-@test quadToStr(w + q) == "2.5 y*z + 7.1 x + w + 2.5"
-@test quadToStr(w - q) == "-2.5 y*z - 7.1 x + w - 2.5"
+@test quadToStr(w + q) == "2.5 y*z + w + 7.1 x + 2.5"
+@test quadToStr(w - q) == "-2.5 y*z + w - 7.1 x - 2.5"
 @test_throws w*q
 @test_throws w/q
-@test conToStr(w <= q) == "-2.5 y*z - 7.1 x + w - 2.5 <= 0"
-@test conToStr(w == q) == "-2.5 y*z - 7.1 x + w - 2.5 == 0"
-@test conToStr(w >= q) == "-2.5 y*z - 7.1 x + w - 2.5 >= 0"
+@test conToStr(w <= q) == "-2.5 y*z + w - 7.1 x - 2.5 <= 0"
+@test conToStr(w == q) == "-2.5 y*z + w - 7.1 x - 2.5 == 0"
+@test conToStr(w >= q) == "-2.5 y*z + w - 7.1 x - 2.5 >= 0"
 
 # 3. AffExpr tests
 # 3-1 AffExpr--Number

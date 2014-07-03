@@ -249,9 +249,9 @@ typealias AffExpr GenericAffExpr{Float64,Variable}
 AffExpr() = AffExpr(Variable[],Float64[],0.0)
 
 Base.isempty{T,S}(a::GenericAffExpr{T,S}) = (length(a.vars) == 0 && a.constant == zero(T))
-Base.convert(::Type{AffExpr}, v::Variable) = AffExpr([v], [1.0], 0.0)
-Base.convert(::Type{AffExpr}, v::Real) = AffExpr(Variable[], Float64[], v)
-Base.zero{T,S}(::Type{GenericAffExpr{T,S}}) = GenericAffExpr(T[], S[], zero(T))
+# Base.convert(::Type{AffExpr}, v::Variable) = AffExpr([v], [1.0], 0.0)
+# Base.convert(::Type{AffExpr}, v::Real) = AffExpr(Variable[], Float64[], v)
+Base.zero{T,S}(::Type{GenericAffExpr{T,S}}) = GenericAffExpr{T,S}(S[], T[], zero(T))
 Base.zero(a::GenericAffExpr) = zero(typeof(a))
 Base.one{T,S}(a::Type{GenericAffExpr{T,S}}) = one(T)
 Base.one(a::GenericAffExpr) = one(typeof(a))
@@ -312,6 +312,12 @@ typealias QuadExpr GenericQuadExpr{Float64,Variable}
 QuadExpr() = QuadExpr(Variable[],Variable[],Float64[],AffExpr())
 
 Base.isempty(q::QuadExpr) = (length(q.qvars1) == 0 && isempty(q.aff))
+# Base.convert(::Type{QuadExpr}, v::Variable) = QuadExpr([],[],[],convert(AffExpr,v))
+# Base.convert(::Type{QuadExpr}, v::Real) = QuadExpr([],[],[],convert(AffExpr,v))
+Base.zero{T,S}(::Type{GenericQuadExpr{T,S}}) = GenericQuadExpr{T,S}(S[], S[], T[], zero(S))
+Base.zero(a::GenericQuadExpr) = zero(typeof(a))
+Base.one{T,S}(a::Type{GenericQuadExpr{T,S}}) = one(T)
+Base.one(a::GenericQuadExpr) = one(typeof(a))
 
 function assert_isfinite(q::GenericQuadExpr)
     assert_isfinite(q.aff)
