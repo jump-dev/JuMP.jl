@@ -101,8 +101,7 @@ type UnsetSolver <: MathProgBase.AbstractMathProgSolver
 end
 
 # Default constructor
-function Model(;solver=nothing)
-    (solver == nothing) && (solver = UnsetSolver())
+function Model(;solver=UnsetSolver())
     if !isa(solver,MathProgBase.AbstractMathProgSolver)
         error("solver argument ($solver) must be an AbstractMathProgSolver")
     end
