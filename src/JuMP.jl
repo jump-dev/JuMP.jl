@@ -102,22 +102,15 @@ end
 
 # Default constructor
 function Model(;solver=nothing)
-    if solver == nothing
-        # use default solvers
-        Model(QuadExpr(),:Min,LinearConstraint[], QuadConstraint[],SOSConstraint[],
-              0,String[],Float64[],Float64[],Int[],
-              0,Float64[],Float64[],Float64[],nothing,UnsetSolver(),false,
-              nothing,nothing,nothing,JuMPDict[],nothing,IndexedVector(Float64,0),nothing,Dict{Symbol,Any}())
-    else
-        if !isa(solver,MathProgBase.AbstractMathProgSolver)
-            error("solver argument ($solver) must be an AbstractMathProgSolver")
-        end
-        # user-provided solver must support problem class
-        Model(QuadExpr(),:Min,LinearConstraint[], QuadConstraint[],SOSConstraint[],
-              0,String[],Float64[],Float64[],Int[],
-              0,Float64[],Float64[],Float64[],nothing,solver,false,
-              nothing,nothing,nothing,JuMPDict[],nothing,IndexedVector(Float64,0),nothing,Dict{Symbol,Any}())
+    (solver == nothing) && (solver = UnsetSolver())
+    if !isa(solver,MathProgBase.AbstractMathProgSolver)
+        error("solver argument ($solver) must be an AbstractMathProgSolver")
     end
+    Model(QuadExpr(),:Min,LinearConstraint[], QuadConstraint[],SOSConstraint[],
+          0,String[],Float64[],Float64[],Int[],
+          0,Float64[],Float64[],Float64[],nothing,solver,
+          false,nothing,nothing,nothing,JuMPDict[],nothing,
+          IndexedVector(Float64,0),nothing,Dict{Symbol,Any}())
 end
 
 # Getters/setters
