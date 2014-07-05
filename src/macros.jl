@@ -220,13 +220,10 @@ macro addConstraint(m, x, extra...)
         code = quote
             q = QuadExpr()
             $(parseExpr(lhs, :q, 1.0))
-            $(refcall) = (isempty(q.qvars1) ? addConstraint($m, $(x.args[2])(q.aff,0)) :
-                                              addConstraint($m, $(x.args[2])(q,0)) )
-            # if isempty(aff.qvars1)
-            #     $(refcall) = addConstraint($m, $(x.args[2])(aff.aff,0) )
-            # else
-            #     $(refcall) = addConstraint($m, $(x.args[2])(aff,0) )
-            # end
+            islinear = isempty(q.qvars1)
+            crefflag && !islinear && error("Three argument form form of @addConstraint does not currently support quadratic constraints")
+            $(refcall) = (islinear ? addConstraint($m, $(x.args[2])(q.aff,0)) :
+                                     addConstraint($m, $(x.args[2])(q,0)) )
         end
     elseif length(x.args) == 5
         # Ranged row
@@ -243,17 +240,10 @@ macro addConstraint(m, x, extra...)
                 error(string("in @addConstraint (",$(string(x)),"): expected ",$(string(ub))," to be a number."))
             end
             $(parseExpr(x.args[3],:q,1.0))
-            $(refcall) = (isempty(q.qvars1) ? addConstraint($m, LinearConstraint(q.aff,$(esc(lb))-q.aff.constant,$(esc(ub))-q.aff.constant)) :
-                                              addConstraint($m,   QuadConstraint(q,    $(esc(lb))-q.aff.constant,$(esc(ub))-q.aff.constant)) )
-            # if isempty(aff.qvars1)               
-            #     $(refcall) = addConstraint($m, 
-            #         LinearConstraint(aff.aff,$(esc(lb))-aff.aff.constant,
-            #             $(esc(ub))-aff.constant))
-            # else
-            #     $(refcall) = addConstraint($m, 
-            #         LinearConstraint(aff,$(esc(lb))-aff.aff.constant,
-            #             $(esc(ub))-aff.aff.constant))
-            # end
+            islinear = isempty(q.qvars1)
+            crefflag && !islinear && error("Three argument form form of @addConstraint does not currently support quadratic constraints")
+            $(refcall) = (islinear ? addConstraint($m, LinearConstraint(q.aff,$(esc(lb))-q.aff.constant,$(esc(ub))-q.aff.constant)) :
+                                     addConstraint($m,   QuadConstraint(q,    $(esc(lb))-q.aff.constant,$(esc(ub))-q.aff.constant)) )
         end
     else
         # Unknown
@@ -265,7 +255,7 @@ macro addConstraint(m, x, extra...)
     # Combine indexing (if needed) with constraint code
     if isa(c,Symbol) || c == nothing
         # No indexing
-        return code
+        return quote crefflag = false; $code; end
     else
         for (idxvar, idxset) in zip(reverse(idxvars),reverse(idxsets))
             code = quote
@@ -277,6 +267,7 @@ macro addConstraint(m, x, extra...)
         mac = Expr(:macrocall,symbol("@gendict"),cname,:(ConstraintRef{LinearConstraint}),idxsets...)
         return quote 
             $mac
+            crefflag = true
             $code
             nothing
         end
