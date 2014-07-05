@@ -49,6 +49,13 @@ end
 
 let
     m = Model()
+    @defVar(m, 3.2 >= x >= 1)
+    @test m.colLower == [1.0]
+    @test m.colUpper == [3.2]
+end
+
+let
+    m = Model()
     @defVar(m, x[1:3,1:3])
     @defVar(m, y)
     C = [1 2 3; 4 5 6; 7 8 9]
