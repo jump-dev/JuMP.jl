@@ -277,13 +277,19 @@ macro defVar(m, x, extra...)
     if isexpr(x,:comparison)
         # We have some bounds
         if x.args[2] == :>= || x.args[2] == :≥
-            # x >= lb
-            var = x.args[1]
-            length(x.args) == 5 &&
-                error("in @defVar ($var): use the form lb <= $var <= ub instead of ub >= $var >= lb.")
-            @assert length(x.args) == 3
-            lb = esc(x.args[3])
-            ub = Inf
+            if length(x.args) == 5
+                # ub >= x >= lb
+                x.args[4] == :>= || x.args[4] == :≥ || error("Invalid variable bounds")
+                var = x.args[3]
+                lb = esc(x.args[5])
+                ub = esc(x.args[1])
+            else
+                # x >= lb
+                var = x.args[1]
+                @assert length(x.args) == 3
+                lb = esc(x.args[3])
+                ub = Inf
+            end
         elseif x.args[2] == :<= || x.args[2] == :≤
             if length(x.args) == 5
                 # lb <= x <= u
