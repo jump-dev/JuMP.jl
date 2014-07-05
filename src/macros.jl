@@ -21,7 +21,7 @@ function timesvar(x::Expr)
 end
 
 addToExpression(aff::AffExpr,x::Variable,c::Number) = addToExpression(aff,c,x)
-addToExpression(aff::AffExpr,c::Number,x::Variable) = push!(aff,c,x)
+addToExpression(aff::AffExpr,c::Number,x::Variable) = push!(aff,convert(Float64,c),x)
 
 addToExpression(aff::AffExpr,c::Number,x::Number) = (aff.constant += c*x)
 
@@ -47,8 +47,8 @@ addToExpression(aff::AffExpr, c::Number, x::QuadExpr) = QuadExpr(copy(x.qvars1),
                                                                          vcat(aff.coeffs,c*x.aff.coeffs),
                                                                          aff.constant+c*x.aff.constant))
 
-addToExpression(quad::QuadExpr,x::Variable,c::Number) = addToExpression(quad,c,x)
-addToExpression(quad::QuadExpr,c::Number,x::Variable) = push!(quad.aff,c,x)
+addToExpression(quad::QuadExpr,x::Variable,c::Float64) = addToExpression(quad,c,x)
+addToExpression(quad::QuadExpr,c::Number,x::Variable) = push!(quad.aff,convert(Float64,c),x)
 
 addToExpression(quad::QuadExpr,c::Number,x::Number) = (quad.aff.constant += c*x)
 
@@ -79,7 +79,6 @@ function addToExpression(quad::QuadExpr,c::Number,x::QuadExpr)
     append!(quad.qcoeffs,c*x.qcoeffs)
     addToExpression(quad,c,x.aff)
 end
-
 
 addToExpression(aff, c, x) = error("Cannot construct an affine expression with a term of type $(typeof(x))")
 
