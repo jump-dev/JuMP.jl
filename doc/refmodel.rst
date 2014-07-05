@@ -85,15 +85,14 @@ Quadratic Objectives
 ^^^^^^^^^^^^^^^^^^^^
 
 Quadratic objectives are supported by JuMP using a solver which implements the
-corresponding extensions of the MathProgBase interface, but currently the 
-``@setObjective`` macro **does not yet support quadratic terms**. Instead you
-may use the (slower) ``setObjective`` function::
+corresponding extensions of the MathProgBase interface. Add them in the same way 
+you would a linear objective::
 
     m = Model()
     @defVar(m, 0 <= x <= 2 )
     @defVar(m, 0 <= y <= 30 )
 
-    setObjective(m, :Min, x*x+ 2x*y + y*y )  # Cannot use macro
+    @setObjective(m, Min, x*x+ 2x*y + y*y )
     @addConstraint(m, x + y >= 1 )
       
     print(m)

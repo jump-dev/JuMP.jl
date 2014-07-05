@@ -161,3 +161,28 @@ let
     @test conToStr(m.linconstr[2]) == "5.4 x[1] + 4 x[3] == 1"
     @test conToStr(m.linconstr[3]) == "x[1] - 13 x[2] - 8 x[3] <= 1"
 end 
+
+# test quadratic objective macro
+let
+    m = Model()
+    @defVar(m, x[1:5])
+    @setObjective(m, Max, sum{i*x[i]*x[j], i=1:5, j=5:-1:1; isodd(i) && iseven(j)} + 2x[5])
+
+    @test quadToStr(m.obj) == "x[1]*x[2] + 3 x[2]*x[3] + x[1]*x[4] + 3 x[3]*x[4] + 5 x[2]*x[5] + 5 x[4]*x[5] + 2 x[5]"
+end
+
+# test quadratic constraint macro
+let 
+    m = Model()
+    @defVar(m, x[1:5])
+
+    @addConstraint(m, x[3]*x[1] + sum{x[i]*x[5-i+1], i=1:5; 2 <= i <= 4} + 4x[5] == 1)
+    @test conToStr(m.quadconstr[1]) == "x[1]*x[3] + x[3]² + 2 x[2]*x[4] + 4 x[5] - 1 == 0"
+
+    @addConstraint(m, sum{sum{(x[i] - 2)*x[j],j=4:5},i=2:3} >= -3*x[2]*2*x[4])
+    @test conToStr(m.quadconstr[2]) == "7 x[2]*x[4] + x[3]*x[4] + x[2]*x[5] + x[3]*x[5] - 4 x[4] - 4 x[5] >= 0"
+
+    myquadexpr = x[1]*x[2]
+    @addConstraint(m, sum{i*myquadexpr + x[i], i=1:3} + sum{x[i] + myquadexpr*i, i=1:3} == 0)
+    @test conToStr(m.quadconstr[3]) == "12 x[1]*x[2] + 2 x[1] + 2 x[2] + 2 x[3] == 0"
+end

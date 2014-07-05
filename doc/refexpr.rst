@@ -37,9 +37,8 @@ be a convex quadratic constraint.
 Methods
 ^^^^^^^
 
-* ``@addConstraint(m::Model, con)`` - efficient way to add linear constraints.
-  Uses macros and thus does not yet support quadratic constraints.
-* ``@addConstraint(m::Model, ref, con)`` - efficient way to add groups of linear constraints.
+* ``@addConstraint(m::Model, con)`` - efficient way to add linear or quadratic constraints.
+* ``@addConstraint(m::Model, ref, con)`` - efficient way to add groups of linear or quadratic constraints.
   See Constraint Reference section for details.
 * ``addConstraint(m::Model, con)`` - general way to add linear and quadratic
   constraints.
