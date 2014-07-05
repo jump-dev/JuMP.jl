@@ -148,7 +148,9 @@ let
     c = [5.4, 3.2, 4]
     @addConstraint(m, sum{x[i]*c[i], i=1:3} == 1)
     @addConstraint(m, sum{x[i]*c[i], i=1:3; isodd(i)} == 1)
+    @addConstraint(m, x[1]*9 - 5*x[2] - 2*sum{ (x[i]+x[i])*2, i=1:3} <= 1)
 
     @test conToStr(m.linconstr[1]) == "5.4 x[1] + 3.2 x[2] + 4 x[3] == 1"
     @test conToStr(m.linconstr[2]) == "5.4 x[1] + 4 x[3] == 1"
+    @test conToStr(m.linconstr[3]) == "x[1] - 13 x[2] - 8 x[3] <= 1"
 end 
