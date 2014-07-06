@@ -29,6 +29,7 @@ let
     @test_approx_eq_eps getValue(z) 2.0 1e-6
     @test_approx_eq_eps getObjectiveValue(m) 201.0 1e-6
 
+
     # Test changing bounds
     # max 1.1x + 1.0y + 100.0z
     # st     x +    y +      z <= 3
@@ -113,6 +114,20 @@ let
     @test_approx_eq_eps getValue(x) 1.0 1e-6
     @test_approx_eq_eps getValue(y) 0.0 1e-6
     @test_approx_eq_eps getValue(z) 1.0 1e-6
+end
+
+# Test adding a "decoupled" variable (#205)
+let
+    m = Model()
+    @defVar(m, x >= 0)
+    @setObjective(m, Min, x)
+    solve(m)
+    @defVar(m, y >= 0)
+    @addConstraint(m, x + y == 1)
+    @setObjective(m, Min, 2x+y)
+    solve(m)
+    @test_approx_eq getValue(x) 0.0
+    @test_approx_eq getValue(y) 1.0
 end
 
 function methods_test(solvername, solverobj, supp)
