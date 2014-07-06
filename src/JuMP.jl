@@ -190,6 +190,14 @@ function Variable(m::Model,lower::Number,upper::Number,cat::Int,name::String)
     push!(m.colUpper, convert(Float64,upper))
     push!(m.colCat, cat)
     push!(m.colVal,NaN)
+    if m.internalModelLoaded
+        if method_exists(MathProgBase.addvar!, (typeof(m.internalModel),Float64,Float64,Float64))
+            MathProgBase.addvar!(m.internalModel,float(lower),float(upper),0.0)
+        else
+            Base.warn_once("Solver does not appear to support adding variables to an existing model. Hot-start is disabled.")
+            m.internalModelLoaded = false
+        end
+    end
     return Variable(m, m.numCols)
 end
 
@@ -510,8 +518,13 @@ end
 function Variable(m::Model,lower::Number,upper::Number,cat::Int,objcoef::Number,
     constraints::Vector{ConstraintRef{LinearConstraint}},coefficients::Vector{Float64};
     name::String="")
-        
-    v = Variable(m, lower, upper, cat, name)
+    m.numCols += 1
+    push!(m.colNames, name)
+    push!(m.colLower, convert(Float64,lower))
+    push!(m.colUpper, convert(Float64,upper))
+    push!(m.colCat, cat)
+    push!(m.colVal,NaN)
+    v = Variable(m,m.numCols)
     # add to existing constraints
     @assert length(constraints) == length(coefficients)
     for i in 1:length(constraints)
