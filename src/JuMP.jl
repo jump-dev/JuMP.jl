@@ -123,6 +123,8 @@ function setObjectiveSense(m::Model, newSense::Symbol)
     end
     m.objSense = newSense
 end
+setObjective(m::Model, something::Any) =
+    error("in setObjective: needs three arguments: model, objective sense (:Max or :Min), and expression.")
 
 # Deep copy the model
 function Base.copy(source::Model)
