@@ -313,7 +313,8 @@ macro setObjective(m, args...)
     quote
         q = QuadExpr()
         $(parseExpr(x, :q, 1.0))
-        setObjective($(esc(m)), $(esc(sense)), q)
+        isempty(q.qvars1) ? setObjective($(esc(m)), $(esc(sense)), q.aff) :
+                            setObjective($(esc(m)), $(esc(sense)), q)
     end
 end
         
