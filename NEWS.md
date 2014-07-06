@@ -1,8 +1,8 @@
 JuMP release notes
 ==================
 
-Unversioned
------------
+Version 0.5.5 (July 6, 2014)
+----------------------------
 
   * ``buildInternalModel(m::Model)`` added to build solver-level model in memory without optimizing.
   * Deprecate ``load_model_only`` keyword argument to ``solve``.
@@ -10,6 +10,7 @@ Unversioned
   * Unicode operators now supported, including ``∑`` for ``sum``, ``∏`` for ``prod``, and ``≤``/``≥`` (requires Julia 0.3)
   * Quadratic constraints supported in ``@addConstraint`` macro.
   * Quadratic objective supported in ``@setObjective`` macro.
+  * Fix bug with problem modification: adding variables that did not appear in existing constraints or objective.
 
 Version 0.5.4 (June 19, 2014)
 ----------------------------
