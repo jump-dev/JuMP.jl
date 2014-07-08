@@ -20,14 +20,12 @@ function timesvar(x::Expr)
     return x.args[end]
 end
 
-addToExpression(aff::AffExpr,x::Variable,c::Number) = addToExpression(aff,c,x)
 addToExpression(aff::AffExpr,c::Number,x::Variable) = push!(aff,convert(Float64,c),x)
 
 addToExpression(aff::AffExpr,c::Number,x::Number) = (aff.constant += c*x)
 
 addToExpression(aff::AffExpr,c::Variable,x::Variable) = QuadExpr([c],[x],[1.0],aff)
 
-addToExpression(aff::AffExpr,x::AffExpr,c::Number) = addToExpression(aff,c,x)
 function addToExpression(aff::AffExpr,c::Number,x::AffExpr)
     append!(aff.vars, x.vars)
     append!(aff.coeffs, c*x.coeffs)
@@ -47,7 +45,6 @@ addToExpression(aff::AffExpr, c::Number, x::QuadExpr) = QuadExpr(copy(x.qvars1),
                                                                          vcat(aff.coeffs,c*x.aff.coeffs),
                                                                          aff.constant+c*x.aff.constant))
 
-addToExpression(quad::QuadExpr,x::Variable,c::Float64) = addToExpression(quad,c,x)
 addToExpression(quad::QuadExpr,c::Number,x::Variable) = push!(quad.aff,convert(Float64,c),x)
 
 addToExpression(quad::QuadExpr,c::Number,x::Number) = (quad.aff.constant += c*x)
@@ -57,7 +54,6 @@ function addToExpression(quad::QuadExpr,c::Variable,x::Variable)
     push!(quad.qvars2, c)
 end
 
-addToExpression(quad::QuadExpr,x::AffExpr,c::Number) = addToExpression(quad::QuadExpr,c::Number,x::AffExpr)
 function addToExpression(quad::QuadExpr,c::Number,x::AffExpr)
     append!(quad.aff.vars, x.vars)
     append!(quad.aff.coeffs, c*x.coeffs)
@@ -72,7 +68,7 @@ function addToExpression(quad::QuadExpr,c::Variable,x::AffExpr)
     addToExpression(quad.aff,x.constant,c)
 end
 
-addToExpression(quad::QuadExpr,x::QuadExpr,c::Number) = addToExpression(quad::QuadExpr,c::Number,x::QuadExpr)
+addToExpression(quad::QuadExpr,x::QuadExpr,c::Number) = addToExpression(quad,c,x)
 function addToExpression(quad::QuadExpr,c::Number,x::QuadExpr)
     append!(quad.qvars1,x.qvars1)
     append!(quad.qvars2,x.qvars2)
