@@ -32,7 +32,7 @@
 
 # This is not well defined if variable types are different, but needed to avoid ambiguities
 (+)(lhs::GenericAffExpr, rhs::GenericAffExpr) = (+)(promote(lhs,rhs)...)
-(-)(lhs::GenericAffExpr, rhs::GenericAffExpr) = (+)(promote(lhs,rhs)...)
+(-)(lhs::GenericAffExpr, rhs::GenericAffExpr) = (-)(promote(lhs,rhs)...)
 
 # Variable
 (+)(lhs::Variable) = lhs
