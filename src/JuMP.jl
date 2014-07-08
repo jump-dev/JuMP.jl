@@ -246,13 +246,17 @@ type GenericAffExpr{CoefType,VarType}
 end
 
 typealias AffExpr GenericAffExpr{Float64,Variable}
+Base.zero{CoefType,VarType}(::Type{GenericAffExpr{CoefType,VarType}}) =
+    GenericAffExpr{CoefType,VarType}(VarType[],CoefType[],zero(CoefType))
+Base.one{CoefType,VarType}(::Type{GenericAffExpr{CoefType,VarType}}) =
+    GenericAffExpr{CoefType,VarType}(VarType[],CoefType[],one(CoefType))
+Base.zero(a::GenericAffExpr) = zero(typeof(a))
+Base.one(a::GenericAffExpr) = one(typeof(a))
 AffExpr() = AffExpr(Variable[],Float64[],0.0)
 
 Base.isempty(a::AffExpr) = (length(a.vars) == 0 && a.constant == 0.)
 Base.convert(::Type{AffExpr}, v::Variable) = AffExpr([v], [1.], 0.)
 Base.convert(::Type{AffExpr}, v::Real) = AffExpr(Variable[], Float64[], v)
-Base.zero(::Type{AffExpr}) = AffExpr(Variable[],Float64[],0.)
-Base.zero(a::AffExpr) = zero(typeof(a))
 
 function assert_isfinite(a::GenericAffExpr)
     coeffs = a.coeffs
