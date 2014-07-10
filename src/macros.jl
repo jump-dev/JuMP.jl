@@ -20,44 +20,60 @@ function timesvar(x::Expr)
     return x.args[end]
 end
 
-addToExpression(aff::AffExpr,c::Number,x::Variable) = push!(aff,convert(Float64,c),x)
+function addToExpression(aff::AffExpr,c::Number,x::Variable)
+    push!(aff,convert(Float64,c),x)
+    return aff
+end
 
-addToExpression(aff::AffExpr,c::Number,x::Number) = (aff.constant += c*x)
+function addToExpression(aff::AffExpr,c::Number,x::Number)
+    (aff.constant += c*x)
+    return aff
+end
 
-addToExpression(aff::AffExpr,c::Variable,x::Variable) = QuadExpr([c],[x],[1.0],aff)
+function addToExpression(aff::AffExpr,c::Variable,x::Variable)
+    q = QuadExpr([c],[x],[1.0],aff)
+    return q
+end
 
 function addToExpression(aff::AffExpr,c::Number,x::AffExpr)
     append!(aff.vars, x.vars)
     append!(aff.coeffs, c*x.coeffs)
     aff.constant += c*x.constant
+    return aff
 end
 
 addToExpression(aff::AffExpr,x::AffExpr,c::Variable) = addToExpression(aff,c,x)
 addToExpression(aff::AffExpr,c::Variable,x::AffExpr) = QuadExpr(fill(c,length(x.vars)),
                                                                 x.vars,
                                                                 x.coeffs,
-                                                                aff)
+                                                                addToExpression(aff,x.constant,c))
 
 addToExpression(aff::AffExpr, c::Number, x::QuadExpr) = QuadExpr(copy(x.qvars1),
                                                                  copy(x.qvars2), 
                                                                  c*x.qcoeffs, 
-                                                                 AffExpr(vcat(aff.vars,x.aff.vars),
-                                                                         vcat(aff.coeffs,c*x.aff.coeffs),
-                                                                         aff.constant+c*x.aff.constant))
+                                                                 addToExpression(aff,c,x.aff))
 
-addToExpression(quad::QuadExpr,c::Number,x::Variable) = push!(quad.aff,convert(Float64,c),x)
+function addToExpression(quad::QuadExpr,c::Number,x::Variable)
+    push!(quad.aff,convert(Float64,c),x)
+    return quad
+end
 
-addToExpression(quad::QuadExpr,c::Number,x::Number) = (quad.aff.constant += c*x)
+function addToExpression(quad::QuadExpr,c::Number,x::Number)
+    (quad.aff.constant += c*x)
+    return quad
+end
 
 function addToExpression(quad::QuadExpr,c::Variable,x::Variable)
     push!(quad.qvars1, x)
     push!(quad.qvars2, c)
+    return quad
 end
 
 function addToExpression(quad::QuadExpr,c::Number,x::AffExpr)
     append!(quad.aff.vars, x.vars)
     append!(quad.aff.coeffs, c*x.coeffs)
     quad.aff.constant += c*x.constant
+    return quad
 end
 
 addToExpression(quad::QuadExpr,x::AffExpr,c::Variable) = addToExpression(quad,c,x)
@@ -66,6 +82,7 @@ function addToExpression(quad::QuadExpr,c::Variable,x::AffExpr)
     append!(quad.qvars2, x.vars)
     append!(quad.qcoeffs, x.coeffs)
     addToExpression(quad.aff,x.constant,c)
+    return quad
 end
 
 addToExpression(quad::QuadExpr,x::QuadExpr,c::Number) = addToExpression(quad,c,x)
@@ -74,9 +91,10 @@ function addToExpression(quad::QuadExpr,c::Number,x::QuadExpr)
     append!(quad.qvars2,x.qvars2)
     append!(quad.qcoeffs,c*x.qcoeffs)
     addToExpression(quad,c,x.aff)
+    return quad
 end
 
-addToExpression(aff, c, x) = error("Cannot construct an affine expression with a term of type $(typeof(x))")
+addToExpression(aff, c, x) = error("Cannot construct an affine expression with a term of type ($(typeof(c)))*($(typeof(x)))")
 
 function parseCurly(x::Expr, aff::Symbol, constantCoef)
     if !(x.args[1] == :sum || x.args[1] == :∑ || x.args[1] == :Σ) # allow either N-ARY SUMMATION or GREEK CAPITAL LETTER SIGMA
@@ -119,9 +137,20 @@ function parseCurly(x::Expr, aff::Symbol, constantCoef)
         for level in (length(x.args)-1):-1:3
             preblock = Expr(:for, esc(x.args[level]),preblock)
         end
-        preblock = :($len = 0; $preblock;
-            sizehint($aff.aff.vars,length($aff.aff.vars)+$len);
-            sizehint($aff.aff.coeffs,length($aff.aff.coeffs)+$len))
+        preblock = quote
+            $len = 0
+            $preblock
+            if isa($aff,AffExpr)
+                sizehint($aff.vars,length($aff.vars)+$len)
+                sizehint($aff.coeffs,length($aff.coeffs)+$len)
+            else
+                sizehint($aff.qvars1,length($aff.qvars1)+$len)
+                sizehint($aff.qvars2,length($aff.qvars2)+$len)
+                sizehint($aff.qcoeffs,length($aff.qcoeffs)+$len)
+                sizehint($aff.aff.vars,length($aff.aff.vars)+$len)
+                sizehint($aff.aff.coeffs,length($aff.aff.coeffs)+$len)
+            end
+        end
         code = :($preblock;$code)
     end
 
@@ -132,7 +161,7 @@ end
 function parseExpr(x, aff::Symbol, constantCoef)
     if !isa(x,Expr)
         # at the lowest level
-        :(addToExpression($aff, $(esc(constantCoef)), $(esc(x))))
+        :($aff = addToExpression($aff, $(esc(constantCoef)), $(esc(x))))
     else
         if x.head == :call && x.args[1] == :+
             Expr(:block,[parseExpr(arg,aff,constantCoef) for arg in x.args[2:end]]...)
@@ -155,7 +184,7 @@ function parseExpr(x, aff::Symbol, constantCoef)
         elseif x.head == :curly
             parseCurly(x,aff,constantCoef)
         else # at lowest level?
-            :(addToExpression($aff, $(esc(constantCoef)), $(esc(x))))
+            :($aff = addToExpression($aff, $(esc(constantCoef)), $(esc(x))))
         end
     end
 end
@@ -214,12 +243,10 @@ macro addConstraint(m, x, extra...)
         end
         lhs = :($(x.args[1]) - $(x.args[3])) 
         code = quote
-            q = QuadExpr()
+            q = AffExpr()
             $(parseExpr(lhs, :q, 1.0))
-            islinear = isempty(q.qvars1)
-            crefflag && !islinear && error("Three argument form form of @addConstraint does not currently support quadratic constraints")
-            $(refcall) = (islinear ? addConstraint($m, $(x.args[2])(q.aff,0)) :
-                                     addConstraint($m, $(x.args[2])(q,0)) )
+            crefflag && !isa(q,AffExpr) && error("Three argument form form of @addConstraint does not currently support quadratic constraints")
+            $(refcall) = addConstraint($m, $(x.args[2])(q,0))
         end
     elseif length(x.args) == 5
         # Ranged row
@@ -229,24 +256,22 @@ macro addConstraint(m, x, extra...)
         lb = x.args[1]
         ub = x.args[5]
         code = quote
-            q = QuadExpr()
+            aff = AffExpr()
             if !isa($(esc(lb)),Number)
                 error(string("in @addConstraint (",$(string(x)),"): expected ",$(string(lb))," to be a number."))
             elseif !isa($(esc(ub)),Number)
                 error(string("in @addConstraint (",$(string(x)),"): expected ",$(string(ub))," to be a number."))
             end
-            $(parseExpr(x.args[3],:q,1.0))
-            islinear = isempty(q.qvars1)
-            crefflag && !islinear && error("Three argument form form of @addConstraint does not currently support quadratic constraints")
-            $(refcall) = (islinear ? addConstraint($m, LinearConstraint(q.aff,$(esc(lb))-q.aff.constant,$(esc(ub))-q.aff.constant)) :
-                                     addConstraint($m,   QuadConstraint(q,    $(esc(lb))-q.aff.constant,$(esc(ub))-q.aff.constant)) )
+            $(parseExpr(x.args[3],:aff,1.0))
+            isa(aff,AffExpr) || error("Ranged quadratic constraints are not allowed") 
+            $(refcall) = addConstraint($m, LinearConstraint(aff,$(esc(lb))-aff.constant,$(esc(ub))-aff.constant))
         end
     else
         # Unknown
         error("in @addConstraint ($(string(x))): constraints must be in one of the following forms:\n" *
               "       expr1 <= expr2\n" * "       expr1 >= expr2\n" *
               "       expr1 == expr2\n" * "       lb <= expr <= ub")
-    end
+          end
 
     # Combine indexing (if needed) with constraint code
     if isa(c,Symbol) || c == nothing
@@ -307,10 +332,9 @@ macro setObjective(m, args...)
         sense = Expr(:quote,sense)
     end
     quote
-        q = QuadExpr()
+        q = AffExpr()
         $(parseExpr(x, :q, 1.0))
-        isempty(q.qvars1) ? setObjective($(esc(m)), $(esc(sense)), q.aff) :
-                            setObjective($(esc(m)), $(esc(sense)), q)
+        setObjective($(esc(m)), $(esc(sense)), q)
     end
 end
         
