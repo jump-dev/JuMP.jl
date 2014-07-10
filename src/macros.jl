@@ -94,7 +94,7 @@ function addToExpression(quad::QuadExpr,c::Number,x::QuadExpr)
     return quad
 end
 
-addToExpression(aff, c, x) = error("Cannot construct an affine expression with a term of type $(typeof(x))")
+addToExpression(aff, c, x) = error("Cannot construct an affine expression with a term of type ($(typeof(c)))*($(typeof(x)))")
 
 function parseCurly(x::Expr, aff::Symbol, constantCoef)
     if !(x.args[1] == :sum || x.args[1] == :∑ || x.args[1] == :Σ) # allow either N-ARY SUMMATION or GREEK CAPITAL LETTER SIGMA
@@ -144,9 +144,9 @@ function parseCurly(x::Expr, aff::Symbol, constantCoef)
                 sizehint($aff.vars,length($aff.vars)+$len)
                 sizehint($aff.coeffs,length($aff.coeffs)+$len)
             else
-                #sizehint($aff.qvars1,length($aff.qvars1)+$len)
-                #sizehint($aff.qvars2,length($aff.qvars2)+$len)
-                #sizehint($aff.qcoeffs,length($aff.qcoeffs)+$len)
+                sizehint($aff.qvars1,length($aff.qvars1)+$len)
+                sizehint($aff.qvars2,length($aff.qvars2)+$len)
+                sizehint($aff.qcoeffs,length($aff.qcoeffs)+$len)
                 sizehint($aff.aff.vars,length($aff.aff.vars)+$len)
                 sizehint($aff.aff.coeffs,length($aff.aff.coeffs)+$len)
             end
@@ -245,8 +245,7 @@ macro addConstraint(m, x, extra...)
         code = quote
             q = AffExpr()
             $(parseExpr(lhs, :q, 1.0))
-            islinear = isa(q,AffExpr)
-            crefflag && !islinear && error("Three argument form form of @addConstraint does not currently support quadratic constraints")
+            crefflag && !isa(q,AffExpr) && error("Three argument form form of @addConstraint does not currently support quadratic constraints")
             $(refcall) = addConstraint($m, $(x.args[2])(q,0))
         end
     elseif length(x.args) == 5
