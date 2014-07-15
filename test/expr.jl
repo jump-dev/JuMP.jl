@@ -34,3 +34,27 @@ let
     @test getValue(x[1]-x[2]+2x[3]-1.0) == 2.0
     @test getValue(x[1]*x[1]-2x[2]*x[1]+3x[2]+1) == 4.0
 end
+
+# Test iterators
+let
+    m = Model()
+    @defVar(m, x[1:10])
+
+    a1 = 1*x[1] + 2*x[2]
+    k = 1
+    for (coeff,var) in a1
+        if k == 1
+            @test coeff == 1
+            @test isequal(var, x[1])
+        elseif k == 2
+            @test coeff == 2
+            @test isequal(var, x[2])
+        end
+        k += 1
+    end
+
+    a2 = AffExpr()
+    for (coeff, var) in a2
+        @test coeff == 0.0  # Shouldn't be called
+    end
+end
