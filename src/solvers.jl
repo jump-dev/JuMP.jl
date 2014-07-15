@@ -1,7 +1,15 @@
 function solve(m::Model;IpoptOptions::Dict=Dict(),load_model_only=false, suppress_warnings=false)
     load_model_only == true && warn("load_model_only keyword is deprecated; use the buildInternalModel function instead")
     if m.nlpdata != nothing
-        return solveIpopt(m, options=IpoptOptions, suppress_warnings=suppress_warnings)
+        if length(IpoptOptions) > 0
+            error("Specifying options by using IpoptOptions is no longer supported. Use \"m = Model(solver=IpoptSolver(option1=value1,option2=value2,...)\" instead, after loading the Ipopt package.")
+        end
+        if isa(m.solver,UnsetSolver)
+            m.solver = MathProgBase.defaultNLPsolver
+        end
+        s = solvenlp(m, suppress_warnings=suppress_warnings)
+        m.solver = UnsetSolver()
+        return s
     end
     # Analyze model to see if any integers
     anyInts = (length(m.sosconstr) > 0)

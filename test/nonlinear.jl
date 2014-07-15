@@ -101,3 +101,19 @@ let
     @test_approx_eq_eps m.objVal -1-4/sqrt(3) 1e-6
     @test_approx_eq_eps (getValue(x) + getValue(y)) -1/3 1e-3
 end
+
+# maximization sense
+let
+    m = Model()
+    @defVar(m, -2 <= x <= 2)
+    @defVar(m, -2 <= y <= 2)
+
+    @setNLObjective(m, Max, y - x)
+    addConstraint(m, x + x*x + x*y + y*y <= 1)
+
+    status = solve(m)
+
+    @assert status == :Optimal
+    @test_approx_eq_eps m.objVal 1+4/sqrt(3) 1e-6
+    @test_approx_eq_eps (getValue(x) + getValue(y)) -1/3 1e-3
+end

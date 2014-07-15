@@ -10,6 +10,8 @@ Unversioned
   * Unicode operators now supported, including ``∑`` for ``sum``, ``∏`` for ``prod``, and ``≤``/``≥`` (requires Julia 0.3)
   * Quadratic constraints supported in ``@addConstraint`` macro.
   * Quadratic objective supported in ``@setObjective`` macro.
+  * MathProgBase solver-independent inteface replaces Ipopt-specific interface for nonlinear problems
+    - **Breaking change** ``IpoptOptions`` no longer supported to specify solver options, use ``m = Model(solver=IpoptSolver(options...))`` instead.
 
 Version 0.5.5 (July 6, 2014)
 ----------------------------
