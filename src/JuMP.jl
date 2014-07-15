@@ -247,37 +247,15 @@ type GenericAffExpr{CoefType,VarType}
     constant::CoefType
 end
 
-typealias AffExpr GenericAffExpr{Float64,Variable}
 Base.zero{CoefType,VarType}(::Type{GenericAffExpr{CoefType,VarType}}) =
     GenericAffExpr{CoefType,VarType}(VarType[],CoefType[],zero(CoefType))
 Base.one{CoefType,VarType}(::Type{GenericAffExpr{CoefType,VarType}}) =
     GenericAffExpr{CoefType,VarType}(VarType[],CoefType[],one(CoefType))
 Base.zero(a::GenericAffExpr) = zero(typeof(a))
 Base.one(a::GenericAffExpr) = one(typeof(a))
-AffExpr() = AffExpr(Variable[],Float64[],0.0)
-
-Base.isempty(a::AffExpr) = (length(a.vars) == 0 && a.constant == 0.)
-Base.convert(::Type{AffExpr}, v::Variable) = AffExpr([v], [1.], 0.)
-Base.convert(::Type{AffExpr}, v::Real) = AffExpr(Variable[], Float64[], v)
-
-function assert_isfinite(a::GenericAffExpr)
-    coeffs = a.coeffs
-    for i in 1:length(a.vars)
-        isfinite(coeffs[i]) || error("Invalid coefficient $(coeffs[i]) on variable $(a.vars[i])")
-    end
-end
-
-function setObjective(m::Model, sense::Symbol, a::AffExpr)
-    setObjectiveSense(m, sense)
-    m.obj = QuadExpr()
-    m.obj.aff = a
-end
-
-# Copy utility function, not exported
-function Base.copy(a::AffExpr, new_model::Model)
-    return AffExpr([Variable(new_model, v.col) for v in a.vars],
-                                 a.coeffs[:], a.constant)
-end
+Base.start(aff::GenericAffExpr) = 1
+Base.done(aff::GenericAffExpr, state::Int) = state > length(aff.vars)
+Base.next(aff::GenericAffExpr, state::Int) = ((aff.coeffs[state], aff.vars[state]), state+1)
 
 # More efficient ways to grow an affine expression
 # Add a single term to an affine expression
@@ -292,6 +270,31 @@ function Base.append!{T,S}(aff::GenericAffExpr{T,S}, other::GenericAffExpr{T,S})
     aff.constant += other.constant  # Not efficient if CoefType isn't immutable
 end
 
+###############################################################################
+# Affine expressions, the specific GenericAffExpr used by JuMP
+typealias AffExpr GenericAffExpr{Float64,Variable}
+AffExpr() = AffExpr(Variable[],Float64[],0.0)
+
+Base.isempty(a::AffExpr) = (length(a.vars) == 0 && a.constant == 0.)
+Base.convert(::Type{AffExpr}, v::Variable) = AffExpr([v], [1.], 0.)
+Base.convert(::Type{AffExpr}, v::Real) = AffExpr(Variable[], Float64[], v)
+
+function assert_isfinite(a::AffExpr)
+    coeffs = a.coeffs
+    for i in 1:length(a.vars)
+        isfinite(coeffs[i]) || error("Invalid coefficient $(coeffs[i]) on variable $(a.vars[i])")
+    end
+end
+
+function setObjective(m::Model, sense::Symbol, a::AffExpr)
+    setObjectiveSense(m, sense)
+    m.obj = QuadExpr()
+    m.obj.aff = a
+end
+
+Base.copy(a::AffExpr, new_model::Model) =
+    AffExpr([Variable(new_model, v.col) for v in a.vars], a.coeffs[:], a.constant)
+
 function getValue(a::AffExpr)
     ret = a.constant
     for it in 1:length(a.vars)
@@ -299,7 +302,6 @@ function getValue(a::AffExpr)
     end
     return ret
 end
-
 getValue(arr::Array{AffExpr}) = map(getValue, arr)
 
 ###############################################################################
