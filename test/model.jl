@@ -19,15 +19,13 @@ let
     solve(modErr)
     @test_throws getDual(con)
 
-    #=
-    Removed due to issue #222
-    modErr = Model()
-    @defVar(modErr, 0 <= x <= 1)
-    @setObjective(modErr, Max, x)
-    @addConstraint(modErr, x <= -1)
-    solve(modErr)
-    @test isnan(getValue(x))
-    =#
+    # Removed due to issue #222
+    #modErr = Model()
+    #@defVar(modErr, 0 <= x <= 1)
+    #@setObjective(modErr, Max, x)
+    #@addConstraint(modErr, x <= -1)
+    #solve(modErr)
+    #@test isnan(getValue(x))
 end
 
 ###############################################################################
