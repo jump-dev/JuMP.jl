@@ -13,10 +13,7 @@ derivatives to solvers. This information can improve solver accuracy and
 performance.
 
 
-Currently, `Ipopt <https://projects.coin-or.org/Ipopt>`_
-is the only supported solver. To install Ipopt, run::
 
-    Pkg.add("Ipopt")
 
 Nonlinear objectives and constraints are specified by using the ``@setNLObjective``
 and ``@addNLConstraint`` macros. The familiar ``sum{}`` syntax is supported within
@@ -48,17 +45,20 @@ For example, we can solve the classical Rosenbrock problem (with a twist) as fol
 
 Examples: `optimal control <https://github.com/JuliaOpt/JuMP.jl/blob/master/examples/optcontrol.jl>`_, `maximum likelihood estimation <https://github.com/JuliaOpt/JuMP.jl/blob/master/examples/mle.jl>`_, and  `Hock-Schittkowski tests <https://github.com/JuliaOpt/JuMP.jl/tree/master/test/hockschittkowski>`_.
 
+Solvers and Options
+^^^^^^^^^^^^^^^^^^^
 
-Solver Options
-^^^^^^^^^^^^^^
+Currently, `Ipopt <https://projects.coin-or.org/Ipopt>`_
+is the only supported solver. To install Ipopt, run::
 
-Solution options for Ipopt can be passed by using the optional ``IpoptOptions`` parameter to ``solve()``::
+    Pkg.add("Ipopt")
 
-    ...
-    solve(m, IpoptOptions=[("tol",1e-6)])
-    ...
+Solution options are specified by using the ``IpoptSolver`` object, e.g.::
 
-to set the relative convergence tolerance to ``1e-6``. A full list of options is available `here <http://www.coin-or.org/Ipopt/documentation/node41.html>`_. This syntax is temporary and will be replaced in the future once nonlinear modeling extensions are implemented at the solver-independent MathProgBase level.
+    using Ipopt
+    m = Model(solver=IpoptSolver(tol=1e-6))
+
+sets the relative convergence tolerance to ``1e-6``. A full list of options is available `here <http://www.coin-or.org/Ipopt/documentation/node41.html>`_. 
 
 Performance
 ^^^^^^^^^^^
