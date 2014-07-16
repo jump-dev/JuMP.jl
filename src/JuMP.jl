@@ -286,6 +286,7 @@ function assert_isfinite(a::AffExpr)
     end
 end
 
+setObjective(m::Model, sense::Symbol, x::Variable) = setObjective(m, sense, convert(AffExpr,x))
 function setObjective(m::Model, sense::Symbol, a::AffExpr)
     setObjectiveSense(m, sense)
     m.obj = QuadExpr()
