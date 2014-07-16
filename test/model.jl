@@ -11,6 +11,23 @@ let
     @defVar(modErr, errVar)
     @test isnan(getValue(errVar))
     @test_throws getDual(errVar)
+
+    modErr = Model()
+    @defVar(modErr, x, Bin)
+    @setObjective(modErr, Max, x)
+    con = @addConstraint(modErr, x <= 0.5)
+    solve(modErr)
+    @test_throws getDual(con)
+
+    #=
+    Removed due to issue #222
+    modErr = Model()
+    @defVar(modErr, 0 <= x <= 1)
+    @setObjective(modErr, Max, x)
+    @addConstraint(modErr, x <= -1)
+    solve(modErr)
+    @test isnan(getValue(x))
+    =#
 end
 
 ###############################################################################
@@ -261,4 +278,30 @@ let
     @setObjective(mod, Min, x)
     @addConstraint(mod, Min, NaN*x == 0)
     @test_throws solve(mod)
+end
+
+######################################################################
+# Test all MPS paths
+let
+    mod = Model()
+    @defVar(mod, free_var)
+    @defVar(mod, int_var, Bin)
+    @defVar(mod, low_var >= 5)
+    @addConstraint(mod, free_var == int_var)
+    @addConstraint(mod, free_var - int_var >= 0)
+    setObjective(mod, :Max, free_var*int_var + low_var)
+    writeMPS(mod,"test.mps")
+end
+
+######################################################################
+# Test all LP paths
+let
+    mod = Model()
+    @defVar(mod, free_var)
+    setObjective(mod, :Max, free_var*free_var)
+    @test_throws writeLP("test.lp")
+    @setObjective(mod, Max, free_var)
+    @addConstraint(mod, free_var - 2*free_var == 0)
+    @addConstraint(mod, free_var + 2*free_var >= 1)
+    writeLP(mod,"test.lp")
 end
