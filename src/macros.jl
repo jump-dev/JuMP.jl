@@ -140,7 +140,7 @@ function parseCurly(x::Expr, aff::Symbol, constantCoef)
         preblock = quote
             $len = 0
             $preblock
-            if isa($aff,AffExpr)
+            if isa($aff,GenericAffExpr)
                 sizehint($aff.vars,length($aff.vars)+$len)
                 sizehint($aff.coeffs,length($aff.coeffs)+$len)
             else
