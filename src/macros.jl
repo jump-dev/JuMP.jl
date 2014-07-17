@@ -325,7 +325,7 @@ end
 macro setObjective(m, args...)
     if length(args) != 2
         # Either just an objective sene, or just an expression.
-        error("in @setObjective: needs two arguments: objective sense (Max or Min) and expression.")
+        error("in @setObjective: needs three arguments: model, objective sense (Max or Min) and expression.")
     end
     sense, x = args
     if sense == :Min || sense == :Max
@@ -337,7 +337,19 @@ macro setObjective(m, args...)
         setObjective($(esc(m)), $(esc(sense)), q)
     end
 end
-        
+
+macro buildExpr(args...)
+    if length(args) != 1
+        # Either just an objective sene, or just an expression.
+        error("in @buildExpr: needs one argument, the expression.")
+    end
+    x = args[1]
+    quote
+        q = AffExpr()
+        $(parseExpr(x, :q, 1.0))
+        q
+    end
+end
 
 macro defVar(m, x, extra...)
     m = esc(m)
