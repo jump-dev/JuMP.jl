@@ -45,6 +45,9 @@ let
     @addConstraint(m, -1 <= x+1 <= 1)
     @test conToStr(m.linconstr[end]) == "-2 <= x <= 0"
     @test_throws @addConstraint(m, x <= t <= y)
+
+    aff = @buildExpr(3x - y - 3.3(w + 2z) + 5)
+    @test affToStr(aff) == "3 x - y - 3.3 w - 6.6 z + 5"
 end
 
 let

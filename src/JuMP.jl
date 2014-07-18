@@ -34,7 +34,7 @@ export
     
 # Macros and support functions
     @addConstraint, @addConstraints, @defVar, 
-    @defConstrRef, @setObjective, addToExpression,
+    @defConstrRef, @setObjective, addToExpression, @buildExpr, 
     @setNLObjective, @addNLConstraint
 
 include("JuMPDict.jl")
