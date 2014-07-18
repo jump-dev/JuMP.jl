@@ -16,62 +16,59 @@ function initNLP(m::Model)
     end
 end
 
-if isdir(Pkg.dir("Ipopt"))
-    eval(Expr(:using,:Ipopt))
+type JuMPNLPEvaluator <: MathProgBase.AbstractNLPEvaluator
+    m::Model
+    A::SparseMatrixCSC{Float64,Int} # linear constraint matrix
+    eval_f
+    eval_g
+    eval_grad_f
+    eval_jac_g
+    eval_hesslag
+    jac_I::Vector{Int}
+    jac_J::Vector{Int}
+    hess_I::Vector{Int}
+    hess_J::Vector{Int}
+    # timers
+    eval_f_timer::Float64
+    eval_g_timer::Float64
+    eval_grad_f_timer::Float64
+    eval_jac_g_timer::Float64
+    eval_hesslag_timer::Float64
 end
 
-function solveIpopt(m::Model; options::Dict=Dict(), suppress_warnings=false)
-    if Pkg.installed("Ipopt") === nothing
-        error("Cannot solve nonlinear instances without Ipopt solver. Please run Pkg.add(\"Ipopt\").")
-    end
-    # check that there are no integer variables
-    for j = 1:m.numCols
-        if m.colCat[j] == INTEGER
-            error("Integer variables present in nonlinear problem")
+JuMPNLPEvaluator(m::Model, A) = JuMPNLPEvaluator(m, A, nothing, nothing, nothing, nothing, nothing, Int[], Int[], Int[], Int[],0.0,0.0,0.0,0.0,0.0)
+
+function MathProgBase.initialize(d::JuMPNLPEvaluator, requested_features::Vector{Symbol})
+    for feat in requested_features
+        if !(feat in [:Grad, :Jac, :Hess])
+            error("Unsupported feature $feat")
+            # TODO: implement Jac-vec and Hess-vec products
+            # for solvers that need them
         end
     end
-    tic()
-    nldata::NLPData = m.nlpdata
+    nldata::NLPData = d.m.nlpdata
     has_nlobj = isa(nldata.nlobj, ReverseDiffSparse.SymbolicOutput)
     if has_nlobj
-        @assert length(m.obj.qvars1) == 0 && length(m.obj.aff.vars) == 0
+        @assert length(d.m.obj.qvars1) == 0 && length(d.m.obj.aff.vars) == 0
     end
-    objscale = 1.0
-    if m.objSense == :Max
-        objscale = -1.0
-    end
+    
+    tic()
 
-    linobj, linrowlb, linrowub = prepProblemBounds(m)
-    A = prepConstrMatrix(m)
+    linobj, linrowlb, linrowub = prepProblemBounds(d.m)
 
-    nlrowlb = Float64[]
-    nlrowub = Float64[]
+    A = d.A
+
     n_nlconstr = length(nldata.nlconstr)
 
-    constrhessI, constrhessJ = prep_sparse_hessians(nldata.nlconstrlist, m.numCols)
-    jacI, jacJ = jac_nz(nldata.nlconstrlist)
-    nnz_jac = length(A.nzval) + length(jacI)
+    constrhessI, constrhessJ = prep_sparse_hessians(nldata.nlconstrlist, d.m.numCols)
+    nljacI, nljacJ = jac_nz(nldata.nlconstrlist) # nonlinear jacobian components
+    nnz_jac = nnz(A) + length(nljacI)
     nnz_hess = length(constrhessI)
-    for c in nldata.nlconstr
-        push!(nlrowlb, c.lb)
-        push!(nlrowub, c.ub)
-    end
-    quadrowlb = Float64[]
-    quadrowub = Float64[]
-    for c in m.quadconstr
+
+    for c in d.m.quadconstr
         nnz_jac += 2*length(c.terms.qvars1)+length(c.terms.aff.vars)
         nnz_hess += length(c.terms.qvars1)
-        if c.sense == :(<=)
-            push!(quadrowlb, -Inf)
-            push!(quadrowub, 0.0)
-        elseif c.sense == :(>=)
-            push!(quadrowlb, 0.0)
-            push!(quadrowub, Inf)
-        else
-            error("Unrecognized quadratic constraint sense $(c.sense)")
-        end
     end
-    tf, tgf, tg, tjg, th = zeros(5)
     
     if has_nlobj
         fg = genfgrad_simple(nldata.nlobj)
@@ -81,50 +78,48 @@ function solveIpopt(m::Model; options::Dict=Dict(), suppress_warnings=false)
             #println("f(x) = ", f(x))
             tic()
             v = f(x)
-            tf += toq()
-            return objscale*v
+            d.eval_f_timer += toq()
+            return v
         end
 
-        function eval_grad_f(x, g)
+        function eval_grad_f(g, x)
             tic()
             fg(x,g)
-            scale!(g,objscale)
-            tgf += toq()
+            d.eval_grad_f_timer += toq()
             #print("x = ");show(x);println()
             #println("gradf(x) = ");show(g);println()
         end
     else
         # linear and quadratic
-        m.colVal = copy(m.colVal) # temporary workaround for julia issue #6645
+        d.m.colVal = copy(d.m.colVal) # temporary workaround for julia issue #6645
         function eval_f(x)
             tic()
-            v = dot(linobj,x) + m.obj.aff.constant 
-            qobj::QuadExpr = m.obj
+            v = dot(linobj,x) + d.m.obj.aff.constant
+            qobj::QuadExpr = d.m.obj
             for k in 1:length(qobj.qvars1)
                 v += qobj.qcoeffs[k]*x[qobj.qvars1[k].col]*x[qobj.qvars2[k].col]
             end
-            tf += toq()
-            return objscale*v
+            d.eval_f_timer += toq()
+            return v
         end
 
-        function eval_grad_f(x,g)
+        function eval_grad_f(g, x)
             tic()
             copy!(g,linobj)
-            qobj::QuadExpr = m.obj
+            qobj::QuadExpr = d.m.obj
             for k in 1:length(qobj.qvars1)
                 coef = qobj.qcoeffs[k]
                 g[qobj.qvars1[k].col] += coef*x[qobj.qvars2[k].col]
                 g[qobj.qvars2[k].col] += coef*x[qobj.qvars1[k].col]
             end
-            scale!(g,objscale)
-            tf += toq()
+            d.eval_grad_f_timer += toq()
         end
     end
 
+    d.eval_f = eval_f
+    d.eval_grad_f = eval_grad_f
 
-
-
-    function eval_g(x, g)
+    function eval_g(g, x)
         tic()
         fill!(subarr(g,1:size(A,1)), 0.0)
         if VERSION < v"0.3-"
@@ -133,7 +128,7 @@ function solveIpopt(m::Model; options::Dict=Dict(), suppress_warnings=false)
             A_mul_B!(subarr(g,1:size(A,1)),A,x)
         end
         idx = size(A,1)+1
-        for c::QuadConstraint in m.quadconstr
+        for c::QuadConstraint in d.m.quadconstr
             aff = c.terms.aff
             v = aff.constant
             for k in 1:length(aff.vars)
@@ -147,226 +142,293 @@ function solveIpopt(m::Model; options::Dict=Dict(), suppress_warnings=false)
         end
         eval_g!(subarr(g,idx:length(g)), nldata.nlconstrlist, x)
         
-        tg += toq()
+        d.eval_g_timer += toq()
         #print("x = ");show(x);println()
         #println(size(A,1), " g(x) = ");show(g);println()
     end
 
-    function eval_jac_g(x, mode, rows, cols, values)
-        if mode == :Structure
-            # Convert column wise sparse to triple format
-            idx = 1
-            for col = 1:size(A,2)
-                for pos = A.colptr[col]:(A.colptr[col+1]-1)
-                    rows[idx] = A.rowval[pos]
-                    cols[idx] = col
-                    idx += 1
-                end
-            end
-            rowoffset = size(A,1)+1
-            for c::QuadConstraint in m.quadconstr
-                aff = c.terms.aff
-                for k in 1:length(aff.vars)
-                    rows[idx] = rowoffset
-                    cols[idx] = aff.vars[k].col
-                    idx += 1
-                end
-                for k in 1:length(c.terms.qvars1)
-                    rows[idx] = rowoffset
-                    cols[idx] = c.terms.qvars1[k].col
-                    rows[idx+1] = rowoffset
-                    cols[idx+1] = c.terms.qvars2[k].col
-                    idx += 2
-                end
-                rowoffset += 1
-            end
-            for k in 1:length(jacI)
-                rows[idx] = jacI[k]+rowoffset-1
-                cols[idx] = jacJ[k]
+    d.eval_g = eval_g
+
+    # Jacobian structure
+    jac_I = zeros(nnz_jac)
+    jac_J = zeros(nnz_jac)
+    let
+        idx = 1
+        for col = 1:size(A,2)
+            for pos = A.colptr[col]:(A.colptr[col+1]-1)
+                jac_I[idx] = A.rowval[pos]
+                jac_J[idx] = col
                 idx += 1
             end
-            @assert idx-1 == nnz_jac
-            #print("I ");show(rows);println()
-            #print("J ");show(cols);println()
-
-
-        else
-            # Values
-            tic()
-            fill!(values,0.0)
-            idx = 1
-            for col = 1:size(A,2)
-                for pos = A.colptr[col]:(A.colptr[col+1]-1)
-                    values[idx] = A.nzval[pos]
-                    idx += 1
-                end
-            end
-            for c::QuadConstraint in m.quadconstr
-                aff = c.terms.aff
-                for k in 1:length(aff.vars)
-                    values[idx] = aff.coeffs[k]
-                    idx += 1
-                end
-                for k in 1:length(c.terms.qvars1)
-                    coef = c.terms.qcoeffs[k]
-                    qidx1 = c.terms.qvars1[k].col
-                    qidx2 = c.terms.qvars2[k].col
-
-                    values[idx] = coef*x[qidx2]
-                    values[idx+1] = coef*x[qidx1]
-                    idx += 2
-                end
-            end
-            eval_jac_g!(subarr(values,idx:length(values)), nldata.nlconstrlist, x)
-            
-            tjg += toq()
-            #print("x = ");show(x);println()
-            #print("V ");show(values);println()
         end
+        rowoffset = size(A,1)+1
+        for c::QuadConstraint in d.m.quadconstr
+            aff = c.terms.aff
+            for k in 1:length(aff.vars)
+                jac_I[idx] = rowoffset
+                jac_J[idx] = aff.vars[k].col
+                idx += 1
+            end
+            for k in 1:length(c.terms.qvars1)
+                jac_I[idx] = rowoffset
+                jac_J[idx] = c.terms.qvars1[k].col
+                jac_I[idx+1] = rowoffset
+                jac_J[idx+1] = c.terms.qvars2[k].col
+                idx += 2
+            end
+            rowoffset += 1
+        end
+        for k in 1:length(nljacI)
+            jac_I[idx] = nljacI[k]+rowoffset-1
+            jac_J[idx] = nljacJ[k]
+            idx += 1
+        end
+        @assert idx-1 == nnz_jac
+    end
+    d.jac_I = jac_I
+    d.jac_J = jac_J
+
+    function eval_jac_g(J, x)
+        tic()
+        fill!(J,0.0)
+        idx = 1
+        for col = 1:size(A,2)
+            for pos = A.colptr[col]:(A.colptr[col+1]-1)
+                J[idx] = A.nzval[pos]
+                idx += 1
+            end
+        end
+        for c::QuadConstraint in d.m.quadconstr
+            aff = c.terms.aff
+            for k in 1:length(aff.vars)
+                J[idx] = aff.coeffs[k]
+                idx += 1
+            end
+            for k in 1:length(c.terms.qvars1)
+                coef = c.terms.qcoeffs[k]
+                qidx1 = c.terms.qvars1[k].col
+                qidx2 = c.terms.qvars2[k].col
+
+                J[idx] = coef*x[qidx2]
+                J[idx+1] = coef*x[qidx1]
+                idx += 2
+            end
+        end
+        eval_jac_g!(subarr(J,idx:length(J)), nldata.nlconstrlist, x)
+        
+        d.eval_jac_g_timer += toq()
+        #print("x = ");show(x);println()
+        #print("V ");show(J);println()
     end
 
+    d.eval_jac_g = eval_jac_g
+
     if has_nlobj
-        hI, hJ, hfunc = gen_hessian_sparse_color_parametric(nldata.nlobj, m.numCols)
+        hI, hJ, hfunc = gen_hessian_sparse_color_parametric(nldata.nlobj, d.m.numCols)
         nnz_hess += length(hI)
     else
         hI = []
         hJ = []
         hfunc = (x,y,z) -> nothing
-        nnz_hess += length(m.obj.qvars1)
+        nnz_hess += length(d.m.obj.qvars1)
     end
 
-    function eval_h(
-        x::Vector{Float64},         # Current solution
-        mode,                       # Either :Structure or :Values
-        rows::Vector{Int32},        # Sparsity structure - row indices
-        cols::Vector{Int32},        # Sparsity structure - column indices
-        obj_factor::Float64,        # Lagrangian multiplier for objective
-        lambda::Vector{Float64},    # Multipliers for each constraint
-        values::Vector{Float64})    # The values of the Hessian
+    hess_I = zeros(nnz_hess)
+    hess_J = zeros(nnz_hess)
 
-        qobj::QuadExpr = m.obj
-        if mode == :Structure
-            for i in 1:length(hI)
-                # not guaranteed to be lower-triangular
-                ix1 = nldata.nlobj.mapfromcanonical[hI[i]]
-                ix2 = nldata.nlobj.mapfromcanonical[hJ[i]]
-                if ix2 > ix1
-                    ix1, ix2 = ix2, ix1
-                end
-                rows[i] = ix1
-                cols[i] = ix2
+    let
+        qobj::QuadExpr = d.m.obj
+        for i in 1:length(hI)
+            # not guaranteed to be lower-triangular
+            ix1 = nldata.nlobj.mapfromcanonical[hI[i]]
+            ix2 = nldata.nlobj.mapfromcanonical[hJ[i]]
+            if ix2 > ix1
+                ix1, ix2 = ix2, ix1
             end
-            idx = length(hI)+1
-            for k in 1:length(qobj.qvars1)
-                qidx1 = qobj.qvars1[k].col
-                qidx2 = qobj.qvars2[k].col
+            hess_I[i] = ix1
+            hess_J[i] = ix2
+        end
+        idx = length(hI)+1
+        for k in 1:length(qobj.qvars1)
+            qidx1 = qobj.qvars1[k].col
+            qidx2 = qobj.qvars2[k].col
+            if qidx2 > qidx1
+                qidx1, qidx2 = qidx2, qidx1
+            end
+            hess_I[idx] = qidx1
+            hess_J[idx] = qidx2
+            idx += 1
+        end
+        # quadratic constraints
+        for c::QuadConstraint in d.m.quadconstr
+            for k in 1:length(c.terms.qvars1)
+                qidx1 = c.terms.qvars1[k].col
+                qidx2 = c.terms.qvars2[k].col
                 if qidx2 > qidx1
                     qidx1, qidx2 = qidx2, qidx1
                 end
-                rows[idx] = qidx1
-                cols[idx] = qidx2
+                hess_I[idx] = qidx1
+                hess_J[idx] = qidx2
                 idx += 1
             end
-            # quadratic constraints
-            for c::QuadConstraint in m.quadconstr
-                for k in 1:length(c.terms.qvars1)
-                    qidx1 = c.terms.qvars1[k].col
-                    qidx2 = c.terms.qvars2[k].col
-                    if qidx2 > qidx1
-                        qidx1, qidx2 = qidx2, qidx1
-                    end
-                    rows[idx] = qidx1
-                    cols[idx] = qidx2
-                    idx += 1
-                end
-            end
+        end
 
-            rows[idx:end] = constrhessI
-            cols[idx:end] = constrhessJ
+        hess_I[idx:end] = constrhessI
+        hess_J[idx:end] = constrhessJ
+    end
+
+    d.hess_I = hess_I
+    d.hess_J = hess_J
+
+
+    function eval_hesslag(
+        H::Vector{Float64},         # Sparse hessian entry vector
+        x::Vector{Float64},         # Current solution
+        obj_factor::Float64,        # Lagrangian multiplier for objective
+        lambda::Vector{Float64})    # Multipliers for each constraint
+
+        qobj::QuadExpr = d.m.obj
         
-        else
-            tic()
-            hfunc(x, subarr(values, 1:length(hI)), nldata.nlobj)
-            scale!(subarr(values, 1:length(hI)), objscale*obj_factor)
-            # quadratic objective
-            idx = 1+length(hI)
-            for k in 1:length(qobj.qvars1)
-                if qobj.qvars1[k].col == qobj.qvars2[k].col
-                    values[idx] = objscale*obj_factor*2*qobj.qcoeffs[k]
+        tic()
+        hfunc(x, subarr(H, 1:length(hI)), nldata.nlobj)
+        scale!(subarr(H, 1:length(hI)), obj_factor)
+        # quadratic objective
+        idx = 1+length(hI)
+        for k in 1:length(qobj.qvars1)
+            if qobj.qvars1[k].col == qobj.qvars2[k].col
+                H[idx] = obj_factor*2*qobj.qcoeffs[k]
+            else
+                H[idx] = obj_factor*qobj.qcoeffs[k]
+            end
+            idx += 1
+        end
+        # quadratic constraints
+        for (i,c::QuadConstraint) in enumerate(d.m.quadconstr)
+            l = lambda[length(d.m.linconstr)+i]
+            for k in 1:length(c.terms.qvars1)
+                if c.terms.qvars1[k].col == c.terms.qvars2[k].col
+                    H[idx] = l*2*c.terms.qcoeffs[k]
                 else
-                    values[idx] = objscale*obj_factor*qobj.qcoeffs[k]
+                    H[idx] = l*c.terms.qcoeffs[k]
                 end
                 idx += 1
             end
-            # quadratic constraints
-            for (i,c::QuadConstraint) in enumerate(m.quadconstr)
-                l = lambda[length(m.linconstr)+i]
-                for k in 1:length(c.terms.qvars1)
-                    if c.terms.qvars1[k].col == c.terms.qvars2[k].col
-                        values[idx] = l*2*c.terms.qcoeffs[k]
-                    else
-                        values[idx] = l*c.terms.qcoeffs[k]
-                    end
-                    idx += 1
-                end
-            end
+        end
 
-            eval_hess!(subarr(values, idx:length(values)), nldata.nlconstrlist, x, subarr(lambda, (length(m.linconstr)+length(m.quadconstr)+1):length(lambda)))
-            th += toq()
+        eval_hess!(subarr(H, idx:length(H)), nldata.nlconstrlist, x, subarr(lambda, (length(d.m.linconstr)+length(d.m.quadconstr)+1):length(lambda)))
+        d.eval_hesslag_timer += toq()
 
+    end
+
+    d.eval_hesslag = eval_hesslag
+
+    numconstr = length(d.m.linconstr)+length(d.m.quadconstr)+n_nlconstr
+    # call functions once to pre-compile
+    eval_f(d.m.colVal)
+    eval_g(Array(Float64,numconstr), d.m.colVal)
+    eval_grad_f(Array(Float64,d.m.numCols), d.m.colVal)
+    eval_jac_g(Array(Float64,nnz_jac), d.m.colVal)
+    eval_hesslag(Array(Float64,nnz_hess), d.m.colVal, 1.0, ones(numconstr))
+
+    tprep = toq()
+    #println("Prep time: $tprep")
+    
+    # reset timers
+    d.eval_f_timer = 0
+    d.eval_grad_f_timer = 0
+    d.eval_g_timer = 0
+    d.eval_jac_g_timer = 0
+    d.eval_hesslag_timer = 0
+end
+
+MathProgBase.features_available(d::JuMPNLPEvaluator) = [:Grad, :Jac, :Hess]
+
+MathProgBase.eval_f(d::JuMPNLPEvaluator, x) = d.eval_f(x)
+MathProgBase.eval_g(d::JuMPNLPEvaluator, g, x) = d.eval_g(g,x)
+MathProgBase.eval_grad_f(d::JuMPNLPEvaluator, g, x) = d.eval_grad_f(g,x)
+MathProgBase.eval_jac_g(d::JuMPNLPEvaluator, J, x) = d.eval_jac_g(J,x)
+MathProgBase.eval_hesslag(d::JuMPNLPEvaluator, H, x, σ, μ) = d.eval_hesslag(H, x, σ, μ)
+
+MathProgBase.isobjlinear(d::JuMPNLPEvaluator) = !(isa(d.m.nldata.nlobj, ReverseDiffSparse.SymbolicOutput)) && (length(d.m.obj.qvars1) == 0)
+# interpret quadratic to include purely linear
+MathProgBase.isobjquadratic(d::JuMPNLPEvaluator) = !(isa(d.m.nldata.nlobj, ReverseDiffSparse.SymbolicOutput)) 
+
+MathProgBase.isconstrlinear(d::JuMPNLPEvaluator, i::Integer) = (i <= length(d.m.linconstr))
+
+MathProgBase.jac_structure(d::JuMPNLPEvaluator) = d.jac_I, d.jac_J
+MathProgBase.hesslag_structure(d::JuMPNLPEvaluator) = d.hess_I, d.hess_J
+
+
+
+
+function solvenlp(m::Model; suppress_warnings=false)
+    
+    # check that there are no integer variables
+    for j = 1:m.numCols
+        if m.colCat[j] == INTEGER
+            error("Integer variables present in nonlinear problem")
         end
     end
+    
+    linobj, linrowlb, linrowub = prepProblemBounds(m)
+    A = prepConstrMatrix(m)
+
+    d = JuMPNLPEvaluator(m,A)
+    nldata::NLPData = m.nlpdata
+
+    numConstr = length(m.linconstr) + length(m.quadconstr) + length(nldata.nlconstr)
+
+    nlrowlb = Float64[]
+    nlrowub = Float64[]
+    for c in nldata.nlconstr
+        push!(nlrowlb, c.lb)
+        push!(nlrowub, c.ub)
+    end
+    quadrowlb = Float64[]
+    quadrowub = Float64[]
+    for c::QuadConstraint in d.m.quadconstr
+        if c.sense == :(<=)
+            push!(quadrowlb, -Inf)
+            push!(quadrowub, 0.0)
+        elseif c.sense == :(>=)
+            push!(quadrowlb, 0.0)
+            push!(quadrowub, Inf)
+        else
+            error("Unrecognized quadratic constraint sense $(c.sense)")
+        end
+    end
+    
     #print("LB: ");show([linrowlb,nlrowlb]);println()
     #print("UB: ");show([linrowub,nlrowub]);println()
 
-    numconstr = length(m.linconstr)+length(m.quadconstr)+n_nlconstr
-    # call functions once to pre-compile
-    eval_f(m.colVal)
-    eval_g(m.colVal, Array(Float64,numconstr))
-    eval_grad_f(m.colVal, Array(Float64,m.numCols))
-    eval_jac_g(m.colVal, :Values, Int32[], Int32[], Array(Float64,nnz_jac))
-    eval_h(m.colVal, :Values, Int32[], Int32[], 1.0, ones(numconstr), Array(Float64,nnz_hess))
-    # reset timers
-    tf, tgf, tg, tjg, th = zeros(5)
+    m.internalModel = MathProgBase.model(m.solver)
 
+    MathProgBase.loadnonlinearproblem!(m.internalModel, m.numCols, numConstr, m.colLower, m.colUpper, [linrowlb,quadrowlb,nlrowlb], [linrowub,quadrowub,nlrowub], m.objSense, d)
 
-    tprep = toq()
-    prob = createProblem(m.numCols, m.colLower, m.colUpper, numconstr,
-        [linrowlb,quadrowlb,nlrowlb], [linrowub,quadrowub,nlrowub], nnz_jac, nnz_hess,
-        eval_f, eval_g, eval_grad_f, eval_jac_g, eval_h)
 
     if !any(isnan(m.colVal))
-        prob.x = m.colVal
+        MathProgBase.setwarmstart!(m.internalModel, m.colVal)
     else
         # solve LP to find feasible point
         # do we need an iterior point?
         lpsol = MathProgBase.linprog(zeros(m.numCols), A, linrowlb, linrowub, m.colLower, m.colUpper)
         @assert lpsol.status == :Optimal
-        prob.x = lpsol.sol
+        MathProgBase.setwarmstart!(m.internalModel, lpsol.sol)
     end
 
-    # pass solver options to IPopt
-    if !isempty(options)
-        for (key,value) in options
-            addOption(prob, key, value)
-        end
+    MathProgBase.optimize!(m.internalModel)
+    stat = MathProgBase.status(m.internalModel)
+    
+    m.objVal = MathProgBase.getobjval(m.internalModel)
+    m.colVal = MathProgBase.getsolution(m.internalModel)
+    
+    if stat != :Optimal && !suppress_warnings
+        warn("Not solved to optimality, status: $stat")
     end
-    status = Ipopt.ApplicationReturnStatus[solveProblem(prob)]
-    m.colVal = prob.x
-    m.objVal = objscale*prob.obj_val
 
-    #println("Prep time: $tprep")
-    #println("feval $tf\nfgrad $tgf\ngeval $tg\njaceval $tjg\nhess $th")
-
-    # translate status
-    if status == :Solve_Succeeded || status == :Solved_To_Acceptable_Level
-        return :Optimal
-    elseif status == :Infeasible_Problem_Detected
-        return :Infeasible
-    else
-        suppress_warnings || warn("Ipopt returned nonoptimal status: $status")
-        return status
-    end
+    #println("feval $(d.eval_f_timer)\nfgrad $(d.eval_grad_f_timer)\ngeval $(d.eval_g_timer)\njaceval $(d.eval_jac_g_timer)\nhess $(d.eval_hesslag_timer)")
+    
+    return stat
 
 end
 

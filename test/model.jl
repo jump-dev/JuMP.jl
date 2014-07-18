@@ -11,9 +11,22 @@ let
     @defVar(modErr, errVar)
     @test isnan(getValue(errVar))
     @test_throws getDual(errVar)
+
+    modErr = Model()
+    @defVar(modErr, x, Bin)
+    @setObjective(modErr, Max, x)
+    con = @addConstraint(modErr, x <= 0.5)
+    solve(modErr)
+    @test_throws getDual(con)
+
+    # Removed due to issue #222
+    #modErr = Model()
+    #@defVar(modErr, 0 <= x <= 1)
+    #@setObjective(modErr, Max, x)
+    #@addConstraint(modErr, x <= -1)
+    #solve(modErr)
+    #@test isnan(getValue(x))
 end
-
-
 
 ###############################################################################
 # Test Model A
@@ -161,7 +174,6 @@ println("  !!TODO: test external solvers for reading LP and MPS files")
 setObjectiveSense(modA, :Min)
 @test getObjectiveSense(modA) == :Min
 
-
 #####################################################################
 # Test binary variable handling
 let
@@ -173,7 +185,6 @@ let
     @test status == :Optimal
     @test_approx_eq_eps getValue(x) 1.0 1e-6
 end
-
 
 #####################################################################
 # Test model copying
@@ -201,7 +212,7 @@ let
     # Constraints
     source.linconstr[1].ub = 5.0
     @test dest.linconstr[1].ub == 6.0
-    source.quadconstr[1].sense == :(>=)
+    source.quadconstr[1].sense = :(>=)
     @test dest.quadconstr[1].sense == :(<=)
 end  
 
@@ -237,4 +248,58 @@ let
 
     addConstraint(modB, x*y >= 1)
     @test_throws solve(modB)
+end
+
+######################################################################
+# Test nonlinear printing
+let
+    mod = Model()
+    @defVar(mod, x[1:5])
+    @addNLConstraint(mod, x[1]*x[2] == 1)
+    @addNLConstraint(mod, x[3]*x[4] == 1)
+    @addNLConstraint(mod, x[5]*x[1] == 1)
+    @setNLObjective(mod, Min, x[1]*x[3])
+    str = string(mod)
+    @test str == "Min (nonlinear expression)\nSubject to \n3 nonlinear constraints\nx[i], for all i in {1..5} free\n"
+end
+
+
+######################################################################
+# Test NaN checking
+let
+    mod = Model()
+    @defVar(mod, x)
+    @setObjective(mod, Min, NaN*x)
+    @test_throws solve(mod)
+    setObjective(mod, :Min, NaN*x^2)
+    @test_throws solve(mod)
+    @setObjective(mod, Min, x)
+    @addConstraint(mod, Min, NaN*x == 0)
+    @test_throws solve(mod)
+end
+
+######################################################################
+# Test all MPS paths
+let
+    mod = Model()
+    @defVar(mod, free_var)
+    @defVar(mod, int_var, Bin)
+    @defVar(mod, low_var >= 5)
+    @addConstraint(mod, free_var == int_var)
+    @addConstraint(mod, free_var - int_var >= 0)
+    setObjective(mod, :Max, free_var*int_var + low_var)
+    writeMPS(mod,"test.mps")
+end
+
+######################################################################
+# Test all LP paths
+let
+    mod = Model()
+    @defVar(mod, free_var)
+    setObjective(mod, :Max, free_var*free_var)
+    @test_throws writeLP("test.lp")
+    @setObjective(mod, Max, free_var)
+    @addConstraint(mod, free_var - 2*free_var == 0)
+    @addConstraint(mod, free_var + 2*free_var >= 1)
+    writeLP(mod,"test.lp")
 end

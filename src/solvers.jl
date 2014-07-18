@@ -1,14 +1,24 @@
 function solve(m::Model;IpoptOptions::Dict=Dict(),load_model_only=false, suppress_warnings=false)
     load_model_only == true && warn("load_model_only keyword is deprecated; use the buildInternalModel function instead")
     if m.nlpdata != nothing
-        return solveIpopt(m, options=IpoptOptions, suppress_warnings=suppress_warnings)
+        if length(IpoptOptions) > 0
+            error("Specifying options by using IpoptOptions is no longer supported. Use \"m = Model(solver=IpoptSolver(option1=value1,option2=value2,...)\" instead, after loading the Ipopt package.")
+        end
+        if isa(m.solver,UnsetSolver)
+            m.solver = MathProgBase.defaultNLPsolver
+        end
+        s = solvenlp(m, suppress_warnings=suppress_warnings)
+        m.solver = UnsetSolver()
+        return s
     end
     # Analyze model to see if any integers
-    anyInts = false
-    for j = 1:m.numCols
-        if m.colCat[j] == INTEGER
-            anyInts = true
-            break
+    anyInts = (length(m.sosconstr) > 0)
+    if !anyInts
+        for j = 1:m.numCols
+            if m.colCat[j] == INTEGER
+                anyInts = true
+                break
+            end
         end
     end
 
@@ -42,6 +52,9 @@ end
 function addQuadratics(m::Model)
 
     if length(m.obj.qvars1) != 0
+        assert_isfinite(m.obj)
+        verify_ownership(m, m.obj.qvars1)
+        verify_ownership(m, m.obj.qvars2)
         MathProgBase.setquadobjterms!(m.internalModel, Cint[v.col for v in m.obj.qvars1], Cint[v.col for v in m.obj.qvars2], m.obj.qcoeffs)
     end
 
@@ -51,7 +64,8 @@ function addQuadratics(m::Model)
         if !((s = string(qconstr.sense)[1]) in ['<', '>', '='])
             error("Invalid sense for quadratic constraint")
         end
-        terms = qconstr.terms
+        terms::QuadExpr = qconstr.terms
+        assert_isfinite(terms)
         for ind in 1:length(terms.qvars1)
             if (terms.qvars1[ind].m != m) || (terms.qvars2[ind].m != m)
                 error("Variable not owned by model present in constraints")
@@ -62,27 +76,13 @@ function addQuadratics(m::Model)
 end
 
 function addSOS(m::Model)
-    try
-        for i in 1:length(m.sosconstr)
-            sos = m.sosconstr[i]
-            indices = Int[v.col for v in sos.terms]
-            if sos.sostype == :SOS1
-                MathProgBase.addsos1!(m.internalModel, indices, sos.weights)
-            elseif sos.sostype == :SOS2
-                MathProgBase.addsos2!(m.internalModel, indices, sos.weights)
-            end
-        end
-    catch
-        for i in 1:length(m.sosconstr)
-            sos = m.sosconstr[i]
-            indices = Int[v.col for v in sos.terms]
-            nvars = length(indices)
-            if sos.sostype == :SOS1
-                Base.warn_once("Current solver does not support SOS1 constraints, adding manually")
-                MathProgBase.addconstr!(m.internalModel, indices, ones(nvars), 0., 1.)
-            elseif sos.sostype == :SOS2
-                error("Current solver does not support SOS2 constraints")
-            end
+    for i in 1:length(m.sosconstr)
+        sos = m.sosconstr[i]
+        indices = Int[v.col for v in sos.terms]
+        if sos.sostype == :SOS1
+            MathProgBase.addsos1!(m.internalModel, indices, sos.weights)
+        elseif sos.sostype == :SOS2
+            MathProgBase.addsos2!(m.internalModel, indices, sos.weights)
         end
     end
 end
@@ -91,6 +91,8 @@ end
 function prepProblemBounds(m::Model)
 
     objaff::AffExpr = m.obj.aff
+    assert_isfinite(objaff)
+    verify_ownership(m, objaff.vars)
         
     # We already have dense column lower and upper bounds
 
@@ -135,6 +137,7 @@ function prepConstrMatrix(m::Model)
     tmpnzidx = tmprow.nzidx
     for c in 1:numRows
         rowptr[c] = nnz + 1
+        assert_isfinite(m.linconstr[c].terms)
         coeffs = m.linconstr[c].terms.coeffs
         vars = m.linconstr[c].terms.vars
         # collect duplicates
@@ -156,6 +159,8 @@ function prepConstrMatrix(m::Model)
 
     # Build the object
     rowmat = SparseMatrixCSC(m.numCols, numRows, rowptr, colval, rownzval)
+    # Note that rowmat doesn't have sorted indices, so technically doesn't
+    # follow SparseMatrixCSC format. But it's safe to take the transpose.
     A = rowmat'
 end
 
@@ -163,25 +168,25 @@ function solveLP(m::Model; load_model_only=false, suppress_warnings=false)
     f, rowlb, rowub = prepProblemBounds(m)  
 
     # Ready to solve
-
+    noQuads = (length(m.quadconstr) == 0) && (length(m.obj.qvars1) == 0)
     if m.internalModelLoaded
-        try
+        if applicable(MathProgBase.setvarLB!, m.internalModel, m.colLower) &&
+           applicable(MathProgBase.setvarUB!, m.internalModel, m.colUpper) &&
+           applicable(MathProgBase.setconstrLB!, m.internalModel, rowlb) &&
+           applicable(MathProgBase.setconstrUB!, m.internalModel, rowub) &&
+           applicable(MathProgBase.setobj!, m.internalModel, f) &&
+           applicable(MathProgBase.setsense!, m.internalModel, m.objSense) &&
+           applicable(MathProgBase.setvartype!, m.internalModel, ['C'])            
             MathProgBase.setvarLB!(m.internalModel, m.colLower)
             MathProgBase.setvarUB!(m.internalModel, m.colUpper)
             MathProgBase.setconstrLB!(m.internalModel, rowlb)
             MathProgBase.setconstrUB!(m.internalModel, rowub)
             MathProgBase.setobj!(m.internalModel, f)
             MathProgBase.setsense!(m.internalModel, m.objSense)
-        catch
+            MathProgBase.setvartype!(m.internalModel, fill('C',m.numCols))
+        else
             !suppress_warnings && Base.warn_once("Solver does not appear to support hot-starts. Problem will be solved from scratch.")
             m.internalModelLoaded = false
-        end
-        all_cont = true
-        try # this fails for LPs for some unfathomable reason...but if it's an LP, we're good anyway
-            all_cont = all(x->isequal('C',x), MathProgBase.getvartype(m.internalModel))
-        end
-        if !all_cont
-            MathProgBase.setvartype!(m.internalModel, fill('C',m.numCols))
         end
     end
     if !m.internalModelLoaded
@@ -204,19 +209,34 @@ function solveLP(m::Model; load_model_only=false, suppress_warnings=false)
         # do nothing
     elseif stat != :Optimal
         !suppress_warnings && warn("Not solved to optimality, status: $stat")
-        fill!(m.colVal, NaN)
+        m.colVal = fill(NaN, m.numCols)
         m.objVal = NaN
         if stat == :Infeasible
-            try
+            if noQuads && applicable(MathProgBase.getinfeasibilityray, m.internalModel)
                 m.linconstrDuals = MathProgBase.getinfeasibilityray(m.internalModel)
-            catch
-                !suppress_warnings && warn("Infeasibility ray (Farkas proof) not available")
+            else
+                noQuads && !suppress_warnings && warn("Infeasibility ray (Farkas proof) not available")
+                m.linconstrDuals = fill(NaN, length(m.linconstr))
             end
         elseif stat == :Unbounded
-            try
+            if noQuads && applicable(MathProgBase.getunboundedray, m.internalModel)
                 m.colVal = MathProgBase.getunboundedray(m.internalModel)
+            else
+                noQuads && !suppress_warnings && warn("Unbounded ray not available")
+                m.colVal = fill(NaN, numCols)
+            end
+        else
+            try # guess try/catch is necessary because we're not sure what return status we have
+                m.colVal = MathProgBase.getsolution(m.internalModel)
             catch
-                !suppress_warnings && warn("Unbounded ray not available")
+                m.colVal = fill(NaN, m.numCols)
+            end
+            try
+                # store solution values in model
+                m.objVal = MathProgBase.getobjval(m.internalModel)
+                m.objVal += m.obj.aff.constant
+            catch
+                m.objVal = NaN
             end
         end
     else
@@ -224,11 +244,14 @@ function solveLP(m::Model; load_model_only=false, suppress_warnings=false)
         m.objVal = MathProgBase.getobjval(m.internalModel)
         m.objVal += m.obj.aff.constant
         m.colVal = MathProgBase.getsolution(m.internalModel)
-        try
+        if noQuads && applicable(MathProgBase.getreducedcosts, m.internalModel) &&
+                      applicable(MathProgBase.getconstrduals,  m.internalModel)
             m.redCosts = MathProgBase.getreducedcosts(m.internalModel)
             m.linconstrDuals = MathProgBase.getconstrduals(m.internalModel)
-        catch
-            !suppress_warnings && warn("Dual solutions not available")
+        else
+            noQuads && !suppress_warnings && warn("Dual solutions not available")
+            m.redCosts = fill(NaN, length(m.linconstr))
+            m.linconstrDuals = fill(NaN, length(m.linconstr))
         end
     end
 
@@ -252,7 +275,13 @@ function solveMIP(m::Model; load_model_only=false, suppress_warnings=false)
     # Ready to solve
     
     if m.internalModelLoaded
-        try
+        if applicable(MathProgBase.setvarLB!, m.internalModel, m.colLower) &&
+           applicable(MathProgBase.setvarUB!, m.internalModel, m.colUpper) &&
+           applicable(MathProgBase.setconstrLB!, m.internalModel, rowlb) &&
+           applicable(MathProgBase.setconstrUB!, m.internalModel, rowub) &&
+           applicable(MathProgBase.setobj!, m.internalModel, f) &&
+           applicable(MathProgBase.setsense!, m.internalModel, m.objSense) &&
+           applicable(MathProgBase.setvartype!, m.internalModel, vartype)
             MathProgBase.setvarLB!(m.internalModel, m.colLower)
             MathProgBase.setvarUB!(m.internalModel, m.colUpper)
             MathProgBase.setconstrLB!(m.internalModel, rowlb)
@@ -260,7 +289,8 @@ function solveMIP(m::Model; load_model_only=false, suppress_warnings=false)
             MathProgBase.setobj!(m.internalModel, f)
             MathProgBase.setsense!(m.internalModel, m.objSense)
             MathProgBase.setvartype!(m.internalModel, vartype)
-        catch
+        else
+            !suppress_warnings && Base.warn_once("Solver does not appear to support hot-starts. Problem will be solved from scratch.")
             m.internalModelLoaded = false
         end
     end
@@ -279,9 +309,9 @@ function solveMIP(m::Model; load_model_only=false, suppress_warnings=false)
     end
 
     if !all(isnan(m.colVal))
-        try
+        if applicable(MathProgBase.setwarmstart!, m.colVal)
             MathProgBase.setwarmstart!(m.internalModel, m.colVal)
-        catch
+        else
             !suppress_warnings && Base.warn_once("Solver does not appear to support providing initial feasible solutions.")
         end
     end
@@ -309,12 +339,12 @@ function solveMIP(m::Model; load_model_only=false, suppress_warnings=false)
         try
             m.colVal = MathProgBase.getsolution(m.internalModel)
         catch
-            fill!(m.colVal, NaN)
+            m.colVal = fill(NaN, m.numCols)
         end
     end
     if stat != :Optimal
         !suppress_warnings && warn("Not solved to optimality, status: ", string(stat))
-        fill!(m.colVal, NaN)
+        m.colVal = fill(NaN, m.numCols)
     end
 
     return stat
@@ -357,10 +387,10 @@ function buildInternalModel(m::Model)
         addSOS(m)
         registercallbacks(m)
         if !all(isnan(m.colVal))
-            try
+            if applicable(MathProgBase.setwarmstart!, m.internalModel)
                 MathProgBase.setwarmstart!(m.internalModel, m.colVal)
-            catch
-                !suppress_warnings && Base.warn_once("Solver does not appear to support providing initial feasible solutions.")
+            else
+                Base.warn_once("Solver does not appear to support providing initial feasible solutions.")
             end
         end
     end
@@ -368,10 +398,10 @@ function buildInternalModel(m::Model)
     nothing
 end
 
-# currently used only in callbacks
 # returns (unsorted) column indices and coefficient terms for merged vector
-# assume that v is zero'd and has the right size (total number of variables in the model)
+# assume that v is zero'd
 function merge_duplicates{CoefType,IntType<:Integer}(::Type{IntType},aff::GenericAffExpr{CoefType,Variable}, v::IndexedVector{CoefType}, m::Model)
+    resize!(v, m.numCols)
     for ind in 1:length(aff.coeffs)
         var = aff.vars[ind]
         is(var.m, m) || error("Variable does not belong to this model")

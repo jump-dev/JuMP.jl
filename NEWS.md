@@ -8,6 +8,22 @@ Unversioned
   * Deprecate ``load_model_only`` keyword argument to ``solve``.
   * Add groups of constraints with ``@addConstraints`` macro.
   * Unicode operators now supported, including ``∑`` for ``sum``, ``∏`` for ``prod``, and ``≤``/``≥`` (requires Julia 0.3)
+  * Quadratic constraints supported in ``@addConstraint`` macro.
+  * Quadratic objective supported in ``@setObjective`` macro.
+  * MathProgBase solver-independent inteface replaces Ipopt-specific interface for nonlinear problems
+    - **Breaking change** ``IpoptOptions`` no longer supported to specify solver options, use ``m = Model(solver=IpoptSolver(options...))`` instead.
+
+Version 0.5.5 (July 6, 2014)
+----------------------------
+
+  * Fix bug with problem modification: adding variables that did not appear in existing constraints or objective.
+
+Version 0.5.4 (June 19, 2014)
+----------------------------
+
+  * Update for breaking change in MathProgBase which reduces loading times for ``using JuMP``
+  * Fix error when MIPs not solved to optimality
+
 
 Version 0.5.3 (May 21, 2014)
 ----------------------------

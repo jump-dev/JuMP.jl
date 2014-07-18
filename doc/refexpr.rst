@@ -37,9 +37,8 @@ be a convex quadratic constraint.
 Methods
 ^^^^^^^
 
-* ``@addConstraint(m::Model, con)`` - efficient way to add linear constraints.
-  Uses macros and thus does not yet support quadratic constraints.
-* ``@addConstraint(m::Model, ref, con)`` - efficient way to add groups of linear constraints.
+* ``@addConstraint(m::Model, con)`` - efficient way to add linear or quadratic constraints.
+* ``@addConstraint(m::Model, ref, con)`` - efficient way to add groups of linear or quadratic constraints.
   See Constraint Reference section for details.
 * ``addConstraint(m::Model, con)`` - general way to add linear and quadratic
   constraints.
@@ -53,6 +52,12 @@ a ``begin ... end`` block. For example::
       sum_to_one[i=1:3], z[i] + y == 1
     end
 
+* ``@buildExpr(expr)`` - efficiently builds a linear or quadratic expression but does not add to model immediately. Instead, returns the expression which can then be inserted in other constraints. For example::
+
+    shared = @buildExpr(sum{i*x[i], i=1:5})
+    @addConstraint(m, shared + y >= 5)
+    @addConstraint(m, shared + z <= 10)
+    
 * ``addSOS1(m::Model, coll::Vector{AffExpr})`` - adds special ordered set constraint
   of type 1 (SOS1). Specify the set as a vector of weighted variables, e.g. ``coll = [3x, y, 2z]``.
   Note that solvers expect the weights to be unique. See 

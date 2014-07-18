@@ -34,3 +34,12 @@ function Base.empty!{T}(v::IndexedVector{T})
     v.nnz = 0
 end
 
+Base.length(v::IndexedVector) = length(v.elts)
+function Base.resize!(v::IndexedVector, n::Integer)
+    if n > length(v)
+        @assert v.nnz == 0 # only resize empty vector
+        resize!(v.elts, n)
+        fill!(v.elts,0)
+        resize!(v.nzidx, n)
+    end
+end

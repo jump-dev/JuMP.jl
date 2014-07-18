@@ -106,11 +106,11 @@ for accessor in (:getValue, :getDual, :getLower, :getUpper)
 end
 
 # delegate zero-argument functions
-for f in (:(Base.endof), :(Base.ndims), :(Base.length), :(Base.abs))
-    @eval $f(x::JuMPContainer)  = $f(x.innerArray)
+for f in (:(Base.endof), :(Base.ndims), :(Base.length), :(Base.abs), :(Base.start))
+    @eval $f(x::JuMPContainer) = $f(x.innerArray)
 end
 # delegate one-argument functions
-for f in (:(Base.size),)
+for f in (:(Base.size), :(Base.next), :(Base.done))
     @eval $f(x::JuMPContainer,k) = $f(x.innerArray,k)
 end
 

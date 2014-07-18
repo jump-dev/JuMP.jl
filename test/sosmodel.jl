@@ -24,6 +24,8 @@ function sos_test(solvername, solverobj)
         addSOS1(modS, [a[i]x[i] for i in 1:3])
         addSOS2(modS, [b[i]y[i] for i in 1:5])
 
+        @test_throws addSOS1(modS, [x[1], x[1]+x[2]])
+
         status = solve(modS)
         @test status == :Optimal
         @test modS.objVal == 15.
@@ -32,44 +34,26 @@ function sos_test(solvername, solverobj)
     end
 end
 
-function sos_test1(solvername, solverobj)
-    println(string("  Running ", solvername))
-    let
-        println("    Test 1")
-        modS = Model(solver=solverobj)
+function sos_test_cont(solvername, solverobj)
+    m = Model(solver=solverobj)
+    ub = [1,1,2]
+    @defVar(m, x[i=1:3] <= ub[i])
+    @setObjective(m, Max, 2x[1]+x[2]+x[3])
+    addSOS1(m, [x[1],2x[2]])
+    addSOS1(m, [x[1],2x[3]])
 
-        @defVar(modS, x[1:3], Bin)
-        @defVar(modS, y[1:5], Bin)
-        @defVar(modS, z)
-
-        @setObjective(modS, Max, z)
-
-        a = [1,2,3]
-
-        @addConstraint(modS, z == sum{a[i]*x[i], i=1:3})
-
-        @test_throws constructSOS([x[1]+y[1]])
-        @test_throws constructSOS([1z])
-
-        addSOS1(modS, [a[i]x[i] for i in 1:3])
-
-        status = solve(modS)
-        @test status == :Optimal
-        @test modS.objVal == 3.
-        @test getValue(z) == 3.
-    end
+    solve(m)
+    @test getValue(x)[:] == [0.0,1.0,2.0]
+    @test getObjectiveValue(m) == 3.0
 end
 
 if Pkg.installed("Gurobi") != nothing  
     using Gurobi
     sos_test("Gurobi", GurobiSolver(OutputFlag=0))
+    sos_test_cont("Gurobi", GurobiSolver(OutputFlag=0))
 end
 if Pkg.installed("CPLEX") != nothing
     using CPLEX
     sos_test("CPLEX", CplexSolver())
-end
-
-if Pkg.installed("GLPKMathProgInterface") != nothing
-    using GLPK, GLPKMathProgInterface
-    sos_test1("GLPK", GLPKSolverMIP())
+    sos_test_cont("CPLEX", CplexSolver())
 end
