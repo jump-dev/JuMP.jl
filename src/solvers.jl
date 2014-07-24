@@ -383,7 +383,7 @@ function buildInternalModel(m::Model)
     addQuadratics(m)
 
     if anyInts # do MIP stuff
-        setvartype!(m.internalModel, vartype)
+        MathProgBase.setvartype!(m.internalModel, vartype)
         addSOS(m)
         registercallbacks(m)
         if !all(isnan(m.colVal))
