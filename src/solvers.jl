@@ -309,7 +309,7 @@ function solveMIP(m::Model; load_model_only=false, suppress_warnings=false)
     end
 
     if !all(isnan(m.colVal))
-        if applicable(MathProgBase.setwarmstart!, m.colVal)
+        if applicable(MathProgBase.setwarmstart!, m.internalModel, m.colVal)
             MathProgBase.setwarmstart!(m.internalModel, m.colVal)
         else
             !suppress_warnings && Base.warn_once("Solver does not appear to support providing initial feasible solutions.")
@@ -387,7 +387,7 @@ function buildInternalModel(m::Model)
         addSOS(m)
         registercallbacks(m)
         if !all(isnan(m.colVal))
-            if applicable(MathProgBase.setwarmstart!, m.internalModel)
+            if applicable(MathProgBase.setwarmstart!, m.internalModel, m.colVal)
                 MathProgBase.setwarmstart!(m.internalModel, m.colVal)
             else
                 Base.warn_once("Solver does not appear to support providing initial feasible solutions.")
