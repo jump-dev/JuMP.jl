@@ -223,7 +223,7 @@ function solveLP(m::Model; load_model_only=false, suppress_warnings=false)
                 m.colVal = MathProgBase.getunboundedray(m.internalModel)
             else
                 noQuads && !suppress_warnings && warn("Unbounded ray not available")
-                m.colVal = fill(NaN, numCols)
+                m.colVal = fill(NaN, m.numCols)
             end
         else
             try # guess try/catch is necessary because we're not sure what return status we have
