@@ -1,9 +1,9 @@
 export setLazyCallback, setCutCallback, setHeuristicCallback
 export setlazycallback
 @Base.deprecate setlazycallback setLazyCallback
-function setLazyCallback(m::Model, f::Function)
+function setLazyCallback(m::Model, f::Function; fractional::Bool=false)
     m.internalModelLoaded = false
-    m.lazycallback = f
+    m.lazycallback = (f,fractional)
 end
 function setCutCallback(m::Model, f::Function)
     m.internalModelLoaded = false
@@ -16,15 +16,17 @@ end
 
 
 function registercallbacks(m::Model)
-    if isa(m.lazycallback, Function)
+    if isa(m.lazycallback, (Function,Bool))
+        lazy, fractional = m.lazycallback::(Function,Bool)
         function lazycallback(d::MathProgBase.MathProgCallbackData)
             state = MathProgBase.cbgetstate(d)
             if state == :MIPSol
                 MathProgBase.cbgetmipsolution(d,m.colVal)
             else
+                fractional || return
                 MathProgBase.cbgetlpsolution(d,m.colVal)
             end
-            m.lazycallback(d)
+            lazy(d)
         end
         #try
             MathProgBase.setlazycallback!(m.internalModel, lazycallback)

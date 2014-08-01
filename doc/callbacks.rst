@@ -110,6 +110,12 @@ The code should print something like (amongst the output from Gurobi)::
 
 This code can also be found in ``/JuMP/examples/simplelazy.jl``.
 
+There is an optional ``fractional`` keyword option to ``setLazyCallback`` which
+indicates that the callback may be called at solutions that do not satisfy
+integrality constraints. For example, ``setLazyCallback(m, myLazyConGenerator,
+fractional=true)``. Depending on the solver, this may invoke the callback
+after solving each LP relaxation in the Branch and Bound tree. By default, ``fractional`` is set to ``false``.
+
 
 User Cuts
 ^^^^^^^^^
