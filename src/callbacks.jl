@@ -20,6 +20,7 @@ function registercallbacks(m::Model)
         lazy, fractional = m.lazycallback::(Function,Bool)
         function lazycallback(d::MathProgBase.MathProgCallbackData)
             state = MathProgBase.cbgetstate(d)
+            @assert state == :MIPSol || state == :MIPNode
             if state == :MIPSol
                 MathProgBase.cbgetmipsolution(d,m.colVal)
             else
@@ -37,6 +38,7 @@ function registercallbacks(m::Model)
     if isa(m.cutcallback, Function)
         function cutcallback(d::MathProgBase.MathProgCallbackData)
             state = MathProgBase.cbgetstate(d)
+            @assert state == :MIPSol || state == :MIPNode
             if state == :MIPSol  # This shouldn't happen right?
                 println("Is this ever called?")
                 MathProgBase.cbgetmipsolution(d,m.colVal)
@@ -52,6 +54,7 @@ function registercallbacks(m::Model)
     if isa(m.heurcallback, Function)
         function heurcallback(d::MathProgBase.MathProgCallbackData)
             state = MathProgBase.cbgetstate(d)
+            @assert state == :MIPSol || state == :MIPNode
             if state == :MIPSol  # This shouldn't happen right?
                 println("Is this ever called?")
                 MathProgBase.cbgetmipsolution(d,m.colVal)
