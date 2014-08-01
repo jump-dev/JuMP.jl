@@ -17,6 +17,7 @@ before_install:
     - sudo apt-get install libgmp-dev -y
     - git config --global user.name "Travis User"
     - git config --global user.email "travis@example.net"
+    - if [[ -a .git/shallow ]]; then git fetch --unshallow; fi
 script:
     - julia -e 'Pkg.init()'
     - if [ $JULIAVERSION = "julianightlies" ]; then julia -e 'Pkg.add("Ipopt")'; fi
