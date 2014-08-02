@@ -44,6 +44,8 @@ Solver support in Julia is currently provided by writing a solver-specific packa
 +----------------------------------------------------------------------------------+---------------------------------------------------------------------------------+-----------------------------+-------------+----+------+-----+
 | `CPLEX <http://www-01.ibm.com/software/commerce/optimization/cplex-optimizer/>`_ | `CPLEX.jl <https://github.com/joehuchette/CPLEX.jl>`_                           | ``CplexSolver()``           |  Comm.      | X  |  X   | X   |
 +----------------------------------------------------------------------------------+---------------------------------------------------------------------------------+-----------------------------+-------------+----+------+-----+
+| `ECOS <https://github.com/ifa-ethz/ecos>`_                                       | `ECOS.jl <https://github.com/JuliaOpt/ECOS.jl>`_                                |  ``ECOSSolver()``           |  GPL        | X  |      |     |
++----------------------------------------------------------------------------------+---------------------------------------------------------------------------------+-----------------------------+-------------+----+------+-----+
 | `GLPK <http://www.gnu.org/software/glpk/>`_                                      | `GLPKMath... <https://github.com/JuliaOpt/GLPKMathProgInterface.jl>`_           |  ``GLPKSolver[LP|MIP]()``   |  GPL        | X  |      | X   |
 +----------------------------------------------------------------------------------+---------------------------------------------------------------------------------+-----------------------------+-------------+----+------+-----+
 | `Gurobi <http://gurobi.com>`_                                                    | `Gurobi.jl <https://github.com/JuliaOpt/Gurobi.jl>`_                            | ``GurobiSolver()``          | Comm.       | X  |   X  |  X  |
@@ -76,6 +78,19 @@ Installation of the binaries will differ by platform:
 
 Clp and Cbc, if available, are the default choice of solver in JuMP. Cbc does *not* support MIP callbacks.
 
+
+CPLEX
++++++
+
+Requires a working installation of CPLEX with a license (free for faculty members and graduate teaching assistants). The `CPLEX.jl <https://github.com/joehuchette/CPLEX.jl>`_ interface is experimental; it requires using CPLEX as a shared library, which is unsupported by the CPLEX developers. Special installation steps are required on OS X. CPLEX supports MIP callbacks.
+
+
+ECOS
+++++
+
+ECOS can be used by JuMP to solve LPs - it cannot be used to solve SOCPs at this time.
+
+
 GLPK
 ++++
 
@@ -94,8 +109,3 @@ MOSEK
 
 Requires a license (free for academic use). Mosek does not support the MIP callbacks used in JuMP.
 The Mosek interface was contributed by the Mosek team. (Thanks!)
-
-CPLEX
-+++++
-
-Requires a working installation of CPLEX with a license (free for faculty members and graduate teaching assistants). The `CPLEX.jl <https://github.com/joehuchette/CPLEX.jl>`_ interface is experimental; it requires using CPLEX as a shared library, which is unsupported by the CPLEX developers. Special installation steps are required on OS X. CPLEX supports MIP callbacks.
