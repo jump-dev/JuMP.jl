@@ -12,6 +12,6 @@ setValue(x[1], 10.0)
 setValue(x[3], 2.0)
 ```
 
-If you don't set the value of a variable, the behaviour is solver-dependent. Some solvers attempt to "complete" solutions that aren't completely specified.
+If you don't set the value of a variable, the behavior is solver-dependent. Some solvers attempt to "complete" solutions that aren't completely specified.
 
 
