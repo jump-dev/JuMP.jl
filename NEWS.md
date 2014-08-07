@@ -12,6 +12,8 @@ Unversioned
   * Quadratic objective supported in ``@setObjective`` macro.
   * MathProgBase solver-independent inteface replaces Ipopt-specific interface for nonlinear problems
     - **Breaking change** ``IpoptOptions`` no longer supported to specify solver options, use ``m = Model(solver=IpoptSolver(options...))`` instead.
+  * New solver interfaces: ECOS, NLopt, and nonlinear support for MOSEK
+  * New option to control whether the lazy callback is executed at each node in the B&B tree or just when feasible solutions are found
 
 Version 0.5.5 (July 6, 2014)
 ----------------------------
