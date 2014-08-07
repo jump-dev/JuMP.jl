@@ -8,8 +8,16 @@ JuMP --- Julia for Mathematical Programming
 `JuMP <https://github.com/JuliaOpt/JuMP.jl>`_ is a domain-specific modeling language for 
 `mathematical programming <http://en.wikipedia.org/wiki/Mathematical_optimization>`_ 
 embedded in `Julia <http://julialang.org/>`_. It currently supports a number
-of open-source and commercial solvers (`Clp <https://projects.coin-or.org/Clp>`_,
-`Cbc <https://projects.coin-or.org/Cbc>`_, `GLPK <http://www.gnu.org/software/glpk/>`_, `Gurobi <http://www.gurobi.com>`_, `MOSEK <http://www.mosek.com/>`_, and `CPLEX <http://www-01.ibm.com/software/commerce/optimization/cplex-optimizer/>`_) via a generic solver-independent 
+of open-source and commercial solvers (`Cbc <https://projects.coin-or.org/Cbc>`_,
+`Clp <https://projects.coin-or.org/Clp>`_,
+`CPLEX <http://www-01.ibm.com/software/commerce/optimization/cplex-optimizer/>`_,
+`ECOS <https://github.com/ifa-ethz/ecos>`_,
+`GLPK <http://www.gnu.org/software/glpk/>`_,
+`Gurobi <http://www.gurobi.com>`_,
+`Ipopt <https://projects.coin-or.org/Ipopt>`_,
+`MOSEK <http://www.mosek.com/>`_,
+and `NLopt <http://ab-initio.mit.edu/wiki/index.php/NLopt>`_
+) via a generic solver-independent
 interface provided by the `MathProgBase <https://github.com/mlubin/MathProgBase.jl>`_
 package. 
 

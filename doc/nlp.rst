@@ -45,21 +45,6 @@ For example, we can solve the classical Rosenbrock problem (with a twist) as fol
 
 Examples: `optimal control <https://github.com/JuliaOpt/JuMP.jl/blob/master/examples/optcontrol.jl>`_, `maximum likelihood estimation <https://github.com/JuliaOpt/JuMP.jl/blob/master/examples/mle.jl>`_, and  `Hock-Schittkowski tests <https://github.com/JuliaOpt/JuMP.jl/tree/master/test/hockschittkowski>`_.
 
-Solvers and Options
-^^^^^^^^^^^^^^^^^^^
-
-Currently, `Ipopt <https://projects.coin-or.org/Ipopt>`_
-is the only supported solver. To install Ipopt, run::
-
-    Pkg.add("Ipopt")
-
-Solution options are specified by using the ``IpoptSolver`` object, e.g.::
-
-    using Ipopt
-    m = Model(solver=IpoptSolver(tol=1e-6))
-
-sets the relative convergence tolerance to ``1e-6``. A full list of options is available `here <http://www.coin-or.org/Ipopt/documentation/node41.html>`_. 
-
 Performance
 ^^^^^^^^^^^
 
@@ -71,9 +56,9 @@ The execution time when solving a nonlinear programming problem can be divided i
     Total CPU secs in NLP function evaluations           =      2.083
     
 
-The performance of the solver itself greatly depends on the linear algebra libraries used. By default, the Ipopt binaries installed by the Ipopt.jl package use the open-source MUMPS library for sparse linear algebra. Significant speedups can be obtained by manually compiling Ipopt to use proprietary sparse linear algebra libraries instead. Julia can be pointed to use a custom version of Ipopt; we suggest posting to the `julia-opt <https://groups.google.com/forum/#!forum/julia-opt>`_ mailing list with your platform details for guidance on how to do this.
+For Ipopt in particular, one can improve the performance by installing advanced sparse linear algebra packages, see :ref:`jump-installation`. For other solvers, see their respective documentation for performance tips.
 
-The function evaluation time is the responsibility of the modeling language. JuMP computes derivatives by using the `ReverseDiffSparse <https://github.com/mlubin/ReverseDiffSparse.jl>`_ package, which implements, in pure Julia, reverse-mode automatic differentiation with state-of-the-art graph coloring methods [1]_ for exploiting sparsity of the Hessian matrix. As a conservative bound, JuMP's performance here currently may be expected to be within a factor of 10 of AMPL's.
+The function evaluation time, on the other hand, is the responsibility of the modeling language. JuMP computes derivatives by using the `ReverseDiffSparse <https://github.com/mlubin/ReverseDiffSparse.jl>`_ package, which implements, in pure Julia, reverse-mode automatic differentiation with state-of-the-art graph coloring methods [1]_ for exploiting sparsity of the Hessian matrix. As a conservative bound, JuMP's performance here currently may be expected to be within a factor of 10 of AMPL's.
 
 .. note::
 
