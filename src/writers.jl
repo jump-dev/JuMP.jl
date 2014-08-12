@@ -172,15 +172,15 @@ function writeMPS(m::Model, fname::String)
         for ind = 1:length(qv1)
             if qv1[ind].col == qv2[ind].col
                 # Diagonal element
-                @printf(f,"  x%d x%d  ", qv1[ind].col,qv2[ind].col)
+                @printf(f,"  VAR%d VAR%d  ", qv1[ind].col,qv2[ind].col)
                 print_shortest(f,2qc[ind])
                 println(f)
             else
                 # Off diagonal, and we're gonna assume no duplicates
-                @printf(f, "  x%d x%d ", qv1[ind].col,qv2[ind].col)
+                @printf(f, "  VAR%d VAR%d ", qv1[ind].col,qv2[ind].col)
                 print_shortest(f, qc[ind])
                 println(f)
-                @printf(f, "  x%d x%d ", qv2[ind].col,qv1[ind].col)
+                @printf(f, "  VAR%d VAR%d ", qv2[ind].col,qv1[ind].col)
                 print_shortest(f, qc[ind])
                 println(f)
             end
