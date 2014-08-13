@@ -103,6 +103,7 @@ function addLazyConstraint(cbdata::MathProgBase.MathProgCallbackData, constr::Li
         MathProgBase.cbaddlazy!(cbdata, Cint[], Float64[], sensemap[sense(constr)], rhs(constr))
         return
     end
+    assert_isfinite(constr.terms)
     m::Model = constr.terms.vars[1].m
     indices, coeffs = merge_duplicates(Cint, constr.terms, m.indexedVector, m)
     MathProgBase.cbaddlazy!(cbdata, indices, coeffs, sensemap[sense(constr)], rhs(constr))
@@ -134,6 +135,7 @@ function addUserCut(cbdata::MathProgBase.MathProgCallbackData, constr::LinearCon
         MathProgBase.cbaddcut!(cbdata, Cint[], Float64[], sensemap[sense(constr)], rhs(constr))
         return
     end
+    assert_isfinite(constr.terms)
     m::Model = constr.terms.vars[1].m
     indices, coeffs = merge_duplicates(Cint, constr.terms, m.indexedVector, m)
     MathProgBase.cbaddcut!(cbdata, indices, coeffs, sensemap[sense(constr)], rhs(constr))
