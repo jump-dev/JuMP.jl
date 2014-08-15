@@ -7,7 +7,7 @@ embedded in **[Julia]**. It currently supports a number of open-source and
 commercial solvers ([COIN Clp], [COIN Cbc], [GNU GLPK], [Gurobi], [MOSEK], [CPLEX]) via a 
 [generic solver-independent interface](https://github.com/JuliaOpt/MathProgBase.jl). 
 
-One the best features of JuMP is its **speed** - benchmarking has shown that it
+One of the best features of JuMP is its **speed** - benchmarking has shown that it
 can create problems at similar speeds to special-purpose modeling languages
 such as AMPL while maintaining the expressiveness of a generic high-level 
 programming language. JuMP communicates with solvers in-memory, 
