@@ -338,7 +338,7 @@ macro setObjective(m, args...)
     end
 end
 
-macro buildExpr(args...)
+macro defExpr(args...)
     if length(args) == 1
         c = nothing
         x = args[1]
@@ -346,7 +346,7 @@ macro buildExpr(args...)
         c = args[1]
         x = args[2]
     else
-        error("in @buildExpr: needs either one or two arguments.")
+        error("in @defExpr: needs either one or two arguments.")
     end
     refcall = gensym()  # Default
     if isa(c,Symbol)
@@ -370,7 +370,7 @@ macro buildExpr(args...)
         end
     elseif c != nothing
         # Something in there, but we don't know what
-        error("in @buildExpr ($(string(x))): expected $(string(c)) to be of form expr[...]")
+        error("in @defExpr ($(string(x))): expected $(string(c)) to be of form expr[...]")
     end
 
     if c == nothing
