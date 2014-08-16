@@ -339,16 +339,70 @@ macro setObjective(m, args...)
 end
 
 macro buildExpr(args...)
-    if length(args) != 1
-        # Either just an objective sene, or just an expression.
-        error("in @buildExpr: needs one argument, the expression.")
+    if length(args) == 1
+        c = nothing
+        x = args[1]
+    elseif length(args) == 2
+        c = args[1]
+        x = args[2]
+    else
+        error("in @buildExpr: needs either one or two arguments.")
     end
-    x = args[1]
-    quote
-        q = AffExpr()
-        $(parseExpr(x, :q, 1.0))
-        q
+    refcall = gensym()  # Default
+    if isa(c,Symbol)
+        refcall = esc(c)
+    elseif isexpr(c,:ref)
+        cname = esc(c.args[1])
+        idxvars = {}
+        idxsets = {}
+        refcall = Expr(:ref,cname)
+        for s in c.args[2:end]
+            if isa(s,Expr) && (s.head == :(=) || s.head == :in)
+                idxvar = s.args[1]
+                idxset = esc(s.args[2])
+            else
+                idxvar = gensym()
+                idxset = esc(s)
+            end
+            push!(idxvars, idxvar)
+            push!(idxsets, idxset)
+            push!(refcall.args, esc(idxvar))
+        end
+    elseif c != nothing
+        # Something in there, but we don't know what
+        error("in @buildExpr ($(string(x))): expected $(string(c)) to be of form expr[...]")
     end
+
+    if c == nothing
+        code = quote
+            q = AffExpr()
+            $(parseExpr(x, :q, 1.0))
+            q
+        end
+    else
+        code = quote
+            q = AffExpr()
+            $(refcall) = $(parseExpr(x, :q, 1.0))
+        end
+    end
+
+    if !(isa(c,Symbol) || c == nothing)
+        for (idxvar, idxset) in zip(reverse(idxvars),reverse(idxsets))
+            code = quote
+                for $(esc(idxvar)) in $idxset
+                    $code
+                end
+            end
+        end
+        mac = Expr(:macrocall,symbol("@gendict"),cname,:AffExpr,idxsets...)
+        code = quote 
+            $mac
+            $code
+            nothing
+        end
+
+    end
+    return code
 end
 
 macro defVar(m, x, extra...)
