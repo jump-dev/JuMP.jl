@@ -52,9 +52,9 @@ a ``begin ... end`` block. For example::
       sum_to_one[i=1:3], z[i] + y == 1
     end
 
-* ``@buildExpr(expr)`` - efficiently builds a linear or quadratic expression but does not add to model immediately. Instead, returns the expression which can then be inserted in other constraints. For example::
+* ``@defExpr(expr)`` - efficiently builds a linear or quadratic expression but does not add to model immediately. Instead, returns the expression which can then be inserted in other constraints. For example::
 
-    shared = @buildExpr(sum{i*x[i], i=1:5})
+    shared = @defExpr(sum{i*x[i], i=1:5})
     @addConstraint(m, shared + y >= 5)
     @addConstraint(m, shared + z <= 10)
     
