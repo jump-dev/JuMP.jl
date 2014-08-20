@@ -52,11 +52,15 @@ a ``begin ... end`` block. For example::
       sum_to_one[i=1:3], z[i] + y == 1
     end
 
-* ``@defExpr(expr)`` - efficiently builds a linear or quadratic expression but does not add to model immediately. Instead, returns the expression which can then be inserted in other constraints. For example::
+* ``@defExpr(ref, expr)`` - efficiently builds a linear or quadratic expression but does not add to model immediately. Instead, returns the expression which can then be inserted in other constraints. For example::
 
-    shared = @defExpr(sum{i*x[i], i=1:5})
+    @defExpr(shared, sum{i*x[i], i=1:5})
     @addConstraint(m, shared + y >= 5)
     @addConstraint(m, shared + z <= 10)
+
+The ``ref`` accepts index sets in the same way as ``@defVar``, and those indices can be used in the construction of the expressions:
+
+    @defExpr(expr[i=1:3], i*sum{x[j], j=1:3})
     
 * ``addSOS1(m::Model, coll::Vector{AffExpr})`` - adds special ordered set constraint
   of type 1 (SOS1). Specify the set as a vector of weighted variables, e.g. ``coll = [3x, y, 2z]``.
