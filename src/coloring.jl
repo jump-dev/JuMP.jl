@@ -115,18 +115,10 @@ function acyclic_coloring(g)
     return color, num_colors
 end
 
-if VERSION >= v"0.3.0-"
-    function twocolorset_of_edge(e,g,color)
-        i = source(e,g)
-        j = target(e,g)
-        return Set([color[i], color[j]])
-    end
-else
-    function twocolorset_of_edge(e,g,color)
-        i = source(e,g)
-        j = target(e,g)
-        return Set(color[i], color[j])
-    end
+function twocolorset_of_edge(e,g,color)
+    i = source(e,g)
+    j = target(e,g)
+    return Set([color[i], color[j]])
 end
 
 immutable RecoveryInfo
