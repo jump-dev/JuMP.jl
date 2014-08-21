@@ -67,6 +67,18 @@ lambda = rand(5)
 eval_hess!(V, exlist, val, lambda)
 @test_approx_eq sparse(I,J,V) diagm(lambda.*val)
 
+# irregular indices
+exlist = ExprList()
+idx = {[1,1],[1,2]}
+for i in 1:2
+    push!(exlist,@processNLExpr sum{x[k]^2/2, k in idx[i]})
+end
+I,J = prep_sparse_hessians(exlist,2)
+V = zeros(length(I))
+lambda = [1.0,2.0]
+eval_hess!(V, exlist, val, lambda)
+@test_approx_eq sparse(I,J,V) diagm([4.,2.])
+
 # test linear expressions
 x,y = placeholders(2)
 ex = @processNLExpr 2x + y

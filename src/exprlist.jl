@@ -85,7 +85,7 @@ function prep_sparse_hessians(l::ExprList, num_total_vars)
                 # TODO: actually we can share the AD but not the coloring here
                 f = genfval_parametric(x)
                 gf = genfgrad_parametric(x)
-                hI, hJ, hf = gen_hessian_sparse_color_parametric(x)
+                hI, hJ, hf = gen_hessian_sparse_color_parametric(x, num_total_vars)
                 push!(l.valfuncs, f)
                 push!(l.gradfuncs, gf)
                 push!(l.hessfuncs, hf)
