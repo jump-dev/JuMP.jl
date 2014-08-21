@@ -1,5 +1,5 @@
 using Graphs
-using DataStructures
+import DataStructures
 
 
 function gen_adjlist(IJ,nel)
@@ -35,7 +35,7 @@ function acyclic_coloring(g)
     color = fill(0, num_vertices(g))
     colored(i) = (color[i] != 0)
     # disjoint set forest of edges in the graph
-    S = DisjointSets{(Int,Int)}(collect(keys(firstVisitToTree)))
+    S = DataStructures.DisjointSets{(Int,Int)}(collect(keys(firstVisitToTree)))
 
     function prevent_cycle(v,w,x)
         er = find_root(S, normalize(w,x))
