@@ -62,7 +62,7 @@ The function evaluation time, on the other hand, is the responsibility of the mo
 
 .. note::
 
-    JuMP's performance for evaluating derivatives significantly improves if the `ArrayViews <https://github.com/lindahua/ArrayViews.jl>`_ package is installed. This is currently an optional dependency because it requires the 0.3 development version of Julia.
+    JuMP's performance for evaluating derivatives significantly improves if the `ArrayViews <https://github.com/lindahua/ArrayViews.jl>`_ package is installed. This is currently an optional dependency.
 
 
 .. [1] Gebremdhin et al., "Efficient Computation of Sparse Hessians Using Coloring and Automatic Differentiation", INFORMS Journal on Computing, 21(1), pp. 209-223, 2009.

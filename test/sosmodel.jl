@@ -18,13 +18,13 @@ function sos_test(solvername, solverobj)
         @addConstraint(modS, z == sum{a[i]*x[i], i=1:3})
         @addConstraint(modS, w == sum{b[i]*y[i], i=1:5})
 
-        @test_throws constructSOS([x[1]+y[1]])
-        @test_throws constructSOS([1z])
+        @test_throws UndefVarError constructSOS([x[1]+y[1]])
+        @test_throws UndefVarError constructSOS([1z])
 
         addSOS1(modS, [a[i]x[i] for i in 1:3])
         addSOS2(modS, [b[i]y[i] for i in 1:5])
 
-        @test_throws addSOS1(modS, [x[1], x[1]+x[2]])
+        @test_throws ErrorException addSOS1(modS, [x[1], x[1]+x[2]])
 
         status = solve(modS)
         @test status == :Optimal

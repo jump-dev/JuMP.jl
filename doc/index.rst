@@ -21,7 +21,7 @@ and `NLopt <http://ab-initio.mit.edu/wiki/index.php/NLopt>`_
 interface provided by the `MathProgBase <https://github.com/mlubin/MathProgBase.jl>`_
 package. 
 
-One the best features of JuMP is its **speed** - benchmarking has shown
+One of the best features of JuMP is its **speed** - benchmarking has shown
 that it can create problems at similar speeds to special-purpose modeling
 languages such as `AMPL <http://www.ampl.com/>`_ while maintaining the expressiveness
 of a generic high-level programming language. JuMP communicates with solvers in-memory, 

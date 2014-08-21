@@ -15,4 +15,4 @@ build_script:
   - C:\projects\julia\bin\julia-debug -e "versioninfo(); Pkg.init(); Pkg.clone(pwd(), \"JuMP\"); Pkg.add(\"GLPKMathProgInterface\"); Pkg.add(\"Ipopt\")"
 
 test_script:
-  - C:\projects\julia\bin\julia-debug test\runtests.jl
+  - C:\projects\julia\bin\julia-debug -e "Pkg.test(\"JuMP\")"

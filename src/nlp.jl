@@ -122,11 +122,7 @@ function MathProgBase.initialize(d::JuMPNLPEvaluator, requested_features::Vector
     function eval_g(g, x)
         tic()
         fill!(subarr(g,1:size(A,1)), 0.0)
-        if VERSION < v"0.3-"
-            g[1:size(A,1)] = A*x
-        else
-            A_mul_B!(subarr(g,1:size(A,1)),A,x)
-        end
+        A_mul_B!(subarr(g,1:size(A,1)),A,x)
         idx = size(A,1)+1
         for c::QuadConstraint in d.m.quadconstr
             aff = c.terms.aff

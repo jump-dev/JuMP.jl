@@ -14,6 +14,7 @@ Unversioned
     - **Breaking change**: ``IpoptOptions`` no longer supported to specify solver options, use ``m = Model(solver=IpoptSolver(options...))`` instead.
   * New solver interfaces: ECOS, NLopt, and nonlinear support for MOSEK
   * New option to control whether the lazy constraint callback is executed at each node in the B&B tree or just when feasible solutions are found
+  * Julia 0.3.0 is the minimum required version for this release.
 
 Version 0.5.5 (July 6, 2014)
 ----------------------------

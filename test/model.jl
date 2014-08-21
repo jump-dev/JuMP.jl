@@ -5,19 +5,19 @@ modPath = joinpath(Pkg.dir("JuMP"),"test","mod")
 
 # Check error cases
 let
-    @test_throws Model(solver=:Foo)
+    @test_throws ErrorException Model(solver=:Foo)
     modErr = Model()
-    @test_throws setObjectiveSense(modErr, :Maximum)
+    @test_throws ErrorException setObjectiveSense(modErr, :Maximum)
     @defVar(modErr, errVar)
     @test isnan(getValue(errVar))
-    @test_throws getDual(errVar)
+    @test_throws ErrorException getDual(errVar)
 
     modErr = Model()
     @defVar(modErr, x, Bin)
     @setObjective(modErr, Max, x)
     con = @addConstraint(modErr, x <= 0.5)
     solve(modErr)
-    @test_throws getDual(con)
+    @test_throws ErrorException getDual(con)
 
     # Removed due to issue #222
     #modErr = Model()
@@ -244,10 +244,10 @@ let
     @defVar(modA, x)
     @defVar(modB, y)
     @addConstraint(modA, x+y == 1)
-    @test_throws solve(modA)
+    @test_throws ErrorException solve(modA)
 
     addConstraint(modB, x*y >= 1)
-    @test_throws solve(modB)
+    @test_throws ErrorException solve(modB)
 end
 
 ######################################################################
@@ -270,12 +270,12 @@ let
     mod = Model()
     @defVar(mod, x)
     @setObjective(mod, Min, NaN*x)
-    @test_throws solve(mod)
+    @test_throws ErrorException solve(mod)
     setObjective(mod, :Min, NaN*x^2)
-    @test_throws solve(mod)
+    @test_throws ErrorException solve(mod)
     @setObjective(mod, Min, x)
     @addConstraint(mod, Min, NaN*x == 0)
-    @test_throws solve(mod)
+    @test_throws ErrorException solve(mod)
 end
 
 ######################################################################
@@ -297,7 +297,7 @@ let
     mod = Model()
     @defVar(mod, free_var)
     setObjective(mod, :Max, free_var*free_var)
-    @test_throws writeLP("test.lp")
+    @test_throws MethodError writeLP("test.lp")
     @setObjective(mod, Max, free_var)
     @addConstraint(mod, free_var - 2*free_var == 0)
     @addConstraint(mod, free_var + 2*free_var >= 1)

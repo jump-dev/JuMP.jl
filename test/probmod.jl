@@ -95,7 +95,7 @@ let
     #     0 <= y <= 3
     #     0 <= z <= 1.5, Integer
     rangeref = @addConstraint(m, -10 <= x <= 10)
-    @test_throws chgConstrRHS(rangeref, 11)
+    @test_throws ErrorException chgConstrRHS(rangeref, 11)
 
     # Test changing constraint bound (>= constraint)
     # max 1.1x + 1.0y + 100.0z
