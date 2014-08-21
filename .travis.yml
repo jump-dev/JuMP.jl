@@ -15,4 +15,5 @@ before_install:
   - if [[ -a .git/shallow ]]; then git fetch --unshallow; fi
 script:
   - julia -e 'Pkg.init(); Pkg.clone(pwd())'
-  - julia -e 'Pkg.test("ReverseDiffSparse")'
+  - julia -e 'Pkg.test("ReverseDiffSparse", coverage=true)'
+  - julia -e 'cd(Pkg.dir("ReverseDiffSparse")); Pkg.add("Coverage"); using Coverage; Coveralls.submit(Coveralls.process_folder())'
