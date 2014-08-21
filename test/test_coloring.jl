@@ -4,6 +4,8 @@ using Graphs
 
 # tests for acyclic coloring
 
+@test_throws ErrorException ReverseDiffSparse.reverse_dict_lookup(Dict(), :x)
+
 g = simple_graph(10, is_directed=false)
 color, numcolors = ReverseDiffSparse.acyclic_coloring(g)
 @test numcolors == 1
@@ -28,5 +30,14 @@ add_edge!(g, 1, 3)
 add_edge!(g, 2, 3)
 color, numcolors = ReverseDiffSparse.acyclic_coloring(g)
 @test numcolors == 2
+
+g = simple_graph(4, is_directed=false)
+add_edge!(g, 1, 2)
+add_edge!(g, 2, 3)
+add_edge!(g, 3, 4)
+add_edge!(g, 4, 1)
+color, numcolors = ReverseDiffSparse.acyclic_coloring(g)
+@test numcolors == 3
+
 
 println("Passed tests")

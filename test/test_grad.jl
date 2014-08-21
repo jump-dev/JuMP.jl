@@ -190,5 +190,11 @@ fval = fg([2.0,3.0], out)
 @test_approx_eq out[1] 3.0
 @test_approx_eq out[2] 2.0
 
+# dummy sum
+ex = @processNLExpr x[1] + sum{ 2, i in 1:10 }
+fg = genfgrad_simple(ex)
+fval = fg([2.0], out)
+@test_approx_eq fval 22.0
+@test_approx_eq out[1] 1.0
 
 println("Passed tests")
