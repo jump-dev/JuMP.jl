@@ -27,6 +27,7 @@ end
 # "New Acyclic and Star Coloring Algorithms with Application to Computing Hessians"
 # SIAM J. Sci. Comput. 2007
 function acyclic_coloring(g)
+    @assert !is_directed(g)
     
     num_colors = 0
     forbiddenColors = Int[]
@@ -38,7 +39,7 @@ function acyclic_coloring(g)
     S = DataStructures.DisjointSets{(Int,Int)}(collect(keys(firstVisitToTree)))
 
     function prevent_cycle(v,w,x)
-        er = find_root(S, normalize(w,x))
+        er = DataStructures.find_root(S, normalize(w,x))
         # reverse lookup, this isn't ideal
         e = reverse_dict_lookup(S.intmap,er)
         p,q = firstVisitToTree[e]
@@ -59,8 +60,8 @@ function acyclic_coloring(g)
     end
 
     function merge_trees(v,w,x)
-        e1 = find_root(S, normalize(v,w))
-        e2 = find_root(S, normalize(w,x))
+        e1 = DataStructures.find_root(S, normalize(v,w))
+        e2 = DataStructures.find_root(S, normalize(w,x))
         if e1 != e2
             union!(S, normalize(v,w), normalize(w,x))
         end
@@ -129,7 +130,7 @@ immutable RecoveryInfo
     color::Vector{Int}
 end
 
-function recovery_preprocess(g,color)
+function recovery_preprocess(g,color; verify_acyclic::Bool=false)
     twocoloredges = Dict{Set{Int},Vector{(Int,Int)}}()
     twocolorvertices = Dict{Set{Int},Set{Int}}()
     for e in edges(g)
@@ -161,6 +162,9 @@ function recovery_preprocess(g,color)
 
         for (i,j) in edgeset
             add_edge!(s, revmap[i], revmap[j])
+        end
+        if verify_acyclic
+            @assert !test_cyclic_by_dfs(s)
         end
 
         push!(twocolorgraphs, s)
