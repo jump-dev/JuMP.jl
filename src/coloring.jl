@@ -168,7 +168,7 @@ function recovery_preprocess(g,color)
     end
 
     # list the vertices in postorder
-    postorder = [reverse_topological_sort_by_dfs(s) for s in twocolorgraphs]
+    postorder = [reverse(topological_sort_by_dfs(s)) for s in twocolorgraphs]
     # identify each vertex's parent in the tree
     parents = Array(Vector{Int},0)
     for i in 1:length(twocolorgraphs)
@@ -349,45 +349,3 @@ function to_H(s::SymbolicOutput, I, J, V, n)
 end
 
 export to_H
-
-
-# Topological sort using DFS -- copied from Graphs.jl until 0.3 is released...
-
-type MyTopologicalSortVisitor <: AbstractGraphVisitor
-    vertices::Vector{Int}
-
-    function MyTopologicalSortVisitor(n::Int)
-        vs = Array(Int, 0)
-        sizehint(vs, n)
-        new(vs)
-    end
-end
-
-import Graphs: examine_neighbor!, close_vertex!
-
-
-function examine_neighbor!{V}(visitor::MyTopologicalSortVisitor, u::V, v::V, vcolor::Int, ecolor::Int)
-    if vcolor == 1 && ecolor == 0
-        throw(ArgumentError("The input graph contains at least one loop."))
-    end
-end
-
-function close_vertex!{V}(visitor::MyTopologicalSortVisitor, v::V)
-    push!(visitor.vertices, v)
-end
-
-function reverse_topological_sort_by_dfs{V}(graph::AbstractGraph{V})
-
-    cmap = zeros(Int, num_vertices(graph))
-    visitor = MyTopologicalSortVisitor(num_vertices(graph))
-
-    for s in vertices(graph)
-        if cmap[vertex_index(s, graph)] == 0
-            traverse_graph(graph, DepthFirst(), s, visitor, vertexcolormap=cmap)
-        end
-    end
-
-    visitor.vertices
-end
-
-
