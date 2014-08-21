@@ -34,7 +34,7 @@ Our documentation includes an installation guide, quick-start guide, and referen
 
 ## Installation
 
-JuMP can be installed through the Julia package manager (version 0.2 required)
+JuMP can be installed through the Julia package manager (version 0.3 required)
 
 ```julia
 julia> Pkg.add("JuMP")

@@ -3,9 +3,7 @@
 
 # Check for changes in Julia's expression parsing
 sumexpr = :(sum{x[i,j] * y[i,j], i = 1:N, j = 1:M; i != j})
-if VERSION >= v"0.3.0-"
-    @test string(sumexpr) == "sum{\$(Expr(:parameters, :(i != j))),x[i,j] * y[i,j],i = 1:N,j = 1:M}"
-end
+@test string(sumexpr) == "sum{\$(Expr(:parameters, :(i != j))),x[i,j] * y[i,j],i = 1:N,j = 1:M}"
 @test sumexpr.head == :curly
 @test length(sumexpr.args) == 5
 @test sumexpr.args[1] == :sum
@@ -16,9 +14,7 @@ end
 
 
 sumexpr = :(sum{x[i,j] * y[i,j], i = 1:N, j = 1:M})
-if VERSION >= v"0.3.0-"
-    @test string(sumexpr) == "sum{x[i,j] * y[i,j],i = 1:N,j = 1:M}"
-end
+@test string(sumexpr) == "sum{x[i,j] * y[i,j],i = 1:N,j = 1:M}"
 @test sumexpr.head == :curly
 @test length(sumexpr.args) == 4
 @test sumexpr.args[1] == :sum
@@ -44,7 +40,7 @@ let
     @test conToStr(m.linconstr[end]) == "-1 <= x - y <= 10"
     @addConstraint(m, -1 <= x+1 <= 1)
     @test conToStr(m.linconstr[end]) == "-2 <= x <= 0"
-    @test_throws @addConstraint(m, x <= t <= y)
+    @test_throws ErrorException @addConstraint(m, x <= t <= y)
 
     aff = @buildExpr(3x - y - 3.3(w + 2z) + 5)
     @test affToStr(aff) == "3 x - y - 3.3 w - 6.6 z + 5"
@@ -109,16 +105,28 @@ let
 
     @test x[end].col == x[5].col
     @test y[3].m == y[5].m == y[7].m == y[9].m # just make sure indexing works alright
-    @test_throws z[8].col
-    @test_throws w[end]
+    @test_throws KeyError z[8].col
+    @test_throws BoundsError w[end]
 
 end
 
 # unicode comparisons
-if VERSION > v"0.3.0-"
-    let
-        eval(parse("m = Model(); @defVar(m, 0 ≤ x ≤ 1); @defVar(m, y ≥ 2); @defVar(m, z ≤ 3); @test m.colUpper == [1.0, Inf,  3.0]; @test m.colLower == [0.0, 2.0, -Inf]; @addConstraint(m, 0 ≤ x + y ≤ 1); @addConstraint(m, x + z ≤ 2); @addConstraint(m, y + z ≥ 3); @test m.linconstr[1].lb == 0.0; @test m.linconstr[1].ub == 1.0; @test m.linconstr[2].lb == -Inf; @test m.linconstr[2].ub == 2.0; @test m.linconstr[3].lb == 3.0; @test m.linconstr[3].ub == Inf"))
-    end
+let
+    m = Model()
+    @defVar(m, 0 ≤ x ≤ 1)
+    @defVar(m, y ≥ 2)
+    @defVar(m, z ≤ 3)
+    @test m.colUpper == [1.0, Inf,  3.0]
+    @test m.colLower == [0.0, 2.0, -Inf]
+    @addConstraint(m, 0 ≤ x + y ≤ 1)
+    @addConstraint(m, x + z ≤ 2)
+    @addConstraint(m, y + z ≥ 3)
+    @test m.linconstr[1].lb == 0.0
+    @test m.linconstr[1].ub == 1.0
+    @test m.linconstr[2].lb == -Inf
+    @test m.linconstr[2].ub == 2.0
+    @test m.linconstr[3].lb == 3.0
+    @test m.linconstr[3].ub == Inf
 end
 
 # test @addConstraint(a,b,c)

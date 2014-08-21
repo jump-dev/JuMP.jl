@@ -19,12 +19,11 @@ before_install:
     - git config --global user.email "travis@example.net"
     - if [[ -a .git/shallow ]]; then git fetch --unshallow; fi
 script:
-    - julia -e 'Pkg.init()'
+    - julia -e 'Pkg.init(); Pkg.clone(pwd())'
     - if [ $JULIAVERSION = "julianightlies" ]; then julia -e 'Pkg.add("Ipopt")'; fi
-    - julia -e 'run(`ln -s $(pwd()) $(Pkg.dir("JuMP"))`); Pkg.pin("JuMP"); Pkg.resolve()'
     - julia -e 'for p in split(ENV["PKGADD"],";") Pkg.add(p) end'
-    - if [ $JULIAVERSION = "julianightlies" ]; then julia --code-coverage test/runtests.jl; fi
-    - if [ $JULIAVERSION = "juliareleases" ]; then julia test/runtests.jl; fi
+    - if [ $JULIAVERSION = "julianightlies" ]; then julia -e 'Pkg.test("JuMP", coverage=true)'; fi
+    - if [ $JULIAVERSION = "juliareleases" ]; then julia -e 'Pkg.test("JuMP")'; fi
     - julia test/hygiene.jl
     - julia test/hockschittkowski/runhs.jl
 after_success:

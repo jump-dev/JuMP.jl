@@ -376,11 +376,6 @@ type GenericRangeConstraint{TermsType} <: JuMPConstraint
     ub::Float64
 end
 
-if VERSION.major == 0 && VERSION.minor < 3
-    GenericRangeConstraint(terms, lb::Number, ub::Number) =
-        GenericRangeConstraint(terms,float(lb),float(ub))
-end
-
 function sense(c::GenericRangeConstraint) 
     if c.lb != -Inf
         if c.ub != Inf
