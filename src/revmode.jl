@@ -1,19 +1,12 @@
 
 # generate code that can be compiled to compute the gradient
 
-# load up derivative rules
-remove_xp(x::Expr) = Expr(x.head, [remove_xp(ex) for ex in x.args]...)
-remove_xp(s::Symbol) = (s == :xp) ? 1 : s
-remove_xp(x) = x
-
 replace_x(x::Expr, xvar) = Expr(x.head, [replace_x(ex,xvar) for ex in x.args]...)
 replace_x(s::Symbol, xvar) = (s == :x) ? xvar : s
 replace_x(x, xvar) = x
 
 const rules = Dict()
-for (funsym, exp) in Calculus.derivative_rules
-    # remove xp from expression -- Calculus uses it for the chain rule
-    exp = remove_xp(exp)
+for (funsym, exp) in Calculus.symbolic_derivatives_1arg()
     # return a function that returns an expression with the given expression replacing the symbol x
     rules[funsym] = arg -> replace_x(exp,arg)
 end
