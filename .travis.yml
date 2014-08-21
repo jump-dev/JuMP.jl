@@ -16,4 +16,4 @@ before_install:
 script:
   - julia -e 'Pkg.init(); Pkg.clone(pwd())'
   - julia -e 'Pkg.test("ReverseDiffSparse", coverage=true)'
-  - julia -e 'cd(Pkg.dir("ReverseDiffSparse")); Pkg.add("Coverage"); using Coverage; Coveralls.submit(Coveralls.process_folder())'
+  - if [ $JULIAVERSION = "juliareleases" ]; then julia -e 'cd(Pkg.dir("ReverseDiffSparse")); Pkg.add("Coverage"); using Coverage; Coveralls.submit(Coveralls.process_folder())'; fi
