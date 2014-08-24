@@ -368,7 +368,20 @@ dependson(ex::Expr,s::Symbol) = any([dependson(a,s) for a in ex.args])
 dependson(ex::Symbol,s::Symbol) = (ex == s)
 dependson(ex,s::Symbol) = false
 
-macro defVar(m, x, extra...)
+macro defVar(args...)
+    if isa(args[1], Expr) && args[1].head == :parameters
+        hascond = true
+        conditions = args[1].args
+        m = args[2]
+        x = args[3]
+        extra = args[4:end]
+    else
+        hascond = false
+        conditions = {}
+        m = args[1]
+        x = args[2]
+        extra = args[3:end]
+    end
     m = esc(m)
     # Identify the variable bounds. Four (legal) possibilities are "x >= lb",
     # "x <= ub", "lb <= x <= ub", or just plain "x"
@@ -495,6 +508,14 @@ macro defVar(m, x, extra...)
         
         tup = Expr(:tuple, [esc(x) for x in idxvars]...)
         code = :( $(refcall) = Variable($m, $lb, $ub, $t) )
+        if hascond
+            for cond in conditions
+                code = quote
+                    $(esc(cond)) || continue
+                    $code
+                end
+            end
+        end
         for (idxvar, idxset) in zip(reverse(idxvars),reverse(idxsets))
             code = quote
                 for $(esc(idxvar)) in $idxset
@@ -503,10 +524,10 @@ macro defVar(m, x, extra...)
             end
         end
        
-        if hasdependentsets(idxvars,idxsets)
+        if hascond || hasdependentsets(idxvars,idxsets)
             # force a JuMPDict
             N = length(idxsets)
-            mac = :($(esc(varname)) = JuMPDict{Variable,$N}(Dict{NTuple{$N},Variable}(),$(quot(varname))))
+            mac = :($(esc(varname)) = JuMPDict{Variable,$N}(Dict{NTuple{$N},Variable}(),$(quot(varname)),$(Expr(:tuple,idxsets...)),$conditions))
         else
             mac = Expr(:macrocall,symbol("@gendict"),esc(varname),:Variable,idxsets...)
         end

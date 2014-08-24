@@ -7,6 +7,8 @@ abstract JuMPArray{T} <: JuMPContainer{T}
 type JuMPDict{T,N} <: JuMPContainer{T}
     tupledict::Dict{NTuple{N},T}
     name::Symbol
+    indexsets
+    conditions
 end
 
 #JuMPDict{T,N}(name::String) =
@@ -22,6 +24,9 @@ function Base.map(f::Function, d::JuMPDict)
     end
     return x
 end
+
+Base.isempty(d::JuMPArray) = (isempty(d.innerArray))
+Base.isempty(d::JuMPDict)  = (isempty(d.tupledict))
 
 # generate and instantiate a type which is indexed by the given index sets
 # the following types of index sets are allowed:
@@ -95,7 +100,7 @@ macro gendict(instancename,T,idxsets...)
     else
         # JuMPDict
         return :(
-            $(esc(instancename)) = JuMPDict{$T,$N}(Dict{NTuple{$N},$T}(),$(quot(instancename)))
+            $(esc(instancename)) = JuMPDict{$T,$N}(Dict{NTuple{$N},$T}(),$(quot(instancename)), $(esc(Expr(:tuple,idxsets...))), {})
         )
     end
 end
@@ -106,17 +111,28 @@ for accessor in (:getValue, :getDual, :getLower, :getUpper)
 end
 
 # delegate zero-argument functions
-for f in (:(Base.endof), :(Base.ndims), :(Base.length), :(Base.abs), :(Base.start))
-    @eval $f(x::JuMPContainer) = $f(x.innerArray)
+for f in (:(Base.endof), :(Base.ndims), :(Base.length), :(Base.abs))
+    @eval begin
+        $f(x::JuMPArray) = $f(x.innerArray)
+        $f(x::JuMPDict)  = $f(x.tupledict)
+    end
 end
+Base.start(x::JuMPArray) = (map(start, x.indexsets), start(x.innerArray))
+Base.start(x::JuMPDict)  = start(x.tupledict)
 # delegate one-argument functions
-for f in (:(Base.size), :(Base.next), :(Base.done))
-    @eval $f(x::JuMPContainer,k) = $f(x.innerArray,k)
+Base.size(x::JuMPArray,k) = size(x.innerArray,k)
+Base.size(x::JuMPDict,k)  = size(x.tupledict,k)
+function Base.next(x::JuMPArray,k)
+    key = map((y,z)->next(x.indexsets[y],z), enumerate(k[1]))
+    (key, x[key])
 end
+Base.next(x::JuMPDict,k)  = next(x.tupledict,k)
+Base.done(x::JuMPArray,k) = all((y,z)->done(x.indexsets[y],z), enumerate(k[1])) && done(x.innerArray, k[2])
+Base.done(x::JuMPDict,k) = done(x.tupledict,k)
 
-(-)(x::JuMPContainer,y::Array) = x.innerArray-y
+(-)(x::JuMPArray,y::Array) = x.innerArray-y
 
-Base.eltype{T}    (x::JuMPDict{T}) = T
+Base.eltype{T}(x::JuMPContainer{T}) = T
 
 Base.full(x::JuMPContainer) = x
 
