@@ -17,8 +17,10 @@ end
 Base.getindex(d::JuMPDict, t...) = d.tupledict[t]
 Base.setindex!(d::JuMPDict, value, t...) = (d.tupledict[t] = value)
 
-function Base.map(f::Function, d::JuMPDict)
-    x = JuMPDict(d.name)
+function Base.map{T,N}(f::Function, d::JuMPDict{T,N})
+    ret = Base.return_types(f, (T,))
+    R = (length(ret) == 1 ? ret[1] : Any)
+    x = JuMPDict(Dict{NTuple{N},R}(), d.name, copy(d.indexsets), copy(d.conditions))
     for (k,v) in d.tupledict
         x.tupledict[k] = f(v)
     end
@@ -112,22 +114,24 @@ end
 
 # delegate zero-argument functions
 for f in (:(Base.endof), :(Base.ndims), :(Base.length), :(Base.abs))
-    @eval begin
-        $f(x::JuMPArray) = $f(x.innerArray)
-        $f(x::JuMPDict)  = $f(x.tupledict)
-    end
+    @eval $f(x::JuMPArray) = $f(x.innerArray)
 end
-Base.start(x::JuMPArray) = (map(start, x.indexsets), start(x.innerArray))
+#Base.first(x::JuMPArray) = (map(first, x.indexsets), first(x.innerArray))
+for f in (:(Base.first), :(Base.length))
+    @eval $f(x::JuMPDict)  = $f(x.tupledict)
+end
+Base.ndims{T,N}(x::JuMPDict{T,N}) = N
+Base.abs(x::JuMPDict) = map(abs, x)
+Base.start(x::JuMPArray) = map(start, x.indexsets)
 Base.start(x::JuMPDict)  = start(x.tupledict)
 # delegate one-argument functions
 Base.size(x::JuMPArray,k) = size(x.innerArray,k)
-Base.size(x::JuMPDict,k)  = size(x.tupledict,k)
 function Base.next(x::JuMPArray,k)
-    key = map((y,z)->next(x.indexsets[y],z), enumerate(k[1]))
-    (key, x[key])
+    key = tuple([next(x.indexsets[it],y)[2] for (it,y) in enumerate(k)]...)
+    ((k, x[k...]), key)
 end
 Base.next(x::JuMPDict,k)  = next(x.tupledict,k)
-Base.done(x::JuMPArray,k) = all((y,z)->done(x.indexsets[y],z), enumerate(k[1])) && done(x.innerArray, k[2])
+Base.done(x::JuMPArray,k) = all(y->done(x.indexsets[y[1]],y[2]), enumerate(k))
 Base.done(x::JuMPDict,k) = done(x.tupledict,k)
 
 (-)(x::JuMPArray,y::Array) = x.innerArray-y

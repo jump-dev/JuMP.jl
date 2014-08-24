@@ -273,7 +273,7 @@ end
 # dictnameindices
 # Not exported. Builds the x[i,j,k,l] part and the "for all" parts. This is also
 # used for printing JuMPDict so thats why its separated out from dictstring
-function dictnameindices(dict::JuMPDict{Variable}, mode=:REPL)
+function dictnameindices(dict::JuMPContainer{Variable}, mode=:REPL)
     dimensions = length(dict.indexsets)
     dim_names = ("i","j","k","l")
 
