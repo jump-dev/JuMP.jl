@@ -20,6 +20,20 @@ function string_intclamp(f::Float64)
     length(str) >= 2 && str[end-1:end] == ".0" ? str[1:end-2] : str
 end
 
+getindexsets(v::JuMPArray{Variable}) = v.indexsets
+function getindexsets(v::JuMPDict{Variable})
+    key = [keys(v.tupledict)...]
+    idxtypes = eltype(key)
+    # if key is well-typed, we know that we have Cartesian indexing
+    idxsets = {}
+    if isa(idxtypes, Tuple)
+        for i in length(idxtypes)
+            push!(idxsets, [x[i] for x in key])
+        end
+    end
+    return idxsets
+end
+
 #############################################################################
 #### type MODEL
 
@@ -44,8 +58,8 @@ function fillVarNames(m::Model)
     end
 end
 
-function fillVarNames(v::JuMPArray{Variable})
-    idxsets = v.indexsets
+function fillVarNames(v::JuMPContainer{Variable})
+    idxsets = getindexsets(v)
     lengths = map(length, idxsets)
     N = length(idxsets)
     name = v.name
@@ -215,7 +229,8 @@ end
 # summarizes the variables into one line. If not, it will return an empty
 # string and these variables should be printed one-by-one. Mode should be
 # :REPL or :IJulia
-function dictstring(dict::JuMPDict{Variable}, mode=:REPL)
+dictstring(dict::JuMPDict{Variable}, mode=:REPL) = ""
+function dictstring(dict::JuMPArray{Variable}, mode=:REPL)
 
     length(dict.innerArray) > 0 || return ""
 

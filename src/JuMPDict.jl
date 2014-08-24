@@ -29,7 +29,7 @@ end
 # S -- general iterable set
 macro gendict(instancename,T,idxsets...)
     N = length(idxsets)
-    allranges = all([isexpr(s,:(:)) && length(s.args) == 2 for s in idxsets])
+    allranges = all(s -> (isexpr(s,:(:)) && length(s.args) == 2), idxsets)
     if allranges
         # JuMPArray
         typename = symbol(string("JuMPArray",gensym()))
