@@ -40,14 +40,25 @@ end
 
 function fillVarNames(m::Model)
     for dict in m.dictList
-        idxsets = dict.indexsets
-        lengths = map(length, idxsets)
-        N = length(idxsets)
-        name = dict.name
-        cprod = cumprod([lengths...])
-        for (ind,var) in enumerate(dict.innerArray)
-            setName(var,string("$name[$(idxsets[1][mod1(ind,lengths[1])])", [ ",$(idxsets[i][int(ceil(mod1(ind,cprod[i]) / cprod[i-1]))])" for i=2:N ]..., "]"))
-        end
+        fillVarNames(dict)
+    end
+end
+
+function fillVarNames(v::JuMPArray{Variable})
+    idxsets = v.indexsets
+    lengths = map(length, idxsets)
+    N = length(idxsets)
+    name = v.name
+    cprod = cumprod([lengths...])
+    for (ind,var) in enumerate(v.innerArray)
+        setName(var,string("$name[$(idxsets[1][mod1(ind,lengths[1])])", [ ",$(idxsets[i][int(ceil(mod1(ind,cprod[i]) / cprod[i-1]))])" for i=2:N ]..., "]"))
+    end
+end
+
+function fillVarNames(v::JuMPDict{Variable})
+    name = v.name
+    for (ind,var) in v.tupledict
+        setName(var,string("$name[", join([string(i) for i in ind],","), "]"))
     end
 end
 
@@ -204,11 +215,14 @@ end
 # summarizes the variables into one line. If not, it will return an empty
 # string and these variables should be printed one-by-one. Mode should be
 # :REPL or :IJulia
-function dictstring(dict::JuMPDict{Variable}, mode=:REPL)
+function dictstring(dict::JuMPContainer{Variable}, mode=:REPL)
 
-    length(dict.innerArray) > 0 || return ""
+    isempty(dict) && return ""
 
-    m = dict.innerArray[1].m
+    v = first(dict)[2]
+
+    m = v.m
+    colCat = m.colCat[v.col]
 
     dimensions = length(dict.indexsets)
     if dimensions >= 5
@@ -216,10 +230,11 @@ function dictstring(dict::JuMPDict{Variable}, mode=:REPL)
     end
 
     # Check that bounds are same throughout
-    colLow = m.colLower[dict.innerArray[1].col]
-    colUp  = m.colUpper[dict.innerArray[1].col]
+    colLow = m.colLower[v.col]
+    colUp  = m.colUpper[v.col]
     all_same = true
-    for v in dict.innerArray[2:end]
+    for el in dict
+        v = el[2]
         all_same &= m.colLower[v.col] == colLow
         all_same &= m.colUpper[v.col] == colUp
         !all_same && break
@@ -230,7 +245,6 @@ function dictstring(dict::JuMPDict{Variable}, mode=:REPL)
 
     name_and_indices, tail_str = dictnameindices(dict, mode)
     
-    colCat = m.colCat[dict.innerArray[1].col]
     return boundstring(name_and_indices, colLow, colUp, colCat, tail_str, mode)
 end
 
@@ -258,8 +272,8 @@ end
 
 # dictnameindices
 # Not exported. Builds the x[i,j,k,l] part and the "for all" parts. This is also
-# used for printing JuMPDict so thats why its seperated out from dictstring
-function dictnameindices(dict::JuMPDict{Variable}, mode=:REPL)
+# used for printing JuMPDict so thats why its separated out from dictstring
+function dictnameindices(dict::JuMPContainer{Variable}, mode=:REPL)
     dimensions = length(dict.indexsets)
     dim_names = ("i","j","k","l")
 
@@ -320,6 +334,9 @@ function dictnameindices(dict::JuMPDict{Variable}, mode=:REPL)
         if dim != dimensions
             tail_str *= ", "
         end
+    end
+    if isa(dict, JuMPDict) && !isempty(dict.conditions)
+        tail_str *= " s.t. $(join(dict.conditions, " and "))"
     end
 
     return name_and_indices, tail_str
@@ -493,8 +510,8 @@ end
 
 #############################################################################
 # JuMPDict for variables
-Base.show(io::IO, dict::JuMPDict{Variable}) = print(io, dict)
-function Base.print(io::IO, dict::JuMPDict{Variable})
+Base.show(io::IO, dict::JuMPContainer{Variable}) = print(io, dict)
+function Base.print(io::IO, dict::JuMPContainer{Variable})
     # Best case: bounds and all dims
     str = dictstring(dict, :REPL)
     if str != ""
@@ -502,7 +519,7 @@ function Base.print(io::IO, dict::JuMPDict{Variable})
         return
     end
     # Easy case: empty JuMPDict
-    isempty(dict.innerArray) && return nothing
+    isempty(dict) && return nothing
     # Maybe too many dims?
     dimensions = length(dict.indexsets)
     if dimensions >= 5
@@ -514,7 +531,8 @@ function Base.print(io::IO, dict::JuMPDict{Variable})
     name_and_indices, tail_str = dictnameindices(dict, :REPL)
     print(io, ".. \u2264 $(name_and_indices) \u2264 ..$(tail_str)")
 end
-function Base.writemime(io::IO, ::MIME"text/latex", dict::JuMPDict{Variable})
+
+function Base.writemime(io::IO, ::MIME"text/latex", dict::JuMPContainer{Variable})
     # Best case: bounds and all dims
     str = dictstring(dict::JuMPDict, :IJulia)
     if str != ""
@@ -535,13 +553,13 @@ end
 
 #############################################################################
 # JuMPDict for values
-Base.show(io::IO, dict::JuMPDict{Float64}) = print(io, dict)
-function Base.print(io::IO, dict::JuMPDict{Float64})
+Base.show(io::IO, dict::JuMPContainer{Float64}) = print(io, dict)
+function Base.print(io::IO, dict::JuMPContainer{Float64})
     println(io, dict.name)
     print_values(io, dict, 1, {}, "")
 end
 
-function print_values(io::IO, dict::JuMPDict{Float64}, depth::Int, 
+function print_values(io::IO, dict::JuMPContainer{Float64}, depth::Int, 
                         parent_index::Vector{Any}, parent_str::String)
     dims = length(dict.indexsets)
     indexset = dict.indexsets[depth]
