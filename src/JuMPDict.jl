@@ -116,23 +116,30 @@ end
 for f in (:(Base.endof), :(Base.ndims), :(Base.length), :(Base.abs))
     @eval $f(x::JuMPArray) = $f(x.innerArray)
 end
-#Base.first(x::JuMPArray) = (map(first, x.indexsets), first(x.innerArray))
-for f in (:(Base.first), :(Base.length))
+for f in (:(Base.first), :(Base.length), :(Base.start))
     @eval $f(x::JuMPDict)  = $f(x.tupledict)
 end
 Base.ndims{T,N}(x::JuMPDict{T,N}) = N
+Base.start(x::JuMPArray) = start(x.innerArray)
 Base.abs(x::JuMPDict) = map(abs, x)
-Base.start(x::JuMPArray) = map(start, x.indexsets)
-Base.start(x::JuMPDict)  = start(x.tupledict)
 # delegate one-argument functions
 Base.size(x::JuMPArray,k) = size(x.innerArray,k)
 function Base.next(x::JuMPArray,k)
-    key = tuple([next(x.indexsets[it],y)[2] for (it,y) in enumerate(k)]...)
-    ((k, x[k...]), key)
+    @assert (ndim = ndims(x)) > 0
+    idxsets = x.indexsets
+    lengths = map(length, idxsets)
+    cprod = cumprod([lengths...])
+    key = Array(Int, ndim)
+    key[1] = idxsets[1][mod1(k,lengths[1])]
+    for i in 2:ndim
+        key[i] = idxsets[i][int(ceil(mod1(k,cprod[i])/cprod[i-1]))]
+    end
+    (var, gidx) = next(x.innerArray, k)
+    return ((key, var), gidx)
 end
 Base.next(x::JuMPDict,k)  = next(x.tupledict,k)
-Base.done(x::JuMPArray,k) = all(y->done(x.indexsets[y[1]],y[2]), enumerate(k))
-Base.done(x::JuMPDict,k) = done(x.tupledict,k)
+Base.done(x::JuMPArray,k) = done(x.innerArray,k)
+Base.done(x::JuMPDict,k)  = done(x.tupledict,k)
 
 (-)(x::JuMPArray,y::Array) = x.innerArray-y
 

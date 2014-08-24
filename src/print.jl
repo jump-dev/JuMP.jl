@@ -510,7 +510,7 @@ end
 
 #############################################################################
 # JuMPDict for variables
-Base.show(io::IO, dict::JuMPDict{Variable}) = print(io, dict)
+Base.show(io::IO, dict::JuMPContainer{Variable}) = print(io, dict)
 function Base.print(io::IO, dict::JuMPContainer{Variable})
     # Best case: bounds and all dims
     str = dictstring(dict, :REPL)
