@@ -53,7 +53,7 @@ let
     #     0 <= z <= 1.5, Integer
     # x* = 2, y* = 0, z* = 1
     setUpper(z, 1.5)
-    m.colCat[3] = JuMP.INTEGER
+    m.colCat[3] = :Int
     solve(m)
     @test_approx_eq_eps getValue(x) 2.0 1e-6
     @test_approx_eq_eps getValue(y) 0.0 1e-6
@@ -157,7 +157,7 @@ const mpb_methods = [(MathProgBase.addquadconstr!, (Cint[1],Float64[1.0],Cint[1]
                      (MathProgBase.setconstrUB!, ([1.0],)),
                      (MathProgBase.setobj!,      ([1.0],)),
                      (MathProgBase.setsense!,    (:Min,)),
-                     (MathProgBase.setvartype!,  (['C'],)),
+                     (MathProgBase.setvartype!,  ([:Cont],)),
                      (MathProgBase.getinfeasibilityray, ()),
                      (MathProgBase.getunboundedray, ()),
                      (MathProgBase.getreducedcosts, ()),

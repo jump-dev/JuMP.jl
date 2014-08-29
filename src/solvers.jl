@@ -15,7 +15,7 @@ function solve(m::Model;IpoptOptions::Dict=Dict(),load_model_only=false, suppres
     anyInts = (length(m.sosconstr) > 0)
     if !anyInts
         for j = 1:m.numCols
-            if m.colCat[j] == INTEGER
+            if m.colCat[j] != :Cont
                 anyInts = true
                 break
             end
@@ -176,14 +176,14 @@ function solveLP(m::Model; load_model_only=false, suppress_warnings=false)
            applicable(MathProgBase.setconstrUB!, m.internalModel, rowub) &&
            applicable(MathProgBase.setobj!, m.internalModel, f) &&
            applicable(MathProgBase.setsense!, m.internalModel, m.objSense) &&
-           applicable(MathProgBase.setvartype!, m.internalModel, ['C'])            
+           applicable(MathProgBase.setvartype!, m.internalModel, [:Cont])            
             MathProgBase.setvarLB!(m.internalModel, m.colLower)
             MathProgBase.setvarUB!(m.internalModel, m.colUpper)
             MathProgBase.setconstrLB!(m.internalModel, rowlb)
             MathProgBase.setconstrUB!(m.internalModel, rowub)
             MathProgBase.setobj!(m.internalModel, f)
             MathProgBase.setsense!(m.internalModel, m.objSense)
-            MathProgBase.setvartype!(m.internalModel, fill('C',m.numCols))
+            MathProgBase.setvartype!(m.internalModel, fill(:Cont,m.numCols))
         else
             !suppress_warnings && Base.warn_once("Solver does not appear to support hot-starts. Problem will be solved from scratch.")
             m.internalModelLoaded = false
@@ -262,16 +262,6 @@ function solveMIP(m::Model; load_model_only=false, suppress_warnings=false)
     f, rowlb, rowub = prepProblemBounds(m)
     A = prepConstrMatrix(m)
 
-    # Build vartype vector
-    vartype = zeros(Char,m.numCols)
-    for j = 1:m.numCols
-        if m.colCat[j] == CONTINUOUS
-            vartype[j] = 'C'
-        else
-            vartype[j] = 'I'
-        end
-    end
-
     # Ready to solve
     
     if m.internalModelLoaded
@@ -298,7 +288,7 @@ function solveMIP(m::Model; load_model_only=false, suppress_warnings=false)
         m.internalModel = MathProgBase.model(m.solver)
         
         MathProgBase.loadproblem!(m.internalModel, A, m.colLower, m.colUpper, f, rowlb, rowub, m.objSense)
-        MathProgBase.setvartype!(m.internalModel, vartype)
+        MathProgBase.setvartype!(m.internalModel, m.colCat)
 
         addSOS(m)
 
@@ -351,14 +341,11 @@ function solveMIP(m::Model; load_model_only=false, suppress_warnings=false)
 end
 
 function buildInternalModel(m::Model)
-    vartype = zeros(Char,m.numCols)
     anyInts = false
     for j = 1:m.numCols
-        if m.colCat[j] == CONTINUOUS
-            vartype[j] = 'C'
-        else
-            vartype[j] = 'I'
+        if m.colCat[j] != :Cont
             anyInts = true
+            break
         end
     end
 
@@ -383,7 +370,7 @@ function buildInternalModel(m::Model)
     addQuadratics(m)
 
     if anyInts # do MIP stuff
-        MathProgBase.setvartype!(m.internalModel, vartype)
+        MathProgBase.setvartype!(m.internalModel, m.colCat)
         addSOS(m)
         registercallbacks(m)
         if !all(isnan(m.colVal))

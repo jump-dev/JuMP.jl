@@ -136,7 +136,7 @@ status = solve(modA)
 @test_approx_eq_eps getValue(r)[6] 6.0 1e-6
 #####################################################################
 # Test solution (LP)
-modA.colCat[2] = 0
+modA.colCat[2] = :Cont
 status = solve(modA)
 @test status == :Optimal  
 @test_approx_eq_eps modA.objVal 5.844611528822055 1e-6

@@ -361,7 +361,7 @@ function solvenlp(m::Model; suppress_warnings=false)
     
     # check that there are no integer variables
     for j = 1:m.numCols
-        if m.colCat[j] == INTEGER
+        if m.colCat[j] == :Int
             error("Integer variables present in nonlinear problem")
         end
     end
