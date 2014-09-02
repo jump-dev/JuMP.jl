@@ -66,6 +66,8 @@ We list below what is currently supported. See the documentation for more inform
 
 * Continuous
 * Integer-valued
+* Semicontinuous
+* Semi-integer
 
 ## Bug reports and support
 
