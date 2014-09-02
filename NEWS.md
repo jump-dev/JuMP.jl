@@ -1,8 +1,8 @@
 JuMP release notes
 ==================
 
-Version 0.5.6
--------------
+Unversioned
+-----------
 
   * ``buildInternalModel(m::Model)`` added to build solver-level model in memory without optimizing.
   * Deprecate ``load_model_only`` keyword argument to ``solve``.
@@ -15,6 +15,10 @@ Version 0.5.6
   * New solver interfaces: ECOS, NLopt, and nonlinear support for MOSEK
   * New option to control whether the lazy constraint callback is executed at each node in the B&B tree or just when feasible solutions are found
   * Julia 0.3.0 is the minimum required version for this release.
+  * Add support for semicontinuous and semi-integer variables for those solvers that support them.
+
+Version 0.5.7 (September 2, 2014)
+---------------------------------
   * Add support for semicontinuous and semi-integer variables for those solvers that support them.
 
 Version 0.5.5 (July 6, 2014)
