@@ -95,6 +95,12 @@ idx3 = [[2:2:20],21]
 @defVar(mprint, q[idx2,idx3])
 @test JuMP.dictstring(q, :REPL)   == "q[i,j], for all i in {2,4..18,20}, j in {2,4,6,8,10,12..} free"
 @test JuMP.dictstring(q, :IJulia) == "q_{i,j} \\quad \\forall i \\in \\{ 2,4..18,20 \\}, j \\in \\{ 2,4,6,8,10,12.. \\} free"
+@defVar(mprint, r[idx1,idx2] >= 2, SemiCont)
+@test JuMP.dictstring(r, :REPL)   == "r[i,j] ≥ 2, for all i in {1..10}, j in {2,4..18,20}, semicontinuous"
+@test JuMP.dictstring(r, :IJulia) == "r_{i,j} \\geq 2 \\quad \\forall i \\in \\{ 1..10 \\}, j \\in \\{ 2,4..18,20 \\}, semicontinuous"
+@defVar(mprint, s[idx2,idx3] <= -3, SemiInt)
+@test JuMP.dictstring(s, :REPL)   == "s[i,j] ≤ -3, for all i in {2,4..18,20}, j in {2,4,6,8,10,12..}, semi-integer"
+@test JuMP.dictstring(s, :IJulia) == "s_{i,j} \\leq -3 \\quad \\forall i \\in \\{ 2,4..18,20 \\}, j \\in \\{ 2,4,6,8,10,12.. \\}, semi-integer"
 # test empty JuMPDict printing (issue #124)
 @defVar(mprint, xx[1:0])
 @test JuMP.dictstring(xx, :REPL) == JuMP.dictstring(xx, :IJulia) == ""

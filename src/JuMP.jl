@@ -47,12 +47,6 @@ include("JuMPDict.jl")
 include("utils.jl")
 
 ###############################################################################
-# Constants
-const CONTINUOUS = 0
-const INTEGER = 1
-export CONTINUOUS, INTEGER
-
-###############################################################################
 # Model class
 # Keeps track of all model and column info
 type Model
@@ -68,7 +62,7 @@ type Model
     colNames::Vector{String}
     colLower::Vector{Float64}
     colUpper::Vector{Float64}
-    colCat::Vector{Int}
+    colCat::Vector{Symbol}
 
     # Solution data
     objVal
@@ -108,7 +102,7 @@ function Model(;solver=nothing)
     if solver == nothing
         # use default solvers
         Model(QuadExpr(),:Min,LinearConstraint[], QuadConstraint[],SOSConstraint[],
-              0,String[],Float64[],Float64[],Int[],
+              0,String[],Float64[],Float64[],Symbol[],
               0,Float64[],Float64[],Float64[],nothing,UnsetSolver(),false,
               nothing,nothing,nothing,JuMPDict[],IndexedVector(Float64,0),nothing,Dict{Symbol,Any}())
     else
@@ -183,7 +177,7 @@ end
 ReverseDiffSparse.getplaceindex(x::Variable) = x.col
 isequal(x::Variable,y::Variable) = isequal(x.col,y.col) && isequal(x.m,y.m)
 
-function Variable(m::Model,lower::Number,upper::Number,cat::Int,name::String)
+function Variable(m::Model,lower::Number,upper::Number,cat::Symbol,name::String)
     m.numCols += 1
     push!(m.colNames, name)
     push!(m.colLower, convert(Float64,lower))
@@ -201,7 +195,7 @@ function Variable(m::Model,lower::Number,upper::Number,cat::Int,name::String)
     return Variable(m, m.numCols)
 end
 
-Variable(m::Model,lower::Number,upper::Number,cat::Int) =
+Variable(m::Model,lower::Number,upper::Number,cat::Symbol) =
     Variable(m,lower,upper,cat,"")
 
 # Name setter/getters
@@ -414,7 +408,7 @@ function constructSOS(coll::Vector{AffExpr})
         if (length(coll[i].vars) != 1) || (coll[i].constant != 0)
             error("Must specify collection in terms of single variables")
         end
-        if coll[i].vars[1].m.colCat[coll[i].vars[1].col] == CONTINUOUS
+        if coll[i].vars[1].m.colCat[coll[i].vars[1].col] == :Cont
             error("SOS constraints cannot handle continuous variables")
         end
         vars[i] = coll[i].vars[1]
@@ -515,7 +509,7 @@ function chgConstrRHS(c::ConstraintRef{LinearConstraint}, rhs::Number)
 end
 
 # add variable to existing constraints
-function Variable(m::Model,lower::Number,upper::Number,cat::Int,objcoef::Number,
+function Variable(m::Model,lower::Number,upper::Number,cat::Symbol,objcoef::Number,
     constraints::Vector{ConstraintRef{LinearConstraint}},coefficients::Vector{Float64};
     name::String="")
     m.numCols += 1

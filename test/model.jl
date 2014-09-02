@@ -111,7 +111,7 @@ status = solve(modA)
 @test_approx_eq getValue(r)[6] 6.0
 #####################################################################
 # Test solution (LP)
-modA.colCat[2] = 0
+modA.colCat[2] = :Cont
 status = solve(modA)
 @test status == :Optimal  
 @test_approx_eq_eps modA.objVal 5.844611528822055 1e-6
@@ -225,4 +225,62 @@ let
 
     addConstraint(modB, x*y >= 1)
     @test_throws solve(modB)
+end
+
+######################################################################
+# Test semi-continuous variables
+if Pkg.installed("Gurobi") != nothing
+    let 
+        using Gurobi
+        mod = Model(solver=GurobiSolver())
+        @defVar(mod, x >= 3, SemiCont)
+        @defVar(mod, y >= 2, SemiCont)
+        @addConstraint(mod, x + y >= 1)
+        @setObjective(mod, Min, x+y)
+        solve(mod)
+        @test getValue(x) == 0.0
+        @test getValue(y) == 2.0
+    end
+end
+if Pkg.installed("CPLEX") != nothing
+    let 
+        using CPLEX
+        mod = Model(solver=CplexSolver())
+        @defVar(mod, x >= 3, SemiCont)
+        @defVar(mod, y >= 2, SemiCont)
+        @addConstraint(mod, x + y >= 1)
+        @setObjective(mod, Min, x+y)
+        solve(mod)
+        @test getValue(x) == 0.0
+        @test getValue(y) == 2.0
+    end
+end
+
+######################################################################
+# Test semi-integer variables
+if Pkg.installed("Gurobi") != nothing
+    let 
+        using Gurobi
+        mod = Model(solver=GurobiSolver())
+        @defVar(mod, x >= 3, SemiInt)
+        @defVar(mod, y >= 2, SemiInt)
+        @addConstraint(mod, x + y >= 2.5)
+        @setObjective(mod, Min, x+1.1y)
+        solve(mod)
+        @test getValue(x) == 3.0
+        @test getValue(y) == 0.0
+    end
+end
+if Pkg.installed("CPLEX") != nothing
+    let 
+        using CPLEX
+        mod = Model(solver=CplexSolver())
+        @defVar(mod, x >= 3, SemiInt)
+        @defVar(mod, y >= 2, SemiInt)
+        @addConstraint(mod, x + y >= 2.5)
+        @setObjective(mod, Min, x+1.1y)
+        solve(mod)
+        @test getValue(x) == 3.0
+        @test getValue(y) == 0.0
+    end
 end

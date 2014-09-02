@@ -26,7 +26,7 @@ function solveIpopt(m::Model; options::Dict=Dict(), suppress_warnings=false)
     end
     # check that there are no integer variables
     for j = 1:m.numCols
-        if m.colCat[j] == INTEGER
+        if m.colCat[j] != :Cont
             error("Integer variables present in nonlinear problem")
         end
     end

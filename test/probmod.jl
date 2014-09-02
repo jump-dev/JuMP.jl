@@ -29,7 +29,7 @@ let
 
     # Test changing problem type
     setUpper(z, 1.5)
-    m.colCat[3] = JuMP.INTEGER
+    m.colCat[3] = :Int
     solve(m)
     @test_approx_eq_eps getValue(x) 2.0 1e-6
     @test_approx_eq_eps getValue(y) 0.0 1e-6

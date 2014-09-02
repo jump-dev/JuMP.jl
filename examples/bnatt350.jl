@@ -47,7 +47,7 @@ vtypes = MathProgBase.getvartype(m_internal)
 for i in 1:n
     setLower(x[i], xlb[i])
     setUpper(x[i], xub[i])
-    (vtypes[i] == 'I' || vtypes[i] == 'B') ? mod.colCat[x[i].col] = INTEGER : nothing # change vartype to integer when appropriate
+    mod.colCat[x[i].col] = vtypes[i]
 end
 At = A' # transpose to get useful row-wise sparse representation
 for i in 1:At.n

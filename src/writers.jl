@@ -77,10 +77,10 @@ function writeMPS(m::Model, fname::String)
     inintegergroup = false
     write(f,"COLUMNS\n")
     for col in 1:m.numCols
-        if m.colCat[col] != CONTINUOUS && !inintegergroup
+        if m.colCat[col] != :Cont && !inintegergroup
             @printf(f,"    MARKER    'MARKER'                 'INTORG'\n")
             inintegergroup = true
-        elseif m.colCat[col] == CONTINUOUS && inintegergroup
+        elseif m.colCat[col] == :Cont && inintegergroup
             @printf(f,"    MARKER    'MARKER'                 'INTEND'\n")
             inintegergroup = false
         end
@@ -261,7 +261,7 @@ function writeLP(m::Model, fname::String)
     # Integer - don't handle binaries specially
     write(f,"General\n")
     for i in 1:m.numCols
-        if m.colCat[i] != CONTINUOUS
+        if m.colCat[i] != :Cont
             @printf(f, " VAR%d\n", i)
         end
     end

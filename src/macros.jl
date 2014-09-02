@@ -276,18 +276,21 @@ macro defVar(m, x, extra...)
         lb = -Inf
         ub = Inf
     end
-    t = JuMP.CONTINUOUS
+    t = :Cont
+    gottype = 0
     if length(extra) > 0
-        gottype = 0
-        if extra[1] == :Int || extra[1] == :Bin
+        if extra[1] in [:Bin, :Int, :SemiCont, :SemiInt]
             gottype = 1
-            if extra[1] == :Int
-                t = JuMP.INTEGER
+            t = extra[1]
+        end
+
+        if t == :Bin
+            if (lb != -Inf || ub != Inf) && !(lb == 0.0 && ub == 1.0)
+                error("in @defVar ($var): bounds other than [0, 1] may not be specified for binary variables.\nThese are always taken to have a lower bound of 0 and upper bound of 1.")
             else
                 if lb != -Inf || ub != Inf
                     error("Bounds may not be specified for binary variables. These are always taken to have a lower bound of 0 and upper bound of 1.")
                 end
-                t = JuMP.INTEGER
                 lb = 0.0
                 ub = 1.0
             end
@@ -301,7 +304,7 @@ macro defVar(m, x, extra...)
                 error("Cannot create multiple variables when adding to existing constraints")
             end
             return quote
-                $(esc(var)) = Variable($m,$lb,$ub,$t,$objcoef,$cols,$coeffs,name=$(string(var)))
+                $(esc(var)) = Variable($m,$lb,$ub,$(quot(t)),$objcoef,$cols,$coeffs,name=$(string(var)))
                 nothing
             end
         elseif length(extra) - gottype != 0
@@ -313,7 +316,7 @@ macro defVar(m, x, extra...)
     if isa(var,Symbol)
         # easy case
         return quote
-            $(esc(var)) = Variable($m,$lb,$ub,$t,$(string(var)))
+            $(esc(var)) = Variable($m,$lb,$ub,$(quot(t)),$(string(var)))
             nothing
         end
     else
@@ -337,7 +340,7 @@ macro defVar(m, x, extra...)
             push!(refcall.args, esc(idxvar))
         end
         tup = Expr(:tuple, [esc(x) for x in idxvars]...)
-        code = :( $(refcall) = Variable($m, $lb, $ub, $t) )
+        code = :( $(refcall) = Variable($m, $lb, $ub, $(quot(t))) )
         for (idxvar, idxset) in zip(reverse(idxvars),reverse(idxsets))
             code = quote
                 for $(esc(idxvar)) in $idxset

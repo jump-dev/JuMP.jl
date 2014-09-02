@@ -5,7 +5,7 @@ function solve(m::Model;IpoptOptions::Dict=Dict(),load_model_only=false, suppres
     # Analyze model to see if any integers
     anyInts = false
     for j = 1:m.numCols
-        if m.colCat[j] == INTEGER
+        if m.colCat[j] != :Cont
             anyInts = true
             break
         end
@@ -177,10 +177,10 @@ function solveLP(m::Model; load_model_only=false, suppress_warnings=false)
         end
         all_cont = true
         try # this fails for LPs for some unfathomable reason...but if it's an LP, we're good anyway
-            all_cont = mapreduce(x->isequal('C',x), &, MathProgBase.getvartype(m.internalModel))
+            all_cont = mapreduce(x->isequal([:Cont],x), &, MathProgBase.getvartype(m.internalModel))
         end
         if !all_cont
-            setvartype!(m.internalModel, fill('C',m.numCols))
+            setvartype!(m.internalModel, fill(:Cont,m.numCols))
         end
     end
     if !m.internalModelLoaded
@@ -235,18 +235,7 @@ function solveMIP(m::Model; load_model_only=false, suppress_warnings=false)
     f, rowlb, rowub = prepProblemBounds(m)
     A = prepConstrMatrix(m)
 
-    # Build vartype vector
-    vartype = zeros(Char,m.numCols)
-    for j = 1:m.numCols
-        if m.colCat[j] == CONTINUOUS
-            vartype[j] = 'C'
-        else
-            vartype[j] = 'I'
-        end
-    end
-
     # Ready to solve
-    
     if m.internalModelLoaded
         try
             setvarLB!(m.internalModel, m.colLower)
@@ -255,7 +244,7 @@ function solveMIP(m::Model; load_model_only=false, suppress_warnings=false)
             setconstrUB!(m.internalModel, rowub)
             setobj!(m.internalModel, f)
             setsense!(m.internalModel, m.objSense)
-            setvartype!(m.internalModel, vartype)
+            setvartype!(m.internalModel, m.colCat)
         catch
             m.internalModelLoaded = false
         end
@@ -264,7 +253,7 @@ function solveMIP(m::Model; load_model_only=false, suppress_warnings=false)
         m.internalModel = model(m.solver)
         
         loadproblem!(m.internalModel, A, m.colLower, m.colUpper, f, rowlb, rowub, m.objSense)
-        setvartype!(m.internalModel, vartype)
+        setvartype!(m.internalModel, m.colCat)
 
         addSOS(m)
 
