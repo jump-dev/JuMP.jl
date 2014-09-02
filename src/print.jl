@@ -183,13 +183,17 @@ end
 function boundstring(var_name, colLow, colUp, colCat, iterate_over="", mode=:REPL)
     greater = (mode == :REPL) ? "\u2265" : "\\geq"
     less    = (mode == :REPL) ? "\u2264" : "\\leq"
-    int_str = (colCat == :Int) ? ", integer" : ""
 
     if colCat == :Bin
         return "$(var_name)$(iterate_over), binary"
-    elseif colLow == -Inf && colUp == Inf
-        return "$(var_name)$(iterate_over) free" * 
-                (colCat == :Int ? ", integer" : "")
+    end
+
+    int_str = (colCat == :Int)      ? ", integer" : 
+              (colCat == :SemiCont) ? ", semicontinuous" : 
+              (colCat == :SemiInt)  ? ", semi-integer" : 
+              ""
+    if colLow == -Inf && colUp == Inf
+        return "$(var_name)$(iterate_over) free$(int_str)"
     elseif colLow == -Inf
         return "$var_name $less $(string_intclamp(colUp))$(iterate_over)$(int_str)"
     elseif colUp == Inf
