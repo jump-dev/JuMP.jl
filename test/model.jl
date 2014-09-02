@@ -303,3 +303,61 @@ let
     @addConstraint(mod, free_var + 2*free_var >= 1)
     writeLP(mod,"test.lp")
 end
+
+######################################################################
+# Test semi-continuous variables
+if Pkg.installed("Gurobi") != nothing
+    let 
+        using Gurobi
+        mod = Model(solver=GurobiSolver())
+        @defVar(mod, x >= 3, SemiCont)
+        @defVar(mod, y >= 2, SemiCont)
+        @addConstraint(mod, x + y >= 1)
+        @setObjective(mod, Min, x+y)
+        solve(mod)
+        @test getValue(x) == 0.0
+        @test getValue(y) == 2.0
+    end
+end
+if Pkg.installed("CPLEX") != nothing
+    let 
+        using CPLEX
+        mod = Model(solver=CplexSolver())
+        @defVar(mod, x >= 3, SemiCont)
+        @defVar(mod, y >= 2, SemiCont)
+        @addConstraint(mod, x + y >= 1)
+        @setObjective(mod, Min, x+y)
+        solve(mod)
+        @test getValue(x) == 0.0
+        @test getValue(y) == 2.0
+    end
+end
+
+######################################################################
+# Test semi-integer variables
+if Pkg.installed("Gurobi") != nothing
+    let 
+        using Gurobi
+        mod = Model(solver=GurobiSolver())
+        @defVar(mod, x >= 3, SemiInt)
+        @defVar(mod, y >= 2, SemiInt)
+        @addConstraint(mod, x + y >= 2.5)
+        @setObjective(mod, Min, x+1.1y)
+        solve(mod)
+        @test getValue(x) == 3.0
+        @test getValue(y) == 0.0
+    end
+end
+if Pkg.installed("CPLEX") != nothing
+    let 
+        using CPLEX
+        mod = Model(solver=CplexSolver())
+        @defVar(mod, x >= 3, SemiInt)
+        @defVar(mod, y >= 2, SemiInt)
+        @addConstraint(mod, x + y >= 2.5)
+        @setObjective(mod, Min, x+1.1y)
+        solve(mod)
+        @test getValue(x) == 3.0
+        @test getValue(y) == 0.0
+    end
+end

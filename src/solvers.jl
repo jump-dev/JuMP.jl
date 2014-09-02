@@ -263,6 +263,7 @@ function solveMIP(m::Model; load_model_only=false, suppress_warnings=false)
     A = prepConstrMatrix(m)
 
     # Ready to solve
+
     
     if m.internalModelLoaded
         if applicable(MathProgBase.setvarLB!, m.internalModel, m.colLower) &&
@@ -271,14 +272,14 @@ function solveMIP(m::Model; load_model_only=false, suppress_warnings=false)
            applicable(MathProgBase.setconstrUB!, m.internalModel, rowub) &&
            applicable(MathProgBase.setobj!, m.internalModel, f) &&
            applicable(MathProgBase.setsense!, m.internalModel, m.objSense) &&
-           applicable(MathProgBase.setvartype!, m.internalModel, vartype)
+           applicable(MathProgBase.setvartype!, m.internalModel, m.colCat)
             MathProgBase.setvarLB!(m.internalModel, m.colLower)
             MathProgBase.setvarUB!(m.internalModel, m.colUpper)
             MathProgBase.setconstrLB!(m.internalModel, rowlb)
             MathProgBase.setconstrUB!(m.internalModel, rowub)
             MathProgBase.setobj!(m.internalModel, f)
             MathProgBase.setsense!(m.internalModel, m.objSense)
-            MathProgBase.setvartype!(m.internalModel, vartype)
+            MathProgBase.setvartype!(m.internalModel, m.colCat)
         else
             !suppress_warnings && Base.warn_once("Solver does not appear to support hot-starts. Problem will be solved from scratch.")
             m.internalModelLoaded = false
