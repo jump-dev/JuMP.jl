@@ -1,3 +1,3 @@
 julia 0.3
-MathProgBase
+MathProgBase 0.3.0- 0.4.0-
 ReverseDiffSparse

@@ -41,12 +41,6 @@ include("JuMPDict.jl")
 include("utils.jl")
 
 ###############################################################################
-# Constants
-const CONTINUOUS = 0
-const INTEGER = 1
-export CONTINUOUS, INTEGER
-
-###############################################################################
 # Model class
 # Keeps track of all model and column info
 type Model
@@ -62,7 +56,7 @@ type Model
     colNames::Vector{String}
     colLower::Vector{Float64}
     colUpper::Vector{Float64}
-    colCat::Vector{Int}
+    colCat::Vector{Symbol}
 
     # Solution data
     objVal
@@ -176,7 +170,7 @@ end
 ReverseDiffSparse.getplaceindex(x::Variable) = x.col
 Base.isequal(x::Variable,y::Variable) = isequal(x.col,y.col) && isequal(x.m,y.m)
 
-function Variable(m::Model,lower::Number,upper::Number,cat::Int,name::String)
+function Variable(m::Model,lower::Number,upper::Number,cat::Symbol,name::String)
     m.numCols += 1
     push!(m.colNames, name)
     push!(m.colLower, convert(Float64,lower))
@@ -194,7 +188,7 @@ function Variable(m::Model,lower::Number,upper::Number,cat::Int,name::String)
     return Variable(m, m.numCols)
 end
 
-Variable(m::Model,lower::Number,upper::Number,cat::Int) =
+Variable(m::Model,lower::Number,upper::Number,cat::Symbol) =
     Variable(m,lower,upper,cat,"")
 
 # Name setter/getters
@@ -569,7 +563,7 @@ function chgConstrRHS(c::ConstraintRef{LinearConstraint}, rhs::Number)
 end
 
 # add variable to existing constraints
-function Variable(m::Model,lower::Number,upper::Number,cat::Int,objcoef::Number,
+function Variable(m::Model,lower::Number,upper::Number,cat::Symbol,objcoef::Number,
     constraints::Vector{ConstraintRef{LinearConstraint}},coefficients::Vector{Float64};
     name::String="")
     m.numCols += 1

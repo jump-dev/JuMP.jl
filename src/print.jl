@@ -162,7 +162,7 @@ function Base.show(io::IO, m::Model)
         println(io, " * $(length(nlp.nlconstr)) nonlinear constraints")
     end
     print(io, " * $(m.numCols) variables")  
-    nint = sum(m.colCat .== INTEGER)
+    nint = sum(m.colCat .== :Int)
     println(io, nint == 0 ? "" : " ($nint integer)")
     print(io, "Solver set to ")
     if isa(m.solver, UnsetSolver)
@@ -183,13 +183,13 @@ end
 function boundstring(var_name, colLow, colUp, colCat, iterate_over="", mode=:REPL)
     greater = (mode == :REPL) ? "\u2265" : "\\geq"
     less    = (mode == :REPL) ? "\u2264" : "\\leq"
-    int_str = (colCat == INTEGER) ? ", integer" : ""
+    int_str = (colCat == :Int) ? ", integer" : ""
 
-    if colCat == INTEGER && colLow == 0 && colUp == 1
+    if colCat == :Bin
         return "$(var_name)$(iterate_over), binary"
     elseif colLow == -Inf && colUp == Inf
         return "$(var_name)$(iterate_over) free" * 
-                (colCat == INTEGER ? ", integer" : "")
+                (colCat == :Int ? ", integer" : "")
     elseif colLow == -Inf
         return "$var_name $less $(string_intclamp(colUp))$(iterate_over)$(int_str)"
     elseif colUp == Inf
