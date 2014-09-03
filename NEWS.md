@@ -17,7 +17,7 @@ Unversioned
   * Julia 0.3.0 is the minimum required version for this release.
   * Add support for semicontinuous and semi-integer variables for those solvers that support them.
 
-Version 0.5.7 (September 2, 2014)
+Version 0.5.6 (September 2, 2014)
 ---------------------------------
   * Add support for semicontinuous and semi-integer variables for those solvers that support them.
 
