@@ -270,6 +270,20 @@ function fillranges(idx)
     return str
 end
 
+# parse_conditions
+# Not exported. Traverses an expression and constructs an array with entries 
+# corresponding to each condition. More specifically, if the condition is
+# a && (b || c) && (d && e), it returns [a, b || c, d, e].
+parse_conditions(not_an_expr) = not_an_expr
+function parse_conditions(expr::Expr)
+    ret = {}
+    if expr.head != :&&
+        return {expr}
+    end
+    recurse = map(parse_conditions, expr.args)
+    vcat(ret, recurse...)
+end
+
 # dictnameindices
 # Not exported. Builds the x[i,j,k,l] part and the "for all" parts. This is also
 # used for printing JuMPDict so thats why its separated out from dictstring
@@ -335,8 +349,8 @@ function dictnameindices(dict::JuMPContainer{Variable}, mode=:REPL)
             tail_str *= ", "
         end
     end
-    if isa(dict, JuMPDict) && !isempty(dict.conditions)
-        tail_str *= " s.t. $(join(dict.conditions, " and "))"
+    if isa(dict, JuMPDict) && !isempty(dict.condition)
+        tail_str *= " s.t. $(join(parse_conditions(dict.condition[1]), " and "))"
     end
 
     return name_and_indices, tail_str

@@ -8,7 +8,7 @@ type JuMPDict{T,N} <: JuMPContainer{T}
     tupledict::Dict{NTuple{N},T}
     name::Symbol
     indexsets
-    conditions
+    condition
 end
 
 #JuMPDict{T,N}(name::String) =
@@ -20,7 +20,7 @@ Base.setindex!(d::JuMPDict, value, t...) = (d.tupledict[t] = value)
 function Base.map{T,N}(f::Function, d::JuMPDict{T,N})
     ret = Base.return_types(f, (T,))
     R = (length(ret) == 1 ? ret[1] : Any)
-    x = JuMPDict(Dict{NTuple{N},R}(), d.name, copy(d.indexsets), copy(d.conditions))
+    x = JuMPDict(Dict{NTuple{N},R}(), d.name, copy(d.indexsets), copy(d.condition))
     for (k,v) in d.tupledict
         x.tupledict[k] = f(v)
     end
