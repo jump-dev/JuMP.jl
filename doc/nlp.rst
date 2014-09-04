@@ -4,9 +4,6 @@
 Nonlinear Modeling
 ------------------
 
-.. note::
-    Nonlinear modeling functionality should be considered as a feature preview. It has not been as widely tested as the (mixed-integer) linear, quadratic, and conic capabilities of JuMP.
-
 JuMP has support for general smooth nonlinear (convex and
 nonconvex) optimization problems. JuMP is able to provide exact, sparse second-order
 derivatives to solvers. This information can improve solver accuracy and
