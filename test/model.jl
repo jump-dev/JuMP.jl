@@ -125,7 +125,7 @@ close(modAfp)
 # Test printing
 s = IOBuffer()
 show(s, modA)
-@test takebuf_string(s) == "Maximization problem with:\n * 3 linear constraints\n * 7 variables (1 integer)\nSolver set to Default"
+@test takebuf_string(s) == "Maximization problem with:\n * 3 linear constraints\n * 7 variables: 1 integer\nSolver set to Default"
 #####################################################################
 # Test solution (MIP)
 status = solve(modA)
