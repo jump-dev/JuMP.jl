@@ -161,9 +161,21 @@ function Base.show(io::IO, m::Model)
     if nlp != nothing && length(nlp.nlconstr) > 0
         println(io, " * $(length(nlp.nlconstr)) nonlinear constraints")
     end
-    print(io, " * $(m.numCols) variables")  
+    print(io, " * $(m.numCols) variables")
+    nbin = sum(m.colCat .== :Bin)
     nint = sum(m.colCat .== :Int)
-    println(io, nint == 0 ? "" : " ($nint integer)")
+    nsc = sum(m.colCat .== :SemiCont)
+    nsi = sum(m.colCat .== :SemiInt)
+    varstr = {}
+    nbin == 0 || push!(varstr, "$nbin binary")
+    nint == 0 || push!(varstr, "$nint integer")
+    nsc  == 0 || push!(varstr, "$nsc semicontinuous")
+    nsi  == 0 || push!(varstr, "$nsi semi-integer")
+    if isempty(varstr)
+        println(io,)
+    else
+        println(io, ": $(join(varstr, ","))")
+    end
     print(io, "Solver set to ")
     if isa(m.solver, UnsetSolver)
         solver = "Default"
