@@ -100,3 +100,7 @@ if Pkg.installed("Mosek") != nothing
     using Mosek
     qp_test("Mosek", MosekSolver(); prob_mod=false) # weird issues with probmod to revisit
 end
+if Pkg.installed("GLPKMathProgInterface") != nothing
+    using GLPKMathProgInterface # doesn't support QPs
+    @test_throws ErrorException qp_test("GLPK", GLPKSolverMIP())
+end

@@ -55,6 +55,7 @@ function addQuadratics(m::Model)
         assert_isfinite(m.obj)
         verify_ownership(m, m.obj.qvars1)
         verify_ownership(m, m.obj.qvars2)
+        # Check for solver support for quadratic objectives happens in MPB
         MathProgBase.setquadobjterms!(m.internalModel, Cint[v.col for v in m.obj.qvars1], Cint[v.col for v in m.obj.qvars2], m.obj.qcoeffs)
     end
 
@@ -71,7 +72,14 @@ function addQuadratics(m::Model)
                 error("Variable not owned by model present in constraints")
             end
         end
-        MathProgBase.addquadconstr!(m.internalModel, Cint[v.col for v in qconstr.terms.aff.vars], qconstr.terms.aff.coeffs, Cint[v.col for v in qconstr.terms.qvars1], Cint[v.col for v in qconstr.terms.qvars2], qconstr.terms.qcoeffs, s, -qconstr.terms.aff.constant)
+        affidx = Cint[v.col for v in qconstr.terms.aff.vars]
+        var1idx = Cint[v.col for v in qconstr.terms.qvars1]
+        var2idx = Cint[v.col for v in qconstr.terms.qvars2]
+        if applicable(MathProgBase.addquadconstr!, m.internalModel, affidx, qconstr.terms.aff.coeffs, var1idx, var2idx, qconstr.terms.qcoeffs, s, -qconstr.terms.aff.constant) 
+            MathProgBase.addquadconstr!(m.internalModel, affidx, qconstr.terms.aff.coeffs, var1idx, var2idx, qconstr.terms.qcoeffs, s, -qconstr.terms.aff.constant)
+        else
+            error("Solver does not support quadratic constraints")
+        end
     end
 end
 
