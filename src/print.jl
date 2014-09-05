@@ -166,7 +166,7 @@ function Base.show(io::IO, m::Model)
     println(io, nint == 0 ? "" : " ($nint integer)")
     print(io, "Solver set to ")
     if isa(m.solver, UnsetSolver)
-        solver = nquad > 0 ? string(MathProgBase.defaultQPsolver) : (nint > 0 ? string(MathProgBase.defaultMIPsolver) : string(MathProgBase.defaultLPsolver))
+        solver = "Default"
     else
         solver = string(m.solver)
     end
