@@ -143,7 +143,7 @@ function show(io::IO, m::Model)
         println(io, " * $(nquad) quadratic constraints")
     end
     print(io, " * $(m.numCols) variables")  
-    nint = sum(m.colCat .== :Int || m.colCat .== :Bin)
+    nint = sum((m.colCat .== :Int) | (m.colCat .== :Bin))
     println(io, nint == 0 ? "" : " ($nint integer)")
     print(io, "Solver set to ")
     if isa(m.solver, UnsetSolver)
