@@ -612,6 +612,7 @@ include("macros.jl")
 include("callbacks.jl")
 # Pretty-printing, including IJulia
 include("print.jl")
+include("print/print.jl")
 # Nonlinear-specific code
 include("nlp.jl")
 
