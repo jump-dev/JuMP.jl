@@ -61,6 +61,9 @@ function callback_test(solvername, lazysolver, cutsolver, heursolver)
             # Leave y undefined - solver should handle as it sees fit
             # In case of Gurobi - try to figure out what it should be
             addSolution(cb)
+            # Check that solvers ignore infeasible solutions
+            setSolutionValue!(cb, x, 3)
+            addSolution(cb)
         end
         setHeuristicCallback(mod, myheuristic)
         solve(mod)
