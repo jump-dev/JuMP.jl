@@ -88,9 +88,17 @@ function addSOS(m::Model)
         sos = m.sosconstr[i]
         indices = Int[v.col for v in sos.terms]
         if sos.sostype == :SOS1
-            MathProgBase.addsos1!(m.internalModel, indices, sos.weights)
+            if applicable(MathProgBase.addsos1!, m.internalModel, indices, sos.weights)
+                MathProgBase.addsos1!(m.internalModel, indices, sos.weights)
+            else
+                error("Solver does not support SOS constraints")
+            end
         elseif sos.sostype == :SOS2
-            MathProgBase.addsos2!(m.internalModel, indices, sos.weights)
+            if applicable(MathProgBase.addsos2!, m.internalModel, indices, sos.weights)
+                MathProgBase.addsos2!(m.internalModel, indices, sos.weights)
+            else
+                error("Solver does not support SOS constraints")
+            end
         end
     end
 end

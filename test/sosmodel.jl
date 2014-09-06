@@ -57,3 +57,7 @@ if Pkg.installed("CPLEX") != nothing
     sos_test("CPLEX", CplexSolver())
     sos_test_cont("CPLEX", CplexSolver())
 end
+if Pkg.installed("Cbc") != nothing
+    using Cbc
+    @test_throws ErrorException sos_test("Cbc", CbcSolver())
+end
