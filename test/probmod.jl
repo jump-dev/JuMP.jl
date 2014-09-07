@@ -144,6 +144,24 @@ function methods_test(solvername, solverobj, supp)
     end
 end
 
+# Test semantics for modifying bounds on binary variables:
+# Variables should be restricted to the intersection of
+# {0,1} and their bounds.
+function binaries_test(solvername, solverobj)
+    println("  Binary semantics test for $solvername")
+    mod = Model(solver=solverobj)
+    @defVar(mod, x, Bin)
+    @setObjective(mod, Max, x)
+    solve(mod)
+    @test_approx_eq getValue(x) 1.0
+    setUpper(x, 2.0)
+    solve(mod)
+    @test_approx_eq getValue(x) 1.0
+    setUpper(x, 0.0)
+    solve(mod)
+    @test_approx_eq getValue(x) 0.0
+end
+
 # test there were no regressions in applicable
 const mpb_methods = [(MathProgBase.addquadconstr!, (Cint[1],Float64[1.0],Cint[1],Cint[1],Float64[1],'>',1.0)),
                      (MathProgBase.setquadobjterms!, (Cint[1], Cint[1], Float64[1.0])),
@@ -168,12 +186,14 @@ if Pkg.installed("Gurobi") != nothing
     using Gurobi
     supp = (true,true,true,true,true,true,true,true,true,true,true,true,true,true,true,true,true,true)
     methods_test("Gurobi", GurobiSolver(), supp)
+    binaries_test("Gurobi", GurobiSolver())
 end
 
 if Pkg.installed("CPLEX") != nothing
     using CPLEX
     supp = (true,true,true,true,true,true,true,true,true,true,true,true,true,true,true,true,true,true)
     methods_test("CPLEX", CplexSolver(), supp)
+    binaries_test("CPLEX", CplexSolver())
 end
 if Pkg.installed("Clp") != nothing
     using Clp
@@ -181,7 +201,9 @@ if Pkg.installed("Clp") != nothing
     methods_test("Clp", ClpSolver(), supp)
 end
 if Pkg.installed("Cbc") != nothing
-    # no-op, since Cbc doesn't support any
+    # TODO: enable test when new version cbc_c branch is merged and tagged
+    #using Cbc
+    #binaries_test("Cbc", CbcSolver())
 end
 if Pkg.installed("GLPK") != nothing
     using GLPKMathProgInterface
@@ -189,11 +211,13 @@ if Pkg.installed("GLPK") != nothing
     methods_test("GLPK", GLPKSolverLP(), supp)
     supp = (false,false,true,false,false, true,true,true,true,true,true,true,true,false,false,false,false,false)
     methods_test("GLPK", GLPKSolverMIP(), supp)
+    binaries_test("GLPK", GLPKSolverMIP())
 end
 if Pkg.installed("Mosek") != nothing
     using Mosek
     supp = (true,true,true,false,false,true,true,true,true,true,true,true,true,true,true,true,true,false)
     methods_test("Mosek", MosekSolver(), supp)
+    binaries_test("Mosek", MosekSolver())
 end
 
 let
