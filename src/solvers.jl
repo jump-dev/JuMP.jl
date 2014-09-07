@@ -305,7 +305,11 @@ function solveMIP(m::Model; load_model_only=false, suppress_warnings=false)
         m.internalModel = MathProgBase.model(m.solver)
         
         MathProgBase.loadproblem!(m.internalModel, A, m.colLower, m.colUpper, f, rowlb, rowub, m.objSense)
-        MathProgBase.setvartype!(m.internalModel, m.colCat)
+        if applicable(MathProgBase.setvartype!, m.internalModel, m.colCat)
+            MathProgBase.setvartype!(m.internalModel, m.colCat)
+        else
+            error("Solver does not support discrete variables")
+        end
 
         addSOS(m)
 
