@@ -212,10 +212,10 @@ macro addConstraint(m, x, extra...)
         refcall = esc(c)
     elseif isexpr(c,:ref)
         # Creating an indexed set of ConstraintRefs
-        cname = esc(c.args[1])
+        cname = c.args[1]
         idxvars = {}
         idxsets = {}
-        refcall = Expr(:ref,cname)
+        refcall = Expr(:ref,esc(cname))
         for s in c.args[2:end]
             if isa(s,Expr) && (s.head == :(=) || s.head == :in)
                 idxvar = s.args[1]
@@ -285,7 +285,17 @@ macro addConstraint(m, x, extra...)
                 end
             end
         end
-        mac = Expr(:macrocall,symbol("@gendict"),cname,:(ConstraintRef{LinearConstraint}),idxsets...)
+        if hasdependentsets(idxvars,idxsets)
+            # force a JuMPDict
+            N = length(idxsets)
+            clear_dependencies(i) = (isdependent(idxvars,idxsets[i],i) ? nothing : idxsets[i])
+            mac = :($(esc(cname)) = JuMPDict{LinConstrRef,$N}(Dict{NTuple{$N},LinConstrRef}(),
+                                                            $(quot(cname)),
+                                                            $(Expr(:tuple,map(clear_dependencies,1:N)...)),
+                                                            ()))
+        else
+            mac = Expr(:macrocall,symbol("@gendict"),esc(cname),:LinConstrRef,idxsets...)
+        end
         return quote 
             $mac
             crefflag = true
@@ -394,7 +404,17 @@ macro defExpr(args...)
                 end
             end
         end
-        mac = Expr(:macrocall,symbol("@gendict"),cname,:AffExpr,idxsets...)
+        if hasdependentsets(idxvars,idxsets)
+            # force a JuMPDict
+            N = length(idxsets)
+            clear_dependencies(i) = (isdependent(idxvars,idxsets[i],i) ? nothing : idxsets[i])
+            mac = :($(esc(varname)) = JuMPDict{AffExpr,$N}(Dict{NTuple{$N},AffExpr}(),
+                                                            $(quot(varname)),
+                                                            $(Expr(:tuple,map(clear_dependencies,1:N)...)),
+                                                            ()))
+        else
+            mac = Expr(:macrocall,symbol("@gendict"),esc(varname),:AffExpr,idxsets...)
+        end
         code = quote 
             $mac
             $code

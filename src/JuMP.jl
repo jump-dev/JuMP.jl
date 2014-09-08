@@ -19,7 +19,7 @@ end
 export
 # Objects
     Model, Variable, AffExpr, QuadExpr, LinearConstraint, QuadConstraint,
-    ConstraintRef,
+    ConstraintRef, LinConstrRef,
 # Functions
     # Model related
     getNumVars, getNumConstraints, getObjectiveValue, getObjective,
@@ -539,6 +539,8 @@ immutable ConstraintRef{T<:JuMPConstraint}
     m::Model
     idx::Int
 end
+
+typealias LinConstrRef ConstraintRef{LinearConstraint}
 
 function getDual(c::ConstraintRef{LinearConstraint}) 
     if length(c.m.linconstrDuals) != getNumConstraints(c.m)
