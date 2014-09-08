@@ -249,8 +249,7 @@ function dictstring(dict::JuMPContainer{Variable}, mode=:REPL)
     colLow = m.colLower[v.col]
     colUp  = m.colUpper[v.col]
     all_same = true
-    for el in dict
-        v = el[2]
+    for (_,v) in dict
         all_same &= m.colLower[v.col] == colLow
         all_same &= m.colUpper[v.col] == colUp
         !all_same && break
@@ -326,38 +325,42 @@ function dictnameindices(dict::JuMPContainer{Variable}, mode=:REPL)
         elseif typeof(dict.indexsets[dim]) <: Range
             tail_str *= fillranges(dict.indexsets[dim])
         else
-            try # try to detect ranges in disguise
-                elem = dict.indexsets[dim][1]
-                off = dict.indexsets[dim][2] - elem
-                for k in dict.indexsets[dim][2:end]
-                    if (k - elem) != off
-                        error("Internal error")
-                    end
-                    elem = k
-                end
-                if off == 1
-                    tail_str *= "$(dict.indexsets[dim][1])..$(dict.indexsets[dim][end])"
-                else
-                    tail_str *= fillranges(dict.indexsets[dim])
-                end
-            catch # Arbitrary set
-                MAXCHAR = 15
-                cur_str = ""
-                for i in dict.indexsets[dim]
-                    str_i = string(i)
-                    if length(str_i) + length(cur_str) >= MAXCHAR
-                        # Stop here
-                        cur_str *= ".."
-                        break
-                    else
-                        # It will fit
-                        if length(cur_str) > 0
-                            cur_str *= ","
+            if dict.indexsets[dim] == nothing
+                tail_str *= ".."
+            else
+                try # try to detect ranges in disguise
+                    elem = dict.indexsets[dim][1]
+                    off = dict.indexsets[dim][2] - elem
+                    for k in dict.indexsets[dim][2:end]
+                        if (k - elem) != off
+                            error("Internal error")
                         end
-                        cur_str *= str_i 
+                        elem = k
                     end
+                    if off == 1
+                        tail_str *= "$(dict.indexsets[dim][1])..$(dict.indexsets[dim][end])"
+                    else
+                        tail_str *= fillranges(dict.indexsets[dim])
+                    end
+                catch # Arbitrary set
+                    MAXCHAR = 15
+                    cur_str = ""
+                    for i in dict.indexsets[dim]
+                        str_i = string(i)
+                        if length(str_i) + length(cur_str) >= MAXCHAR
+                            # Stop here
+                            cur_str *= ".."
+                            break
+                        else
+                            # It will fit
+                            if length(cur_str) > 0
+                                cur_str *= ","
+                            end
+                            cur_str *= str_i 
+                        end
+                    end
+                    tail_str *= cur_str
                 end
-                tail_str *= cur_str
             end
         end
         tail_str *= (mode == :REPL) ? "}" : " \\}"
