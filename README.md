@@ -4,17 +4,28 @@ JuMP
 
 JuMP is a domain-specific modeling language for **[mathematical programming]**
 embedded in **[Julia]**. It currently supports a number of open-source and
-commercial solvers ([COIN Clp], [COIN Cbc], [GNU GLPK], [Gurobi], [MOSEK], [CPLEX]) via a 
-[generic solver-independent interface](https://github.com/JuliaOpt/MathProgBase.jl). 
+commercial solvers ([CPLEX], [COIN Clp], [COIN Cbc], [ECOS], [GLPK],
+[Gurobi], [Ipopt], [MOSEK], and [NLopt]) for a variety of problem classes, including
+**[linear programming]**, **[(mixed) integer programming]**,
+**[second-order conic programming]**, and **[nonlinear programming]**.
 
-One of the best features of JuMP is its **speed** - benchmarking has shown that it
-can create problems at similar speeds to special-purpose modeling languages
-such as AMPL while maintaining the expressiveness of a generic high-level 
-programming language. JuMP communicates with solvers in-memory, 
-avoiding the need to write intermediary files and enabling access to **advanced
-features** such as efficient LP re-solves and callbacks for mixed-integer programming.
+[mathematical programming]: http://en.wikipedia.org/wiki/Mathematical_optimization
+[Julia]: http://julialang.org/
+[COIN Clp]: https://projects.coin-or.org/Clp
+[COIN Cbc]: https://projects.coin-or.org/Cbc
+[ECOS]: https://github.com/ifa-ethz/ecos
+[GLPK]: http://www.gnu.org/software/glpk/
+[Gurobi]: http://www.gurobi.com/
+[MOSEK]: http://mosek.com/
+[CPLEX]: http://www-01.ibm.com/software/commerce/optimization/cplex-optimizer/
+[Ipopt]: https://projects.coin-or.org/Ipopt
+[NLopt]: http://ab-initio.mit.edu/wiki/index.php/NLopt
+[linear programming]: http://en.wikipedia.org/wiki/Linear_programming
+[(mixed) integer programming]: http://en.wikipedia.org/wiki/Integer_programming
+[second-order conic programming]: http://en.wikipedia.org/wiki/Second-order_cone_programming
+[nonlinear programming]: http://en.wikipedia.org/wiki/Nonlinear_programming
 
-JuMP has recently enabled support for nonlinear programming for functions that can be expressed in closed algebraic form. JuMP computes exact sparse second-order derivatives needed by efficient interior-point solvers. Currently, [Ipopt] is the only supported solver, with more coming soon. 
+JuMP makes it easy to specify and **solve optimization problems without expert knowledge**, yet at the same time allows experts to implement advanced algorithmic techniques such as exploiting efficient hot-starts in linear programming or using callbacks to interact with branch-and-bound solvers. JuMP is also **fast** - benchmarking has shown that it can create problems at similar speeds to special-purpose commercial tools such as AMPL while maintaining the expressiveness of a generic high-level programming language. JuMP can be easily embedded in complex work flows including simulations and web servers.
 
 Our documentation includes an installation guide, quick-start guide, and reference manual. 
 
@@ -75,13 +86,4 @@ Please report any issues via the Github **[issue tracker]**. All types of issues
 
 
 [issue tracker]: https://github.com/JuliaOpt/JuMP.jl/issues
-[mathematical programming]: http://en.wikipedia.org/wiki/Mathematical_optimization
-[Julia]: http://julialang.org/
-[COIN Clp]: https://github.com/mlubin/Clp.jl
-[COIN Cbc]: https://github.com/mlubin/Cbc.jl
-[GNU GLPK]: http://www.gnu.org/software/glpk/
-[Gurobi]: http://www.gurobi.com/
-[MOSEK]: http://mosek.com/
-[CPLEX]: http://www-01.ibm.com/software/commerce/optimization/cplex-optimizer/
-[Ipopt]: https://projects.coin-or.org/Ipopt
 [julia-opt]: https://groups.google.com/forum/#!forum/julia-opt
