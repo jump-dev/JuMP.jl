@@ -20,6 +20,20 @@ function string_intclamp(f::Float64)
     length(str) >= 2 && str[end-1:end] == ".0" ? str[1:end-2] : str
 end
 
+getindexsets(v::JuMPArray{Variable}) = v.indexsets
+function getindexsets(v::JuMPDict{Variable})
+    key = [keys(v.tupledict)...]
+    idxtypes = eltype(key)
+    # if key is well-typed, we know that we have Cartesian indexing
+    idxsets = {}
+    if isa(idxtypes, Tuple)
+        for i in length(idxtypes)
+            push!(idxsets, [x[i] for x in key])
+        end
+    end
+    return idxsets
+end
+
 #############################################################################
 #### type MODEL
 
@@ -40,14 +54,25 @@ end
 
 function fillVarNames(m::Model)
     for dict in m.dictList
-        idxsets = dict.indexsets
-        lengths = map(length, idxsets)
-        N = length(idxsets)
-        name = dict.name
-        cprod = cumprod([lengths...])
-        for (ind,var) in enumerate(dict.innerArray)
-            setName(var,string("$name[$(idxsets[1][mod1(ind,lengths[1])])", [ ",$(idxsets[i][int(ceil(mod1(ind,cprod[i]) / cprod[i-1]))])" for i=2:N ]..., "]"))
-        end
+        fillVarNames(dict)
+    end
+end
+
+function fillVarNames(v::JuMPContainer{Variable})
+    idxsets = getindexsets(v)
+    lengths = map(length, idxsets)
+    N = length(idxsets)
+    name = v.name
+    cprod = cumprod([lengths...])
+    for (ind,var) in enumerate(v.innerArray)
+        setName(var,string("$name[$(idxsets[1][mod1(ind,lengths[1])])", [ ",$(idxsets[i][int(ceil(mod1(ind,cprod[i]) / cprod[i-1]))])" for i=2:N ]..., "]"))
+    end
+end
+
+function fillVarNames(v::JuMPDict{Variable})
+    name = v.name
+    for (ind,var) in v.tupledict
+        setName(var,string("$name[", join([string(i) for i in ind],","), "]"))
     end
 end
 
@@ -220,7 +245,8 @@ end
 # summarizes the variables into one line. If not, it will return an empty
 # string and these variables should be printed one-by-one. Mode should be
 # :REPL or :IJulia
-function dictstring(dict::JuMPDict{Variable}, mode=:REPL)
+dictstring(dict::JuMPDict{Variable}, mode=:REPL) = ""
+function dictstring(dict::JuMPArray{Variable}, mode=:REPL)
 
     length(dict.innerArray) > 0 || return ""
 
