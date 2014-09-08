@@ -64,4 +64,4 @@ Citing JuMP
 Further discussion of the design of JuMP in the context of existing domain-specific languages for mathematical programming, together with extensive benchmarks, is given in [1]_. If you find JuMP useful in your work, we request that you cite this paper.
 
 
-.. [1] M. Lubin and I. Dunning, "Computing in Operations Research using Julia", 2013. `arXiv:1312.1431 <http://arxiv.org/abs/1312.1431>`_
+.. [1] M. Lubin and I. Dunning, "Computing in Operations Research using Julia", INFORMS Journal on Computing, to appear, 2014. `arXiv:1312.1431 <http://arxiv.org/abs/1312.1431>`_
