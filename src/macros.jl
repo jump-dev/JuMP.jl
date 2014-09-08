@@ -424,19 +424,28 @@ dependson(ex,s::Symbol) = false
 
 macro defVar(args...)
     condition = {}
-    if isa(args[1], Expr) && args[1].head == :parameters
-        hascond = true
-        @assert length(args[1].args) == 1
-        push!(condition, args[1].args[1])
-        m = args[2]
-        x = args[3]
-        extra = args[4:end]
-    else
-        hascond = false
-        m = args[1]
-        x = args[2]
-        extra = args[3:end]
-    end
+    ####################################################################
+    # TODO: remove commented lines below when x[i,j;k,l] is valid syntax
+    # if isa(args[1], Expr) && args[1].head == :parameters
+    #     hascond = true
+    #     @assert length(args[1].args) == 1
+    #     push!(condition, args[1].args[1])
+    #     m = args[2]
+    #     x = args[3]
+    #     extra = args[4:end]
+    # else
+    #     hascond = false
+    #     m = args[1]
+    #     x = args[2]
+    #     extra = args[3:end]
+    # end
+    ####################################################################
+    # ...and replace the following:
+    hascond = false
+    m = args[1]
+    x = args[2]
+    extra = args[3:end]
+    ####################################################################
     m = esc(m)
     # Identify the variable bounds. Four (legal) possibilities are "x >= lb",
     # "x <= ub", "lb <= x <= ub", or just plain "x"
