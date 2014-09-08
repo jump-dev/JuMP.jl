@@ -103,7 +103,7 @@ function Base.print(io::IO, m::Model)
         if out_str != ""
             println(io, out_str)
             # Don't repeat this variable
-            for v in dict.innerArray
+            for (it,v) in dict
                 in_dictlist[v.col] = true
             end
         end
@@ -144,7 +144,7 @@ function Base.writemime(io::IO, ::MIME"text/latex", m::Model)
         if out_str != ""
             println(io, "& $out_str \\\\")
             # Don't repeat this variable
-            for v in dict.innerArray
+            for (it,v) in dict
                 in_dictlist[v.col] = true
             end
         end
