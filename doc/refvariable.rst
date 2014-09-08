@@ -47,6 +47,10 @@ Bounds can depend on variable indices::
 
     @defVar(m, x[i=1:10] >= i )
 
+And indices can have interdependencies (e.g. "triangular indexing")::
+
+    @defVar(m, x[i=1:10;j=i:10] >= 0)
+
 Finally, variables can be constructed manually, one-by-one::
 
     x = Variable(m::Model, lower::Number, upper::Number, category::Int, name::String)

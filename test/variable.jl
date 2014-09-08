@@ -113,3 +113,42 @@ buf = IOBuffer()
 println(buf, getValue(foobar))
 result = takebuf_string(buf)
 @test result == "foobar\n[ 9,:,:]\n  [ 9, Apple,:]\n    [ 9, Apple,-1] = -9.0\n    [ 9, Apple, 0] = 0.0\n    [ 9, Apple, 1] = 9.0\n  [ 9,     5,:]\n    [ 9,     5,-1] = -9.0\n    [ 9,     5, 0] = 0.0\n    [ 9,     5, 1] = 9.0\n  [ 9,Banana,:]\n    [ 9,Banana,-1] = -9.0\n    [ 9,Banana, 0] = 0.0\n    [ 9,Banana, 1] = 9.0\n[10,:,:]\n  [10, Apple,:]\n    [10, Apple,-1] = -10.0\n    [10, Apple, 0] = 0.0\n    [10, Apple, 1] = 10.0\n  [10,     5,:]\n    [10,     5,-1] = -10.0\n    [10,     5, 0] = 0.0\n    [10,     5, 1] = 10.0\n  [10,Banana,:]\n    [10,Banana,-1] = -10.0\n    [10,Banana, 0] = 0.0\n    [10,Banana, 1] = 10.0\n\n"
+
+# Test "triangular indexing"
+n = 10
+trimod = Model()
+@defVar(trimod, x[i=1:n,j=i:n])
+@test JuMP.dictstring(x, :REPL)   == "x[i,j], for all i in {1..10}, j in {..} free"
+@test JuMP.dictstring(x, :IJulia) == "x_{i,j} \\quad \\forall i \\in \\{ 1..10 \\}, j \\in \\{ .. \\} free"
+@defVar(trimod, y[i=3:2:7,j=-i])
+@test JuMP.dictstring(y, :REPL)   == "y[i,j], for all i in {3,5,7}, j in {..} free"
+@test JuMP.dictstring(y, :IJulia) == "y_{i,j} \\quad \\forall i \\in \\{ 3,5,7 \\}, j \\in \\{ .. \\} free"
+@test getNumVars(trimod) == n*(n+1)/2 + 3
+S = {(i,i+2) for i in 1:5}
+@defVar(trimod, z[(i,j)=S,k=i:j])
+@test JuMP.dictstring(z, :REPL)   == "z[i,j], for all i in {(1,3),(2,4)..}, j in {..} free"
+@test JuMP.dictstring(z, :IJulia) == "z_{i,j} \\quad \\forall i \\in \\{ (1,3),(2,4).. \\}, j \\in \\{ .. \\} free"
+@test length(z.tupledict) == 15
+
+# Test iteration over JuMPDicts
+cntr = zeros(Bool, n, n)
+for (i,j,var) in x
+    @test isequal(x[i,j], var)
+    cntr[i,j] = true
+end
+for i in 1:n, j in 1:n
+    if j >= i
+        @test cntr[i,j]
+    else
+        @test !cntr[i,j]
+    end
+end
+# Test conditionals in variable definition
+# condmod = Model()
+# @defVar(condmod, x[i=1:10]; iseven(i))
+# @defVar(condmod, y[j=1:10,k=3:2:9]; isodd(j+k) && k <= 8)
+# @test JuMP.dictstring(x, :REPL)   == "x[i], for all i in {1..10} s.t. iseven(i) free"
+# @test JuMP.dictstring(x, :IJulia) == "x_{i} \\quad \\forall i \\in \\{ 1..10 \\} s.t. iseven(i) free"
+# @test JuMP.dictstring(y, :REPL)   == "y[i,j], for all i in {1..10}, j in {3,5..7,9} s.t. isodd(j + k) and k <= 8 free"
+# @test JuMP.dictstring(y, :IJulia) == "y_{i,j} \\quad \\forall i \\in \\{ 1..10 \\}, j \\in \\{ 3,5..7,9 \\} s.t. isodd(j + k) and k <= 8 free"
+# @test string(condmod) == "Min 0\nSubject to \nx[i], for all i in {1..10} s.t. iseven(i) free\ny[i,j], for all i in {1..10}, j in {3,5..7,9} s.t. isodd(j + k) and k <= 8 free\n" 
