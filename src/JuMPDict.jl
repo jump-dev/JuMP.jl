@@ -113,14 +113,13 @@ for accessor in (:getValue, :getDual, :getLower, :getUpper)
 end
 
 # delegate zero-argument functions
-for f in (:(Base.endof), :(Base.ndims), :(Base.length), :(Base.abs))
+for f in (:(Base.endof), :(Base.ndims), :(Base.length), :(Base.abs), :(Base.start))
     @eval $f(x::JuMPArray) = $f(x.innerArray)
 end
 for f in (:(Base.first), :(Base.length), :(Base.start))
     @eval $f(x::JuMPDict)  = $f(x.tupledict)
 end
 Base.ndims{T,N}(x::JuMPDict{T,N}) = N
-Base.start(x::JuMPArray) = start(x.innerArray)
 Base.abs(x::JuMPDict) = map(abs, x)
 # delegate one-argument functions
 Base.size(x::JuMPArray,k) = size(x.innerArray,k)
@@ -135,9 +134,12 @@ function Base.next(x::JuMPArray,k)
         key[i] = idxsets[i][int(ceil(mod1(k,cprod[i])/cprod[i-1]))]
     end
     (var, gidx) = next(x.innerArray, k)
-    return ((key, var), gidx)
+    return (tuple(key..., var), gidx)
 end
-Base.next(x::JuMPDict,k)  = next(x.tupledict,k)
+function Base.next(x::JuMPDict,k)
+    ((idx,var),gidx) = next(x.tupledict,k)
+    return (tuple(idx..., var), gidx)
+end
 Base.done(x::JuMPArray,k) = done(x.innerArray,k)
 Base.done(x::JuMPDict,k)  = done(x.tupledict,k)
 

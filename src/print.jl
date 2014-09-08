@@ -249,7 +249,8 @@ function dictstring(dict::JuMPContainer{Variable}, mode=:REPL)
     colLow = m.colLower[v.col]
     colUp  = m.colUpper[v.col]
     all_same = true
-    for (_,v) in dict
+    for val in dict
+        v = val[end]
         all_same &= m.colLower[v.col] == colLow
         all_same &= m.colUpper[v.col] == colUp
         !all_same && break
