@@ -120,6 +120,9 @@ trimod = Model()
 @defVar(trimod, x[i=1:n,j=i:n])
 @defVar(trimod, y[i=3:2:7,j=-i])
 @test getNumVars(trimod) == n*(n+1)/2 + 3
+S = {(i,i+2) for i in 1:5}
+@defVar(trimod, z[(i,j)=S,k=i:j])
+@test length(z.tupledict) == 15
 
 # Test conditionals in variable definition
 # condmod = Model()

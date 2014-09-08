@@ -415,12 +415,16 @@ function hasdependentsets(idxvars, idxsets)
         end
     end
     return false
-
 end
 
-dependson(ex::Expr,s::Symbol) = any([dependson(a,s) for a in ex.args])
+dependson(ex::Expr,s::Symbol) = any(a->dependson(a,s), ex.args)
 dependson(ex::Symbol,s::Symbol) = (ex == s)
 dependson(ex,s::Symbol) = false
+function dependson(ex1,ex2)
+    @assert isa(ex2, Expr)
+    @assert ex2.head == :tuple
+    any(s->dependson(ex1,s), ex2.args)
+end
 
 function isdependent(idxvars,idxset,i)
     for (it,idx) in enumerate(idxvars)
@@ -589,7 +593,6 @@ macro defVar(args...)
                 end
             end
         end
-       
         if hascond || hasdependentsets(idxvars,idxsets)
             # force a JuMPDict
             N = length(idxsets)
