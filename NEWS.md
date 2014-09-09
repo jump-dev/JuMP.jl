@@ -10,8 +10,8 @@ Unversioned
   * Add groups of constraints with ``@addConstraints`` macro.
   * Unicode operators now supported, including ``∑`` for ``sum``, ``∏`` for ``prod``, and ``≤``/``≥``
   * Quadratic constraints supported in ``@addConstraint`` macro.
-  * Quadratic objective supported in ``@setObjective`` macro.
-  * MathProgBase solver-independent inteface replaces Ipopt-specific interface for nonlinear problems
+  * Quadratic objectives supported in ``@setObjective`` macro.
+  * MathProgBase solver-independent interface replaces Ipopt-specific interface for nonlinear problems
     - **Breaking change**: ``IpoptOptions`` no longer supported to specify solver options, use ``m = Model(solver=IpoptSolver(options...))`` instead.
   * New solver interfaces: ECOS, NLopt, and nonlinear support for MOSEK
   * New option to control whether the lazy constraint callback is executed at each node in the B&B tree or just when feasible solutions are found
