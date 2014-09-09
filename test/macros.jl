@@ -183,3 +183,35 @@ let
     @addConstraint(m, sum{i*myquadexpr + x[i], i=1:3} + sum{x[i] + myquadexpr*i, i=1:3} == 0)
     @test conToStr(m.quadconstr[3]) == "12 x[1]*x[2] + 2 x[1] + 2 x[2] + 2 x[3] == 0"
 end
+
+# Test "triangular indexing"
+n = 10
+trimod = Model()
+@defVar(trimod, x[i=1:n,j=i:n])
+@test JuMP.dictstring(x, :REPL)   == "x[i,j], for all i in {1..10}, j in {..} free"
+@test JuMP.dictstring(x, :IJulia) == "x_{i,j} \\quad \\forall i \\in \\{ 1..10 \\}, j \\in \\{ .. \\} free"
+@defVar(trimod, y[i=3:2:7,j=-i])
+@test JuMP.dictstring(y, :REPL)   == "y[i,j], for all i in {3,5,7}, j in {..} free"
+@test JuMP.dictstring(y, :IJulia) == "y_{i,j} \\quad \\forall i \\in \\{ 3,5,7 \\}, j \\in \\{ .. \\} free"
+@test getNumVars(trimod) == n*(n+1)/2 + 3
+S = {(i,i+2) for i in 1:5}
+@defVar(trimod, z[(i,j)=S,k=i:j])
+@test JuMP.dictstring(z, :REPL)   == "z[i,j], for all i in {(1,3),(2,4)..}, j in {..} free"
+@test JuMP.dictstring(z, :IJulia) == "z_{i,j} \\quad \\forall i \\in \\{ (1,3),(2,4).. \\}, j \\in \\{ .. \\} free"
+@test length(z.tupledict) == 15
+@addConstraint(trimod, cref[i=1:n,j=i:n], x[i,j] + y[5,-5] == 1)
+@test getNumConstraints(trimod) == n*(n+1)/2
+
+# Test iteration over JuMPDicts
+cntr = zeros(Bool, n, n)
+for (i,j,var) in x
+    @test isequal(x[i,j], var)
+    cntr[i,j] = true
+end
+for i in 1:n, j in 1:n
+    if j >= i
+        @test cntr[i,j]
+    else
+        @test !cntr[i,j]
+    end
+end

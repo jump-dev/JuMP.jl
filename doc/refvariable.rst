@@ -47,9 +47,12 @@ Bounds can depend on variable indices::
 
     @defVar(m, x[i=1:10] >= i )
 
-And indices can have interdependencies (e.g. "triangular indexing")::
+And indices can have dependencies on preceding indices (e.g. "triangular indexing")::
 
     @defVar(m, x[i=1:10;j=i:10] >= 0)
+
+Note the dependency must be on preceding indices, going from left to right. That is,
+``@defVar(m, x[i=j:10,i=1:10] >= 0)`` is not valid JuMP code.
 
 Finally, variables can be constructed manually, one-by-one::
 

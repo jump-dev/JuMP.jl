@@ -189,6 +189,15 @@ function parseExpr(x, aff::Symbol, constantCoef)
     end
 end
 
+###############################################################################
+# buildrefsets
+# Unexported. Takes as input an object representing a name, associated index 
+# sets, and conditions on those sets, for example 
+# buildrefsets(:(x[i=1:3,[:red,:blue]],k=S; i+k <= 6))
+# Used internally in macros to build JuMPContainers and constraints. Returns 
+#       refcall: Expr to reference a particular element, e.g. :(x[i,j,k])
+#       idxvars: Index names used in referencing, e.g.g {:i,:j,:k}
+#       idxsets: Index sets for indexing, e.g. {1:3, [:red,:blue], S}
 function buildrefsets(c::Expr)
     isexpr(c,:ref) || error("Unrecognized name in construction macro; expected $(string(c)) to be of the form name[...]")
     idxvars = {}
@@ -214,6 +223,20 @@ end
 buildrefsets(c::Symbol)  = (esc(c), {}, {})
 buildrefsets(c::Nothing) = (gensym(), {}, {})
 
+###############################################################################
+# getloopedcode
+# Unexported. Takes a bit of code and corresponding looping information and 
+# returns that code nested in corresponding loops, along with preceding code
+# to construct an appropriate container. Input is:
+#       c: symbolic representation of name and appropriate indexing sets, if
+#          any. E.g. :(myvar) or :(x[i=1:3,[:red,:blue]])
+#       code: inner loop code kernel to be nested in the loops
+#       condition: a boolean expression to be evaluated before each kernel.
+#                  If none, pass :().
+#       idxvars: As defined for buildrefsets
+#       idxsets: As defined for buildrefsets
+#       sym: A symbol or expression containing the element type of the 
+#            resulting container, e.g. :AffExpr or :Variable
 function getloopedcode(c::Expr, code, condition, idxvars, idxsets, sym)
     varname = getname(c)
     hascond = (condition != :())
@@ -236,7 +259,7 @@ function getloopedcode(c::Expr, code, condition, idxvars, idxsets, sym)
         # force a JuMPDict
         N = length(idxsets)
         clear_dependencies(i) = (isdependent(idxvars,idxsets[i],i) ? nothing : idxsets[i])
-        mac = :($(esc(varname)) = JuMPDict{$(sym),$N}(Dict{NTuple{$N},AffExpr}(),
+        mac = :($(esc(varname)) = JuMPDict{$(sym),$N}(Dict{NTuple{$N},$sym}(),
                                                         $(quot(varname)),
                                                         $(Expr(:tuple,map(clear_dependencies,1:N)...)),
                                                         ()))
