@@ -4,6 +4,7 @@ JuMP release notes
 Unversioned
 -----------
 
+  * Julia 0.3.0 is the minimum required version for this release.
   * ``buildInternalModel(m::Model)`` added to build solver-level model in memory without optimizing.
   * Deprecate ``load_model_only`` keyword argument to ``solve``.
   * Add groups of constraints with ``@addConstraints`` macro.
@@ -14,9 +15,9 @@ Unversioned
     - **Breaking change**: ``IpoptOptions`` no longer supported to specify solver options, use ``m = Model(solver=IpoptSolver(options...))`` instead.
   * New solver interfaces: ECOS, NLopt, and nonlinear support for MOSEK
   * New option to control whether the lazy constraint callback is executed at each node in the B&B tree or just when feasible solutions are found
-  * Julia 0.3.0 is the minimum required version for this release.
   * Add support for semicontinuous and semi-integer variables for those solvers that support them.
   * Add support for index dependencies (e.g. triangular indexing) in ``@defVar``, ``@addConstraint``, and ``@defExpr`` (e.g. ``@defVar(m, x[i=1:10,j=i:10])``).
+    - This required some changes to the internal structure of JuMP containers, which may break code that explicitly stored ``JuMPDict`` objects.
 
 Version 0.5.7 (September 5, 2014)
 ---------------------------------
