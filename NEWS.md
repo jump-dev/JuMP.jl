@@ -16,7 +16,7 @@ Unversioned
   * New option to control whether the lazy constraint callback is executed at each node in the B&B tree or just when feasible solutions are found
   * Julia 0.3.0 is the minimum required version for this release.
   * Add support for semicontinuous and semi-integer variables for those solvers that support them.
-  * Add support for triangular indexing in ``@defVar`` (e.g. ``@defVar(m, x[i=1:10,j=i:10])``).
+  * Add support for index dependencies (e.g. triangular indexing) in ``@defVar``, ``@addConstraint``, and ``@defExpr`` (e.g. ``@defVar(m, x[i=1:10,j=i:10])``).
 
 Version 0.5.7 (September 5, 2014)
 ---------------------------------
