@@ -189,6 +189,73 @@ function parseExpr(x, aff::Symbol, constantCoef)
     end
 end
 
+function buildrefsets(c::Expr)
+    isexpr(c,:ref) || error("Unrecognized name in construction macro; expected $(string(c)) to be of the form name[...]")
+    idxvars = {}
+    idxsets = {}
+    # Creating an indexed set of refs
+    cname = c.args[1]
+    refcall = Expr(:ref,esc(cname))
+    for s in c.args[2:end]
+        if isa(s,Expr) && (s.head == :(=) || s.head == :in)
+            idxvar = s.args[1]
+            idxset = esc(s.args[2])
+        else
+            idxvar = gensym()
+            idxset = esc(s)
+        end
+        push!(idxvars, idxvar)
+        push!(idxsets, idxset)
+        push!(refcall.args, esc(idxvar))
+    end
+    return refcall, idxvars, idxsets
+end
+
+buildrefsets(c::Symbol)  = (esc(c), {}, {})
+buildrefsets(c::Nothing) = (gensym(), {}, {})
+
+function getloopedcode(c::Expr, code, condition, idxvars, idxsets, sym)
+    varname = getname(c)
+    hascond = (condition != :())
+
+    if hascond
+        code = quote
+            $(esc(condition)) || continue
+            $code
+        end
+    end
+
+    for (idxvar, idxset) in zip(reverse(idxvars),reverse(idxsets))
+        code = quote
+            for $(esc(idxvar)) in $idxset
+                $code
+            end
+        end
+    end
+    if hascond || hasdependentsets(idxvars,idxsets)
+        # force a JuMPDict
+        N = length(idxsets)
+        clear_dependencies(i) = (isdependent(idxvars,idxsets[i],i) ? nothing : idxsets[i])
+        mac = :($(esc(varname)) = JuMPDict{$(quot(sym)),$N}(Dict{NTuple{$N},AffExpr}(),
+                                                        $(quot(varname)),
+                                                        $(Expr(:tuple,map(clear_dependencies,1:N)...)),
+                                                        ()))
+    else
+        mac = Expr(:macrocall,symbol("@gendict"),esc(varname),quot(sym),idxsets...)
+    end
+    return quote 
+        $mac
+        $code
+        nothing
+    end 
+end
+
+getloopedcode(c, code, condition, idxvars, idxsets, sym) = code
+
+getname(c::Symbol) = c
+getname(c::Nothing) = ()
+getname(c::Expr) = c.args[1]
+
 macro addConstraint(m, x, extra...)
     m = esc(m)
     # Two formats:
@@ -204,35 +271,8 @@ macro addConstraint(m, x, extra...)
 
     # Strategy: build up the code for non-macro addconstraint, and if needed
     # we will wrap in loops to assign to the ConstraintRefs
-
-    # Build up machinery for looping over index sets, if needed
-    refcall = gensym()  # Default
-    if isa(c,Symbol)
-        # Just creating a simple ConstraintRefs (not indexed)
-        refcall = esc(c)
-    elseif isexpr(c,:ref)
-        # Creating an indexed set of ConstraintRefs
-        cname = c.args[1]
-        idxvars = {}
-        idxsets = {}
-        refcall = Expr(:ref,esc(cname))
-        for s in c.args[2:end]
-            if isa(s,Expr) && (s.head == :(=) || s.head == :in)
-                idxvar = s.args[1]
-                idxset = esc(s.args[2])
-            else
-                idxvar = gensym()
-                idxset = esc(s)
-            end
-            push!(idxvars, idxvar)
-            push!(idxsets, idxset)
-            push!(refcall.args, esc(idxvar))
-        end
-    elseif c != nothing
-        # Something in there, but we don't know what
-        error("in @addConstraint ($(string(x))): expected $(string(c)) to be of form constr[...]")
-    end
-
+    crefflag = isa(c,Expr)
+    refcall, idxvars, idxsets = buildrefsets(c)
     # Build the constraint
     if length(x.args) == 3
         # Simple comparison - move everything to the LHS
@@ -245,7 +285,7 @@ macro addConstraint(m, x, extra...)
         code = quote
             q = AffExpr()
             $(parseExpr(lhs, :q, 1.0))
-            crefflag && !isa(q,AffExpr) && error("Three argument form form of @addConstraint does not currently support quadratic constraints")
+            $crefflag && !isa(q,AffExpr) && error("Three argument form form of @addConstraint does not currently support quadratic constraints")
             $(refcall) = addConstraint($m, $(x.args[2])(q,0))
         end
     elseif length(x.args) == 5
@@ -271,38 +311,9 @@ macro addConstraint(m, x, extra...)
         error("in @addConstraint ($(string(x))): constraints must be in one of the following forms:\n" *
               "       expr1 <= expr2\n" * "       expr1 >= expr2\n" *
               "       expr1 == expr2\n" * "       lb <= expr <= ub")
-          end
-
-    # Combine indexing (if needed) with constraint code
-    if isa(c,Symbol) || c == nothing
-        # No indexing
-        return quote crefflag = false; $code; end
-    else
-        for (idxvar, idxset) in zip(reverse(idxvars),reverse(idxsets))
-            code = quote
-                for $(esc(idxvar)) in $idxset
-                    $code
-                end
-            end
-        end
-        if hasdependentsets(idxvars,idxsets)
-            # force a JuMPDict
-            N = length(idxsets)
-            clear_dependencies(i) = (isdependent(idxvars,idxsets[i],i) ? nothing : idxsets[i])
-            mac = :($(esc(cname)) = JuMPDict{LinConstrRef,$N}(Dict{NTuple{$N},LinConstrRef}(),
-                                                            $(quot(cname)),
-                                                            $(Expr(:tuple,map(clear_dependencies,1:N)...)),
-                                                            ()))
-        else
-            mac = Expr(:macrocall,symbol("@gendict"),esc(cname),:LinConstrRef,idxsets...)
-        end
-        return quote 
-            $mac
-            crefflag = true
-            $code
-            nothing
-        end
     end
+
+    return getloopedcode(c, code, :(), idxvars, idxsets, :LinConstrRef)
 end
 
 macro addConstraints(m, x)
@@ -358,71 +369,14 @@ macro defExpr(args...)
     else
         error("in @defExpr: needs either one or two arguments.")
     end
-    refcall = gensym()  # Default
-    if isa(c,Symbol)
-        refcall = esc(c)
-    elseif isexpr(c,:ref)
-        cname = esc(c.args[1])
-        idxvars = {}
-        idxsets = {}
-        refcall = Expr(:ref,cname)
-        for s in c.args[2:end]
-            if isa(s,Expr) && (s.head == :(=) || s.head == :in)
-                idxvar = s.args[1]
-                idxset = esc(s.args[2])
-            else
-                idxvar = gensym()
-                idxset = esc(s)
-            end
-            push!(idxvars, idxvar)
-            push!(idxsets, idxset)
-            push!(refcall.args, esc(idxvar))
-        end
-    elseif c != nothing
-        # Something in there, but we don't know what
-        error("in @defExpr ($(string(x))): expected $(string(c)) to be of form expr[...]")
-    end
 
-    if c == nothing
-        code = quote
-            q = AffExpr()
-            $(parseExpr(x, :q, 1.0))
-            q
-        end
-    else
-        code = quote
-            q = AffExpr()
-            $(refcall) = $(parseExpr(x, :q, 1.0))
-        end
+    refcall, idxvars, idxsets = buildrefsets(c)
+    code = quote
+        q = AffExpr()
+        $(refcall) = $(parseExpr(x, :q, 1.0))
     end
-
-    if !(isa(c,Symbol) || c == nothing)
-        for (idxvar, idxset) in zip(reverse(idxvars),reverse(idxsets))
-            code = quote
-                for $(esc(idxvar)) in $idxset
-                    $code
-                end
-            end
-        end
-        if hasdependentsets(idxvars,idxsets)
-            # force a JuMPDict
-            N = length(idxsets)
-            clear_dependencies(i) = (isdependent(idxvars,idxsets[i],i) ? nothing : idxsets[i])
-            mac = :($(esc(varname)) = JuMPDict{AffExpr,$N}(Dict{NTuple{$N},AffExpr}(),
-                                                            $(quot(varname)),
-                                                            $(Expr(:tuple,map(clear_dependencies,1:N)...)),
-                                                            ()))
-        else
-            mac = Expr(:macrocall,symbol("@gendict"),esc(varname),:AffExpr,idxsets...)
-        end
-        code = quote 
-            $mac
-            $code
-            nothing
-        end
-
-    end
-    return code
+    
+    return getloopedcode(c, code, :(), idxvars, idxsets, :AffExpr)
 end
 
 function hasdependentsets(idxvars, idxsets)
@@ -457,9 +411,7 @@ end
 macro defVar(args...)
     ######################################################################
     # # TODO: remove commented lines below when x[i,j;k,l] is valid syntax
-    # condition = {}
     # if isa(args[1], Expr) && args[1].head == :parameters
-    #     hascond = true
     #     @assert length(args[1].args) == 1
     #     # push!(condition, args[1].args[1])
     #     condition = (args[1].args[1],)
@@ -467,15 +419,13 @@ macro defVar(args...)
     #     x = args[3]
     #     extra = args[4:end]
     # else
-    #     hascond = false
     #     m = args[1]
     #     x = args[2]
     #     extra = args[3:end]
     # end
     ######################################################################
     # ...and replace the following:
-    condition = ()
-    hascond = false
+    condition = :()
     m = args[1]
     x = args[2]
     extra = args[3:end]
@@ -566,76 +516,27 @@ macro defVar(args...)
             error("in @defVar ($var): syntax error")
     end
 
-    # We now build the code to generate the variables (and possibly the JuMPDict
-    # to contain them)
     if isa(var,Symbol)
         # Easy case - a single variable
         return quote
             $(esc(var)) = Variable($m,$lb,$ub,$(quot(t)),$(string(var)))
         end
-    else
-        # An indexed set of variables
-        # Check for malformed expression
-        !isexpr(var,:ref) &&
-            error("in @defVar ($var): expected $var to be of form var[...]")
+    end
+    @assert isa(var,Expr)
 
-        varname = var.args[1]
-        idxvars = {}
-        idxsets = {}
-        refcall = Expr(:ref,esc(varname))
-        # Iterate over each index set s
-        for s in var.args[2:end]
-            # Is the user providing an index variable, e.g. i=1:5?
-            if isa(s,Expr) && (s.head == :(=) || s.head == :in)
-                idxvar = s.args[1]
-                idxset = esc(s.args[2])
-            else
-                idxvar = gensym()
-                idxset = esc(s)
-            end
-            push!(idxvars, idxvar)
-            push!(idxsets, idxset)
-            push!(refcall.args, esc(idxvar))
-        end
-        
-        tup = Expr(:tuple, [esc(x) for x in idxvars]...)
-        code = :( $(refcall) = Variable($m, $lb, $ub, $(quot(t))) )
-        if hascond
-            code = quote
-                $(esc(condition[1])) || continue
-                $code
-            end
-        end
-        for (idxvar, idxset) in zip(reverse(idxvars),reverse(idxsets))
-            code = quote
-                for $(esc(idxvar)) in $idxset
-                    $code
-                end
-            end
-        end
-        if hascond || hasdependentsets(idxvars,idxsets)
-            # force a JuMPDict
-            N = length(idxsets)
-            clear_dependencies(i) = (isdependent(idxvars,idxsets[i],i) ? nothing : idxsets[i])
-            mac = :($(esc(varname)) = JuMPDict{Variable,$N}(Dict{NTuple{$N},Variable}(),
-                                                            $(quot(varname)),
-                                                            $(Expr(:tuple,map(clear_dependencies,1:N)...)),
-                                                            $condition))
-        else
-            mac = Expr(:macrocall,symbol("@gendict"),esc(varname),:Variable,idxsets...)
-        end
-        code = quote 
-            $mac
-            $code
-            push!($(m).dictList, $(esc(varname)))
-            $(esc(varname))
-        end
-        return code
+    # We now build the code to generate the variables (and possibly the JuMPDict
+    # to contain them)
+    refcall, idxvars, idxsets = buildrefsets(var)
+    code = :( $(refcall) = Variable($m, $lb, $ub, $(quot(t))) )
+    looped = getloopedcode(var, code, condition, idxvars, idxsets, :Variable)
+    varname = getname(var)
+    return quote 
+        $looped
+        push!($(m).dictList, $(varname))
     end
 end
 
 macro defConstrRef(var)
-    
     if isa(var,Symbol)
         # easy case
         return esc(:(local $var))
