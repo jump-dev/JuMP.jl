@@ -1,8 +1,8 @@
 JuMP release notes
 ==================
 
-Unversioned
------------
+Version 0.6.0 (September 9, 2014)
+---------------------------------
 
   * Julia 0.3.0 is the minimum required version for this release.
   * ``buildInternalModel(m::Model)`` added to build solver-level model in memory without optimizing.
