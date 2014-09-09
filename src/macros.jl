@@ -236,12 +236,12 @@ function getloopedcode(c::Expr, code, condition, idxvars, idxsets, sym)
         # force a JuMPDict
         N = length(idxsets)
         clear_dependencies(i) = (isdependent(idxvars,idxsets[i],i) ? nothing : idxsets[i])
-        mac = :($(esc(varname)) = JuMPDict{$(quot(sym)),$N}(Dict{NTuple{$N},AffExpr}(),
+        mac = :($(esc(varname)) = JuMPDict{$(sym),$N}(Dict{NTuple{$N},AffExpr}(),
                                                         $(quot(varname)),
                                                         $(Expr(:tuple,map(clear_dependencies,1:N)...)),
                                                         ()))
     else
-        mac = Expr(:macrocall,symbol("@gendict"),esc(varname),quot(sym),idxsets...)
+        mac = Expr(:macrocall,symbol("@gendict"),esc(varname),sym,idxsets...)
     end
     return quote 
         $mac
@@ -529,10 +529,11 @@ macro defVar(args...)
     refcall, idxvars, idxsets = buildrefsets(var)
     code = :( $(refcall) = Variable($m, $lb, $ub, $(quot(t))) )
     looped = getloopedcode(var, code, condition, idxvars, idxsets, :Variable)
-    varname = getname(var)
+    varname = esc(getname(var))
     return quote 
         $looped
-        push!($(m).dictList, $(varname))
+        push!($(m).dictList, $varname)
+        $varname
     end
 end
 
