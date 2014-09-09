@@ -99,7 +99,10 @@ For example::
 adds 9 constraints to the model ``m`` of the expected form. The variable ``xyconstr``
 is a collection of ``ConstraintRef{LinearConstraint}`` instances indexed
 by the ranges ``1:3`` and ``6:-2:2`` (the ordered tuple ``(6,4,2)``), so, for example
-``xyconstr[2,4]`` is a reference to the constraint ``x[2] - y[4] == 1``.
+``xyconstr[2,4]`` is a reference to the constraint ``x[2] - y[4] == 1``. Indices can 
+have dependencies on preceding indices, e.g. triangular indexing is allowed::
+
+    @addConstraint(m, triconstr[i=1:3,j=2i:2:6], x[i] - y[j] == 1)
 
 To obtain the dual of a constraint, call ``getDual`` on the constraint reference::
     
