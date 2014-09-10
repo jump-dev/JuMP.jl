@@ -338,6 +338,9 @@ function solveMIP(m::Model; load_model_only=false, suppress_warnings=false)
     if stat == :NotSolved
         # do nothing
     else
+        if stat != :Optimal
+            !suppress_warnings && warn("Not solved to optimality, status: ", string(stat))
+        end
         # It's possible that we have a feasible solution if we're not optimal
         # TODO: Test this behavior on various solvers
         try
@@ -352,10 +355,6 @@ function solveMIP(m::Model; load_model_only=false, suppress_warnings=false)
         catch
             m.colVal = fill(NaN, m.numCols)
         end
-    end
-    if stat != :Optimal
-        !suppress_warnings && warn("Not solved to optimality, status: ", string(stat))
-        m.colVal = fill(NaN, m.numCols)
     end
 
     return stat
