@@ -101,6 +101,10 @@ idx3 = [[2:2:20],21]
 @defVar(mprint, s[idx2,idx3] <= -3, SemiInt)
 @test JuMP.dictstring(s, :REPL)   == "s[i,j] ≤ -3, for all i in {2,4..18,20}, j in {2,4,6,8,10,12..}, semi-integer"
 @test JuMP.dictstring(s, :IJulia) == "s_{i,j} \\leq -3 \\quad \\forall i \\in \\{ 2,4..18,20 \\}, j \\in \\{ 2,4,6,8,10,12.. \\}, semi-integer"
+@defVar(mprint, t[1:5,1:10])
+@test JuMP.dictstring(t, :REPL)   == "t[i,j], for all i in {1..5}, j in {1..10} free"
+@test JuMP.dictstring(t, :IJulia) == "t_{i,j} \\quad \\forall i \\in \\{ 1..5 \\}, j \\in \\{ 1..10 \\} free"
+
 # test empty JuMPDict printing (issue #124)
 @defVar(mprint, xx[1:0])
 @test JuMP.dictstring(xx, :REPL) == JuMP.dictstring(xx, :IJulia) == ""
