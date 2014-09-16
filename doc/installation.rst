@@ -79,11 +79,7 @@ Solver-specific notes follow below.
 COIN-OR Clp and Cbc
 +++++++++++++++++++
 
-Installation of the binaries will differ by platform:
-
-* Linux - Only option is to build from source, which will happen automatically.
-* OS X - Downloads binary via the `Homebrew.jl <https://github.com/staticfloat/Homebrew.jl>`_ package.
-* Windows - **Only 32-bit versions of Julia are supported by the COIN solvers at this time**. The 32-bit version of Julia can be used on 64-bit Windows with no issues. Binary download. Will require `Visual Studio 2012 redistributable <http://www.microsoft.com/en-us/download/details.aspx?id=30679>`_ if not already installed.
+Binaries for Clp and Cbc are provided on OS X and Windows (32- and 64-bit) by default. On Linux, they will be compiled from source (be sure to have a C++ compiler installed).
 
 Clp and Cbc, if available, are the default choice of solver in JuMP. Cbc does *not* support MIP callbacks.
 
