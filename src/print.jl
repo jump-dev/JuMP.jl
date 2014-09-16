@@ -235,7 +235,7 @@ function dictstring(dict::JuMPContainer{Variable}, mode=:REPL)
 
     isempty(dict) && return ""
 
-    v = first(dict)[2]
+    v = first(dict)[end]
 
     m = v.m
     colCat = m.colCat[v.col]
