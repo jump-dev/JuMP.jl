@@ -7,18 +7,25 @@
 # Pretty printing for REPL
 #############################################################################
 
-const repl_leq = @windows? "<=" : "≤"
-const repl_geq = @windows? ">=" : "≥"
-const repl_eq  = @windows? "==" : "="
+const repl_leq = @windows? "<=" : "≤?"
+const repl_geq = @windows? ">=" : "≥?"
+const repl_eq  = @windows? "==" : "=?"
+const repl_times = "*"
+const repl_sq    = "\u00B2"  # Superscript 2
 
 #########################################################################
 # EXPRESSIONS
 #########################################################################
 #------------------------------------------------------------------------
+# AffExpr  (not GenericAffExpr)
+#------------------------------------------------------------------------
+aff_str(::Type{REPLMode}, a::AffExpr; show_constant=true) =
+    aff_str(a, show_constant=show_constant)
+#------------------------------------------------------------------------
 # GenericQuadExpr
 #------------------------------------------------------------------------
-quad_str(::Type{REPLMode}, q::GenericQuadExpr) =
-    quad_str(REPLMode, q, "*", "\u00B2")
+quad_str(::Type{REPLMode}, q::GenericQuadExpr) = 
+    quad_str(REPLMode, q, repl_times, repl_sq)
 
 #########################################################################
 # CONSTRAINTS

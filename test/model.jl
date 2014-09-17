@@ -1,5 +1,13 @@
 # model.jl
 # Test coverage for Model - writing it to files, and solving
+using JuMP
+using Base.Test
+
+# To ensure the tests work on Windows and Linux/OSX, we need
+# to use the correct comparison operators
+const leq = JuMP.repl_leq
+const geq = JuMP.repl_geq
+const  eq = JuMP.repl_eq
 
 modPath = joinpath(Pkg.dir("JuMP"),"test","mod")
 
