@@ -220,7 +220,7 @@ if Pkg.installed("Mosek") != nothing
     using Mosek
     supp = (true,true,true,false,false,true,true,true,true,true,true,true,true,true,true,true,true,false)
     methods_test("Mosek", MosekSolver(), supp)
-    binaries_test("Mosek", MosekSolver())
+    # binaries_test("Mosek", MosekSolver())
 end
 
 let
