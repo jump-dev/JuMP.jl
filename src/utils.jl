@@ -2,7 +2,7 @@ type IndexedVector{T}
     elts::Vector{T}
     nzidx::Vector{Int}
     nnz::Int
-    empty::BitArray
+    empty::BitArray{1}
 end
 
 IndexedVector{T}(::Type{T},n::Integer) = IndexedVector(zeros(T,n),zeros(Int,n),0,trues(n))
