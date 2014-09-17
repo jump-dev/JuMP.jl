@@ -17,6 +17,7 @@ function addelt!{T}(v::IndexedVector{T},i::Integer,val::T)
             v.elts[i] += val            
         end
     end
+    return nothing
 end
 
 function Base.empty!{T}(v::IndexedVector{T})
