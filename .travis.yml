@@ -15,6 +15,7 @@ before_install:
     - sudo apt-get install julia -y
     - sudo apt-get install gfortran liblapack-dev
     - sudo apt-get install libgmp-dev -y
+    - if [ $PKGADD = "GLPKMathProgInterface" ]; then sudo apt-get install glpk -y; fi
     - git config --global user.name "Travis User"
     - git config --global user.email "travis@example.net"
     - if [[ -a .git/shallow ]]; then git fetch --unshallow; fi
