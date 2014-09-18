@@ -12,6 +12,31 @@ const repl_geq = @windows? ">=" : "≥?"
 const repl_eq  = @windows? "==" : "=?"
 const repl_times = "*"
 const repl_sq    = "\u00B2"  # Superscript 2
+const repl_ind_open  = "["
+const repl_ind_close = "]"
+const repl_for_all   = "for all"
+const repl_in        = "in"
+const repl_open_set  = "{"
+const repl_mid_set   = ".."
+const repl_close_set = "}"
+const repl_union     = "or"
+const repl_infty     = "Inf"
+const repl_open_rng  = "["
+const repl_close_rng = "]"
+const repl_integer   = "integer"
+
+#########################################################################
+# VARIABLES
+#########################################################################
+#------------------------------------------------------------------------
+# JuMPContainer{Variable}
+#------------------------------------------------------------------------
+cont_str(::Type{REPLMode}, j::JuMPContainer{Variable}) =
+    cont_str(REPLMode, j, repl_leq, repl_eq, repl_geq,
+                        repl_ind_open, repl_ind_close, repl_for_all, repl_in,
+                        repl_open_set, repl_mid_set, repl_close_set,
+                        repl_union, repl_infty, repl_open_rng, repl_close_rng,
+                        repl_integer)
 
 #########################################################################
 # EXPRESSIONS
