@@ -663,7 +663,7 @@ function Base.print(io::IO, dict::JuMPDict{Float64})
 
     for (i,tmp) in enumerate(dict)
         print(io, "\n ")
-        i > rows && (print(io, rpad("⋮", keylen), " => ⋮"); break)
+        i > rows && (print(io, rpad("⋮", keylen), " = ⋮"); break)
         key, v = tmp[1:end-1], tmp[end]
         print(io, dict.name, "[")
         print(io, rpad("$(ks[i])]", keylen+1))
