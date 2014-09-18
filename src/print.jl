@@ -57,7 +57,7 @@ end
 
 function fillVarNames(v::JuMPDict{Variable})
     name = v.name
-    for tmp in v.tupledict
+    for tmp in v
         ind, var = tmp[1:end-1], tmp[end]
         setName(var,string("$name[", join([string(i) for i in ind],","), "]"))
     end
@@ -70,7 +70,7 @@ function Base.print(io::IO, m::Model)
     nlp = m.nlpdata
 
     qobj_str = quadToStr(m.obj)
-    if m.nlpdata != nothing && nlp.nlobj != nothing
+    if nlp != nothing && nlp.nlobj != nothing
         qobj_str = (qobj_str == "0" ? "" : qobj_str*" + ")
         println(io, string(m.objSense," ",qobj_str,"(nonlinear expression)"))
     else
@@ -550,7 +550,7 @@ function Base.print(io::IO, dict::JuMPContainer{Variable})
     # Best case: bounds and all dims
     str = dictstring(dict, :REPL)
     if str != ""
-        print(io, str)    
+        print(io, str)
         return
     end
     # Easy case: empty JuMPDict
@@ -639,6 +639,37 @@ function print_values(io::IO, dict::JuMPContainer{Float64}, depth::Int,
     end
 end
 
+# adapted from showdict in base/dict.jl
+function Base.print(io::IO, dict::JuMPDict{Float64})
+    rows, cols = Base.tty_size()[1] - 3, Base.tty_size()[2]
+    nelem = length(dict.tupledict)
+    print(io, "$(length(dict.indexsets))-dimensional JuMPDict with $nelem ")
+    print(io, nelem == 1 ? "entry" : "entries")
+    isempty(dict) && return 
+    println(io, ":")
+
+    rows < 2   && (print(io, " …"); return)
+    cols < 12  && (cols = 12) # Minimum widths of 2 for key, 4 for value
+    cols -= 6 # Subtract the widths of prefix "  " separator " => "
+    rows -= 2 # Subtract the summary and final ⋮ continuation lines
+
+    ks = Array(String, min(rows, length(dict)))
+    keylen = 0
+    for (i, key) in enumerate(keys(dict.tupledict))
+        i > rows && break
+        ks[i] = join(map(string,key),",")
+        keylen = clamp(length(ks[i]), keylen, div(cols, 3))
+    end
+
+    for (i,tmp) in enumerate(dict)
+        i > rows && (print(io, rpad("⋮", keylen), " => ⋮"); break)
+        key, v = tmp[1:end-1], tmp[end]
+        print(io, " ", dict.name, "[")
+        print(io, ks[i])
+        print(io, "] = ")
+        println(io, v) 
+    end
+end
 
 
 ###################
