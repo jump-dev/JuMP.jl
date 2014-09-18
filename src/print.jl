@@ -57,7 +57,7 @@ end
 
 function fillVarNames(v::JuMPDict{Variable})
     name = v.name
-    for tmp in v.tupledict
+    for tmp in v
         ind, var = tmp[1:end-1], tmp[end]
         setName(var,string("$name[", join([string(i) for i in ind],","), "]"))
     end
