@@ -57,7 +57,8 @@ end
 
 function fillVarNames(v::JuMPDict{Variable})
     name = v.name
-    for (ind,var) in v.tupledict
+    for tmp in v.tupledict
+        ind, var = tmp[1:end-1], tmp[end]
         setName(var,string("$name[", join([string(i) for i in ind],","), "]"))
     end
 end
@@ -103,8 +104,8 @@ function Base.print(io::IO, m::Model)
         if out_str != ""
             println(io, out_str)
             # Don't repeat this variable
-            for (it,v) in dict
-                in_dictlist[v.col] = true
+            for v in dict
+                in_dictlist[v[end].col] = true
             end
         end
     end
@@ -144,8 +145,8 @@ function Base.writemime(io::IO, ::MIME"text/latex", m::Model)
         if out_str != ""
             println(io, "& $out_str \\\\")
             # Don't repeat this variable
-            for (it,v) in dict
-                in_dictlist[v.col] = true
+            for v in dict
+                in_dictlist[v[end].col] = true
             end
         end
     end
