@@ -646,7 +646,7 @@ function Base.print(io::IO, dict::JuMPDict{Float64})
     print(io, "$(length(dict.indexsets))-dimensional JuMPDict with $nelem ")
     print(io, nelem == 1 ? "entry" : "entries")
     isempty(dict) && return 
-    println(io, ":")
+    print(io, ":")
 
     rows < 2   && (print(io, " …"); return)
     cols < 12  && (cols = 12) # Minimum widths of 2 for key, 4 for value
@@ -662,12 +662,13 @@ function Base.print(io::IO, dict::JuMPDict{Float64})
     end
 
     for (i,tmp) in enumerate(dict)
+        print(io, "\n ")
         i > rows && (print(io, rpad("⋮", keylen), " => ⋮"); break)
         key, v = tmp[1:end-1], tmp[end]
-        print(io, " ", dict.name, "[")
-        print(io, ks[i])
-        print(io, "] = ")
-        println(io, v) 
+        print(io, dict.name, "[")
+        print(io, rpad("$(ks[i])]", keylen+1))
+        print(io, " = ")
+        print(io, v) 
     end
 end
 
