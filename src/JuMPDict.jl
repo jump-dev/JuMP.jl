@@ -4,10 +4,16 @@ using Base.Meta
 abstract JuMPContainer{T}
 abstract JuMPArray{T} <: JuMPContainer{T}
 
+type IndexPair
+    idxvar
+    idxset
+end
+
 type JuMPDict{T,N} <: JuMPContainer{T}
     tupledict::Dict{NTuple{N},T}
     name::Symbol
     indexsets
+    indexexprs::Vector{IndexPair}
     condition
 end
 
@@ -20,7 +26,7 @@ Base.setindex!(d::JuMPDict, value, t...) = (d.tupledict[t] = value)
 function Base.map{T,N}(f::Function, d::JuMPDict{T,N})
     ret = Base.return_types(f, (T,))
     R = (length(ret) == 1 ? ret[1] : Any)
-    x = JuMPDict(Dict{NTuple{N},R}(), d.name, copy(d.indexsets), copy(d.condition))
+    x = JuMPDict(Dict{NTuple{N},R}(), d.name, copy(d.indexsets), copy(d.indexexprs), copy(d.condition))
     for (k,v) in d.tupledict
         x.tupledict[k] = f(v)
     end
@@ -34,7 +40,7 @@ Base.isempty(d::JuMPDict)  = (isempty(d.tupledict))
 # the following types of index sets are allowed:
 # 0:K -- range with compile-time starting index
 # S -- general iterable set
-macro gendict(instancename,T,idxsets...)
+macro gendict(instancename,T,idxpairs,idxsets...)
     N = length(idxsets)
     allranges = all(s -> (isexpr(s,:(:)) && length(s.args) == 2), idxsets)
     if allranges
@@ -102,7 +108,7 @@ macro gendict(instancename,T,idxsets...)
     else
         # JuMPDict
         return :(
-            $(esc(instancename)) = JuMPDict{$T,$N}(Dict{NTuple{$N},$T}(),$(quot(instancename)), $(esc(Expr(:tuple,idxsets...))), {})
+            $(esc(instancename)) = JuMPDict{$T,$N}(Dict{NTuple{$N},$T}(),$(quot(instancename)), $(esc(Expr(:tuple,idxsets...))), $idxpairs, :())
         )
     end
 end

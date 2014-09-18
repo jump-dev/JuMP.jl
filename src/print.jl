@@ -370,7 +370,7 @@ function dictnameindices(dict::JuMPContainer{Variable}, mode=:REPL)
             tail_str *= ", "
         end
     end
-    if isa(dict, JuMPDict) && !isempty(dict.condition)
+    if isa(dict, JuMPDict) && dict.condition != :()
         tail_str *= " s.t. $(join(parse_conditions(dict.condition[1]), " and "))"
     end
 
