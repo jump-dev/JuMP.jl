@@ -639,6 +639,18 @@ function print_values(io::IO, dict::JuMPContainer{Float64}, depth::Int,
     end
 end
 
+# support types that don't have built-in comparison
+function _isless(t1::Tuple, t2::Tuple)
+    n1, n2 = length(t1), length(t2)
+    for i = 1:min(n1, n2)
+        a, b = t1[i], t2[i]
+        if !isequal(a, b)
+            return applicable(isless,a,b) ? isless(a, b) : isless(hash(a),hash(b))
+        end
+    end
+    return n1 < n2
+end
+
 # adapted from showdict in base/dict.jl
 function Base.print(io::IO, dict::JuMPDict{Float64})
     rows, cols = Base.tty_size()[1] - 3, Base.tty_size()[2]
@@ -653,18 +665,20 @@ function Base.print(io::IO, dict::JuMPDict{Float64})
     cols -= 6 # Subtract the widths of prefix "  " separator " => "
     rows -= 2 # Subtract the summary and final ⋮ continuation lines
 
+    sortedkeys = sort(collect(keys(dict.tupledict)), lt = _isless)
+
     ks = Array(String, min(rows, length(dict)))
     keylen = 0
-    for (i, key) in enumerate(keys(dict.tupledict))
+    for (i, key) in enumerate(sortedkeys)
         i > rows && break
         ks[i] = join(map(string,key),",")
         keylen = clamp(length(ks[i]), keylen, div(cols, 3))
     end
 
-    for (i,tmp) in enumerate(dict)
+    for (i,key) in enumerate(sortedkeys)
         print(io, "\n ")
         i > rows && (print(io, rpad("⋮", keylen), " = ⋮"); break)
-        key, v = tmp[1:end-1], tmp[end]
+        v = dict[key...]
         print(io, dict.name, "[")
         print(io, rpad("$(ks[i])]", keylen+1))
         print(io, " = ")
