@@ -2,34 +2,31 @@ type IndexedVector{T}
     elts::Vector{T}
     nzidx::Vector{Int}
     nnz::Int
+    empty::BitArray{1}
 end
 
-IndexedVector{T}(::Type{T},n::Integer) = IndexedVector(zeros(T,n),zeros(Int,n),0)
+IndexedVector{T}(::Type{T},n::Integer) = IndexedVector(zeros(T,n),zeros(Int,n),0,trues(n))
 
 function addelt!{T}(v::IndexedVector{T},i::Integer,val::T)
     if val != zero(T)
-        if v.elts[i] == zero(T) # new index
+        if v.empty[i]  # new index
             v.elts[i] = val
             v.nzidx[v.nnz += 1] = i
+            v.empty[i] = false
         else
-            v.elts[i] += val
-            if v.elts[i] == zero(T)
-                # set to tiny value.
-
-                # if two instances of T can sum to zero(T),
-                # type must also implement one().
-                # if not, code will never be reached
-                v.elts[i] = 1e-50*one(T)
-            end
+            v.elts[i] += val            
         end
     end
+    return nothing
 end
 
 function Base.empty!{T}(v::IndexedVector{T})
     elts = v.elts
     nzidx = v.nzidx
+    empty = v.empty
     for i in 1:v.nnz
         elts[nzidx[i]] = zero(T)
+        empty[nzidx[i]] = true
     end
     v.nnz = 0
 end
@@ -41,5 +38,7 @@ function Base.resize!(v::IndexedVector, n::Integer)
         resize!(v.elts, n)
         fill!(v.elts,0)
         resize!(v.nzidx, n)
+        resize!(v.empty, n)
+        fill!(v.empty,true)
     end
 end

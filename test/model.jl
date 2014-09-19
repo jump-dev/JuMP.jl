@@ -238,6 +238,12 @@ let
 
     str = string(modC)
     @test str == "Max a - b + 2 a1 - 10 x\nSubject to \na + b - 10 c - 2 x + c1 <= 1\na ≥ 1\nb ≤ 1\n-1 ≤ c ≤ 1\na1 ≥ 1, integer\nb1 ≤ 1, integer\n-1 ≤ c1 ≤ 1, integer\nx, binary\ny free\nz free, integer\n"
+
+    # Issue 265
+    modD = Model()
+    @defVar(modD, w[1:2, 2:5:12])
+    str = string(modD)
+    @test str == "Min 0\nSubject to \nw[i,j], for all i in {1..2}, j in {2,7,12} free\n"
 end
 
 #####################################################################

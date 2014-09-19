@@ -57,7 +57,8 @@ end
 
 function fillVarNames(v::JuMPDict{Variable})
     name = v.name
-    for (ind,var) in v.tupledict
+    for tmp in v
+        ind, var = tmp[1:end-1], tmp[end]
         setName(var,string("$name[", join([string(i) for i in ind],","), "]"))
     end
 end
@@ -69,7 +70,7 @@ function Base.print(io::IO, m::Model)
     nlp = m.nlpdata
 
     qobj_str = quadToStr(m.obj)
-    if m.nlpdata != nothing && nlp.nlobj != nothing
+    if nlp != nothing && nlp.nlobj != nothing
         qobj_str = (qobj_str == "0" ? "" : qobj_str*" + ")
         println(io, string(m.objSense," ",qobj_str,"(nonlinear expression)"))
     else
@@ -103,8 +104,8 @@ function Base.print(io::IO, m::Model)
         if out_str != ""
             println(io, out_str)
             # Don't repeat this variable
-            for (it,v) in dict
-                in_dictlist[v.col] = true
+            for v in dict
+                in_dictlist[v[end].col] = true
             end
         end
     end
@@ -144,8 +145,8 @@ function Base.writemime(io::IO, ::MIME"text/latex", m::Model)
         if out_str != ""
             println(io, "& $out_str \\\\")
             # Don't repeat this variable
-            for (it,v) in dict
-                in_dictlist[v.col] = true
+            for v in dict
+                in_dictlist[v[end].col] = true
             end
         end
     end
@@ -369,7 +370,7 @@ function dictnameindices(dict::JuMPContainer{Variable}, mode=:REPL)
             tail_str *= ", "
         end
     end
-    if isa(dict, JuMPDict) && !isempty(dict.condition)
+    if isa(dict, JuMPDict) && dict.condition != :()
         tail_str *= " s.t. $(join(parse_conditions(dict.condition[1]), " and "))"
     end
 
@@ -549,7 +550,7 @@ function Base.print(io::IO, dict::JuMPContainer{Variable})
     # Best case: bounds and all dims
     str = dictstring(dict, :REPL)
     if str != ""
-        print(io, str)    
+        print(io, str)
         return
     end
     # Easy case: empty JuMPDict
@@ -638,6 +639,52 @@ function print_values(io::IO, dict::JuMPContainer{Float64}, depth::Int,
     end
 end
 
+# support types that don't have built-in comparison
+function _isless(t1::Tuple, t2::Tuple)
+    n1, n2 = length(t1), length(t2)
+    for i = 1:min(n1, n2)
+        a, b = t1[i], t2[i]
+        if !isequal(a, b)
+            return applicable(isless,a,b) ? isless(a, b) : isless(hash(a),hash(b))
+        end
+    end
+    return n1 < n2
+end
+
+# adapted from showdict in base/dict.jl
+function Base.print(io::IO, dict::JuMPDict{Float64})
+    rows, cols = Base.tty_size()[1] - 3, Base.tty_size()[2]
+    nelem = length(dict.tupledict)
+    print(io, "$(length(dict.indexsets))-dimensional JuMPDict with $nelem ")
+    print(io, nelem == 1 ? "entry" : "entries")
+    isempty(dict) && return 
+    print(io, ":")
+
+    rows < 2   && (print(io, " …"); return)
+    cols < 12  && (cols = 12) # Minimum widths of 2 for key, 4 for value
+    cols -= 6 # Subtract the widths of prefix "  " separator " => "
+    rows -= 2 # Subtract the summary and final ⋮ continuation lines
+
+    sortedkeys = sort(collect(keys(dict.tupledict)), lt = _isless)
+
+    ks = Array(String, min(rows, length(dict)))
+    keylen = 0
+    for (i, key) in enumerate(sortedkeys)
+        i > rows && break
+        ks[i] = join(map(string,key),",")
+        keylen = clamp(length(ks[i]), keylen, div(cols, 3))
+    end
+
+    for (i,key) in enumerate(sortedkeys)
+        print(io, "\n ")
+        i > rows && (print(io, rpad("⋮", keylen), " = ⋮"); break)
+        v = dict[key...]
+        print(io, dict.name, "[")
+        print(io, rpad("$(ks[i])]", keylen+1))
+        print(io, " = ")
+        print(io, v) 
+    end
+end
 
 
 ###################

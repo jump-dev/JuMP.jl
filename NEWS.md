@@ -1,6 +1,11 @@
 JuMP release notes
 ==================
 
+Version 0.6.1 (September 19, 2014)
+----------------------------------
+
+  * Improvements and bug fixes for printing.
+
 Version 0.6.0 (September 9, 2014)
 ---------------------------------
 
@@ -21,6 +26,7 @@ Version 0.6.0 (September 9, 2014)
 
 Version 0.5.7 (September 5, 2014)
 ---------------------------------
+
   * Fix a bug in printing models
 
 Version 0.5.6 (September 2, 2014)
