@@ -18,14 +18,14 @@ const THROW_ERROR = false
 
 # Helper function to test IO methods work correctly, and to provide
 # useful outputs if they don't
-function io_test(mode, obj, exp_str)
+function io_test(mode, obj, exp_str; repl=:both)
     if mode == REPLMode
         buf_print = IOBuffer()
         print(buf_print, obj)
         seek(buf_print, 0);
         print_str = readall(buf_print)
         expct_str = exp_str
-        if !(print_str == exp_str)
+        if !(print_str == exp_str) && repl != :show
             @show print_str
             @show expct_str
             THROW_ERROR && error()
@@ -36,7 +36,7 @@ function io_test(mode, obj, exp_str)
         seek(buf_show, 0)
         show_str = readall(buf_show)
         expt_str = "\""*exp_str*"\""
-        if !(show_str == expt_str)
+        if !(show_str == expt_str) && repl != :print
             @show show_str
             @show expt_str
             THROW_ERROR && error()
@@ -57,11 +57,13 @@ end
 
 
 function test_print_JuMPContainer()
+    println("  test_print_JuMPContainer")
     le, ge = JuMP.repl_leq, JuMP.repl_geq
     m = Model()
     
     #------------------------------------------------------------------
     # Test bound printing
+    println("    bound printing")
     @defVar(m,      bnd_free[2:5])
     @defVar(m,      bnd_lowb[2:5] >= 2)
     @defVar(m,      bnd_high[2:5] <= 5)
@@ -72,7 +74,7 @@ function test_print_JuMPContainer()
     @defVar(m, i <= bnd_difflo_with_up[i=2:5] <= 5)
     @defVar(m, 2 <= bnd_diffup_with_lo[i=2:5] <= i)
 
-    io_test(REPLMode, bnd_free, "bnd_free[i] for all i in {2,3,4,5}")
+    io_test(REPLMode, bnd_free, "bnd_free[i] free for all i in {2,3,4,5}")
     io_test(REPLMode, bnd_lowb, "bnd_lowb[i] $ge 2 for all i in {2,3,4,5}")
     io_test(REPLMode, bnd_high, "bnd_high[i] $le 5 for all i in {2,3,4,5}")
     io_test(REPLMode, bnd_both, "2 $le bnd_both[i] $le 5 for all i in {2,3,4,5}")
@@ -82,7 +84,7 @@ function test_print_JuMPContainer()
     io_test(REPLMode, bnd_difflo_with_up, ".. $le bnd_difflo_with_up[i] $le 5 for all i in {2,3,4,5}")
     io_test(REPLMode, bnd_diffup_with_lo, "2 $le bnd_diffup_with_lo[i] $le .. for all i in {2,3,4,5}")
 
-    io_test(IJuliaMode, bnd_free, "bnd_free_{i} \\quad\\forall i \\in \\{2,3,4,5\\}")
+    io_test(IJuliaMode, bnd_free, "bnd_free_{i} free \\quad\\forall i \\in \\{2,3,4,5\\}")
     io_test(IJuliaMode, bnd_lowb, "bnd_lowb_{i} \\geq 2 \\quad\\forall i \\in \\{2,3,4,5\\}")
     io_test(IJuliaMode, bnd_high, "bnd_high_{i} \\leq 5 \\quad\\forall i \\in \\{2,3,4,5\\}")
     io_test(IJuliaMode, bnd_both, "2 \\leq bnd_both_{i} \\leq 5 \\quad\\forall i \\in \\{2,3,4,5\\}")
@@ -94,6 +96,7 @@ function test_print_JuMPContainer()
 
     #------------------------------------------------------------------
     # Test index set printing
+    println("    index set printing")
     @defVar(m, rng_unit1[1:10])  # JuMPArray
     @defVar(m, rng_unit2[-2:3])  # JuMPArray
     @defVar(m, rng_unit3[[1:10]])  # JuMPDict
@@ -109,38 +112,39 @@ function test_print_JuMPContainer()
     @defVar(m, tri_2[i=1:3,j=-i])
     @defVar(m, tri_3[(i,j)={(i,i+2) for i in 1:5},k=i:j])
     
-    io_test(REPLMode, rng_unit1, "rng_unit1[i] for all i in {1,2..9,10}")
-    io_test(REPLMode, rng_unit2, "rng_unit2[i] for all i in {-2,-1..2,3}")
-    io_test(REPLMode, rng_unit3, "rng_unit3[i] for all i in {1,2..9,10}")
-    io_test(REPLMode, rng_step1, "rng_step1[i] for all i in {1,3..7,9}")
-    io_test(REPLMode, rng_step2, "rng_step2[i] for all i in {-2,3,8}")
-    io_test(REPLMode, rng_step3, "rng_step3[i] for all i in {1}")
-    io_test(REPLMode, rng_step4, "rng_step4[i] for all i in {0,2}")
-    io_test(REPLMode, arr_1, "arr_1[i] for all i in {a,b,c}")
-    io_test(REPLMode, arr_2, "arr_2[i] for all i in {a,1,test}")
-    io_test(REPLMode, arr_3, "arr_3[i] for all i in {apple,banana,carrot,diamonds}")
-    io_test(REPLMode, rng2_1, "rng2_1[i,j] for all i in {1,2..9,10}, j in {a,b,c}")
-    io_test(REPLMode, tri_1, "tri_1[i,j] for all i in {1,2,3}, j in {..}")
-    io_test(REPLMode, tri_2, "tri_2[i,j] for all i in {1,2,3}, j in {..}")
-    io_test(REPLMode, tri_3, "tri_3[i,j] for all i in {(1,3),(2,4)..(4,6),(5,7)}, j in {..}")
+    io_test(REPLMode, rng_unit1, "rng_unit1[i] free for all i in {1,2..9,10}")
+    io_test(REPLMode, rng_unit2, "rng_unit2[i] free for all i in {-2,-1..2,3}")
+    io_test(REPLMode, rng_unit3, "rng_unit3[i] free for all i in {1,2..9,10}")
+    io_test(REPLMode, rng_step1, "rng_step1[i] free for all i in {1,3..7,9}")
+    io_test(REPLMode, rng_step2, "rng_step2[i] free for all i in {-2,3,8}")
+    io_test(REPLMode, rng_step3, "rng_step3[i] free for all i in {1}")
+    io_test(REPLMode, rng_step4, "rng_step4[i] free for all i in {0,2}")
+    io_test(REPLMode, arr_1, "arr_1[i] free for all i in {a,b,c}")
+    io_test(REPLMode, arr_2, "arr_2[i] free for all i in {a,1,test}")
+    io_test(REPLMode, arr_3, "arr_3[i] free for all i in {apple,banana,carrot,diamonds}")
+    io_test(REPLMode, rng2_1, "rng2_1[i,j] free for all i in {1,2..9,10}, j in {a,b,c}")
+    io_test(REPLMode, tri_1, "tri_1[i,j] free for all i in {1,2,3}, j in {..}")
+    io_test(REPLMode, tri_2, "tri_2[i,j] free for all i in {1,2,3}, j in {..}")
+    io_test(REPLMode, tri_3, "tri_3[i,j] free for all i in {(1,3),(2,4)..(4,6),(5,7)}, j in {..}")
 
-    io_test(IJuliaMode, rng_unit1, "rng_unit1_{i} \\quad\\forall i \\in \\{1,2,\\dots,9,10\\}")
-    io_test(IJuliaMode, rng_unit2, "rng_unit2_{i} \\quad\\forall i \\in \\{-2,-1,\\dots,2,3\\}")
-    io_test(IJuliaMode, rng_unit3, "rng_unit3_{i} \\quad\\forall i \\in \\{1,2,\\dots,9,10\\}")
-    io_test(IJuliaMode, rng_step1, "rng_step1_{i} \\quad\\forall i \\in \\{1,3,\\dots,7,9\\}")
-    io_test(IJuliaMode, rng_step2, "rng_step2_{i} \\quad\\forall i \\in \\{-2,3,8\\}")
-    io_test(IJuliaMode, rng_step3, "rng_step3_{i} \\quad\\forall i \\in \\{1\\}")
-    io_test(IJuliaMode, rng_step4, "rng_step4_{i} \\quad\\forall i \\in \\{0,2\\}")
-    io_test(IJuliaMode, arr_1, "arr_1_{i} \\quad\\forall i \\in \\{a,b,c\\}")
-    io_test(IJuliaMode, arr_2, "arr_2_{i} \\quad\\forall i \\in \\{a,1,test\\}")
-    io_test(IJuliaMode, arr_3, "arr_3_{i} \\quad\\forall i \\in \\{apple,banana,carrot,diamonds\\}")
-    io_test(IJuliaMode, rng2_1, "rng2_1_{i,j} \\quad\\forall i \\in \\{1,2,\\dots,9,10\\}, j \\in \\{a,b,c\\}")
-    io_test(IJuliaMode, tri_1, "tri_1_{i,j} \\quad\\forall i \\in \\{1,2,3\\}, j \\in \\{..\\}")
-    io_test(IJuliaMode, tri_2, "tri_2_{i,j} \\quad\\forall i \\in \\{1,2,3\\}, j \\in \\{..\\}")
-    io_test(IJuliaMode, tri_3, "tri_3_{i,j} \\quad\\forall i \\in \\{(1,3),(2,4),\\dots,(4,6),(5,7)\\}, j \\in \\{..\\}")
+    io_test(IJuliaMode, rng_unit1, "rng_unit1_{i} free \\quad\\forall i \\in \\{1,2,\\dots,9,10\\}")
+    io_test(IJuliaMode, rng_unit2, "rng_unit2_{i} free \\quad\\forall i \\in \\{-2,-1,\\dots,2,3\\}")
+    io_test(IJuliaMode, rng_unit3, "rng_unit3_{i} free \\quad\\forall i \\in \\{1,2,\\dots,9,10\\}")
+    io_test(IJuliaMode, rng_step1, "rng_step1_{i} free \\quad\\forall i \\in \\{1,3,\\dots,7,9\\}")
+    io_test(IJuliaMode, rng_step2, "rng_step2_{i} free \\quad\\forall i \\in \\{-2,3,8\\}")
+    io_test(IJuliaMode, rng_step3, "rng_step3_{i} free \\quad\\forall i \\in \\{1\\}")
+    io_test(IJuliaMode, rng_step4, "rng_step4_{i} free \\quad\\forall i \\in \\{0,2\\}")
+    io_test(IJuliaMode, arr_1, "arr_1_{i} free \\quad\\forall i \\in \\{a,b,c\\}")
+    io_test(IJuliaMode, arr_2, "arr_2_{i} free \\quad\\forall i \\in \\{a,1,test\\}")
+    io_test(IJuliaMode, arr_3, "arr_3_{i} free \\quad\\forall i \\in \\{apple,banana,carrot,diamonds\\}")
+    io_test(IJuliaMode, rng2_1, "rng2_1_{i,j} free \\quad\\forall i \\in \\{1,2,\\dots,9,10\\}, j \\in \\{a,b,c\\}")
+    io_test(IJuliaMode, tri_1, "tri_1_{i,j} free \\quad\\forall i \\in \\{1,2,3\\}, j \\in \\{..\\}")
+    io_test(IJuliaMode, tri_2, "tri_2_{i,j} free \\quad\\forall i \\in \\{1,2,3\\}, j \\in \\{..\\}")
+    io_test(IJuliaMode, tri_3, "tri_3_{i,j} free \\quad\\forall i \\in \\{(1,3),(2,4),\\dots,(4,6),(5,7)\\}, j \\in \\{..\\}")
 
     #------------------------------------------------------------------
     # Test category printing
+    println("    category printing")
     @defVar(m, cat_bin[1:3], Bin)
     @defVar(m, 2 <= cat_int[1:3] <= 5, Int)
     @defVar(m, cat_semiint_both[2:3] >= 2, SemiInt)
@@ -176,6 +180,7 @@ function test_print_JuMPContainer()
 
     #------------------------------------------------------------------
     # Tests for particular issues
+    println("    issue testing")
     # Empty JuMPContainer printing (#124)
     @defVar(m, empty_free[1:0])
     io_test(REPLMode, empty_free, "empty_free (no indices)")
@@ -183,6 +188,7 @@ function test_print_JuMPContainer()
 end
 
 function test_print_SOS()
+    println("  test_print_SOS")
     modS = Model()
     a = [1,2,3]
     @defVar(modS, x[1:3], Bin)
@@ -200,5 +206,74 @@ function test_print_SOS()
     io_test(IJuliaMode, s2, "SOS2: \\{5 y[1], 4 y[2], 7 y[3], 2 y[4], 1 y[5]\\}")
 end
 
-#test_print_JuMPContainer()
+function test_print_Model()
+    println("  test_print_Model")
+    le, ge = JuMP.repl_leq, JuMP.repl_geq
+
+    #------------------------------------------------------------------
+
+    mod_1 = Model()
+    @defVar(mod_1, a>=1)
+    @defVar(mod_1, b<=1)
+    @defVar(mod_1, -1<=c<=1)
+    @defVar(mod_1, a1>=1,Int)
+    @defVar(mod_1, b1<=1,Int)
+    @defVar(mod_1, -1<=c1<=1,Int)
+    @defVar(mod_1, x, Bin)
+    @defVar(mod_1, y)
+    @defVar(mod_1, z, Int)
+    @defVar(mod_1, sos[1:3], Bin)
+    @defVar(mod_1, 2 <= si <= 3, SemiInt)
+    @defVar(mod_1, 2 <= sc <= 3, SemiCont)
+    @setObjective(mod_1, Max, a - b + 2a1 - 10x)
+    @addConstraint(mod_1, a + b - 10c - 2x + c1 <= 1)
+    @addConstraint(mod_1, a*b <= 2)
+    addSOS1(mod_1, [i*sos[i] for i in 1:3])
+
+    io_test(REPLMode, mod_1, """
+Max a - b + 2 a1 - 10 x
+Subject to
+ a + b - 10 c - 2 x + c1 $le 1
+ a*b - 2 $le 0
+ SOS1: {1 sos[1], 2 sos[2], 3 sos[3]}
+ sos[i] in {0,1} for all i in {1,2,3}
+ a $ge 1
+ b $le 1
+ -1 $le c $le 1
+ a1 $ge 1, integer
+ b1 $le 1, integer
+ -1 $le c1 $le 1, integer
+ x in {0,1}
+ y free
+ z free, integer
+ si in {2..3} or {0}
+ sc in [2,3] or {0}
+""", repl=:print)
+
+    io_test(IJuliaMode, mod_1, """
+\\begin{alignat*}{1}\\max\\quad & a - b + 2 a1 - 10 x\\\\
+\\text{Subject to} \\quad & a + b - 10 c - 2 x + c1 \\leq 1\\\\
+ & a\\timesb - 2 \\leq 0\\\\
+ & SOS1: \\{1 sos[1], 2 sos[2], 3 sos[3]\\}\\\\
+ & sos_{i} \\in \\{0,1\\} \\quad\\forall i \\in \\{1,2,3\\}\\\\
+ & a \\geq 1\\\\
+ & b \\leq 1\\\\
+ & -1 \\leq c \\leq 1\\\\
+ & a1 \\geq 1, \\in \\mathbb{Z}\\\\
+ & b1 \\leq 1, \\in \\mathbb{Z}\\\\
+ & -1 \\leq c1 \\leq 1, \\in \\mathbb{Z}\\\\
+ & x \\in \\{0,1\\}\\\\
+ & y free\\\\
+ & z free, \\in \\mathbb{Z}\\\\
+ & si \\in \\{2,\\dots,3\\} \\cup \\{0\\}\\\\
+ & sc \\in \\[2,3\\] \\cup \\{0\\}\\\\
+\\end{alignat*}
+""")
+
+    #------------------------------------------------------------------
+
+end
+
+test_print_JuMPContainer()
 test_print_SOS()
+test_print_Model()

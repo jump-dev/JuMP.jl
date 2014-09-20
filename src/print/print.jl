@@ -35,6 +35,90 @@ include("ijulia.jl")
 include("repl.jl")
 
 #########################################################################
+# MODEL
+#########################################################################
+Base.print(io::IO, m::Model) = print(io, model_str(REPLMode,m))
+Base.writemime(io::IO, ::MIME"text/latex", m::Model) = 
+    print(io, model_str(IJuliaMode,m))
+function model_str(mode, m::Model, leq, geq, in_set,
+                            open_set, mid_set, close_set, union, infty,
+                            open_rng, close_rng, integer)
+    ijl = mode == IJuliaMode
+    sep = ijl ? " & " : " "
+    eol = ijl ? "\\\\\n" : "\n"
+    nlp = m.nlpdata
+
+    
+    # Objective
+    qobj_str = quad_str(mode, m.obj)
+    obj_sense = ijl ? (m.objSense == :Max ? "\\max" : "\\min")*"\\quad" :
+                      (m.objSense == :Max ? "Max" : "Min")
+    str = obj_sense * sep
+    if nlp != nothing && nlp.nlobj != nothing
+        str *= (qobj_str=="0"?"":"$qobj_str + ") * "(nonlinear expression)"
+    else
+        str *= qobj_str
+    end
+    str *= eol
+
+    # Constraints
+    str *= ijl ? "\\text{Subject to} \\quad" : "Subject to" * eol 
+    for c in m.linconstr
+        str *= sep * con_str(mode,c,mathmode=true) * eol
+    end
+    for c in m.quadconstr
+        str *= sep * con_str(mode,c,mathmode=true) * eol
+    end
+    for c in m.sosconstr
+        str *= sep * con_str(mode,c,mathmode=true) * eol
+    end
+    if nlp != nothing && length(nlp.nlconstr) > 0
+        num = length(nlp.nlconstr)
+        str *= sep * string("$num nonlinear constraint", num>1?"s":"") * eol
+    end
+    
+    # Display indexed variables
+    in_dictlist = falses(m.numCols)
+    for d in m.dictList
+        str *= sep * cont_str(mode,d,mathmode=true)  * eol
+        for it in d  # Mark variables in JuMPContainer as printed
+            in_dictlist[it[end].col] = true
+        end
+    end
+
+    # Display non-indexed variables
+    for i in 1:m.numCols
+        in_dictlist[i] && continue
+        var_name = m.colNames[i]
+        var_lb, var_ub = m.colLower[i], m.colUpper[i]
+        str_lb, str_ub = str_round(var_lb), str_round(var_ub)
+        var_cat = m.colCat[i]
+        if var_cat == :Bin  # x binary
+            str *= sep * "$var_name $in_set $(open_set)0,1$close_set"
+        elseif var_cat == :SemiInt  # x in union of 0 and {lb,...,ub}
+            str *= sep * "$var_name $in_set $open_set$str_lb$mid_set$str_ub$close_set $union $(open_set)0$close_set"
+        elseif var_cat == :SemiCont  # x in union of 0 and [lb,ub]
+            str *= sep * "$var_name $in_set $open_rng$str_lb,$str_ub$close_rng $union $(open_set)0$close_set"
+        elseif var_lb == -Inf && var_ub == +Inf  # Free variable
+            str *= sep * "$var_name free"
+        elseif var_lb == -Inf  # No lower bound
+            str *= sep * "$var_name $leq $str_ub"
+        elseif var_ub == +Inf  # No upper bound
+            str *= sep * "$var_name $geq $str_lb"
+        else
+            str *= sep * "$str_lb $leq $var_name $leq $str_ub"
+        end
+        if var_cat == :Int
+            str *= ", $integer"
+        end
+        str *= eol
+    end    
+
+    ijl ? "\$\$ \\begin{alignat*}{1}"*str*"\\end{alignat*}\n \$\$" :
+          str
+end
+
+#########################################################################
 # VARIABLES
 #########################################################################
 #------------------------------------------------------------------------
@@ -51,6 +135,7 @@ Base.print(io::IO, j::JuMPContainer{Variable}) = print(io, cont_str(REPLMode,j))
 Base.show( io::IO, j::JuMPContainer{Variable}) = show( io, cont_str(REPLMode,j))
 Base.writemime(io::IO, ::MIME"text/latex", j::JuMPContainer{Variable}) =
     print(io, cont_str(IJuliaMode,j,mathmode=false))
+# Generic string converter, called by mode-specific handlers
 function cont_str(mode, j::JuMPContainer{Variable}, leq, eq, geq,
                             ind_open, ind_close, for_all, in_set,
                             open_set, mid_set, close_set, union, infty,
@@ -104,7 +189,7 @@ function cont_str(mode, j::JuMPContainer{Variable}, leq, eq, geq,
     idx_sets = var_cat == :Int ? ", $integer, $idx_sets" : " $idx_sets"
     if all_same_lb && all_same_ub
         # Free variable
-        var_lb == -Inf && var_ub == +Inf && return "$name_idx$idx_sets"
+        var_lb == -Inf && var_ub == +Inf && return "$name_idx free$idx_sets"
         # No lower bound
         var_lb == -Inf && return "$name_idx $leq $str_ub$idx_sets"
         # No upper bound
