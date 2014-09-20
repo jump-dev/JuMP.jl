@@ -1,20 +1,34 @@
+#############################################################################
+# JuMP
+# An algebraic modelling langauge for Julia
+# See http://github.com/JuliaOpt/JuMP.jl
+#############################################################################
+# test/print.jl
+# Testing for all pretty-printing-related functionality
+# Defines:
+#  - test_print_JuMPContainer()
+#  - 
+#############################################################################
 using JuMP
 using Base.Test
 
 import JuMP.REPLMode, JuMP.IJuliaMode
 
-# Helper function to test IO methods work correctly
+const THROW_ERROR = false
+
+# Helper function to test IO methods work correctly, and to provide
+# useful outputs if they don't
 function io_test(mode, obj, exp_str)
     if mode == REPLMode
         buf_print = IOBuffer()
         print(buf_print, obj)
-        seek(buf_print, 0)
+        seek(buf_print, 0);
         print_str = readall(buf_print)
         expct_str = exp_str
         if !(print_str == exp_str)
             @show print_str
             @show expct_str
-            error()
+            THROW_ERROR && error()
         end 
 
         buf_show = IOBuffer()
@@ -25,7 +39,7 @@ function io_test(mode, obj, exp_str)
         if !(show_str == expt_str)
             @show show_str
             @show expt_str
-            error()
+            THROW_ERROR && error()
         end
     else
         buf_display = IOBuffer()
@@ -36,13 +50,13 @@ function io_test(mode, obj, exp_str)
         if !(display_str == expectd_str)
             @show display_str
             @show expectd_str
-            error()
+            THROW_ERROR && error()
         end
     end
 end
 
 
-function test_JuMPContainer_print()
+function test_print_JuMPContainer()
     le, ge = JuMP.repl_leq, JuMP.repl_geq
     m = Model()
     
@@ -168,4 +182,23 @@ function test_JuMPContainer_print()
     io_test(IJuliaMode, empty_free, "empty_free (no indices)")
 end
 
-test_JuMPContainer_print()
+function test_print_SOS()
+    modS = Model()
+    a = [1,2,3]
+    @defVar(modS, x[1:3], Bin)
+    addSOS1(modS, [a[i]x[i] for i in 1:3])    
+    s1 = JuMP.SOSConstraint([x[i] for i in 1:3],
+                            [a[i] for i in 1:3], :SOS1)
+    io_test(REPLMode, s1, "SOS1: {1 x[1], 2 x[2], 3 x[3]}")
+    io_test(IJuliaMode, s1, "SOS1: \\{1 x[1], 2 x[2], 3 x[3]\\}")
+
+    b = [5,4,7,2,1]
+    @defVar(modS, y[1:5], Bin)
+    s2 = JuMP.SOSConstraint([y[i] for i in 1:5],
+                            [b[i] for i in 1:5], :SOS2)
+    io_test(REPLMode, s2, "SOS2: {5 y[1], 4 y[2], 7 y[3], 2 y[4], 1 y[5]}")
+    io_test(IJuliaMode, s2, "SOS2: \\{5 y[1], 4 y[2], 7 y[3], 2 y[4], 1 y[5]\\}")
+end
+
+#test_print_JuMPContainer()
+test_print_SOS()

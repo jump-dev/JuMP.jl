@@ -29,7 +29,7 @@ const repl_integer   = "integer"
 # VARIABLES
 #########################################################################
 #------------------------------------------------------------------------
-# JuMPContainer{Variable}
+## JuMPContainer{Variable}
 #------------------------------------------------------------------------
 cont_str(::Type{REPLMode}, j::JuMPContainer{Variable}) =
     cont_str(REPLMode, j, repl_leq, repl_eq, repl_geq,
@@ -42,12 +42,12 @@ cont_str(::Type{REPLMode}, j::JuMPContainer{Variable}) =
 # EXPRESSIONS
 #########################################################################
 #------------------------------------------------------------------------
-# AffExpr  (not GenericAffExpr)
+## AffExpr  (not GenericAffExpr)
 #------------------------------------------------------------------------
 aff_str(::Type{REPLMode}, a::AffExpr; show_constant=true) =
     aff_str(a, show_constant=show_constant)
 #------------------------------------------------------------------------
-# GenericQuadExpr
+## GenericQuadExpr
 #------------------------------------------------------------------------
 quad_str(::Type{REPLMode}, q::GenericQuadExpr) = 
     quad_str(REPLMode, q, repl_times, repl_sq)
@@ -56,13 +56,17 @@ quad_str(::Type{REPLMode}, q::GenericQuadExpr) =
 # CONSTRAINTS
 #########################################################################
 #------------------------------------------------------------------------
-# GenericRangeConstraint
+## GenericRangeConstraint
 #------------------------------------------------------------------------
 con_str(::Type{REPLMode}, c::GenericRangeConstraint) =
     con_str(REPLMode, c, repl_leq, repl_eq, repl_geq)
-
 #------------------------------------------------------------------------
-# QuadConstraint
+## QuadConstraint
 #------------------------------------------------------------------------
 con_str(::Type{REPLMode}, c::QuadConstraint) =
     con_str(REPLMode, c, repl_leq, repl_eq, repl_geq)
+#------------------------------------------------------------------------
+## SOSConstraint
+#------------------------------------------------------------------------
+con_str(::Type{REPLMode}, c::SOSConstraint) =
+    con_str(REPLMode, c, repl_open_set, repl_close_set)

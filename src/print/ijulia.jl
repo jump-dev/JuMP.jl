@@ -31,7 +31,7 @@ math(s) = "\$\$ $s \$\$"
 # VARIABLES
 #########################################################################
 #------------------------------------------------------------------------
-# JuMPContainer{Variable}
+## JuMPContainer{Variable}
 #------------------------------------------------------------------------
 function cont_str(::Type{IJuliaMode}, j::JuMPContainer{Variable}; mathmode=true)
     j_str = cont_str(IJuliaMode, j, ijulia_leq, ijulia_eq, ijulia_geq,
@@ -46,14 +46,14 @@ end
 # EXPRESSIONS
 #########################################################################
 #------------------------------------------------------------------------
-# AffExpr  (not GenericAffExpr)
+## AffExpr  (not GenericAffExpr)
 #------------------------------------------------------------------------
 function aff_str(::Type{IJuliaMode}, a::AffExpr; mathmode=true, show_constant=true)
     a_str = aff_str(a, show_constant=show_constant)
     mathmode ? a_str : math(a_str)
 end
 #------------------------------------------------------------------------
-# GenericQuadExpr
+## GenericQuadExpr
 #------------------------------------------------------------------------
 function quad_str(::Type{IJuliaMode}, q::GenericQuadExpr; mathmode=true)
     q_str = quad_str(IJuliaMode, q, ijulia_times, ijulia_sq)
@@ -64,17 +64,23 @@ end
 # CONSTRAINTS
 #########################################################################
 #------------------------------------------------------------------------
-# GenericRangeConstraint
+## GenericRangeConstraint
 #------------------------------------------------------------------------
 function con_str(::Type{IJuliaMode}, c::GenericRangeConstraint; mathmode=true)
     c_str = con_str(IJuliaMode, c, ijulia_leq, ijulia_eq, ijulia_geq)
     mathmode ? c_str : math(c_str)
 end
-
 #------------------------------------------------------------------------
-# QuadConstraint
+## QuadConstraint
 #------------------------------------------------------------------------
 function con_str(::Type{IJuliaMode}, c::QuadConstraint; mathmode=true)
     c_str = con_str(IJuliaMode, c, ijulia_leq, ijulia_eq, ijulia_geq)
+    mathmode ? c_str : math(c_str)
+end
+#------------------------------------------------------------------------
+## SOSConstraint
+#------------------------------------------------------------------------
+function con_str(::Type{IJuliaMode}, c::SOSConstraint; mathmode=true)
+    c_str = con_str(IJuliaMode, c, ijulia_open_set, ijulia_close_set)
     mathmode ? c_str : math(c_str)
 end

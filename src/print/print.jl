@@ -7,15 +7,29 @@
 # All "pretty printers" for JuMP types.
 # - Delegates to appropriate methods for REPL or IJulia as appropriate.
 # - Provides generic conversion-to-string code for both.
-# - To find printing code for a type, search for `# TypeName`
+# - To find printing code for a type, search for `## TypeName`
+# - Code here does not need to be fast, in fact simplicity trumps speed
+#   within reason as this code is thorny enough as it is.
 #############################################################################
 
+# Used for dispatching
 abstract PrintMode
 abstract REPLMode <: PrintMode
 abstract IJuliaMode <: PrintMode
 
+# Whether something is zero or not for the purposes of printing it
 const PRINT_ZERO_TOL = 1e-10
+
+# List of indices available for variable printing
 const DIMS = ["i","j","k","l","m","n"]
+
+# Helper function that rounds carefully for the purposes of printing
+# e.g.   5.3  =>  5.3
+#        1.0  =>  1
+function str_round(f::Float64)
+    str = string(f)
+    length(str) >= 2 && str[end-1:end] == ".0" ? str[1:end-2] : str
+end
 
 include("ijulia.jl")
 include("repl.jl")
@@ -296,8 +310,8 @@ conToStr(c::GenericRangeConstraint) = con_str(REPLMode,c)
 #------------------------------------------------------------------------
 ## QuadConstraint
 #------------------------------------------------------------------------
-Base.print(io::IO, c::QuadConstraint) = print(io, con_str(c))
-Base.show( io::IO, c::QuadConstraint) = show( io, con_str(c))
+Base.print(io::IO, c::QuadConstraint) = print(io, con_str(REPLMode,c))
+Base.show( io::IO, c::QuadConstraint) = show( io, con_str(REPLMode,c))
 Base.writemime(io::IO, ::MIME"text/latex", c::QuadConstraint) =
     print(io, con_str(IJuliaMode,c,mathmode=false))
 # Generic string converter, called by mode-specific handlers
@@ -308,3 +322,33 @@ function con_str(mode, c::QuadConstraint, leq, eq, geq)
 end
 # Backwards compatability shim
 conToStr(c::QuadConstraint) = con_str(REPLMode,c)
+
+#------------------------------------------------------------------------
+## SOSConstraint
+#------------------------------------------------------------------------
+Base.print(io::IO, c::SOSConstraint) = print(io, con_str(REPLMode,c))
+Base.show( io::IO, c::SOSConstraint) = show( io, con_str(REPLMode,c))
+Base.writemime(io::IO, ::MIME"text/latex", c::SOSConstraint) =
+    print(io, con_str(IJuliaMode,c,mathmode=false))
+# Generic string converter, called by mode-specific handlers
+function con_str(mode, c::SOSConstraint, open_set, close_set)
+    term_str = [string(str_round(c.weights[i]), " ", c.terms[i])
+                    for i in 1:length(c.terms)]
+    "$(c.sostype): $open_set$(join(term_str,", "))$close_set"
+end
+
+#------------------------------------------------------------------------
+## ConstraintRef
+#------------------------------------------------------------------------
+Base.print(io::IO, c::ConstraintRef{LinearConstraint}) = print(io, con_str(REPLMode,c.m.linconstr[c.idx]))
+Base.print(io::IO, c::ConstraintRef{QuadConstraint})   = print(io, con_str(REPLMode,c.m.quadconstr[c.idx]))
+Base.print(io::IO, c::ConstraintRef{SOSConstraint})    = print(io, con_str(REPLMode,c.m.sosconstr[c.idx]))
+Base.show( io::IO, c::ConstraintRef{LinearConstraint}) = show( io, con_str(REPLMode,c.m.linconstr[c.idx]))
+Base.show( io::IO, c::ConstraintRef{QuadConstraint})   = show( io, con_str(REPLMode,c.m.quadconstr[c.idx]))
+Base.show( io::IO, c::ConstraintRef{SOSConstraint})    = show( io, con_str(REPLMode,c.m.sosconstr[c.idx]))
+Base.writemime(io::IO, ::MIME"text/latex", c::ConstraintRef{LinearConstraint}) =
+    print(io, con_str(IJuliaMode,c.m.linconstr[c.idx],mathmode=false))
+Base.writemime(io::IO, ::MIME"text/latex", c::ConstraintRef{QuadConstraint}) =
+    print(io, con_str(IJuliaMode,c.m.quadconstr[c.idx],mathmode=false))
+Base.writemime(io::IO, ::MIME"text/latex", c::ConstraintRef{SOSConstraint}) =
+    print(io, con_str(IJuliaMode,c.m.sosconstr[c.idx],mathmode=false))
