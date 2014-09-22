@@ -116,7 +116,7 @@ solve(valmod)
 buf = IOBuffer()
 println(buf, getValue(foobar))
 result = takebuf_string(buf)
-if hash(5) < hash(:Apple) # hashing is different on some platforms, affects output ourder
+if hash(5) < hash(:Apple) # hashing is different on some platforms, affects output order
     @test result == "3-dimensional JuMPDict with 18 entries:\n foobar[9,5,-1]       = -9.0\n foobar[9,5,0]        = 0.0\n foobar[9,5,1]        = 9.0\n foobar[9,Apple,-1]   = -9.0\n foobar[9,Apple,0]    = 0.0\n foobar[9,Apple,1]    = 9.0\n foobar[9,Banana,-1]  = -9.0\n foobar[9,Banana,0]   = 0.0\n foobar[9,Banana,1]   = 9.0\n foobar[10,5,-1]      = -10.0\n foobar[10,5,0]       = 0.0\n foobar[10,5,1]       = 10.0\n foobar[10,Apple,-1]  = -10.0\n foobar[10,Apple,0]   = 0.0\n foobar[10,Apple,1]   = 10.0\n foobar[10,Banana,-1] = -10.0\n foobar[10,Banana,0]  = 0.0\n foobar[10,Banana,1]  = 10.0\n"
 else
     @test result == "3-dimensional JuMPDict with 18 entries:\n foobar[9,Apple,-1]   = -9.0\n foobar[9,Apple,0]    = 0.0\n foobar[9,Apple,1]    = 9.0\n foobar[9,Banana,-1]  = -9.0\n foobar[9,Banana,0]   = 0.0\n foobar[9,Banana,1]   = 9.0\n foobar[9,5,-1]       = -9.0\n foobar[9,5,0]        = 0.0\n foobar[9,5,1]        = 9.0\n foobar[10,Apple,-1]  = -10.0\n foobar[10,Apple,0]   = 0.0\n foobar[10,Apple,1]   = 10.0\n foobar[10,Banana,-1] = -10.0\n foobar[10,Banana,0]  = 0.0\n foobar[10,Banana,1]  = 10.0\n foobar[10,5,-1]      = -10.0\n foobar[10,5,0]       = 0.0\n foobar[10,5,1]       = 10.0\n"
