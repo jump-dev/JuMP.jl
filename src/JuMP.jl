@@ -101,7 +101,7 @@ function Model(;solver=UnsetSolver())
         error("solver argument ($solver) must be an AbstractMathProgSolver")
     end
     Model(QuadExpr(),:Min,LinearConstraint[], QuadConstraint[],SOSConstraint[],
-          0,String[],Float64[],Float64[],Int[],
+          0,String[],Float64[],Float64[],Symbol[],
           0,Float64[],Float64[],Float64[],nothing,solver,
           false,nothing,nothing,nothing,JuMPContainer[],nothing,
           IndexedVector(Float64,0),nothing,Dict{Symbol,Any}())
