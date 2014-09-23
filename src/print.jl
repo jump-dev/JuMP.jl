@@ -569,7 +569,7 @@ end
 
 function Base.writemime(io::IO, ::MIME"text/latex", dict::JuMPContainer{Variable})
     # Best case: bounds and all dims
-    str = dictstring(dict::JuMPDict, :IJulia)
+    str = dictstring(dict, :IJulia)
     if str != ""
         print(io, "\\( $str \\)")
         return
