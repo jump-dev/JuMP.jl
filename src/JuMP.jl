@@ -111,7 +111,7 @@ function Model(;solver=nothing)
         end
         # user-provided solver must support problem class
         Model(QuadExpr(),:Min,LinearConstraint[], QuadConstraint[],SOSConstraint[],
-              0,String[],Float64[],Float64[],Int[],
+              0,String[],Float64[],Float64[],Symbol[],
               0,Float64[],Float64[],Float64[],nothing,solver,false,
               nothing,nothing,nothing,JuMPDict[],IndexedVector(Float64,0),nothing,Dict{Symbol,Any}())
     end
