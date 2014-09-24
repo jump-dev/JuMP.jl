@@ -24,6 +24,11 @@ Version 0.6.0 (September 9, 2014)
   * Add support for index dependencies (e.g. triangular indexing) in ``@defVar``, ``@addConstraint``, and ``@defExpr`` (e.g. ``@defVar(m, x[i=1:10,j=i:10])``).
     - This required some changes to the internal structure of JuMP containers, which may break code that explicitly stored ``JuMPDict`` objects.
 
+Version 0.5.8 (September 24, 2014)
+----------------------------------
+
+  * Fix a bug with specifying solvers (affects Julia 0.2 only)
+
 Version 0.5.7 (September 5, 2014)
 ---------------------------------
 
