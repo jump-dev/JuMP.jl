@@ -314,13 +314,6 @@ Base.writemime(io::IO, ::MIME"text/latex", q::GenericQuadExpr) =
 function quad_str(mode, q::GenericQuadExpr, times::String, sq::String)
     length(q.qvars1) == 0 && return aff_str(mode,q.aff)
 
-    # Check model ownership
-    for ind in 1:length(q.qvars1)
-        if q.qvars1[ind].m != q.qvars2[ind].m
-            error("You cannot have a quadratic term with variables from different models.")
-        end
-    end
-
     # Canonicalize x_i * x_j so i <= j
     for ind in 1:length(q.qvars1)
         if q.qvars2[ind].col < q.qvars1[ind].col

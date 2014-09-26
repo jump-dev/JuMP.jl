@@ -272,6 +272,25 @@ Subject to
 
     #------------------------------------------------------------------
 
+    mod_2 = Model()
+    @defVar(mod_2, x[1:5])
+    @addNLConstraint(mod_2, x[1]*x[2] == 1)
+    @addNLConstraint(mod_2, x[3]*x[4] == 1)
+    @addNLConstraint(mod_2, x[5]*x[1] == 1)
+    @setNLObjective(mod_2, Min, x[1]*x[3])
+    
+    io_test(REPLMode, mod_2, """
+Min (nonlinear expression)
+Subject to
+ 3 nonlinear constraints
+ x[i] free for all i in {1,2..4,5}
+""", repl=:print)
+    io_test(IJuliaMode, mod_2, """
+\\begin{alignat*}{1}\\min\\quad & (nonlinear expression)\\\\
+\\text{Subject to} \\quad & 3 nonlinear constraints\\\\
+ & x_{i} free \\quad\\forall i \\in \\{1,2,\\dots,4,5\\}\\\\
+\\end{alignat*}
+""", repl=:print)
 end
 
 test_print_JuMPContainer()

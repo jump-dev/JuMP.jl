@@ -243,20 +243,6 @@ let
 end
 
 ######################################################################
-# Test nonlinear printing
-let
-    mod = Model()
-    @defVar(mod, x[1:5])
-    @addNLConstraint(mod, x[1]*x[2] == 1)
-    @addNLConstraint(mod, x[3]*x[4] == 1)
-    @addNLConstraint(mod, x[5]*x[1] == 1)
-    @setNLObjective(mod, Min, x[1]*x[3])
-    str = string(mod)
-    @test str == "Min (nonlinear expression)\nSubject to \n3 nonlinear constraints\nx[i], for all i in {1..5} free\n"
-end
-
-
-######################################################################
 # Test NaN checking
 let
     mod = Model()
