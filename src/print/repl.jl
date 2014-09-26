@@ -7,9 +7,9 @@
 # Pretty printing for REPL
 #############################################################################
 
-const repl_leq = @windows? "<=" : "≤?"
-const repl_geq = @windows? ">=" : "≥?"
-const repl_eq  = @windows? "==" : "=?"
+const repl_leq = @windows? "<=" : "≤"
+const repl_geq = @windows? ">=" : "≥"
+const repl_eq  = @windows? "==" : "="
 const repl_times = "*"
 const repl_sq    = "\u00B2"  # Superscript 2
 const repl_ind_open  = "["
@@ -34,6 +34,12 @@ model_str(::Type{REPLMode}, m::Model) =
                         repl_union, repl_infty, repl_open_rng, repl_close_rng,
                         repl_integer)
 #------------------------------------------------------------------------
+## Variable
+#------------------------------------------------------------------------
+var_str(::Type{REPLMode}, v::Variable) = var_str(REPLMode, v.m, v.col)
+var_str(::Type{REPLMode}, m::Model, col::Int) = 
+    var_str(REPLMode, m, col, repl_ind_open, repl_ind_close)
+#------------------------------------------------------------------------
 ## JuMPContainer{Variable}
 #------------------------------------------------------------------------
 cont_str(::Type{REPLMode}, j::JuMPContainer{Variable}; mathmode=false) =
@@ -42,11 +48,6 @@ cont_str(::Type{REPLMode}, j::JuMPContainer{Variable}; mathmode=false) =
                         repl_open_set, repl_mid_set, repl_close_set,
                         repl_union, repl_infty, repl_open_rng, repl_close_rng,
                         repl_integer)
-#------------------------------------------------------------------------
-## AffExpr  (not GenericAffExpr)
-#------------------------------------------------------------------------
-aff_str(::Type{REPLMode}, a::AffExpr; show_constant=true) =
-    aff_str(a, show_constant=show_constant)
 #------------------------------------------------------------------------
 ## GenericQuadExpr
 #------------------------------------------------------------------------

@@ -36,6 +36,13 @@ model_str(::Type{IJuliaMode}, m::Model; mathmode=true) =
                         ijulia_union, ijulia_infty, ijulia_open_rng, ijulia_close_rng,
                         ijulia_integer), mathmode)
 #------------------------------------------------------------------------
+## Variable
+#------------------------------------------------------------------------
+var_str(::Type{IJuliaMode}, v::Variable; mathmode=true) = 
+    var_str(IJuliaMode, v.m, v.col, mathmode=mathmode)
+var_str(::Type{IJuliaMode}, m::Model, col::Int; mathmode=true) = 
+    math(var_str(IJuliaMode, m, col, ijulia_ind_open, ijulia_ind_close), mathmode)
+#------------------------------------------------------------------------
 ## JuMPContainer{Variable}
 #------------------------------------------------------------------------
 cont_str(::Type{IJuliaMode}, j::JuMPContainer{Variable}; mathmode=true) =
@@ -44,11 +51,6 @@ cont_str(::Type{IJuliaMode}, j::JuMPContainer{Variable}; mathmode=true) =
                         ijulia_open_set, ijulia_mid_set, ijulia_close_set, 
                         ijulia_union, ijulia_infty, ijulia_open_rng, ijulia_close_rng,
                         ijulia_integer), mathmode)
-#------------------------------------------------------------------------
-## AffExpr  (not GenericAffExpr)
-#------------------------------------------------------------------------
-aff_str(::Type{IJuliaMode}, a::AffExpr; mathmode=true, show_constant=true) =
-    math(aff_str(a, show_constant=show_constant), mathmode)
 #------------------------------------------------------------------------
 ## GenericQuadExpr
 #------------------------------------------------------------------------

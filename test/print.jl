@@ -14,7 +14,7 @@ using Base.Test
 
 import JuMP.REPLMode, JuMP.IJuliaMode
 
-const THROW_ERROR = false
+const THROW_ERROR = true
 
 # Helper function to test IO methods work correctly, and to provide
 # useful outputs if they don't
@@ -293,6 +293,70 @@ Subject to
 """, repl=:print)
 end
 
+function test_print_expr()
+    # Most of the expression logic is well covered by test/operator.jl
+    # This is really just to check IJulia printing for expressions
+    println("  test_print_expr")
+    le, ge = JuMP.repl_leq, JuMP.repl_geq
+
+    #------------------------------------------------------------------
+    mod = Model()
+    @defVar(mod, x[1:5])
+    @defVar(mod, y[i=2:4,j=i:5])
+    @defVar(mod, z)
+
+    @addConstraint(mod, x[1] + 2*y[2,3] <= 3)
+    io_test(REPLMode, mod.linconstr[end], "x[1] + 2 y[2,3] $le 3")
+    io_test(IJuliaMode, mod.linconstr[end], "x_{1} + 2 y_{2,3} \\leq 3")
+end
+
+function test_print_Variable()
+    println("  test_print_Variable")
+    
+    m = Model()
+
+    @defVar(m, 0 <= x <= 2)
+    
+    @test    getName(x) == "x"
+    io_test(REPLMode,   x, "x")
+    io_test(IJuliaMode, x, "x")
+
+    setName(x, "x2")
+    @test    getName(x) == "x2"
+    io_test(REPLMode,   x, "x2")
+    io_test(IJuliaMode, x, "x2")
+
+    setName(x, "")
+    @test    getName(x) == "col_1"
+    io_test(REPLMode,   x, "col_1")
+    io_test(IJuliaMode, x, "col_1")
+
+    @defVar(m, z[1:2,3:5])
+    @test       getName(z[1,3]) == "z[1,3]"
+    io_test(REPLMode,   z[1,3],    "z[1,3]")
+    io_test(IJuliaMode, z[1,3],    "z_{1,3}")
+    @test       getName(z[2,4]) == "z[2,4]"
+    io_test(REPLMode,   z[2,4],    "z[2,4]")
+    io_test(IJuliaMode, z[2,4],    "z_{2,4}")
+    @test       getName(z[2,5]) == "z[2,5]"
+    io_test(REPLMode,   z[2,5],    "z[2,5]")
+    io_test(IJuliaMode, z[2,5],    "z_{2,5}")
+
+    @defVar(m, w[3:9,["red","blue","green"]])
+    @test    getName(w[7,"green"]) == "w[7,green]"
+    io_test(REPLMode,   w[7,"green"], "w[7,green]")
+    io_test(IJuliaMode, w[7,"green"], "w_{7,green}")
+
+    rng = 2:5
+    @defVar(m, v[rng,rng,rng,rng,rng,rng,rng])
+    a_v = v[4,5,2,3,2,2,4]
+    @test    getName(a_v) == "v[4,5,2,3,2,2,4]"
+    io_test(REPLMode,   a_v, "v[4,5,2,3,2,2,4]")
+    io_test(IJuliaMode, a_v, "v_{4,5,2,3,2,2,4}")
+end
+
 test_print_JuMPContainer()
 test_print_SOS()
 test_print_Model()
+test_print_expr()
+test_print_Variable()

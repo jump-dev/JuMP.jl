@@ -34,9 +34,9 @@ end
 include("ijulia.jl")
 include("repl.jl")
 
-#########################################################################
-# MODEL
-#########################################################################
+#------------------------------------------------------------------------
+## Model
+#------------------------------------------------------------------------
 Base.print(io::IO, m::Model) = print(io, model_str(REPLMode,m))
 Base.writemime(io::IO, ::MIME"text/latex", m::Model) = 
     print(io, model_str(IJuliaMode,m))
@@ -89,7 +89,7 @@ function model_str(mode, m::Model, leq, geq, in_set,
     # Display non-indexed variables
     for i in 1:m.numCols
         in_dictlist[i] && continue
-        var_name = m.colNames[i]
+        var_name = var_str(mode,m,i)
         var_lb, var_ub = m.colLower[i], m.colUpper[i]
         str_lb, str_ub = str_round(var_lb), str_round(var_ub)
         var_cat = m.colCat[i]
@@ -118,16 +118,53 @@ function model_str(mode, m::Model, leq, geq, in_set,
           str
 end
 
-#########################################################################
-# VARIABLES
-#########################################################################
 #------------------------------------------------------------------------
 ## Variable
 #------------------------------------------------------------------------
-Base.print(io::IO, v::Variable) = print(io, getName(v))
-Base.show( io::IO, v::Variable) = show( io, getName(v))
+Base.print(io::IO, v::Variable) = print(io, var_str(REPLMode,v))
+Base.show( io::IO, v::Variable) = show( io, var_str(REPLMode,v))
 Base.writemime(io::IO, ::MIME"text/latex", v::Variable) = 
-    print(io, getName(v))
+    print(io, var_str(IJuliaMode,v,mathmode=false))
+function var_str(mode, m::Model, col::Int, ind_open, ind_close)
+    colNames = mode == REPLMode ? m.colNames : m.colNamesIJulia
+    if colNames[col] == ""
+        for cont in m.dictList
+            fill_var_names(mode, colNames, cont)
+        end
+    end
+    return colNames[col] == "" ? "col_$col" : colNames[col]    
+end
+function fill_var_names(mode, colNames, v::JuMPArray{Variable})
+    idxsets = v.indexsets
+    lengths = map(length, idxsets)
+    N = length(idxsets)
+    name = v.name
+    cprod = cumprod([lengths...])
+    for (ind,var) in enumerate(v.innerArray)
+        idx_strs = [string( idxsets[1][mod1(ind,lengths[1])] )]
+        for i = 2:N
+            push!(idx_strs, string(idxsets[i][int(ceil(mod1(ind,cprod[i]) / cprod[i-1]))]))
+        end
+        if mode == IJuliaMode
+            colNames[var.col] = string(name, "_{", join(idx_strs,",") , "}")
+        else
+            colNames[var.col] = string(name,  "[", join(idx_strs,",") , "]")
+        end
+    end
+end
+function fill_var_names(mode, colNames, v::JuMPDict{Variable})
+    name = v.name
+    for tmp in v
+        ind, var = tmp[1:end-1], tmp[end]
+        if mode == IJuliaMode
+            colNames[var.col] = string(name, "_{", join([string(i) for i in ind],","), "}")
+        else
+            colNames[var.col] = string(name,  "[", join([string(i) for i in ind],","), "]")
+        end
+    end
+end
+
+
 #------------------------------------------------------------------------
 ## JuMPContainer{Variable}
 #------------------------------------------------------------------------
@@ -230,22 +267,15 @@ function parse_conditions(expr::Expr)
     vcat(ret, recurse...)
 end=#
 
-
-
-
-#########################################################################
-# EXPRESSIONS
-#########################################################################
 #------------------------------------------------------------------------
 ## AffExpr  (not GenericAffExpr)
 #------------------------------------------------------------------------
 Base.print(io::IO, a::AffExpr) = print(io, aff_str(REPLMode,a))
 Base.show( io::IO, a::AffExpr) = show( io, aff_str(REPLMode,a))
 Base.writemime(io::IO, ::MIME"text/latex", a::AffExpr) =
-    print(io, aff_str(IJuliaMode,a,mathmode=false))
+    print(io, math(aff_str(IJuliaMode,a),false))
 # Generic string converter, called by mode-specific handlers
-# Doesn't need to be passed `mode` as it has no need to pass it on.
-function aff_str(a::AffExpr; show_constant=true)
+function aff_str(mode, a::AffExpr; show_constant=true)
     # If the expression is empty, return the constant (or 0)
     if length(a.vars) == 0
         return show_constant ? str_round(a.constant) : "0"
@@ -255,7 +285,6 @@ function aff_str(a::AffExpr; show_constant=true)
     moddict = Dict{Model,IndexedVector}()
     for var in a.vars
         if !haskey(moddict, var.m)
-            checkNameStatus(var.m)
             moddict[var.m] = IndexedVector(Float64,var.m.numCols)
         end
     end
@@ -277,7 +306,7 @@ function aff_str(a::AffExpr; show_constant=true)
             abs(elt) < PRINT_ZERO_TOL && continue  # e.g. x - x
 
             pre = abs(abs(elt)-1) < PRINT_ZERO_TOL ? "" : str_round(abs(elt)) * " "
-            var = getName(m,idx)
+            var = var_str(mode,m,idx)
 
             term_str[2*elm-1] = elt < 0 ? " - " : " + "
             term_str[2*elm  ] = "$pre$var"
@@ -332,8 +361,8 @@ function quad_str(mode, q::GenericQuadExpr, times::String, sq::String)
             val = abs(V[ind])
             pre = (val == 1.0 ? "" : str_round(val)*" ")
 
-            x = getName(Variable(q.qvars1[ind].m,I[ind]))
-            y = getName(Variable(q.qvars1[ind].m,J[ind]))
+            x = var_str(mode,q.qvars1[ind].m,I[ind])
+            y = var_str(mode,q.qvars1[ind].m,J[ind])
             
             term_str[2*ind-1] = V[ind] < 0 ? " - " : " + " 
             term_str[2*ind  ] = "$pre$x" * (x == y ? sq : "$times$y")
@@ -359,10 +388,6 @@ end
 # Backwards compatability shim
 quadToStr(q::GenericQuadExpr) = quad_str(REPLMode,q)
 
-
-#########################################################################
-# CONSTRAINTS
-#########################################################################
 #------------------------------------------------------------------------
 ## GenericRangeConstraint
 #------------------------------------------------------------------------

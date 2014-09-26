@@ -15,45 +15,6 @@
 #############################################################################
 #### type MODEL
 
-# checkNameStatus
-# Not exported. Initially variables defined as indexed with @defVar do not
-# have names because generating them is relatively slow compared to just
-# creating the variable. We lazily generate them only when someone requires
-# them. This function checks if we have done that already, and if not,
-# generates them
-function checkNameStatus(m::Model)
-    for i in 1:m.numCols
-        if m.colNames[i] == ""
-            fillVarNames(m)
-            return
-        end
-    end
-end
-
-function fillVarNames(m::Model)
-    for dict in m.dictList
-        fillVarNames(dict)
-    end
-end
-
-function fillVarNames(v::JuMPArray{Variable})
-    idxsets = v.indexsets
-    lengths = map(length, idxsets)
-    N = length(idxsets)
-    name = v.name
-    cprod = cumprod([lengths...])
-    for (ind,var) in enumerate(v.innerArray)
-        setName(var,string("$name[$(idxsets[1][mod1(ind,lengths[1])])", [ ",$(idxsets[i][int(ceil(mod1(ind,cprod[i]) / cprod[i-1]))])" for i=2:N ]..., "]"))
-    end
-end
-
-function fillVarNames(v::JuMPDict{Variable})
-    name = v.name
-    for tmp in v
-        ind, var = tmp[1:end-1], tmp[end]
-        setName(var,string("$name[", join([string(i) for i in ind],","), "]"))
-    end
-end
 
 # Default REPL
 function Base.show(io::IO, m::Model)
