@@ -25,7 +25,7 @@ export
     getNumVars, getNumConstraints, getObjectiveValue, getObjective,
     getObjectiveSense, setObjectiveSense, writeLP, writeMPS, setObjective,
     addConstraint, addSOS1, addSOS2, solve,
-    getInternalModel, setPresolve, buildInternalModel,
+    getInternalModel, buildInternalModel,
     # Variable
     setName, getName, setLower, setUpper, getLower, getUpper,
     getValue, setValue, getDual,
@@ -77,8 +77,6 @@ type Model
     # JuMPDict list
     dictList::Vector
 
-    # presolve callback function
-    presolve
     # storage vector for merging duplicate terms
     indexedVector::IndexedVector{Float64}
 
@@ -103,7 +101,7 @@ function Model(;solver=UnsetSolver())
     Model(QuadExpr(),:Min,LinearConstraint[], QuadConstraint[],SOSConstraint[],
           0,String[],Float64[],Float64[],Symbol[],
           0,Float64[],Float64[],Float64[],nothing,solver,
-          false,nothing,nothing,nothing,JuMPContainer[],nothing,
+          false,nothing,nothing,nothing,JuMPContainer[],
           IndexedVector(Float64,0),nothing,Dict{Symbol,Any}())
 end
 
@@ -157,8 +155,6 @@ function Base.copy(source::Model)
 end
 
 getInternalModel(m::Model) = m.internalModel
-
-setPresolve(m::Model, f::Function) = (m.presolve = f)
 
 ###############################################################################
 # Variable class
