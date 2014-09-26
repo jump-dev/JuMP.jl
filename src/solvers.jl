@@ -214,7 +214,6 @@ function solveLP(m::Model; load_model_only=false, suppress_warnings=false)
     end 
 
     if !load_model_only
-        (m.presolve != nothing) && m.presolve(m)
         MathProgBase.optimize!(m.internalModel)
         stat = MathProgBase.status(m.internalModel)
     else
@@ -328,7 +327,6 @@ function solveMIP(m::Model; load_model_only=false, suppress_warnings=false)
     end
 
     if !load_model_only
-        (m.presolve != nothing) && m.presolve(m)
         MathProgBase.optimize!(m.internalModel)
         stat = MathProgBase.status(m.internalModel)
     else
