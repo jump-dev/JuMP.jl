@@ -438,6 +438,8 @@ function isdependent(idxvars,idxset,i)
 end
 
 macro defVar(args...)
+    length(args) <= 1 &&
+        error("in @defVar ($var): expected model as first argument, then variable information.")
     ######################################################################
     # # TODO: remove commented lines below when x[i,j;k,l] is valid syntax
     # if isa(args[1], Expr) && args[1].head == :parameters
