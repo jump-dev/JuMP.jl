@@ -39,7 +39,7 @@ function io_test(mode, obj, exp_str; repl=:both)
         show(buf_show, obj)
         seek(buf_show, 0)
         show_str = readall(buf_show)
-        expt_str = "\""*exp_str*"\""
+        expt_str = exp_str
         if !(show_str == expt_str) && repl != :print
             println(show_str)
             println(expt_str)
@@ -225,7 +225,7 @@ w: 3 dimensions, 18 entries:
    [10,Apple,1] = 10.0
  [10,Banana,-1] = -10.0
   [10,Banana,0] = 0.0
-  [10,Banana,1] = 10.0""", repl=:print)
+  [10,Banana,1] = 10.0""")
     else
         io_test(REPLMode, getValue(w), """
 w: 3 dimensions, 18 entries:
@@ -246,7 +246,7 @@ w: 3 dimensions, 18 entries:
   [10,Banana,1] = 10.0
       [10,5,-1] = -10.0
        [10,5,0] = 0.0
-       [10,5,1] = 10.0""", repl=:print)
+       [10,5,1] = 10.0""")
     end
 
     io_test(REPLMode, getValue(x), """
@@ -289,7 +289,7 @@ y: 2 dimensions, 6 entries:
   [9,11] = 99.0
  [10,10] = 100.0
  [10,11] = 110.0
- [11,11] = 121.0""", repl=:print)
+ [11,11] = 121.0""")
     
     # Deal with hashing variations
     first_hash  = hash(:a) < hash('b') ? "a" : "b"
@@ -301,7 +301,7 @@ z: 2 dimensions, 6 entries:
  [$first_hash,3] = 3.0
  [$second_hash,1] = 1.0
  [$second_hash,2] = 2.0
- [$second_hash,3] = 3.0""", repl=:print)
+ [$second_hash,3] = 3.0""")
 
 end
 
@@ -427,6 +427,14 @@ function test_print_expr()
     @addConstraint(mod, x[1] + 2*y[2,3] <= 3)
     io_test(REPLMode, mod.linconstr[end], "x[1] + 2 y[2,3] $le 3")
     io_test(IJuliaMode, mod.linconstr[end], "x_{1} + 2 y_{2,3} \\leq 3")
+
+     addConstraint(mod, (x[1]+x[2])*(y[2,2]+3.0) <= 1)
+    io_test(REPLMode, mod.quadconstr[end], "x[1]*y[2,2] + x[2]*y[2,2] + 3 x[1] - 1 $le 0")
+    io_test(IJuliaMode, mod.quadconstr[end], "x_{1}\\timesy_{2,2} + x_{2}\\timesy_{2,2} + 3 x_{1} - 1 \\leq 0")
+
+     addConstraint(mod, (y[2,2]+3.0)*(x[1]+x[2]) <= 1)
+    io_test(REPLMode, mod.quadconstr[end], "x[1]*y[2,2] + x[2]*y[2,2] + 3 x[1] + 3 x[2] - 1 $le 0")
+    io_test(IJuliaMode, mod.quadconstr[end], "x_{1}\\timesy_{2,2} + x_{2}\\timesy_{2,2} + 3 x_{1} + 3 x_{2} - 1 \\leq 0")
 end
 
 function test_print_Variable()

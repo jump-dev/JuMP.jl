@@ -212,7 +212,7 @@ model_str(::Type{IJuliaMode}, m::Model; mathmode=true) =
 ## Variable
 #------------------------------------------------------------------------
 Base.print(io::IO, v::Variable) = print(io, var_str(REPLMode,v))
-Base.show( io::IO, v::Variable) = show( io, var_str(REPLMode,v))
+Base.show( io::IO, v::Variable) = print(io, var_str(REPLMode,v))
 Base.writemime(io::IO, ::MIME"text/latex", v::Variable) = 
     print(io, var_str(IJuliaMode,v,mathmode=false))
 function var_str(mode, m::Model, col::Int, ind_open, ind_close)
@@ -269,7 +269,7 @@ var_str(::Type{IJuliaMode}, m::Model, col::Int; mathmode=true) =
 ## JuMPContainer{Variable}
 #------------------------------------------------------------------------
 Base.print(io::IO, j::JuMPContainer{Variable}) = print(io, cont_str(REPLMode,j))
-Base.show( io::IO, j::JuMPContainer{Variable}) = show( io, cont_str(REPLMode,j))
+Base.show( io::IO, j::JuMPContainer{Variable}) = print(io, cont_str(REPLMode,j))
 Base.writemime(io::IO, ::MIME"text/latex", j::JuMPContainer{Variable}) =
     print(io, cont_str(IJuliaMode,j,mathmode=false))
 # Generic string converter, called by mode-specific handlers
@@ -381,7 +381,7 @@ cont_str(::Type{IJuliaMode}, j::JuMPContainer{Variable}; mathmode=true) =
 ## JuMPContainer{Float64}
 #------------------------------------------------------------------------
 Base.print(io::IO, j::JuMPContainer{Float64}) = print(io, val_str(REPLMode,j))
-Base.show( io::IO, j::JuMPContainer{Float64}) = show( io, val_str(REPLMode,j))
+Base.show( io::IO, j::JuMPContainer{Float64}) = print(io, val_str(REPLMode,j))
 Base.writemime(io::IO, ::MIME"text/latex", j::JuMPContainer{Float64}) =
     print(io, val_str(IJuliaMode,j))
 function val_str(mode, j::JuMPArray{Float64})
@@ -470,7 +470,7 @@ end
 ## AffExpr  (not GenericAffExpr)
 #------------------------------------------------------------------------
 Base.print(io::IO, a::AffExpr) = print(io, aff_str(REPLMode,a))
-Base.show( io::IO, a::AffExpr) = show( io, aff_str(REPLMode,a))
+Base.show( io::IO, a::AffExpr) = print(io, aff_str(REPLMode,a))
 Base.writemime(io::IO, ::MIME"text/latex", a::AffExpr) =
     print(io, math(aff_str(IJuliaMode,a),false))
 # Generic string converter, called by mode-specific handlers
@@ -536,7 +536,7 @@ affToStr(a::AffExpr) = aff_str(REPLMode,a)
 ## GenericQuadExpr
 #------------------------------------------------------------------------
 Base.print(io::IO, q::GenericQuadExpr) = print(io, quad_str(REPLMode,q))
-Base.show( io::IO, q::GenericQuadExpr) = show( io, quad_str(REPLMode,q))
+Base.show( io::IO, q::GenericQuadExpr) = print(io, quad_str(REPLMode,q))
 Base.writemime(io::IO, ::MIME"text/latex", q::GenericQuadExpr) =
     print(io, quad_str(IJuliaMode,q,mathmode=false))
 # Generic string converter, called by mode-specific handlers
@@ -598,7 +598,7 @@ quad_str(::Type{IJuliaMode}, q::GenericQuadExpr; mathmode=true) =
 ## GenericRangeConstraint
 #------------------------------------------------------------------------
 Base.print(io::IO, c::GenericRangeConstraint) = print(io, con_str(REPLMode,c))
-Base.show( io::IO, c::GenericRangeConstraint) = show( io, con_str(REPLMode,c))
+Base.show( io::IO, c::GenericRangeConstraint) = print(io, con_str(REPLMode,c))
 Base.writemime(io::IO, ::MIME"text/latex", c::GenericRangeConstraint) =
     print(io, con_str(IJuliaMode,c,mathmode=false))
 # Generic string converter, called by mode-specific handlers
@@ -626,7 +626,7 @@ con_str(::Type{IJuliaMode}, c::GenericRangeConstraint; mathmode=true) =
 ## QuadConstraint
 #------------------------------------------------------------------------
 Base.print(io::IO, c::QuadConstraint) = print(io, con_str(REPLMode,c))
-Base.show( io::IO, c::QuadConstraint) = show( io, con_str(REPLMode,c))
+Base.show( io::IO, c::QuadConstraint) = print(io, con_str(REPLMode,c))
 Base.writemime(io::IO, ::MIME"text/latex", c::QuadConstraint) =
     print(io, con_str(IJuliaMode,c,mathmode=false))
 # Generic string converter, called by mode-specific handlers
@@ -648,7 +648,7 @@ con_str(::Type{IJuliaMode}, c::QuadConstraint; mathmode=true) =
 ## SOSConstraint
 #------------------------------------------------------------------------
 Base.print(io::IO, c::SOSConstraint) = print(io, con_str(REPLMode,c))
-Base.show( io::IO, c::SOSConstraint) = show( io, con_str(REPLMode,c))
+Base.show( io::IO, c::SOSConstraint) = print(io, con_str(REPLMode,c))
 Base.writemime(io::IO, ::MIME"text/latex", c::SOSConstraint) =
     print(io, con_str(IJuliaMode,c,mathmode=false))
 # Generic string converter, called by mode-specific handlers
@@ -670,9 +670,9 @@ con_str(::Type{IJuliaMode}, c::SOSConstraint; mathmode=true) =
 Base.print(io::IO, c::ConstraintRef{LinearConstraint}) = print(io, con_str(REPLMode,c.m.linconstr[c.idx]))
 Base.print(io::IO, c::ConstraintRef{QuadConstraint})   = print(io, con_str(REPLMode,c.m.quadconstr[c.idx]))
 Base.print(io::IO, c::ConstraintRef{SOSConstraint})    = print(io, con_str(REPLMode,c.m.sosconstr[c.idx]))
-Base.show( io::IO, c::ConstraintRef{LinearConstraint}) = show( io, con_str(REPLMode,c.m.linconstr[c.idx]))
-Base.show( io::IO, c::ConstraintRef{QuadConstraint})   = show( io, con_str(REPLMode,c.m.quadconstr[c.idx]))
-Base.show( io::IO, c::ConstraintRef{SOSConstraint})    = show( io, con_str(REPLMode,c.m.sosconstr[c.idx]))
+Base.show( io::IO, c::ConstraintRef{LinearConstraint}) = print(io, con_str(REPLMode,c.m.linconstr[c.idx]))
+Base.show( io::IO, c::ConstraintRef{QuadConstraint})   = print(io, con_str(REPLMode,c.m.quadconstr[c.idx]))
+Base.show( io::IO, c::ConstraintRef{SOSConstraint})    = print(io, con_str(REPLMode,c.m.sosconstr[c.idx]))
 Base.writemime(io::IO, ::MIME"text/latex", c::ConstraintRef{LinearConstraint}) =
     print(io, con_str(IJuliaMode,c.m.linconstr[c.idx],mathmode=false))
 Base.writemime(io::IO, ::MIME"text/latex", c::ConstraintRef{QuadConstraint}) =
