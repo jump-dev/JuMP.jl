@@ -6,8 +6,12 @@
 # test/print.jl
 # Testing for all pretty-printing-related functionality
 # Defines:
-#  - test_print_JuMPContainer()
-#  - 
+#  - test_print_JuMPContainerVar()
+#  - test_print_JuMPContainerVal()
+#  - test_print_SOS()
+#  - test_print_Model()
+#  - test_print_expr()
+#  - test_print_Variable()
 #############################################################################
 using JuMP
 using Base.Test
@@ -37,6 +41,8 @@ function io_test(mode, obj, exp_str; repl=:both)
         show_str = readall(buf_show)
         expt_str = "\""*exp_str*"\""
         if !(show_str == expt_str) && repl != :print
+            println(show_str)
+            println(expt_str)
             @show show_str
             @show expt_str
             THROW_ERROR && error()
@@ -56,8 +62,8 @@ function io_test(mode, obj, exp_str; repl=:both)
 end
 
 
-function test_print_JuMPContainer()
-    println("  test_print_JuMPContainer")
+function test_print_JuMPContainerVar()
+    println("  test_print_JuMPContainerVar")
     le, ge = JuMP.repl_leq, JuMP.repl_geq
     m = Model()
     
@@ -186,6 +192,72 @@ function test_print_JuMPContainer()
     io_test(REPLMode, empty_free, "empty_free (no indices)")
     io_test(IJuliaMode, empty_free, "empty_free (no indices)")
 end
+
+function test_print_JuMPContainerVal()
+    # The same output for REPL and IJulia, so only testing one
+    println("  test_print_JuMPContainerVal")
+
+    mod = Model()
+    @defVar(mod, i*j*k <= x[i=9:11,j=99:101,k=3:4] <= i*j*k)
+    @defVar(mod, i*j <= y[i=9:11,j=i:11] <= i*j)
+    @defVar(mod, j <= z[i=[:a,"b",'c'],j=1:3] <= j)
+    solve(mod)
+
+    io_test(REPLMode, getValue(x), """
+[ 9,:,:]
+  [ 9, 99,:]
+    [ 9, 99,3] = 2673.0
+    [ 9, 99,4] = 3564.0
+  [ 9,100,:]
+    [ 9,100,3] = 2700.0
+    [ 9,100,4] = 3600.0
+  [ 9,101,:]
+    [ 9,101,3] = 2727.0
+    [ 9,101,4] = 3636.0
+[10,:,:]
+  [10, 99,:]
+    [10, 99,3] = 2970.0
+    [10, 99,4] = 3960.0
+  [10,100,:]
+    [10,100,3] = 3000.0
+    [10,100,4] = 4000.0
+  [10,101,:]
+    [10,101,3] = 3030.0
+    [10,101,4] = 4040.0
+[11,:,:]
+  [11, 99,:]
+    [11, 99,3] = 3267.0
+    [11, 99,4] = 4356.0
+  [11,100,:]
+    [11,100,3] = 3300.0
+    [11,100,4] = 4400.0
+  [11,101,:]
+    [11,101,3] = 3333.0
+    [11,101,4] = 4444.0
+""", repl=:print)
+
+    io_test(REPLMode, getValue(y), """
+y: 2 dimensions, 6 entries:
+   [9,9] = 81.0
+  [9,10] = 90.0
+  [9,11] = 99.0
+ [10,10] = 100.0
+ [10,11] = 110.0
+ [11,11] = 121.0""", repl=:print)
+
+    io_test(REPLMode, getValue(z), """
+z: 2 dimensions, 9 entries:
+ [a,1] = 1.0
+ [a,2] = 2.0
+ [a,3] = 3.0
+ [b,1] = 1.0
+ [b,2] = 2.0
+ [b,3] = 3.0
+ [c,1] = 1.0
+ [c,2] = 2.0
+ [c,3] = 3.0""", repl=:print)
+end
+
 
 function test_print_SOS()
     println("  test_print_SOS")
@@ -355,8 +427,9 @@ function test_print_Variable()
     io_test(IJuliaMode, a_v, "v_{4,5,2,3,2,2,4}")
 end
 
-test_print_JuMPContainer()
+test_print_expr()
+test_print_JuMPContainerVar()
+test_print_JuMPContainerVal()
 test_print_SOS()
 test_print_Model()
-test_print_expr()
 test_print_Variable()

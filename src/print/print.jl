@@ -268,6 +268,94 @@ function parse_conditions(expr::Expr)
 end=#
 
 #------------------------------------------------------------------------
+## JuMPContainer{Float64}
+#------------------------------------------------------------------------
+Base.print(io::IO, j::JuMPContainer{Float64}) = print(io, val_str(REPLMode,j))
+Base.show( io::IO, j::JuMPContainer{Float64}) = show( io, val_str(REPLMode,j))
+Base.writemime(io::IO, ::MIME"text/latex", j::JuMPContainer{Float64}) =
+    print(io, val_str(IJuliaMode,j))
+function val_str(mode, j::JuMPArray{Float64})
+    dims = length(j.indexsets)
+    out_str = ""
+    function val_str_rec(depth, parent_index::Vector{Any}, parent_str::String)
+        # Turn index set into strings
+        indexset = j.indexsets[depth]
+        index_strs = map(string, indexset)
+
+        # Determine longest index so we can align columns
+        max_index_len = 0
+        for index_str in index_strs
+            max_index_len = max(max_index_len, strwidth(index_str))
+        end
+
+        # If have recursed, we need to prepend the parent's index strings
+        # accumulated, as well as white space so the alignment works.
+        for i = 1:length(index_strs)
+            index_strs[i] = parent_str * lpad(index_strs[i],max_index_len," ")
+        end
+
+        # Create a string for the number of spaces we need to indent
+        indent = " "^(2*(depth-1))
+
+        # Determine the need to recurse
+        if depth == dims
+            # Deepest level
+            for i = 1:length(indexset)
+                value = length(parent_index) == 0 ? 
+                            j[indexset[i]] :
+                            j[parent_index...,indexset[i]]
+                out_str *= indent * "[" * index_strs[i] * "] = $value\n"
+            end
+        else
+            # At least one more layer to go
+            for i = 1:length(indexset)
+                index = indexset[i]
+                # Print the ":" version of indices we will recurse over
+                out_str *= indent * "[" * index_strs[i] * ",:"^(dims-depth) * "]\n"
+                val_str_rec(depth+1,
+                     length(parent_index) == 0 ? {index} : {parent_index...,index},
+                    index_strs[i] * ",")
+            end
+        end
+    end
+    val_str_rec(1,{},"")
+    return out_str
+end
+# support types that don't have built-in comparison
+function _isless(t1::Tuple, t2::Tuple)
+    n1, n2 = length(t1), length(t2)
+    for i = 1:min(n1, n2)
+        a, b = t1[i], t2[i]
+        if !isequal(a, b)
+            return applicable(isless,a,b) ? isless(a, b) : isless(hash(a),hash(b))
+        end
+    end
+    return n1 < n2
+end
+function val_str(mode, dict::JuMPDict{Float64})
+    nelem = length(dict.tupledict)
+    out_str  = "$(dict.name): $(length(dict.indexsets)) dimensions, $nelem "
+    out_str *= nelem == 1 ? "entry" : "entries"
+    isempty(dict) && return out_str
+    out_str *= ":"
+
+    sortedkeys = sort(collect(keys(dict.tupledict)), lt = _isless)
+
+    key_strs = Array(String, length(dict))
+    for (i, key) in enumerate(sortedkeys)
+        key_strs[i] = join(map(string,key),",")
+    end
+    max_key_len = maximum(map(length,key_strs))
+
+    for (i,key) in enumerate(sortedkeys)
+        val = dict[key...]
+        out_str *= "\n" * lpad("[$(key_strs[i])]", max_key_len+3)
+        out_str *= " = $val"
+    end
+    return out_str
+end
+
+#------------------------------------------------------------------------
 ## AffExpr  (not GenericAffExpr)
 #------------------------------------------------------------------------
 Base.print(io::IO, a::AffExpr) = print(io, aff_str(REPLMode,a))
@@ -403,7 +491,7 @@ function con_str(mode, c::GenericRangeConstraint, leq, eq, geq)
         out_str = "$(str_round(c.lb)) $leq $a $leq $(str_round(c.ub))"
     else
         rel = s == :<= ? leq : (s == :>= ? geq : eq)
-        out_str = "$a $rel $(str_round(rhs(c)))"
+        out_str = string(a," ",rel," ",str_round(rhs(c)))
     end
     out_str
 end
