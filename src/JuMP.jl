@@ -612,9 +612,8 @@ include("solvers.jl")
 include("macros.jl")
 # Callbacks - lazy, cuts, ...
 include("callbacks.jl")
-# Pretty-printing, including IJulia
+# Pretty-printing of JuMP-defined types.
 include("print.jl")
-include("print/print.jl")
 # Nonlinear-specific code
 include("nlp.jl")
 
