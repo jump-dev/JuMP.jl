@@ -1,5 +1,13 @@
 # model.jl
 # Test coverage for Model - writing it to files, and solving
+using JuMP
+using Base.Test
+
+# To ensure the tests work on Windows and Linux/OSX, we need
+# to use the correct comparison operators
+const leq = JuMP.repl_leq
+const geq = JuMP.repl_geq
+const  eq = JuMP.repl_eq
 
 modPath = joinpath(Pkg.dir("JuMP"),"test","mod")
 
@@ -221,32 +229,6 @@ let
 end  
 
 #####################################################################
-# Test model printing
-let
-    modC = Model()
-    @defVar(modC, a>=1)
-    @defVar(modC, b<=1)
-    @defVar(modC, -1<=c<=1)
-    @defVar(modC, a1>=1,Int)
-    @defVar(modC, b1<=1,Int)
-    @defVar(modC, -1<=c1<=1,Int)
-    @defVar(modC, x, Bin)
-    @defVar(modC, y)
-    @defVar(modC, z, Int)
-    @setObjective(modC, Max, a - b + 2a1 - 10x)
-    @addConstraint(modC, a + b - 10c - 2x + c1 <= 1)
-
-    str = string(modC)
-    @test str == "Max a - b + 2 a1 - 10 x\nSubject to \na + b - 10 c - 2 x + c1 <= 1\na ≥ 1\nb ≤ 1\n-1 ≤ c ≤ 1\na1 ≥ 1, integer\nb1 ≤ 1, integer\n-1 ≤ c1 ≤ 1, integer\nx, binary\ny free\nz free, integer\n"
-
-    # Issue 265
-    modD = Model()
-    @defVar(modD, w[1:2, 2:5:12])
-    str = string(modD)
-    @test str == "Min 0\nSubject to \nw[i,j], for all i in {1..2}, j in {2,7,12} free\n"
-end
-
-#####################################################################
 # Test variable/model "hygiene"
 let 
     modA = Model()
@@ -259,20 +241,6 @@ let
     addConstraint(modB, x*y >= 1)
     @test_throws ErrorException solve(modB)
 end
-
-######################################################################
-# Test nonlinear printing
-let
-    mod = Model()
-    @defVar(mod, x[1:5])
-    @addNLConstraint(mod, x[1]*x[2] == 1)
-    @addNLConstraint(mod, x[3]*x[4] == 1)
-    @addNLConstraint(mod, x[5]*x[1] == 1)
-    @setNLObjective(mod, Min, x[1]*x[3])
-    str = string(mod)
-    @test str == "Min (nonlinear expression)\nSubject to \n3 nonlinear constraints\nx[i], for all i in {1..5} free\n"
-end
-
 
 ######################################################################
 # Test NaN checking

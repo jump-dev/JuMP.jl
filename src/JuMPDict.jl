@@ -8,7 +8,13 @@ type IndexPair
     idxvar
     idxset
 end
-
+#= Generated on the fly
+type JuMPArray{T}
+    innerArray::Array{T,N}
+    name::String
+    indexsets
+end
+=#
 type JuMPDict{T,N} <: JuMPContainer{T}
     tupledict::Dict{NTuple{N},T}
     name::Symbol
@@ -16,6 +22,7 @@ type JuMPDict{T,N} <: JuMPContainer{T}
     indexexprs::Vector{IndexPair}
     condition
 end
+
 
 #JuMPDict{T,N}(name::String) =
 #    JuMPDict{T,N}(Dict{NTuple{N},T}(), name)

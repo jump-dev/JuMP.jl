@@ -1,3 +1,6 @@
+using JuMP
+using Base.Test
+
 let
     # Intially
     # max 1.1x + 1.0y
