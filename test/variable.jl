@@ -28,19 +28,6 @@ setUpper(x, 3)
 @test getLower(y) == 0
 @test getUpper(y) == 1
 
-# Test printing of getValue(JuMPDict{Float64})
-valmod = Model()
-@defVar(valmod, i*j <= foobar[i=9:10, [:Apple,5,:Banana], j=-1:+1] <= i*j)
-solve(valmod)
-buf = IOBuffer()
-println(buf, getValue(foobar))
-result = takebuf_string(buf)
-#if hash(5) < hash(:Apple) # hashing is different on some platforms, affects output order
-#    @test result == "3-dimensional JuMPDict with 18 entries:\n foobar[9,5,-1]       = -9.0\n foobar[9,5,0]        = 0.0\n foobar[9,5,1]        = 9.0\n foobar[9,Apple,-1]   = -9.0\n foobar[9,Apple,0]    = 0.0\n foobar[9,Apple,1]    = 9.0\n foobar[9,Banana,-1]  = -9.0\n foobar[9,Banana,0]   = 0.0\n foobar[9,Banana,1]   = 9.0\n foobar[10,5,-1]      = -10.0\n foobar[10,5,0]       = 0.0\n foobar[10,5,1]       = 10.0\n foobar[10,Apple,-1]  = -10.0\n foobar[10,Apple,0]   = 0.0\n foobar[10,Apple,1]   = 10.0\n foobar[10,Banana,-1] = -10.0\n foobar[10,Banana,0]  = 0.0\n foobar[10,Banana,1]  = 10.0\n"
-#else
-#    @test result == "3-dimensional JuMPDict with 18 entries:\n foobar[9,Apple,-1]   = -9.0\n foobar[9,Apple,0]    = 0.0\n foobar[9,Apple,1]    = 9.0\n foobar[9,Banana,-1]  = -9.0\n foobar[9,Banana,0]   = 0.0\n foobar[9,Banana,1]   = 9.0\n foobar[9,5,-1]       = -9.0\n foobar[9,5,0]        = 0.0\n foobar[9,5,1]        = 9.0\n foobar[10,Apple,-1]  = -10.0\n foobar[10,Apple,0]   = 0.0\n foobar[10,Apple,1]   = 10.0\n foobar[10,Banana,-1] = -10.0\n foobar[10,Banana,0]  = 0.0\n foobar[10,Banana,1]  = 10.0\n foobar[10,5,-1]      = -10.0\n foobar[10,5,0]       = 0.0\n foobar[10,5,1]       = 10.0\n"
-#end
-
 # Repeated elements in index set (issue #199)
 repeatmod = Model()
 s = [:x,:x,:y]

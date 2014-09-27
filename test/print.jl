@@ -198,10 +198,56 @@ function test_print_JuMPContainerVal()
     println("  test_print_JuMPContainerVal")
 
     mod = Model()
+    @defVar(mod, i*j <= w[i=9:10, [:Apple,5,:Banana], j=-1:+1] <= i*j)
     @defVar(mod, i*j*k <= x[i=9:11,j=99:101,k=3:4] <= i*j*k)
     @defVar(mod, i*j <= y[i=9:11,j=i:11] <= i*j)
-    @defVar(mod, j <= z[i=[:a,"b",'c'],j=1:3] <= j)
+    @defVar(mod, j <= z[i=[:a,'b'],j=1:3] <= j)
     solve(mod)
+
+    # Deal with hashing variations
+    if hash(5) < hash(:Apple)
+        io_test(REPLMode, getValue(w), """
+w: 3 dimensions, 18 entries:
+       [9,5,-1] = -9.0
+        [9,5,0] = 0.0
+        [9,5,1] = 9.0
+   [9,Apple,-1] = -9.0
+    [9,Apple,0] = 0.0
+    [9,Apple,1] = 9.0
+  [9,Banana,-1] = -9.0
+   [9,Banana,0] = 0.0
+   [9,Banana,1] = 9.0
+      [10,5,-1] = -10.0
+       [10,5,0] = 0.0
+       [10,5,1] = 10.0
+  [10,Apple,-1] = -10.0
+   [10,Apple,0] = 0.0
+   [10,Apple,1] = 10.0
+ [10,Banana,-1] = -10.0
+  [10,Banana,0] = 0.0
+  [10,Banana,1] = 10.0""", repl=:print)
+    else
+        io_test(REPLMode, getValue(w), """
+w: 3 dimensions, 18 entries:
+   [9,Apple,-1] = -9.0
+    [9,Apple,0] = 0.0
+    [9,Apple,1] = 9.0
+  [9,Banana,-1] = -9.0
+   [9,Banana,0] = 0.0
+   [9,Banana,1] = 9.0
+       [9,5,-1] = -9.0
+        [9,5,0] = 0.0
+        [9,5,1] = 9.0
+  [10,Apple,-1] = -10.0
+   [10,Apple,0] = 0.0
+   [10,Apple,1] = 10.0
+ [10,Banana,-1] = -10.0
+  [10,Banana,0] = 0.0
+  [10,Banana,1] = 10.0
+      [10,5,-1] = -10.0
+       [10,5,0] = 0.0
+       [10,5,1] = 10.0""", repl=:print)
+    end
 
     io_test(REPLMode, getValue(x), """
 [ 9,:,:]
@@ -244,18 +290,19 @@ y: 2 dimensions, 6 entries:
  [10,10] = 100.0
  [10,11] = 110.0
  [11,11] = 121.0""", repl=:print)
-
+    
+    # Deal with hashing variations
+    first_hash  = hash(:a) < hash('b') ? "a" : "b"
+    second_hash = first_hash == "a" ? "b" : "a"
     io_test(REPLMode, getValue(z), """
-z: 2 dimensions, 9 entries:
- [a,1] = 1.0
- [a,2] = 2.0
- [a,3] = 3.0
- [b,1] = 1.0
- [b,2] = 2.0
- [b,3] = 3.0
- [c,1] = 1.0
- [c,2] = 2.0
- [c,3] = 3.0""", repl=:print)
+z: 2 dimensions, 6 entries:
+ [$first_hash,1] = 1.0
+ [$first_hash,2] = 2.0
+ [$first_hash,3] = 3.0
+ [$second_hash,1] = 1.0
+ [$second_hash,2] = 2.0
+ [$second_hash,3] = 3.0""", repl=:print)
+
 end
 
 
