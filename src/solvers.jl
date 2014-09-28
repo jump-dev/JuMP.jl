@@ -137,11 +137,12 @@ function prepConstrMatrix(m::Model)
     # First we build it row-wise, then use the efficient transpose
     # Theory is, this is faster than us trying to do it ourselves
     # Intialize storage
-    numRows = length(m.linconstr)
+    linconstr = m.linconstr::Vector{LinearConstraint}
+    numRows = length(linconstr)
     rowptr = Array(Int,numRows+1)
     nnz = 0
     for c in 1:numRows
-        nnz += length(m.linconstr[c].terms.coeffs)
+        nnz += length(linconstr[c].terms.coeffs)
     end
     colval = Array(Int,nnz)
     rownzval = Array(Float64,nnz)
@@ -153,9 +154,9 @@ function prepConstrMatrix(m::Model)
     tmpnzidx = tmprow.nzidx
     for c in 1:numRows
         rowptr[c] = nnz + 1
-        assert_isfinite(m.linconstr[c].terms)
-        coeffs = m.linconstr[c].terms.coeffs
-        vars = m.linconstr[c].terms.vars
+        assert_isfinite(linconstr[c].terms)
+        coeffs = linconstr[c].terms.coeffs
+        vars = linconstr[c].terms.vars
         # collect duplicates
         for ind in 1:length(coeffs)
             if !is(vars[ind].m, m)
