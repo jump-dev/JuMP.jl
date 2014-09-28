@@ -451,15 +451,27 @@ function val_str(mode, dict::JuMPDict{Float64})
 
     sortedkeys = sort(collect(keys(dict.tupledict)), lt = _isless)
 
-    key_strs = Array(String, length(dict))
+    ndim = length(first(keys(dict.tupledict)))
+
+    key_strs = Array(String, length(dict), ndim)
     for (i, key) in enumerate(sortedkeys)
-        key_strs[i] = join(map(string,key),",")
+        for j in 1:ndim
+            key_strs[i,j] = string(key[j])
+        end
     end
-    max_key_len = maximum(map(length,key_strs))
+    max_dim_lens = map(1:ndim) do i
+        maximum(map(length,key_strs[:,i]))
+    end
+    key_str = map(1:length(dict)) do i
+        join(map(1:ndim) do j
+            lpad(key_strs[i,j], max_dim_lens[j])
+        end, ",")
+    end
+    max_key_len = maximum(map(length,key_str))
 
     for (i,key) in enumerate(sortedkeys)
         val = dict[key...]
-        out_str *= "\n" * lpad("[$(key_strs[i])]", max_key_len+3)
+        out_str *= "\n" * lpad("[$(key_str[i])]", max_key_len+3)
         out_str *= " = $val"
     end
     return out_str

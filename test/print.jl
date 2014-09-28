@@ -208,45 +208,45 @@ function test_print_JuMPContainerVal()
     if hash(5) < hash(:Apple)
         io_test(REPLMode, getValue(w), """
 w: 3 dimensions, 18 entries:
-       [9,5,-1] = -9.0
-        [9,5,0] = 0.0
-        [9,5,1] = 9.0
-   [9,Apple,-1] = -9.0
-    [9,Apple,0] = 0.0
-    [9,Apple,1] = 9.0
-  [9,Banana,-1] = -9.0
-   [9,Banana,0] = 0.0
-   [9,Banana,1] = 9.0
-      [10,5,-1] = -10.0
-       [10,5,0] = 0.0
-       [10,5,1] = 10.0
-  [10,Apple,-1] = -10.0
-   [10,Apple,0] = 0.0
-   [10,Apple,1] = 10.0
+ [ 9,     5,-1] = -9.0
+ [ 9,     5, 0] = 0.0
+ [ 9,     5, 1] = 9.0
+ [ 9, Apple,-1] = -9.0
+ [ 9, Apple, 0] = 0.0
+ [ 9, Apple, 1] = 9.0
+ [ 9,Banana,-1] = -9.0
+ [ 9,Banana, 0] = 0.0
+ [ 9,Banana, 1] = 9.0
+ [10,     5,-1] = -10.0
+ [10,     5, 0] = 0.0
+ [10,     5, 1] = 10.0
+ [10, Apple,-1] = -10.0
+ [10, Apple, 0] = 0.0
+ [10, Apple, 1] = 10.0
  [10,Banana,-1] = -10.0
-  [10,Banana,0] = 0.0
-  [10,Banana,1] = 10.0""")
+ [10,Banana, 0] = 0.0
+ [10,Banana, 1] = 10.0""", repl=:print)
     else
         io_test(REPLMode, getValue(w), """
 w: 3 dimensions, 18 entries:
-   [9,Apple,-1] = -9.0
-    [9,Apple,0] = 0.0
-    [9,Apple,1] = 9.0
-  [9,Banana,-1] = -9.0
-   [9,Banana,0] = 0.0
-   [9,Banana,1] = 9.0
-       [9,5,-1] = -9.0
-        [9,5,0] = 0.0
-        [9,5,1] = 9.0
-  [10,Apple,-1] = -10.0
-   [10,Apple,0] = 0.0
-   [10,Apple,1] = 10.0
+ [ 9, Apple,-1] = -9.0
+ [ 9, Apple, 0] = 0.0
+ [ 9, Apple, 1] = 9.0
+ [ 9,Banana,-1] = -9.0
+ [ 9,Banana, 0] = 0.0
+ [ 9,Banana, 1] = 9.0
+ [ 9,     5,-1] = -9.0
+ [ 9,     5, 0] = 0.0
+ [ 9,     5, 1] = 9.0
+ [10, Apple,-1] = -10.0
+ [10, Apple, 0] = 0.0
+ [10, Apple, 1] = 10.0
  [10,Banana,-1] = -10.0
-  [10,Banana,0] = 0.0
-  [10,Banana,1] = 10.0
-      [10,5,-1] = -10.0
-       [10,5,0] = 0.0
-       [10,5,1] = 10.0""")
+ [10,Banana, 0] = 0.0
+ [10,Banana, 1] = 10.0
+ [10,     5,-1] = -10.0
+ [10,     5, 0] = 0.0
+ [10,     5, 1] = 10.0""", repl=:print)
     end
 
     io_test(REPLMode, getValue(x), """
@@ -284,9 +284,9 @@ w: 3 dimensions, 18 entries:
 
     io_test(REPLMode, getValue(y), """
 y: 2 dimensions, 6 entries:
-   [9,9] = 81.0
-  [9,10] = 90.0
-  [9,11] = 99.0
+ [ 9, 9] = 81.0
+ [ 9,10] = 90.0
+ [ 9,11] = 99.0
  [10,10] = 100.0
  [10,11] = 110.0
  [11,11] = 121.0""")
