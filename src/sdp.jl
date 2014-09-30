@@ -195,7 +195,7 @@ function MatrixVar(m::Model, sz::(Int,Int), lb, ub, varname::String)
         upper = (ub ==  Inf || ub == 0.0) ? ub : ub[i,j]
         vname = (patt == :col) ? "$varname[$i]" : 
                 (patt == :row) ? "$varname[1,$j]" : "$varname[$i,$j]"
-        Variable(m, lower, upper, JuMP.CONTINUOUS, vname) # TODO: make this more efficient
+        Variable(m, lower, upper, :Cont, vname) # TODO: make this more efficient
     end
     push!(sdp.solverinfo, SolverInfo(rng,true,0.0))
     return MatrixVar(m, length(sdp.sdpvar)+1, sz)

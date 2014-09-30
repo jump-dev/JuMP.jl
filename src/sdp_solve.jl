@@ -334,7 +334,7 @@ end
 
 function solveSDP(m::Model)
     for j = 1:m.numCols
-        m.colCat[j] == INTEGER && error("Integer variables present in SDP problem")
+        m.colCat[j] == :Int && error("Integer variables present in SDP problem")
     end
 
     sdp = m.sdpdata
