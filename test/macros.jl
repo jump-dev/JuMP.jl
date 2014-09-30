@@ -295,3 +295,30 @@ facts("[macros] @defExpr") do
 
     @fact_throws @defExpr(blah[i=1:3], x[i,1]^2)
 end
+
+if VERSION >= v"0.4-"
+    facts("[macros] Conditionals in constraint indexing") do
+        model = Model()
+        @defVar(model, x[1:10])
+        @addConstraint(model, c1[i=1:9;isodd(i)], x[i] + x[i+1] <= 1)
+        @fact length(model.linconstr) => 5
+        @fact conToStr(model.linconstr[1]) => "x[1] + x[2] $leq 1"
+        @fact conToStr(model.linconstr[2]) => "x[3] + x[4] $leq 1"
+        @fact conToStr(model.linconstr[3]) => "x[5] + x[6] $leq 1"
+        @fact conToStr(model.linconstr[4]) => "x[7] + x[8] $leq 1"
+        @fact conToStr(model.linconstr[5]) => "x[9] + x[10] $leq 1"
+    end
+
+    facts("[macros] Test changes in conditional parsing") do
+        ex = :(x[12;3])
+        @fact ex.head => :typed_vcat
+        @fact ex.args => [:x, 12, 3]
+
+        ex = :(x[i=1:3,j=S;isodd(i) && i+j>=2])
+        @fact ex.head => :typed_vcat
+        @fact ex.args => [:x,
+                          Expr(:parameters, Expr(:&&, :(isodd(i)), :(i+j>=2))),
+                          Expr(:(=), :i, :(1:3)),
+                          Expr(:(=), :j, :S)]
+    end
+end

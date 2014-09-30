@@ -106,6 +106,12 @@ have dependencies on preceding indices, e.g. triangular indexing is allowed::
 
     @addConstraint(m, triconstr[i=1:3,j=2i:2:6], x[i] - y[j] == 1)
 
+A condition can be added following the indices; a semicolon is used to separate index sets from the conditional::
+
+    @addConstraint(m, constr[i=1:5,j=1:5; i+j >= 3], x[i] - y[j] == 1)
+
+Note that only one conditional can be added, although expressions can be built up by using the usual ``&&`` and ``||`` logical operators.
+
 To obtain the dual of a constraint, call ``getDual`` on the constraint reference::
 
     println(getDual(xyconstr[1,6]))

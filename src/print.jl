@@ -337,9 +337,9 @@ function cont_str(mode, j::JuMPContainer{Variable}, leq, eq, geq,
                                 cont_str_set(j.indexsets[dim], mid_set),
                                 close_set), 1:num_dims), ", ")
     # 3. Handle any conditionals
-    #if isa(dict, JuMPDict) && !isempty(dict.condition)
-    #    tail_str *= " s.t. $(join(parse_conditions(j.condition[1]), " and "))"
-    #end
+    if isa(j, JuMPDict) && j.condition != :()
+       idx_sets *= " s.t. $(join(parse_conditions(j.condition), " and "))"
+    end
 
     # 4. Bounds and category, if possible, and return final string
     a_var = first(j)[end]
@@ -409,15 +409,15 @@ cont_str_set(idxset, mid_set) = return ".." # Fallback
 # Not exported. Traverses an expression and constructs an array with entries
 # corresponding to each condition. More specifically, if the condition is
 # a && (b || c) && (d && e), it returns [a, b || c, d, e].
-#=parse_conditions(not_an_expr) = not_an_expr
+parse_conditions(not_an_expr) = not_an_expr
 function parse_conditions(expr::Expr)
-    ret = {}
+    ret = Any[]
     if expr.head != :&&
-        return {expr}
+        return push!(ret, expr)
     end
     recurse = map(parse_conditions, expr.args)
     vcat(ret, recurse...)
-end=#
+end
 
 # Handlers to use correct symbols
 cont_str(::Type{REPLMode}, j::JuMPContainer{Variable}; mathmode=false) =
