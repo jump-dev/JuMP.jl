@@ -382,8 +382,6 @@ cont_str(::Type{IJuliaMode}, j::JuMPContainer{Variable}; mathmode=true) =
 #------------------------------------------------------------------------
 Base.print(io::IO, j::JuMPContainer{Float64}) = print(io, val_str(REPLMode,j))
 Base.show( io::IO, j::JuMPContainer{Float64}) = print(io, val_str(REPLMode,j))
-Base.writemime(io::IO, ::MIME"text/latex", j::JuMPContainer{Float64}) =
-    print(io, val_str(IJuliaMode,j))
 function val_str(mode, j::JuMPArray{Float64})
     dims = length(j.indexsets)
     out_str = ""
