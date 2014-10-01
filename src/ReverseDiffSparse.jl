@@ -19,5 +19,6 @@ include("revmode.jl")
 include("hessian.jl")
 include("coloring.jl")
 include("exprlist.jl")
+include("export.jl")
 
 end # module
