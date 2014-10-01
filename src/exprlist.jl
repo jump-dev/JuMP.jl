@@ -14,10 +14,11 @@ type ExprList
     gradfuncs::Vector{Function}
     hessfuncs::Vector{Function}
     hessIJ::Vector{(Vector{Int},Vector{Int})}
+    exprfuncs::Vector{Function}
 end
 
 
-ExprList() = ExprList(SymbolicOutput[],Dict(), Function[], Function[], Function[], Array((Vector{Int},Vector{Int}),0))
+ExprList() = ExprList(SymbolicOutput[],Dict(), Function[], Function[], Function[], Array((Vector{Int},Vector{Int}),0), Function[])
 
 Base.push!(l::ExprList, s::SymbolicOutput) = push!(l.exprs, s)
 Base.getindex(l::ExprList, i) = l.exprs[i]
@@ -33,7 +34,7 @@ function appendToIJ!(I,J,hI,hJ,x::SymbolicOutput)
 end
 
 # returns sparsity pattern of combined hessian, with duplicates
-function prep_sparse_hessians(l::ExprList, num_total_vars)
+function prep_sparse_hessians(l::ExprList, num_total_vars; need_expr::Bool=false)
     @assert length(l.referenceExpr) == 0
     @assert length(l.valfuncs) == 0
     @assert length(l.gradfuncs) == 0
@@ -57,6 +58,9 @@ function prep_sparse_hessians(l::ExprList, num_total_vars)
             push!(l.gradfuncs, gf)
             push!(l.hessfuncs, hf)
             push!(l.hessIJ, (hI, hJ))
+            if need_expr
+                push!(l.exprfuncs, genfexpr_parametric(x))
+            end
             appendToIJ!(I,J,hI,hJ,x)
         else
             # check if there's a 1-1 mapping from reference indices to
@@ -79,6 +83,9 @@ function prep_sparse_hessians(l::ExprList, num_total_vars)
                 push!(l.hessfuncs, l.hessfuncs[refidx])
                 hI,hJ = l.hessIJ[refidx]
                 push!(l.hessIJ, (hI,hJ))
+                if need_expr
+                    push!(l.exprfuncs, l.exprfuncs[refidx])
+                end
                 appendToIJ!(I,J,hI,hJ,x)
             else
                 # compute from scratch
@@ -91,6 +98,9 @@ function prep_sparse_hessians(l::ExprList, num_total_vars)
                 push!(l.hessfuncs, hf)
                 push!(l.hessIJ, (hI, hJ))
                 appendToIJ!(I,J,hI,hJ,x)
+                if need_expr
+                    push!(l.exprfuncs, genfexpr_parametric(x))
+                end
             end
         end
     end
@@ -152,5 +162,13 @@ function eval_hess!(V::AbstractVector, l::ExprList, xval, lambda)
         idx += nnz
     end
 
+end
+
+# convert idx to a flat expression
+function to_flat_expr(l::ExprList, idx)
+    if length(l.exprfuncs) == 0
+        error("Cannot generate expression, feature was not requested")
+    end
+    return l.exprfuncs[idx](l.exprs[idx].inputvals...)
 end
 

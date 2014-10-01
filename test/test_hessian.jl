@@ -61,11 +61,12 @@ for i in 1:5
     push!(exlist,@processNLExpr x[i]^3/6)
 end
 
-I,J = prep_sparse_hessians(exlist,5)
+I,J = prep_sparse_hessians(exlist,5, need_expr=true)
 V = zeros(length(I))
 lambda = rand(5)
 eval_hess!(V, exlist, val, lambda)
 @test_approx_eq sparse(I,J,V) diagm(lambda.*val)
+@test to_flat_expr(exlist, 4) == :(x[4]^3/6)
 
 # irregular indices
 exlist = ExprList()

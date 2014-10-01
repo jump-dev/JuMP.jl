@@ -58,9 +58,26 @@ function to_flat_expr(x::SymbolicOutput)
             $expr
         end
     end
-    println(fexpr)
     return eval(fexpr)
 
 end
 
 export to_flat_expr
+
+function genfexpr_parametric(x::SymbolicOutput)
+    out = Expr(:block)
+    fval = outputpass(x.tree, out)
+    fname = gensym()
+    fexpr = quote
+        function $(fname)()
+            $out
+            return $fval
+        end
+    end
+    # add arguments for inputnames -- local data
+    for i in 1:length(x.inputnames)
+        push!(fexpr.args[2].args[1].args,x.inputnames[i])
+    end
+
+    return eval(fexpr)
+end
