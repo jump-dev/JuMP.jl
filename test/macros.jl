@@ -217,3 +217,11 @@ for i in 1:n, j in 1:n
         @test !cntr[i,j]
     end
 end
+
+# test @buildExpr
+let
+    model = Model()
+    @defVar(model, x[1:3,1:3])
+    @defExpr(expr, sum{i*x[i,j] + j, i=1:3,j=1:3})
+    @test affToStr(expr) == "x[1,1] + x[1,2] + x[1,3] + 2 x[2,1] + 2 x[2,2] + 2 x[2,3] + 3 x[3,1] + 3 x[3,2] + 3 x[3,3] + 18"
+end
