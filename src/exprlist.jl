@@ -35,10 +35,13 @@ end
 
 # returns sparsity pattern of combined hessian, with duplicates
 function prep_sparse_hessians(l::ExprList, num_total_vars; need_expr::Bool=false)
-    @assert length(l.referenceExpr) == 0
-    @assert length(l.valfuncs) == 0
-    @assert length(l.gradfuncs) == 0
-    @assert length(l.hessfuncs) == 0
+    # clear current state
+    empty!(l.referenceExpr)
+    empty!(l.valfuncs)
+    empty!(l.gradfuncs)
+    empty!(l.hessfuncs)
+    empty!(l.hessIJ)
+    empty!(l.exprfuncs)
 
     N = length(l.exprs)
     sizehint(l.valfuncs, N)
