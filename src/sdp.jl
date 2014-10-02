@@ -560,6 +560,21 @@ function Base.getindex(d::MatrixExpr, x::Range{Int}, y::Int)
     return arr
 end
 
+# helper for library code in other packages
+function Base.convert(::Type{Array{Variable,1}}, x::MatrixExpr)
+    lst = Variable[]
+    for el in x.elem[1].elem
+        if isa(el, Variable)
+            push!(lst, el)
+        else
+            tmp = convert(Array{Variable,1}, el)
+            lst = concat(lst, tmp)
+            #concat(lst, convert(Array{Variable,1}, el))
+        end
+    end
+    return lst
+end
+
 # helper for getValue(c::MatrixExpr)
 getValue{T<:Number}(c::AbstractArray{T,2}) = c
 
