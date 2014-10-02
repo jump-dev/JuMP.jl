@@ -8,7 +8,6 @@ function solve(m::Model;IpoptOptions::Dict=Dict(),load_model_only=false, suppres
             m.solver = MathProgBase.defaultNLPsolver
         end
         s = solvenlp(m, suppress_warnings=suppress_warnings)
-        m.solver = UnsetSolver()
         return s
     end
     # Analyze model to see if any integers
@@ -360,6 +359,8 @@ function solveMIP(m::Model; load_model_only=false, suppress_warnings=false)
 end
 
 function buildInternalModel(m::Model)
+    m.nlpdata == nothing || error("buildInternalModel not supported for nonlinear problems")
+
     anyInts = false
     for j = 1:m.numCols
         if m.colCat[j] != :Cont

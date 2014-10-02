@@ -117,3 +117,44 @@ let
     @test_approx_eq_eps m.objVal 1+4/sqrt(3) 1e-6
     @test_approx_eq_eps (getValue(x) + getValue(y)) -1/3 1e-3
 end
+
+# accessing expressions
+type DummyNLPSolver <: MathProgBase.AbstractMathProgSolver
+end
+
+type DummyNLPModel <: MathProgBase.AbstractMathProgModel
+end
+
+MathProgBase.model(s::DummyNLPSolver) = DummyNLPModel()
+
+function MathProgBase.loadnonlinearproblem!(m::DummyNLPModel, numVar, numConstr, x_l, x_u, g_lb, g_ub, sense, d::MathProgBase.AbstractNLPEvaluator)
+
+    MathProgBase.initialize(d, [:ExprGraph])
+    objexpr = MathProgBase.obj_expr(d)
+    @test (objexpr == :(x[1]^x[2])) || (objexpr == :(-1.0*x[1]+1.0*x[2]))
+    @assert MathProgBase.isconstrlinear(d,1)
+    @test MathProgBase.constr_expr(d,1) == :(2.0*x[1] + 1.0*x[2] <= 1.0)
+    @test MathProgBase.constr_expr(d,2) == :(2.0*x[1]*x[1] + 1.0*x[2] + -2.0 >= 0)
+    @test MathProgBase.constr_expr(d,3) == :(sin(x[1]) * cos(x[2]) - 5 == 0.0)
+
+end
+
+MathProgBase.setwarmstart!(m::DummyNLPModel,x) = nothing
+MathProgBase.optimize!(m::DummyNLPModel) = nothing
+MathProgBase.status(m::DummyNLPModel) = :Optimal
+MathProgBase.getobjval(m::DummyNLPModel) = NaN
+MathProgBase.getsolution(m::DummyNLPModel) = [1.0,1.0]
+
+let
+    m = Model(solver=DummyNLPSolver())
+    @defVar(m, x)
+    @defVar(m, y)
+    @setObjective(m, Min, -x+y)
+    @addConstraint(m, 2x+y <= 1)
+    @addConstraint(m, 2x^2+y >= 2)
+    @addNLConstraint(m, sin(x)*cos(y) == 5)
+    solve(m)
+
+    @setNLObjective(m, Min, x^y)
+    solve(m)
+end
