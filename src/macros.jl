@@ -402,7 +402,8 @@ macro defExpr(args...)
     refcall, idxvars, idxsets, idxpairs = buildrefsets(c)
     code = quote
         q = AffExpr()
-        $(refcall) = $(parseExpr(x, :q, 1.0))
+        $(parseExpr(x, :q, 1.0))
+        $(refcall) = q
     end
     
     return getloopedcode(c, code, :(), idxvars, idxsets, idxpairs, :AffExpr)
