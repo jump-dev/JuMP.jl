@@ -105,7 +105,7 @@ function Model(;solver=UnsetSolver())
           0,String[],String[],Float64[],Float64[],Symbol[],
           0,Float64[],Float64[],Float64[],nothing,solver,
           false,nothing,nothing,nothing,JuMPContainer[],
-          IndexedVector(Float64,0),nothing,Dict{Symbol,Any}())
+          IndexedVector(Float64,0),nothing,nothing,Dict{Symbol,Any}())
 end
 
 # Getters/setters
