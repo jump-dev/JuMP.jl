@@ -281,10 +281,34 @@ function cont_str(mode, j::JuMPContainer{Variable}, leq, eq, geq,
     isempty(j) && return string(j.name, " (no indices)")
 
     # 1. construct the part with variable name and indexing
+    locvars = map(j.indexexprs) do tmp
+        var = tmp.idxvar
+        if var == nothing
+            return ""
+        else
+            return string(var)
+        end
+    end
     num_dims = length(j.indexsets)
-    name_idx = string(j.name, ind_open, join(DIMS[1:num_dims],","), ind_close)
+    idxvars = Array(UTF8String, num_dims)
+    dimidx = 1
+    for i in 1:num_dims
+        if j.indexexprs[i].idxvar == nothing
+            while DIMS[dimidx] in locvars
+                dimidx += 1
+            end
+            if dimidx > length(DIMS)
+                error("Unexpectedly ran out of indices")
+            end
+            idxvars[i] = DIMS[dimidx]
+            dimidx += 1
+        else
+            idxvars[i] = locvars[i]
+        end
+    end
+    name_idx = string(j.name, ind_open, join(idxvars,","), ind_close)
     # 2. construct part with what we index over
-    idx_sets = for_all*" "*join(map(dim->string(DIMS[dim], " ", in_set, " ", open_set,
+    idx_sets = for_all*" "*join(map(dim->string(idxvars[dim], " ", in_set, " ", open_set,
                                 cont_str_set(j.indexsets[dim], mid_set),
                                 close_set), 1:num_dims), ", ")
     # 3. Handle any conditionals

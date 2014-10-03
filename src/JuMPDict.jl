@@ -63,13 +63,13 @@ macro gendict(instancename,T,idxpairs,idxsets...)
             end
         end
         typecode = :(type $(typename){T} <: JuMPArray{T}; innerArray::Array{T,$N}; name::String;
-                            indexsets end)
+                            indexsets; indexexprs::Vector{IndexPair} end)
         getidxlhs = :(Base.getindex(d::$(typename)))
         setidxlhs = :(setindex!(d::$(typename),val))
         getidxrhs = :(Base.getindex(d.innerArray))
         setidxrhs = :(setindex!(d.innerArray,val))
         maplhs = :(Base.map(f::Function,d::$(typename)))
-        maprhs = :($(typename)(map(f,d.innerArray),d.name,d.indexsets))
+        maprhs = :($(typename)(map(f,d.innerArray),d.name,d.indexsets,d.indexexprs))
         for i in 1:N
             varname = symbol(string("x",i))
             
@@ -87,7 +87,7 @@ macro gendict(instancename,T,idxpairs,idxsets...)
 
         funcs = :($getidxlhs = $getidxrhs; $setidxlhs = $setidxrhs;
                   $maplhs = $maprhs; $badgetidxlhs = $badgetidxrhs)
-        geninstance = :($(esc(instancename)) = $(typename)(Array($T),$(string(instancename)),$(esc(Expr(:tuple,idxsets...)))))
+        geninstance = :($(esc(instancename)) = $(typename)(Array($T),$(string(instancename)),$(esc(Expr(:tuple,idxsets...))),$(idxpairs)))
         for i in 1:N
             push!(geninstance.args[2].args[2].args, :(length($(esc(idxsets[i])))))
         end

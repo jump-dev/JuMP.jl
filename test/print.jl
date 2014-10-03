@@ -131,7 +131,7 @@ function test_print_JuMPContainerVar()
     io_test(REPLMode, rng2_1, "rng2_1[i,j] free for all i in {1,2..9,10}, j in {a,b,c}")
     io_test(REPLMode, tri_1, "tri_1[i,j] free for all i in {1,2,3}, j in {..}")
     io_test(REPLMode, tri_2, "tri_2[i,j] free for all i in {1,2,3}, j in {..}")
-    io_test(REPLMode, tri_3, "tri_3[i,j] free for all i in {(1,3),(2,4)..(4,6),(5,7)}, j in {..}")
+    io_test(REPLMode, tri_3, "tri_3[(i,j),k] free for all (i,j) in {(1,3),(2,4)..(4,6),(5,7)}, k in {..}")
 
     io_test(IJuliaMode, rng_unit1, "rng_unit1_{i} free \\quad\\forall i \\in \\{1,2,\\dots,9,10\\}")
     io_test(IJuliaMode, rng_unit2, "rng_unit2_{i} free \\quad\\forall i \\in \\{-2,-1,\\dots,2,3\\}")
@@ -146,7 +146,7 @@ function test_print_JuMPContainerVar()
     io_test(IJuliaMode, rng2_1, "rng2_1_{i,j} free \\quad\\forall i \\in \\{1,2,\\dots,9,10\\}, j \\in \\{a,b,c\\}")
     io_test(IJuliaMode, tri_1, "tri_1_{i,j} free \\quad\\forall i \\in \\{1,2,3\\}, j \\in \\{..\\}")
     io_test(IJuliaMode, tri_2, "tri_2_{i,j} free \\quad\\forall i \\in \\{1,2,3\\}, j \\in \\{..\\}")
-    io_test(IJuliaMode, tri_3, "tri_3_{i,j} free \\quad\\forall i \\in \\{(1,3),(2,4),\\dots,(4,6),(5,7)\\}, j \\in \\{..\\}")
+    io_test(IJuliaMode, tri_3, "tri_3_{(i,j),k} free \\quad\\forall (i,j) \\in \\{(1,3),(2,4),\\dots,(4,6),(5,7)\\}, k \\in \\{..\\}")
 
     #------------------------------------------------------------------
     # Test category printing
