@@ -81,13 +81,13 @@ COIN-OR Clp and Cbc
 
 Binaries for Clp and Cbc are provided on OS X and Windows (32- and 64-bit) by default. On Linux, they will be compiled from source (be sure to have a C++ compiler installed).
 
-Clp and Cbc, if available, are the default choice of solver in JuMP. Cbc does *not* support MIP callbacks.
+Clp and Cbc, if available, are the default choice of solver in JuMP. Cbc supports "SOS" constraints but does *not* support MIP callbacks.
 
 
 CPLEX
 +++++
 
-Requires a working installation of CPLEX with a license (free for faculty members and graduate teaching assistants). The `CPLEX.jl <https://github.com/joehuchette/CPLEX.jl>`_ interface is experimental; it requires using CPLEX as a shared library, which is unsupported by the CPLEX developers. Special installation steps are required on OS X. CPLEX supports MIP callbacks.
+Requires a working installation of CPLEX with a license (free for faculty members and graduate teaching assistants). The `CPLEX.jl <https://github.com/joehuchette/CPLEX.jl>`_ interface is experimental; it requires using CPLEX as a shared library, which is unsupported by the CPLEX developers. Special installation steps are required on OS X. CPLEX supports MIP callbacks and "SOS" constraints.
 
 
 ECOS
@@ -99,12 +99,12 @@ ECOS can be used by JuMP to solve LPs - it cannot be used to solve SOCPs at this
 GLPK
 ++++
 
-GLPK binaries are provided on OS X and Windows (32- and 64-bit) by default. On Linux, it will be compiled from source. Note that ``GLPKSolverLP`` should be used for continuous problems and ``GLPKSolverMIP`` for problems with integer variables. GLPK supports MIP callbacks.
+GLPK binaries are provided on OS X and Windows (32- and 64-bit) by default. On Linux, it will be compiled from source. Note that ``GLPKSolverLP`` should be used for continuous problems and ``GLPKSolverMIP`` for problems with integer variables. GLPK supports MIP callbacks but does not support "SOS" constraints.
 
 Gurobi
 ++++++
 
-Requires a working installation of Gurobi with an activated license (free for academic use). Gurobi supports MIP callbacks.
+Requires a working installation of Gurobi with an activated license (free for academic use). Gurobi supports MIP callbacks and "SOS" constraints.
 
 .. warning::
    If you are using 64-bit Gurobi, you must use 64-bit Julia (and similarly with 32-bit Gurobi).
