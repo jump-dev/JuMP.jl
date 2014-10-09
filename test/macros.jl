@@ -225,5 +225,5 @@ let
     @defExpr(expr, sum{i*x[i,j] + j, i=1:3,j=1:3})
     @test affToStr(expr) == "x[1,1] + x[1,2] + x[1,3] + 2 x[2,1] + 2 x[2,2] + 2 x[2,3] + 3 x[3,1] + 3 x[3,2] + 3 x[3,3] + 18"
 
-    @test_throws ErrorException @defExpr(blah[i=1:3], x[i,1]^2 == 1)
+    @test_throws ErrorException @defExpr(blah[i=1:3], x[i,1]^2)
 end
