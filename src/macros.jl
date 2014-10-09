@@ -184,6 +184,9 @@ function parseExpr(x, aff::Symbol, constantCoef)
         elseif x.head == :curly
             parseCurly(x,aff,constantCoef)
         else # at lowest level?
+            if isexpr(x,:comparison)
+                error("Unexpected comparison in expression $x")
+            end
             :($aff = addToExpression($aff, $(esc(constantCoef)), $(esc(x))))
         end
     end
