@@ -399,10 +399,12 @@ macro defExpr(args...)
         error("in @defExpr: needs either one or two arguments.")
     end
 
+    crefflag = isa(c,Expr)
     refcall, idxvars, idxsets, idxpairs = buildrefsets(c)
     code = quote
         q = AffExpr()
         $(parseExpr(x, :q, 1.0))
+        $crefflag && !isa(q,AffExpr) && error("Three argument form form of @addConstraint does not currently support quadratic constraints")
         $(refcall) = q
     end
     
