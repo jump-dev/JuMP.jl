@@ -317,7 +317,7 @@ macro addConstraint(m, x, extra...)
         code = quote
             q = AffExpr()
             $(parseExpr(lhs, :q, 1.0))
-            $crefflag && !isa(q,AffExpr) && error("Three argument form form of @addConstraint does not currently support quadratic constraints")
+            $crefflag && !isa(q,AffExpr) && error("Three argument form of @addConstraint does not currently support quadratic constraints")
             $(refcall) = addConstraint($m, $(x.args[2])(q,0))
         end
     elseif length(x.args) == 5
@@ -407,7 +407,7 @@ macro defExpr(args...)
     code = quote
         q = AffExpr()
         $(parseExpr(x, :q, 1.0))
-        $crefflag && !isa(q,AffExpr) && error("Three argument form form of @addConstraint does not currently support quadratic constraints")
+        $crefflag && !isa(q,AffExpr) && error("Three argument form of @defExpr does not currently support quadratic constraints")
         $(refcall) = q
     end
     
