@@ -26,6 +26,10 @@ see the syntax discussed in the :ref:`probmod` section.
 All these variations create a new local variable, in this case ``x``. 
 The names of your variables must be valid Julia variable names.
 Integer and binary restrictions can optionally be specified with a third argument, ``Int`` or ``Bin``.
+For advanced users, ``SemiCont`` and ``SemiInt`` may be used to create
+`semicontinuous <http://orinanobworld.blogspot.com/2011/03/semicontinuous-variables.html>`_ or
+`semi-integer <http://www.gams.com/mccarl/mccarlhtml/semi-integer_variables.htm>`_ variables,
+respectively.
 
 To create arrays of variables we append brackets to the variable name.
 
@@ -56,10 +60,11 @@ Note the dependency must be on preceding indices, going from left to right. That
 
 Finally, variables can be constructed manually, one-by-one::
 
-    x = Variable(m::Model, lower::Number, upper::Number, category::Int, name::String)
-    x = Variable(m::Model, lower::Number, upper::Number, category::Int)
+    x = Variable(m::Model, lower::Number, upper::Number, category::Symbol, name::String)
+    x = Variable(m::Model, lower::Number, upper::Number, category::Symbol)
 
-but this is not considered idiomatic JuMP code.
+where ``category`` is one of ``:Cont``, ``:Int``, ``:Bin``, ``:SemiCont``, and ``:SemiInt``.
+This form of constructing variables is not considered idiomatic JuMP code.
 
 .. note::
     ``@defVar`` is equivalent to a simple assignment ``x = ...`` in Julia and therefore redefines variables without warning. The following code may lead to unexpected results::
