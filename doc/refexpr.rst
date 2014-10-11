@@ -58,7 +58,7 @@ a ``begin ... end`` block. For example::
     @addConstraint(m, shared + y >= 5)
     @addConstraint(m, shared + z <= 10)
 
-The ``ref`` accepts index sets in the same way as ``@defVar``, and those indices can be used in the construction of the expressions:
+The ``ref`` accepts index sets in the same way as ``@defVar``, and those indices can be used in the construction of the expressions::
 
     @defExpr(expr[i=1:3], i*sum{x[j], j=1:3})
     
