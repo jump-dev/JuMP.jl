@@ -1,6 +1,13 @@
 JuMP release notes
 ==================
 
+Version 0.6.2 (October 11, 2014)
+--------------------------------
+
+  * Further improvements and bug fixes for printing.
+  * Fixed a bug in ``@defExpr``.
+  * Support for accessing expression graphs through the MathProgBase NLP interface.
+
 Version 0.6.1 (September 19, 2014)
 ----------------------------------
 
@@ -37,6 +44,7 @@ Version 0.5.7 (September 5, 2014)
 Version 0.5.6 (September 2, 2014)
 ---------------------------------
   * Add support for semicontinuous and semi-integer variables for those solvers that support them.
+    - **Breaking change**: Syntax for ``Variable()`` constructor has changed (use of this interface remains discouraged)
   * Update for breaking changes in MathProgBase
 
 Version 0.5.5 (July 6, 2014)
