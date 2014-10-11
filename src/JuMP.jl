@@ -25,7 +25,7 @@ export
     getNumVars, getNumConstraints, getObjectiveValue, getObjective,
     getObjectiveSense, setObjectiveSense, writeLP, writeMPS, setObjective,
     addConstraint, addSOS1, addSOS2, solve,
-    getInternalModel, setPresolve, buildInternalModel,
+    getInternalModel, buildInternalModel,
     # Variable
     setName, getName, setLower, setUpper, getLower, getUpper,
     getValue, setValue, getDual,
@@ -55,6 +55,7 @@ type Model
     # Column data
     numCols::Int
     colNames::Vector{String}
+    colNamesIJulia::Vector{String}
     colLower::Vector{Float64}
     colUpper::Vector{Float64}
     colCat::Vector{Symbol}
@@ -74,11 +75,9 @@ type Model
     cutcallback
     heurcallback
 
-    # JuMPDict list
+    # List of JuMPContainer{Variables} associated with model
     dictList::Vector
 
-    # presolve callback function
-    presolve
     # storage vector for merging duplicate terms
     indexedVector::IndexedVector{Float64}
 
@@ -101,9 +100,9 @@ function Model(;solver=UnsetSolver())
         error("solver argument ($solver) must be an AbstractMathProgSolver")
     end
     Model(QuadExpr(),:Min,LinearConstraint[], QuadConstraint[],SOSConstraint[],
-          0,String[],Float64[],Float64[],Int[],
+          0,String[],String[],Float64[],Float64[],Symbol[],
           0,Float64[],Float64[],Float64[],nothing,solver,
-          false,nothing,nothing,nothing,JuMPContainer[],nothing,
+          false,nothing,nothing,nothing,JuMPContainer[],
           IndexedVector(Float64,0),nothing,Dict{Symbol,Any}())
 end
 
@@ -158,8 +157,6 @@ end
 
 getInternalModel(m::Model) = m.internalModel
 
-setPresolve(m::Model, f::Function) = (m.presolve = f)
-
 ###############################################################################
 # Variable class
 # Doesn't actually do much, just a pointer back to the model
@@ -174,6 +171,7 @@ Base.isequal(x::Variable,y::Variable) = isequal(x.col,y.col) && isequal(x.m,y.m)
 function Variable(m::Model,lower::Number,upper::Number,cat::Symbol,name::String)
     m.numCols += 1
     push!(m.colNames, name)
+    push!(m.colNamesIJulia, name)
     push!(m.colLower, convert(Float64,lower))
     push!(m.colUpper, convert(Float64,upper))
     push!(m.colCat, cat)
@@ -193,12 +191,12 @@ Variable(m::Model,lower::Number,upper::Number,cat::Symbol) =
     Variable(m,lower,upper,cat,"")
 
 # Name setter/getters
-setName(v::Variable,n::String) = (v.m.colNames[v.col] = n)
-function getName(m::Model, col)
-    m.colNames[col] == "" && fillVarNames(m)
-    return ( m.colNames[col] == "" ? "_col$(col)" : m.colNames[col] )
+function setName(v::Variable,n::String)
+    v.m.colNames[v.col] = n
+    v.m.colNamesIJulia[v.col] = n
 end
-getName(v::Variable) = getName(v.m, v.col)
+getName(m::Model, col) = var_str(REPLMode, m, col)
+getName(v::Variable) = var_str(REPLMode, v.m, v.col)
 
 # Bound setter/getters
 setLower(v::Variable,lower::Number) = (v.m.colLower[v.col] = convert(Float64,lower))
@@ -610,7 +608,7 @@ include("solvers.jl")
 include("macros.jl")
 # Callbacks - lazy, cuts, ...
 include("callbacks.jl")
-# Pretty-printing, including IJulia
+# Pretty-printing of JuMP-defined types.
 include("print.jl")
 # Nonlinear-specific code
 include("nlp.jl")

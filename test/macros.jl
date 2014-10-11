@@ -1,5 +1,13 @@
 # macros.jl
 # Tests for macros
+using JuMP
+using Base.Test
+
+# To ensure the tests work on Windows and Linux/OSX, we need
+# to use the correct comparison operators
+const leq = JuMP.repl_leq
+const geq = JuMP.repl_geq
+const  eq = JuMP.repl_eq
 
 # Check for changes in Julia's expression parsing
 sumexpr = :(sum{x[i,j] * y[i,j], i = 1:N, j = 1:M; i != j})
@@ -33,13 +41,13 @@ let
     t = 10
 
     @addConstraint(m, 3x - y == 3.3(w + 2z) + 5) 
-    @test conToStr(m.linconstr[end]) == "3 x - y - 3.3 w - 6.6 z == 5"
+    @test conToStr(m.linconstr[end]) == "3 x - y - 3.3 w - 6.6 z $eq 5"
     @addConstraint(m, (x+y)/2 == 1) 
-    @test conToStr(m.linconstr[end]) == "0.5 x + 0.5 y == 1"
+    @test conToStr(m.linconstr[end]) == "0.5 x + 0.5 y $eq 1"
     @addConstraint(m, -1 <= x-y <= t) 
-    @test conToStr(m.linconstr[end]) == "-1 <= x - y <= 10"
+    @test conToStr(m.linconstr[end]) == "-1 $leq x - y $leq 10"
     @addConstraint(m, -1 <= x+1 <= 1)
-    @test conToStr(m.linconstr[end]) == "-2 <= x <= 0"
+    @test conToStr(m.linconstr[end]) == "-2 $leq x $leq 0"
     @test_throws ErrorException @addConstraint(m, x <= t <= y)
 
     @defExpr(aff, 3x - y - 3.3(w + 2z) + 5)
@@ -59,12 +67,12 @@ let
     @defVar(m, y)
     C = [1 2 3; 4 5 6; 7 8 9]
     @addConstraint(m, sum{ C[i,j]*x[i,j], i = 1:2, j = 2:3 } <= 1)
-    @test conToStr(m.linconstr[end]) == "2 x[1,2] + 3 x[1,3] + 5 x[2,2] + 6 x[2,3] <= 1"
+    @test conToStr(m.linconstr[end]) == "2 x[1,2] + 3 x[1,3] + 5 x[2,2] + 6 x[2,3] $leq 1"
     @addConstraint(m, sum{ C[i,j]*x[i,j], i = 1:3, j = 1:3; i != j} == y)
-    @test conToStr(m.linconstr[end]) == "2 x[1,2] + 3 x[1,3] + 4 x[2,1] + 6 x[2,3] + 7 x[3,1] + 8 x[3,2] - y == 0"
+    @test conToStr(m.linconstr[end]) == "2 x[1,2] + 3 x[1,3] + 4 x[2,1] + 6 x[2,3] + 7 x[3,1] + 8 x[3,2] - y $eq 0"
 
     @addConstraint(m, sum{ C[i,j]*x[i,j], i = 1:3, j = 1:i} == 0);
-    @test conToStr(m.linconstr[end]) == "x[1,1] + 4 x[2,1] + 5 x[2,2] + 7 x[3,1] + 8 x[3,2] + 9 x[3,3] == 0"
+    @test conToStr(m.linconstr[end]) == "x[1,1] + 4 x[2,1] + 5 x[2,2] + 7 x[3,1] + 8 x[3,2] + 9 x[3,3] $eq 0"
 end
 
 let
@@ -72,13 +80,13 @@ let
     @defVar(m, x[1:3,1:3])
     C = [1 2 3; 4 5 6; 7 8 9]
     con = @addConstraint(m, sum{ C[i,j]*x[i,j], i = 1:3, j = 1:3; i != j} == 0)
-    @test conToStr(m.linconstr[end]) == "2 x[1,2] + 3 x[1,3] + 4 x[2,1] + 6 x[2,3] + 7 x[3,1] + 8 x[3,2] == 0"
+    @test conToStr(m.linconstr[end]) == "2 x[1,2] + 3 x[1,3] + 4 x[2,1] + 6 x[2,3] + 7 x[3,1] + 8 x[3,2] $eq 0"
 
     @defVar(m, y, 0, [con], [-1.0])
-    @test conToStr(m.linconstr[end]) == "2 x[1,2] + 3 x[1,3] + 4 x[2,1] + 6 x[2,3] + 7 x[3,1] + 8 x[3,2] - y == 0"
+    @test conToStr(m.linconstr[end]) == "2 x[1,2] + 3 x[1,3] + 4 x[2,1] + 6 x[2,3] + 7 x[3,1] + 8 x[3,2] - y $eq 0"
 
     chgConstrRHS(con, 3)
-    @test conToStr(m.linconstr[end]) == "2 x[1,2] + 3 x[1,3] + 4 x[2,1] + 6 x[2,3] + 7 x[3,1] + 8 x[3,2] - y == 3"
+    @test conToStr(m.linconstr[end]) == "2 x[1,2] + 3 x[1,3] + 4 x[2,1] + 6 x[2,3] + 7 x[3,1] + 8 x[3,2] - y $eq 3"
 end
 
 let
@@ -87,7 +95,7 @@ let
     @defVar(m, y)
     temp = x + 2y + 1
     @addConstraint(m, 3*temp - x - 2 >= 0)
-    @test conToStr(m.linconstr[end]) == "6 y + 2 x >= -1"
+    @test conToStr(m.linconstr[end]) == "6 y + 2 x $geq -1"
 end
 
 # test ranges in @defVar
@@ -136,10 +144,10 @@ let
     @defVar(m, y[2:2:6])
 
     @addConstraint(m, c, x[4] - y[4] == 1)
-    @test conToStr(m.linconstr[c.idx]) == "x[4] - y[4] == 1"
+    @test conToStr(m.linconstr[c.idx]) == "x[4] - y[4] $eq 1"
 
     @addConstraint(m, d[i=1:5,j=6:-2:2], x[i] - y[j] == 2)
-    @test conToStr(m.linconstr[d[4,4].idx]) == "x[4] - y[4] == 2"
+    @test conToStr(m.linconstr[d[4,4].idx]) == "x[4] - y[4] $eq 2"
 end
 
 # test @addConstraints
@@ -153,10 +161,10 @@ let
         ref[i=1:3], y[1] + y[i] >= i
     end
 
-    @test conToStr(m.linconstr[1]) == "x + y[1] == 1"
-    @test conToStr(m.linconstr[2]) == "2 y[1] >= 1"
-    @test conToStr(m.linconstr[3]) == "y[1] + y[2] >= 2"
-    @test conToStr(m.linconstr[4]) == "y[1] + y[3] >= 3"
+    @test conToStr(m.linconstr[1]) == "x + y[1] $eq 1"
+    @test conToStr(m.linconstr[2]) == "2 y[1] $geq 1"
+    @test conToStr(m.linconstr[3]) == "y[1] + y[2] $geq 2"
+    @test conToStr(m.linconstr[4]) == "y[1] + y[3] $geq 3"
 end
 
 # test quadratic objective macro
@@ -174,30 +182,24 @@ let
     @defVar(m, x[1:5])
 
     @addConstraint(m, x[3]*x[1] + sum{x[i]*x[5-i+1], i=1:5; 2 <= i <= 4} + 4x[5] == 1)
-    @test conToStr(m.quadconstr[1]) == "x[1]*x[3] + x[3]² + 2 x[2]*x[4] + 4 x[5] - 1 == 0"
+    @test conToStr(m.quadconstr[1]) == "x[1]*x[3] + x[3]² + 2 x[2]*x[4] + 4 x[5] - 1 $eq 0"
 
     @addConstraint(m, sum{sum{(x[i] - 2)*x[j],j=4:5},i=2:3} >= -3*x[2]*2*x[4])
-    @test conToStr(m.quadconstr[2]) == "7 x[2]*x[4] + x[3]*x[4] + x[2]*x[5] + x[3]*x[5] - 4 x[4] - 4 x[5] >= 0"
+    @test conToStr(m.quadconstr[2]) == "7 x[2]*x[4] + x[3]*x[4] + x[2]*x[5] + x[3]*x[5] - 4 x[4] - 4 x[5] $geq 0"
 
     myquadexpr = x[1]*x[2]
     @addConstraint(m, sum{i*myquadexpr + x[i], i=1:3} + sum{x[i] + myquadexpr*i, i=1:3} == 0)
-    @test conToStr(m.quadconstr[3]) == "12 x[1]*x[2] + 2 x[1] + 2 x[2] + 2 x[3] == 0"
+    @test conToStr(m.quadconstr[3]) == "12 x[1]*x[2] + 2 x[1] + 2 x[2] + 2 x[3] $eq 0"
 end
 
 # Test "triangular indexing"
 n = 10
 trimod = Model()
 @defVar(trimod, x[i=1:n,j=i:n])
-@test JuMP.dictstring(x, :REPL)   == "x[i,j], for all i in {1..10}, j in {..} free"
-@test JuMP.dictstring(x, :IJulia) == "x_{i,j} \\quad \\forall i \\in \\{ 1..10 \\}, j \\in \\{ .. \\} free"
 @defVar(trimod, y[i=3:2:7,j=-i])
-@test JuMP.dictstring(y, :REPL)   == "y[i,j], for all i in {3,5,7}, j in {..} free"
-@test JuMP.dictstring(y, :IJulia) == "y_{i,j} \\quad \\forall i \\in \\{ 3,5,7 \\}, j \\in \\{ .. \\} free"
 @test getNumVars(trimod) == n*(n+1)/2 + 3
 S = {(i,i+2) for i in 1:5}
 @defVar(trimod, z[(i,j)=S,k=i:j])
-@test JuMP.dictstring(z, :REPL)   == "z[i,j], for all i in {(1,3),(2,4)..}, j in {..} free"
-@test JuMP.dictstring(z, :IJulia) == "z_{i,j} \\quad \\forall i \\in \\{ (1,3),(2,4).. \\}, j \\in \\{ .. \\} free"
 @test length(z.tupledict) == 15
 @addConstraint(trimod, cref[i=1:n,j=i:n], x[i,j] + y[5,-5] == 1)
 @test getNumConstraints(trimod) == n*(n+1)/2
@@ -214,4 +216,14 @@ for i in 1:n, j in 1:n
     else
         @test !cntr[i,j]
     end
+end
+
+# test @defExpr
+let
+    model = Model()
+    @defVar(model, x[1:3,1:3])
+    @defExpr(expr, sum{i*x[i,j] + j, i=1:3,j=1:3})
+    @test affToStr(expr) == "x[1,1] + x[1,2] + x[1,3] + 2 x[2,1] + 2 x[2,2] + 2 x[2,3] + 3 x[3,1] + 3 x[3,2] + 3 x[3,3] + 18"
+
+    @test_throws ErrorException @defExpr(blah[i=1:3], x[i,1]^2)
 end

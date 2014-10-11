@@ -184,6 +184,9 @@ function parseExpr(x, aff::Symbol, constantCoef)
         elseif x.head == :curly
             parseCurly(x,aff,constantCoef)
         else # at lowest level?
+            if isexpr(x,:comparison)
+                error("Unexpected comparison in expression $x")
+            end
             :($aff = addToExpression($aff, $(esc(constantCoef)), $(esc(x))))
         end
     end
@@ -314,7 +317,7 @@ macro addConstraint(m, x, extra...)
         code = quote
             q = AffExpr()
             $(parseExpr(lhs, :q, 1.0))
-            $crefflag && !isa(q,AffExpr) && error("Three argument form form of @addConstraint does not currently support quadratic constraints")
+            $crefflag && !isa(q,AffExpr) && error("Three argument form of @addConstraint does not currently support quadratic constraints")
             $(refcall) = addConstraint($m, $(x.args[2])(q,0))
         end
     elseif length(x.args) == 5
@@ -399,10 +402,13 @@ macro defExpr(args...)
         error("in @defExpr: needs either one or two arguments.")
     end
 
+    crefflag = isa(c,Expr)
     refcall, idxvars, idxsets, idxpairs = buildrefsets(c)
     code = quote
         q = AffExpr()
-        $(refcall) = $(parseExpr(x, :q, 1.0))
+        $(parseExpr(x, :q, 1.0))
+        $crefflag && !isa(q,AffExpr) && error("Three argument form of @defExpr does not currently support quadratic constraints")
+        $(refcall) = q
     end
     
     return getloopedcode(c, code, :(), idxvars, idxsets, idxpairs, :AffExpr)
@@ -438,6 +444,8 @@ function isdependent(idxvars,idxset,i)
 end
 
 macro defVar(args...)
+    length(args) <= 1 &&
+        error("in @defVar ($var): expected model as first argument, then variable information.")
     ######################################################################
     # # TODO: remove commented lines below when x[i,j;k,l] is valid syntax
     # if isa(args[1], Expr) && args[1].head == :parameters

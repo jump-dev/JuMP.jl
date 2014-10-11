@@ -40,11 +40,16 @@ JuMPNLPEvaluator(m::Model, A) = JuMPNLPEvaluator(m, A, nothing, nothing, nothing
 
 function MathProgBase.initialize(d::JuMPNLPEvaluator, requested_features::Vector{Symbol})
     for feat in requested_features
-        if !(feat in [:Grad, :Jac, :Hess])
+        if !(feat in [:Grad, :Jac, :Hess, :ExprGraph])
             error("Unsupported feature $feat")
             # TODO: implement Jac-vec and Hess-vec products
             # for solvers that need them
         end
+    end
+    if :ExprGraph in requested_features
+        need_expr = true
+    else
+        need_expr = false
     end
     nldata::NLPData = d.m.nlpdata
     has_nlobj = isa(nldata.nlobj, ReverseDiffSparse.SymbolicOutput)
@@ -60,7 +65,7 @@ function MathProgBase.initialize(d::JuMPNLPEvaluator, requested_features::Vector
 
     n_nlconstr = length(nldata.nlconstr)
 
-    constrhessI, constrhessJ = prep_sparse_hessians(nldata.nlconstrlist, d.m.numCols)
+    constrhessI, constrhessJ = prep_sparse_hessians(nldata.nlconstrlist, d.m.numCols, need_expr=need_expr)
     nljacI, nljacJ = jac_nz(nldata.nlconstrlist) # nonlinear jacobian components
     nnz_jac = nnz(A) + length(nljacI)
     nnz_hess = length(constrhessI)
@@ -337,7 +342,7 @@ function MathProgBase.initialize(d::JuMPNLPEvaluator, requested_features::Vector
     d.eval_hesslag_timer = 0
 end
 
-MathProgBase.features_available(d::JuMPNLPEvaluator) = [:Grad, :Jac, :Hess]
+MathProgBase.features_available(d::JuMPNLPEvaluator) = [:Grad, :Jac, :Hess, :ExprGraph]
 
 MathProgBase.eval_f(d::JuMPNLPEvaluator, x) = d.eval_f(x)
 MathProgBase.eval_g(d::JuMPNLPEvaluator, g, x) = d.eval_g(g,x)
@@ -345,14 +350,67 @@ MathProgBase.eval_grad_f(d::JuMPNLPEvaluator, g, x) = d.eval_grad_f(g,x)
 MathProgBase.eval_jac_g(d::JuMPNLPEvaluator, J, x) = d.eval_jac_g(J,x)
 MathProgBase.eval_hesslag(d::JuMPNLPEvaluator, H, x, σ, μ) = d.eval_hesslag(H, x, σ, μ)
 
-MathProgBase.isobjlinear(d::JuMPNLPEvaluator) = !(isa(d.m.nldata.nlobj, ReverseDiffSparse.SymbolicOutput)) && (length(d.m.obj.qvars1) == 0)
+MathProgBase.isobjlinear(d::JuMPNLPEvaluator) = !(isa(d.m.nlpdata.nlobj, ReverseDiffSparse.SymbolicOutput)) && (length(d.m.obj.qvars1) == 0)
 # interpret quadratic to include purely linear
-MathProgBase.isobjquadratic(d::JuMPNLPEvaluator) = !(isa(d.m.nldata.nlobj, ReverseDiffSparse.SymbolicOutput)) 
+MathProgBase.isobjquadratic(d::JuMPNLPEvaluator) = !(isa(d.m.nlpdata.nlobj, ReverseDiffSparse.SymbolicOutput)) 
 
 MathProgBase.isconstrlinear(d::JuMPNLPEvaluator, i::Integer) = (i <= length(d.m.linconstr))
 
 MathProgBase.jac_structure(d::JuMPNLPEvaluator) = d.jac_I, d.jac_J
 MathProgBase.hesslag_structure(d::JuMPNLPEvaluator) = d.hess_I, d.hess_J
+
+# currently don't merge duplicates (this isn't required by MPB standard)
+function affToExpr(aff::AffExpr)
+    ex = Expr(:call,:+)
+    for k in 1:length(aff.vars)
+        push!(ex.args, Expr(:call,:*,aff.coeffs[k],:(x[$(aff.vars[k].col)])))
+    end
+    if aff.constant != 0
+        push!(ex.args, aff.constant)
+    end
+    return ex
+end
+
+function quadToExpr(q::QuadExpr)
+    ex = Expr(:call,:+)
+    for k in 1:length(q.qvars1)
+        push!(ex.args, Expr(:call,:*,q.qcoeffs[k],:(x[$(q.qvars1[k].col)]), :(x[$(q.qvars2[k].col)])))
+    end
+    append!(ex.args, affToExpr(q.aff).args[2:end])
+    return ex
+end
+
+function MathProgBase.obj_expr(d::JuMPNLPEvaluator)
+    if isa(d.m.nlpdata.nlobj, ReverseDiffSparse.SymbolicOutput)
+        return ReverseDiffSparse.to_flat_expr(d.m.nlpdata.nlobj)
+    else
+        return quadToExpr(d.m.obj)
+    end
+end
+
+function MathProgBase.constr_expr(d::JuMPNLPEvaluator,i::Integer)
+    nlin = length(d.m.linconstr)
+    nquad = length(d.m.quadconstr)
+    if i <= nlin
+        constr = d.m.linconstr[i]
+        ex = affToExpr(constr.terms)
+        # remove constant
+        deleteat!(ex.args,length(ex.args))
+        if sense(constr) == :range
+            return Expr(:comparison, constr.lb, ex, constr.ub)
+        else
+            return Expr(:comparison, ex, sense(constr), rhs(constr))
+        end
+    elseif i > nlin && i <= nlin + nquad
+        i -= nlin
+        qconstr = d.m.quadconstr[i]
+        return Expr(:comparison, quadToExpr(qconstr.terms), qconstr.sense, 0)
+    else
+        i -= nlin + nquad
+        ex = ReverseDiffSparse.to_flat_expr(d.m.nlpdata.nlconstrlist, i)
+        return Expr(:comparison, ex, sense(d.m.nlpdata.nlconstr[i]), rhs(d.m.nlpdata.nlconstr[i]))
+    end
+end
 
 
 

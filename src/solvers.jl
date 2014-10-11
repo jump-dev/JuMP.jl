@@ -8,7 +8,6 @@ function solve(m::Model;IpoptOptions::Dict=Dict(),load_model_only=false, suppres
             m.solver = MathProgBase.defaultNLPsolver
         end
         s = solvenlp(m, suppress_warnings=suppress_warnings)
-        m.solver = UnsetSolver()
         return s
     end
     # Analyze model to see if any integers
@@ -137,11 +136,12 @@ function prepConstrMatrix(m::Model)
     # First we build it row-wise, then use the efficient transpose
     # Theory is, this is faster than us trying to do it ourselves
     # Intialize storage
-    numRows = length(m.linconstr)
+    linconstr = m.linconstr::Vector{LinearConstraint}
+    numRows = length(linconstr)
     rowptr = Array(Int,numRows+1)
     nnz = 0
     for c in 1:numRows
-        nnz += length(m.linconstr[c].terms.coeffs)
+        nnz += length(linconstr[c].terms.coeffs)
     end
     colval = Array(Int,nnz)
     rownzval = Array(Float64,nnz)
@@ -153,9 +153,9 @@ function prepConstrMatrix(m::Model)
     tmpnzidx = tmprow.nzidx
     for c in 1:numRows
         rowptr[c] = nnz + 1
-        assert_isfinite(m.linconstr[c].terms)
-        coeffs = m.linconstr[c].terms.coeffs
-        vars = m.linconstr[c].terms.vars
+        assert_isfinite(linconstr[c].terms)
+        coeffs = linconstr[c].terms.coeffs
+        vars = linconstr[c].terms.vars
         # collect duplicates
         for ind in 1:length(coeffs)
             if !is(vars[ind].m, m)
@@ -214,7 +214,6 @@ function solveLP(m::Model; load_model_only=false, suppress_warnings=false)
     end 
 
     if !load_model_only
-        (m.presolve != nothing) && m.presolve(m)
         MathProgBase.optimize!(m.internalModel)
         stat = MathProgBase.status(m.internalModel)
     else
@@ -328,7 +327,6 @@ function solveMIP(m::Model; load_model_only=false, suppress_warnings=false)
     end
 
     if !load_model_only
-        (m.presolve != nothing) && m.presolve(m)
         MathProgBase.optimize!(m.internalModel)
         stat = MathProgBase.status(m.internalModel)
     else
@@ -361,6 +359,8 @@ function solveMIP(m::Model; load_model_only=false, suppress_warnings=false)
 end
 
 function buildInternalModel(m::Model)
+    m.nlpdata == nothing || error("buildInternalModel not supported for nonlinear problems")
+
     anyInts = false
     for j = 1:m.numCols
         if m.colCat[j] != :Cont
