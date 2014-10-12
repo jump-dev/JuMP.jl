@@ -170,7 +170,7 @@ function parseExpr(x, aff::Symbol, constantCoef)
                 parseExpr(x.args[2], aff, :(-1.0*$constantCoef))
             else # a - b - c ...
                 Expr(:block,vcat(parseExpr(x.args[2], aff, constantCoef),
-                     {parseExpr(arg, aff, :(-1.0*$constantCoef)) for arg in x.args[3:end]})...)
+                Any[parseExpr(arg, aff, :(-1.0*$constantCoef)) for arg in x.args[3:end]])...)
             end
         elseif x.head == :call && x.args[1] == :*
             coef = timescoef(x)
@@ -204,8 +204,8 @@ end
 #       idxpairs: Vector of IndexPair
 function buildrefsets(c::Expr)
     isexpr(c,:ref) || error("Unrecognized name in construction macro; expected $(string(c)) to be of the form name[...]")
-    idxvars = {}
-    idxsets = {}
+    idxvars = Any[]
+    idxsets = Any[]
     idxpairs = IndexPair[]
     # Creating an indexed set of refs
     cname = c.args[1]
@@ -227,8 +227,8 @@ function buildrefsets(c::Expr)
     return refcall, idxvars, idxsets, idxpairs
 end
 
-buildrefsets(c::Symbol)  = (esc(c), {}, {}, IndexPair[])
-buildrefsets(c::Nothing) = (gensym(), {}, {}, IndexPair[])
+buildrefsets(c::Symbol)  = (esc(c), Any[], Any[], IndexPair[])
+buildrefsets(c::Nothing) = (gensym(), Any[], Any[], IndexPair[])
 
 ###############################################################################
 # getloopedcode

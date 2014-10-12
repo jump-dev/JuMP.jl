@@ -116,7 +116,7 @@ function test_print_JuMPContainerVar()
     @defVar(m, rng2_1[1:10,[:a,:b,:c]])
     @defVar(m, tri_1[i=1:3,j=i:3])
     @defVar(m, tri_2[i=1:3,j=-i])
-    @defVar(m, tri_3[(i,j)={(i,i+2) for i in 1:5},k=i:j])
+    @defVar(m, tri_3[(i,j)=[(i,i+2) for i in 1:5],k=i:j])
     
     io_test(REPLMode, rng_unit1, "rng_unit1[i] free for all i in {1,2..9,10}")
     io_test(REPLMode, rng_unit2, "rng_unit2[i] free for all i in {-2,-1..2,3}")

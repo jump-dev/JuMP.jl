@@ -97,7 +97,7 @@ function Base.show(io::IO, m::Model)
     nint = sum(m.colCat .== :Int)
     nsc = sum(m.colCat .== :SemiCont)
     nsi = sum(m.colCat .== :SemiInt)
-    varstr = {}
+    varstr = Any[]
     nbin == 0 || push!(varstr, "$nbin binary")
     nint == 0 || push!(varstr, "$nint integer")
     nsc  == 0 || push!(varstr, "$nsc semicontinuous")
@@ -445,12 +445,12 @@ function val_str(mode, j::JuMPArray{Float64})
                 # Print the ":" version of indices we will recurse over
                 out_str *= indent * "[" * index_strs[i] * ",:"^(dims-depth) * "]\n"
                 val_str_rec(depth+1,
-                     length(parent_index) == 0 ? {index} : {parent_index...,index},
+                     length(parent_index) == 0 ? Any[index] : Any[parent_index...,index],
                     index_strs[i] * ",")
             end
         end
     end
-    val_str_rec(1,{},"")
+    val_str_rec(1,Any[],"")
     return out_str
 end
 # support types that don't have built-in comparison
