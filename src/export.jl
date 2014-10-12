@@ -7,7 +7,7 @@ function outputpass(x::ExprNode, expr_out)
 
     x.value = gensym() # generate a variable to represent the "value" of this node
     if isexpr(x.ex, :call)
-        values = {}
+        values = Any[]
         for i in 2:length(x.ex.args)
             push!(values, outputpass(x.ex.args[i], expr_out))
         end

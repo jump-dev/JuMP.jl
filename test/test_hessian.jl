@@ -70,7 +70,7 @@ eval_hess!(V, exlist, val, lambda)
 
 # irregular indices
 exlist = ExprList()
-idx = {[1,1],[1,2]}
+idx = Any[[1,1],[1,2]]
 for i in 1:2
     push!(exlist,@processNLExpr sum{x[k]^2/2, k in idx[i]})
 end

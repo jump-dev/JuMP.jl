@@ -24,7 +24,7 @@ function compute_hessian_sparsity(s::SymbolicOutput)
     
     clist = Dict()
     eval(fexpr)(clist)
-    edgelist = {}
+    edgelist = Any[]
     for color in values(clist)
         # for every pair:
         for x in color

@@ -156,7 +156,7 @@ macro processNLExpr(x)
     if isa(x, Symbol)
         x = Expr(:call,:+,x,0)
     end
-    tree = esc(quoteTree(x, datalist, {}))
+    tree = esc(quoteTree(x, datalist, Any[]))
     inputnames = Expr(:tuple)
     inputvals = Expr(:tuple)
     for (k,v) in datalist
@@ -218,7 +218,7 @@ function forwardpass(x::ExprNode, expr_out)
 
     x.value = gensym() # generate a variable to represent the value of this node
     if isexpr(x.ex, :call)
-        values = {}
+        values = Any[]
         for i in 2:length(x.ex.args)
             push!(values, forwardpass(x.ex.args[i], expr_out))
         end
