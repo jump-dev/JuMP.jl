@@ -18,6 +18,7 @@ before_install:
     - git config --global user.name "Travis User"
     - git config --global user.email "travis@example.net"
     - if [[ -a .git/shallow ]]; then git fetch --unshallow; fi
+    - julia -e 'versioninfo()'
 script:
     - julia -e 'Pkg.init(); Pkg.clone(pwd())'
     - if [ $JULIAVERSION = "julianightlies" ]; then julia -e 'Pkg.add("Ipopt")'; fi
