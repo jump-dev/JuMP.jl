@@ -7,6 +7,7 @@
 module JuMP
 
 import MathProgBase
+import Base: size, copy, zero, one, isequal, issym
 
 using ReverseDiffSparse
 if isdir(Pkg.dir("ArrayViews"))
@@ -82,6 +83,7 @@ type Model
     indexedVector::IndexedVector{Float64}
 
     nlpdata#::NLPData
+    sdpdata
 
     # Extension dictionary - e.g. for robust
     # Extensions should define a type to hold information particular to
@@ -103,7 +105,7 @@ function Model(;solver=UnsetSolver())
           0,String[],String[],Float64[],Float64[],Symbol[],
           0,Float64[],Float64[],Float64[],nothing,solver,
           false,nothing,nothing,nothing,JuMPContainer[],
-          IndexedVector(Float64,0),nothing,Dict{Symbol,Any}())
+          IndexedVector(Float64,0),nothing,nothing,Dict{Symbol,Any}())
 end
 
 # Getters/setters
@@ -167,6 +169,11 @@ end
 
 ReverseDiffSparse.getplaceindex(x::Variable) = x.col
 Base.isequal(x::Variable,y::Variable) = isequal(x.col,y.col) && isequal(x.m,y.m)
+Base.getindex(x::Variable) = x.col
+Base.getindex(x::Variable,idx::Int) = (idx == 1 ? x : throw(BoundsError()))
+Base.getindex(x::Variable,idx::Int,idy::Int) = ((idx,idy) == (1,1) ? x : throw(BoundsError()))
+
+Base.isequal(x::Variable,y::Variable) = isequal(x.col,y.col) && isequal(x.m,y.m)
 
 function Variable(m::Model,lower::Number,upper::Number,cat::Symbol,name::String)
     m.numCols += 1
@@ -189,6 +196,9 @@ end
 
 Variable(m::Model,lower::Number,upper::Number,cat::Symbol) =
     Variable(m,lower,upper,cat,"")
+
+size(v::Variable) = (1,)
+size(v::Variable,sl::Int) = 1
 
 # Name setter/getters
 function setName(v::Variable,n::String)
@@ -250,6 +260,37 @@ Base.start(aff::GenericAffExpr) = 1
 Base.done(aff::GenericAffExpr, state::Int) = state > length(aff.vars)
 Base.next(aff::GenericAffExpr, state::Int) = ((aff.coeffs[state], aff.vars[state]), state+1)
 
+typealias AffExpr GenericAffExpr{Float64,Variable}
+AffExpr() = AffExpr(Variable[],Float64[],0.0)
+AffExpr(v::Real) = AffExpr(Variable[],Float64[],convert(Float64,v))
+AffExpr(v::Variable) = AffExpr(concat(v),[1.0],0.0)
+
+getindex(x::AffExpr,idx::Int) = (idx == 1 ? x : throw(BoundsError()))
+getindex(x::AffExpr,idx::Int,idy::Int) = ((idx,idy) == (1,1) ? x : throw(BoundsError()))
+isequal(x::AffExpr,y::AffExpr) = isequal(x.vars,y.vars) && isequal(x.coeffs,y.coeffs) && isequal(x.constant,y.constant)
+
+Base.isempty(a::AffExpr) = (length(a.vars) == 0 && a.constant == 0.)
+Base.convert(::Type{AffExpr}, v::Variable) = AffExpr(Variable[v], [1.0], 0.)
+Base.convert(::Type{AffExpr}, v::Real) = AffExpr(Variable[], Float64[], v)
+Base.zero(::Type{AffExpr}) = AffExpr(Variable[],Float64[],0.)
+Base.zero(a::AffExpr) = zero(typeof(a))
+
+copy(a::AffExpr) = AffExpr(copy(a.vars),copy(a.coeffs),copy(a.constant))
+
+zero(::Type{AffExpr}) = AffExpr(Variable[],Float64[],0.)
+
+function setObjective(m::Model, sense::Symbol, a::AffExpr)
+    setObjectiveSense(m, sense)
+    m.obj = QuadExpr()
+    m.obj.aff = a
+end
+
+# Copy utility function, not exported
+function Base.copy(a::AffExpr, new_model::Model)
+    return AffExpr([Variable(new_model, v.col) for v in a.vars],
+                                 a.coeffs[:], a.constant)
+end
+
 # More efficient ways to grow an affine expression
 # Add a single term to an affine expression
 function Base.push!{T,S}(aff::GenericAffExpr{T,S}, new_coeff::T, new_var::S)
@@ -308,6 +349,8 @@ type GenericQuadExpr{CoefType,VarType}
     aff::GenericAffExpr{CoefType,VarType}
 end
 typealias QuadExpr GenericQuadExpr{Float64,Variable}
+
+isequal(x::QuadExpr,y::QuadExpr) = isequal(x.vars1,y.vars1) && isequal(x.vars2,y.vars2) && isequal(x.qcoeffs,y.qcoeffs) && isequal(x.aff,y.aff)
 
 QuadExpr() = QuadExpr(Variable[],Variable[],Float64[],AffExpr())
 
@@ -612,6 +655,14 @@ include("callbacks.jl")
 include("print.jl")
 # Nonlinear-specific code
 include("nlp.jl")
+# SDP-specific (type) code
+include("sdp.jl")
+# SDP-specific operators
+include("sdp_operators.jl")
+# SDP-specific solve code
+include("sdp_solve.jl")
+# concatenation helpers, mostly
+include("sdp_utils.jl")
 
 ##########################################################################
 end

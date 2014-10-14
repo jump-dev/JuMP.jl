@@ -10,6 +10,9 @@ function solve(m::Model;IpoptOptions::Dict=Dict(),load_model_only=false, suppres
         s = solvenlp(m, suppress_warnings=suppress_warnings)
         return s
     end
+    if m.sdpdata != nothing
+        return solveSDP(m)
+    end
     # Analyze model to see if any integers
     anyInts = (length(m.sosconstr) > 0)
     if !anyInts
