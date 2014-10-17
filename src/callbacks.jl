@@ -87,10 +87,11 @@ macro addLazyConstraint(cbdata, x)
     end
     if length(x.args) == 3 # simple comparison
         lhs = :($(x.args[1]) - $(x.args[3])) # move everything to the lhs
+        newaff, parsecode = parseExpr(lhs, :aff, [1.0])
         quote
             aff = AffExpr()
-            $(parseExpr(lhs, :aff, 1.0))
-            constr = $(x.args[2])(aff,0)
+            $parsecode
+            constr = $(x.args[2])($newaff,0)
             addLazyConstraint($cbdata, constr)
         end
     else
@@ -119,10 +120,11 @@ macro addUserCut(cbdata, x)
     end
     if length(x.args) == 3 # simple comparison
         lhs = :($(x.args[1]) - $(x.args[3])) # move everything to the lhs
+        newaff, parsecode = parseExpr(lhs, :aff, [1.0])
         quote
             aff = AffExpr()
-            $(parseExpr(lhs, :aff, 1.0))
-            constr = $(x.args[2])(aff,0)
+            $parsecode
+            constr = $(x.args[2])($newaff,0)
             addUserCut($cbdata, constr)
         end
     else
