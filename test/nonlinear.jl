@@ -120,6 +120,19 @@ function test_nl_maxobj(nl_solver)
     @test_approx_eq_eps (getValue(x) + getValue(y)) -1/3 1e-3
 end
 
+function test_nl_infeas(nl_solver)
+    # (Attemp to) solve an infeasible problem
+    m = Model(solver=nl_solver)
+    n = 10
+    @defVar(m, 0 <= x[i=1:n] <= 1)
+    @setNLObjective(m, Max, x[n])
+    for i in 1:n-1
+        @addNLConstraint(m, x[i+1]-x[i] == 0.15)
+    end
+    status = solve(m)
+    @test status == :Infeasible
+end
+
 #############################################################################
 # Test that output is produced in correct MPB form
 type DummyNLPSolver <: MathProgBase.AbstractMathProgSolver
@@ -167,6 +180,7 @@ function run_nl_tests(nl_solvers)
         test_nl_quadobj(nl_solver)
         test_nl_quadcon(nl_solver)
         test_nl_maxobj(nl_solver)
+        test_nl_infeas(nl_solver)
     end
     println("  Testing MPB interface")
     test_nl_mpb()
