@@ -4,6 +4,8 @@
 # See http://github.com/JuliaOpt/JuMP.jl
 #############################################################################
 # test/nonlinear.jl
+# To run standlone:
+#   julia -L test/nonlinear.jl -e "run_nl_tests(load_nl_solvers())"
 #############################################################################
 
 using JuMP
@@ -168,4 +170,21 @@ function run_nl_tests(nl_solvers)
     end
     println("  Testing MPB interface")
     test_nl_mpb()
+end
+
+function load_nl_solvers()
+    nl_solvers = Any[]
+    if Pkg.installed("Ipopt") != nothing
+        eval(Expr(:import,:Ipopt))
+        push!(nl_solvers, ("Ipopt",Ipopt.IpoptSolver(print_level=0)))
+    end
+    if Pkg.installed("NLopt") != nothing
+        eval(Expr(:import,:NLopt))
+        push!(nl_solvers, ("NLopt",NLopt.NLoptSolver(algorithm=:LD_SLSQP)))
+    end
+    if Pkg.installed("KNITRO") != nothing
+        eval(Expr(:import,:KNITRO))
+        push!(nl_solvers, ("KNITRO",KNITRO.KnitroSolver()))
+    end
+    return nl_solvers
 end

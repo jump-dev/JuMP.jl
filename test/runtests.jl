@@ -1,3 +1,11 @@
+#############################################################################
+# JuMP
+# An algebraic modelling langauge for Julia
+# See http://github.com/JuliaOpt/JuMP.jl
+#############################################################################
+# test/runtests.jl
+#############################################################################
+
 using JuMP
 using Base.Test
 
@@ -6,7 +14,7 @@ tests =["print.jl",
         "variable.jl",
         "operator.jl",
         "macros.jl",
-        #"model.jl",
+        "model.jl",
         "probmod.jl",
         "callback.jl",
         "sosmodel.jl"]
@@ -32,21 +40,8 @@ end
 
 #############################################################################
 println(" Test: nonlinear.jl")
-nl_solvers = Any[]
-if Pkg.installed("Ipopt") != nothing
-    eval(Expr(:import,:Ipopt))
-    push!(nl_solvers, ("Ipopt",Ipopt.IpoptSolver(print_level=0)))
-end
-if Pkg.installed("NLopt") != nothing
-    eval(Expr(:import,:NLopt))
-    push!(nl_solvers, ("NLopt",NLopt.NLoptSolver(algorithm=:LD_SLSQP)))
-end
-if Pkg.installed("KNITRO") != nothing
-    eval(Expr(:import,:KNITRO))
-    push!(nl_solvers, ("KNITRO",KNITRO.KnitroSolver()))
-end
 include("nonlinear.jl")
-run_nl_tests(nl_solvers)
+run_nl_tests(load_nl_solvers())
 
 # hygiene.jl should be run separately
 # hockschittkowski/runhs.jl has additional nonlinear tests
