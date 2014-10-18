@@ -1,4 +1,3 @@
-require("JuMP")
 using JuMP
 using Base.Test
 
@@ -31,10 +30,23 @@ else
     println("WARNING: Neither Gurobi nor CPLEX nor Mosek installed, cannot execute corresponding tests")
 end
 
+#############################################################################
+println(" Test: nonlinear.jl")
+nl_solvers = Any[]
 if Pkg.installed("Ipopt") != nothing
-    println(" Test: nonlinear.jl")
-    include("nonlinear.jl")
+    eval(Expr(:import,:Ipopt))
+    push!(nl_solvers, ("Ipopt",Ipopt.IpoptSolver(print_level=0)))
 end
+if Pkg.installed("NLopt") != nothing
+    eval(Expr(:import,:NLopt))
+    push!(nl_solvers, ("NLopt",NLopt.NLoptSolver(algorithm=:LD_SLSQP)))
+end
+if Pkg.installed("KNITRO") != nothing
+    eval(Expr(:import,:KNITRO))
+    push!(nl_solvers, ("KNITRO",KNITRO.KnitroSolver()))
+end
+include("nonlinear.jl")
+run_nl_tests(nl_solvers)
 
 # hygiene.jl should be run separately
 # hockschittkowski/runhs.jl has additional nonlinear tests
