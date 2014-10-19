@@ -76,7 +76,7 @@ macro gendict(instancename,T,idxpairs,idxsets...)
             push!(getidxlhs.args,:($varname))
             push!(setidxlhs.args,:($varname))
 
-            push!(getidxrhs.args,:(isa($varname, Int) ? $varname+$(offset[i]) : $varname ))
+            push!(getidxrhs.args,:((isa($varname, Int) || isa($varname, Range)) ? $varname+$(offset[i]) : $varname ))
             push!(setidxrhs.args,:($varname+$(offset[i])))
 
         end

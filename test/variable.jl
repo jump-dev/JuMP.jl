@@ -34,6 +34,12 @@ s = [:x,:x,:y]
 @defVar(repeatmod, x[s])
 @test getNumVars(repeatmod) == 3
 
+# Index by ranges (issue #287)
+@defVar(m, x[0:3])
+setValue(x[0],3.0)
+setValue(x[1],5.0)
+@test getValue(x)[0:1] == [3.0,5.0]
+
 # Test conditionals in variable definition
 # condmod = Model()
 # @defVar(condmod, x[i=1:10]; iseven(i))
