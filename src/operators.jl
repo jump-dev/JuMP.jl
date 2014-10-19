@@ -129,10 +129,10 @@ function (*)(lhs::AffExpr, rhs::AffExpr)
         ret.aff.constant += c * rhs.constant
     end
     
-    # Expr 2 constant * Expr 1 terms
+    # [RHS constant] * LHS
     if rhs.constant != 0
         c = rhs.constant
-        for i = 1:m
+        for i = 1:n
             push!(ret.aff.vars,   lhs.vars[i])
             push!(ret.aff.coeffs, lhs.coeffs[i] * c)
         end
