@@ -132,7 +132,7 @@ macro addConstraint(m, x, extra...)
         code = quote
             q = AffExpr()
             $parsecode
-            $crefflag && !isa(q,AffExpr) && error("Three argument form of @addConstraint does not currently support quadratic constraints")
+            $crefflag && !isa($newaff,AffExpr) && error("Three argument form of @addConstraint does not currently support quadratic constraints")
             $(refcall) = addConstraint($m, $(x.args[2])($newaff,0))
         end
     elseif length(x.args) == 5
