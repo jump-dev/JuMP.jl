@@ -1,6 +1,11 @@
 JuMP release notes
 ==================
 
+Version 0.6.3 (October 19, 2014)
+--------------------------------
+
+  * Fix a bug in multiplying two AffExpr objects.
+
 Version 0.6.2 (October 11, 2014)
 --------------------------------
 
