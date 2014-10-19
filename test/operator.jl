@@ -132,6 +132,7 @@ q3 = 2 * x * x + 1 * y * y + z + 3
 @test affToStr(aff + aff2) == "7.1 x + 1.2 y + 3.7"
 @test affToStr(aff - aff2) == "7.1 x - 1.2 y + 1.3"
 @test quadToStr(aff * aff2) == "8.52 x*y + 3 y + 8.52 x + 3"
+@test quadToStr((x+x)*(x+3)) == quadToStr((x+3)*(x+x))  # Issue #288
 @test_throws ErrorException aff/aff2
 @test conToStr(aff ≤ aff2) == "7.1 x - 1.2 y $leq -1.3"
 @test conToStr(aff == aff2) == "7.1 x - 1.2 y $eq -1.3"
