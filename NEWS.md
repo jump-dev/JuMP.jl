@@ -6,6 +6,11 @@ Unreleased
 
   * On Julia 0.4, variables and coefficients may be multiplied in any order within macros. That is, variable*coefficient is now valid syntax.
 
+Version 0.6.3 (October 19, 2014)
+--------------------------------
+
+  * Fix a bug in multiplying two AffExpr objects.
+
 
 Version 0.6.2 (October 11, 2014)
 --------------------------------
