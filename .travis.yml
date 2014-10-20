@@ -1,33 +1,31 @@
 language: cpp
 compiler:
     - gcc
+os:
+    - linux
+    - osx
 notifications:
     email: false
 env:
     matrix: 
-        - PKGADD="Cbc;Clp" JULIAVERSION="juliareleases" 
+        - PKGADD="Cbc;Clp;GLPKMathProgInterface;Ipopt" JULIAVERSION="juliareleases"
         - PKGADD="GLPKMathProgInterface" JULIAVERSION="julianightlies" 
-        - PKGADD="GLPKMathProgInterface" JULIAVERSION="juliareleases" 
 before_install:
-    - sudo add-apt-repository ppa:staticfloat/julia-deps -y
-    - sudo add-apt-repository ppa:staticfloat/${JULIAVERSION} -y
-    - sudo apt-get update -qq -y
-    - sudo apt-get install julia -y
-    - sudo apt-get install gfortran liblapack-dev
-    - sudo apt-get install libgmp-dev -y
-    - git config --global user.name "Travis User"
-    - git config --global user.email "travis@example.net"
+    - curl http://julialang.org/install-julia.sh | sh -s $JULIAVERSION
+    - if [ `uname` = "Linux" ]; then
+        sudo apt-get install gfortran liblapack-dev libgmp-dev libglpk-dev;
+      fi
     - if [[ -a .git/shallow ]]; then git fetch --unshallow; fi
     - julia -e 'versioninfo()'
 script:
     - julia -e 'Pkg.init(); Pkg.clone(pwd())'
-    - if [ $JULIAVERSION = "julianightlies" ]; then julia -e 'Pkg.add("Ipopt")'; fi
+    - if [[ `uname` = "Darwin" ]]; then julia -e 'Pkg.add("Ipopt")'; fi # installs from binaries
     - julia -e 'for p in split(ENV["PKGADD"],";") Pkg.add(p) end'
     - if [ $JULIAVERSION = "julianightlies" ]; then julia -e 'Pkg.test("JuMP", coverage=true)'; fi
     - if [ $JULIAVERSION = "juliareleases" ]; then julia -e 'Pkg.test("JuMP")'; fi
     - julia test/hygiene.jl
     - julia test/hockschittkowski/runhs.jl
 after_success:
-    - if [ $JULIAVERSION = "julianightlies" ]; then julia -e 'cd(Pkg.dir("JuMP")); Pkg.add("Coverage"); using Coverage; Coveralls.submit(Coveralls.process_folder())'; fi
+    - if [[ $JULIAVERSION = "juliareleases" && `uname` = "Linux" ]]; then julia -e 'cd(Pkg.dir("JuMP")); Pkg.add("Coverage"); using Coverage; Coveralls.submit(Coveralls.process_folder())'; fi
 
 
