@@ -242,6 +242,7 @@ Base.one(a::GenericAffExpr) = one(typeof(a))
 Base.start(aff::GenericAffExpr) = 1
 Base.done(aff::GenericAffExpr, state::Int) = state > length(aff.vars)
 Base.next(aff::GenericAffExpr, state::Int) = ((aff.coeffs[state], aff.vars[state]), state+1)
+Base.in{CoefType,VarType}(x::VarType, aff::GenericAffExpr{CoefType,VarType}) = any(map(y->(isequal(y,x)),aff.vars))
 
 # More efficient ways to grow an affine expression
 # Add a single term to an affine expression
