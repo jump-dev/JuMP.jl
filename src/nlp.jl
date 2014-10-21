@@ -96,7 +96,6 @@ function MathProgBase.initialize(d::JuMPNLPEvaluator, requested_features::Vector
         end
     else
         # linear and quadratic
-        d.m.colVal = copy(d.m.colVal) # temporary workaround for julia issue #6645
         function eval_f(x)
             tic()
             v = dot(linobj,x) + d.m.obj.aff.constant
