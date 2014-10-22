@@ -19,11 +19,12 @@ end
 type JuMPNLPEvaluator <: MathProgBase.AbstractNLPEvaluator
     m::Model
     A::SparseMatrixCSC{Float64,Int} # linear constraint matrix
-    eval_f
-    eval_g
-    eval_grad_f
-    eval_jac_g
-    eval_hesslag
+    has_nlobj::Bool
+    linobj::Vector{Float64}
+    eval_f_nl::Function
+    eval_fgrad_nl::Function
+    eval_h_nl::Function
+    nnz_hess_obj::Int
     jac_I::Vector{Int}
     jac_J::Vector{Int}
     hess_I::Vector{Int}
@@ -34,9 +35,16 @@ type JuMPNLPEvaluator <: MathProgBase.AbstractNLPEvaluator
     eval_grad_f_timer::Float64
     eval_jac_g_timer::Float64
     eval_hesslag_timer::Float64
+    function JuMPNLPEvaluator(m::Model, A)
+        d = new(m,A)
+        d.eval_f_timer = 0
+        d.eval_g_timer = 0
+        d.eval_grad_f_timer = 0
+        d.eval_jac_g_timer = 0
+        d.eval_hesslag_timer = 0
+        return d
+    end
 end
-
-JuMPNLPEvaluator(m::Model, A) = JuMPNLPEvaluator(m, A, nothing, nothing, nothing, nothing, nothing, Int[], Int[], Int[], Int[],0.0,0.0,0.0,0.0,0.0)
 
 function MathProgBase.initialize(d::JuMPNLPEvaluator, requested_features::Vector{Symbol})
     for feat in requested_features
@@ -52,14 +60,14 @@ function MathProgBase.initialize(d::JuMPNLPEvaluator, requested_features::Vector
         need_expr = false
     end
     nldata::NLPData = d.m.nlpdata
-    has_nlobj = isa(nldata.nlobj, ReverseDiffSparse.SymbolicOutput)
-    if has_nlobj
+    d.has_nlobj = isa(nldata.nlobj, ReverseDiffSparse.SymbolicOutput)
+    if d.has_nlobj
         @assert length(d.m.obj.qvars1) == 0 && length(d.m.obj.aff.vars) == 0
     end
     
     tic()
 
-    linobj, linrowlb, linrowub = prepProblemBounds(d.m)
+    d.linobj, linrowlb, linrowub = prepProblemBounds(d.m)
 
     A = d.A
 
@@ -67,7 +75,7 @@ function MathProgBase.initialize(d::JuMPNLPEvaluator, requested_features::Vector
 
     constrhessI, constrhessJ = prep_sparse_hessians(nldata.nlconstrlist, d.m.numCols, need_expr=need_expr)
     nljacI, nljacJ = jac_nz(nldata.nlconstrlist) # nonlinear jacobian components
-    nnz_jac = nnz(A) + length(nljacI)
+    nnz_jac::Int = nnz(A) + length(nljacI)
     nnz_hess = length(constrhessI)
 
     for c in d.m.quadconstr
@@ -75,79 +83,10 @@ function MathProgBase.initialize(d::JuMPNLPEvaluator, requested_features::Vector
         nnz_hess += length(c.terms.qvars1)
     end
     
-    if has_nlobj
-        fg = genfgrad_simple(nldata.nlobj)
-        f = genfval_simple(nldata.nlobj)
-        function eval_f(x)
-            #print("x = ");show(x);println()
-            #println("f(x) = ", f(x))
-            tic()
-            v = f(x)
-            d.eval_f_timer += toq()
-            return v
-        end
-
-        function eval_grad_f(g, x)
-            tic()
-            fg(x,g)
-            d.eval_grad_f_timer += toq()
-            #print("x = ");show(x);println()
-            #println("gradf(x) = ");show(g);println()
-        end
-    else
-        # linear and quadratic
-        function eval_f(x)
-            tic()
-            v = dot(linobj,x) + d.m.obj.aff.constant
-            qobj::QuadExpr = d.m.obj
-            for k in 1:length(qobj.qvars1)
-                v += qobj.qcoeffs[k]*x[qobj.qvars1[k].col]*x[qobj.qvars2[k].col]
-            end
-            d.eval_f_timer += toq()
-            return v
-        end
-
-        function eval_grad_f(g, x)
-            tic()
-            copy!(g,linobj)
-            qobj::QuadExpr = d.m.obj
-            for k in 1:length(qobj.qvars1)
-                coef = qobj.qcoeffs[k]
-                g[qobj.qvars1[k].col] += coef*x[qobj.qvars2[k].col]
-                g[qobj.qvars2[k].col] += coef*x[qobj.qvars1[k].col]
-            end
-            d.eval_grad_f_timer += toq()
-        end
+    if d.has_nlobj
+        d.eval_fgrad_nl = genfgrad_simple(nldata.nlobj)
+        d.eval_f_nl = genfval_simple(nldata.nlobj)
     end
-
-    d.eval_f = eval_f
-    d.eval_grad_f = eval_grad_f
-
-    function eval_g(g, x)
-        tic()
-        fill!(subarr(g,1:size(A,1)), 0.0)
-        A_mul_B!(subarr(g,1:size(A,1)),A,x)
-        idx = size(A,1)+1
-        for c::QuadConstraint in d.m.quadconstr
-            aff = c.terms.aff
-            v = aff.constant
-            for k in 1:length(aff.vars)
-                v += aff.coeffs[k]*x[aff.vars[k].col]
-            end
-            for k in 1:length(c.terms.qvars1)
-                v += c.terms.qcoeffs[k]*x[c.terms.qvars1[k].col]*x[c.terms.qvars2[k].col]
-            end
-            g[idx] = v
-            idx += 1
-        end
-        eval_g!(subarr(g,idx:length(g)), nldata.nlconstrlist, x)
-        
-        d.eval_g_timer += toq()
-        #print("x = ");show(x);println()
-        #println(size(A,1), " g(x) = ");show(g);println()
-    end
-
-    d.eval_g = eval_g
 
     # Jacobian structure
     jac_I = zeros(nnz_jac)
@@ -188,50 +127,18 @@ function MathProgBase.initialize(d::JuMPNLPEvaluator, requested_features::Vector
     d.jac_I = jac_I
     d.jac_J = jac_J
 
-    function eval_jac_g(J, x)
-        tic()
-        fill!(J,0.0)
-        idx = 1
-        for col = 1:size(A,2)
-            for pos = A.colptr[col]:(A.colptr[col+1]-1)
-                J[idx] = A.nzval[pos]
-                idx += 1
-            end
-        end
-        for c::QuadConstraint in d.m.quadconstr
-            aff = c.terms.aff
-            for k in 1:length(aff.vars)
-                J[idx] = aff.coeffs[k]
-                idx += 1
-            end
-            for k in 1:length(c.terms.qvars1)
-                coef = c.terms.qcoeffs[k]
-                qidx1 = c.terms.qvars1[k].col
-                qidx2 = c.terms.qvars2[k].col
 
-                J[idx] = coef*x[qidx2]
-                J[idx+1] = coef*x[qidx1]
-                idx += 2
-            end
-        end
-        eval_jac_g!(subarr(J,idx:length(J)), nldata.nlconstrlist, x)
-        
-        d.eval_jac_g_timer += toq()
-        #print("x = ");show(x);println()
-        #print("V ");show(J);println()
-    end
 
-    d.eval_jac_g = eval_jac_g
-
-    if has_nlobj
-        hI, hJ, hfunc = gen_hessian_sparse_color_parametric(nldata.nlobj, d.m.numCols)
+    if d.has_nlobj
+        hI, hJ, d.eval_h_nl = gen_hessian_sparse_color_parametric(nldata.nlobj, d.m.numCols)
         nnz_hess += length(hI)
     else
         hI = []
         hJ = []
-        hfunc = (x,y,z) -> nothing
+        d.eval_h_nl = (x,y,z) -> nothing
         nnz_hess += length(d.m.obj.qvars1)
     end
+    d.nnz_hess_obj = length(hI)
 
     hess_I = zeros(nnz_hess)
     hess_J = zeros(nnz_hess)
@@ -280,55 +187,13 @@ function MathProgBase.initialize(d::JuMPNLPEvaluator, requested_features::Vector
     d.hess_I = hess_I
     d.hess_J = hess_J
 
-
-    function eval_hesslag(
-        H::Vector{Float64},         # Sparse hessian entry vector
-        x::Vector{Float64},         # Current solution
-        obj_factor::Float64,        # Lagrangian multiplier for objective
-        lambda::Vector{Float64})    # Multipliers for each constraint
-
-        qobj::QuadExpr = d.m.obj
-        
-        tic()
-        hfunc(x, subarr(H, 1:length(hI)), nldata.nlobj)
-        scale!(subarr(H, 1:length(hI)), obj_factor)
-        # quadratic objective
-        idx = 1+length(hI)
-        for k in 1:length(qobj.qvars1)
-            if qobj.qvars1[k].col == qobj.qvars2[k].col
-                H[idx] = obj_factor*2*qobj.qcoeffs[k]
-            else
-                H[idx] = obj_factor*qobj.qcoeffs[k]
-            end
-            idx += 1
-        end
-        # quadratic constraints
-        for (i,c::QuadConstraint) in enumerate(d.m.quadconstr)
-            l = lambda[length(d.m.linconstr)+i]
-            for k in 1:length(c.terms.qvars1)
-                if c.terms.qvars1[k].col == c.terms.qvars2[k].col
-                    H[idx] = l*2*c.terms.qcoeffs[k]
-                else
-                    H[idx] = l*c.terms.qcoeffs[k]
-                end
-                idx += 1
-            end
-        end
-
-        eval_hess!(subarr(H, idx:length(H)), nldata.nlconstrlist, x, subarr(lambda, (length(d.m.linconstr)+length(d.m.quadconstr)+1):length(lambda)))
-        d.eval_hesslag_timer += toq()
-
-    end
-
-    d.eval_hesslag = eval_hesslag
-
     numconstr = length(d.m.linconstr)+length(d.m.quadconstr)+n_nlconstr
     # call functions once to pre-compile
-    eval_f(d.m.colVal)
-    eval_g(Array(Float64,numconstr), d.m.colVal)
-    eval_grad_f(Array(Float64,d.m.numCols), d.m.colVal)
-    eval_jac_g(Array(Float64,nnz_jac), d.m.colVal)
-    eval_hesslag(Array(Float64,nnz_hess), d.m.colVal, 1.0, ones(numconstr))
+    MathProgBase.eval_f(d, d.m.colVal)
+    MathProgBase.eval_grad_f(d, Array(Float64,d.m.numCols), d.m.colVal)
+    MathProgBase.eval_g(d, Array(Float64,numconstr), d.m.colVal)
+    MathProgBase.eval_jac_g(d, Array(Float64,nnz_jac), d.m.colVal)
+    MathProgBase.eval_hesslag(d, Array(Float64,nnz_hess), d.m.colVal, 1.0, ones(numconstr))
 
     tprep = toq()
     #println("Prep time: $tprep")
@@ -343,11 +208,146 @@ end
 
 MathProgBase.features_available(d::JuMPNLPEvaluator) = [:Grad, :Jac, :Hess, :ExprGraph]
 
-MathProgBase.eval_f(d::JuMPNLPEvaluator, x) = d.eval_f(x)
-MathProgBase.eval_g(d::JuMPNLPEvaluator, g, x) = d.eval_g(g,x)
-MathProgBase.eval_grad_f(d::JuMPNLPEvaluator, g, x) = d.eval_grad_f(g,x)
-MathProgBase.eval_jac_g(d::JuMPNLPEvaluator, J, x) = d.eval_jac_g(J,x)
-MathProgBase.eval_hesslag(d::JuMPNLPEvaluator, H, x, σ, μ) = d.eval_hesslag(H, x, σ, μ)
+function MathProgBase.eval_f(d::JuMPNLPEvaluator, x)
+    tic()
+    if d.has_nlobj
+        v = d.eval_f_nl(x)::Float64
+    else
+        qobj = d.m.obj::QuadExpr
+        v = dot(x,d.linobj) + qobj.aff.constant
+        for k in 1:length(qobj.qvars1)
+            v += qobj.qcoeffs[k]*x[qobj.qvars1[k].col]*x[qobj.qvars2[k].col]
+        end
+    end
+    d.eval_f_timer += toq()
+    return v
+end
+
+function MathProgBase.eval_grad_f(d::JuMPNLPEvaluator, g, x)
+    tic()
+    if d.has_nlobj
+        d.eval_fgrad_nl(x,g)
+    else
+        copy!(g,d.linobj)
+        qobj::QuadExpr = d.m.obj
+        for k in 1:length(qobj.qvars1)
+            coef = qobj.qcoeffs[k]
+            g[qobj.qvars1[k].col] += coef*x[qobj.qvars2[k].col]
+            g[qobj.qvars2[k].col] += coef*x[qobj.qvars1[k].col]
+        end
+    end
+    d.eval_grad_f_timer += toq()
+    return
+end
+
+function MathProgBase.eval_g(d::JuMPNLPEvaluator, g, x)
+    tic()
+    A = d.A
+    for i in 1:size(A,1); g[i] = 0.0; end
+    #fill!(subarr(g,1:size(A,1)), 0.0)
+    A_mul_B!(subarr(g,1:size(A,1)),A,x)
+    idx = size(A,1)+1
+    quadconstr = d.m.quadconstr::Vector{QuadConstraint}
+    for c::QuadConstraint in quadconstr
+        aff = c.terms.aff
+        v = aff.constant
+        for k in 1:length(aff.vars)
+            v += aff.coeffs[k]*x[aff.vars[k].col]
+        end
+        for k in 1:length(c.terms.qvars1)
+            v += c.terms.qcoeffs[k]*x[c.terms.qvars1[k].col]*x[c.terms.qvars2[k].col]
+        end
+        g[idx] = v
+        idx += 1
+    end
+    eval_g!(subarr(g,idx:length(g)), (d.m.nlpdata::NLPData).nlconstrlist, x)
+    
+    d.eval_g_timer += toq()
+    #print("x = ");show(x);println()
+    #println(size(A,1), " g(x) = ");show(g);println()
+    return
+end
+
+function MathProgBase.eval_jac_g(d::JuMPNLPEvaluator, J, x)
+    tic()
+    fill!(J,0.0)
+    idx = 1
+    A = d.A
+    for col = 1:size(A,2)
+        for pos = A.colptr[col]:(A.colptr[col+1]-1)
+            J[idx] = A.nzval[pos]
+            idx += 1
+        end
+    end
+    quadconstr = d.m.quadconstr::Vector{QuadConstraint}
+    for c::QuadConstraint in quadconstr
+        aff = c.terms.aff
+        for k in 1:length(aff.vars)
+            J[idx] = aff.coeffs[k]
+            idx += 1
+        end
+        for k in 1:length(c.terms.qvars1)
+            coef = c.terms.qcoeffs[k]
+            qidx1 = c.terms.qvars1[k].col
+            qidx2 = c.terms.qvars2[k].col
+
+            J[idx] = coef*x[qidx2]
+            J[idx+1] = coef*x[qidx1]
+            idx += 2
+        end
+    end
+    eval_jac_g!(subarr(J,idx:length(J)), (d.m.nlpdata::NLPData).nlconstrlist, x)
+    
+    d.eval_jac_g_timer += toq()
+    #print("x = ");show(x);println()
+    #print("V ");show(J);println()
+    return
+end
+
+function MathProgBase.eval_hesslag(
+    d::JuMPNLPEvaluator,
+    H::Vector{Float64},         # Sparse hessian entry vector
+    x::Vector{Float64},         # Current solution
+    obj_factor::Float64,        # Lagrangian multiplier for objective
+    lambda::Vector{Float64})    # Multipliers for each constraint
+
+    qobj = d.m.obj::QuadExpr
+    nldata = d.m.nlpdata::NLPData
+    
+    tic()
+    d.eval_h_nl(x, subarr(H, 1:d.nnz_hess_obj), nldata.nlobj)
+    for i in 1:d.nnz_hess_obj; H[i] *= obj_factor; end
+    #scale!(subarr(H, 1:length(hI)), obj_factor)
+    # quadratic objective
+    idx = 1+d.nnz_hess_obj
+    for k in 1:length(qobj.qvars1)
+        if qobj.qvars1[k].col == qobj.qvars2[k].col
+            H[idx] = obj_factor*2*qobj.qcoeffs[k]
+        else
+            H[idx] = obj_factor*qobj.qcoeffs[k]
+        end
+        idx += 1
+    end
+    # quadratic constraints
+    quadconstr = d.m.quadconstr::Vector{QuadConstraint}
+    for i in 1:length(quadconstr)
+        c = quadconstr[i]
+        l = lambda[length(d.m.linconstr)+i]
+        for k in 1:length(c.terms.qvars1)
+            if c.terms.qvars1[k].col == c.terms.qvars2[k].col
+                H[idx] = l*2*c.terms.qcoeffs[k]
+            else
+                H[idx] = l*c.terms.qcoeffs[k]
+            end
+            idx += 1
+        end
+    end
+
+    eval_hess!(subarr(H, idx:length(H)), nldata.nlconstrlist, x, subarr(lambda, (length(d.m.linconstr::Vector{LinearConstraint})+length(quadconstr)+1):length(lambda)))
+    d.eval_hesslag_timer += toq()
+    return
+
+end
 
 MathProgBase.isobjlinear(d::JuMPNLPEvaluator) = !(isa(d.m.nlpdata.nlobj, ReverseDiffSparse.SymbolicOutput)) && (length(d.m.obj.qvars1) == 0)
 # interpret quadratic to include purely linear
