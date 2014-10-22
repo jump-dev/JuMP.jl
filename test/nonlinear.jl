@@ -121,7 +121,7 @@ function test_nl_maxobj(nl_solver)
 end
 
 function test_nl_infeas(nl_solver)
-    # (Attemp to) solve an infeasible problem
+    # (Attempt to) solve an infeasible problem
     m = Model(solver=nl_solver)
     n = 10
     @defVar(m, 0 <= x[i=1:n] <= 1)
@@ -131,6 +131,17 @@ function test_nl_infeas(nl_solver)
     end
     status = solve(m)
     @test status == :Infeasible
+end
+
+function test_nl_unbnd(nl_solver)
+    # (Attempt to) solve an unbounded problem
+    m = Model(solver=nl_solver)
+    @defVar(m, x >= 0)
+    @setNLObjective(m, Max, x)
+    @addNLConstraint(m, x >= 5)
+    status = solve(m)
+    @show status
+    @test status == :Unbounded
 end
 
 #############################################################################
@@ -181,6 +192,7 @@ function run_nl_tests(nl_solvers)
         test_nl_quadcon(nl_solver)
         test_nl_maxobj(nl_solver)
         test_nl_infeas(nl_solver)
+        test_nl_unbnd(nl_solver)
     end
     println("  Testing MPB interface")
     test_nl_mpb()
