@@ -14,15 +14,6 @@ end
 
 export gen_adjlist
 
-function reverse_dict_lookup(d, v)
-    for k in keys(d)
-        if d[k] == v
-            return k
-        end
-    end
-    error("Not found")
-end
-
 # acyclic coloring algorithm of Gebremdehin, Tarafdar, Manne, and Pothen
 # "New Acyclic and Star Coloring Algorithms with Application to Computing Hessians"
 # SIAM J. Sci. Comput. 2007
@@ -37,11 +28,14 @@ function acyclic_coloring(g)
     colored(i) = (color[i] != 0)
     # disjoint set forest of edges in the graph
     S = DataStructures.DisjointSets{(Int,Int)}(collect(keys(firstVisitToTree)))
+    reverse_intmap = Array((Int,Int),length(S.intmap))
+    for (k,v) in S.intmap
+        reverse_intmap[v] = k
+    end
 
     function prevent_cycle(v,w,x)
         er = DataStructures.find_root(S, normalize(w,x))
-        # reverse lookup, this isn't ideal
-        e = reverse_dict_lookup(S.intmap,er)
+        e = reverse_intmap[er]
         p,q = firstVisitToTree[e]
         if p != v
             firstVisitToTree[e] = normalize(v,w)
