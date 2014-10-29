@@ -4,8 +4,6 @@ using Graphs
 
 # tests for acyclic coloring
 
-@test_throws ErrorException ReverseDiffSparse.reverse_dict_lookup(Dict(), :x)
-
 g = simple_graph(10, is_directed=false)
 color, numcolors = ReverseDiffSparse.acyclic_coloring(g)
 @test numcolors == 1
