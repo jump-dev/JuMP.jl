@@ -92,7 +92,7 @@ function compute_hessian_sparsity(x::ExprNode, linear_so_far, expr_out)
             compute_hessian_sparsity(curlyexpr(x.ex), linear_so_far, code)
             push!(expr_out.args, gencurlyloop(x.ex,code))
         else
-            @assert x.ex.args[1] == :prod
+            @assert isprod(x.ex.args[1])
             # new color
             code = quote end
             compute_hessian_sparsity(curlyexpr(x.ex), false, code)
