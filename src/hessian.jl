@@ -60,24 +60,57 @@ end
 function compute_hessian_sparsity(x::ExprNode, linear_so_far, expr_out)
     if isexpr(x.ex, :call)
         # is this a linear operator?
-        if linear_so_far == 1 
-            if x.ex.args[1] == :(+) || x.ex.args[1] == :(-) || (x.ex.args[1] == :(*) && sum([isa(t,ExprNode) for t in x.ex.args[2:end]]) <= 1) # TODO: doesn't catch multiplication by symbolic constants
-                # we're still at the top
-                # give the same color to the children
-                for i in 2:length(x.ex.args)
-                    compute_hessian_sparsity(x.ex.args[i], true, expr_out)
+        if linear_so_far == 1
+            # pre-generate the code for the two cases
+
+            code_linear = quote end
+            # we're still at the top
+            # give the same color to the children
+            for i in 2:length(x.ex.args)
+                compute_hessian_sparsity(x.ex.args[i], true, code_linear)
+            end
+
+            # this is a new f_i, make a new color
+            code_nonlinear = quote
+                mycolor = gensym()
+                colorlist[mycolor] = Set()
+            end
+            for i in 2:length(x.ex.args)
+                compute_hessian_sparsity(x.ex.args[i], false, code_nonlinear)
+            end
+
+
+            if x.ex.args[1] == :(+) || x.ex.args[1] == :(-)
+                push!(expr_out.args, code_linear)
+            elseif x.ex.args[1] == :(*)
+                # if at most one of the multiplicands is a "complex" expression,
+                # try to detect if all others are constants.
+                iscomplexexpr(t) = isa(t,ExprNode) && (isexpr(t.ex,:call) || isexpr(t.ex,:curly))
+                num_complex = mapreduce(iscomplexexpr, +, x.ex.args[2:end])
+                if num_complex <= 1
+                    conditions = quote
+                        num_nonconstant = $num_complex
+                    end
+                    for t in x.ex.args[2:end]
+                        iscomplexexpr(t) && continue
+                        if isa(t,ExprNode)
+                            push!(conditions.args,
+                            :(num_nonconstant += isa($(t.ex),Placeholder)))
+                        end # else, definitely a constant
+                    end
+                    push!(expr_out.args, conditions)
+                    push!(expr_out.args, Expr(:if, :(num_nonconstant <= 1), code_linear, code_nonlinear))
+                else
+                    # too hard to detect constants, just say nonlinear
+                    push!(expr_out.args, quote let
+                            $code_nonlinear
+                        end end)
                 end
+
             else
-                # this is a new f_i, make a new color
-                code = quote
-                    mycolor = gensym()
-                    colorlist[mycolor] = Set()
-                end
-                for i in 2:length(x.ex.args)
-                    compute_hessian_sparsity(x.ex.args[i], false, code)
-                end
+
                 push!(expr_out.args, quote let 
-                            $code 
+                            $code_nonlinear
                         end end)
             end
         else

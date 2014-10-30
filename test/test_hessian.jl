@@ -3,7 +3,7 @@ using ReverseDiffSparse
 
 function test_sparsity(sp, H)
     I,J = sp
-    Hsp = sparse(I,J,ones(length(I)))
+    Hsp = sparse(I,J,ones(length(I)),size(H,1),size(H,2))
     H = sparse(tril(H))
     @test all( Hsp.colptr .== H.colptr)
     @test all( Hsp.rowval .== H.rowval)
@@ -54,6 +54,19 @@ I, J, sparsefunc_color = gen_hessian_sparse_color_parametric(ex,5)
 V = zeros(length(I))
 sparsefunc_color(val, V, ex)
 @test_approx_eq to_H(ex, I, J, V, 5) tril(exact(val))
+
+# sparsity detection with constants
+a = 10
+b = 20
+ex = @processNLExpr  sum{ a*b*x[i], i =1:5 } + sin(x[1]*x[2])
+exact(x) = [ -x[2]^2*sin(x[1]*x[2]) cos(x[1]*x[2])-x[1]*x[2]*sin(x[1]*x[2]) 0 0 0
+            cos(x[1]*x[2])-x[1]*x[2]*sin(x[1]*x[2]) -x[1]^2*sin(x[1]*x[2]) 0 0 0
+            0 0 0 0 0
+            0 0 0 0 0
+            0 0 0 0 0]
+sp = compute_hessian_sparsity_IJ(ex)
+test_sparsity(sp, exact(val))
+
 
 # Expr list
 exlist = ExprList()
