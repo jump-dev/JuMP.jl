@@ -22,7 +22,7 @@ function compute_hessian_sparsity(s::SymbolicOutput)
         end
     end
     
-    clist = Dict()
+    clist = Dict{Symbol,Set{Int}}()
     eval(fexpr)(clist)
     edgelist = Any[]
     for color in values(clist)
@@ -43,9 +43,7 @@ function compute_hessian_sparsity_IJ(s::SymbolicOutput)
     I = Array(Int,0)
     J = Array(Int,0)
     for k in 1:length(edgelist)
-        x,y = edgelist[k]
-        i = getplaceindex(x)
-        j = getplaceindex(y)
+        i,j = edgelist[k]
         if j > i
             continue # ignore upper triangle
         else
@@ -73,7 +71,7 @@ function compute_hessian_sparsity(x::ExprNode, linear_so_far, expr_out)
             # this is a new f_i, make a new color
             code_nonlinear = quote
                 mycolor = gensym()
-                colorlist[mycolor] = Set()
+                colorlist[mycolor] = Set{Int}()
             end
             for i in 2:length(x.ex.args)
                 compute_hessian_sparsity(x.ex.args[i], false, code_nonlinear)
@@ -132,7 +130,7 @@ function compute_hessian_sparsity(x::ExprNode, linear_so_far, expr_out)
             push!(expr_out.args, 
                 quote let
                         mycolor = gensym()
-                        colorlist[mycolor] = Set()
+                        colorlist[mycolor] = Set{Int}()
                         $(gencurlyloop(x.ex, code))
                 end end)
         end
@@ -143,7 +141,7 @@ function compute_hessian_sparsity(x::ExprNode, linear_so_far, expr_out)
         if !linear_so_far
             push!(expr_out.args, :( 
                 if isa($(x.ex),Placeholder)
-                    push!(colorlist[mycolor], $(x.ex))
+                    push!(colorlist[mycolor], getplaceindex($(x.ex)))
                 end))
         end
     end
