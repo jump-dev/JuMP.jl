@@ -16,24 +16,16 @@ function compute_hessian_sparsity(s::SymbolicOutput)
         push!( finit.args, :( $(s.inputnames[i]) = $(s.inputvals[i]) ))
     end
     fexpr = quote
-        function tmp(colorlist)
+        function tmp(edgelist)
             $finit
+            mycolor__ = Set{Int}()
             $code
         end
     end
     
-    clist = Dict{Symbol,Set{Int}}()
-    eval(fexpr)(clist)
-    edgelist = Any[]
-    for color in values(clist)
-        # for every pair:
-        for x in color
-            for y in color
-                # don't worry about duplicate indices
-                push!(edgelist,(x,y))
-            end
-        end
-    end
+    edgelist = Array((Int,Int),0)
+    eval(fexpr)(edgelist)
+
     return edgelist
 
 end
@@ -56,6 +48,15 @@ function compute_hessian_sparsity_IJ(s::SymbolicOutput)
 end
 
 function compute_hessian_sparsity(x::ExprNode, linear_so_far, expr_out)
+    nonlinear_cleanup = quote
+        # for every pair:
+        for x1___ in mycolor__
+            for x2___ in mycolor__
+                # don't worry about duplicate indices
+                push!(edgelist,(x1___,x2___))
+            end
+        end
+    end
     if isexpr(x.ex, :call)
         # is this a linear operator?
         if linear_so_far == 1
@@ -70,8 +71,7 @@ function compute_hessian_sparsity(x::ExprNode, linear_so_far, expr_out)
 
             # this is a new f_i, make a new color
             code_nonlinear = quote
-                mycolor = gensym()
-                colorlist[mycolor] = Set{Int}()
+                empty!(mycolor__)
             end
             for i in 2:length(x.ex.args)
                 compute_hessian_sparsity(x.ex.args[i], false, code_nonlinear)
@@ -97,11 +97,13 @@ function compute_hessian_sparsity(x::ExprNode, linear_so_far, expr_out)
                         end # else, definitely a constant
                     end
                     push!(expr_out.args, conditions)
-                    push!(expr_out.args, Expr(:if, :(num_nonconstant <= 1), code_linear, code_nonlinear))
+                    push!(expr_out.args, Expr(:if, :(num_nonconstant <= 1), code_linear,
+                        :($code_nonlinear; $nonlinear_cleanup)))
                 else
                     # too hard to detect constants, just say nonlinear
                     push!(expr_out.args, quote let
                             $code_nonlinear
+                            $nonlinear_cleanup
                         end end)
                 end
 
@@ -109,6 +111,7 @@ function compute_hessian_sparsity(x::ExprNode, linear_so_far, expr_out)
 
                 push!(expr_out.args, quote let 
                             $code_nonlinear
+                            $nonlinear_cleanup
                         end end)
             end
         else
@@ -129,9 +132,9 @@ function compute_hessian_sparsity(x::ExprNode, linear_so_far, expr_out)
             compute_hessian_sparsity(curlyexpr(x.ex), false, code)
             push!(expr_out.args, 
                 quote let
-                        mycolor = gensym()
-                        colorlist[mycolor] = Set{Int}()
+                        empty!(mycolor__)
                         $(gencurlyloop(x.ex, code))
+                        $nonlinear_cleanup
                 end end)
         end
     else
@@ -141,7 +144,7 @@ function compute_hessian_sparsity(x::ExprNode, linear_so_far, expr_out)
         if !linear_so_far
             push!(expr_out.args, :( 
                 if isa($(x.ex),Placeholder)
-                    push!(colorlist[mycolor], getplaceindex($(x.ex)))
+                    push!(mycolor__, getplaceindex($(x.ex)))
                 end))
         end
     end
