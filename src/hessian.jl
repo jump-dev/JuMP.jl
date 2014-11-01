@@ -101,18 +101,18 @@ function compute_hessian_sparsity(x::ExprNode, linear_so_far, expr_out)
                         :($code_nonlinear; $nonlinear_cleanup)))
                 else
                     # too hard to detect constants, just say nonlinear
-                    push!(expr_out.args, quote let
+                    push!(expr_out.args, quote
                             $code_nonlinear
                             $nonlinear_cleanup
-                        end end)
+                        end)
                 end
 
             else
 
-                push!(expr_out.args, quote let 
+                push!(expr_out.args, quote
                             $code_nonlinear
                             $nonlinear_cleanup
-                        end end)
+                        end)
             end
         else
             # give the same color to the children
