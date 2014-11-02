@@ -57,9 +57,5 @@ For Ipopt in particular, one can improve the performance by installing advanced 
 
 The function evaluation time, on the other hand, is the responsibility of the modeling language. JuMP computes derivatives by using the `ReverseDiffSparse <https://github.com/mlubin/ReverseDiffSparse.jl>`_ package, which implements, in pure Julia, reverse-mode automatic differentiation with state-of-the-art graph coloring methods [1]_ for exploiting sparsity of the Hessian matrix. As a conservative bound, JuMP's performance here currently may be expected to be within a factor of 10 of AMPL's.
 
-.. note::
-
-    JuMP's performance for evaluating derivatives significantly improves if the `ArrayViews <https://github.com/lindahua/ArrayViews.jl>`_ package is installed. This is currently an optional dependency.
-
 
 .. [1] Gebremdhin et al., "Efficient Computation of Sparse Hessians Using Coloring and Automatic Differentiation", INFORMS Journal on Computing, 21(1), pp. 209-223, 2009.

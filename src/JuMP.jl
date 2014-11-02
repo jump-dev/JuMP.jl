@@ -9,12 +9,7 @@ module JuMP
 import MathProgBase
 
 using ReverseDiffSparse
-if isdir(Pkg.dir("ArrayViews"))
-    eval(Expr(:import,:ArrayViews))
-    const subarr = ArrayViews.view
-else
-    const subarr = Base.sub
-end
+const subarr = ArrayViews.view
 
 export
 # Objects
