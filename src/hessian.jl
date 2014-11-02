@@ -7,33 +7,36 @@ normalize(e) = normalize(e...)
 # Idea: detect partially separable structure
 # e.g., f(x) = sum f_i(x)
 
-function compute_hessian_sparsity(s::SymbolicOutput)
+function compute_hessian_sparsity_IJ_parametric(s::SymbolicOutput)
+
     code = quote end
     compute_hessian_sparsity(s.tree, true, code)
     # compile a function:
-    finit = Expr(:block)
-    for i in 1:length(s.inputnames)
-        push!( finit.args, :( $(s.inputnames[i]) = $(s.inputvals[i]) ))
-    end
     fexpr = quote
-        function tmp(edgelist)
-            $finit
+        function sparsity_gen(edgelist__)
             mycolor__ = Set{Int}()
             $code
+            return
         end
     end
-    
-    edgelist = Array((Int,Int),0)
-    eval(fexpr)(edgelist)
+    # add arguments for inputnames -- local data
+    for i in 1:length(s.inputnames)
+        push!(fexpr.args[2].args[1].args,s.inputnames[i])
+    end
 
-    return edgelist
+    f = eval(fexpr)
+
+    return (x::SymbolicOutput)-> (edgelist__ = Array((Int,Int),0); f(edgelist__,x.inputvals...); edgelist_to_IJ(edgelist__,x))
 
 end
 
-function compute_hessian_sparsity_IJ(s::SymbolicOutput)
-    edgelist = compute_hessian_sparsity(s)
+compute_hessian_sparsity_IJ(s::SymbolicOutput) = (compute_hessian_sparsity_IJ_parametric(s))(s)
+
+function edgelist_to_IJ(edgelist,s::SymbolicOutput)
     I = Array(Int,0)
     J = Array(Int,0)
+    sizehint(I,div(length(edgelist),2))
+    sizehint(J,div(length(edgelist),2))
     for k in 1:length(edgelist)
         i,j = edgelist[k]
         if j > i
@@ -53,7 +56,7 @@ function compute_hessian_sparsity(x::ExprNode, linear_so_far, expr_out)
         for x1___ in mycolor__
             for x2___ in mycolor__
                 # don't worry about duplicate indices
-                push!(edgelist,(x1___,x2___))
+                push!(edgelist__,(x1___,x2___))
             end
         end
     end

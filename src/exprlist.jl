@@ -12,13 +12,15 @@ type ExprList
    # matchesCanonical::Vector{Bool}
     valfuncs::Vector{Function}
     gradfuncs::Vector{Function}
-    hessfuncs::Vector{Function}
+    hess_matmat_funcs::Vector{Function}
+    hess_IJ_funcs::Vector{Function}
+    hessfuncs::Vector{Function} # these can't be shared if coloring is different
     hessIJ::Vector{(Vector{Int},Vector{Int})}
     exprfuncs::Vector{Function}
 end
 
 
-ExprList() = ExprList(SymbolicOutput[],Dict(), Function[], Function[], Function[], Array((Vector{Int},Vector{Int}),0), Function[])
+ExprList() = ExprList(SymbolicOutput[],Dict(), Function[], Function[], Function[], Function[], Function[], Array((Vector{Int},Vector{Int}),0), Function[])
 
 Base.push!(l::ExprList, s::SymbolicOutput) = push!(l.exprs, s)
 Base.getindex(l::ExprList, i) = l.exprs[i]
@@ -39,6 +41,8 @@ function prep_sparse_hessians(l::ExprList, num_total_vars; need_expr::Bool=false
     empty!(l.referenceExpr)
     empty!(l.valfuncs)
     empty!(l.gradfuncs)
+    empty!(l.hess_matmat_funcs)
+    empty!(l.hess_IJ_funcs)
     empty!(l.hessfuncs)
     empty!(l.hessIJ)
     empty!(l.exprfuncs)
@@ -56,9 +60,13 @@ function prep_sparse_hessians(l::ExprList, num_total_vars; need_expr::Bool=false
             l.referenceExpr[x.hashval] = i
             f = genfval_parametric(x)
             gf = genfgrad_parametric(x)
-            hI, hJ, hf = gen_hessian_sparse_color_parametric(x, num_total_vars)
+            hess_matmat = gen_hessian_matmat_parametric(x)
+            hess_IJf = compute_hessian_sparsity_IJ_parametric(x)
+            hI, hJ, hf = gen_hessian_sparse_color_parametric(x, num_total_vars, hess_matmat, hess_IJf)
             push!(l.valfuncs, f)
             push!(l.gradfuncs, gf)
+            push!(l.hess_matmat_funcs, hess_matmat)
+            push!(l.hess_IJ_funcs, hess_IJf)
             push!(l.hessfuncs, hf)
             push!(l.hessIJ, (hI, hJ))
             if need_expr
@@ -80,9 +88,11 @@ function prep_sparse_hessians(l::ExprList, num_total_vars; need_expr::Bool=false
                 end
             end
             if matches
-                # re-use AD from previous expression
+                # re-use AD and coloring from previous expression
                 push!(l.valfuncs, l.valfuncs[refidx])
                 push!(l.gradfuncs, l.gradfuncs[refidx])
+                push!(l.hess_matmat_funcs, l.hess_matmat_funcs[refidx])
+                push!(l.hess_IJ_funcs, l.hess_IJ_funcs[refidx])
                 push!(l.hessfuncs, l.hessfuncs[refidx])
                 hI,hJ = l.hessIJ[refidx]
                 push!(l.hessIJ, (hI,hJ))
@@ -91,18 +101,19 @@ function prep_sparse_hessians(l::ExprList, num_total_vars; need_expr::Bool=false
                 end
                 appendToIJ!(I,J,hI,hJ,x)
             else
-                # compute from scratch
-                # TODO: actually we can share the AD but not the coloring here
-                f = genfval_parametric(x)
-                gf = genfgrad_parametric(x)
-                hI, hJ, hf = gen_hessian_sparse_color_parametric(x, num_total_vars)
-                push!(l.valfuncs, f)
-                push!(l.gradfuncs, gf)
+                # we can share the AD but not the coloring here
+                hess_matmat = l.hess_matmat_funcs[refidx]
+                hess_IJf = l.hess_IJ_funcs[refidx]
+                hI, hJ, hf = gen_hessian_sparse_color_parametric(x, num_total_vars, hess_matmat, hess_IJf)
+                push!(l.valfuncs, l.valfuncs[refidx])
+                push!(l.gradfuncs, l.gradfuncs[refidx])
+                push!(l.hess_matmat_funcs, hess_matmat)
+                push!(l.hess_IJ_funcs, hess_IJf)
                 push!(l.hessfuncs, hf)
                 push!(l.hessIJ, (hI, hJ))
                 appendToIJ!(I,J,hI,hJ,x)
                 if need_expr
-                    push!(l.exprfuncs, genfexpr_parametric(x))
+                    push!(l.exprfuncs, l.exprfuncs[refidx])
                 end
             end
         end
