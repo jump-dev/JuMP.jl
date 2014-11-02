@@ -9,6 +9,7 @@ module JuMP
 import MathProgBase
 
 using ReverseDiffSparse
+import ArrayViews
 const subarr = ArrayViews.view
 
 export
