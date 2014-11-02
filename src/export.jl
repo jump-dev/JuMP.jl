@@ -30,6 +30,15 @@ function outputpass(x::ExprNode, expr_out)
         code = :( $code; push!($(x.value).args, $valexpr))
 
         push!(expr_out.args, gencurlyloop(x.ex, code))
+        # perform some basic simplifications
+        defaultvalue = issum(oper) ? 0 : 1
+        push!(expr_out.args, quote
+            if length($(x.value).args) == 1
+                $(x.value) = $defaultvalue
+            elseif length($(x.value).args) == 2
+                $(x.value) = $(x.value).args[2]
+            end
+        end)
         return x.value
     elseif isa(x.ex, Expr) || isa(x.ex, Symbol)
         # some other symbolic value, to evaluate at runtime
