@@ -404,6 +404,12 @@ Subject to
  3 nonlinear constraints
  x[i] free for all i in {1,2..4,5}
 """, repl=:print)
+    io_test(REPLMode, mod_2, """
+Minimization problem with:
+ * 0 linear constraints
+ * 3 nonlinear constraints
+ * 5 variables
+Solver set to Default""", repl=:show)
     io_test(IJuliaMode, mod_2, """
 \\begin{alignat*}{1}\\min\\quad & (nonlinear expression)\\\\
 \\text{Subject to} \\quad & 3 nonlinear constraints\\\\
