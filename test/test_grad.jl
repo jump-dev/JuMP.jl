@@ -197,4 +197,12 @@ fval = fg([2.0], out)
 @test_approx_eq fval 22.0
 @test_approx_eq out[1] 1.0
 
+# exponents
+y = 2
+ex = @processNLExpr x[1]^y
+fg = genfgrad_simple(ex)
+fval = fg([-3.0],out)
+@test_approx_eq fval (-3)^2
+@test_approx_eq out[1] 2*-3
+
 println("Passed tests")

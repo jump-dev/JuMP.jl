@@ -260,6 +260,11 @@ forwardpass(x, expr_out) = :(forwardvalue($x, __placevalues, __placeindex_in))
 forwardvalue(x::Placeholder, placevalues, placeindex_in) = placevalues[placeindex_in[getplaceindex(x)]]
 forwardvalue(x, placevalues, placeindex_in) = float(x)
 
+# better to return NaNs than throw DomainErrors.
+# sometimes the results aren't needed anyway,
+# because the code may compute derivatives wrt constants.
+log(x) = x <= 0 ? NaN : Base.log(x)
+
 function revpass(x::ExprNode, expr_out)
     @assert isexpr(expr_out, :block)
     # compute the partial drivative wrt. each expression down the graph
