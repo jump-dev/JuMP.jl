@@ -210,6 +210,28 @@ end
 genExprGraph{T<:Number}(x::T, parent, k) = x
 genExprGraph(x, parent, k) = ExprNode(x, [(parent,k)], nothing, nothing)
 
+# accumulator for prod{} terms
+# we need to handle this specially so that we can compute
+# derivatives when one of the terms is zero.
+# (If two are zero, all derivatives are zero.)
+immutable ProductAccumulator{T}
+    allbutone::T # product of all but the smallest value
+    smallest::T
+end
+
+ProductAccumulator{T}(::Type{T}) = ProductAccumulator(one(T),one(T))
+
+function add_term{T}(p::ProductAccumulator{T},value::T)
+    if abs(value) < abs(p.smallest)
+        return ProductAccumulator(p.allbutone*p.smallest,value)
+    else
+        return ProductAccumulator(p.allbutone*value,p.smallest)
+    end
+end
+
+asymbol(s::Symbol) = symbol(string(s,"accum"))
+
+
 function forwardpass(x::ExprNode, expr_out)
     @assert isexpr(expr_out, :block)
 
@@ -233,6 +255,7 @@ function forwardpass(x::ExprNode, expr_out)
             push!(expr_out.args, :( $(x.value) = zero(__T) ))
         else # :prod
             push!(expr_out.args, :( $(x.value) = one(__T) ))
+            push!(expr_out.args, :( $(asymbol(x.value)) = ProductAccumulator(__T) ))
         end
         code = quote end
 
@@ -241,7 +264,8 @@ function forwardpass(x::ExprNode, expr_out)
         if issum(oper)
             code = :( $code; $(x.value) += $valexpr )
         else # :prod
-            code = :( $code; $(x.value) *= $valexpr )
+            code = :( $code; $(x.value) *= $valexpr;
+                      $(asymbol(x.value)) = add_term($(asymbol(x.value)),$valexpr))
         end
 
         push!(expr_out.args, gencurlyloop(x.ex, code))
@@ -289,8 +313,14 @@ function revpass(x::ExprNode, expr_out)
         if f == :(+) || (isexpr(p.ex,:curly) && issum(f))
             push!(expr_out.args, :( $(x.deriv) += $(p.deriv) ))
         elseif isexpr(p.ex,:curly) && isprod(f)
-            # potentially numerically unstable if x.value ~= 0
-            push!(expr_out.args, :( $(x.deriv) += $(p.deriv)*$(p.value)/$(x.value) ))
+            prodcode = quote
+                if $(asymbol(p.value)).smallest == $(x.value)
+                    $(x.deriv) += $(p.deriv)*$(asymbol(p.value)).allbutone
+                else
+                    $(x.deriv) += $(p.deriv)*$(p.value)/$(x.value)
+                end
+            end
+            push!(expr_out.args, prodcode)
         elseif f == :(-)
             if length(p.ex.args) > 2 && k == 2
                 push!(expr_out.args, :( $(x.deriv) += $(p.deriv) ))
