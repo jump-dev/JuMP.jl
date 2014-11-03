@@ -205,4 +205,19 @@ fval = fg([-3.0],out)
 @test_approx_eq fval (-3)^2
 @test_approx_eq out[1] 2*-3
 
+# zeros in products
+ex = @processNLExpr prod{ x[i], i = 1:2 }
+fg = genfgrad_simple(ex)
+fval = fg([2.0,0.0],out)
+@test_approx_eq fval 0.0
+@test_approx_eq out[1] 0.0
+@test_approx_eq out[2] 2.0
+
+ex = @processNLExpr prod{ x[i], i = 1:2 }
+fg = genfgrad_simple(ex)
+fval = fg([0.0,0.0],out)
+@test_approx_eq fval 0.0
+@test_approx_eq out[1] 0.0
+@test_approx_eq out[2] 0.0
+
 println("Passed tests")
