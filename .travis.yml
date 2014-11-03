@@ -21,8 +21,8 @@ script:
     - julia -e 'Pkg.init(); Pkg.clone(pwd())'
     - if [[ `uname` = "Darwin" ]]; then julia -e 'Pkg.add("Ipopt")'; fi # installs from binaries
     - julia -e 'for p in split(ENV["PKGADD"],";") Pkg.add(p) end'
-    - if [ $JULIAVERSION = "julianightlies" ]; then julia -e 'Pkg.test("JuMP", coverage=true)'; fi
-    - if [ $JULIAVERSION = "juliareleases" ]; then julia -e 'Pkg.test("JuMP")'; fi
+    - if [ $JULIAVERSION = "julianightlies" ]; then julia --code-coverage test/runtests.jl; fi
+    - if [ $JULIAVERSION = "juliareleases" ]; then julia test/runtests.jl; fi
     - julia test/hygiene.jl
     - julia test/hockschittkowski/runhs.jl
 after_success:
