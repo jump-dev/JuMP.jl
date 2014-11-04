@@ -132,7 +132,6 @@ macro addConstraint(m, x, extra...)
         code = quote
             q = AffExpr()
             $parsecode
-            $crefflag && !isa($newaff,AffExpr) && error("Three argument form of @addConstraint does not currently support quadratic constraints")
             $(refcall) = addConstraint($m, $(x.args[2])($newaff,0))
         end
     elseif length(x.args) == 5
@@ -161,7 +160,7 @@ macro addConstraint(m, x, extra...)
               "       expr1 == expr2\n" * "       lb <= expr <= ub")
     end
 
-    return getloopedcode(c, code, :(), idxvars, idxsets, idxpairs, :LinConstrRef)
+    return getloopedcode(c, code, :(), idxvars, idxsets, idxpairs, :ConstraintRef)
 end
 
 macro addConstraints(m, x)

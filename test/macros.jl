@@ -163,6 +163,9 @@ let
 
     @addConstraint(m, d[i=1:5,j=6:-2:2], x[i] - y[j] == 2)
     @test conToStr(m.linconstr[d[4,4].idx]) == "x[4] - y[4] $eq 2"
+
+    @addConstraint(m, q[i=1:5], x[i]^2 == 1)
+    @test conToStr(m.quadconstr[q[5].idx]) == "x[5]² - 1 $eq 0"
 end
 
 # test @addConstraints
