@@ -426,15 +426,25 @@ macro setNLObjective(m, sense, x)
     end
 end 
 
-
-macro addNLConstraint(m, x)
+macro addNLConstraint(m, x, extra...)
     m = esc(m)
-    if (x.head != :comparison)
-        error("Expected comparison operator in constraint $x")
-    end
-    if length(x.args) == 3 # simple comparison
-        lhs = :($(x.args[1]) - $(x.args[3])) # move everything to the lhs
-        id = hash(x)
+    # Two formats:
+    # - @addNLConstraint(m, a*x <= 5)
+    # - @addNLConstraint(m, myref[a=1:5], sin(x^a) <= 5)
+    length(extra) > 1 && error("in @addConstraint: too many arguments.")
+    # Canonicalize the arguments
+    c = length(extra) == 1 ? x        : nothing
+    x = length(extra) == 1 ? extra[1] : x
+
+    (x.head != :comparison) &&
+        error("in @addNLConstraint ($(string(x))): expected comparison operator (<=, >=, or ==).")
+
+    # Strategy: build up the code for non-macro addconstraint, and if needed
+    # we will wrap in loops to assign to the ConstraintRefs
+    refcall, idxvars, idxsets, idxpairs = buildrefsets(c)
+    # Build the constraint
+    if length(x.args) == 3
+        # Simple comparison - move everything to the LHS
         op = x.args[2]
         if op == :(==)
             lb = 0.0
@@ -442,20 +452,29 @@ macro addNLConstraint(m, x)
         elseif op == :(<=) || op == :(≤)
             lb = -Inf
             ub = 0.0
-        else
-            @assert op == :(>=) || op == :(≥)
+        elseif op == :(>=) || op == :(≥)
             lb = 0.0
             ub = Inf
+        else
+            error("in @addNLConstraint ($(string(x))): expected comparison operator (<=, >=, or ==).")
         end
-        quote
+        lhs = :($(x.args[1]) - $(x.args[3]))
+        code = quote
             initNLP($m)
             c = NonlinearConstraint(@processNLExpr($(esc(lhs))), $lb, $ub)
             push!($m.nlpdata.nlconstr, c)
             push!($m.nlpdata.nlconstrlist, c.terms)
-            nothing
+            $(refcall) = ConstraintRef{NonlinearConstraint}($m, length($m.nlpdata.nlconstr))
         end
-    else
+    elseif length(x.args) == 5
         # ranged row
         error("Two-sided nonlinear constraints not yet supported")
+    else
+        # Unknown
+        error("in @addNLConstraint ($(string(x))): constraints must be in one of the following forms:\n" *
+              "       expr1 <= expr2\n" * "       expr1 >= expr2\n" *
+              "       expr1 == expr2\n")
     end
+
+    return getloopedcode(c, code, :(), idxvars, idxsets, idxpairs, :(ConstraintRef{NonlinearConstraint}))
 end
