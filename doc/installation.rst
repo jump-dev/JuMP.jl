@@ -52,6 +52,8 @@ Solver support in Julia is currently provided by writing a solver-specific packa
 +----------------------------------------------------------------------------------+---------------------------------------------------------------------------------+-----------------------------+-------------+----+------+-----+-----+
 | `Ipopt <https://projects.coin-or.org/Ipopt>`_                                    | `Ipopt.jl <https://github.com/JuliaOpt/Ipopt.jl>`_                              | ``IpoptSolver()``           | EPL         | X  |      |     |  X  |
 +----------------------------------------------------------------------------------+---------------------------------------------------------------------------------+-----------------------------+-------------+----+------+-----+-----+
+| `KNITRO <http://www.ziena.com/knitro.htm>`_                                      | `KNITRO.jl <https://github.com/JuliaOpt/KNITRO.jl>`_                            | ``KnitroSolver()``          | Comm.       |    |      |     |  X  |
++----------------------------------------------------------------------------------+---------------------------------------------------------------------------------+-----------------------------+-------------+----+------+-----+-----+
 | `MOSEK <http://www.mosek.com/>`_                                                 | `Mosek.jl <https://github.com/JuliaOpt/Mosek.jl>`_                              | ``MosekSolver()``           | Comm.       | X  |   X  |  X  |  X  |                     
 +----------------------------------------------------------------------------------+---------------------------------------------------------------------------------+-----------------------------+-------------+----+------+-----+-----+
 | `NLopt <http://ab-initio.mit.edu/wiki/index.php/NLopt>`_                         | `NLopt.jl <https://github.com/JuliaOpt/NLopt.jl>`_                              | ``NLoptSolver()``           | LGPL        |    |      |     |  X  |                     
@@ -116,6 +118,11 @@ Ipopt binaries are provided on OS X and Windows (32- and 64-bit) by default. On 
 The default installation of Ipopt uses the open-source MUMPS library for sparse linear algebra.
 Significant speedups can be obtained by manually compiling Ipopt to use proprietary sparse linear algebra libraries instead.
 Julia can be pointed to use a custom version of Ipopt; we suggest posting to the `julia-opt <https://groups.google.com/forum/#!forum/julia-opt>`_ mailing list with your platform details for guidance on how to do this.
+
+KNITRO
+++++++
+
+Requires a licence. The KNITRO.jl interface currently supports only continuous nonlinear problems.
   
 MOSEK
 +++++
