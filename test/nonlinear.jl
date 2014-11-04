@@ -159,8 +159,8 @@ function MathProgBase.loadnonlinearproblem!(m::DummyNLPModel, numVar, numConstr,
     @test MathProgBase.constr_expr(d,1) == :(2.0*x[1] + 1.0*x[2] <= 1.0)
     @test MathProgBase.constr_expr(d,2) == :(2.0*x[1]*x[1] + 1.0*x[2] + -2.0 >= 0)
     @test MathProgBase.constr_expr(d,3) == :(sin(x[1]) * cos(x[2]) - 5 == 0.0)
-    @test MathProgBase.constr_expr(d,4) == :(1.0*x[1]*x[1] - 1.0 == 0.0)
-    @test MathProgBase.constr_expr(d,5) == :(2.0*x[1]*x[1] - 2.0 == 0.0)
+    @test MathProgBase.constr_expr(d,4) == :(1.0*x[1]^2 - 1.0 == 0.0)
+    @test MathProgBase.constr_expr(d,5) == :(2.0*x[1]^2 - 2.0 == 0.0)
 end
 MathProgBase.setwarmstart!(m::DummyNLPModel,x) = nothing
 MathProgBase.optimize!(m::DummyNLPModel) = nothing
