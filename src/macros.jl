@@ -117,7 +117,6 @@ macro addConstraint(m, x, extra...)
 
     # Strategy: build up the code for non-macro addconstraint, and if needed
     # we will wrap in loops to assign to the ConstraintRefs
-    crefflag = isa(c,Expr)
     refcall, idxvars, idxsets, idxpairs = buildrefsets(c)
     # Build the constraint
     if length(x.args) == 3
