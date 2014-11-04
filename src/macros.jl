@@ -431,7 +431,7 @@ macro addNLConstraint(m, x, extra...)
     # Two formats:
     # - @addNLConstraint(m, a*x <= 5)
     # - @addNLConstraint(m, myref[a=1:5], sin(x^a) <= 5)
-    length(extra) > 1 && error("in @addConstraint: too many arguments.")
+    length(extra) > 1 && error("in @addNLConstraint: too many arguments.")
     # Canonicalize the arguments
     c = length(extra) == 1 ? x        : nothing
     x = length(extra) == 1 ? extra[1] : x
