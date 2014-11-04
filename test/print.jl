@@ -392,6 +392,13 @@ Subject to
     #------------------------------------------------------------------
 
     mod_2 = Model()
+
+    io_test(REPLMode, mod_2, """
+Feasibility problem with:
+ * 0 linear constraints
+ * 0 variables
+Solver set to Default""", repl=:show)
+
     @defVar(mod_2, x[1:5])
     @addNLConstraint(mod_2, x[1]*x[2] == 1)
     @addNLConstraint(mod_2, x[3]*x[4] == 1)

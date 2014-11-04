@@ -81,7 +81,7 @@ math(s,mathmode) = mathmode ? s : "\$\$ $s \$\$"
 #------------------------------------------------------------------------
 Base.print(io::IO, m::Model) = print(io, model_str(REPLMode,m))
 function Base.show(io::IO, m::Model)
-    print(io, m.objSense == :Max ? "Maximization" : ((m.objSense == :Min && (!isempty(m.obj) || isa(m.nlpdata.nlobj, ReverseDiffSparse.SymbolicOutput))) ? "Minimization" : "Feasibility"))
+    print(io, m.objSense == :Max ? "Maximization" : ((m.objSense == :Min && (!isempty(m.obj) || (m.nlpdata != nothing && isa(m.nlpdata.nlobj, ReverseDiffSparse.SymbolicOutput)))) ? "Minimization" : "Feasibility"))
     println(io, " problem with:")
     println(io, " * $(length(m.linconstr)) linear constraints")
     nquad = length(m.quadconstr)
