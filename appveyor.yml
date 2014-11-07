@@ -12,7 +12,7 @@ install:
 build_script:
 # Need to convert from shallow to complete for Pkg.clone to work
 #  - git fetch --unshallow
-  - C:\projects\julia\bin\julia-debug -e "versioninfo(); Pkg.init(); Pkg.clone(pwd(), \"JuMP\"); Pkg.add(\"GLPKMathProgInterface\"); Pkg.add(\"Ipopt\")"
+  - C:\projects\julia\bin\julia-debug -e "versioninfo(); Pkg.init(); Pkg.clone(pwd(), \"JuMP\"); Pkg.add(\"GLPKMathProgInterface\"); Pkg.add(\"Ipopt\"); Pkg.add(\"Clp\");"
 
 test_script:
   - C:\projects\julia\bin\julia-debug -e "Pkg.test(\"JuMP\")"
