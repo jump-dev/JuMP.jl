@@ -1,41 +1,52 @@
-# variable.jl
-# Test coverage for Variable
+#############################################################################
+# JuMP
+# An algebraic modelling langauge for Julia
+# See http://github.com/JuliaOpt/JuMP.jl
+#############################################################################
+# test/expr.jl
+# Testing for Variable
+#############################################################################
+using JuMP, FactCheck
 
-# Constructors
-mcon = Model()
-@defVar(mcon, nobounds)
-@defVar(mcon, lbonly >= 0)
-@defVar(mcon, ubonly <= 1)
-@defVar(mcon, 0 <= bothb <= 1)
-@defVar(mcon, 0 <= onerange[-5:5] <= 10)
-@defVar(mcon, onerangeub[-7:1] <= 10, Int)
-@defVar(mcon, manyrangelb[0:1,10:20,1:1] >= 2)
-@test getLower(manyrangelb[0,15,1]) == 2
-s = ["Green","Blue"]
-@defVar(mcon, x[-10:10,s] <= 5.5, Int)
-@test getUpper(x[-4,"Green"]) == 5.5
+facts("[variable] constructors") do
+    # Constructors
+    mcon = Model()
+    @defVar(mcon, nobounds)
+    @defVar(mcon, lbonly >= 0)
+    @defVar(mcon, ubonly <= 1)
+    @defVar(mcon, 0 <= bothb <= 1)
+    @defVar(mcon, 0 <= onerange[-5:5] <= 10)
+    @defVar(mcon, onerangeub[-7:1] <= 10, Int)
+    @defVar(mcon, manyrangelb[0:1,10:20,1:1] >= 2)
+    @fact getLower(manyrangelb[0,15,1]) => 2
+    s = ["Green","Blue"]
+    @defVar(mcon, x[-10:10,s] <= 5.5, Int)
+    @fact getUpper(x[-4,"Green"]) => 5.5
+end
 
-# Bounds
-m = Model()
-@defVar(m, 0 <= x <= 2)
-@test getLower(x) == 0
-@test getUpper(x) == 2
-setLower(x, 1)
-@test getLower(x) == 1
-setUpper(x, 3)
-@test getUpper(x) == 3
-@defVar(m, y, Bin)
-@test getLower(y) == 0
-@test getUpper(y) == 1
-@defVar(m, 0 <= y <= 1, Bin)
-@test getLower(y) == 0
-@test getUpper(y) == 1
+facts("[variable] get and set bounds") do
+    m = Model()
+    @defVar(m, 0 <= x <= 2)
+    @fact getLower(x) => 0
+    @fact getUpper(x) => 2
+    setLower(x, 1)
+    @fact getLower(x) => 1
+    setUpper(x, 3)
+    @fact getUpper(x) => 3
+    @defVar(m, y, Bin)
+    @fact getLower(y) => 0
+    @fact getUpper(y) => 1
+    @defVar(m, 0 <= y <= 1, Bin)
+    @fact getLower(y) => 0
+    @fact getUpper(y) => 1
+end
 
-# Repeated elements in index set (issue #199)
-repeatmod = Model()
-s = [:x,:x,:y]
-@defVar(repeatmod, x[s])
-@test getNumVars(repeatmod) == 3
+facts("[variable] repeated elements in index set (issue #199)") do
+    repeatmod = Model()
+    s = [:x,:x,:y]
+    @defVar(repeatmod, x[s])
+    @fact getNumVars(repeatmod) => 3
+end
 
 # Test conditionals in variable definition
 # condmod = Model()

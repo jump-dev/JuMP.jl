@@ -7,41 +7,28 @@
 #############################################################################
 
 using JuMP
-using Base.Test
+using FactCheck
+#FactCheck.setstyle(:compact)
 
-tests =["print.jl",
-        "expr.jl",
-        "variable.jl",
-        "operator.jl",
-        "macros.jl",
-        "model.jl",
-        "probmod.jl",
-        "callback.jl",
-        "sosmodel.jl"]
+# Static tests - don't require a solver
+include("print.jl")
+include("variable.jl")
+include("expr.jl")
+include("operator.jl")
+include("macros.jl")
 
-println("Running tests:")
+# Load solvers
+include("solvers.jl")
 
-for curtest in tests
-    println(" Test: $(curtest)")
-    include(curtest)
-end
+# Solver-dependent tests
+include("model.jl");        length(  lp_solvers) == 0 && warn("Model tests not run!")
+include("probmod.jl");      length(  lp_solvers) == 0 && warn("Prob. mod. tests not run!")
+include("callback.jl");     length(lazy_solvers) == 0 && warn("Callback tests not run!")
+include("qcqpmodel.jl");    length(quad_solvers) == 0 && warn("Quadratic tests not run!")
+include("nonlinear.jl");    length(  nl_solvers) == 0 && warn("Nonlinear tests not run!")
 
-if Pkg.installed("Gurobi") != nothing || 
-   Pkg.installed("CPLEX") != nothing ||
-   Pkg.installed("Mosek") != nothing
-    quadtests = ["qcqpmodel.jl", "quadmodel.jl"]
-    for curtest in quadtests
-        println(" Test: $(curtest)")
-        include(curtest)
-    end
-else
-    println("WARNING: Neither Gurobi nor CPLEX nor Mosek installed, cannot execute corresponding tests")
-end
-
-#############################################################################
-println(" Test: nonlinear.jl")
-include("nonlinear.jl")
-run_nl_tests(load_nl_solvers())
+# Throw an error if anything failed
+FactCheck.exitstatus()
 
 # hygiene.jl should be run separately
 # hockschittkowski/runhs.jl has additional nonlinear tests
