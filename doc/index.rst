@@ -36,6 +36,7 @@ JuMP's features include:
     `GLPK <http://www.gnu.org/software/glpk/>`_,
     `Gurobi <http://www.gurobi.com>`_,
     `Ipopt <https://projects.coin-or.org/Ipopt>`_,
+    `KNITRO <http://www.ziena.com/knitro.htm>`_,
     `MOSEK <http://www.mosek.com/>`_,
     and `NLopt <http://ab-initio.mit.edu/wiki/index.php/NLopt>`_.
 

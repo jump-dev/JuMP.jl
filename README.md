@@ -5,7 +5,7 @@ JuMP
 JuMP is a domain-specific modeling language for **[mathematical programming]**
 embedded in **[Julia]**. It currently supports a number of open-source and
 commercial solvers ([CPLEX], [COIN Clp], [COIN Cbc], [ECOS], [GLPK],
-[Gurobi], [Ipopt], [MOSEK], and [NLopt]) for a variety of problem classes, including
+[Gurobi], [Ipopt], [KNITRO], [MOSEK], and [NLopt]) for a variety of problem classes, including
 **[linear programming]**, **[(mixed) integer programming]**,
 **[second-order conic programming]**, and **[nonlinear programming]**.
 
@@ -19,6 +19,7 @@ commercial solvers ([CPLEX], [COIN Clp], [COIN Cbc], [ECOS], [GLPK],
 [MOSEK]: http://mosek.com/
 [CPLEX]: http://www-01.ibm.com/software/commerce/optimization/cplex-optimizer/
 [Ipopt]: https://projects.coin-or.org/Ipopt
+[KNITRO]: http://www.ziena.com/knitro.htm
 [NLopt]: http://ab-initio.mit.edu/wiki/index.php/NLopt
 [linear programming]: http://en.wikipedia.org/wiki/Linear_programming
 [(mixed) integer programming]: http://en.wikipedia.org/wiki/Integer_programming
