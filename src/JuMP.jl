@@ -559,10 +559,19 @@ function chgConstrRHS(c::ConstraintRef{LinearConstraint}, rhs::Number)
     end
 end
 
+Variable(m::Model,lower::Number,upper::Number,cat::Symbol,objcoef::Number,
+    constraints::JuMPArray,coefficients::Vector{Float64}; name::String="") =
+    Variable(m, lower, upper, cat, objcoef, constraints.innerArray, coefficients, name=name)
+
 # add variable to existing constraints
 function Variable(m::Model,lower::Number,upper::Number,cat::Symbol,objcoef::Number,
-    constraints::Vector{ConstraintRef{LinearConstraint}},coefficients::Vector{Float64};
+    constraints::Vector,coefficients::Vector{Float64};
     name::String="")
+    for c in constraints
+        if !isa(c,ConstraintRef{LinearConstraint})
+            error("Unexpected constraint of type $(typeof(c)). Column-wise modeling only supported for linear constraints")
+        end
+    end
     m.numCols += 1
     push!(m.colNames, name)
     push!(m.colLower, convert(Float64,lower))

@@ -256,6 +256,22 @@ let
     @test_throws ErrorException solve(mod)
 end
 
+
+######################################################################
+# Test column-wise modeling
+let
+    mod = Model()
+    @defVar(mod, 0 <= x <= 1)
+    @defVar(mod, 0 <= y <= 1)
+    @setObjective(mod, Max, 5x + 1y)
+    @addConstraint(mod, con[i=1:2], i*x + y <= i+5)
+    @defVar(mod, 0 <= z1 <= 1, 10.0, con, [1.0,-2.0])
+    @defVar(mod, 0 <= z2 <= 1, 10.0, Any[con[i] for i in [1:2]], [1.0,-2.0])
+    solve(mod)
+    @test_approx_eq getValue(z1) 1.0
+    @test_approx_eq getValue(z2) 1.0
+end
+
 ######################################################################
 # Test all MPS paths
 let
