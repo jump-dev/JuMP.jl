@@ -229,7 +229,7 @@ let
     @defVar(m, y >= 0)
     @addConstraint(m, x + y == 1)
     @setObjective(m, Max, y)
-    solve(m; load_model_only=true)
+    buildInternalModel(m)
     @assert getInternalModel(m) != nothing
     @assert m.internalModelLoaded == true
     stat = solve(m)

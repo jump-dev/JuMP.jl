@@ -1,5 +1,4 @@
-function solve(m::Model;IpoptOptions::Dict=Dict(),load_model_only=false, suppress_warnings=false)
-    load_model_only == true && warn("load_model_only keyword is deprecated; use the buildInternalModel function instead")
+function solve(m::Model;IpoptOptions::Dict=Dict(),suppress_warnings=false)
     if m.nlpdata != nothing
         if length(IpoptOptions) > 0
             error("Specifying options by using IpoptOptions is no longer supported. Use \"m = Model(solver=IpoptSolver(option1=value1,option2=value2,...)\" instead, after loading the Ipopt package.")
@@ -28,22 +27,22 @@ function solve(m::Model;IpoptOptions::Dict=Dict(),load_model_only=false, suppres
     if anyInts
         if isa(m.solver,UnsetSolver)
             m.solver = MathProgBase.defaultMIPsolver
-            s = solveMIP(m; load_model_only=load_model_only, suppress_warnings=suppress_warnings)
+            s = solveMIP(m; suppress_warnings=suppress_warnings)
             # Clear solver in case we change problem types
             m.solver = UnsetSolver()
             m.internalModelLoaded = false
             return s
         else
-            solveMIP(m; load_model_only=load_model_only, suppress_warnings=suppress_warnings)
+            solveMIP(m; suppress_warnings=suppress_warnings)
         end
     else
         if isa(m.solver,UnsetSolver)
             m.solver = MathProgBase.defaultLPsolver
-            s = solveLP(m, load_model_only=load_model_only, suppress_warnings=suppress_warnings)
+            s = solveLP(m, suppress_warnings=suppress_warnings)
             m.solver = UnsetSolver()
             return s
         else
-            solveLP(m; load_model_only=load_model_only, suppress_warnings=suppress_warnings)
+            solveLP(m; suppress_warnings=suppress_warnings)
         end
     end
 end
@@ -180,7 +179,7 @@ function prepConstrMatrix(m::Model)
     A = rowmat'
 end
 
-function solveLP(m::Model; load_model_only=false, suppress_warnings=false)
+function solveLP(m::Model; suppress_warnings=false)
     f, rowlb, rowub = prepProblemBounds(m)  
 
     # Ready to solve
@@ -213,16 +212,10 @@ function solveLP(m::Model; load_model_only=false, suppress_warnings=false)
         m.internalModelLoaded = true
     end 
 
-    if !load_model_only
-        MathProgBase.optimize!(m.internalModel)
-        stat = MathProgBase.status(m.internalModel)
-    else
-        stat = :NotSolved
-    end
+    MathProgBase.optimize!(m.internalModel)
+    stat = MathProgBase.status(m.internalModel)
 
-    if stat == :NotSolved
-        # do nothing
-    elseif stat != :Optimal
+    if stat != :Optimal
         !suppress_warnings && warn("Not solved to optimality, status: $stat")
         m.colVal = fill(NaN, m.numCols)
         m.objVal = NaN
@@ -273,7 +266,7 @@ function solveLP(m::Model; load_model_only=false, suppress_warnings=false)
     return stat
 end
 
-function solveMIP(m::Model; load_model_only=false, suppress_warnings=false)
+function solveMIP(m::Model; suppress_warnings=false)
     f, rowlb, rowub = prepProblemBounds(m)
     A = prepConstrMatrix(m)
 
@@ -326,33 +319,25 @@ function solveMIP(m::Model; load_model_only=false, suppress_warnings=false)
         end
     end
 
-    if !load_model_only
-        MathProgBase.optimize!(m.internalModel)
-        stat = MathProgBase.status(m.internalModel)
-    else
-        stat = :NotSolved
-    end
+    MathProgBase.optimize!(m.internalModel)
+    stat = MathProgBase.status(m.internalModel)
 
-    if stat == :NotSolved
-        # do nothing
-    else
-        if stat != :Optimal
-            !suppress_warnings && warn("Not solved to optimality, status: ", string(stat))
-        end
-        # It's possible that we have a feasible solution if we're not optimal
-        # TODO: Test this behavior on various solvers
-        try
-            # store solution values in model
-            m.objVal = MathProgBase.getobjval(m.internalModel)
-            m.objVal += m.obj.aff.constant
-        catch
-            m.objVal = NaN
-        end
-        try
-            m.colVal = MathProgBase.getsolution(m.internalModel)
-        catch
-            m.colVal = fill(NaN, m.numCols)
-        end
+    if stat != :Optimal
+        !suppress_warnings && warn("Not solved to optimality, status: ", string(stat))
+    end
+    # It's possible that we have a feasible solution if we're not optimal
+    # TODO: Test this behavior on various solvers
+    try
+        # store solution values in model
+        m.objVal = MathProgBase.getobjval(m.internalModel)
+        m.objVal += m.obj.aff.constant
+    catch
+        m.objVal = NaN
+    end
+    try
+        m.colVal = MathProgBase.getsolution(m.internalModel)
+    catch
+        m.colVal = fill(NaN, m.numCols)
     end
 
     return stat
