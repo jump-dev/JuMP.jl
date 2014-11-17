@@ -27,6 +27,9 @@ setUpper(x, 3)
 @defVar(m, y, Bin)
 @test getLower(y) == 0
 @test getUpper(y) == 1
+@defVar(m, 0 <= y <= 1, Bin)
+@test getLower(y) == 0
+@test getUpper(y) == 1
 
 # Repeated elements in index set (issue #199)
 repeatmod = Model()

@@ -259,6 +259,9 @@ function isdependent(idxvars,idxset,i)
     return false
 end
 
+esc_nonconstant(x::Number) = x
+esc_nonconstant(x) = esc(x)
+
 macro defVar(args...)
     length(args) <= 1 &&
         error("in @defVar ($var): expected model as first argument, then variable information.")
@@ -293,13 +296,13 @@ macro defVar(args...)
                 # ub >= x >= lb
                 x.args[4] == :>= || x.args[4] == :≥ || error("Invalid variable bounds")
                 var = x.args[3]
-                lb = esc(x.args[5])
-                ub = esc(x.args[1])
+                lb = esc_nonconstant(x.args[5])
+                ub = esc_nonconstant(x.args[1])
             else
                 # x >= lb
                 var = x.args[1]
                 @assert length(x.args) == 3
-                lb = esc(x.args[3])
+                lb = esc_nonconstant(x.args[3])
                 ub = Inf
             end
         elseif x.args[2] == :<= || x.args[2] == :≤
@@ -308,15 +311,15 @@ macro defVar(args...)
                 var = x.args[3]
                 (x.args[4] != :<= && x.args[4] != :≤) &&
                     error("in @defVar ($var): expected <= operator after variable name.")
-                lb = esc(x.args[1])
-                ub = esc(x.args[5])
+                lb = esc_nonconstant(x.args[1])
+                ub = esc_nonconstant(x.args[5])
             else
                 # x <= ub
                 var = x.args[1]
                 # NB: May also be lb <= x, which we do not support
                 #     We handle this later in the macro
                 @assert length(x.args) == 3
-                ub = esc(x.args[3])
+                ub = esc_nonconstant(x.args[3])
                 lb = -Inf
             end
         else
