@@ -4,6 +4,9 @@ JuMP release notes
 Unreleased
 ----------
 
+  * The ``@addNLConstraint`` macro now supports the three-argument version to define sets of nonlinear constraints.
+  * Speed improvements for nonlinear model generation.
+  * KNITRO supported as a nonlinear solver.
   * On Julia 0.4, variables and coefficients may be multiplied in any order within macros. That is, variable*coefficient is now valid syntax.
 
 Version 0.6.3 (October 19, 2014)
