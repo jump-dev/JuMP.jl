@@ -5,71 +5,38 @@
 #############################################################################
 # test/print.jl
 # Testing for all pretty-printing-related functionality
-# Defines:
-#  - test_print_JuMPContainerVar()
-#  - test_print_JuMPContainerVal()
-#  - test_print_SOS()
-#  - test_print_Model()
-#  - test_print_expr()
-#  - test_print_Variable()
 #############################################################################
-using JuMP
-using Base.Test
-
+using JuMP, FactCheck
 import JuMP.REPLMode, JuMP.IJuliaMode
 
-const THROW_ERROR = true
-
-# Helper function to test IO methods work correctly, and to provide
-# useful outputs if they don't
+# Helper function to test IO methods work correctly
 function io_test(mode, obj, exp_str; repl=:both)
     if mode == REPLMode
         buf_print = IOBuffer()
         print(buf_print, obj)
         seek(buf_print, 0);
-        print_str = readall(buf_print)
-        expct_str = exp_str
-        if !(print_str == exp_str) && repl != :show
-            @show print_str
-            @show expct_str
-            THROW_ERROR && error()
-        end 
+        repl != :show && @fact readall(buf_print) => exp_str
 
         buf_show = IOBuffer()
         show(buf_show, obj)
         seek(buf_show, 0)
-        show_str = readall(buf_show)
-        expt_str = exp_str
-        if !(show_str == expt_str) && repl != :print
-            println(show_str)
-            println(expt_str)
-            @show show_str
-            @show expt_str
-            THROW_ERROR && error()
-        end
+        repl != :print && @fact readall(buf_show) => exp_str
     else
         buf_display = IOBuffer()
         writemime(buf_display, "text/latex", obj)
         seek(buf_display,0)
-        display_str = readall(buf_display)
-        expectd_str = "\$\$ "*exp_str*" \$\$"
-        if !(display_str == expectd_str)
-            @show display_str
-            @show expectd_str
-            THROW_ERROR && error()
-        end
+        @fact readall(buf_display) => "\$\$ "*exp_str*" \$\$"
     end
 end
 
 
-function test_print_JuMPContainerVar()
-    println("  test_print_JuMPContainerVar")
+facts("[print] JuMPContainer{Variable}") do
     le, ge = JuMP.repl_leq, JuMP.repl_geq
     m = Model()
     
     #------------------------------------------------------------------
     # Test bound printing
-    println("    bound printing")
+    context("bound printing") do
     @defVar(m,      bnd_free[2:5])
     @defVar(m,      bnd_lowb[2:5] >= 2)
     @defVar(m,      bnd_high[2:5] <= 5)
@@ -99,10 +66,11 @@ function test_print_JuMPContainerVar()
     io_test(IJuliaMode, bnd_diffbo, ".. \\leq bnd_diffbo_{i} \\leq .. \\quad\\forall i \\in \\{2,3,4,5\\}")
     io_test(IJuliaMode, bnd_difflo_with_up, ".. \\leq bnd_difflo_with_up_{i} \\leq 5 \\quad\\forall i \\in \\{2,3,4,5\\}")
     io_test(IJuliaMode, bnd_diffup_with_lo, "2 \\leq bnd_diffup_with_lo_{i} \\leq .. \\quad\\forall i \\in \\{2,3,4,5\\}")
+    end
 
     #------------------------------------------------------------------
     # Test index set printing
-    println("    index set printing")
+    context("index set printing") do
     @defVar(m, rng_unit1[1:10])  # JuMPArray
     @defVar(m, rng_unit2[-2:3])  # JuMPArray
     @defVar(m, rng_unit3[[1:10]])  # JuMPDict
@@ -147,10 +115,11 @@ function test_print_JuMPContainerVar()
     io_test(IJuliaMode, tri_1, "tri_1_{i,j} free \\quad\\forall i \\in \\{1,2,3\\}, j \\in \\{..\\}")
     io_test(IJuliaMode, tri_2, "tri_2_{i,j} free \\quad\\forall i \\in \\{1,2,3\\}, j \\in \\{..\\}")
     io_test(IJuliaMode, tri_3, "tri_3_{(i,j),k} free \\quad\\forall (i,j) \\in \\{(1,3),(2,4),\\dots,(4,6),(5,7)\\}, k \\in \\{..\\}")
+    end
 
     #------------------------------------------------------------------
     # Test category printing
-    println("    category printing")
+    context("category printing") do
     @defVar(m, cat_bin[1:3], Bin)
     @defVar(m, 2 <= cat_int[1:3] <= 5, Int)
     @defVar(m, cat_semiint_both[2:3] >= 2, SemiInt)
@@ -183,20 +152,22 @@ function test_print_JuMPContainerVar()
     io_test(IJuliaMode, cat_semicont_difflow, "cat_semicont_difflow_{i} \\in \\[..,4\\] \\cup \\{0\\} \\quad\\forall i \\in \\{2,3\\}")
     io_test(IJuliaMode, cat_semicont_diffup, "cat_semicont_diffup_{i} \\in \\[2,..\\] \\cup \\{0\\} \\quad\\forall i \\in \\{2,3\\}")
     io_test(IJuliaMode, cat_semicont_none, "cat_semicont_none_{i} \\in \\[..,..\\] \\cup \\{0\\} \\quad\\forall i \\in \\{2,3\\}")
+    end
 
     #------------------------------------------------------------------
     # Tests for particular issues
-    println("    issue testing")
+    context("issue testing") do
     # Empty JuMPContainer printing (#124)
     @defVar(m, empty_free[1:0])
     io_test(REPLMode, empty_free, "empty_free (no indices)")
     io_test(IJuliaMode, empty_free, "empty_free (no indices)")
+    end
 end
 
-function test_print_JuMPContainerVal()
-    # The same output for REPL and IJulia, so only testing one
-    println("  test_print_JuMPContainerVal")
 
+
+facts("[print] JuMPContainer{Number}") do
+    # The same output for REPL and IJulia, so only testing one
     mod = Model()
     @defVar(mod, i*j <= w[i=9:10, [:Apple,5,:Banana], j=-1:+1] <= i*j)
     @defVar(mod, i*j*k <= x[i=9:11,j=99:101,k=3:4] <= i*j*k)
@@ -306,8 +277,8 @@ z: 2 dimensions, 6 entries:
 end
 
 
-function test_print_SOS()
-    println("  test_print_SOS")
+
+facts("[print] SOS constraints") do
     modS = Model()
     a = [1,2,3]
     @defVar(modS, x[1:3], Bin)
@@ -325,8 +296,9 @@ function test_print_SOS()
     io_test(IJuliaMode, s2, "SOS2: \\{5 y[1], 4 y[2], 7 y[3], 2 y[4], 1 y[5]\\}")
 end
 
-function test_print_Model()
-    println("  test_print_Model")
+
+
+facts("[print] Model") do
     le, ge = JuMP.repl_leq, JuMP.repl_geq
 
     #------------------------------------------------------------------
@@ -425,10 +397,11 @@ Solver set to Default""", repl=:show)
 """, repl=:print)
 end
 
-function test_print_expr()
+
+
+facts("[print] expressions") do
     # Most of the expression logic is well covered by test/operator.jl
     # This is really just to check IJulia printing for expressions
-    println("  test_print_expr")
     le, ge = JuMP.repl_leq, JuMP.repl_geq
 
     #------------------------------------------------------------------
@@ -450,54 +423,46 @@ function test_print_expr()
     io_test(IJuliaMode, mod.quadconstr[end], "x_{1}\\timesy_{2,2} + x_{2}\\timesy_{2,2} + 3 x_{1} + 3 x_{2} - 1 \\leq 0")
 end
 
-function test_print_Variable()
-    println("  test_print_Variable")
-    
-    m = Model()
 
+
+facts("[print] Variable") do    
+    m = Model()
     @defVar(m, 0 <= x <= 2)
     
-    @test    getName(x) == "x"
+    @fact    getName(x) => "x"
     io_test(REPLMode,   x, "x")
     io_test(IJuliaMode, x, "x")
 
     setName(x, "x2")
-    @test    getName(x) == "x2"
+    @fact    getName(x) => "x2"
     io_test(REPLMode,   x, "x2")
     io_test(IJuliaMode, x, "x2")
 
     setName(x, "")
-    @test    getName(x) == "col_1"
+    @fact    getName(x) => "col_1"
     io_test(REPLMode,   x, "col_1")
     io_test(IJuliaMode, x, "col_1")
 
     @defVar(m, z[1:2,3:5])
-    @test       getName(z[1,3]) == "z[1,3]"
+    @fact       getName(z[1,3]) => "z[1,3]"
     io_test(REPLMode,   z[1,3],    "z[1,3]")
     io_test(IJuliaMode, z[1,3],    "z_{1,3}")
-    @test       getName(z[2,4]) == "z[2,4]"
+    @fact       getName(z[2,4]) => "z[2,4]"
     io_test(REPLMode,   z[2,4],    "z[2,4]")
     io_test(IJuliaMode, z[2,4],    "z_{2,4}")
-    @test       getName(z[2,5]) == "z[2,5]"
+    @fact       getName(z[2,5]) => "z[2,5]"
     io_test(REPLMode,   z[2,5],    "z[2,5]")
     io_test(IJuliaMode, z[2,5],    "z_{2,5}")
 
     @defVar(m, w[3:9,["red","blue","green"]])
-    @test    getName(w[7,"green"]) == "w[7,green]"
+    @fact    getName(w[7,"green"]) => "w[7,green]"
     io_test(REPLMode,   w[7,"green"], "w[7,green]")
     io_test(IJuliaMode, w[7,"green"], "w_{7,green}")
 
     rng = 2:5
     @defVar(m, v[rng,rng,rng,rng,rng,rng,rng])
     a_v = v[4,5,2,3,2,2,4]
-    @test    getName(a_v) == "v[4,5,2,3,2,2,4]"
+    @fact    getName(a_v) => "v[4,5,2,3,2,2,4]"
     io_test(REPLMode,   a_v, "v[4,5,2,3,2,2,4]")
     io_test(IJuliaMode, a_v, "v_{4,5,2,3,2,2,4}")
 end
-
-test_print_expr()
-test_print_JuMPContainerVar()
-test_print_JuMPContainerVal()
-test_print_SOS()
-test_print_Model()
-test_print_Variable()
