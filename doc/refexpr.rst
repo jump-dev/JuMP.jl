@@ -42,9 +42,7 @@ Methods
   See Constraint Reference section for details.
 * ``addConstraint(m::Model, con)`` - general way to add linear and quadratic
   constraints.
-* ``@addConstraints`` - add groups of constraints at once, in the same fashion as @addConstraint. The 
-model must be the first argument, and multiple constraints can be added on multiple lines wrapped in 
-a ``begin ... end`` block. For example::
+* ``@addConstraints`` - add groups of constraints at once, in the same fashion as @addConstraint. The model must be the first argument, and multiple constraints can be added on multiple lines wrapped in a ``begin ... end`` block. For example::
     
     @addConstraints m begin
       x >= 1
