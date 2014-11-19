@@ -102,6 +102,14 @@ getname(c::Symbol) = c
 getname(c::Nothing) = ()
 getname(c::Expr) = c.args[1]
 
+function assert_validmodel(m, macrocode)
+    # assumes m is already escaped
+    quote
+        isa($m, Model) || error("Expected ", $(quot(m.args[1])), " to be a JuMP model but it has type ", typeof($m))
+        $macrocode
+    end
+end
+
 macro addConstraint(m, x, extra...)
     m = esc(m)
     # Two formats:
@@ -159,7 +167,7 @@ macro addConstraint(m, x, extra...)
               "       expr1 == expr2\n" * "       lb <= expr <= ub")
     end
 
-    return getloopedcode(c, code, :(), idxvars, idxsets, idxpairs, :ConstraintRef)
+    return assert_validmodel(m, getloopedcode(c, code, :(), idxvars, idxsets, idxpairs, :ConstraintRef))
 end
 
 macro addConstraints(m, x)
@@ -190,6 +198,7 @@ macro addConstraints(m, x)
 end
 
 macro setObjective(m, args...)
+    m = esc(m)
     if length(args) != 2
         # Either just an objective sene, or just an expression.
         error("in @setObjective: needs three arguments: model, objective sense (Max or Min) and expression.")
@@ -199,11 +208,12 @@ macro setObjective(m, args...)
         sense = Expr(:quote,sense)
     end
     newaff, parsecode = parseExpr(x, :q, [1.0])
-    quote
+    code = quote
         q = AffExpr()
         $parsecode
-        setObjective($(esc(m)), $(esc(sense)), $newaff)
+        setObjective($m, $(esc(sense)), $newaff)
     end
+    return assert_validmodel(m, code)
 end
 
 macro defExpr(args...)
@@ -363,10 +373,10 @@ macro defVar(args...)
             objcoef = esc(extra[1+gottype])
             cols    = esc(extra[2+gottype])
             coeffs  = esc(extra[3+gottype])
-            return quote
+            return assert_validmodel(m, quote
                 $(esc(var)) = Variable($m,$lb,$ub,$(quot(t)),$objcoef,$cols,$coeffs,name=$(string(var)))
                 nothing
-            end
+            end)
         end
         gottype == 0 &&
             error("in @defVar ($var): syntax error")
@@ -374,9 +384,9 @@ macro defVar(args...)
 
     if isa(var,Symbol)
         # Easy case - a single variable
-        return quote
+        return assert_validmodel(m, quote
             $(esc(var)) = Variable($m,$lb,$ub,$(quot(t)),$(string(var)))
-        end
+        end)
     end
     @assert isa(var,Expr)
 
@@ -386,11 +396,11 @@ macro defVar(args...)
     code = :( $(refcall) = Variable($m, $lb, $ub, $(quot(t))) )
     looped = getloopedcode(var, code, condition, idxvars, idxsets, idxpairs, :Variable)
     varname = esc(getname(var))
-    return quote 
+    return assert_validmodel(m, quote
         $looped
         push!($(m).dictList, $varname)
         $varname
-    end
+    end)
 end
 
 macro defConstrRef(var)
@@ -420,13 +430,14 @@ macro setNLObjective(m, sense, x)
     if sense == :Min || sense == :Max
         sense = Expr(:quote,sense)
     end
-    quote
+    code = quote
         initNLP($m)
         setObjectiveSense($m, $(esc(sense)))
         ex = @processNLExpr($(esc(x)))
         $m.nlpdata.nlobj = ex
         $m.obj = QuadExpr()
     end
+    return assert_validmodel(m, code)
 end 
 
 macro addNLConstraint(m, x, extra...)
@@ -479,5 +490,5 @@ macro addNLConstraint(m, x, extra...)
               "       expr1 == expr2\n")
     end
 
-    return getloopedcode(c, code, :(), idxvars, idxsets, idxpairs, :(ConstraintRef{NonlinearConstraint}))
+    return assert_validmodel(m, getloopedcode(c, code, :(), idxvars, idxsets, idxpairs, :(ConstraintRef{NonlinearConstraint})))
 end
