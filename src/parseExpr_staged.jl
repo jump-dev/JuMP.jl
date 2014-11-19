@@ -203,6 +203,8 @@ function parseCurly(x::Expr, aff::Symbol, constantCoef)
     return code
 end
 
+is_complex_expr(ex) = isa(ex,Expr) && !isexpr(ex,:ref)
+
 # output is assigned to newaff
 function parseExpr(x, aff::Symbol, coefficients::Vector, newaff::Symbol=gensym())
     #@show x
@@ -240,7 +242,6 @@ function parseExpr(x, aff::Symbol, coefficients::Vector, newaff::Symbol=gensym()
         elseif x.head == :call && x.args[1] == :*
             # we might need to recurse on multiple arguments, e.g.,
             # (x+y)*(x+y)
-            is_complex_expr(ex) = isa(ex,Expr) && !isexpr(ex,:ref)
             n_expr = mapreduce(is_complex_expr, +, x.args)
             if n_expr == 1 # special case, only recurse on one argument and don't create temporary objects
                 coefficients = Any[c for c in coefficients]
@@ -269,6 +270,14 @@ function parseExpr(x, aff::Symbol, coefficients::Vector, newaff::Symbol=gensym()
                 push!(blk.args, :($newaff = $callexpr))
                 return newaff, blk
             end
+        elseif x.head == :call && x.args[1] == :^ && is_complex_expr(x.args[2])
+            x.args[3] == 2 || error("Only exponents of 2 are currently supported")
+            blk = Expr(:block)
+            s = gensym()
+            newaff_, parsed = parseExpr(x.args[2], s, [1.0])
+            push!(blk.args, :($s = 0.0; $parsed))
+            push!(blk.args, :($newaff = $newaff_*$newaff_))
+            return newaff, blk
         elseif x.head == :call && x.args[1] == :/
             @assert length(x.args) == 3
             numerator = x.args[2]
