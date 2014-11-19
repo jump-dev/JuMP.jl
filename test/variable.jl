@@ -20,8 +20,9 @@ facts("[variable] constructors") do
     @defVar(mcon, manyrangelb[0:1,10:20,1:1] >= 2)
     @fact getLower(manyrangelb[0,15,1]) => 2
     s = ["Green","Blue"]
-    @defVar(mcon, x[-10:10,s] <= 5.5, Int)
+    @defVar(mcon, x[i=-10:10,s] <= 5.5, Int, start=i+1)
     @fact getUpper(x[-4,"Green"]) => 5.5
+    @fact getValue(x[-3,"Blue"]) => -2
 end
 
 facts("[variable] get and set bounds") do

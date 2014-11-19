@@ -294,7 +294,7 @@ macro defVar(args...)
     condition = :()
     m = args[1]
     x = args[2]
-    extra = args[3:end]
+    extra = vcat(args[3:end]...)
     ######################################################################
     m = esc(m)
 
@@ -355,6 +355,20 @@ macro defVar(args...)
         ub = Inf
     end
 
+    # check for "value" keyword argument
+    value = NaN
+    for i in 1:length(extra)
+        ex = extra[i]
+        if isexpr(ex,:kw)
+            ex.args[1] == :start || error("Unrecognized keyword $(ex.args[1])")
+            value = esc(ex.args[2])
+            deleteat!(extra, i)
+            break
+        end
+    end
+
+
+
     # Determine variable type (if present), as well as variables being 
     # added as complete columns. 
     # Types: default is continuous (reals), alternatives are Int and Bin.
@@ -397,7 +411,7 @@ macro defVar(args...)
     if isa(var,Symbol)
         # Easy case - a single variable
         return assert_validmodel(m, quote
-            $(esc(var)) = Variable($m,$lb,$ub,$(quot(t)),$(string(var)))
+            $(esc(var)) = Variable($m,$lb,$ub,$(quot(t)),$(string(var)),$value)
         end)
     end
     @assert isa(var,Expr)
@@ -405,7 +419,7 @@ macro defVar(args...)
     # We now build the code to generate the variables (and possibly the JuMPDict
     # to contain them)
     refcall, idxvars, idxsets, idxpairs = buildrefsets(var)
-    code = :( $(refcall) = Variable($m, $lb, $ub, $(quot(t))) )
+    code = :( $(refcall) = Variable($m, $lb, $ub, $(quot(t)), "", $value) )
     looped = getloopedcode(var, code, condition, idxvars, idxsets, idxpairs, :Variable)
     varname = esc(getname(var))
     return assert_validmodel(m, quote

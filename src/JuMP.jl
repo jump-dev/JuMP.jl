@@ -169,14 +169,14 @@ end
 ReverseDiffSparse.getplaceindex(x::Variable) = x.col
 Base.isequal(x::Variable,y::Variable) = isequal(x.col,y.col) && isequal(x.m,y.m)
 
-function Variable(m::Model,lower::Number,upper::Number,cat::Symbol,name::String="")
+function Variable(m::Model,lower::Number,upper::Number,cat::Symbol,name::String="",value::Number=NaN)
     m.numCols += 1
     push!(m.colNames, name)
     push!(m.colNamesIJulia, name)
     push!(m.colLower, convert(Float64,lower))
     push!(m.colUpper, convert(Float64,upper))
     push!(m.colCat, cat)
-    push!(m.colVal,NaN)
+    push!(m.colVal,value)
     if cat == :Fixed
         @assert lower == upper
         m.colVal[end] = lower
