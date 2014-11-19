@@ -164,7 +164,7 @@ end
 ReverseDiffSparse.getplaceindex(x::Variable) = x.col
 Base.isequal(x::Variable,y::Variable) = isequal(x.col,y.col) && isequal(x.m,y.m)
 
-function Variable(m::Model,lower::Number,upper::Number,cat::Symbol,name::String)
+function Variable(m::Model,lower::Number,upper::Number,cat::Symbol,name::String="")
     m.numCols += 1
     push!(m.colNames, name)
     push!(m.colNamesIJulia, name)
@@ -182,9 +182,6 @@ function Variable(m::Model,lower::Number,upper::Number,cat::Symbol,name::String)
     end
     return Variable(m, m.numCols)
 end
-
-Variable(m::Model,lower::Number,upper::Number,cat::Symbol) =
-    Variable(m,lower,upper,cat,"")
 
 # Name setter/getters
 function setName(v::Variable,n::String)
