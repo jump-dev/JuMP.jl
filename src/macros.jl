@@ -394,6 +394,7 @@ macro defVar(args...)
 end
 
 macro defConstrRef(var)
+    Base.warn_once("Use of @defConstrRef is deprecated. Use the three-argument version of @addConstraint instead, e.g.,\n\t@addConstraint(m, $var, ...)")
     if isa(var,Symbol)
         # easy case
         return esc(:(local $var))

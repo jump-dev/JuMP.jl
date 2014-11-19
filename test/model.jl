@@ -47,10 +47,9 @@ facts("[model] Test printing a model") do
     @defVar(modA, 2 <= z <= 4)
     @defVar(modA, 0 <= r[i=3:6] <= i)
     @setObjective(modA, Max, ((x + y)/2.0 + 3.0)/3.0 + z + r[3])
-    @defConstrRef constraints[1:3]
-    constraints[1] = @addConstraint(modA, 2 <= x+y <= 4)
-    constraints[2] = @addConstraint(modA, sum{r[i],i=3:5} <= (2 - x)/2.0)
-    constraints[3] = @addConstraint(modA, 7.0*y <= z + r[6]/1.9)
+    @addConstraint(modA, 2 <= x+y <= 4)
+    @addConstraint(modA, sum{r[i],i=3:5} <= (2 - x)/2.0)
+    @addConstraint(modA, 7.0*y <= z + r[6]/1.9)
     #####################################################################
     # Test LP writer
     writeLP(modA, modPath * "A.lp")
@@ -179,10 +178,9 @@ context("With solver $(typeof(solver))") do
     @defVar(modA, 2 <= z <= 4)
     @defVar(modA, 0 <= r[i=3:6] <= i)
     @setObjective(modA, Max, ((x + y)/2.0 + 3.0)/3.0 + z + r[3])
-    @defConstrRef cons[1:3]
-    cons[1] = @addConstraint(modA, x+y >= 2)
-    cons[2] = @addConstraint(modA, sum{r[i],i=3:5} <= (2 - x)/2.0)
-    cons[3] = @addConstraint(modA, 7.0*y <= z + r[6]/1.9)
+    @addConstraint(modA, cons1, x+y >= 2)
+    @addConstraint(modA, cons2, sum{r[i],i=3:5} <= (2 - x)/2.0)
+    @addConstraint(modA, cons3, 7.0*y <= z + r[6]/1.9)
  
     # Solution
     @fact solve(modA) => :Optimal  
@@ -205,9 +203,9 @@ context("With solver $(typeof(solver))") do
     @fact getDual(r)[6] => roughly( 0.03759398, 1e-6)
 
     # Row duals
-    @fact getDual(cons)[1] => roughly(-0.333333, 1e-6)
-    @fact getDual(cons)[2] => roughly( 1.0, 1e-6)
-    @fact getDual(cons)[3] => roughly( 0.0714286, 1e-6)
+    @fact getDual(cons1) => roughly(-0.333333, 1e-6)
+    @fact getDual(cons2) => roughly( 1.0, 1e-6)
+    @fact getDual(cons3) => roughly( 0.0714286, 1e-6)
 end # solver context
 end # loop over solvers
 end # facts block
