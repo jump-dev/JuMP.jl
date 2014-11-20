@@ -1,8 +1,5 @@
-function solve(m::Model;IpoptOptions::Dict=Dict(),suppress_warnings=false)
+function solve(m::Model;suppress_warnings=false)
     if m.nlpdata != nothing
-        if length(IpoptOptions) > 0
-            error("Specifying options by using IpoptOptions is no longer supported. Use \"m = Model(solver=IpoptSolver(option1=value1,option2=value2,...)\" instead, after loading the Ipopt package.")
-        end
         if isa(m.solver,UnsetSolver)
             m.solver = MathProgBase.defaultNLPsolver
         end
