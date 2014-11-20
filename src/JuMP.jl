@@ -173,7 +173,7 @@ function Variable(m::Model,lower::Number,upper::Number,cat::Symbol,name::String=
     push!(m.colCat, cat)
     push!(m.colVal,NaN)
     if m.internalModelLoaded
-        if method_exists(MathProgBase.addvar!, (typeof(m.internalModel),Float64,Float64,Float64))
+        if method_exists(MathProgBase.addvar!, (typeof(m.internalModel),Vector{Int},Vector{Float64},Float64,Float64,Float64))
             MathProgBase.addvar!(m.internalModel,float(lower),float(upper),0.0)
         else
             Base.warn_once("Solver does not appear to support adding variables to an existing model. Hot-start is disabled.")
