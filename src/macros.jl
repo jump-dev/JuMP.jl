@@ -436,6 +436,8 @@ macro setNLObjective(m, sense, x)
         ex = @processNLExpr($(esc(x)))
         $m.nlpdata.nlobj = ex
         $m.obj = QuadExpr()
+        $m.internalModelLoaded = false
+        nothing
     end
     return assert_validmodel(m, code)
 end 
@@ -474,7 +476,6 @@ macro addNLConstraint(m, x, extra...)
         end
         lhs = :($(x.args[1]) - $(x.args[3]))
         code = quote
-            initNLP($m)
             c = NonlinearConstraint(@processNLExpr($(esc(lhs))), $lb, $ub)
             push!($m.nlpdata.nlconstr, c)
             push!($m.nlpdata.nlconstrlist, c.terms)
@@ -489,6 +490,13 @@ macro addNLConstraint(m, x, extra...)
               "       expr1 <= expr2\n" * "       expr1 >= expr2\n" *
               "       expr1 == expr2\n")
     end
+    looped = getloopedcode(c, code, :(), idxvars, idxsets, idxpairs, :(ConstraintRef{NonlinearConstraint}))
+    code = quote
+        initNLP($m)
+        $looped
+        $m.internalModelLoaded = false
+        nothing
+    end
 
-    return assert_validmodel(m, getloopedcode(c, code, :(), idxvars, idxsets, idxpairs, :(ConstraintRef{NonlinearConstraint})))
+    return assert_validmodel(m, code)
 end
