@@ -34,6 +34,7 @@ cpx && push!(lp_solvers, CPLEX.CplexSolver())
 mos && push!(lp_solvers, Mosek.MosekSolver())
 cbc && push!(lp_solvers, Clp.ClpSolver())
 glp && push!(lp_solvers, GLPKMathProgInterface.GLPKSolverLP())
+ipt && push!(lp_solvers, Ipopt.IpoptSolver(print_level=0))
 # MILP solvers
 ip_solvers = Any[]
 grb && push!(ip_solvers, Gurobi.GurobiSolver(OutputFlag=0))
