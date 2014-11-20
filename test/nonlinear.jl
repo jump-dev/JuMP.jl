@@ -74,12 +74,21 @@ context("With solver $(typeof(nl_solver))") do
     @defVar(m, 0.5 <= x <=  2)
     @defVar(m, 0.0 <= y <= 30)
     @setObjective(m, Min, (x+y)^2)
-    @addNLConstraint(m, x + y >= 1)
+    param = [1.0]
+    @addNLConstraint(m, x + y >= param[1])
     status = solve(m)
     
     @fact status => :Optimal
     @fact m.objVal => roughly(1.0, 1e-6)
     @fact getValue(x)+getValue(y) => roughly(1.0, 1e-6)
+
+    # sneaky problem modification
+    param[1] = 10
+    @fact m.internalModelLoaded => true
+    status = solve(m)
+    @fact m.objVal => roughly(10.0^2, 1e-6)
+    @fact getValue(x)+getValue(y) => roughly(10.0, 1e-6)
+
 end; end; end
 
 
