@@ -110,18 +110,3 @@ When an LP model is infeasible, ``getDual`` will return the corresponding compon
 infeasibility ray (Farkas proof), if available from the solver.
 
 Dual information is unavailable for MIPs and has not yet been implemented for quadratic constraints.
-
-For users who prefer to generate constraints in an explicit loop, we also
-provide the ``@defConstrRef`` convenience macro, e.g.::
-
-    @defConstrRef constraintName[1:3]
-
-You can then iterate over constraints and store
-references in this structure, e.g.::
-
-    @defVar(m, x[1:5] >= 0)
-    @defConstrRef myCons[1:5]
-    for i = 1:5
-      myCons[i] = @addConstraint(m, x[i] >= i)
-    end
-

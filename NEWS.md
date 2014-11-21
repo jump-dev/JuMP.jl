@@ -4,6 +4,7 @@ JuMP release notes
 Unreleased
 ----------
 
+  * The ``@defConstrRef`` macro is deprecated in favor of the three-argument version of ``@addConstraint``.
   * The ``@addNLConstraint`` macro now supports the three-argument version to define sets of nonlinear constraints.
   * Speed improvements for nonlinear model generation.
   * KNITRO supported as a nonlinear solver.
