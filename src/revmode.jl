@@ -244,7 +244,11 @@ function forwardpass(x::ExprNode, expr_out)
         for i in 2:length(x.ex.args)
             push!(values, forwardpass(x.ex.args[i], expr_out))
         end
-        fcall = Expr(:call, x.ex.args[1], values...)
+        if x.ex.args[1] == :(^) # Use NaNMath.pow instead of ^
+            fcall = Expr(:call, :pow, values...)
+        else
+            fcall = Expr(:call, x.ex.args[1], values...)
+        end
         push!(expr_out.args, :( $(x.value) = $fcall ))
         return x.value
     elseif isexpr(x.ex, :curly)
@@ -283,11 +287,6 @@ forwardpass(x, expr_out) = :(forwardvalue($x, __placevalues, __placeindex_in))
 
 forwardvalue(x::Placeholder, placevalues, placeindex_in) = placevalues[placeindex_in[getplaceindex(x)]]
 forwardvalue(x, placevalues, placeindex_in) = float(x)
-
-# better to return NaNs than throw DomainErrors.
-# sometimes the results aren't needed anyway,
-# because the code may compute derivatives wrt constants.
-log(x) = x <= 0 ? NaN : Base.log(x)
 
 function revpass(x::ExprNode, expr_out)
     @assert isexpr(expr_out, :block)
@@ -342,12 +341,12 @@ function revpass(x::ExprNode, expr_out)
             if k == 2 # base
                 exponent = getvalue(p.ex.args[3])
                 push!(expr_out.args, 
-                  :( $(x.deriv) += $(p.deriv)*$exponent*$(x.value)^($exponent-1) ))
+                  :( $(x.deriv) += $(p.deriv)*$exponent*pow($(x.value),$exponent-1) ))
             else
                 @assert k == 3
                 base = getvalue(p.ex.args[2])
                 push!(expr_out.args,
-                  :( $(x.deriv) += $(p.deriv)*$base^($(x.value))*log($base) ))
+                  :( $(x.deriv) += $(p.deriv)*pow($base,$(x.value))*log($base) ))
             end
         elseif f == :(/)
             if k == 2 # numerator
@@ -358,7 +357,7 @@ function revpass(x::ExprNode, expr_out)
                 @assert k == 3 # denominator
                 numer = getvalue(p.ex.args[2])
                 push!(expr_out.args,
-                  :( $(x.deriv) += -1*$(p.deriv)*$numer*($(x.value))^(-2) ))
+                  :( $(x.deriv) += -1*$(p.deriv)*$numer*pow($(x.value),-2) ))
             end
         else
             # try one of the derivative rules
