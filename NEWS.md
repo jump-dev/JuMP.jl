@@ -4,6 +4,7 @@ JuMP release notes
 Unreleased
 ----------
 
+  * Support for skipping model generation when solving a sequence of nonlinear models with changing data.
   * The ``@addNLConstraint`` macro now supports the three-argument version to define sets of nonlinear constraints.
   * Speed improvements for nonlinear model generation.
   * KNITRO supported as a nonlinear solver.
