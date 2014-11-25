@@ -4,9 +4,10 @@ type NLPData
     nlobj
     nlconstr::Vector{NonlinearConstraint}
     nlconstrlist::ReverseDiffSparse.ExprList
+    evaluator
 end
 
-NLPData() = NLPData(nothing, NonlinearConstraint[], ExprList())
+NLPData() = NLPData(nothing, NonlinearConstraint[], ExprList(), nothing)
 
 Base.copy(::NLPData) = error("Copying nonlinear problems not yet implemented")
 
@@ -54,6 +55,12 @@ function MathProgBase.initialize(d::JuMPNLPEvaluator, requested_features::Vector
             # for solvers that need them
         end
     end
+    if d.eval_f_timer != 0
+        # we've already been initialized
+        # assume no new features are being requested.
+        return
+    end
+
     if :ExprGraph in requested_features
         need_expr = true
     else
@@ -424,10 +431,16 @@ function solvenlp(m::Model; suppress_warnings=false)
     end
     
     linobj, linrowlb, linrowub = prepProblemBounds(m)
-    A = prepConstrMatrix(m)
 
-    d = JuMPNLPEvaluator(m,A)
     nldata::NLPData = m.nlpdata
+    if m.internalModelLoaded
+        @assert isa(nldata.evaluator, JuMPNLPEvaluator)
+        d = nldata.evaluator
+    else
+        A = prepConstrMatrix(m)
+        d = JuMPNLPEvaluator(m,A)
+        nldata.evaluator = d
+    end
 
     numConstr = length(m.linconstr) + length(m.quadconstr) + length(nldata.nlconstr)
 
@@ -464,7 +477,7 @@ function solvenlp(m::Model; suppress_warnings=false)
     else
         # solve LP to find feasible point
         # do we need an iterior point?
-        lpsol = MathProgBase.linprog(zeros(m.numCols), A, linrowlb, linrowub, m.colLower, m.colUpper)
+        lpsol = MathProgBase.linprog(zeros(m.numCols), d.A, linrowlb, linrowub, m.colLower, m.colUpper)
         @assert lpsol.status == :Optimal
         MathProgBase.setwarmstart!(m.internalModel, lpsol.sol)
     end
@@ -478,6 +491,8 @@ function solvenlp(m::Model; suppress_warnings=false)
     if stat != :Optimal && !suppress_warnings
         warn("Not solved to optimality, status: $stat")
     end
+
+    m.internalModelLoaded = true
 
     #println("feval $(d.eval_f_timer)\nfgrad $(d.eval_grad_f_timer)\ngeval $(d.eval_g_timer)\njaceval $(d.eval_jac_g_timer)\nhess $(d.eval_hesslag_timer)")
     

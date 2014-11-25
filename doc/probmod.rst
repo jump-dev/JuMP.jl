@@ -84,3 +84,8 @@ Modifying the objective
 To change the objective, simply call ``@setObjective`` again - the previous objective
 function and sense will be replaced.
 
+Modifying nonlinear models
+^^^^^^^^^^^^^^^^^^^^^^^^^^
+
+See :ref:`Nonlinear performance <nonlinearprobmod>`.
+
