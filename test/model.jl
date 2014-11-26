@@ -387,3 +387,19 @@ context("With solver $(typeof(solver))") do
     @fact getValue(x)[:] => roughly([0.0,1.0,2.0], 1e-6)
     @fact getObjectiveValue(m) => roughly(3.0, 1e-6)
 end; end; end
+
+facts("[model] Test setSolver") do
+    m = Model()
+    @defVar(m, x[1:5])
+    @addConstraint(m, con[i=1:5], x[6-i] == i)
+    @fact solve(m) => :Optimal
+
+    for solver in lp_solvers
+        setSolver(m, solver)
+        @fact m.solver => solver
+        @fact m.internalModel == nothing => true
+        @fact solve(m) => :Optimal
+        @fact m.solver => solver
+        @fact m.internalModel == nothing => false
+    end
+end
