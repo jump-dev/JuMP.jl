@@ -242,6 +242,15 @@ Base.one(a::GenericAffExpr) = one(typeof(a))
 Base.start(aff::GenericAffExpr) = 1
 Base.done(aff::GenericAffExpr, state::Int) = state > length(aff.vars)
 Base.next(aff::GenericAffExpr, state::Int) = ((aff.coeffs[state], aff.vars[state]), state+1)
+function Base.in{CoefType,VarType}(x::VarType, aff::GenericAffExpr{CoefType,VarType})
+    acc = zero(CoefType)
+    for (coef,term) in aff
+        if isequal(x, term)
+            acc += coef
+        end
+    end
+    return !(acc == zero(CoefType))
+end
 
 # More efficient ways to grow an affine expression
 # Add a single term to an affine expression
