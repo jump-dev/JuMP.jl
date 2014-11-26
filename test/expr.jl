@@ -69,3 +69,13 @@ facts("[expr] Test expression iterators") do
         @fact coeff => 0.0  # Shouldn't be called!
     end
 end
+
+# Test ``in(::Variable, AffExpr)``
+let 
+    m = Model()
+    @defVar(m, x[1:3])
+    @defVar(m, y)
+    @test x[2] in 2x[2] + x[1]
+    @test !(x[3] in x[1] + 2x[2])
+    @test !( y in @defExpr(sum{i*x[i],i=1:3}))
+end
