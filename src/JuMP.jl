@@ -116,7 +116,7 @@ function setObjectiveSense(m::Model, newSense::Symbol)
 end
 setObjective(m::Model, something::Any) =
     error("in setObjective: needs three arguments: model, objective sense (:Max or :Min), and expression.")
-function setSolver{S<:MathProgBase.AbstractMathProgSolver}(m::Model, solver::S)
+function setSolver(m::Model, solver::MathProgBase.AbstractMathProgSolver)
     m.solver = solver
     m.internalModel = nothing
     m.internalModelLoaded = false
