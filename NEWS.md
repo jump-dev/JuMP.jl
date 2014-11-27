@@ -9,6 +9,7 @@ Unreleased
   * Speed improvements for nonlinear model generation.
   * KNITRO supported as a nonlinear solver.
   * On Julia 0.4, variables and coefficients may be multiplied in any order within macros. That is, variable*coefficient is now valid syntax.
+  * The ``setSolver`` function allows users to change the solver subsequent to model creation.
 
 Version 0.6.3 (October 19, 2014)
 --------------------------------
