@@ -19,7 +19,8 @@ export
 # Functions
     # Model related
     getNumVars, getNumConstraints, getObjectiveValue, getObjective,
-    getObjectiveSense, setObjectiveSense, writeLP, writeMPS, setObjective,
+    getObjectiveSense, setObjectiveSense, setSolver,
+    writeLP, writeMPS, setObjective,
     addConstraint, addSOS1, addSOS2, solve,
     getInternalModel, buildInternalModel,
     # Variable
@@ -115,7 +116,11 @@ function setObjectiveSense(m::Model, newSense::Symbol)
 end
 setObjective(m::Model, something::Any) =
     error("in setObjective: needs three arguments: model, objective sense (:Max or :Min), and expression.")
-
+function setSolver(m::Model, solver::MathProgBase.AbstractMathProgSolver)
+    m.solver = solver
+    m.internalModel = nothing
+    m.internalModelLoaded = false
+end
 # Deep copy the model
 function Base.copy(source::Model)
     
