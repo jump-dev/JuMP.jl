@@ -88,7 +88,7 @@ function quoteTree(x::Expr, datalist::Dict, iterstack)
             error("Unrecognized expression $x")
         end
         code = :(Expr($(quot(x.head))))
-        for y in x.args[1:end]
+        for y in x.args
             push!(code.args,quoteTree(y, datalist, iterstack))
         end
         return code
@@ -130,6 +130,8 @@ function genVarList(x::Expr, arrname)
         return gencurlyloop(x,code, escape=true)
     elseif x.head == :call
         return Expr(:block,[genVarList(y,arrname) for y in x.args[2:end]]...)
+    elseif x.head in (:comparison, :&&, :||)
+        return Expr(:block,[genVarList(y,arrname) for y in x.args]...)
     else
         return :(addToVarList!($arrname,$(esc(x))))
     end
@@ -187,14 +189,26 @@ genExprGraph(x) = genExprGraph(x, nothing, nothing)
 function genExprGraph(x::Expr, parent, k)
     parentarr = parent === nothing ? [] : [(parent,k)]
     if isexpr(x, :call)
-        thisnode = ExprNode(x, parentarr, nothing, nothing)
+        thisnode = ExprNode(x, parentarr)
         for i in 2:length(x.args)
+            x.args[i] = genExprGraph(x.args[i], thisnode, i)
+        end
+        return thisnode
+    elseif isexpr(x, :comparison)
+        thisnode = ExprNode(x, parentarr)
+        for i in 1:2:length(x.args) # comparison symbols are in the middle
+            x.args[i] = genExprGraph(x.args[i], thisnode, i)
+        end
+        return thisnode
+    elseif isexpr(x, :&&) || isexpr(x, :||)
+        thisnode = ExprNode(x, parentarr)
+        for i in 1:length(x.args)
             x.args[i] = genExprGraph(x.args[i], thisnode, i)
         end
         return thisnode
     elseif isexpr(x, :curly)
         @assert issum(x.args[1]) || isprod(x.args[1])
-        thisnode = ExprNode(x, parentarr, nothing, nothing)
+        thisnode = ExprNode(x, parentarr)
         if isexpr(x.args[2], :parameters) # filter conditions
             x.args[3] = genExprGraph(x.args[3], thisnode, nothing)
         else
@@ -203,7 +217,7 @@ function genExprGraph(x::Expr, parent, k)
         return thisnode
     else
         @assert isexpr(x, :ref)
-        return ExprNode(x, parentarr, nothing, nothing)
+        return ExprNode(x, parentarr)
     end
 end
 
@@ -274,6 +288,26 @@ function forwardpass(x::ExprNode, expr_out)
 
         push!(expr_out.args, gencurlyloop(x.ex, code))
         return x.value
+    elseif isexpr(x.ex, :comparison)
+        values = Any[]
+        for i in 1:length(x.ex.args)
+            if iseven(i)
+                push!(values, x.ex.args[i]) # comparison operator
+            else
+                push!(values, forwardpass(x.ex.args[i], expr_out))
+            end
+        end
+        fcall = Expr(:comparison, values...)
+        push!(expr_out.args, :( $(x.value) = $fcall ))
+        return x.value
+    elseif isexpr(x.ex, :&&) || isexpr(x.ex, :||)
+        values = Any[]
+        for i in 1:length(x.ex.args)
+            push!(values, forwardpass(x.ex.args[i], expr_out))
+        end
+        fcall = Expr(x.ex.head, values...)
+        push!(expr_out.args, :( $(x.value) = $fcall ))
+        return x.value
     elseif isa(x.ex, Expr) || isa(x.ex, Symbol)
         # some other symbolic value, to evaluate at runtime
         push!(expr_out.args, :( $(x.value) = forwardvalue($(x.ex), __placevalues, __placeindex_in) ))
@@ -286,7 +320,7 @@ end
 forwardpass(x, expr_out) = :(forwardvalue($x, __placevalues, __placeindex_in))
 
 forwardvalue(x::Placeholder, placevalues, placeindex_in) = placevalues[placeindex_in[getplaceindex(x)]]
-forwardvalue(x, placevalues, placeindex_in) = float(x)
+forwardvalue(x, placevalues, placeindex_in) = x
 
 function revpass(x::ExprNode, expr_out)
     @assert isexpr(expr_out, :block)
@@ -358,6 +392,14 @@ function revpass(x::ExprNode, expr_out)
                 numer = getvalue(p.ex.args[2])
                 push!(expr_out.args,
                   :( $(x.deriv) += -1*$(p.deriv)*$numer*pow($(x.value),-2) ))
+            end
+        elseif f == :ifelse
+            if k == 3 # true case
+                push!(expr_out.args, :($(x.deriv) += ifelse($(getvalue(p.ex.args[2])),$(p.deriv), 0)))
+            elseif k == 4
+                push!(expr_out.args, :($(x.deriv) += ifelse($(getvalue(p.ex.args[2])),0,$(p.deriv))))
+            else
+                return # don't do any more work for the condition
             end
         else
             # try one of the derivative rules
@@ -469,8 +511,7 @@ function genfval_parametric(x::SymbolicOutput)
 end
 
 function genfval_simple(x::SymbolicOutput)
-    fexpr = genfval_parametric(x)
-    f = eval(fexpr)
+    f = genfval_parametric(x)
     return xvals -> f(xvals, IdentityArray(), x.inputvals...)
 end
 

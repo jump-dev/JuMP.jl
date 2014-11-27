@@ -7,6 +7,8 @@ type ExprNode
     deriv # derivative wrt this expression (when computed)
 end
 
+ExprNode(ex, parents) = ExprNode(ex, parents, nothing, nothing)
+
 abstract Placeholder
 
 immutable BasicPlaceholder <: Placeholder

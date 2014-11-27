@@ -158,7 +158,17 @@ eval_hess!(V, exlist, val, lambda)
 @test_approx_eq full(sparse(I,J,V)) lambda*[0 0 0 0; val[3]*val[4] 0 0 0; val[2]*val[4] val[1]*val[4] 0 0; val[2]*val[3] val[1]*val[3] val[1]*val[2] 0]
 
 
+# ifelse
+ex = @processNLExpr ifelse(x[1] >= x[2], x[1],x[2])
+I,J = compute_hessian_sparsity_IJ(ex)
+@test length(I) == 0 && length(J) == 0
 
+ex = @processNLExpr x[1]*ifelse(x[1] >= x[2], x[1],x[2])
+sp = compute_hessian_sparsity_IJ(ex)
+test_sparsity(sp, [1.0 1.0; 1.0 1.0])
 
+ex = @processNLExpr x[1]*ifelse(x[1] >= x[2] && true, x[1],x[2])
+sp = compute_hessian_sparsity_IJ(ex)
+test_sparsity(sp, [1.0 1.0; 1.0 1.0])
 
 println("Passed tests")

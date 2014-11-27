@@ -1,5 +1,6 @@
 # flatten out expressions for output to MathProgBase format
 
+# Lots of overlap with this code and forwardpass(). Possible to combine?
 function outputpass(x::ExprNode, expr_out)
     @assert isexpr(expr_out, :block)
 
@@ -39,6 +40,26 @@ function outputpass(x::ExprNode, expr_out)
                 $(x.value) = $(x.value).args[2]
             end
         end)
+        return x.value
+    elseif isexpr(x.ex, :comparison)
+        values = Any[]
+        for i in 1:length(x.ex.args)
+            if iseven(i)
+                push!(values, quot(x.ex.args[i])) # comparison operator
+            else
+                push!(values, outputpass(x.ex.args[i], expr_out))
+            end
+        end
+        fcall = Expr(:call, :Expr, quot(:comparison), values...)
+        push!(expr_out.args, :( $(x.value) = $fcall ))
+        return x.value
+    elseif isexpr(x.ex, :&&) || isexpr(x.ex, :||)
+        values = Any[]
+        for i in 1:length(x.ex.args)
+            push!(values, outputpass(x.ex.args[i], expr_out))
+        end
+        fcall = Expr(:call, :Expr, quot(x.ex.head), values...)
+        push!(expr_out.args, :( $(x.value) = $fcall ))
         return x.value
     elseif isa(x.ex, Expr) || isa(x.ex, Symbol)
         # some other symbolic value, to evaluate at runtime

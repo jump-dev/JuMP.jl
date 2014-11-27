@@ -81,7 +81,7 @@ function compute_hessian_sparsity(x::ExprNode, linear_so_far, expr_out)
             end
 
 
-            if x.ex.args[1] == :(+) || x.ex.args[1] == :(-)
+            if x.ex.args[1] == :(+) || x.ex.args[1] == :(-) || x.ex.args[1] == :ifelse
                 push!(expr_out.args, code_linear)
             elseif x.ex.args[1] == :(*)
                 # if at most one of the multiplicands is a "complex" expression,
@@ -140,6 +140,8 @@ function compute_hessian_sparsity(x::ExprNode, linear_so_far, expr_out)
                         $nonlinear_cleanup
                 end end)
         end
+    elseif isexpr(x.ex, :comparison) || isexpr(x.ex, :&&) || isexpr(x.ex, :||)
+        # nothing to do here
     else
         # we must be at an input expression
         # add this placeholder to the set of nodes with this color

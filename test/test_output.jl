@@ -39,3 +39,10 @@ ex = @processNLExpr x[1] + prod{x[i], i in S} + sum{x[i], i in S}
 S = [2]
 ex = @processNLExpr x[1] + prod{x[i], i in S} + sum{x[i], i in S}
 @test to_flat_expr(ex) == :(x[1] + x[2] + x[2])
+
+# ifelse
+ex = @processNLExpr x[1]*ifelse(x[1] >= x[2], x[1],x[2])
+@test to_flat_expr(ex) == :(x[1] * ifelse(x[1] >= x[2],x[1],x[2]))
+
+ex = @processNLExpr x[1]*ifelse(x[1] >= x[2] && x[1]^2 < 5, x[1],x[2])
+@test to_flat_expr(ex) == :(x[1] * ifelse(x[1] >= x[2] && x[1]^2 < 5,x[1],x[2]))

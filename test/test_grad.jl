@@ -227,4 +227,22 @@ fval = fg([0.0,0.0],out)
 @test_approx_eq out[1] 0.0
 @test_approx_eq out[2] 0.0
 
+# ifelse
+ex = @processNLExpr x[1]*ifelse(x[1] >= x[2], x[1],x[2])
+fg = genfgrad_simple(ex)
+fval = fg([2.5,1.0],out)
+@test_approx_eq fval 2.5^2
+@test_approx_eq out[1] 2*2.5
+@test_approx_eq out[2] 0.0
+fval = fg([0.5,1.0],out)
+@test_approx_eq fval 0.5
+@test_approx_eq out[1] 1.0
+@test_approx_eq out[2] 0.5
+
+ex = @processNLExpr x[1]*ifelse(x[1] >= x[2] || true, x[1],x[2])
+fg = genfgrad_simple(ex)
+fval = fg([0.5,1.0],out)
+@test_approx_eq fval 0.25
+
+
 println("Passed tests")
