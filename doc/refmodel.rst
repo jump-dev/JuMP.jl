@@ -41,7 +41,7 @@ Methods
 * ``getInternalModel(m::Model)`` - returns the internal low-level ``AbstractMathProgModel`` object which can be used to access any functionality that is not exposed by JuMP. See the MathProgBase `documentation <http://mathprogbasejl.readthedocs.org/en/latest/mathprogbase.html#low-level-interface>`_.
 * ``solve(m::Model;  suppress_warnings=false)`` - solves the model using the selected solver (or a default for the problem class), and takes two optional arguments that are disabled by default. Setting ``suppress_warnings`` to ``true`` will suppress all JuMP-specific output (e.g. warnings about infeasibility and lack of dual information) but will not suppress solver output (which should be done by passing options to the solver).
 * ``buildInternalModel(m::Model)`` - builds the model in memory at the MathProgBase level without optimizing. 
-* ``setSolver(m::Model,s::AbstractMathProgSolver)`` - changes the solver attached to a model already created in memory.
+* ``setSolver(m::Model,s::AbstractMathProgSolver)`` - changes the solver which will be used for the next call to ``solve()``, discarding the current internal model if present.
 
 **Objective**
 
