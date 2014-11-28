@@ -130,6 +130,7 @@ facts("[print] JuMPContainer{Variable}") do
     @defVar(m, i <= cat_semicont_difflow[i=2:3] <= 4, SemiCont)
     @defVar(m, 2 <= cat_semicont_diffup[i=2:3] <= i, SemiCont)
     @defVar(m, i <= cat_semicont_none[i=2:3] <= 2i, SemiCont)
+    @defVar(m, fixed_var[i=2:3] == i)
 
     io_test(REPLMode, cat_bin, "cat_bin[i] in {0,1} for all i in {1,2,3}")
     io_test(REPLMode, cat_int, "2 $le cat_int[i] $le 5, integer, for all i in {1,2,3}")
@@ -141,6 +142,7 @@ facts("[print] JuMPContainer{Variable}") do
     io_test(REPLMode, cat_semicont_difflow, "cat_semicont_difflow[i] in [..,4] or {0} for all i in {2,3}")
     io_test(REPLMode, cat_semicont_diffup, "cat_semicont_diffup[i] in [2,..] or {0} for all i in {2,3}")
     io_test(REPLMode, cat_semicont_none, "cat_semicont_none[i] in [..,..] or {0} for all i in {2,3}")
+    io_test(REPLMode, fixed_var, "fixed_var[i] = .. for all i in {2,3}")
 
     io_test(IJuliaMode, cat_bin, "cat_bin_{i} \\in \\{0,1\\} \\quad\\forall i \\in \\{1,2,3\\}")
     io_test(IJuliaMode, cat_int, "2 \\leq cat_int_{i} \\leq 5, \\in \\mathbb{Z}, \\quad\\forall i \\in \\{1,2,3\\}")
@@ -152,6 +154,7 @@ facts("[print] JuMPContainer{Variable}") do
     io_test(IJuliaMode, cat_semicont_difflow, "cat_semicont_difflow_{i} \\in \\[..,4\\] \\cup \\{0\\} \\quad\\forall i \\in \\{2,3\\}")
     io_test(IJuliaMode, cat_semicont_diffup, "cat_semicont_diffup_{i} \\in \\[2,..\\] \\cup \\{0\\} \\quad\\forall i \\in \\{2,3\\}")
     io_test(IJuliaMode, cat_semicont_none, "cat_semicont_none_{i} \\in \\[..,..\\] \\cup \\{0\\} \\quad\\forall i \\in \\{2,3\\}")
+    io_test(IJuliaMode, fixed_var, "fixed_var_{i} = .. \\quad\\forall i \\in \\{2,3\\}")
     end
 
     #------------------------------------------------------------------
