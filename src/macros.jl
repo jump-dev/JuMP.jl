@@ -297,8 +297,11 @@ macro defVar(args...)
     extra = args[3:end]
     ######################################################################
     m = esc(m)
-    # Identify the variable bounds. Four (legal) possibilities are "x >= lb",
-    # "x <= ub", "lb <= x <= ub", or just plain "x"
+
+    t = :Cont
+    gottype = 0
+    # Identify the variable bounds. Five (legal) possibilities are "x >= lb",
+    # "x <= ub", "lb <= x <= ub", "x == val", or just plain "x"
     if isexpr(x,:comparison)
         # We have some bounds
         if x.args[2] == :>= || x.args[2] == :≥
@@ -332,6 +335,14 @@ macro defVar(args...)
                 ub = esc_nonconstant(x.args[3])
                 lb = -Inf
             end
+        elseif x.args[2] == :(==)
+            # fixed variable
+            var = x.args[1]
+            @assert length(x.args) == 3
+            lb = esc(x.args[3])
+            ub = esc(x.args[3])
+            gottype = 1
+            t = :Fixed
         else
             # Its a comparsion, but not using <= ... <=
             error("in @defVar ($(string(x))): use the form lb <= ... <= ub.")
@@ -348,9 +359,10 @@ macro defVar(args...)
     # added as complete columns. 
     # Types: default is continuous (reals), alternatives are Int and Bin.
     # ColGen: format is @defVar(..., [type], objcoef, constrrefs, values)
-    t = :Cont
-    gottype = 0
     if length(extra) > 0
+        if t == :Fixed
+            error("in @defVar ($var): unexpected extra arguments when declaring a fixed variable")
+        end
         if extra[1] in [:Bin, :Int, :SemiCont, :SemiInt]
             gottype = 1
             t = extra[1]

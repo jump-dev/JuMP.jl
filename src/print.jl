@@ -176,6 +176,8 @@ function model_str(mode, m::Model, leq, geq, in_set,
             str *= sep * "$var_name $in_set $open_set$str_lb$mid_set$str_ub$close_set $union $(open_set)0$close_set"
         elseif var_cat == :SemiCont  # x in union of 0 and [lb,ub]
             str *= sep * "$var_name $in_set $open_rng$str_lb,$str_ub$close_rng $union $(open_set)0$close_set"
+        elseif var_cat == :Fixed
+            str *= sep * "$var_name = $str_lb"
         elseif var_lb == -Inf && var_ub == +Inf  # Free variable
             str *= sep * "$var_name free"
         elseif var_lb == -Inf  # No lower bound
@@ -345,6 +347,9 @@ function cont_str(mode, j::JuMPContainer{Variable}, leq, eq, geq,
         si_lb = all_same_lb ? str_lb : ".."
         si_ub = all_same_ub ? str_ub : ".."
         return "$name_idx $in_set $open_rng$si_lb,$si_ub$close_rng $union $(open_set)0$close_set $idx_sets"
+    elseif var_cat == :Fixed
+        si_bnd = all_same_lb ? str_lb : ".."
+        return "$name_idx = $si_bnd $idx_sets"
     end
     # Continuous and Integer
     idx_sets = var_cat == :Int ? ", $integer, $idx_sets" : " $idx_sets"

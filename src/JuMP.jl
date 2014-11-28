@@ -177,6 +177,10 @@ function Variable(m::Model,lower::Number,upper::Number,cat::Symbol,name::String=
     push!(m.colUpper, convert(Float64,upper))
     push!(m.colCat, cat)
     push!(m.colVal,NaN)
+    if cat == :Fixed
+        @assert lower == upper
+        m.colVal[end] = lower
+    end
     if m.internalModelLoaded
         if method_exists(MathProgBase.addvar!, (typeof(m.internalModel),Vector{Int},Vector{Float64},Float64,Float64,Float64))
             MathProgBase.addvar!(m.internalModel,float(lower),float(upper),0.0)
@@ -197,14 +201,24 @@ getName(m::Model, col) = var_str(REPLMode, m, col)
 getName(v::Variable) = var_str(REPLMode, v.m, v.col)
 
 # Bound setter/getters
-setLower(v::Variable,lower::Number) = (v.m.colLower[v.col] = convert(Float64,lower))
-setUpper(v::Variable,upper::Number) = (v.m.colUpper[v.col] = convert(Float64,upper))
+function setLower(v::Variable,lower::Number)
+    v.m.colCat[v.col] == :Fixed && error("use setValue for changing the value of a fixed variable")
+    v.m.colLower[v.col] = lower
+end
+function setUpper(v::Variable,upper::Number)
+    v.m.colCat[v.col] == :Fixed && error("use setValue for changing the value of a fixed variable")
+    v.m.colUpper[v.col] = upper
+end
 getLower(v::Variable) = v.m.colLower[v.col]
 getUpper(v::Variable) = v.m.colUpper[v.col]
 
 # Value setter/getter
 function setValue(v::Variable, val::Number)
     v.m.colVal[v.col] = val
+    if v.m.colCat[v.col] == :Fixed
+        v.m.colLower[v.col] = val
+        v.m.colUpper[v.col] = val
+    end
 end
 
 function getValue(v::Variable) 
@@ -583,12 +597,17 @@ function Variable(m::Model,lower::Number,upper::Number,cat::Symbol,objcoef::Numb
             error("Unexpected constraint of type $(typeof(c)). Column-wise modeling only supported for linear constraints")
         end
     end
+    @assert cat != :Fixed || (lower == upper)
     m.numCols += 1
     push!(m.colNames, name)
     push!(m.colLower, convert(Float64,lower))
     push!(m.colUpper, convert(Float64,upper))
     push!(m.colCat, cat)
     push!(m.colVal,NaN)
+    if cat == :Fixed
+        @assert lower == upper
+        m.colVal[end] = lower
+    end
     v = Variable(m,m.numCols)
     # add to existing constraints
     @assert length(constraints) == length(coefficients)

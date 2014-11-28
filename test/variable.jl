@@ -39,6 +39,14 @@ facts("[variable] get and set bounds") do
     @defVar(m, 0 <= y <= 1, Bin)
     @fact getLower(y) => 0
     @fact getUpper(y) => 1
+    @defVar(m, fixedvar == 2)
+    @fact getValue(fixedvar) => 2
+    @fact getLower(fixedvar) => 2
+    @fact getUpper(fixedvar) => 2
+    setValue(fixedvar, 5)
+    @fact getValue(fixedvar) => 5
+    @fact getLower(fixedvar) => 5
+    @fact getUpper(fixedvar) => 5
 end
 
 facts("[variable] repeated elements in index set (issue #199)") do

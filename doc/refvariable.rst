@@ -22,6 +22,7 @@ see the syntax discussed in the :ref:`probmod` section.
     @defVar(m, x >= lb )        # Lower bound only (note: 'lb <= x' is not valid)
     @defVar(m, x <= ub )        # Upper bound only
     @defVar(m, lb <= x <= ub )  # Lower and upper bounds
+    @defVar(m, x == fixedval )  # Fixed to a value (lb == ub)
 
 All these variations create a new local variable, in this case ``x``. 
 The names of your variables must be valid Julia variable names.
@@ -63,7 +64,7 @@ Finally, variables can be constructed manually, one-by-one::
     x = Variable(m::Model, lower::Number, upper::Number, category::Symbol, name::String)
     x = Variable(m::Model, lower::Number, upper::Number, category::Symbol)
 
-where ``category`` is one of ``:Cont``, ``:Int``, ``:Bin``, ``:SemiCont``, and ``:SemiInt``.
+where ``category`` is one of ``:Cont``, ``:Int``, ``:Bin``, ``:Fixed``, ``:SemiCont``, and ``:SemiInt``.
 This form of constructing variables is not considered idiomatic JuMP code.
 
 .. note::
@@ -109,3 +110,30 @@ Methods
 Variables (in the sense of columns) can have internal names (different from the Julia variable name) that can be used for writing models to file. This feature is disabled for performance reasons, but will be added if there is demand or a special use case.
 
 * ``setName(x::Variable, newName)``, ``getName(x::Variable)`` - Set/get the variable's internal name.
+
+
+Fixed variables
+^^^^^^^^^^^^^^^
+
+`Fixed` variables, created with the ``x == fixedval`` syntax, have slightly special
+semantics. First, it is important to note that fixed variables are considered
+optimization variables, not constants, for the purpose of determining the problem
+class. For example, in::
+
+    @defVar(m, x == 5)
+    @defVar(m, y)
+    @addConstraint(m, x*y <= 10)
+
+the constraint added is a nonconvex quadratic constraint. For efficiency reasons,
+JuMP will *not* substitute the constant ``5`` for ``x`` and then
+provide the resulting *linear* constraint to the solver.
+Two possible uses for fixed variables are:
+
+1. For computing sensitivities. When available from the solver,
+   the sensitivity of the objective with respect to the fixed value may be queried with ``getDual(x)``.
+
+2. For solving a sequence of problems with varying parameters.
+   One may call ``setValue(x, val)``
+   to change the value to which the variable is fixed. For LPs
+   in particular, most solvers are able to efficiently hot-start when
+   solving the resulting modified problem.
