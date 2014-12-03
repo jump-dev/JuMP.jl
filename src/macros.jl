@@ -355,24 +355,37 @@ macro defVar(args...)
         ub = Inf
     end
 
-    # check for "value" keyword argument
+    # separate out keyword arguments
+    kwargs = filter(ex->isexpr(ex,:kw), extra)
+    extra = filter(ex->!isexpr(ex,:kw), extra)
+
+    # process keyword arguments
     value = NaN
-    for i in 1:length(extra)
-        ex = extra[i]
-        if isexpr(ex,:kw)
-            ex.args[1] == :start || error("Unrecognized keyword $(ex.args[1])")
+    obj = nothing
+    inconstraints = nothing
+    coefficients = nothing
+    for ex in kwargs
+        if ex.args[1] == :start
             value = esc(ex.args[2])
-            deleteat!(extra, i)
-            break
+        elseif ex.args[1] == :objective
+            obj = esc(ex.args[2])
+        elseif ex.args[1] == :inconstraints
+            inconstraints = esc(ex.args[2])
+        elseif ex.args[1] == :coefficients
+            coefficients = esc(ex.args[2])
+        else
+            error("in @defVar ($var): Unrecognized keyword argument $(ex.args[1])")
         end
     end
 
+    if (obj != nothing || inconstraints != nothing || coefficients != nothing) &&
+        (obj == nothing || inconstraints == nothing || coefficients == nothing)
+        error("in @defVar ($var): Must provide 'objective', 'inconstraints', and 'coefficients' arguments all together for column-wise modeling")
+    end
 
 
-    # Determine variable type (if present), as well as variables being 
-    # added as complete columns. 
-    # Types: default is continuous (reals), alternatives are Int and Bin.
-    # ColGen: format is @defVar(..., [type], objcoef, constrrefs, values)
+    # Determine variable type (if present).
+    # Types: default is continuous (reals)
     if length(extra) > 0
         if t == :Fixed
             error("in @defVar ($var): unexpected extra arguments when declaring a fixed variable")
@@ -391,11 +404,9 @@ macro defVar(args...)
             end
         end
 
-        # Handle the column generation functionality
+        # Handle the old column generation functionality
         if length(extra) - gottype == 3
-            !isa(var,Symbol) &&
-                error("in @defVar ($var): can only create one variable at a time when adding to existing constraints.")
-
+            warn("in @defVar ($var): the syntax for column-wise modeling has changed. Use @defVar($(m.args[1]), $var, objective=$(extra[1+gottype]), inconstraints=$(extra[2+gottype]), coefficients=$(extra[3+gottype]))")
             objcoef = esc(extra[1+gottype])
             cols    = esc(extra[2+gottype])
             coeffs  = esc(extra[3+gottype])
@@ -404,9 +415,22 @@ macro defVar(args...)
                 nothing
             end)
         end
+
         gottype == 0 &&
             error("in @defVar ($var): syntax error")
     end
+
+    # Handle the column generation functionality
+    if coefficients != nothing
+        !isa(var,Symbol) &&
+        error("in @defVar ($var): can only create one variable at a time when adding to existing constraints.")
+
+        return assert_validmodel(m, quote
+            $(esc(var)) = Variable($m,$lb,$ub,$(quot(t)),$obj,$inconstraints,$coefficients,$(string(var)),$value)
+            nothing
+        end)
+    end
+
 
     if isa(var,Symbol)
         # Easy case - a single variable

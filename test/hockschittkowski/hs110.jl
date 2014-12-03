@@ -21,10 +21,7 @@ using Base.Test
 let
 
 m = Model()
-@defVar(m, -2.001 <= x[1:10] <= 9.999)
-for i = 1:10
-    setValue(x[i], 9)
-end
+@defVar(m, -2.001 <= x[1:10] <= 9.999, start = 9)
 
 @setNLObjective(m, Min, 
     sum{ log(x[j] - 2)^2 + log(10 - x[j])^2, j=1:10} -

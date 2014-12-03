@@ -9,12 +9,8 @@ data = rand(n)
 
 m = Model()
 
-@defVar(m, μ)
-@defVar(m, σ >= 0.0)
-
-# provide starting points -- this is needed
-setValue(μ, 0.0)
-setValue(σ, 1.0)
+@defVar(m, μ, start = 0.0)
+@defVar(m, σ >= 0.0, start = 1.0)
 
 @setNLObjective(m, Max, (n/2)*log(1/(2π*σ^2))-sum{(data[i]-μ)^2, i=1:n}/(2σ^2))
 

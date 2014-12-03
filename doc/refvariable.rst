@@ -59,6 +59,17 @@ And indices can have dependencies on preceding indices (e.g. "triangular indexin
 Note the dependency must be on preceding indices, going from left to right. That is,
 ``@defVar(m, x[i=j:10,i=1:10] >= 0)`` is not valid JuMP code.
 
+An initial value of each variable may be provided with the ``start`` keyword to ``@defVar``::
+
+    @defVar(m, x[i=1:10], start=(i/2))
+
+Is equivalent to::
+
+    @defVar(m, x[i=1:10], start=(i/2))
+    for i in 1:10
+        setValue(x[i], i/2)
+    end
+
 Finally, variables can be constructed manually, one-by-one::
 
     x = Variable(m::Model, lower::Number, upper::Number, category::Symbol, name::String)

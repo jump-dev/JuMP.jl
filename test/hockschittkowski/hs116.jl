@@ -29,9 +29,10 @@ f = 0.00975
 
 lower = [0.1, 0.1, 0.1, 0.0001, 0.1, 0.1, 0.1, 0.1, 500, 0.1, 1.0, 0.0001, 0.0001, 0.0, 0.0, 0.0]
 upper = [1.0, 1.0, 1.0, 0.1, 0.9, 0.9, 1000, 1000, 1000, 500, 150, 150, 150, Inf, Inf, Inf]
+start = [0.5  2 0.8  3 0.9  4 0.1  5 0.14  6 0.5  7 489  8 80  9 650 0.5  2 0.8  3 0.9  4 0.1  5 0.14  6 0.5  7 489  8 80  9 650]
 
 m = Model()
-@defVar(m, lower[i] <= x[i=1:N] <= upper[i])
+@defVar(m, lower[i] <= x[i=1:N] <= upper[i], start = start[i])
 @setNLObjective(m, Min, x[11] + x[12] + x[13])
 
 @addNLConstraint(m, x[3] - x[2] >= 0)
@@ -52,10 +53,6 @@ m = Model()
 @addNLConstraint(m, x[2] - 0.9 - a * (x[2] * x[10] - x[3] * x[10]) >= 0)
 @addNLConstraint(m, x[11] + x[12] + x[13] <= 250)
 
-start = [0.5  2 0.8  3 0.9  4 0.1  5 0.14  6 0.5  7 489  8 80  9 650 0.5  2 0.8  3 0.9  4 0.1  5 0.14  6 0.5  7 489  8 80  9 650]
-for i = 1:N
-    setValue(x[i], start[i])
-end
 
 solve(m)
 

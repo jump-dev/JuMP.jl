@@ -288,8 +288,9 @@ facts("[model] Test column-wise modeling") do
     @defVar(mod, 0 <= y <= 1)
     @setObjective(mod, Max, 5x + 1y)
     @addConstraint(mod, con[i=1:2], i*x + y <= i+5)
-    @defVar(mod, 0 <= z1 <= 1, 10.0, con, [1.0,-2.0])
-    @defVar(mod, 0 <= z2 <= 1, 10.0, Any[con[i] for i in [1:2]], [1.0,-2.0])
+    @defVar(mod, 0 <= z1 <= 0, 0.0, con, [1.0,-2.0]) # coverage for deprecated syntax
+    @defVar(mod, 0 <= z1 <= 1, objective=10.0, inconstraints=con, coefficients=[1.0,-2.0])
+    @defVar(mod, 0 <= z2 <= 1, objective=10.0, inconstraints=Any[con[i] for i in [1:2]], coefficients=[1.0,-2.0])
     @fact solve(mod) => :Optimal
     @fact getValue(z1) => roughly(1.0, 1e-6)
     @fact getValue(z2) => roughly(1.0, 1e-6)
