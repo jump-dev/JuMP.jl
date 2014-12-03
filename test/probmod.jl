@@ -35,7 +35,7 @@ context("With solver $(typeof(solver))") do
     #     1 <= y <= 3
     #     0 <= z <= 5
     # x* = 0, y* = 1, z* = 2
-    @defVar(m, 0 <= z <= 5, 100.0, [maincon], [1.0])
+    @defVar(m, 0 <= z <= 5, objective=100.0, inconstraints=[maincon], coefficients=[1.0])
     @fact solve(m) => :Optimal
     @fact getValue(x) => roughly(0.0, 1e-6)
     @fact getValue(y) => roughly(1.0, 1e-6)

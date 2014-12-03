@@ -18,18 +18,18 @@ these macros, as well as ``prod{}`` which analogously represents the product of
 the terms within. Note that the ``@setObjective`` and ``@addConstraint``
 macros (and corresponding functions) do *not* currently support nonlinear expressions.
 However, a model can contain a mix of linear, quadratic, and nonlinear constraints or
-objective functions.  Starting points may be provided by calling ``setValue`` on each
-variable. For nonconvex problems, the returned solution is only guaranteed to be
+objective functions.  Starting points may be provided by using the ``start``
+keyword argument to ``@defVar``.
+For nonconvex problems, the returned solution is only guaranteed to be
 locally optimal. Convexity detection is not currently provided.
 
 For example, we can solve the classical Rosenbrock problem (with a twist) as follows::
 
     using JuMP
     m = Model()
-    @defVar(m, x)
-    @defVar(m, y)
+    @defVar(m, x, start = 0.0)
+    @defVar(m, y, start = 0.0)
 
-    setValue(x, 0.0); setValue(y, 0.0)
     @setNLObjective(m, Min, (1-x)^2 + 100(y-x^2)^2)
 
     solve(m)

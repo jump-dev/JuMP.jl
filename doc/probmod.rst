@@ -35,11 +35,11 @@ transmitted to the solver until ``solve`` is called again.
 To add variables that appear in existing constraints, e.g. in column generation,
 there is an alternative form of the ``defVar`` macro::
 
-  @defVar(m, x, objcoef, constrrefs, values)
-  @defVar(m, x >= lb, objcoef, constrrefs, values)
-  @defVar(m, x <= ub, objcoef, constrrefs, values)
-  @defVar(m, lb <= x <= ub, objcoef, constrrefs, values)
-  @defVar(m, lb <= x <= ub, Int, objcoef, constrrefs, values)  # Types are supported
+  @defVar(m, x, objective = objcoef, inconstraints = constrrefs, coefficients = values)
+  @defVar(m, x >= lb, objective = objcoef, inconstraints = constrrefs, coefficients = values)
+  @defVar(m, x <= ub, objective = objcoef, inconstraints = constrrefs, coefficients = values)
+  @defVar(m, lb <= x <= ub, objective = objcoef, inconstraints = constrrefs, coefficients = values)
+  @defVar(m, lb <= x <= ub, Int, objective = objcoef, inconstraints = constrrefs, coefficients = values)  # Types are supported
 
 where ``objcoef`` is the coefficient of the variable in the new problem,
 ``constrrefs`` is a vector of ``ConstraintRef``, and ``values`` is a vector
@@ -51,7 +51,7 @@ of numbers. To give an example, consider the following code snippet::
   @setObjective(m, Max, 5x + 1y)
   @addConstraint(m, con, x + y <= 1)
   solve(m)  # x = 1, y = 0
-  @defVar(m, 0 <= z <= 1, 10.0, [con], [1.0])
+  @defVar(m, 0 <= z <= 1, objective = 10.0, inconstraints = [con], coefficients = [1.0])
   # The constraint is now x + y + z <= 1
   # The objective is now 5x + 1y + 10z
   solve(m)  # z = 1
@@ -62,9 +62,9 @@ define a set of empty constraints, e.g. ::
   m = Model()
   @addConstraint(m, con, 0 <= 1)
   @setObjective(m, Max, 0)
-  @defVar(m, 0 <= x <= 1, 5, [con], [1.0])
-  @defVar(m, 0 <= y <= 1, 1, [con], [1.0])
-  @defVar(m, 0 <= z <= 1, 10, [con], [1.0])
+  @defVar(m, 0 <= x <= 1, objective = 5, inconstraints = [con], coefficients = [1.0])
+  @defVar(m, 0 <= y <= 1, objective = 1, inconstraints = [con], coefficients = [1.0])
+  @defVar(m, 0 <= z <= 1, objective = 10, inconstraints = [con], coefficients = [1.0])
   solve(m)
 
 Modifying constraints

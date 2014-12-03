@@ -29,10 +29,7 @@ L = [0.0, 0.0, -0.55, -0.55, 196, 196, 196, -400, -400]
 U = [Inf, Inf,  0.55,  0.55, 252, 252, 252,  800,  800]
 
 m = Model()
-@defVar(m, L[i] <= x[i=1:9] <= U[i])
-for i = 1:9
-    setValue(x[i], 0.0)
-end
+@defVar(m, L[i] <= x[i=1:9] <= U[i], start = 0.0)
 
 @setNLObjective(m, Min, 3 * x[1] + 1e-6 * x[1]^3 + 2 * x[2] + .522074e-6 * x[2]^3)
 

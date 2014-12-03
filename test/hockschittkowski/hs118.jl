@@ -79,7 +79,7 @@ end
 @addConstraint(m, x[10] + x[11] + x[12] >= 85)
 @addConstraint(m, x[13] + x[14] + x[15] >= 100)
 
-# Initial solution
+# Initial solution (could also use 'start' keyword in @defVar)
 setValue(x[1], 20.0)
 setValue(x[2], 55.0)
 setValue(x[3], 15.0)

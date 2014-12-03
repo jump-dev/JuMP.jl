@@ -23,10 +23,7 @@ let
 c = [-6.089, -17.164, -34.054, -5.914, -24.721, -14.986, -24.100, -10.708, -26.662, -22.179]
 
 m = Model()
-@defVar(m, -100 <= x[1:10] <= 100)
-for i = 1:10
-    setValue(x[i], -2.3)
-end
+@defVar(m, -100 <= x[1:10] <= 100, start = -2.3)
 
 @setNLObjective(m, Min, 
     sum{exp(x[j]) * (c[j] + x[j] - log( sum{exp(x[k]), k=1:10} ) ), j=1:10})

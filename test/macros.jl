@@ -94,7 +94,7 @@ facts("[macros] Problem modification") do
     con = @addConstraint(m, sum{ C[i,j]*x[i,j], i = 1:3, j = 1:3; i != j} == 0)
     @fact conToStr(m.linconstr[end]) => "2 x[1,2] + 3 x[1,3] + 4 x[2,1] + 6 x[2,3] + 7 x[3,1] + 8 x[3,2] $eq 0"
 
-    @defVar(m, y, 0, [con], [-1.0])
+    @defVar(m, y, objective = 0, inconstraints = [con], coefficients = [-1.0])
     @fact conToStr(m.linconstr[end]) => "2 x[1,2] + 3 x[1,3] + 4 x[2,1] + 6 x[2,3] + 7 x[3,1] + 8 x[3,2] - y $eq 0"
 
     chgConstrRHS(con, 3)

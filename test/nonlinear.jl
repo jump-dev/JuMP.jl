@@ -46,17 +46,13 @@ context("With solver $(typeof(nl_solver))") do
         # st  t >= x1 * x4 * (x1 + x2 + x3) + x3
         #     ...
         m = Model(solver=nl_solver)
-        @defVar(m, 1 <= x[1:4] <= 5)
-        @defVar(m, t)
+        start = [1.0, 5.0, 5.0, 1.0]
+        @defVar(m, 1 <= x[i=1:4] <= 5, start = start[i])
+        @defVar(m, t, start = 100)
         @setObjective(m, Min, t)
         @addNLConstraint(m, t >= x[1]*x[4]*(x[1]+x[2]+x[3]) + x[3])
         @addNLConstraint(m, x[1]*x[2]*x[3]*x[4] >= 25)
         @addNLConstraint(m, sum{x[i]^2,i=1:4} == 40)
-        setValue(x[1],1.0)
-        setValue(x[2],5.0)
-        setValue(x[3],5.0)
-        setValue(x[4],1.0)
-        setValue(t, 100)
         status = solve(m)
 
         @fact status => :Optimal
