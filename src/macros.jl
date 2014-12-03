@@ -400,7 +400,7 @@ macro defVar(args...)
             cols    = esc(extra[2+gottype])
             coeffs  = esc(extra[3+gottype])
             return assert_validmodel(m, quote
-                $(esc(var)) = Variable($m,$lb,$ub,$(quot(t)),$objcoef,$cols,$coeffs,name=$(string(var)))
+                $(esc(var)) = Variable($m,$lb,$ub,$(quot(t)),$objcoef,$cols,$coeffs,$(string(var)),$value)
                 nothing
             end)
         end

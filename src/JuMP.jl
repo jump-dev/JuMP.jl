@@ -585,13 +585,12 @@ function chgConstrRHS(c::ConstraintRef{LinearConstraint}, rhs::Number)
 end
 
 Variable(m::Model,lower::Number,upper::Number,cat::Symbol,objcoef::Number,
-    constraints::JuMPArray,coefficients::Vector{Float64}; name::String="") =
-    Variable(m, lower, upper, cat, objcoef, constraints.innerArray, coefficients, name=name)
+    constraints::JuMPArray,coefficients::Vector{Float64}, name::String="", value::Number=NaN) =
+    Variable(m, lower, upper, cat, objcoef, constraints.innerArray, coefficients, name, value)
 
 # add variable to existing constraints
 function Variable(m::Model,lower::Number,upper::Number,cat::Symbol,objcoef::Number,
-    constraints::Vector,coefficients::Vector{Float64};
-    name::String="")
+    constraints::Vector,coefficients::Vector{Float64}, name::String="", value::Number=NaN)
     for c in constraints
         if !isa(c,ConstraintRef{LinearConstraint})
             error("Unexpected constraint of type $(typeof(c)). Column-wise modeling only supported for linear constraints")
@@ -603,7 +602,7 @@ function Variable(m::Model,lower::Number,upper::Number,cat::Symbol,objcoef::Numb
     push!(m.colLower, convert(Float64,lower))
     push!(m.colUpper, convert(Float64,upper))
     push!(m.colCat, cat)
-    push!(m.colVal,NaN)
+    push!(m.colVal,value)
     if cat == :Fixed
         @assert lower == upper
         m.colVal[end] = lower
