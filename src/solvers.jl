@@ -55,7 +55,7 @@ function addQuadratics(m::Model)
     end
 
     # Add quadratic constraint to solver
-    sensemap = [:(<=) => '<', :(>=) => '>', :(==) => '=']
+    sensemap = @compat Dict(:(<=) => '<', :(>=) => '>', :(==) => '=')
     for k in 1:length(m.quadconstr)
         qconstr = m.quadconstr[k]::QuadConstraint
         if !haskey(sensemap, qconstr.sense)

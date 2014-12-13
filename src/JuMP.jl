@@ -12,6 +12,8 @@ using ReverseDiffSparse
 import ArrayViews
 const subarr = ArrayViews.view
 
+using Compat
+
 export
 # Objects
     Model, Variable, AffExpr, QuadExpr, LinearConstraint, QuadConstraint,
