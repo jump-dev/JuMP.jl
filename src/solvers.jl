@@ -55,11 +55,14 @@ function addQuadratics(m::Model)
     end
 
     # Add quadratic constraint to solver
+    sensemap = [:(<=) => '<', :(>=) => '>', :(==) => '=']
     for k in 1:length(m.quadconstr)
         qconstr = m.quadconstr[k]::QuadConstraint
-        if !((s = string(qconstr.sense)[1]) in ['<', '>', '='])
+        if !haskey(sensemap, qconstr.sense)
             error("Invalid sense for quadratic constraint")
         end
+        s = sensemap[qconstr.sense]
+
         terms::QuadExpr = qconstr.terms
         assert_isfinite(terms)
         for ind in 1:length(terms.qvars1)

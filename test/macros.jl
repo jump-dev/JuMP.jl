@@ -140,12 +140,14 @@ facts("[macros] Unicode comparisons") do
     @addConstraint(m, 0 ≤ x + y ≤ 1)
     @addConstraint(m, x + z ≤ 2)
     @addConstraint(m, y + z ≥ 3)
+    @addConstraint(m, y*z ≤ 1)
     @fact m.linconstr[1].lb => 0.0
     @fact m.linconstr[1].ub => 1.0
     @fact m.linconstr[2].lb => -Inf
     @fact m.linconstr[2].ub => 2.0
     @fact m.linconstr[3].lb => 3.0
     @fact m.linconstr[3].ub => Inf
+    @fact m.quadconstr[1].sense => :(<=)
 end
 
 facts("[macros] Three argument @addConstraint") do
