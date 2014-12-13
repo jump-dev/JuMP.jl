@@ -55,7 +55,7 @@ function addQuadratics(m::Model)
     end
 
     # Add quadratic constraint to solver
-    sensemap = @compat Dict(:(<=) => '<', :(>=) => '>', :(==) => '=')
+    const sensemap = @compat Dict(:(<=) => '<', :(>=) => '>', :(==) => '=')
     for k in 1:length(m.quadconstr)
         qconstr = m.quadconstr[k]::QuadConstraint
         if !haskey(sensemap, qconstr.sense)
@@ -117,12 +117,13 @@ function prepProblemBounds(m::Model)
     end
 
     # Create row bounds
-    numRows = length(m.linconstr)
+    linconstr = m.linconstr::Vector{LinearConstraint}
+    numRows = length(linconstr)
     rowlb = fill(-Inf, numRows)
     rowub = fill(+Inf, numRows)
     for c in 1:numRows
-        rowlb[c] = m.linconstr[c].lb
-        rowub[c] = m.linconstr[c].ub
+        rowlb[c] = linconstr[c].lb
+        rowub[c] = linconstr[c].ub
     end
     
     return f, rowlb, rowub
@@ -311,7 +312,7 @@ function solveMIP(m::Model; suppress_warnings=false)
         m.internalModelLoaded = true
     end
 
-    if !all(isnan(m.colVal))
+    if !all(isnan,m.colVal)
         if applicable(MathProgBase.setwarmstart!, m.internalModel, m.colVal)
             MathProgBase.setwarmstart!(m.internalModel, m.colVal)
         else
