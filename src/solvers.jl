@@ -56,7 +56,7 @@ function addQuadratics(m::Model)
 
     # Add quadratic constraint to solver
     for k in 1:length(m.quadconstr)
-        qconstr = m.quadconstr[k]
+        qconstr = m.quadconstr[k]::QuadConstraint
         if !((s = string(qconstr.sense)[1]) in ['<', '>', '='])
             error("Invalid sense for quadratic constraint")
         end
