@@ -120,6 +120,8 @@ macro addConstraint(m, x, extra...)
     c = length(extra) == 1 ? x        : nothing
     x = length(extra) == 1 ? extra[1] : x
 
+    (x.head == :block) &&
+        error("Code block passed as constraint. Perhaps you meant to use addConstraints instead?")
     (x.head != :comparison) &&
         error("in @addConstraint ($(string(x))): expected comparison operator (<=, >=, or ==).")
 

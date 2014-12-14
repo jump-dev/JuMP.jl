@@ -74,7 +74,7 @@ end
 
 
 # TODO: Should this be somewhere else?
-const sensemap = [:(<=) => '<', :(==) => '=', :(>=) => '>']
+const sensemap = @compat Dict(:(<=) => '<', :(==) => '=', :(>=) => '>')
 
 
 ## Lazy constraints
