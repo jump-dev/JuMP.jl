@@ -430,7 +430,7 @@ end
 
 facts("[print] Variable") do    
     m = Model()
-    @defVar(m, 0 <= x <= 2)
+    @defVar(m, 0 <= x <= 2, inconstraints=ConstraintRef{LinearConstraint}[], objective=0.0, coefficients=Float64[] )
     
     @fact    getName(x) => "x"
     io_test(REPLMode,   x, "x")

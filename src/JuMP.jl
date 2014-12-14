@@ -601,6 +601,7 @@ function Variable(m::Model,lower::Number,upper::Number,cat::Symbol,objcoef::Numb
     @assert cat != :Fixed || (lower == upper)
     m.numCols += 1
     push!(m.colNames, name)
+    push!(m.colNamesIJulia, name)
     push!(m.colLower, convert(Float64,lower))
     push!(m.colUpper, convert(Float64,upper))
     push!(m.colCat, cat)
