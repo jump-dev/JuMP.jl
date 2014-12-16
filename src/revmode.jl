@@ -439,34 +439,6 @@ revpass(x, expr_out) = nothing
 saverevvalue(x::Placeholder, val, output, placeindex_out) = (output[placeindex_out[getplaceindex(x)]] += val)
 saverevvalue(x, val, output, placeindex_out) = nothing
 
-# This function has a memory leak because the values stored become properties
-# of the ReverseDiffSparse module!
-# Use the parametric version instead.
-function genfgrad(x::SymbolicOutput)
-    out = Expr(:block)
-    # load data into local scope
-    for i in 1:length(x.inputnames)
-        push!( out.args, :( $(x.inputnames[i]) = $(x.inputvals[i]) ))
-    end
-    fval = forwardpass(x.tree, out)
-    push!( out.args, :( beginreverse = nothing ) ) # for debugging, indicate start of reverse pass instructions
-    revpass(x.tree,out)
-    fname = gensym()
-    # placeindex_in[i] specifies the index of the value of the ith
-    # placeholder in placevalues.
-    # placeindex_out[i] specifies the the index in which to output
-    # the partial derivative wrt the ith placeholder
-    fexpr = quote
-        function $(fname){__T}(__placevalues::Vector{__T}, __placeindex_in, __output, __placeindex_out)
-            $out
-            return $fval
-        end
-    end
-
-    return fexpr
-
-end
-
 # gradient evaluation parametric on "inputvals"
 function genfgrad_parametric(x::SymbolicOutput)
     out = Expr(:block)
