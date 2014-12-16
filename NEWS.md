@@ -4,21 +4,21 @@ JuMP release notes
 Unreleased
 ----------
 
-Linear programming
-^^^^^^^^^^^^^^^^^^
+### Linear programming
+
   * **Breaking change**: The syntax for column-wise model generation has been changed to use keyword arguments in ``@defVar``.
   * On Julia 0.4 and later, variables and coefficients may be multiplied in any order within macros. That is, variable*coefficient is now valid syntax.
 
-Nonlinear programming
-^^^^^^^^^^^^^^^^^^^^^
+### Nonlinear programming
+
   * Support for skipping model generation when solving a sequence of nonlinear models with changing data.
   * Fix a memory leak when solving a sequence of nonlinear models.
   * The ``@addNLConstraint`` macro now supports the three-argument version to define sets of nonlinear constraints.
   * KNITRO supported as a nonlinear solver.
   * Speed improvements for model generation.
 
-General
-^^^^^^^
+### General
+
   * Starting values for variables may now be specified with ``@defVar(m, x, start=value)``.
   * The ``setSolver`` function allows users to change the solver subsequent to model creation.
   * Support for "fixed" variables via the ``@defVar(m, x == 1)`` syntax.
