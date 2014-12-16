@@ -473,13 +473,12 @@ function genfgrad_parametric(x::SymbolicOutput)
     fval = forwardpass(x.tree, out)
     push!( out.args, :( beginreverse = nothing ) ) # for debugging, indicate start of reverse pass instructions
     revpass(x.tree,out)
-    fname = gensym()
     # placeindex_in[i] specifies the index of the value of the ith
     # placeholder in placevalues.
     # placeindex_out[i] specifies the the index in which to output
     # the partial derivative wrt the ith placeholder
     fexpr = quote
-        function $(fname){__T}(__placevalues::Vector{__T}, __placeindex_in, __output, __placeindex_out)
+        function _FGRAD_{__T}(__placevalues::Vector{__T}, __placeindex_in, __output, __placeindex_out)
             $out
             return $fval
         end
@@ -489,7 +488,7 @@ function genfgrad_parametric(x::SymbolicOutput)
         push!(fexpr.args[2].args[1].args,x.inputnames[i])
     end
 
-    return eval(fexpr)
+    return eval(:( local _FGRAD_; $fexpr; _FGRAD_))
 
 end
 
@@ -498,9 +497,8 @@ end
 function genfval_parametric(x::SymbolicOutput)
     out = Expr(:block)
     fval = forwardpass(x.tree, out)
-    fname = gensym()
     fexpr = quote
-        function $(fname){__T}(__placevalues::Vector{__T}, __placeindex_in)
+        function _FVAL_{__T}(__placevalues::Vector{__T}, __placeindex_in)
             $out
             return $fval
         end
@@ -510,7 +508,7 @@ function genfval_parametric(x::SymbolicOutput)
         push!(fexpr.args[2].args[1].args,x.inputnames[i])
     end
 
-    return eval(fexpr)
+    return eval(:( local _FVAL_; $fexpr; _FVAL_))
 end
 
 function genfval_simple(x::SymbolicOutput)
