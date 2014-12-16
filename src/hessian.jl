@@ -213,11 +213,10 @@ end
 
 
 
-function gen_hessian_matmat_parametric(s::SymbolicOutput)
-    fgrad = genfgrad_parametric(s)
-    hname = gensym("hessian_matmat")
+function gen_hessian_matmat_parametric(s::SymbolicOutput, fgrad = genfgrad_parametric(s))
     hexpr = quote
-        function $(hname){T,Q}(S, x::Vector{T}, dualvec::Vector{Dual{T}}, dualout::Vector{Dual{T}}, inputvals::Q, fromcanonical)
+        local _HESS_MATMAT_
+        function _HESS_MATMAT_{T,Q}(S, x::Vector{T}, dualvec::Vector{Dual{T}}, dualout::Vector{Dual{T}}, inputvals::Q, fromcanonical)
             # S uses canonical indices
             N = size(S,1)
             @assert length(x) >= N
@@ -234,6 +233,7 @@ function gen_hessian_matmat_parametric(s::SymbolicOutput)
             end
             #return S
         end
+        _HESS_MATMAT_
     end
 
     return eval(hexpr)
