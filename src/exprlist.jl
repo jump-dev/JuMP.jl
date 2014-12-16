@@ -60,7 +60,7 @@ function prep_sparse_hessians(l::ExprList, num_total_vars; need_expr::Bool=false
             l.referenceExpr[x.hashval] = i
             f = genfval_parametric(x)
             gf = genfgrad_parametric(x)
-            hess_matmat = gen_hessian_matmat_parametric(x)
+            hess_matmat = gen_hessian_matmat_parametric(x, gf)
             hess_IJf = compute_hessian_sparsity_IJ_parametric(x)
             hI, hJ, hf = gen_hessian_sparse_color_parametric(x, num_total_vars, hess_matmat, hess_IJf)
             push!(l.valfuncs, f)
