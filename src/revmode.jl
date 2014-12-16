@@ -439,6 +439,9 @@ revpass(x, expr_out) = nothing
 saverevvalue(x::Placeholder, val, output, placeindex_out) = (output[placeindex_out[getplaceindex(x)]] += val)
 saverevvalue(x, val, output, placeindex_out) = nothing
 
+# This function has a memory leak because the values stored become properties
+# of the ReverseDiffSparse module!
+# Use the parametric version instead.
 function genfgrad(x::SymbolicOutput)
     out = Expr(:block)
     # load data into local scope
@@ -521,9 +524,9 @@ end
 Base.getindex(::IdentityArray,i) = i
 
 function genfgrad_simple(x::SymbolicOutput)
-    fexpr = genfgrad(x)
+    fexpr = genfgrad_parametric(x)
     f = eval(fexpr)
-    return (xvals, out) -> (fill!(out, 0.0); f(xvals, IdentityArray(), out, IdentityArray()))
+    return (xvals, out) -> (fill!(out, 0.0); f(xvals, IdentityArray(), out, IdentityArray(),x.inputvals...))
 end
 
 export genfgrad, genfgrad_simple, genfgrad_parametric, genfval_parametric, genfval_simple
