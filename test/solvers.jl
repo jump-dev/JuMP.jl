@@ -73,6 +73,8 @@ quad_solvers = Any[]
 grb && push!(quad_solvers, Gurobi.GurobiSolver(OutputFlag=0))
 cpx && push!(quad_solvers, CPLEX.CplexSolver(CPX_PARAM_SCRIND=0))
 mos && push!(quad_solvers, Mosek.MosekSolver(LOG=0))
+quad_mip_solvers = copy(quad_solvers)
+ipt && push!(quad_solvers, Ipopt.IpoptSolver(print_level=0))
 # Nonlinear solvers
 nl_solvers = Any[]
 ipt && push!(nl_solvers, Ipopt.IpoptSolver(print_level=0))

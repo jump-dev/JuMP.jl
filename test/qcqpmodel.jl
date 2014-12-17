@@ -9,8 +9,8 @@
 #############################################################################
 using JuMP, FactCheck
 
-facts("[qcqpmodel] Test quad objective") do
-for solver in quad_solvers
+facts("[qcqpmodel] Test quad objective (discrete)") do
+for solver in quad_mip_solvers
 context("With solver $(typeof(solver))") do 
 
     modQ = Model(solver=solver)
@@ -32,6 +32,11 @@ context("With solver $(typeof(solver))") do
     @fact modQ.objVal => roughly(-247.0, 1e-5)
     @fact getValue(x)[:] => roughly([2.0, 3.0, 4.0], 1e-6)
 
+end; end; end
+
+facts("[qcqpmodel] Test quad objective (continuous)") do
+for solver in quad_solvers
+context("With solver $(typeof(solver))") do
 
     modQ = Model(solver=solver)
     @defVar(modQ, 0.5 <= x <= 2 )
@@ -41,11 +46,12 @@ context("With solver $(typeof(solver))") do
     @fact solve(modQ) => :Optimal
     @fact modQ.objVal => roughly(1.0, 1e-6)
     @fact (getValue(x) + getValue(y)) => roughly(1.0, 1e-6)
+
 end; end; end
 
 
 
-facts("[qcqpmodel] Test quad constraints") do
+facts("[qcqpmodel] Test quad constraints (continuous)") do
 for solver in quad_solvers
 context("With solver $(typeof(solver))") do 
 
@@ -59,7 +65,11 @@ context("With solver $(typeof(solver))") do
     @fact modQ.objVal => roughly(-1-4/sqrt(3), 1e-6)
     @fact (getValue(x) + getValue(y)) => roughly(-1/3, 1e-3)
 
+end; end; end
 
+facts("[qcqpmodel] Test quad constraints (discrete)") do
+for solver in quad_mip_solvers
+context("With solver $(typeof(solver))") do
     modQ = Model(solver=solver)
     @defVar(modQ, -2 <= x <= 2, Int )
     @defVar(modQ, -2 <= y <= 2, Int )
