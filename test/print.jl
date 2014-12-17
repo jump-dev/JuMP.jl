@@ -224,6 +224,7 @@ w: 3 dimensions, 18 entries:
     end
 
     io_test(REPLMode, getValue(x), """
+x: 3 dimensions:
 [ 9,:,:]
   [ 9, 99,:]
     [ 9, 99,3] = 2673.0

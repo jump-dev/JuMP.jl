@@ -413,7 +413,8 @@ Base.print(io::IO, j::JuMPContainer{Float64}) = print(io, val_str(REPLMode,j))
 Base.show( io::IO, j::JuMPContainer{Float64}) = print(io, val_str(REPLMode,j))
 function val_str(mode, j::JuMPArray{Float64})
     dims = length(j.indexsets)
-    out_str = ""
+    out_str = "$(j.name): $dims dimensions:\n"
+
     function val_str_rec(depth, parent_index::Vector{Any}, parent_str::String)
         # Turn index set into strings
         indexset = j.indexsets[depth]
