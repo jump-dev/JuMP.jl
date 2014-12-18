@@ -81,3 +81,6 @@ ipt && push!(nl_solvers, Ipopt.IpoptSolver(print_level=0))
 nlo && push!(nl_solvers, NLopt.NLoptSolver(algorithm=:LD_SLSQP))
 kni && push!(nl_solvers, KNITRO.KnitroSolver())
 mos && push!(nl_solvers, Mosek.MosekSolver(LOG=0))
+# Mixed-Integer Nonlinear solvers
+minl_solvers = Any[]
+kni && push!(minl_solvers, KNITRO.KnitroSolver())
