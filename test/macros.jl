@@ -181,6 +181,22 @@ facts("[macros] @addConstraints") do
     @fact conToStr(m.linconstr[4]) => "y[1] + y[3] $geq 3"
 end
 
+facts("[macros] @addNLConstraints") do
+    m = Model()
+    @defVar(m, 0 <= x <= 1)
+    @defVar(m, y[1:3])
+    @setObjective(m, Max, x)
+
+    @addNLConstraints m begin
+        ref[i=1:3], y[i] == 0
+        x * y[1] * y[2] * y[3] <= 1
+    end
+    solve(m)
+
+    @fact getValue(x) => 1
+
+end
+
 facts("[macros] @setObjective with quadratic") do
     m = Model()
     @defVar(m, x[1:5])
