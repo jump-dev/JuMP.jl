@@ -105,6 +105,32 @@ context("With solver $(typeof(nl_solver))") do
     @fact getValue(x) + getValue(y) => roughly(-1/3, 1e-3)
 end; end; end
 
+facts("[nonlinear] Test mixed integer nonlinear problems") do
+for minl_solver in minl_solvers
+context("With solver $(typeof(minl_solver))") do 
+    ## Solve test problem 1 (Synthesis of processing system) in
+     # M. Duran & I.E. Grossmann, "An outer approximation algorithm for
+     # a class of mixed integer nonlinear programs", Mathematical
+     # Programming 36, pp. 307-339, 1986.  The problem also appears as
+     # problem synthes1 in the MacMINLP test set.
+    m = Model(solver=minl_solver)
+    x_U = [2,2,1]
+    @defVar(m, x_U[i] >= x[i=1:3] >= 0)
+    @defVar(m, y[4:6], Bin)
+    @setNLObjective(m, Min, 10 + 10*x[1] - 7*x[3] + 5*y[4] + 6*y[5] + 8*y[6] - 18*log(x[2]+1) - 19.2*log(x[1]-x[2]+1))
+    @addNLConstraint(m, 0.8*log(x[2] + 1) + 0.96*log(x[1] - x[2] + 1) - 0.8*x[3] >= 0)
+    @addNLConstraint(m, log(x[2] + 1) + 1.2*log(x[1] - x[2] + 1) - x[3] - 2*y[6] >= -2)
+    @addNLConstraint(m, x[2] - x[1] <= 0)
+    @addNLConstraint(m, x[2] - 2*y[4] <= 0)
+    @addNLConstraint(m, x[1] - x[2] - 2*y[5] <= 0)
+    @addNLConstraint(m, y[4] + y[5] <= 1)
+    status = solve(m)
+
+    @fact status => :Optimal
+    @fact getObjectiveValue(m) => roughly(6.00976, 1e-5)
+    @fact getValue(x)[:] => roughly([1.30098, 0.0, 1.0], 1e-5)
+    @fact getValue(y)[:] => roughly([0.0, 1.0, 0.0], 1e-5)
+end; end; end
 
 facts("[nonlinear] Test maximization objective") do
 for nl_solver in nl_solvers
