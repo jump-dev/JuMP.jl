@@ -423,13 +423,6 @@ end
 
 function solvenlp(m::Model; suppress_warnings=false)
     
-    # check that there are no integer variables
-    for j = 1:m.numCols
-        if m.colCat[j] == :Int
-            error("Integer variables present in nonlinear problem")
-        end
-    end
-    
     linobj, linrowlb, linrowub = prepProblemBounds(m)
 
     nldata::NLPData = m.nlpdata
@@ -469,8 +462,13 @@ function solvenlp(m::Model; suppress_warnings=false)
 
     m.internalModel = MathProgBase.model(m.solver)
 
+    # Preliminary support for mixed-integer nonlinear problems
     MathProgBase.loadnonlinearproblem!(m.internalModel, m.numCols, numConstr, m.colLower, m.colUpper, [linrowlb,quadrowlb,nlrowlb], [linrowub,quadrowub,nlrowub], m.objSense, d)
-
+    if applicable(MathProgBase.setvartype!, m.internalModel, m.colCat)
+        MathProgBase.setvartype!(m.internalModel, m.colCat)
+    elseif any(m.colCat[j] .== :Int)
+        error("Solver does not support discrete variables")
+    end
 
     if !any(isnan(m.colVal))
         MathProgBase.setwarmstart!(m.internalModel, m.colVal)
