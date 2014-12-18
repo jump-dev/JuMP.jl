@@ -16,6 +16,7 @@ Unreleased
   * The ``@addNLConstraint`` macro now supports the three-argument version to define sets of nonlinear constraints.
   * KNITRO supported as a nonlinear solver.
   * Speed improvements for model generation.
+  * The ``@addNLConstraints`` macro supports adding multiple (groups of) constraints at once. Syntax is similar to ``@addConstraints``.
 
 ### General
 

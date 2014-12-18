@@ -189,12 +189,11 @@ facts("[macros] @addNLConstraints") do
 
     @addNLConstraints m begin
         ref[i=1:3], y[i] == 0
-        x * y[1] * y[2] * y[3] <= 1
+        x + y[1] * y[2] * y[3] <= 0.5
     end
     solve(m)
 
-    @fact getValue(x) => 1
-
+    @fact getValue(x) => 0.5
 end
 
 facts("[macros] @setObjective with quadratic") do
