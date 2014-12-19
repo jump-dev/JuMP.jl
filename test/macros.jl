@@ -170,10 +170,10 @@ facts("[macros] @addConstraints") do
     @defVar(m, x)
     @defVar(m, y[1:3])
 
-    @addConstraints m begin
+    @addConstraints(m, begin
         x + y[1] == 1
         ref[i=1:3], y[1] + y[i] >= i
-    end
+    end)
 
     @fact conToStr(m.linconstr[1]) => "x + y[1] $eq 1"
     @fact conToStr(m.linconstr[2]) => "2 y[1] $geq 1"
@@ -187,13 +187,17 @@ facts("[macros] @addNLConstraints") do
     @defVar(m, y[1:3])
     @setObjective(m, Max, x)
 
-    @addNLConstraints m begin
+    @addNLConstraints(m, begin
         ref[i=1:3], y[i] == 0
         x + y[1] * y[2] * y[3] <= 0.5
-    end
-    solve(m)
+    end)
 
-    @fact getValue(x) => 0.5
+    @fact length(m.nlpdata.nlconstr) => 4
+    @fact "$(m.nlpdata.nlconstr[1].terms.tree.ex)" => ":(y[i]) - 0"
+    @fact "$(m.nlpdata.nlconstr[2].terms.tree.ex)" => ":(y[i]) - 0"
+    @fact "$(m.nlpdata.nlconstr[3].terms.tree.ex)" => ":(y[i]) - 0"
+    @fact "$(m.nlpdata.nlconstr[4].terms.tree.ex)" => ":(:x + :(:(y[1]) * :(y[2]) * :(y[3]))) - 0.5"
+
 end
 
 facts("[macros] @setObjective with quadratic") do
