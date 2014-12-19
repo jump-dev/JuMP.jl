@@ -465,7 +465,7 @@ function solvenlp(m::Model; suppress_warnings=false)
     MathProgBase.loadnonlinearproblem!(m.internalModel, m.numCols, numConstr, m.colLower, m.colUpper, [linrowlb,quadrowlb,nlrowlb], [linrowub,quadrowub,nlrowub], m.objSense, d)
     if applicable(MathProgBase.setvartype!, m.internalModel, m.colCat)
         MathProgBase.setvartype!(m.internalModel, m.colCat)
-    elseif any(m.colCat .== :Int)
+    elseif any(x->x==:Int, m.colCat)
         error("Solver does not support discrete variables")
     end
 
