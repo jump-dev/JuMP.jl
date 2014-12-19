@@ -10,8 +10,8 @@
 using JuMP, FactCheck
 
 facts("[nonlinear] Test HS071 solves correctly") do
-for nl_solver in nl_solvers
-context("With solver $(typeof(nl_solver))") do 
+for nlp_solver in nlp_solvers
+context("With solver $(typeof(nlp_solver))") do 
     # hs071
     # Polynomial objective and constraints
     # min x1 * x4 * (x1 + x2 + x3) + x3
@@ -20,7 +20,7 @@ context("With solver $(typeof(nl_solver))") do
     #     1 <= x1, x2, x3, x4 <= 5
     # Start at (1,5,5,1)
     # End at (1.000..., 4.743..., 3.821..., 1.379...)
-    m = Model(solver=nl_solver)
+    m = Model(solver=nlp_solver)
     @defVar(m, 1 <= x[1:4] <= 5)
     @setNLObjective(m, Min, x[1]*x[4]*(x[1]+x[2]+x[3]) + x[3])
     @addNLConstraint(m, x[1]*x[2]*x[3]*x[4] >= 25)
@@ -38,14 +38,14 @@ end; end; end
 
 
 facts("[nonlinear] Test HS071 solves correctly, epigraph") do
-for nl_solver in nl_solvers
-context("With solver $(typeof(nl_solver))") do 
+for nlp_solver in nlp_solvers
+context("With solver $(typeof(nlp_solver))") do 
         # hs071, with epigraph formulation
         # Linear objective, nonlinear constraints
         # min t
         # st  t >= x1 * x4 * (x1 + x2 + x3) + x3
         #     ...
-        m = Model(solver=nl_solver)
+        m = Model(solver=nlp_solver)
         start = [1.0, 5.0, 5.0, 1.0]
         @defVar(m, 1 <= x[i=1:4] <= 5, start = start[i])
         @defVar(m, t, start = 100)
@@ -62,11 +62,11 @@ end; end; end
 
 
 facts("[nonlinear] Test QP solve through NL pathway") do
-for nl_solver in nl_solvers
-context("With solver $(typeof(nl_solver))") do 
+for nlp_solver in nlp_solvers
+context("With solver $(typeof(nlp_solver))") do 
     # Solve a problem with quadratic objective with linear
     # constraints, but force it to use the nonlinear code.
-    m = Model(solver=nl_solver)
+    m = Model(solver=nlp_solver)
     @defVar(m, 0.5 <= x <=  2)
     @defVar(m, 0.0 <= y <= 30)
     @setObjective(m, Min, (x+y)^2)
@@ -89,11 +89,11 @@ end; end; end
 
 
 facts("[nonlinear] Test quad con solve through NL pathway") do
-for nl_solver in nl_solvers
-context("With solver $(typeof(nl_solver))") do 
+for nlp_solver in nlp_solvers
+context("With solver $(typeof(nlp_solver))") do 
     # Solve a problem with linear objective with quadratic
     # constraints, but force it to use the nonlinear code.
-    m = Model(solver=nl_solver)
+    m = Model(solver=nlp_solver)
     @defVar(m, -2 <= x <= 2)
     @defVar(m, -2 <= y <= 2)
     @setNLObjective(m, Min, x - y)
@@ -105,12 +105,38 @@ context("With solver $(typeof(nl_solver))") do
     @fact getValue(x) + getValue(y) => roughly(-1/3, 1e-3)
 end; end; end
 
+facts("[nonlinear] Test mixed integer nonlinear problems") do
+for minlp_solver in minlp_solvers
+context("With solver $(typeof(minlp_solver))") do 
+    ## Solve test problem 1 (Synthesis of processing system) in
+     # M. Duran & I.E. Grossmann, "An outer approximation algorithm for
+     # a class of mixed integer nonlinear programs", Mathematical
+     # Programming 36, pp. 307-339, 1986.  The problem also appears as
+     # problem synthes1 in the MacMINLP test set.
+    m = Model(solver=minlp_solver)
+    x_U = [2,2,1]
+    @defVar(m, x_U[i] >= x[i=1:3] >= 0)
+    @defVar(m, y[4:6], Bin)
+    @setNLObjective(m, Min, 10 + 10*x[1] - 7*x[3] + 5*y[4] + 6*y[5] + 8*y[6] - 18*log(x[2]+1) - 19.2*log(x[1]-x[2]+1))
+    @addNLConstraint(m, 0.8*log(x[2] + 1) + 0.96*log(x[1] - x[2] + 1) - 0.8*x[3] >= 0)
+    @addNLConstraint(m, log(x[2] + 1) + 1.2*log(x[1] - x[2] + 1) - x[3] - 2*y[6] >= -2)
+    @addNLConstraint(m, x[2] - x[1] <= 0)
+    @addNLConstraint(m, x[2] - 2*y[4] <= 0)
+    @addNLConstraint(m, x[1] - x[2] - 2*y[5] <= 0)
+    @addNLConstraint(m, y[4] + y[5] <= 1)
+    status = solve(m)
+
+    @fact status => :Optimal
+    @fact getObjectiveValue(m) => roughly(6.00976, 1e-5)
+    @fact getValue(x)[:] => roughly([1.30098, 0.0, 1.0], 1e-5)
+    @fact getValue(y)[:] => roughly([0.0, 1.0, 0.0], 1e-5)
+end; end; end
 
 facts("[nonlinear] Test maximization objective") do
-for nl_solver in nl_solvers
-context("With solver $(typeof(nl_solver))") do 
+for nlp_solver in nlp_solvers
+context("With solver $(typeof(nlp_solver))") do 
     # Solve a simple problem with a maximization objective
-    m = Model(solver=nl_solver)
+    m = Model(solver=nlp_solver)
     @defVar(m, -2 <= x <= 2); setValue(x, -1.8)
     @defVar(m, -2 <= y <= 2); setValue(y,  1.5)
     @setNLObjective(m, Max, y - x)
@@ -123,10 +149,10 @@ end; end; end
 
 
 facts("[nonlinear] Test infeasibility detection") do
-for nl_solver in nl_solvers
-context("With solver $(typeof(nl_solver))") do 
+for nlp_solver in nlp_solvers
+context("With solver $(typeof(nlp_solver))") do 
     # (Attempt to) solve an infeasible problem
-    m = Model(solver=nl_solver)
+    m = Model(solver=nlp_solver)
     n = 10
     @defVar(m, 0 <= x[i=1:n] <= 1)
     @setNLObjective(m, Max, x[n])
@@ -138,10 +164,10 @@ end; end; end
 
 
 facts("[nonlinear] Test unboundedness detection") do
-for nl_solver in nl_solvers
-context("With solver $(typeof(nl_solver))") do 
+for nlp_solver in nlp_solvers
+context("With solver $(typeof(nlp_solver))") do 
     # (Attempt to) solve an unbounded problem
-    m = Model(solver=nl_solver)
+    m = Model(solver=nlp_solver)
     @defVar(m, x >= 0)
     @setNLObjective(m, Max, x)
     @addNLConstraint(m, x >= 5)
