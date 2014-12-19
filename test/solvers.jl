@@ -76,11 +76,11 @@ mos && push!(quad_solvers, Mosek.MosekSolver(LOG=0))
 quad_mip_solvers = copy(quad_solvers)
 ipt && push!(quad_solvers, Ipopt.IpoptSolver(print_level=0))
 # Nonlinear solvers
-nl_solvers = Any[]
-ipt && push!(nl_solvers, Ipopt.IpoptSolver(print_level=0))
-nlo && push!(nl_solvers, NLopt.NLoptSolver(algorithm=:LD_SLSQP))
-kni && push!(nl_solvers, KNITRO.KnitroSolver())
-mos && push!(nl_solvers, Mosek.MosekSolver(LOG=0))
+nlp_solvers = Any[]
+ipt && push!(nlp_solvers, Ipopt.IpoptSolver(print_level=0))
+nlo && push!(nlp_solvers, NLopt.NLoptSolver(algorithm=:LD_SLSQP))
+kni && push!(nlp_solvers, KNITRO.KnitroSolver())
+mos && push!(nlp_solvers, Mosek.MosekSolver(LOG=0))
 # Mixed-Integer Nonlinear solvers
-minl_solvers = Any[]
-kni && push!(minl_solvers, KNITRO.KnitroSolver())
+minlp_solvers = Any[]
+kni && push!(minlp_solvers, KNITRO.KnitroSolver())
