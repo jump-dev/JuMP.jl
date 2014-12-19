@@ -17,6 +17,7 @@ Unreleased
   * KNITRO supported as a nonlinear solver.
   * Speed improvements for model generation.
   * The ``@addNLConstraints`` macro supports adding multiple (groups of) constraints at once. Syntax is similar to ``@addConstraints``.
+  * Discrete variables allowed in nonlinear problems for solvers which support them (currently only KNITRO).
 
 ### General
 
