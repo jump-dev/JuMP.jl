@@ -118,12 +118,14 @@ context("With solver $(typeof(minlp_solver))") do
     @defVar(m, x_U[i] >= x[i=1:3] >= 0)
     @defVar(m, y[4:6], Bin)
     @setNLObjective(m, Min, 10 + 10*x[1] - 7*x[3] + 5*y[4] + 6*y[5] + 8*y[6] - 18*log(x[2]+1) - 19.2*log(x[1]-x[2]+1))
-    @addNLConstraint(m, 0.8*log(x[2] + 1) + 0.96*log(x[1] - x[2] + 1) - 0.8*x[3] >= 0)
-    @addNLConstraint(m, log(x[2] + 1) + 1.2*log(x[1] - x[2] + 1) - x[3] - 2*y[6] >= -2)
-    @addNLConstraint(m, x[2] - x[1] <= 0)
-    @addNLConstraint(m, x[2] - 2*y[4] <= 0)
-    @addNLConstraint(m, x[1] - x[2] - 2*y[5] <= 0)
-    @addNLConstraint(m, y[4] + y[5] <= 1)
+    @addNLConstraints(m, begin
+        0.8*log(x[2] + 1) + 0.96*log(x[1] - x[2] + 1) - 0.8*x[3] >= 0
+        log(x[2] + 1) + 1.2*log(x[1] - x[2] + 1) - x[3] - 2*y[6] >= -2
+        x[2] - x[1] <= 0
+        x[2] - 2*y[4] <= 0
+        x[1] - x[2] - 2*y[5] <= 0
+        y[4] + y[5] <= 1
+    end)
     status = solve(m)
 
     @fact status => :Optimal

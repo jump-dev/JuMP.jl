@@ -12,6 +12,10 @@ using ReverseDiffSparse
 import ArrayViews
 const subarr = ArrayViews.view
 
+if VERSION > v"0.4.0-"
+    const sizehint = sizehint!
+end
+
 using Compat
 
 export
