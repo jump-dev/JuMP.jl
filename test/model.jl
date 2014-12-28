@@ -170,9 +170,51 @@ end # facts block
 
 
 
-facts("[model] Test solving an LP") do
+facts("[model] Test solving an LP (Min)") do
 for solver in lp_solvers
-context("With solver $(typeof(solver))") do 
+context("With solver $(typeof(solver))") do
+    modA = Model(solver=solver)
+    @defVar(modA, x >= 0)
+    @defVar(modA, y <= 5)
+    @defVar(modA, 2 <= z <= 4)
+    @defVar(modA, 0 <= r[i=3:6] <= i)
+    @setObjective(modA, Min, -((x + y)/2.0 + 3.0)/3.0 - z - r[3])
+    @defConstrRef cons[1:3]
+    cons[1] = @addConstraint(modA, x+y >= 2)
+    cons[2] = @addConstraint(modA, sum{r[i],i=3:5} <= (2 - x)/2.0)
+    cons[3] = @addConstraint(modA, 7.0*y <= z + r[6]/1.9)
+
+    # Solution
+    @fact solve(modA) => :Optimal
+    @fact getObjectiveValue(modA) => roughly(-5.8446115, 1e-6)
+    @fact getValue(x)       => roughly(0.9774436, 1e-6)
+    @fact getValue(y)       => roughly(1.0225563, 1e-6)
+    @fact getValue(z)       => roughly(4.0, 1e-6)
+    @fact getValue(r)[3]    => roughly(0.5112781, 1e-6)
+    @fact getValue(r)[4]    => roughly(0.0, 1e-6)
+    @fact getValue(r)[5]    => roughly(0.0, 1e-6)
+    @fact getValue(r)[6]    => roughly(6.0, 1e-6)
+
+    # Reduced costs
+    @fact getDual(x)    => roughly( 0.0, 1e-6)
+    @fact getDual(y)    => roughly( 0.0, 1e-6)
+    @fact getDual(z)    => roughly(-1.0714286, 1e-6)
+    @fact getDual(r)[3] => roughly( 0.0, 1e-6)
+    @fact getDual(r)[4] => roughly(1.0, 1e-6)
+    @fact getDual(r)[5] => roughly(1.0, 1e-6)
+    @fact getDual(r)[6] => roughly(-0.03759398, 1e-6)
+
+    # Row duals
+    @fact getDual(cons)[1] => roughly( 0.333333, 1e-6)
+    @fact getDual(cons)[2] => roughly(-1.0, 1e-6)
+    @fact getDual(cons)[3] => roughly(-0.0714286, 1e-6)
+end # solver context
+end # loop over solvers
+end # facts block
+
+facts("[model] Test solving an LP (Max)") do
+for solver in lp_solvers
+context("With solver $(typeof(solver))") do
     modA = Model(solver=solver)
     @defVar(modA, x >= 0)
     @defVar(modA, y <= 5)
@@ -183,9 +225,9 @@ context("With solver $(typeof(solver))") do
     cons[1] = @addConstraint(modA, x+y >= 2)
     cons[2] = @addConstraint(modA, sum{r[i],i=3:5} <= (2 - x)/2.0)
     cons[3] = @addConstraint(modA, 7.0*y <= z + r[6]/1.9)
- 
+
     # Solution
-    @fact solve(modA) => :Optimal  
+    @fact solve(modA) => :Optimal
     @fact getObjectiveValue(modA) => roughly(5.8446115, 1e-6)
     @fact getValue(x)       => roughly(0.9774436, 1e-6)
     @fact getValue(y)       => roughly(1.0225563, 1e-6)
