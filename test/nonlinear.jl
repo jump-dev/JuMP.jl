@@ -62,7 +62,7 @@ end; end; end
 
 
 facts("[nonlinear] Test QP solve through NL pathway") do
-for nlp_solver in nlp_solvers
+for nlp_solver in convex_nlp_solvers
 context("With solver $(typeof(nlp_solver))") do 
     # Solve a problem with quadratic objective with linear
     # constraints, but force it to use the nonlinear code.
@@ -89,7 +89,7 @@ end; end; end
 
 
 facts("[nonlinear] Test quad con solve through NL pathway") do
-for nlp_solver in nlp_solvers
+for nlp_solver in convex_nlp_solvers
 context("With solver $(typeof(nlp_solver))") do 
     # Solve a problem with linear objective with quadratic
     # constraints, but force it to use the nonlinear code.
@@ -133,7 +133,7 @@ context("With solver $(typeof(minlp_solver))") do
 end; end; end
 
 facts("[nonlinear] Test maximization objective") do
-for nlp_solver in nlp_solvers
+for nlp_solver in convex_nlp_solvers
 context("With solver $(typeof(nlp_solver))") do 
     # Solve a simple problem with a maximization objective
     m = Model(solver=nlp_solver)
@@ -149,7 +149,7 @@ end; end; end
 
 
 facts("[nonlinear] Test infeasibility detection") do
-for nlp_solver in nlp_solvers
+for nlp_solver in convex_nlp_solvers
 context("With solver $(typeof(nlp_solver))") do 
     # (Attempt to) solve an infeasible problem
     m = Model(solver=nlp_solver)
@@ -164,7 +164,7 @@ end; end; end
 
 
 facts("[nonlinear] Test unboundedness detection") do
-for nlp_solver in nlp_solvers
+for nlp_solver in convex_nlp_solvers
 context("With solver $(typeof(nlp_solver))") do 
     # (Attempt to) solve an unbounded problem
     m = Model(solver=nlp_solver)

@@ -79,8 +79,9 @@ ipt && push!(quad_solvers, Ipopt.IpoptSolver(print_level=0))
 nlp_solvers = Any[]
 ipt && push!(nlp_solvers, Ipopt.IpoptSolver(print_level=0))
 nlo && push!(nlp_solvers, NLopt.NLoptSolver(algorithm=:LD_SLSQP))
-kni && push!(nlp_solvers, KNITRO.KnitroSolver(objrange=1e16))
-mos && push!(nlp_solvers, Mosek.MosekSolver(LOG=0))
+kni && push!(nlp_solvers, KNITRO.KnitroSolver(objrange=1e16,outlev=0))
+convex_nlp_solvers = copy(nlp_solvers)
+mos && push!(convex_nlp_solvers, Mosek.MosekSolver())
 # Mixed-Integer Nonlinear solvers
 minlp_solvers = Any[]
-kni && push!(minlp_solvers, KNITRO.KnitroSolver())
+kni && push!(minlp_solvers, KNITRO.KnitroSolver(outlev=0))
