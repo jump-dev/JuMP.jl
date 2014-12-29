@@ -67,6 +67,24 @@ context("With solver $(typeof(solver))") do
 
 end; end; end
 
+facts("[qcqpmodel] Test SOC constraints (continuous)") do
+for solver in soc_solvers
+context("With solver $(typeof(solver))") do
+
+    modQ = Model(solver=solver)
+    @defVar(modQ, x)
+    @defVar(modQ, y)
+    @defVar(modQ, t >= 0)
+    @setObjective(modQ, Min, t)
+    @addConstraint(modQ, x+y >= 1)
+    @addConstraint(modQ, x^2 + y^2 <= t^2)
+
+    @fact solve(modQ) => :Optimal
+    @fact modQ.objVal => roughly(sqrt(1/2), 1e-6)
+    @fact norm([getValue(x), getValue(y), getValue(t)] - [0.5,0.5,sqrt(1/2)]) => roughly(0.0,1e-3)
+
+end; end; end
+
 facts("[qcqpmodel] Test quad constraints (discrete)") do
 for solver in quad_mip_solvers
 context("With solver $(typeof(solver))") do

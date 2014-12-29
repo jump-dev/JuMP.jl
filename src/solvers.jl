@@ -208,6 +208,15 @@ function solveLP(m::Model; suppress_warnings=false)
     if !m.internalModelLoaded
         A = prepConstrMatrix(m)
         m.internalModel = MathProgBase.model(m.solver)
+
+        # Wrap conic solvers
+        if applicable(MathProgBase.supportedcones, m.solver) &&
+            !method_exists(MathProgBase.addquadconstr!, (typeof(m.internalModel), Vector{Int}, Vector{Float64}, Vector{Int}, Vector{Int}, Vector{Float64}, Char, Float64)) &&
+            :SOC in MathProgBase.supportedcones(m.solver)
+
+            m.internalModel = MathProgBase.model(MathProgBase.ConicSolverWrapper(m.solver))
+        end
+
         MathProgBase.loadproblem!(m.internalModel, A, m.colLower, m.colUpper, f, rowlb, rowub, m.objSense)
         addQuadratics(m)
         m.internalModelLoaded = true
