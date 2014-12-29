@@ -1,8 +1,8 @@
 JuMP release notes
 ==================
 
-Unreleased
-----------
+Version 0.7.0 (December 29, 2014)
+---------------------------------
 
 ### Linear/quadratic/conic programming
 
