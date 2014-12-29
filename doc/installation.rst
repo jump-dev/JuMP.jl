@@ -44,7 +44,7 @@ Solver support in Julia is currently provided by writing a solver-specific packa
 +----------------------------------------------------------------------------------+---------------------------------------------------------------------------------+-----------------------------+-------------+----+------+-----+-----+
 | `CPLEX <http://www-01.ibm.com/software/commerce/optimization/cplex-optimizer/>`_ | `CPLEX.jl <https://github.com/JuliaOpt/CPLEX.jl>`_                              | ``CplexSolver()``           |  Comm.      | X  |  X   | X   |     |
 +----------------------------------------------------------------------------------+---------------------------------------------------------------------------------+-----------------------------+-------------+----+------+-----+-----+
-| `ECOS <https://github.com/ifa-ethz/ecos>`_                                       | `ECOS.jl <https://github.com/JuliaOpt/ECOS.jl>`_                                |  ``ECOSSolver()``           |  GPL        | X  |      |     |     |
+| `ECOS <https://github.com/ifa-ethz/ecos>`_                                       | `ECOS.jl <https://github.com/JuliaOpt/ECOS.jl>`_                                |  ``ECOSSolver()``           |  GPL        | X  |  X   |     |     |
 +----------------------------------------------------------------------------------+---------------------------------------------------------------------------------+-----------------------------+-------------+----+------+-----+-----+
 | `GLPK <http://www.gnu.org/software/glpk/>`_                                      | `GLPKMath... <https://github.com/JuliaOpt/GLPKMathProgInterface.jl>`_           |  ``GLPKSolver[LP|MIP]()``   |  GPL        | X  |      | X   |     |
 +----------------------------------------------------------------------------------+---------------------------------------------------------------------------------+-----------------------------+-------------+----+------+-----+-----+
@@ -95,7 +95,7 @@ Requires a working installation of CPLEX with a license (free for faculty member
 ECOS
 ++++
 
-ECOS can be used by JuMP to solve LPs - it cannot be used to solve SOCPs at this time.
+ECOS can be used by JuMP to solve LPs and SOCPs. ECOS does not support general quadratic objectives or constraints, only second-order conic constraints of the form ``x'x <= y^2``.
 
 
 GLPK
