@@ -12,20 +12,10 @@ import JuMP.REPLMode, JuMP.IJuliaMode
 # Helper function to test IO methods work correctly
 function io_test(mode, obj, exp_str; repl=:both)
     if mode == REPLMode
-        buf_print = IOBuffer()
-        print(buf_print, obj)
-        seek(buf_print, 0);
-        repl != :show && @fact readall(buf_print) => exp_str
-
-        buf_show = IOBuffer()
-        show(buf_show, obj)
-        seek(buf_show, 0)
-        repl != :print && @fact readall(buf_show) => exp_str
+        repl != :show  && @fact sprint(print, obj) => exp_str
+        repl != :print && @fact sprint(show,  obj) => exp_str
     else
-        buf_display = IOBuffer()
-        writemime(buf_display, "text/latex", obj)
-        seek(buf_display,0)
-        @fact readall(buf_display) => "\$\$ "*exp_str*" \$\$"
+        @fact sprint(writemime, "text/latex", obj) => "\$\$ $exp_str \$\$"
     end
 end
 
