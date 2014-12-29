@@ -4,10 +4,11 @@ JuMP release notes
 Unreleased
 ----------
 
-### Linear programming
+### Linear/quadratic/conic programming
 
   * **Breaking change**: The syntax for column-wise model generation has been changed to use keyword arguments in ``@defVar``.
   * On Julia 0.4 and later, variables and coefficients may be multiplied in any order within macros. That is, variable*coefficient is now valid syntax.
+  * ECOS supported for solving second-order conic problems.
 
 ### Nonlinear programming
 
@@ -24,6 +25,7 @@ Unreleased
   * Starting values for variables may now be specified with ``@defVar(m, x, start=value)``.
   * The ``setSolver`` function allows users to change the solver subsequent to model creation.
   * Support for "fixed" variables via the ``@defVar(m, x == 1)`` syntax.
+  * Unit tests rewritten to use FactCheck.jl, improved testing across solvers.
 
 Version 0.6.3 (October 19, 2014)
 --------------------------------

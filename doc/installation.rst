@@ -122,7 +122,7 @@ Julia can be pointed to use a custom version of Ipopt; we suggest posting to the
 KNITRO
 ++++++
 
-Requires a licence. The KNITRO.jl interface currently supports only continuous nonlinear problems.
+Requires a licence. The KNITRO.jl interface currently supports only nonlinear problems.
   
 MOSEK
 +++++
