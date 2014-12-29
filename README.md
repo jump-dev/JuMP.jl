@@ -39,7 +39,7 @@ Our documentation includes an installation guide, quick-start guide, and referen
 **Development version**: 
   * [documentation](https://jump.readthedocs.org/en/latest)
   * [examples](https://github.com/JuliaOpt/JuMP.jl/tree/master/examples) 
-  * Testing status: [![Build Status](https://travis-ci.org/JuliaOpt/JuMP.jl.png?branch=master)](https://travis-ci.org/JuliaOpt/JuMP.jl) [![Build status](https://ci.appveyor.com/api/projects/status/val81xkp6y6uiw8g/branch/master)](https://ci.appveyor.com/project/mlubin/jump-jl) [![Coverage Status](https://coveralls.io/repos/JuliaOpt/JuMP.jl/badge.png)](https://coveralls.io/r/JuliaOpt/JuMP.jl)
+  * Testing status: [![Build Status](https://travis-ci.org/JuliaOpt/JuMP.jl.png?branch=master)](https://travis-ci.org/JuliaOpt/JuMP.jl) [![Coverage Status](https://coveralls.io/repos/JuliaOpt/JuMP.jl/badge.png)](https://coveralls.io/r/JuliaOpt/JuMP.jl)
   * Changes: see [NEWS](https://github.com/JuliaOpt/JuMP.jl/tree/master/NEWS.md)
 
 *JuMP was formerly known as MathProg.jl*
