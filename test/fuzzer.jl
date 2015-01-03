@@ -4,23 +4,23 @@ function random_aff_expr(N, vars::Vector{Symbol})
         vl, vr = Any[], Any[]
         for i in randperm(length(vars))
             v = vars[i]
-            if rand(Bool) 
+            if randbool()
                 push!(vl, :($(rand()-0.5)))
             end
-            if rand(Bool) 
+            if randbool()
                 push!(vr, :($(rand()-0.5)))
             end
-            if rand(Bool) 
+            if randbool()
                 push!(vl, :($(rand()-0.5) * $v))
             end
-            if rand(Bool) 
+            if randbool()
                 push!(vr, :($(rand()-0.5) * $v))
             end
         end
-        if rand(Bool) 
+        if randbool()
             push!(vl, :($(rand()-0.5)))
         end
-        if rand(Bool) 
+        if randbool()
             push!(vr, :($(rand()-0.5)))
         end
         if !isempty(vl) || !isempty(vr)
