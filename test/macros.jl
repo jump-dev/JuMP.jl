@@ -108,6 +108,12 @@ facts("[macros] Using pre-built affine is OK in macro") do
     temp = x + 2y + 1
     @addConstraint(m, 3*temp - x - 2 >= 0)
     @fact conToStr(m.linconstr[end]) => "6 y + 2 x $geq -1"
+    # More complex expression
+    a = 1.0*x
+    @addConstraint(m, (2+2)*((3+4)*(1+a)) == 0)
+    @fact conToStr(m.linconstr[end]) => "28 x $eq -28"
+    @fact affToStr(a) => "x"
+
 end
 
 facts("[macros] Test ranges in @defVar") do

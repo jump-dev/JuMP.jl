@@ -5,7 +5,10 @@ addToExpression(ex::Number, c::Number, x::Number) = ex + c*x
 addToExpression(ex::Number, c::Number, x::Variable) = AffExpr([x],[c],ex)
 
 function addToExpression(ex::Number, c::Number, x::AffExpr)
+    # It's only safe to mutate the first argument.
+    x = copy(x)
     scale!(x.coeffs, c)
+    x.constant *= c
     x.constant += ex
     return x
 end

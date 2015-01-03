@@ -290,6 +290,9 @@ function Base.append!{T,S}(aff::GenericAffExpr{T,S}, other::GenericAffExpr{T,S})
     aff.constant += other.constant  # Not efficient if CoefType isn't immutable
 end
 
+# Copy an affine expression
+Base.copy(aff::GenericAffExpr) = GenericAffExpr(copy(aff.vars),copy(aff.coeffs),copy(aff.constant))
+
 ###############################################################################
 # Affine expressions, the specific GenericAffExpr used by JuMP
 typealias AffExpr GenericAffExpr{Float64,Variable}
