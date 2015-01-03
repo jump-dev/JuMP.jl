@@ -1,5 +1,3 @@
-using JuMP, Base.Test
-
 function random_aff_expr(N, vars::Vector{Symbol})
     ex = Expr(:call, :+)
     for _ in 1:N
@@ -52,12 +50,12 @@ N = 5
 vars = [:x, :y, :z, :w, :v]
 
 
-const ε = 2eps()
+const ε = 5eps()
 nvars = length(vars)
 
 function test_approx_equal_exprs(ex1, ex2)
     # test constant term
-    @test abs(ex1.aff.constant - ex2.aff.constant) < ε
+    abs(ex1.aff.constant - ex2.aff.constant) < ε || return false
 
     # test aff terms
     vals = zeros(nvars)
@@ -68,7 +66,7 @@ function test_approx_equal_exprs(ex1, ex2)
         vals[ex2.aff.vars[i].col] -= ex2.aff.coeffs[i]
     end
     for v in vals
-        @test abs(v) < ε
+        abs(v) < ε || return false
     end
 
     # test quad terms
@@ -82,12 +80,16 @@ function test_approx_equal_exprs(ex1, ex2)
         qvals[j,k] -= ex2.qcoeffs[i]
     end
     for v in vals
-        @test abs(v) < ε
+        abs(v) < ε || return false
     end
+    return true
 end
+
+println("[fuzzer] Check macros for expression construction")   
 
 for _ in 1:1000
     raff = random_aff_expr(N, vars)
     ex = @eval @defExpr($raff)
-    test_approx_equal_exprs(ex, eval(raff))
+    test_approx_equal_exprs(ex, eval(raff)) || 
+        error("The following expression did not pass the fuzzer:\n    $raff")
 end
