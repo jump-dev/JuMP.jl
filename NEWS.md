@@ -1,6 +1,11 @@
 JuMP release notes
 ==================
 
+Version 0.7.1 (January 2, 2015)
+-------------------------------
+
+  * Fix a bug in parsing linear expressions in macros. Affects only Julia 0.4 and later.
+
 Version 0.7.0 (December 29, 2014)
 ---------------------------------
 
