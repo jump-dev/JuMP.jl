@@ -190,7 +190,7 @@ function model_str(mode, m::Model, leq, geq, in_set,
             str *= sep * "$var_name $in_set $open_rng$str_lb,$str_ub$close_rng $union $(open_set)0$close_set"
         elseif var_cat == :Fixed
             str *= sep * "$var_name = $str_lb"
-        elseif var_lb == -Inf && var_ub == +Inf && var_cat == :Cont # Free variable
+        elseif var_lb == -Inf && var_ub == +Inf # Free variable
             str *= sep * "$var_name free"
         elseif var_lb == -Inf  # No lower bound
             str *= sep * "$var_name $leq $str_ub"
