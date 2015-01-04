@@ -4,23 +4,29 @@ function random_aff_expr(N, vars::Vector{Symbol})
         vl, vr = Any[], Any[]
         for i in randperm(length(vars))
             v = vars[i]
-            if randbool()
+            if rand(Bool)
                 push!(vl, :($(rand()-0.5)))
             end
-            if randbool()
+            if rand(Bool)
                 push!(vr, :($(rand()-0.5)))
             end
-            if randbool()
+            if rand(Bool)
                 push!(vl, :($(rand()-0.5) * $v))
             end
-            if randbool()
+            if rand(Bool)
                 push!(vr, :($(rand()-0.5) * $v))
             end
+            if rand(Bool)
+                push!(vl, :($v * $(rand()-0.5)))
+            end
+            if rand(Bool)
+                push!(vl, :($v * $(rand()-0.5)))
+            end
         end
-        if randbool()
+        if rand(Bool)
             push!(vl, :($(rand()-0.5)))
         end
-        if randbool()
+        if rand(Bool)
             push!(vr, :($(rand()-0.5)))
         end
         if !isempty(vl) || !isempty(vr)
@@ -87,7 +93,7 @@ end
 
 println("[fuzzer] Check macros for expression construction")   
 
-for _ in 1:1000
+for _ in 1:100
     raff = random_aff_expr(N, vars)
     ex = @eval @defExpr($raff)
     test_approx_equal_exprs(ex, eval(raff)) || 

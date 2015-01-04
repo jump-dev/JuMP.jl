@@ -18,7 +18,9 @@ include("operator.jl")
 include("macros.jl")
 
 # Fuzzer of macros to build expressions
-include("fuzzer.jl")
+if VERSION > v"0.4-"
+    include("fuzzer.jl")
+end 
 
 # Load solvers
 include("solvers.jl")
