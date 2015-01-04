@@ -1,6 +1,12 @@
 JuMP release notes
 ==================
 
+Unversioned
+-----------
+  
+  * Added the ``setCategory`` function to change a variables category (e.g. continuous or binary) 
+  after construction, and ``getCategory`` to retrieve the variable category.
+
 Version 0.7.1 (January 2, 2015)
 -------------------------------
 
