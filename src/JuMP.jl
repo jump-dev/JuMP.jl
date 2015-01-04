@@ -31,7 +31,7 @@ export
     getInternalModel, buildInternalModel,
     # Variable
     setName, getName, setLower, setUpper, getLower, getUpper,
-    getValue, setValue, getDual,
+    getValue, setValue, getDual, setVarType,
     # Expressions and constraints
     affToStr, quadToStr, conToStr, chgConstrRHS,
     
@@ -242,6 +242,12 @@ function getDual(v::Variable)
         error("Variable bound duals (reduced costs) not available. Check that the model was properly solved and no integer variables are present.")
     end
     return v.m.redCosts[v.col]
+end
+
+const var_types = [:Cont, :Int, :Bin, :SemiCont, :SemiInt]
+function setVarType(v::Variable, v_type::Symbol)
+    v_type in var_types || error("Unrecognized variable type $v_type. Should be one of:\n    $var_types")
+    v.m.colCat[v.col] = v_type
 end
 
 Base.zero(v::Type{Variable}) = AffExpr(Variable[],Float64[],0.0)
