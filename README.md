@@ -42,8 +42,6 @@ Our documentation includes an installation guide, quick-start guide, and referen
   * Testing status: [![Build Status](https://travis-ci.org/JuliaOpt/JuMP.jl.png?branch=master)](https://travis-ci.org/JuliaOpt/JuMP.jl) [![Coverage Status](https://coveralls.io/repos/JuliaOpt/JuMP.jl/badge.png)](https://coveralls.io/r/JuliaOpt/JuMP.jl)
   * Changes: see [NEWS](https://github.com/JuliaOpt/JuMP.jl/tree/master/NEWS.md)
 
-*JuMP was formerly known as MathProg.jl*
-
 ## Installation
 
 JuMP can be installed through the Julia package manager (version 0.3 required)
