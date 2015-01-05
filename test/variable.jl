@@ -50,6 +50,14 @@ facts("[variable] get and set bounds") do
     @fact getUpper(fixedvar) => 5
 end
 
+facts("[variable] get and set category") do
+    m = Model()
+    @defVar(m, x[1:3])
+    setCategory(x[2], :Int)
+    @fact getCategory(x[3]) => :Cont
+    @fact getCategory(x[2]) => :Int
+end
+
 facts("[variable] repeated elements in index set (issue #199)") do
     repeatmod = Model()
     s = [:x,:x,:y]

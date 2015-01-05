@@ -31,7 +31,7 @@ export
     getInternalModel, buildInternalModel,
     # Variable
     setName, getName, setLower, setUpper, getLower, getUpper,
-    getValue, setValue, getDual,
+    getValue, setValue, getDual, setCategory, getCategory, 
     # Expressions and constraints
     affToStr, quadToStr, conToStr, chgConstrRHS,
     
@@ -243,6 +243,14 @@ function getDual(v::Variable)
     end
     return v.m.redCosts[v.col]
 end
+
+const var_types = [:Cont, :Int, :Bin, :SemiCont, :SemiInt]
+function setCategory(v::Variable, v_type::Symbol)
+    v_type in var_types || error("Unrecognized variable type $v_type. Should be one of:\n    $var_types")
+    v.m.colCat[v.col] = v_type
+end
+
+getCategory(v::Variable) = v.m.colCat[v.col]
 
 Base.zero(v::Type{Variable}) = AffExpr(Variable[],Float64[],0.0)
 Base.zero(v::Variable) = zero(typeof(v))

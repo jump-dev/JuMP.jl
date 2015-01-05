@@ -158,8 +158,20 @@ function model_str(mode, m::Model, leq, geq, in_set,
     in_dictlist = falses(m.numCols)
     for d in m.dictList
         str *= sep * cont_str(mode,d,mathmode=true)  * eol
-        for it in d  # Mark variables in JuMPContainer as printed
-            in_dictlist[it[end].col] = true
+
+        # make sure that you haven't changed a variable type in the collection
+        cat = getCategory(first(d)[end])
+        allsame = true
+        for v in d
+            if getCategory(v[end]) != cat
+                allsame = false
+                break
+            end
+        end
+        if allsame
+            for it in d  # Mark variables in JuMPContainer as printed
+                in_dictlist[it[end].col] = true
+            end
         end
     end
 
@@ -178,7 +190,7 @@ function model_str(mode, m::Model, leq, geq, in_set,
             str *= sep * "$var_name $in_set $open_rng$str_lb,$str_ub$close_rng $union $(open_set)0$close_set"
         elseif var_cat == :Fixed
             str *= sep * "$var_name = $str_lb"
-        elseif var_lb == -Inf && var_ub == +Inf  # Free variable
+        elseif var_lb == -Inf && var_ub == +Inf # Free variable
             str *= sep * "$var_name free"
         elseif var_lb == -Inf  # No lower bound
             str *= sep * "$var_name $leq $str_ub"

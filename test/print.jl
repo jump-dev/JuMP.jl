@@ -391,7 +391,46 @@ Solver set to Default""", repl=:show)
 """, repl=:print)
 end
 
+facts("[print] changing variable categories") do
+    le, ge = JuMP.repl_leq, JuMP.repl_geq
+    mod = Model()
+    @defVar(mod, x[1:3])
+    @defVar(mod, y[i=1:3,i:3])
+    setCategory(x[3], :SemiCont)
+    setCategory(y[1,3], :Int)
 
+    io_test(REPLMode, mod, """
+Min 0
+Subject to
+ x[i] free for all i in {1,2,3}
+ y[i,j] free for all i in {1,2,3}, j in {..}
+ x[1] free
+ x[2] free
+ x[3] in [-Inf,Inf] or {0}
+ y[1,1] free
+ y[1,2] free
+ y[1,3] free, integer
+ y[2,2] free
+ y[2,3] free
+ y[3,3] free
+""", repl=:print)
+
+    io_test(IJuliaMode, mod, """
+\\begin{alignat*}{1}\\min\\quad & 0\\\\
+\\text{Subject to} \\quad & x_{i} free \\quad\\forall i \\in \\{1,2,3\\}\\\\
+ & y_{i,j} free \\quad\\forall i \\in \\{1,2,3\\}, j \\in \\{..\\}\\\\
+ & x_{1} free\\\\
+ & x_{2} free\\\\
+ & x_{3} \\in \\[-Inf,Inf\\] \\cup \\{0\\}\\\\
+ & y_{1,1} free\\\\
+ & y_{1,2} free\\\\
+ & y_{1,3} free, \\in \\mathbb{Z}\\\\
+ & y_{2,2} free\\\\
+ & y_{2,3} free\\\\
+ & y_{3,3} free\\\\
+\\end{alignat*}
+""")
+end
 
 facts("[print] expressions") do
     # Most of the expression logic is well covered by test/operator.jl
