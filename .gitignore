@@ -4,4 +4,4 @@
 .DS_Store
 *.sublime*
 *.opf
-
+*.cov

@@ -262,6 +262,25 @@ facts("[macros] Triangular indexing, iteration") do
     end
 end
 
+facts("[macros] Multidimensional indexing") do
+    model = Model()
+    I1 = 1:5
+    I2 = 2:8
+    I3 = 5:6
+    @defVar(model, x[1:5,2:8,5:6])
+    coll = Int[]
+    for v in x
+        push!(coll, v[end].col)
+    end
+    p = 1
+    match = true
+    for k in I3, j in I2, i in I1
+        match &= (coll[p] == x[i,j,k].col)
+        p += 1
+    end
+    @fact match => true
+end
+
 facts("[macros] @defExpr") do
     model = Model()
     @defVar(model, x[1:3,1:3])

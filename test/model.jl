@@ -279,7 +279,15 @@ facts("[model] Test model copying") do
     @addConstraint(source, x + 2.0*y <= 6)
     addConstraint(source, x*x <= 1)
 
+    # uncomment when NLP copying is implemented
+    # @addNLConstraint(source, c[k=1:3], x^2 + y^3 * sin(x+k*y) >= 1)
+
     dest = copy(source)
+
+    # uncomment when NLP copying is implemented
+    # for name in source.nlpdata
+    #     @fact source.name == dest.name => true
+    # end
 
     # Obj
     @setObjective(source, Max, 1x)
