@@ -38,7 +38,10 @@ end
 
 function addToExpression(aff::AffExpr,c::Number,x::AffExpr)
     append!(aff.vars, x.vars)
-    append!(aff.coeffs, c*x.coeffs)
+    sizehint!(aff.coeffs, length(aff.coeffs)+length(x.coeffs))
+    for i in 1:length(x.coeffs)
+        push!(aff.coeffs, c*x.coeffs[i])
+    end
     aff.constant += c*x.constant
     return aff
 end
@@ -79,7 +82,10 @@ end
 
 function addToExpression(quad::QuadExpr,c::Number,x::AffExpr)
     append!(quad.aff.vars, x.vars)
-    append!(quad.aff.coeffs, c*x.coeffs)
+    sizehint!(quad.aff.coeffs, length(quad.aff.coeffs)+length(x.coeffs))
+    for i in 1:length(x.coeffs)
+        push!(quad.aff.coeffs, c*x.coeffs[i])
+    end
     quad.aff.constant += c*x.constant
     return quad
 end
@@ -97,7 +103,10 @@ addToExpression(quad::QuadExpr,x::QuadExpr,c::Number) = addToExpression(quad,c,x
 function addToExpression(quad::QuadExpr,c::Number,x::QuadExpr)
     append!(quad.qvars1,x.qvars1)
     append!(quad.qvars2,x.qvars2)
-    append!(quad.qcoeffs,c*x.qcoeffs)
+    sizehint!(quad.qcoeffs, length(quad.qcoeffs)+length(x.qcoeffs))
+    for i in 1:length(x.qcoeffs)
+        push!(quad.qcoeffs, c*x.qcoeffs[i])
+    end
     addToExpression(quad,c,x.aff)
     return quad
 end
