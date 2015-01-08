@@ -8,7 +8,7 @@ module JuMP
 
 import MathProgBase
 
-using ReverseDiffSparse
+using ReverseDiffSparse, Calculus
 import ArrayViews
 const subarr = ArrayViews.view
 
