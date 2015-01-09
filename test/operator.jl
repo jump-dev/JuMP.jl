@@ -198,22 +198,28 @@ end
 facts("[operator] Higher-level operators") do
 context("sum") do
     sum_m = Model()
-    @defVar(sum_m, 0 ≤ matrix[1:3,1:3] ≤ 1)
-    # sum(j::JuMPDict{Variable}) 
+    @defVar(sum_m, 0 ≤ matrix[1:3,1:3] ≤ 1, start = 1)
+    # sum(j::JuMPArray{Variable})
     @fact affToStr(sum(matrix)) => "matrix[1,1] + matrix[2,1] + matrix[3,1] + matrix[1,2] + matrix[2,2] + matrix[3,2] + matrix[1,3] + matrix[2,3] + matrix[3,3]"
-    # sum(j::JuMPDict{Variable}) in a macro
+    # sum(j::JuMPArray{Variable}) in a macro
     @setObjective(sum_m, Max, sum(matrix))
     @fact quadToStr(sum_m.obj) => "matrix[1,1] + matrix[2,1] + matrix[3,1] + matrix[1,2] + matrix[2,2] + matrix[3,2] + matrix[1,3] + matrix[2,3] + matrix[3,3]"
-    #solve(sum_m)
-    for i in 1:3, j in 1:3
-        setValue(matrix[i,j], 1)
-    end
-    # sum{T<:Real}(j::JuMPDict{T})
+
+    # sum{T<:Real}(j::JuMPArray{T})
     @fact sum(getValue(matrix)) => roughly(9, 1e-6)
     # sum(j::Array{Variable})
     @fact affToStr(sum(matrix[1:3,1:3])) => affToStr(sum(matrix))
     # sum(affs::Array{AffExpr})
     @fact affToStr(sum([2*matrix[i,j] for i in 1:3, j in 1:3])) => "2 matrix[1,1] + 2 matrix[2,1] + 2 matrix[3,1] + 2 matrix[1,2] + 2 matrix[2,2] + 2 matrix[3,2] + 2 matrix[1,3] + 2 matrix[2,3] + 2 matrix[3,3]"
+
+    S = [1,3]
+    @defVar(sum_m, x[S], start=1)
+    # sum(j::JuMPDict{Variable})
+    @fact length(affToStr(sum(x))) => 11 # order depends on hashing
+    @fact contains(affToStr(sum(x)),"x[1]") => true
+    @fact contains(affToStr(sum(x)),"x[3]") => true
+    # sum{T<:Real}(j::JuMPDict{T})
+    @fact sum(getValue(x)) => 2
 end
 
 context("dot") do
