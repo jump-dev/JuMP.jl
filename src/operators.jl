@@ -18,17 +18,14 @@
 (+)(lhs::Number, rhs::Variable) = AffExpr([rhs],[+1.],convert(Float64,lhs))
 (-)(lhs::Number, rhs::Variable) = AffExpr([rhs],[-1.],convert(Float64,lhs))
 (*)(lhs::Number, rhs::Variable) = AffExpr([rhs],[convert(Float64,lhs)], 0.)
-(/)(lhs::Number, rhs::Variable) = error("Cannot divide by variable")
 # Number--GenericAffExpr
 (+)(lhs::Number, rhs::GenericAffExpr) = GenericAffExpr(copy(rhs.vars),copy(rhs.coeffs),lhs+rhs.constant)
 (-)(lhs::Number, rhs::GenericAffExpr) = GenericAffExpr(copy(rhs.vars),    -rhs.coeffs ,lhs-rhs.constant)
 (*)(lhs::Number, rhs::GenericAffExpr) = GenericAffExpr(copy(rhs.vars),[lhs*rhs.coeffs[i] for i=1:length(rhs.coeffs)],lhs*rhs.constant)
-(/)(lhs::Number, rhs::GenericAffExpr) = error("Cannot divide by an affine expression")
 # Number--QuadExpr
 (+)(lhs::Number, rhs::QuadExpr) = QuadExpr(copy(rhs.qvars1),copy(rhs.qvars2),copy(rhs.qcoeffs),lhs+rhs.aff)
 (-)(lhs::Number, rhs::QuadExpr) = QuadExpr(copy(rhs.qvars1),copy(rhs.qvars2),    -rhs.qcoeffs ,lhs-rhs.aff)
 (*)(lhs::Number, rhs::QuadExpr) = QuadExpr(copy(rhs.qvars1),copy(rhs.qvars2), lhs*rhs.qcoeffs ,lhs*rhs.aff)
-(/)(lhs::Number, rhs::QuadExpr) = error("Cannot divide by a quadratic expression")
 
 # This is not well defined if variable types are different, but needed to avoid ambiguities
 (+)(lhs::GenericAffExpr, rhs::GenericAffExpr) = (+)(promote(lhs,rhs)...)
@@ -47,7 +44,6 @@
 (+)(lhs::Variable, rhs::Variable) = AffExpr([lhs,rhs], [1.,+1.], 0.)
 (-)(lhs::Variable, rhs::Variable) = AffExpr([lhs,rhs], [1.,-1.], 0.)
 (*)(lhs::Variable, rhs::Variable) = QuadExpr([lhs],[rhs],[1.],AffExpr(Variable[],Float64[],0.))
-(/)(lhs::Variable, rhs::Variable) = error("Cannot divide a variable by a variable")
 # Variable--AffExpr
 (+){CoefType,VarType}(lhs::VarType, rhs::GenericAffExpr{CoefType,VarType}) =
     GenericAffExpr{CoefType,VarType}(vcat(rhs.vars,lhs),vcat( rhs.coeffs,one(CoefType)), rhs.constant)
@@ -65,9 +61,6 @@ end
 # Variable--QuadExpr
 (+)(v::Variable, q::QuadExpr) = QuadExpr(copy(q.qvars1),copy(q.qvars2),copy(q.qcoeffs),v+q.aff)
 (-)(v::Variable, q::QuadExpr) = QuadExpr(copy(q.qvars1),copy(q.qvars2),    -q.qcoeffs ,v-q.aff)
-(*)(v::Variable, q::QuadExpr) = error("Cannot multiply a variable by a quadratic expression")
-(/)(v::Variable, q::QuadExpr) = error("Cannot divide a variable by a quadratic expression")
-
 
 # AffExpr (GenericAffExpr)
 (+)(lhs::GenericAffExpr) = lhs
@@ -79,7 +72,7 @@ end
 (*)(lhs::GenericAffExpr, rhs::Number) = (*)(rhs,lhs)
 (/)(lhs::GenericAffExpr, rhs::Number) = (*)(1.0/rhs,lhs)
 function (^)(lhs::Union(Variable,AffExpr), rhs::Number)
-    rhs == 2 || error("Only exponents of 2 are currently supported")
+    rhs == 2 || error( "Only exponents of 2 are currently supported. Are you trying to build a nonlinear problem? Make sure you use @addNLConstraint/@setNLObjective.")
     return lhs*lhs
 end
 # AffExpr--Variable
@@ -144,12 +137,9 @@ function (*)(lhs::AffExpr, rhs::AffExpr)
     
     return ret
 end
-(/)(lhs::AffExpr, rhs::AffExpr) = error("Cannot divide aff. expression by aff. expression")
 # AffExpr--QuadExpr
 (+)(a::AffExpr, q::QuadExpr) = QuadExpr(copy(q.qvars1),copy(q.qvars2),copy(q.qcoeffs),a+q.aff)
 (-)(a::AffExpr, q::QuadExpr) = QuadExpr(copy(q.qvars1),copy(q.qvars2),    -q.qcoeffs ,a-q.aff)
-(*)(a::AffExpr, q::QuadExpr) = error("Cannot multiply an aff. expression by a quadratic expression")
-(/)(a::AffExpr, q::QuadExpr) = error("Cannot divide an aff. expression by a quadratic expression")
 
 
 # QuadExpr
@@ -176,8 +166,6 @@ end
                                             vcat(q1.qcoeffs, q2.qcoeffs),   q1.aff + q2.aff)
 (-)(q1::QuadExpr, q2::QuadExpr) = QuadExpr( vcat(q1.qvars1, q2.qvars1),     vcat(q1.qvars2, q2.qvars2),
                                             vcat(q1.qcoeffs, -q2.qcoeffs),  q1.aff - q2.aff)
-(*)(q1::QuadExpr, q2::QuadExpr) = error("Cannot multiply two quadratic expressions")
-(/)(q1::QuadExpr, q2::QuadExpr) = error("Cannot divide a quadratic expression by a quadratic expression")
 
 # LinearConstraint
 # Number--???
@@ -264,3 +252,22 @@ for sgn in (:<=, :(==), :>=)
         end
     end
 end
+
+###############################################################################
+# Add nonlinear function fallbacks for JuMP built-in types
+const op_hint = "Are you trying to build a nonlinear problem? Make sure you use @addNLConstraint/@setNLObjective."
+for (func,_) in Calculus.symbolic_derivatives_1arg(), typ in [:Variable,:AffExpr,:QuadExpr]
+    errstr = "$func is not defined for type $typ. $op_hint"
+    @eval Base.($(quot(func)))(::$typ) = error($errstr)
+end
+
+*{T<:QuadExpr,S<:Union(Variable,AffExpr,QuadExpr)}(::T,::S) = 
+    error( "*(::$T,::$S) is not defined. $op_hint")
+*{T<:QuadExpr,S<:Union(Variable,AffExpr,QuadExpr)}(::S,::T) = 
+    error( "*(::$T,::$S) is not defined. $op_hint")
+/{T<:Union(Variable,AffExpr,QuadExpr),S<:Union(Variable,AffExpr,QuadExpr)}(::T,::S) = 
+    error( "/(::$T,::$S) is not defined. $op_hint")
+/{T<:Union(Variable,AffExpr,QuadExpr),S}(::S,::T) = 
+    error( "/(::$T,::$S) is not defined. $op_hint")
+^{T<:QuadExpr,S}(::T,::S) = 
+    error( "^(::$T,::$S) is not defined. $op_hint")
