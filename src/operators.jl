@@ -267,5 +267,3 @@ end
     error( "*(::$S,::$T) is not defined. $op_hint")
 /{S,T<:Union(Variable,AffExpr,QuadExpr)}(::S,::T) = 
     error( "/(::$S,::$T) is not defined. $op_hint")
-^{T<:QuadExpr,S}(::T,::S) = 
-    error( "^(::$T,::$S) is not defined. $op_hint")
