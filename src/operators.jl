@@ -72,7 +72,7 @@ end
 (*)(lhs::GenericAffExpr, rhs::Number) = (*)(rhs,lhs)
 (/)(lhs::GenericAffExpr, rhs::Number) = (*)(1.0/rhs,lhs)
 function (^)(lhs::Union(Variable,AffExpr), rhs::Number)
-    rhs == 2 || error( "Only exponents of 2 are currently supported. Are you trying to build a nonlinear problem? Make sure you use @addNLConstraint/@setNLObjective.")
+    rhs == 2 || error("Only exponents of 2 are currently supported. Are you trying to build a nonlinear problem? Make sure you use @addNLConstraint/@setNLObjective.")
     return lhs*lhs
 end
 # AffExpr--Variable
@@ -264,10 +264,8 @@ end
 *{T<:QuadExpr,S<:Union(Variable,AffExpr,QuadExpr)}(::T,::S) = 
     error( "*(::$T,::$S) is not defined. $op_hint")
 *{T<:QuadExpr,S<:Union(Variable,AffExpr,QuadExpr)}(::S,::T) = 
-    error( "*(::$T,::$S) is not defined. $op_hint")
-/{T<:Union(Variable,AffExpr,QuadExpr),S<:Union(Variable,AffExpr,QuadExpr)}(::T,::S) = 
-    error( "/(::$T,::$S) is not defined. $op_hint")
-/{T<:Union(Variable,AffExpr,QuadExpr),S}(::S,::T) = 
-    error( "/(::$T,::$S) is not defined. $op_hint")
+    error( "*(::$S,::$T) is not defined. $op_hint")
+/{S,T<:Union(Variable,AffExpr,QuadExpr)}(::S,::T) = 
+    error( "/(::$S,::$T) is not defined. $op_hint")
 ^{T<:QuadExpr,S}(::T,::S) = 
     error( "^(::$T,::$S) is not defined. $op_hint")
