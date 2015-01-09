@@ -366,23 +366,23 @@ MathProgBase.jac_structure(d::JuMPNLPEvaluator) = d.jac_I, d.jac_J
 MathProgBase.hesslag_structure(d::JuMPNLPEvaluator) = d.hess_I, d.hess_J
 
 # currently don't merge duplicates (this isn't required by MPB standard)
-function affToExpr(aff::AffExpr)
+function affToExpr(aff::AffExpr, constant::Bool)
     ex = Expr(:call,:+)
     for k in 1:length(aff.vars)
         push!(ex.args, Expr(:call,:*,aff.coeffs[k],:(x[$(aff.vars[k].col)])))
     end
-    if aff.constant != 0
+    if constant && aff.constant != 0
         push!(ex.args, aff.constant)
     end
     return ex
 end
 
-function quadToExpr(q::QuadExpr)
+function quadToExpr(q::QuadExpr,constant::Bool)
     ex = Expr(:call,:+)
     for k in 1:length(q.qvars1)
         push!(ex.args, Expr(:call,:*,q.qcoeffs[k],:(x[$(q.qvars1[k].col)]), :(x[$(q.qvars2[k].col)])))
     end
-    append!(ex.args, affToExpr(q.aff).args[2:end])
+    append!(ex.args, affToExpr(q.aff,constant).args[2:end])
     return ex
 end
 
@@ -390,7 +390,7 @@ function MathProgBase.obj_expr(d::JuMPNLPEvaluator)
     if isa(d.m.nlpdata.nlobj, ReverseDiffSparse.SymbolicOutput)
         return ReverseDiffSparse.to_flat_expr(d.m.nlpdata.nlobj)
     else
-        return quadToExpr(d.m.obj)
+        return quadToExpr(d.m.obj, true)
     end
 end
 
@@ -399,9 +399,7 @@ function MathProgBase.constr_expr(d::JuMPNLPEvaluator,i::Integer)
     nquad = length(d.m.quadconstr)
     if i <= nlin
         constr = d.m.linconstr[i]
-        ex = affToExpr(constr.terms)
-        # remove constant
-        deleteat!(ex.args,length(ex.args))
+        ex = affToExpr(constr.terms, false)
         if sense(constr) == :range
             return Expr(:comparison, constr.lb, ex, constr.ub)
         else
@@ -410,7 +408,7 @@ function MathProgBase.constr_expr(d::JuMPNLPEvaluator,i::Integer)
     elseif i > nlin && i <= nlin + nquad
         i -= nlin
         qconstr = d.m.quadconstr[i]
-        return Expr(:comparison, quadToExpr(qconstr.terms), qconstr.sense, 0)
+        return Expr(:comparison, quadToExpr(qconstr.terms, true), qconstr.sense, 0)
     else
         i -= nlin + nquad
         ex = ReverseDiffSparse.to_flat_expr(d.m.nlpdata.nlconstrlist, i)

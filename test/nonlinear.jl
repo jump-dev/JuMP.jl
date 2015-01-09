@@ -191,10 +191,11 @@ function MathProgBase.loadnonlinearproblem!(m::DummyNLPModel, numVar, numConstr,
         @fact objexpr => anyof(:(x[1]^x[2]), :(-1.0*x[1]+1.0*x[2]))
         @fact MathProgBase.isconstrlinear(d,1) => true
         @fact MathProgBase.constr_expr(d,1) => :(2.0*x[1] + 1.0*x[2] <= 1.0)
-        @fact MathProgBase.constr_expr(d,2) => :(2.0*x[1]*x[1] + 1.0*x[2] + -2.0 >= 0)
-        @fact MathProgBase.constr_expr(d,3) => :(sin(x[1]) * cos(x[2]) - 5 == 0.0)
-        @fact MathProgBase.constr_expr(d,4) => :(1.0*x[1]^2 - 1.0 == 0.0)
-        @fact MathProgBase.constr_expr(d,5) => :(2.0*x[1]^2 - 2.0 == 0.0)
+        @fact MathProgBase.constr_expr(d,2) => :(2.0*x[1] + 1.0*x[2] <= 0.0)
+        @fact MathProgBase.constr_expr(d,3) => :(2.0*x[1]*x[1] + 1.0*x[2] + -2.0 >= 0)
+        @fact MathProgBase.constr_expr(d,4) => :(sin(x[1]) * cos(x[2]) - 5 == 0.0)
+        @fact MathProgBase.constr_expr(d,5) => :(1.0*x[1]^2 - 1.0 == 0.0)
+        @fact MathProgBase.constr_expr(d,6) => :(2.0*x[1]^2 - 2.0 == 0.0)
     end
 end
 MathProgBase.setwarmstart!(m::DummyNLPModel,x) = nothing
@@ -208,6 +209,7 @@ function test_nl_mpb()
     @defVar(m, y)
     @setObjective(m, Min, -x+y)
     @addConstraint(m, 2x+y <= 1)
+    @addConstraint(m, 2x+y <= 0)
     @addConstraint(m, 2x^2+y >= 2)
     @addNLConstraint(m, sin(x)*cos(y) == 5)
     @addNLConstraint(m, nlconstr[i=1:2], i*x^2 == i)
