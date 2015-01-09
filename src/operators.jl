@@ -210,7 +210,7 @@ end
 Base.sum(j::JuMPArray) = sum(j.innerArray)
 Base.sum(j::JuMPDict)  = sum(values(j.tupledict))
 Base.sum(j::JuMPArray{Variable}) = AffExpr(vec(j.innerArray), ones(length(j.innerArray)), 0.0)
-Base.sum(j::JuMPDict{Variable})  = AffExpr(vec(values(j.tupledict)), ones(length(j.tupledict)), 0.0)
+Base.sum(j::JuMPDict{Variable})  = AffExpr(collect(values(j.tupledict)), ones(length(j.tupledict)), 0.0)
 Base.sum(j::Array{Variable}) = AffExpr(vec(j), ones(length(j)), 0.0)
 function Base.sum{S,T}(affs::Array{GenericAffExpr{S,T}})
     new_aff = GenericAffExpr{S,T}()
