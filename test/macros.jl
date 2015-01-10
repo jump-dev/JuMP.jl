@@ -274,8 +274,8 @@ facts("[macros] Multidimensional indexing") do
     end
     p = 1
     match = true
-    for k in I3, j in I2, i in I1
-        match &= (coll[p] == x[i,j,k].col)
+    for v in x.innerArray
+        match &= (coll[p] == v.col)
         p += 1
     end
     @fact match => true

@@ -129,6 +129,7 @@ end
 for f in (:(Base.endof), :(Base.ndims), :(Base.length), :(Base.abs), :(Base.start))
     @eval $f(x::JuMPArray) = $f(x.innerArray)
 end
+
 for f in (:(Base.first), :(Base.length), :(Base.start))
     @eval $f(x::JuMPDict)  = $f(x.tupledict)
 end
@@ -136,17 +137,24 @@ Base.ndims{T,N}(x::JuMPDict{T,N}) = N
 Base.abs(x::JuMPDict) = map(abs, x)
 # delegate one-argument functions
 Base.size(x::JuMPArray,k) = size(x.innerArray,k)
-function Base.next(x::JuMPArray,k)
-    @assert (ndim = ndims(x)) > 0
-    idxsets = x.indexsets
-    lengths = map(length, idxsets)
-    cprod = cumprod([lengths...])
-    key = Array(Int, ndim)
-    key[1] = idxsets[1][mod1(k,lengths[1])]
-    for i in 2:ndim
-        key[i] = idxsets[i][int(ceil(mod1(k,cprod[i])/cprod[i-1]))]
+
+if VERSION > v"0.4-"
+    iceil(x) = ceil(Integer, x)
+end
+
+function _local_index(indexsets, dim, k)
+    n = length(indexsets)
+    cprod = 1
+    for i in 1:(dim-1)
+        cprod *= length(indexsets[i])
     end
+    idx = iceil(mod1(k,cprod*length(indexsets[dim])) / cprod)
+    return indexsets[dim][idx]
+end
+
+function Base.next(x::JuMPArray,k)
     (var, gidx) = next(x.innerArray, k)
+    key = map(i->_local_index(x.indexsets, i, k), 1:length(x.indexsets))
     return (tuple(key..., var), gidx)
 end
 function Base.next(x::JuMPDict,k)
