@@ -1,9 +1,10 @@
 JuMP release notes
 ==================
 
-Unversioned
------------
+Version 0.7.2 (January 9, 2015)
+-------------------------------
   
+  * Fix a bug in sum(::JuMPDict)
   * Added the ``setCategory`` function to change a variables category (e.g. continuous or binary) 
   after construction, and ``getCategory`` to retrieve the variable category.
 
