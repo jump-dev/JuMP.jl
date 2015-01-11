@@ -138,17 +138,13 @@ Base.abs(x::JuMPDict) = map(abs, x)
 # delegate one-argument functions
 Base.size(x::JuMPArray,k) = size(x.innerArray,k)
 
-if VERSION > v"0.4-"
-    iceil(x) = ceil(Integer, x)
-end
-
 function _local_index(indexsets, dim, k)
     n = length(indexsets)
     cprod = 1
     for i in 1:(dim-1)
         cprod *= length(indexsets[i])
     end
-    idx = iceil(mod1(k,cprod*length(indexsets[dim])) / cprod)
+    idx = Compat.ceil(Integer, mod1(k,cprod*length(indexsets[dim])) / cprod)
     return indexsets[dim][idx]
 end
 
