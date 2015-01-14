@@ -1,6 +1,11 @@
 JuMP release notes
 ==================
 
+Version 0.7.3 (January 14, 2015)
+--------------------------------
+
+  * Fix a method ambiguity conflict with Compose.jl (cosmetic fix)
+
 Version 0.7.2 (January 9, 2015)
 -------------------------------
   
