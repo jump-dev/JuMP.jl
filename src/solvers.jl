@@ -1,4 +1,7 @@
-function solve(m::Model;suppress_warnings=false)
+function solve(m::Model; suppress_warnings=false, ignore_solve_hook=(m.solvehook==nothing))
+
+    ignore_solve_hook || return m.solvehook(m; suppress_warnings=suppress_warnings)
+    
     if m.nlpdata != nothing
         if isa(m.solver,UnsetSolver)
             m.solver = MathProgBase.defaultNLPsolver

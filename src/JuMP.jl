@@ -28,7 +28,7 @@ export
     getObjectiveSense, setObjectiveSense, setSolver,
     writeLP, writeMPS, setObjective,
     addConstraint, addSOS1, addSOS2, solve,
-    getInternalModel, buildInternalModel,
+    getInternalModel, buildInternalModel, setSolveHook,
     # Variable
     setName, getName, setLower, setUpper, getLower, getUpper,
     getValue, setValue, getDual, setCategory, getCategory, 
@@ -78,6 +78,10 @@ type Model
     cutcallback
     heurcallback
 
+    # hook into a solve call...function of the form f(m::Model; kwargs...), 
+    # where kwargs get passed along to subsequent solve calls
+    solvehook
+
     # List of JuMPContainer{Variables} associated with model
     dictList::Vector
 
@@ -105,7 +109,7 @@ function Model(;solver=UnsetSolver())
     Model(QuadExpr(),:Min,LinearConstraint[], QuadConstraint[],SOSConstraint[],
           0,String[],String[],Float64[],Float64[],Symbol[],
           0,Float64[],Float64[],Float64[],nothing,solver,
-          false,nothing,nothing,nothing,JuMPContainer[],
+          false,nothing,nothing,nothing,nothing,JuMPContainer[],
           IndexedVector(Float64,0),nothing,Dict{Symbol,Any}())
 end
 
@@ -163,6 +167,8 @@ function Base.copy(source::Model)
 end
 
 getInternalModel(m::Model) = m.internalModel
+
+setSolveHook(m::Model, f) = (m.solvehook = f)
 
 ###############################################################################
 # Variable class
