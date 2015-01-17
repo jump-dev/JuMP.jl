@@ -145,8 +145,8 @@ function Base.copy(source::Model)
     dest.objSense = source.objSense
 
     # Constraints
-    dest.linconstr = [copy(c, dest) for c in source.linconstr]
-    dest.quadconstr = [copy(c, dest) for c in source.quadconstr]
+    dest.linconstr  = map(c->copy(c, dest), source.linconstr)
+    dest.quadconstr = map(c->copy(c, dest), source.quadconstr)
 
     # Variables
     dest.numCols = source.numCols

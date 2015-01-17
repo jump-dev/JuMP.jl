@@ -305,6 +305,10 @@ facts("[model] Test model copying") do
     @fact dest.linconstr[1].ub => 6.0
     source.quadconstr[1].sense = :(>=)
     @fact dest.quadconstr[1].sense => :(<=)
+
+    # Issue #358
+    @fact typeof(dest.linconstr)  => Array{JuMP.GenericRangeConstraint{JuMP.GenericAffExpr{Float64,JuMP.Variable}},1}
+    @fact typeof(dest.quadconstr) => Array{JuMP.GenericQuadConstraint{JuMP.GenericQuadExpr{Float64,JuMP.Variable}},1}
 end
 
 
