@@ -458,3 +458,31 @@ facts("[model] Test setSolver") do
         @fact m.internalModel == nothing => false
     end
 end
+
+facts("[model] Setting solve hook") do
+    m = Model()
+    @defVar(m, x ≥ 0)
+    dummy = [1]
+    kwarglist = Any[]
+    function solvehook(m::Model; kwargs...)
+        dummy[1] += 1
+        append!(kwarglist, kwargs)
+        nothing
+    end
+    setSolveHook(m, solvehook)
+    solve(m)
+    @fact dummy => [2]
+    @fact kwarglist => Any[(:suppress_warnings,false)]
+end
+
+facts("[model] Setting print hook") do
+    m = Model()
+    @defVar(m, x ≥ 0)
+    dummy = [1]
+    function printhook(m::Model)
+        dummy[1] += 1
+    end
+    setPrintHook(m, printhook)
+    print(m)
+    @fact dummy => [2]
+end
