@@ -474,3 +474,15 @@ facts("[model] Setting solve hook") do
     @fact dummy => [2]
     @fact kwarglist => Any[(:suppress_warnings,false)]
 end
+
+facts("[model] Setting print hook") do
+    m = Model()
+    @defVar(m, x ≥ 0)
+    dummy = [1]
+    function printhook(m::Model)
+        dummy[1] += 1
+    end
+    setPrintHook(m, printhook)
+    print(m)
+    @fact dummy => [2]
+end

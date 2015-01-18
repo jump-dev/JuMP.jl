@@ -79,7 +79,11 @@ math(s,mathmode) = mathmode ? s : "\$\$ $s \$\$"
 #------------------------------------------------------------------------
 ## Model
 #------------------------------------------------------------------------
-Base.print(io::IO, m::Model) = print(io, model_str(REPLMode,m))
+function Base.print(io::IO, m::Model; ignore_print_hook=(m.printhook==nothing))
+    ignore_print_hook || return m.printhook(m)
+    print(io, model_str(REPLMode,m))
+end
+
 function Base.show(io::IO, m::Model)
     print(io, m.objSense == :Max ? "Maximization" : ((m.objSense == :Min && (!isempty(m.obj) || (m.nlpdata != nothing && isa(m.nlpdata.nlobj, ReverseDiffSparse.SymbolicOutput)))) ? "Minimization" : "Feasibility"))
     println(io, " problem with:")
