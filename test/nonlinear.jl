@@ -225,7 +225,7 @@ facts("[nonlinear] Expression graph for linear problem") do
     @defVar(m, x)
     @addConstraint(m, 0 <= x <= 1)
     @setObjective(m, Max, x)
-    d = JuMP.JuMPNLPEvaluator(m, prepConstrMatrix(m))
+    d = JuMP.JuMPNLPEvaluator(m, JuMP.prepConstrMatrix(m))
     MathProgBase.initialize(d, [:ExprGraph])
     @fact MathProgBase.obj_expr(d) => :(+(1.0 * x[1]))
 end
