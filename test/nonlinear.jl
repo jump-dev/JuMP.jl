@@ -215,7 +215,7 @@ function test_nl_mpb()
     @addConstraint(m, 2x+y <= 1)
     @addConstraint(m, 2x+y <= 0)
     @addConstraint(m, -5 <= 2x+y <= 5)
-    solve(m)
+    #solve(m) # FIXME maybe?
     
     @addConstraint(m, 2x^2+y >= 2)
     @addNLConstraint(m, sin(x)*cos(y) == 5)
@@ -232,7 +232,7 @@ facts("[nonlinear] Expression graph for linear problem") do
     @defVar(m, x)
     @addConstraint(m, 0 <= x <= 1)
     @setObjective(m, Max, x)
-    d = JuMP.JuMPNLPEvaluator(m, prepConstrMatrix(m))
+    d = JuMP.JuMPNLPEvaluator(m, JuMP.prepConstrMatrix(m))
     MathProgBase.initialize(d, [:ExprGraph])
     @fact MathProgBase.obj_expr(d) => :(+(1.0 * x[1]))
 end
