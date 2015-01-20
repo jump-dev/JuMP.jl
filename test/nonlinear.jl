@@ -219,3 +219,13 @@ function test_nl_mpb()
     solve(m)
 end
 test_nl_mpb()
+
+facts("[nonlinear] Expression graph for linear problem") do
+    m = Model()
+    @defVar(m, x)
+    @addConstraint(m, 0 <= x <= 1)
+    @setObjective(m, Max, x)
+    d = JuMP.JuMPNLPEvaluator(m, prepConstrMatrix(m))
+    MathProgBase.initialize(d, [:ExprGraph])
+    @fact MathProgBase.obj_expr(d) => :(+(1.0 * x[1]))
+end

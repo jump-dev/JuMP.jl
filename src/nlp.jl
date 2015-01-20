@@ -66,6 +66,8 @@ function MathProgBase.initialize(d::JuMPNLPEvaluator, requested_features::Vector
     else
         need_expr = false
     end
+
+    initNLP(d.m) #in case the problem is purely linear/quadratic thus far
     nldata::NLPData = d.m.nlpdata
     d.has_nlobj = isa(nldata.nlobj, ReverseDiffSparse.SymbolicOutput)
     if d.has_nlobj
@@ -211,6 +213,8 @@ function MathProgBase.initialize(d::JuMPNLPEvaluator, requested_features::Vector
     d.eval_g_timer = 0
     d.eval_jac_g_timer = 0
     d.eval_hesslag_timer = 0
+
+    nothing
 end
 
 MathProgBase.features_available(d::JuMPNLPEvaluator) = [:Grad, :Jac, :Hess, :ExprGraph]
