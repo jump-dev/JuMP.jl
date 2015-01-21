@@ -68,6 +68,9 @@ facts("[operator] Testing basic operator overloads") do
 
     # 2. Variable tests
     context("Variable--???") do
+    # 2-0 Variable unary
+    @fact (+x) => exactly(x)
+    @fact affToStr(-x) => "-x"
     # 2-1 Variable--Number
     @fact affToStr(w + 4.13) => "w + 4.13"
     @fact affToStr(w - 4.13) => "w - 4.13"
@@ -117,6 +120,9 @@ facts("[operator] Testing basic operator overloads") do
 
     # 3. AffExpr tests
     context("AffExpr--???") do
+    # 3-0 AffExpr unary
+    @fact affToStr(+aff) => "7.1 x + 2.5"
+    @fact affToStr(-aff) => "-7.1 x - 2.5"
     # 3-1 AffExpr--Number
     @fact affToStr(aff + 1.5) => "7.1 x + 4"
     @fact affToStr(aff - 1.5) => "7.1 x + 1"
@@ -160,6 +166,9 @@ facts("[operator] Testing basic operator overloads") do
 
     # 4. QuadExpr
     context("QuadExpr--???") do
+    # 4-0 QuadExpr unary
+    @fact quadToStr(+q) => "2.5 y*z + 7.1 x + 2.5"
+    @fact quadToStr(-q) => "-2.5 y*z - 7.1 x - 2.5"
     # 4-1 QuadExpr--Number
     @fact quadToStr(q + 1.5) => "2.5 y*z + 7.1 x + 4"
     @fact quadToStr(q - 1.5) => "2.5 y*z + 7.1 x + 1"
@@ -171,8 +180,8 @@ facts("[operator] Testing basic operator overloads") do
     # 4-2 QuadExpr--Variable
     @fact quadToStr(q + w) => "2.5 y*z + 7.1 x + w + 2.5"
     @fact quadToStr(q - w) => "2.5 y*z + 7.1 x - w + 2.5"
-    @fact_throws  w*q
-    @fact_throws  w/q
+    @fact_throws q*w
+    @fact_throws q/w
     @fact conToStr(q ≤ w) => "2.5 y*z + 7.1 x - w + 2.5 $leq 0"
     @fact conToStr(q == w) => "2.5 y*z + 7.1 x - w + 2.5 $eq 0"
     @fact conToStr(q ≥ w) => "2.5 y*z + 7.1 x - w + 2.5 $geq 0"
