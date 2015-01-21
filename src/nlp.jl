@@ -405,7 +405,7 @@ function MathProgBase.constr_expr(d::JuMPNLPEvaluator,i::Integer)
         constr = d.m.linconstr[i]
         ex = affToExpr(constr.terms, false)
         if sense(constr) == :range
-            return Expr(:comparison, constr.lb, ex, constr.ub)
+            return Expr(:comparison, constr.lb, :(<=), ex, :(<=), constr.ub)
         else
             return Expr(:comparison, ex, sense(constr), rhs(constr))
         end
