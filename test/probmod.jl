@@ -9,6 +9,9 @@
 #############################################################################
 using JuMP, FactCheck
 
+# If solvers not loaded, load them (i.e running just these tests)
+!isdefined(:lp_solvers) && include("solvers.jl")
+
 facts("[probmod] Testing problem modification basics") do
 for solver in lp_solvers
 context("With solver $(typeof(solver))") do 
@@ -185,6 +188,27 @@ context("With solver $(typeof(solver))") do
     @fact getObjectiveValue(m) => roughly(1.0, 1e-6)
     @fact getDual(x)  => roughly(-1.0, 1e-6)
     @fact getDual(y)  => roughly( 0.0, 1e-6)
+end
+end
+end
+
+
+facts("[probmod] Test buildInternalModel with MIP") do
+for solver in ip_solvers
+context("With solver $(typeof(solver))") do 
+    m = Model(solver=solver)
+    @defVar(m, x >= 0, Int)
+    @defVar(m, y, Bin)
+    @addConstraint(m, x + y == 1)
+    @setObjective(m, Max, y)
+    buildInternalModel(m)
+    @fact getInternalModel(m) => not(nothing)
+    @fact m.internalModelLoaded => true
+    stat = solve(m)
+    @fact stat => :Optimal  
+    @fact getValue(x) => roughly( 0.0, 1e-6)
+    @fact getValue(y) => roughly( 1.0, 1e-6)
+    @fact getObjectiveValue(m) => roughly(1.0, 1e-6)
 end
 end
 end

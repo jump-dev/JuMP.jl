@@ -310,6 +310,7 @@ facts("[print] Model") do
     @defVar(mod_1, sos[1:3], Bin)
     @defVar(mod_1, 2 <= si <= 3, SemiInt)
     @defVar(mod_1, 2 <= sc <= 3, SemiCont)
+    @defVar(mod_1, fi == 9)
     @setObjective(mod_1, Max, a - b + 2a1 - 10x)
     @addConstraint(mod_1, a + b - 10c - 2x + c1 <= 1)
     @addConstraint(mod_1, a*b <= 2)
@@ -333,6 +334,7 @@ Subject to
  z free, integer
  si in {2..3} or {0}
  sc in [2,3] or {0}
+ fi = 9
 """, repl=:print)
 
     io_test(IJuliaMode, mod_1, """
@@ -352,38 +354,57 @@ Subject to
  & z free, \\in \\mathbb{Z}\\\\
  & si \\in \\{2,\\dots,3\\} \\cup \\{0\\}\\\\
  & sc \\in \\[2,3\\] \\cup \\{0\\}\\\\
+ & fi = 9\\\\
 \\end{alignat*}
 """)
 
     #------------------------------------------------------------------
 
     mod_2 = Model()
+    @defVar(mod_2, x, Bin)
+    @defVar(mod_2, y, Int)
+    @addConstraint(mod_2, x*y <= 1)
 
     io_test(REPLMode, mod_2, """
 Feasibility problem with:
  * 0 linear constraints
- * 0 variables
+ * 1 quadratic constraint
+ * 2 variables: 1 binary, 1 integer
 Solver set to Default""", repl=:show)
 
-    @defVar(mod_2, x[1:5])
-    @addNLConstraint(mod_2, x[1]*x[2] == 1)
-    @addNLConstraint(mod_2, x[3]*x[4] == 1)
-    @addNLConstraint(mod_2, x[5]*x[1] == 1)
-    @setNLObjective(mod_2, Min, x[1]*x[3])
-    
+    mod_2 = Model()
+    @defVar(mod_2, x)
+    @addConstraint(mod_2, x <= 3)
+
     io_test(REPLMode, mod_2, """
+Feasibility problem with:
+ * 1 linear constraint
+ * 1 variable
+Solver set to Default""", repl=:show)
+
+    #------------------------------------------------------------------
+
+    mod_3 = Model()
+
+    @defVar(mod_3, x[1:5])
+    @addNLConstraint(mod_3, x[1]*x[2] == 1)
+    @addNLConstraint(mod_3, x[3]*x[4] == 1)
+    @addNLConstraint(mod_3, x[5]*x[1] == 1)
+    @setNLObjective(mod_3, Min, x[1]*x[3])
+    
+    io_test(REPLMode, mod_3, """
 Min (nonlinear expression)
 Subject to
  3 nonlinear constraints
  x[i] free for all i in {1,2..4,5}
 """, repl=:print)
-    io_test(REPLMode, mod_2, """
+    io_test(REPLMode, mod_3, """
 Minimization problem with:
  * 0 linear constraints
  * 3 nonlinear constraints
  * 5 variables
 Solver set to Default""", repl=:show)
-    io_test(IJuliaMode, mod_2, """
+    io_test(IJuliaMode, mod_3, """
 \\begin{alignat*}{1}\\min\\quad & (nonlinear expression)\\\\
 \\text{Subject to} \\quad & 3 nonlinear constraints\\\\
  & x_{i} free \\quad\\forall i \\in \\{1,2,\\dots,4,5\\}\\\\

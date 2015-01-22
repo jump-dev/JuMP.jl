@@ -85,18 +85,20 @@ function Base.print(io::IO, m::Model; ignore_print_hook=(m.printhook==nothing))
 end
 
 function Base.show(io::IO, m::Model)
+    plural(n) = (n==1 ? "" : "s")
     print(io, m.objSense == :Max ? "Maximization" : ((m.objSense == :Min && (!isempty(m.obj) || (m.nlpdata != nothing && isa(m.nlpdata.nlobj, ReverseDiffSparse.SymbolicOutput)))) ? "Minimization" : "Feasibility"))
     println(io, " problem with:")
-    println(io, " * $(length(m.linconstr)) linear constraints")
+    nlin = length(m.linconstr)
+    println(io, " * $(nlin) linear constraint$(plural(nlin))")
     nquad = length(m.quadconstr)
     if nquad > 0
-        println(io, " * $(nquad) quadratic constraints")
+        println(io, " * $(nquad) quadratic constraint$(plural(nquad))")
     end
     nlp = m.nlpdata
     if nlp != nothing && length(nlp.nlconstr) > 0
-        println(io, " * $(length(nlp.nlconstr)) nonlinear constraints")
+        println(io, " * $(length(nlp.nlconstr)) nonlinear constraint$(plural(length(nlp.nlconstr)))")
     end
-    print(io, " * $(m.numCols) variables")
+    print(io, " * $(m.numCols) variable$(plural(m.numCols))")
     nbin = sum(m.colCat .== :Bin)
     nint = sum(m.colCat .== :Int)
     nsc = sum(m.colCat .== :SemiCont)
@@ -109,7 +111,7 @@ function Base.show(io::IO, m::Model)
     if isempty(varstr)
         println(io,)
     else
-        println(io, ": $(join(varstr, ","))")
+        println(io, ": $(join(varstr, ", "))")
     end
     print(io, "Solver set to ")
     if isa(m.solver, UnsetSolver)
