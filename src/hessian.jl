@@ -13,15 +13,17 @@ function compute_hessian_sparsity_IJ_parametric(s::SymbolicOutput)
     compute_hessian_sparsity(s.tree, true, code)
     # compile a function:
     fexpr = quote
-        function sparsity_gen(edgelist__)
+        local _SPARSITY_GEN_
+        function _SPARSITY_GEN_(edgelist__)
             mycolor__ = Set{Int}()
             $code
             return
         end
+        _SPARSITY_GEN_
     end
     # add arguments for inputnames -- local data
     for i in 1:length(s.inputnames)
-        push!(fexpr.args[2].args[1].args,s.inputnames[i])
+        push!(fexpr.args[4].args[1].args,s.inputnames[i])
     end
 
     f = eval(fexpr)
