@@ -1,5 +1,6 @@
 module ReverseDiffSparse
 
+using Compat
 import Calculus
 using DualNumbers
 using Base.Meta

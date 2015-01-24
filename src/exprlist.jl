@@ -48,9 +48,9 @@ function prep_sparse_hessians(l::ExprList, num_total_vars; need_expr::Bool=false
     empty!(l.exprfuncs)
 
     N = length(l.exprs)
-    sizehint(l.valfuncs, N)
-    sizehint(l.gradfuncs, N)
-    sizehint(l.hessfuncs, N)
+    sizehint!(l.valfuncs, N)
+    sizehint!(l.gradfuncs, N)
+    sizehint!(l.hessfuncs, N)
 
     I = Int[]
     J = Int[]
@@ -155,8 +155,8 @@ function jac_nz(l::ExprList)
         nnz_jac += length(x.mapfromcanonical)
     end
     I = Int[]; J = Int[]
-    sizehint(I,nnz_jac)
-    sizehint(J,nnz_jac)
+    sizehint!(I,nnz_jac)
+    sizehint!(J,nnz_jac)
     for (i,x) in enumerate(l.exprs)
         for k in x.mapfromcanonical
             push!(I,i)

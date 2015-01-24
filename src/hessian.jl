@@ -37,8 +37,8 @@ compute_hessian_sparsity_IJ(s::SymbolicOutput) = (compute_hessian_sparsity_IJ_pa
 function edgelist_to_IJ(edgelist,s::SymbolicOutput)
     I = Array(Int,0)
     J = Array(Int,0)
-    sizehint(I,div(length(edgelist),2))
-    sizehint(J,div(length(edgelist),2))
+    sizehint!(I,div(length(edgelist),2))
+    sizehint!(J,div(length(edgelist),2))
     for k in 1:length(edgelist)
         i,j = edgelist[k]
         if j > i

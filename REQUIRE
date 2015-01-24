@@ -2,3 +2,4 @@ julia 0.3
 DualNumbers
 NaNMath
 Graphs
+Compat
