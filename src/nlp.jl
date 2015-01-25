@@ -416,7 +416,12 @@ function MathProgBase.constr_expr(d::JuMPNLPEvaluator,i::Integer)
     else
         i -= nlin + nquad
         ex = ReverseDiffSparse.to_flat_expr(d.m.nlpdata.nlconstrlist, i)
-        return Expr(:comparison, ex, sense(d.m.nlpdata.nlconstr[i]), rhs(d.m.nlpdata.nlconstr[i]))
+        constr = d.m.nlpdata.nlconstr[i]
+        if sense(constr) == :range
+            return Expr(:comparison, constr.lb, :(<=), ex, :(<=), constr.ub)
+        else
+            return Expr(:comparison, ex, sense(constr), rhs(constr))
+        end
     end
 end
 
