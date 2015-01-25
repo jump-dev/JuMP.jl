@@ -540,7 +540,22 @@ macro addNLConstraint(m, x, extra...)
         end
     elseif length(x.args) == 5
         # ranged row
-        error("Two-sided nonlinear constraints not yet supported")
+        if (x.args[2] != :<= && x.args[2] != :≤) || (x.args[4] != :<= && x.args[4] != :≤)
+            error("in @addNLConstraint ($(string(x))): only ranged rows of the form lb <= expr <= ub are supported.")
+        end
+        lb = x.args[1]
+        ub = x.args[5]
+        code = quote
+            if !isa($(esc(lb)),Number)
+                error(string("in @addNLConstraint (",$(string(x)),"): expected ",$(string(lb))," to be a number."))
+            elseif !isa($(esc(ub)),Number)
+                error(string("in @addNLConstraint (",$(string(x)),"): expected ",$(string(ub))," to be a number."))
+            end
+            c = NonlinearConstraint(@processNLExpr($(esc(x.args[3]))), $(esc(lb)), $(esc(ub)))
+            push!($m.nlpdata.nlconstr, c)
+            push!($m.nlpdata.nlconstrlist, c.terms)
+            $(refcall) = ConstraintRef{NonlinearConstraint}($m, length($m.nlpdata.nlconstr))
+        end
     else
         # Unknown
         error("in @addNLConstraint ($(string(x))): constraints must be in one of the following forms:\n" *

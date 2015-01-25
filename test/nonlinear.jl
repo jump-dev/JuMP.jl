@@ -105,6 +105,27 @@ context("With solver $(typeof(nlp_solver))") do
     @fact getValue(x) + getValue(y) => roughly(-1/3, 1e-3)
 end; end; end
 
+facts("[nonlinear] Test two-sided nonlinear constraints") do
+for nlp_solver in convex_nlp_solvers
+context("With solver $(typeof(nlp_solver))") do
+    m = Model(solver=nlp_solver)
+    @defVar(m, x)
+    @setNLObjective(m, Max, x)
+    l = -1
+    u = 1
+    @addNLConstraint(m, l <= x <= u)
+    status = solve(m)
+
+    @fact status => :Optimal
+    @fact getObjectiveValue(m) => roughly(u, 1e-6)
+
+    @setNLObjective(m, Min, x)
+    status = solve(m)
+
+    @fact status => :Optimal
+    @fact getObjectiveValue(m) => roughly(l, 1e-6)
+end; end; end
+
 facts("[nonlinear] Test mixed integer nonlinear problems") do
 for minlp_solver in minlp_solvers
 context("With solver $(typeof(minlp_solver))") do 
@@ -199,6 +220,7 @@ function MathProgBase.loadnonlinearproblem!(m::DummyNLPModel, numVar, numConstr,
             @fact MathProgBase.constr_expr(d,5) => :(sin(x[1]) * cos(x[2]) - 5 == 0.0)
             @fact MathProgBase.constr_expr(d,6) => :(1.0*x[1]^2 - 1.0 == 0.0)
             @fact MathProgBase.constr_expr(d,7) => :(2.0*x[1]^2 - 2.0 == 0.0)
+            @fact MathProgBase.constr_expr(d,8) => :(-0.5 <= sin(x[1]) <= 0.5)
         end
     end
 end
@@ -220,6 +242,7 @@ function test_nl_mpb()
     @addConstraint(m, 2x^2+y >= 2)
     @addNLConstraint(m, sin(x)*cos(y) == 5)
     @addNLConstraint(m, nlconstr[i=1:2], i*x^2 == i)
+    @addNLConstraint(m, -0.5 <= sin(x) <= 0.5)
     solve(m)
 
     @setNLObjective(m, Min, x^y)
