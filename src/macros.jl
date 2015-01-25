@@ -445,7 +445,7 @@ macro defVar(args...)
             $(esc(var)) = Variable($m,$lb,$ub,$(quot(t)),$(string(var)),$value)
         end)
     end
-    @assert isa(var,Expr)
+    isa(var,Expr) || error("in @defVar: expected $var to be a variable name")
 
     # We now build the code to generate the variables (and possibly the JuMPDict
     # to contain them)
