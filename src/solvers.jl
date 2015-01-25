@@ -265,12 +265,12 @@ function solveLP(m::Model; suppress_warnings=false)
         m.objVal = MathProgBase.getobjval(m.internalModel)
         m.objVal += m.obj.aff.constant
         m.colVal = MathProgBase.getsolution(m.internalModel)
-        if noQuads && applicable(MathProgBase.getreducedcosts, m.internalModel) &&
+        if applicable(MathProgBase.getreducedcosts, m.internalModel) &&
                       applicable(MathProgBase.getconstrduals,  m.internalModel)
             m.redCosts = MathProgBase.getreducedcosts(m.internalModel)
             m.linconstrDuals = MathProgBase.getconstrduals(m.internalModel)
         else
-            noQuads && !suppress_warnings && warn("Dual solutions not available")
+            !suppress_warnings && warn("Dual solutions not available")
             m.redCosts = fill(NaN, length(m.linconstr))
             m.linconstrDuals = fill(NaN, length(m.linconstr))
         end
