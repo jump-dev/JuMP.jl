@@ -73,7 +73,7 @@ if glp
 end
 # Quadratic support
 quad_solvers = Any[]
-grb && push!(quad_solvers, Gurobi.GurobiSolver(OutputFlag=0))
+grb && push!(quad_solvers, Gurobi.GurobiSolver(QCPDual=1,OutputFlag=0))
 cpx && push!(quad_solvers, CPLEX.CplexSolver(CPX_PARAM_SCRIND=0))
 mos && push!(quad_solvers, Mosek.MosekSolver(LOG=0))
 quad_mip_solvers = copy(quad_solvers)
