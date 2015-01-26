@@ -62,7 +62,7 @@ facts("[variable] repeated elements in index set (issue #199)") do
     repeatmod = Model()
     s = [:x,:x,:y]
     @defVar(repeatmod, x[s])
-    @fact getNumVars(repeatmod) => 3
+    @fact MathProgBase.numvar(repeatmod) => 3
 end
 
 # Test conditionals in variable definition

@@ -59,7 +59,10 @@ context("With solver $(typeof(solver))") do
     @defVar(modQ, -2 <= x <= 2 )
     @defVar(modQ, -2 <= y <= 2 )
     @setObjective(modQ, Min, x - y )
-    addConstraint(modQ, x + x*x + x*y + y*y <= 1 )
+    @addConstraint(modQ, x + x*x + x*y + y*y <= 1 )
+    @fact MathProgBase.numquadconstr(modQ) => 1
+    @fact MathProgBase.numlinconstr(modQ) => 0
+    @fact MathProgBase.numconstr(modQ) => 1
 
     @fact solve(modQ) => :Optimal
     @fact modQ.objVal => roughly(-1-4/sqrt(3), 1e-6)
