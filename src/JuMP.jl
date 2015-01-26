@@ -24,7 +24,6 @@ export
     ConstraintRef, LinConstrRef,
 # Functions
     # Model related
-    numvar, numconstr, numlinconstr, numquadconstr, # MPB re-exports
     getObjectiveValue, getObjective,
     getObjectiveSense, setObjectiveSense, setSolver,
     writeLP, writeMPS, setObjective,
