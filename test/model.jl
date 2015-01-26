@@ -133,8 +133,10 @@ facts("[model] Test printing a model") do
     close(modAfp)
 
     # Getter/setters
-    @fact getNumVars(modA) => 7
-    @fact getNumConstraints(modA) => 3
+    @fact MathProgBase.numvar(modA) => 7
+    @fact MathProgBase.numlinconstr(modA) => 3
+    @fact MathProgBase.numquadconstr(modA) => 0
+    @fact MathProgBase.numconstr(modA) => 3
     @fact getObjectiveSense(modA) => :Max
     setObjectiveSense(modA, :Min)
     @fact getObjectiveSense(modA) => :Min

@@ -245,12 +245,12 @@ facts("[macros] Triangular indexing, iteration") do
     trimod = Model()
     @defVar(trimod, x[i=1:n,j=i:n])
     @defVar(trimod, y[i=3:2:7,j=-i])
-    @fact getNumVars(trimod) => n*(n+1)/2 + 3
+    @fact MathProgBase.numvar(trimod) => n*(n+1)/2 + 3
     S = Any[(i,i+2) for i in 1:5]
     @defVar(trimod, z[(i,j)=S,k=i:j])
     @fact length(z.tupledict) => 15
     @addConstraint(trimod, cref[i=1:n,j=i:n], x[i,j] + y[5,-5] == 1)
-    @fact getNumConstraints(trimod) => n*(n+1)/2
+    @fact MathProgBase.numconstr(trimod) => n*(n+1)/2
 
     cntr = zeros(Bool, n, n)
     for (i,j,var) in x

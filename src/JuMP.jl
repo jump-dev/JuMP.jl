@@ -24,7 +24,7 @@ export
     ConstraintRef, LinConstrRef,
 # Functions
     # Model related
-    getNumVars, getNumConstraints, getObjectiveValue, getObjective,
+    getObjectiveValue, getObjective,
     getObjectiveSense, setObjectiveSense, setSolver,
     writeLP, writeMPS, setObjective,
     addConstraint, addSOS1, addSOS2, solve,
@@ -116,8 +116,20 @@ function Model(;solver=UnsetSolver())
 end
 
 # Getters/setters
-getNumVars(m::Model) = m.numCols
-getNumConstraints(m::Model) = length(m.linconstr)
+MathProgBase.numvar(m::Model) = m.numCols
+MathProgBase.numlinconstr(m::Model) = length(m.linconstr)
+MathProgBase.numquadconstr(m::Model) = length(m.quadconstr)
+function MathProgBase.numconstr(m::Model)
+    c = length(m.linconstr) + length(m.quadconstr) + length(m.sosconstr)
+    if m.nlpdata != nothing
+        c += length(m.nlpdata.nlconstr)
+    end
+    return c
+end
+
+@Base.deprecate getNumVars(m::Model) MathProgBase.numvar(m)
+@Base.deprecate getNumConstraints(m::Model) MathProgBase.numlinconstr(m)
+
 getObjectiveValue(m::Model) = m.objVal
 getObjectiveSense(m::Model) = m.objSense
 function setObjectiveSense(m::Model, newSense::Symbol)
@@ -237,7 +249,7 @@ function setValue(v::Variable, val::Number)
 end
 
 function getValue(v::Variable) 
-    if v.m.colVal[v.col] == NaN
+    if isnan(v.m.colVal[v.col])
         warn("Variable $(getName(v))'s value not defined. Check that the model was properly solved.")
     end
     return v.m.colVal[v.col]
@@ -247,7 +259,7 @@ getValue(arr::Array{Variable}) = map(getValue, arr)
 
 # Dual value (reduced cost) getter
 function getDual(v::Variable) 
-    if length(v.m.redCosts) < getNumVars(v.m)
+    if length(v.m.redCosts) < MathProgBase.numvar(v.m)
         error("Variable bound duals (reduced costs) not available. Check that the model was properly solved and no integer variables are present.")
     end
     return v.m.redCosts[v.col]
@@ -588,7 +600,7 @@ end
 typealias LinConstrRef ConstraintRef{LinearConstraint}
 
 function getDual(c::ConstraintRef{LinearConstraint}) 
-    if length(c.m.linconstrDuals) != getNumConstraints(c.m)
+    if length(c.m.linconstrDuals) != MathProgBase.numlinconstr(c.m)
         error("Dual solution not available. Check that the model was properly solved and no integer variables are present.")
     end
     return c.m.linconstrDuals[c.idx]
