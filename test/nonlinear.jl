@@ -60,6 +60,20 @@ context("With solver $(typeof(nlp_solver))") do
             [1.000000, 4.742999, 3.821150, 1.379408], 1e-5)
 end; end; end
 
+facts("[nonlinear] Accepting fixed variables") do
+for nlp_solver in convex_nlp_solvers
+context("With solver $(typeof(nlp_solver))") do
+    m = Model(solver=nlp_solver)
+    @defVar(m, x == 0)
+    @defVar(m, y ≥ 0)
+    @setObjective(m, Min, y)
+    @addNLConstraint(m, y ≥ x^2)
+    for α in 1:4
+        setValue(x, α)
+        solve(m)
+        @fact getValue(y) => roughly(α^2, 1e-6)
+    end
+end; end; end
 
 facts("[nonlinear] Test QP solve through NL pathway") do
 for nlp_solver in convex_nlp_solvers
