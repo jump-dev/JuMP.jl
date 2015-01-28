@@ -463,14 +463,16 @@ function solvenlp(m::Model; suppress_warnings=false)
             error("Unrecognized quadratic constraint sense $(c.sense)")
         end
     end
-    
+
     #print("LB: ");show([linrowlb,nlrowlb]);println()
     #print("UB: ");show([linrowub,nlrowub]);println()
 
     m.internalModel = MathProgBase.model(m.solver)
 
+    const nl_cont = [:Cont, :Fixed]
+
     MathProgBase.loadnonlinearproblem!(m.internalModel, m.numCols, numConstr, m.colLower, m.colUpper, [linrowlb,quadrowlb,nlrowlb], [linrowub,quadrowub,nlrowub], m.objSense, d)
-    if any(x->x!=:Cont, m.colCat)
+    if !all(x->(x in nl_cont), m.colCat)
         if applicable(MathProgBase.setvartype!, m.internalModel, m.colCat)
             MathProgBase.setvartype!(m.internalModel, m.colCat)
         else
