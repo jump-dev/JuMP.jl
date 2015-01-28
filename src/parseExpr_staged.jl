@@ -55,8 +55,8 @@ addToExpression(aff::AffExpr,c::Variable,x::AffExpr) = QuadExpr(fill(c,length(x.
 addToExpression(aff::AffExpr, x::QuadExpr, c::Number) = addToExpression(aff,c,x)
 
 addToExpression(aff::AffExpr, c::Number, x::QuadExpr) = QuadExpr(copy(x.qvars1),
-                                                                 copy(x.qvars2), 
-                                                                 c*x.qcoeffs, 
+                                                                 copy(x.qvars2),
+                                                                 c*x.qcoeffs,
                                                                  addToExpression(aff,c,x.aff))
 
 function addToExpression(ex::AffExpr, c::AffExpr, x::AffExpr)
@@ -211,7 +211,7 @@ function parseCurly(x::Expr, aff::Symbol, constantCoef)
         code = :($preblock;$code)
     end
 
-    
+
     return code
 end
 
@@ -298,7 +298,7 @@ function parseExpr(x, aff::Symbol, coefficients::Vector, newaff::Symbol=gensym()
         elseif x.head == :curly
             return newaff, :($(parseCurly(x,aff,coefficients)); $newaff = $aff)
         else # at lowest level?
-            !isexpr(x,:comparison) || error("Unexpected comparison in expression $x") 
+            !isexpr(x,:comparison) || error("Unexpected comparison in expression $x")
             callexpr = Expr(:call,:addToExpression_reorder,aff,esc(x),coefficients...)
             return newaff, :($newaff = $callexpr)
         end

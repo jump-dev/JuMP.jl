@@ -14,7 +14,7 @@ using JuMP, FactCheck
 
 facts("[probmod] Testing problem modification basics") do
 for solver in lp_solvers
-context("With solver $(typeof(solver))") do 
+context("With solver $(typeof(solver))") do
 
     # max 1.1x + 1.0y
     # st     x +    y <= 3
@@ -154,7 +154,7 @@ end
 
 facts("[probmod] Test adding a 'decoupled' variable (#205)") do
 for solver in lp_solvers
-context("With solver $(typeof(solver))") do 
+context("With solver $(typeof(solver))") do
     m = Model(solver=solver)
     @defVar(m, x >= 0)
     @setObjective(m, Min, x)
@@ -172,7 +172,7 @@ end
 
 facts("[probmod] Test buildInternalModel") do
 for solver in lp_solvers
-context("With solver $(typeof(solver))") do 
+context("With solver $(typeof(solver))") do
     m = Model(solver=solver)
     @defVar(m, x >= 0)
     @defVar(m, y >= 0)
@@ -182,7 +182,7 @@ context("With solver $(typeof(solver))") do
     @fact getInternalModel(m) => not(nothing)
     @fact m.internalModelLoaded => true
     stat = solve(m)
-    @fact stat => :Optimal  
+    @fact stat => :Optimal
     @fact getValue(x) => roughly( 0.0, 1e-6)
     @fact getValue(y) => roughly( 1.0, 1e-6)
     @fact getObjectiveValue(m) => roughly(1.0, 1e-6)
@@ -195,7 +195,7 @@ end
 
 facts("[probmod] Test buildInternalModel with MIP") do
 for solver in ip_solvers
-context("With solver $(typeof(solver))") do 
+context("With solver $(typeof(solver))") do
     m = Model(solver=solver)
     @defVar(m, x >= 0, Int)
     @defVar(m, y, Bin)
@@ -205,7 +205,7 @@ context("With solver $(typeof(solver))") do
     @fact getInternalModel(m) => not(nothing)
     @fact m.internalModelLoaded => true
     stat = solve(m)
-    @fact stat => :Optimal  
+    @fact stat => :Optimal
     @fact getValue(x) => roughly( 0.0, 1e-6)
     @fact getValue(y) => roughly( 1.0, 1e-6)
     @fact getObjectiveValue(m) => roughly(1.0, 1e-6)
@@ -216,7 +216,7 @@ end
 
 facts("[probmod] Test bound modification on binaries") do
 for solver in ip_solvers
-context("With solver $(typeof(solver))") do 
+context("With solver $(typeof(solver))") do
     # Test semantics for modifying bounds on binary variables:
     # Variables should be restricted to the intersection of
     # {0,1} and their bounds.
@@ -253,7 +253,7 @@ function methods_test(solvername, solverobj, supp)
     end
 end
 
-const mpb_methods = 
+const mpb_methods =
     [(MathProgBase.addquadconstr!, (Cint[1],Float64[1.0],Cint[1],Cint[1],Float64[1],'>',1.0)),
      (MathProgBase.setquadobjterms!, (Cint[1], Cint[1], Float64[1.0])),
      (MathProgBase.addconstr!,   ([1],[1.0],1.0,1.0)),

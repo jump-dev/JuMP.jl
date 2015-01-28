@@ -66,7 +66,7 @@ function solveProblem()
         x_val = getValue(x)
         y_val = getValue(y)
         println("In callback function, x=$x_val, y=$y_val")
-                
+
         newcut, x_coeff, y_coeff, rhs = cornerChecker(x_val, y_val)
 
         if newcut

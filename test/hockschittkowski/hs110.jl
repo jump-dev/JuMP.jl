@@ -4,10 +4,10 @@
 # See http://github.com/JuliaOpt/JuMP.jl
 #############################################################################
 # Hock-Schittkowski Nonlinear Test Suite  -  HS110
-# This file is JuMP implementation of the model described in 
+# This file is JuMP implementation of the model described in
 #  W. Hock, K. Schittkowski, Test Examples for Nonlinear Programming
-#  Codes, Lecture Notes in Economics and Mathematical Systems, 
-#  Springer, No, 187, 1981 
+#  Codes, Lecture Notes in Economics and Mathematical Systems,
+#  Springer, No, 187, 1981
 # More information, including original model description, at
 # http://www.ai7.uni-bayreuth.de/downloads.htm
 #
@@ -23,7 +23,7 @@ let
 m = Model()
 @defVar(m, -2.001 <= x[1:10] <= 9.999, start = 9)
 
-@setNLObjective(m, Min, 
+@setNLObjective(m, Min,
     sum{ log(x[j] - 2)^2 + log(10 - x[j])^2, j=1:10} -
     prod{x[i],i=1:10} ^ 0.2
 )

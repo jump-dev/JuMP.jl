@@ -40,7 +40,7 @@ function mycutgenerator(cb)
 
     # Allow for some impreciseness in the solution
     TOL = 1e-6
-        
+
     # Check top right
     if y_val + x_val > 3 + TOL
         # Cut off this solution

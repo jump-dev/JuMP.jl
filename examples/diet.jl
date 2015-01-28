@@ -6,7 +6,7 @@
 # diet.jl
 #
 # Solve the classic "diet problem".
-# Based on 
+# Based on
 #  http://www.gurobi.com/documentation/5.6/example-tour/diet_cpp_cpp
 #############################################################################
 
@@ -25,7 +25,7 @@ function PrintSolution(status, foods, buy)
 end
 
 function SolveDiet()
-    
+
     # Nutrition guidelines
     numCategories = 4
     categories = ["calories", "protein", "fat", "sodium"]
@@ -49,12 +49,12 @@ function SolveDiet()
 
     # Build model
     m = Model()
- 
+
     # Variables for nutrition info
     @defVar(m, minNutrition[i] <= nutrition[i=1:numCategories] <= maxNutrition[i])
     # Variables for which foods to buy
     @defVar(m, buy[i=1:numFoods] >= 0)
- 
+
     # Objective - minimize cost
     @setObjective(m, Min, dot(cost, buy))
 
@@ -67,7 +67,7 @@ function SolveDiet()
     println("Solving original problem...")
     status = solve(m)
     PrintSolution(status, foods, buy)
-    
+
     # Limit dairy
     @addConstraint(m, buy[8] + buy[9] <= 6)
     println("Solving dairy-limited problem...")

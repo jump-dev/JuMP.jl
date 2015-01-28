@@ -11,7 +11,7 @@ using JuMP, FactCheck
 
 facts("[nonlinear] Test HS071 solves correctly") do
 for nlp_solver in nlp_solvers
-context("With solver $(typeof(nlp_solver))") do 
+context("With solver $(typeof(nlp_solver))") do
     # hs071
     # Polynomial objective and constraints
     # min x1 * x4 * (x1 + x2 + x3) + x3
@@ -37,7 +37,7 @@ end; end; end
 
 facts("[nonlinear] Test HS071 solves correctly, epigraph") do
 for nlp_solver in nlp_solvers
-context("With solver $(typeof(nlp_solver))") do 
+context("With solver $(typeof(nlp_solver))") do
         # hs071, with epigraph formulation
         # Linear objective, nonlinear constraints
         # min t
@@ -75,7 +75,7 @@ end; end; end
 
 facts("[nonlinear] Test QP solve through NL pathway") do
 for nlp_solver in convex_nlp_solvers
-context("With solver $(typeof(nlp_solver))") do 
+context("With solver $(typeof(nlp_solver))") do
     # Solve a problem with quadratic objective with linear
     # constraints, but force it to use the nonlinear code.
     m = Model(solver=nlp_solver)
@@ -85,7 +85,7 @@ context("With solver $(typeof(nlp_solver))") do
     param = [1.0]
     @addNLConstraint(m, x + y >= param[1])
     status = solve(m)
-    
+
     @fact status => :Optimal
     @fact m.objVal => roughly(1.0, 1e-6)
     @fact getValue(x)+getValue(y) => roughly(1.0, 1e-6)
@@ -102,7 +102,7 @@ end; end; end
 
 facts("[nonlinear] Test quad con solve through NL pathway") do
 for nlp_solver in convex_nlp_solvers
-context("With solver $(typeof(nlp_solver))") do 
+context("With solver $(typeof(nlp_solver))") do
     # Solve a problem with linear objective with quadratic
     # constraints, but force it to use the nonlinear code.
     m = Model(solver=nlp_solver)
@@ -140,7 +140,7 @@ end; end; end
 
 facts("[nonlinear] Test mixed integer nonlinear problems") do
 for minlp_solver in minlp_solvers
-context("With solver $(typeof(minlp_solver))") do 
+context("With solver $(typeof(minlp_solver))") do
     ## Solve test problem 1 (Synthesis of processing system) in
      # M. Duran & I.E. Grossmann, "An outer approximation algorithm for
      # a class of mixed integer nonlinear programs", Mathematical
@@ -169,7 +169,7 @@ end; end; end
 
 facts("[nonlinear] Test maximization objective") do
 for nlp_solver in convex_nlp_solvers
-context("With solver $(typeof(nlp_solver))") do 
+context("With solver $(typeof(nlp_solver))") do
     # Solve a simple problem with a maximization objective
     m = Model(solver=nlp_solver)
     @defVar(m, -2 <= x <= 2); setValue(x, -1.8)
@@ -185,7 +185,7 @@ end; end; end
 
 facts("[nonlinear] Test infeasibility detection") do
 for nlp_solver in convex_nlp_solvers
-context("With solver $(typeof(nlp_solver))") do 
+context("With solver $(typeof(nlp_solver))") do
     # (Attempt to) solve an infeasible problem
     m = Model(solver=nlp_solver)
     n = 10
@@ -200,7 +200,7 @@ end; end; end
 
 facts("[nonlinear] Test unboundedness detection") do
 for nlp_solver in convex_nlp_solvers
-context("With solver $(typeof(nlp_solver))") do 
+context("With solver $(typeof(nlp_solver))") do
     # (Attempt to) solve an unbounded problem
     m = Model(solver=nlp_solver)
     @defVar(m, x >= 0)
@@ -250,7 +250,7 @@ function test_nl_mpb()
     @addConstraint(m, 2x+y <= 0)
     @addConstraint(m, -5 <= 2x+y <= 5)
     #solve(m) # FIXME maybe?
-    
+
     @addConstraint(m, 2x^2+y >= 2)
     @addNLConstraint(m, sin(x)*cos(y) == 5)
     @addNLConstraint(m, nlconstr[i=1:2], i*x^2 == i)

@@ -8,9 +8,9 @@ Version 0.7.3 (January 14, 2015)
 
 Version 0.7.2 (January 9, 2015)
 -------------------------------
-  
+
   * Fix a bug in ``sum(::JuMPDict)``
-  * Added the ``setCategory`` function to change a variables category (e.g. continuous or binary) 
+  * Added the ``setCategory`` function to change a variables category (e.g. continuous or binary)
   after construction, and ``getCategory`` to retrieve the variable category.
 
 Version 0.7.1 (January 2, 2015)

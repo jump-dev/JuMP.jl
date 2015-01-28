@@ -55,7 +55,7 @@ function SolveModel(initgrid)
 
     # Solve it
     status = solve(m)
-    
+
     # Check solution
     if status == :Infeasible
         error("No solution found!")

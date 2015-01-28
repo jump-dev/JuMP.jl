@@ -11,7 +11,7 @@ using JuMP, FactCheck
 
 facts("[callback] Test lazy constraints") do
 for lazysolver in lazy_solvers
-context("With solver $(typeof(lazysolver))") do 
+context("With solver $(typeof(lazysolver))") do
 
     mod = Model(solver=lazysolver)
     @defVar(mod, 0 <= x <= 2, Int)
@@ -35,8 +35,8 @@ end; end; end
 
 facts("[callback] Test user cuts") do
 for cutsolver in cut_solvers
-context("With solver $(typeof(cutsolver))") do 
-    
+context("With solver $(typeof(cutsolver))") do
+
     mod = Model(solver=cutsolver)
     @defVar(mod, 0 <= x <= 2, Int)
     @defVar(mod, 0 <= y <= 2, Int)
@@ -45,7 +45,7 @@ context("With solver $(typeof(cutsolver))") do
     function mycutgenerator(cb)
         x_val = getValue(x)
         y_val = getValue(y)
-        TOL = 1e-6  
+        TOL = 1e-6
         # Check top right
         if y_val + x_val > 3 + TOL
             @addUserCut(cb, y + x <= 3)
@@ -60,7 +60,7 @@ end; end; end
 
 facts("[callback] Test heuristics") do
 for heursolver in heur_solvers
-context("With solver $(typeof(heursolver))") do 
+context("With solver $(typeof(heursolver))") do
 
     mod = Model(solver=heursolver)
     @defVar(mod, 0 <= x <= 2, Int)
