@@ -29,7 +29,7 @@ To start using JuMP (after installing a solver), it should be imported into the 
 Getting Solvers
 ^^^^^^^^^^^^^^^
 
-Solver support in Julia is currently provided by writing a solver-specific package that provides a very thin wrapper around the solver's C interface and providing a standard interface that JuMP can call. If you are interested in providing an interface to your solver, please get in touch. The table below lists the currently supported solvers and their capabilities. 
+Solver support in Julia is currently provided by writing a solver-specific package that provides a very thin wrapper around the solver's C interface and providing a standard interface that JuMP can call. If you are interested in providing an interface to your solver, please get in touch. The table below lists the currently supported solvers and their capabilities.
 
 
 
@@ -48,15 +48,15 @@ Solver support in Julia is currently provided by writing a solver-specific packa
 +----------------------------------------------------------------------------------+---------------------------------------------------------------------------------+-----------------------------+-------------+----+------+-----+-----+
 | `GLPK <http://www.gnu.org/software/glpk/>`_                                      | `GLPKMath... <https://github.com/JuliaOpt/GLPKMathProgInterface.jl>`_           |  ``GLPKSolver[LP|MIP]()``   |  GPL        | X  |      | X   |     |
 +----------------------------------------------------------------------------------+---------------------------------------------------------------------------------+-----------------------------+-------------+----+------+-----+-----+
-| `Gurobi <http://gurobi.com>`_                                                    | `Gurobi.jl <https://github.com/JuliaOpt/Gurobi.jl>`_                            | ``GurobiSolver()``          | Comm.       | X  |   X  |  X  |     |   
+| `Gurobi <http://gurobi.com>`_                                                    | `Gurobi.jl <https://github.com/JuliaOpt/Gurobi.jl>`_                            | ``GurobiSolver()``          | Comm.       | X  |   X  |  X  |     |
 +----------------------------------------------------------------------------------+---------------------------------------------------------------------------------+-----------------------------+-------------+----+------+-----+-----+
 | `Ipopt <https://projects.coin-or.org/Ipopt>`_                                    | `Ipopt.jl <https://github.com/JuliaOpt/Ipopt.jl>`_                              | ``IpoptSolver()``           | EPL         | X  |      |     |  X  |
 +----------------------------------------------------------------------------------+---------------------------------------------------------------------------------+-----------------------------+-------------+----+------+-----+-----+
 | `KNITRO <http://www.ziena.com/knitro.htm>`_                                      | `KNITRO.jl <https://github.com/JuliaOpt/KNITRO.jl>`_                            | ``KnitroSolver()``          | Comm.       |    |      |     |  X  |
 +----------------------------------------------------------------------------------+---------------------------------------------------------------------------------+-----------------------------+-------------+----+------+-----+-----+
-| `MOSEK <http://www.mosek.com/>`_                                                 | `Mosek.jl <https://github.com/JuliaOpt/Mosek.jl>`_                              | ``MosekSolver()``           | Comm.       | X  |   X  |  X  |  X  |                     
+| `MOSEK <http://www.mosek.com/>`_                                                 | `Mosek.jl <https://github.com/JuliaOpt/Mosek.jl>`_                              | ``MosekSolver()``           | Comm.       | X  |   X  |  X  |  X  |
 +----------------------------------------------------------------------------------+---------------------------------------------------------------------------------+-----------------------------+-------------+----+------+-----+-----+
-| `NLopt <http://ab-initio.mit.edu/wiki/index.php/NLopt>`_                         | `NLopt.jl <https://github.com/JuliaOpt/NLopt.jl>`_                              | ``NLoptSolver()``           | LGPL        |    |      |     |  X  |                     
+| `NLopt <http://ab-initio.mit.edu/wiki/index.php/NLopt>`_                         | `NLopt.jl <https://github.com/JuliaOpt/NLopt.jl>`_                              | ``NLoptSolver()``           | LGPL        |    |      |     |  X  |
 +----------------------------------------------------------------------------------+---------------------------------------------------------------------------------+-----------------------------+-------------+----+------+-----+-----+
 
 Where:
@@ -67,7 +67,7 @@ Where:
 - NLP = Nonlinear programming
 
 To install Gurobi, for example, and use it with a JuMP model ``m``, run::
-    
+
     Pkg.add("Gurobi")
     using JuMP
     using Gurobi
@@ -123,7 +123,7 @@ KNITRO
 ++++++
 
 Requires a licence. The KNITRO.jl interface currently supports only nonlinear problems.
-  
+
 MOSEK
 +++++
 

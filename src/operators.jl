@@ -51,7 +51,7 @@
     GenericAffExpr{CoefType,VarType}(vcat(rhs.vars,lhs),vcat(-rhs.coeffs,one(CoefType)),-rhs.constant)
 function (*)(lhs::Variable, rhs::AffExpr)
     n = length(rhs.vars)
-    if rhs.constant != 0.      
+    if rhs.constant != 0.
         ret = QuadExpr([lhs for i=1:n],copy(rhs.vars),copy(rhs.coeffs),AffExpr([lhs], [rhs.constant], 0.))
     else
         ret = QuadExpr([lhs for i=1:n],copy(rhs.vars),copy(rhs.coeffs),AffExpr())
@@ -99,7 +99,7 @@ function (*)(lhs::AffExpr, rhs::AffExpr)
             push!(ret.qcoeffs, lhs.coeffs[i]*rhs.coeffs[j])
         end
     end
-    
+
     # Try to preallocate space for aff
     if lhs.constant != 0 && rhs.constant != 0
         sizehint(ret.aff.vars, n+m)
@@ -121,7 +121,7 @@ function (*)(lhs::AffExpr, rhs::AffExpr)
         end
         ret.aff.constant += c * rhs.constant
     end
-    
+
     # [RHS constant] * LHS
     if rhs.constant != 0
         c = rhs.constant
@@ -134,7 +134,7 @@ function (*)(lhs::AffExpr, rhs::AffExpr)
         # If lhs.constant is 0, its a waste of time
         # If lhs.constant is non-zero, its already done
     end
-    
+
     return ret
 end
 # AffExpr--QuadExpr
@@ -193,7 +193,7 @@ end
 # QuadConstraint
 # QuadConstraint--Number
 for sgn in (:<=, :(==), :>=)
-    @eval $(sgn)(lhs::QuadExpr, rhs::Number) = 
+    @eval $(sgn)(lhs::QuadExpr, rhs::Number) =
         QuadConstraint( QuadExpr(copy(lhs.qvars1), copy(lhs.qvars2), lhs.qcoeffs,lhs.aff - rhs), $(quot(sgn)))
     for typ in (:Variable, :AffExpr, :QuadExpr)
         @eval $(sgn)(lhs::QuadExpr, rhs::$(typ)) = $(sgn)(lhs-rhs, 0)
@@ -232,12 +232,12 @@ Base.dot{T<:Real,N}(lhs::Array{T,N}, rhs::Array{Variable,N})   = AffExpr(vec(rhs
 Base.dot{T<:Real,N}(rhs::Array{Variable,N}, lhs::Array{T,N})   = AffExpr(vec(rhs), vec(float(lhs)), 0.0)
 
 function Base.dot{N}(lhs::JuMPArray{Variable,N},rhs::JuMPArray{Variable,N})
-    size(lhs.innerArray) == size(rhs.innerArray) || error("Incompatible dimensions") 
+    size(lhs.innerArray) == size(rhs.innerArray) || error("Incompatible dimensions")
     return QuadExpr(vec(lhs.innerArray), vec(rhs.innerArray), ones(length(lhs.innerArray)), AffExpr())
 end
 
 function Base.dot{N}(lhs::JuMPArray{Float64,N},rhs::JuMPArray{Float64,N})
-    size(lhs.innerArray) == size(rhs.innerArray) || error("Incompatible dimensions") 
+    size(lhs.innerArray) == size(rhs.innerArray) || error("Incompatible dimensions")
     return sum(lhs.innerArray .* rhs.innerArray)
 end
 
@@ -261,9 +261,9 @@ for (func,_) in Calculus.symbolic_derivatives_1arg(), typ in [:Variable,:AffExpr
     @eval Base.($(quot(func)))(::$typ) = error($errstr)
 end
 
-*{T<:QuadExpr,S<:Union(Variable,AffExpr,QuadExpr)}(::T,::S) = 
+*{T<:QuadExpr,S<:Union(Variable,AffExpr,QuadExpr)}(::T,::S) =
     error( "*(::$T,::$S) is not defined. $op_hint")
-*{T<:QuadExpr,S<:Union(Variable,AffExpr,QuadExpr)}(::S,::T) = 
+*{T<:QuadExpr,S<:Union(Variable,AffExpr,QuadExpr)}(::S,::T) =
     error( "*(::$S,::$T) is not defined. $op_hint")
-/{S<:Union(Number,Variable,AffExpr,QuadExpr),T<:Union(Variable,AffExpr,QuadExpr)}(::S,::T) = 
+/{S<:Union(Number,Variable,AffExpr,QuadExpr),T<:Union(Variable,AffExpr,QuadExpr)}(::S,::T) =
     error( "/(::$S,::$T) is not defined. $op_hint")

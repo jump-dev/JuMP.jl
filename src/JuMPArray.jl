@@ -59,7 +59,7 @@ function Base.setindex!{T,N}(d::JuMPArray{T,N,StepRange{Int,Int}},val::T,indices
     d.innerArray[idx...] = val
 end
 
-Base.map{T,N,R}(f::Function,d::JuMPArray{T,N,R}) = 
+Base.map{T,N,R}(f::Function,d::JuMPArray{T,N,R}) =
     JuMPArray{T,N,R}(map(f,d.innerArray), d.name, d.indexsets)
 
 Base.eltype{T,N,R}(x::JuMPArray{T,N,R}) = T

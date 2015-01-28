@@ -11,7 +11,7 @@ using JuMP, FactCheck
 
 facts("[qcqpmodel] Test quad objective (discrete)") do
 for solver in quad_mip_solvers
-context("With solver $(typeof(solver))") do 
+context("With solver $(typeof(solver))") do
 
     modQ = Model(solver=solver)
     @defVar(modQ, 1.1*i <= x[i=1:3] <= 2.5*i, Int)
@@ -53,7 +53,7 @@ end; end; end
 
 facts("[qcqpmodel] Test quad constraints (continuous)") do
 for solver in quad_solvers
-context("With solver $(typeof(solver))") do 
+context("With solver $(typeof(solver))") do
 
     modQ = Model(solver=solver)
     @defVar(modQ, -2 <= x <= 2 )
@@ -130,7 +130,7 @@ end; end; end
 
 facts("[qcqpmodel] Test quad problem modification") do
 for solver in quad_solvers
-context("With solver $(typeof(solver))") do 
+context("With solver $(typeof(solver))") do
 
     modQ = Model(solver=solver)
     @defVar(modQ, x >= 0)

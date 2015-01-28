@@ -24,7 +24,7 @@ see the syntax discussed in the :ref:`probmod` section.
     @defVar(m, lb <= x <= ub )  # Lower and upper bounds
     @defVar(m, x == fixedval )  # Fixed to a value (lb == ub)
 
-All these variations create a new local variable, in this case ``x``. 
+All these variations create a new local variable, in this case ``x``.
 The names of your variables must be valid Julia variable names.
 Integer and binary restrictions can optionally be specified with a third argument, ``Int`` or ``Bin``.
 For advanced users, ``SemiCont`` and ``SemiInt`` may be used to create
@@ -80,7 +80,7 @@ This form of constructing variables is not considered idiomatic JuMP code.
 
 .. note::
     ``@defVar`` is equivalent to a simple assignment ``x = ...`` in Julia and therefore redefines variables without warning. The following code may lead to unexpected results::
-    
+
     @defVar(m, x[1:10,1:10])
     @defVar(m, x[1:5])
 
@@ -111,14 +111,14 @@ Can be one of ``:Cont``, ``:Int``, :Bin``, ``:SemiCont``, or ``:SemiInt``.
 
 **Values**
 
-* ``getValue(x)`` - Get the value of this variable in the solution. If ``x`` is a single variable, this will simply return a number. 
-  If ``x`` is indexable then it will return an indexable dictionary of values. When the model is unbounded, ``getValue`` will 
+* ``getValue(x)`` - Get the value of this variable in the solution. If ``x`` is a single variable, this will simply return a number.
+  If ``x`` is indexable then it will return an indexable dictionary of values. When the model is unbounded, ``getValue`` will
   instead return the corresponding components of an unbounded ray, if available from the solver.
 * ``setValue(x,v)`` - Provide an initial value ``v`` for this variable that can be used by supporting MILP solvers. If ``v`` is ``NaN``, the solver may attempt to fill in this value to construct a feasible solution.
 * ``getDual(x)`` - Get the reduced cost of this variable in the solution. Similar behavior to ``getValue`` for indexable variables.
 
 .. note::
-    The ``getValue`` function always returns a floating-point value, even when a variable is constrained to take integer values, as most solvers only guarantee integrality up to a particular numerical tolerance. The built-in ``iround`` function should be used to obtain integer values, e.g., by calling ``iround(getValue(x))``. 
+    The ``getValue`` function always returns a floating-point value, even when a variable is constrained to take integer values, as most solvers only guarantee integrality up to a particular numerical tolerance. The built-in ``iround`` function should be used to obtain integer values, e.g., by calling ``iround(getValue(x))``.
 
 
 **Names**

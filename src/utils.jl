@@ -14,7 +14,7 @@ function addelt!{T}(v::IndexedVector{T},i::Integer,val::T)
             v.nzidx[v.nnz += 1] = i
             v.empty[i] = false
         else
-            v.elts[i] += val            
+            v.elts[i] += val
         end
     end
     return nothing

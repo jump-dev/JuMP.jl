@@ -5,7 +5,7 @@
 #############################################################################
 # tsp.jl
 #
-# Solves the travelling salesman problem using integer programming and 
+# Solves the travelling salesman problem using integer programming and
 # lazy generation of the subtour elimination constraints.
 #############################################################################
 
@@ -145,11 +145,11 @@ function solveTSP(n, cities)
             println("----")
             return
         end
-        
+
         # Subtour found - add lazy constraint
         # We will build it up piece-by-piece
         arcs_from_subtour = AffExpr()
-        
+
         for i = 1:n
             if !subtour[i]
                 # If this city isn't in subtour, skip it
@@ -170,7 +170,7 @@ function solveTSP(n, cities)
                 end
             end
         end
-        
+
         # Add the new subtour elimination constraint we built
         println("Adding subtour elimination cut")
         println("----")

@@ -12,7 +12,7 @@
 using JuMP
 using Gurobi
 
-# We will use Gurobi and disable PreSolve, Cuts, and (in-built) Heuristics so 
+# We will use Gurobi and disable PreSolve, Cuts, and (in-built) Heuristics so
 # only our heuristic will be used
 m = Model(solver=GurobiSolver(Cuts=0, Presolve=0, Heuristics=0.0))
 
@@ -40,7 +40,7 @@ function myheuristic(cb)
     # Leave y undefined - solver should handle as it sees fit. In the case
     # of Gurobi it will try to figure out what it should be.
     addSolution(cb)
-    
+
     # Submit a second solution
     setSolutionValue!(cb, x, ceil(x_val))
     addSolution(cb)

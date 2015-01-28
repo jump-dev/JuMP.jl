@@ -51,7 +51,7 @@ The execution time when *solving* a nonlinear programming problem can be divided
 
     Total CPU secs in IPOPT (w/o function evaluations)   =      7.412
     Total CPU secs in NLP function evaluations           =      2.083
-    
+
 
 For Ipopt in particular, one can improve the performance by installing advanced sparse linear algebra packages, see :ref:`jump-installation`. For other solvers, see their respective documentation for performance tips.
 

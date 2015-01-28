@@ -5,8 +5,8 @@ JuMP --- Julia for Mathematical Programming
 .. module:: JuMP
    :synopsis: Julia for Mathematical Programming
 
-`JuMP <https://github.com/JuliaOpt/JuMP.jl>`_ is a domain-specific modeling language for 
-`mathematical programming <http://en.wikipedia.org/wiki/Mathematical_optimization>`_ 
+`JuMP <https://github.com/JuliaOpt/JuMP.jl>`_ is a domain-specific modeling language for
+`mathematical programming <http://en.wikipedia.org/wiki/Mathematical_optimization>`_
 embedded in `Julia <http://julialang.org/>`_.
 It currently supports a number of open-source and commercial solvers (see below)
 for a variety of problem classes, including **linear programming**, **mixed-integer programming**, **second-order conic programming**, and **nonlinear programming**.
@@ -27,7 +27,7 @@ JuMP's features include:
 * Solver independence
 
   * JuMP uses a generic solver-independent interface provided by the
-    `MathProgBase <https://github.com/mlubin/MathProgBase.jl>`_ package, making it easy 
+    `MathProgBase <https://github.com/mlubin/MathProgBase.jl>`_ package, making it easy
     to change between a number of open-source and commercial optimization software packages ("solvers").
   * Currently supported solvers include `Cbc <https://projects.coin-or.org/Cbc>`_,
     `Clp <https://projects.coin-or.org/Clp>`_,
@@ -53,7 +53,7 @@ JuMP's features include:
 
   * JuMP is LGPL licensed, meaning that it can be embedded in commercial software that complies with the terms of the license.
 
-While neither Julia nor JuMP have reached version 1.0 yet, the releases are stable enough for everyday use and are being used in a number of research projects and neat applications by a growing community of users who are early adopters. JuMP remains under active development, and we welcome your feedback, suggestions, and bug reports. 
+While neither Julia nor JuMP have reached version 1.0 yet, the releases are stable enough for everyday use and are being used in a number of research projects and neat applications by a growing community of users who are early adopters. JuMP remains under active development, and we welcome your feedback, suggestions, and bug reports.
 
 Installing JuMP
 ---------------

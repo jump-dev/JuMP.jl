@@ -9,7 +9,7 @@ using JuMP
 # its documentation for any purpose and without fee is hereby
 # granted, provided that the above copyright notice appear in all
 # copies and that the copyright notice and this
-# permission notice appear in all supporting documentation.                     
+# permission notice appear in all supporting documentation.
 
 #   Source:
 #   H. Maurer and H.D. Mittelman,
@@ -28,7 +28,7 @@ let
     @defVar(m, u[1:(ni+1)])
 
     @setNLObjective(m, Min, sum{ 0.5*h*(u[i+1]^2 + u[i]^2) + 0.5*alpha*h*(cos(t[i+1]) + cos(t[i])), i = 1:ni})
-    
+
     # cons1
     for i in 1:ni
         @addNLConstraint(m, x[i+1] - x[i] - (0.5h)*(sin(t[i+1])+sin(t[i])) == 0)

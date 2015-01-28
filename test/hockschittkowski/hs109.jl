@@ -4,10 +4,10 @@
 # See http://github.com/JuliaOpt/JuMP.jl
 #############################################################################
 # Hock-Schittkowski Nonlinear Test Suite  -  HS109
-# This file is JuMP implementation of the model described in 
+# This file is JuMP implementation of the model described in
 #  W. Hock, K. Schittkowski, Test Examples for Nonlinear Programming
-#  Codes, Lecture Notes in Economics and Mathematical Systems, 
-#  Springer, No, 187, 1981 
+#  Codes, Lecture Notes in Economics and Mathematical Systems,
+#  Springer, No, 187, 1981
 # More information, including original model description, at
 # http://www.ai7.uni-bayreuth.de/downloads.htm
 #
@@ -37,7 +37,7 @@ m = Model()
 @addNLConstraint(m, x[3] - x[4] + 0.55 >= 0)
 @addNLConstraint(m, 2250000 - x[1]^2 - x[8]^2 >= 0)
 @addNLConstraint(m, 2250000 - x[2]^2 - x[9]^2 >= 0)
-@addNLConstraint(m, 
+@addNLConstraint(m,
     x[5] * x[6] * sin(-x[3] - .25) + x[5] * x[7] * sin(-x[4] - .25) +
     2 * b * x[5]^2 - a * x[1] + 400 * a == 0)
 @addNLConstraint(m,

@@ -37,15 +37,15 @@ facts("[macros] Check @addConstraint basics") do
     @defVar(m, z)
     t = 10
 
-    @addConstraint(m, 3x - y == 3.3(w + 2z) + 5) 
+    @addConstraint(m, 3x - y == 3.3(w + 2z) + 5)
     @fact conToStr(m.linconstr[end]) => "3 x - y - 3.3 w - 6.6 z $eq 5"
     if VERSION >= v"0.4.0-"
         @addConstraint(m, 3x - y == (w + 2z)*3.3 + 5)
         @fact conToStr(m.linconstr[end]) => "3 x - y - 3.3 w - 6.6 z $eq 5"
     end
-    @addConstraint(m, (x+y)/2 == 1) 
+    @addConstraint(m, (x+y)/2 == 1)
     @fact conToStr(m.linconstr[end]) => "0.5 x + 0.5 y $eq 1"
-    @addConstraint(m, -1 <= x-y <= t) 
+    @addConstraint(m, -1 <= x-y <= t)
     @fact conToStr(m.linconstr[end]) => "-1 $leq x - y $leq 10"
     @addConstraint(m, -1 <= x+1 <= 1)
     @fact conToStr(m.linconstr[end]) => "-2 $leq x $leq 0"
@@ -129,11 +129,11 @@ facts("[macros] Test ranges in @defVar") do
     @fact length(w) => 0
 
     @fact x[end].col => x[5].col
-    @fact y[3].m => y[5].m 
+    @fact y[3].m => y[5].m
     @fact y[3].m => y[7].m
     @fact y[3].m => y[9].m
     @fact_throws z[8].col  # KeyError
-    @fact_throws w[end]  # BoundsError 
+    @fact_throws w[end]  # BoundsError
 end
 
 facts("[macros] Unicode comparisons") do

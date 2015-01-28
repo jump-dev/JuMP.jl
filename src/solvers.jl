@@ -1,7 +1,7 @@
 function solve(m::Model; suppress_warnings=false, ignore_solve_hook=(m.solvehook==nothing))
 
     ignore_solve_hook || return m.solvehook(m; suppress_warnings=suppress_warnings)
-    
+
     if m.nlpdata != nothing
         if isa(m.solver,UnsetSolver)
             m.solver = MathProgBase.defaultNLPsolver
@@ -76,7 +76,7 @@ function addQuadratics(m::Model)
         affidx = Cint[v.col for v in qconstr.terms.aff.vars]
         var1idx = Cint[v.col for v in qconstr.terms.qvars1]
         var2idx = Cint[v.col for v in qconstr.terms.qvars2]
-        if applicable(MathProgBase.addquadconstr!, m.internalModel, affidx, qconstr.terms.aff.coeffs, var1idx, var2idx, qconstr.terms.qcoeffs, s, -qconstr.terms.aff.constant) 
+        if applicable(MathProgBase.addquadconstr!, m.internalModel, affidx, qconstr.terms.aff.coeffs, var1idx, var2idx, qconstr.terms.qcoeffs, s, -qconstr.terms.aff.constant)
             MathProgBase.addquadconstr!(m.internalModel, affidx, qconstr.terms.aff.coeffs, var1idx, var2idx, qconstr.terms.qcoeffs, s, -qconstr.terms.aff.constant)
         else
             error("Solver does not support quadratic constraints")
@@ -110,7 +110,7 @@ function prepProblemBounds(m::Model)
     objaff::AffExpr = m.obj.aff
     assert_isfinite(objaff)
     verify_ownership(m, objaff.vars)
-        
+
     # We already have dense column lower and upper bounds
 
     # Create dense objective vector
@@ -128,7 +128,7 @@ function prepProblemBounds(m::Model)
         rowlb[c] = linconstr[c].lb
         rowub[c] = linconstr[c].ub
     end
-    
+
     return f, rowlb, rowub
 end
 
@@ -184,7 +184,7 @@ function prepConstrMatrix(m::Model)
 end
 
 function solveLP(m::Model; suppress_warnings=false)
-    f, rowlb, rowub = prepProblemBounds(m)  
+    f, rowlb, rowub = prepProblemBounds(m)
 
     # Ready to solve
     noQuads = (length(m.quadconstr) == 0) && (length(m.obj.qvars1) == 0)
@@ -195,7 +195,7 @@ function solveLP(m::Model; suppress_warnings=false)
            applicable(MathProgBase.setconstrUB!, m.internalModel, rowub) &&
            applicable(MathProgBase.setobj!, m.internalModel, f) &&
            applicable(MathProgBase.setsense!, m.internalModel, m.objSense) &&
-           applicable(MathProgBase.setvartype!, m.internalModel, [:Cont])            
+           applicable(MathProgBase.setvartype!, m.internalModel, [:Cont])
             MathProgBase.setvarLB!(m.internalModel, m.colLower)
             MathProgBase.setvarUB!(m.internalModel, m.colUpper)
             MathProgBase.setconstrLB!(m.internalModel, rowlb)
@@ -223,7 +223,7 @@ function solveLP(m::Model; suppress_warnings=false)
         MathProgBase.loadproblem!(m.internalModel, A, m.colLower, m.colUpper, f, rowlb, rowub, m.objSense)
         addQuadratics(m)
         m.internalModelLoaded = true
-    end 
+    end
 
     MathProgBase.optimize!(m.internalModel)
     stat = MathProgBase.status(m.internalModel)
@@ -285,7 +285,7 @@ function solveMIP(m::Model; suppress_warnings=false)
 
     # Ready to solve
 
-    
+
     if m.internalModelLoaded
         if applicable(MathProgBase.setvarLB!, m.internalModel, m.colLower) &&
            applicable(MathProgBase.setvarUB!, m.internalModel, m.colUpper) &&
@@ -308,7 +308,7 @@ function solveMIP(m::Model; suppress_warnings=false)
     end
     if !m.internalModelLoaded
         m.internalModel = MathProgBase.model(m.solver)
-        
+
         MathProgBase.loadproblem!(m.internalModel, A, m.colLower, m.colUpper, f, rowlb, rowub, m.objSense)
         if applicable(MathProgBase.setvartype!, m.internalModel, m.colCat)
             MathProgBase.setvartype!(m.internalModel, m.colCat)

@@ -28,7 +28,7 @@ commercial solvers ([CPLEX], [COIN Clp], [COIN Cbc], [ECOS], [GLPK],
 
 JuMP makes it easy to specify and **solve optimization problems without expert knowledge**, yet at the same time allows experts to implement advanced algorithmic techniques such as exploiting efficient hot-starts in linear programming or using callbacks to interact with branch-and-bound solvers. JuMP is also **fast** - benchmarking has shown that it can create problems at similar speeds to special-purpose commercial tools such as AMPL while maintaining the expressiveness of a generic high-level programming language. JuMP can be easily embedded in complex work flows including simulations and web servers.
 
-Our documentation includes an installation guide, quick-start guide, and reference manual. 
+Our documentation includes an installation guide, quick-start guide, and reference manual.
 
 **Latest Release**: 0.7.3 (via ``Pkg.add``)
   * [documentation](https://jump.readthedocs.org/en/release-0.7)
@@ -36,9 +36,9 @@ Our documentation includes an installation guide, quick-start guide, and referen
   * Testing status: [![Build Status](https://travis-ci.org/JuliaOpt/JuMP.jl.png?branch=release-0.7)](https://travis-ci.org/JuliaOpt/JuMP.jl) [![JuMP](http://pkg.julialang.org/badges/JuMP_release.svg)](http://pkg.julialang.org/?pkg=JuMP&ver=release)
 
 
-**Development version**: 
+**Development version**:
   * [documentation](https://jump.readthedocs.org/en/latest)
-  * [examples](https://github.com/JuliaOpt/JuMP.jl/tree/master/examples) 
+  * [examples](https://github.com/JuliaOpt/JuMP.jl/tree/master/examples)
   * Testing status: [![Build Status](https://travis-ci.org/JuliaOpt/JuMP.jl.png?branch=master)](https://travis-ci.org/JuliaOpt/JuMP.jl) [![Coverage Status](https://coveralls.io/repos/JuliaOpt/JuMP.jl/badge.png)](https://coveralls.io/r/JuliaOpt/JuMP.jl)
   * Changes: see [NEWS](https://github.com/JuliaOpt/JuMP.jl/tree/master/NEWS.md)
 
@@ -50,14 +50,14 @@ JuMP can be installed through the Julia package manager (version 0.3 required)
 julia> Pkg.add("JuMP")
 ```
 
-For full installation instructions, including how to install solvers, see the documentation linked above. 
+For full installation instructions, including how to install solvers, see the documentation linked above.
 
 
 
 ## Supported problem classes
 
-Mathematical programming encompasses a large variety of problem classes. 
-We list below what is currently supported. See the documentation for more information. 
+Mathematical programming encompasses a large variety of problem classes.
+We list below what is currently supported. See the documentation for more information.
 
 **Objective types**
 

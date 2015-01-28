@@ -31,13 +31,13 @@ export
     getInternalModel, buildInternalModel, setSolveHook, setPrintHook,
     # Variable
     setName, getName, setLower, setUpper, getLower, getUpper,
-    getValue, setValue, getDual, setCategory, getCategory, 
+    getValue, setValue, getDual, setCategory, getCategory,
     # Expressions and constraints
     affToStr, quadToStr, conToStr, chgConstrRHS,
-    
+
 # Macros and support functions
-    @addConstraint, @addConstraints, @defVar, 
-    @defConstrRef, @setObjective, addToExpression, @defExpr, 
+    @addConstraint, @addConstraints, @defVar,
+    @defConstrRef, @setObjective, addToExpression, @defExpr,
     @setNLObjective, @addNLConstraint, @addNLConstraints
 
 include("JuMPDict.jl")
@@ -50,11 +50,11 @@ include("utils.jl")
 type Model
     obj#::QuadExpr
     objSense::Symbol
-    
+
     linconstr#::Vector{LinearConstraint}
     quadconstr
     sosconstr
-    
+
     # Column data
     numCols::Int
     colNames::Vector{String}
@@ -78,7 +78,7 @@ type Model
     cutcallback
     heurcallback
 
-    # hook into a solve call...function of the form f(m::Model; kwargs...), 
+    # hook into a solve call...function of the form f(m::Model; kwargs...),
     # where kwargs get passed along to subsequent solve calls
     solvehook
     # ditto for a print hook
@@ -135,7 +135,7 @@ function setSolver(m::Model, solver::MathProgBase.AbstractMathProgSolver)
 end
 # Deep copy the model
 function Base.copy(source::Model)
-    
+
     dest = Model()
     dest.solver = source.solver  # The two models are linked by this
     dest.lazycallback = source.lazycallback
@@ -145,7 +145,7 @@ function Base.copy(source::Model)
     if length(source.ext) >= 1
         Base.warn_once("Copying model with extensions - not deep copying extension-specific information.")
     end
-    
+
     # Objective
     dest.obj = copy(source.obj, dest)
     dest.objSense = source.objSense
@@ -236,7 +236,7 @@ function setValue(v::Variable, val::Number)
     end
 end
 
-function getValue(v::Variable) 
+function getValue(v::Variable)
     if v.m.colVal[v.col] == NaN
         warn("Variable $(getName(v))'s value not defined. Check that the model was properly solved.")
     end
@@ -246,7 +246,7 @@ end
 getValue(arr::Array{Variable}) = map(getValue, arr)
 
 # Dual value (reduced cost) getter
-function getDual(v::Variable) 
+function getDual(v::Variable)
     if length(v.m.redCosts) < getNumVars(v.m)
         error("Variable bound duals (reduced costs) not available. Check that the model was properly solved and no integer variables are present.")
     end
@@ -416,7 +416,7 @@ type GenericRangeConstraint{TermsType} <: JuMPConstraint
     ub::Float64
 end
 
-function sense(c::GenericRangeConstraint) 
+function sense(c::GenericRangeConstraint)
     if c.lb != -Inf
         if c.ub != Inf
             if c.ub == c.lb
@@ -450,7 +450,7 @@ typealias LinearConstraint GenericRangeConstraint{AffExpr}
 
 function addConstraint(m::Model, c::LinearConstraint)
     push!(m.linconstr,c)
-    if m.internalModelLoaded 
+    if m.internalModelLoaded
         if method_exists(MathProgBase.addconstr!, (typeof(m.internalModel),Vector{Int},Vector{Float64},Float64,Float64))
             assert_isfinite(c.terms)
             indices, coeffs = merge_duplicates(Cint, c.terms, m.indexedVector, m)
@@ -541,7 +541,7 @@ typealias QuadConstraint GenericQuadConstraint{QuadExpr}
 
 function addConstraint(m::Model, c::QuadConstraint)
     push!(m.quadconstr,c)
-    if m.internalModelLoaded 
+    if m.internalModelLoaded
         if method_exists(MathProgBase.addquadconstr!, (typeof(m.internalModel),
                                                        Vector{Cint},
                                                        Vector{Float64},
@@ -556,13 +556,13 @@ function addConstraint(m::Model, c::QuadConstraint)
             terms = c.terms
             verify_ownership(m, terms.qvars1)
             verify_ownership(m, terms.qvars2)
-            MathProgBase.addquadconstr!(m.internalModel, 
-                                        Cint[v.col for v in c.terms.aff.vars], 
-                                        c.terms.aff.coeffs, 
-                                        Cint[v.col for v in c.terms.qvars1], 
-                                        Cint[v.col for v in c.terms.qvars2], 
-                                        c.terms.qcoeffs, 
-                                        s, 
+            MathProgBase.addquadconstr!(m.internalModel,
+                                        Cint[v.col for v in c.terms.aff.vars],
+                                        c.terms.aff.coeffs,
+                                        Cint[v.col for v in c.terms.qvars1],
+                                        Cint[v.col for v in c.terms.qvars2],
+                                        c.terms.qcoeffs,
+                                        s,
                                         -c.terms.aff.constant)
         else
             Base.warn_once("Solver does not appear to support adding quadratic constraints to an existing model. Hot-start is disabled.")
@@ -587,7 +587,7 @@ end
 
 typealias LinConstrRef ConstraintRef{LinearConstraint}
 
-function getDual(c::ConstraintRef{LinearConstraint}) 
+function getDual(c::ConstraintRef{LinearConstraint})
     if length(c.m.linconstrDuals) != getNumConstraints(c.m)
         error("Dual solution not available. Check that the model was properly solved and no integer variables are present.")
     end

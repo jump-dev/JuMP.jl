@@ -23,7 +23,7 @@ end
 facts("[print] JuMPContainer{Variable}") do
     le, ge = JuMP.repl_leq, JuMP.repl_geq
     m = Model()
-    
+
     #------------------------------------------------------------------
     # Test bound printing
     context("bound printing") do
@@ -75,7 +75,7 @@ facts("[print] JuMPContainer{Variable}") do
     @defVar(m, tri_1[i=1:3,j=i:3])
     @defVar(m, tri_2[i=1:3,j=-i])
     @defVar(m, tri_3[(i,j)=[(i,i+2) for i in 1:5],k=i:j])
-    
+
     io_test(REPLMode, rng_unit1, "rng_unit1[i] free for all i in {1,2..9,10}")
     io_test(REPLMode, rng_unit2, "rng_unit2[i] free for all i in {-2,-1..2,3}")
     io_test(REPLMode, rng_unit3, "rng_unit3[i] free for all i in {1,2..9,10}")
@@ -255,7 +255,7 @@ y: 2 dimensions, 6 entries:
  [10,10] = 100.0
  [10,11] = 110.0
  [11,11] = 121.0""")
-    
+
     # Deal with hashing variations
     first_hash  = hash(:a) < hash('b') ? "a" : "b"
     second_hash = first_hash == "a" ? "b" : "a"
@@ -276,7 +276,7 @@ facts("[print] SOS constraints") do
     modS = Model()
     a = [1,2,3]
     @defVar(modS, x[1:3], Bin)
-    addSOS1(modS, [a[i]x[i] for i in 1:3])    
+    addSOS1(modS, [a[i]x[i] for i in 1:3])
     s1 = JuMP.SOSConstraint([x[i] for i in 1:3],
                             [a[i] for i in 1:3], :SOS1)
     io_test(REPLMode, s1, "SOS1: {1 x[1], 2 x[2], 3 x[3]}")
@@ -391,7 +391,7 @@ Solver set to Default""", repl=:show)
     @addNLConstraint(mod_3, x[3]*x[4] == 1)
     @addNLConstraint(mod_3, x[5]*x[1] == 1)
     @setNLObjective(mod_3, Min, x[1]*x[3])
-    
+
     io_test(REPLMode, mod_3, """
 Min (nonlinear expression)
 Subject to
@@ -479,10 +479,10 @@ end
 
 
 
-facts("[print] Variable") do    
+facts("[print] Variable") do
     m = Model()
     @defVar(m, 0 <= x <= 2, inconstraints=ConstraintRef{LinearConstraint}[], objective=0.0, coefficients=Float64[] )
-    
+
     @fact    getName(x) => "x"
     io_test(REPLMode,   x, "x")
     io_test(IJuliaMode, x, "x")
