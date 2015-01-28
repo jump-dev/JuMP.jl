@@ -97,7 +97,7 @@ Methods
 * ``setLower(x::Variable, lower)``, ``getLower(x::Variable)`` - Set/get the lower bound of a variable.
 * ``setUpper(x::Variable, upper)``, ``getUpper(x::Variable)`` - Set/get the upper bound of a variable.
 
-** Variable Category**
+**Variable Category**
 
 * ``setCategory(x::Variable, v_type::Symbol) - Set the variable category for ``x`` after construction.
 Can be one of ``:Cont``, ``:Int``, :Bin``, ``:SemiCont``, or ``:SemiInt``.
