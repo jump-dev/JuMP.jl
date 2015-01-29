@@ -2,10 +2,10 @@ function writeMPS(m::Model, fname::String)
     f = open(fname, "w")
 
     write(f,"NAME   MathProgModel\n")
-    
+
     numRows = length(m.linconstr)
-    
-    # Objective and constraint names 
+
+    # Objective and constraint names
     gc_disable()
     write(f,"ROWS\n")
     write(f," N  CON$(numRows+1)\n")
@@ -71,7 +71,7 @@ function writeMPS(m::Model, fname::String)
     rowval = colmat.rowval
     nzval = colmat.nzval
     gc_enable()
-        
+
     # Output each column
     gc_disable()
     inintegergroup = false
@@ -96,7 +96,7 @@ function writeMPS(m::Model, fname::String)
         @printf(f,"    MARKER    'MARKER'                 'INTEND'\n")
     end
     gc_enable()
-    
+
     # RHSs
     gc_disable()
     write(f,"RHS\n")
@@ -127,7 +127,7 @@ function writeMPS(m::Model, fname::String)
         end
     end
 
-    
+
     # BOUNDS
     gc_disable()
     write(f,"BOUNDS\n")
@@ -163,7 +163,7 @@ function writeMPS(m::Model, fname::String)
         end
     end
     gc_enable()
-    
+
     # Quadratic objective
     gc_disable()
     if length(m.obj.qvars1) != 0
@@ -188,7 +188,7 @@ function writeMPS(m::Model, fname::String)
             end
         end
     end
-    
+
     write(f,"ENDATA\n")
     close(f)
     gc_enable()
@@ -205,7 +205,7 @@ function writeLP(m::Model, fname::String)
     if length(m.obj.qvars1) != 0
         error("LP writer does not support quadratic objectives.\n")
     end
-    
+
     # Objective
     if m.objSense == :Max
         write(f,"Maximize\n")
@@ -223,7 +223,7 @@ function writeLP(m::Model, fname::String)
         print_shortest(f, objaff.coeffs[nnz])
         @printf(f, " VAR%d\n", objaff.vars[nnz].col)
     end
-    
+
     # Constraints
     function writeconstrterms(c::LinearConstraint)
         nnz = length(c.terms.coeffs)
@@ -253,7 +253,7 @@ function writeLP(m::Model, fname::String)
                 @printf(f, " <= ")
                 print_shortest(f, rhs(c))
                 println(f)
-            else 
+            else
                 @assert rowsense == :>=
                 @printf(f, " >= ")
                 print_shortest(f, rhs(c))
@@ -276,7 +276,7 @@ function writeLP(m::Model, fname::String)
 
     # Bounds
     write(f,"Bounds\n")
-    for i in 1:m.numCols    
+    for i in 1:m.numCols
         if m.colLower[i] == -Inf
             # No low bound
             if m.colUpper[i] == +Inf

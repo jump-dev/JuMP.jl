@@ -14,11 +14,11 @@ The are more complex examples in the ``JuMP/examples/`` `folder <https://github.
 
     @setObjective(m, Max, 5x + 3*y )
     @addConstraint(m, 1x + 5y <= 3.0 )
-        
+
     print(m)
-        
+
     status = solve(m)
-        
+
     println("Objective value: ", getObjectiveValue(m))
     println("x = ", getValue(x))
     println("y = ", getValue(y))
@@ -33,12 +33,12 @@ Models are created with the ``Model()`` function::
     m = Model()
 
 .. note::
-   Your model doesn't have to be called m - it's just a name. 
-   
+   Your model doesn't have to be called m - it's just a name.
+
 There are a few options for defining a variable, depending on whether you want
 to have lower bounds, upper bounds, both bounds, or even no bounds. The following
-commands will create two variables, ``x`` and ``y``, with both lower and upper bounds. 
-Note the first argument is our model variable ``m``. These variables are associated 
+commands will create two variables, ``x`` and ``y``, with both lower and upper bounds.
+Note the first argument is our model variable ``m``. These variables are associated
 with this model and cannot be used in another model.::
 
     @defVar(m, 0 <= x <= 2 )
@@ -67,8 +67,8 @@ the ``print`` function is defined for models.
     print(m)
 
 Models are solved with the ``solve()`` function. This function will not raise
-an error if your model is infeasible - instead it will return a flag. In this 
-case, the model is feasible so the value of ``status`` will be ``:Optimal``, 
+an error if your model is infeasible - instead it will return a flag. In this
+case, the model is feasible so the value of ``status`` will be ``:Optimal``,
 where ``:`` again denotes a symbol. The possible values of ``status``
 are described :ref:`here <solvestatus>`.
 
@@ -78,7 +78,7 @@ are described :ref:`here <solvestatus>`.
 
 Finally, we can access the results of our optimization. Getting the objective
 value is simple::
-    
+
     println("Objective value: ", getObjectiveValue(m))
 
 To get the value from a variable, we call the ``getValue()`` function. If ``x``
@@ -86,6 +86,6 @@ is not a single variable, but instead a range of variables, ``getValue()`` will
 return a list. In this case, however, it will just return a single value.
 
 ::
-    
+
     println("x = ", getValue(x))
     println("y = ", getValue(y))

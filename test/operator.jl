@@ -64,7 +64,7 @@ facts("[operator] Testing basic operator overloads") do
     @fact conToStr(1 ≤ q) => "2.5 y*z + 7.1 x + 1.5 $geq 0"
     @fact conToStr(1 == q) => "2.5 y*z + 7.1 x + 1.5 $eq 0"
     @fact conToStr(1 ≥ q) => "2.5 y*z + 7.1 x + 1.5 $leq 0"
-    end 
+    end
 
     # 2. Variable tests
     context("Variable--???") do

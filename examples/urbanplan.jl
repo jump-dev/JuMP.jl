@@ -6,7 +6,7 @@
 # urbanplan.jl
 #
 # An "urban planning" problem.
-# Based on 
+# Based on
 #  http://puzzlor.editme.com/urbanplanning
 #############################################################################
 
@@ -27,10 +27,10 @@ function SolveUrban()
 
     # Objective - combine the positive and negative parts
     @setObjective(m, Max, sum{
-      3*(y["R", 3,i] + y["C", 3,i]) 
-    + 1*(y["R", 4,i] + y["C", 4,i]) 
-    + 1*(y["R", 5,i] + y["C", 5,i]) 
-    - 3*(y["R",-3,i] + y["C",-3,i]) 
+      3*(y["R", 3,i] + y["C", 3,i])
+    + 1*(y["R", 4,i] + y["C", 4,i])
+    + 1*(y["R", 5,i] + y["C", 5,i])
+    - 3*(y["R",-3,i] + y["C",-3,i])
     - 1*(y["R",-4,i] + y["C",-4,i])
     - 1*(y["R",-5,i] + y["C",-5,i]), i=1:5})
 

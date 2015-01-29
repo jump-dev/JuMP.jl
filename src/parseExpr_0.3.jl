@@ -47,8 +47,8 @@ addToExpression(aff::AffExpr,c::Variable,x::AffExpr) = QuadExpr(fill(c,length(x.
                                                                 addToExpression(aff,x.constant,c))
 
 addToExpression(aff::AffExpr, c::Number, x::QuadExpr) = QuadExpr(copy(x.qvars1),
-                                                                 copy(x.qvars2), 
-                                                                 c*x.qcoeffs, 
+                                                                 copy(x.qvars2),
+                                                                 c*x.qcoeffs,
                                                                  addToExpression(aff,c,x.aff))
 
 function addToExpression(quad::QuadExpr,c::Number,x::Variable)
@@ -152,7 +152,7 @@ function parseCurly(x::Expr, aff::Symbol, constantCoef)
         code = :($preblock;$code)
     end
 
-    
+
     return code
 end
 
