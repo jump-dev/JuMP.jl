@@ -99,8 +99,8 @@ Methods
 
 **Variable Category**
 
-* ``setCategory(x::Variable, v_type::Symbol) - Set the variable category for ``x`` after construction.
-Can be one of ``:Cont``, ``:Int``, :Bin``, ``:SemiCont``, or ``:SemiInt``.
+* ``setCategory(x::Variable, v_type::Symbol)`` - Set the variable category for ``x`` after construction.
+Can be one of ``:Cont``, ``:Int``, ``:Bin``, ``:SemiCont``, or ``:SemiInt``.
 * ``getCategory(x::Variable) - Get the variable category for ``x``.
 
 **Helper functions**
