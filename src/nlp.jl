@@ -480,14 +480,12 @@ function solvenlp(m::Model; suppress_warnings=false)
         end
     end
 
-    if !any(isnan(m.colVal))
+    if !any(isnan,m.colVal)
         MathProgBase.setwarmstart!(m.internalModel, m.colVal)
     else
-        # solve LP to find feasible point
-        # do we need an iterior point?
-        lpsol = MathProgBase.linprog(zeros(m.numCols), d.A, linrowlb, linrowub, m.colLower, m.colUpper)
-        @assert lpsol.status == :Optimal
-        MathProgBase.setwarmstart!(m.internalModel, lpsol.sol)
+        initval = copy(m.colVal)
+        initval[isnan(m.colVal)] = 0
+        MathProgBase.setwarmstart!(m.internalModel, min(max(m.colLower,initval),m.colUpper))
     end
 
     MathProgBase.optimize!(m.internalModel)

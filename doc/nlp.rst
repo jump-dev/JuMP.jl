@@ -20,6 +20,8 @@ macros (and corresponding functions) do *not* currently support nonlinear expres
 However, a model can contain a mix of linear, quadratic, and nonlinear constraints or
 objective functions.  Starting points may be provided by using the ``start``
 keyword argument to ``@defVar``.
+If a starting value is not provided for a variable, it will be set to the projection
+of zero onto the interval defined by the variable bounds.
 For nonconvex problems, the returned solution is only guaranteed to be
 locally optimal. Convexity detection is not currently provided.
 
