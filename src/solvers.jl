@@ -10,15 +10,8 @@ function solve(m::Model; suppress_warnings=false, ignore_solve_hook=(m.solvehook
         return s
     end
     # Analyze model to see if any integers
-    anyInts = (length(m.sosconstr) > 0)
-    if !anyInts
-        for j = 1:m.numCols
-            if m.colCat[j] != :Cont
-                anyInts = true
-                break
-            end
-        end
-    end
+    anyInts = (length(m.sosconstr) > 0) ||
+        any(c-> !(c == :Cont || c == :Fixed), m.colCat)
 
     if isa(m.solver,UnsetSolver) &&
       (length(m.obj.qvars1) > 0 || length(m.quadconstr) > 0)
@@ -359,13 +352,8 @@ end
 function buildInternalModel(m::Model)
     m.nlpdata == nothing || error("buildInternalModel not supported for nonlinear problems")
 
-    anyInts = false
-    for j = 1:m.numCols
-        if m.colCat[j] != :Cont
-            anyInts = true
-            break
-        end
-    end
+    anyInts = (length(m.sosconstr) > 0) ||
+        any(c-> !(c == :Cont || c == :Fixed), m.colCat)
 
     if isa(m.solver,UnsetSolver) &&
       (length(m.obj.qvars1) > 0 || length(m.quadconstr) > 0)
