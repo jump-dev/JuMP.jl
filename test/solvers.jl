@@ -18,7 +18,7 @@ ipt = isdir(Pkg.dir("Ipopt"))
 nlo = isdir(Pkg.dir("NLopt"))
 kni = isdir(Pkg.dir("KNITRO"))
 eco = isdir(Pkg.dir("ECOS"))
-osl = isdir(Pkg.dir("OptimizationServices"))
+osl = isdir(Pkg.dir("CoinOptServices"))
 # Load them
 if grb; import Gurobi; end
 if cpx; import CPLEX; end
@@ -29,7 +29,7 @@ if ipt; import Ipopt; end
 if nlo; import NLopt; end
 if kni; import KNITRO; end
 if eco; import ECOS; end
-if osl; import OptimizationServices; end
+if osl; import CoinOptServices; end
 # Create solver lists
 # LP solvers
 lp_solvers = Any[]
@@ -40,7 +40,7 @@ cbc && push!(lp_solvers, Clp.ClpSolver())
 glp && push!(lp_solvers, GLPKMathProgInterface.GLPKSolverLP())
 ipt && push!(lp_solvers, Ipopt.IpoptSolver(print_level=0))
 eco && push!(lp_solvers, ECOS.ECOSSolver(verbose=false))
-osl && push!(lp_solvers, OptimizationServices.OsilSolver())
+osl && push!(lp_solvers, CoinOptServices.OsilSolver())
 # MILP solvers
 ip_solvers = Any[]
 grb && push!(ip_solvers, Gurobi.GurobiSolver(OutputFlag=0))
@@ -48,7 +48,7 @@ cpx && push!(ip_solvers, CPLEX.CplexSolver(CPX_PARAM_SCRIND=0))
 mos && push!(ip_solvers, Mosek.MosekSolver(LOG=0))
 cbc && push!(ip_solvers, Cbc.CbcSolver(logLevel=0))
 glp && push!(ip_solvers, GLPKMathProgInterface.GLPKSolverMIP())
-osl && push!(ip_solvers, OptimizationServices.OsilSolver())
+osl && push!(ip_solvers, CoinOptServices.OsilSolver())
 # Support semi-continuous, semi-integer solvers
 semi_solvers = Any[]
 grb && push!(semi_solvers, Gurobi.GurobiSolver(OutputFlag=0))
@@ -80,21 +80,21 @@ quad_solvers = Any[]
 grb && push!(quad_solvers, Gurobi.GurobiSolver(QCPDual=1,OutputFlag=0))
 cpx && push!(quad_solvers, CPLEX.CplexSolver(CPX_PARAM_SCRIND=0))
 mos && push!(quad_solvers, Mosek.MosekSolver(LOG=0))
-osl && push!(quad_solvers, OptimizationServices.OsilSolver())
+osl && push!(quad_solvers, CoinOptServices.OsilSolver())
 quad_mip_solvers = copy(quad_solvers)
 soc_solvers = copy(quad_solvers)
 ipt && push!(quad_solvers, Ipopt.IpoptSolver(print_level=0))
 eco && push!(soc_solvers, ECOS.ECOSSolver(verbose=false))
-osl && push!(soc_solvers, OptimizationServices.OsilSolver())
+osl && push!(soc_solvers, CoinOptServices.OsilSolver())
 # Nonlinear solvers
 nlp_solvers = Any[]
 ipt && push!(nlp_solvers, Ipopt.IpoptSolver(print_level=0))
 nlo && push!(nlp_solvers, NLopt.NLoptSolver(algorithm=:LD_SLSQP))
 kni && push!(nlp_solvers, KNITRO.KnitroSolver(objrange=1e16,outlev=0))
-osl && push!(nlp_solvers, OptimizationServices.OsilSolver())
+osl && push!(nlp_solvers, CoinOptServices.OsilSolver())
 convex_nlp_solvers = copy(nlp_solvers)
 mos && push!(convex_nlp_solvers, Mosek.MosekSolver())
 # Mixed-Integer Nonlinear solvers
 minlp_solvers = Any[]
 kni && push!(minlp_solvers, KNITRO.KnitroSolver(outlev=0))
-osl && push!(minlp_solvers, OptimizationServices.OsilSolver())
+osl && push!(minlp_solvers, CoinOptServices.OsilSolver())
