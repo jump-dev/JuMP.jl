@@ -400,6 +400,30 @@ context("With solver $(typeof(solver))") do
     @fact getValue(y) => 0.0
 end; end; end
 
+facts("[model] Test fixed variables don't leak through MPB") do
+for solver in lp_solvers
+context("With solver $(typeof(solver))") do
+    mod = Model(solver=solver)
+    @defVar(mod, 0 <= x[1:3] <= 2)
+    @defVar(mod, y[k=1:2] == k)
+    @setObjective(mod, Min, x[1] + x[2] + x[3] + y[1] + y[2])
+    solve(mod)
+    for i in 1:3
+        @fact getValue(x[i]) => roughly(0, 1e-6)
+    end
+    for k in 1:2
+        @fact getValue(y[k]) => roughly(k, 1e-6)
+    end
+end; end
+for solver in ip_solvers
+context("With solver $(typeof(solver))") do
+    mod = Model(solver=solver)
+    @defVar(mod, x[1:3], Bin)
+    @defVar(mod, y[k=1:2] == k)
+    buildInternalModel(mod)
+    @fact MathProgBase.getvartype(getInternalModel(mod)) => [:Bin,:Bin,:Bin,:Cont,:Cont]
+end; end; end
+
 
 facts("[model] Test SOS constraints") do
 for solver in sos_solvers
