@@ -80,12 +80,10 @@ quad_solvers = Any[]
 grb && push!(quad_solvers, Gurobi.GurobiSolver(QCPDual=1,OutputFlag=0))
 cpx && push!(quad_solvers, CPLEX.CplexSolver(CPX_PARAM_SCRIND=0))
 mos && push!(quad_solvers, Mosek.MosekSolver(LOG=0))
-osl && push!(quad_solvers, CoinOptServices.OsilSolver())
 quad_mip_solvers = copy(quad_solvers)
 soc_solvers = copy(quad_solvers)
 ipt && push!(quad_solvers, Ipopt.IpoptSolver(print_level=0))
 eco && push!(soc_solvers, ECOS.ECOSSolver(verbose=false))
-osl && push!(soc_solvers, CoinOptServices.OsilSolver())
 # Nonlinear solvers
 nlp_solvers = Any[]
 ipt && push!(nlp_solvers, Ipopt.IpoptSolver(print_level=0))
