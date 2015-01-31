@@ -231,6 +231,18 @@ context("With solver $(typeof(solver))") do
     setUpper(x, 0.0)
     solve(mod)
     @fact getValue(x) => roughly(0.0)
+    # same thing, other direction
+    mod = Model(solver=solver)
+    @defVar(mod, x, Bin)
+    @setObjective(mod, Min, x)
+    solve(mod)
+    @fact getValue(x) => roughly(0.0)
+    setLower(x, -1.0)
+    solve(mod)
+    @fact getValue(x) => roughly(0.0)
+    setLower(x, 1.0)
+    solve(mod)
+    @fact getValue(x) => roughly(1.0)
 end
 end
 end
