@@ -176,6 +176,17 @@ function prepConstrMatrix(m::Model)
     A = rowmat'
 end
 
+function vartypes_without_fixed(m::Model)
+    colCats = copy(m.colCat)
+    for i in 1:length(colCats)
+        if colCats[i] == :Fixed
+            @assert m.colLower[i] == m.colUpper[i]
+            colCats[i] = :Cont
+        end
+    end
+    return colCats
+end
+
 function solveLP(m::Model; suppress_warnings=false)
     f, rowlb, rowub = prepProblemBounds(m)
 
@@ -277,7 +288,7 @@ function solveMIP(m::Model; suppress_warnings=false)
     A = prepConstrMatrix(m)
 
     # Ready to solve
-
+    colCats = vartypes_without_fixed(m)
 
     if m.internalModelLoaded
         if applicable(MathProgBase.setvarLB!, m.internalModel, m.colLower) &&
@@ -286,14 +297,14 @@ function solveMIP(m::Model; suppress_warnings=false)
            applicable(MathProgBase.setconstrUB!, m.internalModel, rowub) &&
            applicable(MathProgBase.setobj!, m.internalModel, f) &&
            applicable(MathProgBase.setsense!, m.internalModel, m.objSense) &&
-           applicable(MathProgBase.setvartype!, m.internalModel, m.colCat)
+           applicable(MathProgBase.setvartype!, m.internalModel, colCats)
             MathProgBase.setvarLB!(m.internalModel, m.colLower)
             MathProgBase.setvarUB!(m.internalModel, m.colUpper)
             MathProgBase.setconstrLB!(m.internalModel, rowlb)
             MathProgBase.setconstrUB!(m.internalModel, rowub)
             MathProgBase.setobj!(m.internalModel, f)
             MathProgBase.setsense!(m.internalModel, m.objSense)
-            MathProgBase.setvartype!(m.internalModel, m.colCat)
+            MathProgBase.setvartype!(m.internalModel, colCats)
         else
             !suppress_warnings && Base.warn_once("Solver does not appear to support hot-starts. Problem will be solved from scratch.")
             m.internalModelLoaded = false
@@ -303,8 +314,8 @@ function solveMIP(m::Model; suppress_warnings=false)
         m.internalModel = MathProgBase.model(m.solver)
 
         MathProgBase.loadproblem!(m.internalModel, A, m.colLower, m.colUpper, f, rowlb, rowub, m.objSense)
-        if applicable(MathProgBase.setvartype!, m.internalModel, m.colCat)
-            MathProgBase.setvartype!(m.internalModel, m.colCat)
+        if applicable(MathProgBase.setvartype!, m.internalModel, colCats)
+            MathProgBase.setvartype!(m.internalModel, colCats)
         else
             error("Solver does not support discrete variables")
         end
@@ -376,7 +387,8 @@ function buildInternalModel(m::Model)
     addQuadratics(m)
 
     if anyInts # do MIP stuff
-        MathProgBase.setvartype!(m.internalModel, m.colCat)
+        colCats = vartypes_without_fixed(m)
+        MathProgBase.setvartype!(m.internalModel, colCats)
         addSOS(m)
         registercallbacks(m)
         if !all(isnan(m.colVal))
@@ -386,6 +398,9 @@ function buildInternalModel(m::Model)
                 Base.warn_once("Solver does not appear to support providing initial feasible solutions.")
             end
         end
+    end
+    if applicable(MathProgBase.updatemodel!, m.internalModel)
+        MathProgBase.updatemodel!(m.internalModel)
     end
     m.internalModelLoaded = true
     nothing
