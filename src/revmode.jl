@@ -89,7 +89,7 @@ function quoteTree(x::Expr, datalist::Dict, iterstack)
 
         return quot(x)
     elseif isexpr(x, :quote)
-            return x
+        return x
     else
         if !(x.head in (:(:), :comparison, :&&, :||, :(.)))
             error("Unrecognized expression $x")
