@@ -89,9 +89,9 @@ function (*)(lhs::AffExpr, rhs::AffExpr)
     # Quadratic terms
     n = length(lhs.coeffs)
     m = length(rhs.coeffs)
-    sizehint(ret.qvars1, n*m)
-    sizehint(ret.qvars2, n*m)
-    sizehint(ret.qcoeffs, n*m)
+    sizehint!(ret.qvars1, n*m)
+    sizehint!(ret.qvars2, n*m)
+    sizehint!(ret.qcoeffs, n*m)
     for i = 1:n
         for j = 1:m
             push!(ret.qvars1,  lhs.vars[i])
@@ -102,14 +102,14 @@ function (*)(lhs::AffExpr, rhs::AffExpr)
 
     # Try to preallocate space for aff
     if lhs.constant != 0 && rhs.constant != 0
-        sizehint(ret.aff.vars, n+m)
-        sizehint(ret.aff.coeffs, n+m)
+        sizehint!(ret.aff.vars, n+m)
+        sizehint!(ret.aff.coeffs, n+m)
     elseif lhs.constant != 0
-        sizehint(ret.aff.vars, n)
-        sizehint(ret.aff.coeffs, n)
+        sizehint!(ret.aff.vars, n)
+        sizehint!(ret.aff.coeffs, n)
     elseif rhs.constant != 0
-        sizehint(ret.aff.vars, m)
-        sizehint(ret.aff.coeffs, m)
+        sizehint!(ret.aff.vars, m)
+        sizehint!(ret.aff.coeffs, m)
     end
 
     # [LHS constant] * RHS

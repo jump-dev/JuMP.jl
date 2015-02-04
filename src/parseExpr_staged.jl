@@ -198,14 +198,14 @@ function parseCurly(x::Expr, aff::Symbol, constantCoef)
             $len = 0
             $preblock
             if isa($aff,GenericAffExpr)
-                sizehint($aff.vars,length($aff.vars)+$len)
-                sizehint($aff.coeffs,length($aff.coeffs)+$len)
+                sizehint!($aff.vars,length($aff.vars)+$len)
+                sizehint!($aff.coeffs,length($aff.coeffs)+$len)
             elseif isa($aff,GenericQuadExpr)
-                sizehint($aff.qvars1,length($aff.qvars1)+$len)
-                sizehint($aff.qvars2,length($aff.qvars2)+$len)
-                sizehint($aff.qcoeffs,length($aff.qcoeffs)+$len)
-                sizehint($aff.aff.vars,length($aff.aff.vars)+$len)
-                sizehint($aff.aff.coeffs,length($aff.aff.coeffs)+$len)
+                sizehint!($aff.qvars1,length($aff.qvars1)+$len)
+                sizehint!($aff.qvars2,length($aff.qvars2)+$len)
+                sizehint!($aff.qcoeffs,length($aff.qcoeffs)+$len)
+                sizehint!($aff.aff.vars,length($aff.aff.vars)+$len)
+                sizehint!($aff.aff.coeffs,length($aff.aff.coeffs)+$len)
             end
         end
         code = :($preblock;$code)
