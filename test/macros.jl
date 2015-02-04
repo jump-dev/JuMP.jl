@@ -199,10 +199,10 @@ facts("[macros] @addNLConstraints") do
     end)
 
     @fact length(m.nlpdata.nlconstr) => 4
-    @fact "$(m.nlpdata.nlconstr[1].terms.tree.ex)" => ":(y[i]) - 0"
-    @fact "$(m.nlpdata.nlconstr[2].terms.tree.ex)" => ":(y[i]) - 0"
-    @fact "$(m.nlpdata.nlconstr[3].terms.tree.ex)" => ":(y[i]) - 0"
-    @fact "$(m.nlpdata.nlconstr[4].terms.tree.ex)" => ":(:x + :(:(y[1]) * :(y[2]) * :(y[3]))) - 0.5"
+    @fact "$(ReverseDiffSparse.base_expression(m.nlpdata.nlconstr[1].terms))" => "y[i] - 0"
+    @fact "$(ReverseDiffSparse.base_expression(m.nlpdata.nlconstr[2].terms))" => "y[i] - 0"
+    @fact "$(ReverseDiffSparse.base_expression(m.nlpdata.nlconstr[3].terms))" => "y[i] - 0"
+    @fact "$(ReverseDiffSparse.base_expression(m.nlpdata.nlconstr[4].terms))" => "(x + y[1] * y[2] * y[3]) - 0.5"
 
 end
 
