@@ -151,6 +151,9 @@ type SymbolicOutput
     hashval # for identifying expressions with identical trees
 end
 
+base_expression(s::SymbolicOutput) = s.tree
+export base_expression
+
 macro processNLExpr(x)
     indexlist = :(idxlist = Int[]; $(genVarList(x, :idxlist)); idxlist)
     datalist = Dict()
@@ -165,7 +168,7 @@ macro processNLExpr(x)
         push!(inputnames.args, quot(k))
         push!(inputvals.args, esc(v))
     end
-    return :(SymbolicOutput(genExprGraph($tree), $inputnames, $inputvals,$indexlist, $(hash(x))))
+    return :(SymbolicOutput($tree, $inputnames, $inputvals,$indexlist, $(hash(x))))
 end
 
 function SymbolicOutput(tree, inputnames, inputvals, indexlist, hashval)
@@ -188,6 +191,7 @@ genExprGraph(x) = genExprGraph(x, nothing, nothing)
 
 function genExprGraph(x::Expr, parent, k)
     parentarr = parent === nothing ? [] : [(parent,k)]
+    x = copy(x) # don't mutate original
     if isexpr(x, :call)
         thisnode = ExprNode(x, parentarr)
         for i in 2:length(x.args)
@@ -442,9 +446,10 @@ saverevvalue(x, val, output, placeindex_out) = nothing
 # gradient evaluation parametric on "inputvals"
 function genfgrad_parametric(x::SymbolicOutput)
     out = Expr(:block)
-    fval = forwardpass(x.tree, out)
+    exgraph = genExprGraph(x.tree)
+    fval = forwardpass(exgraph, out)
     push!( out.args, :( beginreverse = nothing ) ) # for debugging, indicate start of reverse pass instructions
-    revpass(x.tree,out)
+    revpass(exgraph,out)
     # placeindex_in[i] specifies the index of the value of the ith
     # placeholder in placevalues.
     # placeindex_out[i] specifies the the index in which to output
@@ -468,7 +473,7 @@ end
 # forward pass only
 function genfval_parametric(x::SymbolicOutput)
     out = Expr(:block)
-    fval = forwardpass(x.tree, out)
+    fval = forwardpass(genExprGraph(x.tree), out)
     fexpr = quote
         function _FVAL_{__T}(__placevalues::Vector{__T}, __placeindex_in)
             $out
