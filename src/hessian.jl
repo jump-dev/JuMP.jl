@@ -10,7 +10,7 @@ normalize(e) = normalize(e...)
 function compute_hessian_sparsity_IJ_parametric(s::SymbolicOutput)
 
     code = quote end
-    compute_hessian_sparsity(s.tree, true, code)
+    compute_hessian_sparsity(genExprGraph(s.tree), true, code)
     # compile a function:
     fexpr = quote
         local _SPARSITY_GEN_

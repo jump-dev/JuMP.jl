@@ -81,7 +81,7 @@ function to_flat_expr(x::SymbolicOutput)
     for i in 1:length(x.inputnames)
         push!( out.args, :( $(x.inputnames[i]) = $(x.inputvals[i]) ))
     end
-    expr = outputpass(x.tree, out)
+    expr = outputpass(genExprGraph(x.tree), out)
     fexpr = quote
         let
             $out
@@ -96,7 +96,7 @@ export to_flat_expr
 
 function genfexpr_parametric(x::SymbolicOutput)
     out = Expr(:block)
-    fval = outputpass(x.tree, out)
+    fval = outputpass(genExprGraph(x.tree), out)
     fname = gensym()
     fexpr = quote
         function $(fname)()
