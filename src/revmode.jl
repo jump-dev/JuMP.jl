@@ -55,7 +55,14 @@ function quoteTree(x::Expr, datalist::Dict, iterstack)
         end
         for ex in x.args[idxstart:end]
             # iteration variables
-            push!(iterstack, ex.args[1])
+            it = ex.args[1]
+            if isa(it, Symbol) && initerstack(it, iterstack)
+                error("$(it) cannot be reused as an iteration variable")
+            elseif isexpr(it, :tuple) && any(x->initerstack(x,iterstack),it.args)
+                error("$(it) contains duplicate iteration variables")
+            end
+
+            push!(iterstack, it)
         end
         if idxstart == 4
             push!(code.args,:(Expr(:parameters,$(quoteTree(x.args[2].args[1],datalist,iterstack)))))

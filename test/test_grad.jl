@@ -1,4 +1,5 @@
 using Base.Test
+using Base.Meta
 using ReverseDiffSparse
 
 x = placeholders(3)
@@ -243,6 +244,11 @@ ex = @processNLExpr x[1]*ifelse(x[1] >= x[2] || true, x[1],x[2])
 fg = genfgrad_simple(ex)
 fval = fg([0.5,1.0],out)
 @test_approx_eq fval 0.25
+
+# errors from duplicate index variables
+@test isexpr(macroexpand(:(@processNLExpr sum{sum{x[i],i=1:2},i=1:2})),:error)
+@test isexpr(macroexpand(:(@processNLExpr sum{sum{x[i],(i,j)=A},i=1:2})),:error)
+@test isexpr(macroexpand(:(@processNLExpr sum{sum{x[i],i=A},(i,j)=B})),:error)
 
 
 println("Passed tests")
