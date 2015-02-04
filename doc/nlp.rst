@@ -20,6 +20,8 @@ macros (and corresponding functions) do *not* currently support nonlinear expres
 However, a model can contain a mix of linear, quadratic, and nonlinear constraints or
 objective functions.  Starting points may be provided by using the ``start``
 keyword argument to ``@defVar``.
+If a starting value is not provided for a variable, it will be set to the projection
+of zero onto the interval defined by the variable bounds.
 For nonconvex problems, the returned solution is only guaranteed to be
 locally optimal. Convexity detection is not currently provided.
 
@@ -51,7 +53,7 @@ The execution time when *solving* a nonlinear programming problem can be divided
 
     Total CPU secs in IPOPT (w/o function evaluations)   =      7.412
     Total CPU secs in NLP function evaluations           =      2.083
-    
+
 
 For Ipopt in particular, one can improve the performance by installing advanced sparse linear algebra packages, see :ref:`jump-installation`. For other solvers, see their respective documentation for performance tips.
 

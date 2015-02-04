@@ -66,12 +66,14 @@ function MathProgBase.initialize(d::JuMPNLPEvaluator, requested_features::Vector
     else
         need_expr = false
     end
+
+    initNLP(d.m) #in case the problem is purely linear/quadratic thus far
     nldata::NLPData = d.m.nlpdata
     d.has_nlobj = isa(nldata.nlobj, ReverseDiffSparse.SymbolicOutput)
     if d.has_nlobj
         @assert length(d.m.obj.qvars1) == 0 && length(d.m.obj.aff.vars) == 0
     end
-    
+
     tic()
 
     d.linobj, linrowlb, linrowub = prepProblemBounds(d.m)
@@ -89,7 +91,7 @@ function MathProgBase.initialize(d::JuMPNLPEvaluator, requested_features::Vector
         nnz_jac += 2*length(c.terms.qvars1)+length(c.terms.aff.vars)
         nnz_hess += length(c.terms.qvars1)
     end
-    
+
     if d.has_nlobj
         d.eval_fgrad_nl = genfgrad_simple(nldata.nlobj)
         d.eval_f_nl = genfval_simple(nldata.nlobj)
@@ -204,13 +206,15 @@ function MathProgBase.initialize(d::JuMPNLPEvaluator, requested_features::Vector
 
     tprep = toq()
     #println("Prep time: $tprep")
-    
+
     # reset timers
     d.eval_f_timer = 0
     d.eval_grad_f_timer = 0
     d.eval_g_timer = 0
     d.eval_jac_g_timer = 0
     d.eval_hesslag_timer = 0
+
+    nothing
 end
 
 MathProgBase.features_available(d::JuMPNLPEvaluator) = [:Grad, :Jac, :Hess, :ExprGraph]
@@ -268,7 +272,7 @@ function MathProgBase.eval_g(d::JuMPNLPEvaluator, g, x)
         idx += 1
     end
     eval_g!(subarr(g,idx:length(g)), (d.m.nlpdata::NLPData).nlconstrlist, x)
-    
+
     d.eval_g_timer += toq()
     #print("x = ");show(x);println()
     #println(size(A,1), " g(x) = ");show(g);println()
@@ -304,7 +308,7 @@ function MathProgBase.eval_jac_g(d::JuMPNLPEvaluator, J, x)
         end
     end
     eval_jac_g!(subarr(J,idx:length(J)), (d.m.nlpdata::NLPData).nlconstrlist, x)
-    
+
     d.eval_jac_g_timer += toq()
     #print("x = ");show(x);println()
     #print("V ");show(J);println()
@@ -320,7 +324,7 @@ function MathProgBase.eval_hesslag(
 
     qobj = d.m.obj::QuadExpr
     nldata = d.m.nlpdata::NLPData
-    
+
     tic()
     d.eval_h_nl(x, subarr(H, 1:d.nnz_hess_obj), nldata.nlobj)
     for i in 1:d.nnz_hess_obj; H[i] *= obj_factor; end
@@ -358,7 +362,7 @@ end
 
 MathProgBase.isobjlinear(d::JuMPNLPEvaluator) = !(isa(d.m.nlpdata.nlobj, ReverseDiffSparse.SymbolicOutput)) && (length(d.m.obj.qvars1) == 0)
 # interpret quadratic to include purely linear
-MathProgBase.isobjquadratic(d::JuMPNLPEvaluator) = !(isa(d.m.nlpdata.nlobj, ReverseDiffSparse.SymbolicOutput)) 
+MathProgBase.isobjquadratic(d::JuMPNLPEvaluator) = !(isa(d.m.nlpdata.nlobj, ReverseDiffSparse.SymbolicOutput))
 
 MathProgBase.isconstrlinear(d::JuMPNLPEvaluator, i::Integer) = (i <= length(d.m.linconstr))
 
@@ -401,7 +405,7 @@ function MathProgBase.constr_expr(d::JuMPNLPEvaluator,i::Integer)
         constr = d.m.linconstr[i]
         ex = affToExpr(constr.terms, false)
         if sense(constr) == :range
-            return Expr(:comparison, constr.lb, ex, constr.ub)
+            return Expr(:comparison, constr.lb, :(<=), ex, :(<=), constr.ub)
         else
             return Expr(:comparison, ex, sense(constr), rhs(constr))
         end
@@ -412,7 +416,12 @@ function MathProgBase.constr_expr(d::JuMPNLPEvaluator,i::Integer)
     else
         i -= nlin + nquad
         ex = ReverseDiffSparse.to_flat_expr(d.m.nlpdata.nlconstrlist, i)
-        return Expr(:comparison, ex, sense(d.m.nlpdata.nlconstr[i]), rhs(d.m.nlpdata.nlconstr[i]))
+        constr = d.m.nlpdata.nlconstr[i]
+        if sense(constr) == :range
+            return Expr(:comparison, constr.lb, :(<=), ex, :(<=), constr.ub)
+        else
+            return Expr(:comparison, ex, sense(constr), rhs(constr))
+        end
     end
 end
 
@@ -420,7 +429,7 @@ end
 
 
 function solvenlp(m::Model; suppress_warnings=false)
-    
+
     linobj, linrowlb, linrowub = prepProblemBounds(m)
 
     nldata::NLPData = m.nlpdata
@@ -454,14 +463,16 @@ function solvenlp(m::Model; suppress_warnings=false)
             error("Unrecognized quadratic constraint sense $(c.sense)")
         end
     end
-    
+
     #print("LB: ");show([linrowlb,nlrowlb]);println()
     #print("UB: ");show([linrowub,nlrowub]);println()
 
     m.internalModel = MathProgBase.model(m.solver)
 
+    const nl_cont = [:Cont, :Fixed]
+
     MathProgBase.loadnonlinearproblem!(m.internalModel, m.numCols, numConstr, m.colLower, m.colUpper, [linrowlb,quadrowlb,nlrowlb], [linrowub,quadrowub,nlrowub], m.objSense, d)
-    if any(x->x!=:Cont, m.colCat)
+    if !all(x->(x in nl_cont), m.colCat)
         if applicable(MathProgBase.setvartype!, m.internalModel, m.colCat)
             MathProgBase.setvartype!(m.internalModel, m.colCat)
         else
@@ -469,22 +480,20 @@ function solvenlp(m::Model; suppress_warnings=false)
         end
     end
 
-    if !any(isnan(m.colVal))
+    if !any(isnan,m.colVal)
         MathProgBase.setwarmstart!(m.internalModel, m.colVal)
     else
-        # solve LP to find feasible point
-        # do we need an iterior point?
-        lpsol = MathProgBase.linprog(zeros(m.numCols), d.A, linrowlb, linrowub, m.colLower, m.colUpper)
-        @assert lpsol.status == :Optimal
-        MathProgBase.setwarmstart!(m.internalModel, lpsol.sol)
+        initval = copy(m.colVal)
+        initval[isnan(m.colVal)] = 0
+        MathProgBase.setwarmstart!(m.internalModel, min(max(m.colLower,initval),m.colUpper))
     end
 
     MathProgBase.optimize!(m.internalModel)
     stat = MathProgBase.status(m.internalModel)
-    
+
     m.objVal = MathProgBase.getobjval(m.internalModel)
     m.colVal = MathProgBase.getsolution(m.internalModel)
-    
+
     if stat != :Optimal && !suppress_warnings
         warn("Not solved to optimality, status: $stat")
     end
@@ -492,7 +501,7 @@ function solvenlp(m::Model; suppress_warnings=false)
     m.internalModelLoaded = true
 
     #println("feval $(d.eval_f_timer)\nfgrad $(d.eval_grad_f_timer)\ngeval $(d.eval_g_timer)\njaceval $(d.eval_jac_g_timer)\nhess $(d.eval_hesslag_timer)")
-    
+
     return stat
 
 end

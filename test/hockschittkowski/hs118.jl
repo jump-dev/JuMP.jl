@@ -4,10 +4,10 @@
 # See http://github.com/JuliaOpt/JuMP.jl
 #############################################################################
 # Hock-Schittkowski Nonlinear Test Suite  -  HS118
-# This file is JuMP implementation of the model described in 
+# This file is JuMP implementation of the model described in
 #  W. Hock, K. Schittkowski, Test Examples for Nonlinear Programming
-#  Codes, Lecture Notes in Economics and Mathematical Systems, 
-#  Springer, No, 187, 1981 
+#  Codes, Lecture Notes in Economics and Mathematical Systems,
+#  Springer, No, 187, 1981
 # More information, including original model description, at
 # http://www.ai7.uni-bayreuth.de/downloads.htm
 #
@@ -38,17 +38,17 @@ end
 
 @defVar(m, L[i] <= x[i=1:15] <= U[i])
 
-@setNLObjective(m, Min, 
+@setNLObjective(m, Min,
     sum{2.3     * x[3*k+1]   +
-        0.0001  * x[3*k+1]^2 + 
+        0.0001  * x[3*k+1]^2 +
         1.7     * x[3*k+2]   +
         0.0001  * x[3*k+2]^2 +
         2.2     * x[3*k+3] +
         0.00015 * x[3*k+3]^2, k=0:4})
 
-# setObjective(m, :Min, 
+# setObjective(m, :Min,
 #   sum([(2.3     * x[3*k+1]   +
-#         0.0001  * x[3*k+1]^2 + 
+#         0.0001  * x[3*k+1]^2 +
 #         1.7     * x[3*k+2]   +
 #         0.0001  * x[3*k+2]^2 +
 #         2.2     * x[3*k+3]^2 +

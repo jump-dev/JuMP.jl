@@ -11,7 +11,7 @@ using JuMP, FactCheck
 
 facts("[qcqpmodel] Test quad objective (discrete)") do
 for solver in quad_mip_solvers
-context("With solver $(typeof(solver))") do 
+context("With solver $(typeof(solver))") do
 
     modQ = Model(solver=solver)
     @defVar(modQ, 1.1*i <= x[i=1:3] <= 2.5*i, Int)
@@ -53,13 +53,16 @@ end; end; end
 
 facts("[qcqpmodel] Test quad constraints (continuous)") do
 for solver in quad_solvers
-context("With solver $(typeof(solver))") do 
+context("With solver $(typeof(solver))") do
 
     modQ = Model(solver=solver)
     @defVar(modQ, -2 <= x <= 2 )
     @defVar(modQ, -2 <= y <= 2 )
     @setObjective(modQ, Min, x - y )
-    addConstraint(modQ, x + x*x + x*y + y*y <= 1 )
+    @addConstraint(modQ, x + x*x + x*y + y*y <= 1 )
+    @fact MathProgBase.numquadconstr(modQ) => 1
+    @fact MathProgBase.numlinconstr(modQ) => 0
+    @fact MathProgBase.numconstr(modQ) => 1
 
     @fact solve(modQ) => :Optimal
     @fact modQ.objVal => roughly(-1-4/sqrt(3), 1e-6)
@@ -85,6 +88,33 @@ context("With solver $(typeof(solver))") do
 
 end; end; end
 
+facts("[qcqpmodel] Test SOC duals") do
+for solver in soc_solvers
+context("With solver $(typeof(solver))") do
+
+    modQ = Model(solver=solver)
+    @defVar(modQ, x >= 0)
+    @defVar(modQ, y)
+    @defVar(modQ, z)
+    @setObjective(modQ, Min, -y-z)
+    @addConstraint(modQ, eq, x <= 1)
+    @addConstraint(modQ, y^2 + z^2 <= x^2)
+
+    @fact solve(modQ) => :Optimal
+    @fact modQ.objVal => roughly(-sqrt(2), 1e-6)
+    @fact getValue(y) => roughly(1/sqrt(2), 1e-6)
+    @fact getValue(z) => roughly(1/sqrt(2), 1e-6)
+    @fact getDual(eq) => roughly(-sqrt(2), 1e-6)
+
+    @setObjective(modQ, Max, y+z)
+    @fact solve(modQ) => :Optimal
+    @fact modQ.objVal => roughly(sqrt(2), 1e-6)
+    @fact getValue(y) => roughly(1/sqrt(2), 1e-6)
+    @fact getValue(z) => roughly(1/sqrt(2), 1e-6)
+    @fact getDual(eq) => roughly(sqrt(2), 1e-6)
+
+end; end; end
+
 facts("[qcqpmodel] Test quad constraints (discrete)") do
 for solver in quad_mip_solvers
 context("With solver $(typeof(solver))") do
@@ -103,7 +133,7 @@ end; end; end
 
 facts("[qcqpmodel] Test quad problem modification") do
 for solver in quad_solvers
-context("With solver $(typeof(solver))") do 
+context("With solver $(typeof(solver))") do
 
     modQ = Model(solver=solver)
     @defVar(modQ, x >= 0)

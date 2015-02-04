@@ -4,11 +4,11 @@
 Solver Callbacks
 ----------------
 
-Many mixed-integer programming solvers offer the ability to modify the solve process. 
+Many mixed-integer programming solvers offer the ability to modify the solve process.
 Examples include changing branching decisions in branch-and-bound, adding custom cutting planes, providing custom heuristics to find feasible solutions, or implementing on-demand separators to add new constraints only when they are violated by the current solution (also known as lazy constraints).
 
 While historically this functionality has been limited to solver-specific interfaces,
-JuMP provides *solver-independent* support for a number of commonly used solver callbacks. Currently, we support lazy constraints, user-provided cuts, and user-provided 
+JuMP provides *solver-independent* support for a number of commonly used solver callbacks. Currently, we support lazy constraints, user-provided cuts, and user-provided
 heuristics for the Gurobi, CPLEX, and GLPK solvers. We do not yet support any
 other class of callbacks, but they may be accessible by using the solver's
 low-level interface.
@@ -24,7 +24,7 @@ that would make the current solution infeasible. For some more information about
 lazy constraints, see this blog post by `Paul Rubin <http://orinanobworld.blogspot.com/2012/08/user-cuts-versus-lazy-constraints.html>`_.
 
 There are three important steps to providing a lazy constraint callback. First we
-must write a function that will analyze the current solution that takes a 
+must write a function that will analyze the current solution that takes a
 single argument, e.g. ``function myLazyConGenerator(cb)``, where cb is a reference
 to the callback management code inside JuMP. Next you will do whatever
 analysis of the solution you need to inside your function to generate the new
@@ -32,7 +32,7 @@ constraint before adding it to the model with the JuMP function
 ``addLazyConstraint(cb, myconstraint)`` or the macro version
 ``@addLazyConstraint(cb, myconstraint)`` (same limitations as addConstraint).
 Finally we notify JuMP that this function should be used for lazy constraint
-generation using the ``setLazyCallback(m, myLazyConGenerator)`` function 
+generation using the ``setLazyCallback(m, myLazyConGenerator)`` function
 before we call ``solve(m)``.
 
 The following is a simple example to make this more clear. In this two-dimensional
@@ -100,7 +100,7 @@ will be either (0,2) or (2,2), and the final solution will be (1,2)::
     println("Final solution: [ $(getValue(x)), $(getValue(y)) ]")
 
 The code should print something like (amongst the output from Gurobi)::
-    
+
     In callback function, x=2.0, y=2.0
     Solution was in top right, cut it off
     In callback function, x=0.0, y=2.0
@@ -125,7 +125,7 @@ User cuts, or simply cuts, provide a way for the user to tighten the LP relaxati
 Your user cuts should not change the set of integer feasible solutions. Equivalently, your cuts can only remove fractional solutions - that is, "tighten" the LP relaxation of the MILP. If you add a cut that removes an integer solution, the solver may return an incorrect solution.
 
 Adding a user cut callback is similar to adding a lazy constraint callback. First we
-must write a function that will analyze the current solution that takes a 
+must write a function that will analyze the current solution that takes a
 single argument, e.g. ``function myUserCutGenerator(cb)``, where cb is a reference
 to the callback management code inside JuMP. Next you will do whatever
 analysis of the solution you need to inside your function to generate the new
@@ -133,7 +133,7 @@ constraint before adding it to the model with the JuMP function
 ``addUserCut(cb, myconstraint)`` or the macro version
 ``@addUserCut(cb, myconstraint)`` (same limitations as addConstraint).
 Finally we notify JuMP that this function should be used for lazy constraint
-generation using the ``setCutCallback(m, myUserCutGenerator)`` function 
+generation using the ``setCutCallback(m, myUserCutGenerator)`` function
 before we call ``solve(m)``.
 
 Consider the following example which is related to the lazy constraint example. The problem is two-dimensional, and the objective sense prefers solution in the top-right of a 2-by-2 square. There is a single constraint that cuts off the top-right corner to make the LP relaxation solution fractional. We will exploit our knowledge of the problem structure to add a user cut that will make the LP relaxation integer, and thus solve the problem at the root node::
@@ -169,7 +169,7 @@ Consider the following example which is related to the lazy constraint example. 
 
         # Allow for some impreciseness in the solution
         TOL = 1e-6
-        
+
         # Check top right
         if y_val + x_val > 3 + TOL
             # Cut off this solution
@@ -189,7 +189,7 @@ Consider the following example which is related to the lazy constraint example. 
     println("Final solution: [ $(getValue(x)), $(getValue(y)) ]")
 
 The code should print something like (amongst the output from Gurobi)::
-    
+
     In callback function, x=1.5, y=2.0
     Fractional solution was in top right, cut it off
     In callback function, x=1.0, y=2.0
@@ -212,7 +212,7 @@ Consider the following example, which is the same problem as seen in the user cu
     using JuMP
     using Gurobi
 
-    # We will use Gurobi and disable PreSolve, Cuts, and (in-built) Heuristics so 
+    # We will use Gurobi and disable PreSolve, Cuts, and (in-built) Heuristics so
     # only our heuristic will be used
     m = Model(solver=GurobiSolver(Cuts=0, Presolve=0, Heuristics=0.0))
 
@@ -227,7 +227,7 @@ Consider the following example, which is the same problem as seen in the user cu
     @addConstraint(m, y + x <= 3.5)
 
     # Optimal solution of relaxed problem will be (1.5, 2.0)
-    
+
     # We now define our callback function that takes one argument,
     # the callback handle. Note that we can access m, x, and y because
     # this function is defined inside the same scope
@@ -256,7 +256,7 @@ Consider the following example, which is the same problem as seen in the user cu
     println("Final solution: [ $(getValue(x)), $(getValue(y)) ]")
 
 The code should print something like::
-    
+
     In callback function, x=1.5, y=2.0
          0     0    5.50000    0    1          -    5.50000     -      -    0s
     H    1     0                       5.0000000    5.50000  10.0%   0.0    0s
@@ -342,7 +342,7 @@ In the above examples the callback function is defined in the same scope as the 
             x_val = getValue(x)
             y_val = getValue(y)
             println("In callback function, x=$x_val, y=$y_val")
-            
+
             newcut, x_coeff, y_coeff, rhs = cornerChecker(x_val, y_val)
 
             if newcut

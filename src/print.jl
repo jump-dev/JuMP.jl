@@ -6,7 +6,7 @@
 # print.jl
 # All "pretty printers" for JuMP types.
 # - Delegates to appropriate handler methods for REPL or IJulia.
-# - These handler methods then pass the correct symbols to use into a 
+# - These handler methods then pass the correct symbols to use into a
 #   generic string builder. The IJulia handlers will also wrap in MathJax
 #   start/close tags.
 # - To find printing code for a type in this file, search for `## TypeName`
@@ -79,20 +79,26 @@ math(s,mathmode) = mathmode ? s : "\$\$ $s \$\$"
 #------------------------------------------------------------------------
 ## Model
 #------------------------------------------------------------------------
-Base.print(io::IO, m::Model) = print(io, model_str(REPLMode,m))
+function Base.print(io::IO, m::Model; ignore_print_hook=(m.printhook==nothing))
+    ignore_print_hook || return m.printhook(m)
+    print(io, model_str(REPLMode,m))
+end
+
 function Base.show(io::IO, m::Model)
+    plural(n) = (n==1 ? "" : "s")
     print(io, m.objSense == :Max ? "Maximization" : ((m.objSense == :Min && (!isempty(m.obj) || (m.nlpdata != nothing && isa(m.nlpdata.nlobj, ReverseDiffSparse.SymbolicOutput)))) ? "Minimization" : "Feasibility"))
     println(io, " problem with:")
-    println(io, " * $(length(m.linconstr)) linear constraints")
+    nlin = length(m.linconstr)
+    println(io, " * $(nlin) linear constraint$(plural(nlin))")
     nquad = length(m.quadconstr)
     if nquad > 0
-        println(io, " * $(nquad) quadratic constraints")
+        println(io, " * $(nquad) quadratic constraint$(plural(nquad))")
     end
     nlp = m.nlpdata
     if nlp != nothing && length(nlp.nlconstr) > 0
-        println(io, " * $(length(nlp.nlconstr)) nonlinear constraints")
+        println(io, " * $(length(nlp.nlconstr)) nonlinear constraint$(plural(length(nlp.nlconstr)))")
     end
-    print(io, " * $(m.numCols) variables")
+    print(io, " * $(m.numCols) variable$(plural(m.numCols))")
     nbin = sum(m.colCat .== :Bin)
     nint = sum(m.colCat .== :Int)
     nsc = sum(m.colCat .== :SemiCont)
@@ -105,7 +111,7 @@ function Base.show(io::IO, m::Model)
     if isempty(varstr)
         println(io,)
     else
-        println(io, ": $(join(varstr, ","))")
+        println(io, ": $(join(varstr, ", "))")
     end
     print(io, "Solver set to ")
     if isa(m.solver, UnsetSolver)
@@ -115,7 +121,7 @@ function Base.show(io::IO, m::Model)
     end
     print(io, split(solver, "Solver")[1])
 end
-Base.writemime(io::IO, ::MIME"text/latex", m::Model) = 
+Base.writemime(io::IO, ::MIME"text/latex", m::Model) =
     print(io, model_str(IJuliaMode,m))
 function model_str(mode, m::Model, leq, geq, in_set,
                             open_set, mid_set, close_set, union, infty,
@@ -125,7 +131,7 @@ function model_str(mode, m::Model, leq, geq, in_set,
     eol = ijl ? "\\\\\n" : "\n"
     nlp = m.nlpdata
 
-    
+
     # Objective
     qobj_str = quad_str(mode, m.obj)
     obj_sense = ijl ? (m.objSense == :Max ? "\\max" : "\\min")*"\\quad" :
@@ -139,7 +145,7 @@ function model_str(mode, m::Model, leq, geq, in_set,
     str *= eol
 
     # Constraints
-    str *= ijl ? "\\text{Subject to} \\quad" : "Subject to" * eol 
+    str *= ijl ? "\\text{Subject to} \\quad" : "Subject to" * eol
     for c in m.linconstr
         str *= sep * con_str(mode,c,mathmode=true) * eol
     end
@@ -153,7 +159,7 @@ function model_str(mode, m::Model, leq, geq, in_set,
         num = length(nlp.nlconstr)
         str *= sep * string("$num nonlinear constraint", num>1?"s":"") * eol
     end
-    
+
     # Display indexed variables
     in_dictlist = falses(m.numCols)
     for d in m.dictList
@@ -203,7 +209,7 @@ function model_str(mode, m::Model, leq, geq, in_set,
             str *= ", $integer"
         end
         str *= eol
-    end    
+    end
 
     ijl ? "\$\$ \\begin{alignat*}{1}"*str*"\\end{alignat*}\n \$\$" :
           str
@@ -217,7 +223,7 @@ model_str(::Type{REPLMode}, m::Model) =
                         repl_integer)
 model_str(::Type{IJuliaMode}, m::Model; mathmode=true) =
     math(model_str(IJuliaMode, m, ijulia_leq, ijulia_geq, ijulia_in,
-                        ijulia_open_set, ijulia_mid_set, ijulia_close_set, 
+                        ijulia_open_set, ijulia_mid_set, ijulia_close_set,
                         ijulia_union, ijulia_infty, ijulia_open_rng, ijulia_close_rng,
                         ijulia_integer), mathmode)
 
@@ -227,7 +233,7 @@ model_str(::Type{IJuliaMode}, m::Model; mathmode=true) =
 #------------------------------------------------------------------------
 Base.print(io::IO, v::Variable) = print(io, var_str(REPLMode,v))
 Base.show( io::IO, v::Variable) = print(io, var_str(REPLMode,v))
-Base.writemime(io::IO, ::MIME"text/latex", v::Variable) = 
+Base.writemime(io::IO, ::MIME"text/latex", v::Variable) =
     print(io, var_str(IJuliaMode,v,mathmode=false))
 function var_str(mode, m::Model, col::Int, ind_open, ind_close)
     colNames = mode == REPLMode ? m.colNames : m.colNamesIJulia
@@ -236,7 +242,7 @@ function var_str(mode, m::Model, col::Int, ind_open, ind_close)
             fill_var_names(mode, colNames, cont)
         end
     end
-    return colNames[col] == "" ? "col_$col" : colNames[col]    
+    return colNames[col] == "" ? "col_$col" : colNames[col]
 end
 function fill_var_names(mode, colNames, v::JuMPArray{Variable})
     idxsets = v.indexsets
@@ -274,9 +280,9 @@ var_str(::Type{REPLMode}, v::Variable) =
 var_str(::Type{IJuliaMode}, v::Variable; mathmode=true) =
     var_str(IJuliaMode, v.m, v.col, mathmode=mathmode)
 
-var_str(::Type{REPLMode}, m::Model, col::Int) = 
+var_str(::Type{REPLMode}, m::Model, col::Int) =
     var_str(REPLMode, m, col, repl_ind_open, repl_ind_close)
-var_str(::Type{IJuliaMode}, m::Model, col::Int; mathmode=true) = 
+var_str(::Type{IJuliaMode}, m::Model, col::Int; mathmode=true) =
     math(var_str(IJuliaMode, m, col, ijulia_ind_open, ijulia_ind_close), mathmode)
 
 #------------------------------------------------------------------------
@@ -375,7 +381,7 @@ function cont_str(mode, j::JuMPContainer{Variable}, leq, eq, geq,
         # Range
         return "$str_lb $leq $name_idx $leq $str_ub$idx_sets"
     end
-    if all_same_lb && !all_same_ub 
+    if all_same_lb && !all_same_ub
         var_lb == -Inf && return "$name_idx $leq ..$idx_sets"
         return "$str_lb $leq $name_idx $leq ..$idx_sets"
     end
@@ -395,7 +401,7 @@ function cont_str_set(idxset::Union(Range,Array), mid_set)  # 2:2:20 -> {2,4..18
 end
 cont_str_set(idxset, mid_set) = return ".." # Fallback
 # parse_conditions
-# Not exported. Traverses an expression and constructs an array with entries 
+# Not exported. Traverses an expression and constructs an array with entries
 # corresponding to each condition. More specifically, if the condition is
 # a && (b || c) && (d && e), it returns [a, b || c, d, e].
 #=parse_conditions(not_an_expr) = not_an_expr
@@ -415,7 +421,7 @@ cont_str(::Type{REPLMode}, j::JuMPContainer{Variable}; mathmode=false) =
                 repl_union, repl_infty, repl_open_rng, repl_close_rng, repl_integer)
 cont_str(::Type{IJuliaMode}, j::JuMPContainer{Variable}; mathmode=true) =
     math(cont_str(IJuliaMode, j, ijulia_leq, ijulia_eq, ijulia_geq, ijulia_ind_open, ijulia_ind_close,
-                ijulia_for_all, ijulia_in, ijulia_open_set, ijulia_mid_set, ijulia_close_set, 
+                ijulia_for_all, ijulia_in, ijulia_open_set, ijulia_mid_set, ijulia_close_set,
                 ijulia_union, ijulia_infty, ijulia_open_rng, ijulia_close_rng, ijulia_integer), mathmode)
 
 #------------------------------------------------------------------------
@@ -451,7 +457,7 @@ function val_str(mode, j::JuMPArray{Float64})
         if depth == dims
             # Deepest level
             for i = 1:length(indexset)
-                value = length(parent_index) == 0 ? 
+                value = length(parent_index) == 0 ?
                             j[indexset[i]] :
                             j[parent_index...,indexset[i]]
                 out_str *= indent * "[" * index_strs[i] * "] = $value\n"
@@ -564,7 +570,7 @@ function aff_str(mode, a::AffExpr; show_constant=true)
             elm += 1
         end
     end
-    
+
     if elm == 1
         # Will happen with cancellation of all terms
         # We should just return the constant, if its desired
@@ -615,8 +621,8 @@ function quad_str(mode, q::GenericQuadExpr, times::String, sq::String)
 
             x = var_str(mode,q.qvars1[ind].m,I[ind])
             y = var_str(mode,q.qvars1[ind].m,J[ind])
-            
-            term_str[2*ind-1] = V[ind] < 0 ? " - " : " + " 
+
+            term_str[2*ind-1] = V[ind] < 0 ? " - " : " + "
             term_str[2*ind  ] = "$pre$x" * (x == y ? sq : "$times$y")
         end
         # Correction for first term as there is no space
@@ -640,7 +646,7 @@ end
 # Backwards compatability shim
 quadToStr(q::GenericQuadExpr) = quad_str(REPLMode,q)
 # Handlers to use correct symbols
-quad_str(::Type{REPLMode}, q::GenericQuadExpr) = 
+quad_str(::Type{REPLMode}, q::GenericQuadExpr) =
     quad_str(REPLMode, q, repl_times, repl_sq)
 quad_str(::Type{IJuliaMode}, q::GenericQuadExpr; mathmode=true) =
     math(quad_str(IJuliaMode, q, ijulia_times, ijulia_sq), mathmode)

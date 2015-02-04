@@ -12,7 +12,7 @@
 using JuMP
 
 function pMedian(numFacility::Int,numCustomer::Int,numLocation::Int)
-    srand(10)   
+    srand(10)
     customerLocations = [rand(1:numLocation) for a = 1:numCustomer ]
 
     tic()
@@ -38,7 +38,7 @@ function pMedian(numFacility::Int,numCustomer::Int,numLocation::Int)
     end
 
     # Subject to must allocate all facilities
-    @addConstraint(m, sum{s[i],i=1:numLocation} == numFacility )    
+    @addConstraint(m, sum{s[i],i=1:numLocation} == numFacility )
     buildTime = toq()
 
     tic()
@@ -58,12 +58,12 @@ function cont5(n)
     h2 = dx^2
     a = 0.001
     yt = [0.5*(1 - (j*dx)^2) for j=0:n]
-    
+
     tic()
     mod = Model()
     @defVar(mod,  0 <= y[0:m,0:n] <= 1)
     @defVar(mod, -1 <= u[1:m] <= 1)
-    @setObjective(mod, Min, 0.25*dx*( (y[m,0] - yt[1])^2 + 
+    @setObjective(mod, Min, 0.25*dx*( (y[m,0] - yt[1])^2 +
        2*sum{ (y[m,j]-yt[j+1])^2, j=1:n1} + (y[m,n]-yt[n+1])^2) +
        0.25*a*dt*(2*sum{u[i]^2,i=1:m1} + u[m]^2))
 

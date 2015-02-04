@@ -21,11 +21,11 @@ m = Model()
 
 @setObjective(m, Max, 5x + 3y)
 @addConstraint(m, 1x + 5y <= 3.0)
-    
+
 print(m)
-    
+
 status = solve(m)
-    
+
 println("Objective value: ", getObjectiveValue(m))
 println("x = ", getValue(x))
 println("y = ", getValue(y))

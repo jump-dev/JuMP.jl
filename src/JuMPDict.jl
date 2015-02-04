@@ -72,7 +72,7 @@ macro gendict(instancename,T,idxpairs,idxsets...)
         maprhs = :($(typename)(map(f,d.innerArray),d.name,d.indexsets,d.indexexprs))
         for i in 1:N
             varname = symbol(string("x",i))
-            
+
             push!(getidxlhs.args,:($varname))
             push!(setidxlhs.args,:($varname))
 

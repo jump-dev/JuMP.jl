@@ -133,8 +133,10 @@ facts("[model] Test printing a model") do
     close(modAfp)
 
     # Getter/setters
-    @fact getNumVars(modA) => 7
-    @fact getNumConstraints(modA) => 3
+    @fact MathProgBase.numvar(modA) => 7
+    @fact MathProgBase.numlinconstr(modA) => 3
+    @fact MathProgBase.numquadconstr(modA) => 0
+    @fact MathProgBase.numconstr(modA) => 3
     @fact getObjectiveSense(modA) => :Max
     setObjectiveSense(modA, :Min)
     @fact getObjectiveSense(modA) => :Min
@@ -144,7 +146,7 @@ end
 
 facts("[model] Test solving a MILP") do
 for solver in ip_solvers
-context("With solver $(typeof(solver))") do 
+context("With solver $(typeof(solver))") do
     modA = Model(solver=solver)
     @defVar(modA, x >= 0)
     @defVar(modA, y <= 5, Int)
@@ -154,7 +156,7 @@ context("With solver $(typeof(solver))") do
     @addConstraint(modA, 2 <= x+y)
     @addConstraint(modA, sum{r[i],i=3:5} <= (2 - x)/2.0)
     @addConstraint(modA, 7.0*y <= z + r[6]/1.9)
- 
+
     @fact solve(modA)       => :Optimal
     @fact modA.objVal       => roughly(1.0+4.833334, 1e-6)
     @fact getValue(x)       => roughly(1.0, 1e-6)
@@ -258,7 +260,7 @@ end # facts block
 
 facts("[model] Test binary variable handling") do
 for solver in ip_solvers
-context("With solver $(typeof(solver))") do 
+context("With solver $(typeof(solver))") do
     modB = Model(solver=solver)
     @defVar(modB, x, Bin)
     @setObjective(modB, Max, x)
@@ -305,6 +307,10 @@ facts("[model] Test model copying") do
     @fact dest.linconstr[1].ub => 6.0
     source.quadconstr[1].sense = :(>=)
     @fact dest.quadconstr[1].sense => :(<=)
+
+    # Issue #358
+    @fact typeof(dest.linconstr)  => Array{JuMP.GenericRangeConstraint{JuMP.GenericAffExpr{Float64,JuMP.Variable}},1}
+    @fact typeof(dest.quadconstr) => Array{JuMP.GenericQuadConstraint{JuMP.GenericQuadExpr{Float64,JuMP.Variable}},1}
 end
 
 
@@ -370,7 +376,7 @@ end
 
 facts("[model] Test semi-continuous variables") do
 for solver in semi_solvers
-context("With solver $(typeof(solver))") do 
+context("With solver $(typeof(solver))") do
     mod = Model(solver=solver)
     @defVar(mod, x >= 3, SemiCont)
     @defVar(mod, y >= 2, SemiCont)
@@ -383,7 +389,7 @@ end; end; end
 
 facts("[model] Test semi-integer variables") do
 for solver in semi_solvers
-context("With solver $(typeof(solver))") do 
+context("With solver $(typeof(solver))") do
     mod = Model(solver=solver)
     @defVar(mod, x >= 3, SemiInt)
     @defVar(mod, y >= 2, SemiInt)
@@ -394,10 +400,34 @@ context("With solver $(typeof(solver))") do
     @fact getValue(y) => 0.0
 end; end; end
 
+facts("[model] Test fixed variables don't leak through MPB") do
+for solver in lp_solvers
+context("With solver $(typeof(solver))") do
+    mod = Model(solver=solver)
+    @defVar(mod, 0 <= x[1:3] <= 2)
+    @defVar(mod, y[k=1:2] == k)
+    @setObjective(mod, Min, x[1] + x[2] + x[3] + y[1] + y[2])
+    solve(mod)
+    for i in 1:3
+        @fact getValue(x[i]) => roughly(0, 1e-6)
+    end
+    for k in 1:2
+        @fact getValue(y[k]) => roughly(k, 1e-6)
+    end
+end; end
+for solver in ip_solvers
+context("With solver $(typeof(solver))") do
+    mod = Model(solver=solver)
+    @defVar(mod, x[1:3], Bin)
+    @defVar(mod, y[k=1:2] == k)
+    buildInternalModel(mod)
+    @fact MathProgBase.getvartype(getInternalModel(mod)) => [:Bin,:Bin,:Bin,:Cont,:Cont]
+end; end; end
+
 
 facts("[model] Test SOS constraints") do
 for solver in sos_solvers
-context("With solver $(typeof(solver))") do 
+context("With solver $(typeof(solver))") do
     modS = Model(solver=solver)
 
     @defVar(modS, x[1:3], Bin)
@@ -453,4 +483,32 @@ facts("[model] Test setSolver") do
         @fact m.solver => solver
         @fact m.internalModel == nothing => false
     end
+end
+
+facts("[model] Setting solve hook") do
+    m = Model()
+    @defVar(m, x ≥ 0)
+    dummy = [1]
+    kwarglist = Any[]
+    function solvehook(m::Model; kwargs...)
+        dummy[1] += 1
+        append!(kwarglist, kwargs)
+        nothing
+    end
+    setSolveHook(m, solvehook)
+    solve(m)
+    @fact dummy => [2]
+    @fact kwarglist => Any[(:suppress_warnings,false)]
+end
+
+facts("[model] Setting print hook") do
+    m = Model()
+    @defVar(m, x ≥ 0)
+    dummy = [1]
+    function printhook(m::Model)
+        dummy[1] += 1
+    end
+    setPrintHook(m, printhook)
+    print(m)
+    @fact dummy => [2]
 end

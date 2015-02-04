@@ -7,8 +7,8 @@ Models
 Constructor
 ^^^^^^^^^^^
 
-``Model`` is a type defined by JuMP. All variables and constraints are 
-associated with a ``Model`` object. It has a constructor that has no 
+``Model`` is a type defined by JuMP. All variables and constraints are
+associated with a ``Model`` object. It has a constructor that has no
 required arguments::
 
     m = Model()
@@ -20,14 +20,14 @@ which can be used to change the default solver behavior.
 
     solver = solvername(Option1=Value1, Option2=Value2, ...)
 
-where ``solvername`` is one of the supported solvers. See the :ref:`solver table <jump-solvertable>` for the list of available solvers and corresponding parameter names.  All options are solver-dependent; see corresponding solver packages for more information. 
+where ``solvername`` is one of the supported solvers. See the :ref:`solver table <jump-solvertable>` for the list of available solvers and corresponding parameter names.  All options are solver-dependent; see corresponding solver packages for more information.
 
 .. note::
     Be sure that the solver provided supports the problem class of the model. For example ``ClpSolver`` and ``GLPKSolverLP`` support only linear programming problems. ``CbcSolver`` and ``GLPKSolverMIP`` support only mixed-integer programming problems.
 
 As an example, we can create a ``Model`` object that will use GLPK's
 exact solver for LPs as follows::
-    
+
     m = Model(solver = GLPKSolverLP(method=:Exact))
 
 
@@ -36,11 +36,13 @@ Methods
 
 **General**
 
-* ``getNumVars(m::Model)`` - returns the number of variables associated with the ``Model m``.
-* ``getNumConstraints(m::Model)`` - returns the number of constraints associated with the ``Model m``.
+* ``MathProgBase.numvar(m::Model)`` - returns the number of variables associated with the ``Model m``.
+* ``MathProgBase.numlinconstr(m::Model)`` - returns the number of linear constraints associated with the ``Model m``.
+* ``MathProgBase.numquadconstr(m::Model)`` - returns the number of quadratic constraints associated with the ``Model m``.
+* ``MathProgBase.numconstr(m::Model)`` - returns the total number of constraints associated with the ``Model m``.
 * ``getInternalModel(m::Model)`` - returns the internal low-level ``AbstractMathProgModel`` object which can be used to access any functionality that is not exposed by JuMP. See the MathProgBase `documentation <http://mathprogbasejl.readthedocs.org/en/latest/mathprogbase.html#low-level-interface>`_.
 * ``solve(m::Model;  suppress_warnings=false)`` - solves the model using the selected solver (or a default for the problem class), and takes two optional arguments that are disabled by default. Setting ``suppress_warnings`` to ``true`` will suppress all JuMP-specific output (e.g. warnings about infeasibility and lack of dual information) but will not suppress solver output (which should be done by passing options to the solver).
-* ``buildInternalModel(m::Model)`` - builds the model in memory at the MathProgBase level without optimizing. 
+* ``buildInternalModel(m::Model)`` - builds the model in memory at the MathProgBase level without optimizing.
 * ``setSolver(m::Model,s::AbstractMathProgSolver)`` - changes the solver which will be used for the next call to ``solve()``, discarding the current internal model if present.
 
 **Objective**
@@ -86,7 +88,7 @@ Quadratic Objectives
 ^^^^^^^^^^^^^^^^^^^^
 
 Quadratic objectives are supported by JuMP using a solver which implements the
-corresponding extensions of the MathProgBase interface. Add them in the same way 
+corresponding extensions of the MathProgBase interface. Add them in the same way
 you would a linear objective::
 
     m = Model()
@@ -95,7 +97,7 @@ you would a linear objective::
 
     @setObjective(m, Min, x*x+ 2x*y + y*y )
     @addConstraint(m, x + y >= 1 )
-      
+
     print(m)
 
     status = solve(m)
@@ -103,8 +105,8 @@ you would a linear objective::
 Accessing the low-level model
 ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
 
-It is possible to construct the internal low-level model before optimizing. To do this, 
+It is possible to construct the internal low-level model before optimizing. To do this,
 call the ``buildInternalModel`` function. It is then possible
 to obtain this model by using the ``getInternalModel`` function. This may be useful when
-it is necessary to access some functionality that is not exposed by JuMP. When you are ready to optimize, 
+it is necessary to access some functionality that is not exposed by JuMP. When you are ready to optimize,
 simply call ``solve`` in the normal fashion.

@@ -15,7 +15,7 @@ import MathProgBase
 
 function print_iis_gurobi(m::Model)
 
-    grb = MathProgBase.getrawsolver(getInternalModel(m)) 
+    grb = MathProgBase.getrawsolver(getInternalModel(m))
     Gurobi.computeIIS(grb)
     numconstr = Gurobi.num_constrs(grb)
     numvar = Gurobi.num_vars(grb)
@@ -37,7 +37,7 @@ function print_iis_gurobi(m::Model)
         end
     end
 
-    
+
     println("Constraints:")
     for i in 1:numconstr
         if iisconstr[i] != 0

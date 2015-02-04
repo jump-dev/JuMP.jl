@@ -8,10 +8,10 @@ end
 
 ###############################################################################
 # buildrefsets
-# Unexported. Takes as input an object representing a name, associated index 
-# sets, and conditions on those sets, for example 
+# Unexported. Takes as input an object representing a name, associated index
+# sets, and conditions on those sets, for example
 # buildrefsets(:(x[i=1:3,[:red,:blue]],k=S; i+k <= 6))
-# Used internally in macros to build JuMPContainers and constraints. Returns 
+# Used internally in macros to build JuMPContainers and constraints. Returns
 #       refcall:  Expr to reference a particular element, e.g. :(x[i,j,k])
 #       idxvars:  Index names used in referencing, e.g.g {:i,:j,:k}
 #       idxsets:  Index sets for indexing, e.g. {1:3, [:red,:blue], S}
@@ -46,7 +46,7 @@ buildrefsets(c::Nothing) = (gensym(), Any[], Any[], IndexPair[])
 
 ###############################################################################
 # getloopedcode
-# Unexported. Takes a bit of code and corresponding looping information and 
+# Unexported. Takes a bit of code and corresponding looping information and
 # returns that code nested in corresponding loops, along with preceding code
 # to construct an appropriate container. Input is:
 #       c: symbolic representation of name and appropriate indexing sets, if
@@ -57,7 +57,7 @@ buildrefsets(c::Nothing) = (gensym(), Any[], Any[], IndexPair[])
 #       idxvars: As defined for buildrefsets
 #       idxsets: As defined for buildrefsets
 #       idxpairs: As defined for buildrefsets
-#       sym: A symbol or expression containing the element type of the 
+#       sym: A symbol or expression containing the element type of the
 #            resulting container, e.g. :AffExpr or :Variable
 function getloopedcode(c::Expr, code, condition, idxvars, idxsets, idxpairs, sym)
     varname = getname(c)
@@ -86,14 +86,14 @@ function getloopedcode(c::Expr, code, condition, idxvars, idxsets, idxpairs, sym
                                                         $(Expr(:tuple,map(clear_dependencies,1:N)...)),
                                                         $idxpairs,
                                                         :()))
-    else 
+    else
         mac = Expr(:macrocall,symbol("@gendict"),esc(varname),sym,idxpairs,idxsets...)
     end
-    return quote 
+    return quote
         $mac
         $code
         nothing
-    end 
+    end
 end
 
 getloopedcode(c, code, condition, idxvars, idxsets, idxpairs, sym) = code
@@ -159,7 +159,7 @@ macro addConstraint(m, x, extra...)
                 error(string("in @addConstraint (",$(string(x)),"): expected ",$(string(ub))," to be a number."))
             end
             $parsecode
-            isa($newaff,AffExpr) || error("Ranged quadratic constraints are not allowed") 
+            isa($newaff,AffExpr) || error("Ranged quadratic constraints are not allowed")
             $(refcall) = addConstraint($m, LinearConstraint($newaff,$(esc(lb))-aff.constant,$(esc(ub))-aff.constant))
         end
     else
@@ -172,7 +172,7 @@ macro addConstraint(m, x, extra...)
     return assert_validmodel(m, getloopedcode(c, code, :(), idxvars, idxsets, idxpairs, :ConstraintRef))
 end
 
-for (mac,sym) in [(:addConstraints,  symbol("@addConstraint")), 
+for (mac,sym) in [(:addConstraints,  symbol("@addConstraint")),
                   (:addNLConstraints,symbol("@addNLConstraint"))]
     @eval begin
         macro $mac(m, x)
@@ -196,8 +196,8 @@ for (mac,sym) in [(:addConstraints,  symbol("@addConstraint")),
                             end
                 end
             end
-            return quote 
-                    $code 
+            return quote
+                    $code
                     nothing
                 end
         end
@@ -243,7 +243,7 @@ macro defExpr(args...)
         $crefflag && !isa($newaff,AffExpr) && error("Three argument form of @defExpr does not currently support quadratic constraints")
         $(refcall) = $newaff
     end
-    
+
     return getloopedcode(c, code, :(), idxvars, idxsets, idxpairs, :AffExpr)
 end
 
@@ -402,7 +402,7 @@ macro defVar(args...)
             t = extra[1]
         end
 
-        if t == :Bin 
+        if t == :Bin
             if (lb != -Inf || ub != Inf) && !(lb == 0.0 && ub == 1.0)
             error("in @defVar ($var): bounds other than [0, 1] may not be specified for binary variables.\nThese are always taken to have a lower bound of 0 and upper bound of 1.")
             else
@@ -445,7 +445,7 @@ macro defVar(args...)
             $(esc(var)) = Variable($m,$lb,$ub,$(quot(t)),$(string(var)),$value)
         end)
     end
-    @assert isa(var,Expr)
+    isa(var,Expr) || error("in @defVar: expected $var to be a variable name")
 
     # We now build the code to generate the variables (and possibly the JuMPDict
     # to contain them)
@@ -468,13 +468,13 @@ macro defConstrRef(var)
         if !isexpr(var,:ref)
             error("Syntax error: Expected $var to be of form var[...]")
         end
-        
+
         varname = var.args[1]
         idxsets = var.args[2:end]
         idxpairs = IndexPair[]
 
         mac = Expr(:macrocall,symbol("@gendict"),varname,:ConstraintRef,idxpairs, idxsets...)
-        code = quote 
+        code = quote
             $(esc(mac))
             nothing
         end
@@ -497,7 +497,7 @@ macro setNLObjective(m, sense, x)
         nothing
     end
     return assert_validmodel(m, code)
-end 
+end
 
 macro addNLConstraint(m, x, extra...)
     m = esc(m)
@@ -540,7 +540,22 @@ macro addNLConstraint(m, x, extra...)
         end
     elseif length(x.args) == 5
         # ranged row
-        error("Two-sided nonlinear constraints not yet supported")
+        if (x.args[2] != :<= && x.args[2] != :≤) || (x.args[4] != :<= && x.args[4] != :≤)
+            error("in @addNLConstraint ($(string(x))): only ranged rows of the form lb <= expr <= ub are supported.")
+        end
+        lb = x.args[1]
+        ub = x.args[5]
+        code = quote
+            if !isa($(esc(lb)),Number)
+                error(string("in @addNLConstraint (",$(string(x)),"): expected ",$(string(lb))," to be a number."))
+            elseif !isa($(esc(ub)),Number)
+                error(string("in @addNLConstraint (",$(string(x)),"): expected ",$(string(ub))," to be a number."))
+            end
+            c = NonlinearConstraint(@processNLExpr($(esc(x.args[3]))), $(esc(lb)), $(esc(ub)))
+            push!($m.nlpdata.nlconstr, c)
+            push!($m.nlpdata.nlconstrlist, c.terms)
+            $(refcall) = ConstraintRef{NonlinearConstraint}($m, length($m.nlpdata.nlconstr))
+        end
     else
         # Unknown
         error("in @addNLConstraint ($(string(x))): constraints must be in one of the following forms:\n" *

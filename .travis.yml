@@ -7,7 +7,7 @@ os:
 notifications:
     email: false
 env:
-    matrix: 
+    matrix:
         - PKGADD="FactCheck;Cbc;Clp;GLPKMathProgInterface;Ipopt;ECOS" JULIAVERSION="juliareleases"
         - PKGADD="FactCheck;GLPKMathProgInterface;ECOS" JULIAVERSION="julianightlies"
 before_install:

@@ -7,7 +7,7 @@
 #
 # Runs some JuMP benchmarks to test for speed-related regressions.
 # Examples taken from the Lubin, Dunning paper.
-# 
+#
 # Post past results here
 # ---------------------------------------------------------------------------
 # Iain's Dell Laptop
@@ -51,7 +51,7 @@
 using JuMP
 
 function pMedian(numFacility::Int,numCustomer::Int,numLocation::Int,useMPS)
-    srand(10)   
+    srand(10)
     customerLocations = [rand(1:numLocation) for a = 1:numCustomer ]
 
     tic()
@@ -77,7 +77,7 @@ function pMedian(numFacility::Int,numCustomer::Int,numLocation::Int,useMPS)
     end
 
     # Subject to must allocate all facilities
-    @addConstraint(m, sum{s[i],i=1:numLocation} == numFacility )    
+    @addConstraint(m, sum{s[i],i=1:numLocation} == numFacility )
     buildTime = toq()
 
     tic()
@@ -101,7 +101,7 @@ function cont5(n,useMPS)
     h2 = dx^2
     a = 0.001
     yt = [0.5*(1 - (j*dx)^2) for j=0:n]
-    
+
     tic()
     mod = Model()
     @defVar(mod,  0 <= y[0:m,0:n] <= 1)

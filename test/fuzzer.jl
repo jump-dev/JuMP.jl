@@ -32,10 +32,10 @@ function random_aff_expr(N, vars::Vector{Symbol})
         if !isempty(vl) || !isempty(vr)
             if isempty(vl)
                 tmp = Expr(:call, :+, vr...)
-            elseif isempty(vr)     
+            elseif isempty(vr)
                 tmp = Expr(:call, :+, vl...)
             else
-                tmp = Expr(:call, :*, 
+                tmp = Expr(:call, :*,
                         Expr(:call, :+, vl...),
                         Expr(:call, :+, vr...))
             end
@@ -91,11 +91,11 @@ function test_approx_equal_exprs(ex1, ex2)
     return true
 end
 
-println("[fuzzer] Check macros for expression construction")   
+println("[fuzzer] Check macros for expression construction")
 
 for _ in 1:100
     raff = random_aff_expr(N, vars)
     ex = @eval @defExpr($raff)
-    test_approx_equal_exprs(ex, eval(raff)) || 
+    test_approx_equal_exprs(ex, eval(raff)) ||
         error("The following expression did not pass the fuzzer:\n    $raff")
 end

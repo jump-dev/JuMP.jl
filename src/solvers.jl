@@ -1,4 +1,7 @@
-function solve(m::Model;suppress_warnings=false)
+function solve(m::Model; suppress_warnings=false, ignore_solve_hook=(m.solvehook==nothing))
+
+    ignore_solve_hook || return m.solvehook(m; suppress_warnings=suppress_warnings)
+
     if m.nlpdata != nothing
         if isa(m.solver,UnsetSolver)
             m.solver = MathProgBase.defaultNLPsolver
@@ -7,15 +10,8 @@ function solve(m::Model;suppress_warnings=false)
         return s
     end
     # Analyze model to see if any integers
-    anyInts = (length(m.sosconstr) > 0)
-    if !anyInts
-        for j = 1:m.numCols
-            if m.colCat[j] != :Cont
-                anyInts = true
-                break
-            end
-        end
-    end
+    anyInts = (length(m.sosconstr) > 0) ||
+        any(c-> !(c == :Cont || c == :Fixed), m.colCat)
 
     if isa(m.solver,UnsetSolver) &&
       (length(m.obj.qvars1) > 0 || length(m.quadconstr) > 0)
@@ -73,7 +69,7 @@ function addQuadratics(m::Model)
         affidx = Cint[v.col for v in qconstr.terms.aff.vars]
         var1idx = Cint[v.col for v in qconstr.terms.qvars1]
         var2idx = Cint[v.col for v in qconstr.terms.qvars2]
-        if applicable(MathProgBase.addquadconstr!, m.internalModel, affidx, qconstr.terms.aff.coeffs, var1idx, var2idx, qconstr.terms.qcoeffs, s, -qconstr.terms.aff.constant) 
+        if applicable(MathProgBase.addquadconstr!, m.internalModel, affidx, qconstr.terms.aff.coeffs, var1idx, var2idx, qconstr.terms.qcoeffs, s, -qconstr.terms.aff.constant)
             MathProgBase.addquadconstr!(m.internalModel, affidx, qconstr.terms.aff.coeffs, var1idx, var2idx, qconstr.terms.qcoeffs, s, -qconstr.terms.aff.constant)
         else
             error("Solver does not support quadratic constraints")
@@ -107,7 +103,7 @@ function prepProblemBounds(m::Model)
     objaff::AffExpr = m.obj.aff
     assert_isfinite(objaff)
     verify_ownership(m, objaff.vars)
-        
+
     # We already have dense column lower and upper bounds
 
     # Create dense objective vector
@@ -125,7 +121,7 @@ function prepProblemBounds(m::Model)
         rowlb[c] = linconstr[c].lb
         rowub[c] = linconstr[c].ub
     end
-    
+
     return f, rowlb, rowub
 end
 
@@ -180,8 +176,19 @@ function prepConstrMatrix(m::Model)
     A = rowmat'
 end
 
+function vartypes_without_fixed(m::Model)
+    colCats = copy(m.colCat)
+    for i in 1:length(colCats)
+        if colCats[i] == :Fixed
+            @assert m.colLower[i] == m.colUpper[i]
+            colCats[i] = :Cont
+        end
+    end
+    return colCats
+end
+
 function solveLP(m::Model; suppress_warnings=false)
-    f, rowlb, rowub = prepProblemBounds(m)  
+    f, rowlb, rowub = prepProblemBounds(m)
 
     # Ready to solve
     noQuads = (length(m.quadconstr) == 0) && (length(m.obj.qvars1) == 0)
@@ -192,7 +199,7 @@ function solveLP(m::Model; suppress_warnings=false)
            applicable(MathProgBase.setconstrUB!, m.internalModel, rowub) &&
            applicable(MathProgBase.setobj!, m.internalModel, f) &&
            applicable(MathProgBase.setsense!, m.internalModel, m.objSense) &&
-           applicable(MathProgBase.setvartype!, m.internalModel, [:Cont])            
+           applicable(MathProgBase.setvartype!, m.internalModel, [:Cont])
             MathProgBase.setvarLB!(m.internalModel, m.colLower)
             MathProgBase.setvarUB!(m.internalModel, m.colUpper)
             MathProgBase.setconstrLB!(m.internalModel, rowlb)
@@ -220,7 +227,7 @@ function solveLP(m::Model; suppress_warnings=false)
         MathProgBase.loadproblem!(m.internalModel, A, m.colLower, m.colUpper, f, rowlb, rowub, m.objSense)
         addQuadratics(m)
         m.internalModelLoaded = true
-    end 
+    end
 
     MathProgBase.optimize!(m.internalModel)
     stat = MathProgBase.status(m.internalModel)
@@ -262,12 +269,12 @@ function solveLP(m::Model; suppress_warnings=false)
         m.objVal = MathProgBase.getobjval(m.internalModel)
         m.objVal += m.obj.aff.constant
         m.colVal = MathProgBase.getsolution(m.internalModel)
-        if noQuads && applicable(MathProgBase.getreducedcosts, m.internalModel) &&
+        if applicable(MathProgBase.getreducedcosts, m.internalModel) &&
                       applicable(MathProgBase.getconstrduals,  m.internalModel)
             m.redCosts = MathProgBase.getreducedcosts(m.internalModel)
             m.linconstrDuals = MathProgBase.getconstrduals(m.internalModel)
         else
-            noQuads && !suppress_warnings && warn("Dual solutions not available")
+            !suppress_warnings && warn("Dual solutions not available")
             m.redCosts = fill(NaN, length(m.linconstr))
             m.linconstrDuals = fill(NaN, length(m.linconstr))
         end
@@ -281,8 +288,8 @@ function solveMIP(m::Model; suppress_warnings=false)
     A = prepConstrMatrix(m)
 
     # Ready to solve
+    colCats = vartypes_without_fixed(m)
 
-    
     if m.internalModelLoaded
         if applicable(MathProgBase.setvarLB!, m.internalModel, m.colLower) &&
            applicable(MathProgBase.setvarUB!, m.internalModel, m.colUpper) &&
@@ -290,14 +297,14 @@ function solveMIP(m::Model; suppress_warnings=false)
            applicable(MathProgBase.setconstrUB!, m.internalModel, rowub) &&
            applicable(MathProgBase.setobj!, m.internalModel, f) &&
            applicable(MathProgBase.setsense!, m.internalModel, m.objSense) &&
-           applicable(MathProgBase.setvartype!, m.internalModel, m.colCat)
+           applicable(MathProgBase.setvartype!, m.internalModel, colCats)
             MathProgBase.setvarLB!(m.internalModel, m.colLower)
             MathProgBase.setvarUB!(m.internalModel, m.colUpper)
             MathProgBase.setconstrLB!(m.internalModel, rowlb)
             MathProgBase.setconstrUB!(m.internalModel, rowub)
             MathProgBase.setobj!(m.internalModel, f)
             MathProgBase.setsense!(m.internalModel, m.objSense)
-            MathProgBase.setvartype!(m.internalModel, m.colCat)
+            MathProgBase.setvartype!(m.internalModel, colCats)
         else
             !suppress_warnings && Base.warn_once("Solver does not appear to support hot-starts. Problem will be solved from scratch.")
             m.internalModelLoaded = false
@@ -305,10 +312,10 @@ function solveMIP(m::Model; suppress_warnings=false)
     end
     if !m.internalModelLoaded
         m.internalModel = MathProgBase.model(m.solver)
-        
+
         MathProgBase.loadproblem!(m.internalModel, A, m.colLower, m.colUpper, f, rowlb, rowub, m.objSense)
-        if applicable(MathProgBase.setvartype!, m.internalModel, m.colCat)
-            MathProgBase.setvartype!(m.internalModel, m.colCat)
+        if applicable(MathProgBase.setvartype!, m.internalModel, colCats)
+            MathProgBase.setvartype!(m.internalModel, colCats)
         else
             error("Solver does not support discrete variables")
         end
@@ -356,13 +363,8 @@ end
 function buildInternalModel(m::Model)
     m.nlpdata == nothing || error("buildInternalModel not supported for nonlinear problems")
 
-    anyInts = false
-    for j = 1:m.numCols
-        if m.colCat[j] != :Cont
-            anyInts = true
-            break
-        end
-    end
+    anyInts = (length(m.sosconstr) > 0) ||
+        any(c-> !(c == :Cont || c == :Fixed), m.colCat)
 
     if isa(m.solver,UnsetSolver) &&
       (length(m.obj.qvars1) > 0 || length(m.quadconstr) > 0)
@@ -385,7 +387,8 @@ function buildInternalModel(m::Model)
     addQuadratics(m)
 
     if anyInts # do MIP stuff
-        MathProgBase.setvartype!(m.internalModel, m.colCat)
+        colCats = vartypes_without_fixed(m)
+        MathProgBase.setvartype!(m.internalModel, colCats)
         addSOS(m)
         registercallbacks(m)
         if !all(isnan(m.colVal))
@@ -395,6 +398,9 @@ function buildInternalModel(m::Model)
                 Base.warn_once("Solver does not appear to support providing initial feasible solutions.")
             end
         end
+    end
+    if applicable(MathProgBase.updatemodel!, m.internalModel)
+        MathProgBase.updatemodel!(m.internalModel)
     end
     m.internalModelLoaded = true
     nothing

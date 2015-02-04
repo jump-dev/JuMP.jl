@@ -22,7 +22,7 @@ Creating a Model
     m = Model()
 
 All variables and constraints are associated with a ``Model`` object. For
-a list of all functions related to ``Model``, including how to change the 
+a list of all functions related to ``Model``, including how to change the
 default solver and set solver parameters, see :ref:`ref-model`.
 
 
@@ -41,8 +41,8 @@ optionally allows specification of lower and upper bounds. For example::
     @defVar(m, lb <= x <= ub )  # Lower and upper bounds
 
 All these variations introduce a new variable ``x`` in the local scope.
-The names of your variables must be valid Julia variable names. 
-For information about common operations on variables, e.g. changing their 
+The names of your variables must be valid Julia variable names.
+For information about common operations on variables, e.g. changing their
 bounds, see the :ref:`ref-variable` section.
 
 **Integer** and **binary** restrictions can optionally be specified with a
@@ -86,15 +86,15 @@ functions, e.g.::
 The second way is visually very similar, and uses the ``@addConstraint`` and ``@setObjective``
 macros, e.g.::
 
-    @addConstraint(m, x[i] - s[i] <= 0)  
+    @addConstraint(m, x[i] - s[i] <= 0)
     @setObjective(m, Max, sum{x[i], i=1:numLocation} )
 
 .. note::
     The ``sense`` passed to ``setObjective`` must be a `symbol <http://docs.julialang.org/en/latest/manual/metaprogramming/#symbols>`_ type: ``:Min`` or ``:Max``.
     The ``@setObjective`` macro accepts ``:Min`` and ``:Max``, as well as ``Min`` and ``Max`` (without the colon) directly.
-    
+
 There is one key restriction on the form of the expression in the second case:
-*if there is a product between coefficients and variables, the variables must appear last*. 
+*if there is a product between coefficients and variables, the variables must appear last*.
 That is, Coefficient times Variable is good, but Variable times Coefficient is bad::
 
    @addConstraint(m, x[i]*5 >= 2)  # Causes an error
@@ -120,7 +120,7 @@ which is equivalent to::
 
 You can also put a condition in::
 
-    sum{expression, i = I1, j = I2, ...; cond} 
+    sum{expression, i = I1, j = I2, ...; cond}
 
 which is equivalent to::
 

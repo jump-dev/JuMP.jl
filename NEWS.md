@@ -1,6 +1,16 @@
 JuMP release notes
 ==================
 
+Version 0.7.4 (February 4, 2015)
+--------------------------------
+
+  * Reduced costs and linear constraint duals are now accessible when quadratic constraints are present.
+  * Two-sided nonlinear constraints are supported.
+  * Methods for accessing the number of variables and constraints in a model are renamed.
+  * New default procedure for setting initial values in nonlinear optimization: project zero onto the variable bounds.
+  * Small bug fixes.
+
+
 Version 0.7.3 (January 14, 2015)
 --------------------------------
 
@@ -8,9 +18,9 @@ Version 0.7.3 (January 14, 2015)
 
 Version 0.7.2 (January 9, 2015)
 -------------------------------
-  
+
   * Fix a bug in ``sum(::JuMPDict)``
-  * Added the ``setCategory`` function to change a variables category (e.g. continuous or binary) 
+  * Added the ``setCategory`` function to change a variables category (e.g. continuous or binary)
   after construction, and ``getCategory`` to retrieve the variable category.
 
 Version 0.7.1 (January 2, 2015)

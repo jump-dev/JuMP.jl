@@ -7,7 +7,7 @@ Expressions and Constraints
 Constructor
 ^^^^^^^^^^^
 
-``AffExpr`` is an affine expression type defined by JuMP. It has three fields: 
+``AffExpr`` is an affine expression type defined by JuMP. It has three fields:
 a vector of coefficients, a vector of variables, and a constant. Apart from
 a default constructor that takes no arguments, it also has a full constructor that
 can be useful if you want to manually build an affine expression::
@@ -43,7 +43,7 @@ Methods
 * ``addConstraint(m::Model, con)`` - general way to add linear and quadratic
   constraints.
 * ``@addConstraints`` - add groups of constraints at once, in the same fashion as @addConstraint. The model must be the first argument, and multiple constraints can be added on multiple lines wrapped in a ``begin ... end`` block. For example::
-    
+
     @addConstraints(m, begin
       x >= 1
       y - w <= 2
@@ -59,15 +59,15 @@ Methods
 The ``ref`` accepts index sets in the same way as ``@defVar``, and those indices can be used in the construction of the expressions::
 
     @defExpr(expr[i=1:3], i*sum{x[j], j=1:3})
-    
+
 * ``addSOS1(m::Model, coll::Vector{AffExpr})`` - adds special ordered set constraint
   of type 1 (SOS1). Specify the set as a vector of weighted variables, e.g. ``coll = [3x, y, 2z]``.
-  Note that solvers expect the weights to be unique. See 
+  Note that solvers expect the weights to be unique. See
   `here <http://lpsolve.sourceforge.net/5.5/SOS.htm>`_ for more details. If there is no inherent
   weighting in your model, an SOS constraint is probably unnecessary.
 * ``addSOS2(m::Model, coll::Vector{AffExpr})`` - adds special ordered set constraint
   of type 2 (SOS2). Specify the set as a vector of weighted variables, e.g. ``coll = [3x, y, 2z]``.
-  Note that solvers expect the weights to be unique. 
+  Note that solvers expect the weights to be unique.
   See `here <http://lpsolve.sourceforge.net/5.5/SOS.htm>`_ for more details.
 * ``push!(aff::AffExpr, new_coeff::Float64, new_var::Variable)`` - efficient
   way to grow an affine expression by one term. For example, to add ``5x`` to
@@ -97,13 +97,13 @@ For example::
 adds 9 constraints to the model ``m`` of the expected form. The variable ``xyconstr``
 is a collection of ``ConstraintRef{LinearConstraint}`` instances indexed
 by the ranges ``1:3`` and ``6:-2:2`` (the ordered tuple ``(6,4,2)``), so, for example
-``xyconstr[2,4]`` is a reference to the constraint ``x[2] - y[4] == 1``. Indices can 
+``xyconstr[2,4]`` is a reference to the constraint ``x[2] - y[4] == 1``. Indices can
 have dependencies on preceding indices, e.g. triangular indexing is allowed::
 
     @addConstraint(m, triconstr[i=1:3,j=2i:2:6], x[i] - y[j] == 1)
 
 To obtain the dual of a constraint, call ``getDual`` on the constraint reference::
-    
+
     println(getDual(xyconstr[1,6]))
 
 When an LP model is infeasible, ``getDual`` will return the corresponding component of the

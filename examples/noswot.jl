@@ -6,8 +6,8 @@
 # noswot.jl
 #
 # Solve a nontrivial MIP problem with user cuts. The jump model is populated
-# from an .MPS file by using MathProgBase to construct another model and 
-# copying the data over to the JuMP model. The problem comes from the 
+# from an .MPS file by using MathProgBase to construct another model and
+# copying the data over to the JuMP model. The problem comes from the
 # MIPLIB 3.0 benchmark collection.
 #############################################################################
 

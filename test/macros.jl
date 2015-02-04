@@ -37,15 +37,15 @@ facts("[macros] Check @addConstraint basics") do
     @defVar(m, z)
     t = 10
 
-    @addConstraint(m, 3x - y == 3.3(w + 2z) + 5) 
+    @addConstraint(m, 3x - y == 3.3(w + 2z) + 5)
     @fact conToStr(m.linconstr[end]) => "3 x - y - 3.3 w - 6.6 z $eq 5"
     if VERSION >= v"0.4.0-"
         @addConstraint(m, 3x - y == (w + 2z)*3.3 + 5)
         @fact conToStr(m.linconstr[end]) => "3 x - y - 3.3 w - 6.6 z $eq 5"
     end
-    @addConstraint(m, (x+y)/2 == 1) 
+    @addConstraint(m, (x+y)/2 == 1)
     @fact conToStr(m.linconstr[end]) => "0.5 x + 0.5 y $eq 1"
-    @addConstraint(m, -1 <= x-y <= t) 
+    @addConstraint(m, -1 <= x-y <= t)
     @fact conToStr(m.linconstr[end]) => "-1 $leq x - y $leq 10"
     @addConstraint(m, -1 <= x+1 <= 1)
     @fact conToStr(m.linconstr[end]) => "-2 $leq x $leq 0"
@@ -129,11 +129,11 @@ facts("[macros] Test ranges in @defVar") do
     @fact length(w) => 0
 
     @fact x[end].col => x[5].col
-    @fact y[3].m => y[5].m 
+    @fact y[3].m => y[5].m
     @fact y[3].m => y[7].m
     @fact y[3].m => y[9].m
     @fact_throws z[8].col  # KeyError
-    @fact_throws w[end]  # BoundsError 
+    @fact_throws w[end]  # BoundsError
 end
 
 facts("[macros] Unicode comparisons") do
@@ -199,10 +199,10 @@ facts("[macros] @addNLConstraints") do
     end)
 
     @fact length(m.nlpdata.nlconstr) => 4
-    @fact "$(m.nlpdata.nlconstr[1].terms.tree.ex)" => ":(y[i]) - 0"
-    @fact "$(m.nlpdata.nlconstr[2].terms.tree.ex)" => ":(y[i]) - 0"
-    @fact "$(m.nlpdata.nlconstr[3].terms.tree.ex)" => ":(y[i]) - 0"
-    @fact "$(m.nlpdata.nlconstr[4].terms.tree.ex)" => ":(:x + :(:(y[1]) * :(y[2]) * :(y[3]))) - 0.5"
+    @fact "$(ReverseDiffSparse.base_expression(m.nlpdata.nlconstr[1].terms))" => "y[i] - 0"
+    @fact "$(ReverseDiffSparse.base_expression(m.nlpdata.nlconstr[2].terms))" => "y[i] - 0"
+    @fact "$(ReverseDiffSparse.base_expression(m.nlpdata.nlconstr[3].terms))" => "y[i] - 0"
+    @fact "$(ReverseDiffSparse.base_expression(m.nlpdata.nlconstr[4].terms))" => "(x + y[1] * y[2] * y[3]) - 0.5"
 
 end
 
@@ -245,12 +245,12 @@ facts("[macros] Triangular indexing, iteration") do
     trimod = Model()
     @defVar(trimod, x[i=1:n,j=i:n])
     @defVar(trimod, y[i=3:2:7,j=-i])
-    @fact getNumVars(trimod) => n*(n+1)/2 + 3
-    S = {(i,i+2) for i in 1:5}
+    @fact MathProgBase.numvar(trimod) => n*(n+1)/2 + 3
+    S = Any[(i,i+2) for i in 1:5]
     @defVar(trimod, z[(i,j)=S,k=i:j])
     @fact length(z.tupledict) => 15
     @addConstraint(trimod, cref[i=1:n,j=i:n], x[i,j] + y[5,-5] == 1)
-    @fact getNumConstraints(trimod) => n*(n+1)/2
+    @fact MathProgBase.numconstr(trimod) => n*(n+1)/2
 
     cntr = zeros(Bool, n, n)
     for (i,j,var) in x

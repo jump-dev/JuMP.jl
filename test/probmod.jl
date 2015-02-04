@@ -9,9 +9,12 @@
 #############################################################################
 using JuMP, FactCheck
 
+# If solvers not loaded, load them (i.e running just these tests)
+!isdefined(:lp_solvers) && include("solvers.jl")
+
 facts("[probmod] Testing problem modification basics") do
 for solver in lp_solvers
-context("With solver $(typeof(solver))") do 
+context("With solver $(typeof(solver))") do
 
     # max 1.1x + 1.0y
     # st     x +    y <= 3
@@ -151,7 +154,7 @@ end
 
 facts("[probmod] Test adding a 'decoupled' variable (#205)") do
 for solver in lp_solvers
-context("With solver $(typeof(solver))") do 
+context("With solver $(typeof(solver))") do
     m = Model(solver=solver)
     @defVar(m, x >= 0)
     @setObjective(m, Min, x)
@@ -169,7 +172,7 @@ end
 
 facts("[probmod] Test buildInternalModel") do
 for solver in lp_solvers
-context("With solver $(typeof(solver))") do 
+context("With solver $(typeof(solver))") do
     m = Model(solver=solver)
     @defVar(m, x >= 0)
     @defVar(m, y >= 0)
@@ -179,7 +182,7 @@ context("With solver $(typeof(solver))") do
     @fact getInternalModel(m) => not(nothing)
     @fact m.internalModelLoaded => true
     stat = solve(m)
-    @fact stat => :Optimal  
+    @fact stat => :Optimal
     @fact getValue(x) => roughly( 0.0, 1e-6)
     @fact getValue(y) => roughly( 1.0, 1e-6)
     @fact getObjectiveValue(m) => roughly(1.0, 1e-6)
@@ -190,9 +193,30 @@ end
 end
 
 
+facts("[probmod] Test buildInternalModel with MIP") do
+for solver in ip_solvers
+context("With solver $(typeof(solver))") do
+    m = Model(solver=solver)
+    @defVar(m, x >= 0, Int)
+    @defVar(m, y, Bin)
+    @addConstraint(m, x + y == 1)
+    @setObjective(m, Max, y)
+    buildInternalModel(m)
+    @fact getInternalModel(m) => not(nothing)
+    @fact m.internalModelLoaded => true
+    stat = solve(m)
+    @fact stat => :Optimal
+    @fact getValue(x) => roughly( 0.0, 1e-6)
+    @fact getValue(y) => roughly( 1.0, 1e-6)
+    @fact getObjectiveValue(m) => roughly(1.0, 1e-6)
+end
+end
+end
+
+
 facts("[probmod] Test bound modification on binaries") do
 for solver in ip_solvers
-context("With solver $(typeof(solver))") do 
+context("With solver $(typeof(solver))") do
     # Test semantics for modifying bounds on binary variables:
     # Variables should be restricted to the intersection of
     # {0,1} and their bounds.
@@ -207,6 +231,18 @@ context("With solver $(typeof(solver))") do
     setUpper(x, 0.0)
     solve(mod)
     @fact getValue(x) => roughly(0.0)
+    # same thing, other direction
+    mod = Model(solver=solver)
+    @defVar(mod, x, Bin)
+    @setObjective(mod, Min, x)
+    solve(mod)
+    @fact getValue(x) => roughly(0.0)
+    setLower(x, -1.0)
+    solve(mod)
+    @fact getValue(x) => roughly(0.0)
+    setLower(x, 1.0)
+    solve(mod)
+    @fact getValue(x) => roughly(1.0)
 end
 end
 end
@@ -229,7 +265,7 @@ function methods_test(solvername, solverobj, supp)
     end
 end
 
-const mpb_methods = 
+const mpb_methods =
     [(MathProgBase.addquadconstr!, (Cint[1],Float64[1.0],Cint[1],Cint[1],Float64[1],'>',1.0)),
      (MathProgBase.setquadobjterms!, (Cint[1], Cint[1], Float64[1.0])),
      (MathProgBase.addconstr!,   ([1],[1.0],1.0,1.0)),

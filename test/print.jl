@@ -23,7 +23,7 @@ end
 facts("[print] JuMPContainer{Variable}") do
     le, ge = JuMP.repl_leq, JuMP.repl_geq
     m = Model()
-    
+
     #------------------------------------------------------------------
     # Test bound printing
     context("bound printing") do
@@ -75,7 +75,7 @@ facts("[print] JuMPContainer{Variable}") do
     @defVar(m, tri_1[i=1:3,j=i:3])
     @defVar(m, tri_2[i=1:3,j=-i])
     @defVar(m, tri_3[(i,j)=[(i,i+2) for i in 1:5],k=i:j])
-    
+
     io_test(REPLMode, rng_unit1, "rng_unit1[i] free for all i in {1,2..9,10}")
     io_test(REPLMode, rng_unit2, "rng_unit2[i] free for all i in {-2,-1..2,3}")
     io_test(REPLMode, rng_unit3, "rng_unit3[i] free for all i in {1,2..9,10}")
@@ -255,7 +255,7 @@ y: 2 dimensions, 6 entries:
  [10,10] = 100.0
  [10,11] = 110.0
  [11,11] = 121.0""")
-    
+
     # Deal with hashing variations
     first_hash  = hash(:a) < hash('b') ? "a" : "b"
     second_hash = first_hash == "a" ? "b" : "a"
@@ -276,7 +276,7 @@ facts("[print] SOS constraints") do
     modS = Model()
     a = [1,2,3]
     @defVar(modS, x[1:3], Bin)
-    addSOS1(modS, [a[i]x[i] for i in 1:3])    
+    addSOS1(modS, [a[i]x[i] for i in 1:3])
     s1 = JuMP.SOSConstraint([x[i] for i in 1:3],
                             [a[i] for i in 1:3], :SOS1)
     io_test(REPLMode, s1, "SOS1: {1 x[1], 2 x[2], 3 x[3]}")
@@ -310,6 +310,7 @@ facts("[print] Model") do
     @defVar(mod_1, sos[1:3], Bin)
     @defVar(mod_1, 2 <= si <= 3, SemiInt)
     @defVar(mod_1, 2 <= sc <= 3, SemiCont)
+    @defVar(mod_1, fi == 9)
     @setObjective(mod_1, Max, a - b + 2a1 - 10x)
     @addConstraint(mod_1, a + b - 10c - 2x + c1 <= 1)
     @addConstraint(mod_1, a*b <= 2)
@@ -333,6 +334,7 @@ Subject to
  z free, integer
  si in {2..3} or {0}
  sc in [2,3] or {0}
+ fi = 9
 """, repl=:print)
 
     io_test(IJuliaMode, mod_1, """
@@ -352,38 +354,57 @@ Subject to
  & z free, \\in \\mathbb{Z}\\\\
  & si \\in \\{2,\\dots,3\\} \\cup \\{0\\}\\\\
  & sc \\in \\[2,3\\] \\cup \\{0\\}\\\\
+ & fi = 9\\\\
 \\end{alignat*}
 """)
 
     #------------------------------------------------------------------
 
     mod_2 = Model()
+    @defVar(mod_2, x, Bin)
+    @defVar(mod_2, y, Int)
+    @addConstraint(mod_2, x*y <= 1)
 
     io_test(REPLMode, mod_2, """
 Feasibility problem with:
  * 0 linear constraints
- * 0 variables
+ * 1 quadratic constraint
+ * 2 variables: 1 binary, 1 integer
 Solver set to Default""", repl=:show)
 
-    @defVar(mod_2, x[1:5])
-    @addNLConstraint(mod_2, x[1]*x[2] == 1)
-    @addNLConstraint(mod_2, x[3]*x[4] == 1)
-    @addNLConstraint(mod_2, x[5]*x[1] == 1)
-    @setNLObjective(mod_2, Min, x[1]*x[3])
-    
+    mod_2 = Model()
+    @defVar(mod_2, x)
+    @addConstraint(mod_2, x <= 3)
+
     io_test(REPLMode, mod_2, """
+Feasibility problem with:
+ * 1 linear constraint
+ * 1 variable
+Solver set to Default""", repl=:show)
+
+    #------------------------------------------------------------------
+
+    mod_3 = Model()
+
+    @defVar(mod_3, x[1:5])
+    @addNLConstraint(mod_3, x[1]*x[2] == 1)
+    @addNLConstraint(mod_3, x[3]*x[4] == 1)
+    @addNLConstraint(mod_3, x[5]*x[1] == 1)
+    @setNLObjective(mod_3, Min, x[1]*x[3])
+
+    io_test(REPLMode, mod_3, """
 Min (nonlinear expression)
 Subject to
  3 nonlinear constraints
  x[i] free for all i in {1,2..4,5}
 """, repl=:print)
-    io_test(REPLMode, mod_2, """
+    io_test(REPLMode, mod_3, """
 Minimization problem with:
  * 0 linear constraints
  * 3 nonlinear constraints
  * 5 variables
 Solver set to Default""", repl=:show)
-    io_test(IJuliaMode, mod_2, """
+    io_test(IJuliaMode, mod_3, """
 \\begin{alignat*}{1}\\min\\quad & (nonlinear expression)\\\\
 \\text{Subject to} \\quad & 3 nonlinear constraints\\\\
  & x_{i} free \\quad\\forall i \\in \\{1,2,\\dots,4,5\\}\\\\
@@ -458,10 +479,10 @@ end
 
 
 
-facts("[print] Variable") do    
+facts("[print] Variable") do
     m = Model()
     @defVar(m, 0 <= x <= 2, inconstraints=ConstraintRef{LinearConstraint}[], objective=0.0, coefficients=Float64[] )
-    
+
     @fact    getName(x) => "x"
     io_test(REPLMode,   x, "x")
     io_test(IJuliaMode, x, "x")
