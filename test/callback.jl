@@ -67,7 +67,8 @@ context("With solver $(typeof(heursolver))") do
     @defVar(mod, 0 <= y <= 2, Int)
     @setObjective(mod, Max, x + 2y)
     @addConstraint(mod, y + x <= 3.5)
-    function myheuristic(cb)
+    # Test that solver fills solution correctly
+    function myheuristic1(cb)
         x_val = getValue(x)
         y_val = getValue(y)
         # Heuristic is to round solution down
@@ -75,14 +76,20 @@ context("With solver $(typeof(heursolver))") do
         # Leave y undefined - solver should handle as it sees fit
         # In case of Gurobi - try to figure out what it should be
         addSolution(cb)
-        # Check that solvers ignore infeasible solutions
+    end
+    setHeuristicCallback(mod, myheuristic1)
+    @fact solve(mod) => :Optimal
+    @fact getValue(x) => roughly(1.0, 1e-6)
+    @fact getValue(y) => roughly(2.0, 1e-6)
+
+    # Test that solver rejects infeasible partial solutions...
+    function myheuristic2(cb)
+        x_val = getValue(x)
+        y_val = getValue(y)
         setSolutionValue!(cb, x, 3)
-        addSolution(cb)
-        setSolutionValue!(cb, x, 3)
-        setSolutionValue!(cb, y, 5)
         addSolution(cb)
     end
-    setHeuristicCallback(mod, myheuristic)
+    setHeuristicCallback(mod, myheuristic2)
     @fact solve(mod) => :Optimal
     @fact getValue(x) => roughly(1.0, 1e-6)
     @fact getValue(y) => roughly(2.0, 1e-6)
