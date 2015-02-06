@@ -86,8 +86,11 @@ function quoteTree(x::Expr, datalist::Dict, iterstack)
         for idxvar in x.args[2:end]
             quoteTree(idxvar, datalist, iterstack)
         end
-
-        return quot(x)
+        if length(iterstack) == 0
+            return :((isa($x, ReverseDiffSparse.SymbolicOutput) ? $x.tree : $(quot(x))))
+        else
+            return quot(x)
+        end
     elseif isexpr(x, :quote)
         return x
     else
@@ -123,29 +126,33 @@ function quoteTree(x::Symbol, datalist, iterstack)
     if !initerstack(x,iterstack)
         datalist[x] = x
     end
-    return quot(x)
+    if length(iterstack) == 0
+        return :((isa($x, ReverseDiffSparse.SymbolicOutput) ? $x.tree : $(quot(x))))
+    else
+        return quot(x)
+    end
 end
 
 quoteTree(x, datalist, iterstack) = x
 
-addToVarList!(l,x::Placeholder) = push!(l,getplaceindex(x))
-addToVarList!(l,x) = nothing
+addToVarList!(l,datalist,x::Placeholder) = push!(l,getplaceindex(x))
+addToVarList!(l,datalist,x) = nothing
 
-function genVarList(x::Expr, arrname)
+function genVarList(x::Expr, arrname, datalist)
     if x.head == :curly
-        code = genVarList(curlyexpr(x),arrname)
+        code = genVarList(curlyexpr(x),arrname, datalist)
         return gencurlyloop(x,code, escape=true)
     elseif x.head == :call
-        return Expr(:block,[genVarList(y,arrname) for y in x.args[2:end]]...)
+        return Expr(:block,[genVarList(y,arrname, datalist) for y in x.args[2:end]]...)
     elseif x.head in (:comparison, :&&, :||)
-        return Expr(:block,[genVarList(y,arrname) for y in x.args]...)
+        return Expr(:block,[genVarList(y,arrname, datalist) for y in x.args]...)
     else
-        return :(addToVarList!($arrname,$(esc(x))))
+        return :(addToVarList!($arrname,$datalist,$(esc(x))))
     end
 end
 
-genVarList(x::Number,arrname) = nothing
-genVarList(x::Symbol,arrname) = :(addToVarList!($arrname,$(esc(x))))
+genVarList(x::Number,arrname,datalist) = nothing
+genVarList(x::Symbol,arrname,datalist) = :(addToVarList!($arrname,$datalist,$(esc(x))))
 
 type SymbolicOutput
     tree
@@ -158,11 +165,18 @@ type SymbolicOutput
     hashval # for identifying expressions with identical trees
 end
 
+function addToVarList!(l,datalist,x::SymbolicOutput)
+    append!(l,x.indexlist)
+    for i in 1:length(x.inputvals)
+        datalist[x.inputnames[i]] = x.inputvals[i]
+    end
+end
+
 base_expression(s::SymbolicOutput) = s.tree
 export base_expression
 
 macro processNLExpr(x)
-    indexlist = :(idxlist = Int[]; $(genVarList(x, :idxlist)); idxlist)
+    indexlist = :(idxlist = Int[]; datlist = Dict(); $(genVarList(x, :idxlist, :datlist)); idxlist)
     datalist = Dict()
     # in the corner case that x is just a symbol, promote it to an expr
     if isa(x, Symbol)
@@ -175,7 +189,26 @@ macro processNLExpr(x)
         push!(inputnames.args, quot(k))
         push!(inputvals.args, esc(v))
     end
-    return :(SymbolicOutput($tree, $inputnames, $inputvals,$indexlist, $(hash(x))))
+    return quote
+        inputnames = $inputnames
+        inputvals = $inputvals
+        $indexlist
+        if length(datlist) > 0
+            for i in 1:length(inputnames) # merge with subexpressions
+                isa(inputvals[i],ReverseDiffSparse.SymbolicOutput) && continue
+                if haskey(datlist,inputnames[i])
+                    if object_id(datlist[inputnames[i]]) != object_id(inputvals[i])
+                        error("The value of $(inputnames[i]) has changed unexpectedly")
+                    end
+                else
+                    datlist[inputnames[i]] = inputvals[i]
+                end
+            end
+            inputnames = tuple(collect(keys(datlist))...)
+            inputvals = tuple(collect(values(datlist))...)
+        end
+        SymbolicOutput($tree, inputnames, inputvals,idxlist, $(hash(x)))
+    end
 end
 
 function SymbolicOutput(tree, inputnames, inputvals, indexlist, hashval)
@@ -331,6 +364,7 @@ end
 forwardpass(x, expr_out) = :(forwardvalue($x, __placevalues, __placeindex_in))
 
 forwardvalue(x::Placeholder, placevalues, placeindex_in) = placevalues[placeindex_in[getplaceindex(x)]]
+forwardvalue(x::SymbolicOutput, placevalues, placeindex_in) = error("Unexpected embedded expression $(x.tree).")
 forwardvalue(x, placevalues, placeindex_in) = x
 
 function revpass(x::ExprNode, expr_out)
