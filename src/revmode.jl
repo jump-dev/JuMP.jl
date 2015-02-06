@@ -170,6 +170,7 @@ function addToVarList!(l,datalist,x::SymbolicOutput)
     for i in 1:length(x.inputvals)
         datalist[x.inputnames[i]] = x.inputvals[i]
     end
+    datalist[symbol("##hash__")] = hash(x.hashval, get(datalist,symbol("##hash__"),unsigned(0))) # sneaky way to store hashes of subexpressions
 end
 
 base_expression(s::SymbolicOutput) = s.tree
@@ -193,6 +194,7 @@ macro processNLExpr(x)
         inputnames = $inputnames
         inputvals = $inputvals
         $indexlist
+        hashval = $(hash(x))
         if length(datlist) > 0
             for i in 1:length(inputnames) # merge with subexpressions
                 isa(inputvals[i],ReverseDiffSparse.SymbolicOutput) && continue
@@ -206,8 +208,9 @@ macro processNLExpr(x)
             end
             inputnames = tuple(collect(keys(datlist))...)
             inputvals = tuple(collect(values(datlist))...)
+            hashval = hash(hashval,datlist[symbol("##hash__")])
         end
-        SymbolicOutput($tree, inputnames, inputvals,idxlist, $(hash(x)))
+        SymbolicOutput($tree, inputnames, inputvals,idxlist, hashval)
     end
 end
 
