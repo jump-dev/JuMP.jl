@@ -87,7 +87,7 @@ function quoteTree(x::Expr, datalist::Dict, iterstack)
             quoteTree(idxvar, datalist, iterstack)
         end
         if length(iterstack) == 0
-            return :((isa($x, ReverseDiffSparse.SymbolicOutput) ? $x.tree : $(quot(x))))
+            return :(ReverseDiffSparse.ifelse_symbolic($x, $(quot(x))))
         else
             return quot(x)
         end
@@ -127,7 +127,7 @@ function quoteTree(x::Symbol, datalist, iterstack)
         datalist[x] = x
     end
     if length(iterstack) == 0
-        return :((isa($x, ReverseDiffSparse.SymbolicOutput) ? $x.tree : $(quot(x))))
+        return :(ReverseDiffSparse.ifelse_symbolic($x, $(quot(x))))
     else
         return quot(x)
     end
@@ -176,6 +176,11 @@ end
 base_expression(s::SymbolicOutput) = s.tree
 export base_expression
 
+# Type stable version of:
+# isa(x,SymbolicOutput) ? x.tree : s
+ifelse_symbolic(x::SymbolicOutput,s) = x.tree
+ifelse_symbolic(::Any,s) = s
+
 macro processNLExpr(x)
     indexlist = :(idxlist = Int[]; datlist = Dict(); $(genVarList(x, :idxlist, :datlist)); idxlist)
     datalist = Dict()
@@ -194,24 +199,26 @@ macro processNLExpr(x)
         inputnames = $inputnames
         inputvals = $inputvals
         $indexlist
-        hashval = $(hash(x))
-        if length(datlist) > 0
-            for i in 1:length(inputnames) # merge with subexpressions
-                isa(inputvals[i],ReverseDiffSparse.SymbolicOutput) && continue
-                if haskey(datlist,inputnames[i])
-                    if object_id(datlist[inputnames[i]]) != object_id(inputvals[i])
-                        error("The value of $(inputnames[i]) has changed unexpectedly")
-                    end
-                else
-                    datlist[inputnames[i]] = inputvals[i]
-                end
-            end
-            inputnames = tuple(collect(keys(datlist))...)
-            inputvals = tuple(collect(values(datlist))...)
-            hashval = hash(hashval,datlist[symbol("##hash__")])
-        end
-        SymbolicOutput($tree, inputnames, inputvals,idxlist, hashval)
+        merge_with_subexpressions($tree, inputnames, inputvals, idxlist, $(hash(x)), datlist)
     end
+end
+
+function merge_with_subexpressions(tree, inputnames, inputvals, idxlist, hashval, datlist)
+    if length(datlist) == 0
+        return SymbolicOutput(tree, inputnames, inputvals, idxlist, hashval)
+    end
+    for i in 1:length(inputnames) # merge with subexpressions
+        isa(inputvals[i],ReverseDiffSparse.SymbolicOutput) && continue
+        if haskey(datlist,inputnames[i])
+            if object_id(datlist[inputnames[i]]) != object_id(inputvals[i])
+                error("The value of $(inputnames[i]) has changed unexpectedly")
+            end
+        else
+            datlist[inputnames[i]] = inputvals[i]
+        end
+    end
+    return SymbolicOutput(tree, tuple(collect(keys(datlist))...), tuple(collect(values(datlist))...), idxlist, hash(hashval,datlist[symbol("##hash__")]))
+
 end
 
 function SymbolicOutput(tree, inputnames, inputvals, indexlist, hashval)
