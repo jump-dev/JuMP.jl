@@ -1,6 +1,6 @@
-function solve(m::Model; suppress_warnings=false, ignore_solve_hook=(m.solvehook==nothing))
+function solve(m::Model; suppress_warnings=false, ignore_solve_hook=(m.solvehook==nothing), kwargs...)
 
-    ignore_solve_hook || return m.solvehook(m; suppress_warnings=suppress_warnings)
+    ignore_solve_hook || return m.solvehook(m; suppress_warnings=suppress_warnings, kwargs...)
 
     if m.nlpdata != nothing
         if isa(m.solver,UnsetSolver)
