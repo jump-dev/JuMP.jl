@@ -2,7 +2,8 @@
 # Make sure that our macros have good hygiene
 using Base.Test
 
-require("JuMP")
+module M
+import JuMP
 
 mymod = JuMP.Model()
 mysense = :Min
@@ -13,3 +14,6 @@ JuMP.@addConstraint(mymod, x + sum{ j*y[j], j=r } <= 1)
 JuMP.@addConstraint(mymod, sum{ y[j], j=r ; j == 4} <= 1)
 JuMP.@addConstraint(mymod, -1 <= x + y[3] <= 1)
 JuMP.@setObjective(mymod, mysense, y[4])
+JuMP.@addNLConstraint(mymod, y[3] == 1)
+
+end
