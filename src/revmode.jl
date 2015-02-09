@@ -88,7 +88,7 @@ function quoteTree(x::Expr, datalist::Dict, iterstack, prefix, justrename::Bool=
             x.args[i] = quoteTree(x.args[i], datalist, iterstack, prefix, true)
         end
         if length(iterstack) == 0
-            return :(ReverseDiffSparse.ifelse_symbolic($xold, $(quot(x))))
+            return :(ifelse($xold, $(quot(x))))
         else
             return quot(x)
         end
@@ -137,7 +137,7 @@ function quoteTree(x::Symbol, datalist, iterstack, prefix, justrename)
     quoted = justrename ? newsym : quot(newsym)
     #quoted = quot(newsym)
     if length(iterstack) == 0 && !justrename
-        return :(ReverseDiffSparse.ifelse_symbolic($x, $quoted))
+        return :(ifelse($x, $quoted))
     else
         return quoted
     end
@@ -191,8 +191,10 @@ export base_expression
 
 # Type stable version of:
 # isa(x,SymbolicOutput) ? x.tree : s
-ifelse_symbolic(x::SymbolicOutput,s) = x.tree
-ifelse_symbolic(::Any,s) = s
+# We extend Base.ifelse as a hack for hygiene issues.
+# See JuliaOpt/JuMP.jl#387.
+Base.ifelse(x::SymbolicOutput,s::Union(Symbol,Expr)) = x.tree
+Base.ifelse(::Any,s::Union(Symbol,Expr)) = s
 
 macro processNLExpr(x)
     indexlist = genVarList(x, :idxlist, :inputvals, :inputnames, :hashsave)
