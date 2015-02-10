@@ -40,19 +40,25 @@ function addInfoCallback(m::Model, f::Function)
 end
 
 function attach_callbacks(m::Model, cbs::Vector{LazyCallback})
+    anyfrac = mapreduce(|, cbs) do cb
+        cb.fractional
+    end
     function lazycallback(d::MathProgBase.MathProgCallbackData)
         state = MathProgBase.cbgetstate(d)
         @assert state == :MIPSol || state == :MIPNode
         if state == :MIPSol
             MathProgBase.cbgetmipsolution(d,m.colVal)
-        else
+        elseif anyfrac
             MathProgBase.cbgetlpsolution(d,m.colVal)
+        else
+            return nothing
         end
         for cb in cbs
             if state == :MIPSol || cb.fractional
                 cb.f(d)
             end
         end
+        nothing
     end
     MathProgBase.setlazycallback!(m.internalModel, lazycallback)
 end
@@ -70,6 +76,7 @@ function attach_callbacks(m::Model, cbs::Vector{CutCallback})
         for cb in cbs
             cb.f(d)
         end
+        nothing
     end
     MathProgBase.setcutcallback!(m.internalModel, cutcallback)
 end
@@ -87,6 +94,7 @@ function attach_callbacks(m::Model, cbs::Vector{HeuristicCallback})
         for cb in cbs
             cb.f(d)
         end
+        nothing
     end
     MathProgBase.setheuristiccallback!(m.internalModel, heurcallback)
 end
@@ -104,6 +112,7 @@ function attach_callbacks(m::Model, cbs::Vector{InfoCallback})
         for cb in cbs
             cb.f(d)
         end
+        nothing
     end
     MathProgBase.setinfocallback!(m.internalModel, infocallback)
 end
