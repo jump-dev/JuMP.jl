@@ -102,13 +102,7 @@ end
 function attach_callbacks(m::Model, cbs::Vector{InfoCallback})
     function infocallback(d::MathProgBase.MathProgCallbackData)
         state = MathProgBase.cbgetstate(d)
-        @assert state == :MIPSol || state == :MIPNode
-        if state == :MIPSol  # This shouldn't happen right?
-            println("Is this ever called?")
-            MathProgBase.cbgetmipsolution(d,m.colVal)
-        else
-            MathProgBase.cbgetlpsolution(d,m.colVal)
-        end
+        @assert state == :MIPInfo
         for cb in cbs
             cb.f(d)
         end

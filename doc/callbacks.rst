@@ -280,6 +280,32 @@ including::
     cbgetstate(cb)
 
 
+Informational Callbacks
+^^^^^^^^^^^^^^^^^^^^^^^
+
+Sometimes it can be useful to track solver progress without actually changing the algorithm by adding cuts or heuristic solutions. In these cases, informational callbacks can be added, wherein statistics can be tracked via the ``cbget`` functions discussed in the previous section. Informational callbacks are added to a JuMP model with the ``addInfoCallback(m::Model, f::Function)`` function.
+
+For a simple example, we can add a function that tracks the best bound and incumbent objective value as the solver progresses through the branch-and-bound tree::
+
+    # build model ``m`` up here
+
+    type NodeData
+        node::Int
+        obj::Float64
+        bestbound::Float64
+    end
+
+    bbdata = NodeData[]
+
+    function infocallback(cb)
+        node      = cbgetexplorednodes(cb)
+        obj       = cbgetobj(cb)
+        bestbound = cbgetbestbound(cb)
+        push!(bbdata, NodeData(node,obj,bestbound))
+    end
+    setInfoCallback(m, infocallback)
+
+
 Code Design Considerations
 ^^^^^^^^^^^^^^^^^^^^^^^^^^
 
