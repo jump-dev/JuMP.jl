@@ -1,71 +1,125 @@
+export addLazyCallback, addCutCallback, addHeuristicCallback, addInfoCallback
 export setLazyCallback, setCutCallback, setHeuristicCallback
-export setlazycallback
-@Base.deprecate setlazycallback setLazyCallback
-function setLazyCallback(m::Model, f::Function; fractional::Bool=false)
-    m.internalModelLoaded = false
-    m.lazycallback = (f,fractional)
+@Base.deprecate setLazyCallback      addLazyCallback
+@Base.deprecate setCutCallback       addCutCallback
+@Base.deprecate setHeuristicCallback addHeuristicCallback
+
+abstract JuMPCallback
+type LazyCallback <: JuMPCallback
+    f::Function
+    fractional::Bool
 end
-function setCutCallback(m::Model, f::Function)
-    m.internalModelLoaded = false
-    m.cutcallback = f
+type CutCallback <: JuMPCallback
+    f::Function
 end
-function setHeuristicCallback(m::Model, f::Function)
-    m.internalModelLoaded = false
-    m.heurcallback = f
+type HeuristicCallback <: JuMPCallback
+    f::Function
+end
+type InfoCallback <: JuMPCallback
+    f::Function
 end
 
+Base.copy{T<:JuMPCallback}(c::T) = T(copy(c))
+Base.copy(c::LazyCallback) = LazyCallback(copy(c.f), c.fractional)
+
+function addLazyCallback(m::Model, f::Function; fractional::Bool=false)
+    m.internalModelLoaded = false
+    push!(m.callbacks, LazyCallback(f,fractional))
+end
+function addCutCallback(m::Model, f::Function)
+    m.internalModelLoaded = false
+    push!(m.callbacks, CutCallback(f))
+end
+function addHeuristicCallback(m::Model, f::Function)
+    m.internalModelLoaded = false
+    push!(m.callbacks, HeuristicCallback(f))
+end
+function addInfoCallback(m::Model, f::Function)
+    m.internalModelLoaded = false
+    push!(m.callbacks, InfoCallback(f))
+end
+
+function attach_callbacks(m::Model, cbs::Vector{LazyCallback})
+    anyfrac = mapreduce(|, cbs) do cb
+        cb.fractional
+    end
+    function lazycallback(d::MathProgBase.MathProgCallbackData)
+        state = MathProgBase.cbgetstate(d)
+        @assert state == :MIPSol || state == :MIPNode
+        if state == :MIPSol
+            MathProgBase.cbgetmipsolution(d,m.colVal)
+        elseif anyfrac
+            MathProgBase.cbgetlpsolution(d,m.colVal)
+        else
+            return nothing
+        end
+        for cb in cbs
+            if state == :MIPSol || cb.fractional
+                cb.f(d)
+            end
+        end
+        nothing
+    end
+    MathProgBase.setlazycallback!(m.internalModel, lazycallback)
+end
+
+function attach_callbacks(m::Model, cbs::Vector{CutCallback})
+    function cutcallback(d::MathProgBase.MathProgCallbackData)
+        state = MathProgBase.cbgetstate(d)
+        @assert state == :MIPSol || state == :MIPNode
+        if state == :MIPSol  # This shouldn't happen right?
+            println("Is this ever called?")
+            MathProgBase.cbgetmipsolution(d,m.colVal)
+        else
+            MathProgBase.cbgetlpsolution(d,m.colVal)
+        end
+        for cb in cbs
+            cb.f(d)
+        end
+        nothing
+    end
+    MathProgBase.setcutcallback!(m.internalModel, cutcallback)
+end
+
+function attach_callbacks(m::Model, cbs::Vector{HeuristicCallback})
+    function heurcallback(d::MathProgBase.MathProgCallbackData)
+        state = MathProgBase.cbgetstate(d)
+        @assert state == :MIPSol || state == :MIPNode
+        if state == :MIPSol  # This shouldn't happen right?
+            println("Is this ever called?")
+            MathProgBase.cbgetmipsolution(d,m.colVal)
+        else
+            MathProgBase.cbgetlpsolution(d,m.colVal)
+        end
+        for cb in cbs
+            cb.f(d)
+        end
+        nothing
+    end
+    MathProgBase.setheuristiccallback!(m.internalModel, heurcallback)
+end
+
+function attach_callbacks(m::Model, cbs::Vector{InfoCallback})
+    function infocallback(d::MathProgBase.MathProgCallbackData)
+        state = MathProgBase.cbgetstate(d)
+        @assert state == :MIPInfo
+        for cb in cbs
+            cb.f(d)
+        end
+        nothing
+    end
+    MathProgBase.setinfocallback!(m.internalModel, infocallback)
+end
 
 function registercallbacks(m::Model)
-    if isa(m.lazycallback, (Function,Bool))
-        lazy, fractional = m.lazycallback::(Function,Bool)
-        function lazycallback(d::MathProgBase.MathProgCallbackData)
-            state = MathProgBase.cbgetstate(d)
-            @assert state == :MIPSol || state == :MIPNode
-            if state == :MIPSol
-                MathProgBase.cbgetmipsolution(d,m.colVal)
-            else
-                fractional || return
-                MathProgBase.cbgetlpsolution(d,m.colVal)
-            end
-            lazy(d)
+    isempty(m.callbacks) && return # might as well avoid allocating the indexedVector
+
+    cbtypes = unique(map(typeof, m.callbacks))
+    for typ in cbtypes
+        cbs::Vector{typ} = filter(m.callbacks) do cb
+            isa(cb, typ)
         end
-        #try
-            MathProgBase.setlazycallback!(m.internalModel, lazycallback)
-        #catch
-        #  error("Solver does not support lazy callbacks")
-        #end
-    end
-    if isa(m.cutcallback, Function)
-        function cutcallback(d::MathProgBase.MathProgCallbackData)
-            state = MathProgBase.cbgetstate(d)
-            @assert state == :MIPSol || state == :MIPNode
-            if state == :MIPSol  # This shouldn't happen right?
-                println("Is this ever called?")
-                MathProgBase.cbgetmipsolution(d,m.colVal)
-            else
-                MathProgBase.cbgetlpsolution(d,m.colVal)
-            end
-            m.cutcallback(d)
-        end
-        #
-            MathProgBase.setcutcallback!(m.internalModel, cutcallback)
-        #
-    end
-    if isa(m.heurcallback, Function)
-        function heurcallback(d::MathProgBase.MathProgCallbackData)
-            state = MathProgBase.cbgetstate(d)
-            @assert state == :MIPSol || state == :MIPNode
-            if state == :MIPSol  # This shouldn't happen right?
-                println("Is this ever called?")
-                MathProgBase.cbgetmipsolution(d,m.colVal)
-            else
-                MathProgBase.cbgetlpsolution(d,m.colVal)
-            end
-            m.heurcallback(d)
-        end
-        #
-            MathProgBase.setheuristiccallback!(m.internalModel, heurcallback)
-        #
+        attach_callbacks(m, cbs)
     end
 
     # prepare storage for callbacks
