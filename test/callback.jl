@@ -26,7 +26,7 @@ context("With solver $(typeof(lazysolver))") do
             @addLazyConstraint(cb, y + 0.5x + 0.5x <= 3)
         end
     end
-    setLazyCallback(mod, corners)
+    addLazyCallback(mod, corners)
     @fact solve(mod) => :Optimal
     @fact getValue(x) => roughly(1.0, 1e-6)
     @fact getValue(y) => roughly(2.0, 1e-6)
@@ -51,7 +51,7 @@ context("With solver $(typeof(cutsolver))") do
             @addUserCut(cb, y + x <= 3)
         end
     end
-    setCutCallback(mod, mycutgenerator)
+    addCutCallback(mod, mycutgenerator)
     @fact solve(mod) => :Optimal
     @fact getValue(x) => roughly(1.0, 1e-6)
     @fact getValue(y) => roughly(2.0, 1e-6)
@@ -77,11 +77,12 @@ context("With solver $(typeof(heursolver))") do
         # In case of Gurobi - try to figure out what it should be
         addSolution(cb)
     end
-    setHeuristicCallback(mod, myheuristic1)
+    addHeuristicCallback(mod, myheuristic1)
     @fact solve(mod) => :Optimal
     @fact getValue(x) => roughly(1.0, 1e-6)
     @fact getValue(y) => roughly(2.0, 1e-6)
 
+    empty!(m.callbacks)
     # Test that solver rejects infeasible partial solutions...
     function myheuristic2(cb)
         x_val = getValue(x)
@@ -89,7 +90,7 @@ context("With solver $(typeof(heursolver))") do
         setSolutionValue!(cb, x, 3)
         addSolution(cb)
     end
-    setHeuristicCallback(mod, myheuristic2)
+    addHeuristicCallback(mod, myheuristic2)
     @fact solve(mod) => :Optimal
     @fact getValue(x) => roughly(1.0, 1e-6)
     @fact getValue(y) => roughly(2.0, 1e-6)

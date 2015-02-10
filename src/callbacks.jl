@@ -1,6 +1,8 @@
-export setLazyCallback, setCutCallback, setHeuristicCallback, setInfoCallback
-export setlazycallback
-@Base.deprecate setlazycallback setLazyCallback
+export addLazyCallback, addCutCallback, addHeuristicCallback, addInfoCallback
+export setLazyCallback, setCutCallback, setHeuristicCallback
+@Base.deprecate setLazyCallback      addLazyCallback
+@Base.deprecate setCutCallback       addCutCallback
+@Base.deprecate setHeuristicCallback addHeuristicCallback
 
 abstract JuMPCallback
 type LazyCallback <: JuMPCallback
@@ -20,40 +22,42 @@ end
 Base.copy{T<:JuMPCallback}(c::T) = T(copy(c))
 Base.copy(c::LazyCallback) = LazyCallback(copy(c.f), c.fractional)
 
-function setLazyCallback(m::Model, f::Function; fractional::Bool=false)
+function addLazyCallback(m::Model, f::Function; fractional::Bool=false)
     m.internalModelLoaded = false
     push!(m.callbacks, LazyCallback(f,fractional))
 end
-function setCutCallback(m::Model, f::Function)
+function addCutCallback(m::Model, f::Function)
     m.internalModelLoaded = false
     push!(m.callbacks, CutCallback(f))
 end
-function setHeuristicCallback(m::Model, f::Function)
+function addHeuristicCallback(m::Model, f::Function)
     m.internalModelLoaded = false
     push!(m.callbacks, HeuristicCallback(f))
 end
-function setInfoCallback(m::Model, f::Function)
+function addInfoCallback(m::Model, f::Function)
     m.internalModelLoaded = false
     push!(m.callbacks, InfoCallback(f))
 end
 
-function attach_callback(m::Model, cb::LazyCallback)
-    lazy, fractional = cb.f::Function, cb.fractional::Bool
+function attach_callbacks(m::Model, cbs::Vector{LazyCallback})
     function lazycallback(d::MathProgBase.MathProgCallbackData)
         state = MathProgBase.cbgetstate(d)
         @assert state == :MIPSol || state == :MIPNode
         if state == :MIPSol
             MathProgBase.cbgetmipsolution(d,m.colVal)
         else
-            fractional || return
             MathProgBase.cbgetlpsolution(d,m.colVal)
         end
-        lazy(d)
+        for cb in cbs
+            if state == :MIPSol || cb.fractional
+                cb.f(d)
+            end
+        end
     end
     MathProgBase.setlazycallback!(m.internalModel, lazycallback)
 end
 
-function attach_callback(m::Model, cb::CutCallback)
+function attach_callbacks(m::Model, cbs::Vector{CutCallback})
     function cutcallback(d::MathProgBase.MathProgCallbackData)
         state = MathProgBase.cbgetstate(d)
         @assert state == :MIPSol || state == :MIPNode
@@ -63,12 +67,14 @@ function attach_callback(m::Model, cb::CutCallback)
         else
             MathProgBase.cbgetlpsolution(d,m.colVal)
         end
-        cb.f(d)
+        for cb in cbs
+            cb.f(d)
+        end
     end
     MathProgBase.setcutcallback!(m.internalModel, cutcallback)
 end
 
-function attach_callback(m::Model, cb::HeuristicCallback)
+function attach_callbacks(m::Model, cbs::Vector{HeuristicCallback})
     function heurcallback(d::MathProgBase.MathProgCallbackData)
         state = MathProgBase.cbgetstate(d)
         @assert state == :MIPSol || state == :MIPNode
@@ -78,12 +84,14 @@ function attach_callback(m::Model, cb::HeuristicCallback)
         else
             MathProgBase.cbgetlpsolution(d,m.colVal)
         end
-        cb.f(d)
+        for cb in cbs
+            cb.f(d)
+        end
     end
     MathProgBase.setheuristiccallback!(m.internalModel, heurcallback)
 end
 
-function attach_callback(m::Model, cb::InfoCallback)
+function attach_callbacks(m::Model, cbs::Vector{InfoCallback})
     function infocallback(d::MathProgBase.MathProgCallbackData)
         state = MathProgBase.cbgetstate(d)
         @assert state == :MIPSol || state == :MIPNode
@@ -93,7 +101,9 @@ function attach_callback(m::Model, cb::InfoCallback)
         else
             MathProgBase.cbgetlpsolution(d,m.colVal)
         end
-        cb.f(d)
+        for cb in cbs
+            cb.f(d)
+        end
     end
     MathProgBase.setinfocallback!(m.internalModel, infocallback)
 end
@@ -101,8 +111,12 @@ end
 function registercallbacks(m::Model)
     isempty(m.callbacks) && return # might as well avoid allocating the indexedVector
 
-    for cb in m.callbacks
-        attach_callback(m, cb)
+    cbtypes = unique(map(typeof, m.callbacks))
+    for typ in cbtypes
+        cbs::Vector{typ} = filter(m.callbacks) do cb
+            isa(cb, typ)
+        end
+        attach_callbacks(m, cbs)
     end
 
     # prepare storage for callbacks
