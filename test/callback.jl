@@ -82,7 +82,7 @@ context("With solver $(typeof(heursolver))") do
     @fact getValue(x) => roughly(1.0, 1e-6)
     @fact getValue(y) => roughly(2.0, 1e-6)
 
-    empty!(m.callbacks)
+    empty!(mod.callbacks)
     # Test that solver rejects infeasible partial solutions...
     function myheuristic2(cb)
         x_val = getValue(x)
