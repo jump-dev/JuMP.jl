@@ -63,7 +63,7 @@ facts("[print] JuMPContainer{Variable}") do
     context("index set printing") do
     @defVar(m, rng_unit1[1:10])  # JuMPArray
     @defVar(m, rng_unit2[-2:3])  # JuMPArray
-    @defVar(m, rng_unit3[[1:10]])  # JuMPDict
+    @defVar(m, rng_unit3[[1:10;]])  # JuMPDict
     @defVar(m, rng_step1[1:2:10])
     @defVar(m, rng_step2[-2:5:10])
     @defVar(m, rng_step3[1:5:3])

@@ -234,7 +234,7 @@ end
 context("dot") do
     dot_m = Model()
     @defVar(dot_m, 0 ≤ x[1:3] ≤ 1)
-    c = [1:3]
+    c = vcat(1:3)
     @fact affToStr(dot(c,x)) => "x[1] + 2 x[2] + 3 x[3]"
     @fact affToStr(dot(x,c)) => "x[1] + 2 x[2] + 3 x[3]"
 
