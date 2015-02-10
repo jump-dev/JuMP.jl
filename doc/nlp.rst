@@ -44,6 +44,40 @@ For example, we can solve the classical Rosenbrock problem (with a twist) as fol
 
 Examples: `optimal control <https://github.com/JuliaOpt/JuMP.jl/blob/master/examples/optcontrol.jl>`_, `maximum likelihood estimation <https://github.com/JuliaOpt/JuMP.jl/blob/master/examples/mle.jl>`_, and  `Hock-Schittkowski tests <https://github.com/JuliaOpt/JuMP.jl/tree/master/test/hockschittkowski>`_.
 
+Syntax notes
+^^^^^^^^^^^^
+
+The syntax accepted in nonlinear expressions is more restricted than
+the syntax for linear and quadratic expressions. We note some important points below.
+
+- All expressions must be simple scalar operations. You cannot use ``dot``,
+  matrix-vector products, vector slices, etc. Translate vector operations
+  into explicit ``sum{}`` operations or use the ``AffExpr`` plus auxiliary variable
+  trick described below.
+- There is no operator overloading provided to build up nonlinear expressions.
+  For example, if ``x`` is a JuMP variable, the code ``3x`` will return an
+  ``AffExpr`` object that can be used inside of future expressions and
+  linear constraints.
+  However, the code ``sin(x)`` is an error. All nonlinear expressions must
+  be inside of macros.
+- ``AffExpr`` and ``QuadExpr`` objects cannot currently be used inside nonlinear
+  expressions. Instead, introduce auxiliary variables, e.g.::
+
+    myexpr = dot(c,x) + 3y # where x and y are variables
+    @defVar(m, aux)
+    @addConstraint(m, aux == myexpr)
+    @setNLObjective(m, Min, sin(aux))
+- You can declare embeddable nonlinear expressions with ``@defNLExpr``. For example::
+
+    @defNLExpr(myexpr[i=1:n], sin(x[i]))
+    @addNLConstraint(m, myconstr[i=1:n], myexpr[i] <= 0.5)
+- Nonlinear expression objects currently cannot appear inside of ``sum{}`` or ``prod{}``. For example::
+
+    @defNLExpr(myexpr[i=1:n], sin(x[i]))
+    # This is not supported!
+    @addNLConstraint(m, myconstr, sum{myexpr[i], i=1:n} <= 0.5)
+
+
 Performance: Solution time
 ^^^^^^^^^^^^^^^^^^^^^^^^^^
 
