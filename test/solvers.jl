@@ -61,9 +61,10 @@ cbc && push!(sos_solvers, Cbc.CbcSolver())
 # Callback solvers
 lazy_solvers, cut_solvers, heur_solvers, info_solvers = Any[], Any[], Any[], Any[]
 if grb
-    push!(lazy_solvers, Gurobi.GurobiSolver(OutputFlag=0))
+    push!(lazy_solvers, Gurobi.GurobiSolver(OutputFlag=0, Presolve=0))
     push!( cut_solvers, Gurobi.GurobiSolver(PreCrush=1, Cuts=0, Presolve=0, Heuristics=0.0, OutputFlag=0))
     push!(heur_solvers, Gurobi.GurobiSolver(Cuts=0, Presolve=0, Heuristics=0.0, OutputFlag=0))
+    # push!(heur_solvers, Gurobi.GurobiSolver(Heuristics=0.0, OutputFlag=0))
     push!(info_solvers, Gurobi.GurobiSolver(OutputFlag=0))
 end
 if cpx
@@ -102,3 +103,7 @@ minlp_solvers = Any[]
 kni && push!(minlp_solvers, KNITRO.KnitroSolver(outlev=0))
 osl && push!(minlp_solvers, CoinOptServices.OsilBonminSolver())
 osl && push!(minlp_solvers, CoinOptServices.OsilCouenneSolver())
+
+const error_map = Dict()
+grb && (error_map[Gurobi.GurobiSolver] = Gurobi.GurobiError)
+cpx && (error_map[CPLEX.CplexSolver] = CPLEX.CplexError)
