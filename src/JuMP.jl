@@ -70,9 +70,10 @@ type Model
     solver::MathProgBase.AbstractMathProgSolver
     internalModelLoaded::Bool
     # callbacks
-    lazycallback
-    cutcallback
-    heurcallback
+    callbacks
+    # lazycallback
+    # cutcallback
+    # heurcallback
 
     # hook into a solve call...function of the form f(m::Model; kwargs...),
     # where kwargs get passed along to subsequent solve calls
@@ -107,7 +108,7 @@ function Model(;solver=UnsetSolver())
     Model(QuadExpr(),:Min,LinearConstraint[], QuadConstraint[],SOSConstraint[],
           0,String[],String[],Float64[],Float64[],Symbol[],
           0,Float64[],Float64[],Float64[],nothing,solver,
-          false,nothing,nothing,nothing,nothing,nothing,JuMPContainer[],
+          false,Any[],nothing,nothing,JuMPContainer[],
           IndexedVector(Float64,0),nothing,Dict{Symbol,Any}())
 end
 
@@ -146,9 +147,7 @@ function Base.copy(source::Model)
 
     dest = Model()
     dest.solver = source.solver  # The two models are linked by this
-    dest.lazycallback = source.lazycallback
-    dest.cutcallback  = source.cutcallback
-    dest.heurcallback = source.heurcallback
+    dest.callbacks = copy(source.callbacks)
     dest.ext = source.ext  # Should probably be deep copy
     if length(source.ext) >= 1
         Base.warn_once("Copying model with extensions - not deep copying extension-specific information.")
