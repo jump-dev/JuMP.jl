@@ -184,7 +184,7 @@ function addToVarList!(l,inputvals,inputnames,hashsave,x::SymbolicOutput)
 end
 
 remove_prefix(x::Expr, prefix::String) = Expr(x.head, [remove_prefix(ex,prefix) for ex in x.args]...)
-remove_prefix(s::Symbol, prefix::String) = beginswith(string(s),prefix) ? symbol(string(s)[length(prefix)+1:end]) : s
+remove_prefix(s::Symbol, prefix::String) = startswith(string(s),prefix) ? symbol(string(s)[length(prefix)+1:end]) : s
 remove_prefix(x, prefix::String) = x
 base_expression(s::SymbolicOutput) = remove_prefix(s.tree, s.symbolprefix)
 export base_expression
