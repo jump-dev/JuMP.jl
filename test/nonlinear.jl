@@ -167,6 +167,39 @@ context("With solver $(typeof(minlp_solver))") do
     @fact getValue(y)[:] => roughly([0.0, 1.0, 0.0], 1e-5)
 end; end; end
 
+facts("[nonlinear] Test continuous relaxation of minlp test problem") do
+for nlp_solver in nlp_solvers
+context("With solver $(typeof(nlp_solver))") do
+    ## Solve continuous relaxation of test problem 1 (Synthesis of processing system) in
+     # M. Duran & I.E. Grossmann, "An outer approximation algorithm for
+     # a class of mixed integer nonlinear programs", Mathematical
+     # Programming 36, pp. 307-339, 1986.  The problem also appears as
+     # problem synthes1 in the MacMINLP test set.
+     # Introduce auxiliary nonnegative variable for the x[1]-x[2]+1 term
+    m = Model(solver=nlp_solver)
+    x_U = [2,2,1]
+    @defVar(m, x_U[i] >= x[i=1:3] >= 0)
+    @defVar(m, 1 >= y[4:6] >= 0)
+    @defVar(m, z >= 0, start=1)
+    @setNLObjective(m, Min, 10 + 10*x[1] - 7*x[3] + 5*y[4] + 6*y[5] + 8*y[6] - 18*log(x[2]+1) - 19.2*log(z))
+    @addNLConstraints(m, begin
+        0.8*log(x[2] + 1) + 0.96*log(z) - 0.8*x[3] >= 0
+        log(x[2] + 1) + 1.2*log(z) - x[3] - 2*y[6] >= -2
+        x[2] - x[1] <= 0
+        x[2] - 2*y[4] <= 0
+        x[1] - x[2] - 2*y[5] <= 0
+        y[4] + y[5] <= 1
+        x[1] - x[2] + 1 == z
+    end)
+    status = solve(m)
+
+    @fact status => :Optimal
+    @fact getObjectiveValue(m) => roughly(0.7593, 5e-5)
+    @fact getValue(x)[:] => roughly([1.1465, 0.54645, 1.0], 2e-4)
+    @fact getValue(y)[:] => roughly([0.2732, 0.3, 0.0], 2e-4)
+    @fact getValue(z) => roughly(1.6, 2e-4)
+end; end; end
+
 facts("[nonlinear] Test maximization objective") do
 for nlp_solver in convex_nlp_solvers
 context("With solver $(typeof(nlp_solver))") do

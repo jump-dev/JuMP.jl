@@ -81,9 +81,12 @@ grb && push!(quad_solvers, Gurobi.GurobiSolver(QCPDual=1,OutputFlag=0))
 cpx && push!(quad_solvers, CPLEX.CplexSolver(CPX_PARAM_SCRIND=0))
 mos && push!(quad_solvers, Mosek.MosekSolver(LOG=0))
 quad_mip_solvers = copy(quad_solvers)
+osl && push!(quad_solvers, CoinOptServices.OsilSolver())
 soc_solvers = copy(quad_solvers)
 ipt && push!(quad_solvers, Ipopt.IpoptSolver(print_level=0))
 eco && push!(soc_solvers, ECOS.ECOSSolver(verbose=false))
+osl && push!(quad_mip_solvers, CoinOptServices.OsilBonminSolver())
+osl && push!(quad_mip_solvers, CoinOptServices.OsilCouenneSolver())
 # Nonlinear solvers
 nlp_solvers = Any[]
 ipt && push!(nlp_solvers, Ipopt.IpoptSolver(print_level=0))
@@ -95,4 +98,5 @@ mos && push!(convex_nlp_solvers, Mosek.MosekSolver())
 # Mixed-Integer Nonlinear solvers
 minlp_solvers = Any[]
 kni && push!(minlp_solvers, KNITRO.KnitroSolver(outlev=0))
-osl && push!(minlp_solvers, CoinOptServices.OsilSolver())
+osl && push!(minlp_solvers, CoinOptServices.OsilBonminSolver())
+osl && push!(minlp_solvers, CoinOptServices.OsilCouenneSolver())
