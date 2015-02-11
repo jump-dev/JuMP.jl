@@ -240,7 +240,7 @@ macro defExpr(args...)
     code = quote
         q = AffExpr()
         $parsecode
-        $crefflag && !isa($newaff,AffExpr) && error("Three argument form of @defExpr does not currently support quadratic constraints")
+        $crefflag && !isa($newaff,AffExpr) && error("Three argument form of @defExpr does not currently support quadratic expressions")
         $(refcall) = $newaff
     end
 
@@ -571,4 +571,22 @@ macro addNLConstraint(m, x, extra...)
     end
 
     return assert_validmodel(m, code)
+end
+
+macro defNLExpr(x, extra...)
+    # Two formats:
+    # - @defNLExpr(a*x <= 5)
+    # - @addNLExpr(myref[a=1:5], sin(x^a))
+    length(extra) > 1 && error("in @defNLExpr: too many arguments.")
+    # Canonicalize the arguments
+    c = length(extra) == 1 ? x        : nothing
+    x = length(extra) == 1 ? extra[1] : x
+
+    # Strategy: build up the code for non-macro addconstraint, and if needed
+    # we will wrap in loops to assign to the ConstraintRefs
+    refcall, idxvars, idxsets, idxpairs = buildrefsets(c)
+    code = :($(refcall) = @processNLExpr($(esc(x))))
+
+    looped = getloopedcode(c, code, :(), idxvars, idxsets, idxpairs, :(ReverseDiffSparse.SymbolicOutput))
+    return looped
 end

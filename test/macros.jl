@@ -204,6 +204,10 @@ facts("[macros] @addNLConstraints") do
     @fact "$(ReverseDiffSparse.base_expression(m.nlpdata.nlconstr[3].terms))" => "y[i] - 0"
     @fact "$(ReverseDiffSparse.base_expression(m.nlpdata.nlconstr[4].terms))" => "(x + y[1] * y[2] * y[3]) - 0.5"
 
+    @defNLExpr(nl[i=1:2], y[i])
+    @fact "$(ReverseDiffSparse.base_expression(nl[1]))" => "y[i]"
+    @fact "$(ReverseDiffSparse.base_expression(nl[2]))" => "y[i]"
+
 end
 
 facts("[macros] @setObjective with quadratic") do

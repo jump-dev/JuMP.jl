@@ -215,6 +215,21 @@ context("With solver $(typeof(nlp_solver))") do
     @fact getValue(x) + getValue(y) => roughly(-1/3, 1e-3)
 end; end; end
 
+facts("[nonlinear] Test maximization objective (embedded expressions)") do
+for nlp_solver in convex_nlp_solvers
+context("With solver $(typeof(nlp_solver))") do
+    m = Model(solver=nlp_solver)
+    @defVar(m, -2 <= x <= 2); setValue(x, -1.8)
+    @defVar(m, -2 <= y <= 2); setValue(y,  1.5)
+    @setNLObjective(m, Max, y - x)
+    @defNLExpr(quadexpr, x + x^2 + x*y + y^2)
+    @addNLConstraint(m, quadexpr <= 1)
+
+    @fact solve(m) => :Optimal
+    @fact getObjectiveValue(m) => roughly(1+4/sqrt(3), 1e-6)
+    @fact getValue(x) + getValue(y) => roughly(-1/3, 1e-3)
+end; end; end
+
 
 facts("[nonlinear] Test infeasibility detection") do
 for nlp_solver in convex_nlp_solvers
