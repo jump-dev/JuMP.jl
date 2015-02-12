@@ -32,7 +32,10 @@ function compute_hessian_sparsity_IJ_parametric(s::SymbolicOutput)
 
 end
 
-compute_hessian_sparsity_IJ(s::SymbolicOutput) = (compute_hessian_sparsity_IJ_parametric(s))(s)
+function compute_hessian_sparsity_IJ(s::SymbolicOutput)
+    prepare_indexlist(s)
+    compute_hessian_sparsity_IJ_parametric(s)(s)
+end
 
 function edgelist_to_IJ(edgelist,s::SymbolicOutput)
     I = Array(Int,0)
