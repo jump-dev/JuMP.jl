@@ -45,11 +45,12 @@ context("With solver $(typeof(cutsolver))") do
     mod = Model(solver=cutsolver)
 
     N = 1000
-    srand(234)
+    # Include explicit data from srand(234) so that we can reproduce across platforms
+    include(joinpath("data","usercut.jl"))
     mod = Model(solver=cutsolver)
     @defVar(mod, x[1:N], Bin)
-    @setObjective(mod, Max, dot(rand(N),x))
-    @addConstraint(mod, c[1:10], dot(rand(N),x) <= rand()*N/10)
+    @setObjective(mod, Max, dot(r1,x))
+    @addConstraint(mod, c[i=1:10], dot(r2[i],x) <= rhs[i]*N/10)
     function mycutgenerator(cb)
         # add a trivially valid cut
         @addUserCut(cb, sum{x[i], i=1:N} <= N)
@@ -69,11 +70,12 @@ context("With solver $(typeof(heursolver))") do
     entered = [false,false]
 
     N = 100
-    srand(250)
+    # Include explicit data from srand(250) so that we can reproduce across platforms
+    include(joinpath("data","heuristic.jl"))
     mod = Model(solver=heursolver)
     @defVar(mod, x[1:N], Bin)
-    @setObjective(mod, Max, dot(rand(N),x))
-    @addConstraint(mod, dot(ones(N),x) <= rand()*N)
+    @setObjective(mod, Max, dot(r1,x))
+    @addConstraint(mod, dot(ones(N),x) <= rhs*N)
     function myheuristic1(cb)
         entered[1] == true && return
         entered[1] = true
@@ -120,10 +122,11 @@ context("With solver $(typeof(infosolver))") do
     entered = [false,false]
 
     N = 10000
+    include(joinpath("data","informational.jl"))
     mod = Model(solver=infosolver)
     @defVar(mod, x[1:N], Bin)
-    @setObjective(mod, Max, dot(rand(N),x))
-    @addConstraint(mod, c[1:10], dot(rand(N),x) <= rand()*N/10)
+    @setObjective(mod, Max, dot(r1,x))
+    @addConstraint(mod, c[i=1:10], dot(r2[i],x) <= rhs[i]*N/10)
     # Test that solver fills solution correctly
     function myinfo(cb)
         entered[1] = true
