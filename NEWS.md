@@ -4,9 +4,10 @@ JuMP release notes
 Unversioned
 -----------
 
-  * **Breaking change**: ``set___Callback`` family deprecated in favor of ``add___Callback``.
+  * ``set___Callback`` family deprecated in favor of ``add___Callback``.
   * Multiple callbacks of the same type can be registered.
   * Added support for informational callbacks via ``addInfoCallback``.
+  * A ``CallbackAbort`` exception can be thrown from callback to safely exit optimization.
 
 Version 0.7.4 (February 4, 2015)
 --------------------------------

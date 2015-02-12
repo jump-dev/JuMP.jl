@@ -19,6 +19,9 @@ type InfoCallback <: JuMPCallback
     f::Function
 end
 
+type CallbackAbort <: Exception end
+export CallbackAbort
+
 Base.copy{T<:JuMPCallback}(c::T) = T(copy(c))
 Base.copy(c::LazyCallback) = LazyCallback(copy(c.f), c.fractional)
 
@@ -39,77 +42,99 @@ function addInfoCallback(m::Model, f::Function)
     push!(m.callbacks, InfoCallback(f))
 end
 
-function attach_callbacks(m::Model, cbs::Vector{LazyCallback})
+function lazycallback(d::MathProgBase.MathProgCallbackData, m::Model, cbs::Vector{LazyCallback})
+    state = MathProgBase.cbgetstate(d)
+    @assert state == :MIPSol || state == :MIPNode
     anyfrac = mapreduce(|, cbs) do cb
         cb.fractional
     end
-    function lazycallback(d::MathProgBase.MathProgCallbackData)
-        state = MathProgBase.cbgetstate(d)
-        @assert state == :MIPSol || state == :MIPNode
-        if state == :MIPSol
-            MathProgBase.cbgetmipsolution(d,m.colVal)
-        elseif anyfrac
-            MathProgBase.cbgetlpsolution(d,m.colVal)
-        else
-            return nothing
-        end
+    if state == :MIPSol
+        MathProgBase.cbgetmipsolution(d,m.colVal)
+    elseif anyfrac
+        MathProgBase.cbgetlpsolution(d,m.colVal)
+    else
+        return :Continue
+    end
+    try
         for cb in cbs
             if state == :MIPSol || cb.fractional
                 cb.f(d)
             end
         end
-        nothing
-    end
-    MathProgBase.setlazycallback!(m.internalModel, lazycallback)
-end
-
-function attach_callbacks(m::Model, cbs::Vector{CutCallback})
-    function cutcallback(d::MathProgBase.MathProgCallbackData)
-        state = MathProgBase.cbgetstate(d)
-        @assert state == :MIPSol || state == :MIPNode
-        if state == :MIPSol  # This shouldn't happen right?
-            println("Is this ever called?")
-            MathProgBase.cbgetmipsolution(d,m.colVal)
+    catch y
+        if isa(y, CallbackAbort)
+            return :Exit
         else
-            MathProgBase.cbgetlpsolution(d,m.colVal)
+            rethrow(y)
         end
+    end
+    :Continue
+end
+
+attach_callbacks(m::Model, cbs::Vector{LazyCallback}) =
+    MathProgBase.setlazycallback!(m.internalModel, d -> lazycallback(d,m,cbs))
+
+function cutcallback(d::MathProgBase.MathProgCallbackData, m::Model, cbs::Vector{CutCallback})
+    state = MathProgBase.cbgetstate(d)
+    @assert state == :MIPNode
+    MathProgBase.cbgetlpsolution(d,m.colVal)
+    try
         for cb in cbs
             cb.f(d)
         end
-        nothing
-    end
-    MathProgBase.setcutcallback!(m.internalModel, cutcallback)
-end
-
-function attach_callbacks(m::Model, cbs::Vector{HeuristicCallback})
-    function heurcallback(d::MathProgBase.MathProgCallbackData)
-        state = MathProgBase.cbgetstate(d)
-        @assert state == :MIPSol || state == :MIPNode
-        if state == :MIPSol  # This shouldn't happen right?
-            println("Is this ever called?")
-            MathProgBase.cbgetmipsolution(d,m.colVal)
+    catch y
+        if isa(y, CallbackAbort)
+            return :Exit
         else
-            MathProgBase.cbgetlpsolution(d,m.colVal)
+            rethrow(y)
         end
-        for cb in cbs
-            cb.f(d)
-        end
-        nothing
     end
-    MathProgBase.setheuristiccallback!(m.internalModel, heurcallback)
+    :Continue
 end
 
-function attach_callbacks(m::Model, cbs::Vector{InfoCallback})
-    function infocallback(d::MathProgBase.MathProgCallbackData)
-        state = MathProgBase.cbgetstate(d)
-        @assert state == :MIPInfo
+attach_callbacks(m::Model, cbs::Vector{CutCallback}) =
+    MathProgBase.setcutcallback!(m.internalModel, d -> cutcallback(d,m,cbs))
+
+function heurcallback(d::MathProgBase.MathProgCallbackData, m::Model, cbs::Vector{HeuristicCallback})
+    state = MathProgBase.cbgetstate(d)
+    @assert state == :MIPNode
+    MathProgBase.cbgetlpsolution(d,m.colVal)
+    try
         for cb in cbs
             cb.f(d)
         end
-        nothing
+    catch y
+        if isa(y, CallbackAbort)
+            return :Exit
+        else
+            rethrow(y)
+        end
     end
-    MathProgBase.setinfocallback!(m.internalModel, infocallback)
+    :Continue
 end
+
+attach_callbacks(m::Model, cbs::Vector{HeuristicCallback}) =
+    MathProgBase.setheuristiccallback!(m.internalModel, d -> heurcallback(d,m,cbs))
+
+function infocallback(d::MathProgBase.MathProgCallbackData, m::Model, cbs::Vector{InfoCallback})
+    state = MathProgBase.cbgetstate(d)
+    @assert state == :MIPInfo
+    try
+        for cb in cbs
+            cb.f(d)
+        end
+    catch y
+        if isa(y, CallbackAbort)
+            return :Exit
+        else
+            rethrow(y)
+        end
+    end
+    :Continue
+end
+
+attach_callbacks(m::Model, cbs::Vector{InfoCallback}) =
+    MathProgBase.setinfocallback!(m.internalModel, d -> infocallback(d,m,cbs))
 
 function registercallbacks(m::Model)
     isempty(m.callbacks) && return # might as well avoid allocating the indexedVector

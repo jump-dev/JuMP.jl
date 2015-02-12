@@ -12,6 +12,7 @@ using JuMP, MathProgBase, FactCheck, Compat
 facts("[callback] Test lazy constraints") do
 for lazysolver in lazy_solvers
 context("With solver $(typeof(lazysolver))") do
+    entered = [false,false]
 
     mod = Model(solver=lazysolver)
     @defVar(mod, 0 <= x <= 2, Int)
@@ -25,9 +26,12 @@ context("With solver $(typeof(lazysolver))") do
         if y_val + x_val > 3 + TOL
             @addLazyConstraint(cb, y + 0.5x + 0.5x <= 3)
         end
+        entered[1] = true
     end
     addLazyCallback(mod, corners)
+    addLazyCallback(mod, cb -> (entered[2] = true))
     @fact solve(mod) => :Optimal
+    @fact entered => [true,true]
     @fact getValue(x) => roughly(1.0, 1e-6)
     @fact getValue(y) => roughly(2.0, 1e-6)
 end; end; end
@@ -36,64 +40,77 @@ end; end; end
 facts("[callback] Test user cuts") do
 for cutsolver in cut_solvers
 context("With solver $(typeof(cutsolver))") do
+    entered = [false,false]
 
     mod = Model(solver=cutsolver)
-    @defVar(mod, 0 <= x <= 2, Int)
-    @defVar(mod, 0 <= y <= 2, Int)
-    @setObjective(mod, Max, x + 2y)
-    @addConstraint(mod, y + x <= 3.5)
+
+    N = 1000
+    # Include explicit data from srand(234) so that we can reproduce across platforms
+    include(joinpath("data","usercut.jl"))
+    mod = Model(solver=cutsolver)
+    @defVar(mod, x[1:N], Bin)
+    @setObjective(mod, Max, dot(r1,x))
+    @addConstraint(mod, c[i=1:10], dot(r2[i],x) <= rhs[i]*N/10)
     function mycutgenerator(cb)
-        x_val = getValue(x)
-        y_val = getValue(y)
-        TOL = 1e-6
-        # Check top right
-        if y_val + x_val > 3 + TOL
-            @addUserCut(cb, y + x <= 3)
-        end
+        # add a trivially valid cut
+        @addUserCut(cb, sum{x[i], i=1:N} <= N)
+        entered[1] = true
     end
     addCutCallback(mod, mycutgenerator)
+    addCutCallback(mod, cb -> (entered[2] = true))
     @fact solve(mod) => :Optimal
-    @fact getValue(x) => roughly(1.0, 1e-6)
-    @fact getValue(y) => roughly(2.0, 1e-6)
+    @fact entered => [true,true]
+    @fact find(getValue(x)[:]) => [35,38,283,305,359,397,419,426,442,453,526,553,659,751,840,865,878,978]
 end; end; end
 
 
 facts("[callback] Test heuristics") do
 for heursolver in heur_solvers
 context("With solver $(typeof(heursolver))") do
+    entered = [false,false]
 
+    N = 100
+    # Include explicit data from srand(250) so that we can reproduce across platforms
+    include(joinpath("data","heuristic.jl"))
     mod = Model(solver=heursolver)
-    @defVar(mod, 0 <= x <= 2, Int)
-    @defVar(mod, 0 <= y <= 2, Int)
-    @setObjective(mod, Max, x + 2y)
-    @addConstraint(mod, y + x <= 3.5)
-    # Test that solver fills solution correctly
+    @defVar(mod, x[1:N], Bin)
+    @setObjective(mod, Max, dot(r1,x))
+    @addConstraint(mod, dot(ones(N),x) <= rhs*N)
     function myheuristic1(cb)
-        x_val = getValue(x)
-        y_val = getValue(y)
-        # Heuristic is to round solution down
-        setSolutionValue!(cb, x, floor(x_val))
-        # Leave y undefined - solver should handle as it sees fit
-        # In case of Gurobi - try to figure out what it should be
+        entered[1] == true && return
+        entered[1] = true
+        for i in 1:100
+            if i in [9,10,11,14,15,16,25,30,32,41,44,49,50,53,54,98,100]
+                setSolutionValue!(cb, x[i], 0)
+            else
+                setSolutionValue!(cb, x[i], 1)
+            end
+        end
         addSolution(cb)
     end
     addHeuristicCallback(mod, myheuristic1)
+    addHeuristicCallback(mod, cb -> (entered[2] = true))
     @fact solve(mod) => :Optimal
-    @fact getValue(x) => roughly(1.0, 1e-6)
-    @fact getValue(y) => roughly(2.0, 1e-6)
+    @fact entered => [true,true]
+    @fact find(getValue(x)[:]) => setdiff(1:N,[9,10,11,14,15,16,25,30,32,41,44,49,50,53,54,98,100])
 
     empty!(mod.callbacks)
+    entered[1] = false
     # Test that solver rejects infeasible partial solutions...
+    # ...the second solution has higher objective value, but is infeasible
     function myheuristic2(cb)
-        x_val = getValue(x)
-        y_val = getValue(y)
-        setSolutionValue!(cb, x, 3)
+        entered[1] == true && return
+        entered[1] = true
+        for i in 1:90 # not every component, but close
+            setSolutionValue!(cb, x[i], 1)
+        end
         addSolution(cb)
     end
     addHeuristicCallback(mod, myheuristic2)
+    addHeuristicCallback(mod, cb -> (entered[2] = true))
     @fact solve(mod) => :Optimal
-    @fact getValue(x) => roughly(1.0, 1e-6)
-    @fact getValue(y) => roughly(2.0, 1e-6)
+    @fact entered => [true,true]
+    @fact find(getValue(x)[:]) => setdiff(1:N,[9,10,11,14,15,16,25,30,32,41,44,49,50,53,54,98,100])
 end; end; end
 
 facts("[callback] Test informational callback") do
@@ -102,21 +119,25 @@ context("With solver $(typeof(infosolver))") do
     nodes      = Int[]
     objs       = Float64[]
     bestbounds = Float64[]
+    entered = [false,false]
 
-    srand(100)
     N = 10000
+    include(joinpath("data","informational.jl"))
     mod = Model(solver=infosolver)
     @defVar(mod, x[1:N], Bin)
-    @setObjective(mod, Max, dot(rand(N),x))
-    @addConstraint(mod, c[1:10], dot(rand(N),x) <= rand()*N/10)
+    @setObjective(mod, Max, dot(r1,x))
+    @addConstraint(mod, c[i=1:10], dot(r2[i],x) <= rhs[i]*N/10)
     # Test that solver fills solution correctly
     function myinfo(cb)
+        entered[1] = true
         push!(nodes,      MathProgBase.cbgetexplorednodes(cb))
         push!(objs,       MathProgBase.cbgetobj(cb))
         push!(bestbounds, MathProgBase.cbgetbestbound(cb))
     end
     addInfoCallback(mod, myinfo)
+    addInfoCallback(mod, cb -> (entered[2] = true))
     @fact solve(mod) => :Optimal
+    @fact entered => [true,true]
     mono_node, mono_obj, mono_bestbound = true, true, true
     for n in 2:length(nodes)
         mono_node &= (nodes[n-1] <= nodes[n] + 1e-8)
@@ -130,31 +151,16 @@ context("With solver $(typeof(infosolver))") do
     @fact mono_bestbound => true
 end; end; end
 
-facts("[callback] Test multiple callbacks") do
-for solver in intersect(lazy_solvers,cut_solvers,heur_solvers)
+facts("[callback] Callback exit on CallbackAbort") do
+for solver in lazy_solvers
 context("With solver $(typeof(solver))") do
-
     mod = Model(solver=solver)
     @defVar(mod, 0 <= x <= 2, Int)
     @defVar(mod, 0 <= y <= 2, Int)
     @setObjective(mod, Max, x + 2y)
     @addConstraint(mod, y + x <= 3.5)
-    cb_tracker = @compat Dict(
-        :l_1 => false,
-        :l_2 => false,
-        :c_1 => false,
-        :c_2 => false,
-        :h_1 => false,
-        :h_2 => false
-    )
-    addLazyCallback(mod, cb -> (cb_tracker[:l_1] = true))
-    addLazyCallback(mod, cb -> (cb_tracker[:l_2] = true))
-    addCutCallback(mod, cb -> (cb_tracker[:c_1] = true))
-    addCutCallback(mod, cb -> (cb_tracker[:c_2] = true))
-    addHeuristicCallback(mod, cb -> (cb_tracker[:h_1] = true))
-    addHeuristicCallback(mod, cb -> (cb_tracker[:h_2] = true))
 
-    @fact solve(mod) => :Optimal
-    @fact collect(values(cb_tracker)) => fill(true,6)
+    mycallback = _ -> throw(CallbackAbort())
+    addLazyCallback(mod, mycallback)
+    @fact_throws solve(mod)
 end; end; end
-
