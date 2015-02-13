@@ -80,7 +80,7 @@ math(s,mathmode) = mathmode ? s : "\$\$ $s \$\$"
 ## Model
 #------------------------------------------------------------------------
 function Base.print(io::IO, m::Model; ignore_print_hook=(m.printhook==nothing))
-    ignore_print_hook || return m.printhook(m)
+    ignore_print_hook || return m.printhook(io, m)
     print(io, model_str(REPLMode,m))
 end
 

@@ -505,7 +505,7 @@ facts("[model] Setting print hook") do
     m = Model()
     @defVar(m, x ≥ 0)
     dummy = [1]
-    function printhook(m::Model)
+    function printhook(io::IO, m::Model)
         dummy[1] += 1
     end
     setPrintHook(m, printhook)
