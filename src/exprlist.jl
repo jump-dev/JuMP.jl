@@ -84,6 +84,12 @@ function prep_sparse_hessians(l::ExprList, num_total_vars; need_expr::Bool=false
             refidx = l.referenceExpr[x.hashval] 
             ref = l.exprs[refidx]
             prepare_indexlist(x, l.idxfuncs[refidx](x.inputvals...))
+            # these are always shared
+            push!(l.idxfuncs, l.idxfuncs[refidx])
+            push!(l.valfuncs, l.valfuncs[refidx])
+            push!(l.gradfuncs, l.gradfuncs[refidx])
+            push!(l.hess_matmat_funcs, l.hess_matmat_funcs[refidx])
+            push!(l.hess_IJ_funcs, l.hess_IJ_funcs[refidx])
 
             matches = (length(x.indexlist) == length(ref.indexlist))
             if matches
@@ -96,10 +102,6 @@ function prep_sparse_hessians(l::ExprList, num_total_vars; need_expr::Bool=false
             end
             if matches
                 # re-use AD and coloring from previous expression
-                push!(l.valfuncs, l.valfuncs[refidx])
-                push!(l.gradfuncs, l.gradfuncs[refidx])
-                push!(l.hess_matmat_funcs, l.hess_matmat_funcs[refidx])
-                push!(l.hess_IJ_funcs, l.hess_IJ_funcs[refidx])
                 push!(l.hessfuncs, l.hessfuncs[refidx])
                 hI,hJ = l.hessIJ[refidx]
                 push!(l.hessIJ, (hI,hJ))
@@ -109,13 +111,7 @@ function prep_sparse_hessians(l::ExprList, num_total_vars; need_expr::Bool=false
                 appendToIJ!(I,J,hI,hJ,x)
             else
                 # we can share the AD but not the coloring here
-                hess_matmat = l.hess_matmat_funcs[refidx]
-                hess_IJf = l.hess_IJ_funcs[refidx]
-                hI, hJ, hf = gen_hessian_sparse_color_parametric(x, num_total_vars, hess_matmat, hess_IJf)
-                push!(l.valfuncs, l.valfuncs[refidx])
-                push!(l.gradfuncs, l.gradfuncs[refidx])
-                push!(l.hess_matmat_funcs, hess_matmat)
-                push!(l.hess_IJ_funcs, hess_IJf)
+                hI, hJ, hf = gen_hessian_sparse_color_parametric(x, num_total_vars, l.hess_matmat_funcs[refidx], l.hess_IJ_funcs[refidx])
                 push!(l.hessfuncs, hf)
                 push!(l.hessIJ, (hI, hJ))
                 appendToIJ!(I,J,hI,hJ,x)
