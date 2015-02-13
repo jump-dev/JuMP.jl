@@ -8,6 +8,9 @@ ex = @processNLExpr sin(y[1])
 
 @test base_expression(ex) == :(sin(y[1]))
 
+ex = @parametricExpr i sin(y[i])
+@test base_expression(ex) == :(sin(y[i]))
+
 
 ex = @processNLExpr sin(y[1])^2
 @test to_flat_expr(ex) == :(sin(x[1])^2)

@@ -252,7 +252,7 @@ fval = fg([0.5,1.0],out)
 
 # nested subexpressions
 c = 10
-ex = @processNLExpr c*x[1]^2
+ex = @parametricExpr c*x[1]^2
 ex2 = @processNLExpr ex+x[2]
 fg = genfgrad_simple(ex2)
 fval = fg([2.5,1.0],out)
@@ -260,17 +260,20 @@ fval = fg([2.5,1.0],out)
 @test_approx_eq out[1] 2*c*2.5
 @test_approx_eq out[2] 1
 
-exarr = [ex]
-ex2 = @processNLExpr exarr[1]+x[2]
+ex = @parametricExpr j c*x[j]^2
+ex2 = @processNLExpr ex[1]+x[2]
 fg = genfgrad_simple(ex2)
 fval = fg([2.5,1.0],out)
 @test_approx_eq fval c*2.5^2+1
 @test_approx_eq out[1] 2*c*2.5
 @test_approx_eq out[2] 1
 
-ex2 = @processNLExpr sum{exarr[i],i=1:1}+x[2]
+ex2 = @processNLExpr sum{ex[i],i=1:1}+x[2]
 fg = genfgrad_simple(ex2)
-@test_throws ErrorException fg([2.5,1.0],out)
+fval = fg([2.5,1.0],out)
+@test_approx_eq fval c*2.5^2+1
+@test_approx_eq out[1] 2*c*2.5
+@test_approx_eq out[2] 1
 
 
 println("Passed tests")

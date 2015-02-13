@@ -1,9 +1,10 @@
 
 # generate code that can be compiled to compute the gradient
 
-replace_x(x::Expr, xvar) = Expr(x.head, [replace_x(ex,xvar) for ex in x.args]...)
-replace_x(s::Symbol, xvar) = (s == :x) ? xvar : s
-replace_x(x, xvar) = x
+replace_x(x, xvar) = replace_param(x, :x, xvar)
+replace_param(x::Expr, param::Symbol, xvar) = Expr(x.head, [replace_param(ex,param,xvar) for ex in x.args]...)
+replace_param(s::Symbol, param::Symbol, xvar) = (s == param) ? xvar : s
+replace_param(x, param::Symbol, xvar) = x
 
 const rules = Dict()
 for (funsym, exp) in Calculus.symbolic_derivatives_1arg()
@@ -35,12 +36,12 @@ end
 
 
 
-function quoteTree(x::Expr, datalist::Dict, iterstack, prefix, justrename::Bool=false)
+function quoteTree(x::Expr, datalist::Dict, iterstack, prefix, parameters = [], justrename::Bool=false)
     if isexpr(x, :call)
         # quote the function name
         code = justrename ? Expr(:call, x.args[1]) : :(Expr(:call,$(quot(x.args[1]))))
         for y in x.args[2:end]
-            push!(code.args,quoteTree(y, datalist, iterstack, prefix, justrename))
+            push!(code.args,quoteTree(y, datalist, iterstack, prefix, parameters, justrename))
         end
         return code
     elseif isexpr(x, :curly)
@@ -68,13 +69,13 @@ function quoteTree(x::Expr, datalist::Dict, iterstack, prefix, justrename::Bool=
             push!(code.args,:(Expr(:parameters,$(quoteTree(x.args[2].args[1],datalist,iterstack, prefix, justrename)))))
         end
         # body of expression
-        push!(code.args,quoteTree(x.args[idxstart-1],datalist,iterstack,prefix, justrename))
+        push!(code.args,quoteTree(x.args[idxstart-1],datalist,iterstack,prefix,parameters,justrename))
         # store iteration sets
         for ex in x.args[end:-1:idxstart]
             pop!(iterstack)
             @assert isexpr(ex,:(=)) || isexpr(ex,:in)
             #itrset = symbol(string("iterset",string(gensym())))
-            rhs = quoteTree(ex.args[2], datalist, iterstack, prefix, justrename)
+            rhs = quoteTree(ex.args[2], datalist, iterstack, prefix, parameters, justrename)
             push!(code.args, :(Expr(:(=), $(quot(ex.args[1])), $rhs)))
         end
         return code
@@ -85,13 +86,10 @@ function quoteTree(x::Expr, datalist::Dict, iterstack, prefix, justrename::Bool=
         xold = x
         x = copy(x)
         for i in 1:length(x.args)
-            x.args[i] = quoteTree(x.args[i], datalist, iterstack, prefix, true)
+            x.args[i] = quoteTree(x.args[i], datalist, iterstack, prefix, parameters, true)
         end
-        if length(iterstack) == 0
-            return :(ifelse($xold, $(quot(x))))
-        else
-            return quot(x)
-        end
+        return Expr(:call,:replaceif,esc(xold.args[1]),quot(x),[quot(s) for s in x.args[2:end]]...)
+        #return quot(x)
     elseif isexpr(x, :quote)
         return x
     else
@@ -103,7 +101,7 @@ function quoteTree(x::Expr, datalist::Dict, iterstack, prefix, justrename::Bool=
             if isexpr(x, :comparison) && iseven(i)
                 push!(code.args, quot(x.args[i])) # don't rename comparison operators
             else
-                push!(code.args,quoteTree(x.args[i], datalist, iterstack, prefix, justrename))
+                push!(code.args,quoteTree(x.args[i], datalist, iterstack, prefix, parameters, justrename))
             end
         end
         return code
@@ -127,42 +125,23 @@ function initerstack(x::Symbol, iterstack)
 end
 
 
-function quoteTree(x::Symbol, datalist, iterstack, prefix, justrename)
-    newsym = symbol("$prefix$x")
+function quoteTree(x::Symbol, datalist, iterstack, prefix, parameters, justrename)
+    newsym = x in parameters ? x : symbol("$prefix$x") # don't rename parameters
     if initerstack(x,iterstack)
         return justrename ? x : quot(x)
     else
         datalist[newsym] = x
     end
-    quoted = justrename ? newsym : quot(newsym)
-    #quoted = quot(newsym)
-    if length(iterstack) == 0 && !justrename
-        return :(ifelse($x, $quoted))
+    if justrename
+        return newsym
     else
-        return quoted
+        return Expr(:call,:replaceif,esc(x),quot(newsym))
     end
 end
 
-quoteTree(x, datalist, iterstack, prefix, justrename) = x
+quoteTree(x, datalist, iterstack, prefix, parameters, justrename) = x
 
-addToVarList!(l,inputvals,inputnames,hashsave,x::Placeholder) = push!(l,getplaceindex(x))
-addToVarList!(l,inputvals,inputnames,hashsave,x) = nothing
 
-function genVarList(x::Expr, arrname, inputvals, inputnames, hashsave)
-    if x.head == :curly
-        code = genVarList(curlyexpr(x),arrname, inputvals, inputnames, hashsave)
-        return gencurlyloop(x,code, escape=true)
-    elseif x.head == :call
-        return Expr(:block,[genVarList(y,arrname, inputvals, inputnames, hashsave) for y in x.args[2:end]]...)
-    elseif x.head in (:comparison, :&&, :||)
-        return Expr(:block,[genVarList(y,arrname, inputvals, inputnames, hashsave) for y in x.args]...)
-    else
-        return :(addToVarList!($arrname,$inputvals,$inputnames,$hashsave,$(esc(x))))
-    end
-end
-
-genVarList(x::Number,arrname,inputvals,inputnames,hashsave) = nothing
-genVarList(x::Symbol,arrname,inputvals,inputnames,hashsave) = :(addToVarList!($arrname,$inputvals,$inputnames,$hashsave,$(esc(x))))
 
 type SymbolicOutput
     tree
@@ -173,38 +152,33 @@ type SymbolicOutput
     mapfromcanonical::Vector{Int}
     maptocanonical
     hashval # for identifying expressions with identical trees
-    symbolprefix
 end
 
-function addToVarList!(l,inputvals,inputnames,hashsave,x::SymbolicOutput)
-    append!(l,x.indexlist)
-    push!(inputvals, x.inputvals...)
-    push!(inputnames, x.inputnames...)
-    hashsave[1] = hash(x.hashval, hashsave[1])
-end
+
 
 remove_prefix(x::Expr, prefix::String) = Expr(x.head, [remove_prefix(ex,prefix) for ex in x.args]...)
-remove_prefix(s::Symbol, prefix::String) = startswith(string(s),prefix) ? symbol(string(s)[length(prefix)+1:end]) : s
+function remove_prefix(s::Symbol, prefix::String)
+    str = string(s)
+    if startswith(str,prefix)
+        return symbol(str[search(str,"##",6)[2]+1:end])
+    else
+        return s
+    end
+end
 remove_prefix(x, prefix::String) = x
-base_expression(s::SymbolicOutput) = remove_prefix(s.tree, s.symbolprefix)
+base_expression(s::SymbolicOutput) = remove_prefix(s.tree, "__R")
 export base_expression
 
-# Type stable version of:
-# isa(x,SymbolicOutput) ? x.tree : s
-# We extend Base.ifelse as a hack for hygiene issues.
-# See JuliaOpt/JuMP.jl#387.
-Base.ifelse(x::SymbolicOutput,s::Union(Symbol,Expr)) = x.tree
-Base.ifelse(::Any,s::Union(Symbol,Expr)) = s
+
 
 macro processNLExpr(x)
-    indexlist = genVarList(x, :idxlist, :inputvals, :inputnames, :hashsave)
     datalist = Dict()
     # in the corner case that x is just a symbol, promote it to an expr
     if isa(x, Symbol)
         x = Expr(:call,:+,x,0)
     end
-    symbolprefix = string(gensym(),"##")
-    tree = esc(quoteTree(x, datalist, Any[], symbolprefix))
+    symbolprefix = string("__R",gensym(),"##")
+    tree = quoteTree(x, datalist, Any[], symbolprefix)
     inputnames = Expr(:ref,:Symbol)
     inputvals = Expr(:ref,:Any)
     for (k,v) in datalist
@@ -212,30 +186,94 @@ macro processNLExpr(x)
         push!(inputvals.args, esc(v))
     end
     #@show tree
-    #@show indexlist
+    subexprcode = quote end
+    for v in values(datalist)
+        push!(subexprcode.args, :(hashval = hashif($(esc(v)),hashval)))
+        push!(subexprcode.args, :(appendnamesif!(inputnames,$(esc(v)))))
+        push!(subexprcode.args, :(appendvalsif!(inputvals,$(esc(v)))))
+    end
     return quote
         inputnames = $inputnames
         inputvals = $inputvals
-        idxlist = Int[]
-        hashsave = [$(hash(x))]
-        $indexlist
-        SymbolicOutput($tree, tuple(inputnames...), tuple(inputvals...), idxlist, hashsave[1], $symbolprefix)
+        hashval = $(hash(x))
+        $subexprcode
+        SymbolicOutput($tree, tuple(inputnames...), tuple(inputvals...), hashval)
     end
 end
 
-function SymbolicOutput(tree, inputnames, inputvals, indexlist, hashval, symbolprefix)
-    # compute canonical indices and maps
-    unq = unique(indexlist)
-    nidx = length(unq)
-    # canonical is 1:nidx
-    maptocanonical = Dict{Int,Int}()
-    for k in 1:nidx
-        maptocanonical[unq[k]] = k
-    end
-    return SymbolicOutput(tree, inputnames, inputvals, indexlist, unq, maptocanonical, hashval, symbolprefix)
+function SymbolicOutput(tree, inputnames, inputvals, hashval)
+    return SymbolicOutput(tree, inputnames, inputvals, nothing, Int[], nothing, hashval)
 end
 
-export @processNLExpr
+
+
+type ParametricExpression{N}
+    tree
+    inputnames
+    inputvals
+    parameters::NTuple{N,Symbol}
+    hashval
+end
+
+macro parametricExpr(args...)
+    params = args[1:end-1]
+    x = args[end]
+    datalist = Dict()
+    # in the corner case that x is just a symbol, promote it to an expr
+    if isa(x, Symbol)
+        x = Expr(:call,:+,x,0)
+    end
+    symbolprefix = string("__R",gensym(),"##")
+    tree = quoteTree(x, datalist, Any[], symbolprefix, params)
+    inputnames = Expr(:ref,:Symbol)
+    inputvals = Expr(:ref,:Any)
+    for (k,v) in datalist
+        v in params && continue
+        push!(inputnames.args, quot(k))
+        push!(inputvals.args, esc(v))
+    end
+    subexprcode = quote end
+    for v in values(datalist)
+        v in params && continue
+        push!(subexprcode.args, :(hashval = hashif($(esc(v)),hashval)))
+        push!(subexprcode.args, :(appendnamesif!(inputnames,$(esc(v)))))
+        push!(subexprcode.args, :(appendvalsif!(inputvals,$(esc(v)))))
+    end
+    paramtup = Expr(:tuple)
+    for p in params
+        @assert isa(p,Symbol)
+        push!(paramtup.args, quot(p))
+    end
+    return quote
+        inputnames = $inputnames
+        inputvals = $inputvals
+        hashval = $(hash(x))
+        $subexprcode
+        ParametricExpression($tree, tuple(inputnames...), tuple(inputvals...), $paramtup, hashval)
+    end
+end
+
+base_expression(s::ParametricExpression) = remove_prefix(s.tree, "__R")
+
+export @parametricExpr, @processNLExpr
+
+hashif(x::ParametricExpression,h) = hash(x,h)
+hashif(x,h) = h
+appendnamesif!(inputnames,x::ParametricExpression) = push!(inputnames, x.inputnames...)
+appendnamesif!(inputnames,x) = nothing
+appendvalsif!(inputvals,x::ParametricExpression) = push!(inputvals, x.inputvals...)
+appendvalsif!(inputvals,x) = nothing
+
+# Substitute the parametric expression with parameters replaced with args...
+function replaceif{N}(x::ParametricExpression{N},s::Union(Symbol,Expr), args...)
+    length(args) == N || error("Incorrect number of parameters for expression $x")
+    tree = x.tree
+    for i in 1:N
+        tree = replace_param(tree, x.parameters[i], args[i])
+    end
+    return tree
+end
+replaceif(::Any,s::Union(Symbol,Expr), args...) = s
 
 # turn each node in the expression tree into an ExprNode
 # this expression is kth argument in parent expression
@@ -279,6 +317,65 @@ end
 
 genExprGraph{T<:Number}(x::T, parent, k) = x
 genExprGraph(x, parent, k) = ExprNode(x, [(parent,k)], nothing, nothing)
+
+
+addToVarList!(l,x::Placeholder) = push!(l,getplaceindex(x))
+addToVarList!(l,x) = nothing
+function genVarList(x::Expr, arrname)
+    if x.head == :curly
+        code = genVarList(curlyexpr(x),arrname)
+        return gencurlyloop(x,code, escape=false)
+    elseif x.head == :call
+        return Expr(:block,[genVarList(y,arrname) for y in x.args[2:end]]...)
+    elseif x.head in (:comparison, :&&, :||)
+        return Expr(:block,[genVarList(y,arrname) for y in x.args]...)
+    else
+        return :(addToVarList!($arrname,$x))
+    end
+end
+genVarList(x::Number,arrname) = nothing
+genVarList(x::Symbol,arrname) = :(addToVarList!($arrname,$x))
+
+function prepare_indexlist(s::SymbolicOutput, indexlist)
+    # compute canonical indices and maps
+    unq = unique(indexlist)
+    nidx = length(unq)
+    # canonical is 1:nidx
+    maptocanonical = Dict{Int,Int}()
+    for k in 1:nidx
+        maptocanonical[unq[k]] = k
+    end
+    s.indexlist = indexlist
+    s.mapfromcanonical = unq
+    s.maptocanonical = maptocanonical
+    return
+end
+
+function prepare_indexlist(s::SymbolicOutput)
+    idxvals = genindexlist_parametric(s)(s.inputvals...)
+    prepare_indexlist(s,idxvals)
+end
+
+export prepare_indexlist
+
+function genindexlist_parametric(x::SymbolicOutput)
+    out = Expr(:block)
+    genVarList
+    fval = forwardpass(genExprGraph(x.tree), out)
+    fexpr = quote
+        function _IDXLIST_()
+            indexlist = Int[]
+            $(genVarList(x.tree, :indexlist))
+            return indexlist
+        end
+    end
+    # add arguments for inputnames -- local data
+    for i in 1:length(x.inputnames)
+        push!(fexpr.args[2].args[1].args,x.inputnames[i])
+    end
+
+    return eval(:( local _IDXLIST_; $fexpr; _IDXLIST_))
+end
 
 # accumulator for prod{} terms
 # we need to handle this specially so that we can compute
@@ -498,6 +595,7 @@ saverevvalue(x, val, output, placeindex_out) = nothing
 
 # gradient evaluation parametric on "inputvals"
 function genfgrad_parametric(x::SymbolicOutput)
+    @assert x.indexlist !== nothing
     out = Expr(:block)
     exgraph = genExprGraph(x.tree)
     fval = forwardpass(exgraph, out)
@@ -525,6 +623,7 @@ end
 # expression evaluation parametric on "inputvals"
 # forward pass only
 function genfval_parametric(x::SymbolicOutput)
+    @assert x.indexlist !== nothing
     out = Expr(:block)
     fval = forwardpass(genExprGraph(x.tree), out)
     fexpr = quote
@@ -542,6 +641,7 @@ function genfval_parametric(x::SymbolicOutput)
 end
 
 function genfval_simple(x::SymbolicOutput)
+    prepare_indexlist(x)
     f = genfval_parametric(x)
     return xvals -> f(xvals, IdentityArray(), x.inputvals...)
 end
@@ -552,6 +652,7 @@ end
 Base.getindex(::IdentityArray,i) = i
 
 function genfgrad_simple(x::SymbolicOutput)
+    prepare_indexlist(x)
     fexpr = genfgrad_parametric(x)
     f = eval(fexpr)
     return (xvals, out) -> (fill!(out, 0.0); f(xvals, IdentityArray(), out, IdentityArray(),x.inputvals...))

@@ -10,6 +10,7 @@ type ExprList
     exprs::Vector{SymbolicOutput}
     referenceExpr::Dict
    # matchesCanonical::Vector{Bool}
+    idxfuncs::Vector{Function}
     valfuncs::Vector{Function}
     gradfuncs::Vector{Function}
     hess_matmat_funcs::Vector{Function}
@@ -20,7 +21,7 @@ type ExprList
 end
 
 
-ExprList() = ExprList(SymbolicOutput[],Dict(), Function[], Function[], Function[], Function[], Function[], Array((Vector{Int},Vector{Int}),0), Function[])
+ExprList() = ExprList(SymbolicOutput[],Dict(), Function[], Function[], Function[], Function[], Function[], Function[], Array((Vector{Int},Vector{Int}),0), Function[])
 
 Base.push!(l::ExprList, s::SymbolicOutput) = push!(l.exprs, s)
 Base.getindex(l::ExprList, i) = l.exprs[i]
@@ -39,6 +40,7 @@ end
 function prep_sparse_hessians(l::ExprList, num_total_vars; need_expr::Bool=false)
     # clear current state
     empty!(l.referenceExpr)
+    empty!(l.idxfuncs)
     empty!(l.valfuncs)
     empty!(l.gradfuncs)
     empty!(l.hess_matmat_funcs)
@@ -58,11 +60,14 @@ function prep_sparse_hessians(l::ExprList, num_total_vars; need_expr::Bool=false
     for (i,x) in enumerate(l.exprs)
         if !haskey(l.referenceExpr, x.hashval)
             l.referenceExpr[x.hashval] = i
+            idxf = genindexlist_parametric(x)
+            prepare_indexlist(x, idxf(x.inputvals...))
             f = genfval_parametric(x)
             gf = genfgrad_parametric(x)
             hess_matmat = gen_hessian_matmat_parametric(x, gf)
             hess_IJf = compute_hessian_sparsity_IJ_parametric(x)
             hI, hJ, hf = gen_hessian_sparse_color_parametric(x, num_total_vars, hess_matmat, hess_IJf)
+            push!(l.idxfuncs, idxf)
             push!(l.valfuncs, f)
             push!(l.gradfuncs, gf)
             push!(l.hess_matmat_funcs, hess_matmat)
@@ -78,6 +83,8 @@ function prep_sparse_hessians(l::ExprList, num_total_vars; need_expr::Bool=false
             # indices in this expression
             refidx = l.referenceExpr[x.hashval] 
             ref = l.exprs[refidx]
+            prepare_indexlist(x, l.idxfuncs[refidx](x.inputvals...))
+
             matches = (length(x.indexlist) == length(ref.indexlist))
             if matches
                 for k in 1:length(x.indexlist)
