@@ -100,6 +100,8 @@ function quoteTree(x::Expr, datalist::Dict, iterstack, prefix, parameters = [], 
         for i in 1:length(x.args)
             if isexpr(x, :comparison) && iseven(i)
                 push!(code.args, quot(x.args[i])) # don't rename comparison operators
+            elseif isexpr(x.args[i], :quote) && !justrename # for dot syntax
+                push!(code.args, quot(x.args[i]))
             else
                 push!(code.args,quoteTree(x.args[i], datalist, iterstack, prefix, parameters, justrename))
             end
@@ -312,7 +314,7 @@ function genExprGraph(x::Expr, parent, k)
         end
         return thisnode
     else
-        @assert isexpr(x, :ref)
+        @assert isexpr(x, :ref) || isexpr(x, :.)
         return ExprNode(x, parentarr)
     end
 end
