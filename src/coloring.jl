@@ -62,13 +62,16 @@ function acyclic_coloring(g)
     end
 
     for v in 1:num_vertices(g)
-        for w in out_neighbors(v,g)
+        for eg in out_edges(v,g)
+            w = target(eg)
             colored(w) || continue
             forbiddenColors[color[w]] = v
         end
-        for w in out_neighbors(v,g)
+        for eg in out_edges(v,g)
+            w = target(eg)
             colored(w) || continue
-            for x in out_neighbors(w,g)
+            for eg2 in out_edges(w,g)
+                x = target(eg2)
                 colored(x) || continue
                 if forbiddenColors[color[x]] != v
                     prevent_cycle(v,w,x)
@@ -92,13 +95,16 @@ function acyclic_coloring(g)
             color[v] = num_colors
         end
 
-        for w in out_neighbors(v,g)
+        for eg in out_edges(v,g)
+            w = target(eg)
             colored(w) || continue
             grow_star(v,w)
         end
-        for w in out_neighbors(v,g)
+        for eg in out_edges(v,g)
+            w = target(eg)
             colored(w) || continue
-            for x in out_neighbors(w,g)
+            for eg2 in out_edges(w,g)
+                x = target(eg2)
                 (colored(x) && x != v) || continue
                 if color[x] == color[v]
                     merge_trees(v,w,x)
@@ -180,17 +186,18 @@ function recovery_preprocess(g,color; verify_acyclic::Bool=false)
             # find the neighbor that we haven't seen
             notseen = 0
             numseen = 0
-            for w in out_neighbors(v,s)
+            for eg in out_edges(v,s)
+                w = target(eg)
                 if seen[w]
                     numseen += 1
                 else
                     notseen = w
                 end
             end
-            if numseen == length(out_neighbors(v,s)) - 1
+            if numseen == length(out_edges(v,s)) - 1
                 parent[v] = notseen
             else
-                (numseen == length(out_neighbors(v,s))) || error("Error processing tree, invalid ordering")
+                (numseen == length(out_edges(v,s))) || error("Error processing tree, invalid ordering")
             end
         end
         push!(parents, parent)
@@ -308,7 +315,7 @@ function gen_hessian_sparse_color_parametric(s::SymbolicOutput, num_total_vars, 
 
 
     g = gen_adjlist(zip(I,J), length(s.mapfromcanonical))
-    
+
     color, num_colors = acyclic_coloring(g)
 
     @assert length(color) == num_vertices(g)
