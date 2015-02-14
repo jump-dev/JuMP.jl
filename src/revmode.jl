@@ -134,6 +134,8 @@ function quoteTree(x::Symbol, datalist, iterstack, prefix, parameters, justrenam
     end
     if justrename
         return newsym
+    elseif x in parameters
+        return quot(newsym)
     else
         return Expr(:call,:replaceif,esc(x),quot(newsym))
     end

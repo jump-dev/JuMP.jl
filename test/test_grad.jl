@@ -275,5 +275,14 @@ fval = fg([2.5,1.0],out)
 @test_approx_eq out[1] 2*c*2.5
 @test_approx_eq out[2] 1
 
+ex = @parametricExpr i j ifelse(i==j,1,0)
+ex2 = @processNLExpr ex[1,1] + ex[1,2]
+f = genfval_simple(ex2)
+@test_approx_eq f([3.0]) 1.0
+
+ex2 = @processNLExpr ifelse(ex[1,1] == ex[2,2],3,0)
+f = genfval_simple(ex2)
+@test_approx_eq f([3.0]) 3.0
+
 
 println("Passed tests")
