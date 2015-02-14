@@ -284,5 +284,10 @@ ex2 = @processNLExpr ifelse(ex[1,1] == ex[2,2],3,0)
 f = genfval_simple(ex2)
 @test_approx_eq f([3.0]) 3.0
 
+ex = @parametricExpr i sum{x[k],k=1:2;k==i}
+ex2 = @processNLExpr ex[1]
+f = genfval_simple(ex2)
+@test_approx_eq f([2.0,3.0]) 2.0
+
 
 println("Passed tests")

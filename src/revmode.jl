@@ -66,7 +66,7 @@ function quoteTree(x::Expr, datalist::Dict, iterstack, prefix, parameters = [], 
             push!(iterstack, it)
         end
         if idxstart == 4
-            push!(code.args,:(Expr(:parameters,$(quoteTree(x.args[2].args[1],datalist,iterstack, prefix, justrename)))))
+            push!(code.args,:(Expr(:parameters,$(quoteTree(x.args[2].args[1],datalist,iterstack, prefix, parameters, justrename)))))
         end
         # body of expression
         push!(code.args,quoteTree(x.args[idxstart-1],datalist,iterstack,prefix,parameters,justrename))
