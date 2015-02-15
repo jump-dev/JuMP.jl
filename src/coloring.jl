@@ -14,6 +14,25 @@ end
 
 export gen_adjlist
 
+# workaround for slow tuples
+immutable MyPair{T}
+    first::T
+    second::T
+end
+
+# workaround for julia issue #10208
+Base.hash(x::MyPair{Int},h::UInt) = hash(x.first,hash(x.second,h))
+
+# convert to lower triangular indices, using Pairs
+# TODO: replace normalize in hessian.jl
+#normalize(i,j) = (j > i) ? (j,i) : (i,j)
+@inline normalize_p(p::MyPair) = (p.second > p.first) ? MyPair(p.second,p.first) : MyPair(p.first,p.second)
+normalize_p(i,j) = normalize_p(MyPair(i,j))
+
+macro colored(i)
+    esc(:((color[$i] != 0)))
+end
+
 # acyclic coloring algorithm of Gebremdehin, Tarafdar, Manne, and Pothen
 # "New Acyclic and Star Coloring Algorithms with Application to Computing Hessians"
 # SIAM J. Sci. Comput. 2007
@@ -22,57 +41,60 @@ function acyclic_coloring(g)
     
     num_colors = 0
     forbiddenColors = Int[]
-    firstNeighbor = Array((Int,Int),0)
-    firstVisitToTree = [normalize(source(e),target(e)) => (0,0) for e in edges(g)]
+    firstNeighbor = Array(MyPair{Int},0)
+    firstVisitToTree = [normalize_p(source(e),target(e)) => MyPair(0,0) for e in edges(g)]
     color = fill(0, num_vertices(g))
-    colored(i) = (color[i] != 0)
     # disjoint set forest of edges in the graph
-    S = DataStructures.DisjointSets{(Int,Int)}(collect(keys(firstVisitToTree)))
-    reverse_intmap = Array((Int,Int),length(S.intmap))
+    S = DataStructures.DisjointSets{MyPair{Int}}(collect(keys(firstVisitToTree)))
+    reverse_intmap = Array(MyPair{Int},length(S.intmap))
     for (k,v) in S.intmap
         reverse_intmap[v] = k
     end
 
     function prevent_cycle(v,w,x)
-        er = DataStructures.find_root(S, normalize(w,x))
+        er = DataStructures.find_root(S, normalize_p(w,x))
         e = reverse_intmap[er]
-        p,q = firstVisitToTree[e]
+        pair = firstVisitToTree[e]
+        p = pair.first
+        q = pair.second
         if p != v
-            firstVisitToTree[e] = normalize(v,w)
+            firstVisitToTree[e] = normalize_p(v,w)
         elseif q != w
             forbiddenColors[color[x]] = v
         end
     end
 
     function grow_star(v,w)
-        p,q = firstNeighbor[color[w]]
+        pair = firstNeighbor[color[w]]
+        p = pair.first
+        q = pair.second
         if p != v
-            firstNeighbor[color[w]] = normalize(v,w)
+            firstNeighbor[color[w]] = normalize_p(v,w)
         else
-            union!(S, normalize(v,w), normalize(p,q))
+            union!(S, normalize_p(v,w), normalize_p(p,q))
         end
     end
 
     function merge_trees(v,w,x)
-        e1 = DataStructures.find_root(S, normalize(v,w))
-        e2 = DataStructures.find_root(S, normalize(w,x))
+        e1 = DataStructures.find_root(S, normalize_p(v,w))
+        e2 = DataStructures.find_root(S, normalize_p(w,x))
         if e1 != e2
-            union!(S, normalize(v,w), normalize(w,x))
+            union!(S, normalize_p(v,w), normalize_p(w,x))
         end
     end
 
     for v in 1:num_vertices(g)
         for eg in out_edges(v,g)
             w = target(eg)
-            colored(w) || continue
+            @colored(w) || continue
             forbiddenColors[color[w]] = v
         end
         for eg in out_edges(v,g)
             w = target(eg)
-            colored(w) || continue
+            @colored(w) || continue
             for eg2 in out_edges(w,g)
                 x = target(eg2)
-                colored(x) || continue
+                @colored(x) || continue
                 if forbiddenColors[color[x]] != v
                     prevent_cycle(v,w,x)
                 end
@@ -91,21 +113,21 @@ function acyclic_coloring(g)
         if !found
             num_colors += 1
             push!(forbiddenColors, 0)
-            push!(firstNeighbor, (0, 0))
+            push!(firstNeighbor, MyPair(0, 0))
             color[v] = num_colors
         end
 
         for eg in out_edges(v,g)
             w = target(eg)
-            colored(w) || continue
+            @colored(w) || continue
             grow_star(v,w)
         end
         for eg in out_edges(v,g)
             w = target(eg)
-            colored(w) || continue
+            @colored(w) || continue
             for eg2 in out_edges(w,g)
                 x = target(eg2)
-                (colored(x) && x != v) || continue
+                (@colored(x) && x != v) || continue
                 if color[x] == color[v]
                     merge_trees(v,w,x)
                 end
