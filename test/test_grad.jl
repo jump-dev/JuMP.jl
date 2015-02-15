@@ -296,5 +296,13 @@ ex2 = @processNLExpr ex[1]
 f = genfval_simple(ex2)
 @test_approx_eq f([2.0,3.0]) 2.0
 
+# embedded indices
+idx = [1]
+ex = @processNLExpr sum{x[idx[j]], j = 1:1}
+fg = genfgrad_simple(ex)
+fval = fg([2.5,1.0],out)
+@test_approx_eq fval 2.5
+@test_approx_eq out[1] 1
+@test_approx_eq out[2] 0
 
 println("Passed tests")
