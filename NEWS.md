@@ -4,6 +4,7 @@ JuMP release notes
 Unversioned
 -----------
 
+  * Nonlinear subexpressions now supported with the ``@defNLExpr`` macro.
   * ``set___Callback`` family deprecated in favor of ``add___Callback``.
   * Multiple callbacks of the same type can be registered.
   * Added support for informational callbacks via ``addInfoCallback``.
