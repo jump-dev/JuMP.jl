@@ -1,6 +1,6 @@
 julia 0.3
 MathProgBase 0.3.8 0.4.0-
-ReverseDiffSparse 0.1.11-
+ReverseDiffSparse 0.2.1
 ArrayViews
 Compat
 Calculus

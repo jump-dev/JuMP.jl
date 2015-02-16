@@ -71,12 +71,6 @@ the syntax for linear and quadratic expressions. We note some important points b
 
     @defNLExpr(myexpr[i=1:n], sin(x[i]))
     @addNLConstraint(m, myconstr[i=1:n], myexpr[i] <= 0.5)
-- Nonlinear expression objects currently cannot appear inside of ``sum{}`` or ``prod{}``. For example::
-
-    @defNLExpr(myexpr[i=1:n], sin(x[i]))
-    # This is not supported!
-    @addNLConstraint(m, myconstr, sum{myexpr[i], i=1:n} <= 0.5)
-
 
 Performance: Solution time
 ^^^^^^^^^^^^^^^^^^^^^^^^^^

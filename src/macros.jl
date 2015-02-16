@@ -572,3 +572,18 @@ macro addNLConstraint(m, x, extra...)
 
     return assert_validmodel(m, code)
 end
+
+macro defNLExpr(x, extra...)
+    # Two formats:
+    # - @defNLExpr(a*x <= 5)
+    # - @defNLExpr(myref[a=1:5], sin(x^a))
+    length(extra) > 1 && error("in @defNLExpr: too many arguments.")
+    # Canonicalize the arguments
+    c = length(extra) == 1 ? x        : nothing
+    x = length(extra) == 1 ? extra[1] : x
+
+    refcall, idxvars, idxsets, idxpairs = buildrefsets(c)
+    varname = isexpr(refcall,:ref) ? refcall.args[1] : refcall
+    macrocall = Expr(:macrocall, symbol("@parametricExpr"), [esc(v) for v in idxvars]..., esc(x))
+    return :($(varname) = $macrocall)
+end
