@@ -203,7 +203,7 @@ macro processNLExpr(x)
     return quote
         inputnames = $inputnames
         inputvals = $inputvals
-        hashval = $(hash(x))
+        hashval = $(hash(symbolprefix,hash(x)))
         $subexprcode
         SymbolicOutput($tree, tuple(inputnames...), tuple(inputvals...), hashval)
     end
