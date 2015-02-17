@@ -255,7 +255,7 @@ macro parametricExpr(args...)
     return quote
         inputnames = $inputnames
         inputvals = $inputvals
-        hashval = $(hash(x))
+        hashval = $(hash(symbolprefix,hash(x)))
         $subexprcode
         ParametricExpression($tree, tuple(inputnames...), tuple(inputvals...), $paramtup, hashval)
     end
