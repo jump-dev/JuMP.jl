@@ -66,7 +66,7 @@ function myheuristic(cb)
     addSolution(cb)
 end  # End of callback function
 
-setHeuristicCallback(mod, myheuristic)
+addHeuristicCallback(mod, myheuristic)
 stat = solve(mod)
 println("Solve status: ", stat)
 println("Objective value: ", getObjectiveValue(mod))

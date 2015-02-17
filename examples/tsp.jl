@@ -178,7 +178,7 @@ function solveTSP(n, cities)
     end  # End function subtour
 
     # Solve the problem with our cut generator
-    setLazyCallback(m, subtour)
+    addLazyCallback(m, subtour)
     solve(m)
 
     # Return best tour

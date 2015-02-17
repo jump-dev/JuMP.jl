@@ -74,7 +74,7 @@ function solveProblem()
         end
     end  # End of callback function
 
-    setLazyCallback(m, corners)
+    addLazyCallback(m, corners)
     solve(m)
     println("Final solution: [ $(getValue(x)), $(getValue(y)) ]")
 end

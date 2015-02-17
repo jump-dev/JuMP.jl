@@ -63,7 +63,7 @@ function mycutgenerator(cb) # valid cuts
 end  # End of callback function
 
 # # Tell JuMP/CPLEX to use our callback function
-setCutCallback(mod, mycutgenerator)
+addCutCallback(mod, mycutgenerator)
 
 stat = solve(mod)
 println("Solve status: ", stat)

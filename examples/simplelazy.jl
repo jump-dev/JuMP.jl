@@ -60,7 +60,7 @@ function corners(cb)
 end  # End of callback function
 
 # Tell JuMP/Gurobi to use our callback function
-setLazyCallback(m, corners)
+addLazyCallback(m, corners)
 
 # Solve the problem
 solve(m)

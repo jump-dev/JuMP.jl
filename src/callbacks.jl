@@ -1,5 +1,4 @@
 export addLazyCallback, addCutCallback, addHeuristicCallback, addInfoCallback
-export setLazyCallback, setCutCallback, setHeuristicCallback
 @Base.deprecate setLazyCallback      addLazyCallback
 @Base.deprecate setCutCallback       addCutCallback
 @Base.deprecate setHeuristicCallback addHeuristicCallback

@@ -32,7 +32,7 @@ constraint before adding it to the model with the JuMP function
 ``addLazyConstraint(cb, myconstraint)`` or the macro version
 ``@addLazyConstraint(cb, myconstraint)`` (same limitations as addConstraint).
 Finally we notify JuMP that this function should be used for lazy constraint
-generation using the ``setLazyCallback(m, myLazyConGenerator)`` function
+generation using the ``addLazyCallback(m, myLazyConGenerator)`` function
 before we call ``solve(m)``.
 
 The following is a simple example to make this more clear. In this two-dimensional
@@ -91,7 +91,7 @@ will be either (0,2) or (2,2), and the final solution will be (1,2)::
     end  # End of callback function
 
     # Tell JuMP/Gurobi to use our callback function
-    setLazyCallback(m, corners)
+    addLazyCallback(m, corners)
 
     # Solve the problem
     solve(m)
@@ -110,9 +110,9 @@ The code should print something like (amongst the output from Gurobi)::
 
 This code can also be found in ``/JuMP/examples/simplelazy.jl``.
 
-There is an optional ``fractional`` keyword option to ``setLazyCallback`` which
+There is an optional ``fractional`` keyword option to ``addLazyCallback`` which
 indicates that the callback may be called at solutions that do not satisfy
-integrality constraints. For example, ``setLazyCallback(m, myLazyConGenerator,
+integrality constraints. For example, ``addLazyCallback(m, myLazyConGenerator,
 fractional=true)``. Depending on the solver, this may invoke the callback
 after solving each LP relaxation in the Branch and Bound tree. By default, ``fractional`` is set to ``false``.
 
@@ -133,7 +133,7 @@ constraint before adding it to the model with the JuMP function
 ``addUserCut(cb, myconstraint)`` or the macro version
 ``@addUserCut(cb, myconstraint)`` (same limitations as addConstraint).
 Finally we notify JuMP that this function should be used for lazy constraint
-generation using the ``setCutCallback(m, myUserCutGenerator)`` function
+generation using the ``addCutCallback(m, myUserCutGenerator)`` function
 before we call ``solve(m)``.
 
 Consider the following example which is related to the lazy constraint example. The problem is two-dimensional, and the objective sense prefers solution in the top-right of a 2-by-2 square. There is a single constraint that cuts off the top-right corner to make the LP relaxation solution fractional. We will exploit our knowledge of the problem structure to add a user cut that will make the LP relaxation integer, and thus solve the problem at the root node::
@@ -180,7 +180,7 @@ Consider the following example which is related to the lazy constraint example. 
     end  # End of callback function
 
     # Tell JuMP/Gurobi to use our callback function
-    setCutCallback(m, mycutgenerator)
+    addCutCallback(m, mycutgenerator)
 
     # Solve the problem
     solve(m)
@@ -203,7 +203,7 @@ User Heuristics
 
 Integer programming solvers frequently include heuristics that run at the nodes of the branch-and-bound tree. They aim to find integer solutions quicker than plain branch-and-bound would to tighten the bound, allowing us to fathom nodes quicker and to tighten the integrality gap. Some heuristics take integer solutions and explore their "local neighborhood" (e.g. flipping binary variables, fix some variables and solve a smaller MILP, ...) and others take fractional solutions and attempt to round them in an intelligent way. You may want to add a heuristic of your own if you have some special insight into the problem structure that the solver is not aware of, e.g. you can consistently take fractional solutions and intelligently guess integer solutions from them.
 
-The user heuristic callback is somewhat different from the previous two heuristics. The general concept is that we can create multiple partial solutions and submit them back to the solver - each solution must be submitted before a new solution is constructed. As before we provide a function that analyzes the current solution and takes a single argument, e.g. ``function myHeuristic(cb)``, where cb is a reference to the callback management code inside JuMP. You can build your solutions using ``setSolutionValue!(cb, x, value)`` and submit them with ``addSolution(cb)``. Note that ``addSolution`` will "wipe" the previous (partial) solution. Notify JuMP that this function should be used as a heuristic using the ``setHeuristicCallback(m, myHeuristic)`` function before calling ``solve(m)``.
+The user heuristic callback is somewhat different from the previous two heuristics. The general concept is that we can create multiple partial solutions and submit them back to the solver - each solution must be submitted before a new solution is constructed. As before we provide a function that analyzes the current solution and takes a single argument, e.g. ``function myHeuristic(cb)``, where cb is a reference to the callback management code inside JuMP. You can build your solutions using ``setSolutionValue!(cb, x, value)`` and submit them with ``addSolution(cb)``. Note that ``addSolution`` will "wipe" the previous (partial) solution. Notify JuMP that this function should be used as a heuristic using the ``addHeuristicCallback(m, myHeuristic)`` function before calling ``solve(m)``.
 
 There is some unavoidable (for performance reasons) solver-dependent behavior - you should check your solver documentation for details. For example: GLPK will not check the feasibility of your heuristic solution. If you need to submit many heuristic solutions in one callback, there may be performance impacts from the "wiping" behavior of ``addSolution`` - please file an issue and we can address this issue.
 
@@ -247,7 +247,7 @@ Consider the following example, which is the same problem as seen in the user cu
     end  # End of callback function
 
     # Tell JuMP/Gurobi to use our callback function
-    setHeuristicCallback(m, myheuristic)
+    addHeuristicCallback(m, myheuristic)
 
     # Solve the problem
     solve(m)
@@ -376,7 +376,7 @@ In the above examples the callback function is defined in the same scope as the 
             end
         end  # End of callback function
 
-        setLazyCallback(m, corners)
+        addLazyCallback(m, corners)
         solve(m)
         println("Final solution: [ $(getValue(x)), $(getValue(y)) ]")
     end
