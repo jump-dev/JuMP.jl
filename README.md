@@ -31,10 +31,10 @@ JuMP makes it easy to specify and **solve optimization problems without expert k
 
 Our documentation includes an installation guide, quick-start guide, and reference manual.
 
-**Latest Release**: 0.7.4 (via ``Pkg.add``)
-  * [documentation](https://jump.readthedocs.org/en/release-0.7)
-  * [examples](https://github.com/JuliaOpt/JuMP.jl/tree/release-0.7/examples)
-  * Testing status: [![Build Status](https://travis-ci.org/JuliaOpt/JuMP.jl.png?branch=release-0.7)](https://travis-ci.org/JuliaOpt/JuMP.jl) [![JuMP](http://pkg.julialang.org/badges/JuMP_release.svg)](http://pkg.julialang.org/?pkg=JuMP&ver=release)
+**Latest Release**: 0.8.0 (via ``Pkg.add``)
+  * [documentation](https://jump.readthedocs.org/en/release-0.8)
+  * [examples](https://github.com/JuliaOpt/JuMP.jl/tree/release-0.8/examples)
+  * Testing status: [![Build Status](https://travis-ci.org/JuliaOpt/JuMP.jl.png?branch=release-0.8)](https://travis-ci.org/JuliaOpt/JuMP.jl) [![JuMP](http://pkg.julialang.org/badges/JuMP_release.svg)](http://pkg.julialang.org/?pkg=JuMP&ver=release)
 
 
 **Development version**:

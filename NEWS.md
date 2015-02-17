@@ -1,11 +1,12 @@
 JuMP release notes
 ==================
 
-Unversioned
------------
+Version 0.8.0 (February 17, 2015)
+---------------------------------
 
   * Nonlinear subexpressions now supported with the ``@defNLExpr`` macro.
-  * ``set___Callback`` family deprecated in favor of ``add___Callback``.
+  * SCS supported for solving second-order conic problems.
+  * ``setXXXCallback`` family deprecated in favor of ``addXXXCallback``.
   * Multiple callbacks of the same type can be registered.
   * Added support for informational callbacks via ``addInfoCallback``.
   * A ``CallbackAbort`` exception can be thrown from callback to safely exit optimization.
