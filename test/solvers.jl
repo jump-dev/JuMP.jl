@@ -19,6 +19,7 @@ nlo = isdir(Pkg.dir("NLopt"))
 kni = isdir(Pkg.dir("KNITRO"))
 eco = isdir(Pkg.dir("ECOS"))
 osl = isdir(Pkg.dir("CoinOptServices"))
+scs = isdir(Pkg.dir("SCS"))
 # Load them
 if grb; import Gurobi; end
 if cpx; import CPLEX; end
@@ -30,6 +31,7 @@ if nlo; import NLopt; end
 if kni; import KNITRO; end
 if eco; import ECOS; end
 if osl; import CoinOptServices; end
+if scs; import SCS; end
 # Create solver lists
 # LP solvers
 lp_solvers = Any[]
@@ -41,6 +43,7 @@ glp && push!(lp_solvers, GLPKMathProgInterface.GLPKSolverLP())
 ipt && push!(lp_solvers, Ipopt.IpoptSolver(print_level=0))
 eco && push!(lp_solvers, ECOS.ECOSSolver(verbose=false))
 osl && push!(lp_solvers, CoinOptServices.OsilSolver())
+scs && push!(lp_solvers, SCS.SCSSolver(eps=1e-6,verbose=0))
 # MILP solvers
 ip_solvers = Any[]
 grb && push!(ip_solvers, Gurobi.GurobiSolver(OutputFlag=0))
@@ -88,6 +91,7 @@ osl && push!(quad_solvers, CoinOptServices.OsilSolver())
 soc_solvers = copy(quad_solvers)
 ipt && push!(quad_solvers, Ipopt.IpoptSolver(print_level=0))
 eco && push!(soc_solvers, ECOS.ECOSSolver(verbose=false))
+scs && push!(soc_solvers, SCS.SCSSolver(eps=1e-6,verbose=0))
 osl && push!(quad_mip_solvers, CoinOptServices.OsilBonminSolver())
 osl && push!(quad_mip_solvers, CoinOptServices.OsilCouenneSolver())
 # Nonlinear solvers

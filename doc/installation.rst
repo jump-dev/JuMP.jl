@@ -58,11 +58,13 @@ Solver support in Julia is currently provided by writing a solver-specific packa
 +----------------------------------------------------------------------------------+---------------------------------------------------------------------------------+-----------------------------+-------------+----+------+-----+-----+
 | `NLopt <http://ab-initio.mit.edu/wiki/index.php/NLopt>`_                         | `NLopt.jl <https://github.com/JuliaOpt/NLopt.jl>`_                              | ``NLoptSolver()``           | LGPL        |    |      |     |  X  |
 +----------------------------------------------------------------------------------+---------------------------------------------------------------------------------+-----------------------------+-------------+----+------+-----+-----+
+| `SCS <https://github.com/cvxgrp/scs>`_                                           | `SCS.jl <https://github.com/JuliaOpt/SCS.jl>`_                                  |  ``SCSSolver()``            |  MIT        | X  |  X   |     |     |
++----------------------------------------------------------------------------------+---------------------------------------------------------------------------------+-----------------------------+-------------+----+------+-----+-----+
 
 Where:
 
 - LP = Linear programming
-- SOCP = Second-order conic programming (including problems with quadratic constraints and/or objective)
+- SOCP = Second-order conic programming (including problems with convex quadratic constraints and/or objective)
 - MIP = Mixed-integer programming
 - NLP = Nonlinear programming
 
@@ -135,3 +137,8 @@ NLopt
 +++++
 
 NLopt supports only nonlinear models. An algorithm must be specified as an option when using ``NLoptSolver``. NLopt is not recommended for large-scale models, because it does not currently exploit sparsity of derivative matrices.
+
+SCS
++++
+
+SCS can be used by JuMP to solve LPs and SOCPs. SCS does not support general quadratic objectives or constraints, only second-order conic constraints of the form ``x'x <= y^2``. SCS is a first order solver and has low accuracy (:math:`10^{-3}`) by default; see the SCS.jl documentation for more information.

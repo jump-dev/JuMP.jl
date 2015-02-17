@@ -8,8 +8,8 @@ notifications:
     email: false
 env:
     matrix:
-        - PKGADD="FactCheck;Cbc;Clp;GLPKMathProgInterface;Ipopt;ECOS" JULIAVERSION="juliareleases"
-        - PKGADD="FactCheck;GLPKMathProgInterface;ECOS" JULIAVERSION="julianightlies"
+        - PKGADD="FactCheck;Cbc;Clp;GLPKMathProgInterface;Ipopt;ECOS;SCS" JULIAVERSION="juliareleases"
+        - PKGADD="FactCheck;GLPKMathProgInterface;ECOS;SCS" JULIAVERSION="julianightlies"
 before_install:
     - curl http://julialang.org/install-julia.sh | sh -s $JULIAVERSION
     - if [ `uname` = "Linux" ]; then
