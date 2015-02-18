@@ -74,7 +74,8 @@ for i in 1:5
     push!(exlist,@processNLExpr x[i]^3/6)
 end
 
-I,J = prep_sparse_hessians(exlist,5, need_expr=true)
+I,J = prep_sparse_hessians(exlist,5)
+prep_expression_output(exlist)
 V = zeros(length(I))
 lambda = rand(5)
 eval_hess!(V, exlist, val, lambda)

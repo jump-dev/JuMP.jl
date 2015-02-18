@@ -4,12 +4,11 @@
 
 
 export ExprList, prep_sparse_hessians, eval_g!,
-    eval_jac_g!, jac_nz, eval_hess!
+    eval_jac_g!, jac_nz, eval_hess!,
+    prep_expression_output
 
 type ExprList
     exprs::Vector{SymbolicOutput}
-    referenceExpr::Dict
-   # matchesCanonical::Vector{Bool}
     idxfuncs::Vector{Function}
     valfuncs::Vector{Function}
     gradfuncs::Vector{Function}
@@ -21,7 +20,7 @@ type ExprList
 end
 
 
-ExprList() = ExprList(SymbolicOutput[],Dict(), Function[], Function[], Function[], Function[], Function[], Function[], Array((Vector{Int},Vector{Int}),0), Function[])
+ExprList() = ExprList(SymbolicOutput[], Function[], Function[], Function[], Function[], Function[], Function[], Array((Vector{Int},Vector{Int}),0), Function[])
 
 Base.push!(l::ExprList, s::SymbolicOutput) = push!(l.exprs, s)
 Base.getindex(l::ExprList, i) = l.exprs[i]
@@ -38,8 +37,8 @@ end
 
 # returns sparsity pattern of combined hessian, with duplicates
 function prep_sparse_hessians(l::ExprList, num_total_vars; need_expr::Bool=false)
+    # TODO: remove need_expr option
     # clear current state
-    empty!(l.referenceExpr)
     empty!(l.idxfuncs)
     empty!(l.valfuncs)
     empty!(l.gradfuncs)
@@ -53,13 +52,14 @@ function prep_sparse_hessians(l::ExprList, num_total_vars; need_expr::Bool=false
     sizehint!(l.valfuncs, N)
     sizehint!(l.gradfuncs, N)
     sizehint!(l.hessfuncs, N)
+    referenceExpr = Dict()
 
     I = Int[]
     J = Int[]
 
     for (i,x) in enumerate(l.exprs)
-        if !haskey(l.referenceExpr, x.hashval)
-            l.referenceExpr[x.hashval] = i
+        if !haskey(referenceExpr, x.hashval)
+            referenceExpr[x.hashval] = i
             idxf = genindexlist_parametric(x)
             prepare_indexlist(x, idxf(x.inputvals...))
             f = genfval_parametric(x)
@@ -81,7 +81,7 @@ function prep_sparse_hessians(l::ExprList, num_total_vars; need_expr::Bool=false
         else
             # check if there's a 1-1 mapping from reference indices to
             # indices in this expression
-            refidx = l.referenceExpr[x.hashval] 
+            refidx = referenceExpr[x.hashval]
             ref = l.exprs[refidx]
             prepare_indexlist(x, l.idxfuncs[refidx](x.inputvals...))
             # these are always shared
@@ -123,6 +123,28 @@ function prep_sparse_hessians(l::ExprList, num_total_vars; need_expr::Bool=false
     end
 
     return I,J
+end
+
+# returns sparsity pattern of combined hessian, with duplicates
+function prep_expression_output(l::ExprList)
+    # clear current state
+    empty!(l.exprfuncs)
+
+    N = length(l.exprs)
+    sizehint!(l.exprfuncs, N)
+    referenceExpr = Dict()
+
+    for (i,x) in enumerate(l.exprs)
+        if !haskey(referenceExpr, x.hashval)
+            referenceExpr[x.hashval] = i
+            push!(l.exprfuncs, genfexpr_parametric(x))
+        else
+            refidx = referenceExpr[x.hashval]
+            push!(l.exprfuncs, l.exprfuncs[refidx])
+        end
+    end
+
+    return
 end
 
 # compute the value of each expression at xval, writing the result into out
