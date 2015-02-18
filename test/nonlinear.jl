@@ -58,6 +58,19 @@ context("With solver $(typeof(nlp_solver))") do
             [1.000000, 4.742999, 3.821150, 1.379408], 1e-5)
 end; end; end
 
+facts("[nonlinear] Test ifelse") do
+for nlp_solver in nlp_solvers
+context("With solver $(typeof(nlp_solver))") do
+        m = Model(solver=nlp_solver)
+        @defVar(m, x, start = 2)
+        # minimizer at smooth point, solvers should be okay
+        @setNLObjective(m, Min, ifelse( x <= 1, x^2, x) )
+        status = solve(m)
+
+        @fact status => :Optimal
+        @fact getValue(x) => roughly(0.0, 1e-5)
+end; end; end
+
 facts("[nonlinear] Accepting fixed variables") do
 for nlp_solver in convex_nlp_solvers
 context("With solver $(typeof(nlp_solver))") do
