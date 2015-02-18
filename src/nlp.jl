@@ -61,14 +61,16 @@ function MathProgBase.initialize(d::JuMPNLPEvaluator, requested_features::Vector
         return
     end
 
-    if :ExprGraph in requested_features
-        need_expr = true
-    else
-        need_expr = false
-    end
-
     initNLP(d.m) #in case the problem is purely linear/quadratic thus far
     nldata::NLPData = d.m.nlpdata
+
+    if :ExprGraph in requested_features
+        prep_expression_output(nldata.nlconstrlist)
+        if length(requested_features) == 1 # don't need to do anything else
+            return
+        end
+    end
+
     d.has_nlobj = isa(nldata.nlobj, ReverseDiffSparse.SymbolicOutput)
     if d.has_nlobj
         @assert length(d.m.obj.qvars1) == 0 && length(d.m.obj.aff.vars) == 0
@@ -82,7 +84,7 @@ function MathProgBase.initialize(d::JuMPNLPEvaluator, requested_features::Vector
 
     n_nlconstr = length(nldata.nlconstr)
 
-    constrhessI, constrhessJ = prep_sparse_hessians(nldata.nlconstrlist, d.m.numCols, need_expr=need_expr)
+    constrhessI, constrhessJ = prep_sparse_hessians(nldata.nlconstrlist, d.m.numCols)
     nljacI, nljacJ = jac_nz(nldata.nlconstrlist) # nonlinear jacobian components
     nnz_jac::Int = nnz(A) + length(nljacI)
     nnz_hess = length(constrhessI)
