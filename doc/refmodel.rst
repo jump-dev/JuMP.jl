@@ -105,6 +105,17 @@ you would a linear objective::
 
     status = solve(m)
 
+Second-order cone constraints
+^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+
+Second-order cone constraints of the form :math:`||Ax-b||_2 + a^Tx + c ≤ 0` can be added directly using the ``norm`` function::
+
+    @addConstraint(m, norm(A*x) <= 2w - 1)
+
+The special ``norm2{...}`` construct may be used to build up normed expressions with complex indexing operations in much the same way as the ``sum{...}`` construct::
+
+    @addConstraint(m, norm2{2x[i] - i, i=1:n; c[i] == 1} <= 1)
+
 Accessing the low-level model
 ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
 

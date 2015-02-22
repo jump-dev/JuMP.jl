@@ -190,6 +190,17 @@ end
 
 _construct_constraint!(quad::QuadExpr, sense::Symbol) = QuadConstraint(quad, sense)
 
+function _construct_constraint!(normexpr::SOCExpr, sense::Symbol)
+    # check that the constraint is SOC representable
+    if sense == :(<=)
+        SOCConstraint(normexpr)
+    elseif sense == :(>=)
+        SOCConstraint(-normexpr)
+    else
+        error("Invalid sense $sense in SOC constraint")
+    end
+end
+
 _construct_constraint!(x::Array, sense::Symbol) = map(c->_construct_constraint!(c,sense), x)
 
 _vectorize_like(x::Number, y::Array{AffExpr}) = fill(x, size(y))
@@ -435,7 +446,7 @@ end
 
 macro QuadConstraint(x)
     (x.head == :block) &&
-        error("Code block passed as constraint. Perhaps you meant to use @LinearConstraints instead?")
+        error("Code block passed as constraint. Perhaps you meant to use @QuadConstraints instead?")
     (x.head != :comparison) &&
         error("in @QuadConstraint ($(string(x))): expected comparison operator (<=, >=, or ==).")
 
@@ -461,8 +472,36 @@ macro QuadConstraint(x)
     end
 end
 
+macro SOCConstraint(x)
+    (x.head == :block) &&
+        error("Code block passed as constraint. Perhaps you meant to use @SOCConstraints instead?")
+    (x.head != :comparison) &&
+        error("in @SOCConstraint ($(string(x))): expected comparison operator (<=, >=, or ==).")
+
+    if length(x.args) == 3
+        (sense,vectorized) = _canonicalize_sense(x.args[2])
+        # Simple comparison - move everything to the LHS
+        vectorized &&
+            error("in @SOCConstraint ($(string(x))): Cannot add vectorized constraints")
+        lhs = :($(x.args[1]) - $(x.args[3]))
+        return quote
+            newaff = @defExpr($(esc(lhs)))
+            q = _construct_constraint!(newaff,$(quot(sense)))
+            isa(q, SOCConstraint) || error("Constraint in @SOCConstraint is really a $(typeof(q))")
+            q
+        end
+    elseif length(x.args) == 5
+        error("Ranged second-order cone constraints are not allowed")
+    else
+        # Unknown
+        error("in @SOCConstraint ($(string(x))): constraints must be in one of the following forms:\n" *
+              "       expr1 <= expr2\n" * "       expr1 >= expr2\n")
+    end
+end
+
 for (mac,sym) in [(:LinearConstraints, symbol("@LinearConstraint")),
-                  (:QuadConstraints,   symbol("@QuadConstraint"))]
+                  (:QuadConstraints,   symbol("@QuadConstraint")),
+                  (:SOCConstraints,    symbol("@SOCConstraint"))]
     @eval begin
         macro $mac(x)
             x.head == :block || error("Invalid syntax for @$mac")

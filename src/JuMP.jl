@@ -20,8 +20,8 @@ using Compat
 
 export
 # Objects
-    Model, Variable, AffExpr, QuadExpr,
-    LinearConstraint, QuadConstraint, SDPConstraint,
+    Model, Variable, Norm, AffExpr, QuadExpr, SOCExpr,
+    LinearConstraint, QuadConstraint, SDPConstraint, SOCConstraint,
     ConstraintRef, LinConstrRef,
 # Functions
     # Model related
@@ -36,11 +36,12 @@ export
     getVar,
     getLinearIndex,
     # Expressions and constraints
-    affToStr, quadToStr, conToStr, chgConstrRHS,
+    affToStr, quadToStr, exprToStr, conToStr, chgConstrRHS,
 
 # Macros and support functions
     @addConstraint, @addConstraints, @addSDPConstraint,
     @LinearConstraint, @LinearConstraints, @QuadConstraint, @QuadConstraints,
+    @SOCConstraint, @SOCConstraints,
     @defVar, @defConstrRef, @setObjective, addToExpression, @defExpr,
     @setNLObjective, @addNLConstraint, @addNLConstraints,
     @defNLExpr
@@ -59,6 +60,7 @@ type Model
     linconstr#::Vector{LinearConstraint}
     quadconstr
     sosconstr
+    socconstr
     sdpconstr
 
     # Column data
@@ -120,7 +122,8 @@ function Model(;solver=UnsetSolver())
     if !isa(solver,MathProgBase.AbstractMathProgSolver)
         error("solver argument ($solver) must be an AbstractMathProgSolver")
     end
-    Model(zero(QuadExpr),:Min,LinearConstraint[],QuadConstraint[],SOSConstraint[],SDPConstraint[],
+    Model(zero(QuadExpr),:Min,LinearConstraint[],QuadConstraint[],
+          SOSConstraint[],SOCConstraint[],SDPConstraint[],
           0,String[],String[],Float64[],Float64[],Symbol[],
           0,Float64[],Float64[],Float64[],nothing,solver,
           false,Any[],nothing,nothing,JuMPContainer[],
@@ -416,6 +419,7 @@ end
 typealias AffExpr GenericAffExpr{Float64,Variable}
 
 AffExpr() = zero(AffExpr)
+AffExpr(x::Union(Number,Variable)) = convert(AffExpr, x)
 
 Base.isempty(a::AffExpr) = (length(a.vars) == 0 && a.constant == 0.)
 Base.convert(::Type{AffExpr}, v::Variable) = AffExpr([v], [1.], 0.)
@@ -523,6 +527,67 @@ function getValue(a::QuadExpr)
 end
 
 getValue(arr::Array{QuadExpr}) = map(getValue, arr)
+
+##########################################################################
+# Norm
+# Container for √(∑ expr)
+type GenericNorm{Typ,C,V}
+    terms::Vector{GenericAffExpr{C,V}}
+end
+
+typealias Norm{Typ} GenericNorm{Typ,Float64,Variable}
+
+Base.norm(x::Vector{Variable}) = vecnorm(x)
+Base.norm{C,V}(x::Array{GenericAffExpr{C,V}}) = vecnorm(x)
+Base.norm{T<:Union(Variable,GenericAffExpr)}(x::JuMPArray{T,1}) = vecnorm(x)
+function Base.norm(x::JuMPDict{Variable})
+    ndims(x) == 1 || error("Cannot use norm() on a multidimensional JuMPDict. Use vecnorm instead.")
+    arr = Array(Variable, length(x))
+    for (it,v) in enumerate(x)
+        arr[it] = v[end]
+    end
+    Norm{2}(arr)
+end
+
+Base.vecnorm(x::Array{Variable}) = Norm{2}(reshape(x,length(x)))
+Base.vecnorm{C,V}(x::Array{GenericAffExpr{C,V}}) = GenericNorm{2,C,V}(reshape(x,length(x)))
+Base.vecnorm{T<:Union(Variable,GenericAffExpr)}(x::JuMPArray{T}) =
+    Norm{2}(collect(x.innerArray))
+function Base.vecnorm(x::JuMPDict{Variable})
+    arr = Array(Variable, length(x))
+    for (it,v) in enumerate(x)
+        arr[it] = v[end]
+    end
+    Norm{2}(arr)
+end
+
+Base.copy{Typ,C,V}(x::GenericNorm{Typ,C,V}) = GenericNorm{Typ,C,V}(copy(x.terms))
+
+Base.convert{Typ,C,V}(::Type{GenericNorm{Typ,C,V}}, x::Array) =
+    GenericNorm{Typ,C,V}(convert(Vector{GenericAffExpr{C,V}}, vec(x)))
+
+##########################################################################
+# SOCExpr
+# Container for expressions containing SOCs and AffExprs
+type GenericSOCExpr{C,V}
+    norm::GenericNorm{2,C,V}
+    coeff::C
+    aff::GenericAffExpr{C,V}
+end
+
+GenericSOCExpr{C,V}(norm::GenericNorm{2,C,V}) =
+    GenericSOCExpr{C,V}(norm, one(C), zero(GenericAffExpr{C,V}))
+
+typealias SOCExpr GenericSOCExpr{Float64,Variable}
+
+Base.copy{C,V}(x::GenericSOCExpr{C,V}) =
+    GenericSOCExpr{C,V}(copy(x.norm), copy(x.coeff), copy(x.aff))
+
+Base.convert{C,V}(::Type{GenericSOCExpr{C,V}}, x::GenericNorm{2,C,V}) =
+    GenericSOCExpr{C,V}(x, one(C), zero(GenericAffExpr{C,V}))
+
+validate_soc(socexpr::GenericSOCExpr) = (socexpr.coeff ≥ 0) ||
+    error("Invalid second-order cone constraint $socexpr")
 
 ##########################################################################
 # JuMPConstraint
@@ -737,6 +802,27 @@ function Base.copy(c::QuadConstraint, new_model::Model)
 end
 
 ##########################################################################
+# SOCConstraint is a second-order cone constraint of the form
+# α||Ax-b||₂ + cᵀx + d ≤ 0
+
+type GenericSOCConstraint{T<:GenericSOCExpr} <: JuMPConstraint
+    normexpr::T
+
+    function GenericSOCConstraint{T}(normexpr::T)
+        validate_soc(normexpr)
+        new(normexpr)
+    end
+end
+
+typealias SOCConstraint GenericSOCConstraint{SOCExpr}
+
+function addConstraint{T<:GenericSOCConstraint}(m::Model, c::T)
+    push!(m.socconstr,c)
+    m.internalModelLoaded = false
+    ConstraintRef{T}(m,length(m.socconstr))
+end
+
+##########################################################################
 # ConstraintRef
 # Reference to a constraint for retrieving solution info
 immutable ConstraintRef{T<:JuMPConstraint}
@@ -869,6 +955,8 @@ operator_warn(lhs,rhs) = nothing
 
 ##########################################################################
 # Operator overloads
+typealias JuMPTypes Union(Variable,Norm,AffExpr,QuadExpr,SOCExpr)
+
 include("operators.jl")
 if VERSION > v"0.4-"
     include(joinpath("v0.4","concatenation.jl"))
@@ -877,10 +965,10 @@ else
 end
 # Writers - we support MPS (MILP + QuadObj), LP (MILP)
 include("writers.jl")
-# Solvers
-include("solvers.jl")
 # Macros - @defVar, sum{}, etc.
 include("macros.jl")
+# Solvers
+include("solvers.jl")
 # Callbacks - lazy, cuts, ...
 include("callbacks.jl")
 # Pretty-printing of JuMP-defined types.

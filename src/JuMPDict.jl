@@ -168,7 +168,6 @@ Base.size(x::JuMPArray)   = size(x.innerArray)
 Base.size(x::JuMPArray,k) = size(x.innerArray,k)
 Base.issym(x::JuMPArray) = issym(x.innerArray)
 Base.trace(x::OneIndexedArray) = trace(x.innerArray)
-Base.norm(x::OneIndexedArray) = norm(x.innerArray)
 Base.diag(x::OneIndexedArray) = diag(x.innerArray)
 Base.diagm{T}(x::JuMPArray{T,1,true}) = diagm(x.innerArray)
 

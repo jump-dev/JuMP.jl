@@ -406,6 +406,50 @@ context("With solver $(typeof(solver))") do
         @addConstraint(m, L2 .== (Σ-Σhat))
         @addConstraint(m, sum{L2[i,j]^2, i=1:d, j=1:d} <= t2^2)
         @addConstraint(m, t2 <= Γ2(𝛿/2,N))
+        
+        A = [(1-ɛ)/ɛ (u-μ)';
+             (u-μ)     Σ   ]
+        @addSDPConstraint(m, A >= 0)
+
+        c = cs[d]
+        @setObjective(m, Max, dot(c,u))
+
+        stat = solve(m)
+
+        object = getObjectiveValue(m)
+        exact = dot(μhat,c) + Γ1(𝛿/2,N)*norm(c) + sqrt((1-ɛ)/ɛ)*sqrt(dot(c,(Σhat+Γ2(𝛿/2,N)*eye(d,d))*c))
+        @fact stat => :Optimal
+        @fact abs(object - exact) => roughly(0, 1e-5)
+    end; end
+end; end; end
+
+facts("[sdp] Robust uncertainty example (with norms)") do
+for solver in sdp_solvers
+context("With solver $(typeof(solver))") do
+    include(joinpath("data","robust_uncertainty.jl"))
+    R = 1
+    d = 3
+    𝛿 = 0.05
+    ɛ = 0.05
+    N = ceil((2+2log(2/𝛿))^2) + 1
+
+    Γ1(𝛿,N) = (R/sqrt(N))*(2+sqrt(2*log(1/𝛿)))
+    Γ2(𝛿,N) = (2R^2/sqrt(N))*(2+sqrt(2*log(2/𝛿)))
+
+    for d in [3,5,8]; context("d = $d") do
+
+        μhat = μhats[d]
+        M = Ms[d]
+        Σhat = 1/(d-1)*(M-ones(d)*μhat')'*(M-ones(d)*μhat')
+
+        m = Model(solver=solver)
+
+        @defVar(m, Σ[1:d,1:d], SDP)
+        @defVar(m, u[1:d])
+        @defVar(m, μ[1:d])
+
+        @addConstraint(m, norm(μ-μhat) <= Γ1(𝛿/2,N))
+        @addConstraint(m, vecnorm(Σ-Σhat) <= Γ2(𝛿/2,N))
 
         A = [(1-ɛ)/ɛ (u-μ)';
              (u-μ)     Σ   ]
