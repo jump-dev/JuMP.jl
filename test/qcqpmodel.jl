@@ -122,7 +122,7 @@ context("With solver $(typeof(solver))") do
     @defVar(modQ, -2 <= x <= 2, Int )
     @defVar(modQ, -2 <= y <= 2, Int )
     @setObjective(modQ, Min, x - y )
-    addConstraint(modQ, x + x*x + x*y + y*y <= 1 )
+    @addConstraint(modQ, x + x*x + x*y + y*y <= 1 )
 
     @fact solve(modQ) => :Optimal
     @fact modQ.objVal => roughly(-3, 1e-6)
@@ -137,12 +137,12 @@ context("With solver $(typeof(solver))") do
 
     modQ = Model(solver=solver)
     @defVar(modQ, x >= 0)
-    addConstraint(modQ, x*x <= 1)
+    @addConstraint(modQ, x*x <= 1)
     @setObjective(modQ, Max, x)
     @fact solve(modQ) => :Optimal
     @fact getObjectiveValue(modQ) => roughly(1.0, 1e-6)
 
-    addConstraint(modQ, 2x*x <= 1)
+    @addConstraint(modQ, 2x*x <= 1)
     @fact modQ.internalModelLoaded => true
     @fact solve(modQ) => :Optimal
     @fact getObjectiveValue(modQ) => roughly(sqrt(0.5), 1e-6)

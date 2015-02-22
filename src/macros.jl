@@ -110,6 +110,35 @@ function assert_validmodel(m, macrocode)
     end
 end
 
+
+const valid_senses = [:(<=), :≤, :(>=), :≥, :(==)]
+function _canonicalize_sense(sns::Symbol)
+    sns in valid_senses || error("Invalid sense $sense")
+    return (sns == :≤ ? :(<=) :
+            sns == :≥ ? :(>=) : sns)
+end
+
+_construct_constraint!(v::Variable, sense::Symbol) = _construct_constraint(convert(AffExpr,v), sense)
+function _construct_constraint!(aff::AffExpr, sense::Symbol)
+    sense in valid_senses || error("Unrecognized sense $sense")
+    offset = aff.constant
+    aff.constant = 0.0
+    if sense == :(<=) || sense == :≤
+        return LinearConstraint(aff, -Inf, -offset)
+    elseif sense == :(>=) || sense == :≥
+        return LinearConstraint(aff, -offset, Inf)
+    elseif sense == :(==)
+        return LinearConstraint(aff, -offset, -offset)
+    else
+        error("Cannot handle ranged constraint")
+    end
+end
+
+function _construct_constraint!(quad::QuadExpr, sense::Symbol)
+    sense in valid_senses || error("Invalid sense $sense in quadratic constraint")
+    return QuadConstraint(quad, sense)
+end
+
 macro addConstraint(m, x, extra...)
     m = esc(m)
     # Two formats:
@@ -131,17 +160,15 @@ macro addConstraint(m, x, extra...)
     # Build the constraint
     if length(x.args) == 3
         # Simple comparison - move everything to the LHS
-        if !((x.args[2] == :<=) || (x.args[2] == :≤) ||
-             (x.args[2] == :>=) || (x.args[2] == :≥) ||
-             (x.args[2] == :(==)))
+        sense = _canonicalize_sense(x.args[2])
+        sense in valid_senses ||
             error("in @addConstraint ($(string(x))): expected comparison operator (<=, >=, or ==).")
-        end
         lhs = :($(x.args[1]) - $(x.args[3]))
         newaff, parsecode = parseExpr(lhs, :q, [1.0])
         code = quote
             q = AffExpr()
             $parsecode
-            $(refcall) = addConstraint($m, $(x.args[2])($newaff,0))
+            $(refcall) = addConstraint($m, _construct_constraint!($newaff,$(quot(sense))))
         end
     elseif length(x.args) == 5
         # Ranged row
@@ -159,8 +186,10 @@ macro addConstraint(m, x, extra...)
                 error(string("in @addConstraint (",$(string(x)),"): expected ",$(string(ub))," to be a number."))
             end
             $parsecode
+            offset = $newaff.constant
+            $newaff.constant = 0.0
             isa($newaff,AffExpr) || error("Ranged quadratic constraints are not allowed")
-            $(refcall) = addConstraint($m, LinearConstraint($newaff,$(esc(lb))-aff.constant,$(esc(ub))-aff.constant))
+            $(refcall) = addConstraint($m, LinearConstraint($newaff,$(esc(lb))-offset,$(esc(ub))-offset))
         end
     else
         # Unknown
@@ -168,8 +197,68 @@ macro addConstraint(m, x, extra...)
               "       expr1 <= expr2\n" * "       expr1 >= expr2\n" *
               "       expr1 == expr2\n" * "       lb <= expr <= ub")
     end
-
     return assert_validmodel(m, getloopedcode(c, code, :(), idxvars, idxsets, idxpairs, :ConstraintRef))
+end
+
+macro LinearConstraint(x)
+    (x.head == :block) &&
+        error("Code block passed as constraint. Perhaps you meant to use @LinearConstraints instead?")
+    (x.head != :comparison) &&
+        error("in @LinearConstraint ($(string(x))): expected comparison operator (<=, >=, or ==).")
+
+    if length(x.args) == 3
+        sense = _canonicalize_sense(x.args[2])
+        # Simple comparison - move everything to the LHS
+        sense in valid_senses ||
+            error("in @LinearConstraint ($(string(x))): expected comparison operator (<=, >=, or ==).")
+        lhs = :($(x.args[1]) - $(x.args[3]))
+        # newaff, parsecode = parseExpr(lhs, :q, [1.0])
+        return quote
+            newaff = @defExpr($(esc(lhs)))
+            _construct_constraint!(newaff,$(quot(sense)))
+        end
+    elseif length(x.args) == 5
+        # Ranged row
+        if (x.args[2] != :<= && x.args[2] != :≤) || (x.args[4] != :<= && x.args[4] != :≤)
+            error("in @addConstraint ($(string(x))): only ranged rows of the form lb <= expr <= ub are supported.")
+        end
+        lb = x.args[1]
+        ub = x.args[5]
+        # newaff, parsecode = parseExpr(x.args[3],:aff, [1.0])
+        return quote
+            if !isa($(esc(lb)),Number)
+                error(string("in @LinearConstraint (",$(string(x)),"): expected ",$(string(lb))," to be a number."))
+            elseif !isa($(esc(ub)),Number)
+                error(string("in @LinearConstraint (",$(string(x)),"): expected ",$(string(ub))," to be a number."))
+            end
+            newaff = @defExpr($(esc(x.args[3])))
+            offset = newaff.constant
+            newaff.constant = 0.0
+            isa(newaff,AffExpr) || error("Ranged quadratic constraints are not allowed")
+            LinearConstraint(newaff,$(esc(lb))-offset,$(esc(ub))-offset)
+        end
+    else
+        # Unknown
+        error("in @LinearConstraint ($(string(x))): constraints must be in one of the following forms:\n" *
+              "       expr1 <= expr2\n" * "       expr1 >= expr2\n" *
+              "       expr1 == expr2\n" * "       lb <= expr <= ub")
+    end
+end
+
+macro LinearConstraints(x)
+    x.head == :block || error("Invalid syntax for @LinearConstraints")
+    @assert x.args[1].head == :line
+    code = Expr(:vect)
+    for it in x.args
+        if it.head == :line
+            # do nothing
+        elseif it.head == :comparison # regular constraint
+            push!(code.args, Expr(:macrocall,symbol("@LinearConstraint"), esc(it)))
+        elseif it.head == :tuple # constraint ref
+            error("@LinearConstraints does not currently support groups of constraints")
+        end
+    end
+    return code
 end
 
 for (mac,sym) in [(:addConstraints,  symbol("@addConstraint")),
@@ -234,13 +323,20 @@ macro defExpr(args...)
         error("in @defExpr: needs either one or two arguments.")
     end
 
-    crefflag = isa(c,Expr)
     refcall, idxvars, idxsets, idxpairs = buildrefsets(c)
     newaff, parsecode = parseExpr(x, :q, [1.0])
     code = quote
         q = AffExpr()
         $parsecode
-        $crefflag && !isa($newaff,AffExpr) && error("Three argument form of @defExpr does not currently support quadratic expressions")
+    end
+    if isa(c,Expr)
+        code = quote
+            $code
+            isa($newaff,AffExpr) || error("Three argument form of @defExpr does not currently support quadratic expressions")
+        end
+    end
+    code = quote
+        $code
         $(refcall) = $newaff
     end
 

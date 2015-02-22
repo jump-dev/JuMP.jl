@@ -32,8 +32,8 @@ export
     affToStr, quadToStr, conToStr, chgConstrRHS,
 
 # Macros and support functions
-    @addConstraint, @addConstraints, @defVar,
-    @defConstrRef, @setObjective, addToExpression, @defExpr,
+    @addConstraint, @addConstraints, @LinearConstraint, @LinearConstraints,
+    @defVar, @defConstrRef, @setObjective, addToExpression, @defExpr,
     @setNLObjective, @addNLConstraint, @addNLConstraints,
     @defNLExpr
 
