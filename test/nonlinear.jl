@@ -60,6 +60,7 @@ end; end; end
 
 facts("[nonlinear] Test ifelse") do
 for nlp_solver in nlp_solvers
+contains("$(typeof(nlp_solver))", "OsilSolver") && continue
 context("With solver $(typeof(nlp_solver))") do
         m = Model(solver=nlp_solver)
         @defVar(m, x, start = 2)
