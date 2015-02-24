@@ -60,6 +60,14 @@ the syntax for linear and quadratic expressions. We note some important points b
   linear constraints.
   However, the code ``sin(x)`` is an error. All nonlinear expressions must
   be inside of macros.
+- As a corollary, user-defined functions may not be used within nonlinear
+  expressions. See the example below::
+
+    myfunction(a,b) = exp(a)*b
+    @defVar(m, x); @defVar(m, y)
+    @setNLObjective(m, Min, myfunction(x,y)) # ERROR
+    @setNLObjective(m, Min, exp(x)*y) # Okay
+
 - ``AffExpr`` and ``QuadExpr`` objects cannot currently be used inside nonlinear
   expressions. Instead, introduce auxiliary variables, e.g.::
 
