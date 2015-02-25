@@ -170,8 +170,9 @@ macro addLazyConstraint(cbdata, x)
     end
     if length(x.args) == 3 # simple comparison
         lhs = :($(x.args[1]) - $(x.args[3])) # move everything to the lhs
-        newaff, parsecode = parseExpr(lhs, :aff, [1.0])
-        sense = _canonicalize_sense(x.args[2])
+        newaff, parsecode = parseExprToplevel(lhs, :aff)
+        sense, vectorized = _canonicalize_sense(x.args[2])
+        vectorized && error("Cannot add vectorized constraint in lazy callback")
         quote
             aff = AffExpr()
             $parsecode
@@ -204,8 +205,9 @@ macro addUserCut(cbdata, x)
     end
     if length(x.args) == 3 # simple comparison
         lhs = :($(x.args[1]) - $(x.args[3])) # move everything to the lhs
-        newaff, parsecode = parseExpr(lhs, :aff, [1.0])
-        sense = _canonicalize_sense(x.args[2])
+        newaff, parsecode = parseExprToplevel(lhs, :aff)
+        sense, vectorized = _canonicalize_sense(x.args[2])
+        vectorized && error("Cannot add vectorized constraint in cut callback")
         quote
             aff = AffExpr()
             $parsecode

@@ -234,7 +234,7 @@ facts("[macros] @addConstraint with quadratic") do
         @addConstraint(m, sum{x[i],i=1:2}*sum{x[i],i=2:3} >= 0)
         @fact conToStr(m.quadconstr[end]) => "x[1]*x[2] + x[2]² + x[1]*x[3] + x[2]*x[3] $geq 0"
         @addConstraint(m, x[1]^2 + x[2]*x[3] >= 0)
-        @fact conToStr(m.quadconstr[end]) => "x[1]² + x[2]*x[3] + 0 $geq 0"
+        @fact conToStr(m.quadconstr[end]) => "x[1]² + x[2]*x[3] $geq 0"
         @addConstraint(m, x[1]^2 + (x[2]+3)*(x[3]-1) >= 0)
         @fact conToStr(m.quadconstr[end]) => "x[1]² + x[2]*x[3] + 3 x[3] - x[2] - 3 $geq 0"
         @addConstraint(m, sum{x[i],i=1:2}^2 >= 0)

@@ -6,9 +6,9 @@
 using Base.Meta
 
 if VERSION > v"0.4.0-"
-    include("parseExpr_staged.jl")
+    include(joinpath("v0.4","parseExpr_staged.jl"))
 else
-    include("parseExpr_0.3.jl")
+    include(joinpath("v0.3","parseExpr_0.3.jl"))
 end
 
 ###############################################################################
@@ -128,19 +128,28 @@ function assert_validmodel(m, macrocode)
     end
 end
 
-
-const valid_senses = [:(<=), :≤, :(>=), :≥, :(==)]
 function _canonicalize_sense(sns::Symbol)
-    sns in valid_senses || error("Invalid sense $sense")
-    return (sns == :≤ ? :(<=) :
-            sns == :≥ ? :(>=) : sns)
+    if sns == :(==)
+        return (:(==),false)
+    elseif sns == :(>=) || sns == :(≥)
+        return (:(>=),false)
+    elseif sns == :(<=) || sns == :(≤)
+        return (:(<=),false)
+    elseif sns == :(.==)
+        return (:(==),true)
+    elseif sns == :(.>=) || sns == :(.≥)
+        return (:(>=),true)
+    elseif sns == :(.<=) || sns == :(.≤)
+        return (:(<=),true)
+    else
+        error("Unrecognized sense $sns")
+    end
 end
 
 # two-argument _construct_constraint! is used for one-sided constraints.
 # Right-hand side is zero.
 _construct_constraint!(v::Variable, sense::Symbol) = _construct_constraint(convert(AffExpr,v), sense)
 function _construct_constraint!(aff::AffExpr, sense::Symbol)
-    sense in valid_senses || error("Unrecognized sense $sense")
     offset = aff.constant
     aff.constant = 0.0
     if sense == :(<=) || sense == :≤
@@ -154,16 +163,38 @@ function _construct_constraint!(aff::AffExpr, sense::Symbol)
     end
 end
 
-function _construct_constraint!(quad::QuadExpr, sense::Symbol)
-    sense in valid_senses || error("Invalid sense $sense in quadratic constraint")
-    return QuadConstraint(quad, sense)
+function _construct_constraint!(aff::AffExpr, lb, ub)
+    offset = aff.constant
+    aff.constant = 0.0
+    LinearConstraint(aff, lb-offset, ub-offset)
+end
+
+_construct_constraint!(quad::QuadExpr, sense::Symbol) = QuadConstraint(quad, sense)
+
+_construct_constraint!(x::Array, sense::Symbol) = map(c->_construct_constraint!(c,sense), x)
+
+_vectorize_like(x::Number, y::Array{AffExpr}) = fill(x, size(y))
+function _vectorize_like{R<:Number}(x::Array{R}, y::Array{AffExpr})
+    for i in 1:max(ndims(x),ndims(y))
+        size(x,i) == size(y,i) || error("Unequal sizes for ranged constraint")
+    end
+    x
+end
+
+function _construct_constraint!(x::Array{AffExpr}, lb, ub)
+    LB = _vectorize_like(lb,x)
+    UB = _vectorize_like(ub,x)
+    ret = similar(x, LinearConstraint)
+    map!(ret, 1:length(ret)) do i
+        _construct_constraint!(x[i], LB[i], UB[i])
+    end
 end
 
 # three-argument _construct_constraint! is used for two-sided constraints.
 function _construct_constraint!(aff::AffExpr, lb::Real, ub::Real)
     offset = aff.constant
     aff.constant = 0.0
-    return LinearConstraint(aff,lb-offset,ub-offset)
+    LinearConstraint(aff,lb-offset,ub-offset)
 end
 
 _construct_constraint!(aff::Variable, lb::Real, ub::Real) = _construct_constraint!(convert(AffExpr,v),lb,ub)
@@ -213,12 +244,11 @@ macro addConstraint(args...)
     # Build the constraint
     if length(x.args) == 3
         # Simple comparison - move everything to the LHS
-        sense = _canonicalize_sense(x.args[2])
-        sense in valid_senses ||
-            error("in @addConstraint ($(string(x))): expected comparison operator (<=, >=, or ==).")
+        (sense,vectorized) = _canonicalize_sense(x.args[2])
         lhs = :($(x.args[1]) - $(x.args[3]))
-        newaff, parsecode = parseExpr(lhs, :q, [1.0])
-        constraintcall = :(addConstraint($m, _construct_constraint!($newaff,$(quot(sense)))))
+        addconstr = (vectorized ? :addVectorizedConstraint : :addConstraint)
+        newaff, parsecode = parseExprToplevel(lhs, :q)
+        constraintcall = :($addconstr($m, _construct_constraint!($newaff,$(quot(sense)))))
         for kw in kwargs.args
             @assert isexpr(kw, :kw)
             push!(constraintcall.args, esc(kw))
@@ -230,23 +260,27 @@ macro addConstraint(args...)
         end
     elseif length(x.args) == 5
         # Ranged row
-        if (x.args[2] != :<= && x.args[2] != :≤) || (x.args[4] != :<= && x.args[4] != :≤)
-            error("in @addConstraint ($(string(x))): only two-sided constraints of the form lb <= expr <= ub are supported.")
+        (lsign,lvectorized) = _canonicalize_sense(x.args[2])
+        (rsign,rvectorized) = _canonicalize_sense(x.args[4])
+        if (lsign != :(<=)) || (rsign != :(<=))
+            error("in @addConstraint ($(string(x))): only ranged rows of the form lb <= expr <= ub are supported.")
         end
+        ((vectorized = lvectorized) == rvectorized) || error("in @addConstraint ($(string(x))): signs are inconsistently vectorized")
+        addconstr = (lvectorized ? :addVectorizedConstraint : :addConstraint)
         x_str = string(x)
         lb_str = string(x.args[1])
         ub_str = string(x.args[5])
-        newaff, parsecode = parseExpr(x.args[3],:aff, [1.0])
+        newaff, parsecode = parseExprToplevel(x.args[3],:aff)
         if VERSION < v"0.4-"
             newlb = esc(x.args[1])
             parselb = nothing
             newub = esc(x.args[5])
             parseub = nothing
         else
-            newlb, parselb = parseExpr(x.args[1],:lb,[1.0])
-            newub, parseub = parseExpr(x.args[5],:ub,[1.0])
+            newlb, parselb = parseExprToplevel(x.args[1],:lb)
+            newub, parseub = parseExprToplevel(x.args[5],:ub)
         end
-        constraintcall = :(addConstraint($m, _construct_constraint!($newaff,$newlb,$newub)))
+        constraintcall = :($addconstr($m, _construct_constraint!($newaff,$newlb,$newub)))
         for kw in kwargs.args
             @assert isexpr(kw, :kw)
             push!(constraintcall.args, esc(kw))
@@ -258,17 +292,30 @@ macro addConstraint(args...)
             $parselb
             ub = 0.0
             $parseub
-            CoefType = coeftype($newaff)
-            try
-                lbval = convert(CoefType, $newlb)
-            catch
-                error(string("in @addConstraint (",$x_str,"): expected ",$lb_str," to be a ", CoefType, "."))
+        end
+        if vectorized
+            code = quote
+                $code
+                lbval, ubval = $newlb, $newub
             end
-            try
-                ubval = convert(CoefType, $newub)
-            catch
-                error(string("in @addConstraint (",$x_str,"): expected ",$ub_str," to be a ", CoefType, "."))
+        else
+            code = quote
+                $code
+                CoefType = coeftype($newaff)
+                try
+                    lbval = convert(CoefType, $newlb)
+                catch
+                    error(string("in @addConstraint (",$x_str,"): expected ",$lb_str," to be a ", CoefType, "."))
+                end
+                try
+                    ubval = convert(CoefType, $newub)
+                catch
+                    error(string("in @addConstraint (",$x_str,"): expected ",$ub_str," to be a ", CoefType, "."))
+                end
             end
+        end
+        code = quote
+            $code
             $(refcall) = $constraintcall
         end
     else
@@ -287,22 +334,27 @@ macro LinearConstraint(x)
         error("in @LinearConstraint ($(string(x))): expected comparison operator (<=, >=, or ==).")
 
     if length(x.args) == 3
-        sense = _canonicalize_sense(x.args[2])
+        (sense,vectorized) = _canonicalize_sense(x.args[2])
         # Simple comparison - move everything to the LHS
-        sense in valid_senses ||
-            error("in @LinearConstraint ($(string(x))): expected comparison operator (<=, >=, or ==).")
+        vectorized &&
+            error("in @LinearConstraint ($(string(x))): Cannot add vectorized constraints")
         lhs = :($(x.args[1]) - $(x.args[3]))
         return quote
             newaff = @defExpr($(esc(lhs)))
             c = _construct_constraint!(newaff,$(quot(sense)))
-            isa(c, LinearConstraint) || error("Constraint in @LinearConstraint is really a $(typeof(c))")
+            isa(c, LinearConstraint) ||
+                error("Constraint in @LinearConstraint is really a $(typeof(c))")
             c
         end
     elseif length(x.args) == 5
         # Ranged row
-        if (x.args[2] != :<= && x.args[2] != :≤) || (x.args[4] != :<= && x.args[4] != :≤)
+        (lsense,lvectorized) = _canonicalize_sense(x.args[2])
+        (rsense,rvectorized) = _canonicalize_sense(x.args[4])
+        if (lsense != :<=) || (rsense != :<=)
             error("in @addConstraint ($(string(x))): only ranged rows of the form lb <= expr <= ub are supported.")
         end
+        (lvectorized || rvectorized) &&
+            error("in @LinearConstraint ($(string(x))): Cannot add vectorized constraints")
         lb = x.args[1]
         ub = x.args[5]
         return quote
@@ -332,10 +384,10 @@ macro QuadConstraint(x)
         error("in @QuadConstraint ($(string(x))): expected comparison operator (<=, >=, or ==).")
 
     if length(x.args) == 3
-        sense = _canonicalize_sense(x.args[2])
+        (sense,vectorized) = _canonicalize_sense(x.args[2])
         # Simple comparison - move everything to the LHS
-        sense in valid_senses ||
-            error("in @QuadConstraint ($(string(x))): expected comparison operator (<=, >=, or ==).")
+        vectorized &&
+            error("in @QuadConstraint ($(string(x))): Cannot add vectorized constraints")
         lhs = :($(x.args[1]) - $(x.args[3]))
         return quote
             newaff = @defExpr($(esc(lhs)))
@@ -423,7 +475,7 @@ macro setObjective(m, args...)
     if sense == :Min || sense == :Max
         sense = Expr(:quote,sense)
     end
-    newaff, parsecode = parseExpr(x, :q, [1.0])
+    newaff, parsecode = parseExprToplevel(x, :q)
     code = quote
         q = AffExpr()
         $parsecode
@@ -444,7 +496,7 @@ macro defExpr(args...)
     end
 
     refcall, idxvars, idxsets, idxpairs, condition = buildrefsets(c)
-    newaff, parsecode = parseExpr(x, :q, [1.0])
+    newaff, parsecode = parseExprToplevel(x, :q)
     if VERSION <= v"0.4-"
         code = quote
             q = AffExpr()

@@ -135,3 +135,46 @@ references in this structure, e.g.::
       myCons[i] = @addConstraint(m, x[i] >= i)
     end
 
+Vectorized operations
+^^^^^^^^^^^^^^^^^^^^^
+
+JuMP supports vectorized expressions and constraints for linear and quadratic models. Although this syntax may
+be familiar for users coming from MATLAB-based modeling languages, we caution that this syntax can be slow---especially
+for large operations. Nevertheless, the syntax often proves useful, for example in constraints involving small,
+dense matrix-vector products.
+
+Linear algebraic operators are available to give meaning to expressions like ``A*x`` where ``A`` is a matrix
+of numbers and ``x`` is a vector of ``Variable``s. You may also use ``JuMPArray``s in these types of expressions,
+but only if the index sets that define them are matrix-like: that is, the index sets are ranges of the type
+``1:n``. For example::
+
+    @defVar(m, x[1:3])
+    expr = rand(3,3)*x
+
+is allowed, while::
+
+    @defVar(m, x[2:4])
+    expr = rand(3,3)*x
+
+is not. Addition and subtraction are also defined in similar ways, following the usual Julia rules for linear
+algebra over arrays.
+
+Vectorized constraints can be added to the model, using the elementwise comparison operators ``.==``, ``.>=``,
+and ``.<=``. For instance, you can write constraints of the form::
+
+    @defVar(m, x[1:10])
+    A = rand(5,10)
+    b = rand(5)
+    @addConstraint(m, A*x + b .<= 1)
+
+Note that scalar literals (such as 1 or 0) are allowed in expressions.
+
+Concatenation is also overloaded for these matrix-like ``JuMPArray``s. For instance, the following will create
+a matrix of ``QuadExpr`` that you can use elsewhere in your model::
+
+    @defVar(m, x[1:3])
+    A = [1 x'
+         x x*x']
+
+Finally, not that this feature is not currently supported directly in nonlinear expressions; for example, a
+matrix--vector product will not work inside a call to the ``@addNLConstraint`` macro.
