@@ -257,18 +257,6 @@ function Base.dot{N}(lhs::JuMPArray{Float64,N},rhs::JuMPArray{Float64,N})
     return sum(lhs.innerArray .* rhs.innerArray)
 end
 
-#############################################################################
-# JuMPDict comparison operators (all errors)
-
-# for sgn in (:<=, :(==), :>=)
-#     for term in (:Real, :Variable, :AffExpr)
-#         @eval begin
-#             $(sgn)(a::JuMPContainer, b::$(term)) = error("Cannot construct constraint with a JuMPDict term")
-#             $(sgn)(a::$(term), b::JuMPContainer) = error("Cannot construct constraint with a JuMPDict term")
-#         end
-#     end
-# end
-
 ###############################################################################
 # Add nonlinear function fallbacks for JuMP built-in types
 const op_hint = "Are you trying to build a nonlinear problem? Make sure you use @addNLConstraint/@setNLObjective."
