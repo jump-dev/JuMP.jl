@@ -468,9 +468,11 @@ facts("[print] expressions") do
     io_test(REPLMode, mod.linconstr[end], "x[1] + 2 y[2,3] $le 3")
     io_test(IJuliaMode, mod.linconstr[end], "x_{1} + 2 y_{2,3} \\leq 3")
 
-    @addConstraint(mod, (x[1]+x[2])*(y[2,2]+3.0) <= 1)
-    io_test(REPLMode, mod.quadconstr[end], "x[1]*y[2,2] + x[2]*y[2,2] + 3 x[1] + 3 x[2] - 1 $le 0")
-    io_test(IJuliaMode, mod.quadconstr[end], "x_{1}\\timesy_{2,2} + x_{2}\\timesy_{2,2} + 3 x_{1} + 3 x_{2} - 1 \\leq 0")
+    if VERSION > v"0.4.0-"
+        @addConstraint(mod, (x[1]+x[2])*(y[2,2]+3.0) <= 1)
+        io_test(REPLMode, mod.quadconstr[end], "x[1]*y[2,2] + x[2]*y[2,2] + 3 x[1] + 3 x[2] - 1 $le 0")
+        io_test(IJuliaMode, mod.quadconstr[end], "x_{1}\\timesy_{2,2} + x_{2}\\timesy_{2,2} + 3 x_{1} + 3 x_{2} - 1 \\leq 0")
+    end
 
     @addConstraint(mod, (y[2,2]+3.0)*(x[1]+x[2]) <= 1)
     io_test(REPLMode, mod.quadconstr[end], "x[1]*y[2,2] + x[2]*y[2,2] + 3 x[1] + 3 x[2] - 1 $le 0")

@@ -212,10 +212,11 @@ macro LinearConstraint(x)
         sense in valid_senses ||
             error("in @LinearConstraint ($(string(x))): expected comparison operator (<=, >=, or ==).")
         lhs = :($(x.args[1]) - $(x.args[3]))
-        # newaff, parsecode = parseExpr(lhs, :q, [1.0])
         return quote
             newaff = @defExpr($(esc(lhs)))
-            _construct_constraint!(newaff,$(quot(sense)))
+            c = _construct_constraint!(newaff,$(quot(sense)))
+            isa(c, LinearConstraint) || error("Constraint in @LinearConstraint is really a $(typeof(c))")
+            c
         end
     elseif length(x.args) == 5
         # Ranged row
@@ -224,7 +225,6 @@ macro LinearConstraint(x)
         end
         lb = x.args[1]
         ub = x.args[5]
-        # newaff, parsecode = parseExpr(x.args[3],:aff, [1.0])
         return quote
             if !isa($(esc(lb)),Number)
                 error(string("in @LinearConstraint (",$(string(x)),"): expected ",$(string(lb))," to be a number."))
@@ -245,27 +245,60 @@ macro LinearConstraint(x)
     end
 end
 
-macro LinearConstraints(x)
-    x.head == :block || error("Invalid syntax for @LinearConstraints")
-    @assert x.args[1].head == :line
-    code = Expr(:vect)
-    for it in x.args
-        if it.head == :line
-            # do nothing
-        elseif it.head == :comparison # regular constraint
-            push!(code.args, Expr(:macrocall,symbol("@LinearConstraint"), esc(it)))
-        elseif it.head == :tuple # constraint ref
-            error("@LinearConstraints does not currently support groups of constraints")
+macro QuadConstraint(x)
+    (x.head == :block) &&
+        error("Code block passed as constraint. Perhaps you meant to use @LinearConstraints instead?")
+    (x.head != :comparison) &&
+        error("in @QuadConstraint ($(string(x))): expected comparison operator (<=, >=, or ==).")
+
+    if length(x.args) == 3
+        sense = _canonicalize_sense(x.args[2])
+        # Simple comparison - move everything to the LHS
+        sense in valid_senses ||
+            error("in @QuadConstraint ($(string(x))): expected comparison operator (<=, >=, or ==).")
+        lhs = :($(x.args[1]) - $(x.args[3]))
+        return quote
+            newaff = @defExpr($(esc(lhs)))
+            q = _construct_constraint!(newaff,$(quot(sense)))
+            isa(q, QuadConstraint) || error("Constraint in @QuadConstraint is really a $(typeof(q))")
+            q
+        end
+    elseif length(x.args) == 5
+        error("Ranged quadratic constraints are not allowed")
+    else
+        # Unknown
+        error("in @QuadConstraint ($(string(x))): constraints must be in one of the following forms:\n" *
+              "       expr1 <= expr2\n" * "       expr1 >= expr2\n" *
+              "       expr1 == expr2\n")
+    end
+end
+
+for (mac,sym) in [(:LinearConstraints, symbol("@LinearConstraint")),
+                  (:QuadConstraints,   symbol("@QuadConstraint"))]
+    @eval begin
+        macro $mac(x)
+            x.head == :block || error("Invalid syntax for @$mac")
+            @assert x.args[1].head == :line
+            code = Expr(:vect)
+            for it in x.args
+                if it.head == :line
+                    # do nothing
+                elseif it.head == :comparison # regular constraint
+                    push!(code.args, Expr(:macrocall, $sym, esc(it)))
+                elseif it.head == :tuple # constraint ref
+                    error("@$mac does not currently support groups of constraints")
+                end
+            end
+            return code
         end
     end
-    return code
 end
 
 for (mac,sym) in [(:addConstraints,  symbol("@addConstraint")),
                   (:addNLConstraints,symbol("@addNLConstraint"))]
     @eval begin
         macro $mac(m, x)
-            x.head == :block || error("Invalid syntax for @addConstraints")
+            x.head == :block || error("Invalid syntax for @$mac")
             @assert x.args[1].head == :line
             code = quote end
             for it in x.args
