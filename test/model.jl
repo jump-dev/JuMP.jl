@@ -279,7 +279,7 @@ facts("[model] Test model copying") do
     @defVar(source, 0 <= y <= 1, Int)
     @setObjective(source, Max, 3*x + 1*y)
     @addConstraint(source, x + 2.0*y <= 6)
-    addConstraint(source, x*x <= 1)
+    @addConstraint(source, x*x <= 1)
 
     # uncomment when NLP copying is implemented
     # @addNLConstraint(source, c[k=1:3], x^2 + y^3 * sin(x+k*y) >= 1)
@@ -322,7 +322,7 @@ facts("[model] Test variable/model 'hygiene'") do
     @addConstraint(modA, x+y == 1)
     @fact_throws solve(modA)
 
-    addConstraint(modB, x*y >= 1)
+    @addConstraint(modB, x*y >= 1)
     @fact_throws solve(modB)
 end
 

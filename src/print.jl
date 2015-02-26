@@ -31,6 +31,7 @@ const DIMS = ["i","j","k","l","m","n"]
 # e.g.   5.3  =>  5.3
 #        1.0  =>  1
 function str_round(f::Float64)
+    abs(f) == 0.0 && return "0" # strip sign off zero
     str = string(f)
     length(str) >= 2 && str[end-1:end] == ".0" ? str[1:end-2] : str
 end

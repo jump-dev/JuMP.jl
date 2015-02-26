@@ -23,9 +23,9 @@ m = Model()
 @setObjective(m, Max, x)
 
 # Subject to 1 linear and 2 nonlinear constraints
-addConstraint(m, x + y + z == 1)
-addConstraint(m, x*x + y*y - z*z <= 0)
-addConstraint(m, x*x - y*z <= 0)
+@addConstraint(m, x + y + z == 1)
+@addConstraint(m, x*x + y*y - z*z <= 0)
+@addConstraint(m, x*x - y*z <= 0)
 
 # Print the model to check correctness
 print(m)
