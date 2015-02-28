@@ -305,4 +305,14 @@ fval = fg([2.5,1.0],out)
 @test_approx_eq out[1] 1
 @test_approx_eq out[2] 0
 
+# JuMP issue #406
+first = @parametricExpr x[1]
+second = @parametricExpr x[1] + first
+ex = @processNLExpr first + second
+fg = genfgrad_simple(ex)
+fval = fg([3.0,1.0], out)
+@test_approx_eq fval 9.0
+@test_approx_eq out[1] 3
+@test_approx_eq out[2] 0
+
 println("Passed tests")

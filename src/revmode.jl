@@ -197,8 +197,7 @@ macro processNLExpr(x)
     subexprcode = quote end
     for v in values(datalist)
         push!(subexprcode.args, :(hashval = hashif($(esc(v)),hashval)))
-        push!(subexprcode.args, :(appendnamesif!(inputnames,$(esc(v)))))
-        push!(subexprcode.args, :(appendvalsif!(inputvals,$(esc(v)))))
+        push!(subexprcode.args, :(appendnames_and_vals_if!(inputnames,inputvals,$(esc(v)))))
     end
     return quote
         inputnames = $inputnames
@@ -244,8 +243,7 @@ macro parametricExpr(args...)
     for v in values(datalist)
         v in params && continue
         push!(subexprcode.args, :(hashval = hashif($(esc(v)),hashval)))
-        push!(subexprcode.args, :(appendnamesif!(inputnames,$(esc(v)))))
-        push!(subexprcode.args, :(appendvalsif!(inputvals,$(esc(v)))))
+        push!(subexprcode.args, :(appendnames_and_vals_if!(inputnames,inputvals,$(esc(v)))))
     end
     paramtup = Expr(:tuple)
     for p in params
@@ -267,10 +265,24 @@ export @parametricExpr, @processNLExpr
 
 hashif(x::ParametricExpression,h) = hash(x,h)
 hashif(x,h) = h
-appendnamesif!(inputnames,x::ParametricExpression) = push!(inputnames, x.inputnames...)
-appendnamesif!(inputnames,x) = nothing
-appendvalsif!(inputvals,x::ParametricExpression) = push!(inputvals, x.inputvals...)
-appendvalsif!(inputvals,x) = nothing
+function appendnames_and_vals_if!(inputnames,inputvals,x::ParametricExpression)
+    for i in 1:length(x.inputnames)
+        name = x.inputnames[i]::Symbol
+        idx = findfirst(inputnames, name)
+        if idx != 0
+            if inputvals[idx] === x.inputvals[i]
+                continue
+            else
+                sname = remove_prefix(name, "__R")
+                error("Value of $sname changed value unexpectedly")
+            end
+        else
+            push!(inputnames, name)
+            push!(inputvals, x.inputvals[i])
+        end
+    end
+end
+appendnames_and_vals_if!(inputnames,inputvals,x) = nothing
 
 # Substitute the parametric expression with parameters replaced with args...
 function replaceif{N}(x::ParametricExpression{N},s::Union(Symbol,Expr), args...)
