@@ -315,4 +315,15 @@ fval = fg([3.0,1.0], out)
 @test_approx_eq out[1] 3
 @test_approx_eq out[2] 0
 
+# embedded tuples
+d = Dict()
+d[(1,1)] = [1,2]
+ex = @processNLExpr sum{x[i], i = d[(1,1)]}
+fg = genfgrad_simple(ex)
+fval = fg([2.5,1.0],out)
+@test_approx_eq fval 3.5
+@test_approx_eq out[1] 1
+@test_approx_eq out[2] 1
+
+
 println("Passed tests")

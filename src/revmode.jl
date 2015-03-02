@@ -97,7 +97,7 @@ function quoteTree(x::Expr, datalist::Dict, iterstack, prefix, parameters = [], 
     elseif isexpr(x, :quote)
         return x
     else
-        if !(x.head in (:(:), :comparison, :&&, :||, :(.)))
+        if !(x.head in (:(:), :comparison, :&&, :||, :(.), :tuple))
             error("Unrecognized expression $x")
         end
         code = justrename ? Expr(x.head) : :(Expr($(quot(x.head))))
