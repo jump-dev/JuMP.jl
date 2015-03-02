@@ -1,13 +1,15 @@
 using Graphs
 import DataStructures
 
+#Graphs.vertex_index(v::Int,g::Graphs.GenericGraph{Int64,Graphs.Edge{Int64},Array{Int64,1},Array{Graphs.Edge{Int64},1},Array{Array{Graphs.Edge{Int64},1},1}}) = v
 
 function gen_adjlist(IJ,nel)
-    g = simple_graph(nel, is_directed=false)
+    edges = Edge{Int}[]
     for (i,j) in IJ
         i == j && continue
-        add_edge!(g, i, j)
+        push!(edges,Edge(length(edges)+1,i,j))
     end
+    g = graph([1:nel;], edges, is_directed=false)
     return g
 
 end
@@ -33,37 +35,42 @@ macro colored(i)
     esc(:((color[$i] != 0)))
 end
 
-function prevent_cycle(v,w,x,S,reverse_intmap,firstVisitToTree,forbiddenColors,color)
-    er = DataStructures.find_root(S, normalize_p(w,x))
-    e = reverse_intmap[er]
-    pair = firstVisitToTree[e]
-    p = pair.first
-    q = pair.second
-    if p != v
-        firstVisitToTree[e] = normalize_p(v,w)
+function prevent_cycle(eg,eg2,S,firstVisitToTree,forbiddenColors,color)
+    v = source(eg)
+    w = target(eg)
+    x = target(eg2)
+
+    er = DataStructures.find_root(S, edge_index(eg2))
+    @inbounds first = firstVisitToTree[er]
+    p = source(first) # but this depends on the order?
+    q = target(first)
+    @inbounds if p != v
+        firstVisitToTree[er] = eg
     elseif q != w
         forbiddenColors[color[x]] = v
     end
     nothing
 end
 
-function grow_star(v,w,firstNeighbor,color,S)
-    pair = firstNeighbor[color[w]]
-    p = pair.first
-    q = pair.second
-    if p != v
-        firstNeighbor[color[w]] = normalize_p(v,w)
+function grow_star(eg,firstNeighbor,color,S)
+    v = source(eg)
+    w = target(eg)
+    @inbounds e = firstNeighbor[color[w]]
+    p = source(e)
+    q = target(e)
+    @inbounds if p != v
+        firstNeighbor[color[w]] = eg
     else
-        union!(S, normalize_p(v,w), normalize_p(p,q))
+        union!(S, edge_index(eg), edge_index(e))
     end
     nothing
 end
 
-function merge_trees(v,w,x,S)
-    e1 = DataStructures.find_root(S, normalize_p(v,w))
-    e2 = DataStructures.find_root(S, normalize_p(w,x))
+function merge_trees(eg,eg1,S)
+    e1 = DataStructures.find_root(S, edge_index(eg))
+    e2 = DataStructures.find_root(S, edge_index(eg1))
     if e1 != e2
-        union!(S, normalize_p(v,w), normalize_p(w,x))
+        union!(S, edge_index(eg), edge_index(eg1))
     end
     nothing
 end
@@ -73,20 +80,18 @@ end
 # SIAM J. Sci. Comput. 2007
 function acyclic_coloring(g)
     @assert !is_directed(g)
+    # Caution: graph is undirected so edges in both directions have
+    # the same index but source/target flipped.
     
     num_colors = 0
     forbiddenColors = Int[]
-    firstNeighbor = Array(MyPair{Int},0)
-    firstVisitToTree = [normalize_p(source(e),target(e)) => MyPair(0,0) for e in edges(g)]
+    firstNeighbor = Array(Edge{Int},0)
+    firstVisitToTree = fill(Edge{Int}(0,0,0),num_edges(g))
     color = fill(0, num_vertices(g))
     # disjoint set forest of edges in the graph
-    S = DataStructures.DisjointSets{MyPair{Int}}(collect(keys(firstVisitToTree)))
-    reverse_intmap = Array(MyPair{Int},length(S.intmap))
-    for k in keys(S.intmap)
-        reverse_intmap[S.intmap[k]] = k
-    end
+    S = DataStructures.IntDisjointSets(num_edges(g))
 
-    for v in 1:num_vertices(g)
+    @inbounds for v in 1:num_vertices(g)
         for eg in out_edges(v,g)
             w = target(eg)
             @colored(w) || continue
@@ -99,7 +104,7 @@ function acyclic_coloring(g)
                 x = target(eg2)
                 @colored(x) || continue
                 if forbiddenColors[color[x]] != v
-                    prevent_cycle(v,w,x,S,reverse_intmap,firstVisitToTree,forbiddenColors,color)
+                    prevent_cycle(eg,eg2,S,firstVisitToTree,forbiddenColors,color)
                 end
             end
         end
@@ -116,14 +121,14 @@ function acyclic_coloring(g)
         if !found
             num_colors += 1
             push!(forbiddenColors, 0)
-            push!(firstNeighbor, MyPair(0, 0))
+            push!(firstNeighbor, Edge{Int}(0,0,0))
             color[v] = num_colors
         end
 
         for eg in out_edges(v,g)
             w = target(eg)
             @colored(w) || continue
-            grow_star(v,w,firstNeighbor,color,S)
+            grow_star(eg,firstNeighbor,color,S)
         end
         for eg in out_edges(v,g)
             w = target(eg)
@@ -132,7 +137,7 @@ function acyclic_coloring(g)
                 x = target(eg2)
                 (@colored(x) && x != v) || continue
                 if color[x] == color[v]
-                    merge_trees(v,w,x,S)
+                    merge_trees(eg,eg2,S)
                 end
             end
         end
