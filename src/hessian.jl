@@ -28,7 +28,7 @@ function compute_hessian_sparsity_IJ_parametric(s::SymbolicOutput)
 
     f = eval(fexpr)
 
-    return (x::SymbolicOutput)-> (edgelist__ = Array((Int,Int),0); f(edgelist__,x.inputvals...); edgelist_to_IJ(edgelist__,x))
+    return (x::SymbolicOutput)-> (edgelist__ = Set{MyPair{Int}}(); f(edgelist__,x.inputvals...); edgelist_to_IJ(edgelist__,x))
 
 end
 
@@ -42,8 +42,9 @@ function edgelist_to_IJ(edgelist,s::SymbolicOutput)
     J = Array(Int,0)
     sizehint!(I,div(length(edgelist),2))
     sizehint!(J,div(length(edgelist),2))
-    for k in 1:length(edgelist)
-        i,j = edgelist[k]
+    for e in edgelist
+        i = e.first
+        j = e.second
         if j > i
             continue # ignore upper triangle
         else
@@ -61,7 +62,7 @@ function compute_hessian_sparsity(x::ExprNode, linear_so_far, expr_out)
         for x1___ in mycolor__
             for x2___ in mycolor__
                 # don't worry about duplicate indices
-                push!(edgelist__,(x1___,x2___))
+                push!(edgelist__,MyPair(x1___,x2___))
             end
         end
     end
