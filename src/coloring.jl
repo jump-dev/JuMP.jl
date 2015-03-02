@@ -5,6 +5,7 @@ import DataStructures
 
 function gen_adjlist(IJ,nel)
     edges = Edge{Int}[]
+    sizehint!(edges,round(Int,length(IJ)/2))
     for (i,j) in IJ
         i == j && continue
         push!(edges,Edge(length(edges)+1,i,j))
@@ -149,7 +150,7 @@ end
 function twocolorset_of_edge(e,g,color)
     i = source(e,g)
     j = target(e,g)
-    return Set([color[i], color[j]])
+    return normalize_p(color[i],color[j])
 end
 
 immutable RecoveryInfo
@@ -161,15 +162,15 @@ immutable RecoveryInfo
 end
 
 function recovery_preprocess(g,color; verify_acyclic::Bool=false)
-    twocoloredges = Dict{Set{Int},Vector{(Int,Int)}}()
-    twocolorvertices = Dict{Set{Int},Set{Int}}()
+    twocoloredges = Dict{MyPair{Int},Vector{MyPair{Int}}}()
+    twocolorvertices = Dict{MyPair{Int},Set{Int}}()
     for e in edges(g)
         twocolor = twocolorset_of_edge(e,g,color)
         if !haskey(twocoloredges, twocolor)
-            twocoloredges[twocolor] = Array((Int,Int),0)
+            twocoloredges[twocolor] = Array(MyPair{Int},0)
             twocolorvertices[twocolor] = Set{Int}()
         end
-        push!(twocoloredges[twocolor], (source(e,g),target(e,g)))
+        push!(twocoloredges[twocolor], normalize_p(source(e,g),target(e,g)))
         push!(twocolorvertices[twocolor], source(e,g))
         push!(twocolorvertices[twocolor], target(e,g))
     end
@@ -185,13 +186,14 @@ function recovery_preprocess(g,color; verify_acyclic::Bool=false)
         s = simple_graph(n, is_directed=false)
 
         vmap = Int[]
+        sizehint!(vmap, length(vertexset))
         for v in vertexset
             push!(vmap, v)
             revmap[v] = length(vmap)
         end
 
-        for (i,j) in edgeset
-            add_edge!(s, revmap[i], revmap[j])
+        for e in edgeset
+            add_edge!(s, revmap[e.first], revmap[e.second])
         end
         if verify_acyclic
             @assert !test_cyclic_by_dfs(s)
@@ -206,9 +208,8 @@ function recovery_preprocess(g,color; verify_acyclic::Bool=false)
     # identify each vertex's parent in the tree
     parents = Array(Vector{Int},0)
     for i in 1:length(twocolorgraphs)
-        s = twocolorgraphs[i]
+        s = twocolorgraphs[i]::SimpleGraph
         parent = zeros(num_vertices(s))
-        s = twocolorgraphs[i]
         seen = falses(num_vertices(s))
         for k in 1:num_vertices(s)
             v = postorder[i][k]
@@ -253,7 +254,7 @@ function indirect_recover_structure(nnz, rinfo::RecoveryInfo)
     end
 
     for t in 1:length(rinfo.twocolorgraphs)
-        s = rinfo.twocolorgraphs[t]
+        s = rinfo.twocolorgraphs[t]::SimpleGraph
         vmap = rinfo.vertexmap[t]
         order = rinfo.postorder[t]
         parent = rinfo.parents[t]
@@ -300,7 +301,7 @@ function indirect_recover(hessian_matmat!, nnz, rinfo::RecoveryInfo, stored_valu
     end
 
     for t in 1:length(rinfo.twocolorgraphs)
-        s = rinfo.twocolorgraphs[t]
+        s = rinfo.twocolorgraphs[t]::SimpleGraph
         vmap = rinfo.vertexmap[t]
         order = rinfo.postorder[t]
         parent = rinfo.parents[t]
