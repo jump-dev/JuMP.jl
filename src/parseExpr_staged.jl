@@ -77,6 +77,7 @@ end
 function addToExpression(quad::QuadExpr,c::Variable,x::Variable)
     push!(quad.qvars1, x)
     push!(quad.qvars2, c)
+    push!(quad.qcoeffs, 1.0)
     return quad
 end
 
