@@ -100,8 +100,8 @@ function MathProgBase.initialize(d::JuMPNLPEvaluator, requested_features::Vector
     end
 
     # Jacobian structure
-    jac_I = zeros(nnz_jac)
-    jac_J = zeros(nnz_jac)
+    jac_I = zeros(Int,nnz_jac)
+    jac_J = zeros(Int,nnz_jac)
     let
         idx = 1
         for col = 1:size(A,2)
@@ -151,8 +151,8 @@ function MathProgBase.initialize(d::JuMPNLPEvaluator, requested_features::Vector
     end
     d.nnz_hess_obj = length(hI)
 
-    hess_I = zeros(nnz_hess)
-    hess_J = zeros(nnz_hess)
+    hess_I = zeros(Int,nnz_hess)
+    hess_J = zeros(Int,nnz_hess)
 
     let
         qobj::QuadExpr = d.m.obj
