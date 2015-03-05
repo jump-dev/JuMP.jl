@@ -307,7 +307,7 @@ function indirect_recover(hessian_matmat!, nnz, rinfo::RecoveryInfo, stored_valu
         parent = rinfo.parents[t]
         stored_values[1:num_vertices(s)] = 0.0
 
-        for z in 1:num_vertices(s)
+        @inbounds for z in 1:num_vertices(s)
             v = order[z]
             p = parent[v]
             (p == 0) && continue
