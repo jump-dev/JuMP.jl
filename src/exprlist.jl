@@ -54,19 +54,33 @@ function prep_sparse_hessians(l::ExprList, num_total_vars; need_expr::Bool=false
     sizehint!(l.hessfuncs, N)
     referenceExpr = Dict()
 
+    genindexlist_t = 0.0
+    indexlist_t = 0.0
+    genfgrad_t = 0.0
+    coloring_t = 0.0
+
+
     I = Int[]
     J = Int[]
 
     for (i,x) in enumerate(l.exprs)
         if !haskey(referenceExpr, x.hashval)
             referenceExpr[x.hashval] = i
+            tic()
             idxf = genindexlist_parametric(x)
+            genindexlist_t += toq()
+            tic()
             prepare_indexlist(x, idxf(x.inputvals...))
+            indexlist_t += toq()
             f = genfval_parametric(x)
+            tic()
             gf = genfgrad_parametric(x)
+            genfgrad_t += toq()
             hess_matmat = gen_hessian_matmat_parametric(x, gf)
             hess_IJf = compute_hessian_sparsity_IJ_parametric(x)
+            tic()
             hI, hJ, hf = gen_hessian_sparse_color_parametric(x, num_total_vars, hess_matmat, hess_IJf)
+            coloring_t += toq()
             push!(l.idxfuncs, idxf)
             push!(l.valfuncs, f)
             push!(l.gradfuncs, gf)
@@ -83,7 +97,9 @@ function prep_sparse_hessians(l::ExprList, num_total_vars; need_expr::Bool=false
             # indices in this expression
             refidx = referenceExpr[x.hashval]
             ref = l.exprs[refidx]
+            tic()
             prepare_indexlist(x, l.idxfuncs[refidx](x.inputvals...))
+            indexlist_t += toq()
             # these are always shared
             push!(l.idxfuncs, l.idxfuncs[refidx])
             push!(l.valfuncs, l.valfuncs[refidx])
@@ -111,7 +127,9 @@ function prep_sparse_hessians(l::ExprList, num_total_vars; need_expr::Bool=false
                 appendToIJ!(I,J,hI,hJ,x)
             else
                 # we can share the AD but not the coloring here
+                tic()
                 hI, hJ, hf = gen_hessian_sparse_color_parametric(x, num_total_vars, l.hess_matmat_funcs[refidx], l.hess_IJ_funcs[refidx])
+                coloring_t += toq()
                 push!(l.hessfuncs, hf)
                 push!(l.hessIJ, (hI, hJ))
                 appendToIJ!(I,J,hI,hJ,x)
@@ -121,6 +139,13 @@ function prep_sparse_hessians(l::ExprList, num_total_vars; need_expr::Bool=false
             end
         end
     end
+
+    #=
+    @show genindexlist_t
+    @show indexlist_t
+    @show genfgrad_t
+    @show coloring_t
+    =#
 
     return I,J
 end

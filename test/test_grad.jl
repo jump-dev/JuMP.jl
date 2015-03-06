@@ -267,6 +267,8 @@ fval = fg([2.5,1.0],out)
 @test_approx_eq out[1] 2*c*2.5
 @test_approx_eq out[2] 1
 
+@test_approx_eq ReverseDiffSparse.getvalue(ex, [2.0,3.0]) c*2.0^2
+
 ex = @parametricExpr j c*x[j]^2
 ex2 = @processNLExpr ex[1]+x[2]
 fg = genfgrad_simple(ex2)
@@ -274,6 +276,9 @@ fval = fg([2.5,1.0],out)
 @test_approx_eq fval c*2.5^2+1
 @test_approx_eq out[1] 2*c*2.5
 @test_approx_eq out[2] 1
+
+@test_approx_eq ReverseDiffSparse.getvalue(ex[1], [2.0,3.0]) c*2.0^2
+@test_approx_eq ReverseDiffSparse.getvalue(ex[2], [2.0,3.0]) c*3.0^2
 
 ex2 = @processNLExpr sum{ex[i],i=1:1}+x[2]
 fg = genfgrad_simple(ex2)
@@ -293,8 +298,11 @@ f = genfval_simple(ex2)
 
 ex = @parametricExpr i sum{x[k],k=1:2;k==i}
 ex2 = @processNLExpr ex[1]
-f = genfval_simple(ex2)
-@test_approx_eq f([2.0,3.0]) 2.0
+fg = genfgrad_simple(ex2)
+fval = fg([2.0,3.0],out)
+@test_approx_eq fval 2.0
+@test_approx_eq out[1] 1.0
+@test_approx_eq out[2] 0.0
 
 # embedded indices
 idx = [1]
@@ -324,6 +332,14 @@ fval = fg([2.5,1.0],out)
 @test_approx_eq fval 3.5
 @test_approx_eq out[1] 1
 @test_approx_eq out[2] 1
+
+ex = @parametricExpr x[1] + x[1]^2 + x[1]*x[2] + x[2]^2
+ex2 = @processNLExpr ex - 1
+fg = genfgrad_simple(ex2)
+fval = fg([1.3,2.4],out)
+@test_approx_eq fval 1.3 + 1.3^2 + 1.3*2.4 + 2.4^2 - 1.0
+@test_approx_eq out[1] 1+2*1.3+2.4
+@test_approx_eq out[2] 1.3+2*2.4
 
 
 println("Passed tests")
