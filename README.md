@@ -34,13 +34,17 @@ Our documentation includes an installation guide, quick-start guide, and referen
 **Latest Release**: 0.8.0 (via ``Pkg.add``)
   * [documentation](https://jump.readthedocs.org/en/release-0.8)
   * [examples](https://github.com/JuliaOpt/JuMP.jl/tree/release-0.8/examples)
-  * Testing status: [![Build Status](https://travis-ci.org/JuliaOpt/JuMP.jl.png?branch=release-0.8)](https://travis-ci.org/JuliaOpt/JuMP.jl) [![JuMP](http://pkg.julialang.org/badges/JuMP_release.svg)](http://pkg.julialang.org/?pkg=JuMP&ver=release)
+  * Testing status:
+    [![Build Status](https://travis-ci.org/JuliaOpt/JuMP.jl.svg?branch=release-0.8)](https://travis-ci.org/JuliaOpt/JuMP.jl)
+    [![JuMP](http://pkg.julialang.org/badges/JuMP_release.svg)](http://pkg.julialang.org/?pkg=JuMP&ver=release)
 
 
 **Development version**:
   * [documentation](https://jump.readthedocs.org/en/latest)
   * [examples](https://github.com/JuliaOpt/JuMP.jl/tree/master/examples)
-  * Testing status: [![Build Status](https://travis-ci.org/JuliaOpt/JuMP.jl.png?branch=master)](https://travis-ci.org/JuliaOpt/JuMP.jl) [![Coverage Status](https://coveralls.io/repos/JuliaOpt/JuMP.jl/badge.png)](https://coveralls.io/r/JuliaOpt/JuMP.jl)
+  * Testing status:
+    [![Build Status](https://travis-ci.org/JuliaOpt/JuMP.jl.svg?branch=master)](https://travis-ci.org/JuliaOpt/JuMP.jl)
+    [![Coverage Status](https://coveralls.io/repos/JuliaOpt/JuMP.jl/badge.svg?branch=master)](https://coveralls.io/r/JuliaOpt/JuMP.jl?branch=master)
   * Changes: see [NEWS](https://github.com/JuliaOpt/JuMP.jl/tree/master/NEWS.md)
 
 ## Installation
