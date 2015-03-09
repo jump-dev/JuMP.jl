@@ -508,6 +508,27 @@ function solvenlp(m::Model; suppress_warnings=false)
 
 end
 
-
-
-
+# getValue for nonlinear subexpressions
+function getValue(x::Union(ReverseDiffSparse.ParametricExpressionWithParams,ReverseDiffSparse.ParametricExpression{0}))
+    # messy check to extract model object
+    found = false
+    m = nothing
+    for item in ReverseDiffSparse.expression_data(x)
+        if isa(item, JuMPDict{Variable})
+            var = first(values(item.tupledict))
+            m = var.m
+            found = true
+            break
+        elseif isa(item, JuMPArray{Variable})
+            m = item.innerArray[1].m
+            found = true
+            break
+        elseif isa(item, Variable)
+            found = true
+            m = item.m
+            break
+        end
+    end
+    found || error("Unable to determine which model this expression belongs to. Are there any variables present?")
+    return ReverseDiffSparse.getvalue(x, m.colVal)
+end
