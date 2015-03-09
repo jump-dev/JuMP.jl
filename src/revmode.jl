@@ -222,6 +222,16 @@ type ParametricExpression{N}
     hashval
 end
 
+type ParametricExpressionWithParams{N}
+    p::ParametricExpression{N}
+    params::NTuple{N,Any}
+end
+
+function Base.getindex{N}(p::ParametricExpression{N},params...)
+    length(params) == N || error("Incorrect number of parameters to expression $p")
+    return ParametricExpressionWithParams(p,params)
+end
+
 macro parametricExpr(args...)
     params = args[1:end-1]
     x = args[end]
@@ -284,14 +294,10 @@ function appendnames_and_vals_if!(inputnames,inputvals,x::ParametricExpression)
 end
 appendnames_and_vals_if!(inputnames,inputvals,x) = nothing
 
-# Substitute the parametric expression with parameters replaced with args...
+# Keep the parametric expression in the tree
 function replaceif{N}(x::ParametricExpression{N},s::Union(Symbol,Expr), args...)
     length(args) == N || error("Incorrect number of parameters for expression $x")
-    tree = x.tree
-    for i in 1:N
-        tree = replace_param(tree, x.parameters[i], args[i])
-    end
-    return tree
+    return x[args...]
 end
 replaceif(::Any,s::Union(Symbol,Expr), args...) = s
 
@@ -336,7 +342,7 @@ function genExprGraph(x::Expr, parent, k)
 end
 
 genExprGraph{T<:Number}(x::T, parent, k) = x
-genExprGraph(x, parent, k) = ExprNode(x, [(parent,k)], nothing, nothing)
+genExprGraph(x, parent, k) = (parent === nothing) ? ExprNode(x,[],nothing,nothing) : ExprNode(x, [(parent,k)], nothing, nothing)
 
 
 addToVarList!(l,x::Placeholder) = push!(l,getplaceindex(x))
@@ -352,6 +358,14 @@ function genVarList(x::Expr, arrname)
     else
         return :(addToVarList!($arrname,$x))
     end
+end
+function genVarList{N}(x::ParametricExpressionWithParams{N},arrname)
+    # for now, just splat it here
+    tree = x.p.tree
+    for i in 1:N
+        tree = replace_param(tree, x.p.parameters[i], x.params[i])
+    end
+    return genVarList(tree,arrname)
 end
 genVarList(x::Number,arrname) = nothing
 genVarList(x::Symbol,arrname) = :(addToVarList!($arrname,$x))
@@ -380,8 +394,6 @@ export prepare_indexlist
 
 function genindexlist_parametric(x::SymbolicOutput)
     out = Expr(:block)
-    genVarList
-    fval = forwardpass(genExprGraph(x.tree), out)
     fexpr = quote
         function _IDXLIST_()
             indexlist = Int[]
@@ -418,6 +430,9 @@ end
 
 asymbol(s::Symbol) = symbol(string(s,"accum"))
 
+const exprval_cache = Dict()
+const exprrev_cache = Dict()
+
 
 function forwardpass(x::ExprNode, expr_out)
     @assert isexpr(expr_out, :block)
@@ -436,6 +451,7 @@ function forwardpass(x::ExprNode, expr_out)
         else
             fcall = Expr(:call, x.ex.args[1], values...)
         end
+        # x.value = GenSym(abs(rand(Int))) # TODO: use on 0.4
         push!(expr_out.args, :( $(x.value) = $fcall ))
         return x.value
     elseif isexpr(x.ex, :curly)
@@ -483,7 +499,18 @@ function forwardpass(x::ExprNode, expr_out)
         return x.value
     elseif isa(x.ex, Expr) || isa(x.ex, Symbol)
         # some other symbolic value, to evaluate at runtime
+        # x.value = GenSym(abs(rand(Int))) # TODO: use on 0.4
         push!(expr_out.args, :( $(x.value) = forwardvalue($(x.ex), __placevalues, __placeindex_in) ))
+        return x.value
+    elseif isa(x.ex,ParametricExpressionWithParams)
+        if !haskey(exprval_cache, x.ex.p.hashval)
+            exprval_cache[x.ex.p.hashval] = genexprval(x.ex.p)
+        end
+        exprval = exprval_cache[x.ex.p.hashval]
+        fcall = :($(exprval)(__placevalues,__placeindex_in))
+        push!(fcall.args,x.ex.params...)
+        push!(fcall.args,x.ex.p.inputnames...)
+        push!(expr_out.args, :( $(x.value) = $fcall::__T ))
         return x.value
     else
         error("Shouldn't get here")
@@ -496,14 +523,13 @@ forwardvalue(x::Placeholder, placevalues, placeindex_in) = placevalues[placeinde
 forwardvalue(x::SymbolicOutput, placevalues, placeindex_in) = error("Unexpected embedded expression $(x.tree).")
 forwardvalue(x, placevalues, placeindex_in) = x
 
-function revpass(x::ExprNode, expr_out)
+function revpass(x::ExprNode, expr_out, rootval= :(one(__T)) )
     @assert isexpr(expr_out, :block)
     # compute the partial drivative wrt. each expression down the graph
     x.deriv = gensym()
-    oneval = :( one(__T) )
     zeroval = :( zero(__T) )
     if length(x.parents) == 0
-        push!(expr_out.args, :( $(x.deriv) = $oneval ) )
+        push!(expr_out.args, :( $(x.deriv) = $rootval ) )
     else
         push!(expr_out.args, :( $(x.deriv) = $zeroval ) )
     end
@@ -536,7 +562,7 @@ function revpass(x::ExprNode, expr_out)
             end
         elseif f == :(*)
             prd = gensym()
-            push!(expr_out.args, :( $prd = $oneval ))
+            push!(expr_out.args, :( $prd = one(__T) ))
             for i in 2:length(p.ex.args)
                 if i == k
                     continue
@@ -602,6 +628,19 @@ function revpass(x::ExprNode, expr_out)
         revpass(exprbody, code)
  
         push!(expr_out.args, gencurlyloop(x.ex,code))
+    elseif isa(x.ex,ParametricExpressionWithParams)
+        if !haskey(exprrev_cache, x.ex.p.hashval)
+            exprrev_cache[x.ex.p.hashval] = genexprrev(x.ex.p)
+        end
+        exprrev = exprrev_cache[x.ex.p.hashval]
+        fcall = :($(exprrev)($(x.deriv),__placevalues,__placeindex_in,__output,__placeindex_out))
+        push!(fcall.args,x.ex.params...)
+        push!(fcall.args,x.ex.p.inputnames...)
+        if VERSION > v"0.4.0"
+            push!(expr_out.args, :( $fcall::Void ))
+        else
+            push!(expr_out.args, :( $fcall::Nothing ))
+        end
     else
         push!(expr_out.args, :( saverevvalue($(x.ex), $(x.deriv), __output, __placeindex_out) ))
     end
@@ -610,7 +649,9 @@ end
 
 revpass(x, expr_out) = nothing
 
+
 saverevvalue(x::Placeholder, val, output, placeindex_out) = (output[placeindex_out[getplaceindex(x)]] += val)
+saverevvalue(x::ParametricExpressionWithParams, val, output, placeindex_out) = error("Unexpected embedded expression $(x.p.tree) (during reverse mode)")
 saverevvalue(x, val, output, placeindex_out) = nothing
 
 # gradient evaluation parametric on "inputvals"
@@ -635,6 +676,7 @@ function genfgrad_parametric(x::SymbolicOutput)
     for i in 1:length(x.inputnames)
         push!(fexpr.args[2].args[1].args,x.inputnames[i])
     end
+    #@show fexpr
 
     return eval(:( local _FGRAD_; $fexpr; _FGRAD_))
 
@@ -660,6 +702,60 @@ function genfval_parametric(x::SymbolicOutput)
     return eval(:( local _FVAL_; $fexpr; _FVAL_))
 end
 
+function genexprval{N}(x::ParametricExpression{N})
+    out = Expr(:block)
+    fval = forwardpass(genExprGraph(x.tree), out)
+    fexpr = quote
+        function _EXPRVAL_{__T}(__placevalues::Vector{__T}, __placeindex_in)
+            $out
+            return convert(__T,$fval)
+        end
+    end
+    # add arguments for parameters
+    for i in 1:N
+        push!(fexpr.args[2].args[1].args,x.parameters[i])
+    end
+    # add arguments for inputnames -- local data
+    for i in 1:length(x.inputnames)
+        push!(fexpr.args[2].args[1].args,x.inputnames[i])
+    end
+
+    return eval(:( local _EXPRVAL_; $fexpr; _EXPRVAL_))
+end
+
+function genexprrev{N}(x::ParametricExpression{N})
+    out = Expr(:block)
+    exgraph = genExprGraph(x.tree)
+    fval = forwardpass(exgraph, out)
+    revpass(exgraph, out, :(__deriv))
+    fexpr = quote
+        function _EXPRREV_{__T}(__deriv::__T,__placevalues::Vector{__T}, __placeindex_in, __output, __placeindex_out)
+            $out
+            nothing
+        end
+    end
+    # add arguments for parameters
+    for i in 1:N
+        push!(fexpr.args[2].args[1].args,x.parameters[i])
+    end
+    # add arguments for inputnames -- local data
+    for i in 1:length(x.inputnames)
+        push!(fexpr.args[2].args[1].args,x.inputnames[i])
+    end
+    #@show fexpr
+
+    return eval(:( local _EXPRREV_; $fexpr; _EXPRREV_))
+end
+
+function getvalue(x::ParametricExpressionWithParams,values::Vector)
+    if !haskey(exprval_cache, x.p.hashval)
+        exprval_cache[x.p.hashval] = genexprval(x.p)
+    end
+    return exprval_cache[x.p.hashval](values, IdentityArray(), x.params..., x.p.inputvals...)
+end
+
+getvalue(x::ParametricExpression{0},values::Vector) = getvalue(x[],values)
+
 function genfval_simple(x::SymbolicOutput)
     prepare_indexlist(x)
     f = genfval_parametric(x)
@@ -673,8 +769,7 @@ Base.getindex(::IdentityArray,i) = i
 
 function genfgrad_simple(x::SymbolicOutput)
     prepare_indexlist(x)
-    fexpr = genfgrad_parametric(x)
-    f = eval(fexpr)
+    f = genfgrad_parametric(x)
     return (xvals, out) -> (fill!(out, 0.0); f(xvals, IdentityArray(), out, IdentityArray(),x.inputvals...))
 end
 

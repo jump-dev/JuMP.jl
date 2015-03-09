@@ -65,6 +65,13 @@ function outputpass(x::ExprNode, expr_out)
         # some other symbolic value, to evaluate at runtime
         push!(expr_out.args, :( $(x.value) = outputvalue($(x.ex) )))
         return x.value
+    elseif isa(x.ex,ParametricExpressionWithParams)
+        # just splat
+        tree = x.ex.p.tree
+        for i in 1:length(x.ex.params)
+            tree = replace_param(tree, x.ex.p.parameters[i], x.ex.params[i])
+        end
+        outputpass(genExprGraph(tree), expr_out)
     else
         error("Shouldn't get here")
     end

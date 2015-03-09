@@ -92,7 +92,7 @@ function compute_hessian_sparsity(x::ExprNode, linear_so_far, expr_out)
             elseif x.ex.args[1] == :(*)
                 # if at most one of the multiplicands is a "complex" expression,
                 # try to detect if all others are constants.
-                iscomplexexpr(t) = isa(t,ExprNode) && (isexpr(t.ex,:call) || isexpr(t.ex,:curly))
+                iscomplexexpr(t) = isa(t,ExprNode) && (isexpr(t.ex,:call) || isexpr(t.ex,:curly) || isa(t.ex,ParametricExpressionWithParams))
                 num_complex = mapreduce(iscomplexexpr, +, x.ex.args[2:end])
                 if num_complex <= 1
                     conditions = quote
@@ -148,6 +148,13 @@ function compute_hessian_sparsity(x::ExprNode, linear_so_far, expr_out)
         end
     elseif isexpr(x.ex, :comparison) || isexpr(x.ex, :&&) || isexpr(x.ex, :||)
         # nothing to do here
+    elseif isa(x.ex,ParametricExpressionWithParams)
+        # just splat
+        tree = x.ex.p.tree
+        for i in 1:length(x.ex.params)
+            tree = replace_param(tree, x.ex.p.parameters[i], x.ex.params[i])
+        end
+        compute_hessian_sparsity(genExprGraph(tree), linear_so_far, expr_out)
     else
         # we must be at an input expression
         # add this placeholder to the set of nodes with this color
@@ -155,7 +162,7 @@ function compute_hessian_sparsity(x::ExprNode, linear_so_far, expr_out)
         if !linear_so_far
             push!(expr_out.args, :( 
                 if isa($(x.ex),Placeholder)
-                    push!(mycolor__, getplaceindex($(x.ex)))
+                    push!(mycolor__, getplaceindex($(x.ex))::Int)
                 end))
         end
     end

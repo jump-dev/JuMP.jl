@@ -204,7 +204,7 @@ function recovery_preprocess(g,color; verify_acyclic::Bool=false)
     end
 
     # list the vertices in postorder
-    postorder = [reverse(topological_sort_by_dfs(s)) for s in twocolorgraphs]
+    postorder = Vector{Int}[reverse(topological_sort_by_dfs(s::SimpleGraph)) for s in twocolorgraphs]
     # identify each vertex's parent in the tree
     parents = Array(Vector{Int},0)
     for i in 1:length(twocolorgraphs)
