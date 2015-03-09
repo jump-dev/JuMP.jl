@@ -162,7 +162,7 @@ type SymbolicOutput
     hashval # for identifying expressions with identical trees
 end
 
-
+expression_data(s::SymbolicOutput) = s.inputvals
 
 remove_prefix(x::Expr, prefix::String) = Expr(x.head, [remove_prefix(ex,prefix) for ex in x.args]...)
 function remove_prefix(s::Symbol, prefix::String)
@@ -226,6 +226,9 @@ type ParametricExpressionWithParams{N}
     p::ParametricExpression{N}
     params::NTuple{N,Any}
 end
+
+expression_data(p::ParametricExpression) = p.inputvals
+expression_data(p::ParametricExpressionWithParams) = p.p.inputvals
 
 function Base.getindex{N}(p::ParametricExpression{N},params...)
     length(params) == N || error("Incorrect number of parameters to expression $p")
