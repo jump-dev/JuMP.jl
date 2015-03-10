@@ -242,6 +242,7 @@ context("With solver $(typeof(nlp_solver))") do
     @fact solve(m) => :Optimal
     @fact getObjectiveValue(m) => roughly(1+4/sqrt(3), 1e-6)
     @fact getValue(x) + getValue(y) => roughly(-1/3, 1e-3)
+    @fact getValue(quadexpr) => roughly(1, 1e-5)
 end; end; end
 
 
@@ -289,10 +290,10 @@ facts("[nonlinear] Test entropy maximization (reformulation)") do
 for nlp_solver in convex_nlp_solvers
 context("With solver $(typeof(nlp_solver))") do
     m = Model(solver=nlp_solver)
-    N = 4
-    @defVar(m, x[1:N] >= 0, start = 1)
-    @defVar(m, z[1:N], start = 0)
-    @defNLExpr(entropy[i=1:N], -x[i]*log(x[i]))
+    idx = [1,2,3,4]
+    @defVar(m, x[idx] >= 0, start = 1)
+    @defVar(m, z[1:4], start = 0)
+    @defNLExpr(entropy[i=idx], -x[i]*log(x[i]))
     @setNLObjective(m, Max, sum{z[i], i = 1:2} + sum{z[i]/2, i=3:4})
     @addNLConstraint(m, z_constr1[i=1], z[i] <= entropy[i])
     @addNLConstraint(m, z_constr1[i=2], z[i] <= entropy[i]) # duplicate expressions
@@ -300,7 +301,10 @@ context("With solver $(typeof(nlp_solver))") do
     @addConstraint(m, sum(x) == 1)
 
     @fact solve(m) => :Optimal
-    @fact norm(getValue(x)[:] - [1/4,1/4,1/4,1/4]) => roughly(0.0, 1e-4)
+    @fact norm([getValue(x[i]) for i in idx] - [1/4,1/4,1/4,1/4]) => roughly(0.0, 1e-4)
+    @fact getValue(entropy[1]) => roughly(-(1/4)*log(1/4), 1e-4)
+    @defNLExpr(zexpr[i=1:4], z[i])
+    @fact getValue(zexpr[1]) => roughly(-(1/4)*log(1/4), 1e-4)
 end; end; end
 
 
