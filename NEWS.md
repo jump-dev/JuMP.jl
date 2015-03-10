@@ -7,6 +7,7 @@ Unversioned
   * Comparison operators for constructing constraints (e.g. ``2x >= 1``) have been deprecated. Instead, construct the constraints explicitly in
     the ``@addConstraint`` macro to add them to the model, or in the ``@LinearConstraint`` macro to create a stand-alone linear constraint instance.
   * ``getValue()`` method implemented to compute the value of a nonlinear subexpression
+  * JuMP is now released under the Mozilla Public License version 2.0 (was previously LGPL). MPL is a copyleft license which is less restrictive than LGPL, especially for embedding JuMP within other applications.
 
 Version 0.8.0 (February 17, 2015)
 ---------------------------------
