@@ -52,7 +52,7 @@ JuMP's features include:
 
     * As a trade-off, JuMP's syntax is constrained by the syntax available in Julia.
 
-  * JuMP is `MPL <https://www.mozilla.org/MPL/2.0/MPL>` licensed, meaning that it can be embedded in commercial software that complies with the terms of the license.
+  * JuMP is `MPL <https://www.mozilla.org/MPL/2.0/>`_ licensed, meaning that it can be embedded in commercial software that complies with the terms of the license.
 
 While neither Julia nor JuMP have reached version 1.0 yet, the releases are stable enough for everyday use and are being used in a number of research projects and neat applications by a growing community of users who are early adopters. JuMP remains under active development, and we welcome your feedback, suggestions, and bug reports.
 
