@@ -157,6 +157,14 @@ fval = fg(xvals[1:2], out)
 @test_approx_eq fval xvals[1]+2xvals[2]
 @test_approx_eq out [1.0,2.0]
 
+v = [t]
+subexpr = @parametricExpr i j v[i].x[j]
+ex = @processNLExpr sum{ subexpr[1,i]*t.y[i], i = 1:2 }
+fg = genfgrad_simple(ex)
+fval = fg(xvals[1:2], out)
+@test_approx_eq fval xvals[1]+2xvals[2]
+@test_approx_eq out [1.0,2.0]
+
 t = [MyType(1.0,2.0),MyType(2.0,3.0)]
 ex = @processNLExpr sum{ t[i].x*x[i], i = 1:2 }
 out = zeros(2)

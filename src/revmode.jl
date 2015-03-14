@@ -90,6 +90,8 @@ function quoteTree(x::Expr, datalist::Dict, iterstack, prefix, parameters = [], 
         end
         if justrename # x[y[i]]
             return x
+        elseif isa(xold.args[1],Expr) # v[i].x[j]
+            return quot(x)
         else
             return Expr(:call,:replaceif, esc(xold.args[1]),quot(x),[quot(s) for s in x.args[2:end]]...)
         end
