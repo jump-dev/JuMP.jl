@@ -341,5 +341,11 @@ fval = fg([1.3,2.4],out)
 @test_approx_eq out[1] 1+2*1.3+2.4
 @test_approx_eq out[2] 1.3+2*2.4
 
+# repeated index names
+a = [1 2;3 4]
+matrix1 = @parametricExpr row col a[row,col]
+matrix_transpose = @parametricExpr row col matrix1[col,row]
+@test_approx_eq a' Float64[ ReverseDiffSparse.getvalue(matrix_transpose[row, col], Float64[]) for row=1:2, col=1:2 ]
+
 
 println("Passed tests")
