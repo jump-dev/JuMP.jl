@@ -308,46 +308,54 @@ replaceif(::Any,s::Union(Symbol,Expr), args...) = s
 
 # turn each node in the expression tree into an ExprNode
 # this expression is kth argument in parent expression
-genExprGraph(x) = genExprGraph(x, nothing, nothing)
+genExprGraph(x) = genExprGraph(x, nothing, nothing, true)
 
-function genExprGraph(x::Expr, parent, k)
+function genExprGraph(x::Expr, parent, k, linear_so_far::Bool)
     parentarr = parent === nothing ? [] : [(parent,k)]
     x = copy(x) # don't mutate original
     if isexpr(x, :call)
-        thisnode = ExprNode(x, parentarr)
+        thisnode = ExprNode(x, parentarr, linear_so_far)
+        if !(x.args[1] == :(+) || x.args[1] == :(-) || x.args[1] == :ifelse)
+            linear_so_far = false
+        end
         for i in 2:length(x.args)
-            x.args[i] = genExprGraph(x.args[i], thisnode, i)
+            x.args[i] = genExprGraph(x.args[i], thisnode, i, linear_so_far)
         end
         return thisnode
     elseif isexpr(x, :comparison)
-        thisnode = ExprNode(x, parentarr)
+        thisnode = ExprNode(x, parentarr, linear_so_far)
         for i in 1:2:length(x.args) # comparison symbols are in the middle
-            x.args[i] = genExprGraph(x.args[i], thisnode, i)
+            x.args[i] = genExprGraph(x.args[i], thisnode, i, false)
         end
         return thisnode
     elseif isexpr(x, :&&) || isexpr(x, :||)
-        thisnode = ExprNode(x, parentarr)
+        thisnode = ExprNode(x, parentarr, linear_so_far)
         for i in 1:length(x.args)
-            x.args[i] = genExprGraph(x.args[i], thisnode, i)
+            x.args[i] = genExprGraph(x.args[i], thisnode, i, false)
         end
         return thisnode
     elseif isexpr(x, :curly)
         @assert issum(x.args[1]) || isprod(x.args[1])
-        thisnode = ExprNode(x, parentarr)
-        if isexpr(x.args[2], :parameters) # filter conditions
-            x.args[3] = genExprGraph(x.args[3], thisnode, nothing)
+        thisnode = ExprNode(x, parentarr, linear_so_far)
+        if isprod(x.args[1])
+            linear_so_far = false
         else
-            x.args[2] = genExprGraph(x.args[2], thisnode, nothing)
+            @assert issum(x.args[1])
+        end
+        if isexpr(x.args[2], :parameters) # filter conditions
+            x.args[3] = genExprGraph(x.args[3], thisnode, nothing, linear_so_far)
+        else
+            x.args[2] = genExprGraph(x.args[2], thisnode, nothing, linear_so_far)
         end
         return thisnode
     else
         @assert isexpr(x, :ref) || isexpr(x, :.)
-        return ExprNode(x, parentarr)
+        return ExprNode(x, parentarr, linear_so_far)
     end
 end
 
-genExprGraph{T<:Number}(x::T, parent, k) = x
-genExprGraph(x, parent, k) = (parent === nothing) ? ExprNode(x,[],nothing,nothing) : ExprNode(x, [(parent,k)], nothing, nothing)
+genExprGraph{T<:Number}(x::T, parent, k, linear_so_far) = x
+genExprGraph(x, parent, k, linear_so_far) = (parent === nothing) ? ExprNode(x,[], linear_so_far) : ExprNode(x, [(parent,k)], linear_so_far)
 
 
 addToVarList!(l,x::Placeholder) = push!(l,getplaceindex(x))
@@ -438,8 +446,11 @@ asymbol(s::Symbol) = symbol(string(s,"accum"))
 const exprval_cache = Dict()
 const exprrev_cache = Dict()
 
-
-function forwardpass(x::ExprNode, expr_out)
+# skip_linear_sums: Don't compute values of sums which contribute to the expression linearly.
+#              This is used for fusing reverse and forward modes:
+#              http://link.springer.com/chapter/10.1007/978-1-4613-0075-5_35
+#              Always false unless you understand what's going on.
+function forwardpass(x::ExprNode, expr_out, skip_linear_sums::Bool)
     @assert isexpr(expr_out, :block)
 
     # compute the value of each expression node by DFS
@@ -449,7 +460,7 @@ function forwardpass(x::ExprNode, expr_out)
     if isexpr(x.ex, :call)
         values = Any[]
         for i in 2:length(x.ex.args)
-            push!(values, forwardpass(x.ex.args[i], expr_out))
+            push!(values, forwardpass(x.ex.args[i], expr_out, skip_linear_sums))
         end
         if x.ex.args[1] == :(^) # Use NaNMath.pow instead of ^
             fcall = Expr(:call, :pow, values...)
@@ -465,13 +476,14 @@ function forwardpass(x::ExprNode, expr_out)
         # compute value of this node, need to use a loop
         if issum(oper)
             push!(expr_out.args, :( $(x.value) = zero(__T) ))
+            x.linear_so_far && skip_linear_sums && return x.value # early exit
         else # :prod
             push!(expr_out.args, :( $(x.value) = one(__T) ))
             push!(expr_out.args, :( $(asymbol(x.value)) = ProductAccumulator(__T) ))
         end
         code = quote end
 
-        valexpr = forwardpass(curlyexpr(x.ex), code)
+        valexpr = forwardpass(curlyexpr(x.ex), code, skip_linear_sums)
 
         if issum(oper)
             code = :( $code; $(x.value) += $valexpr )
@@ -488,7 +500,7 @@ function forwardpass(x::ExprNode, expr_out)
             if iseven(i)
                 push!(values, x.ex.args[i]) # comparison operator
             else
-                push!(values, forwardpass(x.ex.args[i], expr_out))
+                push!(values, forwardpass(x.ex.args[i], expr_out, skip_linear_sums))
             end
         end
         fcall = Expr(:comparison, values...)
@@ -497,7 +509,7 @@ function forwardpass(x::ExprNode, expr_out)
     elseif isexpr(x.ex, :&&) || isexpr(x.ex, :||)
         values = Any[]
         for i in 1:length(x.ex.args)
-            push!(values, forwardpass(x.ex.args[i], expr_out))
+            push!(values, forwardpass(x.ex.args[i], expr_out, skip_linear_sums))
         end
         fcall = Expr(x.ex.head, values...)
         push!(expr_out.args, :( $(x.value) = $fcall ))
@@ -522,13 +534,13 @@ function forwardpass(x::ExprNode, expr_out)
     end
 end
 
-forwardpass(x, expr_out) = :(forwardvalue($x, __placevalues, __placeindex_in))
+forwardpass(x, expr_out, skip_linear_sums) = :(forwardvalue($x, __placevalues, __placeindex_in))
 
 forwardvalue(x::Placeholder, placevalues, placeindex_in) = placevalues[placeindex_in[getplaceindex(x)]]
 forwardvalue(x::SymbolicOutput, placevalues, placeindex_in) = error("Unexpected embedded expression $(x.tree).")
 forwardvalue(x, placevalues, placeindex_in) = x
 
-function revpass(x::ExprNode, expr_out, rootval= :(one(__T)) )
+function revpass(x::ExprNode, expr_out; rootval= :(one(__T)), linear_sums=false )
     @assert isexpr(expr_out, :block)
     # compute the partial drivative wrt. each expression down the graph
     x.deriv = gensym()
@@ -618,19 +630,24 @@ function revpass(x::ExprNode, expr_out, rootval= :(one(__T)) )
     # recurse through children
     if isexpr(x.ex,:call)
         for i in 2:length(x.ex.args)
-            revpass(x.ex.args[i], expr_out)
+            revpass(x.ex.args[i], expr_out, linear_sums=linear_sums)
         end
     elseif isexpr(x.ex,:curly)
         @assert issum(x.ex.args[1]) || isprod(x.ex.args[1])
         exprbody = curlyexpr(x.ex)
-        if !isa(exprbody,ExprNode) # expression inside sum doesn't depend on input
+        if !isa(exprbody,ExprNode) && !x.linear_so_far # expression inside sum doesn't depend on input and haven't computed it yet
             return
         end
         # need to do a mini forward pass here for each child, because we reuse the nodes
         cleargraph(exprbody)
         code = quote end
-        forwardpass(exprbody, code)
-        revpass(exprbody, code)
+        sval = forwardpass(exprbody, code, false)
+        # did we already compute this?
+        # if not, fuse forward+reverse here
+        if linear_sums != false && x.linear_so_far && issum(x.ex.args[1])
+            push!(code.args, :($linear_sums += $sval))
+        end
+        revpass(exprbody, code, linear_sums=linear_sums)
  
         push!(expr_out.args, gencurlyloop(x.ex,code))
     elseif isa(x.ex,ParametricExpressionWithParams)
@@ -652,7 +669,7 @@ function revpass(x::ExprNode, expr_out, rootval= :(one(__T)) )
         
 end
 
-revpass(x, expr_out) = nothing
+revpass(x, expr_out; linear_sums=false) = nothing
 
 
 saverevvalue(x::Placeholder, val, output, placeindex_out) = (output[placeindex_out[getplaceindex(x)]] += val)
@@ -664,9 +681,9 @@ function genfgrad_parametric(x::SymbolicOutput)
     @assert x.indexlist !== nothing
     out = Expr(:block)
     exgraph = genExprGraph(x.tree)
-    fval = forwardpass(exgraph, out)
+    fval = forwardpass(exgraph, out, true) # note we skip linear sums here
     push!( out.args, :( beginreverse = nothing ) ) # for debugging, indicate start of reverse pass instructions
-    revpass(exgraph,out)
+    revpass(exgraph,out, linear_sums = fval)
     # placeindex_in[i] specifies the index of the value of the ith
     # placeholder in placevalues.
     # placeindex_out[i] specifies the the index in which to output
@@ -692,7 +709,7 @@ end
 function genfval_parametric(x::SymbolicOutput)
     @assert x.indexlist !== nothing
     out = Expr(:block)
-    fval = forwardpass(genExprGraph(x.tree), out)
+    fval = forwardpass(genExprGraph(x.tree), out, false)
     fexpr = quote
         function _FVAL_{__T}(__placevalues::Vector{__T}, __placeindex_in)
             $out
@@ -709,7 +726,7 @@ end
 
 function genexprval{N}(x::ParametricExpression{N})
     out = Expr(:block)
-    fval = forwardpass(genExprGraph(x.tree), out)
+    fval = forwardpass(genExprGraph(x.tree), out, false)
     fexpr = quote
         function _EXPRVAL_{__T}(__placevalues::Vector{__T}, __placeindex_in)
             $out
@@ -731,8 +748,8 @@ end
 function genexprrev{N}(x::ParametricExpression{N})
     out = Expr(:block)
     exgraph = genExprGraph(x.tree)
-    fval = forwardpass(exgraph, out)
-    revpass(exgraph, out, :(__deriv))
+    fval = forwardpass(exgraph, out, false)
+    revpass(exgraph, out, rootval=:(__deriv))
     fexpr = quote
         function _EXPRREV_{__T}(__deriv::__T,__placevalues::Vector{__T}, __placeindex_in, __output, __placeindex_out)
             $out

@@ -5,9 +5,10 @@ type ExprNode
     parents
     value # value of this expression in the tree
     deriv # derivative wrt this expression (when computed)
+    linear_so_far::Bool # true if the result of the expression is known to be linear with respect to the value of this node
 end
 
-ExprNode(ex, parents) = ExprNode(ex, parents, nothing, nothing)
+ExprNode(ex, parents, linear_so_far) = ExprNode(ex, parents, nothing, nothing, linear_so_far)
 
 abstract Placeholder
 
