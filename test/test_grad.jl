@@ -91,6 +91,13 @@ fval = fg(xvals, out)
 @test_approx_eq fval 3*sum(xvals)
 @test_approx_eq out fill(3.0,10)
 
+ex = @processNLExpr -sum{3x[i], i = 1:10}
+fg = genfgrad_simple(ex)
+xvals = rand(10)
+fval = fg(xvals, out)
+@test_approx_eq fval -3*sum(xvals)
+@test_approx_eq out fill(-3.0,10)
+
 # with conditions
 out = zeros(10)
 ex = @processNLExpr sum{3x[i], i = 1:10; i > 3}

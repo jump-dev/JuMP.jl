@@ -315,7 +315,8 @@ function genExprGraph(x::Expr, parent, k, linear_so_far::Bool)
     x = copy(x) # don't mutate original
     if isexpr(x, :call)
         thisnode = ExprNode(x, parentarr, linear_so_far)
-        if !(x.args[1] == :(+) || x.args[1] == :(-) || x.args[1] == :ifelse)
+        #TODO: also handle subtraction, but need to keep track of coefficients
+        if !(x.args[1] == :(+) || x.args[1] == :ifelse)
             linear_so_far = false
         end
         for i in 2:length(x.args)
