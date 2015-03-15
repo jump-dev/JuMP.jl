@@ -308,46 +308,54 @@ replaceif(::Any,s::Union(Symbol,Expr), args...) = s
 
 # turn each node in the expression tree into an ExprNode
 # this expression is kth argument in parent expression
-genExprGraph(x) = genExprGraph(x, nothing, nothing)
+genExprGraph(x) = genExprGraph(x, nothing, nothing, true)
 
-function genExprGraph(x::Expr, parent, k)
+function genExprGraph(x::Expr, parent, k, linear_so_far::Bool)
     parentarr = parent === nothing ? [] : [(parent,k)]
     x = copy(x) # don't mutate original
     if isexpr(x, :call)
-        thisnode = ExprNode(x, parentarr)
+        thisnode = ExprNode(x, parentarr, linear_so_far)
+        if !(x.args[1] == :(+) || x.args[1] == :(-) || x.args[1] == :ifelse)
+            linear_so_far = false
+        end
         for i in 2:length(x.args)
-            x.args[i] = genExprGraph(x.args[i], thisnode, i)
+            x.args[i] = genExprGraph(x.args[i], thisnode, i, linear_so_far)
         end
         return thisnode
     elseif isexpr(x, :comparison)
-        thisnode = ExprNode(x, parentarr)
+        thisnode = ExprNode(x, parentarr, linear_so_far)
         for i in 1:2:length(x.args) # comparison symbols are in the middle
-            x.args[i] = genExprGraph(x.args[i], thisnode, i)
+            x.args[i] = genExprGraph(x.args[i], thisnode, i, false)
         end
         return thisnode
     elseif isexpr(x, :&&) || isexpr(x, :||)
-        thisnode = ExprNode(x, parentarr)
+        thisnode = ExprNode(x, parentarr, linear_so_far)
         for i in 1:length(x.args)
-            x.args[i] = genExprGraph(x.args[i], thisnode, i)
+            x.args[i] = genExprGraph(x.args[i], thisnode, i, false)
         end
         return thisnode
     elseif isexpr(x, :curly)
         @assert issum(x.args[1]) || isprod(x.args[1])
-        thisnode = ExprNode(x, parentarr)
-        if isexpr(x.args[2], :parameters) # filter conditions
-            x.args[3] = genExprGraph(x.args[3], thisnode, nothing)
+        thisnode = ExprNode(x, parentarr, linear_so_far)
+        if isprod(x.args[1])
+            linear_so_far = false
         else
-            x.args[2] = genExprGraph(x.args[2], thisnode, nothing)
+            @assert issum(x.args[1])
+        end
+        if isexpr(x.args[2], :parameters) # filter conditions
+            x.args[3] = genExprGraph(x.args[3], thisnode, nothing, linear_so_far)
+        else
+            x.args[2] = genExprGraph(x.args[2], thisnode, nothing, linear_so_far)
         end
         return thisnode
     else
         @assert isexpr(x, :ref) || isexpr(x, :.)
-        return ExprNode(x, parentarr)
+        return ExprNode(x, parentarr, linear_so_far)
     end
 end
 
-genExprGraph{T<:Number}(x::T, parent, k) = x
-genExprGraph(x, parent, k) = (parent === nothing) ? ExprNode(x,[],nothing,nothing) : ExprNode(x, [(parent,k)], nothing, nothing)
+genExprGraph{T<:Number}(x::T, parent, k, linear_so_far) = x
+genExprGraph(x, parent, k, linear_so_far) = (parent === nothing) ? ExprNode(x,[], linear_so_far) : ExprNode(x, [(parent,k)], linear_so_far)
 
 
 addToVarList!(l,x::Placeholder) = push!(l,getplaceindex(x))

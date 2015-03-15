@@ -355,5 +355,12 @@ matrix1 = @parametricExpr row col a[row,col]
 matrix_transpose = @parametricExpr row col matrix1[col,row]
 @test_approx_eq a' Float64[ ReverseDiffSparse.getvalue(matrix_transpose[row, col], Float64[]) for row=1:2, col=1:2 ]
 
+# coarse linearity detection for AD
+ex = @processNLExpr x[1]*x[2] + sum{x[i],i=1:2}
+exnode = ReverseDiffSparse.genExprGraph(ex.tree)
+@test exnode.linear_so_far == true
+@test exnode.ex.args[2].linear_so_far == true
+@test exnode.ex.args[2].ex.args[2].linear_so_far == false
+@test exnode.ex.args[3].linear_so_far == true
 
 println("Passed tests")
