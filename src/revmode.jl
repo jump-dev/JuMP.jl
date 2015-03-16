@@ -763,8 +763,8 @@ end
 function genexprrev{N}(x::ParametricExpression{N})
     out = Expr(:block)
     exgraph = genExprGraph(x.tree)
-    fval = forwardpass(exgraph, out, false)
-    revpass(exgraph, out, rootval=:(__deriv))
+    fval = forwardpass(exgraph, out, true)
+    revpass(exgraph, out, rootval=:(__deriv), linear_sums = fval)
     fexpr = quote
         function _EXPRREV_{__T}(__deriv::__T,__placevalues::Vector{__T}, __placeindex_in, __output, __placeindex_out)
             $out
