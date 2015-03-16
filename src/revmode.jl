@@ -583,16 +583,21 @@ function revpass(x::ExprNode, expr_out; rootval= :(one(__T)), linear_sums=false 
                 push!(expr_out.args, :( $(x.deriv) -= $(p.deriv) ))
             end
         elseif f == :(*)
-            prd = gensym()
-            push!(expr_out.args, :( $prd = one(__T) ))
-            for i in 2:length(p.ex.args)
-                if i == k
-                    continue
-                else
-                    push!(expr_out.args, :( $prd *= $(getvalue(p.ex.args[i])) ) )
+            if length(p.ex.args) == 3 # only two multiplicands, special case
+                other = (k == 2) ? 3 : 2
+                push!(expr_out.args, :( $(x.deriv) += $(p.deriv)*$(getvalue(p.ex.args[other])) ))
+            else
+                prd = gensym()
+                push!(expr_out.args, :( $prd = one(__T) ))
+                for i in 2:length(p.ex.args)
+                    if i == k
+                        continue
+                    else
+                        push!(expr_out.args, :( $prd *= $(getvalue(p.ex.args[i])) ) )
+                    end
                 end
+                push!(expr_out.args, :( $(x.deriv) += $(p.deriv)*$prd ) )
             end
-            push!(expr_out.args, :( $(x.deriv) += $(p.deriv)*$prd ) )
         elseif f == :(^)
             if k == 2 # base
                 if p.ex.args[3] == 2 # special processing for x^2
