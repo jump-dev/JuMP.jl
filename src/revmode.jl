@@ -464,7 +464,11 @@ function forwardpass(x::ExprNode, expr_out, skip_linear_sums::Bool)
             push!(values, forwardpass(x.ex.args[i], expr_out, skip_linear_sums))
         end
         if x.ex.args[1] == :(^) # Use NaNMath.pow instead of ^
-            fcall = Expr(:call, :pow, values...)
+            if x.ex.args[3] == 2 # special processing for x^2
+                fcall = Expr(:call, :*, values[1], values[1])
+            else
+                fcall = Expr(:call, :pow, values...)
+            end
         else
             fcall = Expr(:call, x.ex.args[1], values...)
         end
@@ -591,9 +595,14 @@ function revpass(x::ExprNode, expr_out; rootval= :(one(__T)), linear_sums=false 
             push!(expr_out.args, :( $(x.deriv) += $(p.deriv)*$prd ) )
         elseif f == :(^)
             if k == 2 # base
-                exponent = getvalue(p.ex.args[3])
-                push!(expr_out.args, 
-                  :( $(x.deriv) += $(p.deriv)*$exponent*pow($(x.value),$exponent-1) ))
+                if p.ex.args[3] == 2 # special processing for x^2
+                    push!(expr_out.args,
+                      :( $(x.deriv) += $(p.deriv)*2*$(x.value) ) )
+                else
+                    exponent = getvalue(p.ex.args[3])
+                    push!(expr_out.args,
+                      :( $(x.deriv) += $(p.deriv)*$exponent*pow($(x.value),$exponent-1) ))
+                end
             else
                 @assert k == 3
                 base = getvalue(p.ex.args[2])
