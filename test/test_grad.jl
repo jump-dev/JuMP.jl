@@ -370,4 +370,12 @@ exnode = ReverseDiffSparse.genExprGraph(ex.tree)
 @test exnode.ex.args[2].ex.args[2].linear_so_far == false
 @test exnode.ex.args[3].linear_so_far == true
 
+# fused sums
+ex = @processNLExpr sum{sum{x[i],i=1:2} + x[1]^2;true}
+fg = genfgrad_simple(ex)
+fval = fg([1.3,2.4],out)
+@test_approx_eq fval 1.3 + 2.4 + 1.3^2
+@test_approx_eq out[1] 2*1.3 + 1.0
+@test_approx_eq out[2] 1.0
+
 println("Passed tests")

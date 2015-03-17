@@ -656,7 +656,7 @@ function revpass(x::ExprNode, expr_out; rootval= :(one(__T)), linear_sums=false 
         # need to do a mini forward pass here for each child, because we reuse the nodes
         cleargraph(exprbody)
         code = quote end
-        sval = forwardpass(exprbody, code, false)
+        sval = forwardpass(exprbody, code, true)
         # did we already compute this?
         # if not, fuse forward+reverse here
         if linear_sums != false && x.linear_so_far && issum(x.ex.args[1])
