@@ -65,7 +65,7 @@ An initial value of each variable may be provided with the ``start`` keyword to 
 
 Is equivalent to::
 
-    @defVar(m, x[i=1:10], start=(i/2))
+    @defVar(m, x[i=1:10])
     for i in 1:10
         setValue(x[i], i/2)
     end
