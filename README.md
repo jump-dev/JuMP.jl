@@ -91,3 +91,21 @@ Please report any issues via the Github **[issue tracker]**. All types of issues
 
 [issue tracker]: https://github.com/JuliaOpt/JuMP.jl/issues
 [julia-opt]: https://groups.google.com/forum/#!forum/julia-opt
+
+## Citing JuMP
+
+If you find JuMP useful in your work, we kindly request that you cite the following [paper](http://dx.doi.org/10.1287/ijoc.2014.0623):
+
+    @article{LubinDunningIJOC,
+    author = {Miles Lubin and Iain Dunning},
+    title = {Computing in Operations Research Using Julia},
+    journal = {INFORMS Journal on Computing},
+    volume = {27},
+    number = {2},
+    pages = {238-248},
+    year = {2015},
+    doi = {10.1287/ijoc.2014.0623},
+    URL = {http://dx.doi.org/10.1287/ijoc.2014.0623}
+    }
+
+A preprint of this paper is freely availible on [arXiv](http://arxiv.org/abs/1312.1431).
