@@ -202,7 +202,7 @@ latex_elements = {
 # Grouping the document tree into LaTeX files. List of tuples
 # (source start file, target name, title, author, documentclass [howto/manual]).
 latex_documents = [
-  ('jump', 'JuMP.jl.tex', u'JuMP.jl Documentation',
+  ('index', 'JuMP.jl.tex', u'JuMP.jl Documentation',
    AUTHORS, 'manual'),
 ]
 
