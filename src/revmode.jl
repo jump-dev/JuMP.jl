@@ -134,7 +134,7 @@ end
 
 
 function quoteTree(x::Symbol, datalist, iterstack, prefix, parameters, justrename)
-    newsym = x in parameters ? x : symbol("$prefix$x") # don't rename parameters
+    newsym = symbol("$prefix$x")
     if initerstack(x,iterstack)
         return justrename ? x : quot(x)
     else
@@ -263,7 +263,7 @@ macro parametricExpr(args...)
     paramtup = Expr(:tuple)
     for p in params
         @assert isa(p,Symbol)
-        push!(paramtup.args, quot(p))
+        push!(paramtup.args, quot(symbol(string("$symbolprefix$p"))))
     end
     return quote
         inputnames = $inputnames
