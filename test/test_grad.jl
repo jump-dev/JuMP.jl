@@ -361,6 +361,8 @@ a = [1 2;3 4]
 matrix1 = @parametricExpr row col a[row,col]
 matrix_transpose = @parametricExpr row col matrix1[col,row]
 @test_approx_eq a' Float64[ ReverseDiffSparse.getvalue(matrix_transpose[row, col], Float64[]) for row=1:2, col=1:2 ]
+matrix_again = @parametricExpr row col matrix_transpose[row,col]+1
+@test_approx_eq a'+1 Float64[ ReverseDiffSparse.getvalue(matrix_again[row, col], Float64[]) for row=1:2, col=1:2 ]
 
 # coarse linearity detection for AD
 ex = @processNLExpr x[1]*x[2] + sum{x[i],i=1:2}

@@ -232,6 +232,8 @@ end
 expression_data(p::ParametricExpression) = p.inputvals
 expression_data(p::ParametricExpressionWithParams) = p.p.inputvals
 
+replace_param(x::ParametricExpressionWithParams, param::Symbol, xvar) = ParametricExpressionWithParams(x.p, map(s-> replace_param(s,param,xvar), x.params))
+
 function Base.getindex{N}(p::ParametricExpression{N},params...)
     length(params) == N || error("Incorrect number of parameters to expression $p")
     return ParametricExpressionWithParams(p,params)
@@ -358,6 +360,26 @@ end
 genExprGraph{T<:Number}(x::T, parent, k, linear_so_far) = x
 genExprGraph(x, parent, k, linear_so_far) = (parent === nothing) ? ExprNode(x,[], linear_so_far) : ExprNode(x, [(parent,k)], linear_so_far)
 
+# tradeoff between compilation time and derivative evaluation speed
+const SPLAT_THRESHOLD = 50
+
+function genExprGraph(x::ParametricExpressionWithParams, parent, k, linear_so_far)
+    tree = x.p.tree
+    depth = expr_complexity(tree)
+    if depth < SPLAT_THRESHOLD # just splat
+        for i in 1:length(x.params)
+            tree = replace_param(tree, x.p.parameters[i], x.params[i])
+        end
+        genExprGraph(tree, parent, k, linear_so_far)
+    else
+        invoke(genExprGraph, (Any,Any,Any,Any), x, parent, k, linear_so_far)
+    end
+end
+
+# number of nodes in expression graph
+expr_complexity(x::Expr) = sum([expr_complexity(ex) for ex in x.args])
+expr_complexity(x::ParametricExpressionWithParams) = expr_complexity(x.p.tree)
+expr_complexity(x) = 1
 
 addToVarList!(l,x::Placeholder) = push!(l,getplaceindex(x))
 addToVarList!(l,x) = nothing
