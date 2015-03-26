@@ -224,7 +224,7 @@ type ParametricExpression{N}
     hashval
 end
 
-type ParametricExpressionWithParams{N}
+immutable ParametricExpressionWithParams{N}
     p::ParametricExpression{N}
     params::NTuple{N,Any}
 end
@@ -310,11 +310,17 @@ replaceif(::Any,s::Union(Symbol,Expr), args...) = s
 
 # turn each node in the expression tree into an ExprNode
 # this expression is kth argument in parent expression
-genExprGraph(x) = genExprGraph(x, nothing, nothing, true)
+genExprGraph(x) = genExprGraph(x, nothing, nothing, true, Dict())
 
-function genExprGraph(x::Expr, parent, k, linear_so_far::Bool)
+function genExprGraph(x::Expr, parent, k, linear_so_far::Bool, expr_map)
     parentarr = parent === nothing ? [] : [(parent,k)]
+    xold = x
     x = copy(x) # don't mutate original
+    if haskey(expr_map, x)
+        ex = expr_map[x]
+        push!(ex.parents, (parent,k))
+        return ex
+    end
     if isexpr(x, :call)
         thisnode = ExprNode(x, parentarr, linear_so_far)
         #TODO: also handle subtraction, but need to keep track of coefficients
@@ -322,19 +328,20 @@ function genExprGraph(x::Expr, parent, k, linear_so_far::Bool)
             linear_so_far = false
         end
         for i in 2:length(x.args)
-            x.args[i] = genExprGraph(x.args[i], thisnode, i, linear_so_far)
+            x.args[i] = genExprGraph(x.args[i], thisnode, i, linear_so_far, expr_map)
         end
+        expr_map[xold] = thisnode
         return thisnode
     elseif isexpr(x, :comparison)
         thisnode = ExprNode(x, parentarr, linear_so_far)
         for i in 1:2:length(x.args) # comparison symbols are in the middle
-            x.args[i] = genExprGraph(x.args[i], thisnode, i, false)
+            x.args[i] = genExprGraph(x.args[i], thisnode, i, false, Dict())
         end
         return thisnode
     elseif isexpr(x, :&&) || isexpr(x, :||)
         thisnode = ExprNode(x, parentarr, linear_so_far)
         for i in 1:length(x.args)
-            x.args[i] = genExprGraph(x.args[i], thisnode, i, false)
+            x.args[i] = genExprGraph(x.args[i], thisnode, i, false, Dict())
         end
         return thisnode
     elseif isexpr(x, :curly)
@@ -345,34 +352,50 @@ function genExprGraph(x::Expr, parent, k, linear_so_far::Bool)
         else
             @assert issum(x.args[1])
         end
+        # for now, throw away expr_map when scope changes
         if isexpr(x.args[2], :parameters) # filter conditions
-            x.args[3] = genExprGraph(x.args[3], thisnode, nothing, linear_so_far)
+            x.args[3] = genExprGraph(x.args[3], thisnode, nothing, linear_so_far, Dict())
         else
-            x.args[2] = genExprGraph(x.args[2], thisnode, nothing, linear_so_far)
+            x.args[2] = genExprGraph(x.args[2], thisnode, nothing, linear_so_far, Dict())
         end
         return thisnode
     else
         @assert isexpr(x, :ref) || isexpr(x, :.)
-        return ExprNode(x, parentarr, linear_so_far)
+        thisnode = ExprNode(x, parentarr, linear_so_far)
+        expr_map[xold] = thisnode
+        return thisnode
     end
 end
 
-genExprGraph{T<:Number}(x::T, parent, k, linear_so_far) = x
-genExprGraph(x, parent, k, linear_so_far) = (parent === nothing) ? ExprNode(x,[], linear_so_far) : ExprNode(x, [(parent,k)], linear_so_far)
+genExprGraph{T<:Number}(x::T, parent, k, linear_so_far, expr_map) = x
+function genExprGraph(x, parent, k, linear_so_far, expr_map)
+    if (parent === nothing)
+        return ExprNode(x,[], linear_so_far)
+    end
+    if haskey(expr_map, x)
+        ex = expr_map[x]
+        push!(ex.parents, (parent,k))
+        return expr_map[x]
+    else
+        thisnode = ExprNode(x, [(parent,k)], linear_so_far)
+        expr_map[x] = thisnode
+        return thisnode
+    end
+end
 
 # tradeoff between compilation time and derivative evaluation speed
 const SPLAT_THRESHOLD = 50
 
-function genExprGraph(x::ParametricExpressionWithParams, parent, k, linear_so_far)
+function genExprGraph(x::ParametricExpressionWithParams, parent, k, linear_so_far, expr_map)
     tree = x.p.tree
     depth = expr_complexity(tree)
     if depth < SPLAT_THRESHOLD # just splat
         for i in 1:length(x.params)
             tree = replace_param(tree, x.p.parameters[i], x.params[i])
         end
-        genExprGraph(tree, parent, k, linear_so_far)
+        genExprGraph(tree, parent, k, linear_so_far, expr_map)
     else
-        invoke(genExprGraph, (Any,Any,Any,Any), x, parent, k, linear_so_far)
+        invoke(genExprGraph, (Any,Any,Any,Any,Any), x, parent, k, linear_so_far,expr_map)
     end
 end
 
@@ -582,6 +605,9 @@ function revpass(x::ExprNode, expr_out; rootval= :(one(__T)), linear_sums=false 
     end
 
     # compute the partial drivative wrt. each expression down the graph
+    if isa(x.deriv,Symbol)
+        return # already done
+    end
     x.deriv = gensym()
     zeroval = :( zero(__T) )
     if length(x.parents) == 0
@@ -784,6 +810,7 @@ function genexprval{N}(x::ParametricExpression{N})
     for i in 1:length(x.inputnames)
         push!(fexpr.args[2].args[1].args,x.inputnames[i])
     end
+    #@show fexpr
 
     return eval(:( local _EXPRVAL_; $fexpr; _EXPRVAL_))
 end

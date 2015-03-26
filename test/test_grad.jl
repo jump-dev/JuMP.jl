@@ -380,4 +380,18 @@ fval = fg([1.3,2.4],out)
 @test_approx_eq out[1] 2*1.3 + 1.0
 @test_approx_eq out[2] 1.0
 
+# shared terms
+ex = @processNLExpr sin(x[1])+sin(x[1])
+fg = genfgrad_simple(ex)
+fval = fg([1.0],out)
+@test_approx_eq fval 2sin(1)
+@test_approx_eq out[1] 2cos(1)
+
+subex = @parametricExpr sin(x[1])
+ex = @processNLExpr subex + subex
+fg = genfgrad_simple(ex)
+fval = fg([1.0],out)
+@test_approx_eq fval 2sin(1)
+@test_approx_eq out[1] 2cos(1)
+
 println("Passed tests")
