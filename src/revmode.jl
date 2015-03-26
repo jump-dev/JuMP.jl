@@ -479,6 +479,10 @@ function forwardpass(x::ExprNode, expr_out, skip_linear_sums::Bool)
     # compute the value of each expression node by DFS
     # returns the variable name containing the result
 
+    if isa(x.value,Symbol) # already computed
+        return x.value
+    end
+
     x.value = gensym() # generate a variable to represent the value of this node
     if isexpr(x.ex, :call)
         values = Any[]
@@ -569,6 +573,14 @@ forwardvalue(x, placevalues, placeindex_in) = x
 
 function revpass(x::ExprNode, expr_out; rootval= :(one(__T)), linear_sums=false )
     @assert isexpr(expr_out, :block)
+
+    # if not all parents' derivatives are computed, come back later
+    for (p, k) in x.parents
+        if p.deriv === nothing
+            return
+        end
+    end
+
     # compute the partial drivative wrt. each expression down the graph
     x.deriv = gensym()
     zeroval = :( zero(__T) )
@@ -576,12 +588,6 @@ function revpass(x::ExprNode, expr_out; rootval= :(one(__T)), linear_sums=false 
         push!(expr_out.args, :( $(x.deriv) = $rootval ) )
     else
         push!(expr_out.args, :( $(x.deriv) = $zeroval ) )
-    end
-    # if not all parents' derivatives are computed, come back later
-    for (p, k) in x.parents
-        if p.deriv === nothing
-            return
-        end
     end
     
     # x.deriv = sum_{p in parents} p.deriv*(\partial f_p / \partial x)
