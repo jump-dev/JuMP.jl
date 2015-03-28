@@ -45,12 +45,10 @@ getvalue(x) = x # for constants
 function cleargraph(x::ExprNode)
     x.value = nothing
     x.deriv = nothing
-    if isexpr(x.ex,:call)
-        for i in 2:length(x.ex.args)
-            cleargraph(x.ex.args[i])
+    if isa(x.ex,Expr)
+        for ex in x.ex.args
+            cleargraph(ex)
         end
-    elseif isexpr(x.ex,:curly)
-        cleargraph(x.ex.args[2])
     end
 end
 
