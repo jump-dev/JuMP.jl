@@ -178,7 +178,11 @@ function recovery_preprocess(g,color; verify_acyclic::Bool=false)
     twocolorgraphs = SimpleGraph[]
     # map from vertices in two-color subgraphs to original vertices
     vertexmap = Array(Vector{Int},0)
+    postorder = Array(Vector{Int},0)
     revmap = zeros(Int,num_vertices(g))
+    cmap = zeros(Int,0)
+    sizehint!(vertexmap, length(twocoloredges))
+    sizehint!(postorder, length(twocoloredges))
     for twocolor in keys(twocoloredges)
         edgeset = twocoloredges[twocolor]
         vertexset = twocolorvertices[twocolor]
@@ -201,16 +205,22 @@ function recovery_preprocess(g,color; verify_acyclic::Bool=false)
 
         push!(twocolorgraphs, s)
         push!(vertexmap, vmap)
+        # list the vertices in postorder
+        resize!(cmap,num_vertices(s))
+        push!(postorder, reverse_topological_sort_by_dfs(s,cmap))
     end
 
-    # list the vertices in postorder
-    postorder = Vector{Int}[reverse(topological_sort_by_dfs(s::SimpleGraph)) for s in twocolorgraphs]
     # identify each vertex's parent in the tree
+    parent = zeros(0)
+    seen = falses(0)
     parents = Array(Vector{Int},0)
+    sizehint!(parents,length(twocolorgraphs))
     for i in 1:length(twocolorgraphs)
         s = twocolorgraphs[i]::SimpleGraph
-        parent = zeros(num_vertices(s))
-        seen = falses(num_vertices(s))
+        resize!(parent,num_vertices(s))
+        fill!(parent,0)
+        resize!(seen,num_vertices(s))
+        fill!(seen,false)
         for k in 1:num_vertices(s)
             v = postorder[i][k]
             seen[v] = true
@@ -334,7 +344,7 @@ export acyclic_coloring, indirect_recover
 gen_hessian_sparse_color_parametric(s::SymbolicOutput, num_total_vars) =
     gen_hessian_sparse_color_parametric(s,num_total_vars,gen_hessian_matmat_parametric(s),compute_hessian_sparsity_IJ_parametric(s))
 
-function gen_hessian_sparse_color_parametric(s::SymbolicOutput, num_total_vars, hessian_matmat!, hessian_IJ)
+function gen_hessian_sparse_color_parametric(s::SymbolicOutput, num_total_vars, hessian_matmat!, hessian_IJ, dualvec=Array(Dual{Float64}, num_total_vars), dualout=Array(Dual{Float64}, num_total_vars))
     I,J = hessian_IJ(s)
     # remove duplicates
     M = sparse(I,J,ones(length(I)))
@@ -356,9 +366,6 @@ function gen_hessian_sparse_color_parametric(s::SymbolicOutput, num_total_vars, 
     rinfo = recovery_preprocess(g, color)
 
     stored_values = Array(Float64,num_vertices(g))
-    # vectors for hessian-vec product
-    dualvec = Array(Dual{Float64}, num_total_vars)
-    dualout = Array(Dual{Float64}, num_total_vars)
 
     I,J = indirect_recover_structure(num_edges(g), rinfo)
 
@@ -386,3 +393,43 @@ function to_H(s::SymbolicOutput, I, J, V, n)
 end
 
 export to_H
+
+
+# Modified from Graphs.jl to avoid call to reverse()
+
+type TopologicalSortVisitor{V} <: Graphs.AbstractGraphVisitor
+    vertices::Vector{V}
+
+    function TopologicalSortVisitor(n::Int)
+        vs = Array(Int, 0)
+        sizehint!(vs, n)
+        new(vs)
+    end
+end
+
+
+function Graphs.examine_neighbor!{V}(visitor::TopologicalSortVisitor{V}, u::V, v::V, vcolor::Int, ecolor::Int)
+    if vcolor == 1 && ecolor == 0
+        throw(ArgumentError("The input graph contains at least one loop."))
+    end
+end
+
+function Graphs.close_vertex!{V}(visitor::TopologicalSortVisitor{V}, v::V)
+    push!(visitor.vertices, v)
+end
+
+function reverse_topological_sort_by_dfs{V}(graph::Graphs.AbstractGraph{V}, cmap::Vector{Int})
+    @graph_requires graph vertex_list incidence_list vertex_map
+
+    @assert length(cmap) == num_vertices(graph)
+    fill!(cmap,0)
+    visitor = TopologicalSortVisitor{V}(num_vertices(graph))
+
+    for s in vertices(graph)
+        if cmap[vertex_index(s, graph)] == 0
+            Graphs.traverse_graph(graph, DepthFirst(), s, visitor, vertexcolormap=cmap)
+        end
+    end
+
+    visitor.vertices
+end
