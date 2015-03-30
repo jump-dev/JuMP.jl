@@ -37,5 +37,15 @@ add_edge!(g, 4, 1)
 color, numcolors = ReverseDiffSparse.acyclic_coloring(g)
 @test numcolors == 3
 
+# test our topological sort method
+g = simple_graph(6, is_directed=false)
+add_edge!(g, 1,2)
+add_edge!(g, 1,3)
+add_edge!(g, 1,6)
+add_edge!(g, 2,4)
+add_edge!(g, 2,5)
+
+v = ReverseDiffSparse.reverse_topological_sort_by_dfs(g, zeros(Int,num_vertices(g)))
+@test reverse(v) == [1,6,3,2,5,4]
 
 println("Passed tests")

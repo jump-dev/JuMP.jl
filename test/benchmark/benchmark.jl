@@ -3,7 +3,7 @@ using HDF5, JLD
 using ReverseDiffSparse
 #using ProfileView
 
-d = load("benchmark.jld");
+d = load("benchmark2.jld");
 I = d["I"];
 J = d["J"];
 n = d["n"];
@@ -11,7 +11,10 @@ n = d["n"];
 g = gen_adjlist(zip(I,J), n)
 color, num_colors = acyclic_coloring(g)
 @time color, num_colors = acyclic_coloring(g)
-#Profile.clear_malloc_data()
 #@profile color, num_colors = acyclic_coloring(g)
+
+rinfo = ReverseDiffSparse.recovery_preprocess(g, color)
+Profile.clear_malloc_data()
+@time rinfo = ReverseDiffSparse.recovery_preprocess(g, color)
 
 #ProfileView.view()

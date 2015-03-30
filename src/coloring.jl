@@ -1,7 +1,7 @@
 using Graphs
 import DataStructures
 
-#Graphs.vertex_index(v::Int,g::Graphs.GenericGraph{Int64,Graphs.Edge{Int64},Array{Int64,1},Array{Graphs.Edge{Int64},1},Array{Array{Graphs.Edge{Int64},1},1}}) = v
+include("topological_sort.jl")
 
 function gen_adjlist(IJ,nel)
     edges = Edge{Int}[]
@@ -393,43 +393,3 @@ function to_H(s::SymbolicOutput, I, J, V, n)
 end
 
 export to_H
-
-
-# Modified from Graphs.jl to avoid call to reverse()
-
-type TopologicalSortVisitor{V} <: Graphs.AbstractGraphVisitor
-    vertices::Vector{V}
-
-    function TopologicalSortVisitor(n::Int)
-        vs = Array(Int, 0)
-        sizehint!(vs, n)
-        new(vs)
-    end
-end
-
-
-function Graphs.examine_neighbor!{V}(visitor::TopologicalSortVisitor{V}, u::V, v::V, vcolor::Int, ecolor::Int)
-    if vcolor == 1 && ecolor == 0
-        throw(ArgumentError("The input graph contains at least one loop."))
-    end
-end
-
-function Graphs.close_vertex!{V}(visitor::TopologicalSortVisitor{V}, v::V)
-    push!(visitor.vertices, v)
-end
-
-function reverse_topological_sort_by_dfs{V}(graph::Graphs.AbstractGraph{V}, cmap::Vector{Int})
-    @graph_requires graph vertex_list incidence_list vertex_map
-
-    @assert length(cmap) == num_vertices(graph)
-    fill!(cmap,0)
-    visitor = TopologicalSortVisitor{V}(num_vertices(graph))
-
-    for s in vertices(graph)
-        if cmap[vertex_index(s, graph)] == 0
-            Graphs.traverse_graph(graph, DepthFirst(), s, visitor, vertexcolormap=cmap)
-        end
-    end
-
-    visitor.vertices
-end
