@@ -76,7 +76,9 @@ function traverse_graph{V}(
     alg::DepthFirst,
     s::V,
     visitor::AbstractGraphVisitor,
-    vertexcolormap)
+    vertexcolormap,
+    vertex_stack,
+    index_stack)
 
     @graph_requires graph incidence_list vertex_map
 
@@ -85,8 +87,10 @@ function traverse_graph{V}(
         return
     end
 
-    vertex_stack = [s]
-    index_stack = [1]
+    resize!(vertex_stack,1)
+    vertex_stack[1] = s
+    resize!(index_stack,1)
+    index_stack[1] = 1
 
     depth_first_visit_impl!(graph, vertex_stack, index_stack, vertexcolormap, visitor)
 end
@@ -106,7 +110,7 @@ function close_vertex!{V}(visitor::TopologicalSortVisitor{V}, v::V)
     push!(visitor.vertices, v)
 end
 
-function reverse_topological_sort_by_dfs{V}(graph::Graphs.AbstractGraph{V}, cmap::Vector{Int})
+function reverse_topological_sort_by_dfs{V}(graph::Graphs.AbstractGraph{V}, cmap::Vector{Int}, vertex_stack::Vector{Int}=Int[], index_stack::Vector{Int}=Int[])
     @graph_requires graph vertex_list incidence_list vertex_map
 
     @assert length(cmap) == num_vertices(graph)
@@ -115,7 +119,7 @@ function reverse_topological_sort_by_dfs{V}(graph::Graphs.AbstractGraph{V}, cmap
 
     for s in vertices(graph)
         if cmap[vertex_index(s, graph)] == 0
-            traverse_graph(graph, DepthFirst(), s, visitor, cmap)
+            traverse_graph(graph, DepthFirst(), s, visitor, cmap, vertex_stack, index_stack)
         end
     end
 

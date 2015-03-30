@@ -180,9 +180,11 @@ function recovery_preprocess(g,color; verify_acyclic::Bool=false)
     vertexmap = Array(Vector{Int},0)
     postorder = Array(Vector{Int},0)
     revmap = zeros(Int,num_vertices(g))
-    cmap = zeros(Int,0)
     sizehint!(vertexmap, length(twocoloredges))
     sizehint!(postorder, length(twocoloredges))
+    cmap = zeros(Int,0) # shared storage for DFS
+    vertex_stack = Int[]
+    index_stack = Int[]
     for twocolor in keys(twocoloredges)
         edgeset = twocoloredges[twocolor]
         vertexset = twocolorvertices[twocolor]
@@ -207,7 +209,7 @@ function recovery_preprocess(g,color; verify_acyclic::Bool=false)
         push!(vertexmap, vmap)
         # list the vertices in postorder
         resize!(cmap,num_vertices(s))
-        push!(postorder, reverse_topological_sort_by_dfs(s,cmap))
+        push!(postorder, reverse_topological_sort_by_dfs(s,cmap,vertex_stack,index_stack))
     end
 
     # identify each vertex's parent in the tree
