@@ -190,6 +190,7 @@ function recovery_preprocess(g,color; verify_acyclic::Bool=false)
     end
 
     # map from vertices in two-color subgraphs to original vertices
+    twocolorgraphs = SimpleGraph[]
     vertexmap = Array(Vector{Int},0)
     postorder = Array(Vector{Int},0)
     revmap = zeros(Int,num_vertices(g))
@@ -222,6 +223,7 @@ function recovery_preprocess(g,color; verify_acyclic::Bool=false)
             @assert !test_cyclic_by_dfs(s)
         end
 
+        push!(twocolorgraphs,s)
         push!(vertexmap, vmap)
         # list the vertices in postorder
         resize!(cmap,num_vertices(s))
