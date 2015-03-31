@@ -154,7 +154,6 @@ function twocolorset_of_edge(e,g,color)
 end
 
 immutable RecoveryInfo
-    twocolorgraphs::Vector{SimpleGraph}
     vertexmap::Vector{Vector{Int}}
     postorder::Vector{Vector{Int}}
     parents::Vector{Vector{Int}}
@@ -162,32 +161,49 @@ immutable RecoveryInfo
 end
 
 function recovery_preprocess(g,color; verify_acyclic::Bool=false)
-    twocoloredges = Dict{MyPair{Int},Vector{MyPair{Int}}}()
-    twocolorvertices = Dict{MyPair{Int},Set{Int}}()
-    for e in edges(g)
+    twocolorindex = Dict{MyPair{Int},Int}()
+    twocolorcount = Array(Int,0)
+    twocoloredges = Array(Vector{Int},0)
+    twocolorvertices = Array(Set{Int},0)
+    for i in 1:num_edges(g)
+        e = edges(g)[i]
         twocolor = twocolorset_of_edge(e,g,color)
-        if !haskey(twocoloredges, twocolor)
-            twocoloredges[twocolor] = Array(MyPair{Int},0)
-            twocolorvertices[twocolor] = Set{Int}()
+        if !haskey(twocolorindex, twocolor)
+            twocolorindex[twocolor] = length(twocolorindex)+1
+            push!(twocoloredges,Int[])
+            push!(twocolorvertices,Set{Int}())
+            push!(twocolorcount,0)
         end
-        push!(twocoloredges[twocolor], normalize_p(source(e,g),target(e,g)))
-        push!(twocolorvertices[twocolor], source(e,g))
-        push!(twocolorvertices[twocolor], target(e,g))
+        twocolorcount[twocolorindex[twocolor]] += 1
+    end
+    for k in 1:length(twocolorindex)
+        sizehint!(twocoloredges[k],twocolorcount[k])
+        sizehint!(twocolorvertices[k],2*twocolorcount[k])
+    end
+    for i in 1:num_edges(g)
+        e = edges(g)[i]
+        twocolor = twocolorset_of_edge(e,g,color)
+        idx = twocolorindex[twocolor]
+        push!(twocoloredges[idx], i)
+        push!(twocolorvertices[idx], source(e,g))
+        push!(twocolorvertices[idx], target(e,g))
     end
 
-    twocolorgraphs = SimpleGraph[]
     # map from vertices in two-color subgraphs to original vertices
     vertexmap = Array(Vector{Int},0)
     postorder = Array(Vector{Int},0)
     revmap = zeros(Int,num_vertices(g))
-    sizehint!(vertexmap, length(twocoloredges))
-    sizehint!(postorder, length(twocoloredges))
+    sizehint!(vertexmap, length(twocolorindex))
+    sizehint!(postorder, length(twocolorindex))
+    parents = Array(Vector{Int},0)
+    sizehint!(parents,length(twocolorindex))
     cmap = zeros(Int,0) # shared storage for DFS
     vertex_stack = Int[]
     index_stack = Int[]
-    for twocolor in keys(twocoloredges)
-        edgeset = twocoloredges[twocolor]
-        vertexset = twocolorvertices[twocolor]
+    for twocolor in keys(twocolorindex)
+        idx = twocolorindex[twocolor]
+        edgeset = twocoloredges[idx]
+        vertexset = twocolorvertices[idx]
         n = length(vertexset)
         s = simple_graph(n, is_directed=false)
 
@@ -198,56 +214,23 @@ function recovery_preprocess(g,color; verify_acyclic::Bool=false)
             revmap[v] = length(vmap)
         end
 
-        for e in edgeset
-            add_edge!(s, revmap[e.first], revmap[e.second])
+        for i in edgeset
+            e = edges(g)[i]
+            add_edge!(s, revmap[source(e,g)], revmap[target(e,g)])
         end
         if verify_acyclic
             @assert !test_cyclic_by_dfs(s)
         end
 
-        push!(twocolorgraphs, s)
         push!(vertexmap, vmap)
         # list the vertices in postorder
         resize!(cmap,num_vertices(s))
-        push!(postorder, reverse_topological_sort_by_dfs(s,cmap,vertex_stack,index_stack))
-    end
-
-    # identify each vertex's parent in the tree
-    parent = zeros(0)
-    seen = falses(0)
-    parents = Array(Vector{Int},0)
-    sizehint!(parents,length(twocolorgraphs))
-    for i in 1:length(twocolorgraphs)
-        s = twocolorgraphs[i]::SimpleGraph
-        resize!(parent,num_vertices(s))
-        fill!(parent,0)
-        resize!(seen,num_vertices(s))
-        fill!(seen,false)
-        for k in 1:num_vertices(s)
-            v = postorder[i][k]
-            seen[v] = true
-            # find the neighbor that we haven't seen
-            notseen = 0
-            numseen = 0
-            for eg in out_edges(v,s)
-                w = target(eg)
-                if seen[w]
-                    numseen += 1
-                else
-                    notseen = w
-                end
-            end
-            if numseen == length(out_edges(v,s)) - 1
-                parent[v] = notseen
-            else
-                (numseen == length(out_edges(v,s))) || error("Error processing tree, invalid ordering")
-            end
-        end
+        order, parent = reverse_topological_sort_by_dfs(s,cmap,vertex_stack,index_stack)
+        push!(postorder, order)
         push!(parents, parent)
     end
 
-
-    return RecoveryInfo(twocolorgraphs, vertexmap, postorder, parents, color)
+    return RecoveryInfo(vertexmap, postorder, parents, color)
 
 end
 
@@ -265,13 +248,12 @@ function indirect_recover_structure(nnz, rinfo::RecoveryInfo)
         J[k] = i
     end
 
-    for t in 1:length(rinfo.twocolorgraphs)
-        s = rinfo.twocolorgraphs[t]::SimpleGraph
+    for t in 1:length(rinfo.postorder)
         vmap = rinfo.vertexmap[t]
         order = rinfo.postorder[t]
         parent = rinfo.parents[t]
 
-        for z in 1:num_vertices(s)
+        for z in 1:length(order)
             v = order[z]
             p = parent[v]
             (p == 0) && continue
@@ -312,14 +294,13 @@ function indirect_recover(hessian_matmat!, nnz, rinfo::RecoveryInfo, stored_valu
         V[k] = R[i,rinfo.color[i]]
     end
 
-    for t in 1:length(rinfo.twocolorgraphs)
-        s = rinfo.twocolorgraphs[t]::SimpleGraph
+    for t in 1:length(rinfo.vertexmap)
         vmap = rinfo.vertexmap[t]
         order = rinfo.postorder[t]
         parent = rinfo.parents[t]
-        stored_values[1:num_vertices(s)] = 0.0
+        stored_values[1:length(order)] = 0.0
 
-        @inbounds for z in 1:num_vertices(s)
+        @inbounds for z in 1:length(order)
             v = order[z]
             p = parent[v]
             (p == 0) && continue

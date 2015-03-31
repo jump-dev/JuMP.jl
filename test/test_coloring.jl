@@ -46,6 +46,7 @@ add_edge!(g, 2,4)
 add_edge!(g, 2,5)
 
 v = ReverseDiffSparse.reverse_topological_sort_by_dfs(g, zeros(Int,num_vertices(g)))
-@test reverse(v) == [1,6,3,2,5,4]
+@test reverse(v[1]) == [1,6,3,2,5,4]
+@test v[2] == [0,1,1,2,2,1]
 
 println("Passed tests")

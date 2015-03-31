@@ -29,12 +29,23 @@
 type DepthFirst <: Graphs.AbstractGraphVisitAlgorithm
 end
 
+type TopologicalSortVisitor <: Graphs.AbstractGraphVisitor
+    vertices::Vector{Int}
+    parents::Vector{Int}
+
+    function TopologicalSortVisitor(n::Int)
+        vs = Array(Int, 0)
+        sizehint!(vs, n)
+        new(vs, zeros(Int,n))
+    end
+end
+
 function depth_first_visit_impl!{V,E}(
     graph::AbstractGraph{V,E},      # the graph
     vertex_stack,                   # an (initialized) stack of vertex
     index_stack,                    # stack with out edge indices
     vertexcolormap::Vector{Int},    # an (initialized) color-map to indicate status of vertices
-    visitor::AbstractGraphVisitor)  # the visitor
+    visitor::TopologicalSortVisitor)  # the visitor
 
     while !isempty(vertex_stack)
         u = pop!(vertex_stack)
@@ -56,6 +67,7 @@ function depth_first_visit_impl!{V,E}(
                 end
                 push!(vertex_stack, u)
                 push!(index_stack, out_idx)
+                visitor.parents[v] = u
 
                 open_vertex!(visitor, v)
                 vegs = out_edges(v, graph)
@@ -95,18 +107,9 @@ function traverse_graph{V}(
     depth_first_visit_impl!(graph, vertex_stack, index_stack, vertexcolormap, visitor)
 end
 
-type TopologicalSortVisitor{V} <: Graphs.AbstractGraphVisitor
-    vertices::Vector{V}
-
-    function TopologicalSortVisitor(n::Int)
-        vs = Array(Int, 0)
-        sizehint!(vs, n)
-        new(vs)
-    end
-end
 
 
-function close_vertex!{V}(visitor::TopologicalSortVisitor{V}, v::V)
+function close_vertex!(visitor::TopologicalSortVisitor, v::Int)
     push!(visitor.vertices, v)
 end
 
@@ -115,7 +118,7 @@ function reverse_topological_sort_by_dfs{V}(graph::Graphs.AbstractGraph{V}, cmap
 
     @assert length(cmap) == num_vertices(graph)
     fill!(cmap,0)
-    visitor = TopologicalSortVisitor{V}(num_vertices(graph))
+    visitor = TopologicalSortVisitor(num_vertices(graph))
 
     for s in vertices(graph)
         if cmap[vertex_index(s, graph)] == 0
@@ -123,5 +126,5 @@ function reverse_topological_sort_by_dfs{V}(graph::Graphs.AbstractGraph{V}, cmap
         end
     end
 
-    visitor.vertices
+    visitor.vertices,visitor.parents
 end
