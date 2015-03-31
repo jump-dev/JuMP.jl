@@ -26,10 +26,7 @@
 # OF CONTRACT, TORT OR OTHERWISE, ARISING FROM, OUT OF OR IN CONNECTION
 # WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN THE SOFTWARE.
 
-type DepthFirst <: Graphs.AbstractGraphVisitAlgorithm
-end
-
-type TopologicalSortVisitor <: Graphs.AbstractGraphVisitor
+type TopologicalSortVisitor
     vertices::Vector{Int}
     parents::Vector{Int}
 
@@ -40,8 +37,9 @@ type TopologicalSortVisitor <: Graphs.AbstractGraphVisitor
     end
 end
 
-function depth_first_visit_impl!{V,E}(
-    graph::AbstractGraph{V,E},      # the graph
+function depth_first_visit_impl!(
+    adjlist,
+    offsets,
     vertex_stack,                   # an (initialized) stack of vertex
     index_stack,                    # stack with out edge indices
     vertexcolormap::Vector{Int},    # an (initialized) color-map to indicate status of vertices
@@ -50,27 +48,22 @@ function depth_first_visit_impl!{V,E}(
     while !isempty(vertex_stack)
         u = pop!(vertex_stack)
         out_idx = pop!(index_stack)
-        uegs = out_edges(u,graph)
+        #uegs = out_edges(u,graph)
+        len_uegs = offsets[u+1]-offsets[u]
         found_new_vertex = false
 
-        while out_idx <= length(uegs) && !found_new_vertex
-            v_edge = uegs[out_idx]
+        while out_idx <= len_uegs && !found_new_vertex
+            v = adjlist[offsets[u]+out_idx-1]
             out_idx += 1
-            v = v_edge.target
-            v_color = vertexcolormap[vertex_index(v, graph)]
+            v_color = vertexcolormap[v]
 
             if v_color == 0
                 found_new_vertex = true
-                vertexcolormap[vertex_index(v, graph)] = 1
-                if !discover_vertex!(visitor, v)
-                    return
-                end
+                vertexcolormap[v] = 1
                 push!(vertex_stack, u)
                 push!(index_stack, out_idx)
                 visitor.parents[v] = u
 
-                open_vertex!(visitor, v)
-                vegs = out_edges(v, graph)
                 push!(vertex_stack, v)
                 push!(index_stack, 1)
             end
@@ -78,33 +71,28 @@ function depth_first_visit_impl!{V,E}(
 
         if !found_new_vertex
             close_vertex!(visitor, u)
-            vertexcolormap[vertex_index(u, graph)] = 2
+            vertexcolormap[u] = 2
         end
     end
 end
 
-function traverse_graph{V}(
-    graph::SimpleGraph,
-    alg::DepthFirst,
-    s::V,
-    visitor::AbstractGraphVisitor,
+function traverse_graph(
+    adjlist,
+    offsets,
+    s,
+    visitor::TopologicalSortVisitor,
     vertexcolormap,
     vertex_stack,
     index_stack)
 
-    @graph_requires graph incidence_list vertex_map
-
-    vertexcolormap[vertex_index(s, graph)] = 1
-    if !discover_vertex!(visitor, s)
-        return
-    end
+    vertexcolormap[s] = 1
 
     resize!(vertex_stack,1)
     vertex_stack[1] = s
     resize!(index_stack,1)
     index_stack[1] = 1
 
-    depth_first_visit_impl!(graph, vertex_stack, index_stack, vertexcolormap, visitor)
+    depth_first_visit_impl!(adjlist, offsets, vertex_stack, index_stack, vertexcolormap, visitor)
 end
 
 
@@ -113,16 +101,15 @@ function close_vertex!(visitor::TopologicalSortVisitor, v::Int)
     push!(visitor.vertices, v)
 end
 
-function reverse_topological_sort_by_dfs{V}(graph::Graphs.AbstractGraph{V}, cmap::Vector{Int}, vertex_stack::Vector{Int}=Int[], index_stack::Vector{Int}=Int[])
-    @graph_requires graph vertex_list incidence_list vertex_map
+function reverse_topological_sort_by_dfs(adjlist,offsets,num_vertices, cmap::Vector{Int}, vertex_stack::Vector{Int}=Int[], index_stack::Vector{Int}=Int[])
 
-    @assert length(cmap) == num_vertices(graph)
+    @assert length(cmap) == num_vertices
     fill!(cmap,0)
-    visitor = TopologicalSortVisitor(num_vertices(graph))
+    visitor = TopologicalSortVisitor(num_vertices)
 
-    for s in vertices(graph)
-        if cmap[vertex_index(s, graph)] == 0
-            traverse_graph(graph, DepthFirst(), s, visitor, cmap, vertex_stack, index_stack)
+    for s in 1:num_vertices
+        if cmap[s] == 0
+            traverse_graph(adjlist, offsets, s, visitor, cmap, vertex_stack, index_stack)
         end
     end
 

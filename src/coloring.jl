@@ -147,12 +147,6 @@ function acyclic_coloring(g)
     return color, num_colors
 end
 
-function twocolorset_of_edge(e,g,color)
-    i = source(e,g)
-    j = target(e,g)
-    return normalize_p(color[i],color[j])
-end
-
 immutable RecoveryInfo
     vertexmap::Vector{Vector{Int}}
     postorder::Vector{Vector{Int}}
@@ -160,76 +154,126 @@ immutable RecoveryInfo
     color::Vector{Int}
 end
 
-function recovery_preprocess(g,color; verify_acyclic::Bool=false)
-    twocolorindex = Dict{MyPair{Int},Int}()
-    twocolorcount = Array(Int,0)
-    twocoloredges = Array(Vector{Int},0)
-    twocolorvertices = Array(Set{Int},0)
-    for i in 1:num_edges(g)
-        e = edges(g)[i]
-        twocolor = twocolorset_of_edge(e,g,color)
-        if !haskey(twocolorindex, twocolor)
-            twocolorindex[twocolor] = length(twocolorindex)+1
-            push!(twocoloredges,Int[])
-            push!(twocolorvertices,Set{Int}())
-            push!(twocolorcount,0)
+function recovery_preprocess(g,color,num_colors)
+    # represent two-color subgraph as:
+    # list of vertices (with map to global indices)
+    # adjacency list in a single vector (with list of offsets)
+
+
+    # linear index of pair of colors
+    twocolorindex = zeros(Int32,num_colors, num_colors)
+    seen_twocolors = 0
+    g_edges = edges(g)
+    # count of edges in each subgraph
+    edge_count = Array(Int,0)
+    for k in 1:length(g_edges)
+        e = g_edges[k]
+        u = source(e,g)
+        v = target(e,g)
+        i = min(color[u],color[v])
+        j = max(color[u],color[v])
+        if twocolorindex[i,j] == 0
+            seen_twocolors += 1
+            twocolorindex[i,j] = seen_twocolors
+            push!(edge_count,0)
         end
-        twocolorcount[twocolorindex[twocolor]] += 1
+        idx = twocolorindex[i,j]
+        edge_count[idx] += 1
     end
-    for k in 1:length(twocolorindex)
-        sizehint!(twocoloredges[k],twocolorcount[k])
-        sizehint!(twocolorvertices[k],2*twocolorcount[k])
-    end
-    for i in 1:num_edges(g)
-        e = edges(g)[i]
-        twocolor = twocolorset_of_edge(e,g,color)
-        idx = twocolorindex[twocolor]
-        push!(twocoloredges[idx], i)
-        push!(twocolorvertices[idx], source(e,g))
-        push!(twocolorvertices[idx], target(e,g))
+    # edges sorted by twocolor subgraph
+    sorted_edges = Array(Vector{MyPair{Int}},seen_twocolors)
+    for idx in 1:seen_twocolors
+        sorted_edges[idx] = Array(MyPair{Int},0)
+        sizehint!(sorted_edges[idx],edge_count[idx])
     end
 
-    # map from vertices in two-color subgraphs to original vertices
-    twocolorgraphs = SimpleGraph[]
-    vertexmap = Array(Vector{Int},0)
-    postorder = Array(Vector{Int},0)
+    for i in 1:length(g_edges)
+        e = g_edges[i]
+        u = source(e,g)
+        v = target(e,g)
+        i = min(color[u],color[v])
+        j = max(color[u],color[v])
+        idx = twocolorindex[i,j]
+        push!(sorted_edges[idx], MyPair(u,v))
+    end
+
+    # list of unique vertices in each twocolor subgraph
+    vertexmap = Array(Vector{Int},seen_twocolors)
+
+    postorder = Array(Vector{Int},seen_twocolors)
+    parents = Array(Vector{Int},seen_twocolors)
+
+    # temporary lookup map from global index to subgraph index
     revmap = zeros(Int,num_vertices(g))
-    sizehint!(vertexmap, length(twocolorindex))
-    sizehint!(postorder, length(twocolorindex))
-    parents = Array(Vector{Int},0)
-    sizehint!(parents,length(twocolorindex))
+
+    adjcount = zeros(Int,num_vertices(g))
+
     cmap = zeros(Int,0) # shared storage for DFS
     vertex_stack = Int[]
     index_stack = Int[]
-    for twocolor in keys(twocolorindex)
-        idx = twocolorindex[twocolor]
-        edgeset = twocoloredges[idx]
-        vertexset = twocolorvertices[idx]
-        n = length(vertexset)
-        s = simple_graph(n, is_directed=false)
 
-        vmap = Int[]
-        sizehint!(vmap, length(vertexset))
-        for v in vertexset
-            push!(vmap, v)
-            revmap[v] = length(vmap)
+    for idx in 1:seen_twocolors
+        my_edges = sorted_edges[idx]
+        vlist = Int[]
+
+        # build up the vertex list and adjacency count
+        for k in 1:length(my_edges)
+            e = my_edges[k]
+            u = e.first
+            v = e.second
+            # seen these vertices yet?
+            if revmap[u] == 0
+                push!(vlist,u)
+                revmap[u] = length(vlist)
+                adjcount[u] = 0
+            end
+            if revmap[v] == 0
+                push!(vlist,v)
+                revmap[v] = length(vlist)
+                adjcount[v] = 0
+            end
+            adjcount[u] += 1
+            adjcount[v] += 1
         end
 
-        for i in edgeset
-            e = edges(g)[i]
-            add_edge!(s, revmap[source(e,g)], revmap[target(e,g)])
+        # set up offsets for adjlist
+        offset = Array(Int,length(vlist)+1)
+        offset[1] = 1
+        for k in 1:length(vlist)
+            offset[k+1] = offset[k] + adjcount[vlist[k]]
+            adjcount[vlist[k]] = 0
         end
-        if verify_acyclic
-            @assert !test_cyclic_by_dfs(s)
+        # adjlist for node u in twocolor idx starts at
+        # vec[offset[u]]
+        # u has global index vlist[u]
+        vec = Array(Int,offset[length(vlist)+1]-1)
+
+        # now fill in
+        for k in 1:length(my_edges)
+            e = my_edges[k]
+            u = e.first
+            v = e.second
+
+            u_rev = revmap[u] # indices in the subgraph
+            v_rev = revmap[v]
+            vec[offset[u_rev]+adjcount[u]] = v_rev
+            vec[offset[v_rev]+adjcount[v]] = u_rev
+
+            adjcount[u] += 1
+            adjcount[v] += 1
         end
 
-        push!(twocolorgraphs,s)
-        push!(vertexmap, vmap)
-        # list the vertices in postorder
-        resize!(cmap,num_vertices(s))
-        order, parent = reverse_topological_sort_by_dfs(s,cmap,vertex_stack,index_stack)
-        push!(postorder, order)
-        push!(parents, parent)
+        resize!(cmap,length(vlist))
+        order, parent = reverse_topological_sort_by_dfs(vec,offset,length(vlist),cmap)
+
+        for k in 1:length(vlist)
+            # clear for reuse
+            revmap[vlist[k]] = 0
+        end
+
+        postorder[idx] = order
+        parents[idx] = parent
+        vertexmap[idx] = vlist
     end
 
     return RecoveryInfo(vertexmap, postorder, parents, color)
@@ -348,7 +392,7 @@ function gen_hessian_sparse_color_parametric(s::SymbolicOutput, num_total_vars, 
 
     R = Array(Float64,num_vertices(g),num_colors)
     
-    rinfo = recovery_preprocess(g, color)
+    rinfo = recovery_preprocess(g, color, num_colors)
 
     stored_values = Array(Float64,num_vertices(g))
 

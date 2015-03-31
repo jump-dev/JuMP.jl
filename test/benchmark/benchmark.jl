@@ -13,8 +13,8 @@ color, num_colors = acyclic_coloring(g)
 @time color, num_colors = acyclic_coloring(g)
 #@profile color, num_colors = acyclic_coloring(g)
 
-rinfo = ReverseDiffSparse.recovery_preprocess(g, color)
+rinfo = ReverseDiffSparse.recovery_preprocess(g, color, num_colors)
 Profile.clear_malloc_data()
-@time rinfo = ReverseDiffSparse.recovery_preprocess(g, color)
+@time rinfo = ReverseDiffSparse.recovery_preprocess(g, color, num_colors)
 
 #ProfileView.view()
