@@ -40,6 +40,7 @@ Methods
 * ``MathProgBase.numlinconstr(m::Model)`` - returns the number of linear constraints associated with the ``Model m``.
 * ``MathProgBase.numquadconstr(m::Model)`` - returns the number of quadratic constraints associated with the ``Model m``.
 * ``MathProgBase.numconstr(m::Model)`` - returns the total number of constraints associated with the ``Model m``.
+* ``MathProgBase.getsolvetime(m::Model)`` - returns the solve time from the solver if it is implemented.
 * ``getInternalModel(m::Model)`` - returns the internal low-level ``AbstractMathProgModel`` object which can be used to access any functionality that is not exposed by JuMP. See the MathProgBase `documentation <http://mathprogbasejl.readthedocs.org/en/latest/mathprogbase.html#low-level-interface>`_.
 * ``solve(m::Model;  suppress_warnings=false)`` - solves the model using the selected solver (or a default for the problem class), and takes two optional arguments that are disabled by default. Setting ``suppress_warnings`` to ``true`` will suppress all JuMP-specific output (e.g. warnings about infeasibility and lack of dual information) but will not suppress solver output (which should be done by passing options to the solver).
 * ``buildInternalModel(m::Model)`` - builds the model in memory at the MathProgBase level without optimizing.
