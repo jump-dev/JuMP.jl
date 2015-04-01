@@ -70,7 +70,7 @@ end
 
 export gen_adjlist
 
-type Edge
+immutable Edge
     index::Int
     source::Int
     target::Int
@@ -426,9 +426,7 @@ gen_hessian_sparse_color_parametric(s::SymbolicOutput, num_total_vars) =
 
 function gen_hessian_sparse_color_parametric(s::SymbolicOutput, num_total_vars, hessian_matmat!, hessian_IJ, dualvec=Array(Dual{Float64}, num_total_vars), dualout=Array(Dual{Float64}, num_total_vars), idxset::IndexedSet=IndexedSet(num_total_vars))
     I,J = hessian_IJ(s,idxset)
-    # remove duplicates
-    M = sparse(I,J,ones(length(I)))
-    I,J = findn(M)
+    # I,J cannot contain duplicates
     if length(I) == 0
         # expression is actually linear, return dummy function
         return I,J, (x,output_values,ex) -> nothing
