@@ -434,11 +434,9 @@ function gen_hessian_sparse_color_parametric(s::SymbolicOutput, num_total_vars, 
         return I,J, (x,output_values,ex) -> nothing
     end
 
-    tic()
     g = gen_adjlist(I,J, length(s.mapfromcanonical))
 
     color, num_colors = acyclic_coloring(g)
-    tcolor = toq()
 
     @assert length(color) == num_vertices(g)
 
