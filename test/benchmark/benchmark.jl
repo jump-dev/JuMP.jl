@@ -8,7 +8,7 @@ I = d["I"];
 J = d["J"];
 n = d["n"];
 
-g = gen_adjlist(zip(I,J), n)
+g = gen_adjlist(I,J, n)
 color, num_colors = acyclic_coloring(g)
 @time color, num_colors = acyclic_coloring(g)
 #@profile color, num_colors = acyclic_coloring(g)

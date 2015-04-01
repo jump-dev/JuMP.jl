@@ -40,13 +40,13 @@ end
 function edgelist_to_IJ(edgelist,s::SymbolicOutput)
     I = Array(Int,0)
     J = Array(Int,0)
-    sizehint!(I,div(length(edgelist),2))
-    sizehint!(J,div(length(edgelist),2))
+    sizehint!(I,length(edgelist))
+    sizehint!(J,length(edgelist))
     for e in edgelist
         i = e.first
         j = e.second
         if j > i
-            continue # ignore upper triangle
+            continue # ignore upper triangle, shouldn't be here
         else
             # convert to canonical
             push!(I,s.maptocanonical[i])
@@ -59,9 +59,10 @@ end
 function compute_hessian_sparsity(x::ExprNode, linear_so_far, expr_out)
     nonlinear_cleanup = quote
         # for every pair:
+        sizehint!(edgelist__,length(edgelist__)+ceil(Int,length(mycolor__)^2/2))
         for x1___ in mycolor__
             for x2___ in mycolor__
-                # don't worry about duplicate indices
+                x2___ <= x1___ || continue
                 push!(edgelist__,MyPair(x1___,x2___))
             end
         end

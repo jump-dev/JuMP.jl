@@ -160,7 +160,7 @@ type SymbolicOutput
     indexlist # indices of placeholders as they appear in the expression
               # useful when multiple expressions have the same structure
     mapfromcanonical::Vector{Int}
-    maptocanonical
+    maptocanonical::Dict{Int,Int}
     hashval # for identifying expressions with identical trees
 end
 
@@ -211,7 +211,7 @@ macro processNLExpr(x)
 end
 
 function SymbolicOutput(tree, inputnames, inputvals, hashval)
-    return SymbolicOutput(tree, inputnames, inputvals, nothing, Int[], nothing, hashval)
+    return SymbolicOutput(tree, inputnames, inputvals, nothing, Int[], Dict{Int,Int}(), hashval)
 end
 
 

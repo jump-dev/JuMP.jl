@@ -1,21 +1,6 @@
-using Graphs
 import DataStructures
 
 include("topological_sort.jl")
-
-function gen_adjlist(IJ,nel)
-    edges = Edge{Int}[]
-    sizehint!(edges,round(Int,length(IJ)/2))
-    for (i,j) in IJ
-        i == j && continue
-        push!(edges,Edge(length(edges)+1,i,j))
-    end
-    g = graph([1:nel;], edges, is_directed=false)
-    return g
-
-end
-
-export gen_adjlist
 
 # workaround for slow tuples
 immutable MyPair{T}
@@ -25,6 +10,71 @@ end
 
 # workaround for julia issue #10208
 Base.hash(x::MyPair{Int},h::UInt) = hash(x.first,hash(x.second,h))
+
+# compact storage for an undirected graph
+# neighbors of vertex i start at adjlist[offsets[i]]
+immutable UndirectedGraph
+    adjlist::Vector{Int}
+    edgeindex::Vector{Int} # corresponding edge number, indexed as adjlist
+    offsets::Vector{Int}
+    edges::Vector{MyPair{Int}}
+end
+num_vertices(g::UndirectedGraph) = length(g.offsets)-1
+num_edges(g::UndirectedGraph) = length(g.edges)
+num_neighbors(i::Int,g::UndirectedGraph) = g.offsets[i+1]-g.offsets[i]
+start_neighbors(i::Int,g::UndirectedGraph) = g.offsets[i]
+
+function gen_adjlist(I,J,nel)
+    adjcount = zeros(Int,nel)
+    n_edges = 0
+    for k in 1:length(I)
+        i = I[k]
+        j = J[k]
+        i == j && continue
+        n_edges += 1
+        adjcount[i] += 1
+        adjcount[j] += 1
+    end
+    offsets = Array(Int,nel+1)
+    offsets[1] = 1
+    for k in 1:nel
+        offsets[k+1] = offsets[k] + adjcount[k]
+    end
+    fill!(adjcount,0)
+
+    edges = Array(MyPair{Int},n_edges)
+    adjlist = Array(Int,offsets[nel+1]-1)
+    edgeindex = Array(Int,length(adjlist))
+    edge_count = 0
+
+    for k in 1:length(I)
+        i = I[k]
+        j = J[k]
+        i == j && continue
+        edge_count += 1
+        adjlist[offsets[i]+adjcount[i]] = j
+        edgeindex[offsets[i]+adjcount[i]] = edge_count
+        adjcount[i] += 1
+
+        adjlist[offsets[j]+adjcount[j]] = i
+        edgeindex[offsets[j]+adjcount[j]] = edge_count
+        adjcount[j] += 1
+
+        edges[edge_count] = MyPair(i,j)
+    end
+    @assert edge_count == n_edges
+
+    return UndirectedGraph(adjlist,edgeindex,offsets,edges)
+
+end
+
+export gen_adjlist
+
+type Edge
+    index::Int
+    source::Int
+    target::Int
+end
 
 # convert to lower triangular indices, using Pairs
 # TODO: replace normalize in hessian.jl
@@ -36,42 +86,36 @@ macro colored(i)
     esc(:((color[$i] != 0)))
 end
 
-function prevent_cycle(eg,eg2,S,firstVisitToTree,forbiddenColors,color)
-    v = source(eg)
-    w = target(eg)
-    x = target(eg2)
-
-    er = DataStructures.find_root(S, edge_index(eg2))
+function prevent_cycle(v,w,x,e_idx1,e_idx2,S,firstVisitToTree,forbiddenColors,color)
+    er = DataStructures.find_root(S, e_idx2)
     @inbounds first = firstVisitToTree[er]
-    p = source(first) # but this depends on the order?
-    q = target(first)
+    p = first.source # but this depends on the order?
+    q = first.target
     @inbounds if p != v
-        firstVisitToTree[er] = eg
+        firstVisitToTree[er] = Edge(e_idx1,v,w)
     elseif q != w
         forbiddenColors[color[x]] = v
     end
     nothing
 end
 
-function grow_star(eg,firstNeighbor,color,S)
-    v = source(eg)
-    w = target(eg)
+function grow_star(v,w,e_idx,firstNeighbor,color,S)
     @inbounds e = firstNeighbor[color[w]]
-    p = source(e)
-    q = target(e)
+    p = e.source
+    q = e.target
     @inbounds if p != v
-        firstNeighbor[color[w]] = eg
+        firstNeighbor[color[w]] = Edge(e_idx,v,w)
     else
-        union!(S, edge_index(eg), edge_index(e))
+        union!(S, e_idx, e.index)
     end
     nothing
 end
 
 function merge_trees(eg,eg1,S)
-    e1 = DataStructures.find_root(S, edge_index(eg))
-    e2 = DataStructures.find_root(S, edge_index(eg1))
+    e1 = DataStructures.find_root(S, eg)
+    e2 = DataStructures.find_root(S, eg1)
     if e1 != e2
-        union!(S, edge_index(eg), edge_index(eg1))
+        union!(S, eg, eg1)
     end
     nothing
 end
@@ -79,33 +123,36 @@ end
 # acyclic coloring algorithm of Gebremdehin, Tarafdar, Manne, and Pothen
 # "New Acyclic and Star Coloring Algorithms with Application to Computing Hessians"
 # SIAM J. Sci. Comput. 2007
-function acyclic_coloring(g)
-    @assert !is_directed(g)
-    # Caution: graph is undirected so edges in both directions have
-    # the same index but source/target flipped.
+function acyclic_coloring(g::UndirectedGraph)
     
     num_colors = 0
     forbiddenColors = Int[]
-    firstNeighbor = Array(Edge{Int},0)
-    firstVisitToTree = fill(Edge{Int}(0,0,0),num_edges(g))
+    firstNeighbor = Array(Edge,0)
+    firstVisitToTree = fill(Edge(0,0,0),num_edges(g))
     color = fill(0, num_vertices(g))
     # disjoint set forest of edges in the graph
     S = DataStructures.IntDisjointSets(num_edges(g))
 
     @inbounds for v in 1:num_vertices(g)
-        for eg in out_edges(v,g)
-            w = target(eg)
+        n_neighbor = num_neighbors(v,g)
+        start_neighbor = start_neighbors(v,g)
+        for k in 0:(n_neighbor-1)
+            w = g.adjlist[start_neighbor+k]
             @colored(w) || continue
             forbiddenColors[color[w]] = v
         end
-        for eg in out_edges(v,g)
-            w = target(eg)
+        for k in 0:(n_neighbor-1)
+            w = g.adjlist[start_neighbor+k]
+            e_idx = g.edgeindex[start_neighbor+k]
             @colored(w) || continue
-            for eg2 in out_edges(w,g)
-                x = target(eg2)
+            n_neighbor_w = num_neighbors(w,g)
+            start_neighbor_w = start_neighbors(w,g)
+            for k2 in 0:(n_neighbor_w-1)
+                x = g.adjlist[start_neighbor_w+k2]
+                e2_idx = g.edgeindex[start_neighbor_w+k2]
                 @colored(x) || continue
                 if forbiddenColors[color[x]] != v
-                    prevent_cycle(eg,eg2,S,firstVisitToTree,forbiddenColors,color)
+                    prevent_cycle(v,w,x,e_idx,e2_idx,S,firstVisitToTree,forbiddenColors,color)
                 end
             end
         end
@@ -122,23 +169,28 @@ function acyclic_coloring(g)
         if !found
             num_colors += 1
             push!(forbiddenColors, 0)
-            push!(firstNeighbor, Edge{Int}(0,0,0))
+            push!(firstNeighbor, Edge(0,0,0))
             color[v] = num_colors
         end
 
-        for eg in out_edges(v,g)
-            w = target(eg)
+        for k in 0:(n_neighbor-1)
+            w = g.adjlist[start_neighbor+k]
+            e_idx = g.edgeindex[start_neighbor+k]
             @colored(w) || continue
-            grow_star(eg,firstNeighbor,color,S)
+            grow_star(v,w,e_idx,firstNeighbor,color,S)
         end
-        for eg in out_edges(v,g)
-            w = target(eg)
+        for k in 0:(n_neighbor-1)
+            w = g.adjlist[start_neighbor+k]
+            e_idx = g.edgeindex[start_neighbor+k]
             @colored(w) || continue
-            for eg2 in out_edges(w,g)
-                x = target(eg2)
+            n_neighbor_w = num_neighbors(w,g)
+            start_neighbor_w = start_neighbors(w,g)
+            for k2 in 0:(n_neighbor_w-1)
+                x = g.adjlist[start_neighbor_w+k2]
+                e2_idx = g.edgeindex[start_neighbor_w+k2]
                 (@colored(x) && x != v) || continue
                 if color[x] == color[v]
-                    merge_trees(eg,eg2,S)
+                    merge_trees(e_idx,e2_idx,S)
                 end
             end
         end
@@ -154,7 +206,7 @@ immutable RecoveryInfo
     color::Vector{Int}
 end
 
-function recovery_preprocess(g,color,num_colors)
+function recovery_preprocess(g::UndirectedGraph,color,num_colors)
     # represent two-color subgraph as:
     # list of vertices (with map to global indices)
     # adjacency list in a single vector (with list of offsets)
@@ -163,13 +215,12 @@ function recovery_preprocess(g,color,num_colors)
     # linear index of pair of colors
     twocolorindex = zeros(Int32,num_colors, num_colors)
     seen_twocolors = 0
-    g_edges = edges(g)
     # count of edges in each subgraph
     edge_count = Array(Int,0)
-    for k in 1:length(g_edges)
-        e = g_edges[k]
-        u = source(e,g)
-        v = target(e,g)
+    for k in 1:length(g.edges)
+        e = g.edges[k]
+        u = e.first
+        v = e.second
         i = min(color[u],color[v])
         j = max(color[u],color[v])
         if twocolorindex[i,j] == 0
@@ -187,10 +238,10 @@ function recovery_preprocess(g,color,num_colors)
         sizehint!(sorted_edges[idx],edge_count[idx])
     end
 
-    for i in 1:length(g_edges)
-        e = g_edges[i]
-        u = source(e,g)
-        v = target(e,g)
+    for i in 1:length(g.edges)
+        e = g.edges[i]
+        u = e.first
+        v = e.second
         i = min(color[u],color[v])
         j = max(color[u],color[v])
         idx = twocolorindex[i,j]
@@ -383,10 +434,11 @@ function gen_hessian_sparse_color_parametric(s::SymbolicOutput, num_total_vars, 
         return I,J, (x,output_values,ex) -> nothing
     end
 
-
-    g = gen_adjlist(zip(I,J), length(s.mapfromcanonical))
+    tic()
+    g = gen_adjlist(I,J, length(s.mapfromcanonical))
 
     color, num_colors = acyclic_coloring(g)
+    tcolor = toq()
 
     @assert length(color) == num_vertices(g)
 
