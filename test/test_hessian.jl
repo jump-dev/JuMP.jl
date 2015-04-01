@@ -12,7 +12,7 @@ end
 x,y,z,q = placeholders(4)
 
 ex = @processNLExpr sin(x*y) + exp(z+2q)
-sp = compute_hessian_sparsity_IJ(ex)
+sp = compute_hessian_sparsity_IJ(ex,4)
 hfunc = gen_hessian_dense(ex)
 val = [3.0, 4.0, 5.0, 6.0]
 exact(x,y,z,q) = [ -y^2*sin(x*y) cos(x*y)-x*y*sin(x*y) 0 0
@@ -22,7 +22,7 @@ exact(x,y,z,q) = [ -y^2*sin(x*y) cos(x*y)-x*y*sin(x*y) 0 0
 @test_approx_eq hfunc(val) exact(val...)
 test_sparsity(sp, exact(val...))
 
-sparsemat, sparsefunc = gen_hessian_sparse_mat(ex)
+sparsemat, sparsefunc = gen_hessian_sparse_mat(ex,4)
 sparsefunc(val, sparsemat)
 @test_approx_eq sparsemat tril(exact(val...))
 
@@ -34,7 +34,7 @@ sparsefunc_color(val, V, ex)
 x = placeholders(5)
 
 ex = @processNLExpr  sum{ x[i]^2, i =1:5 } + sin(x[1]*x[2])
-sp = compute_hessian_sparsity_IJ(ex)
+sp = compute_hessian_sparsity_IJ(ex,5)
 hfunc = gen_hessian_dense(ex)
 exact(x) = [ -x[2]^2*sin(x[1]*x[2]) cos(x[1]*x[2])-x[1]*x[2]*sin(x[1]*x[2]) 0 0 0
             cos(x[1]*x[2])-x[1]*x[2]*sin(x[1]*x[2]) -x[1]^2*sin(x[1]*x[2]) 0 0 0
@@ -46,7 +46,7 @@ val = rand(5)
 @test_approx_eq hfunc(val) exact(val)
 test_sparsity(sp, exact(val))
 
-sparsemat, sparsefunc = gen_hessian_sparse_mat(ex)
+sparsemat, sparsefunc = gen_hessian_sparse_mat(ex,5)
 sparsefunc(val, sparsemat)
 @test_approx_eq sparsemat tril(exact(val))
 
@@ -64,7 +64,7 @@ exact(x) = [ -x[2]^2*sin(x[1]*x[2]) cos(x[1]*x[2])-x[1]*x[2]*sin(x[1]*x[2]) 0 0 
             0 0 0 0 0
             0 0 0 0 0
             0 0 0 0 0]
-sp = compute_hessian_sparsity_IJ(ex)
+sp = compute_hessian_sparsity_IJ(ex,5)
 test_sparsity(sp, exact(val))
 
 
@@ -178,15 +178,15 @@ eval_hess!(V, exlist, val, lambda)
 
 # ifelse
 ex = @processNLExpr ifelse(x[1] >= x[2], x[1],x[2])
-I,J = compute_hessian_sparsity_IJ(ex)
+I,J = compute_hessian_sparsity_IJ(ex,4)
 @test length(I) == 0 && length(J) == 0
 
 ex = @processNLExpr x[1]*ifelse(x[1] >= x[2], x[1],x[2])
-sp = compute_hessian_sparsity_IJ(ex)
+sp = compute_hessian_sparsity_IJ(ex,4)
 test_sparsity(sp, [1.0 1.0; 1.0 1.0])
 
 ex = @processNLExpr x[1]*ifelse(x[1] >= x[2] && true, x[1],x[2])
-sp = compute_hessian_sparsity_IJ(ex)
+sp = compute_hessian_sparsity_IJ(ex,4)
 test_sparsity(sp, [1.0 1.0; 1.0 1.0])
 
 println("Passed tests")

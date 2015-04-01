@@ -424,8 +424,8 @@ export acyclic_coloring, indirect_recover
 gen_hessian_sparse_color_parametric(s::SymbolicOutput, num_total_vars) =
     gen_hessian_sparse_color_parametric(s,num_total_vars,gen_hessian_matmat_parametric(s),compute_hessian_sparsity_IJ_parametric(s))
 
-function gen_hessian_sparse_color_parametric(s::SymbolicOutput, num_total_vars, hessian_matmat!, hessian_IJ, dualvec=Array(Dual{Float64}, num_total_vars), dualout=Array(Dual{Float64}, num_total_vars))
-    I,J = hessian_IJ(s)
+function gen_hessian_sparse_color_parametric(s::SymbolicOutput, num_total_vars, hessian_matmat!, hessian_IJ, dualvec=Array(Dual{Float64}, num_total_vars), dualout=Array(Dual{Float64}, num_total_vars), idxset::IndexedSet=IndexedSet(num_total_vars))
+    I,J = hessian_IJ(s,idxset)
     # remove duplicates
     M = sparse(I,J,ones(length(I)))
     I,J = findn(M)

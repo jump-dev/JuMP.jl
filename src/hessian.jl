@@ -14,8 +14,8 @@ function compute_hessian_sparsity_IJ_parametric(s::SymbolicOutput)
     # compile a function:
     fexpr = quote
         local _SPARSITY_GEN_
-        function _SPARSITY_GEN_(edgelist__)
-            mycolor__ = Set{Int}()
+        function _SPARSITY_GEN_(edgelist__,mycolor__::IndexedSet)
+            empty!(mycolor__)
             $code
             return
         end
@@ -28,13 +28,39 @@ function compute_hessian_sparsity_IJ_parametric(s::SymbolicOutput)
 
     f = eval(fexpr)
 
-    return (x::SymbolicOutput)-> (edgelist__ = Set{MyPair{Int}}(); f(edgelist__,x.inputvals...); edgelist_to_IJ(edgelist__,x))
+    return (x::SymbolicOutput,idxset)-> (edgelist__ = Set{MyPair{Int}}(); f(edgelist__,idxset,x.inputvals...); edgelist_to_IJ(edgelist__,x))
 
 end
 
-function compute_hessian_sparsity_IJ(s::SymbolicOutput)
+function compute_hessian_sparsity_IJ(s::SymbolicOutput,num_total_vars::Integer)
     prepare_indexlist(s)
-    compute_hessian_sparsity_IJ_parametric(s)(s)
+    compute_hessian_sparsity_IJ_parametric(s)(s,IndexedSet(num_total_vars))
+end
+
+# set over finite indices with O(1) lookup, addition, and deletion.
+# similar to IndexedVector in JuMP
+type IndexedSet
+    idx::Vector{Int}
+    set::BitArray{1} # true if element is in set
+    nel::Int # number of elements in set
+end
+
+IndexedSet(n::Integer) = IndexedSet(zeros(Int,n),falses(n),0)
+
+function Base.push!(s::IndexedSet,i::Integer)
+    s.set[i] && return # already there
+    s.set[i] = true
+    s.nel += 1
+    s.idx[s.nel] = i
+    return
+end
+Base.length(s::IndexedSet) = s.nel
+function Base.empty!(s::IndexedSet)
+    for i in 1:s.nel
+        s.set[s.idx[i]] = false
+    end
+    s.nel = 0
+    return
 end
 
 function edgelist_to_IJ(edgelist,s::SymbolicOutput)
@@ -60,8 +86,10 @@ function compute_hessian_sparsity(x::ExprNode, linear_so_far, expr_out)
     nonlinear_cleanup = quote
         # for every pair:
         sizehint!(edgelist__,length(edgelist__)+ceil(Int,length(mycolor__)^2/2))
-        for x1___ in mycolor__
-            for x2___ in mycolor__
+        for i__ in 1:length(mycolor__)
+            x1___ = mycolor__.idx[i__]
+            for j__ in 1:length(mycolor__)
+                x2___ = mycolor__.idx[j__]
                 x2___ <= x1___ || continue
                 push!(edgelist__,MyPair(x1___,x2___))
             end
@@ -256,9 +284,9 @@ end
 
 # returns sparse matrix containing hessian structure, and
 # function to evaluate the hessian into a given sparse matrix
-function gen_hessian_sparse_mat(s::SymbolicOutput)
+function gen_hessian_sparse_mat(s::SymbolicOutput,num_total_vars::Integer)
     fgrad = genfgrad_parametric(s)
-    I,J = compute_hessian_sparsity_IJ(s)
+    I,J = compute_hessian_sparsity_IJ(s,num_total_vars)
     structuremat = sparse(I,J,ones(length(I)))
     fill!(structuremat.nzval, 0.0)
 

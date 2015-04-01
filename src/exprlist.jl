@@ -62,6 +62,8 @@ function prep_sparse_hessians(l::ExprList, num_total_vars; need_expr::Bool=false
     # shared temporary storage for hessian-vector products
     dualvec = Array(Dual{Float64}, num_total_vars)
     dualout = Array(Dual{Float64}, num_total_vars)
+    #             ""           for sparsity pattern detection
+    idxset = IndexedSet(num_total_vars)
 
 
     I = Int[]
@@ -83,7 +85,7 @@ function prep_sparse_hessians(l::ExprList, num_total_vars; need_expr::Bool=false
             hess_matmat = gen_hessian_matmat_parametric(x, gf)
             hess_IJf = compute_hessian_sparsity_IJ_parametric(x)
             tic()
-            hI, hJ, hf = gen_hessian_sparse_color_parametric(x, num_total_vars, hess_matmat, hess_IJf, dualvec, dualout)
+            hI, hJ, hf = gen_hessian_sparse_color_parametric(x, num_total_vars, hess_matmat, hess_IJf, dualvec, dualout, idxset)
             coloring_t += toq()
             push!(l.idxfuncs, idxf)
             push!(l.valfuncs, f)
@@ -132,7 +134,7 @@ function prep_sparse_hessians(l::ExprList, num_total_vars; need_expr::Bool=false
             else
                 # we can share the AD but not the coloring here
                 tic()
-                hI, hJ, hf = gen_hessian_sparse_color_parametric(x, num_total_vars, l.hess_matmat_funcs[refidx], l.hess_IJ_funcs[refidx], dualvec, dualout)
+                hI, hJ, hf = gen_hessian_sparse_color_parametric(x, num_total_vars, l.hess_matmat_funcs[refidx], l.hess_IJ_funcs[refidx], dualvec, dualout, idxset)
                 coloring_t += toq()
                 push!(l.hessfuncs, hf)
                 push!(l.hessIJ, (hI, hJ))
