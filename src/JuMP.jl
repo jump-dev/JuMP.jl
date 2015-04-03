@@ -129,6 +129,15 @@ function MathProgBase.numconstr(m::Model)
     end
     return c
 end
+function MathProgBase.getsolvetime(m::Model)
+    if !m.internalModelLoaded
+        error("Model not solved")
+    elseif method_exists(MathProgBase.getsolvetime, (typeof(getInternalModel(m)), ))
+        return MathProgBase.getsolvetime(getInternalModel(m))
+    else
+        error("Solve time not implemented for $(typeof(m.solver))")
+    end
+end
 
 @Base.deprecate getNumVars(m::Model) MathProgBase.numvar(m)
 @Base.deprecate getNumConstraints(m::Model) MathProgBase.numlinconstr(m)
