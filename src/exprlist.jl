@@ -106,7 +106,7 @@ function prep_sparse_hessians(l::ExprList, num_total_vars; need_expr::Bool=false
             ref = l.exprs[refidx]
             tic()
             prepare_indexmap(x, l.idxfuncs[refidx](idxset,x.inputvals...))
-            x.indexlist = idxf(Int[],x.inputvals...)
+            x.indexlist = l.idxfuncs[refidx](Int[],x.inputvals...)
             indexlist_t += toq()
             # these are always shared
             push!(l.idxfuncs, l.idxfuncs[refidx])
