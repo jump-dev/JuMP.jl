@@ -429,7 +429,7 @@ end
 genVarList(x::Number,arrname) = nothing
 genVarList(x::Symbol,arrname) = :(addToVarList!($arrname,$x))
 
-function prepare_indexlist(s::SymbolicOutput, indexlist)
+function process_indexmap(s::SymbolicOutput, indexlist)
     # compute canonical indices and maps
     unq = unique(indexlist)
     nidx = length(unq)
@@ -438,24 +438,31 @@ function prepare_indexlist(s::SymbolicOutput, indexlist)
     for k in 1:nidx
         maptocanonical[unq[k]] = k
     end
-    s.indexlist = indexlist
     s.mapfromcanonical = unq
     s.maptocanonical = maptocanonical
     return
 end
 
-function prepare_indexlist(s::SymbolicOutput)
-    idxvals = genindexlist_parametric(s)(s.inputvals...)
-    prepare_indexlist(s,idxvals)
+function prepare_indexmap(s::SymbolicOutput,indexset)
+    length(s.maptocanonical) > 0 && return
+    genindexlist_parametric(s)(indexset,s.inputvals...)
+    process_indexmap(s,indexset)
 end
 
-export prepare_indexlist
+function prepare_indexmap(s::SymbolicOutput)
+    # TODO: deprecate this version
+    indexset = Int[]
+    genindexlist_parametric(s)(indexset,s.inputvals...)
+    process_indexmap(s,indexset)
+end
+
+export prepare_indexmap
 
 function genindexlist_parametric(x::SymbolicOutput)
     out = Expr(:block)
     fexpr = quote
-        function _IDXLIST_()
-            indexlist = Int[]
+        function _IDXLIST_(indexlist)
+            empty!(indexlist)
             $(genVarList(x.tree, :indexlist))
             return indexlist
         end
@@ -747,7 +754,6 @@ saverevvalue(x, val, output, placeindex_out) = nothing
 
 # gradient evaluation parametric on "inputvals"
 function genfgrad_parametric(x::SymbolicOutput)
-    @assert x.indexlist !== nothing
     out = Expr(:block)
     exgraph = genExprGraph(x.tree)
     fval = forwardpass(exgraph, out, true) # note we skip linear sums here
@@ -776,7 +782,6 @@ end
 # expression evaluation parametric on "inputvals"
 # forward pass only
 function genfval_parametric(x::SymbolicOutput)
-    @assert x.indexlist !== nothing
     out = Expr(:block)
     fval = forwardpass(genExprGraph(x.tree), out, false)
     fexpr = quote
@@ -848,8 +853,13 @@ end
 
 getvalue(x::ParametricExpression{0},values::Vector) = getvalue(x[],values)
 
-function genfval_simple(x::SymbolicOutput)
-    prepare_indexlist(x)
+function genfval_simple(x::SymbolicOutput,num_total_vars::Int=typemax(Int))
+    if num_total_vars == typemax(Int)
+        # TODO: deprecate this version
+        prepare_indexmap(x,Set{Int}())
+    else
+        prepare_indexmap(x,IndexedSet(num_total_vars))
+    end
     f = genfval_parametric(x)
     return xvals -> f(xvals, IdentityArray(), x.inputvals...)
 end
@@ -859,8 +869,13 @@ end
 
 Base.getindex(::IdentityArray,i) = i
 
-function genfgrad_simple(x::SymbolicOutput)
-    prepare_indexlist(x)
+function genfgrad_simple(x::SymbolicOutput,num_total_vars::Int=typemax(Int))
+    if num_total_vars == typemax(Int)
+        # TODO: deprecate this version
+        prepare_indexmap(x,Set{Int}())
+    else
+        prepare_indexmap(x,IndexedSet(num_total_vars))
+    end
     f = genfgrad_parametric(x)
     return (xvals, out) -> (fill!(out, 0.0); f(xvals, IdentityArray(), out, IdentityArray(),x.inputvals...))
 end

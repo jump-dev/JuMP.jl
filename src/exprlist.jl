@@ -76,7 +76,8 @@ function prep_sparse_hessians(l::ExprList, num_total_vars; need_expr::Bool=false
             idxf = genindexlist_parametric(x)
             genindexlist_t += toq()
             tic()
-            prepare_indexlist(x, idxf(x.inputvals...))
+            prepare_indexmap(x, idxf(idxset,x.inputvals...))
+            x.indexlist = idxf(Int[],x.inputvals...)
             indexlist_t += toq()
             f = genfval_parametric(x)
             tic()
@@ -104,7 +105,8 @@ function prep_sparse_hessians(l::ExprList, num_total_vars; need_expr::Bool=false
             refidx = referenceExpr[x.hashval]
             ref = l.exprs[refidx]
             tic()
-            prepare_indexlist(x, l.idxfuncs[refidx](x.inputvals...))
+            prepare_indexmap(x, l.idxfuncs[refidx](idxset,x.inputvals...))
+            x.indexlist = idxf(Int[],x.inputvals...)
             indexlist_t += toq()
             # these are always shared
             push!(l.idxfuncs, l.idxfuncs[refidx])
@@ -115,6 +117,7 @@ function prep_sparse_hessians(l::ExprList, num_total_vars; need_expr::Bool=false
 
             matches = (length(x.indexlist) == length(ref.indexlist))
             if matches
+                # Could we just hash the indexlist sequence instead of storing it?
                 for k in 1:length(x.indexlist)
                     if x.maptocanonical[x.indexlist[k]] != ref.maptocanonical[ref.indexlist[k]]
                         matches = false
