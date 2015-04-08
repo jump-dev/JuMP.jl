@@ -221,11 +221,19 @@ function writeLP(m::Model, fname::String)
     write(f, " obj: ")
     nnz = length(objaff.coeffs)
     for ind in 1:(nnz-1)
-        print_shortest(f, objaff.coeffs[ind])
-        @printf(f, " VAR%d + ", objaff.vars[ind].col)
+        if ind == 1
+            print_shortest(f, objaff.coeffs[ind])
+        else
+            print_shortest(f, abs(objaff.coeffs[ind]))
+        end
+        @printf(f, " VAR%d %s ", objaff.vars[ind].col, (objaff.coeffs[ind+1] < 0)? "-" : "+")
     end
     if nnz >= 1
-        print_shortest(f, objaff.coeffs[nnz])
+        if nnz == 1
+            print_shortest(f, objaff.coeffs[nnz])
+        else
+            print_shortest(f, abs(objaff.coeffs[nnz]))
+        end
         @printf(f, " VAR%d\n", objaff.vars[nnz].col)
     end
 
@@ -233,11 +241,19 @@ function writeLP(m::Model, fname::String)
     function writeconstrterms(c::LinearConstraint)
         nnz = length(c.terms.coeffs)
         for ind in 1:(nnz-1)
-            print_shortest(f, c.terms.coeffs[ind])
-            @printf(f, " VAR%d + ", c.terms.vars[ind].col)
+            if ind == 1
+                print_shortest(f, c.terms.coeffs[ind])
+            else
+                print_shortest(f, abs(c.terms.coeffs[ind]))
+            end
+            @printf(f, " VAR%d %s ", c.terms.vars[ind].col, (c.terms.coeffs[ind+1] < 0)? "-" : "+")
         end
         if nnz >= 1
-            print_shortest(f, c.terms.coeffs[nnz])
+            if nnz == 1
+                print_shortest(f, c.terms.coeffs[nnz])
+            else
+                print_shortest(f, abs(c.terms.coeffs[nnz]))
+            end
             @printf(f, " VAR%d", c.terms.vars[nnz].col)
         end
     end
