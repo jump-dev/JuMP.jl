@@ -65,7 +65,7 @@ facts("[model] Test printing a model") do
     "c1: 1 VAR1 + 1 VAR2 >= 2",
     "c2: 1 VAR1 + 1 VAR2 <= 4",
     "c3: 1 VAR4 + 1 VAR5 + 1 VAR6 + .5 VAR1 <= 1",
-    "c4: 7 VAR2 + -1 VAR3 + -.5263157894736842 VAR7 <= 0",
+    "c4: 7 VAR2 - 1 VAR3 - .5263157894736842 VAR7 <= 0",
     "Bounds",
     "0 <= VAR1 <= +inf",
     "-inf <= VAR2 <= 5",
