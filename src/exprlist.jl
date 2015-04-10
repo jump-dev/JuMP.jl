@@ -60,8 +60,8 @@ function prep_sparse_hessians(l::ExprList, num_total_vars; need_expr::Bool=false
     coloring_t = 0.0
 
     # shared temporary storage for hessian-vector products
-    dualvec = Array(Dual4{Float64}, num_total_vars)
-    dualout = Array(Dual4{Float64}, num_total_vars)
+    dualvec = Array(Dual4{Float64}, ceil(Int,num_total_vars/2))
+    dualout = Array(Dual4{Float64}, ceil(Int,num_total_vars/2))
     #             ""           for sparsity pattern detection
     idxset = IndexedSet(num_total_vars)
 

@@ -424,7 +424,7 @@ export acyclic_coloring, indirect_recover
 gen_hessian_sparse_color_parametric(s::SymbolicOutput, num_total_vars) =
     gen_hessian_sparse_color_parametric(s,num_total_vars,gen_hessian_matmat_parametric(s),compute_hessian_sparsity_IJ_parametric(s))
 
-function gen_hessian_sparse_color_parametric(s::SymbolicOutput, num_total_vars, hessian_matmat!, hessian_IJ, dualvec=Array(Dual4{Float64}, num_total_vars), dualout=Array(Dual4{Float64}, num_total_vars), idxset::IndexedSet=IndexedSet(num_total_vars))
+function gen_hessian_sparse_color_parametric(s::SymbolicOutput, num_total_vars, hessian_matmat!, hessian_IJ, dualvec=Array(Dual4{Float64}, ceil(Int,num_total_vars/2)), dualout=Array(Dual4{Float64}, ceil(Int,num_total_vars/2)), idxset::IndexedSet=IndexedSet(num_total_vars))
     I,J = hessian_IJ(s,idxset)
     # I,J cannot contain duplicates
     if length(I) == 0
@@ -435,6 +435,12 @@ function gen_hessian_sparse_color_parametric(s::SymbolicOutput, num_total_vars, 
     g = gen_adjlist(I,J, length(s.mapfromcanonical))
 
     color, num_colors = acyclic_coloring(g)
+
+    if num_colors >= 4
+        # make sure we have enough memory
+        resize!(dualvec, num_total_vars)
+        resize!(dualout, num_total_vars)
+    end
 
     @assert length(color) == num_vertices(g)
 
