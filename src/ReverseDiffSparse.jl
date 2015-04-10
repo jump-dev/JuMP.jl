@@ -3,6 +3,7 @@ module ReverseDiffSparse
 using Compat
 import Calculus
 using DualNumbers
+import DualNumbers: Dual4, epsilon1, epsilon2, epsilon3, epsilon4
 using Base.Meta
 # Override basic math functions to return NaN instead of throwing errors.
 # This is what NLP solvers expect, and

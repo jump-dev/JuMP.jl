@@ -232,11 +232,32 @@ end
 function gen_hessian_matmat_parametric(s::SymbolicOutput, fgrad = genfgrad_parametric(s))
     hexpr = quote
         local _HESS_MATMAT_
-        function _HESS_MATMAT_{T,Q}(S, x::Vector{T}, dualvec::Vector{Dual{T}}, dualout::Vector{Dual{T}}, inputvals::Q, fromcanonical)
+        function _HESS_MATMAT_{T,Q}(S, x::Vector{T}, dualvec4::Vector{Dual4{T}}, dualout4::Vector{Dual4{T}}, inputvals::Q, fromcanonical)
+            dualvec = reinterpret(Dual{T},dualvec4)
+            dualout = reinterpret(Dual{T},dualout4) # reuse memory
             # S uses canonical indices
             N = size(S,1)
             @assert length(x) >= N
-            for k in 1:size(S,2)
+            # Dual4 lets us avoid expensive function evaluations,
+            # computing 4 directional derivatives for the price of ~1
+            num_4 = div(size(S,2),4) # number of Dual4 evaluations
+            for k in 1:4:(4*num_4)
+                for i in 1:N
+                    r = fromcanonical[i]
+                    dualvec4[r] = Dual4(x[r], S[i,k], S[i,k+1], S[i,k+2], S[i,k+3])
+                    dualout4[r] = zero(Dual4{T})
+                end
+                $(fgrad)(dualvec4, IdentityArray(), dualout4, IdentityArray(),inputvals...)
+                for i in 1:N
+                    r = fromcanonical[i]
+                    dualval = dualout4[r]
+                    S[i,k] = epsilon1(dualval)
+                    S[i,k+1] = epsilon2(dualval)
+                    S[i,k+2] = epsilon3(dualval)
+                    S[i,k+3] = epsilon4(dualval)
+                end
+            end
+            for k in (4*num_4+1):size(S,2)
                 for i in 1:N
                     r = fromcanonical[i]
                     dualvec[r] = Dual(x[r], S[i,k])
