@@ -1,5 +1,5 @@
 julia 0.3
-DualNumbers
+DualNumbers 0.1.3
 NaNMath
 Compat
 DataStructures
