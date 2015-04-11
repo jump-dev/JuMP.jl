@@ -6,7 +6,7 @@
 function writeMPS(m::Model, fname::String)
     f = open(fname, "w")
 
-    write(f,"NAME   MathProgModel\n")
+    write(f,"NAME   JuMPModel\n")
 
     numRows = length(m.linconstr)
 
@@ -47,31 +47,30 @@ function writeMPS(m::Model, fname::String)
 
 
     nnz += length(objaff.coeffs)
-    colval = Array(Int,nnz)
-    rownzval = Array(Float64,nnz)
+    I = Array(Int,nnz)
+    J = Array(Int,nnz)
+    V = Array(Float64,nnz)
     nnz = 0
     for c in 1:numRows
-        rowptr[c] = nnz + 1
         # TODO: type assertion shouldn't be necessary
         constr::LinearConstraint = m.linconstr[c]
         coeffs = constr.terms.coeffs
         vars = constr.terms.vars
         for ind in 1:length(coeffs)
             nnz += 1
-            colval[nnz] = vars[ind].col
-            rownzval[nnz] = coeffs[ind]
+            I[nnz] = c
+            J[nnz] = vars[ind].col
+            V[nnz] = coeffs[ind]
         end
     end
-    rowptr[numRows+1] = nnz + 1
     for ind in 1:length(objaff.coeffs)
         nnz += 1
-        colval[nnz] = objaff.vars[ind].col
-        rownzval[nnz] = objlincoef[ind]
+        I[nnz] = numRows+1
+        J[nnz] = objaff.vars[ind].col
+        V[nnz] = objlincoef[ind]
     end
-    rowptr[numRows+2] = nnz + 1
 
-    rowmat = SparseMatrixCSC(m.numCols,numRows+1, rowptr, colval, rownzval)
-    colmat = rowmat'
+    colmat = sparse(I,J,V,numRows+1,m.numCols)
     colptr = colmat.colptr
     rowval = colmat.rowval
     nzval = colmat.nzval
