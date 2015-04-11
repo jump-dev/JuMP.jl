@@ -54,7 +54,7 @@ facts("[model] Test printing a model") do
     @defConstrRef constraints[1:3]
     constraints[1] = @addConstraint(modA, 2 <= x+y <= 4)
     constraints[2] = @addConstraint(modA, sum{r[i],i=3:5} <= (2 - x)/2.0)
-    constraints[3] = @addConstraint(modA, 7.0*y <= z + r[6]/1.9)
+    constraints[3] = @addConstraint(modA, 6y + y <= z + r[6]/1.9)
     #####################################################################
     # Test LP writer
     writeLP(modA, modPath * "A.lp")
@@ -65,7 +65,7 @@ facts("[model] Test printing a model") do
     "c1: 1 VAR1 + 1 VAR2 >= 2",
     "c2: 1 VAR1 + 1 VAR2 <= 4",
     "c3: 1 VAR4 + 1 VAR5 + 1 VAR6 + .5 VAR1 <= 1",
-    "c4: 7 VAR2 - 1 VAR3 - .5263157894736842 VAR7 <= 0",
+    "c4: 6 VAR2 + 1 VAR2 - 1 VAR3 - .5263157894736842 VAR7 <= 0",
     "Bounds",
     "0 <= VAR1 <= +inf",
     "-inf <= VAR2 <= 5",
@@ -89,7 +89,7 @@ facts("[model] Test printing a model") do
     # Test MPS writer
     writeMPS(modA, modPath * "A.mps")
     modAMPS = ASCIIString[
-    "NAME   MathProgModel",
+    "NAME   JuMPModel",
     "ROWS",
     " N  CON4",
     " E  CON1",
