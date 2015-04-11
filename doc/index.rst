@@ -106,4 +106,4 @@ If you find JuMP useful in your work, we kindly request that you cite the follow
     URL = {http://dx.doi.org/10.1287/ijoc.2014.0623}
     }
 
-A preprint of this paper is freely availible on `arXiv <http://arxiv.org/abs/1312.1431>`_.
+A preprint of this paper is freely available on `arXiv <http://arxiv.org/abs/1312.1431>`_.
