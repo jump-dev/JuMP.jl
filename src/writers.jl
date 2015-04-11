@@ -33,7 +33,6 @@ function writeMPS(m::Model, fname::String)
 
     # Load rows into SparseMatrixCSC
     gc_disable()
-    rowptr = Array(Int,numRows+2)
     nnz = 0
     for c in 1:numRows
         nnz += length(m.linconstr[c].terms.coeffs)
