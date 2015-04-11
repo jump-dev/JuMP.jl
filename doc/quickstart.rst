@@ -80,8 +80,8 @@ but has some restrictions on how they can be used.
 To add constraints in the first way, use the ``addConstraint()`` and ``setObjective()``
 functions, e.g.::
 
-    setObjective(m, :Max, 5x + 22y + (x+y)/2) # or :Min
     addConstraint(m, y + z == 4)  # Other options: <= and >=
+    setObjective(m, :Max, 5x + 22y + (x+y)/2) # or :Min
 
 The second way is visually very similar, and uses the ``@addConstraint`` and ``@setObjective``
 macros, e.g.::
