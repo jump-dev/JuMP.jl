@@ -252,6 +252,7 @@ end; end; end
 
 facts("[nonlinear] Test infeasibility detection") do
 for nlp_solver in convex_nlp_solvers
+contains(string(typeof(nlp_solver)),"NLoptSolver") && continue
 context("With solver $(typeof(nlp_solver))") do
     # (Attempt to) solve an infeasible problem
     m = Model(solver=nlp_solver)
@@ -267,6 +268,7 @@ end; end; end
 
 facts("[nonlinear] Test unboundedness detection") do
 for nlp_solver in convex_nlp_solvers
+contains(string(typeof(nlp_solver)),"NLoptSolver") && continue
 context("With solver $(typeof(nlp_solver))") do
     # (Attempt to) solve an unbounded problem
     m = Model(solver=nlp_solver)
