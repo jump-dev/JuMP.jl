@@ -9,7 +9,7 @@ Version 0.9.0 (April 18, 2015)
   * ``getValue()`` method implemented to compute the value of a nonlinear subexpression
   * JuMP is now released under the Mozilla Public License version 2.0 (was previously LGPL). MPL is a copyleft license which is less restrictive than LGPL, especially for embedding JuMP within other applications.
   * A number of performance improvements in ReverseDiffSparse for computing derivatives.
-  * ``MathProgBase.getsolvetime(m)`` now returns the solution time reported by the solver, if availible. (Thanks @odow, Oscar Dowson)
+  * ``MathProgBase.getsolvetime(m)`` now returns the solution time reported by the solver, if available. (Thanks @odow, Oscar Dowson)
   * Formatting fix for LP format output. (Thanks @sbebo, Leonardo Taccari).
 
 Version 0.8.0 (February 17, 2015)
