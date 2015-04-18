@@ -36,7 +36,7 @@ Base.getindex(d::JuMPDict, t...) = d.tupledict[t]
 Base.setindex!(d::JuMPDict, value, t...) = (d.tupledict[t] = value)
 
 function Base.map{T,N}(f::Function, d::JuMPDict{T,N})
-    ret = Base.return_types(f, (T,))
+    ret = Base.return_types(f, @compat(Tuple{T}))
     R = (length(ret) == 1 ? ret[1] : Any)
     x = JuMPDict(Dict{NTuple{N},R}(), d.name, copy(d.indexsets), copy(d.indexexprs), copy(d.condition))
     for (k,v) in d.tupledict
