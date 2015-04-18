@@ -15,12 +15,12 @@ type ExprList
     hess_matmat_funcs::Vector{Function}
     hess_IJ_funcs::Vector{Function}
     hessfuncs::Vector{Function} # these can't be shared if coloring is different
-    hessIJ::Vector{(Vector{Int},Vector{Int})}
+    hessIJ::Vector{@compat Tuple{Vector{Int},Vector{Int}}}
     exprfuncs::Vector{Function}
 end
 
 
-ExprList() = ExprList(SymbolicOutput[], Function[], Function[], Function[], Function[], Function[], Function[], Array((Vector{Int},Vector{Int}),0), Function[])
+ExprList() = ExprList(SymbolicOutput[], Function[], Function[], Function[], Function[], Function[], Function[], Array(@compat(Tuple{Vector{Int},Vector{Int}}),0), Function[])
 
 Base.push!(l::ExprList, s::SymbolicOutput) = push!(l.exprs, s)
 Base.getindex(l::ExprList, i) = l.exprs[i]
