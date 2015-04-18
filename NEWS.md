@@ -1,8 +1,8 @@
 JuMP release notes
 ==================
 
-Unversioned
------------
+Version 0.9.0 (April 18, 2015)
+------------------------------
 
   * Comparison operators for constructing constraints (e.g. ``2x >= 1``) have been deprecated. Instead, construct the constraints explicitly in
     the ``@addConstraint`` macro to add them to the model, or in the ``@LinearConstraint`` macro to create a stand-alone linear constraint instance.
