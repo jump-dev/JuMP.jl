@@ -21,7 +21,7 @@ type JuMPArray{T}
 end
 =#
 type JuMPDict{T,N} <: JuMPContainer{T,N}
-    tupledict::Dict{NTuple{N},T}
+    tupledict::Dict{NTuple{N,Any},T}
     name::Symbol
     indexsets
     indexexprs::Vector{IndexPair}
@@ -38,7 +38,7 @@ Base.setindex!(d::JuMPDict, value, t...) = (d.tupledict[t] = value)
 function Base.map{T,N}(f::Function, d::JuMPDict{T,N})
     ret = Base.return_types(f, @compat(Tuple{T}))
     R = (length(ret) == 1 ? ret[1] : Any)
-    x = JuMPDict(Dict{NTuple{N},R}(), d.name, copy(d.indexsets), copy(d.indexexprs), copy(d.condition))
+    x = JuMPDict(Dict{NTuple{N,Any},R}(), d.name, copy(d.indexsets), copy(d.indexexprs), copy(d.condition))
     for (k,v) in d.tupledict
         x.tupledict[k] = f(v)
     end
