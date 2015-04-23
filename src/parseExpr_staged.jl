@@ -26,6 +26,18 @@ function addToExpression(ex::Number, c::AffExpr, x::AffExpr)
     return q
 end
 
+function addToExpression(ex::Number, c::AffExpr, x::Variable)
+    q = c*x
+    q.aff.constant += ex
+    return q
+end
+
+function addToExpression(ex::Number, c::QuadExpr, x::Number)
+    q = c*x
+    q.aff.constant += ex
+    return q
+end
+
 function addToExpression(aff::AffExpr, c::Number, x::Number)
     aff.constant += c*x
     return aff
