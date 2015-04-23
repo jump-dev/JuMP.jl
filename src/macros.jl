@@ -363,14 +363,21 @@ macro defExpr(args...)
 
     refcall, idxvars, idxsets, idxpairs = buildrefsets(c)
     newaff, parsecode = parseExpr(x, :q, [1.0])
-    code = quote
-        q = AffExpr()
-        $parsecode
+    if VERSION <= v"0.4-"
+        code = quote
+            q = AffExpr()
+            $parsecode
+        end
+    else
+        code = quote
+            q = 0.0
+            $parsecode
+        end
     end
     if isa(c,Expr)
         code = quote
             $code
-            isa($newaff,AffExpr) || error("Three argument form of @defExpr does not currently support quadratic expressions")
+            isa($newaff,AffExpr) || error("Three argument form of @defExpr only supports linear expressions")
         end
     end
     code = quote
