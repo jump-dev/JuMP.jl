@@ -144,7 +144,28 @@ function _construct_constraint!(quad::QuadExpr, sense::Symbol)
     return QuadConstraint(quad, sense)
 end
 
-macro addConstraint(m, x, extra...)
+macro addConstraint(args...)
+    # Pick out keyword arguments
+    if isexpr(args[1],:parameters) # these come if using a semicolon
+        kwargs = args[1]
+        args = args[2:end]
+    else
+        kwargs = Expr(:parameters)
+    end
+    append!(kwargs.args, collect(filter(x -> isexpr(x, :kw), args))) # comma separated
+    args = collect(filter(x->!isexpr(x, :kw), args))
+
+    if length(args) < 2
+        if length(kwargs.args) > 0
+            error("in @addConstraint($(join(args,','))) with keyword arguments: ($(join(kwargs.args,','))): not enough arguments")
+        else
+            error("in @addConstraint($(join(args,','))): not enough arguments")
+        end
+    end
+    m = args[1]
+    x = args[2]
+    extra = args[3:end]
+
     m = esc(m)
     # Two formats:
     # - @addConstraint(m, a*x <= 5)
@@ -170,10 +191,15 @@ macro addConstraint(m, x, extra...)
             error("in @addConstraint ($(string(x))): expected comparison operator (<=, >=, or ==).")
         lhs = :($(x.args[1]) - $(x.args[3]))
         newaff, parsecode = parseExpr(lhs, :q, [1.0])
+        constraintcall = :(addConstraint($m, _construct_constraint!($newaff,$(quot(sense)))))
+        for kw in kwargs.args
+            @assert isexpr(kw, :kw)
+            push!(constraintcall.args, esc(kw))
+        end
         code = quote
             q = AffExpr()
             $parsecode
-            $(refcall) = addConstraint($m, _construct_constraint!($newaff,$(quot(sense))))
+            $(refcall) = $constraintcall
         end
     elseif length(x.args) == 5
         # Ranged row
@@ -310,13 +336,20 @@ for (mac,sym) in [(:addConstraints,  symbol("@addConstraint")),
                 if it.head == :line
                     # do nothing
                 elseif it.head == :comparison # regular constraint
-                    mac = Expr(:macrocall,$sym, esc(m), esc(it))
+                    mac = Expr(:macrocall,$(quot(sym)), esc(m), esc(it))
                     code = quote
                             $code
                             $mac
                             end
-                elseif it.head == :tuple # constraint ref
-                    mac = Expr(:macrocall,$sym, esc(m), esc(it.args[1]), esc(it.args[2]))
+                elseif it.head == :tuple # constraint ref or kwargs
+                    for i in 1:length(it.args)
+                        if isexpr(it.args[i], :(=))
+                            it.args[i] = Expr(:kw, it.args[i].args[1], esc(it.args[i].args[2]))
+                        else
+                            it.args[i] = esc(it.args[i])
+                        end
+                    end
+                    mac = Expr(:macrocall,$(quot(sym)), esc(m), it.args...)
                     code = quote
                             $code
                             $mac
