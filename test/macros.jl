@@ -49,6 +49,12 @@ facts("[macros] Check @addConstraint basics") do
     @fact conToStr(m.linconstr[end]) => "-1 $leq x - y $leq 10"
     @addConstraint(m, -1 <= x+1 <= 1)
     @fact conToStr(m.linconstr[end]) => "-2 $leq x $leq 0"
+    @addConstraint(m, -1 <= x <= 1)
+    @fact conToStr(m.linconstr[end]) => "-1 $leq x $leq 1"
+    if VERSION > v"0.4-"
+        @addConstraint(m, -1 <= x <= sum{0.5, i = 1:2})
+        @fact conToStr(m.linconstr[end]) => "-1 $leq x $leq 1"
+    end
     @fact_throws @addConstraint(m, x <= t <= y)
 
     @defExpr(aff, 3x - y - 3.3(w + 2z) + 5)

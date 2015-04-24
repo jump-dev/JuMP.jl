@@ -123,6 +123,8 @@ function _canonicalize_sense(sns::Symbol)
             sns == :≥ ? :(>=) : sns)
 end
 
+# two-argument _construct_constraint! is used for one-sided constraints.
+# Right-hand side is zero.
 _construct_constraint!(v::Variable, sense::Symbol) = _construct_constraint(convert(AffExpr,v), sense)
 function _construct_constraint!(aff::AffExpr, sense::Symbol)
     sense in valid_senses || error("Unrecognized sense $sense")
@@ -143,6 +145,17 @@ function _construct_constraint!(quad::QuadExpr, sense::Symbol)
     sense in valid_senses || error("Invalid sense $sense in quadratic constraint")
     return QuadConstraint(quad, sense)
 end
+
+# three-argument _construct_constraint! is used for two-sided constraints.
+function _construct_constraint!(aff::AffExpr, lb::Real, ub::Real)
+    offset = aff.constant
+    aff.constant = 0.0
+    return LinearConstraint(aff,lb-offset,ub-offset)
+end
+
+_construct_constraint!(aff::Variable, lb::Real, ub::Real) = _construct_constraint!(convert(AffExpr,v),lb,ub)
+
+_construct_constraint!(q::QuadExpr, lb, ub) = error("Two-sided quadratic constraints not supported. (Try @addNLConstraint instead.)")
 
 macro addConstraint(args...)
     # Pick out keyword arguments
@@ -204,23 +217,40 @@ macro addConstraint(args...)
     elseif length(x.args) == 5
         # Ranged row
         if (x.args[2] != :<= && x.args[2] != :≤) || (x.args[4] != :<= && x.args[4] != :≤)
-            error("in @addConstraint ($(string(x))): only ranged rows of the form lb <= expr <= ub are supported.")
+            error("in @addConstraint ($(string(x))): only two-sided constraints of the form lb <= expr <= ub are supported.")
         end
-        lb = x.args[1]
-        ub = x.args[5]
+        x_str = string(x)
+        lb_str = string(x.args[1])
+        ub_str = string(x.args[5])
         newaff, parsecode = parseExpr(x.args[3],:aff, [1.0])
+        if VERSION < v"0.4-"
+            newlb = esc(x.args[1])
+            parselb = nothing
+            newub = esc(x.args[5])
+            parseub = nothing
+        else
+            newlb, parselb = parseExpr(x.args[1],:lb,[1.0])
+            newub, parseub = parseExpr(x.args[5],:ub,[1.0])
+        end
         code = quote
             aff = AffExpr()
-            if !isa($(esc(lb)),Number)
-                error(string("in @addConstraint (",$(string(x)),"): expected ",$(string(lb))," to be a number."))
-            elseif !isa($(esc(ub)),Number)
-                error(string("in @addConstraint (",$(string(x)),"): expected ",$(string(ub))," to be a number."))
-            end
             $parsecode
-            offset = $newaff.constant
-            $newaff.constant = 0.0
-            isa($newaff,AffExpr) || error("Ranged quadratic constraints are not allowed")
-            $(refcall) = addConstraint($m, LinearConstraint($newaff,$(esc(lb))-offset,$(esc(ub))-offset))
+            lb = 0.0
+            $parselb
+            ub = 0.0
+            $parseub
+            CoefType = coeftype($newaff)
+            try
+                lbval = convert(CoefType, $newlb)
+            catch
+                error(string("in @addConstraint (",$x_str,"): expected ",$lb_str," to be a ", CoefType, "."))
+            end
+            try
+                ubval = convert(CoefType, $newub)
+            catch
+                error(string("in @addConstraint (",$x_str,"): expected ",$ub_str," to be a ", CoefType, "."))
+            end
+            $(refcall) = addConstraint($m, _construct_constraint!($newaff,$newlb,$newub))
         end
     else
         # Unknown
