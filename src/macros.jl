@@ -232,6 +232,11 @@ macro addConstraint(args...)
             newlb, parselb = parseExpr(x.args[1],:lb,[1.0])
             newub, parseub = parseExpr(x.args[5],:ub,[1.0])
         end
+        constraintcall = :(addConstraint($m, _construct_constraint!($newaff,$newlb,$newub)))
+        for kw in kwargs.args
+            @assert isexpr(kw, :kw)
+            push!(constraintcall.args, esc(kw))
+        end
         code = quote
             aff = AffExpr()
             $parsecode
@@ -250,7 +255,7 @@ macro addConstraint(args...)
             catch
                 error(string("in @addConstraint (",$x_str,"): expected ",$ub_str," to be a ", CoefType, "."))
             end
-            $(refcall) = addConstraint($m, _construct_constraint!($newaff,$newlb,$newub))
+            $(refcall) = $constraintcall
         end
     else
         # Unknown
