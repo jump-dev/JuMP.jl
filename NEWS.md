@@ -1,6 +1,12 @@
 JuMP release notes
 ==================
 
+Version 0.9.1 (April 25, 2015)
+------------------------------
+
+  * Fix for Julia 0.4-dev.
+  * Small infrastructure improvements for extensions.
+
 Version 0.9.0 (April 18, 2015)
 ------------------------------
 
