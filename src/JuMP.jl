@@ -297,6 +297,8 @@ type GenericAffExpr{CoefType,VarType}
     constant::CoefType
 end
 
+coeftype{CoefType,VarType}(::GenericAffExpr{CoefType,VarType}) = CoefType
+
 Base.zero{CoefType,VarType}(::Type{GenericAffExpr{CoefType,VarType}}) =
     GenericAffExpr{CoefType,VarType}(VarType[],CoefType[],zero(CoefType))
 Base.one{CoefType,VarType}(::Type{GenericAffExpr{CoefType,VarType}}) =
@@ -376,6 +378,9 @@ type GenericQuadExpr{CoefType,VarType}
     qcoeffs::Vector{CoefType}
     aff::GenericAffExpr{CoefType,VarType}
 end
+
+coeftype{CoefType,VarType}(::GenericQuadExpr{CoefType,VarType}) = CoefType
+
 typealias QuadExpr GenericQuadExpr{Float64,Variable}
 
 QuadExpr() = QuadExpr(Variable[],Variable[],Float64[],AffExpr())
