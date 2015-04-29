@@ -375,3 +375,24 @@ facts("[nonlinear] Expression graph for linear problem") do
     MathProgBase.initialize(d, [:ExprGraph])
     @fact MathProgBase.obj_expr(d) => :(+(1.0 * x[1]))
 end
+
+facts("[nonlinear] Hessians through MPB") do
+    # Issue 435
+    m = Model()
+    @defVar(m, a, start = 1)
+    @defVar(m, b, start = 2)
+    @defVar(m, c, start = 3)
+
+    @defNLExpr(foo, a * b + c^2)
+
+    @setNLObjective(m, Min, foo)
+    d = JuMP.JuMPNLPEvaluator(m, JuMP.prepConstrMatrix(m))
+    MathProgBase.initialize(d, [:Hess])
+    I,J = MathProgBase.hesslag_structure(d)
+    V = zeros(length(I))
+    MathProgBase.eval_hesslag(d, V, m.colVal, 1.0, Float64[])
+    hess_raw = sparse(I,J,V)
+    # Convert from lower triangular
+    hess_sparse = hess_raw + hess_raw' - sparse(diagm(diag(hess_raw)))
+    @test_approx_eq hess_sparse [0.0 1.0 0.0; 1.0 0.0 0.0; 0.0 0.0 2.0]
+end
