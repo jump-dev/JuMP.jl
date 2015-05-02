@@ -175,6 +175,7 @@ function Base.copy(source::Model)
     # Constraints
     dest.linconstr  = map(c->copy(c, dest), source.linconstr)
     dest.quadconstr = map(c->copy(c, dest), source.quadconstr)
+    dest.sosconstr  = map(c->copy(c, dest), source.sosconstr)
 
     # Variables
     dest.numCols = source.numCols
@@ -555,6 +556,9 @@ function addSOS2(m::Model, coll::Vector{AffExpr})
     end
     return ConstraintRef{SOSConstraint}(m,length(m.sosconstr))
 end
+
+Base.copy(sos::SOSConstraint, new_model::Model) =
+    SOSConstraint([Variable(new_model,v.col) for v in sos.terms], copy(sos.weights), sos.sostype)
 
 ##########################################################################
 # Generic constraint type for quadratic expressions
