@@ -272,6 +272,8 @@ end
 
 *{T<:QuadExpr,S<:Union(Variable,AffExpr,QuadExpr)}(::T,::S) =
     error( "*(::$T,::$S) is not defined. $op_hint")
+(*)(lhs::QuadExpr, rhs::QuadExpr) =
+    error( "*(::QuadExpr,::QuadExpr) is not defined. $op_hint")
 *{T<:QuadExpr,S<:Union(Variable,AffExpr,QuadExpr)}(::S,::T) =
     error( "*(::$S,::$T) is not defined. $op_hint")
 /{S<:Union(Number,Variable,AffExpr,QuadExpr),T<:Union(Variable,AffExpr,QuadExpr)}(::S,::T) =
