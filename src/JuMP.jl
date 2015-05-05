@@ -206,6 +206,9 @@ end
 ReverseDiffSparse.getplaceindex(x::Variable) = x.col
 Base.isequal(x::Variable,y::Variable) = isequal(x.col,y.col) && isequal(x.m,y.m)
 
+Variable(m::Model, lower, upper, cat::Symbol, name::String="", value::Number=NaN) =
+    error("Attempt to create scalar Variable with lower bound of type $(typeof(lower)) and upper bound of type $(typeof(upper)). Bounds must be scalars in Variable constructor.")
+
 function Variable(m::Model,lower::Number,upper::Number,cat::Symbol,name::String="",value::Number=NaN)
     m.numCols += 1
     push!(m.colNames, name)
