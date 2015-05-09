@@ -136,7 +136,7 @@ end
 
 addToExpression(aff, c, x) = error("Cannot construct an affine expression with a term of type ($(typeof(c)))*($(typeof(x)))")
 
-stagedfunction addToExpression_reorder(ex, args...)
+@generated function addToExpression_reorder(ex, args...)
     if !isleaftype(ex) || mapreduce(t -> !isleaftype(t), |, args)
         error("Can't process abstract types")
     end
