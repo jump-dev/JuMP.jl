@@ -336,7 +336,7 @@ function cont_str(mode, j::JuMPContainer{Variable}, leq, eq, geq,
     idx_sets = for_all*" "*join(map(dim->string(idxvars[dim], " ", in_set, " ", open_set,
                                 cont_str_set(j.indexsets[dim], mid_set),
                                 close_set), 1:num_dims), ", ")
-    # 3. Handle any conditionals
+    # 3. Handle any conditions
     if isa(j, JuMPDict) && j.condition != :()
        idx_sets *= " s.t. $(join(parse_conditions(j.condition), " and "))"
     end

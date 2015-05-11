@@ -297,19 +297,21 @@ facts("[macros] @defExpr") do
 end
 
 if VERSION >= v"0.4-"
-    facts("[macros] Conditionals in constraint indexing") do
+    facts("[macros] Conditions in constraint indexing") do
         model = Model()
         @defVar(model, x[1:10])
         @addConstraint(model, c1[i=1:9;isodd(i)], x[i] + x[i+1] <= 1)
+        @addNLConstraint(model, c2[i=["red","blue","green"], k=9:-2:2; (i == "red" && isodd(k)) || (k >=4 && (i == "blue" || i == "green"))], x[k]^3 <= 1)
         @fact length(model.linconstr) => 5
         @fact conToStr(model.linconstr[1]) => "x[1] + x[2] $leq 1"
         @fact conToStr(model.linconstr[2]) => "x[3] + x[4] $leq 1"
         @fact conToStr(model.linconstr[3]) => "x[5] + x[6] $leq 1"
         @fact conToStr(model.linconstr[4]) => "x[7] + x[8] $leq 1"
         @fact conToStr(model.linconstr[5]) => "x[9] + x[10] $leq 1"
+        @fact length(model.nlpdata.nlconstr) => 10
     end
 
-    facts("[macros] Test changes in conditional parsing") do
+    facts("[macros] Test changes in condition parsing") do
         ex = :(x[12;3])
         @fact ex.head => :typed_vcat
         @fact ex.args => [:x, 12, 3]

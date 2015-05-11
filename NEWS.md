@@ -4,7 +4,7 @@ JuMP release notes
 Unversioned
 -----------
 
-  * Support for conditionals in indexing ``@defVar`` and ``@addConstraint`` constructs, e.g. ``@defVar(m, x[i=1:5,j=1:5; i+j >= 3])
+  * Support for conditions in indexing ``@defVar`` and ``@addConstraint`` constructs, e.g. ``@defVar(m, x[i=1:5,j=1:5; i+j >= 3])
 
 Version 0.9.1 (April 25, 2015)
 ------------------------------

@@ -69,9 +69,9 @@ facts("[variable] repeated elements in index set (issue #199)") do
     @fact MathProgBase.numvar(repeatmod) => 3
 end
 
-# Test conditionals in variable definition
+# Test conditions in variable definition
 if VERSION >= v"0.4-"
-    facts("[variable] conditional in indexing") do
+    facts("[variable] condition in indexing") do
         condmod = Model()
         @defVar(condmod, x[i=1:10; iseven(i)])
         @defVar(condmod, y[j=1:10,k=3:2:9; isodd(j+k) && k <= 8])

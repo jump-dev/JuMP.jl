@@ -21,8 +21,8 @@ end
 #       idxvars:  Index names used in referencing, e.g.g {:i,:j,:k}
 #       idxsets:  Index sets for indexing, e.g. {1:3, [:red,:blue], S}
 #       idxpairs: Vector of IndexPair
-#       condition: Expr containing any conditional present for indexing
-# Note in particular that it does not actually evaluate the conditional, and so
+#       condition: Expr containing any condition present for indexing
+# Note in particular that it does not actually evaluate the condition, and so
 # it returns just the cartesian product of possible indices.
 function buildrefsets(expr::Expr)
     c = copy(expr)
@@ -443,7 +443,6 @@ macro defExpr(args...)
         error("in @defExpr: needs either one or two arguments.")
     end
 
-    crefflag = isa(c,Expr)
     refcall, idxvars, idxsets, idxpairs, condition = buildrefsets(c)
     newaff, parsecode = parseExpr(x, :q, [1.0])
     if VERSION <= v"0.4-"
