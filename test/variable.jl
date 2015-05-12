@@ -69,12 +69,14 @@ facts("[variable] repeated elements in index set (issue #199)") do
     @fact MathProgBase.numvar(repeatmod) => 3
 end
 
-# Test conditionals in variable definition
-# condmod = Model()
-# @defVar(condmod, x[i=1:10]; iseven(i))
-# @defVar(condmod, y[j=1:10,k=3:2:9]; isodd(j+k) && k <= 8)
-# @test JuMP.dictstring(x, :REPL)   == "x[i], for all i in {1..10} s.t. iseven(i) free"
-# @test JuMP.dictstring(x, :IJulia) == "x_{i} \\quad \\forall i \\in \\{ 1..10 \\} s.t. iseven(i) free"
-# @test JuMP.dictstring(y, :REPL)   == "y[i,j], for all i in {1..10}, j in {3,5..7,9} s.t. isodd(j + k) and k <= 8 free"
-# @test JuMP.dictstring(y, :IJulia) == "y_{i,j} \\quad \\forall i \\in \\{ 1..10 \\}, j \\in \\{ 3,5..7,9 \\} s.t. isodd(j + k) and k <= 8 free"
-# @test string(condmod) == "Min 0\nSubject to \nx[i], for all i in {1..10} s.t. iseven(i) free\ny[i,j], for all i in {1..10}, j in {3,5..7,9} s.t. isodd(j + k) and k <= 8 free\n"
+# Test conditions in variable definition
+if VERSION >= v"0.4-"
+    facts("[variable] condition in indexing") do
+        condmod = Model()
+        @defVar(condmod, x[i=1:10; iseven(i)])
+        @defVar(condmod, y[j=1:10,k=3:2:9; isodd(j+k) && k <= 8])
+        @fact length(x.tupledict) => 5
+        @fact length(y.tupledict) => 15
+        @fact string(condmod) => "Min 0\nSubject to\n x[i] free for all i in {1,2..9,10} s.t. iseven(i)\n y[j,k] free for all j in {1,2..9,10}, k in {3,5,7,9} s.t. isodd(j + k) and k <= 8\n"
+    end
+end

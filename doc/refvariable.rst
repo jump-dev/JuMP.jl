@@ -54,10 +54,16 @@ Bounds can depend on variable indices::
 
 And indices can have dependencies on preceding indices (e.g. "triangular indexing")::
 
-    @defVar(m, x[i=1:10;j=i:10] >= 0)
+    @defVar(m, x[i=1:10,j=i:10] >= 0)
 
 Note the dependency must be on preceding indices, going from left to right. That is,
 ``@defVar(m, x[i=j:10,i=1:10] >= 0)`` is not valid JuMP code.
+
+Conditions can be placed on the index values for which variables are created; the condition follows the statement of the index sets and is separated with a semicolon::
+
+    @defVar(m, x[i=1:10,j=1:10; isodd(i+j)] >= 0)
+
+Note that only one condition can be added, although expressions can be built up by using the usual ``&&`` and ``||`` logical operators.
 
 An initial value of each variable may be provided with the ``start`` keyword to ``@defVar``::
 
