@@ -138,6 +138,15 @@ function MathProgBase.getsolvetime(m::Model)
         error("Solve time not implemented for $(typeof(m.solver))")
     end
 end
+function MathProgBase.getnodecount(m::Model)
+    if !m.internalModelLoaded
+        error("Model not solved")
+    elseif method_exists(MathProgBase.getnodecount, (typeof(getInternalModel(m)), ))
+        return MathProgBase.getnodecount(getInternalModel(m))
+    else
+        error("Node count not implemented for $(typeof(m.solver)).")
+    end
+end
 
 @Base.deprecate getNumVars(m::Model) MathProgBase.numvar(m)
 @Base.deprecate getNumConstraints(m::Model) MathProgBase.numlinconstr(m)
