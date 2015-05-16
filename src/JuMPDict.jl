@@ -7,7 +7,8 @@ using Base.Meta
 # multivarate "dictionary" used for collections of variables/constraints
 
 abstract JuMPContainer{T,N}
-abstract JuMPArray{T,N} <: JuMPContainer{T,N}
+abstract JuMPArray{T,N,Q} <: JuMPContainer{T,N} # Q is true if all index sets are of the form 1:n
+typealias OneIndexedArray{T,N} JuMPArray{T,N,true}
 
 type IndexPair
     idxvar
@@ -67,7 +68,12 @@ macro gendict(instancename,T,idxpairs,idxsets...)
                 error("Currently only ranges with integer compile-time starting values are allowed as index sets. $(idxsets[i].args[1]) is not an integer in range $(idxsets[i]).")
             end
         end
-        typecode = :(type $(typename){T} <: JuMPArray{T,$N}; innerArray::Array{T,$N}; name::String;
+        truearray = all(idxsets) do rng
+            isexpr(rng,:(:)) && # redundant, but might as well
+            rng.args[1] == 1 && # starts from 1
+            length(rng.args) == 2 || rng.args[2] == 1 # steps of one
+        end
+        typecode = :(type $(typename){T} <: JuMPArray{T,$N,$truearray}; innerArray::Array{T,$N}; name::String;
                             indexsets; indexexprs::Vector{IndexPair} end)
         getidxlhs = :(Base.getindex(d::$(typename)))
         setidxlhs = :(setindex!(d::$(typename),val))

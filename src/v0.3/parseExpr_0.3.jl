@@ -12,7 +12,12 @@ function timescoef(x::Expr)
     x2 = copy(x)
     # just delete last argument
     splice!(x2.args,length(x2.args))
-    return x2
+    # hacky change: if the call is e.g. (*)(a), just return :a
+    if length(x2.args) == 2
+        x2.args[2]
+    else
+        x2
+    end
 end
 # extracts last operand of *
 # a*b*c -> c
@@ -23,82 +28,114 @@ function timesvar(x::Expr)
     return x.args[end]
 end
 
-function addToExpression(aff::AffExpr,c::Number,x::Variable)
-    push!(aff,convert(Float64,c),x)
-    return aff
+function addToExpression{C,V}(aff::GenericAffExpr{C,V},c::Number,x::V)
+    push!(aff, convert(C,c), x)
+    aff
 end
 
-function addToExpression(aff::AffExpr,c::Number,x::Number)
-    (aff.constant += c*x)
-    return aff
+function addToExpression(aff::GenericAffExpr,c::Number,x::Number)
+    aff.constant += c*x
+    aff
 end
 
-function addToExpression(aff::AffExpr,c::Variable,x::Variable)
-    q = QuadExpr([c],[x],[1.0],aff)
-    return q
+function addToExpression{C,V}(aff::GenericAffExpr{C,V},c::V,x::V)
+    GenericQuadExpr{C,V}([c],[x],[one(C)],aff)
 end
 
-function addToExpression(aff::AffExpr,c::Number,x::AffExpr)
+function addToExpression{C,V}(aff::GenericAffExpr{C,V},c::Number,x::GenericAffExpr{C,V})
     append!(aff.vars, x.vars)
     append!(aff.coeffs, c*x.coeffs)
     aff.constant += c*x.constant
-    return aff
+    aff
 end
 
-addToExpression(aff::AffExpr,x::AffExpr,c::Variable) = addToExpression(aff,c,x)
-addToExpression(aff::AffExpr,c::Variable,x::AffExpr) = QuadExpr(fill(c,length(x.vars)),
-                                                                x.vars,
-                                                                x.coeffs,
-                                                                addToExpression(aff,x.constant,c))
+# TODO: add generic versions of following two methods
+addToExpression{C}(aff::GenericAffExpr{C,Variable},c::GenericAffExpr{C,Variable},x::Variable) =
+    GenericQuadExpr{C,Variable}(c.vars,
+                                fill(x,length(c.vars)),
+                                c.coeffs,
+                                addToExpression(aff,c.constant,x))
 
-addToExpression(aff::AffExpr, c::Number, x::QuadExpr) = QuadExpr(copy(x.qvars1),
-                                                                 copy(x.qvars2),
-                                                                 c*x.qcoeffs,
-                                                                 addToExpression(aff,c,x.aff))
+addToExpression{C}(aff::GenericAffExpr{C,Variable},c::Variable,x::GenericAffExpr{C,Variable}) =
+    GenericQuadExpr{C,Variable}(fill(c,length(x.vars)),
+                                x.vars,
+                                x.coeffs,
+                                addToExpression(aff,x.constant,c))
 
-function addToExpression(quad::QuadExpr,c::Number,x::Variable)
-    push!(quad.aff,convert(Float64,c),x)
-    return quad
+addToExpression{C,V}(aff::GenericAffExpr{C,V}, c::Number, x::GenericQuadExpr{C,V}) =
+    GenericQuadExpr{C,V}(copy(x.qvars1),
+                         copy(x.qvars2),
+                         c*x.qcoeffs,
+                         addToExpression(aff,c,x.aff))
+
+function addToExpression{C,V}(quad::GenericQuadExpr{C,V},c::Number,x::V)
+    push!(quad.aff,convert(C,c),x)
+    quad
 end
 
-function addToExpression(quad::QuadExpr,c::Number,x::Number)
-    (quad.aff.constant += c*x)
-    return quad
+function addToExpression(quad::GenericQuadExpr,c::Number,x::Number)
+    quad.aff.constant += c*x
+    quad
 end
 
-function addToExpression(quad::QuadExpr,c::Variable,x::Variable)
+function addToExpression{C,V}(quad::GenericQuadExpr{C,V},c::V,x::V)
     push!(quad.qvars1, x)
     push!(quad.qvars2, c)
     push!(quad.qcoeffs, 1.0)
-    return quad
+    quad
 end
 
-function addToExpression(quad::QuadExpr,c::Number,x::AffExpr)
+function addToExpression{C,V}(quad::GenericQuadExpr{C,V},c::Number,x::GenericAffExpr{C,V})
     append!(quad.aff.vars, x.vars)
     append!(quad.aff.coeffs, c*x.coeffs)
     quad.aff.constant += c*x.constant
-    return quad
+    quad
 end
 
-addToExpression(quad::QuadExpr,x::AffExpr,c::Variable) = addToExpression(quad,c,x)
-function addToExpression(quad::QuadExpr,c::Variable,x::AffExpr)
+function addToExpression{C,V}(quad::GenericQuadExpr{C,V},c::GenericAffExpr{C,V},x::Number)
+    append!(quad.aff.vars, c.vars)
+    append!(quad.aff.coeffs, c.coeffs*x)
+    quad.aff.constant += c.constant*x
+    quad
+end
+
+# TODO: add generic versions of following two methods
+function addToExpression{C}(quad::GenericQuadExpr{C,Variable},c::GenericAffExpr{C,Variable},x::Variable)
+    append!(quad.qvars1, c.vars)
+    append!(quad.qvars2, fill(x,length(c.vars)))
+    append!(quad.qcoeffs, c.coeffs)
+    addToExpression(quad.aff,c.constant,x)
+    quad
+end
+
+function addToExpression{C}(quad::GenericQuadExpr{C,Variable},c::Variable,x::GenericAffExpr{C,Variable})
     append!(quad.qvars1, fill(c,length(x.vars)))
     append!(quad.qvars2, x.vars)
     append!(quad.qcoeffs, x.coeffs)
-    addToExpression(quad.aff,x.constant,c)
-    return quad
+    addToExpression(quad.aff,c,x.constant)
+    quad
 end
 
-addToExpression(quad::QuadExpr,x::QuadExpr,c::Number) = addToExpression(quad,c,x)
-function addToExpression(quad::QuadExpr,c::Number,x::QuadExpr)
+function addToExpression{C,V}(quad::GenericQuadExpr{C,V},c::GenericQuadExpr{C,V},x::Number)
+    append!(quad.qvars1,c.qvars1)
+    append!(quad.qvars2,c.qvars2)
+    append!(quad.qcoeffs,c.qcoeffs*x)
+    addToExpression(quad,c.aff,x)
+    quad
+end
+
+function addToExpression{C,V}(quad::GenericQuadExpr{C,V},c::Number,x::GenericQuadExpr{C,V})
     append!(quad.qvars1,x.qvars1)
     append!(quad.qvars2,x.qvars2)
     append!(quad.qcoeffs,c*x.qcoeffs)
     addToExpression(quad,c,x.aff)
-    return quad
+    quad
 end
 
-addToExpression(aff, c, x) = error("Cannot construct an affine expression with a term of type ($(typeof(c)))*($(typeof(x)))")
+_lift(x::OneIndexedArray) = x.innerArray
+_lift(x) = x
+
+addToExpression(aff, c, x) = _lift(aff) + _lift(c) * _lift(x)
 
 function parseCurly(x::Expr, aff::Symbol, constantCoef)
     if !(x.args[1] == :sum || x.args[1] == :∑ || x.args[1] == :Σ) # allow either N-ARY SUMMATION or GREEK CAPITAL LETTER SIGMA
@@ -162,6 +199,7 @@ function parseCurly(x::Expr, aff::Symbol, constantCoef)
     return code
 end
 
+parseExprToplevel(x, aff::Symbol) = parseExpr(x, aff, [1.0])
 parseExpr(x, aff::Symbol, constantCoef::Vector) = parseExpr(x, aff, Expr(:call,:*,constantCoef...))
 
 function parseExpr(x, aff::Symbol, constantCoef::Union(Number, Expr))
@@ -181,7 +219,7 @@ function parseExpr(x, aff::Symbol, constantCoef::Union(Number, Expr))
         elseif x.head == :call && x.args[1] == :*
             coef = timescoef(x)
             var = timesvar(x)
-            return parseExpr(var, aff, :($coef*$constantCoef))
+            return parseExpr(var, aff, :($constantCoef*$coef))
         elseif x.head == :call && x.args[1] == :/
             @assert length(x.args) == 3
             numerator = x.args[2]

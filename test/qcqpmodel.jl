@@ -19,23 +19,46 @@ context("With solver $(typeof(solver))") do
 
     modQ = Model(solver=solver)
     @defVar(modQ, 1.1*i <= x[i=1:3] <= 2.5*i, Int)
-    setObjective(modQ, :Min, 10*x[1]*x[1] + 3*x[1]*x[2] + 5*x[2]*x[2] + 9*x[3]*x[3])
+    @setObjective(modQ, Min, 10*x[1]*x[1] + 3*x[1]*x[2] + 5*x[2]*x[2] + 9*x[3]*x[3])
     @addConstraint(modQ, x[2] <= 1.7*x[3])
     @addConstraint(modQ, x[2] >= 0.5*x[1])
     @fact solve(modQ) => :Optimal
     @fact modQ.objVal => roughly( 247.0, 1e-5)
     @fact getValue(x)[:] => roughly([2.0, 3.0, 4.0], 1e-6)
 
+    # vectorized version
+    modV = Model(solver=solver)
+    @defVar(modV, 1.1*i <= x[i=1:3] <= 2.5*i, Int)
+    obj = x'*[10 1.5 0; 1.5 5 0; 0 0 9]*x
+    @setObjective(modV, Min, obj[1])
+    A = [  0  1 -1.7
+         0.5 -1    0]
+    @addConstraint(modV, A*x .<= zeros(2))
+    @fact solve(modV) => :Optimal
+    @fact modV.objVal => roughly( 247.0, 1e-5)
+    @fact getValue(x)[:] => roughly([2.0, 3.0, 4.0], 1e-6)
 
     modQ = Model(solver=solver)
     @defVar(modQ, 1.1*i <= x[i=1:3] <= 2.5*i, Int)
-    setObjective(modQ, :Max, -10*x[1]*x[1] - 3*x[1]*x[2] - 5*x[2]*x[2] - 9*x[3]*x[3])
+    @setObjective(modQ, :Max, -10*x[1]*x[1] - 3*x[1]*x[2] - 5*x[2]*x[2] - 9*x[3]*x[3])
     @addConstraint(modQ, x[2] <= 1.7*x[3])
     @addConstraint(modQ, x[2] >= 0.5*x[1])
     @fact solve(modQ) => :Optimal
     @fact modQ.objVal => roughly(-247.0, 1e-5)
     @fact getValue(x)[:] => roughly([2.0, 3.0, 4.0], 1e-6)
 
+    # vectorized version
+    modV = Model(solver=solver)
+    @defVar(modV, 1.1*i <= x[i=1:3] <= 2.5*i, Int)
+    Q = [10 3 0; 0 5 0; 0 0 9]
+    obj = x'Q*x
+    @setObjective(modV, Min, obj[1])
+    A = [   0 -1 1.7
+         -0.5  1   0]
+    @addConstraint(modV, A*x .>= zeros(2))
+    @fact solve(modV) => :Optimal
+    @fact modV.objVal => roughly( 247.0, 1e-5)
+    @fact getValue(x)[:] => roughly([2.0, 3.0, 4.0], 1e-6)
 end; end; end
 
 facts("[qcqpmodel] Test quad objective (continuous)") do
@@ -45,12 +68,22 @@ context("With solver $(typeof(solver))") do
     modQ = Model(solver=solver)
     @defVar(modQ, 0.5 <= x <= 2 )
     @defVar(modQ, 0 <= y <= 30 )
-    setObjective(modQ, :Min, (x+y)*(x+y) )
+    @setObjective(modQ, :Min, (x+y)*(x+y) )
     @addConstraint(modQ, x + y >= 1 )
     @fact solve(modQ) => :Optimal
     @fact modQ.objVal => roughly(1.0, 1e-6)
     @fact (getValue(x) + getValue(y)) => roughly(1.0, 1e-6)
 
+    # Vectorized version
+    modV = Model(solver=solver)
+    @defVar(modV, 0.5 <= x <= 2 )
+    @defVar(modV, 0 <= y <= 30 )
+    obj = [x y]*ones(2,2)*[x,y]
+    @setObjective(modV, Min, obj[1])
+    @addConstraint(modV, ones(1,2)*[x,y] .>= 1)
+    @fact solve(modV) => :Optimal
+    @fact modV.objVal => roughly(1.0, 1e-6)
+    @fact (getValue(x) + getValue(y)) => roughly(1.0, 1e-6)
 end; end; end
 
 
@@ -72,6 +105,22 @@ context("With solver $(typeof(solver))") do
     @fact modQ.objVal => roughly(-1-4/sqrt(3), 1e-6)
     @fact (getValue(x) + getValue(y)) => roughly(-1/3, 1e-3)
 
+    # Vectorized version
+    modV = Model(solver=solver)
+    @defVar(modV, -2 <= x <= 2 )
+    @defVar(modV, -2 <= y <= 2 )
+    obj = [1 -1]*[x,y]
+    @setObjective(modV, Min, obj[1])
+    A = [1 0.5; 0.5 1]
+    @addConstraint(modV, [x y]*A*[x,y] + [x] .<= [1])
+    @fact MathProgBase.numquadconstr(modV) => 1
+    @fact MathProgBase.numlinconstr(modV) => 0
+    @fact MathProgBase.numconstr(modV) => 1
+
+    @fact solve(modV) => :Optimal
+    @fact modV.objVal => roughly(-1-4/sqrt(3), 1e-6)
+    @fact (getValue(x) + getValue(y)) => roughly(-1/3, 1e-3)
+
 end; end; end
 
 facts("[qcqpmodel] Test SOC constraints (continuous)") do
@@ -88,6 +137,22 @@ context("With solver $(typeof(solver))") do
 
     @fact solve(modQ) => :Optimal
     @fact modQ.objVal => roughly(sqrt(1/2), 1e-6)
+    @fact norm([getValue(x), getValue(y), getValue(t)] - [0.5,0.5,sqrt(1/2)]) => roughly(0.0,1e-3)
+
+    # Vectorized version
+    modV = Model(solver=solver)
+    @defVar(modV, x)
+    @defVar(modV, y)
+    @defVar(modV, t >= 0)
+    @setObjective(modV, Min, t)
+    @addConstraint(modV, [1 1 0]*[x,y,t] .>= 1)
+    Q = [1 0  0
+         0 1  0
+         0 0 -1]
+    @addConstraint(modV, [x y t]*Q*[x,y,t] .<= 0)
+
+    @fact solve(modV) => :Optimal
+    @fact modV.objVal => roughly(sqrt(1/2), 1e-6)
     @fact norm([getValue(x), getValue(y), getValue(t)] - [0.5,0.5,sqrt(1/2)]) => roughly(0.0,1e-3)
 
 end; end; end

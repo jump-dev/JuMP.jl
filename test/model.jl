@@ -363,6 +363,22 @@ facts("[model] Test column-wise modeling") do
     @fact solve(mod) => :Optimal
     @fact getValue(z1) => roughly(1.0, 1e-6)
     @fact getValue(z2) => roughly(1.0, 1e-6)
+
+    # do a vectorized version as well
+    mod = Model()
+    @defVar(mod, 0 <= x <= 1)
+    @defVar(mod, 0 <= y <= 1)
+    obj = [5,1]'*[x,y]
+    @setObjective(mod, Max, obj[1])
+    A = [1 1
+         2 1]
+    @addConstraint(mod, A*[x,y] .<= [6,7])
+    @defVar(mod, 0 <= z1 <= 0, 0.0, con, [1.0,-2.0]) # coverage for deprecated syntax
+    @defVar(mod, 0 <= z1 <= 1, objective=10.0, inconstraints=con, coefficients=[1.0,-2.0])
+    @defVar(mod, 0 <= z2 <= 1, objective=10.0, inconstraints=Any[con[i] for i in 1:2], coefficients=[1.0,-2.0])
+    @fact solve(mod) => :Optimal
+    @fact getValue(z1) => roughly(1.0, 1e-6)
+    @fact getValue(z2) => roughly(1.0, 1e-6)
 end
 
 facts("[model] Test all MPS paths") do
@@ -481,6 +497,60 @@ context("With solver $(typeof(solver))") do
     @fact getValue(x)[:] => roughly([0.0,1.0,2.0], 1e-6)
     @fact getObjectiveValue(m) => roughly(3.0, 1e-6)
 end; end; end
+
+facts("[model] Test vectorized model creation") do
+
+    A = sprand(50,10,0.15)
+    B = sprand(50, 7,0.2)
+    modV = Model()
+    @defVar(modV, x[1:10])
+    @defVar(modV, y[1:7])
+    @addConstraint(modV, A*x + B*y .<= 1)
+    obj = (x'*2A')*(2A*x) + (B*2y)'*(B*(2y))
+    @setObjective(modV, Max, obj[1])
+
+    modS = Model()
+    @defVar(modS, x[1:10])
+    @defVar(modS, y[1:7])
+    for i in 1:50
+        @addConstraint(modS, sum{A[i,j]*x[j], j=1:10} + sum{B[i,k]*y[k], k=1:7} <= 1)
+    end
+    AA, BB = 4A'*A, 4B'*A
+    @setObjective(modS, Max, sum{AA[i,j]*x[i]*x[j], i=1:10,j=1:10} + sum{BB[i,j]*y[i]*y[j], i=1:7, j=1:7})
+
+    @fact JuMP.prepConstrMatrix(modV) => JuMP.prepConstrMatrix(modS)
+    @fact JuMP.prepProblemBounds(modV) => JuMP.prepProblemBounds(modS)
+end
+
+facts("[model] Test MIQP vectorization") do
+    n = 1000
+    p = 4
+    function bestsubset(solver,X,y,K,M,integer)
+        mod = Model(solver=solver)
+        @defVar(mod, β[1:p])
+        if integer
+            @defVar(mod, z[1:p], Bin)
+        else
+            @defVar(mod, 0 <= z[1:p] <= 1)
+        end
+        obj = (y-X*β)'*(y-X*β)
+        @setObjective(mod, Min, obj[1])
+        @addConstraint(mod, eye(p)*β .<=  M*eye(p)*z)
+        @addConstraint(mod, eye(p)*β .>= -M*eye(p)*z)
+        @addConstraint(mod, sum(z) == K)
+        solve(mod)
+        return getValue(β)[:]
+    end
+    include(joinpath("data","miqp_vector.jl")) # loads X and q
+    y = X * [100, 50, 10, 1] + 20*q
+    for solver in quad_solvers
+        @fact bestsubset(solver,X,y,2,500,false) => roughly([101.789,49.414,8.63904,1.72663], 1e-6)
+    end
+    for solver in quad_mip_solvers
+        y = X * [100, 50, 10, 1] + 20*q
+        @fact bestsubset(solver,X,y,2,500,true) => roughly([106.25,53.7799,0.0,0.0], 1e-6)
+    end
+end
 
 facts("[model] Test setSolver") do
     m = Model()
