@@ -24,6 +24,7 @@ kni = isdir(Pkg.dir("KNITRO"))
 eco = isdir(Pkg.dir("ECOS"))
 osl = isdir(Pkg.dir("CoinOptServices"))
 scs = isdir(Pkg.dir("SCS"))
+nlw = isdir(Pkg.dir("AmplNLWriter"))
 # Load them
 if grb; import Gurobi; end
 if cpx; import CPLEX; end
@@ -36,6 +37,7 @@ if kni; import KNITRO; end
 if eco; import ECOS; end
 if osl; import CoinOptServices; end
 if scs; import SCS; end
+if nlw; import AmplNLWriter; end
 # Create solver lists
 # LP solvers
 lp_solvers = Any[]
@@ -104,6 +106,7 @@ ipt && push!(nlp_solvers, Ipopt.IpoptSolver(print_level=0))
 nlo && push!(nlp_solvers, NLopt.NLoptSolver(algorithm=:LD_SLSQP))
 kni && push!(nlp_solvers, KNITRO.KnitroSolver(objrange=1e16,outlev=0))
 osl && push!(nlp_solvers, CoinOptServices.OsilSolver(CoinOptServices.OSOption("sb","yes",solver="ipopt")))
+nlw && osl && push!(nlp_solvers, AmplNLWriter.AmplNLSolver(CoinOptServices.bonmin,["bonmin.nlp_log_level"=>0,"bonmin.bb_log_level"=>0]))
 convex_nlp_solvers = copy(nlp_solvers)
 mos && push!(convex_nlp_solvers, Mosek.MosekSolver())
 # Mixed-Integer Nonlinear solvers
@@ -111,6 +114,8 @@ minlp_solvers = Any[]
 kni && push!(minlp_solvers, KNITRO.KnitroSolver(outlev=0))
 osl && push!(minlp_solvers, CoinOptServices.OsilBonminSolver(CoinOptServices.OSOption("sb","yes",category="ipopt")))
 osl && push!(minlp_solvers, CoinOptServices.OsilCouenneSolver())
+nlw && osl && push!(minlp_solvers, AmplNLWriter.AmplNLSolver(CoinOptServices.bonmin,["bonmin.nlp_log_level"=>0,"bonmin.bb_log_level"=>0]))
+nlw && osl && push!(minlp_solvers, AmplNLWriter.AmplNLSolver(CoinOptServices.couenne))
 
 const error_map = Dict()
 grb && (error_map[Gurobi.GurobiSolver] = Gurobi.GurobiError)
