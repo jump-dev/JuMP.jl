@@ -7,6 +7,7 @@ Unversioned
   * Support for conditions in indexing ``@defVar`` and ``@addConstraint`` constructs, e.g. ``@defVar(m, x[i=1:5,j=1:5; i+j >= 3])``
   * Support for vectorized operations on Variables, expressions, and JuMPArrays with indexing over unit-step ranges starting at one. See
     the documentation for details.
+  * New ``getVar()`` method to access variables in a model by name
 
 Version 0.9.1 (April 25, 2015)
 ------------------------------

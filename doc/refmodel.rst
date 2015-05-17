@@ -46,6 +46,7 @@ Methods
 * ``solve(m::Model;  suppress_warnings=false)`` - solves the model using the selected solver (or a default for the problem class), and takes two optional arguments that are disabled by default. Setting ``suppress_warnings`` to ``true`` will suppress all JuMP-specific output (e.g. warnings about infeasibility and lack of dual information) but will not suppress solver output (which should be done by passing options to the solver).
 * ``buildInternalModel(m::Model)`` - builds the model in memory at the MathProgBase level without optimizing.
 * ``setSolver(m::Model,s::AbstractMathProgSolver)`` - changes the solver which will be used for the next call to ``solve()``, discarding the current internal model if present.
+* ``getVar(m::Model,name::Symbol)`` - returns the variable or group of variables of the given name which were added to the model with ``@defVar``. Throws an error if multiple variables were created with the same name.
 
 **Objective**
 

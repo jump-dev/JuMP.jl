@@ -27,6 +27,15 @@ facts("[variable] constructors") do
     @defVar(mcon, x[i=-10:10,s] <= 5.5, Int, start=i+1)
     @fact getUpper(x[-4,"Green"]) => 5.5
     @fact getValue(x[-3,"Blue"]) => -2
+    @fact isequal(getVar(mcon, :lbonly),lbonly) => true
+    @fact isequal(getVar(mcon, :ubonly),ubonly) => true
+    @fact isequal(getVar(mcon, :onerangeub)[-7],onerangeub[-7]) => true
+    @defVar(mcon, lbonly)
+    @fact_throws ErrorException getVar(mcon, :lbonly)
+    @fact_throws ErrorException getVar(mcon, :foo)
+    d = Dict()
+    @defVar(mcon, d["bar"][1:10] == 1)
+    @fact getValue(d["bar"][1]) => 1
 end
 
 facts("[variable] get and set bounds") do
