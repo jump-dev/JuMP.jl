@@ -162,6 +162,34 @@ facts("[macros] Unicode comparisons") do
     @fact m.quadconstr[1].sense => :(<=)
 end
 
+facts("[macros] @defVars and @addConstraints") do
+    m = Model()
+    @defVars m begin
+        0 ≤ x ≤ 1
+        y ≥ 2, Int
+        z ≤ 3, start->10
+        q, Bin, start->0.5
+    end
+    @addConstraints m begin
+        0 ≤ x + y ≤ 1
+        x + z ≤ 2
+        y + z ≥ 3
+        y*z ≤ 1
+    end
+    @fact m.colUpper => [1.0, Inf,  3.0, 1.0]
+    @fact m.colLower => [0.0, 2.0, -Inf, 0.0]
+    @fact m.colCat => [:Cont, :Int, :Cont, :Bin]
+    @fact getValue(z) => 10
+    @fact getValue(q) => 0.5
+    @fact m.linconstr[1].lb => 0.0
+    @fact m.linconstr[1].ub => 1.0
+    @fact m.linconstr[2].lb => -Inf
+    @fact m.linconstr[2].ub => 2.0
+    @fact m.linconstr[3].lb => 3.0
+    @fact m.linconstr[3].ub => Inf
+    @fact m.quadconstr[1].sense => :(<=)
+end
+
 facts("[macros] Three argument @addConstraint") do
     m = Model()
     @defVar(m, x[1:5])

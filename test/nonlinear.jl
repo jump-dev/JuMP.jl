@@ -49,12 +49,16 @@ context("With solver $(typeof(nlp_solver))") do
         #     ...
         m = Model(solver=nlp_solver)
         start = [1.0, 5.0, 5.0, 1.0]
-        @defVar(m, 1 <= x[i=1:4] <= 5, start = start[i])
-        @defVar(m, t, start = 100)
+        @defVars m begin
+            1 <= x[i=1:4] <= 5, start -> start[i]
+            t, start -> 100
+        end
         @setObjective(m, Min, t)
-        @addNLConstraint(m, t >= x[1]*x[4]*(x[1]+x[2]+x[3]) + x[3])
-        @addNLConstraint(m, x[1]*x[2]*x[3]*x[4] >= 25)
-        @addNLConstraint(m, sum{x[i]^2,i=1:4} == 40)
+        @addNLConstraints m begin
+            t >= x[1]*x[4]*(x[1]+x[2]+x[3]) + x[3]
+            x[1]*x[2]*x[3]*x[4] >= 25
+            sum{x[i]^2,i=1:4} == 40
+        end
         status = solve(m)
 
         @fact status => :Optimal
