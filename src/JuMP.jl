@@ -32,6 +32,7 @@ export
     # Variable
     setName, getName, setLower, setUpper, getLower, getUpper,
     getValue, setValue, getDual, setCategory, getCategory,
+    getVar,
     # Expressions and constraints
     affToStr, quadToStr, conToStr, chgConstrRHS,
 
@@ -95,6 +96,8 @@ type Model
 
     nlpdata#::NLPData
 
+    varDict::Dict{Symbol,Any} # dictionary from variable names to variable objects
+
     # Extension dictionary - e.g. for robust
     # Extensions should define a type to hold information particular to
     # their functionality, and store an instance of the type in this
@@ -115,7 +118,7 @@ function Model(;solver=UnsetSolver())
           0,String[],String[],Float64[],Float64[],Symbol[],
           0,Float64[],Float64[],Float64[],nothing,solver,
           false,Any[],nothing,nothing,JuMPContainer[],
-          IndexedVector(Float64,0),nothing,Dict{Symbol,Any}())
+          IndexedVector(Float64,0),nothing,Dict{Symbol,Any}(),Dict{Symbol,Any}())
 end
 
 # Getters/setters
@@ -729,6 +732,28 @@ function Variable(m::Model,lower::Number,upper::Number,cat::Symbol,objcoef::Numb
 
     return v
 end
+
+# handle dictionary of variables
+function registervar(m::Model, varname::Symbol, value)
+    if haskey(m.varDict, varname)
+        m.varDict[varname] = nothing # indicate duplicate variable
+    else
+        m.varDict[varname] = value
+    end
+    return value
+end
+registervar(m::Model, varname, value) = value # variable name isn't a simple symbol, ignore
+
+function getVar(m::Model, varname::Symbol)
+    if !haskey(m.varDict, varname)
+        error("No variable with name $varname")
+    elseif m.varDict[varname] === nothing
+        error("Multiple variables with name $varname")
+    else
+        return m.varDict[varname]
+    end
+end
+
 
 ##########################################################################
 # Operator overloads

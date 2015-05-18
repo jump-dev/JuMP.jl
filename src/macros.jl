@@ -699,6 +699,7 @@ macro defVar(args...)
         # Easy case - a single variable
         return assert_validmodel(m, quote
             $(esc(var)) = Variable($m,$lb,$ub,$(quot(t)),$(string(var)),$value)
+            registervar($m, $(quot(var)), $(esc(var)))
         end)
     end
     isa(var,Expr) || error("in @defVar: expected $var to be a variable name")
@@ -712,7 +713,7 @@ macro defVar(args...)
     return assert_validmodel(m, quote
         $looped
         push!($(m).dictList, $varname)
-        $varname
+        registervar($m, $(quot(getname(var))), $varname)
     end)
 end
 
