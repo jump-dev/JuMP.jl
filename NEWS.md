@@ -8,6 +8,7 @@ Unversioned
   * Support for vectorized operations on Variables, expressions, and JuMPArrays with indexing over unit-step ranges starting at one. See
     the documentation for details.
   * New ``getVar()`` method to access variables in a model by name
+  * Support for semidefinite programming.
 
 Version 0.9.2 (June 27, 2015)
 -----------------------------

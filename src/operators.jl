@@ -172,6 +172,9 @@ end
 (-)(q1::QuadExpr, q2::QuadExpr) = QuadExpr( vcat(q1.qvars1, q2.qvars1),     vcat(q1.qvars2, q2.qvars2),
                                             vcat(q1.qcoeffs, -q2.qcoeffs),  q1.aff - q2.aff)
 
+# (==)(lhs::AffExpr,rhs::AffExpr) = (lhs.vars == rhs.vars) && (lhs.coeffs == rhs.coeffs) && (lhs.constant == rhs.constant)
+# (==)(lhs::QuadExpr,rhs::QuadExpr) = (lhs.qvars1 == rhs.qvars1) && (lhs.qvars2 == rhs.qvars2) && (lhs.qcoeffs == rhs.qcoeffs) && (lhs.aff == rhs.aff)
+
 _deprecate_comparisons(sgn) =
     Base.warn_once("The comparison operator $sgn has been deprecated for constructing constraints. Use the macro form @addConstraint instead.")
 
@@ -283,6 +286,8 @@ end
 # A bunch of operator junk to make matrix multiplication and friends act
 # reasonably sane with JuMP types
 
+typealias JuMPTypes Union(Variable,AffExpr,QuadExpr)
+
 Base.promote_rule{R<:Real}(::Type{Variable},::Type{R}       ) = AffExpr
 Base.promote_rule         (::Type{Variable},::Type{AffExpr} ) = AffExpr
 Base.promote_rule         (::Type{Variable},::Type{QuadExpr}) = QuadExpr
@@ -295,6 +300,64 @@ Base.transpose(x::OneIndexedArray)  = transpose(x.innerArray)
 Base.transpose(x::JuMPArray)  = _throw_transpose_error()
 Base.ctranspose(x::OneIndexedArray) = ctranspose(x.innerArray)
 Base.ctranspose(x::JuMPArray)  = _throw_transpose_error()
+
+# Can remove the following code once == overloading is removed
+_isequal{T,S}(x::T,y::S) = error("Internal error: called _isequal(::$T,::$S)")
+_isequal(x::Variable,y::Variable) = (x.m == y.m) & (x.col == y.col)
+function _isequal{T<:GenericAffExpr}(x::T,y::T)
+    x.constant == y.constant || return false
+    n = length(x.vars)
+    if !(n == length(y.vars) &&
+         n == length(x.coeffs) &&
+         n == length(y.coeffs))
+        return false
+    end
+    for i in 1:n
+        if !_isequal(x.vars[i], y.vars[i])
+            return false
+        end
+        if x.coeffs[i] != y.coeffs[i]
+            return false
+        end
+    end
+    true
+end
+function _isequal{T<:GenericQuadExpr}(x::T,y::T)
+    if !_isequal(x.aff, y.aff)
+        return false
+    end
+    n = length(x.qvars1)
+    if !(n == length(y.qvars1) &&
+         n == length(x.qvars2) &&
+         n == length(y.qvars2) &&
+         n == length(x.qcoeffs) &&
+         n == length(y.qcoeffs))
+        return false
+    end
+    for i in 1:n
+        if !_isequal(x.qvars1[i], y.qvars1[i])
+            return false
+        end
+        if !_isequal(x.qvars2[i], y.qvars2[i])
+            return false
+        end
+        if x.qcoeffs[i] != y.qcoeffs[i]
+            return false
+        end
+    end
+    true
+end
+
+function Base.issym{T<:JuMPTypes}(x::Matrix{T})
+    (n = size(x,1)) == size(x,2) || return false
+    for i in 1:n, j in (i+1):n
+        _isequal(x[i,j], x[j,i]) || return false
+    end
+    true
+end
+
+# Special-case because the the base version wants to do fill!(::Array{Variable}, zero(AffExpr))
+Base.diagm(x::Vector{Variable}) = diagm(convert(Vector{AffExpr}, x))
 
 ###############
 # The _multiply!(buf,y,z) adds the results of y*z into the buffer buf. No bounds/size
@@ -368,8 +431,6 @@ function _multiply!{T<:Union(GenericAffExpr,GenericQuadExpr)}(ret::Array{T}, lhs
     ret
 end
 
-typealias JuMPTypes Union(Variable,AffExpr,QuadExpr)
-
 (*)(lhs::AbstractArray, rhs::OneIndexedArray) = (*)(lhs, rhs.innerArray)
 (*)(lhs::OneIndexedArray, rhs::AbstractArray) = (*)(lhs.innerArray, rhs)
 (*)(lhs::OneIndexedArray, rhs::OneIndexedArray) = (*)(lhs.innerArray, rhs.innerArray)
@@ -416,44 +477,35 @@ function (*){T<:JuMPTypes}(A::Union(Array,SparseMatrixCSC), x::Array{T})
     return ret
 end
 
-for op in [:+, :-, :*]
-    @eval begin
-        $op{T<:JuMPTypes}(lhs::Real,rhs::Array{T}) = map(c->$op(lhs,c), rhs)
-        $op{T<:JuMPTypes}(lhs::Array{T},rhs::Real) = map(c->$op(c,rhs), lhs)
-        $op(lhs::Real,rhs::OneIndexedArray) = $op(lhs, rhs.innerArray)
-        $op(lhs::OneIndexedArray,rhs::Real) = $op(lhs.innerArray, rhs)
+for op in [:+, :-, :*]; @eval begin
+    $op{T<:JuMPTypes}(lhs::Number,rhs::AbstractArray{T}) = map(c->$op(lhs,c), full(rhs))
+    $op{T<:JuMPTypes}(lhs::AbstractArray{T},rhs::Number) = map(c->$op(c,rhs), full(lhs))
+    $op{T<:JuMPTypes}(lhs::T,rhs::AbstractArray) = map(c->$op(lhs,c), full(rhs))
+    $op{T<:JuMPTypes}(lhs::AbstractArray,rhs::T) = map(c->$op(c,rhs), full(lhs))
+    $op(lhs::Real,rhs::OneIndexedArray) = $op(lhs, rhs.innerArray)
+    $op(lhs::OneIndexedArray,rhs::Real) = $op(lhs.innerArray, rhs)
 
-        $op(lhs::OneIndexedArray, rhs::Array) = $op(lhs.innerArray, rhs)
-        $op(lhs::Array, rhs::OneIndexedArray) = $op(lhs, rhs.innerArray)
+    $op(lhs::OneIndexedArray, rhs::AbstractArray) = $op(lhs.innerArray, rhs)
+    $op(lhs::AbstractArray, rhs::OneIndexedArray) = $op(lhs, rhs.innerArray)
 
-        $op{T<:JuMPTypes}(lhs::Array{T},rhs::OneIndexedArray) = $op(lhs,rhs.innerArray)
-        $op{T<:JuMPTypes}(lhs::OneIndexedArray,rhs::Array{T}) = $op(lhs.innerArray,rhs)
-        $op(lhs::OneIndexedArray,rhs::OneIndexedArray) = $op(lhs.innerArray,rhs.innerArray)
-    end
-end
+    $op{T<:JuMPTypes}(lhs::AbstractArray{T},rhs::OneIndexedArray) = $op(lhs,rhs.innerArray)
+    $op{T<:JuMPTypes}(lhs::OneIndexedArray,rhs::AbstractArray{T}) = $op(lhs.innerArray,rhs)
+    $op(lhs::OneIndexedArray,rhs::OneIndexedArray) = $op(lhs.innerArray,rhs.innerArray)
+end; end
 
+# Special-case sparse matrix scalar multiplicaiton
+(*){T<:JuMPTypes}(lhs::T, rhs::SparseMatrixCSC) =
+    SparseMatrixCSC(rhs.m, rhs.n, copy(rhs.colptr), copy(rhs.rowval), lhs .* rhs.nzval)
+(*){T<:JuMPTypes}(lhs::Number, rhs::SparseMatrixCSC{T}) = scale(rhs, lhs)
+(*){T<:JuMPTypes}(lhs::JuMPTypes, rhs::SparseMatrixCSC{T}) =
+    SparseMatrixCSC(rhs.m, rhs.n, copy(rhs.colptr), copy(rhs.rowval), lhs .* rhs.nzval)
+(*){T<:JuMPTypes}(lhs::SparseMatrixCSC, rhs::T) =
+    SparseMatrixCSC(lhs.m, lhs.n, copy(lhs.colptr), copy(lhs.rowval), lhs.nzval .* rhs)
+(*){T<:JuMPTypes}(lhs::SparseMatrixCSC{T}, rhs::Number) = scale(lhs, rhs)
+(*){T<:JuMPTypes}(lhs::SparseMatrixCSC{T}, rhs::JuMPTypes) =
+    SparseMatrixCSC(lhs.m, lhs.n, copy(lhs.colptr), copy(lhs.rowval), lhs.nzval .* rhs)
 # The following are primarily there for internal use in the macro code for @addConstraint
 for op in [:(+), :(-)]; @eval begin
-    function $op(lhs::GenericAffExpr, rhs::Array)
-        (isempty(lhs.vars) && isempty(lhs.coeffs)) || error("Cannot perform $(typeof(lhs)) + $(typeof(rhs))")
-        $op(lhs.constant, rhs)
-    end
-    function $op(lhs::Array, rhs::GenericAffExpr)
-        (isempty(rhs.vars) && isempty(rhs.coeffs)) || error("Cannot perform $(typeof(lhs)) + $(typeof(rhs))")
-        $op(lhs, rhs.constant)
-    end
-    function $op(lhs::GenericQuadExpr, rhs::Array)
-        (isempty(lhs.qvars1) && isempty(lhs.qvars2) && isempty(lhs.qcoeffs) &&
-            isempty(lhs.aff.vars) && isempty(lhs.aff.coeffs)) ||
-            error("Cannot perform $typeof(lhs)) + $(typeof(rhs))")
-        $op(lhs.aff.constant, rhs)
-    end
-    function $op(lhs::Array, rhs::GenericQuadExpr)
-        (isempty(rhs.qvars1) && isempty(rhs.qvars2) && isempty(rhs.qcoeffs) &&
-            isempty(rhs.aff.vars) && isempty(rhs.aff.coeffs)) ||
-            error("Cannot perform $typeof(lhs)) + $(typeof(rhs))")
-        $op(lhs, rhs.aff.constant)
-    end
     function $op(lhs::Array{Variable},rhs::Array{Variable})
         (sz = size(lhs)) == size(rhs) || error("Incompatible sizes for $op: $sz $op $(size(rhs))")
         ret = Array(AffExpr, sz)
@@ -473,8 +525,8 @@ for (dotop,op) in [(:.+,:+), (:.-,:-), (:.*,:*), (:./,:/)]
         $dotop{T<:JuMPTypes}(lhs::Array{T},rhs::Real) = map(c->$op(c,rhs), lhs)
         $dotop(lhs::Real,rhs::OneIndexedArray) = $dotop(lhs, rhs.innerArray)
         $dotop(lhs::OneIndexedArray,rhs::Real) = $dotop(lhs.innerArray, rhs)
-        $dotop{T<:JuMPTypes,S<:JuMPTypes}(lhs::T,rhs::Array{S}) = map(c->$op(lhs,c), rhs)
-        $dotop{T<:JuMPTypes,S<:JuMPTypes}(lhs::Array{T},rhs::S) = map(c->$op(c,rhs), lhs)
+        $dotop{T<:JuMPTypes}(lhs::T,rhs::Array) = map(c->$op(lhs,c), rhs)
+        $dotop{T<:JuMPTypes}(lhs::Array,rhs::T) = map(c->$op(c,rhs), lhs)
 
         $dotop{T<:JuMPTypes,N}(lhs::Array{T,N},rhs::OneIndexedArray) = $dotop(lhs,rhs.innerArray)
         $dotop{T<:JuMPTypes,N}(lhs::OneIndexedArray,rhs::Array{T,N}) = $dotop(lhs.innerArray,rhs)
