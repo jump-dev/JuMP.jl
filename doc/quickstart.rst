@@ -93,15 +93,6 @@ macros, e.g.::
     The ``sense`` passed to ``setObjective`` must be a `symbol <http://docs.julialang.org/en/latest/manual/metaprogramming/#symbols>`_ type: ``:Min`` or ``:Max``.
     The ``@setObjective`` macro accepts ``:Min`` and ``:Max``, as well as ``Min`` and ``Max`` (without the colon) directly.
 
-There is one key restriction on the form of the expression in the second case:
-*if there is a product between coefficients and variables, the variables must appear last*.
-That is, Coefficient times Variable is good, but Variable times Coefficient is bad::
-
-   @addConstraint(m, x[i]*5 >= 2)  # Causes an error
-   @addConstraint(m, 5*x[i] >= 2)  # No problems
-
-However, division by constants is supported.
-
 You may have noticed a special ``sum{}`` operator above. This is defined only for
 the second kind of function. The syntax is of the form::
 
