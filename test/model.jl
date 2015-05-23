@@ -19,7 +19,7 @@ const leq = JuMP.repl_leq
 const geq = JuMP.repl_geq
 const  eq = JuMP.repl_eq
 
-modPath = joinpath(Pkg.dir("JuMP"),"test","mod")
+modPath = joinpath(dirname(@__FILE__), "mod")
 
 facts("[model] Check error cases") do
     @fact_throws Model(solver=:Foo)

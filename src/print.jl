@@ -258,7 +258,7 @@ function fill_var_names(mode, colNames, v::JuMPArray{Variable})
     for (ind,var) in enumerate(v.innerArray)
         idx_strs = [string( idxsets[1][mod1(ind,lengths[1])] )]
         for i = 2:N
-            push!(idx_strs, string(idxsets[i][int(ceil(mod1(ind,cprod[i]) / cprod[i-1]))]))
+            push!(idx_strs, string(idxsets[i][@compat Int(ceil(mod1(ind,cprod[i]) / cprod[i-1]))]))
         end
         if mode == IJuliaMode
             colNames[var.col] = string(name, "_{", join(idx_strs,",") , "}")
