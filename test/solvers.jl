@@ -106,7 +106,7 @@ ipt && push!(nlp_solvers, Ipopt.IpoptSolver(print_level=0))
 nlo && push!(nlp_solvers, NLopt.NLoptSolver(algorithm=:LD_SLSQP))
 kni && push!(nlp_solvers, KNITRO.KnitroSolver(objrange=1e16,outlev=0))
 osl && push!(nlp_solvers, CoinOptServices.OsilSolver(CoinOptServices.OSOption("sb","yes",solver="ipopt")))
-nlw && osl && push!(nlp_solvers, AmplNLWriter.AmplNLSolver(CoinOptServices.bonmin,["bonmin.nlp_log_level"=>0,"bonmin.bb_log_level"=>0]))
+nlw && osl && push!(nlp_solvers, AmplNLWriter.AmplNLSolver(CoinOptServices.bonmin,@compat Dict("bonmin.nlp_log_level"=>0,"bonmin.bb_log_level"=>0)))
 convex_nlp_solvers = copy(nlp_solvers)
 mos && push!(convex_nlp_solvers, Mosek.MosekSolver())
 # Mixed-Integer Nonlinear solvers
@@ -114,7 +114,7 @@ minlp_solvers = Any[]
 kni && push!(minlp_solvers, KNITRO.KnitroSolver(outlev=0))
 osl && push!(minlp_solvers, CoinOptServices.OsilBonminSolver(CoinOptServices.OSOption("sb","yes",category="ipopt")))
 osl && push!(minlp_solvers, CoinOptServices.OsilCouenneSolver())
-nlw && osl && push!(minlp_solvers, AmplNLWriter.AmplNLSolver(CoinOptServices.bonmin,["bonmin.nlp_log_level"=>0,"bonmin.bb_log_level"=>0]))
+nlw && osl && push!(minlp_solvers, AmplNLWriter.AmplNLSolver(CoinOptServices.bonmin, @compat Dict("bonmin.nlp_log_level"=>0,"bonmin.bb_log_level"=>0)))
 nlw && osl && push!(minlp_solvers, AmplNLWriter.AmplNLSolver(CoinOptServices.couenne))
 
 const error_map = Dict()

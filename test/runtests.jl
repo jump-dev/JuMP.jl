@@ -11,6 +11,7 @@
 #############################################################################
 
 using JuMP
+using Compat
 using FactCheck
 #FactCheck.setstyle(:compact)
 
