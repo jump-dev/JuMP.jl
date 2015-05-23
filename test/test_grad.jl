@@ -33,14 +33,14 @@ fval = fg(xvals, out)
 @test_approx_eq out[1] 1/xvals[2]
 @test_approx_eq out[2] -xvals[1]/xvals[2]^2
 
-ex = @processNLExpr exp(sin(x[1]*x[2]/x[3])) 
+ex = @processNLExpr exp(sin(x[1]*x[2]/x[3]))
 fg = genfgrad_simple(ex)
 xvals = [3.4,2.1,6.7]
 fval = fg(xvals, out)
-q = xvals[1]*xvals[2]/xvals[3] 
-@test_approx_eq fval exp(sin(q)) 
-@test_approx_eq out[1] xvals[2]*cos(q)*exp(sin(q))/xvals[3] 
-@test_approx_eq out[2] xvals[1]*cos(q)*exp(sin(q))/xvals[3] 
+q = xvals[1]*xvals[2]/xvals[3]
+@test_approx_eq fval exp(sin(q))
+@test_approx_eq out[1] xvals[2]*cos(q)*exp(sin(q))/xvals[3]
+@test_approx_eq out[2] xvals[1]*cos(q)*exp(sin(q))/xvals[3]
 @test_approx_eq out[3] -xvals[1]*xvals[2]*cos(q)*exp(sin(q))/xvals[3]^2
 
 ex = @processNLExpr exp(sin(x[1]*x[2]+x[3]^2)) + 2x[1]*x[1]
@@ -104,7 +104,7 @@ ex = @processNLExpr sum{3x[i], i = 1:10; i > 3}
 fg = genfgrad_simple(ex)
 fval = fg(xvals, out)
 @test_approx_eq fval 3*sum(xvals[4:end])
-@test_approx_eq out [0.0,0.0,0.0,fill(3.0,7)]
+@test_approx_eq out [0.0;0.0;0.0;fill(3.0,7)]
 
 vars = placeholders(20)
 x = vars[1:10]
@@ -115,7 +115,7 @@ fg = genfgrad_simple(ex)
 vals = rand(20)
 fval = fg(vals, out)
 @test_approx_eq fval sum([vals[i]*vals[i+10] for i in 1:10]) + sin(vals[1])
-deriv = [vals[11:20],vals[1:10]]
+deriv = [vals[11:20];vals[1:10]]
 deriv[1] += cos(vals[1])
 @test_approx_eq out deriv
 
