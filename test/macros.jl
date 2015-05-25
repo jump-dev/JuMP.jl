@@ -294,4 +294,8 @@ facts("[macros] @defExpr") do
     @fact affToStr(expr) => "x[1,1] + x[1,2] + x[1,3] + 2 x[2,1] + 2 x[2,2] + 2 x[2,3] + 3 x[3,1] + 3 x[3,2] + 3 x[3,3] + 18"
 
     @fact_throws @defExpr(blah[i=1:3], x[i,1]^2)
+
+    @defExpr(y[i=1:2], sum{x[i,1]; i == 1})
+    @fact affToStr(y[1]) => "x[1,1]"
+    @fact affToStr(y[2]) => "0"
 end

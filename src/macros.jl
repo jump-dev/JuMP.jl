@@ -449,7 +449,7 @@ macro defExpr(args...)
     if isa(c,Expr)
         code = quote
             $code
-            isa($newaff,AffExpr) || error("Three argument form of @defExpr only supports linear expressions")
+            (isa($newaff,AffExpr) || isa($newaff,Number) || isa($newaff,Variable)) || error("Collection of expressions with @defExpr must be linear. For quadratic expressions, use your own array.")
         end
     end
     code = quote
