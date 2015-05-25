@@ -62,7 +62,7 @@ function addToExpression{C,V}(aff::GenericAffExpr{C,V},c::V,x::V)
     GenericQuadExpr{C,V}([c],[x],[one(C)],aff)
 end
 
-function addToExpression(aff::GenericAffExpr,c::Number,x::GenericAffExpr)
+function addToExpression{C,V}(aff::GenericAffExpr{C,V},c::Number,x::GenericAffExpr{C,V})
     append!(aff.vars, x.vars)
     sizehint!(aff.coeffs, length(aff.coeffs)+length(x.coeffs))
     for i in 1:length(x.coeffs)
