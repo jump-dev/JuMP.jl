@@ -278,11 +278,15 @@ function setValue(v::Variable, val::Number)
     end
 end
 
+# internal method that doesn't print a warning if the value is NaN
+_getValue(v::Variable) = v.m.colVal[v.col]
+
 function getValue(v::Variable)
-    if isnan(v.m.colVal[v.col])
-        warn("Variable $(getName(v))'s value not defined. Check that the model was properly solved.")
+    ret = _getValue(v)
+    if isnan(ret)
+        Base.warn("Variable value not defined. Check that the model was properly solved.")
     end
-    return v.m.colVal[v.col]
+    ret
 end
 
 getValue(arr::Array{Variable}) = map(getValue, arr)
