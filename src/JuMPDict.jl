@@ -132,8 +132,20 @@ macro gendict(instancename,T,idxpairs,idxsets...)
 end
 
 # duck typing approach -- if eltype(innerArray) doesn't support accessor, will fail
-for accessor in (:getValue, :getDual, :getLower, :getUpper)
+for accessor in (:getDual, :getLower, :getUpper)
     @eval $accessor(x::JuMPContainer) = map($accessor,x)
+end
+
+# Special-case this so we don't dump a huge amount of redundant warnings to screen
+function getValue(x::JuMPContainer)
+    ret = map(_getValue, x)
+    if any(ret) do tmp
+            v = tmp[end]
+            isnan(v)
+        end
+        warn("Variable value not defined for entry of $(v.name). Check that the model was properly solved.")
+    end
+    ret
 end
 
 # delegate zero-argument functions
