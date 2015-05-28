@@ -80,6 +80,15 @@ the syntax for linear and quadratic expressions. We note some important points b
     @defNLExpr(myexpr[i=1:n], sin(x[i]))
     @addNLConstraint(m, myconstr[i=1:n], myexpr[i] <= 0.5)
 
+.. note::
+    There is currently no validity check on indices used for parametric nonlinear expressions. Therefore the following example will not raise an error::
+
+        @defNLExpr(myexpr[i=1:2], i * sin(x))
+        @addNLConstraint(m, myexpr[0] <= 0.5)
+
+    You will still receive an error in the case that invalid indices are used to access data or variables within nonlinear expressions.
+    We do not recommend depending on this behavior, since it may chance in a future JuMP release.
+
 Performance: Solution time
 ^^^^^^^^^^^^^^^^^^^^^^^^^^
 
