@@ -228,6 +228,8 @@ end
 #  - dot
 #############################################################################
 
+typealias JuMPTypes Union(Variable,AffExpr,QuadExpr)
+
 Base.sum(j::JuMPArray) = sum(j.innerArray)
 Base.sum(j::JuMPDict)  = sum(values(j.tupledict))
 Base.sum(j::JuMPArray{Variable}) = AffExpr(vec(j.innerArray), ones(length(j.innerArray)), 0.0)
@@ -241,26 +243,25 @@ function Base.sum{S,T}(affs::Array{GenericAffExpr{S,T}})
     return new_aff
 end
 
-function Base.dot{T,S,N}(lhs::Array{T,N}, rhs::JuMPArray{S,N})
-    size(lhs) == size(rhs.innerArray) || error("Incompatible dimensions")
-    dot(lhs,rhs.innerArray)
-end
-Base.dot{S,T,N}(lhs::JuMPArray{S,N},rhs::Array{T,N}) = dot(rhs,lhs)
+Base.dot{T,S,N}(lhs::OneIndexedArray{T,N},rhs::OneIndexedArray{S,N}) = _dot(lhs.innerArray, rhs.innerArray)
+Base.dot{T,S,N}(lhs::OneIndexedArray{T,N},rhs::Array{S,N}) = _dot(lhs.innerArray, rhs)
+Base.dot{T,S,N}(lhs::Array{T,N},rhs::OneIndexedArray{S,N}) = _dot(lhs, rhs.innerArray)
+Base.dot{T<:JuMPTypes,S,N}(lhs::Array{T,N},rhs::Array{S,N}) = _dot(lhs,rhs)
+Base.dot{T<:JuMPTypes,S<:JuMPTypes,N}(lhs::Array{T,N},rhs::Array{S,N}) = _dot(lhs,rhs)
+Base.dot{T,S<:JuMPTypes,N}(lhs::Array{T,N},rhs::Array{S,N}) = _dot(lhs,rhs)
 
-Base.dot{T<:Real,N}(lhs::Array{T,N}, rhs::JuMPArray{Float64,N}) = dot(vec(lhs), vec(rhs.innerArray))
-Base.dot{T<:Real,N}(lhs::JuMPArray{Float64,N}, rhs::Array{T,N}) = dot(vec(rhs), vec(lhs.innerArray))
-Base.dot{T<:Real,N}(lhs::Array{T,N}, rhs::Array{Variable,N})   = AffExpr(vec(rhs), vec(float(lhs)), 0.0)
-Base.dot{T<:Real,N}(rhs::Array{Variable,N}, lhs::Array{T,N})   = AffExpr(vec(rhs), vec(float(lhs)), 0.0)
-
-function Base.dot{N}(lhs::JuMPArray{Variable,N},rhs::JuMPArray{Variable,N})
-    size(lhs.innerArray) == size(rhs.innerArray) || error("Incompatible dimensions")
-    return QuadExpr(vec(lhs.innerArray), vec(rhs.innerArray), ones(length(lhs.innerArray)), AffExpr())
+function _dot{T,S}(lhs::Array{T}, rhs::Array{S})
+    size(lhs) == size(rhs) || error("Incompatible dimensions")
+    ret = zero(one(T)*one(S))
+    for (x,y) in zip(lhs,rhs)
+        ret += x*y
+    end
+    ret
 end
 
-function Base.dot{N}(lhs::JuMPArray{Float64,N},rhs::JuMPArray{Float64,N})
-    size(lhs.innerArray) == size(rhs.innerArray) || error("Incompatible dimensions")
-    return sum(lhs.innerArray .* rhs.innerArray)
-end
+###############################################################################
+# A bunch of operator junk to make matrix multiplication and friends act
+# reasonably sane with JuMP types
 
 Base.promote_rule{R<:Real}(::Type{Variable},::Type{R}       ) = AffExpr
 Base.promote_rule         (::Type{Variable},::Type{AffExpr} ) = AffExpr
@@ -427,6 +428,12 @@ for op in [:(+), :(-)]; @eval begin
             isempty(rhs.aff.vars) && isempty(rhs.aff.coeffs)) ||
             error("Cannot perform $typeof(lhs)) + $(typeof(rhs))")
         $op(lhs, rhs.aff.constant)
+    end
+    function $op(lhs::Array{Variable},rhs::Array{Variable})
+        (sz = size(lhs)) == size(rhs) || error("Incompatible sizes for $op: $sz $op $(size(rhs))")
+        ret = Array(AffExpr, sz)
+        map!($op, ret, lhs, rhs)
+        ret
     end
 end; end
 
