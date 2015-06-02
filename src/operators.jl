@@ -254,7 +254,7 @@ function _dot{T,S}(lhs::Array{T}, rhs::Array{S})
     size(lhs) == size(rhs) || error("Incompatible dimensions")
     ret = zero(one(T)*one(S))
     for (x,y) in zip(lhs,rhs)
-        ret += x*y
+        ret = addToExpression(ret, x, y)
     end
     ret
 end
