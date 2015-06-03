@@ -258,7 +258,7 @@ Base.vecdot{T<:JuMPTypes,S<:JuMPTypes,N}(lhs::Array{T,N},rhs::Array{S,N}) = _dot
 Base.vecdot{T,S<:JuMPTypes,N}(lhs::Array{T,N},rhs::Array{S,N}) = _dot(lhs,rhs)
 
 if VERSION < v"0.4-"
-    Base.vecdot{T,S,N}(x::Array{T,N},y::Array{S,N}) = _dot(x,y)
+    eval(Base, :(vecdot{T,S,N}(x::Array{T,N},y::Array{S,N}) = _dot(x,y)))
 end
 
 function _dot{T,S}(lhs::Array{T}, rhs::Array{S})

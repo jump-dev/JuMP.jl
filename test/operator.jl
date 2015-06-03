@@ -324,7 +324,7 @@ context("dot") do
         setValue(y[i,j], 1)
     end
     @fact dot(c, getValue(x)) => roughly( 6, 1e-6)
-    @fact dot(A, getValue(y)) => roughly(10, 1e-6)
+    @fact vecdot(A, getValue(y)) => roughly(10, 1e-6)
 end
 end
 
