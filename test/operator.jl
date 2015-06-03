@@ -307,15 +307,15 @@ context("dot") do
 
     A = [1 3 ; 2 4]
     @defVar(dot_m, 1 ≤ y[1:2,1:2] ≤ 1)
-    @fact affToStr(dot(A,y)) => "y[1,1] + 2 y[2,1] + 3 y[1,2] + 4 y[2,2]"
-    @fact affToStr(dot(y,A)) => "y[1,1] + 2 y[2,1] + 3 y[1,2] + 4 y[2,2]"
+    @fact affToStr(vecdot(A,y)) => "y[1,1] + 2 y[2,1] + 3 y[1,2] + 4 y[2,2]"
+    @fact affToStr(vecdot(y,A)) => "y[1,1] + 2 y[2,1] + 3 y[1,2] + 4 y[2,2]"
 
     B = ones(2,2,2)
     @defVar(dot_m, 0 ≤ z[1:2,1:2,1:2] ≤ 1)
-    @fact affToStr(dot(B,z)) => "z[1,1,1] + z[2,1,1] + z[1,2,1] + z[2,2,1] + z[1,1,2] + z[2,1,2] + z[1,2,2] + z[2,2,2]"
-    @fact affToStr(dot(z,B)) => "z[1,1,1] + z[2,1,1] + z[1,2,1] + z[2,2,1] + z[1,1,2] + z[2,1,2] + z[1,2,2] + z[2,2,2]"
+    @fact affToStr(vecdot(B,z)) => "z[1,1,1] + z[2,1,1] + z[1,2,1] + z[2,2,1] + z[1,1,2] + z[2,1,2] + z[1,2,2] + z[2,2,2]"
+    @fact affToStr(vecdot(z,B)) => "z[1,1,1] + z[2,1,1] + z[1,2,1] + z[2,2,1] + z[1,1,2] + z[2,1,2] + z[1,2,2] + z[2,2,2]"
 
-    @setObjective(dot_m, Max, dot(x, ones(3)) - dot(y, ones(2,2)) )
+    @setObjective(dot_m, Max, dot(x, ones(3)) - vecdot(y, ones(2,2)) )
     #solve(dot_m)
     for i in 1:3
         setValue(x[i], 1)
