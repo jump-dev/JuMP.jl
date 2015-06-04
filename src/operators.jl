@@ -243,6 +243,13 @@ function Base.sum{S,T}(affs::Array{GenericAffExpr{S,T}})
     return new_aff
 end
 
+if VERSION < v"0.4-"
+    export vecdot
+    vecdot{T,S,N}(x::Array{T,N},y::Array{S,N}) = _dot(x,y)
+else
+    import Base.vecdot
+end
+
 Base.dot{T,S}(lhs::OneIndexedArray{T,1},rhs::OneIndexedArray{S,1}) = _dot(lhs.innerArray, rhs.innerArray)
 Base.dot{T,S}(lhs::OneIndexedArray{T,1},rhs::Vector{S}) = _dot(lhs.innerArray, rhs)
 Base.dot{T,S}(lhs::Vector{T},rhs::OneIndexedArray{S,1}) = _dot(lhs, rhs.innerArray)
@@ -250,16 +257,13 @@ Base.dot{T<:JuMPTypes,S}(lhs::Vector{T},rhs::Vector{S}) = _dot(lhs,rhs)
 Base.dot{T<:JuMPTypes,S<:JuMPTypes}(lhs::Vector{T},rhs::Vector{S}) = _dot(lhs,rhs)
 Base.dot{T,S<:JuMPTypes}(lhs::Vector{T},rhs::Vector{S}) = _dot(lhs,rhs)
 
-Base.vecdot{T,S,N}(lhs::OneIndexedArray{T,N},rhs::OneIndexedArray{S,N}) = _dot(lhs.innerArray, rhs.innerArray)
-Base.vecdot{T,S,N}(lhs::OneIndexedArray{T,N},rhs::Array{S,N}) = _dot(lhs.innerArray, rhs)
-Base.vecdot{T,S,N}(lhs::Array{T,N},rhs::OneIndexedArray{S,N}) = _dot(lhs, rhs.innerArray)
-Base.vecdot{T<:JuMPTypes,S,N}(lhs::Array{T,N},rhs::Array{S,N}) = _dot(lhs,rhs)
-Base.vecdot{T<:JuMPTypes,S<:JuMPTypes,N}(lhs::Array{T,N},rhs::Array{S,N}) = _dot(lhs,rhs)
-Base.vecdot{T,S<:JuMPTypes,N}(lhs::Array{T,N},rhs::Array{S,N}) = _dot(lhs,rhs)
-
-if VERSION < v"0.4-"
-    eval(Base, :(vecdot{T,S,N}(x::Array{T,N},y::Array{S,N}) = _dot(x,y)))
-end
+# TODO: qualify Base.vecdot once v0.3 support is dropped
+vecdot{T,S,N}(lhs::OneIndexedArray{T,N},rhs::OneIndexedArray{S,N}) = _dot(lhs.innerArray, rhs.innerArray)
+vecdot{T,S,N}(lhs::OneIndexedArray{T,N},rhs::Array{S,N}) = _dot(lhs.innerArray, rhs)
+vecdot{T,S,N}(lhs::Array{T,N},rhs::OneIndexedArray{S,N}) = _dot(lhs, rhs.innerArray)
+vecdot{T<:JuMPTypes,S,N}(lhs::Array{T,N},rhs::Array{S,N}) = _dot(lhs,rhs)
+vecdot{T<:JuMPTypes,S<:JuMPTypes,N}(lhs::Array{T,N},rhs::Array{S,N}) = _dot(lhs,rhs)
+vecdot{T,S<:JuMPTypes,N}(lhs::Array{T,N},rhs::Array{S,N}) = _dot(lhs,rhs)
 
 function _dot{T,S}(lhs::Array{T}, rhs::Array{S})
     size(lhs) == size(rhs) || error("Incompatible dimensions")
