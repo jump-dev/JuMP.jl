@@ -246,6 +246,11 @@ end
 if VERSION < v"0.4-"
     export vecdot
     vecdot{T,S,N}(x::Array{T,N},y::Array{S,N}) = _dot(x,y)
+
+    _dot_depr() = warn("dot is deprecated for multidimensional arrays. Use vecdot instead.")
+    Base.dot{T,S,N}(lhs::Array{T,N}, rhs::JuMPArray{S,N})    = begin _dot_depr(); vecdot(lhs,rhs); end
+    Base.dot{T,S,N}(lhs::JuMPArray{T,N},rhs::Array{S,N})     = begin _dot_depr(); vecdot(lhs,rhs); end
+    Base.dot{T,S,N}(lhs::JuMPArray{T,N},rhs::JuMPArray{S,N}) = begin _dot_depr(); vecdot(lhs,rhs); end
 else
     import Base.vecdot
 end
