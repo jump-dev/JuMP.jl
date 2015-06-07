@@ -134,7 +134,10 @@ end
 # duck typing approach -- if eltype(innerArray) doesn't support accessor, will fail
 for accessor in (:getDual, :getLower, :getUpper)
     @eval $accessor(x::JuMPContainer) = map($accessor,x)
+    # return a matrix here
+    @eval $accessor(x::OneIndexedArray) = map($accessor, x.innerArray)
 end
+getValue(x::OneIndexedArray) = getValue(x.innerArray)
 
 # Special-case this so we don't dump a huge amount of redundant warnings to screen
 function getValue(x::JuMPContainer)
@@ -159,6 +162,7 @@ end
 Base.ndims{T,N}(x::JuMPDict{T,N}) = N
 Base.abs(x::JuMPDict) = map(abs, x)
 # delegate one-argument functions
+Base.size(x::JuMPArray)   = size(x.innerArray)
 Base.size(x::JuMPArray,k) = size(x.innerArray,k)
 
 function _local_index(indexsets, dim, k)
@@ -184,6 +188,7 @@ Base.done(x::JuMPArray,k) = done(x.innerArray,k)
 Base.done(x::JuMPDict,k)  = done(x.tupledict,k)
 
 (-)(x::JuMPArray,y::Array) = x.innerArray-y
+(-)(x::Array,y::JuMPArray) = x.innerArray-y
 
 Base.eltype{T}(x::JuMPContainer{T}) = T
 

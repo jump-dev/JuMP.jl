@@ -421,6 +421,9 @@ for op in [:+, :-, :*]
         $op(lhs::Real,rhs::OneIndexedArray) = $op(lhs, rhs.innerArray)
         $op(lhs::OneIndexedArray,rhs::Real) = $op(lhs.innerArray, rhs)
 
+        $op(lhs::OneIndexedArray, rhs::Array) = $op(lhs.innerArray, rhs)
+        $op(lhs::Array, rhs::OneIndexedArray) = $op(lhs, rhs.innerArray)
+
         $op{T<:JuMPTypes}(lhs::Array{T},rhs::OneIndexedArray) = $op(lhs,rhs.innerArray)
         $op{T<:JuMPTypes}(lhs::OneIndexedArray,rhs::Array{T}) = $op(lhs.innerArray,rhs)
         $op(lhs::OneIndexedArray,rhs::OneIndexedArray) = $op(lhs.innerArray,rhs.innerArray)
