@@ -481,7 +481,7 @@ for (dotop,op) in [(:.+,:+), (:.-,:-), (:.*,:*), (:./,:/)]
 end
 (+){T<:JuMPTypes}(x::Array{T}) = x
 (+)(x::OneIndexedArray) = x.innerArray
-(-)(x::Array{Variable}) = (-)(convert(Array{AffExpr},x))
+(-){N}(x::Array{Variable,N}) = (-)(convert(Array{AffExpr,N},x))
 (-)(x::OneIndexedArray) = -x.innerArray
 (*){T<:JuMPTypes}(x::Array{T}) = x
 (*)(x::OneIndexedArray) = x.innerArray
