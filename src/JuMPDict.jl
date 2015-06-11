@@ -137,7 +137,6 @@ for accessor in (:getDual, :getLower, :getUpper)
     # return a matrix here
     @eval $accessor(x::OneIndexedArray) = map($accessor, x.innerArray)
 end
-getValue(x::OneIndexedArray) = getValue(x.innerArray)
 
 # Special-case this so we don't dump a huge amount of redundant warnings to screen
 function getValue(x::JuMPContainer)
@@ -146,7 +145,7 @@ function getValue(x::JuMPContainer)
             v = tmp[end]
             isnan(v)
         end
-        warn("Variable value not defined for entry of $(v.name). Check that the model was properly solved.")
+        warn("Variable value not defined for entry of $(x.name). Check that the model was properly solved.")
     end
     ret
 end

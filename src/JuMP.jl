@@ -284,7 +284,7 @@ _getValue(v::Variable) = v.m.colVal[v.col]
 function getValue(v::Variable)
     ret = _getValue(v)
     if isnan(ret)
-        Base.warn("Variable value not defined. Check that the model was properly solved.")
+        Base.warn("Variable value not defined for $(getName(v)). Check that the model was properly solved.")
     end
     ret
 end
