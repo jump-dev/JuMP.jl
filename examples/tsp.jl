@@ -152,7 +152,7 @@ function solveTSP(n, cities)
 
         # Subtour found - add lazy constraint
         # We will build it up piece-by-piece
-        arcs_from_subtour = AffExpr()
+        arcs_from_subtour = zero(AffExpr)
 
         for i = 1:n
             if !subtour[i]

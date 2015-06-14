@@ -254,7 +254,7 @@ macro addConstraint(args...)
             push!(constraintcall.args, esc(kw))
         end
         code = quote
-            q = AffExpr()
+            q = zero(AffExpr)
             $parsecode
             $(refcall) = $constraintcall
         end
@@ -286,7 +286,7 @@ macro addConstraint(args...)
             push!(constraintcall.args, esc(kw))
         end
         code = quote
-            aff = AffExpr()
+            aff = zero(AffExpr)
             $parsecode
             lb = 0.0
             $parselb
@@ -477,7 +477,7 @@ macro setObjective(m, args...)
     end
     newaff, parsecode = parseExprToplevel(x, :q)
     code = quote
-        q = AffExpr()
+        q = zero(AffExpr)
         $parsecode
         setObjective($m, $(esc(sense)), $newaff)
     end
@@ -499,7 +499,7 @@ macro defExpr(args...)
     newaff, parsecode = parseExprToplevel(x, :q)
     if VERSION <= v"0.4-"
         code = quote
-            q = AffExpr()
+            q = zero(AffExpr)
             $parsecode
         end
     else
@@ -749,7 +749,7 @@ macro setNLObjective(m, sense, x)
         setObjectiveSense($m, $(esc(sense)))
         ex = @processNLExpr($(esc(x)))
         $m.nlpdata.nlobj = ex
-        $m.obj = QuadExpr()
+        $m.obj = zero(QuadExpr)
         $m.internalModelLoaded = false
         nothing
     end

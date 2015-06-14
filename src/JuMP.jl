@@ -114,7 +114,7 @@ function Model(;solver=UnsetSolver())
     if !isa(solver,MathProgBase.AbstractMathProgSolver)
         error("solver argument ($solver) must be an AbstractMathProgSolver")
     end
-    Model(QuadExpr(),:Min,LinearConstraint[], QuadConstraint[],SOSConstraint[],
+    Model(zero(QuadExpr),:Min,LinearConstraint[], QuadConstraint[],SOSConstraint[],
           0,String[],String[],Float64[],Float64[],Symbol[],
           0,Float64[],Float64[],Float64[],nothing,solver,
           false,Any[],nothing,nothing,JuMPContainer[],
@@ -364,7 +364,8 @@ Base.copy(aff::GenericAffExpr) = GenericAffExpr(copy(aff.vars),copy(aff.coeffs),
 ###############################################################################
 # Affine expressions, the specific GenericAffExpr used by JuMP
 typealias AffExpr GenericAffExpr{Float64,Variable}
-AffExpr() = AffExpr(Variable[],Float64[],0.0)
+
+AffExpr() = zero(AffExpr)
 
 Base.isempty(a::AffExpr) = (length(a.vars) == 0 && a.constant == 0.)
 Base.convert(::Type{AffExpr}, v::Variable) = AffExpr([v], [1.], 0.)
@@ -380,7 +381,7 @@ end
 setObjective(m::Model, sense::Symbol, x::Variable) = setObjective(m, sense, convert(AffExpr,x))
 function setObjective(m::Model, sense::Symbol, a::AffExpr)
     setObjectiveSense(m, sense)
-    m.obj = QuadExpr()
+    m.obj = zero(QuadExpr)
     m.obj.aff = a
 end
 
@@ -410,13 +411,13 @@ coeftype{CoefType,VarType}(::GenericQuadExpr{CoefType,VarType}) = CoefType
 
 typealias QuadExpr GenericQuadExpr{Float64,Variable}
 
-QuadExpr() = QuadExpr(Variable[],Variable[],Float64[],AffExpr())
-
 Base.isempty(q::QuadExpr) = (length(q.qvars1) == 0 && isempty(q.aff))
 Base.zero{C,V}(::Type{GenericQuadExpr{C,V}}) = GenericQuadExpr(V[], V[], C[], zero(GenericAffExpr{C,V}))
 Base.one{C,V}(::Type{GenericQuadExpr{C,V}})  = GenericQuadExpr(V[], V[], C[],  one(GenericAffExpr{C,V}))
 Base.zero(q::GenericQuadExpr) = zero(typeof(q))
 Base.one(q::GenericQuadExpr)  =  one(typeof(q))
+
+QuadExpr() = zero(QuadExpr)
 
 Base.convert(::Type{QuadExpr}, v::Union(Real,Variable,AffExpr)) = QuadExpr(Variable[], Variable[], Float64[], AffExpr(v))
 

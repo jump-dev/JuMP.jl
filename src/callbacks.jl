@@ -174,7 +174,7 @@ macro addLazyConstraint(cbdata, x)
         sense, vectorized = _canonicalize_sense(x.args[2])
         vectorized && error("Cannot add vectorized constraint in lazy callback")
         quote
-            aff = AffExpr()
+            aff = zero(AffExpr)
             $parsecode
             constr = _construct_constraint!($newaff, $(quot(sense)))
             addLazyConstraint($cbdata, constr)
@@ -209,7 +209,7 @@ macro addUserCut(cbdata, x)
         sense, vectorized = _canonicalize_sense(x.args[2])
         vectorized && error("Cannot add vectorized constraint in cut callback")
         quote
-            aff = AffExpr()
+            aff = zero(AffExpr)
             $parsecode
             constr = _construct_constraint!($newaff, $(quot(sense)))
             addUserCut($cbdata, constr)
