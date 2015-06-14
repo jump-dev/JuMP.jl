@@ -309,18 +309,20 @@ function _multiply!(ret, A, x)
     return ret
 end
 
-_sizehint_expr!(q::AffExpr, n::Int) = begin
-        sizehint!(q.vars, n)
-        sizehint!(q.coeffs, n)
+_sizehint_expr!(q::GenericAffExpr, n::Int) = begin
+        sizehint!(q.vars,   length(q.vars)   + n)
+        sizehint!(q.coeffs, length(q.coeffs) + n)
+        nothing
 end
 
-_sizehint_expr!(q::QuadExpr, n::Int) = begin
-        sizehint!(q.qvars1, n)
-        sizehint!(q.qvars2, n)
-        sizehint!(q.qcoeffs, n)
+_sizehint_expr!(q::GenericQuadExpr, n::Int) = begin
+        sizehint!(q.qvars1,  length(q.qvars1)  + n)
+        sizehint!(q.qvars2,  length(q.qvars2)  + n)
+        sizehint!(q.qcoeffs, length(q.qcoeffs) + n)
         _sizehint_expr!(q.aff, n)
+        nothing
 end
-_sizehint_expr!(q, n) = q # for type stability
+_sizehint_expr!(q, n) = nothing
 
 function _multiply!{T<:Union(GenericAffExpr,GenericQuadExpr)}(ret::Array{T}, lhs, rhs)
     m, n = size(lhs,1), size(lhs,2)
