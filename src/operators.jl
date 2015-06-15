@@ -435,11 +435,11 @@ end
 # The following are primarily there for internal use in the macro code for @addConstraint
 for op in [:(+), :(-)]; @eval begin
     function $op(lhs::GenericAffExpr, rhs::Array)
-        (isempty(lhs.vars) && isempty(lhs.coeffs)) || error("Cannot perform $typeof(lhs)) + $(typeof(rhs))")
+        (isempty(lhs.vars) && isempty(lhs.coeffs)) || error("Cannot perform $(typeof(lhs)) + $(typeof(rhs))")
         $op(lhs.constant, rhs)
     end
     function $op(lhs::Array, rhs::GenericAffExpr)
-        (isempty(rhs.vars) && isempty(rhs.coeffs)) || error("Cannot perform $typeof(lhs)) + $(typeof(rhs))")
+        (isempty(rhs.vars) && isempty(rhs.coeffs)) || error("Cannot perform $(typeof(lhs)) + $(typeof(rhs))")
         $op(lhs, rhs.constant)
     end
     function $op(lhs::GenericQuadExpr, rhs::Array)
