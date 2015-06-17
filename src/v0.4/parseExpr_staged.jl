@@ -28,7 +28,7 @@ function addToExpression(ex::Number, c::Number, x::GenericQuadExpr)
     x
 end
 
-addToExpression(ex::Number, c::Variable, x::Variable) = QuadExpr([c],[x],[1.0],AffExpr())
+addToExpression(ex::Number, c::Variable, x::Variable) = QuadExpr([c],[x],[1.0],zero(AffExpr))
 
 function addToExpression(ex::Number, c::GenericAffExpr, x::GenericAffExpr)
     q = c*x

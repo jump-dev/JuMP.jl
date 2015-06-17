@@ -68,7 +68,7 @@ facts("[expr] Test expression iterators") do
         k += 1
     end
 
-    a2 = AffExpr()
+    a2 = zero(AffExpr)
     for (coeff, var) in a2
         @fact coeff => 0.0  # Shouldn't be called!
     end

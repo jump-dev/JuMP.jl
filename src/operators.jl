@@ -58,7 +58,7 @@ function (*)(lhs::Variable, rhs::AffExpr)
     if rhs.constant != 0.
         ret = QuadExpr([lhs for i=1:n],copy(rhs.vars),copy(rhs.coeffs),AffExpr([lhs], [rhs.constant], 0.))
     else
-        ret = QuadExpr([lhs for i=1:n],copy(rhs.vars),copy(rhs.coeffs),AffExpr())
+        ret = QuadExpr([lhs for i=1:n],copy(rhs.vars),copy(rhs.coeffs),zero(AffExpr))
     end
 end
 (/)(lhs::Variable, rhs::AffExpr) = error("Cannot divide a variable by an affine expression")
@@ -236,7 +236,7 @@ Base.sum(j::JuMPArray{Variable}) = AffExpr(vec(j.innerArray), ones(length(j.inne
 Base.sum(j::JuMPDict{Variable})  = AffExpr(collect(values(j.tupledict)), ones(length(j.tupledict)), 0.0)
 Base.sum(j::Array{Variable}) = AffExpr(vec(j), ones(length(j)), 0.0)
 function Base.sum{S,T}(affs::Array{GenericAffExpr{S,T}})
-    new_aff = GenericAffExpr{S,T}()
+    new_aff = zero(GenericAffExpr{S,T})
     for aff in affs
         append!(new_aff, aff)
     end
@@ -329,7 +329,7 @@ function _multiply!{T<:Union(GenericAffExpr,GenericQuadExpr)}(ret::Array{T}, lhs
     r, s = size(rhs,1), size(rhs,2)
     p, q = size(ret,1), size(ret,2)
     for i in 1:m, j in 1:s
-        q = T()
+        q = zero(T)
         _sizehint_expr!(q, n)
         for k in 1:n
             tmp = convert(T, lhs[i,k]*rhs[k,j])
@@ -345,7 +345,7 @@ function _multiply!{T<:Union(GenericAffExpr,GenericQuadExpr)}(ret::Array{T}, lhs
     r, s = size(rhs,1), size(rhs,2)
     p, q = size(ret,1), size(ret,2)
     for i in 1:m, j in 1:s
-        q = T()
+        q = zero(T)
         _sizehint_expr!(q, n)
         for k in lhs.colptr[i]:lhs.colptr[i+1]
             tmp = convert(T, lhs.nzval[k]*rhs[lhs.rowval[k],j])

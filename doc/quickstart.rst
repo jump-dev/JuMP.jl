@@ -100,7 +100,7 @@ the second kind of function. The syntax is of the form::
 
 which is equivalent to::
 
-    a = AffExpr()  # Create a new empty affine expression
+    a = zero(AffExpr)  # Create a new empty affine expression
     for i = I1
         for j = I2
             ...
@@ -115,7 +115,7 @@ You can also put a condition in::
 
 which is equivalent to::
 
-    a = AffExpr()
+    a = zero(AffExpr)
     for i = I1
         for j = I2
             ...
