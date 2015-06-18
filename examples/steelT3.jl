@@ -16,6 +16,7 @@
 using JuMP
 
 # Data
+
 T = 4
 prod = ["bands", "coils"]
 area = Dict([("bands", ("east", "north")),
@@ -53,6 +54,7 @@ market = Dict(["bands" => Dict(["east" => [2000  2000  1500  2000],
 Prod = Model()
 print(area["bands"])
 print(market["coils"]["west"][1])
+
 # Decision Variables
 
 @defVar(Prod, Make[p=prod, t=1:T] >= 0); # tons produced
@@ -61,10 +63,24 @@ print(market["coils"]["west"][1])
 
 @addConstraint(Prod, triconstr[p=prod, a=area[p], t=1:T],
                Sell[p, a, t] - market[p][a][t] <= 0)
-#var Make {PROD,1..T} >= 0;      # tons produced
-#var Inv {PROD,0..T} >= 0;       # tons inventoried
-#var Sell {p in PROD, a in AREA[p], t in 1..T}   # tons sold
-#                    >= 0, <= market[p,a,t];
+
+
+@addConstraint(Prod, xyconst[t=1:T],
+               sum{(1/rate[p]) * Make[p,t], p=prod} <= avail[t])
+
+# Total of hours used by all products
+# may not exceed hours available, in each week
+
+@addConstraint(Prod, xyconst[p=prod],
+               Inv[p,0] == inv0[p])
+# Initial inventory must equal given value
+
+@addConstraint(Prod, xyconst[p=prod, t=1:T],
+               Make[p,t] + Inv[p, t-1] == sum{Sell[p,a,t], a=area[p]} + Inv[p,t])
+
+# Tons produced and taken from inventory
+# must equal tons sold and put into inventory
+
 
 @setObjective(Prod, Max,
               sum{
@@ -74,36 +90,7 @@ print(market["coils"]["west"][1])
                     a = area[p]},
                 p=prod, t=1:T})
 #maximize Total_Profit:
-#   sum {p in PROD, t in 1..T}
-#      (sum {a in AREA[p]} revenue[p,a,t]*Sell[p,a,t] -
-#         prodcost[p]*Make[p,t] - invcost[p]*Inv[p,t]);
-
-           # Total revenue less costs for all products in all weeks
-
-@addConstraint(Prod, xyconst[t=1:T],
-               sum{(1/rate[p]) * Make[p,t], p=prod} <= avail[t])
-
-#subject to Time {t in 1..T}:
-#   sum {p in PROD} (1/rate[p]) * Make[p,t] <= avail[t];
-
-           # Total of hours used by all products
-           # may not exceed hours available, in each week
-
-@addConstraint(Prod, xyconst[p=prod],
-               Inv[p,0] == inv0[p])
-#subject to Init_Inv {p in PROD}:  Inv[p,0] = inv0[p];
-
-           # Initial inventory must equal given value
-
-@addConstraint(Prod, xyconst[p=prod, t=1:T],
-               Make[p,t] + Inv[p, t-1] == sum{Sell[p,a,t] + Inv[p,t], a=area[p]})
-#subject to Balance {p in PROD, t in 1..T}:
-#   Make[p,t] + Inv[p,t-1]
-#      = sum {a in AREA[p]} Sell[p,a,t] + Inv[p,t];
-
-           # Tons produced and taken from inventory
-           # must equal tons sold and put into inventory
-
+# Total revenue less costs for all products in all weeks
 
 function PrintSolution(status, area, Make, Inventory, Sell, product, Time)
     println("RESULTS:")

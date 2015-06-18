@@ -13,8 +13,6 @@
 #############################################################################
 
 using JuMP
-using Cbc
-using GLPKMathProgInterface
 
 function PrintSolution(status, plants, markets, ship)
     println("RESULTS:")
@@ -30,10 +28,10 @@ function PrintSolution(status, plants, markets, ship)
     println("")
 end
 
-function solveCannery(plants, markets, capacity, demand, distance, freight, solver)
+function solveCannery(plants, markets, capacity, demand, distance, freight)
   numplants = length(plants)
   nummarkets = length(markets)
-  cannery = Model(solver = solver)
+  cannery = Model()
 
   @defVar(cannery, ship[1:numplants, 1:nummarkets] >= 0)
 
@@ -77,4 +75,4 @@ distanceKmiles = [2.5 1.7 1.8;
 # cost per case per thousand miles
 freightcost = 90
 
-solveCannery(plants, markets, capacitycases, demandcases, distanceKmiles, freightcost, CbcSolver())
+solveCannery(plants, markets, capacitycases, demandcases, distanceKmiles, freightcost)
