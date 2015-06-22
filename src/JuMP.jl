@@ -40,7 +40,7 @@ export
     @addConstraint, @addConstraints,
     @LinearConstraint, @LinearConstraints, @QuadConstraint, @QuadConstraints,
     @defVar, @defConstrRef, @setObjective, addToExpression, @defExpr,
-    @setNLObjective, @addNLConstraint, @addNLConstraints,
+    @setNLObjective, @addNLConstraint, @addNLConstraints, @defVars,
     @defNLExpr
 
 include("JuMPDict.jl")

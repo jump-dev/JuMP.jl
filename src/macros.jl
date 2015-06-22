@@ -427,35 +427,36 @@ for (mac,sym) in [(:LinearConstraints, symbol("@LinearConstraint")),
 end
 
 for (mac,sym) in [(:addConstraints,  symbol("@addConstraint")),
-                  (:addNLConstraints,symbol("@addNLConstraint"))]
+                  (:addNLConstraints,symbol("@addNLConstraint")),
+                  (:defVars, symbol("@defVar"))]
     @eval begin
         macro $mac(m, x)
             x.head == :block || error("Invalid syntax for @$mac")
             @assert x.args[1].head == :line
             code = quote end
             for it in x.args
-                if it.head == :line
+                if isexpr(it, :line)
                     # do nothing
-                elseif it.head == :comparison # regular constraint
-                    mac = Expr(:macrocall,$(quot(sym)), esc(m), esc(it))
-                    code = quote
-                            $code
-                            $mac
-                            end
-                elseif it.head == :tuple # constraint ref or kwargs
+                elseif isexpr(it, :tuple) # line with commas
                     for i in 1:length(it.args)
-                        if isexpr(it.args[i], :(=))
-                            it.args[i] = Expr(:kw, it.args[i].args[1], esc(it.args[i].args[2]))
+                        if isexpr(it.args[i], :(->))
+                            kwname = it.args[i].args[1]
+                            @assert isexpr(it.args[i].args[2], :block)
+                            @assert length(it.args[i].args[2].args) == 2
+                            @assert isexpr(it.args[i].args[2].args[1], :line)
+                            kwval = it.args[i].args[2].args[2]
+                            it.args[i] = Expr(:kw, kwname, esc(kwval))
                         else
                             it.args[i] = esc(it.args[i])
                         end
                     end
-                    mac = Expr(:macrocall,$(quot(sym)), esc(m), it.args...)
-                    code = quote
-                            $code
-                            $mac
-                            end
+                    push!(code.args, Expr(:macrocall,$(quot(sym)), esc(m), it.args...))
+                elseif isexpr(it, :(=))
+                    error("Invalid syntax. Use -> instead of = within @addConstraints.")
+                else # stand-alone symbol or expression
+                    push!(code.args,Expr(:macrocall,$(quot(sym)), esc(m), esc(it)))
                 end
+
             end
             return quote
                     $code
