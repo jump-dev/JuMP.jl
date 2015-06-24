@@ -472,7 +472,7 @@ function genindexlist_parametric(x::SymbolicOutput)
         push!(fexpr.args[2].args[1].args,x.inputnames[i])
     end
 
-    return eval(:( local _IDXLIST_; $fexpr; _IDXLIST_))
+    return eval(:( _IDXLIST_ = let; local _IDXLIST_; $fexpr; end;))
 end
 
 # accumulator for prod{} terms
@@ -775,7 +775,7 @@ function genfgrad_parametric(x::SymbolicOutput)
     end
     #@show fexpr
 
-    return eval(:( local _FGRAD_; $fexpr; _FGRAD_))
+    return eval(:( _FGRAD_ = let; local _FGRAD_; $fexpr; end;))
 
 end
 
@@ -795,7 +795,7 @@ function genfval_parametric(x::SymbolicOutput)
         push!(fexpr.args[2].args[1].args,x.inputnames[i])
     end
 
-    return eval(:( local _FVAL_; $fexpr; _FVAL_))
+    return eval(:( _FVAL_ = let; local _FVAL_; $fexpr; end;))
 end
 
 function genexprval{N}(x::ParametricExpression{N})
@@ -817,7 +817,7 @@ function genexprval{N}(x::ParametricExpression{N})
     end
     #@show fexpr
 
-    return eval(:( local _EXPRVAL_; $fexpr; _EXPRVAL_))
+    return eval(:( _EXPRVAL_ = let; local _EXPRVAL_; $fexpr; end;))
 end
 
 function genexprrev{N}(x::ParametricExpression{N})
@@ -841,7 +841,7 @@ function genexprrev{N}(x::ParametricExpression{N})
     end
     #@show fexpr
 
-    return eval(:( local _EXPRREV_; $fexpr; _EXPRREV_))
+    return eval(:( _EXPRREV_ = let; local _EXPRREV_; $fexpr; end;))
 end
 
 function getvalue(x::ParametricExpressionWithParams,values::Vector)
