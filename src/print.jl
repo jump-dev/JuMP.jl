@@ -429,6 +429,13 @@ cont_str(::Type{IJuliaMode}, j::JuMPContainer{Variable}; mathmode=true) =
                 ijulia_for_all, ijulia_in, ijulia_open_set, ijulia_mid_set, ijulia_close_set,
                 ijulia_union, ijulia_infty, ijulia_open_rng, ijulia_close_rng, ijulia_integer), mathmode)
 
+
+#------------------------------------------------------------------------
+## OneIndexedArray{Float64}
+#------------------------------------------------------------------------
+Base.print(io::IO, j::OneIndexedArray{Float64}) = print(io, j.innerArray)
+Base.show( io::IO, j::OneIndexedArray{Float64}) = print(io, j.innerArray)
+
 #------------------------------------------------------------------------
 ## JuMPContainer{Float64}
 #------------------------------------------------------------------------
