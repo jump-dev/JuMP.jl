@@ -76,7 +76,7 @@ Is equivalent to::
         setValue(x[i], i/2)
     end
 
-Finally, variables can be constructed manually, one-by-one::
+Variables may also be constructed manually, one-by-one::
 
     x = Variable(m::Model, lower::Number, upper::Number, category::Symbol, name::String)
     x = Variable(m::Model, lower::Number, upper::Number, category::Symbol)
@@ -94,6 +94,8 @@ This form of constructing variables is not considered idiomatic JuMP code.
     by the range ``1:5``.
     The reference to the first set of variables has been lost, although they will remain
     in the model.
+
+Finally, the constructor ``Variable(m::Model,idx::Int)`` may be used to create a variable object corresponding to an *existing* variable in the model (the constructor does not add a new variable to the model). The variable indices correspond to those of the internal MathProgBase model. This method is only useful if you intend to interact with solver properties which are not directly exposed through JuMP.
 
 Methods
 ^^^^^^^
