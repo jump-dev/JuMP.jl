@@ -419,6 +419,8 @@ for (mac,sym) in [(:LinearConstraints, symbol("@LinearConstraint")),
                     push!(code.args, Expr(:macrocall, $sym, esc(it)))
                 elseif it.head == :tuple # constraint ref
                     error("@$mac does not currently support groups of constraints")
+                else
+                    error("Unexpected constraint expression $it")
                 end
             end
             return code
