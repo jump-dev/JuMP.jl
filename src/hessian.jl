@@ -19,14 +19,13 @@ function compute_hessian_sparsity_IJ_parametric(s::SymbolicOutput)
             $code
             return
         end
-        _SPARSITY_GEN_
     end
     # add arguments for inputnames -- local data
     for i in 1:length(s.inputnames)
         push!(fexpr.args[4].args[1].args,s.inputnames[i])
     end
 
-    f = eval(fexpr)
+    f = eval(:(let; $fexpr; end))
 
     return (x::SymbolicOutput,idxset)-> (edgelist__ = Set{MyPair{Int}}(); f(edgelist__,idxset,x.inputvals...); edgelist_to_IJ(edgelist__,x))
 
@@ -231,6 +230,7 @@ end
 
 function gen_hessian_matmat_parametric(s::SymbolicOutput, fgrad = genfgrad_parametric(s))
     hexpr = quote
+        let
         local _HESS_MATMAT_
         function _HESS_MATMAT_{T,Q}(S, x::Vector{T}, dualvec4::Vector{Dual4{T}}, dualout4::Vector{Dual4{T}}, inputvals::Q, fromcanonical)
             dualvec = reinterpret(Dual{T},dualvec4)
@@ -270,7 +270,7 @@ function gen_hessian_matmat_parametric(s::SymbolicOutput, fgrad = genfgrad_param
             end
             #return S
         end
-        _HESS_MATMAT_
+        end
     end
 
     return eval(hexpr)
