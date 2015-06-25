@@ -389,6 +389,8 @@ for (mac,sym) in [(:addConstraints,  symbol("@addConstraint")),
                             $code
                             $mac
                             end
+                else
+                    error("Unexpected constraint expression $it")
                 end
             end
             return quote
