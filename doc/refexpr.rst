@@ -70,7 +70,7 @@ The ``ref`` accepts index sets in the same way as ``@defVar``, and those indices
   Note that solvers expect the weights to be unique.
   See `here <http://lpsolve.sourceforge.net/5.5/SOS.htm>`_ for more details.
 * ``@LinearConstraint(expr)`` - Constructs a ``LinearConstraint`` instance efficiently by parsing the ``expr``. The same as ``@addConstraint``, except it does not attach the constraint to any model.
-* ``@LinearConstraints(expr)`` - Constructs a vector of ``LinearConstraint``s. Similar to ``@LinearConstraint``, except it accepts multiple constraints as input as long as they are separated by newlines.
+* ``@LinearConstraints(expr)`` - Constructs a vector of ``LinearConstraint`` objects. Similar to ``@LinearConstraint``, except it accepts multiple constraints as input as long as they are separated by newlines.
 * ``@QuadConstraint(expr)`` - Constructs a ``QuadConstraint`` instance efficiently by parsing the ``expr``. The same as ``@addConstraint``, except it does not attach the constraint to any model.
 * ``@QuadConstraints(expr)`` - Constructs a vector of ``QuadConstraint``s. Similar to ``@QuadConstraint``, except it accepts multiple constraints as input as long as they are separated by newlines.
 * ``push!(aff::AffExpr, new_coeff::Float64, new_var::Variable)`` - efficient
