@@ -9,6 +9,11 @@ Unversioned
     the documentation for details.
   * New ``getVar()`` method to access variables in a model by name
 
+Version 0.9.2 (June 27, 2015)
+-----------------------------
+
+  * Fix bug in @addConstraints.
+
 Version 0.9.1 (April 25, 2015)
 ------------------------------
 
