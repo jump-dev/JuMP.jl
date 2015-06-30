@@ -37,7 +37,7 @@ export
     affToStr, quadToStr, conToStr, chgConstrRHS,
 
 # Macros and support functions
-    @addConstraint, @addConstraints,
+    @addConstraint, @addConstraints, @addSDPConstraint,
     @LinearConstraint, @LinearConstraints, @QuadConstraint, @QuadConstraints,
     @defVar, @defConstrRef, @setObjective, addToExpression, @defExpr,
     @setNLObjective, @addNLConstraint, @addNLConstraints,
@@ -57,6 +57,7 @@ type Model
     linconstr#::Vector{LinearConstraint}
     quadconstr
     sosconstr
+    sdpconstr
 
     # Column data
     numCols::Int
@@ -114,7 +115,7 @@ function Model(;solver=UnsetSolver())
     if !isa(solver,MathProgBase.AbstractMathProgSolver)
         error("solver argument ($solver) must be an AbstractMathProgSolver")
     end
-    Model(zero(QuadExpr),:Min,LinearConstraint[], QuadConstraint[],SOSConstraint[],
+    Model(zero(QuadExpr),:Min,LinearConstraint[],QuadConstraint[],SOSConstraint[],SDPConstraint[],
           0,String[],String[],Float64[],Float64[],Symbol[],
           0,Float64[],Float64[],Float64[],nothing,solver,
           false,Any[],nothing,nothing,JuMPContainer[],
@@ -192,6 +193,7 @@ function Base.copy(source::Model)
     dest.linconstr  = map(c->copy(c, dest), source.linconstr)
     dest.quadconstr = map(c->copy(c, dest), source.quadconstr)
     dest.sosconstr  = map(c->copy(c, dest), source.sosconstr)
+    dest.sdpconstr  = map(c->copy(c, dest), source.sdpconstr)
 
     # Variables
     dest.numCols = source.numCols
@@ -538,7 +540,6 @@ addConstraint(m::Model, c::Array{LinearConstraint}) =
 
 addVectorizedConstraint(m::Model, v::Array{LinearConstraint}) = map(c->addConstraint(m,c), v)
 
-# Copy utility function, not exported
 function Base.copy(c::LinearConstraint, new_model::Model)
     return LinearConstraint(copy(c.terms, new_model), c.lb, c.ub)
 end
@@ -603,6 +604,27 @@ end
 
 Base.copy(sos::SOSConstraint, new_model::Model) =
     SOSConstraint([Variable(new_model,v.col) for v in sos.terms], copy(sos.weights), sos.sostype)
+
+
+##########################################################################
+# SDPConstraint is a (dual) semidefinite constraint of the form
+# ∑ cᵢ Xᵢ ≥ D, where D is a n×n symmetric data matrix, cᵢ are
+# scalars, and Xᵢ are n×n symmetric variable matrices. The inequality
+# is taken w.r.t. the psd partial order.
+type SDPConstraint <: JuMPConstraint
+    terms # purposely leave this untyped so that we can special-case OneIndexedArray with no additional variables
+end
+
+# Special-case X ≥ 0, which is often convenient
+function SDPConstraint(lhs::Union(OneIndexedArray,Matrix), rhs::Number)
+    rhs == 0 || error("Cannot construct a semidefinite constraint with nonzero scalar bound $rhs")
+    SDPConstraint(lhs)
+end
+
+function addConstraint(m::Model, c::SDPConstraint)
+    push!(m.sdpconstr,c)
+    return ConstraintRef{SDPConstraint}(m,length(m.sdpconstr))
+end
 
 ##########################################################################
 # Generic constraint type for quadratic expressions

@@ -59,7 +59,7 @@ Methods
 The ``ref`` accepts index sets in the same way as ``@defVar``, and those indices can be used in the construction of the expressions::
 
     @defExpr(expr[i=1:3], i*sum{x[j], j=1:3})
-
+* ``@addSDPConstraint(m::Model, expr)`` - adds a semidefinite constraint to the model ``m``. The expression ``expr`` must be a square, two-dimensional array.
 * ``addSOS1(m::Model, coll::Vector{AffExpr})`` - adds special ordered set constraint
   of type 1 (SOS1). Specify the set as a vector of weighted variables, e.g. ``coll = [3x, y, 2z]``.
   Note that solvers expect the weights to be unique. See

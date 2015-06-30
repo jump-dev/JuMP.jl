@@ -58,6 +58,7 @@ const repl_infty     = "Inf"
 const repl_open_rng  = "["
 const repl_close_rng = "]"
 const repl_integer   = "integer"
+const repl_succeq0   = " is semidefinite"
 
 # IJulia-specific symbols
 const ijulia_leq        = "\\leq"
@@ -77,6 +78,7 @@ const ijulia_infty      = "\\intfy"
 const ijulia_open_rng  = "\\["
 const ijulia_close_rng = "\\]"
 const ijulia_integer   = "\\in \\mathbb{Z}"
+const ijulia_succeq0   = "\\succeq 0"
 
 # If not already mathmode, then wrap in MathJax start/close tags
 math(s,mathmode) = mathmode ? s : "\$\$ $s \$\$"
@@ -98,6 +100,10 @@ function Base.show(io::IO, m::Model)
     nquad = length(m.quadconstr)
     if nquad > 0
         println(io, " * $(nquad) quadratic constraint$(plural(nquad))")
+    end
+    nsdp = length(m.sdpconstr)
+    if nsdp > 0
+        println(io, " * $(nsdp) semidefinite constraint$(plural(nsdp))")
     end
     nlp = m.nlpdata
     if nlp != nothing && length(nlp.nlconstr) > 0
@@ -732,7 +738,27 @@ con_str(::Type{REPLMode}, c::SOSConstraint; args...) =
     con_str(REPLMode, c, repl_open_set, repl_close_set)
 con_str(::Type{IJuliaMode}, c::SOSConstraint; mathmode=true) =
     math(con_str(IJuliaMode, c, ijulia_open_set, ijulia_close_set), mathmode)
-
+#------------------------------------------------------------------------
+## SDPConstraint
+#------------------------------------------------------------------------
+Base.print(io::IO, c::SDPConstraint) = print(io, con_str(REPLMode,c))
+Base.show( io::IO, c::SDPConstraint) = print(io, con_str(REPLMode,c))
+Base.writemime(io::IO, ::MIME"text/latex", c::SDPConstraint) =
+    print(io, con_str(IJuliaMode,c,mathmode=false))
+# Generic string converter, called by mode-specific handlers
+function con_str(mode, c::SDPConstraint, succeq0)
+    t = isa(c.terms,OneIndexedArray) ? c.terms.innerArray : c.terms
+    str = sprint(print, t)
+    splitted = split(str, "\n")[2:end]
+    center = ceil(Int, length(splitted)/2)
+    splitted[center] *= succeq0
+    join(splitted, "\n")
+end
+# Handlers to use correct symbols
+con_str(::Type{REPLMode}, c::SDPConstraint; args...) =
+    con_str(REPLMode, c, repl_succeq0)
+con_str(::Type{IJuliaMode}, c::SDPConstraint; mathmode=true) =
+    math(con_str(IJuliaMode, c, ijulia_succeq0, mathmode))
 
 #------------------------------------------------------------------------
 ## ConstraintRef
@@ -740,9 +766,11 @@ con_str(::Type{IJuliaMode}, c::SOSConstraint; mathmode=true) =
 Base.print(io::IO, c::ConstraintRef{LinearConstraint}) = print(io, con_str(REPLMode,c.m.linconstr[c.idx]))
 Base.print(io::IO, c::ConstraintRef{QuadConstraint})   = print(io, con_str(REPLMode,c.m.quadconstr[c.idx]))
 Base.print(io::IO, c::ConstraintRef{SOSConstraint})    = print(io, con_str(REPLMode,c.m.sosconstr[c.idx]))
+Base.print(io::IO, c::ConstraintRef{SDPConstraint})    = print(io, con_str(REPLMode,c.m.sdpconstr[c.idx]))
 Base.show( io::IO, c::ConstraintRef{LinearConstraint}) = print(io, con_str(REPLMode,c.m.linconstr[c.idx]))
 Base.show( io::IO, c::ConstraintRef{QuadConstraint})   = print(io, con_str(REPLMode,c.m.quadconstr[c.idx]))
 Base.show( io::IO, c::ConstraintRef{SOSConstraint})    = print(io, con_str(REPLMode,c.m.sosconstr[c.idx]))
+Base.show(  io::IO, c::ConstraintRef{SDPConstraint})   = print(io, con_str(REPLMode,c.m.sdpconstr[c.idx]))
 Base.writemime(io::IO, ::MIME"text/latex", c::ConstraintRef{LinearConstraint}) =
     print(io, con_str(IJuliaMode,c.m.linconstr[c.idx],mathmode=false))
 Base.writemime(io::IO, ::MIME"text/latex", c::ConstraintRef{QuadConstraint}) =

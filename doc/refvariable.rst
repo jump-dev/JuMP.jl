@@ -97,6 +97,20 @@ This form of constructing variables is not considered idiomatic JuMP code.
 
 Finally, the constructor ``Variable(m::Model,idx::Int)`` may be used to create a variable object corresponding to an *existing* variable in the model (the constructor does not add a new variable to the model). The variable indices correspond to those of the internal MathProgBase model. This method is only useful if you intend to interact with solver properties which are not directly exposed through JuMP.
 
+Semidefinite and symmetric variables
+^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+
+JuMP supports modeling with `semidefinite variables <https://en.wikipedia.org/wiki/Semidefinite_programming>`_. A square symmetric matrix :math:`X` is semidefinite if all eigenvalues are nonnegative; this is typically denoted by :math:`X \succeq 0`. A
+
+    @defVar(m, X[1:3,1:3], SDP)
+
+Note in particular the indexing: 1) exactly two index sets must be specified, 2) they must both be unit ranges starting at 1, 3) no bounds can be provided alongside the ``SDP`` tag. If you wish to impose more complex semidefinite constraints on the variables, e.g. :math:`X - I \succeq 0`, you may instead use the ``Symmetric`` tag, along with a semidefinite constraint::
+
+    @defVar(m, X[1:n,1:n], Symmetric)
+    @addSDPConstraint(m, X >= eye(n))
+
+Bounds can be provided as normal when using the ``Symmetric`` tag, with the stipulation that the bounds are symmetric themselves.
+
 Methods
 ^^^^^^^
 

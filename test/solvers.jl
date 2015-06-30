@@ -116,6 +116,10 @@ osl && push!(minlp_solvers, CoinOptServices.OsilBonminSolver(CoinOptServices.OSO
 osl && push!(minlp_solvers, CoinOptServices.OsilCouenneSolver())
 nlw && osl && push!(minlp_solvers, AmplNLWriter.BonminNLSolver(@compat Dict("bonmin.nlp_log_level"=>0,"bonmin.bb_log_level"=>0)))
 nlw && osl && push!(minlp_solvers, AmplNLWriter.CouenneNLSolver())
+# Semidefinite solvers
+sdp_solvers = Any[]
+mos && push!(sdp_solvers, Mosek.MosekSolver(LOG=0))
+scs && push!(sdp_solvers, SCS.SCSSolver(eps=1e-6,verbose=0))
 
 const error_map = Dict()
 grb && (error_map[Gurobi.GurobiSolver] = Gurobi.GurobiError)

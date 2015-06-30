@@ -77,21 +77,40 @@ buildrefsets(c::Nothing) = (gensym(), Any[], Any[], IndexPair[], :())
 #       idxpairs: As defined for buildrefsets
 #       sym: A symbol or expression containing the element type of the
 #            resulting container, e.g. :AffExpr or :Variable
-function getloopedcode(c::Expr, code, condition, idxvars, idxsets, idxpairs, sym)
+function getloopedcode(c::Expr, code, condition, idxvars, idxsets, idxpairs, sym; lowertri=false)
     varname = getname(c)
     hascond = (condition != :())
 
-    if hascond
-        code = quote
-            $(esc(condition)) || continue
-            $code
-        end
-    end
+    if lowertri
+        @assert !hascond
+        @assert length(idxvars)  == 2
+        @assert length(idxpairs) == 2
+        @assert !hasdependentsets(idxvars, idxsets)
 
-    for (idxvar, idxset) in zip(reverse(idxvars),reverse(idxsets))
+        i, j = esc(idxvars[1]), esc(idxvars[2])
+        expr = copy(code)
+        vname = expr.args[1].args[1]
+        expr.args[1] = :tmp
         code = quote
-            for $(esc(idxvar)) in $idxset
+            for $i in $(idxsets[1]), $j in $(idxsets[2])
+                $i <= $j || continue
+                $expr
+                $vname[$i,$j] = tmp
+                $vname[$j,$i] = tmp
+            end
+        end
+    else
+        if hascond
+            code = quote
+                $(esc(condition)) || continue
                 $code
+            end
+        end
+        for (idxvar, idxset) in zip(reverse(idxvars),reverse(idxsets))
+            code = quote
+                for $(esc(idxvar)) in $idxset
+                    $code
+                end
             end
         end
     end
@@ -325,6 +344,43 @@ macro addConstraint(args...)
               "       expr1 == expr2\n" * "       lb <= expr <= ub")
     end
     return assert_validmodel(m, getloopedcode(c, code, condition, idxvars, idxsets, idxpairs, :ConstraintRef))
+end
+
+macro addSDPConstraint(m, x)
+    m = esc(m)
+
+    (x.head == :block) &&
+        error("Code block passed as constraint.")
+    (x.head != :comparison) &&
+        error("in @addSDPConstraint ($(string(x))): expected comparison operator (<=, or >=).")
+
+    length(x.args) == 3 || error("in @addSDPConstraint ($(string(x))): constraints must be in one of the following forms:\n" *
+              "       expr1 <= expr2\n" * "       expr1 >= expr2\n")
+    # Build the constraint
+    # Simple comparison - move everything to the LHS
+    sense = x.args[2]
+    if sense == :⪰
+        sense = :(>=)
+    elseif sense == :⪯
+        sense = :(<=)
+    end
+    sense,_ = _canonicalize_sense(sense)
+    lhs = :()
+    if sense == :(>=)
+        lhs = :($(x.args[1]) - $(x.args[3]))
+    elseif sense == :(<=)
+        lhs = :($(x.args[3]) - $(x.args[1]))
+    else
+        error("Invalid sense $sense in SDP constraint")
+    end
+    newaff, parsecode = parseExprToplevel(lhs, :q)
+    assert_validmodel(m, quote
+        q = zero(AffExpr)
+        $parsecode
+        c = SDPConstraint($newaff)
+        push!($(m).sdpconstr, c)
+        c
+    end)
 end
 
 macro LinearConstraint(x)
@@ -650,6 +706,9 @@ macro defVar(args...)
         error("in @defVar ($var): Must provide 'objective', 'inconstraints', and 'coefficients' arguments all together for column-wise modeling")
     end
 
+    sdp = any(t -> (t == :SDP), extra)
+    symmetric = sdp | any(t -> (t == :Symmetric), extra)
+    extra = filter(x -> (x != :SDP && x != :Symmetric), extra) # filter out SDP and sym tag
 
     # Determine variable type (if present).
     # Types: default is continuous (reals)
@@ -698,9 +757,9 @@ macro defVar(args...)
         end)
     end
 
-
     if isa(var,Symbol)
         # Easy case - a single variable
+        sdp && error("Cannot add a semidefinite scalar variable")
         return assert_validmodel(m, quote
             $(esc(var)) = Variable($m,$lb,$ub,$(quot(t)),$(string(var)),$value)
             registervar($m, $(quot(var)), $(esc(var)))
@@ -712,13 +771,54 @@ macro defVar(args...)
     # to contain them)
     refcall, idxvars, idxsets, idxpairs, condition = buildrefsets(var)
     code = :( $(refcall) = Variable($m, $lb, $ub, $(quot(t)), "", $value) )
-    looped = getloopedcode(var, code, condition, idxvars, idxsets, idxpairs, :Variable)
-    varname = esc(getname(var))
-    return assert_validmodel(m, quote
-        $looped
-        push!($(m).dictList, $varname)
-        registervar($m, $(quot(getname(var))), $varname)
-    end)
+    if symmetric
+        # Sanity checks on SDP input stuff
+        condition == :() ||
+            error("Cannot have conditional indexing for SDP variables")
+        length(idxvars) == length(idxsets) == 2 ||
+            error("SDP variables must be 2-dimensional")
+        !symmetric || (length(idxvars) == length(idxsets) == 2) ||
+            error("Symmetric variables must be 2-dimensional")
+        hasdependentsets(idxvars, idxsets) &&
+            error("Cannot have index dependencies in symmetric variables")
+        for _rng in idxsets
+            isexpr(_rng, :escape) ||
+                error("Internal error 1")
+            rng = _rng.args[1] # undo escaping
+            (isexpr(rng,:(:)) && rng.args[1] == 1 && length(rng.args) == 2) ||
+                error("Index sets for SDP variables must be ranges of the form 1:N")
+        end
+
+        if sdp && !(lb == -Inf && ub == Inf)
+            error("Semidefinite variables cannot be provided bounds")
+        end
+
+        looped = getloopedcode(var, code, condition, idxvars, idxsets, idxpairs, :Variable; lowertri=symmetric)
+        varname = esc(getname(var))
+        code = quote
+            $(esc(idxsets[1].args[1].args[2])) == $(esc(idxsets[2].args[1].args[2])) || error("Cannot construct symmetric variables with nonsquare dimensions")
+            (issym($lb) && issym($ub)) || error("Bounds on symmetric variables must be symmetric")
+            $looped
+            push!($(m).dictList, $varname)
+        end
+        if sdp
+            code = :($code; push!($(m).sdpconstr, SDPConstraint($varname)))
+        end
+        return assert_validmodel(m, quote
+            $code
+            registervar($m, $(quot(getname(var))), $varname)
+            $varname
+        end)
+    else
+        looped = getloopedcode(var, code, condition, idxvars, idxsets, idxpairs, :Variable)
+        varname = esc(getname(var))
+        return assert_validmodel(m, quote
+            $looped
+            push!($(m).dictList, $varname)
+            registervar($m, $(quot(getname(var))), $varname)
+            $varname
+        end)
+    end
 end
 
 macro defConstrRef(var)

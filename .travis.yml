@@ -20,6 +20,7 @@ before_install:
 script:
     - julia -e 'Pkg.init(); Pkg.clone(pwd())'
     - if [[ `uname` = "Darwin" ]]; then julia -e 'Pkg.add("Ipopt")'; fi # installs from binaries
+    - if [[ `uname` = "Linux" ]]; then julia -e 'Pkg.add("SCS")'; fi # hack to avoid broken SCS on OSX nightly
     - julia -e 'for p in split(ENV["PKGADD"],";") Pkg.add(p) end'
     - if [ $JULIAVERSION = "julianightlies" ]; then julia test/runtests.jl; fi
     - if [ $JULIAVERSION = "juliareleases" ]; then julia --code-coverage test/runtests.jl; fi

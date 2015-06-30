@@ -37,6 +37,7 @@ include("callback.jl");     length( lazy_solvers) == 0 && warn("Callback tests n
 include("qcqpmodel.jl");    length( quad_solvers) == 0 && warn("Quadratic tests not run!")
 include("nonlinear.jl");    length(  nlp_solvers) == 0 && warn("Nonlinear tests not run!")
                             length(minlp_solvers) == 0 && warn("Mixed-integer Nonlinear tests not run!")
+include("sdp.jl");          length(  sdp_solvers) == 0 && warn("Semidefinite tests not run!")
 
 # Throw an error if anything failed
 FactCheck.exitstatus()
