@@ -77,6 +77,7 @@ We list below what is currently supported. See the documentation for more inform
 * Linear
 * Convex Quadratic
 * Second-order Conic
+* Semidefinite
 * Nonlinear (convex and nonconvex)
 
 **Variable types**
