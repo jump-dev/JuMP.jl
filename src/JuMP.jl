@@ -624,7 +624,8 @@ end
 
 function addConstraint(m::Model, c::SDPConstraint)
     push!(m.sdpconstr,c)
-    return ConstraintRef{SDPConstraint}(m,length(m.sdpconstr))
+    m.internalModelLoaded = false
+    ConstraintRef{SDPConstraint}(m,length(m.sdpconstr))
 end
 
 ##########################################################################
