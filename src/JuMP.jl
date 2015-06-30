@@ -20,7 +20,8 @@ using Compat
 
 export
 # Objects
-    Model, Variable, AffExpr, QuadExpr, LinearConstraint, QuadConstraint,
+    Model, Variable, AffExpr, QuadExpr, 
+    LinearConstraint, QuadConstraint, SDPConstraint,
     ConstraintRef, LinConstrRef,
 # Functions
     # Model related
