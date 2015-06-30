@@ -5,9 +5,13 @@ facts("[sdp] Test simple SDP") do
 for solver in sdp_solvers
 context("With solver $(typeof(solver))") do
     m = Model(solver=solver)
-    @defVar(m, 0 <= X[1:3,1:3] <= 1/2*eye(3,3), SDP)
-    @defVar(m, -ones(5,5) <= Y[1:5,1:5] <= 2*ones(5,5), SDP)
-    @defVar(m, Z[1:4,1:4] <= ones(4,4), SDP)
+    @defVar(m, X[1:3,1:3], SDP)
+    @addSDPConstraint(m, X <= 1/2*eye(3,3))
+    @defVar(m, Y[1:5,1:5], Symmetric)
+    @addSDPConstraint(m, -ones(5,5) <= Y)
+    @addSDPConstraint(m, Y <= 2*ones(5,5))
+    @defVar(m, Z[1:4,1:4], Symmetric)
+    @addSDPConstraint(m, ones(4,4) >= Z)
 
     @addConstraint(m, trace(X) == 1)
     @addConstraint(m, trace(Y) == 3)
@@ -128,10 +132,10 @@ facts("[sdp] Nonsensical SDPs") do
     @fact macroexpand(:(@defVar(m, oneD[1:5], SDP))).head => :error
     @fact macroexpand(:(@defVar(m, threeD[1:5,1:5,1:5], SDP))).head => :error
     @fact macroexpand(:(@defVar(m, psd[2] <= rand(2,2), SDP))).head => :error
-    @fact_throws @defVar(m, -ones(3,4) <= foo[1:4,1:4] <= ones(4,4), SDP)
-    @fact_throws @defVar(m, -ones(4,4) <= foo[1:4,1:4] <= ones(4,5), SDP)
-    @fact_throws @defVar(m, -rand(5,5) <= nonsymmetric[1:5,1:5] <= rand(5,5), SDP)
-    @fact_throws @defVar(m, -1.0 <= nonzero[1:6,1:6] <= 1.0, SDP)
+    @fact macroexpand(:(@defVar(m, -ones(3,4) <= foo[1:4,1:4] <= ones(4,4), SDP))).head => :error
+    @fact_throws @defVar(m, -ones(3,4) <= foo[1:4,1:4] <= ones(4,4), Symmetric)
+    @fact_throws @defVar(m, -ones(4,4) <= foo[1:4,1:4] <= ones(4,5), Symmetric)
+    @fact_throws @defVar(m, -rand(5,5) <= nonsymmetric[1:5,1:5] <= rand(5,5), Symmetric)
 end
 
 facts("[sdp] SDP with quadratics") do

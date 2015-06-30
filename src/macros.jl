@@ -623,7 +623,6 @@ macro defVar(args...)
 
     t = :Cont
     gottype = 0
-    nobounds = false
     # Identify the variable bounds. Five (legal) possibilities are "x >= lb",
     # "x <= ub", "lb <= x <= ub", "x == val", or just plain "x"
     if isexpr(x,:comparison)
@@ -677,7 +676,6 @@ macro defVar(args...)
         var = x
         lb = -Inf
         ub = Inf
-        nobounds = true
     end
 
     # separate out keyword arguments
@@ -709,6 +707,8 @@ macro defVar(args...)
     end
 
     sdp = any(t -> (t == :SDP), extra)
+    symmetric = sdp | any(t -> (t == :Symmetric), extra)
+    extra = filter(x -> (x != :SDP && x != :Symmetric), extra) # filter out SDP and sym tag
 
     # Determine variable type (if present).
     # Types: default is continuous (reals)
@@ -742,7 +742,7 @@ macro defVar(args...)
             end)
         end
 
-        gottype == 0 && !sdp &&
+        gottype == 0 &&
             error("in @defVar ($var): syntax error")
     end
 
@@ -757,9 +757,9 @@ macro defVar(args...)
         end)
     end
 
-
     if isa(var,Symbol)
         # Easy case - a single variable
+        sdp && error("Cannot add a semidefinite scalar variable")
         return assert_validmodel(m, quote
             $(esc(var)) = Variable($m,$lb,$ub,$(quot(t)),$(string(var)),$value)
             registervar($m, $(quot(var)), $(esc(var)))
@@ -770,14 +770,17 @@ macro defVar(args...)
     # We now build the code to generate the variables (and possibly the JuMPDict
     # to contain them)
     refcall, idxvars, idxsets, idxpairs, condition = buildrefsets(var)
-    if sdp
+    code = :( $(refcall) = Variable($m, $lb, $ub, $(quot(t)), "", $value) )
+    if symmetric
         # Sanity checks on SDP input stuff
         condition == :() ||
             error("Cannot have conditional indexing for SDP variables")
         length(idxvars) == length(idxsets) == 2 ||
             error("SDP variables must be 2-dimensional")
+        !symmetric || (length(idxvars) == length(idxsets) == 2) ||
+            error("Symmetric variables must be 2-dimensional")
         hasdependentsets(idxvars, idxsets) &&
-            error("Cannot have index dependencies in SDP variables")
+            error("Cannot have index dependencies in symmetric variables")
         for _rng in idxsets
             isexpr(_rng, :escape) ||
                 error("Internal error 1")
@@ -786,32 +789,27 @@ macro defVar(args...)
                 error("Index sets for SDP variables must be ranges of the form 1:N")
         end
 
-        # special-case so that @defVar(m, x[1:3,1:3], SDP) <==> @defVar(m, x[1:3,1:3] >= 0, SDP) <===> @defVar(m, x[1:3,1:3] >= zeros(3,3), SDP)
-        if nobounds
-            lb = 0.0
+        if sdp && !(lb == -Inf && ub == Inf)
+            error("Semidefinite variables cannot be provided bounds")
         end
 
-        code = :( $(refcall) = Variable($m, -Inf, Inf, $(quot(t)), "", $value) )
-        looped = getloopedcode(var, code, condition, idxvars, idxsets, idxpairs, :Variable; lowertri=sdp)
+        looped = getloopedcode(var, code, condition, idxvars, idxsets, idxpairs, :Variable; lowertri=symmetric)
         varname = esc(getname(var))
-        return assert_validmodel(m, quote
-            $(esc(idxsets[1].args[1].args[2])) == $(esc(idxsets[2].args[1].args[2])) || error("Cannot construct nonsymmetric semidefinite matrix")
-            isa($lb, Array) || isinf($lb) || $lb == 0 || error("Invalid SDP lowerbound")
-            isa($ub, Array) || isinf($ub) || $ub == 0 || error("Invalid SDP upperbound")
-            (issym($lb) && issym($ub)) || error("Bounds on semidefinite variables must be symmetric")
+        code = quote
+            $(esc(idxsets[1].args[1].args[2])) == $(esc(idxsets[2].args[1].args[2])) || error("Cannot construct symmetric variables with nonsquare dimensions")
+            (issym($lb) && issym($ub)) || error("Bounds on symmetric variables must be symmetric")
             $looped
             push!($(m).dictList, $varname)
+        end
+        if sdp
+            code = :($code; push!($(m).sdpconstr, SDPConstraint($varname)))
+        end
+        return assert_validmodel(m, quote
+            $code
             registervar($m, $(quot(getname(var))), $varname)
-            if !all(v->(v==-Inf), $lb)
-                push!($(m).sdpconstr, SDPConstraint( $varname - $lb))
-            end
-            if !all(v->(v==Inf), $ub)
-                push!($(m).sdpconstr, SDPConstraint(-$varname + $ub))
-            end
             $varname
         end)
     else
-        code = :( $(refcall) = Variable($m, $lb, $ub, $(quot(t)), "", $value) )
         looped = getloopedcode(var, code, condition, idxvars, idxsets, idxpairs, :Variable)
         varname = esc(getname(var))
         return assert_validmodel(m, quote
