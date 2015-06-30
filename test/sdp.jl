@@ -366,10 +366,10 @@ context("With solver $(typeof(solver))") do
     @fact -0.9779 >= getValue(X)[1,3] >= -0.9799 => true
 end; end; end
 
-srand(12345)
 facts("[sdp] Robust uncertainty example") do
 for solver in sdp_solvers
 context("With solver $(typeof(solver))") do
+    include(joinpath("data","robust_uncertainty.jl"))
     R = 1
     d = 3
     𝛿 = 0.05
@@ -380,8 +380,8 @@ context("With solver $(typeof(solver))") do
     Γ2(𝛿,N) = (2R^2/sqrt(N))*(2+sqrt(2*log(2/𝛿)))
 
     for d in [2,5,8]
-        μhat = rand(d)
-        M = rand(d,d)
+        μhat = μhats[d]
+        M = Ms[d]
         Σhat = 1/(d-1)*(M-ones(d)*μhat')'*(M-ones(d)*μhat')
 
         m = Model(solver=solver)
@@ -406,7 +406,7 @@ context("With solver $(typeof(solver))") do
              (u-μ)     Σ   ]
         @addSDPConstraint(m, A >= 0)
 
-        c = randn(d)
+        c = cs[d]
         @setObjective(m, Max, dot(c,u))
 
         stat = solve(m)
