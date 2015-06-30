@@ -7,7 +7,7 @@ embedded in **[Julia]**. It currently supports a number of open-source and
 commercial solvers ([CPLEX], [COIN Clp], [COIN Cbc], [ECOS], [GLPK],
 [Gurobi], [Ipopt], [KNITRO], [MOSEK], [NLopt], [SCS]) for a variety of problem classes, including
 **[linear programming]**, **[(mixed) integer programming]**,
-**[second-order conic programming]**, and **[nonlinear programming]**.
+**[second-order conic programming]**, **[semidefinite programming]**, and **[nonlinear programming]**.
 
 [mathematical programming]: http://en.wikipedia.org/wiki/Mathematical_optimization
 [Julia]: http://julialang.org/
@@ -25,6 +25,7 @@ commercial solvers ([CPLEX], [COIN Clp], [COIN Cbc], [ECOS], [GLPK],
 [linear programming]: http://en.wikipedia.org/wiki/Linear_programming
 [(mixed) integer programming]: http://en.wikipedia.org/wiki/Integer_programming
 [second-order conic programming]: http://en.wikipedia.org/wiki/Second-order_cone_programming
+[semidefinite programming]: https://en.wikipedia.org/wiki/Semidefinite_programming
 [nonlinear programming]: http://en.wikipedia.org/wiki/Nonlinear_programming
 
 JuMP makes it easy to specify and **solve optimization problems without expert knowledge**, yet at the same time allows experts to implement advanced algorithmic techniques such as exploiting efficient hot-starts in linear programming or using callbacks to interact with branch-and-bound solvers. JuMP is also **fast** - benchmarking has shown that it can create problems at similar speeds to special-purpose commercial tools such as AMPL while maintaining the expressiveness of a generic high-level programming language. JuMP can be easily embedded in complex work flows including simulations and web servers.
