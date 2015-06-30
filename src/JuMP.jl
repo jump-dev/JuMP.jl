@@ -20,7 +20,7 @@ using Compat
 
 export
 # Objects
-    Model, Variable, AffExpr, QuadExpr, 
+    Model, Variable, AffExpr, QuadExpr,
     LinearConstraint, QuadConstraint, SDPConstraint,
     ConstraintRef, LinConstrRef,
 # Functions
@@ -316,6 +316,8 @@ Base.one(::Type{Variable}) = AffExpr(Variable[],Float64[],1.0)
 Base.one(::Variable) = one(typeof(v))
 
 verify_ownership(m::Model, vec::Vector{Variable}) = all(v->isequal(v.m,m), vec)
+
+Base.copy(v::Variable, new_model::Model) = Variable(new_model, v.col)
 
 ###############################################################################
 # Generic affine expression class
@@ -627,6 +629,12 @@ function addConstraint(m::Model, c::SDPConstraint)
     m.internalModelLoaded = false
     ConstraintRef{SDPConstraint}(m,length(m.sdpconstr))
 end
+
+# helper method for mapping going on below
+Base.copy(x::Number, new_model::Model) = copy(x)
+
+Base.copy(c::SDPConstraint, new_model::Model) =
+    SDPConstraint(map(t -> copy(t, new_model), c.terms))
 
 ##########################################################################
 # Generic constraint type for quadratic expressions

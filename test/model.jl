@@ -285,6 +285,8 @@ facts("[model] Test model copying") do
     @addConstraint(source, x + 2.0*y <= 6)
     @addConstraint(source, x*x <= 1)
     addSOS2(source, [x, 2y])
+    @addSDPConstraint(source, x*ones(3,3) >= eye(3,3))
+    @addSDPConstraint(source, ones(3,3) <= 0)
 
     # uncomment when NLP copying is implemented
     # @addNLConstraint(source, c[k=1:3], x^2 + y^3 * sin(x+k*y) >= 1)
@@ -320,6 +322,10 @@ facts("[model] Test model copying") do
     @fact dest.sosconstr[1].terms[2].col => 2
     @fact dest.sosconstr[1].weights => [1.0,2.0]
     @fact dest.sosconstr[1].sostype => :SOS2
+    @fact length(dest.sdpconstr) => 2
+    xx = copy(x, dest)
+    @fact all(t -> JuMP._isequal(t[1],t[2]), zip(dest.sdpconstr[1].terms, xx*ones(3,3) - eye(3,3))) => true
+    @fact all(t -> JuMP._isequal(t[1],t[2]), zip(dest.sdpconstr[2].terms, convert(Matrix{AffExpr}, -ones(3,3)))) => true
 
     # Issue #358
     @fact typeof(dest.linconstr)  => Array{JuMP.GenericRangeConstraint{JuMP.GenericAffExpr{Float64,JuMP.Variable}},1}
