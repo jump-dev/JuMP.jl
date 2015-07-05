@@ -287,23 +287,35 @@ Sometimes it can be useful to track solver progress without actually changing th
 
 For a simple example, we can add a function that tracks the best bound and incumbent objective value as the solver progresses through the branch-and-bound tree::
 
-    # build model ``m`` up here
-
     type NodeData
+        time::Uint64  # in nanoseconds
         node::Int
         obj::Float64
         bestbound::Float64
     end
 
+    # build model ``m`` up here
+    
     bbdata = NodeData[]
 
     function infocallback(cb)
-        node      = cbgetexplorednodes(cb)
-        obj       = cbgetobj(cb)
-        bestbound = cbgetbestbound(cb)
-        push!(bbdata, NodeData(node,obj,bestbound))
+        node      = MathProgBase.cbgetexplorednodes(cb)
+        obj       = MathProgBase.cbgetobj(cb)
+        bestbound = MathProgBase.cbgetbestbound(cb)
+        push!(bbdata, NodeData(time_ns(),node,obj,bestbound))
     end
     addInfoCallback(m, infocallback)
+    
+    solve(m)
+    
+    # Save results to file for analysis later
+    open("bbtrack.csv","w") do fp
+        println(fp, "time,node,obj,bestbound")
+        for bb in bbdata
+            println(fp, bb.time, ",", bb.node, ",",
+                        bb.obj, ",", bb.bestbound)
+        end
+    end
 
 
 Code Design Considerations
