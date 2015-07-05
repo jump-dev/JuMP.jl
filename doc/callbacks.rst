@@ -303,7 +303,7 @@ For a simple example, we can add a function that tracks the best bound and incum
         bestbound = cbgetbestbound(cb)
         push!(bbdata, NodeData(node,obj,bestbound))
     end
-    setInfoCallback(m, infocallback)
+    addInfoCallback(m, infocallback)
 
 
 Code Design Considerations
