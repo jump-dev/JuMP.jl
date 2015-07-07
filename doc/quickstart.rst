@@ -94,7 +94,7 @@ macros, e.g.::
     The ``@setObjective`` macro accepts ``:Min`` and ``:Max``, as well as ``Min`` and ``Max`` (without the colon) directly.
 
 You may have noticed a special ``sum{}`` operator above. This is defined only for
-the second kind of function. The syntax is of the form::
+the second kind of function. The syntax is of the form (where ``IX`` can be any iterable)::
 
 	sum{expression, i = I1, j = I2, ...}
 
