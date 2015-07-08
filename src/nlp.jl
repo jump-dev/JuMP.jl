@@ -9,10 +9,11 @@ type NLPData
     nlobj
     nlconstr::Vector{NonlinearConstraint}
     nlconstrlist::ReverseDiffSparse.ExprList
+    nlconstrDuals::Vector{Float64}
     evaluator
 end
 
-NLPData() = NLPData(nothing, NonlinearConstraint[], ExprList(), nothing)
+NLPData() = NLPData(nothing, NonlinearConstraint[], ExprList(), Float64[], nothing)
 
 Base.copy(::NLPData) = error("Copying nonlinear problems not yet implemented")
 
@@ -20,6 +21,15 @@ function initNLP(m::Model)
     if m.nlpdata === nothing
         m.nlpdata = NLPData()
     end
+end
+
+function getDual(c::ConstraintRef{NonlinearConstraint})
+    initNLP(c.m)
+    nldata::NLPData = c.m.nlpdata
+    if length(nldata.nlconstrDuals) != length(nldata.nlconstr)
+        error("Dual solution not available. Check that the model was properly solved.")
+    end
+    return nldata.nlconstrDuals[c.idx]
 end
 
 type JuMPNLPEvaluator <: MathProgBase.AbstractNLPEvaluator
@@ -501,8 +511,18 @@ function solvenlp(m::Model; suppress_warnings=false)
     m.objVal = MathProgBase.getobjval(m.internalModel)
     m.colVal = MathProgBase.getsolution(m.internalModel)
 
-    if stat != :Optimal && !suppress_warnings
-        warn("Not solved to optimality, status: $stat")
+    if stat != :Optimal
+        suppress_warnings || warn("Not solved to optimality, status: $stat")
+    else # stat == :Optimal
+        if applicable(MathProgBase.getconstrduals, m.internalModel) && applicable(MathProgBase.getreducedcosts, m.internalModel)
+            nlduals = MathProgBase.getconstrduals(m.internalModel)
+            m.linconstrDuals = nlduals[1:length(m.linconstr)]
+            # quadratic duals currently not available, formulate as nonlinear constraint if needed
+            nldata.nlconstrDuals = nlduals[length(m.linconstr)+length(m.quadconstr)+1:end]
+            m.redCosts = MathProgBase.getreducedcosts(m.internalModel)
+        else
+            suppress_warnings || Base.warn_once("Nonlinear solver does not provide dual solutions")
+        end
     end
 
     m.internalModelLoaded = true

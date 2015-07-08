@@ -313,6 +313,86 @@ context("With solver $(typeof(nlp_solver))") do
     @fact getValue(zexpr[1]) => roughly(-(1/4)*log(1/4), 1e-4)
 end; end; end
 
+facts("[nonlinear] Test nonlinear duals") do
+for nlp_solver in nlp_solvers
+applicable(MathProgBase.getconstrduals, MathProgBase.model(nlp_solver)) || continue
+context("With solver $(typeof(nlp_solver))") do
+    modA = Model(solver=nlp_solver)
+    @defVar(modA, x >= 0)
+    @defVar(modA, y <= 5)
+    @defVar(modA, 2 <= z <= 4)
+    @defVar(modA, 0 <= r[i=3:6] <= i)
+    @setNLObjective(modA, Min, -((x + y)/2.0 + 3.0)/3.0 - z - r[3])
+    @addConstraint(modA, cons1, x+y >= 2)
+    @addConstraint(modA, cons2, sum{r[i],i=3:5} <= (2 - x)/2.0)
+    @addNLConstraint(modA, cons3, 7.0*y <= z + r[6]/1.9)
+
+    # Solution
+    @fact solve(modA) => :Optimal
+    @fact getObjectiveValue(modA) => roughly(-5.8446115, 1e-6)
+    @fact getValue(x)       => roughly(0.9774436, 1e-6)
+    @fact getValue(y)       => roughly(1.0225563, 1e-6)
+    @fact getValue(z)       => roughly(4.0, 1e-6)
+    @fact getValue(r)[3]    => roughly(0.5112781, 1e-6)
+    @fact getValue(r)[4]    => roughly(0.0, 1e-6)
+    @fact getValue(r)[5]    => roughly(0.0, 1e-6)
+    @fact getValue(r)[6]    => roughly(6.0, 1e-6)
+
+    # Reduced costs
+    @fact getDual(x)    => roughly( 0.0, 1e-6)
+    @fact getDual(y)    => roughly( 0.0, 1e-6)
+    @fact getDual(z)    => roughly(-1.0714286, 1e-6)
+    @fact getDual(r)[3] => roughly( 0.0, 1e-6)
+    @fact getDual(r)[4] => roughly(1.0, 1e-6)
+    @fact getDual(r)[5] => roughly(1.0, 1e-6)
+    @fact getDual(r)[6] => roughly(-0.03759398, 1e-6)
+
+    # Row duals
+    @fact getDual(cons1) => roughly( 0.333333, 1e-6)
+    @fact getDual(cons2) => roughly(-1.0, 1e-6)
+    @fact getDual(cons3) => roughly(-0.0714286, 1e-6)
+end; end; end
+
+facts("[nonlinear] Test nonlinear duals (Max)") do
+for nlp_solver in nlp_solvers
+applicable(MathProgBase.getconstrduals, MathProgBase.model(nlp_solver)) || continue
+context("With solver $(typeof(nlp_solver))") do
+    modA = Model(solver=nlp_solver)
+    @defVar(modA, x >= 0)
+    @defVar(modA, y <= 5)
+    @defVar(modA, 2 <= z <= 4)
+    @defVar(modA, 0 <= r[i=3:6] <= i)
+    @setNLObjective(modA, Max, ((x + y)/2.0 + 3.0)/3.0 + z + r[3])
+    @addConstraint(modA, cons1, x+y >= 2)
+    @addConstraint(modA, cons2, sum{r[i],i=3:5} <= (2 - x)/2.0)
+    @addNLConstraint(modA, cons3, 7.0*y <= z + r[6]/1.9)
+
+    # Solution
+    @fact solve(modA) => :Optimal
+    @fact getObjectiveValue(modA) => roughly(5.8446115, 1e-6)
+    @fact getValue(x)       => roughly(0.9774436, 1e-6)
+    @fact getValue(y)       => roughly(1.0225563, 1e-6)
+    @fact getValue(z)       => roughly(4.0, 1e-6)
+    @fact getValue(r)[3]    => roughly(0.5112781, 1e-6)
+    @fact getValue(r)[4]    => roughly(0.0, 1e-6)
+    @fact getValue(r)[5]    => roughly(0.0, 1e-6)
+    @fact getValue(r)[6]    => roughly(6.0, 1e-6)
+
+    # Reduced costs
+    @fact getDual(x)    => roughly( 0.0, 1e-6)
+    @fact getDual(y)    => roughly( 0.0, 1e-6)
+    @fact getDual(z)    => roughly(1.0714286, 1e-6)
+    @fact getDual(r)[3] => roughly( 0.0, 1e-6)
+    @fact getDual(r)[4] => roughly(-1.0, 1e-6)
+    @fact getDual(r)[5] => roughly(-1.0, 1e-6)
+    @fact getDual(r)[6] => roughly(0.03759398, 1e-6)
+
+    # Row duals
+    @fact getDual(cons1) => roughly(-0.333333, 1e-6)
+    @fact getDual(cons2) => roughly(1.0, 1e-6)
+    @fact getDual(cons3) => roughly(0.0714286, 1e-6)
+end; end; end
+
 
 #############################################################################
 # Test that output is produced in correct MPB form
