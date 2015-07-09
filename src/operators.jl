@@ -289,10 +289,10 @@ end
 typealias JuMPTypes Union(Variable,AffExpr,QuadExpr)
 
 Base.promote_rule{R<:Real}(::Type{Variable},::Type{R}       ) = AffExpr
-Base.promote_rule         (::Type{Variable},::Type{AffExpr} ) = AffExpr
-Base.promote_rule         (::Type{Variable},::Type{QuadExpr}) = QuadExpr
+Base.promote_rule(         ::Type{Variable},::Type{AffExpr} ) = AffExpr
+Base.promote_rule(         ::Type{Variable},::Type{QuadExpr}) = QuadExpr
 Base.promote_rule{R<:Real}(::Type{AffExpr}, ::Type{R}       ) = AffExpr
-Base.promote_rule         (::Type{AffExpr}, ::Type{QuadExpr}) = QuadExpr
+Base.promote_rule(         ::Type{AffExpr}, ::Type{QuadExpr}) = QuadExpr
 Base.promote_rule{R<:Real}(::Type{QuadExpr},::Type{R}       ) = QuadExpr
 _throw_transpose_error() = error("Transpose not currently implemented for JuMPArrays with arbitrary index sets.")
 

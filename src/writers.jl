@@ -11,7 +11,7 @@ function writeMPS(m::Model, fname::String)
     numRows = length(m.linconstr)
 
     # Objective and constraint names
-    gc_disable()
+    gc_enable(false)
     write(f,"ROWS\n")
     write(f," N  CON$(numRows+1)\n")
     hasrange = false
@@ -29,10 +29,10 @@ function writeMPS(m::Model, fname::String)
         end
         @printf(f," %c  CON%d\n",senseChar,c)
     end
-    gc_enable()
+    gc_enable(true)
 
     # Load rows into SparseMatrixCSC
-    gc_disable()
+    gc_enable(false)
     nnz = 0
     for c in 1:numRows
         nnz += length(m.linconstr[c].terms.coeffs)
@@ -73,10 +73,10 @@ function writeMPS(m::Model, fname::String)
     colptr = colmat.colptr
     rowval = colmat.rowval
     nzval = colmat.nzval
-    gc_enable()
+    gc_enable(true)
 
     # Output each column
-    gc_disable()
+    gc_enable(false)
     inintegergroup = false
     write(f,"COLUMNS\n")
     for col in 1:m.numCols
@@ -98,10 +98,10 @@ function writeMPS(m::Model, fname::String)
     if inintegergroup
         @printf(f,"    MARKER    'MARKER'                 'INTEND'\n")
     end
-    gc_enable()
+    gc_enable(true)
 
     # RHSs
-    gc_disable()
+    gc_enable(false)
     write(f,"RHS\n")
     for c in 1:numRows
         rowsense = sense(m.linconstr[c])
@@ -114,11 +114,11 @@ function writeMPS(m::Model, fname::String)
         end
         println(f)
     end
-    gc_enable()
+    gc_enable(true)
 
     # RANGES
     if hasrange
-        gc_disable()
+        gc_enable(false)
         write(f,"RANGES\n")
         for c in 1:numRows
             rowsense = sense(m.linconstr[c])
@@ -132,7 +132,7 @@ function writeMPS(m::Model, fname::String)
 
 
     # BOUNDS
-    gc_disable()
+    gc_enable(false)
     write(f,"BOUNDS\n")
     for col in 1:m.numCols
         if m.colLower[col] == 0
@@ -165,10 +165,10 @@ function writeMPS(m::Model, fname::String)
             println(f)
         end
     end
-    gc_enable()
+    gc_enable(true)
 
     # Quadratic objective
-    gc_disable()
+    gc_enable(false)
     if length(m.obj.qvars1) != 0
         write(f,"QMATRIX\n")
         qv1 = m.obj.qvars1
@@ -194,7 +194,7 @@ function writeMPS(m::Model, fname::String)
 
     write(f,"ENDATA\n")
     close(f)
-    gc_enable()
+    gc_enable(true)
 end
 
 ###############################################################################
