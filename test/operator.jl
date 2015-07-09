@@ -35,6 +35,9 @@ facts("[operator] Testing basic operator overloads") do
     q3 = 2 * x * x + 1 * y * y + z + 3
     @fact quadToStr(q3) => "2 x² + y² + z + 3"
 
+    @fact isequal(3w + 2y, 3w +2y) => true
+    @fact isequal(3w + 2y + 1, 3w + 2y) => false
+
     # Different objects that must all interact:
     # 1. Number
     # 2. Variable

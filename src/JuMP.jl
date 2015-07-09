@@ -366,6 +366,16 @@ end
 # Copy an affine expression
 Base.copy(aff::GenericAffExpr) = GenericAffExpr(copy(aff.vars),copy(aff.coeffs),copy(aff.constant))
 
+function Base.isequal{T,S}(aff::GenericAffExpr{T,S},other::GenericAffExpr{T,S})
+    isequal(aff.constant,other.constant) || return false
+    length(aff.vars) == length(other.vars) || return false
+    for i in 1:length(aff.vars)
+        isequal(aff.vars[i],other.vars[i]) || return false
+        isequal(aff.coeffs[i],other.coeffs[i]) || return false
+    end
+    return true
+end
+
 ###############################################################################
 # Affine expressions, the specific GenericAffExpr used by JuMP
 typealias AffExpr GenericAffExpr{Float64,Variable}
