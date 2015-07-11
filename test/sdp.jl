@@ -383,7 +383,8 @@ context("With solver $(typeof(solver))") do
     Γ1(𝛿,N) = (R/sqrt(N))*(2+sqrt(2*log(1/𝛿)))
     Γ2(𝛿,N) = (2R^2/sqrt(N))*(2+sqrt(2*log(2/𝛿)))
 
-    for d in [2,5,8]
+    for d in [2,5,8]; context("d = $d") do
+
         μhat = μhats[d]
         M = Ms[d]
         Σhat = 1/(d-1)*(M-ones(d)*μhat')'*(M-ones(d)*μhat')
@@ -419,5 +420,5 @@ context("With solver $(typeof(solver))") do
         exact = dot(μhat,c) + Γ1(𝛿/2,N)*norm(c) + sqrt((1-ɛ)/ɛ)*sqrt(dot(c,(Σhat+Γ2(𝛿/2,N)*eye(d,d))*c))
         @fact stat => :Optimal
         @fact abs(object - exact) => roughly(0, 1e-5)
-    end
+    end; end
 end; end; end
