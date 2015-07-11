@@ -629,7 +629,7 @@ function solveSDP(m::Model; suppress_warnings=false)
         rng = (c+1):(c+n)
         append!(I, rng)
         append!(J, copy(cone))
-        append!(V, [-1.0, ones(n-1)])
+        append!(V, [-1.0; ones(n-1)])
         push!(con_cones, (:SOC,rng))
         c += n
     end
@@ -638,7 +638,7 @@ function solveSDP(m::Model; suppress_warnings=false)
         rng = (c+1):(c+n)
         append!(I, rng)
         append!(J, copy(cone))
-        append!(V, [-1.0, -1.0, ones(n-2)])
+        append!(V, [-1.0; -1.0; ones(n-2)])
         push!(con_cones, (:SOCRotated,rng))
         c += n
     end
