@@ -86,7 +86,7 @@ end
 (*)(lhs::AffExpr, rhs::Variable) = (*)(rhs,lhs)
 (/)(lhs::AffExpr, rhs::Variable) = error("Cannot divide affine expression by a variable")
 # AffExpr--AffExpr
-(+){T<:GenericAffExpr}(lhs::T, rhs::T) = GenericAffExpr(vcat(lhs.vars,rhs.vars),vcat(lhs.coeffs, rhs.coeffs),lhs.constant+rhs.constant)
+(+){T<:GenericAffExpr}(lhs::T, rhs::T) = (operator_warn(lhs,rhs); GenericAffExpr(vcat(lhs.vars,rhs.vars),vcat(lhs.coeffs, rhs.coeffs),lhs.constant+rhs.constant))
 (-){T<:GenericAffExpr}(lhs::T, rhs::T) = GenericAffExpr(vcat(lhs.vars,rhs.vars),vcat(lhs.coeffs,-rhs.coeffs),lhs.constant-rhs.constant)
 function (*)(lhs::AffExpr, rhs::AffExpr)
     ret = QuadExpr(Variable[],Variable[],Float64[],AffExpr(Variable[],Float64[],0.))

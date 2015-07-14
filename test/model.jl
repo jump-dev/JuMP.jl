@@ -44,6 +44,18 @@ facts("[model] Check error cases") do
     @fact getValue(x) => isnan
 end
 
+facts("[model] Performance warnings") do
+    m = Model()
+    @defVar(m, x[1:2], start=0)
+    for i in 1:500
+       getValue(x)
+    end
+    q = 0
+    for i in 1:1000
+       q += 3x[1]
+    end
+end
+
 facts("[model] Test printing a model") do
     modA = Model()
     @defVar(modA, x >= 0)

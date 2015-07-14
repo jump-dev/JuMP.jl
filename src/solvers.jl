@@ -7,6 +7,10 @@ function solve(m::Model; suppress_warnings=false, ignore_solve_hook=(m.solvehook
 
     ignore_solve_hook || return m.solvehook(m; suppress_warnings=suppress_warnings, kwargs...)
 
+    # Clear warning counters
+    m.getvalue_counter = 0
+    m.operator_counter = 0
+
     # Analyze model to see if any integers
     anyInts = (length(m.sosconstr) > 0) ||
         any(c-> !(c == :Cont || c == :Fixed), m.colCat)
