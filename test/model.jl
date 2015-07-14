@@ -601,3 +601,11 @@ facts("[model] Setting print hook") do
     print(m)
     @fact dummy => [2]
 end
+
+facts("[model] Test getLinearIndex") do
+    m = Model()
+    @defVar(m, x[1:5])
+    for i in 1:5
+        @fact isequal(Variable(m,getLinearIndex(x[i])),x[i]) => true
+    end
+end

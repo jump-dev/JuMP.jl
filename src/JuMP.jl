@@ -34,6 +34,7 @@ export
     setName, getName, setLower, setUpper, getLower, getUpper,
     getValue, setValue, getDual, setCategory, getCategory,
     getVar,
+    getLinearIndex,
     # Expressions and constraints
     affToStr, quadToStr, conToStr, chgConstrRHS,
 
@@ -223,7 +224,8 @@ immutable Variable <: ReverseDiffSparse.Placeholder
     col::Int
 end
 
-ReverseDiffSparse.getplaceindex(x::Variable) = x.col
+getLinearIndex(x::Variable) = x.col
+ReverseDiffSparse.getplaceindex(x::Variable) = getLinearIndex(x)
 Base.isequal(x::Variable,y::Variable) = isequal(x.col,y.col) && isequal(x.m,y.m)
 
 Variable(m::Model, lower, upper, cat::Symbol, name::String="", value::Number=NaN) =
