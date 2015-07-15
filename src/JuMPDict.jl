@@ -140,6 +140,7 @@ end
 
 # Special-case this so we don't dump a huge amount of redundant warnings to screen
 function getValue(x::JuMPContainer)
+    getvalue_warn(x)
     ret = map(_getValue, x)
     if any(ret) do tmp
             v = tmp[end]

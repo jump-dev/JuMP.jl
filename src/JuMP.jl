@@ -101,6 +101,9 @@ type Model
 
     varDict::Dict{Symbol,Any} # dictionary from variable names to variable objects
 
+    getvalue_counter::Int # number of times we call getValue on a JuMPContainer, so that we can print out a warning
+    operator_counter::Int # number of times we add large expressions
+
     # Extension dictionary - e.g. for robust
     # Extensions should define a type to hold information particular to
     # their functionality, and store an instance of the type in this
@@ -121,7 +124,7 @@ function Model(;solver=UnsetSolver())
           0,String[],String[],Float64[],Float64[],Symbol[],
           0,Float64[],Float64[],Float64[],nothing,solver,
           false,Any[],nothing,nothing,JuMPContainer[],
-          IndexedVector(Float64,0),nothing,Dict{Symbol,Any}(),Dict{Symbol,Any}())
+          IndexedVector(Float64,0),nothing,Dict{Symbol,Any}(),0,0,Dict{Symbol,Any}())
 end
 
 # Getters/setters
@@ -803,6 +806,31 @@ function getVar(m::Model, varname::Symbol)
     else
         return m.varDict[varname]
     end
+end
+
+# usage warnings
+function getvalue_warn(x::JuMPContainer{Variable})
+    v = last(first(x))
+    m = v.m
+    m.getvalue_counter += 1
+    if m.getvalue_counter > 400
+        Base.warn_once("getValue has been called on a collection of variables a large number of times. For performance reasons, this should be avoided. Instead of getValue(x)[a,b,c], use getValue(x[a,b,c]) to avoid temporary allocations.")
+    end
+    return
+end
+getvalue_warn(x::JuMPContainer) = nothing
+
+function operator_warn(lhs::AffExpr,rhs::AffExpr)
+    if length(lhs.vars) > 50 || length(rhs.vars) > 50
+        if length(lhs.vars) > 1
+            m = lhs.vars[1].m
+            m.operator_counter += 1
+            if m.operator_counter > 200
+                Base.warn_once("The addition operator has been used on JuMP expressions a large number of times. For performance reasons, you should not add expressions in a loop. Instead of x += y, use append!(x,y) to modify x in place. If y is a single variable, you may also use push!(x, coef, y) in place of x += coef*y.")
+            end
+        end
+    end
+    return
 end
 
 
