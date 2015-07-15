@@ -10,6 +10,7 @@ Unversioned
   * New ``getVar()`` method to access variables in a model by name
   * Support for semidefinite programming.
   * Dual solutions are now available for general nonlinear problems. You may call ``getDual`` on a reference object for a nonlinear constraint, and ``getDual`` on a variable object for Lagrange multipliers from active bounds.
+  * Introduce warnings for two common performance traps: too many calls to ``getValue()`` on a collection of variables and use of the ``+`` operator in a loop to sum expressions.
 
 Version 0.9.2 (June 27, 2015)
 -----------------------------
