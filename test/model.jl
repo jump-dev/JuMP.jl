@@ -375,7 +375,6 @@ facts("[model] Test column-wise modeling") do
     @defVar(mod, 0 <= y <= 1)
     @setObjective(mod, Max, 5x + 1y)
     @addConstraint(mod, con[i=1:2], i*x + y <= i+5)
-    @defVar(mod, 0 <= z1 <= 0, 0.0, con, [1.0,-2.0]) # coverage for deprecated syntax
     @defVar(mod, 0 <= z1 <= 1, objective=10.0, inconstraints=con, coefficients=[1.0,-2.0])
     @defVar(mod, 0 <= z2 <= 1, objective=10.0, inconstraints=Any[con[i] for i in 1:2], coefficients=[1.0,-2.0])
     @fact solve(mod) => :Optimal
@@ -391,7 +390,6 @@ facts("[model] Test column-wise modeling") do
     A = [1 1
          2 1]
     @addConstraint(mod, A*[x,y] .<= [6,7])
-    @defVar(mod, 0 <= z1 <= 0, 0.0, con, [1.0,-2.0]) # coverage for deprecated syntax
     @defVar(mod, 0 <= z1 <= 1, objective=10.0, inconstraints=con, coefficients=[1.0,-2.0])
     @defVar(mod, 0 <= z2 <= 1, objective=10.0, inconstraints=Any[con[i] for i in 1:2], coefficients=[1.0,-2.0])
     @fact solve(mod) => :Optimal

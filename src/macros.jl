@@ -730,18 +730,6 @@ macro defVar(args...)
             end
         end
 
-        # Handle the old column generation functionality
-        if length(extra) - gottype == 3
-            warn("in @defVar ($var): the syntax for column-wise modeling has changed. Use @defVar($(m.args[1]), $var, objective=$(extra[1+gottype]), inconstraints=$(extra[2+gottype]), coefficients=$(extra[3+gottype]))")
-            objcoef = esc(extra[1+gottype])
-            cols    = esc(extra[2+gottype])
-            coeffs  = esc(extra[3+gottype])
-            return assert_validmodel(m, quote
-                $(esc(var)) = Variable($m,$lb,$ub,$(quot(t)),$objcoef,$cols,$coeffs,$(string(var)),$value)
-                nothing
-            end)
-        end
-
         gottype == 0 &&
             error("in @defVar ($var): syntax error")
     end
