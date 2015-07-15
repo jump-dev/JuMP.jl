@@ -487,9 +487,10 @@ function solvenlp(m::Model; suppress_warnings=false)
     m.internalModel = MathProgBase.model(m.solver)
 
     const nl_cont = [:Cont, :Fixed]
+    any_discrete = !all(x->(x in nl_cont), m.colCat)
 
     MathProgBase.loadnonlinearproblem!(m.internalModel, m.numCols, numConstr, m.colLower, m.colUpper, [linrowlb;quadrowlb;nlrowlb], [linrowub;quadrowub;nlrowub], m.objSense, d)
-    if !all(x->(x in nl_cont), m.colCat)
+    if any_discrete
         if applicable(MathProgBase.setvartype!, m.internalModel, m.colCat)
             MathProgBase.setvartype!(m.internalModel, m.colCat)
         else
@@ -513,7 +514,8 @@ function solvenlp(m::Model; suppress_warnings=false)
 
     if stat != :Optimal
         suppress_warnings || warn("Not solved to optimality, status: $stat")
-    else # stat == :Optimal
+    end
+    if stat == :Optimal && !any_discrete
         if applicable(MathProgBase.getconstrduals, m.internalModel) && applicable(MathProgBase.getreducedcosts, m.internalModel)
             nlduals = MathProgBase.getconstrduals(m.internalModel)
             m.linconstrDuals = nlduals[1:length(m.linconstr)]
