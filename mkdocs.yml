@@ -1,0 +1,5 @@
+site_name: JuMP Manual
+theme: bootstrap
+pages: 
+- 'About': 'index.md'
+- 'Introduction': 'intro.md'
