@@ -383,7 +383,7 @@ context("With solver $(typeof(solver))") do
     Γ1(𝛿,N) = (R/sqrt(N))*(2+sqrt(2*log(1/𝛿)))
     Γ2(𝛿,N) = (2R^2/sqrt(N))*(2+sqrt(2*log(2/𝛿)))
 
-    for d in [2,5,8]; context("d = $d") do
+    for d in [3,5,8]; context("d = $d") do
 
         μhat = μhats[d]
         M = Ms[d]
