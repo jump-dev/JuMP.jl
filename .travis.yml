@@ -1,30 +1,25 @@
-language: cpp
-compiler:
-    - gcc
+language: julia
 os:
     - linux
     - osx
+julia:
+    - release
+    - nightly
 notifications:
     email: false
-env:
-    matrix:
-        - PKGADD="FactCheck;Cbc;Clp;GLPKMathProgInterface;Ipopt;ECOS;SCS" JULIAVERSION="juliareleases"
-        - PKGADD="FactCheck;GLPKMathProgInterface;ECOS" JULIAVERSION="julianightlies"
-before_install:
-    - curl http://julialang.org/install-julia.sh | sh -s $JULIAVERSION
-    - if [ `uname` = "Linux" ]; then
-        sudo apt-get install gfortran liblapack-dev libgmp-dev libglpk-dev;
-      fi
-    - if [[ -a .git/shallow ]]; then git fetch --unshallow; fi
-    - julia -e 'versioninfo()'
+sudo: false
+addons:
+    apt_packages:
+        - gfortran
+        - liblapack-dev
+        - libgmp-dev
+        - libglpk-dev
 script:
-    - julia -e 'Pkg.init(); Pkg.clone(pwd())'
-    - if [[ `uname` = "Darwin" ]]; then julia -e 'Pkg.add("Ipopt")'; fi # installs from binaries
-    - if [[ `uname` = "Linux" ]]; then julia -e 'Pkg.add("SCS")'; fi # hack to avoid broken SCS on OSX nightly
-    - julia -e 'for p in split(ENV["PKGADD"],";") Pkg.add(p) end'
-    - if [ $JULIAVERSION = "julianightlies" ]; then julia test/runtests.jl; fi
-    - if [ $JULIAVERSION = "juliareleases" ]; then julia --code-coverage test/runtests.jl; fi
+    - if [[ -a .git/shallow ]]; then git fetch --unshallow; fi
+    - julia -e 'Pkg.clone(pwd())'
+    - julia -e 'Pkg.test("JuMP", coverage=true)'
     - julia test/hygiene.jl
+    - julia -e 'Pkg.add("Ipopt")' # needed for below tests
     - julia test/hockschittkowski/runhs.jl
 after_success:
     - if [[ $JULIAVERSION = "juliareleases" && `uname` = "Linux" ]]; then julia -e 'cd(Pkg.dir("JuMP")); Pkg.add("Coverage"); using Coverage; Coveralls.submit(Coveralls.process_folder())'; fi
