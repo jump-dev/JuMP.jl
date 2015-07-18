@@ -3,6 +3,26 @@
 #  License, v. 2.0. If a copy of the MPL was not distributed with this
 #  file, You can obtain one at http://mozilla.org/MPL/2.0/.
 
+immutable ProblemTraits
+    int::Bool
+    lin::Bool
+    qp ::Bool
+    qc ::Bool
+    nlp::Bool
+    sdp::Bool
+    sos::Bool
+end
+
+function problemclass(m::Model)
+    int = any(c-> !(c == :Cont || c == :Fixed), m.colCat)
+    qp = !isempty(m.obj.qvars1)
+    qc = !isempty(m.quadconstr)
+    nlp = m.nlpdata != nothing
+    sdp = !isempty(m.sdpconstr)
+    sos = !isempty(m.sosconstr)
+    ProblemTraits(int, !(qp|qc|nlp|sdp|sos), qp, qc, nlp, sdp, sos)
+end
+
 function solve(m::Model; suppress_warnings=false, ignore_solve_hook=(m.solvehook==nothing), kwargs...)
 
     ignore_solve_hook || return m.solvehook(m; suppress_warnings=suppress_warnings, kwargs...)
@@ -11,19 +31,7 @@ function solve(m::Model; suppress_warnings=false, ignore_solve_hook=(m.solvehook
     m.getvalue_counter = 0
     m.operator_counter = 0
 
-    # Analyze model to see if any integers
-    anyInts = (length(m.sosconstr) > 0) ||
-        any(c-> !(c == :Cont || c == :Fixed), m.colCat)
-
-    if length(m.sdpconstr) > 0
-        @assert m.nlpdata == nothing
-        @assert !anyInts
-        if isa(m.solver,UnsetSolver)
-            m.solver = MathProgBase.defaultSDPsolver
-        end
-        return solveSDP(m, suppress_warnings=suppress_warnings)
-    end
-
+    # Unfortunately we still have to take a different codepath for nlp
     if m.nlpdata != nothing
         if isa(m.solver,UnsetSolver)
             m.solver = MathProgBase.defaultNLPsolver
@@ -31,31 +39,69 @@ function solve(m::Model; suppress_warnings=false, ignore_solve_hook=(m.solvehook
         return solvenlp(m, suppress_warnings=suppress_warnings)
     end
 
-    if isa(m.solver,UnsetSolver) &&
-      (length(m.obj.qvars1) > 0 || length(m.quadconstr) > 0)
-        m.solver = MathProgBase.defaultQPsolver
-    end
-    if anyInts
-        if isa(m.solver,UnsetSolver)
-            m.solver = MathProgBase.defaultMIPsolver
-            s = solveMIP(m; suppress_warnings=suppress_warnings)
-            # Clear solver in case we change problem types
-            m.solver = UnsetSolver()
-            m.internalModelLoaded = false
-            return s
-        else
-            solveMIP(m; suppress_warnings=suppress_warnings)
+    unset = m.solver == UnsetSolver()
+    traits = problemclass(m)
+    buildInternalModel(m, traits, suppress_warnings=suppress_warnings)
+
+    MathProgBase.optimize!(m.internalModel)
+    stat = MathProgBase.status(m.internalModel)
+
+    if stat == :Optimal
+        if !(traits.int | traits.sos | traits.sdp)
+            m.redCosts = try
+                MathProgBase.getreducedcosts(m.internalModel)
+            catch
+                fill(NaN, length(m.colVal))
+            end
+
+            m.linconstrDuals = try
+                MathProgBase.getconstrduals(m.internalModel)
+            catch
+                fill(NaN, length(m.linconstr))
+            end
         end
     else
-        if isa(m.solver,UnsetSolver)
-            m.solver = MathProgBase.defaultLPsolver
-            s = solveLP(m, suppress_warnings=suppress_warnings)
-            m.solver = UnsetSolver()
-            return s
-        else
-            solveLP(m; suppress_warnings=suppress_warnings)
+        suppress_warnings || warn("Not solved to optimality, status: $stat")
+
+        if stat == :Infeasible
+            m.linconstrDuals = try
+                MathProgBase.getinfeasibilityray(m.internalModel)
+            catch
+                suppress_warnings || warn("Infeasibility ray (Farkas proof) not available")
+                fill(NaN, length(m.linconstr))
+            end
+        elseif stat == :Unbounded
+            try
+                m.colVal = MathProgBase.getunboundedray(m.internalModel)
+            catch
+                suppress_warnings || warn("Unbounded ray not available")
+            end
         end
     end
+
+    m.objVal = NaN
+    m.colVal = fill(NaN, m.numCols)
+    if !(stat == :Infeasible || stat == :Unbounded)
+        try
+            objVal = MathProgBase.getobjval(m.internalModel) + m.obj.aff.constant
+            colVal = MathProgBase.getsolution(m.internalModel)
+            m.objVal = objVal # Don't corrupt the answers if one of the above two calls fails
+            m.colVal = colVal
+        end
+    end
+
+    if traits.sdp && m.objSense == :Max
+        m.objVal *= -1
+    end
+
+    if unset
+        m.solver = UnsetSolver()
+        if traits.int
+            m.internalModelLoaded = false
+        end
+    end
+
+    stat
 end
 
 function addQuadratics(m::Model)
@@ -84,7 +130,7 @@ function addQuadratics(m::Model)
                 error("Variable not owned by model present in constraints")
             end
         end
-        affidx = Cint[v.col for v in qconstr.terms.aff.vars]
+        affidx  = Cint[v.col for v in qconstr.terms.aff.vars]
         var1idx = Cint[v.col for v in qconstr.terms.qvars1]
         var2idx = Cint[v.col for v in qconstr.terms.qvars2]
         if applicable(MathProgBase.addquadconstr!, m.internalModel, affidx, qconstr.terms.aff.coeffs, var1idx, var2idx, qconstr.terms.qcoeffs, s, -qconstr.terms.aff.constant)
@@ -205,178 +251,6 @@ function vartypes_without_fixed(m::Model)
     return colCats
 end
 
-function solveLP(m::Model; suppress_warnings=false)
-    f, rowlb, rowub = prepProblemBounds(m)
-
-    # Ready to solve
-    noQuads = (length(m.quadconstr) == 0) && (length(m.obj.qvars1) == 0)
-    if m.internalModelLoaded
-        if applicable(MathProgBase.setvarLB!, m.internalModel, m.colLower) &&
-           applicable(MathProgBase.setvarUB!, m.internalModel, m.colUpper) &&
-           applicable(MathProgBase.setconstrLB!, m.internalModel, rowlb) &&
-           applicable(MathProgBase.setconstrUB!, m.internalModel, rowub) &&
-           applicable(MathProgBase.setobj!, m.internalModel, f) &&
-           applicable(MathProgBase.setsense!, m.internalModel, m.objSense) &&
-           applicable(MathProgBase.setvartype!, m.internalModel, [:Cont])
-            MathProgBase.setvarLB!(m.internalModel, m.colLower)
-            MathProgBase.setvarUB!(m.internalModel, m.colUpper)
-            MathProgBase.setconstrLB!(m.internalModel, rowlb)
-            MathProgBase.setconstrUB!(m.internalModel, rowub)
-            MathProgBase.setobj!(m.internalModel, f)
-            MathProgBase.setsense!(m.internalModel, m.objSense)
-            MathProgBase.setvartype!(m.internalModel, fill(:Cont,m.numCols))
-        else
-            !suppress_warnings && Base.warn_once("Solver does not appear to support hot-starts. Problem will be solved from scratch.")
-            m.internalModelLoaded = false
-        end
-    end
-    if !m.internalModelLoaded
-        A = prepConstrMatrix(m)
-        m.internalModel = MathProgBase.model(m.solver)
-
-        # Wrap conic solvers
-        if applicable(MathProgBase.supportedcones, m.solver) &&
-            !method_exists(MathProgBase.addquadconstr!, (typeof(m.internalModel), Vector{Int}, Vector{Float64}, Vector{Int}, Vector{Int}, Vector{Float64}, Char, Float64)) &&
-            :SOC in MathProgBase.supportedcones(m.solver)
-
-            m.internalModel = MathProgBase.model(MathProgBase.ConicSolverWrapper(m.solver))
-        end
-
-        MathProgBase.loadproblem!(m.internalModel, A, m.colLower, m.colUpper, f, rowlb, rowub, m.objSense)
-        addQuadratics(m)
-        m.internalModelLoaded = true
-    end
-
-    MathProgBase.optimize!(m.internalModel)
-    stat = MathProgBase.status(m.internalModel)
-
-    if stat != :Optimal
-        !suppress_warnings && warn("Not solved to optimality, status: $stat")
-        m.colVal = fill(NaN, m.numCols)
-        m.objVal = NaN
-        if stat == :Infeasible
-            if noQuads && applicable(MathProgBase.getinfeasibilityray, m.internalModel)
-                m.linconstrDuals = MathProgBase.getinfeasibilityray(m.internalModel)
-            else
-                noQuads && !suppress_warnings && warn("Infeasibility ray (Farkas proof) not available")
-                m.linconstrDuals = fill(NaN, length(m.linconstr))
-            end
-        elseif stat == :Unbounded
-            if noQuads && applicable(MathProgBase.getunboundedray, m.internalModel)
-                m.colVal = MathProgBase.getunboundedray(m.internalModel)
-            else
-                noQuads && !suppress_warnings && warn("Unbounded ray not available")
-            end
-        else
-            try # guess try/catch is necessary because we're not sure what return status we have
-                m.colVal = MathProgBase.getsolution(m.internalModel)
-            catch
-                m.colVal = fill(NaN, m.numCols)
-            end
-            try
-                # store solution values in model
-                m.objVal = MathProgBase.getobjval(m.internalModel)
-                m.objVal += m.obj.aff.constant
-            catch
-                m.objVal = NaN
-            end
-        end
-    else
-        # store solution values in model
-        m.objVal = MathProgBase.getobjval(m.internalModel)
-        m.objVal += m.obj.aff.constant
-        m.colVal = MathProgBase.getsolution(m.internalModel)
-        if applicable(MathProgBase.getreducedcosts, m.internalModel) &&
-                      applicable(MathProgBase.getconstrduals,  m.internalModel)
-            m.redCosts = MathProgBase.getreducedcosts(m.internalModel)
-            m.linconstrDuals = MathProgBase.getconstrduals(m.internalModel)
-        else
-            !suppress_warnings && warn("Dual solutions not available")
-            m.redCosts = fill(NaN, length(m.linconstr))
-            m.linconstrDuals = fill(NaN, length(m.linconstr))
-        end
-    end
-
-    return stat
-end
-
-function solveMIP(m::Model; suppress_warnings=false)
-    f, rowlb, rowub = prepProblemBounds(m)
-    A = prepConstrMatrix(m)
-
-    # Ready to solve
-    colCats = vartypes_without_fixed(m)
-
-    if m.internalModelLoaded
-        if applicable(MathProgBase.setvarLB!, m.internalModel, m.colLower) &&
-           applicable(MathProgBase.setvarUB!, m.internalModel, m.colUpper) &&
-           applicable(MathProgBase.setconstrLB!, m.internalModel, rowlb) &&
-           applicable(MathProgBase.setconstrUB!, m.internalModel, rowub) &&
-           applicable(MathProgBase.setobj!, m.internalModel, f) &&
-           applicable(MathProgBase.setsense!, m.internalModel, m.objSense) &&
-           applicable(MathProgBase.setvartype!, m.internalModel, colCats)
-            MathProgBase.setvarLB!(m.internalModel, m.colLower)
-            MathProgBase.setvarUB!(m.internalModel, m.colUpper)
-            MathProgBase.setconstrLB!(m.internalModel, rowlb)
-            MathProgBase.setconstrUB!(m.internalModel, rowub)
-            MathProgBase.setobj!(m.internalModel, f)
-            MathProgBase.setsense!(m.internalModel, m.objSense)
-            MathProgBase.setvartype!(m.internalModel, colCats)
-        else
-            !suppress_warnings && Base.warn_once("Solver does not appear to support hot-starts. Problem will be solved from scratch.")
-            m.internalModelLoaded = false
-        end
-    end
-    if !m.internalModelLoaded
-        m.internalModel = MathProgBase.model(m.solver)
-
-        MathProgBase.loadproblem!(m.internalModel, A, m.colLower, m.colUpper, f, rowlb, rowub, m.objSense)
-        if applicable(MathProgBase.setvartype!, m.internalModel, colCats)
-            MathProgBase.setvartype!(m.internalModel, colCats)
-        else
-            error("Solver does not support discrete variables")
-        end
-
-        addSOS(m)
-
-        addQuadratics(m)
-        registercallbacks(m)
-
-        m.internalModelLoaded = true
-    end
-
-    if !all(isnan,m.colVal)
-        if applicable(MathProgBase.setwarmstart!, m.internalModel, m.colVal)
-            MathProgBase.setwarmstart!(m.internalModel, m.colVal)
-        else
-            !suppress_warnings && Base.warn_once("Solver does not appear to support providing initial feasible solutions.")
-        end
-    end
-
-    MathProgBase.optimize!(m.internalModel)
-    stat = MathProgBase.status(m.internalModel)
-
-    if stat != :Optimal
-        !suppress_warnings && warn("Not solved to optimality, status: ", string(stat))
-    end
-    # It's possible that we have a feasible solution if we're not optimal
-    # TODO: Test this behavior on various solvers
-    try
-        # store solution values in model
-        m.objVal = MathProgBase.getobjval(m.internalModel)
-        m.objVal += m.obj.aff.constant
-    catch
-        m.objVal = NaN
-    end
-    try
-        m.colVal = MathProgBase.getsolution(m.internalModel)
-    catch
-        m.colVal = fill(NaN, m.numCols)
-    end
-
-    return stat
-end
-
 function collect_expr!(m, tmprow, terms::AffExpr)
     empty!(tmprow)
     assert_isfinite(terms)
@@ -392,17 +266,7 @@ function collect_expr!(m, tmprow, terms::AffExpr)
     tmprow
 end
 
-function solveSDP(m::Model; suppress_warnings=false)
-    objaff::AffExpr = m.obj.aff
-    assert_isfinite(objaff)
-    verify_ownership(m, objaff.vars)
-
-    # Create dense objective vector
-    f = zeros(m.numCols)
-    for ind in 1:length(objaff.vars)
-        f[objaff.vars[ind].col] += objaff.coeffs[ind]
-    end
-
+function conicconstraintdata(m::Model)
     var_cones = Any[]
     con_cones = Any[]
     nnz = 0
@@ -689,83 +553,100 @@ function solveSDP(m::Model; suppress_warnings=false)
     # @show full(A), b
     # @show var_cones, con_cones
 
-    m.internalModel = MathProgBase.model(m.solver)
     # TODO: uncomment these lines when they work with Mosek
     # supported = MathProgBase.supportedcones(m.internalModel)
     # @assert (:NonNeg in supported) && (:NonPos in supported) && (:Free in supported) && (:SDP in supported)
-
-    MathProgBase.loadconicproblem!(m.internalModel, f, A, b, con_cones, var_cones)
-    MathProgBase.setsense!(m.internalModel, m.objSense)
-    m.internalModelLoaded = true
-
-    MathProgBase.optimize!(m.internalModel)
-    stat = MathProgBase.status(m.internalModel)
-
-    if stat != :Optimal
-        !suppress_warnings && warn("Not solved to optimality, status: $stat")
-        m.colVal = fill(NaN, m.numCols)
-        m.objVal = NaN
-        try # guess try/catch is necessary because we're not sure what return status we have
-            m.colVal = MathProgBase.getsolution(m.internalModel)
-        catch
-            m.colVal = fill(NaN, m.numCols)
-        end
-        try
-            # store solution values in model
-            m.objVal = MathProgBase.getobjval(m.internalModel)
-            m.objVal += m.obj.aff.constant
-        catch
-            m.objVal = NaN
-        end
-    else
-        # store solution values in model
-        m.objVal = MathProgBase.getobjval(m.internalModel)
-        m.objVal += m.obj.aff.constant
-        m.colVal = MathProgBase.getsolution(m.internalModel)
-    end
-
-    return stat
+    A, b, var_cones, con_cones
 end
 
-function buildInternalModel(m::Model)
-    m.nlpdata == nothing || error("buildInternalModel not supported for nonlinear problems")
+function buildInternalModel(m::Model, traits=problemclass(m); suppress_warnings=false)
+    traits.nlp && error("buildInternalModel not supported for nonlinear problems")
 
-    anyInts = (length(m.sosconstr) > 0) ||
-        any(c-> !(c == :Cont || c == :Fixed), m.colCat)
-
-    if isa(m.solver,UnsetSolver) &&
-      (length(m.obj.qvars1) > 0 || length(m.quadconstr) > 0)
-        m.solver = MathProgBase.defaultQPsolver
-    end
-    if anyInts
-        if isa(m.solver,UnsetSolver)
-            m.solver = MathProgBase.defaultMIPsolver
-        end
-    else
-        if isa(m.solver,UnsetSolver)
-            m.solver = MathProgBase.defaultLPsolver
-        end
-    end
-    m.internalModel = MathProgBase.model(m.solver)
-
-    f, rowlb, rowub = prepProblemBounds(m)
-    A = prepConstrMatrix(m)
-    MathProgBase.loadproblem!(m.internalModel, A, m.colLower, m.colUpper, f, rowlb, rowub, m.objSense)
-    addQuadratics(m)
-
-    if anyInts # do MIP stuff
-        colCats = vartypes_without_fixed(m)
-        MathProgBase.setvartype!(m.internalModel, colCats)
-        addSOS(m)
-        registercallbacks(m)
-        if !all(isnan(m.colVal))
-            if applicable(MathProgBase.setwarmstart!, m.internalModel, m.colVal)
-                MathProgBase.setwarmstart!(m.internalModel, m.colVal)
+    # set default solver
+    if isa(m.solver, UnsetSolver)
+        m.solver = begin
+            if traits.int | traits.sos
+                MathProgBase.defaultMIPsolver
+            elseif traits.sdp
+                MathProgBase.defaultSDPsolver
+            elseif traits.qp | traits.qc
+                MathProgBase.defaultQPsolver
             else
-                Base.warn_once("Solver does not appear to support providing initial feasible solutions.")
+                MathProgBase.defaultLPsolver
             end
         end
     end
+
+    if traits.sdp # really should be conic here
+        f,_,_ = prepProblemBounds(m)
+        if m.objSense == :Max
+            scale!(f, -1)
+        end
+
+        m.internalModel = MathProgBase.model(m.solver)
+
+        A, b, var_cones, con_cones = conicconstraintdata(m)
+        MathProgBase.loadconicproblem!(m.internalModel, f, A, b, con_cones, var_cones)
+    else
+        f, rowlb, rowub = prepProblemBounds(m)
+        if m.internalModelLoaded
+            if applicable(MathProgBase.setvarLB!, m.internalModel, m.colLower) &&
+               applicable(MathProgBase.setvarUB!, m.internalModel, m.colUpper) &&
+               applicable(MathProgBase.setconstrLB!, m.internalModel, rowlb) &&
+               applicable(MathProgBase.setconstrUB!, m.internalModel, rowub) &&
+               applicable(MathProgBase.setobj!, m.internalModel, f) &&
+               applicable(MathProgBase.setsense!, m.internalModel, m.objSense)
+                MathProgBase.setvarLB!(m.internalModel, m.colLower)
+                MathProgBase.setvarUB!(m.internalModel, m.colUpper)
+                MathProgBase.setconstrLB!(m.internalModel, rowlb)
+                MathProgBase.setconstrUB!(m.internalModel, rowub)
+                MathProgBase.setobj!(m.internalModel, f)
+                MathProgBase.setsense!(m.internalModel, m.objSense)
+            else
+                suppress_warnings || Base.warn_once("Solver does not appear to support hot-starts. Model will be built from scratch.")
+                m.internalModelLoaded = false
+            end
+        end
+        if !m.internalModelLoaded
+            m.internalModel = MathProgBase.model(m.solver)
+            A = prepConstrMatrix(m)
+
+            # if we have either:
+            #   1) A solver that does not support the loadproblem! interface, or
+            #   2) A QCP and a solver that does not support the addquadconstr! interface,
+            # wrap everything in a ConicSolverWrapper
+            if !applicable(MathProgBase.loadproblem!, m.internalModel, A, m.colLower, m.colUpper, f, rowlb, rowub, m.objSense) ||
+                ( applicable(MathProgBase.supportedcones, m.solver) && # feel like this should have a && traits.qc as well...
+                  !method_exists(MathProgBase.addquadconstr!, (typeof(m.internalModel), Vector{Int}, Vector{Float64}, Vector{Int}, Vector{Int}, Vector{Float64}, Char, Float64)) &&
+                  :SOC in MathProgBase.supportedcones(m.solver) )
+
+                m.internalModel = MathProgBase.model(MathProgBase.ConicSolverWrapper(m.solver))
+            end
+
+            MathProgBase.loadproblem!(m.internalModel, A, m.colLower, m.colUpper, f, rowlb, rowub, m.objSense)
+            addQuadratics(m)
+        end
+
+        addSOS(m)
+        registercallbacks(m)
+    end
+
+    if applicable(MathProgBase.setvartype!, m.internalModel, Symbol[])
+        colCats = vartypes_without_fixed(m)
+        MathProgBase.setvartype!(m.internalModel, colCats)
+    elseif traits.int
+        error("Solver does not support discrete variables")
+    end
+
+    # TODO: change this so you can warmstart continuous problems?
+    if traits.int && !all(isnan(m.colVal))
+        if applicable(MathProgBase.setwarmstart!, m.internalModel, m.colVal)
+            MathProgBase.setwarmstart!(m.internalModel, m.colVal)
+        else
+            suppress_warnings || Base.warn_once("Solver does not appear to support providing initial feasible solutions.")
+        end
+    end
+
     if applicable(MathProgBase.updatemodel!, m.internalModel)
         MathProgBase.updatemodel!(m.internalModel)
     end
