@@ -832,6 +832,7 @@ function operator_warn(lhs::AffExpr,rhs::AffExpr)
     end
     return
 end
+operator_warn(lhs,rhs) = nothing
 
 
 ##########################################################################
