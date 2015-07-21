@@ -716,6 +716,8 @@ end
 
 typealias LinConstrRef ConstraintRef{LinearConstraint}
 
+getLinearIndex(x::ConstraintRef) = x.idx
+
 function getDual(c::ConstraintRef{LinearConstraint})
     if length(c.m.linconstrDuals) != MathProgBase.numlinconstr(c.m)
         error("Dual solution not available. Check that the model was properly solved and no integer variables are present.")
