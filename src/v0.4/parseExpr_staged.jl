@@ -174,6 +174,23 @@ function addToExpression{C,V}(ex::GenericQuadExpr{C,V}, c::GenericAffExpr{C,V}, 
     ex
 end
 
+# Fallback to help in the simple case x::Array{AffExpr} + y::Array{AffExpr}
+function addToExpression{N}(ex::Array{AffExpr,N}, c::Number, x::Array{AffExpr,N})
+    size(ex) == size(x) || error("Incompatible sizes: $(size(ex)) + $(size(x))")
+    for I in eachindex(ex)
+        append!(ex[I], c * x[I])
+    end
+    ex
+end
+
+function addToExpression{N}(ex::Array{AffExpr,N}, c::Array{AffExpr,N}, x::Number)
+    size(ex) == size(x) || error("Incompatible sizes: $(size(ex)) + $(size(x))")
+    for I in eachindex(ex)
+        append!(ex[I], c[I] * x)
+    end
+    ex
+end
+
 _lift(x::OneIndexedArray) = x.innerArray
 _lift(x) = x
 
