@@ -619,3 +619,9 @@ facts("[model] Test getLinearIndex") do
         @fact isequal(Variable(m,getLinearIndex(x[i])),x[i]) => true
     end
 end
+
+facts("[model] Test getValue on OneIndexedArrays") do
+    m = Model()
+    @defVar(m, x[i=1:5], start=i)
+    @fact typeof(getValue(x)) => Vector{Float64}
+end
