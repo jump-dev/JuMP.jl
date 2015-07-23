@@ -80,7 +80,11 @@ macro gendict(instancename,T,idxpairs,idxsets...)
         getidxrhs = :(Base.getindex(d.innerArray))
         setidxrhs = :(setindex!(d.innerArray,val))
         maplhs = :(Base.map(f::Function,d::$(typename)))
-        maprhs = :($(typename)(map(f,d.innerArray),d.name,d.indexsets,d.indexexprs))
+        if truearray # return a julia Array here
+            maprhs = :(map(f,d.innerArray))
+        else
+            maprhs = :($(typename)(map(f,d.innerArray),d.name,d.indexsets,d.indexexprs))
+        end
         for i in 1:N
             varname = symbol(string("x",i))
 
@@ -134,8 +138,6 @@ end
 # duck typing approach -- if eltype(innerArray) doesn't support accessor, will fail
 for accessor in (:getDual, :getLower, :getUpper)
     @eval $accessor(x::JuMPContainer) = map($accessor,x)
-    # return a matrix here
-    @eval $accessor(x::OneIndexedArray) = map($accessor, x.innerArray)
 end
 
 # Special-case this so we don't dump a huge amount of redundant warnings to screen
