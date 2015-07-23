@@ -53,7 +53,7 @@ function addToExpression(aff::AffExpr,c::Variable,x::Variable)
     return q
 end
 
-function addToExpression(aff::AffExpr,c::Number,x::AffExpr)
+function addToExpression{C,V}(aff::GenericAffExpr{C,V},c::Number,x::GenericAffExpr{C,V})
     append!(aff.vars, x.vars)
     sizehint!(aff.coeffs, length(aff.coeffs)+length(x.coeffs))
     for i in 1:length(x.coeffs)
@@ -136,7 +136,7 @@ end
 
 addToExpression(aff, c, x) = error("Cannot construct an affine expression with a term of type ($(typeof(c)))*($(typeof(x)))")
 
-stagedfunction addToExpression_reorder(ex, args...)
+@generated function addToExpression_reorder(ex, args...)
     if !isleaftype(ex) || mapreduce(t -> !isleaftype(t), |, args)
         error("Can't process abstract types")
     end

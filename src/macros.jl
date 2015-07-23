@@ -353,6 +353,8 @@ for (mac,sym) in [(:LinearConstraints, symbol("@LinearConstraint")),
                     push!(code.args, Expr(:macrocall, $sym, esc(it)))
                 elseif it.head == :tuple # constraint ref
                     error("@$mac does not currently support groups of constraints")
+                else
+                    error("Unexpected constraint expression $it")
                 end
             end
             return code
@@ -389,6 +391,8 @@ for (mac,sym) in [(:addConstraints,  symbol("@addConstraint")),
                             $code
                             $mac
                             end
+                else
+                    error("Unexpected constraint expression $it")
                 end
             end
             return quote
@@ -445,7 +449,7 @@ macro defExpr(args...)
     if isa(c,Expr)
         code = quote
             $code
-            isa($newaff,AffExpr) || error("Three argument form of @defExpr only supports linear expressions")
+            (isa($newaff,AffExpr) || isa($newaff,Number) || isa($newaff,Variable)) || error("Collection of expressions with @defExpr must be linear. For quadratic expressions, use your own array.")
         end
     end
     code = quote

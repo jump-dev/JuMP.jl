@@ -175,6 +175,7 @@ function Base.copy(source::Model)
     # Constraints
     dest.linconstr  = map(c->copy(c, dest), source.linconstr)
     dest.quadconstr = map(c->copy(c, dest), source.quadconstr)
+    dest.sosconstr  = map(c->copy(c, dest), source.sosconstr)
 
     # Variables
     dest.numCols = source.numCols
@@ -205,6 +206,9 @@ end
 
 ReverseDiffSparse.getplaceindex(x::Variable) = x.col
 Base.isequal(x::Variable,y::Variable) = isequal(x.col,y.col) && isequal(x.m,y.m)
+
+Variable(m::Model, lower, upper, cat::Symbol, name::String="", value::Number=NaN) =
+    error("Attempt to create scalar Variable with lower bound of type $(typeof(lower)) and upper bound of type $(typeof(upper)). Bounds must be scalars in Variable constructor.")
 
 function Variable(m::Model,lower::Number,upper::Number,cat::Symbol,name::String="",value::Number=NaN)
     m.numCols += 1
@@ -552,6 +556,9 @@ function addSOS2(m::Model, coll::Vector{AffExpr})
     end
     return ConstraintRef{SOSConstraint}(m,length(m.sosconstr))
 end
+
+Base.copy(sos::SOSConstraint, new_model::Model) =
+    SOSConstraint([Variable(new_model,v.col) for v in sos.terms], copy(sos.weights), sos.sostype)
 
 ##########################################################################
 # Generic constraint type for quadratic expressions
