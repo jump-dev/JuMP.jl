@@ -114,11 +114,11 @@ context("With solver $(typeof(solver))") do
     XX, YY = getValue(X), getValue(Y)
     @fact trace(A1*XX-eye(3,3)/3) => roughly(0, 1e-5)
     @fact 2*trace(A2*XX) => roughly(1, 1e-5)
-    @fact trace(A3*XX) >= 2 - 1e-5 => true
+    @fact (trace(A3*XX) >= 2 - 1e-5) => true
     @fact trace(B1*YY) => roughly(1, 1e-5)
     @fact trace(B2*YY) => roughly(0, 1e-5)
-    @fact trace(B3*YY) <= 0 => true
-    @fact trace(A1*XX)+trace(B1*YY) >= 1 => true
+    @fact (trace(B3*YY) <= 0) => true
+    @fact (trace(A1*XX)+trace(B1*YY) >= 1) => true
     @fact YY[2,2] => roughly(1, 1e-5)
     @fact norm(XX - diagm([1,.5,2])) => roughly(0, 1e-3)
     @fact norm(YY - [0 0;0 1]) => roughly(0, 1e-3)
@@ -154,10 +154,10 @@ context("With solver $(typeof(solver))") do
     @fact stat => :Optimal
     XX, yy = getValue(X), getValue(y)
     @fact ispsd(XX) => true
-    @fact yy[0] >= 0 => true
-    @fact yy[1]^2 + yy[2]^2 <= yy[0]^2 + 1e-5 => true
+    @fact (yy[0] >= 0) => true
+    @fact (yy[1]^2 + yy[2]^2 <= yy[0]^2 + 1e-5) => true
     @fact ispsd(eye(2)-XX) => true
-    @fact (XX[1,1] + XX[1,2]) - (yy[1] + yy[2]) => roughly(0,1e-4)
+    @fact ((XX[1,1] + XX[1,2]) - (yy[1] + yy[2])) => roughly(0,1e-4)
     @fact norm(XX - eye(2)) => roughly(0, 1e-4)
     @fact norm(yy[:] - [1/sqrt(2), 0.5, 0.5]) => roughly(0, 1e-4)
     @fact getObjectiveValue(m) => roughly(1.293, 1e-2)
@@ -361,13 +361,13 @@ context("With solver $(typeof(solver))") do
     @setObjective(m, Max, X[1,3])
     stat = solve(m)
     @fact stat => :Optimal
-    @fact +0.8719 <= getValue(X)[1,3] <= +0.8720 => true
+    @fact (+0.8719 <= getValue(X)[1,3] <= +0.8720) => true
 
     # Find lower bound
     @setObjective(m, Min, X[1,3])
     stat = solve(m)
     @fact stat => :Optimal
-    @fact -0.9779 >= getValue(X)[1,3] >= -0.9799 => true
+    @fact (-0.9779 >= getValue(X)[1,3] >= -0.9799) => true
 end; end; end
 
 facts("[sdp] Robust uncertainty example") do
