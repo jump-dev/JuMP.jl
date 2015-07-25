@@ -577,10 +577,10 @@ facts("[model] Test setSolver") do
     for solver in lp_solvers
         setSolver(m, solver)
         @fact m.solver => solver
-        @fact m.internalModel == nothing => true
+        @fact (m.internalModel == nothing) => true
         @fact solve(m) => :Optimal
         @fact m.solver => solver
-        @fact m.internalModel == nothing => false
+        @fact (m.internalModel == nothing) => false
     end
 end
 
