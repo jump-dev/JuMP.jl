@@ -299,6 +299,10 @@ facts("[model] Test model copying") do
     addSOS2(source, [x, 2y])
     @addSDPConstraint(source, x*ones(3,3) >= eye(3,3))
     @addSDPConstraint(source, ones(3,3) <= 0)
+    @defVar(source, z[1:3]) # OneIndexedArray
+    @defVar(source, w[2:4]) # JuMPArray
+    @defVar(source, v[[:red],1:3]) # JuMPDict
+    setSolveHook(source, m -> 1)
 
     # uncomment when NLP copying is implemented
     # @addNLConstraint(source, c[k=1:3], x^2 + y^3 * sin(x+k*y) >= 1)
@@ -339,9 +343,29 @@ facts("[model] Test model copying") do
     @fact all(t -> JuMP._isequal(t[1],t[2]), zip(dest.sdpconstr[1].terms, xx*ones(3,3) - eye(3,3))) => true
     @fact all(t -> JuMP._isequal(t[1],t[2]), zip(dest.sdpconstr[2].terms, convert(Matrix{AffExpr}, -ones(3,3)))) => true
 
+    @fact dest.solvehook(dest) => 1
+
+    @fact Set(collect(keys(dest.varDict))) => Set([:x,:y,:z,:w,:v])
+    @fact JuMP._isequal(dest.varDict[:x], Variable(dest, 1)) => true
+    @fact JuMP._isequal(dest.varDict[:y], Variable(dest, 2)) => true
+    @fact all(t -> JuMP._isequal(t[1], t[2]), zip(dest.varDict[:z].innerArray, [Variable(dest, 3), Variable(dest, 4), Variable(dest, 5)])) => true
+    @fact all(t -> JuMP._isequal(t[1], t[2]), zip(dest.varDict[:w].innerArray, [Variable(dest, 6), Variable(dest, 7), Variable(dest, 8)])) => true
+    td = dest.varDict[:v].tupledict
+    @fact length(td) => 3
+    @fact JuMP._isequal(td[:red,1], Variable(dest, 9))  => true
+    @fact JuMP._isequal(td[:red,2], Variable(dest, 10)) => true
+    @fact JuMP._isequal(td[:red,3], Variable(dest, 11)) => true
+
     # Issue #358
     @fact typeof(dest.linconstr)  => Array{JuMP.GenericRangeConstraint{JuMP.GenericAffExpr{Float64,JuMP.Variable}},1}
     @fact typeof(dest.quadconstr) => Array{JuMP.GenericQuadConstraint{JuMP.GenericQuadExpr{Float64,JuMP.Variable}},1}
+
+    setPrintHook(source, m -> 2)
+    dest2 = copy(source)
+    @fact dest2.printhook(dest2) => 2
+
+    addLazyCallback(source, cb -> 3)
+    @fact_throws copy(source)
 end
 
 
