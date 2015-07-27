@@ -184,8 +184,6 @@ function Base.copy(source::Model)
 
     dest = Model()
     dest.solver = source.solver  # The two models are linked by this
-    dest.callbacks = copy(source.callbacks)
-    dest.ext = source.ext  # Should probably be deep copy
     if length(source.ext) >= 1
         Base.warn_once("Copying model with extensions - not deep copying extension-specific information.")
     end
