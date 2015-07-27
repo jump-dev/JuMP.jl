@@ -204,7 +204,7 @@ function Base.copy(source::Model)
     dest.colCat = source.colCat[:]
 
     # callbacks and hooks
-    if !isempty(dest.callbacks)
+    if !isempty(source.callbacks)
         error("Copying callbacks is not supported")
     end
     if source.solvehook != nothing
