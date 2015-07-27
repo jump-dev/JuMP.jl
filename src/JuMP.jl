@@ -203,9 +203,31 @@ function Base.copy(source::Model)
     # Variables
     dest.numCols = source.numCols
     dest.colNames = source.colNames[:]
+    dest.colNamesIJulia = source.colNamesIJulia[:]
     dest.colLower = source.colLower[:]
     dest.colUpper = source.colUpper[:]
     dest.colCat = source.colCat[:]
+
+    # callbacks and hooks
+    if !isempty(dest.callbacks)
+        error("Copying callbacks is not supported")
+    end
+    if source.solvehook != nothing
+        dest.solvehook = copy(source.solvehook)
+    end
+    if source.printhook != nothing
+        dest.printhook = copy(source.printhook)
+    end
+
+    # variable/extension dicts
+    if !isempty(dest.ext)
+        error("Copying of extension dictionaries is not currently supported")
+    end
+    dest.varDict = Dict{Symbol,Any}()
+    for (symb,v) in source.varDict
+        dest.varDict[symb] = copy(v, dest)
+    end
+    dest.dictList = map(v -> copy(v, dest), source.dictList)
 
     if source.nlpdata != nothing
         dest.nlpdata = copy(source.nlpdata)
@@ -323,6 +345,19 @@ Base.one(::Variable) = one(typeof(v))
 verify_ownership(m::Model, vec::Vector{Variable}) = all(v->isequal(v.m,m), vec)
 
 Base.copy(v::Variable, new_model::Model) = Variable(new_model, v.col)
+
+# Copy methods for variable containers
+Base.copy(d::JuMPContainer) = map(copy, d)
+Base.copy(d::JuMPContainer, new_model::Model) = map(x -> copy(x, new_model), d)
+Base.copy{T<:OneIndexedArray}(d::T) = T(map(copy, d.innerArray),
+                                       d.name,
+                                       d.indexsets,
+                                       d.indexexprs)
+Base.copy{T<:OneIndexedArray}(d::T, new_model::Model) =
+    T(map(v -> copy(v, new_model), d.innerArray),
+      d.name,
+      d.indexsets,
+      d.indexexprs)
 
 ###############################################################################
 # Generic affine expression class
