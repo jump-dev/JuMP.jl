@@ -184,9 +184,6 @@ function Base.copy(source::Model)
 
     dest = Model()
     dest.solver = source.solver  # The two models are linked by this
-    if length(source.ext) >= 1
-        Base.warn_once("Copying model with extensions - not deep copying extension-specific information.")
-    end
 
     # Objective
     dest.obj = copy(source.obj, dest)
@@ -218,7 +215,7 @@ function Base.copy(source::Model)
     end
 
     # variable/extension dicts
-    if !isempty(dest.ext)
+    if !isempty(source.ext)
         error("Copying of extension dictionaries is not currently supported")
     end
     dest.varDict = Dict{Symbol,Any}()
