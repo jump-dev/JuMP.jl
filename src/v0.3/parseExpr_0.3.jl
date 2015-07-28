@@ -132,26 +132,66 @@ function addToExpression{C,V}(quad::GenericQuadExpr{C,V},c::Number,x::GenericQua
     quad
 end
 
-function addToExpression{N}(ex::Array{AffExpr,N}, c::Number, x::Array{AffExpr,N})
-    size(ex) == size(x) || error("Incompatible sizes: $(size(ex)) + $(size(x))")
+function chkdims(x,y)
+    ndim = max(ndims(x), ndims(y))
+    for i in 1:ndim
+        size(x,i) == size(y,i) ||
+            error("Incompatible sizes: $(size(x)) + $(size(y))")
+    end
+    nothing
+end
+
+# __addToExpression__: specialized methods for handling array-like objects
+function __addToExpression__(ex::Array, c::JuMPScalars, x::Array)
+    chkdims(ex, x)
     for I in eachindex(ex)
-        append!(ex[I], c * x[I])
+        ex[I] = addToExpression(ex[I], c, x[I])
     end
     ex
 end
 
-function addToExpression{N}(ex::Array{AffExpr,N}, c::Array{AffExpr,N}, x::Number)
-    size(ex) == size(x) || error("Incompatible sizes: $(size(ex)) + $(size(x))")
+function __addToExpression__(ex::Array, c::Array, x::JuMPScalars)
+    chkdims(ex, c)
     for I in eachindex(ex)
-        append!(ex[I], c[I] * x)
+        ex[I] = addToExpression(ex[I], c[I], x)
     end
     ex
 end
+
+function __addToExpression__(ex::Array, c::Array, x::Array)
+    rhs = c * x
+    chkdims(ex, rhs)
+    for I in eachindex(ex)
+        ex[I] = addToExpression(ex[I], 1.0, rhs[I])
+    end
+    ex
+end
+
+__addToExpression__(ex, c, x) = ex + c*x
 
 _lift(x::OneIndexedArray) = x.innerArray
 _lift(x) = x
 
-addToExpression(aff, c, x) = _lift(aff) + _lift(c) * _lift(x)
+# Internal method to determine size of c*x. Do dimension checking elsewhere.
+_sz(c::JuMPScalars, x::JuMPScalars) = ()
+_sz(c::JuMPScalars, x::AbstractArray) = size(x)
+_sz(c::AbstractArray, x::JuMPScalars) = size(c)
+_sz(c::AbstractArray, x::AbstractMatrix) = size(c,1), size(x,2)
+_sz(c::AbstractMatrix, x::AbstractVector) = size(c,1)
+
+function addToExpression(_aff, _c, _x)
+    aff, c, x = _lift(_aff), _lift(_c), _lift(_x)
+    if !isa(aff,AbstractArray) && (isa(c,AbstractArray) || isa(x,AbstractArray))
+        T = typeof(one(eltype(aff)) + one(eltype(c)) * one(eltype(x)))
+        lhs = Array(T, _sz(c,x))
+        for I in eachindex(lhs)
+            lhs[I] = copy(convert(T, aff))
+        end
+    else
+        lhs = aff
+    end
+    __addToExpression__(lhs, c, x)
+end
 
 function parseCurly(x::Expr, aff::Symbol, coeffs)
     header = x.args[1]
