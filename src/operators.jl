@@ -22,6 +22,10 @@
 (+)(lhs::Number, rhs::Variable) = AffExpr([rhs],[+1.],convert(Float64,lhs))
 (-)(lhs::Number, rhs::Variable) = AffExpr([rhs],[-1.],convert(Float64,lhs))
 (*)(lhs::Number, rhs::Variable) = AffExpr([rhs],[convert(Float64,lhs)], 0.)
+# Number--Norm
+(+){C,V}(lhs::Number, rhs::GenericNorm{2,C,V}) = GenericSOCExpr{C,V}(copy(rhs),  one(C), convert(C,lhs))
+(-){C,V}(lhs::Number, rhs::GenericNorm{2,C,V}) = GenericSOCExpr{C,V}(copy(rhs), -one(C), convert(C,lhs))
+(*){C,V}(lhs::Number, rhs::GenericNorm{2,C,V}) = GenericSOCExpr{C,V}(copy(rhs),     lhs, zero(GenericAffExpr{C,V}))
 # Number--GenericAffExpr
 (+)(lhs::Number, rhs::GenericAffExpr) = GenericAffExpr(copy(rhs.vars),copy(rhs.coeffs),lhs+rhs.constant)
 (-)(lhs::Number, rhs::GenericAffExpr) = GenericAffExpr(copy(rhs.vars),    -rhs.coeffs ,lhs-rhs.constant)
@@ -30,6 +34,10 @@
 (+)(lhs::Number, rhs::QuadExpr) = QuadExpr(copy(rhs.qvars1),copy(rhs.qvars2),copy(rhs.qcoeffs),lhs+rhs.aff)
 (-)(lhs::Number, rhs::QuadExpr) = QuadExpr(copy(rhs.qvars1),copy(rhs.qvars2),    -rhs.qcoeffs ,lhs-rhs.aff)
 (*)(lhs::Number, rhs::QuadExpr) = QuadExpr(copy(rhs.qvars1),copy(rhs.qvars2), lhs*rhs.qcoeffs ,lhs*rhs.aff)
+# Number--SOCExpr
+(+){T<:GenericSOCExpr}(lhs::Number, rhs::T) = T(copy(rhs.norm),     rhs.coeff, lhs+rhs.aff)
+(-){T<:GenericSOCExpr}(lhs::Number, rhs::T) = T(copy(rhs.norm),    -rhs.coeff, lhs-rhs.aff)
+(*){T<:GenericSOCExpr}(lhs::Number, rhs::T) = T(copy(rhs.norm), lhs*rhs.coeff, lhs*rhs.aff)
 
 # This is not well defined if variable types are different, but needed to avoid ambiguities
 (+)(lhs::GenericAffExpr, rhs::GenericAffExpr) = (+)(promote(lhs,rhs)...)
@@ -48,6 +56,9 @@
 (+)(lhs::Variable, rhs::Variable) = AffExpr([lhs,rhs], [1.,+1.], 0.)
 (-)(lhs::Variable, rhs::Variable) = AffExpr([lhs,rhs], [1.,-1.], 0.)
 (*)(lhs::Variable, rhs::Variable) = QuadExpr([lhs],[rhs],[1.],AffExpr(Variable[],Float64[],0.))
+# Variable--Norm
+(+){C,V}(lhs::Variable, rhs::GenericNorm{2,C,V}) = GenericSOCExpr{C,V}(copy(rhs),  one(C), GenericAffExpr{C,V}(lhs))
+(-){C,V}(lhs::Variable, rhs::GenericNorm{2,C,V}) = GenericSOCExpr{C,V}(copy(rhs), -one(C), GenericAffExpr{C,V}(lhs))
 # Variable--AffExpr
 (+){CoefType,VarType}(lhs::VarType, rhs::GenericAffExpr{CoefType,VarType}) =
     GenericAffExpr{CoefType,VarType}(vcat(rhs.vars,lhs),vcat( rhs.coeffs,one(CoefType)), rhs.constant)
@@ -65,6 +76,32 @@ end
 # Variable--QuadExpr
 (+)(v::Variable, q::QuadExpr) = QuadExpr(copy(q.qvars1),copy(q.qvars2),copy(q.qcoeffs),v+q.aff)
 (-)(v::Variable, q::QuadExpr) = QuadExpr(copy(q.qvars1),copy(q.qvars2),    -q.qcoeffs ,v-q.aff)
+# Variable--SOCExpr
+(+){T<:GenericSOCExpr}(lhs::Variable, rhs::T) = T(copy(rhs.norm),  rhs.coeff, lhs+rhs.aff)
+(-){T<:GenericSOCExpr}(lhs::Variable, rhs::T) = T(copy(rhs.norm), -rhs.coeff, lhs-rhs.aff)
+
+# Norm
+(+)(lhs::GenericNorm) = lhs
+(-){C,V}(lhs::GenericNorm{2,C,V}) = GenericSOCExpr{C,V}(copy(lhs), -one(C), zero(GenericAffExpr{C,V}))
+(*)(lhs::GenericNorm) = lhs
+# Norm--Number
+(+){C,V}(lhs::GenericNorm{2,C,V},rhs::Number) =
+    GenericSOCExpr{C,V}(copy(lhs), one(C), GenericAffExpr{C,V}( rhs))
+(-){C,V}(lhs::GenericNorm{2,C,V},rhs::Number) =
+    GenericSOCExpr{C,V}(copy(lhs), one(C), GenericAffExpr{C,V}(-rhs))
+(*){C,V}(lhs::GenericNorm{2,C,V},rhs::Number) =
+    GenericSOCExpr{C,V}(copy(lhs), copy(rhs), zero(GenericAffExpr{C,V}))
+(/){C,V}(lhs::GenericNorm{2,C,V},rhs::Number) =
+    GenericSOCExpr{C,V}(copy(lhs.terms), 1/rhs, zero(GenericAffExpr{C,V}))
+# Norm--Variable
+(+)(lhs::Norm,rhs::Variable) = SOCExpr(copy(lhs), 1.0, AffExpr( rhs))
+(-)(lhs::Norm,rhs::Variable) = SOCExpr(copy(lhs), 1.0, AffExpr(-rhs))
+# Norm--Norm
+# Norm--AffExpr
+(+){C,V}(lhs::GenericNorm{2,C,V},rhs::GenericAffExpr{C,V}) = GenericSOCExpr{C,V}(copy(lhs), one(C), copy(rhs))
+(-){C,V}(lhs::GenericNorm{2,C,V},rhs::GenericAffExpr{C,V}) = GenericSOCExpr{C,V}(copy(lhs), one(C),     -rhs)
+# Norm--QuadExpr
+# Norm--SOCExpr
 
 # AffExpr (GenericAffExpr)
 (+)(lhs::GenericAffExpr) = lhs
@@ -85,6 +122,9 @@ end
 (-){CoefType,VarType}(lhs::GenericAffExpr{CoefType,VarType}, rhs::VarType) = GenericAffExpr{CoefType,VarType}(vcat(lhs.vars,rhs),vcat(lhs.coeffs,-one(CoefType)),lhs.constant)
 (*)(lhs::AffExpr, rhs::Variable) = (*)(rhs,lhs)
 (/)(lhs::AffExpr, rhs::Variable) = error("Cannot divide affine expression by a variable")
+# AffExpr--Norm
+(+){C,V}(lhs::GenericAffExpr{C,V}, rhs::GenericNorm{2,C,V}) = GenericSOCExpr{C,V}(copy(rhs),  one(C), copy(lhs))
+(-){C,V}(lhs::GenericAffExpr{C,V}, rhs::GenericNorm{2,C,V}) = GenericSOCExpr{C,V}(copy(rhs), -one(C), copy(lhs))
 # AffExpr--AffExpr
 (+){T<:GenericAffExpr}(lhs::T, rhs::T) = (operator_warn(lhs,rhs); GenericAffExpr(vcat(lhs.vars,rhs.vars),vcat(lhs.coeffs, rhs.coeffs),lhs.constant+rhs.constant))
 (-){T<:GenericAffExpr}(lhs::T, rhs::T) = GenericAffExpr(vcat(lhs.vars,rhs.vars),vcat(lhs.coeffs,-rhs.coeffs),lhs.constant-rhs.constant)
@@ -145,7 +185,9 @@ end
 # AffExpr--QuadExpr
 (+)(a::AffExpr, q::QuadExpr) = QuadExpr(copy(q.qvars1),copy(q.qvars2),copy(q.qcoeffs),a+q.aff)
 (-)(a::AffExpr, q::QuadExpr) = QuadExpr(copy(q.qvars1),copy(q.qvars2),    -q.qcoeffs ,a-q.aff)
-
+# AffExpr--SOCExpr
+(+){C,V}(lhs::GenericAffExpr{C,V}, rhs::GenericSOCExpr{C,V}) = GenericSOCExpr{C,V}(copy(rhs.norm),  copy(rhs.coeff), lhs+rhs.aff)
+(-){C,V}(lhs::GenericAffExpr{C,V}, rhs::GenericSOCExpr{C,V}) = GenericSOCExpr{C,V}(copy(rhs.norm), -copy(rhs.coeff), lhs-rhs.aff)
 
 # QuadExpr
 (+)(lhs::QuadExpr) = lhs
@@ -171,6 +213,27 @@ end
                                             vcat(q1.qcoeffs, q2.qcoeffs),   q1.aff + q2.aff)
 (-)(q1::QuadExpr, q2::QuadExpr) = QuadExpr( vcat(q1.qvars1, q2.qvars1),     vcat(q1.qvars2, q2.qvars2),
                                             vcat(q1.qcoeffs, -q2.qcoeffs),  q1.aff - q2.aff)
+
+# SOCExpr
+(+)(lhs::GenericSOCExpr) = lhs
+(-){T<:GenericSOCExpr}(lhs::T) = T(copy(lhs.norm), -lhs.coeff, -lhs.aff)
+(*)(lhs::GenericSOCExpr) = lhs
+# SOCExpr--Number
+(+){T<:GenericSOCExpr}(lhs::T,rhs::Number) = T(copy(lhs.norm), lhs.coeff, lhs.aff+rhs)
+(-){T<:GenericSOCExpr}(lhs::T,rhs::Number) = T(copy(lhs.norm), lhs.coeff, lhs.aff-rhs)
+(*){T<:GenericSOCExpr}(lhs::T,rhs::Number) = T(copy(lhs.norm), lhs.coeff*rhs, lhs.aff*rhs)
+(/){T<:GenericSOCExpr}(lhs::T,rhs::Number) = T(copy(lhs.norm), lhs.coeff/rhs, lhs.aff/rhs)
+# SOCExpr--Variable
+(+)(lhs::SOCExpr,rhs::Variable) = SOCExpr(copy(lhs.norm), lhs.coeff, lhs.aff+rhs)
+(-)(lhs::SOCExpr,rhs::Variable) = SOCExpr(copy(lhs.norm), lhs.coeff, lhs.aff-rhs)
+# SOCExpr--Norm
+# SOCExpr--AffExpr
+(+){C,V}(lhs::GenericSOCExpr{C,V},rhs::GenericAffExpr{C,V}) =
+    GenericSOCExpr{C,V}(copy(lhs.norm), lhs.coeff, lhs.aff+rhs)
+(-){C,V}(lhs::GenericSOCExpr{C,V},rhs::GenericAffExpr{C,V}) =
+    GenericSOCExpr{C,V}(copy(lhs.norm), lhs.coeff, lhs.aff-rhs)
+# SOCExpr--QuadExpr
+# SOCExpr--SOCExpr
 
 # (==)(lhs::AffExpr,rhs::AffExpr) = (lhs.vars == rhs.vars) && (lhs.coeffs == rhs.coeffs) && (lhs.constant == rhs.constant)
 # (==)(lhs::QuadExpr,rhs::QuadExpr) = (lhs.qvars1 == rhs.qvars1) && (lhs.qvars2 == rhs.qvars2) && (lhs.qcoeffs == rhs.qcoeffs) && (lhs.aff == rhs.aff)
@@ -231,8 +294,6 @@ end
 #  - dot
 #############################################################################
 
-typealias JuMPTypes Union(Variable,AffExpr,QuadExpr)
-
 Base.sum(j::JuMPArray) = sum(j.innerArray)
 Base.sum(j::JuMPDict)  = sum(values(j.tupledict))
 Base.sum(j::JuMPArray{Variable}) = AffExpr(vec(j.innerArray), ones(length(j.innerArray)), 0.0)
@@ -285,8 +346,6 @@ end
 ###############################################################################
 # A bunch of operator junk to make matrix multiplication and friends act
 # reasonably sane with JuMP types
-
-typealias JuMPTypes Union(Variable,AffExpr,QuadExpr)
 
 Base.promote_rule{R<:Real}(::Type{Variable},::Type{R}       ) = AffExpr
 Base.promote_rule(         ::Type{Variable},::Type{AffExpr} ) = AffExpr

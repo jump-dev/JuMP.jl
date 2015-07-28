@@ -80,6 +80,9 @@ const ijulia_close_rng = "\\]"
 const ijulia_integer   = "\\in \\mathbb{Z}"
 const ijulia_succeq0   = "\\succeq 0"
 
+const sqrt = "√"
+const pow_two = "²"
+
 # If not already mathmode, then wrap in MathJax start/close tags
 math(s,mathmode) = mathmode ? s : "\$\$ $s \$\$"
 
@@ -295,6 +298,30 @@ var_str(::Type{REPLMode}, m::Model, col::Int) =
     var_str(REPLMode, m, col, repl_ind_open, repl_ind_close)
 var_str(::Type{IJuliaMode}, m::Model, col::Int; mathmode=true) =
     math(var_str(IJuliaMode, m, col, ijulia_ind_open, ijulia_ind_close), mathmode)
+
+#------------------------------------------------------------------------
+## Norm
+Base.print(io::IO, j::Norm) = print(io, norm_str(REPLMode,j))
+Base.show( io::IO, j::Norm) = print(io, norm_str(REPLMode,j))
+Base.writemime(io::IO, ::MIME"text/latex", j::Norm) =
+    print(io, norm_str(IJuliaMode,j))
+
+function norm_str(mode, n::Norm)
+    terms_strs = Array(UTF8String, length(n.terms))
+    for i in 1:length(terms_strs)
+        t = aff_str(mode, n.terms[i])
+        terms_strs[i] = (if contains(t, " ")
+            "($t)$pow_two"
+        else
+            "$t$pow_two"
+        end)
+    end
+    string("$sqrt(", join(terms_strs, " + "), ")")
+end
+
+exprToStr(n::Norm) = exprToStr(convert(SOCExpr, copy(n)))
+
+#------------------------------------------------------------------------
 
 #------------------------------------------------------------------------
 ## JuMPContainer{Variable}
@@ -669,6 +696,31 @@ quad_str(::Type{REPLMode}, q::GenericQuadExpr) =
 quad_str(::Type{IJuliaMode}, q::GenericQuadExpr; mathmode=true) =
     math(quad_str(IJuliaMode, q, ijulia_times, ijulia_sq), mathmode)
 
+#------------------------------------------------------------------------
+## SOCExpr
+#------------------------------------------------------------------------
+Base.print(io::IO, c::SOCExpr) = print(io, expr_str(REPLMode,c))
+Base.show( io::IO, c::SOCExpr) = print(io, expr_str(REPLMode,c))
+Base.writemime(io::IO, ::MIME"text/latex", c::SOCExpr) =
+    print(io, expr_str(IJuliaMode,c))
+
+function expr_str(mode, c::SOCExpr)
+    coeff = c.coeff == 1 ? "" : string(c.coeff, " ")
+    nrm   = norm_str(mode, c.norm)
+    aff   = aff_str(mode, c.aff)
+    if aff[1] == '-'
+        chain = " - "
+        aff = aff[2:end]
+    elseif aff == "0"
+        aff = ""
+        chain = ""
+    else
+        chain = " + "
+    end
+    string(coeff, nrm, chain, aff)
+end
+
+exprToStr(c::SOCExpr) = expr_str(REPLMode, c)
 
 #------------------------------------------------------------------------
 ## GenericRangeConstraint
@@ -719,6 +771,23 @@ con_str(::Type{REPLMode}, c::QuadConstraint; args...) =
 con_str(::Type{IJuliaMode}, c::QuadConstraint; mathmode=true) =
     math(con_str(IJuliaMode, c, ijulia_leq, ijulia_eq, ijulia_geq), mathmode)
 
+#------------------------------------------------------------------------
+## SOCConstraint
+#------------------------------------------------------------------------
+Base.print(io::IO, c::SOCConstraint) = print(io, con_str(REPLMode,c))
+Base.show( io::IO, c::SOCConstraint) = print(io, con_str(REPLMode,c))
+Base.writemime(io::IO, ::MIME"text/latex", c::SOCConstraint) =
+    print(io, con_str(IJuliaMode,c))
+
+function con_str(mode, c::SOCConstraint)
+    ne = c.normexpr
+    coeff = ne.coeff == 1 ? "" : string(ne.coeff, " ")
+    nrm   = norm_str(mode, ne.norm)
+    aff   = aff_str(mode, -ne.aff)
+    string(coeff, nrm, " $repl_leq ", aff)
+end
+
+conToStr(c::SOCConstraint) = con_str(REPLMode, c)
 
 #------------------------------------------------------------------------
 ## SOSConstraint

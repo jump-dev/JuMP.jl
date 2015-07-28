@@ -24,8 +24,7 @@ N = ceil((2+2log(2/𝛿))^2) + 1
 
 μhat = rand(d)
 M = rand(d,d)
-# Σhat = 1/(d-1)*(M-ones(d)*μhat')'*(M-ones(d)*μhat')
-Σhat = (M-ones(d)*μhat')'*(M-ones(d)*μhat')
+Σhat = 1/(d-1)*(M-ones(d)*μhat')'*(M-ones(d)*μhat')
 
 m = Model()
 
@@ -33,17 +32,8 @@ m = Model()
 @defVar(m, u[1:d])
 @defVar(m, μ[1:d])
 
-@defVar(m, t1 >= 0)
-@defVar(m, L1[1:d])
-@addConstraint(m, L1 .== (μ-μhat))
-@addConstraint(m, sum{L1[i]^2, i=1:d} <= t1^2)
-@addConstraint(m, t1 <= Γ1(𝛿/2,N))
-
-@defVar(m, t2 >= 0)
-@defVar(m, L2[1:d,1:d])
-@addConstraint(m, L2 .== (Σ-Σhat))
-@addConstraint(m, sum{L2[i,j]^2, i=1:d, j=1:d} <= t2^2)
-@addConstraint(m, t2 <= Γ2(𝛿/2,N))
+@addConstraint(m, norm(μ-μhat) <= Γ1(𝛿/2,N))
+@addConstraint(m, vecnorm(Σ-Σhat) <= Γ2(𝛿/2,N))
 
 A = [(1-ɛ)/ɛ (u-μ)';
      (u-μ)     Σ   ]

@@ -9,8 +9,10 @@ immutable ProblemTraits
     qp ::Bool
     qc ::Bool
     nlp::Bool
+    soc::Bool
     sdp::Bool
     sos::Bool
+    conic::Bool
 end
 
 function problemclass(m::Model)
@@ -18,9 +20,10 @@ function problemclass(m::Model)
     qp = !isempty(m.obj.qvars1)
     qc = !isempty(m.quadconstr)
     nlp = m.nlpdata != nothing
+    soc = !isempty(m.socconstr)
     sdp = !isempty(m.sdpconstr)
     sos = !isempty(m.sosconstr)
-    ProblemTraits(int, !(qp|qc|nlp|sdp|sos), qp, qc, nlp, sdp, sos)
+    ProblemTraits(int, !(qp|qc|nlp|soc|sdp|sos), qp, qc, nlp, soc, sdp, sos, soc|sdp)
 end
 
 function solve(m::Model; suppress_warnings=false, ignore_solve_hook=(m.solvehook==nothing), kwargs...)
@@ -46,18 +49,19 @@ function solve(m::Model; suppress_warnings=false, ignore_solve_hook=(m.solvehook
     MathProgBase.optimize!(m.internalModel)
     stat = MathProgBase.status(m.internalModel)
 
+    numRows, numCols = length(m.linconstr), m.numCols
     if stat == :Optimal
-        if !(traits.int | traits.sos | traits.sdp)
+        if !(traits.int | traits.sos | traits.conic) # just punt on conic duals
             m.redCosts = try
-                MathProgBase.getreducedcosts(m.internalModel)
+                MathProgBase.getreducedcosts(m.internalModel)[1:numCols]
             catch
-                fill(NaN, length(m.colVal))
+                fill(NaN, numCols)
             end
 
             m.linconstrDuals = try
-                MathProgBase.getconstrduals(m.internalModel)
+                MathProgBase.getconstrduals(m.internalModel)[1:numRows]
             catch
-                fill(NaN, length(m.linconstr))
+                fill(NaN, numRows)
             end
         end
     else
@@ -65,14 +69,22 @@ function solve(m::Model; suppress_warnings=false, ignore_solve_hook=(m.solvehook
 
         if stat == :Infeasible
             m.linconstrDuals = try
-                MathProgBase.getinfeasibilityray(m.internalModel)
+                infray = MathProgBase.getinfeasibilityray(m.internalModel)
+                if length(infray) != numRows
+                    infray = fill(NaN, numRows)
+                end
+                infray
             catch
                 suppress_warnings || warn("Infeasibility ray (Farkas proof) not available")
-                fill(NaN, length(m.linconstr))
+                fill(NaN, numRows)
             end
         elseif stat == :Unbounded
             try
-                m.colVal = MathProgBase.getunboundedray(m.internalModel)
+                unbdray = MathProgBase.getunboundedray(m.internalModel)
+                if length(unbdray) != numCols
+                    unbdray = fill(NaN, numCols)
+                end
+                m.colVal = unbdray
             catch
                 suppress_warnings || warn("Unbounded ray not available")
             end
@@ -80,18 +92,19 @@ function solve(m::Model; suppress_warnings=false, ignore_solve_hook=(m.solvehook
     end
 
     m.objVal = NaN
-    m.colVal = fill(NaN, m.numCols)
+    m.colVal = fill(NaN, numCols)
     if !(stat == :Infeasible || stat == :Unbounded)
         try
             objVal = MathProgBase.getobjval(m.internalModel) + m.obj.aff.constant
-            colVal = MathProgBase.getsolution(m.internalModel)
+            colVal = MathProgBase.getsolution(m.internalModel)[1:numCols]
             m.objVal = objVal # Don't corrupt the answers if one of the above two calls fails
             m.colVal = colVal
         end
     end
 
-    if traits.sdp && m.objSense == :Max
+    if traits.conic && m.objSense == :Max
         m.objVal *= -1
+        scale!(m.linconstrDuals, -1)
     end
 
     if unset
@@ -139,6 +152,7 @@ function addQuadratics(m::Model)
             error("Solver does not support quadratic constraints")
         end
     end
+    nothing
 end
 
 function addSOS(m::Model)
@@ -407,7 +421,11 @@ function conicconstraintdata(m::Model)
         nnz += length(linconstr[c].terms.coeffs)
     end
 
-    numRows = numLinRows + numBounds + numQuadRows + numSDPRows + numSymRows
+    numSOCRows = 0
+    for con in m.socconstr
+        numSOCRows += length(con.normexpr.norm.terms) + 1
+    end
+    numRows = numLinRows + numBounds + numQuadRows + numSOCRows + numSDPRows + numSymRows
 
     b = Array(Float64, numRows)
 
@@ -514,6 +532,31 @@ function conicconstraintdata(m::Model)
 
     tmpelts = tmprow.elts
     tmpnzidx = tmprow.nzidx
+    for con in m.socconstr
+        expr = con.normexpr
+        c += 1
+        soc_start = c
+        collect_expr!(m, tmprow, expr.aff)
+        nnz = tmprow.nnz
+        indices = tmpnzidx[1:nnz]
+        append!(I, fill(c, nnz))
+        append!(J, indices)
+        append!(V, tmpelts[indices])
+        b[c] = -expr.aff.constant
+        for term in expr.norm.terms
+            c += 1
+            collect_expr!(m, tmprow, term)
+            nnz = tmprow.nnz
+            indices = tmpnzidx[1:nnz]
+            append!(I, fill(c, nnz))
+            append!(J, indices)
+            append!(V, -expr.coeff*tmpelts[indices])
+            b[c] = term.constant
+        end
+        push!(con_cones, (:SOC, soc_start:c))
+    end
+    @assert c == numLinRows + numBounds + numQuadRows + numSOCRows
+
     for con in m.sdpconstr
         if !isa(con.terms, OneIndexedArray)
             sdp_start = c + 1
@@ -569,6 +612,8 @@ function buildInternalModel(m::Model, traits=problemclass(m); suppress_warnings=
                 MathProgBase.defaultMIPsolver
             elseif traits.sdp
                 MathProgBase.defaultSDPsolver
+            elseif traits.conic
+                MathProgBase.defaultConicsolver
             elseif traits.qp | traits.qc
                 MathProgBase.defaultQPsolver
             else
@@ -577,7 +622,7 @@ function buildInternalModel(m::Model, traits=problemclass(m); suppress_warnings=
         end
     end
 
-    if traits.sdp # really should be conic here
+    if traits.conic
         f,_,_ = prepProblemBounds(m)
         if m.objSense == :Max
             scale!(f, -1)

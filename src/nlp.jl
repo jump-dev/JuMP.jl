@@ -447,6 +447,8 @@ end
 
 function solvenlp(m::Model; suppress_warnings=false)
 
+    @assert isempty(m.sdpconstr) && isempty(m.socconstr)
+
     linobj, linrowlb, linrowub = prepProblemBounds(m)
 
     nldata::NLPData = m.nlpdata
