@@ -53,16 +53,6 @@ function addToExpression(aff::GenericAffExpr, c::Number, x::Number)
     aff
 end
 
-function addToExpression{C,V}(aff::GenericAffExpr{C,V},c::Number,x::V)
-    push!(aff,convert(C,c),x)
-    aff
-end
-
-function addToExpression{C,V}(aff::GenericAffExpr{C,V},c::V,x::Number)
-    push!(aff,convert(C,x),c)
-    aff
-end
-
 function addToExpression{C,V}(aff::GenericAffExpr{C,V},c::V,x::V)
     GenericQuadExpr{C,V}([c],[x],[one(C)],aff)
 end
