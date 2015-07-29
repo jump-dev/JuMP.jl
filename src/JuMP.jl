@@ -336,9 +336,9 @@ end
 getCategory(v::Variable) = v.m.colCat[v.col]
 
 Base.zero(::Type{Variable}) = AffExpr(Variable[],Float64[],0.0)
-Base.zero(::Variable) = zero(typeof(v))
+Base.zero(::Variable) = zero(Variable)
 Base.one(::Type{Variable}) = AffExpr(Variable[],Float64[],1.0)
-Base.one(::Variable) = one(typeof(v))
+Base.one(::Variable) = one(Variable)
 
 verify_ownership(m::Model, vec::Vector{Variable}) = all(v->isequal(v.m,m), vec)
 
