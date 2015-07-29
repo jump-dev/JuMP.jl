@@ -16,10 +16,10 @@ import JuMP.REPLMode, JuMP.IJuliaMode
 # Helper function to test IO methods work correctly
 function io_test(mode, obj, exp_str; repl=:both)
     if mode == REPLMode
-        repl != :show  && @fact sprint(print, obj) => exp_str
-        repl != :print && @fact sprint(show,  obj) => exp_str
+        repl != :show  && @fact sprint(print, obj) --> exp_str
+        repl != :print && @fact sprint(show,  obj) --> exp_str
     else
-        @fact sprint(writemime, "text/latex", obj) => "\$\$ $exp_str \$\$"
+        @fact sprint(writemime, "text/latex", obj) --> "\$\$ $exp_str \$\$"
     end
 end
 
@@ -489,40 +489,40 @@ facts("[print] Variable") do
     m = Model()
     @defVar(m, 0 <= x <= 2, inconstraints=ConstraintRef{LinearConstraint}[], objective=0.0, coefficients=Float64[] )
 
-    @fact    getName(x) => "x"
+    @fact    getName(x) --> "x"
     io_test(REPLMode,   x, "x")
     io_test(IJuliaMode, x, "x")
 
     setName(x, "x2")
-    @fact    getName(x) => "x2"
+    @fact    getName(x) --> "x2"
     io_test(REPLMode,   x, "x2")
     io_test(IJuliaMode, x, "x2")
 
     setName(x, "")
-    @fact    getName(x) => "col_1"
+    @fact    getName(x) --> "col_1"
     io_test(REPLMode,   x, "col_1")
     io_test(IJuliaMode, x, "col_1")
 
     @defVar(m, z[1:2,3:5])
-    @fact       getName(z[1,3]) => "z[1,3]"
+    @fact       getName(z[1,3]) --> "z[1,3]"
     io_test(REPLMode,   z[1,3],    "z[1,3]")
     io_test(IJuliaMode, z[1,3],    "z_{1,3}")
-    @fact       getName(z[2,4]) => "z[2,4]"
+    @fact       getName(z[2,4]) --> "z[2,4]"
     io_test(REPLMode,   z[2,4],    "z[2,4]")
     io_test(IJuliaMode, z[2,4],    "z_{2,4}")
-    @fact       getName(z[2,5]) => "z[2,5]"
+    @fact       getName(z[2,5]) --> "z[2,5]"
     io_test(REPLMode,   z[2,5],    "z[2,5]")
     io_test(IJuliaMode, z[2,5],    "z_{2,5}")
 
     @defVar(m, w[3:9,["red","blue","green"]])
-    @fact    getName(w[7,"green"]) => "w[7,green]"
+    @fact    getName(w[7,"green"]) --> "w[7,green]"
     io_test(REPLMode,   w[7,"green"], "w[7,green]")
     io_test(IJuliaMode, w[7,"green"], "w_{7,green}")
 
     rng = 2:5
     @defVar(m, v[rng,rng,rng,rng,rng,rng,rng])
     a_v = v[4,5,2,3,2,2,4]
-    @fact    getName(a_v) => "v[4,5,2,3,2,2,4]"
+    @fact    getName(a_v) --> "v[4,5,2,3,2,2,4]"
     io_test(REPLMode,   a_v, "v[4,5,2,3,2,2,4]")
     io_test(IJuliaMode, a_v, "v_{4,5,2,3,2,2,4}")
 end

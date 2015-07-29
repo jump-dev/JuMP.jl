@@ -26,7 +26,7 @@ facts("[model] Check error cases") do
     modErr = Model()
     @fact_throws setObjectiveSense(modErr, :Maximum)
     @defVar(modErr, errVar)
-    @fact getValue(errVar) => isnan
+    @fact getValue(errVar) --> isnan
     @fact_throws getDual(errVar)
 
     modErr = Model()
@@ -41,7 +41,7 @@ facts("[model] Check error cases") do
     @setObjective(modErr, Max, x)
     @addConstraint(modErr, x <= -1)
     solve(modErr, suppress_warnings=true)
-    @fact getValue(x) => isnan
+    @fact getValue(x) --> isnan
 end
 
 facts("[model] Performance warnings") do
@@ -93,7 +93,7 @@ facts("[model] Test printing a model") do
     lineInd = 1
     while !eof(modAfp)
         line = readline(modAfp)
-        @fact strip(line) => strip(modALP[lineInd])
+        @fact strip(line) --> strip(modALP[lineInd])
         lineInd += 1
     end
     close(modAfp)
@@ -143,19 +143,19 @@ facts("[model] Test printing a model") do
     lineInd = 1
     while !eof(modAfp)
         line = readline(modAfp)
-        @fact chomp(line) => modAMPS[lineInd]
+        @fact chomp(line) --> modAMPS[lineInd]
         lineInd += 1
     end
     close(modAfp)
 
     # Getter/setters
-    @fact MathProgBase.numvar(modA) => 7
-    @fact MathProgBase.numlinconstr(modA) => 3
-    @fact MathProgBase.numquadconstr(modA) => 0
-    @fact MathProgBase.numconstr(modA) => 3
-    @fact getObjectiveSense(modA) => :Max
+    @fact MathProgBase.numvar(modA) --> 7
+    @fact MathProgBase.numlinconstr(modA) --> 3
+    @fact MathProgBase.numquadconstr(modA) --> 0
+    @fact MathProgBase.numconstr(modA) --> 3
+    @fact getObjectiveSense(modA) --> :Max
     setObjectiveSense(modA, :Min)
-    @fact getObjectiveSense(modA) => :Min
+    @fact getObjectiveSense(modA) --> :Min
 end
 
 
@@ -173,15 +173,15 @@ context("With solver $(typeof(solver))") do
     @addConstraint(modA, sum{r[i],i=3:5} <= (2 - x)/2.0)
     @addConstraint(modA, 7.0*y <= z + r[6]/1.9)
 
-    @fact solve(modA)       => :Optimal
-    @fact modA.objVal       => roughly(1.0+4.833334, 1e-6)
-    @fact getValue(x)       => roughly(1.0, 1e-6)
-    @fact getValue(y)       => roughly(1.0, 1e-6)
-    @fact getValue(z)       => roughly(4.0, 1e-6)
-    @fact getValue(r)[3]    => roughly(0.5, 1e-6)
-    @fact getValue(r)[4]    => roughly(0.0, 1e-6)
-    @fact getValue(r)[5]    => roughly(0.0, 1e-6)
-    @fact getValue(r)[6]    => roughly(6.0, 1e-6)
+    @fact solve(modA)       --> :Optimal
+    @fact modA.objVal       --> roughly(1.0+4.833334, 1e-6)
+    @fact getValue(x)       --> roughly(1.0, 1e-6)
+    @fact getValue(y)       --> roughly(1.0, 1e-6)
+    @fact getValue(z)       --> roughly(4.0, 1e-6)
+    @fact getValue(r)[3]    --> roughly(0.5, 1e-6)
+    @fact getValue(r)[4]    --> roughly(0.0, 1e-6)
+    @fact getValue(r)[5]    --> roughly(0.0, 1e-6)
+    @fact getValue(r)[6]    --> roughly(6.0, 1e-6)
 end # solver context
 end # loop over solvers
 end # facts block
@@ -203,29 +203,29 @@ context("With solver $(typeof(solver))") do
     cons[3] = @addConstraint(modA, 7.0*y <= z + r[6]/1.9)
 
     # Solution
-    @fact solve(modA) => :Optimal
-    @fact getObjectiveValue(modA) => roughly(-5.8446115, 1e-6)
-    @fact getValue(x)       => roughly(0.9774436, 1e-6)
-    @fact getValue(y)       => roughly(1.0225563, 1e-6)
-    @fact getValue(z)       => roughly(4.0, 1e-6)
-    @fact getValue(r)[3]    => roughly(0.5112781, 1e-6)
-    @fact getValue(r)[4]    => roughly(0.0, 1e-6)
-    @fact getValue(r)[5]    => roughly(0.0, 1e-6)
-    @fact getValue(r)[6]    => roughly(6.0, 1e-6)
+    @fact solve(modA) --> :Optimal
+    @fact getObjectiveValue(modA) --> roughly(-5.8446115, 1e-6)
+    @fact getValue(x)       --> roughly(0.9774436, 1e-6)
+    @fact getValue(y)       --> roughly(1.0225563, 1e-6)
+    @fact getValue(z)       --> roughly(4.0, 1e-6)
+    @fact getValue(r)[3]    --> roughly(0.5112781, 1e-6)
+    @fact getValue(r)[4]    --> roughly(0.0, 1e-6)
+    @fact getValue(r)[5]    --> roughly(0.0, 1e-6)
+    @fact getValue(r)[6]    --> roughly(6.0, 1e-6)
 
     # Reduced costs
-    @fact getDual(x)    => roughly( 0.0, 1e-6)
-    @fact getDual(y)    => roughly( 0.0, 1e-6)
-    @fact getDual(z)    => roughly(-1.0714286, 1e-6)
-    @fact getDual(r)[3] => roughly( 0.0, 1e-6)
-    @fact getDual(r)[4] => roughly(1.0, 1e-6)
-    @fact getDual(r)[5] => roughly(1.0, 1e-6)
-    @fact getDual(r)[6] => roughly(-0.03759398, 1e-6)
+    @fact getDual(x)    --> roughly( 0.0, 1e-6)
+    @fact getDual(y)    --> roughly( 0.0, 1e-6)
+    @fact getDual(z)    --> roughly(-1.0714286, 1e-6)
+    @fact getDual(r)[3] --> roughly( 0.0, 1e-6)
+    @fact getDual(r)[4] --> roughly(1.0, 1e-6)
+    @fact getDual(r)[5] --> roughly(1.0, 1e-6)
+    @fact getDual(r)[6] --> roughly(-0.03759398, 1e-6)
 
     # Row duals
-    @fact getDual(cons)[1] => roughly( 0.333333, 1e-6)
-    @fact getDual(cons)[2] => roughly(-1.0, 1e-6)
-    @fact getDual(cons)[3] => roughly(-0.0714286, 1e-6)
+    @fact getDual(cons)[1] --> roughly( 0.333333, 1e-6)
+    @fact getDual(cons)[2] --> roughly(-1.0, 1e-6)
+    @fact getDual(cons)[3] --> roughly(-0.0714286, 1e-6)
 end # solver context
 end # loop over solvers
 end # facts block
@@ -245,29 +245,29 @@ context("With solver $(typeof(solver))") do
     cons[3] = @addConstraint(modA, 7.0*y <= z + r[6]/1.9)
 
     # Solution
-    @fact solve(modA) => :Optimal
-    @fact getObjectiveValue(modA) => roughly(5.8446115, 1e-6)
-    @fact getValue(x)       => roughly(0.9774436, 1e-6)
-    @fact getValue(y)       => roughly(1.0225563, 1e-6)
-    @fact getValue(z)       => roughly(4.0, 1e-6)
-    @fact getValue(r)[3]    => roughly(0.5112781, 1e-6)
-    @fact getValue(r)[4]    => roughly(0.0, 1e-6)
-    @fact getValue(r)[5]    => roughly(0.0, 1e-6)
-    @fact getValue(r)[6]    => roughly(6.0, 1e-6)
+    @fact solve(modA) --> :Optimal
+    @fact getObjectiveValue(modA) --> roughly(5.8446115, 1e-6)
+    @fact getValue(x)       --> roughly(0.9774436, 1e-6)
+    @fact getValue(y)       --> roughly(1.0225563, 1e-6)
+    @fact getValue(z)       --> roughly(4.0, 1e-6)
+    @fact getValue(r)[3]    --> roughly(0.5112781, 1e-6)
+    @fact getValue(r)[4]    --> roughly(0.0, 1e-6)
+    @fact getValue(r)[5]    --> roughly(0.0, 1e-6)
+    @fact getValue(r)[6]    --> roughly(6.0, 1e-6)
 
     # Reduced costs
-    @fact getDual(x)    => roughly( 0.0, 1e-6)
-    @fact getDual(y)    => roughly( 0.0, 1e-6)
-    @fact getDual(z)    => roughly( 1.0714286, 1e-6)
-    @fact getDual(r)[3] => roughly( 0.0, 1e-6)
-    @fact getDual(r)[4] => roughly(-1.0, 1e-6)
-    @fact getDual(r)[5] => roughly(-1.0, 1e-6)
-    @fact getDual(r)[6] => roughly( 0.03759398, 1e-6)
+    @fact getDual(x)    --> roughly( 0.0, 1e-6)
+    @fact getDual(y)    --> roughly( 0.0, 1e-6)
+    @fact getDual(z)    --> roughly( 1.0714286, 1e-6)
+    @fact getDual(r)[3] --> roughly( 0.0, 1e-6)
+    @fact getDual(r)[4] --> roughly(-1.0, 1e-6)
+    @fact getDual(r)[5] --> roughly(-1.0, 1e-6)
+    @fact getDual(r)[6] --> roughly( 0.03759398, 1e-6)
 
     # Row duals
-    @fact getDual(cons)[1] => roughly(-0.333333, 1e-6)
-    @fact getDual(cons)[2] => roughly( 1.0, 1e-6)
-    @fact getDual(cons)[3] => roughly( 0.0714286, 1e-6)
+    @fact getDual(cons)[1] --> roughly(-0.333333, 1e-6)
+    @fact getDual(cons)[2] --> roughly( 1.0, 1e-6)
+    @fact getDual(cons)[3] --> roughly( 0.0714286, 1e-6)
 end # solver context
 end # loop over solvers
 end # facts block
@@ -282,8 +282,8 @@ context("With solver $(typeof(solver))") do
     @setObjective(modB, Max, x)
     @addConstraint(modB, x <= 10)
     status = solve(modB)
-    @fact status => :Optimal
-    @fact getValue(x) => roughly(1.0, 1e-6)
+    @fact status --> :Optimal
+    @fact getValue(x) --> roughly(1.0, 1e-6)
 end
 end
 end
@@ -311,58 +311,58 @@ facts("[model] Test model copying") do
 
     # uncomment when NLP copying is implemented
     # for name in source.nlpdata
-    #     @fact source.name == dest.name => true
+    #     @fact source.name == dest.name --> true
     # end
 
     # Obj
     @setObjective(source, Max, 1x)
-    @fact length(source.obj.aff.coeffs) => 1
-    @fact length(dest.obj.aff.coeffs) => 2
+    @fact length(source.obj.aff.coeffs) --> 1
+    @fact length(dest.obj.aff.coeffs) --> 2
     @setObjective(dest, Max, 1x)
-    @fact length(source.obj.aff.coeffs) => 1
-    @fact length(dest.obj.aff.coeffs) => 1
+    @fact length(source.obj.aff.coeffs) --> 1
+    @fact length(dest.obj.aff.coeffs) --> 1
     @setObjective(dest, Max, 3*x + 1*y)
-    @fact length(source.obj.aff.coeffs) => 1
-    @fact length(dest.obj.aff.coeffs) => 2
+    @fact length(source.obj.aff.coeffs) --> 1
+    @fact length(dest.obj.aff.coeffs) --> 2
 
     # Constraints
     source.linconstr[1].ub = 5.0
-    @fact dest.linconstr[1].ub => 6.0
+    @fact dest.linconstr[1].ub --> 6.0
     source.quadconstr[1].sense = :(>=)
-    @fact dest.quadconstr[1].sense => :(<=)
+    @fact dest.quadconstr[1].sense --> :(<=)
     source.sosconstr[1].terms[1] = Variable(source, 2)
     source.sosconstr[1].terms[2] = Variable(source, 1)
     source.sosconstr[1].weights = [2.0,1.0]
     source.sosconstr[1].sostype = :SOS1
-    @fact dest.sosconstr[1].terms[1].col => 1
-    @fact dest.sosconstr[1].terms[2].col => 2
-    @fact dest.sosconstr[1].weights => [1.0,2.0]
-    @fact dest.sosconstr[1].sostype => :SOS2
-    @fact length(dest.sdpconstr) => 2
+    @fact dest.sosconstr[1].terms[1].col --> 1
+    @fact dest.sosconstr[1].terms[2].col --> 2
+    @fact dest.sosconstr[1].weights --> [1.0,2.0]
+    @fact dest.sosconstr[1].sostype --> :SOS2
+    @fact length(dest.sdpconstr) --> 2
     xx = copy(x, dest)
-    @fact all(t -> JuMP._isequal(t[1],t[2]), zip(dest.sdpconstr[1].terms, xx*ones(3,3) - eye(3,3))) => true
-    @fact all(t -> JuMP._isequal(t[1],t[2]), zip(dest.sdpconstr[2].terms, convert(Matrix{AffExpr}, -ones(3,3)))) => true
+    @fact all(t -> JuMP._isequal(t[1],t[2]), zip(dest.sdpconstr[1].terms, xx*ones(3,3) - eye(3,3))) --> true
+    @fact all(t -> JuMP._isequal(t[1],t[2]), zip(dest.sdpconstr[2].terms, convert(Matrix{AffExpr}, -ones(3,3)))) --> true
 
-    @fact dest.solvehook(dest) => 1
+    @fact dest.solvehook(dest) --> 1
 
-    @fact Set(collect(keys(dest.varDict))) => Set([:x,:y,:z,:w,:v])
-    @fact JuMP._isequal(dest.varDict[:x], Variable(dest, 1)) => true
-    @fact JuMP._isequal(dest.varDict[:y], Variable(dest, 2)) => true
-    @fact all(t -> JuMP._isequal(t[1], t[2]), zip(dest.varDict[:z].innerArray, [Variable(dest, 3), Variable(dest, 4), Variable(dest, 5)])) => true
-    @fact all(t -> JuMP._isequal(t[1], t[2]), zip(dest.varDict[:w].innerArray, [Variable(dest, 6), Variable(dest, 7), Variable(dest, 8)])) => true
+    @fact Set(collect(keys(dest.varDict))) --> Set([:x,:y,:z,:w,:v])
+    @fact JuMP._isequal(dest.varDict[:x], Variable(dest, 1)) --> true
+    @fact JuMP._isequal(dest.varDict[:y], Variable(dest, 2)) --> true
+    @fact all(t -> JuMP._isequal(t[1], t[2]), zip(dest.varDict[:z].innerArray, [Variable(dest, 3), Variable(dest, 4), Variable(dest, 5)])) --> true
+    @fact all(t -> JuMP._isequal(t[1], t[2]), zip(dest.varDict[:w].innerArray, [Variable(dest, 6), Variable(dest, 7), Variable(dest, 8)])) --> true
     td = dest.varDict[:v].tupledict
-    @fact length(td) => 3
-    @fact JuMP._isequal(td[:red,1], Variable(dest, 9))  => true
-    @fact JuMP._isequal(td[:red,2], Variable(dest, 10)) => true
-    @fact JuMP._isequal(td[:red,3], Variable(dest, 11)) => true
+    @fact length(td) --> 3
+    @fact JuMP._isequal(td[:red,1], Variable(dest, 9))  --> true
+    @fact JuMP._isequal(td[:red,2], Variable(dest, 10)) --> true
+    @fact JuMP._isequal(td[:red,3], Variable(dest, 11)) --> true
 
     # Issue #358
-    @fact typeof(dest.linconstr)  => Array{JuMP.GenericRangeConstraint{JuMP.GenericAffExpr{Float64,JuMP.Variable}},1}
-    @fact typeof(dest.quadconstr) => Array{JuMP.GenericQuadConstraint{JuMP.GenericQuadExpr{Float64,JuMP.Variable}},1}
+    @fact typeof(dest.linconstr)  --> Array{JuMP.GenericRangeConstraint{JuMP.GenericAffExpr{Float64,JuMP.Variable}},1}
+    @fact typeof(dest.quadconstr) --> Array{JuMP.GenericQuadConstraint{JuMP.GenericQuadExpr{Float64,JuMP.Variable}},1}
 
     setPrintHook(source, m -> 2)
     dest2 = copy(source)
-    @fact dest2.printhook(dest2) => 2
+    @fact dest2.printhook(dest2) --> 2
 
     addLazyCallback(source, cb -> 3)
     @fact_throws copy(source)
@@ -401,9 +401,9 @@ facts("[model] Test column-wise modeling") do
     @addConstraint(mod, con[i=1:2], i*x + y <= i+5)
     @defVar(mod, 0 <= z1 <= 1, objective=10.0, inconstraints=con, coefficients=[1.0,-2.0])
     @defVar(mod, 0 <= z2 <= 1, objective=10.0, inconstraints=Any[con[i] for i in 1:2], coefficients=[1.0,-2.0])
-    @fact solve(mod) => :Optimal
-    @fact getValue(z1) => roughly(1.0, 1e-6)
-    @fact getValue(z2) => roughly(1.0, 1e-6)
+    @fact solve(mod) --> :Optimal
+    @fact getValue(z1) --> roughly(1.0, 1e-6)
+    @fact getValue(z2) --> roughly(1.0, 1e-6)
 
     # do a vectorized version as well
     mod = Model()
@@ -416,9 +416,9 @@ facts("[model] Test column-wise modeling") do
     @addConstraint(mod, A*[x,y] .<= [6,7])
     @defVar(mod, 0 <= z1 <= 1, objective=10.0, inconstraints=con, coefficients=[1.0,-2.0])
     @defVar(mod, 0 <= z2 <= 1, objective=10.0, inconstraints=Any[con[i] for i in 1:2], coefficients=[1.0,-2.0])
-    @fact solve(mod) => :Optimal
-    @fact getValue(z1) => roughly(1.0, 1e-6)
-    @fact getValue(z2) => roughly(1.0, 1e-6)
+    @fact solve(mod) --> :Optimal
+    @fact getValue(z1) --> roughly(1.0, 1e-6)
+    @fact getValue(z2) --> roughly(1.0, 1e-6)
 end
 
 facts("[model] Test all MPS paths") do
@@ -452,8 +452,8 @@ context("With solver $(typeof(solver))") do
     @addConstraint(mod, x + y >= 1)
     @setObjective(mod, Min, x+y)
     solve(mod)
-    @fact getValue(x) => roughly(0.0, 1e-6)
-    @fact getValue(y) => roughly(2.0, 1e-6)
+    @fact getValue(x) --> roughly(0.0, 1e-6)
+    @fact getValue(y) --> roughly(2.0, 1e-6)
 end; end; end
 
 facts("[model] Test semi-integer variables") do
@@ -465,8 +465,8 @@ context("With solver $(typeof(solver))") do
     @addConstraint(mod, x + y >= 2.5)
     @setObjective(mod, Min, x+1.1y)
     solve(mod)
-    @fact getValue(x) => roughly(3.0, 1e-6)
-    @fact getValue(y) => 0.0
+    @fact getValue(x) --> roughly(3.0, 1e-6)
+    @fact getValue(y) --> 0.0
 end; end; end
 
 facts("[model] Test fixed variables don't leak through MPB") do
@@ -478,10 +478,10 @@ context("With solver $(typeof(solver))") do
     @setObjective(mod, Min, x[1] + x[2] + x[3] + y[1] + y[2])
     solve(mod)
     for i in 1:3
-        @fact getValue(x[i]) => roughly(0, 1e-6)
+        @fact getValue(x[i]) --> roughly(0, 1e-6)
     end
     for k in 1:2
-        @fact getValue(y[k]) => roughly(k, 1e-6)
+        @fact getValue(y[k]) --> roughly(k, 1e-6)
     end
 end; end
 for solver in ip_solvers
@@ -490,7 +490,7 @@ context("With solver $(typeof(solver))") do
     @defVar(mod, x[1:3], Bin)
     @defVar(mod, y[k=1:2] == k)
     buildInternalModel(mod)
-    @fact MathProgBase.getvartype(getInternalModel(mod)) => [:Bin,:Bin,:Bin,:Cont,:Cont]
+    @fact MathProgBase.getvartype(getInternalModel(mod)) --> [:Bin,:Bin,:Bin,:Cont,:Cont]
 end; end; end
 
 
@@ -520,10 +520,10 @@ context("With solver $(typeof(solver))") do
 
     @fact_throws addSOS1(modS, [x[1], x[1]+x[2]])
 
-    @fact solve(modS) => :Optimal
-    @fact modS.objVal => roughly(15.0, 1e-6)
-    @fact getValue(z) => roughly( 3.0, 1e-6)
-    @fact getValue(w) => roughly(12.0, 1e-6)
+    @fact solve(modS) --> :Optimal
+    @fact modS.objVal --> roughly(15.0, 1e-6)
+    @fact getValue(z) --> roughly( 3.0, 1e-6)
+    @fact getValue(w) --> roughly(12.0, 1e-6)
 
 
     m = Model(solver=solver)
@@ -533,9 +533,9 @@ context("With solver $(typeof(solver))") do
     addSOS1(m, [x[1],2x[2]])
     addSOS1(m, [x[1],2x[3]])
 
-    @fact solve(m) => :Optimal
-    @fact getValue(x)[:] => roughly([0.0,1.0,2.0], 1e-6)
-    @fact getObjectiveValue(m) => roughly(3.0, 1e-6)
+    @fact solve(m) --> :Optimal
+    @fact getValue(x)[:] --> roughly([0.0,1.0,2.0], 1e-6)
+    @fact getObjectiveValue(m) --> roughly(3.0, 1e-6)
 end; end; end
 
 facts("[model] Test vectorized model creation") do
@@ -558,8 +558,8 @@ facts("[model] Test vectorized model creation") do
     AA, BB = 4A'*A, 4B'*A
     @setObjective(modS, Max, sum{AA[i,j]*x[i]*x[j], i=1:10,j=1:10} + sum{BB[i,j]*y[i]*y[j], i=1:7, j=1:7})
 
-    @fact JuMP.prepConstrMatrix(modV) => JuMP.prepConstrMatrix(modS)
-    @fact JuMP.prepProblemBounds(modV) => JuMP.prepProblemBounds(modS)
+    @fact JuMP.prepConstrMatrix(modV) --> JuMP.prepConstrMatrix(modS)
+    @fact JuMP.prepProblemBounds(modV) --> JuMP.prepProblemBounds(modS)
 end
 
 facts("[model] Test MIQP vectorization") do
@@ -584,11 +584,11 @@ facts("[model] Test MIQP vectorization") do
     include(joinpath("data","miqp_vector.jl")) # loads X and q
     y = X * [100, 50, 10, 1] + 20*q
     for solver in quad_solvers
-        @fact bestsubset(solver,X,y,2,500,false) => roughly([101.789,49.414,8.63904,1.72663], 1e-6)
+        @fact bestsubset(solver,X,y,2,500,false) --> roughly([101.789,49.414,8.63904,1.72663], 1e-6)
     end
     for solver in quad_mip_solvers
         y = X * [100, 50, 10, 1] + 20*q
-        @fact bestsubset(solver,X,y,2,500,true) => roughly([106.25,53.7799,0.0,0.0], 1e-6)
+        @fact bestsubset(solver,X,y,2,500,true) --> roughly([106.25,53.7799,0.0,0.0], 1e-6)
     end
 end
 
@@ -596,15 +596,15 @@ facts("[model] Test setSolver") do
     m = Model()
     @defVar(m, x[1:5])
     @addConstraint(m, con[i=1:5], x[6-i] == i)
-    @fact solve(m) => :Optimal
+    @fact solve(m) --> :Optimal
 
     for solver in lp_solvers
         setSolver(m, solver)
-        @fact m.solver => solver
-        @fact (m.internalModel == nothing) => true
-        @fact solve(m) => :Optimal
-        @fact m.solver => solver
-        @fact (m.internalModel == nothing) => false
+        @fact m.solver --> solver
+        @fact (m.internalModel == nothing) --> true
+        @fact solve(m) --> :Optimal
+        @fact m.solver --> solver
+        @fact (m.internalModel == nothing) --> false
     end
 end
 
@@ -620,8 +620,8 @@ facts("[model] Setting solve hook") do
     end
     setSolveHook(m, solvehook)
     solve(m)
-    @fact dummy => [2]
-    @fact kwarglist => Any[(:suppress_warnings,false)]
+    @fact dummy --> [2]
+    @fact kwarglist --> Any[(:suppress_warnings,false)]
 end
 
 facts("[model] Setting print hook") do
@@ -633,19 +633,19 @@ facts("[model] Setting print hook") do
     end
     setPrintHook(m, printhook)
     print(m)
-    @fact dummy => [2]
+    @fact dummy --> [2]
 end
 
 facts("[model] Test getLinearIndex") do
     m = Model()
     @defVar(m, x[1:5])
     for i in 1:5
-        @fact isequal(Variable(m,getLinearIndex(x[i])),x[i]) => true
+        @fact isequal(Variable(m,getLinearIndex(x[i])),x[i]) --> true
     end
 end
 
 facts("[model] Test getValue on OneIndexedArrays") do
     m = Model()
     @defVar(m, x[i=1:5], start=i)
-    @fact typeof(getValue(x)) => Vector{Float64}
+    @fact typeof(getValue(x)) --> Vector{Float64}
 end

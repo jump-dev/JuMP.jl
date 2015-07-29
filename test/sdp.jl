@@ -29,18 +29,18 @@ context("With solver $(typeof(solver))") do
               1    1   1 1
               1    1   1 1]
 
-    @fact norm(XX-Xtrue) => roughly(0, 1e-2)
-    @fact norm(YY-Ytrue) => roughly(0, 1e-2)
-    @fact norm(ZZ-Ztrue) => roughly(0, 1e-2)
-    @fact ispsd(XX) => true
-    @fact ispsd(1/2*eye(3,3)-XX) => true
-    @fact ispsd(YY+ones(5,5)) => true
-    @fact ispsd(2*ones(5,5)-YY) => true
-    @fact ispsd(ones(4,4)-ZZ) => true
-    @fact trace(XX) => roughly( 1, 1e-4)
-    @fact trace(YY) => roughly( 3, 1e-4)
-    @fact trace(ZZ) => roughly(-1, 1e-4)
-    @fact getObjectiveValue(m) => roughly(4.35, 1e-2)
+    @fact norm(XX-Xtrue) --> roughly(0, 1e-2)
+    @fact norm(YY-Ytrue) --> roughly(0, 1e-2)
+    @fact norm(ZZ-Ztrue) --> roughly(0, 1e-2)
+    @fact ispsd(XX) --> true
+    @fact ispsd(1/2*eye(3,3)-XX) --> true
+    @fact ispsd(YY+ones(5,5)) --> true
+    @fact ispsd(2*ones(5,5)-YY) --> true
+    @fact ispsd(ones(4,4)-ZZ) --> true
+    @fact trace(XX) --> roughly( 1, 1e-4)
+    @fact trace(YY) --> roughly( 3, 1e-4)
+    @fact trace(ZZ) --> roughly(-1, 1e-4)
+    @fact getObjectiveValue(m) --> roughly(4.35, 1e-2)
 
     @setObjective(m, Min, X[1,2] + Y[1,2] + Z[1,2])
     solve(m)
@@ -55,17 +55,17 @@ context("With solver $(typeof(solver))") do
               1    1   1 1
               1    1   1 1]
 
-    @fact norm(XX-Xtrue) => roughly(0, 1e-2)
-    @fact norm(YY-Ytrue) => roughly(0, 1e-2)
-    @fact norm(ZZ-Ztrue) => roughly(0, 1e-2)
-    @fact ispsd(XX) => true
-    @fact ispsd(1/2*eye(3,3)-XX) => true
-    @fact ispsd(YY+ones(5,5)) => true
-    @fact ispsd(2*ones(5,5)-YY) => true
-    @fact ispsd(ones(4,4)-ZZ) => true
-    @fact trace(XX) => roughly( 1, 1e-4)
-    @fact trace(YY) => roughly( 3, 1e-4)
-    @fact trace(ZZ) => roughly(-1, 1e-4)
+    @fact norm(XX-Xtrue) --> roughly(0, 1e-2)
+    @fact norm(YY-Ytrue) --> roughly(0, 1e-2)
+    @fact norm(ZZ-Ztrue) --> roughly(0, 1e-2)
+    @fact ispsd(XX) --> true
+    @fact ispsd(1/2*eye(3,3)-XX) --> true
+    @fact ispsd(YY+ones(5,5)) --> true
+    @fact ispsd(2*ones(5,5)-YY) --> true
+    @fact ispsd(ones(4,4)-ZZ) --> true
+    @fact trace(XX) --> roughly( 1, 1e-4)
+    @fact trace(YY) --> roughly( 3, 1e-4)
+    @fact trace(ZZ) --> roughly(-1, 1e-4)
 
     # Test SDP constraints
     m = Model(solver=solver)
@@ -74,11 +74,11 @@ context("With solver $(typeof(solver))") do
     @addSDPConstraint(m, ones(3,3) <= X)
     @setObjective(m, Min, trace(ones(3,3)*X))
     stat = solve(m)
-    @fact stat => :Optimal
+    @fact stat --> :Optimal
     XX = getValue(X)
-    @fact ispsd(XX) => true
-    @fact ispsd(XX - ones(3,3)) => true
-    @fact getObjectiveValue(m) => roughly(9,1e-4)
+    @fact ispsd(XX) --> true
+    @fact ispsd(XX - ones(3,3)) --> true
+    @fact getObjectiveValue(m) --> roughly(9,1e-4)
 
     # Another test SDP
     m = Model(solver=solver)
@@ -110,29 +110,29 @@ context("With solver $(typeof(solver))") do
     @addConstraint(m, Y[2,2] == 1)
 
     stat = solve(m)
-    @fact stat => :Optimal
+    @fact stat --> :Optimal
     XX, YY = getValue(X), getValue(Y)
-    @fact trace(A1*XX-eye(3,3)/3) => roughly(0, 1e-5)
-    @fact 2*trace(A2*XX) => roughly(1, 1e-5)
-    @fact (trace(A3*XX) >= 2 - 1e-5) => true
-    @fact trace(B1*YY) => roughly(1, 1e-5)
-    @fact trace(B2*YY) => roughly(0, 1e-5)
-    @fact (trace(B3*YY) <= 0) => true
-    @fact (trace(A1*XX)+trace(B1*YY) >= 1) => true
-    @fact YY[2,2] => roughly(1, 1e-5)
-    @fact norm(XX - diagm([1,.5,2])) => roughly(0, 1e-3)
-    @fact norm(YY - [0 0;0 1]) => roughly(0, 1e-3)
+    @fact trace(A1*XX-eye(3,3)/3) --> roughly(0, 1e-5)
+    @fact 2*trace(A2*XX) --> roughly(1, 1e-5)
+    @fact (trace(A3*XX) >= 2 - 1e-5) --> true
+    @fact trace(B1*YY) --> roughly(1, 1e-5)
+    @fact trace(B2*YY) --> roughly(0, 1e-5)
+    @fact (trace(B3*YY) <= 0) --> true
+    @fact (trace(A1*XX)+trace(B1*YY) >= 1) --> true
+    @fact YY[2,2] --> roughly(1, 1e-5)
+    @fact norm(XX - diagm([1,.5,2])) --> roughly(0, 1e-3)
+    @fact norm(YY - [0 0;0 1]) --> roughly(0, 1e-3)
 end; end; end
 
 facts("[sdp] Nonsensical SDPs") do
     m = Model()
     @fact_throws @defVar(m, unequal[1:5,1:6], SDP)
     # Some of these errors happen at compile time, so we can't use @fact_throws
-    @fact macroexpand(:(@defVar(m, notone[1:5,2:6], SDP))).head => :error
-    @fact macroexpand(:(@defVar(m, oneD[1:5], SDP))).head => :error
-    @fact macroexpand(:(@defVar(m, threeD[1:5,1:5,1:5], SDP))).head => :error
-    @fact macroexpand(:(@defVar(m, psd[2] <= rand(2,2), SDP))).head => :error
-    @fact macroexpand(:(@defVar(m, -ones(3,4) <= foo[1:4,1:4] <= ones(4,4), SDP))).head => :error
+    @fact macroexpand(:(@defVar(m, notone[1:5,2:6], SDP))).head --> :error
+    @fact macroexpand(:(@defVar(m, oneD[1:5], SDP))).head --> :error
+    @fact macroexpand(:(@defVar(m, threeD[1:5,1:5,1:5], SDP))).head --> :error
+    @fact macroexpand(:(@defVar(m, psd[2] <= rand(2,2), SDP))).head --> :error
+    @fact macroexpand(:(@defVar(m, -ones(3,4) <= foo[1:4,1:4] <= ones(4,4), SDP))).head --> :error
     @fact_throws @defVar(m, -ones(3,4) <= foo[1:4,1:4] <= ones(4,4), Symmetric)
     @fact_throws @defVar(m, -ones(4,4) <= foo[1:4,1:4] <= ones(4,5), Symmetric)
     @fact_throws @defVar(m, -rand(5,5) <= nonsymmetric[1:5,1:5] <= rand(5,5), Symmetric)
@@ -151,16 +151,16 @@ context("With solver $(typeof(solver))") do
     @setObjective(m, Max, trace(X) - y[0])
     stat = solve(m)
 
-    @fact stat => :Optimal
+    @fact stat --> :Optimal
     XX, yy = getValue(X), getValue(y)
-    @fact ispsd(XX) => true
-    @fact (yy[0] >= 0) => true
-    @fact (yy[1]^2 + yy[2]^2 <= yy[0]^2 + 1e-5) => true
-    @fact ispsd(eye(2)-XX) => true
-    @fact ((XX[1,1] + XX[1,2]) - (yy[1] + yy[2])) => roughly(0,1e-4)
-    @fact norm(XX - eye(2)) => roughly(0, 1e-4)
-    @fact norm(yy[:] - [1/sqrt(2), 0.5, 0.5]) => roughly(0, 1e-4)
-    @fact getObjectiveValue(m) => roughly(1.293, 1e-2)
+    @fact ispsd(XX) --> true
+    @fact (yy[0] >= 0) --> true
+    @fact (yy[1]^2 + yy[2]^2 <= yy[0]^2 + 1e-5) --> true
+    @fact ispsd(eye(2)-XX) --> true
+    @fact ((XX[1,1] + XX[1,2]) - (yy[1] + yy[2])) --> roughly(0,1e-4)
+    @fact norm(XX - eye(2)) --> roughly(0, 1e-4)
+    @fact norm(yy[:] - [1/sqrt(2), 0.5, 0.5]) --> roughly(0, 1e-4)
+    @fact getObjectiveValue(m) --> roughly(1.293, 1e-2)
 end; end; end
 
 # Adapt SDP atom tests from Convex.jl:
@@ -172,23 +172,23 @@ end; end; end
 #     @defVar(m, X[1:2,1:2], SDP)
 #     @setObjective(m, Max, X[1,1])
 #     stat = solve(m)
-#     @fact stat => :Unbounded
+#     @fact stat --> :Unbounded
 
 #     setObjectiveSense(m, :Min)
 #     stat = solve(m)
-#     @fact stat => :Optimal
-#     @fact getObjectiveValue(m) => roughly(0, 1e-4)
+#     @fact stat --> :Optimal
+#     @fact getObjectiveValue(m) --> roughly(0, 1e-4)
 
 #     @addConstraint(m, X[1,1] == 1)
 #     stat = solve(m)
-#     @fact stat => :Optimal
-#     @fact getObjectiveValue(m) => roughly(1, 1e-5)
-#     @fact getValue(X[1,1]) => roughly(1, 1e-5)
+#     @fact stat --> :Optimal
+#     @fact getObjectiveValue(m) --> roughly(1, 1e-5)
+#     @fact getValue(X[1,1]) --> roughly(1, 1e-5)
 
 #     @setObjective(m, Min, sum(diag(X)))
 #     stat = solve(m)
-#     @fact stat => :Optimal
-#     @fact getObjectiveValue(m) => roughly(1, 1e-5)
+#     @fact stat --> :Optimal
+#     @fact getObjectiveValue(m) --> roughly(1, 1e-5)
 # end; end; end
 
 facts("[sdp] Test problem #2") do
@@ -200,8 +200,8 @@ context("With solver $(typeof(solver))") do
     @addConstraint(m, Y[2,2] >= 3)
     @setObjective(m, Min, trace(Y))
     stat = solve(m)
-    @fact stat => :Optimal
-    @fact getObjectiveValue(m) => roughly(3, 1e-5)
+    @fact stat --> :Optimal
+    @fact getObjectiveValue(m) --> roughly(3, 1e-5)
 end; end; end
 
 facts("[sdp] Test problem #3") do
@@ -213,8 +213,8 @@ context("With solver $(typeof(solver))") do
     @addConstraint(m, Y[2,1] == 1)
     @setObjective(m, Min, Y[1,2])
     stat = solve(m)
-    # @fact stat => :Optimal
-    @fact getObjectiveValue(m) => roughly(1, 1e-4)
+    # @fact stat --> :Optimal
+    @fact getObjectiveValue(m) --> roughly(1, 1e-4)
 end; end; end
 
 facts("[sdp] Test problem #4") do
@@ -227,8 +227,8 @@ context("With solver $(typeof(solver))") do
     @addConstraint(m, Y[2,1] == 1)
     @setObjective(m, Min, x + Y[1,1])
     stat = solve(m)
-    # @fact stat => :Optimal # TODO: remove this once SCS starts behaving
-    @fact getObjectiveValue(m) => roughly(1, 1e-3)
+    # @fact stat --> :Optimal # TODO: remove this once SCS starts behaving
+    @fact getObjectiveValue(m) --> roughly(1, 1e-3)
 end; end; end
 
 function nuclear_norm(model, A)
@@ -249,8 +249,8 @@ context("With solver $(typeof(solver))") do
     @addConstraint(m, Y[3,3] <= 2)
     @setObjective(m, Min, nuclear_norm(m, Y))
     stat = solve(m)
-    @fact stat => :Optimal
-    @fact getObjectiveValue(m) => roughly(3, 1e-5)
+    @fact stat --> :Optimal
+    @fact getObjectiveValue(m) --> roughly(3, 1e-5)
 end; end; end
 
 function operator_norm(model, A)
@@ -270,8 +270,8 @@ context("With solver $(typeof(solver))") do
     @addConstraint(m, sum(Y) >= 12)
     @setObjective(m, Min, operator_norm(m, Y))
     stat = solve(m)
-    @fact stat => :Optimal
-    @fact getObjectiveValue(m) => roughly(4, 1e-5)
+    @fact stat --> :Optimal
+    @fact getObjectiveValue(m) --> roughly(4, 1e-5)
 end; end; end
 
 function lambda_max(model, A)
@@ -290,8 +290,8 @@ context("With solver $(typeof(solver))") do
     @addConstraint(m, Y[1,1] >= 4)
     @setObjective(m, Min, lambda_max(m, Y))
     stat = solve(m)
-    @fact stat => :Optimal
-    @fact getObjectiveValue(m) => roughly(4, 1e-5)
+    @fact stat --> :Optimal
+    @fact getObjectiveValue(m) --> roughly(4, 1e-5)
 end; end; end
 
 function lambda_min(model, A)
@@ -310,8 +310,8 @@ context("With solver $(typeof(solver))") do
     @addConstraint(m, trace(Y) <= 6)
     @setObjective(m, Max, lambda_min(m, Y))
     stat = solve(m)
-    @fact stat => :Optimal
-    @fact getObjectiveValue(m) => roughly(2, 1e-5)
+    @fact stat --> :Optimal
+    @fact getObjectiveValue(m) --> roughly(2, 1e-5)
 end; end; end
 
 function matrix_frac(model, x, P)
@@ -335,8 +335,8 @@ context("With solver $(typeof(solver))") do
     @defVar(m, lb[i,j] <= P[i=1:n,j=1:n] <= ub[i,j])
     @setObjective(m, Min, matrix_frac(m, x, P))
     stat = solve(m)
-    @fact stat => :Optimal
-    @fact getObjectiveValue(m) => roughly(7, 1e-5)
+    @fact stat --> :Optimal
+    @fact getObjectiveValue(m) --> roughly(7, 1e-5)
 end; end; end
 
 facts("[sdp] Correlation example") do
@@ -360,14 +360,14 @@ context("With solver $(typeof(solver))") do
     # Find upper bound
     @setObjective(m, Max, X[1,3])
     stat = solve(m)
-    @fact stat => :Optimal
-    @fact (+0.8719 <= getValue(X)[1,3] <= +0.8720) => true
+    @fact stat --> :Optimal
+    @fact (+0.8719 <= getValue(X)[1,3] <= +0.8720) --> true
 
     # Find lower bound
     @setObjective(m, Min, X[1,3])
     stat = solve(m)
-    @fact stat => :Optimal
-    @fact (-0.9779 >= getValue(X)[1,3] >= -0.9799) => true
+    @fact stat --> :Optimal
+    @fact (-0.9779 >= getValue(X)[1,3] >= -0.9799) --> true
 end; end; end
 
 facts("[sdp] Robust uncertainty example") do
@@ -418,8 +418,8 @@ context("With solver $(typeof(solver))") do
 
         object = getObjectiveValue(m)
         exact = dot(μhat,c) + Γ1(𝛿/2,N)*norm(c) + sqrt((1-ɛ)/ɛ)*sqrt(dot(c,(Σhat+Γ2(𝛿/2,N)*eye(d,d))*c))
-        @fact stat => :Optimal
-        @fact abs(object - exact) => roughly(0, 1e-5)
+        @fact stat --> :Optimal
+        @fact abs(object - exact) --> roughly(0, 1e-5)
     end; end
 end; end; end
 
@@ -462,7 +462,7 @@ context("With solver $(typeof(solver))") do
 
         object = getObjectiveValue(m)
         exact = dot(μhat,c) + Γ1(𝛿/2,N)*norm(c) + sqrt((1-ɛ)/ɛ)*sqrt(dot(c,(Σhat+Γ2(𝛿/2,N)*eye(d,d))*c))
-        @fact stat => :Optimal
-        @fact abs(object - exact) => roughly(0, 1e-5)
+        @fact stat --> :Optimal
+        @fact abs(object - exact) --> roughly(0, 1e-5)
     end; end
 end; end; end

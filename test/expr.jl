@@ -20,24 +20,24 @@ facts("[expr] Test expression construction") do
     context("AffExpr") do
         # Test affToStr
         a1 = x[1] + LongName + 5
-        @fact affToStr(a1) => "x[1] + LongName + 5"
+        @fact affToStr(a1) --> "x[1] + LongName + 5"
         # Test like term collection
         a2 = 2*(x[2] + LongName + x[2]) + 0
-        @fact affToStr(a2) => "4 x[2] + 2 LongName"
+        @fact affToStr(a2) --> "4 x[2] + 2 LongName"
         # Test appending functionality
         push!(a1, 5.0, x[2])
-        @fact affToStr(a1) => "x[1] + LongName + 5 x[2] + 5"
+        @fact affToStr(a1) --> "x[1] + LongName + 5 x[2] + 5"
         append!(a1, a2)
-        @fact affToStr(a1) => "x[1] + 3 LongName + 9 x[2] + 5"
+        @fact affToStr(a1) --> "x[1] + 3 LongName + 9 x[2] + 5"
     end
 
     context("QuadExpr") do
         # Test quadToStr
         q1 = x[1]*x[2] + 27.2*LongName + 5
-        @fact quadToStr(q1) => "x[1]*x[2] + 27.2 LongName + 5"
+        @fact quadToStr(q1) --> "x[1]*x[2] + 27.2 LongName + 5"
         # Test like term collection
         q2 = x[1]*x[2] + x[2]*x[1]
-        @fact quadToStr(q2) => "2 x[1]*x[2]"
+        @fact quadToStr(q2) --> "2 x[1]*x[2]"
     end
 end
 
@@ -47,8 +47,8 @@ facts("[expr] Test getValue(expr)") do
     setValue(x[3], 2)
     setValue(x[2], 2)
     setValue(x[1], 1)
-    @fact getValue(x[1]-x[2]+2x[3]-1.0) => roughly(2.0)
-    @fact getValue(x[1]*x[1]-2x[2]*x[1]+3x[2]+1) => roughly(4.0)
+    @fact getValue(x[1]-x[2]+2x[3]-1.0) --> roughly(2.0)
+    @fact getValue(x[1]*x[1]-2x[2]*x[1]+3x[2]+1) --> roughly(4.0)
 end
 
 facts("[expr] Test expression iterators") do
@@ -59,18 +59,18 @@ facts("[expr] Test expression iterators") do
     k = 1
     for (coeff,var) in a1
         if k == 1
-            @fact coeff => 1
-            @fact var => exactly(x[1])
+            @fact coeff --> 1
+            @fact var --> exactly(x[1])
         elseif k == 2
-            @fact coeff => 2
-            @fact var => exactly(x[2])
+            @fact coeff --> 2
+            @fact var --> exactly(x[2])
         end
         k += 1
     end
 
     a2 = zero(AffExpr)
     for (coeff, var) in a2
-        @fact coeff => 0.0  # Shouldn't be called!
+        @fact coeff --> 0.0  # Shouldn't be called!
     end
 end
 
@@ -79,8 +79,8 @@ facts("[expr] Test in(::Variable, ::AffExpr)") do
     m = Model()
     @defVar(m, x[1:3])
     @defVar(m, y)
-    @fact (x[2] in 2x[2] + x[1]) => true
-    @fact (x[3] in x[1] + 2x[2]) => false
-    @fact (y in @defExpr(sum{i*x[i],i=1:3})) => false
-    @fact (x[2] in x[1] + 2x[2] - x[2] + x[3] - x[2]) => false
+    @fact (x[2] in 2x[2] + x[1]) --> true
+    @fact (x[3] in x[1] + 2x[2]) --> false
+    @fact (y in @defExpr(sum{i*x[i],i=1:3})) --> false
+    @fact (x[2] in x[1] + 2x[2] - x[2] + x[3] - x[2]) --> false
 end
