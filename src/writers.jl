@@ -13,7 +13,7 @@ function writeMPS(m::Model, fname::String)
     # Objective and constraint names
     gc_enable(false)
     write(f,"ROWS\n")
-    write(f," N  CON$(numRows+1)\n")
+    write(f," N  OBJ\n")
     hasrange = false
     for c in 1:numRows
         rowsense = sense(m.linconstr[c])
@@ -31,49 +31,16 @@ function writeMPS(m::Model, fname::String)
     end
     gc_enable(true)
 
-    # Load rows into SparseMatrixCSC
-    gc_enable(false)
-    nnz = 0
-    for c in 1:numRows
-        nnz += length(m.linconstr[c].terms.coeffs)
-    end
-    objaff::AffExpr = m.obj.aff
-    objlincoef = objaff.coeffs
+    objlincoef, rowlb, rowub = prepProblemBounds(m)
     if m.objSense == :Max
         println("Warning, MPS does not support maximization sense. Flipping objective coefficients.")
-        objlincoef = -objaff.coeffs
+        objlincoef = -objlincoef
     end
 
-
-    nnz += length(objaff.coeffs)
-    I = Array(Int,nnz)
-    J = Array(Int,nnz)
-    V = Array(Float64,nnz)
-    nnz = 0
-    for c in 1:numRows
-        # TODO: type assertion shouldn't be necessary
-        constr::LinearConstraint = m.linconstr[c]
-        coeffs = constr.terms.coeffs
-        vars = constr.terms.vars
-        for ind in 1:length(coeffs)
-            nnz += 1
-            I[nnz] = c
-            J[nnz] = vars[ind].col
-            V[nnz] = coeffs[ind]
-        end
-    end
-    for ind in 1:length(objaff.coeffs)
-        nnz += 1
-        I[nnz] = numRows+1
-        J[nnz] = objaff.vars[ind].col
-        V[nnz] = objlincoef[ind]
-    end
-
-    colmat = sparse(I,J,V,numRows+1,m.numCols)
-    colptr = colmat.colptr
-    rowval = colmat.rowval
-    nzval = colmat.nzval
-    gc_enable(true)
+    A = prepConstrMatrix(m)
+    colptr = A.colptr
+    rowval = A.rowval
+    nzval = A.nzval
 
     # Output each column
     gc_enable(false)
@@ -89,11 +56,14 @@ function writeMPS(m::Model, fname::String)
             @printf(f,"    MARKER    'MARKER'                 'INTEND'\n")
             inintegergroup = false
         end
-        for ind in colmat.colptr[col]:(colmat.colptr[col+1]-1)
+        for ind in colptr[col]:(colptr[col+1]-1)
             @printf(f,"    VAR%d  CON%d  ",col,rowval[ind])
             print_shortest(f,nzval[ind])
             println(f)
         end
+        @printf(f,"    VAR%d  OBJ  ",col)
+        print_shortest(f,objlincoef[col])
+        println(f)
     end
     if inintegergroup
         @printf(f,"    MARKER    'MARKER'                 'INTEND'\n")
@@ -185,9 +155,9 @@ function writeMPS(m::Model, fname::String)
                 @printf(f, "  VAR%d VAR%d ", qv1[ind].col,qv2[ind].col)
                 print_shortest(f, qc[ind])
                 println(f)
-                @printf(f, "  VAR%d VAR%d ", qv2[ind].col,qv1[ind].col)
-                print_shortest(f, qc[ind])
-                println(f)
+                #@printf(f, "  VAR%d VAR%d ", qv2[ind].col,qv1[ind].col)
+                #print_shortest(f, qc[ind])
+                #println(f)
             end
         end
     end

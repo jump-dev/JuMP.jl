@@ -103,26 +103,29 @@ facts("[model] Test printing a model") do
     modAMPS = ASCIIString[
     "NAME   JuMPModel",
     "ROWS",
-    " N  CON4",
+    " N  OBJ",
     " E  CON1",
     " L  CON2",
     " L  CON3",
     "COLUMNS",
     "    VAR1  CON1  1",
     "    VAR1  CON2  .5",
-    "    VAR1  CON4  -.16666666666666666",
+    "    VAR1  OBJ  -.16666666666666666",
     "    MARKER    'MARKER'                 'INTORG'",
     "    VAR2  CON1  1",
     "    VAR2  CON3  7",
-    "    VAR2  CON4  -.16666666666666666",
+    "    VAR2  OBJ  -.16666666666666666",
     "    MARKER    'MARKER'                 'INTEND'",
     "    VAR3  CON3  -1",
-    "    VAR3  CON4  -1",
+    "    VAR3  OBJ  -1",
     "    VAR4  CON2  1",
-    "    VAR4  CON4  -1",
+    "    VAR4  OBJ  -1",
     "    VAR5  CON2  1",
+    "    VAR5  OBJ  0",
     "    VAR6  CON2  1",
+    "    VAR6  OBJ  0",
     "    VAR7  CON3  -.5263157894736842",
+    "    VAR7  OBJ  0",
     "RHS",
     "    rhs    CON1    2",
     "    rhs    CON2    1",
@@ -158,6 +161,47 @@ facts("[model] Test printing a model") do
     @fact getObjectiveSense(modA) => :Min
 end
 
+facts("[model] Quadratic MPS writer") do
+    modQ = Model()
+    @defVar(modQ, x == 1)
+    @defVar(modQ, y ≥ 0)
+    @setObjective(modQ, Min, x^2 - 2*x*y + y^2 + x)
+
+    #####################################################################
+    # Test MPS writer
+    writeMPS(modQ, modPath * "Q.mps")
+    modQMPS = ASCIIString[
+    "NAME   JuMPModel",
+    "ROWS",
+    " N  OBJ",
+    "COLUMNS",
+    "    VAR1  OBJ  1",
+    "    VAR2  OBJ  0",
+    "RHS",
+    "BOUNDS",
+    "  LO BOUND VAR1 1",
+    "  UP BOUND VAR1 1",
+    "QMATRIX",
+    "  VAR1 VAR1  2",
+    "  VAR1 VAR2 -2",
+    "  VAR2 VAR2  2",
+    "ENDATA"]
+    modQfp = open(modPath * "Q.mps")
+    lineInd = 1
+    while !eof(modQfp)
+        line = readline(modQfp)
+        @fact chomp(line) => modQMPS[lineInd]
+        lineInd += 1
+    end
+    close(modQfp)
+
+    # Getter/setters
+    @fact MathProgBase.numvar(modQ) => 2
+    @fact MathProgBase.numlinconstr(modQ) => 0
+    @fact MathProgBase.numquadconstr(modQ) => 0
+    @fact MathProgBase.numconstr(modQ) => 0
+    @fact getObjectiveSense(modQ) => :Min
+end
 
 
 facts("[model] Test solving a MILP") do
