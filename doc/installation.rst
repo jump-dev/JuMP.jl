@@ -159,3 +159,10 @@ On Linux, they will be compiled from source. Once installed, they can be called 
 or via ``.nl`` files using ``BonminNLSolver`` and ``CouenneNLSolver`` from `AmplNLWriter.jl <https://github.com/JackDunnNZ/AmplNLWriter.jl>`_.
 Automatic differentiation performance is likely to be much better with ``.nl`` files than ``.osil`` files at this time.
 Since both Bonmin and Couenne use Ipopt for continuous subproblems, the same MUMPS sparse linear algebra performance caveat applies.
+
+Other AMPL-compatible solvers
++++++++++++++++++++++++++++++
+
+Any other solver not listed above that can be called from `AMPL <http://ampl.com>`_ can be used by JuMP through the
+`AmplNLWriter.jl <https://github.com/JackDunnNZ/AmplNLWriter.jl>`_ package. The first argument to ``AmplNLSolver``
+can be used to specify a solver executable name.
