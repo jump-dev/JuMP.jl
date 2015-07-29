@@ -31,6 +31,8 @@ context("With solver $(typeof(lazysolver))") do
             @addLazyConstraint(cb, y + 0.5x + 0.5x <= 3)
         end
         entered[1] = true
+        @fact_throws ErrorException @defVar(cb, z)
+        @fact_throws ErrorException @addLazyConstraint(cb, x^2 <= 1)
     end
     addLazyCallback(mod, corners)
     addLazyCallback(mod, cb -> (entered[2] = true))

@@ -139,10 +139,14 @@ getname(c::Symbol) = c
 getname(c::Nothing) = ()
 getname(c::Expr) = c.args[1]
 
+validmodel(m::Model, name) = nothing
+validmodel(m::MathProgBase.MathProgCallbackData, name) = error("Expected $name to be a JuMP model, but it is a callback object. Use of this macro is not supported within callbacks.")
+validmodel(m, name) = error("Expected $name to be a JuMP model, but it has type ", typeof(m))
+
 function assert_validmodel(m, macrocode)
     # assumes m is already escaped
     quote
-        isa($m, Model) || error("Expected ", $(quot(m.args[1])), " to be a JuMP model but it has type ", typeof($m))
+        validmodel($m, $(quot(m.args[1])))
         $macrocode
     end
 end

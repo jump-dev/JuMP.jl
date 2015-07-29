@@ -195,6 +195,8 @@ function addLazyConstraint(cbdata::MathProgBase.MathProgCallbackData, constr::Li
     MathProgBase.cbaddlazy!(cbdata, indices, coeffs, sensemap[sense(constr)], rhs(constr))
 end
 
+addLazyConstraint(cbdata::MathProgBase.MathProgCallbackData,constr::QuadConstraint) = error("Quadratic lazy constraints are not supported.")
+
 ## User cuts
 export addUserCut, @addUserCut
 
