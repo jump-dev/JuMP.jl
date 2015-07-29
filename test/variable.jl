@@ -36,6 +36,8 @@ facts("[variable] constructors") do
     d = Dict()
     @defVar(mcon, d["bar"][1:10] == 1)
     @fact getValue(d["bar"][1]) --> 1
+    @fact typeof(zero(nobounds)) --> AffExpr
+    @fact typeof(one(nobounds)) --> AffExpr
 end
 
 facts("[variable] get and set bounds") do
