@@ -658,7 +658,7 @@ esc_nonconstant(x) = esc(x)
 
 macro defVar(args...)
     length(args) <= 1 &&
-        error("in @defVar ($var): expected model as first argument, then variable information.")
+        error("in @defVar: expected model as first argument, then variable information.")
     m = args[1]
     x = args[2]
     extra = vcat(args[3:end]...)
