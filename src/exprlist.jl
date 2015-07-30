@@ -36,8 +36,7 @@ function appendToIJ!(I,J,hI,hJ,x::SymbolicOutput)
 end
 
 # returns sparsity pattern of combined hessian, with duplicates
-function prep_sparse_hessians(l::ExprList, num_total_vars; need_expr::Bool=false)
-    # TODO: remove need_expr option
+function prep_sparse_hessians(l::ExprList, num_total_vars)
     # clear current state
     empty!(l.idxfuncs)
     empty!(l.valfuncs)
@@ -46,7 +45,6 @@ function prep_sparse_hessians(l::ExprList, num_total_vars; need_expr::Bool=false
     empty!(l.hess_IJ_funcs)
     empty!(l.hessfuncs)
     empty!(l.hessIJ)
-    empty!(l.exprfuncs)
 
     N = length(l.exprs)
     sizehint!(l.valfuncs, N)
@@ -95,9 +93,6 @@ function prep_sparse_hessians(l::ExprList, num_total_vars; need_expr::Bool=false
             push!(l.hess_IJ_funcs, hess_IJf)
             push!(l.hessfuncs, hf)
             push!(l.hessIJ, (hI, hJ))
-            if need_expr
-                push!(l.exprfuncs, genfexpr_parametric(x))
-            end
             appendToIJ!(I,J,hI,hJ,x)
         else
             # check if there's a 1-1 mapping from reference indices to
@@ -132,9 +127,6 @@ function prep_sparse_hessians(l::ExprList, num_total_vars; need_expr::Bool=false
                 push!(l.hessfuncs, l.hessfuncs[refidx])
                 hI,hJ = l.hessIJ[refidx]
                 push!(l.hessIJ, (hI,hJ))
-                if need_expr
-                    push!(l.exprfuncs, l.exprfuncs[refidx])
-                end
                 appendToIJ!(I,J,hI,hJ,x)
             else
                 # we can share the AD but not the coloring here
@@ -144,9 +136,6 @@ function prep_sparse_hessians(l::ExprList, num_total_vars; need_expr::Bool=false
                 push!(l.hessfuncs, hf)
                 push!(l.hessIJ, (hI, hJ))
                 appendToIJ!(I,J,hI,hJ,x)
-                if need_expr
-                    push!(l.exprfuncs, l.exprfuncs[refidx])
-                end
             end
         end
     end
