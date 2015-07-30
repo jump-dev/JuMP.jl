@@ -213,7 +213,7 @@ function parseSum(x::Expr, aff::Symbol, coeffs)
     code
 end
 
-function parseNorm(x::Expr, aff::Symbol, lcoeffs, rcoeffs)
+function parseNorm(x::Expr, aff::Symbol, coeffs)
     @assert string(x.args[1])[1:4] == "norm"
     # we have a filter condition
     finalaff = gensym()
@@ -265,7 +265,7 @@ function parseNorm(x::Expr, aff::Symbol, lcoeffs, rcoeffs)
         $preblock
         $code
         $gennorm = Norm{2}($normexpr)
-        $aff = addToExpression_reorder($aff,$(lcoeffs...),$gennorm,$(rcoeffs...))
+        $aff = addToExpression_reorder($aff,$(coeffs...),$gennorm)
     end
 end
 
