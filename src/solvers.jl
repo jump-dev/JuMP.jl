@@ -553,7 +553,7 @@ function conicconstraintdata(m::Model)
             append!(I, fill(c, nnz))
             append!(J, indices)
             append!(V, -expr.coeff*tmpelts[indices])
-            b[c] = term.constant
+            b[c] = expr.coeff*term.constant
         end
         push!(con_cones, (:SOC, soc_start:c))
     end
