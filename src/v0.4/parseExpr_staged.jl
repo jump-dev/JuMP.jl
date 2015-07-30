@@ -301,7 +301,7 @@ function parseNorm(x::Expr, aff::Symbol, lcoeffs, rcoeffs)
             error("No commas after semicolon allowed in sum expression, use && for multiple conditions")
         end
         # generate inner loop code first and then wrap in for loops
-        newaff, innercode = parseExpr(x.args[3], :normaff, [], [])
+        newaff, innercode = parseExprToplevel(x.args[3], :normaff)
         code = quote
             if $(esc(cond.args[1]))
                 normaff = zero(AffExpr)
@@ -317,7 +317,7 @@ function parseNorm(x::Expr, aff::Symbol, lcoeffs, rcoeffs)
         end
         preblock = :($normexpr = AffExpr[])
     else # no condition
-        newaff, code = parseExpr(x.args[2], :normaff, [], [])
+        newaff, code = parseExprToplevel(x.args[2], :normaff)
         code = :(normaff = zero(AffExpr); $code; push!($normexpr, $newaff))
         preblock = :($len += length($(esc(x.args[length(x.args)].args[2]))))
         for level in length(x.args):-1:3
