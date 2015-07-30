@@ -190,17 +190,17 @@ facts("[model] Quadratic MPS writer") do
     lineInd = 1
     while !eof(modQfp)
         line = readline(modQfp)
-        @fact chomp(line) => modQMPS[lineInd]
+        @fact chomp(line) --> modQMPS[lineInd]
         lineInd += 1
     end
     close(modQfp)
 
     # Getter/setters
-    @fact MathProgBase.numvar(modQ) => 2
-    @fact MathProgBase.numlinconstr(modQ) => 0
-    @fact MathProgBase.numquadconstr(modQ) => 0
-    @fact MathProgBase.numconstr(modQ) => 0
-    @fact getObjectiveSense(modQ) => :Min
+    @fact MathProgBase.numvar(modQ) --> 2
+    @fact MathProgBase.numlinconstr(modQ) --> 0
+    @fact MathProgBase.numquadconstr(modQ) --> 0
+    @fact MathProgBase.numconstr(modQ) --> 0
+    @fact getObjectiveSense(modQ) --> :Min
 end
 
 

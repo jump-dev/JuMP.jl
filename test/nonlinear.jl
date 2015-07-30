@@ -474,5 +474,5 @@ facts("[nonlinear] Hessians through MPB") do
     hess_raw = sparse(I,J,V)
     # Convert from lower triangular
     hess_sparse = hess_raw + hess_raw' - sparse(diagm(diag(hess_raw)))
-    @test_approx_eq hess_sparse [0.0 1.0 0.0; 1.0 0.0 0.0; 0.0 0.0 2.0]
+    @fact hess_sparse --> roughly([0.0 1.0 0.0; 1.0 0.0 0.0; 0.0 0.0 2.0])
 end
