@@ -839,6 +839,7 @@ Base.print(io::IO, c::ConstraintRef{SDPConstraint})    = print(io, con_str(REPLM
 Base.show( io::IO, c::ConstraintRef{LinearConstraint}) = print(io, con_str(REPLMode,c.m.linconstr[c.idx]))
 Base.show( io::IO, c::ConstraintRef{QuadConstraint})   = print(io, con_str(REPLMode,c.m.quadconstr[c.idx]))
 Base.show( io::IO, c::ConstraintRef{SOSConstraint})    = print(io, con_str(REPLMode,c.m.sosconstr[c.idx]))
+Base.show( io::IO, c::ConstraintRef{SOCConstraint})    = print(io, con_str(REPLMode,c.m.socconstr[c.idx]))
 Base.show(  io::IO, c::ConstraintRef{SDPConstraint})   = print(io, con_str(REPLMode,c.m.sdpconstr[c.idx]))
 Base.writemime(io::IO, ::MIME"text/latex", c::ConstraintRef{LinearConstraint}) =
     print(io, con_str(IJuliaMode,c.m.linconstr[c.idx],mathmode=false))
