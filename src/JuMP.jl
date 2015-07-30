@@ -954,10 +954,24 @@ function operator_warn(lhs::AffExpr,rhs::AffExpr)
 end
 operator_warn(lhs,rhs) = nothing
 
+##########################################################################
+# Behavior that's uniform across all JuMP "scalar" objects
+
+typealias JuMPTypes Union(Variable,
+                          Norm,
+                          AffExpr,
+                          QuadExpr,
+                          SOCExpr)
+typealias JuMPScalars Union(Number,JuMPTypes)
+
+# would really want to do this on ::Type{T}, but doesn't work on v0.4
+Base.eltype{T<:JuMPTypes}(::T) = T
+Base.size(::JuMPTypes) = ()
+Base.size(x::JuMPTypes,d::Int) = 1
+Base.ndims(::JuMPTypes) = 0
 
 ##########################################################################
 # Operator overloads
-typealias JuMPTypes Union(Variable,Norm,AffExpr,QuadExpr,SOCExpr)
 
 include("operators.jl")
 if VERSION > v"0.4-"

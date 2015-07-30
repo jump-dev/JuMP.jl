@@ -13,6 +13,7 @@
 using JuMP
 using Compat
 using FactCheck
+using Base.Test
 #FactCheck.setstyle(:compact)
 
 # Static tests - don't require a solver

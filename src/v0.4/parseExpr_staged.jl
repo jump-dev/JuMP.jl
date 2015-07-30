@@ -53,11 +53,6 @@ function addToExpression(aff::GenericAffExpr, c::Number, x::Number)
     aff
 end
 
-function addToExpression{C,V}(aff::GenericAffExpr{C,V},c::Number,x::V)
-    push!(aff,convert(C,c),x)
-    aff
-end
-
 function addToExpression{C,V}(aff::GenericAffExpr{C,V},c::V,x::V)
     GenericQuadExpr{C,V}([c],[x],[one(C)],aff)
 end
@@ -84,6 +79,13 @@ addToExpression(aff::AffExpr,c::Variable,x::AffExpr) =
              x.vars,
              x.coeffs,
              addToExpression(aff,c,x.constant))
+
+function addToExpression{C,V}(aff::GenericAffExpr{C,V},c::GenericAffExpr{C,V},x::Number)
+    append!(aff.vars, c.vars)
+    append!(aff.coeffs, c.coeffs * x)
+    aff.constant += c.constant * x
+    aff
+end
 
 addToExpression{C,V}(aff::GenericAffExpr{C,V}, c::GenericQuadExpr{C,V}, x::Number) =
     GenericQuadExpr{C,V}(copy(c.qvars1),
@@ -127,6 +129,11 @@ function addToExpression{C,V}(quad::GenericQuadExpr{C,V},c::Number,x::GenericAff
         push!(quad.aff.coeffs, c*x.coeffs[i])
     end
     quad.aff.constant += c*x.constant
+    quad
+end
+
+function addToExpression{C,V}(quad::GenericQuadExpr{C,V},c::GenericAffExpr{C,V},x::Number)
+    addToExpression(quad.aff,c,x)
     quad
 end
 
@@ -174,27 +181,70 @@ function addToExpression{C,V}(ex::GenericQuadExpr{C,V}, c::GenericAffExpr{C,V}, 
     ex
 end
 
-# Fallback to help in the simple case x::Array{AffExpr} + y::Array{AffExpr}
-function addToExpression{N}(ex::Array{AffExpr,N}, c::Number, x::Array{AffExpr,N})
-    size(ex) == size(x) || error("Incompatible sizes: $(size(ex)) + $(size(x))")
+function chkdims(x,y)
+    ndim = max(ndims(x), ndims(y))
+    for i in 1:ndim
+        size(x,i) == size(y,i) ||
+            error("Incompatible sizes: $(size(x)) + $(size(y))")
+    end
+    nothing
+end
+
+# __addToExpression__: specialized methods for handling array-like objects
+function __addToExpression__(ex::Array, c::JuMPScalars, x::Array)
+    chkdims(ex, x)
     for I in eachindex(ex)
-        append!(ex[I], c * x[I])
+        ex[I] = addToExpression(ex[I], c, x[I])
     end
     ex
 end
 
-function addToExpression{N}(ex::Array{AffExpr,N}, c::Array{AffExpr,N}, x::Number)
-    size(ex) == size(x) || error("Incompatible sizes: $(size(ex)) + $(size(x))")
+function __addToExpression__(ex::Array, c::Array, x::JuMPScalars)
+    chkdims(ex, c)
     for I in eachindex(ex)
-        append!(ex[I], c[I] * x)
+        ex[I] = addToExpression(ex[I], c[I], x)
     end
     ex
 end
+
+# I believe the following is unnecessary on v0.4 since addToExpression_reorder
+# will rewrite e.g. addToExpression_reorder(ex, c, x) (all arrays) to
+# addToExpression_reorder(ex, 1.0, c*x)
+# function __addToExpression__(ex::Array, c::Array, x::Array)
+#     println("Checkpoint #3")
+#     rhs = c * x
+#     chkdims(ex, rhs)
+#     for I in eachindex(ex)
+#         ex[I] = append!(ex[I], rhs[I])
+#     end
+#     ex
+# end
+
+__addToExpression__(ex, c, x) = ex + c*x
 
 _lift(x::OneIndexedArray) = x.innerArray
 _lift(x) = x
 
-addToExpression(aff, c, x) = _lift(aff) + _lift(c) * _lift(x)
+# Internal method to determine size of c*x. Do dimension checking elsewhere.
+_sz(c::JuMPScalars, x::JuMPScalars) = ()
+_sz(c::JuMPScalars, x::AbstractArray) = size(x)
+_sz(c::AbstractArray, x::JuMPScalars) = size(c)
+_sz(c::AbstractArray, x::AbstractMatrix) = size(c,1), size(x,2)
+_sz(c::AbstractMatrix, x::AbstractVector) = size(c,1)
+
+function addToExpression(_aff, _c, _x)
+    aff, c, x = _lift(_aff), _lift(_c), _lift(_x)
+    if !isa(aff,AbstractArray) && (isa(c,AbstractArray) || isa(x,AbstractArray))
+        T = typeof(one(eltype(aff)) + one(eltype(c)) * one(eltype(x)))
+        lhs = Array(T, _sz(c,x))
+        for I in eachindex(lhs)
+            lhs[I] = copy(convert(T, aff))
+        end
+    else
+        lhs = aff
+    end
+    __addToExpression__(lhs, c, x)
+end
 
 @generated addToExpression_reorder(ex, arg) = :(addToExpression(ex, 1.0, arg))
 
