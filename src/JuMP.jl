@@ -10,6 +10,8 @@
 
 module JuMP
 
+importall Base.Operators
+
 import MathProgBase
 
 using ReverseDiffSparse, Calculus
