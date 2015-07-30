@@ -291,18 +291,22 @@ end
 function parseNorm(x::Expr, aff::Symbol, lcoeffs, rcoeffs)
     @assert string(x.args[1])[1:4] == "norm"
     # we have a filter condition
+    finalaff = gensym()
+    gennorm  = gensym()
+    len      = gensym()
+    normexpr = gensym()
     if isexpr(x.args[2],:parameters)
         cond = x.args[2]
         if length(cond.args) != 1
             error("No commas after semicolon allowed in sum expression, use && for multiple conditions")
         end
         # generate inner loop code first and then wrap in for loops
-        newaff, innercode = parseExpr(x.args[3], :normaff, lcoeffs, rcoeffs)
+        newaff, innercode = parseExpr(x.args[3], :normaff, [], [])
         code = quote
             if $(esc(cond.args[1]))
-                normaff = AffExpr()
+                normaff = zero(AffExpr)
                 $innercode
-                push!(normexpr, $newaff)
+                push!($normexpr, $newaff)
             end
         end
         for level in length(x.args):-1:4
@@ -311,34 +315,31 @@ function parseNorm(x::Expr, aff::Symbol, lcoeffs, rcoeffs)
                 $code
             end)
         end
-        code = :(normexpr = AffExpr[]; $code; $aff = Norm{2}(normexpr))
+        preblock = :($normexpr = AffExpr[])
     else # no condition
-        newaff, code = parseExpr(x.args[2], :normaff, lcoeffs, rcoeffs)
+        newaff, code = parseExpr(x.args[2], :normaff, [], [])
+        code = :(normaff = zero(AffExpr); $code; push!($normexpr, $newaff))
+        preblock = :($len += length($(esc(x.args[length(x.args)].args[2]))))
         for level in length(x.args):-1:3
             code = :(
             for $(esc(x.args[level].args[1])) in $(esc(x.args[level].args[2]))
-                normaff = AffExpr();
                 $code
-                push!(normexpr, $newaff);
-            end
-            )
-        end
-        code = :(normexpr = AffExpr[]; $code; $aff = Norm{2}(normexpr))
-        len = :len
-        # precompute the number of elements to add
-        # this is unncessary if we're just summing constants
-        preblock = :($len += length($(esc(x.args[length(x.args)].args[2]))))
-        for level in (length(x.args)-1):-1:3
+            end)
             preblock = Expr(:for, esc(x.args[level]),preblock)
         end
         preblock = quote
             $len = 0
             $preblock
-            _sizehint_expr!($aff, $len)
+            $normexpr = AffExpr[]
+            _sizehint_expr!($normexpr, $len)
         end
-        code = :($preblock;$code)
     end
-    code
+    quote
+        $preblock
+        $code
+        $gennorm = Norm{2}($normexpr)
+        $aff = addToExpression_reorder($aff,$(lcoeffs...),$gennorm,$(rcoeffs...))
+    end
 end
 
 is_complex_expr(ex) = isa(ex,Expr) && !isexpr(ex,:ref)

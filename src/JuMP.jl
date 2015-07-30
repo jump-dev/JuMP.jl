@@ -589,7 +589,7 @@ Base.convert{C,V}(::Type{GenericSOCExpr{C,V}}, x::GenericNorm{2,C,V}) =
     GenericSOCExpr{C,V}(x, one(C), zero(GenericAffExpr{C,V}))
 
 validate_soc(socexpr::GenericSOCExpr) = (socexpr.coeff ≥ 0) ||
-    error("Invalid second-order cone constraint $socexpr")
+    error("Invalid second-order cone constraint $(socexpr) ≥ 0")
 
 ##########################################################################
 # JuMPConstraint

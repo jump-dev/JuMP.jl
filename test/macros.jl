@@ -328,3 +328,16 @@ if VERSION >= v"0.4-"
                           Expr(:(=), :j, :S)]
     end
 end
+
+facts("[macros] Norm parsing") do
+    model = Model()
+    @defVar(model, x[1:2,1:2])
+    @addConstraint(model, -2norm2{x[i,j], i=1:2, j=1:2} + x[1,2] >= -1)
+    @addConstraint(model, -2norm2{x[i,j], i=1:2, j=1:2; iseven(i+j)} + x[1,2] >= -1)
+    @addConstraint(model, 1 >= 2*norm2{x[i,1],i=1:2})
+    @fact conToStr(model.socconstr[1]) --> "2.0 √(x[1,1]² + x[1,2]² + x[2,1]² + x[2,2]²) $leq x[1,2] + 1"
+    @fact conToStr(model.socconstr[2]) --> "2.0 √(x[1,1]² + x[2,2]²) $leq x[1,2] + 1"
+    @fact conToStr(model.socconstr[3]) --> "2.0 √(x[1,1]² + x[2,1]²) $leq 1"
+    @fact_throws @addConstraint(model, (x[1,1]+1)*norm2{x[i,j], i=1:2, j=1:2} + x[1,2] >= -1)
+    @fact_throws @addConstraint(model, norm2{x[i,j], i=1:2, j=1:2} + x[1,2] >= -1)
+end
