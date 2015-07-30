@@ -163,6 +163,6 @@ Since both Bonmin and Couenne use Ipopt for continuous subproblems, the same MUM
 Other AMPL-compatible solvers
 +++++++++++++++++++++++++++++
 
-Any other solver not listed above that can be called from `AMPL <http://ampl.com>`_ can be used by JuMP through the
+Any other solver not listed above that can be called from `AMPL <http://ampl.com/products/solvers/all-solvers-for-ampl/>`_ can be used by JuMP through the
 `AmplNLWriter.jl <https://github.com/JackDunnNZ/AmplNLWriter.jl>`_ package. The first argument to ``AmplNLSolver``
 can be used to specify a solver executable name.
