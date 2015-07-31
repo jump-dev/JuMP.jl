@@ -85,8 +85,8 @@ macro gendict(instancename,T,idxpairs,idxsets...)
         else
             maprhs = :($(typename)(map(f,d.innerArray),d.name,d.indexsets,d.indexexprs))
         end
-        _wraplhs = :(_wrapper(d::$(typename),inner)) # helper function that wraps array into JuMPArray of similar type
-        _wraprhs = :($(typename)(inner, d.name, d.indexsets, d.indexexprs))
+        wraplhs = :(JuMPContainer_from(d::$(typename),inner)) # helper function that wraps array into JuMPArray of similar type
+        wraprhs = :($(typename)(inner, d.name, d.indexsets, d.indexexprs))
         for i in 1:N
             varname = symbol(string("x",i))
 
@@ -105,7 +105,7 @@ macro gendict(instancename,T,idxpairs,idxsets...)
         funcs = :($getidxlhs = $getidxrhs; $setidxlhs = $setidxrhs;
                   $maplhs = $maprhs; $badgetidxlhs = $badgetidxrhs)
         if !truearray
-            funcs = :($funcs; $_wraplhs = $_wraprhs)
+            funcs = :($funcs; $wraplhs = $wraprhs)
         end
         geninstance = :($(esc(instancename)) = $(typename)(Array($T),$(string(instancename)),$(esc(Expr(:tuple,idxsets...))),$(idxpairs)))
         for i in 1:N
@@ -167,13 +167,13 @@ function _getValueInner(x)
 end
 
 
-_wrapper(x::JuMPDict,inner) =
+JuMPContainer_from(x::JuMPDict,inner) =
     JuMPDict(inner, x.name, x.indexsets, x.indexexprs, x.condition)
-_wrapper(x::OneIndexedArray, inner) = inner
+JuMPContainer_from(x::OneIndexedArray, inner) = inner
 
 function getValue(x::JuMPContainer)
     getvalue_warn(x)
-    _wrapper(x,_getValueInner(x))
+    JuMPContainer_from(x,_getValueInner(x))
 end
 
 # delegate zero-argument functions
