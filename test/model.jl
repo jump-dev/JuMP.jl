@@ -19,7 +19,7 @@ const leq = JuMP.repl_leq
 const geq = JuMP.repl_geq
 const  eq = JuMP.repl_eq
 
-const TOL = 1e-5
+const TOL = 1e-4
 
 modPath = joinpath(dirname(@__FILE__), "mod")
 
@@ -628,11 +628,11 @@ facts("[model] Test MIQP vectorization") do
     include(joinpath("data","miqp_vector.jl")) # loads X and q
     y = X * [100, 50, 10, 1] + 20*q
     for solver in quad_solvers
-        @fact bestsubset(solver,X,y,2,500,false) --> roughly([101.789,49.414,8.63904,1.72663], TOL)
+        @fact bestsubset(solver,X,y,2,500,false) --> roughly([101.789,49.414,8.63904,1.72663], 10TOL)
     end
     for solver in quad_mip_solvers
         y = X * [100, 50, 10, 1] + 20*q
-        @fact bestsubset(solver,X,y,2,500,true) --> roughly([106.25,53.7799,0.0,0.0], TOL)
+        @fact bestsubset(solver,X,y,2,500,true) --> roughly([106.25,53.7799,0.0,0.0], 10TOL)
     end
 end
 
