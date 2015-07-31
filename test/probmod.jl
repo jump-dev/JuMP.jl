@@ -16,6 +16,8 @@ using JuMP, FactCheck
 # If solvers not loaded, load them (i.e running just these tests)
 !isdefined(:lp_solvers) && include("solvers.jl")
 
+const TOL = 1e-5
+
 facts("[probmod] Testing problem modification basics") do
 for solver in lp_solvers
 context("With solver $(typeof(solver))") do
@@ -32,8 +34,8 @@ context("With solver $(typeof(solver))") do
     maincon = @addConstraint(m, x + y <= 3)
     @fact solve(m) --> :Optimal
     @fact m.internalModelLoaded --> true
-    @fact getValue(x) --> roughly(2.0, 1e-6)
-    @fact getValue(y) --> roughly(1.0, 1e-6)
+    @fact getValue(x) --> roughly(2.0, TOL)
+    @fact getValue(y) --> roughly(1.0, TOL)
 
     # Test adding a variable
     # max 1.1x + 1.0y + 100.0z
@@ -44,10 +46,10 @@ context("With solver $(typeof(solver))") do
     # x* = 0, y* = 1, z* = 2
     @defVar(m, 0 <= z <= 5, objective=100.0, inconstraints=[maincon], coefficients=[1.0])
     @fact solve(m) --> :Optimal
-    @fact getValue(x) --> roughly(0.0, 1e-6)
-    @fact getValue(y) --> roughly(1.0, 1e-6)
-    @fact getValue(z) --> roughly(2.0, 1e-6)
-    @fact getObjectiveValue(m) --> roughly(201.0, 1e-6)
+    @fact getValue(x) --> roughly(0.0, TOL)
+    @fact getValue(y) --> roughly(1.0, TOL)
+    @fact getValue(z) --> roughly(2.0, TOL)
+    @fact getObjectiveValue(m) --> roughly(201.0, TOL)
 
 
     # Test changing bounds
@@ -60,9 +62,9 @@ context("With solver $(typeof(solver))") do
     setLower(y, 0.0)
     setUpper(z, 2.0)
     @fact solve(m) --> :Optimal
-    @fact getValue(x) --> roughly(1.0, 1e-6)
-    @fact getValue(y) --> roughly(0.0, 1e-6)
-    @fact getValue(z) --> roughly(2.0, 1e-6)
+    @fact getValue(x) --> roughly(1.0, TOL)
+    @fact getValue(y) --> roughly(0.0, TOL)
+    @fact getValue(z) --> roughly(2.0, TOL)
     m.internalModelLoaded = false
 end
 end
@@ -95,9 +97,9 @@ context("With solver $(typeof(solver))") do
     setUpper(z, 1.5)
     m.colCat[3] = :Int
     @fact solve(m) --> :Optimal
-    @fact getValue(x) --> roughly(2.0, 1e-6)
-    @fact getValue(y) --> roughly(0.0, 1e-6)
-    @fact getValue(z) --> roughly(1.0, 1e-6)
+    @fact getValue(x) --> roughly(2.0, TOL)
+    @fact getValue(y) --> roughly(0.0, TOL)
+    @fact getValue(z) --> roughly(1.0, TOL)
 
     # Test changing constraint bound (<= constraint)
     # max 1.1x + 1.0y + 100.0z
@@ -108,9 +110,9 @@ context("With solver $(typeof(solver))") do
     # x* = 1, y* = 0, z* = 1
     chgConstrRHS(maincon, 2.0)
     @fact solve(m) --> :Optimal
-    @fact getValue(x) --> roughly(1.0, 1e-6)
-    @fact getValue(y) --> roughly(0.0, 1e-6)
-    @fact getValue(z) --> roughly(1.0, 1e-6)
+    @fact getValue(x) --> roughly(1.0, TOL)
+    @fact getValue(y) --> roughly(0.0, TOL)
+    @fact getValue(z) --> roughly(1.0, TOL)
 
     # Test adding a constraint
     # max 1.1x + 1.0y + 100.0z
@@ -122,9 +124,9 @@ context("With solver $(typeof(solver))") do
     # x* = 0, y* = 2, z* = 0
     xz0ref = @addConstraint(m, x + z <=0)
     @fact solve(m) --> :Optimal
-    @fact getValue(x) --> roughly(0.0, 1e-6)
-    @fact getValue(y) --> roughly(2.0, 1e-6)
-    @fact getValue(z) --> roughly(0.0, 1e-6)
+    @fact getValue(x) --> roughly(0.0, TOL)
+    @fact getValue(y) --> roughly(2.0, TOL)
+    @fact getValue(z) --> roughly(0.0, TOL)
 
     # Test changing constraint bound (>= constraint)
     # max 1.1x + 1.0y + 100.0z
@@ -140,9 +142,9 @@ context("With solver $(typeof(solver))") do
     @fact solve(m) --> :Optimal
     chgConstrRHS(xyg0ref, 1)
     @fact solve(m) --> :Optimal
-    @fact getValue(x) --> roughly(1.0, 1e-6)
-    @fact getValue(y) --> roughly(0.0, 1e-6)
-    @fact getValue(z) --> roughly(1.0, 1e-6)
+    @fact getValue(x) --> roughly(1.0, TOL)
+    @fact getValue(y) --> roughly(0.0, TOL)
+    @fact getValue(z) --> roughly(1.0, TOL)
 end
 end
 end
@@ -167,8 +169,8 @@ context("With solver $(typeof(solver))") do
     @addConstraint(m, x + y == 1)
     @setObjective(m, Min, 2x+y)
     solve(m)
-    @fact getValue(x) --> roughly(0.0, 1e-6)
-    @fact getValue(y) --> roughly(1.0, 1e-6)
+    @fact getValue(x) --> roughly(0.0, TOL)
+    @fact getValue(y) --> roughly(1.0, TOL)
 end
 end
 end
@@ -187,11 +189,11 @@ context("With solver $(typeof(solver))") do
     @fact m.internalModelLoaded --> true
     stat = solve(m)
     @fact stat --> :Optimal
-    @fact getValue(x) --> roughly( 0.0, 1e-6)
-    @fact getValue(y) --> roughly( 1.0, 1e-6)
-    @fact getObjectiveValue(m) --> roughly(1.0, 1e-6)
-    @fact getDual(x)  --> roughly(-1.0, 1e-6)
-    @fact getDual(y)  --> roughly( 0.0, 1e-6)
+    @fact getValue(x) --> roughly( 0.0, TOL)
+    @fact getValue(y) --> roughly( 1.0, TOL)
+    @fact getObjectiveValue(m) --> roughly(1.0, TOL)
+    @fact getDual(x)  --> roughly(-1.0, TOL)
+    @fact getDual(y)  --> roughly( 0.0, TOL)
 end
 end
 end
@@ -210,9 +212,9 @@ context("With solver $(typeof(solver))") do
     @fact m.internalModelLoaded --> true
     stat = solve(m)
     @fact stat --> :Optimal
-    @fact getValue(x) --> roughly( 0.0, 1e-6)
-    @fact getValue(y) --> roughly( 1.0, 1e-6)
-    @fact getObjectiveValue(m) --> roughly(1.0, 1e-6)
+    @fact getValue(x) --> roughly( 0.0, TOL)
+    @fact getValue(y) --> roughly( 1.0, TOL)
+    @fact getObjectiveValue(m) --> roughly(1.0, TOL)
 end
 end
 end

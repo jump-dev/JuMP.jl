@@ -19,6 +19,8 @@ const leq = JuMP.repl_leq
 const geq = JuMP.repl_geq
 const  eq = JuMP.repl_eq
 
+const TOL = 1e-5
+
 modPath = joinpath(dirname(@__FILE__), "mod")
 
 facts("[model] Check error cases") do
@@ -218,19 +220,17 @@ context("With solver $(typeof(solver))") do
     @addConstraint(modA, 7.0*y <= z + r[6]/1.9)
 
     @fact solve(modA)       --> :Optimal
-    @fact modA.objVal       --> roughly(1.0+4.833334, 1e-6)
-    @fact getValue(x)       --> roughly(1.0, 1e-6)
-    @fact getValue(y)       --> roughly(1.0, 1e-6)
-    @fact getValue(z)       --> roughly(4.0, 1e-6)
-    @fact getValue(r)[3]    --> roughly(0.5, 1e-6)
-    @fact getValue(r)[4]    --> roughly(0.0, 1e-6)
-    @fact getValue(r)[5]    --> roughly(0.0, 1e-6)
-    @fact getValue(r)[6]    --> roughly(6.0, 1e-6)
+    @fact modA.objVal       --> roughly(1.0+4.833334, TOL)
+    @fact getValue(x)       --> roughly(1.0, TOL)
+    @fact getValue(y)       --> roughly(1.0, TOL)
+    @fact getValue(z)       --> roughly(4.0, TOL)
+    @fact getValue(r)[3]    --> roughly(0.5, TOL)
+    @fact getValue(r)[4]    --> roughly(0.0, TOL)
+    @fact getValue(r)[5]    --> roughly(0.0, TOL)
+    @fact getValue(r)[6]    --> roughly(6.0, TOL)
 end # solver context
 end # loop over solvers
 end # facts block
-
-
 
 facts("[model] Test solving an LP (Min)") do
 for solver in lp_solvers
@@ -248,28 +248,28 @@ context("With solver $(typeof(solver))") do
 
     # Solution
     @fact solve(modA) --> :Optimal
-    @fact getObjectiveValue(modA) --> roughly(-5.8446115, 1e-6)
-    @fact getValue(x)       --> roughly(0.9774436, 1e-6)
-    @fact getValue(y)       --> roughly(1.0225563, 1e-6)
-    @fact getValue(z)       --> roughly(4.0, 1e-6)
-    @fact getValue(r)[3]    --> roughly(0.5112781, 1e-6)
-    @fact getValue(r)[4]    --> roughly(0.0, 1e-6)
-    @fact getValue(r)[5]    --> roughly(0.0, 1e-6)
-    @fact getValue(r)[6]    --> roughly(6.0, 1e-6)
+    @fact getObjectiveValue(modA) --> roughly(-5.8446115, TOL)
+    @fact getValue(x)       --> roughly(0.9774436, TOL)
+    @fact getValue(y)       --> roughly(1.0225563, TOL)
+    @fact getValue(z)       --> roughly(4.0, TOL)
+    @fact getValue(r)[3]    --> roughly(0.5112781, TOL)
+    @fact getValue(r)[4]    --> roughly(0.0, TOL)
+    @fact getValue(r)[5]    --> roughly(0.0, TOL)
+    @fact getValue(r)[6]    --> roughly(6.0, TOL)
 
     # Reduced costs
-    @fact getDual(x)    --> roughly( 0.0, 1e-6)
-    @fact getDual(y)    --> roughly( 0.0, 1e-6)
-    @fact getDual(z)    --> roughly(-1.0714286, 1e-6)
-    @fact getDual(r)[3] --> roughly( 0.0, 1e-6)
-    @fact getDual(r)[4] --> roughly(1.0, 1e-6)
-    @fact getDual(r)[5] --> roughly(1.0, 1e-6)
-    @fact getDual(r)[6] --> roughly(-0.03759398, 1e-6)
+    @fact getDual(x)    --> roughly( 0.0, TOL)
+    @fact getDual(y)    --> roughly( 0.0, TOL)
+    @fact getDual(z)    --> roughly(-1.0714286, TOL)
+    @fact getDual(r)[3] --> roughly( 0.0, TOL)
+    @fact getDual(r)[4] --> roughly(1.0, TOL)
+    @fact getDual(r)[5] --> roughly(1.0, TOL)
+    @fact getDual(r)[6] --> roughly(-0.03759398, TOL)
 
     # Row duals
-    @fact getDual(cons)[1] --> roughly( 0.333333, 1e-6)
-    @fact getDual(cons)[2] --> roughly(-1.0, 1e-6)
-    @fact getDual(cons)[3] --> roughly(-0.0714286, 1e-6)
+    @fact getDual(cons)[1] --> roughly( 0.333333, TOL)
+    @fact getDual(cons)[2] --> roughly(-1.0, TOL)
+    @fact getDual(cons)[3] --> roughly(-0.0714286, TOL)
 end # solver context
 end # loop over solvers
 end # facts block
@@ -290,28 +290,28 @@ context("With solver $(typeof(solver))") do
 
     # Solution
     @fact solve(modA) --> :Optimal
-    @fact getObjectiveValue(modA) --> roughly(5.8446115, 1e-6)
-    @fact getValue(x)       --> roughly(0.9774436, 1e-6)
-    @fact getValue(y)       --> roughly(1.0225563, 1e-6)
-    @fact getValue(z)       --> roughly(4.0, 1e-6)
-    @fact getValue(r)[3]    --> roughly(0.5112781, 1e-6)
-    @fact getValue(r)[4]    --> roughly(0.0, 1e-6)
-    @fact getValue(r)[5]    --> roughly(0.0, 1e-6)
-    @fact getValue(r)[6]    --> roughly(6.0, 1e-6)
+    @fact getObjectiveValue(modA) --> roughly(5.8446115, TOL)
+    @fact getValue(x)       --> roughly(0.9774436, TOL)
+    @fact getValue(y)       --> roughly(1.0225563, TOL)
+    @fact getValue(z)       --> roughly(4.0, TOL)
+    @fact getValue(r)[3]    --> roughly(0.5112781, TOL)
+    @fact getValue(r)[4]    --> roughly(0.0, TOL)
+    @fact getValue(r)[5]    --> roughly(0.0, TOL)
+    @fact getValue(r)[6]    --> roughly(6.0, TOL)
 
     # Reduced costs
-    @fact getDual(x)    --> roughly( 0.0, 1e-6)
-    @fact getDual(y)    --> roughly( 0.0, 1e-6)
-    @fact getDual(z)    --> roughly( 1.0714286, 1e-6)
-    @fact getDual(r)[3] --> roughly( 0.0, 1e-6)
-    @fact getDual(r)[4] --> roughly(-1.0, 1e-6)
-    @fact getDual(r)[5] --> roughly(-1.0, 1e-6)
-    @fact getDual(r)[6] --> roughly( 0.03759398, 1e-6)
+    @fact getDual(x)    --> roughly( 0.0, TOL)
+    @fact getDual(y)    --> roughly( 0.0, TOL)
+    @fact getDual(z)    --> roughly( 1.0714286, TOL)
+    @fact getDual(r)[3] --> roughly( 0.0, TOL)
+    @fact getDual(r)[4] --> roughly(-1.0, TOL)
+    @fact getDual(r)[5] --> roughly(-1.0, TOL)
+    @fact getDual(r)[6] --> roughly( 0.03759398, TOL)
 
     # Row duals
-    @fact getDual(cons)[1] --> roughly(-0.333333, 1e-6)
-    @fact getDual(cons)[2] --> roughly( 1.0, 1e-6)
-    @fact getDual(cons)[3] --> roughly( 0.0714286, 1e-6)
+    @fact getDual(cons)[1] --> roughly(-0.333333, TOL)
+    @fact getDual(cons)[2] --> roughly( 1.0, TOL)
+    @fact getDual(cons)[3] --> roughly( 0.0714286, TOL)
 end # solver context
 end # loop over solvers
 end # facts block
@@ -327,7 +327,7 @@ context("With solver $(typeof(solver))") do
     @addConstraint(modB, x <= 10)
     status = solve(modB)
     @fact status --> :Optimal
-    @fact getValue(x) --> roughly(1.0, 1e-6)
+    @fact getValue(x) --> roughly(1.0, TOL)
 end
 end
 end
@@ -446,8 +446,8 @@ facts("[model] Test column-wise modeling") do
     @defVar(mod, 0 <= z1 <= 1, objective=10.0, inconstraints=con, coefficients=[1.0,-2.0])
     @defVar(mod, 0 <= z2 <= 1, objective=10.0, inconstraints=Any[con[i] for i in 1:2], coefficients=[1.0,-2.0])
     @fact solve(mod) --> :Optimal
-    @fact getValue(z1) --> roughly(1.0, 1e-6)
-    @fact getValue(z2) --> roughly(1.0, 1e-6)
+    @fact getValue(z1) --> roughly(1.0, TOL)
+    @fact getValue(z2) --> roughly(1.0, TOL)
 
     # do a vectorized version as well
     mod = Model()
@@ -461,8 +461,8 @@ facts("[model] Test column-wise modeling") do
     @defVar(mod, 0 <= z1 <= 1, objective=10.0, inconstraints=con, coefficients=[1.0,-2.0])
     @defVar(mod, 0 <= z2 <= 1, objective=10.0, inconstraints=Any[con[i] for i in 1:2], coefficients=[1.0,-2.0])
     @fact solve(mod) --> :Optimal
-    @fact getValue(z1) --> roughly(1.0, 1e-6)
-    @fact getValue(z2) --> roughly(1.0, 1e-6)
+    @fact getValue(z1) --> roughly(1.0, TOL)
+    @fact getValue(z2) --> roughly(1.0, TOL)
 end
 
 facts("[model] Test all MPS paths") do
@@ -496,8 +496,8 @@ context("With solver $(typeof(solver))") do
     @addConstraint(mod, x + y >= 1)
     @setObjective(mod, Min, x+y)
     solve(mod)
-    @fact getValue(x) --> roughly(0.0, 1e-6)
-    @fact getValue(y) --> roughly(2.0, 1e-6)
+    @fact getValue(x) --> roughly(0.0, TOL)
+    @fact getValue(y) --> roughly(2.0, TOL)
 end; end; end
 
 facts("[model] Test semi-integer variables") do
@@ -509,7 +509,7 @@ context("With solver $(typeof(solver))") do
     @addConstraint(mod, x + y >= 2.5)
     @setObjective(mod, Min, x+1.1y)
     solve(mod)
-    @fact getValue(x) --> roughly(3.0, 1e-6)
+    @fact getValue(x) --> roughly(3.0, TOL)
     @fact getValue(y) --> 0.0
 end; end; end
 
@@ -522,10 +522,10 @@ context("With solver $(typeof(solver))") do
     @setObjective(mod, Min, x[1] + x[2] + x[3] + y[1] + y[2])
     solve(mod)
     for i in 1:3
-        @fact getValue(x[i]) --> roughly(0, 1e-6)
+        @fact getValue(x[i]) --> roughly(0, TOL)
     end
     for k in 1:2
-        @fact getValue(y[k]) --> roughly(k, 1e-6)
+        @fact getValue(y[k]) --> roughly(k, TOL)
     end
 end; end
 for solver in ip_solvers
@@ -565,9 +565,9 @@ context("With solver $(typeof(solver))") do
     @fact_throws addSOS1(modS, [x[1], x[1]+x[2]])
 
     @fact solve(modS) --> :Optimal
-    @fact modS.objVal --> roughly(15.0, 1e-6)
-    @fact getValue(z) --> roughly( 3.0, 1e-6)
-    @fact getValue(w) --> roughly(12.0, 1e-6)
+    @fact modS.objVal --> roughly(15.0, TOL)
+    @fact getValue(z) --> roughly( 3.0, TOL)
+    @fact getValue(w) --> roughly(12.0, TOL)
 
 
     m = Model(solver=solver)
@@ -578,8 +578,8 @@ context("With solver $(typeof(solver))") do
     addSOS1(m, [x[1],2x[3]])
 
     @fact solve(m) --> :Optimal
-    @fact getValue(x)[:] --> roughly([0.0,1.0,2.0], 1e-6)
-    @fact getObjectiveValue(m) --> roughly(3.0, 1e-6)
+    @fact getValue(x)[:] --> roughly([0.0,1.0,2.0], TOL)
+    @fact getObjectiveValue(m) --> roughly(3.0, TOL)
 end; end; end
 
 facts("[model] Test vectorized model creation") do
@@ -628,11 +628,11 @@ facts("[model] Test MIQP vectorization") do
     include(joinpath("data","miqp_vector.jl")) # loads X and q
     y = X * [100, 50, 10, 1] + 20*q
     for solver in quad_solvers
-        @fact bestsubset(solver,X,y,2,500,false) --> roughly([101.789,49.414,8.63904,1.72663], 1e-6)
+        @fact bestsubset(solver,X,y,2,500,false) --> roughly([101.789,49.414,8.63904,1.72663], TOL)
     end
     for solver in quad_mip_solvers
         y = X * [100, 50, 10, 1] + 20*q
-        @fact bestsubset(solver,X,y,2,500,true) --> roughly([106.25,53.7799,0.0,0.0], 1e-6)
+        @fact bestsubset(solver,X,y,2,500,true) --> roughly([106.25,53.7799,0.0,0.0], TOL)
     end
 end
 
