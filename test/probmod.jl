@@ -16,7 +16,7 @@ using JuMP, FactCheck
 # If solvers not loaded, load them (i.e running just these tests)
 !isdefined(:lp_solvers) && include("solvers.jl")
 
-const TOL = 1e-5
+const TOL = 1e-4
 
 facts("[probmod] Testing problem modification basics") do
 for solver in lp_solvers

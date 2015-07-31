@@ -21,7 +21,7 @@ const  eq = JuMP.repl_eq
 
 modPath = joinpath(Pkg.dir("JuMP"),"test","mod")
 
-const TOL = 1e-5
+const TOL = 1e-4
 
 facts("[model] Check error cases") do
     @fact_throws Model(solver=:Foo)
