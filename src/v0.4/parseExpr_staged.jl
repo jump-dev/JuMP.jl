@@ -278,21 +278,21 @@ end
     end
 end
 
-function parseCurly(x::Expr, aff::Symbol, lcoeffs, rcoeffs)
+function parseCurly(x::Expr, aff::Symbol, lcoeffs, rcoeffs, newaff=gensym())
     header = x.args[1]
     if length(x.args) < 3
         error("Need at least two arguments for $header")
     end
     if (header == :sum || header == :∑ || header == :Σ)
-        parseSum(x, aff, lcoeffs, rcoeffs)
+        parseSum(x, aff, lcoeffs, rcoeffs, newaff)
     elseif header == :norm2
-        parseNorm(x, aff, lcoeffs, rcoeffs)
+        parseNorm(x, aff, lcoeffs, rcoeffs, newaff)
     else
         error("Expected sum or norm outside curly braces; got $header")
     end
 end
 
-function parseSum(x::Expr, aff::Symbol, lcoeffs, rcoeffs)
+function parseSum(x::Expr, aff::Symbol, lcoeffs, rcoeffs, newaff)
     # we have a filter condition
     if isexpr(x.args[2],:parameters)
         cond = x.args[2]
@@ -300,8 +300,7 @@ function parseSum(x::Expr, aff::Symbol, lcoeffs, rcoeffs)
             error("No commas after semicolon allowed in sum expression, use && for multiple conditions")
         end
         # generate inner loop code first and then wrap in for loops
-        newaff, innercode = parseExpr(x.args[3], aff, lcoeffs, rcoeffs, aff)
-        @assert aff == newaff
+        inneraff, innercode = parseExpr(x.args[3], aff, lcoeffs, rcoeffs, aff)
         code = quote
             if $(esc(cond.args[1]))
                 $innercode
@@ -314,7 +313,7 @@ function parseSum(x::Expr, aff::Symbol, lcoeffs, rcoeffs)
             end)
         end
     else # no condition
-        newaff, code = parseExpr(x.args[2], aff, lcoeffs, rcoeffs, aff)
+        inneraff, code = parseExpr(x.args[2], aff, lcoeffs, rcoeffs, aff)
         for level in length(x.args):-1:3
             code = :(
             for $(esc(x.args[level].args[1])) in $(esc(x.args[level].args[2]))
@@ -335,10 +334,10 @@ function parseSum(x::Expr, aff::Symbol, lcoeffs, rcoeffs)
         end
         code = :($preblock;$code)
     end
-    code
+    :($code; $newaff=$aff)
 end
 
-function parseNorm(x::Expr, aff::Symbol, lcoeffs, rcoeffs)
+function parseNorm(x::Expr, aff::Symbol, lcoeffs, rcoeffs, newaff)
     @assert string(x.args[1])[1:4] == "norm"
     # we have a filter condition
     finalaff = gensym()
@@ -351,12 +350,12 @@ function parseNorm(x::Expr, aff::Symbol, lcoeffs, rcoeffs)
             error("No commas after semicolon allowed in sum expression, use && for multiple conditions")
         end
         # generate inner loop code first and then wrap in for loops
-        newaff, innercode = parseExprToplevel(x.args[3], :normaff)
+        inneraff, innercode = parseExprToplevel(x.args[3], :normaff)
         code = quote
             if $(esc(cond.args[1]))
                 normaff = zero(AffExpr)
                 $innercode
-                push!($normexpr, $newaff)
+                push!($normexpr, $inneraff)
             end
         end
         for level in length(x.args):-1:4
@@ -367,8 +366,8 @@ function parseNorm(x::Expr, aff::Symbol, lcoeffs, rcoeffs)
         end
         preblock = :($normexpr = AffExpr[])
     else # no condition
-        newaff, code = parseExprToplevel(x.args[2], :normaff)
-        code = :(normaff = zero(AffExpr); $code; push!($normexpr, $newaff))
+        inneraff, code = parseExprToplevel(x.args[2], :normaff)
+        code = :(normaff = zero(AffExpr); $code; push!($normexpr, $inneraff))
         preblock = :($len += length($(esc(x.args[length(x.args)].args[2]))))
         for level in length(x.args):-1:3
             code = :(
@@ -388,7 +387,7 @@ function parseNorm(x::Expr, aff::Symbol, lcoeffs, rcoeffs)
         $preblock
         $code
         $gennorm = Norm{2}($normexpr)
-        $aff = addToExpression_reorder($aff,$(lcoeffs...),$gennorm,$(rcoeffs...))
+        $newaff = addToExpression_reorder($aff,$(lcoeffs...),$gennorm,$(rcoeffs...))
     end
 end
 
@@ -447,7 +446,7 @@ function parseExpr(x, aff::Symbol, lcoeffs::Vector, rcoeffs::Vector, newaff::Sym
                 for i in 2:length(x.args)
                     if is_complex_expr(x.args[i])
                         s = gensym()
-                        newaff_, parsed = parseExpr(x.args[i], s, [], [])
+                        newaff_, parsed = parseExprToplevel(x.args[i], s)
                         push!(blk.args, :($s = 0.0; $parsed))
                         x.args[i] = newaff_
                     else
@@ -462,7 +461,7 @@ function parseExpr(x, aff::Symbol, lcoeffs::Vector, rcoeffs::Vector, newaff::Sym
             x.args[3] == 2 || error("Only exponents of 2 are currently supported")
             blk = Expr(:block)
             s = gensym()
-            newaff_, parsed = parseExpr(x.args[2], s, [], [])
+            newaff_, parsed = parseExprToplevel(x.args[2], s)
             push!(blk.args, :($s = 0.0; $parsed))
             push!(blk.args, :($newaff = $newaff_*$newaff_))
             return newaff, blk
@@ -472,7 +471,7 @@ function parseExpr(x, aff::Symbol, lcoeffs::Vector, rcoeffs::Vector, newaff::Sym
             denom = x.args[3]
             return parseExpr(numerator, aff, vcat(esc(:(1/$denom)),lcoeffs),rcoeffs,newaff)
         elseif x.head == :curly
-            return newaff, :($(parseCurly(x,aff,lcoeffs,rcoeffs)); $newaff = $aff)
+            return newaff, parseCurly(x,aff,lcoeffs,rcoeffs,newaff)
         else # at lowest level?
             !isexpr(x,:comparison) || error("Unexpected comparison in expression $x")
             callexpr = Expr(:call,:addToExpression_reorder,aff,lcoeffs...,esc(x),rcoeffs...)
