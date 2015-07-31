@@ -85,6 +85,8 @@ macro gendict(instancename,T,idxpairs,idxsets...)
         else
             maprhs = :($(typename)(map(f,d.innerArray),d.name,d.indexsets,d.indexexprs))
         end
+        wraplhs = :(JuMPContainer_from(d::$(typename),inner)) # helper function that wraps array into JuMPArray of similar type
+        wraprhs = :($(typename)(inner, d.name, d.indexsets, d.indexexprs))
         for i in 1:N
             varname = symbol(string("x",i))
 
@@ -102,6 +104,9 @@ macro gendict(instancename,T,idxpairs,idxsets...)
 
         funcs = :($getidxlhs = $getidxrhs; $setidxlhs = $setidxrhs;
                   $maplhs = $maprhs; $badgetidxlhs = $badgetidxrhs)
+        if !truearray
+            funcs = :($funcs; $wraplhs = $wraprhs)
+        end
         geninstance = :($(esc(instancename)) = $(typename)(Array($T),$(string(instancename)),$(esc(Expr(:tuple,idxsets...))),$(idxpairs)))
         for i in 1:N
             push!(geninstance.args[2].args[2].args, :(length($(esc(idxsets[i])))))
@@ -140,17 +145,35 @@ for accessor in (:getDual, :getLower, :getUpper)
     @eval $accessor(x::JuMPContainer) = map($accessor,x)
 end
 
-# Special-case this so we don't dump a huge amount of redundant warnings to screen
+_similar(x::Array) = Array(Float64,size(x))
+_similar{T}(x::Dict{T}) = Dict{T,Float64}()
+
+_innercontainer(x::JuMPArray) = x.innerArray
+_innercontainer(x::JuMPDict)  = x.tupledict
+
+function _getValueInner(x)
+    vars = _innercontainer(x)
+    vals = _similar(vars)
+    warnedyet = false
+    for I in eachindex(vars)
+        tmp = _getValue(vars[I])
+        if isnan(tmp) && !warnedyet
+            warn("Variable value not defined for entry of $(x.name). Check that the model was properly solved.")
+            warnedyet = true
+        end
+        vals[I] = tmp
+    end
+    vals
+end
+
+
+JuMPContainer_from(x::JuMPDict,inner) =
+    JuMPDict(inner, x.name, x.indexsets, x.indexexprs, x.condition)
+JuMPContainer_from(x::OneIndexedArray, inner) = inner
+
 function getValue(x::JuMPContainer)
     getvalue_warn(x)
-    ret = map(_getValue, x)
-    if any(ret) do tmp
-            v = tmp[end]
-            isnan(v)
-        end
-        warn("Variable value not defined for entry of $(x.name). Check that the model was properly solved.")
-    end
-    ret
+    JuMPContainer_from(x,_getValueInner(x))
 end
 
 # delegate zero-argument functions
