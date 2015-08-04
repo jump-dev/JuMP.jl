@@ -45,6 +45,7 @@ type JuMPNLPEvaluator <: MathProgBase.AbstractNLPEvaluator
     jac_J::Vector{Int}
     hess_I::Vector{Int}
     hess_J::Vector{Int}
+    requested_hessian::Bool
     # timers
     eval_f_timer::Float64
     eval_g_timer::Float64
@@ -64,7 +65,7 @@ end
 
 function MathProgBase.initialize(d::JuMPNLPEvaluator, requested_features::Vector{Symbol})
     for feat in requested_features
-        if !(feat in [:Grad, :Jac, :Hess, :ExprGraph])
+        if !(feat in [:Grad, :Jac, :Hess, :HessVec, :ExprGraph])
             error("Unsupported feature $feat")
             # TODO: implement Jac-vec and Hess-vec products
             # for solvers that need them
@@ -86,6 +87,9 @@ function MathProgBase.initialize(d::JuMPNLPEvaluator, requested_features::Vector
         end
     end
 
+    need_hessian = (:Hess in requested_features)
+    d.requested_hessian = need_hessian
+
     d.has_nlobj = isa(nldata.nlobj, ReverseDiffSparse.SymbolicOutput)
     if d.has_nlobj
         @assert length(d.m.obj.qvars1) == 0 && length(d.m.obj.aff.vars) == 0
@@ -99,7 +103,7 @@ function MathProgBase.initialize(d::JuMPNLPEvaluator, requested_features::Vector
 
     n_nlconstr = length(nldata.nlconstr)
 
-    constrhessI, constrhessJ = prep_sparse_hessians(nldata.nlconstrlist, d.m.numCols)
+    constrhessI, constrhessJ = prep_sparse_hessians(nldata.nlconstrlist, d.m.numCols, hessvec_only = !need_hessian)
     nljacI, nljacJ = jac_nz(nldata.nlconstrlist) # nonlinear jacobian components
     nnz_jac::Int = nnz(A) + length(nljacI)
     nnz_hess = length(constrhessI)
@@ -153,23 +157,21 @@ function MathProgBase.initialize(d::JuMPNLPEvaluator, requested_features::Vector
     d.jac_I = jac_I
     d.jac_J = jac_J
 
+    if need_hessian
+        if d.has_nlobj
+            hI, hJ, d.eval_h_nl = gen_hessian_sparse_color_parametric(nldata.nlobj, d.m.numCols)
+            nnz_hess += length(hI)
+        else
+            hI = []
+            hJ = []
+            d.eval_h_nl = (x,y,z) -> nothing
+            nnz_hess += length(d.m.obj.qvars1)
+        end
+        d.nnz_hess_obj = length(hI)
 
+        hess_I = zeros(Int,nnz_hess)
+        hess_J = zeros(Int,nnz_hess)
 
-    if d.has_nlobj
-        hI, hJ, d.eval_h_nl = gen_hessian_sparse_color_parametric(nldata.nlobj, d.m.numCols)
-        nnz_hess += length(hI)
-    else
-        hI = []
-        hJ = []
-        d.eval_h_nl = (x,y,z) -> nothing
-        nnz_hess += length(d.m.obj.qvars1)
-    end
-    d.nnz_hess_obj = length(hI)
-
-    hess_I = zeros(Int,nnz_hess)
-    hess_J = zeros(Int,nnz_hess)
-
-    let
         qobj::QuadExpr = d.m.obj
         for i in 1:length(hI)
             # not guaranteed to be lower-triangular
@@ -208,10 +210,9 @@ function MathProgBase.initialize(d::JuMPNLPEvaluator, requested_features::Vector
 
         hess_I[idx:end] = constrhessI
         hess_J[idx:end] = constrhessJ
+        d.hess_I = hess_I
+        d.hess_J = hess_J
     end
-
-    d.hess_I = hess_I
-    d.hess_J = hess_J
 
     numconstr = length(d.m.linconstr)+length(d.m.quadconstr)+n_nlconstr
     # call functions once to pre-compile
@@ -219,7 +220,7 @@ function MathProgBase.initialize(d::JuMPNLPEvaluator, requested_features::Vector
     MathProgBase.eval_grad_f(d, Array(Float64,d.m.numCols), d.m.colVal)
     MathProgBase.eval_g(d, Array(Float64,numconstr), d.m.colVal)
     MathProgBase.eval_jac_g(d, Array(Float64,nnz_jac), d.m.colVal)
-    MathProgBase.eval_hesslag(d, Array(Float64,nnz_hess), d.m.colVal, 1.0, ones(numconstr))
+    need_hessian && MathProgBase.eval_hesslag(d, Array(Float64,nnz_hess), d.m.colVal, 1.0, ones(numconstr))
 
     tprep = toq()
     #println("Prep time: $tprep")
@@ -234,7 +235,7 @@ function MathProgBase.initialize(d::JuMPNLPEvaluator, requested_features::Vector
     nothing
 end
 
-MathProgBase.features_available(d::JuMPNLPEvaluator) = [:Grad, :Jac, :Hess, :ExprGraph]
+MathProgBase.features_available(d::JuMPNLPEvaluator) = [:Grad, :Jac, :Hess, :HessVec, :ExprGraph]
 
 function MathProgBase.eval_f(d::JuMPNLPEvaluator, x)
     tic()
@@ -332,6 +333,53 @@ function MathProgBase.eval_jac_g(d::JuMPNLPEvaluator, J, x)
     return
 end
 
+import DualNumbers: Dual, epsilon
+
+function MathProgBase.eval_hesslag_prod(
+    d::JuMPNLPEvaluator,
+    h::Vector{Float64}, # output vector
+    x::Vector{Float64}, # current solution
+    v::Vector{Float64}, # rhs vector
+    σ::Float64,         # multiplier for objective
+    μ::Vector{Float64}) # multipliers for each constraint
+
+    nldata = d.m.nlpdata::NLPData
+
+    # evaluate directional derivative of the gradient
+    dualvec = reinterpret(Dual{Float64}, nldata.nlconstrlist.dualvec)
+    dualout = reinterpret(Dual{Float64}, nldata.nlconstrlist.dualout)
+    @assert length(dualvec) >= length(x)
+    for i in 1:length(x)
+        dualvec[i] = Dual(x[i], v[i])
+        dualout[i] = zero(Dual{Float64})
+    end
+    MathProgBase.eval_grad_f(d, dualout, dualvec)
+    for i in 1:length(x)
+        h[i] = σ*epsilon(dualout[i])
+    end
+
+    row = size(d.A,1)+1
+    quadconstr = d.m.quadconstr::Vector{QuadConstraint}
+    for c in quadconstr
+        l = μ[row]
+        for k in 1:length(c.terms.qvars1)
+            col1 = c.terms.qvars1[k].col
+            col2 = c.terms.qvars2[k].col
+            coef = c.terms.qcoeffs[k]
+            if col1 == col2
+                h[col1] += l*2*coef*v[col1]
+            else
+                h[col1] += l*coef*v[col2]
+                h[col2] += l*coef*v[col1]
+            end
+        end
+        row += 1
+    end
+
+    ReverseDiffSparse.eval_hessvec!(h, v, nldata.nlconstrlist, x, subarr(μ,row:length(μ)))
+
+end
+
 function MathProgBase.eval_hesslag(
     d::JuMPNLPEvaluator,
     H::Vector{Float64},         # Sparse hessian entry vector
@@ -341,6 +389,8 @@ function MathProgBase.eval_hesslag(
 
     qobj = d.m.obj::QuadExpr
     nldata = d.m.nlpdata::NLPData
+
+    d.requested_hessian || error("Hessian computations were not requested on the call to MathProgBase.initialize.")
 
     tic()
     d.eval_h_nl(x, subarr(H, 1:d.nnz_hess_obj), nldata.nlobj)
@@ -384,7 +434,10 @@ MathProgBase.isobjquadratic(d::JuMPNLPEvaluator) = !(isa(d.m.nlpdata.nlobj, Reve
 MathProgBase.isconstrlinear(d::JuMPNLPEvaluator, i::Integer) = (i <= length(d.m.linconstr))
 
 MathProgBase.jac_structure(d::JuMPNLPEvaluator) = d.jac_I, d.jac_J
-MathProgBase.hesslag_structure(d::JuMPNLPEvaluator) = d.hess_I, d.hess_J
+function MathProgBase.hesslag_structure(d::JuMPNLPEvaluator)
+    d.requested_hessian || error("Hessian computations were not requested on the call to MathProgBase.initialize.")
+    return d.hess_I, d.hess_J
+end
 
 # currently don't merge duplicates (this isn't required by MPB standard)
 function affToExpr(aff::AffExpr, constant::Bool)
