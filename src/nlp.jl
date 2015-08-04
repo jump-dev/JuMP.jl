@@ -67,7 +67,7 @@ function MathProgBase.initialize(d::JuMPNLPEvaluator, requested_features::Vector
     for feat in requested_features
         if !(feat in [:Grad, :Jac, :Hess, :HessVec, :ExprGraph])
             error("Unsupported feature $feat")
-            # TODO: implement Jac-vec and Hess-vec products
+            # TODO: implement Jac-vec products
             # for solvers that need them
         end
     end
