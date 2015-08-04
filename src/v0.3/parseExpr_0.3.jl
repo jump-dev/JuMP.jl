@@ -132,6 +132,23 @@ function addToExpression{C,V}(quad::GenericQuadExpr{C,V},c::Number,x::GenericQua
     quad
 end
 
+# Catch nonlinear expressions being used in addConstraint, etc.
+typealias _NLExpr ReverseDiffSparse.ParametricExpression 
+_nlexprerr() = error("""Cannot use nonlinear expression in @addConstraint or @setObjective.
+                        Use @addNLConstraint or @setNLObjective instead.""")
+# Following two definitions avoid ambiguity warnings
+addToExpression{C,V<:_NLExpr}(expr::GenericAffExpr{C,V},c::Number,x::V) = _nlexprerr()
+addToExpression{C,V<:_NLExpr}(expr::GenericQuadExpr{C,V},c::Number,x::V) = _nlexprerr()
+addToExpression(
+    expr::Union(GenericAffExpr,GenericQuadExpr),
+    c::Union(Number,Variable,GenericAffExpr,GenericQuadExpr),
+    x::_NLExpr) = _nlexprerr()
+addToExpression(
+    expr::Union(GenericAffExpr,GenericQuadExpr),
+    c::_NLExpr,
+    x::Union(Number,Variable,GenericAffExpr,GenericQuadExpr)) = _nlexprerr()
+
+
 function chkdims(x,y)
     ndim = max(ndims(x), ndims(y))
     for i in 1:ndim
