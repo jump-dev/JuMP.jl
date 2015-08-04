@@ -50,6 +50,11 @@ function solve(m::Model; suppress_warnings=false, ignore_solve_hook=(m.solvehook
     stat = MathProgBase.status(m.internalModel)
 
     numRows, numCols = length(m.linconstr), m.numCols
+
+    m.objVal = NaN
+    m.colVal = fill(NaN, numCols)
+    m.linconstrDuals = Array(Float64, 0)
+    
     if stat == :Optimal
         if !(traits.int | traits.sos | traits.conic) # just punt on conic duals
             m.redCosts = try
@@ -66,33 +71,29 @@ function solve(m::Model; suppress_warnings=false, ignore_solve_hook=(m.solvehook
         end
     else
         suppress_warnings || warn("Not solved to optimality, status: $stat")
-
-        if stat == :Infeasible
-            m.linconstrDuals = try
-                infray = MathProgBase.getinfeasibilityray(m.internalModel)
-                if length(infray) != numRows
-                    infray = fill(NaN, numRows)
+        if traits.lin
+            if stat == :Infeasible
+                m.linconstrDuals = try
+                    infray = MathProgBase.getinfeasibilityray(m.internalModel)
+                    @assert length(infray) == numRows
+                    infray
+                catch
+                    suppress_warnings || warn("Infeasibility ray (Farkas proof) not available")
+                    fill(NaN, numRows)
                 end
-                infray
-            catch
-                suppress_warnings || warn("Infeasibility ray (Farkas proof) not available")
-                fill(NaN, numRows)
-            end
-        elseif stat == :Unbounded
-            try
-                unbdray = MathProgBase.getunboundedray(m.internalModel)
-                if length(unbdray) != numCols
-                    unbdray = fill(NaN, numCols)
+            elseif stat == :Unbounded
+                m.colVal = try
+                    unbdray = MathProgBase.getunboundedray(m.internalModel)
+                    @assert length(unbdray) == numCols
+                    unbdray
+                catch
+                    suppress_warnings || warn("Unbounded ray not available")
+                    fill(NaN, numCols)
                 end
-                m.colVal = unbdray
-            catch
-                suppress_warnings || warn("Unbounded ray not available")
             end
         end
     end
 
-    m.objVal = NaN
-    m.colVal = fill(NaN, numCols)
     if !(stat == :Infeasible || stat == :Unbounded)
         try
             objVal = MathProgBase.getobjval(m.internalModel) + m.obj.aff.constant
