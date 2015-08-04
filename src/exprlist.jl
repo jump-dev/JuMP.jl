@@ -220,7 +220,7 @@ function eval_hessvec!{T}(h,v::DenseVector{T}, l::ExprList, xval, μ)
         end
         l.gradfuncs[k](dualvec, IdentityArray(), dualout, IdentityArray(), x.inputvals...)
         for i in 1:length(xval)
-            h[i] += μ[i]*epsilon(dualout[i])
+            h[i] += μ[k]*epsilon(dualout[i])
         end
     end
 end
