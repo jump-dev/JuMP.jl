@@ -82,6 +82,18 @@ eval_hess!(V, exlist, val, lambda)
 @test_approx_eq sparse(I,J,V) diagm(lambda.*val)
 @test to_flat_expr(exlist, 4) == :(x[4]^3/6)
 
+# hessvec
+exlist = ExprList()
+for i in 1:5
+    push!(exlist,@processNLExpr x[i]^3/6)
+end
+I,J = prep_sparse_hessians(exlist,5,hessvec_only=true)
+h = zeros(5)
+V = [1.0,2.0,3.0,3.0,1.0]
+μ = [3.4,2.5,5.6,1.2,4.5]
+eval_hessvec!(h, V, exlist, val, μ)
+@test_approx_eq h V.*μ.*val
+
 # irregular indices
 exlist = ExprList()
 idx = Any[[1,1],[1,2]]

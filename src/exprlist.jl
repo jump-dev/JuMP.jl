@@ -4,7 +4,7 @@
 
 
 export ExprList, prep_sparse_hessians, eval_g!,
-    eval_jac_g!, jac_nz, eval_hess!,
+    eval_jac_g!, jac_nz, eval_hess!, eval_hessvec!,
     prep_expression_output
 
 type ExprList
@@ -17,10 +17,12 @@ type ExprList
     hessfuncs::Vector{Function} # these can't be shared if coloring is different
     hessIJ::Vector{@compat Tuple{Vector{Int},Vector{Int}}}
     exprfuncs::Vector{Function}
+    dualvec::Vector{Dual4{Float64}}
+    dualout::Vector{Dual4{Float64}}
 end
 
 
-ExprList() = ExprList(SymbolicOutput[], Function[], Function[], Function[], Function[], Function[], Function[], Array(@compat(Tuple{Vector{Int},Vector{Int}}),0), Function[])
+ExprList() = ExprList(SymbolicOutput[], Function[], Function[], Function[], Function[], Function[], Function[], Array(@compat(Tuple{Vector{Int},Vector{Int}}),0), Function[], Array(Dual4{Float64},0), Array(Dual4{Float64},0))
 
 Base.push!(l::ExprList, s::SymbolicOutput) = push!(l.exprs, s)
 Base.getindex(l::ExprList, i) = l.exprs[i]
@@ -36,7 +38,8 @@ function appendToIJ!(I,J,hI,hJ,x::SymbolicOutput)
 end
 
 # returns sparsity pattern of combined hessian, with duplicates
-function prep_sparse_hessians(l::ExprList, num_total_vars)
+# if hessvec_only is true, we just prepare the gradients and jacobians
+function prep_sparse_hessians(l::ExprList, num_total_vars; hessvec_only::Bool=false)
     # clear current state
     empty!(l.idxfuncs)
     empty!(l.valfuncs)
@@ -58,8 +61,8 @@ function prep_sparse_hessians(l::ExprList, num_total_vars)
     coloring_t = 0.0
 
     # shared temporary storage for hessian-vector products
-    dualvec = Array(Dual4{Float64}, ceil(Int,num_total_vars/2))
-    dualout = Array(Dual4{Float64}, ceil(Int,num_total_vars/2))
+    l.dualvec = Array(Dual4{Float64}, ceil(Int,num_total_vars/2))
+    l.dualout = Array(Dual4{Float64}, ceil(Int,num_total_vars/2))
     #             ""           for sparsity pattern detection
     idxset = IndexedSet(num_total_vars)
 
@@ -81,19 +84,22 @@ function prep_sparse_hessians(l::ExprList, num_total_vars)
             tic()
             gf = genfgrad_parametric(x)
             genfgrad_t += toq()
-            hess_matmat = gen_hessian_matmat_parametric(x, gf)
-            hess_IJf = compute_hessian_sparsity_IJ_parametric(x)
-            tic()
-            hI, hJ, hf = gen_hessian_sparse_color_parametric(x, num_total_vars, hess_matmat, hess_IJf, dualvec, dualout, idxset)
-            coloring_t += toq()
+
             push!(l.idxfuncs, idxf)
             push!(l.valfuncs, f)
             push!(l.gradfuncs, gf)
-            push!(l.hess_matmat_funcs, hess_matmat)
-            push!(l.hess_IJ_funcs, hess_IJf)
-            push!(l.hessfuncs, hf)
-            push!(l.hessIJ, (hI, hJ))
-            appendToIJ!(I,J,hI,hJ,x)
+            if !hessvec_only
+                hess_matmat = gen_hessian_matmat_parametric(x, gf)
+                hess_IJf = compute_hessian_sparsity_IJ_parametric(x)
+                tic()
+                hI, hJ, hf = gen_hessian_sparse_color_parametric(x, num_total_vars, hess_matmat, hess_IJf, l.dualvec, l.dualout, idxset)
+                coloring_t += toq()
+                push!(l.hess_matmat_funcs, hess_matmat)
+                push!(l.hess_IJ_funcs, hess_IJf)
+                push!(l.hessfuncs, hf)
+                push!(l.hessIJ, (hI, hJ))
+                appendToIJ!(I,J,hI,hJ,x)
+            end
         else
             # check if there's a 1-1 mapping from reference indices to
             # indices in this expression
@@ -107,6 +113,8 @@ function prep_sparse_hessians(l::ExprList, num_total_vars)
             push!(l.idxfuncs, l.idxfuncs[refidx])
             push!(l.valfuncs, l.valfuncs[refidx])
             push!(l.gradfuncs, l.gradfuncs[refidx])
+            hessvec_only && continue
+
             push!(l.hess_matmat_funcs, l.hess_matmat_funcs[refidx])
             push!(l.hess_IJ_funcs, l.hess_IJ_funcs[refidx])
 
@@ -131,7 +139,7 @@ function prep_sparse_hessians(l::ExprList, num_total_vars)
             else
                 # we can share the AD but not the coloring here
                 tic()
-                hI, hJ, hf = gen_hessian_sparse_color_parametric(x, num_total_vars, l.hess_matmat_funcs[refidx], l.hess_IJ_funcs[refidx], dualvec, dualout, idxset)
+                hI, hJ, hf = gen_hessian_sparse_color_parametric(x, num_total_vars, l.hess_matmat_funcs[refidx], l.hess_IJ_funcs[refidx], l.dualvec, l.dualout, idxset)
                 coloring_t += toq()
                 push!(l.hessfuncs, hf)
                 push!(l.hessIJ, (hI, hJ))
@@ -150,7 +158,6 @@ function prep_sparse_hessians(l::ExprList, num_total_vars)
     return I,J
 end
 
-# returns sparsity pattern of combined hessian, with duplicates
 function prep_expression_output(l::ExprList)
     # clear current state
     empty!(l.exprfuncs)
@@ -196,6 +203,26 @@ function eval_jac_g!(V::DenseVector, l::ExprList, xval)
         idx += k
     end
 
+end
+
+# weighted hessian-vector product h += ∑_i μ_i*∇g_i(xval)*v
+function eval_hessvec!{T}(h,v::DenseVector{T}, l::ExprList, xval, μ)
+    idx = 1
+    dualvec = reinterpret(Dual{T}, l.dualvec)
+    dualout = reinterpret(Dual{T}, l.dualout)
+    @assert length(dualvec) >= length(xval)
+    @assert length(dualout) >= length(xval)
+    for k in 1:length(l.exprs)
+        x = l.exprs[k]
+        for i in 1:length(xval)
+            dualvec[i] = Dual(xval[i],v[i])
+            dualout[i] = zero(Dual{T})
+        end
+        l.gradfuncs[k](dualvec, IdentityArray(), dualout, IdentityArray(), x.inputvals...)
+        for i in 1:length(xval)
+            h[i] += μ[i]*epsilon(dualout[i])
+        end
+    end
 end
 
 function jac_nz(l::ExprList)
