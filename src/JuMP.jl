@@ -25,6 +25,7 @@ export
     Model, Variable, Norm, AffExpr, QuadExpr, SOCExpr,
     LinearConstraint, QuadConstraint, SDPConstraint, SOCConstraint,
     ConstraintRef, LinConstrRef,
+    JuMPNLPEvaluator,
 # Functions
     # Model related
     getObjectiveValue, getObjective,

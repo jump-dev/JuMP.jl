@@ -451,7 +451,7 @@ facts("[nonlinear] Expression graph for linear problem") do
     @defVar(m, x)
     @addConstraint(m, 0 <= x <= 1)
     @setObjective(m, Max, x)
-    d = JuMP.JuMPNLPEvaluator(m, JuMP.prepConstrMatrix(m))
+    d = JuMPNLPEvaluator(m)
     MathProgBase.initialize(d, [:ExprGraph])
     @fact MathProgBase.obj_expr(d) --> :(+(1.0 * x[1]))
 end
@@ -466,7 +466,7 @@ facts("[nonlinear] Hessians through MPB") do
     @defNLExpr(foo, a * b + c^2)
 
     @setNLObjective(m, Min, foo)
-    d = JuMP.JuMPNLPEvaluator(m, JuMP.prepConstrMatrix(m))
+    d = JuMPNLPEvaluator(m)
     MathProgBase.initialize(d, [:Hess])
     I,J = MathProgBase.hesslag_structure(d)
     V = zeros(length(I))
@@ -486,7 +486,7 @@ facts("[nonlinear] Hess-vec through MPB") do
     @setNLObjective(m, Min, a*b + c^2)
     @addConstraint(m, c*b <= 1)
     @addNLConstraint(m, a^2/2 <= 1)
-    d = JuMP.JuMPNLPEvaluator(m, JuMP.prepConstrMatrix(m))
+    d = JuMPNLPEvaluator(m)
     MathProgBase.initialize(d, [:HessVec])
     h = zeros(3)
     v = [2.4,3.5,1.2]

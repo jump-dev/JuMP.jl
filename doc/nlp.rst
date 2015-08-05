@@ -139,4 +139,36 @@ The line ``param = 10.0`` changes ``param`` to reference a new value in the loca
 
 This variable binding trick for quick model regeneration does not apply to the macros ``@addConstraint`` and ``@setObjective`` for linear and quadratic expressions; see :ref:`probmod` for modifying linear models. We hope to treat in-place model modifications in a more uniform manner in future releases.
 
+Querying derivatives from a JuMP model
+^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+
+For some advanced use cases, one may want to directly query the derivatives
+of a JuMP model instead of handing the problem off to a solver.
+Internally, JuMP implements the ``AbstractNLPEvaluator`` interface from
+`MathProgBase <http://mathprogbasejl.readthedocs.org/en/latest/nlp.html>`_.
+To obtain an NLP evaluator object from a JuMP model, use ``JuMPNLPEvaluator``.
+The ``getLinearIndex`` method maps from JuMP variables to the variable
+indices at the MathProgBase level.
+
+For example::
+
+    m = Model()
+    @defVar(m, x)
+    @defVar(m, y)
+
+    @setNLObjective(m, Min, sin(x) + sin(y))
+    values = zeros(2)
+    values[getLinearIndex(x)] = 2.0
+    values[getLinearIndex(y)] = 3.0
+
+    d = JuMPNLPEvaluator(m)
+    MathProgBase.initialize(d, [:Grad])
+    objval = MathProgBase.eval_f(d, values) # == sin(2.0) + sin(3.0)
+
+    ∇f = zeros(2)
+    MathProgBase.eval_grad_f(d, ∇f, values)
+    # ∇f[getLinearIndex(x)] == cos(2.0)
+    # ∇f[getLinearIndex(y)] == cos(3.0)
+
+
 .. [1] Gebremdhin et al., "Efficient Computation of Sparse Hessians Using Coloring and Automatic Differentiation", INFORMS Journal on Computing, 21(1), pp. 209-223, 2009.

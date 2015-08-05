@@ -52,8 +52,9 @@ type JuMPNLPEvaluator <: MathProgBase.AbstractNLPEvaluator
     eval_grad_f_timer::Float64
     eval_jac_g_timer::Float64
     eval_hesslag_timer::Float64
-    function JuMPNLPEvaluator(m::Model, A)
-        d = new(m,A)
+    function JuMPNLPEvaluator(m::Model)
+        d = new(m)
+        d.A = prepConstrMatrix(m)
         d.eval_f_timer = 0
         d.eval_g_timer = 0
         d.eval_grad_f_timer = 0
@@ -62,6 +63,8 @@ type JuMPNLPEvaluator <: MathProgBase.AbstractNLPEvaluator
         return d
     end
 end
+
+@Base.deprecate JuMPNLPEvaluator(m::Model,A) JuMPNLPEvaluator(m)
 
 function MathProgBase.initialize(d::JuMPNLPEvaluator, requested_features::Vector{Symbol})
     for feat in requested_features
@@ -509,8 +512,7 @@ function solvenlp(m::Model; suppress_warnings=false)
         @assert isa(nldata.evaluator, JuMPNLPEvaluator)
         d = nldata.evaluator
     else
-        A = prepConstrMatrix(m)
-        d = JuMPNLPEvaluator(m,A)
+        d = JuMPNLPEvaluator(m)
         nldata.evaluator = d
     end
 
