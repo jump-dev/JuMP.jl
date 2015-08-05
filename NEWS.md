@@ -12,6 +12,7 @@ Unversioned
   * Dual solutions are now available for general nonlinear problems. You may call ``getDual`` on a reference object for a nonlinear constraint, and ``getDual`` on a variable object for Lagrange multipliers from active bounds.
   * Introduce warnings for two common performance traps: too many calls to ``getValue()`` on a collection of variables and use of the ``+`` operator in a loop to sum expressions.
   * Second-order cone constraints can be written directly with the ``norm()`` and ``norm2{}`` syntax.
+  * Implement MathProgBase interface for querying Hessian-vector products
 
 Version 0.9.2 (June 27, 2015)
 -----------------------------
