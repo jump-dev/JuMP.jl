@@ -476,3 +476,21 @@ facts("[nonlinear] Hessians through MPB") do
     hess_sparse = hess_raw + hess_raw' - sparse(diagm(diag(hess_raw)))
     @fact hess_sparse --> roughly([0.0 1.0 0.0; 1.0 0.0 0.0; 0.0 0.0 2.0])
 end
+
+facts("[nonlinear] Hess-vec through MPB") do
+    m = Model()
+    @defVar(m, a, start = 1)
+    @defVar(m, b, start = 2)
+    @defVar(m, c, start = 3)
+
+    @setNLObjective(m, Min, a*b + c^2)
+    @addConstraint(m, c*b <= 1)
+    @addNLConstraint(m, a^2/2 <= 1)
+    d = JuMP.JuMPNLPEvaluator(m, JuMP.prepConstrMatrix(m))
+    MathProgBase.initialize(d, [:HessVec])
+    h = zeros(3)
+    v = [2.4,3.5,1.2]
+    MathProgBase.eval_hesslag_prod(d, h, m.colVal, v, 1.0, [2.0,3.0])
+    correct = [3.0 1.0 0.0; 1.0 0.0 2.0; 0.0 2.0 2.0]*v
+    @fact h --> roughly(correct)
+end
