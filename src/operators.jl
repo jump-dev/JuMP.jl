@@ -39,10 +39,6 @@
 (-){T<:GenericSOCExpr}(lhs::Number, rhs::T) = T(copy(rhs.norm),    -rhs.coeff, lhs-rhs.aff)
 (*){T<:GenericSOCExpr}(lhs::Number, rhs::T) = T(copy(rhs.norm), lhs*rhs.coeff, lhs*rhs.aff)
 
-# This is not well defined if variable types are different, but needed to avoid ambiguities
-(+)(lhs::GenericAffExpr, rhs::GenericAffExpr) = (+)(promote(lhs,rhs)...)
-(-)(lhs::GenericAffExpr, rhs::GenericAffExpr) = (-)(promote(lhs,rhs)...)
-
 # Variable
 (+)(lhs::Variable) = lhs
 (-)(lhs::Variable) = AffExpr([lhs],[-1.0],0.0)
@@ -60,10 +56,10 @@
 (+){C,V}(lhs::Variable, rhs::GenericNorm{2,C,V}) = GenericSOCExpr{C,V}(copy(rhs),  one(C), GenericAffExpr{C,V}(lhs))
 (-){C,V}(lhs::Variable, rhs::GenericNorm{2,C,V}) = GenericSOCExpr{C,V}(copy(rhs), -one(C), GenericAffExpr{C,V}(lhs))
 # Variable--AffExpr
-(+){CoefType,VarType}(lhs::VarType, rhs::GenericAffExpr{CoefType,VarType}) =
-    GenericAffExpr{CoefType,VarType}(vcat(rhs.vars,lhs),vcat( rhs.coeffs,one(CoefType)), rhs.constant)
-(-){CoefType,VarType}(lhs::VarType, rhs::GenericAffExpr{CoefType,VarType}) =
-    GenericAffExpr{CoefType,VarType}(vcat(rhs.vars,lhs),vcat(-rhs.coeffs,one(CoefType)),-rhs.constant)
+(+){C,V<:JuMPTypes}(lhs::V, rhs::GenericAffExpr{C,V}) =
+    GenericAffExpr{C,V}(vcat(rhs.vars,lhs),vcat(rhs.coeffs,one(C)), rhs.constant)
+(-){C,V<:JuMPTypes}(lhs::V, rhs::GenericAffExpr{C,V}) =
+    GenericAffExpr{C,V}(vcat(rhs.vars,lhs),vcat(-rhs.coeffs,one(C)),-rhs.constant)
 function (*)(lhs::Variable, rhs::AffExpr)
     n = length(rhs.vars)
     if rhs.constant != 0.
@@ -118,16 +114,16 @@ function (^)(lhs::Union(Variable,AffExpr), rhs::Integer)
 end
 (^)(lhs::Union(Variable,AffExpr), rhs::Number) = error("Only exponents of 2 are currently supported. Are you trying to build a nonlinear problem? Make sure you use @addNLConstraint/@setNLObjective.")
 # AffExpr--Variable
-(+){CoefType,VarType}(lhs::GenericAffExpr{CoefType,VarType}, rhs::VarType) = (+)(rhs,lhs)
-(-){CoefType,VarType}(lhs::GenericAffExpr{CoefType,VarType}, rhs::VarType) = GenericAffExpr{CoefType,VarType}(vcat(lhs.vars,rhs),vcat(lhs.coeffs,-one(CoefType)),lhs.constant)
+(+){C,V<:JuMPTypes}(lhs::GenericAffExpr{C,V}, rhs::V) = (+)(rhs,lhs)
+(-){C,V<:JuMPTypes}(lhs::GenericAffExpr{C,V}, rhs::V) = GenericAffExpr{C,V}(vcat(lhs.vars,rhs),vcat(lhs.coeffs,-one(C)),lhs.constant)
 (*)(lhs::AffExpr, rhs::Variable) = (*)(rhs,lhs)
 (/)(lhs::AffExpr, rhs::Variable) = error("Cannot divide affine expression by a variable")
 # AffExpr--Norm
 (+){C,V}(lhs::GenericAffExpr{C,V}, rhs::GenericNorm{2,C,V}) = GenericSOCExpr{C,V}(copy(rhs),  one(C), copy(lhs))
 (-){C,V}(lhs::GenericAffExpr{C,V}, rhs::GenericNorm{2,C,V}) = GenericSOCExpr{C,V}(copy(rhs), -one(C), copy(lhs))
 # AffExpr--AffExpr
-(+){T<:GenericAffExpr}(lhs::T, rhs::T) = (operator_warn(lhs,rhs); GenericAffExpr(vcat(lhs.vars,rhs.vars),vcat(lhs.coeffs, rhs.coeffs),lhs.constant+rhs.constant))
-(-){T<:GenericAffExpr}(lhs::T, rhs::T) = GenericAffExpr(vcat(lhs.vars,rhs.vars),vcat(lhs.coeffs,-rhs.coeffs),lhs.constant-rhs.constant)
+(+){C,V<:JuMPTypes}(lhs::GenericAffExpr{C,V}, rhs::GenericAffExpr{C,V}) = (operator_warn(lhs,rhs); GenericAffExpr(vcat(lhs.vars,rhs.vars),vcat(lhs.coeffs, rhs.coeffs),lhs.constant+rhs.constant))
+(-){C,V<:JuMPTypes}(lhs::GenericAffExpr{C,V}, rhs::GenericAffExpr{C,V}) = GenericAffExpr(vcat(lhs.vars,rhs.vars),vcat(lhs.coeffs,-rhs.coeffs),lhs.constant-rhs.constant)
 function (*)(lhs::AffExpr, rhs::AffExpr)
     ret = QuadExpr(Variable[],Variable[],Float64[],AffExpr(Variable[],Float64[],0.))
 
@@ -353,8 +349,22 @@ Base.promote_rule(         ::Type{Variable},::Type{QuadExpr}) = QuadExpr
 Base.promote_rule{R<:Real}(::Type{AffExpr}, ::Type{R}       ) = AffExpr
 Base.promote_rule(         ::Type{AffExpr}, ::Type{QuadExpr}) = QuadExpr
 Base.promote_rule{R<:Real}(::Type{QuadExpr},::Type{R}       ) = QuadExpr
-_throw_transpose_error() = error("Transpose not currently implemented for JuMPArrays with arbitrary index sets.")
 
+# This function is used to define the type of a container for multiplication
+# of different JuMPTypes. Extensions should define new methods in order to
+# utilize the machinery for matrix multiplication below.
+_multiply_type{R<:Real}(::Type{R},       ::Type{Variable}) = AffExpr
+_multiply_type{R<:Real}(::Type{R},       ::Type{AffExpr} ) = AffExpr
+_multiply_type{R<:Real}(::Type{R},       ::Type{QuadExpr}) = AffExpr
+_multiply_type{R<:Real}(::Type{Variable},::Type{R}       ) = AffExpr
+_multiply_type(         ::Type{Variable},::Type{Variable}) = QuadExpr
+_multiply_type(         ::Type{Variable},::Type{AffExpr} ) = QuadExpr
+_multiply_type{R<:Real}(::Type{AffExpr}, ::Type{R}       ) = AffExpr
+_multiply_type(         ::Type{AffExpr}, ::Type{Variable}) = QuadExpr
+_multiply_type(         ::Type{AffExpr}, ::Type{AffExpr} ) = QuadExpr
+_multiply_type{R<:Real}(::Type{QuadExpr},::Type{R}       ) = QuadExpr
+
+_throw_transpose_error() = error("Transpose not currently implemented for JuMPArrays with arbitrary index sets.")
 Base.transpose(x::OneIndexedArray)  = transpose(x.innerArray)
 Base.transpose(x::JuMPArray)  = _throw_transpose_error()
 Base.ctranspose(x::OneIndexedArray) = ctranspose(x.innerArray)
@@ -496,13 +506,13 @@ end
 
 # Don't do size checks here in _return_array, defer that to (*)
 function _return_array{R,S}(A::AbstractArray{R}, x::AbstractArray{S,1})
-    Q = (R <: JuMPTypes && S <: JuMPTypes) ? QuadExpr : AffExpr
+    Q = _multiply_type(R,S)
     m = size(A,1)
     Array(Q, m)
 end
 
 function _return_array{R,S}(A::AbstractArray{R}, x::AbstractArray{S,2})
-    Q = (R <: JuMPTypes && S <: JuMPTypes) ? QuadExpr : AffExpr
+    Q = _multiply_type(R,S)
     m = size(A,1)
     s = size(x,2)
     Array(Q, m, s)
@@ -518,7 +528,6 @@ function (*){T<:JuMPTypes}(A::Array{T}, x::Union(Array,SparseMatrixCSC))
 end
 
 function (*){T<:JuMPTypes,R<:JuMPTypes}(A::Array{T}, x::Array{R})
-    (T == QuadExpr || R == QuadExpr) && error("Cannot multiply two arrays of QuadExpr")
     m, n = size(A,1), size(A,2)
     r, s = size(x,1), size(x,2)
     n == r || error("Incompatible sizes")
