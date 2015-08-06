@@ -9,7 +9,7 @@ using JuMP
 # aka the sample mean and variance
 
 n = 1000
-data = rand(n)
+data = randn(n)
 
 m = Model()
 
