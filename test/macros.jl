@@ -259,7 +259,7 @@ facts("[macros] Triangular indexing, iteration") do
     @fact MathProgBase.numconstr(trimod) --> n*(n+1)/2
 
     cntr = zeros(Bool, n, n)
-    for (i,j,var) in x
+    for ((i,j),var) in zip(keys(x),values(x))
         @fact x[i,j] --> exactly(var)
         cntr[i,j] = true
     end
@@ -275,8 +275,8 @@ facts("[macros] Multidimensional indexing") do
     I3 = 5:6
     @defVar(model, x[1:5,2:8,5:6])
     coll = Int[]
-    for v in x
-        push!(coll, v[end].col)
+    for v in values(x)
+        push!(coll, v.col)
     end
     p = 1
     match = true

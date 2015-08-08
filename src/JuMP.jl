@@ -51,7 +51,7 @@ export
     @setNLObjective, @addNLConstraint, @addNLConstraints,
     @defNLExpr
 
-include("JuMPDict.jl")
+include("JuMPContainer.jl")
 #include("JuMPArray.jl")
 include("utils.jl")
 
@@ -549,8 +549,8 @@ Base.norm{T<:Union(Variable,GenericAffExpr)}(x::JuMPArray{T,1}) = vecnorm(x)
 function Base.norm(x::JuMPDict{Variable})
     ndims(x) == 1 || error("Cannot use norm() on a multidimensional JuMPDict. Use vecnorm instead.")
     arr = Array(Variable, length(x))
-    for (it,v) in enumerate(x)
-        arr[it] = v[end]
+    for (it,v) in enumerate(values(x))
+        arr[it] = v
     end
     Norm{2}(arr)
 end
@@ -561,8 +561,8 @@ Base.vecnorm{T<:Union(Variable,GenericAffExpr)}(x::JuMPArray{T}) =
     Norm{2}(collect(x.innerArray))
 function Base.vecnorm(x::JuMPDict{Variable})
     arr = Array(Variable, length(x))
-    for (it,v) in enumerate(x)
-        arr[it] = v[end]
+    for (it,v) in enumerate(values(x))
+        arr[it] = v
     end
     Norm{2}(arr)
 end
@@ -934,7 +934,7 @@ end
 
 # usage warnings
 function getvalue_warn(x::JuMPContainer{Variable})
-    v = last(first(x))
+    v = first(values(x))
     m = v.m
     m.getvalue_counter += 1
     if m.getvalue_counter > 400

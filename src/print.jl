@@ -180,17 +180,17 @@ function model_str(mode, m::Model, leq, geq, in_set,
         str *= sep * cont_str(mode,d,mathmode=true)  * eol
 
         # make sure that you haven't changed a variable type in the collection
-        cat = getCategory(first(d)[end])
+        cat = getCategory(first(values(d)))
         allsame = true
-        for v in d
-            if getCategory(v[end]) != cat
+        for v in values(d)
+            if getCategory(v) != cat
                 allsame = false
                 break
             end
         end
         if allsame
-            for it in d  # Mark variables in JuMPContainer as printed
-                in_dictlist[it[end].col] = true
+            for it in values(d)  # Mark variables in JuMPContainer as printed
+                in_dictlist[it.col] = true
             end
         end
     end
@@ -278,8 +278,7 @@ function fill_var_names(mode, colNames, v::JuMPArray{Variable})
 end
 function fill_var_names(mode, colNames, v::JuMPDict{Variable})
     name = v.name
-    for tmp in v
-        ind, var = tmp[1:end-1], tmp[end]
+    for (ind,var) in zip(keys(v),values(v))
         if mode == IJuliaMode
             colNames[var.col] = string(name, "_{", join([string(i) for i in ind],","), "}")
         else
@@ -375,7 +374,7 @@ function cont_str(mode, j::JuMPContainer{Variable}, leq, eq, geq,
     end
 
     # 4. Bounds and category, if possible, and return final string
-    a_var = first(j)[end]
+    a_var = first(values(j))
     model = a_var.m
     var_cat = model.colCat[a_var.col]
     var_lb  = model.colLower[a_var.col]
@@ -385,8 +384,7 @@ function cont_str(mode, j::JuMPContainer{Variable}, leq, eq, geq,
     # creation, which we'd never be able to handle.
     all_same_lb = true
     all_same_ub = true
-    for iter in j
-        var = iter[end]
+    for var in values(j)
         all_same_lb &= model.colLower[var.col] == var_lb
         all_same_ub &= model.colUpper[var.col] == var_ub
     end
@@ -474,9 +472,8 @@ Base.show( io::IO, j::OneIndexedArray{Float64}) = print(io, j.innerArray)
 #------------------------------------------------------------------------
 Base.print(io::IO, j::JuMPContainer{Float64}) = print(io, val_str(REPLMode,j))
 Base.show( io::IO, j::JuMPContainer{Float64}) = print(io, val_str(REPLMode,j))
-function val_str(mode, j::JuMPArray{Float64})
-    dims = length(j.indexsets)
-    out_str = "$(j.name): $dims dimensions:\n"
+function val_str{N}(mode, j::JuMPArray{Float64,N})
+    out_str = "$(j.name): $N dimensions:\n"
 
     function val_str_rec(depth, parent_index::Vector{Any}, parent_str::String)
         # Turn index set into strings
@@ -499,7 +496,7 @@ function val_str(mode, j::JuMPArray{Float64})
         indent = " "^(2*(depth-1))
 
         # Determine the need to recurse
-        if depth == dims
+        if depth == N
             # Deepest level
             for i = 1:length(indexset)
                 value = length(parent_index) == 0 ?
@@ -512,7 +509,7 @@ function val_str(mode, j::JuMPArray{Float64})
             for i = 1:length(indexset)
                 index = indexset[i]
                 # Print the ":" version of indices we will recurse over
-                out_str *= indent * "[" * index_strs[i] * ",:"^(dims-depth) * "]\n"
+                out_str *= indent * "[" * index_strs[i] * ",:"^(N-depth) * "]\n"
                 val_str_rec(depth+1,
                      length(parent_index) == 0 ? Any[index] : Any[parent_index...,index],
                     index_strs[i] * ",")
