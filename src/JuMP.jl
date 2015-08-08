@@ -244,7 +244,8 @@ setPrintHook(m::Model, f) = (m.printhook = f)
 ###############################################################################
 # Variable class
 # Doesn't actually do much, just a pointer back to the model
-immutable Variable <: ReverseDiffSparse.Placeholder
+abstract AbstractJuMPScalar <: ReverseDiffSparse.Placeholder
+immutable Variable <: AbstractJuMPScalar
     m::Model
     col::Int
 end
@@ -957,9 +958,9 @@ operator_warn(lhs,rhs) = nothing
 ##########################################################################
 # Behavior that's uniform across all JuMP "scalar" objects
 
-typealias JuMPTypes Union(Variable,
+typealias JuMPTypes Union(AbstractJuMPScalar,
                           Norm,
-                          AffExpr,
+                          GenericAffExpr,
                           QuadExpr,
                           SOCExpr)
 typealias JuMPScalars Union(Number,JuMPTypes)
