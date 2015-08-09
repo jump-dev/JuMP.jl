@@ -154,7 +154,15 @@ COIN-OR Bonmin and Couenne
 ++++++++++++++++++++++++++
 
 Binaries of Bonmin and Couenne are provided on OS X and Windows (32- and 64-bit) by the `CoinOptServices.jl <https://github.com/JuliaOpt/CoinOptServices.jl>`_ package.
-Once installed, they can be called either via ``.osil`` files using ``OsilBonminSolver`` and ``OsilCouenneSolver`` from `CoinOptServices.jl <https://github.com/JuliaOpt/CoinOptServices.jl>`_,
+On Linux, they will be compiled from source. Once installed, they can be called either via ``.osil`` files using
+``OsilBonminSolver`` and ``OsilCouenneSolver`` from `CoinOptServices.jl <https://github.com/JuliaOpt/CoinOptServices.jl>`_,
 or via ``.nl`` files using ``BonminNLSolver`` and ``CouenneNLSolver`` from `AmplNLWriter.jl <https://github.com/JackDunnNZ/AmplNLWriter.jl>`_.
 Automatic differentiation performance is likely to be much better with ``.nl`` files than ``.osil`` files at this time.
 Since both Bonmin and Couenne use Ipopt for continuous subproblems, the same MUMPS sparse linear algebra performance caveat applies.
+
+Other AMPL-compatible solvers
++++++++++++++++++++++++++++++
+
+Any other solver not listed above that can be called from `AMPL <http://ampl.com/products/solvers/all-solvers-for-ampl/>`_ can be used by JuMP through the
+`AmplNLWriter.jl <https://github.com/JackDunnNZ/AmplNLWriter.jl>`_ package. The first argument to ``AmplNLSolver``
+can be used to specify a solver executable name.
