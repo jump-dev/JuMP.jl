@@ -35,38 +35,48 @@ Solver support in Julia is currently provided by writing a solver-specific packa
 
 .. _jump-solvertable:
 
-+----------------------------------------------------------------------------------+---------------------------------------------------------------------------------+-----------------------------+-------------+----+------+-----+-----+
-| Solver                                                                           | Julia Package                                                                   | ``solver=``                 | License     | LP | SOCP | MIP | NLP |
-+==================================================================================+=================================================================================+=============================+=============+====+======+=====+=====+
-| `Cbc <https://projects.coin-or.org/Cbc>`_                                        | `Cbc.jl <https://github.com/JuliaOpt/Cbc.jl>`_                                  | ``CbcSolver()``             |     EPL     |    |      |  X  |     |
-+----------------------------------------------------------------------------------+---------------------------------------------------------------------------------+-----------------------------+-------------+----+------+-----+-----+
-| `Clp <https://projects.coin-or.org/Clp>`_                                        | `Clp.jl <https://github.com/JuliaOpt/Clp.jl>`_                                  | ``ClpSolver()``             |      EPL    | X  |      |     |     |
-+----------------------------------------------------------------------------------+---------------------------------------------------------------------------------+-----------------------------+-------------+----+------+-----+-----+
-| `CPLEX <http://www-01.ibm.com/software/commerce/optimization/cplex-optimizer/>`_ | `CPLEX.jl <https://github.com/JuliaOpt/CPLEX.jl>`_                              | ``CplexSolver()``           |  Comm.      | X  |  X   | X   |     |
-+----------------------------------------------------------------------------------+---------------------------------------------------------------------------------+-----------------------------+-------------+----+------+-----+-----+
-| `ECOS <https://github.com/ifa-ethz/ecos>`_                                       | `ECOS.jl <https://github.com/JuliaOpt/ECOS.jl>`_                                |  ``ECOSSolver()``           |  GPL        | X  |  X   |     |     |
-+----------------------------------------------------------------------------------+---------------------------------------------------------------------------------+-----------------------------+-------------+----+------+-----+-----+
-| `GLPK <http://www.gnu.org/software/glpk/>`_                                      | `GLPKMath... <https://github.com/JuliaOpt/GLPKMathProgInterface.jl>`_           |  ``GLPKSolver[LP|MIP]()``   |  GPL        | X  |      | X   |     |
-+----------------------------------------------------------------------------------+---------------------------------------------------------------------------------+-----------------------------+-------------+----+------+-----+-----+
-| `Gurobi <http://gurobi.com>`_                                                    | `Gurobi.jl <https://github.com/JuliaOpt/Gurobi.jl>`_                            | ``GurobiSolver()``          | Comm.       | X  |   X  |  X  |     |
-+----------------------------------------------------------------------------------+---------------------------------------------------------------------------------+-----------------------------+-------------+----+------+-----+-----+
-| `Ipopt <https://projects.coin-or.org/Ipopt>`_                                    | `Ipopt.jl <https://github.com/JuliaOpt/Ipopt.jl>`_                              | ``IpoptSolver()``           | EPL         | X  |      |     |  X  |
-+----------------------------------------------------------------------------------+---------------------------------------------------------------------------------+-----------------------------+-------------+----+------+-----+-----+
-| `KNITRO <http://www.ziena.com/knitro.htm>`_                                      | `KNITRO.jl <https://github.com/JuliaOpt/KNITRO.jl>`_                            | ``KnitroSolver()``          | Comm.       |    |      |     |  X  |
-+----------------------------------------------------------------------------------+---------------------------------------------------------------------------------+-----------------------------+-------------+----+------+-----+-----+
-| `MOSEK <http://www.mosek.com/>`_                                                 | `Mosek.jl <https://github.com/JuliaOpt/Mosek.jl>`_                              | ``MosekSolver()``           | Comm.       | X  |   X  |  X  |  X  |
-+----------------------------------------------------------------------------------+---------------------------------------------------------------------------------+-----------------------------+-------------+----+------+-----+-----+
-| `NLopt <http://ab-initio.mit.edu/wiki/index.php/NLopt>`_                         | `NLopt.jl <https://github.com/JuliaOpt/NLopt.jl>`_                              | ``NLoptSolver()``           | LGPL        |    |      |     |  X  |
-+----------------------------------------------------------------------------------+---------------------------------------------------------------------------------+-----------------------------+-------------+----+------+-----+-----+
-| `SCS <https://github.com/cvxgrp/scs>`_                                           | `SCS.jl <https://github.com/JuliaOpt/SCS.jl>`_                                  |  ``SCSSolver()``            |  MIT        | X  |  X   |     |     |
-+----------------------------------------------------------------------------------+---------------------------------------------------------------------------------+-----------------------------+-------------+----+------+-----+-----+
++----------------------------------------------------------------------------------+---------------------------------------------------------------------------------+-----------------------------+-------------+----+------+------+-----+-------+
+| Solver                                                                           | Julia Package                                                                   | ``solver=``                 | License     | LP | SOCP | MILP | NLP | MINLP |
++==================================================================================+=================================================================================+=============================+=============+====+======+======+=====+=======+
+| `Cbc <https://projects.coin-or.org/Cbc>`_                                        | `Cbc.jl <https://github.com/JuliaOpt/Cbc.jl>`_                                  | ``CbcSolver()``             |  EPL        |    |      |  X   |     |       |
++----------------------------------------------------------------------------------+---------------------------------------------------------------------------------+-----------------------------+-------------+----+------+------+-----+-------+
+| `Clp <https://projects.coin-or.org/Clp>`_                                        | `Clp.jl <https://github.com/JuliaOpt/Clp.jl>`_                                  | ``ClpSolver()``             |  EPL        | X  |      |      |     |       |
++----------------------------------------------------------------------------------+---------------------------------------------------------------------------------+-----------------------------+-------------+----+------+------+-----+-------+
+| `CPLEX <http://www-01.ibm.com/software/commerce/optimization/cplex-optimizer/>`_ | `CPLEX.jl <https://github.com/JuliaOpt/CPLEX.jl>`_                              | ``CplexSolver()``           |  Comm.      | X  |  X   |  X   |     |       |
++----------------------------------------------------------------------------------+---------------------------------------------------------------------------------+-----------------------------+-------------+----+------+------+-----+-------+
+| `ECOS <https://github.com/ifa-ethz/ecos>`_                                       | `ECOS.jl <https://github.com/JuliaOpt/ECOS.jl>`_                                |  ``ECOSSolver()``           |  GPL        | X  |  X   |      |     |       |
++----------------------------------------------------------------------------------+---------------------------------------------------------------------------------+-----------------------------+-------------+----+------+------+-----+-------+
+| `GLPK <http://www.gnu.org/software/glpk/>`_                                      | `GLPKMath... <https://github.com/JuliaOpt/GLPKMathProgInterface.jl>`_           |  ``GLPKSolver[LP|MIP]()``   |  GPL        | X  |      |  X   |     |       |
++----------------------------------------------------------------------------------+---------------------------------------------------------------------------------+-----------------------------+-------------+----+------+------+-----+-------+
+| `Gurobi <http://gurobi.com>`_                                                    | `Gurobi.jl <https://github.com/JuliaOpt/Gurobi.jl>`_                            | ``GurobiSolver()``          |  Comm.      | X  |   X  |  X   |     |       |
++----------------------------------------------------------------------------------+---------------------------------------------------------------------------------+-----------------------------+-------------+----+------+------+-----+-------+
+| `Ipopt <https://projects.coin-or.org/Ipopt>`_                                    | `Ipopt.jl <https://github.com/JuliaOpt/Ipopt.jl>`_                              | ``IpoptSolver()``           |  EPL        | X  |      |      |  X  |       |
++----------------------------------------------------------------------------------+---------------------------------------------------------------------------------+-----------------------------+-------------+----+------+------+-----+-------+
+| `KNITRO <http://www.ziena.com/knitro.htm>`_                                      | `KNITRO.jl <https://github.com/JuliaOpt/KNITRO.jl>`_                            | ``KnitroSolver()``          |  Comm.      |    |      |      |  X  |   X   |
++----------------------------------------------------------------------------------+---------------------------------------------------------------------------------+-----------------------------+-------------+----+------+------+-----+-------+
+| `MOSEK <http://www.mosek.com/>`_                                                 | `Mosek.jl <https://github.com/JuliaOpt/Mosek.jl>`_                              | ``MosekSolver()``           |  Comm.      | X  |   X  |  X   |  X  |       |
++----------------------------------------------------------------------------------+---------------------------------------------------------------------------------+-----------------------------+-------------+----+------+------+-----+-------+
+| `NLopt <http://ab-initio.mit.edu/wiki/index.php/NLopt>`_                         | `NLopt.jl <https://github.com/JuliaOpt/NLopt.jl>`_                              | ``NLoptSolver()``           |  LGPL       |    |      |      |  X  |       |
++----------------------------------------------------------------------------------+---------------------------------------------------------------------------------+-----------------------------+-------------+----+------+------+-----+-------+
+| `SCS <https://github.com/cvxgrp/scs>`_                                           | `SCS.jl <https://github.com/JuliaOpt/SCS.jl>`_                                  |  ``SCSSolver()``            |  MIT        | X  |  X   |      |     |       |
++----------------------------------------------------------------------------------+---------------------------------------------------------------------------------+-----------------------------+-------------+----+------+------+-----+-------+
+| `Bonmin <https://projects.coin-or.org/Bonmin>`_                                  | `AmplNLWriter.jl <https://github.com/JackDunnNZ/AmplNLWriter.jl>`_              | ``BonminNLSolver()`` *      |  EPL        | X  |      |  X   |  X  |   X   |
++                                                                                  +---------------------------------------------------------------------------------+-----------------------------+             +    +      +      +     +       +
+|                                                                                  | `CoinOptServices.jl <https://github.com/JuliaOpt/CoinOptServices.jl>`_          | ``OsilBonminSolver()``      |             |    |      |      |     |       |
++----------------------------------------------------------------------------------+---------------------------------------------------------------------------------+-----------------------------+-------------+----+------+------+-----+-------+
+|  `Couenne <https://projects.coin-or.org/Couenne>`_                               | `AmplNLWriter.jl <https://github.com/JackDunnNZ/AmplNLWriter.jl>`_              | ``CouenneNLSolver()`` *     |  EPL        | X  |      |  X   |  X  |   X   |
++                                                                                  +---------------------------------------------------------------------------------+-----------------------------+             +    +      +      +     +       +
+|                                                                                  | `CoinOptServices.jl <https://github.com/JuliaOpt/CoinOptServices.jl>`_          | ``OsilCouenneSolver()``     |             |    |      |      |     |       |
++----------------------------------------------------------------------------------+---------------------------------------------------------------------------------+-----------------------------+-------------+----+------+------+-----+-------+
 
 Where:
 
 - LP = Linear programming
 - SOCP = Second-order conic programming (including problems with convex quadratic constraints and/or objective)
-- MIP = Mixed-integer programming
+- MILP = Mixed-integer linear programming
 - NLP = Nonlinear programming
+- MINLP = Mixed-integer nonlinear programming
+`*` requires CoinOptServices installed, see below.
 
 To install Gurobi, for example, and use it with a JuMP model ``m``, run::
 
@@ -120,6 +130,7 @@ Ipopt binaries are provided on OS X and Windows (32- and 64-bit) by default. On 
 The default installation of Ipopt uses the open-source MUMPS library for sparse linear algebra.
 Significant speedups can be obtained by manually compiling Ipopt to use proprietary sparse linear algebra libraries instead.
 Julia can be pointed to use a custom version of Ipopt; we suggest posting to the `julia-opt <https://groups.google.com/forum/#!forum/julia-opt>`_ mailing list with your platform details for guidance on how to do this.
+If both the `Ipopt.jl <https://github.com/JuliaOpt/Ipopt.jl>`_ and `AmplNLWriter.jl <https://github.com/JackDunnNZ/AmplNLWriter.jl>`_ packages are installed,
 
 KNITRO
 ++++++
@@ -141,4 +152,21 @@ NLopt supports only nonlinear models. An algorithm must be specified as an optio
 SCS
 +++
 
-SCS can be used by JuMP to solve LPs and SOCPs. SCS does not support general quadratic objectives or constraints, only second-order conic constraints of the form ``x'x <= y^2``. SCS is a first order solver and has low accuracy (:math:`10^{-3}`) by default; see the SCS.jl documentation for more information.
+SCS can be used by JuMP to solve LPs and SOCPs. SCS does not support general quadratic objectives or constraints, only second-order conic constraints of the form ``x'x <= y^2``. SCS is a first order solver and has low accuracy (:math:`10^{-4}`) by default; see the SCS.jl documentation for more information.
+
+COIN-OR Bonmin and Couenne
+++++++++++++++++++++++++++
+
+Binaries of Bonmin and Couenne are provided on OS X and Windows (32- and 64-bit) by the `CoinOptServices.jl <https://github.com/JuliaOpt/CoinOptServices.jl>`_ package.
+On Linux, they will be compiled from source. Once installed, they can be called either via ``.osil`` files using
+``OsilBonminSolver`` and ``OsilCouenneSolver`` from `CoinOptServices.jl <https://github.com/JuliaOpt/CoinOptServices.jl>`_,
+or via ``.nl`` files using ``BonminNLSolver`` and ``CouenneNLSolver`` from `AmplNLWriter.jl <https://github.com/JackDunnNZ/AmplNLWriter.jl>`_.
+We recommend using the ``.nl`` format option, which is currently more stable and has better performance for derivative computations.
+Since both Bonmin and Couenne use Ipopt for continuous subproblems, the same MUMPS sparse linear algebra performance caveat applies.
+
+Other AMPL-compatible solvers
++++++++++++++++++++++++++++++
+
+Any other solver not listed above that can be called from `AMPL <http://ampl.com/products/solvers/all-solvers-for-ampl/>`_ can be used by JuMP through the
+`AmplNLWriter.jl <https://github.com/JackDunnNZ/AmplNLWriter.jl>`_ package. The first argument to ``AmplNLSolver``
+can be used to specify a solver executable name.
