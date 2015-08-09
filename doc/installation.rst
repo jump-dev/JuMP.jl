@@ -130,7 +130,6 @@ Ipopt binaries are provided on OS X and Windows (32- and 64-bit) by default. On 
 The default installation of Ipopt uses the open-source MUMPS library for sparse linear algebra.
 Significant speedups can be obtained by manually compiling Ipopt to use proprietary sparse linear algebra libraries instead.
 Julia can be pointed to use a custom version of Ipopt; we suggest posting to the `julia-opt <https://groups.google.com/forum/#!forum/julia-opt>`_ mailing list with your platform details for guidance on how to do this.
-If both the `Ipopt.jl <https://github.com/JuliaOpt/Ipopt.jl>`_ and `AmplNLWriter.jl <https://github.com/JackDunnNZ/AmplNLWriter.jl>`_ packages are installed,
 
 KNITRO
 ++++++
