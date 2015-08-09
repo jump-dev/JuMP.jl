@@ -60,11 +60,13 @@ Solver support in Julia is currently provided by writing a solver-specific packa
 +----------------------------------------------------------------------------------+---------------------------------------------------------------------------------+-----------------------------+-------------+----+------+------+-----+-------+
 | `SCS <https://github.com/cvxgrp/scs>`_                                           | `SCS.jl <https://github.com/JuliaOpt/SCS.jl>`_                                  |  ``SCSSolver()``            |  MIT        | X  |  X   |      |     |       |
 +----------------------------------------------------------------------------------+---------------------------------------------------------------------------------+-----------------------------+-------------+----+------+------+-----+-------+
-| `Bonmin <https://projects.coin-or.org/Bonmin>`_                                  | `CoinOptServices.jl <https://github.com/JuliaOpt/CoinOptServices.jl>`_          | ``OsilBonminSolver()``      |  EPL        | X  |      |  X   |  X  |   X   |
-|                                                                                  | or `AmplNLWriter.jl <https://github.com/JackDunnNZ/AmplNLWriter.jl>`_           | or ``BonminNLSolver()``     |             |    |      |      |     |       |
+| `Bonmin <https://projects.coin-or.org/Bonmin>`_                                  | `AmplNLWriter.jl <https://github.com/JackDunnNZ/AmplNLWriter.jl>`_              | ``BonminNLSolver()`` *      |  EPL        | X  |      |  X   |  X  |   X   |
++                                                                                  +---------------------------------------------------------------------------------+-----------------------------+             +    +      +      +     +       +
+|                                                                                  | `CoinOptServices.jl <https://github.com/JuliaOpt/CoinOptServices.jl>`_          | ``OsilBonminSolver()``      |             |    |      |      |     |       |
 +----------------------------------------------------------------------------------+---------------------------------------------------------------------------------+-----------------------------+-------------+----+------+------+-----+-------+
-| `Couenne <https://projects.coin-or.org/Couenne>`_                                | `CoinOptServices.jl <https://github.com/JuliaOpt/CoinOptServices.jl>`_          | ``OsilCouenneSolver()``     |  EPL        | X  |      |  X   |  X  |   X   |
-|                                                                                  | or `AmplNLWriter.jl <https://github.com/JackDunnNZ/AmplNLWriter.jl>`_           | or ``CouenneNLSolver()``    |             |    |      |      |     |       |
+|  `Couenne <https://projects.coin-or.org/Couenne>`_                               | `AmplNLWriter.jl <https://github.com/JackDunnNZ/AmplNLWriter.jl>`_              | ``CouenneNLSolver()`` *     |  EPL        | X  |      |  X   |  X  |   X   |
++                                                                                  +---------------------------------------------------------------------------------+-----------------------------+             +    +      +      +     +       +
+|                                                                                  | `CoinOptServices.jl <https://github.com/JuliaOpt/CoinOptServices.jl>`_          | ``OsilCouenneSolver()``     |             |    |      |      |     |       |
 +----------------------------------------------------------------------------------+---------------------------------------------------------------------------------+-----------------------------+-------------+----+------+------+-----+-------+
 
 Where:
@@ -74,6 +76,7 @@ Where:
 - MILP = Mixed-integer linear programming
 - NLP = Nonlinear programming
 - MINLP = Mixed-integer nonlinear programming
+`*` requires CoinOptServices installed, see below.
 
 To install Gurobi, for example, and use it with a JuMP model ``m``, run::
 
@@ -127,6 +130,7 @@ Ipopt binaries are provided on OS X and Windows (32- and 64-bit) by default. On 
 The default installation of Ipopt uses the open-source MUMPS library for sparse linear algebra.
 Significant speedups can be obtained by manually compiling Ipopt to use proprietary sparse linear algebra libraries instead.
 Julia can be pointed to use a custom version of Ipopt; we suggest posting to the `julia-opt <https://groups.google.com/forum/#!forum/julia-opt>`_ mailing list with your platform details for guidance on how to do this.
+If both the `Ipopt.jl <https://github.com/JuliaOpt/Ipopt.jl>`_ and `AmplNLWriter.jl <https://github.com/JackDunnNZ/AmplNLWriter.jl>`_ packages are installed,
 
 KNITRO
 ++++++
@@ -148,7 +152,7 @@ NLopt supports only nonlinear models. An algorithm must be specified as an optio
 SCS
 +++
 
-SCS can be used by JuMP to solve LPs and SOCPs. SCS does not support general quadratic objectives or constraints, only second-order conic constraints of the form ``x'x <= y^2``. SCS is a first order solver and has low accuracy (:math:`10^{-3}`) by default; see the SCS.jl documentation for more information.
+SCS can be used by JuMP to solve LPs and SOCPs. SCS does not support general quadratic objectives or constraints, only second-order conic constraints of the form ``x'x <= y^2``. SCS is a first order solver and has low accuracy (:math:`10^{-4}`) by default; see the SCS.jl documentation for more information.
 
 COIN-OR Bonmin and Couenne
 ++++++++++++++++++++++++++
@@ -157,7 +161,7 @@ Binaries of Bonmin and Couenne are provided on OS X and Windows (32- and 64-bit)
 On Linux, they will be compiled from source. Once installed, they can be called either via ``.osil`` files using
 ``OsilBonminSolver`` and ``OsilCouenneSolver`` from `CoinOptServices.jl <https://github.com/JuliaOpt/CoinOptServices.jl>`_,
 or via ``.nl`` files using ``BonminNLSolver`` and ``CouenneNLSolver`` from `AmplNLWriter.jl <https://github.com/JackDunnNZ/AmplNLWriter.jl>`_.
-Automatic differentiation performance is likely to be much better with ``.nl`` files than ``.osil`` files at this time.
+We recommend using the ``.nl`` format option, which is currently more stable and has better performance for derivative computations.
 Since both Bonmin and Couenne use Ipopt for continuous subproblems, the same MUMPS sparse linear algebra performance caveat applies.
 
 Other AMPL-compatible solvers
