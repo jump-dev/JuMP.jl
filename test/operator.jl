@@ -620,6 +620,30 @@ context("Vectorized arithmetic") do
                                      x[2] + 3x[3]]) --> true
 end
 
+context("Dot-ops") do
+    m = Model()
+    @defVar(m, x[1:2,1:2])
+    A = [1 2;
+         3 4]
+    @fact TestHelper.vec_eq(A.+x, [1+x[1,1]  2+x[1,2];
+                                   3+x[2,1]  4+x[2,2]]) --> true
+    @fact TestHelper.vec_eq(x.+A, [1+x[1,1]  2+x[1,2];
+                                   3+x[2,1]  4+x[2,2]]) --> true
+    @fact TestHelper.vec_eq(A.-x, [1-x[1,1]  2-x[1,2];
+                                   3-x[2,1]  4-x[2,2]]) --> true
+    @fact TestHelper.vec_eq(x.-A, [-1+x[1,1]  -2+x[1,2];
+                                   -3+x[2,1]  -4+x[2,2]]) --> true
+    @fact TestHelper.vec_eq(A.*x, [1*x[1,1]  2*x[1,2];
+                                   3*x[2,1]  4*x[2,2]]) --> true
+    @fact TestHelper.vec_eq(x.*A, [1*x[1,1]  2*x[1,2];
+                                   3*x[2,1]  4*x[2,2]]) --> true
+    @fact_throws TestHelper.vec_eq(A./x, [1*x[1,1]  2*x[1,2];
+                                          3*x[2,1]  4*x[2,2]])
+    @fact TestHelper.vec_eq(x./A, [1/1*x[1,1]  1/2*x[1,2];
+                                   1/3*x[2,1]  1/4*x[2,2]]) --> true
+
+end
+
 context("Vectorized comparisons") do
     m = Model()
     @defVar(m, x[1:3])
