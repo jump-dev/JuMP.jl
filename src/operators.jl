@@ -596,8 +596,8 @@ for (dotop,op) in [(:.+,:+), (:.-,:-), (:.*,:*), (:./,:/)]
         $dotop{T<:JuMPTypes}(lhs::T,rhs::Array) = map(c->$op(lhs,c), rhs)
         $dotop{T<:JuMPTypes}(lhs::Array,rhs::T) = map(c->$op(c,rhs), lhs)
 
-        $dotop{T<:JuMPTypes,N}(lhs::Array{T,N},rhs::OneIndexedArray) = $dotop(lhs,rhs.innerArray)
-        $dotop{T<:JuMPTypes,N}(lhs::OneIndexedArray,rhs::Array{T,N}) = $dotop(lhs.innerArray,rhs)
+        $dotop{T<:JuMPScalars,N}(lhs::Array{T,N},rhs::OneIndexedArray) = $dotop(lhs,rhs.innerArray)
+        $dotop{T<:JuMPScalars,N}(lhs::OneIndexedArray,rhs::Array{T,N}) = $dotop(lhs.innerArray,rhs)
         $dotop(lhs::OneIndexedArray,rhs::OneIndexedArray) = $dotop(lhs.innerArray,rhs.innerArray)
     end
 end
