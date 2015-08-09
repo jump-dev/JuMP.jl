@@ -139,4 +139,66 @@ The line ``param = 10.0`` changes ``param`` to reference a new value in the loca
 
 This variable binding trick for quick model regeneration does not apply to the macros ``@addConstraint`` and ``@setObjective`` for linear and quadratic expressions; see :ref:`probmod` for modifying linear models. We hope to treat in-place model modifications in a more uniform manner in future releases.
 
+Querying derivatives from a JuMP model
+^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+
+For some advanced use cases, one may want to directly query the derivatives
+of a JuMP model instead of handing the problem off to a solver.
+Internally, JuMP implements the ``AbstractNLPEvaluator`` interface from
+`MathProgBase <http://mathprogbasejl.readthedocs.org/en/latest/nlp.html>`_.
+To obtain an NLP evaluator object from a JuMP model, use ``JuMPNLPEvaluator``.
+The ``getLinearIndex`` method maps from JuMP variables to the variable
+indices at the MathProgBase level.
+
+For example::
+
+    m = Model()
+    @defVar(m, x)
+    @defVar(m, y)
+
+    @setNLObjective(m, Min, sin(x) + sin(y))
+    values = zeros(2)
+    values[getLinearIndex(x)] = 2.0
+    values[getLinearIndex(y)] = 3.0
+
+    d = JuMPNLPEvaluator(m)
+    MathProgBase.initialize(d, [:Grad])
+    objval = MathProgBase.eval_f(d, values) # == sin(2.0) + sin(3.0)
+
+    ∇f = zeros(2)
+    MathProgBase.eval_grad_f(d, ∇f, values)
+    # ∇f[getLinearIndex(x)] == cos(2.0)
+    # ∇f[getLinearIndex(y)] == cos(3.0)
+
+The ordering of constraints in a JuMP model corresponds to the following ordering
+at the MathProgBase nonlinear abstraction layer. There are three groups of constraints:
+linear, quadratic, and nonlinear. Linear and quadratic constraints, to be recognized
+as such, must be added with the ``@addConstraint`` macros. All constraints added with
+the ``@addNLConstraint`` macros are treated as nonlinear constraints.
+Linear constraints are ordered first, then quadratic, then nonlinear.
+The ``getLinearIndex`` method applied to a constraint reference object
+returns the index of the constraint *within its corresponding constraint class*.
+For example::
+
+    m = Model()
+    @defVar(m, x)
+    @addConstraint(m, cons1, x^2 <= 1)
+    @addConstraint(m, cons2, x + 1 == 3)
+    @addNLConstraint(m, cons3, x + 5 == 10)
+
+    typeof(cons1) # ConstraintRef{GenericQuadConstraint{GenericQuadExpr{Float64,Variable}}} indicates a quadratic constraint
+    typeof(cons2) # ConstraintRef{GenericRangeConstraint{GenericAffExpr{Float64,Variable}}} indicates a linear constraint
+    typeof(cons3) # ConstraintRef{GenericRangeConstraint{SymbolicOutput}} indicates a nonlinear constraint
+    getLinearIndex(cons1) == getLinearIndex(cons2) == getLinearIndex(cons3) == 1
+
+When querying derivatives, ``cons2`` will appear first, because it is the first linear constraint, then ``cons1``, because it is the first quadratic constraint, then ``cons3``, because it is the first nonlinear constraint. Note that for one-sided nonlinear constraints, JuMP subtracts any values on the right-hand side when computing expression. In other words, one-sided linear constraints are always transformed to have a right-hand side of zero.
+
+This method of querying derivatives directly from a JuMP model is convenient for
+interacting with the model in a structured way, e.g., for accessing derivatives of
+specific variables. For example, in statistical maximum likelihood estimation problems,
+one is often interested in the Hessian matrix at the optimal solution,
+which can be queried using the ``JuMPNLPEvaluator``.
+
+However, the examples above are *not* a convenient way to access the NLP `standard-form <http://mathprogbasejl.readthedocs.org/en/latest/nlp.html>`_ representation of a JuMP model, because there is no direct way to access the vector of constraint upper and lower bounds. In this case, you should implement an ``AbstractMathProgSolver`` and corresponding ``AbstractMathProgModel`` type following the MathProgBase nonlinear interface, collecting the problem data through the ``MathProgBase.loadnonlinearproblem!`` `method <http://mathprogbasejl.readthedocs.org/en/latest/nlp.html#loadnonlinearproblem!>`_. This approach has the advantage of being nominally independent of JuMP itself in terms of problem format. You may use the ``buildInternalModel`` method to ask JuMP to populate the "solver" without calling ``optimize!``.
+
 .. [1] Gebremdhin et al., "Efficient Computation of Sparse Hessians Using Coloring and Automatic Differentiation", INFORMS Journal on Computing, 21(1), pp. 209-223, 2009.

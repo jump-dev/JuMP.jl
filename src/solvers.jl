@@ -34,17 +34,11 @@ function solve(m::Model; suppress_warnings=false, ignore_solve_hook=(m.solvehook
     m.getvalue_counter = 0
     m.operator_counter = 0
 
-    # Unfortunately we still have to take a different codepath for nlp
-    if m.nlpdata != nothing
-        if isa(m.solver,UnsetSolver)
-            m.solver = MathProgBase.defaultNLPsolver
-        end
-        return solvenlp(m, suppress_warnings=suppress_warnings)
-    end
-
     unset = m.solver == UnsetSolver()
     traits = problemclass(m)
     buildInternalModel(m, traits, suppress_warnings=suppress_warnings)
+
+    traits.nlp && return solvenlp(m, traits, suppress_warnings=suppress_warnings)
 
     MathProgBase.optimize!(m.internalModel)
     stat = MathProgBase.status(m.internalModel)
@@ -606,7 +600,6 @@ function conicconstraintdata(m::Model)
 end
 
 function buildInternalModel(m::Model, traits=problemclass(m); suppress_warnings=false)
-    traits.nlp && error("buildInternalModel not supported for nonlinear problems")
 
     # set default solver
     if isa(m.solver, UnsetSolver)
@@ -619,11 +612,15 @@ function buildInternalModel(m::Model, traits=problemclass(m); suppress_warnings=
                 MathProgBase.defaultConicsolver
             elseif traits.qp | traits.qc
                 MathProgBase.defaultQPsolver
+            elseif traits.nlp
+                MathProgBase.defaultNLPsolver
             else
                 MathProgBase.defaultLPsolver
             end
         end
     end
+
+    traits.nlp && return _buildInternalModel_nlp(m, traits)
 
     if traits.conic
         f,_,_ = prepProblemBounds(m)

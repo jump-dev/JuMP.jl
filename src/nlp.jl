@@ -52,8 +52,9 @@ type JuMPNLPEvaluator <: MathProgBase.AbstractNLPEvaluator
     eval_grad_f_timer::Float64
     eval_jac_g_timer::Float64
     eval_hesslag_timer::Float64
-    function JuMPNLPEvaluator(m::Model, A)
-        d = new(m,A)
+    function JuMPNLPEvaluator(m::Model)
+        d = new(m)
+        d.A = prepConstrMatrix(m)
         d.eval_f_timer = 0
         d.eval_g_timer = 0
         d.eval_grad_f_timer = 0
@@ -62,6 +63,8 @@ type JuMPNLPEvaluator <: MathProgBase.AbstractNLPEvaluator
         return d
     end
 end
+
+@Base.deprecate JuMPNLPEvaluator(m::Model,A) JuMPNLPEvaluator(m)
 
 function MathProgBase.initialize(d::JuMPNLPEvaluator, requested_features::Vector{Symbol})
     for feat in requested_features
@@ -495,10 +498,7 @@ function MathProgBase.constr_expr(d::JuMPNLPEvaluator,i::Integer)
     end
 end
 
-
-
-
-function solvenlp(m::Model; suppress_warnings=false)
+function _buildInternalModel_nlp(m::Model, traits)
 
     @assert isempty(m.sdpconstr) && isempty(m.socconstr)
 
@@ -509,8 +509,7 @@ function solvenlp(m::Model; suppress_warnings=false)
         @assert isa(nldata.evaluator, JuMPNLPEvaluator)
         d = nldata.evaluator
     else
-        A = prepConstrMatrix(m)
-        d = JuMPNLPEvaluator(m,A)
+        d = JuMPNLPEvaluator(m)
         nldata.evaluator = d
     end
 
@@ -536,16 +535,10 @@ function solvenlp(m::Model; suppress_warnings=false)
         end
     end
 
-    #print("LB: ");show([linrowlb,nlrowlb]);println()
-    #print("UB: ");show([linrowub,nlrowub]);println()
-
     m.internalModel = MathProgBase.model(m.solver)
 
-    const nl_cont = [:Cont, :Fixed]
-    any_discrete = !all(x->(x in nl_cont), m.colCat)
-
     MathProgBase.loadnonlinearproblem!(m.internalModel, m.numCols, numConstr, m.colLower, m.colUpper, [linrowlb;quadrowlb;nlrowlb], [linrowub;quadrowub;nlrowub], m.objSense, d)
-    if any_discrete
+    if traits.int
         if applicable(MathProgBase.setvartype!, m.internalModel, m.colCat)
             MathProgBase.setvartype!(m.internalModel, m.colCat)
         else
@@ -561,6 +554,15 @@ function solvenlp(m::Model; suppress_warnings=false)
         MathProgBase.setwarmstart!(m.internalModel, min(max(m.colLower,initval),m.colUpper))
     end
 
+    m.internalModelLoaded = true
+
+end
+
+
+function solvenlp(m::Model, traits; suppress_warnings=false)
+
+    @assert m.internalModelLoaded
+
     MathProgBase.optimize!(m.internalModel)
     stat = MathProgBase.status(m.internalModel)
 
@@ -570,19 +572,17 @@ function solvenlp(m::Model; suppress_warnings=false)
     if stat != :Optimal
         suppress_warnings || warn("Not solved to optimality, status: $stat")
     end
-    if stat == :Optimal && !any_discrete
+    if stat == :Optimal && !traits.int
         if applicable(MathProgBase.getconstrduals, m.internalModel) && applicable(MathProgBase.getreducedcosts, m.internalModel)
             nlduals = MathProgBase.getconstrduals(m.internalModel)
             m.linconstrDuals = nlduals[1:length(m.linconstr)]
             # quadratic duals currently not available, formulate as nonlinear constraint if needed
-            nldata.nlconstrDuals = nlduals[length(m.linconstr)+length(m.quadconstr)+1:end]
+            m.nlpdata.nlconstrDuals = nlduals[length(m.linconstr)+length(m.quadconstr)+1:end]
             m.redCosts = MathProgBase.getreducedcosts(m.internalModel)
         else
             suppress_warnings || Base.warn_once("Nonlinear solver does not provide dual solutions")
         end
     end
-
-    m.internalModelLoaded = true
 
     #println("feval $(d.eval_f_timer)\nfgrad $(d.eval_grad_f_timer)\ngeval $(d.eval_g_timer)\njaceval $(d.eval_jac_g_timer)\nhess $(d.eval_hesslag_timer)")
 
