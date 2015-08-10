@@ -32,7 +32,7 @@ JuMP makes it easy to specify and **solve optimization problems without expert k
 
 Our documentation includes an installation guide, quick-start guide, and reference manual.
 
-**Latest Release**: 0.9.1 (via ``Pkg.add``)
+**Latest Release**: 0.9.2 (via ``Pkg.add``)
   * [documentation](https://jump.readthedocs.org/en/release-0.9)
   * [examples](https://github.com/JuliaOpt/JuMP.jl/tree/release-0.9/examples)
   * Testing status:
