@@ -174,8 +174,6 @@ function getValue(x::JuMPContainer)
     JuMPContainer_from(x,_getValueInner(x))
 end
 
-_iteration_depwarn() = Base.warn_once("Iteration over JuMP containers is deprecated. Use keys(d) and values(d) instead")
-
 # delegate zero-argument functions
 for f in (:(Base.endof), :(Base.ndims), :(Base.length), :(Base.abs), :(Base.start))
     @eval $f(x::JuMPArray) = $f(x.innerArray)
@@ -183,7 +181,6 @@ end
 
 Base.first(x::JuMPDict)  =  first(x.tupledict)
 Base.length(x::JuMPDict) = length(x.tupledict)
-Base.start(x::JuMPDict)  = (_iteration_depwarn(); start(x.tupledict))
 
 Base.ndims{T,N}(x::JuMPDict{T,N}) = N
 Base.abs(x::JuMPDict) = map(abs, x)
@@ -200,8 +197,12 @@ Base.start(x::OneIndexedArray)   = start(x.innerArray)
 Base.next(x::OneIndexedArray, k) =  next(x.innerArray, k)
 Base.done(x::OneIndexedArray, k) =  done(x.innerArray, k)
 
+function Base.start(x::JuMPContainer)
+    warn("Iteration over JuMP containers is deprecated. Use keys(d) and values(d) instead")
+    start(x.tupledict)
+end
+
 function Base.next(x::JuMPArray,k)
-    _iteration_depwarn()
     var, gidx = next(x.innerArray, k)
     keys = _next_index(x,k)
     tuple(keys..., x[keys...]), gidx
@@ -219,13 +220,12 @@ _next_index{T,N}(x::JuMPArray{T,N}, k) =
     end
 
 function Base.next(x::JuMPDict,k)
-    _iteration_depwarn()
     ((idx,var),gidx) = next(x.tupledict,k)
     return (tuple(idx..., var), gidx)
 end
 
-Base.done(x::JuMPArray,k) = (_iteration_depwarn(); done(x.innerArray,k))
-Base.done(x::JuMPDict,k)  = (_iteration_depwarn(); done(x.tupledict,k))
+Base.done(x::JuMPArray,k) = done(x.innerArray,k)
+Base.done(x::JuMPDict,k)  = done(x.tupledict,k)
 
 Base.eltype{T}(x::JuMPContainer{T}) = T
 
