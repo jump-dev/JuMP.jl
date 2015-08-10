@@ -46,8 +46,7 @@ function Base.map{T,N}(f::Function, d::JuMPDict{T,N})
     return x
 end
 
-Base.isempty(d::JuMPArray) = (isempty(d.innerArray))
-Base.isempty(d::JuMPDict)  = (isempty(d.tupledict))
+Base.isempty(d::JuMPContainer) = isempty(_innercontainer(d))
 
 # generate and instantiate a type which is indexed by the given index sets
 # the following types of index sets are allowed:
@@ -166,7 +165,6 @@ function _getValueInner(x)
     vals
 end
 
-
 JuMPContainer_from(x::JuMPDict,inner) =
     JuMPDict(inner, x.name, x.indexsets, x.indexexprs, x.condition)
 JuMPContainer_from(x::OneIndexedArray, inner) = inner
@@ -181,9 +179,9 @@ for f in (:(Base.endof), :(Base.ndims), :(Base.length), :(Base.abs), :(Base.star
     @eval $f(x::JuMPArray) = $f(x.innerArray)
 end
 
-for f in (:(Base.first), :(Base.length), :(Base.start))
-    @eval $f(x::JuMPDict)  = $f(x.tupledict)
-end
+Base.first(x::JuMPDict)  =  first(x.tupledict)
+Base.length(x::JuMPDict) = length(x.tupledict)
+
 Base.ndims{T,N}(x::JuMPDict{T,N}) = N
 Base.abs(x::JuMPDict) = map(abs, x)
 # delegate one-argument functions
@@ -194,25 +192,38 @@ Base.trace(x::OneIndexedArray) = trace(x.innerArray)
 Base.diag(x::OneIndexedArray) = diag(x.innerArray)
 Base.diagm{T}(x::JuMPArray{T,1,true}) = diagm(x.innerArray)
 
-function _local_index(indexsets, dim, k)
-    n = length(indexsets)
-    cprod = 1
-    for i in 1:(dim-1)
-        cprod *= length(indexsets[i])
-    end
-    idx = Compat.ceil(Integer, mod1(k,cprod*length(indexsets[dim])) / cprod)
-    return indexsets[dim][idx]
+# special-case OneIndexedArray iteration
+Base.start(x::OneIndexedArray)   = start(x.innerArray)
+Base.next(x::OneIndexedArray, k) =  next(x.innerArray, k)
+Base.done(x::OneIndexedArray, k) =  done(x.innerArray, k)
+
+function Base.start(x::JuMPContainer)
+    warn("Iteration over JuMP containers is deprecated. Use keys(d) and values(d) instead")
+    start(x.tupledict)
 end
 
 function Base.next(x::JuMPArray,k)
-    (var, gidx) = next(x.innerArray, k)
-    key = map(i->_local_index(x.indexsets, i, k), 1:length(x.indexsets))
-    return (tuple(key..., var), gidx)
+    var, gidx = next(x.innerArray, k)
+    keys = _next_index(x,k)
+    tuple(keys..., x[keys...]), gidx
 end
+
+_next_index{T,N}(x::JuMPArray{T,N}, k) =
+    ntuple(N) do index
+        cprod = 1
+        for i in 1:(index-1)
+            cprod *= length(x.indexsets[i])
+        end
+        locidxset = x.indexsets[index]
+        idx = Compat.ceil(Int, mod1(k, cprod*length(locidxset)) / cprod)
+        locidxset[idx]
+    end
+
 function Base.next(x::JuMPDict,k)
     ((idx,var),gidx) = next(x.tupledict,k)
     return (tuple(idx..., var), gidx)
 end
+
 Base.done(x::JuMPArray,k) = done(x.innerArray,k)
 Base.done(x::JuMPDict,k)  = done(x.tupledict,k)
 
@@ -220,5 +231,29 @@ Base.eltype{T}(x::JuMPContainer{T}) = T
 
 Base.full(x::JuMPContainer) = x
 Base.full(x::OneIndexedArray) = x.innerArray
+
+# keys/vals iterations for JuMPContainers
+Base.keys(d::JuMPDict)    = keys(d.tupledict)
+Base.values(d::JuMPDict)  = values(d.tupledict)
+
+Base.keys(d::JuMPArray)   = KeyIterator(d)
+Base.values(d::JuMPArray) = ValueIterator(d.innerArray)
+
+# Wrapper type so that you can't access the values directly
+type ValueIterator{T,N}
+    x::Array{T,N}
+end
+Base.start(it::ValueIterator)   =  start(it.x)
+Base.next(it::ValueIterator, k) =   next(it.x, k)
+Base.done(it::ValueIterator, k) =   done(it.x, k)
+Base.length(it::ValueIterator)  = length(it.x)
+
+type KeyIterator{JA<:JuMPArray}
+    x::JA
+end
+Base.start(it::KeyIterator)   =  start(it.x.innerArray)
+Base.next(it::KeyIterator, k) =  _next_index(it.x, k), next(it.x.innerArray, k)[2]
+Base.done(it::KeyIterator, k) =   done(it.x.innerArray, k)
+Base.length(it::KeyIterator)  = length(it.x.innerArray)
 
 export @gendict

@@ -91,3 +91,24 @@ if VERSION >= v"0.4-"
         @fact string(condmod) --> "Min 0\nSubject to\n x[i] free for all i in {1,2..9,10} s.t. iseven(i)\n y[j,k] free for all j in {1,2..9,10}, k in {3,5,7,9} s.t. isodd(j + k) and k <= 8\n"
     end
 end
+
+facts("[variable] JuMPContainer iteration") do
+    m = Model()
+    @defVar(m, oia[1:3,1:4,1:2])
+    @defVar(m, ja[1:3,2:5,1:2])
+    @defVar(m, jd[1:3,[:red,:blue]])
+
+    @fact length(keys(oia)) == length(values(oia)) == 3*4*2 --> true
+    @fact length(keys(ja))  == length(values(ja))  == 3*4*2 --> true
+    @fact length(keys(jd))  == length(values(jd))  == 3*2   --> true
+
+    for (key,val) in zip(keys(oia),values(oia))
+        @fact oia[key...] === val --> true
+    end
+    for (key,val) in zip(keys(ja),values(ja))
+        @fact ja[key...] === val --> true
+    end
+    for (key,val) in zip(keys(jd),values(jd))
+        @fact jd[key...] === val --> true
+    end
+end
