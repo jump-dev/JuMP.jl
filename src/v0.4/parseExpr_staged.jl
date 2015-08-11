@@ -53,8 +53,10 @@ function addToExpression(aff::GenericAffExpr, c::Number, x::Number)
     aff
 end
 
-function addToExpression{C,V}(aff::GenericAffExpr{C,V},c::V,x::V)
-    GenericQuadExpr{C,V}([c],[x],[one(C)],aff)
+function addToExpression{V}(aff::GenericAffExpr{C,V}, c::Number, x::V)
+    append!(aff.vars,   x)
+    append!(aff.coeffs, c)
+    aff
 end
 
 function addToExpression{C,V}(aff::GenericAffExpr{C,V},c::Number,x::GenericAffExpr{C,V})
@@ -65,6 +67,10 @@ function addToExpression{C,V}(aff::GenericAffExpr{C,V},c::Number,x::GenericAffEx
     end
     aff.constant += c*x.constant
     aff
+end
+
+function addToExpression{C,V}(aff::GenericAffExpr{C,V},c::V,x::V)
+    GenericQuadExpr{C,V}([c],[x],[one(C)],aff)
 end
 
 # TODO: add generic versions of following two methods
@@ -182,7 +188,7 @@ function addToExpression{C,V}(ex::GenericQuadExpr{C,V}, c::GenericAffExpr{C,V}, 
 end
 
 # Catch nonlinear expressions being used in addConstraint, etc.
-typealias _NLExpr ReverseDiffSparse.ParametricExpression 
+typealias _NLExpr ReverseDiffSparse.ParametricExpression
 _nlexprerr() = error("""Cannot use nonlinear expression in @addConstraint or @setObjective.
                         Use @addNLConstraint or @setNLObjective instead.""")
 # Following three definitions avoid ambiguity warnings
