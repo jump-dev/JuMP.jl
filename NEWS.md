@@ -1,6 +1,11 @@
 JuMP release notes
 ==================
 
+Version 0.9.3 (August 11, 2015)
+-------------------------------
+
+  * Fixes for FactCheck testing on julia v0.4.
+
 Version 0.9.2 (June 27, 2015)
 -----------------------------
 
