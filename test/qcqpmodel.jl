@@ -22,9 +22,9 @@ context("With solver $(typeof(solver))") do
     setObjective(modQ, :Min, 10*x[1]*x[1] + 3*x[1]*x[2] + 5*x[2]*x[2] + 9*x[3]*x[3])
     @addConstraint(modQ, x[2] <= 1.7*x[3])
     @addConstraint(modQ, x[2] >= 0.5*x[1])
-    @fact solve(modQ) => :Optimal
-    @fact modQ.objVal => roughly( 247.0, 1e-5)
-    @fact getValue(x)[:] => roughly([2.0, 3.0, 4.0], 1e-6)
+    @fact solve(modQ) --> :Optimal
+    @fact modQ.objVal --> roughly( 247.0, 1e-5)
+    @fact getValue(x)[:] --> roughly([2.0, 3.0, 4.0], 1e-6)
 
 
     modQ = Model(solver=solver)
@@ -32,9 +32,9 @@ context("With solver $(typeof(solver))") do
     setObjective(modQ, :Max, -10*x[1]*x[1] - 3*x[1]*x[2] - 5*x[2]*x[2] - 9*x[3]*x[3])
     @addConstraint(modQ, x[2] <= 1.7*x[3])
     @addConstraint(modQ, x[2] >= 0.5*x[1])
-    @fact solve(modQ) => :Optimal
-    @fact modQ.objVal => roughly(-247.0, 1e-5)
-    @fact getValue(x)[:] => roughly([2.0, 3.0, 4.0], 1e-6)
+    @fact solve(modQ) --> :Optimal
+    @fact modQ.objVal --> roughly(-247.0, 1e-5)
+    @fact getValue(x)[:] --> roughly([2.0, 3.0, 4.0], 1e-6)
 
 end; end; end
 
@@ -47,9 +47,9 @@ context("With solver $(typeof(solver))") do
     @defVar(modQ, 0 <= y <= 30 )
     setObjective(modQ, :Min, (x+y)*(x+y) )
     @addConstraint(modQ, x + y >= 1 )
-    @fact solve(modQ) => :Optimal
-    @fact modQ.objVal => roughly(1.0, 1e-6)
-    @fact (getValue(x) + getValue(y)) => roughly(1.0, 1e-6)
+    @fact solve(modQ) --> :Optimal
+    @fact modQ.objVal --> roughly(1.0, 1e-6)
+    @fact (getValue(x) + getValue(y)) --> roughly(1.0, 1e-6)
 
 end; end; end
 
@@ -64,13 +64,13 @@ context("With solver $(typeof(solver))") do
     @defVar(modQ, -2 <= y <= 2 )
     @setObjective(modQ, Min, x - y )
     @addConstraint(modQ, x + x*x + x*y + y*y <= 1 )
-    @fact MathProgBase.numquadconstr(modQ) => 1
-    @fact MathProgBase.numlinconstr(modQ) => 0
-    @fact MathProgBase.numconstr(modQ) => 1
+    @fact MathProgBase.numquadconstr(modQ) --> 1
+    @fact MathProgBase.numlinconstr(modQ) --> 0
+    @fact MathProgBase.numconstr(modQ) --> 1
 
-    @fact solve(modQ) => :Optimal
-    @fact modQ.objVal => roughly(-1-4/sqrt(3), 1e-6)
-    @fact (getValue(x) + getValue(y)) => roughly(-1/3, 1e-3)
+    @fact solve(modQ) --> :Optimal
+    @fact modQ.objVal --> roughly(-1-4/sqrt(3), 1e-6)
+    @fact (getValue(x) + getValue(y)) --> roughly(-1/3, 1e-3)
 
 end; end; end
 
@@ -86,9 +86,9 @@ context("With solver $(typeof(solver))") do
     @addConstraint(modQ, x+y >= 1)
     @addConstraint(modQ, x^2 + y^2 <= t^2)
 
-    @fact solve(modQ) => :Optimal
-    @fact modQ.objVal => roughly(sqrt(1/2), 1e-6)
-    @fact norm([getValue(x), getValue(y), getValue(t)] - [0.5,0.5,sqrt(1/2)]) => roughly(0.0,1e-3)
+    @fact solve(modQ) --> :Optimal
+    @fact modQ.objVal --> roughly(sqrt(1/2), 1e-6)
+    @fact norm([getValue(x), getValue(y), getValue(t)] - [0.5,0.5,sqrt(1/2)]) --> roughly(0.0,1e-3)
 
 end; end; end
 
@@ -104,18 +104,18 @@ context("With solver $(typeof(solver))") do
     @addConstraint(modQ, eq, x <= 1)
     @addConstraint(modQ, y^2 + z^2 <= x^2)
 
-    @fact solve(modQ) => :Optimal
-    @fact modQ.objVal => roughly(-sqrt(2), 1e-6)
-    @fact getValue(y) => roughly(1/sqrt(2), 1e-6)
-    @fact getValue(z) => roughly(1/sqrt(2), 1e-6)
-    @fact getDual(eq) => roughly(-sqrt(2), 1e-6)
+    @fact solve(modQ) --> :Optimal
+    @fact modQ.objVal --> roughly(-sqrt(2), 1e-6)
+    @fact getValue(y) --> roughly(1/sqrt(2), 1e-6)
+    @fact getValue(z) --> roughly(1/sqrt(2), 1e-6)
+    @fact getDual(eq) --> roughly(-sqrt(2), 1e-6)
 
     @setObjective(modQ, Max, y+z)
-    @fact solve(modQ) => :Optimal
-    @fact modQ.objVal => roughly(sqrt(2), 1e-6)
-    @fact getValue(y) => roughly(1/sqrt(2), 1e-6)
-    @fact getValue(z) => roughly(1/sqrt(2), 1e-6)
-    @fact getDual(eq) => roughly(sqrt(2), 1e-6)
+    @fact solve(modQ) --> :Optimal
+    @fact modQ.objVal --> roughly(sqrt(2), 1e-6)
+    @fact getValue(y) --> roughly(1/sqrt(2), 1e-6)
+    @fact getValue(z) --> roughly(1/sqrt(2), 1e-6)
+    @fact getDual(eq) --> roughly(sqrt(2), 1e-6)
 
 end; end; end
 
@@ -128,9 +128,9 @@ context("With solver $(typeof(solver))") do
     @setObjective(modQ, Min, x - y )
     @addConstraint(modQ, x + x*x + x*y + y*y <= 1 )
 
-    @fact solve(modQ) => :Optimal
-    @fact modQ.objVal => roughly(-3, 1e-6)
-    @fact (getValue(x) + getValue(y)) => roughly(-1, 1e-6)
+    @fact solve(modQ) --> :Optimal
+    @fact modQ.objVal --> roughly(-3, 1e-6)
+    @fact (getValue(x) + getValue(y)) --> roughly(-1, 1e-6)
 
 end; end; end
 
@@ -143,24 +143,24 @@ context("With solver $(typeof(solver))") do
     @defVar(modQ, x >= 0)
     @addConstraint(modQ, x*x <= 1)
     @setObjective(modQ, Max, x)
-    @fact solve(modQ) => :Optimal
-    @fact getObjectiveValue(modQ) => roughly(1.0, 1e-6)
+    @fact solve(modQ) --> :Optimal
+    @fact getObjectiveValue(modQ) --> roughly(1.0, 1e-6)
 
     @addConstraint(modQ, 2x*x <= 1)
-    @fact modQ.internalModelLoaded => true
-    @fact solve(modQ) => :Optimal
-    @fact getObjectiveValue(modQ) => roughly(sqrt(0.5), 1e-6)
+    @fact modQ.internalModelLoaded --> true
+    @fact solve(modQ) --> :Optimal
+    @fact getObjectiveValue(modQ) --> roughly(sqrt(0.5), 1e-6)
 
 
     modQ = Model(solver=solver)
     @defVar(modQ,   0 <= x <= 1)
     @defVar(modQ, 1/2 <= y <= 1)
     setObjective(modQ, :Min, x*x - y)
-    @fact solve(modQ) => :Optimal
-    @fact getObjectiveValue(modQ) => roughly(-1.0, 1e-6)
+    @fact solve(modQ) --> :Optimal
+    @fact getObjectiveValue(modQ) --> roughly(-1.0, 1e-6)
 
     setObjective(modQ, :Min, y*y - x)
-    @fact modQ.internalModelLoaded => true
-    @fact solve(modQ) => :Optimal
-    @fact getObjectiveValue(modQ) => roughly(-0.75, 1e-6)
+    @fact modQ.internalModelLoaded --> true
+    @fact solve(modQ) --> :Optimal
+    @fact getObjectiveValue(modQ) --> roughly(-0.75, 1e-6)
 end; end; end
