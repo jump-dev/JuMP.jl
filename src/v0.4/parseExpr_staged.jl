@@ -53,9 +53,9 @@ function addToExpression(aff::GenericAffExpr, c::Number, x::Number)
     aff
 end
 
-function addToExpression{V}(aff::GenericAffExpr{C,V}, c::Number, x::V)
-    append!(aff.vars,   x)
-    append!(aff.coeffs, c)
+function addToExpression{C,V}(aff::GenericAffExpr{C,V}, c::Number, x::V)
+    push!(aff.vars,   x)
+    push!(aff.coeffs, c)
     aff
 end
 
@@ -195,15 +195,10 @@ _nlexprerr() = error("""Cannot use nonlinear expression in @addConstraint or @se
 addToExpression{C,V<:_NLExpr}(expr::GenericQuadExpr{C,V}, c::GenericAffExpr{C,V}, x::V) = _nlexprerr()
 addToExpression{C,V<:_NLExpr}(expr::GenericQuadExpr{C,V}, c::Number, x::V) = _nlexprerr()
 addToExpression{C,V<:_NLExpr}(expr::GenericQuadExpr{C,V}, c::V, x::GenericAffExpr{C,V}) = _nlexprerr()
-addToExpression(
-    expr::Union(GenericAffExpr,GenericQuadExpr),
-    c::Union(Number,Variable,GenericAffExpr,GenericQuadExpr),
-    x::_NLExpr) = _nlexprerr()
-addToExpression(
-    expr::Union(GenericAffExpr,GenericQuadExpr),
-    c::_NLExpr,
-    x::Union(Number,Variable,GenericAffExpr,GenericQuadExpr)) = _nlexprerr()
-
+for T1 in (GenericAffExpr,GenericQuadExpr), T2 in (Number,Variable,GenericAffExpr,GenericQuadExpr)
+    @eval addToExpression(::$T1, ::$T2, ::_NLExpr) = _nlexprerr()
+    @eval addToExpression(::$T1, ::_NLExpr, ::$T2) = _nlexprerr()
+end
 
 function chkdims(x,y)
     ndim = max(ndims(x), ndims(y))
