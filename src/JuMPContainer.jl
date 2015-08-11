@@ -75,9 +75,9 @@ macro gendict(instancename,T,idxpairs,idxsets...)
         typecode = :(type $(typename){T} <: JuMPArray{T,$N,$truearray}; innerArray::Array{T,$N}; name::String;
                             indexsets; indexexprs::Vector{IndexPair} end)
         getidxlhs = :(Base.getindex(d::$(typename)))
-        setidxlhs = :(setindex!(d::$(typename),val))
+        setidxlhs = :(Base.setindex!(d::$(typename),val))
         getidxrhs = :(Base.getindex(d.innerArray))
-        setidxrhs = :(setindex!(d.innerArray,val))
+        setidxrhs = :(Base.setindex!(d.innerArray,val))
         maplhs = :(Base.map(f::Function,d::$(typename)))
         if truearray # return a julia Array here
             maprhs = :(map(f,d.innerArray))
