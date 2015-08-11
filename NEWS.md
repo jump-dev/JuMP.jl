@@ -15,6 +15,11 @@ Unversioned
   * Implement MathProgBase interface for querying Hessian-vector products.
   * Iteration over ``JuMPContainer``s is deprecated; instead, use the ``keys`` and ``values`` functions, and ``zip(keys(d),values(d))`` for the old behavior.
 
+Version 0.9.3 (August 11, 2015)
+-------------------------------
+
+  * Fixes for FactCheck testing on julia v0.4.
+
 Version 0.9.2 (June 27, 2015)
 -----------------------------
 
