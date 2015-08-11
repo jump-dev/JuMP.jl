@@ -24,7 +24,7 @@ using Compat
 
 export
 # Objects
-    Model, Variable, Norm, AffExpr, QuadExpr, SOCExpr,
+    Model, Variable, Norm, AffExpr, QuadExpr, SOCExpr, AbstractJuMPScalar,
     LinearConstraint, QuadConstraint, SDPConstraint, SOCConstraint,
     ConstraintRef, LinConstrRef,
     JuMPNLPEvaluator,

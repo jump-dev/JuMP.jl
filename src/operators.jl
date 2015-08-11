@@ -39,10 +39,10 @@
 (-){T<:GenericSOCExpr}(lhs::Number, rhs::T) = T(copy(rhs.norm),    -rhs.coeff, lhs-rhs.aff)
 (*){T<:GenericSOCExpr}(lhs::Number, rhs::T) = T(copy(rhs.norm), lhs*rhs.coeff, lhs*rhs.aff)
 
-# Variable
-(+)(lhs::Variable) = lhs
+# Variable (or, AbstractJuMPScalar)
+(+)(lhs::AbstractJuMPScalar) = lhs
 (-)(lhs::Variable) = AffExpr([lhs],[-1.0],0.0)
-(*)(lhs::Variable) = lhs
+(*)(lhs::AbstractJuMPScalar) = lhs # make this more generic so extensions don't have to define unary multiplication for our macros
 # Variable--Number
 (+)(lhs::Variable, rhs::Number) = (+)( rhs,lhs)
 (-)(lhs::Variable, rhs::Number) = (+)(-rhs,lhs)
@@ -350,20 +350,6 @@ Base.promote_rule{R<:Real}(::Type{AffExpr}, ::Type{R}       ) = AffExpr
 Base.promote_rule(         ::Type{AffExpr}, ::Type{QuadExpr}) = QuadExpr
 Base.promote_rule{R<:Real}(::Type{QuadExpr},::Type{R}       ) = QuadExpr
 
-# This function is used to define the type of a container for multiplication
-# of different JuMPTypes. Extensions should define new methods in order to
-# utilize the machinery for matrix multiplication below.
-_multiply_type{R<:Real}(::Type{R},       ::Type{Variable}) = AffExpr
-_multiply_type{R<:Real}(::Type{R},       ::Type{AffExpr} ) = AffExpr
-_multiply_type{R<:Real}(::Type{R},       ::Type{QuadExpr}) = AffExpr
-_multiply_type{R<:Real}(::Type{Variable},::Type{R}       ) = AffExpr
-_multiply_type(         ::Type{Variable},::Type{Variable}) = QuadExpr
-_multiply_type(         ::Type{Variable},::Type{AffExpr} ) = QuadExpr
-_multiply_type{R<:Real}(::Type{AffExpr}, ::Type{R}       ) = AffExpr
-_multiply_type(         ::Type{AffExpr}, ::Type{Variable}) = QuadExpr
-_multiply_type(         ::Type{AffExpr}, ::Type{AffExpr} ) = QuadExpr
-_multiply_type{R<:Real}(::Type{QuadExpr},::Type{R}       ) = QuadExpr
-
 _throw_transpose_error() = error("Transpose not currently implemented for JuMPArrays with arbitrary index sets.")
 Base.transpose(x::OneIndexedArray)  = transpose(x.innerArray)
 Base.transpose(x::JuMPArray)  = _throw_transpose_error()
@@ -503,6 +489,8 @@ end
 (*)(lhs::AbstractArray, rhs::OneIndexedArray) = (*)(lhs, rhs.innerArray)
 (*)(lhs::OneIndexedArray, rhs::AbstractArray) = (*)(lhs.innerArray, rhs)
 (*)(lhs::OneIndexedArray, rhs::OneIndexedArray) = (*)(lhs.innerArray, rhs.innerArray)
+
+_multiply_type(R,S) = typeof(one(R) * one(S))
 
 # Don't do size checks here in _return_array, defer that to (*)
 function _return_array{R,S}(A::AbstractArray{R}, x::AbstractArray{S,1})
