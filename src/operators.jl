@@ -13,8 +13,10 @@
 # Different objects that must all interact:
 # 1. Number
 # 2. Variable
-# 3. AffExpr
-# 4. QuadExpr
+# 3. [Generic]Norm
+# 4. [Generic]AffExpr
+# 5. QuadExpr
+# 6. [Generic]SOCExpr
 
 # Number
 # Number--Number obviously already taken care of!

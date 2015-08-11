@@ -216,10 +216,10 @@ function parseCurly(x::Expr, aff::Symbol, coeffs, newaff=gensym())
     if length(x.args) < 3
         error("Need at least two arguments for $header")
     end
-    if (header == :sum || header == :∑ || header == :Σ)
+    if header ∈ [:sum, :∑, :Σ]
         parseSum(x, aff, coeffs, newaff)
-    elseif header == :norm2
-        parseNorm(x, aff, coeffs, newaff)
+    elseif header ∈ [:norm1, :norm2, :norminf, :norm∞]
+        parseNorm(header, x, aff, coeffs, newaff)
     else
         error("Expected sum or norm2 outside curly braces; got $header")
     end
@@ -270,7 +270,8 @@ function parseSum(x::Expr, aff::Symbol, coeffs, newaff)
     :($code;$newaff=$aff)
 end
 
-function parseNorm(x::Expr, aff::Symbol, coeffs, newaff)
+
+function parseNorm(normp::Symbol, x::Expr, aff::Symbol, coeffs)
     @assert string(x.args[1])[1:4] == "norm"
     # we have a filter condition
     finalaff = gensym()
@@ -286,7 +287,7 @@ function parseNorm(x::Expr, aff::Symbol, coeffs, newaff)
         inneraff, innercode = parseExprToplevel(x.args[3], :normaff)
         code = quote
             if $(esc(cond.args[1]))
-                normaff = zero(AffExpr)
+                normaff = 0.0
                 $innercode
                 push!($normexpr, $inneraff)
             end
@@ -297,10 +298,10 @@ function parseNorm(x::Expr, aff::Symbol, coeffs, newaff)
                 $code
             end)
         end
-        preblock = :($normexpr = AffExpr[])
+        preblock = :($normexpr = GenericAffExpr[])
     else # no condition
         inneraff, code = parseExprToplevel(x.args[2], :normaff)
-        code = :(normaff = zero(AffExpr); $code; push!($normexpr, $inneraff))
+        code = :(normaff = 0.0; $code; push!($normexpr, $inneraff))
         preblock = :($len += length($(esc(x.args[length(x.args)].args[2]))))
         for level in length(x.args):-1:3
             code = :(
@@ -312,14 +313,23 @@ function parseNorm(x::Expr, aff::Symbol, coeffs, newaff)
         preblock = quote
             $len = 0
             $preblock
-            $normexpr = AffExpr[]
+            $normexpr = GenericAffExpr[]
             _sizehint_expr!($normexpr, $len)
         end
+    end
+    if normp == :norm2
+        param = 2
+    elseif normp == :norm1
+        param = 1
+    elseif normp ∈ [:norminf, :norm∞]
+        param = Inf
+    else
+        error("Unrecognized norm: $normp")
     end
     quote
         $preblock
         $code
-        $gennorm = Norm{2}($normexpr)
+        $gennorm = _build_norm($param,$normexpr)
         $newaff = addToExpression($aff,$(esc(coeffs)),$gennorm)
     end
 end

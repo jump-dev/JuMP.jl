@@ -543,6 +543,13 @@ end
 
 typealias Norm{Typ} GenericNorm{Typ,Float64,Variable}
 
+_build_norm(Lp, terms::Vector{GenericAffExpr}) = _build_norm(Lp, [terms...])
+function _build_norm(Lp, terms::Vector{AffExpr})
+    Lp ==   1 && error("JuMP doesn't support L1 norms.")
+    Lp == Inf && error("JuMP doesn't support L∞ norms.")
+    Norm{2}(terms)
+end
+
 Base.norm(x::Vector{Variable}) = vecnorm(x)
 Base.norm{C,V}(x::Array{GenericAffExpr{C,V}}) = vecnorm(x)
 Base.norm{T<:Union(Variable,GenericAffExpr)}(x::JuMPArray{T,1}) = vecnorm(x)
