@@ -176,7 +176,7 @@ macro addLazyConstraint(cbdata, x)
         quote
             aff = zero(AffExpr)
             $parsecode
-            constr = _construct_constraint!($newaff, $(quot(sense)))
+            constr = constructconstraint!($newaff, $(quot(sense)))
             addLazyConstraint($cbdata, constr)
         end
     else
@@ -213,7 +213,7 @@ macro addUserCut(cbdata, x)
         quote
             aff = zero(AffExpr)
             $parsecode
-            constr = _construct_constraint!($newaff, $(quot(sense)))
+            constr = constructconstraint!($newaff, $(quot(sense)))
             addUserCut($cbdata, constr)
         end
     else

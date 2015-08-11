@@ -169,10 +169,15 @@ function _canonicalize_sense(sns::Symbol)
     end
 end
 
-# two-argument _construct_constraint! is used for one-sided constraints.
+function _construct_constraint!(args...)
+    warn("_construct_constraint! is deprecated. Use constructconstraint! instead")
+    constructconstraint(args...)
+end
+
+# two-argument constructconstraint! is used for one-sided constraints.
 # Right-hand side is zero.
-_construct_constraint!(v::Variable, sense::Symbol) = _construct_constraint(convert(AffExpr,v), sense)
-function _construct_constraint!(aff::AffExpr, sense::Symbol)
+constructconstraint!(v::Variable, sense::Symbol) = constructconstraint(convert(AffExpr,v), sense)
+function constructconstraint!(aff::AffExpr, sense::Symbol)
     offset = aff.constant
     aff.constant = 0.0
     if sense == :(<=) || sense == :≤
@@ -186,15 +191,15 @@ function _construct_constraint!(aff::AffExpr, sense::Symbol)
     end
 end
 
-function _construct_constraint!(aff::AffExpr, lb, ub)
+function constructconstraint!(aff::AffExpr, lb, ub)
     offset = aff.constant
     aff.constant = 0.0
     LinearConstraint(aff, lb-offset, ub-offset)
 end
 
-_construct_constraint!(quad::QuadExpr, sense::Symbol) = QuadConstraint(quad, sense)
+constructconstraint!(quad::QuadExpr, sense::Symbol) = QuadConstraint(quad, sense)
 
-function _construct_constraint!(normexpr::SOCExpr, sense::Symbol)
+function constructconstraint!(normexpr::SOCExpr, sense::Symbol)
     # check that the constraint is SOC representable
     if sense == :(<=)
         SOCConstraint(normexpr)
@@ -205,7 +210,7 @@ function _construct_constraint!(normexpr::SOCExpr, sense::Symbol)
     end
 end
 
-_construct_constraint!(x::Array, sense::Symbol) = map(c->_construct_constraint!(c,sense), x)
+constructconstraint!(x::Array, sense::Symbol) = map(c->constructconstraint!(c,sense), x)
 
 _vectorize_like(x::Number, y::Array{AffExpr}) = fill(x, size(y))
 function _vectorize_like{R<:Number}(x::Array{R}, y::Array{AffExpr})
@@ -215,25 +220,25 @@ function _vectorize_like{R<:Number}(x::Array{R}, y::Array{AffExpr})
     x
 end
 
-function _construct_constraint!(x::Array{AffExpr}, lb, ub)
+function constructconstraint!(x::Array{AffExpr}, lb, ub)
     LB = _vectorize_like(lb,x)
     UB = _vectorize_like(ub,x)
     ret = similar(x, LinearConstraint)
     map!(ret, 1:length(ret)) do i
-        _construct_constraint!(x[i], LB[i], UB[i])
+        constructconstraint!(x[i], LB[i], UB[i])
     end
 end
 
-# three-argument _construct_constraint! is used for two-sided constraints.
-function _construct_constraint!(aff::AffExpr, lb::Real, ub::Real)
+# three-argument constructconstraint! is used for two-sided constraints.
+function constructconstraint!(aff::AffExpr, lb::Real, ub::Real)
     offset = aff.constant
     aff.constant = 0.0
     LinearConstraint(aff,lb-offset,ub-offset)
 end
 
-_construct_constraint!(aff::Variable, lb::Real, ub::Real) = _construct_constraint!(convert(AffExpr,v),lb,ub)
+constructconstraint!(aff::Variable, lb::Real, ub::Real) = constructconstraint!(convert(AffExpr,v),lb,ub)
 
-_construct_constraint!(q::QuadExpr, lb, ub) = error("Two-sided quadratic constraints not supported. (Try @addNLConstraint instead.)")
+constructconstraint!(q::QuadExpr, lb, ub) = error("Two-sided quadratic constraints not supported. (Try @addNLConstraint instead.)")
 
 macro addConstraint(args...)
     # Pick out keyword arguments
@@ -282,7 +287,7 @@ macro addConstraint(args...)
         lhs = :($(x.args[1]) - $(x.args[3]))
         addconstr = (vectorized ? :addVectorizedConstraint : :addConstraint)
         newaff, parsecode = parseExprToplevel(lhs, :q)
-        constraintcall = :($addconstr($m, _construct_constraint!($newaff,$(quot(sense)))))
+        constraintcall = :($addconstr($m, constructconstraint!($newaff,$(quot(sense)))))
         for kw in kwargs.args
             @assert isexpr(kw, :kw)
             push!(constraintcall.args, esc(kw))
@@ -314,7 +319,7 @@ macro addConstraint(args...)
             newlb, parselb = parseExprToplevel(x.args[1],:lb)
             newub, parseub = parseExprToplevel(x.args[5],:ub)
         end
-        constraintcall = :($addconstr($m, _construct_constraint!($newaff,$newlb,$newub)))
+        constraintcall = :($addconstr($m, constructconstraint!($newaff,$newlb,$newub)))
         for kw in kwargs.args
             @assert isexpr(kw, :kw)
             push!(constraintcall.args, esc(kw))
@@ -412,7 +417,7 @@ macro LinearConstraint(x)
         lhs = :($(x.args[1]) - $(x.args[3]))
         return quote
             newaff = @defExpr($(esc(lhs)))
-            c = _construct_constraint!(newaff,$(quot(sense)))
+            c = constructconstraint!(newaff,$(quot(sense)))
             isa(c, LinearConstraint) ||
                 error("Constraint in @LinearConstraint is really a $(typeof(c))")
             c
@@ -462,7 +467,7 @@ macro QuadConstraint(x)
         lhs = :($(x.args[1]) - $(x.args[3]))
         return quote
             newaff = @defExpr($(esc(lhs)))
-            q = _construct_constraint!(newaff,$(quot(sense)))
+            q = constructconstraint!(newaff,$(quot(sense)))
             isa(q, QuadConstraint) || error("Constraint in @QuadConstraint is really a $(typeof(q))")
             q
         end
@@ -490,7 +495,7 @@ macro SOCConstraint(x)
         lhs = :($(x.args[1]) - $(x.args[3]))
         return quote
             newaff = @defExpr($(esc(lhs)))
-            q = _construct_constraint!(newaff,$(quot(sense)))
+            q = constructconstraint!(newaff,$(quot(sense)))
             isa(q, SOCConstraint) || error("Constraint in @SOCConstraint is really a $(typeof(q))")
             q
         end
