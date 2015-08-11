@@ -221,7 +221,7 @@ function parseCurly(x::Expr, aff::Symbol, coeffs)
     elseif header == :norm2
         parseNorm(x, aff, coeffs)
     else
-        error("Expected sum or norm outside curly braces; got $header")
+        error("Expected sum or norm2 outside curly braces; got $header")
     end
 end
 

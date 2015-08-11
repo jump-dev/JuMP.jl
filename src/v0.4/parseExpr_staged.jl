@@ -307,7 +307,7 @@ function parseCurly(x::Expr, aff::Symbol, lcoeffs, rcoeffs, newaff=gensym())
     elseif header == :norm2
         parseNorm(x, aff, lcoeffs, rcoeffs, newaff)
     else
-        error("Expected sum or norm outside curly braces; got $header")
+        error("Expected sum or norm2 outside curly braces; got $header")
     end
 end
 
