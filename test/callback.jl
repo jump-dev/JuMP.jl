@@ -34,10 +34,10 @@ context("With solver $(typeof(lazysolver))") do
     end
     addLazyCallback(mod, corners)
     addLazyCallback(mod, cb -> (entered[2] = true))
-    @fact solve(mod) => :Optimal
-    @fact entered => [true,true]
-    @fact getValue(x) => roughly(1.0, 1e-6)
-    @fact getValue(y) => roughly(2.0, 1e-6)
+    @fact solve(mod) --> :Optimal
+    @fact entered --> [true,true]
+    @fact getValue(x) --> roughly(1.0, 1e-6)
+    @fact getValue(y) --> roughly(2.0, 1e-6)
 end; end; end
 
 
@@ -62,9 +62,9 @@ context("With solver $(typeof(cutsolver))") do
     end
     addCutCallback(mod, mycutgenerator)
     addCutCallback(mod, cb -> (entered[2] = true))
-    @fact solve(mod) => :Optimal
-    @fact entered => [true,true]
-    @fact find(getValue(x)[:]) => [35,38,283,305,359,397,419,426,442,453,526,553,659,751,840,865,878,978]
+    @fact solve(mod) --> :Optimal
+    @fact entered --> [true,true]
+    @fact find(getValue(x)[:]) --> [35,38,283,305,359,397,419,426,442,453,526,553,659,751,840,865,878,978]
 end; end; end
 
 
@@ -94,9 +94,9 @@ context("With solver $(typeof(heursolver))") do
     end
     addHeuristicCallback(mod, myheuristic1)
     addHeuristicCallback(mod, cb -> (entered[2] = true))
-    @fact solve(mod) => :Optimal
-    @fact entered => [true,true]
-    @fact find(getValue(x)[:]) => setdiff(1:N,[9,10,11,14,15,16,25,30,32,41,44,49,50,53,54,98,100])
+    @fact solve(mod) --> :Optimal
+    @fact entered --> [true,true]
+    @fact find(getValue(x)[:]) --> setdiff(1:N,[9,10,11,14,15,16,25,30,32,41,44,49,50,53,54,98,100])
 
     empty!(mod.callbacks)
     entered[1] = false
@@ -112,9 +112,9 @@ context("With solver $(typeof(heursolver))") do
     end
     addHeuristicCallback(mod, myheuristic2)
     addHeuristicCallback(mod, cb -> (entered[2] = true))
-    @fact solve(mod) => :Optimal
-    @fact entered => [true,true]
-    @fact find(getValue(x)[:]) => setdiff(1:N,[9,10,11,14,15,16,25,30,32,41,44,49,50,53,54,98,100])
+    @fact solve(mod) --> :Optimal
+    @fact entered --> [true,true]
+    @fact find(getValue(x)[:]) --> setdiff(1:N,[9,10,11,14,15,16,25,30,32,41,44,49,50,53,54,98,100])
 end; end; end
 
 facts("[callback] Test informational callback") do
@@ -140,8 +140,8 @@ context("With solver $(typeof(infosolver))") do
     end
     addInfoCallback(mod, myinfo)
     addInfoCallback(mod, cb -> (entered[2] = true))
-    @fact solve(mod) => :Optimal
-    @fact entered => [true,true]
+    @fact solve(mod) --> :Optimal
+    @fact entered --> [true,true]
     mono_node, mono_obj, mono_bestbound = true, true, true
     for n in 2:length(nodes)
         mono_node &= (nodes[n-1] <= nodes[n] + 1e-8)
@@ -150,9 +150,9 @@ context("With solver $(typeof(infosolver))") do
             mono_bestbound &= (bestbounds[n-1] >= bestbounds[n] - 1e-8)
         end
     end
-    @fact mono_node      => true
-    @fact mono_obj       => true
-    @fact mono_bestbound => true
+    @fact mono_node      --> true
+    @fact mono_obj       --> true
+    @fact mono_bestbound --> true
 end; end; end
 
 facts("[callback] Callback exit on CallbackAbort") do
