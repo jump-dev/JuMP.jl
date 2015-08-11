@@ -425,10 +425,11 @@ MathProgBase.optimize!(m::DummyNLPModel) = nothing
 MathProgBase.status(m::DummyNLPModel) = :Optimal
 MathProgBase.getobjval(m::DummyNLPModel) = NaN
 MathProgBase.getsolution(m::DummyNLPModel) = [1.0,1.0]
+MathProgBase.setvartype!(m::DummyNLPModel,vartype) = @fact any(vartype .== :Fixed) --> false
 function test_nl_mpb()
     m = Model(solver=DummyNLPSolver())
-    @defVar(m, x)
-    @defVar(m, y)
+    @defVar(m, x == 1)
+    @defVar(m, y, Bin)
     @setObjective(m, Min, -x+y)
     @addConstraint(m, 2x+y <= 1)
     @addConstraint(m, 2x+y <= 0)
