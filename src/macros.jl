@@ -235,7 +235,25 @@ _construct_constraint!(aff::Variable, lb::Real, ub::Real) = _construct_constrain
 
 _construct_constraint!(q::QuadExpr, lb, ub) = error("Two-sided quadratic constraints not supported. (Try @addNLConstraint instead.)")
 
-macro addConstraint(args...)
+function _checkvectorized(args)
+    try
+        if isexpr(args[1],:parameters) # these come if using a semicolon
+            args = args[2:end]
+        end
+        x = args[2]
+        extra = args[3:end]
+        x = length(extra) == 1 ? extra[1] : x
+        _,vectorized = _canonicalize_sense(x.args[2])
+        vectorized ? :addVectorizedConstraint : :addConstraint
+    catch
+        error("in @addConstraint: invalid constraint syntax $args")
+    end
+end
+
+macro addConstraint(args...) __addConstraint__(args...) end
+
+function __addConstraint__(args...; kernelfunc=_checkvectorized(args))
+
     # Pick out keyword arguments
     if isexpr(args[1],:parameters) # these come if using a semicolon
         kwargs = args[1]
@@ -280,9 +298,8 @@ macro addConstraint(args...)
         # Simple comparison - move everything to the LHS
         (sense,vectorized) = _canonicalize_sense(x.args[2])
         lhs = :($(x.args[1]) - $(x.args[3]))
-        addconstr = (vectorized ? :addVectorizedConstraint : :addConstraint)
         newaff, parsecode = parseExprToplevel(lhs, :q)
-        constraintcall = :($addconstr($m, _construct_constraint!($newaff,$(quot(sense)))))
+        constraintcall = :($kernelfunc($m, _construct_constraint!($newaff,$(quot(sense)))))
         for kw in kwargs.args
             @assert isexpr(kw, :kw)
             push!(constraintcall.args, esc(kw))
@@ -300,7 +317,6 @@ macro addConstraint(args...)
             error("in @addConstraint ($(string(x))): only ranged rows of the form lb <= expr <= ub are supported.")
         end
         ((vectorized = lvectorized) == rvectorized) || error("in @addConstraint ($(string(x))): signs are inconsistently vectorized")
-        addconstr = (lvectorized ? :addVectorizedConstraint : :addConstraint)
         x_str = string(x)
         lb_str = string(x.args[1])
         ub_str = string(x.args[5])
@@ -314,7 +330,7 @@ macro addConstraint(args...)
             newlb, parselb = parseExprToplevel(x.args[1],:lb)
             newub, parseub = parseExprToplevel(x.args[5],:ub)
         end
-        constraintcall = :($addconstr($m, _construct_constraint!($newaff,$newlb,$newub)))
+        constraintcall = :($kernelfunc($m, _construct_constraint!($newaff,$newlb,$newub)))
         for kw in kwargs.args
             @assert isexpr(kw, :kw)
             push!(constraintcall.args, esc(kw))
@@ -656,7 +672,9 @@ end
 esc_nonconstant(x::Number) = x
 esc_nonconstant(x) = esc(x)
 
-macro defVar(args...)
+macro defVar(args...) __defVar__(args...) end
+
+function __defVar__(args...; kernelfunc=:Variable)
     length(args) <= 1 &&
         error("in @defVar: expected model as first argument, then variable information.")
     m = args[1]
@@ -783,7 +801,7 @@ macro defVar(args...)
         error("in @defVar ($var): can only create one variable at a time when adding to existing constraints.")
 
         return assert_validmodel(m, quote
-            $(esc(var)) = Variable($m,$lb,$ub,$(quot(t)),$obj,$inconstraints,$coefficients,$(string(var)),$value)
+            $(esc(var)) = $kernelfunc($m,$lb,$ub,$(quot(t)),$obj,$inconstraints,$coefficients,$(string(var)),$value)
             nothing
         end)
     end
@@ -792,7 +810,7 @@ macro defVar(args...)
         # Easy case - a single variable
         sdp && error("Cannot add a semidefinite scalar variable")
         return assert_validmodel(m, quote
-            $(esc(var)) = Variable($m,$lb,$ub,$(quot(t)),$(string(var)),$value)
+            $(esc(var)) = $kernelfunc($m,$lb,$ub,$(quot(t)),$(string(var)),$value)
             registervar($m, $(quot(var)), $(esc(var)))
         end)
     end
@@ -801,7 +819,7 @@ macro defVar(args...)
     # We now build the code to generate the variables (and possibly the JuMPDict
     # to contain them)
     refcall, idxvars, idxsets, idxpairs, condition = buildrefsets(var)
-    code = :( $(refcall) = Variable($m, $lb, $ub, $(quot(t)), "", $value) )
+    code = :( $(refcall) = $kernelfunc($m, $lb, $ub, $(quot(t)), "", $value) )
     if symmetric
         # Sanity checks on SDP input stuff
         condition == :() ||
@@ -824,7 +842,7 @@ macro defVar(args...)
             error("Semidefinite variables cannot be provided bounds")
         end
 
-        looped = getloopedcode(var, code, condition, idxvars, idxsets, idxpairs, :Variable; lowertri=symmetric)
+        looped = getloopedcode(var, code, condition, idxvars, idxsets, idxpairs, kernelfunc; lowertri=symmetric)
         varname = esc(getname(var))
         code = quote
             $(esc(idxsets[1].args[1].args[2])) == $(esc(idxsets[2].args[1].args[2])) || error("Cannot construct symmetric variables with nonsquare dimensions")
@@ -841,7 +859,7 @@ macro defVar(args...)
             $varname
         end)
     else
-        looped = getloopedcode(var, code, condition, idxvars, idxsets, idxpairs, :Variable)
+        looped = getloopedcode(var, code, condition, idxvars, idxsets, idxpairs, kernelfunc)
         varname = esc(getname(var))
         return assert_validmodel(m, quote
             $looped
