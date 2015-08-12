@@ -102,7 +102,7 @@ The execution time when *solving* a nonlinear programming problem can be divided
 
 For Ipopt in particular, one can improve the performance by installing advanced sparse linear algebra packages, see :ref:`jump-installation`. For other solvers, see their respective documentation for performance tips.
 
-The function evaluation time, on the other hand, is the responsibility of the modeling language. JuMP computes derivatives by using the `ReverseDiffSparse <https://github.com/mlubin/ReverseDiffSparse.jl>`_ package, which implements, in pure Julia, reverse-mode automatic differentiation with state-of-the-art graph coloring methods [1]_ for exploiting sparsity of the Hessian matrix. As a conservative bound, JuMP's performance here currently may be expected to be within a factor of 5 of AMPL's.
+The function evaluation time, on the other hand, is the responsibility of the modeling language. JuMP computes derivatives by using the `ReverseDiffSparse <https://github.com/mlubin/ReverseDiffSparse.jl>`_ package, which implements, in pure Julia, reverse-mode automatic differentiation with graph coloring methods for exploiting sparsity of the Hessian matrix [1]_. As a conservative bound, JuMP's performance here currently may be expected to be within a factor of 5 of AMPL's.
 
 .. _nonlinearprobmod:
 
@@ -201,4 +201,4 @@ which can be queried using the ``JuMPNLPEvaluator``.
 
 However, the examples above are *not* a convenient way to access the NLP `standard-form <http://mathprogbasejl.readthedocs.org/en/latest/nlp.html>`_ representation of a JuMP model, because there is no direct way to access the vector of constraint upper and lower bounds. In this case, you should implement an ``AbstractMathProgSolver`` and corresponding ``AbstractMathProgModel`` type following the MathProgBase nonlinear interface, collecting the problem data through the ``MathProgBase.loadnonlinearproblem!`` `method <http://mathprogbasejl.readthedocs.org/en/latest/nlp.html#loadnonlinearproblem!>`_. This approach has the advantage of being nominally independent of JuMP itself in terms of problem format. You may use the ``buildInternalModel`` method to ask JuMP to populate the "solver" without calling ``optimize!``.
 
-.. [1] Gebremdhin et al., "Efficient Computation of Sparse Hessians Using Coloring and Automatic Differentiation", INFORMS Journal on Computing, 21(1), pp. 209-223, 2009.
+.. [1] Dunning, Huchette, and Lubin, "JuMP: A Modeling Language for Mathematical Optimization", `arXiv <http://arxiv.org/abs/1508.01982>`_.
