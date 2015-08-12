@@ -113,4 +113,12 @@ If you find JuMP useful in your work, we kindly request that you cite the follow
 
 A preprint of this paper is freely available on [arXiv](http://arxiv.org/abs/1312.1431).
 
-If you use the nonlinear or conic optimization functionality of JuMP, please cite the following [preprint](http://arxiv.org/abs/1508.01982) which describes the methods implemented in JuMP.
+If you use the nonlinear or conic optimization functionality of JuMP, please cite the following [preprint](http://arxiv.org/abs/1508.01982) which describes the methods implemented in JuMP. You may cite it as:
+
+    @articl{DunningHuchetteLubin2015,
+    title = {{JuMP}: {A} modeling language for mathematical optimization},
+    author = {Iain Dunning and Joey Huchette and Miles Lubin},
+    journal = {arXiv:1508.01982 [math.OC]},
+    year = {2015},
+    url = {http://arxiv.org/abs/1508.01982}
+    }
