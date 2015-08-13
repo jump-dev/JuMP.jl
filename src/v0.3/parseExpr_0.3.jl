@@ -211,21 +211,21 @@ function addToExpression(_aff, _c, _x)
     __addToExpression__(lhs, c, x)
 end
 
-function parseCurly(x::Expr, aff::Symbol, coeffs)
+function parseCurly(x::Expr, aff::Symbol, coeffs, newaff=gensym())
     header = x.args[1]
     if length(x.args) < 3
         error("Need at least two arguments for $header")
     end
     if (header == :sum || header == :∑ || header == :Σ)
-        parseSum(x, aff, coeffs)
+        parseSum(x, aff, coeffs, newaff)
     elseif header == :norm2
-        parseNorm(x, aff, coeffs)
+        parseNorm(x, aff, coeffs, newaff)
     else
         error("Expected sum or norm2 outside curly braces; got $header")
     end
 end
 
-function parseSum(x::Expr, aff::Symbol, coeffs)
+function parseSum(x::Expr, aff::Symbol, coeffs, newaff)
     # we have a filter condition
     if isexpr(x.args[2],:parameters)
         cond = x.args[2]
@@ -233,8 +233,7 @@ function parseSum(x::Expr, aff::Symbol, coeffs)
             error("No commas after semicolon allowed in sum expression, use && for multiple conditions")
         end
         # generate inner loop code first and then wrap in for loops
-        newaff, innercode = parseExpr(x.args[3], aff, coeffs, aff)
-        @assert aff == newaff
+        inneraff, innercode = parseExpr(x.args[3], aff, coeffs, aff)
         code = quote
             if $(esc(cond.args[1]))
                 $innercode
@@ -247,7 +246,7 @@ function parseSum(x::Expr, aff::Symbol, coeffs)
             end)
         end
     else # no condition
-        newaff, code = parseExpr(x.args[2], aff, coeffs, aff)
+        inneraff, code = parseExpr(x.args[2], aff, coeffs, aff)
         for level in length(x.args):-1:3
             code = :(
             for $(esc(x.args[level].args[1])) in $(esc(x.args[level].args[2]))
@@ -268,10 +267,10 @@ function parseSum(x::Expr, aff::Symbol, coeffs)
         end
         code = :($preblock;$code)
     end
-    code
+    :($code;$newaff=$aff)
 end
 
-function parseNorm(x::Expr, aff::Symbol, coeffs)
+function parseNorm(x::Expr, aff::Symbol, coeffs, newaff)
     @assert string(x.args[1])[1:4] == "norm"
     # we have a filter condition
     finalaff = gensym()
@@ -284,12 +283,12 @@ function parseNorm(x::Expr, aff::Symbol, coeffs)
             error("No commas after semicolon allowed in sum expression, use && for multiple conditions")
         end
         # generate inner loop code first and then wrap in for loops
-        newaff, innercode = parseExprToplevel(x.args[3], :normaff)
+        inneraff, innercode = parseExprToplevel(x.args[3], :normaff)
         code = quote
             if $(esc(cond.args[1]))
                 normaff = zero(AffExpr)
                 $innercode
-                push!($normexpr, $newaff)
+                push!($normexpr, $inneraff)
             end
         end
         for level in length(x.args):-1:4
@@ -300,8 +299,8 @@ function parseNorm(x::Expr, aff::Symbol, coeffs)
         end
         preblock = :($normexpr = AffExpr[])
     else # no condition
-        newaff, code = parseExprToplevel(x.args[2], :normaff)
-        code = :(normaff = zero(AffExpr); $code; push!($normexpr, $newaff))
+        inneraff, code = parseExprToplevel(x.args[2], :normaff)
+        code = :(normaff = zero(AffExpr); $code; push!($normexpr, $inneraff))
         preblock = :($len += length($(esc(x.args[length(x.args)].args[2]))))
         for level in length(x.args):-1:3
             code = :(
@@ -321,7 +320,7 @@ function parseNorm(x::Expr, aff::Symbol, coeffs)
         $preblock
         $code
         $gennorm = Norm{2}($normexpr)
-        $aff = addToExpression($aff,$(esc(coeffs)),$gennorm)
+        $newaff = addToExpression($aff,$(esc(coeffs)),$gennorm)
     end
 end
 
@@ -364,7 +363,7 @@ function parseExpr(x, aff::Symbol, constantCoef::Union(Number, Expr), newaff::Sy
             denom = x.args[3]
             return parseExpr(numerator, aff, :((1/$denom)*$constantCoef), newaff)
         elseif x.head == :curly
-            return aff, parseCurly(x,aff,constantCoef)
+            return newaff, parseCurly(x,aff,constantCoef,newaff)
         else # at lowest level?
             if isexpr(x,:comparison)
                 error("Unexpected comparison in expression $x")
