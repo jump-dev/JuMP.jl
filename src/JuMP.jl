@@ -593,24 +593,24 @@ Base.convert{Typ,C,V}(::Type{GenericNorm{Typ,C,V}}, x::Array) =
     GenericNorm{Typ,C,V}(convert(Vector{GenericAffExpr{C,V}}, vec(x)))
 
 ##########################################################################
-# SOCExpr
-# Container for expressions containing SOCs and AffExprs
-type GenericSOCExpr{C,V}
-    norm::GenericNorm{2,C,V}
+# GenericNormExpr, SOCExpr
+# Container for expressions containing Norms and AffExprs
+type GenericNormExpr{P,C,V}
+    norm::GenericNorm{P,C,V}
     coeff::C
     aff::GenericAffExpr{C,V}
 end
 
-GenericSOCExpr{C,V}(norm::GenericNorm{2,C,V}) =
-    GenericSOCExpr{C,V}(norm, one(C), zero(GenericAffExpr{C,V}))
+GenericNormExpr{P,C,V}(norm::GenericNorm{P,C,V}) =
+    GenericNormExpr{C,V}(norm, one(C), zero(GenericAffExpr{C,V}))
+Base.copy{P,C,V}(x::GenericNormExpr{P,C,V}) =
+    GenericNormExpr{P,C,V}(copy(x.norm), copy(x.coeff), copy(x.aff))
+Base.convert{P,C,V}(::Type{GenericNormExpr{P,C,V}}, x::GenericNorm{P,C,V}) =
+    GenericNormExpr{P,C,V}(x, one(C), zero(GenericAffExpr{C,V}))
 
+
+typealias GenericSOCExpr{C,V} GenericNormExpr{2,C,V}
 typealias SOCExpr GenericSOCExpr{Float64,Variable}
-
-Base.copy{C,V}(x::GenericSOCExpr{C,V}) =
-    GenericSOCExpr{C,V}(copy(x.norm), copy(x.coeff), copy(x.aff))
-
-Base.convert{C,V}(::Type{GenericSOCExpr{C,V}}, x::GenericNorm{2,C,V}) =
-    GenericSOCExpr{C,V}(x, one(C), zero(GenericAffExpr{C,V}))
 
 validate_soc(socexpr::GenericSOCExpr) = (socexpr.coeff ≥ 0) ||
     error("Invalid second-order cone constraint $(socexpr) ≥ 0")

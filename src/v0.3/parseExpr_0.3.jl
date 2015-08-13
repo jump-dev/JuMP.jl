@@ -271,7 +271,7 @@ function parseSum(x::Expr, aff::Symbol, coeffs, newaff)
 end
 
 
-function parseNorm(normp::Symbol, x::Expr, aff::Symbol, coeffs)
+function parseNorm(normp::Symbol, x::Expr, aff::Symbol, coeffs, newaff)
     @assert string(x.args[1])[1:4] == "norm"
     # we have a filter condition
     finalaff = gensym()
