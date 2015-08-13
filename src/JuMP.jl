@@ -543,7 +543,20 @@ end
 
 typealias Norm{Typ} GenericNorm{Typ,Float64,Variable}
 
-_build_norm(Lp, terms::Vector{GenericAffExpr}) = _build_norm(Lp, [terms...])
+function _build_norm(Lp, terms::Vector{GenericAffExpr})
+    if length(terms) == 0
+        _build_norm(Lp,AffExpr[])  # Punt
+    else
+        new_terms = Array(typeof(terms[1]), length(terms))
+        for i in 1:length(terms)
+            new_terms[i] = terms[i]
+        end
+        _build_norm(Lp,new_terms)
+    end
+end
+# The above is needed only for performance on 0.3
+# The following works just as well on 0.4
+# _build_norm(Lp, terms::Vector{GenericAffExpr}) = _build_norm(Lp, [terms...])
 function _build_norm(Lp, terms::Vector{AffExpr})
     Lp ==   1 && error("JuMP doesn't support L1 norms.")
     Lp == Inf && error("JuMP doesn't support L∞ norms.")
