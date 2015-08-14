@@ -467,82 +467,9 @@ end
 getValue(arr::Array{AffExpr}) = map(getValue, arr)
 
 ###############################################################################
-# QuadExpr class
-# Holds a vector of tuples (Var, Var, Coeff), as well as an AffExpr
-type GenericQuadExpr{CoefType,VarType}
-    qvars1::Vector{VarType}
-    qvars2::Vector{VarType}
-    qcoeffs::Vector{CoefType}
-    aff::GenericAffExpr{CoefType,VarType}
-end
-
-coeftype{CoefType,VarType}(::GenericQuadExpr{CoefType,VarType}) = CoefType
-
-typealias QuadExpr GenericQuadExpr{Float64,Variable}
-
-Base.isempty(q::QuadExpr) = (length(q.qvars1) == 0 && isempty(q.aff))
-Base.zero{C,V}(::Type{GenericQuadExpr{C,V}}) = GenericQuadExpr(V[], V[], C[], zero(GenericAffExpr{C,V}))
-Base.one{C,V}(::Type{GenericQuadExpr{C,V}})  = GenericQuadExpr(V[], V[], C[],  one(GenericAffExpr{C,V}))
-Base.zero(q::GenericQuadExpr) = zero(typeof(q))
-Base.one(q::GenericQuadExpr)  =  one(typeof(q))
-
-QuadExpr() = zero(QuadExpr)
-
-Base.convert(::Type{QuadExpr}, v::Union(Real,Variable,AffExpr)) = QuadExpr(Variable[], Variable[], Float64[], AffExpr(v))
-
-function Base.append!{T,S}(q::GenericQuadExpr{T,S}, other::GenericQuadExpr{T,S})
-    append!(q.qvars1, other.qvars1)
-    append!(q.qvars2, other.qvars2)
-    append!(q.qcoeffs, other.qcoeffs)
-    append!(q.aff, other.aff)
-    q
-end
-
-function assert_isfinite(q::GenericQuadExpr)
-    assert_isfinite(q.aff)
-    for i in 1:length(q.qcoeffs)
-        isfinite(q.qcoeffs[i]) || error("Invalid coefficient $(q.qcoeffs[i]) on quadratic term $(q.qvars1[i])*$(q.qvars2[i])")
-    end
-end
-
-function setObjective(m::Model, sense::Symbol, q::QuadExpr)
-    m.obj = q
-    if m.internalModelLoaded
-        if method_exists(MathProgBase.setquadobjterms!, (typeof(m.internalModel), Vector{Cint}, Vector{Cint}, Vector{Float64}))
-            verify_ownership(m, m.obj.qvars1)
-            verify_ownership(m, m.obj.qvars2)
-            MathProgBase.setquadobjterms!(m.internalModel, Cint[v.col for v in m.obj.qvars1], Cint[v.col for v in m.obj.qvars2], m.obj.qcoeffs)
-        else
-            # we don't (yet) support hot-starting QCQP solutions
-            Base.warn_once("JuMP does not yet support adding a quadratic objective to an existing model. Hot-start is disabled.")
-            m.internalModelLoaded = false
-        end
-    end
-    setObjectiveSense(m, sense)
-end
-
-Base.copy(q::GenericQuadExpr) = GenericQuadExpr(copy(q.qvars1),copy(q.qvars2),copy(q.qcoeffs),copy(q.aff))
-
-# Copy utility function
-function Base.copy(q::QuadExpr, new_model::Model)
-    return QuadExpr([Variable(new_model, v.col) for v in q.qvars1],
-                    [Variable(new_model, v.col) for v in q.qvars2],
-                    q.qcoeffs[:], copy(q.aff, new_model))
-end
-
-Base.zero(::Type{QuadExpr}) = QuadExpr(Variable[],Variable[],Float64[],zero(AffExpr))
-Base.zero(v::QuadExpr) = zero(typeof(v))
-
-function getValue(a::QuadExpr)
-    ret = getValue(a.aff)
-    for it in 1:length(a.qvars1)
-        ret += a.qcoeffs[it] * getValue(a.qvars1[it]) * getValue(a.qvars2[it])
-    end
-    return ret
-end
-
-getValue(arr::Array{QuadExpr}) = map(getValue, arr)
-
+# GenericQuadExpr, QuadExpr
+# GenericQuadConstraint, QuadConstraint
+include("quadexpr.jl")
 
 ##########################################################################
 # GenericNorm, Norm
@@ -703,61 +630,6 @@ Base.copy(x::Number, new_model::Model) = copy(x)
 Base.copy(c::SDPConstraint, new_model::Model) =
     SDPConstraint(map(t -> copy(t, new_model), c.terms))
 
-##########################################################################
-# Generic constraint type for quadratic expressions
-# Right-hand side is implicitly taken to be zero, constraint is stored in
-# the included QuadExpr.
-type GenericQuadConstraint{QuadType} <: JuMPConstraint
-    terms::QuadType
-    sense::Symbol
-end
-
-##########################################################################
-# QuadConstraint class
-typealias QuadConstraint GenericQuadConstraint{QuadExpr}
-
-function addConstraint(m::Model, c::QuadConstraint)
-    push!(m.quadconstr,c)
-    if m.internalModelLoaded
-        if method_exists(MathProgBase.addquadconstr!, (typeof(m.internalModel),
-                                                       Vector{Cint},
-                                                       Vector{Float64},
-                                                       Vector{Cint},
-                                                       Vector{Cint},
-                                                       Vector{Float64},
-                                                       Char,
-                                                       Float64))
-            if !((s = string(c.sense)[1]) in ['<', '>', '='])
-                error("Invalid sense for quadratic constraint")
-            end
-            terms = c.terms
-            verify_ownership(m, terms.qvars1)
-            verify_ownership(m, terms.qvars2)
-            MathProgBase.addquadconstr!(m.internalModel,
-                                        Cint[v.col for v in c.terms.aff.vars],
-                                        c.terms.aff.coeffs,
-                                        Cint[v.col for v in c.terms.qvars1],
-                                        Cint[v.col for v in c.terms.qvars2],
-                                        c.terms.qcoeffs,
-                                        s,
-                                        -c.terms.aff.constant)
-        else
-            Base.warn_once("Solver does not appear to support adding quadratic constraints to an existing model. Hot-start is disabled.")
-            m.internalModelLoaded = false
-        end
-    end
-    return ConstraintRef{QuadConstraint}(m,length(m.quadconstr))
-end
-addConstraint(m::Model, c::Array{QuadConstraint}) =
-    error("Vectorized constraint added without elementwise comparisons. Try using one of (.<=,.>=,.==).")
-
-addVectorizedConstraint(m::Model, v::Array{QuadConstraint}) = map(c->addConstraint(m,c), v)
-
-# Copy utility function
-function Base.copy(c::QuadConstraint, new_model::Model)
-    return QuadConstraint(copy(c.terms, new_model), c.sense)
-end
-
 
 ##########################################################################
 # ConstraintRef
@@ -907,7 +779,6 @@ Base.ndims(::JuMPTypes) = 0
 
 ##########################################################################
 # Operator overloads
-
 include("operators.jl")
 if VERSION > v"0.4-"
     include(joinpath("v0.4","concatenation.jl"))
