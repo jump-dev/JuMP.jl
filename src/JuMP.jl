@@ -244,10 +244,19 @@ getInternalModel(m::Model) = m.internalModel
 setSolveHook(m::Model, f) = (m.solvehook = f)
 setPrintHook(m::Model, f) = (m.printhook = f)
 
-###############################################################################
+
+#############################################################################
+# JuMPConstraint
+# Abstract base type for all constraint types
+abstract JuMPConstraint
+# Abstract base type for all scalar types
+# In JuMP, used only for Variable. Useful primarily for extensions
+abstract AbstractJuMPScalar <: ReverseDiffSparse.Placeholder
+
+
+#############################################################################
 # Variable class
 # Doesn't actually do much, just a pointer back to the model
-abstract AbstractJuMPScalar <: ReverseDiffSparse.Placeholder
 immutable Variable <: AbstractJuMPScalar
     m::Model
     col::Int
@@ -458,168 +467,16 @@ end
 getValue(arr::Array{AffExpr}) = map(getValue, arr)
 
 ###############################################################################
-# QuadExpr class
-# Holds a vector of tuples (Var, Var, Coeff), as well as an AffExpr
-type GenericQuadExpr{CoefType,VarType}
-    qvars1::Vector{VarType}
-    qvars2::Vector{VarType}
-    qcoeffs::Vector{CoefType}
-    aff::GenericAffExpr{CoefType,VarType}
-end
-
-coeftype{CoefType,VarType}(::GenericQuadExpr{CoefType,VarType}) = CoefType
-
-typealias QuadExpr GenericQuadExpr{Float64,Variable}
-
-Base.isempty(q::QuadExpr) = (length(q.qvars1) == 0 && isempty(q.aff))
-Base.zero{C,V}(::Type{GenericQuadExpr{C,V}}) = GenericQuadExpr(V[], V[], C[], zero(GenericAffExpr{C,V}))
-Base.one{C,V}(::Type{GenericQuadExpr{C,V}})  = GenericQuadExpr(V[], V[], C[],  one(GenericAffExpr{C,V}))
-Base.zero(q::GenericQuadExpr) = zero(typeof(q))
-Base.one(q::GenericQuadExpr)  =  one(typeof(q))
-
-QuadExpr() = zero(QuadExpr)
-
-Base.convert(::Type{QuadExpr}, v::Union(Real,Variable,AffExpr)) = QuadExpr(Variable[], Variable[], Float64[], AffExpr(v))
-
-function Base.append!{T,S}(q::GenericQuadExpr{T,S}, other::GenericQuadExpr{T,S})
-    append!(q.qvars1, other.qvars1)
-    append!(q.qvars2, other.qvars2)
-    append!(q.qcoeffs, other.qcoeffs)
-    append!(q.aff, other.aff)
-    q
-end
-
-function assert_isfinite(q::GenericQuadExpr)
-    assert_isfinite(q.aff)
-    for i in 1:length(q.qcoeffs)
-        isfinite(q.qcoeffs[i]) || error("Invalid coefficient $(q.qcoeffs[i]) on quadratic term $(q.qvars1[i])*$(q.qvars2[i])")
-    end
-end
-
-function setObjective(m::Model, sense::Symbol, q::QuadExpr)
-    m.obj = q
-    if m.internalModelLoaded
-        if method_exists(MathProgBase.setquadobjterms!, (typeof(m.internalModel), Vector{Cint}, Vector{Cint}, Vector{Float64}))
-            verify_ownership(m, m.obj.qvars1)
-            verify_ownership(m, m.obj.qvars2)
-            MathProgBase.setquadobjterms!(m.internalModel, Cint[v.col for v in m.obj.qvars1], Cint[v.col for v in m.obj.qvars2], m.obj.qcoeffs)
-        else
-            # we don't (yet) support hot-starting QCQP solutions
-            Base.warn_once("JuMP does not yet support adding a quadratic objective to an existing model. Hot-start is disabled.")
-            m.internalModelLoaded = false
-        end
-    end
-    setObjectiveSense(m, sense)
-end
-
-Base.copy(q::GenericQuadExpr) = GenericQuadExpr(copy(q.qvars1),copy(q.qvars2),copy(q.qcoeffs),copy(q.aff))
-
-# Copy utility function
-function Base.copy(q::QuadExpr, new_model::Model)
-    return QuadExpr([Variable(new_model, v.col) for v in q.qvars1],
-                    [Variable(new_model, v.col) for v in q.qvars2],
-                    q.qcoeffs[:], copy(q.aff, new_model))
-end
-
-Base.zero(::Type{QuadExpr}) = QuadExpr(Variable[],Variable[],Float64[],zero(AffExpr))
-Base.zero(v::QuadExpr) = zero(typeof(v))
-
-function getValue(a::QuadExpr)
-    ret = getValue(a.aff)
-    for it in 1:length(a.qvars1)
-        ret += a.qcoeffs[it] * getValue(a.qvars1[it]) * getValue(a.qvars2[it])
-    end
-    return ret
-end
-
-getValue(arr::Array{QuadExpr}) = map(getValue, arr)
+# GenericQuadExpr, QuadExpr
+# GenericQuadConstraint, QuadConstraint
+include("quadexpr.jl")
 
 ##########################################################################
 # GenericNorm, Norm
-# Container for √(∑ expr)
-type GenericNorm{P,C,V}
-    terms::Vector{GenericAffExpr{C,V}}
-end
-function GenericNorm{C,V}(P, terms::Vector{GenericAffExpr{C,V}})
-    if C == Float64 && V == Variable
-        # JuMP doesn't support anything else than the L2 Norm
-        # Throw an error now before going any further
-        P ==   1 && error("JuMP doesn't support L₁ norms.")
-        P == Inf && error("JuMP doesn't support L∞ norms.")
-        P !=   2 && error("JuMP only supports L₂ norms.")
-    end
-    GenericNorm{P,C,V}(terms)
-end
-Base.copy{P,C,V}(x::GenericNorm{P,C,V}) = GenericNorm{P,C,V}(copy(x.terms))
+# GenericNormExpr. GenericSOCExpr, SOCExpr
+# GenericSOCConstraint, SOCConstraint
+include("norms.jl")
 
-Base.norm{V<:AbstractJuMPScalar}(x::V,           p=2) = vecnorm(x,p)
-Base.norm{V<:AbstractJuMPScalar}(x::Array{V},    p=2) = vecnorm(x,p)
-Base.norm{V<:AbstractJuMPScalar}(x::JuMPArray{V},p=2) = vecnorm(x,p)
-Base.norm{V<:AbstractJuMPScalar}(x::JuMPDict{V}, p=2) = vecnorm(x,p)
-Base.norm{C,V}(x::GenericAffExpr{C,V},           p=2) = vecnorm(x,p)
-Base.norm{C,V}(x::Array{GenericAffExpr{C,V}},    p=2) = vecnorm(x,p)
-Base.norm{C,V}(x::JuMPArray{GenericAffExpr{C,V}},p=2) = vecnorm(x,p)
-Base.norm{C,V}(x::JuMPDict{GenericAffExpr{C,V}}, p=2) = vecnorm(x,p)
-
-_vecaff(C,V,x) = map(GenericAffExpr{C,V},vec(x))
-Base.vecnorm{V<:AbstractJuMPScalar}(x::V,           p=2) = GenericNorm(p, [GenericAffExpr{Float64,V}(x)] )
-Base.vecnorm{V<:AbstractJuMPScalar}(x::Array{V},    p=2) = GenericNorm(p, _vecaff(Float64,V,x) )
-Base.vecnorm{V<:AbstractJuMPScalar}(x::JuMPArray{V},p=2) = GenericNorm(p, _vecaff(Float64,V,x.innerArray) )
-Base.vecnorm{V<:AbstractJuMPScalar}(x::JuMPDict{V}, p=2) = GenericNorm(p, _vecaff(Float64,V,collect(values(x))) )
-Base.vecnorm{C,V}(x::GenericAffExpr{C,V},           p=2) = GenericNorm(p, [x])
-Base.vecnorm{C,V}(x::Array{GenericAffExpr{C,V}},    p=2) = GenericNorm(p, vec(x))
-Base.vecnorm{C,V}(x::JuMPArray{GenericAffExpr{C,V}},p=2) = GenericNorm(p, vec(x.innerArray))
-Base.vecnorm{C,V}(x::JuMPDict{GenericAffExpr{C,V}}, p=2) = GenericNorm(p, collect(values(x)))
-
-# Called by macros
-_build_norm{C,V}(P,terms::Vector{GenericAffExpr{C,V}}) = GenericNorm(P,terms)
-# The terms vector produced by the macro may not be tightly typed,
-# so we need to repackage in a tighter typed vector ourselves.
-# This function is needed for performance reasons on only 0.3, as
-# the following works just as well on 0.4:
-# _build_norm(Lp, terms::Vector{GenericAffExpr}) = _build_norm(Lp, [terms...])
-function _build_norm(Lp, terms::Vector{GenericAffExpr})
-    if length(terms) == 0
-        _build_norm(Lp,AffExpr[])  # Punt
-    else
-        new_terms = Array(typeof(terms[1]), length(terms))
-        for i in 1:length(terms)
-            new_terms[i] = terms[i]
-        end
-        _build_norm(Lp,new_terms)
-    end
-end
-
-# Short-hand used in operator overloads, etc.
-typealias Norm{P} GenericNorm{P,Float64,Variable}
-
-##########################################################################
-# GenericNormExpr, SOCExpr
-# Container for expressions containing Norms and AffExprs
-type GenericNormExpr{P,C,V}
-    norm::GenericNorm{P,C,V}
-    coeff::C
-    aff::GenericAffExpr{C,V}
-end
-
-GenericNormExpr{P,C,V}(norm::GenericNorm{P,C,V}) =
-    GenericNormExpr{C,V}(norm, one(C), zero(GenericAffExpr{C,V}))
-Base.copy{P,C,V}(x::GenericNormExpr{P,C,V}) =
-    GenericNormExpr{P,C,V}(copy(x.norm), copy(x.coeff), copy(x.aff))
-Base.convert{P,C,V}(::Type{GenericNormExpr{P,C,V}}, x::GenericNorm{P,C,V}) =
-    GenericNormExpr{P,C,V}(x, one(C), zero(GenericAffExpr{C,V}))
-
-
-typealias GenericSOCExpr{C,V} GenericNormExpr{2,C,V}
-typealias SOCExpr GenericSOCExpr{Float64,Variable}
-
-validate_soc(socexpr::GenericSOCExpr) = (socexpr.coeff ≥ 0) ||
-    error("Invalid second-order cone constraint $(socexpr) ≥ 0")
-
-##########################################################################
-# JuMPConstraint
-# abstract base for constraint types
-abstract JuMPConstraint
 
 ##########################################################################
 # Generic constraint type with lower and upper bound
@@ -773,81 +630,6 @@ Base.copy(x::Number, new_model::Model) = copy(x)
 Base.copy(c::SDPConstraint, new_model::Model) =
     SDPConstraint(map(t -> copy(t, new_model), c.terms))
 
-##########################################################################
-# Generic constraint type for quadratic expressions
-# Right-hand side is implicitly taken to be zero, constraint is stored in
-# the included QuadExpr.
-type GenericQuadConstraint{QuadType} <: JuMPConstraint
-    terms::QuadType
-    sense::Symbol
-end
-
-##########################################################################
-# QuadConstraint class
-typealias QuadConstraint GenericQuadConstraint{QuadExpr}
-
-function addConstraint(m::Model, c::QuadConstraint)
-    push!(m.quadconstr,c)
-    if m.internalModelLoaded
-        if method_exists(MathProgBase.addquadconstr!, (typeof(m.internalModel),
-                                                       Vector{Cint},
-                                                       Vector{Float64},
-                                                       Vector{Cint},
-                                                       Vector{Cint},
-                                                       Vector{Float64},
-                                                       Char,
-                                                       Float64))
-            if !((s = string(c.sense)[1]) in ['<', '>', '='])
-                error("Invalid sense for quadratic constraint")
-            end
-            terms = c.terms
-            verify_ownership(m, terms.qvars1)
-            verify_ownership(m, terms.qvars2)
-            MathProgBase.addquadconstr!(m.internalModel,
-                                        Cint[v.col for v in c.terms.aff.vars],
-                                        c.terms.aff.coeffs,
-                                        Cint[v.col for v in c.terms.qvars1],
-                                        Cint[v.col for v in c.terms.qvars2],
-                                        c.terms.qcoeffs,
-                                        s,
-                                        -c.terms.aff.constant)
-        else
-            Base.warn_once("Solver does not appear to support adding quadratic constraints to an existing model. Hot-start is disabled.")
-            m.internalModelLoaded = false
-        end
-    end
-    return ConstraintRef{QuadConstraint}(m,length(m.quadconstr))
-end
-addConstraint(m::Model, c::Array{QuadConstraint}) =
-    error("Vectorized constraint added without elementwise comparisons. Try using one of (.<=,.>=,.==).")
-
-addVectorizedConstraint(m::Model, v::Array{QuadConstraint}) = map(c->addConstraint(m,c), v)
-
-# Copy utility function
-function Base.copy(c::QuadConstraint, new_model::Model)
-    return QuadConstraint(copy(c.terms, new_model), c.sense)
-end
-
-##########################################################################
-# SOCConstraint is a second-order cone constraint of the form
-# α||Ax-b||₂ + cᵀx + d ≤ 0
-
-type GenericSOCConstraint{T<:GenericSOCExpr} <: JuMPConstraint
-    normexpr::T
-
-    function GenericSOCConstraint{T}(normexpr::T)
-        validate_soc(normexpr)
-        new(normexpr)
-    end
-end
-
-typealias SOCConstraint GenericSOCConstraint{SOCExpr}
-
-function addConstraint{T<:GenericSOCConstraint}(m::Model, c::T)
-    push!(m.socconstr,c)
-    m.internalModelLoaded = false
-    ConstraintRef{T}(m,length(m.socconstr))
-end
 
 ##########################################################################
 # ConstraintRef
@@ -997,7 +779,6 @@ Base.ndims(::JuMPTypes) = 0
 
 ##########################################################################
 # Operator overloads
-
 include("operators.jl")
 if VERSION > v"0.4-"
     include(joinpath("v0.4","concatenation.jl"))
