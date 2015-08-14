@@ -232,11 +232,13 @@ function prepConstrMatrix(m::Model)
             end
             addelt!(tmprow,vars[ind].col,coeffs[ind])
         end
-        for i in 1:tmprow.nnz
-            nnz += 1
+        @inbounds for i in 1:tmprow.nnz
             idx = tmpnzidx[i]
+            elt = tmpelts[idx]
+            elt == 0.0 && continue
+            nnz += 1
             colval[nnz] = idx
-            rownzval[nnz] = tmpelts[idx]
+            rownzval[nnz] = elt
         end
         empty!(tmprow)
     end
