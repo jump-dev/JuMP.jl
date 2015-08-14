@@ -33,32 +33,35 @@ JuMP makes it easy to specify and **solve optimization problems without expert k
 Our documentation includes an installation guide, quick-start guide, and reference manual.
 
 **Latest Release**: 0.9.3 (via ``Pkg.add``)
-  * [documentation](https://jump.readthedocs.org/en/release-0.9)
-  * [examples](https://github.com/JuliaOpt/JuMP.jl/tree/release-0.9/examples)
+  * [Documentation](https://jump.readthedocs.org/en/release-0.9)
+  * [Examples](https://github.com/JuliaOpt/JuMP.jl/tree/release-0.9/examples)
   * Testing status:
-    [![Build Status](https://travis-ci.org/JuliaOpt/JuMP.jl.svg?branch=release-0.9)](https://travis-ci.org/JuliaOpt/JuMP.jl)
-    [![JuMP](http://pkg.julialang.org/badges/JuMP_0.3.svg)](http://pkg.julialang.org/?pkg=JuMP&ver=release)
-    [![JuMP](http://pkg.julialang.org/badges/JuMP_0.4.svg)](http://pkg.julialang.org/?pkg=JuMP&ver=nightly)
+    * TravisCI: [![Build Status](https://travis-ci.org/JuliaOpt/JuMP.jl.svg?branch=release-0.9)](https://travis-ci.org/JuliaOpt/JuMP.jl)
+    * PackageEvaluator:
+      [![JuMP](http://pkg.julialang.org/badges/JuMP_0.3.svg)](http://pkg.julialang.org/?pkg=JuMP&ver=release)
+      [![JuMP](http://pkg.julialang.org/badges/JuMP_0.4.svg)](http://pkg.julialang.org/?pkg=JuMP&ver=nightly)
 
 
 **Development version**:
-  * [documentation](https://jump.readthedocs.org/en/latest)
-  * [examples](https://github.com/JuliaOpt/JuMP.jl/tree/master/examples)
+  * [Documentation](https://jump.readthedocs.org/en/latest)
+  * [Examples](https://github.com/JuliaOpt/JuMP.jl/tree/master/examples)
   * Testing status:
-    [![Build Status](https://travis-ci.org/JuliaOpt/JuMP.jl.svg?branch=master)](https://travis-ci.org/JuliaOpt/JuMP.jl)
-    [![Coverage Status](https://coveralls.io/repos/JuliaOpt/JuMP.jl/badge.svg?branch=master)](https://coveralls.io/r/JuliaOpt/JuMP.jl?branch=master)
+    * TravisCI: [![Build Status](https://travis-ci.org/JuliaOpt/JuMP.jl.svg?branch=master)](https://travis-ci.org/JuliaOpt/JuMP.jl)
+    * Test coverage:
+      [![Coverage Status](https://coveralls.io/repos/JuliaOpt/JuMP.jl/badge.svg?branch=master)](https://coveralls.io/r/JuliaOpt/JuMP.jl?branch=master)
+      [![codecov.io](http://codecov.io/github/JuliaOpt/JuMP.jl/coverage.svg?branch=master)](http://codecov.io/github/JuliaOpt/JuMP.jl?branch=master)
   * Changes: see [NEWS](https://github.com/JuliaOpt/JuMP.jl/tree/master/NEWS.md)
+
 
 ## Installation
 
-JuMP can be installed through the Julia package manager (version 0.3 required)
+JuMP can be installed through the Julia package manager:
 
 ```julia
 julia> Pkg.add("JuMP")
 ```
 
 For full installation instructions, including how to install solvers, see the documentation linked above.
-
 
 
 ## Supported problem classes
@@ -87,13 +90,14 @@ We list below what is currently supported. See the documentation for more inform
 * Semicontinuous
 * Semi-integer
 
+
 ## Bug reports and support
 
 Please report any issues via the Github **[issue tracker]**. All types of issues are welcome and encouraged; this includes bug reports, documentation typos, feature requests, etc. The **[julia-opt]** mailing list is appropriate for general discussion, including "how do I do this?" questions.
 
-
 [issue tracker]: https://github.com/JuliaOpt/JuMP.jl/issues
 [julia-opt]: https://groups.google.com/forum/#!forum/julia-opt
+
 
 ## Citing JuMP
 
