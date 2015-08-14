@@ -244,10 +244,19 @@ getInternalModel(m::Model) = m.internalModel
 setSolveHook(m::Model, f) = (m.solvehook = f)
 setPrintHook(m::Model, f) = (m.printhook = f)
 
-###############################################################################
+
+#############################################################################
+# JuMPConstraint
+# Abstract base type for all constraint types
+abstract JuMPConstraint
+# Abstract base type for all scalar types
+# In JuMP, used only for Variable. Useful primarily for extensions
+abstract AbstractJuMPScalar <: ReverseDiffSparse.Placeholder
+
+
+#############################################################################
 # Variable class
 # Doesn't actually do much, just a pointer back to the model
-abstract AbstractJuMPScalar <: ReverseDiffSparse.Placeholder
 immutable Variable <: AbstractJuMPScalar
     m::Model
     col::Int
@@ -534,92 +543,13 @@ end
 
 getValue(arr::Array{QuadExpr}) = map(getValue, arr)
 
+
 ##########################################################################
 # GenericNorm, Norm
-# Container for √(∑ expr)
-type GenericNorm{P,C,V}
-    terms::Vector{GenericAffExpr{C,V}}
-end
-function GenericNorm{C,V}(P, terms::Vector{GenericAffExpr{C,V}})
-    if C == Float64 && V == Variable
-        # JuMP doesn't support anything else than the L2 Norm
-        # Throw an error now before going any further
-        P ==   1 && error("JuMP doesn't support L₁ norms.")
-        P == Inf && error("JuMP doesn't support L∞ norms.")
-        P !=   2 && error("JuMP only supports L₂ norms.")
-    end
-    GenericNorm{P,C,V}(terms)
-end
-Base.copy{P,C,V}(x::GenericNorm{P,C,V}) = GenericNorm{P,C,V}(copy(x.terms))
+# GenericNormExpr. GenericSOCExpr, SOCExpr
+# GenericSOCConstraint, SOCConstraint
+include("norms.jl")
 
-Base.norm{V<:AbstractJuMPScalar}(x::V,           p=2) = vecnorm(x,p)
-Base.norm{V<:AbstractJuMPScalar}(x::Array{V},    p=2) = vecnorm(x,p)
-Base.norm{V<:AbstractJuMPScalar}(x::JuMPArray{V},p=2) = vecnorm(x,p)
-Base.norm{V<:AbstractJuMPScalar}(x::JuMPDict{V}, p=2) = vecnorm(x,p)
-Base.norm{C,V}(x::GenericAffExpr{C,V},           p=2) = vecnorm(x,p)
-Base.norm{C,V}(x::Array{GenericAffExpr{C,V}},    p=2) = vecnorm(x,p)
-Base.norm{C,V}(x::JuMPArray{GenericAffExpr{C,V}},p=2) = vecnorm(x,p)
-Base.norm{C,V}(x::JuMPDict{GenericAffExpr{C,V}}, p=2) = vecnorm(x,p)
-
-_vecaff(C,V,x) = map(GenericAffExpr{C,V},vec(x))
-Base.vecnorm{V<:AbstractJuMPScalar}(x::V,           p=2) = GenericNorm(p, [GenericAffExpr{Float64,V}(x)] )
-Base.vecnorm{V<:AbstractJuMPScalar}(x::Array{V},    p=2) = GenericNorm(p, _vecaff(Float64,V,x) )
-Base.vecnorm{V<:AbstractJuMPScalar}(x::JuMPArray{V},p=2) = GenericNorm(p, _vecaff(Float64,V,x.innerArray) )
-Base.vecnorm{V<:AbstractJuMPScalar}(x::JuMPDict{V}, p=2) = GenericNorm(p, _vecaff(Float64,V,collect(values(x))) )
-Base.vecnorm{C,V}(x::GenericAffExpr{C,V},           p=2) = GenericNorm(p, [x])
-Base.vecnorm{C,V}(x::Array{GenericAffExpr{C,V}},    p=2) = GenericNorm(p, vec(x))
-Base.vecnorm{C,V}(x::JuMPArray{GenericAffExpr{C,V}},p=2) = GenericNorm(p, vec(x.innerArray))
-Base.vecnorm{C,V}(x::JuMPDict{GenericAffExpr{C,V}}, p=2) = GenericNorm(p, collect(values(x)))
-
-# Called by macros
-_build_norm{C,V}(P,terms::Vector{GenericAffExpr{C,V}}) = GenericNorm(P,terms)
-# The terms vector produced by the macro may not be tightly typed,
-# so we need to repackage in a tighter typed vector ourselves.
-# This function is needed for performance reasons on only 0.3, as
-# the following works just as well on 0.4:
-# _build_norm(Lp, terms::Vector{GenericAffExpr}) = _build_norm(Lp, [terms...])
-function _build_norm(Lp, terms::Vector{GenericAffExpr})
-    if length(terms) == 0
-        _build_norm(Lp,AffExpr[])  # Punt
-    else
-        new_terms = Array(typeof(terms[1]), length(terms))
-        for i in 1:length(terms)
-            new_terms[i] = terms[i]
-        end
-        _build_norm(Lp,new_terms)
-    end
-end
-
-# Short-hand used in operator overloads, etc.
-typealias Norm{P} GenericNorm{P,Float64,Variable}
-
-##########################################################################
-# GenericNormExpr, SOCExpr
-# Container for expressions containing Norms and AffExprs
-type GenericNormExpr{P,C,V}
-    norm::GenericNorm{P,C,V}
-    coeff::C
-    aff::GenericAffExpr{C,V}
-end
-
-GenericNormExpr{P,C,V}(norm::GenericNorm{P,C,V}) =
-    GenericNormExpr{C,V}(norm, one(C), zero(GenericAffExpr{C,V}))
-Base.copy{P,C,V}(x::GenericNormExpr{P,C,V}) =
-    GenericNormExpr{P,C,V}(copy(x.norm), copy(x.coeff), copy(x.aff))
-Base.convert{P,C,V}(::Type{GenericNormExpr{P,C,V}}, x::GenericNorm{P,C,V}) =
-    GenericNormExpr{P,C,V}(x, one(C), zero(GenericAffExpr{C,V}))
-
-
-typealias GenericSOCExpr{C,V} GenericNormExpr{2,C,V}
-typealias SOCExpr GenericSOCExpr{Float64,Variable}
-
-validate_soc(socexpr::GenericSOCExpr) = (socexpr.coeff ≥ 0) ||
-    error("Invalid second-order cone constraint $(socexpr) ≥ 0")
-
-##########################################################################
-# JuMPConstraint
-# abstract base for constraint types
-abstract JuMPConstraint
 
 ##########################################################################
 # Generic constraint type with lower and upper bound
@@ -828,26 +758,6 @@ function Base.copy(c::QuadConstraint, new_model::Model)
     return QuadConstraint(copy(c.terms, new_model), c.sense)
 end
 
-##########################################################################
-# SOCConstraint is a second-order cone constraint of the form
-# α||Ax-b||₂ + cᵀx + d ≤ 0
-
-type GenericSOCConstraint{T<:GenericSOCExpr} <: JuMPConstraint
-    normexpr::T
-
-    function GenericSOCConstraint{T}(normexpr::T)
-        validate_soc(normexpr)
-        new(normexpr)
-    end
-end
-
-typealias SOCConstraint GenericSOCConstraint{SOCExpr}
-
-function addConstraint{T<:GenericSOCConstraint}(m::Model, c::T)
-    push!(m.socconstr,c)
-    m.internalModelLoaded = false
-    ConstraintRef{T}(m,length(m.socconstr))
-end
 
 ##########################################################################
 # ConstraintRef
