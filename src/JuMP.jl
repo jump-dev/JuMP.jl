@@ -535,14 +535,49 @@ end
 getValue(arr::Array{QuadExpr}) = map(getValue, arr)
 
 ##########################################################################
-# Norm
+# GenericNorm, Norm
 # Container for √(∑ expr)
-type GenericNorm{Typ,C,V}
+type GenericNorm{P,C,V}
     terms::Vector{GenericAffExpr{C,V}}
 end
+function GenericNorm{C,V}(P, terms::Vector{GenericAffExpr{C,V}})
+    if C == Float64 && V == Variable
+        # JuMP doesn't support anything else than the L2 Norm
+        # Throw an error now before going any further
+        P ==   1 && error("JuMP doesn't support L₁ norms.")
+        P == Inf && error("JuMP doesn't support L∞ norms.")
+        P !=   2 && error("JuMP only supports L₂ norms.")
+    end
+    GenericNorm{P,C,V}(terms)
+end
+Base.copy{P,C,V}(x::GenericNorm{P,C,V}) = GenericNorm{P,C,V}(copy(x.terms))
 
-typealias Norm{Typ} GenericNorm{Typ,Float64,Variable}
+Base.norm{V<:AbstractJuMPScalar}(x::V,           p=2) = vecnorm(x,p)
+Base.norm{V<:AbstractJuMPScalar}(x::Array{V},    p=2) = vecnorm(x,p)
+Base.norm{V<:AbstractJuMPScalar}(x::JuMPArray{V},p=2) = vecnorm(x,p)
+Base.norm{V<:AbstractJuMPScalar}(x::JuMPDict{V}, p=2) = vecnorm(x,p)
+Base.norm{C,V}(x::GenericAffExpr{C,V},           p=2) = vecnorm(x,p)
+Base.norm{C,V}(x::Array{GenericAffExpr{C,V}},    p=2) = vecnorm(x,p)
+Base.norm{C,V}(x::JuMPArray{GenericAffExpr{C,V}},p=2) = vecnorm(x,p)
+Base.norm{C,V}(x::JuMPDict{GenericAffExpr{C,V}}, p=2) = vecnorm(x,p)
 
+_vecaff(C,V,x) = map(GenericAffExpr{C,V},vec(x))
+Base.vecnorm{V<:AbstractJuMPScalar}(x::V,           p=2) = GenericNorm(p, [GenericAffExpr{Float64,V}(x)] )
+Base.vecnorm{V<:AbstractJuMPScalar}(x::Array{V},    p=2) = GenericNorm(p, _vecaff(Float64,V,x) )
+Base.vecnorm{V<:AbstractJuMPScalar}(x::JuMPArray{V},p=2) = GenericNorm(p, _vecaff(Float64,V,x.innerArray) )
+Base.vecnorm{V<:AbstractJuMPScalar}(x::JuMPDict{V}, p=2) = GenericNorm(p, _vecaff(Float64,V,collect(values(x))) )
+Base.vecnorm{C,V}(x::GenericAffExpr{C,V},           p=2) = GenericNorm(p, [x])
+Base.vecnorm{C,V}(x::Array{GenericAffExpr{C,V}},    p=2) = GenericNorm(p, vec(x))
+Base.vecnorm{C,V}(x::JuMPArray{GenericAffExpr{C,V}},p=2) = GenericNorm(p, vec(x.innerArray))
+Base.vecnorm{C,V}(x::JuMPDict{GenericAffExpr{C,V}}, p=2) = GenericNorm(p, collect(values(x)))
+
+# Called by macros
+_build_norm{C,V}(P,terms::Vector{GenericAffExpr{C,V}}) = GenericNorm(P,terms)
+# The terms vector produced by the macro may not be tightly typed,
+# so we need to repackage in a tighter typed vector ourselves.
+# This function is needed for performance reasons on only 0.3, as
+# the following works just as well on 0.4:
+# _build_norm(Lp, terms::Vector{GenericAffExpr}) = _build_norm(Lp, [terms...])
 function _build_norm(Lp, terms::Vector{GenericAffExpr})
     if length(terms) == 0
         _build_norm(Lp,AffExpr[])  # Punt
@@ -554,43 +589,9 @@ function _build_norm(Lp, terms::Vector{GenericAffExpr})
         _build_norm(Lp,new_terms)
     end
 end
-# The above is needed only for performance on 0.3
-# The following works just as well on 0.4
-# _build_norm(Lp, terms::Vector{GenericAffExpr}) = _build_norm(Lp, [terms...])
-function _build_norm(Lp, terms::Vector{AffExpr})
-    Lp ==   1 && error("JuMP doesn't support L1 norms.")
-    Lp == Inf && error("JuMP doesn't support L∞ norms.")
-    Norm{2}(terms)
-end
 
-Base.norm(x::Vector{Variable}) = vecnorm(x)
-Base.norm{C,V}(x::Array{GenericAffExpr{C,V}}) = vecnorm(x)
-Base.norm{T<:Union(Variable,GenericAffExpr)}(x::JuMPArray{T,1}) = vecnorm(x)
-function Base.norm(x::JuMPDict{Variable})
-    ndims(x) == 1 || error("Cannot use norm() on a multidimensional JuMPDict. Use vecnorm instead.")
-    arr = Array(Variable, length(x))
-    for (it,v) in enumerate(values(x))
-        arr[it] = v
-    end
-    Norm{2}(arr)
-end
-
-Base.vecnorm(x::Array{Variable}) = Norm{2}(reshape(x,length(x)))
-Base.vecnorm{C,V}(x::Array{GenericAffExpr{C,V}}) = GenericNorm{2,C,V}(reshape(x,length(x)))
-Base.vecnorm{T<:Union(Variable,GenericAffExpr)}(x::JuMPArray{T}) =
-    Norm{2}(collect(x.innerArray))
-function Base.vecnorm(x::JuMPDict{Variable})
-    arr = Array(Variable, length(x))
-    for (it,v) in enumerate(values(x))
-        arr[it] = v
-    end
-    Norm{2}(arr)
-end
-
-Base.copy{Typ,C,V}(x::GenericNorm{Typ,C,V}) = GenericNorm{Typ,C,V}(copy(x.terms))
-
-Base.convert{Typ,C,V}(::Type{GenericNorm{Typ,C,V}}, x::Array) =
-    GenericNorm{Typ,C,V}(convert(Vector{GenericAffExpr{C,V}}, vec(x)))
+# Short-hand used in operator overloads, etc.
+typealias Norm{P} GenericNorm{P,Float64,Variable}
 
 ##########################################################################
 # GenericNormExpr, SOCExpr
