@@ -1015,6 +1015,8 @@ include("callbacks.jl")
 include("print.jl")
 # Nonlinear-specific code
 include("nlp.jl")
+# Precompile functions to speed up initial runs
+include("precompile.jl")
 
 ##########################################################################
 end
