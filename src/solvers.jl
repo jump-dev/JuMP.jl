@@ -138,11 +138,19 @@ function addQuadratics(m::Model)
                 error("Variable not owned by model present in constraints")
             end
         end
-        affidx  = Cint[v.col for v in qconstr.terms.aff.vars]
+        n_aff = length(qconstr.terms.aff.coeffs)
+        affcoef = Float64[]; sizehint!(affcoef, n_aff)
+        affidx  = Cint[];    sizehint!(affidx,  n_aff)
+        for (coeff, var) in qconstr.terms.aff
+            if coeff != 0.0
+                push!(affcoef, coeff)
+                push!(affidx, var.col)
+            end
+        end
         var1idx = Cint[v.col for v in qconstr.terms.qvars1]
         var2idx = Cint[v.col for v in qconstr.terms.qvars2]
-        if applicable(MathProgBase.addquadconstr!, m.internalModel, affidx, qconstr.terms.aff.coeffs, var1idx, var2idx, qconstr.terms.qcoeffs, s, -qconstr.terms.aff.constant)
-            MathProgBase.addquadconstr!(m.internalModel, affidx, qconstr.terms.aff.coeffs, var1idx, var2idx, qconstr.terms.qcoeffs, s, -qconstr.terms.aff.constant)
+        if applicable(MathProgBase.addquadconstr!, m.internalModel, affidx, affcoef, var1idx, var2idx, qconstr.terms.qcoeffs, s, -qconstr.terms.aff.constant)
+            MathProgBase.addquadconstr!(m.internalModel, affidx, affcoef, var1idx, var2idx, qconstr.terms.qcoeffs, s, -qconstr.terms.aff.constant)
         else
             error("Solver does not support quadratic constraints")
         end
