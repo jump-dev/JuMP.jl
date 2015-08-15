@@ -9,23 +9,31 @@ addToExpression(ex::Number, c::Number, x::Number) = ex + c*x
 
 addToExpression(ex::Number, c::Number, x::Variable) = AffExpr([x],[c],ex)
 
-function addToExpression(ex::Number, c::Number, x::GenericAffExpr)
+function addToExpression{T<:GenericAffExpr}(ex::Number, c::Number, x::T)
     # It's only safe to mutate the first argument.
-    x = copy(x)
-    scale!(x.coeffs, c)
-    x.constant *= c
-    x.constant += ex
-    x
+    if c == 0
+        T(ex)
+    else
+        x = copy(x)
+        scale!(x.coeffs, c)
+        x.constant *= c
+        x.constant += ex
+        x
+    end
 end
 
-function addToExpression(ex::Number, c::Number, x::GenericQuadExpr)
+function addToExpression{T<:GenericQuadExpr}(ex::Number, c::Number, x::T)
     # It's only safe to mutate the first argument.
-    x = copy(x)
-    scale!(x.qcoeffs, c)
-    scale!(x.aff.coeffs, c)
-    x.aff.constant *= c
-    x.aff.constant += ex
-    x
+    if c == 0
+        T(ex)
+    else
+        x = copy(x)
+        scale!(x.qcoeffs, c)
+        scale!(x.aff.coeffs, c)
+        x.aff.constant *= c
+        x.aff.constant += ex
+        x
+    end
 end
 
 addToExpression(ex::Number, c::Variable, x::Variable) = QuadExpr([c],[x],[1.0],zero(AffExpr))
@@ -42,10 +50,14 @@ function addToExpression{C,V}(ex::Number, c::GenericAffExpr{C,V}, x::V)
     q
 end
 
-function addToExpression(ex::Number, c::GenericQuadExpr, x::Number)
-    q = c*x
-    q.aff.constant += ex
-    q
+function addToExpression{T<:GenericQuadExpr}(ex::Number, c::T, x::Number)
+    if x == 0
+        T(ex)
+    else
+        q = c*x
+        q.aff.constant += ex
+        q
+    end
 end
 
 function addToExpression(aff::GenericAffExpr, c::Number, x::Number)
@@ -54,24 +66,27 @@ function addToExpression(aff::GenericAffExpr, c::Number, x::Number)
 end
 
 function addToExpression{C,V}(aff::GenericAffExpr{C,V}, c::Number, x::V)
-    push!(aff.vars,   x)
-    push!(aff.coeffs, c)
+    if c != 0
+        push!(aff.vars,   x)
+        push!(aff.coeffs, c)
+    end
     aff
 end
 
 function addToExpression{C,V}(aff::GenericAffExpr{C,V},c::Number,x::GenericAffExpr{C,V})
-    append!(aff.vars, x.vars)
-    sizehint!(aff.coeffs, length(aff.coeffs)+length(x.coeffs))
-    for i in 1:length(x.coeffs)
-        push!(aff.coeffs, c*x.coeffs[i])
+    if c != 0
+        append!(aff.vars, x.vars)
+        sizehint!(aff.coeffs, length(aff.coeffs)+length(x.coeffs))
+        for i in 1:length(x.coeffs)
+            push!(aff.coeffs, c*x.coeffs[i])
+        end
+        aff.constant += c*x.constant
     end
-    aff.constant += c*x.constant
     aff
 end
 
-function addToExpression{C,V}(aff::GenericAffExpr{C,V},c::V,x::V)
+addToExpression{C,V}(aff::GenericAffExpr{C,V},c::V,x::V) =
     GenericQuadExpr{C,V}([c],[x],[one(C)],aff)
-end
 
 # TODO: add generic versions of following two methods
 addToExpression(aff::AffExpr,c::AffExpr,x::Variable) =
@@ -87,23 +102,35 @@ addToExpression(aff::AffExpr,c::Variable,x::AffExpr) =
              addToExpression(aff,c,x.constant))
 
 function addToExpression{C,V}(aff::GenericAffExpr{C,V},c::GenericAffExpr{C,V},x::Number)
-    append!(aff.vars, c.vars)
-    append!(aff.coeffs, c.coeffs * x)
-    aff.constant += c.constant * x
+    if x != 0
+        append!(aff.vars, c.vars)
+        append!(aff.coeffs, c.coeffs * x)
+        aff.constant += c.constant * x
+    end
     aff
 end
 
-addToExpression{C,V}(aff::GenericAffExpr{C,V}, c::GenericQuadExpr{C,V}, x::Number) =
-    GenericQuadExpr{C,V}(copy(c.qvars1),
-                         copy(c.qvars2),
-                         c*qcoeffs*x,
-                         addToExpression(aff,c.aff,x))
+function addToExpression{C,V}(aff::GenericAffExpr{C,V}, c::GenericQuadExpr{C,V}, x::Number)
+    if x == 0
+        GenericQuadExpr{C,V}(aff)
+    else
+        GenericQuadExpr{C,V}(copy(c.qvars1),
+                            copy(c.qvars2),
+                            c*qcoeffs*x,
+                            addToExpression(aff,c.aff,x))
+    end
+end
 
-addToExpression{C,V}(aff::GenericAffExpr{C,V}, c::Number, x::GenericQuadExpr{C,V}) =
-    GenericQuadExpr{C,V}(copy(x.qvars1),
-                         copy(x.qvars2),
-                         c*x.qcoeffs,
-                         addToExpression(aff,c,x.aff))
+function addToExpression{C,V}(aff::GenericAffExpr{C,V}, c::Number, x::GenericQuadExpr{C,V})
+    if c == 0
+        GenericQuadExpr{C,V}(aff)
+    else
+        GenericQuadExpr{C,V}(copy(x.qvars1),
+                            copy(x.qvars2),
+                            c*x.qcoeffs,
+                            addToExpression(aff,c,x.aff))
+    end
+end
 
 function addToExpression{C,V}(ex::GenericAffExpr{C,V}, c::GenericAffExpr{C,V}, x::GenericAffExpr{C,V})
     q = convert(GenericQuadExpr{C,V}, ex)
@@ -112,7 +139,9 @@ function addToExpression{C,V}(ex::GenericAffExpr{C,V}, c::GenericAffExpr{C,V}, x
 end
 
 function addToExpression{C,V}(quad::GenericQuadExpr{C,V},c::Number,x::V)
-    push!(quad.aff, convert(C,c), x)
+    if c != 0
+        push!(quad.aff, convert(C,c), x)
+    end
     quad
 end
 
@@ -129,17 +158,21 @@ function addToExpression{C,V}(quad::GenericQuadExpr{C,V},c::V,x::V)
 end
 
 function addToExpression{C,V}(quad::GenericQuadExpr{C,V},c::Number,x::GenericAffExpr{C,V})
-    append!(quad.aff.vars, x.vars)
-    sizehint!(quad.aff.coeffs, length(quad.aff.coeffs)+length(x.coeffs))
-    for i in 1:length(x.coeffs)
-        push!(quad.aff.coeffs, c*x.coeffs[i])
+    if c != 0
+        append!(quad.aff.vars, x.vars)
+        sizehint!(quad.aff.coeffs, length(quad.aff.coeffs)+length(x.coeffs))
+        for i in 1:length(x.coeffs)
+            push!(quad.aff.coeffs, c*x.coeffs[i])
+        end
+        quad.aff.constant += c*x.constant
     end
-    quad.aff.constant += c*x.constant
     quad
 end
 
 function addToExpression{C,V}(quad::GenericQuadExpr{C,V},c::GenericAffExpr{C,V},x::Number)
-    addToExpression(quad.aff,c,x)
+    if x != 0
+        addToExpression(quad.aff,c,x)
+    end
     quad
 end
 
@@ -160,24 +193,28 @@ function addToExpression{C,V}(quad::GenericQuadExpr{C,V},c::V,x::GenericAffExpr{
 end
 
 function addToExpression{C,V}(quad::GenericQuadExpr{C,V},c::GenericQuadExpr{C,V},x::Number)
-    append!(quad.qvars1,c.qvars1)
-    append!(quad.qvars2,c.qvars2)
-    sizehint!(quad.qcoeffs, length(quad.qcoeffs)+length(c.qcoeffs))
-    for i in 1:length(c.qcoeffs)
-        push!(quad.qcoeffs, c.qcoeffs[i]*x)
+    if x != 0
+        append!(quad.qvars1,c.qvars1)
+        append!(quad.qvars2,c.qvars2)
+        sizehint!(quad.qcoeffs, length(quad.qcoeffs)+length(c.qcoeffs))
+        for i in 1:length(c.qcoeffs)
+            push!(quad.qcoeffs, c.qcoeffs[i]*x)
+        end
+        addToExpression(quad,c.aff,x)
     end
-    addToExpression(quad,c.aff,x)
     quad
 end
 
 function addToExpression{C,V}(quad::GenericQuadExpr{C,V},c::Number,x::GenericQuadExpr{C,V})
-    append!(quad.qvars1,x.qvars1)
-    append!(quad.qvars2,x.qvars2)
-    sizehint!(quad.qcoeffs, length(quad.qcoeffs)+length(x.qcoeffs))
-    for i in 1:length(x.qcoeffs)
-        push!(quad.qcoeffs, c*x.qcoeffs[i])
+    if c != 0
+        append!(quad.qvars1,x.qvars1)
+        append!(quad.qvars2,x.qvars2)
+        sizehint!(quad.qcoeffs, length(quad.qcoeffs)+length(x.qcoeffs))
+        for i in 1:length(x.qcoeffs)
+            push!(quad.qcoeffs, c*x.qcoeffs[i])
+        end
+        addToExpression(quad,c,x.aff)
     end
-    addToExpression(quad,c,x.aff)
     quad
 end
 
