@@ -341,3 +341,11 @@ facts("[macros] Norm parsing") do
     @fact_throws @addConstraint(model, (x[1,1]+1)*norm2{x[i,j], i=1:2, j=1:2} + x[1,2] >= -1)
     @fact_throws @addConstraint(model, norm2{x[i,j], i=1:2, j=1:2} + x[1,2] >= -1)
 end
+
+facts("[macros] Extraneous terms in QuadExpr (#535)") do
+    model = Model()
+    @defVar(model, x)
+    @defVar(model, y)
+    @addConstraint(model, x*x <= y*y)
+    @fact conToStr(model.quadconstr[1]) --> "x² - y² $leq 0"
+end
