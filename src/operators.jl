@@ -581,16 +581,67 @@ for (dotop,op) in [(:.+,:+), (:.-,:-), (:.*,:*), (:./,:/)]
     @eval begin
         $dotop(lhs::Real,rhs::JuMPTypes) = $op(lhs,rhs)
         $dotop(lhs::JuMPTypes,rhs::Real) = $op(lhs,rhs)
-        $dotop{T<:JuMPTypes}(lhs::Real,rhs::Array{T}) = map(c->$op(lhs,c), rhs)
-        $dotop{T<:JuMPTypes}(lhs::Array{T},rhs::Real) = map(c->$op(c,rhs), lhs)
+        function $dotop{T<:JuMPTypes}(lhs::Real,rhs::Array{T})
+            arr_type = typeof($op(lhs,one(T)))
+            arr = Array(arr_type, size(rhs))
+            @inbounds for i in eachindex(rhs)
+                arr[i] = $op(lhs,rhs[i])
+            end
+            return arr
+        end
+        function $dotop{T<:JuMPTypes}(lhs::Array{T},rhs::Real)
+            arr_type = typeof($op(one(T),rhs))
+            arr = Array(arr_type, size(lhs))
+            @inbounds for i in eachindex(lhs)
+                arr[i] = $op(lhs[i],rhs)
+            end
+            return arr
+        end
         $dotop(lhs::Real,rhs::OneIndexedArray) = $dotop(lhs, rhs.innerArray)
         $dotop(lhs::OneIndexedArray,rhs::Real) = $dotop(lhs.innerArray, rhs)
-        $dotop{T<:JuMPTypes}(lhs::T,rhs::Array) = map(c->$op(lhs,c), rhs)
-        $dotop{T<:JuMPTypes}(lhs::Array,rhs::T) = map(c->$op(c,rhs), lhs)
+        function $dotop{T<:JuMPTypes}(lhs::T,rhs::Array)
+            length(rhs) == 0 && return Array(eltype(rhs),size(rhs))
+            # Guess based on first element of rhs
+            arr_type = typeof($op(lhs,one(rhs[1])))
+            arr = Array(arr_type, size(rhs))
+            @inbounds for i in eachindex(rhs)
+                arr[i] = $op(lhs,rhs[i])
+            end
+            return arr
+        end
+        function $dotop{T<:JuMPTypes}(lhs::Array,rhs::T)
+            length(lhs) == 0 && return Array(eltype(lhs),size(lhs))
+            # Guess based on first element of rhs
+            arr_type = typeof($op(one(lhs[1]),rhs))
+            arr = Array(arr_type, size(lhs))
+            @inbounds for i in eachindex(lhs)
+                arr[i] = $op(lhs[i],rhs)
+            end
+            return arr
+        end
 
         $dotop{T<:JuMPScalars,N}(lhs::Array{T,N},rhs::OneIndexedArray) = $dotop(lhs,rhs.innerArray)
         $dotop{T<:JuMPScalars,N}(lhs::OneIndexedArray,rhs::Array{T,N}) = $dotop(lhs.innerArray,rhs)
         $dotop(lhs::OneIndexedArray,rhs::OneIndexedArray) = $dotop(lhs.innerArray,rhs.innerArray)
+
+        function $dotop{S<:Real,T<:JuMPTypes,N}(lhs::Array{S,N},rhs::Array{T,N})
+            size(lhs) == size(rhs) || error("Incompatible dimensions")
+            arr_type = typeof($op(one(S),one(T)))
+            arr = Array(arr_type, size(lhs))
+            @inbounds for i in eachindex(lhs)
+                arr[i] = $op(lhs[i],rhs[i])
+            end
+            return arr
+        end
+        function $dotop{S<:JuMPTypes,T<:Real,N}(lhs::Array{S,N},rhs::Array{T,N})
+            size(lhs) == size(rhs) || error("Incompatible dimensions")
+            arr_type = typeof($op(one(S),one(T)))
+            arr = Array(arr_type, size(lhs))
+            @inbounds for i in eachindex(lhs)
+                arr[i] = $op(lhs[i],rhs[i])
+            end
+            return arr
+        end
     end
 end
 (+){T<:JuMPTypes}(x::Array{T}) = x
