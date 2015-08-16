@@ -85,6 +85,18 @@ function addToExpression{C,V}(aff::GenericAffExpr{C,V},c::Number,x::GenericAffEx
     aff
 end
 
+# help w/ ambiguity
+addToExpression{C,V<:Number}(aff::GenericAffExpr{C,V}, c::Number, x::Number) =
+    __addToExpression__(aff, c, x)
+
+function addToExpression{C,V}(aff::GenericAffExpr{C,V}, c::V, x::Number)
+    if x != 0
+        push!(aff.vars,   c)
+        push!(aff.coeffs, x)
+    end
+    aff
+end
+
 addToExpression{C,V}(aff::GenericAffExpr{C,V},c::V,x::V) =
     GenericQuadExpr{C,V}([c],[x],[one(C)],aff)
 
@@ -304,34 +316,27 @@ end
 
 @generated addToExpression_reorder(ex, arg) = :(addToExpression(ex, 1.0, arg))
 
-@generated function addToExpression_reorder(ex, args...)
-    if !isleaftype(ex) || mapreduce(t -> !isleaftype(t), |, args)
-        error("Can't process abstract types")
-    end
-    # how many of the multiplicands are variables?
-    n_var = mapreduce(t -> (t == Variable || t == AffExpr), +, args)
-    has_quad = mapreduce(t -> (t == QuadExpr), |, args)
-    if n_var == 0 && !has_quad
-        #println("No variables")
-        return :(addToExpression(ex, 1.0, (*)(args...)))
-    elseif n_var == 1 && !has_quad # linear
-        #println("Linear")
-        coef_expr = Expr(:call, :*)
-        coef_idx = Int[]
-        var_idx = 0
-        for i in 1:length(args)
-            if args[i] == Variable || args[i] == AffExpr
-                var_idx = i
-            else
-                push!(coef_expr.args, :(args[$i]))
-            end
-        end
-        return :(addToExpression(ex, $coef_expr, args[$var_idx]))
+@generated function addToExpression_reorder(ex, x, y)
+    if x <: Union(Variable,AffExpr) && y <: Number
+        :(addToExpression(ex, y, x))
     else
-        #println("Nonlinear")
-        coef_expr = Expr(:call, :*, [:(args[$i]) for i in 1:(length(args)-1)]...)
-        return :(addToExpression(ex, $coef_expr, args[$(length(args))]))
+        :(addToExpression(ex, x, y))
     end
+end
+
+@generated function addToExpression_reorder(ex, args...)
+    n = length(args)
+    @assert n ≥ 3
+    varidx = find(t -> (t == Variable || t == AffExpr), collect(args))
+    allscalar = all(t -> (t <: Number), args[setdiff(1:n, varidx)])
+    if allscalar && length(varidx) == 1
+        idx = varidx[1]
+        coef = Expr(:call, :*, [:(args[$i]) for i in setdiff(1:n,idx)]...)
+    else
+        coef = Expr(:call, :*, [:(args[$i]) for i in 1:(n-1)]...)
+        idx = n
+    end
+    :(addToExpression(ex, $coef, args[$idx]))
 end
 
 function parseCurly(x::Expr, aff::Symbol, lcoeffs, rcoeffs, newaff=gensym())
