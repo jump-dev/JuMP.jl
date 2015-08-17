@@ -11,6 +11,8 @@ for (funsym, exp) in Calculus.symbolic_derivatives_1arg()
     # return a function that returns an expression with the given expression replacing the symbol x
     rules[funsym] = arg -> replace_x(exp,arg)
 end
+# special case for nonsmooth function, we return a subgradient
+rules[:abs] = arg -> replace_x(:(x > 0 ? one(x) : -one(x)),arg)
 
 curlyexpr(x::Expr) = isexpr(x.args[2],:parameters) ? x.args[3] : x.args[2]
 function gencurlyloop(x::Expr, code; escape=false)

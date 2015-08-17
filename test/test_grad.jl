@@ -394,4 +394,14 @@ fval = fg([1.0],out)
 @test_approx_eq fval 2sin(1)
 @test_approx_eq out[1] 2cos(1)
 
+# abs
+ex = @processNLExpr abs(x[1])
+fg = genfgrad_simple(ex)
+fval = fg([2.0],out)
+@test_approx_eq fval 2.0
+@test_approx_eq out[1] 1.0
+fval = fg([-2.0],out)
+@test_approx_eq fval 2.0
+@test_approx_eq out[1] -1.0
+
 println("Passed tests")
