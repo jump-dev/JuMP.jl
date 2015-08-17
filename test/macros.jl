@@ -349,3 +349,15 @@ facts("[macros] Extraneous terms in QuadExpr (#535)") do
     @addConstraint(model, x*x <= y*y)
     @fact conToStr(model.quadconstr[1]) --> "x² - y² $leq 0"
 end
+
+if VERSION > v"0.4-"
+facts("[macros] Special-case binary multiplication in addToExpression_reorder (#537)") do
+    dual = Model()
+    @defVar(dual, α[1:3] <= 0)
+    @defVar(dual, γ >= 0)
+    @addConstraint(dual, ones(3)*γ .<= α)
+    @fact conToStr(dual.linconstr[1]) --> "γ - α[1] $leq 0"
+    @fact conToStr(dual.linconstr[2]) --> "γ - α[2] $leq 0"
+    @fact conToStr(dual.linconstr[3]) --> "γ - α[3] $leq 0"
+end
+end
