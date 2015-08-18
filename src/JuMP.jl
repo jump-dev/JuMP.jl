@@ -70,8 +70,8 @@ type Model
 
     # Column data
     numCols::Int
-    colNames::Vector{String}
-    colNamesIJulia::Vector{String}
+    colNames::Vector{UTF8String}
+    colNamesIJulia::Vector{UTF8String}
     colLower::Vector{Float64}
     colUpper::Vector{Float64}
     colCat::Vector{Symbol}
@@ -127,12 +127,37 @@ function Model(;solver=UnsetSolver())
     if !isa(solver,MathProgBase.AbstractMathProgSolver)
         error("solver argument ($solver) must be an AbstractMathProgSolver")
     end
-    Model(zero(QuadExpr),:Min,LinearConstraint[],QuadConstraint[],
-          SOSConstraint[],SOCConstraint[],SDPConstraint[],
-          0,String[],String[],Float64[],Float64[],Symbol[],
-          0,Float64[],Float64[],Float64[],nothing,solver,
-          false,Any[],nothing,nothing,JuMPContainer[],
-          IndexedVector(Float64,0),nothing,Dict{Symbol,Any}(),0,0,Dict{Symbol,Any}())
+    Model(zero(QuadExpr),           # obj
+          :Min,                     # objSense
+          LinearConstraint[],       # linconstr
+          QuadConstraint[],         # quadconstr
+          SOSConstraint[],          # sosconstr
+          SOCConstraint[],          # socconstr
+          SDPConstraint[],          # sdpconstr
+          0,                        # numCols
+          UTF8String[],             # colNames
+          UTF8String[],             # colNamesIJulia
+          Float64[],                # colLower
+          Float64[],                # colUpper
+          Symbol[],                 # colCat
+          0,                         # objVal
+          Float64[],                # colVal
+          Float64[],                # redCosts
+          Float64[],                # linconstrDuals
+          nothing,                  # internalModel
+          solver,                   # solver
+          false,                    # internalModelLoaded
+          Any[],                    # callbacks
+          nothing,                  # solvehook
+          nothing,                  # printhook
+          JuMPContainer[],          # dictList
+          IndexedVector(Float64,0), # indexedVector
+          nothing,                  # nlpdata
+          Dict{Symbol,Any}(),       # varDict
+          0,                        # getvalue_counter
+          0,                        # operator_counter
+          Dict{Symbol,Any}(),       # ext
+    )
 end
 
 # Getters/setters
