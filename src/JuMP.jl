@@ -141,7 +141,7 @@ MathProgBase.numlinconstr(m::Model) = length(m.linconstr)
 MathProgBase.numquadconstr(m::Model) = length(m.quadconstr)
 function MathProgBase.numconstr(m::Model)
     c = length(m.linconstr) + length(m.quadconstr) + length(m.sosconstr)
-    if m.nlpdata != nothing
+    if m.nlpdata !== nothing
         c += length(m.nlpdata.nlconstr)
     end
     return c
@@ -215,10 +215,10 @@ function Base.copy(source::Model)
     if !isempty(source.callbacks)
         error("Copying callbacks is not supported")
     end
-    if source.solvehook != nothing
+    if source.solvehook !== nothing
         dest.solvehook = copy(source.solvehook)
     end
-    if source.printhook != nothing
+    if source.printhook !== nothing
         dest.printhook = copy(source.printhook)
     end
 
@@ -232,7 +232,7 @@ function Base.copy(source::Model)
     end
     dest.dictList = map(v -> copy(v, dest), source.dictList)
 
-    if source.nlpdata != nothing
+    if source.nlpdata !== nothing
         dest.nlpdata = copy(source.nlpdata)
     end
 

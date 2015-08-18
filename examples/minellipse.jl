@@ -51,7 +51,7 @@ X_val = getValue(X)
 println(X_val)
 
 # Plot it, if desired (e.g. julia minellipse.jl plot)
-if length(ARGS) > 0 && Pkg.installed("PyPlot") != nothing
+if length(ARGS) > 0 && Pkg.installed("PyPlot") !== nothing
     # Setup the figure
     fig = figure()
     ax = fig[:gca]()

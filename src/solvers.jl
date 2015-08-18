@@ -19,14 +19,14 @@ function problemclass(m::Model)
     int = any(c-> !(c == :Cont || c == :Fixed), m.colCat)
     qp = !isempty(m.obj.qvars1)
     qc = !isempty(m.quadconstr)
-    nlp = m.nlpdata != nothing
+    nlp = m.nlpdata !== nothing
     soc = !isempty(m.socconstr)
     sdp = !isempty(m.sdpconstr)
     sos = !isempty(m.sosconstr)
     ProblemTraits(int, !(qp|qc|nlp|soc|sdp|sos), qp, qc, nlp, soc, sdp, sos, soc|sdp)
 end
 
-function solve(m::Model; suppress_warnings=false, ignore_solve_hook=(m.solvehook==nothing), kwargs...)
+function solve(m::Model; suppress_warnings=false, ignore_solve_hook=(m.solvehook===nothing), kwargs...)
 
     ignore_solve_hook || return m.solvehook(m; suppress_warnings=suppress_warnings, kwargs...)
 
@@ -134,7 +134,7 @@ function addQuadratics(m::Model)
         terms::QuadExpr = qconstr.terms
         assert_isfinite(terms)
         for ind in 1:length(terms.qvars1)
-            if (terms.qvars1[ind].m != m) || (terms.qvars2[ind].m != m)
+            if (terms.qvars1[ind].m !== m) || (terms.qvars2[ind].m !== m)
                 error("Variable not owned by model present in constraints")
             end
         end

@@ -749,8 +749,8 @@ macro defVar(args...)
         end
     end
 
-    if (obj != nothing || inconstraints != nothing || coefficients != nothing) &&
-        (obj == nothing || inconstraints == nothing || coefficients == nothing)
+    if (obj !== nothing || inconstraints !== nothing || coefficients !== nothing) &&
+       (obj === nothing || inconstraints === nothing || coefficients === nothing)
         error("in @defVar ($var): Must provide 'objective', 'inconstraints', and 'coefficients' arguments all together for column-wise modeling")
     end
 
@@ -783,7 +783,7 @@ macro defVar(args...)
     end
 
     # Handle the column generation functionality
-    if coefficients != nothing
+    if coefficients !== nothing
         !isa(var,Symbol) &&
         error("in @defVar ($var): can only create one variable at a time when adding to existing constraints.")
 

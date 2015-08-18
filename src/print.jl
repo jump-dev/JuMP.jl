@@ -96,7 +96,7 @@ end
 
 function Base.show(io::IO, m::Model)
     plural(n) = (n==1 ? "" : "s")
-    print(io, m.objSense == :Max ? "Maximization" : ((m.objSense == :Min && (!isempty(m.obj) || (m.nlpdata != nothing && isa(m.nlpdata.nlobj, ReverseDiffSparse.SymbolicOutput)))) ? "Minimization" : "Feasibility"))
+    print(io, m.objSense == :Max ? "Maximization" : ((m.objSense == :Min && (!isempty(m.obj) || (m.nlpdata !== nothing && isa(m.nlpdata.nlobj, ReverseDiffSparse.SymbolicOutput)))) ? "Minimization" : "Feasibility"))
     println(io, " problem with:")
     nlin = length(m.linconstr)
     println(io, " * $(nlin) linear constraint$(plural(nlin))")
@@ -109,7 +109,7 @@ function Base.show(io::IO, m::Model)
         println(io, " * $(nsdp) semidefinite constraint$(plural(nsdp))")
     end
     nlp = m.nlpdata
-    if nlp != nothing && length(nlp.nlconstr) > 0
+    if nlp !== nothing && length(nlp.nlconstr) > 0
         println(io, " * $(length(nlp.nlconstr)) nonlinear constraint$(plural(length(nlp.nlconstr)))")
     end
     print(io, " * $(m.numCols) variable$(plural(m.numCols))")
@@ -151,7 +151,7 @@ function model_str(mode, m::Model, leq, geq, in_set,
     obj_sense = ijl ? (m.objSense == :Max ? "\\max" : "\\min")*"\\quad" :
                       (m.objSense == :Max ? "Max" : "Min")
     str = obj_sense * sep
-    if nlp != nothing && nlp.nlobj != nothing
+    if nlp !== nothing && nlp.nlobj !== nothing
         str *= (qobj_str=="0"?"":"$qobj_str + ") * "(nonlinear expression)"
     else
         str *= qobj_str
@@ -169,7 +169,7 @@ function model_str(mode, m::Model, leq, geq, in_set,
     for c in m.sosconstr
         str *= sep * con_str(mode,c,mathmode=true) * eol
     end
-    if nlp != nothing && length(nlp.nlconstr) > 0
+    if nlp !== nothing && length(nlp.nlconstr) > 0
         num = length(nlp.nlconstr)
         str *= sep * string("$num nonlinear constraint", num>1?"s":"") * eol
     end
