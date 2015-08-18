@@ -8,7 +8,7 @@
 # See http://github.com/JuliaOpt/JuMP.jl
 #############################################################################
 
-VERSION >= v"0.4.0-dev+6521" && __precompile__()
+isdefined(Base, :__precompile__) && __precompile__()
 
 module JuMP
 
