@@ -70,8 +70,8 @@ type Model
 
     # Column data
     numCols::Int
-    colNames::Vector{String}
-    colNamesIJulia::Vector{String}
+    colNames::Vector{UTF8String}
+    colNamesIJulia::Vector{UTF8String}
     colLower::Vector{Float64}
     colUpper::Vector{Float64}
     colCat::Vector{Symbol}
@@ -135,8 +135,8 @@ function Model(;solver=UnsetSolver())
           SOCConstraint[],          # socconstr
           SDPConstraint[],          # sdpconstr
           0,                        # numCols
-          String[],             # colNames
-          String[],             # colNamesIJulia
+          UTF8String[],             # colNames
+          UTF8String[],             # colNamesIJulia
           Float64[],                # colLower
           Float64[],                # colUpper
           Symbol[],                 # colCat
@@ -291,10 +291,10 @@ getLinearIndex(x::Variable) = x.col
 ReverseDiffSparse.getplaceindex(x::Variable) = getLinearIndex(x)
 Base.isequal(x::Variable,y::Variable) = isequal(x.col,y.col) && isequal(x.m,y.m)
 
-Variable(m::Model, lower, upper, cat::Symbol, name::String="", value::Number=NaN) =
+Variable(m::Model, lower, upper, cat::Symbol, name::UTF8String="", value::Number=NaN) =
     error("Attempt to create scalar Variable with lower bound of type $(typeof(lower)) and upper bound of type $(typeof(upper)). Bounds must be scalars in Variable constructor.")
 
-function Variable(m::Model,lower::Number,upper::Number,cat::Symbol,name::String="",value::Number=NaN)
+function Variable(m::Model,lower::Number,upper::Number,cat::Symbol,name::UTF8String="",value::Number=NaN)
     m.numCols += 1
     push!(m.colNames, name)
     push!(m.colNamesIJulia, name)

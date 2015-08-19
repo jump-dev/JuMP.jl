@@ -661,6 +661,8 @@ end
 esc_nonconstant(x::Number) = x
 esc_nonconstant(x) = esc(x)
 
+const EMPTYSTRING = utf8("")
+
 macro defVar(args...)
     length(args) <= 1 &&
         error("in @defVar: expected model as first argument, then variable information.")
@@ -788,7 +790,7 @@ macro defVar(args...)
         error("in @defVar ($var): can only create one variable at a time when adding to existing constraints.")
 
         return assert_validmodel(m, quote
-            $(esc(var)) = Variable($m,$lb,$ub,$(quot(t)),$obj,$inconstraints,$coefficients,$(string(var)),$value)
+            $(esc(var)) = Variable($m,$lb,$ub,$(quot(t)),$obj,$inconstraints,$coefficients,$(utf8(string(var))),$value)
             nothing
         end)
     end
@@ -797,7 +799,7 @@ macro defVar(args...)
         # Easy case - a single variable
         sdp && error("Cannot add a semidefinite scalar variable")
         return assert_validmodel(m, quote
-            $(esc(var)) = Variable($m,$lb,$ub,$(quot(t)),$(string(var)),$value)
+            $(esc(var)) = Variable($m,$lb,$ub,$(quot(t)),$(utf8(string(var))),$value)
             registervar($m, $(quot(var)), $(esc(var)))
         end)
     end
@@ -806,7 +808,7 @@ macro defVar(args...)
     # We now build the code to generate the variables (and possibly the JuMPDict
     # to contain them)
     refcall, idxvars, idxsets, idxpairs, condition = buildrefsets(var)
-    code = :( $(refcall) = Variable($m, $lb, $ub, $(quot(t)), "", $value) )
+    code = :( $(refcall) = Variable($m, $lb, $ub, $(quot(t)), EMPTYSTRING, $value) )
     if symmetric
         # Sanity checks on SDP input stuff
         condition == :() ||
