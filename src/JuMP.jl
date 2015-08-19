@@ -70,8 +70,8 @@ type Model
 
     # Column data
     numCols::Int
-    colNames::Vector{UTF8String}
-    colNamesIJulia::Vector{UTF8String}
+    colNames::Vector{String}
+    colNamesIJulia::Vector{String}
     colLower::Vector{Float64}
     colUpper::Vector{Float64}
     colCat::Vector{Symbol}
@@ -135,8 +135,8 @@ function Model(;solver=UnsetSolver())
           SOCConstraint[],          # socconstr
           SDPConstraint[],          # sdpconstr
           0,                        # numCols
-          UTF8String[],             # colNames
-          UTF8String[],             # colNamesIJulia
+          String[],             # colNames
+          String[],             # colNamesIJulia
           Float64[],                # colLower
           Float64[],                # colUpper
           Symbol[],                 # colCat
