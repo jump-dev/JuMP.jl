@@ -37,6 +37,7 @@ function ProblemTraits(m::Model)
     ProblemTraits(int, !(qp|qc|nlp|soc|sdp|sos), qp, qc, nlp, soc, sdp, sos, soc|sdp)
 end
 
+
 function solve(m::Model; suppress_warnings=false,
                 ignore_solve_hook=(m.solvehook===nothing), kwargs...)
     # If the user or an extension has provided a solve hook, call
@@ -155,6 +156,108 @@ function solve(m::Model; suppress_warnings=false,
     # Return the solve status
     stat
 end
+
+
+function buildInternalModel(m::Model, traits=ProblemTraits(m); suppress_warnings=false)
+
+    # set default solver
+    if isa(m.solver, UnsetSolver)
+        m.solver = begin
+            if traits.int | traits.sos
+                MathProgBase.defaultMIPsolver
+            elseif traits.sdp
+                MathProgBase.defaultSDPsolver
+            elseif traits.conic
+                MathProgBase.defaultConicsolver
+            elseif traits.qp | traits.qc
+                MathProgBase.defaultQPsolver
+            elseif traits.nlp
+                MathProgBase.defaultNLPsolver
+            else
+                MathProgBase.defaultLPsolver
+            end
+        end
+    end
+
+    traits.nlp && return _buildInternalModel_nlp(m, traits)
+
+    if traits.conic
+        f,_,_ = prepProblemBounds(m)
+        if m.objSense == :Max
+            scale!(f, -1)
+        end
+
+        m.internalModel = MathProgBase.model(m.solver)
+
+        A, b, var_cones, con_cones = conicconstraintdata(m)
+        MathProgBase.loadconicproblem!(m.internalModel, f, A, b, con_cones, var_cones)
+    else
+        f, rowlb, rowub = prepProblemBounds(m)
+        if m.internalModelLoaded
+            if applicable(MathProgBase.setvarLB!, m.internalModel, m.colLower) &&
+               applicable(MathProgBase.setvarUB!, m.internalModel, m.colUpper) &&
+               applicable(MathProgBase.setconstrLB!, m.internalModel, rowlb) &&
+               applicable(MathProgBase.setconstrUB!, m.internalModel, rowub) &&
+               applicable(MathProgBase.setobj!, m.internalModel, f) &&
+               applicable(MathProgBase.setsense!, m.internalModel, m.objSense)
+                MathProgBase.setvarLB!(m.internalModel, m.colLower)
+                MathProgBase.setvarUB!(m.internalModel, m.colUpper)
+                MathProgBase.setconstrLB!(m.internalModel, rowlb)
+                MathProgBase.setconstrUB!(m.internalModel, rowub)
+                MathProgBase.setobj!(m.internalModel, f)
+                MathProgBase.setsense!(m.internalModel, m.objSense)
+            else
+                suppress_warnings || Base.warn_once("Solver does not appear to support hot-starts. Model will be built from scratch.")
+                m.internalModelLoaded = false
+            end
+        end
+        if !m.internalModelLoaded
+            m.internalModel = MathProgBase.model(m.solver)
+            A = prepConstrMatrix(m)
+
+            # if we have either:
+            #   1) A solver that does not support the loadproblem! interface, or
+            #   2) A QCP and a solver that does not support the addquadconstr! interface,
+            # wrap everything in a ConicSolverWrapper
+            if !applicable(MathProgBase.loadproblem!, m.internalModel, A, m.colLower, m.colUpper, f, rowlb, rowub, m.objSense) ||
+                ( applicable(MathProgBase.supportedcones, m.solver) && # feel like this should have a && traits.qc as well...
+                  !method_exists(MathProgBase.addquadconstr!, (typeof(m.internalModel), Vector{Int}, Vector{Float64}, Vector{Int}, Vector{Int}, Vector{Float64}, Char, Float64)) &&
+                  :SOC in MathProgBase.supportedcones(m.solver) )
+
+                m.internalModel = MathProgBase.model(MathProgBase.ConicSolverWrapper(m.solver))
+            end
+
+            MathProgBase.loadproblem!(m.internalModel, A, m.colLower, m.colUpper, f, rowlb, rowub, m.objSense)
+            addQuadratics(m)
+            addSOS(m)
+        end
+
+        registercallbacks(m)
+    end
+
+    if applicable(MathProgBase.setvartype!, m.internalModel, Symbol[])
+        colCats = vartypes_without_fixed(m)
+        MathProgBase.setvartype!(m.internalModel, colCats)
+    elseif traits.int
+        error("Solver does not support discrete variables")
+    end
+
+    # TODO: change this so you can warmstart continuous problems?
+    if traits.int && !all(isnan(m.colVal))
+        if applicable(MathProgBase.setwarmstart!, m.internalModel, m.colVal)
+            MathProgBase.setwarmstart!(m.internalModel, m.colVal)
+        else
+            suppress_warnings || Base.warn_once("Solver does not appear to support providing initial feasible solutions.")
+        end
+    end
+
+    if applicable(MathProgBase.updatemodel!, m.internalModel)
+        MathProgBase.updatemodel!(m.internalModel)
+    end
+    m.internalModelLoaded = true
+    nothing
+end
+
 
 function addQuadratics(m::Model)
 
@@ -645,105 +748,6 @@ function conicconstraintdata(m::Model)
     A, b, var_cones, con_cones
 end
 
-function buildInternalModel(m::Model, traits=ProblemTraits(m); suppress_warnings=false)
-
-    # set default solver
-    if isa(m.solver, UnsetSolver)
-        m.solver = begin
-            if traits.int | traits.sos
-                MathProgBase.defaultMIPsolver
-            elseif traits.sdp
-                MathProgBase.defaultSDPsolver
-            elseif traits.conic
-                MathProgBase.defaultConicsolver
-            elseif traits.qp | traits.qc
-                MathProgBase.defaultQPsolver
-            elseif traits.nlp
-                MathProgBase.defaultNLPsolver
-            else
-                MathProgBase.defaultLPsolver
-            end
-        end
-    end
-
-    traits.nlp && return _buildInternalModel_nlp(m, traits)
-
-    if traits.conic
-        f,_,_ = prepProblemBounds(m)
-        if m.objSense == :Max
-            scale!(f, -1)
-        end
-
-        m.internalModel = MathProgBase.model(m.solver)
-
-        A, b, var_cones, con_cones = conicconstraintdata(m)
-        MathProgBase.loadconicproblem!(m.internalModel, f, A, b, con_cones, var_cones)
-    else
-        f, rowlb, rowub = prepProblemBounds(m)
-        if m.internalModelLoaded
-            if applicable(MathProgBase.setvarLB!, m.internalModel, m.colLower) &&
-               applicable(MathProgBase.setvarUB!, m.internalModel, m.colUpper) &&
-               applicable(MathProgBase.setconstrLB!, m.internalModel, rowlb) &&
-               applicable(MathProgBase.setconstrUB!, m.internalModel, rowub) &&
-               applicable(MathProgBase.setobj!, m.internalModel, f) &&
-               applicable(MathProgBase.setsense!, m.internalModel, m.objSense)
-                MathProgBase.setvarLB!(m.internalModel, m.colLower)
-                MathProgBase.setvarUB!(m.internalModel, m.colUpper)
-                MathProgBase.setconstrLB!(m.internalModel, rowlb)
-                MathProgBase.setconstrUB!(m.internalModel, rowub)
-                MathProgBase.setobj!(m.internalModel, f)
-                MathProgBase.setsense!(m.internalModel, m.objSense)
-            else
-                suppress_warnings || Base.warn_once("Solver does not appear to support hot-starts. Model will be built from scratch.")
-                m.internalModelLoaded = false
-            end
-        end
-        if !m.internalModelLoaded
-            m.internalModel = MathProgBase.model(m.solver)
-            A = prepConstrMatrix(m)
-
-            # if we have either:
-            #   1) A solver that does not support the loadproblem! interface, or
-            #   2) A QCP and a solver that does not support the addquadconstr! interface,
-            # wrap everything in a ConicSolverWrapper
-            if !applicable(MathProgBase.loadproblem!, m.internalModel, A, m.colLower, m.colUpper, f, rowlb, rowub, m.objSense) ||
-                ( applicable(MathProgBase.supportedcones, m.solver) && # feel like this should have a && traits.qc as well...
-                  !method_exists(MathProgBase.addquadconstr!, (typeof(m.internalModel), Vector{Int}, Vector{Float64}, Vector{Int}, Vector{Int}, Vector{Float64}, Char, Float64)) &&
-                  :SOC in MathProgBase.supportedcones(m.solver) )
-
-                m.internalModel = MathProgBase.model(MathProgBase.ConicSolverWrapper(m.solver))
-            end
-
-            MathProgBase.loadproblem!(m.internalModel, A, m.colLower, m.colUpper, f, rowlb, rowub, m.objSense)
-            addQuadratics(m)
-            addSOS(m)
-        end
-
-        registercallbacks(m)
-    end
-
-    if applicable(MathProgBase.setvartype!, m.internalModel, Symbol[])
-        colCats = vartypes_without_fixed(m)
-        MathProgBase.setvartype!(m.internalModel, colCats)
-    elseif traits.int
-        error("Solver does not support discrete variables")
-    end
-
-    # TODO: change this so you can warmstart continuous problems?
-    if traits.int && !all(isnan(m.colVal))
-        if applicable(MathProgBase.setwarmstart!, m.internalModel, m.colVal)
-            MathProgBase.setwarmstart!(m.internalModel, m.colVal)
-        else
-            suppress_warnings || Base.warn_once("Solver does not appear to support providing initial feasible solutions.")
-        end
-    end
-
-    if applicable(MathProgBase.updatemodel!, m.internalModel)
-        MathProgBase.updatemodel!(m.internalModel)
-    end
-    m.internalModelLoaded = true
-    nothing
-end
 
 # returns (unsorted) column indices and coefficient terms for merged vector
 # assume that v is zero'd
