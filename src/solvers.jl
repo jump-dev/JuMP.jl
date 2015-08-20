@@ -2,20 +2,31 @@
 #  This Source Code Form is subject to the terms of the Mozilla Public
 #  License, v. 2.0. If a copy of the MPL was not distributed with this
 #  file, You can obtain one at http://mozilla.org/MPL/2.0/.
+#############################################################################
+# JuMP
+# An algebraic modelling langauge for Julia
+# See http://github.com/JuliaOpt/JuMP.jl
+#############################################################################
+# src/solvers.jl
+# Handles conversion of the JuMP Model into a format that can be passed
+# through the MathProgBase interface to solvers, and ongoing updating of
+# that representation if supported by the solver.
+#############################################################################
 
+# Analyze a JuMP Model to determine its traits, and thus what solvers can
+# be used to solve the problem
 immutable ProblemTraits
-    int::Bool
-    lin::Bool
-    qp ::Bool
-    qc ::Bool
-    nlp::Bool
-    soc::Bool
-    sdp::Bool
-    sos::Bool
-    conic::Bool
+    int::Bool  # has integer variables
+    lin::Bool  # has only linear objectives and constraints
+    qp ::Bool  # has a quadratic objective function
+    qc ::Bool  # has a quadratic constraint
+    nlp::Bool  # has general nonlinear objective or constraints
+    soc::Bool  # has a second-order cone constraint
+    sdp::Bool  # has an SDP constraint (or SDP variable bounds)
+    sos::Bool  # has an SOS constraint
+    conic::Bool  # has an SDP or SOC constraint
 end
-
-function problemclass(m::Model)
+function ProblemTraits(m::Model)
     int = any(c-> !(c == :Cont || c == :Fixed), m.colCat)
     qp = !isempty(m.obj.qvars1)
     qc = !isempty(m.quadconstr)
@@ -26,31 +37,47 @@ function problemclass(m::Model)
     ProblemTraits(int, !(qp|qc|nlp|soc|sdp|sos), qp, qc, nlp, soc, sdp, sos, soc|sdp)
 end
 
-function solve(m::Model; suppress_warnings=false, ignore_solve_hook=(m.solvehook===nothing), kwargs...)
-
-    ignore_solve_hook || return m.solvehook(m; suppress_warnings=suppress_warnings, kwargs...)
+function solve(m::Model; suppress_warnings=false,
+                ignore_solve_hook=(m.solvehook===nothing), kwargs...)
+    # If the user or an extension has provided a solve hook, call
+    # that instead of solving the model ourselves
+    if !ignore_solve_hook
+        return m.solvehook(m; suppress_warnings=suppress_warnings, kwargs...)
+    end
 
     # Clear warning counters
     m.getvalue_counter = 0
     m.operator_counter = 0
 
+    # Remember if the solver was initially unset so we can restore
+    # it to be unset later
     unset = m.solver == UnsetSolver()
-    traits = problemclass(m)
+
+    # Analyze the problems traits to determine what solvers we can use
+    traits = ProblemTraits(m)
+
+    # Build the MathProgBase model from the JuMP model
     buildInternalModel(m, traits, suppress_warnings=suppress_warnings)
 
+    # If the model is a general nonlinear, use different logic in
+    # nlp.jl to solve the problem
     traits.nlp && return solvenlp(m, traits, suppress_warnings=suppress_warnings)
 
+    # Solve the problem
     MathProgBase.optimize!(m.internalModel)
     stat = MathProgBase.status(m.internalModel)
 
+    # Extract solution from the solver
     numRows, numCols = length(m.linconstr), m.numCols
-
     m.objVal = NaN
     m.colVal = fill(NaN, numCols)
     m.linconstrDuals = Array(Float64, 0)
     
     if stat == :Optimal
-        if !(traits.int | traits.sos | traits.conic) # just punt on conic duals
+        # If we think dual information might be available, try to get it
+        # If not, return an array of the correct length
+        # TODO: support conic duals
+        if !(traits.int | traits.sos | traits.conic)
             m.redCosts = try
                 MathProgBase.getreducedcosts(m.internalModel)[1:numCols]
             catch
@@ -64,7 +91,12 @@ function solve(m::Model; suppress_warnings=false, ignore_solve_hook=(m.solvehook
             end
         end
     else
+        # Problem was not solved to optimality, attempt to extract useful
+        # information anyway
         suppress_warnings || warn("Not solved to optimality, status: $stat")
+        # Some solvers provide infeasibility rays (dual) or unbounded
+        # rays (primal) for linear problems. Store these as the solution
+        # if the exist.
         if traits.lin
             if stat == :Infeasible
                 m.linconstrDuals = try
@@ -88,20 +120,31 @@ function solve(m::Model; suppress_warnings=false, ignore_solve_hook=(m.solvehook
         end
     end
 
+    # If the problem was solved, or if it terminated prematurely, try
+    # to extract a solution anyway. This commonly occurs when a time
+    # limit or tolerance is set (:UserLimit)
     if !(stat == :Infeasible || stat == :Unbounded)
         try
             objVal = MathProgBase.getobjval(m.internalModel) + m.obj.aff.constant
             colVal = MathProgBase.getsolution(m.internalModel)[1:numCols]
-            m.objVal = objVal # Don't corrupt the answers if one of the above two calls fails
+            # Don't corrupt the answers if one of the above two calls fails
+            m.objVal = objVal
             m.colVal = colVal
         end
     end
 
+    # The MathProgBase interface defines a conic problem to always be
+    # a minimization problem, so we need to flip the objective before
+    # reporting it to the user
     if traits.conic && m.objSense == :Max
         m.objVal *= -1
         scale!(m.linconstrDuals, -1)
     end
 
+    # If the solver was initially not set, we will restore this status
+    # and drop the internal MPB model. This is important for the case
+    # where the solver used changes between solves because the user
+    # has changed the problem class (e.g. LP to MILP)
     if unset
         m.solver = UnsetSolver()
         if traits.int
@@ -109,6 +152,7 @@ function solve(m::Model; suppress_warnings=false, ignore_solve_hook=(m.solvehook
         end
     end
 
+    # Return the solve status
     stat
 end
 
@@ -601,7 +645,7 @@ function conicconstraintdata(m::Model)
     A, b, var_cones, con_cones
 end
 
-function buildInternalModel(m::Model, traits=problemclass(m); suppress_warnings=false)
+function buildInternalModel(m::Model, traits=ProblemTraits(m); suppress_warnings=false)
 
     # set default solver
     if isa(m.solver, UnsetSolver)
