@@ -36,6 +36,21 @@ function ProblemTraits(m::Model)
     sos = !isempty(m.sosconstr)
     ProblemTraits(int, !(qp|qc|nlp|soc|sdp|sos), qp, qc, nlp, soc, sdp, sos, soc|sdp)
 end
+function default_solver(traits::ProblemTraits)
+    if traits.int | traits.sos
+        MathProgBase.defaultMIPsolver
+    elseif traits.sdp
+        MathProgBase.defaultSDPsolver
+    elseif traits.conic
+        MathProgBase.defaultConicsolver
+    elseif traits.qp | traits.qc
+        MathProgBase.defaultQPsolver
+    elseif traits.nlp
+        MathProgBase.defaultNLPsolver
+    else
+        MathProgBase.defaultLPsolver
+    end
+end
 
 
 function solve(m::Model; suppress_warnings=false,
@@ -157,43 +172,43 @@ function solve(m::Model; suppress_warnings=false,
     stat
 end
 
-
-function buildInternalModel(m::Model, traits=ProblemTraits(m); suppress_warnings=false)
-
-    # set default solver
+# Converts the JuMP Model into a MathProgBase model based on the
+# traits of the model
+function buildInternalModel(m::Model, traits=ProblemTraits(m);
+                            suppress_warnings=false)
+    # Set solver based on the model's traits if it hasn't provided
     if isa(m.solver, UnsetSolver)
-        m.solver = begin
-            if traits.int | traits.sos
-                MathProgBase.defaultMIPsolver
-            elseif traits.sdp
-                MathProgBase.defaultSDPsolver
-            elseif traits.conic
-                MathProgBase.defaultConicsolver
-            elseif traits.qp | traits.qc
-                MathProgBase.defaultQPsolver
-            elseif traits.nlp
-                MathProgBase.defaultNLPsolver
-            else
-                MathProgBase.defaultLPsolver
-            end
-        end
+        m.solver = default_solver(traits)
     end
 
+    # If the model is nonlinear, use different logic in nlp.jl
+    # to build the problem
     traits.nlp && return _buildInternalModel_nlp(m, traits)
 
     if traits.conic
+        # If the problem is conic then use only the objective
+        # coefficients from prepProblemBounds
         f,_,_ = prepProblemBounds(m)
-        if m.objSense == :Max
-            scale!(f, -1)
-        end
 
+        # The conic MPB interface defines conic problems as
+        # always being minimization problems, so flip if needed
+        m.objSense == :Max && scale!(f, -1.0)
+
+        # Obtain a fresh MPB model for the solver
+        # If the problem is conic, we rebuild the problem from
+        # scratch every time
         m.internalModel = MathProgBase.model(m.solver)
 
+        # Build up the LHS, RHS and cones from the JuMP Model...
         A, b, var_cones, con_cones = conicconstraintdata(m)
+        # ... and pass to the solver
         MathProgBase.loadconicproblem!(m.internalModel, f, A, b, con_cones, var_cones)
     else
+        # Extract objective coefficients and linear constraint bounds
         f, rowlb, rowub = prepProblemBounds(m)
+        # If we already have an MPB model for the solver...
         if m.internalModelLoaded
+            # ... and if the solver supports updating bounds/objective
             if applicable(MathProgBase.setvarLB!, m.internalModel, m.colLower) &&
                applicable(MathProgBase.setvarUB!, m.internalModel, m.colUpper) &&
                applicable(MathProgBase.setconstrLB!, m.internalModel, rowlb) &&
@@ -207,15 +222,22 @@ function buildInternalModel(m::Model, traits=ProblemTraits(m); suppress_warnings
                 MathProgBase.setobj!(m.internalModel, f)
                 MathProgBase.setsense!(m.internalModel, m.objSense)
             else
-                suppress_warnings || Base.warn_once("Solver does not appear to support hot-starts. Model will be built from scratch.")
+                # The solver doesn't support changing bounds/objective
+                # We need to build the model from scratch
+                if !suppress_warnings
+                    Base.warn_once("Solver does not appear to support hot-starts. Model will be built from scratch.")
+                end
                 m.internalModelLoaded = false
             end
         end
+        # If we don't already have a MPB model
         if !m.internalModelLoaded
+            # Obtain a fresh MPB model for the solver
             m.internalModel = MathProgBase.model(m.solver)
+            # Construct a LHS matrix from the linear constraints
             A = prepConstrMatrix(m)
-
-            # if we have either:
+            
+            # If we have either:
             #   1) A solver that does not support the loadproblem! interface, or
             #   2) A QCP and a solver that does not support the addquadconstr! interface,
             # wrap everything in a ConicSolverWrapper
@@ -227,22 +249,30 @@ function buildInternalModel(m::Model, traits=ProblemTraits(m); suppress_warnings
                 m.internalModel = MathProgBase.model(MathProgBase.ConicSolverWrapper(m.solver))
             end
 
+            # Load the problem data into the model...
             MathProgBase.loadproblem!(m.internalModel, A, m.colLower, m.colUpper, f, rowlb, rowub, m.objSense)
+            # ... and add quadratic and SOS constraints separately
             addQuadratics(m)
             addSOS(m)
         end
-
+        # Update solver callbacks, if any
         registercallbacks(m)
     end
 
+    # Update the type of each variable
     if applicable(MathProgBase.setvartype!, m.internalModel, Symbol[])
         colCats = vartypes_without_fixed(m)
         MathProgBase.setvartype!(m.internalModel, colCats)
     elseif traits.int
+        # Solver that do not implement anything other than continuous
+        # variables do not need to implement this method, so throw an
+        # error if the model has anything but continuous
         error("Solver does not support discrete variables")
     end
 
-    # TODO: change this so you can warmstart continuous problems?
+    # Provide a primal solution to the solve, if the problem is integer
+    # and the user has provided one.
+    # TODO: change this so you can warm start continuous problems?
     if traits.int && !all(isnan(m.colVal))
         if applicable(MathProgBase.setwarmstart!, m.internalModel, m.colVal)
             MathProgBase.setwarmstart!(m.internalModel, m.colVal)
@@ -251,9 +281,12 @@ function buildInternalModel(m::Model, traits=ProblemTraits(m); suppress_warnings
         end
     end
 
+    # Some solvers need to have an explicit "update" phase, e.g. Gurobi
     if applicable(MathProgBase.updatemodel!, m.internalModel)
         MathProgBase.updatemodel!(m.internalModel)
     end
+
+    # Record that we have a MPB model constructed
     m.internalModelLoaded = true
     nothing
 end
