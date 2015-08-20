@@ -502,6 +502,9 @@ include("quadexpr.jl")
 # GenericSOCConstraint, SOCConstraint
 include("norms.jl")
 
+##########################################################################
+# SOSConstraint  (special ordered set constraints)
+include("sos.jl")
 
 ##########################################################################
 # Generic constraint type with lower and upper bound
@@ -565,67 +568,6 @@ addVectorizedConstraint(m::Model, v::Array{LinearConstraint}) = map(c->addConstr
 function Base.copy(c::LinearConstraint, new_model::Model)
     return LinearConstraint(copy(c.terms, new_model), c.lb, c.ub)
 end
-
-##########################################################################
-# SOSConstraint class
-# An SOS constraint.
-type SOSConstraint <: JuMPConstraint
-    terms::Vector{Variable}
-    weights::Vector{Float64}
-    sostype::Symbol
-end
-
-function constructSOS(m::Model, coll::Vector{AffExpr})
-    nvar = length(coll)
-    vars = Array(Variable, nvar)
-    weight = Array(Float64, nvar)
-    for i in 1:length(coll)
-        if (length(coll[i].vars) != 1) || (coll[i].constant != 0)
-            error("Must specify collection in terms of single variables")
-        end
-        vars[i] = coll[i].vars[1]
-        vars[i].m == m || error("Variable in constraint is not owned by the model")
-        weight[i] = coll[i].coeffs[1]
-    end
-    return vars, weight
-end
-
-addSOS1(m::Model, coll) = addSOS1(m, convert(Vector{AffExpr}, coll))
-
-function addSOS1(m::Model, coll::Vector{AffExpr})
-    vars, weight = constructSOS(m,coll)
-    push!(m.sosconstr, SOSConstraint(vars, weight, :SOS1))
-    if m.internalModelLoaded
-        idx = Int[v.col for v in vars]
-        if applicable(MathProgBase.addsos1!, m.internalModel, idx, weight)
-            MathProgBase.addsos1!(m.internalModel, idx, weight)
-        else
-            Base.warn_once("Solver does not appear to support adding constraints to an existing model. Hot-start is disabled.")
-            m.internalModelLoaded = false
-        end
-    end
-    return ConstraintRef{SOSConstraint}(m,length(m.sosconstr))
-end
-
-addSOS2(m::Model, coll) = addSOS2(m, convert(Vector{AffExpr}, coll))
-
-function addSOS2(m::Model, coll::Vector{AffExpr})
-    vars, weight = constructSOS(m,coll)
-    push!(m.sosconstr, SOSConstraint(vars, weight, :SOS2))
-    if m.internalModelLoaded
-        idx = Int[v.col for v in vars]
-        if applicable(MathProgBase.addsos2!, m.internalModel, idx, weight)
-            MathProgBase.addsos2!(m.internalModel, idx, weight)
-        else
-            Base.warn_once("Solver does not appear to support adding constraints to an existing model. Hot-start is disabled.")
-            m.internalModelLoaded = false
-        end
-    end
-    return ConstraintRef{SOSConstraint}(m,length(m.sosconstr))
-end
-
-Base.copy(sos::SOSConstraint, new_model::Model) =
-    SOSConstraint([Variable(new_model,v.col) for v in sos.terms], copy(sos.weights), sos.sostype)
 
 
 ##########################################################################
