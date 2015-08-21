@@ -293,13 +293,21 @@ end
 
 
 function addQuadratics(m::Model)
-
+    # The objective function is always a quadratic expression, but
+    # may have no quadratic terms (i.e. be just affine)
     if length(m.obj.qvars1) != 0
+        # Check all coefficients not NaN/Inf
         assert_isfinite(m.obj)
-        verify_ownership(m, m.obj.qvars1)
-        verify_ownership(m, m.obj.qvars2)
+        # Check that quadratic term variables belong to this model
+        # Affine portion is checked in prepProblemBounds
+        if !(verify_ownership(m, m.obj.qvars1) &&
+                verify_ownership(m, m.obj.qvars2))
+            error("Variable not owned by model present in objective")
+        end
         # Check for solver support for quadratic objectives happens in MPB
-        MathProgBase.setquadobjterms!(m.internalModel, Cint[v.col for v in m.obj.qvars1], Cint[v.col for v in m.obj.qvars2], m.obj.qcoeffs)
+        MathProgBase.setquadobjterms!(m.internalModel,
+            Cint[v.col for v in m.obj.qvars1],
+            Cint[v.col for v in m.obj.qvars2], m.obj.qcoeffs)
     end
 
     # Add quadratic constraint to solver

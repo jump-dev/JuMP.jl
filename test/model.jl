@@ -414,15 +414,24 @@ end
 
 
 facts("[model] Test variable/model 'hygiene'") do
-    modA = Model()
-    modB = Model()
-    @defVar(modA, x)
-    @defVar(modB, y)
+context("Linear constraint") do
+    modA = Model(); @defVar(modA, x)
+    modB = Model(); @defVar(modB, y)
     @addConstraint(modA, x+y == 1)
     @fact_throws solve(modA)
-
+end
+context("Quadratic constraint") do
+    modA = Model(); @defVar(modA, x)
+    modB = Model(); @defVar(modB, y)
     @addConstraint(modB, x*y >= 1)
     @fact_throws solve(modB)
+end
+context("Quadratic objective") do
+    modA = Model(); @defVar(modA, x)
+    modB = Model(); @defVar(modB, y)
+    @setObjective(modB, Min, x*y)
+    @fact_throws solve(modB)
+end
 end
 
 facts("[model] Test NaN checking") do
