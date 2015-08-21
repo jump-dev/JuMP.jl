@@ -364,29 +364,31 @@ function addSOS(m::Model)
     end
 end
 
-# prepare objective, constraint matrix, and row bounds
+# Returns coefficients for the affine part of the objective and the
+# affine constraint lower and upper bounds, all as dense vectors
 function prepProblemBounds(m::Model)
 
-    objaff::AffExpr = m.obj.aff
-    assert_isfinite(objaff)
-    verify_ownership(m, objaff.vars)
-
-    # We already have dense column lower and upper bounds
-
     # Create dense objective vector
+    objaff::AffExpr = m.obj.aff
+    # Check that no coefficients are NaN/Inf
+    assert_isfinite(objaff)
+    if !verify_ownership(m, objaff.vars)
+        error("Variable not owned by model present in objective")
+    end
     f = zeros(m.numCols)
-    for ind in 1:length(objaff.vars)
+    @inbounds for ind in 1:length(objaff.vars)
         f[objaff.vars[ind].col] += objaff.coeffs[ind]
     end
-
-    # Create row bounds
+    
+    # Create dense affine constraint bound vectors
     linconstr = m.linconstr::Vector{LinearConstraint}
     numRows = length(linconstr)
+    # -Inf means no lower bound, +Inf means no upper bound
     rowlb = fill(-Inf, numRows)
     rowub = fill(+Inf, numRows)
-    for c in 1:numRows
-        rowlb[c] = linconstr[c].lb
-        rowub[c] = linconstr[c].ub
+    @inbounds for ind in 1:numRows
+        rowlb[ind] = linconstr[ind].lb
+        rowub[ind] = linconstr[ind].ub
     end
 
     return f, rowlb, rowub

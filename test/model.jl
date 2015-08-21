@@ -424,6 +424,12 @@ context("Linear constraint") do
     @addConstraint(modA, x+y == 1)
     @fact_throws solve(modA)
 end
+context("Linear objective") do
+    modA = Model(); @defVar(modA, 0 <= x <= 1)
+    modB = Model(); @defVar(modB, 0 <= y <= 1)
+    @setObjective(modA, Min, x + y)
+    @fact_throws solve(modA)
+end
 context("Quadratic constraint") do
     modA = Model(); @defVar(modA, x)
     modB = Model(); @defVar(modB, y)
