@@ -154,7 +154,6 @@ function solve(m::Model; suppress_warnings=false,
     # reporting it to the user
     if traits.conic && m.objSense == :Max
         m.objVal *= -1
-        scale!(m.linconstrDuals, -1)
     end
 
     # If the solver was initially not set, we will restore this status
