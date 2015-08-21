@@ -672,9 +672,9 @@ function buildInternalModel(m::Model, traits=problemclass(m); suppress_warnings=
 
             MathProgBase.loadproblem!(m.internalModel, A, m.colLower, m.colUpper, f, rowlb, rowub, m.objSense)
             addQuadratics(m)
+            addSOS(m)
         end
 
-        addSOS(m)
         registercallbacks(m)
     end
 
