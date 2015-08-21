@@ -290,9 +290,6 @@ end
 
 __addToExpression__(ex, c, x) = ex + c*x
 
-_lift(x::OneIndexedArray) = x.innerArray
-_lift(x) = x
-
 # Internal method to determine size of c*x. Do dimension checking elsewhere.
 _sz(c::JuMPScalars, x::JuMPScalars) = ()
 _sz(c::JuMPScalars, x::AbstractArray) = size(x)
@@ -300,8 +297,7 @@ _sz(c::AbstractArray, x::JuMPScalars) = size(c)
 _sz(c::AbstractArray, x::AbstractMatrix) = size(c,1), size(x,2)
 _sz(c::AbstractMatrix, x::AbstractVector) = size(c,1)
 
-function addToExpression(_aff, _c, _x)
-    aff, c, x = _lift(_aff), _lift(_c), _lift(_x)
+function addToExpression(aff, c, x)
     if !isa(aff,AbstractArray) && (isa(c,AbstractArray) || isa(x,AbstractArray))
         T = typeof(one(eltype(aff)) + one(eltype(c)) * one(eltype(x)))
         lhs = Array(T, _sz(c,x))

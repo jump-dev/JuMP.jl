@@ -65,7 +65,7 @@ facts("[print] JuMPContainer{Variable}") do
     #------------------------------------------------------------------
     # Test index set printing
     context("index set printing") do
-    @defVar(m, rng_unit1[1:10])  # OneIndexedArray
+    @defVar(m, rng_unit1[1:10])  # Array{Variable}
     @defVar(m, rng_unit2[-2:3])  # JuMPArray
     @defVar(m, rng_unit3[[1:10;]])  # JuMPDict
     @defVar(m, rng_step1[1:2:10])
@@ -156,8 +156,11 @@ facts("[print] JuMPContainer{Variable}") do
     context("issue testing") do
     # Empty JuMPContainer printing (#124)
     @defVar(m, empty_free[1:0])
-    io_test(REPLMode, empty_free, "empty_free (no indices)")
-    io_test(IJuliaMode, empty_free, "empty_free (no indices)")
+    io_test(REPLMode, empty_free, "Empty Array{Variable} (no indices)")
+    io_test(IJuliaMode, empty_free, "Empty Array{Variable} (no indices)")
+    @defVar(m, empty_set[[]])
+    io_test(REPLMode, empty_set, "empty_set (no indices)")
+    io_test(IJuliaMode, empty_set, "empty_set (no indices)")
     end
 end
 

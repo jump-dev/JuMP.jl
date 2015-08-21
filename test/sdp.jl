@@ -155,7 +155,7 @@ context("With solver $(typeof(solver))") do
     XX, yy = getValue(X), getValue(y)
     @fact ispsd(XX) --> true
     @fact (yy[0] >= 0) --> true
-    @fact (yy[1]^2 + yy[2]^2 <= yy[0]^2 + 1e-5) --> true
+    @fact (yy[1]^2 + yy[2]^2 <= yy[0]^2 + 1e-4) --> true
     @fact ispsd(eye(2)-XX) --> true
     @fact ((XX[1,1] + XX[1,2]) - (yy[1] + yy[2])) --> roughly(0,1e-4)
     @fact norm(XX - eye(2)) --> roughly(0, 1e-4)
@@ -406,7 +406,7 @@ context("With solver $(typeof(solver))") do
         @addConstraint(m, L2 .== (Σ-Σhat))
         @addConstraint(m, sum{L2[i,j]^2, i=1:d, j=1:d} <= t2^2)
         @addConstraint(m, t2 <= Γ2(𝛿/2,N))
-        
+
         A = [(1-ɛ)/ɛ (u-μ)';
              (u-μ)     Σ   ]
         @addSDPConstraint(m, A >= 0)

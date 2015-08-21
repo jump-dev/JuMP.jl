@@ -76,6 +76,9 @@ type Model
     colUpper::Vector{Float64}
     colCat::Vector{Symbol}
 
+    # Variable cones of the form, e.g. (:SDP, 1:9)
+    varCones::Vector{@compat Tuple{Symbol,Any}}
+
     # Solution data
     objVal
     colVal::Vector{Float64}
@@ -107,6 +110,7 @@ type Model
     nlpdata#::NLPData
 
     varDict::Dict{Symbol,Any} # dictionary from variable names to variable objects
+    varData::ObjectIdDict
 
     getvalue_counter::Int # number of times we call getValue on a JuMPContainer, so that we can print out a warning
     operator_counter::Int # number of times we add large expressions
@@ -127,36 +131,38 @@ function Model(;solver=UnsetSolver())
     if !isa(solver,MathProgBase.AbstractMathProgSolver)
         error("solver argument ($solver) must be an AbstractMathProgSolver")
     end
-    Model(zero(QuadExpr),           # obj
-          :Min,                     # objSense
-          LinearConstraint[],       # linconstr
-          QuadConstraint[],         # quadconstr
-          SOSConstraint[],          # sosconstr
-          SOCConstraint[],          # socconstr
-          SDPConstraint[],          # sdpconstr
-          0,                        # numCols
-          UTF8String[],             # colNames
-          UTF8String[],             # colNamesIJulia
-          Float64[],                # colLower
-          Float64[],                # colUpper
-          Symbol[],                 # colCat
-          0,                         # objVal
-          Float64[],                # colVal
-          Float64[],                # redCosts
-          Float64[],                # linconstrDuals
-          nothing,                  # internalModel
-          solver,                   # solver
-          false,                    # internalModelLoaded
-          Any[],                    # callbacks
-          nothing,                  # solvehook
-          nothing,                  # printhook
-          JuMPContainer[],          # dictList
-          IndexedVector(Float64,0), # indexedVector
-          nothing,                  # nlpdata
-          Dict{Symbol,Any}(),       # varDict
-          0,                        # getvalue_counter
-          0,                        # operator_counter
-          Dict{Symbol,Any}(),       # ext
+    Model(zero(QuadExpr),              # obj
+          :Min,                        # objSense
+          LinearConstraint[],          # linconstr
+          QuadConstraint[],            # quadconstr
+          SOSConstraint[],             # sosconstr
+          SOCConstraint[],             # socconstr
+          SDPConstraint[],             # sdpconstr
+          0,                           # numCols
+          UTF8String[],                # colNames
+          UTF8String[],                # colNamesIJulia
+          Float64[],                   # colLower
+          Float64[],                   # colUpper
+          Symbol[],                    # colCat
+          Vector{@compat Tuple{Symbol,Any}}[], # varCones
+          0,                           # objVal
+          Float64[],                   # colVal
+          Float64[],                   # redCosts
+          Float64[],                   # linconstrDuals
+          nothing,                     # internalModel
+          solver,                      # solver
+          false,                       # internalModelLoaded
+          Any[],                       # callbacks
+          nothing,                     # solvehook
+          nothing,                     # printhook
+          Any[],                       # dictList
+          IndexedVector(Float64,0),    # indexedVector
+          nothing,                     # nlpdata
+          Dict{Symbol,Any}(),          # varDict
+          ObjectIdDict(),              # varData
+          0,                           # getvalue_counter
+          0,                           # operator_counter
+          Dict{Symbol,Any}(),          # ext
     )
 end
 
@@ -236,6 +242,9 @@ function Base.copy(source::Model)
     dest.colUpper = source.colUpper[:]
     dest.colCat = source.colCat[:]
 
+    # varCones
+    dest.varCones = copy(source.varCones)
+
     # callbacks and hooks
     if !isempty(source.callbacks)
         error("Copying callbacks is not supported")
@@ -255,7 +264,8 @@ function Base.copy(source::Model)
     for (symb,v) in source.varDict
         dest.varDict[symb] = copy(v, dest)
     end
-    dest.dictList = map(v -> copy(v, dest), source.dictList)
+
+    # varData---possibly shouldn't copy
 
     if source.nlpdata !== nothing
         dest.nlpdata = copy(source.nlpdata)
@@ -357,7 +367,30 @@ function getValue(v::Variable)
     ret
 end
 
-getValue(arr::Array{Variable}) = map(getValue, arr)
+function getValue(arr::Array{Variable})
+    ret = similar(arr, Float64)
+    if isempty(ret)
+        return ret
+    end
+    warnedyet = false
+    m = first(arr).m
+    # whether this was constructed via @defVar, essentially
+    registered = haskey(m.varData, arr)
+    name = registered ? m.varData[arr].name : m.colName[v.col]
+    for I in eachindex(arr)
+        v = arr[I]
+        value = _getValue(v)
+        ret[I] = value
+        if !warnedyet && isnan(value)
+            Base.warn("Variable value not defined for $name. Check that the model was properly solved.")
+            warnedyet = true
+        end
+    end
+    if registered
+        m.varData[ret] = m.varData[arr]
+    end
+    ret
+end
 
 # Dual value (reduced cost) getter
 function getDual(v::Variable)
@@ -389,19 +422,17 @@ function verify_ownership(m::Model, vec::Vector{Variable})
 end
 
 Base.copy(v::Variable, new_model::Model) = Variable(new_model, v.col)
+function Base.copy(v::Array{Variable}, new_model::Model)
+    ret = similar(v, Variable, size(v))
+    for I in eachindex(v)
+        ret[I] = Variable(new_model, v[I].col)
+    end
+    ret
+end
 
 # Copy methods for variable containers
 Base.copy(d::JuMPContainer) = map(copy, d)
 Base.copy(d::JuMPContainer, new_model::Model) = map(x -> copy(x, new_model), d)
-Base.copy{T<:OneIndexedArray}(d::T) = T(map(copy, d.innerArray),
-                                       d.name,
-                                       d.indexsets,
-                                       d.indexexprs)
-Base.copy{T<:OneIndexedArray}(d::T, new_model::Model) =
-    T(map(v -> copy(v, new_model), d.innerArray),
-      d.name,
-      d.indexsets,
-      d.indexexprs)
 
 ###############################################################################
 # Generic affine expression class
@@ -465,7 +496,9 @@ end
 typealias AffExpr GenericAffExpr{Float64,Variable}
 
 AffExpr() = zero(AffExpr)
+# TODO: remove these when no longer supporting v0.3
 AffExpr(x::Union(Number,Variable)) = convert(AffExpr, x)
+AffExpr(x::AffExpr) = x
 
 Base.isempty(a::AffExpr) = (length(a.vars) == 0 && a.constant == 0.)
 Base.convert(::Type{AffExpr}, v::Variable) = AffExpr([v], [1.], 0.)
@@ -582,11 +615,11 @@ end
 # scalars, and Xᵢ are n×n symmetric variable matrices. The inequality
 # is taken w.r.t. the psd partial order.
 type SDPConstraint <: JuMPConstraint
-    terms # purposely leave this untyped so that we can special-case OneIndexedArray with no additional variables
+    terms
 end
 
 # Special-case X ≥ 0, which is often convenient
-function SDPConstraint(lhs::Union(OneIndexedArray,Matrix), rhs::Number)
+function SDPConstraint(lhs::Matrix, rhs::Number)
     rhs == 0 || error("Cannot construct a semidefinite constraint with nonzero scalar bound $rhs")
     SDPConstraint(lhs)
 end
@@ -753,11 +786,6 @@ Base.ndims(::JuMPTypes) = 0
 ##########################################################################
 # Operator overloads
 include("operators.jl")
-if VERSION > v"0.4-"
-    include(joinpath("v0.4","concatenation.jl"))
-else
-    include(joinpath("v0.3","concatenation.jl"))
-end
 # Writers - we support MPS (MILP + QuadObj), LP (MILP)
 include("writers.jl")
 # Macros - @defVar, sum{}, etc.

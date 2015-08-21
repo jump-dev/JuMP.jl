@@ -596,15 +596,13 @@ function getValue(x::Union(ReverseDiffSparse.ParametricExpressionWithParams,Reve
     found = false
     m = nothing
     for item in ReverseDiffSparse.expression_data(x)
-        if isa(item, JuMPDict{Variable})
-            var = first(values(item.tupledict))
-            m = var.m
+        if isa(item, JuMPContainer)
             found = true
+            m = getmeta(item, :model)
             break
-        elseif isa(item, JuMPArray{Variable})
-            m = item.innerArray[1].m
+        elseif isa(item, Array{Variable}) && !isempty(item)
             found = true
-            break
+            m = first(item).m
         elseif isa(item, Variable)
             found = true
             m = item.m
