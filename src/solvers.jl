@@ -290,12 +290,13 @@ function buildInternalModel(m::Model, traits=ProblemTraits(m);
     nothing
 end
 
-
+# Add the quadratic part of the objective and all quadratic constraints
+# to the internal MPB model
 function addQuadratics(m::Model)
     # The objective function is always a quadratic expression, but
     # may have no quadratic terms (i.e. be just affine)
     if length(m.obj.qvars1) != 0
-        # Check all coefficients not NaN/Inf
+        # Check that no coefficients are NaN/Inf
         assert_isfinite(m.obj)
         # Check that quadratic term variables belong to this model
         # Affine portion is checked in prepProblemBounds
@@ -319,17 +320,23 @@ function addQuadratics(m::Model)
         s = sensemap[qconstr.sense]
 
         terms::QuadExpr = qconstr.terms
+        # Check that no coefficients are NaN/Inf
         assert_isfinite(terms)
+        # Check that quadratic and affine term variables belong to this model
         if !(verify_ownership(m, terms.qvars1) &&
                 verify_ownership(m, terms.qvars2) &&
                 verify_ownership(m, terms.aff.vars))
             error("Variable not owned by model present in quadratic constraint")
         end
-        affidx  = Cint[v.col for v in qconstr.terms.aff.vars]
-        var1idx = Cint[v.col for v in qconstr.terms.qvars1]
-        var2idx = Cint[v.col for v in qconstr.terms.qvars2]
-        if applicable(MathProgBase.addquadconstr!, m.internalModel, affidx, qconstr.terms.aff.coeffs, var1idx, var2idx, qconstr.terms.qcoeffs, s, -qconstr.terms.aff.constant)
-            MathProgBase.addquadconstr!(m.internalModel, affidx, qconstr.terms.aff.coeffs, var1idx, var2idx, qconstr.terms.qcoeffs, s, -qconstr.terms.aff.constant)
+        # Extract indices for MPB, and add the constraint (if we can)
+        affidx  = Cint[v.col for v in terms.aff.vars]
+        var1idx = Cint[v.col for v in terms.qvars1]
+        var2idx = Cint[v.col for v in terms.qvars2]
+        if applicable(MathProgBase.addquadconstr!, m.internalModel, affidx, terms.aff.coeffs, var1idx, var2idx, terms.qcoeffs, s, -terms.aff.constant)
+            MathProgBase.addquadconstr!(m.internalModel,
+                affidx, terms.aff.coeffs,           # aᵀx +
+                var1idx, var2idx, terms.qcoeffs,    # xᵀQx
+                s, -terms.aff.constant)             # ≤/≥ b
         else
             error("Solver does not support quadratic constraints")
         end
