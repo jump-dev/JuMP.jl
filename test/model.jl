@@ -12,6 +12,10 @@
 # Must be run as part of runtests.jl, as it needs a list of solvers.
 #############################################################################
 using JuMP, FactCheck
+using Compat
+
+# If solvers not loaded, load them (i.e running just these tests)
+!isdefined(:lp_solvers) && include("solvers.jl")
 
 # To ensure the tests work on Windows and Linux/OSX, we need
 # to use the correct comparison operators
@@ -424,6 +428,12 @@ context("Quadratic constraint") do
     modA = Model(); @defVar(modA, x)
     modB = Model(); @defVar(modB, y)
     @addConstraint(modB, x*y >= 1)
+    @fact_throws solve(modB)
+end
+context("Affine in quadratic constraint") do
+    modA = Model(); @defVar(modA, x)
+    modB = Model(); @defVar(modB, y)
+    @addConstraint(modB, y*y + x + y <= 1)
     @fact_throws solve(modB)
 end
 context("Quadratic objective") do

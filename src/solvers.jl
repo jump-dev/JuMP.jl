@@ -320,10 +320,10 @@ function addQuadratics(m::Model)
 
         terms::QuadExpr = qconstr.terms
         assert_isfinite(terms)
-        for ind in 1:length(terms.qvars1)
-            if (terms.qvars1[ind].m !== m) || (terms.qvars2[ind].m !== m)
-                error("Variable not owned by model present in constraints")
-            end
+        if !(verify_ownership(m, terms.qvars1) &&
+                verify_ownership(m, terms.qvars2) &&
+                verify_ownership(m, terms.aff.vars))
+            error("Variable not owned by model present in quadratic constraint")
         end
         affidx  = Cint[v.col for v in qconstr.terms.aff.vars]
         var1idx = Cint[v.col for v in qconstr.terms.qvars1]
