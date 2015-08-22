@@ -25,7 +25,7 @@ end
 
 
 facts("[print] JuMPContainer{Variable}") do
-    le, ge = JuMP.repl_leq, JuMP.repl_geq
+    le, ge = JuMP.repl[:leq], JuMP.repl[:geq]
     m = Model()
 
     #------------------------------------------------------------------
@@ -297,7 +297,7 @@ end
 
 
 facts("[print] Model") do
-    le, ge = JuMP.repl_leq, JuMP.repl_geq
+    le, ge = JuMP.repl[:leq], JuMP.repl[:geq]
 
     #------------------------------------------------------------------
 
@@ -417,7 +417,7 @@ Solver set to Default""", repl=:show)
 end
 
 facts("[print] changing variable categories") do
-    le, ge = JuMP.repl_leq, JuMP.repl_geq
+    le, ge = JuMP.repl[:leq], JuMP.repl[:geq]
     mod = Model()
     @defVar(mod, x[1:3])
     @defVar(mod, y[i=1:3,i:3])
@@ -460,7 +460,7 @@ end
 facts("[print] expressions") do
     # Most of the expression logic is well covered by test/operator.jl
     # This is really just to check IJulia printing for expressions
-    le, ge = JuMP.repl_leq, JuMP.repl_geq
+    le, ge = JuMP.repl[:leq], JuMP.repl[:geq]
 
     #------------------------------------------------------------------
     mod = Model()

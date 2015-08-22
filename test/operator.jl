@@ -14,9 +14,9 @@ using JuMP, FactCheck
 
 # To ensure the tests work on both Windows and Linux/OSX, we need
 # to use the correct comparison operators in the strings
-const leq = JuMP.repl_leq
-const geq = JuMP.repl_geq
-const  eq = JuMP.repl_eq
+const leq = JuMP.repl[:leq]
+const geq = JuMP.repl[:geq]
+const  eq = JuMP.repl[:eq]
 
 facts("[operator] Testing basic operator overloads") do
     m = Model()

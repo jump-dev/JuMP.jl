@@ -41,47 +41,51 @@ function str_round(f::Float64)
 end
 
 # REPL-specific symbols
-const repl_leq = @windows? "<=" : "≤"
-const repl_geq = @windows? ">=" : "≥"
-const repl_eq  = @windows? "==" : "="
-const repl_times = "*"
-const repl_sq    = "\u00B2"  # Superscript 2
-const repl_ind_open  = "["
-const repl_ind_close = "]"
-const repl_for_all   = "for all"
-const repl_in        = "in"
-const repl_open_set  = "{"
-const repl_mid_set   = ".."
-const repl_close_set = "}"
-const repl_union     = "or"
-const repl_infty     = "Inf"
-const repl_open_rng  = "["
-const repl_close_rng = "]"
-const repl_integer   = "integer"
-const repl_succeq0   = " is semidefinite"
+const repl = @compat Dict{Symbol,UTF8String}(
+    :leq        => (OS_NAME===:Windows ? "<=" : "≤"),
+    :geq        => (OS_NAME===:Windows ? ">=" : "≥"),
+    :eq         => (OS_NAME===:Windows ? "==" : "="),
+    :times      => "*",
+    :sq         => "\u00B2",  # Superscript 2
+    :ind_open   => "[",
+    :ind_close  => "]",
+    :for_all    => "for all",
+    :in         => "in",
+    :open_set   => "{",
+    :mid_set    => "..",
+    :close_set  => "}",
+    :union      => "or",
+    :infty      => "Inf",
+    :open_rng   => "[",
+    :close_rng  => "]",
+    :integer    => "integer",
+    :succeq0    => " is semidefinite")
 
 # IJulia-specific symbols
-const ijulia_leq        = "\\leq"
-const ijulia_geq        = "\\geq"
-const ijulia_eq         = "="
-const ijulia_times      = "\\times"
-const ijulia_sq         = "^2"
-const ijulia_ind_open   = "_{"
-const ijulia_ind_close  = "}"
-const ijulia_for_all    = "\\quad\\forall"
-const ijulia_in         = "\\in"
-const ijulia_open_set   = "\\{"
-const ijulia_mid_set    = ",\\dots,"
-const ijulia_close_set  = "\\}"
-const ijulia_union      = "\\cup"
-const ijulia_infty      = "\\intfy"
-const ijulia_open_rng  = "\\["
-const ijulia_close_rng = "\\]"
-const ijulia_integer   = "\\in \\mathbb{Z}"
-const ijulia_succeq0   = "\\succeq 0"
+const ijulia = @compat Dict{Symbol,UTF8String}(
+    :leq        => "\\leq",
+    :geq        => "\\geq",
+    :eq         => "=",
+    :times      => "\\times",
+    :sq         => "^2",
+    :ind_open   => "_{",
+    :ind_close  => "}",
+    :for_all    => "\\quad\\forall",
+    :in         => "\\in",
+    :open_set   => "\\{",
+    :mid_set    => ",\\dots,",
+    :close_set  => "\\}",
+    :union      => "\\cup",
+    :infty      => "\\intfy",
+    :open_rng   => "\\[",
+    :close_rng  => "\\]",
+    :integer    => "\\in \\mathbb{Z}",
+    :succeq0    => "\\succeq 0")
 
 const sqrt = "√"
 const pow_two = "²"
+
+typealias PrintSymbols Dict{Symbol,UTF8String}
 
 # If not already mathmode, then wrap in MathJax start/close tags
 math(s,mathmode) = mathmode ? s : "\$\$ $s \$\$"
@@ -137,14 +141,11 @@ function Base.show(io::IO, m::Model)
 end
 Base.writemime(io::IO, ::MIME"text/latex", m::Model) =
     print(io, model_str(IJuliaMode,m))
-function model_str(mode, m::Model, leq, geq, in_set,
-                            open_set, mid_set, close_set, union, infty,
-                            open_rng, close_rng, integer)
+function model_str(mode, m::Model, sym::PrintSymbols)
     ijl = mode == IJuliaMode
     sep = ijl ? " & " : " "
     eol = ijl ? "\\\\\n" : "\n"
     nlp = m.nlpdata
-
 
     # Objective
     qobj_str = quad_str(mode, m.obj)
@@ -203,24 +204,41 @@ function model_str(mode, m::Model, leq, geq, in_set,
         str_lb, str_ub = str_round(var_lb), str_round(var_ub)
         var_cat = m.colCat[i]
         if var_cat == :Bin  # x binary
-            str *= sep * "$var_name $in_set $(open_set)0,1$close_set"
+            str *= string(sep, var_name,
+                            " ", sym[:in],
+                            " ", sym[:open_set],
+                            "0,1", sym[:close_set])
         elseif var_cat == :SemiInt  # x in union of 0 and {lb,...,ub}
-            str *= sep * "$var_name $in_set $open_set$str_lb$mid_set$str_ub$close_set $union $(open_set)0$close_set"
+            str *= string(sep, var_name,
+                            " ", sym[:in],
+                            " ", sym[:open_set],
+                            str_lb, sym[:mid_set], str_ub,
+                            sym[:close_set],
+                            " ", sym[:union], " ",
+                            sym[:open_set], "0", sym[:close_set])
         elseif var_cat == :SemiCont  # x in union of 0 and [lb,ub]
-            str *= sep * "$var_name $in_set $open_rng$str_lb,$str_ub$close_rng $union $(open_set)0$close_set"
+            str *= string(sep, var_name,
+                            " ", sym[:in],
+                            " ", sym[:open_rng],
+                            str_lb, ",", str_ub,
+                            sym[:close_rng],
+                            " ", sym[:union], " ",
+                            sym[:open_set], "0", sym[:close_set])
         elseif var_cat == :Fixed
-            str *= sep * "$var_name = $str_lb"
+            str *= string(sep, var_name, " = ", str_lb)
         elseif var_lb == -Inf && var_ub == +Inf # Free variable
-            str *= sep * "$var_name free"
+            str *= string(sep, var_name, " free")
         elseif var_lb == -Inf  # No lower bound
-            str *= sep * "$var_name $leq $str_ub"
+            str *= string(sep, var_name, " ", sym[:leq], " ", str_ub)
         elseif var_ub == +Inf  # No upper bound
-            str *= sep * "$var_name $geq $str_lb"
+            str *= string(sep, var_name, " ", sym[:geq], " ", str_lb)
         else
-            str *= sep * "$str_lb $leq $var_name $leq $str_ub"
+            str *= string(sep, str_lb, " ", sym[:leq],
+                            " ", var_name, " ",
+                            sym[:leq], " ", str_ub)
         end
         if var_cat == :Int
-            str *= ", $integer"
+            str *= string(", ", sym[:integer])
         end
         str *= eol
     end
@@ -231,15 +249,9 @@ end
 
 # Handlers to use correct symbols
 model_str(::Type{REPLMode}, m::Model) =
-    model_str(REPLMode, m, repl_leq, repl_geq, repl_in,
-                        repl_open_set, repl_mid_set, repl_close_set,
-                        repl_union, repl_infty, repl_open_rng, repl_close_rng,
-                        repl_integer)
+    model_str(REPLMode, m, repl)
 model_str(::Type{IJuliaMode}, m::Model; mathmode=true) =
-    math(model_str(IJuliaMode, m, ijulia_leq, ijulia_geq, ijulia_in,
-                        ijulia_open_set, ijulia_mid_set, ijulia_close_set,
-                        ijulia_union, ijulia_infty, ijulia_open_rng, ijulia_close_rng,
-                        ijulia_integer), mathmode)
+    math(model_str(IJuliaMode, m, ijulia), mathmode)
 
 
 #------------------------------------------------------------------------
@@ -249,14 +261,14 @@ Base.print(io::IO, v::Variable) = print(io, var_str(REPLMode,v))
 Base.show( io::IO, v::Variable) = print(io, var_str(REPLMode,v))
 Base.writemime(io::IO, ::MIME"text/latex", v::Variable) =
     print(io, var_str(IJuliaMode,v,mathmode=false))
-function var_str(mode, m::Model, col::Int, ind_open, ind_close)
+function var_str(mode, m::Model, col::Int; mathmode=true)
     colNames = mode == REPLMode ? m.colNames : m.colNamesIJulia
     if colNames[col] == ""
         for cont in m.dictList
             fill_var_names(mode, colNames, cont)
         end
     end
-    return colNames[col] == "" ? "col_$col" : colNames[col]
+    return math(colNames[col] == "" ? "col_$col" : colNames[col], mathmode)
 end
 function fill_var_names(mode, colNames, v::JuMPArray{Variable})
     idxsets = v.indexsets
@@ -293,13 +305,9 @@ var_str(::Type{REPLMode}, v::Variable) =
 var_str(::Type{IJuliaMode}, v::Variable; mathmode=true) =
     var_str(IJuliaMode, v.m, v.col, mathmode=mathmode)
 
-var_str(::Type{REPLMode}, m::Model, col::Int) =
-    var_str(REPLMode, m, col, repl_ind_open, repl_ind_close)
-var_str(::Type{IJuliaMode}, m::Model, col::Int; mathmode=true) =
-    math(var_str(IJuliaMode, m, col, ijulia_ind_open, ijulia_ind_close), mathmode)
-
 #------------------------------------------------------------------------
 ## Norm
+#------------------------------------------------------------------------
 Base.print(io::IO, j::Norm) = print(io, norm_str(REPLMode,j))
 Base.show( io::IO, j::Norm) = print(io, norm_str(REPLMode,j))
 Base.writemime(io::IO, ::MIME"text/latex", j::Norm) =
@@ -320,7 +328,6 @@ end
 
 exprToStr(n::Norm) = exprToStr(convert(SOCExpr, copy(n)))
 
-#------------------------------------------------------------------------
 
 #------------------------------------------------------------------------
 ## JuMPContainer{Variable}
@@ -330,10 +337,7 @@ Base.show( io::IO, j::JuMPContainer{Variable}) = print(io, cont_str(REPLMode,j))
 Base.writemime(io::IO, ::MIME"text/latex", j::JuMPContainer{Variable}) =
     print(io, cont_str(IJuliaMode,j,mathmode=false))
 # Generic string converter, called by mode-specific handlers
-function cont_str(mode, j::JuMPContainer{Variable}, leq, eq, geq,
-                            ind_open, ind_close, for_all, in_set,
-                            open_set, mid_set, close_set, union, infty,
-                            open_rng, close_rng, integer)
+function cont_str(mode, j::JuMPContainer{Variable}, sym::PrintSymbols)
     # Check if anything in the container
     isempty(j) && return string(j.name, " (no indices)")
 
@@ -363,14 +367,15 @@ function cont_str(mode, j::JuMPContainer{Variable}, leq, eq, geq,
             idxvars[i] = locvars[i]
         end
     end
-    name_idx = string(j.name, ind_open, join(idxvars,","), ind_close)
+    name_idx = string(j.name, sym[:ind_open], join(idxvars,","), sym[:ind_close])
     # 2. construct part with what we index over
-    idx_sets = for_all*" "*join(map(dim->string(idxvars[dim], " ", in_set, " ", open_set,
-                                cont_str_set(j.indexsets[dim], mid_set),
-                                close_set), 1:num_dims), ", ")
+    idx_sets = sym[:for_all]*" "*join(map(dim->string(idxvars[dim], " ", sym[:in],
+                                " ", sym[:open_set],
+                                cont_str_set(j.indexsets[dim],sym[:mid_set]),
+                                sym[:close_set]), 1:num_dims), ", ")
     # 3. Handle any conditions
     if isa(j, JuMPDict) && j.condition != :()
-       idx_sets *= " s.t. $(join(parse_conditions(j.condition), " and "))"
+       idx_sets *= string(" s.t. ",join(parse_conditions(j.condition), " and "))
     end
 
     # 4. Bounds and category, if possible, and return final string
@@ -388,44 +393,44 @@ function cont_str(mode, j::JuMPContainer{Variable}, leq, eq, geq,
         all_same_lb &= model.colLower[var.col] == var_lb
         all_same_ub &= model.colUpper[var.col] == var_ub
     end
-    str_lb = var_lb == -Inf ? "-$infty" : str_round(var_lb)
-    str_ub = var_ub == +Inf ? infty     : str_round(var_ub)
+    str_lb = var_lb == -Inf ? "-"*sym[:infty] : str_round(var_lb)
+    str_ub = var_ub == +Inf ?     sym[:infty] : str_round(var_ub)
     # Special case bounds printing based on the category
     if var_cat == :Bin  # x in {0,1}
-        return "$name_idx $in_set $(open_set)0,1$close_set $idx_sets"
+        return "$name_idx $(sym[:in]) $(sym[:open_set])0,1$(sym[:close_set]) $idx_sets"
     elseif var_cat == :SemiInt  # x in union of 0 and {lb,...,ub}
         si_lb = all_same_lb ? str_lb : ".."
         si_ub = all_same_ub ? str_ub : ".."
-        return "$name_idx $in_set $open_set$si_lb$mid_set$si_ub$close_set $union $(open_set)0$close_set $idx_sets"
+        return "$name_idx $(sym[:in]) $(sym[:open_set])$si_lb$(sym[:mid_set])$si_ub$(sym[:close_set]) $(sym[:union]) $(sym[:open_set])0$(sym[:close_set]) $idx_sets"
     elseif var_cat == :SemiCont  # x in union of 0 and [lb,ub]
         si_lb = all_same_lb ? str_lb : ".."
         si_ub = all_same_ub ? str_ub : ".."
-        return "$name_idx $in_set $open_rng$si_lb,$si_ub$close_rng $union $(open_set)0$close_set $idx_sets"
+        return "$name_idx $(sym[:in]) $(sym[:open_rng])$si_lb,$si_ub$(sym[:close_rng]) $(sym[:union]) $(sym[:open_set])0$(sym[:close_set]) $idx_sets"
     elseif var_cat == :Fixed
         si_bnd = all_same_lb ? str_lb : ".."
         return "$name_idx = $si_bnd $idx_sets"
     end
     # Continuous and Integer
-    idx_sets = var_cat == :Int ? ", $integer, $idx_sets" : " $idx_sets"
+    idx_sets = var_cat == :Int ? ", $(sym[:integer]), $idx_sets" : " $idx_sets"
     if all_same_lb && all_same_ub
         # Free variable
         var_lb == -Inf && var_ub == +Inf && return "$name_idx free$idx_sets"
         # No lower bound
-        var_lb == -Inf && return "$name_idx $leq $str_ub$idx_sets"
+        var_lb == -Inf && return "$name_idx $(sym[:leq]) $str_ub$idx_sets"
         # No upper bound
-        var_ub == +Inf && return "$name_idx $geq $str_lb$idx_sets"
+        var_ub == +Inf && return "$name_idx $(sym[:geq]) $str_lb$idx_sets"
         # Range
-        return "$str_lb $leq $name_idx $leq $str_ub$idx_sets"
+        return "$str_lb $(sym[:leq]) $name_idx $(sym[:leq]) $str_ub$idx_sets"
     end
     if all_same_lb && !all_same_ub
-        var_lb == -Inf && return "$name_idx $leq ..$idx_sets"
-        return "$str_lb $leq $name_idx $leq ..$idx_sets"
+        var_lb == -Inf && return "$name_idx $(sym[:leq]) ..$idx_sets"
+        return "$str_lb $(sym[:leq]) $name_idx $(sym[:leq]) ..$idx_sets"
     end
     if !all_same_lb && all_same_ub
-        var_ub == +Inf && return "$name_idx $geq ..$idx_sets"
-        return ".. $leq $name_idx $leq $str_ub$idx_sets"
+        var_ub == +Inf && return "$name_idx $(sym[:geq]) ..$idx_sets"
+        return ".. $(sym[:leq]) $name_idx $(sym[:leq]) $str_ub$idx_sets"
     end
-    return ".. $leq $name_idx $leq ..$idx_sets"
+    return ".. $(sym[:leq]) $name_idx $(sym[:leq]) ..$idx_sets"
 end
 # UTILITY FUNCTIONS FOR cont_str
 function cont_str_set(idxset::Union(Range,Array), mid_set)  # 2:2:20 -> {2,4..18,20}
@@ -452,13 +457,9 @@ end
 
 # Handlers to use correct symbols
 cont_str(::Type{REPLMode}, j::JuMPContainer{Variable}; mathmode=false) =
-    cont_str(REPLMode, j, repl_leq, repl_eq, repl_geq, repl_ind_open, repl_ind_close,
-                repl_for_all, repl_in, repl_open_set, repl_mid_set, repl_close_set,
-                repl_union, repl_infty, repl_open_rng, repl_close_rng, repl_integer)
+    cont_str(REPLMode, j, repl)
 cont_str(::Type{IJuliaMode}, j::JuMPContainer{Variable}; mathmode=true) =
-    math(cont_str(IJuliaMode, j, ijulia_leq, ijulia_eq, ijulia_geq, ijulia_ind_open, ijulia_ind_close,
-                ijulia_for_all, ijulia_in, ijulia_open_set, ijulia_mid_set, ijulia_close_set,
-                ijulia_union, ijulia_infty, ijulia_open_rng, ijulia_close_rng, ijulia_integer), mathmode)
+    math(cont_str(IJuliaMode, j, ijulia), mathmode)
 
 
 #------------------------------------------------------------------------
@@ -574,7 +575,7 @@ Base.show( io::IO, a::AffExpr) = print(io, aff_str(REPLMode,a))
 Base.writemime(io::IO, ::MIME"text/latex", a::AffExpr) =
     print(io, math(aff_str(IJuliaMode,a),false))
 # Generic string converter, called by mode-specific handlers
-function aff_str(mode, a::AffExpr; show_constant=true)
+function aff_str(mode, a::AffExpr, show_constant=true)
     # If the expression is empty, return the constant (or 0)
     if length(a.vars) == 0
         return show_constant ? str_round(a.constant) : "0"
@@ -640,7 +641,7 @@ Base.show( io::IO, q::GenericQuadExpr) = print(io, quad_str(REPLMode,q))
 Base.writemime(io::IO, ::MIME"text/latex", q::GenericQuadExpr) =
     print(io, quad_str(IJuliaMode,q,mathmode=false))
 # Generic string converter, called by mode-specific handlers
-function quad_str(mode, q::GenericQuadExpr, times::String, sq::String)
+function quad_str(mode, q::GenericQuadExpr, sym)
     length(q.qvars1) == 0 && return aff_str(mode,q.aff)
 
     # Canonicalize x_i * x_j so i <= j
@@ -665,7 +666,7 @@ function quad_str(mode, q::GenericQuadExpr, times::String, sq::String)
             y = var_str(mode,q.qvars1[ind].m,J[ind])
 
             term_str[2*ind-1] = V[ind] < 0 ? " - " : " + "
-            term_str[2*ind  ] = "$pre$x" * (x == y ? sq : "$times$y")
+            term_str[2*ind  ] = "$pre$x" * (x == y ? sym[:sq] : "$(sym[:times])$y")
         end
         # Correction for first term as there is no space
         # between - and variable coefficient/name
@@ -689,9 +690,9 @@ end
 quadToStr(q::GenericQuadExpr) = quad_str(REPLMode,q)
 # Handlers to use correct symbols
 quad_str(::Type{REPLMode}, q::GenericQuadExpr) =
-    quad_str(REPLMode, q, repl_times, repl_sq)
+    quad_str(REPLMode, q, repl)
 quad_str(::Type{IJuliaMode}, q::GenericQuadExpr; mathmode=true) =
-    math(quad_str(IJuliaMode, q, ijulia_times, ijulia_sq), mathmode)
+    math(quad_str(IJuliaMode, q, ijulia), mathmode)
 
 #------------------------------------------------------------------------
 ## SOCExpr
@@ -727,13 +728,13 @@ Base.show( io::IO, c::GenericRangeConstraint) = print(io, con_str(REPLMode,c))
 Base.writemime(io::IO, ::MIME"text/latex", c::GenericRangeConstraint) =
     print(io, con_str(IJuliaMode,c,mathmode=false))
 # Generic string converter, called by mode-specific handlers
-function con_str(mode, c::GenericRangeConstraint, leq, eq, geq)
+function con_str(mode, c::GenericRangeConstraint, sym)
     s = sense(c)
-    a = aff_str(mode,c.terms,show_constant=false)
+    a = aff_str(mode,c.terms,false)
     if s == :range
-        out_str = "$(str_round(c.lb)) $leq $a $leq $(str_round(c.ub))"
+        out_str = "$(str_round(c.lb)) $(sym[:leq]) $a $(sym[:leq]) $(str_round(c.ub))"
     else
-        rel = s == :<= ? leq : (s == :>= ? geq : eq)
+        rel = s == :<= ? sym[:leq] : (s == :>= ? sym[:geq] : sym[:eq])
         out_str = string(a," ",rel," ",str_round(rhs(c)))
     end
     out_str
@@ -742,9 +743,9 @@ end
 conToStr(c::GenericRangeConstraint) = con_str(REPLMode,c)
 # Handlers to use correct symbols
 con_str(::Type{REPLMode}, c::GenericRangeConstraint; args...) =
-    con_str(REPLMode, c, repl_leq, repl_eq, repl_geq)
+    con_str(REPLMode, c, repl)
 con_str(::Type{IJuliaMode}, c::GenericRangeConstraint; mathmode=true) =
-    math(con_str(IJuliaMode, c, ijulia_leq, ijulia_eq, ijulia_geq), mathmode)
+    math(con_str(IJuliaMode, c, ijulia), mathmode)
 
 
 #------------------------------------------------------------------------
@@ -755,18 +756,18 @@ Base.show( io::IO, c::QuadConstraint) = print(io, con_str(REPLMode,c))
 Base.writemime(io::IO, ::MIME"text/latex", c::QuadConstraint) =
     print(io, con_str(IJuliaMode,c,mathmode=false))
 # Generic string converter, called by mode-specific handlers
-function con_str(mode, c::QuadConstraint, leq, eq, geq)
+function con_str(mode, c::QuadConstraint, sym)
     s = c.sense
-    r = (s == :<=) ? leq : (s == :>= ? geq : eq)
+    r = (s == :<=) ? sym[:leq] : (s == :>= ? sym[:geq] : sym[:eq])
     "$(quad_str(mode,c.terms)) $r 0"
 end
 # Backwards compatability shim
 conToStr(c::QuadConstraint) = con_str(REPLMode,c)
 # Handlers to use correct symbols
 con_str(::Type{REPLMode}, c::QuadConstraint; args...) =
-    con_str(REPLMode, c, repl_leq, repl_eq, repl_geq)
+    con_str(REPLMode, c, repl)
 con_str(::Type{IJuliaMode}, c::QuadConstraint; mathmode=true) =
-    math(con_str(IJuliaMode, c, ijulia_leq, ijulia_eq, ijulia_geq), mathmode)
+    math(con_str(IJuliaMode, c, ijulia), mathmode)
 
 #------------------------------------------------------------------------
 ## SOCConstraint
@@ -781,7 +782,7 @@ function con_str(mode, c::SOCConstraint)
     coeff = ne.coeff == 1 ? "" : string(ne.coeff, " ")
     nrm   = norm_str(mode, ne.norm)
     aff   = aff_str(mode, -ne.aff)
-    string(coeff, nrm, " $repl_leq ", aff)
+    string(coeff, nrm, " $(repl[:leq]) ", aff)
 end
 
 conToStr(c::SOCConstraint) = con_str(REPLMode, c)
@@ -794,16 +795,16 @@ Base.show( io::IO, c::SOSConstraint) = print(io, con_str(REPLMode,c))
 Base.writemime(io::IO, ::MIME"text/latex", c::SOSConstraint) =
     print(io, con_str(IJuliaMode,c,mathmode=false))
 # Generic string converter, called by mode-specific handlers
-function con_str(mode, c::SOSConstraint, open_set, close_set)
+function con_str(mode, c::SOSConstraint, sym)
     term_str = [string(str_round(c.weights[i]), " ", c.terms[i])
                     for i in 1:length(c.terms)]
-    "$(c.sostype): $open_set$(join(term_str,", "))$close_set"
+    "$(c.sostype): $(sym[:open_set])$(join(term_str,", "))$(sym[:close_set])"
 end
 # Handlers to use correct symbols
 con_str(::Type{REPLMode}, c::SOSConstraint; args...) =
-    con_str(REPLMode, c, repl_open_set, repl_close_set)
+    con_str(REPLMode, c, repl)
 con_str(::Type{IJuliaMode}, c::SOSConstraint; mathmode=true) =
-    math(con_str(IJuliaMode, c, ijulia_open_set, ijulia_close_set), mathmode)
+    math(con_str(IJuliaMode, c, ijulia), mathmode)
 #------------------------------------------------------------------------
 ## SDPConstraint
 #------------------------------------------------------------------------
@@ -822,9 +823,9 @@ function con_str(mode, c::SDPConstraint, succeq0)
 end
 # Handlers to use correct symbols
 con_str(::Type{REPLMode}, c::SDPConstraint; args...) =
-    con_str(REPLMode, c, repl_succeq0)
+    con_str(REPLMode, c, repl[:succeq0])
 con_str(::Type{IJuliaMode}, c::SDPConstraint; mathmode=true) =
-    math(con_str(IJuliaMode, c, ijulia_succeq0, mathmode))
+    math(con_str(IJuliaMode, c, ijulia[:succeq0], mathmode))
 
 #------------------------------------------------------------------------
 ## ConstraintRef
