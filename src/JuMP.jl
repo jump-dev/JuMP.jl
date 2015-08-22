@@ -380,7 +380,13 @@ Base.zero(::Variable) = zero(Variable)
 Base.one(::Type{Variable}) = AffExpr(Variable[],Float64[],1.0)
 Base.one(::Variable) = one(Variable)
 
-verify_ownership(m::Model, vec::Vector{Variable}) = all(v->isequal(v.m,m), vec)
+function verify_ownership(m::Model, vec::Vector{Variable})
+    n = length(vec)
+    @inbounds for i in 1:n
+        !isequal(vec[i].m, m) && return false
+    end
+    return true
+end
 
 Base.copy(v::Variable, new_model::Model) = Variable(new_model, v.col)
 

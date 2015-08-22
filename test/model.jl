@@ -12,6 +12,10 @@
 # Must be run as part of runtests.jl, as it needs a list of solvers.
 #############################################################################
 using JuMP, FactCheck
+using Compat
+
+# If solvers not loaded, load them (i.e running just these tests)
+!isdefined(:lp_solvers) && include("solvers.jl")
 
 # To ensure the tests work on Windows and Linux/OSX, we need
 # to use the correct comparison operators
@@ -414,15 +418,36 @@ end
 
 
 facts("[model] Test variable/model 'hygiene'") do
-    modA = Model()
-    modB = Model()
-    @defVar(modA, x)
-    @defVar(modB, y)
+context("Linear constraint") do
+    modA = Model(); @defVar(modA, x)
+    modB = Model(); @defVar(modB, y)
     @addConstraint(modA, x+y == 1)
     @fact_throws solve(modA)
-
+end
+context("Linear objective") do
+    modA = Model(); @defVar(modA, 0 <= x <= 1)
+    modB = Model(); @defVar(modB, 0 <= y <= 1)
+    @setObjective(modA, Min, x + y)
+    @fact_throws solve(modA)
+end
+context("Quadratic constraint") do
+    modA = Model(); @defVar(modA, x)
+    modB = Model(); @defVar(modB, y)
     @addConstraint(modB, x*y >= 1)
     @fact_throws solve(modB)
+end
+context("Affine in quadratic constraint") do
+    modA = Model(); @defVar(modA, x)
+    modB = Model(); @defVar(modB, y)
+    @addConstraint(modB, y*y + x + y <= 1)
+    @fact_throws solve(modB)
+end
+context("Quadratic objective") do
+    modA = Model(); @defVar(modA, x)
+    modB = Model(); @defVar(modB, y)
+    @setObjective(modB, Min, x*y)
+    @fact_throws solve(modB)
+end
 end
 
 facts("[model] Test NaN checking") do
