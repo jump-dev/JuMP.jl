@@ -19,9 +19,9 @@ using Compat
 
 # To ensure the tests work on Windows and Linux/OSX, we need
 # to use the correct comparison operators
-const leq = JuMP.repl_leq
-const geq = JuMP.repl_geq
-const  eq = JuMP.repl_eq
+const leq = JuMP.repl[:leq]
+const geq = JuMP.repl[:geq]
+const  eq = JuMP.repl[:eq]
 
 const TOL = 1e-4
 
