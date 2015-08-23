@@ -582,7 +582,7 @@ function aff_str(mode, a::AffExpr, show_constant=true)
     end
 
     # Get reference to models included in this expression
-    moddict = Dict{Model,IndexedVector}()
+    moddict = Dict{Model,IndexedVector{Float64}}()
     for var in a.vars
         if !haskey(moddict, var.m)
             moddict[var.m] = IndexedVector(Float64,var.m.numCols)
@@ -628,9 +628,14 @@ function aff_str(mode, a::AffExpr, show_constant=true)
         return ret
     end
 end
-
 # Backwards compatability shim
 affToStr(a::AffExpr) = aff_str(REPLMode,a)
+
+# Precompile for faster boot times
+Base.precompile(aff_str, (Type{JuMP.REPLMode}, AffExpr, Bool))
+Base.precompile(aff_str, (Type{JuMP.IJuliaMode}, AffExpr, Bool))
+Base.precompile(aff_str, (Type{JuMP.REPLMode}, AffExpr))
+Base.precompile(aff_str, (Type{JuMP.IJuliaMode}, AffExpr))
 
 
 #------------------------------------------------------------------------
