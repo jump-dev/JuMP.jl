@@ -315,6 +315,7 @@ function addToExpression(_aff, _c, _x)
 end
 
 @generated addToExpression_reorder(ex, arg) = :(addToExpression(ex, 1.0, arg))
+Base.precompile(addToExpression_reorder, (AffExpr,AffExpr))
 
 @generated function addToExpression_reorder(ex, x, y)
     if x <: Union(Variable,AffExpr) && y <: Number
@@ -323,6 +324,8 @@ end
         :(addToExpression(ex, x, y))
     end
 end
+Base.precompile(addToExpression_reorder, (AffExpr,Float64,Int))
+Base.precompile(addToExpression_reorder, (AffExpr,Int,Variable))
 
 @generated function addToExpression_reorder(ex, args...)
     n = length(args)
@@ -338,6 +341,9 @@ end
     end
     :(addToExpression(ex, $coef, args[$idx]))
 end
+Base.precompile(addToExpression_reorder, (AffExpr,(Int,Variable)))
+Base.precompile(addToExpression_reorder, (AffExpr,(Int,Int,Variable)))
+Base.precompile(addToExpression_reorder, (AffExpr,(Float64,Variable)))
 
 function parseCurly(x::Expr, aff::Symbol, lcoeffs, rcoeffs, newaff=gensym())
     header = x.args[1]
@@ -352,6 +358,7 @@ function parseCurly(x::Expr, aff::Symbol, lcoeffs, rcoeffs, newaff=gensym())
         error("Expected sum or norm2 outside curly braces; got $header")
     end
 end
+Base.precompile(parseCurly, (Expr,Symbol,Vector{Any},Vector{Any},Symbol))
 
 function parseSum(x::Expr, aff::Symbol, lcoeffs, rcoeffs, newaff)
     # we have a filter condition
@@ -397,6 +404,7 @@ function parseSum(x::Expr, aff::Symbol, lcoeffs, rcoeffs, newaff)
     end
     :($code; $newaff=$aff)
 end
+Base.precompile(parseSum, (Expr,Symbol,Vector{Any},Vector{Any},Symbol))
 
 function parseNorm(normp::Symbol, x::Expr, aff::Symbol, lcoeffs, rcoeffs, newaff)
     @assert string(x.args[1])[1:4] == "norm"
@@ -549,3 +557,4 @@ function parseExpr(x, aff::Symbol, lcoeffs::Vector, rcoeffs::Vector, newaff::Sym
         end
     end
 end
+Base.precompile(parseExpr,  (Expr,Symbol,Vector{Any},Vector{Any},Symbol))
