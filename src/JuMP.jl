@@ -743,6 +743,7 @@ end
 
 # usage warnings
 function getvalue_warn(x::JuMPContainer{Variable})
+    isempty(x) && return
     v = first(values(x))
     m = v.m
     m.getvalue_counter += 1

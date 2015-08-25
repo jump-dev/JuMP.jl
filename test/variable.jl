@@ -130,3 +130,16 @@ facts("[variable] @defVar returning Array{Variable}") do
     @fact typeof(getValue(y)) --> Array{Float64,1}
     @fact typeof(getValue(z)) --> Array{Float64,1}
 end
+
+facts("[variable] getValue on empty things") do
+    m = Model()
+    @defVar(m, x[1:4,  1:0,1:3])   # Array{Variable}
+    @defVar(m, y[1:4,  2:1,1:3]) # JuMPArray
+    @defVar(m, z[1:4,Set(),1:3]) # JuMPDict
+
+    @fact getValue(x) --> Array(Float64, 4, 0, 3)
+    @fact typeof(getValue(y)) <: JuMP.JuMPArray{Float64} --> true
+    @fact size(getValue(y)) --> (4,0,3)
+    @fact typeof(getValue(z)) --> JuMP.JuMPDict{Float64,3}
+    @fact length(getValue(z)) --> 0
+end
