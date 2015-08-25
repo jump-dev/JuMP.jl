@@ -48,8 +48,6 @@ for cutsolver in cut_solvers
 context("With solver $(typeof(cutsolver))") do
     entered = [false,false]
 
-    mod = Model(solver=cutsolver)
-
     N = 1000
     # Include explicit data from srand(234) so that we can reproduce across platforms
     include(joinpath("data","usercut.jl"))

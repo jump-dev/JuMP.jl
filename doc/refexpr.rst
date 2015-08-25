@@ -139,16 +139,16 @@ Vectorized operations
 ^^^^^^^^^^^^^^^^^^^^^
 
 JuMP supports vectorized expressions and constraints for linear and quadratic models. Although this syntax may
-be familiar for users coming from MATLAB-based modeling languages, we caution that this syntax can be slow---especially
-for large operations. Nevertheless, the syntax often proves useful, for example in constraints involving small,
-dense matrix-vector products.
+be familiar for users coming from MATLAB-based modeling languages, we caution that this syntax may be slower than
+the scalar versions using loops---especially for large operations. Nevertheless, the syntax often proves useful,
+for example in constraints involving small, dense matrix-vector products.
 
 Linear algebraic operators are available to give meaning to expressions like ``A*x`` where ``A`` is a matrix
-of numbers and ``x`` is a vector of ``Variable``s. You may also use ``JuMPArray``s in these types of expressions,
-but only if the index sets that define them are matrix-like: that is, the index sets are ranges of the type
+of numbers and ``x`` is a vector of ``Variable``s. You may also use ``Array{Variable}``s in these types of
+expressions; for example, any object you construct with ``@defVar`` where each of the index sets are of the form
 ``1:n``. For example::
 
-    @defVar(m, x[1:3])
+    @defVar(m, x[1:3,1:4])
     expr = rand(3,3)*x
 
 is allowed, while::
@@ -169,8 +169,8 @@ and ``.<=``. For instance, you can write constraints of the form::
 
 Note that scalar literals (such as 1 or 0) are allowed in expressions.
 
-Concatenation is also overloaded for these matrix-like ``JuMPArray``s. For instance, the following will create
-a matrix of ``QuadExpr`` that you can use elsewhere in your model::
+Concatenation is also possible for these ``Array``s of ``Variable``s or expressions. For instance, the following
+will create a matrix of ``QuadExpr`` that you can use elsewhere in your model::
 
     @defVar(m, x[1:3])
     A = [1 x'

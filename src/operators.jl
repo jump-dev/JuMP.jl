@@ -318,18 +318,15 @@ _dot_depr() = warn("dot is deprecated for multidimensional arrays. Use vecdot in
 Base.dot{T,S,N}(lhs::Array{T,N}, rhs::JuMPArray{S,N})    = begin _dot_depr(); vecdot(lhs,rhs); end
 Base.dot{T,S,N}(lhs::JuMPArray{T,N},rhs::Array{S,N})     = begin _dot_depr(); vecdot(lhs,rhs); end
 Base.dot{T,S,N}(lhs::JuMPArray{T,N},rhs::JuMPArray{S,N}) = begin _dot_depr(); vecdot(lhs,rhs); end
+Base.dot{T<:JuMPTypes,S,N}(lhs::Array{T,N}, rhs::Array{S,N}) = begin _dot_depr(); vecdot(lhs,rhs); end
+Base.dot{T<:JuMPTypes,S<:JuMPTypes,N}(lhs::Array{T,N}, rhs::Array{S,N}) = begin _dot_depr(); vecdot(lhs,rhs); end
+Base.dot{T,S<:JuMPTypes,N}(lhs::Array{T,N}, rhs::Array{S,N}) = begin _dot_depr(); vecdot(lhs,rhs); end
 
-Base.dot{T,S}(lhs::OneIndexedArray{T,1},rhs::OneIndexedArray{S,1}) = _dot(lhs.innerArray, rhs.innerArray)
-Base.dot{T,S}(lhs::OneIndexedArray{T,1},rhs::Vector{S}) = _dot(lhs.innerArray, rhs)
-Base.dot{T,S}(lhs::Vector{T},rhs::OneIndexedArray{S,1}) = _dot(lhs, rhs.innerArray)
-Base.dot{T<:JuMPTypes,S}(lhs::Vector{T},rhs::Vector{S}) = _dot(lhs,rhs)
 Base.dot{T<:JuMPTypes,S<:JuMPTypes}(lhs::Vector{T},rhs::Vector{S}) = _dot(lhs,rhs)
+Base.dot{T<:JuMPTypes,S}(lhs::Vector{T},rhs::Vector{S}) = _dot(lhs,rhs)
 Base.dot{T,S<:JuMPTypes}(lhs::Vector{T},rhs::Vector{S}) = _dot(lhs,rhs)
 
 # TODO: qualify Base.vecdot once v0.3 support is dropped
-vecdot{T,S,N}(lhs::OneIndexedArray{T,N},rhs::OneIndexedArray{S,N}) = _dot(lhs.innerArray, rhs.innerArray)
-vecdot{T,S,N}(lhs::OneIndexedArray{T,N},rhs::Array{S,N}) = _dot(lhs.innerArray, rhs)
-vecdot{T,S,N}(lhs::Array{T,N},rhs::OneIndexedArray{S,N}) = _dot(lhs, rhs.innerArray)
 vecdot{T<:JuMPTypes,S,N}(lhs::Array{T,N},rhs::Array{S,N}) = _dot(lhs,rhs)
 vecdot{T<:JuMPTypes,S<:JuMPTypes,N}(lhs::Array{T,N},rhs::Array{S,N}) = _dot(lhs,rhs)
 vecdot{T,S<:JuMPTypes,N}(lhs::Array{T,N},rhs::Array{S,N}) = _dot(lhs,rhs)
@@ -355,10 +352,8 @@ Base.promote_rule(         ::Type{AffExpr}, ::Type{QuadExpr}) = QuadExpr
 Base.promote_rule{R<:Real}(::Type{QuadExpr},::Type{R}       ) = QuadExpr
 
 _throw_transpose_error() = error("Transpose not currently implemented for JuMPArrays with arbitrary index sets.")
-Base.transpose(x::OneIndexedArray)  = transpose(x.innerArray)
-Base.transpose(x::JuMPArray)  = _throw_transpose_error()
-Base.ctranspose(x::OneIndexedArray) = ctranspose(x.innerArray)
-Base.ctranspose(x::JuMPArray)  = _throw_transpose_error()
+Base.transpose( x::JuMPArray) = _throw_transpose_error()
+Base.ctranspose(x::JuMPArray) = _throw_transpose_error()
 
 # Can remove the following code once == overloading is removed
 _isequal{T,S}(x::T,y::S) = error("Internal error: called _isequal(::$T,::$S)")
@@ -490,10 +485,6 @@ function _multiply!{T<:Union(GenericAffExpr,GenericQuadExpr)}(ret::Array{T}, lhs
     ret
 end
 
-(*)(lhs::AbstractArray, rhs::OneIndexedArray) = (*)(lhs, rhs.innerArray)
-(*)(lhs::OneIndexedArray, rhs::AbstractArray) = (*)(lhs.innerArray, rhs)
-(*)(lhs::OneIndexedArray, rhs::OneIndexedArray) = (*)(lhs.innerArray, rhs.innerArray)
-
 _multiply_type(R,S) = typeof(one(R) * one(S))
 
 # Don't do size checks here in _return_array, defer that to (*)
@@ -542,15 +533,6 @@ for op in [:+, :-, :*]; @eval begin
     $op{T<:JuMPTypes}(lhs::AbstractArray{T},rhs::Number) = map(c->$op(c,rhs), full(lhs))
     $op{T<:JuMPTypes}(lhs::T,rhs::AbstractArray) = map(c->$op(lhs,c), full(rhs))
     $op{T<:JuMPTypes}(lhs::AbstractArray,rhs::T) = map(c->$op(c,rhs), full(lhs))
-    $op(lhs::Real,rhs::OneIndexedArray) = $op(lhs, rhs.innerArray)
-    $op(lhs::OneIndexedArray,rhs::Real) = $op(lhs.innerArray, rhs)
-
-    $op(lhs::OneIndexedArray, rhs::AbstractArray) = $op(lhs.innerArray, rhs)
-    $op(lhs::AbstractArray, rhs::OneIndexedArray) = $op(lhs, rhs.innerArray)
-
-    $op{T<:JuMPTypes}(lhs::AbstractArray{T},rhs::OneIndexedArray) = $op(lhs,rhs.innerArray)
-    $op{T<:JuMPTypes}(lhs::OneIndexedArray,rhs::AbstractArray{T}) = $op(lhs.innerArray,rhs)
-    $op(lhs::OneIndexedArray,rhs::OneIndexedArray) = $op(lhs.innerArray,rhs.innerArray)
 end; end
 
 # Special-case sparse matrix scalar multiplicaiton
@@ -575,7 +557,6 @@ for op in [:(+), :(-)]; @eval begin
 end; end
 
 (/){T<:JuMPTypes}(lhs::Array{T},rhs::Real) = map(c->$op(c,rhs), lhs)
-(/)(lhs::OneIndexedArray,rhs::Real) = $op(lhs.innerArray, rhs)
 
 for (dotop,op) in [(:.+,:+), (:.-,:-), (:.*,:*), (:./,:/)]
     @eval begin
@@ -597,8 +578,6 @@ for (dotop,op) in [(:.+,:+), (:.-,:-), (:.*,:*), (:./,:/)]
             end
             return arr
         end
-        $dotop(lhs::Real,rhs::OneIndexedArray) = $dotop(lhs, rhs.innerArray)
-        $dotop(lhs::OneIndexedArray,rhs::Real) = $dotop(lhs.innerArray, rhs)
         function $dotop{T<:JuMPTypes}(lhs::T,rhs::Array)
             length(rhs) == 0 && return Array(eltype(rhs),size(rhs))
             # Guess based on first element of rhs
@@ -619,10 +598,6 @@ for (dotop,op) in [(:.+,:+), (:.-,:-), (:.*,:*), (:./,:/)]
             end
             return arr
         end
-
-        $dotop{T<:JuMPScalars,N}(lhs::Array{T,N},rhs::OneIndexedArray) = $dotop(lhs,rhs.innerArray)
-        $dotop{T<:JuMPScalars,N}(lhs::OneIndexedArray,rhs::Array{T,N}) = $dotop(lhs.innerArray,rhs)
-        $dotop(lhs::OneIndexedArray,rhs::OneIndexedArray) = $dotop(lhs.innerArray,rhs.innerArray)
 
         function $dotop{S<:Real,T<:JuMPTypes,N}(lhs::Array{S,N},rhs::Array{T,N})
             size(lhs) == size(rhs) || error("Incompatible dimensions")
@@ -645,11 +620,8 @@ for (dotop,op) in [(:.+,:+), (:.-,:-), (:.*,:*), (:./,:/)]
     end
 end
 (+){T<:JuMPTypes}(x::Array{T}) = x
-(+)(x::OneIndexedArray) = x.innerArray
 (-){N}(x::Array{Variable,N}) = (-)(convert(Array{AffExpr,N},x))
-(-)(x::OneIndexedArray) = -x.innerArray
 (*){T<:JuMPTypes}(x::Array{T}) = x
-(*)(x::OneIndexedArray) = x.innerArray
 
 ###############################################################################
 # Add nonlinear function fallbacks for JuMP built-in types

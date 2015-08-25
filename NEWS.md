@@ -5,8 +5,7 @@ Unversioned
 -----------
 
   * Support (on Julia 0.4 and later) for conditions in indexing ``@defVar`` and ``@addConstraint`` constructs, e.g. ``@defVar(m, x[i=1:5,j=1:5; i+j >= 3])``
-  * Support for vectorized operations on Variables, expressions, and JuMPArrays with indexing over unit-step ranges starting at one. See
-    the documentation for details.
+  * Support for vectorized operations on Variables and expressions. See the documentation for details.
   * New ``getVar()`` method to access variables in a model by name
   * Support for semidefinite programming.
   * Dual solutions are now available for general nonlinear problems. You may call ``getDual`` on a reference object for a nonlinear constraint, and ``getDual`` on a variable object for Lagrange multipliers from active bounds.
@@ -14,6 +13,7 @@ Unversioned
   * Second-order cone constraints can be written directly with the ``norm()`` and ``norm2{}`` syntax.
   * Implement MathProgBase interface for querying Hessian-vector products.
   * Iteration over ``JuMPContainer``s is deprecated; instead, use the ``keys`` and ``values`` functions, and ``zip(keys(d),values(d))`` for the old behavior.
+  * ``@defVar`` returns ``Array{Variable,N}`` when each of ``N`` index sets are of the form ``1:nᵢ``.
 
 Version 0.9.3 (August 11, 2015)
 -------------------------------
