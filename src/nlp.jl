@@ -566,8 +566,10 @@ function solvenlp(m::Model, traits; suppress_warnings=false)
     MathProgBase.optimize!(m.internalModel)
     stat = MathProgBase.status(m.internalModel)
 
-    m.objVal = MathProgBase.getobjval(m.internalModel)
-    m.colVal = MathProgBase.getsolution(m.internalModel)
+    if stat != :Infeasible && stat != :Unbounded
+        m.objVal = MathProgBase.getobjval(m.internalModel)
+        m.colVal = MathProgBase.getsolution(m.internalModel)
+    end
 
     if stat != :Optimal
         suppress_warnings || warn("Not solved to optimality, status: $stat")
