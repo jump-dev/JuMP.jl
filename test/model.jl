@@ -57,7 +57,7 @@ facts("[model] Performance warnings") do
        getValue(x)
     end
     q = 0
-    for i in 1:1000
+    for i in 1:30000
        q += 3x[1]
     end
 end
