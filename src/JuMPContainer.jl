@@ -108,17 +108,11 @@ macro gendict(instancename,T,idxpairs,idxsets...)
 
             nextidxlhs = :(_next_index(d::$(typename), k))
             # build up exprs for _next_index
-            cprods   = [ii => symbol(string("cprod",ii))     for ii in 0:N]
             lidxsets = [ii => symbol(string("locidxset",ii)) for ii in 1:N]
-            nextidxrhs = Expr(:block, :($(cprods[0]) = 1))
-            for ii in 1:N
-                push!(nextidxrhs.args, :($(cprods[ii]) = $(cprods[ii-1]) * size(d,$ii)))
+            nextidxrhs = quote
+                subidx = ind2sub(size(d), k)
+                $(Expr(:tuple, [:(subidx[$ii] - $(offset[ii])) for ii in 1:N]...))
             end
-            tup = Expr(:tuple)
-            for ii in 1:N
-                push!(tup.args, :(Compat.ceil(Int, mod1(k, $(cprods[ii])) / $(cprods[ii-1])) - $(offset[ii])))
-            end
-            nextidxrhs = :($nextidxrhs; $tup)
             for i in 1:N
                 varname = symbol(string("x",i))
 
