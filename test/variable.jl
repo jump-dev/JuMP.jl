@@ -114,6 +114,12 @@ facts("[variable] JuMPContainer iteration") do
     for (key,val) in zip(keys(jd),values(jd))
         @fact jd[key...] === val --> true
     end
+    for (ii,jj,kk,v) in ja
+        @fact ja[ii,jj,kk] === v --> true
+    end
+    for (ii,jj,v) in jd
+        @fact jd[ii,jj] === v --> true
+    end
 end
 
 facts("[variable] @defVar returning Array{Variable}") do

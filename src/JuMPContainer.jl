@@ -110,20 +110,13 @@ macro gendict(instancename,T,idxpairs,idxsets...)
             # build up exprs for _next_index
             cprods   = [ii => symbol(string("cprod",ii))     for ii in 0:N]
             lidxsets = [ii => symbol(string("locidxset",ii)) for ii in 1:N]
-            nextidxrhs = :($(cprods[0]) = 1)
+            nextidxrhs = Expr(:block, :($(cprods[0]) = 1))
             for ii in 1:N
-                nextidxrhs = quote
-                    $nextidxrhs
-                    $(lidxsets[ii]) = $(idxsets[ii])
-                    $(cprods[ii])   = $(cprods[ii-1]) * length($(lidxsets[ii]))
-                end
+                push!(nextidxrhs.args, :($(cprods[ii]) = $(cprods[ii-1]) * size(d,$ii)))
             end
             tup = Expr(:tuple)
             for ii in 1:N
-                push!(tup.args,
-                    :(idx = Compat.ceil(Int, mod1(k, $(cprods[ii])) / $(cprods[ii-1]));
-                      $(lidxsets[ii])[idx];)
-                )
+                push!(tup.args, :(Compat.ceil(Int, mod1(k, $(cprods[ii])) / $(cprods[ii-1])) - $(offset[ii])))
             end
             nextidxrhs = :($nextidxrhs; $tup)
             for i in 1:N
