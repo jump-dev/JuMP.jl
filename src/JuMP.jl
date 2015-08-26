@@ -356,6 +356,14 @@ function setValue(v::Variable, val::Number)
     end
 end
 
+function setValue(set::Array{Variable}, val::Array)
+    promote_shape(size(set), size(val)) # Check dimensions match
+    for I in eachindex(set)
+        setValue(set[I], val[I])
+    end
+    nothing
+end
+
 # internal method that doesn't print a warning if the value is NaN
 _getValue(v::Variable) = v.m.colVal[v.col]
 
