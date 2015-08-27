@@ -356,56 +356,11 @@ Base.transpose( x::JuMPArray) = _throw_transpose_error()
 Base.ctranspose(x::JuMPArray) = _throw_transpose_error()
 
 # Can remove the following code once == overloading is removed
-_isequal{T,S}(x::T,y::S) = error("Internal error: called _isequal(::$T,::$S)")
-_isequal(x::Variable,y::Variable) = (x.m == y.m) & (x.col == y.col)
-function _isequal{T<:GenericAffExpr}(x::T,y::T)
-    x.constant == y.constant || return false
-    n = length(x.vars)
-    if !(n == length(y.vars) &&
-         n == length(x.coeffs) &&
-         n == length(y.coeffs))
-        return false
-    end
-    for i in 1:n
-        if !_isequal(x.vars[i], y.vars[i])
-            return false
-        end
-        if x.coeffs[i] != y.coeffs[i]
-            return false
-        end
-    end
-    true
-end
-function _isequal{T<:GenericQuadExpr}(x::T,y::T)
-    if !_isequal(x.aff, y.aff)
-        return false
-    end
-    n = length(x.qvars1)
-    if !(n == length(y.qvars1) &&
-         n == length(x.qvars2) &&
-         n == length(y.qvars2) &&
-         n == length(x.qcoeffs) &&
-         n == length(y.qcoeffs))
-        return false
-    end
-    for i in 1:n
-        if !_isequal(x.qvars1[i], y.qvars1[i])
-            return false
-        end
-        if !_isequal(x.qvars2[i], y.qvars2[i])
-            return false
-        end
-        if x.qcoeffs[i] != y.qcoeffs[i]
-            return false
-        end
-    end
-    true
-end
 
 function Base.issym{T<:JuMPTypes}(x::Matrix{T})
     (n = size(x,1)) == size(x,2) || return false
     for i in 1:n, j in (i+1):n
-        _isequal(x[i,j], x[j,i]) || return false
+        isequal(x[i,j], x[j,i]) || return false
     end
     true
 end

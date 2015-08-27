@@ -388,21 +388,21 @@ facts("[model] Test model copying") do
     @fact dest.sosconstr[1].sostype --> :SOS2
     @fact length(dest.sdpconstr) --> 2
     xx = copy(x, dest)
-    @fact all(t -> JuMP._isequal(t[1],t[2]), zip(dest.sdpconstr[1].terms, xx*ones(3,3) - eye(3,3))) --> true
-    @fact all(t -> JuMP._isequal(t[1],t[2]), zip(dest.sdpconstr[2].terms, convert(Matrix{AffExpr}, -ones(3,3)))) --> true
+    @fact all(t -> isequal(t[1],t[2]), zip(dest.sdpconstr[1].terms, xx*ones(3,3) - eye(3,3))) --> true
+    @fact all(t -> isequal(t[1],t[2]), zip(dest.sdpconstr[2].terms, convert(Matrix{AffExpr}, -ones(3,3)))) --> true
 
     @fact dest.solvehook(dest) --> 1
 
     @fact Set(collect(keys(dest.varDict))) --> Set([:x,:y,:z,:w,:v])
-    @fact JuMP._isequal(dest.varDict[:x], Variable(dest, 1)) --> true
-    @fact JuMP._isequal(dest.varDict[:y], Variable(dest, 2)) --> true
-    @fact all(t -> JuMP._isequal(t[1], t[2]), zip(dest.varDict[:z], [Variable(dest, 3), Variable(dest, 4), Variable(dest, 5)])) --> true
-    @fact all(t -> JuMP._isequal(t[1], t[2]), zip(dest.varDict[:w].innerArray, [Variable(dest, 6), Variable(dest, 7), Variable(dest, 8)])) --> true
+    @fact isequal(dest.varDict[:x], Variable(dest, 1)) --> true
+    @fact isequal(dest.varDict[:y], Variable(dest, 2)) --> true
+    @fact all(t -> isequal(t[1], t[2]), zip(dest.varDict[:z], [Variable(dest, 3), Variable(dest, 4), Variable(dest, 5)])) --> true
+    @fact all(t -> isequal(t[1], t[2]), zip(dest.varDict[:w].innerArray, [Variable(dest, 6), Variable(dest, 7), Variable(dest, 8)])) --> true
     td = dest.varDict[:v].tupledict
     @fact length(td) --> 3
-    @fact JuMP._isequal(td[:red,1], Variable(dest, 9))  --> true
-    @fact JuMP._isequal(td[:red,2], Variable(dest, 10)) --> true
-    @fact JuMP._isequal(td[:red,3], Variable(dest, 11)) --> true
+    @fact isequal(td[:red,1], Variable(dest, 9))  --> true
+    @fact isequal(td[:red,2], Variable(dest, 10)) --> true
+    @fact isequal(td[:red,3], Variable(dest, 11)) --> true
 
     # Issue #358
     @fact typeof(dest.linconstr)  --> Array{JuMP.GenericRangeConstraint{JuMP.GenericAffExpr{Float64,JuMP.Variable}},1}

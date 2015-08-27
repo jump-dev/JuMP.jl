@@ -50,6 +50,16 @@ function assert_isfinite(q::GenericQuadExpr)
     end
 end
 
+function Base.isequal{T,S}(q::GenericQuadExpr{T,S},other::GenericQuadExpr{T,S})
+    isequal(q.aff,other.aff)   || return false
+    length(q.qvars1) == length(other.qvars1) || return false
+    for i in 1:length(q.qvars1)
+        isequal(q.qvars1[i],  other.qvars1[i]) || return false
+        isequal(q.qvars2[i],  other.qvars2[i]) || return false
+        isequal(q.qcoeffs[i],other.qcoeffs[i]) || return false
+    end
+    return true
+end
 
 # Alias for (Float64, Variable)
 typealias QuadExpr GenericQuadExpr{Float64,Variable}

@@ -299,7 +299,7 @@ end
 
 getLinearIndex(x::Variable) = x.col
 ReverseDiffSparse.getplaceindex(x::Variable) = getLinearIndex(x)
-Base.isequal(x::Variable,y::Variable) = isequal(x.col,y.col) && isequal(x.m,y.m)
+Base.isequal(x::Variable,y::Variable) = (x.col == y.col) && (x.m === y.m)
 
 Variable(m::Model, lower, upper, cat::Symbol, name::UTF8String="", value::Number=NaN) =
     error("Attempt to create scalar Variable with lower bound of type $(typeof(lower)) and upper bound of type $(typeof(upper)). Bounds must be scalars in Variable constructor.")
@@ -424,7 +424,7 @@ Base.one(::Variable) = one(Variable)
 function verify_ownership(m::Model, vec::Vector{Variable})
     n = length(vec)
     @inbounds for i in 1:n
-        !isequal(vec[i].m, m) && return false
+        vec[i].m !== m && return false
     end
     return true
 end
@@ -490,10 +490,10 @@ end
 Base.copy(aff::GenericAffExpr) = GenericAffExpr(copy(aff.vars),copy(aff.coeffs),copy(aff.constant))
 
 function Base.isequal{T,S}(aff::GenericAffExpr{T,S},other::GenericAffExpr{T,S})
-    isequal(aff.constant,other.constant) || return false
+    isequal(aff.constant,other.constant)   || return false
     length(aff.vars) == length(other.vars) || return false
     for i in 1:length(aff.vars)
-        isequal(aff.vars[i],other.vars[i]) || return false
+        isequal(aff.vars[i],  other.vars[i])   || return false
         isequal(aff.coeffs[i],other.coeffs[i]) || return false
     end
     return true
