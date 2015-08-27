@@ -148,4 +148,10 @@ end
 addConstraint(m::Model, c::Array{QuadConstraint}) =
     error("Vectorized constraint added without elementwise comparisons. Try using one of (.<=,.>=,.==).")
 
-addVectorizedConstraint(m::Model, v::Array{QuadConstraint}) = map(c->addConstraint(m,c), v)
+function addVectorizedConstraint(m::Model, v::Array{QuadConstraint})
+    ret = Array(ConstraintRef{QuadConstraint}, size(v))
+    for I in eachindex(v)
+        ret[I] = addConstraint(m, v[I])
+    end
+    ret
+end

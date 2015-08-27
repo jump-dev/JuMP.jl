@@ -534,9 +534,16 @@ function getValue(a::AffExpr)
     for it in 1:length(a.vars)
         ret += a.coeffs[it] * getValue(a.vars[it])
     end
-    return ret
+    ret
 end
-getValue(arr::Array{AffExpr}) = map(getValue, arr)
+
+function getValue(arr::Array{AffExpr})
+    ret = similar(arr, Float64)
+    for I in eachindex(arr)
+        ret[I] = getValue(arr[I])
+    end
+    ret
+end
 
 ###############################################################################
 # GenericQuadExpr, QuadExpr
@@ -610,8 +617,13 @@ end
 addConstraint(m::Model, c::Array{LinearConstraint}) =
     error("The operators <=, >=, and == can only be used to specify scalar constraints. If you are trying to add a vectorized constraint, use the element-wise dot comparison operators (.<=, .>=, or .==) instead")
 
-addVectorizedConstraint(m::Model, v::Array{LinearConstraint}) = map(c->addConstraint(m,c), v)
-
+function addVectorizedConstraint(m::Model, v::Array{LinearConstraint})
+    ret = Array(ConstraintRef{LinearConstraint}, size(v))
+    for I in eachindex(v)
+        ret[I] = addConstraint(m, v[I])
+    end
+    ret
+end
 function Base.copy(c::LinearConstraint, new_model::Model)
     return LinearConstraint(copy(c.terms, new_model), c.lb, c.ub)
 end
