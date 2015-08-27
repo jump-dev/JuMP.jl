@@ -82,10 +82,11 @@ function setObjective(m::Model, sense::Symbol, q::QuadExpr)
     setObjectiveSense(m, sense)
 end
 
+# Copy a quadratic expression to a new model by converting all the
+# variables to the new model's variables
 function Base.copy(q::QuadExpr, new_model::Model)
-    return QuadExpr([Variable(new_model, v.col) for v in q.qvars1],
-                    [Variable(new_model, v.col) for v in q.qvars2],
-                    q.qcoeffs[:], copy(q.aff, new_model))
+    QuadExpr(copy(q.qvars1, new_model), copy(q.qvars2, new_model),
+                copy(q.qcoeffs), copy(q.aff, new_model))
 end
 
 function getValue(a::QuadExpr)
@@ -112,6 +113,10 @@ Base.copy{CON<:GenericQuadConstraint}(c::CON, new_model::Model) = CON(copy(c.ter
 
 # Alias for (Float64, Variable)
 typealias QuadConstraint GenericQuadConstraint{QuadExpr}
+
+function Base.copy(c::QuadConstraint, new_model::Model)
+    return QuadConstraint(copy(c.terms, new_model), c.sense)
+end
 
 function addConstraint(m::Model, c::QuadConstraint)
     push!(m.quadconstr,c)
