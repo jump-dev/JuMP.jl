@@ -529,7 +529,7 @@ function parseExpr(x, aff::Symbol, lcoeffs::Vector, rcoeffs::Vector, newaff::Sym
             s = gensym()
             newaff_, parsed = parseExprToplevel(x.args[2], s)
             push!(blk.args, :($s = 0.0; $parsed))
-            push!(blk.args, :($newaff = $newaff_*$newaff_))
+            push!(blk.args, :($newaff = $(Expr(:call,:*,lcoeffs...,newaff_,newaff_,rcoeffs...)) + $aff))
             return newaff, blk
         elseif x.head == :call && x.args[1] == :/
             @assert length(x.args) == 3
