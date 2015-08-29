@@ -3,7 +3,7 @@
 #  License, v. 2.0. If a copy of the MPL was not distributed with this
 #  file, You can obtain one at http://mozilla.org/MPL/2.0/.
 
-function random_aff_expr(N, vars::Vector{Symbol})
+function random_aff_expr(N, vars::Vector)
     ex = Expr(:call, :+)
     for _ in 1:N
         vl, vr = Any[], Any[]
@@ -58,7 +58,7 @@ m = Model()
 @defVar(m, v)
 
 N = 5
-vars = [:x, :y, :z, :w, :v]
+vars = [:x, :y, :z, :w, :v, :(identity(x)), :(identity(y)), :(identity(z))]
 
 
 const ε = 5eps()
