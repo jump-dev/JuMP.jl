@@ -68,16 +68,16 @@ end
 facts("[variable] get and set values") do
     m = Model()
     @defVar(m, x[1:3])
-    x0 = [1:3]
+    x0 = collect(1:3)
     setValue(x, x0)
     @fact getValue(x) --> x0
     @fact getValue([x[1],x[2],x[3]]) --> x0
 
     @defVar(m, y[1:3,1:2])
     if VERSION >= v"0.4-"
-        @fact_throws DimensionMismatch setValue(y, [1:6])
+        @fact_throws DimensionMismatch setValue(y, collect(1:6))
     else
-        @fact_throws ErrorException setValue(y, [1:6])
+        @fact_throws ErrorException setValue(y, collect(1:6))
     end
 end
 

@@ -61,12 +61,13 @@ N = 5
 vars = [:x, :y, :z, :w, :v, :(identity(x)), :(identity(y)), :(identity(z))]
 
 
-const ε = 5eps()
+const ε = 10eps()
 nvars = length(vars)
 
 function test_approx_equal_exprs(ex1, ex2)
+    res = true
     # test constant term
-    abs(ex1.aff.constant - ex2.aff.constant) < ε || return false
+    abs(ex1.aff.constant - ex2.aff.constant) < ε || (res = false)
 
     # test aff terms
     vals = zeros(nvars)
@@ -77,7 +78,7 @@ function test_approx_equal_exprs(ex1, ex2)
         vals[ex2.aff.vars[i].col] -= ex2.aff.coeffs[i]
     end
     for v in vals
-        abs(v) < ε || return false
+        abs(v) < ε || (res = false)
     end
 
     # test quad terms
@@ -91,9 +92,12 @@ function test_approx_equal_exprs(ex1, ex2)
         qvals[j,k] -= ex2.qcoeffs[i]
     end
     for v in vals
-        abs(v) < ε || return false
+        abs(v) < ε || (res = false)
     end
-    return true
+    if !res
+        warn("The following expression did not pass the fuzzer:\n    ex1 = $ex1\n    ex2 = $ex2")
+    end
+    return res
 end
 
 println("[fuzzer] Check macros for expression construction")
@@ -101,6 +105,5 @@ println("[fuzzer] Check macros for expression construction")
 for _ in 1:100
     raff = random_aff_expr(N, vars)
     ex = @eval @defExpr($raff)
-    test_approx_equal_exprs(ex, eval(raff)) ||
-        error("The following expression did not pass the fuzzer:\n    $raff")
+    @fact test_approx_equal_exprs(ex, eval(raff)) --> true
 end

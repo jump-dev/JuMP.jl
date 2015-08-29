@@ -119,7 +119,6 @@ function getValue(arr::Array{AffExpr})
     ret
 end
 
-
 ##########################################################################
 # GenericRangeConstraint
 # l ≤ ∑ aᵢ xᵢ ≤ u
