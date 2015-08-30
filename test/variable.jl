@@ -71,6 +71,7 @@ facts("[variable] get and set values") do
     x0 = [1:3]
     setValue(x, x0)
     @fact getValue(x) --> x0
+    @fact getValue([x[1],x[2],x[3]]) --> x0
 
     @defVar(m, y[1:3,1:2])
     if VERSION >= v"0.4-"

@@ -377,28 +377,35 @@ end
 
 function getValue(arr::Array{Variable})
     ret = similar(arr, Float64)
+    # return immediately for empty array
     if isempty(ret)
         return ret
     end
+    # warnedyet is set to true if we've already warned for a component of a JuMPContainer
     warnedyet = false
     m = first(arr).m
     # whether this was constructed via @defVar, essentially
     registered = haskey(m.varData, arr)
-    name = registered ? m.varData[arr].name : m.colName[v.col]
     for I in eachindex(arr)
         v = arr[I]
         value = _getValue(v)
         ret[I] = value
         if !warnedyet && isnan(value)
-            Base.warn("Variable value not defined for $name. Check that the model was properly solved.")
-            warnedyet = true
+            if registered
+                Base.warn("Variable value not defined for component of $(m.varData[arr].name). Check that the model was properly solved.")
+                warnedyet = true
+            else
+                Base.warn("Variable value not defined for $(m.colNames[v.col]). Check that the model was properly solved.")
+            end
         end
     end
+    # Copy printing data from @defVar for Array{Variable} to corresponding Array{Float64} of values
     if registered
         m.varData[ret] = m.varData[arr]
     end
     ret
 end
+
 
 # Dual value (reduced cost) getter
 function getDual(v::Variable)
