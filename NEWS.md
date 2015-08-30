@@ -14,6 +14,7 @@ Unversioned
   * Implement MathProgBase interface for querying Hessian-vector products.
   * Iteration over ``JuMPContainer``s is deprecated; instead, use the ``keys`` and ``values`` functions, and ``zip(keys(d),values(d))`` for the old behavior.
   * ``@defVar`` returns ``Array{Variable,N}`` when each of ``N`` index sets are of the form ``1:nᵢ``.
+  * Module precompilation: on Julia 0.4 and later, ``using JuMP`` is now much faster.
 
 Version 0.9.3 (August 11, 2015)
 -------------------------------
