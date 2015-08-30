@@ -60,6 +60,9 @@ facts("[macros] Check @addConstraint basics") do
     @defExpr(aff, 3x - y - 3.3(w + 2z) + 5)
     @fact affToStr(aff) --> "3 x - y - 3.3 w - 6.6 z + 5"
 
+    @addConstraint(m, 3 + 5*7 <= 0)
+    @fact conToStr(m.linconstr[end]) --> "0 $leq -38"
+
     if VERSION >= v"0.4.0-"
         @defExpr(qaff, (w+3)*(2x+1)+10)
         @fact quadToStr(qaff) --> "2 w*x + 6 x + w + 13"
@@ -85,6 +88,13 @@ facts("[macros] sum{}") do
 
     @addConstraint(m, sum{ C[i,j]*x[i,j], i = 1:3, j = 1:i} == 0);
     @fact conToStr(m.linconstr[end]) --> "x[1,1] + 4 x[2,1] + 5 x[2,2] + 7 x[3,1] + 8 x[3,2] + 9 x[3,3] $eq 0"
+
+    @addConstraint(m, sum{ 0*x[i,1], i=1:3} == 0)
+    @fact conToStr(m.linconstr[end]) --> "0 $eq 0"
+
+    @addConstraint(m, sum{ 0*x[i,1] + y, i=1:3} == 0)
+    @fact conToStr(m.linconstr[end]) --> "3 y $eq 0"
+
 end
 
 facts("[macros] Problem modification") do
@@ -248,6 +258,9 @@ facts("[macros] @addConstraint with quadratic") do
     myquadexpr = x[1]*x[2]
     @addConstraint(m, sum{i*myquadexpr + x[i], i=1:3} + sum{x[i] + myquadexpr*i, i=1:3} == 0)
     @fact conToStr(m.quadconstr[end]) --> "12 x[1]*x[2] + 2 x[1] + 2 x[2] + 2 x[3] $eq 0"
+
+    @addConstraint(m, (x[1] + x[2])*sum{ 0*x[i] + x[3], i=1:3} == 0)
+    @fact conToStr(m.quadconstr[end]) --> "3 x[1]*x[3] + 3 x[2]*x[3] $eq 0"
 end
 
 facts("[macros] Triangular indexing, iteration") do
