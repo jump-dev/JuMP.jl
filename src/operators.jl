@@ -561,15 +561,6 @@ for (dotop,op) in [(:.+,:+), (:.-,:-), (:.*,:*), (:./,:/)]
             end
             return arr
         end
-
-        function $dotop{S<:Number,T<:JuMPTypes,N}(lhs::AbstractArray{S,N},rhs::AbstractArray{T,N})
-            size(lhs) == size(rhs) || error("Incompatible dimensions")
-            arr = Array(typeof($op(zero(S), zero(T))), size(rhs))
-            @inbounds for i in eachindex(lhs)
-                arr[i] = $op(lhs[i],rhs[i])
-            end
-            return arr
-        end
         function $dotop{S<:JuMPTypes,T<:Number,N}(lhs::AbstractArray{S,N},rhs::AbstractArray{T,N})
             size(lhs) == size(rhs) || error("Incompatible dimensions")
             arr = Array(typeof($op(zero(S), zero(T))), size(rhs))
@@ -577,6 +568,26 @@ for (dotop,op) in [(:.+,:+), (:.-,:-), (:.*,:*), (:./,:/)]
                 arr[i] = $op(lhs[i],rhs[i])
             end
             return arr
+        end
+    end
+    if op != :/
+        @eval begin
+            function $dotop{S<:JuMPTypes,T<:JuMPTypes,N}(lhs::AbstractArray{S,N},rhs::AbstractArray{T,N})
+                size(lhs) == size(rhs) || error("Incompatible dimensions")
+                arr = Array(typeof($op(zero(S), zero(T))), size(rhs))
+                @inbounds for i in eachindex(lhs)
+                    arr[i] = $op(lhs[i],rhs[i])
+                end
+                return arr
+            end
+            function $dotop{S<:Number,T<:JuMPTypes,N}(lhs::AbstractArray{S,N},rhs::AbstractArray{T,N})
+                size(lhs) == size(rhs) || error("Incompatible dimensions")
+                arr = Array(typeof($op(zero(S), zero(T))), size(rhs))
+                @inbounds for i in eachindex(lhs)
+                    arr[i] = $op(lhs[i],rhs[i])
+                end
+                return arr
+            end
         end
     end
 end
