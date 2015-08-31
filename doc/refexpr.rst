@@ -144,7 +144,7 @@ the scalar versions using loops---especially for large operations. Nevertheless,
 for example in constraints involving small, dense matrix-vector products.
 
 Linear algebraic operators are available to give meaning to expressions like ``A*x`` where ``A`` is a matrix
-of numbers and ``x`` is a vector of ``Variable``s. You may also use ``Array{Variable}``s in these types of
+of numbers and ``x`` is a vector of ``Variable``s. You may also use objects of type ``Array{Variable}`` in these kinds of
 expressions; for example, any object you construct with ``@defVar`` where each of the index sets are of the form
 ``1:n``. For example::
 
@@ -169,7 +169,7 @@ and ``.<=``. For instance, you can write constraints of the form::
 
 Note that scalar literals (such as 1 or 0) are allowed in expressions.
 
-Concatenation is also possible for these ``Array``s of ``Variable``s or expressions. For instance, the following
+Concatenation is also possible for these arrays of variables or expressions. For instance, the following
 will create a matrix of ``QuadExpr`` that you can use elsewhere in your model::
 
     @defVar(m, x[1:3])
