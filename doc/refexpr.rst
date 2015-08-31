@@ -144,7 +144,7 @@ the scalar versions using loops---especially for large operations. Nevertheless,
 for example in constraints involving small, dense matrix-vector products.
 
 Linear algebraic operators are available to give meaning to expressions like ``A*x`` where ``A`` is a matrix
-of numbers and ``x`` is a vector of ``Variable``s. You may also use objects of type ``Array{Variable}`` in these kinds of
+of numbers and ``x`` is a vector of ``Variable`` objects. You may also use objects of type ``Array{Variable}`` in these kinds of
 expressions; for example, any object you construct with ``@defVar`` where each of the index sets are of the form
 ``1:n``. For example::
 
