@@ -4,15 +4,17 @@ JuMP
 
 JuMP is a domain-specific modeling language for **[mathematical programming]**
 embedded in **[Julia]**. It currently supports a number of open-source and
-commercial solvers ([CPLEX], [COIN Clp], [COIN Cbc], [ECOS], [GLPK],
+commercial solvers ([Bonmin], [Cbc], [Clp], [Couenne], [CPLEX], [ECOS], [GLPK],
 [Gurobi], [Ipopt], [KNITRO], [MOSEK], [NLopt], [SCS]) for a variety of problem classes, including
 **[linear programming]**, **[(mixed) integer programming]**,
 **[second-order conic programming]**, **[semidefinite programming]**, and **[nonlinear programming]**.
 
 [mathematical programming]: http://en.wikipedia.org/wiki/Mathematical_optimization
 [Julia]: http://julialang.org/
-[COIN Clp]: https://projects.coin-or.org/Clp
-[COIN Cbc]: https://projects.coin-or.org/Cbc
+[Bonmin]: https://projects.coin-or.org/Bonmin
+[Couenne]: https://projects.coin-or.org/Couenne
+[Clp]: https://projects.coin-or.org/Clp
+[Cbc]: https://projects.coin-or.org/Cbc
 [ECOS]: https://github.com/ifa-ethz/ecos
 [GLPK]: http://www.gnu.org/software/glpk/
 [Gurobi]: http://www.gurobi.com/
