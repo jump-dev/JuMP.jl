@@ -1,8 +1,8 @@
 JuMP release notes
 ==================
 
-Unversioned
------------
+Version 0.10.0 (August 31, 2015)
+--------------------------------
 
   * Support (on Julia 0.4 and later) for conditions in indexing ``@defVar`` and ``@addConstraint`` constructs, e.g. ``@defVar(m, x[i=1:5,j=1:5; i+j >= 3])``
   * Support for vectorized operations on Variables and expressions. See the documentation for details.
