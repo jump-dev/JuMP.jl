@@ -29,8 +29,11 @@ JuMP's features include:
   * JuMP uses a generic solver-independent interface provided by the
     `MathProgBase <https://github.com/mlubin/MathProgBase.jl>`_ package, making it easy
     to change between a number of open-source and commercial optimization software packages ("solvers").
-  * Currently supported solvers include `Cbc <https://projects.coin-or.org/Cbc>`_,
+  * Currently supported solvers include
+    `Bonmin <https://projects.coin-or.org/Bonmin>`_,
+    `Cbc <https://projects.coin-or.org/Cbc>`_,
     `Clp <https://projects.coin-or.org/Clp>`_,
+    `Couenne <https://projects.coin-or.org/Couenne>`_,
     `CPLEX <http://www-01.ibm.com/software/commerce/optimization/cplex-optimizer/>`_,
     `ECOS <https://github.com/ifa-ethz/ecos>`_,
     `GLPK <http://www.gnu.org/software/glpk/>`_,
