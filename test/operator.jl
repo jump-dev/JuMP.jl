@@ -568,11 +568,21 @@ context("Vectorized arithmetic") do
     A = [2 1 0
          1 2 1
          0 1 2]
+    B = sparse(A)
     @fact TestHelper.vec_eq(A*x, [2x[1] +  x[2]
                         2x[2] + x[1] + x[3]
                         x[2] + 2x[3]]) --> true
+    @fact TestHelper.vec_eq(A*x, B*x) --> true
+    @fact TestHelper.vec_eq(A*x, @defExpr(B*x)) --> true
+    @fact TestHelper.vec_eq(@defExpr(A*x), @defExpr(B*x)) --> true
     @fact TestHelper.vec_eq(x'*A, [2x[1]+x[2]; 2x[2]+x[1]+x[3]; x[2]+2x[3]]') --> true
+    @fact TestHelper.vec_eq(x'*A, x'*B) --> true
+    @fact TestHelper.vec_eq(x'*A, @defExpr(x'*B)) --> true
+    @fact TestHelper.vec_eq(@defExpr(x'*A), @defExpr(x'*B)) --> true
     @fact TestHelper.vec_eq(x'*A*x, [2x[1]*x[1] + 2x[1]*x[2] + 2x[2]*x[2] + 2x[2]*x[3] + 2x[3]*x[3]]) --> true
+    @fact TestHelper.vec_eq(x'A*x, x'*B*x) --> true
+    @fact TestHelper.vec_eq(x'*A*x, @defExpr(x'*B*x)) --> true
+    @fact TestHelper.vec_eq(@defExpr(x'*A*x), @defExpr(x'*B*x)) --> true
 
     y = A*x
     @fact TestHelper.vec_eq(-x, [-x[1], -x[2], -x[3]]) --> true
@@ -618,6 +628,8 @@ context("Vectorized arithmetic") do
     @fact TestHelper.vec_eq(x[:] + y, [3x[1] +  x[2]
                              x[1] + 3x[2] +  x[3]
                                      x[2] + 3x[3]]) --> true
+
+    @fact TestHelper.vec_eq(@defExpr(A*x/2), A*x/2) --> true
 end
 
 context("Dot-ops") do
@@ -625,23 +637,51 @@ context("Dot-ops") do
     @defVar(m, x[1:2,1:2])
     A = [1 2;
          3 4]
+    B = sparse(A)
+    y = SparseMatrixCSC(2, 2, copy(B.colptr), copy(B.rowval), vec(x))
     @fact TestHelper.vec_eq(A.+x, [1+x[1,1]  2+x[1,2];
                                    3+x[2,1]  4+x[2,2]]) --> true
+    @fact TestHelper.vec_eq(A.+x, B.+x) --> true
+    # @fact TestHelper.vec_eq(A.+x, A.+y) --> true
+    # @fact TestHelper.vec_eq(A.+y, B.+y) --> true
     @fact TestHelper.vec_eq(x.+A, [1+x[1,1]  2+x[1,2];
                                    3+x[2,1]  4+x[2,2]]) --> true
+    @fact TestHelper.vec_eq(x.+A, x.+B) --> true
+    @fact TestHelper.vec_eq(x.+A, y.+A) --> true
+    # @fact TestHelper.vec_eq(y.+A, y.+B) --> true
     @fact TestHelper.vec_eq(A.-x, [1-x[1,1]  2-x[1,2];
                                    3-x[2,1]  4-x[2,2]]) --> true
+    @fact TestHelper.vec_eq(A.-x, B.-x) --> true
+    @fact TestHelper.vec_eq(A.-x, A.-y) --> true
+    # @fact TestHelper.vec_eq(A.-y, B.-y) --> true
     @fact TestHelper.vec_eq(x.-A, [-1+x[1,1]  -2+x[1,2];
                                    -3+x[2,1]  -4+x[2,2]]) --> true
+    @fact TestHelper.vec_eq(x.-A, x.-B) --> true
+    @fact TestHelper.vec_eq(x.-A, y.-A) --> true
+    # @fact TestHelper.vec_eq(y.-A, y.-B) --> true
     @fact TestHelper.vec_eq(A.*x, [1*x[1,1]  2*x[1,2];
                                    3*x[2,1]  4*x[2,2]]) --> true
+    if VERSION > v"0.4-"
+        @fact TestHelper.vec_eq(A.*x, B.*x) --> true
+        @fact TestHelper.vec_eq(A.*x, A.*y) --> true
+        # @fact TestHelper.vec_eq(A.*y, B.*y) --> true
+    end
     @fact TestHelper.vec_eq(x.*A, [1*x[1,1]  2*x[1,2];
                                    3*x[2,1]  4*x[2,2]]) --> true
+    if VERSION > v"0.4-"
+        @fact TestHelper.vec_eq(x.*A, x.*B) --> true
+        @fact TestHelper.vec_eq(x.*A, y.*A) --> true
+        # @fact TestHelper.vec_eq(y.*A, y.*B) --> true
+    end
     @fact_throws TestHelper.vec_eq(A./x, [1*x[1,1]  2*x[1,2];
                                           3*x[2,1]  4*x[2,2]])
     @fact TestHelper.vec_eq(x./A, [1/1*x[1,1]  1/2*x[1,2];
                                    1/3*x[2,1]  1/4*x[2,2]]) --> true
-
+    if VERSION > v"0.4-"
+        @fact TestHelper.vec_eq(x./A, x./B) --> true
+        @fact TestHelper.vec_eq(x./A, y./A) --> true
+        # @fact TestHelper.vec_eq(A./y, B./y) --> true
+    end
 end
 
 context("Vectorized comparisons") do
@@ -650,9 +690,12 @@ context("Vectorized comparisons") do
     A = [1 2 3
          0 4 5
          6 0 7]
+    B = sparse(A)
     @addConstraint(m, x'*A*x .>= 1)
     @fact TestHelper.vec_eq(m.quadconstr[1].terms, [x[1]*x[1] + 2x[1]*x[2] + 4x[2]*x[2] + 9x[1]*x[3] + 5x[2]*x[3] + 7x[3]*x[3] - 1]) --> true
     @fact m.quadconstr[1].sense --> :(>=)
+    @addConstraint(m, x'*A*x .>= 1)
+    @fact TestHelper.vec_eq(m.quadconstr[1].terms, m.quadconstr[2].terms) --> true
 
     mat = [ 3x[1] + 12x[3] +  4x[2]
             2x[1] + 12x[2] + 10x[3]
@@ -665,6 +708,13 @@ context("Vectorized comparisons") do
     @fact TestHelper.vec_eq(terms, mat) --> true
     @fact lbs --> fill(-Inf, 3)
     @fact ubs --> fill(   1, 3)
+    @fact TestHelper.vec_eq((x'A)' + 2A*x, (x'A)' + 2B*x) --> true
+    @fact TestHelper.vec_eq((x'A)' + 2A*x, (x'B)' + 2A*x) --> true
+    @fact TestHelper.vec_eq((x'A)' + 2A*x, (x'B)' + 2B*x) --> true
+    @fact TestHelper.vec_eq((x'A)' + 2A*x, @defExpr((x'A)' + 2A*x)) --> true
+    @fact TestHelper.vec_eq((x'A)' + 2A*x, @defExpr((x'B)' + 2A*x)) --> true
+    @fact TestHelper.vec_eq((x'A)' + 2A*x, @defExpr((x'A)' + 2B*x)) --> true
+    @fact TestHelper.vec_eq((x'A)' + 2A*x, @defExpr((x'B)' + 2B*x)) --> true
 
     @addConstraint(m, -1 .<= (x'A)' + 2A*x .<= 1)
     terms = map(v->v.terms, m.linconstr[4:6])
@@ -738,6 +788,10 @@ facts("[operator] JuMPArray concatenation") do
             x[2] -x[1]*x[2]+2y[2,1]  -x[2]*x[2]+2y[2,2]  -x[2]*x[3] + 2y[2,3]
             x[3] -x[1]*x[3]+2y[3,1]  -x[2]*x[3]+2y[3,2]  -x[3]*x[3] + 2y[3,3]]
     @fact TestHelper.vec_eq(tmp3, tmp4) --> true
+
+    A = sprand(3, 3, 0.2)
+    B = full(A)
+    @fact TestHelper.vec_eq([A, y], [B, y]) --> true
 end
 
 

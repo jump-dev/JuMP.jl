@@ -288,6 +288,25 @@ for sgn in (:<=, :(==), :>=)
 end
 
 #############################################################################
+# Helpers to initialize memory for AffExpr/QuadExpr
+#############################################################################
+
+_sizehint_expr!(q::GenericAffExpr, n::Int) = begin
+        sizehint!(q.vars,   length(q.vars)   + n)
+        sizehint!(q.coeffs, length(q.coeffs) + n)
+        nothing
+end
+
+_sizehint_expr!(q::GenericQuadExpr, n::Int) = begin
+        sizehint!(q.qvars1,  length(q.qvars1)  + n)
+        sizehint!(q.qvars2,  length(q.qvars2)  + n)
+        sizehint!(q.qcoeffs, length(q.qcoeffs) + n)
+        _sizehint_expr!(q.aff, n)
+        nothing
+end
+_sizehint_expr!(q, n) = nothing
+
+#############################################################################
 # High-level operators
 # Currently supported
 #  - sum
@@ -299,8 +318,8 @@ Base.sum(j::JuMPDict)  = sum(values(j.tupledict))
 Base.sum(j::JuMPArray{Variable}) = AffExpr(vec(j.innerArray), ones(length(j.innerArray)), 0.0)
 Base.sum(j::JuMPDict{Variable})  = AffExpr(collect(values(j.tupledict)), ones(length(j.tupledict)), 0.0)
 Base.sum(j::Array{Variable}) = AffExpr(vec(j), ones(length(j)), 0.0)
-function Base.sum{S,T}(affs::Array{GenericAffExpr{S,T}})
-    new_aff = zero(GenericAffExpr{S,T})
+function Base.sum{T<:GenericAffExpr}(affs::Array{T})
+    new_aff = zero(T)
     for aff in affs
         append!(new_aff, aff)
     end
@@ -373,200 +392,187 @@ Base.diagm(x::Vector{Variable}) = diagm(convert(Vector{AffExpr}, x))
 # checks are performed; it is expected that the caller has done this, has ensured
 # that the eltype of buf is appropriate, and has zeroed the elements of buf (if desired).
 
-function _multiply!(ret, A, x)
-    m, n = size(A,1), size(A,2)
-    for i in 1:m, j in 1:n
-        ret[i] += A[i,j] * x[j]
-    end
-    return ret
-end
-
-_sizehint_expr!(q::GenericAffExpr, n::Int) = begin
-        sizehint!(q.vars,   length(q.vars)   + n)
-        sizehint!(q.coeffs, length(q.coeffs) + n)
-        nothing
-end
-
-_sizehint_expr!(q::GenericQuadExpr, n::Int) = begin
-        sizehint!(q.qvars1,  length(q.qvars1)  + n)
-        sizehint!(q.qvars2,  length(q.qvars2)  + n)
-        sizehint!(q.qcoeffs, length(q.qcoeffs) + n)
-        _sizehint_expr!(q.aff, n)
-        nothing
-end
-_sizehint_expr!(q, n) = nothing
-
-function _multiply!{T<:Union(GenericAffExpr,GenericQuadExpr)}(ret::Array{T}, lhs, rhs)
+function _multiply!{T<:JuMPTypes}(ret::Array{T}, lhs::Array, rhs::Array)
     m, n = size(lhs,1), size(lhs,2)
     r, s = size(rhs,1), size(rhs,2)
-    p, q = size(ret,1), size(ret,2)
     for i in 1:m, j in 1:s
-        q = zero(T)
+        q = ret[i,j]
         _sizehint_expr!(q, n)
         for k in 1:n
             tmp = convert(T, lhs[i,k]*rhs[k,j])
             append!(q, tmp)
         end
-        ret[i,j] = q
     end
     ret
 end
 
-function _multiply!{T<:Union(GenericAffExpr,GenericQuadExpr)}(ret::Array{T}, lhs::SparseMatrixCSC, rhs)
-    m, n = size(lhs,1), size(lhs,2)
-    r, s = size(rhs,1), size(rhs,2)
-    p, q = size(ret,1), size(ret,2)
-    for i in 1:m, j in 1:s
-        q = zero(T)
-        _sizehint_expr!(q, n)
-        for k in lhs.colptr[i]:lhs.colptr[i+1]
-            tmp = convert(T, lhs.nzval[k]*rhs[lhs.rowval[k],j])
-            append!(q, tmp)
+function _multiply!{T<:Union(GenericAffExpr,GenericQuadExpr)}(ret::Array{T}, lhs::SparseMatrixCSC, rhs::Array)
+    nzv = lhs.nzval
+    rv  = lhs.rowval
+    for col in 1:lhs.n
+        for k in 1:size(ret, 2)
+            for j in lhs.colptr[col]:(lhs.colptr[col+1]-1)
+                append!(ret[rv[j], k], nzv[j] * rhs[col,k])
+            end
         end
-        ret[i,j] = q
     end
     ret
 end
 
-# Not sure how/why you'd make a sparse matrix with Variables...
-_multiply!{T<:Union(GenericAffExpr,GenericQuadExpr)}(ret::Array{T}, lhs::SparseMatrixCSC, rhs::SparseMatrixCSC) =
-    _multiply!(ret, lhs, full(rhs))
+function _multiply!{T<:Union(GenericAffExpr,GenericQuadExpr)}(ret::Array{T}, lhs::Matrix, rhs::SparseMatrixCSC)
+    rowval = rhs.rowval
+    nzval  = rhs.nzval
+    for multivec_row in 1:size(lhs,1)
+        for col in 1:rhs.n
+            idxset = rhs.colptr[col]:(rhs.colptr[col+1]-1)
+            q = ret[multivec_row, col]
+            _sizehint_expr!(q, length(idxset))
+            for k in idxset
+                append!(q, lhs[multivec_row, rowval[k]] * nzval[k])
+            end
+        end
+    end
+    ret
+end
 
-# Kind of hacky that this relies on commutativity...
-function _multiply!{T<:Union(GenericAffExpr,GenericQuadExpr)}(ret::Array{T}, lhs, rhs::SparseMatrixCSC)
-    tmp = Array(T, size(ret,2), size(ret,1))
-    _multiply!(tmp, rhs', lhs')
-    copy!(ret, tmp')
+# TODO: implement sparse * sparse code as in base/sparse/linalg.jl (spmatmul)
+_multiply!{T<:JuMPTypes}(ret::AbstractArray{T}, lhs::SparseMatrixCSC, rhs::SparseMatrixCSC) = _multiply!(ret, lhs, full(rhs))
+
+_multiply!(ret, lhs, rhs) = A_mul_B!(ret, lhs, ret)
+
+(*){T<:JuMPTypes}(             A::Union(Matrix{T},SparseMatrixCSC{T}), x::Union(Matrix,   Vector,   SparseMatrixCSC))    = _matmul(A, x)
+(*){T<:JuMPTypes,R<:JuMPTypes}(A::Union(Matrix{T},SparseMatrixCSC{T}), x::Union(Matrix{R},Vector{R},SparseMatrixCSC{R})) = _matmul(A, x)
+(*){T<:JuMPTypes}(             A::Union(Matrix,   SparseMatrixCSC),    x::Union(Matrix{T},Vector{T},SparseMatrixCSC{T})) = _matmul(A, x)
+
+function _matmul(A, x)
+    m, n = size(A,1), size(A,2)
+    r, s = size(x,1), size(x,2)
+    n == r || error("Incompatible sizes")
+    ret = _return_array(A, x)
+    _multiply!(ret, A, x)
     ret
 end
 
 _multiply_type(R,S) = typeof(one(R) * one(S))
 
 # Don't do size checks here in _return_array, defer that to (*)
-function _return_array{R,S}(A::AbstractArray{R}, x::AbstractArray{S,1})
-    Q = _multiply_type(R,S)
-    m = size(A,1)
-    Array(Q, m)
-end
+_return_array{R,S}(A::AbstractMatrix{R}, x::AbstractVector{S}) = _fillwithzeros(Array(_multiply_type(R,S), size(A,1)))
+_return_array{R,S}(A::AbstractMatrix{R}, x::AbstractMatrix{S}) = _fillwithzeros(Array(_multiply_type(R,S), size(A,1), size(x,2)))
 
-function _return_array{R,S}(A::AbstractArray{R}, x::AbstractArray{S,2})
-    Q = _multiply_type(R,S)
-    m = size(A,1)
-    s = size(x,2)
-    Array(Q, m, s)
-end
-
-function (*){T<:JuMPTypes}(A::Array{T}, x::Union(Array,SparseMatrixCSC))
-    m, n = size(A,1), size(A,2)
-    r, s = size(x,1), size(x,2)
-    n == r || error("Incompatible sizes")
-    ret = _return_array(A, x)
-    _multiply!(ret, A, x)
-    ret
-end
-
-function (*){T<:JuMPTypes,R<:JuMPTypes}(A::Array{T}, x::Array{R})
-    m, n = size(A,1), size(A,2)
-    r, s = size(x,1), size(x,2)
-    n == r || error("Incompatible sizes")
-    ret = _return_array(A, x)
-    _multiply!(ret, A, x)
-    ret
-end
-
-function (*){T<:JuMPTypes}(A::Union(Array,SparseMatrixCSC), x::Array{T})
-    m, n = size(A,1), size(A,2)
-    r, s = size(x,1), size(x,2)
-    n == r || error("Incompatible sizes")
-    ret = _return_array(A, x)
-    _multiply!(ret, A, x)
-    return ret
+# helper so we don't fill the buffer array with the same object
+function _fillwithzeros{T}(arr::Array{T})
+    for I in eachindex(arr)
+        arr[I] = zero(T)
+    end
+    arr
 end
 
 for op in [:+, :-, :*]; @eval begin
-    $op{T<:JuMPTypes}(lhs::Number,rhs::AbstractArray{T}) = map(c->$op(lhs,c), full(rhs))
-    $op{T<:JuMPTypes}(lhs::AbstractArray{T},rhs::Number) = map(c->$op(c,rhs), full(lhs))
-    $op{T<:JuMPTypes}(lhs::T,rhs::AbstractArray) = map(c->$op(lhs,c), full(rhs))
-    $op{T<:JuMPTypes}(lhs::AbstractArray,rhs::T) = map(c->$op(c,rhs), full(lhs))
+    function $op{T<:JuMPTypes}(lhs::Number,rhs::AbstractArray{T})
+        ret = similar(rhs, typeof($op(lhs, zero(T))))
+        for I in eachindex(ret)
+            ret[I] = $op(lhs, rhs[I])
+        end
+        ret
+    end
+    function $op{T<:JuMPTypes}(lhs::AbstractArray{T},rhs::Number)
+        ret = similar(lhs, typeof($op(zero(T), rhs)))
+        for I in eachindex(ret)
+            ret[I] = $op(lhs[I], rhs)
+        end
+        ret
+    end
+    function $op{T<:JuMPTypes,S}(lhs::T,rhs::AbstractArray{S})
+        ret = similar(rhs, typeof($op(lhs, zero(S))))
+        for I in eachindex(ret)
+            ret[I] = $op(lhs, rhs[I])
+        end
+        ret
+    end
+    function $op{T<:JuMPTypes,S}(lhs::AbstractArray{S},rhs::T)
+        ret = similar(lhs, typeof($op(zero(S), rhs)))
+        for I in eachindex(ret)
+            ret[I] = $op(lhs[I], rhs)
+        end
+        ret
+    end
 end; end
 
 # Special-case sparse matrix scalar multiplicaiton
-(*){T<:JuMPTypes}(lhs::T, rhs::SparseMatrixCSC) =
-    SparseMatrixCSC(rhs.m, rhs.n, copy(rhs.colptr), copy(rhs.rowval), lhs .* rhs.nzval)
 (*){T<:JuMPTypes}(lhs::Number, rhs::SparseMatrixCSC{T}) = scale(rhs, lhs)
-(*){T<:JuMPTypes}(lhs::JuMPTypes, rhs::SparseMatrixCSC{T}) =
+(*)(lhs::JuMPTypes, rhs::SparseMatrixCSC) =
     SparseMatrixCSC(rhs.m, rhs.n, copy(rhs.colptr), copy(rhs.rowval), lhs .* rhs.nzval)
-(*){T<:JuMPTypes}(lhs::SparseMatrixCSC, rhs::T) =
-    SparseMatrixCSC(lhs.m, lhs.n, copy(lhs.colptr), copy(lhs.rowval), lhs.nzval .* rhs)
 (*){T<:JuMPTypes}(lhs::SparseMatrixCSC{T}, rhs::Number) = scale(lhs, rhs)
-(*){T<:JuMPTypes}(lhs::SparseMatrixCSC{T}, rhs::JuMPTypes) =
+(*)(lhs::SparseMatrixCSC, rhs::JuMPTypes) =
     SparseMatrixCSC(lhs.m, lhs.n, copy(lhs.colptr), copy(lhs.rowval), lhs.nzval .* rhs)
 # The following are primarily there for internal use in the macro code for @addConstraint
 for op in [:(+), :(-)]; @eval begin
     function $op(lhs::Array{Variable},rhs::Array{Variable})
         (sz = size(lhs)) == size(rhs) || error("Incompatible sizes for $op: $sz $op $(size(rhs))")
         ret = Array(AffExpr, sz)
-        map!($op, ret, lhs, rhs)
+        for I in eachindex(ret)
+            ret[I] = $op(lhs[I], rhs[I])
+        end
         ret
     end
 end; end
 
-(/){T<:JuMPTypes}(lhs::Array{T},rhs::Real) = map(c->$op(c,rhs), lhs)
+function (/){T<:JuMPTypes}(lhs::Array{T},rhs::Real)
+    ret = similar(lhs, typeof(one(T) / rhs))
+    for I in eachindex(lhs)
+        ret[I] = lhs[I] / rhs
+    end
+    ret
+end
 
 for (dotop,op) in [(:.+,:+), (:.-,:-), (:.*,:*), (:./,:/)]
     @eval begin
-        $dotop(lhs::Real,rhs::JuMPTypes) = $op(lhs,rhs)
-        $dotop(lhs::JuMPTypes,rhs::Real) = $op(lhs,rhs)
-        function $dotop{T<:JuMPTypes}(lhs::Real,rhs::Array{T})
-            arr_type = typeof($op(lhs,one(T)))
-            arr = Array(arr_type, size(rhs))
+        $dotop(lhs::Number,rhs::JuMPTypes) = $op(lhs,rhs)
+        $dotop(lhs::JuMPTypes,rhs::Number) = $op(lhs,rhs)
+        function $dotop{T<:JuMPTypes}(lhs::Number,rhs::AbstractArray{T})
+            arr = Array(typeof($op(lhs, zero(T))), size(rhs))
             @inbounds for i in eachindex(rhs)
                 arr[i] = $op(lhs,rhs[i])
             end
             return arr
         end
-        function $dotop{T<:JuMPTypes}(lhs::Array{T},rhs::Real)
-            arr_type = typeof($op(one(T),rhs))
-            arr = Array(arr_type, size(lhs))
+        function $dotop{T<:JuMPTypes}(lhs::AbstractArray{T},rhs::Number)
+            arr = Array(typeof($op(zero(T), rhs)), size(lhs))
             @inbounds for i in eachindex(lhs)
                 arr[i] = $op(lhs[i],rhs)
             end
             return arr
         end
-        function $dotop{T<:JuMPTypes}(lhs::T,rhs::Array)
+        function $dotop{T<:JuMPTypes}(lhs::T,rhs::AbstractArray)
             length(rhs) == 0 && return Array(eltype(rhs),size(rhs))
             # Guess based on first element of rhs
-            arr_type = typeof($op(lhs,one(rhs[1])))
-            arr = Array(arr_type, size(rhs))
+            arr = Array(typeof($op(lhs, rhs[1])), size(rhs))
             @inbounds for i in eachindex(rhs)
                 arr[i] = $op(lhs,rhs[i])
             end
             return arr
         end
-        function $dotop{T<:JuMPTypes}(lhs::Array,rhs::T)
+        function $dotop{T<:JuMPTypes}(lhs::AbstractArray,rhs::T)
             length(lhs) == 0 && return Array(eltype(lhs),size(lhs))
             # Guess based on first element of rhs
-            arr_type = typeof($op(one(lhs[1]),rhs))
-            arr = Array(arr_type, size(lhs))
+            arr = Array(typeof($op(lhs[1], rhs)), size(lhs))
             @inbounds for i in eachindex(lhs)
                 arr[i] = $op(lhs[i],rhs)
             end
             return arr
         end
 
-        function $dotop{S<:Real,T<:JuMPTypes,N}(lhs::Array{S,N},rhs::Array{T,N})
+        function $dotop{S<:Number,T<:JuMPTypes,N}(lhs::AbstractArray{S,N},rhs::AbstractArray{T,N})
             size(lhs) == size(rhs) || error("Incompatible dimensions")
-            arr_type = typeof($op(one(S),one(T)))
-            arr = Array(arr_type, size(lhs))
+            arr = Array(typeof($op(zero(S), zero(T))), size(rhs))
             @inbounds for i in eachindex(lhs)
                 arr[i] = $op(lhs[i],rhs[i])
             end
             return arr
         end
-        function $dotop{S<:JuMPTypes,T<:Real,N}(lhs::Array{S,N},rhs::Array{T,N})
+        function $dotop{S<:JuMPTypes,T<:Number,N}(lhs::AbstractArray{S,N},rhs::AbstractArray{T,N})
             size(lhs) == size(rhs) || error("Incompatible dimensions")
-            arr_type = typeof($op(one(S),one(T)))
-            arr = Array(arr_type, size(lhs))
+            arr = Array(typeof($op(zero(S), zero(T))), size(rhs))
             @inbounds for i in eachindex(lhs)
                 arr[i] = $op(lhs[i],rhs[i])
             end
@@ -575,7 +581,13 @@ for (dotop,op) in [(:.+,:+), (:.-,:-), (:.*,:*), (:./,:/)]
     end
 end
 (+){T<:JuMPTypes}(x::Array{T}) = x
-(-){N}(x::Array{Variable,N}) = (-)(convert(Array{AffExpr,N},x))
+function (-)(x::Array{Variable})
+    ret = similar(x, AffExpr)
+    for I in eachindex(ret)
+        ret[I] = -x[I]
+    end
+    ret
+end
 (*){T<:JuMPTypes}(x::Array{T}) = x
 
 ###############################################################################

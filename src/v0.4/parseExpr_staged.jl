@@ -325,13 +325,8 @@ end
     @assert n ≥ 3
     varidx = find(t -> (t == Variable || t == AffExpr), collect(args))
     allscalar = all(t -> (t <: Number), args[setdiff(1:n, varidx)])
-    if allscalar && length(varidx) == 1
-        idx = varidx[1]
-        coef = Expr(:call, :*, [:(args[$i]) for i in setdiff(1:n,idx)]...)
-    else
-        coef = Expr(:call, :*, [:(args[$i]) for i in 1:(n-1)]...)
-        idx = n
-    end
+    idx = (allscalar && length(varidx) == 1) ? varidx[1] : n
+    coef = Expr(:call, :*, [:(args[$i]) for i in setdiff(1:n,idx)]...)
     :(addToExpression(ex, $coef, args[$idx]))
 end
 
@@ -453,7 +448,7 @@ function parseNorm(normp::Symbol, x::Expr, aff::Symbol, lcoeffs, rcoeffs, newaff
         $preblock
         $code
         $gennorm = _build_norm($param,$normexpr)
-        $newaff = addToExpression_reorder($aff,$(lcoeffs...),$gennorm,$(rcoeffs...))
+        $newaff = $(Expr(:call, :addToExpression_reorder, aff,lcoeffs...,gennorm,rcoeffs...))
     end
 end
 
@@ -529,13 +524,13 @@ function parseExpr(x, aff::Symbol, lcoeffs::Vector, rcoeffs::Vector, newaff::Sym
             s = gensym()
             newaff_, parsed = parseExprToplevel(x.args[2], s)
             push!(blk.args, :($s = 0.0; $parsed))
-            push!(blk.args, :($newaff = $(Expr(:call,:*,lcoeffs...,newaff_,newaff_,rcoeffs...)) + $aff))
+            push!(blk.args, :($newaff = $aff + $(Expr(:call,:*,lcoeffs...,newaff_,newaff_,rcoeffs...))))
             return newaff, blk
         elseif x.head == :call && x.args[1] == :/
             @assert length(x.args) == 3
             numerator = x.args[2]
             denom = x.args[3]
-            return parseExpr(numerator, aff, vcat(esc(:(1/$denom)),lcoeffs),rcoeffs,newaff)
+            return parseExpr(numerator, aff, lcoeffs,vcat(esc(:(1/$denom)),rcoeffs),newaff)
         elseif x.head == :curly
             return newaff, parseCurly(x,aff,lcoeffs,rcoeffs,newaff)
         else # at lowest level?

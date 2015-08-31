@@ -488,6 +488,23 @@ facts("[model] Test column-wise modeling") do
     @fact solve(mod) --> :Optimal
     @fact getValue(z1) --> roughly(1.0, TOL)
     @fact getValue(z2) --> roughly(1.0, TOL)
+
+    # vectorized with sparse matrices
+    mod = Model()
+    @defVar(mod, 0 <= x <= 1)
+    @defVar(mod, 0 <= y <= 1)
+    # TODO: get this to work by adding method for Ac_mul_B!
+    # obj = sparse([5,1])'*[x,y]
+    obj = sparse([5,1]')*[x,y]
+    @setObjective(mod, Max, obj[1])
+    A = sparse([1 1
+                2 1])
+    @addConstraint(mod, A*[x,y] .<= [6,7])
+    @defVar(mod, 0 <= z1 <= 1, objective=10.0, inconstraints=con, coefficients=[1.0,-2.0])
+    @defVar(mod, 0 <= z2 <= 1, objective=10.0, inconstraints=Any[con[i] for i in 1:2], coefficients=[1.0,-2.0])
+    @fact solve(mod) --> :Optimal
+    @fact getValue(z1) --> roughly(1.0, TOL)
+    @fact getValue(z2) --> roughly(1.0, TOL)
 end
 
 facts("[model] Test all MPS paths") do
@@ -654,10 +671,12 @@ facts("[model] Test MIQP vectorization") do
     y = X * [100, 50, 10, 1] + 20*q
     for solver in quad_solvers
         @fact bestsubset(solver,X,y,2,500,false) --> roughly([101.789,49.414,8.63904,1.72663], 10TOL)
+        @fact bestsubset(solver,sparse(X),y,2,500,false) --> roughly([101.789,49.414,8.63904,1.72663], 10TOL)
     end
     for solver in quad_mip_solvers
         y = X * [100, 50, 10, 1] + 20*q
         @fact bestsubset(solver,X,y,2,500,true) --> roughly([106.25,53.7799,0.0,0.0], 10TOL)
+        @fact bestsubset(solver,sparse(X),y,2,500,true) --> roughly([106.25,53.7799,0.0,0.0], 10TOL)
     end
 end
 
