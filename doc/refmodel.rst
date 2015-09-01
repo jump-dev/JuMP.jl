@@ -108,7 +108,7 @@ you would a linear objective::
 Second-order cone constraints
 ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
 
-Second-order cone constraints of the form :math:`||Ax-b||_2 + a^Tx + c ≤ 0` can be added directly using the ``norm`` function::
+Second-order cone constraints of the form :math:`||Ax-b||_2 + a^Tx + c \le 0` can be added directly using the ``norm`` function::
 
     @addConstraint(m, norm(A*x) <= 2w - 1)
 
