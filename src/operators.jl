@@ -467,29 +467,32 @@ function _fillwithzeros{T}(arr::Array{T})
     arr
 end
 
+# Let's be conservative and only define arithmetic for the basic types
+typealias ArrayOrSparseMat{T} Union(Array{T}, SparseMatrixCSC{T})
+
 for op in [:+, :-, :*]; @eval begin
-    function $op{T<:JuMPTypes}(lhs::Number,rhs::AbstractArray{T})
+    function $op{T<:JuMPTypes}(lhs::Number,rhs::ArrayOrSparseMat{T})
         ret = similar(rhs, typeof($op(lhs, zero(T))))
         for I in eachindex(ret)
             ret[I] = $op(lhs, rhs[I])
         end
         ret
     end
-    function $op{T<:JuMPTypes}(lhs::AbstractArray{T},rhs::Number)
+    function $op{T<:JuMPTypes}(lhs::ArrayOrSparseMat{T},rhs::Number)
         ret = similar(lhs, typeof($op(zero(T), rhs)))
         for I in eachindex(ret)
             ret[I] = $op(lhs[I], rhs)
         end
         ret
     end
-    function $op{T<:JuMPTypes,S}(lhs::T,rhs::AbstractArray{S})
+    function $op{T<:JuMPTypes,S}(lhs::T,rhs::ArrayOrSparseMat{S})
         ret = similar(rhs, typeof($op(lhs, zero(S))))
         for I in eachindex(ret)
             ret[I] = $op(lhs, rhs[I])
         end
         ret
     end
-    function $op{T<:JuMPTypes,S}(lhs::AbstractArray{S},rhs::T)
+    function $op{T<:JuMPTypes,S}(lhs::ArrayOrSparseMat{S},rhs::T)
         ret = similar(lhs, typeof($op(zero(S), rhs)))
         for I in eachindex(ret)
             ret[I] = $op(lhs[I], rhs)
@@ -529,21 +532,21 @@ for (dotop,op) in [(:.+,:+), (:.-,:-), (:.*,:*), (:./,:/)]
     @eval begin
         $dotop(lhs::Number,rhs::JuMPTypes) = $op(lhs,rhs)
         $dotop(lhs::JuMPTypes,rhs::Number) = $op(lhs,rhs)
-        function $dotop{T<:JuMPTypes}(lhs::Number,rhs::AbstractArray{T})
+        function $dotop{T<:JuMPTypes}(lhs::Number,rhs::ArrayOrSparseMat{T})
             arr = Array(typeof($op(lhs, zero(T))), size(rhs))
             @inbounds for i in eachindex(rhs)
                 arr[i] = $op(lhs,rhs[i])
             end
             return arr
         end
-        function $dotop{T<:JuMPTypes}(lhs::AbstractArray{T},rhs::Number)
+        function $dotop{T<:JuMPTypes}(lhs::ArrayOrSparseMat{T},rhs::Number)
             arr = Array(typeof($op(zero(T), rhs)), size(lhs))
             @inbounds for i in eachindex(lhs)
                 arr[i] = $op(lhs[i],rhs)
             end
             return arr
         end
-        function $dotop{T<:JuMPTypes}(lhs::T,rhs::AbstractArray)
+        function $dotop{T<:JuMPTypes}(lhs::T,rhs::ArrayOrSparseMat)
             length(rhs) == 0 && return Array(eltype(rhs),size(rhs))
             # Guess based on first element of rhs
             arr = Array(typeof($op(lhs, rhs[1])), size(rhs))
@@ -552,7 +555,7 @@ for (dotop,op) in [(:.+,:+), (:.-,:-), (:.*,:*), (:./,:/)]
             end
             return arr
         end
-        function $dotop{T<:JuMPTypes}(lhs::AbstractArray,rhs::T)
+        function $dotop{T<:JuMPTypes}(lhs::ArrayOrSparseMat,rhs::T)
             length(lhs) == 0 && return Array(eltype(lhs),size(lhs))
             # Guess based on first element of rhs
             arr = Array(typeof($op(lhs[1], rhs)), size(lhs))
@@ -561,7 +564,7 @@ for (dotop,op) in [(:.+,:+), (:.-,:-), (:.*,:*), (:./,:/)]
             end
             return arr
         end
-        function $dotop{S<:JuMPTypes,T<:Number,N}(lhs::AbstractArray{S,N},rhs::AbstractArray{T,N})
+        function $dotop{S<:JuMPTypes,T<:Number}(lhs::ArrayOrSparseMat{S},rhs::ArrayOrSparseMat{T})
             size(lhs) == size(rhs) || error("Incompatible dimensions")
             arr = Array(typeof($op(zero(S), zero(T))), size(rhs))
             @inbounds for i in eachindex(lhs)
@@ -572,7 +575,7 @@ for (dotop,op) in [(:.+,:+), (:.-,:-), (:.*,:*), (:./,:/)]
     end
     if op != :/
         @eval begin
-            function $dotop{S<:JuMPTypes,T<:JuMPTypes,N}(lhs::AbstractArray{S,N},rhs::AbstractArray{T,N})
+            function $dotop{S<:JuMPTypes,T<:JuMPTypes}(lhs::ArrayOrSparseMat{S},rhs::ArrayOrSparseMat{T})
                 size(lhs) == size(rhs) || error("Incompatible dimensions")
                 arr = Array(typeof($op(zero(S), zero(T))), size(rhs))
                 @inbounds for i in eachindex(lhs)
@@ -580,7 +583,7 @@ for (dotop,op) in [(:.+,:+), (:.-,:-), (:.*,:*), (:./,:/)]
                 end
                 return arr
             end
-            function $dotop{S<:Number,T<:JuMPTypes,N}(lhs::AbstractArray{S,N},rhs::AbstractArray{T,N})
+            function $dotop{S<:Number,T<:JuMPTypes}(lhs::ArrayOrSparseMat{S},rhs::ArrayOrSparseMat{T})
                 size(lhs) == size(rhs) || error("Incompatible dimensions")
                 arr = Array(typeof($op(zero(S), zero(T))), size(rhs))
                 @inbounds for i in eachindex(lhs)
