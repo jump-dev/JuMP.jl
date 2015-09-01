@@ -35,7 +35,7 @@ JuMP makes it easy to specify and **solve optimization problems without expert k
 Our documentation includes an installation guide, quick-start guide, and reference manual.
 
 **Latest Release**: 0.10.0 (via ``Pkg.add``)
-  * [Documentation](https://jump.readthedocs.org/en/release-0.10)
+  * [Documentation](https://jump.readthedocs.org/en/latest)
   * [Examples](https://github.com/JuliaOpt/JuMP.jl/tree/release-0.10/examples)
   * Testing status:
     * TravisCI: [![Build Status](https://travis-ci.org/JuliaOpt/JuMP.jl.svg?branch=release-0.10)](https://travis-ci.org/JuliaOpt/JuMP.jl)
