@@ -575,7 +575,7 @@ context("With solver $(typeof(solver))") do
     mod = Model(solver=solver)
     @defVar(mod, x[1:3], Bin)
     @defVar(mod, y[k=1:2] == k)
-    buildInternalModel(mod)
+    buildInternalModel(mod, JuMP.ProblemTraits(mod), false)
     @fact MathProgBase.getvartype(getInternalModel(mod)) --> [:Bin,:Bin,:Bin,:Cont,:Cont]
 end; end; end
 
