@@ -467,29 +467,32 @@ function _fillwithzeros{T}(arr::Array{T})
     arr
 end
 
-for op in [:+, :-, :*]; @eval begin
-    function $op{T<:JuMPTypes}(lhs::Number,rhs::AbstractArray{T})
+# Let's be conservative and only define arithmetic for the basic types
+typealias ArrayOrSparseMat{T} Union(Array{T}, SparseMatrixCSC{T})
+
+for op in [:+, :-, :*, :/]; @eval begin
+    function $op{T<:JuMPTypes}(lhs::Number,rhs::ArrayOrSparseMat{T})
         ret = similar(rhs, typeof($op(lhs, zero(T))))
         for I in eachindex(ret)
             ret[I] = $op(lhs, rhs[I])
         end
         ret
     end
-    function $op{T<:JuMPTypes}(lhs::AbstractArray{T},rhs::Number)
+    function $op{T<:JuMPTypes}(lhs::ArrayOrSparseMat{T},rhs::Number)
         ret = similar(lhs, typeof($op(zero(T), rhs)))
         for I in eachindex(ret)
             ret[I] = $op(lhs[I], rhs)
         end
         ret
     end
-    function $op{T<:JuMPTypes,S}(lhs::T,rhs::AbstractArray{S})
+    function $op{T<:JuMPTypes,S}(lhs::T,rhs::ArrayOrSparseMat{S})
         ret = similar(rhs, typeof($op(lhs, zero(S))))
         for I in eachindex(ret)
             ret[I] = $op(lhs, rhs[I])
         end
         ret
     end
-    function $op{T<:JuMPTypes,S}(lhs::AbstractArray{S},rhs::T)
+    function $op{T<:JuMPTypes,S}(lhs::ArrayOrSparseMat{S},rhs::T)
         ret = similar(lhs, typeof($op(zero(S), rhs)))
         for I in eachindex(ret)
             ret[I] = $op(lhs[I], rhs)
@@ -505,6 +508,7 @@ end; end
 (*){T<:JuMPTypes}(lhs::SparseMatrixCSC{T}, rhs::Number) = scale(lhs, rhs)
 (*)(lhs::SparseMatrixCSC, rhs::JuMPTypes) =
     SparseMatrixCSC(lhs.m, lhs.n, copy(lhs.colptr), copy(lhs.rowval), lhs.nzval .* rhs)
+
 # The following are primarily there for internal use in the macro code for @addConstraint
 for op in [:(+), :(-)]; @eval begin
     function $op(lhs::Array{Variable},rhs::Array{Variable})
@@ -517,83 +521,39 @@ for op in [:(+), :(-)]; @eval begin
     end
 end; end
 
-function (/){T<:JuMPTypes}(lhs::Array{T},rhs::Real)
-    ret = similar(lhs, typeof(one(T) / rhs))
-    for I in eachindex(lhs)
-        ret[I] = lhs[I] / rhs
-    end
-    ret
-end
-
 for (dotop,op) in [(:.+,:+), (:.-,:-), (:.*,:*), (:./,:/)]
     @eval begin
         $dotop(lhs::Number,rhs::JuMPTypes) = $op(lhs,rhs)
         $dotop(lhs::JuMPTypes,rhs::Number) = $op(lhs,rhs)
-        function $dotop{T<:JuMPTypes}(lhs::Number,rhs::AbstractArray{T})
-            arr = Array(typeof($op(lhs, zero(T))), size(rhs))
-            @inbounds for i in eachindex(rhs)
-                arr[i] = $op(lhs,rhs[i])
-            end
-            return arr
-        end
-        function $dotop{T<:JuMPTypes}(lhs::AbstractArray{T},rhs::Number)
-            arr = Array(typeof($op(zero(T), rhs)), size(lhs))
-            @inbounds for i in eachindex(lhs)
-                arr[i] = $op(lhs[i],rhs)
-            end
-            return arr
-        end
-        function $dotop{T<:JuMPTypes}(lhs::T,rhs::AbstractArray)
-            length(rhs) == 0 && return Array(eltype(rhs),size(rhs))
-            # Guess based on first element of rhs
-            arr = Array(typeof($op(lhs, rhs[1])), size(rhs))
-            @inbounds for i in eachindex(rhs)
-                arr[i] = $op(lhs,rhs[i])
-            end
-            return arr
-        end
-        function $dotop{T<:JuMPTypes}(lhs::AbstractArray,rhs::T)
-            length(lhs) == 0 && return Array(eltype(lhs),size(lhs))
-            # Guess based on first element of rhs
-            arr = Array(typeof($op(lhs[1], rhs)), size(lhs))
-            @inbounds for i in eachindex(lhs)
-                arr[i] = $op(lhs[i],rhs)
-            end
-            return arr
-        end
-        function $dotop{S<:JuMPTypes,T<:Number,N}(lhs::AbstractArray{S,N},rhs::AbstractArray{T,N})
-            size(lhs) == size(rhs) || error("Incompatible dimensions")
-            arr = Array(typeof($op(zero(S), zero(T))), size(rhs))
-            @inbounds for i in eachindex(lhs)
-                arr[i] = $op(lhs[i],rhs[i])
-            end
-            return arr
-        end
     end
-    if op != :/
-        @eval begin
-            function $dotop{S<:JuMPTypes,T<:JuMPTypes,N}(lhs::AbstractArray{S,N},rhs::AbstractArray{T,N})
-                size(lhs) == size(rhs) || error("Incompatible dimensions")
-                arr = Array(typeof($op(zero(S), zero(T))), size(rhs))
-                @inbounds for i in eachindex(lhs)
-                    arr[i] = $op(lhs[i],rhs[i])
+    for (T1,T2) in [(:JuMPTypes,:Number),(:JuMPTypes,:JuMPTypes),(:Number,:JuMPTypes)]
+        # Need these looks over S1,S2 for v0.3 because Union(Array,SparseMatrix)
+        # gives ambiguity warnings
+        for S1 in (:Array,:SparseMatrixCSC)
+            @eval $dotop{S<:$T1}(lhs::$S1{S},rhs::$T2) = $op(lhs,rhs)
+        end
+        for (S1,S2) in [(:Array,:Array),(:Array,:SparseMatrixCSC),(:SparseMatrixCSC,:Array)]
+            @eval begin
+                function $dotop{S<:$T1,T<:$T2}(lhs::$S1{S},rhs::$S2{T})
+                    size(lhs) == size(rhs) || error("Incompatible dimensions")
+                    arr = Array(typeof($op(zero(S),zero(T))), size(rhs))
+                    @inbounds for i in eachindex(lhs)
+                        arr[i] = $op(lhs[i], rhs[i])
+                    end
+                    arr
                 end
-                return arr
             end
-            function $dotop{S<:Number,T<:JuMPTypes,N}(lhs::AbstractArray{S,N},rhs::AbstractArray{T,N})
-                size(lhs) == size(rhs) || error("Incompatible dimensions")
-                arr = Array(typeof($op(zero(S), zero(T))), size(rhs))
-                @inbounds for i in eachindex(lhs)
-                    arr[i] = $op(lhs[i],rhs[i])
-                end
-                return arr
-            end
+        end
+        for S2 in (:Array,:SparseMatrixCSC)
+            @eval $dotop{T<:$T2}(lhs::$T1,rhs::$S2{T}) = $op(lhs,rhs)
         end
     end
 end
+
+
 (+){T<:JuMPTypes}(x::Array{T}) = x
-function (-)(x::Array{Variable})
-    ret = similar(x, AffExpr)
+function (-){T<:JuMPTypes}(x::Array{T})
+    ret = similar(x, typeof(-one(T)))
     for I in eachindex(ret)
         ret[I] = -x[I]
     end
