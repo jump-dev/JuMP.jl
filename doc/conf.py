@@ -196,6 +196,7 @@ latex_elements = {
         \DeclareUnicodeCharacter{2203}{\ensuremath{\exists}}
         \DeclareUnicodeCharacter{2200}{\ensuremath{\forall}}
         \DeclareUnicodeCharacter{27FA}{\ensuremath{\Longleftrightarrow}}
+        \DeclareUnicodeCharacter{2207}{\ensuremath{\nabla}}
     ''',
 }
 
