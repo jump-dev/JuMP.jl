@@ -40,8 +40,8 @@ Our documentation includes an installation guide, quick-start guide, and referen
   * Testing status:
     * TravisCI: [![Build Status](https://travis-ci.org/JuliaOpt/JuMP.jl.svg?branch=release-0.10)](https://travis-ci.org/JuliaOpt/JuMP.jl)
     * PackageEvaluator:
-      [![JuMP](http://pkg.julialang.org/badges/JuMP_0.3.svg)](http://pkg.julialang.org/?pkg=JuMP&ver=release)
-      [![JuMP](http://pkg.julialang.org/badges/JuMP_0.4.svg)](http://pkg.julialang.org/?pkg=JuMP&ver=nightly)
+      [![JuMP](http://pkg.julialang.org/badges/JuMP_0.3.svg)](http://pkg.julialang.org/?pkg=JuMP&ver=0.3)
+      [![JuMP](http://pkg.julialang.org/badges/JuMP_0.4.svg)](http://pkg.julialang.org/?pkg=JuMP&ver=0.4)
 
 
 **Development version**:
