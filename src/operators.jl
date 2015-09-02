@@ -470,7 +470,7 @@ end
 # Let's be conservative and only define arithmetic for the basic types
 typealias ArrayOrSparseMat{T} Union(Array{T}, SparseMatrixCSC{T})
 
-for op in [:+, :-, :*]; @eval begin
+for op in [:+, :-, :*, :/]; @eval begin
     function $op{T<:JuMPTypes}(lhs::Number,rhs::ArrayOrSparseMat{T})
         ret = similar(rhs, typeof($op(lhs, zero(T))))
         for I in eachindex(ret)
@@ -508,6 +508,7 @@ end; end
 (*){T<:JuMPTypes}(lhs::SparseMatrixCSC{T}, rhs::Number) = scale(lhs, rhs)
 (*)(lhs::SparseMatrixCSC, rhs::JuMPTypes) =
     SparseMatrixCSC(lhs.m, lhs.n, copy(lhs.colptr), copy(lhs.rowval), lhs.nzval .* rhs)
+
 # The following are primarily there for internal use in the macro code for @addConstraint
 for op in [:(+), :(-)]; @eval begin
     function $op(lhs::Array{Variable},rhs::Array{Variable})
@@ -520,74 +521,31 @@ for op in [:(+), :(-)]; @eval begin
     end
 end; end
 
-function (/){T<:JuMPTypes}(lhs::Array{T},rhs::Real)
-    ret = similar(lhs, typeof(one(T) / rhs))
-    for I in eachindex(lhs)
-        ret[I] = lhs[I] / rhs
-    end
-    ret
-end
-
 for (dotop,op) in [(:.+,:+), (:.-,:-), (:.*,:*), (:./,:/)]
     @eval begin
         $dotop(lhs::Number,rhs::JuMPTypes) = $op(lhs,rhs)
         $dotop(lhs::JuMPTypes,rhs::Number) = $op(lhs,rhs)
-        function $dotop{T<:JuMPTypes}(lhs::Number,rhs::ArrayOrSparseMat{T})
-            arr = Array(typeof($op(lhs, zero(T))), size(rhs))
-            @inbounds for i in eachindex(rhs)
-                arr[i] = $op(lhs,rhs[i])
+    end
+    for (T1,T2) in [(:JuMPTypes,:Number),(:JuMPTypes,:JuMPTypes),(:Number,:JuMPTypes)]
+        @eval begin
+            $dotop{S<:$T1}(lhs::ArrayOrSparseMat{S},rhs::$T2) = $op(lhs,rhs)
+            function $dotop{S<:$T1,T<:$T2}(lhs::ArrayOrSparseMat{S},rhs::ArrayOrSparseMat{T})
+                size(lhs) == size(rhs) || error("Incompatible dimensions")
+                arr = Array(typeof($op(zero(S),zero(T))), size(rhs))
+                @inbounds for i in eachindex(lhs)
+                    arr[i] = $op(lhs[i], rhs[i])
+                end
+                arr
             end
-            return arr
-        end
-        function $dotop{T<:JuMPTypes}(lhs::ArrayOrSparseMat{T},rhs::Number)
-            arr = Array(typeof($op(zero(T), rhs)), size(lhs))
-            @inbounds for i in eachindex(lhs)
-                arr[i] = $op(lhs[i],rhs)
-            end
-            return arr
-        end
-        function $dotop{T<:JuMPTypes}(lhs::T,rhs::ArrayOrSparseMat)
-            length(rhs) == 0 && return Array(eltype(rhs),size(rhs))
-            # Guess based on first element of rhs
-            arr = Array(typeof($op(lhs, rhs[1])), size(rhs))
-            @inbounds for i in eachindex(rhs)
-                arr[i] = $op(lhs,rhs[i])
-            end
-            return arr
-        end
-        function $dotop{T<:JuMPTypes}(lhs::ArrayOrSparseMat,rhs::T)
-            length(lhs) == 0 && return Array(eltype(lhs),size(lhs))
-            # Guess based on first element of rhs
-            arr = Array(typeof($op(lhs[1], rhs)), size(lhs))
-            @inbounds for i in eachindex(lhs)
-                arr[i] = $op(lhs[i],rhs)
-            end
-            return arr
+            $dotop{T<:$T2}(lhs::$T1,rhs::ArrayOrSparseMat{T}) = $op(lhs,rhs)
         end
     end
 end
 
-# Leave dotop(::Sparse, ::Sparse) undefined because this won't be what you wanna do anyway
-for (T1,T2) in [(:Array,:Array), (:Array,:SparseMatrixCSC), (:SparseMatrixCSC,:Array)]
-    for (dotop,op) in [(:.+,:+), (:.-,:-), (:.*,:*)]
-        for (S1,S2) in [(:JuMPTypes,:Number), (:JuMPTypes,:JuMPTypes), (:Number,:JuMPTypes)]
-            @eval begin
-                function $dotop{S<:$S1,T<:$S2}(lhs::$T1{S},rhs::$T2{T})
-                    size(lhs) == size(rhs) || error("Incompatible dimensions")
-                    arr = Array(typeof($op(zero(S), zero(T))), size(rhs))
-                    @inbounds for i in eachindex(lhs)
-                        arr[i] = $op(lhs[i],rhs[i])
-                    end
-                    return arr
-                end
-            end
-        end
-    end
-end
 
 (+){T<:JuMPTypes}(x::Array{T}) = x
-function (-)(x::Array{Variable})
-    ret = similar(x, AffExpr)
+function (-){T<:JuMPTypes}(x::Array{T})
+    ret = similar(x, typeof(-one(T)))
     for I in eachindex(ret)
         ret[I] = -x[I]
     end
