@@ -564,36 +564,27 @@ for (dotop,op) in [(:.+,:+), (:.-,:-), (:.*,:*), (:./,:/)]
             end
             return arr
         end
-        function $dotop{S<:JuMPTypes,T<:Number}(lhs::ArrayOrSparseMat{S},rhs::ArrayOrSparseMat{T})
-            size(lhs) == size(rhs) || error("Incompatible dimensions")
-            arr = Array(typeof($op(zero(S), zero(T))), size(rhs))
-            @inbounds for i in eachindex(lhs)
-                arr[i] = $op(lhs[i],rhs[i])
-            end
-            return arr
-        end
     end
-    if op != :/
-        @eval begin
-            function $dotop{S<:JuMPTypes,T<:JuMPTypes}(lhs::ArrayOrSparseMat{S},rhs::ArrayOrSparseMat{T})
-                size(lhs) == size(rhs) || error("Incompatible dimensions")
-                arr = Array(typeof($op(zero(S), zero(T))), size(rhs))
-                @inbounds for i in eachindex(lhs)
-                    arr[i] = $op(lhs[i],rhs[i])
+end
+
+# Leave dotop(::Sparse, ::Sparse) undefined because this won't be what you wanna do anyway
+for (T1,T2) in [(:Array,:Array), (:Array,:SparseMatrixCSC), (:SparseMatrixCSC,:Array)]
+    for (dotop,op) in [(:.+,:+), (:.-,:-), (:.*,:*)]
+        for (S1,S2) in [(:JuMPTypes,:Number), (:JuMPTypes,:JuMPTypes), (:Number,:JuMPTypes)]
+            @eval begin
+                function $dotop{S<:$S1,T<:$S2}(lhs::$T1{S},rhs::$T2{T})
+                    size(lhs) == size(rhs) || error("Incompatible dimensions")
+                    arr = Array(typeof($op(zero(S), zero(T))), size(rhs))
+                    @inbounds for i in eachindex(lhs)
+                        arr[i] = $op(lhs[i],rhs[i])
+                    end
+                    return arr
                 end
-                return arr
-            end
-            function $dotop{S<:Number,T<:JuMPTypes}(lhs::ArrayOrSparseMat{S},rhs::ArrayOrSparseMat{T})
-                size(lhs) == size(rhs) || error("Incompatible dimensions")
-                arr = Array(typeof($op(zero(S), zero(T))), size(rhs))
-                @inbounds for i in eachindex(lhs)
-                    arr[i] = $op(lhs[i],rhs[i])
-                end
-                return arr
             end
         end
     end
 end
+
 (+){T<:JuMPTypes}(x::Array{T}) = x
 function (-)(x::Array{Variable})
     ret = similar(x, AffExpr)
