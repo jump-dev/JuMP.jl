@@ -74,7 +74,7 @@ function solve(m::Model; suppress_warnings=false,
     traits = ProblemTraits(m)
 
     # Build the MathProgBase model from the JuMP model
-    buildInternalModel(m, traits, suppress_warnings=suppress_warnings)
+    buildInternalModel(m, traits, suppress_warnings)
 
     # If the model is a general nonlinear, use different logic in
     # nlp.jl to solve the problem
@@ -174,8 +174,7 @@ end
 
 # Converts the JuMP Model into a MathProgBase model based on the
 # traits of the model
-function buildInternalModel(m::Model, traits=ProblemTraits(m);
-                            suppress_warnings=false)
+function buildInternalModel(m::Model, traits::ProblemTraits, suppress_warnings::Bool)
     # Set solver based on the model's traits if it hasn't provided
     if isa(m.solver, UnsetSolver)
         m.solver = default_solver(traits)
@@ -290,6 +289,7 @@ function buildInternalModel(m::Model, traits=ProblemTraits(m);
     m.internalModelLoaded = true
     nothing
 end
+Base.precompile(buildInternalModel, (Model, ProblemTraits, Bool))
 
 # Add the quadratic part of the objective and all quadratic constraints
 # to the internal MPB model

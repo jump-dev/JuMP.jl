@@ -184,7 +184,7 @@ context("With solver $(typeof(solver))") do
     @defVar(m, y >= 0)
     @addConstraint(m, x + y == 1)
     @setObjective(m, Max, y)
-    buildInternalModel(m)
+    buildInternalModel(m, JuMP.ProblemTraits(m), false)
     @fact getInternalModel(m) --> not(nothing)
     @fact m.internalModelLoaded --> true
     stat = solve(m)
@@ -207,7 +207,7 @@ context("With solver $(typeof(solver))") do
     @defVar(m, y, Bin)
     @addConstraint(m, x + y == 1)
     @setObjective(m, Max, y)
-    buildInternalModel(m)
+    buildInternalModel(m, JuMP.ProblemTraits(m), false)
     @fact getInternalModel(m) --> not(nothing)
     @fact m.internalModelLoaded --> true
     stat = solve(m)
