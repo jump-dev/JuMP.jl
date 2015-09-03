@@ -95,7 +95,7 @@ context("With solver $(typeof(solver))") do
     #     0 <= z <= 1.5, Integer
     # x* = 2, y* = 0, z* = 1
     setUpper(z, 1.5)
-    m.colCat[3] = :Int
+    setType(z, :Int)
     @fact solve(m) --> :Optimal
     @fact getValue(x) --> roughly(2.0, TOL)
     @fact getValue(y) --> roughly(0.0, TOL)

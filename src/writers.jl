@@ -47,7 +47,7 @@ function writeMPS(m::Model, fname::String)
     inintegergroup = false
     write(f,"COLUMNS\n")
     for col in 1:m.numCols
-        t = m.colCat[col]
+        t = m.colType[col]
         (t == :SemiCont || t == :SemiInt) && error("The MPS file writer does not currently support semicontinuous or semi-integer variables")
         if (t == :Bin || t == :Int) && !inintegergroup
             @printf(f,"    MARKER    'MARKER'                 'INTORG'\n")
@@ -298,7 +298,7 @@ function writeLP(m::Model, fname::String)
     # Integer - don't handle binaries specially
     write(f,"General\n")
     for i in 1:m.numCols
-        t = m.colCat[i]
+        t = m.colType[i]
         (t == :SemiCont || t == :SemiInt) && error("The LP file writer does not currently support semicontinuous or semi-integer variables")
         if t == :Bin || t == :Int
             @printf(f, " VAR%d\n", i)

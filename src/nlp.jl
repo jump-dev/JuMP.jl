@@ -539,7 +539,7 @@ function _buildInternalModel_nlp(m::Model, traits)
 
     MathProgBase.loadnonlinearproblem!(m.internalModel, m.numCols, numConstr, m.colLower, m.colUpper, [linrowlb;quadrowlb;nlrowlb], [linrowub;quadrowub;nlrowub], m.objSense, d)
     if traits.int
-        if applicable(MathProgBase.setvartype!, m.internalModel, m.colCat)
+        if applicable(MathProgBase.setvartype!, m.internalModel, m.colType)
             MathProgBase.setvartype!(m.internalModel, vartypes_without_fixed(m))
         else
             error("Solver does not support discrete variables")

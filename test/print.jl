@@ -418,13 +418,13 @@ Solver set to Default""", repl=:show)
 """, repl=:print)
 end
 
-facts("[print] changing variable categories") do
+facts("[print] changing variable types") do
     le, ge = JuMP.repl[:leq], JuMP.repl[:geq]
     mod = Model()
     @defVar(mod, x[1:3])
     @defVar(mod, y[i=1:3,i:3])
-    setCategory(x[3], :SemiCont)
-    setCategory(y[1,3], :Int)
+    setType(x[3], :SemiCont)
+    setType(y[1,3], :Int)
 
     io_test(REPLMode, mod, """
 Min 0

@@ -81,12 +81,17 @@ facts("[variable] get and set values") do
     end
 end
 
-facts("[variable] get and set category") do
+facts("[variable] get and set type") do
     m = Model()
     @defVar(m, x[1:3])
     setCategory(x[2], :Int)
-    @fact getCategory(x[3]) --> :Cont
+    @fact getCategory(x[1]) --> :Cont
     @fact getCategory(x[2]) --> :Int
+    @fact getCategory(x[3]) --> :Cont
+    setType(x[1], :Int)
+    @fact getType(x[1]) --> :Int
+    @fact getType(x[2]) --> :Int
+    @fact getType(x[3]) --> :Cont
 end
 
 facts("[variable] repeated elements in index set (issue #199)") do
