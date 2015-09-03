@@ -14,9 +14,11 @@ using JuMP, FactCheck
 
 # To ensure the tests work on both Windows and Linux/OSX, we need
 # to use the correct comparison operators in the strings
-const leq = JuMP.repl[:leq]
-const geq = JuMP.repl[:geq]
-const  eq = JuMP.repl[:eq]
+const  leq = JuMP.repl[:leq]
+const  geq = JuMP.repl[:geq]
+const   eq = JuMP.repl[:eq]
+const Vert = JuMP.repl[:Vert]
+const sub2 = JuMP.repl[:sub2]
 
 facts("[operator] Testing basic operator overloads") do
     m = Model()
@@ -36,9 +38,9 @@ facts("[operator] Testing basic operator overloads") do
     @fact quadToStr(q3) --> "2 x² + y² + z + 3"
 
     nrm = norm([w,1-w])
-    @fact exprToStr(nrm) --> "√(w² + (-w + 1)²)"
+    @fact exprToStr(nrm) --> "$Vert[w,-w + 1]$Vert$sub2"
     socexpr = 1.5*nrm - 2 - w
-    @fact exprToStr(socexpr) --> "1.5 √(w² + (-w + 1)²) - w - 2"
+    @fact exprToStr(socexpr) --> "1.5 $Vert[w,-w + 1]$Vert$sub2 - w - 2"
 
     @fact isequal(3w + 2y, 3w +2y) --> true
     @fact isequal(3w + 2y + 1, 3w + 2y) --> false
@@ -64,13 +66,13 @@ facts("[operator] Testing basic operator overloads") do
     @fact conToStr(@LinearConstraint(2.1 == w)) --> "-w $eq -2.1"
     @fact conToStr(@LinearConstraint(2.1 ≥ w)) --> "-w $geq -2.1"
     # 1-3 Number--Norm
-    @fact exprToStr(4.13 + nrm) --> "√(w² + (-w + 1)²) + 4.13"
-    @fact exprToStr(3.16 - nrm) --> "-1.0 √(w² + (-w + 1)²) + 3.16"
-    @fact exprToStr(5.23 * nrm) --> "5.23 √(w² + (-w + 1)²)"
+    @fact exprToStr(4.13 + nrm) --> "$Vert[w,-w + 1]$Vert$sub2 + 4.13"
+    @fact exprToStr(3.16 - nrm) --> "-1.0 $Vert[w,-w + 1]$Vert$sub2 + 3.16"
+    @fact exprToStr(5.23 * nrm) --> "5.23 $Vert[w,-w + 1]$Vert$sub2"
     @fact_throws 2.94 / nrm
     @fact_throws @SOCConstraint(2.1 ≤ nrm)
     @fact_throws @SOCConstraint(2.1 == nrm)
-    @fact conToStr(@SOCConstraint(2.1 ≥ nrm)) --> "√(w² + (-w + 1)²) $leq 2.1"
+    @fact conToStr(@SOCConstraint(2.1 ≥ nrm)) --> "$Vert[w,-w + 1]$Vert$sub2 $leq 2.1"
     # 1-4 Number--AffExpr
     @fact affToStr(1.5 + aff) --> "7.1 x + 4"
     @fact affToStr(1.5 - aff) --> "-7.1 x - 1"
@@ -94,13 +96,13 @@ facts("[operator] Testing basic operator overloads") do
     @fact conToStr(@QuadConstraint(1 == q)) --> "-2.5 y*z - 7.1 x - 1.5 $eq 0"
     @fact conToStr(@QuadConstraint(1 ≥ q)) --> "-2.5 y*z - 7.1 x - 1.5 $geq 0"
     # 1-6 Number--SOCExpr
-    @fact exprToStr(1.5 + socexpr) --> "1.5 √(w² + (-w + 1)²) - w - 0.5"
-    @fact exprToStr(1.5 - socexpr) --> "-1.5 √(w² + (-w + 1)²) + w + 3.5"
-    @fact exprToStr(1.5 * socexpr) --> "2.25 √(w² + (-w + 1)²) - 1.5 w - 3"
+    @fact exprToStr(1.5 + socexpr) --> "1.5 $Vert[w,-w + 1]$Vert$sub2 - w - 0.5"
+    @fact exprToStr(1.5 - socexpr) --> "-1.5 $Vert[w,-w + 1]$Vert$sub2 + w + 3.5"
+    @fact exprToStr(1.5 * socexpr) --> "2.25 $Vert[w,-w + 1]$Vert$sub2 - 1.5 w - 3"
     @fact_throws 1.5 / socexpr
     @fact_throws @SOCConstraint(2.1 ≤ socexpr)
     @fact_throws @SOCConstraint(2.1 == socexpr)
-    @fact conToStr(@SOCConstraint(2.1 ≥ socexpr)) --> "1.5 √(w² + (-w + 1)²) $leq w + 4.1"
+    @fact conToStr(@SOCConstraint(2.1 ≥ socexpr)) --> "1.5 $Vert[w,-w + 1]$Vert$sub2 $leq w + 4.1"
     end
 
     # 2. Variable tests
@@ -150,13 +152,13 @@ facts("[operator] Testing basic operator overloads") do
     @fact conToStr(@LinearConstraint(x == x)) --> "0 $eq 0"
     @fact conToStr(@LinearConstraint(x ≥ x)) --> "0 $geq 0"
     # 2-3 Variable--Norm
-    @fact exprToStr(w + nrm) --> "√(w² + (-w + 1)²) + w"
-    @fact exprToStr(w - nrm) --> "-1.0 √(w² + (-w + 1)²) + w"
+    @fact exprToStr(w + nrm) --> "$Vert[w,-w + 1]$Vert$sub2 + w"
+    @fact exprToStr(w - nrm) --> "-1.0 $Vert[w,-w + 1]$Vert$sub2 + w"
     @fact_throws w * nrm
     @fact_throws w / nrm
     @fact_throws @SOCConstraint(w ≤ nrm)
     @fact_throws @SOCConstraint(w == nrm)
-    @fact conToStr(@SOCConstraint(w ≥ nrm)) --> "√(w² + (-w + 1)²) $leq w"
+    @fact conToStr(@SOCConstraint(w ≥ nrm)) --> "$Vert[w,-w + 1]$Vert$sub2 $leq w"
     # 2-4 Variable--AffExpr
     @fact affToStr(z + aff) --> "7.1 x + z + 2.5"
     @fact affToStr(z - aff) --> "-7.1 x + z - 2.5"
@@ -186,34 +188,34 @@ facts("[operator] Testing basic operator overloads") do
     @fact conToStr(@QuadConstraint(w == q)) --> "-2.5 y*z + w - 7.1 x - 2.5 $eq 0"
     @fact conToStr(@QuadConstraint(w ≥ q)) --> "-2.5 y*z + w - 7.1 x - 2.5 $geq 0"
     # 2-6 Variable--SOCExpr
-    @fact exprToStr(y + socexpr) --> "1.5 √(w² + (-w + 1)²) - w + y - 2"
-    @fact exprToStr(y - socexpr) --> "-1.5 √(w² + (-w + 1)²) + w + y + 2"
+    @fact exprToStr(y + socexpr) --> "1.5 $Vert[w,-w + 1]$Vert$sub2 - w + y - 2"
+    @fact exprToStr(y - socexpr) --> "-1.5 $Vert[w,-w + 1]$Vert$sub2 + w + y + 2"
     @fact_throws y * socexpr
     @fact_throws y / socexpr
     @fact_throws @SOCConstraint(y ≤ socexpr)
     @fact_throws @SOCConstraint(y == socexpr)
-    @fact conToStr(@SOCConstraint(y ≥ socexpr)) --> "1.5 √(w² + (-w + 1)²) $leq y + w + 2"
+    @fact conToStr(@SOCConstraint(y ≥ socexpr)) --> "1.5 $Vert[w,-w + 1]$Vert$sub2 $leq y + w + 2"
     end
 
     # 3. Norm tests
     context("Norm--???") do
     # 3-0 Norm unary
-    @fact exprToStr(+nrm) --> "√(w² + (-w + 1)²)"
-    @fact exprToStr(-nrm) --> "-1.0 √(w² + (-w + 1)²)"
+    @fact exprToStr(+nrm) --> "$Vert[w,-w + 1]$Vert$sub2"
+    @fact exprToStr(-nrm) --> "-1.0 $Vert[w,-w + 1]$Vert$sub2"
     # 3-1 Norm--Number
-    @fact exprToStr(nrm + 1.5) --> "√(w² + (-w + 1)²) + 1.5"
-    @fact exprToStr(nrm - 1.5) --> "√(w² + (-w + 1)²) - 1.5"
-    @fact exprToStr(nrm * 1.5) --> "1.5 √(w² + (-w + 1)²)"
-    @fact exprToStr(nrm / 1.5) --> "0.6666666666666666 √(w² + (-w + 1)²)"
-    @fact conToStr(@SOCConstraint(nrm ≤ 1.5)) --> "√(w² + (-w + 1)²) $leq 1.5"
+    @fact exprToStr(nrm + 1.5) --> "$Vert[w,-w + 1]$Vert$sub2 + 1.5"
+    @fact exprToStr(nrm - 1.5) --> "$Vert[w,-w + 1]$Vert$sub2 - 1.5"
+    @fact exprToStr(nrm * 1.5) --> "1.5 $Vert[w,-w + 1]$Vert$sub2"
+    @fact exprToStr(nrm / 1.5) --> "0.6666666666666666 $Vert[w,-w + 1]$Vert$sub2"
+    @fact conToStr(@SOCConstraint(nrm ≤ 1.5)) --> "$Vert[w,-w + 1]$Vert$sub2 $leq 1.5"
     @fact_throws @SOCConstraint(nrm == 1.5)
     @fact_throws @SOCConstraint(nrm ≥ 1.5)
     # 3-2 Norm--Variable
-    @fact exprToStr(nrm + w) --> "√(w² + (-w + 1)²) + w"
-    @fact exprToStr(nrm - w) --> "√(w² + (-w + 1)²) - w"
+    @fact exprToStr(nrm + w) --> "$Vert[w,-w + 1]$Vert$sub2 + w"
+    @fact exprToStr(nrm - w) --> "$Vert[w,-w + 1]$Vert$sub2 - w"
     @fact_throws nrm * w
     @fact_throws nrm / w
-    @fact conToStr(@SOCConstraint(nrm ≤ w)) --> "√(w² + (-w + 1)²) $leq w"
+    @fact conToStr(@SOCConstraint(nrm ≤ w)) --> "$Vert[w,-w + 1]$Vert$sub2 $leq w"
     @fact_throws conToStr(nrm == w)
     @fact_throws conToStr(nrm ≥ w)
     # 3-3 Norm--Norm
@@ -225,11 +227,11 @@ facts("[operator] Testing basic operator overloads") do
     @fact_throws @SOCConstraint(nrm == nrm)
     @fact_throws @SOCConstraint(nrm ≥ nrm)
     # 3-4 Norm--AffExpr
-    @fact exprToStr(nrm + aff) --> "√(w² + (-w + 1)²) + 7.1 x + 2.5"
-    @fact exprToStr(nrm - aff) --> "√(w² + (-w + 1)²) - 7.1 x - 2.5"
+    @fact exprToStr(nrm + aff) --> "$Vert[w,-w + 1]$Vert$sub2 + 7.1 x + 2.5"
+    @fact exprToStr(nrm - aff) --> "$Vert[w,-w + 1]$Vert$sub2 - 7.1 x - 2.5"
     @fact_throws nrm * aff
     @fact_throws nrm / aff
-    @fact conToStr(@SOCConstraint(nrm ≤ aff)) --> "√(w² + (-w + 1)²) $leq 7.1 x + 2.5"
+    @fact conToStr(@SOCConstraint(nrm ≤ aff)) --> "$Vert[w,-w + 1]$Vert$sub2 $leq 7.1 x + 2.5"
     @fact_throws @SOCConstraint(nrm == aff)
     @fact_throws @SOCConstraint(nrm ≥ aff)
     # 3-5 Norm--QuadExpr
@@ -284,13 +286,13 @@ facts("[operator] Testing basic operator overloads") do
     @fact conToStr(@LinearConstraint(aff - 7.1 * x == 0)) --> "0 $eq -2.5"
     @fact conToStr(@LinearConstraint(aff - 7.1 * x ≥ 0)) --> "0 $geq -2.5"
     # 4-3 AffExpr--Norm
-    @fact exprToStr(aff + nrm) --> "√(w² + (-w + 1)²) + 7.1 x + 2.5"
-    @fact exprToStr(aff - nrm) --> "-1.0 √(w² + (-w + 1)²) + 7.1 x + 2.5"
+    @fact exprToStr(aff + nrm) --> "$Vert[w,-w + 1]$Vert$sub2 + 7.1 x + 2.5"
+    @fact exprToStr(aff - nrm) --> "-1.0 $Vert[w,-w + 1]$Vert$sub2 + 7.1 x + 2.5"
     @fact_throws aff * nrm
     @fact_throws aff / nrm
     @fact_throws @SOCConstraint(aff ≤ nrm)
     @fact_throws @SOCConstraint(aff == nrm)
-    @fact conToStr(@SOCConstraint(aff ≥ nrm)) --> "√(w² + (-w + 1)²) $leq 7.1 x + 2.5"
+    @fact conToStr(@SOCConstraint(aff ≥ nrm)) --> "$Vert[w,-w + 1]$Vert$sub2 $leq 7.1 x + 2.5"
     # 4-4 AffExpr--AffExpr
     @fact affToStr(aff + aff2) --> "7.1 x + 1.2 y + 3.7"
     @fact affToStr(aff - aff2) --> "7.1 x - 1.2 y + 1.3"
@@ -321,13 +323,13 @@ facts("[operator] Testing basic operator overloads") do
     @fact conToStr(@QuadConstraint(aff2 == q)) --> "-2.5 y*z + 1.2 y - 7.1 x - 1.3 $eq 0"
     @fact conToStr(@QuadConstraint(aff2 ≥ q)) --> "-2.5 y*z + 1.2 y - 7.1 x - 1.3 $geq 0"
     # 4-6 AffExpr--SOCExpr
-    @fact exprToStr(aff + socexpr) --> "1.5 √(w² + (-w + 1)²) + 7.1 x - w + 0.5"
-    @fact exprToStr(aff - socexpr) --> "-1.5 √(w² + (-w + 1)²) + 7.1 x + w + 4.5"
+    @fact exprToStr(aff + socexpr) --> "1.5 $Vert[w,-w + 1]$Vert$sub2 + 7.1 x - w + 0.5"
+    @fact exprToStr(aff - socexpr) --> "-1.5 $Vert[w,-w + 1]$Vert$sub2 + 7.1 x + w + 4.5"
     @fact_throws aff * socexpr
     @fact_throws aff / socexpr
     @fact_throws @SOCConstraint(aff ≤ socexpr)
     @fact_throws @SOCConstraint(aff == socexpr)
-    @fact conToStr(@SOCConstraint(aff ≥ socexpr)) --> "1.5 √(w² + (-w + 1)²) $leq 7.1 x + w + 4.5"
+    @fact conToStr(@SOCConstraint(aff ≥ socexpr)) --> "1.5 $Vert[w,-w + 1]$Vert$sub2 $leq 7.1 x + w + 4.5"
     end
 
     # 5. QuadExpr
@@ -400,22 +402,22 @@ facts("[operator] Testing basic operator overloads") do
     # 6. SOCExpr tests
     context("SOCExpr--???") do
     # 6-0 SOCExpr unary
-    @fact exprToStr(+socexpr) --> "1.5 √(w² + (-w + 1)²) - w - 2"
-    @fact exprToStr(-socexpr) --> "-1.5 √(w² + (-w + 1)²) + w + 2"
+    @fact exprToStr(+socexpr) --> "1.5 $Vert[w,-w + 1]$Vert$sub2 - w - 2"
+    @fact exprToStr(-socexpr) --> "-1.5 $Vert[w,-w + 1]$Vert$sub2 + w + 2"
     # 6-1 SOCExpr--Number
-    @fact exprToStr(socexpr + 1.5) --> "1.5 √(w² + (-w + 1)²) - w - 0.5"
-    @fact exprToStr(socexpr - 1.5) --> "1.5 √(w² + (-w + 1)²) - w - 3.5"
-    @fact exprToStr(socexpr * 1.5) --> "2.25 √(w² + (-w + 1)²) - 1.5 w - 3"
-    @fact exprToStr(socexpr / 1.5) --> "√(w² + (-w + 1)²) - 0.6666666666666666 w - 1.3333333333333333"
-    @fact conToStr(@SOCConstraint(socexpr ≤ 1.5)) --> "1.5 √(w² + (-w + 1)²) $leq w + 3.5"
+    @fact exprToStr(socexpr + 1.5) --> "1.5 $Vert[w,-w + 1]$Vert$sub2 - w - 0.5"
+    @fact exprToStr(socexpr - 1.5) --> "1.5 $Vert[w,-w + 1]$Vert$sub2 - w - 3.5"
+    @fact exprToStr(socexpr * 1.5) --> "2.25 $Vert[w,-w + 1]$Vert$sub2 - 1.5 w - 3"
+    @fact exprToStr(socexpr / 1.5) --> "$Vert[w,-w + 1]$Vert$sub2 - 0.6666666666666666 w - 1.3333333333333333"
+    @fact conToStr(@SOCConstraint(socexpr ≤ 1.5)) --> "1.5 $Vert[w,-w + 1]$Vert$sub2 $leq w + 3.5"
     @fact_throws @SOCConstraint(socexpr == 1.5)
     @fact_throws @SOCConstraint(socexpr ≥ 1.5)
     # 6-2 SOCExpr--Variable
-    @fact exprToStr(socexpr + y) --> "1.5 √(w² + (-w + 1)²) - w + y - 2"
-    @fact exprToStr(socexpr - y) --> "1.5 √(w² + (-w + 1)²) - w - y - 2"
+    @fact exprToStr(socexpr + y) --> "1.5 $Vert[w,-w + 1]$Vert$sub2 - w + y - 2"
+    @fact exprToStr(socexpr - y) --> "1.5 $Vert[w,-w + 1]$Vert$sub2 - w - y - 2"
     @fact_throws socexpr * y
     @fact_throws socexpr / y
-    @fact conToStr(@SOCConstraint(socexpr ≤ y)) --> "1.5 √(w² + (-w + 1)²) $leq w + y + 2"
+    @fact conToStr(@SOCConstraint(socexpr ≤ y)) --> "1.5 $Vert[w,-w + 1]$Vert$sub2 $leq w + y + 2"
     @fact_throws conToStr(socexpr == y)
     @fact_throws conToStr(socexpr ≥ y)
     # 6-3 SOCExpr--Norm
@@ -427,11 +429,11 @@ facts("[operator] Testing basic operator overloads") do
     @fact_throws @SOCConstraint(socexpr == nrm)
     @fact_throws @SOCConstraint(socexpr ≥ nrm)
     # 6-4 SOCExpr--AffExpr
-    @fact exprToStr(socexpr + aff) --> "1.5 √(w² + (-w + 1)²) - w + 7.1 x + 0.5"
-    @fact exprToStr(socexpr - aff) --> "1.5 √(w² + (-w + 1)²) - w - 7.1 x - 4.5"
+    @fact exprToStr(socexpr + aff) --> "1.5 $Vert[w,-w + 1]$Vert$sub2 - w + 7.1 x + 0.5"
+    @fact exprToStr(socexpr - aff) --> "1.5 $Vert[w,-w + 1]$Vert$sub2 - w - 7.1 x - 4.5"
     @fact_throws socexpr * aff
     @fact_throws socexpr / aff
-    @fact conToStr(@SOCConstraint(socexpr ≤ aff)) --> "1.5 √(w² + (-w + 1)²) $leq w + 7.1 x + 4.5"
+    @fact conToStr(@SOCConstraint(socexpr ≤ aff)) --> "1.5 $Vert[w,-w + 1]$Vert$sub2 $leq w + 7.1 x + 4.5"
     @fact_throws @SOCConstraint(socexpr == aff)
     @fact_throws @SOCConstraint(socexpr ≥ aff)
     # 6-5 SOCExpr--QuadExpr

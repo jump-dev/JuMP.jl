@@ -9,6 +9,8 @@ using Base.Test
 const leq = JuMP.repl[:leq]
 const geq = JuMP.repl[:geq]
 const  eq = JuMP.repl[:eq]
+const Vert = JuMP.repl[:Vert]
+const sub2 = JuMP.repl[:sub2]
 
 facts("[macros] Check Julia expression parsing") do
     sumexpr = :(sum{x[i,j] * y[i,j], i = 1:N, j = 1:M; i != j})
@@ -352,9 +354,9 @@ facts("[macros] Norm parsing") do
     @addConstraint(model, -2norm2{x[i,j], i=1:2, j=1:2} + x[1,2] >= -1)
     @addConstraint(model, -2norm2{x[i,j], i=1:2, j=1:2; iseven(i+j)} + x[1,2] >= -1)
     @addConstraint(model, 1 >= 2*norm2{x[i,1],i=1:2})
-    @fact conToStr(model.socconstr[1]) --> "2.0 √(x[1,1]² + x[1,2]² + x[2,1]² + x[2,2]²) $leq x[1,2] + 1"
-    @fact conToStr(model.socconstr[2]) --> "2.0 √(x[1,1]² + x[2,2]²) $leq x[1,2] + 1"
-    @fact conToStr(model.socconstr[3]) --> "2.0 √(x[1,1]² + x[2,1]²) $leq 1"
+    @fact conToStr(model.socconstr[1]) --> "2.0 $Vert[x[1,1],x[1,2],x[2,1],x[2,2]]$Vert$sub2 $leq x[1,2] + 1"
+    @fact conToStr(model.socconstr[2]) --> "2.0 $Vert[x[1,1],x[2,2]]$Vert$sub2 $leq x[1,2] + 1"
+    @fact conToStr(model.socconstr[3]) --> "2.0 $Vert[x[1,1],x[2,1]]$Vert$sub2 $leq 1"
     @fact_throws @addConstraint(model, (x[1,1]+1)*norm2{x[i,j], i=1:2, j=1:2} + x[1,2] >= -1)
     @fact_throws @addConstraint(model, norm2{x[i,j], i=1:2, j=1:2} + x[1,2] >= -1)
 end
