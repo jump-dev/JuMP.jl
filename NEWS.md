@@ -1,6 +1,12 @@
 JuMP release notes
 ==================
 
+Version 0.10.1 (September 3, 2015)
+----------------------------------
+
+  * Fixes for ambiguity warnings.
+  * Fix for breaking change in precompilation syntax in Julia 0.4-pre
+
 Version 0.10.0 (August 31, 2015)
 --------------------------------
 
