@@ -415,10 +415,10 @@ function getDual(v::Variable)
     return v.m.redCosts[v.col]
 end
 
-const var_types = [:Cont, :Int, :Bin, :SemiCont, :SemiInt]
-function setCategory(v::Variable, v_type::Symbol)
-    v_type in var_types || error("Unrecognized variable type $v_type. Should be one of:\n    $var_types")
-    v.m.colCat[v.col] = v_type
+const var_cats = [:Cont, :Int, :Bin, :SemiCont, :SemiInt]
+function setCategory(v::Variable, cat::Symbol)
+    cat in var_cats || error("Unrecognized variable category $cat. Should be one of:\n    $var_cats")
+    v.m.colCat[v.col] = cat
 end
 
 getCategory(v::Variable) = v.m.colCat[v.col]
