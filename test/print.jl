@@ -8,10 +8,11 @@
 # See http://github.com/JuliaOpt/JuMP.jl
 #############################################################################
 # test/print.jl
-# Testing for all pretty-printing-related functionality
+# Testing $fa pretty-printing-related functionality
 #############################################################################
 using JuMP, FactCheck
 import JuMP.REPLMode, JuMP.IJuliaMode
+import JuMP.repl, JuMP.ijulia
 
 # Helper function to test IO methods work correctly
 function io_test(mode, obj, exp_str; repl=:both)
@@ -25,7 +26,10 @@ end
 
 
 facts("[print] JuMPContainer{Variable}") do
-    le, ge = JuMP.repl[:leq], JuMP.repl[:geq]
+    le, ge, fa = repl[:leq], repl[:geq], repl[:for_all]
+    inset, dots = repl[:in], repl[:dots]
+    infty, union = repl[:infty], repl[:union]
+
     m = Model()
 
     #------------------------------------------------------------------
@@ -41,25 +45,25 @@ facts("[print] JuMPContainer{Variable}") do
     @defVar(m, i <= bnd_difflo_with_up[i=2:5] <= 5)
     @defVar(m, 2 <= bnd_diffup_with_lo[i=2:5] <= i)
 
-    io_test(REPLMode, bnd_free, "bnd_free[i] free for all i in {2,3,4,5}")
-    io_test(REPLMode, bnd_lowb, "bnd_lowb[i] $ge 2 for all i in {2,3,4,5}")
-    io_test(REPLMode, bnd_high, "bnd_high[i] $le 5 for all i in {2,3,4,5}")
-    io_test(REPLMode, bnd_both, "2 $le bnd_both[i] $le 5 for all i in {2,3,4,5}")
-    io_test(REPLMode, bnd_difflo, "bnd_difflo[i] $ge .. for all i in {2,3,4,5}")
-    io_test(REPLMode, bnd_diffup, "bnd_diffup[i] $le .. for all i in {2,3,4,5}")
-    io_test(REPLMode, bnd_diffbo, ".. $le bnd_diffbo[i] $le .. for all i in {2,3,4,5}")
-    io_test(REPLMode, bnd_difflo_with_up, ".. $le bnd_difflo_with_up[i] $le 5 for all i in {2,3,4,5}")
-    io_test(REPLMode, bnd_diffup_with_lo, "2 $le bnd_diffup_with_lo[i] $le .. for all i in {2,3,4,5}")
+    io_test(REPLMode, bnd_free, "bnd_free[i] free $fa i $inset {2,3,4,5}")
+    io_test(REPLMode, bnd_lowb, "bnd_lowb[i] $ge 2 $fa i $inset {2,3,4,5}")
+    io_test(REPLMode, bnd_high, "bnd_high[i] $le 5 $fa i $inset {2,3,4,5}")
+    io_test(REPLMode, bnd_both, "2 $le bnd_both[i] $le 5 $fa i $inset {2,3,4,5}")
+    io_test(REPLMode, bnd_difflo, "bnd_difflo[i] $ge $dots $fa i $inset {2,3,4,5}")
+    io_test(REPLMode, bnd_diffup, "bnd_diffup[i] $le $dots $fa i $inset {2,3,4,5}")
+    io_test(REPLMode, bnd_diffbo, "$dots $le bnd_diffbo[i] $le $dots $fa i $inset {2,3,4,5}")
+    io_test(REPLMode, bnd_difflo_with_up, "$dots $le bnd_difflo_with_up[i] $le 5 $fa i $inset {2,3,4,5}")
+    io_test(REPLMode, bnd_diffup_with_lo, "2 $le bnd_diffup_with_lo[i] $le $dots $fa i $inset {2,3,4,5}")
 
     io_test(IJuliaMode, bnd_free, "bnd_free_{i} free \\quad\\forall i \\in \\{2,3,4,5\\}")
     io_test(IJuliaMode, bnd_lowb, "bnd_lowb_{i} \\geq 2 \\quad\\forall i \\in \\{2,3,4,5\\}")
     io_test(IJuliaMode, bnd_high, "bnd_high_{i} \\leq 5 \\quad\\forall i \\in \\{2,3,4,5\\}")
     io_test(IJuliaMode, bnd_both, "2 \\leq bnd_both_{i} \\leq 5 \\quad\\forall i \\in \\{2,3,4,5\\}")
-    io_test(IJuliaMode, bnd_difflo, "bnd_difflo_{i} \\geq .. \\quad\\forall i \\in \\{2,3,4,5\\}")
-    io_test(IJuliaMode, bnd_diffup, "bnd_diffup_{i} \\leq .. \\quad\\forall i \\in \\{2,3,4,5\\}")
-    io_test(IJuliaMode, bnd_diffbo, ".. \\leq bnd_diffbo_{i} \\leq .. \\quad\\forall i \\in \\{2,3,4,5\\}")
-    io_test(IJuliaMode, bnd_difflo_with_up, ".. \\leq bnd_difflo_with_up_{i} \\leq 5 \\quad\\forall i \\in \\{2,3,4,5\\}")
-    io_test(IJuliaMode, bnd_diffup_with_lo, "2 \\leq bnd_diffup_with_lo_{i} \\leq .. \\quad\\forall i \\in \\{2,3,4,5\\}")
+    io_test(IJuliaMode, bnd_difflo, "bnd_difflo_{i} \\geq \\dots \\quad\\forall i \\in \\{2,3,4,5\\}")
+    io_test(IJuliaMode, bnd_diffup, "bnd_diffup_{i} \\leq \\dots \\quad\\forall i \\in \\{2,3,4,5\\}")
+    io_test(IJuliaMode, bnd_diffbo, "\\dots \\leq bnd_diffbo_{i} \\leq \\dots \\quad\\forall i \\in \\{2,3,4,5\\}")
+    io_test(IJuliaMode, bnd_difflo_with_up, "\\dots \\leq bnd_difflo_with_up_{i} \\leq 5 \\quad\\forall i \\in \\{2,3,4,5\\}")
+    io_test(IJuliaMode, bnd_diffup_with_lo, "2 \\leq bnd_diffup_with_lo_{i} \\leq \\dots \\quad\\forall i \\in \\{2,3,4,5\\}")
     end
 
     #------------------------------------------------------------------
@@ -80,20 +84,20 @@ facts("[print] JuMPContainer{Variable}") do
     @defVar(m, tri_2[i=1:3,j=-i])
     @defVar(m, tri_3[(i,j)=[(i,i+2) for i in 1:5],k=i:j])
 
-    io_test(REPLMode, rng_unit1, "rng_unit1[i] free for all i in {1,2..9,10}")
-    io_test(REPLMode, rng_unit2, "rng_unit2[i] free for all i in {-2,-1..2,3}")
-    io_test(REPLMode, rng_unit3, "rng_unit3[i] free for all i in {1,2..9,10}")
-    io_test(REPLMode, rng_step1, "rng_step1[i] free for all i in {1,3..7,9}")
-    io_test(REPLMode, rng_step2, "rng_step2[i] free for all i in {-2,3,8}")
-    io_test(REPLMode, rng_step3, "rng_step3[i] free for all i in {1}")
-    io_test(REPLMode, rng_step4, "rng_step4[i] free for all i in {0,2}")
-    io_test(REPLMode, arr_1, "arr_1[i] free for all i in {a,b,c}")
-    io_test(REPLMode, arr_2, "arr_2[i] free for all i in {a,1,test}")
-    io_test(REPLMode, arr_3, "arr_3[i] free for all i in {apple,banana,carrot,diamonds}")
-    io_test(REPLMode, rng2_1, "rng2_1[i,j] free for all i in {1,2..9,10}, j in {a,b,c}")
-    io_test(REPLMode, tri_1, "tri_1[i,j] free for all i in {1,2,3}, j in {..}")
-    io_test(REPLMode, tri_2, "tri_2[i,j] free for all i in {1,2,3}, j in {..}")
-    io_test(REPLMode, tri_3, "tri_3[(i,j),k] free for all (i,j) in {(1,3),(2,4)..(4,6),(5,7)}, k in {..}")
+    io_test(REPLMode, rng_unit1, "rng_unit1[i] free $fa i $inset {1,2,$dots,9,10}")
+    io_test(REPLMode, rng_unit2, "rng_unit2[i] free $fa i $inset {-2,-1,$dots,2,3}")
+    io_test(REPLMode, rng_unit3, "rng_unit3[i] free $fa i $inset {1,2,$dots,9,10}")
+    io_test(REPLMode, rng_step1, "rng_step1[i] free $fa i $inset {1,3,$dots,7,9}")
+    io_test(REPLMode, rng_step2, "rng_step2[i] free $fa i $inset {-2,3,8}")
+    io_test(REPLMode, rng_step3, "rng_step3[i] free $fa i $inset {1}")
+    io_test(REPLMode, rng_step4, "rng_step4[i] free $fa i $inset {0,2}")
+    io_test(REPLMode, arr_1, "arr_1[i] free $fa i $inset {a,b,c}")
+    io_test(REPLMode, arr_2, "arr_2[i] free $fa i $inset {a,1,test}")
+    io_test(REPLMode, arr_3, "arr_3[i] free $fa i $inset {apple,banana,carrot,diamonds}")
+    io_test(REPLMode, rng2_1, "rng2_1[i,j] free $fa i $inset {1,2,$dots,9,10}, j $inset {a,b,c}")
+    io_test(REPLMode, tri_1, "tri_1[i,j] free $fa i $inset {1,2,3}, j $inset {$dots}")
+    io_test(REPLMode, tri_2, "tri_2[i,j] free $fa i $inset {1,2,3}, j $inset {$dots}")
+    io_test(REPLMode, tri_3, "tri_3[(i,j),k] free $fa (i,j) $inset {(1,3),(2,4),$dots,(4,6),(5,7)}, k $inset {$dots}")
 
     io_test(IJuliaMode, rng_unit1, "rng_unit1_{i} free \\quad\\forall i \\in \\{1,2,\\dots,9,10\\}")
     io_test(IJuliaMode, rng_unit2, "rng_unit2_{i} free \\quad\\forall i \\in \\{-2,-1,\\dots,2,3\\}")
@@ -106,9 +110,9 @@ facts("[print] JuMPContainer{Variable}") do
     io_test(IJuliaMode, arr_2, "arr_2_{i} free \\quad\\forall i \\in \\{a,1,test\\}")
     io_test(IJuliaMode, arr_3, "arr_3_{i} free \\quad\\forall i \\in \\{apple,banana,carrot,diamonds\\}")
     io_test(IJuliaMode, rng2_1, "rng2_1_{i,j} free \\quad\\forall i \\in \\{1,2,\\dots,9,10\\}, j \\in \\{a,b,c\\}")
-    io_test(IJuliaMode, tri_1, "tri_1_{i,j} free \\quad\\forall i \\in \\{1,2,3\\}, j \\in \\{..\\}")
-    io_test(IJuliaMode, tri_2, "tri_2_{i,j} free \\quad\\forall i \\in \\{1,2,3\\}, j \\in \\{..\\}")
-    io_test(IJuliaMode, tri_3, "tri_3_{(i,j),k} free \\quad\\forall (i,j) \\in \\{(1,3),(2,4),\\dots,(4,6),(5,7)\\}, k \\in \\{..\\}")
+    io_test(IJuliaMode, tri_1, "tri_1_{i,j} free \\quad\\forall i \\in \\{1,2,3\\}, j \\in \\{\\dots\\}")
+    io_test(IJuliaMode, tri_2, "tri_2_{i,j} free \\quad\\forall i \\in \\{1,2,3\\}, j \\in \\{\\dots\\}")
+    io_test(IJuliaMode, tri_3, "tri_3_{(i,j),k} free \\quad\\forall (i,j) \\in \\{(1,3),(2,4),\\dots,(4,6),(5,7)\\}, k \\in \\{\\dots\\}")
     end
 
     #------------------------------------------------------------------
@@ -126,34 +130,34 @@ facts("[print] JuMPContainer{Variable}") do
     @defVar(m, i <= cat_semicont_none[i=2:3] <= 2i, SemiCont)
     @defVar(m, fixed_var[i=2:3] == i)
 
-    io_test(REPLMode, cat_bin, "cat_bin[i] in {0,1} for all i in {1,2,3}")
-    io_test(REPLMode, cat_int, "2 $le cat_int[i] $le 5, integer, for all i in {1,2,3}")
-    io_test(REPLMode, cat_semiint_both, "cat_semiint_both[i] in {2..Inf} or {0} for all i in {2,3}")
-    io_test(REPLMode, cat_semiint_difflow, "cat_semiint_difflow[i] in {....4} or {0} for all i in {2,3}")
-    io_test(REPLMode, cat_semiint_diffup, "cat_semiint_diffup[i] in {2....} or {0} for all i in {2,3}")
-    io_test(REPLMode, cat_semiint_none, "cat_semiint_none[i] in {......} or {0} for all i in {2,3}")
-    io_test(REPLMode, cat_semicont_both, "cat_semicont_both[i] in [2,Inf] or {0} for all i in {2,3}")
-    io_test(REPLMode, cat_semicont_difflow, "cat_semicont_difflow[i] in [..,4] or {0} for all i in {2,3}")
-    io_test(REPLMode, cat_semicont_diffup, "cat_semicont_diffup[i] in [2,..] or {0} for all i in {2,3}")
-    io_test(REPLMode, cat_semicont_none, "cat_semicont_none[i] in [..,..] or {0} for all i in {2,3}")
-    io_test(REPLMode, fixed_var, "fixed_var[i] = .. for all i in {2,3}")
+    io_test(REPLMode, cat_bin, "cat_bin[i] $inset {0,1} $fa i $inset {1,2,3}")
+    io_test(REPLMode, cat_int, "2 $le cat_int[i] $le 5, integer, $fa i $inset {1,2,3}")
+    io_test(REPLMode, cat_semiint_both, "cat_semiint_both[i] $inset {2,$dots,$infty} $union {0} $fa i $inset {2,3}")
+    io_test(REPLMode, cat_semiint_difflow, "cat_semiint_difflow[i] $inset {$dots,$dots,4} $union {0} $fa i $inset {2,3}")
+    io_test(REPLMode, cat_semiint_diffup, "cat_semiint_diffup[i] $inset {2,$dots,$dots} $union {0} $fa i $inset {2,3}")
+    io_test(REPLMode, cat_semiint_none, "cat_semiint_none[i] $inset {$dots,$dots,$dots} $union {0} $fa i $inset {2,3}")
+    io_test(REPLMode, cat_semicont_both, "cat_semicont_both[i] $inset [2,$infty] $union {0} $fa i $inset {2,3}")
+    io_test(REPLMode, cat_semicont_difflow, "cat_semicont_difflow[i] $inset [$dots,4] $union {0} $fa i $inset {2,3}")
+    io_test(REPLMode, cat_semicont_diffup, "cat_semicont_diffup[i] $inset [2,$dots] $union {0} $fa i $inset {2,3}")
+    io_test(REPLMode, cat_semicont_none, "cat_semicont_none[i] $inset [$dots,$dots] $union {0} $fa i $inset {2,3}")
+    io_test(REPLMode, fixed_var, "fixed_var[i] = $dots $fa i $inset {2,3}")
 
     io_test(IJuliaMode, cat_bin, "cat_bin_{i} \\in \\{0,1\\} \\quad\\forall i \\in \\{1,2,3\\}")
     io_test(IJuliaMode, cat_int, "2 \\leq cat_int_{i} \\leq 5, \\in \\mathbb{Z}, \\quad\\forall i \\in \\{1,2,3\\}")
-    io_test(IJuliaMode, cat_semiint_both, "cat_semiint_both_{i} \\in \\{2,\\dots,\\intfy\\} \\cup \\{0\\} \\quad\\forall i \\in \\{2,3\\}")
-    io_test(IJuliaMode, cat_semiint_difflow, "cat_semiint_difflow_{i} \\in \\{..,\\dots,4\\} \\cup \\{0\\} \\quad\\forall i \\in \\{2,3\\}")
-    io_test(IJuliaMode, cat_semiint_diffup, "cat_semiint_diffup_{i} \\in \\{2,\\dots,..\\} \\cup \\{0\\} \\quad\\forall i \\in \\{2,3\\}")
-    io_test(IJuliaMode, cat_semiint_none, "cat_semiint_none_{i} \\in \\{..,\\dots,..\\} \\cup \\{0\\} \\quad\\forall i \\in \\{2,3\\}")
-    io_test(IJuliaMode, cat_semicont_both, "cat_semicont_both_{i} \\in \\[2,\\intfy\\] \\cup \\{0\\} \\quad\\forall i \\in \\{2,3\\}")
-    io_test(IJuliaMode, cat_semicont_difflow, "cat_semicont_difflow_{i} \\in \\[..,4\\] \\cup \\{0\\} \\quad\\forall i \\in \\{2,3\\}")
-    io_test(IJuliaMode, cat_semicont_diffup, "cat_semicont_diffup_{i} \\in \\[2,..\\] \\cup \\{0\\} \\quad\\forall i \\in \\{2,3\\}")
-    io_test(IJuliaMode, cat_semicont_none, "cat_semicont_none_{i} \\in \\[..,..\\] \\cup \\{0\\} \\quad\\forall i \\in \\{2,3\\}")
-    io_test(IJuliaMode, fixed_var, "fixed_var_{i} = .. \\quad\\forall i \\in \\{2,3\\}")
+    io_test(IJuliaMode, cat_semiint_both, "cat_semiint_both_{i} \\in \\{2,\\dots,\\infty\\} \\cup \\{0\\} \\quad\\forall i \\in \\{2,3\\}")
+    io_test(IJuliaMode, cat_semiint_difflow, "cat_semiint_difflow_{i} \\in \\{\\dots,\\dots,4\\} \\cup \\{0\\} \\quad\\forall i \\in \\{2,3\\}")
+    io_test(IJuliaMode, cat_semiint_diffup, "cat_semiint_diffup_{i} \\in \\{2,\\dots,\\dots\\} \\cup \\{0\\} \\quad\\forall i \\in \\{2,3\\}")
+    io_test(IJuliaMode, cat_semiint_none, "cat_semiint_none_{i} \\in \\{\\dots,\\dots,\\dots\\} \\cup \\{0\\} \\quad\\forall i \\in \\{2,3\\}")
+    io_test(IJuliaMode, cat_semicont_both, "cat_semicont_both_{i} \\in \\[2,\\infty\\] \\cup \\{0\\} \\quad\\forall i \\in \\{2,3\\}")
+    io_test(IJuliaMode, cat_semicont_difflow, "cat_semicont_difflow_{i} \\in \\[\\dots,4\\] \\cup \\{0\\} \\quad\\forall i \\in \\{2,3\\}")
+    io_test(IJuliaMode, cat_semicont_diffup, "cat_semicont_diffup_{i} \\in \\[2,\\dots\\] \\cup \\{0\\} \\quad\\forall i \\in \\{2,3\\}")
+    io_test(IJuliaMode, cat_semicont_none, "cat_semicont_none_{i} \\in \\[\\dots,\\dots\\] \\cup \\{0\\} \\quad\\forall i \\in \\{2,3\\}")
+    io_test(IJuliaMode, fixed_var, "fixed_var_{i} = \\dots \\quad\\forall i \\in \\{2,3\\}")
     end
 
     #------------------------------------------------------------------
     # Tests for particular issues
-    context("[print] Empty JuMPContainer printing (#124)") do
+    context("Empty JuMPContainer printing (#124)") do
     @defVar(m, empty_free[1:0])
     io_test(REPLMode, empty_free, "Empty Array{Variable} (no indices)")
     io_test(IJuliaMode, empty_free, "Empty Array{Variable} (no indices)")
@@ -299,7 +303,10 @@ end
 
 
 facts("[print] Model") do
-    le, ge = JuMP.repl[:leq], JuMP.repl[:geq]
+    le, ge, fa = repl[:leq], repl[:geq], repl[:for_all]
+    inset, dots = repl[:in], repl[:dots]
+    infty, union = repl[:infty], repl[:union]
+    Vert, sub2 = repl[:Vert], repl[:sub2]
 
     #------------------------------------------------------------------
 
@@ -321,6 +328,7 @@ facts("[print] Model") do
     @addConstraint(mod_1, a + b - 10c - 2x + c1 <= 1)
     @addConstraint(mod_1, a*b <= 2)
     addSOS1(mod_1, [i*sos[i] for i in 1:3])
+    @addConstraint(mod_1, norm(sos) + a <= 1)
 
     io_test(REPLMode, mod_1, """
 Max a - b + 2 a1 - 10 x
@@ -328,26 +336,37 @@ Subject to
  a + b - 10 c - 2 x + c1 $le 1
  a*b - 2 $le 0
  SOS1: {1 sos[1], 2 sos[2], 3 sos[3]}
- sos[i] in {0,1} for all i in {1,2,3}
+ $(Vert)[sos[1],sos[2],sos[3]]$(Vert)$(sub2) $le -a + 1
+ sos[i] $inset {0,1} $fa i $inset {1,2,3}
  a $ge 1
  b $le 1
  -1 $le c $le 1
  a1 $ge 1, integer
  b1 $le 1, integer
  -1 $le c1 $le 1, integer
- x in {0,1}
+ x $inset {0,1}
  y free
  z free, integer
- si in {2..3} or {0}
- sc in [2,3] or {0}
+ si $inset {2,$dots,3} $union {0}
+ sc $inset [2,3] $union {0}
  fi = 9
 """, repl=:print)
+
+    io_test(REPLMode, mod_1, """
+Maximization problem with:
+ * 1 linear constraint
+ * 1 quadratic constraint
+ * 1 SOS constraint
+ * 1 SOC constraint
+ * 15 variables: 4 binary, 4 integer, 1 semicontinuous, 1 semi-integer
+Solver set to Default""", repl=:show)
 
     io_test(IJuliaMode, mod_1, """
 \\begin{alignat*}{1}\\max\\quad & a - b + 2 a1 - 10 x\\\\
 \\text{Subject to} \\quad & a + b - 10 c - 2 x + c1 \\leq 1\\\\
  & a\\timesb - 2 \\leq 0\\\\
  & SOS1: \\{1 sos[1], 2 sos[2], 3 sos[3]\\}\\\\
+ & \\Vert[sos_{1},sos_{2},sos_{3}]\\Vert_2 $le -a + 1\\\\
  & sos_{i} \\in \\{0,1\\} \\quad\\forall i \\in \\{1,2,3\\}\\\\
  & a \\geq 1\\\\
  & b \\leq 1\\\\
@@ -402,7 +421,7 @@ Solver set to Default""", repl=:show)
 Min (nonlinear expression)
 Subject to
  3 nonlinear constraints
- x[i] free for all i in {1,2..4,5}
+ x[i] free $fa i $inset {1,2,$dots,4,5}
 """, repl=:print)
     io_test(REPLMode, mod_3, """
 Minimization problem with:
@@ -419,7 +438,10 @@ Solver set to Default""", repl=:show)
 end
 
 facts("[print] changing variable categories") do
-    le, ge = JuMP.repl[:leq], JuMP.repl[:geq]
+    le, ge, fa = repl[:leq], repl[:geq], repl[:for_all]
+    inset, dots = repl[:in], repl[:dots]
+    infty, union = repl[:infty], repl[:union]
+    
     mod = Model()
     @defVar(mod, x[1:3])
     @defVar(mod, y[i=1:3,i:3])
@@ -429,11 +451,11 @@ facts("[print] changing variable categories") do
     io_test(REPLMode, mod, """
 Min 0
 Subject to
- x[i] free for all i in {1,2,3}
- y[i,j] free for all i in {1,2,3}, j in {..}
+ x[i] free $fa i $inset {1,2,3}
+ y[i,j] free $fa i $inset {1,2,3}, j $inset {$dots}
  x[1] free
  x[2] free
- x[3] in [-Inf,Inf] or {0}
+ x[3] $inset [-$infty,$infty] $union {0}
  y[1,1] free
  y[1,2] free
  y[1,3] free, integer
@@ -445,10 +467,10 @@ Subject to
     io_test(IJuliaMode, mod, """
 \\begin{alignat*}{1}\\min\\quad & 0\\\\
 \\text{Subject to} \\quad & x_{i} free \\quad\\forall i \\in \\{1,2,3\\}\\\\
- & y_{i,j} free \\quad\\forall i \\in \\{1,2,3\\}, j \\in \\{..\\}\\\\
+ & y_{i,j} free \\quad\\forall i \\in \\{1,2,3\\}, j \\in \\{\\dots\\}\\\\
  & x_{1} free\\\\
  & x_{2} free\\\\
- & x_{3} \\in \\[-Inf,Inf\\] \\cup \\{0\\}\\\\
+ & x_{3} \\in \\[-\\infty,\\infty\\] \\cup \\{0\\}\\\\
  & y_{1,1} free\\\\
  & y_{1,2} free\\\\
  & y_{1,3} free, \\in \\mathbb{Z}\\\\
@@ -462,7 +484,7 @@ end
 facts("[print] expressions") do
     # Most of the expression logic is well covered by test/operator.jl
     # This is really just to check IJulia printing for expressions
-    le, ge = JuMP.repl[:leq], JuMP.repl[:geq]
+    le, ge = repl[:leq], repl[:geq]
 
     #------------------------------------------------------------------
     mod = Model()

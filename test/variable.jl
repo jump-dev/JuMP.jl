@@ -98,13 +98,16 @@ end
 
 # Test conditions in variable definition
 if VERSION >= v"0.4-"
+    fa = repl[:for_all]
+    inset, dots = repl[:in], repl[:dots]
+
     facts("[variable] condition in indexing") do
         condmod = Model()
         @defVar(condmod, x[i=1:10; iseven(i)])
         @defVar(condmod, y[j=1:10,k=3:2:9; isodd(j+k) && k <= 8])
         @fact length(x.tupledict) --> 5
         @fact length(y.tupledict) --> 15
-        @fact string(condmod) --> "Min 0\nSubject to\n x[i] free for all i in {1,2..9,10} s.t. iseven(i)\n y[j,k] free for all j in {1,2..9,10}, k in {3,5,7,9} s.t. isodd(j + k) and k <= 8\n"
+        @fact string(condmod) --> "Min 0\nSubject to\n x[i] free $fa i $inset {1,2,$dots,9,10} s.t. iseven(i)\n y[j,k] free $fa j $inset {1,2,$dots,9,10}, k $inset {3,5,7,9} s.t. isodd(j + k) and k <= 8\n"
     end
 end
 
