@@ -38,7 +38,7 @@ export
     # Variable
     setName, getName, setLower, setUpper, getLower, getUpper,
     getValue, setValue, getDual, setCategory, getCategory,
-    getVar,
+    getVar, setType, getType,
     getLinearIndex,
     # Expressions and constraints
     affToStr, quadToStr, exprToStr, conToStr, chgConstrRHS,
@@ -74,7 +74,7 @@ type Model
     colNamesIJulia::Vector{UTF8String}
     colLower::Vector{Float64}
     colUpper::Vector{Float64}
-    colCat::Vector{Symbol}
+    colType::Vector{Symbol}
 
     # Variable cones of the form, e.g. (:SDP, 1:9)
     varCones::Vector{@compat Tuple{Symbol,Any}}
@@ -143,7 +143,7 @@ function Model(;solver=UnsetSolver())
           UTF8String[],                # colNamesIJulia
           Float64[],                   # colLower
           Float64[],                   # colUpper
-          Symbol[],                    # colCat
+          Symbol[],                    # colType
           Vector{@compat Tuple{Symbol,Any}}[], # varCones
           0,                           # objVal
           Float64[],                   # colVal
@@ -240,7 +240,7 @@ function Base.copy(source::Model)
     dest.colNamesIJulia = source.colNamesIJulia[:]
     dest.colLower = source.colLower[:]
     dest.colUpper = source.colUpper[:]
-    dest.colCat = source.colCat[:]
+    dest.colType = source.colType[:]
 
     # varCones
     dest.varCones = copy(source.varCones)
@@ -301,18 +301,18 @@ getLinearIndex(x::Variable) = x.col
 ReverseDiffSparse.getplaceindex(x::Variable) = getLinearIndex(x)
 Base.isequal(x::Variable,y::Variable) = (x.col == y.col) && (x.m === y.m)
 
-Variable(m::Model, lower, upper, cat::Symbol, name::UTF8String="", value::Number=NaN) =
+Variable(m::Model, lower, upper, vartype::Symbol, name::UTF8String="", value::Number=NaN) =
     error("Attempt to create scalar Variable with lower bound of type $(typeof(lower)) and upper bound of type $(typeof(upper)). Bounds must be scalars in Variable constructor.")
 
-function Variable(m::Model,lower::Number,upper::Number,cat::Symbol,name::UTF8String="",value::Number=NaN)
+function Variable(m::Model,lower::Number,upper::Number,vartype::Symbol,name::UTF8String="",value::Number=NaN)
     m.numCols += 1
     push!(m.colNames, name)
     push!(m.colNamesIJulia, name)
     push!(m.colLower, convert(Float64,lower))
     push!(m.colUpper, convert(Float64,upper))
-    push!(m.colCat, cat)
-    push!(m.colVal,value)
-    if cat == :Fixed
+    push!(m.colType, vartype)
+    push!(m.colVal, value)
+    if vartype == :Fixed
         @assert lower == upper
         m.colVal[end] = lower
     end
@@ -337,11 +337,11 @@ getName(v::Variable) = var_str(REPLMode, v.m, v.col)
 
 # Bound setter/getters
 function setLower(v::Variable,lower::Number)
-    v.m.colCat[v.col] == :Fixed && error("use setValue for changing the value of a fixed variable")
+    v.m.colType[v.col] == :Fixed && error("use setValue for changing the value of a fixed variable")
     v.m.colLower[v.col] = lower
 end
 function setUpper(v::Variable,upper::Number)
-    v.m.colCat[v.col] == :Fixed && error("use setValue for changing the value of a fixed variable")
+    v.m.colType[v.col] == :Fixed && error("use setValue for changing the value of a fixed variable")
     v.m.colUpper[v.col] = upper
 end
 getLower(v::Variable) = v.m.colLower[v.col]
@@ -350,7 +350,7 @@ getUpper(v::Variable) = v.m.colUpper[v.col]
 # Value setter/getter
 function setValue(v::Variable, val::Number)
     v.m.colVal[v.col] = val
-    if v.m.colCat[v.col] == :Fixed
+    if v.m.colType[v.col] == :Fixed
         v.m.colLower[v.col] = val
         v.m.colUpper[v.col] = val
     end
@@ -416,12 +416,13 @@ function getDual(v::Variable)
 end
 
 const var_types = [:Cont, :Int, :Bin, :SemiCont, :SemiInt]
-function setCategory(v::Variable, v_type::Symbol)
+@Base.deprecate setCategory(v::Variable, v_type::Symbol) setType(v, v_type)
+@Base.deprecate getCategory(v::Variable) getType(v)
+function setType(v::Variable, v_type::Symbol)
     v_type in var_types || error("Unrecognized variable type $v_type. Should be one of:\n    $var_types")
-    v.m.colCat[v.col] = v_type
+    v.m.colType[v.col] = v_type
 end
-
-getCategory(v::Variable) = v.m.colCat[v.col]
+getType(v::Variable) = v.m.colType[v.col]
 
 Base.zero(::Type{Variable}) = AffExpr(Variable[],Float64[],0.0)
 Base.zero(::Variable) = zero(Variable)
@@ -532,27 +533,27 @@ function chgConstrRHS(c::ConstraintRef{LinearConstraint}, rhs::Number)
     end
 end
 
-Variable(m::Model,lower::Number,upper::Number,cat::Symbol,objcoef::Number,
+Variable(m::Model,lower::Number,upper::Number,vartype::Symbol,objcoef::Number,
     constraints::JuMPArray,coefficients::Vector{Float64}, name::String="", value::Number=NaN) =
-    Variable(m, lower, upper, cat, objcoef, constraints.innerArray, coefficients, name, value)
+    Variable(m, lower, upper, vartype, objcoef, constraints.innerArray, coefficients, name, value)
 
 # add variable to existing constraints
-function Variable(m::Model,lower::Number,upper::Number,cat::Symbol,objcoef::Number,
+function Variable(m::Model,lower::Number,upper::Number,vartype::Symbol,objcoef::Number,
     constraints::Vector,coefficients::Vector{Float64}, name::String="", value::Number=NaN)
     for c in constraints
         if !isa(c,ConstraintRef{LinearConstraint})
             error("Unexpected constraint of type $(typeof(c)). Column-wise modeling only supported for linear constraints")
         end
     end
-    @assert cat != :Fixed || (lower == upper)
+    @assert vartype != :Fixed || (lower == upper)
     m.numCols += 1
     push!(m.colNames, name)
     push!(m.colNamesIJulia, name)
     push!(m.colLower, convert(Float64,lower))
     push!(m.colUpper, convert(Float64,upper))
-    push!(m.colCat, cat)
-    push!(m.colVal,value)
-    if cat == :Fixed
+    push!(m.colType, vartype)
+    push!(m.colVal, value)
+    if vartype == :Fixed
         @assert lower == upper
         m.colVal[end] = lower
     end

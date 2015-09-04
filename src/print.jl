@@ -132,10 +132,10 @@ function Base.show(io::IO, m::Model)
         println(io, " * $(length(nlp.nlconstr)) nonlinear constraint$(plural(length(nlp.nlconstr)))")
     end
     print(io, " * $(m.numCols) variable$(plural(m.numCols))")
-    nbin = sum(m.colCat .== :Bin)
-    nint = sum(m.colCat .== :Int)
-    nsc = sum(m.colCat .== :SemiCont)
-    nsi = sum(m.colCat .== :SemiInt)
+    nbin = sum(m.colType .== :Bin)
+    nint = sum(m.colType .== :Int)
+    nsc = sum(m.colType .== :SemiCont)
+    nsi = sum(m.colType .== :SemiInt)
     varstr = Any[]
     nbin == 0 || push!(varstr, "$nbin binary")
     nint == 0 || push!(varstr, "$nint integer")
@@ -196,10 +196,10 @@ function model_str(mode, m::Model, sym::PrintSymbols)
         str *= sep * cont_str(mode,d,mathmode=true)  * eol
 
         # make sure that you haven't changed a variable type in the collection
-        cat = getCategory(first(_values(d)))
+        vartype = getType(first(_values(d)))
         allsame = true
         for v in _values(d)
-            if getCategory(v) != cat
+            if getType(v) != vartype
                 allsame = false
                 break
             end
@@ -217,13 +217,13 @@ function model_str(mode, m::Model, sym::PrintSymbols)
         var_name = var_str(mode,m,i)
         var_lb, var_ub = m.colLower[i], m.colUpper[i]
         str_lb, str_ub = str_round(var_lb), str_round(var_ub)
-        var_cat = m.colCat[i]
-        if var_cat == :Bin  # x binary
+        vartype = m.colType[i]
+        if vartype == :Bin  # x binary
             str *= string(sep, var_name,
                             " ", sym[:in],
                             " ", sym[:open_set],
                             "0,1", sym[:close_set])
-        elseif var_cat == :SemiInt  # x in union of 0 and {lb,...,ub}
+        elseif vartype == :SemiInt  # x in union of 0 and {lb,...,ub}
             str *= string(sep, var_name,
                             " ", sym[:in],
                             " ", sym[:open_set],
@@ -231,7 +231,7 @@ function model_str(mode, m::Model, sym::PrintSymbols)
                             sym[:close_set],
                             " ", sym[:union], " ",
                             sym[:open_set], "0", sym[:close_set])
-        elseif var_cat == :SemiCont  # x in union of 0 and [lb,ub]
+        elseif vartype == :SemiCont  # x in union of 0 and [lb,ub]
             str *= string(sep, var_name,
                             " ", sym[:in],
                             " ", sym[:open_rng],
@@ -239,7 +239,7 @@ function model_str(mode, m::Model, sym::PrintSymbols)
                             sym[:close_rng],
                             " ", sym[:union], " ",
                             sym[:open_set], "0", sym[:close_set])
-        elseif var_cat == :Fixed
+        elseif vartype == :Fixed
             str *= string(sep, var_name, " = ", str_lb)
         elseif var_lb == -Inf && var_ub == +Inf # Free variable
             str *= string(sep, var_name, " free")
@@ -252,7 +252,7 @@ function model_str(mode, m::Model, sym::PrintSymbols)
                             " ", var_name, " ",
                             sym[:leq], " ", str_ub)
         end
-        if var_cat == :Int
+        if vartype == :Int
             str *= string(", ", sym[:integer])
         end
         str *= eol
@@ -422,10 +422,10 @@ function cont_str(mode, j, sym::PrintSymbols)
        idx_sets *= string(" s.t. ",join(parse_conditions(data.condition), " and "))
     end
 
-    # 4. Bounds and category, if possible, and return final string
+    # 4. Bounds and type, if possible, and return final string
     a_var = first(_values(j))
     model = a_var.m
-    var_cat = model.colCat[a_var.col]
+    vartype = model.colType[a_var.col]
     var_lb  = model.colLower[a_var.col]
     var_ub  = model.colUpper[a_var.col]
     # Variables may have different bounds, so we can't really print nicely
@@ -439,23 +439,23 @@ function cont_str(mode, j, sym::PrintSymbols)
     end
     str_lb = var_lb == -Inf ? "-"*sym[:infty] : str_round(var_lb)
     str_ub = var_ub == +Inf ?     sym[:infty] : str_round(var_ub)
-    # Special case bounds printing based on the category
-    if var_cat == :Bin  # x in {0,1}
+    # Special case bounds printing based on the type
+    if vartype == :Bin  # x in {0,1}
         return "$name_idx $(sym[:in]) $(sym[:open_set])0,1$(sym[:close_set]) $idx_sets"
-    elseif var_cat == :SemiInt  # x in union of 0 and {lb,...,ub}
+    elseif vartype == :SemiInt  # x in union of 0 and {lb,...,ub}
         si_lb = all_same_lb ? str_lb : ".."
         si_ub = all_same_ub ? str_ub : ".."
         return "$name_idx $(sym[:in]) $(sym[:open_set])$si_lb$(sym[:mid_set])$si_ub$(sym[:close_set]) $(sym[:union]) $(sym[:open_set])0$(sym[:close_set]) $idx_sets"
-    elseif var_cat == :SemiCont  # x in union of 0 and [lb,ub]
+    elseif vartype == :SemiCont  # x in union of 0 and [lb,ub]
         si_lb = all_same_lb ? str_lb : ".."
         si_ub = all_same_ub ? str_ub : ".."
         return "$name_idx $(sym[:in]) $(sym[:open_rng])$si_lb,$si_ub$(sym[:close_rng]) $(sym[:union]) $(sym[:open_set])0$(sym[:close_set]) $idx_sets"
-    elseif var_cat == :Fixed
+    elseif vartype == :Fixed
         si_bnd = all_same_lb ? str_lb : ".."
         return "$name_idx = $si_bnd $idx_sets"
     end
     # Continuous and Integer
-    idx_sets = var_cat == :Int ? ", $(sym[:integer]), $idx_sets" : " $idx_sets"
+    idx_sets = vartype == :Int ? ", $(sym[:integer]), $idx_sets" : " $idx_sets"
     if all_same_lb && all_same_ub
         # Free variable
         var_lb == -Inf && var_ub == +Inf && return "$name_idx free$idx_sets"

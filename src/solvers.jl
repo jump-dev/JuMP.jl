@@ -27,7 +27,7 @@ immutable ProblemTraits
     conic::Bool  # has an SDP or SOC constraint
 end
 function ProblemTraits(m::Model)
-    int = any(c-> !(c == :Cont || c == :Fixed), m.colCat)
+    int = any(c-> !(c == :Cont || c == :Fixed), m.colType)
     qp = !isempty(m.obj.qvars1)
     qc = !isempty(m.quadconstr)
     nlp = m.nlpdata !== nothing
@@ -261,8 +261,8 @@ function buildInternalModel(m::Model, traits=ProblemTraits(m);
 
     # Update the type of each variable
     if applicable(MathProgBase.setvartype!, m.internalModel, Symbol[])
-        colCats = vartypes_without_fixed(m)
-        MathProgBase.setvartype!(m.internalModel, colCats)
+        colTypes = vartypes_without_fixed(m)
+        MathProgBase.setvartype!(m.internalModel, colTypes)
     elseif traits.int
         # Solver that do not implement anything other than continuous
         # variables do not need to implement this method, so throw an
@@ -469,14 +469,14 @@ function prepConstrMatrix(m::Model)
 end
 
 function vartypes_without_fixed(m::Model)
-    colCats = copy(m.colCat)
-    for i in 1:length(colCats)
-        if colCats[i] == :Fixed
+    colTypes = copy(m.colType)
+    for i in 1:length(colTypes)
+        if colTypes[i] == :Fixed
             @assert m.colLower[i] == m.colUpper[i]
-            colCats[i] = :Cont
+            colTypes[i] = :Cont
         end
     end
-    return colCats
+    return colTypes
 end
 
 function collect_expr!(m, tmprow, terms::AffExpr)
