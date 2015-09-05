@@ -132,6 +132,7 @@ facts("[macros] Using pre-built affine is OK in macro") do
     @fact conToStr(m.linconstr[end]) --> "28 x $eq -28"
     @fact affToStr(a) --> "x"
 
+    @fact conToStr(@LinearConstraint(1 + 0*temp == 0)) --> "0 $eq -1"
 end
 
 facts("[macros] Test ranges in @defVar") do
@@ -263,6 +264,14 @@ facts("[macros] @addConstraint with quadratic") do
 
     @addConstraint(m, (x[1] + x[2])*sum{ 0*x[i] + x[3], i=1:3} == 0)
     @fact conToStr(m.quadconstr[end]) --> "3 x[1]*x[3] + 3 x[2]*x[3] $eq 0"
+
+    @fact conToStr(@QuadConstraint(1 + 0*myquadexpr == 0)) --> "1 $eq 0"
+
+    @defVar(m, y)
+    @fact conToStr(@QuadConstraint(1 + (2y)*y   == 0)) --> "2 y² + 1 $eq 0"
+    @fact conToStr(@QuadConstraint(1 +   y *y*2 == 0)) --> "2 y² + 1 $eq 0"
+    z = 2y
+    @fact conToStr(@QuadConstraint(y*y + y*z == 0)) --> "3 y² $eq 0"
 end
 
 facts("[macros] Triangular indexing, iteration") do
