@@ -162,9 +162,9 @@ function addToExpression(quad::GenericQuadExpr,c::Number,x::Number)
     quad
 end
 
-function addToExpression{C,V}(quad::GenericQuadExpr{C,V},c::V,x::V)
+function addToExpression{C,V}(quad::GenericQuadExpr{C,V},x::V,y::V)
     push!(quad.qvars1, x)
-    push!(quad.qvars2, c)
+    push!(quad.qvars2, y)
     push!(quad.qcoeffs, one(C))
     quad
 end
