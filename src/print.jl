@@ -46,25 +46,29 @@ _values(x::Array) = x
 _values(x) = Base.values(x)
 
 # REPL-specific symbols
+# Anything here: https://en.wikipedia.org/wiki/Windows-1252
+# should probably work fine on Windows
 const repl = @compat Dict{Symbol,UTF8String}(
-    :leq        => (OS_NAME===:Windows ? "<=" : "≤"),
-    :geq        => (OS_NAME===:Windows ? ">=" : "≥"),
-    :eq         => (OS_NAME===:Windows ? "==" : "="),
+    :leq        => (OS_NAME == :Windows ? "<=" : "≤"),
+    :geq        => (OS_NAME == :Windows ? ">=" : "≥"),
+    :eq         => (OS_NAME == :Windows ? "==" : "="),
     :times      => "*",
-    :sq         => "\u00B2",  # Superscript 2
+    :sq         => "²",
     :ind_open   => "[",
     :ind_close  => "]",
-    :for_all    => "for all",
-    :in         => "in",
+    :for_all    => (OS_NAME == :Windows ? "for all" : "∀"),
+    :in         => (OS_NAME == :Windows ? "in" : "∈"),
     :open_set   => "{",
-    :mid_set    => "..",
+    :dots       => (OS_NAME == :Windows ? ".." : "…"),
     :close_set  => "}",
-    :union      => "or",
-    :infty      => "Inf",
+    :union      => (OS_NAME == :Windows ? "or" : "∪"),
+    :infty      => (OS_NAME == :Windows ? "Inf" : "∞"),
     :open_rng   => "[",
     :close_rng  => "]",
     :integer    => "integer",
-    :succeq0    => " is semidefinite")
+    :succeq0    => " is semidefinite",
+    :Vert       => (OS_NAME == :Windows ? "||" : "‖"),
+    :sub2       => (OS_NAME == :Windows ? "_2" : "₂"))
 
 # IJulia-specific symbols
 const ijulia = @compat Dict{Symbol,UTF8String}(
@@ -78,17 +82,16 @@ const ijulia = @compat Dict{Symbol,UTF8String}(
     :for_all    => "\\quad\\forall",
     :in         => "\\in",
     :open_set   => "\\{",
-    :mid_set    => ",\\dots,",
+    :dots       => "\\dots",
     :close_set  => "\\}",
     :union      => "\\cup",
-    :infty      => "\\intfy",
+    :infty      => "\\infty",
     :open_rng   => "\\[",
     :close_rng  => "\\]",
     :integer    => "\\in \\mathbb{Z}",
-    :succeq0    => "\\succeq 0")
-
-const sqrt = "√"
-const pow_two = "²"
+    :succeq0    => "\\succeq 0",
+    :Vert       => "\\Vert",
+    :sub2       => "_2")
 
 typealias PrintSymbols Dict{Symbol,UTF8String}
 
@@ -122,6 +125,14 @@ function Base.show(io::IO, m::Model)
     nquad = length(m.quadconstr)
     if nquad > 0
         println(io, " * $(nquad) quadratic constraint$(plural(nquad))")
+    end
+    nsos = length(m.sosconstr)
+    if nsos > 0
+        println(io, " * $(nsos) SOS constraint$(plural(nsos))")
+    end
+    nsoc = length(m.socconstr)
+    if nsoc > 0
+        println(io, " * $(nsoc) SOC constraint$(plural(nsoc))")
     end
     nsdp = length(m.sdpconstr)
     if nsdp > 0
@@ -185,6 +196,9 @@ function model_str(mode, m::Model, sym::PrintSymbols)
     for c in m.sosconstr
         str *= sep * con_str(mode,c,mathmode=true) * eol
     end
+    for c in m.socconstr
+        str *= sep * con_str(mode,c,mathmode=true) * eol
+    end
     if nlp !== nothing && length(nlp.nlconstr) > 0
         num = length(nlp.nlconstr)
         str *= sep * string("$num nonlinear constraint", num>1?"s":"") * eol
@@ -216,7 +230,8 @@ function model_str(mode, m::Model, sym::PrintSymbols)
         in_dictlist[i] && continue
         var_name = var_str(mode,m,i)
         var_lb, var_ub = m.colLower[i], m.colUpper[i]
-        str_lb, str_ub = str_round(var_lb), str_round(var_ub)
+        str_lb = var_lb == -Inf ? "-"*sym[:infty] : str_round(var_lb)
+        str_ub = var_ub == +Inf ?     sym[:infty] : str_round(var_ub)
         var_cat = m.colCat[i]
         if var_cat == :Bin  # x binary
             str *= string(sep, var_name,
@@ -227,7 +242,7 @@ function model_str(mode, m::Model, sym::PrintSymbols)
             str *= string(sep, var_name,
                             " ", sym[:in],
                             " ", sym[:open_set],
-                            str_lb, sym[:mid_set], str_ub,
+                            str_lb, ",", sym[:dots], ",", str_ub,
                             sym[:close_set],
                             " ", sym[:union], " ",
                             sym[:open_set], "0", sym[:close_set])
@@ -347,21 +362,19 @@ Base.show( io::IO, j::Norm) = print(io, norm_str(REPLMode,j))
 Base.writemime(io::IO, ::MIME"text/latex", j::Norm) =
     print(io, norm_str(IJuliaMode,j))
 
-function norm_str(mode, n::Norm)
-    terms_strs = Array(UTF8String, length(n.terms))
-    for i in 1:length(terms_strs)
-        t = aff_str(mode, n.terms[i])
-        terms_strs[i] = (if contains(t, " ")
-            "($t)$pow_two"
-        else
-            "$t$pow_two"
-        end)
-    end
-    string("$sqrt(", join(terms_strs, " + "), ")")
+function norm_str(mode, n::Norm, sym::PrintSymbols)
+    string(sym[:Vert], "[",
+            join(map(t->aff_str(mode,t),n.terms),","),
+            "]", sym[:Vert], sym[:sub2])
 end
 
-exprToStr(n::Norm) = exprToStr(convert(SOCExpr, copy(n)))
+# Handlers to use correct symbols
+norm_str(::Type{REPLMode}, n::Norm) =
+    norm_str(REPLMode, n, repl)
+norm_str(::Type{IJuliaMode}, n::Norm; mathmode=true) =
+    math(norm_str(IJuliaMode, n, ijulia), mathmode)
 
+exprToStr(n::Norm) = norm_str(REPLMode, n)
 
 #------------------------------------------------------------------------
 ## JuMPContainer{Variable}
@@ -415,7 +428,7 @@ function cont_str(mode, j, sym::PrintSymbols)
     # 2. construct part with what we index over
     idx_sets = sym[:for_all]*" "*join(map(dim->string(idxvars[dim], " ", sym[:in],
                                 " ", sym[:open_set],
-                                cont_str_set(data.indexsets[dim],sym[:mid_set]),
+                                cont_str_set(data.indexsets[dim],sym[:dots]),
                                 sym[:close_set]), 1:num_dims), ", ")
     # 3. Handle any conditions
     if isa(j, JuMPDict) && data.condition != :()
@@ -439,19 +452,20 @@ function cont_str(mode, j, sym::PrintSymbols)
     end
     str_lb = var_lb == -Inf ? "-"*sym[:infty] : str_round(var_lb)
     str_ub = var_ub == +Inf ?     sym[:infty] : str_round(var_ub)
+
     # Special case bounds printing based on the category
     if var_cat == :Bin  # x in {0,1}
         return "$name_idx $(sym[:in]) $(sym[:open_set])0,1$(sym[:close_set]) $idx_sets"
     elseif var_cat == :SemiInt  # x in union of 0 and {lb,...,ub}
-        si_lb = all_same_lb ? str_lb : ".."
-        si_ub = all_same_ub ? str_ub : ".."
-        return "$name_idx $(sym[:in]) $(sym[:open_set])$si_lb$(sym[:mid_set])$si_ub$(sym[:close_set]) $(sym[:union]) $(sym[:open_set])0$(sym[:close_set]) $idx_sets"
+        si_lb = all_same_lb ? str_lb : sym[:dots]
+        si_ub = all_same_ub ? str_ub : sym[:dots]
+        return "$name_idx $(sym[:in]) $(sym[:open_set])$si_lb,$(sym[:dots]),$si_ub$(sym[:close_set]) $(sym[:union]) $(sym[:open_set])0$(sym[:close_set]) $idx_sets"
     elseif var_cat == :SemiCont  # x in union of 0 and [lb,ub]
-        si_lb = all_same_lb ? str_lb : ".."
-        si_ub = all_same_ub ? str_ub : ".."
+        si_lb = all_same_lb ? str_lb : sym[:dots]
+        si_ub = all_same_ub ? str_ub : sym[:dots]
         return "$name_idx $(sym[:in]) $(sym[:open_rng])$si_lb,$si_ub$(sym[:close_rng]) $(sym[:union]) $(sym[:open_set])0$(sym[:close_set]) $idx_sets"
     elseif var_cat == :Fixed
-        si_bnd = all_same_lb ? str_lb : ".."
+        si_bnd = all_same_lb ? str_lb : sym[:dots]
         return "$name_idx = $si_bnd $idx_sets"
     end
     # Continuous and Integer
@@ -467,25 +481,25 @@ function cont_str(mode, j, sym::PrintSymbols)
         return "$str_lb $(sym[:leq]) $name_idx $(sym[:leq]) $str_ub$idx_sets"
     end
     if all_same_lb && !all_same_ub
-        var_lb == -Inf && return "$name_idx $(sym[:leq]) ..$idx_sets"
-        return "$str_lb $(sym[:leq]) $name_idx $(sym[:leq]) ..$idx_sets"
+        var_lb == -Inf && return "$name_idx $(sym[:leq]) $(sym[:dots])$idx_sets"
+        return "$str_lb $(sym[:leq]) $name_idx $(sym[:leq]) $(sym[:dots])$idx_sets"
     end
     if !all_same_lb && all_same_ub
-        var_ub == +Inf && return "$name_idx $(sym[:geq]) ..$idx_sets"
-        return ".. $(sym[:leq]) $name_idx $(sym[:leq]) $str_ub$idx_sets"
+        var_ub == +Inf && return "$name_idx $(sym[:geq]) $(sym[:dots])$idx_sets"
+        return "$(sym[:dots]) $(sym[:leq]) $name_idx $(sym[:leq]) $str_ub$idx_sets"
     end
-    return ".. $(sym[:leq]) $name_idx $(sym[:leq]) ..$idx_sets"
+    return "$(sym[:dots]) $(sym[:leq]) $name_idx $(sym[:leq]) $(sym[:dots])$idx_sets"
 end
 
 # UTILITY FUNCTIONS FOR cont_str
-function cont_str_set(idxset::Union(Range,Array), mid_set)  # 2:2:20 -> {2,4..18,20}
+function cont_str_set(idxset::Union(Range,Array), dots)  # 2:2:20 -> {2,4..18,20}
     length(idxset) == 1 && return string(idxset[1])
     length(idxset) == 2 && return string(idxset[1],",",idxset[2])
     length(idxset) == 3 && return string(idxset[1],",",idxset[2],",",idxset[3])
     length(idxset) == 4 && return string(idxset[1],",",idxset[2],",",idxset[3],",",idxset[4])
-    return string(idxset[1],",",idxset[2],mid_set,idxset[end-1],",",idxset[end])
+    return string(idxset[1],",",idxset[2],",",dots,",",idxset[end-1],",",idxset[end])
 end
-cont_str_set(idxset, mid_set) = return ".." # Fallback
+cont_str_set(idxset, dots) = return dots # Fallback
 # parse_conditions
 # Not exported. Traverses an expression and constructs an array with entries
 # corresponding to each condition. More specifically, if the condition is
@@ -826,16 +840,20 @@ Base.print(io::IO, c::SOCConstraint) = print(io, con_str(REPLMode,c))
 Base.show( io::IO, c::SOCConstraint) = print(io, con_str(REPLMode,c))
 Base.writemime(io::IO, ::MIME"text/latex", c::SOCConstraint) =
     print(io, con_str(IJuliaMode,c))
-
-function con_str(mode, c::SOCConstraint)
+function con_str(mode, c::SOCConstraint, sym::PrintSymbols)
     ne = c.normexpr
     coeff = ne.coeff == 1 ? "" : string(ne.coeff, " ")
     nrm   = norm_str(mode, ne.norm)
     aff   = aff_str(mode, -ne.aff)
     string(coeff, nrm, " $(repl[:leq]) ", aff)
 end
-
-conToStr(c::SOCConstraint) = con_str(REPLMode, c)
+# Handlers to use correct symbols
+con_str(::Type{REPLMode}, c::SOCConstraint; args...) =
+    con_str(REPLMode, c, repl)
+con_str(::Type{IJuliaMode}, c::SOCConstraint; mathmode=true) =
+    math(con_str(IJuliaMode, c, ijulia), mathmode)
+# Backwards compatability shim
+conToStr(c::SOCConstraint) = con_str(REPLMode,c)
 
 #------------------------------------------------------------------------
 ## SOSConstraint
@@ -845,7 +863,7 @@ Base.show( io::IO, c::SOSConstraint) = print(io, con_str(REPLMode,c))
 Base.writemime(io::IO, ::MIME"text/latex", c::SOSConstraint) =
     print(io, con_str(IJuliaMode,c,mathmode=false))
 # Generic string converter, called by mode-specific handlers
-function con_str(mode, c::SOSConstraint, sym)
+function con_str(mode, c::SOSConstraint, sym::PrintSymbols)
     term_str = [string(str_round(c.weights[i]), " ", c.terms[i])
                     for i in 1:length(c.terms)]
     "$(c.sostype): $(sym[:open_set])$(join(term_str,", "))$(sym[:close_set])"
@@ -855,6 +873,7 @@ con_str(::Type{REPLMode}, c::SOSConstraint; args...) =
     con_str(REPLMode, c, repl)
 con_str(::Type{IJuliaMode}, c::SOSConstraint; mathmode=true) =
     math(con_str(IJuliaMode, c, ijulia), mathmode)
+
 #------------------------------------------------------------------------
 ## SDPConstraint
 #------------------------------------------------------------------------

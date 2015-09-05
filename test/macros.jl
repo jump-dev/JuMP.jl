@@ -9,6 +9,8 @@ using Base.Test
 const leq = JuMP.repl[:leq]
 const geq = JuMP.repl[:geq]
 const  eq = JuMP.repl[:eq]
+const Vert = JuMP.repl[:Vert]
+const sub2 = JuMP.repl[:sub2]
 
 facts("[macros] Check Julia expression parsing") do
     sumexpr = :(sum{x[i,j] * y[i,j], i = 1:N, j = 1:M; i != j})
@@ -130,6 +132,7 @@ facts("[macros] Using pre-built affine is OK in macro") do
     @fact conToStr(m.linconstr[end]) --> "28 x $eq -28"
     @fact affToStr(a) --> "x"
 
+    @fact conToStr(@LinearConstraint(1 + 0*temp == 0)) --> "0 $eq -1"
 end
 
 facts("[macros] Test ranges in @defVar") do
@@ -261,6 +264,14 @@ facts("[macros] @addConstraint with quadratic") do
 
     @addConstraint(m, (x[1] + x[2])*sum{ 0*x[i] + x[3], i=1:3} == 0)
     @fact conToStr(m.quadconstr[end]) --> "3 x[1]*x[3] + 3 x[2]*x[3] $eq 0"
+
+    @fact conToStr(@QuadConstraint(1 + 0*myquadexpr == 0)) --> "1 $eq 0"
+
+    @defVar(m, y)
+    @fact conToStr(@QuadConstraint(1 + (2y)*y   == 0)) --> "2 y² + 1 $eq 0"
+    @fact conToStr(@QuadConstraint(1 +   y *y*2 == 0)) --> "2 y² + 1 $eq 0"
+    z = 2y
+    @fact conToStr(@QuadConstraint(y*y + y*z == 0)) --> "3 y² $eq 0"
 end
 
 facts("[macros] Triangular indexing, iteration") do
@@ -352,9 +363,9 @@ facts("[macros] Norm parsing") do
     @addConstraint(model, -2norm2{x[i,j], i=1:2, j=1:2} + x[1,2] >= -1)
     @addConstraint(model, -2norm2{x[i,j], i=1:2, j=1:2; iseven(i+j)} + x[1,2] >= -1)
     @addConstraint(model, 1 >= 2*norm2{x[i,1],i=1:2})
-    @fact conToStr(model.socconstr[1]) --> "2.0 √(x[1,1]² + x[1,2]² + x[2,1]² + x[2,2]²) $leq x[1,2] + 1"
-    @fact conToStr(model.socconstr[2]) --> "2.0 √(x[1,1]² + x[2,2]²) $leq x[1,2] + 1"
-    @fact conToStr(model.socconstr[3]) --> "2.0 √(x[1,1]² + x[2,1]²) $leq 1"
+    @fact conToStr(model.socconstr[1]) --> "2.0 $Vert[x[1,1],x[1,2],x[2,1],x[2,2]]$Vert$sub2 $leq x[1,2] + 1"
+    @fact conToStr(model.socconstr[2]) --> "2.0 $Vert[x[1,1],x[2,2]]$Vert$sub2 $leq x[1,2] + 1"
+    @fact conToStr(model.socconstr[3]) --> "2.0 $Vert[x[1,1],x[2,1]]$Vert$sub2 $leq 1"
     @fact_throws @addConstraint(model, (x[1,1]+1)*norm2{x[i,j], i=1:2, j=1:2} + x[1,2] >= -1)
     @fact_throws @addConstraint(model, norm2{x[i,j], i=1:2, j=1:2} + x[1,2] >= -1)
 end

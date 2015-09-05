@@ -661,13 +661,12 @@ const EMPTYSTRING = utf8("")
 macro defVar(args...)
     length(args) <= 1 &&
         error("in @defVar: expected model as first argument, then variable information.")
-    m = args[1]
+    m = esc(args[1])
     x = args[2]
     extra = vcat(args[3:end]...)
-    m = esc(m)
 
     t = :Cont
-    gottype = 0
+    gottype = false
     # Identify the variable bounds. Five (legal) possibilities are "x >= lb",
     # "x <= ub", "lb <= x <= ub", "x == val", or just plain "x"
     if isexpr(x,:comparison)
@@ -709,7 +708,7 @@ macro defVar(args...)
             @assert length(x.args) == 3
             lb = esc(x.args[3])
             ub = esc(x.args[3])
-            gottype = 1
+            gottype = true
             t = :Fixed
         else
             # Its a comparsion, but not using <= ... <=
@@ -752,7 +751,7 @@ macro defVar(args...)
     end
 
     sdp = any(t -> (t == :SDP), extra)
-    symmetric = sdp | any(t -> (t == :Symmetric), extra)
+    symmetric = (sdp || any(t -> (t == :Symmetric), extra))
     extra = filter(x -> (x != :SDP && x != :Symmetric), extra) # filter out SDP and sym tag
 
     # Determine variable type (if present).
@@ -762,7 +761,7 @@ macro defVar(args...)
             error("in @defVar ($var): unexpected extra arguments when declaring a fixed variable")
         end
         if extra[1] in [:Bin, :Int, :SemiCont, :SemiInt]
-            gottype = 1
+            gottype = true
             t = extra[1]
         end
 
@@ -775,8 +774,7 @@ macro defVar(args...)
             end
         end
 
-        gottype == 0 &&
-            error("in @defVar ($var): syntax error")
+        !gottype && error("in @defVar ($var): syntax error")
     end
 
     # Handle the column generation functionality
