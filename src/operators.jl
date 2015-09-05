@@ -470,30 +470,30 @@ end
 # Let's be conservative and only define arithmetic for the basic types
 typealias ArrayOrSparseMat{T} Union(Array{T}, SparseMatrixCSC{T})
 
-for op in [:+, :-, :*, :/]; @eval begin
+for op in [:+, :-]; @eval begin
     function $op{T<:JuMPTypes}(lhs::Number,rhs::ArrayOrSparseMat{T})
-        ret = similar(rhs, typeof($op(lhs, zero(T))))
+        ret = Array(typeof($op(lhs, zero(T))), size(rhs))
         for I in eachindex(ret)
             ret[I] = $op(lhs, rhs[I])
         end
         ret
     end
     function $op{T<:JuMPTypes}(lhs::ArrayOrSparseMat{T},rhs::Number)
-        ret = similar(lhs, typeof($op(zero(T), rhs)))
+        ret = Array(typeof($op(zero(T), rhs)), size(lhs))
         for I in eachindex(ret)
             ret[I] = $op(lhs[I], rhs)
         end
         ret
     end
     function $op{T<:JuMPTypes,S}(lhs::T,rhs::ArrayOrSparseMat{S})
-        ret = similar(rhs, typeof($op(lhs, zero(S))))
+        ret = Array(typeof($op(lhs, zero(S))), size(rhs))
         for I in eachindex(ret)
             ret[I] = $op(lhs, rhs[I])
         end
         ret
     end
     function $op{T<:JuMPTypes,S}(lhs::ArrayOrSparseMat{S},rhs::T)
-        ret = similar(lhs, typeof($op(zero(S), rhs)))
+        ret = Array(typeof($op(zero(S), rhs)), size(lhs))
         for I in eachindex(ret)
             ret[I] = $op(lhs[I], rhs)
         end
@@ -501,13 +501,46 @@ for op in [:+, :-, :*, :/]; @eval begin
     end
 end; end
 
-# Special-case sparse matrix scalar multiplicaiton
+for op in [:*, :/]; @eval begin
+    function $op{T<:JuMPTypes}(lhs::Number,rhs::Array{T})
+        ret = Array(typeof($op(lhs, zero(T))), size(rhs))
+        for I in eachindex(ret)
+            ret[I] = $op(lhs, rhs[I])
+        end
+        ret
+    end
+    function $op{T<:JuMPTypes}(lhs::Array{T},rhs::Number)
+        ret = Array(typeof($op(zero(T), rhs)), size(lhs))
+        for I in eachindex(ret)
+            ret[I] = $op(lhs[I], rhs)
+        end
+        ret
+    end
+    function $op{T<:JuMPTypes,S}(lhs::T,rhs::Array{S})
+        ret = Array(typeof($op(lhs, zero(S))), size(rhs))
+        for I in eachindex(ret)
+            ret[I] = $op(lhs, rhs[I])
+        end
+        ret
+    end
+    function $op{T<:JuMPTypes,S}(lhs::Array{S},rhs::T)
+        ret = Array(typeof($op(zero(S), rhs)), size(lhs))
+        for I in eachindex(ret)
+            ret[I] = $op(lhs[I], rhs)
+        end
+        ret
+    end
+end; end
+
+# Special-case sparse matrix scalar multiplication/division
 (*){T<:JuMPTypes}(lhs::Number, rhs::SparseMatrixCSC{T}) = scale(rhs, lhs)
 (*)(lhs::JuMPTypes, rhs::SparseMatrixCSC) =
     SparseMatrixCSC(rhs.m, rhs.n, copy(rhs.colptr), copy(rhs.rowval), lhs .* rhs.nzval)
 (*){T<:JuMPTypes}(lhs::SparseMatrixCSC{T}, rhs::Number) = scale(lhs, rhs)
 (*)(lhs::SparseMatrixCSC, rhs::JuMPTypes) =
     SparseMatrixCSC(lhs.m, lhs.n, copy(lhs.colptr), copy(lhs.rowval), lhs.nzval .* rhs)
+(/){T<:JuMPTypes}(lhs::SparseMatrixCSC{T}, rhs::Number) = scale(lhs, 1/rhs)
+
 
 # The following are primarily there for internal use in the macro code for @addConstraint
 for op in [:(+), :(-)]; @eval begin
