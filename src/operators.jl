@@ -533,13 +533,16 @@ for op in [:*, :/]; @eval begin
 end; end
 
 # Special-case sparse matrix scalar multiplication/division
-(*){T<:JuMPTypes}(lhs::Number, rhs::SparseMatrixCSC{T}) = scale(rhs, lhs)
+(*){T<:JuMPTypes}(lhs::Number, rhs::SparseMatrixCSC{T}) =
+    SparseMatrixCSC(rhs.m, rhs.n, copy(rhs.colptr), copy(rhs.rowval), lhs .* rhs.nzval)
 (*)(lhs::JuMPTypes, rhs::SparseMatrixCSC) =
     SparseMatrixCSC(rhs.m, rhs.n, copy(rhs.colptr), copy(rhs.rowval), lhs .* rhs.nzval)
-(*){T<:JuMPTypes}(lhs::SparseMatrixCSC{T}, rhs::Number) = scale(lhs, rhs)
+(*){T<:JuMPTypes}(lhs::SparseMatrixCSC{T}, rhs::Number) =
+    SparseMatrixCSC(lhs.m, lhs.n, copy(lhs.colptr), copy(lhs.rowval), lhs.nzval .* rhs)
 (*)(lhs::SparseMatrixCSC, rhs::JuMPTypes) =
     SparseMatrixCSC(lhs.m, lhs.n, copy(lhs.colptr), copy(lhs.rowval), lhs.nzval .* rhs)
-(/){T<:JuMPTypes}(lhs::SparseMatrixCSC{T}, rhs::Number) = scale(lhs, 1/rhs)
+(/){T<:JuMPTypes}(lhs::SparseMatrixCSC{T}, rhs::Number) =
+    SparseMatrixCSC(lhs.m, lhs.n, copy(lhs.colptr), copy(lhs.rowval), lhs.nzval ./ rhs)
 
 # The following are primarily there for internal use in the macro code for @addConstraint
 for op in [:(+), :(-)]; @eval begin

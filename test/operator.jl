@@ -685,6 +685,10 @@ context("Dot-ops") do
         @fact TestHelper.vec_eq(x./A, y./A) --> true
         # @fact TestHelper.vec_eq(A./y, B./y) --> true
     end
+
+    @fact TestHelper.vec_eq((2*x) / 3, full((2*y) / 3)) --> true
+    @fact TestHelper.vec_eq(2 * (x/3), full(2 * (y/3))) --> true
+    @fact TestHelper.vec_eq(x[1,1] * A, full(x[1,1] * B)) --> true
 end
 
 context("Vectorized comparisons") do
