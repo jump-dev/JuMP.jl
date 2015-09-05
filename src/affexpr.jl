@@ -24,7 +24,8 @@ type GenericAffExpr{CoefType,VarType}
     coeffs::Vector{CoefType}
     constant::CoefType
 end
-coeftype{C,V}(::GenericAffExpr{C,V}) = C
+coeftype{T<:GenericAffExpr}(::T) = coeftype(T)
+coeftype{C,V}(::Type{GenericAffExpr{C,V}}) = C
 
 Base.zero{C,V}(::Type{GenericAffExpr{C,V}}) = GenericAffExpr{C,V}(V[],C[],zero(C))
 Base.one{ C,V}(::Type{GenericAffExpr{C,V}}) = GenericAffExpr{C,V}(V[],C[], one(C))
