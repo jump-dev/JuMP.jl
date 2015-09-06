@@ -86,8 +86,7 @@ function addToExpression{C,V}(aff::GenericAffExpr{C,V},c::Number,x::GenericAffEx
 end
 
 # help w/ ambiguity
-addToExpression{C,V<:Number}(aff::GenericAffExpr{C,V}, c::Number, x::Number) =
-    __addToExpression__(aff, c, x)
+addToExpression{C,V<:Number}(aff::GenericAffExpr{C,V}, c::Number, x::Number) = aff + c*x
 
 function addToExpression{C,V}(aff::GenericAffExpr{C,V}, c::V, x::Number)
     if x != 0
