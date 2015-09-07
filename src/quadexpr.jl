@@ -26,8 +26,7 @@ type GenericQuadExpr{CoefType,VarType}
     qcoeffs::Vector{CoefType}
     aff::GenericAffExpr{CoefType,VarType}
 end
-coeftype{T<:GenericQuadExpr}(::T) = coeftype(T)
-coeftype{C,V}(::Type{GenericQuadExpr{C,V}}) = C
+coeftype{C,V}(::GenericQuadExpr{C,V}) = C
 
 Base.isempty(q::GenericQuadExpr) = (length(q.qvars1) == 0 && isempty(q.aff))
 Base.zero{C,V}(::Type{GenericQuadExpr{C,V}}) = GenericQuadExpr(V[], V[], C[], zero(GenericAffExpr{C,V}))
