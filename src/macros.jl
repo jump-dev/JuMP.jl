@@ -92,11 +92,15 @@ function getloopedcode(c::Expr, code, condition, idxvars, idxsets, idxpairs, sym
         vname = expr.args[1].args[1]
         expr.args[1] = :tmp
         code = quote
-            for $i in $(idxsets[1]), $j in $(idxsets[2])
-                $i <= $j || continue
-                $expr
-                $vname[$i,$j] = tmp
-                $vname[$j,$i] = tmp
+            let
+                $(localvar(i))
+                $(localvar(j))
+                for $i in $(idxsets[1]), $j in $(idxsets[2])
+                    $i <= $j || continue
+                    $expr
+                    $vname[$i,$j] = tmp
+                    $vname[$j,$i] = tmp
+                end
             end
         end
     else
@@ -108,8 +112,11 @@ function getloopedcode(c::Expr, code, condition, idxvars, idxsets, idxpairs, sym
         end
         for (idxvar, idxset) in zip(reverse(idxvars),reverse(idxsets))
             code = quote
-                for $(esc(idxvar)) in $idxset
-                    $code
+                let
+                    $(localvar(esc(idxvar)))
+                    for $(esc(idxvar)) in $idxset
+                        $code
+                    end
                 end
             end
         end
@@ -129,6 +136,26 @@ function getloopedcode(c::Expr, code, condition, idxvars, idxsets, idxpairs, sym
 end
 
 getloopedcode(c, code, condition, idxvars, idxsets, idxpairs, sym) = code
+
+localvar(x::Expr) = Expr(:block, _localvar(x)...)
+_localvar(x::Symbol) = :(local $(esc(x)))
+function _localvar(x::Expr)
+    @assert x.head == :escape
+    args = Any[]
+    for t in x.args
+        if isa(t, Symbol)
+            push!(args, :(local $(esc(t))))
+        else
+            @assert isa(t, Expr)
+            if t.head == :tuple
+                append!(args, map(_localvar, t.args))
+            else
+                error("Internal error; please file an issue")
+            end
+        end
+    end
+    args
+end
 
 getname(c::Symbol) = c
 getname(c::Nothing) = ()

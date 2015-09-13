@@ -195,17 +195,23 @@ function parseSum(x::Expr, aff::Symbol, coeffs, newaff)
             end
         end
         for level in length(x.args):-1:4
-            code = :(
-            for $(esc(x.args[level].args[1])) in $(esc(x.args[level].args[2]))
-                $code
+            idxvar = esc(x.args[level].args[1])
+            code = :(let
+                $(localvar(idxvar))
+                for $idxvar in $(esc(x.args[level].args[2]))
+                    $code
+                end
             end)
         end
     else # no condition
         inneraff, code = parseExpr(x.args[2], aff, coeffs, aff)
         for level in length(x.args):-1:3
-            code = :(
-            for $(esc(x.args[level].args[1])) in $(esc(x.args[level].args[2]))
-                $code
+            idxvar = esc(x.args[level].args[1])
+            code = :(let
+                $(localvar(idxvar))
+                for $idxvar in $(esc(x.args[level].args[2]))
+                    $code
+                end
             end)
         end
         len = :len
@@ -213,7 +219,13 @@ function parseSum(x::Expr, aff::Symbol, coeffs, newaff)
         # this is unncessary if we're just summing constants
         preblock = :($len += length($(esc(x.args[length(x.args)].args[2]))))
         for level in (length(x.args)-1):-1:3
-            preblock = Expr(:for, esc(x.args[level]),preblock)
+            idxvar = esc(x.args[level].args[1])
+            preblock = :(let
+                $(localvar(idxvar))
+                for $idxvar in $(esc(x.args[level].args[2]))
+                    $preblock
+                end
+            end)
         end
         preblock = quote
             $len = 0
@@ -248,9 +260,12 @@ function parseNorm(normp::Symbol, x::Expr, aff::Symbol, coeffs, newaff)
             end
         end
         for level in length(x.args):-1:4
-            code = :(
-            for $(esc(x.args[level].args[1])) in $(esc(x.args[level].args[2]))
-                $code
+            idxvar = esc(x.args[level].args[1])
+            code = :(let
+                $(localvar(idxvar))
+                for $idxvar in $(esc(x.args[level].args[2]))
+                    $code
+                end
             end)
         end
         preblock = :($normexpr = GenericAffExpr[])
@@ -259,11 +274,19 @@ function parseNorm(normp::Symbol, x::Expr, aff::Symbol, coeffs, newaff)
         code = :(normaff = 0.0; $code; push!($normexpr, $inneraff))
         preblock = :($len += length($(esc(x.args[length(x.args)].args[2]))))
         for level in length(x.args):-1:3
-            code = :(
-            for $(esc(x.args[level].args[1])) in $(esc(x.args[level].args[2]))
-                $code
+            idxvar = esc(x.args[level].args[1])
+            code = :(let
+                $(localvar(idxvar))
+                for $idxvar in $(esc(x.args[level].args[2]))
+                    $code
+                end
             end)
-            preblock = Expr(:for, esc(x.args[level]),preblock)
+            preblock = :(let
+                $(localvar(idxvar))
+                for $idxvar in $(esc(x.args[level].args[2]))
+                    $preblock
+                end
+            end)
         end
         preblock = quote
             $len = 0

@@ -389,3 +389,47 @@ facts("[macros] Special-case binary multiplication in addToExpression_reorder (#
     @fact conToStr(dual.linconstr[3]) --> "γ - α[3] $leq 0"
 end
 end
+
+facts("[macros] Indices in macros don't leak out of scope (#582)") do
+    m = Model()
+    cnt = 4
+    for i in 5:8
+        @defVar(m, x[i=1:3,j=1:3] ≤ i)
+        cnt += 1
+        @fact i --> cnt
+    end
+    cnt = 4
+    for i in 5:8
+        @defVar(m, y[i=2:4,j=1:3] ≤ i)
+        cnt += 1
+        @fact i --> cnt
+    end
+    cnt = 4
+    for i in 5:8
+        @defVar(m, z[i=[1:3;],j=1:3] ≤ i)
+        cnt += 1
+        @fact i --> cnt
+    end
+    @fact m.colUpper --> vcat(repeat([1.0,2.0,3.0], inner=[3], outer=[4]),
+                              repeat([2.0,3.0,4.0], inner=[3], outer=[4]),
+                              repeat([1.0,2.0,3.0], inner=[3], outer=[4]))
+    @defVar(m, x[i=1:3] ≤ i)
+    cnt = 4
+    for i in 5:8
+        @addConstraint(m, sum{x[i], i=1, j=1, k=1} == 1)
+        cnt += 1
+        @fact i --> cnt
+    end
+    cnt = 4
+    for i in 5:8
+        @addConstraint(m, norm2{x[i], i=1, j=1, k=1} <= 1)
+        cnt += 1
+        @fact i --> cnt
+    end
+    cnt = 4
+    for i in 5:8
+        @addConstraint(m, c[i=1:3,j=1:3], x[i] == 1)
+        cnt += 1
+        @fact i --> cnt
+    end
+end
