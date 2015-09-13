@@ -150,7 +150,7 @@ function _localvar(x::Expr)
             if t.head == :tuple
                 append!(args, map(_localvar, t.args))
             else
-                error("Internal error; please file an issue")
+                error("Internal error defining local variables in macros; please file an issue at https://github.com/JuliaOpt/JuMP.jl/issues/new")
             end
         end
     end
