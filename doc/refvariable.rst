@@ -63,7 +63,7 @@ Conditions can be placed on the index values for which variables are created; th
 
     @defVar(m, x[i=1:10,j=1:10; isodd(i+j)] >= 0)
 
-Note that only one condition can be added, although expressions can be built up by using the usual ``&&`` and ``||`` logical operators.
+Note that only one condition can be added, although expressions can be built up by using the usual ``&&`` and ``||`` logical operators. **This condition syntax requires Julia 0.4 or later.**
 
 An initial value of each variable may be provided with the ``start`` keyword to ``@defVar``::
 

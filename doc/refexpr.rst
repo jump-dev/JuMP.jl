@@ -110,7 +110,7 @@ A condition can be added following the indices; a semicolon is used to separate 
 
     @addConstraint(m, constr[i=1:5,j=1:5; i+j >= 3], x[i] - y[j] == 1)
 
-Note that only one condition can be added, although expressions can be built up by using the usual ``&&`` and ``||`` logical operators.
+Note that only one condition can be added, although expressions can be built up by using the usual ``&&`` and ``||`` logical operators. **This condition syntax requires Julia 0.4 or later.**
 
 To obtain the dual of a constraint, call ``getDual`` on the constraint reference::
 
