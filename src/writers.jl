@@ -3,7 +3,7 @@
 #  License, v. 2.0. If a copy of the MPL was not distributed with this
 #  file, You can obtain one at http://mozilla.org/MPL/2.0/.
 
-function writeMPS(m::Model, fname::String)
+function writeMPS(m::Model, fname::AbstractString)
     f = open(fname, "w")
 
     write(f,"NAME   JuMPModel\n")
@@ -171,7 +171,7 @@ end
 # LP File Writer
 # We use the formatting defined at:
 #   http://lpsolve.sourceforge.net/5.0/CPLEX-format.htm
-function writeLP(m::Model, fname::String)
+function writeLP(m::Model, fname::AbstractString)
 
     f = open(fname, "w")
 

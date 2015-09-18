@@ -78,7 +78,7 @@ Is equivalent to::
 
 Variables may also be constructed manually, one-by-one::
 
-    x = Variable(m::Model, lower::Number, upper::Number, category::Symbol, name::String)
+    x = Variable(m::Model, lower::Number, upper::Number, category::Symbol, name::AbstractString)
     x = Variable(m::Model, lower::Number, upper::Number, category::Symbol)
 
 where ``category`` is one of ``:Cont``, ``:Int``, ``:Bin``, ``:Fixed``, ``:SemiCont``, and ``:SemiInt``.

@@ -60,7 +60,7 @@ function buildrefsets(expr::Expr)
 end
 
 buildrefsets(c::Symbol)  = (esc(c), Any[], Any[], IndexPair[], :())
-buildrefsets(c::Nothing) = (gensym(), Any[], Any[], IndexPair[], :())
+@compat buildrefsets(c::Void) = (gensym(), Any[], Any[], IndexPair[], :())
 
 ###############################################################################
 # getloopedcode
@@ -131,7 +131,7 @@ end
 getloopedcode(c, code, condition, idxvars, idxsets, idxpairs, sym) = code
 
 getname(c::Symbol) = c
-getname(c::Nothing) = ()
+@compat getname(c::Void) = ()
 getname(c::Expr) = c.args[1]
 
 validmodel(m::Model, name) = nothing

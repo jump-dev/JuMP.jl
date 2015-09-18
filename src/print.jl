@@ -533,7 +533,7 @@ function val_str{N}(mode, j::JuMPArray{Float64,N})
         return out_str * "  (no entries)"
     end
 
-    function val_str_rec(depth, parent_index::Vector{Any}, parent_str::String)
+    function val_str_rec(depth, parent_index::Vector{Any}, parent_str::AbstractString)
         # Turn index set into strings
         indexset = data.indexsets[depth]
         index_strs = map(string, indexset)
@@ -601,7 +601,7 @@ function val_str(mode, dict::JuMPDict{Float64})
 
     ndim = length(first(keys(dict.tupledict)))
 
-    key_strs = Array(String, length(dict), ndim)
+    key_strs = Array(AbstractString, length(dict), ndim)
     for (i, key) in enumerate(sortedkeys)
         for j in 1:ndim
             key_strs[i,j] = string(key[j])

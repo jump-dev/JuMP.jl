@@ -288,7 +288,7 @@ Sometimes it can be useful to track solver progress without actually changing th
 For a simple example, we can add a function that tracks the best bound and incumbent objective value as the solver progresses through the branch-and-bound tree::
 
     type NodeData
-        time::Uint64  # in nanoseconds
+        time::UInt64  # in nanoseconds
         node::Int
         obj::Float64
         bestbound::Float64

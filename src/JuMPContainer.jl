@@ -46,7 +46,7 @@ type JuMPContainerData
     condition
 end
 
-#JuMPDict{T,N}(name::String) =
+#JuMPDict{T,N}(name::AbstractString) =
 #    JuMPDict{T,N}(Dict{NTuple{N},T}(), name)
 
 Base.getindex(d::JuMPDict, t...) = d.tupledict[t]
