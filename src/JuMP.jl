@@ -631,12 +631,12 @@ operator_warn(lhs,rhs) = nothing
 ##########################################################################
 # Behavior that's uniform across all JuMP "scalar" objects
 
-typealias JuMPTypes Union(AbstractJuMPScalar,
+@compat typealias JuMPTypes Union{AbstractJuMPScalar,
                           Norm,
                           GenericAffExpr,
                           QuadExpr,
-                          SOCExpr)
-typealias JuMPScalars Union(Number,JuMPTypes)
+                          SOCExpr}
+@compat typealias JuMPScalars Union{Number,JuMPTypes}
 
 # would really want to do this on ::Type{T}, but doesn't work on v0.4
 Base.eltype{T<:JuMPTypes}(::T) = T
