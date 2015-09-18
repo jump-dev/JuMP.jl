@@ -58,8 +58,8 @@ Methods
 
 **Output**
 
-* ``writeLP(m::Model, filename::String)`` - write the model to ``filename`` in the LP file format.
-* ``writeMPS(m::Model, filename::String)`` - write the model to ``filename`` in the MPS file format.
+* ``writeLP(m::Model, filename::AbstractString)`` - write the model to ``filename`` in the LP file format.
+* ``writeMPS(m::Model, filename::AbstractString)`` - write the model to ``filename`` in the MPS file format.
 
 .. _solvestatus:
 
