@@ -379,9 +379,9 @@ exprToStr(n::Norm) = norm_str(REPLMode, n)
 #------------------------------------------------------------------------
 ## JuMPContainer{Variable}
 #------------------------------------------------------------------------
-Base.print(io::IO, j::Union(JuMPContainer{Variable}, Array{Variable})) = print(io, cont_str(REPLMode,j))
-Base.show( io::IO, j::Union(JuMPContainer{Variable}, Array{Variable})) = print(io, cont_str(REPLMode,j))
-Base.writemime(io::IO, ::MIME"text/latex", j::Union(JuMPContainer{Variable},Array{Variable})) =
+@compat Base.print(io::IO, j::Union{JuMPContainer{Variable}, Array{Variable}}) = print(io, cont_str(REPLMode,j))
+@compat Base.show( io::IO, j::Union{JuMPContainer{Variable}, Array{Variable}}) = print(io, cont_str(REPLMode,j))
+@compat Base.writemime(io::IO, ::MIME"text/latex", j::Union{JuMPContainer{Variable},Array{Variable}}) =
     print(io, cont_str(IJuliaMode,j,mathmode=false))
 # Generic string converter, called by mode-specific handlers
 
@@ -492,7 +492,7 @@ function cont_str(mode, j, sym::PrintSymbols)
 end
 
 # UTILITY FUNCTIONS FOR cont_str
-function cont_str_set(idxset::Union(Range,Array), dots)  # 2:2:20 -> {2,4..18,20}
+@compat function cont_str_set(idxset::Union{Range,Array}, dots)  # 2:2:20 -> {2,4..18,20}
     length(idxset) == 1 && return string(idxset[1])
     length(idxset) == 2 && return string(idxset[1],",",idxset[2])
     length(idxset) == 3 && return string(idxset[1],",",idxset[2],",",idxset[3])

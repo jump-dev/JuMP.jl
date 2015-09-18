@@ -176,7 +176,7 @@ getmeta(x::JuMPContainer, sym::Symbol) = x.meta[sym]
 
 # duck typing approach -- if eltype(innerArray) doesn't support accessor, will fail
 for accessor in (:getDual, :getLower, :getUpper)
-    @eval $accessor(x::Union(JuMPContainer,Array)) = map($accessor,x)
+    @eval @compat $accessor(x::Union{JuMPContainer,Array}) = map($accessor,x)
 end
 
 _similar(x::Array) = Array(Float64,size(x))

@@ -77,7 +77,7 @@ end
 typealias AffExpr GenericAffExpr{Float64,Variable}
 AffExpr() = zero(AffExpr)
 # TODO: remove following two lines when no longer supporting Julia v0.3
-AffExpr(x::Union(Number,Variable)) = convert(AffExpr, x)
+@compat AffExpr(x::Union{Number,Variable}) = convert(AffExpr, x)
 AffExpr(x::AffExpr) = x
 
 Base.isempty(a::AffExpr) = (length(a.vars) == 0 && a.constant == 0.)
