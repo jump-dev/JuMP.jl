@@ -1,6 +1,6 @@
 # ReverseDiffSparse
 
-[![Build Status](https://travis-ci.org/mlubin/ReverseDiffSparse.jl.png?branch=master)](https://travis-ci.org/mlubin/ReverseDiffSparse.jl) [![ReverseDiffSparse](http://pkg.julialang.org/badges/ReverseDiffSparse_release.svg)](http://pkg.julialang.org/?pkg=ReverseDiffSparse&ver=release) [![Coverage Status](https://coveralls.io/repos/mlubin/ReverseDiffSparse.jl/badge.png)](https://coveralls.io/r/mlubin/ReverseDiffSparse.jl)
+[![Build Status](https://travis-ci.org/mlubin/ReverseDiffSparse.jl.png?branch=master)](https://travis-ci.org/mlubin/ReverseDiffSparse.jl) [![ReverseDiffSparse](http://pkg.julialang.org/badges/ReverseDiffSparse_0.3.svg)](http://pkg.julialang.org/?pkg=ReverseDiffSparse&ver=0.3) [![Coverage Status](https://coveralls.io/repos/mlubin/ReverseDiffSparse.jl/badge.png)](https://coveralls.io/r/mlubin/ReverseDiffSparse.jl)
 
 Reverse-mode automatic differentiation for closed-form scalar algebraic expressions, producing gradients and Hessians. Efficient sparse Hessian computation is implemented by using state-of-the-art graph coloring approaches, written in pure Julia (see ``src/coloring.jl``). This package is primarily used by [JuMP](https://github.com/JuliaOpt/JuMP.jl), but it works stand-alone as well.
 
