@@ -3,3 +3,4 @@ DualNumbers 0.1.3
 NaNMath
 Compat 0.4.0
 DataStructures
+ArrayViews
