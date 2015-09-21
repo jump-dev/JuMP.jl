@@ -253,7 +253,7 @@ addToExpression(ex, c, x) = ex + c*x
 @generated addToExpression_reorder(ex, arg) = :(addToExpression(ex, 1.0, arg))
 
 @generated function addToExpression_reorder(ex, x, y)
-    if x <: Union(Variable,AffExpr) && y <: Number
+    if x <: Union{Variable,AffExpr} && y <: Number
         :(addToExpression(ex, y, x))
     else
         :(addToExpression(ex, x, y))

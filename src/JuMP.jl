@@ -328,7 +328,7 @@ function Variable(m::Model,lower::Number,upper::Number,cat::Symbol,name::UTF8Str
 end
 
 # Name setter/getters
-function setName(v::Variable,n::String)
+function setName(v::Variable,n::AbstractString)
     v.m.colNames[v.col] = n
     v.m.colNamesIJulia[v.col] = n
 end
@@ -533,12 +533,12 @@ function chgConstrRHS(c::ConstraintRef{LinearConstraint}, rhs::Number)
 end
 
 Variable(m::Model,lower::Number,upper::Number,cat::Symbol,objcoef::Number,
-    constraints::JuMPArray,coefficients::Vector{Float64}, name::String="", value::Number=NaN) =
+    constraints::JuMPArray,coefficients::Vector{Float64}, name::AbstractString="", value::Number=NaN) =
     Variable(m, lower, upper, cat, objcoef, constraints.innerArray, coefficients, name, value)
 
 # add variable to existing constraints
 function Variable(m::Model,lower::Number,upper::Number,cat::Symbol,objcoef::Number,
-    constraints::Vector,coefficients::Vector{Float64}, name::String="", value::Number=NaN)
+    constraints::Vector,coefficients::Vector{Float64}, name::AbstractString="", value::Number=NaN)
     for c in constraints
         if !isa(c,ConstraintRef{LinearConstraint})
             error("Unexpected constraint of type $(typeof(c)). Column-wise modeling only supported for linear constraints")
@@ -631,12 +631,12 @@ operator_warn(lhs,rhs) = nothing
 ##########################################################################
 # Behavior that's uniform across all JuMP "scalar" objects
 
-typealias JuMPTypes Union(AbstractJuMPScalar,
+@compat typealias JuMPTypes Union{AbstractJuMPScalar,
                           Norm,
                           GenericAffExpr,
                           QuadExpr,
-                          SOCExpr)
-typealias JuMPScalars Union(Number,JuMPTypes)
+                          SOCExpr}
+@compat typealias JuMPScalars Union{Number,JuMPTypes}
 
 # would really want to do this on ::Type{T}, but doesn't work on v0.4
 Base.eltype{T<:JuMPTypes}(::T) = T
