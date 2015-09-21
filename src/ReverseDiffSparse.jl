@@ -4,6 +4,7 @@ using Compat
 import Calculus
 import DualNumbers: Dual, Dual4, epsilon, epsilon1, epsilon2, epsilon3, epsilon4
 using Base.Meta
+using ArrayViews
 # Override basic math functions to return NaN instead of throwing errors.
 # This is what NLP solvers expect, and
 # sometimes the results aren't needed anyway,
