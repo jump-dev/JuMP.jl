@@ -119,7 +119,7 @@ function getloopedcode(c::Expr, code, condition, idxvars, idxsets, idxpairs, sym
         N = length(idxsets)
         mac = :($(esc(varname)) = JuMPDict{$(sym),$N}())
     else
-        mac = Expr(:macrocall,symbol("@gendict"),esc(varname),sym,idxpairs,idxsets...)
+        mac = Expr(:macrocall,symbol("@gendict"),esc(varname),sym,idxsets...)
     end
     return quote
         $mac
@@ -877,7 +877,7 @@ macro defConstrRef(var)
         idxsets = var.args[2:end]
         idxpairs = IndexPair[]
 
-        mac = Expr(:macrocall,symbol("@gendict"),varname,:ConstraintRef,idxpairs, idxsets...)
+        mac = Expr(:macrocall,symbol("@gendict"), varname, :ConstraintRef, idxsets...)
         code = quote
             $(esc(mac))
             nothing

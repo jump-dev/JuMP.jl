@@ -69,7 +69,7 @@ Base.isempty(d::JuMPContainer) = isempty(_innercontainer(d))
 # 0:K -- range with compile-time starting index
 # S -- general iterable set
 export @gendict
-macro gendict(instancename,T,idxpairs,idxsets...)
+macro gendict(instancename,T,idxsets...)
     N = length(idxsets)
     allranges = all(s -> (isexpr(s,:(:)) && length(s.args) == 2), idxsets)
     truearray = allranges && all(s -> s.args[1] == 1, idxsets)
@@ -165,12 +165,92 @@ macro gendict(instancename,T,idxpairs,idxsets...)
         =#
     else
         # JuMPDict
+        escidxs = [esc(idxset) for idxset in idxsets]
         return :(
-            $(esc(instancename)) = JuMPDict{$T,$N}()
+            $(esc(instancename)) = (if is_unit_ranges($(escidxs...))
+                runtime_gendict($T, $(escidxs...))
+            else
+                JuMPDict{$T,$N}()
+            end)
         )
     end
 end
 
+function runtime_gendict(T,idxsets...)
+    N = length(idxsets)
+    allranges = all(s -> (typeof(s) <: Range), idxsets)
+    truearray = allranges && all(s -> (first(s) == 1), idxsets)
+    if allranges
+        if truearray
+            return Array(T, [last(rng) for rng in idxsets]...)
+        else
+            typename = symbol(string("JuMPArray",gensym()))
+            dictnames = Array(Symbol,N)
+            # JuMPArray
+            offset = Array(Int,N)
+            for i in 1:N
+                offset[i] = 1 - first(idxsets[i])
+            end
+            typecode = quote
+                type $(typename){T} <: JuMPArray{T,$N}
+                    innerArray::Array{T,$N}
+                    meta::Dict{Symbol,Any}
+                end
+            end
+            constrlhs = :($(typename)(innerArray::Array))
+            constrrhs = :($(typename)(innerArray, Dict{Symbol,Any}()))
+            getidxlhs = :(Base.getindex(d::$(typename)))
+            setidxlhs = :(Base.setindex!(d::$(typename),val))
+            getidxrhs = :(Base.getindex(d.innerArray))
+            setidxrhs = :(Base.setindex!(d.innerArray,val))
+            maplhs = :(Base.map(f::Function,d::$(typename)))
+            maprhs = :($(typename)(map(f,d.innerArray),d.meta))
+            wraplhs = :(JuMPContainer_from(d::$(typename),inner)) # helper function that wraps array into JuMPArray of similar type
+            wraprhs = :($(typename)(inner))
+
+            nextidxlhs = :(_next_index(d::$(typename), k))
+            # build up exprs for _next_index
+            lidxsets = [ii => symbol(string("locidxset",ii)) for ii in 1:N]
+            nextidxrhs = quote
+                subidx = ind2sub(size(d), k)
+                $(Expr(:tuple, [:(subidx[$ii] - $(offset[ii])) for ii in 1:N]...))
+            end
+            for i in 1:N
+                varname = symbol(string("x",i))
+
+                push!(getidxlhs.args,:($varname))
+                push!(setidxlhs.args,:($varname))
+
+                push!(getidxrhs.args,:(isa($varname, Int) ? $varname+$(offset[i]) : $varname ))
+                push!(setidxrhs.args,:($varname+$(offset[i])))
+
+            end
+
+            badgetidxlhs = :(Base.getindex(d::$(typename),wrong...))
+            badgetidxrhs = :(data = printdata(d);
+                            error("Wrong number of indices for ",data.name, ", expected ",length(data.indexsets)))
+
+            funcs = quote
+                $constrlhs    = $constrrhs
+                $getidxlhs    = $getidxrhs
+                $setidxlhs    = $setidxrhs
+                $maplhs       = $maprhs
+                $badgetidxlhs = $badgetidxrhs
+                $wraplhs      = $wraprhs
+                $nextidxlhs   = $nextidxrhs
+            end
+
+            eval(Expr(:toplevel, typecode))
+            eval(Expr(:toplevel, funcs))
+
+            return eval(:($(typename)(Array($T, [length(idxset) for idxset in $idxsets]...))))
+        end
+    else
+        error("Should not reach this point")
+    end
+end
+
+@generated is_unit_ranges(idxsets...) = :($(all(s -> s <: UnitRange{Int}, idxsets)))
 pushmeta!(x::JuMPContainer, sym::Symbol, val) = (x.meta[sym] = val)
 getmeta(x::JuMPContainer, sym::Symbol) = x.meta[sym]
 
