@@ -326,12 +326,7 @@ function Base.sum{T<:GenericAffExpr}(affs::Array{T})
     return new_aff
 end
 
-if VERSION < v"0.4-"
-    export vecdot
-    vecdot{T,S,N}(x::Array{T,N},y::Array{S,N}) = _dot(x,y)
-else
-    import Base.vecdot
-end
+import Base.vecdot
 
 _dot_depr() = warn("dot is deprecated for multidimensional arrays. Use vecdot instead.")
 Base.dot{T,S,N}(lhs::Array{T,N}, rhs::JuMPArray{S,N})    = begin _dot_depr(); vecdot(lhs,rhs); end

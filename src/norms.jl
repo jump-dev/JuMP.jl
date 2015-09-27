@@ -66,18 +66,7 @@ _build_norm{C,V}(P,terms::Vector{GenericAffExpr{C,V}}) = GenericNorm(P,terms)
 # so we need to repackage in a tighter typed vector ourselves.
 # This function is needed for performance reasons on only 0.3, as
 # the following works just as well on 0.4:
-# _build_norm(Lp, terms::Vector{GenericAffExpr}) = _build_norm(Lp, [terms...])
-function _build_norm(Lp, terms::Vector{GenericAffExpr})
-    if length(terms) == 0
-        _build_norm(Lp,AffExpr[])  # Punt
-    else
-        new_terms = Array(typeof(terms[1]), length(terms))
-        for i in 1:length(terms)
-            new_terms[i] = terms[i]
-        end
-        _build_norm(Lp,new_terms)
-    end
-end
+_build_norm(Lp, terms::Vector{GenericAffExpr}) = _build_norm(Lp, [terms...])
 
 # Alias for AffExprs. Short-hand used in operator overloads, etc.
 typealias Norm{P} GenericNorm{P,Float64,Variable}

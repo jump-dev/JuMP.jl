@@ -41,10 +41,8 @@ facts("[macros] Check @addConstraint basics") do
 
     @addConstraint(m, 3x - y == 3.3(w + 2z) + 5)
     @fact conToStr(m.linconstr[end]) --> "3 x - y - 3.3 w - 6.6 z $eq 5"
-    if VERSION >= v"0.4.0-"
-        @addConstraint(m, 3x - y == (w + 2z)*3.3 + 5)
-        @fact conToStr(m.linconstr[end]) --> "3 x - y - 3.3 w - 6.6 z $eq 5"
-    end
+    @addConstraint(m, 3x - y == (w + 2z)*3.3 + 5)
+    @fact conToStr(m.linconstr[end]) --> "3 x - y - 3.3 w - 6.6 z $eq 5"
     @addConstraint(m, (x+y)/2 == 1)
     @fact conToStr(m.linconstr[end]) --> "0.5 x + 0.5 y $eq 1"
     @addConstraint(m, -1 <= x-y <= t)
@@ -53,10 +51,8 @@ facts("[macros] Check @addConstraint basics") do
     @fact conToStr(m.linconstr[end]) --> "-2 $leq x $leq 0"
     @addConstraint(m, -1 <= x <= 1)
     @fact conToStr(m.linconstr[end]) --> "-1 $leq x $leq 1"
-    if VERSION > v"0.4-"
-        @addConstraint(m, -1 <= x <= sum{0.5, i = 1:2})
-        @fact conToStr(m.linconstr[end]) --> "-1 $leq x $leq 1"
-    end
+    @addConstraint(m, -1 <= x <= sum{0.5, i = 1:2})
+    @fact conToStr(m.linconstr[end]) --> "-1 $leq x $leq 1"
     @fact_throws @addConstraint(m, x <= t <= y)
 
     @defExpr(aff, 3x - y - 3.3(w + 2z) + 5)
@@ -65,10 +61,8 @@ facts("[macros] Check @addConstraint basics") do
     @addConstraint(m, 3 + 5*7 <= 0)
     @fact conToStr(m.linconstr[end]) --> "0 $leq -38"
 
-    if VERSION >= v"0.4.0-"
-        @defExpr(qaff, (w+3)*(2x+1)+10)
-        @fact quadToStr(qaff) --> "2 w*x + 6 x + w + 13"
-    end
+    @defExpr(qaff, (w+3)*(2x+1)+10)
+    @fact quadToStr(qaff) --> "2 w*x + 6 x + w + 13"
 end
 
 facts("[macros] Checking @defVar with reverse direction bounds") do
@@ -104,10 +98,8 @@ facts("[macros] Problem modification") do
     @defVar(m, x[1:3,1:3])
     C = [1 2 3; 4 5 6; 7 8 9]
 
-    if VERSION >= v"0.4.0-"
-        @addConstraint(m, sum{ x[i,j]*(C[i,j]-1), i = 1:3, j = 1:3; i != j} == 0)
-        @fact conToStr(m.linconstr[end]) --> "x[1,2] + 2 x[1,3] + 3 x[2,1] + 5 x[2,3] + 6 x[3,1] + 7 x[3,2] $eq 0"
-    end
+    @addConstraint(m, sum{ x[i,j]*(C[i,j]-1), i = 1:3, j = 1:3; i != j} == 0)
+    @fact conToStr(m.linconstr[end]) --> "x[1,2] + 2 x[1,3] + 3 x[2,1] + 5 x[2,3] + 6 x[3,1] + 7 x[3,2] $eq 0"
 
     con = @addConstraint(m, sum{ C[i,j]*x[i,j], i = 1:3, j = 1:3; i != j} == 0)
     @fact conToStr(m.linconstr[end]) --> "2 x[1,2] + 3 x[1,3] + 4 x[2,1] + 6 x[2,3] + 7 x[3,1] + 8 x[3,2] $eq 0"
@@ -247,16 +239,14 @@ facts("[macros] @addConstraint with quadratic") do
     @addConstraint(m, x[1] ≤ foo(x[1])^2)
     @fact conToStr(m.quadconstr[end]) --> "-x[1]² + x[1] $leq 0"
 
-    if VERSION > v"0.4.0-"
-        @addConstraint(m, sum{x[i],i=1:2}*sum{x[i],i=2:3} >= 0)
-        @fact conToStr(m.quadconstr[end]) --> "x[1]*x[2] + x[2]² + x[1]*x[3] + x[2]*x[3] $geq 0"
-        @addConstraint(m, x[1]^2 + x[2]*x[3] >= 0)
-        @fact conToStr(m.quadconstr[end]) --> "x[1]² + x[2]*x[3] $geq 0"
-        @addConstraint(m, x[1]^2 + (x[2]+3)*(x[3]-1) >= 0)
-        @fact conToStr(m.quadconstr[end]) --> "x[1]² + x[2]*x[3] + 3 x[3] - x[2] - 3 $geq 0"
-        @addConstraint(m, sum{x[i],i=1:2}^2 >= 0)
-        @fact conToStr(m.quadconstr[end]) --> "x[1]² + 2 x[1]*x[2] + x[2]² $geq 0"
-    end
+    @addConstraint(m, sum{x[i],i=1:2}*sum{x[i],i=2:3} >= 0)
+    @fact conToStr(m.quadconstr[end]) --> "x[1]*x[2] + x[2]² + x[1]*x[3] + x[2]*x[3] $geq 0"
+    @addConstraint(m, x[1]^2 + x[2]*x[3] >= 0)
+    @fact conToStr(m.quadconstr[end]) --> "x[1]² + x[2]*x[3] $geq 0"
+    @addConstraint(m, x[1]^2 + (x[2]+3)*(x[3]-1) >= 0)
+    @fact conToStr(m.quadconstr[end]) --> "x[1]² + x[2]*x[3] + 3 x[3] - x[2] - 3 $geq 0"
+    @addConstraint(m, sum{x[i],i=1:2}^2 >= 0)
+    @fact conToStr(m.quadconstr[end]) --> "x[1]² + 2 x[1]*x[2] + x[2]² $geq 0"
 
     myquadexpr = x[1]*x[2]
     @addConstraint(m, sum{i*myquadexpr + x[i], i=1:3} + sum{x[i] + myquadexpr*i, i=1:3} == 0)
@@ -328,33 +318,31 @@ facts("[macros] @defExpr") do
     @fact affToStr(y[2]) --> "0"
 end
 
-if VERSION >= v"0.4-"
-    facts("[macros] Conditions in constraint indexing") do
-        model = Model()
-        @defVar(model, x[1:10])
-        @addConstraint(model, c1[i=1:9;isodd(i)], x[i] + x[i+1] <= 1)
-        @addNLConstraint(model, c2[i=["red","blue","green"], k=9:-2:2; (i == "red" && isodd(k)) || (k >=4 && (i == "blue" || i == "green"))], x[k]^3 <= 1)
-        @fact length(model.linconstr) --> 5
-        @fact conToStr(model.linconstr[1]) --> "x[1] + x[2] $leq 1"
-        @fact conToStr(model.linconstr[2]) --> "x[3] + x[4] $leq 1"
-        @fact conToStr(model.linconstr[3]) --> "x[5] + x[6] $leq 1"
-        @fact conToStr(model.linconstr[4]) --> "x[7] + x[8] $leq 1"
-        @fact conToStr(model.linconstr[5]) --> "x[9] + x[10] $leq 1"
-        @fact length(model.nlpdata.nlconstr) --> 10
-    end
+facts("[macros] Conditions in constraint indexing") do
+    model = Model()
+    @defVar(model, x[1:10])
+    @addConstraint(model, c1[i=1:9;isodd(i)], x[i] + x[i+1] <= 1)
+    @addNLConstraint(model, c2[i=["red","blue","green"], k=9:-2:2; (i == "red" && isodd(k)) || (k >=4 && (i == "blue" || i == "green"))], x[k]^3 <= 1)
+    @fact length(model.linconstr) --> 5
+    @fact conToStr(model.linconstr[1]) --> "x[1] + x[2] $leq 1"
+    @fact conToStr(model.linconstr[2]) --> "x[3] + x[4] $leq 1"
+    @fact conToStr(model.linconstr[3]) --> "x[5] + x[6] $leq 1"
+    @fact conToStr(model.linconstr[4]) --> "x[7] + x[8] $leq 1"
+    @fact conToStr(model.linconstr[5]) --> "x[9] + x[10] $leq 1"
+    @fact length(model.nlpdata.nlconstr) --> 10
+end
 
-    facts("[macros] Test changes in condition parsing") do
-        ex = :(x[12;3])
-        @fact ex.head --> :typed_vcat
-        @fact ex.args --> [:x, 12, 3]
+facts("[macros] Test changes in condition parsing") do
+    ex = :(x[12;3])
+    @fact ex.head --> :typed_vcat
+    @fact ex.args --> [:x, 12, 3]
 
-        ex = :(x[i=1:3,j=S;isodd(i) && i+j>=2])
-        @fact ex.head --> :typed_vcat
-        @fact ex.args --> [:x,
-                          Expr(:parameters, Expr(:&&, :(isodd(i)), :(i+j>=2))),
-                          Expr(:(=), :i, :(1:3)),
-                          Expr(:(=), :j, :S)]
-    end
+    ex = :(x[i=1:3,j=S;isodd(i) && i+j>=2])
+    @fact ex.head --> :typed_vcat
+    @fact ex.args --> [:x,
+                      Expr(:parameters, Expr(:&&, :(isodd(i)), :(i+j>=2))),
+                      Expr(:(=), :i, :(1:3)),
+                      Expr(:(=), :j, :S)]
 end
 
 facts("[macros] Norm parsing") do
@@ -378,7 +366,6 @@ facts("[macros] Extraneous terms in QuadExpr (#535)") do
     @fact conToStr(model.quadconstr[1]) --> "x² - y² $leq 0"
 end
 
-if VERSION > v"0.4-"
 facts("[macros] Special-case binary multiplication in addToExpression_reorder (#537)") do
     dual = Model()
     @defVar(dual, α[1:3] <= 0)
@@ -387,7 +374,6 @@ facts("[macros] Special-case binary multiplication in addToExpression_reorder (#
     @fact conToStr(dual.linconstr[1]) --> "γ - α[1] $leq 0"
     @fact conToStr(dual.linconstr[2]) --> "γ - α[2] $leq 0"
     @fact conToStr(dual.linconstr[3]) --> "γ - α[3] $leq 0"
-end
 end
 
 facts("[macros] Indices in macros don't leak out of scope (#582)") do

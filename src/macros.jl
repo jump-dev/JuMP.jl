@@ -5,11 +5,7 @@
 
 using Base.Meta
 
-if VERSION > v"0.4.0-"
-    include(joinpath("v0.4","parseExpr_staged.jl"))
-else
-    include(joinpath("v0.3","parseExpr_0.3.jl"))
-end
+include("parseExpr_staged.jl")
 
 ###############################################################################
 # buildrefsets
@@ -332,15 +328,10 @@ macro addConstraint(args...)
         lb_str = string(x.args[1])
         ub_str = string(x.args[5])
         newaff, parsecode = parseExprToplevel(x.args[3],:aff)
-        if VERSION < v"0.4-"
-            newlb = esc(x.args[1])
-            parselb = nothing
-            newub = esc(x.args[5])
-            parseub = nothing
-        else
-            newlb, parselb = parseExprToplevel(x.args[1],:lb)
-            newub, parseub = parseExprToplevel(x.args[5],:ub)
-        end
+
+        newlb, parselb = parseExprToplevel(x.args[1],:lb)
+        newub, parseub = parseExprToplevel(x.args[5],:ub)
+
         constraintcall = :($addconstr($m, constructconstraint!($newaff,$newlb,$newub)))
         for kw in kwargs.args
             @assert isexpr(kw, :kw)
@@ -627,16 +618,9 @@ macro defExpr(args...)
 
     refcall, idxvars, idxsets, idxpairs, condition = buildrefsets(c)
     newaff, parsecode = parseExprToplevel(x, :q)
-    if VERSION <= v"0.4-"
-        code = quote
-            q = zero(AffExpr)
-            $parsecode
-        end
-    else
-        code = quote
-            q = 0.0
-            $parsecode
-        end
+    code = quote
+        q = 0.0
+        $parsecode
     end
     if isa(c,Expr)
         code = quote
