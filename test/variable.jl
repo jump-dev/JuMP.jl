@@ -111,7 +111,7 @@ facts("[variable] JuMPContainer iteration") do
     m = Model()
     @defVar(m, oia[1:3,1:4,1:2])
     @defVar(m, ja[1:3,2:5,1:2])
-    @defVar(m, jd[1:3,[:red,:blue]])
+    @defVar(m, jd[1:3,[:red,:blue];true])
 
     @fact length(oia) == 3*4*2 --> true
     @fact length(keys(ja))  == length(values(ja))  == 3*4*2 --> true
@@ -161,6 +161,6 @@ facts("[variable] getValue on empty things") do
     @fact getValue(x) --> Array(Float64, 4, 0, 3)
     @fact typeof(getValue(y)) <: JuMP.JuMPArray{Float64} --> true
     @fact size(getValue(y)) --> (4,0,3)
-    @fact typeof(getValue(z)) --> JuMP.JuMPDict{Float64,3}
+    @fact typeof(getValue(z)) --> JuMP.JuMPArray{Float64,3,Tuple{UnitRange{Int},Set{Any},UnitRange{Int}}}
     @fact length(getValue(z)) --> 0
 end
