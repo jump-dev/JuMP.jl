@@ -20,8 +20,6 @@ using ReverseDiffSparse, Calculus
 import ArrayViews
 const subarr = ArrayViews.view
 
-using Compat
-
 export
 # Objects
     Model, Variable, Norm, AffExpr, QuadExpr, SOCExpr, AbstractJuMPScalar,
@@ -77,7 +75,7 @@ type Model
     colCat::Vector{Symbol}
 
     # Variable cones of the form, e.g. (:SDP, 1:9)
-    varCones::Vector{@compat Tuple{Symbol,Any}}
+    varCones::Vector{Tuple{Symbol,Any}}
 
     # Solution data
     objVal
@@ -144,7 +142,7 @@ function Model(;solver=UnsetSolver())
           Float64[],                   # colLower
           Float64[],                   # colUpper
           Symbol[],                    # colCat
-          Vector{@compat Tuple{Symbol,Any}}[], # varCones
+          Vector{Tuple{Symbol,Any}}[], # varCones
           0,                           # objVal
           Float64[],                   # colVal
           Float64[],                   # redCosts
@@ -631,12 +629,12 @@ operator_warn(lhs,rhs) = nothing
 ##########################################################################
 # Behavior that's uniform across all JuMP "scalar" objects
 
-@compat typealias JuMPTypes Union{AbstractJuMPScalar,
+typealias JuMPTypes Union{AbstractJuMPScalar,
                           Norm,
                           GenericAffExpr,
                           QuadExpr,
                           SOCExpr}
-@compat typealias JuMPScalars Union{Number,JuMPTypes}
+typealias JuMPScalars Union{Number,JuMPTypes}
 
 # would really want to do this on ::Type{T}, but doesn't work on v0.4
 Base.eltype{T<:JuMPTypes}(::T) = T

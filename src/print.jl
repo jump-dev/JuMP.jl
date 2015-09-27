@@ -48,7 +48,7 @@ _values(x) = Base.values(x)
 # REPL-specific symbols
 # Anything here: https://en.wikipedia.org/wiki/Windows-1252
 # should probably work fine on Windows
-const repl = @compat Dict{Symbol,UTF8String}(
+const repl = Dict{Symbol,UTF8String}(
     :leq        => (OS_NAME == :Windows ? "<=" : "≤"),
     :geq        => (OS_NAME == :Windows ? ">=" : "≥"),
     :eq         => (OS_NAME == :Windows ? "==" : "="),
@@ -71,7 +71,7 @@ const repl = @compat Dict{Symbol,UTF8String}(
     :sub2       => (OS_NAME == :Windows ? "_2" : "₂"))
 
 # IJulia-specific symbols
-const ijulia = @compat Dict{Symbol,UTF8String}(
+const ijulia = Dict{Symbol,UTF8String}(
     :leq        => "\\leq",
     :geq        => "\\geq",
     :eq         => "=",
@@ -309,7 +309,7 @@ function fill_var_names{N}(mode, colNames, v::JuMPArray{Variable,N})
     for (ind,var) in enumerate(v.innerArray)
         idx_strs = [string( idxsets[1][mod1(ind,lengths[1])] )]
         for i = 2:N
-            push!(idx_strs, string(idxsets[i][@compat Int(ceil(mod1(ind,cprod[i]) / cprod[i-1]))]))
+            push!(idx_strs, string(idxsets[i][Int(ceil(mod1(ind,cprod[i]) / cprod[i-1]))]))
         end
         if mode == IJuliaMode
             colNames[var.col] = string(name, "_{", join(idx_strs,",") , "}")
@@ -379,9 +379,9 @@ exprToStr(n::Norm) = norm_str(REPLMode, n)
 #------------------------------------------------------------------------
 ## JuMPContainer{Variable}
 #------------------------------------------------------------------------
-@compat Base.print(io::IO, j::Union{JuMPContainer{Variable}, Array{Variable}}) = print(io, cont_str(REPLMode,j))
-@compat Base.show( io::IO, j::Union{JuMPContainer{Variable}, Array{Variable}}) = print(io, cont_str(REPLMode,j))
-@compat Base.writemime(io::IO, ::MIME"text/latex", j::Union{JuMPContainer{Variable},Array{Variable}}) =
+Base.print(io::IO, j::Union{JuMPContainer{Variable}, Array{Variable}}) = print(io, cont_str(REPLMode,j))
+Base.show( io::IO, j::Union{JuMPContainer{Variable}, Array{Variable}}) = print(io, cont_str(REPLMode,j))
+Base.writemime(io::IO, ::MIME"text/latex", j::Union{JuMPContainer{Variable},Array{Variable}}) =
     print(io, cont_str(IJuliaMode,j,mathmode=false))
 # Generic string converter, called by mode-specific handlers
 
@@ -492,7 +492,7 @@ function cont_str(mode, j, sym::PrintSymbols)
 end
 
 # UTILITY FUNCTIONS FOR cont_str
-@compat function cont_str_set(idxset::Union{Range,Array}, dots)  # 2:2:20 -> {2,4..18,20}
+function cont_str_set(idxset::Union{Range,Array}, dots)  # 2:2:20 -> {2,4..18,20}
     length(idxset) == 1 && return string(idxset[1])
     length(idxset) == 2 && return string(idxset[1],",",idxset[2])
     length(idxset) == 3 && return string(idxset[1],",",idxset[2],",",idxset[3])

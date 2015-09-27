@@ -53,7 +53,7 @@ Base.getindex(d::JuMPDict, t...) = d.tupledict[t]
 Base.setindex!(d::JuMPDict, value, t...) = (d.tupledict[t] = value)
 
 function Base.map{T,N}(f::Function, d::JuMPDict{T,N})
-    ret = Base.return_types(f, @compat(Tuple{T}))
+    ret = Base.return_types(f, Tuple{T})
     R = (length(ret) == 1 ? ret[1] : Any)
     x = JuMPDict{R,N}()
     for (k,v) in d.tupledict
@@ -176,7 +176,7 @@ getmeta(x::JuMPContainer, sym::Symbol) = x.meta[sym]
 
 # duck typing approach -- if eltype(innerArray) doesn't support accessor, will fail
 for accessor in (:getDual, :getLower, :getUpper)
-    @eval @compat $accessor(x::Union{JuMPContainer,Array}) = map($accessor,x)
+    @eval $accessor(x::Union{JuMPContainer,Array}) = map($accessor,x)
 end
 
 _similar(x::Array) = Array(Float64,size(x))

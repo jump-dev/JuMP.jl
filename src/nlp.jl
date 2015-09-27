@@ -593,7 +593,7 @@ function solvenlp(m::Model, traits; suppress_warnings=false)
 end
 
 # getValue for nonlinear subexpressions
-@compat function getValue(x::Union{ReverseDiffSparse.ParametricExpressionWithParams,ReverseDiffSparse.ParametricExpression{0}})
+function getValue(x::Union{ReverseDiffSparse.ParametricExpressionWithParams,ReverseDiffSparse.ParametricExpression{0}})
     # messy check to extract model object
     found = false
     m = nothing

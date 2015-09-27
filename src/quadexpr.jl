@@ -63,7 +63,7 @@ end
 
 # Alias for (Float64, Variable)
 typealias QuadExpr GenericQuadExpr{Float64,Variable}
-@compat Base.convert(::Type{QuadExpr}, v::Union{Real,Variable,AffExpr}) = QuadExpr(Variable[], Variable[], Float64[], AffExpr(v))
+Base.convert(::Type{QuadExpr}, v::Union{Real,Variable,AffExpr}) = QuadExpr(Variable[], Variable[], Float64[], AffExpr(v))
 QuadExpr() = zero(QuadExpr)
 
 function setObjective(m::Model, sense::Symbol, q::QuadExpr)

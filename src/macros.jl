@@ -56,7 +56,7 @@ function buildrefsets(expr::Expr)
 end
 
 buildrefsets(c::Symbol)  = (esc(c), Any[], Any[], IndexPair[], :())
-@compat buildrefsets(c::Void) = (gensym(), Any[], Any[], IndexPair[], :())
+buildrefsets(c::Void) = (gensym(), Any[], Any[], IndexPair[], :())
 
 ###############################################################################
 # getloopedcode
@@ -154,7 +154,7 @@ function _localvar(x::Expr)
 end
 
 getname(c::Symbol) = c
-@compat getname(c::Void) = ()
+getname(c::Void) = ()
 getname(c::Expr) = c.args[1]
 
 validmodel(m::Model, name) = nothing

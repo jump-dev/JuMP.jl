@@ -112,11 +112,11 @@ end
 (-)(lhs::GenericAffExpr, rhs::Number) = (+)(-rhs,lhs)
 (*)(lhs::GenericAffExpr, rhs::Number) = (*)(rhs,lhs)
 (/)(lhs::GenericAffExpr, rhs::Number) = (*)(1.0/rhs,lhs)
-@compat function (^)(lhs::Union{Variable,AffExpr}, rhs::Integer)
+function (^)(lhs::Union{Variable,AffExpr}, rhs::Integer)
     rhs == 2 || error("Only exponents of 2 are currently supported. Are you trying to build a nonlinear problem? Make sure you use @addNLConstraint/@setNLObjective.")
     return lhs*lhs
 end
-@compat (^)(lhs::Union{Variable,AffExpr}, rhs::Number) = error("Only exponents of 2 are currently supported. Are you trying to build a nonlinear problem? Make sure you use @addNLConstraint/@setNLObjective.")
+(^)(lhs::Union{Variable,AffExpr}, rhs::Number) = error("Only exponents of 2 are currently supported. Are you trying to build a nonlinear problem? Make sure you use @addNLConstraint/@setNLObjective.")
 # AffExpr--Variable
 (+){C,V<:JuMPTypes}(lhs::GenericAffExpr{C,V}, rhs::V) = (+)(rhs,lhs)
 (-){C,V<:JuMPTypes}(lhs::GenericAffExpr{C,V}, rhs::V) = GenericAffExpr{C,V}(vcat(lhs.vars,rhs),vcat(lhs.coeffs,-one(C)),lhs.constant)
@@ -401,7 +401,7 @@ function _multiply!{T<:JuMPTypes}(ret::Array{T}, lhs::Array, rhs::Array)
     ret
 end
 
-@compat function _multiply!{T<:Union{GenericAffExpr,GenericQuadExpr}}(ret::Array{T}, lhs::SparseMatrixCSC, rhs::Array)
+function _multiply!{T<:Union{GenericAffExpr,GenericQuadExpr}}(ret::Array{T}, lhs::SparseMatrixCSC, rhs::Array)
     nzv = lhs.nzval
     rv  = lhs.rowval
     for col in 1:lhs.n
@@ -414,7 +414,7 @@ end
     ret
 end
 
-@compat function _multiply!{T<:Union{GenericAffExpr,GenericQuadExpr}}(ret::Array{T}, lhs::Matrix, rhs::SparseMatrixCSC)
+function _multiply!{T<:Union{GenericAffExpr,GenericQuadExpr}}(ret::Array{T}, lhs::Matrix, rhs::SparseMatrixCSC)
     rowval = rhs.rowval
     nzval  = rhs.nzval
     for multivec_row in 1:size(lhs,1)
@@ -435,9 +435,9 @@ _multiply!{T<:JuMPTypes}(ret::AbstractArray{T}, lhs::SparseMatrixCSC, rhs::Spars
 
 _multiply!(ret, lhs, rhs) = A_mul_B!(ret, lhs, ret)
 
-@compat (*){T<:JuMPTypes}(             A::Union{Matrix{T},SparseMatrixCSC{T}}, x::Union{Matrix,   Vector,   SparseMatrixCSC})    = _matmul(A, x)
-@compat (*){T<:JuMPTypes,R<:JuMPTypes}(A::Union{Matrix{T},SparseMatrixCSC{T}}, x::Union{Matrix{R},Vector{R},SparseMatrixCSC{R}}) = _matmul(A, x)
-@compat (*){T<:JuMPTypes}(             A::Union{Matrix,   SparseMatrixCSC},    x::Union{Matrix{T},Vector{T},SparseMatrixCSC{T}}) = _matmul(A, x)
+(*){T<:JuMPTypes}(             A::Union{Matrix{T},SparseMatrixCSC{T}}, x::Union{Matrix,   Vector,   SparseMatrixCSC})    = _matmul(A, x)
+(*){T<:JuMPTypes,R<:JuMPTypes}(A::Union{Matrix{T},SparseMatrixCSC{T}}, x::Union{Matrix{R},Vector{R},SparseMatrixCSC{R}}) = _matmul(A, x)
+(*){T<:JuMPTypes}(             A::Union{Matrix,   SparseMatrixCSC},    x::Union{Matrix{T},Vector{T},SparseMatrixCSC{T}}) = _matmul(A, x)
 
 function _matmul(A, x)
     m, n = size(A,1), size(A,2)
@@ -463,7 +463,7 @@ function _fillwithzeros{T}(arr::Array{T})
 end
 
 # Let's be conservative and only define arithmetic for the basic types
-@compat typealias ArrayOrSparseMat{T} Union{Array{T}, SparseMatrixCSC{T}}
+typealias ArrayOrSparseMat{T} Union{Array{T}, SparseMatrixCSC{T}}
 
 for op in [:+, :-]; @eval begin
     function $op{T<:JuMPTypes}(lhs::Number,rhs::ArrayOrSparseMat{T})
@@ -599,11 +599,11 @@ for (func,_) in Calculus.symbolic_derivatives_1arg(), typ in [:Variable,:AffExpr
     @eval Base.($(quot(func)))(::$typ) = error($errstr)
 end
 
-@compat *{T<:QuadExpr,S<:Union{Variable,AffExpr,QuadExpr}}(::T,::S) =
+*{T<:QuadExpr,S<:Union{Variable,AffExpr,QuadExpr}}(::T,::S) =
     error( "*(::$T,::$S) is not defined. $op_hint")
 (*)(lhs::QuadExpr, rhs::QuadExpr) =
     error( "*(::QuadExpr,::QuadExpr) is not defined. $op_hint")
-@compat *{T<:QuadExpr,S<:Union{Variable,AffExpr,QuadExpr}}(::S,::T) =
+*{T<:QuadExpr,S<:Union{Variable,AffExpr,QuadExpr}}(::S,::T) =
     error( "*(::$S,::$T) is not defined. $op_hint")
-@compat /{S<:Union{Number,Variable,AffExpr,QuadExpr},T<:Union{Variable,AffExpr,QuadExpr}}(::S,::T) =
+/{S<:Union{Number,Variable,AffExpr,QuadExpr},T<:Union{Variable,AffExpr,QuadExpr}}(::S,::T) =
     error( "/(::$S,::$T) is not defined. $op_hint")
