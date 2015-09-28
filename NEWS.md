@@ -1,6 +1,12 @@
 JuMP release notes
 ==================
 
+Version 0.10.2 (September 28, 2015)
+-----------------------------------
+
+  * Fix for deprecation warnings
+
+
 Version 0.10.1 (September 3, 2015)
 ----------------------------------
 
