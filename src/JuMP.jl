@@ -199,6 +199,7 @@ end
 @Base.deprecate getNumVars(m::Model) MathProgBase.numvar(m)
 @Base.deprecate getNumConstraints(m::Model) MathProgBase.numlinconstr(m)
 
+getObjective(m::Model) = m.obj
 getObjectiveValue(m::Model) = m.objVal
 getObjectiveSense(m::Model) = m.objSense
 function setObjectiveSense(m::Model, newSense::Symbol)
