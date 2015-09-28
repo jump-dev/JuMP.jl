@@ -30,7 +30,7 @@ export
     JuMPNLPEvaluator,
 # Functions
     # Model related
-    getObjectiveValue, getObjective,
+	getCost, getObjectiveValue, getObjective,
     getObjectiveSense, setObjectiveSense, setSolver,
     writeLP, writeMPS, setObjective,
     addConstraint, addSOS1, addSOS2, solve,
@@ -199,6 +199,7 @@ end
 @Base.deprecate getNumVars(m::Model) MathProgBase.numvar(m)
 @Base.deprecate getNumConstraints(m::Model) MathProgBase.numlinconstr(m)
 
+getCost(m::Model) = m.redCost
 getObjective(m::Model) = m.obj
 getObjectiveValue(m::Model) = m.objVal
 getObjectiveSense(m::Model) = m.objSense
