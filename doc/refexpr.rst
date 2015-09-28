@@ -72,7 +72,7 @@ The ``ref`` accepts index sets in the same way as ``@defVar``, and those indices
 * ``@LinearConstraint(expr)`` - Constructs a ``LinearConstraint`` instance efficiently by parsing the ``expr``. The same as ``@addConstraint``, except it does not attach the constraint to any model.
 * ``@LinearConstraints(expr)`` - Constructs a vector of ``LinearConstraint`` objects. Similar to ``@LinearConstraint``, except it accepts multiple constraints as input as long as they are separated by newlines.
 * ``@QuadConstraint(expr)`` - Constructs a ``QuadConstraint`` instance efficiently by parsing the ``expr``. The same as ``@addConstraint``, except it does not attach the constraint to any model.
-* ``@QuadConstraints(expr)`` - Constructs a vector of ``QuadConstraint``s. Similar to ``@QuadConstraint``, except it accepts multiple constraints as input as long as they are separated by newlines.
+* ``@QuadConstraints(expr)`` - Constructs a vector of ``QuadConstraint`` objects. Similar to ``@QuadConstraint``, except it accepts multiple constraints as input as long as they are separated by newlines.
 * ``push!(aff::AffExpr, new_coeff::Float64, new_var::Variable)`` - efficient
   way to grow an affine expression by one term. For example, to add ``5x`` to
   an existing expression ``aff``, use ``push!(aff, 5.0, x)``. This is
