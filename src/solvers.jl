@@ -312,7 +312,7 @@ function addQuadratics(m::Model)
     end
 
     # Add quadratic constraint to solver
-    const sensemap = @compat Dict(:(<=) => '<', :(>=) => '>', :(==) => '=')
+    const sensemap = Dict(:(<=) => '<', :(>=) => '>', :(==) => '=')
     for k in 1:length(m.quadconstr)
         qconstr = m.quadconstr[k]::QuadConstraint
         if !haskey(sensemap, qconstr.sense)
@@ -630,9 +630,9 @@ function conicconstraintdata(m::Model)
     I = Int[]
     J = Int[]
     V = Float64[]
-    @compat sizehint!(I, nnz)
-    @compat sizehint!(J, nnz)
-    @compat sizehint!(V, nnz)
+    sizehint!(I, nnz)
+    sizehint!(J, nnz)
+    sizehint!(V, nnz)
 
     # Fill it up
     nnz = 0

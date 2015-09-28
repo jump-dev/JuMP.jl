@@ -76,9 +76,6 @@ end
 # Alias for (Float64, Variable), the specific GenericAffExpr used by JuMP
 typealias AffExpr GenericAffExpr{Float64,Variable}
 AffExpr() = zero(AffExpr)
-# TODO: remove following two lines when no longer supporting Julia v0.3
-@compat AffExpr(x::Union{Number,Variable}) = convert(AffExpr, x)
-AffExpr(x::AffExpr) = x
 
 Base.isempty(a::AffExpr) = (length(a.vars) == 0 && a.constant == 0.)
 Base.convert(::Type{AffExpr}, v::Variable) = AffExpr([v], [1.], 0.)

@@ -665,28 +665,24 @@ context("Dot-ops") do
     # @fact TestHelper.vec_eq(y.-A, y.-B) --> true
     @fact TestHelper.vec_eq(A.*x, [1*x[1,1]  2*x[1,2];
                                    3*x[2,1]  4*x[2,2]]) --> true
-    if VERSION > v"0.4-"
-        @fact TestHelper.vec_eq(A.*x, B.*x) --> true
-        @fact TestHelper.vec_eq(A.*x, A.*y) --> true
-        # @fact TestHelper.vec_eq(A.*y, B.*y) --> true
-    end
+    @fact TestHelper.vec_eq(A.*x, B.*x) --> true
+    @fact TestHelper.vec_eq(A.*x, A.*y) --> true
+    # @fact TestHelper.vec_eq(A.*y, B.*y) --> true
+
     @fact TestHelper.vec_eq(x.*A, [1*x[1,1]  2*x[1,2];
                                    3*x[2,1]  4*x[2,2]]) --> true
-    if VERSION > v"0.4-"
-        @fact TestHelper.vec_eq(x.*A, x.*B) --> true
-        @fact TestHelper.vec_eq(x.*A, y.*A) --> true
-        # @fact TestHelper.vec_eq(y.*A, y.*B) --> true
-    end
+    @fact TestHelper.vec_eq(x.*A, x.*B) --> true
+    @fact TestHelper.vec_eq(x.*A, y.*A) --> true
+    # @fact TestHelper.vec_eq(y.*A, y.*B) --> true
+
     @fact TestHelper.vec_eq(x .* x, [x[1,1]^2 x[1,2]^2; x[2,1]^2 x[2,2]^2]) --> true
     @fact_throws TestHelper.vec_eq(A./x, [1*x[1,1]  2*x[1,2];
                                           3*x[2,1]  4*x[2,2]])
     @fact TestHelper.vec_eq(x./A, [1/1*x[1,1]  1/2*x[1,2];
                                    1/3*x[2,1]  1/4*x[2,2]]) --> true
-    if VERSION > v"0.4-"
-        @fact TestHelper.vec_eq(x./A, x./B) --> true
-        @fact TestHelper.vec_eq(x./A, y./A) --> true
-        # @fact TestHelper.vec_eq(A./y, B./y) --> true
-    end
+    @fact TestHelper.vec_eq(x./A, x./B) --> true
+    @fact TestHelper.vec_eq(x./A, y./A) --> true
+    # @fact TestHelper.vec_eq(A./y, B./y) --> true
 
     @fact TestHelper.vec_eq((2*x) / 3, full((2*y) / 3)) --> true
     @fact TestHelper.vec_eq(2 * (x/3), full(2 * (y/3))) --> true
