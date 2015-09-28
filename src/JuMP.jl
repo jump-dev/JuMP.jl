@@ -199,7 +199,7 @@ end
 @Base.deprecate getNumVars(m::Model) MathProgBase.numvar(m)
 @Base.deprecate getNumConstraints(m::Model) MathProgBase.numlinconstr(m)
 
-getCost(m::Model) = m.redCost
+getCost(m::Model) = m.redCosts
 getObjective(m::Model) = m.obj
 getObjectiveValue(m::Model) = m.objVal
 getObjectiveSense(m::Model) = m.objSense
