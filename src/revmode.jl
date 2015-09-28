@@ -168,8 +168,8 @@ end
 
 expression_data(s::SymbolicOutput) = s.inputvals
 
-remove_prefix(x::Expr, prefix::String) = Expr(x.head, [remove_prefix(ex,prefix) for ex in x.args]...)
-function remove_prefix(s::Symbol, prefix::String)
+remove_prefix(x::Expr, prefix::AbstractString) = Expr(x.head, [remove_prefix(ex,prefix) for ex in x.args]...)
+function remove_prefix(s::Symbol, prefix::AbstractString)
     str = string(s)
     if startswith(str,prefix)
         return symbol(str[search(str,"##",6)[2]+1:end])
@@ -177,7 +177,7 @@ function remove_prefix(s::Symbol, prefix::String)
         return s
     end
 end
-remove_prefix(x, prefix::String) = x
+remove_prefix(x, prefix::AbstractString) = x
 base_expression(s::SymbolicOutput) = remove_prefix(s.tree, "__R")
 export base_expression
 
@@ -304,11 +304,11 @@ end
 appendnames_and_vals_if!(inputnames,inputvals,x) = nothing
 
 # Keep the parametric expression in the tree
-function replaceif{N}(x::ParametricExpression{N},s::Union(Symbol,Expr), args...)
+function replaceif{N}(x::ParametricExpression{N},s::(@compat Union{Symbol,Expr}), args...)
     length(args) == N || error("Incorrect number of parameters for expression $x")
     return x[args...]
 end
-replaceif(::Any,s::Union(Symbol,Expr), args...) = s
+replaceif(::Any,s::(@compat Union{Symbol,Expr}), args...) = s
 
 # turn each node in the expression tree into an ExprNode
 # this expression is kth argument in parent expression
