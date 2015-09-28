@@ -1,6 +1,13 @@
 JuMP release notes
 ==================
 
+Unreleased
+----------
+
+  * Julia 0.4.0 is the minimum required version for this release.
+  * Fix for scoping semantics of index variables in sum{}. Index variables no longer leak into the surrounding scope.
+
+
 Version 0.10.1 (September 3, 2015)
 ----------------------------------
 
