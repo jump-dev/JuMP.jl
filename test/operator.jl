@@ -59,9 +59,6 @@ facts("[operator] Testing basic operator overloads") do
     @fact affToStr(3.16 - w) --> "-w + 3.16"
     @fact affToStr(5.23 * w) --> "5.23 w"
     @fact_throws  2.94 / w
-    @fact conToStr(2.1 ≤ w) --> "w $geq 2.1"
-    @fact conToStr(2.1 == w) --> "w $eq 2.1"
-    @fact conToStr(2.1 ≥ w) --> "w $leq 2.1"
     @fact conToStr(@LinearConstraint(2.1 ≤ w)) --> "-w $leq -2.1"
     @fact conToStr(@LinearConstraint(2.1 == w)) --> "-w $eq -2.1"
     @fact conToStr(@LinearConstraint(2.1 ≥ w)) --> "-w $geq -2.1"
@@ -78,9 +75,6 @@ facts("[operator] Testing basic operator overloads") do
     @fact affToStr(1.5 - aff) --> "-7.1 x - 1"
     @fact affToStr(2 * aff) --> "14.2 x + 5"
     @fact_throws  2 / aff
-    @fact conToStr(1 ≤ aff) --> "7.1 x $geq -1.5"
-    @fact conToStr(1 == aff) --> "7.1 x $eq -1.5"
-    @fact conToStr(1 ≥ aff) --> "7.1 x $leq -1.5"
     @fact conToStr(@LinearConstraint(1 ≤ aff)) --> "-7.1 x $leq 1.5"
     @fact conToStr(@LinearConstraint(1 == aff)) --> "-7.1 x $eq 1.5"
     @fact conToStr(@LinearConstraint(1 ≥ aff)) --> "-7.1 x $geq 1.5"
@@ -89,9 +83,6 @@ facts("[operator] Testing basic operator overloads") do
     @fact quadToStr(1.5 - q) --> "-2.5 y*z - 7.1 x - 1"
     @fact quadToStr(2 * q) --> "5 y*z + 14.2 x + 5"
     @fact_throws  2 / q
-    @fact conToStr(1 ≤ q) --> "2.5 y*z + 7.1 x + 1.5 $geq 0"
-    @fact conToStr(1 == q) --> "2.5 y*z + 7.1 x + 1.5 $eq 0"
-    @fact conToStr(1 ≥ q) --> "2.5 y*z + 7.1 x + 1.5 $leq 0"
     @fact conToStr(@QuadConstraint(1 ≤ q)) --> "-2.5 y*z - 7.1 x - 1.5 $leq 0"
     @fact conToStr(@QuadConstraint(1 == q)) --> "-2.5 y*z - 7.1 x - 1.5 $eq 0"
     @fact conToStr(@QuadConstraint(1 ≥ q)) --> "-2.5 y*z - 7.1 x - 1.5 $geq 0"
@@ -115,12 +106,7 @@ facts("[operator] Testing basic operator overloads") do
     @fact affToStr(w - 4.13) --> "w - 4.13"
     @fact affToStr(w * 4.13) --> "4.13 w"
     @fact affToStr(w / 2.00) --> "0.5 w"
-    @fact conToStr(w ≤ 1) --> "w $leq 1"
-    @fact conToStr(w == 1) --> "w $eq 1"
-    @fact conToStr(w ≥ 1) --> "w $geq 1"
-    @fact conToStr(x*y ≤ 1) --> "x*y - 1 $leq 0"
-    @fact conToStr(x*y == 1) --> "x*y - 1 $eq 0"
-    @fact conToStr(x*y ≥ 1) --> "x*y - 1 $geq 0"
+    @fact w == w --> true
     @fact conToStr(@LinearConstraint(w ≤ 1)) --> "w $leq 1"
     @fact conToStr(@LinearConstraint(w == 1)) --> "w $eq 1"
     @fact conToStr(@LinearConstraint(w ≥ 1)) --> "w $geq 1"
@@ -133,15 +119,6 @@ facts("[operator] Testing basic operator overloads") do
     @fact quadToStr(w * x) --> "w*x"
     @fact affToStr(x - x) --> "0"
     @fact_throws  w / x
-    @fact conToStr(w ≤ x) --> "w - x $leq 0"
-    @fact conToStr(w == x) --> "w - x $eq 0"
-    @fact conToStr(w ≥ x) --> "w - x $geq 0"
-    @fact conToStr(y*z ≤ x) --> "y*z - x $leq 0"
-    @fact conToStr(y*z == x) --> "y*z - x $eq 0"
-    @fact conToStr(y*z ≥ x) --> "y*z - x $geq 0"
-    @fact conToStr(x ≤ x) --> "0 $leq 0"
-    @fact conToStr(x == x) --> "0 $eq 0"
-    @fact conToStr(x ≥ x) --> "0 $geq 0"
     @fact conToStr(@LinearConstraint(w ≤ x)) --> "w - x $leq 0"
     @fact conToStr(@LinearConstraint(w == x)) --> "w - x $eq 0"
     @fact conToStr(@LinearConstraint(w ≥ x)) --> "w - x $geq 0"
@@ -164,12 +141,7 @@ facts("[operator] Testing basic operator overloads") do
     @fact affToStr(z - aff) --> "-7.1 x + z - 2.5"
     @fact quadToStr(z * aff) --> "7.1 x*z + 2.5 z"
     @fact_throws  z / aff
-    @fact conToStr(z ≤ aff) --> "-7.1 x + z $leq 2.5"
-    @fact conToStr(z == aff) --> "-7.1 x + z $eq 2.5"
-    @fact conToStr(z ≥ aff) --> "-7.1 x + z $geq 2.5"
-    @fact conToStr(7.1 * x - aff ≤ 0) --> "0 $leq 2.5"
-    @fact conToStr(7.1 * x - aff == 0) --> "0 $eq 2.5"
-    @fact conToStr(7.1 * x - aff ≥ 0) --> "0 $geq 2.5"
+    @fact_throws  z ≤ aff
     @fact conToStr(@LinearConstraint(z ≤ aff)) --> "z - 7.1 x $leq 2.5"
     @fact conToStr(@LinearConstraint(z == aff)) --> "z - 7.1 x $eq 2.5"
     @fact conToStr(@LinearConstraint(z ≥ aff)) --> "z - 7.1 x $geq 2.5"
@@ -181,9 +153,6 @@ facts("[operator] Testing basic operator overloads") do
     @fact quadToStr(w - q) --> "-2.5 y*z - 7.1 x + w - 2.5"
     @fact_throws  w*q
     @fact_throws  w/q
-    @fact conToStr(w ≤ q) --> "-2.5 y*z - 7.1 x + w - 2.5 $leq 0"
-    @fact conToStr(w == q) --> "-2.5 y*z - 7.1 x + w - 2.5 $eq 0"
-    @fact conToStr(w ≥ q) --> "-2.5 y*z - 7.1 x + w - 2.5 $geq 0"
     @fact conToStr(@QuadConstraint(w ≤ q)) --> "-2.5 y*z + w - 7.1 x - 2.5 $leq 0"
     @fact conToStr(@QuadConstraint(w == q)) --> "-2.5 y*z + w - 7.1 x - 2.5 $eq 0"
     @fact conToStr(@QuadConstraint(w ≥ q)) --> "-2.5 y*z + w - 7.1 x - 2.5 $geq 0"
@@ -262,9 +231,9 @@ facts("[operator] Testing basic operator overloads") do
     @fact affToStr(aff - 1.5) --> "7.1 x + 1"
     @fact affToStr(aff * 2) --> "14.2 x + 5"
     @fact affToStr(aff / 2) --> "3.55 x + 1.25"
-    @fact conToStr(aff ≤ 1) --> "7.1 x $leq -1.5"
-    @fact conToStr(aff == 1) --> "7.1 x $eq -1.5"
-    @fact conToStr(aff ≥ 1) --> "7.1 x $geq -1.5"
+    @fact_throws aff ≤ 1
+    @fact aff == aff --> true
+    @fact_throws aff ≥ 1
     @fact conToStr(@LinearConstraint(aff ≤ 1)) --> "7.1 x $leq -1.5"
     @fact conToStr(@LinearConstraint(aff == 1)) --> "7.1 x $eq -1.5"
     @fact conToStr(@LinearConstraint(aff ≥ 1)) --> "7.1 x $geq -1.5"
@@ -273,12 +242,6 @@ facts("[operator] Testing basic operator overloads") do
     @fact affToStr(aff - z) --> "7.1 x - z + 2.5"
     @fact quadToStr(aff * z) --> "7.1 x*z + 2.5 z"
     @fact_throws  aff/z
-    @fact conToStr(aff ≤ z) --> "7.1 x - z $leq -2.5"
-    @fact conToStr(aff == z) --> "7.1 x - z $eq -2.5"
-    @fact conToStr(aff ≥ z) --> "7.1 x - z $geq -2.5"
-    @fact conToStr(aff - 7.1 * x ≤ 0) --> "0 $leq -2.5"
-    @fact conToStr(aff - 7.1 * x == 0) --> "0 $eq -2.5"
-    @fact conToStr(aff - 7.1 * x ≥ 0) --> "0 $geq -2.5"
     @fact conToStr(@LinearConstraint(aff ≤ z)) --> "7.1 x - z $leq -2.5"
     @fact conToStr(@LinearConstraint(aff == z)) --> "7.1 x - z $eq -2.5"
     @fact conToStr(@LinearConstraint(aff ≥ z)) --> "7.1 x - z $geq -2.5"
@@ -299,12 +262,6 @@ facts("[operator] Testing basic operator overloads") do
     @fact quadToStr(aff * aff2) --> "8.52 x*y + 3 y + 8.52 x + 3"
     @fact quadToStr((x+x)*(x+3)) --> quadToStr((x+3)*(x+x))  # Issue #288
     @fact_throws  aff/aff2
-    @fact conToStr(aff ≤ aff2) --> "7.1 x - 1.2 y $leq -1.3"
-    @fact conToStr(aff == aff2) --> "7.1 x - 1.2 y $eq -1.3"
-    @fact conToStr(aff ≥ aff2) --> "7.1 x - 1.2 y $geq -1.3"
-    @fact conToStr(aff-aff ≤ 0) --> "0 $leq 0"
-    @fact conToStr(aff-aff == 0) --> "0 $eq 0"
-    @fact conToStr(aff-aff ≥ 0) --> "0 $geq 0"
     @fact conToStr(@LinearConstraint(aff ≤ aff2)) --> "7.1 x - 1.2 y $leq -1.3"
     @fact conToStr(@LinearConstraint(aff == aff2)) --> "7.1 x - 1.2 y $eq -1.3"
     @fact conToStr(@LinearConstraint(aff ≥ aff2)) --> "7.1 x - 1.2 y $geq -1.3"
@@ -316,9 +273,6 @@ facts("[operator] Testing basic operator overloads") do
     @fact quadToStr(aff2 - q) --> "-2.5 y*z + 1.2 y - 7.1 x - 1.3"
     @fact_throws  aff2 * q
     @fact_throws  aff2 / q
-    @fact conToStr(aff2 ≤ q) --> "-2.5 y*z + 1.2 y - 7.1 x - 1.3 $leq 0"
-    @fact conToStr(aff2 == q) --> "-2.5 y*z + 1.2 y - 7.1 x - 1.3 $eq 0"
-    @fact conToStr(aff2 ≥ q) --> "-2.5 y*z + 1.2 y - 7.1 x - 1.3 $geq 0"
     @fact conToStr(@QuadConstraint(aff2 ≤ q)) --> "-2.5 y*z + 1.2 y - 7.1 x - 1.3 $leq 0"
     @fact conToStr(@QuadConstraint(aff2 == q)) --> "-2.5 y*z + 1.2 y - 7.1 x - 1.3 $eq 0"
     @fact conToStr(@QuadConstraint(aff2 ≥ q)) --> "-2.5 y*z + 1.2 y - 7.1 x - 1.3 $geq 0"
@@ -342,9 +296,7 @@ facts("[operator] Testing basic operator overloads") do
     @fact quadToStr(q - 1.5) --> "2.5 y*z + 7.1 x + 1"
     @fact quadToStr(q * 2) --> "5 y*z + 14.2 x + 5"
     @fact quadToStr(q / 2) --> "1.25 y*z + 3.55 x + 1.25"
-    @fact conToStr(q ≥ 1) --> "2.5 y*z + 7.1 x + 1.5 $geq 0"
-    @fact conToStr(q == 1) --> "2.5 y*z + 7.1 x + 1.5 $eq 0"
-    @fact conToStr(q ≤ 1) --> "2.5 y*z + 7.1 x + 1.5 $leq 0"
+    @fact q == q --> true
     @fact conToStr(@QuadConstraint(aff2 ≤ q)) --> "-2.5 y*z + 1.2 y - 7.1 x - 1.3 $leq 0"
     @fact conToStr(@QuadConstraint(aff2 == q)) --> "-2.5 y*z + 1.2 y - 7.1 x - 1.3 $eq 0"
     @fact conToStr(@QuadConstraint(aff2 ≥ q)) --> "-2.5 y*z + 1.2 y - 7.1 x - 1.3 $geq 0"
@@ -353,9 +305,6 @@ facts("[operator] Testing basic operator overloads") do
     @fact quadToStr(q - w) --> "2.5 y*z + 7.1 x - w + 2.5"
     @fact_throws q*w
     @fact_throws q/w
-    @fact conToStr(q ≤ w) --> "2.5 y*z + 7.1 x - w + 2.5 $leq 0"
-    @fact conToStr(q == w) --> "2.5 y*z + 7.1 x - w + 2.5 $eq 0"
-    @fact conToStr(q ≥ w) --> "2.5 y*z + 7.1 x - w + 2.5 $geq 0"
     @fact conToStr(@QuadConstraint(q ≤ w)) --> "2.5 y*z + 7.1 x - w + 2.5 $leq 0"
     @fact conToStr(@QuadConstraint(q == w)) --> "2.5 y*z + 7.1 x - w + 2.5 $eq 0"
     @fact conToStr(@QuadConstraint(q ≥ w)) --> "2.5 y*z + 7.1 x - w + 2.5 $geq 0"
@@ -372,9 +321,6 @@ facts("[operator] Testing basic operator overloads") do
     @fact quadToStr(q - aff2) --> "2.5 y*z + 7.1 x - 1.2 y + 1.3"
     @fact_throws  q * aff2
     @fact_throws  q / aff2
-    @fact conToStr(q ≤ aff2) --> "2.5 y*z + 7.1 x - 1.2 y + 1.3 $leq 0"
-    @fact conToStr(q == aff2) --> "2.5 y*z + 7.1 x - 1.2 y + 1.3 $eq 0"
-    @fact conToStr(q ≥ aff2) --> "2.5 y*z + 7.1 x - 1.2 y + 1.3 $geq 0"
     @fact conToStr(@QuadConstraint(q ≤ aff2)) --> "2.5 y*z + 7.1 x - 1.2 y + 1.3 $leq 0"
     @fact conToStr(@QuadConstraint(q == aff2)) --> "2.5 y*z + 7.1 x - 1.2 y + 1.3 $eq 0"
     @fact conToStr(@QuadConstraint(q ≥ aff2)) --> "2.5 y*z + 7.1 x - 1.2 y + 1.3 $geq 0"
@@ -383,9 +329,6 @@ facts("[operator] Testing basic operator overloads") do
     @fact quadToStr(q - q2) --> "-8 x*z + 2.5 y*z + 7.1 x - 1.2 y + 1.3"
     @fact_throws  q * q2
     @fact_throws  q / q2
-    @fact conToStr(q ≤ q2) --> "-8 x*z + 2.5 y*z + 7.1 x - 1.2 y + 1.3 $leq 0"
-    @fact conToStr(q == q2) --> "-8 x*z + 2.5 y*z + 7.1 x - 1.2 y + 1.3 $eq 0"
-    @fact conToStr(q ≥ q2) --> "-8 x*z + 2.5 y*z + 7.1 x - 1.2 y + 1.3 $geq 0"
     @fact conToStr(@QuadConstraint(q ≤ q2)) --> "-8 x*z + 2.5 y*z + 7.1 x - 1.2 y + 1.3 $leq 0"
     @fact conToStr(@QuadConstraint(q == q2)) --> "-8 x*z + 2.5 y*z + 7.1 x - 1.2 y + 1.3 $eq 0"
     @fact conToStr(@QuadConstraint(q ≥ q2)) --> "-8 x*z + 2.5 y*z + 7.1 x - 1.2 y + 1.3 $geq 0"

@@ -235,57 +235,8 @@ end
 # SOCExpr--QuadExpr
 # SOCExpr--SOCExpr
 
-# (==)(lhs::AffExpr,rhs::AffExpr) = (lhs.vars == rhs.vars) && (lhs.coeffs == rhs.coeffs) && (lhs.constant == rhs.constant)
-# (==)(lhs::QuadExpr,rhs::QuadExpr) = (lhs.qvars1 == rhs.qvars1) && (lhs.qvars2 == rhs.qvars2) && (lhs.qcoeffs == rhs.qcoeffs) && (lhs.aff == rhs.aff)
-
-_deprecate_comparisons(sgn) =
-    Base.warn_once("The comparison operator $sgn has been deprecated for constructing constraints. Use the macro form @addConstraint instead.")
-
-# LinearConstraint
-# Number--???
-for (sgn, osgn) in ( (:<=,:>=), (:(==),:(==)), (:>=,:<=) )
-    for typ in (:Variable, :AffExpr, :QuadExpr)
-        @eval $(sgn)(lhs::Number, rhs::$(typ)) = $(osgn)(rhs, lhs)
-    end
-    # Variable--???
-    for typ in (:Number, :Variable, :AffExpr, :QuadExpr)
-        @eval $(sgn)(lhs::Variable, rhs::$(typ)) = $(sgn)(lhs-rhs, 0.0)
-    end
-end
-# AffExpr--???
-function (<=)(lhs::AffExpr, rhs::Number)
-    _deprecate_comparisons(:(<=))
-    LinearConstraint(lhs,-Inf,rhs-lhs.constant)
-end
-function (==)(lhs::AffExpr, rhs::Number)
-    _deprecate_comparisons(:(==))
-    LinearConstraint(lhs,rhs-lhs.constant,rhs-lhs.constant)
-end
-function (>=)(lhs::AffExpr, rhs::Number)
-    _deprecate_comparisons(:(>=))
-    LinearConstraint(lhs,rhs-lhs.constant,Inf)
-end
-for sgn in (:<=, :(==), :>=)
-    for typ in (:Variable, :AffExpr, :QuadExpr)
-        @eval $(sgn)(lhs::AffExpr, rhs::$(typ)) = $(sgn)(lhs-rhs, 0.0)
-    end
-end
-# There's no easy way to allow operator overloads for range constraints.
-# Use macros instead.
-
-# QuadConstraint
-# QuadConstraint--Number
-for sgn in (:<=, :(==), :>=)
-    @eval begin
-        function $(sgn)(lhs::QuadExpr, rhs::Number)
-            _deprecate_comparisons($sgn)
-            QuadConstraint( QuadExpr(copy(lhs.qvars1), copy(lhs.qvars2), lhs.qcoeffs,lhs.aff - rhs), $(quot(sgn)))
-        end
-    end
-    for typ in (:Variable, :AffExpr, :QuadExpr)
-        @eval $(sgn)(lhs::QuadExpr, rhs::$(typ)) = $(sgn)(lhs-rhs, 0)
-    end
-end
+(==)(lhs::AffExpr,rhs::AffExpr) = (lhs.vars == rhs.vars) && (lhs.coeffs == rhs.coeffs) && (lhs.constant == rhs.constant)
+(==)(lhs::QuadExpr,rhs::QuadExpr) = (lhs.qvars1 == rhs.qvars1) && (lhs.qvars2 == rhs.qvars2) && (lhs.qcoeffs == rhs.qcoeffs) && (lhs.aff == rhs.aff)
 
 #############################################################################
 # Helpers to initialize memory for AffExpr/QuadExpr
