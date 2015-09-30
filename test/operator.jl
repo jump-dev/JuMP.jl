@@ -739,7 +739,7 @@ facts("[operator] JuMPArray concatenation") do
 
     A = sprand(3, 3, 0.2)
     B = full(A)
-    @fact TestHelper.vec_eq([A, y], [B, y]) --> true
+    @fact TestHelper.vec_eq([A y], [B y]) --> true
 end
 
 
