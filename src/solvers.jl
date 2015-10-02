@@ -399,10 +399,6 @@ end
 # matrix of coefficients.
 function prepConstrMatrix(m::Model)
 
-    # We want a column-wise sparse A matrix, but we have the
-    # data in a row-wise format. The solution is to build up
-    # a row-wise sparse matrix, then use the built-in transpose
-    # operator to convert to a column-wise matrix.
     linconstr = m.linconstr::Vector{LinearConstraint}
     numRows = length(linconstr)
     # Calculate the maximum number of nonzeros
@@ -412,23 +408,17 @@ function prepConstrMatrix(m::Model)
     for c in 1:numRows
         nnz += length(linconstr[c].terms.coeffs)
     end
-    # The non-zero values
-    rownzval = Array(Float64,nnz)
-    # The column for each non-zero
-    colval = Array(Int,nnz)
-    # The index of the beginning of each row in rownzval
-    rowptr = Array(Int,numRows+1)
+    # Non-zero row indices
+    I = Array(Int,nnz)
+    # Non-zero column indices
+    J = Array(Int,nnz)
+    # Non-zero values
+    V = Array(Float64,nnz)
 
     # Fill it up!
     # Number of nonzeros seen so far
     nnz = 0
-    # Maintain a data structure for collapsing down duplicate
-    # terms in each constraint
-    tmprow = IndexedVector(Float64,m.numCols)
-    tmpelts = tmprow.elts
-    tmpnzidx = tmprow.nzidx
     for c in 1:numRows
-        rowptr[c] = nnz + 1
         # Check that no coefficients are NaN/Inf
         assert_isfinite(linconstr[c].terms)
         coeffs = linconstr[c].terms.coeffs
@@ -437,35 +427,17 @@ function prepConstrMatrix(m::Model)
         if !verify_ownership(m, vars)
             error("Variable not owned by model present in a constraint")
         end
-        # Add all terms into the IndexedVector, which will
-        # combine any duplicate terms
+        # Record all (i,j,v) triplets
         @inbounds for ind in 1:length(coeffs)
-            addelt!(tmprow, vars[ind].col, coeffs[ind])
-        end
-        # Extract all the terms from the IndexedVector
-        # Each variable will appear at most once
-        @inbounds for i in 1:tmprow.nnz
-            idx = tmpnzidx[i]   # The column index
-            elt = tmpelts[idx]  # The coefficient
-            # Do not pass zero coefficients through to the solver
-            elt == 0.0 && continue
-            # Store this nonzero value in the row-wise matrix
             nnz += 1
-            colval[nnz] = idx
-            rownzval[nnz] = elt
+            I[nnz] = c
+            J[nnz] = vars[ind].col
+            V[nnz] = coeffs[ind]
         end
-        # Reset the IndexedVector for the next constraint
-        empty!(tmprow)
     end
-    # The last value in rowptr is the 1 after the last term added
-    rowptr[numRows+1] = nnz + 1
 
-    # Build the row-wise sparse matrix (although we pretend it is
-    # a column-wise sparse matrix, it doesn't make a difference)
-    rowmat = SparseMatrixCSC(m.numCols, numRows, rowptr, colval, rownzval)
-    # Note that rowmat doesn't have sorted indices, so technically doesn't
-    # follow SparseMatrixCSC format. But it's safe to take the transpose.
-    A = rowmat'
+    # sparse() handles merging duplicate terms and removing zeros
+    A = sparse(I,J,V,numRows,m.numCols)
 end
 
 function vartypes_without_fixed(m::Model)
