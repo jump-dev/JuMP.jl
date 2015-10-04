@@ -34,6 +34,8 @@ JuMP makes it easy to specify and **solve optimization problems without expert k
 
 Our documentation includes an installation guide, quick-start guide, and reference manual. The **[juliaopt-notebooks]** repository contains a small but growing collection of contributed examples. Submissions are welcome!
 
+[juliaopt-notebooks]: https://github.com/JuliaOpt/juliaopt-notebooks
+
 **Latest Release**: 0.10.2 (via ``Pkg.add``)
   * [Documentation](https://jump.readthedocs.org/en/latest)
   * [Examples](https://github.com/JuliaOpt/JuMP.jl/tree/release-0.10/examples)
