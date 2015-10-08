@@ -505,6 +505,8 @@ end
 
 typealias LinConstrRef ConstraintRef{LinearConstraint}
 
+LinearConstraint(ref::LinConstrRef) = ref.m.linconstr[ref.idx]::LinearConstraint
+
 getLinearIndex(x::ConstraintRef) = x.idx
 
 function getDual(c::ConstraintRef{LinearConstraint})

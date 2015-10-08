@@ -121,6 +121,10 @@ infeasibility ray (Farkas proof), if available from the solver.
 
 Dual information is unavailable for MIPs and has not yet been implemented for quadratic constraints.
 
+One may retrieve the corresponding internal ``LinearConstraint`` object from a
+``ConstraintRef{LinearConstraint}`` object ``constr`` by calling ``LinearConstraint(constr)``.
+This functionality is not yet implemented for other classes of constraints.
+
 For users who prefer to generate constraints in an explicit loop, we also
 provide the ``@defConstrRef`` convenience macro, e.g.::
 

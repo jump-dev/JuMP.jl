@@ -732,6 +732,14 @@ facts("[model] Test getLinearIndex") do
     end
 end
 
+facts("[model] Test LinearConstraint from ConstraintRef") do
+    m = Model()
+    @defVar(m, x)
+    @addConstraint(m, constr, x == 1)
+    real_constr = LinearConstraint(constr)
+    @fact real_constr.terms --> @LinearConstraint(x == 1).terms
+end
+
 facts("[model] Test getValue on OneIndexedArrays") do
     m = Model()
     @defVar(m, x[i=1:5], start=i)
