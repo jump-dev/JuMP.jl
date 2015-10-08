@@ -38,13 +38,13 @@ function ProblemTraits(m::Model)
     ProblemTraits(int, !(qp|qc|nlp|soc|sdp|sos), qp, qc, nlp, soc, sdp, sos, soc|sdp)
 end
 function default_solver(traits::ProblemTraits)
-    if traits.int | traits.sos
+    if traits.int || traits.sos
         MathProgBase.defaultMIPsolver
     elseif traits.sdp
         MathProgBase.defaultSDPsolver
     elseif traits.conic
         MathProgBase.defaultConicsolver
-    elseif traits.qp | traits.qc
+    elseif traits.qp || traits.qc
         MathProgBase.defaultQPsolver
     elseif traits.nlp
         MathProgBase.defaultNLPsolver
@@ -55,7 +55,9 @@ end
 
 
 function solve(m::Model; suppress_warnings=false,
-                ignore_solve_hook=(m.solvehook===nothing), kwargs...)
+                ignore_solve_hook=(m.solvehook===nothing),
+                relaxation=false,
+                kwargs...)
     # If the user or an extension has provided a solve hook, call
     # that instead of solving the model ourselves
     if !ignore_solve_hook
@@ -74,7 +76,7 @@ function solve(m::Model; suppress_warnings=false,
     traits = ProblemTraits(m)
 
     # Build the MathProgBase model from the JuMP model
-    buildInternalModel(m, traits, suppress_warnings=suppress_warnings)
+    buildInternalModel(m, traits, suppress_warnings=suppress_warnings, relaxation=relaxation)
 
     # If the model is a general nonlinear, use different logic in
     # nlp.jl to solve the problem
@@ -94,7 +96,7 @@ function solve(m::Model; suppress_warnings=false,
         # If we think dual information might be available, try to get it
         # If not, return an array of the correct length
         # TODO: support conic duals
-        if !(traits.int | traits.sos | traits.conic)
+        if !(traits.int || traits.sos || traits.conic)
             m.redCosts = try
                 MathProgBase.getreducedcosts(m.internalModel)[1:numCols]
             catch
@@ -168,6 +170,9 @@ function solve(m::Model; suppress_warnings=false,
         end
     end
 
+    # don't keep relaxed model in memory
+    relaxation && (m.internalModelLoaded = false)
+
     # Return the solve status
     stat
 end
@@ -175,7 +180,7 @@ end
 # Converts the JuMP Model into a MathProgBase model based on the
 # traits of the model
 function buildInternalModel(m::Model, traits=ProblemTraits(m);
-                            suppress_warnings=false)
+                            suppress_warnings=false, relaxation=false)
     # Set solver based on the model's traits if it hasn't provided
     if isa(m.solver, UnsetSolver)
         m.solver = default_solver(traits)
@@ -186,6 +191,13 @@ function buildInternalModel(m::Model, traits=ProblemTraits(m);
     traits.nlp && return _buildInternalModel_nlp(m, traits)
 
     if traits.conic
+        # If there are semicontinuous/semi-integer variables, we will have to
+        # adjust the b vector below to construct a valid relaxation. This seems
+        # like a pretty marginal case, so let's punt on it for now.
+        if relaxation && any(x -> (x == :SemiCont || x == :SemiInt), m.colCat)
+            error("Relaxations of conic problem with semi-integer/semicontinuous variables are not currently supported.")
+        end
+
         # If the problem is conic then use only the objective
         # coefficients from prepProblemBounds
         f,_,_ = prepProblemBounds(m)
@@ -250,19 +262,37 @@ function buildInternalModel(m::Model, traits=ProblemTraits(m);
             end
 
             # Load the problem data into the model...
-            MathProgBase.loadproblem!(m.internalModel, A, m.colLower, m.colUpper, f, rowlb, rowub, m.objSense)
+            collb = copy(m.colLower)
+            colub = copy(m.colUpper)
+            if relaxation
+                for i in 1:m.numCols
+                    if m.colCat[i] in (:SemiCont,:SemiInt)
+                        collb[i] = min(0.0, collb[i])
+                        colub[i] = max(0.0, colub[i])
+                    end
+                end
+            end
+            MathProgBase.loadproblem!(m.internalModel, A, collb, colub, f, rowlb, rowub, m.objSense)
             # ... and add quadratic and SOS constraints separately
             addQuadratics(m)
-            addSOS(m)
+            if !relaxation
+                addSOS(m)
+            end
         end
         # Update solver callbacks, if any
-        registercallbacks(m)
+        if !relaxation
+            registercallbacks(m)
+        end
     end
 
     # Update the type of each variable
     if applicable(MathProgBase.setvartype!, m.internalModel, Symbol[])
-        colCats = vartypes_without_fixed(m)
-        MathProgBase.setvartype!(m.internalModel, colCats)
+        if relaxation
+            MathProgBase.setvartype!(m.internalModel, fill(:Cont, m.numCols))
+        else
+            colCats = vartypes_without_fixed(m)
+            MathProgBase.setvartype!(m.internalModel, colCats)
+        end
     elseif traits.int
         # Solver that do not implement anything other than continuous
         # variables do not need to implement this method, so throw an
@@ -273,7 +303,7 @@ function buildInternalModel(m::Model, traits=ProblemTraits(m);
     # Provide a primal solution to the solve, if the problem is integer
     # and the user has provided one.
     # TODO: change this so you can warm start continuous problems?
-    if traits.int && !all(isnan(m.colVal))
+    if !relaxation && traits.int && !all(isnan(m.colVal))
         if applicable(MathProgBase.setwarmstart!, m.internalModel, m.colVal)
             MathProgBase.setwarmstart!(m.internalModel, m.colVal)
         else

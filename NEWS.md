@@ -6,6 +6,7 @@ Unreleased
 
   * Julia 0.4.0 is the minimum required version for this release.
   * Fix for scoping semantics of index variables in sum{}. Index variables no longer leak into the surrounding scope.
+  * Addition of the ``solve(m::Model, relaxation=true)`` keyword argument to solve the standard continuous realaxation of model ``m``.
 
 Version 0.10.2 (September 28, 2015)
 -----------------------------------
