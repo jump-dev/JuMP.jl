@@ -170,6 +170,7 @@ function solve(m::Model; suppress_warnings=false,
         end
     end
 
+    # don't keep relaxed model in memory
     relaxation && (m.internalModelLoaded = false)
 
     # Return the solve status
