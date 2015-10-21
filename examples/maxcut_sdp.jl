@@ -30,7 +30,7 @@ function solve_maxcut_sdp(n, W)
     solve(m)
 
     # Cholesky the result
-    F = cholfact(getValue(X)[:,:], pivot=true)
+    F = cholfact(getValue(X)[:,:], :U, Val{true})
     V = (F[:P]*F[:L])'
 
     # Normalize columns
@@ -65,8 +65,7 @@ function test0()
          5.0 0.0]
     cut, cutval = solve_maxcut_sdp(n, W)
 
-    @assert cut[1] == +1.0
-    @assert cut[2] == -1.0
+    @assert cut[1] != cut[2]
 
     println("Solution for Graph 0 = $cutval")
     println(cut)
@@ -90,10 +89,8 @@ function test1()
          7.0 0.0 0.0 1.0;
          6.0 1.0 1.0 0.0]
     cut, cutval = solve_maxcut_sdp(n, W)
-    @assert cut[1] == -1.0
-    @assert cut[2] == +1.0
-    @assert cut[3] == +1.0
-    @assert cut[4] == +1.0
+    @assert (v = cut[2]) == cut[3] == cut[4]
+    @assert cut[1] != v
 
     println("Solution for Graph 1 = $cutval")
     println(cut)
@@ -117,10 +114,9 @@ function test2()
          9.0 0.0 0.0 1.0;
          0.0 9.0 1.0 0.0]
     cut, cutval = solve_maxcut_sdp(n, W)
-    @assert cut[1] == +1.0
-    @assert cut[2] == -1.0
-    @assert cut[3] == -1.0
-    @assert cut[4] == +1.0
+    @assert (v = cut[1]) == cut[4]
+    @assert (w = cut[2]) == cut[3]
+    @assert v != w
 
     println("Solution for Graph 2 = $cutval")
     println(cut)
