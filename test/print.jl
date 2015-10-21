@@ -556,17 +556,15 @@ facts("[print] User-created Array{Variable}") do
 
     v = [x,y,x]
     A = [x y; y x]
-    io_test(REPLMode,   v, "[x,y,x]\n")
-    io_test(IJuliaMode, v, "[x,y,x]\n")
+    io_test(REPLMode,   v, "[x,y,x]")
+    io_test(IJuliaMode, v, "[x,y,x]")
 
     io_test(REPLMode,   A, """
 2x2 Array{JuMP.Variable,2}:
  x  y
- y  x
-""")
+ y  x""")
     io_test(IJuliaMode, A, """
 2x2 Array{JuMP.Variable,2}:
  x  y
- y  x
-""")
+ y  x""")
 end
