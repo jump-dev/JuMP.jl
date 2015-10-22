@@ -381,6 +381,7 @@ exprToStr(n::Norm) = norm_str(REPLMode, n)
 #------------------------------------------------------------------------
 Base.print(io::IO, j::Union{JuMPContainer{Variable}, Array{Variable}}) = print(io, cont_str(REPLMode,j))
 Base.show( io::IO, j::Union{JuMPContainer{Variable}, Array{Variable}}) = print(io, cont_str(REPLMode,j))
+
 Base.writemime(io::IO, ::MIME"text/latex", j::Union{JuMPContainer{Variable},Array{Variable}}) =
     print(io, cont_str(IJuliaMode,j,mathmode=false))
 # Generic string converter, called by mode-specific handlers
@@ -388,6 +389,7 @@ Base.writemime(io::IO, ::MIME"text/latex", j::Union{JuMPContainer{Variable},Arra
 # Assumes that !isempty(j)
 _getmodel(j::Array{Variable}) = first(j).m
 _getmodel(j::JuMPContainer) = getmeta(j, :model)
+
 function cont_str(mode, j, sym::PrintSymbols)
     # Check if anything in the container
     if isempty(j)
@@ -396,6 +398,17 @@ function cont_str(mode, j, sym::PrintSymbols)
     end
 
     m = _getmodel(j)
+
+    # If this looks like a user-created Array, then defer to base printing
+    if !haskey(m.varData, j)
+        @assert isa(j, Array{Variable})
+        if ndims(j) == 1
+            return sprint((io,v) -> Base.show_vector(io, v, "[", "]"), j)
+        else
+            return sprint((io,X) -> Base.showarray(io, X), j)
+        end
+    end
+
     data = printdata(j)
 
     # 1. construct the part with variable name and indexing

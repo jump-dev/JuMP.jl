@@ -441,7 +441,7 @@ facts("[print] changing variable categories") do
     le, ge, fa = repl[:leq], repl[:geq], repl[:for_all]
     inset, dots = repl[:in], repl[:dots]
     infty, union = repl[:infty], repl[:union]
-    
+
     mod = Model()
     @defVar(mod, x[1:3])
     @defVar(mod, y[i=1:3,i:3])
@@ -547,4 +547,24 @@ facts("[print] Variable") do
     @fact    getName(a_v) --> "v[4,5,2,3,2,2,4]"
     io_test(REPLMode,   a_v, "v[4,5,2,3,2,2,4]")
     io_test(IJuliaMode, a_v, "v_{4,5,2,3,2,2,4}")
+end
+
+facts("[print] User-created Array{Variable}") do
+    m = Model()
+    @defVar(m, x)
+    @defVar(m, y)
+
+    v = [x,y,x]
+    A = [x y; y x]
+    io_test(REPLMode,   v, "[x,y,x]")
+    io_test(IJuliaMode, v, "[x,y,x]")
+
+    io_test(REPLMode,   A, """
+2x2 Array{JuMP.Variable,2}:
+ x  y
+ y  x""")
+    io_test(IJuliaMode, A, """
+2x2 Array{JuMP.Variable,2}:
+ x  y
+ y  x""")
 end
