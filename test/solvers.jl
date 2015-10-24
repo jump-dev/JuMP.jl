@@ -12,32 +12,30 @@
 # Should be run as part of runtests.jl
 #############################################################################
 
-# Detect solvers
-grb = isdir(Pkg.dir("Gurobi"))
-cpx = isdir(Pkg.dir("CPLEX"))
-mos = isdir(Pkg.dir("Mosek"))
-cbc = isdir(Pkg.dir("Cbc"))
-glp = isdir(Pkg.dir("GLPKMathProgInterface"))
-ipt = isdir(Pkg.dir("Ipopt"))
-nlo = isdir(Pkg.dir("NLopt"))
-kni = isdir(Pkg.dir("KNITRO"))
-eco = isdir(Pkg.dir("ECOS"))
-osl = isdir(Pkg.dir("CoinOptServices"))
-scs = isdir(Pkg.dir("SCS"))
-nlw = isdir(Pkg.dir("AmplNLWriter"))
-# Load them
-if grb; import Gurobi; end
-if cpx; import CPLEX; end
-if mos; import Mosek; end
-if cbc; import Cbc; import Clp; end
-if glp; import GLPKMathProgInterface; end
-if ipt; import Ipopt; end
-if nlo; import NLopt; end
-if kni; import KNITRO; end
-if eco; import ECOS; end
-if osl; import CoinOptServices; end
-if scs; import SCS; end
-if nlw; import AmplNLWriter; end
+function try_import(name::Symbol)
+    try
+        @eval import $name
+        return true
+    catch e
+        return false
+    end
+end
+
+# Load available solvers
+grb = try_import(:Gurobi)
+cpx = try_import(:CPLEX)
+mos = try_import(:Mosek)
+cbc = try_import(:Cbc)
+if cbc; import Clp; end
+glp = try_import(:GLPKMathProgInterface)
+ipt = try_import(:Ipopt)
+nlo = try_import(:NLopt)
+kni = try_import(:KNITRO)
+eco = try_import(:ECOS)
+osl = try_import(:CoinOptServices)
+scs = try_import(:SCS)
+nlw = try_import(:AmplNLWriter)
+
 # Create solver lists
 # LP solvers
 lp_solvers = Any[]
