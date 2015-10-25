@@ -17,12 +17,12 @@ function tryParseIdxSet(arg::Expr)
     return false, nothing, nothing
 end
 
-function parseIdxSet(arg::Expr, msg="Invalid loop condition")
+function parseIdxSet(arg::Expr)
     parse_done, idxvar, idxset = tryParseIdxSet(arg)
     if parse_done
         return idxvar, idxset
     end
-    error(msg)
+    error("Invalid syntax: $arg")
 end
 
 # addToExpression(ex::Number, c::Number) = ex + c

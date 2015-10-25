@@ -47,7 +47,7 @@ function buildrefsets(expr::Expr)
                 push!(idxpairs, IndexPair(idxvar, _idxset))
             end
         end
-        if !parse_done
+        if !parse_done # No index variable specified
             idxvar = gensym()
             idxset = esc(s)
             push!(idxpairs, IndexPair(nothing,s))
