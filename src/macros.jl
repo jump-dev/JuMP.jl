@@ -39,11 +39,15 @@ function buildrefsets(expr::Expr)
         end
     end
     for s in c.args
-        if isa(s,Expr) && (s.head == :(=) || s.head == :in)
-            idxvar = s.args[1]
-            idxset = esc(s.args[2])
-            push!(idxpairs, IndexPair(s.args[1],s.args[2]))
-        else
+        parse_done = false
+        if isa(s, Expr)
+            parse_done, idxvar, _idxset = tryParseIdxSet(s::Expr)
+            if parse_done
+                idxset = esc(_idxset)
+                push!(idxpairs, IndexPair(idxvar, _idxset))
+            end
+        end
+        if !parse_done
             idxvar = gensym()
             idxset = esc(s)
             push!(idxpairs, IndexPair(nothing,s))

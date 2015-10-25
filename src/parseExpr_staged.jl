@@ -3,7 +3,29 @@
 #  License, v. 2.0. If a copy of the MPL was not distributed with this
 #  file, You can obtain one at http://mozilla.org/MPL/2.0/.
 
-#addToExpression(ex::Number, c::Number) = ex + c
+# `a in b` is a comparison after JuliaLang/julia#13078
+const in_is_compare = VERSION >= v"0.5.0-dev+901"
+
+function tryParseIdxSet(arg::Expr)
+    if arg.head === :(=) || (!in_is_compare && arg.head === :in)
+        @assert length(arg.args) == 2
+        return true, arg.args[1], arg.args[2]
+    elseif (in_is_compare && arg.head === :comparison &&
+            length(arg.args) == 3 && arg.args[2] === :in)
+        return true, arg.args[1], arg.args[3]
+    end
+    return false, nothing, nothing
+end
+
+function parseIdxSet(arg::Expr, msg="Invalid loop condition")
+    parse_done, idxvar, idxset = tryParseIdxSet(arg)
+    if parse_done
+        return idxvar, idxset
+    end
+    error(msg)
+end
+
+# addToExpression(ex::Number, c::Number) = ex + c
 
 addToExpression(ex::Number, c::Number, x::Number) = ex + c*x
 
@@ -299,10 +321,11 @@ function parseSum(x::Expr, aff::Symbol, lcoeffs, rcoeffs, newaff)
             end
         end
         for level in length(x.args):-1:4
-            idxvar = esc(x.args[level].args[1])
+            _idxvar, idxset = parseIdxSet(x.args[level]::Expr)
+            idxvar = esc(_idxvar)
             code = :(let
                 $(localvar(idxvar))
-                for $idxvar in $(esc(x.args[level].args[2]))
+                for $idxvar in $(esc(idxset))
                     $code
                 end
             end)
@@ -310,10 +333,11 @@ function parseSum(x::Expr, aff::Symbol, lcoeffs, rcoeffs, newaff)
     else # no condition
         inneraff, code = parseExpr(x.args[2], aff, lcoeffs, rcoeffs, aff)
         for level in length(x.args):-1:3
-            idxvar = esc(x.args[level].args[1])
+            _idxvar, idxset = parseIdxSet(x.args[level]::Expr)
+            idxvar = esc(_idxvar)
             code = :(let
                 $(localvar(idxvar))
-                for $idxvar in $(esc(x.args[level].args[2]))
+                for $idxvar in $(esc(idxset))
                     $code
                 end
             end)
@@ -321,12 +345,14 @@ function parseSum(x::Expr, aff::Symbol, lcoeffs, rcoeffs, newaff)
         len = :len
         # precompute the number of elements to add
         # this is unncessary if we're just summing constants
-        preblock = :($len += length($(esc(x.args[length(x.args)].args[2]))))
+        _, lastidxset = parseIdxSet(x.args[length(x.args)]::Expr)
+        preblock = :($len += length($(esc(lastidxset))))
         for level in (length(x.args)-1):-1:3
-            idxvar = esc(x.args[level].args[1])
+            _idxvar, idxset = parseIdxSet(x.args[level]::Expr)
+            idxvar = esc(_idxvar)
             preblock = :(let
                 $(localvar(idxvar))
-                for $idxvar in $(esc(x.args[level].args[2]))
+                for $idxvar in $(esc(idxset))
                     $preblock
                 end
             end)
@@ -363,10 +389,11 @@ function parseNorm(normp::Symbol, x::Expr, aff::Symbol, lcoeffs, rcoeffs, newaff
             end
         end
         for level in length(x.args):-1:4
-            idxvar = esc(x.args[level].args[1])
+            _idxvar, idxset = parseIdxSet(x.args[level]::Expr)
+            idxvar = esc(_idxvar)
             code = :(let
                 $(localvar(idxvar))
-                for $idxvar in $(esc(x.args[level].args[2]))
+                for $idxvar in $(esc(idxset))
                     $code
                 end
             end)
@@ -375,18 +402,20 @@ function parseNorm(normp::Symbol, x::Expr, aff::Symbol, lcoeffs, rcoeffs, newaff
     else # no condition
         inneraff, code = parseExprToplevel(x.args[2], :normaff)
         code = :(normaff = 0.0; $code; push!($normexpr, $inneraff))
-        preblock = :($len += length($(esc(x.args[length(x.args)].args[2]))))
+        _, lastidxset = parseIdxSet(x.args[length(x.args)]::Expr)
+        preblock = :($len += length($(esc(lastidxset))))
         for level in length(x.args):-1:3
-            idxvar = esc(x.args[level].args[1])
+            _idxvar, idxset = parseIdxSet(x.args[level]::Expr)
+            idxvar = esc(_idxvar)
             code = :(let
                 $(localvar(idxvar))
-                for $idxvar in $(esc(x.args[level].args[2]))
+                for $idxvar in $(esc(idxset))
                     $code
                 end
             end)
             preblock = :(let
                 $(localvar(idxvar))
-                for $idxvar in $(esc(x.args[level].args[2]))
+                for $idxvar in $(esc(idxset))
                     $preblock
                 end
             end)
