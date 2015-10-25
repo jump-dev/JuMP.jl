@@ -11,23 +11,37 @@ const geq = JuMP.repl[:geq]
 const  eq = JuMP.repl[:eq]
 const Vert = JuMP.repl[:Vert]
 const sub2 = JuMP.repl[:sub2]
+# `a in b` is a comparison after JuliaLang/julia#13078
+const in_is_compare = VERSION >= v"0.5.0-dev+901"
 
 facts("[macros] Check Julia expression parsing") do
-    sumexpr = :(sum{x[i,j] * y[i,j], i = 1:N, j = 1:M; i != j})
+    sumexpr = :(sum{x[i,j] * y[i,j], i = 1:N, j in 1:M; i != j})
     @fact sumexpr.head --> :curly
     @fact length(sumexpr.args) --> 5
     @fact sumexpr.args[1] --> :sum
     @fact sumexpr.args[2].head --> :parameters
     @fact sumexpr.args[3] --> :(x[i,j] * y[i,j])
     @fact sumexpr.args[4].head --> :(=)
-    @fact sumexpr.args[5].head --> :(=)
+    if in_is_compare
+        @fact sumexpr.args[5].head --> :comparison
+        @fact length(sumexpr.args[5].args) --> 3
+        @fact sumexpr.args[5].args[2] --> :in
+    else
+        @fact sumexpr.args[5].head --> :in
+    end
 
-    sumexpr = :(sum{x[i,j] * y[i,j], i = 1:N, j = 1:M})
+    sumexpr = :(sum{x[i,j] * y[i,j], i in 1:N, j = 1:M})
     @fact sumexpr.head --> :curly
     @fact length(sumexpr.args) --> 4
     @fact sumexpr.args[1] --> :sum
     @fact sumexpr.args[2] --> :(x[i,j] * y[i,j])
-    @fact sumexpr.args[3].head --> :(=)
+    if in_is_compare
+        @fact sumexpr.args[3].head --> :comparison
+        @fact length(sumexpr.args[3].args) --> 3
+        @fact sumexpr.args[3].args[2] --> :in
+    else
+        @fact sumexpr.args[3].head --> :in
+    end
     @fact sumexpr.args[4].head --> :(=)
 end
 
@@ -77,9 +91,9 @@ facts("[macros] sum{}") do
     @defVar(m, x[1:3,1:3])
     @defVar(m, y)
     C = [1 2 3; 4 5 6; 7 8 9]
-    @addConstraint(m, sum{ C[i,j]*x[i,j], i = 1:2, j = 2:3 } <= 1)
+    @addConstraint(m, sum{ C[i,j]*x[i,j], i in 1:2, j = 2:3 } <= 1)
     @fact conToStr(m.linconstr[end]) --> "2 x[1,2] + 3 x[1,3] + 5 x[2,2] + 6 x[2,3] $leq 1"
-    @addConstraint(m, sum{ C[i,j]*x[i,j], i = 1:3, j = 1:3; i != j} == y)
+    @addConstraint(m, sum{ C[i,j]*x[i,j], i = 1:3, j in 1:3; i != j} == y)
     @fact conToStr(m.linconstr[end]) --> "2 x[1,2] + 3 x[1,3] + 4 x[2,1] + 6 x[2,3] + 7 x[3,1] + 8 x[3,2] - y $eq 0"
 
     @addConstraint(m, sum{ C[i,j]*x[i,j], i = 1:3, j = 1:i} == 0);
@@ -98,7 +112,7 @@ facts("[macros] Problem modification") do
     @defVar(m, x[1:3,1:3])
     C = [1 2 3; 4 5 6; 7 8 9]
 
-    @addConstraint(m, sum{ x[i,j]*(C[i,j]-1), i = 1:3, j = 1:3; i != j} == 0)
+    @addConstraint(m, sum{ x[i,j]*(C[i,j]-1), i in 1:3, j = 1:3; i != j} == 0)
     @fact conToStr(m.linconstr[end]) --> "x[1,2] + 2 x[1,3] + 3 x[2,1] + 5 x[2,3] + 6 x[3,1] + 7 x[3,2] $eq 0"
 
     con = @addConstraint(m, sum{ C[i,j]*x[i,j], i = 1:3, j = 1:3; i != j} == 0)
@@ -175,7 +189,7 @@ facts("[macros] Three argument @addConstraint") do
     @addConstraint(m, c, x[4] - y[4] == 1)
     @fact conToStr(m.linconstr[c.idx]) --> "x[4] - y[4] $eq 1"
 
-    @addConstraint(m, d[i=1:5,j=6:-2:2], x[i] - y[j] == 2)
+    @addConstraint(m, d[i in 1:5,j=6:-2:2], x[i] - y[j] == 2)
     @fact conToStr(m.linconstr[d[4,4].idx]) --> "x[4] - y[4] $eq 2"
 
     @addConstraint(m, q[i=1:5], x[i]^2 == 1)
@@ -308,7 +322,7 @@ end
 facts("[macros] @defExpr") do
     model = Model()
     @defVar(model, x[1:3,1:3])
-    @defExpr(expr, sum{i*x[i,j] + j, i=1:3,j=1:3})
+    @defExpr(expr, sum{i*x[i,j] + j, i=1:3,j in 1:3})
     @fact affToStr(expr) --> "x[1,1] + x[1,2] + x[1,3] + 2 x[2,1] + 2 x[2,2] + 2 x[2,3] + 3 x[3,1] + 3 x[3,2] + 3 x[3,3] + 18"
 
     @fact_throws @defExpr(blah[i=1:3], x[i,1]^2)
@@ -348,9 +362,9 @@ end
 facts("[macros] Norm parsing") do
     model = Model()
     @defVar(model, x[1:2,1:2])
-    @addConstraint(model, -2norm2{x[i,j], i=1:2, j=1:2} + x[1,2] >= -1)
-    @addConstraint(model, -2norm2{x[i,j], i=1:2, j=1:2; iseven(i+j)} + x[1,2] >= -1)
-    @addConstraint(model, 1 >= 2*norm2{x[i,1],i=1:2})
+    @addConstraint(model, -2norm2{x[i,j], i in 1:2, j=1:2} + x[1,2] >= -1)
+    @addConstraint(model, -2norm2{x[i,j], i=1:2, j in 1:2; iseven(i+j)} + x[1,2] >= -1)
+    @addConstraint(model, 1 >= 2*norm2{x[i,1], i in 1:2})
     @fact conToStr(model.socconstr[1]) --> "2.0 $Vert[x[1,1],x[1,2],x[2,1],x[2,2]]$Vert$sub2 $leq x[1,2] + 1"
     @fact conToStr(model.socconstr[2]) --> "2.0 $Vert[x[1,1],x[2,2]]$Vert$sub2 $leq x[1,2] + 1"
     @fact conToStr(model.socconstr[3]) --> "2.0 $Vert[x[1,1],x[2,1]]$Vert$sub2 $leq 1"
