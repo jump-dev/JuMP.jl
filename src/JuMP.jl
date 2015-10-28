@@ -8,11 +8,12 @@
 # See http://github.com/JuliaOpt/JuMP.jl
 #############################################################################
 
-isdefined(Base, :__precompile__) && __precompile__()
+__precompile__()
 
 module JuMP
 
 importall Base.Operators
+using Base: MulFun, AddFun, SubFun, LDivFun, RDivFun
 
 import MathProgBase
 

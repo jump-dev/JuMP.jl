@@ -465,7 +465,7 @@ module TestHelper # weird scoping behavior with FactCheck...
         return x
     end
 
-    vec_eq(x,y) = vec_eq([x;], [y;])
+    vec_eq(x,y) = vec_eq(convert(Array, [x;]), convert(Array, [y;]))
 
     function vec_eq(x::Array, y::Array)
         size(x) == size(y) || return false
@@ -575,6 +575,14 @@ context("Vectorized arithmetic") do
                                      x[2] + 3x[3]]) --> true
 
     @fact TestHelper.vec_eq(@defExpr(A*x/2), A*x/2) --> true
+
+    x2 = x[1:2]
+    Xcov = [x[1]^2    x[1]*x[2];
+            x[1]*x[2] x[2]^2]
+    @fact TestHelper.vec_eq(x2 .* x2', Xcov) --> true
+
+    X = reshape(x2, 2, 1)
+    @fact TestHelper.vec_eq(X * X', Xcov) --> true
 end
 
 context("Dot-ops") do
