@@ -738,3 +738,48 @@ facts("[model] Test getValue on OneIndexedArrays") do
     @fact typeof(x) --> Vector{Variable}
     @fact typeof(getValue(x)) --> Vector{Float64}
 end
+
+facts("[model] Relaxation keyword argument to solve") do
+    m = Model()
+    @defVar(m, 1.5 <= y <= 2, Int)
+    @defVar(m, z, Bin)
+    @defVar(m, 0.5 <= w <= 1.5, Int)
+    @defVar(m, 1 <= v <= 2)
+
+    @setObjective(m, Min, y + z + w + v)
+
+    @fact solve(m, relaxation=true) --> :Optimal
+    @fact getValue(y) --> 1.5
+    @fact getValue(z) --> 0
+    @fact getValue(w) --> 0.5
+    @fact getValue(v) --> 1
+    @fact getObjectiveValue(m) --> 1.5 + 0 + 0.5 + 1
+
+    @fact solve(m) --> :Optimal
+    @fact getValue(y) --> 2
+    @fact getValue(z) --> 0
+    @fact getValue(w) --> 1
+    @fact getValue(v) --> 1
+    @fact getObjectiveValue(m) --> 2 + 0 + 1 + 1
+
+    @defVar(m, 1 <= x <= 2, SemiCont)
+    @defVar(m, -2 <= t <= -1, SemiInt)
+
+    addSOS1(m, [x, 2y, 3z, 4w, 5v, 6t])
+    @setObjective(m, Min, x + y + z + w + v - t)
+
+    @fact solve(m, relaxation=true) --> :Optimal
+
+    @fact getValue(x) --> 0
+    @fact getValue(y) --> 1.5
+    @fact getValue(z) --> 0
+    @fact getValue(w) --> 0.5
+    @fact getValue(v) --> 1
+    @fact getValue(t) --> 0
+    @fact getObjectiveValue(m) --> 0 + 1.5 + 0 + 0.5 + 1 + 0
+end
+
+facts("[model] Unrecognized keyword argument to solve") do
+    m = Model()
+    @fact_throws solve(m, this_should_throw=true)
+end

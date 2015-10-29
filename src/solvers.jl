@@ -62,6 +62,8 @@ function solve(m::Model; suppress_warnings=false,
         return m.solvehook(m; suppress_warnings=suppress_warnings, kwargs...)
     end
 
+    isempty(kwargs) || error("Unrecognized keyword arguments $kwargs")
+
     # Clear warning counters
     m.getvalue_counter = 0
     m.operator_counter = 0
