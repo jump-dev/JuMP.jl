@@ -62,7 +62,7 @@ function solve(m::Model; suppress_warnings=false,
         return m.solvehook(m; suppress_warnings=suppress_warnings, kwargs...)
     end
 
-    isempty(kwargs) || error("Unrecognized keyword arguments $kwargs")
+    isempty(kwargs) || error("Unrecognized keyword arguments: $(join([k[1] for k in kwargs], ", "))")
 
     # Clear warning counters
     m.getvalue_counter = 0
