@@ -786,3 +786,8 @@ facts("[model] Relaxation keyword argument to solve") do
     @fact getValue(t) --> 0
     @fact getObjectiveValue(m) --> 0 + 1.5 + 0 + 0.5 + 1 + 0
 end
+
+facts("[model] Unrecognized keyword argument to solve") do
+    m = Model()
+    @fact_throws solve(m, this_should_throw=true)
+end
