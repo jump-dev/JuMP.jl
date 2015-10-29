@@ -1,0 +1,4 @@
+To build:
+1) Get Boostrap 3, e.g. http://getbootstrap.com/getting-started/#download
+2) Install Mustache.jl
+3) julia build.jl

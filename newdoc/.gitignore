@@ -1,0 +1,5 @@
+css
+js
+fonts
+*.html
+!templates/*.html
