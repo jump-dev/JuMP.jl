@@ -9,7 +9,7 @@ This guide will briefly guide you through installing Julia, JuMP and[a] solver[s
 Getting Julia
 ^^^^^^^^^^^^^
 
-At the time of writing this documentation the latest release of Julia is version ``0.3``, which is the version required by JuMP. You can easily build from source on OS X and Linux, but the binaries will work well for most people.
+At the time of writing this documentation the latest release of Julia is version ``0.4``, which is the version required by JuMP. You can easily build from source on OS X and Linux, but the binaries will work well for most people.
 
 Download links and more detailed instructions are available on the `Julia website <http://julialang.org>`_.
 
