@@ -37,6 +37,8 @@ function gencurlyloop(x::Expr, code; escape=false)
 end
 
 
+# `a in b` is a comparison after JuliaLang/julia#13078
+const in_is_compare = VERSION >= v"0.5.0-dev+901"
 
 function quoteTree(x::Expr, datalist::Dict, iterstack, prefix, parameters = [], justrename::Bool=false)
     if isexpr(x, :call)
@@ -74,11 +76,19 @@ function quoteTree(x::Expr, datalist::Dict, iterstack, prefix, parameters = [], 
         push!(code.args,quoteTree(x.args[idxstart-1],datalist,iterstack,prefix,parameters,justrename))
         # store iteration sets
         for ex in x.args[end:-1:idxstart]
+            ex = ex::Expr
             pop!(iterstack)
-            @assert isexpr(ex,:(=)) || isexpr(ex,:in)
-            #itrset = symbol(string("iterset",string(gensym())))
-            rhs = quoteTree(ex.args[2], datalist, iterstack, prefix, parameters, justrename)
-            push!(code.args, :(Expr(:(=), $(quot(ex.args[1])), $rhs)))
+            arg1, arg2 = if isexpr(ex, :(=)) || (!in_is_compare &&
+                                                 isexpr(ex, :in))
+                ex.args[1], ex.args[2]
+            elseif in_is_compare && isexpr(ex, :comparison)
+                @assert length(ex.args) == 3 && ex.args[2] === :in
+                ex.args[1], ex.args[3]
+            end
+            # itrset = symbol(string("iterset", string(gensym())))
+            rhs = quoteTree(arg2, datalist, iterstack, prefix,
+                            parameters, justrename)
+            push!(code.args, :(Expr(:(=), $(quot(arg1)), $rhs)))
         end
         return code
     elseif isexpr(x, :ref)
