@@ -72,10 +72,10 @@ end
 
 ### Special ordered sets (SOS)
 
-*Special ordered sets* are a different way to express constraints to integer solvers. They can be expressed in other ways, but if provided explicitly as an SOS then the solver *may* be able to solve the problem more efficiently. For more information about SOS, see the [`lpsolve` documentation](http://lpsolve.sourceforge.net/5.5/SOS.htm). There are two types of SOS constraint that are supported by JuMP. If a solver doesn't support SOS constraints, then the user should manually the problem, using constraints and possibly auxiliary variables.
+*Special ordered sets* are a different way to express constraints to integer solvers. They can be expressed in other ways, but if provided explicitly as an SOS then the solver *may* be able to solve the problem more efficiently. For more information about SOS, see the [`lpsolve` documentation](http://lpsolve.sourceforge.net/5.5/SOS.htm). There are two types of SOS constraint that are supported by JuMP. If a solver doesn't support SOS constraints then the user should manually reformulate using constraints and possibly auxiliary variables. Each variable in the set has a *weight*, and solvers expect the weights to be unique. The weights on the variables determine the ordering. If there is no natural weighting/ordering on the variables, an SOS constraint is probably unnecessary.
 
 ##### SOS Type 1
-An SOS Type 1 constraint says that, of the variables contained in the set, at most one may be non-zero. Each variable should have a *weight*, and solvers may expect the weights to be unique. If there is no natural weighting on the variables, an SOS Type 1 constraint is probably unnecessary.
+An SOS Type 1 constraint says that, of the variables contained in the set, at most one may be non-zero. Weights are provided as the coefficients of variables.
 ```julia
 @defVar(m, x[1:5], Bin)
 addSOS1(m, [i*x[i] for i in 1:5])
@@ -84,7 +84,7 @@ addSOS1(m, [i*x[i] for i in 1:5])
 ```
 
 ##### SOS Type 2
-An SOS Type 2 constraint says that, of the variables contained in the set, no more than two adjacent (in the order) variables may be non-zero. A weighting should be provided, as in SOS Type 1.
+An SOS Type 2 constraint says that, of the variables contained in the set, no more than two adjacent (in the order) variables may be non-zero.
 ```julia
 N = 10
 @defVar(m, x[1:N], Bin)
