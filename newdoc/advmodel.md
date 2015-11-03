@@ -95,8 +95,49 @@ for i in 1:N, j in i+2:N
 end
 ```
 
-### Building up expressions
+### Building up expressions manually
 
+Some complex models can be difficult to express in a single expression, or have repeated components that appear in multiple places. For example, consider a stylized inventory control problem, with `T` time stages, where we have demand `d[t]` (data) and stock orders `x[t]` (decisons):
+```julia
+T = 10
+demand = rand(50:250, T)
+m = Model()
+@defVar(m, x[1:T] >= 0)
+```
+In inventory control problems we often want to use the total inventory at each time period in multiple places. For example, we might put it in the objective function to penalize holding too much stock, or in a constraint to ensure we never have a negative amount of inventory. The total inventory at the end of time period `t` is the sum of stock ordered up to that time, less the sum of demand up to that time. To manually express the objective and constraint we just described, we could write our model as
+```julia
+holdingcost = rand(1:5, T)
+@setObjective(m, Min, sum{holdingcost[t]*sum{x[s]-demand[s], s=1:t}, t=1:T})
+for t in 1:T
+    @addConstraint(m, sum{x[s]-demand[s], s=1:t} >= 0)
+end
+```
+Alternatively, we could avoid repeating ourselves by creating an expression. There are three general ways to do this.
+1. Define auxiliary variables and fix their values using equality constraints. How this is handled at the solver level varies - the solver may eliminate the auxiliaries in presolve, or leave it as is.
+2. Use the `@defExpr` macro. The `@defExpr` macro creates expressions much as `@defVar` creates variables. Expressions can be indexed, and the expression itself can depend on the index. Unlike `@defExpr`, we do not need to pass the model as the first argument.
+```julia
+@defExpr(totalinv[t=1:T], sum{x[s]-demand[s], s=1:t})
+@setObjective(m, Min, sum{holdingcost[t]*totalinv[t], t=1:T})
+for t in 1:T
+    @addConstraint(m, totalinv[t] >= 0)
+end
+```
+3. Manually constructing the *affine expression*. Internally, JuMP stores a combination of coefficients and variables as an `AffExpr`. Users can manually create, construct, and combine `AffExpr`s. However, in general this should be avoided, as it can be far less efficient than use `@defExpr` for larger expressions. Operators like `+` and `*` can be used on expressions, but a more efficient method is to use `push!` and `append!`, e.g.,
+```julia
+@defVar(m, x[1:5])
+foo = AffExpr()     # 0 (empty expression)
+foo += x[1]         # 1 x[1]
+bar = 5 * x[5]      # 5 x[5]
+# append!(foo::AffExpr, bar::AffExpr)
+append!(foo, bar)   # foo = 1 x[1] + 5 x[5]
+# push!(foo::AffExpr, c::Number, x::Variable)
+push!(foo, 3, x[3]) # foo = 1 x[1] + 3 x[3] + 5 x[5]
+totalinv = zeros(AffExpr, T)
+totalinv = x[1] - demand[1]
+for t in 2:T
+    totalinv[t] = total[t-1] + x[t] - demand[t]
+end
+```
 
 ### TODO/IDEAS
 Performance
