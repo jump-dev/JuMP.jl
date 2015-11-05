@@ -139,7 +139,7 @@ Methods
 * ``getDual(x)`` - Get the reduced cost of this variable in the solution. Similar behavior to ``getValue`` for indexable variables.
 
 .. note::
-    The ``getValue`` function always returns a floating-point value, even when a variable is constrained to take integer values, as most solvers only guarantee integrality up to a particular numerical tolerance. The built-in ``iround`` function should be used to obtain integer values, e.g., by calling ``iround(getValue(x))``.
+    The ``getValue`` function always returns a floating-point value, even when a variable is constrained to take integer values, as most solvers only guarantee integrality up to a particular numerical tolerance. The built-in ``round`` function should be used to obtain integer values, e.g., by calling ``round(Integer, getValue(x))``.
 
 
 **Names**
