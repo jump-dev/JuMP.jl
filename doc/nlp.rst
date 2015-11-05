@@ -193,12 +193,15 @@ For example::
 
 When querying derivatives, ``cons2`` will appear first, because it is the first linear constraint, then ``cons1``, because it is the first quadratic constraint, then ``cons3``, because it is the first nonlinear constraint. Note that for one-sided nonlinear constraints, JuMP subtracts any values on the right-hand side when computing expression. In other words, one-sided linear constraints are always transformed to have a right-hand side of zero.
 
+The ``getConstraintBounds(m::Model)`` method returns the lower and upper bounds
+of all the constraints in the model, concatenated in the order discussed above.
+
 This method of querying derivatives directly from a JuMP model is convenient for
 interacting with the model in a structured way, e.g., for accessing derivatives of
 specific variables. For example, in statistical maximum likelihood estimation problems,
 one is often interested in the Hessian matrix at the optimal solution,
 which can be queried using the ``JuMPNLPEvaluator``.
 
-However, the examples above are *not* a convenient way to access the NLP `standard-form <http://mathprogbasejl.readthedocs.org/en/latest/nlp.html>`_ representation of a JuMP model, because there is no direct way to access the vector of constraint upper and lower bounds. In this case, you should implement an ``AbstractMathProgSolver`` and corresponding ``AbstractMathProgModel`` type following the MathProgBase nonlinear interface, collecting the problem data through the ``MathProgBase.loadnonlinearproblem!`` `method <http://mathprogbasejl.readthedocs.org/en/latest/nlp.html#loadnonlinearproblem!>`_. This approach has the advantage of being nominally independent of JuMP itself in terms of problem format. You may use the ``buildInternalModel`` method to ask JuMP to populate the "solver" without calling ``optimize!``.
+If you are writing a "solver", we *highly encourage* use of the `MathProgBase nonlinear interface <http://mathprogbasejl.readthedocs.org/en/latest/nlp.html>`_ over querying derivatives using the above methods. These methods are provided for convenience but do not fully integrate with JuMP's solver infrastructure. In particular, they do not allow users to specify your solver to the ``Model()`` constructor nor to call it using ``solve()`` nor to populate the solution back into the model. Use of the MathProgBase interface also has the advantage of being independent of JuMP itself; users of MathProgBase solvers are free to implement their own evaluation routines instead of expressing their model in JuMP.  You may use the ``buildInternalModel`` method to ask JuMP to populate the "solver" without calling ``optimize!``.
 
 .. [1] Dunning, Huchette, and Lubin, "JuMP: A Modeling Language for Mathematical Optimization", `arXiv <http://arxiv.org/abs/1508.01982>`_.

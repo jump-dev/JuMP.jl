@@ -804,6 +804,50 @@ function conicconstraintdata(m::Model)
     A, b, var_cones, con_cones
 end
 
+getConstraintBounds(m::Model) = getConstraintBounds(m, ProblemTraits(m))
+
+function getConstraintBounds(m::Model,traits::ProblemTraits)
+
+    if traits.conic
+        error("Not implemented for conic problems")
+    elseif traits.sos
+        error("Not implemented for SOS constraints")
+    end
+
+    linobj, linrowlb, linrowub = prepProblemBounds(m)
+
+    quadrowlb = Float64[]
+    quadrowub = Float64[]
+    for c::QuadConstraint in m.quadconstr
+        if c.sense == :(<=)
+            push!(quadrowlb, -Inf)
+            push!(quadrowub, 0.0)
+        elseif c.sense == :(>=)
+            push!(quadrowlb, 0.0)
+            push!(quadrowub, Inf)
+        else
+            error("Unrecognized quadratic constraint sense $(c.sense)")
+        end
+    end
+
+    nlrowlb = Float64[]
+    nlrowub = Float64[]
+
+    if traits.nlp
+        nldata::NLPData = m.nlpdata
+        for c in nldata.nlconstr
+            push!(nlrowlb, c.lb)
+            push!(nlrowub, c.ub)
+        end
+    end
+
+    lb = [linrowlb;quadrowlb;nlrowlb]
+    ub = [linrowub;quadrowub;nlrowub]
+
+    return lb, ub
+
+end
+
 
 # returns (unsorted) column indices and coefficient terms for merged vector
 # assume that v is zero'd
