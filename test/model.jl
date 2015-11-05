@@ -350,7 +350,7 @@ facts("[model] Test model copying") do
     @defVar(source, z[1:3])
     @defVar(source, w[2:4]) # JuMPArray
     @defVar(source, v[[:red],1:3]) # JuMPDict
-    setSolveHook(source, m -> 1)
+    setSolveHook(source, m -> :Optimal)
 
     # uncomment when NLP copying is implemented
     # @addNLConstraint(source, c[k=1:3], x^2 + y^3 * sin(x+k*y) >= 1)
@@ -391,7 +391,7 @@ facts("[model] Test model copying") do
     @fact all(t -> isequal(t[1],t[2]), zip(dest.sdpconstr[1].terms, xx*ones(3,3) - eye(3,3))) --> true
     @fact all(t -> isequal(t[1],t[2]), zip(dest.sdpconstr[2].terms, convert(Matrix{AffExpr}, -ones(3,3)))) --> true
 
-    @fact dest.solvehook(dest) --> 1
+    @fact dest.solvehook(dest) --> :Optimal
 
     @fact Set(collect(keys(dest.varDict))) --> Set([:x,:y,:z,:w,:v])
     @fact isequal(dest.varDict[:x], Variable(dest, 1)) --> true
@@ -704,7 +704,7 @@ facts("[model] Setting solve hook") do
     function solvehook(m::Model; kwargs...)
         dummy[1] += 1
         append!(kwarglist, kwargs)
-        nothing
+        :DidntDoAnything
     end
     setSolveHook(m, solvehook)
     solve(m)

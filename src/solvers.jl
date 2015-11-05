@@ -61,7 +61,7 @@ function solve(m::Model; suppress_warnings=false,
     # If the user or an extension has provided a solve hook, call
     # that instead of solving the model ourselves
     if !ignore_solve_hook
-        return m.solvehook(m; suppress_warnings=suppress_warnings, kwargs...)
+        return m.solvehook(m; suppress_warnings=suppress_warnings, kwargs...)::Symbol
     end
 
     isempty(kwargs) || error("Unrecognized keyword arguments: $(join([k[1] for k in kwargs], ", "))")
@@ -86,7 +86,7 @@ function solve(m::Model; suppress_warnings=false,
 
     # Solve the problem
     MathProgBase.optimize!(m.internalModel)
-    stat = MathProgBase.status(m.internalModel)
+    stat::Symbol = MathProgBase.status(m.internalModel)
 
     # Extract solution from the solver
     numRows, numCols = length(m.linconstr), m.numCols
