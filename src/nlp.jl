@@ -498,9 +498,8 @@ function MathProgBase.constr_expr(d::JuMPNLPEvaluator,i::Integer)
     end
 end
 
-function _buildInternalModel_nlp(m::Model, traits)
 
-    @assert isempty(m.sdpconstr) && isempty(m.socconstr)
+function _buildInternalModel_nlp(m::Model, traits)
 
     linobj, linrowlb, linrowub = prepProblemBounds(m)
 
@@ -513,31 +512,12 @@ function _buildInternalModel_nlp(m::Model, traits)
         nldata.evaluator = d
     end
 
-    numConstr = length(m.linconstr) + length(m.quadconstr) + length(nldata.nlconstr)
-
-    nlrowlb = Float64[]
-    nlrowub = Float64[]
-    for c in nldata.nlconstr
-        push!(nlrowlb, c.lb)
-        push!(nlrowub, c.ub)
-    end
-    quadrowlb = Float64[]
-    quadrowub = Float64[]
-    for c::QuadConstraint in d.m.quadconstr
-        if c.sense == :(<=)
-            push!(quadrowlb, -Inf)
-            push!(quadrowub, 0.0)
-        elseif c.sense == :(>=)
-            push!(quadrowlb, 0.0)
-            push!(quadrowub, Inf)
-        else
-            error("Unrecognized quadratic constraint sense $(c.sense)")
-        end
-    end
+    nlp_lb, nlp_ub = getConstraintBounds(m)
+    numConstr = length(nlp_lb)
 
     m.internalModel = MathProgBase.model(m.solver)
 
-    MathProgBase.loadnonlinearproblem!(m.internalModel, m.numCols, numConstr, m.colLower, m.colUpper, [linrowlb;quadrowlb;nlrowlb], [linrowub;quadrowub;nlrowub], m.objSense, d)
+    MathProgBase.loadnonlinearproblem!(m.internalModel, m.numCols, numConstr, m.colLower, m.colUpper, nlp_lb, nlp_ub, m.objSense, d)
     if traits.int
         if applicable(MathProgBase.setvartype!, m.internalModel, m.colCat)
             MathProgBase.setvartype!(m.internalModel, vartypes_without_fixed(m))

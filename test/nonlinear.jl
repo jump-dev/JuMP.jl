@@ -435,6 +435,9 @@ function test_nl_mpb()
     @addConstraint(m, 2x+y <= 0)
     @addConstraint(m, -5 <= 2x+y <= 5)
     #solve(m) # FIXME maybe?
+    lb,ub = getConstraintBounds(m)
+    @fact lb --> [-Inf,-Inf,-5.0]
+    @fact ub --> [1.0,-0.0,5.0]
 
     @addConstraint(m, 2x^2+y >= 2)
     @addNLConstraint(m, sin(x)*cos(y) == 5)
@@ -444,6 +447,10 @@ function test_nl_mpb()
 
     @setNLObjective(m, Min, x^y)
     solve(m)
+
+    lb,ub = getConstraintBounds(m)
+    @fact lb --> [-Inf,-Inf,-5.0,0.0,0.0,0.0,0.0,-0.5]
+    @fact ub --> [1.0,-0.0,5.0,Inf,0.0,0.0,0.0,0.5]
 end
 test_nl_mpb()
 
