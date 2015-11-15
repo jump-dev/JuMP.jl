@@ -198,6 +198,14 @@ end
 @Base.deprecate getNumVars(m::Model) MathProgBase.numvar(m)
 @Base.deprecate getNumConstraints(m::Model) MathProgBase.numlinconstr(m)
 
+function getObjective(m::Model)
+    traits = ProblemTraits(m)
+    if traits.nlp
+        error("getObjective() not supported for nonlinear models")
+    end
+    return m.obj
+end
+
 getObjectiveValue(m::Model) = m.objVal
 getObjectiveSense(m::Model) = m.objSense
 function setObjectiveSense(m::Model, newSense::Symbol)

@@ -232,6 +232,7 @@ context("With solver $(typeof(solver))") do
     @fact getValue(r)[4]    --> roughly(0.0, TOL)
     @fact getValue(r)[5]    --> roughly(0.0, TOL)
     @fact getValue(r)[6]    --> roughly(6.0, TOL)
+    @fact getObjective(modA).aff --> ((x + y)/2.0 + 3.0)/3.0 + z + r[3]
 end # solver context
 end # loop over solvers
 end # facts block
