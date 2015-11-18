@@ -24,7 +24,7 @@
 # D(a,b) is the distance in the metric space.
 #
 # Any embedding can be characterized by its Gram matrix Q, which is PSD,
-# and ||f(a)-f(b)||^2 = Q[a,a] + Q[b,b] - 2Q[i,j]
+# and ||f(a)-f(b)||^2 = Q[a,a] + Q[b,b] - 2Q[a,b]
 # We can therefore constrain
 # D[i,j]^2 ≤ Q[i,i] + Q[j,j] - 2Q[i,j] ≤ c^2*D[i,j]^2
 # and minimize c^2, which gives us the SDP formulation below.
