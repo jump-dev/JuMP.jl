@@ -567,6 +567,7 @@ function solvenlp(m::Model, traits; suppress_warnings=false)
         end
     end
 
+    #d = m.nlpdata.evaluator
     #println("feval $(d.eval_f_timer)\nfgrad $(d.eval_grad_f_timer)\ngeval $(d.eval_g_timer)\njaceval $(d.eval_jac_g_timer)\nhess $(d.eval_hesslag_timer)")
 
     return stat::Symbol
