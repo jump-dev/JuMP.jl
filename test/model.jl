@@ -64,7 +64,7 @@ end
 
 facts("[model] Test printing a model") do
     modA = Model()
-    @defVar(modA, x >= 0)
+    x = Variable(modA, 0, Inf, :Cont)
     @defVar(modA, y <= 5, Int)
     @defVar(modA, 2 <= z <= 4)
     @defVar(modA, 0 <= r[i=3:6] <= i)
