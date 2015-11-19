@@ -489,6 +489,7 @@ end
 function conicconstraintdata(m::Model)
     var_cones = Any[cone for cone in m.varCones]
     con_cones = Any[]
+    constr_dual_map = Array(Vector{Int}, length(m.linconstr) + length(m.socconstr))
     nnz = 0
 
     # find starting column indices for sdp matrices
