@@ -36,7 +36,7 @@ include("qcqpmodel.jl");    length( quad_solvers) == 0 && warn("Quadratic tests 
 include("nonlinear.jl");    length(  nlp_solvers) == 0 && warn("Nonlinear tests not run!")
                             length(minlp_solvers) == 0 && warn("Mixed-integer Nonlinear tests not run!")
 include("sdp.jl");          length(  sdp_solvers) == 0 && warn("Semidefinite tests not run!")
-
+include("socduals.jl");     length(conic_solvers_with_duals) == 0 && warn("Conic solvers with duals tests not run!")
 # Throw an error if anything failed
 FactCheck.exitstatus()
 
