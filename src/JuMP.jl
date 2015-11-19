@@ -83,6 +83,7 @@ type Model
     colVal::Vector{Float64}
     redCosts::Vector{Float64}
     linconstrDuals::Vector{Float64}
+    conicconstrDuals::Vector{Float64}
     # internal solver model object
     internalModel
     # Solver+option object from MathProgBase
@@ -148,6 +149,7 @@ function Model(;solver=UnsetSolver())
           Float64[],                   # colVal
           Float64[],                   # redCosts
           Float64[],                   # linconstrDuals
+          Float64[],                   # conicconstrDuals
           nothing,                     # internalModel
           solver,                      # solver
           false,                       # internalModelLoaded
