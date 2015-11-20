@@ -533,7 +533,8 @@ function getDual(c::ConstraintRef{SOCConstraint})
     #=if length(c.m.linconstrDuals) != MathProgBase.numsocconstr(c.m)
         error("Dual solution not available. Check that the model was properly solved and no integer variables are present.")
     end=#
-    return c.m.conicconstrDuals[c.idx]
+    return c.m.conicconstrDuals[
+        c.m.constrDualMap[length(c.m.linconstr) + c.idx]]
 end
 
 

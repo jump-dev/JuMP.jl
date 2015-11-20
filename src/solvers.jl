@@ -113,10 +113,11 @@ function solve(m::Model; suppress_warnings=false,
         # conic duals
         if traits.conic
             m.conicconstrDuals = try
-                MathProgBase.getconstrduals(m.internalModel)[1:numRows]
+                MathProgBase.getconstrduals(m.internalModel)
             catch
                 fill(NaN, numRows)
             end
+            m.linconstrDuals = m.conicconstrDuals[1:length(m.linconstr)]
         end
     else
         # Problem was not solved to optimality, attempt to extract useful
@@ -624,6 +625,7 @@ function conicconstraintdata(m::Model)
         numNormRows += 1
         numSOCRows += length(con.normexpr.norm.terms) + 1
     end
+    @show numNormRows, numSOCRows
     numRows = numLinRows + numBounds + numQuadRows + numSOCRows + numSDPRows + numSymRows
 
     # should maintain the order of constraints in the above form
@@ -802,6 +804,7 @@ function conicconstraintdata(m::Model)
     end
     @assert c == numRows
 
+    @show constr_dual_map
     m.constrDualMap = constr_dual_map
 
     A = sparse(I, J, V, numRows, m.numCols)
