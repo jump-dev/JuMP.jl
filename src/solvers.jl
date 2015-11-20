@@ -684,9 +684,11 @@ function conicconstraintdata(m::Model)
     end
 
     c = numLinRows
+    bndidx = 0
     for idx in 1:m.numCols
         lb = m.colLower[idx]
         if !(lb == 0 || lb == -Inf)
+            bndidx += 1
             nnz += 1
             c   += 1
             push!(I, c)
@@ -694,17 +696,18 @@ function conicconstraintdata(m::Model)
             push!(V, 1.0)
             b[c] = lb
             push!(nonpos_rows, c)
-            constr_dual_map[numLinRows + idx] = collect(c)
+            constr_dual_map[numLinRows + bndidx] = collect(c)
         end
         ub = m.colUpper[idx]
         if !(ub == 0 || ub == Inf)
+            bndidx += 1
             c   += 1
             push!(I, c)
             push!(J, idx)
             push!(V, 1.0)
             b[c] = ub
             push!(nonneg_rows, c)
-            constr_dual_map[numLinRows + idx] = collect(c)
+            constr_dual_map[numLinRows + bndidx] = collect(c)
         end
     end
 
