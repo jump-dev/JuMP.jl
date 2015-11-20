@@ -1,7 +1,7 @@
 using JuMP
-using CPLEX
+import ECOS
 
-m = Model(solver=CplexSolver())
+m = Model(solver=ECOS.ECOSSolver())
 
 @defVar(m, x[1:5])
 @setObjective(m, Max, x[1] + x[2] + x[3] + x[4] + 2*x[5])
@@ -12,8 +12,9 @@ m = Model(solver=CplexSolver())
 #@addConstraint(m, constrcon3, x[5]^2 + x[4]^2 <= 10)
 #@addConstraint(m, constrcon2, norm2{x[i], i = 2:5} <= 10)
 
+@show typeof(m)
 solve(m)
-@show MathProgBase.getconstrduals(m.internalModel)
+#@show MathProgBase.getconstrduals(m.internalModel)
 @show getDual(constrcon1)
 @show getDual(constrcon2)
 @show m.conicconstrDuals

@@ -111,9 +111,9 @@ function solve(m::Model; suppress_warnings=false,
             end
         end
         # conic duals
-        if traits.conic
+        if traits.conic && !traits.qp && !traits.qc && !traits.sdp
             m.conicconstrDuals = try
-                MathProgBase.getconstrduals(m.internalModel)
+                MathProgBase.getconicdual(m.internalModel)
             catch
                 fill(NaN, numRows)
             end
