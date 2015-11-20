@@ -625,7 +625,7 @@ function conicconstraintdata(m::Model)
         numNormRows += 1
         numSOCRows += length(con.normexpr.norm.terms) + 1
     end
-    @show numNormRows, numSOCRows
+    #@show numNormRows, numSOCRows
     numRows = numLinRows + numBounds + numQuadRows + numSOCRows + numSDPRows + numSymRows
 
     # should maintain the order of constraints in the above form
@@ -804,7 +804,7 @@ function conicconstraintdata(m::Model)
     end
     @assert c == numRows
 
-    @show constr_dual_map
+    #@show constr_dual_map
     m.constrDualMap = constr_dual_map
 
     A = sparse(I, J, V, numRows, m.numCols)
