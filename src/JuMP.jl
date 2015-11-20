@@ -84,7 +84,7 @@ type Model
     redCosts::Vector{Float64}
     linconstrDuals::Vector{Float64}
     conicconstrDuals::Vector{Float64}
-    conicconstrDualsMap::Any[]
+    constrDualMap::Any[]
     # internal solver model object
     internalModel
     # Solver+option object from MathProgBase
@@ -151,7 +151,7 @@ function Model(;solver=UnsetSolver())
           Float64[],                   # redCosts
           Float64[],                   # linconstrDuals
           Float64[],                   # conicconstrDuals
-          Any[],                       # conicconstrDualsMap
+          Any[],                       # constrDualsMap
           nothing,                     # internalModel
           solver,                      # solver
           false,                       # internalModelLoaded
