@@ -75,6 +75,10 @@ type Model
     colUpper::Vector{Float64}
     colCat::Vector{Symbol}
 
+    numLinRows::Int
+    numBndRows::Int
+    numSOCRows::Int
+
     # Variable cones of the form, e.g. (:SDP, 1:9)
     varCones::Vector{Tuple{Symbol,Any}}
 
@@ -145,6 +149,9 @@ function Model(;solver=UnsetSolver())
           Float64[],                   # colLower
           Float64[],                   # colUpper
           Symbol[],                    # colCat
+          0,                           # numLinRows
+          0,                           # numBndRows
+          0,                           # numSOCRows
           Vector{Tuple{Symbol,Any}}[], # varCones
           0,                           # objVal
           Float64[],                   # colVal
@@ -530,11 +537,11 @@ function getDual(c::ConstraintRef{LinearConstraint})
 end
 
 function getDual(c::ConstraintRef{SOCConstraint})
-    #=if length(c.m.linconstrDuals) != MathProgBase.numsocconstr(c.m)
+    if length(c.m.conicconstrDuals) != (c.m.numLinRows + c.m.numBndRows + c.m.numSOCRows)
         error("Dual solution not available. Check that the model was properly solved and no integer variables are present.")
-    end=#
+    end
     return c.m.conicconstrDuals[
-        c.m.constrDualMap[length(c.m.linconstr) + c.idx]]
+        c.m.constrDualMap[c.m.numLinRows + c.m.numBndRows + c.idx]]
 end
 
 
