@@ -84,7 +84,7 @@ type Model
     redCosts::Vector{Float64}
     linconstrDuals::Vector{Float64}
     conicconstrDuals::Vector{Float64}
-    constrDualMap::Any[]
+    constrDualMap
     # internal solver model object
     internalModel
     # Solver+option object from MathProgBase
@@ -528,6 +528,15 @@ function getDual(c::ConstraintRef{LinearConstraint})
     end
     return c.m.linconstrDuals[c.idx]
 end
+
+function getDual(c::ConstraintRef{SOCConstraint})
+    #=if length(c.m.linconstrDuals) != MathProgBase.numsocconstr(c.m)
+        error("Dual solution not available. Check that the model was properly solved and no integer variables are present.")
+    end=#
+    return c.m.conicconstrDuals[c.idx]
+end
+
+
 
 function chgConstrRHS(c::ConstraintRef{LinearConstraint}, rhs::Number)
     constr = c.m.linconstr[c.idx]
