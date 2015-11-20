@@ -633,10 +633,6 @@ function conicconstraintdata(m::Model)
     # TODO: only added linear+bound+soc support, extend to all
     constr_dual_map = Array(Vector{Int}, numLinRows + numBounds + numNormRows)
 
-    m.numLinRows = numLinRows
-    m.numBndRows = numBounds
-    m.numSOCRows = numSOCRows
-
     b = Array(Float64, numRows)
 
     I = Int[]
