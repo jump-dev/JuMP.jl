@@ -389,3 +389,13 @@ facts("[macros] Special-case binary multiplication in addToExpression_reorder (#
     @fact conToStr(dual.linconstr[3]) --> "γ - α[3] $leq 0"
 end
 end
+
+facts("[macros] Issue #621") do
+    m = Model()
+    @defVar(m, x)
+
+    q = x^2
+    a = x+1
+    con = @QuadConstraint(a+q*3 <= 0)
+    @fact conToStr(con) --> "3 x² + x + 1 $leq 0"
+end
