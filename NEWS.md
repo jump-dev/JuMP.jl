@@ -8,6 +8,13 @@ Unreleased
   * Fix for scoping semantics of index variables in sum{}. Index variables no longer leak into the surrounding scope.
   * Addition of the ``solve(m::Model, relaxation=true)`` keyword argument to solve the standard continuous realaxation of model ``m``.
 
+Version 0.10.3 (November 20, 2015)
+----------------------------------
+
+  * Fix a rare error when parsing quadratic expressions
+  * Fix ``Variable()`` constructor with default arguments
+  * Detect unrecognized keywords in ``solve()``
+
 Version 0.10.2 (September 28, 2015)
 -----------------------------------
 
