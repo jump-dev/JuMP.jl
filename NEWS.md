@@ -1,6 +1,13 @@
 JuMP release notes
 ==================
 
+Version 0.10.3 (November 20, 2015)
+----------------------------------
+
+  * Fix a rare error when parsing quadratic expressions
+  * Fix ``Variable()`` constructor with default arguments
+  * Detect unrecognized keywords in ``solve()``
+
 Version 0.10.2 (September 28, 2015)
 -----------------------------------
 
