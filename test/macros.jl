@@ -433,3 +433,13 @@ facts("[macros] Indices in macros don't leak out of scope (#582)") do
         @fact i --> cnt
     end
 end
+
+facts("[macros] Issue #621") do
+    m = Model()
+    @defVar(m, x)
+
+    q = x^2
+    a = x+1
+    con = @QuadConstraint(a+q*3 <= 0)
+    @fact conToStr(con) --> "3 x² + x + 1 $leq 0"
+end

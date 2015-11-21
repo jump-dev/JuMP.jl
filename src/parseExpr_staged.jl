@@ -149,7 +149,7 @@ function addToExpression{C,V}(aff::GenericAffExpr{C,V}, c::GenericQuadExpr{C,V},
     else
         GenericQuadExpr{C,V}(copy(c.qvars1),
                             copy(c.qvars2),
-                            c*qcoeffs*x,
+                            c.qcoeffs*x,
                             addToExpression(aff,c.aff,x))
     end
 end
