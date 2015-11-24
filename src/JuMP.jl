@@ -543,10 +543,10 @@ function getBndRows(m::Model)
         end
 
         if !seen
-            if !(lb == 0 || lb == -Inf)
+            if !(lb == -Inf)
                 numBounds += 1
             end
-            if !(ub == 0 || ub == Inf)
+            if !(ub == Inf)
                 numBounds += 1
             end
         end
