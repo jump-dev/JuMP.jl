@@ -61,11 +61,11 @@ function fillConicRedCosts(m::Model)
         upper = false
         lb, ub = m.colLower[i], m.colUpper[i]
 
-        if !(lb == 0 || lb == -Inf)
+        if !(lb == -Inf)
             lower = true
             bndidx += 1
         end
-        if !(ub == 0 || ub == Inf)
+        if !(ub == Inf)
             upper = true
             bndidx += 1
         end
@@ -617,10 +617,10 @@ function conicconstraintdata(m::Model)
         end
 
         if !seen
-            if !(lb == 0 || lb == -Inf)
+            if !(lb == -Inf)
                 numBounds += 1
             end
-            if !(ub == 0 || ub == Inf)
+            if !(ub == Inf)
                 numBounds += 1
             end
             if lb == 0 && ub == 0
@@ -721,7 +721,7 @@ function conicconstraintdata(m::Model)
     bndidx = 0
     for idx in 1:m.numCols
         lb = m.colLower[idx]
-        if !(lb == 0 || lb == -Inf)
+        if !(lb == -Inf)
             bndidx += 1
             nnz += 1
             c   += 1
@@ -733,7 +733,7 @@ function conicconstraintdata(m::Model)
             constr_dual_map[numLinRows + bndidx] = collect(c)
         end
         ub = m.colUpper[idx]
-        if !(ub == 0 || ub == Inf)
+        if !(ub == Inf)
             bndidx += 1
             c   += 1
             push!(I, c)
