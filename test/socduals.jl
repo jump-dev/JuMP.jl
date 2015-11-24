@@ -26,24 +26,58 @@ facts("SOC dual vector return test") do
 
 end
 
-facts("LP dual vs SOC dual test") do
+facts("LP dual vs SOC dual test / MAX") do
 
     m1 = Model(solver=CplexSolver())
-    @defVar(m1, x[1:2] >= 0)
-    @setObjective(m1, Max, x[1] + 2x[2])
-    @addConstraint(m1, c1, 3x[1] + x[2] <= 4)
+    @defVar(m1, x1[1:2] >= 0)
+    @setObjective(m1, Max, x1[1] + 2x1[2])
+    @addConstraint(m1, c11, 3x1[1] + x1[2] <= 4)
+    @addConstraint(m1, c12, x1[1] + 2x1[2] >= 1)
+    @addConstraint(m1, c13, -x1[1] + x1[2] == 0.5)
 
 
     m2 = Model(solver=ECOS.ECOSSolver())
-    @defVar(m2, x[1:2] >= 0)
-    @setObjective(m2, Max, x[1] + 2x[2])
-    @addConstraint(m2, c2, 3x[1] + x[2] <= 4)
-    @addConstraint(m2, norm(x[1]) <= x[2])
+    @defVar(m2, x2[1:2] >= 0)
+    @setObjective(m2, Max, x2[1] + 2x2[2])
+    @addConstraint(m2, c21, 3x2[1] + x2[2] <= 4)
+    @addConstraint(m2, c22, x2[1] + 2x2[2] >= 1)
+    @addConstraint(m2, c23, -x2[1] + x2[2] == 0.5)
+    @addConstraint(m2, norm(x2[1]) <= x2[2])
 
     solve(m1)
     solve(m2)
     #@show m2.conicconstrDuals
 
-    @fact getDual(c1) --> roughly(getDual(c2))
+    @fact getDual(c11) --> roughly(getDual(c21),1e-6)
+    @fact getDual(c12) --> roughly(getDual(c22),1e-6)
+    @fact getDual(c13) --> roughly(getDual(c23),1e-6)
+
+end
+
+facts("LP dual vs SOC dual test / MIN") do
+
+    m1 = Model(solver=CplexSolver())
+    @defVar(m1, x1[1:2] >= 0)
+    @setObjective(m1, Min, -x1[1] - 2x1[2])
+    @addConstraint(m1, c11, 3x1[1] + x1[2] <= 4)
+    @addConstraint(m1, c12, x1[1] + 2x1[2] >= 1)
+    @addConstraint(m1, c13, -x1[1] + x1[2] == 0.5)
+
+
+    m2 = Model(solver=ECOS.ECOSSolver())
+    @defVar(m2, x2[1:2] >= 0)
+    @setObjective(m2, Min, -x2[1] - 2x2[2])
+    @addConstraint(m2, c21, 3x2[1] + x2[2] <= 4)
+    @addConstraint(m2, c22, x2[1] + 2x2[2] >= 1)
+    @addConstraint(m2, c23, -x2[1] + x2[2] == 0.5)
+    @addConstraint(m2, norm(x2[1]) <= x2[2])
+
+    solve(m1)
+    solve(m2)
+    #@show m2.conicconstrDuals
+
+    @fact getDual(c11) --> roughly(getDual(c21),1e-6)
+    @fact getDual(c12) --> roughly(getDual(c22),1e-6)
+    @fact getDual(c13) --> roughly(getDual(c23),1e-6)
 
 end

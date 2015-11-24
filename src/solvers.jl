@@ -146,6 +146,9 @@ function solve(m::Model; suppress_warnings=false,
             catch
                 fill(NaN, numRows)
             end
+            if m.objSense == :Min
+                m.conicconstrDuals = -m.conicconstrDuals
+            end
             m.linconstrDuals = m.conicconstrDuals[1:length(m.linconstr)]
             m.redCosts = zeros(numCols)
             numBndRows = getBndRows(m)
