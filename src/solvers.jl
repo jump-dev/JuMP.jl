@@ -53,6 +53,45 @@ function default_solver(traits::ProblemTraits)
     end
 end
 
+function fillConicRedCosts(m::Model)
+    bndidx = 0
+    numlinconstr = length(m.linconstr)
+    for i in 1:m.numCols
+        seen = false
+        lower = false
+        upper = false
+        lb, ub = m.colLower[i], m.colUpper[i]
+        for (_,cone) in m.varCones
+            if i in cone
+                seen = true
+                @assert lb == -Inf && ub == Inf
+                break
+            end
+        end
+
+        if !seen
+            if !(lb == 0 || lb == -Inf)
+                lower = true
+                bndidx += 1
+            end
+            if !(ub == 0 || ub == Inf)
+                upper = true
+                bndidx += 1
+            end
+        end
+
+        if lower && !upper
+            m.redCosts[i] = m.conicconstrDuals[numlinconstr + bndidx]
+        elseif !lower && upper
+            m.redCosts[i] = m.conicconstrDuals[numlinconstr + bndidx]
+        elseif lower && upper
+            m.redCosts[i] = m.conicconstrDuals[numlinconstr + bndidx]
+                            +m.conicconstrDuals[numlinconstr + bndidx-1]
+        end
+    end
+end
+
+
 
 function solve(m::Model; suppress_warnings=false,
                 ignore_solve_hook=(m.solvehook===nothing),
@@ -118,6 +157,11 @@ function solve(m::Model; suppress_warnings=false,
                 fill(NaN, numRows)
             end
             m.linconstrDuals = m.conicconstrDuals[1:length(m.linconstr)]
+            m.redCosts = zeros(numCols)
+            numBndRows = getBndRows(m)
+            if numBndRows > 0
+                fillConicRedCosts(m::Model)
+            end
         end
     else
         # Problem was not solved to optimality, attempt to extract useful
