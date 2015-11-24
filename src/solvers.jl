@@ -57,27 +57,17 @@ function fillConicRedCosts(m::Model)
     bndidx = 0
     numlinconstr = length(m.linconstr)
     for i in 1:m.numCols
-        seen = false
         lower = false
         upper = false
         lb, ub = m.colLower[i], m.colUpper[i]
-        for (_,cone) in m.varCones
-            if i in cone
-                seen = true
-                @assert lb == -Inf && ub == Inf
-                break
-            end
-        end
 
-        if !seen
-            if !(lb == 0 || lb == -Inf)
-                lower = true
-                bndidx += 1
-            end
-            if !(ub == 0 || ub == Inf)
-                upper = true
-                bndidx += 1
-            end
+        if !(lb == 0 || lb == -Inf)
+            lower = true
+            bndidx += 1
+        end
+        if !(ub == 0 || ub == Inf)
+            upper = true
+            bndidx += 1
         end
 
         if lower && !upper
@@ -160,7 +150,7 @@ function solve(m::Model; suppress_warnings=false,
             m.redCosts = zeros(numCols)
             numBndRows = getBndRows(m)
             if numBndRows > 0
-                fillConicRedCosts(m::Model)
+                fillConicRedCosts(m)
             end
         end
     else
