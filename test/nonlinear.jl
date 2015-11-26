@@ -315,7 +315,7 @@ end; end; end
 
 facts("[nonlinear] Test nonlinear duals") do
 for nlp_solver in nlp_solvers
-applicable(MathProgBase.getconstrduals, MathProgBase.model(nlp_solver)) || continue
+applicable(MathProgBase.getconstrduals, MathProgBase.NonlinearModel(nlp_solver)) || continue
 context("With solver $(typeof(nlp_solver))") do
     modA = Model(solver=nlp_solver)
     @defVar(modA, x >= 0)
@@ -355,7 +355,7 @@ end; end; end
 
 facts("[nonlinear] Test nonlinear duals (Max)") do
 for nlp_solver in nlp_solvers
-applicable(MathProgBase.getconstrduals, MathProgBase.model(nlp_solver)) || continue
+applicable(MathProgBase.getconstrduals, MathProgBase.NonlinearModel(nlp_solver)) || continue
 context("With solver $(typeof(nlp_solver))") do
     modA = Model(solver=nlp_solver)
     @defVar(modA, x >= 0)
@@ -398,10 +398,10 @@ end; end; end
 # Test that output is produced in correct MPB form
 type DummyNLPSolver <: MathProgBase.AbstractMathProgSolver
 end
-type DummyNLPModel <: MathProgBase.AbstractMathProgModel
+type DummyNLPModel <: MathProgBase.AbstractNonlinearModel
 end
-MathProgBase.model(s::DummyNLPSolver) = DummyNLPModel()
-function MathProgBase.loadnonlinearproblem!(m::DummyNLPModel, numVar, numConstr, x_l, x_u, g_lb, g_ub, sense, d::MathProgBase.AbstractNLPEvaluator)
+MathProgBase.NonlinearModel(s::DummyNLPSolver) = DummyNLPModel()
+function MathProgBase.loadproblem!(m::DummyNLPModel, numVar, numConstr, x_l, x_u, g_lb, g_ub, sense, d::MathProgBase.AbstractNLPEvaluator)
     MathProgBase.initialize(d, [:ExprGraph])
     objexpr = MathProgBase.obj_expr(d)
     facts("[nonlinear] Test NL MPB interface ($objexpr)") do

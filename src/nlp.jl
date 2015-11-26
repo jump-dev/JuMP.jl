@@ -515,9 +515,9 @@ function _buildInternalModel_nlp(m::Model, traits)
     nlp_lb, nlp_ub = getConstraintBounds(m)
     numConstr = length(nlp_lb)
 
-    m.internalModel = MathProgBase.model(m.solver)
+    m.internalModel = MathProgBase.NonlinearModel(m.solver)
 
-    MathProgBase.loadnonlinearproblem!(m.internalModel, m.numCols, numConstr, m.colLower, m.colUpper, nlp_lb, nlp_ub, m.objSense, d)
+    MathProgBase.loadproblem!(m.internalModel, m.numCols, numConstr, m.colLower, m.colUpper, nlp_lb, nlp_ub, m.objSense, d)
     if traits.int
         if applicable(MathProgBase.setvartype!, m.internalModel, m.colCat)
             MathProgBase.setvartype!(m.internalModel, vartypes_without_fixed(m))
