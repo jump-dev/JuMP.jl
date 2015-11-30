@@ -755,14 +755,23 @@ facts("[model] Relaxation keyword argument to solve") do
     @defVar(m, 1 <= v <= 2)
 
     @setObjective(m, Min, y + z + w + v)
-
+    
+    # Force LP solver since not all MIP solvers
+    # return duals (i.e. Cbc)
+    setSolver(m, lp_solvers[1])
     @fact solve(m, relaxation=true) --> :Optimal
     @fact getValue(y) --> 1.5
     @fact getValue(z) --> 0
     @fact getValue(w) --> 0.5
     @fact getValue(v) --> 1
+    @fact getDual(y) --> 1
+    @fact getDual(z) --> 1
+    @fact getDual(w) --> 1
+    @fact getDual(v) --> 1
     @fact getObjectiveValue(m) --> 1.5 + 0 + 0.5 + 1
 
+    # Let JuMP choose solver again
+    setSolver(m, JuMP.UnsetSolver())
     @fact solve(m) --> :Optimal
     @fact getValue(y) --> 2
     @fact getValue(z) --> 0

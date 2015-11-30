@@ -98,7 +98,7 @@ function solve(m::Model; suppress_warnings=false,
         # If we think dual information might be available, try to get it
         # If not, return an array of the correct length
         # TODO: support conic duals
-        if !(traits.int || traits.sos || traits.conic)
+        if relaxation || !(traits.int || traits.sos || traits.conic)
             m.redCosts = try
                 MathProgBase.getreducedcosts(m.internalModel)[1:numCols]
             catch
