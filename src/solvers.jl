@@ -211,12 +211,12 @@ function buildInternalModel(m::Model, traits=ProblemTraits(m);
         # Obtain a fresh MPB model for the solver
         # If the problem is conic, we rebuild the problem from
         # scratch every time
-        m.internalModel = MathProgBase.model(m.solver)
+        m.internalModel = MathProgBase.ConicModel(m.solver)
 
         # Build up the LHS, RHS and cones from the JuMP Model...
         A, b, var_cones, con_cones = conicconstraintdata(m)
         # ... and pass to the solver
-        MathProgBase.loadconicproblem!(m.internalModel, f, A, b, con_cones, var_cones)
+        MathProgBase.loadproblem!(m.internalModel, f, A, b, con_cones, var_cones)
     else
         # Extract objective coefficients and linear constraint bounds
         f, rowlb, rowub = prepProblemBounds(m)
@@ -247,21 +247,9 @@ function buildInternalModel(m::Model, traits=ProblemTraits(m);
         # If we don't already have a MPB model
         if !m.internalModelLoaded
             # Obtain a fresh MPB model for the solver
-            m.internalModel = MathProgBase.model(m.solver)
+            m.internalModel = MathProgBase.LinearQuadraticModel(m.solver)
             # Construct a LHS matrix from the linear constraints
             A = prepConstrMatrix(m)
-
-            # If we have either:
-            #   1) A solver that does not support the loadproblem! interface, or
-            #   2) A QCP and a solver that does not support the addquadconstr! interface,
-            # wrap everything in a ConicSolverWrapper
-            if !applicable(MathProgBase.loadproblem!, m.internalModel, A, m.colLower, m.colUpper, f, rowlb, rowub, m.objSense) ||
-                ( applicable(MathProgBase.supportedcones, m.solver) && # feel like this should have a && traits.qc as well...
-                  !method_exists(MathProgBase.addquadconstr!, (typeof(m.internalModel), Vector{Int}, Vector{Float64}, Vector{Int}, Vector{Int}, Vector{Float64}, Char, Float64)) &&
-                  :SOC in MathProgBase.supportedcones(m.solver) )
-
-                m.internalModel = MathProgBase.model(MathProgBase.ConicSolverWrapper(m.solver))
-            end
 
             # Load the problem data into the model...
             collb = copy(m.colLower)
