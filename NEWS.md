@@ -1,12 +1,14 @@
 JuMP release notes
 ==================
 
-Unreleased
-----------
+Version 0.11.0 (November 30, 2015)
+----------------------------------
 
   * Julia 0.4.0 is the minimum required version for this release.
   * Fix for scoping semantics of index variables in sum{}. Index variables no longer leak into the surrounding scope.
-  * Addition of the ``solve(m::Model, relaxation=true)`` keyword argument to solve the standard continuous realaxation of model ``m``.
+  * Addition of the ``solve(m::Model, relaxation=true)`` keyword argument to solve the standard continuous realaxation of model ``m``
+  * The ``getConstraintBounds()`` method allows access to the lower and upper bounds of all constraints in a (nonlinear) model.
+  * Update for breaking changes in MathProgBase
 
 Version 0.10.3 (November 20, 2015)
 ----------------------------------
