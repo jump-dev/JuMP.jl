@@ -3,6 +3,8 @@ using FactCheck
 using CPLEX
 import ECOS
 
+TOL = 1e-6
+
 facts("SOC dual vector return test") do
 
     m = Model(solver=ECOS.ECOSSolver())
@@ -48,9 +50,9 @@ facts("LP dual vs SOC dual test / MAX") do
     solve(m2)
     #@show m2.conicconstrDuals
 
-    @fact getDual(c11) --> roughly(-getDual(c21),1e-6)
-    @fact getDual(c12) --> roughly(-getDual(c22),1e-6)
-    @fact getDual(c13) --> roughly(-getDual(c23),1e-6)
+    @fact getDual(c11) --> roughly(-getDual(c21),TOL)
+    @fact getDual(c12) --> roughly(-getDual(c22),TOL)
+    @fact getDual(c13) --> roughly(-getDual(c23),TOL)
 
 end
 
@@ -76,9 +78,9 @@ facts("LP vs SOC dual test / MIN") do
     solve(m2)
     #@show m2.conicconstrDuals
 
-    @fact getDual(c11) --> roughly(getDual(c21),1e-6)
-    @fact getDual(c12) --> roughly(getDual(c22),1e-6)
-    @fact getDual(c13) --> roughly(getDual(c23),1e-6)
+    @fact getDual(c11) --> roughly(-getDual(c21),TOL)
+    @fact getDual(c12) --> roughly(-getDual(c22),TOL)
+    @fact getDual(c13) --> roughly(-getDual(c23),TOL)
 
 end
 
@@ -102,14 +104,14 @@ facts("LP vs SOC reduced costs test") do
     solve(m1)
     solve(m2)
 
-    @fact dot([getDual(y1), getDual(x1)],[getValue(y1); getValue(x1)]) --> greater_than_or_equal(-1e-6)
-    @fact dot([getDual(y2), getDual(x2)],[getValue(y2); getValue(x2)]) --> greater_than_or_equal(-1e-6)
+    @fact dot([getDual(y1), getDual(x1)],[getValue(y1); getValue(x1)]) --> greater_than_or_equal(-TOL)
+    @fact dot([getDual(y2), getDual(x2)],[getValue(y2); getValue(x2)]) --> greater_than_or_equal(-TOL)
 
-    @fact getValue(x1) --> roughly(getValue(x2),1e-6)
-    @fact getValue(y1) --> roughly(getValue(y2),1e-6)
+    @fact getValue(x1) --> roughly(getValue(x2),TOL)
+    @fact getValue(y1) --> roughly(getValue(y2),TOL)
 
-    #@fact getDual(x1) --> roughly(-getDual(x2),1e-6)
-    #@fact getDual(y1) --> roughly(-getDual(y2),1e-6)
+    #@fact getDual(x1) --> roughly(-getDual(x2),TOL)
+    #@fact getDual(y1) --> roughly(-getDual(y2),TOL)
 end
 
 facts("LP vs SOC reduced costs test") do
@@ -137,17 +139,17 @@ facts("LP vs SOC reduced costs test") do
     solve(m1)
     solve(m2)
 
-    @fact dot([getDual(y1), getDual(x1)],[getValue(y1); getValue(x1)]) --> greater_than_or_equal(-1e-6)
-    @fact dot([getDual(y2), getDual(x2)],[getValue(y2); getValue(x2)]) --> greater_than_or_equal(-1e-6)
+    @fact dot([getDual(y1), getDual(x1)],[getValue(y1); getValue(x1)]) --> greater_than_or_equal(-TOL)
+    @fact dot([getDual(y2), getDual(x2)],[getValue(y2); getValue(x2)]) --> greater_than_or_equal(-TOL)
 
 
-    @fact dot([getDual(y1), getDual(z1)],[getValue(y1); getValue(z1)]) --> greater_than_or_equal(-1e-6)
-    @fact dot([getDual(y2), getDual(z2)],[getValue(y2); getValue(z2)]) --> greater_than_or_equal(-1e-6)
+    @fact dot([getDual(y1), getDual(z1)],[getValue(y1); getValue(z1)]) --> greater_than_or_equal(-TOL)
+    @fact dot([getDual(y2), getDual(z2)],[getValue(y2); getValue(z2)]) --> greater_than_or_equal(-TOL)
 
-    @fact getValue(x1) --> roughly(getValue(x2),1e-6)
-    @fact getValue(y1) --> roughly(getValue(y2),1e-6)
+    @fact getValue(x1) --> roughly(getValue(x2),TOL)
+    @fact getValue(y1) --> roughly(getValue(y2),TOL)
 
-    #@fact getDual(x1) --> roughly(-getDual(x2),1e-6)
-    #@fact getDual(y1) --> roughly(-getDual(y2),1e-6)
+    #@fact getDual(x1) --> roughly(-getDual(x2),TOL)
+    #@fact getDual(y1) --> roughly(-getDual(y2),TOL)
 end
 
