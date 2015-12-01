@@ -146,7 +146,7 @@ function solve(m::Model; suppress_warnings=false,
             catch
                 fill(NaN, numRows)
             end
-            if m.objSense == :Min
+            if m.objSense == :Max
                 m.conicconstrDuals = -m.conicconstrDuals
             end
             m.linconstrDuals = m.conicconstrDuals[1:length(m.linconstr)]

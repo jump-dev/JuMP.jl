@@ -48,9 +48,9 @@ facts("LP dual vs SOC dual test / MAX") do
     solve(m2)
     #@show m2.conicconstrDuals
 
-    @fact getDual(c11) --> roughly(getDual(c21),1e-6)
-    @fact getDual(c12) --> roughly(getDual(c22),1e-6)
-    @fact getDual(c13) --> roughly(getDual(c23),1e-6)
+    @fact getDual(c11) --> roughly(-getDual(c21),1e-6)
+    @fact getDual(c12) --> roughly(-getDual(c22),1e-6)
+    @fact getDual(c13) --> roughly(-getDual(c23),1e-6)
 
 end
 
@@ -84,36 +84,30 @@ end
 
 facts("LP vs SOC reduced costs test") do
 
+
     m1 = Model(solver=CplexSolver())
-    @defVar(m1, x11)
-    @defVar(m1, 1 <= x12 <= 3)
-    @defVar(m1, 0 >= x13 >= -5)
-    @setObjective(m1, Min, -x11 - 2x12 + x13)
-    @addConstraint(m1, c11, 3x11 + x12 <= 4)
-    @addConstraint(m1, c12, x11 + 2x12 >= 1)
-    @addConstraint(m1, c13, -x11 + x12 == 0.5)
-    @addConstraint(m1, c14, x11 + x12 >= x13)
-
-
     m2 = Model(solver=ECOS.ECOSSolver())
-    @defVar(m2, x21)
-    @defVar(m2, 1 <= x22 <= 3)
-    @defVar(m2, 0 >= x23 >= -5)
-    @setObjective(m2, Min, -x21 - 2x22 + x23)
-    @addConstraint(m2, c21, 3x21 + x22 <= 4)
-    @addConstraint(m2, c22, x21 + 2x22 >= 1)
-    @addConstraint(m2, c23, -x21 + x22 == 0.5)
-    @addConstraint(m2, c24, x21 + x22 >= x23)
-    @addConstraint(m2, norm(x21) <= x22)
+    
+    @defVar(m1, x1 >= 0)
+    @defVar(m1, y1 >= 0)
+    @addConstraint(m1, x1 + y1 == 1)
+    @setObjective(m1, Max, y1)
 
+    @defVar(m2, x2 >= 0)
+    @defVar(m2, y2 >= 0)
+    @addConstraint(m2, x2 + y2 == 1)
+    @setObjective(m2, Max, y2)
+    @addConstraint(m2, norm(x2) <= y2)
+    
     solve(m1)
     solve(m2)
-    @show getDual(x11)
-    @show getDual(x12)
-    @show getDual(x13)
-    @show getValue(x23)
 
-    @fact getDual(x11) --> roughly(getDual(x21),1e-6)
-    @fact getDual(x12) --> roughly(getDual(x22),1e-6)
-    @fact getDual(x13) --> roughly(getDual(x23),1e-6)
+    @fact dot([getDual(y1), getDual(x1)],[getValue(y1); getValue(x1)]) --> greater_than_or_equal(0)
+    @fact dot([getDual(y2), getDual(x2)],[getValue(y2); getValue(x2)]) --> greater_than_or_equal(0)
+
+    @fact getValue(x1) --> roughly(getValue(x2),1e-6)
+    @fact getValue(y1) --> roughly(getValue(y2),1e-6)
+
+    #@fact getDual(x1) --> roughly(-getDual(x2),1e-6)
+    #@fact getDual(y1) --> roughly(-getDual(y2),1e-6)
 end
