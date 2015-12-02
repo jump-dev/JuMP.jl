@@ -12,9 +12,6 @@
 # Must be run as part of runtests.jl, as it needs a list of solvers.
 #############################################################################
 using JuMP, FactCheck
-using Compat
-
-!isdefined(:conic_solvers_with_duals) && include("solvers.jl")
 
 facts("[qcqpmodel] Test quad objective (discrete)") do
 for solver in quad_mip_solvers
