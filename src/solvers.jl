@@ -141,19 +141,22 @@ function solve(m::Model; suppress_warnings=false,
         end
         # conic duals
         if traits.conic && !traits.qp && !traits.qc && !traits.sdp
+            numBndRows = getBndRows(m)
+            numSOCRows = getSOCRows(m)
             m.conicconstrDuals = try
                 MathProgBase.getconicdual(m.internalModel)
             catch
-                fill(NaN, numRows)
+                fill(NaN, numRows+numBndRows+numSOCRows)
             end
-            if m.objSense == :Max
-                m.conicconstrDuals = -m.conicconstrDuals
-            end
-            m.linconstrDuals = m.conicconstrDuals[1:length(m.linconstr)]
-            m.redCosts = zeros(numCols)
-            numBndRows = getBndRows(m)
-            if numBndRows > 0
-                fillConicRedCosts(m)
+            if m.conicconstrDuals[1] != NaN
+                if m.objSense == :Max
+                    m.conicconstrDuals = -m.conicconstrDuals
+                end
+                m.linconstrDuals = m.conicconstrDuals[1:length(m.linconstr)]
+                m.redCosts = zeros(numCols)
+                if numBndRows > 0
+                    fillConicRedCosts(m)
+                end
             end
         end
     else
