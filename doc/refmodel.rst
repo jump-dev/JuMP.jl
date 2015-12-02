@@ -132,7 +132,7 @@ Then one can access the dual vector corresponding to constraint `b-Ax \in K_1` u
 
 	Returns a vector of dual variables in the dimension of the corresponding cone. Currently JuMP supports returning the dual vector of only Second-order cone constraints.
 
-For example let us consider the above Second-order cone constraint `||Ax-b||_2 \le a^Tx + c`, where A is an `m\times n` matrix. This constraint is equivalent to `(a^Tx + c, Ax -b) \in SOC` in conic form. Therefore upon successful call to solve, getDual will return an optimal dual vector, `y\in \mathbb{R}^{m+1}`, such that `y^T(a^Tx + c, Ax-b) \ge 0`.
+For example let us consider the above Second-order cone constraint `||Ax-b||_2 \le a^Tx + c`, where A is an `m\times n` matrix. This constraint is equivalent to `(a^Tx + c, Ax -b) \in SOC` in conic form. Therefore upon successful call to solve, getDual will return an optimal dual vector, `y\in \mathbb{R}^{m+1}`, such that `y^T(a^Tx + c, Ax-b) \le 0`.
 
 Accessing the low-level model
 ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^

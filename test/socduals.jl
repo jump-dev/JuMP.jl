@@ -27,6 +27,8 @@ context("With solver $(typeof(solver))") do
     @fact length(m.conicconstrDuals) --> 10
     @fact length(m.linconstrDuals) --> 2
 
+    @fact (getDual(constrcon2)'*[getValue(x[5]) - 2;[2 3;1 1]*[getValue(x[2]);getValue(x[3])]-[3;4]])[1] --> less_than_or_equal(TOL)
+
 end
 end
 end
