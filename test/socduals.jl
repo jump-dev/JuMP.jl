@@ -57,9 +57,14 @@ context("With conic solver $(typeof(_conic_solver))") do
     solve(m2)
     #@show m2.conicconstrDuals
 
-    @fact getDual(c11) --> roughly(-getDual(c21),TOL)
-    @fact getDual(c12) --> roughly(-getDual(c22),TOL)
-    @fact getDual(c13) --> roughly(-getDual(c23),TOL)
+    @fact getDual(c11) --> roughly(0.75, TOL)
+    @fact getDual(c12) --> roughly(0.0,TOL)
+    @fact getDual(c13) --> roughly(1.25,TOL)
+
+    @fact getDual(c21) --> roughly(-0.75, TOL)
+    @fact getDual(c22) --> roughly(-0.0,TOL)
+    @fact getDual(c23) --> roughly(-1.25,TOL)
+
 
 end
 end
@@ -94,9 +99,13 @@ context("With conic solver $(typeof(_conic_solver))") do
     solve(m2)
     #@show m2.conicconstrDuals
 
-    @fact getDual(c11) --> roughly(-getDual(c21),TOL)
-    @fact getDual(c12) --> roughly(-getDual(c22),TOL)
-    @fact getDual(c13) --> roughly(-getDual(c23),TOL)
+    @fact getDual(c11) --> roughly(-0.75, TOL)
+    @fact getDual(c12) --> roughly(-0.0,TOL)
+    @fact getDual(c13) --> roughly(-1.25,TOL)
+
+    @fact getDual(c21) --> roughly(0.75, TOL)
+    @fact getDual(c22) --> roughly(0.0,TOL)
+    @fact getDual(c23) --> roughly(1.25,TOL)
 
 end
 end
