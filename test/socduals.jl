@@ -1,13 +1,14 @@
-using JuMP
-using FactCheck
-using CPLEX
-import ECOS
+using JuMP, FactCheck
+using Compat
 
-TOL = 1e-6
+!isdefined(:conic_solvers_with_duals) && include("solvers.jl")
+
+const TOL = 1e-4
 
 facts("SOC dual vector return test") do
-
-    m = Model(solver=ECOS.ECOSSolver())
+for solver in conic_solvers_with_duals
+context("With solver $(typeof(solver))") do
+    m = Model(solver=solver)
 
     @defVar(m, x[1:5])
     @setObjective(m, Max, x[1] + x[2] + x[3] + x[4] + 2*x[5])
@@ -27,10 +28,16 @@ facts("SOC dual vector return test") do
     @fact length(m.linconstrDuals) --> 2
 
 end
+end
+end
 
 facts("LP dual vs SOC dual test / MAX") do
+for _lp_solver in lp_solvers
+context("With lp solver $(typeof(_lp_solver))") do
+for _conic_solver in conic_solvers_with_duals
+context("With conic solver $(typeof(_conic_solver))") do
 
-    m1 = Model(solver=CplexSolver())
+    m1 = Model(solver=_lp_solver)
     @defVar(m1, x1[1:2] >= 0)
     @setObjective(m1, Max, x1[1] + 2x1[2])
     @addConstraint(m1, c11, 3x1[1] + x1[2] <= 4)
@@ -38,7 +45,7 @@ facts("LP dual vs SOC dual test / MAX") do
     @addConstraint(m1, c13, -x1[1] + x1[2] == 0.5)
 
 
-    m2 = Model(solver=ECOS.ECOSSolver())
+    m2 = Model(solver=_conic_solver)
     @defVar(m2, x2[1:2] >= 0)
     @setObjective(m2, Max, x2[1] + 2x2[2])
     @addConstraint(m2, c21, 3x2[1] + x2[2] <= 4)
@@ -55,10 +62,19 @@ facts("LP dual vs SOC dual test / MAX") do
     @fact getDual(c13) --> roughly(-getDual(c23),TOL)
 
 end
+end
+end
+end
+end
 
 facts("LP vs SOC dual test / MIN") do
+for _lp_solver in lp_solvers
+context("With lp solver $(typeof(_lp_solver))") do
+for _conic_solver in conic_solvers_with_duals
+context("With conic solver $(typeof(_conic_solver))") do
 
-    m1 = Model(solver=CplexSolver())
+
+    m1 = Model(solver=_lp_solver)
     @defVar(m1, x1[1:2] >= 0)
     @setObjective(m1, Min, -x1[1] - 2x1[2])
     @addConstraint(m1, c11, 3x1[1] + x1[2] <= 4)
@@ -66,7 +82,7 @@ facts("LP vs SOC dual test / MIN") do
     @addConstraint(m1, c13, -x1[1] + x1[2] == 0.5)
 
 
-    m2 = Model(solver=ECOS.ECOSSolver())
+    m2 = Model(solver=_conic_solver)
     @defVar(m2, x2[1:2] >= 0)
     @setObjective(m2, Min, -x2[1] - 2x2[2])
     @addConstraint(m2, c21, 3x2[1] + x2[2] <= 4)
@@ -83,12 +99,21 @@ facts("LP vs SOC dual test / MIN") do
     @fact getDual(c13) --> roughly(-getDual(c23),TOL)
 
 end
+end
+end
+end
+end
 
 facts("LP vs SOC reduced costs test") do
+for _lp_solver in lp_solvers
+context("With lp solver $(typeof(_lp_solver))") do
+for _conic_solver in conic_solvers_with_duals
+context("With conic solver $(typeof(_conic_solver))") do
 
 
-    m1 = Model(solver=CplexSolver())
-    m2 = Model(solver=ECOS.ECOSSolver())
+
+    m1 = Model(solver=_lp_solver)
+    m2 = Model(solver=_conic_solver)
     
     @defVar(m1, x1 >= 0)
     @defVar(m1, y1 >= 0)
@@ -113,12 +138,22 @@ facts("LP vs SOC reduced costs test") do
     #@fact getDual(x1) --> roughly(-getDual(x2),TOL)
     #@fact getDual(y1) --> roughly(-getDual(y2),TOL)
 end
+end
+end
+end
+end
+
 
 facts("LP vs SOC reduced costs test") do
+for _lp_solver in lp_solvers
+context("With lp solver $(typeof(_lp_solver))") do
+for _conic_solver in conic_solvers_with_duals
+context("With conic solver $(typeof(_conic_solver))") do
 
 
-    m1 = Model(solver=CplexSolver())
-    m2 = Model(solver=ECOS.ECOSSolver())
+
+    m1 = Model(solver=_lp_solver)
+    m2 = Model(solver=_conic_solver)
     
     @defVar(m1, x1 >= 0)
     @defVar(m1, y1 <= 5)
@@ -152,4 +187,7 @@ facts("LP vs SOC reduced costs test") do
     #@fact getDual(x1) --> roughly(-getDual(x2),TOL)
     #@fact getDual(y1) --> roughly(-getDual(y2),TOL)
 end
-
+end
+end
+end
+end
