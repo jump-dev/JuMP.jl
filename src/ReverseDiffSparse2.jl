@@ -6,6 +6,7 @@ import Lazy
 
 include("types.jl")
 include("conversion.jl")
+include("linearity.jl")
 include("forward.jl")
 include("reverse.jl")
 
