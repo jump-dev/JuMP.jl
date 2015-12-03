@@ -27,11 +27,8 @@ function classify_linearity(nd::Vector{NodeData},adj)
             for r in children_idx
                 if linearity[children_arr[r]] == NONLINEAR
                     any_nonlinear = true
-                    all_constant = false
                     break
-                elseif linearity[children_arr[r]] == LINEAR
-                    all_constant = false
-                else
+                elseif linearity[children_arr[r]] == CONSTANT
                     num_constant_children += 1
                 end
             end
