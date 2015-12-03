@@ -34,8 +34,8 @@ end
 end
 
 facts("LP dual vs SOC dual test / MAX") do
-for _lp_solver in lp_solvers, _conic_solver in conic_solvers_with_duals
-context("With lp solver $(typeof(_lp_solver)) conic solver $(typeof(_conic_solver))") do 
+for _lp_solver in lp_solvers
+context("With lp solver $(typeof(_lp_solver))") do 
 
     m1 = Model(solver=_lp_solver)
     @defVar(m1, x1[1:2] >= 0)
@@ -44,6 +44,16 @@ context("With lp solver $(typeof(_lp_solver)) conic solver $(typeof(_conic_solve
     @addConstraint(m1, c12, x1[1] + 2x1[2] >= 1)
     @addConstraint(m1, c13, -x1[1] + x1[2] == 0.5)
 
+    solve(m1)
+
+    @fact getDual(c11) --> roughly(0.75, TOL)
+    @fact getDual(c12) --> roughly(0.0,TOL)
+    @fact getDual(c13) --> roughly(1.25,TOL)
+
+end
+end
+for  _conic_solver in conic_solvers_with_duals
+context("With conic solver $(typeof(_conic_solver))") do
 
     m2 = Model(solver=_conic_solver)
     @defVar(m2, x2[1:2] >= 0)
@@ -53,49 +63,7 @@ context("With lp solver $(typeof(_lp_solver)) conic solver $(typeof(_conic_solve
     @addConstraint(m2, c23, -x2[1] + x2[2] == 0.5)
     @addConstraint(m2, norm(x2[1]) <= x2[2])
 
-    solve(m1)
     solve(m2)
-    #@show m2.conicconstrDuals
-
-    @fact getDual(c11) --> roughly(0.75, TOL)
-    @fact getDual(c12) --> roughly(0.0,TOL)
-    @fact getDual(c13) --> roughly(1.25,TOL)
-
-    @fact getDual(c21) --> roughly(-0.75, TOL)
-    @fact getDual(c22) --> roughly(-0.0,TOL)
-    @fact getDual(c23) --> roughly(-1.25,TOL)
-
-
-end
-end
-end
-
-facts("LP vs SOC dual test / MIN") do
-for _lp_solver in lp_solvers, _conic_solver in conic_solvers_with_duals
-context("With lp solver $(typeof(_lp_solver)) conic solver $(typeof(_conic_solver))") do 
-
-    m1 = Model(solver=_lp_solver)
-    @defVar(m1, x1[1:2] >= 0)
-    @setObjective(m1, Min, -x1[1] - 2x1[2])
-    @addConstraint(m1, c11, 3x1[1] + x1[2] <= 4)
-    @addConstraint(m1, c12, x1[1] + 2x1[2] >= 1)
-    @addConstraint(m1, c13, -x1[1] + x1[2] == 0.5)
-
-
-    m2 = Model(solver=_conic_solver)
-    @defVar(m2, x2[1:2] >= 0)
-    @setObjective(m2, Min, -x2[1] - 2x2[2])
-    @addConstraint(m2, c21, 3x2[1] + x2[2] <= 4)
-    @addConstraint(m2, c22, x2[1] + 2x2[2] >= 1)
-    @addConstraint(m2, c23, -x2[1] + x2[2] == 0.5)
-    @addConstraint(m2, norm(x2[1]) <= x2[2])
-
-    solve(m1)
-    solve(m2)
-
-    @fact getDual(c11) --> roughly(-0.75, TOL)
-    @fact getDual(c12) --> roughly(-0.0,TOL)
-    @fact getDual(c13) --> roughly(-1.25,TOL)
 
     @fact getDual(c21) --> roughly(0.75, TOL)
     @fact getDual(c22) --> roughly(0.0,TOL)
@@ -105,17 +73,69 @@ end
 end
 end
 
-facts("LP vs SOC reduced costs test") do
-for _lp_solver in lp_solvers, _conic_solver in conic_solvers_with_duals
-context("With lp solver $(typeof(_lp_solver)) conic solver $(typeof(_conic_solver))") do 
+facts("LP vs SOC dual test / MIN") do
+for _lp_solver in lp_solvers
+context("With lp solver $(typeof(_lp_solver))") do 
 
     m1 = Model(solver=_lp_solver)
+    @defVar(m1, x1[1:2] >= 0)
+    @setObjective(m1, Min, -x1[1] - 2x1[2])
+    @addConstraint(m1, c11, 3x1[1] + x1[2] <= 4)
+    @addConstraint(m1, c12, x1[1] + 2x1[2] >= 1)
+    @addConstraint(m1, c13, -x1[1] + x1[2] == 0.5)
+
+    solve(m1)
+
+    @fact getDual(c11) --> roughly(-0.75, TOL)
+    @fact getDual(c12) --> roughly(-0.0,TOL)
+    @fact getDual(c13) --> roughly(-1.25,TOL)
+
+end
+end
+for  _conic_solver in conic_solvers_with_duals
+context("With conic solver $(typeof(_conic_solver))") do
+
     m2 = Model(solver=_conic_solver)
+    @defVar(m2, x2[1:2] >= 0)
+    @setObjective(m2, Min, -x2[1] - 2x2[2])
+    @addConstraint(m2, c21, 3x2[1] + x2[2] <= 4)
+    @addConstraint(m2, c22, x2[1] + 2x2[2] >= 1)
+    @addConstraint(m2, c23, -x2[1] + x2[2] == 0.5)
+    @addConstraint(m2, norm(x2[1]) <= x2[2])
+
+    solve(m2)
+    @fact getDual(c21) --> roughly(-0.75, TOL)
+    @fact getDual(c22) --> roughly(-0.0,TOL)
+    @fact getDual(c23) --> roughly(-1.25,TOL)
+
+end
+end
+end
+
+facts("LP vs SOC reduced costs test") do
+for _lp_solver in lp_solvers
+context("With lp solver $(typeof(_lp_solver))") do 
+
+    m1 = Model(solver=_lp_solver)
     
     @defVar(m1, x1 >= 0)
     @defVar(m1, y1 >= 0)
     @addConstraint(m1, x1 + y1 == 1)
     @setObjective(m1, Max, y1)
+
+    solve(m1)
+
+    @fact dot([getDual(y1), getDual(x1)],[getValue(y1); getValue(x1)]) --> greater_than_or_equal(-TOL)
+
+    @fact getValue(x1) --> roughly(0.0,TOL)
+    @fact getValue(y1) --> roughly(1.0,TOL)
+
+end
+end
+for  _conic_solver in conic_solvers_with_duals
+context("With conic solver $(typeof(_conic_solver))") do
+
+    m2 = Model(solver=_conic_solver)
 
     @defVar(m2, x2 >= 0)
     @defVar(m2, y2 >= 0)
@@ -123,14 +143,12 @@ context("With lp solver $(typeof(_lp_solver)) conic solver $(typeof(_conic_solve
     @setObjective(m2, Max, y2)
     @addConstraint(m2, norm(x2) <= y2)
     
-    solve(m1)
     solve(m2)
 
-    @fact dot([getDual(y1), getDual(x1)],[getValue(y1); getValue(x1)]) --> greater_than_or_equal(-TOL)
     @fact dot([getDual(y2), getDual(x2)],[getValue(y2); getValue(x2)]) --> greater_than_or_equal(-TOL)
 
-    @fact getValue(x1) --> roughly(getValue(x2),TOL)
-    @fact getValue(y1) --> roughly(getValue(y2),TOL)
+    @fact getValue(x2) --> roughly(0.0,TOL)
+    @fact getValue(y2) --> roughly(1.0,TOL)
 
 end
 end
@@ -138,11 +156,10 @@ end
 
 
 facts("LP vs SOC reduced costs test") do
-for _lp_solver in lp_solvers, _conic_solver in conic_solvers_with_duals
-context("With lp solver $(typeof(_lp_solver)) conic solver $(typeof(_conic_solver))") do 
+for _lp_solver in lp_solvers
+context("With lp solver $(typeof(_lp_solver))") do 
 
     m1 = Model(solver=_lp_solver)
-    m2 = Model(solver=_conic_solver)
     
     @defVar(m1, x1 >= 0)
     @defVar(m1, y1 <= 5)
@@ -150,6 +167,21 @@ context("With lp solver $(typeof(_lp_solver)) conic solver $(typeof(_conic_solve
     @addConstraint(m1, x1 + y1 == 1)
     @addConstraint(m1, y1 + z1 >= 3)
     @setObjective(m1, Max, y1)
+
+    solve(m1)
+
+    @fact dot([getDual(y1), getDual(x1)],[getValue(y1); getValue(x1)]) --> greater_than_or_equal(-TOL)
+    @fact dot([getDual(y1), getDual(z1)],[getValue(y1); getValue(z1)]) --> greater_than_or_equal(-TOL)
+
+    @fact getValue(x1) --> roughly(0.0,TOL)
+    @fact getValue(y1) --> roughly(1.0,TOL)
+
+end
+end
+for  _conic_solver in conic_solvers_with_duals
+context("With conic solver $(typeof(_conic_solver))") do
+
+    m2 = Model(solver=_conic_solver)
 
     @defVar(m2, x2 >= 0)
     @defVar(m2, y2 <= 5)
@@ -160,18 +192,13 @@ context("With lp solver $(typeof(_lp_solver)) conic solver $(typeof(_conic_solve
     @addConstraint(m2, norm(x2) <= y2)
     @addConstraint(m2, norm(y2) <= z2)
     
-    solve(m1)
     solve(m2)
 
-    @fact dot([getDual(y1), getDual(x1)],[getValue(y1); getValue(x1)]) --> greater_than_or_equal(-TOL)
     @fact dot([getDual(y2), getDual(x2)],[getValue(y2); getValue(x2)]) --> greater_than_or_equal(-TOL)
-
-
-    @fact dot([getDual(y1), getDual(z1)],[getValue(y1); getValue(z1)]) --> greater_than_or_equal(-TOL)
     @fact dot([getDual(y2), getDual(z2)],[getValue(y2); getValue(z2)]) --> greater_than_or_equal(-TOL)
 
-    @fact getValue(x1) --> roughly(getValue(x2),TOL)
-    @fact getValue(y1) --> roughly(getValue(y2),TOL)
+    @fact getValue(x2) --> roughly(0.0,TOL)
+    @fact getValue(y2) --> roughly(1.0,TOL)
 
 end
 end

@@ -149,7 +149,7 @@ function solve(m::Model; suppress_warnings=false,
                 fill(NaN, numRows+numBndRows+numSOCRows)
             end
             if m.conicconstrDuals[1] != NaN
-                if m.objSense == :Max
+                if m.objSense == :Min
                     scale!(m.conicconstrDuals, -1)
                 end
                 m.linconstrDuals = m.conicconstrDuals[1:length(m.linconstr)]
