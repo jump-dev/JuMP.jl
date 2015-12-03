@@ -144,7 +144,7 @@ function solve(m::Model; suppress_warnings=false,
             numBndRows = getNumBndRows(m)
             numSOCRows = getNumSOCRows(m)
             m.conicconstrDuals = try
-                MathProgBase.getconicdual(m.internalModel)
+                MathProgBase.getdual(m.internalModel)
             catch
                 fill(NaN, numRows+numBndRows+numSOCRows)
             end
