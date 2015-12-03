@@ -125,7 +125,7 @@ context("With lp solver $(typeof(_lp_solver))") do
 
     solve(m1)
 
-    #@fact dot([getDual(y1), getDual(x1)],[getValue(y1); getValue(x1)]) --> less_than_or_equal(TOL)
+    @fact dot([getDual(y1), getDual(x1)],[getValue(y1); getValue(x1)]) --> less_than_or_equal(TOL)
 
     @fact getValue(x1) --> roughly(0.0,TOL)
     @fact getValue(y1) --> roughly(1.0,TOL)
@@ -145,7 +145,7 @@ context("With conic solver $(typeof(_conic_solver))") do
     
     solve(m2)
 
-    #@fact dot([getDual(y2), getDual(x2)],[getValue(y2); getValue(x2)]) --> less_than_or_equal(TOL)
+    @fact dot([getDual(y2), getDual(x2)],[getValue(y2); getValue(x2)]) --> less_than_or_equal(TOL)
 
     @fact getValue(x2) --> roughly(0.0,TOL)
     @fact getValue(y2) --> roughly(1.0,TOL)
@@ -162,19 +162,13 @@ context("With lp solver $(typeof(_lp_solver))") do
     m1 = Model(solver=_lp_solver)
     
     @defVar(m1, x1 >= 0)
-    @defVar(m1, y1 <= 5)
-    @defVar(m1, 3 >= z1 >= 2)
-    @addConstraint(m1, x1 + y1 == 1)
-    @addConstraint(m1, y1 + z1 >= 3)
-    @setObjective(m1, Max, y1)
+    @addConstraint(m1, x1 <= 1)
+    @setObjective(m1, Max, x1)
 
     solve(m1)
 
-    #@fact dot([getDual(y1), getDual(x1)],[getValue(y1); getValue(x1)]) --> less_than_or_equal(TOL)
-    #@fact dot([getDual(y1), getDual(z1)],[getValue(y1); getValue(z1)]) --> less_than_or_equal(TOL)
-
-    @fact getValue(x1) --> roughly(0.0,TOL)
-    @fact getValue(y1) --> roughly(1.0,TOL)
+    @fact getDual(x1) --> roughly(0.0, TOL)
+    @fact getValue(x1) --> roughly(1.0,TOL)
 
 end
 end
@@ -184,21 +178,14 @@ context("With conic solver $(typeof(_conic_solver))") do
     m2 = Model(solver=_conic_solver)
 
     @defVar(m2, x2 >= 0)
-    @defVar(m2, y2 <= 5)
-    @defVar(m2, 3 >= z2 >= 2)
-    @addConstraint(m2, x2 + y2 == 1)
-    @addConstraint(m2, y2 + z2 >= 3)
-    @setObjective(m2, Max, y2)
-    @addConstraint(m2, norm(x2) <= y2)
-    @addConstraint(m2, norm(y2) <= z2)
+    @addConstraint(m2, x2 <= 1)
+    @setObjective(m2, Max, x2)
+    @addConstraint(m2, norm(x2) <= x2)
     
     solve(m2)
 
-    #@fact dot([getDual(y2), getDual(x2)],[getValue(y2); getValue(x2)]) --> less_than_or_equal(TOL)
-    #@fact dot([getDual(y2), getDual(z2)],[getValue(y2); getValue(z2)]) --> less_than_or_equal(TOL)
-
-    @fact getValue(x2) --> roughly(0.0,TOL)
-    @fact getValue(y2) --> roughly(1.0,TOL)
+    @fact getDual(x2) --> roughly(0.0, TOL)
+    @fact getValue(x2) --> roughly(1.0,TOL)
 
 end
 end
