@@ -84,7 +84,7 @@ type Model
     redCosts::Vector{Float64}
     linconstrDuals::Vector{Float64}
     conicconstrDuals::Vector{Float64}
-    constrDualMap
+    constrDualMap::Vector{Vector{Int}}
     # internal solver model object
     internalModel
     # Solver+option object from MathProgBase
@@ -529,7 +529,8 @@ function getDual(c::ConstraintRef{LinearConstraint})
     return c.m.linconstrDuals[c.idx]
 end
 
-function getBndRows(m::Model)
+# Returns the number of non-infinity bounds on variables
+function getNumBndRows(m::Model)
     numBounds = 0
     for i in 1:m.numCols
         seen = false
@@ -543,10 +544,10 @@ function getBndRows(m::Model)
         end
 
         if !seen
-            if !(lb == -Inf)
+            if lb != -Inf
                 numBounds += 1
             end
-            if !(ub == Inf)
+            if ub != Inf
                 numBounds += 1
             end
         end
@@ -554,7 +555,8 @@ function getBndRows(m::Model)
     return numBounds
 end
 
-function getSOCRows(m::Model)
+# Returns the number of second-order cone constraints
+function getNumSOCRows(m::Model)
     numSOCRows = 0
     for con in m.socconstr
         numSOCRows += length(con.normexpr.norm.terms) + 1
@@ -563,8 +565,8 @@ function getSOCRows(m::Model)
 end
 
 function getDual(c::ConstraintRef{SOCConstraint})
-    numBndRows = getBndRows(c.m)
-    numSOCRows = getSOCRows(c.m)
+    numBndRows = getNumBndRows(c.m)
+    numSOCRows = getNumSOCRows(c.m)
     if length(c.m.conicconstrDuals) != (MathProgBase.numlinconstr(c.m) + numBndRows + numSOCRows)
         error("Dual solution not available. Check that the model was properly solved and no integer variables are present.")
     end

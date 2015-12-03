@@ -61,11 +61,11 @@ function fillConicRedCosts(m::Model)
         upper = false
         lb, ub = m.colLower[i], m.colUpper[i]
 
-        if !(lb == -Inf)
+        if lb != -Inf
             lower = true
             bndidx += 1
         end
-        if !(ub == Inf)
+        if ub != Inf
             upper = true
             bndidx += 1
         end
@@ -140,9 +140,9 @@ function solve(m::Model; suppress_warnings=false,
             end
         end
         # conic duals
-        if traits.conic && !traits.qp && !traits.qc && !traits.sdp
-            numBndRows = getBndRows(m)
-            numSOCRows = getSOCRows(m)
+        if traits.soc #traits.conic && !traits.qp && !traits.qc && !traits.sdp
+            numBndRows = getNumBndRows(m)
+            numSOCRows = getNumSOCRows(m)
             m.conicconstrDuals = try
                 MathProgBase.getconicdual(m.internalModel)
             catch
@@ -150,7 +150,7 @@ function solve(m::Model; suppress_warnings=false,
             end
             if m.conicconstrDuals[1] != NaN
                 if m.objSense == :Max
-                    m.conicconstrDuals = -m.conicconstrDuals
+                    scale!(m.conicconstrDuals, -1)
                 end
                 m.linconstrDuals = m.conicconstrDuals[1:length(m.linconstr)]
                 m.redCosts = zeros(numCols)
@@ -623,10 +623,10 @@ function conicconstraintdata(m::Model)
         end
 
         if !seen
-            if !(lb == -Inf)
+            if lb != -Inf
                 numBounds += 1
             end
-            if !(ub == Inf)
+            if ub != Inf
                 numBounds += 1
             end
             if lb == 0 && ub == 0
@@ -665,7 +665,6 @@ function conicconstraintdata(m::Model)
         numNormRows += 1
         numSOCRows += length(con.normexpr.norm.terms) + 1
     end
-    #@show numNormRows, numSOCRows
     numRows = numLinRows + numBounds + numQuadRows + numSOCRows + numSDPRows + numSymRows
 
     # should maintain the order of constraints in the above form
@@ -727,7 +726,7 @@ function conicconstraintdata(m::Model)
     bndidx = 0
     for idx in 1:m.numCols
         lb = m.colLower[idx]
-        if !(lb == -Inf)
+        if lb != -Inf
             bndidx += 1
             nnz += 1
             c   += 1
@@ -739,7 +738,7 @@ function conicconstraintdata(m::Model)
             constr_dual_map[numLinRows + bndidx] = collect(c)
         end
         ub = m.colUpper[idx]
-        if !(ub == Inf)
+        if ub != Inf
             bndidx += 1
             c   += 1
             push!(I, c)
