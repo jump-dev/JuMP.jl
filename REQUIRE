@@ -1,5 +1,5 @@
-julia 0.4-rc2
-MathProgBase 0.3.8 0.4.0-
+julia 0.4
+MathProgBase 0.4.0 0.5.0-
 ReverseDiffSparse 0.2.2
 ArrayViews 0.4.12
 Calculus

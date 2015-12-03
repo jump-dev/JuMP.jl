@@ -1,12 +1,27 @@
 JuMP release notes
 ==================
 
-Unreleased
-----------
+Version 0.11.1 (December 1, 2015)
+---------------------------------
+
+  * Remove usage of `@compat` in tests.
+  * Fix updating quadratic objectives for nonlinear models.
+
+Version 0.11.0 (November 30, 2015)
+----------------------------------
 
   * Julia 0.4.0 is the minimum required version for this release.
   * Fix for scoping semantics of index variables in sum{}. Index variables no longer leak into the surrounding scope.
-  * Addition of the ``solve(m::Model, relaxation=true)`` keyword argument to solve the standard continuous realaxation of model ``m``.
+  * Addition of the ``solve(m::Model, relaxation=true)`` keyword argument to solve the standard continuous realaxation of model ``m``
+  * The ``getConstraintBounds()`` method allows access to the lower and upper bounds of all constraints in a (nonlinear) model.
+  * Update for breaking changes in MathProgBase
+
+Version 0.10.3 (November 20, 2015)
+----------------------------------
+
+  * Fix a rare error when parsing quadratic expressions
+  * Fix ``Variable()`` constructor with default arguments
+  * Detect unrecognized keywords in ``solve()``
 
 Version 0.10.2 (September 28, 2015)
 -----------------------------------
