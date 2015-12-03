@@ -9,6 +9,8 @@ julia:
 notifications:
   email: false
 # uncomment the following lines to override the default test script
-#script:
-#  - if [[ -a .git/shallow ]]; then git fetch --unshallow; fi
-#  - julia -e 'Pkg.clone(pwd()); Pkg.build("ReverseDiffSparse2"); Pkg.test("ReverseDiffSparse2"; coverage=true)'
+script:
+  - if [[ -a .git/shallow ]]; then git fetch --unshallow; fi
+  - julia -e 'Pkg.clone(pwd()); Pkg.build("ReverseDiffSparse2"); Pkg.test("ReverseDiffSparse2"; coverage=true)'
+after_success:
+  - julia -e 'cd(Pkg.dir("ReverseDiffSparse2")); Pkg.add("Coverage"); using Coverage; Codecov.submit(process_folder())'
