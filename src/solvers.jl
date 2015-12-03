@@ -75,8 +75,7 @@ function fillConicRedCosts(m::Model)
         elseif !lower && upper
             m.redCosts[i] = m.conicconstrDuals[numlinconstr + bndidx]
         elseif lower && upper
-            m.redCosts[i] = m.conicconstrDuals[numlinconstr + bndidx]
-                            +m.conicconstrDuals[numlinconstr + bndidx-1]
+            m.redCosts[i] = m.conicconstrDuals[numlinconstr + bndidx]+m.conicconstrDuals[numlinconstr + bndidx-1]
         end
     end
 end
