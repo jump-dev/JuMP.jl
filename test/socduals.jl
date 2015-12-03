@@ -34,10 +34,8 @@ end
 end
 
 facts("LP dual vs SOC dual test / MAX") do
-for _lp_solver in lp_solvers
-context("With lp solver $(typeof(_lp_solver))") do
-for _conic_solver in conic_solvers_with_duals
-context("With conic solver $(typeof(_conic_solver))") do
+for _lp_solver in lp_solvers, _conic_solver in conic_solvers_with_duals
+context("With lp solver $(typeof(_lp_solver)) conic solver $(typeof(_conic_solver))") do 
 
     m1 = Model(solver=_lp_solver)
     @defVar(m1, x1[1:2] >= 0)
@@ -71,15 +69,10 @@ context("With conic solver $(typeof(_conic_solver))") do
 end
 end
 end
-end
-end
 
 facts("LP vs SOC dual test / MIN") do
-for _lp_solver in lp_solvers
-context("With lp solver $(typeof(_lp_solver))") do
-for _conic_solver in conic_solvers_with_duals
-context("With conic solver $(typeof(_conic_solver))") do
-
+for _lp_solver in lp_solvers, _conic_solver in conic_solvers_with_duals
+context("With lp solver $(typeof(_lp_solver)) conic solver $(typeof(_conic_solver))") do 
 
     m1 = Model(solver=_lp_solver)
     @defVar(m1, x1[1:2] >= 0)
@@ -99,7 +92,6 @@ context("With conic solver $(typeof(_conic_solver))") do
 
     solve(m1)
     solve(m2)
-    #@show m2.conicconstrDuals
 
     @fact getDual(c11) --> roughly(-0.75, TOL)
     @fact getDual(c12) --> roughly(-0.0,TOL)
@@ -112,16 +104,10 @@ context("With conic solver $(typeof(_conic_solver))") do
 end
 end
 end
-end
-end
 
 facts("LP vs SOC reduced costs test") do
-for _lp_solver in lp_solvers
-context("With lp solver $(typeof(_lp_solver))") do
-for _conic_solver in conic_solvers_with_duals
-context("With conic solver $(typeof(_conic_solver))") do
-
-
+for _lp_solver in lp_solvers, _conic_solver in conic_solvers_with_duals
+context("With lp solver $(typeof(_lp_solver)) conic solver $(typeof(_conic_solver))") do 
 
     m1 = Model(solver=_lp_solver)
     m2 = Model(solver=_conic_solver)
@@ -146,22 +132,14 @@ context("With conic solver $(typeof(_conic_solver))") do
     @fact getValue(x1) --> roughly(getValue(x2),TOL)
     @fact getValue(y1) --> roughly(getValue(y2),TOL)
 
-    #@fact getDual(x1) --> roughly(-getDual(x2),TOL)
-    #@fact getDual(y1) --> roughly(-getDual(y2),TOL)
-end
-end
 end
 end
 end
 
 
 facts("LP vs SOC reduced costs test") do
-for _lp_solver in lp_solvers
-context("With lp solver $(typeof(_lp_solver))") do
-for _conic_solver in conic_solvers_with_duals
-context("With conic solver $(typeof(_conic_solver))") do
-
-
+for _lp_solver in lp_solvers, _conic_solver in conic_solvers_with_duals
+context("With lp solver $(typeof(_lp_solver)) conic solver $(typeof(_conic_solver))") do 
 
     m1 = Model(solver=_lp_solver)
     m2 = Model(solver=_conic_solver)
@@ -195,10 +173,6 @@ context("With conic solver $(typeof(_conic_solver))") do
     @fact getValue(x1) --> roughly(getValue(x2),TOL)
     @fact getValue(y1) --> roughly(getValue(y2),TOL)
 
-    #@fact getDual(x1) --> roughly(-getDual(x2),TOL)
-    #@fact getDual(y1) --> roughly(-getDual(y2),TOL)
-end
-end
 end
 end
 end
