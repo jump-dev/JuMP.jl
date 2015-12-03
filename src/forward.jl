@@ -24,7 +24,6 @@ function forward_eval{T}(storage::Vector{T},nd::Vector{NodeData},adj,const_value
             children_idx = nzrange(adj,k)
             #@show children_idx
             n_children = length(children_idx)
-            # can generate this code later
             if op == 1 # :+
                 tmp_sum = zero(T)
                 # sum over children
@@ -35,26 +34,16 @@ function forward_eval{T}(storage::Vector{T},nd::Vector{NodeData},adj,const_value
             elseif op == 2 # :-
                 child1 = first(children_idx)
                 tmp_sub = storage[children_arr[child1]]
-                if n_children == 1
-                    storage[k] = -tmp_sub
-                else
-                    @assert n_children == 2
-                    tmp_sub -= storage[children_arr[child1+1]] 
-                    storage[k] = tmp_sub
-                end
+                @assert n_children >= 2
+                tmp_sub -= storage[children_arr[child1+1]]
+                storage[k] = tmp_sub
             elseif op == 3 # :*
                 tmp_prod = one(T)
                 for c_idx in children_idx
                     @inbounds tmp_prod *= storage[children_arr[c_idx]]
                 end
                 storage[k] = tmp_prod
-            elseif op == 4 # :sin
-                @assert n_children == 1
-                storage[k] = sin(storage[children_arr[first(children_idx)]])
-            elseif op == 5 # :cos
-                @assert n_children == 1
-                storage[k] = cos(storage[children_arr[first(children_idx)]])
-            elseif op == 6 # :^
+            elseif op == 4 # :^
                 @assert n_children == 2
                 idx1 = children_idx[1] 
                 idx2 = children_idx[2] 
@@ -68,7 +57,14 @@ function forward_eval{T}(storage::Vector{T},nd::Vector{NodeData},adj,const_value
             else
                 error()
             end
+        elseif nod.nodetype == CALLUNIVAR # univariate function
+            op = nod.index
+            child_idx = children_arr[adj.colptr[k]]
+            #@assert child_idx == children_arr[first(nzrange(adj,k))]
+            child_val = storage[child_idx]
+            storage[k] = eval_univariate(op, child_val)
         end
+
     end
     #@show storage
 
@@ -77,3 +73,16 @@ function forward_eval{T}(storage::Vector{T},nd::Vector{NodeData},adj,const_value
 end
 
 export forward_eval
+
+
+switchblock = Expr(:block)
+for i = 1:length(univariate_operators)
+    op = univariate_operators[i]
+	ex = :(return $op(v))
+    push!(switchblock.args,i,ex)
+end
+switchexpr = Expr(:macrocall, Expr(:.,:Lazy,quot(symbol("@switch"))), :operator_id,switchblock)
+
+@eval @inline function eval_univariate(operator_id,v)
+    $switchexpr
+end

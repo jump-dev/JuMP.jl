@@ -14,7 +14,11 @@ function expr_to_nodedata(ex::Expr,nd::Vector{NodeData},values::Vector{Float64},
     myid = length(nd) + 1
     if isexpr(ex,:call)
         op = ex.args[1]
-        push!(nd,NodeData(CALL, operator_to_id[op], parentid,whichchild))
+        if length(ex.args) == 2
+            push!(nd,NodeData(CALLUNIVAR, univariate_operator_to_id[op], parentid, whichchild))
+        else
+            push!(nd,NodeData(CALL, operator_to_id[op], parentid,whichchild))
+        end
         for k in 2:length(ex.args)
             expr_to_nodedata(ex.args[k],nd,values,myid,k-1)
         end

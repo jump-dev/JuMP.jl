@@ -24,41 +24,42 @@ function reverse_eval{T}(output::Vector{T},rev_storage::Vector{T},forward_storag
         # compute the value of reverse_storage[k]
         parentidx = nod.parent
         @inbounds par = nd[parentidx]
-        @assert par.nodetype == CALL
         op = par.index
-        if op == 1 # :+
-            @inbounds rev_storage[k] = rev_storage[parentidx]
-        elseif op == 2 # :-
-            @inbounds siblings_idx = nzrange(adj,parentidx)
-            if nod.whichchild == 1 && length(siblings_idx) > 1
+        if par.nodetype == CALL
+            if op == 1 # :+
                 @inbounds rev_storage[k] = rev_storage[parentidx]
-            else
-                @inbounds rev_storage[k] = -rev_storage[parentidx]
-            end
-        elseif op == 3 # :*
-            # dummy version for now
-            @inbounds rev_storage[k] = rev_storage[parentidx]*(forward_storage[parentidx]/forward_storage[k])
-        elseif op == 4 # :sin
-            rev_storage[k] = rev_storage[parentidx]*cos(forward_storage[k])
-        elseif op == 5 # :cos
-            rev_storage[k] = -rev_storage[parentidx]*sin(forward_storage[k])
-        elseif op == 6 # :^
-            @inbounds siblings_idx = nzrange(adj,parentidx)
-            if nod.whichchild == 1 # base
-                @inbounds exponentidx = children_arr[last(siblings_idx)]
-                @inbounds exponent = forward_storage[exponentidx]
-                if exponent == 2
-                    @inbounds rev_storage[k] = rev_storage[parentidx]*2*forward_storage[k]
+            elseif op == 2 # :-
+                @inbounds siblings_idx = nzrange(adj,parentidx)
+                if nod.whichchild == 1
+                    @inbounds rev_storage[k] = rev_storage[parentidx]
                 else
-                    rev_storage[k] = rev_storage[parentidx]*exponent*forward_storage[k]^(exponent-1)
+                    @inbounds rev_storage[k] = -rev_storage[parentidx]
+                end
+            elseif op == 3 # :*
+                # dummy version for now
+                @inbounds rev_storage[k] = rev_storage[parentidx]*(forward_storage[parentidx]/forward_storage[k])
+            elseif op == 4 # :^
+                @inbounds siblings_idx = nzrange(adj,parentidx)
+                if nod.whichchild == 1 # base
+                    @inbounds exponentidx = children_arr[last(siblings_idx)]
+                    @inbounds exponent = forward_storage[exponentidx]
+                    if exponent == 2
+                        @inbounds rev_storage[k] = rev_storage[parentidx]*2*forward_storage[k]
+                    else
+                        rev_storage[k] = rev_storage[parentidx]*exponent*forward_storage[k]^(exponent-1)
+                    end
+                else
+                    baseidx = children_arr[first(siblings_idx)]
+                    base = forward_storage[baseidx]
+                    rev_storage[k] = rev_storage[parentidx]*forward_storage[parentidx]*log(base)
                 end
             else
-                baseidx = children_arr[first(siblings_idx)]
-                base = forward_storage[baseidx]
-                rev_storage[k] = rev_storage[parentidx]*forward_storage[parentidx]*log(base)
+                error()
             end
         else
-            error()
+            @assert par.nodetype == CALLUNIVAR
+            @inbounds this_value = forward_storage[k]
+            @inbounds rev_storage[k] = rev_storage[parentidx]*univariate_deriv(op,this_value)
         end
 
         if nod.nodetype == VARIABLE
@@ -72,3 +73,15 @@ function reverse_eval{T}(output::Vector{T},rev_storage::Vector{T},forward_storag
 end
 
 export reverse_eval
+
+switchblock = Expr(:block)
+for i = 1:length(univariate_operators)
+    deriv_expr = univariate_operator_deriv[i]
+	ex = :(return $deriv_expr)
+    push!(switchblock.args,i,ex)
+end
+switchexpr = Expr(:macrocall, Expr(:.,:Lazy,quot(symbol("@switch"))), :operator_id,switchblock)
+
+@eval @inline function univariate_deriv(operator_id,x)
+    $switchexpr
+end

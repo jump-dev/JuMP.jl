@@ -42,9 +42,9 @@ println("JuMP Feval time")
     println("JuMP grad time")
     @time MathProgBase.eval_grad_f(nl, ∇f, x)
     @time MathProgBase.eval_grad_f(nl, ∇f, x)
-    for i in 1:10
-        @profile reverse_eval(grad,reverse_storage,storage,nd,adj,const_values,x)
-    end
+    #for i in 1:10
+    #    @profile reverse_eval(grad,reverse_storage,storage,nd,adj,const_values,x)
+    #end
 end
 
 function mod1(N)
