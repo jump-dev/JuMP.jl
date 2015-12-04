@@ -214,11 +214,7 @@ context("With lp solver $(typeof(_lp_solver))") do
     @fact getDual(x1) --> roughly(-0.7, TOL)
     @fact getDual(y1) --> roughly(0.0, TOL)
 
-    lp_dual_x = getDual(x1)
-    lp_dual_y = getDual(y1)
-    @fact getDual(x1) --> roughly(lp_dual_x, TOL)
-    @fact getDual(y1) --> roughly(lp_dual_y, TOL)
-    lp_dual_obj = getDual(c1)*RHS + lp_dual_x * X_LB + lp_dual_y * Y_UB
+    lp_dual_obj = getDual(c1)*RHS + getDual(x1) * X_LB + getDual(y1) * Y_UB
     @fact getObjectiveValue(m1) --> roughly(lp_dual_obj, TOL)
 
 end
@@ -246,11 +242,7 @@ context("With conic solver $(typeof(_conic_solver))") do
     @fact getDual(x2) --> roughly(-0.7, TOL)
     @fact getDual(y2) --> roughly(0.0, TOL)
 
-    conic_dual_x = m2.conicconstrDuals[2]
-    conic_dual_y = m2.conicconstrDuals[3]
-    @fact getDual(x2) --> roughly(conic_dual_x, TOL)
-    @fact getDual(y2) --> roughly(conic_dual_y, TOL)
-    conic_dual_obj = getDual(c2)*RHS + conic_dual_x * X_LB + conic_dual_y * Y_UB
+    conic_dual_obj = getDual(c2)*RHS + getDual(x2) * X_LB + getDual(y2) * Y_UB
     @fact getObjectiveValue(m2) --> roughly(conic_dual_obj, TOL)
 end
 end
