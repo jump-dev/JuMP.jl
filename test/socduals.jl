@@ -194,8 +194,6 @@ end
 facts("LP vs SOC reduced costs test") do
 for _lp_solver in lp_solvers
 context("With lp solver $(typeof(_lp_solver))") do 
-for  _conic_solver in conic_solvers_with_duals
-context("With conic solver $(typeof(_conic_solver))") do
 
     RHS = 2
     X_LB = 0.5
@@ -210,6 +208,28 @@ context("With conic solver $(typeof(_conic_solver))") do
 
     solve(m1)
 
+    @fact getValue(x1) --> roughly(0.5, TOL)
+    @fact getValue(y1) --> roughly(1.5, TOL)
+
+    @fact getDual(x1) --> roughly(-0.7, TOL)
+    @fact getDual(y1) --> roughly(0.0, TOL)
+
+    lp_dual_x = getDual(x1)
+    lp_dual_y = getDual(y1)
+    @fact getDual(x1) --> roughly(lp_dual_x, TOL)
+    @fact getDual(y1) --> roughly(lp_dual_y, TOL)
+    lp_dual_obj = getDual(c1)*RHS + lp_dual_x * X_LB + lp_dual_y * Y_UB
+    @fact getObjectiveValue(m1) --> roughly(lp_dual_obj, TOL)
+
+end
+end
+for  _conic_solver in conic_solvers_with_duals
+context("With conic solver $(typeof(_conic_solver))") do
+
+    RHS = 2
+    X_LB = 0.5
+    Y_UB = 5
+
     m2 = Model(solver=_conic_solver)
 
     @defVar(m2, x2 >= X_LB)
@@ -220,27 +240,18 @@ context("With conic solver $(typeof(_conic_solver))") do
     
     solve(m2)
 
-    @fact getValue(x1) --> roughly(getValue(x2), TOL)
-    @fact getValue(y1) --> roughly(getValue(y2), TOL)
+    @fact getValue(x2) --> roughly(0.5, TOL)
+    @fact getValue(y2) --> roughly(1.5, TOL)
 
-    @fact getDual(x1) --> roughly(getDual(x2), TOL)
-    @fact getDual(y1) --> roughly(getDual(y2), TOL)
-
-    lp_dual_x = getDual(x1)
-    lp_dual_y = getDual(y1)
-    @fact getDual(x1) --> roughly(lp_dual_x, TOL)
-    @fact getDual(y1) --> roughly(lp_dual_y, TOL)
-    lp_dual_obj = getDual(c1)*RHS + lp_dual_x * X_LB + lp_dual_y * Y_UB
-    @fact getObjectiveValue(m1) --> roughly(lp_dual_obj, TOL)
+    @fact getDual(x2) --> roughly(-0.7, TOL)
+    @fact getDual(y2) --> roughly(0.0, TOL)
 
     conic_dual_x = m2.conicconstrDuals[2]
     conic_dual_y = m2.conicconstrDuals[3]
     @fact getDual(x2) --> roughly(conic_dual_x, TOL)
     @fact getDual(y2) --> roughly(conic_dual_y, TOL)
     conic_dual_obj = getDual(c2)*RHS + conic_dual_x * X_LB + conic_dual_y * Y_UB
-    @fact getObjectiveValue(m1) --> roughly(conic_dual_obj, TOL)
-end
-end
+    @fact getObjectiveValue(m2) --> roughly(conic_dual_obj, TOL)
 end
 end
 end
