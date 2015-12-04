@@ -80,3 +80,5 @@ test_linearity(:(x[1]^x[2]), NONLINEAR, Set([(2,2),(1,1),(2,1)]))
 test_linearity(:(x[1]/3+x[2]), LINEAR)
 test_linearity(:(3/(x[1]*x[2])), NONLINEAR, Set([(2,2),(1,1),(2,1)]))
 test_linearity(:(1/(x[1]+3)), NONLINEAR)
+
+include("test_coloring.jl")
