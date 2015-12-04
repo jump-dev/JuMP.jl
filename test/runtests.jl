@@ -27,7 +27,7 @@ for k in 1:3
 
 end
 
-ex = :((1/x[1])^x[2])
+ex = :((1/x[1])^x[2]-x[3])
 
 nd,const_values = expr_to_nodedata(ex)
 adj = adjmat(nd)
@@ -35,16 +35,16 @@ adj = adjmat(nd)
 storage = zeros(length(nd))
 reverse_storage = zeros(length(nd))
 
-x = [2.5,3.5]
+x = [2.5,3.5,1.0]
 #@show x
 fval = forward_eval(storage,nd,adj,const_values,x)
-true_val = (1/x[1])^x[2]
+true_val = (1/x[1])^x[2]-x[3]
 @test isapprox(fval,true_val)
 
-grad = zeros(2)
+grad = zeros(3)
 reverse_eval(grad,reverse_storage,storage,nd,adj,const_values,x)
 
-true_grad = [-x[2]*x[1]^(-x[2]-1), -true_val*log(x[1])]
+true_grad = [-x[2]*x[1]^(-x[2]-1), -((1/x[1])^x[2])*log(x[1]),-1]
 @test isapprox(grad,true_grad)
 
 
