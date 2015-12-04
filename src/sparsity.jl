@@ -1,10 +1,28 @@
 
+# compute the sparsity pattern of the gradient of an expression
+# (i.e., a list of which indices are present)
+
+function compute_gradient_sparsity(nd::Vector{NodeData},adj)
+
+    # this is easy, just build a list of which variable indices appear
+    indices = Set{Int}()
+    for k in 1:length(nd)
+        nod = nd[k]
+        if nod.nodetype == VARIABLE
+            push!(indices, nod.index)
+        end
+    end
+
+    return sort(collect(indices))
+end
+
+export compute_gradient_sparsity
 
 # compute the sparsity pattern the hessian of an expression
 
 # input_linearity is the linearity with respect to the input
 # computed by classify_linearity
-function compute_sparsity(nd::Vector{NodeData},adj,input_linearity::Vector{Linearity})
+function compute_hessian_sparsity(nd::Vector{NodeData},adj,input_linearity::Vector{Linearity})
 
     # idea: consider the linearity/nonlinearity of a node *with respect to the output*
     # The children of any node which is nonlinear with respect to the output
@@ -99,4 +117,4 @@ function compute_sparsity(nd::Vector{NodeData},adj,input_linearity::Vector{Linea
 
 end
 
-export compute_sparsity
+export compute_hessian_sparsity

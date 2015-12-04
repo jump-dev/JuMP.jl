@@ -29,25 +29,29 @@ end
 
 import ReverseDiffSparse2: CONSTANT, LINEAR, NONLINEAR
 
-function test_linearity(ex,testval,IJ = [])
+function test_linearity(ex,testval,IJ = [],indices=[])
     nd,const_values = expr_to_nodedata(ex)
     adj = adjmat(nd)
     linearity = classify_linearity(nd,adj)
     @test linearity[1] == testval
-    edgelist = compute_sparsity(nd,adj,linearity)
+    edgelist = compute_hessian_sparsity(nd,adj,linearity)
     if linearity[1] != NONLINEAR
         @test length(edgelist) == 0
     elseif length(IJ) > 0
         @test IJ == edgelist
     end
+    if length(indices) > 0
+        ix = compute_gradient_sparsity(nd, adj)
+        @test ix == indices
+    end
 end
 
-test_linearity(:(sin(x[1]^2) + cos(x[2]*4)-2.0), NONLINEAR, Set([(2,2),(1,1)]))
+test_linearity(:(sin(x[1]^2) + cos(x[2]*4)-2.0), NONLINEAR, Set([(2,2),(1,1)]), [1,2])
 test_linearity(:(3*4*(x[1]+x[2])), LINEAR)
-test_linearity(:(x[3]*x[2]), NONLINEAR, Set([(3,2),(3,3),(2,2)]))
+test_linearity(:(x[3]*x[2]), NONLINEAR, Set([(3,2),(3,3),(2,2)]),[2,3])
 test_linearity(:(3+4), CONSTANT)
 test_linearity(:(sin(3)+x[1]), LINEAR)
-test_linearity(:(cos(x[3])*sin(3)+x[1]), NONLINEAR, Set([(3,3)]))
+test_linearity(:(cos(x[3])*sin(3)+x[1]), NONLINEAR, Set([(3,3)]),[1,3])
 test_linearity(:(x[1]-3x[2]), LINEAR)
 test_linearity(:(-x[1]), LINEAR)
 test_linearity(:(+x[1]), LINEAR)
