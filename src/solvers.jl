@@ -53,6 +53,34 @@ function default_solver(traits::ProblemTraits)
     end
 end
 
+function fillConicRedCosts(m::Model)
+    bndidx = 0
+    numlinconstr = length(m.linconstr)
+    for i in 1:m.numCols
+        lower = false
+        upper = false
+        lb, ub = m.colLower[i], m.colUpper[i]
+
+        if lb != -Inf
+            lower = true
+            bndidx += 1
+        end
+        if ub != Inf
+            upper = true
+            bndidx += 1
+        end
+
+        if lower && !upper
+            m.redCosts[i] = m.conicconstrDuals[numlinconstr + bndidx]
+        elseif !lower && upper
+            m.redCosts[i] = m.conicconstrDuals[numlinconstr + bndidx]
+        elseif lower && upper
+            m.redCosts[i] = m.conicconstrDuals[numlinconstr + bndidx]+m.conicconstrDuals[numlinconstr + bndidx-1]
+        end
+    end
+end
+
+
 
 function solve(m::Model; suppress_warnings=false,
                 ignore_solve_hook=(m.solvehook===nothing),
@@ -97,7 +125,6 @@ function solve(m::Model; suppress_warnings=false,
     if stat == :Optimal
         # If we think dual information might be available, try to get it
         # If not, return an array of the correct length
-        # TODO: support conic duals
         if !(traits.int || traits.sos || traits.conic)
             m.redCosts = try
                 MathProgBase.getreducedcosts(m.internalModel)[1:numCols]
@@ -109,6 +136,26 @@ function solve(m::Model; suppress_warnings=false,
                 MathProgBase.getconstrduals(m.internalModel)[1:numRows]
             catch
                 fill(NaN, numRows)
+            end
+        end
+        # conic duals
+        if traits.soc #traits.conic && !traits.qp && !traits.qc && !traits.sdp
+            numBndRows = getNumBndRows(m)
+            numSOCRows = getNumSOCRows(m)
+            m.conicconstrDuals = try
+                MathProgBase.getdual(m.internalModel)
+            catch
+                fill(NaN, numRows+numBndRows+numSOCRows)
+            end
+            if m.conicconstrDuals[1] != NaN
+                if m.objSense == :Min
+                    scale!(m.conicconstrDuals, -1)
+                end
+                m.linconstrDuals = m.conicconstrDuals[1:length(m.linconstr)]
+                m.redCosts = zeros(numCols)
+                if numBndRows > 0
+                    fillConicRedCosts(m)
+                end
             end
         end
     else
@@ -575,10 +622,10 @@ function conicconstraintdata(m::Model)
         end
 
         if !seen
-            if !(lb == 0 || lb == -Inf)
+            if lb != -Inf
                 numBounds += 1
             end
-            if !(ub == 0 || ub == Inf)
+            if ub != Inf
                 numBounds += 1
             end
             if lb == 0 && ub == 0
@@ -612,10 +659,17 @@ function conicconstraintdata(m::Model)
     end
 
     numSOCRows = 0
+    numNormRows = 0
     for con in m.socconstr
+        numNormRows += 1
         numSOCRows += length(con.normexpr.norm.terms) + 1
     end
     numRows = numLinRows + numBounds + numQuadRows + numSOCRows + numSDPRows + numSymRows
+
+    # should maintain the order of constraints in the above form
+    # throughout the code c is the conic constraint index
+    # TODO: only added linear+bound+soc support, extend to all
+    constr_dual_map = Array(Vector{Int}, numLinRows + numBounds + numNormRows)
 
     b = Array(Float64, numRows)
 
@@ -664,12 +718,15 @@ function conicconstraintdata(m::Model)
         append!(J, indices)
         append!(V, tmpelts[indices])
         empty!(tmprow)
+        constr_dual_map[c] = collect(c)
     end
 
     c = numLinRows
+    bndidx = 0
     for idx in 1:m.numCols
         lb = m.colLower[idx]
-        if !(lb == 0 || lb == -Inf)
+        if lb != -Inf
+            bndidx += 1
             nnz += 1
             c   += 1
             push!(I, c)
@@ -677,15 +734,18 @@ function conicconstraintdata(m::Model)
             push!(V, 1.0)
             b[c] = lb
             push!(nonpos_rows, c)
+            constr_dual_map[numLinRows + bndidx] = collect(c)
         end
         ub = m.colUpper[idx]
-        if !(ub == 0 || ub == Inf)
+        if ub != Inf
+            bndidx += 1
             c   += 1
             push!(I, c)
             push!(J, idx)
             push!(V, 1.0)
             b[c] = ub
             push!(nonneg_rows, c)
+            constr_dual_map[numLinRows + bndidx] = collect(c)
         end
     end
 
@@ -724,7 +784,9 @@ function conicconstraintdata(m::Model)
 
     tmpelts = tmprow.elts
     tmpnzidx = tmprow.nzidx
+    socidx = 0
     for con in m.socconstr
+        socidx += 1
         expr = con.normexpr
         c += 1
         soc_start = c
@@ -746,6 +808,7 @@ function conicconstraintdata(m::Model)
             b[c] = expr.coeff*term.constant
         end
         push!(con_cones, (:SOC, soc_start:c))
+        constr_dual_map[numLinRows + numBounds + socidx] = collect(soc_start:c)
     end
     @assert c == numLinRows + numBounds + numQuadRows + numSOCRows
 
@@ -781,6 +844,9 @@ function conicconstraintdata(m::Model)
         end
     end
     @assert c == numRows
+
+    #@show constr_dual_map
+    m.constrDualMap = constr_dual_map
 
     A = sparse(I, J, V, numRows, m.numCols)
     # @show full(A), b
