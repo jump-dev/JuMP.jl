@@ -26,7 +26,7 @@ function expr_to_nodedata(ex::Expr,nd::Vector{NodeData},values::Vector{Float64},
         @assert ex.args[1] == :x
         push!(nd,NodeData(VARIABLE, ex.args[2], parentid, whichchild))
     else
-        error()
+        error("Unrecognized expression $ex: $(ex.head)")
     end
     nothing
 end

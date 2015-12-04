@@ -11,5 +11,6 @@ include("sparsity.jl")
 include("forward.jl")
 include("reverse.jl")
 include("coloring.jl")
+include("mpb_wrapper.jl")
 
 end # module

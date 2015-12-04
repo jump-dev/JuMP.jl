@@ -27,7 +27,7 @@ end
 
 const univariate_operators = Symbol[:+,:-]
 const univariate_operator_to_id = Dict{Symbol,Int}(:+ => 1, :- => 2)
-const univariate_operator_deriv = Any[:x,:(-x)]
+const univariate_operator_deriv = Any[:(one(x)),:(-one(x))]
 
 for (op, deriv) in Calculus.symbolic_derivatives_1arg()
     push!(univariate_operators, op)

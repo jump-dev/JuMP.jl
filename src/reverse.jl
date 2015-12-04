@@ -13,10 +13,14 @@ function reverse_eval{T}(output::Vector{T},rev_storage::Vector{T},forward_storag
 
     children_arr = rowvals(adj)
 
+    if nd[1].nodetype == VARIABLE
+        output[nd[1].index] += 1
+        return # trivial case
+    end
+
     # reverse_storage[k] is the partial derivative of the output with respect to
     # the value of node k
     rev_storage[1] = 1
-    @assert nd[1].nodetype != VARIABLE
 
     for k in 2:length(nd)
         @inbounds nod = nd[k]
@@ -37,7 +41,20 @@ function reverse_eval{T}(output::Vector{T},rev_storage::Vector{T},forward_storag
                 end
             elseif op == 3 # :*
                 # dummy version for now
-                @inbounds rev_storage[k] = rev_storage[parentidx]*(forward_storage[parentidx]/forward_storage[k])
+                parent_val = forward_storage[parentidx]
+                if parent_val == 0.0
+                    @inbounds siblings_idx = nzrange(adj,parentidx)
+                    # product of all other siblings
+                    prod_others = 1.0
+                    for r in 1:length(siblings_idx)
+                        r == nod.whichchild && continue
+                        prod_others *= forward_storage[children_arr[siblings_idx[r]]]
+                        prod_others == 0.0 && break
+                    end
+                    @inbounds rev_storage[k] = rev_storage[parentidx]*prod_others
+                else
+                    @inbounds rev_storage[k] = rev_storage[parentidx]*(parent_val/forward_storage[k])
+                end
             elseif op == 4 # :^
                 @inbounds siblings_idx = nzrange(adj,parentidx)
                 if nod.whichchild == 1 # base
