@@ -12,8 +12,8 @@ export NodeData
 
 # Only need to store parents, then transpose adjacency matrix!
 
-# for CALL, index is list of operators
-# for CALLUNIVAR, index is list of univariate operators
+# for CALL, index is into list of operators
+# for CALLUNIVAR, index is into list of univariate operators
 # for VARIABLE, index is variable index
 # for VALUE, index is into list of constants
 # for PARAMETER, index is into list of parameters

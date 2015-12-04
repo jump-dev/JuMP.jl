@@ -1,6 +1,6 @@
 
 
-# classify the nodes in a tree as constant, linear, or nonlinear
+# classify the nodes in a tree as constant, linear, or nonlinear with respect to the input
 
 @enum Linearity CONSTANT LINEAR NONLINEAR
 
