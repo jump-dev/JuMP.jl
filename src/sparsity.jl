@@ -69,7 +69,13 @@ function compute_hessian_sparsity(nd::Vector{NodeData},adj,input_linearity::Vect
                     # at least one sibling isn't constant
                     nonlinear_wrt_output[k] = true
                 end
-            else # TODO: division
+            elseif operators[op] == :/
+                # check if denominator is nonconstant
+                sibling_idx = nzrange(adj,nod.parent)
+                if input_linearity[children_arr[last(sibling_idx)]] != CONSTANT
+                    nonlinear_wrt_output[k] = true
+                end
+            else
                 nonlinear_wrt_output[k] = true
             end
         end

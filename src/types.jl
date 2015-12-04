@@ -18,7 +18,7 @@ export NodeData
 # for VALUE, index is into list of constants
 # for PARAMETER, index is into list of parameters
 
-const operators = [:+,:-,:*,:^]
+const operators = [:+,:-,:*,:^,:/]
 
 const operator_to_id = Dict{Symbol,Int}()
 for i in 1:length(operators)

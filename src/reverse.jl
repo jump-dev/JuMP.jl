@@ -53,6 +53,17 @@ function reverse_eval{T}(output::Vector{T},rev_storage::Vector{T},forward_storag
                     base = forward_storage[baseidx]
                     rev_storage[k] = rev_storage[parentidx]*forward_storage[parentidx]*log(base)
                 end
+            elseif op == 5 # :/
+                @inbounds siblings_idx = nzrange(adj,parentidx)
+                if nod.whichchild == 1 # numerator
+                    @inbounds denomidx = children_arr[last(siblings_idx)]
+                    @inbounds denom = forward_storage[denomidx]
+                    @inbounds rev_storage[k] = rev_storage[parentidx]/denom
+                else # denominator
+                    @inbounds numeratoridx = children_arr[first(siblings_idx)]
+                    @inbounds numerator = forward_storage[numeratoridx]
+                    @inbounds rev_storage[k] = -rev_storage[parentidx]*numerator*forward_storage[k]^(-2)
+                end
             else
                 error()
             end

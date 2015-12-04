@@ -56,7 +56,15 @@ function classify_linearity(nd::Vector{NodeData},adj)
                     linearity[k] = LINEAR
                 elseif operators[op] == :* && num_constant_children == length(children_idx) - 1
                     linearity[k] = LINEAR
-                else # all other operators are nonlinear TODO: division
+                elseif operators[op] == :/
+                    if linearity[children_arr[last(children_idx)]] == CONSTANT
+                        # denominator is constant, we're linear
+                        linearity[k] = LINEAR
+                    else
+                        # denominator is linear
+                        linearity[k] = NONLINEAR
+                    end
+                else # all other operators are nonlinear
                     linearity[k] = NONLINEAR
                 end
             end

@@ -54,6 +54,13 @@ function forward_eval{T}(storage::Vector{T},nd::Vector{NodeData},adj,const_value
                 else
                     storage[k] = base^exponent
                 end
+            elseif op == 5 # :/
+                @assert n_children == 2
+                idx1 = children_idx[1]
+                idx2 = children_idx[2]
+                @inbounds numerator = storage[children_arr[idx1]]
+                @inbounds denominator = storage[children_arr[idx2]]
+                storage[k] = numerator/denominator
             else
                 error()
             end
