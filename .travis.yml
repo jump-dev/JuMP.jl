@@ -8,6 +8,10 @@ julia:
   - nightly
 notifications:
   email: false
+sudo: false
+addons:
+    apt_packages:
+        - gfortran
 # uncomment the following lines to override the default test script
 script:
   - if [[ -a .git/shallow ]]; then git fetch --unshallow; fi
