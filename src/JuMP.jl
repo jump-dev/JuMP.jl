@@ -83,6 +83,8 @@ type Model
     colVal::Vector{Float64}
     redCosts::Vector{Float64}
     linconstrDuals::Vector{Float64}
+    conicconstrDuals::Vector{Float64}
+    constrDualMap::Vector{Vector{Int}}
     # internal solver model object
     internalModel
     # Solver+option object from MathProgBase
@@ -148,6 +150,8 @@ function Model(;solver=UnsetSolver())
           Float64[],                   # colVal
           Float64[],                   # redCosts
           Float64[],                   # linconstrDuals
+          Float64[],                   # conicconstrDuals
+          Any[],                       # constrDualsMap
           nothing,                     # internalModel
           solver,                      # solver
           false,                       # internalModelLoaded
@@ -524,6 +528,53 @@ function getDual(c::ConstraintRef{LinearConstraint})
     end
     return c.m.linconstrDuals[c.idx]
 end
+
+# Returns the number of non-infinity bounds on variables
+function getNumBndRows(m::Model)
+    numBounds = 0
+    for i in 1:m.numCols
+        seen = false
+        lb, ub = m.colLower[i], m.colUpper[i]
+        for (_,cone) in m.varCones
+            if i in cone
+                seen = true
+                @assert lb == -Inf && ub == Inf
+                break
+            end
+        end
+
+        if !seen
+            if lb != -Inf
+                numBounds += 1
+            end
+            if ub != Inf
+                numBounds += 1
+            end
+        end
+    end
+    return numBounds
+end
+
+# Returns the number of second-order cone constraints
+function getNumSOCRows(m::Model)
+    numSOCRows = 0
+    for con in m.socconstr
+        numSOCRows += length(con.normexpr.norm.terms) + 1
+    end
+    return numSOCRows
+end
+
+function getDual(c::ConstraintRef{SOCConstraint})
+    numBndRows = getNumBndRows(c.m)
+    numSOCRows = getNumSOCRows(c.m)
+    if length(c.m.conicconstrDuals) != (MathProgBase.numlinconstr(c.m) + numBndRows + numSOCRows)
+        error("Dual solution not available. Check that the model was properly solved and no integer variables are present.")
+    end
+    return c.m.conicconstrDuals[
+        c.m.constrDualMap[MathProgBase.numlinconstr(c.m) + numBndRows + c.idx]]
+end
+
+
 
 function chgConstrRHS(c::ConstraintRef{LinearConstraint}, rhs::Number)
     constr = c.m.linconstr[c.idx]
