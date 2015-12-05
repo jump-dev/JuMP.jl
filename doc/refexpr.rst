@@ -119,7 +119,7 @@ To obtain the dual of a constraint, call ``getDual`` on the constraint reference
 When an LP model is infeasible, ``getDual`` will return the corresponding component of the
 infeasibility ray (Farkas proof), if available from the solver.
 
-Dual information is unavailable for MIPs and has not yet been implemented for quadratic constraints.
+Dual information is also accessible for second-order cone problems as described below. Duals are unavailable for MIPs.
 
 One may retrieve the corresponding internal ``LinearConstraint`` object from a
 ``ConstraintRef{LinearConstraint}`` object ``constr`` by calling ``LinearConstraint(constr)``.
@@ -138,6 +138,34 @@ references in this structure, e.g.::
     for i = 1:5
       myCons[i] = @addConstraint(m, x[i] >= i)
     end
+
+Conic constraint duals
+^^^^^^^^^^^^^^^^^^^^^^
+
+JuMP supports accessing the dual solutions to second-order cone problems. Dual multipliers on variable bounds, linear constraints,
+and second-order cone constraints are accessible through ``getDual()`` given the corresponding variable or constraint reference object.
+For second-order cone constraints, ``getDual(c::ConstraintRef{SOCConstraint})`` returns a vector of dual variables in the dimension of the corresponding cone.
+Duals are defined such that they are consistent in sign with linear programming duals in the case that the second-order cone constraints
+are inactive.
+
+For example::
+
+   m = Model()
+   @defVar(m, x[1:2] >= 1)
+   @defVar(m, t)
+   @setObjective(m, Min, t)
+   @addConstraint(m, soc, norm2{ x[i], i=1:2 } <= t)
+   status = solve(m)
+
+   @show getValue(x) # [1.000000000323643,1.0000000003235763]
+   @show getValue(t) # 1.4142135583106126
+   @show getDual(x)  # [0.7071067807797846,0.7071067802906756]
+   @show getDual(soc)# [-1.0000000004665652,0.707106779497123,0.707106779008014]
+
+Note that the *negative* of the dual vector ``getDual(soc)`` belongs to the second-order cone.
+See the `MathProgBase documentation <http://mathprogbasejl.readthedocs.org/en/latest/conic.html>`_ for more
+on the definition of the dual problem. The dual solutions returned by JuMP agree with the definitions from
+MathProgBase up to a possible change in sign.
 
 Vectorized operations
 ^^^^^^^^^^^^^^^^^^^^^

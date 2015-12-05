@@ -125,7 +125,8 @@ function solve(m::Model; suppress_warnings=false,
     if stat == :Optimal
         # If we think dual information might be available, try to get it
         # If not, return an array of the correct length
-        if relaxation || !(traits.int || traits.sos || traits.conic)
+        discrete = !relaxation && (traits.int || traits.sos)
+        if !discrete && !traits.conic
             m.redCosts = try
                 MathProgBase.getreducedcosts(m.internalModel)[1:numCols]
             catch
@@ -138,8 +139,8 @@ function solve(m::Model; suppress_warnings=false,
                 fill(NaN, numRows)
             end
         end
-        # conic duals
-        if traits.soc #traits.conic && !traits.qp && !traits.qc && !traits.sdp
+        # conic duals (currently, SOC only)
+        if !discrete && traits.soc && !traits.qp && !traits.qc && !traits.sdp
             numBndRows = getNumBndRows(m)
             numSOCRows = getNumSOCRows(m)
             m.conicconstrDuals = try
@@ -845,7 +846,6 @@ function conicconstraintdata(m::Model)
     end
     @assert c == numRows
 
-    #@show constr_dual_map
     m.constrDualMap = constr_dual_map
 
     A = sparse(I, J, V, numRows, m.numCols)

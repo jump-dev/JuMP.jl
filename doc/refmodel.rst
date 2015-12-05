@@ -116,24 +116,6 @@ The special ``norm2{...}`` construct may be used to build up normed expressions 
 
     @addConstraint(m, norm2{2x[i] - i, i=1:n; c[i] == 1} <= 1)
 
-Conic constraints duals
-^^^^^^^^^^^^^^^^^^^^^^^
-
-We consider the following primal problem to be in canonical conic form:
-
-.. math::
-    \min_{x}\, &c^Tx\\
-    s.t.\,   &b - Ax \in K_1\\
-             &x \in K_2\\
-
-Then one can access the dual vector corresponding to constraint `b-Ax \in K_1` using:
-
-.. function:: getDual(c::ConstraintRef{SOCConstraint}) 
-
-	Returns a vector of dual variables in the dimension of the corresponding cone. Currently JuMP supports returning the dual vector of only second-order cone constraints.
-
-For example let us consider the above second-order cone constraint `||b-Ax||_2 \le a^Tx + c`, where A is an `m\times n` matrix. This constraint is equivalent to `(a^Tx + c, b-Ax) \in SOC` in conic form. Therefore upon successful call to solve, ``getDual`` will return an optimal dual vector, `y\in \mathbb{R}^{m+1}`, such that `y^T(a^Tx + c, b-Ax) \le 0`.
-
 Accessing the low-level model
 ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
 
