@@ -25,6 +25,8 @@ type FunctionStorage
     forward_storage::Vector{Float64}
     reverse_storage::Vector{Float64}
     grad_sparsity::Vector{Int}
+    hess_I::Vector{Int} # nonzero pattern of hessian
+    hess_J::Vector{Int}
 end
 
 type RDSNLPEvaluator <: MathProgBase.AbstractNLPEvaluator
@@ -47,10 +49,10 @@ function MathProgBase.loadproblem!(m::RDSModel, numVar, numConstr, l, u, lb, ub,
 end
 
 
-MathProgBase.features_available(d::RDSNLPEvaluator) = [:Grad,:Jac] # no hess yet
+MathProgBase.features_available(d::RDSNLPEvaluator) = [:Grad,:Jac]
 
 # convert expression into flat tree format
-function FunctionStorage(ex,numVar)
+function FunctionStorage(ex,numVar, want_hess::Bool)
     
     nd,const_values = expr_to_nodedata(ex)
     adj = adjmat(nd)
@@ -58,7 +60,16 @@ function FunctionStorage(ex,numVar)
     reverse_storage = zeros(length(nd))
     grad_sparsity = compute_gradient_sparsity(nd, adj)
 
-    return FunctionStorage(nd, adj, const_values, forward_storage, reverse_storage, grad_sparsity)
+    if want_hess
+        # compute hessian sparsity
+        linearity = classify_linearity(nd, adj)
+        edgelist = compute_hessian_sparsity(nd, adj, linearity)
+        hess_I, hess_J, rinfo = Coloring.hessian_color_preprocess(edgelist, numVar)
+    else
+        hess_I = hess_J = Int[]
+    end
+
+    return FunctionStorage(nd, adj, const_values, forward_storage, reverse_storage, grad_sparsity, hess_I, hess_J)
 
 end
 
@@ -66,7 +77,9 @@ function MathProgBase.initialize(d::RDSNLPEvaluator, requested_features)
 
     MathProgBase.initialize(d.nlp_eval, [:ExprGraph,:Jac,:Grad]) # Jac and Grad for debugging only
 
-    obj = FunctionStorage(MathProgBase.obj_expr(d.nlp_eval), d.numVar)
+    want_hess = (:Hess in requested_features)
+
+    obj = FunctionStorage(MathProgBase.obj_expr(d.nlp_eval), d.numVar, want_hess)
     #@show MathProgBase.obj_expr(d.nlp_eval)
     push!(d.expressions, obj)
 
@@ -78,7 +91,7 @@ function MathProgBase.initialize(d::RDSNLPEvaluator, requested_features)
         else
             ex = constr.args[3]
         end
-        push!(d.expressions, FunctionStorage(ex, d.numVar))
+        push!(d.expressions, FunctionStorage(ex, d.numVar, want_hess))
     end
 end
 
@@ -128,7 +141,7 @@ function MathProgBase.eval_grad_f(d::RDSNLPEvaluator,g,x)
 
     fill!(g,0.0)
     ex = d.expressions[1]
-    reverse_eval(g,ex.reverse_storage,ex.forward_storage,ex.nd,ex.adj,ex.const_values,x)
+    reverse_eval(g,ex.reverse_storage,ex.forward_storage,ex.nd,ex.adj,ex.const_values)
     return
 end
 
@@ -159,7 +172,7 @@ function MathProgBase.eval_jac_g(d::RDSNLPEvaluator, J, x)
         ex = d.expressions[i+1]
         idx = ex.grad_sparsity
         grad_storage[idx] = 0.0
-        reverse_eval(grad_storage,ex.reverse_storage,ex.forward_storage,ex.nd,ex.adj,ex.const_values,x)
+        reverse_eval(grad_storage,ex.reverse_storage,ex.forward_storage,ex.nd,ex.adj,ex.const_values)
         for k in 1:length(idx)
             J[nz+k] = grad_storage[idx[k]]
         end
@@ -167,6 +180,18 @@ function MathProgBase.eval_jac_g(d::RDSNLPEvaluator, J, x)
     end
 
     return
+end
+
+function MathProgBase.hesslag_structure(d::RDSNLPEvaluator)
+
+    hess_I = Int[]
+    hess_J = Int[]
+
+    for ex in d.expressions
+        append!(hess_I, ex.hess_I)
+        append!(hess_J, ex.hess_J)
+    end
+    return hess_I, hess_J
 end
 
 MathProgBase.setwarmstart!(m::RDSModel, x) = MathProgBase.setwarmstart!(m.realmodel,x)

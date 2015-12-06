@@ -11,7 +11,7 @@ function to_adjlist(g::SimpleGraph)
     return gen_adjlist(I,J,num_vertices(g))
 end
 
-import ReverseDiffSparse2.Coloring: acyclic_coloring, recovery_preprocess, reverse_topological_sort_by_dfs, gen_adjlist
+import ReverseDiffSparse2.Coloring: acyclic_coloring, recovery_preprocess, reverse_topological_sort_by_dfs, gen_adjlist, hessian_color_preprocess, prepare_seed_matrix!, recover_from_matmat!
 
 # tests for acyclic coloring
 
@@ -32,7 +32,7 @@ color, numcolors = acyclic_coloring(to_adjlist(g))
 add_edge!(g, 3, 4)
 color, numcolors = acyclic_coloring(to_adjlist(g))
 @test numcolors == 3
-recovery_preprocess(to_adjlist(g), color, numcolors)
+recovery_preprocess(to_adjlist(g), color, numcolors, Int[])
 
 g = simple_graph(3, is_directed=false)
 add_edge!(g, 1, 3)
@@ -63,3 +63,17 @@ offset = [1,4,7,8,9,10,11]
 v = reverse_topological_sort_by_dfs(vec, offset, 6, zeros(Int,6))
 @test v[1] == [3,6,4,5,2,1]
 @test v[2] == [0,1,1,2,2,1]
+
+I,J,rinfo = hessian_color_preprocess(Set([(1,2)]),2)
+num_colors = rinfo.num_colors
+N = length(rinfo.color)
+R = Array(Float64, N, num_colors)
+prepare_seed_matrix!(R, rinfo)
+@test I == [1,2,2]
+@test J == [1,2,1]
+@test R == [1.0 0.0; 0.0 1.0]
+hess = [3.4 2.1; 2.1 1.3]
+matmat = hess*R
+V = zeros(3)
+recover_from_matmat!(V, matmat, rinfo, zeros(3))
+@test V == [3.4,1.3,2.1]

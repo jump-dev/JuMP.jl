@@ -4,7 +4,7 @@
 
 # assumes forward_storage is already updated
 # dense gradient output, assumes initialized to zero
-function reverse_eval{T}(output::Vector{T},rev_storage::Vector{T},forward_storage::Vector{T},nd::Vector{NodeData},adj,const_values,x_values::Vector{T})
+function reverse_eval{T}(output::Vector{T},rev_storage::Vector{T},forward_storage::Vector{T},nd::Vector{NodeData},adj,const_values)
 
     @assert length(forward_storage) == length(rev_storage) == length(nd)
 
@@ -113,3 +113,43 @@ switchexpr = Expr(:macrocall, Expr(:.,:Lazy,quot(symbol("@switch"))), :operator_
 @eval @inline function univariate_deriv(operator_id,x)
     $switchexpr
 end
+
+
+# Hessian-matrix products
+
+function hessmat_eval!{T}(R::Matrix{T},rev_storage::Vector{Dual{T}},forward_storage::Vector{Dual{T}},nd::Vector{NodeData},adj,const_values,x_values::Vector{T},reverse_output_vector::Vector{Dual{T}}, forward_input_vector::Vector{Dual{T}},local_to_global_idx::Vector{Int})
+
+    num_products = size(R,2) # number of hessian-vector products
+    @assert size(R,1) == length(local_to_global_idx)
+    numVar = length(x_values)
+
+    for i in 1:numVar
+        forward_input_vector[i] = Dual(x_values[i],0.0)
+    end
+
+    for k in 1:num_products
+
+        for r in 1:length(local_to_global_idx)
+            # set up directional derivatives
+            idx = local_to_global_idx[r]
+            forward_input_vector[idx] = Dual(x_values[idx],R[r,k])
+            reverse_output_vector[idx] = zero(Dual{T})
+        end
+
+        # do a forward pass
+        forward_eval(forward_storage,nd,adj,const_values,forward_input_vector)
+        # do a reverse pass
+        reverse_eval(reverse_output_vector,rev_storage,forward_storage,nd,adj,const_values)
+
+        # collect directional derivatives
+        for r in 1:length(local_to_global_idx)
+            idx = local_to_global_idx[r]
+            R[r,k] = epsilon(reverse_output_vector[idx])
+        end
+
+    end
+
+
+end
+
+export hessmat_eval!

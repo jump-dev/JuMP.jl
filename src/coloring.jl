@@ -79,8 +79,7 @@ immutable Edge
 end
 
 # convert to lower triangular indices, using Pairs
-# TODO: replace normalize in hessian.jl
-#normalize(i,j) = (j > i) ? (j,i) : (i,j)
+normalize(i,j) = (j > i) ? (j,i) : (i,j)
 normalize_p(p::MyPair) = (p.second > p.first) ? MyPair(p.second,p.first) : MyPair(p.first,p.second)
 normalize_p(i,j) = normalize_p(MyPair(i,j))
 
@@ -206,9 +205,12 @@ immutable RecoveryInfo
     postorder::Vector{Vector{Int}}
     parents::Vector{Vector{Int}}
     color::Vector{Int}
+    num_colors::Int
+    nnz::Int # number of off-diagonal nonzeros
+    local_indices::Vector{Int} # map back to global indices
 end
 
-function recovery_preprocess(g::UndirectedGraph,color,num_colors)
+function recovery_preprocess(g::UndirectedGraph,color,num_colors, local_indices)
     # represent two-color subgraph as:
     # list of vertices (with map to global indices)
     # adjacency list in a single vector (with list of offsets)
@@ -329,12 +331,13 @@ function recovery_preprocess(g::UndirectedGraph,color,num_colors)
         vertexmap[idx] = vlist
     end
 
-    return RecoveryInfo(vertexmap, postorder, parents, color)
+    return RecoveryInfo(vertexmap, postorder, parents, color, num_colors, num_edges(g), local_indices)
 
 end
 
-function indirect_recover_structure(nnz, rinfo::RecoveryInfo)
+function indirect_recover_structure(rinfo::RecoveryInfo)
     N = length(rinfo.color)
+    nnz = rinfo.nnz
     
     I = zeros(Int, nnz+N)
     J = zeros(Int, nnz+N)
@@ -371,20 +374,75 @@ function indirect_recover_structure(nnz, rinfo::RecoveryInfo)
     return I,J
 end
 
-#=
-function indirect_recover(hessian_matmat!, nnz, rinfo::RecoveryInfo, stored_values, x, inputvals, fromcanonical, R, dualvec, dualout, V)
-    N = length(rinfo.color)
-    
-    #R = zeros(N,num_colors)
+# edgelist is nonzeros in hessian, *including* nonzeros on the diagonal
+function hessian_color_preprocess(edgelist,num_total_var)
+
+    seen_idx = Set{Int}()
+    I = Int[]
+    J = Int[]
+    for (i,j) in edgelist
+        push!(seen_idx,i)
+        push!(seen_idx,j)
+        push!(I,i)
+        push!(J,j)
+    end
+    local_indices = sort(collect(seen_idx))
+
+    global_to_local_idx = Dict{Int,Int}()
+    for k in 1:length(local_indices)
+        global_to_local_idx[local_indices[k]] = k
+    end
+    # only do the coloring on the local indices
+    for k in 1:length(I)
+        I[k] = global_to_local_idx[I[k]]
+        J[k] = global_to_local_idx[J[k]]
+    end
+
+    g = gen_adjlist(I,J, length(local_indices))
+
+    color, num_colors = acyclic_coloring(g)
+
+    @assert length(color) == num_vertices(g)
+
+    rinfo = recovery_preprocess(g, color, num_colors, local_indices)
+
+    I,J = indirect_recover_structure(rinfo)
+    #nnz = num_edges(g)
+    # convert back to global indices
+    for k in 1:length(I)
+        I[k] = local_indices[I[k]]
+        J[k] = local_indices[J[k]]
+    end
+
+    return I,J, rinfo
+end
+
+export hessian_color_preprocess
+
+function prepare_seed_matrix!(R, rinfo::RecoveryInfo)
+
+    N = length(rinfo.color) # number of local variables
+    @assert N == length(rinfo.local_indices)
+    @assert size(R,1) == N
+    @assert size(R,2) == rinfo.num_colors
+
     fill!(R,0.0)
     for i in 1:N
         R[i,rinfo.color[i]] = 1
     end
+    return
+end
 
-    hessian_matmat!(R,x, dualvec, dualout, inputvals, fromcanonical)
+export prepare_seed_matrix!
+
+# recover the hessian values from the hessian-matrix solution
+# stored_values is a temporary vector of length >= length(rinfo.local_indices)
+function recover_from_matmat!(V, R, rinfo::RecoveryInfo, stored_values)
+    N = length(rinfo.color) # number of local variables
+    nnz = rinfo.nnz
     
-    # now, recover
     @assert length(V) == nnz+N
+    @assert length(stored_values) >= length(rinfo.local_indices)
     
     # diagonal entries
     k = 0
@@ -418,67 +476,10 @@ function indirect_recover(hessian_matmat!, nnz, rinfo::RecoveryInfo, stored_valu
 
     @assert k == nnz + N
 
-    return V
+    return
 
 end
 
-export acyclic_coloring, indirect_recover
-
-gen_hessian_sparse_color_parametric(s::SymbolicOutput, num_total_vars) =
-    gen_hessian_sparse_color_parametric(s,num_total_vars,gen_hessian_matmat_parametric(s),compute_hessian_sparsity_IJ_parametric(s))
-
-function gen_hessian_sparse_color_parametric(s::SymbolicOutput, num_total_vars, hessian_matmat!, hessian_IJ, dualvec=Array(Dual4{Float64}, ceil(Int,num_total_vars/2)), dualout=Array(Dual4{Float64}, ceil(Int,num_total_vars/2)), idxset::IndexedSet=IndexedSet(num_total_vars))
-    I,J = hessian_IJ(s,idxset)
-    # I,J cannot contain duplicates
-    if length(I) == 0
-        # expression is actually linear, return dummy function
-        return I,J, (x,output_values,ex) -> nothing
-    end
-
-    g = gen_adjlist(I,J, length(s.mapfromcanonical))
-
-    color, num_colors = acyclic_coloring(g)
-
-    if num_colors >= 4
-        # make sure we have enough memory
-        resize!(dualvec, num_total_vars)
-        resize!(dualout, num_total_vars)
-    end
-
-    @assert length(color) == num_vertices(g)
-
-    R = Array(Float64,num_vertices(g),num_colors)
-    
-    rinfo = recovery_preprocess(g, color, num_colors)
-
-    stored_values = Array(Float64,num_vertices(g))
-
-    I,J = indirect_recover_structure(num_edges(g), rinfo)
-
-    nnz = num_edges(g)
-    
-    function eval_h(x,output_values, ex::SymbolicOutput)
-        indirect_recover(hessian_matmat!, nnz, rinfo, stored_values, x, ex.inputvals, ex.mapfromcanonical, R, dualvec, dualout, output_values)
-    end
-
-    return I,J, eval_h
-
-
-end
-
-export gen_hessian_sparse_color_parametric
-
-function to_H(s::SymbolicOutput, I, J, V, n)
-    I2 = similar(I)
-    J2 = similar(J)
-    for k in 1:length(I)
-        I2[k],J2[k] = normalize(s.mapfromcanonical[I[k]],s.mapfromcanonical[J[k]])
-    end
-    return sparse(I2,J2,V, n, n)
-
-end
-
-export to_H
-=#
+export recover_from_matmat!
 
 end
