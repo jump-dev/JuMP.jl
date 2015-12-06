@@ -349,7 +349,7 @@ facts("[model] Test model copying") do
     @addSDPConstraint(source, ones(3,3) <= 0)
     @defVar(source, z[1:3])
     @defVar(source, w[2:4]) # JuMPArray
-    @defVar(source, v[[:red],1:3]) # JuMPDict
+    @defVar(source, v[[:red],i=1:3;isodd(i)]) # JuMPDict
     setSolveHook(source, m -> :Optimal)
 
     # uncomment when NLP copying is implemented
@@ -399,10 +399,9 @@ facts("[model] Test model copying") do
     @fact all(t -> isequal(t[1], t[2]), zip(dest.varDict[:z], [Variable(dest, 3), Variable(dest, 4), Variable(dest, 5)])) --> true
     @fact all(t -> isequal(t[1], t[2]), zip(dest.varDict[:w].innerArray, [Variable(dest, 6), Variable(dest, 7), Variable(dest, 8)])) --> true
     td = dest.varDict[:v].tupledict
-    @fact length(td) --> 3
+    @fact length(td) --> 2
     @fact isequal(td[:red,1], Variable(dest, 9))  --> true
-    @fact isequal(td[:red,2], Variable(dest, 10)) --> true
-    @fact isequal(td[:red,3], Variable(dest, 11)) --> true
+    @fact isequal(td[:red,3], Variable(dest, 10)) --> true
 
     # Issue #358
     @fact typeof(dest.linconstr)  --> Array{JuMP.GenericRangeConstraint{JuMP.GenericAffExpr{Float64,JuMP.Variable}},1}

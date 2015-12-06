@@ -5,67 +5,79 @@
 
 # This code is unused for now. See issue #192
 
-immutable JuMPArray{T,N,R<:OrdinalRange} <: JuMPContainer
+immutable JuMPArray{T,N,NT<:NTuple} <: JuMPContainer{T}
     innerArray::Array{T,N}
-    name::Symbol
-    indexsets::NTuple{N,R}
+    indexsets::NT
+    lookup::NTuple{N,Dict}
+    meta::Dict{Symbol,Any}
 end
 
-function Base.getindex{T}(d::JuMPArray{T,1,UnitRange{Int}},index::Real)
-    @inbounds return d.innerArray[index - start(d.indexsets[1])+1]
-end
-
-function Base.getindex{T}(d::JuMPArray{T,2,UnitRange{Int}},ix1::Real,ix2::Real)
-    @inbounds return d.innerArray[ix1 - start(d.indexsets[1])+1, ix2 - start(d.indexsets[2])+1]
-end
-
-
-function Base.getindex{T,N}(d::JuMPArray{T,N,UnitRange{Int}},indices::Real...)
-    length(indices) == N || error("Wrong number of indices for ",d.name,", expected ",length(d.indexsets))
-    idx = Array(Int, N)
+@generated function JuMPArray{T,N}(innerArray::Array{T,N}, indexsets::NTuple{N})
+    dicttuple = Expr(:tuple)
     for i in 1:N
-        idx[i] = Base.to_index(indices[i]) - start(d.indexsets[i]) + 1
+        inner = quote
+            idxset = indexsets[$i]
+            ret = Dict{eltype(idxset), Int}()
+        end
+        tupelem = indexsets.parameters[i]
+        if !(tupelem == UnitRange{Int} || tupelem == StepRange{Int})
+            inner = quote
+                $inner
+                cnt = 1
+                for x in idxset
+                    ret[x] = cnt
+                    cnt += 1
+                end
+                ret
+            end
+        end
+        push!(dicttuple.args, inner)
     end
-    return d.innerArray[idx...]
+    :(JuMPArray(innerArray, indexsets, $dicttuple, Dict{Symbol,Any}()))
 end
 
-function Base.getindex{T,N}(d::JuMPArray{T,N,StepRange{Int,Int}},indices::Int...)
-    length(indices) == N || error("Wrong number of indices for ",d.name,", expected ",length(d.indexsets))
-    idx = Array(Int, N)
-    steps  = 0
-    starts = 0
-    for i in 1:N
-        steps  = step(d.indexsets[i])
-        starts = start(d.indexsets[i])
-        idx[i] = convert(Int,(indices[i]-starts)/steps) + 1
+Base.getindex(d::JuMPArray, ::Colon) = d.innerArray[:]
+@generated function Base.getindex{T,N,NT<:NTuple}(d::JuMPArray{T,N,NT}, idx...)
+    if N != length(idx)
+        error("Indexed into a JuMPArray with $(length(idx)) indices (expected $N indices)")
     end
-    return d.innerArray[idx...]
+    Expr(:call, :getindex, :(d.innerArray), _to_cartesian(d,NT,idx)...)
 end
 
-function Base.setindex!{T,N}(d::JuMPArray{T,N,UnitRange{Int}},val::T,indices::Int...)
-    length(indices) == N || error("Wrong number of indices for ",d.name,", expected ",length(d.indexsets))
-    idx = Array(Int, N)
-    for i in 1:N
-        idx[i] = indices[i] - start(d.indexsets[i]) + 1
+@generated function Base.setindex!{T,N,NT<:NTuple}(d::JuMPArray{T,N,NT}, v::T, idx...)
+    if N != length(idx)
+        error("Indexed into a JuMPArray with $(length(idx)) indices (expected $N indices)")
     end
-    d.innerArray[idx...] = val
+    Expr(:call, :setindex!, :(d.innerArray), :v, _to_cartesian(d,NT,idx)...)
 end
 
-function Base.setindex!{T,N}(d::JuMPArray{T,N,StepRange{Int,Int}},val::T,indices::Int...)
-    length(indices) == N || error("Wrong number of indices for ",d.name,", expected ",length(d.indexsets))
-    idx = Array(Int, N)
-    steps  = 0
-    starts = 0
-    for i in 1:N
-        steps  = step(d.indexsets[i])
-        starts = start(d.indexsets[i])
-        idx[i] = convert(Int,(indices[i]-starts)/steps) + 1
+function _to_cartesian(d,NT,idx...)
+    indexing = Any[]
+    for (i,S) in enumerate(NT.parameters)
+        if S == UnitRange{Int}
+            push!(indexing, quote
+                rng = d.indexsets[$i]
+                I = idx[$i]
+                first(rng) <= I <= last(rng) || error("Failed attempt to index JuMPArray along dimension $($i): $I ∉ $(d.indexsets[$i])")
+                I - (start(rng) - 1)
+            end)
+        elseif S == StepRange{Int}
+            push!(indexing, quote
+                rng = $(d.indexsets[i])
+                I = idx[$i]
+                first(rng) <= I <= last(rng) || error("Failed attempt to index JuMPArray along dimension $($i): $I ∉ $(d.indexsets[$i])")
+                dv, rv = divrem(I - start(rng), step(rng))
+                rv == 0 || error("Failed attempt to index JuMPArray along dimension $($i): $I ∉ $(d.indexsets[$i])")
+                dv + 1
+            end)
+        else
+            push!(indexing, quote
+                if !haskey(d.lookup[$i],idx[$i])
+                    error("Failed attempt to index JuMPArray along dimension $($i): $(idx[$i]) ∉ $(d.indexsets[$i])")
+                end
+                d.lookup[$i][idx[$i]]::Int
+            end)
+        end
     end
-    d.innerArray[idx...] = val
+    indexing
 end
-
-Base.map{T,N,R}(f::Function,d::JuMPArray{T,N,R}) =
-    JuMPArray{T,N,R}(map(f,d.innerArray), d.name, d.indexsets)
-
-Base.eltype{T,N,R}(x::JuMPArray{T,N,R}) = T
-

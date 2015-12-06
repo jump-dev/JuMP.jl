@@ -181,46 +181,64 @@ facts("[print] JuMPContainer{Number}") do
     # Deal with hashing variations
     if hash(5) < hash(:Apple)
         io_test(REPLMode, getValue(w), """
-w: 3 dimensions, 18 entries:
- [ 9,     5,-1] = -9.0
- [ 9,     5, 0] = 0.0
- [ 9,     5, 1] = 9.0
- [ 9, Apple,-1] = -9.0
- [ 9, Apple, 0] = 0.0
- [ 9, Apple, 1] = 9.0
- [ 9,Banana,-1] = -9.0
- [ 9,Banana, 0] = 0.0
- [ 9,Banana, 1] = 9.0
- [10,     5,-1] = -10.0
- [10,     5, 0] = 0.0
- [10,     5, 1] = 10.0
- [10, Apple,-1] = -10.0
- [10, Apple, 0] = 0.0
- [10, Apple, 1] = 10.0
- [10,Banana,-1] = -10.0
- [10,Banana, 0] = 0.0
- [10,Banana, 1] = 10.0""", repl=:print)
+w: 3 dimensions:
+[ 9,:,:]
+  [ 9, Apple,:]
+    [ 9, Apple,-1] = -9.0
+    [ 9, Apple, 0] = 0.0
+    [ 9, Apple, 1] = 9.0
+  [ 9,     5,:]
+    [ 9,     5,-1] = -9.0
+    [ 9,     5, 0] = 0.0
+    [ 9,     5, 1] = 9.0
+  [ 9,Banana,:]
+    [ 9,Banana,-1] = -9.0
+    [ 9,Banana, 0] = 0.0
+    [ 9,Banana, 1] = 9.0
+[10,:,:]
+  [10, Apple,:]
+    [10, Apple,-1] = -10.0
+    [10, Apple, 0] = 0.0
+    [10, Apple, 1] = 10.0
+  [10,     5,:]
+    [10,     5,-1] = -10.0
+    [10,     5, 0] = 0.0
+    [10,     5, 1] = 10.0
+  [10,Banana,:]
+    [10,Banana,-1] = -10.0
+    [10,Banana, 0] = 0.0
+    [10,Banana, 1] = 10.0
+""", repl=:print)
     else
         io_test(REPLMode, getValue(w), """
-w: 3 dimensions, 18 entries:
- [ 9, Apple,-1] = -9.0
- [ 9, Apple, 0] = 0.0
- [ 9, Apple, 1] = 9.0
- [ 9,Banana,-1] = -9.0
- [ 9,Banana, 0] = 0.0
- [ 9,Banana, 1] = 9.0
- [ 9,     5,-1] = -9.0
- [ 9,     5, 0] = 0.0
- [ 9,     5, 1] = 9.0
- [10, Apple,-1] = -10.0
- [10, Apple, 0] = 0.0
- [10, Apple, 1] = 10.0
- [10,Banana,-1] = -10.0
- [10,Banana, 0] = 0.0
- [10,Banana, 1] = 10.0
- [10,     5,-1] = -10.0
- [10,     5, 0] = 0.0
- [10,     5, 1] = 10.0""", repl=:print)
+w: 3 dimensions:
+[ 9,:,:]
+  [ 9, Apple,:]
+    [ 9, Apple,-1] = -9.0
+    [ 9, Apple, 0] = 0.0
+    [ 9, Apple, 1] = 9.0
+  [ 9,     5,:]
+    [ 9,     5,-1] = -9.0
+    [ 9,     5, 0] = 0.0
+    [ 9,     5, 1] = 9.0
+  [ 9,Banana,:]
+    [ 9,Banana,-1] = -9.0
+    [ 9,Banana, 0] = 0.0
+    [ 9,Banana, 1] = 9.0
+[10,:,:]
+  [10, Apple,:]
+    [10, Apple,-1] = -10.0
+    [10, Apple, 0] = 0.0
+    [10, Apple, 1] = 10.0
+  [10,     5,:]
+    [10,     5,-1] = -10.0
+    [10,     5, 0] = 0.0
+    [10,     5, 1] = 10.0
+  [10,Banana,:]
+    [10,Banana,-1] = -10.0
+    [10,Banana, 0] = 0.0
+    [10,Banana, 1] = 10.0
+""", repl=:print)
     end
 
     io_test(REPLMode, getValue(x), """
@@ -266,17 +284,17 @@ y: 2 dimensions, 6 entries:
  [10,11] = 110.0
  [11,11] = 121.0""")
 
-    # Deal with hashing variations
-    first_hash  = hash(:a) < hash('b') ? "a" : "b"
-    second_hash = first_hash == "a" ? "b" : "a"
     io_test(REPLMode, getValue(z), """
-z: 2 dimensions, 6 entries:
- [$first_hash,1] = 1.0
- [$first_hash,2] = 2.0
- [$first_hash,3] = 3.0
- [$second_hash,1] = 1.0
- [$second_hash,2] = 2.0
- [$second_hash,3] = 3.0""")
+z: 2 dimensions:
+[a,:]
+  [a,1] = 1.0
+  [a,2] = 2.0
+  [a,3] = 3.0
+[b,:]
+  [b,1] = 1.0
+  [b,2] = 2.0
+  [b,3] = 3.0
+""")
 
 end
 
