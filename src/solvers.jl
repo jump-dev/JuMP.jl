@@ -15,7 +15,7 @@
 
 # Analyze a JuMP Model to determine its traits, and thus what solvers can
 # be used to solve the problem
-immutable ProblemTraits
+type ProblemTraits
     int::Bool  # has integer variables
     lin::Bool  # has only linear objectives and constraints
     qp ::Bool  # has a quadratic objective function
@@ -227,6 +227,60 @@ function solve(m::Model; suppress_warnings=false,
     stat
 end
 
+function isquadsoc(m::Model)
+    # check if all quadratic constraints are actually conic
+    all_conic = true
+    for qconstr in m.quadconstr
+        q = copy(qconstr.terms)
+        if qconstr.sense == :(>=)
+            q *= -1
+        end
+        if !(all(t->t==0, q.aff.coeffs) && q.aff.constant == 0)
+            all_conic = false
+            break
+        end
+        n_pos_on_diag = 0
+        off_diag_idx  = 0
+        neg_diag_idx  = 0
+        n = length(q.qvars1)
+        nz = 0
+        for i in 1:n
+            q.qcoeffs[i] == 0 && continue
+            nz += 1
+            if q.qvars1[i].col == q.qvars2[i].col
+                if q.qcoeffs[i] == 1
+                    n_pos_on_diag += 1
+                elseif q.qcoeffs[i] == -1
+                    if !(neg_diag_idx == off_diag_idx == 0)
+                        all_conic = false; break
+                    end
+                    neg_diag_idx = i
+                else
+                    all_conic = false; break
+                end
+            else
+                if q.qcoeffs[i] == -1
+                    if !(neg_diag_idx == off_diag_idx == 0)
+                        all_conic = false; break
+                    end
+                    off_diag_idx = i
+                else
+                    all_conic = false; break
+                end
+            end
+        end
+        if n_pos_on_diag == nz-1 && neg_diag_idx > 0
+            # Plain SOC
+        elseif n_pos_on_diag == nz-1 && off_diag_idx > 0
+            # Rotated SOC
+        else
+            all_conic = false
+        end
+    end
+    return all_conic && length(m.quadconstr) > 0
+
+end
+
 # Converts the JuMP Model into a MathProgBase model based on the
 # traits of the model
 function buildInternalModel(m::Model, traits=ProblemTraits(m);
@@ -239,6 +293,11 @@ function buildInternalModel(m::Model, traits=ProblemTraits(m);
     # If the model is nonlinear, use different logic in nlp.jl
     # to build the problem
     traits.nlp && return _buildInternalModel_nlp(m, traits)
+
+    ## Temporary hack for Mosek, see https://github.com/JuliaOpt/Mosek.jl/pull/67
+    if contains("$(typeof(m.solver))","MosekSolver") && isquadsoc(m)
+        traits.conic = true
+    end
 
     if traits.conic
         # If there are semicontinuous/semi-integer variables, we will have to
@@ -564,14 +623,17 @@ function conicconstraintdata(m::Model)
         if qconstr.sense == :(>=)
             q *= -1
         end
-        if !(isempty(q.aff.vars) && q.aff.constant == 0)
+        if !(all(t->t==0, q.aff.coeffs) && q.aff.constant == 0)
             error("Quadratic constraint $qconstr must be in second-order cone form")
         end
         n_pos_on_diag = 0
         off_diag_idx  = 0
         neg_diag_idx  = 0
         n = length(q.qvars1)
+        nz = 0
         for i in 1:n
+            q.qcoeffs[i] == 0 && continue
+            nz += 1
             if q.qvars1[i].col == q.qvars2[i].col
                 if q.qcoeffs[i] == 1
                     n_pos_on_diag += 1
@@ -586,17 +648,25 @@ function conicconstraintdata(m::Model)
                 end
             end
         end
-        cone = Array(Int, n)
-        if n_pos_on_diag == n-1 && neg_diag_idx > 0
+        cone = Array(Int, nz)
+        if n_pos_on_diag == nz-1 && neg_diag_idx > 0
             cone[1] = q.qvars1[neg_diag_idx].col
-            for i in 1:(neg_diag_idx-1); cone[i+1] = q.qvars1[i].col; end
-            for i in (neg_diag_idx+1):n; cone[i]   = q.qvars1[i].col; end
+            r = 1
+            for i in 1:n
+                (q.qcoeffs[i] == 0 || i == neg_diag_idx) && continue
+                r += 1
+                cone[r] = q.qvars1[i].col
+            end
             push!(soc_cones, cone)
-        elseif n_pos_on_diag == n-1 && off_diag_idx > 0
+        elseif n_pos_on_diag == nz-1 && off_diag_idx > 0
             cone[1] = q.qvars1[off_diag_idx].col
             cone[2] = q.qvars2[off_diag_idx].col
-            for i in 1:(off_diag_idx-1); cone[i+2] = q.qvars1[i].col; end
-            for i in (off_diag_idx+1):n; cone[i+1] = q.qvars1[i].col; end
+            r = 2
+            for i in 1:n
+                (q.qcoeffs[i] == 0 || i == off_diag_idx) && continue
+                r += 1
+                cone[r] = q.qvars1[i].col
+            end
             push!(rsoc_cones, cone)
         else
             error("Quadratic constraint $qconstr is not conic representable")
