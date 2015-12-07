@@ -29,34 +29,41 @@ function reverse_eval{T}(output::Vector{T},rev_storage::Vector{T},forward_storag
         # compute the value of reverse_storage[k]
         parentidx = nod.parent
         @inbounds par = nd[parentidx]
+        @inbounds parentval = rev_storage[parentidx]
         op = par.index
         if par.nodetype == CALL
             if op == 1 # :+
-                @inbounds rev_storage[k] = rev_storage[parentidx]
+                @inbounds rev_storage[k] = parentval
             elseif op == 2 # :-
                 @inbounds siblings_idx = nzrange(adj,parentidx)
                 if nod.whichchild == 1
-                    @inbounds rev_storage[k] = rev_storage[parentidx]
+                    @inbounds rev_storage[k] = parentval
                 else
-                    @inbounds rev_storage[k] = -rev_storage[parentidx]
+                    @inbounds rev_storage[k] = -parentval
                 end
             elseif op == 3 # :*
                 # dummy version for now
-                parent_val = forward_storage[parentidx]
                 @inbounds siblings_idx = nzrange(adj,parentidx)
                 n_siblings = length(siblings_idx)
-                if parent_val == 0.0 || n_siblings <= 3
-                    # product of all other siblings
-                    prod_others = one(T)
-                    for r in 1:n_siblings
-                        r == nod.whichchild && continue
-                        sib_idx = first(siblings_idx) + r - 1
-                        @inbounds prod_others *= forward_storage[children_arr[sib_idx]]
-                        prod_others == 0.0 && break
-                    end
-                    @inbounds rev_storage[k] = rev_storage[parentidx]*prod_others
+                if n_siblings == 2
+                    otheridx = ifelse(nod.whichchild == 1, last(siblings_idx),first(siblings_idx))
+                    @inbounds prod_others = forward_storage[children_arr[otheridx]]
+                    @inbounds rev_storage[k] = parentval*prod_others
                 else
-                    @inbounds rev_storage[k] = rev_storage[parentidx]*(parent_val/forward_storage[k])
+                    @inbounds parent_val = forward_storage[parentidx]
+                    if parent_val == 0.0
+                        # product of all other siblings
+                        prod_others = one(T)
+                        for r in 1:n_siblings
+                            r == nod.whichchild && continue
+                            sib_idx = first(siblings_idx) + r - 1
+                            @inbounds prod_others *= forward_storage[children_arr[sib_idx]]
+                            prod_others == 0.0 && break
+                        end
+                        @inbounds rev_storage[k] = parentval*prod_others
+                    else
+                        @inbounds rev_storage[k] = parentval*(parent_val/forward_storage[k])
+                    end
                 end
             elseif op == 4 # :^
                 @inbounds siblings_idx = nzrange(adj,parentidx)
@@ -64,25 +71,25 @@ function reverse_eval{T}(output::Vector{T},rev_storage::Vector{T},forward_storag
                     @inbounds exponentidx = children_arr[last(siblings_idx)]
                     @inbounds exponent = forward_storage[exponentidx]
                     if exponent == 2
-                        @inbounds rev_storage[k] = rev_storage[parentidx]*2*forward_storage[k]
+                        @inbounds rev_storage[k] = parentval*2*forward_storage[k]
                     else
-                        rev_storage[k] = rev_storage[parentidx]*exponent*forward_storage[k]^(exponent-1)
+                        rev_storage[k] = parentval*exponent*forward_storage[k]^(exponent-1)
                     end
                 else
                     baseidx = children_arr[first(siblings_idx)]
                     base = forward_storage[baseidx]
-                    rev_storage[k] = rev_storage[parentidx]*forward_storage[parentidx]*log(base)
+                    rev_storage[k] = parentval*forward_storage[parentidx]*log(base)
                 end
             elseif op == 5 # :/
                 @inbounds siblings_idx = nzrange(adj,parentidx)
                 if nod.whichchild == 1 # numerator
                     @inbounds denomidx = children_arr[last(siblings_idx)]
                     @inbounds denom = forward_storage[denomidx]
-                    @inbounds rev_storage[k] = rev_storage[parentidx]/denom
+                    @inbounds rev_storage[k] = parentval/denom
                 else # denominator
                     @inbounds numeratoridx = children_arr[first(siblings_idx)]
                     @inbounds numerator = forward_storage[numeratoridx]
-                    @inbounds rev_storage[k] = -rev_storage[parentidx]*numerator*forward_storage[k]^(-2)
+                    @inbounds rev_storage[k] = -parentval*numerator*forward_storage[k]^(-2)
                 end
             else
                 error()
@@ -90,7 +97,7 @@ function reverse_eval{T}(output::Vector{T},rev_storage::Vector{T},forward_storag
         else
             @assert par.nodetype == CALLUNIVAR
             @inbounds this_value = forward_storage[k]
-            @inbounds rev_storage[k] = rev_storage[parentidx]*univariate_deriv(op,this_value)
+            @inbounds rev_storage[k] = parentval*univariate_deriv(op,this_value)
         end
 
         if nod.nodetype == VARIABLE
@@ -130,9 +137,9 @@ function hessmat_eval!{T}(R::Matrix{T},rev_storage::Vector{Dual{T}},forward_stor
 
         for r in 1:length(local_to_global_idx)
             # set up directional derivatives
-            idx = local_to_global_idx[r]
-            forward_input_vector[idx] = Dual(x_values[idx],R[r,k])
-            reverse_output_vector[idx] = zero(Dual{T})
+            @inbounds idx = local_to_global_idx[r]
+            @inbounds forward_input_vector[idx] = Dual(x_values[idx],R[r,k])
+            @inbounds reverse_output_vector[idx] = zero(Dual{T})
         end
 
         # do a forward pass
