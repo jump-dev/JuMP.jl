@@ -86,7 +86,7 @@ end
 
 function MathProgBase.initialize(d::RDSNLPEvaluator, requested_features)
 
-    MathProgBase.initialize(d.nlp_eval, [:ExprGraph,:Jac,:Grad]) # Jac and Grad for debugging only
+    MathProgBase.initialize(d.nlp_eval, [:ExprGraph]) # Jac and Grad for debugging only
 
     want_hess = (:Hess in requested_features)
 
@@ -215,6 +215,11 @@ end
 function MathProgBase.eval_hesslag(d::RDSNLPEvaluator, H, x, σ, μ)
 
     nzcount = 0
+
+    for i in 1:d.numVar
+        d.forward_input_vector[i] = Dual(x[i],0.0)
+    end
+
     for i in 1:length(d.expressions)
         ex = d.expressions[i]
         seed = ex.seed_matrix

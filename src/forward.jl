@@ -14,14 +14,14 @@ function forward_eval{T}(storage::Vector{T},nd::Vector{NodeData},adj,const_value
 
     for k in length(nd):-1:1
         # compute the value of node k
-        nod = nd[k]
+        @inbounds nod = nd[k]
         if nod.nodetype == VARIABLE
-            storage[k] = x_values[nod.index]
+            @inbounds storage[k] = x_values[nod.index]
         elseif nod.nodetype == VALUE
-            storage[k] = const_values[nod.index]
+            @inbounds storage[k] = const_values[nod.index]
         elseif nod.nodetype == CALL
             op = nod.index
-            children_idx = nzrange(adj,k)
+            @inbounds children_idx = nzrange(adj,k)
             #@show children_idx
             n_children = length(children_idx)
             if op == 1 # :+
@@ -33,9 +33,9 @@ function forward_eval{T}(storage::Vector{T},nd::Vector{NodeData},adj,const_value
                 storage[k] = tmp_sum
             elseif op == 2 # :-
                 child1 = first(children_idx)
-                tmp_sub = storage[children_arr[child1]]
-                @assert n_children >= 2
-                tmp_sub -= storage[children_arr[child1+1]]
+                @inbounds tmp_sub = storage[children_arr[child1]]
+                @assert n_children == 2
+                @inbounds tmp_sub -= storage[children_arr[child1+1]]
                 storage[k] = tmp_sub
             elseif op == 3 # :*
                 tmp_prod = one(T)
@@ -45,8 +45,8 @@ function forward_eval{T}(storage::Vector{T},nd::Vector{NodeData},adj,const_value
                 storage[k] = tmp_prod
             elseif op == 4 # :^
                 @assert n_children == 2
-                idx1 = children_idx[1] 
-                idx2 = children_idx[2] 
+                idx1 = first(children_idx)
+                idx2 = last(children_idx)
                 @inbounds base = storage[children_arr[idx1]]
                 @inbounds exponent = storage[children_arr[idx2]]
                 if exponent == 2
@@ -56,8 +56,8 @@ function forward_eval{T}(storage::Vector{T},nd::Vector{NodeData},adj,const_value
                 end
             elseif op == 5 # :/
                 @assert n_children == 2
-                idx1 = children_idx[1]
-                idx2 = children_idx[2]
+                idx1 = first(children_idx)
+                idx2 = last(children_idx)
                 @inbounds numerator = storage[children_arr[idx1]]
                 @inbounds denominator = storage[children_arr[idx2]]
                 storage[k] = numerator/denominator
@@ -66,10 +66,10 @@ function forward_eval{T}(storage::Vector{T},nd::Vector{NodeData},adj,const_value
             end
         elseif nod.nodetype == CALLUNIVAR # univariate function
             op = nod.index
-            child_idx = children_arr[adj.colptr[k]]
+            @inbounds child_idx = children_arr[adj.colptr[k]]
             #@assert child_idx == children_arr[first(nzrange(adj,k))]
             child_val = storage[child_idx]
-            storage[k] = eval_univariate(op, child_val)
+            @inbounds storage[k] = eval_univariate(op, child_val)
         end
 
     end

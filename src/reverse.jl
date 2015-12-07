@@ -43,11 +43,12 @@ function reverse_eval{T}(output::Vector{T},rev_storage::Vector{T},forward_storag
             elseif op == 3 # :*
                 # dummy version for now
                 parent_val = forward_storage[parentidx]
-                if parent_val == 0.0
-                    @inbounds siblings_idx = nzrange(adj,parentidx)
+                @inbounds siblings_idx = nzrange(adj,parentidx)
+                n_siblings = length(siblings_idx)
+                if parent_val == 0.0 || n_siblings <= 3
                     # product of all other siblings
                     prod_others = one(T)
-                    for r in 1:length(siblings_idx)
+                    for r in 1:n_siblings
                         r == nod.whichchild && continue
                         sib_idx = first(siblings_idx) + r - 1
                         @inbounds prod_others *= forward_storage[children_arr[sib_idx]]
@@ -118,16 +119,12 @@ end
 
 
 # Hessian-matrix products
-
+# forward_input_vector should already be initialized with the input x values
 function hessmat_eval!{T}(R::Matrix{T},rev_storage::Vector{Dual{T}},forward_storage::Vector{Dual{T}},nd::Vector{NodeData},adj,const_values,x_values::Vector{T},reverse_output_vector::Vector{Dual{T}}, forward_input_vector::Vector{Dual{T}},local_to_global_idx::Vector{Int})
 
     num_products = size(R,2) # number of hessian-vector products
     @assert size(R,1) == length(local_to_global_idx)
     numVar = length(x_values)
-
-    for i in 1:numVar
-        forward_input_vector[i] = Dual(x_values[i],0.0)
-    end
 
     for k in 1:num_products
 
