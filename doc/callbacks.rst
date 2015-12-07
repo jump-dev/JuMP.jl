@@ -271,7 +271,7 @@ Querying Solver Progress
 All JuMP callback methods must take a single argument, called ``cb`` by convention.
 ``cb`` is a handle to the internal callback system used by the underlying solver, and
 allows the user to query solver state. There are a variety of methods available which
-are listed in the `MathProgBase documentation <http://mathprogbasejl.readthedocs.org/en/latest/mathprogbase.html#mip-callbacks>`_
+are listed in the `MathProgBase documentation <http://mathprogbasejl.readthedocs.org/en/latest/lpqcqp.html#mip-callbacks>`_
 including::
 
     cbgetobj(cb)
