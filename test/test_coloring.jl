@@ -11,7 +11,7 @@ function to_adjlist(g::SimpleGraph)
     return gen_adjlist(I,J,num_vertices(g))
 end
 
-import ReverseDiffSparse2.Coloring: acyclic_coloring, recovery_preprocess, reverse_topological_sort_by_dfs, gen_adjlist, hessian_color_preprocess, prepare_seed_matrix!, recover_from_matmat!
+import ReverseDiffSparse2.Coloring: acyclic_coloring, recovery_preprocess, reverse_topological_sort_by_dfs, gen_adjlist, hessian_color_preprocess, prepare_seed_matrix!, recover_from_matmat!, seed_matrix
 
 # tests for acyclic coloring
 
@@ -67,7 +67,7 @@ v = reverse_topological_sort_by_dfs(vec, offset, 6, zeros(Int,6))
 I,J,rinfo = hessian_color_preprocess(Set([(1,2)]),2)
 num_colors = rinfo.num_colors
 N = length(rinfo.color)
-R = Array(Float64, N, num_colors)
+R = seed_matrix(rinfo)
 prepare_seed_matrix!(R, rinfo)
 @test I == [1,2,2]
 @test J == [1,2,1]

@@ -1,10 +1,12 @@
 # example: julia opf.jl 66200 /path/to/JuMPSupplement/acpower
 # JuMPSupplement is at https://github.com/mlubin/JuMPSupplement
 
-include("compare_jump.jl")
+#include("compare_jump.jl")
 
 using JuMP
 using Compat
+using Ipopt
+using ReverseDiffSparse2
 
 type Bus
     bustype::Int
@@ -244,4 +246,7 @@ mod = opf(buses, branches,
     branch_tap_min, branch_tap_max,
     p_gen_upper, p_gen_lower)
 
-compare_jump(mod)
+#setSolver(mod,IpoptSolver())
+setSolver(mod,RDSSolver(IpoptSolver()))
+solve(mod)
+#compare_jump(mod)

@@ -5,7 +5,7 @@ using JuMP, Ipopt
 nlp_solvers = [] #[RDSSolver(IpoptSolver())]
 
 # All tests pass except the unboundedness test
-convex_nlp_solvers = [RDSSolver(IpoptSolver(print_level=0))]
+convex_nlp_solvers = [RDSSolver(IpoptSolver())]
 minlp_solvers = []
 
 include(Pkg.dir("JuMP","test","nonlinear.jl"))

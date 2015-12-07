@@ -210,6 +210,8 @@ immutable RecoveryInfo
     local_indices::Vector{Int} # map back to global indices
 end
 
+RecoveryInfo() = RecoveryInfo(Vector{Vector{Int}}(0),Vector{Vector{Int}}(0),Vector{Vector{Int}}(0),Vector{Int}(0),0,0,Vector{Int}(0))
+
 function recovery_preprocess(g::UndirectedGraph,color,num_colors, local_indices)
     # represent two-color subgraph as:
     # list of vertices (with map to global indices)
@@ -418,6 +420,11 @@ function hessian_color_preprocess(edgelist,num_total_var)
 end
 
 export hessian_color_preprocess
+
+# allocate a seed matrix
+seed_matrix(rinfo::RecoveryInfo) = Array(Float64,length(rinfo.local_indices),rinfo.num_colors)
+
+export seed_matrix
 
 function prepare_seed_matrix!(R, rinfo::RecoveryInfo)
 

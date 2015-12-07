@@ -6,7 +6,8 @@
 # dense gradient output, assumes initialized to zero
 function reverse_eval{T}(output::Vector{T},rev_storage::Vector{T},forward_storage::Vector{T},nd::Vector{NodeData},adj,const_values)
 
-    @assert length(forward_storage) == length(rev_storage) == length(nd)
+    @assert length(rev_storage) >= length(nd)
+    @assert length(forward_storage) >= length(nd)
 
     # nd is already in order such that parents always appear before children
     # so a forward pass through nd is a backwards pass through the tree

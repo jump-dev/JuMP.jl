@@ -27,6 +27,8 @@ type FunctionStorage
     grad_sparsity::Vector{Int}
     hess_I::Vector{Int} # nonzero pattern of hessian
     hess_J::Vector{Int}
+    rinfo::Coloring.RecoveryInfo # coloring info for hessians
+    seed_matrix::Matrix{Float64}
 end
 
 type RDSNLPEvaluator <: MathProgBase.AbstractNLPEvaluator
@@ -36,6 +38,11 @@ type RDSNLPEvaluator <: MathProgBase.AbstractNLPEvaluator
     expressions::Vector{FunctionStorage} # objective is in the first slot
     last_x::Vector{Float64}
     jac_storage::Vector{Float64} # temporary storage for computing jacobians
+    # storage for computing hessians
+    forward_storage_hess::Vector{Dual{Float64}} # length is of the longest expression
+    reverse_storage_hess::Vector{Dual{Float64}} # length is of the longest expression
+    forward_input_vector::Vector{Dual{Float64}} # length is number of variables
+    reverse_output_vector::Vector{Dual{Float64}}# length is number of variables
 end
 
 function MathProgBase.loadproblem!(m::RDSModel, numVar, numConstr, l, u, lb, ub, sense, d::MathProgBase.AbstractNLPEvaluator)
@@ -43,13 +50,14 @@ function MathProgBase.loadproblem!(m::RDSModel, numVar, numConstr, l, u, lb, ub,
     m.numVar = numVar
     m.numConstr = numConstr
 
-    nlp = RDSNLPEvaluator(numVar, numConstr, d, FunctionStorage[], Array(Float64,numVar), Array(Float64, numVar))
+    nlp = RDSNLPEvaluator(numVar, numConstr, d, FunctionStorage[], Array(Float64,numVar), Array(Float64, numVar),Vector{Dual{Float64}}(0),Vector{Dual{Float64}}(0),
+    Array(Dual{Float64},numVar),Array(Dual{Float64},numVar))
 
     MathProgBase.loadproblem!(m.realmodel, numVar, numConstr, l, u, lb, ub, sense, nlp)
 end
 
 
-MathProgBase.features_available(d::RDSNLPEvaluator) = [:Grad,:Jac]
+MathProgBase.features_available(d::RDSNLPEvaluator) = [:Grad,:Jac,:Hess]
 
 # convert expression into flat tree format
 function FunctionStorage(ex,numVar, want_hess::Bool)
@@ -65,11 +73,14 @@ function FunctionStorage(ex,numVar, want_hess::Bool)
         linearity = classify_linearity(nd, adj)
         edgelist = compute_hessian_sparsity(nd, adj, linearity)
         hess_I, hess_J, rinfo = Coloring.hessian_color_preprocess(edgelist, numVar)
+        seed_matrix = Coloring.seed_matrix(rinfo)
     else
         hess_I = hess_J = Int[]
+        rinfo = Coloring.RecoveryInfo()
+        seed_matrix = Array(Float64,0,0)
     end
 
-    return FunctionStorage(nd, adj, const_values, forward_storage, reverse_storage, grad_sparsity, hess_I, hess_J)
+    return FunctionStorage(nd, adj, const_values, forward_storage, reverse_storage, grad_sparsity, hess_I, hess_J, rinfo, seed_matrix)
 
 end
 
@@ -81,6 +92,7 @@ function MathProgBase.initialize(d::RDSNLPEvaluator, requested_features)
 
     obj = FunctionStorage(MathProgBase.obj_expr(d.nlp_eval), d.numVar, want_hess)
     #@show MathProgBase.obj_expr(d.nlp_eval)
+    max_expr_length = length(obj.nd)
     push!(d.expressions, obj)
 
     for i in 1:d.numConstr
@@ -92,6 +104,12 @@ function MathProgBase.initialize(d::RDSNLPEvaluator, requested_features)
             ex = constr.args[3]
         end
         push!(d.expressions, FunctionStorage(ex, d.numVar, want_hess))
+        max_expr_length = max(max_expr_length, length(d.expressions[end].nd))
+    end
+
+    if want_hess # allocate extra storage
+        d.forward_storage_hess = Array(Dual{Float64},max_expr_length)
+        d.reverse_storage_hess = Array(Dual{Float64},max_expr_length)
     end
 end
 
@@ -192,6 +210,32 @@ function MathProgBase.hesslag_structure(d::RDSNLPEvaluator)
         append!(hess_J, ex.hess_J)
     end
     return hess_I, hess_J
+end
+
+function MathProgBase.eval_hesslag(d::RDSNLPEvaluator, H, x, σ, μ)
+
+    nzcount = 0
+    for i in 1:length(d.expressions)
+        ex = d.expressions[i]
+        seed = ex.seed_matrix
+        Coloring.prepare_seed_matrix!(seed,ex.rinfo)
+
+        nzthis = length(ex.hess_I)
+
+
+        hessmat_eval!(seed, d.reverse_storage_hess, d.forward_storage_hess, ex.nd, ex.adj, ex.const_values, x, d.reverse_output_vector, d.forward_input_vector, ex.rinfo.local_indices)
+        # Output is in seed, now recover
+
+        output_slice = sub(H, (nzcount+1):(nzcount+nzthis))
+        Coloring.recover_from_matmat!(output_slice, seed, ex.rinfo, d.forward_input_vector) # forward_input_vector is just reused as storage
+        if i == 1
+            scale!(output_slice, σ)
+        else
+            scale!(output_slice, μ[i-1])
+        end
+        nzcount += nzthis
+    end
+
 end
 
 MathProgBase.setwarmstart!(m::RDSModel, x) = MathProgBase.setwarmstart!(m.realmodel,x)

@@ -5,7 +5,7 @@
 
 function forward_eval{T}(storage::Vector{T},nd::Vector{NodeData},adj,const_values,x_values::Vector{T})
 
-    @assert length(storage) == length(nd)
+    @assert length(storage) >= length(nd)
 
     # nd is already in order such that parents always appear before children
     # so a backwards pass through nd is a forward pass through the tree
