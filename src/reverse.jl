@@ -46,10 +46,11 @@ function reverse_eval{T}(output::Vector{T},rev_storage::Vector{T},forward_storag
                 if parent_val == 0.0
                     @inbounds siblings_idx = nzrange(adj,parentidx)
                     # product of all other siblings
-                    prod_others = 1.0
+                    prod_others = one(T)
                     for r in 1:length(siblings_idx)
                         r == nod.whichchild && continue
-                        prod_others *= forward_storage[children_arr[siblings_idx[r]]]
+                        sib_idx = first(siblings_idx) + r - 1
+                        @inbounds prod_others *= forward_storage[children_arr[sib_idx]]
                         prod_others == 0.0 && break
                     end
                     @inbounds rev_storage[k] = rev_storage[parentidx]*prod_others
@@ -106,12 +107,12 @@ export reverse_eval
 switchblock = Expr(:block)
 for i = 1:length(univariate_operators)
     deriv_expr = univariate_operator_deriv[i]
-	ex = :(return $deriv_expr)
+	ex = :(return $deriv_expr::T)
     push!(switchblock.args,i,ex)
 end
 switchexpr = Expr(:macrocall, Expr(:.,:Lazy,quot(symbol("@switch"))), :operator_id,switchblock)
 
-@eval @inline function univariate_deriv(operator_id,x)
+@eval @inline function univariate_deriv{T}(operator_id,x::T)
     $switchexpr
 end
 
