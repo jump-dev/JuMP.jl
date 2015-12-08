@@ -219,3 +219,26 @@ context("With conic solver $(typeof(conic_solver))") do
 end
 end
 end
+
+
+
+facts("[socduals] SOC infeasibility ray test") do
+for  conic_solver in conic_solvers_with_duals
+context("With conic solver $(typeof(conic_solver))") do
+
+    m2 = Model(solver=conic_solver)
+
+    @defVar(m2, x2 >= 0)
+    @addConstraint(m2, x2 <= -1)
+    @setObjective(m2, Max, x2)
+    @addConstraint(m2, c2, norm(x2) <= x2)
+
+    status = solve(m2)
+
+    inf_ray = getDual(c2)
+    @fact status --> :Infeasible
+    @fact (-inf_ray[1] - inf_ray[2]) --> less_than_or_equal(-TOL)
+
+end
+end
+end
