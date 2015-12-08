@@ -144,10 +144,10 @@ function solve(m::Model; suppress_warnings=false,
     m.colVal = fill(NaN, numCols)
     m.linconstrDuals = Array(Float64, 0)
 
+    discrete = !relaxation && (traits.int || traits.sos)
     if stat == :Optimal
         # If we think dual information might be available, try to get it
         # If not, return an array of the correct length
-        discrete = !relaxation && (traits.int || traits.sos)
         if !discrete && !traits.conic
             m.redCosts = try
                 MathProgBase.getreducedcosts(m.internalModel)[1:numCols]
