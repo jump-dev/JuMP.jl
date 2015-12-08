@@ -195,7 +195,9 @@ function solve(m::Model; suppress_warnings=false,
         end
         # conic duals (currently, SOC only)
         if !discrete && traits.soc && !traits.qp && !traits.qc && !traits.sdp
-            fillConicDuals(m)
+            if stat == :Infeasible
+                fillConicDuals(m)
+            end
         end
     end
 
