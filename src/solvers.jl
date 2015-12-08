@@ -80,7 +80,29 @@ function fillConicRedCosts(m::Model)
     end
 end
 
+function fillConicDuals(m::Model)
 
+    numRows, numCols = length(m.linconstr), m.numCols
+
+    numBndRows = getNumBndRows(m)
+    numSOCRows = getNumSOCRows(m)
+    m.conicconstrDuals = try
+        MathProgBase.getdual(m.internalModel)
+    catch
+        fill(NaN, numRows+numBndRows+numSOCRows)
+    end
+    if m.conicconstrDuals[1] != NaN
+        if m.objSense == :Min
+            scale!(m.conicconstrDuals, -1)
+        end
+        m.linconstrDuals = m.conicconstrDuals[1:length(m.linconstr)]
+        m.redCosts = zeros(numCols)
+        if numBndRows > 0
+            fillConicRedCosts(m)
+        end
+    end
+
+end
 
 function solve(m::Model; suppress_warnings=false,
                 ignore_solve_hook=(m.solvehook===nothing),
@@ -141,23 +163,7 @@ function solve(m::Model; suppress_warnings=false,
         end
         # conic duals (currently, SOC only)
         if !discrete && traits.soc && !traits.qp && !traits.qc && !traits.sdp
-            numBndRows = getNumBndRows(m)
-            numSOCRows = getNumSOCRows(m)
-            m.conicconstrDuals = try
-                MathProgBase.getdual(m.internalModel)
-            catch
-                fill(NaN, numRows+numBndRows+numSOCRows)
-            end
-            if m.conicconstrDuals[1] != NaN
-                if m.objSense == :Min
-                    scale!(m.conicconstrDuals, -1)
-                end
-                m.linconstrDuals = m.conicconstrDuals[1:length(m.linconstr)]
-                m.redCosts = zeros(numCols)
-                if numBndRows > 0
-                    fillConicRedCosts(m)
-                end
-            end
+            fillConicDuals(m)
         end
     else
         # Problem was not solved to optimality, attempt to extract useful
@@ -186,6 +192,10 @@ function solve(m::Model; suppress_warnings=false,
                     fill(NaN, numCols)
                 end
             end
+        end
+        # conic duals (currently, SOC only)
+        if !discrete && traits.soc && !traits.qp && !traits.qc && !traits.sdp
+            fillConicDuals(m)
         end
     end
 
