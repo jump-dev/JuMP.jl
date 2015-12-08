@@ -29,6 +29,10 @@ facts("[expr] Test expression construction") do
         @fact affToStr(a1) --> "x[1] + LongName + 5 x[2] + 5"
         append!(a1, a2)
         @fact affToStr(a1) --> "x[1] + 3 LongName + 9 x[2] + 5"
+        append!(a1, 2.0)
+        @fact affToStr(a1) --> "x[1] + 3 LongName + 9 x[2] + 7"
+        append!(a1, LongName)
+        @fact affToStr(a1) --> "x[1] + 4 LongName + 9 x[2] + 7"
     end
 
     context("QuadExpr") do

@@ -61,6 +61,13 @@ function Base.append!{C,V}(aff::GenericAffExpr{C,V}, other::GenericAffExpr{C,V})
     aff.constant += other.constant
     aff
 end
+# For consistency, allow appending constants and individual variables
+Base.append!{C}(aff::GenericAffExpr{C,C}, other::C) = error() # for ambiguity
+function Base.append!{C,V}(aff::GenericAffExpr{C,V}, other::C)
+    aff.constant += other
+    aff
+end
+Base.append!{C,V}(aff::GenericAffExpr{C,V}, other::V) = push!(aff,one(C),other)
 
 function Base.isequal{C,V}(aff::GenericAffExpr{C,V},other::GenericAffExpr{C,V})
     isequal(aff.constant, other.constant)  || return false
