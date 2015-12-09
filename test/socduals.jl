@@ -219,3 +219,30 @@ context("With conic solver $(typeof(conic_solver))") do
 end
 end
 end
+
+# || b-Ax || <= a - c^T x, x\in K
+# (a - c^Tx, b-Ax) \in SOC, x\in K
+# ((a,b) - (c^T,A)x) \in SOC, x\in K
+# if the problem is infeasible, we get a y satisfying -(a,b)^Ty > 0, (c,A^T)y \in K^*, y \in SOC^*
+
+facts("[socduals] SOC infeasibility ray test") do
+for  conic_solver in conic_solvers_with_duals
+context("With conic solver $(typeof(conic_solver))") do
+
+    m2 = Model(solver=conic_solver)
+
+    @defVar(m2, x2 >= 0)
+    @addConstraint(m2, x2 <= 1)
+    @setObjective(m2, Max, x2)
+    @addConstraint(m2, c2, norm(x2) <= x2 - 1)
+
+    status = solve(m2)
+
+    inf_ray = getDual(c2)
+    @fact status --> :Infeasible
+    @fact (-inf_ray[1] - inf_ray[2]) --> less_than_or_equal(-TOL)
+    @fact -(-inf_ray[1]) --> greater_than_or_equal(TOL)
+
+end
+end
+end
