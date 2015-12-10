@@ -80,7 +80,29 @@ function fillConicRedCosts(m::Model)
     end
 end
 
+function fillConicDuals(m::Model)
 
+    numRows, numCols = length(m.linconstr), m.numCols
+
+    numBndRows = getNumBndRows(m)
+    numSOCRows = getNumSOCRows(m)
+    m.conicconstrDuals = try
+        MathProgBase.getdual(m.internalModel)
+    catch
+        fill(NaN, numRows+numBndRows+numSOCRows)
+    end
+    if m.conicconstrDuals[1] != NaN
+        if m.objSense == :Min
+            scale!(m.conicconstrDuals, -1)
+        end
+        m.linconstrDuals = m.conicconstrDuals[1:length(m.linconstr)]
+        m.redCosts = zeros(numCols)
+        if numBndRows > 0
+            fillConicRedCosts(m)
+        end
+    end
+
+end
 
 function solve(m::Model; suppress_warnings=false,
                 ignore_solve_hook=(m.solvehook===nothing),
@@ -122,10 +144,10 @@ function solve(m::Model; suppress_warnings=false,
     m.colVal = fill(NaN, numCols)
     m.linconstrDuals = Array(Float64, 0)
 
+    discrete = !relaxation && (traits.int || traits.sos)
     if stat == :Optimal
         # If we think dual information might be available, try to get it
         # If not, return an array of the correct length
-        discrete = !relaxation && (traits.int || traits.sos)
         if !discrete && !traits.conic
             m.redCosts = try
                 MathProgBase.getreducedcosts(m.internalModel)[1:numCols]
@@ -141,23 +163,7 @@ function solve(m::Model; suppress_warnings=false,
         end
         # conic duals (currently, SOC only)
         if !discrete && traits.soc && !traits.qp && !traits.qc && !traits.sdp
-            numBndRows = getNumBndRows(m)
-            numSOCRows = getNumSOCRows(m)
-            m.conicconstrDuals = try
-                MathProgBase.getdual(m.internalModel)
-            catch
-                fill(NaN, numRows+numBndRows+numSOCRows)
-            end
-            if m.conicconstrDuals[1] != NaN
-                if m.objSense == :Min
-                    scale!(m.conicconstrDuals, -1)
-                end
-                m.linconstrDuals = m.conicconstrDuals[1:length(m.linconstr)]
-                m.redCosts = zeros(numCols)
-                if numBndRows > 0
-                    fillConicRedCosts(m)
-                end
-            end
+            fillConicDuals(m)
         end
     else
         # Problem was not solved to optimality, attempt to extract useful
@@ -185,6 +191,12 @@ function solve(m::Model; suppress_warnings=false,
                     suppress_warnings || warn("Unbounded ray not available")
                     fill(NaN, numCols)
                 end
+            end
+        end
+        # conic duals (currently, SOC only)
+        if !discrete && traits.soc && !traits.qp && !traits.qc && !traits.sdp
+            if stat == :Infeasible
+                fillConicDuals(m)
             end
         end
     end
