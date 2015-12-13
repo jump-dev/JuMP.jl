@@ -29,6 +29,7 @@ type FunctionStorage
     hess_J::Vector{Int}
     rinfo::Coloring.RecoveryInfo # coloring info for hessians
     seed_matrix::Matrix{Float64}
+    linearity::Linearity
 end
 
 type RDSNLPEvaluator <: MathProgBase.AbstractNLPEvaluator
@@ -78,9 +79,10 @@ function FunctionStorage(ex,numVar, want_hess::Bool)
         hess_I = hess_J = Int[]
         rinfo = Coloring.RecoveryInfo()
         seed_matrix = Array(Float64,0,0)
+        linearity = [NONLINEAR]
     end
 
-    return FunctionStorage(nd, adj, const_values, forward_storage, reverse_storage, grad_sparsity, hess_I, hess_J, rinfo, seed_matrix)
+    return FunctionStorage(nd, adj, const_values, forward_storage, reverse_storage, grad_sparsity, hess_I, hess_J, rinfo, seed_matrix, linearity[1])
 
 end
 
@@ -223,10 +225,13 @@ function MathProgBase.eval_hesslag(d::RDSNLPEvaluator, H, x, σ, μ)
     recovery_tmp_storage = reinterpret(Float64, d.reverse_output_vector)
     for i in 1:length(d.expressions)
         ex = d.expressions[i]
+        nzthis = length(ex.hess_I)
+        if ex.linearity == LINEAR
+            @assert nzthis == 0
+            continue
+        end
         seed = ex.seed_matrix
         Coloring.prepare_seed_matrix!(seed,ex.rinfo)
-
-        nzthis = length(ex.hess_I)
 
 
         hessmat_eval!(seed, d.reverse_storage_hess, d.forward_storage_hess, ex.nd, ex.adj, ex.const_values, x, d.reverse_output_vector, d.forward_input_vector, ex.rinfo.local_indices)
