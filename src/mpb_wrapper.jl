@@ -220,6 +220,7 @@ function MathProgBase.eval_hesslag(d::RDSNLPEvaluator, H, x, σ, μ)
         d.forward_input_vector[i] = Dual(x[i],0.0)
     end
 
+    recovery_tmp_storage = reinterpret(Float64, d.reverse_output_vector)
     for i in 1:length(d.expressions)
         ex = d.expressions[i]
         seed = ex.seed_matrix
@@ -232,7 +233,7 @@ function MathProgBase.eval_hesslag(d::RDSNLPEvaluator, H, x, σ, μ)
         # Output is in seed, now recover
 
         output_slice = sub(H, (nzcount+1):(nzcount+nzthis))
-        Coloring.recover_from_matmat!(output_slice, seed, ex.rinfo, d.forward_input_vector) # forward_input_vector is just reused as storage
+        Coloring.recover_from_matmat!(output_slice, seed, ex.rinfo, recovery_tmp_storage)
         if i == 1
             scale!(output_slice, σ)
         else
