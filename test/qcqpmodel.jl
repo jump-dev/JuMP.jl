@@ -132,6 +132,7 @@ context("With solver $(typeof(solver))") do
     @fact MathProgBase.numquadconstr(modQ) --> 1
     @fact MathProgBase.numlinconstr(modQ) --> 0
     @fact MathProgBase.numconstr(modQ) --> 1
+    @fact JuMP.isquadsoc(modQ) --> false
 
     @fact solve(modQ) --> :Optimal
     @fact modQ.objVal --> roughly(-1-4/sqrt(3), 1e-6)
@@ -181,6 +182,7 @@ context("With solver $(typeof(solver))") do
     @setObjective(modQ, Min, t)
     @addConstraint(modQ, x+y >= 1)
     @addConstraint(modQ, x^2 + y^2 <= t^2)
+    @fact JuMP.isquadsoc(modQ) --> true
 
     @fact solve(modQ) --> :Optimal
     @fact modQ.objVal --> roughly(sqrt(1/2), 1e-6)
@@ -248,6 +250,7 @@ end; end; end
 
 facts("[qcqpmodel] Test SOC duals") do
 for solver in soc_solvers
+contains("$(typeof(solver))", "MosekSolver") && continue # Mosek doesn't support duals with conic-through-quadratic
 context("With solver $(typeof(solver))") do
 
     modQ = Model(solver=solver)

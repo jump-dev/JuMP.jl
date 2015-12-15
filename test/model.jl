@@ -674,8 +674,8 @@ facts("[model] Test MIQP vectorization") do
     end
     for solver in quad_mip_solvers
         y = X * [100, 50, 10, 1] + 20*q
-        @fact bestsubset(solver,X,y,2,500,true) --> roughly([106.25,53.7799,0.0,0.0], 10TOL)
-        @fact bestsubset(solver,sparse(X),y,2,500,true) --> roughly([106.25,53.7799,0.0,0.0], 10TOL)
+        @fact bestsubset(solver,X,y,2,500,true) --> roughly([106.25,53.7799,0.0,0.0], 1.0)
+        @fact bestsubset(solver,sparse(X),y,2,500,true) --> roughly([106.25,53.7799,0.0,0.0], 1.0)
     end
 end
 
