@@ -1,6 +1,5 @@
 module ReverseDiffSparse
 
-using Compat
 import Calculus
 import DualNumbers: Dual, Dual4, epsilon, epsilon1, epsilon2, epsilon3, epsilon4
 using Base.Meta
