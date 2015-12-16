@@ -314,11 +314,11 @@ end
 appendnames_and_vals_if!(inputnames,inputvals,x) = nothing
 
 # Keep the parametric expression in the tree
-function replaceif{N}(x::ParametricExpression{N},s::(@compat Union{Symbol,Expr}), args...)
+function replaceif{N}(x::ParametricExpression{N},s::Union{Symbol,Expr}, args...)
     length(args) == N || error("Incorrect number of parameters for expression $x")
     return x[args...]
 end
-replaceif(::Any,s::(@compat Union{Symbol,Expr}), args...) = s
+replaceif(::Any,s::Union{Symbol,Expr}, args...) = s
 
 # turn each node in the expression tree into an ExprNode
 # this expression is kth argument in parent expression
