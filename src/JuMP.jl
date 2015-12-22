@@ -719,5 +719,7 @@ include("print.jl")
 # Nonlinear-specific code
 include("nlp.jl")
 
+include("latex.jl")
+
 ##########################################################################
 end
