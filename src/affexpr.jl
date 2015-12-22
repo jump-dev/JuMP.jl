@@ -19,7 +19,7 @@
 #############################################################################
 # GenericAffExpr
 # ∑ aᵢ xᵢ  +  c
-type GenericAffExpr{CoefType,VarType}
+type GenericAffExpr{CoefType,VarType} <: AbstractJuMPScalar
     vars::Vector{VarType}
     coeffs::Vector{CoefType}
     constant::CoefType
@@ -32,20 +32,16 @@ Base.zero(a::GenericAffExpr) = zero(typeof(a))
 Base.one( a::GenericAffExpr) =  one(typeof(a))
 Base.copy(a::GenericAffExpr) = GenericAffExpr(copy(a.vars),copy(a.coeffs),copy(a.constant))
 
-# Iterator protocol - iterates over tuples (aᵢ,xᵢ)
-Base.start(aff::GenericAffExpr) = 1
-Base.done( aff::GenericAffExpr, state::Int) = state > length(aff.vars)
-Base.next( aff::GenericAffExpr, state::Int) = ((aff.coeffs[state], aff.vars[state]), state+1)
-function Base.in{C,V}(x::V, aff::GenericAffExpr{C,V})
-    acc = zero(C)
-    for (coef,term) in aff
-        if isequal(x, term)
-            acc += coef
-        end
-    end
-    return !(acc == zero(C))
+# Old iterator protocol - iterates over tuples (aᵢ,xᵢ)
+immutable LinearTermIterator{GAE<:GenericAffExpr}
+    aff::GAE
 end
 
+linearterms(aff::GenericAffExpr) = LinearTermIterator(aff)
+
+Base.start(lti::LinearTermIterator) = 1
+Base.done( lti::LinearTermIterator, state::Int) = state > length(lti.aff.vars)
+Base.next( lti::LinearTermIterator, state::Int) = ((lti.aff.coeffs[state], lti.aff.vars[state]), state+1)
 
 # More efficient ways to grow an affine expression
 # Add a single term to an affine expression

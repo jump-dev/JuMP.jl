@@ -20,7 +20,7 @@
 #############################################################################
 # GenericQuadExpr
 # ∑qᵢⱼ xᵢⱼ  +  ∑ aᵢ xᵢ  +  c
-type GenericQuadExpr{CoefType,VarType}
+type GenericQuadExpr{CoefType,VarType} <: AbstractJuMPScalar
     qvars1::Vector{VarType}
     qvars2::Vector{VarType}
     qcoeffs::Vector{CoefType}
