@@ -61,7 +61,7 @@ facts("[expr] Test expression iterators") do
 
     a1 = 1*x[1] + 2*x[2]
     k = 1
-    for (coeff,var) in a1
+    for (coeff,var) in linearterms(a1)
         if k == 1
             @fact coeff --> 1
             @fact var --> exactly(x[1])
@@ -73,18 +73,7 @@ facts("[expr] Test expression iterators") do
     end
 
     a2 = zero(AffExpr)
-    for (coeff, var) in a2
+    for (coeff, var) in linearterms(a2)
         @fact coeff --> 0.0  # Shouldn't be called!
     end
-end
-
-# Test ``in(::Variable, AffExpr)``
-facts("[expr] Test in(::Variable, ::AffExpr)") do
-    m = Model()
-    @defVar(m, x[1:3])
-    @defVar(m, y)
-    @fact (x[2] in 2x[2] + x[1]) --> true
-    @fact (x[3] in x[1] + 2x[2]) --> false
-    @fact (y in @defExpr(sum{i*x[i],i=1:3})) --> false
-    @fact (x[2] in x[1] + 2x[2] - x[2] + x[3] - x[2]) --> false
 end

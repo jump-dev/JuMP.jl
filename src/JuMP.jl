@@ -40,7 +40,7 @@ export
     getVar,
     getLinearIndex,
     # Expressions and constraints
-    affToStr, quadToStr, exprToStr, conToStr, chgConstrRHS,
+    affToStr, quadToStr, exprToStr, conToStr, chgConstrRHS, linearterms,
 
 # Macros and support functions
     @addConstraint, @addConstraints, @addSDPConstraint,
@@ -298,6 +298,10 @@ abstract JuMPConstraint
 # In JuMP, used only for Variable. Useful primarily for extensions
 abstract AbstractJuMPScalar <: ReverseDiffSparse.Placeholder
 
+Base.start(::AbstractJuMPScalar) = false
+Base.next(x::AbstractJuMPScalar, state) = (x, true)
+Base.done(::AbstractJuMPScalar, state) = state
+Base.isempty(::AbstractJuMPScalar) = false
 
 #############################################################################
 # Variable class

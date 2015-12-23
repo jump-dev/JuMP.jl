@@ -84,6 +84,7 @@ The ``ref`` accepts index sets in the same way as ``@defVar``, and those indices
   This is significantly more efficient than using ``aff += other``.
 * ``sum(affs::Array{AffExpr})`` - efficiently sum an array of affine expressions.
 * ``getValue(expr)`` - evaluate an ``AffExpr`` or ``QuadExpr``, given the current solution values.
+* ``linearterms{C,V}(aff::GenericAffExpr{C,V})`` - provides an iterator over the ``(a_i::C,x_i::V)`` terms in affine expression :math:`\sum_i a_i x_i + b`.
 
 Constraint References
 ^^^^^^^^^^^^^^^^^^^^^
