@@ -157,13 +157,12 @@ function Base.show(io::IO, m::Model)
     else
         println(io, ": $(join(varstr, ", "))")
     end
-    print(io, "Solver set to ")
+    print(io, "Solver is ")
     if isa(m.solver, UnsetSolver)
-        solver = "Default"
+        print(io, "default solver")
     else
-        solver = string(m.solver)
+        print(io, split(split(string(m.solver), "Solver")[1], ".")[2])
     end
-    print(io, split(solver, "Solver")[1])
 end
 Base.writemime(io::IO, ::MIME"text/latex", m::Model) =
     print(io, model_str(IJuliaMode,m))

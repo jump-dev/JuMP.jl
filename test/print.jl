@@ -377,7 +377,7 @@ Maximization problem with:
  * 1 SOS constraint
  * 1 SOC constraint
  * 15 variables: 4 binary, 4 integer, 1 semicontinuous, 1 semi-integer
-Solver set to Default""", repl=:show)
+Solver is default solver""", repl=:show)
 
     io_test(IJuliaMode, mod_1, """
 \\begin{alignat*}{1}\\max\\quad & a - b + 2 a1 - 10 x\\\\
@@ -413,7 +413,7 @@ Feasibility problem with:
  * 0 linear constraints
  * 1 quadratic constraint
  * 2 variables: 1 binary, 1 integer
-Solver set to Default""", repl=:show)
+Solver is default solver""", repl=:show)
 
     mod_2 = Model()
     @defVar(mod_2, x)
@@ -423,7 +423,7 @@ Solver set to Default""", repl=:show)
 Feasibility problem with:
  * 1 linear constraint
  * 1 variable
-Solver set to Default""", repl=:show)
+Solver is default solver""", repl=:show)
 
     #------------------------------------------------------------------
 
@@ -446,7 +446,7 @@ Minimization problem with:
  * 0 linear constraints
  * 3 nonlinear constraints
  * 5 variables
-Solver set to Default""", repl=:show)
+Solver is default solver""", repl=:show)
     io_test(IJuliaMode, mod_3, """
 \\begin{alignat*}{1}\\min\\quad & (nonlinear expression)\\\\
 \\text{Subject to} \\quad & 3 nonlinear constraints\\\\
