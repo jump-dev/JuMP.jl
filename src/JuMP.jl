@@ -16,14 +16,18 @@ importall Base.Operators
 
 import MathProgBase
 
-using ReverseDiffSparse, Calculus
-import ArrayViews
-const subarr = ArrayViews.view
+using Calculus
+using ReverseDiffSparse
+
+function __init__()
+    ENABLE_NLP_RESOLVE[1] = false
+end
 
 export
 # Objects
     Model, Variable, Norm, AffExpr, QuadExpr, SOCExpr, AbstractJuMPScalar,
     LinearConstraint, QuadConstraint, SDPConstraint, SOCConstraint,
+    NonlinearConstraint,
     ConstraintRef, LinConstrRef,
     JuMPNLPEvaluator,
 # Functions
@@ -48,7 +52,7 @@ export
     @SOCConstraint, @SOCConstraints,
     @defVar, @defConstrRef, @setObjective, addToExpression, @defExpr,
     @setNLObjective, @addNLConstraint, @addNLConstraints,
-    @defNLExpr
+    @defNLExpr, @defNLParam
 
 include("JuMPContainer.jl")
 include("utils.jl")
@@ -296,7 +300,7 @@ setPrintHook(m::Model, f) = (m.printhook = f)
 abstract JuMPConstraint
 # Abstract base type for all scalar types
 # In JuMP, used only for Variable. Useful primarily for extensions
-abstract AbstractJuMPScalar <: ReverseDiffSparse.Placeholder
+abstract AbstractJuMPScalar
 
 Base.start(::AbstractJuMPScalar) = false
 Base.next(x::AbstractJuMPScalar, state) = (x, true)
@@ -312,7 +316,6 @@ immutable Variable <: AbstractJuMPScalar
 end
 
 getLinearIndex(x::Variable) = x.col
-ReverseDiffSparse.getplaceindex(x::Variable) = getLinearIndex(x)
 Base.isequal(x::Variable,y::Variable) = (x.col == y.col) && (x.m === y.m)
 
 Variable(m::Model, lower, upper, cat::Symbol, name::AbstractString="", value::Number=NaN) =
@@ -706,6 +709,18 @@ Base.eltype{T<:JuMPTypes}(::T) = T
 Base.size(::JuMPTypes) = ()
 Base.size(x::JuMPTypes,d::Int) = 1
 Base.ndims(::JuMPTypes) = 0
+
+##########################################################################
+# Types used in the nonlinear code
+immutable NonlinearExpression
+    m::Model
+    index::Int
+end
+
+immutable NonlinearParameter
+    m::Model
+    index::Int
+end
 
 ##########################################################################
 # Operator overloads

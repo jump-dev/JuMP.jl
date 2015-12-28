@@ -224,10 +224,13 @@ facts("[macros] @addNLConstraints") do
     end)
 
     @fact length(m.nlpdata.nlconstr) --> 4
-    @fact "$(ReverseDiffSparse.base_expression(m.nlpdata.nlconstr[1].terms))" --> "y[i] - 0"
-    @fact "$(ReverseDiffSparse.base_expression(m.nlpdata.nlconstr[2].terms))" --> "y[i] - 0"
-    @fact "$(ReverseDiffSparse.base_expression(m.nlpdata.nlconstr[3].terms))" --> "y[i] - 0"
-    @fact "$(ReverseDiffSparse.base_expression(m.nlpdata.nlconstr[4].terms))" --> "(x + y[1] * y[2] * y[3]) - 0.5"
+    d = JuMPNLPEvaluator(m)
+    MathProgBase.initialize(d, [:ExprGraph])
+
+    @fact MathProgBase.constr_expr(d,1) --> :(x[2] - 0.0 == 0.0)
+    @fact MathProgBase.constr_expr(d,2) --> :(x[3] - 0.0 == 0.0)
+    @fact MathProgBase.constr_expr(d,3) --> :(x[4] - 0.0 == 0.0)
+    @fact MathProgBase.constr_expr(d,4) --> :((x[1] + x[2] * x[3] * x[4]) - 0.5 <= 0.0)
 
 end
 
