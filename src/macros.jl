@@ -5,6 +5,9 @@
 
 using Base.Meta
 
+issum(s::Symbol) = (s == :sum) || (s == :∑) || (s == :Σ)
+isprod(s::Symbol) = (s == :prod) || (s == :∏)
+
 include("parseExpr_staged.jl")
 
 ###############################################################################
@@ -954,7 +957,6 @@ macro addNLConstraint(m, x, extra...)
         code = quote
             c = NonlinearConstraint(@processNLExpr($(esc(lhs))), $lb, $ub)
             push!($m.nlpdata.nlconstr, c)
-            push!($m.nlpdata.nlconstrlist, c.terms)
             $(refcall) = ConstraintRef{NonlinearConstraint}($m, length($m.nlpdata.nlconstr))
         end
     elseif length(x.args) == 5
@@ -992,6 +994,7 @@ macro addNLConstraint(m, x, extra...)
     return assert_validmodel(m, code)
 end
 
+#=
 macro defNLExpr(x, extra...)
     # Two formats:
     # - @defNLExpr(a*x <= 5)
@@ -1006,3 +1009,4 @@ macro defNLExpr(x, extra...)
     macrocall = Expr(:macrocall, symbol("@parametricExpr"), [esc(v) for v in idxvars]..., esc(x))
     return :($(varname) = $macrocall)
 end
+=#

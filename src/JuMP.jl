@@ -16,7 +16,8 @@ importall Base.Operators
 
 import MathProgBase
 
-using ReverseDiffSparse, Calculus
+using Calculus
+using ReverseDiffSparse2
 import ArrayViews
 const subarr = ArrayViews.view
 
@@ -296,7 +297,7 @@ setPrintHook(m::Model, f) = (m.printhook = f)
 abstract JuMPConstraint
 # Abstract base type for all scalar types
 # In JuMP, used only for Variable. Useful primarily for extensions
-abstract AbstractJuMPScalar <: ReverseDiffSparse.Placeholder
+abstract AbstractJuMPScalar
 
 Base.start(::AbstractJuMPScalar) = false
 Base.next(x::AbstractJuMPScalar, state) = (x, true)
@@ -312,7 +313,6 @@ immutable Variable <: AbstractJuMPScalar
 end
 
 getLinearIndex(x::Variable) = x.col
-ReverseDiffSparse.getplaceindex(x::Variable) = getLinearIndex(x)
 Base.isequal(x::Variable,y::Variable) = (x.col == y.col) && (x.m === y.m)
 
 Variable(m::Model, lower, upper, cat::Symbol, name::AbstractString="", value::Number=NaN) =
