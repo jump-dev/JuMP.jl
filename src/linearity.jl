@@ -4,6 +4,8 @@
 
 @enum Linearity CONSTANT LINEAR NONLINEAR
 
+export CONSTANT, LINEAR, NONLINEAR
+
 function classify_linearity(nd::Vector{NodeData},adj)
 
     linearity = Array(Linearity,length(nd))
@@ -75,4 +77,4 @@ function classify_linearity(nd::Vector{NodeData},adj)
 
 end
 
-export classify_linearity
+export Linearity,classify_linearity
