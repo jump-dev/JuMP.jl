@@ -30,14 +30,16 @@ true_grad = [2*x[1]*cos(x[1]^2), -4*sin(x[2]*4)/5]
 nd_outer = [NodeData(SUBEXPRESSION,1,-1,-1)]
 li = list_subexpressions(nd_outer)
 @test li == [1]
-li = order_subexpressions(Vector{NodeData}[nd_outer], Vector{NodeData}[nd])
+li,li_individual = order_subexpressions(Vector{NodeData}[nd_outer], Vector{NodeData}[nd])
 @test li == [1]
+@test li_individual[1] == [1]
 
 nd_outer2 = [NodeData(CALL,operator_to_id[:+],-1,-1),NodeData(SUBEXPRESSION,2,1,1),NodeData(SUBEXPRESSION,1,1,2)]
 li = list_subexpressions(nd_outer2)
 @test li == [1,2]
-li = order_subexpressions(Vector{NodeData}[nd_outer2], Vector{NodeData}[nd,nd_outer])
+li,li_individual = order_subexpressions(Vector{NodeData}[nd_outer2], Vector{NodeData}[nd,nd_outer])
 @test li == [1,2]
+@test li_individual[1] == [1,2]
 
 adj_outer = adjmat(nd_outer)
 outer_storage = zeros(1)

@@ -4,7 +4,6 @@ using Base.Meta
 import DualNumbers: Dual, epsilon
 import Calculus
 import Lazy
-import LightGraphs
 
 include("types.jl")
 include("conversion.jl")
