@@ -1,7 +1,7 @@
 
-@enum NodeType CALL CALLUNIVAR VARIABLE VALUE PARAMETER
+@enum NodeType CALL CALLUNIVAR VARIABLE VALUE PARAMETER SUBEXPRESSION
 
-export CALL, CALLUNIVAR, VARIABLE, VALUE, PARAMETER
+export CALL, CALLUNIVAR, VARIABLE, VALUE, PARAMETER, SUBEXPRESSION
 
 immutable NodeData
     nodetype::NodeType
@@ -19,6 +19,7 @@ export NodeData
 # for VARIABLE, index is variable index
 # for VALUE, index is into list of constants
 # for PARAMETER, index is into list of parameters
+# for SUBEXPRESSION, index is into list of subexpressions
 
 const operators = [:+,:-,:*,:^,:/]
 

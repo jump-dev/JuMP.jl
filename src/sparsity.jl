@@ -2,7 +2,7 @@
 # compute the sparsity pattern of the gradient of an expression
 # (i.e., a list of which indices are present)
 
-function compute_gradient_sparsity(nd::Vector{NodeData},adj)
+function compute_gradient_sparsity(nd::Vector{NodeData})
 
     # this is easy, just build a list of which variable indices appear
     indices = Set{Int}()
@@ -13,7 +13,7 @@ function compute_gradient_sparsity(nd::Vector{NodeData},adj)
         end
     end
 
-    return sort(collect(indices))
+    return indices
 end
 
 export compute_gradient_sparsity

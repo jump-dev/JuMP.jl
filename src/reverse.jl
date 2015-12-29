@@ -4,7 +4,8 @@
 
 # assumes forward_storage is already updated
 # dense gradient output, assumes initialized to zero
-function reverse_eval{T}(output::Vector{T},rev_storage::Vector{T},forward_storage::Vector{T},nd::Vector{NodeData},adj,const_values)
+# if subexpressions are present, must run reverse_eval on subexpression tapes afterwards
+function reverse_eval{T}(output::Vector{T},rev_storage::Vector{T},forward_storage::Vector{T},nd::Vector{NodeData},adj,const_values,subexpression_output,scale_value::T=one(T))
 
     @assert length(rev_storage) >= length(nd)
     @assert length(forward_storage) >= length(nd)
@@ -15,13 +16,16 @@ function reverse_eval{T}(output::Vector{T},rev_storage::Vector{T},forward_storag
     children_arr = rowvals(adj)
 
     if nd[1].nodetype == VARIABLE
-        output[nd[1].index] += 1
+        output[nd[1].index] += scale_value
         return # trivial case
+    elseif nd[1].nodetype == SUBEXPRESSION
+        subexpression_output[nd[1].index] += scale_value
+        return
     end
 
     # reverse_storage[k] is the partial derivative of the output with respect to
     # the value of node k
-    rev_storage[1] = 1
+    rev_storage[1] = scale_value
 
     for k in 2:length(nd)
         @inbounds nod = nd[k]
@@ -102,6 +106,8 @@ function reverse_eval{T}(output::Vector{T},rev_storage::Vector{T},forward_storag
 
         if nod.nodetype == VARIABLE
             @inbounds output[nod.index] += rev_storage[k]
+        elseif nod.nodetype == SUBEXPRESSION
+            @inbounds subexpression_output[nod.index] += rev_storage[k]
         end
     end
     #@show storage
@@ -143,9 +149,9 @@ function hessmat_eval!{T}(R::Matrix{T},rev_storage::Vector{Dual{T}},forward_stor
         end
 
         # do a forward pass
-        forward_eval(forward_storage,nd,adj,const_values,forward_input_vector)
+        forward_eval(forward_storage,nd,adj,const_values,forward_input_vector,[])
         # do a reverse pass
-        reverse_eval(reverse_output_vector,rev_storage,forward_storage,nd,adj,const_values)
+        reverse_eval(reverse_output_vector,rev_storage,forward_storage,nd,adj,const_values,[])
 
         # collect directional derivatives
         for r in 1:length(local_to_global_idx)
