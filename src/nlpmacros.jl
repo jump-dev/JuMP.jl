@@ -118,6 +118,11 @@ function parseNLExpr_runtime(x::Variable, tape, parent, whichchild, values)
     nothing
 end
 
+function parseNLExpr_runtime(x::NonlinearExpression, tape, parent, whichchild, values)
+    push!(tape, NodeData(SUBEXPRESSION, x.index, parent, whichchild))
+    nothing
+end
+
 macro processNLExpr(ex)
     parsed = parseNLExpr(ex, :tape, -1, -1, :values)
     quote

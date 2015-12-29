@@ -974,7 +974,6 @@ macro addNLConstraint(m, x, extra...)
             end
             c = NonlinearConstraint(@processNLExpr($(esc(x.args[3]))), $(esc(lb)), $(esc(ub)))
             push!($m.nlpdata.nlconstr, c)
-            push!($m.nlpdata.nlconstrlist, c.terms)
             $(refcall) = ConstraintRef{NonlinearConstraint}($m, length($m.nlpdata.nlconstr))
         end
     else
@@ -994,19 +993,21 @@ macro addNLConstraint(m, x, extra...)
     return assert_validmodel(m, code)
 end
 
-#=
-macro defNLExpr(x, extra...)
-    # Two formats:
-    # - @defNLExpr(a*x <= 5)
-    # - @defNLExpr(myref[a=1:5], sin(x^a))
-    length(extra) > 1 && error("in @defNLExpr: too many arguments.")
-    # Canonicalize the arguments
-    c = length(extra) == 1 ? x        : nothing
-    x = length(extra) == 1 ? extra[1] : x
+macro defNLExpr(m,args...)
+    if length(args) == 1
+        c = nothing
+        x = args[1]
+    elseif length(args) == 2
+        c = args[1]
+        x = args[2]
+    else
+        error("in @defNLExpr: needs either two or three arguments.")
+    end
 
-    refcall, idxvars, idxsets, idxpairs = buildrefsets(c)
-    varname = isexpr(refcall,:ref) ? refcall.args[1] : refcall
-    macrocall = Expr(:macrocall, symbol("@parametricExpr"), [esc(v) for v in idxvars]..., esc(x))
-    return :($(varname) = $macrocall)
+    refcall, idxvars, idxsets, idxpairs, condition = buildrefsets(c)
+    m = esc(m)
+    code = quote
+        $(refcall) = NonlinearExpression($m, @processNLExpr($(esc(x))))
+    end
+    return assert_validmodel(m, getloopedcode(c, code, condition, idxvars, idxsets, idxpairs, :NonlinearExpression))
 end
-=#

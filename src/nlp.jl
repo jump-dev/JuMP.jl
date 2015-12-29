@@ -3,6 +3,11 @@
 #  License, v. 2.0. If a copy of the MPL was not distributed with this
 #  file, You can obtain one at http://mozilla.org/MPL/2.0/.
 
+immutable NonlinearExpression
+    m::Model
+    index::Int
+end
+
 include("nlpmacros.jl")
 
 import DualNumbers: Dual, epsilon
@@ -17,11 +22,19 @@ typealias NonlinearConstraint GenericRangeConstraint{NonlinearExprData}
 type NLPData
     nlobj
     nlconstr::Vector{NonlinearConstraint}
+    nlexpr::Vector{NonlinearExprData}
     nlconstrDuals::Vector{Float64}
     evaluator
 end
 
-NLPData() = NLPData(nothing, NonlinearConstraint[], Float64[], nothing)
+function NonlinearExpression(m::Model,ex::NonlinearExprData)
+    initNLP(m)
+    nldata::NLPData = m.nlpdata
+    push!(nldata.nlexpr, ex)
+    return NonlinearExpression(m, length(nldata.nlexpr))
+end
+
+NLPData() = NLPData(nothing, NonlinearConstraint[], NonlinearExprData[], Float64[], nothing)
 
 Base.copy(::NLPData) = error("Copying nonlinear problems not yet implemented")
 
@@ -52,6 +65,15 @@ type FunctionStorage
     rinfo::Coloring.RecoveryInfo # coloring info for hessians
     seed_matrix::Matrix{Float64}
     linearity::Linearity
+    dependent_subexpressions::Vector{Int} # subexpressions which this function depends on, ordered for forward pass
+end
+
+type SubexpressionStorage
+    nd::Vector{NodeData}
+    adj::SparseMatrixCSC{Bool,Int}
+    const_values::Vector{Float64}
+    forward_storage::Vector{Float64}
+    reverse_storage::Vector{Float64}
 end
 
 type JuMPNLPEvaluator <: MathProgBase.AbstractNLPEvaluator
@@ -61,6 +83,10 @@ type JuMPNLPEvaluator <: MathProgBase.AbstractNLPEvaluator
     linobj::Vector{Float64}
     objective::FunctionStorage
     constraints::Vector{FunctionStorage}
+    subexpressions::Vector{SubexpressionStorage}
+    subexpression_order::Vector{Int}
+    subexpression_forward_values::Vector{Float64}
+    subexpression_reverse_values::Vector{Float64}
     last_x::Vector{Float64}
     jac_storage::Vector{Float64} # temporary storage for computing jacobians
     # storage for computing hessians
@@ -93,14 +119,18 @@ type JuMPNLPEvaluator <: MathProgBase.AbstractNLPEvaluator
     end
 end
 
-function FunctionStorage(nld::NonlinearExprData,numVar, want_hess::Bool)
+function FunctionStorage(nld::NonlinearExprData,numVar, want_hess::Bool, subexpr::Vector{Vector{NodeData}}, dependent_subexpressions)
 
     nd = nld.nd
     const_values = nld.const_values
     adj = adjmat(nd)
     forward_storage = zeros(length(nd))
     reverse_storage = zeros(length(nd))
-    grad_sparsity = compute_gradient_sparsity(nd, adj)
+    grad_sparsity = compute_gradient_sparsity(nd)
+
+    for k in dependent_subexpressions
+        union!(grad_sparsity, compute_gradient_sparsity(subexpr[k]))
+    end
 
     if want_hess
         # compute hessian sparsity
@@ -115,7 +145,23 @@ function FunctionStorage(nld::NonlinearExprData,numVar, want_hess::Bool)
         linearity = [NONLINEAR]
     end
 
-    return FunctionStorage(nd, adj, const_values, forward_storage, reverse_storage, grad_sparsity, hess_I, hess_J, rinfo, seed_matrix, linearity[1])
+    return FunctionStorage(nd, adj, const_values, forward_storage, reverse_storage, sort(collect(grad_sparsity)), hess_I, hess_J, rinfo, seed_matrix, linearity[1],dependent_subexpressions)
+
+end
+
+function SubexpressionStorage(nld::NonlinearExprData,numVar, want_hess::Bool)
+
+    nd = nld.nd
+    const_values = nld.const_values
+    adj = adjmat(nd)
+    forward_storage = zeros(length(nd))
+    reverse_storage = zeros(length(nd))
+
+    if want_hess
+        error()
+    end
+
+    return SubexpressionStorage(nd, adj, const_values, forward_storage, reverse_storage)
 
 end
 
@@ -149,17 +195,33 @@ function MathProgBase.initialize(d::JuMPNLPEvaluator, requested_features::Vector
     numVar = length(d.linobj)
 
     d.want_hess = (:Hess in requested_features)
+    @assert !d.want_hess
 
     d.has_nlobj = isa(nldata.nlobj, NonlinearExprData)
     max_expr_length = 0
+    main_expressions = Array(Vector{NodeData},0)
+    subexpr = Array(Vector{NodeData},0)
+    for nlexpr in nldata.nlexpr
+        push!(subexpr, nlexpr.nd)
+    end
+    if d.has_nlobj
+        push!(main_expressions,nldata.nlobj.nd)
+    end
+    for nlconstr in nldata.nlconstr
+        push!(main_expressions,nlconstr.terms.nd)
+    end
+    println("Ordering subexpressions")
+    @time d.subexpression_order, individual_order = order_subexpressions(main_expressions,subexpr)
     if d.has_nlobj
         @assert length(d.m.obj.qvars1) == 0 && length(d.m.obj.aff.vars) == 0
-        d.objective = FunctionStorage(nldata.nlobj, numVar, d.want_hess)
+        d.objective = FunctionStorage(nldata.nlobj, numVar, d.want_hess, subexpr, individual_order[1])
         max_expr_length = max(max_expr_length, length(d.objective.nd))
     end
 
-    for nlconstr in nldata.nlconstr
-        push!(d.constraints, FunctionStorage(nlconstr.terms, numVar, d.want_hess))
+    for k in 1:length(nldata.nlconstr)
+        nlconstr = nldata.nlconstr[k]
+        idx = (d.has_nlobj) ? k+1 : k
+        push!(d.constraints, FunctionStorage(nlconstr.terms, numVar, d.want_hess, subexpr, individual_order[idx]))
         max_expr_length = max(max_expr_length, length(d.constraints[end].nd))
     end
 
@@ -168,9 +230,21 @@ function MathProgBase.initialize(d::JuMPNLPEvaluator, requested_features::Vector
         d.reverse_storage_hess = Array(Dual{Float64},max_expr_length)
     end
 
+    # order subexpressions
+
+
+
+    d.subexpressions = Array(SubexpressionStorage, length(nldata.nlexpr))
+    for k in d.subexpression_order # only load expressions which actually are used
+        d.subexpressions[k] = SubexpressionStorage(nldata.nlexpr[k], numVar, d.want_hess)
+    end
+    d.subexpression_forward_values = Array(Float64, length(d.subexpressions))
+    d.subexpression_reverse_values = Array(Float64, length(d.subexpressions))
+
+
 
     tprep = toq()
-    #println("Prep time: $tprep")
+    println("Prep time: $tprep")
 
     # reset timers
     d.eval_f_timer = 0
@@ -182,16 +256,21 @@ function MathProgBase.initialize(d::JuMPNLPEvaluator, requested_features::Vector
     nothing
 end
 
-MathProgBase.features_available(d::JuMPNLPEvaluator) = [:Grad, :Jac, :Hess, :HessVec, :ExprGraph]
+MathProgBase.features_available(d::JuMPNLPEvaluator) = [:Grad, :Jac]#, :Hess, :HessVec, :ExprGraph]
 
 function forward_eval_all(d::JuMPNLPEvaluator,x)
     # do a forward pass on all expressions at x
+    subexpr_values = d.subexpression_forward_values
+    for k in d.subexpression_order
+        ex = d.subexpressions[k]
+        subexpr_values[k] = forward_eval(ex.forward_storage,ex.nd,ex.adj,ex.const_values,x,subexpr_values)
+    end
     if d.has_nlobj
         ex = d.objective
-        forward_eval(ex.forward_storage,ex.nd,ex.adj,ex.const_values,x)
+        forward_eval(ex.forward_storage,ex.nd,ex.adj,ex.const_values,x,subexpr_values)
     end
     for ex in d.constraints
-        forward_eval(ex.forward_storage,ex.nd,ex.adj,ex.const_values,x)
+        forward_eval(ex.forward_storage,ex.nd,ex.adj,ex.const_values,x,subexpr_values)
     end
     copy!(d.last_x,x)
 end
@@ -223,7 +302,15 @@ function MathProgBase.eval_grad_f(d::JuMPNLPEvaluator, g, x)
     if d.has_nlobj
         fill!(g,0.0)
         ex = d.objective
-        reverse_eval(g,ex.reverse_storage,ex.forward_storage,ex.nd,ex.adj,ex.const_values)
+        subexpr_reverse_values = d.subexpression_reverse_values
+        subexpr_reverse_values[ex.dependent_subexpressions] = 0.0
+        reverse_eval(g,ex.reverse_storage,ex.forward_storage,ex.nd,ex.adj,ex.const_values,subexpr_reverse_values)
+        for i in length(ex.dependent_subexpressions):-1:1
+            k = ex.dependent_subexpressions[i]
+            subexpr = d.subexpressions[k]
+            reverse_eval(g,subexpr.reverse_storage,subexpr.forward_storage,subexpr.nd,subexpr.adj,subexpr.const_values,subexpr_reverse_values,subexpr_reverse_values[k])
+
+        end
     else
         copy!(g,d.linobj)
         qobj::QuadExpr = d.m.obj
@@ -303,10 +390,19 @@ function MathProgBase.eval_jac_g(d::JuMPNLPEvaluator, J, x)
         end
     end
     grad_storage = d.jac_storage
+    subexpr_reverse_values = d.subexpression_reverse_values
     for ex in d.constraints
         nzidx = ex.grad_sparsity
         grad_storage[nzidx] = 0.0
-        reverse_eval(grad_storage,ex.reverse_storage,ex.forward_storage,ex.nd,ex.adj,ex.const_values)
+        subexpr_reverse_values[ex.dependent_subexpressions] = 0.0
+
+        reverse_eval(grad_storage,ex.reverse_storage,ex.forward_storage,ex.nd,ex.adj,ex.const_values,subexpr_reverse_values)
+        for i in length(ex.dependent_subexpressions):-1:1
+            k = ex.dependent_subexpressions[i]
+            subexpr = d.subexpressions[k]
+            reverse_eval(grad_storage,subexpr.reverse_storage,subexpr.forward_storage,subexpr.nd,subexpr.adj,subexpr.const_values,subexpr_reverse_values,subexpr_reverse_values[k])
+        end
+
         for k in 1:length(nzidx)
             J[idx+k-1] = grad_storage[nzidx[k]]
         end
