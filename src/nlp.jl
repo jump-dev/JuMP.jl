@@ -210,8 +210,7 @@ function MathProgBase.initialize(d::JuMPNLPEvaluator, requested_features::Vector
     for nlconstr in nldata.nlconstr
         push!(main_expressions,nlconstr.terms.nd)
     end
-    println("Ordering subexpressions")
-    @time d.subexpression_order, individual_order = order_subexpressions(main_expressions,subexpr)
+    d.subexpression_order, individual_order = order_subexpressions(main_expressions,subexpr)
     if d.has_nlobj
         @assert length(d.m.obj.qvars1) == 0 && length(d.m.obj.aff.vars) == 0
         d.objective = FunctionStorage(nldata.nlobj, numVar, d.want_hess, subexpr, individual_order[1])
