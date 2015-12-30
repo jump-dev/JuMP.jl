@@ -54,7 +54,7 @@ function forward_eval{T}(storage::Vector{T},nd::Vector{NodeData},adj,const_value
                 if exponent == 2
                     storage[k] = base*base
                 else
-                    storage[k] = base^exponent
+                    storage[k] = pow(base,exponent)
                 end
             elseif op == 5 # :/
                 @assert n_children == 2

@@ -77,7 +77,7 @@ function reverse_eval{T}(output::Vector{T},rev_storage::Vector{T},forward_storag
                     if exponent == 2
                         @inbounds rev_storage[k] = parentval*2*forward_storage[k]
                     else
-                        rev_storage[k] = parentval*exponent*forward_storage[k]^(exponent-1)
+                        rev_storage[k] = parentval*exponent*pow(forward_storage[k],exponent-1)
                     end
                 else
                     baseidx = children_arr[first(siblings_idx)]
@@ -93,7 +93,7 @@ function reverse_eval{T}(output::Vector{T},rev_storage::Vector{T},forward_storag
                 else # denominator
                     @inbounds numeratoridx = children_arr[first(siblings_idx)]
                     @inbounds numerator = forward_storage[numeratoridx]
-                    @inbounds rev_storage[k] = -parentval*numerator*forward_storage[k]^(-2)
+                    @inbounds rev_storage[k] = -parentval*numerator*pow(forward_storage[k],-2)
                 end
             else
                 error()
