@@ -469,8 +469,6 @@ facts("[print] changing variable categories") do
     io_test(REPLMode, mod, """
 Min 0
 Subject to
- x[i] free $fa i $inset {1,2,3}
- y[i,j] free $fa i $inset {1,2,3}, j $inset {$dots}
  x[1] free
  x[2] free
  x[3] $inset [-$infty,$infty] $union {0}
@@ -484,9 +482,7 @@ Subject to
 
     io_test(IJuliaMode, mod, """
 \\begin{alignat*}{1}\\min\\quad & 0\\\\
-\\text{Subject to} \\quad & x_{i} free \\quad\\forall i \\in \\{1,2,3\\}\\\\
- & y_{i,j} free \\quad\\forall i \\in \\{1,2,3\\}, j \\in \\{\\dots\\}\\\\
- & x_{1} free\\\\
+\\text{Subject to} \\quad & x_{1} free\\\\
  & x_{2} free\\\\
  & x_{3} \\in \\[-\\infty,\\infty\\] \\cup \\{0\\}\\\\
  & y_{1,1} free\\\\
