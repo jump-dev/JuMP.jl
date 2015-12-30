@@ -81,9 +81,9 @@ import ReverseDiffSparse2: CONSTANT, LINEAR, NONLINEAR
 function test_linearity(ex,testval,IJ = [],indices=[])
     nd,const_values = expr_to_nodedata(ex)
     adj = adjmat(nd)
-    linearity = classify_linearity(nd,adj)
+    linearity = classify_linearity(nd,adj,[])
     @test linearity[1] == testval
-    edgelist = compute_hessian_sparsity(nd,adj,linearity)
+    edgelist = compute_hessian_sparsity(nd,adj,linearity,Array(Set{Tuple{Int,Int}},0), Array(Set{Int},0))
     if linearity[1] != NONLINEAR
         @test length(edgelist) == 0
     elseif length(IJ) > 0

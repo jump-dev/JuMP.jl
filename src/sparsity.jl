@@ -22,7 +22,10 @@ export compute_gradient_sparsity
 
 # input_linearity is the linearity with respect to the input
 # computed by classify_linearity
-function compute_hessian_sparsity(nd::Vector{NodeData},adj,input_linearity::Vector{Linearity})
+# subexpression_edgelist is the edgelist of each subexpression
+# subexpression_variables is the list of all variables which appear in
+# a subexpression (including recursively)
+function compute_hessian_sparsity(nd::Vector{NodeData},adj,input_linearity::Vector{Linearity},subexpression_edgelist::Vector{Set{Tuple{Int,Int}}},subexpression_variables::Vector{Set{Int}})
 
     # idea: consider the linearity/nonlinearity of a node *with respect to the output*
     # The children of any node which is nonlinear with respect to the output
@@ -44,6 +47,10 @@ function compute_hessian_sparsity(nd::Vector{NodeData},adj,input_linearity::Vect
 
     stack = Int[]
     nonlinear_group = Set{Int}() # TODO: replace with indexed set
+    if length(nd) > 0
+        # TODO
+        @assert nd[1].nodetype != SUBEXPRESSION
+    end
     
     for k in 2:length(nd)
         nod = nd[k]
@@ -61,7 +68,7 @@ function compute_hessian_sparsity(nd::Vector{NodeData},adj,input_linearity::Vect
         elseif par.nodetype == CALL
             op = par.index
             if operators[op] == :+ || operators[op] == :-
-                continue
+                # pass
             elseif operators[op] == :*
                 # check if all siblings are constant
                 sibling_idx = nzrange(adj,nod.parent)
@@ -77,6 +84,13 @@ function compute_hessian_sparsity(nd::Vector{NodeData},adj,input_linearity::Vect
                 end
             else
                 nonlinear_wrt_output[k] = true
+            end
+        end
+
+        if nod.nodetype == SUBEXPRESSION && !nonlinear_wrt_output[k]
+            # subexpression comes in linearly, so append edgelist
+            for ij in subexpression_edgelist[nod.index]
+                push!(edgelist,ij)
             end
         end
         
@@ -98,6 +112,9 @@ function compute_hessian_sparsity(nd::Vector{NodeData},adj,input_linearity::Vect
             end
             if nd[r].nodetype == VARIABLE
                 push!(nonlinear_group, nd[r].index)
+            elseif nd[r].nodetype == SUBEXPRESSION
+                # append all variables in subexpression
+                union!(nonlinear_group, subexpression_variables[nd[r].index])
             end
         end
         for i in nonlinear_group

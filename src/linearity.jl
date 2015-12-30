@@ -6,7 +6,7 @@
 
 export CONSTANT, LINEAR, NONLINEAR
 
-function classify_linearity(nd::Vector{NodeData},adj)
+function classify_linearity(nd::Vector{NodeData},adj,subexpression_linearity)
 
     linearity = Array(Linearity,length(nd))
 
@@ -21,6 +21,8 @@ function classify_linearity(nd::Vector{NodeData},adj)
             linearity[k] = LINEAR
         elseif nod.nodetype == VALUE
             linearity[k] = CONSTANT
+        elseif nod.nodetype == SUBEXPRESSION
+            linearity[k] = subexpression_linearity[nod.index]
         else
             @assert nod.nodetype == CALL || nod.nodetype == CALLUNIVAR
             children_idx = nzrange(adj,k)
