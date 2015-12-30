@@ -74,6 +74,8 @@ type SubexpressionStorage
     const_values::Vector{Float64}
     forward_storage::Vector{Float64}
     reverse_storage::Vector{Float64}
+    forward_hessian_storage::Vector{Dual{Float64}}
+    reverse_hessian_storage::Vector{Dual{Float64}}
 end
 
 type JuMPNLPEvaluator <: MathProgBase.AbstractNLPEvaluator
@@ -95,6 +97,8 @@ type JuMPNLPEvaluator <: MathProgBase.AbstractNLPEvaluator
     reverse_storage_hess::Vector{Dual{Float64}} # length is of the longest expression
     forward_input_vector::Vector{Dual{Float64}} # length is number of variables
     reverse_output_vector::Vector{Dual{Float64}}# length is number of variables
+    subexpression_hessian_forward_values::Vector{Dual{Float64}} # length is number of subexpressions
+    subexpression_hessian_reverse_values::Vector{Dual{Float64}} # lenght is number of subexpressions
     # timers
     eval_f_timer::Float64
     eval_g_timer::Float64
@@ -119,7 +123,7 @@ type JuMPNLPEvaluator <: MathProgBase.AbstractNLPEvaluator
     end
 end
 
-function FunctionStorage(nld::NonlinearExprData,numVar, want_hess::Bool, subexpr::Vector{Vector{NodeData}}, dependent_subexpressions)
+function FunctionStorage(nld::NonlinearExprData,numVar, want_hess::Bool, subexpr::Vector{Vector{NodeData}}, dependent_subexpressions, subexpression_linearity, subexpression_edgelist, subexpression_variables)
 
     nd = nld.nd
     const_values = nld.const_values
@@ -134,10 +138,13 @@ function FunctionStorage(nld::NonlinearExprData,numVar, want_hess::Bool, subexpr
 
     if want_hess
         # compute hessian sparsity
-        linearity = classify_linearity(nd, adj)
-        edgelist = compute_hessian_sparsity(nd, adj, linearity)
+        linearity = classify_linearity(nd, adj, subexpression_linearity)
+        edgelist = compute_hessian_sparsity(nd, adj, linearity, subexpression_edgelist, subexpression_variables)
         hess_I, hess_J, rinfo = Coloring.hessian_color_preprocess(edgelist, numVar)
         seed_matrix = Coloring.seed_matrix(rinfo)
+        if linearity[1] == NONLINEAR
+            @assert length(hess_I) > 0
+        end
     else
         hess_I = hess_J = Int[]
         rinfo = Coloring.RecoveryInfo()
@@ -156,12 +163,16 @@ function SubexpressionStorage(nld::NonlinearExprData,numVar, want_hess::Bool)
     adj = adjmat(nd)
     forward_storage = zeros(length(nd))
     reverse_storage = zeros(length(nd))
-
     if want_hess
-        error()
+        forward_hessian_storage = zeros(Dual{Float64},length(nd))
+        reverse_hessian_storage = zeros(Dual{Float64},length(nd))
+    else
+        forward_hessian_storage = Array(Dual{Float64},0)
+        reverse_hessian_storage = Array(Dual{Float64},0)
     end
 
-    return SubexpressionStorage(nd, adj, const_values, forward_storage, reverse_storage)
+
+    return SubexpressionStorage(nd, adj, const_values, forward_storage, reverse_storage, forward_hessian_storage, reverse_hessian_storage)
 
 end
 
@@ -195,7 +206,6 @@ function MathProgBase.initialize(d::JuMPNLPEvaluator, requested_features::Vector
     numVar = length(d.linobj)
 
     d.want_hess = (:Hess in requested_features)
-    @assert !d.want_hess
 
     d.has_nlobj = isa(nldata.nlobj, NonlinearExprData)
     max_expr_length = 0
@@ -211,32 +221,50 @@ function MathProgBase.initialize(d::JuMPNLPEvaluator, requested_features::Vector
         push!(main_expressions,nlconstr.terms.nd)
     end
     d.subexpression_order, individual_order = order_subexpressions(main_expressions,subexpr)
+    subexpression_linearity = Array(Linearity, length(nldata.nlexpr))
+    subexpression_variables = Array(Set{Int}, length(nldata.nlexpr))
+    subexpression_edgelist = Array(Set{Tuple{Int,Int}}, length(nldata.nlexpr))
+    d.subexpressions = Array(SubexpressionStorage, length(nldata.nlexpr))
+    for k in d.subexpression_order # only load expressions which actually are used
+        d.subexpressions[k] = SubexpressionStorage(nldata.nlexpr[k], numVar, d.want_hess)
+        subex = d.subexpressions[k]
+        if d.want_hess
+            linearity = classify_linearity(subex.nd, subex.adj, subexpression_linearity)
+            subexpression_linearity[k] = linearity[1]
+            vars = compute_gradient_sparsity(d.subexpressions[k].nd)
+            # union with all dependent expressions
+            for idx in list_subexpressions(d.subexpressions[k].nd)
+                union!(vars, subexpression_variables[idx])
+            end
+            subexpression_variables[k] = vars
+            edgelist = compute_hessian_sparsity(subex.nd, subex.adj, linearity,subexpression_edgelist, subexpression_variables)
+            subexpression_edgelist[k] = edgelist
+        end
+
+    end
+
+
     if d.has_nlobj
         @assert length(d.m.obj.qvars1) == 0 && length(d.m.obj.aff.vars) == 0
-        d.objective = FunctionStorage(nldata.nlobj, numVar, d.want_hess, subexpr, individual_order[1])
+        d.objective = FunctionStorage(nldata.nlobj, numVar, d.want_hess, subexpr, individual_order[1], subexpression_linearity, subexpression_edgelist, subexpression_variables)
         max_expr_length = max(max_expr_length, length(d.objective.nd))
     end
 
     for k in 1:length(nldata.nlconstr)
         nlconstr = nldata.nlconstr[k]
         idx = (d.has_nlobj) ? k+1 : k
-        push!(d.constraints, FunctionStorage(nlconstr.terms, numVar, d.want_hess, subexpr, individual_order[idx]))
+        push!(d.constraints, FunctionStorage(nlconstr.terms, numVar, d.want_hess, subexpr, individual_order[idx], subexpression_linearity, subexpression_edgelist, subexpression_variables))
         max_expr_length = max(max_expr_length, length(d.constraints[end].nd))
     end
 
     if d.want_hess # allocate extra storage
         d.forward_storage_hess = Array(Dual{Float64},max_expr_length)
         d.reverse_storage_hess = Array(Dual{Float64},max_expr_length)
+        d.subexpression_hessian_forward_values = Array(Dual{Float64},length(d.subexpressions))
+        d.subexpression_hessian_reverse_values = Array(Dual{Float64},length(d.subexpressions))
     end
 
-    # order subexpressions
 
-
-
-    d.subexpressions = Array(SubexpressionStorage, length(nldata.nlexpr))
-    for k in d.subexpression_order # only load expressions which actually are used
-        d.subexpressions[k] = SubexpressionStorage(nldata.nlexpr[k], numVar, d.want_hess)
-    end
     d.subexpression_forward_values = Array(Float64, length(d.subexpressions))
     d.subexpression_reverse_values = Array(Float64, length(d.subexpressions))
 
@@ -255,7 +283,7 @@ function MathProgBase.initialize(d::JuMPNLPEvaluator, requested_features::Vector
     nothing
 end
 
-MathProgBase.features_available(d::JuMPNLPEvaluator) = [:Grad, :Jac]#, :Hess, :HessVec, :ExprGraph]
+MathProgBase.features_available(d::JuMPNLPEvaluator) = [:Grad, :Jac, :Hess, :HessVec, :ExprGraph]
 
 function forward_eval_all(d::JuMPNLPEvaluator,x)
     # do a forward pass on all expressions at x
@@ -530,14 +558,58 @@ function hessian_slice(d, ex, x, H, scale, nzcount, recovery_tmp_storage)
         @assert nzthis == 0
         return 0
     end
-    seed = ex.seed_matrix
-    Coloring.prepare_seed_matrix!(seed,ex.rinfo)
+    R = ex.seed_matrix
+    Coloring.prepare_seed_matrix!(R,ex.rinfo)
+    local_to_global_idx = ex.rinfo.local_indices
+    reverse_output_vector = d.reverse_output_vector
+    forward_input_vector = d.forward_input_vector
+    subexpr_forward_values = d.subexpression_hessian_forward_values
+    subexpr_reverse_values = d.subexpression_hessian_reverse_values
 
-    hessmat_eval!(seed, d.reverse_storage_hess, d.forward_storage_hess, ex.nd, ex.adj, ex.const_values, x, d.reverse_output_vector, d.forward_input_vector, ex.rinfo.local_indices)
-    # Output is in seed, now recover
+    # compute hessian-vector products
+    num_products = size(R,2) # number of hessian-vector products
+    @assert size(R,1) == length(local_to_global_idx)
+    numVar = length(x)
+
+    for k in 1:num_products
+
+        for r in 1:length(local_to_global_idx)
+            # set up directional derivatives
+            @inbounds idx = local_to_global_idx[r]
+            @inbounds forward_input_vector[idx] = Dual(x[idx],R[r,k])
+            @inbounds reverse_output_vector[idx] = zero(Dual{Float64})
+        end
+
+        # do a forward pass
+        for expridx in ex.dependent_subexpressions
+            subexpr = d.subexpressions[expridx]
+            subexpr_forward_values[expridx] = forward_eval(subexpr.forward_hessian_storage, subexpr.nd, subexpr.adj, subexpr.const_values, forward_input_vector,subexpr_forward_values)
+        end
+        forward_eval(d.forward_storage_hess,ex.nd,ex.adj,ex.const_values,forward_input_vector,subexpr_forward_values)
+
+        # do a reverse pass
+        subexpr_reverse_values[ex.dependent_subexpressions] = zero(Dual{Float64})
+        reverse_eval(reverse_output_vector,d.reverse_storage_hess,d.forward_storage_hess,ex.nd,ex.adj,ex.const_values,subexpr_reverse_values)
+        for i in length(ex.dependent_subexpressions):-1:1
+            expridx = ex.dependent_subexpressions[i]
+            subexpr = d.subexpressions[expridx]
+            reverse_eval(reverse_output_vector,subexpr.reverse_hessian_storage,subexpr.forward_hessian_storage,subexpr.nd,subexpr.adj,subexpr.const_values,subexpr_reverse_values,subexpr_reverse_values[expridx])
+        end
+
+
+        # collect directional derivatives
+        for r in 1:length(local_to_global_idx)
+            idx = local_to_global_idx[r]
+            R[r,k] = epsilon(reverse_output_vector[idx])
+        end
+
+    end
+
+    #hessmat_eval!(seed, d.reverse_storage_hess, d.forward_storage_hess, ex.nd, ex.adj, ex.const_values, x, d.reverse_output_vector, d.forward_input_vector, ex.rinfo.local_indices)
+    # Output is in R, now recover
 
     output_slice = sub(H, (nzcount+1):(nzcount+nzthis))
-    Coloring.recover_from_matmat!(output_slice, seed, ex.rinfo, recovery_tmp_storage)
+    Coloring.recover_from_matmat!(output_slice, R, ex.rinfo, recovery_tmp_storage)
     scale!(output_slice, scale)
     return nzthis
 
