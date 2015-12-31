@@ -37,6 +37,34 @@ function parseNLExpr(x, tapevar, parent, whichchild, values)
             return code
         end
     end
+    if isexpr(x, :comparison)
+        code = :(let; end)
+        block = code.args[1]
+        op = x.args[2]
+        operatorid = comparison_operator_to_id[op]
+        for k in 2:2:length(x.args)-1
+            @assert x.args[k] == op # don't handle a <= b >= c
+        end
+        parentvar = gensym()
+        push!(block.args, :(push!($tapevar, NodeData(COMPARISON, $operatorid, $parent, $whichchild))))
+        push!(block.args, :($parentvar = length($tapevar)))
+        for k in 1:2:length(x.args)
+            push!(block.args, parseNLExpr(x.args[k], tapevar, parentvar, div(k+1,2), values))
+        end
+        return code
+    end
+    if isexpr(x, :&&) || isexpr(x, :||)
+        code = :(let; end)
+        block = code.args[1]
+        op = x.head
+        operatorid = logic_operator_to_id[op]
+        parentvar = gensym()
+        push!(block.args, :(push!($tapevar, NodeData(LOGIC, $operatorid, $parent, $whichchild))))
+        push!(block.args, :($parentvar = length($tapevar)))
+        push!(block.args, parseNLExpr(x.args[1], tapevar, parentvar, 1, values))
+        push!(block.args, parseNLExpr(x.args[2], tapevar, parentvar, 2, values))
+        return code
+    end
     if isexpr(x, :curly)
         header = x.args[1]
         if length(x.args) < 3
