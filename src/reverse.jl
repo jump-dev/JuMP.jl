@@ -104,13 +104,14 @@ function reverse_eval{T}(output::Vector{T},rev_storage::Vector{T},forward_storag
                 if (condition && nod.whichchild == 2) || (!condition && nod.whichchild == 3)
                     rev_storage[k] = parentval
                 else
-                    rev_storage[k] = 0
+                    rev_storage[k] = zero(T)
                 end
             else
                 error()
             end
         elseif par.nodetype == LOGIC || par.nodetype == COMPARISON
-            # pass
+            # nonlinear, but these don't go into the derivatives
+            rev_storage[k] = zero(T)
         else
             @assert par.nodetype == CALLUNIVAR
             @inbounds this_value = forward_storage[k]
