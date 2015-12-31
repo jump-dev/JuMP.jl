@@ -2,9 +2,9 @@
 
 # classify the nodes in a tree as constant, linear, or nonlinear with respect to the input
 
-@enum Linearity CONSTANT LINEAR NONLINEAR
+@enum Linearity CONSTANT LINEAR PIECEWISE_LINEAR NONLINEAR
 
-export CONSTANT, LINEAR, NONLINEAR
+export CONSTANT, LINEAR, PIECEWISE_LINEAR, NONLINEAR
 
 function classify_linearity(nd::Vector{NodeData},adj,subexpression_linearity)
 
@@ -24,7 +24,6 @@ function classify_linearity(nd::Vector{NodeData},adj,subexpression_linearity)
         elseif nod.nodetype == SUBEXPRESSION
             linearity[k] = subexpression_linearity[nod.index]
         else
-            @assert nod.nodetype == CALL || nod.nodetype == CALLUNIVAR
             children_idx = nzrange(adj,k)
             num_constant_children = 0
             any_nonlinear = false
@@ -39,6 +38,12 @@ function classify_linearity(nd::Vector{NodeData},adj,subexpression_linearity)
             if any_nonlinear
                 # if any children are nonlinear, then we're nonlinear
                 linearity[k] = NONLINEAR
+                # except in the case of ifelse. if the operands are linear then we're piecewise linear
+                if nod.nodetype == CALL && operators[nod.index] == :ifelse
+                    if linearity[children_arr[children_idx[2]]] == LINEAR && linearity[children_arr[children_idx[3]]] == LINEAR
+                        linearity[k] = PIECEWISE_LINEAR
+                    end
+                end
                 continue
             elseif num_constant_children == length(children_idx)
                 # if all children are constant, then we're constant
@@ -54,7 +59,7 @@ function classify_linearity(nd::Vector{NodeData},adj,subexpression_linearity)
                 else
                     linearity[k] = NONLINEAR
                 end
-            else
+            elseif nod.nodetype == CALL
                 # operator with more than 1 argument
                 if operators[op] == :+ || operators[op] == :-
                     linearity[k] = LINEAR
@@ -71,6 +76,10 @@ function classify_linearity(nd::Vector{NodeData},adj,subexpression_linearity)
                 else # all other operators are nonlinear
                     linearity[k] = NONLINEAR
                 end
+            elseif nod.nodetype == LOGIC || nod.nodetype == COMPARISON
+                linearity[k] = NONLINEAR
+            else
+                error("Unknown node type")
             end
         end
     end

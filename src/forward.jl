@@ -63,6 +63,13 @@ function forward_eval{T}(storage::Vector{T},nd::Vector{NodeData},adj,const_value
                 @inbounds numerator = storage[children_arr[idx1]]
                 @inbounds denominator = storage[children_arr[idx2]]
                 storage[k] = numerator/denominator
+            elseif op == 6 # ifelse
+                @assert n_children == 3
+                idx1 = first(children_idx)
+                @inbounds condition = storage[children_arr[idx1]]
+                @inbounds lhs = storage[children_arr[idx1+1]]
+                @inbounds rhs = storage[children_arr[idx1+2]]
+                storage[k] = ifelse(condition == 1, lhs, rhs)
             else
                 error()
             end
@@ -72,6 +79,39 @@ function forward_eval{T}(storage::Vector{T},nd::Vector{NodeData},adj,const_value
             #@assert child_idx == children_arr[first(nzrange(adj,k))]
             child_val = storage[child_idx]
             @inbounds storage[k] = eval_univariate(op, child_val)
+        elseif nod.nodetype == COMPARISON
+            op = nod.index
+
+            @inbounds children_idx = nzrange(adj,k)
+            n_children = length(children_idx)
+            result = true
+            for r in 1:n_children-1
+                cval_lhs = storage[children_arr[children_idx[r]]]
+                cval_rhs = storage[children_arr[children_idx[r+1]]]
+                if op == 1
+                    result &= cval_lhs <= cval_rhs
+                elseif op == 2
+                    result &= cval_lhs == cval_rhs
+                elseif op == 3
+                    result &= cval_lhs >= cval_rhs
+                elseif op == 4
+                    result &= cval_lhs < cval_rhs
+                elseif op == 5
+                    result &= cval_lhs > cval_rhs
+                end
+            end
+            storage[k] = result
+        elseif nod.nodetype == LOGIC
+            op = nod.index
+            @inbounds children_idx = nzrange(adj,k)
+            # boolean values are stored as floats
+            cval_lhs = (storage[children_arr[first(children_idx)]] == 1)
+            cval_rhs = (storage[children_arr[last(children_idx)]] == 1)
+            if op == 1
+                storage[k] = cval_lhs && cval_rhs
+            elseif op == 2
+                storage[k] = cval_lhs || cval_rhs
+            end
         end
 
     end

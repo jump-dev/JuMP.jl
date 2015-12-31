@@ -25,6 +25,23 @@ function expr_to_nodedata(ex::Expr,nd::Vector{NodeData},values::Vector{Float64},
     elseif isexpr(ex, :ref)
         @assert ex.args[1] == :x
         push!(nd,NodeData(VARIABLE, ex.args[2], parentid, whichchild))
+    elseif isexpr(ex, :comparison)
+        op = ex.args[2]
+        opid = comparison_operator_to_id[op]
+        for k in 2:2:length(ex.args)-1
+            @assert ex.args[k] == op
+        end
+        push!(nd, NodeData(COMPARISON, opid, parentid, whichchild))
+        for k in 1:2:length(ex.args)
+            expr_to_nodedata(ex.args[k],nd,values,myid,div(k+1,2))
+        end
+    elseif isexpr(ex,:&&) || isexpr(ex,:||)
+        @assert length(ex.args) == 2
+        op = ex.head
+        opid = logic_operator_to_id[op]
+        push!(nd, NodeData(LOGIC, opid, parentid, whichchild))
+        expr_to_nodedata(ex.args[1],nd,values,myid,1)
+        expr_to_nodedata(ex.args[2],nd,values,myid,2)
     else
         error("Unrecognized expression $ex: $(ex.head)")
     end

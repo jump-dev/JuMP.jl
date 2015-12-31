@@ -29,7 +29,9 @@ function reverse_eval{T}(output::Vector{T},rev_storage::Vector{T},forward_storag
 
     for k in 2:length(nd)
         @inbounds nod = nd[k]
-        (nod.nodetype == VALUE) && continue
+        if nod.nodetype == VALUE || nod.nodetype == LOGIC || nod.nodetype == COMPARISON
+            continue
+        end
         # compute the value of reverse_storage[k]
         parentidx = nod.parent
         @inbounds par = nd[parentidx]
@@ -95,9 +97,20 @@ function reverse_eval{T}(output::Vector{T},rev_storage::Vector{T},forward_storag
                     @inbounds numerator = forward_storage[numeratoridx]
                     @inbounds rev_storage[k] = -parentval*numerator*pow(forward_storage[k],-2)
                 end
+            elseif op == 6 # ifelse
+                @inbounds siblings_idx = nzrange(adj,parentidx)
+                conditionidx = first(siblings_idx)
+                @inbounds condition = (forward_storage[children_arr[conditionidx]]==1)
+                if (condition && nod.whichchild == 2) || (!condition && nod.whichchild == 3)
+                    rev_storage[k] = parentval
+                else
+                    rev_storage[k] = 0
+                end
             else
                 error()
             end
+        elseif par.nodetype == LOGIC || par.nodetype == COMPARISON
+            # pass
         else
             @assert par.nodetype == CALLUNIVAR
             @inbounds this_value = forward_storage[k]

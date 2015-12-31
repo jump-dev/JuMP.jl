@@ -67,7 +67,7 @@ function compute_hessian_sparsity(nd::Vector{NodeData},adj,input_linearity::Vect
             end
         elseif par.nodetype == CALL
             op = par.index
-            if operators[op] == :+ || operators[op] == :-
+            if operators[op] == :+ || operators[op] == :- || operators[op] == :ifelse
                 # pass
             elseif operators[op] == :*
                 # check if all siblings are constant
@@ -106,6 +106,9 @@ function compute_hessian_sparsity(nd::Vector{NodeData},adj,input_linearity::Vect
         while length(stack) > 0
             r = pop!(stack)
             nonlinear_wrt_output[r] = true
+            if nd[r].nodetype == LOGIC || nd[r].nodetype == COMPARISON
+                continue
+            end
             children_idx = nzrange(adj,r)
             for cidx in children_idx
                 push!(stack, children_arr[cidx])

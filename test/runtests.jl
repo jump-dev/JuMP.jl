@@ -75,6 +75,38 @@ reverse_eval(grad,reverse_storage,storage,nd,adj,const_values,[])
 true_grad = [-x[2]*x[1]^(-x[2]-1), -((1/x[1])^x[2])*log(x[1]),-1]
 @test isapprox(grad,true_grad)
 
+# logical expressions
+ex = :(x[1] > 0.5 && x[1] < 0.9)
+nd,const_values = expr_to_nodedata(ex)
+adj = adjmat(nd)
+storage = zeros(length(nd))
+fval = forward_eval(storage,nd,adj,const_values,[1.5],[])
+@test fval == 0
+fval = forward_eval(storage,nd,adj,const_values,[0.6],[])
+@test fval == 1
+
+ex = :(ifelse(x[1] >= 0.5 || x[1] <= 0.1,x[1],5))
+nd,const_values = expr_to_nodedata(ex)
+adj = adjmat(nd)
+storage = zeros(length(nd))
+reverse_storage = zeros(length(nd))
+grad = zeros(1)
+fval = forward_eval(storage,nd,adj,const_values,[1.5],[])
+@test fval == 1.5
+reverse_eval(grad,reverse_storage,storage,nd,adj,const_values,[])
+@test grad[1] == 1
+
+fval = forward_eval(storage,nd,adj,const_values,[-0.1],[])
+@test fval == -0.1
+fill!(grad,0)
+reverse_eval(grad,reverse_storage,storage,nd,adj,const_values,[])
+@test grad[1] == 1
+
+fval = forward_eval(storage,nd,adj,const_values,[0.2],[])
+@test fval == 5
+fill!(grad,0)
+reverse_eval(grad,reverse_storage,storage,nd,adj,const_values,[])
+@test grad[1] == 0
 
 import ReverseDiffSparse2: CONSTANT, LINEAR, NONLINEAR
 
@@ -108,6 +140,9 @@ test_linearity(:(x[1]^x[2]), NONLINEAR, Set([(2,2),(1,1),(2,1)]))
 test_linearity(:(x[1]/3+x[2]), LINEAR)
 test_linearity(:(3/(x[1]*x[2])), NONLINEAR, Set([(2,2),(1,1),(2,1)]))
 test_linearity(:(1/(x[1]+3)), NONLINEAR)
+test_linearity(:(ifelse(x[1] <= 1,x[1],x[2])), PIECEWISE_LINEAR, Set([]))
+test_linearity(:(ifelse(x[1] <= 1,x[1]^2,x[2])), NONLINEAR, Set([(1,1)]))
+test_linearity(:(ifelse(1 <= 1,2,3)), CONSTANT)
 
 using DualNumbers
 
