@@ -89,6 +89,7 @@ type JuMPNLPEvaluator <: MathProgBase.AbstractNLPEvaluator
     subexpression_order::Vector{Int}
     subexpression_forward_values::Vector{Float64}
     subexpression_reverse_values::Vector{Float64}
+    subexpressions_as_julia_expressions::Vector{Any}
     last_x::Vector{Float64}
     jac_storage::Vector{Float64} # temporary storage for computing jacobians
     # storage for computing hessians
@@ -193,13 +194,6 @@ function MathProgBase.initialize(d::JuMPNLPEvaluator, requested_features::Vector
     initNLP(d.m) #in case the problem is purely linear/quadratic thus far
     nldata::NLPData = d.m.nlpdata
 
-    if :ExprGraph in requested_features
-        error("Not supported yet")
-        if length(requested_features) == 1 # don't need to do anything else
-            return
-        end
-    end
-
     tic()
 
     d.linobj, linrowlb, linrowub = prepProblemBounds(d.m)
@@ -221,6 +215,15 @@ function MathProgBase.initialize(d::JuMPNLPEvaluator, requested_features::Vector
         push!(main_expressions,nlconstr.terms.nd)
     end
     d.subexpression_order, individual_order = order_subexpressions(main_expressions,subexpr)
+    if :ExprGraph in requested_features
+        d.subexpressions_as_julia_expressions = Array(Any,length(subexpr))
+        for k in d.subexpression_order
+            ex = nldata.nlexpr[k]
+            adj = adjmat(nd)
+            d.subexpressions_as_julia_expressions[k] = tapeToExpr(1, ex.nd, adj, ex.const_values, d.subexpressions_as_julia_expressions)
+        end
+    end
+
     subexpression_linearity = Array(Linearity, length(nldata.nlexpr))
     subexpression_variables = Array(Set{Int}, length(nldata.nlexpr))
     subexpression_edgelist = Array(Set{Tuple{Int,Int}}, length(nldata.nlexpr))
@@ -696,7 +699,7 @@ function MathProgBase.hesslag_structure(d::JuMPNLPEvaluator)
 
     return hess_I, hess_J
 end
-#=
+
 # currently don't merge duplicates (this isn't required by MPB standard)
 function affToExpr(aff::AffExpr, constant::Bool)
     ex = Expr(:call,:+)
@@ -718,9 +721,62 @@ function quadToExpr(q::QuadExpr,constant::Bool)
     return ex
 end
 
+# we splat in the subexpressions (for now)
+function tapeToExpr(k, nd::Vector{NodeData}, adj, const_values, subexpressions::Vector{Any})
+
+    children_arr = rowvals(adj)
+
+    nod = nd[k]
+    if nod.nodetype == VARIABLE
+        return Expr(:ref,:x,nod.index)
+    elseif nod.nodetype == VALUE
+        return const_values[nod.index]
+    elseif nod.nodetype == SUBEXPRESSION
+        return subexpressions[nod.index]
+    elseif nod.nodetype == CALL
+        op = nod.index
+        opsymbol = operators[op]
+        children_idx = nzrange(adj,k)
+        ex = Expr(:call,opsymbol)
+        for cidx in children_idx
+            push!(ex.args, tapeToExpr(children_arr[cidx], nd, adj, const_values, subexpressions))
+        end
+        return ex
+    elseif nod.nodetype == CALLUNIVAR
+        op = nod.index
+        opsymbol = univariate_operators[op]
+        cidx = first(nzrange(adj,k))
+        return Expr(:call,opsymbol,tapeToExpr(children_arr[cidx], nd, adj, const_values, subexpressions))
+    elseif nod.nodetype == COMPARISON
+        op = nod.index
+        opsymbol = comparison_operators[op]
+        children_idx = nzrange(adj,k)
+        ex = Expr(:comparison)
+        for cidx in children_idx
+            push!(ex.args, tapeToExpr(children_arr[cidx], nd, adj, const_values, subexpressions))
+            push!(ex.args, opsymbol)
+        end
+        pop!(ex.args)
+        return ex
+    elseif nod.nodetype == LOGIC
+        op = nod.index
+        opsymbol = logic_operators[op]
+        children_idx = nzrange(adj,k)
+        lhs = tapeToExpr(children_arr[first(children_idx)], nd, adj, const_values, subexpressions)
+        rhs = tapeToExpr(children_arr[last(children_idx)], nd, adj, const_values, subexpressions)
+        return Expr(opsymbol, lhs, rhs)
+    else
+        error()
+    end
+
+
+end
+
+
 function MathProgBase.obj_expr(d::JuMPNLPEvaluator)
-    if isa(d.m.nlpdata.nlobj, ReverseDiffSparse.SymbolicOutput)
-        return ReverseDiffSparse.to_flat_expr(d.m.nlpdata.nlobj)
+    if d.has_nlobj
+        ex = d.objective
+        return tapeToExpr(1, ex.nd, ex.adj, ex.const_values, d.subexpressions_as_julia_expressions)
     else
         return quadToExpr(d.m.obj, true)
     end
@@ -743,16 +799,17 @@ function MathProgBase.constr_expr(d::JuMPNLPEvaluator,i::Integer)
         return Expr(:comparison, quadToExpr(qconstr.terms, true), qconstr.sense, 0)
     else
         i -= nlin + nquad
-        ex = ReverseDiffSparse.to_flat_expr(d.m.nlpdata.nlconstrlist, i)
+        ex = d.constraints[i]
+        julia_expr = tapeToExpr(1, ex.nd, ex.adj, ex.const_values, d.subexpressions_as_julia_expressions)
         constr = d.m.nlpdata.nlconstr[i]
         if sense(constr) == :range
-            return Expr(:comparison, constr.lb, :(<=), ex, :(<=), constr.ub)
+            return Expr(:comparison, constr.lb, :(<=), julia_expr, :(<=), constr.ub)
         else
-            return Expr(:comparison, ex, sense(constr), rhs(constr))
+            return Expr(:comparison, julia_expr, sense(constr), rhs(constr))
         end
     end
 end
-=#
+
 
 function _buildInternalModel_nlp(m::Model, traits)
 
