@@ -19,7 +19,7 @@ function classify_linearity(nd::Vector{NodeData},adj,subexpression_linearity)
         nod = nd[k]
         if nod.nodetype == VARIABLE
             linearity[k] = LINEAR
-        elseif nod.nodetype == VALUE
+        elseif nod.nodetype == VALUE || nod.nodetype == PARAMETER
             linearity[k] = CONSTANT
         elseif nod.nodetype == SUBEXPRESSION
             linearity[k] = subexpression_linearity[nod.index]

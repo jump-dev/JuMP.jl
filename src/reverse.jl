@@ -5,7 +5,7 @@
 # assumes forward_storage is already updated
 # dense gradient output, assumes initialized to zero
 # if subexpressions are present, must run reverse_eval on subexpression tapes afterwards
-function reverse_eval{T}(output::Vector{T},rev_storage::Vector{T},forward_storage::Vector{T},nd::Vector{NodeData},adj,const_values,subexpression_output,scale_value::T=one(T))
+function reverse_eval{T}(output::Vector{T},rev_storage::Vector{T},forward_storage::Vector{T},nd::Vector{NodeData},adj,subexpression_output,scale_value::T)
 
     @assert length(rev_storage) >= length(nd)
     @assert length(forward_storage) >= length(nd)
@@ -29,7 +29,7 @@ function reverse_eval{T}(output::Vector{T},rev_storage::Vector{T},forward_storag
 
     for k in 2:length(nd)
         @inbounds nod = nd[k]
-        if nod.nodetype == VALUE || nod.nodetype == LOGIC || nod.nodetype == COMPARISON
+        if nod.nodetype == VALUE || nod.nodetype == LOGIC || nod.nodetype == COMPARISON || nod.nodetype == PARAMETER
             continue
         end
         # compute the value of reverse_storage[k]
@@ -163,9 +163,9 @@ function hessmat_eval!{T}(R::Matrix{T},rev_storage::Vector{Dual{T}},forward_stor
         end
 
         # do a forward pass
-        forward_eval(forward_storage,nd,adj,const_values,forward_input_vector,[])
+        forward_eval(forward_storage,nd,adj,const_values,[],forward_input_vector,[])
         # do a reverse pass
-        reverse_eval(reverse_output_vector,rev_storage,forward_storage,nd,adj,const_values,[])
+        reverse_eval(reverse_output_vector,rev_storage,forward_storage,nd,adj,[],Dual(1.0))
 
         # collect directional derivatives
         for r in 1:length(local_to_global_idx)

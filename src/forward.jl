@@ -3,7 +3,7 @@
 # forward-mode evaluation of an expression tree
 # tree is represented as Vector{NodeData} and adjacency matrix from adjmat()
 # assumes values of expressions have already been computed
-function forward_eval{T}(storage::Vector{T},nd::Vector{NodeData},adj,const_values,x_values::Vector{T},subexpression_values)
+function forward_eval{T}(storage::Vector{T},nd::Vector{NodeData},adj,const_values,parameter_values,x_values::Vector{T},subexpression_values)
 
     @assert length(storage) >= length(nd)
 
@@ -21,6 +21,8 @@ function forward_eval{T}(storage::Vector{T},nd::Vector{NodeData},adj,const_value
             @inbounds storage[k] = const_values[nod.index]
         elseif nod.nodetype == SUBEXPRESSION
             @inbounds storage[k] = subexpression_values[nod.index]
+        elseif nod.nodetype == PARAMETER
+            @inbounds storage[k] = parameter_values[nod.index]
         elseif nod.nodetype == CALL
             op = nod.index
             @inbounds children_idx = nzrange(adj,k)
