@@ -25,6 +25,7 @@ export
 # Objects
     Model, Variable, Norm, AffExpr, QuadExpr, SOCExpr, AbstractJuMPScalar,
     LinearConstraint, QuadConstraint, SDPConstraint, SOCConstraint,
+    NonlinearConstraint,
     ConstraintRef, LinConstrRef,
     JuMPNLPEvaluator,
 # Functions
