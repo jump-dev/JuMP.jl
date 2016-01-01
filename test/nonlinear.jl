@@ -249,6 +249,8 @@ context("With solver $(typeof(nlp_solver))") do
     @fact getObjectiveValue(m) --> roughly(1+4/sqrt(3), 1e-6)
     @fact getValue(x) + getValue(y) --> roughly(-1/3, 1e-3)
     @fact getValue(quadexpr) --> roughly(1, 1e-5)
+    @defNLExpr(quadexpr2, x + x^2 + x*y + y^2)
+    @fact getValue(quadexpr2) --> roughly(1, 1e-5)
 end; end; end
 
 
@@ -503,9 +505,4 @@ facts("[nonlinear] Hess-vec through MPB") do
     MathProgBase.eval_hesslag_prod(d, h, m.colVal, v, 1.0, [2.0,3.0])
     correct = [3.0 1.0 0.0; 1.0 0.0 2.0; 0.0 2.0 2.0]*v
     @fact h --> roughly(correct)
-end
-
-facts("[nonlinear] Old @defNLExpr syntax") do
-    @fact_throws ErrorException @defNLExpr(quadexpr, x + x^2 + x*y + y^2)
-    @fact_throws ErrorException @defNLExpr(entropy[i=idx], -x[i]*log(x[i]))
 end

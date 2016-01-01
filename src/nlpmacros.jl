@@ -141,7 +141,11 @@ function parseNLExpr_runtime(x::Number, tape, parent, whichchild, values)
     nothing
 end
 
+# Temporary hack for deprecation of @defNLExpr syntax
+const __last_model = Array(Model,1)
+
 function parseNLExpr_runtime(x::Variable, tape, parent, whichchild, values)
+    __last_model[1] = x.m
     push!(tape, NodeData(VARIABLE, x.col, parent, whichchild))
     nothing
 end

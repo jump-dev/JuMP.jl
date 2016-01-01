@@ -994,13 +994,11 @@ macro addNLConstraint(m, x, extra...)
 end
 
 macro defNLExpr(args...)
-    if length(args) == 1 || length(args) == 2
+    if length(args) == 2
         s = IOBuffer()
         print(s,args[1])
-        if length(args) == 2
-            print(s,",")
-            print(s,args[2])
-        end
+        print(s,",")
+        print(s,args[2])
         msg = """
         in @defNLExpr($(takebuf_string(s))): three arguments are required.
         Note that the syntax of @defNLExpr has recently changed:
@@ -1010,15 +1008,19 @@ macro defNLExpr(args...)
         Example:
         @defNLExpr(m, my_expr, x^2/y)
         @defNLExpr(m, my_expr_collection[i=1:2],sin(z[i])^2)
+        Support for the old syntax (with the model omitted) will be removed in an upcoming release.
         """
-        # this way is more likely to give a backtrace
-        return :(error($msg))
+        Base.warn(msg)
+        m = :(__last_model[1])
+        c = args[1]
+        x = args[2]
+    else
+        @assert length(args) == 3
+        m, c, x = args
+        m = esc(m)
     end
-    @assert length(args) == 3
-    m, c, x = args
 
     refcall, idxvars, idxsets, idxpairs, condition = buildrefsets(c)
-    m = esc(m)
     code = quote
         $(refcall) = NonlinearExpression($m, @processNLExpr($(esc(x))))
     end
