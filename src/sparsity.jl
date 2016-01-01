@@ -47,9 +47,11 @@ function compute_hessian_sparsity(nd::Vector{NodeData},adj,input_linearity::Vect
 
     stack = Int[]
     nonlinear_group = Set{Int}() # TODO: replace with indexed set
-    if length(nd) > 0
-        # TODO
-        @assert nd[1].nodetype != SUBEXPRESSION
+    if length(nd) == 1 && nd[1].nodetype == SUBEXPRESSION
+        # subexpression comes in linearly, so append edgelist
+        for ij in subexpression_edgelist[nd[1].index]
+            push!(edgelist,ij)
+        end
     end
     
     for k in 2:length(nd)
