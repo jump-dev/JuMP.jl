@@ -157,14 +157,14 @@ function FunctionStorage(nld::NonlinearExprData,numVar, want_hess::Bool, subexpr
 
 end
 
-function SubexpressionStorage(nld::NonlinearExprData,numVar, want_hess::Bool)
+function SubexpressionStorage(nld::NonlinearExprData,numVar, want_hess_storage::Bool)
 
     nd = nld.nd
     const_values = nld.const_values
     adj = adjmat(nd)
     forward_storage = zeros(length(nd))
     reverse_storage = zeros(length(nd))
-    if want_hess
+    if want_hess_storage # for Hess or HessVec
         forward_hessian_storage = zeros(Dual{Float64},length(nd))
         reverse_hessian_storage = zeros(Dual{Float64},length(nd))
     else
@@ -200,6 +200,7 @@ function MathProgBase.initialize(d::JuMPNLPEvaluator, requested_features::Vector
     numVar = length(d.linobj)
 
     d.want_hess = (:Hess in requested_features)
+    want_hess_storage = (:HessVec in requested_features) || d.want_hess
 
     d.has_nlobj = isa(nldata.nlobj, NonlinearExprData)
     max_expr_length = 0
@@ -219,7 +220,7 @@ function MathProgBase.initialize(d::JuMPNLPEvaluator, requested_features::Vector
         d.subexpressions_as_julia_expressions = Array(Any,length(subexpr))
         for k in d.subexpression_order
             ex = nldata.nlexpr[k]
-            adj = adjmat(nd)
+            adj = adjmat(ex.nd)
             d.subexpressions_as_julia_expressions[k] = tapeToExpr(1, ex.nd, adj, ex.const_values, d.subexpressions_as_julia_expressions)
         end
     end
@@ -229,7 +230,7 @@ function MathProgBase.initialize(d::JuMPNLPEvaluator, requested_features::Vector
     subexpression_edgelist = Array(Set{Tuple{Int,Int}}, length(nldata.nlexpr))
     d.subexpressions = Array(SubexpressionStorage, length(nldata.nlexpr))
     for k in d.subexpression_order # only load expressions which actually are used
-        d.subexpressions[k] = SubexpressionStorage(nldata.nlexpr[k], numVar, d.want_hess)
+        d.subexpressions[k] = SubexpressionStorage(nldata.nlexpr[k], numVar, want_hess_storage)
         subex = d.subexpressions[k]
         if d.want_hess
             linearity = classify_linearity(subex.nd, subex.adj, subexpression_linearity)
@@ -260,7 +261,7 @@ function MathProgBase.initialize(d::JuMPNLPEvaluator, requested_features::Vector
         max_expr_length = max(max_expr_length, length(d.constraints[end].nd))
     end
 
-    if d.want_hess # allocate extra storage
+    if d.want_hess || want_hess_storage # storage for Hess or HessVec
         d.forward_storage_hess = Array(Dual{Float64},max_expr_length)
         d.reverse_storage_hess = Array(Dual{Float64},max_expr_length)
         d.subexpression_hessian_forward_values = Array(Dual{Float64},length(d.subexpressions))
@@ -274,7 +275,7 @@ function MathProgBase.initialize(d::JuMPNLPEvaluator, requested_features::Vector
 
 
     tprep = toq()
-    println("Prep time: $tprep")
+    #println("Prep time: $tprep")
 
     # reset timers
     d.eval_f_timer = 0
@@ -446,7 +447,7 @@ function MathProgBase.eval_jac_g(d::JuMPNLPEvaluator, J, x)
 end
 
 
-#=
+
 function MathProgBase.eval_hesslag_prod(
     d::JuMPNLPEvaluator,
     h::Vector{Float64}, # output vector
@@ -457,19 +458,21 @@ function MathProgBase.eval_hesslag_prod(
 
     nldata = d.m.nlpdata::NLPData
 
-    # evaluate directional derivative of the gradient
-    dualvec = reinterpret(Dual{Float64}, nldata.nlconstrlist.dualvec)
-    dualout = reinterpret(Dual{Float64}, nldata.nlconstrlist.dualout)
-    @assert length(dualvec) >= length(x)
-    for i in 1:length(x)
-        dualvec[i] = Dual(x[i], v[i])
-        dualout[i] = zero(Dual{Float64})
-    end
-    MathProgBase.eval_grad_f(d, dualout, dualvec)
-    for i in 1:length(x)
-        h[i] = σ*epsilon(dualout[i])
+    # quadratic objective
+    qobj::QuadExpr = d.m.obj
+    for k in 1:length(qobj.qvars1)
+        col1 = qobj.qvars1[k].col
+        col2 = qobj.qvars2[k].col
+        coef = qobj.qcoeffs[k]
+        if col1 == col2
+            h[col1] += σ*2*coef*v[col1]
+        else
+            h[col1] += σ*coef*v[col2]
+            h[col2] += σ*coef*v[col1]
+        end
     end
 
+    # quadratic constraints
     row = size(d.A,1)+1
     quadconstr = d.m.quadconstr::Vector{QuadConstraint}
     for c in quadconstr
@@ -488,9 +491,47 @@ function MathProgBase.eval_hesslag_prod(
         row += 1
     end
 
-    ReverseDiffSparse.eval_hessvec!(h, v, nldata.nlconstrlist, x, subarr(μ,row:length(μ)))
+    for i in 1:length(x)
+        d.forward_input_vector[i] = Dual(x[i],v[i])
+    end
 
-end=#
+    # forward evaluate all subexpressions once
+    subexpr_forward_values = d.subexpression_hessian_forward_values
+    subexpr_reverse_values = d.subexpression_hessian_reverse_values
+    reverse_output_vector = d.reverse_output_vector
+    for expridx in d.subexpression_order
+        subexpr = d.subexpressions[expridx]
+        subexpr_forward_values[expridx] = forward_eval(subexpr.forward_hessian_storage, subexpr.nd, subexpr.adj, subexpr.const_values, forward_input_vector,subexpr_forward_values)
+    end
+    # we only need to do one reverse pass through the subexpressions as well
+    fill!(subexpr_reverse_values,zero(Dual{Float64}))
+    fill!(reverse_output_vector,zero(Dual{Float64}))
+    if d.has_nlobj
+        ex = d.objective
+        forward_eval(d.forward_storage_hess,ex.nd,ex.adj,ex.const_values,d.forward_input_vector,subexpr_forward_values)
+        reverse_eval(reverse_output_vector,d.reverse_storage_hess,d.forward_storage_hess,ex.nd,ex.adj,ex.const_values,subexpr_reverse_values, Dual(σ)) # note scaled by σ
+    end
+
+
+    for i in 1:length(d.constraints)
+        ex = d.constraints[i]
+        l = μ[row]
+        forward_eval(d.forward_storage_hess,ex.nd,ex.adj,ex.const_values,d.forward_input_vector,subexpr_forward_values)
+        reverse_eval(reverse_output_vector,d.reverse_storage_hess,d.forward_storage_hess,ex.nd,ex.adj,ex.const_values,subexpr_reverse_values, Dual(l))
+        row += 1
+    end
+
+    for i in length(ex.dependent_subexpressions):-1:1
+        expridx = ex.dependent_subexpressions[i]
+        subexpr = d.subexpressions[expridx]
+        reverse_eval(reverse_output_vector,subexpr.reverse_hessian_storage,subexpr.forward_hessian_storage,subexpr.nd,subexpr.adj,subexpr.const_values,subexpr_reverse_values,subexpr_reverse_values[expridx])
+    end
+
+    for i in 1:length(x)
+        h[i] += epsilon(reverse_output_vector[i])
+    end
+
+end
 
 function MathProgBase.eval_hesslag(
     d::JuMPNLPEvaluator,
