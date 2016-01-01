@@ -504,3 +504,8 @@ facts("[nonlinear] Hess-vec through MPB") do
     correct = [3.0 1.0 0.0; 1.0 0.0 2.0; 0.0 2.0 2.0]*v
     @fact h --> roughly(correct)
 end
+
+facts("[nonlinear] Old @defNLExpr syntax") do
+    @fact_throws ErrorException @defNLExpr(quadexpr, x + x^2 + x*y + y^2)
+    @fact_throws ErrorException @defNLExpr(entropy[i=idx], -x[i]*log(x[i]))
+end

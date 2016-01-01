@@ -993,16 +993,29 @@ macro addNLConstraint(m, x, extra...)
     return assert_validmodel(m, code)
 end
 
-macro defNLExpr(m,args...)
-    if length(args) == 1
-        c = nothing
-        x = args[1]
-    elseif length(args) == 2
-        c = args[1]
-        x = args[2]
-    else
-        error("in @defNLExpr: needs either two or three arguments.")
+macro defNLExpr(args...)
+    if length(args) == 1 || length(args) == 2
+        s = IOBuffer()
+        print(s,args[1])
+        if length(args) == 2
+            print(s,",")
+            print(s,args[2])
+        end
+        msg = """
+        in @defNLExpr($(takebuf_string(s))): three arguments are required.
+        Note that the syntax of @defNLExpr has recently changed:
+        The first argument should be the model to which the expression is attached.
+        The second is the name of the expression (or collection of expressions).
+        The third is the expression itself.
+        Example:
+        @defNLExpr(m, my_expr, x^2/y)
+        @defNLExpr(m, my_expr_collection[i=1:2],sin(z[i])^2)
+        """
+        # this way is more likely to give a backtrace
+        return :(error($msg))
     end
+    @assert length(args) == 3
+    m, c, x = args
 
     refcall, idxvars, idxsets, idxpairs, condition = buildrefsets(c)
     m = esc(m)
