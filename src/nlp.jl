@@ -927,27 +927,40 @@ function solvenlp(m::Model, traits; suppress_warnings=false)
 
 end
 
-#=
+
 # getValue for nonlinear subexpressions
-function getValue(x::Union{ReverseDiffSparse.ParametricExpressionWithParams,ReverseDiffSparse.ParametricExpression{0}})
-    # messy check to extract model object
-    found = false
-    m = nothing
-    for item in ReverseDiffSparse.expression_data(x)
-        if isa(item, JuMPContainer)
-            found = true
-            m = getmeta(item, :model)
-            break
-        elseif isa(item, Array{Variable}) && !isempty(item)
-            found = true
-            m = first(item).m
-        elseif isa(item, Variable)
-            found = true
-            m = item.m
-            break
-        end
+function getValue(x::NonlinearExpression)
+    m = x.m
+    # recompute EVERYTHING here
+    # could be smarter and cache
+
+    nldata::NLPData = m.nlpdata
+    subexpr = Array(Vector{NodeData},0)
+    for nlexpr in nldata.nlexpr
+        push!(subexpr, nlexpr.nd)
     end
-    found || error("Unable to determine which model this expression belongs to. Are there any variables present?")
-    return ReverseDiffSparse.getvalue(x, m.colVal)
+
+    this_subexpr = nldata.nlexpr[x.index]
+
+    max_len = length(this_subexpr.nd)
+
+    subexpression_order, individual_order = order_subexpressions(Vector{NodeData}[this_subexpr.nd],subexpr)
+
+    subexpr_values = Array(Float64, length(subexpr))
+
+    for k in subexpression_order
+        max_len = max(max_len, length(nldata.nlexpr[k].nd))
+    end
+
+    forward_storage = Array(Float64, max_len)
+
+    for k in subexpression_order # compute value of dependent subexpressions
+        ex = nldata.nlexpr[k]
+        adj = adjmat(ex.nd)
+        subexpr_values[k] = forward_eval(forward_storage,ex.nd,adj,ex.const_values,m.colVal,subexpr_values)
+    end
+
+    adj = adjmat(this_subexpr.nd)
+
+    return forward_eval(forward_storage,this_subexpr.nd,adj,this_subexpr.const_values,m.colVal,subexpr_values)
 end
-=#
