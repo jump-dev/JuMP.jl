@@ -17,7 +17,7 @@ importall Base.Operators
 import MathProgBase
 
 using Calculus
-using ReverseDiffSparse2
+using ReverseDiffSparse
 import ArrayViews
 const subarr = ArrayViews.view
 
