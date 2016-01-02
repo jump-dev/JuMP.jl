@@ -1026,3 +1026,19 @@ macro defNLExpr(args...)
     end
     return assert_validmodel(m, getloopedcode(c, code, condition, idxvars, idxsets, idxpairs, :NonlinearExpression))
 end
+
+# syntax is @defNLParam(m, p[i=1] == 2i)
+macro defNLParam(m, ex)
+    m = esc(m)
+    @assert isexpr(ex, :comparison)
+    @assert length(ex.args) == 3
+    @assert ex.args[2] == :(==)
+    c = ex.args[1]
+    x = ex.args[3]
+
+    refcall, idxvars, idxsets, idxpairs, condition = buildrefsets(c)
+    code = quote
+        $(refcall) = newparameter($m, $(esc(x)))
+    end
+    return assert_validmodel(m, getloopedcode(c, code, condition, idxvars, idxsets, idxpairs, :NonlinearParameter))
+end

@@ -8,6 +8,11 @@ immutable NonlinearExpression
     index::Int
 end
 
+immutable NonlinearParameter
+    m::Model
+    index::Int
+end
+
 include("nlpmacros.jl")
 
 import DualNumbers: Dual, epsilon
@@ -24,6 +29,7 @@ type NLPData
     nlconstr::Vector{NonlinearConstraint}
     nlexpr::Vector{NonlinearExprData}
     nlconstrDuals::Vector{Float64}
+    nlparamvalues::Vector{Float64}
     evaluator
 end
 
@@ -34,7 +40,17 @@ function NonlinearExpression(m::Model,ex::NonlinearExprData)
     return NonlinearExpression(m, length(nldata.nlexpr))
 end
 
-NLPData() = NLPData(nothing, NonlinearConstraint[], NonlinearExprData[], Float64[], nothing)
+function newparameter(m::Model,value::Number)
+    initNLP(m)
+    nldata::NLPData = m.nlpdata
+    push!(nldata.nlparamvalues, value)
+    return NonlinearParameter(m, length(nldata.nlparamvalues))
+end
+
+getValue(p::NonlinearParameter) = p.m.nlpdata.nlparamvalues[p.index]::Float64
+setValue(p::NonlinearParameter,v::Number) = (p.m.nlpdata.nlparamvalues[p.index] = v)
+
+NLPData() = NLPData(nothing, NonlinearConstraint[], NonlinearExprData[], Float64[], Float64[], nothing)
 
 Base.copy(::NLPData) = error("Copying nonlinear problems not yet implemented")
 
@@ -81,6 +97,7 @@ end
 type JuMPNLPEvaluator <: MathProgBase.AbstractNLPEvaluator
     m::Model
     A::SparseMatrixCSC{Float64,Int} # linear constraint matrix
+    parameter_values::Vector{Float64}
     has_nlobj::Bool
     linobj::Vector{Float64}
     objective::FunctionStorage
@@ -194,6 +211,8 @@ function MathProgBase.initialize(d::JuMPNLPEvaluator, requested_features::Vector
     initNLP(d.m) #in case the problem is purely linear/quadratic thus far
     nldata::NLPData = d.m.nlpdata
 
+    d.parameter_values = nldata.nlparamvalues
+
     tic()
 
     d.linobj, linrowlb, linrowub = prepProblemBounds(d.m)
@@ -221,7 +240,7 @@ function MathProgBase.initialize(d::JuMPNLPEvaluator, requested_features::Vector
         for k in d.subexpression_order
             ex = nldata.nlexpr[k]
             adj = adjmat(ex.nd)
-            d.subexpressions_as_julia_expressions[k] = tapeToExpr(1, ex.nd, adj, ex.const_values, d.subexpressions_as_julia_expressions)
+            d.subexpressions_as_julia_expressions[k] = tapeToExpr(1, ex.nd, adj, ex.const_values, d.parameter_values, d.subexpressions_as_julia_expressions)
         end
     end
 
@@ -294,14 +313,14 @@ function forward_eval_all(d::JuMPNLPEvaluator,x)
     subexpr_values = d.subexpression_forward_values
     for k in d.subexpression_order
         ex = d.subexpressions[k]
-        subexpr_values[k] = forward_eval(ex.forward_storage,ex.nd,ex.adj,ex.const_values,x,subexpr_values)
+        subexpr_values[k] = forward_eval(ex.forward_storage,ex.nd,ex.adj,ex.const_values,d.parameter_values,x,subexpr_values)
     end
     if d.has_nlobj
         ex = d.objective
-        forward_eval(ex.forward_storage,ex.nd,ex.adj,ex.const_values,x,subexpr_values)
+        forward_eval(ex.forward_storage,ex.nd,ex.adj,ex.const_values,d.parameter_values,x,subexpr_values)
     end
     for ex in d.constraints
-        forward_eval(ex.forward_storage,ex.nd,ex.adj,ex.const_values,x,subexpr_values)
+        forward_eval(ex.forward_storage,ex.nd,ex.adj,ex.const_values,d.parameter_values,x,subexpr_values)
     end
     copy!(d.last_x,x)
 end
@@ -335,11 +354,11 @@ function MathProgBase.eval_grad_f(d::JuMPNLPEvaluator, g, x)
         ex = d.objective
         subexpr_reverse_values = d.subexpression_reverse_values
         subexpr_reverse_values[ex.dependent_subexpressions] = 0.0
-        reverse_eval(g,ex.reverse_storage,ex.forward_storage,ex.nd,ex.adj,ex.const_values,subexpr_reverse_values)
+        reverse_eval(g,ex.reverse_storage,ex.forward_storage,ex.nd,ex.adj,subexpr_reverse_values,1.0)
         for i in length(ex.dependent_subexpressions):-1:1
             k = ex.dependent_subexpressions[i]
             subexpr = d.subexpressions[k]
-            reverse_eval(g,subexpr.reverse_storage,subexpr.forward_storage,subexpr.nd,subexpr.adj,subexpr.const_values,subexpr_reverse_values,subexpr_reverse_values[k])
+            reverse_eval(g,subexpr.reverse_storage,subexpr.forward_storage,subexpr.nd,subexpr.adj,subexpr_reverse_values,subexpr_reverse_values[k])
 
         end
     else
@@ -427,11 +446,11 @@ function MathProgBase.eval_jac_g(d::JuMPNLPEvaluator, J, x)
         grad_storage[nzidx] = 0.0
         subexpr_reverse_values[ex.dependent_subexpressions] = 0.0
 
-        reverse_eval(grad_storage,ex.reverse_storage,ex.forward_storage,ex.nd,ex.adj,ex.const_values,subexpr_reverse_values)
+        reverse_eval(grad_storage,ex.reverse_storage,ex.forward_storage,ex.nd,ex.adj,subexpr_reverse_values,1.0)
         for i in length(ex.dependent_subexpressions):-1:1
             k = ex.dependent_subexpressions[i]
             subexpr = d.subexpressions[k]
-            reverse_eval(grad_storage,subexpr.reverse_storage,subexpr.forward_storage,subexpr.nd,subexpr.adj,subexpr.const_values,subexpr_reverse_values,subexpr_reverse_values[k])
+            reverse_eval(grad_storage,subexpr.reverse_storage,subexpr.forward_storage,subexpr.nd,subexpr.adj,subexpr_reverse_values,subexpr_reverse_values[k])
         end
 
         for k in 1:length(nzidx)
@@ -501,23 +520,23 @@ function MathProgBase.eval_hesslag_prod(
     reverse_output_vector = d.reverse_output_vector
     for expridx in d.subexpression_order
         subexpr = d.subexpressions[expridx]
-        subexpr_forward_values[expridx] = forward_eval(subexpr.forward_hessian_storage, subexpr.nd, subexpr.adj, subexpr.const_values, forward_input_vector,subexpr_forward_values)
+        subexpr_forward_values[expridx] = forward_eval(subexpr.forward_hessian_storage, subexpr.nd, subexpr.adj, subexpr.const_values, d.parameter_values, forward_input_vector,subexpr_forward_values)
     end
     # we only need to do one reverse pass through the subexpressions as well
     fill!(subexpr_reverse_values,zero(Dual{Float64}))
     fill!(reverse_output_vector,zero(Dual{Float64}))
     if d.has_nlobj
         ex = d.objective
-        forward_eval(d.forward_storage_hess,ex.nd,ex.adj,ex.const_values,d.forward_input_vector,subexpr_forward_values)
-        reverse_eval(reverse_output_vector,d.reverse_storage_hess,d.forward_storage_hess,ex.nd,ex.adj,ex.const_values,subexpr_reverse_values, Dual(σ)) # note scaled by σ
+        forward_eval(d.forward_storage_hess,ex.nd,ex.adj,ex.const_values,d.parameter_values,d.forward_input_vector,subexpr_forward_values)
+        reverse_eval(reverse_output_vector,d.reverse_storage_hess,d.forward_storage_hess,ex.nd,ex.adj,subexpr_reverse_values, Dual(σ)) # note scaled by σ
     end
 
 
     for i in 1:length(d.constraints)
         ex = d.constraints[i]
         l = μ[row]
-        forward_eval(d.forward_storage_hess,ex.nd,ex.adj,ex.const_values,d.forward_input_vector,subexpr_forward_values)
-        reverse_eval(reverse_output_vector,d.reverse_storage_hess,d.forward_storage_hess,ex.nd,ex.adj,ex.const_values,subexpr_reverse_values, Dual(l))
+        forward_eval(d.forward_storage_hess,ex.nd,ex.adj,ex.const_values,d.parameter_values,d.forward_input_vector,subexpr_forward_values)
+        reverse_eval(reverse_output_vector,d.reverse_storage_hess,d.forward_storage_hess,ex.nd,ex.adj,subexpr_reverse_values, Dual(l))
         row += 1
     end
 
@@ -627,17 +646,17 @@ function hessian_slice(d, ex, x, H, scale, nzcount, recovery_tmp_storage)
         # do a forward pass
         for expridx in ex.dependent_subexpressions
             subexpr = d.subexpressions[expridx]
-            subexpr_forward_values[expridx] = forward_eval(subexpr.forward_hessian_storage, subexpr.nd, subexpr.adj, subexpr.const_values, forward_input_vector,subexpr_forward_values)
+            subexpr_forward_values[expridx] = forward_eval(subexpr.forward_hessian_storage, subexpr.nd, subexpr.adj, subexpr.const_values, d.parameter_values, forward_input_vector,subexpr_forward_values)
         end
-        forward_eval(d.forward_storage_hess,ex.nd,ex.adj,ex.const_values,forward_input_vector,subexpr_forward_values)
+        forward_eval(d.forward_storage_hess,ex.nd,ex.adj,ex.const_values,d.parameter_values, forward_input_vector,subexpr_forward_values)
 
         # do a reverse pass
         subexpr_reverse_values[ex.dependent_subexpressions] = zero(Dual{Float64})
-        reverse_eval(reverse_output_vector,d.reverse_storage_hess,d.forward_storage_hess,ex.nd,ex.adj,ex.const_values,subexpr_reverse_values)
+        reverse_eval(reverse_output_vector,d.reverse_storage_hess,d.forward_storage_hess,ex.nd,ex.adj,subexpr_reverse_values, Dual(1.0))
         for i in length(ex.dependent_subexpressions):-1:1
             expridx = ex.dependent_subexpressions[i]
             subexpr = d.subexpressions[expridx]
-            reverse_eval(reverse_output_vector,subexpr.reverse_hessian_storage,subexpr.forward_hessian_storage,subexpr.nd,subexpr.adj,subexpr.const_values,subexpr_reverse_values,subexpr_reverse_values[expridx])
+            reverse_eval(reverse_output_vector,subexpr.reverse_hessian_storage,subexpr.forward_hessian_storage,subexpr.nd,subexpr.adj,subexpr_reverse_values,subexpr_reverse_values[expridx])
         end
 
 
@@ -763,7 +782,7 @@ function quadToExpr(q::QuadExpr,constant::Bool)
 end
 
 # we splat in the subexpressions (for now)
-function tapeToExpr(k, nd::Vector{NodeData}, adj, const_values, subexpressions::Vector{Any})
+function tapeToExpr(k, nd::Vector{NodeData}, adj, const_values, parameter_values, subexpressions::Vector{Any})
 
     children_arr = rowvals(adj)
 
@@ -774,27 +793,29 @@ function tapeToExpr(k, nd::Vector{NodeData}, adj, const_values, subexpressions::
         return const_values[nod.index]
     elseif nod.nodetype == SUBEXPRESSION
         return subexpressions[nod.index]
+    elseif nod.nodetype == PARAMETER
+        return parameter_values[nod.index]
     elseif nod.nodetype == CALL
         op = nod.index
         opsymbol = operators[op]
         children_idx = nzrange(adj,k)
         ex = Expr(:call,opsymbol)
         for cidx in children_idx
-            push!(ex.args, tapeToExpr(children_arr[cidx], nd, adj, const_values, subexpressions))
+            push!(ex.args, tapeToExpr(children_arr[cidx], nd, adj, const_values, parameter_values, subexpressions))
         end
         return ex
     elseif nod.nodetype == CALLUNIVAR
         op = nod.index
         opsymbol = univariate_operators[op]
         cidx = first(nzrange(adj,k))
-        return Expr(:call,opsymbol,tapeToExpr(children_arr[cidx], nd, adj, const_values, subexpressions))
+        return Expr(:call,opsymbol,tapeToExpr(children_arr[cidx], nd, adj, const_values, parameter_values, subexpressions))
     elseif nod.nodetype == COMPARISON
         op = nod.index
         opsymbol = comparison_operators[op]
         children_idx = nzrange(adj,k)
         ex = Expr(:comparison)
         for cidx in children_idx
-            push!(ex.args, tapeToExpr(children_arr[cidx], nd, adj, const_values, subexpressions))
+            push!(ex.args, tapeToExpr(children_arr[cidx], nd, adj, const_values, parameter_values, subexpressions))
             push!(ex.args, opsymbol)
         end
         pop!(ex.args)
@@ -803,8 +824,8 @@ function tapeToExpr(k, nd::Vector{NodeData}, adj, const_values, subexpressions::
         op = nod.index
         opsymbol = logic_operators[op]
         children_idx = nzrange(adj,k)
-        lhs = tapeToExpr(children_arr[first(children_idx)], nd, adj, const_values, subexpressions)
-        rhs = tapeToExpr(children_arr[last(children_idx)], nd, adj, const_values, subexpressions)
+        lhs = tapeToExpr(children_arr[first(children_idx)], nd, adj, const_values, parameter_values, subexpressions)
+        rhs = tapeToExpr(children_arr[last(children_idx)], nd, adj, const_values, parameter_values, subexpressions)
         return Expr(opsymbol, lhs, rhs)
     else
         error()
@@ -817,7 +838,7 @@ end
 function MathProgBase.obj_expr(d::JuMPNLPEvaluator)
     if d.has_nlobj
         ex = d.objective
-        return tapeToExpr(1, ex.nd, ex.adj, ex.const_values, d.subexpressions_as_julia_expressions)
+        return tapeToExpr(1, ex.nd, ex.adj, ex.const_values, d.parameter_values, d.subexpressions_as_julia_expressions)
     else
         return quadToExpr(d.m.obj, true)
     end
@@ -841,7 +862,7 @@ function MathProgBase.constr_expr(d::JuMPNLPEvaluator,i::Integer)
     else
         i -= nlin + nquad
         ex = d.constraints[i]
-        julia_expr = tapeToExpr(1, ex.nd, ex.adj, ex.const_values, d.subexpressions_as_julia_expressions)
+        julia_expr = tapeToExpr(1, ex.nd, ex.adj, ex.const_values, d.parameter_values, d.subexpressions_as_julia_expressions)
         constr = d.m.nlpdata.nlconstr[i]
         if sense(constr) == :range
             return Expr(:comparison, constr.lb, :(<=), julia_expr, :(<=), constr.ub)
@@ -957,10 +978,10 @@ function getValue(x::NonlinearExpression)
     for k in subexpression_order # compute value of dependent subexpressions
         ex = nldata.nlexpr[k]
         adj = adjmat(ex.nd)
-        subexpr_values[k] = forward_eval(forward_storage,ex.nd,adj,ex.const_values,m.colVal,subexpr_values)
+        subexpr_values[k] = forward_eval(forward_storage,ex.nd,adj,ex.const_values,nldata.nlparamvalues,m.colVal,subexpr_values)
     end
 
     adj = adjmat(this_subexpr.nd)
 
-    return forward_eval(forward_storage,this_subexpr.nd,adj,this_subexpr.const_values,m.colVal,subexpr_values)
+    return forward_eval(forward_storage,this_subexpr.nd,adj,this_subexpr.const_values,nldata.nlparamvalues,m.colVal,subexpr_values)
 end
