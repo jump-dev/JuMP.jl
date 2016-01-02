@@ -1,89 +1,57 @@
 
+@enum NodeType CALL CALLUNIVAR VARIABLE VALUE PARAMETER SUBEXPRESSION LOGIC COMPARISON
 
-type ExprNode
-    ex
-    parents
-    value # value of this expression in the tree
-    deriv # derivative wrt this expression (when computed)
-    linear_so_far::Bool # true if the result of the expression is known to be linear with respect to the value of this node
+export CALL, CALLUNIVAR, VARIABLE, VALUE, PARAMETER, SUBEXPRESSION, LOGIC, COMPARISON
+
+immutable NodeData
+    nodetype::NodeType
+    index::Int
+    parent::Int
+    whichchild::Int # which number child is this node
 end
 
-ExprNode(ex, parents, linear_so_far) = ExprNode(ex, parents, nothing, nothing, linear_so_far)
+export NodeData
 
-abstract Placeholder
+# Only need to store parents, then transpose adjacency matrix!
 
-immutable BasicPlaceholder <: Placeholder
-    idx::Int
+# for CALL, index is into list of operators
+# for CALLUNIVAR, index is into list of univariate operators
+# for VARIABLE, index is variable index
+# for VALUE, index is into list of constants
+# for PARAMETER, index is into list of parameters
+# for SUBEXPRESSION, index is into list of subexpressions
+# for LOGIC, index is into list of logical operators (inputs and outputs are boolean)
+# for COMPARISON, index is into lost of comparison operators
+
+const operators = [:+,:-,:*,:^,:/,:ifelse]
+
+const operator_to_id = Dict{Symbol,Int}()
+for i in 1:length(operators)
+    operator_to_id[operators[i]] = i
+end
+export operator_to_id, operators
+
+const univariate_operators = Symbol[:+,:-]
+const univariate_operator_to_id = Dict{Symbol,Int}(:+ => 1, :- => 2)
+const univariate_operator_deriv = Any[:(one(x)),:(-one(x))]
+export univariate_operator_to_id, univariate_operators
+
+for (op, deriv) in Calculus.symbolic_derivatives_1arg()
+    push!(univariate_operators, op)
+    push!(univariate_operator_deriv,deriv)
+    univariate_operator_to_id[op] = length(univariate_operators)
 end
 
-getplaceindex(x::BasicPlaceholder) = x.idx
-
-function placeholders(n::Int)
-    v = Array(BasicPlaceholder, n)
-    for i in 1:n
-        v[i] = BasicPlaceholder(i)
-    end
-    return v
+const logic_operators = [:&&,:||]
+const logic_operator_to_id = Dict{Symbol,Int}()
+for i in 1:length(logic_operators)
+    logic_operator_to_id[logic_operators[i]] = i
 end
+export logic_operator_to_id, logic_operators
 
-export Placeholder, BasicPlaceholder, placeholders
-
-function Base.dump(io::IO, x::ExprNode)
-    dump(io, x.ex)
-    dump(io, x.value)
-    dump(io, x.deriv)
+const comparison_operators = [:<=,:(==),:>=,:<,:>]
+const comparison_operator_to_id = Dict{Symbol,Int}()
+for i in 1:length(comparison_operators)
+    comparison_operator_to_id[comparison_operators[i]] = i
 end
-
-function Base.show(io::IO, x::ExprNode)
-    show(io, x.ex)
-end
-
-
-getvalue(x::ExprNode) = x.value
-getvalue(x) = x # for constants
-
-function cleargraph(x::ExprNode)
-    x.value = nothing
-    x.deriv = nothing
-    if isa(x.ex,Expr)
-        for ex in x.ex.args
-            cleargraph(ex)
-        end
-    end
-end
-
-cleargraph(x) = nothing
-
-# set over finite indices with O(1) lookup, addition, and deletion.
-# similar to IndexedVector in JuMP
-type IndexedSet
-    idx::Vector{Int}
-    set::BitArray{1} # true if element is in set
-    nel::Int # number of elements in set
-end
-
-IndexedSet(n::Integer) = IndexedSet(zeros(Int,n),falses(n),0)
-
-function Base.push!(s::IndexedSet,i::Integer)
-    s.set[i] && return # already there
-    s.set[i] = true
-    s.nel += 1
-    s.idx[s.nel] = i
-    return
-end
-Base.length(s::IndexedSet) = s.nel
-function Base.empty!(s::IndexedSet)
-    for i in 1:s.nel
-        s.set[s.idx[i]] = false
-    end
-    s.nel = 0
-    return
-end
-
-function Base.unique(s::IndexedSet)
-    arr = Array(Int,length(s))
-    for i in 1:length(s)
-        arr[i] = s.idx[i]
-    end
-    return arr
-end
+export comparison_operator_to_id, comparison_operators

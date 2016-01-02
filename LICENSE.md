@@ -1,6 +1,6 @@
-The ReverseDiffSparse.jl package is licensed under the MIT "Expat" License:
+The ReverseDiffSparse2.jl package is licensed under the MIT "Expat" License:
 
-> Copyright (c) 2014: Miles Lubin.
+> Copyright (c) 2015: Miles Lubin.
 >
 > Permission is hereby granted, free of charge, to any person obtaining
 > a copy of this software and associated documentation files (the
