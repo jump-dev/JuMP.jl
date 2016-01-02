@@ -3,16 +3,6 @@
 #  License, v. 2.0. If a copy of the MPL was not distributed with this
 #  file, You can obtain one at http://mozilla.org/MPL/2.0/.
 
-immutable NonlinearExpression
-    m::Model
-    index::Int
-end
-
-immutable NonlinearParameter
-    m::Model
-    index::Int
-end
-
 include("nlpmacros.jl")
 
 import DualNumbers: Dual, epsilon

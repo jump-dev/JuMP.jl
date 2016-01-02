@@ -257,10 +257,10 @@ function addToExpression{C,V}(ex::GenericQuadExpr{C,V}, c::GenericAffExpr{C,V}, 
     ex
 end
 
-# Catch nonlinear expressions being used in addConstraint, etc.
-#=
-typealias _NLExpr ReverseDiffSparse.ParametricExpression
-_nlexprerr() = error("""Cannot use nonlinear expression in @addConstraint or @setObjective.
+# Catch nonlinear expressions and parameters being used in addConstraint, etc.
+
+typealias _NLExpr Union{NonlinearExpression,NonlinearParameter}
+_nlexprerr() = error("""Cannot use nonlinear expression or parameter in @addConstraint or @setObjective.
                         Use @addNLConstraint or @setNLObjective instead.""")
 # Following three definitions avoid ambiguity warnings
 addToExpression{C,V<:_NLExpr}(expr::GenericQuadExpr{C,V}, c::GenericAffExpr{C,V}, x::V) = _nlexprerr()
@@ -270,7 +270,6 @@ for T1 in (GenericAffExpr,GenericQuadExpr), T2 in (Number,Variable,GenericAffExp
     @eval addToExpression(::$T1, ::$T2, ::_NLExpr) = _nlexprerr()
     @eval addToExpression(::$T1, ::_NLExpr, ::$T2) = _nlexprerr()
 end
-=#
 
 addToExpression(ex, c, x) = ex + c*x
 

@@ -709,6 +709,18 @@ Base.size(x::JuMPTypes,d::Int) = 1
 Base.ndims(::JuMPTypes) = 0
 
 ##########################################################################
+# Types used in the nonlinear code
+immutable NonlinearExpression
+    m::Model
+    index::Int
+end
+
+immutable NonlinearParameter
+    m::Model
+    index::Int
+end
+
+##########################################################################
 # Operator overloads
 include("operators.jl")
 # Writers - we support MPS (MILP + QuadObj), LP (MILP)
