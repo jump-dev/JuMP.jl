@@ -31,9 +31,9 @@ for i in 1:length(operators)
 end
 export operator_to_id, operators
 
-const univariate_operators = Symbol[:+,:-]
-const univariate_operator_to_id = Dict{Symbol,Int}(:+ => 1, :- => 2)
-const univariate_operator_deriv = Any[:(one(x)),:(-one(x))]
+const univariate_operators = Symbol[:+,:-,:abs]
+const univariate_operator_to_id = Dict{Symbol,Int}(:+ => 1, :- => 2, :abs => 3)
+const univariate_operator_deriv = Any[:(one(x)),:(-one(x)),:(ifelse(x >= 0, one(x),-one(x)))]
 export univariate_operator_to_id, univariate_operators
 
 for (op, deriv) in Calculus.symbolic_derivatives_1arg()

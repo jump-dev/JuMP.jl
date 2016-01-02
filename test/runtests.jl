@@ -115,6 +115,28 @@ storage = zeros(length(nd))
 fval = forward_eval(storage,nd,adj,[],[105.2],[-0.1],[])
 @test fval == 105.2
 
+# abs
+ex = :(abs(x[1]))
+
+nd,const_values = expr_to_nodedata(ex)
+adj = adjmat(nd)
+
+storage = zeros(length(nd))
+reverse_storage = zeros(length(nd))
+fval = forward_eval(storage,nd,adj,const_values,[],[2.0],[])
+@test fval == 2.0
+grad = zeros(1)
+reverse_eval(grad,reverse_storage,storage,nd,adj,[],1.0)
+@test grad[1] == 1.0
+
+
+fval = forward_eval(storage,nd,adj,const_values,[],[-2.0],[])
+@test fval == 2.0
+grad = zeros(1)
+reverse_eval(grad,reverse_storage,storage,nd,adj,[],1.0)
+@test grad[1] == -1.0
+
+
 function test_linearity(ex,testval,IJ = [],indices=[])
     nd,const_values = expr_to_nodedata(ex)
     adj = adjmat(nd)
