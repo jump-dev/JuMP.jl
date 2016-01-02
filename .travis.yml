@@ -4,7 +4,7 @@ os:
   - linux
   - osx
 julia:
-  - release
+  - 0.4
   - nightly
 notifications:
   email: false
@@ -15,6 +15,6 @@ addons:
 # uncomment the following lines to override the default test script
 script:
   - if [[ -a .git/shallow ]]; then git fetch --unshallow; fi
-  - julia -e 'Pkg.clone(pwd()); Pkg.build("ReverseDiffSparse2"); Pkg.test("ReverseDiffSparse2"; coverage=true)'
+  - julia -e 'Pkg.clone(pwd()); Pkg.build("ReverseDiffSparse"); Pkg.test("ReverseDiffSparse"; coverage=true)'
 after_success:
-  - julia -e 'cd(Pkg.dir("ReverseDiffSparse2")); Pkg.add("Coverage"); using Coverage; Codecov.submit(process_folder())'
+  - julia -e 'cd(Pkg.dir("ReverseDiffSparse")); Pkg.add("Coverage"); using Coverage; Codecov.submit(process_folder())'

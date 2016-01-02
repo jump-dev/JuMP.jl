@@ -1,4 +1,4 @@
-using ReverseDiffSparse2
+using ReverseDiffSparse
 using Base.Test
 using FactCheck
 
@@ -114,8 +114,6 @@ adj = adjmat(nd)
 storage = zeros(length(nd))
 fval = forward_eval(storage,nd,adj,[],[105.2],[-0.1],[])
 @test fval == 105.2
-
-import ReverseDiffSparse2: CONSTANT, LINEAR, NONLINEAR
 
 function test_linearity(ex,testval,IJ = [],indices=[])
     nd,const_values = expr_to_nodedata(ex)
