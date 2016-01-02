@@ -906,7 +906,7 @@ function _buildInternalModel_nlp(m::Model, traits)
             then call `EnableNLPResolve()` at the top of this file to disable
             this error message.
             To return to the last version of JuMP which supported the
-            old behavior, run `Pkg.pin("JuMP",v0.11.1)`.
+            old behavior, run `Pkg.pin("JuMP",v"0.11.1")`.
             """
             error(msg)
         end
