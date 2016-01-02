@@ -106,7 +106,7 @@ type JuMPNLPEvaluator <: MathProgBase.AbstractNLPEvaluator
     forward_input_vector::Vector{Dual{Float64}} # length is number of variables
     reverse_output_vector::Vector{Dual{Float64}}# length is number of variables
     subexpression_hessian_forward_values::Vector{Dual{Float64}} # length is number of subexpressions
-    subexpression_hessian_reverse_values::Vector{Dual{Float64}} # lenght is number of subexpressions
+    subexpression_hessian_reverse_values::Vector{Dual{Float64}} # length is number of subexpressions
     # timers
     eval_f_timer::Float64
     eval_g_timer::Float64
@@ -862,6 +862,15 @@ function MathProgBase.constr_expr(d::JuMPNLPEvaluator,i::Integer)
     end
 end
 
+const ENABLE_NLP_RESOLVE = Array(Bool,1)
+function EnableNLPResolve()
+    ENABLE_NLP_RESOLVE[1] = true
+end
+function DisableNLPResolve()
+    ENABLE_NLP_RESOLVE[1] = false
+end
+export EnableNLPResolve, DisableNLPResolve
+
 
 function _buildInternalModel_nlp(m::Model, traits)
 
@@ -871,6 +880,34 @@ function _buildInternalModel_nlp(m::Model, traits)
     if m.internalModelLoaded
         @assert isa(nldata.evaluator, JuMPNLPEvaluator)
         d = nldata.evaluator
+        if length(nldata.nlparamvalues) == 0 && !ENABLE_NLP_RESOLVE[1]
+            # no parameters and haven't explicitly allowed resolves
+            # error to prevent potentially incorrect answers
+            msg = """
+            There was a recent **breaking** change in behavior
+            for solving sequences of nonlinear models.
+            Previously, users were allowed to modify the data in the model
+            by modifying the values stored in their own data arrays.
+            For example:
+
+            data = [1.0]
+            @addNLConstraint(m, data[1]*x <= 1)
+            solve(m)
+            data[1] = 2.0
+            solve(m) # coefficient is updated
+
+            However, this behavior **no longer works**. Instead,
+            nonlinear parameters defined with @defNLParam should be used.
+            See the latest JuMP documentation for more information.
+            It is possible that this model was exploiting the previous behavior,
+            and out of extreme caution we have temporarily introduced
+            this error message.
+            If you are sure that you are solving the correct model,
+            then call `EnableNLPResolve()` at the top of this file to disable
+            this error message.
+            """
+            error(msg)
+        end
     else
         d = JuMPNLPEvaluator(m)
         nldata.evaluator = d

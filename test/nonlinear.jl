@@ -84,11 +84,13 @@ context("With solver $(typeof(nlp_solver))") do
     @defVar(m, y ≥ 0)
     @setObjective(m, Min, y)
     @addNLConstraint(m, y ≥ x^2)
+    EnableNLPResolve()
     for α in 1:4
         setValue(x, α)
         solve(m)
         @fact getValue(y) --> roughly(α^2, 1e-6)
     end
+    DisableNLPResolve()
 end; end; end
 
 facts("[nonlinear] Test QP solve through NL pathway") do
@@ -505,4 +507,18 @@ facts("[nonlinear] Hess-vec through MPB") do
     MathProgBase.eval_hesslag_prod(d, h, m.colVal, v, 1.0, [2.0,3.0])
     correct = [3.0 1.0 0.0; 1.0 0.0 2.0; 0.0 2.0 2.0]*v
     @fact h --> roughly(correct)
+end
+
+if length(convex_nlp_solvers) > 0
+    facts("[nonlinear] Error on NLP resolve") do
+        m = Model(solver=convex_nlp_solvers[1])
+        @defVar(m, x, start = 1)
+        @setNLObjective(m, Min, x^2)
+        solve(m)
+        setValue(x, 2)
+        @fact_throws ErrorException solve(m)
+        EnableNLPResolve()
+        status = solve(m)
+        @fact status --> :Optimal
+    end
 end
