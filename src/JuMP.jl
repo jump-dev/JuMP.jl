@@ -18,8 +18,6 @@ import MathProgBase
 
 using Calculus
 using ReverseDiffSparse
-import ArrayViews
-const subarr = ArrayViews.view
 
 export
 # Objects
