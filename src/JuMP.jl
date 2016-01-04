@@ -373,14 +373,6 @@ function setValue(v::Variable, val::Number)
     end
 end
 
-function setValue(set::Array{Variable}, val::Array)
-    promote_shape(size(set), size(val)) # Check dimensions match
-    for I in eachindex(set)
-        setValue(set[I], val[I])
-    end
-    nothing
-end
-
 # internal method that doesn't print a warning if the value is NaN
 _getValue(v::Variable) = v.m.colVal[v.col]
 
@@ -422,7 +414,6 @@ function getValue(arr::Array{Variable})
     end
     ret
 end
-
 
 # Dual value (reduced cost) getter
 function getDual(v::Variable)
@@ -695,9 +686,23 @@ end
 operator_warn(lhs,rhs) = nothing
 
 ##########################################################################
+# Types used in the nonlinear code
+immutable NonlinearExpression
+    m::Model
+    index::Int
+end
+
+immutable NonlinearParameter <: AbstractJuMPScalar
+    m::Model
+    index::Int
+end
+
+
+##########################################################################
 # Behavior that's uniform across all JuMP "scalar" objects
 
 typealias JuMPTypes Union{AbstractJuMPScalar,
+                          NonlinearExpression,
                           Norm,
                           GenericAffExpr,
                           QuadExpr,
@@ -710,17 +715,6 @@ Base.size(::JuMPTypes) = ()
 Base.size(x::JuMPTypes,d::Int) = 1
 Base.ndims(::JuMPTypes) = 0
 
-##########################################################################
-# Types used in the nonlinear code
-immutable NonlinearExpression
-    m::Model
-    index::Int
-end
-
-immutable NonlinearParameter
-    m::Model
-    index::Int
-end
 
 ##########################################################################
 # Operator overloads
@@ -737,6 +731,17 @@ include("callbacks.jl")
 include("print.jl")
 # Nonlinear-specific code
 include("nlp.jl")
+
+getValue{T<:JuMPTypes}(arr::Array{T}) = map(getValue, arr)
+
+function setValue{T<:AbstractJuMPScalar}(set::Array{T}, val::Array)
+    promote_shape(size(set), size(val)) # Check dimensions match
+    for I in eachindex(set)
+        setValue(set[I], val[I])
+    end
+    nothing
+end
+
 
 ##########################################################################
 end

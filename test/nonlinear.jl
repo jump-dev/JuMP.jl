@@ -13,6 +13,26 @@
 #############################################################################
 using JuMP, FactCheck
 
+facts("[nonlinear] Test getValue on arrays") do
+    m = Model()
+    @defVar(m, x, start = π/2)
+    @defNLExpr(m, f1, sin(x))
+    @defNLExpr(m, f2, sin(2x))
+    @defNLExpr(m, f3[i=1:2], sin(i*x))
+
+    @fact getValue(f1) --> roughly(1, 1e-5)
+    @fact getValue(f2) --> roughly(0, 1e-5)
+
+    @fact getValue([f1, f2]) --> getValue(f3)
+
+    v = [1.0, 2.0]
+    @defNLParam(m, vparam[i=1:2] == v[i])
+    @fact getValue(vparam) --> v
+    v[1] = 3.0
+    setValue(vparam, v)
+    @fact getValue(vparam) --> v
+end
+
 facts("[nonlinear] Test HS071 solves correctly") do
 for nlp_solver in nlp_solvers
 context("With solver $(typeof(nlp_solver))") do
