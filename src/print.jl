@@ -206,13 +206,16 @@ function model_str(mode, m::Model, sym::PrintSymbols)
     # Display indexed variables
     in_dictlist = falses(m.numCols)
     for d in m.dictList
-        str *= sep * cont_str(mode,d,mathmode=true)  * eol
-
         # make sure that you haven't changed a variable type in the collection
-        cat = getCategory(first(_values(d)))
+        firstval = first(_values(d))
+        cat = getCategory(firstval)
+        lb, ub = getLower(firstval), getUpper(firstval)
         allsame = true
         for v in _values(d)
-            if getCategory(v) != cat
+            if !(getCategory(v) == cat && getLower(v) == lb && getUpper(v) == ub)
+                allsame = false
+                break
+            elseif v in m.customNames
                 allsame = false
                 break
             end
@@ -221,6 +224,7 @@ function model_str(mode, m::Model, sym::PrintSymbols)
             for it in _values(d)  # Mark variables in JuMPContainer as printed
                 in_dictlist[it.col] = true
             end
+            str *= sep * cont_str(mode,d,mathmode=true)  * eol
         end
     end
 

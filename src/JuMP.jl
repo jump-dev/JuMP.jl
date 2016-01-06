@@ -74,6 +74,8 @@ type Model
     colUpper::Vector{Float64}
     colCat::Vector{Symbol}
 
+    customNames::Vector
+
     # Variable cones of the form, e.g. (:SDP, 1:9)
     varCones::Vector{Tuple{Symbol,Any}}
 
@@ -144,6 +146,7 @@ function Model(;solver=UnsetSolver())
           Float64[],                   # colLower
           Float64[],                   # colUpper
           Symbol[],                    # colCat
+          Variable[],                  # customNames
           Vector{Tuple{Symbol,Any}}[], # varCones
           0,                           # objVal
           Float64[],                   # colVal
@@ -343,6 +346,7 @@ end
 
 # Name setter/getters
 function setName(v::Variable,n::AbstractString)
+    push!(v.m.customNames, v)
     v.m.colNames[v.col] = n
     v.m.colNamesIJulia[v.col] = n
 end
