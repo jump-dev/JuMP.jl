@@ -117,7 +117,7 @@ context("With solver $(typeof(solver))") do
     @fact (trace(A3*XX) >= 2 - 1e-5) --> true
     @fact trace(B1*YY) --> roughly(1, 1e-5)
     @fact trace(B2*YY) --> roughly(0, 1e-5)
-    @fact (trace(B3*YY) <= 0) --> true
+    @fact (trace(B3*YY) <= 1e-3) --> true
     @fact (trace(A1*XX)+trace(B1*YY) >= 1) --> true
     @fact YY[2,2] --> roughly(1, 1e-5)
     @fact norm(XX - diagm([1,.5,2])) --> roughly(0, 1e-3)
