@@ -38,6 +38,7 @@ function newparameter(m::Model,value::Number)
 end
 
 getValue(p::NonlinearParameter) = p.m.nlpdata.nlparamvalues[p.index]::Float64
+
 setValue(p::NonlinearParameter,v::Number) = (p.m.nlpdata.nlparamvalues[p.index] = v)
 
 NLPData() = NLPData(nothing, NonlinearConstraint[], NonlinearExprData[], Float64[], Float64[], nothing)
@@ -976,7 +977,6 @@ function solvenlp(m::Model, traits; suppress_warnings=false)
     return stat::Symbol
 
 end
-
 
 # getValue for nonlinear subexpressions
 function getValue(x::NonlinearExpression)

@@ -111,13 +111,6 @@ function getValue(a::AffExpr)
     end
     ret
 end
-function getValue(arr::Array{AffExpr})
-    ret = similar(arr, Float64)
-    for I in eachindex(arr)
-        ret[I] = getValue(arr[I])
-    end
-    ret
-end
 
 ##########################################################################
 # GenericRangeConstraint
