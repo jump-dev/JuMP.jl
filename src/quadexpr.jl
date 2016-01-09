@@ -74,8 +74,7 @@ function setObjective(m::Model, sense::Symbol, q::QuadExpr)
             verify_ownership(m, m.obj.qvars2)
             MathProgBase.setquadobjterms!(m.internalModel, Cint[v.col for v in m.obj.qvars1], Cint[v.col for v in m.obj.qvars2], m.obj.qcoeffs)
         else
-            # we don't (yet) support hot-starting QCQP solutions
-            Base.warn_once("JuMP does not yet support adding a quadratic objective to an existing model. Hot-start is disabled.")
+            isa(m.internalModel, MathProgBase.AbstractLinearQuadraticModel) && Base.warn_once("Solver does not support adding a quadratic objective to an existing model. Hot-start is disabled.")
             m.internalModelLoaded = false
         end
     end

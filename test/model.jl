@@ -12,7 +12,6 @@
 # Must be run as part of runtests.jl, as it needs a list of solvers.
 #############################################################################
 using JuMP, FactCheck
-using Compat
 
 # If solvers not loaded, load them (i.e running just these tests)
 !isdefined(:lp_solvers) && include("solvers.jl")

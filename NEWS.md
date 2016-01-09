@@ -1,6 +1,12 @@
 JuMP release notes
 ==================
 
+Version 0.11.1 (December 1, 2015)
+---------------------------------
+
+  * Remove usage of `@compat` in tests.
+  * Fix updating quadratic objectives for nonlinear models.
+
 Version 0.11.0 (November 30, 2015)
 ----------------------------------
 

@@ -11,7 +11,7 @@
 # Testing callbacks
 # Must be run as part of runtests.jl, as it needs a list of solvers.
 #############################################################################
-using JuMP, MathProgBase, FactCheck, Compat
+using JuMP, MathProgBase, FactCheck
 
 facts("[callback] Test lazy constraints") do
 for lazysolver in lazy_solvers
