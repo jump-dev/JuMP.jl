@@ -880,6 +880,7 @@ function _buildInternalModel_nlp(m::Model, traits)
     if m.internalModelLoaded
         @assert isa(nldata.evaluator, JuMPNLPEvaluator)
         d = nldata.evaluator
+        fill!(d.last_x, NaN)
         if length(nldata.nlparamvalues) == 0 && !ENABLE_NLP_RESOLVE[1]
             # no parameters and haven't explicitly allowed resolves
             # error to prevent potentially incorrect answers

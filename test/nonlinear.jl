@@ -159,6 +159,23 @@ context("With solver $(typeof(nlp_solver))") do
     @fact getValue(x) + getValue(y) --> roughly(-1/3, 1e-3)
 end; end; end
 
+facts("[nonlinear] Test resolve with parameter") do
+for nlp_solver in convex_nlp_solvers
+context("With solver $(typeof(nlp_solver))") do
+    m = Model(solver=nlp_solver)
+    @defVar(m, z)
+    @defNLParam(m, x == 1.0)
+    @setNLObjective(m, Min, (z-x)^2)
+    status = solve(m)
+    @fact status --> :Optimal
+    @fact getValue(z) --> roughly(1.0, 1e-3)
+
+    setValue(x, 5.0)
+    status = solve(m)
+    @fact status --> :Optimal
+    @fact getValue(z) --> roughly(5.0, 1e-3)
+end; end; end
+
 facts("[nonlinear] Test two-sided nonlinear constraints") do
 for nlp_solver in convex_nlp_solvers
 context("With solver $(typeof(nlp_solver))") do
