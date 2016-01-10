@@ -341,6 +341,18 @@ context("With solver $(typeof(nlp_solver))") do
     @fact getValue(zexpr[1]) --> roughly(-(1/4)*log(1/4), 1e-4)
 end; end; end
 
+facts("[nonlinear] Test derivatives of x^4, x < 0") do
+for nlp_solver in convex_nlp_solvers
+context("With solver $(typeof(nlp_solver))") do
+    m = Model(solver=nlp_solver)
+    @defVar(m, x >= -1, start = -0.5)
+    @setNLObjective(m, Min, x^4)
+    status = solve(m)
+
+    @fact status --> :Optimal
+    @fact getValue(x) --> roughly(0.0, 1e-2)
+end; end; end
+
 facts("[nonlinear] Test nonlinear duals") do
 for nlp_solver in nlp_solvers
 applicable(MathProgBase.getconstrduals, MathProgBase.NonlinearModel(nlp_solver)) || continue
