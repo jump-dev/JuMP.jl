@@ -118,7 +118,7 @@ end
 
 function Base.show(io::IO, m::Model)
     plural(n) = (n==1 ? "" : "s")
-    print(io, m.objSense == :Max ? "Maximization" : ((m.objSense == :Min && (!isempty(m.obj) || (m.nlpdata !== nothing && isa(m.nlpdata.nlobj, ReverseDiffSparse.SymbolicOutput)))) ? "Minimization" : "Feasibility"))
+    print(io, m.objSense == :Max ? "Maximization" : ((m.objSense == :Min && (!isempty(m.obj) || (m.nlpdata !== nothing && isa(m.nlpdata.nlobj, NonlinearExprData)))) ? "Minimization" : "Feasibility"))
     println(io, " problem with:")
     nlin = length(m.linconstr)
     println(io, " * $(nlin) linear constraint$(plural(nlin))")

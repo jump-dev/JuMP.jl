@@ -87,5 +87,5 @@ function and sense will be replaced.
 Modifying nonlinear models
 ^^^^^^^^^^^^^^^^^^^^^^^^^^
 
-See :ref:`Nonlinear performance <nonlinearprobmod>`.
+See :ref:`nonlinear parameters <nonlinearprobmod>`.
 

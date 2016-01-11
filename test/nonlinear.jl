@@ -13,6 +13,26 @@
 #############################################################################
 using JuMP, FactCheck
 
+facts("[nonlinear] Test getValue on arrays") do
+    m = Model()
+    @defVar(m, x, start = π/2)
+    @defNLExpr(m, f1, sin(x))
+    @defNLExpr(m, f2, sin(2x))
+    @defNLExpr(m, f3[i=1:2], sin(i*x))
+
+    @fact getValue(f1) --> roughly(1, 1e-5)
+    @fact getValue(f2) --> roughly(0, 1e-5)
+
+    @fact getValue([f1, f2]) --> getValue(f3)
+
+    v = [1.0, 2.0]
+    @defNLParam(m, vparam[i=1:2] == v[i])
+    @fact getValue(vparam) --> v
+    v[1] = 3.0
+    setValue(vparam, v)
+    @fact getValue(vparam) --> v
+end
+
 facts("[nonlinear] Test HS071 solves correctly") do
 for nlp_solver in nlp_solvers
 context("With solver $(typeof(nlp_solver))") do
@@ -84,11 +104,13 @@ context("With solver $(typeof(nlp_solver))") do
     @defVar(m, y ≥ 0)
     @setObjective(m, Min, y)
     @addNLConstraint(m, y ≥ x^2)
+    EnableNLPResolve()
     for α in 1:4
         setValue(x, α)
         solve(m)
         @fact getValue(y) --> roughly(α^2, 1e-6)
     end
+    DisableNLPResolve()
 end; end; end
 
 facts("[nonlinear] Test QP solve through NL pathway") do
@@ -99,21 +121,23 @@ context("With solver $(typeof(nlp_solver))") do
     m = Model(solver=nlp_solver)
     @defVar(m, 0.5 <= x <=  2)
     @defVar(m, 0.0 <= y <= 30)
+    @defNLParam(m, param == 1.0)
     @setObjective(m, Min, (x+y)^2)
-    param = [1.0]
-    @addNLConstraint(m, x + y >= param[1])
+    @addNLConstraint(m, x + y >= param)
     status = solve(m)
 
     @fact status --> :Optimal
     @fact m.objVal --> roughly(1.0, 1e-6)
+    @defNLExpr(m, lhs, x+y)
     @fact getValue(x)+getValue(y) --> roughly(1.0, 1e-6)
+    @fact getValue(lhs) --> roughly(1.0, 1e-6)
 
-    # sneaky problem modification
-    param[1] = 10
+    setValue(param,10)
     @fact m.internalModelLoaded --> true
     status = solve(m)
     @fact m.objVal --> roughly(10.0^2, 1e-6)
     @fact getValue(x)+getValue(y) --> roughly(10.0, 1e-6)
+    @fact getValue(lhs) --> roughly(10.0, 1e-6)
 
 end; end; end
 
@@ -133,6 +157,23 @@ context("With solver $(typeof(nlp_solver))") do
     @fact status --> :Optimal
     @fact getObjectiveValue(m) --> roughly(-1-4/sqrt(3), 1e-6)
     @fact getValue(x) + getValue(y) --> roughly(-1/3, 1e-3)
+end; end; end
+
+facts("[nonlinear] Test resolve with parameter") do
+for nlp_solver in convex_nlp_solvers
+context("With solver $(typeof(nlp_solver))") do
+    m = Model(solver=nlp_solver)
+    @defVar(m, z)
+    @defNLParam(m, x == 1.0)
+    @setNLObjective(m, Min, (z-x)^2)
+    status = solve(m)
+    @fact status --> :Optimal
+    @fact getValue(z) --> roughly(1.0, 1e-3)
+
+    setValue(x, 5.0)
+    status = solve(m)
+    @fact status --> :Optimal
+    @fact getValue(z) --> roughly(5.0, 1e-3)
 end; end; end
 
 facts("[nonlinear] Test two-sided nonlinear constraints") do
@@ -240,13 +281,17 @@ context("With solver $(typeof(nlp_solver))") do
     @defVar(m, -2 <= x <= 2); setValue(x, -1.8)
     @defVar(m, -2 <= y <= 2); setValue(y,  1.5)
     @setNLObjective(m, Max, y - x)
-    @defNLExpr(quadexpr, x + x^2 + x*y + y^2)
+    @defNLExpr(m, quadexpr, x + x^2 + x*y + y^2)
     @addNLConstraint(m, quadexpr <= 1)
 
     @fact solve(m) --> :Optimal
     @fact getObjectiveValue(m) --> roughly(1+4/sqrt(3), 1e-6)
     @fact getValue(x) + getValue(y) --> roughly(-1/3, 1e-3)
     @fact getValue(quadexpr) --> roughly(1, 1e-5)
+    @defNLExpr(quadexpr2, x + x^2 + x*y + y^2)
+    @fact getValue(quadexpr2) --> roughly(1, 1e-5)
+    quadexpr3 = @defNLExpr(x + x^2 + x*y + y^2)
+    @fact getValue(quadexpr3) --> roughly(1, 1e-5)
 end; end; end
 
 
@@ -284,7 +329,7 @@ context("With solver $(typeof(nlp_solver))") do
     m = Model(solver=nlp_solver)
     N = 3
     @defVar(m, x[1:N] >= 0, start = 1)
-    @defNLExpr(entropy[i=1:N], -x[i]*log(x[i]))
+    @defNLExpr(m, entropy[i=1:N], -x[i]*log(x[i]))
     @setNLObjective(m, Max, sum{entropy[i], i = 1:N})
     @addConstraint(m, sum(x) == 1)
 
@@ -299,7 +344,7 @@ context("With solver $(typeof(nlp_solver))") do
     idx = [1,2,3,4]
     @defVar(m, x[idx] >= 0, start = 1)
     @defVar(m, z[1:4], start = 0)
-    @defNLExpr(entropy[i=idx], -x[i]*log(x[i]))
+    @defNLExpr(m, entropy[i=idx], -x[i]*log(x[i]))
     @setNLObjective(m, Max, sum{z[i], i = 1:2} + sum{z[i]/2, i=3:4})
     @addNLConstraint(m, z_constr1[i=1], z[i] <= entropy[i])
     @addNLConstraint(m, z_constr1[i=2], z[i] <= entropy[i]) # duplicate expressions
@@ -309,8 +354,20 @@ context("With solver $(typeof(nlp_solver))") do
     @fact solve(m) --> :Optimal
     @fact norm([getValue(x[i]) for i in idx] - [1/4,1/4,1/4,1/4]) --> roughly(0.0, 1e-4)
     @fact getValue(entropy[1]) --> roughly(-(1/4)*log(1/4), 1e-4)
-    @defNLExpr(zexpr[i=1:4], z[i])
+    @defNLExpr(m, zexpr[i=1:4], z[i])
     @fact getValue(zexpr[1]) --> roughly(-(1/4)*log(1/4), 1e-4)
+end; end; end
+
+facts("[nonlinear] Test derivatives of x^4, x < 0") do
+for nlp_solver in convex_nlp_solvers
+context("With solver $(typeof(nlp_solver))") do
+    m = Model(solver=nlp_solver)
+    @defVar(m, x >= -1, start = -0.5)
+    @setNLObjective(m, Min, x^4)
+    status = solve(m)
+
+    @fact status --> :Optimal
+    @fact getValue(x) --> roughly(0.0, 1e-2)
 end; end; end
 
 facts("[nonlinear] Test nonlinear duals") do
@@ -471,7 +528,7 @@ facts("[nonlinear] Hessians through MPB") do
     @defVar(m, b, start = 2)
     @defVar(m, c, start = 3)
 
-    @defNLExpr(foo, a * b + c^2)
+    @defNLExpr(m, foo, a * b + c^2)
 
     @setNLObjective(m, Min, foo)
     d = JuMPNLPEvaluator(m)
@@ -501,4 +558,18 @@ facts("[nonlinear] Hess-vec through MPB") do
     MathProgBase.eval_hesslag_prod(d, h, m.colVal, v, 1.0, [2.0,3.0])
     correct = [3.0 1.0 0.0; 1.0 0.0 2.0; 0.0 2.0 2.0]*v
     @fact h --> roughly(correct)
+end
+
+if length(convex_nlp_solvers) > 0
+    facts("[nonlinear] Error on NLP resolve") do
+        m = Model(solver=convex_nlp_solvers[1])
+        @defVar(m, x, start = 1)
+        @setNLObjective(m, Min, x^2)
+        solve(m)
+        setValue(x, 2)
+        @fact_throws ErrorException solve(m)
+        EnableNLPResolve()
+        status = solve(m)
+        @fact status --> :Optimal
+    end
 end

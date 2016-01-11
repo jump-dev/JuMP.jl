@@ -77,22 +77,65 @@ the syntax for linear and quadratic expressions. We note some important points b
     @setNLObjective(m, Min, sin(aux))
 - You can declare embeddable nonlinear expressions with ``@defNLExpr``. For example::
 
-    @defNLExpr(myexpr[i=1:n], sin(x[i]))
+    @defNLExpr(m, myexpr[i=1:n], sin(x[i]))
     @addNLConstraint(m, myconstr[i=1:n], myexpr[i] <= 0.5)
 
 .. note::
-    There is currently no validity check on indices used for parametric nonlinear expressions. Therefore the following example will not raise an error::
+    The syntax of ``@defNLExpr`` differs from ``@defExpr``. The former requires the
+    model object as the first argument, while the latter does not take the JuMP
+    model as an argument.
 
-        @defNLExpr(myexpr[i=1:2], i * sin(x))
-        @addNLConstraint(m, myexpr[0] <= 0.5)
+.. _nonlinearprobmod:
 
-    You will still receive an error in the case that invalid indices are used to access data or variables within nonlinear expressions.
-    We do not recommend depending on this behavior, since it may change in a future JuMP release.
+Nonlinear Parameters
+^^^^^^^^^^^^^^^^^^^^
 
-Performance: Solution time
-^^^^^^^^^^^^^^^^^^^^^^^^^^
+For nonlinear models only, JuMP offers a syntax for explicit "parameter" objects
+which can be used to modify a model in-place just by updating the value of
+the parameter.
+Nonlinear parameters are declared by using the ``@defNLParam`` macro and may
+be indexed by arbitrary sets analogously to JuMP variables and expressions.
+The initial value of the parameter must be provided
+on the right-hand side of the ``==`` sign as seen below::
 
-The execution time when *solving* a nonlinear programming problem can be divided into two parts, the time spent in the optimization algorithm (the solver) and the time spent evaluating the nonlinear functions and corresponding derivatives. Ipopt explicitly displays these two timings in its output, for example:
+    @defNLParam(m, x == 10)
+    @defNLParam(m, y[i=1:10] == my_data[i]) # set of parameters indexed from 1 to 10
+
+You may use ``getValue`` and ``setValue`` to query or update the value of a parameter::
+
+    getValue(x) # 10, from above
+    setValue(y[4], 54.3) # y[4] now holds the value 54.3
+
+Nonlinear parameters can be used *within nonlinear expressions* only::
+
+    @defVar(m, z)
+    @setObjective(m, Max, x*z)       # error: x is a nonlinear parameter
+    @setNLObjective(m, Max, x*z)     # ok
+    @defExpr(my_expr, x*z^2)         # error: x is a nonlinear parameter
+    @defNLExpr(m, my_nl_expr, x*z^2) # ok
+
+Nonlinear parameters are useful when solving nonlinear models in a sequence::
+
+    m = Model()
+    @defVar(m, z)
+    @defNLParam(m, x == 1.0)
+    @setNLObjective(m, Min, (z-x)^2)
+    solve(m)
+    getValue(z) # equals 1.0
+
+    # Now, update the value of x to solve a different problem
+    setValue(x, 5.0)
+    solve(m)
+    getValue(z) # equals 5.0
+
+Using nonlinear parameters can be faster than creating a new model from scratch
+with updated data because JuMP is able to avoid repeating a number of steps
+in processing the model before handing it off to the solver.
+
+Factors affecting solution time
+^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+
+The execution time when solving a nonlinear programming problem can be divided into two parts, the time spent in the optimization algorithm (the solver) and the time spent evaluating the nonlinear functions and corresponding derivatives. Ipopt explicitly displays these two timings in its output, for example:
 
 .. code-block:: text
 
@@ -104,40 +147,7 @@ For Ipopt in particular, one can improve the performance by installing advanced 
 
 The function evaluation time, on the other hand, is the responsibility of the modeling language. JuMP computes derivatives by using the `ReverseDiffSparse <https://github.com/mlubin/ReverseDiffSparse.jl>`_ package, which implements, in pure Julia, reverse-mode automatic differentiation with graph coloring methods for exploiting sparsity of the Hessian matrix [1]_. As a conservative bound, JuMP's performance here currently may be expected to be within a factor of 5 of AMPL's.
 
-.. _nonlinearprobmod:
 
-Performance: Model generation
-^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
-
-
-Before the solution process starts, JuMP processes the model in order to set up callbacks which solvers use to query derivative information. Typically this "model generation" time is not a bottleneck; however, it could be relatively large when solving a sequence of small problems. **It is possible to skip model generation** after the first call to ``solve()`` if the only differences between models are changes in input data; if constraints are added, the model will be rebuilt from scratch.
-
-Unlike some other modeling languages, JuMP does not currently have a special syntax for "parameters", that is, symbolic constants whose values can be changed between solves. Instead, JuMP uses Julia's rules for `variable bindings <http://docs.julialang.org/en/release-0.3/manual/faq/#i-passed-an-argument-x-to-a-function-modified-it-inside-that-function-but-on-the-outside-the-variable-x-is-still-unchanged-why>`_. Internally, when a variable appears in ``@addNLConstraint`` or ``@setNLObjective``, JuMP saves the object that the variable is bound to. If this object is later modified, the corresponding changes will be reflected in JuMP's function evaluations. For example::
-
-    using JuMP
-    m = Model()
-    @defVar(m, 0.5 <= x <=  2)
-    @defVar(m, 0.0 <= y <= 30)
-    @setObjective(m, Min, (x+y)^2)
-    param = [1.0]
-    @addNLConstraint(m, x + y >= param[1])
-    solve(m)
-    # Optimal objective is 1.0
-
-    # modify the value saved by JuMP
-    param[1] = 10.0
-    solve(m)
-    # optimal objective is 10.0^2
-
-Note that we used a vector ``param``, which is a mutable object. On the other hand, the following code would *not* result in any modifications to the JuMP model::
-
-    param = 1.0
-    @addNLConstraint(m, x + y >= param)
-    param = 10.0
-
-The line ``param = 10.0`` changes ``param`` to reference a new value in the local scope, but does not affect the value referenced by JuMP.
-
-This variable binding trick for quick model regeneration does not apply to the macros ``@addConstraint`` and ``@setObjective`` for linear and quadratic expressions; see :ref:`probmod` for modifying linear models. We hope to treat in-place model modifications in a more uniform manner in future releases.
 
 Querying derivatives from a JuMP model
 ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^

@@ -257,9 +257,10 @@ function addToExpression{C,V}(ex::GenericQuadExpr{C,V}, c::GenericAffExpr{C,V}, 
     ex
 end
 
-# Catch nonlinear expressions being used in addConstraint, etc.
-typealias _NLExpr ReverseDiffSparse.ParametricExpression
-_nlexprerr() = error("""Cannot use nonlinear expression in @addConstraint or @setObjective.
+# Catch nonlinear expressions and parameters being used in addConstraint, etc.
+
+typealias _NLExpr Union{NonlinearExpression,NonlinearParameter}
+_nlexprerr() = error("""Cannot use nonlinear expression or parameter in @addConstraint or @setObjective.
                         Use @addNLConstraint or @setNLObjective instead.""")
 # Following three definitions avoid ambiguity warnings
 addToExpression{C,V<:_NLExpr}(expr::GenericQuadExpr{C,V}, c::GenericAffExpr{C,V}, x::V) = _nlexprerr()
@@ -297,7 +298,7 @@ function parseCurly(x::Expr, aff::Symbol, lcoeffs, rcoeffs, newaff=gensym())
     if length(x.args) < 3
         error("Need at least two arguments for $header")
     end
-    if header ∈ [:sum, :∑, :Σ]
+    if issum(header)
         parseSum(x, aff, lcoeffs, rcoeffs, newaff)
     elseif header ∈ [:norm1, :norm2, :norminf, :norm∞]
         parseNorm(header, x, aff, lcoeffs, rcoeffs, newaff)

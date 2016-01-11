@@ -16,14 +16,18 @@ importall Base.Operators
 
 import MathProgBase
 
-using ReverseDiffSparse, Calculus
-import ArrayViews
-const subarr = ArrayViews.view
+using Calculus
+using ReverseDiffSparse
+
+function __init__()
+    ENABLE_NLP_RESOLVE[1] = false
+end
 
 export
 # Objects
     Model, Variable, Norm, AffExpr, QuadExpr, SOCExpr, AbstractJuMPScalar,
     LinearConstraint, QuadConstraint, SDPConstraint, SOCConstraint,
+    NonlinearConstraint,
     ConstraintRef, LinConstrRef,
     JuMPNLPEvaluator,
 # Functions
@@ -48,7 +52,7 @@ export
     @SOCConstraint, @SOCConstraints,
     @defVar, @defConstrRef, @setObjective, addToExpression, @defExpr,
     @setNLObjective, @addNLConstraint, @addNLConstraints,
-    @defNLExpr
+    @defNLExpr, @defNLParam
 
 include("JuMPContainer.jl")
 include("utils.jl")
@@ -299,7 +303,7 @@ setPrintHook(m::Model, f) = (m.printhook = f)
 abstract JuMPConstraint
 # Abstract base type for all scalar types
 # In JuMP, used only for Variable. Useful primarily for extensions
-abstract AbstractJuMPScalar <: ReverseDiffSparse.Placeholder
+abstract AbstractJuMPScalar
 
 Base.start(::AbstractJuMPScalar) = false
 Base.next(x::AbstractJuMPScalar, state) = (x, true)
@@ -315,7 +319,6 @@ immutable Variable <: AbstractJuMPScalar
 end
 
 getLinearIndex(x::Variable) = x.col
-ReverseDiffSparse.getplaceindex(x::Variable) = getLinearIndex(x)
 Base.isequal(x::Variable,y::Variable) = (x.col == y.col) && (x.m === y.m)
 
 Variable(m::Model, lower, upper, cat::Symbol, name::AbstractString="", value::Number=NaN) =
@@ -374,14 +377,6 @@ function setValue(v::Variable, val::Number)
     end
 end
 
-function setValue(set::Array{Variable}, val::Array)
-    promote_shape(size(set), size(val)) # Check dimensions match
-    for I in eachindex(set)
-        setValue(set[I], val[I])
-    end
-    nothing
-end
-
 # internal method that doesn't print a warning if the value is NaN
 _getValue(v::Variable) = v.m.colVal[v.col]
 
@@ -423,7 +418,6 @@ function getValue(arr::Array{Variable})
     end
     ret
 end
-
 
 # Dual value (reduced cost) getter
 function getDual(v::Variable)
@@ -696,9 +690,23 @@ end
 operator_warn(lhs,rhs) = nothing
 
 ##########################################################################
+# Types used in the nonlinear code
+immutable NonlinearExpression
+    m::Model
+    index::Int
+end
+
+immutable NonlinearParameter <: AbstractJuMPScalar
+    m::Model
+    index::Int
+end
+
+
+##########################################################################
 # Behavior that's uniform across all JuMP "scalar" objects
 
 typealias JuMPTypes Union{AbstractJuMPScalar,
+                          NonlinearExpression,
                           Norm,
                           GenericAffExpr,
                           QuadExpr,
@@ -710,6 +718,7 @@ Base.eltype{T<:JuMPTypes}(::T) = T
 Base.size(::JuMPTypes) = ()
 Base.size(x::JuMPTypes,d::Int) = 1
 Base.ndims(::JuMPTypes) = 0
+
 
 ##########################################################################
 # Operator overloads
@@ -726,6 +735,17 @@ include("callbacks.jl")
 include("print.jl")
 # Nonlinear-specific code
 include("nlp.jl")
+
+getValue{T<:JuMPTypes}(arr::Array{T}) = map(getValue, arr)
+
+function setValue{T<:AbstractJuMPScalar}(set::Array{T}, val::Array)
+    promote_shape(size(set), size(val)) # Check dimensions match
+    for I in eachindex(set)
+        setValue(set[I], val[I])
+    end
+    nothing
+end
+
 
 ##########################################################################
 end
