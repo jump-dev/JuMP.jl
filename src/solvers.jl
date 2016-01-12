@@ -38,7 +38,9 @@ function ProblemTraits(m::Model)
     ProblemTraits(int, !(qp|qc|nlp|soc|sdp|sos), qp, qc, nlp, soc, sdp, sos, soc|sdp)
 end
 function default_solver(traits::ProblemTraits)
-    if traits.int || traits.sos
+    if traits.nlp
+        MathProgBase.defaultNLPsolver
+    elseif traits.int || traits.sos
         MathProgBase.defaultMIPsolver
     elseif traits.sdp
         MathProgBase.defaultSDPsolver
@@ -46,8 +48,6 @@ function default_solver(traits::ProblemTraits)
         MathProgBase.defaultConicsolver
     elseif traits.qp || traits.qc
         MathProgBase.defaultQPsolver
-    elseif traits.nlp
-        MathProgBase.defaultNLPsolver
     else
         MathProgBase.defaultLPsolver
     end
