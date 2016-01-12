@@ -455,7 +455,7 @@ function addQuadratics(m::Model)
     for k in 1:length(m.quadconstr)
         qconstr = m.quadconstr[k]::QuadConstraint
         if !haskey(sensemap, qconstr.sense)
-            error("Invalid sense for quadratic constraint")
+            error("Invalid quadratic constraint sense $(qconstr.sense)")
         end
         s = sensemap[qconstr.sense]
 
