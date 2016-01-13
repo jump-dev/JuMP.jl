@@ -961,6 +961,9 @@ function getConstraintBounds(m::Model,traits::ProblemTraits)
         elseif c.sense == :(>=)
             push!(quadrowlb, 0.0)
             push!(quadrowub, Inf)
+        elseif c.sense == :(==)
+            push!(quadrowlb, 0.0)
+            push!(quadrowub, 0.0)
         else
             error("Unrecognized quadratic constraint sense $(c.sense)")
         end
