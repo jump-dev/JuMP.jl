@@ -197,6 +197,19 @@ context("With solver $(typeof(nlp_solver))") do
     @fact getObjectiveValue(m) --> roughly(l, 1e-6)
 end; end; end
 
+facts("[nonlinear] Quadratic equality constraints") do
+for nlp_solver in nlp_solvers
+context("With solver $(typeof(nlp_solver))") do
+    m = Model(solver=nlp_solver)
+    @defVar(m, 0 <= x[1:2] <= 1)
+    @addConstraint(m, x[1]^2 + x[2]^2 == 1/2)
+    @setNLObjective(m, Max, x[1] - x[2])
+    status = solve(m)
+
+    @fact status --> :Optimal
+    @fact getValue(x) --> roughly([sqrt(1/2), 0], 1e-6)
+end; end; end
+
 facts("[nonlinear] Test mixed integer nonlinear problems") do
 for minlp_solver in minlp_solvers
 context("With solver $(typeof(minlp_solver))") do

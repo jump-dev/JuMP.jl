@@ -38,7 +38,9 @@ function ProblemTraits(m::Model)
     ProblemTraits(int, !(qp|qc|nlp|soc|sdp|sos), qp, qc, nlp, soc, sdp, sos, soc|sdp)
 end
 function default_solver(traits::ProblemTraits)
-    if traits.int || traits.sos
+    if traits.nlp
+        MathProgBase.defaultNLPsolver
+    elseif traits.int || traits.sos
         MathProgBase.defaultMIPsolver
     elseif traits.sdp
         MathProgBase.defaultSDPsolver
@@ -46,8 +48,6 @@ function default_solver(traits::ProblemTraits)
         MathProgBase.defaultConicsolver
     elseif traits.qp || traits.qc
         MathProgBase.defaultQPsolver
-    elseif traits.nlp
-        MathProgBase.defaultNLPsolver
     else
         MathProgBase.defaultLPsolver
     end
@@ -455,7 +455,7 @@ function addQuadratics(m::Model)
     for k in 1:length(m.quadconstr)
         qconstr = m.quadconstr[k]::QuadConstraint
         if !haskey(sensemap, qconstr.sense)
-            error("Invalid sense for quadratic constraint")
+            error("Invalid quadratic constraint sense $(qconstr.sense)")
         end
         s = sensemap[qconstr.sense]
 
@@ -961,6 +961,9 @@ function getConstraintBounds(m::Model,traits::ProblemTraits)
         elseif c.sense == :(>=)
             push!(quadrowlb, 0.0)
             push!(quadrowub, Inf)
+        elseif c.sense == :(==)
+            push!(quadrowlb, 0.0)
+            push!(quadrowub, 0.0)
         else
             error("Unrecognized quadratic constraint sense $(c.sense)")
         end
