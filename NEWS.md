@@ -6,6 +6,11 @@ Unversioned
 
   * Replaced iteration over ``AffExpr`` with ``Number``-like scalar iteration; previous iteration behavior is now available via ``linearterms(::AffExpr)``.
 
+Version 0.11.2 (January 14, 2016)
+---------------------------------
+
+  * Compatibility update for Mosek
+
 Version 0.11.1 (December 1, 2015)
 ---------------------------------
 
