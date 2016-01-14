@@ -1,6 +1,11 @@
 JuMP release notes
 ==================
 
+Version 0.11.2 (January 14, 2016)
+---------------------------------
+
+  * Compatibility update for Mosek
+
 Version 0.11.1 (December 1, 2015)
 ---------------------------------
 
