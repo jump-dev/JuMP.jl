@@ -209,5 +209,5 @@ will create a matrix of ``QuadExpr`` that you can use elsewhere in your model::
     A = [1 x'
          x x*x']
 
-Finally, not that this feature is not currently supported directly in nonlinear expressions; for example, a
+Finally, note that this feature is not currently supported directly in nonlinear expressions; for example, a
 matrix--vector product will not work inside a call to the ``@addNLConstraint`` macro.
