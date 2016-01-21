@@ -6,7 +6,7 @@
 
 export CONSTANT, LINEAR, PIECEWISE_LINEAR, NONLINEAR
 
-function classify_linearity(nd::Vector{NodeData},adj,subexpression_linearity)
+function classify_linearity(nd::Vector{NodeData},adj,subexpression_linearity,fixed_variable = [])
 
     linearity = Array(Linearity,length(nd))
 
@@ -18,7 +18,11 @@ function classify_linearity(nd::Vector{NodeData},adj,subexpression_linearity)
         # compute the value of node k
         nod = nd[k]
         if nod.nodetype == VARIABLE
-            linearity[k] = LINEAR
+            if length(fixed_variable) > 0 && fixed_variable[nod.index]
+                linearity[k] = CONSTANT
+            else
+                linearity[k] = LINEAR
+            end
         elseif nod.nodetype == VALUE || nod.nodetype == PARAMETER
             linearity[k] = CONSTANT
         elseif nod.nodetype == SUBEXPRESSION

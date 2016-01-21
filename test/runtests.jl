@@ -171,6 +171,27 @@ test_linearity(:(ifelse(x[1] <= 1,x[1],x[2])), PIECEWISE_LINEAR, Set([]))
 test_linearity(:(ifelse(x[1] <= 1,x[1]^2,x[2])), NONLINEAR, Set([(1,1)]))
 test_linearity(:(ifelse(1 <= 1,2,3)), CONSTANT)
 
+# eliminating fixed variables and constants
+ex = :(sin(x[1]^2) + cos(x[2]*(2*2))/5-2.0)
+nd,const_values = expr_to_nodedata(ex)
+adj = adjmat(nd)
+storage = zeros(length(nd))
+x = [2.0,3.0]
+fval = forward_eval(storage,nd,adj,const_values,[],x,[])
+linearity = classify_linearity(nd,adj,[],[false,true])
+new_nd = simplify_constants(storage,nd,adj,const_values,linearity)
+@test length(new_nd) < length(nd)
+new_adj = adjmat(new_nd)
+true_val = sin(x[1]^2) + cos(x[2]*4)/5 -2.0
+x[2] = 100 # this shouldn't affect the answer because we said x[2] is fixed
+fval = forward_eval(storage,new_nd,new_adj,const_values,[],x,[])
+@test isapprox(fval,true_val)
+# all variables fixed
+linearity = classify_linearity(nd,adj,[],[true,true])
+new_nd = simplify_constants(storage,nd,adj,const_values,linearity)
+@test length(new_nd) == 1
+
+
 using DualNumbers
 
 ex = :(x[1]^2/2 + 2x[1]*x[2])
