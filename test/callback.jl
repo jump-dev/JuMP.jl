@@ -155,16 +155,16 @@ context("With solver $(typeof(infosolver))") do
     @fact mono_bestbound --> true
 end; end; end
 
-facts("[callback] Callback exit on CallbackAbort") do
-for solver in lazy_solvers
-context("With solver $(typeof(solver))") do
-    mod = Model(solver=solver)
-    @defVar(mod, 0 <= x <= 2, Int)
-    @defVar(mod, 0 <= y <= 2, Int)
-    @setObjective(mod, Max, x + 2y)
-    @addConstraint(mod, y + x <= 3.5)
-
-    mycallback = _ -> throw(CallbackAbort())
-    addLazyCallback(mod, mycallback)
-    @fact_throws solve(mod)
-end; end; end
+# facts("[callback] Callback exit on CallbackAbort") do
+# for solver in lazy_solvers
+# context("With solver $(typeof(solver))") do
+#     mod = Model(solver=solver)
+#     @defVar(mod, 0 <= x <= 2, Int)
+#     @defVar(mod, 0 <= y <= 2, Int)
+#     @setObjective(mod, Max, x + 2y)
+#     @addConstraint(mod, y + x <= 3.5)
+#
+#     mycallback = _ -> throw(CallbackAbort())
+#     addLazyCallback(mod, mycallback)
+#     @fact_throws solve(mod)
+# end; end; end
