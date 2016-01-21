@@ -22,16 +22,16 @@ using MathProgBase
 ## Uncomment the following three lines to solve using Gurobi
 # using Gurobi
 # mod = Model(solver=GurobiSolver(PreCrush=1, Cuts=0, Presolve=0, DisplayInterval=1))
-# m_internal = MathProgBase.model(GurobiSolver())
+# m_internal = MathProgBase.LinearQuadraticModel(GurobiSolver())
 
 using CPLEX
 mod = Model(solver=CplexSolver(CPX_PARAM_PRELINEAR=0, CPX_PARAM_PREIND=0, CPX_PARAM_ADVIND=0, CPX_PARAM_MIPSEARCH=1,CPX_PARAM_MIPCBREDLP=0))
-m_internal = MathProgBase.model(CplexSolver())
+m_internal = MathProgBase.LinearQuadraticModel(CplexSolver())
 
 ## Uncomment the following three lines to solve using GLPK
 # using GLPKMathProgInterface
 # mod = Model(solver=GLPKSolverMIP())
-# m_internal = MathProgBase.model(GLPKSolverMIP())
+# m_internal = MathProgBase.LinearQuadraticModel(GLPKSolverMIP())
 
 # Load the model from .MPS file
 MathProgBase.loadproblem!(m_internal, "data/bnatt350.mps")
@@ -74,4 +74,3 @@ addHeuristicCallback(mod, myheuristic)
 stat = solve(mod)
 println("Solve status: ", stat)
 println("Objective value: ", getObjectiveValue(mod))
-
