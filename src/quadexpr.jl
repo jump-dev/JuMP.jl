@@ -66,6 +66,9 @@ typealias QuadExpr GenericQuadExpr{Float64,Variable}
 Base.convert(::Type{QuadExpr}, v::Union{Real,Variable,AffExpr}) = QuadExpr(Variable[], Variable[], Float64[], AffExpr(v))
 QuadExpr() = zero(QuadExpr)
 
+"""
+Sets the objective function to a and q respectively, with given objective sense, which must be either :Min or :Max.
+"""
 function setObjective(m::Model, sense::Symbol, q::QuadExpr)
     m.obj = q
     if m.internalModelLoaded
@@ -117,6 +120,9 @@ function Base.copy(c::QuadConstraint, new_model::Model)
     return QuadConstraint(copy(c.terms, new_model), c.sense)
 end
 
+"""
+Add a constraint to the model 'm'. The model forms the first argument and the constraint itself isthe second argument.
+"""
 function addConstraint(m::Model, c::QuadConstraint)
     push!(m.quadconstr,c)
     if m.internalModelLoaded

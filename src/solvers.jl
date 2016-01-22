@@ -104,6 +104,9 @@ function fillConicDuals(m::Model)
 
 end
 
+"""
+Solves the model using the selected solver (or a default for the problem class), and takes two optional arguments that are disabled by default. Setting suppress_warnings to true will suppress all JuMP-specific output (e.g. warnings about infeasibility and lack of dual information) but will not suppress solver output (which should be done by passing options to the solver). Setting relaxation=true solves the standard continuous relaxation for the model: that is, integrality is dropped, special ordered set constraints are not enforced, and semi-continuous and semi-integer variables with bounds [l,u] are replaced with bounds [min(l,0),max(u,0)].
+"""
 function solve(m::Model; suppress_warnings=false,
                 ignore_solve_hook=(m.solvehook===nothing),
                 relaxation=false,
@@ -295,6 +298,9 @@ end
 
 # Converts the JuMP Model into a MathProgBase model based on the
 # traits of the model
+"""
+Builds the model in memory at the MathProgBase level without optimizing.
+"""
 function buildInternalModel(m::Model, traits=ProblemTraits(m);
                             suppress_warnings=false, relaxation=false)
     # Set solver based on the model's traits if it hasn't provided
@@ -942,6 +948,9 @@ end
 
 getConstraintBounds(m::Model) = getConstraintBounds(m, ProblemTraits(m))
 
+"""
+Method returns the lower and upper bounds of all the constraints in the model.
+"""
 function getConstraintBounds(m::Model,traits::ProblemTraits)
 
     if traits.conic
