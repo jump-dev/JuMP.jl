@@ -155,6 +155,8 @@ context("With solver $(typeof(infosolver))") do
     @fact mono_bestbound --> true
 end; end; end
 
+# TODO: uncomment after solvers are updated for this behavior
+#=
 facts("[callback] Callback exit on CallbackAbort") do
 for solver in lazy_solvers
 context("With solver $(typeof(solver))") do
@@ -168,3 +170,4 @@ context("With solver $(typeof(solver))") do
     addLazyCallback(mod, mycallback)
     @fact solve(mod) --> :UserLimit
 end; end; end
+=#
