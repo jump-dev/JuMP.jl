@@ -408,4 +408,4 @@ If you need to exit the optimization process earlier than a solver otherwise wou
 
     throw(CallbackAbort())
 
-JuMP will take this exception and pass the appropriate error code to the solver so that the environment can be cleaned up. Note that the solver level will most likely throw an exception of its own, e.g. Gurobi will throw a ``GurobiError``.
+This will trigger the solver to exit immediately and return a ``:UserLimit`` status.
