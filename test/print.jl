@@ -382,7 +382,7 @@ Solver is default solver""", repl=:show)
     io_test(IJuliaMode, mod_1, """
 \\begin{alignat*}{1}\\max\\quad & a - b + 2 a1 - 10 x\\\\
 \\text{Subject to} \\quad & a + b - 10 c - 2 x + c1 \\leq 1\\\\
- & a\\timesb - 2 \\leq 0\\\\
+ & a\\times b - 2 \\leq 0\\\\
  & SOS1: \\{1 sos[1], 2 sos[2], 3 sos[3]\\}\\\\
  & \\Vert[sos_{1},sos_{2},sos_{3}]\\Vert_2 $le -a + 1\\\\
  & sos_{i} \\in \\{0,1\\} \\quad\\forall i \\in \\{1,2,3\\}\\\\
@@ -512,11 +512,11 @@ facts("[print] expressions") do
 
     @addConstraint(mod, (x[1]+x[2])*(y[2,2]+3.0) <= 1)
     io_test(REPLMode, mod.quadconstr[end], "x[1]*y[2,2] + x[2]*y[2,2] + 3 x[1] + 3 x[2] - 1 $le 0")
-    io_test(IJuliaMode, mod.quadconstr[end], "x_{1}\\timesy_{2,2} + x_{2}\\timesy_{2,2} + 3 x_{1} + 3 x_{2} - 1 \\leq 0")
+    io_test(IJuliaMode, mod.quadconstr[end], "x_{1}\\times y_{2,2} + x_{2}\\times y_{2,2} + 3 x_{1} + 3 x_{2} - 1 \\leq 0")
 
     @addConstraint(mod, (y[2,2]+3.0)*(x[1]+x[2]) <= 1)
     io_test(REPLMode, mod.quadconstr[end], "x[1]*y[2,2] + x[2]*y[2,2] + 3 x[1] + 3 x[2] - 1 $le 0")
-    io_test(IJuliaMode, mod.quadconstr[end], "x_{1}\\timesy_{2,2} + x_{2}\\timesy_{2,2} + 3 x_{1} + 3 x_{2} - 1 \\leq 0")
+    io_test(IJuliaMode, mod.quadconstr[end], "x_{1}\\times y_{2,2} + x_{2}\\times y_{2,2} + 3 x_{1} + 3 x_{2} - 1 \\leq 0")
 end
 
 

@@ -75,7 +75,7 @@ const ijulia = Dict{Symbol,UTF8String}(
     :leq        => "\\leq",
     :geq        => "\\geq",
     :eq         => "=",
-    :times      => "\\times",
+    :times      => "\\times ",
     :sq         => "^2",
     :ind_open   => "_{",
     :ind_close  => "}",
