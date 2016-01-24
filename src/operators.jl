@@ -280,6 +280,14 @@ end
 import Base.vecdot
 
 _dot_depr() = warn("dot is deprecated for multidimensional arrays. Use vecdot instead.")
+
+# Base Julia's generic fallback vecdot requires that dot be defined
+# for scalars, so instead of defining them one-by-one, we will
+# fallback to the multiplication operator
+Base.dot(lhs::JuMPTypes, rhs::JuMPTypes) = lhs*rhs
+Base.dot(lhs::JuMPTypes, rhs::Number)    = lhs*rhs
+Base.dot(lhs::Number,    rhs::JuMPTypes) = lhs*rhs
+
 Base.dot{T,S,N}(lhs::Array{T,N}, rhs::JuMPArray{S,N})    = begin _dot_depr(); vecdot(lhs,rhs); end
 Base.dot{T,S,N}(lhs::JuMPArray{T,N},rhs::Array{S,N})     = begin _dot_depr(); vecdot(lhs,rhs); end
 Base.dot{T,S,N}(lhs::JuMPArray{T,N},rhs::JuMPArray{S,N}) = begin _dot_depr(); vecdot(lhs,rhs); end
