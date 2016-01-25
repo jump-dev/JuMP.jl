@@ -452,6 +452,15 @@ context("dot") do
     end
     @fact dot(c, getValue(x)) --> roughly( 6, 1e-6)
     @fact vecdot(A, getValue(y)) --> roughly(10, 1e-6)
+
+    # https://github.com/JuliaOpt/JuMP.jl/issues/656
+    issue656 = Model()
+    @defVar(issue656, x)
+    floats = Float64[i for i in 1:2]
+    anys   = Array(Any, 2)
+    anys[1] = 10
+    anys[2] = 20 + x
+    @fact dot(floats, anys) --> 10 + 40 + 2x
 end
 end
 
