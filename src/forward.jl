@@ -73,7 +73,7 @@ function forward_eval{T}(storage::Vector{T},nd::Vector{NodeData},adj,const_value
                 @inbounds rhs = storage[children_arr[idx1+2]]
                 storage[k] = ifelse(condition == 1, lhs, rhs)
             else
-                error()
+                error("Unsupported operation $(operators[op])")
             end
         elseif nod.nodetype == CALLUNIVAR # univariate function
             op = nod.index

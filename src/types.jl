@@ -23,7 +23,7 @@ export NodeData
 # for LOGIC, index is into list of logical operators (inputs and outputs are boolean)
 # for COMPARISON, index is into lost of comparison operators
 
-const operators = [:+,:-,:*,:^,:/,:ifelse]
+const operators = [:+,:-,:*,:^,:/,:ifelse,:max,:min]
 
 const operator_to_id = Dict{Symbol,Int}()
 for i in 1:length(operators)
