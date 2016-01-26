@@ -40,9 +40,10 @@ function constructSOS(m::Model, coll::Vector{AffExpr})
     return vars, weight
 end
 
-
 addSOS1(m::Model, coll) = addSOS1(m, convert(Vector{AffExpr}, coll))
-
+"""
+Adds special ordered set constraint of type 1 (SOS1). Specify the set as a vector of weighted variables, e.g. coll = [3x, y, 2z].
+"""
 function addSOS1(m::Model, coll::Vector{AffExpr})
     vars, weight = constructSOS(m,coll)
     push!(m.sosconstr, SOSConstraint(vars, weight, :SOS1))
@@ -59,7 +60,9 @@ function addSOS1(m::Model, coll::Vector{AffExpr})
 end
 
 addSOS2(m::Model, coll) = addSOS2(m, convert(Vector{AffExpr}, coll))
-
+"""
+Adds special ordered set constraint of type 2 (SOS2). Specify the set as a vector of weighted variables, e.g. coll = [3x, y, 2z]. 
+"""
 function addSOS2(m::Model, coll::Vector{AffExpr})
     vars, weight = constructSOS(m,coll)
     push!(m.sosconstr, SOSConstraint(vars, weight, :SOS2))

@@ -60,6 +60,9 @@ include("utils.jl")
 ###############################################################################
 # Model class
 # Keeps track of all model and column info
+"""
+Model is a type defined by JuMP. All variables and constraints are associated with a Model object.
+"""
 type Model
     obj#::QuadExpr
     objSense::Symbol
@@ -208,6 +211,9 @@ end
 @Base.deprecate getNumVars(m::Model) MathProgBase.numvar(m)
 @Base.deprecate getNumConstraints(m::Model) MathProgBase.numlinconstr(m)
 
+"""
+Returns the objective function as a QuadExpr.
+"""
 function getObjective(m::Model)
     traits = ProblemTraits(m)
     if traits.nlp
@@ -216,8 +222,19 @@ function getObjective(m::Model)
     return m.obj
 end
 
+"""
+Returns objective value after a call to solve.
+"""
 getObjectiveValue(m::Model) = m.objVal
+
+"""
+Returns objective sense, either :Min or :Max.
+"""
 getObjectiveSense(m::Model) = m.objSense
+
+"""
+Sets the objective sense (newSense is either :Min or :Max).
+"""
 function setObjectiveSense(m::Model, newSense::Symbol)
     if (newSense != :Max && newSense != :Min)
         error("Model sense must be :Max or :Min")
@@ -230,6 +247,9 @@ setObjective(m::Model, something::Any) =
 setObjective(::Model, ::Symbol, x::Array) =
     error("in setObjective: array of size $(size(x)) passed as objective; only scalar objectives are allowed")
 
+"""
+Changes the solver which will be used for the next call to solve(), discarding the current internal model if present.
+"""
 function setSolver(m::Model, solver::MathProgBase.AbstractMathProgSolver)
     m.solver = solver
     m.internalModel = nothing
@@ -291,6 +311,9 @@ function Base.copy(source::Model)
     return dest
 end
 
+"""
+Returns the internal low-level AbstractMathProgModel object which can be used to access any functionality that is not exposed by JuMP.
+"""
 getInternalModel(m::Model) = m.internalModel
 
 setSolveHook(m::Model, f) = (m.solvehook = f)
@@ -318,6 +341,9 @@ immutable Variable <: AbstractJuMPScalar
     col::Int
 end
 
+"""
+Returns the flattened out (linear) index of a variable as JuMP provides it to a solver.
+"""
 getLinearIndex(x::Variable) = x.col
 Base.isequal(x::Variable,y::Variable) = (x.col == y.col) && (x.m === y.m)
 
@@ -348,27 +374,50 @@ function Variable(m::Model,lower::Number,upper::Number,cat::Symbol,name::Abstrac
 end
 
 # Name setter/getters
+"""
+Set the variable’s internal name.
+"""
 function setName(v::Variable,n::AbstractString)
     push!(v.m.customNames, v)
     v.m.colNames[v.col] = n
     v.m.colNamesIJulia[v.col] = n
 end
+
+"""
+Get the variable’s internal name. 
+"""
 getName(m::Model, col) = var_str(REPLMode, m, col)
 getName(v::Variable) = var_str(REPLMode, v.m, v.col)
 
 # Bound setter/getters
+"""
+Set the lower bound of a variable.
+"""
 function setLower(v::Variable,lower::Number)
     v.m.colCat[v.col] == :Fixed && error("use setValue for changing the value of a fixed variable")
     v.m.colLower[v.col] = lower
 end
+"""
+Set the upper bound of a variable.
+"""
 function setUpper(v::Variable,upper::Number)
     v.m.colCat[v.col] == :Fixed && error("use setValue for changing the value of a fixed variable")
     v.m.colUpper[v.col] = upper
 end
+
+"""
+Get the lower bound of a variable.
+"""
 getLower(v::Variable) = v.m.colLower[v.col]
+"""
+Get the upper bound of a variable.
+"""
 getUpper(v::Variable) = v.m.colUpper[v.col]
 
 # Value setter/getter
+"""
+Provide an initial value v for this variable that can be used by supporting MILP solvers. If v is NaN, the solver may attempt to fill in this value to construct a feasible solution.
+"""
 function setValue(v::Variable, val::Number)
     v.m.colVal[v.col] = val
     if v.m.colCat[v.col] == :Fixed
@@ -379,7 +428,9 @@ end
 
 # internal method that doesn't print a warning if the value is NaN
 _getValue(v::Variable) = v.m.colVal[v.col]
-
+"""
+Get the value of this variable in the solution. If x is a single variable, this will simply return a number. 
+"""
 function getValue(v::Variable)
     ret = _getValue(v)
     if isnan(ret)
@@ -388,6 +439,9 @@ function getValue(v::Variable)
     ret
 end
 
+"""
+ Get the value of this variable in the solution.  If x is indexable then it will return an indexable dictionary of values. 
+"""
 function getValue(arr::Array{Variable})
     ret = similar(arr, Float64)
     # return immediately for empty array
@@ -420,6 +474,9 @@ function getValue(arr::Array{Variable})
 end
 
 # Dual value (reduced cost) getter
+"""
+Get the reduced cost of this variable in the solution. Similar behavior to getValue for indexable variables.
+"""
 function getDual(v::Variable)
     if length(v.m.redCosts) < MathProgBase.numvar(v.m)
         error("Variable bound duals (reduced costs) not available. Check that the model was properly solved and no integer variables are present.")
@@ -428,11 +485,17 @@ function getDual(v::Variable)
 end
 
 const var_cats = [:Cont, :Int, :Bin, :SemiCont, :SemiInt]
+"""
+Set the variable category for x after construction. 
+"""
 function setCategory(v::Variable, cat::Symbol)
     cat in var_cats || error("Unrecognized variable category $cat. Should be one of:\n    $var_cats")
     v.m.colCat[v.col] = cat
 end
 
+"""
+Get the variable category for x.
+"""
 getCategory(v::Variable) = v.m.colCat[v.col]
 
 Base.zero(::Type{Variable}) = AffExpr(Variable[],Float64[],0.0)

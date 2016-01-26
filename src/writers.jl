@@ -3,6 +3,9 @@
 #  License, v. 2.0. If a copy of the MPL was not distributed with this
 #  file, You can obtain one at http://mozilla.org/MPL/2.0/.
 
+"""
+Write the model to filename in the MPS file format.
+"""
 function writeMPS(m::Model, fname::AbstractString)
     f = open(fname, "w")
 
@@ -171,6 +174,9 @@ end
 # LP File Writer
 # We use the formatting defined at:
 #   http://lpsolve.sourceforge.net/5.0/CPLEX-format.htm
+"""
+Write the model to filename in the LP file format.
+"""
 function writeLP(m::Model, fname::AbstractString)
 
     f = open(fname, "w")
