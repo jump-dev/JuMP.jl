@@ -103,6 +103,8 @@ eco && push!(soc_solvers, ECOS.ECOSSolver(verbose=false))
 scs && push!(soc_solvers, SCS.SCSSolver(eps=1e-6,verbose=0))
 osl && push!(quad_mip_solvers, CoinOptServices.OsilBonminSolver(CoinOptServices.OSOption("sb","yes",category="ipopt")))
 osl && push!(quad_mip_solvers, CoinOptServices.OsilCouenneSolver())
+rsoc_solvers = Any[]
+mos && push!(rsoc_solvers, Mosek.MosekSolver(LOG=0))
 # Nonlinear solvers
 nlp_solvers = Any[]
 ipt && push!(nlp_solvers, Ipopt.IpoptSolver(print_level=0))
