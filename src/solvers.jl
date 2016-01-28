@@ -597,6 +597,7 @@ function conicconstraintdata(m::Model)
                 if q.qcoeffs[i] == -1
                     neg_diag_idx == off_diag_idx == 0 || error("Invalid rotated SOC constraint $qconstr")
                     off_diag_idx = i
+                    nz += 1
                 end
             end
         end
@@ -610,7 +611,7 @@ function conicconstraintdata(m::Model)
                 cone[r] = q.qvars1[i].col
             end
             push!(soc_cones, cone)
-        elseif n_pos_on_diag == nz-1 && off_diag_idx > 0
+        elseif n_pos_on_diag == nz-2 && off_diag_idx > 0
             cone[1] = q.qvars1[off_diag_idx].col
             cone[2] = q.qvars2[off_diag_idx].col
             r = 2

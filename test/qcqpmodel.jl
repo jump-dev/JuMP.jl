@@ -355,3 +355,23 @@ context("With solver $(typeof(solver))") do
     @fact solve(modQ) --> :Optimal
     @fact getObjectiveValue(modQ) --> roughly(-0.75, 1e-6)
 end; end; end
+
+facts("[qcqpmodel] Rotated second-order cones") do
+for solver in soc_solvers
+context("With solver $(typeof(solver))") do
+    mod = Model(solver=solver)
+
+    @defVar(mod, x[1:5] >= 0)
+    @defVar(mod, 0 <= u <= 5)
+    @defVar(mod, v)
+
+    @setObjective(mod, Max, v)
+
+    @addConstraint(mod, norm(x[:]) <= 1)
+    @addConstraint(mod, v^2 <= u * x[1])
+
+    @fact solve(mod) --> :Optimal
+    @fact getValue(x) --> roughly([1,0,0,0,0], 1e-6)
+    @fact getValue(u) --> roughly(5, 1e-6)
+    @fact getValue(v) --> roughly(sqrt(5), 1e-6)
+end; end; end
