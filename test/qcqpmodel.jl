@@ -371,7 +371,7 @@ context("With solver $(typeof(solver))") do
     @addConstraint(mod, v^2 <= u * x[1])
 
     @fact solve(mod) --> :Optimal
-    @fact getValue(x) --> roughly([1,0,0,0,0], 1e-4)
+    @fact getValue(x) --> roughly([1,0,0,0,0], 1e-2)
     @fact getValue(u) --> roughly(5, 1e-4)
     @fact getValue(v) --> roughly(sqrt(5), 1e-6)
 end; end; end
