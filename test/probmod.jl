@@ -220,6 +220,23 @@ end
 end
 
 
+facts("[probmod] Test adding empty constraints") do
+for solver in lp_solvers
+context("With solver $(typeof(solver))") do
+    m = Model(solver=solver)
+    @defVar(m, 0 <= x <= 9)
+    @setObjective(m, Max, x)
+    @addConstraint(m, x <= 5)
+    @addConstraint(m, 0 <= 1)
+    solve(m)
+    @addConstraint(m, 0 <= 1)
+    @fact solve(m) --> :Optimal
+    @fact getValue(x) --> roughly(5.0, TOL)
+end
+end
+end
+
+
 facts("[probmod] Test bound modification on binaries") do
 for solver in ip_solvers
 context("With solver $(typeof(solver))") do
