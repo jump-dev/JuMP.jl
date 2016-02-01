@@ -55,22 +55,3 @@ for i in 1:length(comparison_operators)
     comparison_operator_to_id[comparison_operators[i]] = i
 end
 export comparison_operator_to_id, comparison_operators
-
-# accumulator for prod{} terms
-# we need to handle this specially so that we can compute
-# derivatives when one of the terms is zero.
-# (If two are zero, all derivatives are zero.)
-immutable ProductAccumulator{T}
-    allbutone::T # product of all but the smallest value
-    smallest::T
-end
-
-ProductAccumulator{T}(::Type{T}) = ProductAccumulator(one(T),one(T))
-
-@inline function add_term{T}(p::ProductAccumulator{T},value::T)
-    if -1e-4 <= value <= 1e-4 && abs(value) < abs(p.smallest)
-        return ProductAccumulator(p.allbutone*p.smallest,value)
-    else
-        return ProductAccumulator(p.allbutone*value,p.smallest)
-    end
-end
