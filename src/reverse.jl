@@ -41,7 +41,6 @@ function reverse_eval{T}(output::Vector{T},rev_storage::Vector{T},forward_storag
             if op == 1 # :+
                 @inbounds rev_storage[k] = parentval
             elseif op == 2 # :-
-                @inbounds siblings_idx = nzrange(adj,parentidx)
                 if nod.whichchild == 1
                     @inbounds rev_storage[k] = parentval
                 else
@@ -50,27 +49,19 @@ function reverse_eval{T}(output::Vector{T},rev_storage::Vector{T},forward_storag
             elseif op == 3 # :*
                 @inbounds rev_storage[k] = parentval*partials_storage[k]
             elseif op == 4 # :^
-                @inbounds siblings_idx = nzrange(adj,parentidx)
                 if nod.whichchild == 1 # base
-                    @inbounds exponentidx = children_arr[last(siblings_idx)]
-                    @inbounds exponent = forward_storage[exponentidx]
-                    if exponent == 2
-                        @inbounds rev_storage[k] = parentval*2*forward_storage[k]
-                    else
-                        rev_storage[k] = parentval*exponent*pow(forward_storage[k],exponent-1)
-                    end
+                    @inbounds rev_storage[k] = parentval*partials_storage[k]
                 else
+                    @inbounds siblings_idx = nzrange(adj,parentidx)
                     baseidx = children_arr[first(siblings_idx)]
                     base = forward_storage[baseidx]
                     rev_storage[k] = parentval*forward_storage[parentidx]*log(base)
                 end
             elseif op == 5 # :/
-                @inbounds siblings_idx = nzrange(adj,parentidx)
                 if nod.whichchild == 1 # numerator
-                    @inbounds denomidx = children_arr[last(siblings_idx)]
-                    @inbounds denom = forward_storage[denomidx]
-                    @inbounds rev_storage[k] = parentval/denom
+                    @inbounds rev_storage[k] = parentval*partials_storage[k]
                 else # denominator
+                    @inbounds siblings_idx = nzrange(adj,parentidx)
                     @inbounds numeratoridx = children_arr[first(siblings_idx)]
                     @inbounds numerator = forward_storage[numeratoridx]
                     @inbounds rev_storage[k] = -parentval*numerator*pow(forward_storage[k],-2)

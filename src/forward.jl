@@ -67,20 +67,30 @@ function forward_eval{T}(storage::Vector{T},partials_storage::Vector{T},nd::Vect
                 @assert n_children == 2
                 idx1 = first(children_idx)
                 idx2 = last(children_idx)
-                @inbounds base = storage[children_arr[idx1]]
-                @inbounds exponent = storage[children_arr[idx2]]
+                @inbounds ix1 = children_arr[idx1]
+                @inbounds ix2 = children_arr[idx2]
+                @inbounds base = storage[ix1]
+                @inbounds exponent = storage[ix2]
                 if exponent == 2
-                    storage[k] = base*base
+                    @inbounds storage[k] = base*base
+                    @inbounds partials_storage[ix1] = 2*base
                 else
                     storage[k] = pow(base,exponent)
+                    partials_storage[ix1] = exponent*pow(base,exponent-1)
                 end
             elseif op == 5 # :/
                 @assert n_children == 2
                 idx1 = first(children_idx)
                 idx2 = last(children_idx)
-                @inbounds numerator = storage[children_arr[idx1]]
-                @inbounds denominator = storage[children_arr[idx2]]
-                storage[k] = numerator/denominator
+                @inbounds ix1 = children_arr[idx1]
+                @inbounds ix2 = children_arr[idx2]
+                @inbounds numerator = storage[ix1]
+                @inbounds denominator = storage[ix2]
+                # only store the partial wrt numerator because it's cheap
+                # partial wrt denominator may not be needed if constant
+                recip_denominator = 1/denominator
+                @inbounds partials_storage[ix1] = recip_denominator
+                storage[k] = numerator*recip_denominator
             elseif op == 6 # ifelse
                 @assert n_children == 3
                 idx1 = first(children_idx)
