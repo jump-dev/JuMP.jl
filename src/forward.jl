@@ -97,6 +97,8 @@ function forward_eval{T}(storage::Vector{T},partials_storage::Vector{T},nd::Vect
                 @inbounds condition = storage[children_arr[idx1]]
                 @inbounds lhs = storage[children_arr[idx1+1]]
                 @inbounds rhs = storage[children_arr[idx1+2]]
+                @inbounds partials_storage[children_arr[idx1+1]] = condition == 1
+                @inbounds partials_storage[children_arr[idx1+2]] = !(condition == 1)
                 storage[k] = ifelse(condition == 1, lhs, rhs)
             else
                 error("Unsupported operation $(operators[op])")

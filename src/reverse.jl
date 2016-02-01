@@ -67,14 +67,7 @@ function reverse_eval{T}(output::Vector{T},rev_storage::Vector{T},forward_storag
                     @inbounds rev_storage[k] = -parentval*numerator*pow(forward_storage[k],-2)
                 end
             elseif op == 6 # ifelse
-                @inbounds siblings_idx = nzrange(adj,parentidx)
-                conditionidx = first(siblings_idx)
-                @inbounds condition = (forward_storage[children_arr[conditionidx]]==1)
-                if (condition && nod.whichchild == 2) || (!condition && nod.whichchild == 3)
-                    rev_storage[k] = parentval
-                else
-                    rev_storage[k] = zero(T)
-                end
+                @inbounds rev_storage[k] = parentval*partials_storage[k]
             else
                 error()
             end
