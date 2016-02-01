@@ -5,9 +5,9 @@
 # assumes forward_storage is already updated
 # dense gradient output, assumes initialized to zero
 # if subexpressions are present, must run reverse_eval on subexpression tapes afterwards
-function reverse_eval{T}(output::Vector{T},rev_storage::Vector{T},forward_storage::Vector{T},partials_storage::Vector{T},nd::Vector{NodeData},adj,subexpression_output,scale_value::T)
+function reverse_eval{T}(output::Vector{T},reverse_storage::Vector{T},forward_storage::Vector{T},partials_storage::Vector{T},nd::Vector{NodeData},adj,subexpression_output,scale_value::T)
 
-    @assert length(rev_storage) >= length(nd)
+    @assert length(reverse_storage) >= length(nd)
     @assert length(forward_storage) >= length(nd)
 
     # nd is already in order such that parents always appear before children
@@ -25,7 +25,7 @@ function reverse_eval{T}(output::Vector{T},rev_storage::Vector{T},forward_storag
 
     # reverse_storage[k] is the partial derivative of the output with respect to
     # the value of node k
-    rev_storage[1] = scale_value
+    reverse_storage[1] = scale_value
 
     for k in 2:length(nd)
         @inbounds nod = nd[k]
@@ -33,57 +33,13 @@ function reverse_eval{T}(output::Vector{T},rev_storage::Vector{T},forward_storag
             continue
         end
         # compute the value of reverse_storage[k]
-        parentidx = nod.parent
-        @inbounds par = nd[parentidx]
-        @inbounds parentval = rev_storage[parentidx]
-        op = par.index
-        if par.nodetype == CALL
-            if op == 1 # :+
-                @inbounds rev_storage[k] = parentval
-            elseif op == 2 # :-
-                if nod.whichchild == 1
-                    @inbounds rev_storage[k] = parentval
-                else
-                    @inbounds rev_storage[k] = -parentval
-                end
-            elseif op == 3 # :*
-                @inbounds rev_storage[k] = parentval*partials_storage[k]
-            elseif op == 4 # :^
-                if nod.whichchild == 1 # base
-                    @inbounds rev_storage[k] = parentval*partials_storage[k]
-                else
-                    @inbounds siblings_idx = nzrange(adj,parentidx)
-                    baseidx = children_arr[first(siblings_idx)]
-                    base = forward_storage[baseidx]
-                    rev_storage[k] = parentval*forward_storage[parentidx]*log(base)
-                end
-            elseif op == 5 # :/
-                if nod.whichchild == 1 # numerator
-                    @inbounds rev_storage[k] = parentval*partials_storage[k]
-                else # denominator
-                    @inbounds siblings_idx = nzrange(adj,parentidx)
-                    @inbounds numeratoridx = children_arr[first(siblings_idx)]
-                    @inbounds numerator = forward_storage[numeratoridx]
-                    @inbounds rev_storage[k] = -parentval*numerator*pow(forward_storage[k],-2)
-                end
-            elseif op == 6 # ifelse
-                @inbounds rev_storage[k] = parentval*partials_storage[k]
-            else
-                error()
-            end
-        elseif par.nodetype == LOGIC || par.nodetype == COMPARISON
-            # nonlinear, but these don't go into the derivatives
-            rev_storage[k] = zero(T)
-        else
-            @assert par.nodetype == CALLUNIVAR
-            @inbounds this_fprime = partials_storage[k]
-            @inbounds rev_storage[k] = parentval*this_fprime
-        end
+        @inbounds parentval = reverse_storage[nod.parent]
+        reverse_storage[k] = parentval*partials_storage[k]
 
         if nod.nodetype == VARIABLE
-            @inbounds output[nod.index] += rev_storage[k]
+            @inbounds output[nod.index] += reverse_storage[k]
         elseif nod.nodetype == SUBEXPRESSION
-            @inbounds subexpression_output[nod.index] += rev_storage[k]
+            @inbounds subexpression_output[nod.index] += reverse_storage[k]
         end
     end
     #@show storage
@@ -93,18 +49,6 @@ function reverse_eval{T}(output::Vector{T},rev_storage::Vector{T},forward_storag
 end
 
 export reverse_eval
-
-switchblock = Expr(:block)
-for i = 1:length(univariate_operators)
-    deriv_expr = univariate_operator_deriv[i]
-	ex = :(return $deriv_expr::T)
-    push!(switchblock.args,i,ex)
-end
-switchexpr = Expr(:macrocall, Expr(:.,:Lazy,quot(symbol("@switch"))), :operator_id,switchblock)
-
-@eval @inline function univariate_deriv{T}(operator_id,x::T)
-    $switchexpr
-end
 
 
 # Hessian-matrix products

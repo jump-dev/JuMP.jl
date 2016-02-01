@@ -38,14 +38,20 @@ function forward_eval{T}(storage::Vector{T},partials_storage::Vector{T},nd::Vect
                 tmp_sum = zero(T)
                 # sum over children
                 for c_idx in children_idx
-                    @inbounds tmp_sum += storage[children_arr[c_idx]]
+                    @inbounds ix = children_arr[c_idx]
+                    @inbounds partials_storage[ix] = 1.0
+                    @inbounds tmp_sum += storage[ix]
                 end
                 storage[k] = tmp_sum
             elseif op == 2 # :-
                 child1 = first(children_idx)
-                @inbounds tmp_sub = storage[children_arr[child1]]
                 @assert n_children == 2
-                @inbounds tmp_sub -= storage[children_arr[child1+1]]
+                @inbounds ix1 = children_arr[child1]
+                @inbounds ix2 = children_arr[child1+1]
+                @inbounds tmp_sub = storage[ix1]
+                @inbounds tmp_sub -= storage[ix2]
+                @inbounds partials_storage[ix1] = 1.0
+                @inbounds partials_storage[ix2] = -1.0
                 storage[k] = tmp_sub
             elseif op == 3 # :*
                 tmp_prod = one(T)
@@ -83,6 +89,7 @@ function forward_eval{T}(storage::Vector{T},partials_storage::Vector{T},nd::Vect
                     storage[k] = pow(base,exponent)
                     partials_storage[ix1] = exponent*pow(base,exponent-1)
                 end
+                partials_storage[ix2] = storage[k]*log(base)
             elseif op == 5 # :/
                 @assert n_children == 2
                 idx1 = first(children_idx)
@@ -91,10 +98,9 @@ function forward_eval{T}(storage::Vector{T},partials_storage::Vector{T},nd::Vect
                 @inbounds ix2 = children_arr[idx2]
                 @inbounds numerator = storage[ix1]
                 @inbounds denominator = storage[ix2]
-                # only store the partial wrt numerator because it's cheap
-                # partial wrt denominator may not be needed if constant
                 recip_denominator = 1/denominator
                 @inbounds partials_storage[ix1] = recip_denominator
+                partials_storage[ix2] = -numerator*recip_denominator*recip_denominator
                 storage[k] = numerator*recip_denominator
             elseif op == 6 # ifelse
                 @assert n_children == 3
@@ -123,6 +129,7 @@ function forward_eval{T}(storage::Vector{T},partials_storage::Vector{T},nd::Vect
             n_children = length(children_idx)
             result = true
             for r in 1:n_children-1
+                partials_storage[children_arr[children_idx[r]]] = zero(T)
                 cval_lhs = storage[children_arr[children_idx[r]]]
                 cval_rhs = storage[children_arr[children_idx[r+1]]]
                 if op == 1
@@ -137,11 +144,14 @@ function forward_eval{T}(storage::Vector{T},partials_storage::Vector{T},nd::Vect
                     result &= cval_lhs > cval_rhs
                 end
             end
+            partials_storage[children_arr[children_idx[n_children]]] = zero(T)
             storage[k] = result
         elseif nod.nodetype == LOGIC
             op = nod.index
             @inbounds children_idx = nzrange(adj,k)
             # boolean values are stored as floats
+            partials_storage[children_arr[first(children_idx)]] = zero(T)
+            partials_storage[children_arr[last(children_idx)]] = zero(T)
             cval_lhs = (storage[children_arr[first(children_idx)]] == 1)
             cval_rhs = (storage[children_arr[last(children_idx)]] == 1)
             if op == 1
