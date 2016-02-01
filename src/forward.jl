@@ -56,7 +56,7 @@ function forward_eval{T}(storage::Vector{T},partials_storage::Vector{T},nd::Vect
                 for c_idx in children_idx
                     @inbounds ix = children_arr[c_idx]
                     @inbounds child_value = storage[ix]
-                    if child_value == tmp_prod.smallest
+                    if isequal(child_value,tmp_prod.smallest)
                         @inbounds partials_storage[ix] = tmp_prod.allbutone
                     else
                         @inbounds partials_storage[ix] = product_value/child_value
