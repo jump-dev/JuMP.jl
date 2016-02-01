@@ -106,7 +106,7 @@ osl && push!(quad_mip_solvers, CoinOptServices.OsilCouenneSolver())
 rsoc_solvers = Any[]
 mos && push!(rsoc_solvers, Mosek.MosekSolver(LOG=0))
 grb && push!(rsoc_solvers, Gurobi.GurobiSolver(QCPDual=1,OutputFlag=0))
-cpx && push!(rsco_solvers, CPLEX.CplexSolver(CPX_PARAM_SCRIND=0))
+cpx && push!(rsoc_solvers, CPLEX.CplexSolver(CPX_PARAM_SCRIND=0))
 # Nonlinear solvers
 nlp_solvers = Any[]
 ipt && push!(nlp_solvers, Ipopt.IpoptSolver(print_level=0))
