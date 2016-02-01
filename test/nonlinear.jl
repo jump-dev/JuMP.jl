@@ -98,8 +98,9 @@ end; end; end
 
 facts("[nonlinear] Accepting fixed variables") do
 for nlp_solver in convex_nlp_solvers
-context("With solver $(typeof(nlp_solver))") do
-    m = Model(solver=nlp_solver)
+for simplify in [true, false]
+context("With solver $(typeof(nlp_solver)), simplify = $simplify") do
+    m = Model(solver=nlp_solver, simplify_nonlinear_expressions=simplify)
     @defVar(m, x == 0)
     @defVar(m, y ≥ 0)
     @setObjective(m, Min, y)
@@ -111,7 +112,7 @@ context("With solver $(typeof(nlp_solver))") do
         @fact getValue(y) --> roughly(α^2, 1e-6)
     end
     DisableNLPResolve()
-end; end; end
+end; end; end; end
 
 facts("[nonlinear] Test QP solve through NL pathway") do
 for nlp_solver in convex_nlp_solvers
@@ -161,8 +162,9 @@ end; end; end
 
 facts("[nonlinear] Test resolve with parameter") do
 for nlp_solver in convex_nlp_solvers
-context("With solver $(typeof(nlp_solver))") do
-    m = Model(solver=nlp_solver)
+for simplify in [true,false]
+context("With solver $(typeof(nlp_solver)), simplify = $simplify") do
+    m = Model(solver=nlp_solver, simplify_nonlinear_expressions=simplify)
     @defVar(m, z)
     @defNLParam(m, x == 1.0)
     @setNLObjective(m, Min, (z-x)^2)
@@ -174,7 +176,7 @@ context("With solver $(typeof(nlp_solver))") do
     status = solve(m)
     @fact status --> :Optimal
     @fact getValue(z) --> roughly(5.0, 1e-3)
-end; end; end
+end; end; end; end
 
 facts("[nonlinear] Test two-sided nonlinear constraints") do
 for nlp_solver in convex_nlp_solvers
@@ -289,8 +291,9 @@ end; end; end
 
 facts("[nonlinear] Test maximization objective (embedded expressions)") do
 for nlp_solver in convex_nlp_solvers
-context("With solver $(typeof(nlp_solver))") do
-    m = Model(solver=nlp_solver)
+for simplify in [true,false]
+context("With solver $(typeof(nlp_solver)), simplify = $simplify") do
+    m = Model(solver=nlp_solver, simplify_nonlinear_expressions=simplify)
     @defVar(m, -2 <= x <= 2); setValue(x, -1.8)
     @defVar(m, -2 <= y <= 2); setValue(y,  1.5)
     @setNLObjective(m, Max, y - x)
@@ -305,7 +308,7 @@ context("With solver $(typeof(nlp_solver))") do
     @fact getValue(quadexpr2) --> roughly(1, 1e-5)
     quadexpr3 = @defNLExpr(x + x^2 + x*y + y^2)
     @fact getValue(quadexpr3) --> roughly(1, 1e-5)
-end; end; end
+end; end; end; end
 
 
 facts("[nonlinear] Test infeasibility detection") do
@@ -385,9 +388,10 @@ end; end; end
 
 facts("[nonlinear] Test nonlinear duals") do
 for nlp_solver in nlp_solvers
+for simplify in [true,false]
 applicable(MathProgBase.getconstrduals, MathProgBase.NonlinearModel(nlp_solver)) || continue
-context("With solver $(typeof(nlp_solver))") do
-    modA = Model(solver=nlp_solver)
+context("With solver $(typeof(nlp_solver)), simplify = $simplify") do
+    modA = Model(solver=nlp_solver, simplify_nonlinear_expressions=simplify)
     @defVar(modA, x >= 0)
     @defVar(modA, y <= 5)
     @defVar(modA, 2 <= z <= 4)
@@ -421,7 +425,7 @@ context("With solver $(typeof(nlp_solver))") do
     @fact getDual(cons1) --> roughly( 0.333333, 1e-6)
     @fact getDual(cons2) --> roughly(-1.0, 1e-6)
     @fact getDual(cons3) --> roughly(-0.0714286, 1e-6)
-end; end; end
+end; end; end; end
 
 facts("[nonlinear] Test nonlinear duals (Max)") do
 for nlp_solver in nlp_solvers
