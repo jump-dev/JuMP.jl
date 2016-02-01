@@ -5,7 +5,7 @@
 # assumes forward_storage is already updated
 # dense gradient output, assumes initialized to zero
 # if subexpressions are present, must run reverse_eval on subexpression tapes afterwards
-function reverse_eval{T}(output::Vector{T},rev_storage::Vector{T},forward_storage::Vector{T},nd::Vector{NodeData},adj,subexpression_output,scale_value::T)
+function reverse_eval{T}(output::Vector{T},rev_storage::Vector{T},forward_storage::Vector{T},partials_storage::Vector{T},nd::Vector{NodeData},adj,subexpression_output,scale_value::T)
 
     @assert length(rev_storage) >= length(nd)
     @assert length(forward_storage) >= length(nd)
@@ -114,8 +114,8 @@ function reverse_eval{T}(output::Vector{T},rev_storage::Vector{T},forward_storag
             rev_storage[k] = zero(T)
         else
             @assert par.nodetype == CALLUNIVAR
-            @inbounds this_value = forward_storage[k]
-            @inbounds rev_storage[k] = parentval*univariate_deriv(op,this_value)
+            @inbounds this_fprime = partials_storage[k]
+            @inbounds rev_storage[k] = parentval*this_fprime
         end
 
         if nod.nodetype == VARIABLE
@@ -147,7 +147,7 @@ end
 
 # Hessian-matrix products
 # forward_input_vector should already be initialized with the input x values
-function hessmat_eval!{T}(R::Matrix{T},rev_storage::Vector{Dual{T}},forward_storage::Vector{Dual{T}},nd::Vector{NodeData},adj,const_values,x_values::Vector{T},reverse_output_vector::Vector{Dual{T}}, forward_input_vector::Vector{Dual{T}},local_to_global_idx::Vector{Int})
+function hessmat_eval!{T}(R::Matrix{T},rev_storage::Vector{Dual{T}},forward_storage::Vector{Dual{T}},partials_storage,nd::Vector{NodeData},adj,const_values,x_values::Vector{T},reverse_output_vector::Vector{Dual{T}}, forward_input_vector::Vector{Dual{T}},local_to_global_idx::Vector{Int})
 
     num_products = size(R,2) # number of hessian-vector products
     @assert size(R,1) == length(local_to_global_idx)
@@ -163,9 +163,9 @@ function hessmat_eval!{T}(R::Matrix{T},rev_storage::Vector{Dual{T}},forward_stor
         end
 
         # do a forward pass
-        forward_eval(forward_storage,nd,adj,const_values,[],forward_input_vector,[])
+        forward_eval(forward_storage,partials_storage,nd,adj,const_values,[],forward_input_vector,[])
         # do a reverse pass
-        reverse_eval(reverse_output_vector,rev_storage,forward_storage,nd,adj,[],Dual(1.0))
+        reverse_eval(reverse_output_vector,rev_storage,forward_storage,partials_storage,nd,adj,[],Dual(1.0))
 
         # collect directional derivatives
         for r in 1:length(local_to_global_idx)

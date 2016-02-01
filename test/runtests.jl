@@ -11,16 +11,17 @@ adj = adjmat(nd)
 #@show nd
 
 storage = zeros(length(nd))
+partials_storage = zeros(length(nd))
 reverse_storage = zeros(length(nd))
 
 x = [2.0,3.0]
 #@show x
-fval = forward_eval(storage,nd,adj,const_values,[],x,[])
+fval = forward_eval(storage,partials_storage,nd,adj,const_values,[],x,[])
 true_val = sin(x[1]^2) + cos(x[2]*4)/5 -2.0
 @test isapprox(fval,true_val)
 
 grad = zeros(2)
-reverse_eval(grad,reverse_storage,storage,nd,adj,[],1.0)
+reverse_eval(grad,reverse_storage,storage,partials_storage,nd,adj,[],1.0)
 
 true_grad = [2*x[1]*cos(x[1]^2), -4*sin(x[2]*4)/5]
 @test isapprox(grad,true_grad)
@@ -43,15 +44,16 @@ li,li_individual = order_subexpressions(Vector{NodeData}[nd_outer2], Vector{Node
 
 adj_outer = adjmat(nd_outer)
 outer_storage = zeros(1)
-fval = forward_eval(outer_storage,nd_outer,adj_outer,[],[],x,[fval])
+outer_storage_partials = zeros(1)
+fval = forward_eval(outer_storage,outer_storage_partials,nd_outer,adj_outer,[],[],x,[fval])
 @test isapprox(fval,true_val)
 
 outer_reverse_storage = zeros(1)
 fill!(grad,0.0)
 subexpr_output = zeros(1)
-reverse_eval(grad,outer_reverse_storage,outer_storage,nd_outer,adj_outer,subexpr_output,1.0)
+reverse_eval(grad,outer_reverse_storage,outer_storage,outer_storage_partials,nd_outer,adj_outer,subexpr_output,1.0)
 @assert subexpr_output[1] == 1.0
-reverse_eval(grad,reverse_storage,storage,nd,adj,[],subexpr_output[1])
+reverse_eval(grad,reverse_storage,storage,partials_storage,nd,adj,[],subexpr_output[1])
 @test isapprox(grad,true_grad)
 
 
@@ -61,16 +63,17 @@ nd,const_values = expr_to_nodedata(ex)
 adj = adjmat(nd)
 
 storage = zeros(length(nd))
+partials_storage = zeros(length(nd))
 reverse_storage = zeros(length(nd))
 
 x = [2.5,3.5,1.0]
 #@show x
-fval = forward_eval(storage,nd,adj,const_values,[],x,[])
+fval = forward_eval(storage,partials_storage,nd,adj,const_values,[],x,[])
 true_val = (1/x[1])^x[2]-x[3]
 @test isapprox(fval,true_val)
 
 grad = zeros(3)
-reverse_eval(grad,reverse_storage,storage,nd,adj,[],1.0)
+reverse_eval(grad,reverse_storage,storage,partials_storage,nd,adj,[],1.0)
 
 true_grad = [-x[2]*x[1]^(-x[2]-1), -((1/x[1])^x[2])*log(x[1]),-1]
 @test isapprox(grad,true_grad)
@@ -80,39 +83,42 @@ ex = :(x[1] > 0.5 && x[1] < 0.9)
 nd,const_values = expr_to_nodedata(ex)
 adj = adjmat(nd)
 storage = zeros(length(nd))
-fval = forward_eval(storage,nd,adj,const_values,[],[1.5],[])
+partials_storage = zeros(length(nd))
+fval = forward_eval(storage,partials_storage,nd,adj,const_values,[],[1.5],[])
 @test fval == 0
-fval = forward_eval(storage,nd,adj,const_values,[],[0.6],[])
+fval = forward_eval(storage,partials_storage,nd,adj,const_values,[],[0.6],[])
 @test fval == 1
 
 ex = :(ifelse(x[1] >= 0.5 || x[1] <= 0.1,x[1],5))
 nd,const_values = expr_to_nodedata(ex)
 adj = adjmat(nd)
 storage = zeros(length(nd))
+partials_storage = zeros(length(nd))
 reverse_storage = zeros(length(nd))
 grad = zeros(1)
-fval = forward_eval(storage,nd,adj,const_values,[],[1.5],[])
+fval = forward_eval(storage,partials_storage,nd,adj,const_values,[],[1.5],[])
 @test fval == 1.5
-reverse_eval(grad,reverse_storage,storage,nd,adj,[],1.0)
+reverse_eval(grad,reverse_storage,storage,partials_storage,nd,adj,[],1.0)
 @test grad[1] == 1
 
-fval = forward_eval(storage,nd,adj,const_values,[],[-0.1],[])
+fval = forward_eval(storage,partials_storage,nd,adj,const_values,[],[-0.1],[])
 @test fval == -0.1
 fill!(grad,0)
-reverse_eval(grad,reverse_storage,storage,nd,adj,[],1.0)
+reverse_eval(grad,reverse_storage,storage,partials_storage,nd,adj,[],1.0)
 @test grad[1] == 1
 
-fval = forward_eval(storage,nd,adj,const_values,[],[0.2],[])
+fval = forward_eval(storage,partials_storage,nd,adj,const_values,[],[0.2],[])
 @test fval == 5
 fill!(grad,0)
-reverse_eval(grad,reverse_storage,storage,nd,adj,[],1.0)
+reverse_eval(grad,reverse_storage,storage,partials_storage,nd,adj,[],1.0)
 @test grad[1] == 0
 
 # parameters
 nd = [NodeData(PARAMETER,1,-1,-1)]
 adj = adjmat(nd)
 storage = zeros(length(nd))
-fval = forward_eval(storage,nd,adj,[],[105.2],[-0.1],[])
+partials_storage = zeros(length(nd))
+fval = forward_eval(storage,partials_storage,nd,adj,[],[105.2],[-0.1],[])
 @test fval == 105.2
 
 # abs
@@ -122,18 +128,19 @@ nd,const_values = expr_to_nodedata(ex)
 adj = adjmat(nd)
 
 storage = zeros(length(nd))
+partials_storage = zeros(length(nd))
 reverse_storage = zeros(length(nd))
-fval = forward_eval(storage,nd,adj,const_values,[],[2.0],[])
+fval = forward_eval(storage,partials_storage,nd,adj,const_values,[],[2.0],[])
 @test fval == 2.0
 grad = zeros(1)
-reverse_eval(grad,reverse_storage,storage,nd,adj,[],1.0)
+reverse_eval(grad,reverse_storage,storage,partials_storage,nd,adj,[],1.0)
 @test grad[1] == 1.0
 
 
-fval = forward_eval(storage,nd,adj,const_values,[],[-2.0],[])
+fval = forward_eval(storage,partials_storage,nd,adj,const_values,[],[-2.0],[])
 @test fval == 2.0
 grad = zeros(1)
-reverse_eval(grad,reverse_storage,storage,nd,adj,[],1.0)
+reverse_eval(grad,reverse_storage,storage,partials_storage,nd,adj,[],1.0)
 @test grad[1] == -1.0
 
 
@@ -176,15 +183,16 @@ ex = :(sin(x[1]^2) + cos(x[2]*(2*2))/5-2.0)
 nd,const_values = expr_to_nodedata(ex)
 adj = adjmat(nd)
 storage = zeros(length(nd))
+partials_storage = zeros(length(nd))
 x = [2.0,3.0]
-fval = forward_eval(storage,nd,adj,const_values,[],x,[])
+fval = forward_eval(storage,partials_storage,nd,adj,const_values,[],x,[])
 linearity = classify_linearity(nd,adj,[],[false,true])
 new_nd = simplify_constants(storage,nd,adj,const_values,linearity)
 @test length(new_nd) < length(nd)
 new_adj = adjmat(new_nd)
 true_val = sin(x[1]^2) + cos(x[2]*4)/5 -2.0
 x[2] = 100 # this shouldn't affect the answer because we said x[2] is fixed
-fval = forward_eval(storage,new_nd,new_adj,const_values,[],x,[])
+fval = forward_eval(storage,partials_storage,new_nd,new_adj,const_values,[],x,[])
 @test isapprox(fval,true_val)
 # all variables fixed
 linearity = classify_linearity(nd,adj,[],[true,true])
@@ -199,18 +207,19 @@ nd,const_values = expr_to_nodedata(ex)
 adj = adjmat(nd)
 forward_storage = Array(Dual{Float64},length(nd))
 reverse_storage = Array(Dual{Float64},length(nd))
+partials_storage = Array(Dual{Float64},length(nd))
 reverse_output_vector = Array(Dual{Float64},2)
 forward_input_vector = Array(Dual{Float64},2)
 x_values = [10.0,2.0]
 
 local_to_global_idx = [1,2]
 R = [1.0 0.0; 0.0 1.0]
-hessmat_eval!(R, reverse_storage, forward_storage, nd, adj, const_values, x_values, reverse_output_vector, forward_input_vector, local_to_global_idx)
+hessmat_eval!(R, reverse_storage, forward_storage, partials_storage, nd, adj, const_values, x_values, reverse_output_vector, forward_input_vector, local_to_global_idx)
 @test R == [1.0 2.0; 2.0 0.0]
 # now with a permutation
 local_to_global_idx = [2,1]
 R = [0.0 1.0; 1.0 0.0]
-hessmat_eval!(R, reverse_storage, forward_storage, nd, adj, const_values, x_values, reverse_output_vector, forward_input_vector, local_to_global_idx)
+hessmat_eval!(R, reverse_storage, forward_storage, partials_storage, nd, adj, const_values, x_values, reverse_output_vector, forward_input_vector, local_to_global_idx)
 @test R == [2.0 0.0; 1.0 2.0]
 
 
