@@ -48,11 +48,21 @@ function forward_eval{T}(storage::Vector{T},partials_storage::Vector{T},nd::Vect
                 @inbounds tmp_sub -= storage[children_arr[child1+1]]
                 storage[k] = tmp_sub
             elseif op == 3 # :*
-                tmp_prod = one(T)
+                tmp_prod = ProductAccumulator(T)
                 for c_idx in children_idx
-                    @inbounds tmp_prod *= storage[children_arr[c_idx]]
+                    @inbounds tmp_prod = add_term(tmp_prod,storage[children_arr[c_idx]])
                 end
-                storage[k] = tmp_prod
+                product_value = tmp_prod.allbutone*tmp_prod.smallest
+                for c_idx in children_idx
+                    @inbounds ix = children_arr[c_idx]
+                    @inbounds child_value = storage[ix]
+                    if child_value == tmp_prod.smallest
+                        @inbounds partials_storage[ix] = tmp_prod.allbutone
+                    else
+                        @inbounds partials_storage[ix] = product_value/child_value
+                    end
+                end
+                @inbounds storage[k] = product_value
             elseif op == 4 # :^
                 @assert n_children == 2
                 idx1 = first(children_idx)

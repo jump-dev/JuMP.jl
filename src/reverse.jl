@@ -48,29 +48,7 @@ function reverse_eval{T}(output::Vector{T},rev_storage::Vector{T},forward_storag
                     @inbounds rev_storage[k] = -parentval
                 end
             elseif op == 3 # :*
-                # dummy version for now
-                @inbounds siblings_idx = nzrange(adj,parentidx)
-                n_siblings = length(siblings_idx)
-                if n_siblings == 2
-                    otheridx = ifelse(nod.whichchild == 1, last(siblings_idx),first(siblings_idx))
-                    @inbounds prod_others = forward_storage[children_arr[otheridx]]
-                    @inbounds rev_storage[k] = parentval*prod_others
-                else
-                    @inbounds parent_val = forward_storage[parentidx]
-                    if parent_val == 0.0
-                        # product of all other siblings
-                        prod_others = one(T)
-                        for r in 1:n_siblings
-                            r == nod.whichchild && continue
-                            sib_idx = first(siblings_idx) + r - 1
-                            @inbounds prod_others *= forward_storage[children_arr[sib_idx]]
-                            prod_others == 0.0 && break
-                        end
-                        @inbounds rev_storage[k] = parentval*prod_others
-                    else
-                        @inbounds rev_storage[k] = parentval*(parent_val/forward_storage[k])
-                    end
-                end
+                @inbounds rev_storage[k] = parentval*partials_storage[k]
             elseif op == 4 # :^
                 @inbounds siblings_idx = nzrange(adj,parentidx)
                 if nod.whichchild == 1 # base
