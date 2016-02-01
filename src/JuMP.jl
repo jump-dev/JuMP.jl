@@ -114,6 +114,7 @@ type Model
     indexedVector::IndexedVector{Float64}
 
     nlpdata#::NLPData
+    simplify_nonlinear_expressions::Bool
 
     varDict::Dict{Symbol,Any} # dictionary from variable names to variable objects
     varData::ObjectIdDict
@@ -133,7 +134,7 @@ type UnsetSolver <: MathProgBase.AbstractMathProgSolver
 end
 
 # Default constructor
-function Model(;solver=UnsetSolver())
+function Model(;solver=UnsetSolver(), simplify_nonlinear_expressions::Bool=false)
     if !isa(solver,MathProgBase.AbstractMathProgSolver)
         error("solver argument ($solver) must be an AbstractMathProgSolver")
     end
@@ -167,6 +168,7 @@ function Model(;solver=UnsetSolver())
           Any[],                       # dictList
           IndexedVector(Float64,0),    # indexedVector
           nothing,                     # nlpdata
+          simplify_nonlinear_expressions, # ...
           Dict{Symbol,Any}(),          # varDict
           ObjectIdDict(),              # varData
           0,                           # getvalue_counter
