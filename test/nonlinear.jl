@@ -9,9 +9,11 @@
 #############################################################################
 # test/nonlinear.jl
 # Test general nonlinear
-# Must be run as part of runtests.jl, as it needs a list of solvers.
 #############################################################################
 using JuMP, FactCheck
+
+# If solvers not loaded, load them (i.e running just these tests)
+!isdefined(:nlp_solvers) && include("solvers.jl")
 
 facts("[nonlinear] Test getValue on arrays") do
     m = Model()
