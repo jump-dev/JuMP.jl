@@ -21,7 +21,7 @@ true_val = sin(x[1]^2) + cos(x[2]*4)/5 -2.0
 @test isapprox(fval,true_val)
 
 grad = zeros(2)
-reverse_eval(grad,reverse_storage,storage,partials_storage,nd,adj,[],1.0)
+reverse_eval(grad,reverse_storage,partials_storage,nd,adj,[],1.0)
 
 true_grad = [2*x[1]*cos(x[1]^2), -4*sin(x[2]*4)/5]
 @test isapprox(grad,true_grad)
@@ -51,9 +51,9 @@ fval = forward_eval(outer_storage,outer_storage_partials,nd_outer,adj_outer,[],[
 outer_reverse_storage = zeros(1)
 fill!(grad,0.0)
 subexpr_output = zeros(1)
-reverse_eval(grad,outer_reverse_storage,outer_storage,outer_storage_partials,nd_outer,adj_outer,subexpr_output,1.0)
+reverse_eval(grad,outer_reverse_storage,outer_storage_partials,nd_outer,adj_outer,subexpr_output,1.0)
 @assert subexpr_output[1] == 1.0
-reverse_eval(grad,reverse_storage,storage,partials_storage,nd,adj,[],subexpr_output[1])
+reverse_eval(grad,reverse_storage,partials_storage,nd,adj,[],subexpr_output[1])
 @test isapprox(grad,true_grad)
 
 
@@ -73,7 +73,7 @@ true_val = (1/x[1])^x[2]-x[3]
 @test isapprox(fval,true_val)
 
 grad = zeros(3)
-reverse_eval(grad,reverse_storage,storage,partials_storage,nd,adj,[],1.0)
+reverse_eval(grad,reverse_storage,partials_storage,nd,adj,[],1.0)
 
 true_grad = [-x[2]*x[1]^(-x[2]-1), -((1/x[1])^x[2])*log(x[1]),-1]
 @test isapprox(grad,true_grad)
@@ -98,19 +98,19 @@ reverse_storage = zeros(length(nd))
 grad = zeros(1)
 fval = forward_eval(storage,partials_storage,nd,adj,const_values,[],[1.5],[])
 @test fval == 1.5
-reverse_eval(grad,reverse_storage,storage,partials_storage,nd,adj,[],1.0)
+reverse_eval(grad,reverse_storage,partials_storage,nd,adj,[],1.0)
 @test grad[1] == 1
 
 fval = forward_eval(storage,partials_storage,nd,adj,const_values,[],[-0.1],[])
 @test fval == -0.1
 fill!(grad,0)
-reverse_eval(grad,reverse_storage,storage,partials_storage,nd,adj,[],1.0)
+reverse_eval(grad,reverse_storage,partials_storage,nd,adj,[],1.0)
 @test grad[1] == 1
 
 fval = forward_eval(storage,partials_storage,nd,adj,const_values,[],[0.2],[])
 @test fval == 5
 fill!(grad,0)
-reverse_eval(grad,reverse_storage,storage,partials_storage,nd,adj,[],1.0)
+reverse_eval(grad,reverse_storage,partials_storage,nd,adj,[],1.0)
 @test grad[1] == 0
 
 # parameters
@@ -133,14 +133,14 @@ reverse_storage = zeros(length(nd))
 fval = forward_eval(storage,partials_storage,nd,adj,const_values,[],[2.0],[])
 @test fval == 2.0
 grad = zeros(1)
-reverse_eval(grad,reverse_storage,storage,partials_storage,nd,adj,[],1.0)
+reverse_eval(grad,reverse_storage,partials_storage,nd,adj,[],1.0)
 @test grad[1] == 1.0
 
 
 fval = forward_eval(storage,partials_storage,nd,adj,const_values,[],[-2.0],[])
 @test fval == 2.0
 grad = zeros(1)
-reverse_eval(grad,reverse_storage,storage,partials_storage,nd,adj,[],1.0)
+reverse_eval(grad,reverse_storage,partials_storage,nd,adj,[],1.0)
 @test grad[1] == -1.0
 
 
@@ -234,7 +234,7 @@ function dualforward(ex, x)
 
     fval = forward_eval(forward_storage,partials_storage,nd,adj,const_values,[],x,[])
     grad = zeros(length(x))
-    reverse_eval(grad,reverse_storage,storage,partials_storage,nd,adj,[],1.0)
+    reverse_eval(grad,reverse_storage,partials_storage,nd,adj,[],1.0)
 
     zero_ϵ = ForwardDiff.zero_partials(NTuple{1,Float64},1)
     forward_storage_ϵ = fill(zero_ϵ,length(nd))

@@ -2,13 +2,13 @@
 
 # reverse-mode evaluation of an expression tree
 
-# assumes forward_storage is already updated
+# assumes partials_storage is already updated
 # dense gradient output, assumes initialized to zero
 # if subexpressions are present, must run reverse_eval on subexpression tapes afterwards
-function reverse_eval{T}(output::Vector{T},reverse_storage::Vector{T},forward_storage::Vector{T},partials_storage::Vector{T},nd::Vector{NodeData},adj,subexpression_output,scale_value::T)
+function reverse_eval{T}(output::Vector{T},reverse_storage::Vector{T},partials_storage::Vector{T},nd::Vector{NodeData},adj,subexpression_output,scale_value::T)
 
     @assert length(reverse_storage) >= length(nd)
-    @assert length(forward_storage) >= length(nd)
+    @assert length(partials_storage) >= length(nd)
 
     # nd is already in order such that parents always appear before children
     # so a forward pass through nd is a backwards pass through the tree
@@ -71,7 +71,7 @@ function hessmat_eval!{T}(R::Matrix{T},rev_storage::Vector{Dual{T}},forward_stor
         # do a forward pass
         forward_eval(forward_storage,partials_storage,nd,adj,const_values,[],forward_input_vector,[])
         # do a reverse pass
-        reverse_eval(reverse_output_vector,rev_storage,forward_storage,partials_storage,nd,adj,[],Dual(1.0))
+        reverse_eval(reverse_output_vector,rev_storage,partials_storage,nd,adj,[],Dual(1.0))
 
         # collect directional derivatives
         for r in 1:length(local_to_global_idx)
