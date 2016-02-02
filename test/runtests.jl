@@ -257,6 +257,8 @@ function dualforward(ex, x)
 end
 
 dualforward(:(sin(x[1]^2) + cos(x[2]*4)/5-2.0),[1.0,2.0])
+dualforward(:(sin(x[1]^x[2]) + cos(x[2]*4)/5-2.0),[1.0,2.0])
+dualforward(:(sin(x[1]^3) + cos(x[1]*x[2]*4)/5-2.0),[1.0,0.0])
 
 
 include("test_coloring.jl")

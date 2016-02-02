@@ -223,7 +223,7 @@ function forward_eval_ϵ{N,T}(storage::Vector{T},storage_ϵ::Vector{ForwardDiff.
                         gnum = gradnum(storage[ix],storage_ϵ[ix])
                         tmp_prod *= gnum
                     end
-                    if tmp_prod == zero(tmp_prod) # inefficient
+                    if ForwardDiff.value(tmp_prod) == zero(T) # inefficient
                         for c_idx in children_idx
                             prod_others = one(ForwardDiff.GradientNumber{N,T,NTuple{N,T}})
                             for c_idx2 in children_idx
