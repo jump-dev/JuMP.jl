@@ -240,19 +240,27 @@ function dualforward(ex, x)
     forward_storage_ϵ = fill(zero_ϵ,length(nd))
     partials_storage_ϵ = fill(zero_ϵ,length(nd))
     x_values_ϵ = fill(ForwardDiff.Partials((1.0,)),length(x))
+    reverse_storage_ϵ = fill(zero_ϵ,length(nd))
+    output_ϵ = fill(zero_ϵ,length(x))
     fval_ϵ = forward_eval_ϵ(forward_storage,forward_storage_ϵ,partials_storage,partials_storage_ϵ,nd,adj,x_values_ϵ,[])
+    reverse_eval_ϵ(output_ϵ,reverse_storage,reverse_storage_ϵ,partials_storage,partials_storage_ϵ,nd,adj,[],1.0)
     @test_approx_eq fval_ϵ.data[1] dot(grad,ones(length(x)))
 
     # compare with running dual numbers
     forward_dual_storage = zeros(Dual{Float64},length(nd))
     partials_dual_storage = zeros(Dual{Float64},length(nd))
+    output_dual_storage = zeros(Dual{Float64},length(x))
+    reverse_dual_storage = zeros(Dual{Float64},length(nd))
     x_dual = [Dual(x[i],1.0) for i in 1:length(x)]
     fval = forward_eval(forward_dual_storage,partials_dual_storage,nd,adj,const_values,[],x_dual,[])
+    reverse_eval(output_dual_storage,reverse_dual_storage,partials_dual_storage,nd,adj,[],Dual(1.0))
     for k in 1:length(nd)
         @test_approx_eq epsilon(forward_dual_storage[k]) forward_storage_ϵ[k].data[1]
-    end
-    for k in 1:length(nd)
         @test_approx_eq epsilon(partials_dual_storage[k]) partials_storage_ϵ[k].data[1]
+        @test_approx_eq epsilon(reverse_dual_storage[k]) reverse_storage_ϵ[k].data[1]
+    end
+    for k in 1:length(x)
+        @test_approx_eq epsilon(output_dual_storage[k]) output_ϵ[k].data[1]
     end
 end
 

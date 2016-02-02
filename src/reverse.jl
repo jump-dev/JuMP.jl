@@ -13,8 +13,6 @@ function reverse_eval{T}(output::Vector{T},reverse_storage::Vector{T},partials_s
     # nd is already in order such that parents always appear before children
     # so a forward pass through nd is a backwards pass through the tree
 
-    children_arr = rowvals(adj)
-
     if nd[1].nodetype == VARIABLE
         output[nd[1].index] += scale_value
         return # trivial case
@@ -49,6 +47,48 @@ function reverse_eval{T}(output::Vector{T},reverse_storage::Vector{T},partials_s
 end
 
 export reverse_eval
+
+# Compute directional derivatives of the reverse pass, goes with forward_eval_ϵ
+# to compute hessian-vector products.
+function reverse_eval_ϵ{N,T}(output_ϵ::Vector{ForwardDiff.PartialsTup{N,T}},reverse_storage::Vector{T},reverse_storage_ϵ,partials_storage::Vector{T},partials_storage_ϵ,nd::Vector{NodeData},adj,subexpression_output_ϵ,scale_value::T)
+
+    @assert length(reverse_storage_ϵ) >= length(nd)
+    @assert length(partials_storage_ϵ) >= length(nd)
+
+    if nd[1].nodetype == VARIABLE || nd[1].nodetype == SUBEXPRESSION
+        return # trivial case
+    end
+
+    zero_ϵ = ForwardDiff.zero_partials(NTuple{N,T},N)
+
+    reverse_storage_ϵ[1] = zero_ϵ
+
+    for k in 2:length(nd)
+        @inbounds nod = nd[k]
+        if nod.nodetype == VALUE || nod.nodetype == LOGIC || nod.nodetype == COMPARISON || nod.nodetype == PARAMETER
+            continue
+        end
+        # compute the value of reverse_storage[k]
+        @inbounds parentval = reverse_storage[nod.parent]
+        @inbounds parentval_ϵ = reverse_storage_ϵ[nod.parent]
+        @inbounds partial = partials_storage[k]
+        @inbounds partial_ϵ = partials_storage_ϵ[k]
+        #reverse_storage_ϵ[k] = parentval*partial_ϵ + partial*parentval_ϵ
+        reverse_storage_ϵ[k] = ForwardDiff._mul_partials(partial_ϵ,parentval_ϵ,parentval,partial)
+
+        if nod.nodetype == VARIABLE
+            @inbounds output_ϵ[nod.index] += reverse_storage_ϵ[k]
+        elseif nod.nodetype == SUBEXPRESSION
+            @inbounds subexpression_output_ϵ[nod.index] += reverse_storage_ϵ[k]
+        end
+    end
+    #@show storage
+
+    nothing
+
+end
+
+export reverse_eval_ϵ
 
 
 # Hessian-matrix products
