@@ -21,6 +21,7 @@ function forward_eval{T}(storage::Vector{T},partials_storage::Vector{T},nd::Vect
     for k in length(nd):-1:1
         # compute the value of node k
         @inbounds nod = nd[k]
+        partials_storage[k] = zero(T)
         if nod.nodetype == VARIABLE
             @inbounds storage[k] = x_values[nod.index]
         elseif nod.nodetype == VALUE
@@ -39,7 +40,7 @@ function forward_eval{T}(storage::Vector{T},partials_storage::Vector{T},nd::Vect
                 # sum over children
                 for c_idx in children_idx
                     @inbounds ix = children_arr[c_idx]
-                    @inbounds partials_storage[ix] = 1.0
+                    @inbounds partials_storage[ix] = one(T)
                     @inbounds tmp_sum += storage[ix]
                 end
                 storage[k] = tmp_sum
@@ -50,15 +51,15 @@ function forward_eval{T}(storage::Vector{T},partials_storage::Vector{T},nd::Vect
                 @inbounds ix2 = children_arr[child1+1]
                 @inbounds tmp_sub = storage[ix1]
                 @inbounds tmp_sub -= storage[ix2]
-                @inbounds partials_storage[ix1] = 1.0
-                @inbounds partials_storage[ix2] = -1.0
+                @inbounds partials_storage[ix1] = one(T)
+                @inbounds partials_storage[ix2] = -one(T)
                 storage[k] = tmp_sub
             elseif op == 3 # :*
                 tmp_prod = one(T)
                 for c_idx in children_idx
                     @inbounds tmp_prod *= storage[children_arr[c_idx]]
                 end
-                if tmp_prod == 0.0 # inefficient
+                if tmp_prod == zero(T) # inefficient
                     for c_idx in children_idx
                         prod_others = one(T)
                         for c_idx2 in children_idx
@@ -170,23 +171,30 @@ end
 
 export forward_eval
 
+@inline gradnum(x,ϵval) = ForwardDiff.GradientNumber(x,ϵval.data)
+
 # Evaluate directional derivatives of an expression tree.
 # This is equivalent to evaluating the expression tree using DualNumbers or ForwardDiff,
 # but instead we keep the storage for the epsilon components separate so that we don't
 # need to recompute the real components.
+# Computes partials_storage_ϵ as well
 # We assume that forward_eval has already been called.
-function forward_eval_dual{T,N}(storage::Vector{T},storage_ϵ::Vector{ForwardDiff.PartialsTup{T,N}},nd::Vector{NodeData},adj,x_values_ϵ::Vector{ForwardDiff.PartialsTup{T,N}},subexpression_values_ϵ)
+function forward_eval_ϵ{N,T}(storage::Vector{T},storage_ϵ::Vector{ForwardDiff.PartialsTup{N,T}},partials_storage::Vector{T},partials_storage_ϵ::Vector{ForwardDiff.PartialsTup{N,T}},nd::Vector{NodeData},adj,x_values_ϵ,subexpression_values_ϵ)
 
-    @assert length(storage) >= length(nd)
     @assert length(storage_ϵ) >= length(nd)
+    @assert length(partials_storage_ϵ) >= length(nd)
 
-    zero_ϵ = zero_partials(eltype(storage_ϵ))
+    zero_ϵ = ForwardDiff.zero_partials(NTuple{N,T},N)
+
+    # nd is already in order such that parents always appear before children
+    # so a backwards pass through nd is a forward pass through the tree
 
     children_arr = rowvals(adj)
 
     for k in length(nd):-1:1
         # compute the value of node k
         @inbounds nod = nd[k]
+        partials_storage_ϵ[k] = zero_ϵ
         if nod.nodetype == VARIABLE
             @inbounds storage_ϵ[k] = x_values_ϵ[nod.index]
         elseif nod.nodetype == VALUE
@@ -195,80 +203,93 @@ function forward_eval_dual{T,N}(storage::Vector{T},storage_ϵ::Vector{ForwardDif
             @inbounds storage_ϵ[k] = subexpression_values_ϵ[nod.index]
         elseif nod.nodetype == PARAMETER
             @inbounds storage_ϵ[k] = zero_ϵ
-        elseif nod.nodetype == CALL
-            op = nod.index
+        else
+            ϵtmp = zero_ϵ
             @inbounds children_idx = nzrange(adj,k)
-            #@show children_idx
-            n_children = length(children_idx)
-            if op == 1 # :+
-                tmp_sum = zero_ϵ
-                # sum over children
-                for c_idx in children_idx
-                    @inbounds tmp_sum += storage_ϵ[children_arr[c_idx]]
-                end
-                storage_ϵ[k] = tmp_sum
-            elseif op == 2 # :-
-                child1 = first(children_idx)
-                @inbounds tmp_sub = storage_ϵ[children_arr[child1]]
-                @assert n_children == 2
-                @inbounds tmp_sub -= storage_ϵ[children_arr[child1+1]]
-                storage_ϵ[k] = tmp_sub
-            elseif op == 3 # :*
-                # Not much to be saved by skipping multiplication of real parts
-                tmp_prod = one(GradientNumber{N,T,NTuple{N,T}})
-                for c_idx in children_idx
-                    @inbounds ix = children_arr[c_idx]
-                    @inbounds gnum = GradientNumber(storage[ix], storage_ϵ[ix])
-                    @inbounds tmp_prod *= gnum
-                end
-                storage_ϵ[k] = grad(tmp_prod)
-            elseif op == 4 # :^
-                @assert n_children == 2
-                idx1 = first(children_idx)
-                idx2 = last(children_idx)
-                @inbounds base = storage[children_arr[idx1]]
-                @inbounds base_ϵ = storage_ϵ[children_arr[idx1]]
-                @inbounds exponent = storage[children_arr[idx2]]
-                @inbounds exponent_ϵ = storage[children_arr[idx2]]
-                # lazy approach for now
-                storage_ϵ[k] = grad(pow(GradientNumber(base,base_ϵ),GradientNumber(exponent,exponent_ϵ)))
-            elseif op == 5 # :/
-                @assert n_children == 2
-                idx1 = first(children_idx)
-                idx2 = last(children_idx)
-                @inbounds numerator = storage[children_arr[idx1]]
-                @inbounds numerator_ϵ = storage_ϵ[children_arr[idx1]]
-                @inbounds denominator = storage[children_arr[idx2]]
-                @inbounds denominator_ϵ = storage_ϵ[children_arr[idx2]]
-                storage_ϵ[k] = grad(GradientNumber(numerator,numerator_ϵ)/GradientNumbers(denominator,denominator_ϵ))
-            elseif op == 6 # ifelse
-                @assert n_children == 3
-                idx1 = first(children_idx)
-                @inbounds condition = storage[children_arr[idx1]]
-                @inbounds lhs = storage_ϵ[children_arr[idx1+1]]
-                @inbounds rhs = storage_ϵ[children_arr[idx1+2]]
-                storage_ϵ[k] = ifelse(condition == 1, lhs, rhs)
-            else
-                error("Unsupported operation $(operators[op])")
+            for c_idx in children_idx
+                ix = children_arr[c_idx]
+                ϵtmp += storage_ϵ[ix]*partials_storage[ix]
             end
-        elseif nod.nodetype == CALLUNIVAR # univariate function
-            op = nod.index
-            @inbounds child_idx = children_arr[adj.colptr[k]]
-            #@assert child_idx == children_arr[first(nzrange(adj,k))]
-            child_val = storage[child_idx]
-            @inbounds storage[k] = eval_univariate(op, child_val)
-        elseif nod.nodetype == COMPARISON
-            # nothing to do
-        elseif nod.nodetype == LOGIC
-            # nothing to do
+            storage_ϵ[k] = ϵtmp
+
+            if nod.nodetype == CALL
+                op = nod.index
+                n_children = length(children_idx)
+                if op == 3 # :*
+                    # Lazy approach for now
+                    tmp_prod = one(ForwardDiff.GradientNumber{N,T,NTuple{N,T}})
+                    for c_idx in children_idx
+                        ix = children_arr[c_idx]
+                        gnum = gradnum(storage[ix],storage_ϵ[ix])
+                        tmp_prod *= gnum
+                    end
+                    if tmp_prod == zero(tmp_prod) # inefficient
+                        for c_idx in children_idx
+                            prod_others = one(ForwardDiff.GradientNumber{N,T,NTuple{N,T}})
+                            for c_idx2 in children_idx
+                                (c_idx == c_idx2) && continue
+                                ix = children_arr[c_idx2]
+                                gnum = gradnum(storage[ix],storage_ϵ[ix])
+                                prod_others *= gnum
+                            end
+                            partials_storage_ϵ[children_arr[c_idx]] = ForwardDiff.partials(prod_others)
+                        end
+                    else
+                        for c_idx in children_idx
+                            ix = children_arr[c_idx]
+                            prod_others = tmp_prod/gradnum(storage[ix],storage_ϵ[ix])
+                            partials_storage_ϵ[ix] = ForwardDiff.partials(prod_others)
+                        end
+                    end
+                elseif op == 4 # :^
+                    @assert n_children == 2
+                    idx1 = first(children_idx)
+                    idx2 = last(children_idx)
+                    @inbounds ix1 = children_arr[idx1]
+                    @inbounds ix2 = children_arr[idx2]
+                    @inbounds base = storage[ix1]
+                    @inbounds base_ϵ = storage_ϵ[ix1]
+                    @inbounds exponent = storage[ix2]
+                    @inbounds exponent_ϵ = storage_ϵ[ix2]
+                    base_gnum = gradnum(base,base_ϵ)
+                    exponent_gnum = gradnum(exponent,exponent_ϵ)
+                    if exponent == 2
+                        partials_storage_ϵ[ix1] = 2*base_ϵ
+                    else
+                        partials_storage_ϵ[ix1] = ForwardDiff.partials(exponent_gnum*pow(base_gnum,exponent_gnum-1))
+                    end
+                    result_gnum = gradnum(storage[k],storage_ϵ[k])
+                    partials_storage_ϵ[ix2] = ForwardDiff.partials(result_gnum*log(base_gnum))
+                elseif op == 5 # :/
+                    @assert n_children == 2
+                    idx1 = first(children_idx)
+                    idx2 = last(children_idx)
+                    @inbounds ix1 = children_arr[idx1]
+                    @inbounds ix2 = children_arr[idx2]
+                    @inbounds numerator = storage[ix1]
+                    @inbounds numerator_ϵ = storage_ϵ[ix1]
+                    @inbounds denominator = storage[ix2]
+                    @inbounds denominator_ϵ = storage_ϵ[ix2]
+                    recip_denominator = 1/gradnum(denominator,denominator_ϵ)
+                    partials_storage_ϵ[ix1] = ForwardDiff.partials(recip_denominator)
+                    partials_storage_ϵ[ix2] = ForwardDiff.partials(-gradnum(numerator,numerator_ϵ)*recip_denominator*recip_denominator)
+                end
+            elseif nod.nodetype == CALLUNIVAR # univariate function
+                op = nod.index
+                @inbounds child_idx = children_arr[adj.colptr[k]]
+                child_val = storage[child_idx]
+                fprimeprime = eval_univariate_2nd_deriv(op, child_val,storage[k])
+                partials_storage_ϵ[child_idx] = fprimeprime*storage_ϵ[child_idx]
+            end
         end
 
     end
-    #@show storage
 
-    return storage[1]
+    return storage_ϵ[1]
 
 end
+
+export forward_eval_ϵ
 
 
 switchblock = Expr(:block)
@@ -281,5 +302,27 @@ end
 switchexpr = Expr(:macrocall, Expr(:.,:Lazy,quot(symbol("@switch"))), :operator_id,switchblock)
 
 @eval @inline function eval_univariate{T}(operator_id,x::T)
+    $switchexpr
+end
+
+# TODO: optimize sin/cos/exp
+switchblock = Expr(:block)
+for i = 1:length(univariate_operators)
+    op = univariate_operators[i]
+    if op == :asec || op == :acsc || op == :asecd || op == :acscd || op == :acsch || op == :trigamma
+        # there's an abs in the derivative that Calculus can't symbolically differentiate
+        continue
+    end
+    if i in 1:3 # :+, :-, :abs
+        deriv_expr = :(zero(T))
+    else
+        deriv_expr = Calculus.differentiate(univariate_operator_deriv[i],:x)
+    end
+	ex = :(return $deriv_expr::T)
+    push!(switchblock.args,i,ex)
+end
+switchexpr = Expr(:macrocall, Expr(:.,:Lazy,quot(symbol("@switch"))), :operator_id,switchblock)
+
+@eval @inline function eval_univariate_2nd_deriv{T}(operator_id,x::T,fval::T)
     $switchexpr
 end

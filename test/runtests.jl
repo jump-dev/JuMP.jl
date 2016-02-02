@@ -222,6 +222,42 @@ R = [0.0 1.0; 1.0 0.0]
 hessmat_eval!(R, reverse_storage, forward_storage, partials_storage, nd, adj, const_values, x_values, reverse_output_vector, forward_input_vector, local_to_global_idx)
 @test R == [2.0 0.0; 1.0 2.0]
 
+using ForwardDiff
+
+# dual forward test
+function dualforward(ex, x)
+    nd,const_values = expr_to_nodedata(ex)
+    adj = adjmat(nd)
+    forward_storage = zeros(length(nd))
+    partials_storage = zeros(length(nd))
+    reverse_storage = zeros(length(nd))
+
+    fval = forward_eval(forward_storage,partials_storage,nd,adj,const_values,[],x,[])
+    grad = zeros(length(x))
+    reverse_eval(grad,reverse_storage,storage,partials_storage,nd,adj,[],1.0)
+
+    zero_ϵ = ForwardDiff.zero_partials(NTuple{1,Float64},1)
+    forward_storage_ϵ = fill(zero_ϵ,length(nd))
+    partials_storage_ϵ = fill(zero_ϵ,length(nd))
+    x_values_ϵ = fill(ForwardDiff.Partials((1.0,)),length(x))
+    fval_ϵ = forward_eval_ϵ(forward_storage,forward_storage_ϵ,partials_storage,partials_storage_ϵ,nd,adj,x_values_ϵ,[])
+    @test_approx_eq fval_ϵ.data[1] dot(grad,ones(length(x)))
+
+    # compare with running dual numbers
+    forward_dual_storage = zeros(Dual{Float64},length(nd))
+    partials_dual_storage = zeros(Dual{Float64},length(nd))
+    x_dual = [Dual(x[i],1.0) for i in 1:length(x)]
+    fval = forward_eval(forward_dual_storage,partials_dual_storage,nd,adj,const_values,[],x_dual,[])
+    for k in 1:length(nd)
+        @test_approx_eq epsilon(forward_dual_storage[k]) forward_storage_ϵ[k].data[1]
+    end
+    for k in 1:length(nd)
+        @test_approx_eq epsilon(partials_dual_storage[k]) partials_storage_ϵ[k].data[1]
+    end
+end
+
+dualforward(:(sin(x[1]^2) + cos(x[2]*4)/5-2.0),[1.0,2.0])
+
 
 include("test_coloring.jl")
 #include("test_jump.jl")
