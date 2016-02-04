@@ -466,3 +466,13 @@ context("With solver $(typeof(solver))") do
         @fact abs(object - exact) --> roughly(0, 1e-5)
     end; end
 end; end; end
+
+facts("[sdp] Can't mix SDP and QP (#665)") do
+for solver in sdp_solvers
+context("With solver $(typeof(solver))") do
+    model = Model(solver=solver)
+    @defVar(model, Q[1:2, 1:2], SDP)
+    @addConstraint(model, Q[1,1] - 1 == Q[2,2])
+    @setObjective(model, :Min, Q[1,1] * Q[1,1])
+    @fact_throws solve(model)
+end; end; end

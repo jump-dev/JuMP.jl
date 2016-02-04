@@ -259,6 +259,8 @@ function buildInternalModel(m::Model, traits=ProblemTraits(m);
             error("Relaxations of conic problem with semi-integer/semicontinuous variables are not currently supported.")
         end
 
+        traits.qp && error("JuMP does not support quadratic objectives for conic problems")
+
         # If the problem is conic then use only the objective
         # coefficients from prepProblemBounds
         f,_,_ = prepProblemBounds(m)
