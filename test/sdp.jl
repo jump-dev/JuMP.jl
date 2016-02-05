@@ -473,7 +473,7 @@ context("With solver $(typeof(solver))") do
     model = Model(solver=solver)
     @defVar(model, Q[1:2, 1:2], SDP)
     @addConstraint(model, Q[1,1] - 1 == Q[2,2])
-    @setObjective(model, :Min, Q[1,1] * Q[1,1])
+    @setObjective(model, Min, Q[1,1] * Q[1,1])
     @fact_throws solve(model)
 end; end; end
 
@@ -486,8 +486,8 @@ context("With solver $(typeof(solver))") do
     @defVar(model, objective)
     T = [1 Q[1,1]; Q[1,1] objective]
     @addSDPConstraint(model, T ⪰ 0)
-    @setObjective(model, :Min, objective)
+    @setObjective(model, Min, objective)
     @fact solve(model) --> :Optimal
-    @fact getValue(Q) --> roughly([1 0;0 1], 1e-3)
+    @fact getValue(Q) --> roughly([1 0;0 0], 1e-3)
     @fact getObjectiveValue(model) --> roughly(1, TOL)
 end; end; end
