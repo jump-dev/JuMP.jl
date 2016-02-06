@@ -50,7 +50,7 @@ export reverse_eval
 
 # Compute directional derivatives of the reverse pass, goes with forward_eval_ϵ
 # to compute hessian-vector products.
-function reverse_eval_ϵ{N,T}(output_ϵ::Vector{ForwardDiff.PartialsTup{N,T}},reverse_storage::Vector{T},reverse_storage_ϵ,partials_storage::Vector{T},partials_storage_ϵ,nd::Vector{NodeData},adj,subexpression_output_ϵ,scale_value::T)
+function reverse_eval_ϵ{N,T}(output_ϵ::Vector{ForwardDiff.PartialsTup{N,T}},reverse_storage::Vector{T},reverse_storage_ϵ,partials_storage::Vector{T},partials_storage_ϵ,nd::Vector{NodeData},adj,subexpression_output_ϵ,scale_value_ϵ::ForwardDiff.PartialsTup{N,T})
 
     @assert length(reverse_storage_ϵ) >= length(nd)
     @assert length(partials_storage_ϵ) >= length(nd)
@@ -59,9 +59,7 @@ function reverse_eval_ϵ{N,T}(output_ϵ::Vector{ForwardDiff.PartialsTup{N,T}},re
         return # trivial case
     end
 
-    zero_ϵ = ForwardDiff.zero_partials(NTuple{N,T},N)
-
-    reverse_storage_ϵ[1] = zero_ϵ
+    reverse_storage_ϵ[1] = scale_value_ϵ
 
     for k in 2:length(nd)
         @inbounds nod = nd[k]
