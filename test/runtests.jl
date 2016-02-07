@@ -232,7 +232,7 @@ function dualforward(ex, x)
     reverse_storage_ϵ = fill(zero_ϵ,length(nd))
     output_ϵ = fill(zero_ϵ,length(x))
     fval_ϵ = forward_eval_ϵ(forward_storage,forward_storage_ϵ,partials_storage,partials_storage_ϵ,nd,adj,x_values_ϵ,[])
-    reverse_eval_ϵ(output_ϵ,reverse_storage,reverse_storage_ϵ,partials_storage,partials_storage_ϵ,nd,adj,[],2.0,zero_ϵ)
+    reverse_eval_ϵ(output_ϵ,reverse_storage,reverse_storage_ϵ,partials_storage,partials_storage_ϵ,nd,adj,[],[],2.0,zero_ϵ)
     @test_approx_eq fval_ϵ.data[1] dot(grad,ones(length(x)))
 
     # compare with running dual numbers

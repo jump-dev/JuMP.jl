@@ -56,13 +56,18 @@ export reverse_extract
 
 # Compute directional derivatives of the reverse pass, goes with forward_eval_ϵ
 # to compute hessian-vector products.
-function reverse_eval_ϵ{N,T}(output_ϵ::Vector{ForwardDiff.PartialsTup{N,T}},reverse_storage::Vector{T},reverse_storage_ϵ,partials_storage::Vector{T},partials_storage_ϵ,nd::Vector{NodeData},adj,subexpression_output_ϵ,scale_value::T,scale_value_ϵ::ForwardDiff.PartialsTup{N,T})
+function reverse_eval_ϵ{N,T}(output_ϵ::DenseVector{ForwardDiff.PartialsTup{N,T}},reverse_storage::Vector{T},reverse_storage_ϵ,partials_storage::Vector{T},partials_storage_ϵ,nd::Vector{NodeData},adj,subexpression_output,subexpression_output_ϵ,scale_value::T,scale_value_ϵ::ForwardDiff.PartialsTup{N,T})
 
     @assert length(reverse_storage_ϵ) >= length(nd)
     @assert length(partials_storage_ϵ) >= length(nd)
 
-    if nd[1].nodetype == VARIABLE || nd[1].nodetype == SUBEXPRESSION
-        return # trivial case
+    if nd[1].nodetype == VARIABLE
+        @inbounds output_ϵ[nd[1].index] += scale_value_ϵ
+        return
+    elseif nd[1].nodetype == SUBEXPRESSION
+        @inbounds subexpression_output[nd[1].index] += scale_value*reverse_storage[1]
+        @inbounds subexpression_output_ϵ[nd[1].index] += scale_value_ϵ
+        return
     end
 
     reverse_storage_ϵ[1] = scale_value_ϵ
@@ -83,6 +88,7 @@ function reverse_eval_ϵ{N,T}(output_ϵ::Vector{ForwardDiff.PartialsTup{N,T}},re
         if nod.nodetype == VARIABLE
             @inbounds output_ϵ[nod.index] += reverse_storage_ϵ[k]
         elseif nod.nodetype == SUBEXPRESSION
+            @inbounds subexpression_output[nod.index] += scale_value*reverse_storage[k]
             @inbounds subexpression_output_ϵ[nod.index] += reverse_storage_ϵ[k]
         end
     end

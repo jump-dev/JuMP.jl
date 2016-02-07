@@ -179,7 +179,7 @@ export forward_eval
 # need to recompute the real components.
 # Computes partials_storage_ϵ as well
 # We assume that forward_eval has already been called.
-function forward_eval_ϵ{N,T}(storage::Vector{T},storage_ϵ::Vector{ForwardDiff.PartialsTup{N,T}},partials_storage::Vector{T},partials_storage_ϵ::Vector{ForwardDiff.PartialsTup{N,T}},nd::Vector{NodeData},adj,x_values_ϵ,subexpression_values_ϵ)
+function forward_eval_ϵ{N,T}(storage::Vector{T},storage_ϵ::DenseVector{ForwardDiff.PartialsTup{N,T}},partials_storage::Vector{T},partials_storage_ϵ::DenseVector{ForwardDiff.PartialsTup{N,T}},nd::Vector{NodeData},adj,x_values_ϵ,subexpression_values_ϵ)
 
     @assert length(storage_ϵ) >= length(nd)
     @assert length(partials_storage_ϵ) >= length(nd)
@@ -208,6 +208,10 @@ function forward_eval_ϵ{N,T}(storage::Vector{T},storage_ϵ::Vector{ForwardDiff.
             @inbounds children_idx = nzrange(adj,k)
             for c_idx in children_idx
                 ix = children_arr[c_idx]
+                @inbounds partial = partials_storage[ix]
+                if isnan(partials_storage[ix]) && storage_ϵ[ix] == zero_ϵ
+                    continue
+                end
                 ϵtmp += storage_ϵ[ix]*partials_storage[ix]
             end
             storage_ϵ[k] = ϵtmp
