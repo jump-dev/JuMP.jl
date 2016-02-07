@@ -559,6 +559,17 @@ facts("[nonlinear] Hessians through MPB") do
     # Convert from lower triangular
     hess_sparse = hess_raw + hess_raw' - sparse(diagm(diag(hess_raw)))
     @fact hess_sparse --> roughly([0.0 1.0 0.0; 1.0 0.0 0.0; 0.0 0.0 2.0])
+
+    # make sure we don't get NaNs in this case
+    @setNLObjective(m, Min, a * b + 3*c^2)
+    d = JuMPNLPEvaluator(m)
+    MathProgBase.initialize(d, [:Hess])
+    setValue(c, -1.0)
+    V = zeros(length(I))
+    MathProgBase.eval_hesslag(d, V, m.colVal, 1.0, Float64[])
+    hess_raw = sparse(I,J,V)
+    hess_sparse = hess_raw + hess_raw' - sparse(diagm(diag(hess_raw)))
+    @fact hess_sparse --> roughly([0.0 1.0 0.0; 1.0 0.0 0.0; 0.0 0.0 6.0])
 end
 
 facts("[nonlinear] Hess-vec through MPB") do

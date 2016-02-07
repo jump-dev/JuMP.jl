@@ -47,3 +47,42 @@ function Base.resize!(v::IndexedVector, n::Integer)
         fill!(v.empty,true)
     end
 end
+
+# lightweight unsafe view for vectors
+# it seems that the only way to avoid triggering
+# allocations is to have only bitstype fields, so
+# we store a pointer.
+immutable VectorView{T} <: DenseVector{T}
+    offset::Int
+    len::Int
+    ptr::Ptr{T}
+end
+
+Base.getindex(v::VectorView,idx::Integer) = unsafe_load(v.ptr, idx+v.offset)
+Base.setindex!(v::VectorView,value,idx::Integer) = unsafe_store!(v.ptr,value,idx+v.offset)
+function Base.setindex!{T}(v::VectorView{T},value::T,idx::Vector{Int})
+    for i in idx
+        v[i] = value
+    end
+end
+Base.length(v::VectorView) = v.len
+function Base.fill!{T}(v::VectorView{T},value)
+    val = convert(T,value)
+    for i in 1:length(v)
+        v[i] = val
+    end
+    nothing
+end
+function Base.scale!{T<:Number}(v::VectorView{T},value::T)
+    for i in 1:length(v)
+        v[i] *= value
+    end
+    nothing
+end
+function reinterpret_unsafe{T,R}(::Type{T},x::Vector{R})
+    # how many T's fit into x?
+    @assert isbits(T) && isbits(R)
+    len = length(x)*sizeof(R)
+    p = reinterpret(Ptr{T},pointer(x))
+    return VectorView(0,div(len,sizeof(T)),p)
+end

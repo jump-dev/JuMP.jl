@@ -678,6 +678,7 @@ function MathProgBase.eval_hesslag(
         end
     end
 
+    fill!(d.input_ϵ,0.0)
     recovery_tmp_storage = d.output_ϵ
     nzcount -= 1
 
@@ -711,18 +712,14 @@ function hessian_slice(d, ex, x, H, scale, nzcount, recovery_tmp_storage)
 
     zero_ϵ = ForwardDiff.zero_partials(NTuple{1,Float64},1)
 
-    input_ϵ = reinterpret(ForwardDiff.PartialsTup{1,Float64}, d.input_ϵ)
-    output_ϵ = reinterpret(ForwardDiff.PartialsTup{1,Float64}, d.output_ϵ)
-    fill!(input_ϵ,zero_ϵ)
-    fill!(output_ϵ,zero_ϵ)
+    input_ϵ = reinterpret_unsafe(ForwardDiff.PartialsTup{1,Float64}, d.input_ϵ)
+    output_ϵ = reinterpret_unsafe(ForwardDiff.PartialsTup{1,Float64}, d.output_ϵ)
 
-    subexpr_forward_values_ϵ = reinterpret(ForwardDiff.PartialsTup{1,Float64},d.subexpression_forward_values_ϵ)
-    subexpr_reverse_values_ϵ = reinterpret(ForwardDiff.PartialsTup{1,Float64},d.subexpression_reverse_values_ϵ)
-    forward_storage_ϵ = reinterpret(ForwardDiff.PartialsTup{1,Float64},d.forward_storage_ϵ)
-    reverse_storage_ϵ = reinterpret(ForwardDiff.PartialsTup{1,Float64},d.reverse_storage_ϵ)
-    partials_storage_ϵ = reinterpret(ForwardDiff.PartialsTup{1,Float64},d.partials_storage_ϵ)
-    fill!(subexpr_reverse_values_ϵ,zero_ϵ)
-    fill!(reverse_storage_ϵ,zero_ϵ)
+    subexpr_forward_values_ϵ = reinterpret_unsafe(ForwardDiff.PartialsTup{1,Float64},d.subexpression_forward_values_ϵ)
+    subexpr_reverse_values_ϵ = reinterpret_unsafe(ForwardDiff.PartialsTup{1,Float64},d.subexpression_reverse_values_ϵ)
+    forward_storage_ϵ = reinterpret_unsafe(ForwardDiff.PartialsTup{1,Float64},d.forward_storage_ϵ)
+    reverse_storage_ϵ = reinterpret_unsafe(ForwardDiff.PartialsTup{1,Float64},d.reverse_storage_ϵ)
+    partials_storage_ϵ = reinterpret_unsafe(ForwardDiff.PartialsTup{1,Float64},d.partials_storage_ϵ)
 
 
     # compute hessian-vector products
@@ -742,8 +739,8 @@ function hessian_slice(d, ex, x, H, scale, nzcount, recovery_tmp_storage)
         # do a forward pass
         for expridx in ex.dependent_subexpressions
             subexpr = d.subexpressions[expridx]
-            sub_forward_storage_ϵ = reinterpret(ForwardDiff.PartialsTup{1,Float64},subexpr.forward_storage_ϵ)
-            sub_partials_storage_ϵ = reinterpret(ForwardDiff.PartialsTup{1,Float64},subexpr.partials_storage_ϵ)
+            sub_forward_storage_ϵ = reinterpret_unsafe(ForwardDiff.PartialsTup{1,Float64},subexpr.forward_storage_ϵ)
+            sub_partials_storage_ϵ = reinterpret_unsafe(ForwardDiff.PartialsTup{1,Float64},subexpr.partials_storage_ϵ)
             subexpr_forward_values_ϵ[expridx] = forward_eval_ϵ(subexpr.forward_storage,sub_forward_storage_ϵ,subexpr.partials_storage,sub_partials_storage_ϵ, subexpr.nd, subexpr.adj, input_ϵ, subexpr_forward_values_ϵ)
         end
         forward_eval_ϵ(ex.forward_storage,forward_storage_ϵ,ex.partials_storage, partials_storage_ϵ,ex.nd,ex.adj,input_ϵ, subexpr_forward_values_ϵ)
@@ -756,8 +753,8 @@ function hessian_slice(d, ex, x, H, scale, nzcount, recovery_tmp_storage)
         for i in length(ex.dependent_subexpressions):-1:1
             expridx = ex.dependent_subexpressions[i]
             subexpr = d.subexpressions[expridx]
-            sub_reverse_storage_ϵ = reinterpret(ForwardDiff.PartialsTup{1,Float64},subexpr.reverse_storage_ϵ)
-            sub_partials_storage_ϵ = reinterpret(ForwardDiff.PartialsTup{1,Float64},subexpr.partials_storage_ϵ)
+            sub_reverse_storage_ϵ = reinterpret_unsafe(ForwardDiff.PartialsTup{1,Float64},subexpr.reverse_storage_ϵ)
+            sub_partials_storage_ϵ = reinterpret_unsafe(ForwardDiff.PartialsTup{1,Float64},subexpr.partials_storage_ϵ)
             reverse_eval_ϵ(output_ϵ, subexpr.reverse_storage, sub_reverse_storage_ϵ,subexpr.partials_storage,sub_partials_storage_ϵ,subexpr.nd,subexpr.adj,d.subexpression_reverse_values,subexpr_reverse_values_ϵ,d.subexpression_reverse_values[expridx],subexpr_reverse_values_ϵ[expridx])
         end
 
@@ -766,6 +763,7 @@ function hessian_slice(d, ex, x, H, scale, nzcount, recovery_tmp_storage)
         for r in 1:length(local_to_global_idx)
             idx = local_to_global_idx[r]
             R[r,k] = output_ϵ[idx].data[1]
+            @inbounds input_ϵ[idx] = ForwardDiff.Partials((0.0,))
         end
 
     end
@@ -773,7 +771,8 @@ function hessian_slice(d, ex, x, H, scale, nzcount, recovery_tmp_storage)
     #hessmat_eval!(seed, d.reverse_storage_hess, d.forward_storage_hess, ex.nd, ex.adj, ex.const_values, x, d.reverse_output_vector, d.forward_input_vector, ex.rinfo.local_indices)
     # Output is in R, now recover
 
-    output_slice = sub(H, (nzcount+1):(nzcount+nzthis))
+    #output_slice = sub(H, (nzcount+1):(nzcount+nzthis))
+    output_slice = VectorView(nzcount, nzthis, pointer(H))
     Coloring.recover_from_matmat!(output_slice, R, ex.rinfo, recovery_tmp_storage)
     scale!(output_slice, scale)
     return nzthis
