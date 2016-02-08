@@ -1,6 +1,7 @@
 module ReverseDiffSparse
 
 using Base.Meta
+using ForwardDiff
 import DualNumbers: Dual, epsilon
 import Calculus
 import Lazy
