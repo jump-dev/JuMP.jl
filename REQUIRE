@@ -5,4 +5,4 @@ DataStructures
 MathProgBase
 DualNumbers
 NaNMath
-ForwardDiff
+ForwardDiff 0.1 0.2
