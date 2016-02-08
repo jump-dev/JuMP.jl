@@ -319,6 +319,10 @@ for i = 1:length(univariate_operators)
     end
     if i in 1:3 # :+, :-, :abs
         deriv_expr = :(zero(T))
+    elseif op == :sin || op == :cos
+        deriv_expr = :(-fval)
+    elseif op == :exp
+        deriv_expr = :(fval)
     else
         deriv_expr = Calculus.differentiate(univariate_operator_deriv[i],:x)
     end
