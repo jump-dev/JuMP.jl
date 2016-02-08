@@ -118,6 +118,7 @@ type JuMPNLPEvaluator <: MathProgBase.AbstractNLPEvaluator
     # hessian sparsity pattern
     hess_I::Vector{Int}
     hess_J::Vector{Int}
+    max_chunk::Int # chunk size for which we've allocated storage
     # timers
     eval_f_timer::Float64
     eval_g_timer::Float64
@@ -183,7 +184,7 @@ function FunctionStorage(nd::Vector{NodeData}, const_values,numVar, want_hess::B
 
 end
 
-function SubexpressionStorage(nd::Vector{NodeData}, const_values,numVar, want_hess_storage::Bool,fixed_variables,subexpression_linearity)
+function SubexpressionStorage(nd::Vector{NodeData}, const_values,numVar, fixed_variables,subexpression_linearity)
 
     adj = adjmat(nd)
     forward_storage = zeros(length(nd))
@@ -191,19 +192,9 @@ function SubexpressionStorage(nd::Vector{NodeData}, const_values,numVar, want_he
     reverse_storage = zeros(length(nd))
     linearity = classify_linearity(nd, adj, subexpression_linearity, fixed_variables)
 
+    empty_arr = Array(Float64,0)
 
-    if want_hess_storage # for Hess or HessVec
-        forward_storage_ϵ = zeros(Float64,length(nd))
-        partials_storage_ϵ = zeros(Float64,length(nd))
-        reverse_storage_ϵ = zeros(Float64,length(nd))
-    else
-        forward_storage_ϵ = Array(Float64,0)
-        reverse_storage_ϵ = Array(Float64,0)
-        partials_storage_ϵ = Array(Float64,0)
-    end
-
-
-    return SubexpressionStorage(nd, adj, const_values, forward_storage, partials_storage, reverse_storage, forward_storage_ϵ, partials_storage_ϵ, reverse_storage_ϵ, linearity[1])
+    return SubexpressionStorage(nd, adj, const_values, forward_storage, partials_storage, reverse_storage, empty_arr, empty_arr, empty_arr, linearity[1])
 
 end
 
@@ -275,7 +266,7 @@ function MathProgBase.initialize(d::JuMPNLPEvaluator, requested_features::Vector
             nd_new = nldata.nlexpr[k].nd
             forward_value = NaN
         end
-        d.subexpressions[k] = SubexpressionStorage(nd_new, nldata.nlexpr[k].const_values, numVar, want_hess_storage, fixed_variables, subexpression_linearity)
+        d.subexpressions[k] = SubexpressionStorage(nd_new, nldata.nlexpr[k].const_values, numVar, fixed_variables, subexpression_linearity)
         subex = d.subexpressions[k]
         d.subexpression_forward_values[k] = forward_value
         subexpression_linearity[k] = subex.linearity
@@ -313,12 +304,15 @@ function MathProgBase.initialize(d::JuMPNLPEvaluator, requested_features::Vector
         end
     end
 
+    max_chunk = 1
+
 
     if d.has_nlobj
         @assert length(d.m.obj.qvars1) == 0 && length(d.m.obj.aff.vars) == 0
         nd = main_expressions[1]
         d.objective = FunctionStorage(nd, nldata.nlobj.const_values, numVar, d.want_hess, subexpr, individual_order[1], subexpression_linearity, subexpression_edgelist, subexpression_variables, fixed_variables)
         max_expr_length = max(max_expr_length, length(d.objective.nd))
+        max_chunk = max(max_chunk, size(d.objective.seed_matrix,2))
     end
 
     for k in 1:length(nldata.nlconstr)
@@ -327,17 +321,26 @@ function MathProgBase.initialize(d::JuMPNLPEvaluator, requested_features::Vector
         nd = main_expressions[idx]
         push!(d.constraints, FunctionStorage(nd, nlconstr.terms.const_values, numVar, d.want_hess, subexpr, individual_order[idx], subexpression_linearity, subexpression_edgelist, subexpression_variables, fixed_variables))
         max_expr_length = max(max_expr_length, length(d.constraints[end].nd))
+        max_chunk = max(max_chunk, size(d.constraints[end].seed_matrix,2))
     end
 
+    max_chunk = min(max_chunk, 10) # 10 is hardcoded upper bound to avoid excess memory allocation
 
     if d.want_hess || want_hess_storage # storage for Hess or HessVec
-        d.input_ϵ = Array(Float64,d.m.numCols)
-        d.output_ϵ = Array(Float64,d.m.numCols)
-        d.forward_storage_ϵ = Array(Float64,max_expr_length)
-        d.partials_storage_ϵ = Array(Float64,max_expr_length)
-        d.reverse_storage_ϵ = Array(Float64,max_expr_length)
-        d.subexpression_forward_values_ϵ = Array(Float64,length(d.subexpressions))
-        d.subexpression_reverse_values_ϵ = Array(Float64,length(d.subexpressions))
+        d.input_ϵ = Array(Float64,max_chunk*d.m.numCols)
+        d.output_ϵ = Array(Float64,max_chunk*d.m.numCols)
+        d.forward_storage_ϵ = Array(Float64,max_chunk*max_expr_length)
+        d.partials_storage_ϵ = Array(Float64,max_chunk*max_expr_length)
+        d.reverse_storage_ϵ = Array(Float64,max_chunk*max_expr_length)
+        d.subexpression_forward_values_ϵ = Array(Float64,max_chunk*length(d.subexpressions))
+        d.subexpression_reverse_values_ϵ = Array(Float64,max_chunk*length(d.subexpressions))
+        for k in d.subexpression_order
+            subex = d.subexpressions[k]
+            subex.forward_storage_ϵ = zeros(Float64,max_chunk*length(subex.nd))
+            subex.partials_storage_ϵ = zeros(Float64,max_chunk*length(subex.nd))
+            subex.reverse_storage_ϵ = zeros(Float64,max_chunk*length(subex.nd))
+        end
+        d.max_chunk = max_chunk
         if d.want_hess
             d.hess_I, d.hess_J = _hesslag_structure(d)
             # JIT warm-up
@@ -692,13 +695,24 @@ function MathProgBase.eval_hesslag(
 
     if d.has_nlobj
         ex = d.objective
-        nzthis = hessian_slice(d, ex, x, H, obj_factor, nzcount, recovery_tmp_storage)
+        chunk = min(size(ex.seed_matrix,2),d.max_chunk)
+        if chunk == 1
+            # skip dynamic dispatch
+            nzthis = hessian_slice(d, ex, x, H, obj_factor, nzcount, recovery_tmp_storage, Val{1})::Int
+        else
+            nzthis = hessian_slice(d, ex, x, H, obj_factor, nzcount, recovery_tmp_storage, Val{chunk})::Int
+        end
         nzcount += nzthis
     end
 
     for i in 1:length(d.constraints)
         ex = d.constraints[i]
-        nzthis = hessian_slice(d, ex, x, H, lambda[i+length(quadconstr)+length(d.m.linconstr)], nzcount, recovery_tmp_storage)
+        chunk = min(size(ex.seed_matrix,2),d.max_chunk)
+        if chunk == 1
+            nzthis = hessian_slice(d, ex, x, H, lambda[i+length(quadconstr)+length(d.m.linconstr)], nzcount, recovery_tmp_storage, Val{1})::Int
+        else
+            nzthis = hessian_slice(d, ex, x, H, lambda[i+length(quadconstr)+length(d.m.linconstr)], nzcount, recovery_tmp_storage, Val{chunk})::Int
+        end
         nzcount += nzthis
     end
 
@@ -707,7 +721,40 @@ function MathProgBase.eval_hesslag(
 
 end
 
-function hessian_slice(d, ex, x, H, scale, nzcount, recovery_tmp_storage)
+function hessian_slice_inner{CHUNK}(d, ex, R, input_ϵ, output_ϵ, ::Type{Val{CHUNK}})
+
+    subexpr_forward_values_ϵ = reinterpret_unsafe(ForwardDiff.PartialsTup{CHUNK,Float64},d.subexpression_forward_values_ϵ)
+    subexpr_reverse_values_ϵ = reinterpret_unsafe(ForwardDiff.PartialsTup{CHUNK,Float64},d.subexpression_reverse_values_ϵ)
+    forward_storage_ϵ = reinterpret_unsafe(ForwardDiff.PartialsTup{CHUNK,Float64},d.forward_storage_ϵ)
+    reverse_storage_ϵ = reinterpret_unsafe(ForwardDiff.PartialsTup{CHUNK,Float64},d.reverse_storage_ϵ)
+    partials_storage_ϵ = reinterpret_unsafe(ForwardDiff.PartialsTup{CHUNK,Float64},d.partials_storage_ϵ)
+    zero_ϵ = ForwardDiff.zero_partials(NTuple{CHUNK,Float64},1)
+
+
+    # do a forward pass
+    for expridx in ex.dependent_subexpressions
+        subexpr = d.subexpressions[expridx]
+        sub_forward_storage_ϵ = reinterpret_unsafe(ForwardDiff.PartialsTup{CHUNK,Float64},subexpr.forward_storage_ϵ)
+        sub_partials_storage_ϵ = reinterpret_unsafe(ForwardDiff.PartialsTup{CHUNK,Float64},subexpr.partials_storage_ϵ)
+        subexpr_forward_values_ϵ[expridx] = forward_eval_ϵ(subexpr.forward_storage,sub_forward_storage_ϵ,subexpr.partials_storage,sub_partials_storage_ϵ, subexpr.nd, subexpr.adj, input_ϵ, subexpr_forward_values_ϵ)
+    end
+    forward_eval_ϵ(ex.forward_storage,forward_storage_ϵ,ex.partials_storage, partials_storage_ϵ,ex.nd,ex.adj,input_ϵ, subexpr_forward_values_ϵ)
+
+    # do a reverse pass
+    subexpr_reverse_values_ϵ[ex.dependent_subexpressions] = zero_ϵ
+    d.subexpression_reverse_values[ex.dependent_subexpressions] = 0.0
+
+    reverse_eval_ϵ(output_ϵ, ex.reverse_storage, reverse_storage_ϵ,ex.partials_storage, partials_storage_ϵ,ex.nd,ex.adj,d.subexpression_reverse_values,subexpr_reverse_values_ϵ, 1.0, zero_ϵ)
+    for i in length(ex.dependent_subexpressions):-1:1
+        expridx = ex.dependent_subexpressions[i]
+        subexpr = d.subexpressions[expridx]
+        sub_reverse_storage_ϵ = reinterpret_unsafe(ForwardDiff.PartialsTup{CHUNK,Float64},subexpr.reverse_storage_ϵ)
+        sub_partials_storage_ϵ = reinterpret_unsafe(ForwardDiff.PartialsTup{CHUNK,Float64},subexpr.partials_storage_ϵ)
+        reverse_eval_ϵ(output_ϵ, subexpr.reverse_storage, sub_reverse_storage_ϵ,subexpr.partials_storage,sub_partials_storage_ϵ,subexpr.nd,subexpr.adj,d.subexpression_reverse_values,subexpr_reverse_values_ϵ,d.subexpression_reverse_values[expridx],subexpr_reverse_values_ϵ[expridx])
+    end
+end
+
+function hessian_slice{CHUNK}(d, ex, x, H, scale, nzcount, recovery_tmp_storage,::Type{Val{CHUNK}})
 
     nzthis = length(ex.hess_I)
     if ex.linearity == LINEAR
@@ -718,65 +765,73 @@ function hessian_slice(d, ex, x, H, scale, nzcount, recovery_tmp_storage)
     Coloring.prepare_seed_matrix!(R,ex.rinfo)
     local_to_global_idx = ex.rinfo.local_indices
 
-    zero_ϵ = ForwardDiff.zero_partials(NTuple{1,Float64},1)
+    zero_ϵ = ForwardDiff.zero_partials(NTuple{CHUNK,Float64},1)
 
-    input_ϵ = reinterpret_unsafe(ForwardDiff.PartialsTup{1,Float64}, d.input_ϵ)
-    output_ϵ = reinterpret_unsafe(ForwardDiff.PartialsTup{1,Float64}, d.output_ϵ)
-
-    subexpr_forward_values_ϵ = reinterpret_unsafe(ForwardDiff.PartialsTup{1,Float64},d.subexpression_forward_values_ϵ)
-    subexpr_reverse_values_ϵ = reinterpret_unsafe(ForwardDiff.PartialsTup{1,Float64},d.subexpression_reverse_values_ϵ)
-    forward_storage_ϵ = reinterpret_unsafe(ForwardDiff.PartialsTup{1,Float64},d.forward_storage_ϵ)
-    reverse_storage_ϵ = reinterpret_unsafe(ForwardDiff.PartialsTup{1,Float64},d.reverse_storage_ϵ)
-    partials_storage_ϵ = reinterpret_unsafe(ForwardDiff.PartialsTup{1,Float64},d.partials_storage_ϵ)
+    input_ϵ_raw = d.input_ϵ
+    output_ϵ_raw = d.output_ϵ
+    input_ϵ = reinterpret_unsafe(ForwardDiff.PartialsTup{CHUNK,Float64}, input_ϵ_raw)
+    output_ϵ = reinterpret_unsafe(ForwardDiff.PartialsTup{CHUNK,Float64}, output_ϵ_raw)
 
 
     # compute hessian-vector products
     num_products = size(R,2) # number of hessian-vector products
+    num_chunks = div(num_products, CHUNK)
     @assert size(R,1) == length(local_to_global_idx)
     numVar = length(x)
 
-    for k in 1:num_products
+    for k in 1:CHUNK:num_products
 
         for r in 1:length(local_to_global_idx)
             # set up directional derivatives
             @inbounds idx = local_to_global_idx[r]
-            @inbounds input_ϵ[idx] = ForwardDiff.Partials((R[r,k],))
+            # load up R[r,k,k+1,...,k+CHUNK-1] into input_ϵ
+            for s in 1:CHUNK
+                input_ϵ_raw[(idx-1)*CHUNK + s] = R[r,k+s-1]
+            end
             @inbounds output_ϵ[idx] = zero_ϵ
         end
 
-        # do a forward pass
-        for expridx in ex.dependent_subexpressions
-            subexpr = d.subexpressions[expridx]
-            sub_forward_storage_ϵ = reinterpret_unsafe(ForwardDiff.PartialsTup{1,Float64},subexpr.forward_storage_ϵ)
-            sub_partials_storage_ϵ = reinterpret_unsafe(ForwardDiff.PartialsTup{1,Float64},subexpr.partials_storage_ϵ)
-            subexpr_forward_values_ϵ[expridx] = forward_eval_ϵ(subexpr.forward_storage,sub_forward_storage_ϵ,subexpr.partials_storage,sub_partials_storage_ϵ, subexpr.nd, subexpr.adj, input_ϵ, subexpr_forward_values_ϵ)
-        end
-        forward_eval_ϵ(ex.forward_storage,forward_storage_ϵ,ex.partials_storage, partials_storage_ϵ,ex.nd,ex.adj,input_ϵ, subexpr_forward_values_ϵ)
-
-        # do a reverse pass
-        subexpr_reverse_values_ϵ[ex.dependent_subexpressions] = zero_ϵ
-        d.subexpression_reverse_values[ex.dependent_subexpressions] = 0.0
-
-        reverse_eval_ϵ(output_ϵ, ex.reverse_storage, reverse_storage_ϵ,ex.partials_storage, partials_storage_ϵ,ex.nd,ex.adj,d.subexpression_reverse_values,subexpr_reverse_values_ϵ, 1.0, zero_ϵ)
-        for i in length(ex.dependent_subexpressions):-1:1
-            expridx = ex.dependent_subexpressions[i]
-            subexpr = d.subexpressions[expridx]
-            sub_reverse_storage_ϵ = reinterpret_unsafe(ForwardDiff.PartialsTup{1,Float64},subexpr.reverse_storage_ϵ)
-            sub_partials_storage_ϵ = reinterpret_unsafe(ForwardDiff.PartialsTup{1,Float64},subexpr.partials_storage_ϵ)
-            reverse_eval_ϵ(output_ϵ, subexpr.reverse_storage, sub_reverse_storage_ϵ,subexpr.partials_storage,sub_partials_storage_ϵ,subexpr.nd,subexpr.adj,d.subexpression_reverse_values,subexpr_reverse_values_ϵ,d.subexpression_reverse_values[expridx],subexpr_reverse_values_ϵ[expridx])
-        end
-
+        hessian_slice_inner(d, ex, R, input_ϵ, output_ϵ, Val{CHUNK})
 
         # collect directional derivatives
         for r in 1:length(local_to_global_idx)
             idx = local_to_global_idx[r]
-            R[r,k] = output_ϵ[idx].data[1]
-            @inbounds input_ϵ[idx] = ForwardDiff.Partials((0.0,))
+            # load output_ϵ into R[r,k,k+1,...,k+CHUNK-1]
+            for s in 1:CHUNK
+                R[r,k+s-1] = output_ϵ_raw[(idx-1)*CHUNK + s]
+            end
+            @inbounds input_ϵ[idx] = zero_ϵ
         end
 
     end
 
-    #hessmat_eval!(seed, d.reverse_storage_hess, d.forward_storage_hess, ex.nd, ex.adj, ex.const_values, x, d.reverse_output_vector, d.forward_input_vector, ex.rinfo.local_indices)
+    # leftover chunk
+    remaining = num_products - CHUNK*num_chunks
+    if remaining > 0
+        for r in 1:length(local_to_global_idx)
+            # set up directional derivatives
+            @inbounds idx = local_to_global_idx[r]
+            # load up R[r,k,k+1,...,k+remaining-1] into input_ϵ
+            for s in 1:remaining
+                # leave junk in the unused components
+                input_ϵ_raw[(idx-1)*CHUNK + s] = R[r,k+s-1]
+            end
+            @inbounds output_ϵ[idx] = zero_ϵ
+        end
+
+        hessian_slice_inner(d, ex, R, input_ϵ, output_ϵ, Val{CHUNK})
+
+        # collect directional derivatives
+        for r in 1:length(local_to_global_idx)
+            idx = local_to_global_idx[r]
+            # load output_ϵ into R[r,k,k+1,...,k+remaining-1]
+            for s in 1:remaining
+                R[r,k+s-1] = output_ϵ_raw[(idx-1)*CHUNK + s]
+            end
+            @inbounds input_ϵ[idx] = zero_ϵ
+        end
+    end
+
     # Output is in R, now recover
 
     #output_slice = sub(H, (nzcount+1):(nzcount+nzthis))
