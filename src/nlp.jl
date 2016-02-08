@@ -115,6 +115,9 @@ type JuMPNLPEvaluator <: MathProgBase.AbstractNLPEvaluator
     output_ϵ::Vector{Float64}# (number of variables)
     subexpression_forward_values_ϵ::Vector{Float64} # (number of subexpressions)
     subexpression_reverse_values_ϵ::Vector{Float64} # (number of subexpressions)
+    # hessian sparsity pattern
+    hess_I::Vector{Int}
+    hess_J::Vector{Int}
     # timers
     eval_f_timer::Float64
     eval_g_timer::Float64
@@ -335,6 +338,11 @@ function MathProgBase.initialize(d::JuMPNLPEvaluator, requested_features::Vector
         d.reverse_storage_ϵ = Array(Float64,max_expr_length)
         d.subexpression_forward_values_ϵ = Array(Float64,length(d.subexpressions))
         d.subexpression_reverse_values_ϵ = Array(Float64,length(d.subexpressions))
+        if d.want_hess
+            d.hess_I, d.hess_J = _hesslag_structure(d)
+            # JIT warm-up
+            MathProgBase.eval_hesslag(d, Array(Float64,length(d.hess_I)), d.m.colVal, 1.0, ones(MathProgBase.numconstr(d.m)))
+        end
     end
 
     tprep = toq()
@@ -823,6 +831,9 @@ function MathProgBase.jac_structure(d::JuMPNLPEvaluator)
 end
 function MathProgBase.hesslag_structure(d::JuMPNLPEvaluator)
     d.want_hess || error("Hessian computations were not requested on the call to MathProgBase.initialize.")
+    return d.hess_I,d.hess_J
+end
+function _hesslag_structure(d::JuMPNLPEvaluator)
     hess_I = Int[]
     hess_J = Int[]
 
