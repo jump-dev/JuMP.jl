@@ -348,6 +348,12 @@ function MathProgBase.initialize(d::JuMPNLPEvaluator, requested_features::Vector
         end
     end
 
+    # JIT warm-up
+    if :Grad in requested_features
+        MathProgBase.eval_grad_f(d, zeros(numVar), d.m.colVal)
+        MathProgBase.eval_g(d, zeros(MathProgBase.numconstr(d.m)), d.m.colVal)
+    end
+
     tprep = toq()
     #println("Prep time: $tprep")
 
