@@ -42,6 +42,7 @@ for (op, deriv) in Calculus.symbolic_derivatives_1arg()
     push!(univariate_operator_deriv,deriv)
     univariate_operator_to_id[op] = length(univariate_operators)
 end
+const USER_UNIVAR_OPERATOR_ID_START = length(univariate_operators) + 1
 
 const logic_operators = [:&&,:||]
 const logic_operator_to_id = Dict{Symbol,Int}()
@@ -74,3 +75,20 @@ function register_multivariate_operator(s::Symbol,f::MathProgBase.AbstractNLPEva
 end
 
 export register_multivariate_operator
+
+const user_univariate_operator_f = Dict{Int,Any}()
+const user_univariate_operator_fprime = Dict{Int,Any}()
+const user_univariate_operator_fprimeprime = Dict{Int,Any}()
+
+# for univariate operators, just take in functions to evaluate
+# zeroth, first, and second order derivatives
+function register_univariate_operator(s::Symbol,f,fprime,fprimeprime)
+    id = length(univariate_operators)+1
+    push!(univariate_operators,s)
+    univariate_operator_to_id[s] = id
+    user_univariate_operator_f[id] = f
+    user_univariate_operator_fprime[id] = fprime
+    user_univariate_operator_fprimeprime[id] = fprimeprime
+end
+
+export register_univariate_operator

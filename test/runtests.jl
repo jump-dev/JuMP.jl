@@ -211,6 +211,7 @@ new_nd = simplify_constants(storage,nd,adj,const_values,linearity)
 # user-defined functions
 using Distributions
 #Φ(x,y) = Φ(y) - Φ(x)
+# c(x) = cos(x)
 type CDFEvaluator <: MathProgBase.AbstractNLPEvaluator
 end
 function MathProgBase.eval_f(::CDFEvaluator,x)
@@ -222,8 +223,9 @@ function MathProgBase.eval_grad_f(::CDFEvaluator,grad,x)
     grad[2] = pdf(Normal(0,1),x[2])
 end
 register_multivariate_operator(:Φ,CDFEvaluator())
+register_univariate_operator(:c,cos,x->-sin(x),x->-cos(x))
 Φ(x,y) = MathProgBase.eval_f(CDFEvaluator(),[x,y])
-ex = :(Φ(x[2],x[1]-1)*cos(x[3]))
+ex = :(Φ(x[2],x[1]-1)*c(x[3]))
 nd,const_values = expr_to_nodedata(ex)
 adj = adjmat(nd)
 storage = zeros(length(nd))

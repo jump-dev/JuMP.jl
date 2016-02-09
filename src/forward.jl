@@ -142,7 +142,14 @@ function forward_eval{T}(storage::Vector{T},partials_storage::Vector{T},nd::Vect
             @inbounds child_idx = children_arr[adj.colptr[k]]
             #@assert child_idx == children_arr[first(nzrange(adj,k))]
             child_val = storage[child_idx]
-            fval, fprimeval = eval_univariate(op, child_val)
+            if op >= USER_UNIVAR_OPERATOR_ID_START
+                f = user_univariate_operator_f[op]
+                fprime = user_univariate_operator_fprime[op]
+                fval = f(child_val)::T
+                fprimeval = fprime(child_val)::T
+            else
+                fval, fprimeval = eval_univariate(op, child_val)
+            end
             @inbounds partials_storage[child_idx] = fprimeval
             @inbounds storage[k] = fval
         elseif nod.nodetype == COMPARISON
@@ -306,7 +313,11 @@ function forward_eval_ϵ{N,T}(storage::Vector{T},storage_ϵ::DenseVector{Forward
                 op = nod.index
                 @inbounds child_idx = children_arr[adj.colptr[k]]
                 child_val = storage[child_idx]
-                fprimeprime = eval_univariate_2nd_deriv(op, child_val,storage[k])
+                if op >= USER_UNIVAR_OPERATOR_ID_START
+                    fprimeprime = user_univariate_operator_fprimeprime[op](child_val)::T
+                else
+                    fprimeprime = eval_univariate_2nd_deriv(op, child_val,storage[k])
+                end
                 partials_storage_ϵ[child_idx] = fprimeprime*storage_ϵ[child_idx]
             end
         end
