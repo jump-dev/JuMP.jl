@@ -1,7 +1,7 @@
 JuMP release notes
 ==================
 
-Version 0.11.3 (February 2, 2016)
+Version 0.11.3 (February 4, 2016)
 ---------------------------------
 
   * Bug-fix for problems with quadratic objectives and semidefinite constraints
