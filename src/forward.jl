@@ -112,6 +112,18 @@ function forward_eval{T}(storage::Vector{T},partials_storage::Vector{T},nd::Vect
                 @inbounds partials_storage[children_arr[idx1+1]] = condition == 1
                 @inbounds partials_storage[children_arr[idx1+2]] = !(condition == 1)
                 storage[k] = ifelse(condition == 1, lhs, rhs)
+            elseif op >= USER_OPERATOR_ID_START
+                evaluator = user_operator_map[op]
+                # TODO: avoid slow temporary arrays
+                child_indices = children_arr[children_idx]
+                input_vec = storage[child_indices]
+                grad_vec = zeros(n_children)
+                fval = MathProgBase.eval_f(evaluator, input_vec)::T
+                MathProgBase.eval_grad_f(evaluator, grad_vec, input_vec)
+                storage[k] = fval
+                for r in 1:length(child_indices)
+                    partials_storage[child_indices[r]] = grad_vec[r]
+                end
             else
                 error("Unsupported operation $(operators[op])")
             end
@@ -277,6 +289,8 @@ function forward_eval_ϵ{N,T}(storage::Vector{T},storage_ϵ::DenseVector{Forward
                     recip_denominator = 1/gradnum(denominator,denominator_ϵ)
                     partials_storage_ϵ[ix1] = ForwardDiff.partials(recip_denominator)
                     partials_storage_ϵ[ix2] = ForwardDiff.partials(-gradnum(numerator,numerator_ϵ)*recip_denominator*recip_denominator)
+                elseif op >= USER_OPERATOR_ID_START
+                    error("User-defined operators not supported for hessian computations")
                 end
             elseif nod.nodetype == CALLUNIVAR # univariate function
                 op = nod.index

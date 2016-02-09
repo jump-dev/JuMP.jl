@@ -24,6 +24,7 @@ export NodeData
 # for COMPARISON, index is into lost of comparison operators
 
 const operators = [:+,:-,:*,:^,:/,:ifelse,:max,:min]
+const USER_OPERATOR_ID_START = length(operators) + 1
 
 const operator_to_id = Dict{Symbol,Int}()
 for i in 1:length(operators)
@@ -55,3 +56,21 @@ for i in 1:length(comparison_operators)
     comparison_operator_to_id[comparison_operators[i]] = i
 end
 export comparison_operator_to_id, comparison_operators
+
+
+# user-provided operators
+
+const user_operator_map = Dict{Int,MathProgBase.AbstractNLPEvaluator}()
+
+# we use the MathProgBase NLPEvaluator interface, where the
+# operator takes the place of the objective function.
+# users should implement eval_f and eval_grad_f for now.
+# we will eventually support hessians too
+function register_multivariate_operator(s::Symbol,f::MathProgBase.AbstractNLPEvaluator)
+    id = length(operators)+1
+    push!(operators,s)
+    operator_to_id[s] = id
+    user_operator_map[id] = f
+end
+
+export register_multivariate_operator

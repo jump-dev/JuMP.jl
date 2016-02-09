@@ -208,6 +208,39 @@ linearity = classify_linearity(nd,adj,[],[true,true])
 new_nd = simplify_constants(storage,nd,adj,const_values,linearity)
 @test length(new_nd) == 1
 
+# user-defined functions
+using Distributions
+#Φ(x,y) = Φ(y) - Φ(x)
+type CDFEvaluator <: MathProgBase.AbstractNLPEvaluator
+end
+function MathProgBase.eval_f(::CDFEvaluator,x)
+    @assert length(x) == 2
+    return cdf(Normal(0,1),x[2])-cdf(Normal(0,1),x[1])
+end
+function MathProgBase.eval_grad_f(::CDFEvaluator,grad,x)
+    grad[1] = -pdf(Normal(0,1),x[1])
+    grad[2] = pdf(Normal(0,1),x[2])
+end
+register_multivariate_operator(:Φ,CDFEvaluator())
+Φ(x,y) = MathProgBase.eval_f(CDFEvaluator(),[x,y])
+ex = :(Φ(x[2],x[1]-1)*cos(x[3]))
+nd,const_values = expr_to_nodedata(ex)
+adj = adjmat(nd)
+storage = zeros(length(nd))
+partials_storage = zeros(length(nd))
+reverse_storage = zeros(length(nd))
+x = [2.0,3.0,4.0]
+fval = forward_eval(storage,partials_storage,nd,adj,const_values,[],x,[])
+true_val = Φ(x[2],x[1]-1)*cos(x[3])
+@test isapprox(fval,true_val)
+grad = zeros(3)
+reverse_eval(reverse_storage,partials_storage,nd,adj)
+reverse_extract(grad,reverse_storage,nd,adj,[],1.0)
+
+true_grad = [cos(x[3])*pdf(Normal(0,1),x[1]-1), -cos(x[3])*pdf(Normal(0,1),x[2]), -sin(x[3])*Φ(x[2],x[1]-1)]
+@test isapprox(grad,true_grad)
+
+
 
 using DualNumbers
 using ForwardDiff
