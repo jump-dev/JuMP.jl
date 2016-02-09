@@ -2,7 +2,6 @@ module ReverseDiffSparse
 
 using Base.Meta
 using ForwardDiff
-import DualNumbers: Dual, epsilon
 import Calculus
 import Lazy
 # Override basic math functions to return NaN instead of throwing errors.
