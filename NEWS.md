@@ -7,7 +7,7 @@ Unversioned
   * Replaced iteration over ``AffExpr`` with ``Number``-like scalar iteration; previous iteration behavior is now available via ``linearterms(::AffExpr)``.
   * Stopping the solver via ``throw(CallbackAbort())`` from a callback no longer triggers an exception. Instead, ``solve()`` returns ``UserLimit`` status.
 
-Version 0.11.3 (February 2, 2016)
+Version 0.11.3 (February 4, 2016)
 ---------------------------------
 
   * Bug-fix for problems with quadratic objectives and semidefinite constraints
