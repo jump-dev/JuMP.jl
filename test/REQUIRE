@@ -2,3 +2,5 @@ Graphs
 JuMP
 FactCheck
 Ipopt
+DualNumbers
+Distributions

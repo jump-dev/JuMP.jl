@@ -8,7 +8,9 @@
 # Since we use it in reverse mode and in dual forward mode.
 # Note that partials_storage makes a subtle assumption that we have a tree instead of
 # a general DAG. If we have a DAG, then need to associate storage with each edge of the DAG.
-function forward_eval{T}(storage::Vector{T},partials_storage::Vector{T},nd::Vector{NodeData},adj,const_values,parameter_values,x_values::Vector{T},subexpression_values)
+# user_input_buffer and user_output_buffer are used as temporary storage
+# when handling user-defined functions
+function forward_eval{T}(storage::Vector{T},partials_storage::Vector{T},nd::Vector{NodeData},adj,const_values,parameter_values,x_values::Vector{T},subexpression_values,user_input_buffer=[],user_output_buffer=[])
 
     @assert length(storage) >= length(nd)
     @assert length(partials_storage) >= length(nd)
@@ -112,6 +114,26 @@ function forward_eval{T}(storage::Vector{T},partials_storage::Vector{T},nd::Vect
                 @inbounds partials_storage[children_arr[idx1+1]] = condition == 1
                 @inbounds partials_storage[children_arr[idx1+2]] = !(condition == 1)
                 storage[k] = ifelse(condition == 1, lhs, rhs)
+            elseif op >= USER_OPERATOR_ID_START
+                evaluator = user_operator_map[op]
+                f_input = sub(user_input_buffer, 1:n_children)
+                grad_output = sub(user_output_buffer, 1:n_children)
+                r = 1
+                for c_idx in children_idx
+                    ix = children_arr[c_idx]
+                    f_input[r] = storage[ix]
+                    grad_output[r] = 0.0
+                    r += 1
+                end
+                fval = MathProgBase.eval_f(evaluator, f_input)::T
+                MathProgBase.eval_grad_f(evaluator, grad_output, f_input)
+                storage[k] = fval
+                r = 1
+                for c_idx in children_idx
+                    ix = children_arr[c_idx]
+                    partials_storage[ix] = grad_output[r]
+                    r += 1
+                end
             else
                 error("Unsupported operation $(operators[op])")
             end
@@ -120,7 +142,14 @@ function forward_eval{T}(storage::Vector{T},partials_storage::Vector{T},nd::Vect
             @inbounds child_idx = children_arr[adj.colptr[k]]
             #@assert child_idx == children_arr[first(nzrange(adj,k))]
             child_val = storage[child_idx]
-            fval, fprimeval = eval_univariate(op, child_val)
+            if op >= USER_UNIVAR_OPERATOR_ID_START
+                f = user_univariate_operator_f[op]
+                fprime = user_univariate_operator_fprime[op]
+                fval = f(child_val)::T
+                fprimeval = fprime(child_val)::T
+            else
+                fval, fprimeval = eval_univariate(op, child_val)
+            end
             @inbounds partials_storage[child_idx] = fprimeval
             @inbounds storage[k] = fval
         elseif nod.nodetype == COMPARISON
@@ -277,12 +306,18 @@ function forward_eval_ϵ{N,T}(storage::Vector{T},storage_ϵ::DenseVector{Forward
                     recip_denominator = 1/gradnum(denominator,denominator_ϵ)
                     partials_storage_ϵ[ix1] = ForwardDiff.partials(recip_denominator)
                     partials_storage_ϵ[ix2] = ForwardDiff.partials(-gradnum(numerator,numerator_ϵ)*recip_denominator*recip_denominator)
+                elseif op >= USER_OPERATOR_ID_START
+                    error("User-defined operators not supported for hessian computations")
                 end
             elseif nod.nodetype == CALLUNIVAR # univariate function
                 op = nod.index
                 @inbounds child_idx = children_arr[adj.colptr[k]]
                 child_val = storage[child_idx]
-                fprimeprime = eval_univariate_2nd_deriv(op, child_val,storage[k])
+                if op >= USER_UNIVAR_OPERATOR_ID_START
+                    fprimeprime = user_univariate_operator_fprimeprime[op](child_val)::T
+                else
+                    fprimeprime = eval_univariate_2nd_deriv(op, child_val,storage[k])
+                end
                 partials_storage_ϵ[child_idx] = fprimeprime*storage_ϵ[child_idx]
             end
         end
