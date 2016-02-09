@@ -230,7 +230,7 @@ storage = zeros(length(nd))
 partials_storage = zeros(length(nd))
 reverse_storage = zeros(length(nd))
 x = [2.0,3.0,4.0]
-fval = forward_eval(storage,partials_storage,nd,adj,const_values,[],x,[])
+fval = forward_eval(storage,partials_storage,nd,adj,const_values,[],x,[],zeros(2),zeros(2))
 true_val = Φ(x[2],x[1]-1)*cos(x[3])
 @test isapprox(fval,true_val)
 grad = zeros(3)

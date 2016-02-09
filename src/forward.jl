@@ -8,7 +8,9 @@
 # Since we use it in reverse mode and in dual forward mode.
 # Note that partials_storage makes a subtle assumption that we have a tree instead of
 # a general DAG. If we have a DAG, then need to associate storage with each edge of the DAG.
-function forward_eval{T}(storage::Vector{T},partials_storage::Vector{T},nd::Vector{NodeData},adj,const_values,parameter_values,x_values::Vector{T},subexpression_values)
+# user_input_buffer and user_output_buffer are used as temporary storage
+# when handling user-defined functions
+function forward_eval{T}(storage::Vector{T},partials_storage::Vector{T},nd::Vector{NodeData},adj,const_values,parameter_values,x_values::Vector{T},subexpression_values,user_input_buffer=[],user_output_buffer=[])
 
     @assert length(storage) >= length(nd)
     @assert length(partials_storage) >= length(nd)
@@ -114,15 +116,23 @@ function forward_eval{T}(storage::Vector{T},partials_storage::Vector{T},nd::Vect
                 storage[k] = ifelse(condition == 1, lhs, rhs)
             elseif op >= USER_OPERATOR_ID_START
                 evaluator = user_operator_map[op]
-                # TODO: avoid slow temporary arrays
-                child_indices = children_arr[children_idx]
-                input_vec = storage[child_indices]
-                grad_vec = zeros(n_children)
-                fval = MathProgBase.eval_f(evaluator, input_vec)::T
-                MathProgBase.eval_grad_f(evaluator, grad_vec, input_vec)
+                f_input = sub(user_input_buffer, 1:n_children)
+                grad_output = sub(user_output_buffer, 1:n_children)
+                r = 1
+                for c_idx in children_idx
+                    ix = children_arr[c_idx]
+                    f_input[r] = storage[ix]
+                    grad_output[r] = 0.0
+                    r += 1
+                end
+                fval = MathProgBase.eval_f(evaluator, f_input)::T
+                MathProgBase.eval_grad_f(evaluator, grad_output, f_input)
                 storage[k] = fval
-                for r in 1:length(child_indices)
-                    partials_storage[child_indices[r]] = grad_vec[r]
+                r = 1
+                for c_idx in children_idx
+                    ix = children_arr[c_idx]
+                    partials_storage[ix] = grad_output[r]
+                    r += 1
                 end
             else
                 error("Unsupported operation $(operators[op])")
