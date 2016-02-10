@@ -104,9 +104,11 @@ type JuMPNLPEvaluator <: MathProgBase.AbstractNLPEvaluator
     subexpressions_as_julia_expressions::Vector{Any}
     last_x::Vector{Float64}
     jac_storage::Vector{Float64} # temporary storage for computing jacobians
+    user_output_buffer::Vector{Float64} # temporary storage for user-defined functions
     # storage for computing hessians
     # these Float64 vectors are reinterpreted to hold multiple epsilon components
     # so the length should be multiplied by the maximum number of epsilon components
+    disable_2ndorder::Bool # don't offer Hess or HessVec
     want_hess::Bool
     forward_storage_ϵ::Vector{Float64} # (longest expression)
     partials_storage_ϵ::Vector{Float64} # (longest expression)
@@ -132,6 +134,28 @@ type JuMPNLPEvaluator <: MathProgBase.AbstractNLPEvaluator
         d.constraints = FunctionStorage[]
         d.last_x = fill(NaN, numVar)
         d.jac_storage = Array(Float64,numVar)
+        d.user_output_buffer = Array(Float64,numVar)
+        # check if we have any user-defined operators, in which case we need to
+        # disable hessians.
+        if isa(m.nlpdata,NLPData)
+            nldata::NLPData = m.nlpdata
+            has_nlobj = isa(nldata.nlobj, NonlinearExprData)
+            has_user_mv_operator = false
+            for nlexpr in nldata.nlexpr
+                has_user_mv_operator |= ReverseDiffSparse.has_user_multivariate_operators(nlexpr.nd)
+            end
+            if has_nlobj
+
+                has_user_mv_operator |= ReverseDiffSparse.has_user_multivariate_operators(nldata.nlobj.nd)
+            end
+            for nlconstr in nldata.nlconstr
+                has_user_mv_operator |= ReverseDiffSparse.has_user_multivariate_operators(nlconstr.terms.nd)
+            end
+            d.disable_2ndorder = has_user_mv_operator
+        else
+            d.disable_2ndorder = false
+        end
+
         d.eval_f_timer = 0
         d.eval_g_timer = 0
         d.eval_grad_f_timer = 0
@@ -200,7 +224,7 @@ end
 
 function MathProgBase.initialize(d::JuMPNLPEvaluator, requested_features::Vector{Symbol})
     for feat in requested_features
-        if !(feat in [:Grad, :Jac, :Hess, :HessVec, :ExprGraph])
+        if !(feat in MathProgBase.features_available(d))
             error("Unsupported feature $feat")
             # TODO: implement Jac-vec products
             # for solvers that need them
@@ -367,21 +391,30 @@ function MathProgBase.initialize(d::JuMPNLPEvaluator, requested_features::Vector
     nothing
 end
 
-MathProgBase.features_available(d::JuMPNLPEvaluator) = [:Grad, :Jac, :Hess, :HessVec, :ExprGraph]
+function MathProgBase.features_available(d::JuMPNLPEvaluator)
+    features = [:Grad, :Jac, :ExprGraph]
+    if !d.disable_2ndorder
+        push!(features,:Hess)
+        push!(features,:HessVec)
+    end
+    return features
+end
 
 function forward_eval_all(d::JuMPNLPEvaluator,x)
     # do a forward pass on all expressions at x
     subexpr_values = d.subexpression_forward_values
+    user_input_buffer = d.jac_storage
+    user_output_buffer = d.user_output_buffer
     for k in d.subexpression_order
         ex = d.subexpressions[k]
-        subexpr_values[k] = forward_eval(ex.forward_storage,ex.partials_storage,ex.nd,ex.adj,ex.const_values,d.parameter_values,x,subexpr_values)
+        subexpr_values[k] = forward_eval(ex.forward_storage,ex.partials_storage,ex.nd,ex.adj,ex.const_values,d.parameter_values,x,subexpr_values,user_input_buffer,user_output_buffer)
     end
     if d.has_nlobj
         ex = d.objective
-        forward_eval(ex.forward_storage,ex.partials_storage,ex.nd,ex.adj,ex.const_values,d.parameter_values,x,subexpr_values)
+        forward_eval(ex.forward_storage,ex.partials_storage,ex.nd,ex.adj,ex.const_values,d.parameter_values,x,subexpr_values,user_input_buffer,user_output_buffer)
     end
     for ex in d.constraints
-        forward_eval(ex.forward_storage,ex.partials_storage,ex.nd,ex.adj,ex.const_values,d.parameter_values,x,subexpr_values)
+        forward_eval(ex.forward_storage,ex.partials_storage,ex.nd,ex.adj,ex.const_values,d.parameter_values,x,subexpr_values,user_input_buffer,user_output_buffer)
     end
 end
 
@@ -1190,14 +1223,67 @@ function getValue(x::NonlinearExpression)
 
     forward_storage = Array(Float64, max_len)
     partials_storage = Array(Float64, max_len)
+    user_input_buffer = zeros(m.numCols)
+    user_output_buffer = zeros(m.numCols)
 
     for k in subexpression_order # compute value of dependent subexpressions
         ex = nldata.nlexpr[k]
         adj = adjmat(ex.nd)
-        subexpr_values[k] = forward_eval(forward_storage,partials_storage,ex.nd,adj,ex.const_values,nldata.nlparamvalues,m.colVal,subexpr_values)
+        subexpr_values[k] = forward_eval(forward_storage,partials_storage,ex.nd,adj,ex.const_values,nldata.nlparamvalues,m.colVal,subexpr_values,user_input_buffer,user_output_buffer)
     end
 
     adj = adjmat(this_subexpr.nd)
 
-    return forward_eval(forward_storage,partials_storage,this_subexpr.nd,adj,this_subexpr.const_values,nldata.nlparamvalues,m.colVal,subexpr_values)
+    return forward_eval(forward_storage,partials_storage,this_subexpr.nd,adj,this_subexpr.const_values,nldata.nlparamvalues,m.colVal,subexpr_values,user_input_buffer,user_output_buffer)
+end
+
+type UserFunctionEvaluator <: MathProgBase.AbstractNLPEvaluator
+    f
+    ∇f
+    len::Int
+end
+
+function MathProgBase.eval_f(d::UserFunctionEvaluator,x)
+    @assert length(x) == d.len
+    return d.f(x...)::eltype(x)
+end
+function MathProgBase.eval_grad_f(d::UserFunctionEvaluator,grad,x)
+    d.∇f(grad,x)
+    nothing
+end
+
+function UserAutoDiffEvaluator(dimension::Integer, f::Function)
+    ∇f = ForwardDiff.gradient(x -> f(x...), mutates=true)
+    return UserFunctionEvaluator(f, ∇f, dimension)
+end
+
+function registerNLFunction(s::Symbol, dimension::Integer, f::Function; autodiff::Bool=false)
+    autodiff == true || error("If only the function is provided, must set autodiff=true")
+
+    if dimension == 1
+        fprime = x -> ForwardDiff.derivative(f, x)
+        fprimeprime = x -> ForwardDiff.derivative(fprime, x)
+        ReverseDiffSparse.register_univariate_operator(s, f, fprime, fprimeprime)
+    else
+        ReverseDiffSparse.register_multivariate_operator(s, UserAutoDiffEvaluator(dimension, f))
+    end
+
+end
+
+function registerNLFunction(s::Symbol, dimension::Integer, f::Function, ∇f::Function; autodiff::Bool=false)
+    if dimension == 1
+        autodiff == true || error("Currently must provide 2nd order derivatives of univariate functions. Try setting autodiff=true.")
+        fprimeprime = x -> ForwardDiff.derivative(∇f, x)
+        ReverseDiffSparse.register_univariate_operator(s, f, ∇f, fprimeprime)
+    else
+        autodiff == false || Base.warn_once("autodiff=true ignored since gradient is already provided.")
+        d = UserFunctionEvaluator(f, (g,x)->∇f(g,x...), dimension)
+        ReverseDiffSparse.register_multivariate_operator(s, d)
+    end
+
+end
+
+function registerNLFunction(s::Symbol, dimension::Integer, f::Function, ∇f::Function, ∇²f::Function)
+    dimension == 1 || error("Providing hessians for multivariate functions is not yet supported")
+    ReverseDiffSparse.register_univariate_operator(s, f, ∇f, ∇²f)
 end
