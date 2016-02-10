@@ -5,8 +5,6 @@
 
 include("nlpmacros.jl")
 
-import DualNumbers: Dual, epsilon
-
 type NonlinearExprData
     nd::Vector{NodeData}
     const_values::Vector{Float64}
