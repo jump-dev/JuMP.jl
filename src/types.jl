@@ -92,3 +92,14 @@ function register_univariate_operator(s::Symbol,f,fprime,fprimeprime)
 end
 
 export register_univariate_operator
+
+
+function has_user_multivariate_operators(nd::Vector{NodeData})
+    for k in 1:length(nd)
+        nod = nd[k]
+        if nod.nodetype == CALL && nod.index >= USER_OPERATOR_ID_START
+            return true
+        end
+    end
+    return false
+end
