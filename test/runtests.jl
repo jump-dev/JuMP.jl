@@ -296,5 +296,3 @@ dualforward(:(sin(x[1]^3) + cos(x[1]*x[2]*4)/5-2.0),[1.0,0.0])
 
 
 include("test_coloring.jl")
-#include("test_jump.jl")
-# FactCheck.exitstatus() # ignore these errors for now
