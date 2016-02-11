@@ -128,11 +128,10 @@ function getValue(x::JuMPContainer)
 end
 
 # delegate zero-argument functions
-for f in (:(Base.endof), :(Base.ndims), :(Base.length), :(Base.abs), :(Base.start))
+for f in (:(Base.endof), :(Base.ndims), :(Base.length), :(Base.abs))
     @eval $f(x::JuMPArray) = $f(x.innerArray)
 end
 
-Base.first(x::JuMPDict)  =  first(x.tupledict)
 Base.length(x::JuMPDict) = length(x.tupledict)
 
 Base.ndims{T,N}(x::JuMPDict{T,N}) = N
@@ -141,29 +140,6 @@ Base.abs(x::JuMPDict) = map(abs, x)
 Base.size(x::JuMPArray)   = size(x.innerArray)
 Base.size(x::JuMPArray,k) = size(x.innerArray,k)
 Base.issym(x::JuMPArray) = issym(x.innerArray)
-
-function Base.start(x::JuMPContainer)
-    warn("Iteration over JuMP containers is deprecated. Use keys(d) and values(d) instead")
-    start(x.tupledict)
-end
-
-@generated function Base.next{T,N,NT}(x::JuMPArray{T,N,NT},k)
-    keys = [:(x.indexsets[$i][subidx[$i]]) for i in 1:N]
-    tup = Expr(:tuple, keys..., Expr(:call, :getindex, :x, keys...))
-    quote
-        var, gidx = next(x.innerArray, k)
-        subidx = ind2sub(size(x),k)
-        $tup, gidx
-    end
-end
-
-function Base.next(x::JuMPDict,k)
-    ((idx,var),gidx) = next(x.tupledict,k)
-    return (tuple(idx..., var), gidx)
-end
-
-Base.done(x::JuMPArray,k) = done(x.innerArray,k)
-Base.done(x::JuMPDict,k)  = done(x.tupledict,k)
 
 Base.eltype{T}(x::JuMPContainer{T}) = T
 
