@@ -603,3 +603,56 @@ if length(convex_nlp_solvers) > 0
         @fact status --> :Optimal
     end
 end
+
+mysquare(x) = x^2
+function myf(x,y)
+    return (x-1)^2+(y-2)^2
+end
+registerNLFunction(:myf, 2, myf, autodiff=true)
+registerNLFunction(:myf_2, 2, myf, (g,x,y) -> (g[1] = 2(x-1); g[2] = 2(y-2)))
+registerNLFunction(:mysquare, 1, mysquare, autodiff=true)
+registerNLFunction(:mysquare_2, 1, mysquare, x-> 2x, autodiff=true)
+registerNLFunction(:mysquare_3, 1, mysquare, x-> 2x, x -> 2.0)
+
+if length(convex_nlp_solvers) > 0
+    facts("[nonlinear] User-defined functions") do
+        m = Model(solver=convex_nlp_solvers[1])
+
+        @defVar(m, x[1:2] >= 0.5)
+        @setNLObjective(m, Min, myf(x[1],mysquare(x[2])))
+
+        d = JuMPNLPEvaluator(m)
+        MathProgBase.initialize(d, [:Grad])
+        gradout = zeros(2)
+        xval = [1,sqrt(2.0)]
+        @fact MathProgBase.eval_f(d, xval) --> roughly(0.0,1e-10)
+        MathProgBase.eval_grad_f(d, gradout, xval)
+        @fact gradout --> roughly([0.0,0.0],1e-10)
+
+        @fact solve(m) --> :Optimal
+
+        @fact getValue(x) --> roughly(xval)
+
+        @setNLObjective(m, Min, myf_2(x[1],mysquare_2(x[2])))
+
+        d = JuMPNLPEvaluator(m)
+        MathProgBase.initialize(d, [:Grad])
+        gradout = zeros(2)
+        xval = [1,sqrt(2.0)]
+        @fact MathProgBase.eval_f(d, xval) --> roughly(0.0,1e-10)
+        MathProgBase.eval_grad_f(d, gradout, xval)
+        @fact gradout --> roughly([0.0,0.0],1e-10)
+        setValue(x[1],0.5)
+        setValue(x[2],0.5)
+        @fact solve(m) --> :Optimal
+
+        @fact getValue(x) --> roughly(xval)
+
+        # Test just univariate functions because hessians are disabled
+        # if any multivariate functions are present.
+        @setNLObjective(m, Min, mysquare(x[1]-1) + mysquare_2(x[2]-2) + mysquare_3(x[1]))
+        @fact solve(m) --> :Optimal
+        @fact getValue(x) --> roughly([0.5,2.0],1e-4)
+
+    end
+end
