@@ -816,7 +816,7 @@ function hessian_slice{CHUNK}(d, ex, x, H, scale, nzcount, recovery_tmp_storage,
     @assert size(R,1) == length(local_to_global_idx)
     numVar = length(x)
 
-    for k in 1:CHUNK:num_products
+    for k in 1:CHUNK:CHUNK*num_chunks
 
         for r in 1:length(local_to_global_idx)
             # set up directional derivatives
@@ -845,6 +845,7 @@ function hessian_slice{CHUNK}(d, ex, x, H, scale, nzcount, recovery_tmp_storage,
     # leftover chunk
     remaining = num_products - CHUNK*num_chunks
     if remaining > 0
+        k = CHUNK*num_chunks+1
         for r in 1:length(local_to_global_idx)
             # set up directional derivatives
             @inbounds idx = local_to_global_idx[r]
