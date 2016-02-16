@@ -469,6 +469,16 @@ context("With solver $(typeof(nlp_solver))") do
     @fact getDual(cons3) --> roughly(0.0714286, 1e-6)
 end; end; end
 
+facts("[nonlinear] Test Hessian chunking code") do
+for nlp_solver in nlp_solvers
+context("With solver $(typeof(nlp_solver))") do
+    m = Model(solver=nlp_solver)
+    @defVar(m, x[1:18] >= 1, start = 1.2)
+    @setNLObjective(m, Min, prod{x[i],i=1:18})
+    @fact solve(m) --> :Optimal
+    @fact getValue(x) --> roughly(ones(18),1e-4)
+end; end; end
+
 
 #############################################################################
 # Test that output is produced in correct MPB form
