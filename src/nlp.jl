@@ -174,7 +174,7 @@ function simplify_expression(nd::Vector{NodeData}, const_values, subexpression_l
     return nd_new, forward_storage[1]
 end
 
-function FunctionStorage(nd::Vector{NodeData}, const_values,numVar, want_hess::Bool, subexpr::Vector{Vector{NodeData}}, dependent_subexpressions, subexpression_linearity, subexpression_edgelist, subexpression_variables, fixed_variables)
+function FunctionStorage(nd::Vector{NodeData}, const_values,numVar, coloring_storage, want_hess::Bool, subexpr::Vector{Vector{NodeData}}, dependent_subexpressions, subexpression_linearity, subexpression_edgelist, subexpression_variables, fixed_variables)
 
     adj = adjmat(nd)
     forward_storage = zeros(length(nd))
@@ -190,7 +190,7 @@ function FunctionStorage(nd::Vector{NodeData}, const_values,numVar, want_hess::B
         # compute hessian sparsity
         linearity = classify_linearity(nd, adj, subexpression_linearity, fixed_variables)
         edgelist = compute_hessian_sparsity(nd, adj, linearity, subexpression_edgelist, subexpression_variables)
-        hess_I, hess_J, rinfo = Coloring.hessian_color_preprocess(edgelist, numVar)
+        hess_I, hess_J, rinfo = Coloring.hessian_color_preprocess(edgelist, numVar, coloring_storage)
         seed_matrix = Coloring.seed_matrix(rinfo)
         if linearity[1] == NONLINEAR
             @assert length(hess_I) > 0
@@ -251,6 +251,7 @@ function MathProgBase.initialize(d::JuMPNLPEvaluator, requested_features::Vector
 
     d.want_hess = (:Hess in requested_features)
     want_hess_storage = (:HessVec in requested_features) || d.want_hess
+    coloring_storage = ReverseDiffSparse.Coloring.IndexedSet(numVar)
 
     d.has_nlobj = isa(nldata.nlobj, NonlinearExprData)
     max_expr_length = 0
@@ -332,7 +333,7 @@ function MathProgBase.initialize(d::JuMPNLPEvaluator, requested_features::Vector
     if d.has_nlobj
         @assert length(d.m.obj.qvars1) == 0 && length(d.m.obj.aff.vars) == 0
         nd = main_expressions[1]
-        d.objective = FunctionStorage(nd, nldata.nlobj.const_values, numVar, d.want_hess, subexpr, individual_order[1], subexpression_linearity, subexpression_edgelist, subexpression_variables, fixed_variables)
+        d.objective = FunctionStorage(nd, nldata.nlobj.const_values, numVar, coloring_storage, d.want_hess, subexpr, individual_order[1], subexpression_linearity, subexpression_edgelist, subexpression_variables, fixed_variables)
         max_expr_length = max(max_expr_length, length(d.objective.nd))
         max_chunk = max(max_chunk, size(d.objective.seed_matrix,2))
     end
@@ -341,7 +342,7 @@ function MathProgBase.initialize(d::JuMPNLPEvaluator, requested_features::Vector
         nlconstr = nldata.nlconstr[k]
         idx = (d.has_nlobj) ? k+1 : k
         nd = main_expressions[idx]
-        push!(d.constraints, FunctionStorage(nd, nlconstr.terms.const_values, numVar, d.want_hess, subexpr, individual_order[idx], subexpression_linearity, subexpression_edgelist, subexpression_variables, fixed_variables))
+        push!(d.constraints, FunctionStorage(nd, nlconstr.terms.const_values, numVar, coloring_storage, d.want_hess, subexpr, individual_order[idx], subexpression_linearity, subexpression_edgelist, subexpression_variables, fixed_variables))
         max_expr_length = max(max_expr_length, length(d.constraints[end].nd))
         max_chunk = max(max_chunk, size(d.constraints[end].seed_matrix,2))
     end
