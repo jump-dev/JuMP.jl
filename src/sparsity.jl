@@ -16,7 +16,18 @@ function compute_gradient_sparsity(nd::Vector{NodeData})
     return indices
 end
 
-export compute_gradient_sparsity
+
+function compute_gradient_sparsity!(indices::Coloring.IndexedSet,nd::Vector{NodeData})
+    for k in 1:length(nd)
+        nod = nd[k]
+        if nod.nodetype == VARIABLE
+            push!(indices, nod.index)
+        end
+    end
+    nothing
+end
+
+export compute_gradient_sparsity, compute_gradient_sparsity!
 
 # compute the sparsity pattern the hessian of an expression
 
@@ -25,7 +36,7 @@ export compute_gradient_sparsity
 # subexpression_edgelist is the edgelist of each subexpression
 # subexpression_variables is the list of all variables which appear in
 # a subexpression (including recursively)
-function compute_hessian_sparsity(nd::Vector{NodeData},adj,input_linearity::Vector{Linearity},subexpression_edgelist::Vector{Set{Tuple{Int,Int}}},subexpression_variables::Vector{Set{Int}})
+function compute_hessian_sparsity(nd::Vector{NodeData},adj,input_linearity::Vector{Linearity},indexedset::Coloring.IndexedSet,subexpression_edgelist::Vector{Set{Tuple{Int,Int}}},subexpression_variables::Vector{Vector{Int}})
 
     # idea: consider the linearity/nonlinearity of a node *with respect to the output*
     # The children of any node which is nonlinear with respect to the output
@@ -46,7 +57,7 @@ function compute_hessian_sparsity(nd::Vector{NodeData},adj,input_linearity::Vect
     children_arr = rowvals(adj)
 
     stack = Int[]
-    nonlinear_group = Set{Int}() # TODO: replace with indexed set
+    nonlinear_group = indexedset
     if length(nd) == 1 && nd[1].nodetype == SUBEXPRESSION
         # subexpression comes in linearly, so append edgelist
         for ij in subexpression_edgelist[nd[1].index]
@@ -122,8 +133,10 @@ function compute_hessian_sparsity(nd::Vector{NodeData},adj,input_linearity::Vect
                 union!(nonlinear_group, subexpression_variables[nd[r].index])
             end
         end
-        for i in nonlinear_group
-            for j in nonlinear_group
+        for i_ in 1:nonlinear_group.nnz
+            i = nonlinear_group.nzidx[i_]
+            for j_ in 1:nonlinear_group.nnz
+                j = nonlinear_group.nzidx[j_]
                 j <= i || continue # only lower triangle
                 push!(edgelist,(i,j))
             end

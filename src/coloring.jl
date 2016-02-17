@@ -49,6 +49,15 @@ function Base.resize!(v::IndexedSet, n::Integer)
     end
 end
 
+Base.collect(v::IndexedSet) = v.nzidx[1:v.nnz]
+function Base.union!(v::IndexedSet,s)
+    for x in s
+        push!(v,x)
+    end
+    nothing
+end
+
+
 # compact storage for an undirected graph
 # neighbors of vertex i start at adjlist[offsets[i]]
 immutable UndirectedGraph
@@ -162,6 +171,9 @@ end
 # SIAM J. Sci. Comput. 2007
 function acyclic_coloring(g::UndirectedGraph)
     
+    if num_edges(g) == 0
+        return fill(1,num_vertices(g)), 1
+    end
     num_colors = 0
     forbiddenColors = Int[]
     firstNeighbor = Array(Edge,0)
@@ -427,7 +439,7 @@ function hessian_color_preprocess(edgelist,num_total_var,seen_idx=IndexedSet(0))
     local_indices = sort!(seen_idx.nzidx[1:seen_idx.nnz])
     empty!(seen_idx)
 
-    global_to_local_idx = Dict{Int,Int}()
+    global_to_local_idx = seen_idx.nzidx # steal for storage
     for k in 1:length(local_indices)
         global_to_local_idx[local_indices[k]] = k
     end

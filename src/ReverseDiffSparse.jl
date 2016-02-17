@@ -13,12 +13,12 @@ import NaNMath: sin, cos, tan, asin, acos, acosh, atanh, log, log2, log10, lgamm
 
 include("types.jl")
 include("conversion.jl")
+include("coloring.jl")
+export Coloring
 include("linearity.jl")
 include("sparsity.jl")
 include("forward.jl")
 include("reverse.jl")
-include("coloring.jl")
-export Coloring
 include("subexpressions.jl")
 include("simplify.jl")
 

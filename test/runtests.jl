@@ -157,7 +157,8 @@ function test_linearity(ex,testval,IJ = [],indices=[])
     adj = adjmat(nd)
     linearity = classify_linearity(nd,adj,[])
     @test linearity[1] == testval
-    edgelist = compute_hessian_sparsity(nd,adj,linearity,Array(Set{Tuple{Int,Int}},0), Array(Set{Int},0))
+    idxset = Coloring.IndexedSet(100)
+    edgelist = compute_hessian_sparsity(nd,adj,linearity,idxset,Array(Set{Tuple{Int,Int}},0), Array(Vector{Int},0))
     if linearity[1] != NONLINEAR
         @test length(edgelist) == 0
     elseif length(IJ) > 0
@@ -165,7 +166,11 @@ function test_linearity(ex,testval,IJ = [],indices=[])
     end
     if length(indices) > 0
         ix = sort(collect(compute_gradient_sparsity(nd)))
+        compute_gradient_sparsity!(idxset, nd)
+        ix2 = sort(collect(idxset))
+        empty!(idxset)
         @test ix == indices
+        @test ix == ix2
     end
 end
 
