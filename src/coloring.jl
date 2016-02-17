@@ -13,6 +13,42 @@ end
 # workaround for julia issue #10208
 Base.hash(x::MyPair{Int},h::UInt) = hash(x.first,hash(x.second,h))
 
+# indexed sparse set of integers
+type IndexedSet
+    nzidx::Vector{Int}
+    empty::BitArray{1}
+    nnz::Int
+end
+
+IndexedSet(n::Integer) = IndexedSet(zeros(Int,n),trues(n),0)
+
+function Base.push!(v::IndexedSet,i::Integer)
+    if v.empty[i]  # new index
+        v.nzidx[v.nnz += 1] = i
+        v.empty[i] = false
+    end
+    return nothing
+end
+
+function Base.empty!(v::IndexedSet)
+    nzidx = v.nzidx
+    empty = v.empty
+    for i in 1:v.nnz
+        empty[nzidx[i]] = true
+    end
+    v.nnz = 0
+end
+
+Base.length(v::IndexedSet) = length(v.nzidx)
+function Base.resize!(v::IndexedSet, n::Integer)
+    if n > length(v)
+        @assert v.nnz == 0 # only resize empty vector
+        resize!(v.nzidx, n)
+        resize!(v.empty, n)
+        fill!(v.empty,true)
+    end
+end
+
 # compact storage for an undirected graph
 # neighbors of vertex i start at adjlist[offsets[i]]
 immutable UndirectedGraph
@@ -377,9 +413,9 @@ function indirect_recover_structure(rinfo::RecoveryInfo)
 end
 
 # edgelist is nonzeros in hessian, *including* nonzeros on the diagonal
-function hessian_color_preprocess(edgelist,num_total_var)
+function hessian_color_preprocess(edgelist,num_total_var,seen_idx=IndexedSet(0))
 
-    seen_idx = Set{Int}()
+    resize!(seen_idx,num_total_var)
     I = Int[]
     J = Int[]
     for (i,j) in edgelist
@@ -388,7 +424,8 @@ function hessian_color_preprocess(edgelist,num_total_var)
         push!(I,i)
         push!(J,j)
     end
-    local_indices = sort(collect(seen_idx))
+    local_indices = sort!(seen_idx.nzidx[1:seen_idx.nnz])
+    empty!(seen_idx)
 
     global_to_local_idx = Dict{Int,Int}()
     for k in 1:length(local_indices)
