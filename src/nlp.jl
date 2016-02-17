@@ -180,16 +180,19 @@ function FunctionStorage(nd::Vector{NodeData}, const_values,numVar, coloring_sto
     forward_storage = zeros(length(nd))
     partials_storage = zeros(length(nd))
     reverse_storage = zeros(length(nd))
-    grad_sparsity = compute_gradient_sparsity(nd)
+    empty!(coloring_storage)
+    compute_gradient_sparsity!(coloring_storage, nd)
 
     for k in dependent_subexpressions
-        union!(grad_sparsity, compute_gradient_sparsity(subexpr[k]))
+        compute_gradient_sparsity!(coloring_storage,subexpr[k])
     end
+    grad_sparsity = sort!(collect(coloring_storage))
+    empty!(coloring_storage)
 
     if want_hess
         # compute hessian sparsity
         linearity = classify_linearity(nd, adj, subexpression_linearity, fixed_variables)
-        edgelist = compute_hessian_sparsity(nd, adj, linearity, subexpression_edgelist, subexpression_variables)
+        edgelist = compute_hessian_sparsity(nd, adj, linearity, coloring_storage, subexpression_edgelist, subexpression_variables)
         hess_I, hess_J, rinfo = Coloring.hessian_color_preprocess(edgelist, numVar, coloring_storage)
         seed_matrix = Coloring.seed_matrix(rinfo)
         if linearity[1] == NONLINEAR
@@ -202,7 +205,7 @@ function FunctionStorage(nd::Vector{NodeData}, const_values,numVar, coloring_sto
         linearity = [NONLINEAR]
     end
 
-    return FunctionStorage(nd, adj, const_values, forward_storage, partials_storage, reverse_storage, sort(collect(grad_sparsity)), hess_I, hess_J, rinfo, seed_matrix, linearity[1],dependent_subexpressions)
+    return FunctionStorage(nd, adj, const_values, forward_storage, partials_storage, reverse_storage, grad_sparsity, hess_I, hess_J, rinfo, seed_matrix, linearity[1],dependent_subexpressions)
 
 end
 
@@ -277,7 +280,7 @@ function MathProgBase.initialize(d::JuMPNLPEvaluator, requested_features::Vector
     end
 
     subexpression_linearity = Array(Linearity, length(nldata.nlexpr))
-    subexpression_variables = Array(Set{Int}, length(nldata.nlexpr))
+    subexpression_variables = Array(Vector{Int}, length(nldata.nlexpr))
     subexpression_edgelist = Array(Set{Tuple{Int,Int}}, length(nldata.nlexpr))
     d.subexpressions = Array(SubexpressionStorage, length(nldata.nlexpr))
     d.subexpression_forward_values = Array(Float64, length(d.subexpressions))
@@ -294,14 +297,16 @@ function MathProgBase.initialize(d::JuMPNLPEvaluator, requested_features::Vector
         d.subexpression_forward_values[k] = forward_value
         subexpression_linearity[k] = subex.linearity
         if d.want_hess
-            vars = compute_gradient_sparsity(subex.nd)
+            empty!(coloring_storage)
+            compute_gradient_sparsity!(coloring_storage,subex.nd)
             # union with all dependent expressions
             for idx in list_subexpressions(subex.nd)
-                union!(vars, subexpression_variables[idx])
+                union!(coloring_storage, subexpression_variables[idx])
             end
-            subexpression_variables[k] = vars
+            subexpression_variables[k] = collect(coloring_storage)
+            empty!(coloring_storage)
             linearity = classify_linearity(subex.nd, subex.adj, subexpression_linearity, fixed_variables)
-            edgelist = compute_hessian_sparsity(subex.nd, subex.adj, linearity,subexpression_edgelist, subexpression_variables)
+            edgelist = compute_hessian_sparsity(subex.nd, subex.adj, linearity,coloring_storage,subexpression_edgelist, subexpression_variables)
             subexpression_edgelist[k] = edgelist
         end
     end
