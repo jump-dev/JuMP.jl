@@ -317,6 +317,54 @@ end
 # A bunch of operator junk to make matrix multiplication and friends act
 # reasonably sane with JuMP types
 
+divlike = (LDivFun, RDivFun)
+Base.promote_op{R<:Real}(::AddFun, ::Type{Variable}, ::Type{R}       ) = AffExpr
+Base.promote_op{R<:Real}(::AddFun, ::Type{R}, ::Type{Variable}       ) = AffExpr
+Base.promote_op{R<:Real}(::SubFun, ::Type{Variable}, ::Type{R}       ) = AffExpr
+Base.promote_op{R<:Real}(::SubFun, ::Type{R}, ::Type{Variable}       ) = AffExpr
+Base.promote_op{R<:Real}(::MulFun, ::Type{Variable}, ::Type{R}       ) = AffExpr
+Base.promote_op{R<:Real}(::MulFun, ::Type{R}, ::Type{Variable}       ) = AffExpr
+for F in divlike
+    @eval Base.promote_op{R<:Real}(::$F, ::Type{Variable}, ::Type{R} ) = AffExpr
+end
+
+Base.promote_op{R<:Real}(::AddFun, ::Type{AffExpr}, ::Type{R}        ) = AffExpr
+Base.promote_op{R<:Real}(::AddFun, ::Type{R}, ::Type{AffExpr}        ) = AffExpr
+Base.promote_op{R<:Real}(::SubFun, ::Type{AffExpr}, ::Type{R}        ) = AffExpr
+Base.promote_op{R<:Real}(::SubFun, ::Type{R}, ::Type{AffExpr}        ) = AffExpr
+Base.promote_op{R<:Real}(::MulFun, ::Type{AffExpr}, ::Type{R}        ) = AffExpr
+Base.promote_op{R<:Real}(::MulFun, ::Type{R}, ::Type{AffExpr}        ) = AffExpr
+for F in divlike
+    @eval Base.promote_op{R<:Real}(::$F, ::Type{AffExpr}, ::Type{R}  ) = AffExpr
+end
+
+Base.promote_op{R<:Real}(::AddFun, ::Type{QuadExpr}, ::Type{R}       ) = QuadExpr
+Base.promote_op{R<:Real}(::AddFun, ::Type{R}, ::Type{QuadExpr}       ) = QuadExpr
+Base.promote_op{R<:Real}(::SubFun, ::Type{QuadExpr}, ::Type{R}       ) = QuadExpr
+Base.promote_op{R<:Real}(::SubFun, ::Type{R}, ::Type{QuadExpr}       ) = QuadExpr
+Base.promote_op{R<:Real}(::MulFun, ::Type{QuadExpr}, ::Type{R}       ) = QuadExpr
+Base.promote_op{R<:Real}(::MulFun, ::Type{R}, ::Type{QuadExpr}       ) = QuadExpr
+for F in divlike
+    @eval Base.promote_op{R<:Real}(::$F, ::Type{QuadExpr}, ::Type{R} ) = QuadExpr
+end
+
+Base.promote_op(         ::AddFun, ::Type{Variable}, ::Type{Variable} ) = AffExpr
+Base.promote_op(         ::SubFun, ::Type{Variable}, ::Type{Variable} ) = AffExpr
+Base.promote_op(         ::MulFun, ::Type{Variable}, ::Type{Variable} ) = QuadExpr
+
+Base.promote_op(         ::AddFun, ::Type{Variable}, ::Type{AffExpr} ) = AffExpr
+Base.promote_op(         ::AddFun, ::Type{AffExpr},  ::Type{Variable}) = AffExpr
+Base.promote_op(         ::SubFun, ::Type{Variable}, ::Type{AffExpr} ) = AffExpr
+Base.promote_op(         ::SubFun, ::Type{AffExpr},  ::Type{Variable}) = AffExpr
+Base.promote_op(         ::MulFun, ::Type{Variable}, ::Type{AffExpr} ) = QuadExpr
+Base.promote_op(         ::MulFun, ::Type{AffExpr},  ::Type{Variable}) = QuadExpr
+
+Base.promote_op(         ::AddFun, ::Type{Variable}, ::Type{QuadExpr}) = QuadExpr
+Base.promote_op(         ::AddFun, ::Type{QuadExpr}, ::Type{Variable}) = QuadExpr
+Base.promote_op(         ::SubFun, ::Type{Variable}, ::Type{QuadExpr}) = QuadExpr
+Base.promote_op(         ::SubFun, ::Type{QuadExpr}, ::Type{Variable}) = QuadExpr
+
+# Make concatenation work properly
 Base.promote_rule{R<:Real}(::Type{Variable},::Type{R}       ) = AffExpr
 Base.promote_rule(         ::Type{Variable},::Type{AffExpr} ) = AffExpr
 Base.promote_rule(         ::Type{Variable},::Type{QuadExpr}) = QuadExpr
@@ -425,20 +473,6 @@ end
 typealias ArrayOrSparseMat{T} Union{Array{T}, SparseMatrixCSC{T}}
 
 for op in [:+, :-]; @eval begin
-    function $op{T<:JuMPTypes}(lhs::Number,rhs::ArrayOrSparseMat{T})
-        ret = Array(typeof($op(lhs, zero(T))), size(rhs))
-        for I in eachindex(ret)
-            ret[I] = $op(lhs, rhs[I])
-        end
-        ret
-    end
-    function $op{T<:JuMPTypes}(lhs::ArrayOrSparseMat{T},rhs::Number)
-        ret = Array(typeof($op(zero(T), rhs)), size(lhs))
-        for I in eachindex(ret)
-            ret[I] = $op(lhs[I], rhs)
-        end
-        ret
-    end
     function $op{T<:JuMPTypes,S}(lhs::T,rhs::ArrayOrSparseMat{S})
         ret = Array(typeof($op(lhs, zero(S))), size(rhs))
         for I in eachindex(ret)
@@ -455,21 +489,7 @@ for op in [:+, :-]; @eval begin
     end
 end; end
 
-for op in [:*, :/]; @eval begin
-    function $op{T<:JuMPTypes}(lhs::Number,rhs::Array{T})
-        ret = Array(typeof($op(lhs, zero(T))), size(rhs))
-        for I in eachindex(ret)
-            ret[I] = $op(lhs, rhs[I])
-        end
-        ret
-    end
-    function $op{T<:JuMPTypes}(lhs::Array{T},rhs::Number)
-        ret = Array(typeof($op(zero(T), rhs)), size(lhs))
-        for I in eachindex(ret)
-            ret[I] = $op(lhs[I], rhs)
-        end
-        ret
-    end
+for op in [:*, :/, :.*, :./]; @eval begin
     function $op{T<:JuMPTypes,S}(lhs::T,rhs::Array{S})
         ret = Array(typeof($op(lhs, zero(S))), size(rhs))
         for I in eachindex(ret)
@@ -487,55 +507,16 @@ for op in [:*, :/]; @eval begin
 end; end
 
 # Special-case sparse matrix scalar multiplication/division
-(*){T<:JuMPTypes}(lhs::Number, rhs::SparseMatrixCSC{T}) =
-    SparseMatrixCSC(rhs.m, rhs.n, copy(rhs.colptr), copy(rhs.rowval), lhs .* rhs.nzval)
 (*)(lhs::JuMPTypes, rhs::SparseMatrixCSC) =
     SparseMatrixCSC(rhs.m, rhs.n, copy(rhs.colptr), copy(rhs.rowval), lhs .* rhs.nzval)
-(*){T<:JuMPTypes}(lhs::SparseMatrixCSC{T}, rhs::Number) =
-    SparseMatrixCSC(lhs.m, lhs.n, copy(lhs.colptr), copy(lhs.rowval), lhs.nzval .* rhs)
 (*)(lhs::SparseMatrixCSC, rhs::JuMPTypes) =
     SparseMatrixCSC(lhs.m, lhs.n, copy(lhs.colptr), copy(lhs.rowval), lhs.nzval .* rhs)
-(/){T<:JuMPTypes}(lhs::SparseMatrixCSC{T}, rhs::Number) =
-    SparseMatrixCSC(lhs.m, lhs.n, copy(lhs.colptr), copy(lhs.rowval), lhs.nzval ./ rhs)
 
 # The following are primarily there for internal use in the macro code for @addConstraint
-for op in [:(+), :(-)]; @eval begin
-    function $op(lhs::Array{Variable},rhs::Array{Variable})
-        (sz = size(lhs)) == size(rhs) || error("Incompatible sizes for $op: $sz $op $(size(rhs))")
-        ret = Array(AffExpr, sz)
-        for I in eachindex(ret)
-            ret[I] = $op(lhs[I], rhs[I])
-        end
-        ret
-    end
-end; end
-
 for (dotop,op) in [(:.+,:+), (:.-,:-), (:.*,:*), (:./,:/)]
     @eval begin
         $dotop(lhs::Number,rhs::JuMPTypes) = $op(lhs,rhs)
         $dotop(lhs::JuMPTypes,rhs::Number) = $op(lhs,rhs)
-    end
-    for (T1,T2) in [(:JuMPTypes,:Number),(:JuMPTypes,:JuMPTypes),(:Number,:JuMPTypes)]
-        # Need these looks over S1,S2 for v0.3 because Union{Array,SparseMatrix}
-        # gives ambiguity warnings
-        for S1 in (:Array,:SparseMatrixCSC)
-            @eval $dotop{S<:$T1}(lhs::$S1{S},rhs::$T2) = $op(lhs,rhs)
-        end
-        for (S1,S2) in [(:Array,:Array),(:Array,:SparseMatrixCSC),(:SparseMatrixCSC,:Array)]
-            @eval begin
-                function $dotop{S<:$T1,T<:$T2}(lhs::$S1{S},rhs::$S2{T})
-                    size(lhs) == size(rhs) || error("Incompatible dimensions")
-                    arr = Array(typeof($op(zero(S),zero(T))), size(rhs))
-                    @inbounds for i in eachindex(lhs)
-                        arr[i] = $op(lhs[i], rhs[i])
-                    end
-                    arr
-                end
-            end
-        end
-        for S2 in (:Array,:SparseMatrixCSC)
-            @eval $dotop{T<:$T2}(lhs::$T1,rhs::$S2{T}) = $op(lhs,rhs)
-        end
     end
 end
 
