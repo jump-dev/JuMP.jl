@@ -99,6 +99,7 @@ type JuMPNLPEvaluator <: MathProgBase.AbstractNLPEvaluator
     subexpression_order::Vector{Int}
     subexpression_forward_values::Vector{Float64}
     subexpression_reverse_values::Vector{Float64}
+    subexpression_linearity::Vector{ReverseDiffSparse.Linearity}
     subexpressions_as_julia_expressions::Vector{Any}
     last_x::Vector{Float64}
     jac_storage::Vector{Float64} # temporary storage for computing jacobians
@@ -171,26 +172,29 @@ function simplify_expression(nd::Vector{NodeData}, const_values, subexpression_l
     linearity = classify_linearity(nd, adj, subexpression_linearity, fixed_variables)
     forward_eval(forward_storage, partials_storage, nd, adj, const_values, parameter_values, x_values, subexpression_values)
     nd_new = simplify_constants(forward_storage, nd, adj, const_values, linearity)
-    return nd_new, forward_storage[1]
+    return nd_new, forward_storage[1], linearity[1]
 end
 
-function FunctionStorage(nd::Vector{NodeData}, const_values,numVar, want_hess::Bool, subexpr::Vector{Vector{NodeData}}, dependent_subexpressions, subexpression_linearity, subexpression_edgelist, subexpression_variables, fixed_variables)
+function FunctionStorage(nd::Vector{NodeData}, const_values,numVar, coloring_storage, want_hess::Bool, subexpr::Vector{Vector{NodeData}}, dependent_subexpressions, subexpression_linearity, subexpression_edgelist, subexpression_variables, fixed_variables)
 
     adj = adjmat(nd)
     forward_storage = zeros(length(nd))
     partials_storage = zeros(length(nd))
     reverse_storage = zeros(length(nd))
-    grad_sparsity = compute_gradient_sparsity(nd)
+    empty!(coloring_storage)
+    compute_gradient_sparsity!(coloring_storage, nd)
 
     for k in dependent_subexpressions
-        union!(grad_sparsity, compute_gradient_sparsity(subexpr[k]))
+        compute_gradient_sparsity!(coloring_storage,subexpr[k])
     end
+    grad_sparsity = sort!(collect(coloring_storage))
+    empty!(coloring_storage)
 
     if want_hess
         # compute hessian sparsity
         linearity = classify_linearity(nd, adj, subexpression_linearity, fixed_variables)
-        edgelist = compute_hessian_sparsity(nd, adj, linearity, subexpression_edgelist, subexpression_variables)
-        hess_I, hess_J, rinfo = Coloring.hessian_color_preprocess(edgelist, numVar)
+        edgelist = compute_hessian_sparsity(nd, adj, linearity, coloring_storage, subexpression_edgelist, subexpression_variables)
+        hess_I, hess_J, rinfo = Coloring.hessian_color_preprocess(edgelist, numVar, coloring_storage)
         seed_matrix = Coloring.seed_matrix(rinfo)
         if linearity[1] == NONLINEAR
             @assert length(hess_I) > 0
@@ -202,7 +206,7 @@ function FunctionStorage(nd::Vector{NodeData}, const_values,numVar, want_hess::B
         linearity = [NONLINEAR]
     end
 
-    return FunctionStorage(nd, adj, const_values, forward_storage, partials_storage, reverse_storage, sort(collect(grad_sparsity)), hess_I, hess_J, rinfo, seed_matrix, linearity[1],dependent_subexpressions)
+    return FunctionStorage(nd, adj, const_values, forward_storage, partials_storage, reverse_storage, grad_sparsity, hess_I, hess_J, rinfo, seed_matrix, linearity[1],dependent_subexpressions)
 
 end
 
@@ -251,6 +255,7 @@ function MathProgBase.initialize(d::JuMPNLPEvaluator, requested_features::Vector
 
     d.want_hess = (:Hess in requested_features)
     want_hess_storage = (:HessVec in requested_features) || d.want_hess
+    coloring_storage = ReverseDiffSparse.Coloring.IndexedSet(numVar)
 
     d.has_nlobj = isa(nldata.nlobj, NonlinearExprData)
     max_expr_length = 0
@@ -275,34 +280,46 @@ function MathProgBase.initialize(d::JuMPNLPEvaluator, requested_features::Vector
         end
     end
 
-    subexpression_linearity = Array(Linearity, length(nldata.nlexpr))
-    subexpression_variables = Array(Set{Int}, length(nldata.nlexpr))
+    d.subexpression_linearity = Array(Linearity, length(nldata.nlexpr))
+    subexpression_variables = Array(Vector{Int}, length(nldata.nlexpr))
     subexpression_edgelist = Array(Set{Tuple{Int,Int}}, length(nldata.nlexpr))
     d.subexpressions = Array(SubexpressionStorage, length(nldata.nlexpr))
     d.subexpression_forward_values = Array(Float64, length(d.subexpressions))
     d.subexpression_reverse_values = Array(Float64, length(d.subexpressions))
+
+    empty_edgelist = Set{Tuple{Int,Int}}()
     for k in d.subexpression_order # only load expressions which actually are used
         if SIMPLIFY
-            nd_new, forward_value = simplify_expression(nldata.nlexpr[k].nd, nldata.nlexpr[k].const_values,subexpression_linearity, fixed_variables, d.parameter_values, d.m.colVal, d.subexpression_forward_values)
+            nd_new, forward_value, simplified_linearity = simplify_expression(nldata.nlexpr[k].nd, nldata.nlexpr[k].const_values,d.subexpression_linearity, fixed_variables, d.parameter_values, d.m.colVal, d.subexpression_forward_values)
         else
             nd_new = nldata.nlexpr[k].nd
             forward_value = NaN
+            simplified_linearity = NONLINEAR
         end
-        d.subexpressions[k] = SubexpressionStorage(nd_new, nldata.nlexpr[k].const_values, numVar, fixed_variables, subexpression_linearity)
-        subex = d.subexpressions[k]
         d.subexpression_forward_values[k] = forward_value
-        subexpression_linearity[k] = subex.linearity
-        if d.want_hess
-            vars = compute_gradient_sparsity(subex.nd)
-            # union with all dependent expressions
-            for idx in list_subexpressions(subex.nd)
-                union!(vars, subexpression_variables[idx])
+        if simplified_linearity != CONSTANT
+            d.subexpressions[k] = SubexpressionStorage(nd_new, nldata.nlexpr[k].const_values, numVar, fixed_variables, d.subexpression_linearity)
+            subex = d.subexpressions[k]
+            d.subexpression_linearity[k] = subex.linearity
+            @assert !SIMPLIFY || subex.linearity != CONSTANT
+            if d.want_hess
+                empty!(coloring_storage)
+                compute_gradient_sparsity!(coloring_storage,subex.nd)
+                # union with all dependent expressions
+                for idx in list_subexpressions(subex.nd)
+                    union!(coloring_storage, subexpression_variables[idx])
+                end
+                subexpression_variables[k] = collect(coloring_storage)
+                empty!(coloring_storage)
+                linearity = classify_linearity(subex.nd, subex.adj, d.subexpression_linearity, fixed_variables)
+                edgelist = compute_hessian_sparsity(subex.nd, subex.adj, linearity,coloring_storage,subexpression_edgelist, subexpression_variables)
+                subexpression_edgelist[k] = edgelist
             end
-            subexpression_variables[k] = vars
-            linearity = classify_linearity(subex.nd, subex.adj, subexpression_linearity, fixed_variables)
-            edgelist = compute_hessian_sparsity(subex.nd, subex.adj, linearity,subexpression_edgelist, subexpression_variables)
-            subexpression_edgelist[k] = edgelist
+        else
+            d.subexpression_linearity[k] = simplified_linearity
+            subexpression_edgelist[k] = empty_edgelist
         end
+
     end
 
     if SIMPLIFY
@@ -310,11 +327,11 @@ function MathProgBase.initialize(d::JuMPNLPEvaluator, requested_features::Vector
 
         # simplify objective and constraint expressions
         if d.has_nlobj
-            nd_new, forward_value = simplify_expression(nldata.nlobj.nd, nldata.nlobj.const_values,subexpression_linearity, fixed_variables, d.parameter_values, d.m.colVal, d.subexpression_forward_values)
+            nd_new, forward_value = simplify_expression(nldata.nlobj.nd, nldata.nlobj.const_values,d.subexpression_linearity, fixed_variables, d.parameter_values, d.m.colVal, d.subexpression_forward_values)
             push!(main_expressions,nd_new)
         end
         for k in 1:length(nldata.nlconstr)
-            nd_new, forward_value = simplify_expression(nldata.nlconstr[k].terms.nd, nldata.nlconstr[k].terms.const_values,subexpression_linearity, fixed_variables, d.parameter_values, d.m.colVal, d.subexpression_forward_values)
+            nd_new, forward_value = simplify_expression(nldata.nlconstr[k].terms.nd, nldata.nlconstr[k].terms.const_values,d.subexpression_linearity, fixed_variables, d.parameter_values, d.m.colVal, d.subexpression_forward_values)
             push!(main_expressions,nd_new)
         end
         # recompute dependencies after simplification
@@ -332,7 +349,7 @@ function MathProgBase.initialize(d::JuMPNLPEvaluator, requested_features::Vector
     if d.has_nlobj
         @assert length(d.m.obj.qvars1) == 0 && length(d.m.obj.aff.vars) == 0
         nd = main_expressions[1]
-        d.objective = FunctionStorage(nd, nldata.nlobj.const_values, numVar, d.want_hess, subexpr, individual_order[1], subexpression_linearity, subexpression_edgelist, subexpression_variables, fixed_variables)
+        d.objective = FunctionStorage(nd, nldata.nlobj.const_values, numVar, coloring_storage, d.want_hess, subexpr, individual_order[1], d.subexpression_linearity, subexpression_edgelist, subexpression_variables, fixed_variables)
         max_expr_length = max(max_expr_length, length(d.objective.nd))
         max_chunk = max(max_chunk, size(d.objective.seed_matrix,2))
     end
@@ -341,7 +358,7 @@ function MathProgBase.initialize(d::JuMPNLPEvaluator, requested_features::Vector
         nlconstr = nldata.nlconstr[k]
         idx = (d.has_nlobj) ? k+1 : k
         nd = main_expressions[idx]
-        push!(d.constraints, FunctionStorage(nd, nlconstr.terms.const_values, numVar, d.want_hess, subexpr, individual_order[idx], subexpression_linearity, subexpression_edgelist, subexpression_variables, fixed_variables))
+        push!(d.constraints, FunctionStorage(nd, nlconstr.terms.const_values, numVar, coloring_storage, d.want_hess, subexpr, individual_order[idx], d.subexpression_linearity, subexpression_edgelist, subexpression_variables, fixed_variables))
         max_expr_length = max(max_expr_length, length(d.constraints[end].nd))
         max_chunk = max(max_chunk, size(d.constraints[end].seed_matrix,2))
     end
@@ -403,7 +420,11 @@ function forward_eval_all(d::JuMPNLPEvaluator,x)
     subexpr_values = d.subexpression_forward_values
     user_input_buffer = d.jac_storage
     user_output_buffer = d.user_output_buffer
+    SIMPLIFY = d.m.simplify_nonlinear_expressions
     for k in d.subexpression_order
+        if SIMPLIFY && d.subexpression_linearity[k] == CONSTANT
+            continue
+        end
         ex = d.subexpressions[k]
         subexpr_values[k] = forward_eval(ex.forward_storage,ex.partials_storage,ex.nd,ex.adj,ex.const_values,d.parameter_values,x,subexpr_values,user_input_buffer,user_output_buffer)
     end
@@ -421,7 +442,11 @@ function reverse_eval_all(d::JuMPNLPEvaluator,x)
     subexpr_reverse_values = d.subexpression_reverse_values
     subexpr_values = d.subexpression_forward_values
     grad_storage = d.jac_storage
+    SIMPLIFY = d.m.simplify_nonlinear_expressions
     for k in d.subexpression_order
+        if SIMPLIFY && d.subexpression_linearity[k] == CONSTANT
+            continue
+        end
         ex = d.subexpressions[k]
         reverse_eval(ex.reverse_storage,ex.partials_storage,ex.nd,ex.adj)
     end
@@ -461,6 +486,7 @@ function MathProgBase.eval_grad_f(d::JuMPNLPEvaluator, g, x)
         forward_eval_all(d,x)
         reverse_eval_all(d,x)
     end
+    SIMPLIFY = d.m.simplify_nonlinear_expressions
     if d.has_nlobj
         fill!(g,0.0)
         ex = d.objective
@@ -469,6 +495,9 @@ function MathProgBase.eval_grad_f(d::JuMPNLPEvaluator, g, x)
         reverse_extract(g,ex.reverse_storage,ex.nd,ex.adj,subexpr_reverse_values,1.0)
         for i in length(ex.dependent_subexpressions):-1:1
             k = ex.dependent_subexpressions[i]
+            if SIMPLIFY && d.subexpression_linearity[k] == CONSTANT
+                continue
+            end
             subexpr = d.subexpressions[k]
             reverse_extract(g,subexpr.reverse_storage,subexpr.nd,subexpr.adj,subexpr_reverse_values,subexpr_reverse_values[k])
 
@@ -555,6 +584,7 @@ function MathProgBase.eval_jac_g(d::JuMPNLPEvaluator, J, x)
     end
     grad_storage = d.jac_storage
     subexpr_reverse_values = d.subexpression_reverse_values
+    SIMPLIFY = d.m.simplify_nonlinear_expressions
     for ex in d.constraints
         nzidx = ex.grad_sparsity
         grad_storage[nzidx] = 0.0
@@ -563,6 +593,9 @@ function MathProgBase.eval_jac_g(d::JuMPNLPEvaluator, J, x)
         reverse_extract(grad_storage,ex.reverse_storage,ex.nd,ex.adj,subexpr_reverse_values,1.0)
         for i in length(ex.dependent_subexpressions):-1:1
             k = ex.dependent_subexpressions[i]
+            if SIMPLIFY && d.subexpression_linearity[k] == CONSTANT
+                continue
+            end
             subexpr = d.subexpressions[k]
             reverse_extract(grad_storage,subexpr.reverse_storage,subexpr.nd,subexpr.adj,subexpr_reverse_values,subexpr_reverse_values[k])
         end
@@ -641,7 +674,11 @@ function MathProgBase.eval_hesslag_prod(
     forward_storage_ϵ = reinterpret(ForwardDiff.PartialsTup{1,Float64},d.forward_storage_ϵ)
     reverse_storage_ϵ = reinterpret(ForwardDiff.PartialsTup{1,Float64},d.reverse_storage_ϵ)
     partials_storage_ϵ = reinterpret(ForwardDiff.PartialsTup{1,Float64},d.partials_storage_ϵ)
+    SIMPLIFY = d.m.simplify_nonlinear_expressions
     for expridx in d.subexpression_order
+        if SIMPLIFY && d.subexpression_linearity[expridx] == CONSTANT
+            continue
+        end
         subexpr = d.subexpressions[expridx]
         sub_forward_storage_ϵ = reinterpret(ForwardDiff.PartialsTup{1,Float64},subexpr.forward_storage_ϵ)
         sub_partials_storage_ϵ = reinterpret(ForwardDiff.PartialsTup{1,Float64},subexpr.partials_storage_ϵ)
@@ -670,6 +707,9 @@ function MathProgBase.eval_hesslag_prod(
 
     for i in length(ex.dependent_subexpressions):-1:1
         expridx = ex.dependent_subexpressions[i]
+        if SIMPLIFY && d.subexpression_linearity[expridx] == CONSTANT
+            continue
+        end
         subexpr = d.subexpressions[expridx]
         sub_reverse_storage_ϵ = reinterpret(ForwardDiff.PartialsTup{1,Float64},subexpr.reverse_storage_ϵ)
         sub_partials_storage_ϵ = reinterpret(ForwardDiff.PartialsTup{1,Float64},subexpr.partials_storage_ϵ)
@@ -768,8 +808,12 @@ function hessian_slice_inner{CHUNK}(d, ex, R, input_ϵ, output_ϵ, ::Type{Val{CH
     zero_ϵ = ForwardDiff.zero_partials(NTuple{CHUNK,Float64},1)
 
 
+    SIMPLIFY = d.m.simplify_nonlinear_expressions
     # do a forward pass
     for expridx in ex.dependent_subexpressions
+        if SIMPLIFY && d.subexpression_linearity[expridx] == CONSTANT
+            continue
+        end
         subexpr = d.subexpressions[expridx]
         sub_forward_storage_ϵ = reinterpret_unsafe(ForwardDiff.PartialsTup{CHUNK,Float64},subexpr.forward_storage_ϵ)
         sub_partials_storage_ϵ = reinterpret_unsafe(ForwardDiff.PartialsTup{CHUNK,Float64},subexpr.partials_storage_ϵ)
@@ -784,6 +828,9 @@ function hessian_slice_inner{CHUNK}(d, ex, R, input_ϵ, output_ϵ, ::Type{Val{CH
     reverse_eval_ϵ(output_ϵ, ex.reverse_storage, reverse_storage_ϵ,ex.partials_storage, partials_storage_ϵ,ex.nd,ex.adj,d.subexpression_reverse_values,subexpr_reverse_values_ϵ, 1.0, zero_ϵ)
     for i in length(ex.dependent_subexpressions):-1:1
         expridx = ex.dependent_subexpressions[i]
+        if SIMPLIFY && d.subexpression_linearity[expridx] == CONSTANT
+            continue
+        end
         subexpr = d.subexpressions[expridx]
         sub_reverse_storage_ϵ = reinterpret_unsafe(ForwardDiff.PartialsTup{CHUNK,Float64},subexpr.reverse_storage_ϵ)
         sub_partials_storage_ϵ = reinterpret_unsafe(ForwardDiff.PartialsTup{CHUNK,Float64},subexpr.partials_storage_ϵ)
