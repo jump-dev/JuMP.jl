@@ -301,7 +301,7 @@ function MathProgBase.initialize(d::JuMPNLPEvaluator, requested_features::Vector
             d.subexpressions[k] = SubexpressionStorage(nd_new, nldata.nlexpr[k].const_values, numVar, fixed_variables, d.subexpression_linearity)
             subex = d.subexpressions[k]
             d.subexpression_linearity[k] = subex.linearity
-            @assert subex.linearity != CONSTANT
+            @assert !SIMPLIFY || subex.linearity != CONSTANT
             if d.want_hess
                 empty!(coloring_storage)
                 compute_gradient_sparsity!(coloring_storage,subex.nd)
