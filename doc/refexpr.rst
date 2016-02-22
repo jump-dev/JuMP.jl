@@ -50,15 +50,15 @@ Methods
       sum_to_one[i=1:3], z[i] + y == 1
     end)
 
-* ``@defExpr(ref, expr)`` - efficiently builds a linear or quadratic expression but does not add to model immediately. Instead, returns the expression which can then be inserted in other constraints. For example::
+* ``@defExpr(m::Model, ref, expr)`` - efficiently builds a linear, quadratic, or second-order cone expression but does not add to model immediately. Instead, returns the expression which can then be inserted in other constraints. For example::
 
-    @defExpr(shared, sum{i*x[i], i=1:5})
+    @defExpr(m, shared, sum{i*x[i], i=1:5})
     @addConstraint(m, shared + y >= 5)
     @addConstraint(m, shared + z <= 10)
 
 The ``ref`` accepts index sets in the same way as ``@defVar``, and those indices can be used in the construction of the expressions::
 
-    @defExpr(expr[i=1:3], i*sum{x[j], j=1:3})
+    @defExpr(m, expr[i=1:3], i*sum{x[j], j=1:3})
 * ``@addSDPConstraint(m::Model, expr)`` - adds a semidefinite constraint to the model ``m``. The expression ``expr`` must be a square, two-dimensional array.
 * ``addSOS1(m::Model, coll::Vector{AffExpr})`` - adds special ordered set constraint
   of type 1 (SOS1). Specify the set as a vector of weighted variables, e.g. ``coll = [3x, y, 2z]``.
