@@ -527,16 +527,16 @@ context("Vectorized arithmetic") do
                         2x[2] + x[1] + x[3]
                         x[2] + 2x[3]]) --> true
     @fact TestHelper.vec_eq(A*x, B*x) --> true
-    @fact TestHelper.vec_eq(A*x, @defExpr(B*x)) --> true
-    @fact TestHelper.vec_eq(@defExpr(A*x), @defExpr(B*x)) --> true
+    @fact TestHelper.vec_eq(A*x, @JuMP.Expression(B*x)) --> true
+    @fact TestHelper.vec_eq(@JuMP.Expression(A*x), @JuMP.Expression(B*x)) --> true
     @fact TestHelper.vec_eq(x'*A, [2x[1]+x[2]; 2x[2]+x[1]+x[3]; x[2]+2x[3]]') --> true
     @fact TestHelper.vec_eq(x'*A, x'*B) --> true
-    @fact TestHelper.vec_eq(x'*A, @defExpr(x'*B)) --> true
-    @fact TestHelper.vec_eq(@defExpr(x'*A), @defExpr(x'*B)) --> true
+    @fact TestHelper.vec_eq(x'*A, @JuMP.Expression(x'*B)) --> true
+    @fact TestHelper.vec_eq(@JuMP.Expression(x'*A), @JuMP.Expression(x'*B)) --> true
     @fact TestHelper.vec_eq(x'*A*x, [2x[1]*x[1] + 2x[1]*x[2] + 2x[2]*x[2] + 2x[2]*x[3] + 2x[3]*x[3]]) --> true
     @fact TestHelper.vec_eq(x'A*x, x'*B*x) --> true
-    @fact TestHelper.vec_eq(x'*A*x, @defExpr(x'*B*x)) --> true
-    @fact TestHelper.vec_eq(@defExpr(x'*A*x), @defExpr(x'*B*x)) --> true
+    @fact TestHelper.vec_eq(x'*A*x, @JuMP.Expression(x'*B*x)) --> true
+    @fact TestHelper.vec_eq(@JuMP.Expression(x'*A*x), @JuMP.Expression(x'*B*x)) --> true
 
     y = A*x
     @fact TestHelper.vec_eq(-x, [-x[1], -x[2], -x[3]]) --> true
@@ -583,7 +583,7 @@ context("Vectorized arithmetic") do
                              x[1] + 3x[2] +  x[3]
                                      x[2] + 3x[3]]) --> true
 
-    @fact TestHelper.vec_eq(@defExpr(A*x/2), A*x/2) --> true
+    @fact TestHelper.vec_eq(@JuMP.Expression(A*x/2), A*x/2) --> true
 end
 
 context("Dot-ops") do
@@ -668,10 +668,10 @@ context("Vectorized comparisons") do
     @fact TestHelper.vec_eq((x'A)' + 2A*x, (x'A)' + 2B*x) --> true
     @fact TestHelper.vec_eq((x'A)' + 2A*x, (x'B)' + 2A*x) --> true
     @fact TestHelper.vec_eq((x'A)' + 2A*x, (x'B)' + 2B*x) --> true
-    @fact TestHelper.vec_eq((x'A)' + 2A*x, @defExpr((x'A)' + 2A*x)) --> true
-    @fact TestHelper.vec_eq((x'A)' + 2A*x, @defExpr((x'B)' + 2A*x)) --> true
-    @fact TestHelper.vec_eq((x'A)' + 2A*x, @defExpr((x'A)' + 2B*x)) --> true
-    @fact TestHelper.vec_eq((x'A)' + 2A*x, @defExpr((x'B)' + 2B*x)) --> true
+    @fact TestHelper.vec_eq((x'A)' + 2A*x, @JuMP.Expression((x'A)' + 2A*x)) --> true
+    @fact TestHelper.vec_eq((x'A)' + 2A*x, @JuMP.Expression((x'B)' + 2A*x)) --> true
+    @fact TestHelper.vec_eq((x'A)' + 2A*x, @JuMP.Expression((x'A)' + 2B*x)) --> true
+    @fact TestHelper.vec_eq((x'A)' + 2A*x, @JuMP.Expression((x'B)' + 2B*x)) --> true
 
     @addConstraint(m, -1 .<= (x'A)' + 2A*x .<= 1)
     terms = map(v->v.terms, m.linconstr[4:6])

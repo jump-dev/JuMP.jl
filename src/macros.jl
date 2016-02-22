@@ -436,7 +436,7 @@ macro LinearConstraint(x)
             error("in @LinearConstraint ($(string(x))): Cannot add vectorized constraints")
         lhs = :($(x.args[1]) - $(x.args[3]))
         return quote
-            newaff = @defExpr($(esc(lhs)))
+            newaff = @Expression($(esc(lhs)))
             c = constructconstraint!(newaff,$(quot(sense)))
             isa(c, LinearConstraint) ||
                 error("Constraint in @LinearConstraint is really a $(typeof(c))")
@@ -459,7 +459,7 @@ macro LinearConstraint(x)
             elseif !isa($(esc(ub)),Number)
                 error(string("in @LinearConstraint (",$(string(x)),"): expected ",$(string(ub))," to be a number."))
             end
-            newaff = @defExpr($(esc(x.args[3])))
+            newaff = @Expression($(esc(x.args[3])))
             offset = newaff.constant
             newaff.constant = 0.0
             isa(newaff,AffExpr) || error("Ranged quadratic constraints are not allowed")
@@ -486,7 +486,7 @@ macro QuadConstraint(x)
             error("in @QuadConstraint ($(string(x))): Cannot add vectorized constraints")
         lhs = :($(x.args[1]) - $(x.args[3]))
         return quote
-            newaff = @defExpr($(esc(lhs)))
+            newaff = @Expression($(esc(lhs)))
             q = constructconstraint!(newaff,$(quot(sense)))
             isa(q, QuadConstraint) || error("Constraint in @QuadConstraint is really a $(typeof(q))")
             q
@@ -514,7 +514,7 @@ macro SOCConstraint(x)
             error("in @SOCConstraint ($(string(x))): Cannot add vectorized constraints")
         lhs = :($(x.args[1]) - $(x.args[3]))
         return quote
-            newaff = @defExpr($(esc(lhs)))
+            newaff = @Expression($(esc(lhs)))
             q = constructconstraint!(newaff,$(quot(sense)))
             isa(q, SOCConstraint) || error("Constraint in @SOCConstraint is really a $(typeof(q))")
             q
@@ -612,15 +612,37 @@ macro setObjective(m, args...)
     return assert_validmodel(m, code)
 end
 
+# Return a standalone, unnamed expression
+# ex = @Expression(2x + 3y)
+# Currently for internal use only.
+macro Expression(x)
+    newaff, parsecode = parseExprToplevel(x, :q)
+    code = quote
+        q = 0.0
+        $parsecode
+        $newaff
+    end
+    return code
+end
+
+
 macro defExpr(args...)
-    if length(args) == 1
+    if length(args) == 3
+        m = esc(args[1])
+        c = args[2]
+        x = args[3]
+    elseif length(args) == 1
+        m = nothing
         c = nothing
         x = args[1]
+        Base.warn_once("The one-argument version of @defExpr is deprecated. The corresponding JuMP model is now required as the first argument, and a name for the expression or collection of expressions is required as the second argument. The new syntax is @defExpr(<JuMP model>, <name of expression(s)>, <expression>)")
     elseif length(args) == 2
+        m = nothing
         c = args[1]
         x = args[2]
+        Base.warn_once("The two-argument version of @defExpr is deprecated. The corresponding JuMP model is now required as the first argument. The new syntax is @defExpr(<JuMP model>, <name of expression(s)>, <expression>)")
     else
-        error("in @defExpr: needs either one or two arguments.")
+        error("@defExpr: needs three arguments.")
     end
 
     refcall, idxvars, idxsets, idxpairs, condition = buildrefsets(c)
@@ -639,7 +661,13 @@ macro defExpr(args...)
         $code
         $(refcall) = $newaff
     end
-    return getloopedcode(c, code, condition, idxvars, idxsets, idxpairs, :AffExpr)
+    code = getloopedcode(c, code, condition, idxvars, idxsets, idxpairs, :AffExpr)
+    if m === nothing
+        return code # deprecated usage
+    else
+        # don't do anything with the model, but check that it's valid anyway
+        return assert_validmodel(m, code)
+    end
 end
 
 function hasdependentsets(idxvars, idxsets)
