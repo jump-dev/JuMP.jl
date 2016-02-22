@@ -17,6 +17,7 @@ function parseNLExpr(x, tapevar, parent, whichchild, values)
             code = :(let; end)
             block = code.args[1]
             @assert isexpr(block, :block)
+            haskey(univariate_operator_to_id,x.args[1]) || error("Unrecognized function $(x.args[1]) used in nonlinear expression.")
             operatorid = univariate_operator_to_id[x.args[1]]
             push!(block.args, :(push!($tapevar, NodeData(CALLUNIVAR, $operatorid, $parent, $whichchild))))
             parentvar = gensym()
@@ -27,6 +28,7 @@ function parseNLExpr(x, tapevar, parent, whichchild, values)
             code = :(let; end)
             block = code.args[1]
             @assert isexpr(block, :block)
+            haskey(operator_to_id,x.args[1]) || error("Unrecognized function $(x.args[1]) used in nonlinear expression.")
             operatorid = operator_to_id[x.args[1]]
             parentvar = gensym()
             push!(block.args, :(push!($tapevar, NodeData(CALL, $operatorid, $parent, $whichchild))))
