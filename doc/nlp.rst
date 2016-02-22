@@ -80,11 +80,6 @@ the syntax for linear and quadratic expressions. We note some important points b
     @defNLExpr(m, myexpr[i=1:n], sin(x[i]))
     @addNLConstraint(m, myconstr[i=1:n], myexpr[i] <= 0.5)
 
-.. note::
-    The syntax of ``@defNLExpr`` differs from ``@defExpr``. The former requires the
-    model object as the first argument, while the latter does not take the JuMP
-    model as an argument.
-
 .. _nonlinearprobmod:
 
 Nonlinear Parameters
@@ -111,7 +106,7 @@ Nonlinear parameters can be used *within nonlinear expressions* only::
     @defVar(m, z)
     @setObjective(m, Max, x*z)       # error: x is a nonlinear parameter
     @setNLObjective(m, Max, x*z)     # ok
-    @defExpr(my_expr, x*z^2)         # error: x is a nonlinear parameter
+    @defExpr(m, my_expr, x*z^2)      # error: x is a nonlinear parameter
     @defNLExpr(m, my_nl_expr, x*z^2) # ok
 
 Nonlinear parameters are useful when solving nonlinear models in a sequence::

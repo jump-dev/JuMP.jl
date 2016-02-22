@@ -4,6 +4,7 @@ JuMP release notes
 Unversioned
 -----------
 
+  * ``@defExpr`` and ``@defNLExpr`` now take the model as the first argument. The previous one-argument version of ``@defExpr`` is deprecated; all expressions should be named. E.g., replace ``@defExpr(2x+y)`` with ``@defExpr(jump_model, my_expr, 2x+y)``.
   * Replaced iteration over ``AffExpr`` with ``Number``-like scalar iteration; previous iteration behavior is now available via ``linearterms(::AffExpr)``.
   * Stopping the solver via ``throw(CallbackAbort())`` from a callback no longer triggers an exception. Instead, ``solve()`` returns ``UserLimit`` status.
 

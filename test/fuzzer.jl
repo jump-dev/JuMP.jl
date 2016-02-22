@@ -104,6 +104,6 @@ println("[fuzzer] Check macros for expression construction")
 
 for _ in 1:100
     raff = random_aff_expr(N, vars)
-    ex = @eval @defExpr($raff)
+    ex = @eval @JuMP.Expression($raff)
     @fact test_approx_equal_exprs(ex, eval(raff)) --> true
 end

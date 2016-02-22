@@ -69,13 +69,13 @@ facts("[macros] Check @addConstraint basics") do
     @fact conToStr(m.linconstr[end]) --> "-1 $leq x $leq 1"
     @fact_throws @addConstraint(m, x <= t <= y)
 
-    @defExpr(aff, 3x - y - 3.3(w + 2z) + 5)
+    @defExpr(m, aff, 3x - y - 3.3(w + 2z) + 5)
     @fact affToStr(aff) --> "3 x - y - 3.3 w - 6.6 z + 5"
 
     @addConstraint(m, 3 + 5*7 <= 0)
     @fact conToStr(m.linconstr[end]) --> "0 $leq -38"
 
-    @defExpr(qaff, (w+3)*(2x+1)+10)
+    @defExpr(m, qaff, (w+3)*(2x+1)+10)
     @fact quadToStr(qaff) --> "2 w*x + 6 x + w + 13"
 end
 
@@ -325,14 +325,20 @@ end
 facts("[macros] @defExpr") do
     model = Model()
     @defVar(model, x[1:3,1:3])
-    @defExpr(expr, sum{i*x[i,j] + j, i=1:3,j in 1:3})
+    @defExpr(model, expr, sum{i*x[i,j] + j, i=1:3,j in 1:3})
     @fact affToStr(expr) --> "x[1,1] + x[1,2] + x[1,3] + 2 x[2,1] + 2 x[2,2] + 2 x[2,3] + 3 x[3,1] + 3 x[3,2] + 3 x[3,3] + 18"
 
-    @fact_throws @defExpr(blah[i=1:3], x[i,1]^2)
+    @fact_throws @defExpr(model, blah[i=1:3], x[i,1]^2)
 
-    @defExpr(y[i=1:2], sum{x[i,1]; i == 1})
+    @defExpr(model, y[i=1:2], sum{x[i,1]; i == 1})
     @fact affToStr(y[1]) --> "x[1,1]"
     @fact affToStr(y[2]) --> "0"
+
+    # deprecated versions
+    @defExpr(expr2, sum{i*x[i,j] + j, i=1:3,j in 1:3})
+    @fact affToStr(expr2) --> "x[1,1] + x[1,2] + x[1,3] + 2 x[2,1] + 2 x[2,2] + 2 x[2,3] + 3 x[3,1] + 3 x[3,2] + 3 x[3,3] + 18"
+    expr2 = @defExpr(sum{i*x[i,j] + j, i=1:3,j in 1:3})
+    @fact affToStr(expr2) --> "x[1,1] + x[1,2] + x[1,3] + 2 x[2,1] + 2 x[2,2] + 2 x[2,3] + 3 x[3,1] + 3 x[3,2] + 3 x[3,3] + 18"
 end
 
 facts("[macros] Conditions in constraint indexing") do
