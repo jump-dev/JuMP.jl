@@ -912,7 +912,7 @@ macro setNLObjective(m, sense, x)
     code = quote
         initNLP($m)
         setObjectiveSense($m, $(esc(sense)))
-        ex = @processNLExpr($(esc(x)))
+        ex = @processNLExpr($m, $(esc(x)))
         $m.nlpdata.nlobj = ex
         $m.obj = zero(QuadExpr)
         $m.internalModelLoaded = false
@@ -955,7 +955,7 @@ macro addNLConstraint(m, x, extra...)
         end
         lhs = :($(x.args[1]) - $(x.args[3]))
         code = quote
-            c = NonlinearConstraint(@processNLExpr($(esc(lhs))), $lb, $ub)
+            c = NonlinearConstraint(@processNLExpr($m, $(esc(lhs))), $lb, $ub)
             push!($m.nlpdata.nlconstr, c)
             $(refcall) = ConstraintRef{NonlinearConstraint}($m, length($m.nlpdata.nlconstr))
         end
@@ -972,7 +972,7 @@ macro addNLConstraint(m, x, extra...)
             elseif !isa($(esc(ub)),Number)
                 error(string("in @addNLConstraint (",$(string(x)),"): expected ",$(string(ub))," to be a number."))
             end
-            c = NonlinearConstraint(@processNLExpr($(esc(x.args[3]))), $(esc(lb)), $(esc(ub)))
+            c = NonlinearConstraint(@processNLExpr($m, $(esc(x.args[3]))), $(esc(lb)), $(esc(ub)))
             push!($m.nlpdata.nlconstr, c)
             $(refcall) = ConstraintRef{NonlinearConstraint}($m, length($m.nlpdata.nlconstr))
         end
@@ -1029,7 +1029,7 @@ macro defNLExpr(args...)
 
     refcall, idxvars, idxsets, idxpairs, condition = buildrefsets(c)
     code = quote
-        $(refcall) = NonlinearExpression($m, @processNLExpr($(esc(x))))
+        $(refcall) = NonlinearExpression($m, @processNLExpr($m, $(esc(x))))
     end
     return assert_validmodel(m, getloopedcode(c, code, condition, idxvars, idxsets, idxpairs, :NonlinearExpression))
 end
