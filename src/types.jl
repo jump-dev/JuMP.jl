@@ -7,7 +7,6 @@ immutable NodeData
     nodetype::NodeType
     index::Int
     parent::Int
-    whichchild::Int # which number child is this node
 end
 
 export NodeData
