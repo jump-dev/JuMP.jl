@@ -168,5 +168,7 @@ Other AMPL-compatible solvers
 +++++++++++++++++++++++++++++
 
 Any other solver not listed above that can be called from `AMPL <http://ampl.com/products/solvers/all-solvers-for-ampl/>`_ can be used by JuMP through the
-`AmplNLWriter.jl <https://github.com/JackDunnNZ/AmplNLWriter.jl>`_ package. The first argument to ``AmplNLSolver``
+`AmplNLWriter.jl <https://github.com/JuliaOpt/AmplNLWriter.jl>`_ package. The first argument to ``AmplNLSolver``
 can be used to specify a solver executable name.
+
+For example, `SCIP <http://scip.zib.de/>`_ is a powerful noncommercial mixed-integer programming solver. To use SCIP within JuMP, you must first download and `compile SCIP with support for AMPL <http://zverovich.net/2012/08/07/using-scip-with-ampl.html>`_. Then you may use ``AmplNLSolver("/path/to/scipampl")`` where ``scipampl`` is the executable produced from the compilation process.
