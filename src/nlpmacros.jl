@@ -8,9 +8,8 @@
 
 # generates code which converts an expression into a NodeData array (tape)
 # parent is the index of the parent expression
-# whichchild is the index of this node in the parent expression
 # values is the name of the list of constants which appear in the expression
-function parseNLExpr(m, x, tapevar, parent, whichchild, values)
+function parseNLExpr(m, x, tapevar, parent, values)
 
     if isexpr(x, :call)
         if length(x.args) == 2 # univariate
@@ -19,10 +18,10 @@ function parseNLExpr(m, x, tapevar, parent, whichchild, values)
             @assert isexpr(block, :block)
             haskey(univariate_operator_to_id,x.args[1]) || error("Unrecognized function $(x.args[1]) used in nonlinear expression.")
             operatorid = univariate_operator_to_id[x.args[1]]
-            push!(block.args, :(push!($tapevar, NodeData(CALLUNIVAR, $operatorid, $parent, $whichchild))))
+            push!(block.args, :(push!($tapevar, NodeData(CALLUNIVAR, $operatorid, $parent))))
             parentvar = gensym()
             push!(block.args, :($parentvar = length($tapevar)))
-            push!(block.args, parseNLExpr(m, x.args[2], tapevar, parentvar, 1, values))
+            push!(block.args, parseNLExpr(m, x.args[2], tapevar, parentvar, values))
             return code
         else
             code = :(let; end)
@@ -31,10 +30,10 @@ function parseNLExpr(m, x, tapevar, parent, whichchild, values)
             haskey(operator_to_id,x.args[1]) || error("Unrecognized function $(x.args[1]) used in nonlinear expression.")
             operatorid = operator_to_id[x.args[1]]
             parentvar = gensym()
-            push!(block.args, :(push!($tapevar, NodeData(CALL, $operatorid, $parent, $whichchild))))
+            push!(block.args, :(push!($tapevar, NodeData(CALL, $operatorid, $parent))))
             push!(block.args, :($parentvar = length($tapevar)))
             for i in 1:length(x.args)-1
-                push!(block.args, parseNLExpr(m, x.args[i+1], tapevar, parentvar, i, values))
+                push!(block.args, parseNLExpr(m, x.args[i+1], tapevar, parentvar, values))
             end
             return code
         end
@@ -48,10 +47,10 @@ function parseNLExpr(m, x, tapevar, parent, whichchild, values)
             @assert x.args[k] == op # don't handle a <= b >= c
         end
         parentvar = gensym()
-        push!(block.args, :(push!($tapevar, NodeData(COMPARISON, $operatorid, $parent, $whichchild))))
+        push!(block.args, :(push!($tapevar, NodeData(COMPARISON, $operatorid, $parent))))
         push!(block.args, :($parentvar = length($tapevar)))
         for k in 1:2:length(x.args)
-            push!(block.args, parseNLExpr(m, x.args[k], tapevar, parentvar, div(k+1,2), values))
+            push!(block.args, parseNLExpr(m, x.args[k], tapevar, parentvar, values))
         end
         return code
     end
@@ -61,10 +60,10 @@ function parseNLExpr(m, x, tapevar, parent, whichchild, values)
         op = x.head
         operatorid = logic_operator_to_id[op]
         parentvar = gensym()
-        push!(block.args, :(push!($tapevar, NodeData(LOGIC, $operatorid, $parent, $whichchild))))
+        push!(block.args, :(push!($tapevar, NodeData(LOGIC, $operatorid, $parent))))
         push!(block.args, :($parentvar = length($tapevar)))
-        push!(block.args, parseNLExpr(m, x.args[1], tapevar, parentvar, 1, values))
-        push!(block.args, parseNLExpr(m, x.args[2], tapevar, parentvar, 2, values))
+        push!(block.args, parseNLExpr(m, x.args[1], tapevar, parentvar, values))
+        push!(block.args, parseNLExpr(m, x.args[2], tapevar, parentvar, values))
         return code
     end
     if isexpr(x, :curly)
@@ -81,11 +80,9 @@ function parseNLExpr(m, x, tapevar, parent, whichchild, values)
         end
         codeblock = :(let; end)
         block = codeblock.args[1]
-        push!(block.args, :(push!($tapevar, NodeData(CALL, $operatorid, $parent, $whichchild))))
+        push!(block.args, :(push!($tapevar, NodeData(CALL, $operatorid, $parent))))
         parentvar = gensym()
         push!(block.args, :($parentvar = length($tapevar)))
-        childcountervar = gensym()
-        push!(block.args, :($childcountervar = 1))
         
         # we have a filter condition
         if isexpr(x.args[2],:parameters)
@@ -94,10 +91,9 @@ function parseNLExpr(m, x, tapevar, parent, whichchild, values)
                 error("No commas after semicolon allowed in $header{} expression, use && for multiple conditions")
             end
             # generate inner loop code first and then wrap in for loops
-            innercode = parseNLExpr(m, x.args[3], tapevar, parentvar, childcountervar, values)
+            innercode = parseNLExpr(m, x.args[3], tapevar, parentvar, values)
             code = quote
                 if $(esc(cond.args[1]))
-                    $childcountervar += 1
                     $innercode
                 end
             end
@@ -113,9 +109,8 @@ function parseNLExpr(m, x, tapevar, parent, whichchild, values)
             end
             push!(block.args, code)
         else # no condition
-            innercode = parseNLExpr(m, x.args[2], tapevar, parentvar, childcountervar, values)
+            innercode = parseNLExpr(m, x.args[2], tapevar, parentvar, values)
             code = quote
-                $childcountervar += 1
                 $innercode
             end
             for level in length(x.args):-1:3
@@ -133,38 +128,38 @@ function parseNLExpr(m, x, tapevar, parent, whichchild, values)
         return codeblock
     end
     # at the lowest level?
-    return :( parseNLExpr_runtime($(esc(m)), $(esc(x)), $tapevar, $parent, $whichchild, $values) )
+    return :( parseNLExpr_runtime($(esc(m)),$(esc(x)), $tapevar, $parent, $values) )
 
 end
 
-function parseNLExpr_runtime(m::Model, x::Number, tape, parent, whichchild, values)
+function parseNLExpr_runtime(m::Model, x::Number, tape, parent, values)
     push!(values, x)
-    push!(tape, NodeData(VALUE, length(values), parent, whichchild))
+    push!(tape, NodeData(VALUE, length(values), parent))
     nothing
 end
 
 # Temporary hack for deprecation of @defNLExpr syntax
 const __last_model = Array(Model,1)
 
-function parseNLExpr_runtime(m::Model, x::Variable, tape, parent, whichchild, values)
+function parseNLExpr_runtime(m::Model, x::Variable, tape, parent, values)
     __last_model[1] = x.m
     x.m === m || error("Variable in nonlinear expression does not belong to corresponding model")
-    push!(tape, NodeData(VARIABLE, x.col, parent, whichchild))
+    push!(tape, NodeData(VARIABLE, x.col, parent))
     nothing
 end
 
-function parseNLExpr_runtime(m::Model, x::NonlinearExpression, tape, parent, whichchild, values)
-    push!(tape, NodeData(SUBEXPRESSION, x.index, parent, whichchild))
+function parseNLExpr_runtime(m::Model, x::NonlinearExpression, tape, parent, values)
+    push!(tape, NodeData(SUBEXPRESSION, x.index, parent))
     nothing
 end
 
-function parseNLExpr_runtime(m::Model, x::NonlinearParameter, tape, parent, whichchild, values)
-    push!(tape, NodeData(PARAMETER, x.index, parent, whichchild))
+function parseNLExpr_runtime(m::Model, x::NonlinearParameter, tape, parent, values)
+    push!(tape, NodeData(PARAMETER, x.index, parent))
     nothing
 end
 
 macro processNLExpr(m, ex)
-    parsed = parseNLExpr(m, ex, :tape, -1, -1, :values)
+    parsed = parseNLExpr(m, ex, :tape, -1, :values)
     quote
         tape = NodeData[]
         values = Float64[]
