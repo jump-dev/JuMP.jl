@@ -28,14 +28,14 @@ true_grad = [2*x[1]*cos(x[1]^2), -4*sin(x[2]*4)/5]
 
 # subexpressions
 
-nd_outer = [NodeData(SUBEXPRESSION,1,-1,-1)]
+nd_outer = [NodeData(SUBEXPRESSION,1,-1)]
 li = list_subexpressions(nd_outer)
 @test li == [1]
 li,li_individual = order_subexpressions(Vector{NodeData}[nd_outer], Vector{NodeData}[nd])
 @test li == [1]
 @test li_individual[1] == [1]
 
-nd_outer2 = [NodeData(CALL,operator_to_id[:+],-1,-1),NodeData(SUBEXPRESSION,2,1,1),NodeData(SUBEXPRESSION,1,1,2)]
+nd_outer2 = [NodeData(CALL,operator_to_id[:+],-1),NodeData(SUBEXPRESSION,2,1),NodeData(SUBEXPRESSION,1,1)]
 li = list_subexpressions(nd_outer2)
 @test li == [1,2]
 li,li_individual = order_subexpressions(Vector{NodeData}[nd_outer2], Vector{NodeData}[nd,nd_outer])
@@ -120,7 +120,7 @@ reverse_extract(grad,reverse_storage,nd,adj,[],1.0)
 @test grad[1] == 0
 
 # parameters
-nd = [NodeData(PARAMETER,1,-1,-1)]
+nd = [NodeData(PARAMETER,1,-1)]
 adj = adjmat(nd)
 storage = zeros(length(nd))
 partials_storage = zeros(length(nd))
