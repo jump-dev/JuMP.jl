@@ -1,5 +1,5 @@
 
-@enum NodeType CALL CALLUNIVAR VARIABLE VALUE PARAMETER SUBEXPRESSION LOGIC COMPARISON
+@enum NodeType CALL CALLUNIVAR VARIABLE VALUE PARAMETER SUBEXPRESSION LOGIC COMPARISON EXTRA
 
 export CALL, CALLUNIVAR, VARIABLE, VALUE, PARAMETER, SUBEXPRESSION, LOGIC, COMPARISON
 
@@ -22,6 +22,7 @@ export NodeData
 # for SUBEXPRESSION, index is into list of subexpressions
 # for LOGIC, index is into list of logical operators (inputs and outputs are boolean)
 # for COMPARISON, index is into lost of comparison operators
+# for EXTRA, index is extension specific
 
 const operators = [:+,:-,:*,:^,:/,:ifelse,:max,:min]
 const USER_OPERATOR_ID_START = length(operators) + 1
