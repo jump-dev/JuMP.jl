@@ -1,12 +1,16 @@
 JuMP release notes
 ==================
 
-Unversioned
------------
+Version 0.12.0 (February 27, 2017)
+----------------------------------
 
-  * ``@defExpr`` and ``@defNLExpr`` now take the model as the first argument. The previous one-argument version of ``@defExpr`` is deprecated; all expressions should be named. E.g., replace ``@defExpr(2x+y)`` with ``@defExpr(jump_model, my_expr, 2x+y)``.
+  * The automatic differentiation functionality has been completely rewritten with a number of user-facing changes:
+      - ``@defExpr`` and ``@defNLExpr`` now take the model as the first argument. The previous one-argument version of ``@defExpr`` is deprecated; all expressions should be named. E.g., replace ``@defExpr(2x+y)`` with ``@defExpr(jump_model, my_expr, 2x+y)``.
+      - JuMP no longer uses Julia's variable binding rules for efficiently re-solving a sequence of nonlinear models. Instead, we have introduced nonlinear parameters. This is a breaking change, so we have added a warning message when we detect models that may depend on the old behavior.
+      - Support for user-defined functions integrated within nonlinear JuMP expressions.
   * Replaced iteration over ``AffExpr`` with ``Number``-like scalar iteration; previous iteration behavior is now available via ``linearterms(::AffExpr)``.
   * Stopping the solver via ``throw(CallbackAbort())`` from a callback no longer triggers an exception. Instead, ``solve()`` returns ``UserLimit`` status.
+  * ``getDual()`` now works for conic problems (Thanks @emreyamangil.)
 
 Version 0.11.3 (February 4, 2016)
 ---------------------------------
