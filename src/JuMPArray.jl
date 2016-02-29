@@ -54,22 +54,38 @@ end
 function _to_cartesian(d,NT,idx...)
     indexing = Any[]
     for (i,S) in enumerate(NT.parameters)
+        idxtype = idx[1][i]
         if S == UnitRange{Int}
-            push!(indexing, quote
-                rng = d.indexsets[$i]
-                I = idx[$i]
-                first(rng) <= I <= last(rng) || error("Failed attempt to index JuMPArray along dimension $($i): $I ∉ $(d.indexsets[$i])")
-                I - (start(rng) - 1)
-            end)
+            if idxtype == Colon
+                # special stuff
+                push!(indexing, Colon())
+            elseif idxtype <: Range
+                push!(indexing, quote
+                    rng = d.indexsets[$i]
+                    I = idx[$i]
+                    I - (start(rng) - 1)
+                end)
+            else
+                push!(indexing, quote
+                    rng = d.indexsets[$i]
+                    I = idx[$i]
+                    first(rng) <= I <= last(rng) || error("Failed attempt to index JuMPArray along dimension $($i): $I ∉ $(d.indexsets[$i])")
+                    I - (start(rng) - 1)
+                end)
+            end
         elseif S == StepRange{Int}
-            push!(indexing, quote
-                rng = $(d.indexsets[i])
-                I = idx[$i]
-                first(rng) <= I <= last(rng) || error("Failed attempt to index JuMPArray along dimension $($i): $I ∉ $(d.indexsets[$i])")
-                dv, rv = divrem(I - start(rng), step(rng))
-                rv == 0 || error("Failed attempt to index JuMPArray along dimension $($i): $I ∉ $(d.indexsets[$i])")
-                dv + 1
-            end)
+            if idx[1][i] == Colon
+                push!(indexing, Colon())
+            else
+                push!(indexing, quote
+                    rng = $(d.indexsets[i])
+                    I = idx[$i]
+                    first(rng) <= I <= last(rng) || error("Failed attempt to index JuMPArray along dimension $($i): $I ∉ $(d.indexsets[$i])")
+                    dv, rv = divrem(I - start(rng), step(rng))
+                    rv == 0 || error("Failed attempt to index JuMPArray along dimension $($i): $I ∉ $(d.indexsets[$i])")
+                    dv + 1
+                end)
+            end
         else
             push!(indexing, quote
                 if !haskey(d.lookup[$i],idx[$i])
