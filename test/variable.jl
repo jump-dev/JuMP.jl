@@ -135,6 +135,10 @@ facts("[variable] getValue on empty things") do
     @fact length(getValue(z)) --> 0
 end
 
+# Slices three-dimensional JuMPContainer x[I+oi,J+oj,K+ok]
+# I,J,K can be singletons, ranges, colons, etc.
+# oi, oj, ok are scalar offsets. The last can be omitted, as
+# that's useful to test more exotic indexing ([:red,"blue"])
 function sliceof(x, I, J, K, oi, oj, ok=nothing)
     if length(K) == 1
         if length(J) == 1
