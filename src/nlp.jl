@@ -130,8 +130,6 @@ type JuMPNLPEvaluator <: MathProgBase.AbstractNLPEvaluator
         d = new(m)
         numVar = m.numCols
         d.A = prepConstrMatrix(m)
-        d.constraints = FunctionStorage[]
-        d.last_x = fill(NaN, numVar)
         d.jac_storage = Array(Float64,numVar)
         d.user_output_buffer = Array(Float64,numVar)
         # check if we have any user-defined operators, in which case we need to
@@ -240,6 +238,9 @@ function MathProgBase.initialize(d::JuMPNLPEvaluator, requested_features::Vector
 
     initNLP(d.m) #in case the problem is purely linear/quadratic thus far
     nldata::NLPData = d.m.nlpdata
+
+    d.constraints = FunctionStorage[]
+    d.last_x = fill(NaN, d.m.numCols)
 
     SIMPLIFY = d.m.simplify_nonlinear_expressions
 

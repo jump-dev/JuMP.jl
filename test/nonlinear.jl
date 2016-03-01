@@ -580,6 +580,14 @@ facts("[nonlinear] Hessians through MPB") do
     hess_raw = sparse(I,J,V)
     hess_sparse = hess_raw + hess_raw' - sparse(diagm(diag(hess_raw)))
     @fact hess_sparse --> roughly([0.0 1.0 0.0; 1.0 0.0 0.0; 0.0 0.0 6.0])
+
+    # Initialize again
+    MathProgBase.initialize(d, [:Hess])
+    V = zeros(length(I))
+    MathProgBase.eval_hesslag(d, V, m.colVal, 1.0, Float64[])
+    hess_raw = sparse(I,J,V)
+    hess_sparse = hess_raw + hess_raw' - sparse(diagm(diag(hess_raw)))
+    @fact hess_sparse --> roughly([0.0 1.0 0.0; 1.0 0.0 0.0; 0.0 0.0 6.0])
 end
 
 facts("[nonlinear] Hess-vec through MPB") do
