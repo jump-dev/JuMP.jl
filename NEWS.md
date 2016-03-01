@@ -1,7 +1,12 @@
 JuMP release notes
 ==================
 
-Version 0.12.0 (February 27, 2017)
+Version 0.12.1 (March 1, 2016)
+------------------------------
+
+  * Fix a regression in slicing for JuMPArrays (when not using 1-based indexing)
+
+Version 0.12.0 (February 27, 2016)
 ----------------------------------
 
   * The automatic differentiation functionality has been completely rewritten with a number of user-facing changes:
