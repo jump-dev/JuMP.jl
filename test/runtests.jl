@@ -253,7 +253,7 @@ using DualNumbers
 using ForwardDiff
 
 # dual forward test
-function dualforward(ex, x)
+function dualforward(ex, x; ignore_nan=false)
     nd,const_values = expr_to_nodedata(ex)
     adj = adjmat(nd)
     forward_storage = zeros(length(nd))
@@ -286,17 +286,30 @@ function dualforward(ex, x)
     reverse_extract(output_dual_storage,reverse_dual_storage,nd,adj,[],Dual(2.0))
     for k in 1:length(nd)
         @test_approx_eq epsilon(forward_dual_storage[k]) forward_storage_ϵ[k].data[1]
-        @test_approx_eq epsilon(partials_dual_storage[k]) partials_storage_ϵ[k].data[1]
-        @test_approx_eq epsilon(reverse_dual_storage[k]) reverse_storage_ϵ[k].data[1]/2
+        if !(isnan(epsilon(partials_dual_storage[k])) && ignore_nan)
+            @test_approx_eq epsilon(partials_dual_storage[k]) partials_storage_ϵ[k].data[1]
+        else
+            @test !isnan(forward_storage_ϵ[k].data[1])
+        end
+        if !(isnan(epsilon(reverse_dual_storage[k])) && ignore_nan)
+            @test_approx_eq epsilon(reverse_dual_storage[k]) reverse_storage_ϵ[k].data[1]/2
+        else
+            @test !isnan(reverse_storage_ϵ[k].data[1])
+        end
     end
     for k in 1:length(x)
-        @test_approx_eq epsilon(output_dual_storage[k]) output_ϵ[k].data[1]
+        if !(isnan(epsilon(output_dual_storage[k])) && ignore_nan)
+            @test_approx_eq epsilon(output_dual_storage[k]) output_ϵ[k].data[1]
+        else
+            @test !isnan(output_ϵ[k].data[1])
+        end
     end
 end
 
 dualforward(:(sin(x[1]^2) + cos(x[2]*4)/5-2.0),[1.0,2.0])
 dualforward(:(sin(x[1]^x[2]) + cos(x[2]*4)/5-2.0),[1.0,2.0])
 dualforward(:(sin(x[1]^3) + cos(x[1]*x[2]*4)/5-2.0),[1.0,0.0])
+dualforward(:(x[1]*x[2]),[3.427139283036299e-206,1.0], ignore_nan=true)
 
 
 include("test_coloring.jl")

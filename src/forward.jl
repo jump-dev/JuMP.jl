@@ -250,13 +250,18 @@ function forward_eval_ϵ{N,T}(storage::Vector{T},storage_ϵ::DenseVector{Forward
                 n_children = length(children_idx)
                 if op == 3 # :*
                     # Lazy approach for now
+                    anyzero = false
                     tmp_prod = one(ForwardDiff.GradientNumber{N,T,NTuple{N,T}})
                     for c_idx in children_idx
                         ix = children_arr[c_idx]
-                        gnum = gradnum(storage[ix],storage_ϵ[ix])
+                        sval = storage[ix]
+                        gnum = gradnum(sval,storage_ϵ[ix])
                         tmp_prod *= gnum
+                        anyzero = ifelse(sval*sval == zero(T), true, anyzero)
                     end
-                    if ForwardDiff.value(tmp_prod) == zero(T) # inefficient
+                    # By a quirk of floating-point numbers, we can have
+                    # anyzero == true && ForwardDiff.value(tmp_prod) != zero(T)
+                    if anyzero # inefficient
                         for c_idx in children_idx
                             prod_others = one(ForwardDiff.GradientNumber{N,T,NTuple{N,T}})
                             for c_idx2 in children_idx
