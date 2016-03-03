@@ -71,6 +71,7 @@ _build_norm(Lp, terms::Vector{GenericAffExpr}) = _build_norm(Lp, [terms...])
 # Alias for AffExprs. Short-hand used in operator overloads, etc.
 typealias Norm{P} GenericNorm{P,Float64,Variable}
 
+getValue{P,C,V}(n::GenericNorm{P,C,V}) = norm(getValue(n.terms),P)
 
 ##########################################################################
 # GenericNormExpr
@@ -94,10 +95,11 @@ typealias GenericSOCExpr{C,V} GenericNormExpr{2,C,V}
 # Alias for ‖Ax‖₂ and AffExpr case
 typealias SOCExpr GenericSOCExpr{Float64,Variable}
 
+getValue(n::GenericNormExpr) = n.coeff * getValue(n.norm) + getValue(n.aff)
 
 ##########################################################################
 # GenericSOCConstraint
-# Second-order cone constraint of form 
+# Second-order cone constraint of form
 # α||Ax-b||₂ + cᵀx + d ≤ 0
 type GenericSOCConstraint{T<:GenericSOCExpr} <: JuMPConstraint
     normexpr::T

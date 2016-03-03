@@ -13,6 +13,9 @@
 #############################################################################
 using JuMP, FactCheck
 
+# If solvers not loaded, load them (i.e running just these tests)
+!isdefined(:lp_solvers) && include("solvers.jl")
+
 facts("[qcqpmodel] Test quad objective (discrete)") do
 for solver in quad_mip_solvers
 context("With solver $(typeof(solver))") do
@@ -325,6 +328,8 @@ context("With solver $(typeof(solver))") do
     @fact solve(m) --> :Optimal
     @fact getObjectiveValue(m) --> roughly(2+sqrt(2), 1e-5)
     @fact norm(getValue(x)-[1+sqrt(1/2),1+sqrt(1/2),1]) --> roughly(0, 1e-6)
+    @fact getValue(norm(x-1)) --> roughly(1, 1e-5)
+    @fact getValue(norm(x-1)-2) --> roughly(-1, 1e-5)
 end; end; end
 
 facts("[qcqpmodel] Test quad problem modification") do
@@ -367,11 +372,12 @@ context("With solver $(typeof(solver))") do
 
     @setObjective(mod, Max, v)
 
-    @addConstraint(mod, norm(x[:]) <= 1)
+    @addConstraint(mod, norm(x) <= 1)
     @addConstraint(mod, v^2 <= u * x[1])
 
     @fact solve(mod) --> :Optimal
     @fact getValue(x) --> roughly([1,0,0,0,0], 1e-2)
     @fact getValue(u) --> roughly(5, 1e-4)
     @fact getValue(v) --> roughly(sqrt(5), 1e-6)
+    @fact getValue(norm(x)) --> roughly(1, 1e-4)
 end; end; end
