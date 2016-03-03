@@ -52,7 +52,7 @@ export
     @addConstraint, @addConstraints, @addSDPConstraint,
     @LinearConstraint, @LinearConstraints, @QuadConstraint, @QuadConstraints,
     @SOCConstraint, @SOCConstraints,
-    @defVar, @defConstrRef, @setObjective, addToExpression, @defExpr,
+    @defVar, @defConstrRef, @setObjective, addToExpression, @defExpr, @defVars,
     @setNLObjective, @addNLConstraint, @addNLConstraints,
     @defNLExpr, @defNLParam
 

@@ -553,42 +553,41 @@ for (mac,sym) in [(:LinearConstraints, symbol("@LinearConstraint")),
 end
 
 for (mac,sym) in [(:addConstraints,  symbol("@addConstraint")),
-                  (:addNLConstraints,symbol("@addNLConstraint"))]
+                  (:addNLConstraints,symbol("@addNLConstraint")),
+                  (:defVars,symbol("@defVar"))]
     @eval begin
         macro $mac(m, x)
             x.head == :block || error("Invalid syntax for @$mac")
             @assert x.args[1].head == :line
             code = quote end
             for it in x.args
-                if it.head == :line
+                if isexpr(it, :line)
                     # do nothing
-                elseif it.head == :comparison # regular constraint
-                    mac = Expr(:macrocall,$(quot(sym)), esc(m), esc(it))
-                    code = quote
-                            $code
-                            $mac
-                            end
-                elseif it.head == :tuple # constraint ref or kwargs
-                    for i in 1:length(it.args)
-                        if isexpr(it.args[i], :(=))
-                            it.args[i] = Expr(:kw, it.args[i].args[1], esc(it.args[i].args[2]))
+                elseif isexpr(it, :tuple) # line with commas
+                    args = []
+                    for ex in it.args
+                        if isexpr(ex, :tuple) # embedded tuple
+                            append!(args, ex.args)
                         else
-                            it.args[i] = esc(it.args[i])
+                            push!(args, ex)
                         end
                     end
-                    mac = Expr(:macrocall,$(quot(sym)), esc(m), it.args...)
-                    code = quote
-                            $code
-                            $mac
-                            end
-                else
-                    error("Unexpected constraint expression $it")
+                    args_esc = []
+                    for ex in args
+                        if isexpr(ex, :(=))
+                            push!(args_esc,Expr(:kw, ex.args[1], esc(ex.args[2])))
+                        else
+                            push!(args_esc, esc(ex))
+                        end
+                    end
+                    mac = Expr(:macrocall,$(quot(sym)), esc(m), args_esc...)
+                    push!(code.args, mac)
+                else # stand-alone symbol or expression
+                    push!(code.args,Expr(:macrocall,$(quot(sym)), esc(m), esc(it)))
                 end
             end
-            return quote
-                    $code
-                    nothing
-                end
+            push!(code.args, :(nothing))
+            return code
         end
     end
 end
