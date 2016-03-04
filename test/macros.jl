@@ -456,20 +456,20 @@ end
 facts("[macros] @defVars and @addConstraints") do
     m = Model()
     @defVars m begin
-        0 ≤ x ≤ 1
+        0 ≤ x[i=1:2] ≤ i
         y ≥ 2, Int, (start = 0.7)
         z ≤ 3, (start=10)
         q, (Bin, start=0.5)
     end
     @addConstraints m begin
-        0 ≤ x + y ≤ 1
-        x + z ≤ 2
+        0 ≤ x[1] + y ≤ 1
+        x[1] + z ≤ 2
         y + z ≥ 3
         y*z ≤ 1
     end
-    @fact m.colUpper --> [1.0, Inf,  3.0, 1.0]
-    @fact m.colLower --> [0.0, 2.0, -Inf, 0.0]
-    @fact m.colCat --> [:Cont, :Int, :Cont, :Bin]
+    @fact m.colUpper --> [1.0, 2.0, Inf,  3.0, 1.0]
+    @fact m.colLower --> [0.0, 0.0, 2.0, -Inf, 0.0]
+    @fact m.colCat --> [:Cont, :Cont, :Int, :Cont, :Bin]
     @fact getValue(y) --> 0.7
     @fact getValue(z) --> 10
     @fact getValue(q) --> 0.5
