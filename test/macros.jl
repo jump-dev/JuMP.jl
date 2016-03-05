@@ -452,3 +452,32 @@ facts("[macros] Issue #621") do
     con = @QuadConstraint(a+q*3 <= 0)
     @fact conToStr(con) --> "3 x² + x + 1 $leq 0"
 end
+
+facts("[macros] @defVars and @addConstraints") do
+    m = Model()
+    @defVars m begin
+        0 ≤ x[i=1:2] ≤ i
+        y ≥ 2, Int, (start = 0.7)
+        z ≤ 3, (start=10)
+        q, (Bin, start=0.5)
+    end
+    @addConstraints m begin
+        0 ≤ x[1] + y ≤ 1
+        x[1] + z ≤ 2
+        y + z ≥ 3
+        y*z ≤ 1
+    end
+    @fact m.colUpper --> [1.0, 2.0, Inf,  3.0, 1.0]
+    @fact m.colLower --> [0.0, 0.0, 2.0, -Inf, 0.0]
+    @fact m.colCat --> [:Cont, :Cont, :Int, :Cont, :Bin]
+    @fact getValue(y) --> 0.7
+    @fact getValue(z) --> 10
+    @fact getValue(q) --> 0.5
+    @fact m.linconstr[1].lb --> 0.0
+    @fact m.linconstr[1].ub --> 1.0
+    @fact m.linconstr[2].lb --> -Inf
+    @fact m.linconstr[2].ub --> 2.0
+    @fact m.linconstr[3].lb --> 3.0
+    @fact m.linconstr[3].ub --> Inf
+    @fact m.quadconstr[1].sense --> :(<=)
+end
