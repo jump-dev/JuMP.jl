@@ -234,6 +234,13 @@ facts("[macros] @addNLConstraints") do
 
 end
 
+facts("[macros] Vectors in nonlinear expressions") do
+    m = Model()
+    @defVar(m, x[1:3])
+    @fact_throws ErrorException @setNLObjective(m, Min, x)
+    @fact_throws ErrorException @setNLObjective(m, Min, [1,2,3])
+end
+
 facts("[macros] @setObjective with quadratic") do
     m = Model()
     @defVar(m, x[1:5])

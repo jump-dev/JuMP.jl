@@ -158,6 +158,10 @@ function parseNLExpr_runtime(m::Model, x::NonlinearParameter, tape, parent, valu
     nothing
 end
 
+function parseNLExpr_runtime(m::Model, x::Vector, tape, parent, values)
+    error("Unexpected vector $x in nonlinear expression. Nonlinear expressions may contain only scalar expressions.")
+end
+
 macro processNLExpr(m, ex)
     parsed = parseNLExpr(m, ex, :tape, -1, :values)
     quote
