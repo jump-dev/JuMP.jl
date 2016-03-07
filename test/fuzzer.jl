@@ -60,7 +60,6 @@ m = Model()
 N = 5
 vars = [:x, :y, :z, :w, :v, :(identity(x)), :(identity(y)), :(identity(z))]
 
-
 const ε = 10eps()
 nvars = length(vars)
 
@@ -95,7 +94,8 @@ function test_approx_equal_exprs(ex1, ex2)
         abs(v) < ε || (res = false)
     end
     if !res
-        warn("The following expression did not pass the fuzzer:\n    ex1 = $ex1\n    ex2 = $ex2")
+        str = "The following expression did not pass the fuzzer:\n    ex1 = QuadExpr($(ex1.qvars1),$(ex1.qvars2),$(ex1.qcoeffs),AffExpr($(ex1.aff.vars),$(ex1.aff.coeffs),$(ex1.aff.constant)))\n    ex2 = QuadExpr($(ex2.qvars1),$(ex2.qvars2),$(ex2.qcoeffs),AffExpr($(ex2.aff.vars),$(ex2.aff.coeffs),$(ex2.aff.constant)))"
+        warn(str)
     end
     return res
 end
