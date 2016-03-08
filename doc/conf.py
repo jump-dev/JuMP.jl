@@ -50,7 +50,7 @@ master_doc = 'index'
 # General information about the project.
 project = u'JuMP -- Julia for Mathematical Programming'
 AUTHORS = u"Miles Lubin, Iain Dunning, and Joey Huchette"
-copyright = u'2015, '+AUTHORS
+copyright = u'2016, '+AUTHORS
 
 # The version info for the project you're documenting, acts as replacement for
 # |version| and |release|, also used in various other places throughout the
