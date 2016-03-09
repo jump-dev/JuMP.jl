@@ -288,7 +288,7 @@ Sometimes it can be useful to track solver progress without actually changing th
 For a simple example, we can add a function that tracks the best bound and incumbent objective value as the solver progresses through the branch-and-bound tree::
 
     type NodeData
-        time::UInt64  # in nanoseconds
+        time::Float64  # in seconds since the epoch
         node::Int
         obj::Float64
         bestbound::Float64
@@ -302,7 +302,7 @@ For a simple example, we can add a function that tracks the best bound and incum
         node      = MathProgBase.cbgetexplorednodes(cb)
         obj       = MathProgBase.cbgetobj(cb)
         bestbound = MathProgBase.cbgetbestbound(cb)
-        push!(bbdata, NodeData(time_ns(),node,obj,bestbound))
+        push!(bbdata, NodeData(time(),node,obj,bestbound))
     end
     addInfoCallback(m, infocallback)
     
