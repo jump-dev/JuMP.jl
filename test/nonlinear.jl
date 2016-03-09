@@ -601,7 +601,7 @@ facts("[nonlinear] Hess-vec through MPB") do
     @addNLConstraint(m, a^2/2 <= 1)
     d = JuMPNLPEvaluator(m)
     MathProgBase.initialize(d, [:HessVec])
-    h = zeros(3)
+    h = ones(3) # test that input values are overwritten
     v = [2.4,3.5,1.2]
     MathProgBase.eval_hesslag_prod(d, h, m.colVal, v, 1.0, [2.0,3.0])
     correct = [3.0 1.0 0.0; 1.0 0.0 2.0; 0.0 2.0 2.0]*v

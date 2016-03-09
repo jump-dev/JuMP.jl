@@ -630,6 +630,8 @@ function MathProgBase.eval_hesslag_prod(
         reverse_eval_all(d,x)
     end
 
+    fill!(h, 0.0)
+
     # quadratic objective
     qobj::QuadExpr = d.m.obj
     for k in 1:length(qobj.qvars1)
