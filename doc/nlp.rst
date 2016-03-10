@@ -243,9 +243,9 @@ For example::
     @addConstraint(m, cons2, x + 1 == 3)
     @addNLConstraint(m, cons3, x + 5 == 10)
 
-    typeof(cons1) # ConstraintRef{GenericQuadConstraint{GenericQuadExpr{Float64,Variable}}} indicates a quadratic constraint
-    typeof(cons2) # ConstraintRef{GenericRangeConstraint{GenericAffExpr{Float64,Variable}}} indicates a linear constraint
-    typeof(cons3) # ConstraintRef{GenericRangeConstraint{SymbolicOutput}} indicates a nonlinear constraint
+    typeof(cons1) # JuMP.ConstraintRef{JuMP.GenericQuadConstraint{JuMP.GenericQuadExpr{Float64,JuMP.Variable}}} indicates a quadratic constraint
+    typeof(cons2) # JuMP.ConstraintRef{JuMP.GenericRangeConstraint{JuMP.GenericAffExpr{Float64,JuMP.Variable}}} indicates a linear constraint
+    typeof(cons3) # JuMP.ConstraintRef{JuMP.GenericRangeConstraint{JuMP.NonlinearExprData}} indicates a nonlinear constraint
     getLinearIndex(cons1) == getLinearIndex(cons2) == getLinearIndex(cons3) == 1
 
 When querying derivatives, ``cons2`` will appear first, because it is the first linear constraint, then ``cons1``, because it is the first quadratic constraint, then ``cons3``, because it is the first nonlinear constraint. Note that for one-sided nonlinear constraints, JuMP subtracts any values on the right-hand side when computing expression. In other words, one-sided linear constraints are always transformed to have a right-hand side of zero.
