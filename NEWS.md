@@ -1,6 +1,11 @@
 JuMP release notes
 ==================
 
+Version 0.12.2 (March 9, 2016)
+------------------------------
+
+  * Small fixes for nonlinear optimization
+
 Version 0.12.1 (March 1, 2016)
 ------------------------------
 
