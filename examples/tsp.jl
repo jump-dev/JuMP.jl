@@ -109,7 +109,6 @@ function solveTSP(n, cities)
     end
 
     # Create a model that will use Gurobi to solve
-    # We need to tell Gurobi we are using lazy constraints
     m = Model(solver=GurobiSolver())
 
     # x[i,j] is 1 iff we travel between i and j, 0 otherwise
@@ -178,7 +177,7 @@ function solveTSP(n, cities)
         # Add the new subtour elimination constraint we built
         println("Adding subtour elimination cut")
         println("----")
-        addLazyConstraint(cb, arcs_from_subtour >= 2)
+        @addLazyConstraint(cb, arcs_from_subtour >= 2)
     end  # End function subtour
 
     # Solve the problem with our cut generator
