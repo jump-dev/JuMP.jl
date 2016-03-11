@@ -238,7 +238,7 @@ function forward_eval_ϵ{N,T}(storage::Vector{T},storage_ϵ::DenseVector{Forward
             for c_idx in children_idx
                 ix = children_arr[c_idx]
                 @inbounds partial = partials_storage[ix]
-                if isnan(partials_storage[ix]) && storage_ϵ[ix] == zero_ϵ
+                if !isfinite(partials_storage[ix]) && storage_ϵ[ix] == zero_ϵ
                     continue
                 end
                 ϵtmp += storage_ϵ[ix]*partials_storage[ix]
