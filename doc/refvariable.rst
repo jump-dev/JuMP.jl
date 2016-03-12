@@ -95,7 +95,14 @@ This form of constructing variables is not considered idiomatic JuMP code.
     The reference to the first set of variables has been lost, although they will remain
     in the model.
 
-Finally, the constructor ``Variable(m::Model,idx::Int)`` may be used to create a variable object corresponding to an *existing* variable in the model (the constructor does not add a new variable to the model). The variable indices correspond to those of the internal MathProgBase model. The inverse of this operation is ``getLinearIndex(x::Variable)``, which returns the flattened out (linear) index of a variable as JuMP provides it to a solver. We guarantee that ``Variable(m,getLinearIndex(x))`` returns ``x`` itself. These methods are only useful if you intend to interact with solver properties which are not directly exposed through JuMP.
+The constructor ``Variable(m::Model,idx::Int)`` may be used to create a variable object corresponding to an *existing* variable in the model (the constructor does not add a new variable to the model). The variable indices correspond to those of the internal MathProgBase model. The inverse of this operation is ``getLinearIndex(x::Variable)``, which returns the flattened out (linear) index of a variable as JuMP provides it to a solver. We guarantee that ``Variable(m,getLinearIndex(x))`` returns ``x`` itself. These methods are only useful if you intend to interact with solver properties which are not directly exposed through JuMP.
+
+If you would like to change the name used when printing a variable or group of variables, you may use the ``basename`` keyword argument:
+
+    i = 3
+    @defVar(m, x[1:3], basename="myvariable-$i")
+
+Printing ``x[2]`` will display ``myvariable-3[2]``.
 
 Semidefinite and symmetric variables
 ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
