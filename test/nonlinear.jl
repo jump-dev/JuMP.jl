@@ -608,6 +608,26 @@ facts("[nonlinear] Hess-vec through MPB") do
     @fact h --> roughly(correct)
 end
 
+facts("[nonlinear] NaN corner case (#695)") do
+
+    m = Model()
+    x0 = 0.0
+    y0 = 0.0
+
+    @defVar(m, x >= -1, start = 1.0)
+    @defVar(m, y, start = 2.0)
+
+    @setNLObjective(m, Min, (x - x0) /(sqrt(y0) + sqrt(y)))
+
+    d = JuMPNLPEvaluator(m)
+    MathProgBase.initialize(d, [:HessVec])
+    h = ones(2)
+    v = [2.4,3.5]
+    MathProgBase.eval_hesslag_prod(d, h, m.colVal, v, 1.0, Float64[])
+    correct = [0.0 -1/(2*2^(3/2)); -1/(2*2^(3/2)) 3/(4*2^(5/2))]*v
+    @fact h --> roughly(correct)
+end
+
 if length(convex_nlp_solvers) > 0
     facts("[nonlinear] Error on NLP resolve") do
         m = Model(solver=convex_nlp_solvers[1])
