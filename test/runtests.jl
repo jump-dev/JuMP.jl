@@ -119,6 +119,20 @@ reverse_eval(reverse_storage,partials_storage,nd,adj)
 reverse_extract(grad,reverse_storage,nd,adj,[],1.0)
 @test grad[1] == 0
 
+ex = :(sqrt(x[1]))
+nd,const_values = expr_to_nodedata(ex)
+adj = adjmat(nd)
+storage = zeros(length(nd))
+partials_storage = zeros(length(nd))
+reverse_storage = zeros(length(nd))
+grad = zeros(1)
+fval = forward_eval(storage,partials_storage,nd,adj,const_values,[],[-1.5],[])
+@test isnan(fval)
+reverse_eval(reverse_storage,partials_storage,nd,adj)
+reverse_extract(grad,reverse_storage,nd,adj,[],1.0)
+@test isnan(grad[1])
+
+
 # parameters
 nd = [NodeData(PARAMETER,1,-1)]
 adj = adjmat(nd)
