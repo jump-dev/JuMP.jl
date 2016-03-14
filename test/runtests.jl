@@ -204,6 +204,7 @@ test_linearity(:(1/(x[1]+3)), NONLINEAR)
 test_linearity(:(ifelse(x[1] <= 1,x[1],x[2])), PIECEWISE_LINEAR, Set([]))
 test_linearity(:(ifelse(x[1] <= 1,x[1]^2,x[2])), NONLINEAR, Set([(1,1)]))
 test_linearity(:(ifelse(1 <= 1,2,3)), CONSTANT)
+test_linearity(:(1/ifelse(x[1] < 1, x[1],0)), NONLINEAR, Set([(1,1)]))
 
 # eliminating fixed variables and constants
 ex = :(sin(x[1]^2) + cos(x[2]*(2*2))/5-2.0)

@@ -57,6 +57,7 @@ function compute_hessian_sparsity(nd::Vector{NodeData},adj,input_linearity::Vect
     children_arr = rowvals(adj)
 
     stack = Int[]
+    stack_ignore = Bool[]
     nonlinear_group = indexedset
     if length(nd) == 1 && nd[1].nodetype == SUBEXPRESSION
         # subexpression comes in linearly, so append edgelist
@@ -64,7 +65,7 @@ function compute_hessian_sparsity(nd::Vector{NodeData},adj,input_linearity::Vect
             push!(edgelist,ij)
         end
     end
-    
+
     for k in 2:length(nd)
         nod = nd[k]
         nonlinear_wrt_output[k] && continue # already seen this node one way or another
@@ -111,21 +112,28 @@ function compute_hessian_sparsity(nd::Vector{NodeData},adj,input_linearity::Vect
         
         # do a DFS from here, including all children
         @assert isempty(stack)
+        @assert isempty(stack_ignore)
         sibling_idx = nzrange(adj,nod.parent)
         for sidx in sibling_idx
             push!(stack, children_arr[sidx])
+            push!(stack_ignore, false)
         end
         empty!(nonlinear_group)
         while length(stack) > 0
             r = pop!(stack)
+            should_ignore = pop!(stack_ignore)
             nonlinear_wrt_output[r] = true
             if nd[r].nodetype == LOGIC || nd[r].nodetype == COMPARISON
-                continue
+                # don't count the nonlinear interactions inside
+                # logical conditions or comparisons
+                should_ignore = true
             end
             children_idx = nzrange(adj,r)
             for cidx in children_idx
                 push!(stack, children_arr[cidx])
+                push!(stack_ignore, should_ignore)
             end
+            should_ignore && continue
             if nd[r].nodetype == VARIABLE
                 push!(nonlinear_group, nd[r].index)
             elseif nd[r].nodetype == SUBEXPRESSION
