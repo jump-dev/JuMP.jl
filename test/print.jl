@@ -582,3 +582,24 @@ facts("[print] User-created Array{Variable}") do
  x  y
  y  x""")
 end
+
+facts("[print] basename keyword argument") do
+    m = Model()
+    @defVar(m, x, basename="foo")
+    @defVar(m, y[1:3], basename=:bar)
+    num = 123
+    @defVar(m, z[[:red,:blue]], basename="color_$num")
+    @defVar(m, v[1:2,1:2], SDP, basename=string("i","$num",num))
+    @defVar(m, w[1:3,1:3], Symmetric, basename="symm")
+
+    io_test(REPLMode,   x, "foo")
+    io_test(IJuliaMode, x, "foo")
+    io_test(REPLMode,   y[2], "bar[2]")
+    io_test(IJuliaMode, y[2], "bar_{2}")
+    io_test(REPLMode,   z[:red], "color_123[red]")
+    io_test(IJuliaMode, z[:red], "color_123_{red}")
+    io_test(REPLMode,   v[2,1], "i123123[1,2]")
+    io_test(IJuliaMode, v[2,1], "i123123_{1,2}")
+    io_test(REPLMode,   w[1,3], "symm[1,3]")
+    io_test(IJuliaMode, w[1,3], "symm_{1,3}")
+end

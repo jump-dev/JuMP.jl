@@ -1,6 +1,11 @@
 JuMP release notes
 ==================
 
+Unversioned
+-----------
+
+  * Change name printed for variable using the ``basename`` keyword argument to ``@defVar``.
+
 Version 0.12.2 (March 9, 2016)
 ------------------------------
 

@@ -162,7 +162,8 @@ end
 
 getname(c::Symbol) = c
 getname(c::Void) = ()
-getname(c::Expr) = c.args[1]
+getname(c::AbstractString) = c
+getname(c::Expr) = (c.head == :string ? c : c.args[1])
 
 validmodel(m::Model, name) = nothing
 validmodel(m::MathProgBase.MathProgCallbackData, name) = error("Expected $name to be a JuMP model, but it is a callback object. Use of this macro is not supported within callbacks.")
@@ -776,6 +777,8 @@ macro defVar(args...)
     obj = nothing
     inconstraints = nothing
     coefficients = nothing
+    quotvarname = quot(getname(var))
+    escvarname  = esc(getname(var))
     for ex in kwargs
         if ex.args[1] == :start
             value = esc(ex.args[2])
@@ -785,6 +788,8 @@ macro defVar(args...)
             inconstraints = esc(ex.args[2])
         elseif ex.args[1] == :coefficients
             coefficients = esc(ex.args[2])
+        elseif ex.args[1] == :basename
+            quotvarname = esc(ex.args[2])
         else
             error("in @defVar ($var): Unrecognized keyword argument $(ex.args[1])")
         end
@@ -828,7 +833,7 @@ macro defVar(args...)
         error("in @defVar ($var): can only create one variable at a time when adding to existing constraints.")
 
         return assert_validmodel(m, quote
-            $(esc(var)) = Variable($m,$lb,$ub,$(quot(t)),$obj,$inconstraints,$coefficients,$(utf8(string(var))),$value)
+            $(esc(var)) = Variable($m,$lb,$ub,$(quot(t)),$obj,$inconstraints,$coefficients,utf8(string($quotvarname)),$value)
             nothing
         end)
     end
@@ -837,7 +842,7 @@ macro defVar(args...)
         # Easy case - a single variable
         sdp && error("Cannot add a semidefinite scalar variable")
         return assert_validmodel(m, quote
-            $(esc(var)) = Variable($m,$lb,$ub,$(quot(t)),$(utf8(string(var))),$value)
+            $(esc(var)) = Variable($m,$lb,$ub,$(quot(t)),utf8(string($quotvarname)),$value)
             registervar($m, $(quot(var)), $(esc(var)))
         end)
     end
@@ -872,36 +877,34 @@ macro defVar(args...)
         end
 
         looped = getloopedcode(var, code, condition, idxvars, idxsets, idxpairs, :Variable; lowertri=symmetric)
-        varname = esc(getname(var))
         code = quote
             $(esc(idxsets[1].args[1].args[2])) == $(esc(idxsets[2].args[1].args[2])) || error("Cannot construct symmetric variables with nonsquare dimensions")
             (issym($lb) && issym($ub)) || error("Bounds on symmetric variables must be symmetric")
             $looped
-            push!($(m).dictList, $varname)
+            push!($(m).dictList, $escvarname)
         end
         if sdp
-            code = :($code; push!($(m).varCones, (:SDP, first($varname).col : last($varname).col)))
+            code = :($code; push!($(m).varCones, (:SDP, first($escvarname).col : last($escvarname).col)))
         end
         return assert_validmodel(m, quote
             $code
-            registervar($m, $(quot(getname(var))), $varname)
-            storecontainerdata($m, $varname, $(quot(getname(var))),
+            registervar($m, $quotvarname, $escvarname)
+            storecontainerdata($m, $escvarname, $quotvarname,
                                $(Expr(:tuple,idxsets...)),
                                $idxpairs, $(quot(condition)))
-            $varname
+            $escvarname
         end)
     else
         looped = getloopedcode(var, code, condition, idxvars, idxsets, idxpairs, :Variable)
-        varname = esc(getname(var))
         return assert_validmodel(m, quote
             $looped
-            push!($(m).dictList, $varname)
-            registervar($m, $(quot(getname(var))), $varname)
-            storecontainerdata($m, $varname, $(quot(getname(var))),
+            push!($(m).dictList, $escvarname)
+            registervar($m, $quotvarname, $escvarname)
+            storecontainerdata($m, $escvarname, $quotvarname,
                                $(Expr(:tuple,map(clear_dependencies,1:length(idxsets))...)),
                                $idxpairs, $(quot(condition)))
-            isa($varname, JuMPContainer) && pushmeta!($varname, :model, $m)
-            $varname
+            isa($escvarname, JuMPContainer) && pushmeta!($escvarname, :model, $m)
+            $escvarname
         end)
     end
 end
