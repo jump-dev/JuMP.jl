@@ -238,6 +238,7 @@ function setSolver(m::Model, solver::MathProgBase.AbstractMathProgSolver)
     m.solver = solver
     m.internalModel = nothing
     m.internalModelLoaded = false
+    nothing
 end
 # Deep copy the model
 function Base.copy(source::Model)
