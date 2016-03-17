@@ -68,6 +68,7 @@ const user_operator_map = Dict{Int,MathProgBase.AbstractNLPEvaluator}()
 # users should implement eval_f and eval_grad_f for now.
 # we will eventually support hessians too
 function register_multivariate_operator(s::Symbol,f::MathProgBase.AbstractNLPEvaluator)
+    !haskey(operator_to_id, s) || error("Operator $s has already been defined")
     id = length(operators)+1
     push!(operators,s)
     operator_to_id[s] = id
@@ -83,6 +84,7 @@ const user_univariate_operator_fprimeprime = Dict{Int,Any}()
 # for univariate operators, just take in functions to evaluate
 # zeroth, first, and second order derivatives
 function register_univariate_operator(s::Symbol,f,fprime,fprimeprime)
+    !haskey(univariate_operator_to_id, s) || error("Operator $s has already been defined")
     id = length(univariate_operators)+1
     push!(univariate_operators,s)
     univariate_operator_to_id[s] = id
