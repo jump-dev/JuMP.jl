@@ -646,14 +646,15 @@ mysquare(x) = x^2
 function myf(x,y)
     return (x-1)^2+(y-2)^2
 end
-registerNLFunction(:myf, 2, myf, autodiff=true)
-registerNLFunction(:myf_2, 2, myf, (g,x,y) -> (g[1] = 2(x-1); g[2] = 2(y-2)))
-registerNLFunction(:mysquare, 1, mysquare, autodiff=true)
-registerNLFunction(:mysquare_2, 1, mysquare, x-> 2x, autodiff=true)
-registerNLFunction(:mysquare_3, 1, mysquare, x-> 2x, x -> 2.0)
 
 if length(convex_nlp_solvers) > 0
     facts("[nonlinear] User-defined functions") do
+        registerNLFunction(:myf, 2, myf, autodiff=true)
+        registerNLFunction(:myf_2, 2, myf, (g,x,y) -> (g[1] = 2(x-1); g[2] = 2(y-2)))
+        registerNLFunction(:mysquare, 1, mysquare, autodiff=true)
+        registerNLFunction(:mysquare_2, 1, mysquare, x-> 2x, autodiff=true)
+        registerNLFunction(:mysquare_3, 1, mysquare, x-> 2x, x -> 2.0)
+
         m = Model(solver=convex_nlp_solvers[1])
 
         @defVar(m, x[1:2] >= 0.5)
