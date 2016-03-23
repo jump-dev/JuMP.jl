@@ -39,6 +39,9 @@ function parseNLExpr(m, x, tapevar, parent, values)
             if haskey(operator_to_id,x.args[1]) # fast compile-time lookup
                 operatorid = operator_to_id[x.args[1]]
                 push!(block.args, :(push!($tapevar, NodeData(CALL, $operatorid, $parent))))
+            elseif haskey(comparison_operator_to_id,x.args[1])
+                operatorid = comparison_operator_to_id[x.args[1]]
+                push!(block.args, :(push!($tapevar, NodeData(COMPARISON, $operatorid, $parent))))
             else # could be user defined
                 opname = quot(x.args[1])
                 errorstring = "Unrecognized function $opname used in nonlinear expression."

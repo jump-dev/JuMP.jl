@@ -3,18 +3,16 @@
 #  License, v. 2.0. If a copy of the MPL was not distributed with this
 #  file, You can obtain one at http://mozilla.org/MPL/2.0/.
 
-# `a in b` is a comparison after JuliaLang/julia#13078
-const in_is_compare = VERSION >= v"0.5.0-dev+901"
-
 function tryParseIdxSet(arg::Expr)
-    if arg.head === :(=) || (!in_is_compare && arg.head === :in)
+    # :in appears as arg.head only prior to 0.5
+    if arg.head === :(=) || arg.head === :in
         @assert length(arg.args) == 2
         return true, arg.args[1], arg.args[2]
-    elseif (in_is_compare && arg.head === :comparison &&
-            length(arg.args) == 3 && arg.args[2] === :in)
-        return true, arg.args[1], arg.args[3]
+    elseif isexpr(arg, :call) && arg.args[1] === :in
+        return true, arg.args[2], arg.args[3]
+    else
+        return false, nothing, nothing
     end
-    return false, nothing, nothing
 end
 
 function parseIdxSet(arg::Expr)

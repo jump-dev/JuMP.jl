@@ -165,13 +165,13 @@ export addLazyConstraint, @addLazyConstraint
 
 macro addLazyConstraint(cbdata, x)
     cbdata = esc(cbdata)
-    if (x.head != :comparison)
-        error("Expected comparison operator in constraint $x")
+    if VERSION < v"0.5.0-dev+3231"
+        x = comparison_to_call(x)
     end
-    if length(x.args) == 3 # simple comparison
-        lhs = :($(x.args[1]) - $(x.args[3])) # move everything to the lhs
+    if isexpr(x, :call) && length(x.args) == 3 # simple comparison
+        lhs = :($(x.args[2]) - $(x.args[3])) # move everything to the lhs
         newaff, parsecode = parseExprToplevel(lhs, :aff)
-        sense, vectorized = _canonicalize_sense(x.args[2])
+        sense, vectorized = _canonicalize_sense(x.args[1])
         vectorized && error("Cannot add vectorized constraint in lazy callback")
         quote
             aff = zero(AffExpr)
@@ -180,7 +180,7 @@ macro addLazyConstraint(cbdata, x)
             addLazyConstraint($cbdata, constr)
         end
     else
-        error("Syntax error (ranged constraints not permitted in callbacks)")
+        error("Syntax error in addLazyConstraint, expected one-sided comparison.")
     end
 end
 
@@ -202,13 +202,13 @@ export addUserCut, @addUserCut
 
 macro addUserCut(cbdata, x)
     cbdata = esc(cbdata)
-    if (x.head != :comparison)
-        error("Expected comparison operator in constraint $x")
+    if VERSION < v"0.5.0-dev+3231"
+        x = comparison_to_call(x)
     end
-    if length(x.args) == 3 # simple comparison
-        lhs = :($(x.args[1]) - $(x.args[3])) # move everything to the lhs
+    if isexpr(x, :call) && length(x.args) == 3 # simple comparison
+        lhs = :($(x.args[2]) - $(x.args[3])) # move everything to the lhs
         newaff, parsecode = parseExprToplevel(lhs, :aff)
-        sense, vectorized = _canonicalize_sense(x.args[2])
+        sense, vectorized = _canonicalize_sense(x.args[1])
         vectorized && error("Cannot add vectorized constraint in cut callback")
         quote
             aff = zero(AffExpr)
@@ -217,7 +217,7 @@ macro addUserCut(cbdata, x)
             addUserCut($cbdata, constr)
         end
     else
-        error("Syntax error (ranged constraints not permitted in callbacks)")
+        error("Syntax error in addUserCut, expected one-sided comparison.")
     end
 end
 

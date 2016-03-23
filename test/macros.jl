@@ -11,8 +11,6 @@ const geq = JuMP.repl[:geq]
 const  eq = JuMP.repl[:eq]
 const Vert = JuMP.repl[:Vert]
 const sub2 = JuMP.repl[:sub2]
-# `a in b` is a comparison after JuliaLang/julia#13078
-const in_is_compare = VERSION >= v"0.5.0-dev+901"
 
 facts("[macros] Check Julia expression parsing") do
     sumexpr = :(sum{x[i,j] * y[i,j], i = 1:N, j in 1:M; i != j})
@@ -22,12 +20,11 @@ facts("[macros] Check Julia expression parsing") do
     @fact sumexpr.args[2].head --> :parameters
     @fact sumexpr.args[3] --> :(x[i,j] * y[i,j])
     @fact sumexpr.args[4].head --> :(=)
-    if in_is_compare
-        @fact sumexpr.args[5].head --> :comparison
-        @fact length(sumexpr.args[5].args) --> 3
-        @fact sumexpr.args[5].args[2] --> :in
-    else
+    if VERSION < v"0.5.0-dev+3231"
         @fact sumexpr.args[5].head --> :in
+    else
+        @fact sumexpr.args[5].head --> :call
+        @fact sumexpr.args[5].args[1] --> :in
     end
 
     sumexpr = :(sum{x[i,j] * y[i,j], i in 1:N, j = 1:M})
@@ -35,13 +32,13 @@ facts("[macros] Check Julia expression parsing") do
     @fact length(sumexpr.args) --> 4
     @fact sumexpr.args[1] --> :sum
     @fact sumexpr.args[2] --> :(x[i,j] * y[i,j])
-    if in_is_compare
-        @fact sumexpr.args[3].head --> :comparison
-        @fact length(sumexpr.args[3].args) --> 3
-        @fact sumexpr.args[3].args[2] --> :in
-    else
+    if VERSION < v"0.5.0-dev+3231"
         @fact sumexpr.args[3].head --> :in
+    else
+        @fact sumexpr.args[3].head --> :call
+        @fact sumexpr.args[3].args[1] --> :in
     end
+
     @fact sumexpr.args[4].head --> :(=)
 end
 

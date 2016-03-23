@@ -8,6 +8,18 @@ using Base.Meta
 issum(s::Symbol) = (s == :sum) || (s == :∑) || (s == :Σ)
 isprod(s::Symbol) = (s == :prod) || (s == :∏)
 
+# for backward compatibility with 0.4
+function comparison_to_call(ex)
+    if isexpr(ex,:comparison) && length(ex.args) == 3
+        return Expr(:call,ex.args[2],ex.args[1],ex.args[3])
+    else
+        return ex
+    end
+end
+
+# we don't support older versions of 0.5 due to parsing changes
+v"0.5-" < VERSION < v"0.5.0-dev+3231" && error("Current Julia version is a prerelease of 0.5 which is no longer supported by JuMP. Please update to a newer build of 0.5.")
+
 include("parseExpr_staged.jl")
 
 ###############################################################################
@@ -299,18 +311,20 @@ macro addConstraint(args...)
 
     (x.head == :block) &&
         error("Code block passed as constraint. Perhaps you meant to use addConstraints instead?")
-    (x.head != :comparison) &&
-        error("in @addConstraint ($(string(x))): expected comparison operator (<=, >=, or ==).")
+    if VERSION < v"0.5.0-dev+3231"
+        x = comparison_to_call(x)
+    end
 
     # Strategy: build up the code for non-macro addconstraint, and if needed
     # we will wrap in loops to assign to the ConstraintRefs
     crefflag = isa(c,Expr)
     refcall, idxvars, idxsets, idxpairs, condition = buildrefsets(c)
     # Build the constraint
-    if length(x.args) == 3
+    if isexpr(x, :call)
         # Simple comparison - move everything to the LHS
-        (sense,vectorized) = _canonicalize_sense(x.args[2])
-        lhs = :($(x.args[1]) - $(x.args[3]))
+        @assert length(x.args) == 3
+        (sense,vectorized) = _canonicalize_sense(x.args[1])
+        lhs = :($(x.args[2]) - $(x.args[3]))
         addconstr = (vectorized ? :addVectorizedConstraint : :addConstraint)
         newaff, parsecode = parseExprToplevel(lhs, :q)
         constraintcall = :($addconstr($m, constructconstraint!($newaff,$(quot(sense)))))
@@ -323,7 +337,7 @@ macro addConstraint(args...)
             $parsecode
             $(refcall) = $constraintcall
         end
-    elseif length(x.args) == 5
+    elseif isexpr(x, :comparison)
         # Ranged row
         (lsign,lvectorized) = _canonicalize_sense(x.args[2])
         (rsign,rvectorized) = _canonicalize_sense(x.args[4])
@@ -392,14 +406,14 @@ macro addSDPConstraint(m, x)
 
     (x.head == :block) &&
         error("Code block passed as constraint.")
-    (x.head != :comparison) &&
-        error("in @addSDPConstraint ($(string(x))): expected comparison operator (<=, or >=).")
-
-    length(x.args) == 3 || error("in @addSDPConstraint ($(string(x))): constraints must be in one of the following forms:\n" *
+    if VERSION < v"0.5.0-dev+3231"
+        x = comparison_to_call(x)
+    end
+    isexpr(x,:call) && length(x.args) == 3 || error("in @addSDPConstraint ($(string(x))): constraints must be in one of the following forms:\n" *
               "       expr1 <= expr2\n" * "       expr1 >= expr2\n")
     # Build the constraint
     # Simple comparison - move everything to the LHS
-    sense = x.args[2]
+    sense = x.args[1]
     if sense == :⪰
         sense = :(>=)
     elseif sense == :⪯
@@ -408,9 +422,9 @@ macro addSDPConstraint(m, x)
     sense,_ = _canonicalize_sense(sense)
     lhs = :()
     if sense == :(>=)
-        lhs = :($(x.args[1]) - $(x.args[3]))
+        lhs = :($(x.args[2]) - $(x.args[3]))
     elseif sense == :(<=)
-        lhs = :($(x.args[3]) - $(x.args[1]))
+        lhs = :($(x.args[3]) - $(x.args[2]))
     else
         error("Invalid sense $sense in SDP constraint")
     end
@@ -427,15 +441,16 @@ end
 macro LinearConstraint(x)
     (x.head == :block) &&
         error("Code block passed as constraint. Perhaps you meant to use @LinearConstraints instead?")
-    (x.head != :comparison) &&
-        error("in @LinearConstraint ($(string(x))): expected comparison operator (<=, >=, or ==).")
 
-    if length(x.args) == 3
-        (sense,vectorized) = _canonicalize_sense(x.args[2])
+    if VERSION < v"0.5.0-dev+3231"
+        x = comparison_to_call(x)
+    end
+    if isexpr(x, :call) && length(x.args) == 3
+        (sense,vectorized) = _canonicalize_sense(x.args[1])
         # Simple comparison - move everything to the LHS
         vectorized &&
             error("in @LinearConstraint ($(string(x))): Cannot add vectorized constraints")
-        lhs = :($(x.args[1]) - $(x.args[3]))
+        lhs = :($(x.args[2]) - $(x.args[3]))
         return quote
             newaff = @Expression($(esc(lhs)))
             c = constructconstraint!(newaff,$(quot(sense)))
@@ -443,7 +458,7 @@ macro LinearConstraint(x)
                 error("Constraint in @LinearConstraint is really a $(typeof(c))")
             c
         end
-    elseif length(x.args) == 5
+    elseif isexpr(x, :comparison)
         # Ranged row
         (lsense,lvectorized) = _canonicalize_sense(x.args[2])
         (rsense,rvectorized) = _canonicalize_sense(x.args[4])
@@ -477,22 +492,23 @@ end
 macro QuadConstraint(x)
     (x.head == :block) &&
         error("Code block passed as constraint. Perhaps you meant to use @QuadConstraints instead?")
-    (x.head != :comparison) &&
-        error("in @QuadConstraint ($(string(x))): expected comparison operator (<=, >=, or ==).")
 
-    if length(x.args) == 3
-        (sense,vectorized) = _canonicalize_sense(x.args[2])
+    if VERSION < v"0.5.0-dev+3231"
+        x = comparison_to_call(x)
+    end
+    if isexpr(x, :call) && length(x.args) == 3
+        (sense,vectorized) = _canonicalize_sense(x.args[1])
         # Simple comparison - move everything to the LHS
         vectorized &&
             error("in @QuadConstraint ($(string(x))): Cannot add vectorized constraints")
-        lhs = :($(x.args[1]) - $(x.args[3]))
+        lhs = :($(x.args[2]) - $(x.args[3]))
         return quote
             newaff = @Expression($(esc(lhs)))
             q = constructconstraint!(newaff,$(quot(sense)))
             isa(q, QuadConstraint) || error("Constraint in @QuadConstraint is really a $(typeof(q))")
             q
         end
-    elseif length(x.args) == 5
+    elseif isexpr(x, :comparison)
         error("Ranged quadratic constraints are not allowed")
     else
         # Unknown
@@ -505,22 +521,23 @@ end
 macro SOCConstraint(x)
     (x.head == :block) &&
         error("Code block passed as constraint. Perhaps you meant to use @SOCConstraints instead?")
-    (x.head != :comparison) &&
-        error("in @SOCConstraint ($(string(x))): expected comparison operator (<=, >=, or ==).")
 
-    if length(x.args) == 3
-        (sense,vectorized) = _canonicalize_sense(x.args[2])
+    if VERSION < v"0.5.0-dev+3231"
+        x = comparison_to_call(x)
+    end
+    if isexpr(x, :call) && length(x.args) == 3
+        (sense,vectorized) = _canonicalize_sense(x.args[1])
         # Simple comparison - move everything to the LHS
         vectorized &&
             error("in @SOCConstraint ($(string(x))): Cannot add vectorized constraints")
-        lhs = :($(x.args[1]) - $(x.args[3]))
+        lhs = :($(x.args[2]) - $(x.args[3]))
         return quote
             newaff = @Expression($(esc(lhs)))
             q = constructconstraint!(newaff,$(quot(sense)))
             isa(q, SOCConstraint) || error("Constraint in @SOCConstraint is really a $(typeof(q))")
             q
         end
-    elseif length(x.args) == 5
+    elseif isexpr(x, :comparison)
         error("Ranged second-order cone constraints are not allowed")
     else
         # Unknown
@@ -715,42 +732,44 @@ macro defVar(args...)
     gottype = false
     # Identify the variable bounds. Five (legal) possibilities are "x >= lb",
     # "x <= ub", "lb <= x <= ub", "x == val", or just plain "x"
-    if isexpr(x,:comparison)
-        # We have some bounds
+    if VERSION < v"0.5.0-dev+3231"
+        x = comparison_to_call(x)
+    end
+    if isexpr(x,:comparison) # two-sided
         if x.args[2] == :>= || x.args[2] == :≥
-            if length(x.args) == 5
-                # ub >= x >= lb
-                x.args[4] == :>= || x.args[4] == :≥ || error("Invalid variable bounds")
-                var = x.args[3]
-                lb = esc_nonconstant(x.args[5])
-                ub = esc_nonconstant(x.args[1])
-            else
-                # x >= lb
-                var = x.args[1]
-                @assert length(x.args) == 3
-                lb = esc_nonconstant(x.args[3])
-                ub = Inf
-            end
+            # ub >= x >= lb
+            x.args[4] == :>= || x.args[4] == :≥ || error("Invalid variable bounds")
+            var = x.args[3]
+            lb = esc_nonconstant(x.args[5])
+            ub = esc_nonconstant(x.args[1])
         elseif x.args[2] == :<= || x.args[2] == :≤
-            if length(x.args) == 5
-                # lb <= x <= u
-                var = x.args[3]
-                (x.args[4] != :<= && x.args[4] != :≤) &&
-                    error("in @defVar ($var): expected <= operator after variable name.")
-                lb = esc_nonconstant(x.args[1])
-                ub = esc_nonconstant(x.args[5])
-            else
-                # x <= ub
-                var = x.args[1]
-                # NB: May also be lb <= x, which we do not support
-                #     We handle this later in the macro
-                @assert length(x.args) == 3
-                ub = esc_nonconstant(x.args[3])
-                lb = -Inf
-            end
-        elseif x.args[2] == :(==)
+            # lb <= x <= u
+            var = x.args[3]
+            (x.args[4] != :<= && x.args[4] != :≤) &&
+                error("in @defVar ($var): expected <= operator after variable name.")
+            lb = esc_nonconstant(x.args[1])
+            ub = esc_nonconstant(x.args[5])
+        else
+            error("in @defVar ($(string(x))): use the form lb <= ... <= ub.")
+        end
+    elseif isexpr(x,:call)
+        if x.args[1] == :>= || x.args[1] == :≥
+            # x >= lb
+            var = x.args[2]
+            @assert length(x.args) == 3
+            lb = esc_nonconstant(x.args[3])
+            ub = Inf
+        elseif x.args[1] == :<= || x.args[1] == :≤
+            # x <= ub
+            var = x.args[2]
+            # NB: May also be lb <= x, which we do not support
+            #     We handle this later in the macro
+            @assert length(x.args) == 3
+            ub = esc_nonconstant(x.args[3])
+            lb = -Inf
+        elseif x.args[1] == :(==)
             # fixed variable
-            var = x.args[1]
+            var = x.args[2]
             @assert length(x.args) == 3
             lb = esc(x.args[3])
             ub = esc(x.args[3])
@@ -758,7 +777,7 @@ macro defVar(args...)
             t = :Fixed
         else
             # Its a comparsion, but not using <= ... <=
-            error("in @defVar ($(string(x))): use the form lb <= ... <= ub.")
+            error("in @defVar: unexpected syntax $(string(x)).")
         end
     else
         # No bounds provided - free variable
@@ -961,16 +980,17 @@ macro addNLConstraint(m, x, extra...)
     c = length(extra) == 1 ? x        : nothing
     x = length(extra) == 1 ? extra[1] : x
 
-    (x.head != :comparison) &&
-        error("in @addNLConstraint ($(string(x))): expected comparison operator (<=, >=, or ==).")
+    if VERSION < v"0.5.0-dev+3231"
+        x = comparison_to_call(x)
+    end
 
     # Strategy: build up the code for non-macro addconstraint, and if needed
     # we will wrap in loops to assign to the ConstraintRefs
     refcall, idxvars, idxsets, idxpairs, condition = buildrefsets(c)
     # Build the constraint
-    if length(x.args) == 3
+    if isexpr(x, :call) # one-sided constraint
         # Simple comparison - move everything to the LHS
-        op = x.args[2]
+        op = x.args[1]
         if op == :(==)
             lb = 0.0
             ub = 0.0
@@ -983,13 +1003,13 @@ macro addNLConstraint(m, x, extra...)
         else
             error("in @addNLConstraint ($(string(x))): expected comparison operator (<=, >=, or ==).")
         end
-        lhs = :($(x.args[1]) - $(x.args[3]))
+        lhs = :($(x.args[2]) - $(x.args[3]))
         code = quote
             c = NonlinearConstraint(@processNLExpr($m, $(esc(lhs))), $lb, $ub)
             push!($m.nlpdata.nlconstr, c)
             $(refcall) = ConstraintRef{NonlinearConstraint}($m, length($m.nlpdata.nlconstr))
         end
-    elseif length(x.args) == 5
+    elseif isexpr(x, :comparison)
         # ranged row
         if (x.args[2] != :<= && x.args[2] != :≤) || (x.args[4] != :<= && x.args[4] != :≤)
             error("in @addNLConstraint ($(string(x))): only ranged rows of the form lb <= expr <= ub are supported.")
@@ -1067,10 +1087,13 @@ end
 # syntax is @defNLParam(m, p[i=1] == 2i)
 macro defNLParam(m, ex)
     m = esc(m)
-    @assert isexpr(ex, :comparison)
+    if VERSION < v"0.5.0-dev+3231"
+        ex = comparison_to_call(ex)
+    end
+    @assert isexpr(ex, :call)
     @assert length(ex.args) == 3
-    @assert ex.args[2] == :(==)
-    c = ex.args[1]
+    @assert ex.args[1] == :(==)
+    c = ex.args[2]
     x = ex.args[3]
 
     refcall, idxvars, idxsets, idxpairs, condition = buildrefsets(c)
