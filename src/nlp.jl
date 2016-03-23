@@ -1109,12 +1109,20 @@ function MathProgBase.constr_expr(d::JuMPNLPEvaluator,i::Integer)
         if sense(constr) == :range
             return Expr(:comparison, constr.lb, :(<=), ex, :(<=), constr.ub)
         else
-            return Expr(:comparison, ex, sense(constr), rhs(constr))
+            if VERSION > v"0.5-"
+                return Expr(:call, sense(constr), ex, rhs(constr))
+            else
+                return Expr(:comparison, ex, sense(constr), rhs(constr))
+            end
         end
     elseif i > nlin && i <= nlin + nquad
         i -= nlin
         qconstr = d.m.quadconstr[i]
-        return Expr(:comparison, quadToExpr(qconstr.terms, true), qconstr.sense, 0)
+        if VERSION > v"0.5-"
+            return Expr(:call, qconstr.sense, quadToExpr(qconstr.terms, true), 0)
+        else
+            return Expr(:comparison, quadToExpr(qconstr.terms, true), qconstr.sense, 0)
+        end
     else
         i -= nlin + nquad
         # for now, don't pass simplified expressions
@@ -1125,7 +1133,11 @@ function MathProgBase.constr_expr(d::JuMPNLPEvaluator,i::Integer)
         if sense(constr) == :range
             return Expr(:comparison, constr.lb, :(<=), julia_expr, :(<=), constr.ub)
         else
-            return Expr(:comparison, julia_expr, sense(constr), rhs(constr))
+            if VERSION > v"0.5-"
+                return Expr(:call, sense(constr), julia_expr, rhs(constr))
+            else
+                return Expr(:comparison, julia_expr, sense(constr), rhs(constr))
+            end
         end
     end
 end
