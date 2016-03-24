@@ -62,7 +62,8 @@ include("utils.jl")
 ###############################################################################
 # Model class
 # Keeps track of all model and column info
-type Model
+abstract AbstractModel
+type Model <: AbstractModel
     obj#::QuadExpr
     objSense::Symbol
 

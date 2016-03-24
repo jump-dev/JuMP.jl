@@ -177,7 +177,7 @@ getname(c::Void) = ()
 getname(c::AbstractString) = c
 getname(c::Expr) = (c.head == :string ? c : c.args[1])
 
-validmodel(m::Model, name) = nothing
+validmodel(m::AbstractModel, name) = nothing
 validmodel(m::MathProgBase.MathProgCallbackData, name) = error("Expected $name to be a JuMP model, but it is a callback object. Use of this macro is not supported within callbacks.")
 validmodel(m, name) = error("Expected $name to be a JuMP model, but it has type ", typeof(m))
 
