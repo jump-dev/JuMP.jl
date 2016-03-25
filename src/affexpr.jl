@@ -168,13 +168,13 @@ function addConstraint(m::Model, c::LinearConstraint)
             m.internalModelLoaded = false
         end
     end
-    return ConstraintRef{LinearConstraint}(m,length(m.linconstr))
+    return LinConstrRef(m,length(m.linconstr))
 end
 addConstraint(m::Model, c::Array{LinearConstraint}) =
     error("The operators <=, >=, and == can only be used to specify scalar constraints. If you are trying to add a vectorized constraint, use the element-wise dot comparison operators (.<=, .>=, or .==) instead")
 
 function addVectorizedConstraint(m::Model, v::Array{LinearConstraint})
-    ret = Array(ConstraintRef{LinearConstraint}, size(v))
+    ret = Array(LinConstrRef, size(v))
     for I in eachindex(v)
         ret[I] = addConstraint(m, v[I])
     end

@@ -119,5 +119,5 @@ typealias SOCConstraint GenericSOCConstraint{SOCExpr}
 function addConstraint(m::Model, c::SOCConstraint)
     push!(m.socconstr,c)
     m.internalModelLoaded = false
-    ConstraintRef{SOCConstraint}(m,length(m.socconstr))
+    ConstraintRef{Model,SOCConstraint}(m,length(m.socconstr))
 end

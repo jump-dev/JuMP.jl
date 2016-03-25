@@ -45,7 +45,7 @@ function print_iis_gurobi(m::Model)
     println("Constraints:")
     for i in 1:numconstr
         if iisconstr[i] != 0
-            println(ConstraintRef{LinearConstraint}(m, i))
+            println(ConstraintRef{Model,LinearConstraint}(m, i))
         end
     end
     println("End of IIS")

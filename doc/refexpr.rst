@@ -100,7 +100,7 @@ For example::
     @addConstraint(m, xyconstr[i=1:3,j=6:-2:2], x[i] - y[j] == 1)
 
 adds 9 constraints to the model ``m`` of the expected form. The variable ``xyconstr``
-is a collection of ``ConstraintRef{LinearConstraint}`` instances indexed
+is a collection of ``ConstraintRef{Model,LinearConstraint}`` instances indexed
 by the ranges ``1:3`` and ``6:-2:2`` (the ordered tuple ``(6,4,2)``), so, for example
 ``xyconstr[2,4]`` is a reference to the constraint ``x[2] - y[4] == 1``. Indices can
 have dependencies on preceding indices, e.g. triangular indexing is allowed::
@@ -123,7 +123,7 @@ infeasibility ray (Farkas proof), if available from the solver.
 Dual information is also accessible for second-order cone problems as described below. Duals are unavailable for MIPs.
 
 One may retrieve the corresponding internal ``LinearConstraint`` object from a
-``ConstraintRef{LinearConstraint}`` object ``constr`` by calling ``LinearConstraint(constr)``.
+``ConstraintRef{Model,LinearConstraint}`` object ``constr`` by calling ``LinearConstraint(constr)``.
 This functionality is not yet implemented for other classes of constraints.
 
 For users who prefer to generate constraints in an explicit loop, we also
@@ -145,7 +145,7 @@ Conic constraint duals
 
 JuMP supports accessing the dual solutions to second-order cone problems. Dual multipliers on variable bounds, linear constraints,
 and second-order cone constraints are accessible through ``getDual()`` given the corresponding variable or constraint reference object.
-For second-order cone constraints, ``getDual(c::ConstraintRef{SOCConstraint})`` returns a vector of dual variables in the dimension of the corresponding cone.
+For second-order cone constraints, ``getDual(c::ConstraintRef{Model,SOCConstraint})`` returns a vector of dual variables in the dimension of the corresponding cone.
 Duals are defined such that they are consistent in sign with linear programming duals in the case that the second-order cone constraints
 are inactive.
 

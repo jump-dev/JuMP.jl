@@ -505,7 +505,7 @@ end
 function addConstraint(m::Model, c::SDPConstraint)
     push!(m.sdpconstr,c)
     m.internalModelLoaded = false
-    ConstraintRef{SDPConstraint}(m,length(m.sdpconstr))
+    ConstraintRef{Model,SDPConstraint}(m,length(m.sdpconstr))
 end
 
 # helper method for mapping going on below
@@ -518,18 +518,18 @@ Base.copy(c::SDPConstraint, new_model::Model) =
 ##########################################################################
 # ConstraintRef
 # Reference to a constraint for retrieving solution info
-immutable ConstraintRef{T<:JuMPConstraint}
-    m::Model
+immutable ConstraintRef{M<:AbstractModel,T<:JuMPConstraint}
+    m::M
     idx::Int
 end
 
-typealias LinConstrRef ConstraintRef{LinearConstraint}
+typealias LinConstrRef ConstraintRef{Model,LinearConstraint}
 
 LinearConstraint(ref::LinConstrRef) = ref.m.linconstr[ref.idx]::LinearConstraint
 
 getLinearIndex(x::ConstraintRef) = x.idx
 
-function getDual(c::ConstraintRef{LinearConstraint})
+function getDual(c::LinConstrRef)
     if length(c.m.linconstrDuals) != MathProgBase.numlinconstr(c.m)
         error("Dual solution not available. Check that the model was properly solved and no integer variables are present.")
     end
@@ -571,7 +571,7 @@ function getNumSOCRows(m::Model)
     return numSOCRows
 end
 
-function getDual(c::ConstraintRef{SOCConstraint})
+function getDual(c::ConstraintRef{Model,SOCConstraint})
     numBndRows = getNumBndRows(c.m)
     numSOCRows = getNumSOCRows(c.m)
     if length(c.m.conicconstrDuals) != (MathProgBase.numlinconstr(c.m) + numBndRows + numSOCRows)
@@ -583,7 +583,7 @@ end
 
 
 
-function chgConstrRHS(c::ConstraintRef{LinearConstraint}, rhs::Number)
+function chgConstrRHS(c::LinConstrRef, rhs::Number)
     constr = c.m.linconstr[c.idx]
     sen = sense(constr)
     if sen == :range
@@ -607,7 +607,7 @@ Variable(m::Model,lower::Number,upper::Number,cat::Symbol,objcoef::Number,
 function Variable(m::Model,lower::Number,upper::Number,cat::Symbol,objcoef::Number,
     constraints::Vector,coefficients::Vector{Float64}, name::AbstractString="", value::Number=NaN)
     for c in constraints
-        if !isa(c,ConstraintRef{LinearConstraint})
+        if !isa(c, LinConstrRef)
             error("Unexpected constraint of type $(typeof(c)). Column-wise modeling only supported for linear constraints")
         end
     end
@@ -618,7 +618,7 @@ function Variable(m::Model,lower::Number,upper::Number,cat::Symbol,objcoef::Numb
     push!(m.colLower, convert(Float64,lower))
     push!(m.colUpper, convert(Float64,upper))
     push!(m.colCat, cat)
-    push!(m.colVal,value)
+    push!(m.colVal, value)
     if cat == :Fixed
         @assert lower == upper
         m.colVal[end] = lower
