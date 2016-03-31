@@ -147,13 +147,13 @@ function addConstraint(m::Model, c::QuadConstraint)
             m.internalModelLoaded = false
         end
     end
-    return ConstraintRef{QuadConstraint}(m,length(m.quadconstr))
+    return ConstraintRef{Model,QuadConstraint}(m,length(m.quadconstr))
 end
 addConstraint(m::Model, c::Array{QuadConstraint}) =
     error("Vectorized constraint added without elementwise comparisons. Try using one of (.<=,.>=,.==).")
 
 function addVectorizedConstraint(m::Model, v::Array{QuadConstraint})
-    ret = Array(ConstraintRef{QuadConstraint}, size(v))
+    ret = Array(ConstraintRef{Model,QuadConstraint}, size(v))
     for I in eachindex(v)
         ret[I] = addConstraint(m, v[I])
     end

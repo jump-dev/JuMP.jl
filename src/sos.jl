@@ -55,7 +55,7 @@ function addSOS1(m::Model, coll::Vector{AffExpr})
             m.internalModelLoaded = false
         end
     end
-    return ConstraintRef{SOSConstraint}(m,length(m.sosconstr))
+    return ConstraintRef{Model,SOSConstraint}(m,length(m.sosconstr))
 end
 
 addSOS2(m::Model, coll) = addSOS2(m, convert(Vector{AffExpr}, coll))
@@ -72,5 +72,5 @@ function addSOS2(m::Model, coll::Vector{AffExpr})
             m.internalModelLoaded = false
         end
     end
-    return ConstraintRef{SOSConstraint}(m,length(m.sosconstr))
+    return ConstraintRef{Model,SOSConstraint}(m,length(m.sosconstr))
 end

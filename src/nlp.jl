@@ -49,7 +49,7 @@ function initNLP(m::Model)
     end
 end
 
-function getDual(c::ConstraintRef{NonlinearConstraint})
+function getDual(c::ConstraintRef{Model,NonlinearConstraint})
     initNLP(c.m)
     nldata::NLPData = c.m.nlpdata
     if length(nldata.nlconstrDuals) != length(nldata.nlconstr)

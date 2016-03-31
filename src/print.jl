@@ -914,18 +914,18 @@ con_str(::Type{IJuliaMode}, c::SDPConstraint; mathmode=true) =
 #------------------------------------------------------------------------
 ## ConstraintRef
 #------------------------------------------------------------------------
-Base.print(io::IO, c::ConstraintRef{LinearConstraint}) = print(io, con_str(REPLMode,c.m.linconstr[c.idx]))
-Base.print(io::IO, c::ConstraintRef{QuadConstraint})   = print(io, con_str(REPLMode,c.m.quadconstr[c.idx]))
-Base.print(io::IO, c::ConstraintRef{SOSConstraint})    = print(io, con_str(REPLMode,c.m.sosconstr[c.idx]))
-Base.print(io::IO, c::ConstraintRef{SDPConstraint})    = print(io, con_str(REPLMode,c.m.sdpconstr[c.idx]))
-Base.show( io::IO, c::ConstraintRef{LinearConstraint}) = print(io, con_str(REPLMode,c.m.linconstr[c.idx]))
-Base.show( io::IO, c::ConstraintRef{QuadConstraint})   = print(io, con_str(REPLMode,c.m.quadconstr[c.idx]))
-Base.show( io::IO, c::ConstraintRef{SOSConstraint})    = print(io, con_str(REPLMode,c.m.sosconstr[c.idx]))
-Base.show( io::IO, c::ConstraintRef{SOCConstraint})    = print(io, con_str(REPLMode,c.m.socconstr[c.idx]))
-Base.show(  io::IO, c::ConstraintRef{SDPConstraint})   = print(io, con_str(REPLMode,c.m.sdpconstr[c.idx]))
-Base.writemime(io::IO, ::MIME"text/latex", c::ConstraintRef{LinearConstraint}) =
+Base.print(io::IO, c::ConstraintRef{Model,LinearConstraint}) = print(io, con_str(REPLMode,c.m.linconstr[c.idx]))
+Base.print(io::IO, c::ConstraintRef{Model,QuadConstraint})   = print(io, con_str(REPLMode,c.m.quadconstr[c.idx]))
+Base.print(io::IO, c::ConstraintRef{Model,SOSConstraint})    = print(io, con_str(REPLMode,c.m.sosconstr[c.idx]))
+Base.print(io::IO, c::ConstraintRef{Model,SDPConstraint})    = print(io, con_str(REPLMode,c.m.sdpconstr[c.idx]))
+Base.show( io::IO, c::ConstraintRef{Model,LinearConstraint}) = print(io, con_str(REPLMode,c.m.linconstr[c.idx]))
+Base.show( io::IO, c::ConstraintRef{Model,QuadConstraint})   = print(io, con_str(REPLMode,c.m.quadconstr[c.idx]))
+Base.show( io::IO, c::ConstraintRef{Model,SOSConstraint})    = print(io, con_str(REPLMode,c.m.sosconstr[c.idx]))
+Base.show( io::IO, c::ConstraintRef{Model,SOCConstraint})    = print(io, con_str(REPLMode,c.m.socconstr[c.idx]))
+Base.show( io::IO, c::ConstraintRef{Model,SDPConstraint})    = print(io, con_str(REPLMode,c.m.sdpconstr[c.idx]))
+Base.writemime(io::IO, ::MIME"text/latex", c::ConstraintRef{Model,LinearConstraint}) =
     print(io, con_str(IJuliaMode,c.m.linconstr[c.idx],mathmode=false))
-Base.writemime(io::IO, ::MIME"text/latex", c::ConstraintRef{QuadConstraint}) =
+Base.writemime(io::IO, ::MIME"text/latex", c::ConstraintRef{Model,QuadConstraint}) =
     print(io, con_str(IJuliaMode,c.m.quadconstr[c.idx],mathmode=false))
-Base.writemime(io::IO, ::MIME"text/latex", c::ConstraintRef{SOSConstraint}) =
+Base.writemime(io::IO, ::MIME"text/latex", c::ConstraintRef{Model,SOSConstraint}) =
     print(io, con_str(IJuliaMode,c.m.sosconstr[c.idx],mathmode=false))

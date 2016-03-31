@@ -177,7 +177,7 @@ getname(c::Void) = ()
 getname(c::AbstractString) = c
 getname(c::Expr) = (c.head == :string ? c : c.args[1])
 
-validmodel(m::Model, name) = nothing
+validmodel(m::AbstractModel, name) = nothing
 validmodel(m::MathProgBase.MathProgCallbackData, name) = error("Expected $name to be a JuMP model, but it is a callback object. Use of this macro is not supported within callbacks.")
 validmodel(m, name) = error("Expected $name to be a JuMP model, but it has type ", typeof(m))
 
@@ -1007,7 +1007,7 @@ macro addNLConstraint(m, x, extra...)
         code = quote
             c = NonlinearConstraint(@processNLExpr($m, $(esc(lhs))), $lb, $ub)
             push!($m.nlpdata.nlconstr, c)
-            $(refcall) = ConstraintRef{NonlinearConstraint}($m, length($m.nlpdata.nlconstr))
+            $(refcall) = ConstraintRef{Model,NonlinearConstraint}($m, length($m.nlpdata.nlconstr))
         end
     elseif isexpr(x, :comparison)
         # ranged row
@@ -1024,7 +1024,7 @@ macro addNLConstraint(m, x, extra...)
             end
             c = NonlinearConstraint(@processNLExpr($m, $(esc(x.args[3]))), $(esc(lb)), $(esc(ub)))
             push!($m.nlpdata.nlconstr, c)
-            $(refcall) = ConstraintRef{NonlinearConstraint}($m, length($m.nlpdata.nlconstr))
+            $(refcall) = ConstraintRef{Model,NonlinearConstraint}($m, length($m.nlpdata.nlconstr))
         end
     else
         # Unknown
@@ -1032,7 +1032,7 @@ macro addNLConstraint(m, x, extra...)
               "       expr1 <= expr2\n" * "       expr1 >= expr2\n" *
               "       expr1 == expr2\n")
     end
-    looped = getloopedcode(c, code, condition, idxvars, idxsets, idxpairs, :(ConstraintRef{NonlinearConstraint}))
+    looped = getloopedcode(c, code, condition, idxvars, idxsets, idxpairs, :(ConstraintRef{Model,NonlinearConstraint}))
     code = quote
         initNLP($m)
         $looped
