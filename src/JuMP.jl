@@ -210,9 +210,6 @@ function MathProgBase.getnodecount(m::Model)
     end
 end
 
-@Base.deprecate getNumVars(m::Model) MathProgBase.numvar(m)
-@Base.deprecate getNumConstraints(m::Model) MathProgBase.numlinconstr(m)
-
 function getObjective(m::Model)
     traits = ProblemTraits(m)
     if traits.nlp
