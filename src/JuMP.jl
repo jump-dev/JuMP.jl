@@ -191,23 +191,18 @@ function MathProgBase.numconstr(m::Model)
     end
     return c
 end
-function MathProgBase.getsolvetime(m::Model)
-    if !m.internalModelLoaded
-        error("Model not solved")
-    elseif method_exists(MathProgBase.getsolvetime, (typeof(getInternalModel(m)), ))
-        return MathProgBase.getsolvetime(getInternalModel(m))
-    else
-        error("Solve time not implemented for $(typeof(m.solver))")
+
+for f in MathProgBase.SolverInterface.methods_by_tag[:rewrap]
+    eval(Expr(:import,:MathProgBase,f))
+    @eval function $f(m::Model)
+        # check internal model exists
+        if !m.internalModelLoaded
+            error("Model not solved")
+        else
+            return $f(getInternalModel(m))
+        end
     end
-end
-function MathProgBase.getnodecount(m::Model)
-    if !m.internalModelLoaded
-        error("Model not solved")
-    elseif method_exists(MathProgBase.getnodecount, (typeof(getInternalModel(m)), ))
-        return MathProgBase.getnodecount(getInternalModel(m))
-    else
-        error("Node count not implemented for $(typeof(m.solver)).")
-    end
+    eval(Expr(:export,f))
 end
 
 function getObjective(m::Model)
