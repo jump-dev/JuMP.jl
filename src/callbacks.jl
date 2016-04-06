@@ -4,9 +4,6 @@
 #  file, You can obtain one at http://mozilla.org/MPL/2.0/.
 
 export addLazyCallback, addCutCallback, addHeuristicCallback, addInfoCallback
-@Base.deprecate setLazyCallback      addLazyCallback
-@Base.deprecate setCutCallback       addCutCallback
-@Base.deprecate setHeuristicCallback addHeuristicCallback
 
 abstract JuMPCallback
 type LazyCallback <: JuMPCallback
