@@ -40,8 +40,13 @@ Methods
 * ``MathProgBase.numlinconstr(m::Model)`` - returns the number of linear constraints associated with the ``Model m``.
 * ``MathProgBase.numquadconstr(m::Model)`` - returns the number of quadratic constraints associated with the ``Model m``.
 * ``MathProgBase.numconstr(m::Model)`` - returns the total number of constraints associated with the ``Model m``.
-* ``MathProgBase.getsolvetime(m::Model)`` - returns the solve time from the solver if it is implemented.
-* ``MathProgBase.getnodecount(m::Model)`` - returns the number of explored branch-and-bound nodes, if it is implemented.
+* ``getsolvetime(m::Model)`` - returns the solve time reported by the solver if it is implemented.
+* ``getnodecount(m::Model)`` - returns the number of explored branch-and-bound nodes, if it is implemented.
+* ``getobjbound(m::Model)`` - returns the best known bound on the optimal objective value. This is used, for example, when a branch-and-bound method is stopped before finishing.
+* ``getobjgap(m::Model)`` - returns the final relative optimality gap as optimization terminated. That is, it returns :math:`\frac{|b-f|}{|f|}`, where :math:`b` is the best bound and :math:`f` is the best feasible objective value.
+* ``getrawsolver(m::Model)`` - returns an object that may be used to access a solver-specific API.
+* ``getsimplexiter(m::Model)`` - returns the cumulative number of simplex iterations during the optimization process. In particular, for a MIP it returns the total simplex iterations for all nodes.
+* ``getbarrieriter(m::Model)`` - returns the cumulative number of barrier iterations during the optimization process.
 * ``getInternalModel(m::Model)`` - returns the internal low-level ``AbstractMathProgModel`` object which can be used to access any functionality that is not exposed by JuMP. See the MathProgBase `documentation <https://mathprogbasejl.readthedocs.org/en/latest/lowlevel.html>`_.
 * ``solve(m::Model; suppress_warnings=false, relaxation=false)`` - solves the model using the selected solver (or a default for the problem class), and takes two optional arguments that are disabled by default. Setting ``suppress_warnings`` to ``true`` will suppress all JuMP-specific output (e.g. warnings about infeasibility and lack of dual information) but will not suppress solver output (which should be done by passing options to the solver). Setting ``relaxation=true`` solves the standard continuous relaxation for the model: that is, integrality is dropped, special ordered set constraints are not enforced, and semi-continuous and semi-integer variables with bounds ``[l,u]`` are replaced with bounds ``[min(l,0),max(u,0)]``.
 * ``buildInternalModel(m::Model)`` - builds the model in memory at the MathProgBase level without optimizing.
