@@ -10,12 +10,12 @@ for solver in conic_solvers_with_duals
 context("With solver $(typeof(solver))") do
     m = Model(solver=solver)
 
-    @defVar(m, x[1:5])
-    @setObjective(m, Max, x[1] + x[2] + x[3] + x[4] + 2*x[5])
-    @addConstraint(m, constrcon1, norm(x[2:5]) <= x[1])
-    @addConstraint(m, constrlin1, x[1] <= 5)
-    @addConstraint(m, constrlin2, x[1]+2*x[2] - x[3] <= 10)
-    @addConstraint(m, constrcon2, norm([2 3;1 1]*x[2:3]-[3;4]) <= x[5] - 2)
+    @variable(m, x[1:5])
+    @objective(m, Max, x[1] + x[2] + x[3] + x[4] + 2*x[5])
+    @constraint(m, constrcon1, norm(x[2:5]) <= x[1])
+    @constraint(m, constrlin1, x[1] <= 5)
+    @constraint(m, constrlin2, x[1]+2*x[2] - x[3] <= 10)
+    @constraint(m, constrcon2, norm([2 3;1 1]*x[2:3]-[3;4]) <= x[5] - 2)
 
     solve(m)
     @fact length(getDual(constrcon1)) --> 5
@@ -36,11 +36,11 @@ for lp_solver in lp_solvers
 context("With LP solver $(typeof(lp_solver))") do
 
     m1 = Model(solver=lp_solver)
-    @defVar(m1, x1[1:2] >= 0)
-    @setObjective(m1, Max, x1[1] + 2x1[2])
-    @addConstraint(m1, c11, 3x1[1] + x1[2] <= 4)
-    @addConstraint(m1, c12, x1[1] + 2x1[2] >= 1)
-    @addConstraint(m1, c13, -x1[1] + x1[2] == 0.5)
+    @variable(m1, x1[1:2] >= 0)
+    @objective(m1, Max, x1[1] + 2x1[2])
+    @constraint(m1, c11, 3x1[1] + x1[2] <= 4)
+    @constraint(m1, c12, x1[1] + 2x1[2] >= 1)
+    @constraint(m1, c13, -x1[1] + x1[2] == 0.5)
 
     solve(m1)
 
@@ -54,12 +54,12 @@ for  conic_solver in conic_solvers_with_duals
 context("With conic solver $(typeof(conic_solver))") do
 
     m2 = Model(solver=conic_solver)
-    @defVar(m2, x2[1:2] >= 0)
-    @setObjective(m2, Max, x2[1] + 2x2[2])
-    @addConstraint(m2, c21, 3x2[1] + x2[2] <= 4)
-    @addConstraint(m2, c22, x2[1] + 2x2[2] >= 1)
-    @addConstraint(m2, c23, -x2[1] + x2[2] == 0.5)
-    @addConstraint(m2, norm(x2[1]) <= x2[2])
+    @variable(m2, x2[1:2] >= 0)
+    @objective(m2, Max, x2[1] + 2x2[2])
+    @constraint(m2, c21, 3x2[1] + x2[2] <= 4)
+    @constraint(m2, c22, x2[1] + 2x2[2] >= 1)
+    @constraint(m2, c23, -x2[1] + x2[2] == 0.5)
+    @constraint(m2, norm(x2[1]) <= x2[2])
 
     solve(m2)
 
@@ -76,11 +76,11 @@ for lp_solver in lp_solvers
 context("With LP solver $(typeof(lp_solver))") do
 
     m1 = Model(solver=lp_solver)
-    @defVar(m1, x1[1:2] >= 0)
-    @setObjective(m1, Min, -x1[1] - 2x1[2])
-    @addConstraint(m1, c11, 3x1[1] + x1[2] <= 4)
-    @addConstraint(m1, c12, x1[1] + 2x1[2] >= 1)
-    @addConstraint(m1, c13, -x1[1] + x1[2] == 0.5)
+    @variable(m1, x1[1:2] >= 0)
+    @objective(m1, Min, -x1[1] - 2x1[2])
+    @constraint(m1, c11, 3x1[1] + x1[2] <= 4)
+    @constraint(m1, c12, x1[1] + 2x1[2] >= 1)
+    @constraint(m1, c13, -x1[1] + x1[2] == 0.5)
 
     solve(m1)
 
@@ -94,12 +94,12 @@ for  conic_solver in conic_solvers_with_duals
 context("With conic solver $(typeof(conic_solver))") do
 
     m2 = Model(solver=conic_solver)
-    @defVar(m2, x2[1:2] >= 0)
-    @setObjective(m2, Min, -x2[1] - 2x2[2])
-    @addConstraint(m2, c21, 3x2[1] + x2[2] <= 4)
-    @addConstraint(m2, c22, x2[1] + 2x2[2] >= 1)
-    @addConstraint(m2, c23, -x2[1] + x2[2] == 0.5)
-    @addConstraint(m2, norm(x2[1]) <= x2[2])
+    @variable(m2, x2[1:2] >= 0)
+    @objective(m2, Min, -x2[1] - 2x2[2])
+    @constraint(m2, c21, 3x2[1] + x2[2] <= 4)
+    @constraint(m2, c22, x2[1] + 2x2[2] >= 1)
+    @constraint(m2, c23, -x2[1] + x2[2] == 0.5)
+    @constraint(m2, norm(x2[1]) <= x2[2])
 
     solve(m2)
     @fact getDual(c21) --> roughly(-0.75, TOL)
@@ -116,10 +116,10 @@ context("With LP solver $(typeof(lp_solver))") do
 
     m1 = Model(solver=lp_solver)
 
-    @defVar(m1, x1 >= 0)
-    @defVar(m1, y1 >= 0)
-    @addConstraint(m1, x1 + y1 == 1)
-    @setObjective(m1, Max, y1)
+    @variable(m1, x1 >= 0)
+    @variable(m1, y1 >= 0)
+    @constraint(m1, x1 + y1 == 1)
+    @objective(m1, Max, y1)
 
     solve(m1)
 
@@ -130,9 +130,9 @@ context("With LP solver $(typeof(lp_solver))") do
 
     m1 = Model(solver=lp_solver)
 
-    @defVar(m1, x1 >= 0)
-    @addConstraint(m1, x1 <= 1)
-    @setObjective(m1, Max, x1)
+    @variable(m1, x1 >= 0)
+    @constraint(m1, x1 <= 1)
+    @objective(m1, Max, x1)
 
     solve(m1)
 
@@ -145,10 +145,10 @@ context("With LP solver $(typeof(lp_solver))") do
 
     m1 = Model(solver=lp_solver)
 
-    @defVar(m1, x1 >= X_LB)
-    @defVar(m1, y1 <= Y_UB)
-    @addConstraint(m1, c1,  x1 + y1 == RHS)
-    @setObjective(m1, Max, 0.8*y1 + 0.1*x1)
+    @variable(m1, x1 >= X_LB)
+    @variable(m1, y1 <= Y_UB)
+    @constraint(m1, c1,  x1 + y1 == RHS)
+    @objective(m1, Max, 0.8*y1 + 0.1*x1)
 
     solve(m1)
 
@@ -168,11 +168,11 @@ context("With conic solver $(typeof(conic_solver))") do
 
     m2 = Model(solver=conic_solver)
 
-    @defVar(m2, x2 >= 0)
-    @defVar(m2, y2 >= 0)
-    @addConstraint(m2, x2 + y2 == 1)
-    @setObjective(m2, Max, y2)
-    @addConstraint(m2, norm(x2) <= y2)
+    @variable(m2, x2 >= 0)
+    @variable(m2, y2 >= 0)
+    @constraint(m2, x2 + y2 == 1)
+    @objective(m2, Max, y2)
+    @constraint(m2, norm(x2) <= y2)
 
     solve(m2)
 
@@ -183,10 +183,10 @@ context("With conic solver $(typeof(conic_solver))") do
 
     m2 = Model(solver=conic_solver)
 
-    @defVar(m2, x2 >= 0)
-    @addConstraint(m2, x2 <= 1)
-    @setObjective(m2, Max, x2)
-    @addConstraint(m2, norm(x2) <= x2)
+    @variable(m2, x2 >= 0)
+    @constraint(m2, x2 <= 1)
+    @objective(m2, Max, x2)
+    @constraint(m2, norm(x2) <= x2)
 
     solve(m2)
 
@@ -199,11 +199,11 @@ context("With conic solver $(typeof(conic_solver))") do
 
     m2 = Model(solver=conic_solver)
 
-    @defVar(m2, x2 >= X_LB)
-    @defVar(m2, y2 <= Y_UB)
-    @addConstraint(m2, c2, x2 + y2 == RHS)
-    @setObjective(m2, Max, 0.8*y2 + 0.1*x2)
-    @addConstraint(m2, norm(x2) <= y2)
+    @variable(m2, x2 >= X_LB)
+    @variable(m2, y2 <= Y_UB)
+    @constraint(m2, c2, x2 + y2 == RHS)
+    @objective(m2, Max, 0.8*y2 + 0.1*x2)
+    @constraint(m2, norm(x2) <= y2)
 
     solve(m2)
 
@@ -231,10 +231,10 @@ context("With conic solver $(typeof(conic_solver))") do
 
     m2 = Model(solver=conic_solver)
 
-    @defVar(m2, x2 >= 0)
-    @addConstraint(m2, x2 <= 1)
-    @setObjective(m2, Max, x2)
-    @addConstraint(m2, c2, norm(x2) <= x2 - 1)
+    @variable(m2, x2 >= 0)
+    @constraint(m2, x2 <= 1)
+    @objective(m2, Max, x2)
+    @constraint(m2, c2, norm(x2) <= x2 - 1)
 
     status = solve(m2)
 

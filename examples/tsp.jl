@@ -114,23 +114,23 @@ function solveTSP(n, cities)
     # x[i,j] is 1 iff we travel between i and j, 0 otherwise
     # Although we define all n^2 variables, we will only use
     # the upper triangle
-    @defVar(m, x[1:n,1:n], Bin)
+    @variable(m, x[1:n,1:n], Bin)
 
     # Minimize length of tour
-    @setObjective(m, Min, sum{dist[i,j]*x[i,j], i=1:n,j=i:n})
+    @objective(m, Min, sum{dist[i,j]*x[i,j], i=1:n,j=i:n})
 
     # Make x_ij and x_ji be the same thing (undirectional)
     # Don't allow self-arcs
     for i = 1:n
-        @addConstraint(m, x[i,i] == 0)
+        @constraint(m, x[i,i] == 0)
         for j = (i+1):n
-            @addConstraint(m, x[i,j] == x[j,i])
+            @constraint(m, x[i,j] == x[j,i])
         end
     end
 
     # We must enter and leave every city once and only once
     for i = 1:n
-        @addConstraint(m, sum{x[i,j], j=1:n} == 2)
+        @constraint(m, sum{x[i,j], j=1:n} == 2)
     end
 
     function subtour(cb)
@@ -177,7 +177,7 @@ function solveTSP(n, cities)
         # Add the new subtour elimination constraint we built
         println("Adding subtour elimination cut")
         println("----")
-        @addLazyConstraint(cb, arcs_from_subtour >= 2)
+        @lazyconstraint(cb, arcs_from_subtour >= 2)
     end  # End function subtour
 
     # Solve the problem with our cut generator

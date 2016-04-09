@@ -22,14 +22,14 @@ using Gurobi
 m = Model(solver=GurobiSolver(PreCrush=1, Cuts=0, Presolve=0, Heuristics=0.0))
 
 # Define our variables to be inside a box, and integer
-@defVar(m, 0 <= x <= 2, Int)
-@defVar(m, 0 <= y <= 2, Int)
+@variable(m, 0 <= x <= 2, Int)
+@variable(m, 0 <= y <= 2, Int)
 
 # Optimal solution is trying to go towards top-right corner (2.0, 2.0)
-@setObjective(m, Max, x + 2y)
+@objective(m, Max, x + 2y)
 
 # We have one constraint that cuts off the top right corner
-@addConstraint(m, y + x <= 3.5)
+@constraint(m, y + x <= 3.5)
 
 # Optimal solution of relaxed problem will be (1.5, 2.0)
 # We can add a user cut that will cut of this fractional solution.
@@ -50,7 +50,7 @@ function mycutgenerator(cb)
         # Cut off this solution
         println("Fractional solution was in top right, cut it off")
         # Use the original variables
-        @addUserCut(cb, y + x <= 3)
+        @usercut(cb, y + x <= 3)
     end
 end  # End of callback function
 

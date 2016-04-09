@@ -17,10 +17,10 @@ using JuMP, FactCheck
 
 facts("[nonlinear] Test getValue on arrays") do
     m = Model()
-    @defVar(m, x, start = π/2)
-    @defNLExpr(m, f1, sin(x))
-    @defNLExpr(m, f2, sin(2x))
-    @defNLExpr(m, f3[i=1:2], sin(i*x))
+    @variable(m, x, start = π/2)
+    @NLexpression(m, f1, sin(x))
+    @NLexpression(m, f2, sin(2x))
+    @NLexpression(m, f3[i=1:2], sin(i*x))
 
     @fact getValue(f1) --> roughly(1, 1e-5)
     @fact getValue(f2) --> roughly(0, 1e-5)
@@ -28,7 +28,7 @@ facts("[nonlinear] Test getValue on arrays") do
     @fact getValue([f1, f2]) --> getValue(f3)
 
     v = [1.0, 2.0]
-    @defNLParam(m, vparam[i=1:2] == v[i])
+    @NLparameter(m, vparam[i=1:2] == v[i])
     @fact getValue(vparam) --> v
     v[1] = 3.0
     setValue(vparam, v)
@@ -48,10 +48,10 @@ context("With solver $(typeof(nlp_solver))") do
     # End at (1.000..., 4.743..., 3.821..., 1.379...)
     m = Model(solver=nlp_solver)
     initval = [1,5,5,1]
-    @defVar(m, 1 <= x[i=1:4] <= 5, start=initval[i])
-    @setNLObjective(m, Min, x[1]*x[4]*(x[1]+x[2]+x[3]) + x[3])
-    @addNLConstraint(m, x[1]*x[2]*x[3]*x[4] >= 25)
-    @addNLConstraint(m, sum{x[i]^2,i=1:4} == 40)
+    @variable(m, 1 <= x[i=1:4] <= 5, start=initval[i])
+    @NLobjective(m, Min, x[1]*x[4]*(x[1]+x[2]+x[3]) + x[3])
+    @NLconstraint(m, x[1]*x[2]*x[3]*x[4] >= 25)
+    @NLconstraint(m, sum{x[i]^2,i=1:4} == 40)
     @fact MathProgBase.numconstr(m) --> 2
     status = solve(m)
 
@@ -71,12 +71,12 @@ context("With solver $(typeof(nlp_solver))") do
         #     ...
         m = Model(solver=nlp_solver)
         start = [1.0, 5.0, 5.0, 1.0]
-        @defVar(m, 1 <= x[i=1:4] <= 5, start = start[i])
-        @defVar(m, t, start = 100)
-        @setObjective(m, Min, t)
-        @addNLConstraint(m, t >= x[1]*x[4]*(x[1]+x[2]+x[3]) + x[3])
-        @addNLConstraint(m, x[1]*x[2]*x[3]*x[4] >= 25)
-        @addNLConstraint(m, sum{x[i]^2,i=1:4} == 40)
+        @variable(m, 1 <= x[i=1:4] <= 5, start = start[i])
+        @variable(m, t, start = 100)
+        @objective(m, Min, t)
+        @NLconstraint(m, t >= x[1]*x[4]*(x[1]+x[2]+x[3]) + x[3])
+        @NLconstraint(m, x[1]*x[2]*x[3]*x[4] >= 25)
+        @NLconstraint(m, sum{x[i]^2,i=1:4} == 40)
         status = solve(m)
 
         @fact status --> :Optimal
@@ -89,9 +89,9 @@ for nlp_solver in nlp_solvers
 (contains("$(typeof(nlp_solver))", "OsilSolver") || contains("$(typeof(nlp_solver))", "NLoptSolver")) && continue
 context("With solver $(typeof(nlp_solver))") do
         m = Model(solver=nlp_solver)
-        @defVar(m, x, start = 2)
+        @variable(m, x, start = 2)
         # minimizer at smooth point, solvers should be okay
-        @setNLObjective(m, Min, ifelse( x <= 1, x^2, x) )
+        @NLobjective(m, Min, ifelse( x <= 1, x^2, x) )
         status = solve(m)
 
         @fact status --> :Optimal
@@ -103,10 +103,10 @@ for nlp_solver in convex_nlp_solvers
 for simplify in [true, false]
 context("With solver $(typeof(nlp_solver)), simplify = $simplify") do
     m = Model(solver=nlp_solver, simplify_nonlinear_expressions=simplify)
-    @defVar(m, x == 0)
-    @defVar(m, y ≥ 0)
-    @setObjective(m, Min, y)
-    @addNLConstraint(m, y ≥ x^2)
+    @variable(m, x == 0)
+    @variable(m, y ≥ 0)
+    @objective(m, Min, y)
+    @NLconstraint(m, y ≥ x^2)
     EnableNLPResolve()
     for α in 1:4
         setValue(x, α)
@@ -122,16 +122,16 @@ context("With solver $(typeof(nlp_solver))") do
     # Solve a problem with quadratic objective with linear
     # constraints, but force it to use the nonlinear code.
     m = Model(solver=nlp_solver)
-    @defVar(m, 0.5 <= x <=  2)
-    @defVar(m, 0.0 <= y <= 30)
-    @defNLParam(m, param == 1.0)
-    @setObjective(m, Min, (x+y)^2)
-    @addNLConstraint(m, x + y >= param)
+    @variable(m, 0.5 <= x <=  2)
+    @variable(m, 0.0 <= y <= 30)
+    @NLparameter(m, param == 1.0)
+    @objective(m, Min, (x+y)^2)
+    @NLconstraint(m, x + y >= param)
     status = solve(m)
 
     @fact status --> :Optimal
     @fact m.objVal --> roughly(1.0, 1e-6)
-    @defNLExpr(m, lhs, x+y)
+    @NLexpression(m, lhs, x+y)
     @fact getValue(x)+getValue(y) --> roughly(1.0, 1e-6)
     @fact getValue(lhs) --> roughly(1.0, 1e-6)
 
@@ -151,10 +151,10 @@ context("With solver $(typeof(nlp_solver))") do
     # Solve a problem with linear objective with quadratic
     # constraints, but force it to use the nonlinear code.
     m = Model(solver=nlp_solver)
-    @defVar(m, -2 <= x <= 2)
-    @defVar(m, -2 <= y <= 2)
-    @setNLObjective(m, Min, x - y)
-    @addConstraint(m, x + x^2 + x*y + y^2 <= 1)
+    @variable(m, -2 <= x <= 2)
+    @variable(m, -2 <= y <= 2)
+    @NLobjective(m, Min, x - y)
+    @constraint(m, x + x^2 + x*y + y^2 <= 1)
     status = solve(m)
 
     @fact status --> :Optimal
@@ -167,9 +167,9 @@ for nlp_solver in convex_nlp_solvers
 for simplify in [true,false]
 context("With solver $(typeof(nlp_solver)), simplify = $simplify") do
     m = Model(solver=nlp_solver, simplify_nonlinear_expressions=simplify)
-    @defVar(m, z)
-    @defNLParam(m, x == 1.0)
-    @setNLObjective(m, Min, (z-x)^2)
+    @variable(m, z)
+    @NLparameter(m, x == 1.0)
+    @NLobjective(m, Min, (z-x)^2)
     status = solve(m)
     @fact status --> :Optimal
     @fact getValue(z) --> roughly(1.0, 1e-3)
@@ -184,17 +184,17 @@ facts("[nonlinear] Test two-sided nonlinear constraints") do
 for nlp_solver in convex_nlp_solvers
 context("With solver $(typeof(nlp_solver))") do
     m = Model(solver=nlp_solver)
-    @defVar(m, x)
-    @setNLObjective(m, Max, x)
+    @variable(m, x)
+    @NLobjective(m, Max, x)
     l = -1
     u = 1
-    @addNLConstraint(m, l <= x <= u)
+    @NLconstraint(m, l <= x <= u)
     status = solve(m)
 
     @fact status --> :Optimal
     @fact getObjectiveValue(m) --> roughly(u, 1e-6)
 
-    @setNLObjective(m, Min, x)
+    @NLobjective(m, Min, x)
     status = solve(m)
 
     @fact status --> :Optimal
@@ -205,9 +205,9 @@ facts("[nonlinear] Quadratic equality constraints") do
 for nlp_solver in nlp_solvers
 context("With solver $(typeof(nlp_solver))") do
     m = Model(solver=nlp_solver)
-    @defVar(m, 0 <= x[1:2] <= 1)
-    @addConstraint(m, x[1]^2 + x[2]^2 == 1/2)
-    @setNLObjective(m, Max, x[1] - x[2])
+    @variable(m, 0 <= x[1:2] <= 1)
+    @constraint(m, x[1]^2 + x[2]^2 == 1/2)
+    @NLobjective(m, Max, x[1] - x[2])
     status = solve(m)
 
     @fact status --> :Optimal
@@ -224,10 +224,10 @@ context("With solver $(typeof(minlp_solver))") do
      # problem synthes1 in the MacMINLP test set.
     m = Model(solver=minlp_solver)
     x_U = [2,2,1]
-    @defVar(m, x_U[i] >= x[i=1:3] >= 0)
-    @defVar(m, y[4:6], Bin)
-    @setNLObjective(m, Min, 10 + 10*x[1] - 7*x[3] + 5*y[4] + 6*y[5] + 8*y[6] - 18*log(x[2]+1) - 19.2*log(x[1]-x[2]+1))
-    @addNLConstraints(m, begin
+    @variable(m, x_U[i] >= x[i=1:3] >= 0)
+    @variable(m, y[4:6], Bin)
+    @NLobjective(m, Min, 10 + 10*x[1] - 7*x[3] + 5*y[4] + 6*y[5] + 8*y[6] - 18*log(x[2]+1) - 19.2*log(x[1]-x[2]+1))
+    @NLconstraints(m, begin
         0.8*log(x[2] + 1) + 0.96*log(x[1] - x[2] + 1) - 0.8*x[3] >= 0
         log(x[2] + 1) + 1.2*log(x[1] - x[2] + 1) - x[3] - 2*y[6] >= -2
         x[2] - x[1] <= 0
@@ -254,11 +254,11 @@ context("With solver $(typeof(nlp_solver))") do
      # Introduce auxiliary nonnegative variable for the x[1]-x[2]+1 term
     m = Model(solver=nlp_solver)
     x_U = [2,2,1]
-    @defVar(m, x_U[i] >= x[i=1:3] >= 0)
-    @defVar(m, 1 >= y[4:6] >= 0)
-    @defVar(m, z >= 0, start=1)
-    @setNLObjective(m, Min, 10 + 10*x[1] - 7*x[3] + 5*y[4] + 6*y[5] + 8*y[6] - 18*log(x[2]+1) - 19.2*log(z))
-    @addNLConstraints(m, begin
+    @variable(m, x_U[i] >= x[i=1:3] >= 0)
+    @variable(m, 1 >= y[4:6] >= 0)
+    @variable(m, z >= 0, start=1)
+    @NLobjective(m, Min, 10 + 10*x[1] - 7*x[3] + 5*y[4] + 6*y[5] + 8*y[6] - 18*log(x[2]+1) - 19.2*log(z))
+    @NLconstraints(m, begin
         0.8*log(x[2] + 1) + 0.96*log(z) - 0.8*x[3] >= 0
         log(x[2] + 1) + 1.2*log(z) - x[3] - 2*y[6] >= -2
         x[2] - x[1] <= 0
@@ -281,10 +281,10 @@ for nlp_solver in convex_nlp_solvers
 context("With solver $(typeof(nlp_solver))") do
     # Solve a simple problem with a maximization objective
     m = Model(solver=nlp_solver)
-    @defVar(m, -2 <= x <= 2); setValue(x, -1.8)
-    @defVar(m, -2 <= y <= 2); setValue(y,  1.5)
-    @setNLObjective(m, Max, y - x)
-    @addConstraint(m, x + x^2 + x*y + y^2 <= 1)
+    @variable(m, -2 <= x <= 2); setValue(x, -1.8)
+    @variable(m, -2 <= y <= 2); setValue(y,  1.5)
+    @NLobjective(m, Max, y - x)
+    @constraint(m, x + x^2 + x*y + y^2 <= 1)
 
     @fact solve(m) --> :Optimal
     @fact getObjectiveValue(m) --> roughly(1+4/sqrt(3), 1e-6)
@@ -296,19 +296,19 @@ for nlp_solver in convex_nlp_solvers
 for simplify in [true,false]
 context("With solver $(typeof(nlp_solver)), simplify = $simplify") do
     m = Model(solver=nlp_solver, simplify_nonlinear_expressions=simplify)
-    @defVar(m, -2 <= x <= 2); setValue(x, -1.8)
-    @defVar(m, -2 <= y <= 2); setValue(y,  1.5)
-    @setNLObjective(m, Max, y - x)
-    @defNLExpr(m, quadexpr, x + x^2 + x*y + y^2)
-    @addNLConstraint(m, quadexpr <= 1)
+    @variable(m, -2 <= x <= 2); setValue(x, -1.8)
+    @variable(m, -2 <= y <= 2); setValue(y,  1.5)
+    @NLobjective(m, Max, y - x)
+    @NLexpression(m, quadexpr, x + x^2 + x*y + y^2)
+    @NLconstraint(m, quadexpr <= 1)
 
     @fact solve(m) --> :Optimal
     @fact getObjectiveValue(m) --> roughly(1+4/sqrt(3), 1e-6)
     @fact getValue(x) + getValue(y) --> roughly(-1/3, 1e-3)
     @fact getValue(quadexpr) --> roughly(1, 1e-5)
-    @defNLExpr(quadexpr2, x + x^2 + x*y + y^2)
+    @NLexpression(quadexpr2, x + x^2 + x*y + y^2)
     @fact getValue(quadexpr2) --> roughly(1, 1e-5)
-    quadexpr3 = @defNLExpr(x + x^2 + x*y + y^2)
+    quadexpr3 = @NLexpression(x + x^2 + x*y + y^2)
     @fact getValue(quadexpr3) --> roughly(1, 1e-5)
 end; end; end; end
 
@@ -320,10 +320,10 @@ context("With solver $(typeof(nlp_solver))") do
     # (Attempt to) solve an infeasible problem
     m = Model(solver=nlp_solver)
     n = 10
-    @defVar(m, 0 <= x[i=1:n] <= 1)
-    @setNLObjective(m, Max, x[n])
+    @variable(m, 0 <= x[i=1:n] <= 1)
+    @NLobjective(m, Max, x[n])
     for i in 1:n-1
-        @addNLConstraint(m, x[i+1]-x[i] == 0.15)
+        @NLconstraint(m, x[i+1]-x[i] == 0.15)
     end
     @fact solve(m, suppress_warnings=true) --> :Infeasible
 end; end; end
@@ -335,9 +335,9 @@ contains(string(typeof(nlp_solver)),"NLoptSolver") && continue
 context("With solver $(typeof(nlp_solver))") do
     # (Attempt to) solve an unbounded problem
     m = Model(solver=nlp_solver)
-    @defVar(m, x >= 0)
-    @setNLObjective(m, Max, x)
-    @addNLConstraint(m, x >= 5)
+    @variable(m, x >= 0)
+    @NLobjective(m, Max, x)
+    @NLconstraint(m, x >= 5)
     @fact solve(m, suppress_warnings=true) --> :Unbounded
 end; end; end
 
@@ -346,10 +346,10 @@ for nlp_solver in convex_nlp_solvers
 context("With solver $(typeof(nlp_solver))") do
     m = Model(solver=nlp_solver)
     N = 3
-    @defVar(m, x[1:N] >= 0, start = 1)
-    @defNLExpr(m, entropy[i=1:N], -x[i]*log(x[i]))
-    @setNLObjective(m, Max, sum{entropy[i], i = 1:N})
-    @addConstraint(m, sum(x) == 1)
+    @variable(m, x[1:N] >= 0, start = 1)
+    @NLexpression(m, entropy[i=1:N], -x[i]*log(x[i]))
+    @NLobjective(m, Max, sum{entropy[i], i = 1:N})
+    @constraint(m, sum(x) == 1)
 
     @fact solve(m) --> :Optimal
     @fact norm(getValue(x)[:] - [1/3,1/3,1/3]) --> roughly(0.0, 1e-4)
@@ -360,19 +360,19 @@ for nlp_solver in convex_nlp_solvers
 context("With solver $(typeof(nlp_solver))") do
     m = Model(solver=nlp_solver)
     idx = [1,2,3,4]
-    @defVar(m, x[idx] >= 0, start = 1)
-    @defVar(m, z[1:4], start = 0)
-    @defNLExpr(m, entropy[i=idx], -x[i]*log(x[i]))
-    @setNLObjective(m, Max, sum{z[i], i = 1:2} + sum{z[i]/2, i=3:4})
-    @addNLConstraint(m, z_constr1[i=1], z[i] <= entropy[i])
-    @addNLConstraint(m, z_constr1[i=2], z[i] <= entropy[i]) # duplicate expressions
-    @addNLConstraint(m, z_constr2[i=3:4], z[i] <= 2*entropy[i])
-    @addConstraint(m, sum(x) == 1)
+    @variable(m, x[idx] >= 0, start = 1)
+    @variable(m, z[1:4], start = 0)
+    @NLexpression(m, entropy[i=idx], -x[i]*log(x[i]))
+    @NLobjective(m, Max, sum{z[i], i = 1:2} + sum{z[i]/2, i=3:4})
+    @NLconstraint(m, z_constr1[i=1], z[i] <= entropy[i])
+    @NLconstraint(m, z_constr1[i=2], z[i] <= entropy[i]) # duplicate expressions
+    @NLconstraint(m, z_constr2[i=3:4], z[i] <= 2*entropy[i])
+    @constraint(m, sum(x) == 1)
 
     @fact solve(m) --> :Optimal
     @fact norm([getValue(x[i]) for i in idx] - [1/4,1/4,1/4,1/4]) --> roughly(0.0, 1e-4)
     @fact getValue(entropy[1]) --> roughly(-(1/4)*log(1/4), 1e-4)
-    @defNLExpr(m, zexpr[i=1:4], z[i])
+    @NLexpression(m, zexpr[i=1:4], z[i])
     @fact getValue(zexpr[1]) --> roughly(-(1/4)*log(1/4), 1e-4)
 end; end; end
 
@@ -380,8 +380,8 @@ facts("[nonlinear] Test derivatives of x^4, x < 0") do
 for nlp_solver in convex_nlp_solvers
 context("With solver $(typeof(nlp_solver))") do
     m = Model(solver=nlp_solver)
-    @defVar(m, x >= -1, start = -0.5)
-    @setNLObjective(m, Min, x^4)
+    @variable(m, x >= -1, start = -0.5)
+    @NLobjective(m, Min, x^4)
     status = solve(m)
 
     @fact status --> :Optimal
@@ -394,14 +394,14 @@ for simplify in [true,false]
 applicable(MathProgBase.getconstrduals, MathProgBase.NonlinearModel(nlp_solver)) || continue
 context("With solver $(typeof(nlp_solver)), simplify = $simplify") do
     modA = Model(solver=nlp_solver, simplify_nonlinear_expressions=simplify)
-    @defVar(modA, x >= 0)
-    @defVar(modA, y <= 5)
-    @defVar(modA, 2 <= z <= 4)
-    @defVar(modA, 0 <= r[i=3:6] <= i)
-    @setNLObjective(modA, Min, -((x + y)/2.0 + 3.0)/3.0 - z - r[3])
-    @addConstraint(modA, cons1, x+y >= 2)
-    @addConstraint(modA, cons2, sum{r[i],i=3:5} <= (2 - x)/2.0)
-    @addNLConstraint(modA, cons3, 7.0*y <= z + r[6]/1.9)
+    @variable(modA, x >= 0)
+    @variable(modA, y <= 5)
+    @variable(modA, 2 <= z <= 4)
+    @variable(modA, 0 <= r[i=3:6] <= i)
+    @NLobjective(modA, Min, -((x + y)/2.0 + 3.0)/3.0 - z - r[3])
+    @constraint(modA, cons1, x+y >= 2)
+    @constraint(modA, cons2, sum{r[i],i=3:5} <= (2 - x)/2.0)
+    @NLconstraint(modA, cons3, 7.0*y <= z + r[6]/1.9)
 
     # Solution
     @fact solve(modA) --> :Optimal
@@ -434,14 +434,14 @@ for nlp_solver in nlp_solvers
 applicable(MathProgBase.getconstrduals, MathProgBase.NonlinearModel(nlp_solver)) || continue
 context("With solver $(typeof(nlp_solver))") do
     modA = Model(solver=nlp_solver)
-    @defVar(modA, x >= 0)
-    @defVar(modA, y <= 5)
-    @defVar(modA, 2 <= z <= 4)
-    @defVar(modA, 0 <= r[i=3:6] <= i)
-    @setNLObjective(modA, Max, ((x + y)/2.0 + 3.0)/3.0 + z + r[3])
-    @addConstraint(modA, cons1, x+y >= 2)
-    @addConstraint(modA, cons2, sum{r[i],i=3:5} <= (2 - x)/2.0)
-    @addNLConstraint(modA, cons3, 7.0*y <= z + r[6]/1.9)
+    @variable(modA, x >= 0)
+    @variable(modA, y <= 5)
+    @variable(modA, 2 <= z <= 4)
+    @variable(modA, 0 <= r[i=3:6] <= i)
+    @NLobjective(modA, Max, ((x + y)/2.0 + 3.0)/3.0 + z + r[3])
+    @constraint(modA, cons1, x+y >= 2)
+    @constraint(modA, cons2, sum{r[i],i=3:5} <= (2 - x)/2.0)
+    @NLconstraint(modA, cons3, 7.0*y <= z + r[6]/1.9)
 
     # Solution
     @fact solve(modA) --> :Optimal
@@ -473,8 +473,8 @@ facts("[nonlinear] Test Hessian chunking code") do
 for nlp_solver in nlp_solvers
 context("With solver $(typeof(nlp_solver))") do
     m = Model(solver=nlp_solver)
-    @defVar(m, x[1:18] >= 1, start = 1.2)
-    @setNLObjective(m, Min, prod{x[i],i=1:18})
+    @variable(m, x[1:18] >= 1, start = 1.2)
+    @NLobjective(m, Min, prod{x[i],i=1:18})
     @fact solve(m) --> :Optimal
     @fact getValue(x) --> roughly(ones(18),1e-4)
 end; end; end
@@ -514,24 +514,24 @@ MathProgBase.getsolution(m::DummyNLPModel) = [1.0,1.0]
 MathProgBase.setvartype!(m::DummyNLPModel,vartype) = @fact any(vartype .== :Fixed) --> false
 function test_nl_mpb()
     m = Model(solver=DummyNLPSolver())
-    @defVar(m, x == 1)
-    @defVar(m, y, Bin)
-    @setObjective(m, Min, -x+y)
-    @addConstraint(m, 2x+y <= 1)
-    @addConstraint(m, 2x+y <= 0)
-    @addConstraint(m, -5 <= 2x+y <= 5)
+    @variable(m, x == 1)
+    @variable(m, y, Bin)
+    @objective(m, Min, -x+y)
+    @constraint(m, 2x+y <= 1)
+    @constraint(m, 2x+y <= 0)
+    @constraint(m, -5 <= 2x+y <= 5)
     #solve(m) # FIXME maybe?
     lb,ub = getConstraintBounds(m)
     @fact lb --> [-Inf,-Inf,-5.0]
     @fact ub --> [1.0,-0.0,5.0]
 
-    @addConstraint(m, 2x^2+y >= 2)
-    @addNLConstraint(m, sin(x)*cos(y) == 5)
-    @addNLConstraint(m, nlconstr[i=1:2], i*x^2 == i)
-    @addNLConstraint(m, -0.5 <= sin(x) <= 0.5)
+    @constraint(m, 2x^2+y >= 2)
+    @NLconstraint(m, sin(x)*cos(y) == 5)
+    @NLconstraint(m, nlconstr[i=1:2], i*x^2 == i)
+    @NLconstraint(m, -0.5 <= sin(x) <= 0.5)
     solve(m)
 
-    @setNLObjective(m, Min, x^y)
+    @NLobjective(m, Min, x^y)
     solve(m)
 
     lb,ub = getConstraintBounds(m)
@@ -542,9 +542,9 @@ test_nl_mpb()
 
 facts("[nonlinear] Expression graph for linear problem") do
     m = Model()
-    @defVar(m, x)
-    @addConstraint(m, 0 <= x <= 1)
-    @setObjective(m, Max, x)
+    @variable(m, x)
+    @constraint(m, 0 <= x <= 1)
+    @objective(m, Max, x)
     d = JuMPNLPEvaluator(m)
     MathProgBase.initialize(d, [:ExprGraph])
     @fact MathProgBase.obj_expr(d) --> :(+(1.0 * x[1]))
@@ -553,13 +553,13 @@ end
 facts("[nonlinear] Hessians through MPB") do
     # Issue 435
     m = Model()
-    @defVar(m, a, start = 1)
-    @defVar(m, b, start = 2)
-    @defVar(m, c, start = 3)
+    @variable(m, a, start = 1)
+    @variable(m, b, start = 2)
+    @variable(m, c, start = 3)
 
-    @defNLExpr(m, foo, a * b + c^2)
+    @NLexpression(m, foo, a * b + c^2)
 
-    @setNLObjective(m, Min, foo)
+    @NLobjective(m, Min, foo)
     d = JuMPNLPEvaluator(m)
     MathProgBase.initialize(d, [:Hess])
     I,J = MathProgBase.hesslag_structure(d)
@@ -571,7 +571,7 @@ facts("[nonlinear] Hessians through MPB") do
     @fact hess_sparse --> roughly([0.0 1.0 0.0; 1.0 0.0 0.0; 0.0 0.0 2.0])
 
     # make sure we don't get NaNs in this case
-    @setNLObjective(m, Min, a * b + 3*c^2)
+    @NLobjective(m, Min, a * b + 3*c^2)
     d = JuMPNLPEvaluator(m)
     MathProgBase.initialize(d, [:Hess])
     setValue(c, -1.0)
@@ -592,13 +592,13 @@ end
 
 facts("[nonlinear] Hess-vec through MPB") do
     m = Model()
-    @defVar(m, a, start = 1)
-    @defVar(m, b, start = 2)
-    @defVar(m, c, start = 3)
+    @variable(m, a, start = 1)
+    @variable(m, b, start = 2)
+    @variable(m, c, start = 3)
 
-    @setNLObjective(m, Min, a*b + c^2)
-    @addConstraint(m, c*b <= 1)
-    @addNLConstraint(m, a^2/2 <= 1)
+    @NLobjective(m, Min, a*b + c^2)
+    @constraint(m, c*b <= 1)
+    @NLconstraint(m, a^2/2 <= 1)
     d = JuMPNLPEvaluator(m)
     MathProgBase.initialize(d, [:HessVec])
     h = ones(3) # test that input values are overwritten
@@ -614,10 +614,10 @@ facts("[nonlinear] NaN corner case (#695)") do
     x0 = 0.0
     y0 = 0.0
 
-    @defVar(m, x >= -1, start = 1.0)
-    @defVar(m, y, start = 2.0)
+    @variable(m, x >= -1, start = 1.0)
+    @variable(m, y, start = 2.0)
 
-    @setNLObjective(m, Min, (x - x0) /(sqrt(y0) + sqrt(y)))
+    @NLobjective(m, Min, (x - x0) /(sqrt(y0) + sqrt(y)))
 
     d = JuMPNLPEvaluator(m)
     MathProgBase.initialize(d, [:HessVec])
@@ -631,8 +631,8 @@ end
 if length(convex_nlp_solvers) > 0
     facts("[nonlinear] Error on NLP resolve") do
         m = Model(solver=convex_nlp_solvers[1])
-        @defVar(m, x, start = 1)
-        @setNLObjective(m, Min, x^2)
+        @variable(m, x, start = 1)
+        @NLobjective(m, Min, x^2)
         solve(m)
         setValue(x, 2)
         @fact_throws ErrorException solve(m)
@@ -657,8 +657,8 @@ if length(convex_nlp_solvers) > 0
 
         m = Model(solver=convex_nlp_solvers[1])
 
-        @defVar(m, x[1:2] >= 0.5)
-        @setNLObjective(m, Min, myf(x[1],mysquare(x[2])))
+        @variable(m, x[1:2] >= 0.5)
+        @NLobjective(m, Min, myf(x[1],mysquare(x[2])))
 
         d = JuMPNLPEvaluator(m)
         MathProgBase.initialize(d, [:Grad])
@@ -672,7 +672,7 @@ if length(convex_nlp_solvers) > 0
 
         @fact getValue(x) --> roughly(xval)
 
-        @setNLObjective(m, Min, myf_2(x[1],mysquare_2(x[2])))
+        @NLobjective(m, Min, myf_2(x[1],mysquare_2(x[2])))
 
         d = JuMPNLPEvaluator(m)
         MathProgBase.initialize(d, [:Grad])
@@ -689,7 +689,7 @@ if length(convex_nlp_solvers) > 0
 
         # Test just univariate functions because hessians are disabled
         # if any multivariate functions are present.
-        @setNLObjective(m, Min, mysquare(x[1]-1) + mysquare_2(x[2]-2) + mysquare_3(x[1]))
+        @NLobjective(m, Min, mysquare(x[1]-1) + mysquare_2(x[2]-2) + mysquare_3(x[1]))
         @fact solve(m) --> :Optimal
         @fact getValue(x) --> roughly([0.5,2.0],1e-4)
 

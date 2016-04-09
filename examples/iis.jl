@@ -65,10 +65,10 @@ End of IIS
 function iis_example()
     m = Model(solver=GurobiSolver())
 
-    @defVar(m, 0 <= x <= 1)
-    @defVar(m, 0 <= y <= 1)
+    @variable(m, 0 <= x <= 1)
+    @variable(m, 0 <= y <= 1)
 
-    @addConstraint(m, x+y >= 3)
+    @constraint(m, x+y >= 3)
 
     status = solve(m)
     @assert status == :Infeasible

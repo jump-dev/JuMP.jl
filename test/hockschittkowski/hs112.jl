@@ -27,13 +27,13 @@ let
 c = [-6.089, -17.164, -34.054, -5.914, -24.721, -14.986, -24.100, -10.708, -26.662, -22.179]
 
 m = Model()
-@defVar(m, x[1:10] >= 1e-6, start = 0.1)
+@variable(m, x[1:10] >= 1e-6, start = 0.1)
 
-@setNLObjective(m, Min, sum{x[j]*(c[j] + log(x[j]/sum{x[k],k=1:10})), j=1:10})
+@NLobjective(m, Min, sum{x[j]*(c[j] + log(x[j]/sum{x[k],k=1:10})), j=1:10})
 
-@addNLConstraint(m, x[1] + 2*x[2] + 2*x[3] + x[6] + x[10] == 2)
-@addNLConstraint(m, x[4] + 2*x[5] + x[6] + x[7] == 1)
-@addNLConstraint(m, x[3] + x[7] + x[8] + 2*x[9] + x[10] == 1)
+@NLconstraint(m, x[1] + 2*x[2] + 2*x[3] + x[6] + x[10] == 2)
+@NLconstraint(m, x[4] + 2*x[5] + x[6] + x[7] == 1)
+@NLconstraint(m, x[3] + x[7] + x[8] + 2*x[9] + x[10] == 1)
 
 solve(m)
 

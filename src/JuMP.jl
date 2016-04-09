@@ -49,12 +49,15 @@ export
     affToStr, quadToStr, exprToStr, conToStr, chgConstrRHS, linearterms,
 
 # Macros and support functions
-    @addConstraint, @addConstraints, @addSDPConstraint,
     @LinearConstraint, @LinearConstraints, @QuadConstraint, @QuadConstraints,
     @SOCConstraint, @SOCConstraints,
-    @defVar, @defConstrRef, @setObjective, addToExpression, @defExpr, @defVars,
-    @setNLObjective, @addNLConstraint, @addNLConstraints,
-    @defNLExpr, @defNLParam
+    addToExpression,
+    @expression, @NLexpression,
+    @variable, @variables, @constraint, @constraints,
+    @NLconstraint, @NLconstraints,
+    @SDconstraint, @SDconstraints,
+    @objective, @NLobjective,
+    @NLparameter, @constraintref
 
 include("JuMPContainer.jl")
 include("utils.jl")
@@ -733,6 +736,8 @@ include("callbacks.jl")
 include("print.jl")
 # Nonlinear-specific code
 include("nlp.jl")
+# Deprecations
+include("deprecated.jl")
 
 getValue{T<:JuMPTypes}(arr::Array{T}) = map(getValue, arr)
 

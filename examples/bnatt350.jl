@@ -47,7 +47,7 @@ u = MathProgBase.getconstrUB(m_internal)
 vtypes = MathProgBase.getvartype(m_internal)
 
 # populate JuMP model with data from internal model
-@defVar(mod, x[1:n])
+@variable(mod, x[1:n])
 for i in 1:n
     setLower(x[i], xlb[i])
     setUpper(x[i], xub[i])
@@ -55,9 +55,9 @@ for i in 1:n
 end
 At = A' # transpose to get useful row-wise sparse representation
 for i in 1:At.n
-    @addConstraint( mod, l[i] <= sum{ At.nzval[idx]*x[At.rowval[idx]], idx = At.colptr[i]:(At.colptr[i+1]-1) } <= u[i] )
+    @constraint( mod, l[i] <= sum{ At.nzval[idx]*x[At.rowval[idx]], idx = At.colptr[i]:(At.colptr[i+1]-1) } <= u[i] )
 end
-@setObjective(mod, Min, sum{ c[i]*x[i], i=1:n })
+@objective(mod, Min, sum{ c[i]*x[i], i=1:n })
 
 function myheuristic(cb)
     fp = open("data/bnatt350.sol", "r")

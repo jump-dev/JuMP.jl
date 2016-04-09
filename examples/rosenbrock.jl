@@ -9,10 +9,10 @@ let
 
     m = Model()
 
-    @defVar(m, x)
-    @defVar(m, y)
+    @variable(m, x)
+    @variable(m, y)
 
-    @setNLObjective(m, Min, (1-x)^2 + 100(y-x^2)^2)
+    @NLobjective(m, Min, (1-x)^2 + 100(y-x^2)^2)
 
     solve(m)
 

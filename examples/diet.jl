@@ -55,16 +55,16 @@ function SolveDiet()
     m = Model()
 
     # Variables for nutrition info
-    @defVar(m, minNutrition[i] <= nutrition[i=1:numCategories] <= maxNutrition[i])
+    @variable(m, minNutrition[i] <= nutrition[i=1:numCategories] <= maxNutrition[i])
     # Variables for which foods to buy
-    @defVar(m, buy[i=1:numFoods] >= 0)
+    @variable(m, buy[i=1:numFoods] >= 0)
 
     # Objective - minimize cost
-    @setObjective(m, Min, dot(cost, buy))
+    @objective(m, Min, dot(cost, buy))
 
     # Nutrition constraints
     for j = 1:numCategories
-        @addConstraint(m, sum{nutritionValues[i,j]*buy[i], i=1:numFoods} == nutrition[j])
+        @constraint(m, sum{nutritionValues[i,j]*buy[i], i=1:numFoods} == nutrition[j])
     end
 
     # Solve
@@ -73,7 +73,7 @@ function SolveDiet()
     PrintSolution(status, foods, buy)
 
     # Limit dairy
-    @addConstraint(m, buy[8] + buy[9] <= 6)
+    @constraint(m, buy[8] + buy[9] <= 6)
     println("Solving dairy-limited problem...")
     status = solve(m)
     PrintSolution(status, foods, buy)

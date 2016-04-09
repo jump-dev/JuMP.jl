@@ -22,10 +22,10 @@ const sub2 = JuMP.repl[:sub2]
 
 facts("[operator] Testing basic operator overloads") do
     m = Model()
-    @defVar(m, w)
-    @defVar(m, x)
-    @defVar(m, y)
-    @defVar(m, z)
+    @variable(m, w)
+    @variable(m, x)
+    @variable(m, y)
+    @variable(m, z)
     aff = 7.1 * x + 2.5
     @fact affToStr(aff) --> "7.1 x + 2.5"
     aff2 = 1.2 * y + 1.2
@@ -401,11 +401,11 @@ end
 facts("[operator] Higher-level operators") do
 context("sum") do
     sum_m = Model()
-    @defVar(sum_m, 0 ≤ matrix[1:3,1:3] ≤ 1, start = 1)
+    @variable(sum_m, 0 ≤ matrix[1:3,1:3] ≤ 1, start = 1)
     # sum(j::JuMPArray{Variable})
     @fact affToStr(sum(matrix)) --> "matrix[1,1] + matrix[2,1] + matrix[3,1] + matrix[1,2] + matrix[2,2] + matrix[3,2] + matrix[1,3] + matrix[2,3] + matrix[3,3]"
     # sum(j::JuMPArray{Variable}) in a macro
-    @setObjective(sum_m, Max, sum(matrix))
+    @objective(sum_m, Max, sum(matrix))
     @fact quadToStr(sum_m.obj) --> "matrix[1,1] + matrix[2,1] + matrix[3,1] + matrix[1,2] + matrix[2,2] + matrix[3,2] + matrix[1,3] + matrix[2,3] + matrix[3,3]"
 
     # sum{T<:Real}(j::JuMPArray{T})
@@ -416,7 +416,7 @@ context("sum") do
     @fact affToStr(sum([2*matrix[i,j] for i in 1:3, j in 1:3])) --> "2 matrix[1,1] + 2 matrix[2,1] + 2 matrix[3,1] + 2 matrix[1,2] + 2 matrix[2,2] + 2 matrix[3,2] + 2 matrix[1,3] + 2 matrix[2,3] + 2 matrix[3,3]"
 
     S = [1,3]
-    @defVar(sum_m, x[S], start=1)
+    @variable(sum_m, x[S], start=1)
     # sum(j::JuMPDict{Variable})
     @fact length(affToStr(sum(x))) --> 11 # order depends on hashing
     @fact contains(affToStr(sum(x)),"x[1]") --> true
@@ -427,22 +427,22 @@ end
 
 context("dot") do
     dot_m = Model()
-    @defVar(dot_m, 0 ≤ x[1:3] ≤ 1)
+    @variable(dot_m, 0 ≤ x[1:3] ≤ 1)
     c = vcat(1:3)
     @fact affToStr(dot(c,x)) --> "x[1] + 2 x[2] + 3 x[3]"
     @fact affToStr(dot(x,c)) --> "x[1] + 2 x[2] + 3 x[3]"
 
     A = [1 3 ; 2 4]
-    @defVar(dot_m, 1 ≤ y[1:2,1:2] ≤ 1)
+    @variable(dot_m, 1 ≤ y[1:2,1:2] ≤ 1)
     @fact affToStr(vecdot(A,y)) --> "y[1,1] + 2 y[2,1] + 3 y[1,2] + 4 y[2,2]"
     @fact affToStr(vecdot(y,A)) --> "y[1,1] + 2 y[2,1] + 3 y[1,2] + 4 y[2,2]"
 
     B = ones(2,2,2)
-    @defVar(dot_m, 0 ≤ z[1:2,1:2,1:2] ≤ 1)
+    @variable(dot_m, 0 ≤ z[1:2,1:2,1:2] ≤ 1)
     @fact affToStr(vecdot(B,z)) --> "z[1,1,1] + z[2,1,1] + z[1,2,1] + z[2,2,1] + z[1,1,2] + z[2,1,2] + z[1,2,2] + z[2,2,2]"
     @fact affToStr(vecdot(z,B)) --> "z[1,1,1] + z[2,1,1] + z[1,2,1] + z[2,2,1] + z[1,1,2] + z[2,1,2] + z[1,2,2] + z[2,2,2]"
 
-    @setObjective(dot_m, Max, dot(x, ones(3)) - vecdot(y, ones(2,2)) )
+    @objective(dot_m, Max, dot(x, ones(3)) - vecdot(y, ones(2,2)) )
     #solve(dot_m)
     for i in 1:3
         setValue(x[i], 1)
@@ -455,7 +455,7 @@ context("dot") do
 
     # https://github.com/JuliaOpt/JuMP.jl/issues/656
     issue656 = Model()
-    @defVar(issue656, x)
+    @variable(issue656, x)
     floats = Float64[i for i in 1:2]
     anys   = Array(Any, 2)
     anys[1] = 10
@@ -500,9 +500,9 @@ facts("Vectorized operations") do
 
 context("Transpose") do
     m = Model()
-    @defVar(m, x[1:3])
-    @defVar(m, y[1:2,1:3])
-    @defVar(m, z[2:5])
+    @variable(m, x[1:3])
+    @variable(m, y[1:2,1:3])
+    @variable(m, z[2:5])
     @fact TestHelper.vec_eq(x', [x[1] x[2] x[3]]) --> true
     @fact TestHelper.vec_eq(transpose(x), [x[1] x[2] x[3]]) --> true
     @fact TestHelper.vec_eq(y', [y[1,1] y[2,1]
@@ -518,7 +518,7 @@ end
 
 context("Vectorized arithmetic") do
     m = Model()
-    @defVar(m, x[1:3])
+    @variable(m, x[1:3])
     A = [2 1 0
          1 2 1
          0 1 2]
@@ -588,7 +588,7 @@ end
 
 context("Dot-ops") do
     m = Model()
-    @defVar(m, x[1:2,1:2])
+    @variable(m, x[1:2,1:2])
     A = [1 2;
          3 4]
     B = sparse(A)
@@ -643,22 +643,22 @@ end
 
 context("Vectorized comparisons") do
     m = Model()
-    @defVar(m, x[1:3])
+    @variable(m, x[1:3])
     A = [1 2 3
          0 4 5
          6 0 7]
     B = sparse(A)
-    @addConstraint(m, x'*A*x .>= 1)
+    @constraint(m, x'*A*x .>= 1)
     @fact TestHelper.vec_eq(m.quadconstr[1].terms, [x[1]*x[1] + 2x[1]*x[2] + 4x[2]*x[2] + 9x[1]*x[3] + 5x[2]*x[3] + 7x[3]*x[3] - 1]) --> true
     @fact m.quadconstr[1].sense --> :(>=)
-    @addConstraint(m, x'*A*x .>= 1)
+    @constraint(m, x'*A*x .>= 1)
     @fact TestHelper.vec_eq(m.quadconstr[1].terms, m.quadconstr[2].terms) --> true
 
     mat = [ 3x[1] + 12x[3] +  4x[2]
             2x[1] + 12x[2] + 10x[3]
            15x[1] +  5x[2] + 21x[3]]
 
-    @addConstraint(m, (x'A)' + 2A*x .<= 1)
+    @constraint(m, (x'A)' + 2A*x .<= 1)
     terms = map(v->v.terms, m.linconstr[1:3])
     lbs   = map(v->v.lb,    m.linconstr[1:3])
     ubs   = map(v->v.ub,    m.linconstr[1:3])
@@ -673,7 +673,7 @@ context("Vectorized comparisons") do
     @fact TestHelper.vec_eq((x'A)' + 2A*x, @JuMP.Expression((x'A)' + 2B*x)) --> true
     @fact TestHelper.vec_eq((x'A)' + 2A*x, @JuMP.Expression((x'B)' + 2B*x)) --> true
 
-    @addConstraint(m, -1 .<= (x'A)' + 2A*x .<= 1)
+    @constraint(m, -1 .<= (x'A)' + 2A*x .<= 1)
     terms = map(v->v.terms, m.linconstr[4:6])
     lbs   = map(v->v.lb,    m.linconstr[4:6])
     ubs   = map(v->v.ub,    m.linconstr[4:6])
@@ -681,7 +681,7 @@ context("Vectorized comparisons") do
     @fact lbs --> fill(-1, 3)
     @fact ubs --> fill( 1, 3)
 
-    @addConstraint(m, -[1:3;] .<= (x'A)' + 2A*x .<= 1)
+    @constraint(m, -[1:3;] .<= (x'A)' + 2A*x .<= 1)
     terms = map(v->v.terms, m.linconstr[7:9])
     lbs   = map(v->v.lb,    m.linconstr[7:9])
     ubs   = map(v->v.ub,    m.linconstr[7:9])
@@ -689,7 +689,7 @@ context("Vectorized comparisons") do
     @fact lbs --> -[1:3;]
     @fact ubs --> fill( 1, 3)
 
-    @addConstraint(m, -[1:3;] .<= (x'A)' + 2A*x .<= [3:-1:1;])
+    @constraint(m, -[1:3;] .<= (x'A)' + 2A*x .<= [3:-1:1;])
     terms = map(v->v.terms, m.linconstr[10:12])
     lbs   = map(v->v.lb,    m.linconstr[10:12])
     ubs   = map(v->v.ub,    m.linconstr[10:12])
@@ -697,7 +697,7 @@ context("Vectorized comparisons") do
     @fact lbs --> -[1:3;]
     @fact ubs --> [3:-1:1;]
 
-    @addConstraint(m, -[1:3;] .<= (x'A)' + 2A*x .<= 3)
+    @constraint(m, -[1:3;] .<= (x'A)' + 2A*x .<= 3)
     terms = map(v->v.terms, m.linconstr[13:15])
     lbs   = map(v->v.lb,    m.linconstr[13:15])
     ubs   = map(v->v.ub,    m.linconstr[13:15])
@@ -710,10 +710,10 @@ end
 
 facts("[operator] JuMPArray concatenation") do
     m = Model()
-    @defVar(m, x[1:3])
-    @defVar(m, y[1:3,1:3])
-    @defVar(m, z[1:1])
-    @defVar(m, w[1:1,1:3])
+    @variable(m, x[1:3])
+    @variable(m, y[1:3,1:3])
+    @variable(m, z[1:1])
+    @variable(m, w[1:1,1:3])
 
     @fact TestHelper.vec_eq([x y], [x[1] y[1,1] y[1,2] y[1,3]
                                     x[2] y[2,1] y[2,2] y[2,3]
@@ -755,12 +755,12 @@ end
 # The behavior in this test is no longer well-defined
 #let
 #    dot_m = Model()
-#    @defVar(dot_m, 0 <= v[1:3,1:4] <= 1)
-#    @defVar(dot_m, 0 <= w[3:2:7,7:-2:1] <= 1)
+#    @variable(dot_m, 0 <= v[1:3,1:4] <= 1)
+#    @variable(dot_m, 0 <= w[3:2:7,7:-2:1] <= 1)
 #    @fact quadToStr(dot(v,w)) --> "v[1,1]*w[3,7] + v[1,2]*w[3,5] + v[1,3]*w[3,3] + v[1,4]*w[3,1] + v[2,1]*w[5,7] + v[2,2]*w[5,5] + v[2,3]*w[5,3] + v[2,4]*w[5,1] + v[3,1]*w[7,7] + v[3,2]*w[7,5] + v[3,3]*w[7,3] + v[3,4]*w[7,1]"
 #
-#    @addConstraint(dot_m, sum(v) + sum(w) --> 2)
-#    @setObjective(dot_m, :Max, v[2,3] + w[5,3])
+#    @constraint(dot_m, sum(v) + sum(w) --> 2)
+#    @objective(dot_m, :Max, v[2,3] + w[5,3])
 #    solve(dot_m)
 #    @fact dot(getValue(v),getValue(w)) --> 1.0
 #end
@@ -769,7 +769,7 @@ end
 #let
 #    slice_m = Model()
 #    C = [:cat,:dog]
-#    @defVar(slice_m, x[-1:1,C])
+#    @variable(slice_m, x[-1:1,C])
 #    catcoef = [1,2,3]
 #    dogcoef = [3,4,5]
 #

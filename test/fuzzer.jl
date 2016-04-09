@@ -51,11 +51,11 @@ function random_aff_expr(N, vars::Vector)
 end
 
 m = Model()
-@defVar(m, x)
-@defVar(m, y)
-@defVar(m, z)
-@defVar(m, w)
-@defVar(m, v)
+@variable(m, x)
+@variable(m, y)
+@variable(m, z)
+@variable(m, w)
+@variable(m, v)
 
 N = 5
 vars = [:x, :y, :z, :w, :v, :(identity(x)), :(identity(y)), :(identity(z))]

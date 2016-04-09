@@ -20,10 +20,10 @@ using Gurobi
 m = Model(solver=GurobiSolver())
 
 # Define our variables to be inside a box, and integer
-@defVar(m, 0 <= x <= 2, Int)
-@defVar(m, 0 <= y <= 2, Int)
+@variable(m, 0 <= x <= 2, Int)
+@variable(m, 0 <= y <= 2, Int)
 
-@setObjective(m, Max, y)
+@objective(m, Max, y)
 
 # We now define our callback function that takes one argument,
 # the callback handle. Note that we can access m, x, and y because
@@ -53,13 +53,13 @@ function corners(cb)
         # Cut off this solution
         println("Solution was in top left, cut it off")
         # Use the original variables
-        @addLazyConstraint(cb, y - x <= 1)
+        @lazyconstraint(cb, y - x <= 1)
     # Check top right
     elseif y_val + x_val > 3 + TOL
         # Cut off this solution
         println("Solution was in top right, cut it off")
         # Use the original variables
-        @addLazyConstraint(cb, y + x <= 3)
+        @lazyconstraint(cb, y + x <= 3)
     end
 end  # End of callback function
 

@@ -37,9 +37,9 @@ end
 function SolveModel(initgrid)
     m = Model()
 
-    @defVar(m, x[1:9, 1:9, 1:9], Bin)
+    @variable(m, x[1:9, 1:9, 1:9], Bin)
 
-    @addConstraints m begin
+    @constraints m begin
         # Constraint 1 - Only one value appears in each cell
         # Constraint 2 - Each value appears in each row once only
         # Constraint 3 - Each value appears in each column once only
@@ -53,7 +53,7 @@ function SolveModel(initgrid)
     # Initial solution
     for row in 1:9, col in 1:9
         if initgrid[row,col] != 0
-            @addConstraint(m, x[row, col, initgrid[row, col]] == 1)
+            @constraint(m, x[row, col, initgrid[row, col]] == 1)
         end
     end
 

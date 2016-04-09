@@ -19,20 +19,20 @@ context("With solver $(typeof(lazysolver))") do
     entered = [false,false]
 
     mod = Model(solver=lazysolver)
-    @defVar(mod, 0 <= x <= 2, Int)
-    @defVar(mod, 0 <= y <= 2, Int)
-    @setObjective(mod, Max, y + 0.5x)
+    @variable(mod, 0 <= x <= 2, Int)
+    @variable(mod, 0 <= y <= 2, Int)
+    @objective(mod, Max, y + 0.5x)
     function corners(cb)
         x_val = getValue(x)
         y_val = getValue(y)
         TOL = 1e-6
         # Check top right
         if y_val + x_val > 3 + TOL
-            @addLazyConstraint(cb, y + 0.5x + 0.5x <= 3)
+            @lazyconstraint(cb, y + 0.5x + 0.5x <= 3)
         end
         entered[1] = true
-        @fact_throws ErrorException @defVar(cb, z)
-        @fact_throws ErrorException @addLazyConstraint(cb, x^2 <= 1)
+        @fact_throws ErrorException @variable(cb, z)
+        @fact_throws ErrorException @lazyconstraint(cb, x^2 <= 1)
     end
     addLazyCallback(mod, corners)
     addLazyCallback(mod, cb -> (entered[2] = true))
@@ -41,7 +41,6 @@ context("With solver $(typeof(lazysolver))") do
     @fact getValue(x) --> roughly(1.0, 1e-6)
     @fact getValue(y) --> roughly(2.0, 1e-6)
 end; end; end
-
 
 facts("[callback] Test user cuts") do
 for cutsolver in cut_solvers
@@ -52,12 +51,12 @@ context("With solver $(typeof(cutsolver))") do
     # Include explicit data from srand(234) so that we can reproduce across platforms
     include(joinpath("data","usercut.jl"))
     mod = Model(solver=cutsolver)
-    @defVar(mod, x[1:N], Bin)
-    @setObjective(mod, Max, dot(r1,x))
-    @addConstraint(mod, c[i=1:10], dot(r2[i],x) <= rhs[i]*N/10)
+    @variable(mod, x[1:N], Bin)
+    @objective(mod, Max, dot(r1,x))
+    @constraint(mod, c[i=1:10], dot(r2[i],x) <= rhs[i]*N/10)
     function mycutgenerator(cb)
         # add a trivially valid cut
-        @addUserCut(cb, sum{x[i], i=1:N} <= N)
+        @usercut(cb, sum{x[i], i=1:N} <= N)
         entered[1] = true
     end
     addCutCallback(mod, mycutgenerator)
@@ -66,7 +65,6 @@ context("With solver $(typeof(cutsolver))") do
     @fact entered --> [true,true]
     @fact find(getValue(x)[:]) --> [35,38,283,305,359,397,419,426,442,453,526,553,659,751,840,865,878,978]
 end; end; end
-
 
 facts("[callback] Test heuristics") do
 for heursolver in heur_solvers
@@ -77,9 +75,9 @@ context("With solver $(typeof(heursolver))") do
     # Include explicit data from srand(250) so that we can reproduce across platforms
     include(joinpath("data","heuristic.jl"))
     mod = Model(solver=heursolver)
-    @defVar(mod, x[1:N], Bin)
-    @setObjective(mod, Max, dot(r1,x))
-    @addConstraint(mod, dot(ones(N),x) <= rhs*N)
+    @variable(mod, x[1:N], Bin)
+    @objective(mod, Max, dot(r1,x))
+    @constraint(mod, dot(ones(N),x) <= rhs*N)
     function myheuristic1(cb)
         entered[1] == true && return
         entered[1] = true
@@ -128,9 +126,9 @@ context("With solver $(typeof(infosolver))") do
     N = 10000
     include(joinpath("data","informational.jl"))
     mod = Model(solver=infosolver)
-    @defVar(mod, x[1:N], Bin)
-    @setObjective(mod, Max, dot(r1,x))
-    @addConstraint(mod, c[i=1:10], dot(r2[i],x) <= rhs[i]*N/10)
+    @variable(mod, x[1:N], Bin)
+    @objective(mod, Max, dot(r1,x))
+    @constraint(mod, c[i=1:10], dot(r2[i],x) <= rhs[i]*N/10)
     # Test that solver fills solution correctly
     function myinfo(cb)
         entered[1] = true
@@ -155,19 +153,16 @@ context("With solver $(typeof(infosolver))") do
     @fact mono_bestbound --> true
 end; end; end
 
-# TODO: uncomment after solvers are updated for this behavior
-#=
 facts("[callback] Callback exit on CallbackAbort") do
 for solver in lazy_solvers
 context("With solver $(typeof(solver))") do
     mod = Model(solver=solver)
-    @defVar(mod, 0 <= x <= 2, Int)
-    @defVar(mod, 0 <= y <= 2, Int)
-    @setObjective(mod, Max, x + 2y)
-    @addConstraint(mod, y + x <= 3.5)
+    @variable(mod, 0 <= x <= 2, Int)
+    @variable(mod, 0 <= y <= 2, Int)
+    @objective(mod, Max, x + 2y)
+    @constraint(mod, y + x <= 3.5)
 
     mycallback = _ -> throw(CallbackAbort())
     addLazyCallback(mod, mycallback)
     @fact solve(mod) --> :UserLimit
 end; end; end
-=#

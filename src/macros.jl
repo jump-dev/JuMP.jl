@@ -276,9 +276,9 @@ end
 
 constructconstraint!(aff::Variable, lb::Real, ub::Real) = constructconstraint!(convert(AffExpr,v),lb,ub)
 
-constructconstraint!(q::QuadExpr, lb, ub) = error("Two-sided quadratic constraints not supported. (Try @addNLConstraint instead.)")
+constructconstraint!(q::QuadExpr, lb, ub) = error("Two-sided quadratic constraints not supported. (Try @NLconstraint instead.)")
 
-macro addConstraint(args...)
+macro constraint(args...)
     # Pick out keyword arguments
     if isexpr(args[1],:parameters) # these come if using a semicolon
         kwargs = args[1]
@@ -291,9 +291,9 @@ macro addConstraint(args...)
 
     if length(args) < 2
         if length(kwargs.args) > 0
-            error("in @addConstraint($(join(args,','))) with keyword arguments: ($(join(kwargs.args,','))): not enough arguments")
+            error("in @constraint($(join(args,','))) with keyword arguments: ($(join(kwargs.args,','))): not enough arguments")
         else
-            error("in @addConstraint($(join(args,','))): not enough arguments")
+            error("in @constraint($(join(args,','))): not enough arguments")
         end
     end
     m = args[1]
@@ -302,9 +302,9 @@ macro addConstraint(args...)
 
     m = esc(m)
     # Two formats:
-    # - @addConstraint(m, a*x <= 5)
-    # - @addConstraint(m, myref[a=1:5], a*x <= 5)
-    length(extra) > 1 && error("in @addConstraint: too many arguments.")
+    # - @constraint(m, a*x <= 5)
+    # - @constraint(m, myref[a=1:5], a*x <= 5)
+    length(extra) > 1 && error("in @constraint: too many arguments.")
     # Canonicalize the arguments
     c = length(extra) == 1 ? x        : nothing
     x = length(extra) == 1 ? extra[1] : x
@@ -342,9 +342,9 @@ macro addConstraint(args...)
         (lsign,lvectorized) = _canonicalize_sense(x.args[2])
         (rsign,rvectorized) = _canonicalize_sense(x.args[4])
         if (lsign != :(<=)) || (rsign != :(<=))
-            error("in @addConstraint ($(string(x))): only ranged rows of the form lb <= expr <= ub are supported.")
+            error("in @constraint ($(string(x))): only ranged rows of the form lb <= expr <= ub are supported.")
         end
-        ((vectorized = lvectorized) == rvectorized) || error("in @addConstraint ($(string(x))): signs are inconsistently vectorized")
+        ((vectorized = lvectorized) == rvectorized) || error("in @constraint ($(string(x))): signs are inconsistently vectorized")
         addconstr = (lvectorized ? :addVectorizedConstraint : :addConstraint)
         x_str = string(x)
         lb_str = string(x.args[1])
@@ -379,12 +379,12 @@ macro addConstraint(args...)
                 try
                     lbval = convert(CoefType, $newlb)
                 catch
-                    error(string("in @addConstraint (",$x_str,"): expected ",$lb_str," to be a ", CoefType, "."))
+                    error(string("in @constraint (",$x_str,"): expected ",$lb_str," to be a ", CoefType, "."))
                 end
                 try
                     ubval = convert(CoefType, $newub)
                 catch
-                    error(string("in @addConstraint (",$x_str,"): expected ",$ub_str," to be a ", CoefType, "."))
+                    error(string("in @constraint (",$x_str,"): expected ",$ub_str," to be a ", CoefType, "."))
                 end
             end
         end
@@ -394,14 +394,14 @@ macro addConstraint(args...)
         end
     else
         # Unknown
-        error("in @addConstraint ($(string(x))): constraints must be in one of the following forms:\n" *
+        error("in @constraint ($(string(x))): constraints must be in one of the following forms:\n" *
               "       expr1 <= expr2\n" * "       expr1 >= expr2\n" *
               "       expr1 == expr2\n" * "       lb <= expr <= ub")
     end
     return assert_validmodel(m, getloopedcode(c, code, condition, idxvars, idxsets, idxpairs, :ConstraintRef))
 end
 
-macro addSDPConstraint(m, x)
+macro SDconstraint(m, x)
     m = esc(m)
 
     (x.head == :block) &&
@@ -409,7 +409,7 @@ macro addSDPConstraint(m, x)
     if VERSION < v"0.5.0-dev+3231"
         x = comparison_to_call(x)
     end
-    isexpr(x,:call) && length(x.args) == 3 || error("in @addSDPConstraint ($(string(x))): constraints must be in one of the following forms:\n" *
+    isexpr(x,:call) && length(x.args) == 3 || error("in @SDconstraint ($(string(x))): constraints must be in one of the following forms:\n" *
               "       expr1 <= expr2\n" * "       expr1 >= expr2\n")
     # Build the constraint
     # Simple comparison - move everything to the LHS
@@ -463,7 +463,7 @@ macro LinearConstraint(x)
         (lsense,lvectorized) = _canonicalize_sense(x.args[2])
         (rsense,rvectorized) = _canonicalize_sense(x.args[4])
         if (lsense != :<=) || (rsense != :<=)
-            error("in @addConstraint ($(string(x))): only ranged rows of the form lb <= expr <= ub are supported.")
+            error("in @constraint ($(string(x))): only ranged rows of the form lb <= expr <= ub are supported.")
         end
         (lvectorized || rvectorized) &&
             error("in @LinearConstraint ($(string(x))): Cannot add vectorized constraints")
@@ -570,9 +570,10 @@ for (mac,sym) in [(:LinearConstraints, symbol("@LinearConstraint")),
     end
 end
 
-for (mac,sym) in [(:addConstraints,  symbol("@addConstraint")),
-                  (:addNLConstraints,symbol("@addNLConstraint")),
-                  (:defVars,symbol("@defVar"))]
+for (mac,sym) in [(:constraints,  symbol("@constraint")),
+                  (:NLconstraints,symbol("@NLconstraint")),
+                  (:SDconstraints,symbol("@SDconstraint")),
+                  (:variables,symbol("@variable"))]
     @eval begin
         macro $mac(m, x)
             x.head == :block || error("Invalid syntax for @$mac")
@@ -610,11 +611,11 @@ for (mac,sym) in [(:addConstraints,  symbol("@addConstraint")),
     end
 end
 
-macro setObjective(m, args...)
+macro objective(m, args...)
     m = esc(m)
     if length(args) != 2
         # Either just an objective sene, or just an expression.
-        error("in @setObjective: needs three arguments: model, objective sense (Max or Min) and expression.")
+        error("in @objective: needs three arguments: model, objective sense (Max or Min) and expression.")
     end
     sense, x = args
     if sense == :Min || sense == :Max
@@ -643,7 +644,7 @@ macro Expression(x)
 end
 
 
-macro defExpr(args...)
+macro expression(args...)
     if length(args) == 3
         m = esc(args[1])
         c = args[2]
@@ -652,14 +653,14 @@ macro defExpr(args...)
         m = nothing
         c = nothing
         x = args[1]
-        Base.warn_once("The one-argument version of @defExpr is deprecated. The corresponding JuMP model is now required as the first argument, and a name for the expression or collection of expressions is required as the second argument. The new syntax is @defExpr(<JuMP model>, <name of expression(s)>, <expression>)")
+        Base.warn_once("The one-argument version of @defExpr is deprecated. The corresponding JuMP model is now required as the first argument, and a name for the expression or collection of expressions is required as the second argument. The new syntax is @expression(<JuMP model>, <name of expression(s)>, <expression>)")
     elseif length(args) == 2
         m = nothing
         c = args[1]
         x = args[2]
-        Base.warn_once("The two-argument version of @defExpr is deprecated. The corresponding JuMP model is now required as the first argument. The new syntax is @defExpr(<JuMP model>, <name of expression(s)>, <expression>)")
+        Base.warn_once("The two-argument version of @defExpr is deprecated. The corresponding JuMP model is now required as the first argument. The new syntax is @expression(<JuMP model>, <name of expression(s)>, <expression>)")
     else
-        error("@defExpr: needs three arguments.")
+        error("@expression: needs three arguments.")
     end
 
     refcall, idxvars, idxsets, idxpairs, condition = buildrefsets(c)
@@ -671,7 +672,7 @@ macro defExpr(args...)
     if isa(c,Expr)
         code = quote
             $code
-            (isa($newaff,AffExpr) || isa($newaff,Number) || isa($newaff,Variable)) || error("Collection of expressions with @defExpr must be linear. For quadratic expressions, use your own array.")
+            (isa($newaff,AffExpr) || isa($newaff,Number) || isa($newaff,Variable)) || error("Collection of expressions with @expression must be linear. For quadratic expressions, use your own array.")
         end
     end
     code = quote
@@ -721,9 +722,9 @@ esc_nonconstant(x) = esc(x)
 
 const EMPTYSTRING = utf8("")
 
-macro defVar(args...)
+macro variable(args...)
     length(args) <= 1 &&
-        error("in @defVar: expected model as first argument, then variable information.")
+        error("in @variable: expected model as first argument, then variable information.")
     m = esc(args[1])
     x = args[2]
     extra = vcat(args[3:end]...)
@@ -746,11 +747,11 @@ macro defVar(args...)
             # lb <= x <= u
             var = x.args[3]
             (x.args[4] != :<= && x.args[4] != :≤) &&
-                error("in @defVar ($var): expected <= operator after variable name.")
+                error("in @variable ($var): expected <= operator after variable name.")
             lb = esc_nonconstant(x.args[1])
             ub = esc_nonconstant(x.args[5])
         else
-            error("in @defVar ($(string(x))): use the form lb <= ... <= ub.")
+            error("in @variable ($(string(x))): use the form lb <= ... <= ub.")
         end
     elseif isexpr(x,:call)
         if x.args[1] == :>= || x.args[1] == :≥
@@ -777,7 +778,7 @@ macro defVar(args...)
             t = :Fixed
         else
             # Its a comparsion, but not using <= ... <=
-            error("in @defVar: unexpected syntax $(string(x)).")
+            error("in @variable: unexpected syntax $(string(x)).")
         end
     else
         # No bounds provided - free variable
@@ -810,13 +811,13 @@ macro defVar(args...)
         elseif ex.args[1] == :basename
             quotvarname = esc(ex.args[2])
         else
-            error("in @defVar ($var): Unrecognized keyword argument $(ex.args[1])")
+            error("in @variable ($var): Unrecognized keyword argument $(ex.args[1])")
         end
     end
 
     if (obj !== nothing || inconstraints !== nothing || coefficients !== nothing) &&
        (obj === nothing || inconstraints === nothing || coefficients === nothing)
-        error("in @defVar ($var): Must provide 'objective', 'inconstraints', and 'coefficients' arguments all together for column-wise modeling")
+        error("in @variable ($var): Must provide 'objective', 'inconstraints', and 'coefficients' arguments all together for column-wise modeling")
     end
 
     sdp = any(t -> (t == :SDP), extra)
@@ -827,7 +828,7 @@ macro defVar(args...)
     # Types: default is continuous (reals)
     if length(extra) > 0
         if t == :Fixed
-            error("in @defVar ($var): unexpected extra arguments when declaring a fixed variable")
+            error("in @variable ($var): unexpected extra arguments when declaring a fixed variable")
         end
         if extra[1] in [:Bin, :Int, :SemiCont, :SemiInt]
             gottype = true
@@ -836,20 +837,20 @@ macro defVar(args...)
 
         if t == :Bin
             if (lb != -Inf || ub != Inf) && !(lb == 0.0 && ub == 1.0)
-            error("in @defVar ($var): bounds other than [0, 1] may not be specified for binary variables.\nThese are always taken to have a lower bound of 0 and upper bound of 1.")
+            error("in @variable ($var): bounds other than [0, 1] may not be specified for binary variables.\nThese are always taken to have a lower bound of 0 and upper bound of 1.")
             else
                 lb = 0.0
                 ub = 1.0
             end
         end
 
-        !gottype && error("in @defVar ($var): syntax error")
+        !gottype && error("in @variable ($var): syntax error")
     end
 
     # Handle the column generation functionality
     if coefficients !== nothing
         !isa(var,Symbol) &&
-        error("in @defVar ($var): can only create one variable at a time when adding to existing constraints.")
+        error("in @variable ($var): can only create one variable at a time when adding to existing constraints.")
 
         return assert_validmodel(m, quote
             $(esc(var)) = Variable($m,$lb,$ub,$(quot(t)),$obj,$inconstraints,$coefficients,utf8(string($quotvarname)),$value)
@@ -865,7 +866,7 @@ macro defVar(args...)
             registervar($m, $(quot(var)), $(esc(var)))
         end)
     end
-    isa(var,Expr) || error("in @defVar: expected $var to be a variable name")
+    isa(var,Expr) || error("in @variable: expected $var to be a variable name")
 
     # We now build the code to generate the variables (and possibly the JuMPDict
     # to contain them)
@@ -931,7 +932,7 @@ end
 storecontainerdata(m::Model, variable, varname, idxsets, idxpairs, condition) =
     m.varData[variable] = JuMPContainerData(varname, idxsets, idxpairs, condition)
 
-macro defConstrRef(var)
+macro constraintref(var)
     if isa(var,Symbol)
         # easy case
         return esc(:(local $var))
@@ -953,7 +954,7 @@ macro defConstrRef(var)
     end
 end
 
-macro setNLObjective(m, sense, x)
+macro NLobjective(m, sense, x)
     m = esc(m)
     if sense == :Min || sense == :Max
         sense = Expr(:quote,sense)
@@ -970,12 +971,12 @@ macro setNLObjective(m, sense, x)
     return assert_validmodel(m, code)
 end
 
-macro addNLConstraint(m, x, extra...)
+macro NLconstraint(m, x, extra...)
     m = esc(m)
     # Two formats:
-    # - @addNLConstraint(m, a*x <= 5)
-    # - @addNLConstraint(m, myref[a=1:5], sin(x^a) <= 5)
-    length(extra) > 1 && error("in @addNLConstraint: too many arguments.")
+    # - @NLconstraint(m, a*x <= 5)
+    # - @NLconstraint(m, myref[a=1:5], sin(x^a) <= 5)
+    length(extra) > 1 && error("in @NLconstraint: too many arguments.")
     # Canonicalize the arguments
     c = length(extra) == 1 ? x        : nothing
     x = length(extra) == 1 ? extra[1] : x
@@ -1001,7 +1002,7 @@ macro addNLConstraint(m, x, extra...)
             lb = 0.0
             ub = Inf
         else
-            error("in @addNLConstraint ($(string(x))): expected comparison operator (<=, >=, or ==).")
+            error("in @NLconstraint ($(string(x))): expected comparison operator (<=, >=, or ==).")
         end
         lhs = :($(x.args[2]) - $(x.args[3]))
         code = quote
@@ -1012,15 +1013,15 @@ macro addNLConstraint(m, x, extra...)
     elseif isexpr(x, :comparison)
         # ranged row
         if (x.args[2] != :<= && x.args[2] != :≤) || (x.args[4] != :<= && x.args[4] != :≤)
-            error("in @addNLConstraint ($(string(x))): only ranged rows of the form lb <= expr <= ub are supported.")
+            error("in @NLconstraint ($(string(x))): only ranged rows of the form lb <= expr <= ub are supported.")
         end
         lb = x.args[1]
         ub = x.args[5]
         code = quote
             if !isa($(esc(lb)),Number)
-                error(string("in @addNLConstraint (",$(string(x)),"): expected ",$(string(lb))," to be a number."))
+                error(string("in @NLconstraint (",$(string(x)),"): expected ",$(string(lb))," to be a number."))
             elseif !isa($(esc(ub)),Number)
-                error(string("in @addNLConstraint (",$(string(x)),"): expected ",$(string(ub))," to be a number."))
+                error(string("in @NLconstraint (",$(string(x)),"): expected ",$(string(ub))," to be a number."))
             end
             c = NonlinearConstraint(@processNLExpr($m, $(esc(x.args[3]))), $(esc(lb)), $(esc(ub)))
             push!($m.nlpdata.nlconstr, c)
@@ -1028,7 +1029,7 @@ macro addNLConstraint(m, x, extra...)
         end
     else
         # Unknown
-        error("in @addNLConstraint ($(string(x))): constraints must be in one of the following forms:\n" *
+        error("in @NLconstraint ($(string(x))): constraints must be in one of the following forms:\n" *
               "       expr1 <= expr2\n" * "       expr1 >= expr2\n" *
               "       expr1 == expr2\n")
     end
@@ -1043,7 +1044,7 @@ macro addNLConstraint(m, x, extra...)
     return assert_validmodel(m, code)
 end
 
-macro defNLExpr(args...)
+macro NLexpression(args...)
     if length(args) <= 2
         s = IOBuffer()
         print(s,args[1])
@@ -1052,14 +1053,14 @@ macro defNLExpr(args...)
             print(s,args[2])
         end
         msg = """
-        in @defNLExpr($(takebuf_string(s))): three arguments are required.
-        Note that the syntax of @defNLExpr has recently changed:
+        in @NLexpression($(takebuf_string(s))): three arguments are required.
+        Note that the syntax of @NLexpression has recently changed:
         The first argument should be the model to which the expression is attached.
         The second is the name of the expression (or collection of expressions).
         The third is the expression itself.
         Example:
-        @defNLExpr(m, my_expr, x^2/y)
-        @defNLExpr(m, my_expr_collection[i=1:2], sin(z[i])^2)
+        @NLexpression(m, my_expr, x^2/y)
+        @NLexpression(m, my_expr_collection[i=1:2], sin(z[i])^2)
         Support for the old syntax (with the model omitted) will be removed in an upcoming release.
         """
         Base.warn(msg)
@@ -1084,8 +1085,8 @@ macro defNLExpr(args...)
     return assert_validmodel(m, getloopedcode(c, code, condition, idxvars, idxsets, idxpairs, :NonlinearExpression))
 end
 
-# syntax is @defNLParam(m, p[i=1] == 2i)
-macro defNLParam(m, ex)
+# syntax is @NLparameter(m, p[i=1] == 2i)
+macro NLparameter(m, ex)
     m = esc(m)
     if VERSION < v"0.5.0-dev+3231"
         ex = comparison_to_call(ex)
