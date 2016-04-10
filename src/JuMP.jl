@@ -733,6 +733,8 @@ include("callbacks.jl")
 include("print.jl")
 # Nonlinear-specific code
 include("nlp.jl")
+# Presolve
+include("presolve.jl")
 
 getValue{T<:JuMPTypes}(arr::Array{T}) = map(getValue, arr)
 
