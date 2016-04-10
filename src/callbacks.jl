@@ -159,6 +159,7 @@ const sensemap = Dict(:(<=) => '<', :(==) => '=', :(>=) => '>')
 
 ## Lazy constraints
 export addLazyConstraint, @addLazyConstraint
+export addLazyConstraintLocal, @addLazyConstraintLocal
 
 macro addLazyConstraint(cbdata, x)
     cbdata = esc(cbdata)
@@ -181,6 +182,29 @@ macro addLazyConstraint(cbdata, x)
     end
 end
 
+macro addLazyConstraintLocal(cbdata, x)
+    cbdata = esc(cbdata)
+    if VERSION < v"0.5.0-dev+3231"
+        x = comparison_to_call(x)
+    end
+    if isexpr(x, :call) && length(x.args) == 3 # simple comparison
+        lhs = :($(x.args[2]) - $(x.args[3])) # move everything to the lhs
+        newaff, parsecode = parseExprToplevel(lhs, :aff)
+        sense, vectorized = _canonicalize_sense(x.args[1])
+        vectorized && error("Cannot add vectorized constraint in lazy callback")
+        quote
+            aff = zero(AffExpr)
+            $parsecode
+            constr = constructconstraint!($newaff, $(quot(sense)))
+            addLazyConstraintLocal($cbdata, constr)
+        end
+    else
+        error("Syntax error in addLazyConstraint, expected one-sided comparison.")
+    end
+end
+
+
+
 function addLazyConstraint(cbdata::MathProgBase.MathProgCallbackData, constr::LinearConstraint)
     if length(constr.terms.vars) == 0
         MathProgBase.cbaddlazy!(cbdata, Cint[], Float64[], sensemap[sense(constr)], rhs(constr))
@@ -192,10 +216,24 @@ function addLazyConstraint(cbdata::MathProgBase.MathProgCallbackData, constr::Li
     MathProgBase.cbaddlazy!(cbdata, indices, coeffs, sensemap[sense(constr)], rhs(constr))
 end
 
+function addLazyConstraintLocal(cbdata::MathProgBase.MathProgCallbackData, constr::LinearConstraint)
+    if length(constr.terms.vars) == 0
+        MathProgBase.cbaddlazylocal!(cbdata, Cint[], Float64[], sensemap[sense(constr)], rhs(constr))
+        return
+    end
+    assert_isfinite(constr.terms)
+    m::Model = constr.terms.vars[1].m
+    indices, coeffs = merge_duplicates(Cint, constr.terms, m.indexedVector, m)
+    MathProgBase.cbaddlazylocal!(cbdata, indices, coeffs, sensemap[sense(constr)], rhs(constr))
+end
+
+
 addLazyConstraint(cbdata::MathProgBase.MathProgCallbackData,constr::QuadConstraint) = error("Quadratic lazy constraints are not supported.")
+addLazyConstraintLocal(cbdata::MathProgBase.MathProgCallbackData,constr::QuadConstraint) = error("Quadratic lazy constraints are not supported.")
 
 ## User cuts
 export addUserCut, @addUserCut
+export addUserCutLocal, @addUserCutLocal
 
 macro addUserCut(cbdata, x)
     cbdata = esc(cbdata)
@@ -218,6 +256,31 @@ macro addUserCut(cbdata, x)
     end
 end
 
+macro addUserCutLocal(cbdata, x)
+    cbdata = esc(cbdata)
+    if VERSION < v"0.5.0-dev+3231"
+        x = comparison_to_call(x)
+    end
+    if isexpr(x, :call) && length(x.args) == 3 # simple comparison
+        lhs = :($(x.args[2]) - $(x.args[3])) # move everything to the lhs
+        newaff, parsecode = parseExprToplevel(lhs, :aff)
+        sense, vectorized = _canonicalize_sense(x.args[1])
+        vectorized && error("Cannot add vectorized constraint in cut callback")
+        quote
+            aff = zero(AffExpr)
+            $parsecode
+            constr = constructconstraint!($newaff, $(quot(sense)))
+            addUserCutLocal($cbdata, constr)
+        end
+    else
+        error("Syntax error in addUserCut, expected one-sided comparison.")
+    end
+end
+
+
+
+
+
 function addUserCut(cbdata::MathProgBase.MathProgCallbackData, constr::LinearConstraint)
     if length(constr.terms.vars) == 0
         MathProgBase.cbaddcut!(cbdata, Cint[], Float64[], sensemap[sense(constr)], rhs(constr))
@@ -228,6 +291,18 @@ function addUserCut(cbdata::MathProgBase.MathProgCallbackData, constr::LinearCon
     indices, coeffs = merge_duplicates(Cint, constr.terms, m.indexedVector, m)
     MathProgBase.cbaddcut!(cbdata, indices, coeffs, sensemap[sense(constr)], rhs(constr))
 end
+
+function addUserCutLocal(cbdata::MathProgBase.MathProgCallbackData, constr::LinearConstraint)
+    if length(constr.terms.vars) == 0
+        MathProgBase.cbaddcutlocal!(cbdata, Cint[], Float64[], sensemap[sense(constr)], rhs(constr))
+        return
+    end
+    assert_isfinite(constr.terms)
+    m::Model = constr.terms.vars[1].m
+    indices, coeffs = merge_duplicates(Cint, constr.terms, m.indexedVector, m)
+    MathProgBase.cbaddcutlocal!(cbdata, indices, coeffs, sensemap[sense(constr)], rhs(constr))
+end
+
 
 ## User heuristic
 export addSolution, setSolutionValue!
