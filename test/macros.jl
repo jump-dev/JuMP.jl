@@ -485,3 +485,14 @@ facts("[macros] @variables and @constraints") do
     @fact m.linconstr[3].ub --> Inf
     @fact m.quadconstr[1].sense --> :(<=)
 end
+
+facts("[macros] No bare symbols in constraint macros") do
+    m = Model()
+    @variable(m, x)
+    @fact macroexpand(:(@constraint(m, x))).head --> :error
+    @fact macroexpand(:(@constraint(m, :foo))).head --> :error
+    @fact macroexpand(:(@SDconstraint(m, x))).head --> :error
+    @fact macroexpand(:(@SDconstraint(m, :foo))).head --> :error
+    @fact macroexpand(:(@NLconstraint(m, x))).head --> :error
+    @fact macroexpand(:(@NLconstraint(m, :foo))).head --> :error
+end
