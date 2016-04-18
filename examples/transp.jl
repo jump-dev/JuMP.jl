@@ -31,14 +31,14 @@ cost = [
 
 m = Model();
 
-@defVar(m, Trans[i=1:length(ORIG), j=1:length(DEST)] >= 0);
+@variable(m, Trans[i=1:length(ORIG), j=1:length(DEST)] >= 0);
 
 
-@setObjective(m, Min, sum{cost[i,j] * Trans[i,j], i=1:length(ORIG), j=1:length(DEST)});
+@objective(m, Min, sum{cost[i,j] * Trans[i,j], i=1:length(ORIG), j=1:length(DEST)});
 
-@addConstraint(m, xyconstr[i=1:1:length(ORIG)], sum{Trans[i,j], j=1:length(DEST)} == supply[i]);
+@constraint(m, xyconstr[i=1:1:length(ORIG)], sum{Trans[i,j], j=1:length(DEST)} == supply[i]);
 
-@addConstraint(m, xyconstr[j = 1:length(DEST)], sum{Trans[i,j], i=1:length(ORIG)} == demand[j]);
+@constraint(m, xyconstr[j = 1:length(DEST)], sum{Trans[i,j], i=1:length(ORIG)} == demand[j]);
 
 println("Solving original problem...")
 status = solve(m);

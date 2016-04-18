@@ -143,53 +143,53 @@ minv = [[dem[p][t+1] * checkpro(p,t, pro, pir, rir) for t=numperiods] for p=1:nu
 prod = Model()
 
 ###  VARIABLES  ###
-@defVar(prod, Crews[0:lastperiod] >= 0)
+@variable(prod, Crews[0:lastperiod] >= 0)
 # Average number of crews employed in each period
 
-@defVar(prod, Hire[numperiods] >= 0)
+@variable(prod, Hire[numperiods] >= 0)
 # Crews hired from previous to current period
 
-@defVar(prod, Layoff[numperiods]>= 0)
+@variable(prod, Layoff[numperiods]>= 0)
 # Crews laid off from previous to current period
 
-@defVar(prod, Rprd[1:numprd, numperiods] >=0)
+@variable(prod, Rprd[1:numprd, numperiods] >=0)
 # Production using regular-time labor, in 1000s
 
-@defVar(prod, Oprd[1:numprd, numperiods]>=0)
+@variable(prod, Oprd[1:numprd, numperiods]>=0)
 # Production using overtime labor, in 1000s
 
-@defVar(prod, Inv[1:numprd, numperiods, 1:life] >=0)
+@variable(prod, Inv[1:numprd, numperiods, 1:life] >=0)
 # a numperiods old -- produced in period (t+1)-a --
 # and still in storage at the end of period t
-@defVar(prod, Short[1:numprd, numperiods]>=0)
+@variable(prod, Short[1:numprd, numperiods]>=0)
 			# Accumulated unsatisfied demand at the end of period t
 
 ###  CONSTRAINTS  ###
 
-@addConstraint(prod, xyconstr[t=numperiods],
+@constraint(prod, xyconstr[t=numperiods],
                sum{pt[p] * Rprd[p,t], p=1:numprd} <= sl * dpp[t] * Crews[t])
 # Hours needed to accomplish all regular-time
 # production in a period must not exceed
 # hours available on all shifts
 
-@addConstraint(prod, xyconstr[t=numperiods],
+@constraint(prod, xyconstr[t=numperiods],
                sum{pt[p] * Oprd[p,t], p:1:numprd}  <= ol[t])
 # Hours needed to accomplish all overtime
 # production in a period must not exceed
 # the specified overtime limit
 
-@addConstraint(prod, Crews[firstperiod-1]==iw)
+@constraint(prod, Crews[firstperiod-1]==iw)
 # Use given initial workforce
 
-@addConstraint(prod,xyconstr[t=numperiods],
+@constraint(prod,xyconstr[t=numperiods],
                Crews[t]== Crews[t-1] + Hire[t]-Layoff[t])
 # Workforce changes by hiring or layoffs
 
-@addConstraint(prod, xyconstr[t=numperiods], cmin[t] <= Crews[t])
-@addConstraint(prod, xyconstr[t=numperiods], Crews[t] <= cmax[t])
+@constraint(prod, xyconstr[t=numperiods], cmin[t] <= Crews[t])
+@constraint(prod, xyconstr[t=numperiods], Crews[t] <= cmax[t])
 # Workforce must remain within specified bounds
 
-@addConstraint(prod, xyconstr[p=1:numprd],
+@constraint(prod, xyconstr[p=1:numprd],
                Rprd[p, firstperiod] + Oprd[p,firstperiod] + Short[p, firstperiod]-Inv[p, firstperiod, 1]
                  == max(0,dem[p][firstperiod]-iinv[p]))
 # 'first demand requirement
@@ -197,7 +197,7 @@ prod = Model()
 # NOTE: JuMP xyconstr[] requires that indices be integer at compile time,
 # so firstperiod +1 could not be an index within xycontr or triconstr
 for t=(firstperiod+1:lastperiod)
-  @addConstraint(prod, xyconstr[p=1:numprd],
+  @constraint(prod, xyconstr[p=1:numprd],
                  Rprd[p,t] + Oprd[p,t] + Short[p,t] - Short[p,t-1] +
                    sum{Inv[p, t-1, a] - Inv[p,t,a], a=1:life} ==
                    max(0, dem[p][t]-iil[p][t-1]))
@@ -205,31 +205,31 @@ end
 # Production plus increase in shortage plus
 # decrease in inventory must equal demand
 
-@addConstraint(prod, xyconstr[p=1:numprd, t=numperiods],
+@constraint(prod, xyconstr[p=1:numprd, t=numperiods],
                sum{Inv[p,t,a] + iil[p][t], a=1:life} >= minv[p][t])
 # Inventory in storage at end of period t
 # must meet specified minimum
 
-@addConstraint(prod, triconstr[p=1:numprd, v=1:(life-1), a=v+1:life], Inv[p, firstperiod+v-1, a] ==0)
+@constraint(prod, triconstr[p=1:numprd, v=1:(life-1), a=v+1:life], Inv[p, firstperiod+v-1, a] ==0)
 
 # In the vth period (starting from first)
 # no inventory may be more than v numperiods old
 # (initial inventories are handled separately)
 
-@addConstraint(prod, xyconstr[p=1:numprd, t=numperiods],
+@constraint(prod, xyconstr[p=1:numprd, t=numperiods],
                Inv[p,t,1] <= Rprd[p,t]+Oprd[p,t])
 # New inventory cannot exceed
 # production in the most recent period
 
 secondperiod = firstperiod + 1
-@addConstraint(prod, triconstr[p=1:numprd, t=2:lastperiod, a=2:life],
+@constraint(prod, triconstr[p=1:numprd, t=2:lastperiod, a=2:life],
                      Inv[p,t,a] <= Inv[p,t-1,a-1])
 # Inventory left from period (t+1)-p
 # can only decrease as time goes on
 
 ###  OBJECTIVE  ###
 
-@setObjective(prod, Min,
+@objective(prod, Min,
                 sum{rtr * sl * dpp[t] * cs * Crews[t], t=numperiods} +
                 sum{hc[t] * Hire[t], t=numperiods} +
                 sum{lc[t] * Layoff[t], t=numperiods} +

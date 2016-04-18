@@ -42,18 +42,18 @@ D = [0.0 1.0 1.0 1.0
      1.0 2.0 0.0 2.0
      1.0 2.0 2.0 0.0]
 
-@defVar(m, cSq >= 1.0)
+@variable(m, cSq >= 1.0)
 
-@defVar(m, Q[1:4,1:4], SDP)
+@variable(m, Q[1:4,1:4], SDP)
 
 for i in 1:4
     for j in (i+1):4
-        @addConstraint(m, D[i,j]^2 <= Q[i,i] + Q[j,j] - 2Q[i,j])
-        @addConstraint(m, Q[i,i] + Q[j,j] - 2Q[i,j] <= D[i,j]^2*cSq )
+        @constraint(m, D[i,j]^2 <= Q[i,i] + Q[j,j] - 2Q[i,j])
+        @constraint(m, Q[i,i] + Q[j,j] - 2Q[i,j] <= D[i,j]^2*cSq )
     end
 end
 
-@setObjective(m, Min, cSq)
+@objective(m, Min, cSq)
 
 solve(m)
 

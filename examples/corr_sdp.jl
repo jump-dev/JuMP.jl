@@ -20,27 +20,27 @@ using JuMP
 
 m = Model()
 
-@defVar(m, X[1:3,1:3], SDP)
+@variable(m, X[1:3,1:3], SDP)
 
 # Diagonal is 1s
-@addConstraint(m, X[1,1] == 1)
-@addConstraint(m, X[2,2] == 1)
-@addConstraint(m, X[3,3] == 1)
+@constraint(m, X[1,1] == 1)
+@constraint(m, X[2,2] == 1)
+@constraint(m, X[3,3] == 1)
 
 # Bounds on the known correlations
-@addConstraint(m, X[1,2] >= -0.2)
-@addConstraint(m, X[1,2] <= -0.1)
-@addConstraint(m, X[2,3] >=  0.4)
-@addConstraint(m, X[2,3] <=  0.5)
+@constraint(m, X[1,2] >= -0.2)
+@constraint(m, X[1,2] <= -0.1)
+@constraint(m, X[2,3] >=  0.4)
+@constraint(m, X[2,3] <=  0.5)
 
 # Find upper bound
-@setObjective(m, Max, X[1,3])
+@objective(m, Max, X[1,3])
 solve(m)
 println("Maximum value is ", getValue(X)[1,3])
 @assert +0.8719 <= getValue(X)[1,3] <= +0.8720
 
 # Find lower bound
-@setObjective(m, Min, X[1,3])
+@objective(m, Min, X[1,3])
 solve(m)
 println("Minimum value is ", getValue(X)[1,3])
 @assert -0.9779 >= getValue(X)[1,3] >= -0.9799

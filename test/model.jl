@@ -30,28 +30,28 @@ facts("[model] Check error cases") do
     @fact_throws Model(solver=:Foo)
     modErr = Model()
     @fact_throws setObjectiveSense(modErr, :Maximum)
-    @defVar(modErr, errVar)
+    @variable(modErr, errVar)
     @fact getValue(errVar) --> isnan
     @fact_throws getDual(errVar)
 
     modErr = Model()
-    @defVar(modErr, x, Bin)
-    @setObjective(modErr, Max, x)
-    con = @addConstraint(modErr, x <= 0.5)
+    @variable(modErr, x, Bin)
+    @objective(modErr, Max, x)
+    con = @constraint(modErr, x <= 0.5)
     solve(modErr)
     @fact_throws getDual(con)
 
     modErr = Model()
-    @defVar(modErr, 0 <= x <= 1)
-    @setObjective(modErr, Max, x)
-    @addConstraint(modErr, x <= -1)
+    @variable(modErr, 0 <= x <= 1)
+    @objective(modErr, Max, x)
+    @constraint(modErr, x <= -1)
     solve(modErr, suppress_warnings=true)
     @fact getValue(x) --> isnan
 end
 
 facts("[model] Performance warnings") do
     m = Model()
-    @defVar(m, x[1:2], start=0)
+    @variable(m, x[1:2], start=0)
     for i in 1:500
        getValue(x)
     end
@@ -64,14 +64,14 @@ end
 facts("[model] Test printing a model") do
     modA = Model()
     x = Variable(modA, 0, Inf, :Cont)
-    @defVar(modA, y <= 5, Int)
-    @defVar(modA, 2 <= z <= 4)
-    @defVar(modA, 0 <= r[i=3:6] <= i)
-    @setObjective(modA, Max, ((x + y)/2.0 + 3.0)/3.0 + z + r[3])
-    @defConstrRef constraints[1:3]
-    constraints[1] = @addConstraint(modA, 2 <= x+y <= 4)
-    constraints[2] = @addConstraint(modA, sum{r[i],i=3:5} <= (2 - x)/2.0)
-    constraints[3] = @addConstraint(modA, 6y + y <= z + r[6]/1.9)
+    @variable(modA, y <= 5, Int)
+    @variable(modA, 2 <= z <= 4)
+    @variable(modA, 0 <= r[i=3:6] <= i)
+    @objective(modA, Max, ((x + y)/2.0 + 3.0)/3.0 + z + r[3])
+    @constraintref constraints[1:3]
+    constraints[1] = @constraint(modA, 2 <= x+y <= 4)
+    constraints[2] = @constraint(modA, sum{r[i],i=3:5} <= (2 - x)/2.0)
+    constraints[3] = @constraint(modA, 6y + y <= z + r[6]/1.9)
     #####################################################################
     # Test LP writer
     writeLP(modA, modPath * "A.lp")
@@ -235,9 +235,9 @@ end
 
 facts("[model] Quadratic MPS writer") do
     modQ = Model()
-    @defVar(modQ, x == 1)
-    @defVar(modQ, y ≥ 0)
-    @setObjective(modQ, Min, x^2 - 2*x*y + y^2 + x)
+    @variable(modQ, x == 1)
+    @variable(modQ, y ≥ 0)
+    @objective(modQ, Min, x^2 - 2*x*y + y^2 + x)
 
     #####################################################################
     # Test MPS writer
@@ -280,14 +280,14 @@ facts("[model] Test solving a MILP") do
 for solver in ip_solvers
 context("With solver $(typeof(solver))") do
     modA = Model(solver=solver)
-    @defVar(modA, x >= 0)
-    @defVar(modA, y <= 5, Int)
-    @defVar(modA, 2 <= z <= 4)
-    @defVar(modA, 0 <= r[i=3:6] <= i)
-    @setObjective(modA, Max, ((x + y)/2.0 + 3.0)/3.0 + z + r[3])
-    @addConstraint(modA, 2 <= x+y)
-    @addConstraint(modA, sum{r[i],i=3:5} <= (2 - x)/2.0)
-    @addConstraint(modA, 7.0*y <= z + r[6]/1.9)
+    @variable(modA, x >= 0)
+    @variable(modA, y <= 5, Int)
+    @variable(modA, 2 <= z <= 4)
+    @variable(modA, 0 <= r[i=3:6] <= i)
+    @objective(modA, Max, ((x + y)/2.0 + 3.0)/3.0 + z + r[3])
+    @constraint(modA, 2 <= x+y)
+    @constraint(modA, sum{r[i],i=3:5} <= (2 - x)/2.0)
+    @constraint(modA, 7.0*y <= z + r[6]/1.9)
 
     @fact solve(modA)       --> :Optimal
     @fact modA.objVal       --> roughly(1.0+4.833334, TOL)
@@ -307,15 +307,15 @@ facts("[model] Test solving an LP (Min)") do
 for solver in lp_solvers
 context("With solver $(typeof(solver))") do
     modA = Model(solver=solver)
-    @defVar(modA, x >= 0)
-    @defVar(modA, y <= 5)
-    @defVar(modA, 2 <= z <= 4)
-    @defVar(modA, 0 <= r[i=3:6] <= i)
-    @setObjective(modA, Min, -((x + y)/2.0 + 3.0)/3.0 - z - r[3])
-    @defConstrRef cons[1:3]
-    cons[1] = @addConstraint(modA, x+y >= 2)
-    cons[2] = @addConstraint(modA, sum{r[i],i=3:5} <= (2 - x)/2.0)
-    cons[3] = @addConstraint(modA, 7.0*y <= z + r[6]/1.9)
+    @variable(modA, x >= 0)
+    @variable(modA, y <= 5)
+    @variable(modA, 2 <= z <= 4)
+    @variable(modA, 0 <= r[i=3:6] <= i)
+    @objective(modA, Min, -((x + y)/2.0 + 3.0)/3.0 - z - r[3])
+    @constraintref cons[1:3]
+    cons[1] = @constraint(modA, x+y >= 2)
+    cons[2] = @constraint(modA, sum{r[i],i=3:5} <= (2 - x)/2.0)
+    cons[3] = @constraint(modA, 7.0*y <= z + r[6]/1.9)
 
     # Solution
     @fact solve(modA) --> :Optimal
@@ -349,15 +349,15 @@ facts("[model] Test solving an LP (Max)") do
 for solver in lp_solvers
 context("With solver $(typeof(solver))") do
     modA = Model(solver=solver)
-    @defVar(modA, x >= 0)
-    @defVar(modA, y <= 5)
-    @defVar(modA, 2 <= z <= 4)
-    @defVar(modA, 0 <= r[i=3:6] <= i)
-    @setObjective(modA, Max, ((x + y)/2.0 + 3.0)/3.0 + z + r[3])
-    @defConstrRef cons[1:3]
-    cons[1] = @addConstraint(modA, x+y >= 2)
-    cons[2] = @addConstraint(modA, sum{r[i],i=3:5} <= (2 - x)/2.0)
-    cons[3] = @addConstraint(modA, 7.0*y <= z + r[6]/1.9)
+    @variable(modA, x >= 0)
+    @variable(modA, y <= 5)
+    @variable(modA, 2 <= z <= 4)
+    @variable(modA, 0 <= r[i=3:6] <= i)
+    @objective(modA, Max, ((x + y)/2.0 + 3.0)/3.0 + z + r[3])
+    @constraintref cons[1:3]
+    cons[1] = @constraint(modA, x+y >= 2)
+    cons[2] = @constraint(modA, sum{r[i],i=3:5} <= (2 - x)/2.0)
+    cons[3] = @constraint(modA, 7.0*y <= z + r[6]/1.9)
 
     # Solution
     @fact solve(modA) --> :Optimal
@@ -393,9 +393,9 @@ facts("[model] Test binary variable handling") do
 for solver in ip_solvers
 context("With solver $(typeof(solver))") do
     modB = Model(solver=solver)
-    @defVar(modB, x, Bin)
-    @setObjective(modB, Max, x)
-    @addConstraint(modB, x <= 10)
+    @variable(modB, x, Bin)
+    @objective(modB, Max, x)
+    @constraint(modB, x <= 10)
     status = solve(modB)
     @fact status --> :Optimal
     @fact getValue(x) --> roughly(1.0, TOL)
@@ -406,21 +406,21 @@ end
 
 facts("[model] Test model copying") do
     source = Model()
-    @defVar(source, 2 <= x <= 5)
-    @defVar(source, 0 <= y <= 1, Int)
-    @setObjective(source, Max, 3*x + 1*y)
-    @addConstraint(source, x + 2.0*y <= 6)
-    @addConstraint(source, x*x <= 1)
+    @variable(source, 2 <= x <= 5)
+    @variable(source, 0 <= y <= 1, Int)
+    @objective(source, Max, 3*x + 1*y)
+    @constraint(source, x + 2.0*y <= 6)
+    @constraint(source, x*x <= 1)
     addSOS2(source, [x, 2y])
-    @addSDPConstraint(source, x*ones(3,3) >= eye(3,3))
-    @addSDPConstraint(source, ones(3,3) <= 0)
-    @defVar(source, z[1:3])
-    @defVar(source, w[2:4]) # JuMPArray
-    @defVar(source, v[[:red],i=1:3;isodd(i)]) # JuMPDict
+    @SDconstraint(source, x*ones(3,3) >= eye(3,3))
+    @SDconstraint(source, ones(3,3) <= 0)
+    @variable(source, z[1:3])
+    @variable(source, w[2:4]) # JuMPArray
+    @variable(source, v[[:red],i=1:3;isodd(i)]) # JuMPDict
     setSolveHook(source, m -> :Optimal)
 
     # uncomment when NLP copying is implemented
-    # @addNLConstraint(source, c[k=1:3], x^2 + y^3 * sin(x+k*y) >= 1)
+    # @NLconstraint(source, c[k=1:3], x^2 + y^3 * sin(x+k*y) >= 1)
 
     dest = copy(source)
 
@@ -430,13 +430,13 @@ facts("[model] Test model copying") do
     # end
 
     # Obj
-    @setObjective(source, Max, 1x)
+    @objective(source, Max, 1x)
     @fact length(source.obj.aff.coeffs) --> 1
     @fact length(dest.obj.aff.coeffs) --> 2
-    @setObjective(dest, Max, 1x)
+    @objective(dest, Max, 1x)
     @fact length(source.obj.aff.coeffs) --> 1
     @fact length(dest.obj.aff.coeffs) --> 1
-    @setObjective(dest, Max, 3*x + 1*y)
+    @objective(dest, Max, 3*x + 1*y)
     @fact length(source.obj.aff.coeffs) --> 1
     @fact length(dest.obj.aff.coeffs) --> 2
 
@@ -485,89 +485,89 @@ end
 
 facts("[model] Test variable/model 'hygiene'") do
 context("Linear constraint") do
-    modA = Model(); @defVar(modA, x)
-    modB = Model(); @defVar(modB, y)
-    @addConstraint(modA, x+y == 1)
+    modA = Model(); @variable(modA, x)
+    modB = Model(); @variable(modB, y)
+    @constraint(modA, x+y == 1)
     @fact_throws solve(modA)
 end
 context("Linear objective") do
-    modA = Model(); @defVar(modA, 0 <= x <= 1)
-    modB = Model(); @defVar(modB, 0 <= y <= 1)
-    @setObjective(modA, Min, x + y)
+    modA = Model(); @variable(modA, 0 <= x <= 1)
+    modB = Model(); @variable(modB, 0 <= y <= 1)
+    @objective(modA, Min, x + y)
     @fact_throws solve(modA)
 end
 context("Quadratic constraint") do
-    modA = Model(); @defVar(modA, x)
-    modB = Model(); @defVar(modB, y)
-    @addConstraint(modB, x*y >= 1)
+    modA = Model(); @variable(modA, x)
+    modB = Model(); @variable(modB, y)
+    @constraint(modB, x*y >= 1)
     @fact_throws solve(modB)
 end
 context("Affine in quadratic constraint") do
-    modA = Model(); @defVar(modA, x)
-    modB = Model(); @defVar(modB, y)
-    @addConstraint(modB, y*y + x + y <= 1)
+    modA = Model(); @variable(modA, x)
+    modB = Model(); @variable(modB, y)
+    @constraint(modB, y*y + x + y <= 1)
     @fact_throws solve(modB)
 end
 context("Quadratic objective") do
-    modA = Model(); @defVar(modA, x)
-    modB = Model(); @defVar(modB, y)
-    @setObjective(modB, Min, x*y)
+    modA = Model(); @variable(modA, x)
+    modB = Model(); @variable(modB, y)
+    @objective(modB, Min, x*y)
     @fact_throws solve(modB)
 end
 end
 
 facts("[model] Test NaN checking") do
     mod = Model()
-    @defVar(mod, x)
-    @setObjective(mod, Min, NaN*x)
+    @variable(mod, x)
+    @objective(mod, Min, NaN*x)
     @fact_throws solve(mod)
     setObjective(mod, :Min, NaN*x^2)
     @fact_throws solve(mod)
-    @setObjective(mod, Min, x)
-    @addConstraint(mod, Min, NaN*x == 0)
+    @objective(mod, Min, x)
+    @constraint(mod, Min, NaN*x == 0)
     @fact_throws solve(mod)
 end
 
 facts("[model] Test column-wise modeling") do
     mod = Model()
-    @defVar(mod, 0 <= x <= 1)
-    @defVar(mod, 0 <= y <= 1)
-    @setObjective(mod, Max, 5x + 1y)
-    @addConstraint(mod, con[i=1:2], i*x + y <= i+5)
-    @defVar(mod, 0 <= z1 <= 1, objective=10.0, inconstraints=con, coefficients=[1.0,-2.0])
-    @defVar(mod, 0 <= z2 <= 1, objective=10.0, inconstraints=Any[con[i] for i in 1:2], coefficients=[1.0,-2.0])
+    @variable(mod, 0 <= x <= 1)
+    @variable(mod, 0 <= y <= 1)
+    @objective(mod, Max, 5x + 1y)
+    @constraint(mod, con[i=1:2], i*x + y <= i+5)
+    @variable(mod, 0 <= z1 <= 1, objective=10.0, inconstraints=con, coefficients=[1.0,-2.0])
+    @variable(mod, 0 <= z2 <= 1, objective=10.0, inconstraints=Any[con[i] for i in 1:2], coefficients=[1.0,-2.0])
     @fact solve(mod) --> :Optimal
     @fact getValue(z1) --> roughly(1.0, TOL)
     @fact getValue(z2) --> roughly(1.0, TOL)
 
     # do a vectorized version as well
     mod = Model()
-    @defVar(mod, 0 <= x <= 1)
-    @defVar(mod, 0 <= y <= 1)
+    @variable(mod, 0 <= x <= 1)
+    @variable(mod, 0 <= y <= 1)
     obj = [5,1]'*[x,y]
-    @setObjective(mod, Max, obj[1])
+    @objective(mod, Max, obj[1])
     A = [1 1
          2 1]
-    @addConstraint(mod, A*[x,y] .<= [6,7])
-    @defVar(mod, 0 <= z1 <= 1, objective=10.0, inconstraints=con, coefficients=[1.0,-2.0])
-    @defVar(mod, 0 <= z2 <= 1, objective=10.0, inconstraints=Any[con[i] for i in 1:2], coefficients=[1.0,-2.0])
+    @constraint(mod, A*[x,y] .<= [6,7])
+    @variable(mod, 0 <= z1 <= 1, objective=10.0, inconstraints=con, coefficients=[1.0,-2.0])
+    @variable(mod, 0 <= z2 <= 1, objective=10.0, inconstraints=Any[con[i] for i in 1:2], coefficients=[1.0,-2.0])
     @fact solve(mod) --> :Optimal
     @fact getValue(z1) --> roughly(1.0, TOL)
     @fact getValue(z2) --> roughly(1.0, TOL)
 
     # vectorized with sparse matrices
     mod = Model()
-    @defVar(mod, 0 <= x <= 1)
-    @defVar(mod, 0 <= y <= 1)
+    @variable(mod, 0 <= x <= 1)
+    @variable(mod, 0 <= y <= 1)
     # TODO: get this to work by adding method for Ac_mul_B!
     # obj = sparse([5,1])'*[x,y]
     obj = sparse([5,1]')*[x,y]
-    @setObjective(mod, Max, obj[1])
+    @objective(mod, Max, obj[1])
     A = sparse([1 1
                 2 1])
-    @addConstraint(mod, A*[x,y] .<= [6,7])
-    @defVar(mod, 0 <= z1 <= 1, objective=10.0, inconstraints=con, coefficients=[1.0,-2.0])
-    @defVar(mod, 0 <= z2 <= 1, objective=10.0, inconstraints=Any[con[i] for i in 1:2], coefficients=[1.0,-2.0])
+    @constraint(mod, A*[x,y] .<= [6,7])
+    @variable(mod, 0 <= z1 <= 1, objective=10.0, inconstraints=con, coefficients=[1.0,-2.0])
+    @variable(mod, 0 <= z2 <= 1, objective=10.0, inconstraints=Any[con[i] for i in 1:2], coefficients=[1.0,-2.0])
     @fact solve(mod) --> :Optimal
     @fact getValue(z1) --> roughly(1.0, TOL)
     @fact getValue(z2) --> roughly(1.0, TOL)
@@ -575,23 +575,23 @@ end
 
 facts("[model] Test all MPS paths") do
     mod = Model()
-    @defVar(mod, free_var)
-    @defVar(mod, int_var, Bin)
-    @defVar(mod, low_var >= 5)
-    @addConstraint(mod, free_var == int_var)
-    @addConstraint(mod, free_var - int_var >= 0)
+    @variable(mod, free_var)
+    @variable(mod, int_var, Bin)
+    @variable(mod, low_var >= 5)
+    @constraint(mod, free_var == int_var)
+    @constraint(mod, free_var - int_var >= 0)
     setObjective(mod, :Max, free_var*int_var + low_var)
     writeMPS(mod,"test.mps")
 end
 
 facts("[model] Test all LP paths") do
     mod = Model()
-    @defVar(mod, free_var)
+    @variable(mod, free_var)
     setObjective(mod, :Max, free_var*free_var)
     @fact_throws writeLP(mod,"test.lp")
-    @setObjective(mod, Max, free_var)
-    @addConstraint(mod, free_var - 2*free_var == 0)
-    @addConstraint(mod, free_var + 2*free_var >= 1)
+    @objective(mod, Max, free_var)
+    @constraint(mod, free_var - 2*free_var == 0)
+    @constraint(mod, free_var + 2*free_var >= 1)
     writeLP(mod,"test.lp")
 end
 
@@ -599,10 +599,10 @@ facts("[model] Test semi-continuous variables") do
 for solver in semi_solvers
 context("With solver $(typeof(solver))") do
     mod = Model(solver=solver)
-    @defVar(mod, x >= 3, SemiCont)
-    @defVar(mod, y >= 2, SemiCont)
-    @addConstraint(mod, x + y >= 1)
-    @setObjective(mod, Min, x+y)
+    @variable(mod, x >= 3, SemiCont)
+    @variable(mod, y >= 2, SemiCont)
+    @constraint(mod, x + y >= 1)
+    @objective(mod, Min, x+y)
     solve(mod)
     @fact getValue(x) --> roughly(0.0, TOL)
     @fact getValue(y) --> roughly(2.0, TOL)
@@ -612,10 +612,10 @@ facts("[model] Test semi-integer variables") do
 for solver in semi_solvers
 context("With solver $(typeof(solver))") do
     mod = Model(solver=solver)
-    @defVar(mod, x >= 3, SemiInt)
-    @defVar(mod, y >= 2, SemiInt)
-    @addConstraint(mod, x + y >= 2.5)
-    @setObjective(mod, Min, x+1.1y)
+    @variable(mod, x >= 3, SemiInt)
+    @variable(mod, y >= 2, SemiInt)
+    @constraint(mod, x + y >= 2.5)
+    @objective(mod, Min, x+1.1y)
     solve(mod)
     @fact getValue(x) --> roughly(3.0, TOL)
     @fact getValue(y) --> 0.0
@@ -625,9 +625,9 @@ facts("[model] Test fixed variables don't leak through MPB") do
 for solver in lp_solvers
 context("With solver $(typeof(solver))") do
     mod = Model(solver=solver)
-    @defVar(mod, 0 <= x[1:3] <= 2)
-    @defVar(mod, y[k=1:2] == k)
-    @setObjective(mod, Min, x[1] + x[2] + x[3] + y[1] + y[2])
+    @variable(mod, 0 <= x[1:3] <= 2)
+    @variable(mod, y[k=1:2] == k)
+    @objective(mod, Min, x[1] + x[2] + x[3] + y[1] + y[2])
     solve(mod)
     for i in 1:3
         @fact getValue(x[i]) --> roughly(0, TOL)
@@ -639,8 +639,8 @@ end; end
 for solver in ip_solvers
 context("With solver $(typeof(solver))") do
     mod = Model(solver=solver)
-    @defVar(mod, x[1:3], Bin)
-    @defVar(mod, y[k=1:2] == k)
+    @variable(mod, x[1:3], Bin)
+    @variable(mod, y[k=1:2] == k)
     buildInternalModel(mod)
     @fact MathProgBase.getvartype(getInternalModel(mod)) --> [:Bin,:Bin,:Bin,:Cont,:Cont]
 end; end; end
@@ -651,18 +651,18 @@ for solver in sos_solvers
 context("With solver $(typeof(solver))") do
     modS = Model(solver=solver)
 
-    @defVar(modS, x[1:3], Bin)
-    @defVar(modS, y[1:5], Bin)
-    @defVar(modS, z)
-    @defVar(modS, w)
+    @variable(modS, x[1:3], Bin)
+    @variable(modS, y[1:5], Bin)
+    @variable(modS, z)
+    @variable(modS, w)
 
     setObjective(modS, :Max, z+w)
 
     a = [1,2,3]
     b = [5,4,7,2,1]
 
-    @addConstraint(modS, z == sum{a[i]*x[i], i=1:3})
-    @addConstraint(modS, w == sum{b[i]*y[i], i=1:5})
+    @constraint(modS, z == sum{a[i]*x[i], i=1:3})
+    @constraint(modS, w == sum{b[i]*y[i], i=1:5})
 
     @fact_throws constructSOS([x[1]+y[1]])
     @fact_throws constructSOS([1z])
@@ -680,8 +680,8 @@ context("With solver $(typeof(solver))") do
 
     m = Model(solver=solver)
     ub = [1,1,2]
-    @defVar(m, x[i=1:3] <= ub[i])
-    @setObjective(m, Max, 2x[1]+x[2]+x[3])
+    @variable(m, x[i=1:3] <= ub[i])
+    @objective(m, Max, 2x[1]+x[2]+x[3])
     addSOS1(m, [x[1],2x[2]])
     addSOS1(m, [x[1],2x[3]])
 
@@ -695,20 +695,20 @@ facts("[model] Test vectorized model creation") do
     A = sprand(50,10,0.15)
     B = sprand(50, 7,0.2)
     modV = Model()
-    @defVar(modV, x[1:10])
-    @defVar(modV, y[1:7])
-    @addConstraint(modV, A*x + B*y .<= 1)
+    @variable(modV, x[1:10])
+    @variable(modV, y[1:7])
+    @constraint(modV, A*x + B*y .<= 1)
     obj = (x'*2A')*(2A*x) + (B*2y)'*(B*(2y))
-    @setObjective(modV, Max, obj[1])
+    @objective(modV, Max, obj[1])
 
     modS = Model()
-    @defVar(modS, x[1:10])
-    @defVar(modS, y[1:7])
+    @variable(modS, x[1:10])
+    @variable(modS, y[1:7])
     for i in 1:50
-        @addConstraint(modS, sum{A[i,j]*x[j], j=1:10} + sum{B[i,k]*y[k], k=1:7} <= 1)
+        @constraint(modS, sum{A[i,j]*x[j], j=1:10} + sum{B[i,k]*y[k], k=1:7} <= 1)
     end
     AA, BB = 4A'*A, 4B'*A
-    @setObjective(modS, Max, sum{AA[i,j]*x[i]*x[j], i=1:10,j=1:10} + sum{BB[i,j]*y[i]*y[j], i=1:7, j=1:7})
+    @objective(modS, Max, sum{AA[i,j]*x[i]*x[j], i=1:10,j=1:10} + sum{BB[i,j]*y[i]*y[j], i=1:7, j=1:7})
 
     @fact JuMP.prepConstrMatrix(modV) --> JuMP.prepConstrMatrix(modS)
     @fact JuMP.prepProblemBounds(modV) --> JuMP.prepProblemBounds(modS)
@@ -719,17 +719,17 @@ facts("[model] Test MIQP vectorization") do
     p = 4
     function bestsubset(solver,X,y,K,M,integer)
         mod = Model(solver=solver)
-        @defVar(mod, β[1:p])
+        @variable(mod, β[1:p])
         if integer
-            @defVar(mod, z[1:p], Bin)
+            @variable(mod, z[1:p], Bin)
         else
-            @defVar(mod, 0 <= z[1:p] <= 1)
+            @variable(mod, 0 <= z[1:p] <= 1)
         end
         obj = (y-X*β)'*(y-X*β)
-        @setObjective(mod, Min, obj[1])
-        @addConstraint(mod, eye(p)*β .<=  M*eye(p)*z)
-        @addConstraint(mod, eye(p)*β .>= -M*eye(p)*z)
-        @addConstraint(mod, sum(z) == K)
+        @objective(mod, Min, obj[1])
+        @constraint(mod, eye(p)*β .<=  M*eye(p)*z)
+        @constraint(mod, eye(p)*β .>= -M*eye(p)*z)
+        @constraint(mod, sum(z) == K)
         solve(mod)
         return getValue(β)[:]
     end
@@ -748,8 +748,8 @@ end
 
 facts("[model] Test setSolver") do
     m = Model()
-    @defVar(m, x[1:5])
-    @addConstraint(m, con[i=1:5], x[6-i] == i)
+    @variable(m, x[1:5])
+    @constraint(m, con[i=1:5], x[6-i] == i)
     @fact solve(m) --> :Optimal
 
     for solver in lp_solvers
@@ -764,7 +764,7 @@ end
 
 facts("[model] Setting solve hook") do
     m = Model()
-    @defVar(m, x ≥ 0)
+    @variable(m, x ≥ 0)
     dummy = [1]
     kwarglist = Any[]
     function solvehook(m::Model; kwargs...)
@@ -780,7 +780,7 @@ end
 
 facts("[model] Setting print hook") do
     m = Model()
-    @defVar(m, x ≥ 0)
+    @variable(m, x ≥ 0)
     dummy = [1]
     function printhook(io::IO, m::Model)
         dummy[1] += 1
@@ -792,7 +792,7 @@ end
 
 facts("[model] Test getLinearIndex") do
     m = Model()
-    @defVar(m, x[1:5])
+    @variable(m, x[1:5])
     for i in 1:5
         @fact isequal(Variable(m,getLinearIndex(x[i])),x[i]) --> true
     end
@@ -800,27 +800,27 @@ end
 
 facts("[model] Test LinearConstraint from ConstraintRef") do
     m = Model()
-    @defVar(m, x)
-    @addConstraint(m, constr, x == 1)
+    @variable(m, x)
+    @constraint(m, constr, x == 1)
     real_constr = LinearConstraint(constr)
     @fact real_constr.terms --> @LinearConstraint(x == 1).terms
 end
 
 facts("[model] Test getValue on OneIndexedArrays") do
     m = Model()
-    @defVar(m, x[i=1:5], start=i)
+    @variable(m, x[i=1:5], start=i)
     @fact typeof(x) --> Vector{Variable}
     @fact typeof(getValue(x)) --> Vector{Float64}
 end
 
 facts("[model] Relaxation keyword argument to solve") do
     m = Model()
-    @defVar(m, 1.5 <= y <= 2, Int)
-    @defVar(m, z, Bin)
-    @defVar(m, 0.5 <= w <= 1.5, Int)
-    @defVar(m, 1 <= v <= 2)
+    @variable(m, 1.5 <= y <= 2, Int)
+    @variable(m, z, Bin)
+    @variable(m, 0.5 <= w <= 1.5, Int)
+    @variable(m, 1 <= v <= 2)
 
-    @setObjective(m, Min, y + z + w + v)
+    @objective(m, Min, y + z + w + v)
 
     # Force LP solver since not all MIP solvers
     # return duals (i.e. Cbc)
@@ -845,11 +845,11 @@ facts("[model] Relaxation keyword argument to solve") do
     @fact getValue(v) --> 1
     @fact getObjectiveValue(m) --> 2 + 0 + 1 + 1
 
-    @defVar(m, 1 <= x <= 2, SemiCont)
-    @defVar(m, -2 <= t <= -1, SemiInt)
+    @variable(m, 1 <= x <= 2, SemiCont)
+    @variable(m, -2 <= t <= -1, SemiInt)
 
     addSOS1(m, [x, 2y, 3z, 4w, 5v, 6t])
-    @setObjective(m, Min, x + y + z + w + v - t)
+    @objective(m, Min, x + y + z + w + v - t)
 
     @fact solve(m, relaxation=true) --> :Optimal
 

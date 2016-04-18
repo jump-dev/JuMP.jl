@@ -28,10 +28,10 @@ context("With solver $(typeof(solver))") do
     #     1 <= y <= 3
     # x* = 2, y* = 1
     m = Model(solver=solver)
-    @defVar(m, 0 <= x <= 3)
-    @defVar(m, 1 <= y <= 3)
-    @setObjective(m, :Max, 1.1x + 1.0y)
-    maincon = @addConstraint(m, x + y <= 3)
+    @variable(m, 0 <= x <= 3)
+    @variable(m, 1 <= y <= 3)
+    @objective(m, :Max, 1.1x + 1.0y)
+    maincon = @constraint(m, x + y <= 3)
     @fact solve(m) --> :Optimal
     @fact m.internalModelLoaded --> true
     @fact getValue(x) --> roughly(2.0, TOL)
@@ -44,7 +44,7 @@ context("With solver $(typeof(solver))") do
     #     1 <= y <= 3
     #     0 <= z <= 5
     # x* = 0, y* = 1, z* = 2
-    @defVar(m, 0 <= z <= 5, objective=100.0, inconstraints=[maincon], coefficients=[1.0])
+    @variable(m, 0 <= z <= 5, objective=100.0, inconstraints=[maincon], coefficients=[1.0])
     @fact solve(m) --> :Optimal
     @fact getValue(x) --> roughly(0.0, TOL)
     @fact getValue(y) --> roughly(1.0, TOL)
@@ -80,11 +80,11 @@ context("With solver $(typeof(solver))") do
     #     1 <= y <= 3
     #     0 <= z <= 0
     m = Model(solver=solver)
-    @defVar(m, 0 <= x <= 3)
-    @defVar(m, 0 <= y <= 3)
-    @defVar(m, 0 <= z <= 0)
-    @setObjective(m, :Max, 1.1x + 1.0y + 100.0z)
-    maincon = @addConstraint(m, x + y + z <= 3)
+    @variable(m, 0 <= x <= 3)
+    @variable(m, 0 <= y <= 3)
+    @variable(m, 0 <= z <= 0)
+    @objective(m, :Max, 1.1x + 1.0y + 100.0z)
+    maincon = @constraint(m, x + y + z <= 3)
     @fact solve(m) --> :Optimal
 
     # Test changing problem type
@@ -122,7 +122,7 @@ context("With solver $(typeof(solver))") do
     #     0 <= y <= 3
     #     0 <= z <= 1.5, Integer
     # x* = 0, y* = 2, z* = 0
-    xz0ref = @addConstraint(m, x + z <=0)
+    xz0ref = @constraint(m, x + z <=0)
     @fact solve(m) --> :Optimal
     @fact getValue(x) --> roughly(0.0, TOL)
     @fact getValue(y) --> roughly(2.0, TOL)
@@ -138,7 +138,7 @@ context("With solver $(typeof(solver))") do
     #     0 <= z <= 1.5, Integer
     # x* = 1, y* = 0, z* = 1
     chgConstrRHS(xz0ref, 2.0)
-    xyg0ref = @addConstraint(m, x + y >= 0)
+    xyg0ref = @constraint(m, x + y >= 0)
     @fact solve(m) --> :Optimal
     chgConstrRHS(xyg0ref, 1)
     @fact solve(m) --> :Optimal
@@ -152,8 +152,8 @@ end
 
 facts("[probmod] Test adding a range constraint and modifying it") do
     m = Model()
-    @defVar(m, x)
-    rangeref = @addConstraint(m, -10 <= x <= 10)
+    @variable(m, x)
+    rangeref = @constraint(m, -10 <= x <= 10)
     @fact_throws chgConstrRHS(rangeref, 11)
 end
 
@@ -162,12 +162,12 @@ facts("[probmod] Test adding a 'decoupled' variable (#205)") do
 for solver in lp_solvers
 context("With solver $(typeof(solver))") do
     m = Model(solver=solver)
-    @defVar(m, x >= 0)
-    @setObjective(m, Min, x)
+    @variable(m, x >= 0)
+    @objective(m, Min, x)
     solve(m)
-    @defVar(m, y >= 0)
-    @addConstraint(m, x + y == 1)
-    @setObjective(m, Min, 2x+y)
+    @variable(m, y >= 0)
+    @constraint(m, x + y == 1)
+    @objective(m, Min, 2x+y)
     solve(m)
     @fact getValue(x) --> roughly(0.0, TOL)
     @fact getValue(y) --> roughly(1.0, TOL)
@@ -180,10 +180,10 @@ facts("[probmod] Test buildInternalModel") do
 for solver in lp_solvers
 context("With solver $(typeof(solver))") do
     m = Model(solver=solver)
-    @defVar(m, x >= 0)
-    @defVar(m, y >= 0)
-    @addConstraint(m, x + y == 1)
-    @setObjective(m, Max, y)
+    @variable(m, x >= 0)
+    @variable(m, y >= 0)
+    @constraint(m, x + y == 1)
+    @objective(m, Max, y)
     buildInternalModel(m)
     @fact getInternalModel(m) --> not(nothing)
     @fact m.internalModelLoaded --> true
@@ -203,10 +203,10 @@ facts("[probmod] Test buildInternalModel with MIP") do
 for solver in ip_solvers
 context("With solver $(typeof(solver))") do
     m = Model(solver=solver)
-    @defVar(m, x >= 0, Int)
-    @defVar(m, y, Bin)
-    @addConstraint(m, x + y == 1)
-    @setObjective(m, Max, y)
+    @variable(m, x >= 0, Int)
+    @variable(m, y, Bin)
+    @constraint(m, x + y == 1)
+    @objective(m, Max, y)
     buildInternalModel(m)
     @fact getInternalModel(m) --> not(nothing)
     @fact m.internalModelLoaded --> true
@@ -224,12 +224,12 @@ facts("[probmod] Test adding empty constraints") do
 for solver in lp_solvers
 context("With solver $(typeof(solver))") do
     m = Model(solver=solver)
-    @defVar(m, 0 <= x <= 9)
-    @setObjective(m, Max, x)
-    @addConstraint(m, x <= 5)
-    @addConstraint(m, 0 <= 1)
+    @variable(m, 0 <= x <= 9)
+    @objective(m, Max, x)
+    @constraint(m, x <= 5)
+    @constraint(m, 0 <= 1)
     solve(m)
-    @addConstraint(m, 0 <= 1)
+    @constraint(m, 0 <= 1)
     @fact solve(m) --> :Optimal
     @fact getValue(x) --> roughly(5.0, TOL)
 end
@@ -244,8 +244,8 @@ context("With solver $(typeof(solver))") do
     # Variables should be restricted to the intersection of
     # {0,1} and their bounds.
     mod = Model(solver=solver)
-    @defVar(mod, x, Bin)
-    @setObjective(mod, Max, x)
+    @variable(mod, x, Bin)
+    @objective(mod, Max, x)
     solve(mod)
     @fact getValue(x) --> roughly(1.0)
     setUpper(x, 2.0)
@@ -256,8 +256,8 @@ context("With solver $(typeof(solver))") do
     @fact getValue(x) --> roughly(0.0)
     # same thing, other direction
     mod = Model(solver=solver)
-    @defVar(mod, x, Bin)
-    @setObjective(mod, Min, x)
+    @variable(mod, x, Bin)
+    @objective(mod, Min, x)
     solve(mod)
     @fact getValue(x) --> roughly(0.0)
     setLower(x, -1.0)
@@ -274,8 +274,8 @@ facts("[probmod] Applicable regressions") do
 
 function methods_test(solvername, solverobj, supp)
     mod = Model(solver=solverobj)
-    @defVar(mod, x >= 0)
-    @addConstraint(mod, 2x == 2)
+    @variable(mod, x >= 0)
+    @constraint(mod, 2x == 2)
     solve(mod, suppress_warnings=true)
     internal_mod = getInternalModel(mod)
     context(solvername) do

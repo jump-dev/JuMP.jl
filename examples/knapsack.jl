@@ -20,17 +20,17 @@ using JuMP
 # Maximization problem
 m = Model()
 
-@defVar(m, x[1:5], Bin)
+@variable(m, x[1:5], Bin)
 
 profit = [ 5, 3, 2, 7, 4 ]
 weight = [ 2, 8, 4, 2, 5 ]
 capacity = 10
 
 # Objective: maximize profit
-@setObjective(m, Max, dot(profit, x))
+@objective(m, Max, dot(profit, x))
 
 # Constraint: can carry all
-@addConstraint(m, dot(weight, x) <= capacity)
+@constraint(m, dot(weight, x) <= capacity)
 
 # Solve problem using MIP solver
 status = solve(m)

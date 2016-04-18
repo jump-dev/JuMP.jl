@@ -20,11 +20,11 @@ using JuMP
 
 m = Model()
 
-@defVar(m, 0 <= x <= 2)
-@defVar(m, 0 <= y <= 30)
+@variable(m, 0 <= x <= 2)
+@variable(m, 0 <= y <= 30)
 
-@setObjective(m, Max, 5x + 3y)
-@addConstraint(m, 1x + 5y <= 3.0)
+@objective(m, Max, 5x + 3y)
+@constraint(m, 1x + 5y <= 3.0)
 
 print(m)
 

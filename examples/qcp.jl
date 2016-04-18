@@ -19,17 +19,17 @@ using JuMP
 m = Model()
 
 # Need nonnegativity for (rotated) second-order cone
-@defVar(m, x)
-@defVar(m, y >= 0)
-@defVar(m, z >= 0)
+@variable(m, x)
+@variable(m, y >= 0)
+@variable(m, z >= 0)
 
 # Maximize x
-@setObjective(m, Max, x)
+@objective(m, Max, x)
 
 # Subject to 1 linear and 2 nonlinear constraints
-@addConstraint(m, x + y + z == 1)
-@addConstraint(m, x*x + y*y - z*z <= 0)
-@addConstraint(m, x*x - y*z <= 0)
+@constraint(m, x + y + z == 1)
+@constraint(m, x*x + y*y - z*z <= 0)
+@constraint(m, x*x - y*z <= 0)
 
 # Print the model to check correctness
 print(m)

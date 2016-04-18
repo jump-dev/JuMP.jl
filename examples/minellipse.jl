@@ -40,10 +40,10 @@ W = [1.0 0.0
      0.0 1.0];
 
 mod = Model()
-@defVar(mod, X[1:2,1:2], SDP)
-@setObjective(mod, Min, trace(W*X))
+@variable(mod, X[1:2,1:2], SDP)
+@objective(mod, Min, trace(W*X))
 for i = 1:m
-    @addSDPConstraint(mod, X >= As[i])
+    @SDconstraint(mod, X >= As[i])
 end
 solve(mod)
 

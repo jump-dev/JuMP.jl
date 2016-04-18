@@ -60,9 +60,9 @@ end
 function solveProblem()
     m = Model(solver=GurobiSolver())
 
-    @defVar(m, 0 <= x <= 2, Int)
-    @defVar(m, 0 <= y <= 2, Int)
-    @setObjective(m, Max, y)
+    @variable(m, 0 <= x <= 2, Int)
+    @variable(m, 0 <= y <= 2, Int)
+    @objective(m, Max, y)
 
     # Note that the callback is now a stub that passes off
     # the work to the "algorithm"
@@ -74,7 +74,7 @@ function solveProblem()
         newcut, x_coeff, y_coeff, rhs = cornerChecker(x_val, y_val)
 
         if newcut
-            @addLazyConstraint(cb, x_coeff*x + y_coeff*y <= rhs)
+            @lazyconstraint(cb, x_coeff*x + y_coeff*y <= rhs)
         end
     end  # End of callback function
 

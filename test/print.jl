@@ -35,15 +35,15 @@ facts("[print] JuMPContainer{Variable}") do
     #------------------------------------------------------------------
     # Test bound printing
     context("bound printing") do
-    @defVar(m,      bnd_free[2:5])
-    @defVar(m,      bnd_lowb[2:5] >= 2)
-    @defVar(m,      bnd_high[2:5] <= 5)
-    @defVar(m, 2 <= bnd_both[2:5] <= 5)
-    @defVar(m,      bnd_difflo[i=2:5] >= i)
-    @defVar(m,      bnd_diffup[i=2:5] <= i)
-    @defVar(m, i <= bnd_diffbo[i=2:5] <= 2i)
-    @defVar(m, i <= bnd_difflo_with_up[i=2:5] <= 5)
-    @defVar(m, 2 <= bnd_diffup_with_lo[i=2:5] <= i)
+    @variable(m,      bnd_free[2:5])
+    @variable(m,      bnd_lowb[2:5] >= 2)
+    @variable(m,      bnd_high[2:5] <= 5)
+    @variable(m, 2 <= bnd_both[2:5] <= 5)
+    @variable(m,      bnd_difflo[i=2:5] >= i)
+    @variable(m,      bnd_diffup[i=2:5] <= i)
+    @variable(m, i <= bnd_diffbo[i=2:5] <= 2i)
+    @variable(m, i <= bnd_difflo_with_up[i=2:5] <= 5)
+    @variable(m, 2 <= bnd_diffup_with_lo[i=2:5] <= i)
 
     io_test(REPLMode, bnd_free, "bnd_free[i] free $fa i $inset {2,3,4,5}")
     io_test(REPLMode, bnd_lowb, "bnd_lowb[i] $ge 2 $fa i $inset {2,3,4,5}")
@@ -69,20 +69,20 @@ facts("[print] JuMPContainer{Variable}") do
     #------------------------------------------------------------------
     # Test index set printing
     context("index set printing") do
-    @defVar(m, rng_unit1[1:10])  # Array{Variable}
-    @defVar(m, rng_unit2[-2:3])  # JuMPArray
-    @defVar(m, rng_unit3[[1:10;]])  # JuMPDict
-    @defVar(m, rng_step1[1:2:10])
-    @defVar(m, rng_step2[-2:5:10])
-    @defVar(m, rng_step3[1:5:3])
-    @defVar(m, rng_step4[0:2:2])
-    @defVar(m, arr_1[[:a,:b,:c]])
-    @defVar(m, arr_2[[:a,1,"test"]])
-    @defVar(m, arr_3[[:apple,:banana,:carrot,:diamonds]])
-    @defVar(m, rng2_1[1:10,[:a,:b,:c]])
-    @defVar(m, tri_1[i=1:3,j=i:3])
-    @defVar(m, tri_2[i=1:3,j=-i])
-    @defVar(m, tri_3[(i,j)=[(i,i+2) for i in 1:5],k=i:j])
+    @variable(m, rng_unit1[1:10])  # Array{Variable}
+    @variable(m, rng_unit2[-2:3])  # JuMPArray
+    @variable(m, rng_unit3[[1:10;]])  # JuMPDict
+    @variable(m, rng_step1[1:2:10])
+    @variable(m, rng_step2[-2:5:10])
+    @variable(m, rng_step3[1:5:3])
+    @variable(m, rng_step4[0:2:2])
+    @variable(m, arr_1[[:a,:b,:c]])
+    @variable(m, arr_2[[:a,1,"test"]])
+    @variable(m, arr_3[[:apple,:banana,:carrot,:diamonds]])
+    @variable(m, rng2_1[1:10,[:a,:b,:c]])
+    @variable(m, tri_1[i=1:3,j=i:3])
+    @variable(m, tri_2[i=1:3,j=-i])
+    @variable(m, tri_3[(i,j)=[(i,i+2) for i in 1:5],k=i:j])
 
     io_test(REPLMode, rng_unit1, "rng_unit1[i] free $fa i $inset {1,2,$dots,9,10}")
     io_test(REPLMode, rng_unit2, "rng_unit2[i] free $fa i $inset {-2,-1,$dots,2,3}")
@@ -118,17 +118,17 @@ facts("[print] JuMPContainer{Variable}") do
     #------------------------------------------------------------------
     # Test category printing
     context("category printing") do
-    @defVar(m, cat_bin[1:3], Bin)
-    @defVar(m, 2 <= cat_int[1:3] <= 5, Int)
-    @defVar(m, cat_semiint_both[2:3] >= 2, SemiInt)
-    @defVar(m, i <= cat_semiint_difflow[i=2:3] <= 4, SemiInt)
-    @defVar(m, 2 <= cat_semiint_diffup[i=2:3] <= i, SemiInt)
-    @defVar(m, i <= cat_semiint_none[i=2:3] <= 2i, SemiInt)
-    @defVar(m, cat_semicont_both[2:3] >= 2, SemiCont)
-    @defVar(m, i <= cat_semicont_difflow[i=2:3] <= 4, SemiCont)
-    @defVar(m, 2 <= cat_semicont_diffup[i=2:3] <= i, SemiCont)
-    @defVar(m, i <= cat_semicont_none[i=2:3] <= 2i, SemiCont)
-    @defVar(m, fixed_var[i=2:3] == i)
+    @variable(m, cat_bin[1:3], Bin)
+    @variable(m, 2 <= cat_int[1:3] <= 5, Int)
+    @variable(m, cat_semiint_both[2:3] >= 2, SemiInt)
+    @variable(m, i <= cat_semiint_difflow[i=2:3] <= 4, SemiInt)
+    @variable(m, 2 <= cat_semiint_diffup[i=2:3] <= i, SemiInt)
+    @variable(m, i <= cat_semiint_none[i=2:3] <= 2i, SemiInt)
+    @variable(m, cat_semicont_both[2:3] >= 2, SemiCont)
+    @variable(m, i <= cat_semicont_difflow[i=2:3] <= 4, SemiCont)
+    @variable(m, 2 <= cat_semicont_diffup[i=2:3] <= i, SemiCont)
+    @variable(m, i <= cat_semicont_none[i=2:3] <= 2i, SemiCont)
+    @variable(m, fixed_var[i=2:3] == i)
 
     io_test(REPLMode, cat_bin, "cat_bin[i] $inset {0,1} $fa i $inset {1,2,3}")
     io_test(REPLMode, cat_int, "2 $le cat_int[i] $le 5, integer, $fa i $inset {1,2,3}")
@@ -158,10 +158,10 @@ facts("[print] JuMPContainer{Variable}") do
     #------------------------------------------------------------------
     # Tests for particular issues
     context("Empty JuMPContainer printing (#124)") do
-    @defVar(m, empty_free[1:0])
+    @variable(m, empty_free[1:0])
     io_test(REPLMode, empty_free, "Empty Array{Variable} (no indices)")
     io_test(IJuliaMode, empty_free, "Empty Array{Variable} (no indices)")
-    @defVar(m, empty_set[[]])
+    @variable(m, empty_set[[]])
     io_test(REPLMode, empty_set, "empty_set (no indices)")
     io_test(IJuliaMode, empty_set, "empty_set (no indices)")
     end
@@ -172,10 +172,10 @@ end
 facts("[print] JuMPContainer{Number}") do
     # The same output for REPL and IJulia, so only testing one
     mod = Model()
-    @defVar(mod, i*j <= w[i=9:10, [:Apple,5,:Banana], j=-1:+1] <= i*j)
-    @defVar(mod, i*j*k <= x[i=9:11,j=99:101,k=3:4] <= i*j*k)
-    @defVar(mod, i*j <= y[i=9:11,j=i:11] <= i*j)
-    @defVar(mod, j <= z[i=[:a,'b'],j=1:3] <= j)
+    @variable(mod, i*j <= w[i=9:10, [:Apple,5,:Banana], j=-1:+1] <= i*j)
+    @variable(mod, i*j*k <= x[i=9:11,j=99:101,k=3:4] <= i*j*k)
+    @variable(mod, i*j <= y[i=9:11,j=i:11] <= i*j)
+    @variable(mod, j <= z[i=[:a,'b'],j=1:3] <= j)
     solve(mod)
 
     # Deal with hashing variations
@@ -303,7 +303,7 @@ end
 facts("[print] SOS constraints") do
     modS = Model()
     a = [1,2,3]
-    @defVar(modS, x[1:3], Bin)
+    @variable(modS, x[1:3], Bin)
     addSOS1(modS, [a[i]x[i] for i in 1:3])
     s1 = JuMP.SOSConstraint([x[i] for i in 1:3],
                             [a[i] for i in 1:3], :SOS1)
@@ -311,7 +311,7 @@ facts("[print] SOS constraints") do
     io_test(IJuliaMode, s1, "SOS1: \\{1 x[1], 2 x[2], 3 x[3]\\}")
 
     b = [5,4,7,2,1]
-    @defVar(modS, y[1:5], Bin)
+    @variable(modS, y[1:5], Bin)
     s2 = JuMP.SOSConstraint([y[i] for i in 1:5],
                             [b[i] for i in 1:5], :SOS2)
     io_test(REPLMode, s2, "SOS2: {5 y[1], 4 y[2], 7 y[3], 2 y[4], 1 y[5]}")
@@ -329,24 +329,24 @@ facts("[print] Model") do
     #------------------------------------------------------------------
 
     mod_1 = Model()
-    @defVar(mod_1, a>=1)
-    @defVar(mod_1, b<=1)
-    @defVar(mod_1, -1<=c<=1)
-    @defVar(mod_1, a1>=1,Int)
-    @defVar(mod_1, b1<=1,Int)
-    @defVar(mod_1, -1<=c1<=1,Int)
-    @defVar(mod_1, x, Bin)
-    @defVar(mod_1, y)
-    @defVar(mod_1, z, Int)
-    @defVar(mod_1, sos[1:3], Bin)
-    @defVar(mod_1, 2 <= si <= 3, SemiInt)
-    @defVar(mod_1, 2 <= sc <= 3, SemiCont)
-    @defVar(mod_1, fi == 9)
-    @setObjective(mod_1, Max, a - b + 2a1 - 10x)
-    @addConstraint(mod_1, a + b - 10c - 2x + c1 <= 1)
-    @addConstraint(mod_1, a*b <= 2)
+    @variable(mod_1, a>=1)
+    @variable(mod_1, b<=1)
+    @variable(mod_1, -1<=c<=1)
+    @variable(mod_1, a1>=1,Int)
+    @variable(mod_1, b1<=1,Int)
+    @variable(mod_1, -1<=c1<=1,Int)
+    @variable(mod_1, x, Bin)
+    @variable(mod_1, y)
+    @variable(mod_1, z, Int)
+    @variable(mod_1, sos[1:3], Bin)
+    @variable(mod_1, 2 <= si <= 3, SemiInt)
+    @variable(mod_1, 2 <= sc <= 3, SemiCont)
+    @variable(mod_1, fi == 9)
+    @objective(mod_1, Max, a - b + 2a1 - 10x)
+    @constraint(mod_1, a + b - 10c - 2x + c1 <= 1)
+    @constraint(mod_1, a*b <= 2)
     addSOS1(mod_1, [i*sos[i] for i in 1:3])
-    @addConstraint(mod_1, norm(sos) + a <= 1)
+    @constraint(mod_1, norm(sos) + a <= 1)
 
     io_test(REPLMode, mod_1, """
 Max a - b + 2 a1 - 10 x
@@ -404,9 +404,9 @@ Solver is default solver""", repl=:show)
     #------------------------------------------------------------------
 
     mod_2 = Model()
-    @defVar(mod_2, x, Bin)
-    @defVar(mod_2, y, Int)
-    @addConstraint(mod_2, x*y <= 1)
+    @variable(mod_2, x, Bin)
+    @variable(mod_2, y, Int)
+    @constraint(mod_2, x*y <= 1)
 
     io_test(REPLMode, mod_2, """
 Feasibility problem with:
@@ -416,8 +416,8 @@ Feasibility problem with:
 Solver is default solver""", repl=:show)
 
     mod_2 = Model()
-    @defVar(mod_2, x)
-    @addConstraint(mod_2, x <= 3)
+    @variable(mod_2, x)
+    @constraint(mod_2, x <= 3)
 
     io_test(REPLMode, mod_2, """
 Feasibility problem with:
@@ -429,11 +429,11 @@ Solver is default solver""", repl=:show)
 
     mod_3 = Model()
 
-    @defVar(mod_3, x[1:5])
-    @addNLConstraint(mod_3, x[1]*x[2] == 1)
-    @addNLConstraint(mod_3, x[3]*x[4] == 1)
-    @addNLConstraint(mod_3, x[5]*x[1] == 1)
-    @setNLObjective(mod_3, Min, x[1]*x[3])
+    @variable(mod_3, x[1:5])
+    @NLconstraint(mod_3, x[1]*x[2] == 1)
+    @NLconstraint(mod_3, x[3]*x[4] == 1)
+    @NLconstraint(mod_3, x[5]*x[1] == 1)
+    @NLobjective(mod_3, Min, x[1]*x[3])
 
     io_test(REPLMode, mod_3, """
 Min (nonlinear expression)
@@ -461,8 +461,8 @@ facts("[print] changing variable categories") do
     infty, union = repl[:infty], repl[:union]
 
     mod = Model()
-    @defVar(mod, x[1:3])
-    @defVar(mod, y[i=1:3,i:3])
+    @variable(mod, x[1:3])
+    @variable(mod, y[i=1:3,i:3])
     setCategory(x[3], :SemiCont)
     setCategory(y[1,3], :Int)
 
@@ -502,19 +502,19 @@ facts("[print] expressions") do
 
     #------------------------------------------------------------------
     mod = Model()
-    @defVar(mod, x[1:5])
-    @defVar(mod, y[i=2:4,j=i:5])
-    @defVar(mod, z)
+    @variable(mod, x[1:5])
+    @variable(mod, y[i=2:4,j=i:5])
+    @variable(mod, z)
 
-    @addConstraint(mod, x[1] + 2*y[2,3] <= 3)
+    @constraint(mod, x[1] + 2*y[2,3] <= 3)
     io_test(REPLMode, mod.linconstr[end], "x[1] + 2 y[2,3] $le 3")
     io_test(IJuliaMode, mod.linconstr[end], "x_{1} + 2 y_{2,3} \\leq 3")
 
-    @addConstraint(mod, (x[1]+x[2])*(y[2,2]+3.0) <= 1)
+    @constraint(mod, (x[1]+x[2])*(y[2,2]+3.0) <= 1)
     io_test(REPLMode, mod.quadconstr[end], "x[1]*y[2,2] + x[2]*y[2,2] + 3 x[1] + 3 x[2] - 1 $le 0")
     io_test(IJuliaMode, mod.quadconstr[end], "x_{1}\\times y_{2,2} + x_{2}\\times y_{2,2} + 3 x_{1} + 3 x_{2} - 1 \\leq 0")
 
-    @addConstraint(mod, (y[2,2]+3.0)*(x[1]+x[2]) <= 1)
+    @constraint(mod, (y[2,2]+3.0)*(x[1]+x[2]) <= 1)
     io_test(REPLMode, mod.quadconstr[end], "x[1]*y[2,2] + x[2]*y[2,2] + 3 x[1] + 3 x[2] - 1 $le 0")
     io_test(IJuliaMode, mod.quadconstr[end], "x_{1}\\times y_{2,2} + x_{2}\\times y_{2,2} + 3 x_{1} + 3 x_{2} - 1 \\leq 0")
 end
@@ -523,7 +523,7 @@ end
 
 facts("[print] Variable") do
     m = Model()
-    @defVar(m, 0 <= x <= 2, inconstraints=ConstraintRef{Model,LinearConstraint}[], objective=0.0, coefficients=Float64[] )
+    @variable(m, 0 <= x <= 2, inconstraints=ConstraintRef{Model,LinearConstraint}[], objective=0.0, coefficients=Float64[] )
 
     @fact    getName(x) --> "x"
     io_test(REPLMode,   x, "x")
@@ -539,7 +539,7 @@ facts("[print] Variable") do
     io_test(REPLMode,   x, "col_1")
     io_test(IJuliaMode, x, "col_1")
 
-    @defVar(m, z[1:2,3:5])
+    @variable(m, z[1:2,3:5])
     @fact       getName(z[1,3]) --> "z[1,3]"
     io_test(REPLMode,   z[1,3],    "z[1,3]")
     io_test(IJuliaMode, z[1,3],    "z_{1,3}")
@@ -550,13 +550,13 @@ facts("[print] Variable") do
     io_test(REPLMode,   z[2,5],    "z[2,5]")
     io_test(IJuliaMode, z[2,5],    "z_{2,5}")
 
-    @defVar(m, w[3:9,["red","blue","green"]])
+    @variable(m, w[3:9,["red","blue","green"]])
     @fact    getName(w[7,"green"]) --> "w[7,green]"
     io_test(REPLMode,   w[7,"green"], "w[7,green]")
     io_test(IJuliaMode, w[7,"green"], "w_{7,green}")
 
     rng = 2:5
-    @defVar(m, v[rng,rng,rng,rng,rng,rng,rng])
+    @variable(m, v[rng,rng,rng,rng,rng,rng,rng])
     a_v = v[4,5,2,3,2,2,4]
     @fact    getName(a_v) --> "v[4,5,2,3,2,2,4]"
     io_test(REPLMode,   a_v, "v[4,5,2,3,2,2,4]")
@@ -565,8 +565,8 @@ end
 
 facts("[print] User-created Array{Variable}") do
     m = Model()
-    @defVar(m, x)
-    @defVar(m, y)
+    @variable(m, x)
+    @variable(m, y)
 
     v = [x,y,x]
     A = [x y; y x]
@@ -585,12 +585,12 @@ end
 
 facts("[print] basename keyword argument") do
     m = Model()
-    @defVar(m, x, basename="foo")
-    @defVar(m, y[1:3], basename=:bar)
+    @variable(m, x, basename="foo")
+    @variable(m, y[1:3], basename=:bar)
     num = 123
-    @defVar(m, z[[:red,:blue]], basename="color_$num")
-    @defVar(m, v[1:2,1:2], SDP, basename=string("i","$num",num))
-    @defVar(m, w[1:3,1:3], Symmetric, basename="symm")
+    @variable(m, z[[:red,:blue]], basename="color_$num")
+    @variable(m, v[1:2,1:2], SDP, basename=string("i","$num",num))
+    @variable(m, w[1:3,1:3], Symmetric, basename="symm")
 
     io_test(REPLMode,   x, "foo")
     io_test(IJuliaMode, x, "foo")

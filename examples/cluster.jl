@@ -34,20 +34,20 @@ end
 mod = Model()
 
 # Z >= 0, PSD
-@defVar(mod, Z[1:m,1:m], SDP)
-@addConstraint(mod, Z .>= 0)
+@variable(mod, Z[1:m,1:m], SDP)
+@constraint(mod, Z .>= 0)
 
 # min Tr(W(I-Z))
-@setObjective(mod, Min, trace(W * (eye(m,m) - Z)))
+@objective(mod, Min, trace(W * (eye(m,m) - Z)))
 
 # Z e = e
-@addConstraint(mod, Z*ones(m) .== ones(m))
+@constraint(mod, Z*ones(m) .== ones(m))
 #for i = 1:m
 #    addConstraint(mod, sum([ Z[i,j] for j = 1:m]) == 1)
 #end
 
 # Tr(Z) = k
-@addConstraint(mod, trace(Z) == k)
+@constraint(mod, trace(Z) == k)
 
 solve(mod)
 

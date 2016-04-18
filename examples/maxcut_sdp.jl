@@ -24,9 +24,9 @@ function solve_maxcut_sdp(n, W)
 
     # Solve the SDP relaxation
     m = Model()
-    @defVar(m, X[1:n,1:n], SDP)
-    @setObjective(m, Max, dot(L,X))
-    @addConstraint(m, diag(X) .== 1)
+    @variable(m, X[1:n,1:n], SDP)
+    @objective(m, Max, dot(L,X))
+    @constraint(m, diag(X) .== 1)
     solve(m)
 
     # Cholesky the result

@@ -14,8 +14,8 @@ using JuMP, FactCheck
 
 facts("[expr] Test expression construction") do
     maff = Model()
-    @defVar(maff, 0 <= x[1:5] <= 1)
-    @defVar(maff, 0 <= LongName <= 99)
+    @variable(maff, 0 <= x[1:5] <= 1)
+    @variable(maff, 0 <= LongName <= 99)
 
     context("AffExpr") do
         # Test affToStr
@@ -47,7 +47,7 @@ end
 
 facts("[expr] Test getValue(expr)") do
     m = Model()
-    @defVar(m, 1 <= x[1:3] <= 2)
+    @variable(m, 1 <= x[1:3] <= 2)
     setValue(x[3], 2)
     setValue(x[2], 2)
     setValue(x[1], 1)
@@ -57,7 +57,7 @@ end
 
 facts("[expr] Test expression iterators") do
     m = Model()
-    @defVar(m, x[1:10])
+    @variable(m, x[1:10])
 
     a1 = 1*x[1] + 2*x[2]
     k = 1

@@ -28,19 +28,19 @@ M = rand(d,d)
 
 m = Model()
 
-@defVar(m, Σ[1:d,1:d], SDP)
-@defVar(m, u[1:d])
-@defVar(m, μ[1:d])
+@variable(m, Σ[1:d,1:d], SDP)
+@variable(m, u[1:d])
+@variable(m, μ[1:d])
 
-@addConstraint(m, norm(μ-μhat) <= Γ1(𝛿/2,N))
-@addConstraint(m, vecnorm(Σ-Σhat) <= Γ2(𝛿/2,N))
+@constraint(m, norm(μ-μhat) <= Γ1(𝛿/2,N))
+@constraint(m, vecnorm(Σ-Σhat) <= Γ2(𝛿/2,N))
 
 A = [(1-ɛ)/ɛ (u-μ)';
      (u-μ)     Σ   ]
-@addSDPConstraint(m, A >= 0)
+@SDconstraint(m, A >= 0)
 
 c = randn(d)
-@setObjective(m, Max, dot(c,u))
+@objective(m, Max, dot(c,u))
 
 solve(m)
 

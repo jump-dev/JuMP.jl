@@ -77,28 +77,28 @@ multi = Model()
 
 #  VARIABLES
 
-@defVar(multi, Trans[1:numorig, 1:numdest, 1:numprod] >= 0)
+@variable(multi, Trans[1:numorig, 1:numdest, 1:numprod] >= 0)
 
 #  OBJECTIVE
 
 length(cost)
 
-@setObjective(multi, Max,
+@objective(multi, Max,
               sum{sum{sum{cost[j, i, p] * Trans[i,j, p],
                         i=1:numorig}, j=1:numdest}, p=1:numprod})
 
 #  CONSTRAINTS
 
 # Supply constraint
-@addConstraint(multi, xyconstr[i=1:numorig, p=1:numprod],
+@constraint(multi, xyconstr[i=1:numorig, p=1:numprod],
                sum{Trans[i,j,p], j=1:numdest} == supply[p,i])
 
 # Demand constraint
-@addConstraint(multi, xyconstr[j=1:numdest, p=1:numprod],
+@constraint(multi, xyconstr[j=1:numdest, p=1:numprod],
                sum{Trans[i,j,p], i=1:numorig} == demand[p,j])
 
 # Total shipment constraint
-@addConstraint(multi, xyconstr[i=1:numorig, j=1:numdest],
+@constraint(multi, xyconstr[i=1:numorig, j=1:numdest],
                sum{Trans[i,j,p], p=1:numprod} - limit[i][j] <= 0)
 limit[2][3]
 status = solve(multi)

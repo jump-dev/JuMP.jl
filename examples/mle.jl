@@ -13,10 +13,10 @@ data = randn(n)
 
 m = Model()
 
-@defVar(m, μ, start = 0.0)
-@defVar(m, σ >= 0.0, start = 1.0)
+@variable(m, μ, start = 0.0)
+@variable(m, σ >= 0.0, start = 1.0)
 
-@setNLObjective(m, Max, (n/2)*log(1/(2π*σ^2))-sum{(data[i]-μ)^2, i=1:n}/(2σ^2))
+@NLobjective(m, Max, (n/2)*log(1/(2π*σ^2))-sum{(data[i]-μ)^2, i=1:n}/(2σ^2))
 
 solve(m)
 
@@ -27,7 +27,7 @@ println("var(data) = ", var(data))
 println("MLE objective: ", getObjectiveValue(m))
 
 # constrained MLE?
-@addNLConstraint(m, μ == σ^2)
+@NLconstraint(m, μ == σ^2)
 
 solve(m)
 println("\nWith constraint μ == σ^2:")
