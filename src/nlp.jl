@@ -35,9 +35,9 @@ function newparameter(m::Model,value::Number)
     return NonlinearParameter(m, length(nldata.nlparamvalues))
 end
 
-getValue(p::NonlinearParameter) = p.m.nlpdata.nlparamvalues[p.index]::Float64
+getvalue(p::NonlinearParameter) = p.m.nlpdata.nlparamvalues[p.index]::Float64
 
-setValue(p::NonlinearParameter,v::Number) = (p.m.nlpdata.nlparamvalues[p.index] = v)
+setvalue(p::NonlinearParameter,v::Number) = (p.m.nlpdata.nlparamvalues[p.index] = v)
 
 NLPData() = NLPData(nothing, NonlinearConstraint[], NonlinearExprData[], Float64[], Float64[], nothing)
 
@@ -49,7 +49,7 @@ function initNLP(m::Model)
     end
 end
 
-function getDual(c::ConstraintRef{Model,NonlinearConstraint})
+function getdual(c::ConstraintRef{Model,NonlinearConstraint})
     initNLP(c.m)
     nldata::NLPData = c.m.nlpdata
     if length(nldata.nlconstrDuals) != length(nldata.nlconstr)
@@ -1172,7 +1172,7 @@ function _buildInternalModel_nlp(m::Model, traits)
             For example:
 
             data = [1.0]
-            @addNLConstraint(m, data[1]*x <= 1)
+            @NLconstraint(m, data[1]*x <= 1)
             solve(m)
             data[1] = 2.0
             solve(m) # coefficient is updated
@@ -1196,7 +1196,7 @@ function _buildInternalModel_nlp(m::Model, traits)
         nldata.evaluator = d
     end
 
-    nlp_lb, nlp_ub = getConstraintBounds(m)
+    nlp_lb, nlp_ub = constraintbounds(m)
     numConstr = length(nlp_lb)
 
     m.internalModel = MathProgBase.NonlinearModel(m.solver)
@@ -1258,8 +1258,8 @@ function solvenlp(m::Model, traits; suppress_warnings=false)
 
 end
 
-# getValue for nonlinear subexpressions
-function getValue(x::NonlinearExpression)
+# getvalue for nonlinear subexpressions
+function getvalue(x::NonlinearExpression)
     m = x.m
     # recompute EVERYTHING here
     # could be smarter and cache
@@ -1318,7 +1318,7 @@ function UserAutoDiffEvaluator(dimension::Integer, f::Function)
     return UserFunctionEvaluator(f, ∇f, dimension)
 end
 
-function registerNLFunction(s::Symbol, dimension::Integer, f::Function; autodiff::Bool=false)
+function register(s::Symbol, dimension::Integer, f::Function; autodiff::Bool=false)
     autodiff == true || error("If only the function is provided, must set autodiff=true")
 
     if dimension == 1
@@ -1331,7 +1331,7 @@ function registerNLFunction(s::Symbol, dimension::Integer, f::Function; autodiff
 
 end
 
-function registerNLFunction(s::Symbol, dimension::Integer, f::Function, ∇f::Function; autodiff::Bool=false)
+function register(s::Symbol, dimension::Integer, f::Function, ∇f::Function; autodiff::Bool=false)
     if dimension == 1
         autodiff == true || error("Currently must provide 2nd order derivatives of univariate functions. Try setting autodiff=true.")
         fprimeprime = x -> ForwardDiff.derivative(∇f, x)
@@ -1344,7 +1344,7 @@ function registerNLFunction(s::Symbol, dimension::Integer, f::Function, ∇f::Fu
 
 end
 
-function registerNLFunction(s::Symbol, dimension::Integer, f::Function, ∇f::Function, ∇²f::Function)
+function register(s::Symbol, dimension::Integer, f::Function, ∇f::Function, ∇²f::Function)
     dimension == 1 || error("Providing hessians for multivariate functions is not yet supported")
     ReverseDiffSparse.register_univariate_operator(s, f, ∇f, ∇²f)
 end

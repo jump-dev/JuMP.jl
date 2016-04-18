@@ -36,25 +36,25 @@ m = Model(solver=GurobiSolver(Cuts=0, Presolve=0, Heuristics=0.0))
 # the callback handle. Note that we can access m, x, and y because
 # this function is defined inside the same scope
 function myheuristic(cb)
-    x_val = getValue(x)
-    y_val = getValue(y)
+    x_val = getvalue(x)
+    y_val = getvalue(y)
     println("In callback function, x=$x_val, y=$y_val")
 
-    setSolutionValue!(cb, x, floor(x_val))
+    setsolutionvalue(cb, x, floor(x_val))
     # Leave y undefined - solver should handle as it sees fit. In the case
     # of Gurobi it will try to figure out what it should be.
-    addSolution(cb)
+    addsolution(cb)
 
     # Submit a second solution
-    setSolutionValue!(cb, x, ceil(x_val))
-    addSolution(cb)
+    setsolutionvalue(cb, x, ceil(x_val))
+    addsolution(cb)
 end  # End of callback function
 
 # Tell JuMP/Gurobi to use our callback function
-addHeuristicCallback(m, myheuristic)
+addheuristiccallback(m, myheuristic)
 
 # Solve the problem
 solve(m)
 
 # Print our final solution
-println("Final solution: [ $(getValue(x)), $(getValue(y)) ]")
+println("Final solution: [ $(getvalue(x)), $(getvalue(y)) ]")

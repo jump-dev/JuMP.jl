@@ -57,4 +57,4 @@ end
 
 solve(m)
 
-println(getValue(cSq))
+println(getvalue(cSq))

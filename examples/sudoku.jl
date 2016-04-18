@@ -64,7 +64,7 @@ function SolveModel(initgrid)
     if status == :Infeasible
         error("No solution found!")
     else
-        mipSol = getValue(x)
+        mipSol = getvalue(x)
         sol = zeros(Int,9,9)
         for row in 1:9, col in 1:9, val in 1:9
             if mipSol[row, col, val] >= 0.9

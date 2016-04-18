@@ -137,10 +137,10 @@ function solveTSP(n, cities)
         # Optional: display tour starting at city 1
         println("----\nInside subtour callback")
         println("Current tour starting at city 1:")
-        print(extractTour(n, getValue(x)))
+        print(extractTour(n, getvalue(x)))
 
         # Find any set of cities in a subtour
-        subtour, subtour_length = findSubtour(n, getValue(x))
+        subtour, subtour_length = findSubtour(n, getvalue(x))
 
         if subtour_length == n
             # This "subtour" is actually all cities, so we are done
@@ -181,11 +181,11 @@ function solveTSP(n, cities)
     end  # End function subtour
 
     # Solve the problem with our cut generator
-    addLazyCallback(m, subtour)
+    addlazycallback(m, subtour)
     solve(m)
 
     # Return best tour
-    return extractTour(n, getValue(x))
+    return extractTour(n, getvalue(x))
 end  # end solveTSP
 
 

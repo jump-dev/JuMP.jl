@@ -67,8 +67,8 @@ function solveProblem()
     # Note that the callback is now a stub that passes off
     # the work to the "algorithm"
     function corners(cb)
-        x_val = getValue(x)
-        y_val = getValue(y)
+        x_val = getvalue(x)
+        y_val = getvalue(y)
         println("In callback function, x=$x_val, y=$y_val")
 
         newcut, x_coeff, y_coeff, rhs = cornerChecker(x_val, y_val)
@@ -78,9 +78,9 @@ function solveProblem()
         end
     end  # End of callback function
 
-    addLazyCallback(m, corners)
+    addlazycallback(m, corners)
     solve(m)
-    println("Final solution: [ $(getValue(x)), $(getValue(y)) ]")
+    println("Final solution: [ $(getvalue(x)), $(getvalue(y)) ]")
 end
 
 # Run tests

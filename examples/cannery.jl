@@ -19,7 +19,7 @@ function PrintSolution(status, plants, markets, ship)
     if status == :Optimal
       for i = 1:length(plants)
         for j in 1:length(markets)
-          println("  $(plants[i]) $(markets[j]) = $(getValue(ship[i,j]))")
+          println("  $(plants[i]) $(markets[j]) = $(getvalue(ship[i,j]))")
         end
       end
     else

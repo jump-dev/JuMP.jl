@@ -21,17 +21,17 @@ function PrintSolution(status, CREWS, HIRE, LAYOFF)
     if status == :Optimal
       println("Crews")
       for t = 0:length(CREWS)-1
-        print(" $(getValue(CREWS[t])) ")
+        print(" $(getvalue(CREWS[t])) ")
       end
       println()
       println("Hire")
       for t = 1:length(HIRE)
-        print(" $(getValue(HIRE[t])) ")
+        print(" $(getvalue(HIRE[t])) ")
       end
       println()
       println("Layoff")
       for t = 1:length(LAYOFF)
-        print(" $(getValue(LAYOFF[t])) ")
+        print(" $(getvalue(LAYOFF[t])) ")
       end
       println()
     else

@@ -208,11 +208,11 @@ function model_str(mode, m::Model, sym::PrintSymbols)
     for d in m.dictList
         # make sure that you haven't changed a variable type in the collection
         firstval = first(_values(d))
-        cat = getCategory(firstval)
-        lb, ub = getLower(firstval), getUpper(firstval)
+        cat = getcategory(firstval)
+        lb, ub = getlowerbound(firstval), getupperbound(firstval)
         allsame = true
         for v in _values(d)
-            if !(getCategory(v) == cat && getLower(v) == lb && getUpper(v) == ub)
+            if !(getcategory(v) == cat && getlowerbound(v) == lb && getupperbound(v) == ub)
                 allsame = false
                 break
             elseif v in m.customNames
@@ -377,7 +377,7 @@ norm_str(::Type{REPLMode}, n::Norm) =
 norm_str(::Type{IJuliaMode}, n::Norm; mathmode=true) =
     math(norm_str(IJuliaMode, n, ijulia), mathmode)
 
-exprToStr(n::Norm) = norm_str(REPLMode, n)
+exprstr(n::Norm) = norm_str(REPLMode, n)
 
 #------------------------------------------------------------------------
 ## JuMPContainer{Variable}
@@ -703,7 +703,7 @@ function aff_str(mode, a::AffExpr, show_constant=true)
     end
 end
 # Backwards compatability shim
-affToStr(a::AffExpr) = aff_str(REPLMode,a)
+affstr(a::AffExpr) = aff_str(REPLMode,a)
 
 # Precompile for faster boot times
 Base.precompile(aff_str, (Type{JuMP.REPLMode}, AffExpr, Bool))
@@ -766,7 +766,7 @@ function quad_str(mode, q::GenericQuadExpr, sym)
 end
 
 # Backwards compatability shim
-quadToStr(q::GenericQuadExpr) = quad_str(REPLMode,q)
+quadstr(q::GenericQuadExpr) = quad_str(REPLMode,q)
 # Handlers to use correct symbols
 quad_str(::Type{REPLMode}, q::GenericQuadExpr) =
     quad_str(REPLMode, q, repl)
@@ -797,7 +797,7 @@ function expr_str(mode, c::SOCExpr)
     string(coeff, nrm, chain, aff)
 end
 
-exprToStr(c::SOCExpr) = expr_str(REPLMode, c)
+exprstr(c::SOCExpr) = expr_str(REPLMode, c)
 
 #------------------------------------------------------------------------
 ## GenericRangeConstraint
@@ -819,7 +819,7 @@ function con_str(mode, c::GenericRangeConstraint, sym)
     out_str
 end
 # Backwards compatability shim
-conToStr(c::GenericRangeConstraint) = con_str(REPLMode,c)
+constr(c::GenericRangeConstraint) = con_str(REPLMode,c)
 # Handlers to use correct symbols
 con_str(::Type{REPLMode}, c::GenericRangeConstraint; args...) =
     con_str(REPLMode, c, repl)
@@ -841,7 +841,7 @@ function con_str(mode, c::QuadConstraint, sym)
     "$(quad_str(mode,c.terms)) $r 0"
 end
 # Backwards compatability shim
-conToStr(c::QuadConstraint) = con_str(REPLMode,c)
+constr(c::QuadConstraint) = con_str(REPLMode,c)
 # Handlers to use correct symbols
 con_str(::Type{REPLMode}, c::QuadConstraint; args...) =
     con_str(REPLMode, c, repl)
@@ -868,7 +868,7 @@ con_str(::Type{REPLMode}, c::SOCConstraint; args...) =
 con_str(::Type{IJuliaMode}, c::SOCConstraint; mathmode=true) =
     math(con_str(IJuliaMode, c, ijulia), mathmode)
 # Backwards compatability shim
-conToStr(c::SOCConstraint) = con_str(REPLMode,c)
+constr(c::SOCConstraint) = con_str(REPLMode,c)
 
 #------------------------------------------------------------------------
 ## SOSConstraint
@@ -890,14 +890,14 @@ con_str(::Type{IJuliaMode}, c::SOSConstraint; mathmode=true) =
     math(con_str(IJuliaMode, c, ijulia), mathmode)
 
 #------------------------------------------------------------------------
-## SDPConstraint
+## SDConstraint
 #------------------------------------------------------------------------
-Base.print(io::IO, c::SDPConstraint) = print(io, con_str(REPLMode,c))
-Base.show( io::IO, c::SDPConstraint) = print(io, con_str(REPLMode,c))
-Base.writemime(io::IO, ::MIME"text/latex", c::SDPConstraint) =
+Base.print(io::IO, c::SDConstraint) = print(io, con_str(REPLMode,c))
+Base.show( io::IO, c::SDConstraint) = print(io, con_str(REPLMode,c))
+Base.writemime(io::IO, ::MIME"text/latex", c::SDConstraint) =
     print(io, con_str(IJuliaMode,c,mathmode=false))
 # Generic string converter, called by mode-specific handlers
-function con_str(mode, c::SDPConstraint, succeq0)
+function con_str(mode, c::SDConstraint, succeq0)
     t = c.terms
     str = sprint(print, t)
     splitted = split(str, "\n")[2:end]
@@ -906,9 +906,9 @@ function con_str(mode, c::SDPConstraint, succeq0)
     join(splitted, "\n")
 end
 # Handlers to use correct symbols
-con_str(::Type{REPLMode}, c::SDPConstraint; args...) =
+con_str(::Type{REPLMode}, c::SDConstraint; args...) =
     con_str(REPLMode, c, repl[:succeq0])
-con_str(::Type{IJuliaMode}, c::SDPConstraint; mathmode=true) =
+con_str(::Type{IJuliaMode}, c::SDConstraint; mathmode=true) =
     math(con_str(IJuliaMode, c, ijulia[:succeq0], mathmode))
 
 #------------------------------------------------------------------------
@@ -917,12 +917,12 @@ con_str(::Type{IJuliaMode}, c::SDPConstraint; mathmode=true) =
 Base.print(io::IO, c::ConstraintRef{Model,LinearConstraint}) = print(io, con_str(REPLMode,c.m.linconstr[c.idx]))
 Base.print(io::IO, c::ConstraintRef{Model,QuadConstraint})   = print(io, con_str(REPLMode,c.m.quadconstr[c.idx]))
 Base.print(io::IO, c::ConstraintRef{Model,SOSConstraint})    = print(io, con_str(REPLMode,c.m.sosconstr[c.idx]))
-Base.print(io::IO, c::ConstraintRef{Model,SDPConstraint})    = print(io, con_str(REPLMode,c.m.sdpconstr[c.idx]))
+Base.print(io::IO, c::ConstraintRef{Model,SDConstraint})    = print(io, con_str(REPLMode,c.m.sdpconstr[c.idx]))
 Base.show( io::IO, c::ConstraintRef{Model,LinearConstraint}) = print(io, con_str(REPLMode,c.m.linconstr[c.idx]))
 Base.show( io::IO, c::ConstraintRef{Model,QuadConstraint})   = print(io, con_str(REPLMode,c.m.quadconstr[c.idx]))
 Base.show( io::IO, c::ConstraintRef{Model,SOSConstraint})    = print(io, con_str(REPLMode,c.m.sosconstr[c.idx]))
 Base.show( io::IO, c::ConstraintRef{Model,SOCConstraint})    = print(io, con_str(REPLMode,c.m.socconstr[c.idx]))
-Base.show( io::IO, c::ConstraintRef{Model,SDPConstraint})    = print(io, con_str(REPLMode,c.m.sdpconstr[c.idx]))
+Base.show( io::IO, c::ConstraintRef{Model,SDConstraint})    = print(io, con_str(REPLMode,c.m.sdpconstr[c.idx]))
 Base.writemime(io::IO, ::MIME"text/latex", c::ConstraintRef{Model,LinearConstraint}) =
     print(io, con_str(IJuliaMode,c.m.linconstr[c.idx],mathmode=false))
 Base.writemime(io::IO, ::MIME"text/latex", c::ConstraintRef{Model,QuadConstraint}) =

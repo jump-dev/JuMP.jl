@@ -15,24 +15,24 @@ using JuMP, FactCheck
 # If solvers not loaded, load them (i.e running just these tests)
 !isdefined(:nlp_solvers) && include("solvers.jl")
 
-facts("[nonlinear] Test getValue on arrays") do
+facts("[nonlinear] Test getvalue on arrays") do
     m = Model()
     @variable(m, x, start = π/2)
     @NLexpression(m, f1, sin(x))
     @NLexpression(m, f2, sin(2x))
     @NLexpression(m, f3[i=1:2], sin(i*x))
 
-    @fact getValue(f1) --> roughly(1, 1e-5)
-    @fact getValue(f2) --> roughly(0, 1e-5)
+    @fact getvalue(f1) --> roughly(1, 1e-5)
+    @fact getvalue(f2) --> roughly(0, 1e-5)
 
-    @fact getValue([f1, f2]) --> getValue(f3)
+    @fact getvalue([f1, f2]) --> getvalue(f3)
 
     v = [1.0, 2.0]
     @NLparameter(m, vparam[i=1:2] == v[i])
-    @fact getValue(vparam) --> v
+    @fact getvalue(vparam) --> v
     v[1] = 3.0
-    setValue(vparam, v)
-    @fact getValue(vparam) --> v
+    setvalue(vparam, v)
+    @fact getvalue(vparam) --> v
 end
 
 facts("[nonlinear] Test HS071 solves correctly") do
@@ -56,7 +56,7 @@ context("With solver $(typeof(nlp_solver))") do
     status = solve(m)
 
     @fact status --> :Optimal
-    @fact getValue(x)[:] --> roughly(
+    @fact getvalue(x)[:] --> roughly(
         [1.000000, 4.742999, 3.821150, 1.379408], 1e-5)
 end; end; end
 
@@ -80,7 +80,7 @@ context("With solver $(typeof(nlp_solver))") do
         status = solve(m)
 
         @fact status --> :Optimal
-        @fact getValue(x)[:] --> roughly(
+        @fact getvalue(x)[:] --> roughly(
             [1.000000, 4.742999, 3.821150, 1.379408], 1e-5)
 end; end; end
 
@@ -95,7 +95,7 @@ context("With solver $(typeof(nlp_solver))") do
         status = solve(m)
 
         @fact status --> :Optimal
-        @fact getValue(x) --> roughly(0.0, 1e-5)
+        @fact getvalue(x) --> roughly(0.0, 1e-5)
 end; end; end
 
 facts("[nonlinear] Accepting fixed variables") do
@@ -109,9 +109,9 @@ context("With solver $(typeof(nlp_solver)), simplify = $simplify") do
     @NLconstraint(m, y ≥ x^2)
     EnableNLPResolve()
     for α in 1:4
-        setValue(x, α)
+        setvalue(x, α)
         solve(m)
-        @fact getValue(y) --> roughly(α^2, 1e-6)
+        @fact getvalue(y) --> roughly(α^2, 1e-6)
     end
     DisableNLPResolve()
 end; end; end; end
@@ -132,15 +132,15 @@ context("With solver $(typeof(nlp_solver))") do
     @fact status --> :Optimal
     @fact m.objVal --> roughly(1.0, 1e-6)
     @NLexpression(m, lhs, x+y)
-    @fact getValue(x)+getValue(y) --> roughly(1.0, 1e-6)
-    @fact getValue(lhs) --> roughly(1.0, 1e-6)
+    @fact getvalue(x)+getvalue(y) --> roughly(1.0, 1e-6)
+    @fact getvalue(lhs) --> roughly(1.0, 1e-6)
 
-    setValue(param,10)
+    setvalue(param,10)
     @fact m.internalModelLoaded --> true
     status = solve(m)
     @fact m.objVal --> roughly(10.0^2, 1e-6)
-    @fact getValue(x)+getValue(y) --> roughly(10.0, 1e-6)
-    @fact getValue(lhs) --> roughly(10.0, 1e-6)
+    @fact getvalue(x)+getvalue(y) --> roughly(10.0, 1e-6)
+    @fact getvalue(lhs) --> roughly(10.0, 1e-6)
 
 end; end; end
 
@@ -158,8 +158,8 @@ context("With solver $(typeof(nlp_solver))") do
     status = solve(m)
 
     @fact status --> :Optimal
-    @fact getObjectiveValue(m) --> roughly(-1-4/sqrt(3), 1e-6)
-    @fact getValue(x) + getValue(y) --> roughly(-1/3, 1e-3)
+    @fact getobjectivevalue(m) --> roughly(-1-4/sqrt(3), 1e-6)
+    @fact getvalue(x) + getvalue(y) --> roughly(-1/3, 1e-3)
 end; end; end
 
 facts("[nonlinear] Test resolve with parameter") do
@@ -172,12 +172,12 @@ context("With solver $(typeof(nlp_solver)), simplify = $simplify") do
     @NLobjective(m, Min, (z-x)^2)
     status = solve(m)
     @fact status --> :Optimal
-    @fact getValue(z) --> roughly(1.0, 1e-3)
+    @fact getvalue(z) --> roughly(1.0, 1e-3)
 
-    setValue(x, 5.0)
+    setvalue(x, 5.0)
     status = solve(m)
     @fact status --> :Optimal
-    @fact getValue(z) --> roughly(5.0, 1e-3)
+    @fact getvalue(z) --> roughly(5.0, 1e-3)
 end; end; end; end
 
 facts("[nonlinear] Test two-sided nonlinear constraints") do
@@ -192,13 +192,13 @@ context("With solver $(typeof(nlp_solver))") do
     status = solve(m)
 
     @fact status --> :Optimal
-    @fact getObjectiveValue(m) --> roughly(u, 1e-6)
+    @fact getobjectivevalue(m) --> roughly(u, 1e-6)
 
     @NLobjective(m, Min, x)
     status = solve(m)
 
     @fact status --> :Optimal
-    @fact getObjectiveValue(m) --> roughly(l, 1e-6)
+    @fact getobjectivevalue(m) --> roughly(l, 1e-6)
 end; end; end
 
 facts("[nonlinear] Quadratic equality constraints") do
@@ -211,7 +211,7 @@ context("With solver $(typeof(nlp_solver))") do
     status = solve(m)
 
     @fact status --> :Optimal
-    @fact getValue(x) --> roughly([sqrt(1/2), 0], 1e-6)
+    @fact getvalue(x) --> roughly([sqrt(1/2), 0], 1e-6)
 end; end; end
 
 facts("[nonlinear] Test mixed integer nonlinear problems") do
@@ -238,9 +238,9 @@ context("With solver $(typeof(minlp_solver))") do
     status = solve(m)
 
     @fact status --> :Optimal
-    @fact getObjectiveValue(m) --> roughly(6.00976, 1e-5)
-    @fact getValue(x)[:] --> roughly([1.30098, 0.0, 1.0], 1e-5)
-    @fact getValue(y)[:] --> roughly([0.0, 1.0, 0.0], 1e-5)
+    @fact getobjectivevalue(m) --> roughly(6.00976, 1e-5)
+    @fact getvalue(x)[:] --> roughly([1.30098, 0.0, 1.0], 1e-5)
+    @fact getvalue(y)[:] --> roughly([0.0, 1.0, 0.0], 1e-5)
 end; end; end
 
 facts("[nonlinear] Test continuous relaxation of minlp test problem") do
@@ -270,10 +270,10 @@ context("With solver $(typeof(nlp_solver))") do
     status = solve(m)
 
     @fact status --> :Optimal
-    @fact getObjectiveValue(m) --> roughly(0.7593, 5e-5)
-    @fact getValue(x)[:] --> roughly([1.1465, 0.54645, 1.0], 2e-4)
-    @fact getValue(y)[:] --> roughly([0.2732, 0.3, 0.0], 2e-4)
-    @fact getValue(z) --> roughly(1.6, 2e-4)
+    @fact getobjectivevalue(m) --> roughly(0.7593, 5e-5)
+    @fact getvalue(x)[:] --> roughly([1.1465, 0.54645, 1.0], 2e-4)
+    @fact getvalue(y)[:] --> roughly([0.2732, 0.3, 0.0], 2e-4)
+    @fact getvalue(z) --> roughly(1.6, 2e-4)
 end; end; end
 
 facts("[nonlinear] Test maximization objective") do
@@ -281,14 +281,14 @@ for nlp_solver in convex_nlp_solvers
 context("With solver $(typeof(nlp_solver))") do
     # Solve a simple problem with a maximization objective
     m = Model(solver=nlp_solver)
-    @variable(m, -2 <= x <= 2); setValue(x, -1.8)
-    @variable(m, -2 <= y <= 2); setValue(y,  1.5)
+    @variable(m, -2 <= x <= 2); setvalue(x, -1.8)
+    @variable(m, -2 <= y <= 2); setvalue(y,  1.5)
     @NLobjective(m, Max, y - x)
     @constraint(m, x + x^2 + x*y + y^2 <= 1)
 
     @fact solve(m) --> :Optimal
-    @fact getObjectiveValue(m) --> roughly(1+4/sqrt(3), 1e-6)
-    @fact getValue(x) + getValue(y) --> roughly(-1/3, 1e-3)
+    @fact getobjectivevalue(m) --> roughly(1+4/sqrt(3), 1e-6)
+    @fact getvalue(x) + getvalue(y) --> roughly(-1/3, 1e-3)
 end; end; end
 
 facts("[nonlinear] Test maximization objective (embedded expressions)") do
@@ -296,20 +296,20 @@ for nlp_solver in convex_nlp_solvers
 for simplify in [true,false]
 context("With solver $(typeof(nlp_solver)), simplify = $simplify") do
     m = Model(solver=nlp_solver, simplify_nonlinear_expressions=simplify)
-    @variable(m, -2 <= x <= 2); setValue(x, -1.8)
-    @variable(m, -2 <= y <= 2); setValue(y,  1.5)
+    @variable(m, -2 <= x <= 2); setvalue(x, -1.8)
+    @variable(m, -2 <= y <= 2); setvalue(y,  1.5)
     @NLobjective(m, Max, y - x)
     @NLexpression(m, quadexpr, x + x^2 + x*y + y^2)
     @NLconstraint(m, quadexpr <= 1)
 
     @fact solve(m) --> :Optimal
-    @fact getObjectiveValue(m) --> roughly(1+4/sqrt(3), 1e-6)
-    @fact getValue(x) + getValue(y) --> roughly(-1/3, 1e-3)
-    @fact getValue(quadexpr) --> roughly(1, 1e-5)
+    @fact getobjectivevalue(m) --> roughly(1+4/sqrt(3), 1e-6)
+    @fact getvalue(x) + getvalue(y) --> roughly(-1/3, 1e-3)
+    @fact getvalue(quadexpr) --> roughly(1, 1e-5)
     @NLexpression(quadexpr2, x + x^2 + x*y + y^2)
-    @fact getValue(quadexpr2) --> roughly(1, 1e-5)
+    @fact getvalue(quadexpr2) --> roughly(1, 1e-5)
     quadexpr3 = @NLexpression(x + x^2 + x*y + y^2)
-    @fact getValue(quadexpr3) --> roughly(1, 1e-5)
+    @fact getvalue(quadexpr3) --> roughly(1, 1e-5)
 end; end; end; end
 
 
@@ -352,7 +352,7 @@ context("With solver $(typeof(nlp_solver))") do
     @constraint(m, sum(x) == 1)
 
     @fact solve(m) --> :Optimal
-    @fact norm(getValue(x)[:] - [1/3,1/3,1/3]) --> roughly(0.0, 1e-4)
+    @fact norm(getvalue(x)[:] - [1/3,1/3,1/3]) --> roughly(0.0, 1e-4)
 end; end; end
 
 facts("[nonlinear] Test entropy maximization (reformulation)") do
@@ -370,10 +370,10 @@ context("With solver $(typeof(nlp_solver))") do
     @constraint(m, sum(x) == 1)
 
     @fact solve(m) --> :Optimal
-    @fact norm([getValue(x[i]) for i in idx] - [1/4,1/4,1/4,1/4]) --> roughly(0.0, 1e-4)
-    @fact getValue(entropy[1]) --> roughly(-(1/4)*log(1/4), 1e-4)
+    @fact norm([getvalue(x[i]) for i in idx] - [1/4,1/4,1/4,1/4]) --> roughly(0.0, 1e-4)
+    @fact getvalue(entropy[1]) --> roughly(-(1/4)*log(1/4), 1e-4)
     @NLexpression(m, zexpr[i=1:4], z[i])
-    @fact getValue(zexpr[1]) --> roughly(-(1/4)*log(1/4), 1e-4)
+    @fact getvalue(zexpr[1]) --> roughly(-(1/4)*log(1/4), 1e-4)
 end; end; end
 
 facts("[nonlinear] Test derivatives of x^4, x < 0") do
@@ -385,7 +385,7 @@ context("With solver $(typeof(nlp_solver))") do
     status = solve(m)
 
     @fact status --> :Optimal
-    @fact getValue(x) --> roughly(0.0, 1e-2)
+    @fact getvalue(x) --> roughly(0.0, 1e-2)
 end; end; end
 
 facts("[nonlinear] Test nonlinear duals") do
@@ -405,28 +405,28 @@ context("With solver $(typeof(nlp_solver)), simplify = $simplify") do
 
     # Solution
     @fact solve(modA) --> :Optimal
-    @fact getObjectiveValue(modA) --> roughly(-5.8446115, 1e-6)
-    @fact getValue(x)       --> roughly(0.9774436, 1e-6)
-    @fact getValue(y)       --> roughly(1.0225563, 1e-6)
-    @fact getValue(z)       --> roughly(4.0, 1e-6)
-    @fact getValue(r)[3]    --> roughly(0.5112781, 1e-6)
-    @fact getValue(r)[4]    --> roughly(0.0, 1e-6)
-    @fact getValue(r)[5]    --> roughly(0.0, 1e-6)
-    @fact getValue(r)[6]    --> roughly(6.0, 1e-6)
+    @fact getobjectivevalue(modA) --> roughly(-5.8446115, 1e-6)
+    @fact getvalue(x)       --> roughly(0.9774436, 1e-6)
+    @fact getvalue(y)       --> roughly(1.0225563, 1e-6)
+    @fact getvalue(z)       --> roughly(4.0, 1e-6)
+    @fact getvalue(r)[3]    --> roughly(0.5112781, 1e-6)
+    @fact getvalue(r)[4]    --> roughly(0.0, 1e-6)
+    @fact getvalue(r)[5]    --> roughly(0.0, 1e-6)
+    @fact getvalue(r)[6]    --> roughly(6.0, 1e-6)
 
     # Reduced costs
-    @fact getDual(x)    --> roughly( 0.0, 1e-6)
-    @fact getDual(y)    --> roughly( 0.0, 1e-6)
-    @fact getDual(z)    --> roughly(-1.0714286, 1e-6)
-    @fact getDual(r)[3] --> roughly( 0.0, 1e-6)
-    @fact getDual(r)[4] --> roughly(1.0, 1e-6)
-    @fact getDual(r)[5] --> roughly(1.0, 1e-6)
-    @fact getDual(r)[6] --> roughly(-0.03759398, 1e-6)
+    @fact getdual(x)    --> roughly( 0.0, 1e-6)
+    @fact getdual(y)    --> roughly( 0.0, 1e-6)
+    @fact getdual(z)    --> roughly(-1.0714286, 1e-6)
+    @fact getdual(r)[3] --> roughly( 0.0, 1e-6)
+    @fact getdual(r)[4] --> roughly(1.0, 1e-6)
+    @fact getdual(r)[5] --> roughly(1.0, 1e-6)
+    @fact getdual(r)[6] --> roughly(-0.03759398, 1e-6)
 
     # Row duals
-    @fact getDual(cons1) --> roughly( 0.333333, 1e-6)
-    @fact getDual(cons2) --> roughly(-1.0, 1e-6)
-    @fact getDual(cons3) --> roughly(-0.0714286, 1e-6)
+    @fact getdual(cons1) --> roughly( 0.333333, 1e-6)
+    @fact getdual(cons2) --> roughly(-1.0, 1e-6)
+    @fact getdual(cons3) --> roughly(-0.0714286, 1e-6)
 end; end; end; end
 
 facts("[nonlinear] Test nonlinear duals (Max)") do
@@ -445,28 +445,28 @@ context("With solver $(typeof(nlp_solver))") do
 
     # Solution
     @fact solve(modA) --> :Optimal
-    @fact getObjectiveValue(modA) --> roughly(5.8446115, 1e-6)
-    @fact getValue(x)       --> roughly(0.9774436, 1e-6)
-    @fact getValue(y)       --> roughly(1.0225563, 1e-6)
-    @fact getValue(z)       --> roughly(4.0, 1e-6)
-    @fact getValue(r)[3]    --> roughly(0.5112781, 1e-6)
-    @fact getValue(r)[4]    --> roughly(0.0, 1e-6)
-    @fact getValue(r)[5]    --> roughly(0.0, 1e-6)
-    @fact getValue(r)[6]    --> roughly(6.0, 1e-6)
+    @fact getobjectivevalue(modA) --> roughly(5.8446115, 1e-6)
+    @fact getvalue(x)       --> roughly(0.9774436, 1e-6)
+    @fact getvalue(y)       --> roughly(1.0225563, 1e-6)
+    @fact getvalue(z)       --> roughly(4.0, 1e-6)
+    @fact getvalue(r)[3]    --> roughly(0.5112781, 1e-6)
+    @fact getvalue(r)[4]    --> roughly(0.0, 1e-6)
+    @fact getvalue(r)[5]    --> roughly(0.0, 1e-6)
+    @fact getvalue(r)[6]    --> roughly(6.0, 1e-6)
 
     # Reduced costs
-    @fact getDual(x)    --> roughly( 0.0, 1e-6)
-    @fact getDual(y)    --> roughly( 0.0, 1e-6)
-    @fact getDual(z)    --> roughly(1.0714286, 1e-6)
-    @fact getDual(r)[3] --> roughly( 0.0, 1e-6)
-    @fact getDual(r)[4] --> roughly(-1.0, 1e-6)
-    @fact getDual(r)[5] --> roughly(-1.0, 1e-6)
-    @fact getDual(r)[6] --> roughly(0.03759398, 1e-6)
+    @fact getdual(x)    --> roughly( 0.0, 1e-6)
+    @fact getdual(y)    --> roughly( 0.0, 1e-6)
+    @fact getdual(z)    --> roughly(1.0714286, 1e-6)
+    @fact getdual(r)[3] --> roughly( 0.0, 1e-6)
+    @fact getdual(r)[4] --> roughly(-1.0, 1e-6)
+    @fact getdual(r)[5] --> roughly(-1.0, 1e-6)
+    @fact getdual(r)[6] --> roughly(0.03759398, 1e-6)
 
     # Row duals
-    @fact getDual(cons1) --> roughly(-0.333333, 1e-6)
-    @fact getDual(cons2) --> roughly(1.0, 1e-6)
-    @fact getDual(cons3) --> roughly(0.0714286, 1e-6)
+    @fact getdual(cons1) --> roughly(-0.333333, 1e-6)
+    @fact getdual(cons2) --> roughly(1.0, 1e-6)
+    @fact getdual(cons3) --> roughly(0.0714286, 1e-6)
 end; end; end
 
 facts("[nonlinear] Test Hessian chunking code") do
@@ -476,7 +476,7 @@ context("With solver $(typeof(nlp_solver))") do
     @variable(m, x[1:18] >= 1, start = 1.2)
     @NLobjective(m, Min, prod{x[i],i=1:18})
     @fact solve(m) --> :Optimal
-    @fact getValue(x) --> roughly(ones(18),1e-4)
+    @fact getvalue(x) --> roughly(ones(18),1e-4)
 end; end; end
 
 
@@ -525,7 +525,7 @@ function test_nl_mpb()
     @constraint(m, 2x+y <= 0)
     @constraint(m, -5 <= 2x+y <= 5)
     #solve(m) # FIXME maybe?
-    lb,ub = getConstraintBounds(m)
+    lb,ub = JuMP.constraintbounds(m)
     @fact lb --> [-Inf,-Inf,-5.0]
     @fact ub --> [1.0,-0.0,5.0]
 
@@ -538,7 +538,7 @@ function test_nl_mpb()
     @NLobjective(m, Min, x^y)
     solve(m)
 
-    lb,ub = getConstraintBounds(m)
+    lb,ub = JuMP.constraintbounds(m)
     @fact lb --> [-Inf,-Inf,-5.0,0.0,0.0,0.0,0.0,-0.5]
     @fact ub --> [1.0,-0.0,5.0,Inf,0.0,0.0,0.0,0.5]
 end
@@ -578,7 +578,7 @@ facts("[nonlinear] Hessians through MPB") do
     @NLobjective(m, Min, a * b + 3*c^2)
     d = JuMPNLPEvaluator(m)
     MathProgBase.initialize(d, [:Hess])
-    setValue(c, -1.0)
+    setvalue(c, -1.0)
     V = zeros(length(I))
     MathProgBase.eval_hesslag(d, V, m.colVal, 1.0, Float64[])
     hess_raw = sparse(I,J,V)
@@ -638,7 +638,7 @@ if length(convex_nlp_solvers) > 0
         @variable(m, x, start = 1)
         @NLobjective(m, Min, x^2)
         solve(m)
-        setValue(x, 2)
+        setvalue(x, 2)
         @fact_throws ErrorException solve(m)
         EnableNLPResolve()
         status = solve(m)
@@ -653,11 +653,11 @@ end
 
 if length(convex_nlp_solvers) > 0
     facts("[nonlinear] User-defined functions") do
-        registerNLFunction(:myf, 2, myf, autodiff=true)
-        registerNLFunction(:myf_2, 2, myf, (g,x,y) -> (g[1] = 2(x-1); g[2] = 2(y-2)))
-        registerNLFunction(:mysquare, 1, mysquare, autodiff=true)
-        registerNLFunction(:mysquare_2, 1, mysquare, x-> 2x, autodiff=true)
-        registerNLFunction(:mysquare_3, 1, mysquare, x-> 2x, x -> 2.0)
+        JuMP.register(:myf, 2, myf, autodiff=true)
+        JuMP.register(:myf_2, 2, myf, (g,x,y) -> (g[1] = 2(x-1); g[2] = 2(y-2)))
+        JuMP.register(:mysquare, 1, mysquare, autodiff=true)
+        JuMP.register(:mysquare_2, 1, mysquare, x-> 2x, autodiff=true)
+        JuMP.register(:mysquare_3, 1, mysquare, x-> 2x, x -> 2.0)
 
         m = Model(solver=convex_nlp_solvers[1])
 
@@ -674,7 +674,7 @@ if length(convex_nlp_solvers) > 0
 
         @fact solve(m) --> :Optimal
 
-        @fact getValue(x) --> roughly(xval)
+        @fact getvalue(x) --> roughly(xval)
 
         @NLobjective(m, Min, myf_2(x[1],mysquare_2(x[2])))
 
@@ -685,17 +685,17 @@ if length(convex_nlp_solvers) > 0
         @fact MathProgBase.eval_f(d, xval) --> roughly(0.0,1e-10)
         MathProgBase.eval_grad_f(d, gradout, xval)
         @fact gradout --> roughly([0.0,0.0],1e-10)
-        setValue(x[1],0.5)
-        setValue(x[2],0.5)
+        setvalue(x[1],0.5)
+        setvalue(x[2],0.5)
         @fact solve(m) --> :Optimal
 
-        @fact getValue(x) --> roughly(xval)
+        @fact getvalue(x) --> roughly(xval)
 
         # Test just univariate functions because hessians are disabled
         # if any multivariate functions are present.
         @NLobjective(m, Min, mysquare(x[1]-1) + mysquare_2(x[2]-2) + mysquare_3(x[1]))
         @fact solve(m) --> :Optimal
-        @fact getValue(x) --> roughly([0.5,2.0],1e-4)
+        @fact getvalue(x) --> roughly([0.5,2.0],1e-4)
 
     end
 end

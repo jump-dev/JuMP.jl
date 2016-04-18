@@ -180,7 +180,7 @@ facts("[print] JuMPContainer{Number}") do
 
     # Deal with hashing variations
     if hash(5) < hash(:Apple)
-        io_test(REPLMode, getValue(w), """
+        io_test(REPLMode, getvalue(w), """
 w: 3 dimensions:
 [ 9,:,:]
   [ 9, Apple,:]
@@ -210,7 +210,7 @@ w: 3 dimensions:
     [10,Banana, 1] = 10.0
 """, repl=:print)
     else
-        io_test(REPLMode, getValue(w), """
+        io_test(REPLMode, getvalue(w), """
 w: 3 dimensions:
 [ 9,:,:]
   [ 9, Apple,:]
@@ -241,7 +241,7 @@ w: 3 dimensions:
 """, repl=:print)
     end
 
-    io_test(REPLMode, getValue(x), """
+    io_test(REPLMode, getvalue(x), """
 x: 3 dimensions:
 [ 9,:,:]
   [ 9, 99,:]
@@ -275,7 +275,7 @@ x: 3 dimensions:
     [11,101,4] = 4444.0
 """, repl=:print)
 
-    io_test(REPLMode, getValue(y), """
+    io_test(REPLMode, getvalue(y), """
 y: 2 dimensions, 6 entries:
  [ 9, 9] = 81.0
  [ 9,10] = 90.0
@@ -284,7 +284,7 @@ y: 2 dimensions, 6 entries:
  [10,11] = 110.0
  [11,11] = 121.0""")
 
-    io_test(REPLMode, getValue(z), """
+    io_test(REPLMode, getvalue(z), """
 z: 2 dimensions:
 [a,:]
   [a,1] = 1.0
@@ -463,8 +463,8 @@ facts("[print] changing variable categories") do
     mod = Model()
     @variable(mod, x[1:3])
     @variable(mod, y[i=1:3,i:3])
-    setCategory(x[3], :SemiCont)
-    setCategory(y[1,3], :Int)
+    setcategory(x[3], :SemiCont)
+    setcategory(y[1,3], :Int)
 
     io_test(REPLMode, mod, """
 Min 0
@@ -525,40 +525,40 @@ facts("[print] Variable") do
     m = Model()
     @variable(m, 0 <= x <= 2, inconstraints=ConstraintRef{Model,LinearConstraint}[], objective=0.0, coefficients=Float64[] )
 
-    @fact    getName(x) --> "x"
+    @fact    getname(x) --> "x"
     io_test(REPLMode,   x, "x")
     io_test(IJuliaMode, x, "x")
 
-    setName(x, "x2")
-    @fact    getName(x) --> "x2"
+    setname(x, "x2")
+    @fact    getname(x) --> "x2"
     io_test(REPLMode,   x, "x2")
     io_test(IJuliaMode, x, "x2")
 
-    setName(x, "")
-    @fact    getName(x) --> "col_1"
+    setname(x, "")
+    @fact    getname(x) --> "col_1"
     io_test(REPLMode,   x, "col_1")
     io_test(IJuliaMode, x, "col_1")
 
     @variable(m, z[1:2,3:5])
-    @fact       getName(z[1,3]) --> "z[1,3]"
+    @fact       getname(z[1,3]) --> "z[1,3]"
     io_test(REPLMode,   z[1,3],    "z[1,3]")
     io_test(IJuliaMode, z[1,3],    "z_{1,3}")
-    @fact       getName(z[2,4]) --> "z[2,4]"
+    @fact       getname(z[2,4]) --> "z[2,4]"
     io_test(REPLMode,   z[2,4],    "z[2,4]")
     io_test(IJuliaMode, z[2,4],    "z_{2,4}")
-    @fact       getName(z[2,5]) --> "z[2,5]"
+    @fact       getname(z[2,5]) --> "z[2,5]"
     io_test(REPLMode,   z[2,5],    "z[2,5]")
     io_test(IJuliaMode, z[2,5],    "z_{2,5}")
 
     @variable(m, w[3:9,["red","blue","green"]])
-    @fact    getName(w[7,"green"]) --> "w[7,green]"
+    @fact    getname(w[7,"green"]) --> "w[7,green]"
     io_test(REPLMode,   w[7,"green"], "w[7,green]")
     io_test(IJuliaMode, w[7,"green"], "w_{7,green}")
 
     rng = 2:5
     @variable(m, v[rng,rng,rng,rng,rng,rng,rng])
     a_v = v[4,5,2,3,2,2,4]
-    @fact    getName(a_v) --> "v[4,5,2,3,2,2,4]"
+    @fact    getname(a_v) --> "v[4,5,2,3,2,2,4]"
     io_test(REPLMode,   a_v, "v[4,5,2,3,2,2,4]")
     io_test(IJuliaMode, a_v, "v_{4,5,2,3,2,2,4}")
 end

@@ -20,7 +20,7 @@ function PrintSolution(status, foods, buy)
     println("RESULTS:")
     if status == :Optimal
         for i = 1:length(foods)
-            println("  $(foods[i]) = $(getValue(buy[i]))")
+            println("  $(foods[i]) = $(getvalue(buy[i]))")
         end
     else
         println("  No solution")

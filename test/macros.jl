@@ -51,29 +51,29 @@ facts("[macros] Check @constraint basics") do
     t = 10
 
     @constraint(m, 3x - y == 3.3(w + 2z) + 5)
-    @fact conToStr(m.linconstr[end]) --> "3 x - y - 3.3 w - 6.6 z $eq 5"
+    @fact JuMP.constr(m.linconstr[end]) --> "3 x - y - 3.3 w - 6.6 z $eq 5"
     @constraint(m, 3x - y == (w + 2z)*3.3 + 5)
-    @fact conToStr(m.linconstr[end]) --> "3 x - y - 3.3 w - 6.6 z $eq 5"
+    @fact JuMP.constr(m.linconstr[end]) --> "3 x - y - 3.3 w - 6.6 z $eq 5"
     @constraint(m, (x+y)/2 == 1)
-    @fact conToStr(m.linconstr[end]) --> "0.5 x + 0.5 y $eq 1"
+    @fact JuMP.constr(m.linconstr[end]) --> "0.5 x + 0.5 y $eq 1"
     @constraint(m, -1 <= x-y <= t)
-    @fact conToStr(m.linconstr[end]) --> "-1 $leq x - y $leq 10"
+    @fact JuMP.constr(m.linconstr[end]) --> "-1 $leq x - y $leq 10"
     @constraint(m, -1 <= x+1 <= 1)
-    @fact conToStr(m.linconstr[end]) --> "-2 $leq x $leq 0"
+    @fact JuMP.constr(m.linconstr[end]) --> "-2 $leq x $leq 0"
     @constraint(m, -1 <= x <= 1)
-    @fact conToStr(m.linconstr[end]) --> "-1 $leq x $leq 1"
+    @fact JuMP.constr(m.linconstr[end]) --> "-1 $leq x $leq 1"
     @constraint(m, -1 <= x <= sum{0.5, i = 1:2})
-    @fact conToStr(m.linconstr[end]) --> "-1 $leq x $leq 1"
+    @fact JuMP.constr(m.linconstr[end]) --> "-1 $leq x $leq 1"
     @fact_throws @constraint(m, x <= t <= y)
 
     @expression(m, aff, 3x - y - 3.3(w + 2z) + 5)
-    @fact affToStr(aff) --> "3 x - y - 3.3 w - 6.6 z + 5"
+    @fact JuMP.affstr(aff) --> "3 x - y - 3.3 w - 6.6 z + 5"
 
     @constraint(m, 3 + 5*7 <= 0)
-    @fact conToStr(m.linconstr[end]) --> "0 $leq -38"
+    @fact JuMP.constr(m.linconstr[end]) --> "0 $leq -38"
 
     @expression(m, qaff, (w+3)*(2x+1)+10)
-    @fact quadToStr(qaff) --> "2 w*x + 6 x + w + 13"
+    @fact JuMP.quadstr(qaff) --> "2 w*x + 6 x + w + 13"
 end
 
 facts("[macros] Checking @variable with reverse direction bounds") do
@@ -89,18 +89,18 @@ facts("[macros] sum{}") do
     @variable(m, y)
     C = [1 2 3; 4 5 6; 7 8 9]
     @constraint(m, sum{ C[i,j]*x[i,j], i in 1:2, j = 2:3 } <= 1)
-    @fact conToStr(m.linconstr[end]) --> "2 x[1,2] + 3 x[1,3] + 5 x[2,2] + 6 x[2,3] $leq 1"
+    @fact JuMP.constr(m.linconstr[end]) --> "2 x[1,2] + 3 x[1,3] + 5 x[2,2] + 6 x[2,3] $leq 1"
     @constraint(m, sum{ C[i,j]*x[i,j], i = 1:3, j in 1:3; i != j} == y)
-    @fact conToStr(m.linconstr[end]) --> "2 x[1,2] + 3 x[1,3] + 4 x[2,1] + 6 x[2,3] + 7 x[3,1] + 8 x[3,2] - y $eq 0"
+    @fact JuMP.constr(m.linconstr[end]) --> "2 x[1,2] + 3 x[1,3] + 4 x[2,1] + 6 x[2,3] + 7 x[3,1] + 8 x[3,2] - y $eq 0"
 
     @constraint(m, sum{ C[i,j]*x[i,j], i = 1:3, j = 1:i} == 0);
-    @fact conToStr(m.linconstr[end]) --> "x[1,1] + 4 x[2,1] + 5 x[2,2] + 7 x[3,1] + 8 x[3,2] + 9 x[3,3] $eq 0"
+    @fact JuMP.constr(m.linconstr[end]) --> "x[1,1] + 4 x[2,1] + 5 x[2,2] + 7 x[3,1] + 8 x[3,2] + 9 x[3,3] $eq 0"
 
     @constraint(m, sum{ 0*x[i,1], i=1:3} == 0)
-    @fact conToStr(m.linconstr[end]) --> "0 $eq 0"
+    @fact JuMP.constr(m.linconstr[end]) --> "0 $eq 0"
 
     @constraint(m, sum{ 0*x[i,1] + y, i=1:3} == 0)
-    @fact conToStr(m.linconstr[end]) --> "3 y $eq 0"
+    @fact JuMP.constr(m.linconstr[end]) --> "3 y $eq 0"
 
 end
 
@@ -110,16 +110,16 @@ facts("[macros] Problem modification") do
     C = [1 2 3; 4 5 6; 7 8 9]
 
     @constraint(m, sum{ x[i,j]*(C[i,j]-1), i in 1:3, j = 1:3; i != j} == 0)
-    @fact conToStr(m.linconstr[end]) --> "x[1,2] + 2 x[1,3] + 3 x[2,1] + 5 x[2,3] + 6 x[3,1] + 7 x[3,2] $eq 0"
+    @fact JuMP.constr(m.linconstr[end]) --> "x[1,2] + 2 x[1,3] + 3 x[2,1] + 5 x[2,3] + 6 x[3,1] + 7 x[3,2] $eq 0"
 
     con = @constraint(m, sum{ C[i,j]*x[i,j], i = 1:3, j = 1:3; i != j} == 0)
-    @fact conToStr(m.linconstr[end]) --> "2 x[1,2] + 3 x[1,3] + 4 x[2,1] + 6 x[2,3] + 7 x[3,1] + 8 x[3,2] $eq 0"
+    @fact JuMP.constr(m.linconstr[end]) --> "2 x[1,2] + 3 x[1,3] + 4 x[2,1] + 6 x[2,3] + 7 x[3,1] + 8 x[3,2] $eq 0"
 
     @variable(m, y, objective = 0, inconstraints = [con], coefficients = [-1.0])
-    @fact conToStr(m.linconstr[end]) --> "2 x[1,2] + 3 x[1,3] + 4 x[2,1] + 6 x[2,3] + 7 x[3,1] + 8 x[3,2] - y $eq 0"
+    @fact JuMP.constr(m.linconstr[end]) --> "2 x[1,2] + 3 x[1,3] + 4 x[2,1] + 6 x[2,3] + 7 x[3,1] + 8 x[3,2] - y $eq 0"
 
-    chgConstrRHS(con, 3)
-    @fact conToStr(m.linconstr[end]) --> "2 x[1,2] + 3 x[1,3] + 4 x[2,1] + 6 x[2,3] + 7 x[3,1] + 8 x[3,2] - y $eq 3"
+    JuMP.setRHS(con, 3)
+    @fact JuMP.constr(m.linconstr[end]) --> "2 x[1,2] + 3 x[1,3] + 4 x[2,1] + 6 x[2,3] + 7 x[3,1] + 8 x[3,2] - y $eq 3"
 end
 
 facts("[macros] Using pre-built affine is OK in macro") do
@@ -128,14 +128,14 @@ facts("[macros] Using pre-built affine is OK in macro") do
     @variable(m, y)
     temp = x + 2y + 1
     @constraint(m, 3*temp - x - 2 >= 0)
-    @fact conToStr(m.linconstr[end]) --> "6 y + 2 x $geq -1"
+    @fact JuMP.constr(m.linconstr[end]) --> "6 y + 2 x $geq -1"
     # More complex expression
     a = 1.0*x
     @constraint(m, (2+2)*((3+4)*(1+a)) == 0)
-    @fact conToStr(m.linconstr[end]) --> "28 x $eq -28"
-    @fact affToStr(a) --> "x"
+    @fact JuMP.constr(m.linconstr[end]) --> "28 x $eq -28"
+    @fact JuMP.affstr(a) --> "x"
 
-    @fact conToStr(@LinearConstraint(1 + 0*temp == 0)) --> "0 $eq -1"
+    @fact JuMP.constr(@LinearConstraint(1 + 0*temp == 0)) --> "0 $eq -1"
 end
 
 facts("[macros] Test ranges in @variable") do
@@ -184,13 +184,13 @@ facts("[macros] Three argument @constraint") do
     @variable(m, y[2:2:6])
 
     @constraint(m, c, x[4] - y[4] == 1)
-    @fact conToStr(m.linconstr[c.idx]) --> "x[4] - y[4] $eq 1"
+    @fact JuMP.constr(m.linconstr[c.idx]) --> "x[4] - y[4] $eq 1"
 
     @constraint(m, d[i in 1:5,j=6:-2:2], x[i] - y[j] == 2)
-    @fact conToStr(m.linconstr[d[4,4].idx]) --> "x[4] - y[4] $eq 2"
+    @fact JuMP.constr(m.linconstr[d[4,4].idx]) --> "x[4] - y[4] $eq 2"
 
     @constraint(m, q[i=1:5], x[i]^2 == 1)
-    @fact conToStr(m.quadconstr[q[5].idx]) --> "x[5]² - 1 $eq 0"
+    @fact JuMP.constr(m.quadconstr[q[5].idx]) --> "x[5]² - 1 $eq 0"
 end
 
 facts("[macros] @constraints") do
@@ -203,10 +203,10 @@ facts("[macros] @constraints") do
         ref[i=1:3], y[1] + y[i] >= i
     end)
 
-    @fact conToStr(m.linconstr[1]) --> "x + y[1] $eq 1"
-    @fact conToStr(m.linconstr[2]) --> "2 y[1] $geq 1"
-    @fact conToStr(m.linconstr[3]) --> "y[1] + y[2] $geq 2"
-    @fact conToStr(m.linconstr[4]) --> "y[1] + y[3] $geq 3"
+    @fact JuMP.constr(m.linconstr[1]) --> "x + y[1] $eq 1"
+    @fact JuMP.constr(m.linconstr[2]) --> "2 y[1] $geq 1"
+    @fact JuMP.constr(m.linconstr[3]) --> "y[1] + y[2] $geq 2"
+    @fact JuMP.constr(m.linconstr[4]) --> "y[1] + y[3] $geq 3"
 end
 
 facts("[macros] @NLconstraints") do
@@ -243,7 +243,7 @@ facts("[macros] @objective with quadratic") do
     @variable(m, x[1:5])
     @objective(m, Max, sum{i*x[i]*x[j], i=1:5, j=5:-1:1; isodd(i) && iseven(j)} + 2x[5])
 
-    @fact quadToStr(m.obj) --> "x[1]*x[2] + 3 x[2]*x[3] + x[1]*x[4] + 3 x[3]*x[4] + 5 x[2]*x[5] + 5 x[4]*x[5] + 2 x[5]"
+    @fact JuMP.quadstr(m.obj) --> "x[1]*x[2] + 3 x[2]*x[3] + x[1]*x[4] + 3 x[3]*x[4] + 5 x[2]*x[5] + 5 x[4]*x[5] + 2 x[5]"
 end
 
 facts("[macros] @constraint with quadratic") do
@@ -251,38 +251,38 @@ facts("[macros] @constraint with quadratic") do
     @variable(m, x[1:5])
 
     @constraint(m, x[3]*x[1] + sum{x[i]*x[5-i+1], i=1:5; 2 <= i <= 4} + 4x[5] == 1)
-    @fact conToStr(m.quadconstr[end]) --> "x[1]*x[3] + x[3]² + 2 x[2]*x[4] + 4 x[5] - 1 $eq 0"
+    @fact JuMP.constr(m.quadconstr[end]) --> "x[1]*x[3] + x[3]² + 2 x[2]*x[4] + 4 x[5] - 1 $eq 0"
 
     @constraint(m, sum{sum{(x[i] - 2)*x[j],j=4:5},i=2:3} >= -3*x[2]*2*x[4])
-    @fact conToStr(m.quadconstr[end]) --> "7 x[2]*x[4] + x[3]*x[4] + x[2]*x[5] + x[3]*x[5] - 4 x[4] - 4 x[5] $geq 0"
+    @fact JuMP.constr(m.quadconstr[end]) --> "7 x[2]*x[4] + x[3]*x[4] + x[2]*x[5] + x[3]*x[5] - 4 x[4] - 4 x[5] $geq 0"
 
     foo(x) = x
     @constraint(m, x[1] ≤ foo(x[1])^2)
-    @fact conToStr(m.quadconstr[end]) --> "-x[1]² + x[1] $leq 0"
+    @fact JuMP.constr(m.quadconstr[end]) --> "-x[1]² + x[1] $leq 0"
 
     @constraint(m, sum{x[i],i=1:2}*sum{x[i],i=2:3} >= 0)
-    @fact conToStr(m.quadconstr[end]) --> "x[1]*x[2] + x[2]² + x[1]*x[3] + x[2]*x[3] $geq 0"
+    @fact JuMP.constr(m.quadconstr[end]) --> "x[1]*x[2] + x[2]² + x[1]*x[3] + x[2]*x[3] $geq 0"
     @constraint(m, x[1]^2 + x[2]*x[3] >= 0)
-    @fact conToStr(m.quadconstr[end]) --> "x[1]² + x[2]*x[3] $geq 0"
+    @fact JuMP.constr(m.quadconstr[end]) --> "x[1]² + x[2]*x[3] $geq 0"
     @constraint(m, x[1]^2 + (x[2]+3)*(x[3]-1) >= 0)
-    @fact conToStr(m.quadconstr[end]) --> "x[1]² + x[2]*x[3] + 3 x[3] - x[2] - 3 $geq 0"
+    @fact JuMP.constr(m.quadconstr[end]) --> "x[1]² + x[2]*x[3] + 3 x[3] - x[2] - 3 $geq 0"
     @constraint(m, sum{x[i],i=1:2}^2 >= 0)
-    @fact conToStr(m.quadconstr[end]) --> "x[1]² + 2 x[1]*x[2] + x[2]² $geq 0"
+    @fact JuMP.constr(m.quadconstr[end]) --> "x[1]² + 2 x[1]*x[2] + x[2]² $geq 0"
 
     myquadexpr = x[1]*x[2]
     @constraint(m, sum{i*myquadexpr + x[i], i=1:3} + sum{x[i] + myquadexpr*i, i=1:3} == 0)
-    @fact conToStr(m.quadconstr[end]) --> "12 x[1]*x[2] + 2 x[1] + 2 x[2] + 2 x[3] $eq 0"
+    @fact JuMP.constr(m.quadconstr[end]) --> "12 x[1]*x[2] + 2 x[1] + 2 x[2] + 2 x[3] $eq 0"
 
     @constraint(m, (x[1] + x[2])*sum{ 0*x[i] + x[3], i=1:3} == 0)
-    @fact conToStr(m.quadconstr[end]) --> "3 x[1]*x[3] + 3 x[2]*x[3] $eq 0"
+    @fact JuMP.constr(m.quadconstr[end]) --> "3 x[1]*x[3] + 3 x[2]*x[3] $eq 0"
 
-    @fact conToStr(@QuadConstraint(1 + 0*myquadexpr == 0)) --> "1 $eq 0"
+    @fact JuMP.constr(@QuadConstraint(1 + 0*myquadexpr == 0)) --> "1 $eq 0"
 
     @variable(m, y)
-    @fact conToStr(@QuadConstraint(1 + (2y)*y   == 0)) --> "2 y² + 1 $eq 0"
-    @fact conToStr(@QuadConstraint(1 +   y *y*2 == 0)) --> "2 y² + 1 $eq 0"
+    @fact JuMP.constr(@QuadConstraint(1 + (2y)*y   == 0)) --> "2 y² + 1 $eq 0"
+    @fact JuMP.constr(@QuadConstraint(1 +   y *y*2 == 0)) --> "2 y² + 1 $eq 0"
     z = 2y
-    @fact conToStr(@QuadConstraint(y*y + y*z == 0)) --> "3 y² $eq 0"
+    @fact JuMP.constr(@QuadConstraint(y*y + y*z == 0)) --> "3 y² $eq 0"
 end
 
 facts("[macros] Triangular indexing, iteration") do
@@ -330,19 +330,19 @@ facts("[macros] @expression") do
     model = Model()
     @variable(model, x[1:3,1:3])
     @expression(model, expr, sum{i*x[i,j] + j, i=1:3,j in 1:3})
-    @fact affToStr(expr) --> "x[1,1] + x[1,2] + x[1,3] + 2 x[2,1] + 2 x[2,2] + 2 x[2,3] + 3 x[3,1] + 3 x[3,2] + 3 x[3,3] + 18"
+    @fact JuMP.affstr(expr) --> "x[1,1] + x[1,2] + x[1,3] + 2 x[2,1] + 2 x[2,2] + 2 x[2,3] + 3 x[3,1] + 3 x[3,2] + 3 x[3,3] + 18"
 
     @fact_throws @expression(model, blah[i=1:3], x[i,1]^2)
 
     @expression(model, y[i=1:2], sum{x[i,1]; i == 1})
-    @fact affToStr(y[1]) --> "x[1,1]"
-    @fact affToStr(y[2]) --> "0"
+    @fact JuMP.affstr(y[1]) --> "x[1,1]"
+    @fact JuMP.affstr(y[2]) --> "0"
 
     # deprecated versions
     @expression(expr2, sum{i*x[i,j] + j, i=1:3,j in 1:3})
-    @fact affToStr(expr2) --> "x[1,1] + x[1,2] + x[1,3] + 2 x[2,1] + 2 x[2,2] + 2 x[2,3] + 3 x[3,1] + 3 x[3,2] + 3 x[3,3] + 18"
+    @fact JuMP.affstr(expr2) --> "x[1,1] + x[1,2] + x[1,3] + 2 x[2,1] + 2 x[2,2] + 2 x[2,3] + 3 x[3,1] + 3 x[3,2] + 3 x[3,3] + 18"
     expr2 = @expression(sum{i*x[i,j] + j, i=1:3,j in 1:3})
-    @fact affToStr(expr2) --> "x[1,1] + x[1,2] + x[1,3] + 2 x[2,1] + 2 x[2,2] + 2 x[2,3] + 3 x[3,1] + 3 x[3,2] + 3 x[3,3] + 18"
+    @fact JuMP.affstr(expr2) --> "x[1,1] + x[1,2] + x[1,3] + 2 x[2,1] + 2 x[2,2] + 2 x[2,3] + 3 x[3,1] + 3 x[3,2] + 3 x[3,3] + 18"
 end
 
 facts("[macros] Conditions in constraint indexing") do
@@ -351,11 +351,11 @@ facts("[macros] Conditions in constraint indexing") do
     @constraint(model, c1[i=1:9;isodd(i)], x[i] + x[i+1] <= 1)
     @NLconstraint(model, c2[i=["red","blue","green"], k=9:-2:2; (i == "red" && isodd(k)) || (k >=4 && (i == "blue" || i == "green"))], x[k]^3 <= 1)
     @fact length(model.linconstr) --> 5
-    @fact conToStr(model.linconstr[1]) --> "x[1] + x[2] $leq 1"
-    @fact conToStr(model.linconstr[2]) --> "x[3] + x[4] $leq 1"
-    @fact conToStr(model.linconstr[3]) --> "x[5] + x[6] $leq 1"
-    @fact conToStr(model.linconstr[4]) --> "x[7] + x[8] $leq 1"
-    @fact conToStr(model.linconstr[5]) --> "x[9] + x[10] $leq 1"
+    @fact JuMP.constr(model.linconstr[1]) --> "x[1] + x[2] $leq 1"
+    @fact JuMP.constr(model.linconstr[2]) --> "x[3] + x[4] $leq 1"
+    @fact JuMP.constr(model.linconstr[3]) --> "x[5] + x[6] $leq 1"
+    @fact JuMP.constr(model.linconstr[4]) --> "x[7] + x[8] $leq 1"
+    @fact JuMP.constr(model.linconstr[5]) --> "x[9] + x[10] $leq 1"
     @fact length(model.nlpdata.nlconstr) --> 10
 end
 
@@ -378,9 +378,9 @@ facts("[macros] Norm parsing") do
     @constraint(model, -2norm2{x[i,j], i in 1:2, j=1:2} + x[1,2] >= -1)
     @constraint(model, -2norm2{x[i,j], i=1:2, j in 1:2; iseven(i+j)} + x[1,2] >= -1)
     @constraint(model, 1 >= 2*norm2{x[i,1], i in 1:2})
-    @fact conToStr(model.socconstr[1]) --> "2.0 $Vert[x[1,1],x[1,2],x[2,1],x[2,2]]$Vert$sub2 $leq x[1,2] + 1"
-    @fact conToStr(model.socconstr[2]) --> "2.0 $Vert[x[1,1],x[2,2]]$Vert$sub2 $leq x[1,2] + 1"
-    @fact conToStr(model.socconstr[3]) --> "2.0 $Vert[x[1,1],x[2,1]]$Vert$sub2 $leq 1"
+    @fact JuMP.constr(model.socconstr[1]) --> "2.0 $Vert[x[1,1],x[1,2],x[2,1],x[2,2]]$Vert$sub2 $leq x[1,2] + 1"
+    @fact JuMP.constr(model.socconstr[2]) --> "2.0 $Vert[x[1,1],x[2,2]]$Vert$sub2 $leq x[1,2] + 1"
+    @fact JuMP.constr(model.socconstr[3]) --> "2.0 $Vert[x[1,1],x[2,1]]$Vert$sub2 $leq 1"
     @fact_throws @constraint(model, (x[1,1]+1)*norm2{x[i,j], i=1:2, j=1:2} + x[1,2] >= -1)
     @fact_throws @constraint(model, norm2{x[i,j], i=1:2, j=1:2} + x[1,2] >= -1)
 end
@@ -390,17 +390,17 @@ facts("[macros] Extraneous terms in QuadExpr (#535)") do
     @variable(model, x)
     @variable(model, y)
     @constraint(model, x*x <= y*y)
-    @fact conToStr(model.quadconstr[1]) --> "x² - y² $leq 0"
+    @fact JuMP.constr(model.quadconstr[1]) --> "x² - y² $leq 0"
 end
 
-facts("[macros] Special-case binary multiplication in addToExpression_reorder (#537)") do
+facts("[macros] Special-case binary multiplication in addtoexpr_reorder (#537)") do
     dual = Model()
     @variable(dual, α[1:3] <= 0)
     @variable(dual, γ >= 0)
     @constraint(dual, ones(3)*γ .<= α)
-    @fact conToStr(dual.linconstr[1]) --> "γ - α[1] $leq 0"
-    @fact conToStr(dual.linconstr[2]) --> "γ - α[2] $leq 0"
-    @fact conToStr(dual.linconstr[3]) --> "γ - α[3] $leq 0"
+    @fact JuMP.constr(dual.linconstr[1]) --> "γ - α[1] $leq 0"
+    @fact JuMP.constr(dual.linconstr[2]) --> "γ - α[2] $leq 0"
+    @fact JuMP.constr(dual.linconstr[3]) --> "γ - α[3] $leq 0"
 end
 
 facts("[macros] Indices in macros don't leak out of scope (#582)") do
@@ -454,7 +454,7 @@ facts("[macros] Issue #621") do
     q = x^2
     a = x+1
     con = @QuadConstraint(a+q*3 <= 0)
-    @fact conToStr(con) --> "3 x² + x + 1 $leq 0"
+    @fact JuMP.constr(con) --> "3 x² + x + 1 $leq 0"
 end
 
 facts("[macros] @variables and @constraints") do
@@ -474,9 +474,9 @@ facts("[macros] @variables and @constraints") do
     @fact m.colUpper --> [1.0, 2.0, Inf,  3.0, 1.0]
     @fact m.colLower --> [0.0, 0.0, 2.0, -Inf, 0.0]
     @fact m.colCat --> [:Cont, :Cont, :Int, :Cont, :Bin]
-    @fact getValue(y) --> 0.7
-    @fact getValue(z) --> 10
-    @fact getValue(q) --> 0.5
+    @fact getvalue(y) --> 0.7
+    @fact getvalue(z) --> 10
+    @fact getvalue(q) --> 0.5
     @fact m.linconstr[1].lb --> 0.0
     @fact m.linconstr[1].ub --> 1.0
     @fact m.linconstr[2].lb --> -Inf

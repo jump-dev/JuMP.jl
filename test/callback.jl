@@ -23,8 +23,8 @@ context("With solver $(typeof(lazysolver))") do
     @variable(mod, 0 <= y <= 2, Int)
     @objective(mod, Max, y + 0.5x)
     function corners(cb)
-        x_val = getValue(x)
-        y_val = getValue(y)
+        x_val = getvalue(x)
+        y_val = getvalue(y)
         TOL = 1e-6
         # Check top right
         if y_val + x_val > 3 + TOL
@@ -34,12 +34,12 @@ context("With solver $(typeof(lazysolver))") do
         @fact_throws ErrorException @variable(cb, z)
         @fact_throws ErrorException @lazyconstraint(cb, x^2 <= 1)
     end
-    addLazyCallback(mod, corners)
-    addLazyCallback(mod, cb -> (entered[2] = true))
+    addlazycallback(mod, corners)
+    addlazycallback(mod, cb -> (entered[2] = true))
     @fact solve(mod) --> :Optimal
     @fact entered --> [true,true]
-    @fact getValue(x) --> roughly(1.0, 1e-6)
-    @fact getValue(y) --> roughly(2.0, 1e-6)
+    @fact getvalue(x) --> roughly(1.0, 1e-6)
+    @fact getvalue(y) --> roughly(2.0, 1e-6)
 end; end; end
 
 facts("[callback] Test user cuts") do
@@ -59,11 +59,11 @@ context("With solver $(typeof(cutsolver))") do
         @usercut(cb, sum{x[i], i=1:N} <= N)
         entered[1] = true
     end
-    addCutCallback(mod, mycutgenerator)
-    addCutCallback(mod, cb -> (entered[2] = true))
+    addcutcallback(mod, mycutgenerator)
+    addcutcallback(mod, cb -> (entered[2] = true))
     @fact solve(mod) --> :Optimal
     @fact entered --> [true,true]
-    @fact find(getValue(x)[:]) --> [35,38,283,305,359,397,419,426,442,453,526,553,659,751,840,865,878,978]
+    @fact find(getvalue(x)[:]) --> [35,38,283,305,359,397,419,426,442,453,526,553,659,751,840,865,878,978]
 end; end; end
 
 facts("[callback] Test heuristics") do
@@ -83,18 +83,18 @@ context("With solver $(typeof(heursolver))") do
         entered[1] = true
         for i in 1:100
             if i in [9,10,11,14,15,16,25,30,32,41,44,49,50,53,54,98,100]
-                setSolutionValue!(cb, x[i], 0)
+                setsolutionvalue(cb, x[i], 0)
             else
-                setSolutionValue!(cb, x[i], 1)
+                setsolutionvalue(cb, x[i], 1)
             end
         end
-        addSolution(cb)
+        addsolution(cb)
     end
-    addHeuristicCallback(mod, myheuristic1)
-    addHeuristicCallback(mod, cb -> (entered[2] = true))
+    addheuristiccallback(mod, myheuristic1)
+    addheuristiccallback(mod, cb -> (entered[2] = true))
     @fact solve(mod) --> :Optimal
     @fact entered --> [true,true]
-    @fact find(getValue(x)[:]) --> setdiff(1:N,[9,10,11,14,15,16,25,30,32,41,44,49,50,53,54,98,100])
+    @fact find(getvalue(x)[:]) --> setdiff(1:N,[9,10,11,14,15,16,25,30,32,41,44,49,50,53,54,98,100])
 
     empty!(mod.callbacks)
     entered[1] = false
@@ -104,15 +104,15 @@ context("With solver $(typeof(heursolver))") do
         entered[1] == true && return
         entered[1] = true
         for i in 1:90 # not every component, but close
-            setSolutionValue!(cb, x[i], 1)
+            setsolutionvalue(cb, x[i], 1)
         end
-        addSolution(cb)
+        addsolution(cb)
     end
-    addHeuristicCallback(mod, myheuristic2)
-    addHeuristicCallback(mod, cb -> (entered[2] = true))
+    addheuristiccallback(mod, myheuristic2)
+    addheuristiccallback(mod, cb -> (entered[2] = true))
     @fact solve(mod) --> :Optimal
     @fact entered --> [true,true]
-    @fact find(getValue(x)[:]) --> setdiff(1:N,[9,10,11,14,15,16,25,30,32,41,44,49,50,53,54,98,100])
+    @fact find(getvalue(x)[:]) --> setdiff(1:N,[9,10,11,14,15,16,25,30,32,41,44,49,50,53,54,98,100])
 end; end; end
 
 facts("[callback] Test informational callback") do
@@ -136,8 +136,8 @@ context("With solver $(typeof(infosolver))") do
         push!(objs,       MathProgBase.cbgetobj(cb))
         push!(bestbounds, MathProgBase.cbgetbestbound(cb))
     end
-    addInfoCallback(mod, myinfo)
-    addInfoCallback(mod, cb -> (entered[2] = true))
+    addinfocallback(mod, myinfo)
+    addinfocallback(mod, cb -> (entered[2] = true))
     @fact solve(mod) --> :Optimal
     @fact entered --> [true,true]
     mono_node, mono_obj, mono_bestbound = true, true, true
@@ -163,6 +163,6 @@ context("With solver $(typeof(solver))") do
     @constraint(mod, y + x <= 3.5)
 
     mycallback = _ -> throw(CallbackAbort())
-    addLazyCallback(mod, mycallback)
+    addlazycallback(mod, mycallback)
     @fact solve(mod) --> :UserLimit
 end; end; end

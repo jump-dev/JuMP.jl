@@ -50,7 +50,7 @@ end
         2.2     * x[3*k+3] +
         0.00015 * x[3*k+3]^2, k=0:4})
 
-# setObjective(m, :Min,
+# setobjective(m, :Min,
 #   sum([(2.3     * x[3*k+1]   +
 #         0.0001  * x[3*k+1]^2 +
 #         1.7     * x[3*k+2]   +
@@ -84,30 +84,30 @@ end
 @constraint(m, x[13] + x[14] + x[15] >= 100)
 
 # Initial solution (could also use 'start' keyword in @variable)
-setValue(x[1], 20.0)
-setValue(x[2], 55.0)
-setValue(x[3], 15.0)
-setValue(x[4], 20.0)
-setValue(x[5], 60.0)
-setValue(x[6], 20.0)
-setValue(x[7], 20.0)
-setValue(x[8], 60.0)
-setValue(x[9], 20.0)
-setValue(x[10], 20.0)
-setValue(x[11], 60.0)
-setValue(x[12], 20.0)
-setValue(x[13], 20.0)
-setValue(x[14], 60.0)
-setValue(x[15], 20.0)
+setvalue(x[1], 20.0)
+setvalue(x[2], 55.0)
+setvalue(x[3], 15.0)
+setvalue(x[4], 20.0)
+setvalue(x[5], 60.0)
+setvalue(x[6], 20.0)
+setvalue(x[7], 20.0)
+setvalue(x[8], 60.0)
+setvalue(x[9], 20.0)
+setvalue(x[10], 20.0)
+setvalue(x[11], 60.0)
+setvalue(x[12], 20.0)
+setvalue(x[13], 20.0)
+setvalue(x[14], 60.0)
+setvalue(x[15], 20.0)
 
 solve(m)
 
-#println(getValue(x))
+#println(getvalue(x))
 
-@test_approx_eq_eps getValue(x[1]) 8.0  1e-5
-@test_approx_eq_eps getValue(x[2]) 49.0 1e-5
-@test_approx_eq_eps getValue(x[3]) 3.0  1e-5
-@test_approx_eq_eps getValue(x[4]) 1.0  1e-5
-@test_approx_eq_eps getObjectiveValue(m) 664.82045 1e-5
+@test_approx_eq_eps getvalue(x[1]) 8.0  1e-5
+@test_approx_eq_eps getvalue(x[2]) 49.0 1e-5
+@test_approx_eq_eps getvalue(x[3]) 3.0  1e-5
+@test_approx_eq_eps getvalue(x[4]) 1.0  1e-5
+@test_approx_eq_eps getobjectivevalue(m) 664.82045 1e-5
 
 end

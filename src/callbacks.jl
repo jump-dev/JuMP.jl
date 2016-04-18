@@ -3,7 +3,7 @@
 #  License, v. 2.0. If a copy of the MPL was not distributed with this
 #  file, You can obtain one at http://mozilla.org/MPL/2.0/.
 
-export addLazyCallback, addCutCallback, addHeuristicCallback, addInfoCallback
+export addlazycallback, addcutcallback, addheuristiccallback, addinfocallback
 
 abstract JuMPCallback
 type LazyCallback <: JuMPCallback
@@ -26,19 +26,19 @@ export CallbackAbort
 Base.copy{T<:JuMPCallback}(c::T) = T(copy(c))
 Base.copy(c::LazyCallback) = LazyCallback(copy(c.f), c.fractional)
 
-function addLazyCallback(m::Model, f::Function; fractional::Bool=false)
+function addlazycallback(m::Model, f::Function; fractional::Bool=false)
     m.internalModelLoaded = false
     push!(m.callbacks, LazyCallback(f,fractional))
 end
-function addCutCallback(m::Model, f::Function)
+function addcutcallback(m::Model, f::Function)
     m.internalModelLoaded = false
     push!(m.callbacks, CutCallback(f))
 end
-function addHeuristicCallback(m::Model, f::Function)
+function addheuristiccallback(m::Model, f::Function)
     m.internalModelLoaded = false
     push!(m.callbacks, HeuristicCallback(f))
 end
-function addInfoCallback(m::Model, f::Function)
+function addinfocallback(m::Model, f::Function)
     m.internalModelLoaded = false
     push!(m.callbacks, InfoCallback(f))
 end
@@ -158,7 +158,6 @@ const sensemap = Dict(:(<=) => '<', :(==) => '=', :(>=) => '>')
 
 
 ## Lazy constraints
-export addLazyConstraint
 export @lazyconstraint
 
 macro lazyconstraint(cbdata, x)
@@ -175,14 +174,14 @@ macro lazyconstraint(cbdata, x)
             aff = zero(AffExpr)
             $parsecode
             constr = constructconstraint!($newaff, $(quot(sense)))
-            addLazyConstraint($cbdata, constr)
+            addlazyconstraint($cbdata, constr)
         end
     else
         error("Syntax error in @lazyconstraint, expected one-sided comparison.")
     end
 end
 
-function addLazyConstraint(cbdata::MathProgBase.MathProgCallbackData, constr::LinearConstraint)
+function addlazyconstraint(cbdata::MathProgBase.MathProgCallbackData, constr::LinearConstraint)
     if length(constr.terms.vars) == 0
         MathProgBase.cbaddlazy!(cbdata, Cint[], Float64[], sensemap[sense(constr)], rhs(constr))
         return
@@ -193,10 +192,10 @@ function addLazyConstraint(cbdata::MathProgBase.MathProgCallbackData, constr::Li
     MathProgBase.cbaddlazy!(cbdata, indices, coeffs, sensemap[sense(constr)], rhs(constr))
 end
 
-addLazyConstraint(cbdata::MathProgBase.MathProgCallbackData,constr::QuadConstraint) = error("Quadratic lazy constraints are not supported.")
+addlazyconstraint(cbdata::MathProgBase.MathProgCallbackData,constr::QuadConstraint) = error("Quadratic lazy constraints are not supported.")
 
 ## User cuts
-export addUserCut
+export addusercut
 export @usercut
 
 macro usercut(cbdata, x)
@@ -213,14 +212,14 @@ macro usercut(cbdata, x)
             aff = zero(AffExpr)
             $parsecode
             constr = constructconstraint!($newaff, $(quot(sense)))
-            addUserCut($cbdata, constr)
+            addusercut($cbdata, constr)
         end
     else
         error("Syntax error in @usercut, expected one-sided comparison.")
     end
 end
 
-function addUserCut(cbdata::MathProgBase.MathProgCallbackData, constr::LinearConstraint)
+function addusercut(cbdata::MathProgBase.MathProgCallbackData, constr::LinearConstraint)
     if length(constr.terms.vars) == 0
         MathProgBase.cbaddcut!(cbdata, Cint[], Float64[], sensemap[sense(constr)], rhs(constr))
         return
@@ -232,9 +231,9 @@ function addUserCut(cbdata::MathProgBase.MathProgCallbackData, constr::LinearCon
 end
 
 ## User heuristic
-export addSolution, setSolutionValue!
+export addsolution, setsolutionvalue
 
-addSolution(cbdata::MathProgBase.MathProgCallbackData) = MathProgBase.cbaddsolution!(cbdata)
-function setSolutionValue!(cbdata::MathProgBase.MathProgCallbackData, v::Variable, x)
+addsolution(cbdata::MathProgBase.MathProgCallbackData) = MathProgBase.cbaddsolution!(cbdata)
+function setsolutionvalue(cbdata::MathProgBase.MathProgCallbackData, v::Variable, x)
     MathProgBase.cbsetsolutionvalue!(cbdata, convert(Cint, v.col), x)
 end

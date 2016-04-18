@@ -16,6 +16,6 @@ let
 
     solve(m)
 
-    println("x = ", getValue(x), " y = ", getValue(y))
+    println("x = ", getvalue(x), " y = ", getvalue(y))
 
 end

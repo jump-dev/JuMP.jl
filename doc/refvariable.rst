@@ -74,7 +74,7 @@ Is equivalent to::
 
     @defVar(m, x[i=1:10])
     for i in 1:10
-        setValue(x[i], i/2)
+        setvalue(x[i], i/2)
     end
 
 Variables may also be constructed manually, one-by-one::
@@ -96,7 +96,7 @@ This form of constructing variables is not considered idiomatic JuMP code.
     The reference to the first set of variables has been lost, although they will remain
     in the model.
 
-The constructor ``Variable(m::Model,idx::Int)`` may be used to create a variable object corresponding to an *existing* variable in the model (the constructor does not add a new variable to the model). The variable indices correspond to those of the internal MathProgBase model. The inverse of this operation is ``getLinearIndex(x::Variable)``, which returns the flattened out (linear) index of a variable as JuMP provides it to a solver. We guarantee that ``Variable(m,getLinearIndex(x))`` returns ``x`` itself. These methods are only useful if you intend to interact with solver properties which are not directly exposed through JuMP.
+The constructor ``Variable(m::Model,idx::Int)`` may be used to create a variable object corresponding to an *existing* variable in the model (the constructor does not add a new variable to the model). The variable indices correspond to those of the internal MathProgBase model. The inverse of this operation is ``linearindex(x::Variable)``, which returns the flattened out (linear) index of a variable as JuMP provides it to a solver. We guarantee that ``Variable(m,linearindex(x))`` returns ``x`` itself. These methods are only useful if you intend to interact with solver properties which are not directly exposed through JuMP.
 
 If you would like to change the name used when printing a variable or group of variables, you may use the ``basename`` keyword argument:
 
@@ -115,7 +115,7 @@ JuMP supports modeling with `semidefinite variables <https://en.wikipedia.org/wi
 Note in particular the indexing: 1) exactly two index sets must be specified, 2) they must both be unit ranges starting at 1, 3) no bounds can be provided alongside the ``SDP`` tag. If you wish to impose more complex semidefinite constraints on the variables, e.g. :math:`X - I \succeq 0`, you may instead use the ``Symmetric`` tag, along with a semidefinite constraint::
 
     @defVar(m, X[1:n,1:n], Symmetric)
-    @addSDPConstraint(m, X >= eye(n))
+    @SDconstraint(m, X >= eye(n))
 
 Bounds can be provided as normal when using the ``Symmetric`` tag, with the stipulation that the bounds are symmetric themselves.
 
@@ -124,13 +124,13 @@ Methods
 
 **Bounds**
 
-* ``setLower(x::Variable, lower)``, ``getLower(x::Variable)`` - Set/get the lower bound of a variable.
-* ``setUpper(x::Variable, upper)``, ``getUpper(x::Variable)`` - Set/get the upper bound of a variable.
+* ``setlowerbound(x::Variable, lower)``, ``getlowerbound(x::Variable)`` - Set/get the lower bound of a variable.
+* ``setupperbound(x::Variable, upper)``, ``getupperbound(x::Variable)`` - Set/get the upper bound of a variable.
 
 **Variable Category**
 
-* ``setCategory(x::Variable, v_type::Symbol)`` - Set the variable category for ``x`` after construction. Possible categories are listed above.
-* ``getCategory(x::Variable)`` - Get the variable category for ``x``.
+* ``setcategory(x::Variable, v_type::Symbol)`` - Set the variable category for ``x`` after construction. Possible categories are listed above.
+* ``getcategory(x::Variable)`` - Get the variable category for ``x``.
 
 **Helper functions**
 
@@ -140,21 +140,21 @@ Methods
 
 **Values**
 
-* ``getValue(x)`` - Get the value of this variable in the solution. If ``x`` is a single variable, this will simply return a number.
-  If ``x`` is indexable then it will return an indexable dictionary of values. When the model is unbounded, ``getValue`` will
+* ``getvalue(x)`` - Get the value of this variable in the solution. If ``x`` is a single variable, this will simply return a number.
+  If ``x`` is indexable then it will return an indexable dictionary of values. When the model is unbounded, ``getvalue`` will
   instead return the corresponding components of an unbounded ray, if available from the solver.
-* ``setValue(x,v)`` - Provide an initial value ``v`` for this variable that can be used by supporting MILP solvers. If ``v`` is ``NaN``, the solver may attempt to fill in this value to construct a feasible solution.
-* ``getDual(x)`` - Get the reduced cost of this variable in the solution. Similar behavior to ``getValue`` for indexable variables.
+* ``setvalue(x,v)`` - Provide an initial value ``v`` for this variable that can be used by supporting MILP solvers. If ``v`` is ``NaN``, the solver may attempt to fill in this value to construct a feasible solution.
+* ``getdual(x)`` - Get the reduced cost of this variable in the solution. Similar behavior to ``getvalue`` for indexable variables.
 
 .. note::
-    The ``getValue`` function always returns a floating-point value, even when a variable is constrained to take integer values, as most solvers only guarantee integrality up to a particular numerical tolerance. The built-in ``round`` function should be used to obtain integer values, e.g., by calling ``round(Integer, getValue(x))``.
+    The ``getvalue`` function always returns a floating-point value, even when a variable is constrained to take integer values, as most solvers only guarantee integrality up to a particular numerical tolerance. The built-in ``round`` function should be used to obtain integer values, e.g., by calling ``round(Integer, getvalue(x))``.
 
 
 **Names**
 
 Variables (in the sense of columns) can have internal names (different from the Julia variable name) that can be used for writing models to file. This feature is disabled for performance reasons, but will be added if there is demand or a special use case.
 
-* ``setName(x::Variable, newName)``, ``getName(x::Variable)`` - Set/get the variable's internal name.
+* ``setname(x::Variable, newName)``, ``getname(x::Variable)`` - Set/get the variable's internal name.
 
 
 Fixed variables
@@ -175,10 +175,10 @@ provide the resulting *linear* constraint to the solver.
 Two possible uses for fixed variables are:
 
 1. For computing sensitivities. When available from the solver,
-   the sensitivity of the objective with respect to the fixed value may be queried with ``getDual(x)``.
+   the sensitivity of the objective with respect to the fixed value may be queried with ``getdual(x)``.
 
 2. For solving a sequence of problems with varying parameters.
-   One may call ``setValue(x, val)``
+   One may call ``setvalue(x, val)``
    to change the value to which the variable is fixed. For LPs
    in particular, most solvers are able to efficiently hot-start when
    solving the resulting modified problem.

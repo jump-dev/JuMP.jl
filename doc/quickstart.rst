@@ -73,27 +73,20 @@ Finally, bounds can depend on variable indices::
 Objective and Constraints
 ^^^^^^^^^^^^^^^^^^^^^^^^^
 
-JuMP allows users to use a natural notation to describe linear expressions.
-There are two ways to do so. The first is very similar to other modeling
-languages and has no restrictions. The second utilizes Julia's powerful
-metaprogramming features to get excellent performance even for large problems,
-but has some restrictions on how they can be used.
+JuMP allows users to use a natural notation to describe linear expressions. To add constraints, use the ``@constraint()`` and ``@objective()``
+macros, e.g.::
 
-To add constraints in the first way, use the ``addConstraint()`` and ``setObjective()``
-functions, e.g.::
-
-    addConstraint(m, y + z == 4)  # Other options: <= and >=
-    setObjective(m, :Max, 5x + 22y + (x+y)/2) # or :Min
+    @constraint(m, x[i] - s[i] <= 0)  # Other options: <= and >=
+    @constraint(m, sum{x[i], i=1:numLocation} == 1)
+    @objective(m, Max, 5x + 22y + (x+y)/2) # or Min
 
 The second way is visually very similar, and uses the ``@addConstraint`` and ``@setObjective``
 macros, e.g.::
 
-    @addConstraint(m, x[i] - s[i] <= 0)
-    @setObjective(m, Max, sum{x[i], i=1:numLocation} )
+
 
 .. note::
-    The ``sense`` passed to ``setObjective`` must be a `symbol <http://docs.julialang.org/en/latest/manual/metaprogramming/#symbols>`_ type: ``:Min`` or ``:Max``.
-    The ``@setObjective`` macro accepts ``:Min`` and ``:Max``, as well as ``Min`` and ``Max`` (without the colon) directly.
+    The ``sense`` passed to ``@objective`` must be a `symbol <http://docs.julialang.org/en/latest/manual/metaprogramming/#symbols>`_ type: ``:Min`` or ``:Max``, although the macro accepts ``:Min`` and ``:Max``, as well as ``Min`` and ``Max`` (without the colon) directly.
 
 You may have noticed a special ``sum{}`` operator above. This is defined only for
 the second kind of function. The syntax is of the form (where ``IX`` can be any iterable)::

@@ -29,7 +29,7 @@ end
 
 @deprecate_macro defVar variable
 @deprecate_macro defVars variables
-@deprecate_macro setObjective objective
+@deprecate_macro setobjective objective
 @deprecate_macro setNLObjective NLobjective
 @deprecate_macro addConstraint constraint
 @deprecate_macro addConstraints constraints
@@ -43,4 +43,47 @@ end
 
 # callback macros
 @deprecate_macro addLazyConstraint lazyconstraint
-@deprecate_macro addUserCut usercut
+@deprecate_macro addusercut usercut
+
+@deprecate JuMPNLPEvaluator JuMP.NLPEvaluator
+@deprecate addConstraint addconstraint
+@deprecate addCutCallback addcutcallback
+@deprecate addHeuristicCallback addheuristiccallback
+@deprecate addInfoCallback addinfocallback
+@deprecate addLazyCallback addlazycallback
+@deprecate addLazyConstraint JuMP.addlazyconstraint
+@deprecate addSolution addsolution
+@deprecate addToExpression JuMP.addtoexpr
+@deprecate addUserCut JuMP.addusercut
+@deprecate affToStr(c::GenericAffExpr) JuMP.aff_str(JuMP.REPLMode,c)
+@deprecate affToStr JuMP.affstr
+@deprecate buildInternalModel JuMP.build
+@deprecate chgConstrRHS JuMP.setRHS
+@deprecate conToStr(c::GenericRangeConstraint) JuMP.con_str(JuMP.REPLMode,c)
+@deprecate exprToStr(c::SOCExpr) JuMP.expr_str(JuMP.REPLMode,c)
+@deprecate getCategory getcategory
+@deprecate getConstraintBounds JuMP.constraintbounds
+@deprecate getDual getdual
+@deprecate getInternalModel internalmodel
+@deprecate getLinearIndex linearindex
+@deprecate getLower getlowerbound
+@deprecate getName getname
+@deprecate getObjective getobjective
+@deprecate getObjectiveSense getobjectivesense
+@deprecate getObjectiveValue getobjectivevalue
+@deprecate getUpper getupperbound
+@deprecate getValue getvalue
+@deprecate getVar getvariable
+@deprecate quadToStr(c::GenericQuadExpr) JuMP.quad_str(JuMP.REPLMode,c)
+@deprecate registerNLFunction JuMP.register
+@deprecate setCategory setcategory
+@deprecate setLower setlowerbound
+@deprecate setName setname
+@deprecate setObjective JuMP.setobjective
+@deprecate setObjectiveSense setobjectivesense
+@deprecate setPrintHook setprinthook
+@deprecate setSolutionValue! setsolutionvalue
+@deprecate setSolveHook JuMP.setsolvehook
+@deprecate setSolver setsolver
+@deprecate setUpper setupperbound
+@deprecate setValue setvalue

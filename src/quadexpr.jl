@@ -66,7 +66,7 @@ typealias QuadExpr GenericQuadExpr{Float64,Variable}
 Base.convert(::Type{QuadExpr}, v::Union{Real,Variable,AffExpr}) = QuadExpr(Variable[], Variable[], Float64[], AffExpr(v))
 QuadExpr() = zero(QuadExpr)
 
-function setObjective(m::Model, sense::Symbol, q::QuadExpr)
+function setobjective(m::Model, sense::Symbol, q::QuadExpr)
     m.obj = q
     if m.internalModelLoaded
         if method_exists(MathProgBase.setquadobjterms!, (typeof(m.internalModel), Vector{Cint}, Vector{Cint}, Vector{Float64}))
@@ -78,7 +78,7 @@ function setObjective(m::Model, sense::Symbol, q::QuadExpr)
             m.internalModelLoaded = false
         end
     end
-    setObjectiveSense(m, sense)
+    setobjectivesense(m, sense)
 end
 
 # Copy a quadratic expression to a new model by converting all the
@@ -88,14 +88,14 @@ function Base.copy(q::QuadExpr, new_model::Model)
                 copy(q.qcoeffs), copy(q.aff, new_model))
 end
 
-function getValue(a::QuadExpr)
-    ret = getValue(a.aff)
+function getvalue(a::QuadExpr)
+    ret = getvalue(a.aff)
     for it in 1:length(a.qvars1)
-        ret += a.qcoeffs[it] * getValue(a.qvars1[it]) * getValue(a.qvars2[it])
+        ret += a.qcoeffs[it] * getvalue(a.qvars1[it]) * getvalue(a.qvars2[it])
     end
     return ret
 end
-getValue(arr::Array{QuadExpr}) = map(getValue, arr)
+getvalue(arr::Array{QuadExpr}) = map(getvalue, arr)
 
 
 
@@ -117,7 +117,7 @@ function Base.copy(c::QuadConstraint, new_model::Model)
     return QuadConstraint(copy(c.terms, new_model), c.sense)
 end
 
-function addConstraint(m::Model, c::QuadConstraint)
+function addconstraint(m::Model, c::QuadConstraint)
     push!(m.quadconstr,c)
     if m.internalModelLoaded
         if method_exists(MathProgBase.addquadconstr!, (typeof(m.internalModel),
@@ -149,13 +149,13 @@ function addConstraint(m::Model, c::QuadConstraint)
     end
     return ConstraintRef{Model,QuadConstraint}(m,length(m.quadconstr))
 end
-addConstraint(m::Model, c::Array{QuadConstraint}) =
+addconstraint(m::Model, c::Array{QuadConstraint}) =
     error("Vectorized constraint added without elementwise comparisons. Try using one of (.<=,.>=,.==).")
 
 function addVectorizedConstraint(m::Model, v::Array{QuadConstraint})
     ret = Array(ConstraintRef{Model,QuadConstraint}, size(v))
     for I in eachindex(v)
-        ret[I] = addConstraint(m, v[I])
+        ret[I] = addconstraint(m, v[I])
     end
     ret
 end

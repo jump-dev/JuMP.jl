@@ -67,7 +67,6 @@ Base.isempty(d::JuMPContainer) = isempty(_innercontainer(d))
 # the following types of index sets are allowed:
 # 0:K -- range with compile-time starting index
 # S -- general iterable set
-export @gendict
 macro gendict(instancename,T,idxsets...)
     N = length(idxsets)
     truearray = all(s -> (isexpr(s,:(:)) && length(s.args) == 2), idxsets) &&
@@ -85,7 +84,7 @@ pushmeta!(x::JuMPContainer, sym::Symbol, val) = (x.meta[sym] = val)
 getmeta(x::JuMPContainer, sym::Symbol) = x.meta[sym]
 
 # duck typing approach -- if eltype(innerArray) doesn't support accessor, will fail
-for accessor in (:getDual, :getLower, :getUpper)
+for accessor in (:getdual, :getlowerbound, :getupperbound)
     @eval $accessor(x::Union{JuMPContainer,Array}) = map($accessor,x)
 end
 
@@ -114,7 +113,7 @@ end
 JuMPContainer_from(x::JuMPDict,inner) = JuMPDict(inner)
 JuMPContainer_from(x::JuMPArray,inner) = JuMPArray(inner, x.indexsets)
 
-function getValue(x::JuMPContainer)
+function getvalue(x::JuMPContainer)
     getvalue_warn(x)
     ret = JuMPContainer_from(x,_getValueInner(x))
     # I guess copy!(::Dict, ::Dict) isn't defined, so...

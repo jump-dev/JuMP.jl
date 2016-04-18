@@ -47,7 +47,7 @@ for i = 1:m
 end
 solve(mod)
 
-X_val = getValue(X)
+X_val = getvalue(X)
 println(X_val)
 
 # Plot it, if desired (e.g. julia minellipse.jl plot)
