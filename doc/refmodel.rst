@@ -1,5 +1,7 @@
 .. _ref-model:
 
+.. include:: warn.rst
+
 ------
 Models
 ------

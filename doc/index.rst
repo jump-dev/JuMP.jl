@@ -2,6 +2,8 @@
 JuMP --- Julia for Mathematical Programming
 ===========================================
 
+.. include:: warn.rst
+
 .. module:: JuMP
    :synopsis: Julia for Mathematical Programming
 
