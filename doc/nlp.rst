@@ -1,5 +1,6 @@
 .. _nonlinear:
 
+.. include:: warn.rst
 ------------------
 Nonlinear Modeling
 ------------------

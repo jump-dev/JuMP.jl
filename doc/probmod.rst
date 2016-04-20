@@ -1,5 +1,7 @@
 .. _probmod:
 
+.. include:: warn.rst
+
 --------------------
 Problem Modification
 --------------------
