@@ -899,7 +899,7 @@ macro variable(args...)
         looped = getloopedcode(var, code, condition, idxvars, idxsets, idxpairs, :Variable; lowertri=symmetric)
         code = quote
             $(esc(idxsets[1].args[1].args[2])) == $(esc(idxsets[2].args[1].args[2])) || error("Cannot construct symmetric variables with nonsquare dimensions")
-            (issym($lb) && issym($ub)) || error("Bounds on symmetric variables must be symmetric")
+            (Compat.issymmetric($lb) && Compat.issymmetric($ub)) || error("Bounds on symmetric variables must be symmetric")
             $looped
             push!($(m).dictList, $escvarname)
         end

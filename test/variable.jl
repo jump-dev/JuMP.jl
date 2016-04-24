@@ -135,31 +135,18 @@ facts("[variable] getValue on empty things") do
     @fact length(getValue(z)) --> 0
 end
 
-# Slices three-dimensional JuMPContainer x[I+oi,J+oj,K+ok]
+# Slices three-dimensional JuMPContainer x[I,J,K]
 # I,J,K can be singletons, ranges, colons, etc.
-# oi, oj, ok are scalar offsets. The last can be omitted, as
-# that's useful to test more exotic indexing ([:red,"blue"])
-function sliceof(x, I, J, K, oi, oj, ok=nothing)
-    if length(K) == 1
-        if length(J) == 1
-            y = Array(Variable, length(I))
-        else
-            y = Array(Variable, length(I), length(J))
-        end
-    else
-        y = Array(Variable, length(I), length(J), length(K))
-    end
+function sliceof(x, I, J, K)
+    y = Array(Variable, length(I), length(J), length(K))
+
     ii = 1
     jj = 1
     kk = 1
     for i in I
         for j in J
             for k in K
-                if ok == nothing
-                    y[ii,jj,kk] = x[i+oi,j+oj,k]
-                else
-                    y[ii,jj,kk] = x[i+oi,j+oj,k+ok]
-                end
+                y[ii,jj,kk] = x[i,j,k]
                 kk += 1
             end
             jj += 1
@@ -168,7 +155,15 @@ function sliceof(x, I, J, K, oi, oj, ok=nothing)
         ii += 1
         jj = 1
     end
-    y
+    if VERSION >= v"0.5-"
+        idx = [length(I)==1, length(J)==1, length(K)==1]
+    else
+        idx = [false, false, length(K)==1]
+        if idx[3] == true && length(J) == 1
+            idx[2] = true
+        end
+    end
+    squeeze(y, tuple(find(idx)...))
 end
 
 facts("[variable] Slices of JuMPArray (#684)") do
@@ -178,40 +173,40 @@ facts("[variable] Slices of JuMPArray (#684)") do
     @variable(m, z[1:3,-1:2:4,3:4])
     @variable(m, w[1:3,-1:2,[:red,"blue"]])
 
-    @fact x[:] --> vec(sliceof(x, 1:3, 1:4, 1:2, 0, 0, 0))
-    @fact x[:,:,:] --> sliceof(x, 1:3, 1:4, 1:2, 0, 0, 0)
-    @fact x[1,:,:] --> sliceof(x, 1, 1:4, 1:2, 0, 0, 0)
-    @fact x[1,:,2] --> sliceof(x, 1, 1:4, 2, 0, 0, 0)
+    @fact x[:] --> vec(sliceof(x, 1:3, 1:4, 1:2))
+    @fact x[:,:,:] --> sliceof(x, 1:3, 1:4, 1:2)
+    @fact x[1,:,:] --> sliceof(x, 1, 1:4, 1:2)
+    @fact x[1,:,2] --> sliceof(x, 1, 1:4, 2)
     @fact_throws x[1,:,3]
-    @fact x[1:2,:,:] --> sliceof(x, 1:2, 1:4, 1:2, 0, 0, 0)
-    @fact x[1:2,:,2] --> sliceof(x, 1:2, 1:4, 2, 0, 0, 0)
-    @fact x[1:2,:,1:2] --> sliceof(x, 1:2, 1:4, 1:2, 0, 0, 0)
+    @fact x[1:2,:,:] --> sliceof(x, 1:2, 1:4, 1:2)
+    @fact x[1:2,:,2] --> sliceof(x, 1:2, 1:4, 2)
+    @fact x[1:2,:,1:2] --> sliceof(x, 1:2, 1:4, 1:2)
     @fact_throws x[1:2,:,1:3]
 
-    @fact y[:] --> vec(sliceof(y, 1:3, 1:4, 1:2, 0, -2, 2))
-    @fact y[:,:,:] --> sliceof(y, 1:3, 1:4, 1:2, 0, -2, 2)
-    @fact y[1,:,:] --> sliceof(y, 1, 1:4, 1:2, 0, -2, 2)
-    @fact y[1,:,4] --> sliceof(y, 1, 1:4, 2, 0, -2, 2)
+    @fact y[:] --> vec(sliceof(y, 1:3, -1:2, 3:4))
+    @fact y[:,:,:] --> sliceof(y, 1:3, -1:2, 3:4)
+    @fact y[1,:,:] --> sliceof(y, 1, -1:2, 3:4)
+    @fact y[1,:,4] --> sliceof(y, 1, -1:2, 4)
     @fact_throws y[1,:,5]
-    @fact y[1:2,:,:] --> sliceof(y, 1:2, 1:4, 1:2, 0, -2, 2)
-    @fact y[1:2,:,4] --> sliceof(y, 1:2, 1:4, 2, 0, -2, 2)
-    @fact y[1:2,:,3:4] --> sliceof(y, 1:2, 1:4, 1:2, 0, -2, 2)
+    @fact y[1:2,:,:] --> sliceof(y, 1:2, -1:2, 3:4)
+    @fact y[1:2,:,4] --> sliceof(y, 1:2, -1:2, 4)
+    @fact y[1:2,:,3:4] --> sliceof(y, 1:2, -1:2, 3:4)
     @fact_throws y[1:2,:,1:3]
 
-    @fact z[:] --> vec(sliceof(z, 1:3, 1:2:6, 1:2, 0, -2, 2))
-    @fact z[:,1,:] --> sliceof(z, 1:3, 3, 1:2, 0, -2, 2)
-    @fact z[1,1,:] --> sliceof(z, 1, 3, 1:2, 0, -2, 2)
+    @fact z[:] --> vec(sliceof(z, 1:3, -1:2:4, 3:4))
+    @fact z[:,1,:] --> sliceof(z, 1:3, 1, 3:4)
+    @fact z[1,1,:] --> sliceof(z, 1, 1, 3:4)
     @fact_throws z[:,5,3]
-    @fact z[1:2,1,:] --> sliceof(z, 1:2, 3, 1:2, 0, -2, 2)
-    @fact z[1:2,1,4] --> sliceof(z, 1:2, 3, 2, 0, -2, 2)
-    @fact z[1:2,1,3:4] --> sliceof(z, 1:2, 3, 1:2, 0, -2, 2)
+    @fact z[1:2,1,:] --> sliceof(z, 1:2, 1, 3:4)
+    @fact z[1:2,1,4] --> sliceof(z, 1:2, 1, 4)
+    @fact z[1:2,1,3:4] --> sliceof(z, 1:2, 1, 3:4)
     @fact_throws z[1:2,1,1:3]
 
-    @fact w[:] --> vec(sliceof(w, 1:3, 1:4, [:red,"blue"], 0, -2))
+    @fact w[:] --> vec(sliceof(w, 1:3, -1:2, [:red,"blue"]))
     @fact_throws w[:,:,:]
-    @fact w[1,:,"blue"] --> sliceof(w, 1, 1:4, ["blue"], 0, -2)
-    @fact w[1,:,:red] --> sliceof(w, 1, 1:4, [:red], 0, -2)
+    @fact w[1,:,"blue"] --> sliceof(w, 1, -1:2, ["blue"])
+    @fact w[1,:,:red] --> sliceof(w, 1, -1:2, [:red])
     @fact_throws w[1,:,"green"]
-    @fact w[1:2,:,"blue"] --> sliceof(w, 1:2, 1:4, ["blue"], 0, -2)
+    @fact w[1:2,:,"blue"] --> sliceof(w, 1:2, -1:2, ["blue"])
     @fact_throws w[1:2,:,[:red,"blue"]]
 end

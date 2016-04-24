@@ -139,7 +139,7 @@ Base.abs(x::JuMPDict) = map(abs, x)
 # delegate one-argument functions
 Base.size(x::JuMPArray)   = size(x.innerArray)
 Base.size(x::JuMPArray,k) = size(x.innerArray,k)
-Base.issym(x::JuMPArray) = issym(x.innerArray)
+Compat.issymmetric(x::JuMPArray) = Compat.issymmetric(x.innerArray)
 
 Base.eltype{T}(x::JuMPContainer{T}) = T
 

@@ -573,14 +573,25 @@ facts("[print] User-created Array{Variable}") do
     io_test(REPLMode,   v, "[x,y,x]")
     io_test(IJuliaMode, v, "[x,y,x]")
 
-    io_test(REPLMode,   A, """
+    if VERSION > v"0.5-"
+        io_test(REPLMode,   A, """
+2×2 Array{JuMP.Variable,2}:
+ x  y
+ y  x""")
+        io_test(IJuliaMode, A, """
+2×2 Array{JuMP.Variable,2}:
+ x  y
+ y  x""")
+    else
+        io_test(REPLMode,   A, """
 2x2 Array{JuMP.Variable,2}:
  x  y
  y  x""")
-    io_test(IJuliaMode, A, """
+        io_test(IJuliaMode, A, """
 2x2 Array{JuMP.Variable,2}:
  x  y
  y  x""")
+    end
 end
 
 facts("[print] basename keyword argument") do

@@ -19,6 +19,7 @@ import MathProgBase
 using Calculus
 using ReverseDiffSparse
 using ForwardDiff
+using Compat
 
 function __init__()
     ENABLE_NLP_RESOLVE[1] = false
