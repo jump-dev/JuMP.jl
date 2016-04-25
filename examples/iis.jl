@@ -33,11 +33,11 @@ function print_iis_gurobi(m::Model)
     for i in 1:numvar
         v = Variable(m, i)
         if iislb[i] != 0 && iisub[i] != 0
-            println(getLower(v), " <= ", getName(v), " <= ", getUpper(v))
+            println(getlowerbound(v), " <= ", getname(v), " <= ", getupperbound(v))
         elseif iislb[i] != 0
-            println(getName(v), " >= ", getLower(v))
+            println(getname(v), " >= ", getlowerbound(v))
         elseif iisub[i] != 0
-            println(getName(v), " <= ", getUpper(v))
+            println(getname(v), " <= ", getupperbound(v))
         end
     end
 

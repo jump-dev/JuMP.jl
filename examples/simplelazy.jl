@@ -29,8 +29,8 @@ m = Model(solver=GurobiSolver())
 # the callback handle. Note that we can access m, x, and y because
 # this function is defined inside the same scope
 function corners(cb)
-    x_val = getValue(x)
-    y_val = getValue(y)
+    x_val = getvalue(x)
+    y_val = getvalue(y)
     println("In callback function, x=$x_val, y=$y_val")
 
     # We have two constraints, one cutting off the top
@@ -64,10 +64,10 @@ function corners(cb)
 end  # End of callback function
 
 # Tell JuMP/Gurobi to use our callback function
-addLazyCallback(m, corners)
+addlazycallback(m, corners)
 
 # Solve the problem
 solve(m)
 
 # Print our final solution
-println("Final solution: [ $(getValue(x)), $(getValue(y)) ]")
+println("Final solution: [ $(getvalue(x)), $(getvalue(y)) ]")

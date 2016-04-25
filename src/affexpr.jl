@@ -92,9 +92,9 @@ function assert_isfinite(a::AffExpr)
     end
 end
 
-setObjective(m::Model, sense::Symbol, x::Variable) = setObjective(m, sense, convert(AffExpr,x))
-function setObjective(m::Model, sense::Symbol, a::AffExpr)
-    setObjectiveSense(m, sense)
+setobjective(m::Model, sense::Symbol, x::Variable) = setobjective(m, sense, convert(AffExpr,x))
+function setobjective(m::Model, sense::Symbol, a::AffExpr)
+    setobjectivesense(m, sense)
     m.obj = convert(QuadExpr,a)
 end
 
@@ -104,10 +104,10 @@ function Base.copy(a::AffExpr, new_model::Model)
     AffExpr(copy(a.vars, new_model), copy(a.coeffs), a.constant)
 end
 
-function getValue(a::AffExpr)
+function getvalue(a::AffExpr)
     ret = a.constant
     for it in 1:length(a.vars)
-        ret += a.coeffs[it] * getValue(a.vars[it])
+        ret += a.coeffs[it] * getvalue(a.vars[it])
     end
     ret
 end
@@ -156,7 +156,7 @@ function Base.copy(c::LinearConstraint, new_model::Model)
     return LinearConstraint(copy(c.terms, new_model), c.lb, c.ub)
 end
 
-function addConstraint(m::Model, c::LinearConstraint)
+function addconstraint(m::Model, c::LinearConstraint)
     push!(m.linconstr,c)
     if m.internalModelLoaded
         if method_exists(MathProgBase.addconstr!, (typeof(m.internalModel),Vector{Int},Vector{Float64},Float64,Float64))
@@ -170,13 +170,13 @@ function addConstraint(m::Model, c::LinearConstraint)
     end
     return LinConstrRef(m,length(m.linconstr))
 end
-addConstraint(m::Model, c::Array{LinearConstraint}) =
+addconstraint(m::Model, c::Array{LinearConstraint}) =
     error("The operators <=, >=, and == can only be used to specify scalar constraints. If you are trying to add a vectorized constraint, use the element-wise dot comparison operators (.<=, .>=, or .==) instead")
 
 function addVectorizedConstraint(m::Model, v::Array{LinearConstraint})
     ret = Array(LinConstrRef, size(v))
     for I in eachindex(v)
-        ret[I] = addConstraint(m, v[I])
+        ret[I] = addconstraint(m, v[I])
     end
     ret
 end

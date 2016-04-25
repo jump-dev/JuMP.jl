@@ -30,6 +30,6 @@ print(m)
 
 status = solve(m)
 
-println("Objective value: ", getObjectiveValue(m))
-println("x = ", getValue(x))
-println("y = ", getValue(y))
+println("Objective value: ", getobjectivevalue(m))
+println("x = ", getvalue(x))
+println("y = ", getvalue(y))

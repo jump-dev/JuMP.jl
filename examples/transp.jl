@@ -45,7 +45,7 @@ status = solve(m);
 
 if status == :Optimal
 	@printf("Optimal!\n");
-	@printf("Objective value: %d\n", getObjectiveValue(m));
+	@printf("Objective value: %d\n", getobjectivevalue(m));
 	@printf("Transpotation:\n");
 	for j = 1:length(DEST)
 		@printf("\t%s", DEST[j]);
@@ -54,7 +54,7 @@ if status == :Optimal
 	for i = 1:length(ORIG)
 		@printf("%s", ORIG[i]);
 		for j = 1:length(DEST)
-			@printf("\t%d", getValue(Trans[i,j]));
+			@printf("\t%d", getvalue(Trans[i,j]));
 		end
 		@printf("\n");
 	end

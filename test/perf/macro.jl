@@ -8,7 +8,7 @@ function test_linear(N)
     @defVar(m, y[1:N,1:N,1:N])
 
     for z in 1:10
-        @addConstraint(m,
+        @constraint(m,
             9*y[1,1,1] - 5*y[N,N,N] -
             2*sum{ z*x[j,i*N],                j=((z-1)*N+1):z*N, i=3:4} +
               sum{ i*(9*x[i,j] + 3*x[j,i]),   i=N:2N,            j=N:2N} +
@@ -28,7 +28,7 @@ function test_quad(N)
     @defVar(m, y[1:N,1:N,1:N])
 
     for z in 1:10
-        @addConstraint(m,
+        @constraint(m,
             9*y[1,1,1] - 5*y[N,N,N] -
             2*sum{ z*x[j,i*N],                j=((z-1)*N+1):z*N, i=3:4} +
               sum{ i*(9*x[i,j] + 3*x[j,i]),   i=N:2N,            j=N:2N} +
@@ -62,4 +62,3 @@ for N in [20,50,100]
     println("    N=$(N) min $(minimum(N1_times))")
     println("    N=$(N) min $(minimum(N2_times))")
 end
-

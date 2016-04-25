@@ -36,12 +36,12 @@ For example, we can solve the classical Rosenbrock problem (with a twist) as fol
     @setNLObjective(m, Min, (1-x)^2 + 100(y-x^2)^2)
 
     solve(m)
-    println("x = ", getValue(x), " y = ", getValue(y))
+    println("x = ", getvalue(x), " y = ", getvalue(y))
 
     # adding a (linear) constraint
     @addConstraint(m, x + y == 10)
     solve(m)
-    println("x = ", getValue(x), " y = ", getValue(y))
+    println("x = ", getvalue(x), " y = ", getvalue(y))
 
 Examples: `optimal control <https://github.com/JuliaOpt/JuMP.jl/blob/master/examples/optcontrol.jl>`_, `maximum likelihood estimation <https://github.com/JuliaOpt/JuMP.jl/blob/master/examples/mle.jl>`_, and  `Hock-Schittkowski tests <https://github.com/JuliaOpt/JuMP.jl/tree/master/test/hockschittkowski>`_.
 
@@ -97,10 +97,10 @@ on the right-hand side of the ``==`` sign as seen below::
     @defNLParam(m, x == 10)
     @defNLParam(m, y[i=1:10] == my_data[i]) # set of parameters indexed from 1 to 10
 
-You may use ``getValue`` and ``setValue`` to query or update the value of a parameter::
+You may use ``getvalue`` and ``setvalue`` to query or update the value of a parameter::
 
-    getValue(x) # 10, from above
-    setValue(y[4], 54.3) # y[4] now holds the value 54.3
+    getvalue(x) # 10, from above
+    setvalue(y[4], 54.3) # y[4] now holds the value 54.3
 
 Nonlinear parameters can be used *within nonlinear expressions* only::
 
@@ -117,12 +117,12 @@ Nonlinear parameters are useful when solving nonlinear models in a sequence::
     @defNLParam(m, x == 1.0)
     @setNLObjective(m, Min, (z-x)^2)
     solve(m)
-    getValue(z) # equals 1.0
+    getvalue(z) # equals 1.0
 
     # Now, update the value of x to solve a different problem
-    setValue(x, 5.0)
+    setvalue(x, 5.0)
     solve(m)
-    getValue(z) # equals 5.0
+    getvalue(z) # equals 5.0
 
 Using nonlinear parameters can be faster than creating a new model from scratch
 with updated data because JuMP is able to avoid repeating a number of steps
@@ -136,27 +136,27 @@ JuMP's library of recognized univariate functions is derived from the `Calculus.
 .. note::
     Automatic differentiation is *not* finite differencing. JuMP's automatically computed derivatives are not subject to approximation error.
 
-JuMP uses `ForwardDiff.jl <https://github.com/JuliaDiff/ForwardDiff.jl>`_ to perform automatic differentiation; see the ForwardDiff.jl `documentation <http://www.juliadiff.org/ForwardDiff.jl/perf_diff.html#restrictions-on-the-target-function>`_ for a description of how to write a function suitable for automatic differentiation. The general guideline is to write code that is generic with respect to the number type; don't assume that the input to the function is ``Float64``. To register a user-defined function with derivatives computed by automatic differentiation, use the ``registerNLFunction`` method as in the following example::
+JuMP uses `ForwardDiff.jl <https://github.com/JuliaDiff/ForwardDiff.jl>`_ to perform automatic differentiation; see the ForwardDiff.jl `documentation <http://www.juliadiff.org/ForwardDiff.jl/perf_diff.html#restrictions-on-the-target-function>`_ for a description of how to write a function suitable for automatic differentiation. The general guideline is to write code that is generic with respect to the number type; don't assume that the input to the function is ``Float64``. To register a user-defined function with derivatives computed by automatic differentiation, use the ``JuMP.register`` method as in the following example::
 
     mysquare(x) = x^2
     myf(x,y) = (x-1)^2+(y-2)^2
 
-    registerNLFunction(:myf, 2, myf, autodiff=true)
-    registerNLFunction(:mysquare, 1, mysquare, autodiff=true)
+    JuMP.register(:myf, 2, myf, autodiff=true)
+    JuMP.register(:mysquare, 1, mysquare, autodiff=true)
 
     m = Model()
 
     @defVar(m, x[1:2] >= 0.5)
     @setNLObjective(m, Min, myf(x[1],mysquare(x[2])))
 
-The above code creates a JuMP model with the objective function ``(x[1]-1)^2 + (x[2]^2-2)^2``. The first argument to ``registerNLFunction`` is a Julia symbol object which registers the name of the user-defined function in JuMP expressions; the JuMP name need not be the same as the name of the corresponding Julia method. The second argument specifies how many arguments the function takes. The third argument is the name of the Julia method which computes the function, and ``autodiff=true`` instructs JuMP to compute exact gradients automatically.
+The above code creates a JuMP model with the objective function ``(x[1]-1)^2 + (x[2]^2-2)^2``. The first argument to ``JuMP.register`` is a Julia symbol object which registers the name of the user-defined function in JuMP expressions; the JuMP name need not be the same as the name of the corresponding Julia method. The second argument specifies how many arguments the function takes. The third argument is the name of the Julia method which computes the function, and ``autodiff=true`` instructs JuMP to compute exact gradients automatically.
 
 .. note::
     All arguments to user-defined functions are scalars, not vectors. To define a function which takes a large number of arguments, you may use the splatting syntax ``f(x...) = ...``.
 
-Forward-mode automatic differentiation as implemented by ForwardDiff.jl has a computational cost that scales linearly with the number of input dimensions. As such, it is not the most efficient way to compute gradients of user-defined functions if the number of input arguments is large. In this case, users may want to provide their own routines for evaluating gradients. The more general syntax for ``registerNLFunction`` which accepts user-provided derivative evaluation routines is::
+Forward-mode automatic differentiation as implemented by ForwardDiff.jl has a computational cost that scales linearly with the number of input dimensions. As such, it is not the most efficient way to compute gradients of user-defined functions if the number of input arguments is large. In this case, users may want to provide their own routines for evaluating gradients. The more general syntax for ``JuMP.register`` which accepts user-provided derivative evaluation routines is::
 
-    registerNLFunction(s::Symbol, dimension::Integer, f::Function, ∇f::Function, ∇²f::Function)
+    JuMP.register(s::Symbol, dimension::Integer, f::Function, ∇f::Function, ∇²f::Function)
 
 The input differs for functions which take a single input argument and functions which take more than one. For univariate functions, the derivative evaluation routines should return a number which represents the first and second-order derivatives respectively. For multivariate functions, the derivative evaluation routines will be passed a gradient vector which they must explicitly fill. Second-order derivatives of multivariate functions are not currently supported; this argument should be omitted. The following example sets up the same optimization problem as before, but now we explicitly provide evaluation routines for the user-defined functions::
 
@@ -170,8 +170,8 @@ The input differs for functions which take a single input argument and functions
         g[2] = 2*(y-2)
     end
 
-    registerNLFunction(:myf, 2, myf, ∇f)
-    registerNLFunction(:mysquare, 1, mysquare, mysquare_prime, mysquare_primeprime)
+    JuMP.register(:myf, 2, myf, ∇f)
+    JuMP.register(:mysquare, 1, mysquare, mysquare_prime, mysquare_primeprime)
 
     m = Model()
 
@@ -205,7 +205,7 @@ of a JuMP model instead of handing the problem off to a solver.
 Internally, JuMP implements the ``AbstractNLPEvaluator`` interface from
 `MathProgBase <http://mathprogbasejl.readthedocs.org/en/latest/nlp.html>`_.
 To obtain an NLP evaluator object from a JuMP model, use ``JuMPNLPEvaluator``.
-The ``getLinearIndex`` method maps from JuMP variables to the variable
+The ``linearindex`` method maps from JuMP variables to the variable
 indices at the MathProgBase level.
 
 For example::
@@ -216,8 +216,8 @@ For example::
 
     @setNLObjective(m, Min, sin(x) + sin(y))
     values = zeros(2)
-    values[getLinearIndex(x)] = 2.0
-    values[getLinearIndex(y)] = 3.0
+    values[linearindex(x)] = 2.0
+    values[linearindex(y)] = 3.0
 
     d = JuMPNLPEvaluator(m)
     MathProgBase.initialize(d, [:Grad])
@@ -225,8 +225,8 @@ For example::
 
     ∇f = zeros(2)
     MathProgBase.eval_grad_f(d, ∇f, values)
-    # ∇f[getLinearIndex(x)] == cos(2.0)
-    # ∇f[getLinearIndex(y)] == cos(3.0)
+    # ∇f[linearindex(x)] == cos(2.0)
+    # ∇f[linearindex(y)] == cos(3.0)
 
 The ordering of constraints in a JuMP model corresponds to the following ordering
 at the MathProgBase nonlinear abstraction layer. There are three groups of constraints:
@@ -234,7 +234,7 @@ linear, quadratic, and nonlinear. Linear and quadratic constraints, to be recogn
 as such, must be added with the ``@addConstraint`` macros. All constraints added with
 the ``@addNLConstraint`` macros are treated as nonlinear constraints.
 Linear constraints are ordered first, then quadratic, then nonlinear.
-The ``getLinearIndex`` method applied to a constraint reference object
+The ``linearindex`` method applied to a constraint reference object
 returns the index of the constraint *within its corresponding constraint class*.
 For example::
 
@@ -247,11 +247,11 @@ For example::
     typeof(cons1) # JuMP.ConstraintRef{JuMP.Model,JuMP.GenericQuadConstraint{JuMP.GenericQuadExpr{Float64,JuMP.Variable}}} indicates a quadratic constraint
     typeof(cons2) # JuMP.ConstraintRef{JuMP.Model,JuMP.GenericRangeConstraint{JuMP.GenericAffExpr{Float64,JuMP.Variable}}} indicates a linear constraint
     typeof(cons3) # JuMP.ConstraintRef{JuMP.Model,JuMP.GenericRangeConstraint{JuMP.NonlinearExprData}} indicates a nonlinear constraint
-    getLinearIndex(cons1) == getLinearIndex(cons2) == getLinearIndex(cons3) == 1
+    linearindex(cons1) == linearindex(cons2) == linearindex(cons3) == 1
 
 When querying derivatives, ``cons2`` will appear first, because it is the first linear constraint, then ``cons1``, because it is the first quadratic constraint, then ``cons3``, because it is the first nonlinear constraint. Note that for one-sided nonlinear constraints, JuMP subtracts any values on the right-hand side when computing expression. In other words, one-sided linear constraints are always transformed to have a right-hand side of zero.
 
-The ``getConstraintBounds(m::Model)`` method returns the lower and upper bounds
+The ``JuMP.constraintbounds(m::Model)`` method returns the lower and upper bounds
 of all the constraints in the model, concatenated in the order discussed above.
 
 This method of querying derivatives directly from a JuMP model is convenient for
@@ -260,6 +260,6 @@ specific variables. For example, in statistical maximum likelihood estimation pr
 one is often interested in the Hessian matrix at the optimal solution,
 which can be queried using the ``JuMPNLPEvaluator``.
 
-If you are writing a "solver", we *highly encourage* use of the `MathProgBase nonlinear interface <http://mathprogbasejl.readthedocs.org/en/latest/nlp.html>`_ over querying derivatives using the above methods. These methods are provided for convenience but do not fully integrate with JuMP's solver infrastructure. In particular, they do not allow users to specify your solver to the ``Model()`` constructor nor to call it using ``solve()`` nor to populate the solution back into the model. Use of the MathProgBase interface also has the advantage of being independent of JuMP itself; users of MathProgBase solvers are free to implement their own evaluation routines instead of expressing their model in JuMP.  You may use the ``buildInternalModel`` method to ask JuMP to populate the "solver" without calling ``optimize!``.
+If you are writing a "solver", we *highly encourage* use of the `MathProgBase nonlinear interface <http://mathprogbasejl.readthedocs.org/en/latest/nlp.html>`_ over querying derivatives using the above methods. These methods are provided for convenience but do not fully integrate with JuMP's solver infrastructure. In particular, they do not allow users to specify your solver to the ``Model()`` constructor nor to call it using ``solve()`` nor to populate the solution back into the model. Use of the MathProgBase interface also has the advantage of being independent of JuMP itself; users of MathProgBase solvers are free to implement their own evaluation routines instead of expressing their model in JuMP.  You may use the ``JuMP.build`` method to ask JuMP to populate the "solver" without calling ``optimize!``.
 
 .. [1] Dunning, Huchette, and Lubin, "JuMP: A Modeling Language for Mathematical Optimization", `arXiv <http://arxiv.org/abs/1508.01982>`_.

@@ -34,8 +34,8 @@ context("With solver $(typeof(solver))") do
     maincon = @constraint(m, x + y <= 3)
     @fact solve(m) --> :Optimal
     @fact m.internalModelLoaded --> true
-    @fact getValue(x) --> roughly(2.0, TOL)
-    @fact getValue(y) --> roughly(1.0, TOL)
+    @fact getvalue(x) --> roughly(2.0, TOL)
+    @fact getvalue(y) --> roughly(1.0, TOL)
 
     # Test adding a variable
     # max 1.1x + 1.0y + 100.0z
@@ -46,10 +46,10 @@ context("With solver $(typeof(solver))") do
     # x* = 0, y* = 1, z* = 2
     @variable(m, 0 <= z <= 5, objective=100.0, inconstraints=[maincon], coefficients=[1.0])
     @fact solve(m) --> :Optimal
-    @fact getValue(x) --> roughly(0.0, TOL)
-    @fact getValue(y) --> roughly(1.0, TOL)
-    @fact getValue(z) --> roughly(2.0, TOL)
-    @fact getObjectiveValue(m) --> roughly(201.0, TOL)
+    @fact getvalue(x) --> roughly(0.0, TOL)
+    @fact getvalue(y) --> roughly(1.0, TOL)
+    @fact getvalue(z) --> roughly(2.0, TOL)
+    @fact getobjectivevalue(m) --> roughly(201.0, TOL)
 
 
     # Test changing bounds
@@ -59,12 +59,12 @@ context("With solver $(typeof(solver))") do
     #     0 <= y <= 3
     #     0 <= z <= 2
     # x* = 1, y* = 0, z* = 2
-    setLower(y, 0.0)
-    setUpper(z, 2.0)
+    setlowerbound(y, 0.0)
+    setupperbound(z, 2.0)
     @fact solve(m) --> :Optimal
-    @fact getValue(x) --> roughly(1.0, TOL)
-    @fact getValue(y) --> roughly(0.0, TOL)
-    @fact getValue(z) --> roughly(2.0, TOL)
+    @fact getvalue(x) --> roughly(1.0, TOL)
+    @fact getvalue(y) --> roughly(0.0, TOL)
+    @fact getvalue(z) --> roughly(2.0, TOL)
     m.internalModelLoaded = false
 end
 end
@@ -94,12 +94,12 @@ context("With solver $(typeof(solver))") do
     #     0 <= y <= 3
     #     0 <= z <= 1.5, Integer
     # x* = 2, y* = 0, z* = 1
-    setUpper(z, 1.5)
+    setupperbound(z, 1.5)
     m.colCat[3] = :Int
     @fact solve(m) --> :Optimal
-    @fact getValue(x) --> roughly(2.0, TOL)
-    @fact getValue(y) --> roughly(0.0, TOL)
-    @fact getValue(z) --> roughly(1.0, TOL)
+    @fact getvalue(x) --> roughly(2.0, TOL)
+    @fact getvalue(y) --> roughly(0.0, TOL)
+    @fact getvalue(z) --> roughly(1.0, TOL)
 
     # Test changing constraint bound (<= constraint)
     # max 1.1x + 1.0y + 100.0z
@@ -108,11 +108,11 @@ context("With solver $(typeof(solver))") do
     #     0 <= y <= 3
     #     0 <= z <= 1.5, Integer
     # x* = 1, y* = 0, z* = 1
-    chgConstrRHS(maincon, 2.0)
+    JuMP.setRHS(maincon, 2.0)
     @fact solve(m) --> :Optimal
-    @fact getValue(x) --> roughly(1.0, TOL)
-    @fact getValue(y) --> roughly(0.0, TOL)
-    @fact getValue(z) --> roughly(1.0, TOL)
+    @fact getvalue(x) --> roughly(1.0, TOL)
+    @fact getvalue(y) --> roughly(0.0, TOL)
+    @fact getvalue(z) --> roughly(1.0, TOL)
 
     # Test adding a constraint
     # max 1.1x + 1.0y + 100.0z
@@ -124,9 +124,9 @@ context("With solver $(typeof(solver))") do
     # x* = 0, y* = 2, z* = 0
     xz0ref = @constraint(m, x + z <=0)
     @fact solve(m) --> :Optimal
-    @fact getValue(x) --> roughly(0.0, TOL)
-    @fact getValue(y) --> roughly(2.0, TOL)
-    @fact getValue(z) --> roughly(0.0, TOL)
+    @fact getvalue(x) --> roughly(0.0, TOL)
+    @fact getvalue(y) --> roughly(2.0, TOL)
+    @fact getvalue(z) --> roughly(0.0, TOL)
 
     # Test changing constraint bound (>= constraint)
     # max 1.1x + 1.0y + 100.0z
@@ -137,14 +137,14 @@ context("With solver $(typeof(solver))") do
     #     0 <= y <= 3
     #     0 <= z <= 1.5, Integer
     # x* = 1, y* = 0, z* = 1
-    chgConstrRHS(xz0ref, 2.0)
+    JuMP.setRHS(xz0ref, 2.0)
     xyg0ref = @constraint(m, x + y >= 0)
     @fact solve(m) --> :Optimal
-    chgConstrRHS(xyg0ref, 1)
+    JuMP.setRHS(xyg0ref, 1)
     @fact solve(m) --> :Optimal
-    @fact getValue(x) --> roughly(1.0, TOL)
-    @fact getValue(y) --> roughly(0.0, TOL)
-    @fact getValue(z) --> roughly(1.0, TOL)
+    @fact getvalue(x) --> roughly(1.0, TOL)
+    @fact getvalue(y) --> roughly(0.0, TOL)
+    @fact getvalue(z) --> roughly(1.0, TOL)
 end
 end
 end
@@ -154,7 +154,7 @@ facts("[probmod] Test adding a range constraint and modifying it") do
     m = Model()
     @variable(m, x)
     rangeref = @constraint(m, -10 <= x <= 10)
-    @fact_throws chgConstrRHS(rangeref, 11)
+    @fact_throws JuMP.setRHS(rangeref, 11)
 end
 
 
@@ -169,14 +169,14 @@ context("With solver $(typeof(solver))") do
     @constraint(m, x + y == 1)
     @objective(m, Min, 2x+y)
     solve(m)
-    @fact getValue(x) --> roughly(0.0, TOL)
-    @fact getValue(y) --> roughly(1.0, TOL)
+    @fact getvalue(x) --> roughly(0.0, TOL)
+    @fact getvalue(y) --> roughly(1.0, TOL)
 end
 end
 end
 
 
-facts("[probmod] Test buildInternalModel") do
+facts("[probmod] Test JuMP.build") do
 for solver in lp_solvers
 context("With solver $(typeof(solver))") do
     m = Model(solver=solver)
@@ -184,22 +184,22 @@ context("With solver $(typeof(solver))") do
     @variable(m, y >= 0)
     @constraint(m, x + y == 1)
     @objective(m, Max, y)
-    buildInternalModel(m)
-    @fact getInternalModel(m) --> not(nothing)
+    JuMP.build(m)
+    @fact internalmodel(m) --> not(nothing)
     @fact m.internalModelLoaded --> true
     stat = solve(m)
     @fact stat --> :Optimal
-    @fact getValue(x) --> roughly( 0.0, TOL)
-    @fact getValue(y) --> roughly( 1.0, TOL)
-    @fact getObjectiveValue(m) --> roughly(1.0, TOL)
-    @fact getDual(x)  --> roughly(-1.0, TOL)
-    @fact getDual(y)  --> roughly( 0.0, TOL)
+    @fact getvalue(x) --> roughly( 0.0, TOL)
+    @fact getvalue(y) --> roughly( 1.0, TOL)
+    @fact getobjectivevalue(m) --> roughly(1.0, TOL)
+    @fact getdual(x)  --> roughly(-1.0, TOL)
+    @fact getdual(y)  --> roughly( 0.0, TOL)
 end
 end
 end
 
 
-facts("[probmod] Test buildInternalModel with MIP") do
+facts("[probmod] Test JuMP.build with MIP") do
 for solver in ip_solvers
 context("With solver $(typeof(solver))") do
     m = Model(solver=solver)
@@ -207,14 +207,14 @@ context("With solver $(typeof(solver))") do
     @variable(m, y, Bin)
     @constraint(m, x + y == 1)
     @objective(m, Max, y)
-    buildInternalModel(m)
-    @fact getInternalModel(m) --> not(nothing)
+    JuMP.build(m)
+    @fact internalmodel(m) --> not(nothing)
     @fact m.internalModelLoaded --> true
     stat = solve(m)
     @fact stat --> :Optimal
-    @fact getValue(x) --> roughly( 0.0, TOL)
-    @fact getValue(y) --> roughly( 1.0, TOL)
-    @fact getObjectiveValue(m) --> roughly(1.0, TOL)
+    @fact getvalue(x) --> roughly( 0.0, TOL)
+    @fact getvalue(y) --> roughly( 1.0, TOL)
+    @fact getobjectivevalue(m) --> roughly(1.0, TOL)
 end
 end
 end
@@ -231,7 +231,7 @@ context("With solver $(typeof(solver))") do
     solve(m)
     @constraint(m, 0 <= 1)
     @fact solve(m) --> :Optimal
-    @fact getValue(x) --> roughly(5.0, TOL)
+    @fact getvalue(x) --> roughly(5.0, TOL)
 end
 end
 end
@@ -247,25 +247,25 @@ context("With solver $(typeof(solver))") do
     @variable(mod, x, Bin)
     @objective(mod, Max, x)
     solve(mod)
-    @fact getValue(x) --> roughly(1.0)
-    setUpper(x, 2.0)
+    @fact getvalue(x) --> roughly(1.0)
+    setupperbound(x, 2.0)
     solve(mod)
-    @fact getValue(x) --> roughly(1.0)
-    setUpper(x, 0.0)
+    @fact getvalue(x) --> roughly(1.0)
+    setupperbound(x, 0.0)
     solve(mod)
-    @fact getValue(x) --> roughly(0.0)
+    @fact getvalue(x) --> roughly(0.0)
     # same thing, other direction
     mod = Model(solver=solver)
     @variable(mod, x, Bin)
     @objective(mod, Min, x)
     solve(mod)
-    @fact getValue(x) --> roughly(0.0)
-    setLower(x, -1.0)
+    @fact getvalue(x) --> roughly(0.0)
+    setlowerbound(x, -1.0)
     solve(mod)
-    @fact getValue(x) --> roughly(0.0)
-    setLower(x, 1.0)
+    @fact getvalue(x) --> roughly(0.0)
+    setlowerbound(x, 1.0)
     solve(mod)
-    @fact getValue(x) --> roughly(1.0)
+    @fact getvalue(x) --> roughly(1.0)
 end
 end
 end
@@ -277,7 +277,7 @@ function methods_test(solvername, solverobj, supp)
     @variable(mod, x >= 0)
     @constraint(mod, 2x == 2)
     solve(mod, suppress_warnings=true)
-    internal_mod = getInternalModel(mod)
+    internal_mod = internalmodel(mod)
     context(solvername) do
         for (it,(meth, args)) in enumerate(mpb_methods)
             if supp[it]

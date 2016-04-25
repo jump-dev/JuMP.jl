@@ -43,8 +43,8 @@ vtypes = MathProgBase.getvartype(m_internal)
 # populate JuMP model with data from internal model
 @variable(mod, x[1:n])
 for i in 1:n
-    setLower(x[i], xlb[i])
-    setUpper(x[i], xub[i])
+    setlowerbound(x[i], xlb[i])
+    setupperbound(x[i], xub[i])
     vtypes[i] == 'I' ? mod.colCat[x[i].col] = :Int : nothing # change vartype to integer when appropriate
 end
 At = A' # transpose to get useful row-wise sparse representation
@@ -54,7 +54,7 @@ end
 @objective(mod, Min, sum{ c[i]*x[i], i=1:n })
 
 function mycutgenerator(cb) # valid cuts
-    x_val = getValue(x)
+    x_val = getvalue(x)
     println("in callback")
     @usercut(cb, x[62]-x[63] <= 0)
     @usercut(cb, x[63]-x[64] <= 0)
@@ -67,8 +67,8 @@ function mycutgenerator(cb) # valid cuts
 end  # End of callback function
 
 # # Tell JuMP/CPLEX to use our callback function
-addCutCallback(mod, mycutgenerator)
+addcutcallback(mod, mycutgenerator)
 
 stat = solve(mod)
 println("Solve status: ", stat)
-println("Objective value: ", getObjectiveValue(mod))
+println("Objective value: ", getobjectivevalue(mod))

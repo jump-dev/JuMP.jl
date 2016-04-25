@@ -21,7 +21,7 @@ function PrintSolution(status, Trans, ORIG, DEST, PROD)
       for i = 1:length(ORIG)
         for j = 1:length(DEST)
           for p = 1:length(PROD)
-            print(" $(PROD[p]) $(ORIG[i]) $(DEST[j]) = $(getValue(Trans[i,j, p])) \t")
+            print(" $(PROD[p]) $(ORIG[i]) $(DEST[j]) = $(getvalue(Trans[i,j, p])) \t")
           end
           println()
         end

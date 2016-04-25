@@ -22,20 +22,20 @@ facts("[variable] constructors") do
     @variable(mcon, 0 <= onerange[-5:5] <= 10)
     @variable(mcon, onerangeub[-7:1] <= 10, Int)
     @variable(mcon, manyrangelb[0:1,10:20,1:1] >= 2)
-    @fact getLower(manyrangelb[0,15,1]) --> 2
+    @fact getlowerbound(manyrangelb[0,15,1]) --> 2
     s = ["Green","Blue"]
     @variable(mcon, x[i=-10:10,s] <= 5.5, Int, start=i+1)
-    @fact getUpper(x[-4,"Green"]) --> 5.5
-    @fact getValue(x[-3,"Blue"]) --> -2
-    @fact isequal(getVar(mcon, :lbonly),lbonly) --> true
-    @fact isequal(getVar(mcon, :ubonly),ubonly) --> true
-    @fact isequal(getVar(mcon, :onerangeub)[-7],onerangeub[-7]) --> true
+    @fact getupperbound(x[-4,"Green"]) --> 5.5
+    @fact getvalue(x[-3,"Blue"]) --> -2
+    @fact isequal(getvariable(mcon, :lbonly),lbonly) --> true
+    @fact isequal(getvariable(mcon, :ubonly),ubonly) --> true
+    @fact isequal(getvariable(mcon, :onerangeub)[-7],onerangeub[-7]) --> true
     @variable(mcon, lbonly)
-    @fact_throws ErrorException getVar(mcon, :lbonly)
-    @fact_throws ErrorException getVar(mcon, :foo)
+    @fact_throws ErrorException getvariable(mcon, :lbonly)
+    @fact_throws ErrorException getvariable(mcon, :foo)
     d = Dict()
     @variable(mcon, d["bar"][1:10] == 1)
-    @fact getValue(d["bar"][1]) --> 1
+    @fact getvalue(d["bar"][1]) --> 1
     @fact typeof(zero(nobounds)) --> AffExpr
     @fact typeof(one(nobounds)) --> AffExpr
 end
@@ -43,46 +43,46 @@ end
 facts("[variable] get and set bounds") do
     m = Model()
     @variable(m, 0 <= x <= 2)
-    @fact getLower(x) --> 0
-    @fact getUpper(x) --> 2
-    setLower(x, 1)
-    @fact getLower(x) --> 1
-    setUpper(x, 3)
-    @fact getUpper(x) --> 3
+    @fact getlowerbound(x) --> 0
+    @fact getupperbound(x) --> 2
+    setlowerbound(x, 1)
+    @fact getlowerbound(x) --> 1
+    setupperbound(x, 3)
+    @fact getupperbound(x) --> 3
     @variable(m, y, Bin)
-    @fact getLower(y) --> 0
-    @fact getUpper(y) --> 1
+    @fact getlowerbound(y) --> 0
+    @fact getupperbound(y) --> 1
     @variable(m, 0 <= y <= 1, Bin)
-    @fact getLower(y) --> 0
-    @fact getUpper(y) --> 1
+    @fact getlowerbound(y) --> 0
+    @fact getupperbound(y) --> 1
     @variable(m, fixedvar == 2)
-    @fact getValue(fixedvar) --> 2
-    @fact getLower(fixedvar) --> 2
-    @fact getUpper(fixedvar) --> 2
-    setValue(fixedvar, 5)
-    @fact getValue(fixedvar) --> 5
-    @fact getLower(fixedvar) --> 5
-    @fact getUpper(fixedvar) --> 5
+    @fact getvalue(fixedvar) --> 2
+    @fact getlowerbound(fixedvar) --> 2
+    @fact getupperbound(fixedvar) --> 2
+    setvalue(fixedvar, 5)
+    @fact getvalue(fixedvar) --> 5
+    @fact getlowerbound(fixedvar) --> 5
+    @fact getupperbound(fixedvar) --> 5
 end
 
 facts("[variable] get and set values") do
     m = Model()
     @variable(m, x[1:3])
     x0 = collect(1:3)
-    setValue(x, x0)
-    @fact getValue(x) --> x0
-    @fact getValue([x[1],x[2],x[3]]) --> x0
+    setvalue(x, x0)
+    @fact getvalue(x) --> x0
+    @fact getvalue([x[1],x[2],x[3]]) --> x0
 
     @variable(m, y[1:3,1:2])
-    @fact_throws DimensionMismatch setValue(y, collect(1:6))
+    @fact_throws DimensionMismatch setvalue(y, collect(1:6))
 end
 
 facts("[variable] get and set category") do
     m = Model()
     @variable(m, x[1:3])
-    setCategory(x[2], :Int)
-    @fact getCategory(x[3]) --> :Cont
-    @fact getCategory(x[2]) --> :Int
+    setcategory(x[2], :Int)
+    @fact getcategory(x[3]) --> :Cont
+    @fact getcategory(x[2]) --> :Int
 end
 
 facts("[variable] repeated elements in index set (issue #199)") do
@@ -117,22 +117,22 @@ facts("[variable] @variable returning Array{Variable}") do
     @fact typeof(y) --> Array{Variable,1}
     @fact typeof(z) --> Array{Variable,1}
 
-    @fact typeof(getValue(x)) --> Array{Float64,3}
-    @fact typeof(getValue(y)) --> Array{Float64,1}
-    @fact typeof(getValue(z)) --> Array{Float64,1}
+    @fact typeof(getvalue(x)) --> Array{Float64,3}
+    @fact typeof(getvalue(y)) --> Array{Float64,1}
+    @fact typeof(getvalue(z)) --> Array{Float64,1}
 end
 
-facts("[variable] getValue on empty things") do
+facts("[variable] getvalue on empty things") do
     m = Model()
     @variable(m, x[1:4,  1:0,1:3])   # Array{Variable}
     @variable(m, y[1:4,  2:1,1:3]) # JuMPArray
     @variable(m, z[1:4,Set(),1:3]) # JuMPDict
 
-    @fact getValue(x) --> Array(Float64, 4, 0, 3)
-    @fact typeof(getValue(y)) <: JuMP.JuMPArray{Float64} --> true
-    @fact size(getValue(y)) --> (4,0,3)
-    @fact typeof(getValue(z)) --> JuMP.JuMPArray{Float64,3,Tuple{UnitRange{Int},Set{Any},UnitRange{Int}}}
-    @fact length(getValue(z)) --> 0
+    @fact getvalue(x) --> Array(Float64, 4, 0, 3)
+    @fact typeof(getvalue(y)) <: JuMP.JuMPArray{Float64} --> true
+    @fact size(getvalue(y)) --> (4,0,3)
+    @fact typeof(getvalue(z)) --> JuMP.JuMPArray{Float64,3,Tuple{UnitRange{Int},Set{Any},UnitRange{Int}}}
+    @fact length(getvalue(z)) --> 0
 end
 
 # Slices three-dimensional JuMPContainer x[I,J,K]

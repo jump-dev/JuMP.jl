@@ -98,18 +98,18 @@ function PrintSolution(status, area, Make, Inventory, Sell, product, Time)
       for p = product
         println("Make $(p)")
         for t = 1:T
-          print("$(getValue(Make[p,t]))\t")
+          print("$(getvalue(Make[p,t]))\t")
         end
         println()
         println("Inventory $(p)")
         for t=1:T
-          print("$(getValue(Inventory[p,t]))\t")
+          print("$(getvalue(Inventory[p,t]))\t")
         end
         println()
         for a = area[p]
           println("Sell $(p) $(a)")
           for t=1:T
-            print("$(getValue(Sell[p,a,t])) \t")
+            print("$(getvalue(Sell[p,a,t])) \t")
           end
         println()
         end

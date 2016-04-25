@@ -51,6 +51,6 @@ m = Model()
 
 solve(m)
 
-@test_approx_eq_eps getObjectiveValue(m) -1768.80696 1e-3
+@test_approx_eq_eps getobjectivevalue(m) -1768.80696 1e-3
 
 end

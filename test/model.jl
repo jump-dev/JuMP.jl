@@ -29,31 +29,31 @@ modPath = joinpath(dirname(@__FILE__), "mod")
 facts("[model] Check error cases") do
     @fact_throws Model(solver=:Foo)
     modErr = Model()
-    @fact_throws setObjectiveSense(modErr, :Maximum)
+    @fact_throws setobjectivesense(modErr, :Maximum)
     @variable(modErr, errVar)
-    @fact getValue(errVar) --> isnan
-    @fact_throws getDual(errVar)
+    @fact getvalue(errVar) --> isnan
+    @fact_throws getdual(errVar)
 
     modErr = Model()
     @variable(modErr, x, Bin)
     @objective(modErr, Max, x)
     con = @constraint(modErr, x <= 0.5)
     solve(modErr)
-    @fact_throws getDual(con)
+    @fact_throws getdual(con)
 
     modErr = Model()
     @variable(modErr, 0 <= x <= 1)
     @objective(modErr, Max, x)
     @constraint(modErr, x <= -1)
     solve(modErr, suppress_warnings=true)
-    @fact getValue(x) --> isnan
+    @fact getvalue(x) --> isnan
 end
 
 facts("[model] Performance warnings") do
     m = Model()
     @variable(m, x[1:2], start=0)
     for i in 1:500
-       getValue(x)
+       getvalue(x)
     end
     q = 0
     for i in 1:30000
@@ -228,9 +228,9 @@ facts("[model] Test printing a model") do
     @fact MathProgBase.numlinconstr(modA) --> 3
     @fact MathProgBase.numquadconstr(modA) --> 0
     @fact MathProgBase.numconstr(modA) --> 3
-    @fact getObjectiveSense(modA) --> :Max
-    setObjectiveSense(modA, :Min)
-    @fact getObjectiveSense(modA) --> :Min
+    @fact getobjectivesense(modA) --> :Max
+    setobjectivesense(modA, :Min)
+    @fact getobjectivesense(modA) --> :Min
 end
 
 facts("[model] Quadratic MPS writer") do
@@ -272,7 +272,7 @@ facts("[model] Quadratic MPS writer") do
     @fact MathProgBase.numlinconstr(modQ) --> 0
     @fact MathProgBase.numquadconstr(modQ) --> 0
     @fact MathProgBase.numconstr(modQ) --> 0
-    @fact getObjectiveSense(modQ) --> :Min
+    @fact getobjectivesense(modQ) --> :Min
 end
 
 
@@ -291,14 +291,14 @@ context("With solver $(typeof(solver))") do
 
     @fact solve(modA)       --> :Optimal
     @fact modA.objVal       --> roughly(1.0+4.833334, TOL)
-    @fact getValue(x)       --> roughly(1.0, TOL)
-    @fact getValue(y)       --> roughly(1.0, TOL)
-    @fact getValue(z)       --> roughly(4.0, TOL)
-    @fact getValue(r)[3]    --> roughly(0.5, TOL)
-    @fact getValue(r)[4]    --> roughly(0.0, TOL)
-    @fact getValue(r)[5]    --> roughly(0.0, TOL)
-    @fact getValue(r)[6]    --> roughly(6.0, TOL)
-    @fact getObjective(modA).aff --> ((x + y)/2.0 + 3.0)/3.0 + z + r[3]
+    @fact getvalue(x)       --> roughly(1.0, TOL)
+    @fact getvalue(y)       --> roughly(1.0, TOL)
+    @fact getvalue(z)       --> roughly(4.0, TOL)
+    @fact getvalue(r)[3]    --> roughly(0.5, TOL)
+    @fact getvalue(r)[4]    --> roughly(0.0, TOL)
+    @fact getvalue(r)[5]    --> roughly(0.0, TOL)
+    @fact getvalue(r)[6]    --> roughly(6.0, TOL)
+    @fact getobjective(modA).aff --> ((x + y)/2.0 + 3.0)/3.0 + z + r[3]
 end # solver context
 end # loop over solvers
 end # facts block
@@ -319,28 +319,28 @@ context("With solver $(typeof(solver))") do
 
     # Solution
     @fact solve(modA) --> :Optimal
-    @fact getObjectiveValue(modA) --> roughly(-5.8446115, TOL)
-    @fact getValue(x)       --> roughly(0.9774436, TOL)
-    @fact getValue(y)       --> roughly(1.0225563, TOL)
-    @fact getValue(z)       --> roughly(4.0, TOL)
-    @fact getValue(r)[3]    --> roughly(0.5112781, TOL)
-    @fact getValue(r)[4]    --> roughly(0.0, TOL)
-    @fact getValue(r)[5]    --> roughly(0.0, TOL)
-    @fact getValue(r)[6]    --> roughly(6.0, TOL)
+    @fact getobjectivevalue(modA) --> roughly(-5.8446115, TOL)
+    @fact getvalue(x)       --> roughly(0.9774436, TOL)
+    @fact getvalue(y)       --> roughly(1.0225563, TOL)
+    @fact getvalue(z)       --> roughly(4.0, TOL)
+    @fact getvalue(r)[3]    --> roughly(0.5112781, TOL)
+    @fact getvalue(r)[4]    --> roughly(0.0, TOL)
+    @fact getvalue(r)[5]    --> roughly(0.0, TOL)
+    @fact getvalue(r)[6]    --> roughly(6.0, TOL)
 
     # Reduced costs
-    @fact getDual(x)    --> roughly( 0.0, TOL)
-    @fact getDual(y)    --> roughly( 0.0, TOL)
-    @fact getDual(z)    --> roughly(-1.0714286, TOL)
-    @fact getDual(r)[3] --> roughly( 0.0, TOL)
-    @fact getDual(r)[4] --> roughly(1.0, TOL)
-    @fact getDual(r)[5] --> roughly(1.0, TOL)
-    @fact getDual(r)[6] --> roughly(-0.03759398, TOL)
+    @fact getdual(x)    --> roughly( 0.0, TOL)
+    @fact getdual(y)    --> roughly( 0.0, TOL)
+    @fact getdual(z)    --> roughly(-1.0714286, TOL)
+    @fact getdual(r)[3] --> roughly( 0.0, TOL)
+    @fact getdual(r)[4] --> roughly(1.0, TOL)
+    @fact getdual(r)[5] --> roughly(1.0, TOL)
+    @fact getdual(r)[6] --> roughly(-0.03759398, TOL)
 
     # Row duals
-    @fact getDual(cons)[1] --> roughly( 0.333333, TOL)
-    @fact getDual(cons)[2] --> roughly(-1.0, TOL)
-    @fact getDual(cons)[3] --> roughly(-0.0714286, TOL)
+    @fact getdual(cons)[1] --> roughly( 0.333333, TOL)
+    @fact getdual(cons)[2] --> roughly(-1.0, TOL)
+    @fact getdual(cons)[3] --> roughly(-0.0714286, TOL)
 end # solver context
 end # loop over solvers
 end # facts block
@@ -361,28 +361,28 @@ context("With solver $(typeof(solver))") do
 
     # Solution
     @fact solve(modA) --> :Optimal
-    @fact getObjectiveValue(modA) --> roughly(5.8446115, TOL)
-    @fact getValue(x)       --> roughly(0.9774436, TOL)
-    @fact getValue(y)       --> roughly(1.0225563, TOL)
-    @fact getValue(z)       --> roughly(4.0, TOL)
-    @fact getValue(r)[3]    --> roughly(0.5112781, TOL)
-    @fact getValue(r)[4]    --> roughly(0.0, TOL)
-    @fact getValue(r)[5]    --> roughly(0.0, TOL)
-    @fact getValue(r)[6]    --> roughly(6.0, TOL)
+    @fact getobjectivevalue(modA) --> roughly(5.8446115, TOL)
+    @fact getvalue(x)       --> roughly(0.9774436, TOL)
+    @fact getvalue(y)       --> roughly(1.0225563, TOL)
+    @fact getvalue(z)       --> roughly(4.0, TOL)
+    @fact getvalue(r)[3]    --> roughly(0.5112781, TOL)
+    @fact getvalue(r)[4]    --> roughly(0.0, TOL)
+    @fact getvalue(r)[5]    --> roughly(0.0, TOL)
+    @fact getvalue(r)[6]    --> roughly(6.0, TOL)
 
     # Reduced costs
-    @fact getDual(x)    --> roughly( 0.0, TOL)
-    @fact getDual(y)    --> roughly( 0.0, TOL)
-    @fact getDual(z)    --> roughly( 1.0714286, TOL)
-    @fact getDual(r)[3] --> roughly( 0.0, TOL)
-    @fact getDual(r)[4] --> roughly(-1.0, TOL)
-    @fact getDual(r)[5] --> roughly(-1.0, TOL)
-    @fact getDual(r)[6] --> roughly( 0.03759398, TOL)
+    @fact getdual(x)    --> roughly( 0.0, TOL)
+    @fact getdual(y)    --> roughly( 0.0, TOL)
+    @fact getdual(z)    --> roughly( 1.0714286, TOL)
+    @fact getdual(r)[3] --> roughly( 0.0, TOL)
+    @fact getdual(r)[4] --> roughly(-1.0, TOL)
+    @fact getdual(r)[5] --> roughly(-1.0, TOL)
+    @fact getdual(r)[6] --> roughly( 0.03759398, TOL)
 
     # Row duals
-    @fact getDual(cons)[1] --> roughly(-0.333333, TOL)
-    @fact getDual(cons)[2] --> roughly( 1.0, TOL)
-    @fact getDual(cons)[3] --> roughly( 0.0714286, TOL)
+    @fact getdual(cons)[1] --> roughly(-0.333333, TOL)
+    @fact getdual(cons)[2] --> roughly( 1.0, TOL)
+    @fact getdual(cons)[3] --> roughly( 0.0714286, TOL)
 end # solver context
 end # loop over solvers
 end # facts block
@@ -398,7 +398,7 @@ context("With solver $(typeof(solver))") do
     @constraint(modB, x <= 10)
     status = solve(modB)
     @fact status --> :Optimal
-    @fact getValue(x) --> roughly(1.0, TOL)
+    @fact getvalue(x) --> roughly(1.0, TOL)
 end
 end
 end
@@ -417,7 +417,7 @@ facts("[model] Test model copying") do
     @variable(source, z[1:3])
     @variable(source, w[2:4]) # JuMPArray
     @variable(source, v[[:red],i=1:3;isodd(i)]) # JuMPDict
-    setSolveHook(source, m -> :Optimal)
+    JuMP.setsolvehook(source, m -> :Optimal)
 
     # uncomment when NLP copying is implemented
     # @NLconstraint(source, c[k=1:3], x^2 + y^3 * sin(x+k*y) >= 1)
@@ -474,11 +474,11 @@ facts("[model] Test model copying") do
     @fact typeof(dest.linconstr)  --> Array{JuMP.GenericRangeConstraint{JuMP.GenericAffExpr{Float64,JuMP.Variable}},1}
     @fact typeof(dest.quadconstr) --> Array{JuMP.GenericQuadConstraint{JuMP.GenericQuadExpr{Float64,JuMP.Variable}},1}
 
-    setPrintHook(source, m -> 2)
+    JuMP.setprinthook(source, m -> 2)
     dest2 = copy(source)
     @fact dest2.printhook(dest2) --> 2
 
-    addLazyCallback(source, cb -> 3)
+    addlazycallback(source, cb -> 3)
     @fact_throws copy(source)
 end
 
@@ -521,7 +521,7 @@ facts("[model] Test NaN checking") do
     @variable(mod, x)
     @objective(mod, Min, NaN*x)
     @fact_throws solve(mod)
-    setObjective(mod, :Min, NaN*x^2)
+    @objective(mod, Min, NaN*x^2)
     @fact_throws solve(mod)
     @objective(mod, Min, x)
     @constraint(mod, Min, NaN*x == 0)
@@ -537,8 +537,8 @@ facts("[model] Test column-wise modeling") do
     @variable(mod, 0 <= z1 <= 1, objective=10.0, inconstraints=con, coefficients=[1.0,-2.0])
     @variable(mod, 0 <= z2 <= 1, objective=10.0, inconstraints=Any[con[i] for i in 1:2], coefficients=[1.0,-2.0])
     @fact solve(mod) --> :Optimal
-    @fact getValue(z1) --> roughly(1.0, TOL)
-    @fact getValue(z2) --> roughly(1.0, TOL)
+    @fact getvalue(z1) --> roughly(1.0, TOL)
+    @fact getvalue(z2) --> roughly(1.0, TOL)
 
     # do a vectorized version as well
     mod = Model()
@@ -552,8 +552,8 @@ facts("[model] Test column-wise modeling") do
     @variable(mod, 0 <= z1 <= 1, objective=10.0, inconstraints=con, coefficients=[1.0,-2.0])
     @variable(mod, 0 <= z2 <= 1, objective=10.0, inconstraints=Any[con[i] for i in 1:2], coefficients=[1.0,-2.0])
     @fact solve(mod) --> :Optimal
-    @fact getValue(z1) --> roughly(1.0, TOL)
-    @fact getValue(z2) --> roughly(1.0, TOL)
+    @fact getvalue(z1) --> roughly(1.0, TOL)
+    @fact getvalue(z2) --> roughly(1.0, TOL)
 
     # vectorized with sparse matrices
     mod = Model()
@@ -569,8 +569,8 @@ facts("[model] Test column-wise modeling") do
     @variable(mod, 0 <= z1 <= 1, objective=10.0, inconstraints=con, coefficients=[1.0,-2.0])
     @variable(mod, 0 <= z2 <= 1, objective=10.0, inconstraints=Any[con[i] for i in 1:2], coefficients=[1.0,-2.0])
     @fact solve(mod) --> :Optimal
-    @fact getValue(z1) --> roughly(1.0, TOL)
-    @fact getValue(z2) --> roughly(1.0, TOL)
+    @fact getvalue(z1) --> roughly(1.0, TOL)
+    @fact getvalue(z2) --> roughly(1.0, TOL)
 end
 
 facts("[model] Test all MPS paths") do
@@ -580,14 +580,14 @@ facts("[model] Test all MPS paths") do
     @variable(mod, low_var >= 5)
     @constraint(mod, free_var == int_var)
     @constraint(mod, free_var - int_var >= 0)
-    setObjective(mod, :Max, free_var*int_var + low_var)
+    @objective(mod, Max, free_var*int_var + low_var)
     writeMPS(mod,"test.mps")
 end
 
 facts("[model] Test all LP paths") do
     mod = Model()
     @variable(mod, free_var)
-    setObjective(mod, :Max, free_var*free_var)
+    @objective(mod, Max, free_var*free_var)
     @fact_throws writeLP(mod,"test.lp")
     @objective(mod, Max, free_var)
     @constraint(mod, free_var - 2*free_var == 0)
@@ -604,8 +604,8 @@ context("With solver $(typeof(solver))") do
     @constraint(mod, x + y >= 1)
     @objective(mod, Min, x+y)
     solve(mod)
-    @fact getValue(x) --> roughly(0.0, TOL)
-    @fact getValue(y) --> roughly(2.0, TOL)
+    @fact getvalue(x) --> roughly(0.0, TOL)
+    @fact getvalue(y) --> roughly(2.0, TOL)
 end; end; end
 
 facts("[model] Test semi-integer variables") do
@@ -617,8 +617,8 @@ context("With solver $(typeof(solver))") do
     @constraint(mod, x + y >= 2.5)
     @objective(mod, Min, x+1.1y)
     solve(mod)
-    @fact getValue(x) --> roughly(3.0, TOL)
-    @fact getValue(y) --> 0.0
+    @fact getvalue(x) --> roughly(3.0, TOL)
+    @fact getvalue(y) --> 0.0
 end; end; end
 
 facts("[model] Test fixed variables don't leak through MPB") do
@@ -630,10 +630,10 @@ context("With solver $(typeof(solver))") do
     @objective(mod, Min, x[1] + x[2] + x[3] + y[1] + y[2])
     solve(mod)
     for i in 1:3
-        @fact getValue(x[i]) --> roughly(0, TOL)
+        @fact getvalue(x[i]) --> roughly(0, TOL)
     end
     for k in 1:2
-        @fact getValue(y[k]) --> roughly(k, TOL)
+        @fact getvalue(y[k]) --> roughly(k, TOL)
     end
 end; end
 for solver in ip_solvers
@@ -641,8 +641,8 @@ context("With solver $(typeof(solver))") do
     mod = Model(solver=solver)
     @variable(mod, x[1:3], Bin)
     @variable(mod, y[k=1:2] == k)
-    buildInternalModel(mod)
-    @fact MathProgBase.getvartype(getInternalModel(mod)) --> [:Bin,:Bin,:Bin,:Cont,:Cont]
+    JuMP.build(mod)
+    @fact MathProgBase.getvartype(internalmodel(mod)) --> [:Bin,:Bin,:Bin,:Cont,:Cont]
 end; end; end
 
 
@@ -656,7 +656,7 @@ context("With solver $(typeof(solver))") do
     @variable(modS, z)
     @variable(modS, w)
 
-    setObjective(modS, :Max, z+w)
+    @objective(modS, Max, z+w)
 
     a = [1,2,3]
     b = [5,4,7,2,1]
@@ -674,8 +674,8 @@ context("With solver $(typeof(solver))") do
 
     @fact solve(modS) --> :Optimal
     @fact modS.objVal --> roughly(15.0, TOL)
-    @fact getValue(z) --> roughly( 3.0, TOL)
-    @fact getValue(w) --> roughly(12.0, TOL)
+    @fact getvalue(z) --> roughly( 3.0, TOL)
+    @fact getvalue(w) --> roughly(12.0, TOL)
 
 
     m = Model(solver=solver)
@@ -686,8 +686,8 @@ context("With solver $(typeof(solver))") do
     addSOS1(m, [x[1],2x[3]])
 
     @fact solve(m) --> :Optimal
-    @fact getValue(x)[:] --> roughly([0.0,1.0,2.0], TOL)
-    @fact getObjectiveValue(m) --> roughly(3.0, TOL)
+    @fact getvalue(x)[:] --> roughly([0.0,1.0,2.0], TOL)
+    @fact getobjectivevalue(m) --> roughly(3.0, TOL)
 end; end; end
 
 facts("[model] Test vectorized model creation") do
@@ -731,7 +731,7 @@ facts("[model] Test MIQP vectorization") do
         @constraint(mod, eye(p)*β .>= -M*eye(p)*z)
         @constraint(mod, sum(z) == K)
         solve(mod)
-        return getValue(β)[:]
+        return getvalue(β)[:]
     end
     include(joinpath("data","miqp_vector.jl")) # loads X and q
     y = X * [100, 50, 10, 1] + 20*q
@@ -746,14 +746,14 @@ facts("[model] Test MIQP vectorization") do
     end
 end
 
-facts("[model] Test setSolver") do
+facts("[model] Test setsolver") do
     m = Model()
     @variable(m, x[1:5])
     @constraint(m, con[i=1:5], x[6-i] == i)
     @fact solve(m) --> :Optimal
 
     for solver in lp_solvers
-        setSolver(m, solver)
+        setsolver(m, solver)
         @fact m.solver --> solver
         @fact (m.internalModel == nothing) --> true
         @fact solve(m) --> :Optimal
@@ -772,7 +772,7 @@ facts("[model] Setting solve hook") do
         append!(kwarglist, kwargs)
         :DidntDoAnything
     end
-    setSolveHook(m, solvehook)
+    JuMP.setsolvehook(m, solvehook)
     solve(m)
     @fact dummy --> [2]
     @fact kwarglist --> Any[(:suppress_warnings,false)]
@@ -785,16 +785,16 @@ facts("[model] Setting print hook") do
     function printhook(io::IO, m::Model)
         dummy[1] += 1
     end
-    setPrintHook(m, printhook)
+    JuMP.setprinthook(m, printhook)
     print(m)
     @fact dummy --> [2]
 end
 
-facts("[model] Test getLinearIndex") do
+facts("[model] Test linearindex") do
     m = Model()
     @variable(m, x[1:5])
     for i in 1:5
-        @fact isequal(Variable(m,getLinearIndex(x[i])),x[i]) --> true
+        @fact isequal(Variable(m,linearindex(x[i])),x[i]) --> true
     end
 end
 
@@ -806,11 +806,11 @@ facts("[model] Test LinearConstraint from ConstraintRef") do
     @fact real_constr.terms --> @LinearConstraint(x == 1).terms
 end
 
-facts("[model] Test getValue on OneIndexedArrays") do
+facts("[model] Test getvalue on OneIndexedArrays") do
     m = Model()
     @variable(m, x[i=1:5], start=i)
     @fact typeof(x) --> Vector{Variable}
-    @fact typeof(getValue(x)) --> Vector{Float64}
+    @fact typeof(getvalue(x)) --> Vector{Float64}
 end
 
 facts("[model] Relaxation keyword argument to solve") do
@@ -824,26 +824,26 @@ facts("[model] Relaxation keyword argument to solve") do
 
     # Force LP solver since not all MIP solvers
     # return duals (i.e. Cbc)
-    setSolver(m, lp_solvers[1])
+    setsolver(m, lp_solvers[1])
     @fact solve(m, relaxation=true) --> :Optimal
-    @fact getValue(y) --> 1.5
-    @fact getValue(z) --> 0
-    @fact getValue(w) --> 0.5
-    @fact getValue(v) --> 1
-    @fact getDual(y) --> 1
-    @fact getDual(z) --> 1
-    @fact getDual(w) --> 1
-    @fact getDual(v) --> 1
-    @fact getObjectiveValue(m) --> 1.5 + 0 + 0.5 + 1
+    @fact getvalue(y) --> 1.5
+    @fact getvalue(z) --> 0
+    @fact getvalue(w) --> 0.5
+    @fact getvalue(v) --> 1
+    @fact getdual(y) --> 1
+    @fact getdual(z) --> 1
+    @fact getdual(w) --> 1
+    @fact getdual(v) --> 1
+    @fact getobjectivevalue(m) --> 1.5 + 0 + 0.5 + 1
 
     # Let JuMP choose solver again
-    setSolver(m, JuMP.UnsetSolver())
+    setsolver(m, JuMP.UnsetSolver())
     @fact solve(m) --> :Optimal
-    @fact getValue(y) --> 2
-    @fact getValue(z) --> 0
-    @fact getValue(w) --> 1
-    @fact getValue(v) --> 1
-    @fact getObjectiveValue(m) --> 2 + 0 + 1 + 1
+    @fact getvalue(y) --> 2
+    @fact getvalue(z) --> 0
+    @fact getvalue(w) --> 1
+    @fact getvalue(v) --> 1
+    @fact getobjectivevalue(m) --> 2 + 0 + 1 + 1
 
     @variable(m, 1 <= x <= 2, SemiCont)
     @variable(m, -2 <= t <= -1, SemiInt)
@@ -853,13 +853,13 @@ facts("[model] Relaxation keyword argument to solve") do
 
     @fact solve(m, relaxation=true) --> :Optimal
 
-    @fact getValue(x) --> 0
-    @fact getValue(y) --> 1.5
-    @fact getValue(z) --> 0
-    @fact getValue(w) --> 0.5
-    @fact getValue(v) --> 1
-    @fact getValue(t) --> 0
-    @fact getObjectiveValue(m) --> 0 + 1.5 + 0 + 0.5 + 1 + 0
+    @fact getvalue(x) --> 0
+    @fact getvalue(y) --> 1.5
+    @fact getvalue(z) --> 0
+    @fact getvalue(w) --> 0.5
+    @fact getvalue(v) --> 1
+    @fact getvalue(t) --> 0
+    @fact getobjectivevalue(m) --> 0 + 1.5 + 0 + 0.5 + 1 + 0
 end
 
 facts("[model] Unrecognized keyword argument to solve") do

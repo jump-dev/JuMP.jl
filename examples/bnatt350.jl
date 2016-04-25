@@ -49,8 +49,8 @@ vtypes = MathProgBase.getvartype(m_internal)
 # populate JuMP model with data from internal model
 @variable(mod, x[1:n])
 for i in 1:n
-    setLower(x[i], xlb[i])
-    setUpper(x[i], xub[i])
+    setlowerbound(x[i], xlb[i])
+    setupperbound(x[i], xub[i])
     mod.colCat[x[i].col] = vtypes[i]
 end
 At = A' # transpose to get useful row-wise sparse representation
@@ -65,12 +65,12 @@ function myheuristic(cb)
     for i in 1:n
         line = chomp(readline(fp))
         spl = filter(x->!isempty(x), split(line, " "))
-        setSolutionValue!(cb, x[i], round(float(spl[2]),4))
+        setsolutionvalue(cb, x[i], round(float(spl[2]),4))
     end
-    addSolution(cb)
+    addsolution(cb)
 end  # End of callback function
 
-addHeuristicCallback(mod, myheuristic)
+addheuristiccallback(mod, myheuristic)
 stat = solve(mod)
 println("Solve status: ", stat)
-println("Objective value: ", getObjectiveValue(mod))
+println("Objective value: ", getobjectivevalue(mod))

@@ -35,9 +35,9 @@ capacity = 10
 # Solve problem using MIP solver
 status = solve(m)
 
-println("Objective is: ", getObjectiveValue(m))
+println("Objective is: ", getobjectivevalue(m))
 println("Solution is:")
 for i = 1:5
-    print("x[$i] = ", getValue(x[i]))
+    print("x[$i] = ", getvalue(x[i]))
     println(", p[$i]/w[$i] = ", profit[i]/weight[i])
 end

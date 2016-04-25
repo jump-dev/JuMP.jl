@@ -61,7 +61,7 @@ Methods
 The ``ref`` accepts index sets in the same way as ``@defVar``, and those indices can be used in the construction of the expressions::
 
     @defExpr(m, expr[i=1:3], i*sum{x[j], j=1:3})
-* ``@addSDPConstraint(m::Model, expr)`` - adds a semidefinite constraint to the model ``m``. The expression ``expr`` must be a square, two-dimensional array.
+* ``@SDconstraint(m::Model, expr)`` - adds a semidefinite constraint to the model ``m``. The expression ``expr`` must be a square, two-dimensional array.
 * ``addSOS1(m::Model, coll::Vector{AffExpr})`` - adds special ordered set constraint
   of type 1 (SOS1). Specify the set as a vector of weighted variables, e.g. ``coll = [3x, y, 2z]``.
   Note that solvers expect the weights to be unique. See
@@ -85,7 +85,7 @@ The ``ref`` accepts index sets in the same way as ``@defVar``, and those indices
   ``append!(aff, other)`` which results in ``aff`` equaling ``5x + 7y + 3z``.
   This is significantly more efficient than using ``aff += other``.
 * ``sum(affs::Array{AffExpr})`` - efficiently sum an array of affine expressions.
-* ``getValue(expr)`` - evaluate an ``AffExpr`` or ``QuadExpr``, given the current solution values.
+* ``getvalue(expr)`` - evaluate an ``AffExpr`` or ``QuadExpr``, given the current solution values.
 * ``linearterms{C,V}(aff::GenericAffExpr{C,V})`` - provides an iterator over the ``(a_i::C,x_i::V)`` terms in affine expression :math:`\sum_i a_i x_i + b`.
 
 Constraint References
@@ -115,11 +115,11 @@ A condition can be added following the indices; a semicolon is used to separate 
 
 Note that only one condition can be added, although expressions can be built up by using the usual ``&&`` and ``||`` logical operators. **This condition syntax requires Julia 0.4 or later.**
 
-To obtain the dual of a constraint, call ``getDual`` on the constraint reference::
+To obtain the dual of a constraint, call ``getdual`` on the constraint reference::
 
-    println(getDual(xyconstr[1,6]))
+    println(getdual(xyconstr[1,6]))
 
-When an LP model is infeasible, ``getDual`` will return the corresponding component of the
+When an LP model is infeasible, ``getdual`` will return the corresponding component of the
 infeasibility ray (Farkas proof), if available from the solver.
 
 Dual information is also accessible for second-order cone problems as described below. Duals are unavailable for MIPs.
@@ -146,8 +146,8 @@ Conic constraint duals
 ^^^^^^^^^^^^^^^^^^^^^^
 
 JuMP supports accessing the dual solutions to second-order cone problems. Dual multipliers on variable bounds, linear constraints,
-and second-order cone constraints are accessible through ``getDual()`` given the corresponding variable or constraint reference object.
-For second-order cone constraints, ``getDual(c::ConstraintRef{Model,SOCConstraint})`` returns a vector of dual variables in the dimension of the corresponding cone.
+and second-order cone constraints are accessible through ``getdual()`` given the corresponding variable or constraint reference object.
+For second-order cone constraints, ``getdual(c::ConstraintRef{Model,SOCConstraint})`` returns a vector of dual variables in the dimension of the corresponding cone.
 Duals are defined such that they are consistent in sign with linear programming duals in the case that the second-order cone constraints
 are inactive.
 
@@ -160,12 +160,12 @@ For example::
    @addConstraint(m, soc, norm2{ x[i], i=1:2 } <= t)
    status = solve(m)
 
-   @show getValue(x) # [1.000000000323643,1.0000000003235763]
-   @show getValue(t) # 1.4142135583106126
-   @show getDual(x)  # [0.7071067807797846,0.7071067802906756]
-   @show getDual(soc)# [-1.0000000004665652,0.707106779497123,0.707106779008014]
+   @show getvalue(x) # [1.000000000323643,1.0000000003235763]
+   @show getvalue(t) # 1.4142135583106126
+   @show getdual(x)  # [0.7071067807797846,0.7071067802906756]
+   @show getdual(soc)# [-1.0000000004665652,0.707106779497123,0.707106779008014]
 
-Note that the *negative* of the dual vector ``getDual(soc)`` belongs to the second-order cone.
+Note that the *negative* of the dual vector ``getdual(soc)`` belongs to the second-order cone.
 See the `MathProgBase documentation <http://mathprogbasejl.readthedocs.org/en/latest/conic.html>`_ for more
 on the definition of the dual problem. The dual solutions returned by JuMP agree with the definitions from
 MathProgBase up to a possible change in sign.

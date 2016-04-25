@@ -51,7 +51,7 @@ mod = Model()
 
 solve(mod)
 
-Z_val = getValue(Z)[:,:]
+Z_val = getvalue(Z)[:,:]
 println("Raw solution")
 println(round(Z_val,4))
 

@@ -113,10 +113,10 @@ end
 (*)(lhs::GenericAffExpr, rhs::Number) = (*)(rhs,lhs)
 (/)(lhs::GenericAffExpr, rhs::Number) = (*)(1.0/rhs,lhs)
 function (^)(lhs::Union{Variable,AffExpr}, rhs::Integer)
-    rhs == 2 || error("Only exponents of 2 are currently supported. Are you trying to build a nonlinear problem? Make sure you use @addNLConstraint/@setNLObjective.")
+    rhs == 2 || error("Only exponents of 2 are currently supported. Are you trying to build a nonlinear problem? Make sure you use @NLconstraint/@NLobjective.")
     return lhs*lhs
 end
-(^)(lhs::Union{Variable,AffExpr}, rhs::Number) = error("Only exponents of 2 are currently supported. Are you trying to build a nonlinear problem? Make sure you use @addNLConstraint/@setNLObjective.")
+(^)(lhs::Union{Variable,AffExpr}, rhs::Number) = error("Only exponents of 2 are currently supported. Are you trying to build a nonlinear problem? Make sure you use @NLconstraint/@NLobjective.")
 # AffExpr--Variable
 (+){C,V<:JuMPTypes}(lhs::GenericAffExpr{C,V}, rhs::V) = (+)(rhs,lhs)
 (-){C,V<:JuMPTypes}(lhs::GenericAffExpr{C,V}, rhs::V) = GenericAffExpr{C,V}(vcat(lhs.vars,rhs),vcat(lhs.coeffs,-one(C)),lhs.constant)
@@ -308,7 +308,7 @@ function _dot{T,S}(lhs::Array{T}, rhs::Array{S})
     size(lhs) == size(rhs) || error("Incompatible dimensions")
     ret = zero(one(T)*one(S))
     for (x,y) in zip(lhs,rhs)
-        ret = addToExpression(ret, x, y)
+        ret = addtoexpr(ret, x, y)
     end
     ret
 end
@@ -498,7 +498,7 @@ end; end
 (/){T<:JuMPTypes}(lhs::SparseMatrixCSC{T}, rhs::Number) =
     SparseMatrixCSC(lhs.m, lhs.n, copy(lhs.colptr), copy(lhs.rowval), lhs.nzval ./ rhs)
 
-# The following are primarily there for internal use in the macro code for @addConstraint
+# The following are primarily there for internal use in the macro code for @constraint
 for op in [:(+), :(-)]; @eval begin
     function $op(lhs::Array{Variable},rhs::Array{Variable})
         (sz = size(lhs)) == size(rhs) || error("Incompatible sizes for $op: $sz $op $(size(rhs))")
@@ -552,7 +552,7 @@ end
 
 ###############################################################################
 # Add nonlinear function fallbacks for JuMP built-in types
-const op_hint = "Are you trying to build a nonlinear problem? Make sure you use @addNLConstraint/@setNLObjective."
+const op_hint = "Are you trying to build a nonlinear problem? Make sure you use @NLconstraint/@NLobjective."
 for (func,_) in Calculus.symbolic_derivatives_1arg(), typ in [:Variable,:AffExpr,:QuadExpr]
     errstr = "$func is not defined for type $typ. $op_hint"
     @eval Base.($(quot(func)))(::$typ) = error($errstr)

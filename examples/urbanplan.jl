@@ -69,8 +69,8 @@ function SolveUrban()
     end
 
     # Print results
-    println("Best objective: $(round(getObjectiveValue(m)))")
-    println(getValue(x))
+    println("Best objective: $(round(getobjectivevalue(m)))")
+    println(getvalue(x))
 end
 
 SolveUrban()

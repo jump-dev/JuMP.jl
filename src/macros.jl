@@ -141,7 +141,7 @@ function getloopedcode(c::Expr, code, condition, idxvars, idxsets, idxpairs, sym
         N = length(idxsets)
         mac = :($(esc(varname)) = JuMPDict{$(sym),$N}())
     else
-        mac = Expr(:macrocall,symbol("@gendict"),esc(varname),sym,idxsets...)
+        mac = Expr(:macrocall,Expr(:.,:JuMP,QuoteNode(symbol("@gendict"))),esc(varname),sym,idxsets...)
     end
     return quote
         $mac
@@ -310,7 +310,7 @@ macro constraint(args...)
     x = length(extra) == 1 ? extra[1] : x
 
     (x.head == :block) &&
-        error("Code block passed as constraint. Perhaps you meant to use addConstraints instead?")
+        error("Code block passed as constraint. Perhaps you meant to use @constraints instead?")
     if VERSION < v"0.5.0-dev+3231"
         x = comparison_to_call(x)
     end
@@ -325,7 +325,7 @@ macro constraint(args...)
         @assert length(x.args) == 3
         (sense,vectorized) = _canonicalize_sense(x.args[1])
         lhs = :($(x.args[2]) - $(x.args[3]))
-        addconstr = (vectorized ? :addVectorizedConstraint : :addConstraint)
+        addconstr = (vectorized ? :addVectorizedConstraint : :addconstraint)
         newaff, parsecode = parseExprToplevel(lhs, :q)
         constraintcall = :($addconstr($m, constructconstraint!($newaff,$(quot(sense)))))
         for kw in kwargs.args
@@ -345,7 +345,7 @@ macro constraint(args...)
             error("in @constraint ($(string(x))): only ranged rows of the form lb <= expr <= ub are supported.")
         end
         ((vectorized = lvectorized) == rvectorized) || error("in @constraint ($(string(x))): signs are inconsistently vectorized")
-        addconstr = (lvectorized ? :addVectorizedConstraint : :addConstraint)
+        addconstr = (lvectorized ? :addVectorizedConstraint : :addconstraint)
         x_str = string(x)
         lb_str = string(x.args[1])
         ub_str = string(x.args[5])
@@ -432,7 +432,7 @@ macro SDconstraint(m, x)
     assert_validmodel(m, quote
         q = zero(AffExpr)
         $parsecode
-        c = SDPConstraint($newaff)
+        c = SDConstraint($newaff)
         push!($(m).sdpconstr, c)
         c
     end)
@@ -625,7 +625,7 @@ macro objective(m, args...)
     code = quote
         q = zero(AffExpr)
         $parsecode
-        setObjective($m, $(esc(sense)), $newaff)
+        setobjective($m, $(esc(sense)), $newaff)
     end
     return assert_validmodel(m, code)
 end
@@ -945,7 +945,7 @@ macro constraintref(var)
         idxsets = var.args[2:end]
         idxpairs = IndexPair[]
 
-        mac = Expr(:macrocall,symbol("@gendict"),varname,:ConstraintRef,idxsets...)
+        mac = Expr(:macrocall,Expr(:.,:JuMP,QuoteNode(symbol("@gendict"))),varname,:ConstraintRef,idxsets...)
         code = quote
             $(esc(mac))
             nothing
@@ -961,7 +961,7 @@ macro NLobjective(m, sense, x)
     end
     code = quote
         initNLP($m)
-        setObjectiveSense($m, $(esc(sense)))
+        setobjectivesense($m, $(esc(sense)))
         ex = @processNLExpr($m, $(esc(x)))
         $m.nlpdata.nlobj = ex
         $m.obj = zero(QuadExpr)

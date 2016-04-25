@@ -30,7 +30,7 @@ function solve_maxcut_sdp(n, W)
     solve(m)
 
     # Cholesky the result
-    F = cholfact(getValue(X)[:,:], :U, Val{true})
+    F = cholfact(getvalue(X)[:,:], :U, Val{true})
     V = (F[:P]*F[:L])'
 
     # Normalize columns

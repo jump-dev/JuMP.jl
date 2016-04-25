@@ -20,21 +20,21 @@ m = Model()
 
 solve(m)
 
-println("μ = ", getValue(μ))
+println("μ = ", getvalue(μ))
 println("mean(data) = ", mean(data))
-println("σ^2 = ", getValue(σ)^2)
+println("σ^2 = ", getvalue(σ)^2)
 println("var(data) = ", var(data))
-println("MLE objective: ", getObjectiveValue(m))
+println("MLE objective: ", getobjectivevalue(m))
 
 # constrained MLE?
 @NLconstraint(m, μ == σ^2)
 
 solve(m)
 println("\nWith constraint μ == σ^2:")
-println("μ = ", getValue(μ))
-println("σ^2 = ", getValue(σ)^2)
+println("μ = ", getvalue(μ))
+println("σ^2 = ", getvalue(σ)^2)
 
-println("Constrained MLE objective: ", getObjectiveValue(m))
+println("Constrained MLE objective: ", getobjectivevalue(m))
 
 
 

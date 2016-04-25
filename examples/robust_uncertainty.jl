@@ -44,7 +44,7 @@ c = randn(d)
 
 solve(m)
 
-object = getObjectiveValue(m)
+object = getobjectivevalue(m)
 exact = dot(μhat,c) + Γ1(𝛿/2,N)*norm(c) + sqrt((1-ɛ)/ɛ)*sqrt(dot(c,(Σhat+Γ2(𝛿/2,N)*eye(d,d))*c))
 
 println("objective value:  $(object)")

@@ -18,41 +18,41 @@ facts("[expr] Test expression construction") do
     @variable(maff, 0 <= LongName <= 99)
 
     context("AffExpr") do
-        # Test affToStr
+        # Test affstr
         a1 = x[1] + LongName + 5
-        @fact affToStr(a1) --> "x[1] + LongName + 5"
+        @fact JuMP.affstr(a1) --> "x[1] + LongName + 5"
         # Test like term collection
         a2 = 2*(x[2] + LongName + x[2]) + 0
-        @fact affToStr(a2) --> "4 x[2] + 2 LongName"
+        @fact JuMP.affstr(a2) --> "4 x[2] + 2 LongName"
         # Test appending functionality
         push!(a1, 5.0, x[2])
-        @fact affToStr(a1) --> "x[1] + LongName + 5 x[2] + 5"
+        @fact JuMP.affstr(a1) --> "x[1] + LongName + 5 x[2] + 5"
         append!(a1, a2)
-        @fact affToStr(a1) --> "x[1] + 3 LongName + 9 x[2] + 5"
+        @fact JuMP.affstr(a1) --> "x[1] + 3 LongName + 9 x[2] + 5"
         append!(a1, 2.0)
-        @fact affToStr(a1) --> "x[1] + 3 LongName + 9 x[2] + 7"
+        @fact JuMP.affstr(a1) --> "x[1] + 3 LongName + 9 x[2] + 7"
         append!(a1, LongName)
-        @fact affToStr(a1) --> "x[1] + 4 LongName + 9 x[2] + 7"
+        @fact JuMP.affstr(a1) --> "x[1] + 4 LongName + 9 x[2] + 7"
     end
 
     context("QuadExpr") do
-        # Test quadToStr
+        # Test JuMP.quadstr
         q1 = x[1]*x[2] + 27.2*LongName + 5
-        @fact quadToStr(q1) --> "x[1]*x[2] + 27.2 LongName + 5"
+        @fact JuMP.quadstr(q1) --> "x[1]*x[2] + 27.2 LongName + 5"
         # Test like term collection
         q2 = x[1]*x[2] + x[2]*x[1]
-        @fact quadToStr(q2) --> "2 x[1]*x[2]"
+        @fact JuMP.quadstr(q2) --> "2 x[1]*x[2]"
     end
 end
 
-facts("[expr] Test getValue(expr)") do
+facts("[expr] Test getvalue(expr)") do
     m = Model()
     @variable(m, 1 <= x[1:3] <= 2)
-    setValue(x[3], 2)
-    setValue(x[2], 2)
-    setValue(x[1], 1)
-    @fact getValue(x[1]-x[2]+2x[3]-1.0) --> roughly(2.0)
-    @fact getValue(x[1]*x[1]-2x[2]*x[1]+3x[2]+1) --> roughly(4.0)
+    setvalue(x[3], 2)
+    setvalue(x[2], 2)
+    setvalue(x[1], 1)
+    @fact getvalue(x[1]-x[2]+2x[3]-1.0) --> roughly(2.0)
+    @fact getvalue(x[1]*x[1]-2x[2]*x[1]+3x[2]+1) --> roughly(4.0)
 end
 
 facts("[expr] Test expression iterators") do

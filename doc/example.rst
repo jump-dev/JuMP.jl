@@ -19,9 +19,9 @@ The are more complex examples in the ``JuMP/examples/`` `folder <https://github.
 
     status = solve(m)
 
-    println("Objective value: ", getObjectiveValue(m))
-    println("x = ", getValue(x))
-    println("y = ", getValue(y))
+    println("Objective value: ", getobjectivevalue(m))
+    println("x = ", getvalue(x))
+    println("y = ", getvalue(y))
 
 Once JuMP is :ref:`installed <jump-installation>`, to use JuMP in your
 programs, you just need to say::
@@ -79,13 +79,13 @@ are described :ref:`here <solvestatus>`.
 Finally, we can access the results of our optimization. Getting the objective
 value is simple::
 
-    println("Objective value: ", getObjectiveValue(m))
+    println("Objective value: ", getobjectivevalue(m))
 
-To get the value from a variable, we call the ``getValue()`` function. If ``x``
-is not a single variable, but instead a range of variables, ``getValue()`` will
+To get the value from a variable, we call the ``getvalue()`` function. If ``x``
+is not a single variable, but instead a range of variables, ``getvalue()`` will
 return a list. In this case, however, it will just return a single value.
 
 ::
 
-    println("x = ", getValue(x))
-    println("y = ", getValue(y))
+    println("x = ", getvalue(x))
+    println("y = ", getvalue(y))

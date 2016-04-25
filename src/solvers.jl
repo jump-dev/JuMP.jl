@@ -128,7 +128,7 @@ function solve(m::Model; suppress_warnings=false,
     traits = ProblemTraits(m)
 
     # Build the MathProgBase model from the JuMP model
-    buildInternalModel(m, traits, suppress_warnings=suppress_warnings, relaxation=relaxation)
+    build(m, traits, suppress_warnings=suppress_warnings, relaxation=relaxation)
 
     # If the model is a general nonlinear, use different logic in
     # nlp.jl to solve the problem
@@ -295,8 +295,8 @@ end
 
 # Converts the JuMP Model into a MathProgBase model based on the
 # traits of the model
-function buildInternalModel(m::Model, traits=ProblemTraits(m);
-                            suppress_warnings=false, relaxation=false)
+function build(m::Model, traits=ProblemTraits(m);
+               suppress_warnings=false, relaxation=false)
     # Set solver based on the model's traits if it hasn't provided
     if isa(m.solver, UnsetSolver)
         m.solver = default_solver(traits)
@@ -943,9 +943,9 @@ function conicconstraintdata(m::Model)
     A, b, var_cones, con_cones
 end
 
-getConstraintBounds(m::Model) = getConstraintBounds(m, ProblemTraits(m))
+constraintbounds(m::Model) = constraintbounds(m, ProblemTraits(m))
 
-function getConstraintBounds(m::Model,traits::ProblemTraits)
+function constraintbounds(m::Model,traits::ProblemTraits)
 
     if traits.conic
         error("Not implemented for conic problems")

@@ -49,19 +49,18 @@ Methods
 * ``getrawsolver(m::Model)`` - returns an object that may be used to access a solver-specific API.
 * ``getsimplexiter(m::Model)`` - returns the cumulative number of simplex iterations during the optimization process. In particular, for a MIP it returns the total simplex iterations for all nodes.
 * ``getbarrieriter(m::Model)`` - returns the cumulative number of barrier iterations during the optimization process.
-* ``getInternalModel(m::Model)`` - returns the internal low-level ``AbstractMathProgModel`` object which can be used to access any functionality that is not exposed by JuMP. See the MathProgBase `documentation <https://mathprogbasejl.readthedocs.org/en/latest/lowlevel.html>`_.
+* ``internalmodel(m::Model)`` - returns the internal low-level ``AbstractMathProgModel`` object which can be used to access any functionality that is not exposed by JuMP. See the MathProgBase `documentation <https://mathprogbasejl.readthedocs.org/en/latest/lowlevel.html>`_.
 * ``solve(m::Model; suppress_warnings=false, relaxation=false)`` - solves the model using the selected solver (or a default for the problem class), and takes two optional arguments that are disabled by default. Setting ``suppress_warnings`` to ``true`` will suppress all JuMP-specific output (e.g. warnings about infeasibility and lack of dual information) but will not suppress solver output (which should be done by passing options to the solver). Setting ``relaxation=true`` solves the standard continuous relaxation for the model: that is, integrality is dropped, special ordered set constraints are not enforced, and semi-continuous and semi-integer variables with bounds ``[l,u]`` are replaced with bounds ``[min(l,0),max(u,0)]``.
-* ``buildInternalModel(m::Model)`` - builds the model in memory at the MathProgBase level without optimizing.
-* ``setSolver(m::Model,s::AbstractMathProgSolver)`` - changes the solver which will be used for the next call to ``solve()``, discarding the current internal model if present.
-* ``getVar(m::Model,name::Symbol)`` - returns the variable or group of variables of the given name which were added to the model with ``@defVar``. Throws an error if multiple variables were created with the same name.
+* ``JuMP.build(m::Model)`` - builds the model in memory at the MathProgBase level without optimizing.
+* ``setsolver(m::Model,s::AbstractMathProgSolver)`` - changes the solver which will be used for the next call to ``solve()``, discarding the current internal model if present.
+* ``getvariable(m::Model,name::Symbol)`` - returns the variable or group of variables of the given name which were added to the model with ``@defVar``. Throws an error if multiple variables were created with the same name.
 
 **Objective**
 
-* ``getObjective(m::Model)`` - returns the objective function as a ``QuadExpr``.
-* ``setObjective(m::Model, sense::Symbol, a::AffExpr)``, ``setObjective(m::Model, sense::Symbol, q::QuadExpr)`` - sets the objective function to ``a`` and ``q`` respectively, with given objective sense, which must be either ``:Min`` or ``:Max``.
-* ``getObjectiveSense(m::Model)`` - returns objective sense, either ``:Min`` or ``:Max``.
-* ``setObjectiveSense(m::Model, newSense::Symbol)`` - sets the objective sense (``newSense`` is either ``:Min`` or ``:Max``).
-* ``getObjectiveValue(m::Model)`` - returns objective value after a call to ``solve``.
+* ``getobjective(m::Model)`` - returns the objective function as a ``QuadExpr``.
+* ``getobjectivesense(m::Model)`` - returns objective sense, either ``:Min`` or ``:Max``.
+* ``setobjectivesense(m::Model, newSense::Symbol)`` - sets the objective sense (``newSense`` is either ``:Min`` or ``:Max``).
+* ``getobjectivevalue(m::Model)`` - returns objective value after a call to ``solve``.
 
 **Output**
 
@@ -127,7 +126,7 @@ Accessing the low-level model
 ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
 
 It is possible to construct the internal low-level model before optimizing. To do this,
-call the ``buildInternalModel`` function. It is then possible
-to obtain this model by using the ``getInternalModel`` function. This may be useful when
+call the ``JuMP.build`` function. It is then possible
+to obtain this model by using the ``internalmodel`` function. This may be useful when
 it is necessary to access some functionality that is not exposed by JuMP. When you are ready to optimize,
 simply call ``solve`` in the normal fashion.

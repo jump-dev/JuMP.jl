@@ -18,12 +18,12 @@ context("With solver $(typeof(solver))") do
     @constraint(m, constrcon2, norm([2 3;1 1]*x[2:3]-[3;4]) <= x[5] - 2)
 
     solve(m)
-    @fact length(getDual(constrcon1)) --> 5
-    @fact length(getDual(constrcon2)) --> 3
+    @fact length(getdual(constrcon1)) --> 5
+    @fact length(getdual(constrcon2)) --> 3
     @fact length(m.conicconstrDuals) --> 10
     @fact length(m.linconstrDuals) --> 2
 
-    @fact dot(getDual(constrcon2),[getValue(x[5]) - 2;[2 3;1 1]*[getValue(x[2]);getValue(x[3])]-[3;4]]) --> less_than_or_equal(TOL)
+    @fact dot(getdual(constrcon2),[getvalue(x[5]) - 2;[2 3;1 1]*[getvalue(x[2]);getvalue(x[3])]-[3;4]]) --> less_than_or_equal(TOL)
 
 end
 end
@@ -44,9 +44,9 @@ context("With LP solver $(typeof(lp_solver))") do
 
     solve(m1)
 
-    @fact getDual(c11) --> roughly(0.75, TOL)
-    @fact getDual(c12) --> roughly(0.0,TOL)
-    @fact getDual(c13) --> roughly(1.25,TOL)
+    @fact getdual(c11) --> roughly(0.75, TOL)
+    @fact getdual(c12) --> roughly(0.0,TOL)
+    @fact getdual(c13) --> roughly(1.25,TOL)
 
 end
 end
@@ -63,9 +63,9 @@ context("With conic solver $(typeof(conic_solver))") do
 
     solve(m2)
 
-    @fact getDual(c21) --> roughly(0.75, TOL)
-    @fact getDual(c22) --> roughly(0.0,TOL)
-    @fact getDual(c23) --> roughly(1.25,TOL)
+    @fact getdual(c21) --> roughly(0.75, TOL)
+    @fact getdual(c22) --> roughly(0.0,TOL)
+    @fact getdual(c23) --> roughly(1.25,TOL)
 
 end
 end
@@ -84,9 +84,9 @@ context("With LP solver $(typeof(lp_solver))") do
 
     solve(m1)
 
-    @fact getDual(c11) --> roughly(-0.75, TOL)
-    @fact getDual(c12) --> roughly(-0.0,TOL)
-    @fact getDual(c13) --> roughly(-1.25,TOL)
+    @fact getdual(c11) --> roughly(-0.75, TOL)
+    @fact getdual(c12) --> roughly(-0.0,TOL)
+    @fact getdual(c13) --> roughly(-1.25,TOL)
 
 end
 end
@@ -102,9 +102,9 @@ context("With conic solver $(typeof(conic_solver))") do
     @constraint(m2, norm(x2[1]) <= x2[2])
 
     solve(m2)
-    @fact getDual(c21) --> roughly(-0.75, TOL)
-    @fact getDual(c22) --> roughly(-0.0,TOL)
-    @fact getDual(c23) --> roughly(-1.25,TOL)
+    @fact getdual(c21) --> roughly(-0.75, TOL)
+    @fact getdual(c22) --> roughly(-0.0,TOL)
+    @fact getdual(c23) --> roughly(-1.25,TOL)
 
 end
 end
@@ -123,10 +123,10 @@ context("With LP solver $(typeof(lp_solver))") do
 
     solve(m1)
 
-    @fact dot([getDual(y1), getDual(x1)],[getValue(y1); getValue(x1)]) --> less_than_or_equal(TOL)
+    @fact dot([getdual(y1), getdual(x1)],[getvalue(y1); getvalue(x1)]) --> less_than_or_equal(TOL)
 
-    @fact getValue(x1) --> roughly(0.0,TOL)
-    @fact getValue(y1) --> roughly(1.0,TOL)
+    @fact getvalue(x1) --> roughly(0.0,TOL)
+    @fact getvalue(y1) --> roughly(1.0,TOL)
 
     m1 = Model(solver=lp_solver)
 
@@ -136,8 +136,8 @@ context("With LP solver $(typeof(lp_solver))") do
 
     solve(m1)
 
-    @fact getDual(x1) --> roughly(0.0, TOL)
-    @fact getValue(x1) --> roughly(1.0,TOL)
+    @fact getdual(x1) --> roughly(0.0, TOL)
+    @fact getvalue(x1) --> roughly(1.0,TOL)
 
     RHS = 2
     X_LB = 0.5
@@ -152,14 +152,14 @@ context("With LP solver $(typeof(lp_solver))") do
 
     solve(m1)
 
-    @fact getValue(x1) --> roughly(0.5, TOL)
-    @fact getValue(y1) --> roughly(1.5, TOL)
+    @fact getvalue(x1) --> roughly(0.5, TOL)
+    @fact getvalue(y1) --> roughly(1.5, TOL)
 
-    @fact getDual(x1) --> roughly(-0.7, TOL)
-    @fact getDual(y1) --> roughly(0.0, TOL)
+    @fact getdual(x1) --> roughly(-0.7, TOL)
+    @fact getdual(y1) --> roughly(0.0, TOL)
 
-    lp_dual_obj = getDual(c1)*RHS + getDual(x1) * X_LB + getDual(y1) * Y_UB
-    @fact getObjectiveValue(m1) --> roughly(lp_dual_obj, TOL)
+    lp_dual_obj = getdual(c1)*RHS + getdual(x1) * X_LB + getdual(y1) * Y_UB
+    @fact getobjectivevalue(m1) --> roughly(lp_dual_obj, TOL)
 
 end
 end
@@ -176,10 +176,10 @@ context("With conic solver $(typeof(conic_solver))") do
 
     solve(m2)
 
-    @fact dot([getDual(y2), getDual(x2)],[getValue(y2); getValue(x2)]) --> less_than_or_equal(TOL)
+    @fact dot([getdual(y2), getdual(x2)],[getvalue(y2); getvalue(x2)]) --> less_than_or_equal(TOL)
 
-    @fact getValue(x2) --> roughly(0.0,TOL)
-    @fact getValue(y2) --> roughly(1.0,TOL)
+    @fact getvalue(x2) --> roughly(0.0,TOL)
+    @fact getvalue(y2) --> roughly(1.0,TOL)
 
     m2 = Model(solver=conic_solver)
 
@@ -190,8 +190,8 @@ context("With conic solver $(typeof(conic_solver))") do
 
     solve(m2)
 
-    @fact getDual(x2) --> roughly(0.0, TOL)
-    @fact getValue(x2) --> roughly(1.0,TOL)
+    @fact getdual(x2) --> roughly(0.0, TOL)
+    @fact getvalue(x2) --> roughly(1.0,TOL)
 
     RHS = 2
     X_LB = 0.5
@@ -207,14 +207,14 @@ context("With conic solver $(typeof(conic_solver))") do
 
     solve(m2)
 
-    @fact getValue(x2) --> roughly(0.5, TOL)
-    @fact getValue(y2) --> roughly(1.5, TOL)
+    @fact getvalue(x2) --> roughly(0.5, TOL)
+    @fact getvalue(y2) --> roughly(1.5, TOL)
 
-    @fact getDual(x2) --> roughly(-0.7, TOL)
-    @fact getDual(y2) --> roughly(0.0, TOL)
+    @fact getdual(x2) --> roughly(-0.7, TOL)
+    @fact getdual(y2) --> roughly(0.0, TOL)
 
-    conic_dual_obj = getDual(c2)*RHS + getDual(x2) * X_LB + getDual(y2) * Y_UB
-    @fact getObjectiveValue(m2) --> roughly(conic_dual_obj, TOL)
+    conic_dual_obj = getdual(c2)*RHS + getdual(x2) * X_LB + getdual(y2) * Y_UB
+    @fact getobjectivevalue(m2) --> roughly(conic_dual_obj, TOL)
 
 end
 end
@@ -238,7 +238,7 @@ context("With conic solver $(typeof(conic_solver))") do
 
     status = solve(m2)
 
-    inf_ray = getDual(c2)
+    inf_ray = getdual(c2)
     @fact status --> :Infeasible
     @fact (-inf_ray[1] - inf_ray[2]) --> less_than_or_equal(-TOL)
     @fact -(-inf_ray[1]) --> greater_than_or_equal(TOL)

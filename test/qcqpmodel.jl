@@ -27,7 +27,7 @@ context("With solver $(typeof(solver))") do
     @constraint(modQ, x[2] >= 0.5*x[1])
     @fact solve(modQ) --> :Optimal
     @fact modQ.objVal --> roughly( 247.0, 1e-5)
-    @fact getValue(x)[:] --> roughly([2.0, 3.0, 4.0], 1e-6)
+    @fact getvalue(x)[:] --> roughly([2.0, 3.0, 4.0], 1e-6)
 
     # vectorized version
     modV = Model(solver=solver)
@@ -39,7 +39,7 @@ context("With solver $(typeof(solver))") do
     @constraint(modV, A*x .<= zeros(2))
     @fact solve(modV) --> :Optimal
     @fact modV.objVal --> roughly( 247.0, 1e-5)
-    @fact getValue(x)[:] --> roughly([2.0, 3.0, 4.0], 1e-6)
+    @fact getvalue(x)[:] --> roughly([2.0, 3.0, 4.0], 1e-6)
 
     modQ = Model(solver=solver)
     @variable(modQ, 1.1*i <= x[i=1:3] <= 2.5*i, Int)
@@ -48,7 +48,7 @@ context("With solver $(typeof(solver))") do
     @constraint(modQ, x[2] >= 0.5*x[1])
     @fact solve(modQ) --> :Optimal
     @fact modQ.objVal --> roughly(-247.0, 1e-5)
-    @fact getValue(x)[:] --> roughly([2.0, 3.0, 4.0], 1e-6)
+    @fact getvalue(x)[:] --> roughly([2.0, 3.0, 4.0], 1e-6)
 
     # sparse vectorized version
     modV = Model(solver=solver)
@@ -60,7 +60,7 @@ context("With solver $(typeof(solver))") do
     @constraint(modV, A*x .<= zeros(2))
     @fact solve(modV) --> :Optimal
     @fact modV.objVal --> roughly( 247.0, 1e-5)
-    @fact getValue(x)[:] --> roughly([2.0, 3.0, 4.0], 1e-6)
+    @fact getvalue(x)[:] --> roughly([2.0, 3.0, 4.0], 1e-6)
 
     modQ = Model(solver=solver)
     @variable(modQ, 1.1*i <= x[i=1:3] <= 2.5*i, Int)
@@ -69,7 +69,7 @@ context("With solver $(typeof(solver))") do
     @constraint(modQ, x[2] >= 0.5*x[1])
     @fact solve(modQ) --> :Optimal
     @fact modQ.objVal --> roughly(-247.0, 1e-5)
-    @fact getValue(x)[:] --> roughly([2.0, 3.0, 4.0], 1e-6)
+    @fact getvalue(x)[:] --> roughly([2.0, 3.0, 4.0], 1e-6)
 
     # vectorized version
     modV = Model(solver=solver)
@@ -82,7 +82,7 @@ context("With solver $(typeof(solver))") do
     @constraint(modV, A*x .>= zeros(2))
     @fact solve(modV) --> :Optimal
     @fact modV.objVal --> roughly( 247.0, 1e-5)
-    @fact getValue(x)[:] --> roughly([2.0, 3.0, 4.0], 1e-6)
+    @fact getvalue(x)[:] --> roughly([2.0, 3.0, 4.0], 1e-6)
 end; end; end
 
 facts("[qcqpmodel] Test quad objective (continuous)") do
@@ -96,7 +96,7 @@ context("With solver $(typeof(solver))") do
     @constraint(modQ, x + y >= 1 )
     @fact solve(modQ) --> :Optimal
     @fact modQ.objVal --> roughly(1.0, 1e-6)
-    @fact (getValue(x) + getValue(y)) --> roughly(1.0, 1e-6)
+    @fact (getvalue(x) + getvalue(y)) --> roughly(1.0, 1e-6)
 
     # Vectorized version
     modV = Model(solver=solver)
@@ -107,7 +107,7 @@ context("With solver $(typeof(solver))") do
     @constraint(modV, ones(1,2)*[x,y] .>= 1)
     @fact solve(modV) --> :Optimal
     @fact modV.objVal --> roughly(1.0, 1e-6)
-    @fact (getValue(x) + getValue(y)) --> roughly(1.0, 1e-6)
+    @fact (getvalue(x) + getvalue(y)) --> roughly(1.0, 1e-6)
 
     # Sparse vectorized version
     modV = Model(solver=solver)
@@ -118,7 +118,7 @@ context("With solver $(typeof(solver))") do
     @constraint(modV, sparse(ones(1,2))*[x,y] .>= 1)
     @fact solve(modV) --> :Optimal
     @fact modV.objVal --> roughly(1.0, 1e-6)
-    @fact (getValue(x) + getValue(y)) --> roughly(1.0, 1e-6)
+    @fact (getvalue(x) + getvalue(y)) --> roughly(1.0, 1e-6)
 end; end; end
 
 
@@ -139,7 +139,7 @@ context("With solver $(typeof(solver))") do
 
     @fact solve(modQ) --> :Optimal
     @fact modQ.objVal --> roughly(-1-4/sqrt(3), 1e-6)
-    @fact (getValue(x) + getValue(y)) --> roughly(-1/3, 1e-3)
+    @fact (getvalue(x) + getvalue(y)) --> roughly(-1/3, 1e-3)
 
     # Vectorized version
     modV = Model(solver=solver)
@@ -155,7 +155,7 @@ context("With solver $(typeof(solver))") do
 
     @fact solve(modV) --> :Optimal
     @fact modV.objVal --> roughly(-1-4/sqrt(3), 1e-6)
-    @fact (getValue(x) + getValue(y)) --> roughly(-1/3, 1e-3)
+    @fact (getvalue(x) + getvalue(y)) --> roughly(-1/3, 1e-3)
 
     # Sparse vectorized version
     modV = Model(solver=solver)
@@ -171,7 +171,7 @@ context("With solver $(typeof(solver))") do
 
     @fact solve(modV) --> :Optimal
     @fact modV.objVal --> roughly(-1-4/sqrt(3), 1e-6)
-    @fact (getValue(x) + getValue(y)) --> roughly(-1/3, 1e-3)
+    @fact (getvalue(x) + getvalue(y)) --> roughly(-1/3, 1e-3)
 end; end; end
 
 facts("[qcqpmodel] Test SOC constraints (continuous)") do
@@ -189,7 +189,7 @@ context("With solver $(typeof(solver))") do
 
     @fact solve(modQ) --> :Optimal
     @fact modQ.objVal --> roughly(sqrt(1/2), 1e-6)
-    @fact norm([getValue(x), getValue(y), getValue(t)] - [0.5,0.5,sqrt(1/2)]) --> roughly(0.0,1e-3)
+    @fact norm([getvalue(x), getvalue(y), getvalue(t)] - [0.5,0.5,sqrt(1/2)]) --> roughly(0.0,1e-3)
 
     # Vectorized version
     modV = Model(solver=solver)
@@ -205,7 +205,7 @@ context("With solver $(typeof(solver))") do
 
     @fact solve(modV) --> :Optimal
     @fact modV.objVal --> roughly(sqrt(1/2), 1e-6)
-    @fact norm([getValue(x), getValue(y), getValue(t)] - [0.5,0.5,sqrt(1/2)]) --> roughly(0.0,1e-3)
+    @fact norm([getvalue(x), getvalue(y), getvalue(t)] - [0.5,0.5,sqrt(1/2)]) --> roughly(0.0,1e-3)
 
     # Sparse vectorized version
     modV = Model(solver=solver)
@@ -221,7 +221,7 @@ context("With solver $(typeof(solver))") do
 
     @fact solve(modV) --> :Optimal
     @fact modV.objVal --> roughly(sqrt(1/2), 1e-6)
-    @fact norm([getValue(x), getValue(y), getValue(t)] - [0.5,0.5,sqrt(1/2)]) --> roughly(0.0,1e-3)
+    @fact norm([getvalue(x), getvalue(y), getvalue(t)] - [0.5,0.5,sqrt(1/2)]) --> roughly(0.0,1e-3)
 
     # SOC version 1
     modN = Model(solver=solver)
@@ -234,7 +234,7 @@ context("With solver $(typeof(solver))") do
 
     @fact solve(modN) --> :Optimal
     @fact modN.objVal --> roughly(sqrt(1/2), 1e-6)
-    @fact norm([getValue(x), getValue(y), getValue(t)] - [0.5,0.5,sqrt(1/2)]) --> roughly(0.0,1e-3)
+    @fact norm([getvalue(x), getvalue(y), getvalue(t)] - [0.5,0.5,sqrt(1/2)]) --> roughly(0.0,1e-3)
 
     # SOC version 2
     modN = Model(solver=solver)
@@ -248,7 +248,7 @@ context("With solver $(typeof(solver))") do
 
     @fact solve(modN) --> :Optimal
     @fact modN.objVal --> roughly(sqrt(1/2), 1e-6)
-    @fact norm([getValue(x), getValue(y), getValue(t)] - [0.5,0.5,sqrt(1/2)]) --> roughly(0.0,1e-3)
+    @fact norm([getvalue(x), getvalue(y), getvalue(t)] - [0.5,0.5,sqrt(1/2)]) --> roughly(0.0,1e-3)
 end; end; end
 
 facts("[qcqpmodel] Test SOC duals") do
@@ -266,16 +266,16 @@ context("With solver $(typeof(solver))") do
 
     @fact solve(modQ) --> :Optimal
     @fact modQ.objVal --> roughly(-sqrt(2), 1e-6)
-    @fact getValue(y) --> roughly(1/sqrt(2), 1e-6)
-    @fact getValue(z) --> roughly(1/sqrt(2), 1e-6)
-    @fact getDual(eq) --> roughly(-sqrt(2), 1e-6)
+    @fact getvalue(y) --> roughly(1/sqrt(2), 1e-6)
+    @fact getvalue(z) --> roughly(1/sqrt(2), 1e-6)
+    @fact getdual(eq) --> roughly(-sqrt(2), 1e-6)
 
     @objective(modQ, Max, y+z)
     @fact solve(modQ) --> :Optimal
     @fact modQ.objVal --> roughly(sqrt(2), 1e-6)
-    @fact getValue(y) --> roughly(1/sqrt(2), 1e-6)
-    @fact getValue(z) --> roughly(1/sqrt(2), 1e-6)
-    @fact getDual(eq) --> roughly(sqrt(2), 1e-6)
+    @fact getvalue(y) --> roughly(1/sqrt(2), 1e-6)
+    @fact getvalue(z) --> roughly(1/sqrt(2), 1e-6)
+    @fact getdual(eq) --> roughly(sqrt(2), 1e-6)
 
     # # SOC syntax version
     # modN = Model(solver=solver)
@@ -289,16 +289,16 @@ context("With solver $(typeof(solver))") do
     #
     # @fact solve(modN) --> :Optimal
     # @fact modN.objVal --> roughly(-sqrt(2), 1e-6)
-    # @fact getValue(y) --> roughly(1/sqrt(2), 1e-6)
-    # @fact getValue(z) --> roughly(1/sqrt(2), 1e-6)
-    # @fact getDual(eq) --> roughly(-sqrt(2), 1e-6)
+    # @fact getvalue(y) --> roughly(1/sqrt(2), 1e-6)
+    # @fact getvalue(z) --> roughly(1/sqrt(2), 1e-6)
+    # @fact getdual(eq) --> roughly(-sqrt(2), 1e-6)
     #
     # @objective(modN, Max, y+z)
     # @fact solve(modN) --> :Optimal
     # @fact modN.objVal --> roughly(sqrt(2), 1e-6)
-    # @fact getValue(y) --> roughly(1/sqrt(2), 1e-6)
-    # @fact getValue(z) --> roughly(1/sqrt(2), 1e-6)
-    # @fact getDual(eq) --> roughly(sqrt(2), 1e-6)
+    # @fact getvalue(y) --> roughly(1/sqrt(2), 1e-6)
+    # @fact getvalue(z) --> roughly(1/sqrt(2), 1e-6)
+    # @fact getdual(eq) --> roughly(sqrt(2), 1e-6)
 
 end; end; end
 
@@ -313,7 +313,7 @@ context("With solver $(typeof(solver))") do
 
     @fact solve(modQ) --> :Optimal
     @fact modQ.objVal --> roughly(-3, 1e-6)
-    @fact (getValue(x) + getValue(y)) --> roughly(-1, 1e-6)
+    @fact (getvalue(x) + getvalue(y)) --> roughly(-1, 1e-6)
 
 end; end; end
 
@@ -326,10 +326,10 @@ context("With solver $(typeof(solver))") do
     @objective(m, Max, x[1]+x[2])
 
     @fact solve(m) --> :Optimal
-    @fact getObjectiveValue(m) --> roughly(2+sqrt(2), 1e-5)
-    @fact norm(getValue(x)-[1+sqrt(1/2),1+sqrt(1/2),1]) --> roughly(0, 1e-6)
-    @fact getValue(norm(x-1)) --> roughly(1, 1e-5)
-    @fact getValue(norm(x-1)-2) --> roughly(-1, 1e-5)
+    @fact getobjectivevalue(m) --> roughly(2+sqrt(2), 1e-5)
+    @fact norm(getvalue(x)-[1+sqrt(1/2),1+sqrt(1/2),1]) --> roughly(0, 1e-6)
+    @fact getvalue(norm(x-1)) --> roughly(1, 1e-5)
+    @fact getvalue(norm(x-1)-2) --> roughly(-1, 1e-5)
 end; end; end
 
 facts("[qcqpmodel] Test quad problem modification") do
@@ -341,24 +341,24 @@ context("With solver $(typeof(solver))") do
     @constraint(modQ, x*x <= 1)
     @objective(modQ, Max, x)
     @fact solve(modQ) --> :Optimal
-    @fact getObjectiveValue(modQ) --> roughly(1.0, 1e-6)
+    @fact getobjectivevalue(modQ) --> roughly(1.0, 1e-6)
 
     @constraint(modQ, 2x*x <= 1)
     @fact modQ.internalModelLoaded --> true
     @fact solve(modQ) --> :Optimal
-    @fact getObjectiveValue(modQ) --> roughly(sqrt(0.5), 1e-6)
+    @fact getobjectivevalue(modQ) --> roughly(sqrt(0.5), 1e-6)
 
     modQ = Model(solver=solver)
     @variable(modQ,   0 <= x <= 1)
     @variable(modQ, 1/2 <= y <= 1)
-    setObjective(modQ, :Min, x*x - y)
+    @objective(modQ, Min, x*x - y)
     @fact solve(modQ) --> :Optimal
-    @fact getObjectiveValue(modQ) --> roughly(-1.0, 1e-6)
+    @fact getobjectivevalue(modQ) --> roughly(-1.0, 1e-6)
 
-    setObjective(modQ, :Min, y*y - x)
+    @objective(modQ, Min, y*y - x)
     @fact modQ.internalModelLoaded --> true
     @fact solve(modQ) --> :Optimal
-    @fact getObjectiveValue(modQ) --> roughly(-0.75, 1e-6)
+    @fact getobjectivevalue(modQ) --> roughly(-0.75, 1e-6)
 end; end; end
 
 facts("[qcqpmodel] Rotated second-order cones") do
@@ -376,8 +376,8 @@ context("With solver $(typeof(solver))") do
     @constraint(mod, v^2 <= u * x[1])
 
     @fact solve(mod) --> :Optimal
-    @fact getValue(x) --> roughly([1,0,0,0,0], 1e-2)
-    @fact getValue(u) --> roughly(5, 1e-4)
-    @fact getValue(v) --> roughly(sqrt(5), 1e-6)
-    @fact getValue(norm(x)) --> roughly(1, 1e-4)
+    @fact getvalue(x) --> roughly([1,0,0,0,0], 1e-2)
+    @fact getvalue(u) --> roughly(5, 1e-4)
+    @fact getvalue(v) --> roughly(sqrt(5), 1e-6)
+    @fact getvalue(norm(x)) --> roughly(1, 1e-4)
 end; end; end

@@ -28,8 +28,8 @@ Modifying variables
 As before, variables can be added using the ``@defVar`` macro. To remove a variable,
 one can set the bounds on that variable to zero, e.g.::
 
-    setLower(x, 0.0)
-    setUpper(x, 0.0)
+    setlowerbound(x, 0.0)
+    setupperbound(x, 0.0)
 
 While bound updates are applied immediately in JuMP, variable bound changes are not
 transmitted to the solver until ``solve`` is called again.
@@ -77,7 +77,7 @@ and greater-than constraints, the right-hand-side can be changed, e.g.::
 
     @addConstraint(m, mycon, x + y <= 4)
     solve(m)
-    chgConstrRHS(mycon, 3)  # Now x + y <= 3
+    JuMP.setRHS(mycon, 3)  # Now x + y <= 3
     solve(m)  # Hot-start for LPs
 
 Modifying the objective
@@ -90,4 +90,3 @@ Modifying nonlinear models
 ^^^^^^^^^^^^^^^^^^^^^^^^^^
 
 See :ref:`nonlinear parameters <nonlinearprobmod>`.
-

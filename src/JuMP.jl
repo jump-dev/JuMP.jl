@@ -27,32 +27,28 @@ end
 
 export
 # Objects
-    Model, Variable, Norm, AffExpr, QuadExpr, SOCExpr, AbstractJuMPScalar,
-    LinearConstraint, QuadConstraint, SDPConstraint, SOCConstraint,
+    Model, Variable, Norm, AffExpr, QuadExpr, SOCExpr,
+    LinearConstraint, QuadConstraint, SDConstraint, SOCConstraint,
     NonlinearConstraint,
-    ConstraintRef, LinConstrRef,
-    JuMPNLPEvaluator,
+    ConstraintRef,
 # Functions
     # Model related
-    getObjectiveValue, getObjective,
-    getObjectiveSense, setObjectiveSense, setSolver,
-    writeLP, writeMPS, setObjective,
-    addConstraint, addSOS1, addSOS2, solve,
-    getInternalModel, buildInternalModel, setSolveHook, setPrintHook,
-    getConstraintBounds,
-    registerNLFunction,
+    getobjectivevalue, getobjective,
+    getobjectivesense, setobjectivesense, setsolver,
+    writeLP, writeMPS,
+    addSOS1, addSOS2, solve,
+    internalmodel,
     # Variable
-    setName, getName, setLower, setUpper, getLower, getUpper,
-    getValue, setValue, getDual, setCategory, getCategory,
-    getVar,
-    getLinearIndex,
+    setname, getname, setlowerbound, setupperbound, getlowerbound, getupperbound,
+    getvalue, setvalue, getdual, setcategory, getcategory,
+    getvariable,
+    linearindex,
     # Expressions and constraints
-    affToStr, quadToStr, exprToStr, conToStr, chgConstrRHS, linearterms,
+    linearterms,
 
 # Macros and support functions
     @LinearConstraint, @LinearConstraints, @QuadConstraint, @QuadConstraints,
     @SOCConstraint, @SOCConstraints,
-    addToExpression,
     @expression, @NLexpression,
     @variable, @variables, @constraint, @constraints,
     @NLconstraint, @NLconstraints,
@@ -126,7 +122,7 @@ type Model <: AbstractModel
     varDict::Dict{Symbol,Any} # dictionary from variable names to variable objects
     varData::ObjectIdDict
 
-    getvalue_counter::Int # number of times we call getValue on a JuMPContainer, so that we can print out a warning
+    getvalue_counter::Int # number of times we call getvalue on a JuMPContainer, so that we can print out a warning
     operator_counter::Int # number of times we add large expressions
 
     # Extension dictionary - e.g. for robust
@@ -151,7 +147,7 @@ function Model(;solver=UnsetSolver(), simplify_nonlinear_expressions::Bool=false
           QuadConstraint[],            # quadconstr
           SOSConstraint[],             # sosconstr
           SOCConstraint[],             # socconstr
-          SDPConstraint[],             # sdpconstr
+          SDConstraint[],             # sdpconstr
           0,                           # numCols
           UTF8String[],                # colNames
           UTF8String[],                # colNamesIJulia
@@ -203,35 +199,35 @@ for f in MathProgBase.SolverInterface.methods_by_tag[:rewrap]
         if !m.internalModelLoaded
             error("Model not solved")
         else
-            return $f(getInternalModel(m))
+            return $f(internalmodel(m))
         end
     end
     eval(Expr(:export,f))
 end
 
-function getObjective(m::Model)
+function getobjective(m::Model)
     traits = ProblemTraits(m)
     if traits.nlp
-        error("getObjective() not supported for nonlinear models")
+        error("getobjective() not supported for nonlinear models")
     end
     return m.obj
 end
 
-getObjectiveValue(m::Model) = m.objVal
-getObjectiveSense(m::Model) = m.objSense
-function setObjectiveSense(m::Model, newSense::Symbol)
+getobjectivevalue(m::Model) = m.objVal
+getobjectivesense(m::Model) = m.objSense
+function setobjectivesense(m::Model, newSense::Symbol)
     if (newSense != :Max && newSense != :Min)
         error("Model sense must be :Max or :Min")
     end
     m.objSense = newSense
 end
-setObjective(m::Model, something::Any) =
-    error("in setObjective: needs three arguments: model, objective sense (:Max or :Min), and expression.")
+setobjective(m::Model, something::Any) =
+    error("in setobjective: needs three arguments: model, objective sense (:Max or :Min), and expression.")
 
-setObjective(::Model, ::Symbol, x::Array) =
-    error("in setObjective: array of size $(size(x)) passed as objective; only scalar objectives are allowed")
+setobjective(::Model, ::Symbol, x::Array) =
+    error("in setobjective: array of size $(size(x)) passed as objective; only scalar objectives are allowed")
 
-function setSolver(m::Model, solver::MathProgBase.AbstractMathProgSolver)
+function setsolver(m::Model, solver::MathProgBase.AbstractMathProgSolver)
     m.solver = solver
     m.internalModel = nothing
     m.internalModelLoaded = false
@@ -293,10 +289,10 @@ function Base.copy(source::Model)
     return dest
 end
 
-getInternalModel(m::Model) = m.internalModel
+internalmodel(m::Model) = m.internalModel
 
-setSolveHook(m::Model, f) = (m.solvehook = f)
-setPrintHook(m::Model, f) = (m.printhook = f)
+setsolvehook(m::Model, f) = (m.solvehook = f)
+setprinthook(m::Model, f) = (m.printhook = f)
 
 
 #############################################################################
@@ -320,7 +316,7 @@ immutable Variable <: AbstractJuMPScalar
     col::Int
 end
 
-getLinearIndex(x::Variable) = x.col
+linearindex(x::Variable) = x.col
 Base.isequal(x::Variable,y::Variable) = (x.col == y.col) && (x.m === y.m)
 
 Variable(m::Model, lower, upper, cat::Symbol, name::AbstractString="", value::Number=NaN) =
@@ -350,28 +346,28 @@ function Variable(m::Model,lower::Number,upper::Number,cat::Symbol,name::Abstrac
 end
 
 # Name setter/getters
-function setName(v::Variable,n::AbstractString)
+function setname(v::Variable,n::AbstractString)
     push!(v.m.customNames, v)
     v.m.colNames[v.col] = n
     v.m.colNamesIJulia[v.col] = n
 end
-getName(m::Model, col) = var_str(REPLMode, m, col)
-getName(v::Variable) = var_str(REPLMode, v.m, v.col)
+getname(m::Model, col) = var_str(REPLMode, m, col)
+getname(v::Variable) = var_str(REPLMode, v.m, v.col)
 
 # Bound setter/getters
-function setLower(v::Variable,lower::Number)
-    v.m.colCat[v.col] == :Fixed && error("use setValue for changing the value of a fixed variable")
+function setlowerbound(v::Variable,lower::Number)
+    v.m.colCat[v.col] == :Fixed && error("use setvalue for changing the value of a fixed variable")
     v.m.colLower[v.col] = lower
 end
-function setUpper(v::Variable,upper::Number)
-    v.m.colCat[v.col] == :Fixed && error("use setValue for changing the value of a fixed variable")
+function setupperbound(v::Variable,upper::Number)
+    v.m.colCat[v.col] == :Fixed && error("use setvalue for changing the value of a fixed variable")
     v.m.colUpper[v.col] = upper
 end
-getLower(v::Variable) = v.m.colLower[v.col]
-getUpper(v::Variable) = v.m.colUpper[v.col]
+getlowerbound(v::Variable) = v.m.colLower[v.col]
+getupperbound(v::Variable) = v.m.colUpper[v.col]
 
 # Value setter/getter
-function setValue(v::Variable, val::Number)
+function setvalue(v::Variable, val::Number)
     v.m.colVal[v.col] = val
     if v.m.colCat[v.col] == :Fixed
         v.m.colLower[v.col] = val
@@ -382,15 +378,15 @@ end
 # internal method that doesn't print a warning if the value is NaN
 _getValue(v::Variable) = v.m.colVal[v.col]
 
-function getValue(v::Variable)
+function getvalue(v::Variable)
     ret = _getValue(v)
     if isnan(ret)
-        Base.warn("Variable value not defined for $(getName(v)). Check that the model was properly solved.")
+        Base.warn("Variable value not defined for $(getname(v)). Check that the model was properly solved.")
     end
     ret
 end
 
-function getValue(arr::Array{Variable})
+function getvalue(arr::Array{Variable})
     ret = similar(arr, Float64)
     # return immediately for empty array
     if isempty(ret)
@@ -422,7 +418,7 @@ function getValue(arr::Array{Variable})
 end
 
 # Dual value (reduced cost) getter
-function getDual(v::Variable)
+function getdual(v::Variable)
     if length(v.m.redCosts) < MathProgBase.numvar(v.m)
         error("Variable bound duals (reduced costs) not available. Check that the model was properly solved and no integer variables are present.")
     end
@@ -430,12 +426,12 @@ function getDual(v::Variable)
 end
 
 const var_cats = [:Cont, :Int, :Bin, :SemiCont, :SemiInt]
-function setCategory(v::Variable, cat::Symbol)
+function setcategory(v::Variable, cat::Symbol)
     cat in var_cats || error("Unrecognized variable category $cat. Should be one of:\n    $var_cats")
     v.m.colCat[v.col] = cat
 end
 
-getCategory(v::Variable) = v.m.colCat[v.col]
+getcategory(v::Variable) = v.m.colCat[v.col]
 
 Base.zero(::Type{Variable}) = AffExpr(Variable[],Float64[],0.0)
 Base.zero(::Variable) = zero(Variable)
@@ -484,31 +480,31 @@ include("norms.jl")
 include("sos.jl")
 
 ##########################################################################
-# SDPConstraint is a (dual) semidefinite constraint of the form
+# SDConstraint is a (dual) semidefinite constraint of the form
 # ∑ cᵢ Xᵢ ≥ D, where D is a n×n symmetric data matrix, cᵢ are
 # scalars, and Xᵢ are n×n symmetric variable matrices. The inequality
 # is taken w.r.t. the psd partial order.
-type SDPConstraint <: JuMPConstraint
+type SDConstraint <: JuMPConstraint
     terms
 end
 
 # Special-case X ≥ 0, which is often convenient
-function SDPConstraint(lhs::Matrix, rhs::Number)
+function SDConstraint(lhs::Matrix, rhs::Number)
     rhs == 0 || error("Cannot construct a semidefinite constraint with nonzero scalar bound $rhs")
-    SDPConstraint(lhs)
+    SDConstraint(lhs)
 end
 
-function addConstraint(m::Model, c::SDPConstraint)
+function addconstraint(m::Model, c::SDConstraint)
     push!(m.sdpconstr,c)
     m.internalModelLoaded = false
-    ConstraintRef{Model,SDPConstraint}(m,length(m.sdpconstr))
+    ConstraintRef{Model,SDConstraint}(m,length(m.sdpconstr))
 end
 
 # helper method for mapping going on below
 Base.copy(x::Number, new_model::Model) = copy(x)
 
-Base.copy(c::SDPConstraint, new_model::Model) =
-    SDPConstraint(map(t -> copy(t, new_model), c.terms))
+Base.copy(c::SDConstraint, new_model::Model) =
+    SDConstraint(map(t -> copy(t, new_model), c.terms))
 
 
 ##########################################################################
@@ -523,9 +519,9 @@ typealias LinConstrRef ConstraintRef{Model,LinearConstraint}
 
 LinearConstraint(ref::LinConstrRef) = ref.m.linconstr[ref.idx]::LinearConstraint
 
-getLinearIndex(x::ConstraintRef) = x.idx
+linearindex(x::ConstraintRef) = x.idx
 
-function getDual(c::LinConstrRef)
+function getdual(c::LinConstrRef)
     if length(c.m.linconstrDuals) != MathProgBase.numlinconstr(c.m)
         error("Dual solution not available. Check that the model was properly solved and no integer variables are present.")
     end
@@ -567,7 +563,7 @@ function getNumSOCRows(m::Model)
     return numSOCRows
 end
 
-function getDual(c::ConstraintRef{Model,SOCConstraint})
+function getdual(c::ConstraintRef{Model,SOCConstraint})
     numBndRows = getNumBndRows(c.m)
     numSOCRows = getNumSOCRows(c.m)
     if length(c.m.conicconstrDuals) != (MathProgBase.numlinconstr(c.m) + numBndRows + numSOCRows)
@@ -579,7 +575,7 @@ end
 
 
 
-function chgConstrRHS(c::LinConstrRef, rhs::Number)
+function setRHS(c::LinConstrRef, rhs::Number)
     constr = c.m.linconstr[c.idx]
     sen = sense(constr)
     if sen == :range
@@ -654,7 +650,7 @@ function registervar(m::Model, varname::Symbol, value)
 end
 registervar(m::Model, varname, value) = value # variable name isn't a simple symbol, ignore
 
-function getVar(m::Model, varname::Symbol)
+function getvariable(m::Model, varname::Symbol)
     if !haskey(m.varDict, varname)
         error("No variable with name $varname")
     elseif m.varDict[varname] === nothing
@@ -671,7 +667,7 @@ function getvalue_warn(x::JuMPContainer{Variable})
     m = v.m
     m.getvalue_counter += 1
     if m.getvalue_counter > 400
-        Base.warn_once("getValue has been called on a collection of variables a large number of times. For performance reasons, this should be avoided. Instead of getValue(x)[a,b,c], use getValue(x[a,b,c]) to avoid temporary allocations.")
+        Base.warn_once("getvalue has been called on a collection of variables a large number of times. For performance reasons, this should be avoided. Instead of getvalue(x)[a,b,c], use getvalue(x[a,b,c]) to avoid temporary allocations.")
     end
     return
 end
@@ -740,12 +736,12 @@ include("nlp.jl")
 # Deprecations
 include("deprecated.jl")
 
-getValue{T<:JuMPTypes}(arr::Array{T}) = map(getValue, arr)
+getvalue{T<:JuMPTypes}(arr::Array{T}) = map(getvalue, arr)
 
-function setValue{T<:AbstractJuMPScalar}(set::Array{T}, val::Array)
+function setvalue{T<:AbstractJuMPScalar}(set::Array{T}, val::Array)
     promote_shape(size(set), size(val)) # Check dimensions match
     for I in eachindex(set)
-        setValue(set[I], val[I])
+        setvalue(set[I], val[I])
     end
     nothing
 end
