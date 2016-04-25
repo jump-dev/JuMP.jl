@@ -67,16 +67,22 @@ Base.isempty(d::JuMPContainer) = isempty(_innercontainer(d))
 # the following types of index sets are allowed:
 # 0:K -- range with compile-time starting index
 # S -- general iterable set
-macro gendict(instancename,T,idxsets...)
+function gendict(instancename,T,idxsets...)
     N = length(idxsets)
-    truearray = all(s -> (isexpr(s,:(:)) && length(s.args) == 2), idxsets) &&
-                all(s -> s.args[1] == 1, idxsets)
-    sizes = Expr(:tuple, [:(length($(esc(rng)))) for rng in idxsets]...)
+    truearray = true
+    for idxset in idxsets
+        s = isexpr(idxset,:escape) ? idxset.args[1] : idxset
+        if !(isexpr(s,:(:)) && length(s.args) == 2 && s.args[1] == 1)
+            truearray = false
+            break
+        end
+    end
+    sizes = Expr(:tuple, [:(length($rng)) for rng in idxsets]...)
     if truearray
-        :($(esc(instancename)) = Array($T, $sizes))
+        :($instancename = Array($T, $sizes))
     else
-        indexsets = Expr(:tuple, [:($(esc(idxset))) for idxset in idxsets]...)
-        :($(esc(instancename)) = JuMPArray(Array($T, $sizes), $indexsets))
+        indexsets = Expr(:tuple, idxsets...)
+        :($instancename = JuMPArray(Array($T, $sizes), $indexsets))
     end
 end
 

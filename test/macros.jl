@@ -538,3 +538,44 @@ facts("[macros] LB/UB kwargs") do
     @fact macroexpand(:(@variable(m, 0 <= i <= 1, lowerbound=1))).head --> :error
     @fact macroexpand(:(@variable(m, 0 <= j <= 1, upperbound=1))).head --> :error
 end
+
+facts("[macros] Anonymous versions of macros") do
+    m = Model()
+    x = @variable(m, [1:3], lowerbound=1.0)
+    y = @variable(m, [2:3,1:3], upperbound=1.0, lowerbound=0.0, Bin)
+    z = @variable(m, [[:red,:blue]], Int)
+    w = @variable(m, [i=1:4,j=1:4;isodd(i+j)], SemiCont)
+    # v = @variable(m, [i=1:3,j=1:3], Symmetric, lowerbound = eye(3)[i,j])
+    u = @variable(m, [1:4,1:4], SDP)
+    @fact macroexpand(:(@variable(m, [1:3] <= 1))).head --> :error
+
+    @fact getlowerbound(x[1]) --> 1.0
+    @fact getupperbound(x[1]) --> Inf
+    @fact getcategory(x[1]) --> :Cont
+    @fact getlowerbound(y[2,1]) --> 0.0
+    @fact getupperbound(y[2,1]) --> 1.0
+    @fact getcategory(y[2,1]) --> :Bin
+    @fact getlowerbound(z[:red]) --> -Inf
+    @fact getupperbound(z[:red]) --> Inf
+    @fact getcategory(z[:red]) --> :Int
+    @fact getlowerbound(w[1,2]) --> -Inf
+    @fact getupperbound(w[1,2]) --> Inf
+    @fact getcategory(w[1,2]) --> :SemiCont
+    # @fact getlowerbound(v[1,2]) --> 0.0
+    # @fact getupperbound(v[1,2]) --> Inf
+    # @fact getcategory(v[1,2]) --> :Cont
+    @fact getlowerbound(u[1,2]) --> -Inf
+    @fact getupperbound(u[1,2]) --> Inf
+    @fact getcategory(u[1,2]) --> :Cont
+
+    c = @constraint(m, [i=1:3], x[i] <= z[:red])
+    d = @NLconstraint(m, [i=1:3], x[i]^3 == 1)
+    e = @NLexpression(m, [i=2:3], y[2,i]^3)
+    f = @expression(m, [i=[:red,:blue]], u[1,2] + 2z[i])
+
+    # not sure how else to test this
+    @fact c[1] --> c[1]
+    @fact d[1] --> d[1]
+    @fact e[2] --> e[2]
+    @fact f[:red] --> f[:red]
+end
