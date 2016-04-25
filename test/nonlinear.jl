@@ -495,7 +495,11 @@ function MathProgBase.loadproblem!(m::DummyNLPModel, numVar, numConstr, x_l, x_u
         @fact MathProgBase.isconstrlinear(d,1) --> true
         @fact MathProgBase.isconstrlinear(d,3) --> true
         @fact MathProgBase.constr_expr(d,1) --> :(2.0*x[1] + 1.0*x[2] <= 1.0)
-        @fact MathProgBase.constr_expr(d,2) --> :(2.0*x[1] + 1.0*x[2] <= 0.0)
+        if VERSION > v"0.5-"
+            @fact MathProgBase.constr_expr(d,2) --> :(2.0*x[1] + 1.0*x[2] <= -0.0)
+        else
+            @fact MathProgBase.constr_expr(d,2) --> :(2.0*x[1] + 1.0*x[2] <= 0.0)
+        end
         @fact MathProgBase.constr_expr(d,3) --> :(-5.0 <= 2.0*x[1] + 1.0*x[2] <= 5.0)
         if numConstr > 3
             @fact MathProgBase.constr_expr(d,4) --> :(2.0*x[1]*x[1] + 1.0*x[2] + -2.0 >= 0)
