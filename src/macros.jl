@@ -739,12 +739,16 @@ macro variable(args...)
 
     t = :Cont
     gottype = false
+    haslb = false
+    hasub = false
     # Identify the variable bounds. Five (legal) possibilities are "x >= lb",
     # "x <= ub", "lb <= x <= ub", "x == val", or just plain "x"
     if VERSION < v"0.5.0-dev+3231"
         x = comparison_to_call(x)
     end
     if isexpr(x,:comparison) # two-sided
+        haslb = true
+        hasub = true
         if x.args[2] == :>= || x.args[2] == :≥
             # ub >= x >= lb
             x.args[4] == :>= || x.args[4] == :≥ || error("Invalid variable bounds")
@@ -767,6 +771,7 @@ macro variable(args...)
             var = x.args[2]
             @assert length(x.args) == 3
             lb = esc_nonconstant(x.args[3])
+            haslb = true
             ub = Inf
         elseif x.args[1] == :<= || x.args[1] == :≤
             # x <= ub
@@ -775,13 +780,16 @@ macro variable(args...)
             #     We handle this later in the macro
             @assert length(x.args) == 3
             ub = esc_nonconstant(x.args[3])
+            hasub = true
             lb = -Inf
         elseif x.args[1] == :(==)
             # fixed variable
             var = x.args[2]
             @assert length(x.args) == 3
             lb = esc(x.args[3])
+            haslb = true
             ub = esc(x.args[3])
+            hasub = true
             gottype = true
             t = :Fixed
         else
@@ -808,18 +816,27 @@ macro variable(args...)
     quotvarname = quot(getname(var))
     escvarname  = esc(getname(var))
     for ex in kwargs
-        if ex.args[1] == :start
+        kwarg = ex.args[1]
+        if kwarg == :start
             value = esc(ex.args[2])
-        elseif ex.args[1] == :objective
+        elseif kwarg == :objective
             obj = esc(ex.args[2])
-        elseif ex.args[1] == :inconstraints
+        elseif kwarg == :inconstraints
             inconstraints = esc(ex.args[2])
-        elseif ex.args[1] == :coefficients
+        elseif kwarg == :coefficients
             coefficients = esc(ex.args[2])
-        elseif ex.args[1] == :basename
+        elseif kwarg == :basename
             quotvarname = esc(ex.args[2])
+        elseif kwarg == :lowerbound
+            haslb && error("Cannot specify variable lowerbound twice")
+            lb = esc_nonconstant(ex.args[2])
+            haslb = true
+        elseif kwarg == :upperbound
+            hasub && error("Cannot specify variable upperbound twice")
+            ub = esc_nonconstant(ex.args[2])
+            hasub = true
         else
-            error("in @variable ($var): Unrecognized keyword argument $(ex.args[1])")
+            error("in @variable ($var): Unrecognized keyword argument $kwarg")
         end
     end
 
