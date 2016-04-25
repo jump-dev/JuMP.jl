@@ -330,7 +330,7 @@ Base.ctranspose(x::JuMPArray) = _throw_transpose_error()
 
 # Can remove the following code once == overloading is removed
 
-function Base.issym{T<:JuMPTypes}(x::Matrix{T})
+function Compat.issymmetric{T<:JuMPTypes}(x::Matrix{T})
     (n = size(x,1)) == size(x,2) || return false
     for i in 1:n, j in (i+1):n
         isequal(x[i,j], x[j,i]) || return false
