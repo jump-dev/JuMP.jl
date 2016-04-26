@@ -29,7 +29,7 @@ end
 
 @deprecate_macro defVar variable
 @deprecate_macro defVars variables
-@deprecate_macro setobjective objective
+@deprecate_macro setObjective objective
 @deprecate_macro setNLObjective NLobjective
 @deprecate_macro addConstraint constraint
 @deprecate_macro addConstraints constraints
