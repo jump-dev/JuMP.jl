@@ -31,16 +31,16 @@ default solver and set solver parameters, see :ref:`ref-model`.
 Defining Variables
 ^^^^^^^^^^^^^^^^^^
 
-**Variables** are also Julia objects, and are defined using the ``@defVar``
+**Variables** are also Julia objects, and are defined using the ``@variable``
 macro. The first argument will always be the ``Model`` to associate this
 variable with. In the examples below we assume ``m`` is already defined.
 The second argument is an expression that declares the variable name and
 optionally allows specification of lower and upper bounds. For example::
 
-    @defVar(m, x )              # No bounds
-    @defVar(m, x >= lb )        # Lower bound only (note: 'lb <= x' is not valid)
-    @defVar(m, x <= ub )        # Upper bound only
-    @defVar(m, lb <= x <= ub )  # Lower and upper bounds
+    @variable(m, x )              # No bounds
+    @variable(m, x >= lb )        # Lower bound only (note: 'lb <= x' is not valid)
+    @variable(m, x <= ub )        # Upper bound only
+    @variable(m, lb <= x <= ub )  # Lower and upper bounds
 
 All these variations introduce a new variable ``x`` in the local scope.
 The names of your variables must be valid Julia variable names.
@@ -53,7 +53,7 @@ third argument, ``Int`` or ``Bin``.
 To create arrays of variables we append brackets to the variable name.
 For example::
 
-    @defVar(m, x[1:M,1:N] >= 0 )
+    @variable(m, x[1:M,1:N] >= 0 )
 
 will create an ``M`` by ``N`` array of variables. Both ranges and arbitrary
 iterable sets are supported as index sets. Currently we only support ranges
@@ -62,12 +62,12 @@ Using ranges will generally be faster than using arbitrary symbols. You can
 mix both ranges and lists of symbols, as in the following example::
 
     s = ["Green", "Blue"]
-    @defVar(m, x[-10:10,s], Int )
+    @variable(m, x[-10:10,s], Int )
     # e.g. x[-4, "Green"]
 
 Finally, bounds can depend on variable indices::
 
-    @defVar(m, x[i=1:10] >= i )
+    @variable(m, x[i=1:10] >= i )
 
 
 Objective and Constraints
@@ -79,11 +79,6 @@ macros, e.g.::
     @constraint(m, x[i] - s[i] <= 0)  # Other options: <= and >=
     @constraint(m, sum{x[i], i=1:numLocation} == 1)
     @objective(m, Max, 5x + 22y + (x+y)/2) # or Min
-
-The second way is visually very similar, and uses the ``@addConstraint`` and ``@setObjective``
-macros, e.g.::
-
-
 
 .. note::
     The ``sense`` passed to ``@objective`` must be a `symbol <http://docs.julialang.org/en/latest/manual/metaprogramming/#symbols>`_ type: ``:Min`` or ``:Max``, although the macro accepts ``:Min`` and ``:Max``, as well as ``Min`` and ``Max`` (without the colon) directly.

@@ -87,7 +87,7 @@ type SubexpressionStorage
     linearity::Linearity
 end
 
-type JuMPNLPEvaluator <: MathProgBase.AbstractNLPEvaluator
+type NLPEvaluator <: MathProgBase.AbstractNLPEvaluator
     m::Model
     A::SparseMatrixCSC{Float64,Int} # linear constraint matrix
     parameter_values::Vector{Float64}
@@ -126,7 +126,7 @@ type JuMPNLPEvaluator <: MathProgBase.AbstractNLPEvaluator
     eval_grad_f_timer::Float64
     eval_jac_g_timer::Float64
     eval_hesslag_timer::Float64
-    function JuMPNLPEvaluator(m::Model)
+    function NLPEvaluator(m::Model)
         d = new(m)
         numVar = m.numCols
         d.A = prepConstrMatrix(m)
@@ -222,7 +222,7 @@ function SubexpressionStorage(nd::Vector{NodeData}, const_values,numVar, fixed_v
 
 end
 
-function MathProgBase.initialize(d::JuMPNLPEvaluator, requested_features::Vector{Symbol})
+function MathProgBase.initialize(d::NLPEvaluator, requested_features::Vector{Symbol})
     for feat in requested_features
         if !(feat in MathProgBase.features_available(d))
             error("Unsupported feature $feat")
@@ -407,7 +407,7 @@ function MathProgBase.initialize(d::JuMPNLPEvaluator, requested_features::Vector
     nothing
 end
 
-function MathProgBase.features_available(d::JuMPNLPEvaluator)
+function MathProgBase.features_available(d::NLPEvaluator)
     features = [:Grad, :Jac, :ExprGraph]
     if !d.disable_2ndorder
         push!(features,:Hess)
@@ -416,7 +416,7 @@ function MathProgBase.features_available(d::JuMPNLPEvaluator)
     return features
 end
 
-function forward_eval_all(d::JuMPNLPEvaluator,x)
+function forward_eval_all(d::NLPEvaluator,x)
     # do a forward pass on all expressions at x
     subexpr_values = d.subexpression_forward_values
     user_input_buffer = d.jac_storage
@@ -438,7 +438,7 @@ function forward_eval_all(d::JuMPNLPEvaluator,x)
     end
 end
 
-function reverse_eval_all(d::JuMPNLPEvaluator,x)
+function reverse_eval_all(d::NLPEvaluator,x)
     # do a reverse pass on all expressions at x
     subexpr_reverse_values = d.subexpression_reverse_values
     subexpr_values = d.subexpression_forward_values
@@ -461,7 +461,7 @@ function reverse_eval_all(d::JuMPNLPEvaluator,x)
     copy!(d.last_x,x)
 end
 
-function MathProgBase.eval_f(d::JuMPNLPEvaluator, x)
+function MathProgBase.eval_f(d::NLPEvaluator, x)
     tic()
     if d.last_x != x
         forward_eval_all(d,x)
@@ -481,7 +481,7 @@ function MathProgBase.eval_f(d::JuMPNLPEvaluator, x)
     return val
 end
 
-function MathProgBase.eval_grad_f(d::JuMPNLPEvaluator, g, x)
+function MathProgBase.eval_grad_f(d::NLPEvaluator, g, x)
     tic()
     if d.last_x != x
         forward_eval_all(d,x)
@@ -516,7 +516,7 @@ function MathProgBase.eval_grad_f(d::JuMPNLPEvaluator, g, x)
     return
 end
 
-function MathProgBase.eval_g(d::JuMPNLPEvaluator, g, x)
+function MathProgBase.eval_g(d::NLPEvaluator, g, x)
     tic()
     if d.last_x != x
         forward_eval_all(d,x)
@@ -551,7 +551,7 @@ function MathProgBase.eval_g(d::JuMPNLPEvaluator, g, x)
     return
 end
 
-function MathProgBase.eval_jac_g(d::JuMPNLPEvaluator, J, x)
+function MathProgBase.eval_jac_g(d::NLPEvaluator, J, x)
     tic()
     if d.last_x != x
         forward_eval_all(d,x)
@@ -616,7 +616,7 @@ end
 
 
 function MathProgBase.eval_hesslag_prod(
-    d::JuMPNLPEvaluator,
+    d::NLPEvaluator,
     h::Vector{Float64}, # output vector
     x::Vector{Float64}, # current solution
     v::Vector{Float64}, # rhs vector
@@ -726,7 +726,7 @@ function MathProgBase.eval_hesslag_prod(
 end
 
 function MathProgBase.eval_hesslag(
-    d::JuMPNLPEvaluator,
+    d::NLPEvaluator,
     H::Vector{Float64},         # Sparse hessian entry vector
     x::Vector{Float64},         # Current solution
     obj_factor::Float64,        # Lagrangian multiplier for objective
@@ -930,13 +930,13 @@ function hessian_slice{CHUNK}(d, ex, x, H, scale, nzcount, recovery_tmp_storage,
 
 end
 
-MathProgBase.isobjlinear(d::JuMPNLPEvaluator) = !d.has_nlobj && (length(d.m.obj.qvars1) == 0)
+MathProgBase.isobjlinear(d::NLPEvaluator) = !d.has_nlobj && (length(d.m.obj.qvars1) == 0)
 # interpret quadratic to include purely linear
-MathProgBase.isobjquadratic(d::JuMPNLPEvaluator) = !d.has_nlobj
+MathProgBase.isobjquadratic(d::NLPEvaluator) = !d.has_nlobj
 
-MathProgBase.isconstrlinear(d::JuMPNLPEvaluator, i::Integer) = (i <= length(d.m.linconstr))
+MathProgBase.isconstrlinear(d::NLPEvaluator, i::Integer) = (i <= length(d.m.linconstr))
 
-function MathProgBase.jac_structure(d::JuMPNLPEvaluator)
+function MathProgBase.jac_structure(d::NLPEvaluator)
     # Jacobian structure
     jac_I = Int[]
     jac_J = Int[]
@@ -972,11 +972,11 @@ function MathProgBase.jac_structure(d::JuMPNLPEvaluator)
     end
     return jac_I, jac_J
 end
-function MathProgBase.hesslag_structure(d::JuMPNLPEvaluator)
+function MathProgBase.hesslag_structure(d::NLPEvaluator)
     d.want_hess || error("Hessian computations were not requested on the call to MathProgBase.initialize.")
     return d.hess_I,d.hess_J
 end
-function _hesslag_structure(d::JuMPNLPEvaluator)
+function _hesslag_structure(d::NLPEvaluator)
     hess_I = Int[]
     hess_J = Int[]
 
@@ -1089,7 +1089,7 @@ function tapeToExpr(k, nd::Vector{NodeData}, adj, const_values, parameter_values
 end
 
 
-function MathProgBase.obj_expr(d::JuMPNLPEvaluator)
+function MathProgBase.obj_expr(d::NLPEvaluator)
     if d.has_nlobj
         # for now, don't pass simplified expressions
         ex = d.m.nlpdata.nlobj
@@ -1100,7 +1100,7 @@ function MathProgBase.obj_expr(d::JuMPNLPEvaluator)
     end
 end
 
-function MathProgBase.constr_expr(d::JuMPNLPEvaluator,i::Integer)
+function MathProgBase.constr_expr(d::NLPEvaluator,i::Integer)
     nlin = length(d.m.linconstr)
     nquad = length(d.m.quadconstr)
     if i <= nlin
@@ -1158,7 +1158,7 @@ function _buildInternalModel_nlp(m::Model, traits)
 
     nldata::NLPData = m.nlpdata
     if m.internalModelLoaded && !m.simplify_nonlinear_expressions
-        @assert isa(nldata.evaluator, JuMPNLPEvaluator)
+        @assert isa(nldata.evaluator, NLPEvaluator)
         d = nldata.evaluator
         fill!(d.last_x, NaN)
         if length(nldata.nlparamvalues) == 0 && !ENABLE_NLP_RESOLVE[1]
@@ -1192,7 +1192,7 @@ function _buildInternalModel_nlp(m::Model, traits)
             error(msg)
         end
     else
-        d = JuMPNLPEvaluator(m)
+        d = NLPEvaluator(m)
         nldata.evaluator = d
     end
 
