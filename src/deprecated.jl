@@ -46,7 +46,7 @@ end
 @deprecate_macro addusercut usercut
 
 @deprecate JuMPNLPEvaluator JuMP.NLPEvaluator
-@deprecate addConstraint addconstraint
+@deprecate addConstraint JuMP.addconstraint
 @deprecate addCutCallback addcutcallback
 @deprecate addHeuristicCallback addheuristiccallback
 @deprecate addInfoCallback addinfocallback
@@ -81,7 +81,7 @@ end
 @deprecate setName setname
 @deprecate setObjective JuMP.setobjective
 @deprecate setObjectiveSense setobjectivesense
-@deprecate setPrintHook setprinthook
+@deprecate setPrintHook JuMP.setprinthook
 @deprecate setSolutionValue! setsolutionvalue
 @deprecate setSolveHook JuMP.setsolvehook
 @deprecate setSolver setsolver
