@@ -10,7 +10,7 @@ Variables, also known as columns or decision variables, are the results of the o
 Constructors
 ^^^^^^^^^^^^
 
-The primary way to create variables is with the ``@defVar`` macro.
+The primary way to create variables is with the ``@variable`` macro.
 The first argument will always be a ``Model``. In the examples below we assume
 ``m`` is already defined. The second argument is an expression that declares
 the variable name and optionally allows specification of lower and upper bounds.
@@ -19,11 +19,11 @@ see the syntax discussed in the :ref:`probmod` section.
 
 ::
 
-    @defVar(m, x )              # No bounds
-    @defVar(m, x >= lb )        # Lower bound only (note: 'lb <= x' is not valid)
-    @defVar(m, x <= ub )        # Upper bound only
-    @defVar(m, lb <= x <= ub )  # Lower and upper bounds
-    @defVar(m, x == fixedval )  # Fixed to a value (lb == ub)
+    @variable(m, x )              # No bounds
+    @variable(m, x >= lb )        # Lower bound only (note: 'lb <= x' is not valid)
+    @variable(m, x <= ub )        # Upper bound only
+    @variable(m, lb <= x <= ub )  # Lower and upper bounds
+    @variable(m, x == fixedval )  # Fixed to a value (lb == ub)
 
 All these variations create a new local variable, in this case ``x``.
 The names of your variables must be valid Julia variable names.
@@ -37,7 +37,7 @@ To create arrays of variables we append brackets to the variable name.
 
 ::
 
-    @defVar(m, x[1:M,1:N] >= 0 )
+    @variable(m, x[1:M,1:N] >= 0 )
 
 will create an ``M`` by ``N`` array of variables. Both ranges and arbitrary
 iterable sets are supported as index sets. Currently we only support ranges
@@ -46,33 +46,33 @@ ranges will generally be faster than using arbitrary symbols. You can mix both
 ranges and lists of symbols, as in the following example::
 
     s = ["Green","Blue"]
-    @defVar(m, x[-10:10,s] , Int)
+    @variable(m, x[-10:10,s] , Int)
     x[-4,"Green"]
 
 Bounds can depend on variable indices::
 
-    @defVar(m, x[i=1:10] >= i )
+    @variable(m, x[i=1:10] >= i )
 
 And indices can have dependencies on preceding indices (e.g. "triangular indexing")::
 
-    @defVar(m, x[i=1:10,j=i:10] >= 0)
+    @variable(m, x[i=1:10,j=i:10] >= 0)
 
 Note the dependency must be on preceding indices, going from left to right. That is,
-``@defVar(m, x[i=j:10,i=1:10] >= 0)`` is not valid JuMP code.
+``@variable(m, x[i=j:10,i=1:10] >= 0)`` is not valid JuMP code.
 
 Conditions can be placed on the index values for which variables are created; the condition follows the statement of the index sets and is separated with a semicolon::
 
-    @defVar(m, x[i=1:10,j=1:10; isodd(i+j)] >= 0)
+    @variable(m, x[i=1:10,j=1:10; isodd(i+j)] >= 0)
 
 Note that only one condition can be added, although expressions can be built up by using the usual ``&&`` and ``||`` logical operators. **This condition syntax requires Julia 0.4 or later.**
 
-An initial value of each variable may be provided with the ``start`` keyword to ``@defVar``::
+An initial value of each variable may be provided with the ``start`` keyword to ``@variable``::
 
-    @defVar(m, x[i=1:10], start=(i/2))
+    @variable(m, x[i=1:10], start=(i/2))
 
 Is equivalent to::
 
-    @defVar(m, x[i=1:10])
+    @variable(m, x[i=1:10])
     for i in 1:10
         setvalue(x[i], i/2)
     end
@@ -86,10 +86,10 @@ where ``category`` is one of ``:Cont``, ``:Int``, ``:Bin``, ``:Fixed``, ``:SemiC
 This form of constructing variables is not considered idiomatic JuMP code.
 
 .. note::
-    ``@defVar`` is equivalent to a simple assignment ``x = ...`` in Julia and therefore redefines variables without warning. The following code may lead to unexpected results::
+    ``@variable`` is equivalent to a simple assignment ``x = ...`` in Julia and therefore redefines variables without warning. The following code may lead to unexpected results::
 
-    @defVar(m, x[1:10,1:10])
-    @defVar(m, x[1:5])
+    @variable(m, x[1:10,1:10])
+    @variable(m, x[1:5])
 
     After the second line, the Julia variable ``x`` refers to a set of variables indexed
     by the range ``1:5``.
@@ -98,23 +98,23 @@ This form of constructing variables is not considered idiomatic JuMP code.
 
 The constructor ``Variable(m::Model,idx::Int)`` may be used to create a variable object corresponding to an *existing* variable in the model (the constructor does not add a new variable to the model). The variable indices correspond to those of the internal MathProgBase model. The inverse of this operation is ``linearindex(x::Variable)``, which returns the flattened out (linear) index of a variable as JuMP provides it to a solver. We guarantee that ``Variable(m,linearindex(x))`` returns ``x`` itself. These methods are only useful if you intend to interact with solver properties which are not directly exposed through JuMP.
 
-If you would like to change the name used when printing a variable or group of variables, you may use the ``basename`` keyword argument:
+If you would like to change the name used when printing a variable or group of variables, you may use the ``basename`` keyword argument::
 
     i = 3
-    @defVar(m, x[1:3], basename="myvariable-$i")
+    @variable(m, x[1:3], basename="myvariable-$i")
 
 Printing ``x[2]`` will display ``myvariable-3[2]``.
 
 Semidefinite and symmetric variables
 ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
 
-JuMP supports modeling with `semidefinite variables <https://en.wikipedia.org/wiki/Semidefinite_programming>`_. A square symmetric matrix :math:`X` is semidefinite if all eigenvalues are nonnegative; this is typically denoted by :math:`X \succeq 0`. A
+JuMP supports modeling with `semidefinite variables <https://en.wikipedia.org/wiki/Semidefinite_programming>`_. A square symmetric matrix :math:`X` is positive semidefinite if all eigenvalues are nonnegative; this is typically denoted by :math:`X \succeq 0`. You can declare a matrix of variables to be positive semidefinite as follows::
 
-    @defVar(m, X[1:3,1:3], SDP)
+    @variable(m, X[1:3,1:3], SDP)
 
 Note in particular the indexing: 1) exactly two index sets must be specified, 2) they must both be unit ranges starting at 1, 3) no bounds can be provided alongside the ``SDP`` tag. If you wish to impose more complex semidefinite constraints on the variables, e.g. :math:`X - I \succeq 0`, you may instead use the ``Symmetric`` tag, along with a semidefinite constraint::
 
-    @defVar(m, X[1:n,1:n], Symmetric)
+    @variable(m, X[1:n,1:n], Symmetric)
     @SDconstraint(m, X >= eye(n))
 
 Bounds can be provided as normal when using the ``Symmetric`` tag, with the stipulation that the bounds are symmetric themselves.
@@ -165,9 +165,9 @@ semantics. First, it is important to note that fixed variables are considered
 optimization variables, not constants, for the purpose of determining the problem
 class. For example, in::
 
-    @defVar(m, x == 5)
-    @defVar(m, y)
-    @addConstraint(m, x*y <= 10)
+    @variable(m, x == 5)
+    @variable(m, y)
+    @constraint(m, x*y <= 10)
 
 the constraint added is a nonconvex quadratic constraint. For efficiency reasons,
 JuMP will *not* substitute the constant ``5`` for ``x`` and then

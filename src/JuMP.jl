@@ -265,10 +265,10 @@ function Base.copy(source::Model)
         error("Copying callbacks is not supported")
     end
     if source.solvehook !== nothing
-        dest.solvehook = copy(source.solvehook)
+        dest.solvehook = source.solvehook
     end
     if source.printhook !== nothing
-        dest.printhook = copy(source.printhook)
+        dest.printhook = source.printhook
     end
 
     # variable/extension dicts

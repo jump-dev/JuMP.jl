@@ -53,7 +53,7 @@ Methods
 * ``solve(m::Model; suppress_warnings=false, relaxation=false)`` - solves the model using the selected solver (or a default for the problem class), and takes two optional arguments that are disabled by default. Setting ``suppress_warnings`` to ``true`` will suppress all JuMP-specific output (e.g. warnings about infeasibility and lack of dual information) but will not suppress solver output (which should be done by passing options to the solver). Setting ``relaxation=true`` solves the standard continuous relaxation for the model: that is, integrality is dropped, special ordered set constraints are not enforced, and semi-continuous and semi-integer variables with bounds ``[l,u]`` are replaced with bounds ``[min(l,0),max(u,0)]``.
 * ``JuMP.build(m::Model)`` - builds the model in memory at the MathProgBase level without optimizing.
 * ``setsolver(m::Model,s::AbstractMathProgSolver)`` - changes the solver which will be used for the next call to ``solve()``, discarding the current internal model if present.
-* ``getvariable(m::Model,name::Symbol)`` - returns the variable or group of variables of the given name which were added to the model with ``@defVar``. Throws an error if multiple variables were created with the same name.
+* ``getvariable(m::Model,name::Symbol)`` - returns the variable or group of variables of the given name which were added to the model with ``@variable``. Throws an error if multiple variables were created with the same name.
 
 **Objective**
 
@@ -101,11 +101,11 @@ corresponding extensions of the MathProgBase interface. Add them in the same way
 you would a linear objective::
 
     m = Model()
-    @defVar(m, 0 <= x <= 2 )
-    @defVar(m, 0 <= y <= 30 )
+    @variable(m, 0 <= x <= 2 )
+    @variable(m, 0 <= y <= 30 )
 
-    @setObjective(m, Min, x*x+ 2x*y + y*y )
-    @addConstraint(m, x + y >= 1 )
+    @objective(m, Min, x*x+ 2x*y + y*y )
+    @constraint(m, x + y >= 1 )
 
     print(m)
 
@@ -116,11 +116,11 @@ Second-order cone constraints
 
 Second-order cone constraints of the form :math:`||Ax-b||_2 + a^Tx + c \le 0` can be added directly using the ``norm`` function::
 
-    @addConstraint(m, norm(A*x) <= 2w - 1)
+    @constraint(m, norm(A*x) <= 2w - 1)
 
 The special ``norm2{...}`` construct may be used to build up normed expressions with complex indexing operations in much the same way as the ``sum{...}`` construct::
 
-    @addConstraint(m, norm2{2x[i] - i, i=1:n; c[i] == 1} <= 1)
+    @constraint(m, norm2{2x[i] - i, i=1:n; c[i] == 1} <= 1)
 
 Accessing the low-level model
 ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^

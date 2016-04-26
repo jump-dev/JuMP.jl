@@ -9,11 +9,11 @@ The are more complex examples in the ``JuMP/examples/`` `folder <https://github.
     using JuMP
 
     m = Model()
-    @defVar(m, 0 <= x <= 2 )
-    @defVar(m, 0 <= y <= 30 )
+    @variable(m, 0 <= x <= 2 )
+    @variable(m, 0 <= y <= 30 )
 
-    @setObjective(m, Max, 5x + 3*y )
-    @addConstraint(m, 1x + 5y <= 3.0 )
+    @objective(m, Max, 5x + 3*y )
+    @constraint(m, 1x + 5y <= 3.0 )
 
     print(m)
 
@@ -41,8 +41,8 @@ commands will create two variables, ``x`` and ``y``, with both lower and upper b
 Note the first argument is our model variable ``m``. These variables are associated
 with this model and cannot be used in another model.::
 
-    @defVar(m, 0 <= x <= 2 )
-    @defVar(m, 0 <= y <= 30 )
+    @variable(m, 0 <= x <= 2 )
+    @variable(m, 0 <= y <= 30 )
 
 Next we'll set our objective. Note again the ``m``, so we know which model's
 objective we are setting! The objective sense, ``Max`` or ``Min``, should
@@ -51,13 +51,13 @@ symbol between 5 and our variable ``x`` - Julia is smart enough to not need it!
 Feel free to stick with ``*`` if it makes you feel more comfortable, as we have
 done with ``3*y``::
 
-    @setObjective(m, Max, 5x + 3*y )
+    @objective(m, Max, 5x + 3*y )
 
 Adding constraints is a lot like setting the objective. Here we create a
 less-than-or-equal-to constraint using ``<=``, but we can also create equality
 constraints using ``==`` and greater-than-or-equal-to constraints with ``>=``::
 
-    @addConstraint(m, 1x + 5y <= 3.0 )
+    @constraint(m, 1x + 5y <= 3.0 )
 
 If you want to see what your model looks like in a human-readable format,
 the ``print`` function is defined for models.

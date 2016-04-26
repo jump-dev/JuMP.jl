@@ -549,7 +549,7 @@ facts("[nonlinear] Expression graph for linear problem") do
     @variable(m, x)
     @constraint(m, 0 <= x <= 1)
     @objective(m, Max, x)
-    d = JuMPNLPEvaluator(m)
+    d = JuMP.NLPEvaluator(m)
     MathProgBase.initialize(d, [:ExprGraph])
     @fact MathProgBase.obj_expr(d) --> :(+(1.0 * x[1]))
 end
@@ -564,7 +564,7 @@ facts("[nonlinear] Hessians through MPB") do
     @NLexpression(m, foo, a * b + c^2)
 
     @NLobjective(m, Min, foo)
-    d = JuMPNLPEvaluator(m)
+    d = JuMP.NLPEvaluator(m)
     MathProgBase.initialize(d, [:Hess])
     I,J = MathProgBase.hesslag_structure(d)
     V = zeros(length(I))
@@ -576,7 +576,7 @@ facts("[nonlinear] Hessians through MPB") do
 
     # make sure we don't get NaNs in this case
     @NLobjective(m, Min, a * b + 3*c^2)
-    d = JuMPNLPEvaluator(m)
+    d = JuMP.NLPEvaluator(m)
     MathProgBase.initialize(d, [:Hess])
     setvalue(c, -1.0)
     V = zeros(length(I))
@@ -603,7 +603,7 @@ facts("[nonlinear] Hess-vec through MPB") do
     @NLobjective(m, Min, a*b + c^2)
     @constraint(m, c*b <= 1)
     @NLconstraint(m, a^2/2 <= 1)
-    d = JuMPNLPEvaluator(m)
+    d = JuMP.NLPEvaluator(m)
     MathProgBase.initialize(d, [:HessVec])
     h = ones(3) # test that input values are overwritten
     v = [2.4,3.5,1.2]
@@ -623,7 +623,7 @@ facts("[nonlinear] NaN corner case (#695)") do
 
     @NLobjective(m, Min, (x - x0) /(sqrt(y0) + sqrt(y)))
 
-    d = JuMPNLPEvaluator(m)
+    d = JuMP.NLPEvaluator(m)
     MathProgBase.initialize(d, [:HessVec])
     h = ones(2)
     v = [2.4,3.5]
@@ -664,7 +664,7 @@ if length(convex_nlp_solvers) > 0
         @variable(m, x[1:2] >= 0.5)
         @NLobjective(m, Min, myf(x[1],mysquare(x[2])))
 
-        d = JuMPNLPEvaluator(m)
+        d = JuMP.NLPEvaluator(m)
         MathProgBase.initialize(d, [:Grad])
         gradout = zeros(2)
         xval = [1,sqrt(2.0)]
@@ -678,7 +678,7 @@ if length(convex_nlp_solvers) > 0
 
         @NLobjective(m, Min, myf_2(x[1],mysquare_2(x[2])))
 
-        d = JuMPNLPEvaluator(m)
+        d = JuMP.NLPEvaluator(m)
         MathProgBase.initialize(d, [:Grad])
         gradout = zeros(2)
         xval = [1,sqrt(2.0)]

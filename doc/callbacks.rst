@@ -30,9 +30,8 @@ must write a function that will analyze the current solution that takes a
 single argument, e.g. ``function myLazyConGenerator(cb)``, where cb is a reference
 to the callback management code inside JuMP. Next you will do whatever
 analysis of the solution you need to inside your function to generate the new
-constraint before adding it to the model with the JuMP function
-``addLazyConstraint(cb, myconstraint)`` or the macro version
-``@addLazyConstraint(cb, myconstraint)`` (same limitations as addConstraint).
+constraint before adding it to the model with
+``@lazyconstraint(cb, myconstraint)``.
 Finally we notify JuMP that this function should be used for lazy constraint
 generation using the ``addlazycallback(m, myLazyConGenerator)`` function
 before we call ``solve(m)``.
@@ -49,10 +48,10 @@ will be either (0,2) or (2,2), and the final solution will be (1,2)::
     m = Model(solver=GurobiSolver())
 
     # Define our variables to be inside a box, and integer
-    @defVar(m, 0 <= x <= 2, Int)
-    @defVar(m, 0 <= y <= 2, Int)
+    @variable(m, 0 <= x <= 2, Int)
+    @variable(m, 0 <= y <= 2, Int)
 
-    @setObjective(m, Max, y)
+    @objective(m, Max, y)
 
     # We now define our callback function that takes one argument,
     # the callback handle. Note that we can access m, x, and y because
@@ -82,13 +81,13 @@ will be either (0,2) or (2,2), and the final solution will be (1,2)::
             # Cut off this solution
             println("Solution was in top left, cut it off")
             # Use the original variables, but not m - cb instead
-            @addLazyConstraint(cb, y - x <= 1)
+            @lazyconstraint(cb, y - x <= 1)
         # Check top right
         elseif y_val + x_val > 3 + TOL
             # Cut off this solution
             println("Solution was in top right, cut it off")
             # Use the original variables, but not m - cb instead
-            @addLazyConstraint(cb, y + x <= 3)
+            @lazyconstraint(cb, y + x <= 3)
         end
     end  # End of callback function
 
@@ -148,14 +147,14 @@ Consider the following example which is related to the lazy constraint example. 
     m = Model(solver=GurobiSolver(PreCrush=1, Cuts=0, Presolve=0, Heuristics=0.0))
 
     # Define our variables to be inside a box, and integer
-    @defVar(m, 0 <= x <= 2, Int)
-    @defVar(m, 0 <= y <= 2, Int)
+    @variable(m, 0 <= x <= 2, Int)
+    @variable(m, 0 <= y <= 2, Int)
 
     # Optimal solution is trying to go towards top-right corner (2.0, 2.0)
-    @setObjective(m, Max, x + 2y)
+    @objective(m, Max, x + 2y)
 
     # We have one constraint that cuts off the top right corner
-    @addConstraint(m, y + x <= 3.5)
+    @constraint(m, y + x <= 3.5)
 
     # Optimal solution of relaxed problem will be (1.5, 2.0)
     # We can add a user cut that will cut of this fractional solution.
@@ -218,14 +217,14 @@ Consider the following example, which is the same problem as seen in the user cu
     m = Model(solver=GurobiSolver(Cuts=0, Presolve=0, Heuristics=0.0))
 
     # Define our variables to be inside a box, and integer
-    @defVar(m, 0 <= x <= 2, Int)
-    @defVar(m, 0 <= y <= 2, Int)
+    @variable(m, 0 <= x <= 2, Int)
+    @variable(m, 0 <= y <= 2, Int)
 
     # Optimal solution is trying to go towards top-right corner (2.0, 2.0)
-    @setObjective(m, Max, x + 2y)
+    @objective(m, Max, x + 2y)
 
     # We have one constraint that cuts off the top right corner
-    @addConstraint(m, y + x <= 3.5)
+    @constraint(m, y + x <= 3.5)
 
     # Optimal solution of relaxed problem will be (1.5, 2.0)
 
@@ -371,9 +370,9 @@ In the above examples the callback function is defined in the same scope as the 
     function solveProblem()
         m = Model(solver=GurobiSolver())
 
-        @defVar(m, 0 <= x <= 2, Int)
-        @defVar(m, 0 <= y <= 2, Int)
-        @setObjective(m, Max, y)
+        @variable(m, 0 <= x <= 2, Int)
+        @variable(m, 0 <= y <= 2, Int)
+        @objective(m, Max, y)
 
         # Note that the callback is now a stub that passes off
         # the work to the "algorithm"
@@ -385,7 +384,7 @@ In the above examples the callback function is defined in the same scope as the 
             newcut, x_coeff, y_coeff, rhs = cornerChecker(x_val, y_val)
 
             if newcut
-                @addLazyConstraint(cb, x_coeff*x + y_coeff*y <= rhs)
+                @lazyconstraint(cb, x_coeff*x + y_coeff*y <= rhs)
             end
         end  # End of callback function
 

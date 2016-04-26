@@ -13,14 +13,14 @@ performance.
 
 
 
-Nonlinear objectives and constraints are specified by using the ``@setNLObjective``
-and ``@addNLConstraint`` macros. The familiar ``sum{}`` syntax is supported within
+Nonlinear objectives and constraints are specified by using the ``@NLobjective``
+and ``@NLconstraint`` macros. The familiar ``sum{}`` syntax is supported within
 these macros, as well as ``prod{}`` which analogously represents the product of
-the terms within. Note that the ``@setObjective`` and ``@addConstraint``
+the terms within. Note that the ``@objective`` and ``@constraint``
 macros (and corresponding functions) do *not* currently support nonlinear expressions.
 However, a model can contain a mix of linear, quadratic, and nonlinear constraints or
 objective functions.  Starting points may be provided by using the ``start``
-keyword argument to ``@defVar``.
+keyword argument to ``@variable``.
 If a starting value is not provided for a variable, it will be set to the projection
 of zero onto the interval defined by the variable bounds.
 For nonconvex problems, the returned solution is only guaranteed to be
@@ -30,16 +30,16 @@ For example, we can solve the classical Rosenbrock problem (with a twist) as fol
 
     using JuMP
     m = Model()
-    @defVar(m, x, start = 0.0)
-    @defVar(m, y, start = 0.0)
+    @variable(m, x, start = 0.0)
+    @variable(m, y, start = 0.0)
 
-    @setNLObjective(m, Min, (1-x)^2 + 100(y-x^2)^2)
+    @NLobjective(m, Min, (1-x)^2 + 100(y-x^2)^2)
 
     solve(m)
     println("x = ", getvalue(x), " y = ", getvalue(y))
 
     # adding a (linear) constraint
-    @addConstraint(m, x + y == 10)
+    @constraint(m, x + y == 10)
     solve(m)
     println("x = ", getvalue(x), " y = ", getvalue(y))
 
@@ -65,21 +65,21 @@ the syntax for linear and quadratic expressions. We note some important points b
   expressions. See the example below::
 
     myfunction(a,b) = exp(a)*b
-    @defVar(m, x); @defVar(m, y)
-    @setNLObjective(m, Min, myfunction(x,y)) # ERROR
-    @setNLObjective(m, Min, exp(x)*y) # Okay
+    @variable(m, x); @variable(m, y)
+    @NLobjective(m, Min, myfunction(x,y)) # ERROR
+    @NLobjective(m, Min, exp(x)*y) # Okay
 
 - ``AffExpr`` and ``QuadExpr`` objects cannot currently be used inside nonlinear
   expressions. Instead, introduce auxiliary variables, e.g.::
 
     myexpr = dot(c,x) + 3y # where x and y are variables
-    @defVar(m, aux)
-    @addConstraint(m, aux == myexpr)
-    @setNLObjective(m, Min, sin(aux))
-- You can declare embeddable nonlinear expressions with ``@defNLExpr``. For example::
+    @variable(m, aux)
+    @constraint(m, aux == myexpr)
+    @NLobjective(m, Min, sin(aux))
+- You can declare embeddable nonlinear expressions with ``@NLexpression``. For example::
 
-    @defNLExpr(m, myexpr[i=1:n], sin(x[i]))
-    @addNLConstraint(m, myconstr[i=1:n], myexpr[i] <= 0.5)
+    @NLexpression(m, myexpr[i=1:n], sin(x[i]))
+    @NLconstraint(m, myconstr[i=1:n], myexpr[i] <= 0.5)
 
 .. _nonlinearprobmod:
 
@@ -89,13 +89,13 @@ Nonlinear Parameters
 For nonlinear models only, JuMP offers a syntax for explicit "parameter" objects
 which can be used to modify a model in-place just by updating the value of
 the parameter.
-Nonlinear parameters are declared by using the ``@defNLParam`` macro and may
+Nonlinear parameters are declared by using the ``@NLparameter`` macro and may
 be indexed by arbitrary sets analogously to JuMP variables and expressions.
 The initial value of the parameter must be provided
 on the right-hand side of the ``==`` sign as seen below::
 
-    @defNLParam(m, x == 10)
-    @defNLParam(m, y[i=1:10] == my_data[i]) # set of parameters indexed from 1 to 10
+    @NLparameter(m, x == 10)
+    @NLparameter(m, y[i=1:10] == my_data[i]) # set of parameters indexed from 1 to 10
 
 You may use ``getvalue`` and ``setvalue`` to query or update the value of a parameter::
 
@@ -104,18 +104,18 @@ You may use ``getvalue`` and ``setvalue`` to query or update the value of a para
 
 Nonlinear parameters can be used *within nonlinear expressions* only::
 
-    @defVar(m, z)
-    @setObjective(m, Max, x*z)       # error: x is a nonlinear parameter
-    @setNLObjective(m, Max, x*z)     # ok
-    @defExpr(m, my_expr, x*z^2)      # error: x is a nonlinear parameter
-    @defNLExpr(m, my_nl_expr, x*z^2) # ok
+    @variable(m, z)
+    @objective(m, Max, x*z)       # error: x is a nonlinear parameter
+    @NLobjective(m, Max, x*z)     # ok
+    @expression(m, my_expr, x*z^2)      # error: x is a nonlinear parameter
+    @NLexpression(m, my_nl_expr, x*z^2) # ok
 
 Nonlinear parameters are useful when solving nonlinear models in a sequence::
 
     m = Model()
-    @defVar(m, z)
-    @defNLParam(m, x == 1.0)
-    @setNLObjective(m, Min, (z-x)^2)
+    @variable(m, z)
+    @NLparameter(m, x == 1.0)
+    @NLobjective(m, Min, (z-x)^2)
     solve(m)
     getvalue(z) # equals 1.0
 
@@ -146,8 +146,8 @@ JuMP uses `ForwardDiff.jl <https://github.com/JuliaDiff/ForwardDiff.jl>`_ to per
 
     m = Model()
 
-    @defVar(m, x[1:2] >= 0.5)
-    @setNLObjective(m, Min, myf(x[1],mysquare(x[2])))
+    @variable(m, x[1:2] >= 0.5)
+    @NLobjective(m, Min, myf(x[1],mysquare(x[2])))
 
 The above code creates a JuMP model with the objective function ``(x[1]-1)^2 + (x[2]^2-2)^2``. The first argument to ``JuMP.register`` is a Julia symbol object which registers the name of the user-defined function in JuMP expressions; the JuMP name need not be the same as the name of the corresponding Julia method. The second argument specifies how many arguments the function takes. The third argument is the name of the Julia method which computes the function, and ``autodiff=true`` instructs JuMP to compute exact gradients automatically.
 
@@ -175,8 +175,8 @@ The input differs for functions which take a single input argument and functions
 
     m = Model()
 
-    @defVar(m, x[1:2] >= 0.5)
-    @setNLObjective(m, Min, myf(x[1],mysquare(x[2])))
+    @variable(m, x[1:2] >= 0.5)
+    @NLobjective(m, Min, myf(x[1],mysquare(x[2])))
 
 Support for user-provided functions was recently introduced in JuMP 0.12 and is not mature. Please let us know if you find any important functionality missing.
 
@@ -204,22 +204,22 @@ For some advanced use cases, one may want to directly query the derivatives
 of a JuMP model instead of handing the problem off to a solver.
 Internally, JuMP implements the ``AbstractNLPEvaluator`` interface from
 `MathProgBase <http://mathprogbasejl.readthedocs.org/en/latest/nlp.html>`_.
-To obtain an NLP evaluator object from a JuMP model, use ``JuMPNLPEvaluator``.
+To obtain an NLP evaluator object from a JuMP model, use ``JuMP.NLPEvaluator``.
 The ``linearindex`` method maps from JuMP variables to the variable
 indices at the MathProgBase level.
 
 For example::
 
     m = Model()
-    @defVar(m, x)
-    @defVar(m, y)
+    @variable(m, x)
+    @variable(m, y)
 
-    @setNLObjective(m, Min, sin(x) + sin(y))
+    @NLobjective(m, Min, sin(x) + sin(y))
     values = zeros(2)
     values[linearindex(x)] = 2.0
     values[linearindex(y)] = 3.0
 
-    d = JuMPNLPEvaluator(m)
+    d = JuMP.NLPEvaluator(m)
     MathProgBase.initialize(d, [:Grad])
     objval = MathProgBase.eval_f(d, values) # == sin(2.0) + sin(3.0)
 
@@ -231,18 +231,18 @@ For example::
 The ordering of constraints in a JuMP model corresponds to the following ordering
 at the MathProgBase nonlinear abstraction layer. There are three groups of constraints:
 linear, quadratic, and nonlinear. Linear and quadratic constraints, to be recognized
-as such, must be added with the ``@addConstraint`` macros. All constraints added with
-the ``@addNLConstraint`` macros are treated as nonlinear constraints.
+as such, must be added with the ``@constraint`` macros. All constraints added with
+the ``@NLconstraint`` macros are treated as nonlinear constraints.
 Linear constraints are ordered first, then quadratic, then nonlinear.
 The ``linearindex`` method applied to a constraint reference object
 returns the index of the constraint *within its corresponding constraint class*.
 For example::
 
     m = Model()
-    @defVar(m, x)
-    @addConstraint(m, cons1, x^2 <= 1)
-    @addConstraint(m, cons2, x + 1 == 3)
-    @addNLConstraint(m, cons3, x + 5 == 10)
+    @variable(m, x)
+    @constraint(m, cons1, x^2 <= 1)
+    @constraint(m, cons2, x + 1 == 3)
+    @NLconstraint(m, cons3, x + 5 == 10)
 
     typeof(cons1) # JuMP.ConstraintRef{JuMP.Model,JuMP.GenericQuadConstraint{JuMP.GenericQuadExpr{Float64,JuMP.Variable}}} indicates a quadratic constraint
     typeof(cons2) # JuMP.ConstraintRef{JuMP.Model,JuMP.GenericRangeConstraint{JuMP.GenericAffExpr{Float64,JuMP.Variable}}} indicates a linear constraint
@@ -258,7 +258,7 @@ This method of querying derivatives directly from a JuMP model is convenient for
 interacting with the model in a structured way, e.g., for accessing derivatives of
 specific variables. For example, in statistical maximum likelihood estimation problems,
 one is often interested in the Hessian matrix at the optimal solution,
-which can be queried using the ``JuMPNLPEvaluator``.
+which can be queried using the ``JuMP.NLPEvaluator``.
 
 If you are writing a "solver", we *highly encourage* use of the `MathProgBase nonlinear interface <http://mathprogbasejl.readthedocs.org/en/latest/nlp.html>`_ over querying derivatives using the above methods. These methods are provided for convenience but do not fully integrate with JuMP's solver infrastructure. In particular, they do not allow users to specify your solver to the ``Model()`` constructor nor to call it using ``solve()`` nor to populate the solution back into the model. Use of the MathProgBase interface also has the advantage of being independent of JuMP itself; users of MathProgBase solvers are free to implement their own evaluation routines instead of expressing their model in JuMP.  You may use the ``JuMP.build`` method to ask JuMP to populate the "solver" without calling ``optimize!``.
 

@@ -221,7 +221,7 @@ facts("[macros] @NLconstraints") do
     end)
 
     @fact length(m.nlpdata.nlconstr) --> 4
-    d = JuMPNLPEvaluator(m)
+    d = JuMP.NLPEvaluator(m)
     MathProgBase.initialize(d, [:ExprGraph])
 
     @fact MathProgBase.constr_expr(d,1) --> :(x[2] - 0.0 == 0.0)
