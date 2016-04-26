@@ -395,7 +395,7 @@ function getvalue(arr::Array{Variable})
     # warnedyet is set to true if we've already warned for a component of a JuMPContainer
     warnedyet = false
     m = first(arr).m
-    # whether this was constructed via @defVar, essentially
+    # whether this was constructed via @variable, essentially
     registered = haskey(m.varData, arr)
     for I in eachindex(arr)
         v = arr[I]
