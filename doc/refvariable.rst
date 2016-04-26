@@ -77,6 +77,11 @@ Is equivalent to::
         setvalue(x[i], i/2)
     end
 
+For more complicated variable bounds, it may be clearer to specify them using the ``lowerbound`` and ``upperbound`` keyword arguments to ``@variable``::
+
+    @variable(m, x[i=1:3], lowerbound=my_complex_function(i))
+    @variable(m, x[i=1:3], lowerbound=my_complex_function(i), upperbound=another_function(i))
+
 Variables may also be constructed manually, one-by-one::
 
     x = Variable(m::Model, lower::Number, upper::Number, category::Symbol, name::AbstractString)

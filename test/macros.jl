@@ -496,3 +496,20 @@ facts("[macros] No bare symbols in constraint macros") do
     @fact macroexpand(:(@NLconstraint(m, x))).head --> :error
     @fact macroexpand(:(@NLconstraint(m, :foo))).head --> :error
 end
+
+facts("[macros] LB/UB kwargs") do
+    m = Model()
+    @variable(m, a, lowerbound=0)
+    @variable(m, b, lowerbound=0, upperbound=1)
+    @variable(m, c, upperbound=1, lowerbound=0)
+    @variable(m, d, upperbound=1)
+    @variable(m, e >= 0, upperbound=1)
+    @variable(m, f <= 1, lowerbound=0)
+    @fact m.colLower --> [0,0,0,-Inf,0,0]
+    @fact m.colUpper --> [Inf,1,1,1,1,1]
+
+    @fact macroexpand(:(@variable(m, g >= 0, lowerbound=1))).head --> :error
+    @fact macroexpand(:(@variable(m, h <= 1, upperbound=1))).head --> :error
+    @fact macroexpand(:(@variable(m, 0 <= i <= 1, lowerbound=1))).head --> :error
+    @fact macroexpand(:(@variable(m, 0 <= j <= 1, upperbound=1))).head --> :error
+end
