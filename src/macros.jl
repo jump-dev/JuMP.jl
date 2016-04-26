@@ -309,6 +309,10 @@ macro constraint(args...)
     c = length(extra) == 1 ? x        : nothing
     x = length(extra) == 1 ? extra[1] : x
 
+    if isa(x, Symbol)
+        error("in @constraint($(join(args,','))): Incomplete constraint specification $x. Are you missing a comparison (<=, >=, or ==)?")
+    end
+
     (x.head == :block) &&
         error("Code block passed as constraint. Perhaps you meant to use @constraints instead?")
     if VERSION < v"0.5.0-dev+3231"
@@ -404,13 +408,17 @@ end
 macro SDconstraint(m, x)
     m = esc(m)
 
+    if isa(x, Symbol)
+        error("in @SDConstraint: Incomplete constraint specification $x. Are you missing a comparison (<= or >=)?")
+    end
+
     (x.head == :block) &&
         error("Code block passed as constraint.")
     if VERSION < v"0.5.0-dev+3231"
         x = comparison_to_call(x)
     end
     isexpr(x,:call) && length(x.args) == 3 || error("in @SDconstraint ($(string(x))): constraints must be in one of the following forms:\n" *
-              "       expr1 <= expr2\n" * "       expr1 >= expr2\n")
+              "       expr1 <= expr2\n" * "       expr1 >= expr2")
     # Build the constraint
     # Simple comparison - move everything to the LHS
     sense = x.args[1]
@@ -514,7 +522,7 @@ macro QuadConstraint(x)
         # Unknown
         error("in @QuadConstraint ($(string(x))): constraints must be in one of the following forms:\n" *
               "       expr1 <= expr2\n" * "       expr1 >= expr2\n" *
-              "       expr1 == expr2\n")
+              "       expr1 == expr2")
     end
 end
 
@@ -542,7 +550,7 @@ macro SOCConstraint(x)
     else
         # Unknown
         error("in @SOCConstraint ($(string(x))): constraints must be in one of the following forms:\n" *
-              "       expr1 <= expr2\n" * "       expr1 >= expr2\n")
+              "       expr1 <= expr2\n" * "       expr1 >= expr2")
     end
 end
 
@@ -1031,7 +1039,7 @@ macro NLconstraint(m, x, extra...)
         # Unknown
         error("in @NLconstraint ($(string(x))): constraints must be in one of the following forms:\n" *
               "       expr1 <= expr2\n" * "       expr1 >= expr2\n" *
-              "       expr1 == expr2\n")
+              "       expr1 == expr2")
     end
     looped = getloopedcode(c, code, condition, idxvars, idxsets, idxpairs, :(ConstraintRef{Model,NonlinearConstraint}))
     code = quote
