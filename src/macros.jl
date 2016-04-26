@@ -298,9 +298,6 @@ macro constraint(args...)
     end
     m = args[1]
     x = args[2]
-    if isa(x, Symbol)
-        error("in @constraint($(join(args,','))): Incomplete constraint specification $x. Are you missing a comparison (<=, >=, or ==)?")
-    end
     extra = args[3:end]
 
     m = esc(m)
@@ -311,6 +308,10 @@ macro constraint(args...)
     # Canonicalize the arguments
     c = length(extra) == 1 ? x        : nothing
     x = length(extra) == 1 ? extra[1] : x
+
+    if isa(x, Symbol)
+        error("in @constraint($(join(args,','))): Incomplete constraint specification $x. Are you missing a comparison (<=, >=, or ==)?")
+    end
 
     (x.head == :block) &&
         error("Code block passed as constraint. Perhaps you meant to use @constraints instead?")
