@@ -128,7 +128,7 @@ function getValue(x::JuMPContainer)
 end
 
 # delegate zero-argument functions
-for f in (:(Base.endof), :(Base.ndims), :(Base.length), :(Base.abs))
+for f in (:(Base.ndims), :(Base.length), :(Base.abs))
     @eval $f(x::JuMPArray) = $f(x.innerArray)
 end
 
