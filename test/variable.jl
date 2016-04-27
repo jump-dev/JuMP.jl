@@ -215,3 +215,14 @@ facts("[variable] Slices of JuMPArray (#684)") do
     @fact w[1:2,:,"blue"] --> sliceof(w, 1:2, 1:4, ["blue"], 0, -2)
     @fact_throws w[1:2,:,[:red,"blue"]]
 end
+
+facts("[variable] Can't use end for indexing a JuMPContainer") do
+    m = Model()
+    @defVar(m, x[0:2,1:4])
+    @defVar(m, y[i=1:4,j=1:4;true])
+    @fact_throws x[end,1]
+    @fact_throws x[end-1]
+    @fact x[0,end-1] --> x[0,3]
+    @fact_throws y[end,end-1]
+    @fact_throws y[end,1]
+end
