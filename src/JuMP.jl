@@ -296,9 +296,9 @@ setprinthook(m::Model, f) = (m.printhook = f)
 
 
 #############################################################################
-# JuMPConstraint
+# AbstractConstraint
 # Abstract base type for all constraint types
-abstract JuMPConstraint
+abstract AbstractConstraint
 # Abstract base type for all scalar types
 # In JuMP, used only for Variable. Useful primarily for extensions
 abstract AbstractJuMPScalar
@@ -484,7 +484,7 @@ include("sos.jl")
 # ∑ cᵢ Xᵢ ≥ D, where D is a n×n symmetric data matrix, cᵢ are
 # scalars, and Xᵢ are n×n symmetric variable matrices. The inequality
 # is taken w.r.t. the psd partial order.
-type SDConstraint <: JuMPConstraint
+type SDConstraint <: AbstractConstraint
     terms
 end
 
@@ -510,7 +510,7 @@ Base.copy(c::SDConstraint, new_model::Model) =
 ##########################################################################
 # ConstraintRef
 # Reference to a constraint for retrieving solution info
-immutable ConstraintRef{M<:AbstractModel,T<:JuMPConstraint}
+immutable ConstraintRef{M<:AbstractModel,T<:AbstractConstraint}
     m::M
     idx::Int
 end

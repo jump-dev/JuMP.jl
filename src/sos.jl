@@ -14,7 +14,7 @@
 #############################################################################
 
 
-type SOSConstraint <: JuMPConstraint
+type SOSConstraint <: AbstractConstraint
     terms::Vector{Variable}
     weights::Vector{Float64}
     sostype::Symbol
