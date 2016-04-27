@@ -27,20 +27,20 @@ facts("[operator] Testing basic operator overloads") do
     @variable(m, y)
     @variable(m, z)
     aff = 7.1 * x + 2.5
-    @fact JuMP.affstr(aff) --> "7.1 x + 2.5"
+    @fact string(aff) --> "7.1 x + 2.5"
     aff2 = 1.2 * y + 1.2
-    @fact JuMP.affstr(aff2) --> "1.2 y + 1.2"
+    @fact string(aff2) --> "1.2 y + 1.2"
     q = 2.5 * y * z + aff
-    @fact JuMP.quadstr(q) --> "2.5 y*z + 7.1 x + 2.5"
+    @fact string(q) --> "2.5 y*z + 7.1 x + 2.5"
     q2 = 8 * x * z + aff2
-    @fact JuMP.quadstr(q2) --> "8 x*z + 1.2 y + 1.2"
+    @fact string(q2) --> "8 x*z + 1.2 y + 1.2"
     q3 = 2 * x * x + 1 * y * y + z + 3
-    @fact JuMP.quadstr(q3) --> "2 x² + y² + z + 3"
+    @fact string(q3) --> "2 x² + y² + z + 3"
 
     nrm = norm([w,1-w])
-    @fact JuMP.exprstr(nrm) --> "$Vert[w,-w + 1]$Vert$sub2"
+    @fact string(nrm) --> "$Vert[w,-w + 1]$Vert$sub2"
     socexpr = 1.5*nrm - 2 - w
-    @fact JuMP.exprstr(socexpr) --> "1.5 $Vert[w,-w + 1]$Vert$sub2 - w - 2"
+    @fact string(socexpr) --> "1.5 $Vert[w,-w + 1]$Vert$sub2 - w - 2"
 
     @fact isequal(3w + 2y, 3w +2y) --> true
     @fact isequal(3w + 2y + 1, 3w + 2y) --> false
@@ -55,138 +55,138 @@ facts("[operator] Testing basic operator overloads") do
     context("Number--???") do
     # 1-1 Number--Number - nope!
     # 1-2 Number--Variable
-    @fact JuMP.affstr(4.13 + w) --> "w + 4.13"
-    @fact JuMP.affstr(3.16 - w) --> "-w + 3.16"
-    @fact JuMP.affstr(5.23 * w) --> "5.23 w"
+    @fact string(4.13 + w) --> "w + 4.13"
+    @fact string(3.16 - w) --> "-w + 3.16"
+    @fact string(5.23 * w) --> "5.23 w"
     @fact_throws  2.94 / w
-    @fact JuMP.constr(@LinearConstraint(2.1 ≤ w)) --> "-w $leq -2.1"
-    @fact JuMP.constr(@LinearConstraint(2.1 == w)) --> "-w $eq -2.1"
-    @fact JuMP.constr(@LinearConstraint(2.1 ≥ w)) --> "-w $geq -2.1"
+    @fact string(@LinearConstraint(2.1 ≤ w)) --> "-w $leq -2.1"
+    @fact string(@LinearConstraint(2.1 == w)) --> "-w $eq -2.1"
+    @fact string(@LinearConstraint(2.1 ≥ w)) --> "-w $geq -2.1"
     # 1-3 Number--Norm
-    @fact JuMP.exprstr(4.13 + nrm) --> "$Vert[w,-w + 1]$Vert$sub2 + 4.13"
-    @fact JuMP.exprstr(3.16 - nrm) --> "-1.0 $Vert[w,-w + 1]$Vert$sub2 + 3.16"
-    @fact JuMP.exprstr(5.23 * nrm) --> "5.23 $Vert[w,-w + 1]$Vert$sub2"
+    @fact string(4.13 + nrm) --> "$Vert[w,-w + 1]$Vert$sub2 + 4.13"
+    @fact string(3.16 - nrm) --> "-1.0 $Vert[w,-w + 1]$Vert$sub2 + 3.16"
+    @fact string(5.23 * nrm) --> "5.23 $Vert[w,-w + 1]$Vert$sub2"
     @fact_throws 2.94 / nrm
     @fact_throws @SOCConstraint(2.1 ≤ nrm)
     @fact_throws @SOCConstraint(2.1 == nrm)
-    @fact JuMP.constr(@SOCConstraint(2.1 ≥ nrm)) --> "$Vert[w,-w + 1]$Vert$sub2 $leq 2.1"
+    @fact string(@SOCConstraint(2.1 ≥ nrm)) --> "$Vert[w,-w + 1]$Vert$sub2 $leq 2.1"
     # 1-4 Number--AffExpr
-    @fact JuMP.affstr(1.5 + aff) --> "7.1 x + 4"
-    @fact JuMP.affstr(1.5 - aff) --> "-7.1 x - 1"
-    @fact JuMP.affstr(2 * aff) --> "14.2 x + 5"
+    @fact string(1.5 + aff) --> "7.1 x + 4"
+    @fact string(1.5 - aff) --> "-7.1 x - 1"
+    @fact string(2 * aff) --> "14.2 x + 5"
     @fact_throws  2 / aff
-    @fact JuMP.constr(@LinearConstraint(1 ≤ aff)) --> "-7.1 x $leq 1.5"
-    @fact JuMP.constr(@LinearConstraint(1 == aff)) --> "-7.1 x $eq 1.5"
-    @fact JuMP.constr(@LinearConstraint(1 ≥ aff)) --> "-7.1 x $geq 1.5"
+    @fact string(@LinearConstraint(1 ≤ aff)) --> "-7.1 x $leq 1.5"
+    @fact string(@LinearConstraint(1 == aff)) --> "-7.1 x $eq 1.5"
+    @fact string(@LinearConstraint(1 ≥ aff)) --> "-7.1 x $geq 1.5"
     # 1-5 Number--QuadExpr
-    @fact JuMP.quadstr(1.5 + q) --> "2.5 y*z + 7.1 x + 4"
-    @fact JuMP.quadstr(1.5 - q) --> "-2.5 y*z - 7.1 x - 1"
-    @fact JuMP.quadstr(2 * q) --> "5 y*z + 14.2 x + 5"
+    @fact string(1.5 + q) --> "2.5 y*z + 7.1 x + 4"
+    @fact string(1.5 - q) --> "-2.5 y*z - 7.1 x - 1"
+    @fact string(2 * q) --> "5 y*z + 14.2 x + 5"
     @fact_throws  2 / q
-    @fact JuMP.constr(@QuadConstraint(1 ≤ q)) --> "-2.5 y*z - 7.1 x - 1.5 $leq 0"
-    @fact JuMP.constr(@QuadConstraint(1 == q)) --> "-2.5 y*z - 7.1 x - 1.5 $eq 0"
-    @fact JuMP.constr(@QuadConstraint(1 ≥ q)) --> "-2.5 y*z - 7.1 x - 1.5 $geq 0"
+    @fact string(@QuadConstraint(1 ≤ q)) --> "-2.5 y*z - 7.1 x - 1.5 $leq 0"
+    @fact string(@QuadConstraint(1 == q)) --> "-2.5 y*z - 7.1 x - 1.5 $eq 0"
+    @fact string(@QuadConstraint(1 ≥ q)) --> "-2.5 y*z - 7.1 x - 1.5 $geq 0"
     # 1-6 Number--SOCExpr
-    @fact JuMP.exprstr(1.5 + socexpr) --> "1.5 $Vert[w,-w + 1]$Vert$sub2 - w - 0.5"
-    @fact JuMP.exprstr(1.5 - socexpr) --> "-1.5 $Vert[w,-w + 1]$Vert$sub2 + w + 3.5"
-    @fact JuMP.exprstr(1.5 * socexpr) --> "2.25 $Vert[w,-w + 1]$Vert$sub2 - 1.5 w - 3"
+    @fact string(1.5 + socexpr) --> "1.5 $Vert[w,-w + 1]$Vert$sub2 - w - 0.5"
+    @fact string(1.5 - socexpr) --> "-1.5 $Vert[w,-w + 1]$Vert$sub2 + w + 3.5"
+    @fact string(1.5 * socexpr) --> "2.25 $Vert[w,-w + 1]$Vert$sub2 - 1.5 w - 3"
     @fact_throws 1.5 / socexpr
     @fact_throws @SOCConstraint(2.1 ≤ socexpr)
     @fact_throws @SOCConstraint(2.1 == socexpr)
-    @fact JuMP.constr(@SOCConstraint(2.1 ≥ socexpr)) --> "1.5 $Vert[w,-w + 1]$Vert$sub2 $leq w + 4.1"
+    @fact string(@SOCConstraint(2.1 ≥ socexpr)) --> "1.5 $Vert[w,-w + 1]$Vert$sub2 $leq w + 4.1"
     end
 
     # 2. Variable tests
     context("Variable--???") do
     # 2-0 Variable unary
     @fact (+x) --> exactly(x)
-    @fact JuMP.affstr(-x) --> "-x"
+    @fact string(-x) --> "-x"
     # 2-1 Variable--Number
-    @fact JuMP.affstr(w + 4.13) --> "w + 4.13"
-    @fact JuMP.affstr(w - 4.13) --> "w - 4.13"
-    @fact JuMP.affstr(w * 4.13) --> "4.13 w"
-    @fact JuMP.affstr(w / 2.00) --> "0.5 w"
+    @fact string(w + 4.13) --> "w + 4.13"
+    @fact string(w - 4.13) --> "w - 4.13"
+    @fact string(w * 4.13) --> "4.13 w"
+    @fact string(w / 2.00) --> "0.5 w"
     @fact w == w --> true
-    @fact JuMP.constr(@LinearConstraint(w ≤ 1)) --> "w $leq 1"
-    @fact JuMP.constr(@LinearConstraint(w == 1)) --> "w $eq 1"
-    @fact JuMP.constr(@LinearConstraint(w ≥ 1)) --> "w $geq 1"
-    @fact JuMP.constr(@QuadConstraint(x*y ≤ 1)) --> "x*y - 1 $leq 0"
-    @fact JuMP.constr(@QuadConstraint(x*y == 1)) --> "x*y - 1 $eq 0"
-    @fact JuMP.constr(@QuadConstraint(x*y ≥ 1)) --> "x*y - 1 $geq 0"
+    @fact string(@LinearConstraint(w ≤ 1)) --> "w $leq 1"
+    @fact string(@LinearConstraint(w == 1)) --> "w $eq 1"
+    @fact string(@LinearConstraint(w ≥ 1)) --> "w $geq 1"
+    @fact string(@QuadConstraint(x*y ≤ 1)) --> "x*y - 1 $leq 0"
+    @fact string(@QuadConstraint(x*y == 1)) --> "x*y - 1 $eq 0"
+    @fact string(@QuadConstraint(x*y ≥ 1)) --> "x*y - 1 $geq 0"
     # 2-2 Variable--Variable
-    @fact JuMP.affstr(w + x) --> "w + x"
-    @fact JuMP.affstr(w - x) --> "w - x"
-    @fact JuMP.quadstr(w * x) --> "w*x"
-    @fact JuMP.affstr(x - x) --> "0"
+    @fact string(w + x) --> "w + x"
+    @fact string(w - x) --> "w - x"
+    @fact string(w * x) --> "w*x"
+    @fact string(x - x) --> "0"
     @fact_throws  w / x
-    @fact JuMP.constr(@LinearConstraint(w ≤ x)) --> "w - x $leq 0"
-    @fact JuMP.constr(@LinearConstraint(w == x)) --> "w - x $eq 0"
-    @fact JuMP.constr(@LinearConstraint(w ≥ x)) --> "w - x $geq 0"
-    @fact JuMP.constr(@QuadConstraint(y*z ≤ x)) --> "y*z - x $leq 0"
-    @fact JuMP.constr(@QuadConstraint(y*z == x)) --> "y*z - x $eq 0"
-    @fact JuMP.constr(@QuadConstraint(y*z ≥ x)) --> "y*z - x $geq 0"
-    @fact JuMP.constr(@LinearConstraint(x ≤ x)) --> "0 $leq 0"
-    @fact JuMP.constr(@LinearConstraint(x == x)) --> "0 $eq 0"
-    @fact JuMP.constr(@LinearConstraint(x ≥ x)) --> "0 $geq 0"
+    @fact string(@LinearConstraint(w ≤ x)) --> "w - x $leq 0"
+    @fact string(@LinearConstraint(w == x)) --> "w - x $eq 0"
+    @fact string(@LinearConstraint(w ≥ x)) --> "w - x $geq 0"
+    @fact string(@QuadConstraint(y*z ≤ x)) --> "y*z - x $leq 0"
+    @fact string(@QuadConstraint(y*z == x)) --> "y*z - x $eq 0"
+    @fact string(@QuadConstraint(y*z ≥ x)) --> "y*z - x $geq 0"
+    @fact string(@LinearConstraint(x ≤ x)) --> "0 $leq 0"
+    @fact string(@LinearConstraint(x == x)) --> "0 $eq 0"
+    @fact string(@LinearConstraint(x ≥ x)) --> "0 $geq 0"
     # 2-3 Variable--Norm
-    @fact JuMP.exprstr(w + nrm) --> "$Vert[w,-w + 1]$Vert$sub2 + w"
-    @fact JuMP.exprstr(w - nrm) --> "-1.0 $Vert[w,-w + 1]$Vert$sub2 + w"
+    @fact string(w + nrm) --> "$Vert[w,-w + 1]$Vert$sub2 + w"
+    @fact string(w - nrm) --> "-1.0 $Vert[w,-w + 1]$Vert$sub2 + w"
     @fact_throws w * nrm
     @fact_throws w / nrm
     @fact_throws @SOCConstraint(w ≤ nrm)
     @fact_throws @SOCConstraint(w == nrm)
-    @fact JuMP.constr(@SOCConstraint(w ≥ nrm)) --> "$Vert[w,-w + 1]$Vert$sub2 $leq w"
+    @fact string(@SOCConstraint(w ≥ nrm)) --> "$Vert[w,-w + 1]$Vert$sub2 $leq w"
     # 2-4 Variable--AffExpr
-    @fact JuMP.affstr(z + aff) --> "7.1 x + z + 2.5"
-    @fact JuMP.affstr(z - aff) --> "-7.1 x + z - 2.5"
-    @fact JuMP.quadstr(z * aff) --> "7.1 x*z + 2.5 z"
+    @fact string(z + aff) --> "7.1 x + z + 2.5"
+    @fact string(z - aff) --> "-7.1 x + z - 2.5"
+    @fact string(z * aff) --> "7.1 x*z + 2.5 z"
     @fact_throws  z / aff
     @fact_throws  z ≤ aff
-    @fact JuMP.constr(@LinearConstraint(z ≤ aff)) --> "z - 7.1 x $leq 2.5"
-    @fact JuMP.constr(@LinearConstraint(z == aff)) --> "z - 7.1 x $eq 2.5"
-    @fact JuMP.constr(@LinearConstraint(z ≥ aff)) --> "z - 7.1 x $geq 2.5"
-    @fact JuMP.constr(@LinearConstraint(7.1 * x - aff ≤ 0)) --> "0 $leq 2.5"
-    @fact JuMP.constr(@LinearConstraint(7.1 * x - aff == 0)) --> "0 $eq 2.5"
-    @fact JuMP.constr(@LinearConstraint(7.1 * x - aff ≥ 0)) --> "0 $geq 2.5"
+    @fact string(@LinearConstraint(z ≤ aff)) --> "z - 7.1 x $leq 2.5"
+    @fact string(@LinearConstraint(z == aff)) --> "z - 7.1 x $eq 2.5"
+    @fact string(@LinearConstraint(z ≥ aff)) --> "z - 7.1 x $geq 2.5"
+    @fact string(@LinearConstraint(7.1 * x - aff ≤ 0)) --> "0 $leq 2.5"
+    @fact string(@LinearConstraint(7.1 * x - aff == 0)) --> "0 $eq 2.5"
+    @fact string(@LinearConstraint(7.1 * x - aff ≥ 0)) --> "0 $geq 2.5"
     # 2-5 Variable--QuadExpr
-    @fact JuMP.quadstr(w + q) --> "2.5 y*z + 7.1 x + w + 2.5"
-    @fact JuMP.quadstr(w - q) --> "-2.5 y*z - 7.1 x + w - 2.5"
+    @fact string(w + q) --> "2.5 y*z + 7.1 x + w + 2.5"
+    @fact string(w - q) --> "-2.5 y*z - 7.1 x + w - 2.5"
     @fact_throws  w*q
     @fact_throws  w/q
-    @fact JuMP.constr(@QuadConstraint(w ≤ q)) --> "-2.5 y*z + w - 7.1 x - 2.5 $leq 0"
-    @fact JuMP.constr(@QuadConstraint(w == q)) --> "-2.5 y*z + w - 7.1 x - 2.5 $eq 0"
-    @fact JuMP.constr(@QuadConstraint(w ≥ q)) --> "-2.5 y*z + w - 7.1 x - 2.5 $geq 0"
+    @fact string(@QuadConstraint(w ≤ q)) --> "-2.5 y*z + w - 7.1 x - 2.5 $leq 0"
+    @fact string(@QuadConstraint(w == q)) --> "-2.5 y*z + w - 7.1 x - 2.5 $eq 0"
+    @fact string(@QuadConstraint(w ≥ q)) --> "-2.5 y*z + w - 7.1 x - 2.5 $geq 0"
     # 2-6 Variable--SOCExpr
-    @fact JuMP.exprstr(y + socexpr) --> "1.5 $Vert[w,-w + 1]$Vert$sub2 - w + y - 2"
-    @fact JuMP.exprstr(y - socexpr) --> "-1.5 $Vert[w,-w + 1]$Vert$sub2 + w + y + 2"
+    @fact string(y + socexpr) --> "1.5 $Vert[w,-w + 1]$Vert$sub2 - w + y - 2"
+    @fact string(y - socexpr) --> "-1.5 $Vert[w,-w + 1]$Vert$sub2 + w + y + 2"
     @fact_throws y * socexpr
     @fact_throws y / socexpr
     @fact_throws @SOCConstraint(y ≤ socexpr)
     @fact_throws @SOCConstraint(y == socexpr)
-    @fact JuMP.constr(@SOCConstraint(y ≥ socexpr)) --> "1.5 $Vert[w,-w + 1]$Vert$sub2 $leq y + w + 2"
+    @fact string(@SOCConstraint(y ≥ socexpr)) --> "1.5 $Vert[w,-w + 1]$Vert$sub2 $leq y + w + 2"
     end
 
     # 3. Norm tests
     context("Norm--???") do
     # 3-0 Norm unary
-    @fact JuMP.exprstr(+nrm) --> "$Vert[w,-w + 1]$Vert$sub2"
-    @fact JuMP.exprstr(-nrm) --> "-1.0 $Vert[w,-w + 1]$Vert$sub2"
+    @fact string(+nrm) --> "$Vert[w,-w + 1]$Vert$sub2"
+    @fact string(-nrm) --> "-1.0 $Vert[w,-w + 1]$Vert$sub2"
     # 3-1 Norm--Number
-    @fact JuMP.exprstr(nrm + 1.5) --> "$Vert[w,-w + 1]$Vert$sub2 + 1.5"
-    @fact JuMP.exprstr(nrm - 1.5) --> "$Vert[w,-w + 1]$Vert$sub2 - 1.5"
-    @fact JuMP.exprstr(nrm * 1.5) --> "1.5 $Vert[w,-w + 1]$Vert$sub2"
-    @fact JuMP.exprstr(nrm / 1.5) --> "0.6666666666666666 $Vert[w,-w + 1]$Vert$sub2"
-    @fact JuMP.constr(@SOCConstraint(nrm ≤ 1.5)) --> "$Vert[w,-w + 1]$Vert$sub2 $leq 1.5"
+    @fact string(nrm + 1.5) --> "$Vert[w,-w + 1]$Vert$sub2 + 1.5"
+    @fact string(nrm - 1.5) --> "$Vert[w,-w + 1]$Vert$sub2 - 1.5"
+    @fact string(nrm * 1.5) --> "1.5 $Vert[w,-w + 1]$Vert$sub2"
+    @fact string(nrm / 1.5) --> "0.6666666666666666 $Vert[w,-w + 1]$Vert$sub2"
+    @fact string(@SOCConstraint(nrm ≤ 1.5)) --> "$Vert[w,-w + 1]$Vert$sub2 $leq 1.5"
     @fact_throws @SOCConstraint(nrm == 1.5)
     @fact_throws @SOCConstraint(nrm ≥ 1.5)
     # 3-2 Norm--Variable
-    @fact JuMP.exprstr(nrm + w) --> "$Vert[w,-w + 1]$Vert$sub2 + w"
-    @fact JuMP.exprstr(nrm - w) --> "$Vert[w,-w + 1]$Vert$sub2 - w"
+    @fact string(nrm + w) --> "$Vert[w,-w + 1]$Vert$sub2 + w"
+    @fact string(nrm - w) --> "$Vert[w,-w + 1]$Vert$sub2 - w"
     @fact_throws nrm * w
     @fact_throws nrm / w
-    @fact JuMP.constr(@SOCConstraint(nrm ≤ w)) --> "$Vert[w,-w + 1]$Vert$sub2 $leq w"
-    @fact_throws JuMP.constr(nrm == w)
-    @fact_throws JuMP.constr(nrm ≥ w)
+    @fact string(@SOCConstraint(nrm ≤ w)) --> "$Vert[w,-w + 1]$Vert$sub2 $leq w"
+    @fact_throws @SOCConstraint(nrm == w)
+    @fact_throws @SOCConstraint(nrm ≥ w)
     # 3-3 Norm--Norm
     @fact_throws nrm + nrm
     @fact_throws nrm - nrm
@@ -196,11 +196,11 @@ facts("[operator] Testing basic operator overloads") do
     @fact_throws @SOCConstraint(nrm == nrm)
     @fact_throws @SOCConstraint(nrm ≥ nrm)
     # 3-4 Norm--AffExpr
-    @fact JuMP.exprstr(nrm + aff) --> "$Vert[w,-w + 1]$Vert$sub2 + 7.1 x + 2.5"
-    @fact JuMP.exprstr(nrm - aff) --> "$Vert[w,-w + 1]$Vert$sub2 - 7.1 x - 2.5"
+    @fact string(nrm + aff) --> "$Vert[w,-w + 1]$Vert$sub2 + 7.1 x + 2.5"
+    @fact string(nrm - aff) --> "$Vert[w,-w + 1]$Vert$sub2 - 7.1 x - 2.5"
     @fact_throws nrm * aff
     @fact_throws nrm / aff
-    @fact JuMP.constr(@SOCConstraint(nrm ≤ aff)) --> "$Vert[w,-w + 1]$Vert$sub2 $leq 7.1 x + 2.5"
+    @fact string(@SOCConstraint(nrm ≤ aff)) --> "$Vert[w,-w + 1]$Vert$sub2 $leq 7.1 x + 2.5"
     @fact_throws @SOCConstraint(nrm == aff)
     @fact_throws @SOCConstraint(nrm ≥ aff)
     # 3-5 Norm--QuadExpr
@@ -224,90 +224,90 @@ facts("[operator] Testing basic operator overloads") do
     # 4. AffExpr tests
     context("AffExpr--???") do
     # 4-0 AffExpr unary
-    @fact JuMP.affstr(+aff) --> "7.1 x + 2.5"
-    @fact JuMP.affstr(-aff) --> "-7.1 x - 2.5"
+    @fact string(+aff) --> "7.1 x + 2.5"
+    @fact string(-aff) --> "-7.1 x - 2.5"
     # 4-1 AffExpr--Number
-    @fact JuMP.affstr(aff + 1.5) --> "7.1 x + 4"
-    @fact JuMP.affstr(aff - 1.5) --> "7.1 x + 1"
-    @fact JuMP.affstr(aff * 2) --> "14.2 x + 5"
-    @fact JuMP.affstr(aff / 2) --> "3.55 x + 1.25"
+    @fact string(aff + 1.5) --> "7.1 x + 4"
+    @fact string(aff - 1.5) --> "7.1 x + 1"
+    @fact string(aff * 2) --> "14.2 x + 5"
+    @fact string(aff / 2) --> "3.55 x + 1.25"
     @fact_throws aff ≤ 1
     @fact aff == aff --> true
     @fact_throws aff ≥ 1
-    @fact JuMP.constr(@LinearConstraint(aff ≤ 1)) --> "7.1 x $leq -1.5"
-    @fact JuMP.constr(@LinearConstraint(aff == 1)) --> "7.1 x $eq -1.5"
-    @fact JuMP.constr(@LinearConstraint(aff ≥ 1)) --> "7.1 x $geq -1.5"
+    @fact string(@LinearConstraint(aff ≤ 1)) --> "7.1 x $leq -1.5"
+    @fact string(@LinearConstraint(aff == 1)) --> "7.1 x $eq -1.5"
+    @fact string(@LinearConstraint(aff ≥ 1)) --> "7.1 x $geq -1.5"
     # 4-2 AffExpr--Variable
-    @fact JuMP.affstr(aff + z) --> "7.1 x + z + 2.5"
-    @fact JuMP.affstr(aff - z) --> "7.1 x - z + 2.5"
-    @fact JuMP.quadstr(aff * z) --> "7.1 x*z + 2.5 z"
+    @fact string(aff + z) --> "7.1 x + z + 2.5"
+    @fact string(aff - z) --> "7.1 x - z + 2.5"
+    @fact string(aff * z) --> "7.1 x*z + 2.5 z"
     @fact_throws  aff/z
-    @fact JuMP.constr(@LinearConstraint(aff ≤ z)) --> "7.1 x - z $leq -2.5"
-    @fact JuMP.constr(@LinearConstraint(aff == z)) --> "7.1 x - z $eq -2.5"
-    @fact JuMP.constr(@LinearConstraint(aff ≥ z)) --> "7.1 x - z $geq -2.5"
-    @fact JuMP.constr(@LinearConstraint(aff - 7.1 * x ≤ 0)) --> "0 $leq -2.5"
-    @fact JuMP.constr(@LinearConstraint(aff - 7.1 * x == 0)) --> "0 $eq -2.5"
-    @fact JuMP.constr(@LinearConstraint(aff - 7.1 * x ≥ 0)) --> "0 $geq -2.5"
+    @fact string(@LinearConstraint(aff ≤ z)) --> "7.1 x - z $leq -2.5"
+    @fact string(@LinearConstraint(aff == z)) --> "7.1 x - z $eq -2.5"
+    @fact string(@LinearConstraint(aff ≥ z)) --> "7.1 x - z $geq -2.5"
+    @fact string(@LinearConstraint(aff - 7.1 * x ≤ 0)) --> "0 $leq -2.5"
+    @fact string(@LinearConstraint(aff - 7.1 * x == 0)) --> "0 $eq -2.5"
+    @fact string(@LinearConstraint(aff - 7.1 * x ≥ 0)) --> "0 $geq -2.5"
     # 4-3 AffExpr--Norm
-    @fact JuMP.exprstr(aff + nrm) --> "$Vert[w,-w + 1]$Vert$sub2 + 7.1 x + 2.5"
-    @fact JuMP.exprstr(aff - nrm) --> "-1.0 $Vert[w,-w + 1]$Vert$sub2 + 7.1 x + 2.5"
+    @fact string(aff + nrm) --> "$Vert[w,-w + 1]$Vert$sub2 + 7.1 x + 2.5"
+    @fact string(aff - nrm) --> "-1.0 $Vert[w,-w + 1]$Vert$sub2 + 7.1 x + 2.5"
     @fact_throws aff * nrm
     @fact_throws aff / nrm
     @fact_throws @SOCConstraint(aff ≤ nrm)
     @fact_throws @SOCConstraint(aff == nrm)
-    @fact JuMP.constr(@SOCConstraint(aff ≥ nrm)) --> "$Vert[w,-w + 1]$Vert$sub2 $leq 7.1 x + 2.5"
+    @fact string(@SOCConstraint(aff ≥ nrm)) --> "$Vert[w,-w + 1]$Vert$sub2 $leq 7.1 x + 2.5"
     # 4-4 AffExpr--AffExpr
-    @fact JuMP.affstr(aff + aff2) --> "7.1 x + 1.2 y + 3.7"
-    @fact JuMP.affstr(aff - aff2) --> "7.1 x - 1.2 y + 1.3"
-    @fact JuMP.quadstr(aff * aff2) --> "8.52 x*y + 3 y + 8.52 x + 3"
-    @fact JuMP.quadstr((x+x)*(x+3)) --> JuMP.quadstr((x+3)*(x+x))  # Issue #288
+    @fact string(aff + aff2) --> "7.1 x + 1.2 y + 3.7"
+    @fact string(aff - aff2) --> "7.1 x - 1.2 y + 1.3"
+    @fact string(aff * aff2) --> "8.52 x*y + 3 y + 8.52 x + 3"
+    @fact string((x+x)*(x+3)) --> string((x+3)*(x+x))  # Issue #288
     @fact_throws  aff/aff2
-    @fact JuMP.constr(@LinearConstraint(aff ≤ aff2)) --> "7.1 x - 1.2 y $leq -1.3"
-    @fact JuMP.constr(@LinearConstraint(aff == aff2)) --> "7.1 x - 1.2 y $eq -1.3"
-    @fact JuMP.constr(@LinearConstraint(aff ≥ aff2)) --> "7.1 x - 1.2 y $geq -1.3"
-    @fact JuMP.constr(@LinearConstraint(aff-aff ≤ 0)) --> "0 $leq 0"
-    @fact JuMP.constr(@LinearConstraint(aff-aff == 0)) --> "0 $eq 0"
-    @fact JuMP.constr(@LinearConstraint(aff-aff ≥ 0)) --> "0 $geq 0"
+    @fact string(@LinearConstraint(aff ≤ aff2)) --> "7.1 x - 1.2 y $leq -1.3"
+    @fact string(@LinearConstraint(aff == aff2)) --> "7.1 x - 1.2 y $eq -1.3"
+    @fact string(@LinearConstraint(aff ≥ aff2)) --> "7.1 x - 1.2 y $geq -1.3"
+    @fact string(@LinearConstraint(aff-aff ≤ 0)) --> "0 $leq 0"
+    @fact string(@LinearConstraint(aff-aff == 0)) --> "0 $eq 0"
+    @fact string(@LinearConstraint(aff-aff ≥ 0)) --> "0 $geq 0"
     # 4-5 AffExpr--QuadExpr
-    @fact JuMP.quadstr(aff2 + q) --> "2.5 y*z + 1.2 y + 7.1 x + 3.7"
-    @fact JuMP.quadstr(aff2 - q) --> "-2.5 y*z + 1.2 y - 7.1 x - 1.3"
+    @fact string(aff2 + q) --> "2.5 y*z + 1.2 y + 7.1 x + 3.7"
+    @fact string(aff2 - q) --> "-2.5 y*z + 1.2 y - 7.1 x - 1.3"
     @fact_throws  aff2 * q
     @fact_throws  aff2 / q
-    @fact JuMP.constr(@QuadConstraint(aff2 ≤ q)) --> "-2.5 y*z + 1.2 y - 7.1 x - 1.3 $leq 0"
-    @fact JuMP.constr(@QuadConstraint(aff2 == q)) --> "-2.5 y*z + 1.2 y - 7.1 x - 1.3 $eq 0"
-    @fact JuMP.constr(@QuadConstraint(aff2 ≥ q)) --> "-2.5 y*z + 1.2 y - 7.1 x - 1.3 $geq 0"
+    @fact string(@QuadConstraint(aff2 ≤ q)) --> "-2.5 y*z + 1.2 y - 7.1 x - 1.3 $leq 0"
+    @fact string(@QuadConstraint(aff2 == q)) --> "-2.5 y*z + 1.2 y - 7.1 x - 1.3 $eq 0"
+    @fact string(@QuadConstraint(aff2 ≥ q)) --> "-2.5 y*z + 1.2 y - 7.1 x - 1.3 $geq 0"
     # 4-6 AffExpr--SOCExpr
-    @fact JuMP.exprstr(aff + socexpr) --> "1.5 $Vert[w,-w + 1]$Vert$sub2 + 7.1 x - w + 0.5"
-    @fact JuMP.exprstr(aff - socexpr) --> "-1.5 $Vert[w,-w + 1]$Vert$sub2 + 7.1 x + w + 4.5"
+    @fact string(aff + socexpr) --> "1.5 $Vert[w,-w + 1]$Vert$sub2 + 7.1 x - w + 0.5"
+    @fact string(aff - socexpr) --> "-1.5 $Vert[w,-w + 1]$Vert$sub2 + 7.1 x + w + 4.5"
     @fact_throws aff * socexpr
     @fact_throws aff / socexpr
     @fact_throws @SOCConstraint(aff ≤ socexpr)
     @fact_throws @SOCConstraint(aff == socexpr)
-    @fact JuMP.constr(@SOCConstraint(aff ≥ socexpr)) --> "1.5 $Vert[w,-w + 1]$Vert$sub2 $leq 7.1 x + w + 4.5"
+    @fact string(@SOCConstraint(aff ≥ socexpr)) --> "1.5 $Vert[w,-w + 1]$Vert$sub2 $leq 7.1 x + w + 4.5"
     end
 
     # 5. QuadExpr
     context("QuadExpr--???") do
     # 5-0 QuadExpr unary
-    @fact JuMP.quadstr(+q) --> "2.5 y*z + 7.1 x + 2.5"
-    @fact JuMP.quadstr(-q) --> "-2.5 y*z - 7.1 x - 2.5"
+    @fact string(+q) --> "2.5 y*z + 7.1 x + 2.5"
+    @fact string(-q) --> "-2.5 y*z - 7.1 x - 2.5"
     # 5-1 QuadExpr--Number
-    @fact JuMP.quadstr(q + 1.5) --> "2.5 y*z + 7.1 x + 4"
-    @fact JuMP.quadstr(q - 1.5) --> "2.5 y*z + 7.1 x + 1"
-    @fact JuMP.quadstr(q * 2) --> "5 y*z + 14.2 x + 5"
-    @fact JuMP.quadstr(q / 2) --> "1.25 y*z + 3.55 x + 1.25"
+    @fact string(q + 1.5) --> "2.5 y*z + 7.1 x + 4"
+    @fact string(q - 1.5) --> "2.5 y*z + 7.1 x + 1"
+    @fact string(q * 2) --> "5 y*z + 14.2 x + 5"
+    @fact string(q / 2) --> "1.25 y*z + 3.55 x + 1.25"
     @fact q == q --> true
-    @fact JuMP.constr(@QuadConstraint(aff2 ≤ q)) --> "-2.5 y*z + 1.2 y - 7.1 x - 1.3 $leq 0"
-    @fact JuMP.constr(@QuadConstraint(aff2 == q)) --> "-2.5 y*z + 1.2 y - 7.1 x - 1.3 $eq 0"
-    @fact JuMP.constr(@QuadConstraint(aff2 ≥ q)) --> "-2.5 y*z + 1.2 y - 7.1 x - 1.3 $geq 0"
+    @fact string(@QuadConstraint(aff2 ≤ q)) --> "-2.5 y*z + 1.2 y - 7.1 x - 1.3 $leq 0"
+    @fact string(@QuadConstraint(aff2 == q)) --> "-2.5 y*z + 1.2 y - 7.1 x - 1.3 $eq 0"
+    @fact string(@QuadConstraint(aff2 ≥ q)) --> "-2.5 y*z + 1.2 y - 7.1 x - 1.3 $geq 0"
     # 5-2 QuadExpr--Variable
-    @fact JuMP.quadstr(q + w) --> "2.5 y*z + 7.1 x + w + 2.5"
-    @fact JuMP.quadstr(q - w) --> "2.5 y*z + 7.1 x - w + 2.5"
+    @fact string(q + w) --> "2.5 y*z + 7.1 x + w + 2.5"
+    @fact string(q - w) --> "2.5 y*z + 7.1 x - w + 2.5"
     @fact_throws q*w
     @fact_throws q/w
-    @fact JuMP.constr(@QuadConstraint(q ≤ w)) --> "2.5 y*z + 7.1 x - w + 2.5 $leq 0"
-    @fact JuMP.constr(@QuadConstraint(q == w)) --> "2.5 y*z + 7.1 x - w + 2.5 $eq 0"
-    @fact JuMP.constr(@QuadConstraint(q ≥ w)) --> "2.5 y*z + 7.1 x - w + 2.5 $geq 0"
+    @fact string(@QuadConstraint(q ≤ w)) --> "2.5 y*z + 7.1 x - w + 2.5 $leq 0"
+    @fact string(@QuadConstraint(q == w)) --> "2.5 y*z + 7.1 x - w + 2.5 $eq 0"
+    @fact string(@QuadConstraint(q ≥ w)) --> "2.5 y*z + 7.1 x - w + 2.5 $geq 0"
     # 5-3 QuadExpr--Norm
     @fact_throws q + nrm
     @fact_throws q - nrm
@@ -317,21 +317,21 @@ facts("[operator] Testing basic operator overloads") do
     @fact_throws @SOCConstraint(q == nrm)
     @fact_throws @SOCConstraint(q ≥ nrm)
     # 5-4 QuadExpr--AffExpr
-    @fact JuMP.quadstr(q + aff2) --> "2.5 y*z + 7.1 x + 1.2 y + 3.7"
-    @fact JuMP.quadstr(q - aff2) --> "2.5 y*z + 7.1 x - 1.2 y + 1.3"
+    @fact string(q + aff2) --> "2.5 y*z + 7.1 x + 1.2 y + 3.7"
+    @fact string(q - aff2) --> "2.5 y*z + 7.1 x - 1.2 y + 1.3"
     @fact_throws  q * aff2
     @fact_throws  q / aff2
-    @fact JuMP.constr(@QuadConstraint(q ≤ aff2)) --> "2.5 y*z + 7.1 x - 1.2 y + 1.3 $leq 0"
-    @fact JuMP.constr(@QuadConstraint(q == aff2)) --> "2.5 y*z + 7.1 x - 1.2 y + 1.3 $eq 0"
-    @fact JuMP.constr(@QuadConstraint(q ≥ aff2)) --> "2.5 y*z + 7.1 x - 1.2 y + 1.3 $geq 0"
+    @fact string(@QuadConstraint(q ≤ aff2)) --> "2.5 y*z + 7.1 x - 1.2 y + 1.3 $leq 0"
+    @fact string(@QuadConstraint(q == aff2)) --> "2.5 y*z + 7.1 x - 1.2 y + 1.3 $eq 0"
+    @fact string(@QuadConstraint(q ≥ aff2)) --> "2.5 y*z + 7.1 x - 1.2 y + 1.3 $geq 0"
     # 5-5 QuadExpr--QuadExpr
-    @fact JuMP.quadstr(q + q2) --> "8 x*z + 2.5 y*z + 7.1 x + 1.2 y + 3.7"
-    @fact JuMP.quadstr(q - q2) --> "-8 x*z + 2.5 y*z + 7.1 x - 1.2 y + 1.3"
+    @fact string(q + q2) --> "8 x*z + 2.5 y*z + 7.1 x + 1.2 y + 3.7"
+    @fact string(q - q2) --> "-8 x*z + 2.5 y*z + 7.1 x - 1.2 y + 1.3"
     @fact_throws  q * q2
     @fact_throws  q / q2
-    @fact JuMP.constr(@QuadConstraint(q ≤ q2)) --> "-8 x*z + 2.5 y*z + 7.1 x - 1.2 y + 1.3 $leq 0"
-    @fact JuMP.constr(@QuadConstraint(q == q2)) --> "-8 x*z + 2.5 y*z + 7.1 x - 1.2 y + 1.3 $eq 0"
-    @fact JuMP.constr(@QuadConstraint(q ≥ q2)) --> "-8 x*z + 2.5 y*z + 7.1 x - 1.2 y + 1.3 $geq 0"
+    @fact string(@QuadConstraint(q ≤ q2)) --> "-8 x*z + 2.5 y*z + 7.1 x - 1.2 y + 1.3 $leq 0"
+    @fact string(@QuadConstraint(q == q2)) --> "-8 x*z + 2.5 y*z + 7.1 x - 1.2 y + 1.3 $eq 0"
+    @fact string(@QuadConstraint(q ≥ q2)) --> "-8 x*z + 2.5 y*z + 7.1 x - 1.2 y + 1.3 $geq 0"
     # 4-6 QuadExpr--SOCExpr
     @fact_throws q + socexpr
     @fact_throws q - socexpr
@@ -345,24 +345,24 @@ facts("[operator] Testing basic operator overloads") do
     # 6. SOCExpr tests
     context("SOCExpr--???") do
     # 6-0 SOCExpr unary
-    @fact JuMP.exprstr(+socexpr) --> "1.5 $Vert[w,-w + 1]$Vert$sub2 - w - 2"
-    @fact JuMP.exprstr(-socexpr) --> "-1.5 $Vert[w,-w + 1]$Vert$sub2 + w + 2"
+    @fact string(+socexpr) --> "1.5 $Vert[w,-w + 1]$Vert$sub2 - w - 2"
+    @fact string(-socexpr) --> "-1.5 $Vert[w,-w + 1]$Vert$sub2 + w + 2"
     # 6-1 SOCExpr--Number
-    @fact JuMP.exprstr(socexpr + 1.5) --> "1.5 $Vert[w,-w + 1]$Vert$sub2 - w - 0.5"
-    @fact JuMP.exprstr(socexpr - 1.5) --> "1.5 $Vert[w,-w + 1]$Vert$sub2 - w - 3.5"
-    @fact JuMP.exprstr(socexpr * 1.5) --> "2.25 $Vert[w,-w + 1]$Vert$sub2 - 1.5 w - 3"
-    @fact JuMP.exprstr(socexpr / 1.5) --> "$Vert[w,-w + 1]$Vert$sub2 - 0.6666666666666666 w - 1.3333333333333333"
-    @fact JuMP.constr(@SOCConstraint(socexpr ≤ 1.5)) --> "1.5 $Vert[w,-w + 1]$Vert$sub2 $leq w + 3.5"
+    @fact string(socexpr + 1.5) --> "1.5 $Vert[w,-w + 1]$Vert$sub2 - w - 0.5"
+    @fact string(socexpr - 1.5) --> "1.5 $Vert[w,-w + 1]$Vert$sub2 - w - 3.5"
+    @fact string(socexpr * 1.5) --> "2.25 $Vert[w,-w + 1]$Vert$sub2 - 1.5 w - 3"
+    @fact string(socexpr / 1.5) --> "$Vert[w,-w + 1]$Vert$sub2 - 0.6666666666666666 w - 1.3333333333333333"
+    @fact string(@SOCConstraint(socexpr ≤ 1.5)) --> "1.5 $Vert[w,-w + 1]$Vert$sub2 $leq w + 3.5"
     @fact_throws @SOCConstraint(socexpr == 1.5)
     @fact_throws @SOCConstraint(socexpr ≥ 1.5)
     # 6-2 SOCExpr--Variable
-    @fact JuMP.exprstr(socexpr + y) --> "1.5 $Vert[w,-w + 1]$Vert$sub2 - w + y - 2"
-    @fact JuMP.exprstr(socexpr - y) --> "1.5 $Vert[w,-w + 1]$Vert$sub2 - w - y - 2"
+    @fact string(socexpr + y) --> "1.5 $Vert[w,-w + 1]$Vert$sub2 - w + y - 2"
+    @fact string(socexpr - y) --> "1.5 $Vert[w,-w + 1]$Vert$sub2 - w - y - 2"
     @fact_throws socexpr * y
     @fact_throws socexpr / y
-    @fact JuMP.constr(@SOCConstraint(socexpr ≤ y)) --> "1.5 $Vert[w,-w + 1]$Vert$sub2 $leq w + y + 2"
-    @fact_throws JuMP.constr(socexpr == y)
-    @fact_throws JuMP.constr(socexpr ≥ y)
+    @fact string(@SOCConstraint(socexpr ≤ y)) --> "1.5 $Vert[w,-w + 1]$Vert$sub2 $leq w + y + 2"
+    @fact_throws @SOCConstraint(socexpr == y)
+    @fact_throws @SOCConstraint(socexpr ≥ y)
     # 6-3 SOCExpr--Norm
     @fact_throws socexpr + nrm
     @fact_throws socexpr - nrm
@@ -372,11 +372,11 @@ facts("[operator] Testing basic operator overloads") do
     @fact_throws @SOCConstraint(socexpr == nrm)
     @fact_throws @SOCConstraint(socexpr ≥ nrm)
     # 6-4 SOCExpr--AffExpr
-    @fact JuMP.exprstr(socexpr + aff) --> "1.5 $Vert[w,-w + 1]$Vert$sub2 - w + 7.1 x + 0.5"
-    @fact JuMP.exprstr(socexpr - aff) --> "1.5 $Vert[w,-w + 1]$Vert$sub2 - w - 7.1 x - 4.5"
+    @fact string(socexpr + aff) --> "1.5 $Vert[w,-w + 1]$Vert$sub2 - w + 7.1 x + 0.5"
+    @fact string(socexpr - aff) --> "1.5 $Vert[w,-w + 1]$Vert$sub2 - w - 7.1 x - 4.5"
     @fact_throws socexpr * aff
     @fact_throws socexpr / aff
-    @fact JuMP.constr(@SOCConstraint(socexpr ≤ aff)) --> "1.5 $Vert[w,-w + 1]$Vert$sub2 $leq w + 7.1 x + 4.5"
+    @fact string(@SOCConstraint(socexpr ≤ aff)) --> "1.5 $Vert[w,-w + 1]$Vert$sub2 $leq w + 7.1 x + 4.5"
     @fact_throws @SOCConstraint(socexpr == aff)
     @fact_throws @SOCConstraint(socexpr ≥ aff)
     # 6-5 SOCExpr--QuadExpr
@@ -403,24 +403,24 @@ context("sum") do
     sum_m = Model()
     @variable(sum_m, 0 ≤ matrix[1:3,1:3] ≤ 1, start = 1)
     # sum(j::JuMPArray{Variable})
-    @fact JuMP.affstr(sum(matrix)) --> "matrix[1,1] + matrix[2,1] + matrix[3,1] + matrix[1,2] + matrix[2,2] + matrix[3,2] + matrix[1,3] + matrix[2,3] + matrix[3,3]"
+    @fact string(sum(matrix)) --> "matrix[1,1] + matrix[2,1] + matrix[3,1] + matrix[1,2] + matrix[2,2] + matrix[3,2] + matrix[1,3] + matrix[2,3] + matrix[3,3]"
     # sum(j::JuMPArray{Variable}) in a macro
     @objective(sum_m, Max, sum(matrix))
-    @fact JuMP.quadstr(sum_m.obj) --> "matrix[1,1] + matrix[2,1] + matrix[3,1] + matrix[1,2] + matrix[2,2] + matrix[3,2] + matrix[1,3] + matrix[2,3] + matrix[3,3]"
+    @fact string(sum_m.obj) --> "matrix[1,1] + matrix[2,1] + matrix[3,1] + matrix[1,2] + matrix[2,2] + matrix[3,2] + matrix[1,3] + matrix[2,3] + matrix[3,3]"
 
     # sum{T<:Real}(j::JuMPArray{T})
     @fact sum(getvalue(matrix)) --> roughly(9, 1e-6)
     # sum(j::Array{Variable})
-    @fact JuMP.affstr(sum(matrix[1:3,1:3])) --> JuMP.affstr(sum(matrix))
+    @fact string(sum(matrix[1:3,1:3])) --> string(sum(matrix))
     # sum(affs::Array{AffExpr})
-    @fact JuMP.affstr(sum([2*matrix[i,j] for i in 1:3, j in 1:3])) --> "2 matrix[1,1] + 2 matrix[2,1] + 2 matrix[3,1] + 2 matrix[1,2] + 2 matrix[2,2] + 2 matrix[3,2] + 2 matrix[1,3] + 2 matrix[2,3] + 2 matrix[3,3]"
+    @fact string(sum([2*matrix[i,j] for i in 1:3, j in 1:3])) --> "2 matrix[1,1] + 2 matrix[2,1] + 2 matrix[3,1] + 2 matrix[1,2] + 2 matrix[2,2] + 2 matrix[3,2] + 2 matrix[1,3] + 2 matrix[2,3] + 2 matrix[3,3]"
 
     S = [1,3]
     @variable(sum_m, x[S], start=1)
     # sum(j::JuMPDict{Variable})
-    @fact length(JuMP.affstr(sum(x))) --> 11 # order depends on hashing
-    @fact contains(JuMP.affstr(sum(x)),"x[1]") --> true
-    @fact contains(JuMP.affstr(sum(x)),"x[3]") --> true
+    @fact length(string(sum(x))) --> 11 # order depends on hashing
+    @fact contains(string(sum(x)),"x[1]") --> true
+    @fact contains(string(sum(x)),"x[3]") --> true
     # sum{T<:Real}(j::JuMPDict{T})
     @fact sum(getvalue(x)) --> 2
 end
@@ -429,18 +429,18 @@ context("dot") do
     dot_m = Model()
     @variable(dot_m, 0 ≤ x[1:3] ≤ 1)
     c = vcat(1:3)
-    @fact JuMP.affstr(dot(c,x)) --> "x[1] + 2 x[2] + 3 x[3]"
-    @fact JuMP.affstr(dot(x,c)) --> "x[1] + 2 x[2] + 3 x[3]"
+    @fact string(dot(c,x)) --> "x[1] + 2 x[2] + 3 x[3]"
+    @fact string(dot(x,c)) --> "x[1] + 2 x[2] + 3 x[3]"
 
     A = [1 3 ; 2 4]
     @variable(dot_m, 1 ≤ y[1:2,1:2] ≤ 1)
-    @fact JuMP.affstr(vecdot(A,y)) --> "y[1,1] + 2 y[2,1] + 3 y[1,2] + 4 y[2,2]"
-    @fact JuMP.affstr(vecdot(y,A)) --> "y[1,1] + 2 y[2,1] + 3 y[1,2] + 4 y[2,2]"
+    @fact string(vecdot(A,y)) --> "y[1,1] + 2 y[2,1] + 3 y[1,2] + 4 y[2,2]"
+    @fact string(vecdot(y,A)) --> "y[1,1] + 2 y[2,1] + 3 y[1,2] + 4 y[2,2]"
 
     B = ones(2,2,2)
     @variable(dot_m, 0 ≤ z[1:2,1:2,1:2] ≤ 1)
-    @fact JuMP.affstr(vecdot(B,z)) --> "z[1,1,1] + z[2,1,1] + z[1,2,1] + z[2,2,1] + z[1,1,2] + z[2,1,2] + z[1,2,2] + z[2,2,2]"
-    @fact JuMP.affstr(vecdot(z,B)) --> "z[1,1,1] + z[2,1,1] + z[1,2,1] + z[2,2,1] + z[1,1,2] + z[2,1,2] + z[1,2,2] + z[2,2,2]"
+    @fact string(vecdot(B,z)) --> "z[1,1,1] + z[2,1,1] + z[1,2,1] + z[2,2,1] + z[1,1,2] + z[2,1,2] + z[1,2,2] + z[2,2,2]"
+    @fact string(vecdot(z,B)) --> "z[1,1,1] + z[2,1,1] + z[1,2,1] + z[2,2,1] + z[1,1,2] + z[2,1,2] + z[1,2,2] + z[2,2,2]"
 
     @objective(dot_m, Max, dot(x, ones(3)) - vecdot(y, ones(2,2)) )
     #solve(dot_m)
@@ -482,7 +482,7 @@ module TestHelper # weird scoping behavior with FactCheck...
             v, w = convert(AffExpr,x[i]), convert(AffExpr,y[i])
             sort_expr!(v)
             sort_expr!(w)
-            JuMP.affstr(v) == JuMP.affstr(w) || return false
+            string(v) == string(w) || return false
         end
         return true
     end
@@ -490,7 +490,7 @@ module TestHelper # weird scoping behavior with FactCheck...
     function vec_eq(x::Array{QuadExpr}, y::Array{QuadExpr})
         size(x) == size(y) || return false
         for i in 1:length(x)
-            JuMP.quadstr(x[i]) == JuMP.quadstr(y[i]) || return false
+            string(x[i]) == string(y[i]) || return false
         end
         return true
     end
@@ -757,7 +757,7 @@ end
 #    dot_m = Model()
 #    @variable(dot_m, 0 <= v[1:3,1:4] <= 1)
 #    @variable(dot_m, 0 <= w[3:2:7,7:-2:1] <= 1)
-#    @fact JuMP.quadstr(dot(v,w)) --> "v[1,1]*w[3,7] + v[1,2]*w[3,5] + v[1,3]*w[3,3] + v[1,4]*w[3,1] + v[2,1]*w[5,7] + v[2,2]*w[5,5] + v[2,3]*w[5,3] + v[2,4]*w[5,1] + v[3,1]*w[7,7] + v[3,2]*w[7,5] + v[3,3]*w[7,3] + v[3,4]*w[7,1]"
+#    @fact string(dot(v,w)) --> "v[1,1]*w[3,7] + v[1,2]*w[3,5] + v[1,3]*w[3,3] + v[1,4]*w[3,1] + v[2,1]*w[5,7] + v[2,2]*w[5,5] + v[2,3]*w[5,3] + v[2,4]*w[5,1] + v[3,1]*w[7,7] + v[3,2]*w[7,5] + v[3,3]*w[7,3] + v[3,4]*w[7,1]"
 #
 #    @constraint(dot_m, sum(v) + sum(w) --> 2)
 #    @objective(dot_m, :Max, v[2,3] + w[5,3])
@@ -773,6 +773,6 @@ end
 #    catcoef = [1,2,3]
 #    dogcoef = [3,4,5]
 #
-#    @fact JuMP.affstr(dot(catcoef, x[:,:cat])) --> "x[-1,cat] + 2 x[0,cat] + 3 x[1,cat]"
-#    @fact JuMP.affstr(dot(dogcoef, x[:,:dog])) --> "3 x[-1,dog] + 4 x[0,dog] + 5 x[1,dog]"
+#    @fact string(dot(catcoef, x[:,:cat])) --> "x[-1,cat] + 2 x[0,cat] + 3 x[1,cat]"
+#    @fact string(dot(dogcoef, x[:,:dog])) --> "3 x[-1,dog] + 4 x[0,dog] + 5 x[1,dog]"
 #end
