@@ -103,7 +103,7 @@ getvalue(arr::Array{QuadExpr}) = map(getvalue, arr)
 # GenericQuadConstraint
 # ∑qᵢⱼ xᵢⱼ  +  ∑ aᵢ xᵢ  +  c  [≤,≥]  0
 # As RHS is implicitly taken to be zero, we store only LHS and sense
-type GenericQuadConstraint{QuadType} <: JuMPConstraint
+type GenericQuadConstraint{QuadType} <: AbstractConstraint
     terms::QuadType
     sense::Symbol
 end

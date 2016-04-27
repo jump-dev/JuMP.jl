@@ -116,7 +116,7 @@ end
 # GenericRangeConstraint
 # l ≤ ∑ aᵢ xᵢ ≤ u
 # The constant part of the internal expression is assumed to be zero
-type GenericRangeConstraint{TermsType} <: JuMPConstraint
+type GenericRangeConstraint{TermsType} <: AbstractConstraint
     terms::TermsType
     lb::Float64
     ub::Float64

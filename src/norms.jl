@@ -101,7 +101,7 @@ getvalue(n::GenericNormExpr) = n.coeff * getvalue(n.norm) + getvalue(n.aff)
 # GenericSOCConstraint
 # Second-order cone constraint of form
 # α||Ax-b||₂ + cᵀx + d ≤ 0
-type GenericSOCConstraint{T<:GenericSOCExpr} <: JuMPConstraint
+type GenericSOCConstraint{T<:GenericSOCExpr} <: AbstractConstraint
     normexpr::T
     function GenericSOCConstraint{T}(normexpr::T)
         if normexpr.coeff < 0
