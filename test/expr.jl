@@ -20,28 +20,28 @@ facts("[expr] Test expression construction") do
     context("AffExpr") do
         # Test affstr
         a1 = x[1] + LongName + 5
-        @fact JuMP.affstr(a1) --> "x[1] + LongName + 5"
+        @fact string(a1) --> "x[1] + LongName + 5"
         # Test like term collection
         a2 = 2*(x[2] + LongName + x[2]) + 0
-        @fact JuMP.affstr(a2) --> "4 x[2] + 2 LongName"
+        @fact string(a2) --> "4 x[2] + 2 LongName"
         # Test appending functionality
         push!(a1, 5.0, x[2])
-        @fact JuMP.affstr(a1) --> "x[1] + LongName + 5 x[2] + 5"
+        @fact string(a1) --> "x[1] + LongName + 5 x[2] + 5"
         append!(a1, a2)
-        @fact JuMP.affstr(a1) --> "x[1] + 3 LongName + 9 x[2] + 5"
+        @fact string(a1) --> "x[1] + 3 LongName + 9 x[2] + 5"
         append!(a1, 2.0)
-        @fact JuMP.affstr(a1) --> "x[1] + 3 LongName + 9 x[2] + 7"
+        @fact string(a1) --> "x[1] + 3 LongName + 9 x[2] + 7"
         append!(a1, LongName)
-        @fact JuMP.affstr(a1) --> "x[1] + 4 LongName + 9 x[2] + 7"
+        @fact string(a1) --> "x[1] + 4 LongName + 9 x[2] + 7"
     end
 
     context("QuadExpr") do
-        # Test JuMP.quadstr
+        # Test string
         q1 = x[1]*x[2] + 27.2*LongName + 5
-        @fact JuMP.quadstr(q1) --> "x[1]*x[2] + 27.2 LongName + 5"
+        @fact string(q1) --> "x[1]*x[2] + 27.2 LongName + 5"
         # Test like term collection
         q2 = x[1]*x[2] + x[2]*x[1]
-        @fact JuMP.quadstr(q2) --> "2 x[1]*x[2]"
+        @fact string(q2) --> "2 x[1]*x[2]"
     end
 end
 

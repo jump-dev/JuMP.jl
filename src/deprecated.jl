@@ -55,12 +55,11 @@ end
 @deprecate addSolution addsolution
 @deprecate addToExpression JuMP.addtoexpr
 @deprecate addUserCut JuMP.addusercut
-@deprecate affToStr(c::GenericAffExpr) JuMP.aff_str(JuMP.REPLMode,c)
-@deprecate affToStr JuMP.affstr
+@deprecate affToStr string
 @deprecate buildInternalModel JuMP.build
 @deprecate chgConstrRHS JuMP.setRHS
-@deprecate conToStr(c::GenericRangeConstraint) JuMP.con_str(JuMP.REPLMode,c)
-@deprecate exprToStr(c::SOCExpr) JuMP.expr_str(JuMP.REPLMode,c)
+@deprecate conToStr string
+@deprecate exprToStr string
 @deprecate getCategory getcategory
 @deprecate getConstraintBounds JuMP.constraintbounds
 @deprecate getDual getdual
@@ -74,7 +73,7 @@ end
 @deprecate getUpper getupperbound
 @deprecate getValue getvalue
 @deprecate getVar getvariable
-@deprecate quadToStr(c::GenericQuadExpr) JuMP.quad_str(JuMP.REPLMode,c)
+@deprecate quadToStr string
 @deprecate registerNLFunction JuMP.register
 @deprecate setCategory setcategory
 @deprecate setLower setlowerbound

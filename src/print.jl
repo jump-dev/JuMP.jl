@@ -702,9 +702,6 @@ function aff_str(mode, a::AffExpr, show_constant=true)
         return ret
     end
 end
-# Backwards compatability shim
-affstr(a::AffExpr) = aff_str(REPLMode,a)
-
 # Precompile for faster boot times
 Base.precompile(aff_str, (Type{JuMP.REPLMode}, AffExpr, Bool))
 Base.precompile(aff_str, (Type{JuMP.IJuliaMode}, AffExpr, Bool))
@@ -765,8 +762,6 @@ function quad_str(mode, q::GenericQuadExpr, sym)
     end
 end
 
-# Backwards compatability shim
-quadstr(q::GenericQuadExpr) = quad_str(REPLMode,q)
 # Handlers to use correct symbols
 quad_str(::Type{REPLMode}, q::GenericQuadExpr) =
     quad_str(REPLMode, q, repl)
@@ -818,8 +813,6 @@ function con_str(mode, c::GenericRangeConstraint, sym)
     end
     out_str
 end
-# Backwards compatability shim
-constr(c::GenericRangeConstraint) = con_str(REPLMode,c)
 # Handlers to use correct symbols
 con_str(::Type{REPLMode}, c::GenericRangeConstraint; args...) =
     con_str(REPLMode, c, repl)
@@ -840,8 +833,6 @@ function con_str(mode, c::QuadConstraint, sym)
     r = (s == :<=) ? sym[:leq] : (s == :>= ? sym[:geq] : sym[:eq])
     "$(quad_str(mode,c.terms)) $r 0"
 end
-# Backwards compatability shim
-constr(c::QuadConstraint) = con_str(REPLMode,c)
 # Handlers to use correct symbols
 con_str(::Type{REPLMode}, c::QuadConstraint; args...) =
     con_str(REPLMode, c, repl)
@@ -867,8 +858,6 @@ con_str(::Type{REPLMode}, c::SOCConstraint; args...) =
     con_str(REPLMode, c, repl)
 con_str(::Type{IJuliaMode}, c::SOCConstraint; mathmode=true) =
     math(con_str(IJuliaMode, c, ijulia), mathmode)
-# Backwards compatability shim
-constr(c::SOCConstraint) = con_str(REPLMode,c)
 
 #------------------------------------------------------------------------
 ## SOSConstraint
