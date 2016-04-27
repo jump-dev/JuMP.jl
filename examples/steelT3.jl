@@ -24,29 +24,29 @@ area = Dict([("bands", ("east", "north")),
 
 avail = [40, 40, 32,40]
 
-rate = Dict(["bands" => 200,
-             "coils" =>140])
+rate = Dict("bands" => 200,
+             "coils" =>140)
 
-inv0 = Dict(["bands" => 10,
-             "coils" => 0])
+inv0 = Dict("bands" => 10,
+             "coils" => 0)
 
-prodcost = Dict(["bands" => 10,
-                 "coils" => 11])
-invcost = Dict(["bands" => 2.5,
-                "coils" => 3])
+prodcost = Dict("bands" => 10,
+                 "coils" => 11)
+invcost = Dict("bands" => 2.5,
+                "coils" => 3)
 
-revenue = Dict(["bands" => Dict(["east" => [25.0 26.0 27.0 27.0],
-                                 "north" => [26.5 27.5 28.0 28.5]]),
-                "coils" => Dict(["east" =>[30    35    37    39],
+revenue = Dict("bands" => Dict("east" => [25.0 26.0 27.0 27.0],
+                                 "north" => [26.5 27.5 28.0 28.5]),
+                "coils" => Dict("east" =>[30    35    37    39],
                                 "west" => [29    32    33    35],
-                                "export" => [25    25    25    28]])]
+                                "export" => [25    25    25    28])
               )
 
-market = Dict(["bands" => Dict(["east" => [2000  2000  1500  2000],
-                                "north" => [4000  4000  2500  4500]]),
-               "coils" => Dict(["east" => [1000   800  1000  1100],
+market = Dict("bands" => Dict("east" => [2000  2000  1500  2000],
+                                "north" => [4000  4000  2500  4500]),
+               "coils" => Dict("east" => [1000   800  1000  1100],
                                 "west" => [2000  1200  2000  2300],
-                                "export" => [1000   500   500   800]])]
+                                "export" => [1000   500   500   800])
               )
 
 # Model

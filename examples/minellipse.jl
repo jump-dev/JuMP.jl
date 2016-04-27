@@ -27,10 +27,10 @@ using PyPlot  # Comment out if not installed
 # We will use three ellipses
 m = 3
 # Two "simple" ones
-As = { [2.0  0.0;
-        0.0  1.0],
-       [1.0  0.0;
-        0.0  3.0]}
+As = Any[ [2.0  0.0;
+           0.0  1.0],
+          [1.0  0.0;
+           0.0  3.0]]
 # and a random one
 randA = rand(2,2)
 push!(As, (randA' * randA) * (rand()*2+1))

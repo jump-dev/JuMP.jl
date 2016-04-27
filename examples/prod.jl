@@ -57,9 +57,9 @@ pc=	[2304,	2920,	2910]
 
 ###  TIME PERIOD SETS AND PARAMETERS  ###
 
-firstperiod =  int(1)
+firstperiod = 1
 # Index of first production period to be modeled
-lastperiod  = int(13)
+lastperiod  = 13
 # Index of last production period to be modeled
 numperiods = firstperiod:lastperiod
 # 'planning horizon' := first..last;
@@ -173,7 +173,7 @@ prod = Model()
 # hours available on all shifts
 
 @constraint(prod, xyconstr[t=numperiods],
-               sum{pt[p] * Oprd[p,t], p:1:numprd}  <= ol[t])
+               sum{pt[p] * Oprd[p,t], p=1:numprd}  <= ol[t])
 # Hours needed to accomplish all overtime
 # production in a period must not exceed
 # the specified overtime limit

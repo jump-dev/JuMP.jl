@@ -28,7 +28,7 @@ function LoadData(filepath)
     initgrid = zeros(Int,9,9)
     for row in 1:9
         line = readline(fp)
-        initgrid[row,:] = int(split(line,","))
+        initgrid[row,:] = [parse(Int,s) for s in split(line,",")]
     end
     return initgrid
 end
