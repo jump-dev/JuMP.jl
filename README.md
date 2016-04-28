@@ -53,7 +53,7 @@ Our documentation includes an installation guide, quick-start guide, and referen
     * TravisCI: [![Build Status](https://travis-ci.org/JuliaOpt/JuMP.jl.svg?branch=master)](https://travis-ci.org/JuliaOpt/JuMP.jl)
     * Test coverage:
       [![Coverage Status](https://coveralls.io/repos/JuliaOpt/JuMP.jl/badge.svg?branch=master)](https://coveralls.io/r/JuliaOpt/JuMP.jl?branch=master)
-      [![codecov.io](http://codecov.io/github/JuliaOpt/JuMP.jl/coverage.svg?branch=master)](http://codecov.io/github/JuliaOpt/JuMP.jl?branch=master)
+      [![codecov](https://codecov.io/gh/JuliaOpt/JuMP.jl/branch/master/graph/badge.svg)](https://codecov.io/gh/JuliaOpt/JuMP.jl)
   * Changes: see [NEWS](https://github.com/JuliaOpt/JuMP.jl/tree/master/NEWS.md)
 
 
