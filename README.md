@@ -36,11 +36,11 @@ Our documentation includes an installation guide, quick-start guide, and referen
 
 [juliaopt-notebooks]: https://github.com/JuliaOpt/juliaopt-notebooks
 
-**Latest Release**: 0.12.2 (via ``Pkg.add``)
-  * [Documentation](http://www.juliaopt.org/JuMP.jl/0.12/)
-  * [Examples](https://github.com/JuliaOpt/JuMP.jl/tree/release-0.12/examples)
+**Latest Release**: 0.13.0 (via ``Pkg.add``)
+  * [Documentation](http://www.juliaopt.org/JuMP.jl/0.13/)
+  * [Examples](https://github.com/JuliaOpt/JuMP.jl/tree/release-0.13/examples)
   * Testing status:
-    * TravisCI: [![Build Status](https://travis-ci.org/JuliaOpt/JuMP.jl.svg?branch=release-0.12)](https://travis-ci.org/JuliaOpt/JuMP.jl)
+    * TravisCI: [![Build Status](https://travis-ci.org/JuliaOpt/JuMP.jl.svg?branch=release-0.13)](https://travis-ci.org/JuliaOpt/JuMP.jl)
     * PackageEvaluator:
       [![JuMP](http://pkg.julialang.org/badges/JuMP_0.3.svg)](http://pkg.julialang.org/?pkg=JuMP&ver=0.3)
       [![JuMP](http://pkg.julialang.org/badges/JuMP_0.4.svg)](http://pkg.julialang.org/?pkg=JuMP&ver=0.4)

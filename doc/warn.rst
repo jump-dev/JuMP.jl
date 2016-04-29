@@ -3,7 +3,7 @@
 
     <div id="officialwarn" class="admonition warning" style="position: fixed; top: 1em; right: 1em;">
     <p class="first admonition-title">Warning</p>
-    <p class="last">This documentation tracks the development branch of JuMP. For the documentation of the latest JuMP release, see <a href="http://www.juliaopt.org/JuMP.jl/0.12/">here</a>.</p>
+    <p class="last">This documentation tracks the development branch of JuMP. For the documentation of the latest JuMP release, see <a href="http://www.juliaopt.org/JuMP.jl/0.13/">here</a>.</p>
     </div>
     <script type="text/javascript">
     if(!(location.hostname.match('readthedocs') || location.hostname.match('rtfd'))){ 
