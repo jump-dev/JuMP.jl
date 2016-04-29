@@ -1,11 +1,15 @@
 JuMP release notes
 ==================
 
-Unversioned
------------
+Version 0.13.0 (April 29, 2016)
+-------------------------------
 
+  * Most exported methods and macros have been renamed to avoid camelCase. See the list of changes [here](https://github.com/JuliaOpt/JuMP.jl/blob/e53d0db67cde2a4b80d0c1281f4b49eb0128a1f5/src/deprecated.jl#L30). There is a 1-1 mapping from the old names to the new, and it is safe to simply replace the names to update existing models.
   * Specify variable lower/upper bounds in ``@variable`` using the ``lowerbound`` and ``upperbound`` keyword arguments.
-  * Change name printed for variable using the ``basename`` keyword argument to ``@defVar``.
+  * Change name printed for variable using the ``basename`` keyword argument to ``@variable``.
+  * New ``@variables`` macro allows multiline declaration of groups of variables.
+  * A number of solver methods previously available only through MathProgBase are now exposed directly in JuMP. The fix was [recorded](https://youtu.be/qF1lZPJ3a5A) live!
+  * Compatibility fixes with Julia 0.5.
 
 Version 0.12.2 (March 9, 2016)
 ------------------------------
