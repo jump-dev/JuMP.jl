@@ -10,6 +10,7 @@ Version 0.13.0 (April 29, 2016)
   * New ``@variables`` macro allows multiline declaration of groups of variables.
   * A number of solver methods previously available only through MathProgBase are now exposed directly in JuMP. The fix was [recorded](https://youtu.be/qF1lZPJ3a5A) live!
   * Compatibility fixes with Julia 0.5.
+  * The "end" indexing syntax is no longer supported within JuMPArrays which do not use 1-based indexing until upstream issues are resolved, see [here](https://github.com/JuliaOpt/JuMP.jl/issues/730).
 
 Version 0.12.2 (March 9, 2016)
 ------------------------------
