@@ -130,7 +130,7 @@ facts("[variable] getvalue on empty things") do
 
     @fact getvalue(x) --> Array(Float64, 4, 0, 3)
     @fact typeof(getvalue(y)) <: JuMP.JuMPArray{Float64} --> true
-    @fact size(getvalue(y)) --> (4,0,3)
+    @fact JuMP.size(getvalue(y)) --> (4,0,3)
     @fact typeof(getvalue(z)) --> JuMP.JuMPArray{Float64,3,Tuple{UnitRange{Int},Set{Any},UnitRange{Int}}}
     @fact length(getvalue(z)) --> 0
 end
@@ -213,11 +213,13 @@ end
 
 facts("[variable] Can't use end for indexing a JuMPContainer") do
     m = Model()
-    @defVar(m, x[0:2,1:4])
-    @defVar(m, y[i=1:4,j=1:4;true])
+    @variable(m, x[0:2,1:4])
+    @variable(m, y[i=1:4,j=1:4;true])
+    @variable(m, z[0:2])
     @fact_throws x[end,1]
     @fact_throws x[end-1]
-    @fact x[0,end-1] --> x[0,3]
+    @fact_throws x[0,end-1]
     @fact_throws y[end,end-1]
     @fact_throws y[end,1]
+    @fact_throws z[end]
 end
