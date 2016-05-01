@@ -74,7 +74,6 @@ end
 @deprecate getValue getvalue
 @deprecate getVar getvariable
 @deprecate quadToStr string
-@deprecate registerNLFunction JuMP.register
 @deprecate setCategory setcategory
 @deprecate setLower setlowerbound
 @deprecate setName setname
@@ -86,3 +85,9 @@ end
 @deprecate setSolver setsolver
 @deprecate setUpper setupperbound
 @deprecate setValue setvalue
+
+function registerNLFunction(args...;autodiff=false)
+    Base.depwarn("registerNLFunction is deprecated, use JuMP.register instead.",:registerNLFunction)
+    JuMP.register(args...,autodiff=autodiff)
+end
+export registerNLFunction
