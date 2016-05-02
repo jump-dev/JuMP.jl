@@ -19,7 +19,7 @@ import MathProgBase
 
 function print_iis_gurobi(m::Model)
 
-    grb = MathProgBase.getrawsolver(getInternalModel(m))
+    grb = getrawsolver(m)
     Gurobi.computeIIS(grb)
     numconstr = Gurobi.num_constrs(grb)
     numvar = Gurobi.num_vars(grb)
