@@ -1,6 +1,11 @@
 JuMP release notes
 ==================
 
+Version 0.13.1 (May 3, 2016)
+----------------------------
+
+  * Fix broken deprecation for ``registerNLfunction``.
+
 Version 0.13.0 (April 29, 2016)
 -------------------------------
 
