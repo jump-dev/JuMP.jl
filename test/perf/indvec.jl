@@ -14,9 +14,8 @@ function bench_add(n)
 end
 
 bench_add(10)
-gc_disable()
+gc_enable(false)
 @time bench_add(1000000)
 @time bench_add(1000000)
 @time bench_add(1000000)
-gc_enable()
-
+gc_enable(true)

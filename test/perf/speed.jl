@@ -58,13 +58,13 @@ function pMedian(numFacility::Int,numCustomer::Int,numLocation::Int,useMPS)
     m = Model()
 
     # Facility locations
-    @defVar(m, 0 <= s[1:numLocation] <= 1)
+    @variable(m, 0 <= s[1:numLocation] <= 1)
 
     # Aux. variable: x_a,i = 1 iff the closest facility to a is at i
-    @defVar(m, 0 <= x[1:numLocation,1:numCustomer] <= 1)
+    @variable(m, 0 <= x[1:numLocation,1:numCustomer] <= 1)
 
     # Objective: min distance
-    @setObjective(m, Max, sum{abs(customerLocations[a]-i)*x[i,a], a = 1:numCustomer, i = 1:numLocation} )
+    @objective(m, Max, sum{abs(customerLocations[a]-i)*x[i,a], a = 1:numCustomer, i = 1:numLocation} )
 
     # Constraints
     for a in 1:numCustomer
@@ -104,9 +104,9 @@ function cont5(n,useMPS)
 
     tic()
     mod = Model()
-    @defVar(mod,  0 <= y[0:m,0:n] <= 1)
-    @defVar(mod, -1 <= u[1:m] <= 1)
-    @setObjective(mod, Min, y[0,0])
+    @variable(mod,  0 <= y[0:m,0:n] <= 1)
+    @variable(mod, -1 <= u[1:m] <= 1)
+    @objective(mod, Min, y[0,0])
 
     # PDE
     for i = 0:m1
@@ -169,4 +169,3 @@ function RunTests()
 end
 
 RunTests()
-
