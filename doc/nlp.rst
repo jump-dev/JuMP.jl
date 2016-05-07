@@ -249,7 +249,7 @@ For example::
     typeof(cons3) # JuMP.ConstraintRef{JuMP.Model,JuMP.GenericRangeConstraint{JuMP.NonlinearExprData}} indicates a nonlinear constraint
     linearindex(cons1) == linearindex(cons2) == linearindex(cons3) == 1
 
-When querying derivatives, ``cons2`` will appear first, because it is the first linear constraint, then ``cons1``, because it is the first quadratic constraint, then ``cons3``, because it is the first nonlinear constraint. Note that for one-sided nonlinear constraints, JuMP subtracts any values on the right-hand side when computing expression. In other words, one-sided linear constraints are always transformed to have a right-hand side of zero.
+When querying derivatives, ``cons2`` will appear first, because it is the first linear constraint, then ``cons1``, because it is the first quadratic constraint, then ``cons3``, because it is the first nonlinear constraint. Note that for one-sided nonlinear constraints, JuMP subtracts any values on the right-hand side when computing expression. In other words, one-sided nonlinear constraints are always transformed to have a right-hand side of zero.
 
 The ``JuMP.constraintbounds(m::Model)`` method returns the lower and upper bounds
 of all the constraints in the model, concatenated in the order discussed above.
