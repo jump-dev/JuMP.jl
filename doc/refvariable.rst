@@ -30,7 +30,7 @@ The names of your variables must be valid Julia variable names.
 Integer and binary restrictions can optionally be specified with a third argument, ``Int`` or ``Bin``.
 For advanced users, ``SemiCont`` and ``SemiInt`` may be used to create
 `semicontinuous <http://orinanobworld.blogspot.com/2011/03/semicontinuous-variables.html>`_ or
-`semi-integer <http://www.gams.com/mccarl/mccarlhtml/semi-integer_variables.htm>`_ variables,
+`semi-integer <http://www.gams.com/help/topic/gams.doc/userguides/mccarl/semi-integer_variables.htm>`_ variables,
 respectively.
 
 To create arrays of variables we append brackets to the variable name.
