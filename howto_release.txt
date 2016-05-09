@@ -1,0 +1,11 @@
+This note serves as developer documentation for the JuMP release process, which has accumulated a number of manual steps.
+
+Steps for a new major (0.xx) release:
+
+- Update NEWS.md
+- Update version and release in doc/conf.py
+- Create release-0.xx branch
+- Run "make html" in doc/. Copy doc/_build/html to new directory in gh-pages branch
+- Update version link in doc/warn.rst.
+- Update version and branches in README
+- Check that CI passes on release branch
