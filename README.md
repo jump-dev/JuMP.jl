@@ -47,7 +47,7 @@ Our documentation includes an installation guide, quick-start guide, and referen
 
 
 **Development version**:
-  * [Documentation](https://jump.readthedocs.org/en/latest)
+  * [Documentation](https://jump.readthedocs.io/en/latest)
   * [Examples](https://github.com/JuliaOpt/JuMP.jl/tree/master/examples)
   * Testing status:
     * TravisCI: [![Build Status](https://travis-ci.org/JuliaOpt/JuMP.jl.svg?branch=master)](https://travis-ci.org/JuliaOpt/JuMP.jl)
