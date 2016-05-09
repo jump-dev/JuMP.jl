@@ -141,7 +141,7 @@ function getloopedcode(c::Expr, code, condition, idxvars, idxsets, idxpairs, sym
         N = length(idxsets)
         mac = :($(esc(varname)) = JuMPDict{$(sym),$N}())
     else
-        mac = Expr(:macrocall,Expr(:.,:JuMP,QuoteNode(symbol("@gendict"))),esc(varname),sym,idxsets...)
+        mac = Expr(:macrocall,Expr(:.,:JuMP,QuoteNode(Symbol("@gendict"))),esc(varname),sym,idxsets...)
     end
     return quote
         $mac
@@ -554,9 +554,9 @@ macro SOCConstraint(x)
     end
 end
 
-for (mac,sym) in [(:LinearConstraints, symbol("@LinearConstraint")),
-                  (:QuadConstraints,   symbol("@QuadConstraint")),
-                  (:SOCConstraints,    symbol("@SOCConstraint"))]
+for (mac,sym) in [(:LinearConstraints, Symbol("@LinearConstraint")),
+                  (:QuadConstraints,   Symbol("@QuadConstraint")),
+                  (:SOCConstraints,    Symbol("@SOCConstraint"))]
     @eval begin
         macro $mac(x)
             x.head == :block || error("Invalid syntax for @$mac")
@@ -578,10 +578,10 @@ for (mac,sym) in [(:LinearConstraints, symbol("@LinearConstraint")),
     end
 end
 
-for (mac,sym) in [(:constraints,  symbol("@constraint")),
-                  (:NLconstraints,symbol("@NLconstraint")),
-                  (:SDconstraints,symbol("@SDconstraint")),
-                  (:variables,symbol("@variable"))]
+for (mac,sym) in [(:constraints,  Symbol("@constraint")),
+                  (:NLconstraints,Symbol("@NLconstraint")),
+                  (:SDconstraints,Symbol("@SDconstraint")),
+                  (:variables,Symbol("@variable"))]
     @eval begin
         macro $mac(m, x)
             x.head == :block || error("Invalid syntax for @$mac")
@@ -970,7 +970,7 @@ macro constraintref(var)
         idxsets = var.args[2:end]
         idxpairs = IndexPair[]
 
-        mac = Expr(:macrocall,Expr(:.,:JuMP,QuoteNode(symbol("@gendict"))),varname,:ConstraintRef,idxsets...)
+        mac = Expr(:macrocall,Expr(:.,:JuMP,QuoteNode(Symbol("@gendict"))),varname,:ConstraintRef,idxsets...)
         code = quote
             $(esc(mac))
             nothing
