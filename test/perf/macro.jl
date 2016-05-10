@@ -4,8 +4,8 @@ using JuMP
 
 function test_linear(N)
     m = Model()
-    @defVar(m, x[1:10N,1:5N])
-    @defVar(m, y[1:N,1:N,1:N])
+    @variable(m, x[1:10N,1:5N])
+    @variable(m, y[1:N,1:N,1:N])
 
     for z in 1:10
         @constraint(m,
@@ -24,8 +24,8 @@ end
 
 function test_quad(N)
     m = Model()
-    @defVar(m, x[1:10N,1:5N])
-    @defVar(m, y[1:N,1:N,1:N])
+    @variable(m, x[1:10N,1:5N])
+    @variable(m, y[1:N,1:N,1:N])
 
     for z in 1:10
         @constraint(m,
@@ -49,8 +49,8 @@ test_linear(1)
 test_quad(1)
 for N in [20,50,100]
     println("  Running N=$(N)...")
-    N1_times = {}
-    N2_times = {}
+    N1_times = Any[]
+    N2_times = Any[]
     for iter in 1:10
         tic()
         test_linear(N)
