@@ -581,7 +581,9 @@ end
 for (mac,sym) in [(:constraints,  Symbol("@constraint")),
                   (:NLconstraints,Symbol("@NLconstraint")),
                   (:SDconstraints,Symbol("@SDconstraint")),
-                  (:variables,Symbol("@variable"))]
+                  (:variables,Symbol("@variable")),
+                  (:expressions, Symbol("@expression")),
+                  (:NLexpressions, Symbol("@NLexpression"))]
     @eval begin
         macro $mac(m, x)
             x.head == :block || error("Invalid syntax for @$mac")
