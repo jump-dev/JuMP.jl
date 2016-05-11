@@ -422,11 +422,6 @@ function build(m::Model, traits=ProblemTraits(m);
         end
     end
 
-    # Some solvers need to have an explicit "update" phase, e.g. Gurobi
-    if applicable(MathProgBase.updatemodel!, m.internalModel)
-        MathProgBase.updatemodel!(m.internalModel)
-    end
-
     # Record that we have a MPB model constructed
     m.internalModelLoaded = true
     nothing
