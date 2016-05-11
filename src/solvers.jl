@@ -208,6 +208,11 @@ function solve(m::Model; suppress_warnings=false,
         try
             objVal = MathProgBase.getobjval(m.internalModel) + m.obj.aff.constant
             colVal = MathProgBase.getsolution(m.internalModel)[1:numCols]
+            # Rescale off-diagonal terms of SDP variables
+            if traits.sdp
+                offdiagvars = offdiagsdpvars(m)
+                colVal[offdiagvars] /= sqrt(2)
+            end
             # Don't corrupt the answers if one of the above two calls fails
             m.objVal = objVal
             m.colVal = colVal
@@ -321,21 +326,13 @@ function build(m::Model, traits=ProblemTraits(m);
 
         traits.qp && error("JuMP does not support quadratic objectives for conic problems")
 
-        # If the problem is conic then use only the objective
-        # coefficients from prepProblemBounds
-        f,_,_ = prepProblemBounds(m)
-
-        # The conic MPB interface defines conic problems as
-        # always being minimization problems, so flip if needed
-        m.objSense == :Max && scale!(f, -1.0)
-
         # Obtain a fresh MPB model for the solver
         # If the problem is conic, we rebuild the problem from
         # scratch every time
         m.internalModel = MathProgBase.ConicModel(m.solver)
 
-        # Build up the LHS, RHS and cones from the JuMP Model...
-        A, b, var_cones, con_cones = conicconstraintdata(m)
+        # Build up the objective, LHS, RHS and cones from the JuMP Model...
+        f, A, b, var_cones, con_cones = conicdata(m)
         # ... and pass to the solver
         MathProgBase.loadproblem!(m.internalModel, f, A, b, con_cones, var_cones)
     else
@@ -602,7 +599,32 @@ function collect_expr!(m, tmprow, terms::AffExpr)
     tmprow
 end
 
-function conicconstraintdata(m::Model)
+# Returns a boolean vector indicating if variable in the model
+# is an off-diagonal element of an SDP matrix.
+# This is needed because we have to rescale coefficients that
+# touch these variables.
+function offdiagsdpvars(m::Model)
+    offdiagvars = falses(m.numCols)
+    for (name,idx) in m.varCones
+        if name == :SDP
+            conelen = length(idx)
+            n = round(Int,sqrt(1/4+2*conelen)-1/2)
+            @assert n*(n+1)/2 == conelen
+            r = 1
+            for i in 1:n
+                for j in i:n
+                    if i != j
+                        offdiagvars[idx[r]] = true
+                    end
+                    r += 1
+                end
+            end
+        end
+    end
+    return offdiagvars
+end
+
+function conicdata(m::Model)
     var_cones = Any[cone for cone in m.varCones]
     con_cones = Any[]
     nnz = 0
@@ -904,8 +926,10 @@ function conicconstraintdata(m::Model)
             indices = tmpnzidx[1:nnz]
             append!(I, fill(c, nnz))
             append!(J, indices)
-            append!(V, -tmpelts[indices])
-            b[c] = terms.constant
+            # scale to svec form
+            scale = (i == j) ? 1.0 : sqrt(2)
+            append!(V, -scale*tmpelts[indices])
+            b[c] = scale*terms.constant
         end
         push!(con_cones, (:SDP, sdp_start:c))
         if !Compat.issymmetric(con.terms)
@@ -928,6 +952,23 @@ function conicconstraintdata(m::Model)
 
     m.constrDualMap = constr_dual_map
 
+    # Use only the objective coefficients from prepProblemBounds
+    f,_,_ = prepProblemBounds(m)
+
+    # The conic MPB interface defines conic problems as
+    # always being minimization problems, so flip if needed
+    m.objSense == :Max && scale!(f, -1.0)
+
+    # Objective coefficients and columns of A matrix are
+    # rescaled for SDP variables
+    offdiagvars = offdiagsdpvars(m)
+    f[offdiagvars] /= sqrt(2)
+    for k in 1:length(J)
+        if offdiagvars[J[k]]
+            V[k] /= sqrt(2)
+        end
+    end
+
     A = sparse(I, J, V, numRows, m.numCols)
     # @show full(A), b
     # @show var_cones, con_cones
@@ -935,7 +976,7 @@ function conicconstraintdata(m::Model)
     # TODO: uncomment these lines when they work with Mosek
     # supported = MathProgBase.supportedcones(m.internalModel)
     # @assert (:NonNeg in supported) && (:NonPos in supported) && (:Free in supported) && (:SDP in supported)
-    A, b, var_cones, con_cones
+    f, A, b, var_cones, con_cones
 end
 
 constraintbounds(m::Model) = constraintbounds(m, ProblemTraits(m))
