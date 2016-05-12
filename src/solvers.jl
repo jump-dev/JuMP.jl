@@ -56,16 +56,20 @@ end
 function fillConicRedCosts(m::Model)
     bndidx = 0
     numlinconstr = length(m.linconstr)
+    vardual = MathProgBase.getvardual(m.internalModel)
+    if m.objSense == :Min
+        scale!(vardual, -1)
+    end
     for i in 1:m.numCols
         lower = false
         upper = false
         lb, ub = m.colLower[i], m.colUpper[i]
 
-        if lb != -Inf
+        if lb != -Inf && lb != 0.0
             lower = true
             bndidx += 1
         end
-        if ub != Inf
+        if ub != Inf && ub != 0.0
             upper = true
             bndidx += 1
         end
@@ -77,6 +81,7 @@ function fillConicRedCosts(m::Model)
         elseif lower && upper
             m.redCosts[i] = m.conicconstrDuals[numlinconstr + bndidx]+m.conicconstrDuals[numlinconstr + bndidx-1]
         end
+        m.redCosts[i] += vardual[i]
     end
 end
 
@@ -91,15 +96,13 @@ function fillConicDuals(m::Model)
     catch
         fill(NaN, numRows+numBndRows+numSOCRows)
     end
-    if m.conicconstrDuals[1] != NaN
+    if isfinite(m.conicconstrDuals[1]) # NaN could mean unavailable
         if m.objSense == :Min
             scale!(m.conicconstrDuals, -1)
         end
         m.linconstrDuals = m.conicconstrDuals[1:length(m.linconstr)]
         m.redCosts = zeros(numCols)
-        if numBndRows > 0
-            fillConicRedCosts(m)
-        end
+        fillConicRedCosts(m)
     end
 
 end
@@ -725,10 +728,10 @@ function conicdata(m::Model)
         end
 
         if !seen
-            if lb != -Inf
+            if lb != -Inf && lb != 0
                 numBounds += 1
             end
-            if ub != Inf
+            if ub != Inf && ub != 0
                 numBounds += 1
             end
             if lb == 0 && ub == 0
@@ -828,7 +831,7 @@ function conicdata(m::Model)
     bndidx = 0
     for idx in 1:m.numCols
         lb = m.colLower[idx]
-        if lb != -Inf
+        if lb != -Inf && lb != 0
             bndidx += 1
             nnz += 1
             c   += 1
@@ -840,7 +843,7 @@ function conicdata(m::Model)
             constr_dual_map[numLinRows + bndidx] = collect(c)
         end
         ub = m.colUpper[idx]
-        if ub != Inf
+        if ub != Inf && ub != 0
             bndidx += 1
             c   += 1
             push!(I, c)

@@ -528,7 +528,7 @@ function getdual(c::LinConstrRef)
     return c.m.linconstrDuals[c.idx]
 end
 
-# Returns the number of non-infinity bounds on variables
+# Returns the number of non-infinity and nonzero bounds on variables
 function getNumBndRows(m::Model)
     numBounds = 0
     for i in 1:m.numCols
@@ -543,10 +543,10 @@ function getNumBndRows(m::Model)
         end
 
         if !seen
-            if lb != -Inf
+            if lb != -Inf && lb != 0
                 numBounds += 1
             end
-            if ub != Inf
+            if ub != Inf && ub != 0
                 numBounds += 1
             end
         end
