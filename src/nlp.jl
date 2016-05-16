@@ -1068,12 +1068,18 @@ function tapeToExpr(k, nd::Vector{NodeData}, adj, const_values, parameter_values
         op = nod.index
         opsymbol = comparison_operators[op]
         children_idx = nzrange(adj,k)
-        ex = Expr(:comparison)
-        for cidx in children_idx
-            push!(ex.args, tapeToExpr(children_arr[cidx], nd, adj, const_values, parameter_values, subexpressions))
-            push!(ex.args, opsymbol)
+        if length(children_idx) > 2 || VERSION < v"0.5-"
+            ex = Expr(:comparison)
+            for cidx in children_idx
+                push!(ex.args, tapeToExpr(children_arr[cidx], nd, adj, const_values, parameter_values, subexpressions))
+                push!(ex.args, opsymbol)
+            end
+            pop!(ex.args)
+        else
+            ex = Expr(:call, opsymbol)
+            push!(ex.args, tapeToExpr(children_arr[children_idx[1]], nd, adj, const_values, parameter_values, subexpressions))
+            push!(ex.args, tapeToExpr(children_arr[children_idx[2]], nd, adj, const_values, parameter_values, subexpressions))
         end
-        pop!(ex.args)
         return ex
     elseif nod.nodetype == LOGIC
         op = nod.index

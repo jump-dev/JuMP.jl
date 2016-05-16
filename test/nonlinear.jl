@@ -552,6 +552,15 @@ facts("[nonlinear] Expression graph for linear problem") do
     @fact MathProgBase.obj_expr(d) --> :(+(1.0 * x[1]))
 end
 
+facts("[nonlinear] Expression graph for ifelse") do
+    m = Model()
+    @variable(m, x, start = 2)
+    @NLobjective(m, Min, ifelse( x <= 1, x^2, x) )
+    d = JuMP.NLPEvaluator(m)
+    MathProgBase.initialize(d, [:ExprGraph])
+    @fact MathProgBase.obj_expr(d) --> :(ifelse( x[1] <= 1, x[1]^2, x[1]))
+end
+
 facts("[nonlinear] Hessians through MPB") do
     # Issue 435
     m = Model()
