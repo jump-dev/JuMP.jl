@@ -306,10 +306,8 @@ context("With solver $(typeof(nlp_solver)), simplify = $simplify") do
     @fact getobjectivevalue(m) --> roughly(1+4/sqrt(3), 1e-6)
     @fact getvalue(x) + getvalue(y) --> roughly(-1/3, 1e-3)
     @fact getvalue(quadexpr) --> roughly(1, 1e-5)
-    @NLexpression(quadexpr2, x + x^2 + x*y + y^2)
+    @NLexpression(m, quadexpr2, x + x^2 + x*y + y^2)
     @fact getvalue(quadexpr2) --> roughly(1, 1e-5)
-    quadexpr3 = @NLexpression(x + x^2 + x*y + y^2)
-    @fact getvalue(quadexpr3) --> roughly(1, 1e-5)
 end; end; end; end
 
 

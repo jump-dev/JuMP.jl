@@ -10,8 +10,8 @@
 # deprecated.jl
 # List of deprecated macros and functions, mostly from the "big renaming"
 macro deprecate_macro(old,new)
-    oldmac = symbol(string("@",old))
-    newmac = symbol(string("@",new))
+    oldmac = Symbol(string("@",old))
+    newmac = Symbol(string("@",new))
     s = string(oldmac," is deprecated, use ", newmac, " instead.")
     if VERSION > v"0.5-"
         # backtraces are ok on 0.5

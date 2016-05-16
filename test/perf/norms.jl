@@ -2,7 +2,7 @@ using JuMP
 
 function norm_stress1(N)
     m = Model()
-    @defVar(m, x[1:N])
+    @variable(m, x[1:N])
     for i in 1:N
         @constraint(m, norm2{x[j],j=1:i} <= i)
     end

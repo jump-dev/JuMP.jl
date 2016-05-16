@@ -9,7 +9,7 @@ run(`$(ENV["_"]) -e """
 using JuMP
 m = Model()
 N = 100
-@defVar(m, x[1:N])
+@variable(m, x[1:N])
 @constraint(m, sum{i*x[i],i=1:N} >= N)
 @time JuMP.aff_str(JuMP.REPLMode, m.linconstr[end].terms)
 @time JuMP.model_str(JuMP.REPLMode, m)"""
@@ -23,7 +23,7 @@ run(`$(ENV["_"]) -e """
 using JuMP
 m = Model()
 N = 100
-@defVar(m, x[1:N])
+@variable(m, x[1:N])
 @constraint(m, sum{i*x[i],i=1:N} >= N)
 @time JuMP.model_str(JuMP.REPLMode, m)"""
 `)
@@ -36,7 +36,7 @@ run(`$(ENV["_"]) -e """
 using JuMP
 m = Model()
 N = 10000
-@defVar(m, x[1:N])
+@variable(m, x[1:N])
 @constraint(m, sum{i*x[i],i=1:N} >= N)
 @time sprint(print, m)"""
 `)
@@ -49,11 +49,11 @@ run(`$(ENV["_"]) -e """
 using JuMP
 m = Model()
 N = 10
-@defVar(m, x1[1:N])
-@defVar(m, x2[1:N,f=1:N])
-@defVar(m, x3[1:N,f=1:2:N])
-@defVar(m, x4[[:a,:b,:c]])
-@defVar(m, x5[[:a,:b,:c],[:d,"e",4]])
+@variable(m, x1[1:N])
+@variable(m, x2[1:N,f=1:N])
+@variable(m, x3[1:N,f=1:2:N])
+@variable(m, x4[[:a,:b,:c]])
+@variable(m, x5[[:a,:b,:c],[:d,"e",4]])
 @constraint(m,
     sum{i*x1[i],i=1:N} +
     sum{i*f*x2[i,f],i=1:N,f=1:N} + 

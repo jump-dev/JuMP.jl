@@ -486,6 +486,31 @@ facts("[macros] @variables and @constraints") do
     @fact m.quadconstr[1].sense --> :(<=)
 end
 
+facts("[macros] @expressions and @NLexpressions") do
+    m = Model()
+    @variable(m, x)
+
+    @expressions(m, begin
+        myex[i=1:2], x + i
+        myex2,       x + 3
+    end)
+    setvalue(x, 1)
+    @fact getvalue(myex[1]) --> 2
+    @fact getvalue(myex[2]) --> 3
+    @fact getvalue(myex2)   --> 4
+    @fact_throws getvalue(myex[3])
+
+    @NLexpressions(m, begin
+        nlex,         x^2
+        nlex2[i=1:2], x^i + sqrt(x)
+    end)
+    setvalue(x, 2)
+    @fact getvalue(nlex) --> 4
+    @fact getvalue(nlex2[1]) --> 2^1 + sqrt(2)
+    @fact getvalue(nlex2[2]) --> 2^2 + sqrt(2)
+    @fact_throws getvalue(nlex2[3])
+end
+
 facts("[macros] No bare symbols in constraint macros") do
     m = Model()
     @variable(m, x)

@@ -1,6 +1,11 @@
 JuMP release notes
 ==================
 
+Version 0.13.2 (May 16, 2016)
+-----------------------------
+
+  * Compatibility update for MathProgBase
+
 Version 0.13.1 (May 3, 2016)
 ----------------------------
 

@@ -49,7 +49,7 @@ export
 # Macros and support functions
     @LinearConstraint, @LinearConstraints, @QuadConstraint, @QuadConstraints,
     @SOCConstraint, @SOCConstraints,
-    @expression, @NLexpression,
+    @expression, @expressions, @NLexpression, @NLexpressions,
     @variable, @variables, @constraint, @constraints,
     @NLconstraint, @NLconstraints,
     @SDconstraint, @SDconstraints,
