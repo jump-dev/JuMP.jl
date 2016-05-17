@@ -467,6 +467,26 @@ context("With solver $(typeof(nlp_solver))") do
     @fact getdual(cons3) --> roughly(0.0714286, 1e-6)
 end; end; end
 
+facts("[nonlinear] Test changing objectives") do
+for nlp_solver in nlp_solvers
+context("With solver $(typeof(nlp_solver))") do
+    m = Model(solver=nlp_solver)
+    @variable(m, x >= 0)
+    @variable(m, y >= 0)
+    @objective(m, Max, x+y)
+    @NLconstraint(m, x+2y <= 1)
+    @fact solve(m) --> :Optimal
+    @fact getvalue(x) --> roughly(1.0,1e-4)
+    @fact getvalue(y) --> roughly(0.0,1e-4)
+    @fact getobjectivevalue(m) --> roughly(1.0,1e-4)
+
+    @objective(m, Max, 2x+y)
+    @fact solve(m) --> :Optimal
+    @fact getvalue(x) --> roughly(1.0,1e-4)
+    @fact getvalue(y) --> roughly(0.0,1e-4)
+    @fact getobjectivevalue(m) --> roughly(2.0,1e-4)
+end; end; end
+
 facts("[nonlinear] Test Hessian chunking code") do
 for nlp_solver in nlp_solvers
 context("With solver $(typeof(nlp_solver))") do
