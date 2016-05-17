@@ -1068,7 +1068,7 @@ function tapeToExpr(k, nd::Vector{NodeData}, adj, const_values, parameter_values
         op = nod.index
         opsymbol = comparison_operators[op]
         children_idx = nzrange(adj,k)
-        if length(children_idx) > 2 || VERSION < v"0.5-"
+        if length(children_idx) > 2 || VERSION < v"0.5.0-dev+3231"
             ex = Expr(:comparison)
             for cidx in children_idx
                 push!(ex.args, tapeToExpr(children_arr[cidx], nd, adj, const_values, parameter_values, subexpressions))
@@ -1115,7 +1115,7 @@ function MathProgBase.constr_expr(d::NLPEvaluator,i::Integer)
         if sense(constr) == :range
             return Expr(:comparison, constr.lb, :(<=), ex, :(<=), constr.ub)
         else
-            if VERSION > v"0.5-"
+            if VERSION >= v"0.5.0-dev+3231"
                 return Expr(:call, sense(constr), ex, rhs(constr))
             else
                 return Expr(:comparison, ex, sense(constr), rhs(constr))
@@ -1124,7 +1124,7 @@ function MathProgBase.constr_expr(d::NLPEvaluator,i::Integer)
     elseif i > nlin && i <= nlin + nquad
         i -= nlin
         qconstr = d.m.quadconstr[i]
-        if VERSION > v"0.5-"
+        if VERSION >= v"0.5.0-dev+3231"
             return Expr(:call, qconstr.sense, quadToExpr(qconstr.terms, true), 0)
         else
             return Expr(:comparison, quadToExpr(qconstr.terms, true), qconstr.sense, 0)
@@ -1139,7 +1139,7 @@ function MathProgBase.constr_expr(d::NLPEvaluator,i::Integer)
         if sense(constr) == :range
             return Expr(:comparison, constr.lb, :(<=), julia_expr, :(<=), constr.ub)
         else
-            if VERSION > v"0.5-"
+            if VERSION >= v"0.5.0-dev+3231"
                 return Expr(:call, sense(constr), julia_expr, rhs(constr))
             else
                 return Expr(:comparison, julia_expr, sense(constr), rhs(constr))

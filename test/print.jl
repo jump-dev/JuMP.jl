@@ -573,7 +573,7 @@ facts("[print] User-created Array{Variable}") do
     io_test(REPLMode,   v, "[x,y,x]")
     io_test(IJuliaMode, v, "[x,y,x]")
 
-    if VERSION > v"0.5-"
+    if VERSION >= v"0.5.0-dev+3642"
         io_test(REPLMode,   A, """
 2×2 Array{JuMP.Variable,2}:
  x  y

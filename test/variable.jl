@@ -92,19 +92,15 @@ facts("[variable] repeated elements in index set (issue #199)") do
     @fact MathProgBase.numvar(repeatmod) --> 3
 end
 
-# Test conditions in variable definition
-if VERSION >= v"0.4-"
+facts("[variable] condition in indexing") do
     fa = repl[:for_all]
     inset, dots = repl[:in], repl[:dots]
-
-    facts("[variable] condition in indexing") do
-        condmod = Model()
-        @variable(condmod, x[i=1:10; iseven(i)])
-        @variable(condmod, y[j=1:10,k=3:2:9; isodd(j+k) && k <= 8])
-        @fact length(x.tupledict) --> 5
-        @fact length(y.tupledict) --> 15
-        @fact string(condmod) --> "Min 0\nSubject to\n x[i] free $fa i $inset {1,2,$dots,9,10} s.t. iseven(i)\n y[j,k] free $fa j $inset {1,2,$dots,9,10}, k $inset {3,5,7,9} s.t. isodd(j + k) and k <= 8\n"
-    end
+    condmod = Model()
+    @variable(condmod, x[i=1:10; iseven(i)])
+    @variable(condmod, y[j=1:10,k=3:2:9; isodd(j+k) && k <= 8])
+    @fact length(x.tupledict) --> 5
+    @fact length(y.tupledict) --> 15
+    @fact string(condmod) --> "Min 0\nSubject to\n x[i] free $fa i $inset {1,2,$dots,9,10} s.t. iseven(i)\n y[j,k] free $fa j $inset {1,2,$dots,9,10}, k $inset {3,5,7,9} s.t. isodd(j + k) and k <= 8\n"
 end
 
 facts("[variable] @variable returning Array{Variable}") do
@@ -155,7 +151,7 @@ function sliceof(x, I, J, K)
         ii += 1
         jj = 1
     end
-    if VERSION >= v"0.5-"
+    if VERSION >= v"0.5.0-dev+1195"
         idx = [length(I)==1, length(J)==1, length(K)==1]
     else
         idx = [false, false, length(K)==1]
