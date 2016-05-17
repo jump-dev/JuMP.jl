@@ -151,7 +151,7 @@ function sliceof(x, I, J, K)
         ii += 1
         jj = 1
     end
-    if VERSION >= v"0.5-"
+    if VERSION >= v"0.5.0-dev+1195"
         idx = [length(I)==1, length(J)==1, length(K)==1]
     else
         idx = [false, false, length(K)==1]

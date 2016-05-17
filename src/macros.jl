@@ -17,9 +17,6 @@ function comparison_to_call(ex)
     end
 end
 
-# we don't support older versions of 0.5 due to parsing changes
-v"0.5-" < VERSION < v"0.5.0-dev+3231" && error("Current Julia version is a prerelease of 0.5 which is no longer supported by JuMP. Please update to a newer build of 0.5.")
-
 include("parseExpr_staged.jl")
 
 ###############################################################################

@@ -75,7 +75,7 @@ facts("[model] Test printing a model") do
     #####################################################################
     # Test LP writer
     writeLP(modA, modPath * "A.lp")
-    modALP = if VERSION >= v"0.5-"
+    modALP = if VERSION >= v"0.5.0-dev+1866" # leading zero, base Julia PR #14377
         ASCIIString[
         "Maximize",
         "obj: 0.16666666666666666 VAR1 + 0.16666666666666666 VAR2 + 1 VAR3 + 1 VAR4",
@@ -127,7 +127,7 @@ facts("[model] Test printing a model") do
     #####################################################################
     # Test MPS writer
     writeMPS(modA, modPath * "A.mps")
-    if VERSION >= v"0.5-"
+    if VERSION >= v"0.5.0-dev+1866" # leading zero, base Julia PR #14377
         modAMPS = ASCIIString[
         "NAME   JuMPModel",
         "ROWS",
