@@ -94,6 +94,11 @@ end
 
 setobjective(m::Model, sense::Symbol, x::Variable) = setobjective(m, sense, convert(AffExpr,x))
 function setobjective(m::Model, sense::Symbol, a::AffExpr)
+    if isa(m.internalModel, MathProgBase.AbstractNonlinearModel)
+        # Give the correct answer when changing objectives in an NLP.
+        # A better approach would be to update and reuse the evaluator
+        m.internalModelLoaded = false
+    end
     setobjectivesense(m, sense)
     m.obj = convert(QuadExpr,a)
 end
