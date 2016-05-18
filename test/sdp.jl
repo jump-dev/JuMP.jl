@@ -163,6 +163,34 @@ context("With solver $(typeof(solver))") do
     @fact getobjectivevalue(m) --> roughly(1.293, 1e-2)
 end; end; end
 
+facts("[sdp] Trivial symmetry constraints are removed (#766)") do
+for solver in sdp_solvers
+context("With solver $(typeof(solver))") do
+    q = 2
+    m = 3
+    angles1 = linspace(3*pi/4, pi, m)
+    angles2 = linspace(0, -pi/2, m)
+    V = [3.*cos(angles1)' 1.5.*cos(angles2)';
+         3.*sin(angles1)' 1.5.*sin(angles2)']
+    p = 2*m
+    n = 100
+
+    mod = Model(solver=solver)
+    @variable(mod, x[j=1:p] >= 0, Int)
+    @variable(mod, u[i=1:q] >= 0)
+    @objective(mod, Min, sum(u))
+    @constraint(mod, sum(x) <= n)
+    for i=1:q
+        @SDconstraint(mod, [V*diagm(x./n)*V' eye(q)[:,i] ; eye(q)[i,:] u[i]] >= 0)
+    end
+    f, A, b, var_cones, con_cones = JuMP.conicdata(mod)
+    @fact length(f) --> 8
+    @fact size(A) --> (23,8)
+    @fact length(b) --> 23
+    @fact var_cones --> [(:NonNeg,[1,2,3,4,5,6,7,8])]
+    @fact con_cones --> [(:NonNeg,[1]),(:NonPos,[2,3,4,5,6,7,8,9]),(:SDP,10:15),(:Zero,16:16),(:SDP,17:22),(:Zero,23:23)]
+end; end; end
+
 # Adapt SDP atom tests from Convex.jl:
 #   https://github.com/JuliaOpt/Convex.jl/blob/master/test/test_sdp.jl
 # facts("[sdp] Test problem #1") do
