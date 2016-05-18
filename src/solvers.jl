@@ -915,6 +915,7 @@ function conicdata(m::Model)
     end
     @assert c == numLinRows + numBounds + numQuadRows + numSOCRows
 
+    numDroppedSym = 0
     for con in m.sdpconstr
         sdp_start = c + 1
         n = size(con.terms,1)
@@ -936,9 +937,14 @@ function conicdata(m::Model)
             sym_start = c + 1
             # add linear symmetry constraints
             for i in 1:n, j in 1:(i-1)
-                c += 1
                 collect_expr!(m, tmprow, con.terms[i,j] - con.terms[j,i])
                 nnz = tmprow.nnz
+                # if the symmetry-enforcing row is empty, just drop it
+                if nnz == 0
+                    numDroppedSym += 1
+                    continue
+                end
+                c += 1
                 indices = tmpnzidx[1:nnz]
                 append!(I, fill(c, nnz))
                 append!(J, indices)
@@ -948,6 +954,8 @@ function conicdata(m::Model)
             push!(con_cones, (:Zero, sym_start:c))
         end
     end
+    numRows -= numDroppedSym
+    resize!(b, numRows)
     @assert c == numRows
 
     m.constrDualMap = constr_dual_map
