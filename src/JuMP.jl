@@ -729,10 +729,10 @@ include("macros.jl")
 include("solvers.jl")
 # Callbacks - lazy, cuts, ...
 include("callbacks.jl")
-# Pretty-printing of JuMP-defined types.
-include("print.jl")
 # Nonlinear-specific code
 include("nlp.jl")
+# Pretty-printing of JuMP-defined types.
+include("print.jl")
 # Deprecations
 include("deprecated.jl")
 
