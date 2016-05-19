@@ -1060,9 +1060,8 @@ macro NLconstraint(m, x, extra...)
     looped = getloopedcode(c, code, condition, idxvars, idxsets, idxpairs, :(ConstraintRef{Model,NonlinearConstraint}))
     code = quote
         initNLP($m)
-        $looped
         $m.internalModelLoaded = false
-        nothing
+        $looped
     end
 
     return assert_validmodel(m, code)

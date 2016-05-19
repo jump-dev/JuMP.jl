@@ -439,7 +439,7 @@ context("With solver $(typeof(nlp_solver))") do
     @NLobjective(modA, Max, ((x + y)/2.0 + 3.0)/3.0 + z + r[3])
     @constraint(modA, cons1, x+y >= 2)
     @constraint(modA, cons2, sum{r[i],i=3:5} <= (2 - x)/2.0)
-    @NLconstraint(modA, cons3, 7.0*y <= z + r[6]/1.9)
+    cons3 = @NLconstraint(modA, 7.0*y <= z + r[6]/1.9)
 
     # Solution
     @fact solve(modA) --> :Optimal
