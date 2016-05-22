@@ -160,8 +160,23 @@ const sensemap = Dict(:(<=) => '<', :(==) => '=', :(>=) => '>')
 ## Lazy constraints
 export @lazyconstraint
 
-macro lazyconstraint(cbdata, x)
-    cbdata = esc(cbdata)
+macro lazyconstraint(args...)
+    cbdata = esc(args[1])
+    x = args[2]
+    extra = vcat(args[3:end]...)
+    # separate out keyword arguments
+    kwargs = filter(ex->isexpr(ex,:kw), extra) # filtering expressions corresponding to kw args specs
+    extra = filter(ex->!isexpr(ex,:kw), extra) # others
+
+    localcut_val = false # by default, the lazy constraint is global
+    for ex in kwargs
+        kwarg = ex.args[1]
+        if kwarg == :localcut
+            localcut_val = esc(ex.args[2])   # excepted if otherwise specified ...
+        else error("in @lazyconstraint($(join(args,','))), invalid keyword argument: $(kwarg)")
+        end
+    end
+
     if VERSION < v"0.5.0-dev+3231"
         x = comparison_to_call(x)
     end
@@ -174,14 +189,14 @@ macro lazyconstraint(cbdata, x)
             aff = zero(AffExpr)
             $parsecode
             constr = constructconstraint!($newaff, $(quot(sense)))
-            addlazyconstraint($cbdata, constr)
+            addlazyconstraint($cbdata, constr, localcut=$localcut_val)
         end
     else
         error("Syntax error in @lazyconstraint, expected one-sided comparison.")
     end
 end
 
-function addlazyconstraint(cbdata::MathProgBase.MathProgCallbackData, constr::LinearConstraint)
+function addlazyconstraint(cbdata::MathProgBase.MathProgCallbackData, constr::LinearConstraint; localcut::Bool=false)
     if length(constr.terms.vars) == 0
         MathProgBase.cbaddlazy!(cbdata, Cint[], Float64[], sensemap[sense(constr)], rhs(constr))
         return
@@ -189,17 +204,38 @@ function addlazyconstraint(cbdata::MathProgBase.MathProgCallbackData, constr::Li
     assert_isfinite(constr.terms)
     m::Model = constr.terms.vars[1].m
     indices, coeffs = merge_duplicates(Cint, constr.terms, m.indexedVector, m)
-    MathProgBase.cbaddlazy!(cbdata, indices, coeffs, sensemap[sense(constr)], rhs(constr))
+    if localcut
+        MathProgBase.cbaddlazylocal!(cbdata, indices, coeffs, sensemap[sense(constr)], rhs(constr))
+    else
+        MathProgBase.cbaddlazy!(cbdata, indices, coeffs, sensemap[sense(constr)], rhs(constr))
+    end
+
 end
 
-addlazyconstraint(cbdata::MathProgBase.MathProgCallbackData,constr::QuadConstraint) = error("Quadratic lazy constraints are not supported.")
+addlazyconstraint(cbdata::MathProgBase.MathProgCallbackData,constr::QuadConstraint; localcut::Bool=false) = error("Quadratic lazy constraints are not supported.")
 
 ## User cuts
 export addusercut
 export @usercut
 
-macro usercut(cbdata, x)
-    cbdata = esc(cbdata)
+macro usercut(args...)
+    cbdata = esc(args[1])
+    x = args[2]
+    extra = vcat(args[3:end]...)
+    # separate out keyword arguments
+    kwargs = filter(ex->isexpr(ex,:kw), extra) # filtering expressions corresponding to kw args specs
+    extra = filter(ex->!isexpr(ex,:kw), extra) # others
+
+    localcut_val = false # by default, the user cut is global
+    for ex in kwargs
+        kwarg = ex.args[1]
+        if kwarg == :localcut
+            localcut_val = esc(ex.args[2])   # excepted if otherwise specified ...
+        else error("in @usercut($(join(args,','))), invalid keyword argument: $(kwarg)")
+        end
+    end
+
+    #cbdata = esc(cbdata)
     if VERSION < v"0.5.0-dev+3231"
         x = comparison_to_call(x)
     end
@@ -212,14 +248,14 @@ macro usercut(cbdata, x)
             aff = zero(AffExpr)
             $parsecode
             constr = constructconstraint!($newaff, $(quot(sense)))
-            addusercut($cbdata, constr)
+            addusercut($cbdata, constr, localcut=$localcut_val)
         end
     else
         error("Syntax error in @usercut, expected one-sided comparison.")
     end
 end
 
-function addusercut(cbdata::MathProgBase.MathProgCallbackData, constr::LinearConstraint)
+function addusercut(cbdata::MathProgBase.MathProgCallbackData, constr::LinearConstraint; localcut::Bool=false)
     if length(constr.terms.vars) == 0
         MathProgBase.cbaddcut!(cbdata, Cint[], Float64[], sensemap[sense(constr)], rhs(constr))
         return
@@ -227,7 +263,11 @@ function addusercut(cbdata::MathProgBase.MathProgCallbackData, constr::LinearCon
     assert_isfinite(constr.terms)
     m::Model = constr.terms.vars[1].m
     indices, coeffs = merge_duplicates(Cint, constr.terms, m.indexedVector, m)
-    MathProgBase.cbaddcut!(cbdata, indices, coeffs, sensemap[sense(constr)], rhs(constr))
+    if localcut
+        MathProgBase.cbaddcutlocal!(cbdata, indices, coeffs, sensemap[sense(constr)], rhs(constr))
+    else
+        MathProgBase.cbaddcut!(cbdata, indices, coeffs, sensemap[sense(constr)], rhs(constr))
+    end
 end
 
 ## User heuristic

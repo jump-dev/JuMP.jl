@@ -32,6 +32,8 @@ to the callback management code inside JuMP. Next you will do whatever
 analysis of the solution you need to inside your function to generate the new
 constraint before adding it to the model with
 ``@lazyconstraint(cb, myconstraint)``.
+There is an optional keyword option ``localcut`` to ``@lazyconstraint``, which indicates if the lazy constraint that will be added will only apply at the current node and the tree rooted at that node.
+For example, ``@lazyconstraint(cb, myconstraint, localcut=true)``. By default, ``localcut`` is set to ``false``.
 Finally we notify JuMP that this function should be used for lazy constraint
 generation using the ``addlazycallback(m, myLazyConGenerator)`` function
 before we call ``solve(m)``.
@@ -131,8 +133,10 @@ single argument, e.g. ``function myUserCutGenerator(cb)``, where cb is a referen
 to the callback management code inside JuMP. Next you will do whatever
 analysis of the solution you need to inside your function to generate the new
 constraint before adding it to the model with the JuMP macro
-``@addusercut(cb, myconstraint)`` (same limitations as addConstraint).
-Finally we notify JuMP that this function should be used for lazy constraint
+``@usercut(cb, myconstraint)`` (same limitations as addConstraint).
+There is an optional keyword option ``localcut`` to ``@usercut``, which indicates if the user cut that will be added will only apply at the current node and the tree rooted at that node.
+For example, ``@usercut(cb, myconstraint, localcut=true)``. By default, ``localcut`` is set to ``false``.
+Finally we notify JuMP that this function should be used for user cut
 generation using the ``addcutcallback(m, myUserCutGenerator)`` function
 before we call ``solve(m)``.
 
