@@ -42,6 +42,38 @@ context("With solver $(typeof(lazysolver))") do
     @fact getvalue(y) --> roughly(2.0, 1e-6)
 end; end; end
 
+facts("[callback] Test vectorized lazy constraints") do
+for lazysolver in lazy_solvers
+context("With solver $(typeof(lazysolver))") do
+    entered = [false,false]
+
+    mod = Model(solver=lazysolver)
+    @variable(mod, 0 <= x <= 2, Int)
+    @variable(mod, 0 <= y <= 2, Int)
+    @objective(mod, Max, y + 0.5x)
+    function corners(cb)
+        x_val = getvalue(x)
+        y_val = getvalue(y)
+        TOL = 1e-6
+        # Check top right
+        if y_val + x_val > 3 + TOL
+            A = [1.0 1.0
+                 1.0 0.5]
+            b = [3, 4]
+            @lazyconstraint(cb, A*[x,y] .<= b)
+        end
+        entered[1] = true
+        @fact_throws ErrorException @variable(cb, z)
+        @fact_throws ErrorException @lazyconstraint(cb, x^2 <= 1)
+    end
+    addlazycallback(mod, corners)
+    addlazycallback(mod, cb -> (entered[2] = true))
+    @fact solve(mod) --> :Optimal
+    @fact entered --> [true,true]
+    @fact getvalue(x) --> roughly(1.0, 1e-6)
+    @fact getvalue(y) --> roughly(2.0, 1e-6)
+end; end; end
+
 facts("[callback] Test local lazy constraints") do
 for lazylocalsolver in lazylocal_solvers
 context("With solver $(typeof(lazylocalsolver))") do

@@ -184,12 +184,23 @@ macro lazyconstraint(args...)
         lhs = :($(x.args[2]) - $(x.args[3])) # move everything to the lhs
         newaff, parsecode = parseExprToplevel(lhs, :aff)
         sense, vectorized = _canonicalize_sense(x.args[1])
-        vectorized && error("Cannot add vectorized constraint in lazy callback")
-        quote
+        code = quote
             aff = zero(AffExpr)
             $parsecode
             constr = constructconstraint!($newaff, $(quot(sense)))
-            addlazyconstraint($cbdata, constr, localcut=$localcut_val)
+        end
+        if vectorized
+            return quote
+                $code
+                for con in constr
+                    addlazyconstraint($cbdata, con, localcut=$localcut_val)
+                end
+            end
+        else
+            return quote
+                $code
+                addlazyconstraint($cbdata, constr, localcut=$localcut_val)
+            end
         end
     else
         error("Syntax error in @lazyconstraint, expected one-sided comparison.")
@@ -209,7 +220,6 @@ function addlazyconstraint(cbdata::MathProgBase.MathProgCallbackData, constr::Li
     else
         MathProgBase.cbaddlazy!(cbdata, indices, coeffs, sensemap[sense(constr)], rhs(constr))
     end
-
 end
 
 addlazyconstraint(cbdata::MathProgBase.MathProgCallbackData,constr::QuadConstraint; localcut::Bool=false) = error("Quadratic lazy constraints are not supported.")
