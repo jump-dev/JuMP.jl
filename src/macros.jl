@@ -556,7 +556,7 @@ for (mac,sym) in [(:LinearConstraints, Symbol("@LinearConstraint")),
                   (:SOCConstraints,    Symbol("@SOCConstraint"))]
     @eval begin
         macro $mac(x)
-            x.head == :block || error("Invalid syntax for @$mac")
+            x.head == :block || error(string("Invalid syntax for ", $(quot(sym))))
             @assert x.args[1].head == :line
             code = Expr(:vect)
             for it in x.args
@@ -565,7 +565,15 @@ for (mac,sym) in [(:LinearConstraints, Symbol("@LinearConstraint")),
                 elseif it.head == :comparison # regular constraint
                     push!(code.args, Expr(:macrocall, $sym, esc(it)))
                 elseif it.head == :tuple # constraint ref
-                    error("@$mac does not currently support groups of constraints")
+                    if all([isexpr(arg,:comparison) for arg in it.args]...)
+                        # the user probably had trailing commas at end of lines, e.g.
+                        # @LinearConstraints(m, begin
+                        #     x <= 1,
+                        #     x >= 1
+                        # end)
+                        error(string("Invalid syntax in ", $(quot(sym)), ". Do you have commas at the end of a line specifying a constraint?"))
+                    end
+                    error(string($(quot(sym)), " does not currently support the two argument syntax for specifying groups of constraints in one line."))
                 else
                     error("Unexpected constraint expression $it")
                 end
