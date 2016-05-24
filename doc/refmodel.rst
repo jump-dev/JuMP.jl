@@ -54,6 +54,7 @@ Methods
 * ``JuMP.build(m::Model)`` - builds the model in memory at the MathProgBase level without optimizing.
 * ``setsolver(m::Model,s::AbstractMathProgSolver)`` - changes the solver which will be used for the next call to ``solve()``, discarding the current internal model if present.
 * ``getvariable(m::Model,name::Symbol)`` - returns the variable or group of variables of the given name which were added to the model with ``@variable``. Throws an error if multiple variables were created with the same name.
+* ``getconstraint(m::Model,name::Symbol)`` - returns the constraint or group of constraint of the given name which were added to the model with ``@constraint`` or ``@NLconstraint``. Throws an error if multiple variables were created with the same name.
 
 **Objective**
 

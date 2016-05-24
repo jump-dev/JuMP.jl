@@ -425,6 +425,7 @@ macro constraint(args...)
     end
     return assert_validmodel(m, quote
         $(getloopedcode(variable, code, condition, idxvars, idxsets, idxpairs, :ConstraintRef))
+        registercon($m, $quotvarname, $variable)
         $(anonvar ? variable : :($escvarname = $variable))
     end)
 end
@@ -1058,6 +1059,7 @@ macro NLconstraint(m, x, extra...)
 
     anonvar = isexpr(c, :vect) || isexpr(c, :vcat)
     variable = gensym()
+    quotvarname = anonvar ? :(:__anon__) : quot(getname(c))
     escvarname  = anonvar ? variable : esc(getname(c))
 
     if VERSION < v"0.5.0-dev+3231"
@@ -1117,6 +1119,7 @@ macro NLconstraint(m, x, extra...)
         initNLP($m)
         $m.internalModelLoaded = false
         $looped
+        registercon($m, $quotvarname, $variable)
         $(anonvar ? variable : :($escvarname = $variable))
     end)
 end
