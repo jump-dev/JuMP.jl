@@ -275,6 +275,8 @@ constructconstraint!(aff::Variable, lb::Real, ub::Real) = constructconstraint!(c
 
 constructconstraint!(q::QuadExpr, lb, ub) = error("Two-sided quadratic constraints not supported. (Try @NLconstraint instead.)")
 
+constraint_error(args, str) = error("In @constraint($(join(args,","))): ", str)
+
 macro constraint(args...)
     # Pick out keyword arguments
     if isexpr(args[1],:parameters) # these come if using a semicolon
@@ -288,9 +290,9 @@ macro constraint(args...)
 
     if length(args) < 2
         if length(kwargs.args) > 0
-            error("in @constraint($(join(args,','))) with keyword arguments: ($(join(kwargs.args,','))): not enough arguments")
+            constraint_error(args, "Not enough positional arguments")
         else
-            error("in @constraint($(join(args,','))): not enough arguments")
+            constraint_error(args, "Not enough arguments")
         end
     end
     m = args[1]
@@ -301,17 +303,17 @@ macro constraint(args...)
     # Two formats:
     # - @constraint(m, a*x <= 5)
     # - @constraint(m, myref[a=1:5], a*x <= 5)
-    length(extra) > 1 && error("in @constraint: too many arguments.")
+    length(extra) > 1 && constraint_error(args, "Too many arguments.")
     # Canonicalize the arguments
     c = length(extra) == 1 ? x        : nothing
     x = length(extra) == 1 ? extra[1] : x
 
     if isa(x, Symbol)
-        error("in @constraint($(join(args,','))): Incomplete constraint specification $x. Are you missing a comparison (<=, >=, or ==)?")
+        constraint_error(args, "Incomplete constraint specification $x. Are you missing a comparison (<=, >=, or ==)?")
     end
 
     (x.head == :block) &&
-        error("Code block passed as constraint. Perhaps you meant to use @constraints instead?")
+        constraint_error(args, "Code block passed as constraint. Perhaps you meant to use @constraints instead?")
     if VERSION < v"0.5.0-dev+3231"
         x = comparison_to_call(x)
     end
@@ -343,9 +345,9 @@ macro constraint(args...)
         (lsign,lvectorized) = _canonicalize_sense(x.args[2])
         (rsign,rvectorized) = _canonicalize_sense(x.args[4])
         if (lsign != :(<=)) || (rsign != :(<=))
-            error("in @constraint ($(string(x))): only ranged rows of the form lb <= expr <= ub are supported.")
+            constraint_error(args, "Only ranged rows of the form lb <= expr <= ub are supported.")
         end
-        ((vectorized = lvectorized) == rvectorized) || error("in @constraint ($(string(x))): signs are inconsistently vectorized")
+        ((vectorized = lvectorized) == rvectorized) || constraint_error("Signs are inconsistently vectorized")
         addconstr = (lvectorized ? :addVectorizedConstraint : :addconstraint)
         x_str = string(x)
         lb_str = string(x.args[1])
@@ -380,12 +382,12 @@ macro constraint(args...)
                 try
                     lbval = convert(CoefType, $newlb)
                 catch
-                    error(string("in @constraint (",$x_str,"): expected ",$lb_str," to be a ", CoefType, "."))
+                    constraint_error(args, string("Expected ",$lb_str," to be a ", CoefType, "."))
                 end
                 try
                     ubval = convert(CoefType, $newub)
                 catch
-                    error(string("in @constraint (",$x_str,"): expected ",$ub_str," to be a ", CoefType, "."))
+                    constraint_error(args, string("Expected ",$ub_str," to be a ", CoefType, "."))
                 end
             end
         end
@@ -395,9 +397,9 @@ macro constraint(args...)
         end
     else
         # Unknown
-        error("in @constraint ($(string(x))): constraints must be in one of the following forms:\n" *
+        constraint_error(args, string("Constraints must be in one of the following forms:\n" *
               "       expr1 <= expr2\n" * "       expr1 >= expr2\n" *
-              "       expr1 == expr2\n" * "       lb <= expr <= ub")
+              "       expr1 == expr2\n" * "       lb <= expr <= ub"))
     end
     return assert_validmodel(m, getloopedcode(c, code, condition, idxvars, idxsets, idxpairs, :ConstraintRef))
 end
@@ -729,7 +731,7 @@ esc_nonconstant(x) = esc(x)
 
 const EMPTYSTRING = utf8("")
 
-@noinline variable_error(args, str) = error("In @variable($(join(args,","))): ", str)
+variable_error(args, str) = error("In @variable($(join(args,","))): ", str)
 
 macro variable(args...)
     length(args) == 1 && (args = (args[1], gensym()))

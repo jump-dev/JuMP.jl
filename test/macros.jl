@@ -65,6 +65,8 @@ facts("[macros] Check @constraint basics") do
     @constraint(m, -1 <= x <= sum{0.5, i = 1:2})
     @fact string(m.linconstr[end]) --> "-1 $leq x $leq 1"
     @fact_throws @constraint(m, x <= t <= y)
+    @fact_throws @constraint(m, 1 >= x >= 0)
+    @fact_throws @constraint(x <= t <= y, foo=:bar)
 
     @expression(m, aff, 3x - y - 3.3(w + 2z) + 5)
     @fact string(aff) --> "3 x - y - 3.3 w - 6.6 z + 5"
