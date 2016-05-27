@@ -1,6 +1,11 @@
 JuMP release notes
 ==================
 
+Unversioned
+-----------
+
+  * Support for "anonymous" variables, constraints, expressions, and parameters.
+
 Version 0.13.2 (May 16, 2016)
 -----------------------------
 
