@@ -275,6 +275,8 @@ constructconstraint!(aff::Variable, lb::Real, ub::Real) = constructconstraint!(c
 
 constructconstraint!(q::QuadExpr, lb, ub) = error("Two-sided quadratic constraints not supported. (Try @NLconstraint instead.)")
 
+constraint_error(args, str) = error("In @constraint($(join(args,","))): ", str)
+
 macro constraint(args...)
     # Pick out keyword arguments
     if isexpr(args[1],:parameters) # these come if using a semicolon
@@ -288,9 +290,9 @@ macro constraint(args...)
 
     if length(args) < 2
         if length(kwargs.args) > 0
-            error("in @constraint($(join(args,','))) with keyword arguments: ($(join(kwargs.args,','))): not enough arguments")
+            constraint_error(args, "Not enough positional arguments")
         else
-            error("in @constraint($(join(args,','))): not enough arguments")
+            constraint_error(args, "Not enough arguments")
         end
     end
     m = args[1]
@@ -301,17 +303,17 @@ macro constraint(args...)
     # Two formats:
     # - @constraint(m, a*x <= 5)
     # - @constraint(m, myref[a=1:5], a*x <= 5)
-    length(extra) > 1 && error("in @constraint: too many arguments.")
+    length(extra) > 1 && constraint_error(args, "Too many arguments.")
     # Canonicalize the arguments
     c = length(extra) == 1 ? x        : nothing
     x = length(extra) == 1 ? extra[1] : x
 
     if isa(x, Symbol)
-        error("in @constraint($(join(args,','))): Incomplete constraint specification $x. Are you missing a comparison (<=, >=, or ==)?")
+        constraint_error(args, "Incomplete constraint specification $x. Are you missing a comparison (<=, >=, or ==)?")
     end
 
     (x.head == :block) &&
-        error("Code block passed as constraint. Perhaps you meant to use @constraints instead?")
+        constraint_error(args, "Code block passed as constraint. Perhaps you meant to use @constraints instead?")
     if VERSION < v"0.5.0-dev+3231"
         x = comparison_to_call(x)
     end
@@ -343,9 +345,9 @@ macro constraint(args...)
         (lsign,lvectorized) = _canonicalize_sense(x.args[2])
         (rsign,rvectorized) = _canonicalize_sense(x.args[4])
         if (lsign != :(<=)) || (rsign != :(<=))
-            error("in @constraint ($(string(x))): only ranged rows of the form lb <= expr <= ub are supported.")
+            constraint_error(args, "Only ranged rows of the form lb <= expr <= ub are supported.")
         end
-        ((vectorized = lvectorized) == rvectorized) || error("in @constraint ($(string(x))): signs are inconsistently vectorized")
+        ((vectorized = lvectorized) == rvectorized) || constraint_error("Signs are inconsistently vectorized")
         addconstr = (lvectorized ? :addVectorizedConstraint : :addconstraint)
         x_str = string(x)
         lb_str = string(x.args[1])
@@ -380,12 +382,12 @@ macro constraint(args...)
                 try
                     lbval = convert(CoefType, $newlb)
                 catch
-                    error(string("in @constraint (",$x_str,"): expected ",$lb_str," to be a ", CoefType, "."))
+                    constraint_error(args, string("Expected ",$lb_str," to be a ", CoefType, "."))
                 end
                 try
                     ubval = convert(CoefType, $newub)
                 catch
-                    error(string("in @constraint (",$x_str,"): expected ",$ub_str," to be a ", CoefType, "."))
+                    constraint_error(args, string("Expected ",$ub_str," to be a ", CoefType, "."))
                 end
             end
         end
@@ -395,9 +397,9 @@ macro constraint(args...)
         end
     else
         # Unknown
-        error("in @constraint ($(string(x))): constraints must be in one of the following forms:\n" *
+        constraint_error(args, string("Constraints must be in one of the following forms:\n" *
               "       expr1 <= expr2\n" * "       expr1 >= expr2\n" *
-              "       expr1 == expr2\n" * "       lb <= expr <= ub")
+              "       expr1 == expr2\n" * "       lb <= expr <= ub"))
     end
     return assert_validmodel(m, getloopedcode(c, code, condition, idxvars, idxsets, idxpairs, :ConstraintRef))
 end
@@ -737,9 +739,12 @@ esc_nonconstant(x) = esc(x)
 
 const EMPTYSTRING = utf8("")
 
+variable_error(args, str) = error("In @variable($(join(args,","))): ", str)
+
 macro variable(args...)
-    length(args) <= 1 &&
-        error("in @variable: expected model as first argument, then variable information.")
+    length(args) == 1 && (args = (args[1], gensym()))
+    length(args) == 0 &&
+        variable_error(args, "Expected model as first argument, then variable information.")
     m = esc(args[1])
     x = args[2]
     extra = vcat(args[3:end]...)
@@ -758,7 +763,7 @@ macro variable(args...)
         hasub = true
         if x.args[2] == :>= || x.args[2] == :≥
             # ub >= x >= lb
-            x.args[4] == :>= || x.args[4] == :≥ || error("Invalid variable bounds")
+            x.args[4] == :>= || x.args[4] == :≥ || variable_error(args, "Invalid variable bounds")
             var = x.args[3]
             lb = esc_nonconstant(x.args[5])
             ub = esc_nonconstant(x.args[1])
@@ -766,11 +771,11 @@ macro variable(args...)
             # lb <= x <= u
             var = x.args[3]
             (x.args[4] != :<= && x.args[4] != :≤) &&
-                error("in @variable ($var): expected <= operator after variable name.")
+                variable_error(args, "Expected <= operator after variable name.")
             lb = esc_nonconstant(x.args[1])
             ub = esc_nonconstant(x.args[5])
         else
-            error("in @variable ($(string(x))): use the form lb <= ... <= ub.")
+            variable_error(args, "Use the form lb <= ... <= ub.")
         end
     elseif isexpr(x,:call)
         if x.args[1] == :>= || x.args[1] == :≥
@@ -801,7 +806,7 @@ macro variable(args...)
             t = :Fixed
         else
             # Its a comparsion, but not using <= ... <=
-            error("in @variable: unexpected syntax $(string(x)).")
+            variable_error(args, "Unexpected syntax $(string(x)).")
         end
     else
         # No bounds provided - free variable
@@ -835,21 +840,21 @@ macro variable(args...)
         elseif kwarg == :basename
             quotvarname = esc(ex.args[2])
         elseif kwarg == :lowerbound
-            haslb && error("Cannot specify variable lowerbound twice")
+            haslb && variable_error(args, "Cannot specify variable lowerbound twice")
             lb = esc_nonconstant(ex.args[2])
             haslb = true
         elseif kwarg == :upperbound
-            hasub && error("Cannot specify variable upperbound twice")
+            hasub && variable_error(args, "Cannot specify variable upperbound twice")
             ub = esc_nonconstant(ex.args[2])
             hasub = true
         else
-            error("in @variable ($var): Unrecognized keyword argument $kwarg")
+            variable_error(args, "Unrecognized keyword argument $kwarg")
         end
     end
 
     if (obj !== nothing || inconstraints !== nothing || coefficients !== nothing) &&
        (obj === nothing || inconstraints === nothing || coefficients === nothing)
-        error("in @variable ($var): Must provide 'objective', 'inconstraints', and 'coefficients' arguments all together for column-wise modeling")
+        variable_error(args, "Must provide 'objective', 'inconstraints', and 'coefficients' arguments all together for column-wise modeling")
     end
 
     sdp = any(t -> (t == :SDP), extra)
@@ -860,7 +865,7 @@ macro variable(args...)
     # Types: default is continuous (reals)
     if length(extra) > 0
         if t == :Fixed
-            error("in @variable ($var): unexpected extra arguments when declaring a fixed variable")
+            variable_error(args, "Unexpected extra arguments when declaring a fixed variable")
         end
         if extra[1] in [:Bin, :Int, :SemiCont, :SemiInt]
             gottype = true
@@ -869,20 +874,20 @@ macro variable(args...)
 
         if t == :Bin
             if (lb != -Inf || ub != Inf) && !(lb == 0.0 && ub == 1.0)
-            error("in @variable ($var): bounds other than [0, 1] may not be specified for binary variables.\nThese are always taken to have a lower bound of 0 and upper bound of 1.")
+            variable_error(args, "Bounds other than [0, 1] may not be specified for binary variables.\nThese are always taken to have a lower bound of 0 and upper bound of 1.")
             else
                 lb = 0.0
                 ub = 1.0
             end
         end
 
-        !gottype && error("in @variable ($var): syntax error")
+        !gottype && variable_error(args, "Syntax error")
     end
 
     # Handle the column generation functionality
     if coefficients !== nothing
         !isa(var,Symbol) &&
-        error("in @variable ($var): can only create one variable at a time when adding to existing constraints.")
+        variable_error(args, "Can only create one variable at a time when adding to existing constraints.")
 
         return assert_validmodel(m, quote
             $(esc(var)) = Variable($m,$lb,$ub,$(quot(t)),$obj,$inconstraints,$coefficients,utf8(string($quotvarname)),$value)
@@ -892,13 +897,13 @@ macro variable(args...)
 
     if isa(var,Symbol)
         # Easy case - a single variable
-        sdp && error("Cannot add a semidefinite scalar variable")
+        sdp && variable_error(args, "Cannot add a semidefinite scalar variable")
         return assert_validmodel(m, quote
             $(esc(var)) = Variable($m,$lb,$ub,$(quot(t)),utf8(string($quotvarname)),$value)
             registervar($m, $(quot(var)), $(esc(var)))
         end)
     end
-    isa(var,Expr) || error("in @variable: expected $var to be a variable name")
+    isa(var,Expr) || variable_error(args, "Expected $var to be a variable name")
 
     # We now build the code to generate the variables (and possibly the JuMPDict
     # to contain them)
@@ -909,29 +914,29 @@ macro variable(args...)
     if symmetric
         # Sanity checks on SDP input stuff
         condition == :() ||
-            error("Cannot have conditional indexing for SDP variables")
+            variable_error(args, "Cannot have conditional indexing for SDP variables")
         length(idxvars) == length(idxsets) == 2 ||
-            error("SDP variables must be 2-dimensional")
+            variable_error(args, "SDP variables must be 2-dimensional")
         !symmetric || (length(idxvars) == length(idxsets) == 2) ||
-            error("Symmetric variables must be 2-dimensional")
+            variable_error(args, "Symmetric variables must be 2-dimensional")
         hasdependentsets(idxvars, idxsets) &&
-            error("Cannot have index dependencies in symmetric variables")
+            variable_error(args, "Cannot have index dependencies in symmetric variables")
         for _rng in idxsets
             isexpr(_rng, :escape) ||
-                error("Internal error 1")
+                variable_error(args, "Internal error 1")
             rng = _rng.args[1] # undo escaping
             (isexpr(rng,:(:)) && rng.args[1] == 1 && length(rng.args) == 2) ||
-                error("Index sets for SDP variables must be ranges of the form 1:N")
+                variable_error(args, "Index sets for SDP variables must be ranges of the form 1:N")
         end
 
         if sdp && !(lb == -Inf && ub == Inf)
-            error("Semidefinite variables cannot be provided bounds")
+            variable_error(args, "Semidefinite variables cannot be provided bounds")
         end
 
         looped = getloopedcode(var, code, condition, idxvars, idxsets, idxpairs, :Variable; lowertri=symmetric)
         code = quote
-            $(esc(idxsets[1].args[1].args[2])) == $(esc(idxsets[2].args[1].args[2])) || error("Cannot construct symmetric variables with nonsquare dimensions")
-            (Compat.issymmetric($lb) && Compat.issymmetric($ub)) || error("Bounds on symmetric variables must be symmetric")
+            $(esc(idxsets[1].args[1].args[2])) == $(esc(idxsets[2].args[1].args[2])) || variable_error(args, "Cannot construct symmetric variables with nonsquare dimensions")
+            (Compat.issymmetric($lb) && Compat.issymmetric($ub)) || variable_error(args, "Bounds on symmetric variables must be symmetric")
             $looped
             push!($(m).dictList, $escvarname)
         end
