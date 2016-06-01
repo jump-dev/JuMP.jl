@@ -985,6 +985,8 @@ macro variable(args...)
             $(anonvar ? variable : :($escvarname = $variable))
         end)
     else
+        coloncheckcode = Expr(:call,:coloncheck,refcall.args[2:end]...)
+        code = :($coloncheckcode; $code)
         return assert_validmodel(m, quote
             $(getloopedcode(variable, code, condition, idxvars, idxsets, idxpairs, :Variable))
             isa($variable, JuMPContainer) && pushmeta!($variable, :model, $m)

@@ -63,6 +63,14 @@ end
 
 Base.isempty(d::JuMPContainer) = isempty(_innercontainer(d))
 
+coloncheck(args::Number...) = nothing
+
+function coloncheck(args...)
+    if any(t -> t == Colon(), args)
+        error("Colons not allowed as keys in JuMP containers.")
+    end
+end
+
 # generate and instantiate a type which is indexed by the given index sets
 # the following types of index sets are allowed:
 # 0:K -- range with compile-time starting index
