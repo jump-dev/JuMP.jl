@@ -133,8 +133,8 @@ facts("[sdp] Nonsensical SDPs") do
     @fact macroexpand(:(@variable(m, threeD[1:5,1:5,1:5], SDP))).head --> :error
     @fact macroexpand(:(@variable(m, psd[2] <= rand(2,2), SDP))).head --> :error
     @fact macroexpand(:(@variable(m, -ones(3,4) <= foo[1:4,1:4] <= ones(4,4), SDP))).head --> :error
-    @fact_throws @variable(m, -ones(3,4) <= foo[1:4,1:4] <= ones(4,4), Symmetric)
-    @fact_throws @variable(m, -ones(4,4) <= foo[1:4,1:4] <= ones(4,5), Symmetric)
+    @fact macroexpand(:(@variable(m, -ones(3,4) <= foo[1:4,1:4] <= ones(4,4), Symmetric))).head --> :error
+    @fact macroexpand(:(@variable(m, -ones(4,4) <= foo[1:4,1:4] <= ones(4,5), Symmetric))).head --> :error
     @fact_throws @variable(m, -rand(5,5) <= nonsymmetric[1:5,1:5] <= rand(5,5), Symmetric)
 end
 
