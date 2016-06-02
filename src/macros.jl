@@ -931,7 +931,7 @@ macro variable(args...)
 
     if isa(var,Symbol)
         # Easy case - a single variable
-    sdp && variable_error(args, "Cannot add a semidefinite scalar variable")
+        sdp && variable_error(args, "Cannot add a semidefinite scalar variable")
         @assert !anonvar
         return assert_validmodel(m, quote
             $variable = Variable($m,$lb,$ub,$(quot(t)),utf8(string($quotvarname)),$value)
@@ -965,8 +965,8 @@ macro variable(args...)
                 variable_error(args, "Index sets for SDP variables must be ranges of the form 1:N")
         end
 
-        if sdp && !(lb == -Inf && ub == Inf)
-            variable_error(args, "Semidefinite variables cannot be provided bounds")
+        if !(lb == -Inf && ub == Inf)
+            variable_error(args, "Semidefinite or symmetric variables cannot be provided bounds")
         end
         return assert_validmodel(m, quote
             $(esc(idxsets[1].args[1].args[2])) == $(esc(idxsets[2].args[1].args[2])) || error("Cannot construct symmetric variables with nonsquare dimensions")
