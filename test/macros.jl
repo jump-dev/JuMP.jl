@@ -581,3 +581,9 @@ facts("[macros] Anonymous versions of macros") do
     @fact e[2] --> e[2]
     @fact f[:red] --> f[:red]
 end
+
+facts("[macros] Colons in index sets") do
+    m = Model()
+    S = [:]
+    @fact_throws ErrorException @variable(m, x[S])
+end
