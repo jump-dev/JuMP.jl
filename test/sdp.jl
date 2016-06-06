@@ -176,8 +176,8 @@ context("With solver $(typeof(solver))") do
     n = 100
 
     mod = Model(solver=solver)
-    @variable(mod, x[j=1:p] >= 0, Int)
-    @variable(mod, u[i=1:q] >= 0)
+    @variable(mod, x[j=1:p] >= 1, Int)
+    @variable(mod, u[i=1:q] >= 1)
     @objective(mod, Min, sum(u))
     @constraint(mod, sum(x) <= n)
     for i=1:q
@@ -187,7 +187,7 @@ context("With solver $(typeof(solver))") do
     @fact length(f) --> 8
     @fact size(A) --> (23,8)
     @fact length(b) --> 23
-    @fact var_cones --> [(:NonNeg,[1,2,3,4,5,6,7,8])]
+    @fact var_cones --> [(:Free,[1,2,3,4,5,6,7,8])]
     @fact con_cones --> [(:NonNeg,[1]),(:NonPos,[2,3,4,5,6,7,8,9]),(:SDP,10:15),(:Zero,16:16),(:SDP,17:22),(:Zero,23:23)]
 end; end; end
 

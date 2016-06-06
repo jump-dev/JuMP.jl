@@ -69,7 +69,7 @@ cbc && push!(sos_solvers, Cbc.CbcSolver())
 conic_solvers_with_duals = Any[]
 eco && push!(conic_solvers_with_duals, ECOS.ECOSSolver(verbose=false))
 scs && push!(conic_solvers_with_duals, SCS.SCSSolver(eps=1e-6,verbose=0))
-#mos && push!(conic_solvers_with_duals, Mosek.MosekSolver(LOG=0))
+mos && push!(conic_solvers_with_duals, Mosek.MosekSolver(LOG=0))
 # Callback solvers
 lazy_solvers, lazylocal_solvers, cut_solvers, cutlocal_solvers, heur_solvers, info_solvers = Any[], Any[], Any[], Any[], Any[], Any[]
 if grb

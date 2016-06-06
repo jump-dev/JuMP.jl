@@ -240,7 +240,7 @@ context("With conic solver $(typeof(conic_solver))") do
 
     inf_ray = getdual(c2)
     @fact status --> :Infeasible
-    @fact (-inf_ray[1] - inf_ray[2]) --> less_than_or_equal(-TOL)
+    @fact inf_ray[1] ≥ abs(inf_ray[2]) - TOL --> true
     @fact -(-inf_ray[1]) --> greater_than_or_equal(TOL)
 
 end
