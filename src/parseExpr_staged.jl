@@ -58,7 +58,7 @@ end
 
 addtoexpr(ex::Number, c::Variable, x::Variable) = QuadExpr([c],[x],[1.0],zero(AffExpr))
 
-function addtoexpr(ex::Number, c::GenericAffExpr, x::GenericAffExpr)
+function addtoexpr{T<:GenericAffExpr}(ex::Number, c::T, x::T)
     q = c*x
     q.aff.constant += ex
     q
