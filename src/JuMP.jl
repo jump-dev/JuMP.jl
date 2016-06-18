@@ -273,7 +273,14 @@ function Base.copy(source::Model)
 
     # variable/extension dicts
     if !isempty(source.ext)
-        error("Copying of extension dictionaries is not currently supported")
+        dest.ext = similar(source.ext)
+        for (key, val) in source.ext
+            dest.ext[key] = try
+                copy(source.ext[key])
+            catch
+                error("Error copying extension dictionary. Is `copy` defined for all your user types?")
+            end
+        end
     end
     dest.varDict = Dict{Symbol,Any}()
     for (symb,v) in source.varDict
@@ -447,6 +454,7 @@ function verify_ownership(m::Model, vec::Vector{Variable})
 end
 
 Base.copy(v::Variable, new_model::Model) = Variable(new_model, v.col)
+Base.copy(x::Void, new_model::Model) = nothing
 function Base.copy(v::Array{Variable}, new_model::Model)
     ret = similar(v, Variable, size(v))
     for I in eachindex(v)
