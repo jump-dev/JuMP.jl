@@ -35,7 +35,7 @@ While bound updates are applied immediately in JuMP, variable bound changes are 
 transmitted to the solver until ``solve`` is called again.
 
 To add variables that appear in existing constraints, e.g. in column generation,
-there is an alternative form of the ``defVar`` macro::
+there is an alternative form of the ``@variable`` macro::
 
   @variable(m, x, objective = objcoef, inconstraints = constrrefs, coefficients = values)
   @variable(m, x >= lb, objective = objcoef, inconstraints = constrrefs, coefficients = values)
