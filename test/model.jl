@@ -478,14 +478,14 @@ facts("[model] Test model copying") do
     dest2 = copy(source)
     @fact dest2.printhook(dest2) --> 2
 
-    addlazycallback(source, cb -> 3)
-    @fact_throws copy(source)
-
     # Test copying model with multiple variables of same name
     @variable(source, x)
     dest3 = copy(source)
     @fact_throws getvariable(dest3, :x)
     @fact dest3.varDict[:x] --> nothing
+
+    addlazycallback(source, cb -> 3)
+    @fact_throws copy(source)
 end
 
 type TemporaryExtensionTestType
