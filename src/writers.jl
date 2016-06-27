@@ -111,6 +111,10 @@ function writeMPS(m::Model, fname::AbstractString)
                 @printf(f,"  UP BOUND VAR%d ", col)
                 print_shortest(f, m.colUpper[col])
                 println(f)
+            else
+                # Default bounds. Explicitly state for solvers like Gurobi. See issue #792
+                @printf(f,"  PL BOUND VAR%d", col)
+                println(f)
             end
         elseif m.colLower[col] == -Inf && m.colUpper[col] == +Inf
             # Free
@@ -309,4 +313,3 @@ function writeLP(m::Model, fname::AbstractString)
     write(f,"End\n")
     close(f)
 end
-
