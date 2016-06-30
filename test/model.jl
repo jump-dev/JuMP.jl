@@ -300,7 +300,8 @@ context("With solver $(typeof(solver))") do
     @fact getvalue(r)[3]    --> roughly(0.5, TOL)
     @fact getvalue(r)[4]    --> roughly(0.0, TOL)
     @fact getvalue(r)[5]    --> roughly(0.0, TOL)
-    @fact getvalue(r)[6]    --> roughly(6.0, TOL)
+    @fact getvalue(r)[6]    --> greater_than_or_equal(5.7-TOL)
+    @fact getvalue(r)[6]    --> less_than_or_equal(6.0+TOL)
     @fact getobjective(modA).aff --> ((x + y)/2.0 + 3.0)/3.0 + z + r[3]
 end # solver context
 end # loop over solvers
