@@ -343,7 +343,7 @@ for i = 1:length(univariate_operators)
 	ex = :(return $op(x), $deriv_expr::T)
     push!(switchblock.args,i,ex)
 end
-switchexpr = Expr(:macrocall, Expr(:.,:Lazy,quot(symbol("@switch"))), :operator_id,switchblock)
+switchexpr = Expr(:macrocall, Expr(:.,:Lazy,quot(Symbol("@switch"))), :operator_id,switchblock)
 
 @eval @inline function eval_univariate{T}(operator_id,x::T)
     $switchexpr
@@ -369,7 +369,7 @@ for i = 1:length(univariate_operators)
 	ex = :(return $deriv_expr::T)
     push!(switchblock.args,i,ex)
 end
-switchexpr = Expr(:macrocall, Expr(:.,:Lazy,quot(symbol("@switch"))), :operator_id,switchblock)
+switchexpr = Expr(:macrocall, Expr(:.,:Lazy,quot(Symbol("@switch"))), :operator_id,switchblock)
 
 @eval @inline function eval_univariate_2nd_deriv{T}(operator_id,x::T,fval::T)
     $switchexpr
