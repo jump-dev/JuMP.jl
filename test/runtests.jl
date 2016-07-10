@@ -280,7 +280,7 @@ function dualforward(ex, x; ignore_nan=false)
     reverse_eval(reverse_storage,partials_storage,nd,adj)
     reverse_extract(grad,reverse_storage,nd,adj,[],1.0)
 
-    zero_ϵ = ForwardDiff.zero_partials(NTuple{1,Float64},1)
+    zero_ϵ = zero(ForwardDiff.Partials{1,Float64})
     forward_storage_ϵ = fill(zero_ϵ,length(nd))
     partials_storage_ϵ = fill(zero_ϵ,length(nd))
     x_values_ϵ = fill(ForwardDiff.Partials((1.0,)),length(x))
@@ -288,7 +288,7 @@ function dualforward(ex, x; ignore_nan=false)
     output_ϵ = fill(zero_ϵ,length(x))
     fval_ϵ = forward_eval_ϵ(forward_storage,forward_storage_ϵ,partials_storage,partials_storage_ϵ,nd,adj,x_values_ϵ,[])
     reverse_eval_ϵ(output_ϵ,reverse_storage,reverse_storage_ϵ,partials_storage,partials_storage_ϵ,nd,adj,[],[],2.0,zero_ϵ)
-    @test_approx_eq fval_ϵ.data[1] dot(grad,ones(length(x)))
+    @test_approx_eq fval_ϵ[1] dot(grad,ones(length(x)))
 
     # compare with running dual numbers
     forward_dual_storage = zeros(Dual{Float64},length(nd))
@@ -300,23 +300,23 @@ function dualforward(ex, x; ignore_nan=false)
     reverse_eval(reverse_dual_storage,partials_dual_storage,nd,adj)
     reverse_extract(output_dual_storage,reverse_dual_storage,nd,adj,[],Dual(2.0))
     for k in 1:length(nd)
-        @test_approx_eq epsilon(forward_dual_storage[k]) forward_storage_ϵ[k].data[1]
+        @test_approx_eq epsilon(forward_dual_storage[k]) forward_storage_ϵ[k][1]
         if !(isnan(epsilon(partials_dual_storage[k])) && ignore_nan)
-            @test_approx_eq epsilon(partials_dual_storage[k]) partials_storage_ϵ[k].data[1]
+            @test_approx_eq epsilon(partials_dual_storage[k]) partials_storage_ϵ[k][1]
         else
-            @test !isnan(forward_storage_ϵ[k].data[1])
+            @test !isnan(forward_storage_ϵ[k][1])
         end
         if !(isnan(epsilon(reverse_dual_storage[k])) && ignore_nan)
-            @test_approx_eq epsilon(reverse_dual_storage[k]) reverse_storage_ϵ[k].data[1]/2
+            @test_approx_eq epsilon(reverse_dual_storage[k]) reverse_storage_ϵ[k][1]/2
         else
-            @test !isnan(reverse_storage_ϵ[k].data[1])
+            @test !isnan(reverse_storage_ϵ[k][1])
         end
     end
     for k in 1:length(x)
         if !(isnan(epsilon(output_dual_storage[k])) && ignore_nan)
-            @test_approx_eq epsilon(output_dual_storage[k]) output_ϵ[k].data[1]
+            @test_approx_eq epsilon(output_dual_storage[k]) output_ϵ[k][1]
         else
-            @test !isnan(output_ϵ[k].data[1])
+            @test !isnan(output_ϵ[k][1])
         end
     end
 end
