@@ -665,30 +665,30 @@ function MathProgBase.eval_hesslag_prod(
         row += 1
     end
 
-    input_ϵ = reinterpret(ForwardDiff.PartialsTup{1,Float64}, d.input_ϵ)
-    output_ϵ = reinterpret(ForwardDiff.PartialsTup{1,Float64}, d.output_ϵ)
+    input_ϵ = reinterpret(ForwardDiff.Partials{1,Float64}, d.input_ϵ)
+    output_ϵ = reinterpret(ForwardDiff.Partials{1,Float64}, d.output_ϵ)
     for i in 1:length(x)
         input_ϵ[i] = ForwardDiff.Partials((v[i],))
     end
 
     # forward evaluate all subexpressions once
-    subexpr_forward_values_ϵ = reinterpret(ForwardDiff.PartialsTup{1,Float64},d.subexpression_forward_values_ϵ)
-    subexpr_reverse_values_ϵ = reinterpret(ForwardDiff.PartialsTup{1,Float64},d.subexpression_reverse_values_ϵ)
-    forward_storage_ϵ = reinterpret(ForwardDiff.PartialsTup{1,Float64},d.forward_storage_ϵ)
-    reverse_storage_ϵ = reinterpret(ForwardDiff.PartialsTup{1,Float64},d.reverse_storage_ϵ)
-    partials_storage_ϵ = reinterpret(ForwardDiff.PartialsTup{1,Float64},d.partials_storage_ϵ)
+    subexpr_forward_values_ϵ = reinterpret(ForwardDiff.Partials{1,Float64},d.subexpression_forward_values_ϵ)
+    subexpr_reverse_values_ϵ = reinterpret(ForwardDiff.Partials{1,Float64},d.subexpression_reverse_values_ϵ)
+    forward_storage_ϵ = reinterpret(ForwardDiff.Partials{1,Float64},d.forward_storage_ϵ)
+    reverse_storage_ϵ = reinterpret(ForwardDiff.Partials{1,Float64},d.reverse_storage_ϵ)
+    partials_storage_ϵ = reinterpret(ForwardDiff.Partials{1,Float64},d.partials_storage_ϵ)
     SIMPLIFY = d.m.simplify_nonlinear_expressions
     for expridx in d.subexpression_order
         if SIMPLIFY && d.subexpression_linearity[expridx] == CONSTANT
             continue
         end
         subexpr = d.subexpressions[expridx]
-        sub_forward_storage_ϵ = reinterpret(ForwardDiff.PartialsTup{1,Float64},subexpr.forward_storage_ϵ)
-        sub_partials_storage_ϵ = reinterpret(ForwardDiff.PartialsTup{1,Float64},subexpr.partials_storage_ϵ)
+        sub_forward_storage_ϵ = reinterpret(ForwardDiff.Partials{1,Float64},subexpr.forward_storage_ϵ)
+        sub_partials_storage_ϵ = reinterpret(ForwardDiff.Partials{1,Float64},subexpr.partials_storage_ϵ)
         subexpr_forward_values_ϵ[expridx] = forward_eval_ϵ(subexpr.forward_storage,sub_forward_storage_ϵ, subexpr.partials_storage, sub_partials_storage_ϵ, subexpr.nd, subexpr.adj, input_ϵ, subexpr_forward_values_ϵ)
     end
     # we only need to do one reverse pass through the subexpressions as well
-    zero_ϵ = ForwardDiff.zero_partials(NTuple{1,Float64},1)
+    zero_ϵ = zero(ForwardDiff.Partials{1,Float64})
     fill!(subexpr_reverse_values_ϵ,zero_ϵ)
     fill!(d.subexpression_reverse_values,0.0)
     fill!(reverse_storage_ϵ,zero_ϵ)
@@ -714,13 +714,13 @@ function MathProgBase.eval_hesslag_prod(
             continue
         end
         subexpr = d.subexpressions[expridx]
-        sub_reverse_storage_ϵ = reinterpret(ForwardDiff.PartialsTup{1,Float64},subexpr.reverse_storage_ϵ)
-        sub_partials_storage_ϵ = reinterpret(ForwardDiff.PartialsTup{1,Float64},subexpr.partials_storage_ϵ)
+        sub_reverse_storage_ϵ = reinterpret(ForwardDiff.Partials{1,Float64},subexpr.reverse_storage_ϵ)
+        sub_partials_storage_ϵ = reinterpret(ForwardDiff.Partials{1,Float64},subexpr.partials_storage_ϵ)
         reverse_eval_ϵ(output_ϵ,subexpr.reverse_storage,sub_reverse_storage_ϵ, subexpr.partials_storage, sub_partials_storage_ϵ,subexpr.nd,subexpr.adj,d.subexpression_reverse_values,subexpr_reverse_values_ϵ,d.subexpression_reverse_values[expridx],subexpr_reverse_values_ϵ[expridx])
     end
 
     for i in 1:length(x)
-        h[i] += output_ϵ[i].data[1]
+        h[i] += output_ϵ[i].values[1]
     end
 
 end
@@ -803,12 +803,12 @@ end
 
 function hessian_slice_inner{CHUNK}(d, ex, R, input_ϵ, output_ϵ, ::Type{Val{CHUNK}})
 
-    subexpr_forward_values_ϵ = reinterpret_unsafe(ForwardDiff.PartialsTup{CHUNK,Float64},d.subexpression_forward_values_ϵ)
-    subexpr_reverse_values_ϵ = reinterpret_unsafe(ForwardDiff.PartialsTup{CHUNK,Float64},d.subexpression_reverse_values_ϵ)
-    forward_storage_ϵ = reinterpret_unsafe(ForwardDiff.PartialsTup{CHUNK,Float64},d.forward_storage_ϵ)
-    reverse_storage_ϵ = reinterpret_unsafe(ForwardDiff.PartialsTup{CHUNK,Float64},d.reverse_storage_ϵ)
-    partials_storage_ϵ = reinterpret_unsafe(ForwardDiff.PartialsTup{CHUNK,Float64},d.partials_storage_ϵ)
-    zero_ϵ = ForwardDiff.zero_partials(NTuple{CHUNK,Float64},1)
+    subexpr_forward_values_ϵ = reinterpret_unsafe(ForwardDiff.Partials{CHUNK,Float64},d.subexpression_forward_values_ϵ)
+    subexpr_reverse_values_ϵ = reinterpret_unsafe(ForwardDiff.Partials{CHUNK,Float64},d.subexpression_reverse_values_ϵ)
+    forward_storage_ϵ = reinterpret_unsafe(ForwardDiff.Partials{CHUNK,Float64},d.forward_storage_ϵ)
+    reverse_storage_ϵ = reinterpret_unsafe(ForwardDiff.Partials{CHUNK,Float64},d.reverse_storage_ϵ)
+    partials_storage_ϵ = reinterpret_unsafe(ForwardDiff.Partials{CHUNK,Float64},d.partials_storage_ϵ)
+    zero_ϵ = zero(ForwardDiff.Partials{CHUNK,Float64})
 
 
     SIMPLIFY = d.m.simplify_nonlinear_expressions
@@ -818,8 +818,8 @@ function hessian_slice_inner{CHUNK}(d, ex, R, input_ϵ, output_ϵ, ::Type{Val{CH
             continue
         end
         subexpr = d.subexpressions[expridx]
-        sub_forward_storage_ϵ = reinterpret_unsafe(ForwardDiff.PartialsTup{CHUNK,Float64},subexpr.forward_storage_ϵ)
-        sub_partials_storage_ϵ = reinterpret_unsafe(ForwardDiff.PartialsTup{CHUNK,Float64},subexpr.partials_storage_ϵ)
+        sub_forward_storage_ϵ = reinterpret_unsafe(ForwardDiff.Partials{CHUNK,Float64},subexpr.forward_storage_ϵ)
+        sub_partials_storage_ϵ = reinterpret_unsafe(ForwardDiff.Partials{CHUNK,Float64},subexpr.partials_storage_ϵ)
         subexpr_forward_values_ϵ[expridx] = forward_eval_ϵ(subexpr.forward_storage,sub_forward_storage_ϵ,subexpr.partials_storage,sub_partials_storage_ϵ, subexpr.nd, subexpr.adj, input_ϵ, subexpr_forward_values_ϵ)
     end
     forward_eval_ϵ(ex.forward_storage,forward_storage_ϵ,ex.partials_storage, partials_storage_ϵ,ex.nd,ex.adj,input_ϵ, subexpr_forward_values_ϵ)
@@ -835,8 +835,8 @@ function hessian_slice_inner{CHUNK}(d, ex, R, input_ϵ, output_ϵ, ::Type{Val{CH
             continue
         end
         subexpr = d.subexpressions[expridx]
-        sub_reverse_storage_ϵ = reinterpret_unsafe(ForwardDiff.PartialsTup{CHUNK,Float64},subexpr.reverse_storage_ϵ)
-        sub_partials_storage_ϵ = reinterpret_unsafe(ForwardDiff.PartialsTup{CHUNK,Float64},subexpr.partials_storage_ϵ)
+        sub_reverse_storage_ϵ = reinterpret_unsafe(ForwardDiff.Partials{CHUNK,Float64},subexpr.reverse_storage_ϵ)
+        sub_partials_storage_ϵ = reinterpret_unsafe(ForwardDiff.Partials{CHUNK,Float64},subexpr.partials_storage_ϵ)
         reverse_eval_ϵ(output_ϵ, subexpr.reverse_storage, sub_reverse_storage_ϵ,subexpr.partials_storage,sub_partials_storage_ϵ,subexpr.nd,subexpr.adj,d.subexpression_reverse_values,subexpr_reverse_values_ϵ,d.subexpression_reverse_values[expridx],subexpr_reverse_values_ϵ[expridx])
     end
 end
@@ -852,12 +852,12 @@ function hessian_slice{CHUNK}(d, ex, x, H, scale, nzcount, recovery_tmp_storage,
     Coloring.prepare_seed_matrix!(R,ex.rinfo)
     local_to_global_idx = ex.rinfo.local_indices
 
-    zero_ϵ = ForwardDiff.zero_partials(NTuple{CHUNK,Float64},1)
+    zero_ϵ = zero(ForwardDiff.Partials{CHUNK,Float64})
 
     input_ϵ_raw = d.input_ϵ
     output_ϵ_raw = d.output_ϵ
-    input_ϵ = reinterpret_unsafe(ForwardDiff.PartialsTup{CHUNK,Float64}, input_ϵ_raw)
-    output_ϵ = reinterpret_unsafe(ForwardDiff.PartialsTup{CHUNK,Float64}, output_ϵ_raw)
+    input_ϵ = reinterpret_unsafe(ForwardDiff.Partials{CHUNK,Float64}, input_ϵ_raw)
+    output_ϵ = reinterpret_unsafe(ForwardDiff.Partials{CHUNK,Float64}, output_ϵ_raw)
 
 
     # compute hessian-vector products
@@ -1320,7 +1320,7 @@ function MathProgBase.eval_grad_f(d::UserFunctionEvaluator,grad,x)
 end
 
 function UserAutoDiffEvaluator(dimension::Integer, f::Function)
-    ∇f = ForwardDiff.gradient(x -> f(x...), mutates=true)
+    ∇f = (out,y) -> ForwardDiff.gradient!(out, x -> f(x...), y)
     return UserFunctionEvaluator(f, ∇f, dimension)
 end
 
