@@ -16,6 +16,8 @@ function expr_to_nodedata(ex::Expr,nd::Vector{NodeData},values::Vector{Float64},
         op = ex.args[1]
         if length(ex.args) == 2
             push!(nd,NodeData(CALLUNIVAR, univariate_operator_to_id[op], parentid))
+        elseif op in comparison_operators
+            push!(nd,NodeData(COMPARISON, comparison_operator_to_id[op], parentid))
         else
             push!(nd,NodeData(CALL, operator_to_id[op], parentid))
         end
