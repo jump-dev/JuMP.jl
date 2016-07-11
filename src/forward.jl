@@ -200,20 +200,18 @@ end
 
 export forward_eval
 
-@inline gradnum(x,ϵval) = ForwardDiff.GradientNumber(x,ϵval.data)
-
 # Evaluate directional derivatives of an expression tree.
 # This is equivalent to evaluating the expression tree using DualNumbers or ForwardDiff,
 # but instead we keep the storage for the epsilon components separate so that we don't
 # need to recompute the real components.
 # Computes partials_storage_ϵ as well
 # We assume that forward_eval has already been called.
-function forward_eval_ϵ{N,T}(storage::Vector{T},storage_ϵ::DenseVector{ForwardDiff.PartialsTup{N,T}},partials_storage::Vector{T},partials_storage_ϵ::DenseVector{ForwardDiff.PartialsTup{N,T}},nd::Vector{NodeData},adj,x_values_ϵ,subexpression_values_ϵ)
+function forward_eval_ϵ{N,T}(storage::Vector{T},storage_ϵ::DenseVector{ForwardDiff.Partials{N,T}},partials_storage::Vector{T},partials_storage_ϵ::DenseVector{ForwardDiff.Partials{N,T}},nd::Vector{NodeData},adj,x_values_ϵ,subexpression_values_ϵ)
 
     @assert length(storage_ϵ) >= length(nd)
     @assert length(partials_storage_ϵ) >= length(nd)
 
-    zero_ϵ = ForwardDiff.zero_partials(NTuple{N,T},N)
+    zero_ϵ = zero(ForwardDiff.Partials{N,T})
 
     # nd is already in order such that parents always appear before children
     # so a backwards pass through nd is a forward pass through the tree
@@ -251,11 +249,11 @@ function forward_eval_ϵ{N,T}(storage::Vector{T},storage_ϵ::DenseVector{Forward
                 if op == 3 # :*
                     # Lazy approach for now
                     anyzero = false
-                    tmp_prod = one(ForwardDiff.GradientNumber{N,T,NTuple{N,T}})
+                    tmp_prod = one(ForwardDiff.Dual{N,T})
                     for c_idx in children_idx
                         ix = children_arr[c_idx]
                         sval = storage[ix]
-                        gnum = gradnum(sval,storage_ϵ[ix])
+                        gnum = ForwardDiff.Dual(sval,storage_ϵ[ix])
                         tmp_prod *= gnum
                         anyzero = ifelse(sval*sval == zero(T), true, anyzero)
                     end
@@ -263,11 +261,11 @@ function forward_eval_ϵ{N,T}(storage::Vector{T},storage_ϵ::DenseVector{Forward
                     # anyzero == true && ForwardDiff.value(tmp_prod) != zero(T)
                     if anyzero # inefficient
                         for c_idx in children_idx
-                            prod_others = one(ForwardDiff.GradientNumber{N,T,NTuple{N,T}})
+                            prod_others = one(ForwardDiff.Dual{N,T})
                             for c_idx2 in children_idx
                                 (c_idx == c_idx2) && continue
                                 ix = children_arr[c_idx2]
-                                gnum = gradnum(storage[ix],storage_ϵ[ix])
+                                gnum = ForwardDiff.Dual(storage[ix],storage_ϵ[ix])
                                 prod_others *= gnum
                             end
                             partials_storage_ϵ[children_arr[c_idx]] = ForwardDiff.partials(prod_others)
@@ -275,7 +273,7 @@ function forward_eval_ϵ{N,T}(storage::Vector{T},storage_ϵ::DenseVector{Forward
                     else
                         for c_idx in children_idx
                             ix = children_arr[c_idx]
-                            prod_others = tmp_prod/gradnum(storage[ix],storage_ϵ[ix])
+                            prod_others = tmp_prod/ForwardDiff.Dual(storage[ix],storage_ϵ[ix])
                             partials_storage_ϵ[ix] = ForwardDiff.partials(prod_others)
                         end
                     end
@@ -289,14 +287,14 @@ function forward_eval_ϵ{N,T}(storage::Vector{T},storage_ϵ::DenseVector{Forward
                     @inbounds base_ϵ = storage_ϵ[ix1]
                     @inbounds exponent = storage[ix2]
                     @inbounds exponent_ϵ = storage_ϵ[ix2]
-                    base_gnum = gradnum(base,base_ϵ)
-                    exponent_gnum = gradnum(exponent,exponent_ϵ)
+                    base_gnum = ForwardDiff.Dual(base,base_ϵ)
+                    exponent_gnum = ForwardDiff.Dual(exponent,exponent_ϵ)
                     if exponent == 2
                         partials_storage_ϵ[ix1] = 2*base_ϵ
                     else
                         partials_storage_ϵ[ix1] = ForwardDiff.partials(exponent_gnum*pow(base_gnum,exponent_gnum-1))
                     end
-                    result_gnum = gradnum(storage[k],storage_ϵ[k])
+                    result_gnum = ForwardDiff.Dual(storage[k],storage_ϵ[k])
                     partials_storage_ϵ[ix2] = ForwardDiff.partials(result_gnum*log(base_gnum))
                 elseif op == 5 # :/
                     @assert n_children == 2
@@ -308,9 +306,9 @@ function forward_eval_ϵ{N,T}(storage::Vector{T},storage_ϵ::DenseVector{Forward
                     @inbounds numerator_ϵ = storage_ϵ[ix1]
                     @inbounds denominator = storage[ix2]
                     @inbounds denominator_ϵ = storage_ϵ[ix2]
-                    recip_denominator = 1/gradnum(denominator,denominator_ϵ)
+                    recip_denominator = 1/ForwardDiff.Dual(denominator,denominator_ϵ)
                     partials_storage_ϵ[ix1] = ForwardDiff.partials(recip_denominator)
-                    partials_storage_ϵ[ix2] = ForwardDiff.partials(-gradnum(numerator,numerator_ϵ)*recip_denominator*recip_denominator)
+                    partials_storage_ϵ[ix2] = ForwardDiff.partials(-ForwardDiff.Dual(numerator,numerator_ϵ)*recip_denominator*recip_denominator)
                 elseif op >= USER_OPERATOR_ID_START
                     error("User-defined operators not supported for hessian computations")
                 end
