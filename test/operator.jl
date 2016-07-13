@@ -608,7 +608,7 @@ context("Dot-ops") do
                                    3-x[2,1]  4-x[2,2]]) --> true
     @fact TestHelper.vec_eq(A.-x, B.-x) --> true
     @fact TestHelper.vec_eq(A.-x, A.-y) --> true
-    @fact TestHelper.vec_eq(x .- x, [zero(AffExpr) for _ in 1:2, _ in 1:2]) --> true
+    @fact TestHelper.vec_eq(x .- x, [zero(AffExpr) for _1 in 1:2, _2 in 1:2]) --> true
     # @fact TestHelper.vec_eq(A.-y, B.-y) --> true
     @fact TestHelper.vec_eq(x.-A, [-1+x[1,1]  -2+x[1,2];
                                    -3+x[2,1]  -4+x[2,2]]) --> true
