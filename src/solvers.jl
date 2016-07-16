@@ -824,7 +824,7 @@ function conicdata(m::Model)
         append!(J, indices)
         append!(V, tmpelts[indices])
         empty!(tmprow)
-        constr_dual_map[c] = collect(c)
+        constr_dual_map[c] = vec(collect(c))
     end
 
     c = numLinRows
@@ -840,7 +840,7 @@ function conicdata(m::Model)
             push!(V, 1.0)
             b[c] = lb
             push!(nonpos_rows, c)
-            constr_dual_map[numLinRows + bndidx] = collect(c)
+            constr_dual_map[numLinRows + bndidx] = vec(collect(c))
         end
         ub = m.colUpper[idx]
         if ub != Inf && ub != 0
@@ -851,7 +851,7 @@ function conicdata(m::Model)
             push!(V, 1.0)
             b[c] = ub
             push!(nonneg_rows, c)
-            constr_dual_map[numLinRows + bndidx] = collect(c)
+            constr_dual_map[numLinRows + bndidx] = vec(collect(c))
         end
     end
 
