@@ -476,7 +476,7 @@ module TestHelper # weird scoping behavior with FactCheck...
 
     vec_eq(x,y) = vec_eq([x;], [y;])
 
-    function vec_eq(x::Array, y::Array)
+    function vec_eq(x::AbstractArray, y::AbstractArray)
         size(x) == size(y) || return false
         for i in 1:length(x)
             v, w = convert(AffExpr,x[i]), convert(AffExpr,y[i])
