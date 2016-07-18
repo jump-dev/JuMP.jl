@@ -443,6 +443,152 @@ function parseNorm(normp::Symbol, x::Expr, aff::Symbol, lcoeffs, rcoeffs, newaff
     end
 end
 
+function parseGenerator(x::Expr, aff::Symbol, lcoeffs, rcoeffs, newaff=gensym())
+    @assert isexpr(x,:call)
+    @assert length(x.args) > 1
+    @assert isexpr(x.args[2],:generator)
+    header = x.args[1]
+    if issum(header)
+        parseGeneratorSum(x.args[2], aff, lcoeffs, rcoeffs, newaff)
+    elseif header ∈ [:norm1, :norm2, :norminf, :norm∞]
+        parseGeneratorNorm(header, x.args[2], aff, lcoeffs, rcoeffs, newaff)
+    else
+        error("Expected sum or norm2 outside generator expression; got $header")
+    end
+end
+
+function parseGeneratorSum(x::Expr, aff::Symbol, lcoeffs, rcoeffs, newaff)
+    # we have a filter condition
+    if isexpr(x.args[2],:filter)
+        cond = x.args[2].args[1]
+        # generate inner loop code first and then wrap in for loops
+        inneraff, innercode = parseExpr(x.args[1], aff, lcoeffs, rcoeffs, aff)
+        code = quote
+            if $(esc(cond))
+                $innercode
+            end
+        end
+        for level in length(x.args[2].args):-1:2
+            _idxvar, idxset = parseIdxSet(x.args[2].args[level]::Expr)
+            idxvar = esc(_idxvar)
+            code = :(let
+                $(localvar(idxvar))
+                for $idxvar in $(esc(idxset))
+                    $code
+                end
+            end)
+        end
+    else # no condition
+        inneraff, code = parseExpr(x.args[1], aff, lcoeffs, rcoeffs, aff)
+        for level in length(x.args):-1:2
+            _idxvar, idxset = parseIdxSet(x.args[level]::Expr)
+            idxvar = esc(_idxvar)
+            code = :(let
+                $(localvar(idxvar))
+                for $idxvar in $(esc(idxset))
+                    $code
+                end
+            end)
+        end
+        len = :len
+        # precompute the number of elements to add
+        # this is unncessary if we're just summing constants
+        _, lastidxset = parseIdxSet(x.args[length(x.args)]::Expr)
+        preblock = :($len += length($(esc(lastidxset))))
+        for level in (length(x.args)-1):-1:2
+            _idxvar, idxset = parseIdxSet(x.args[level]::Expr)
+            idxvar = esc(_idxvar)
+            preblock = :(let
+                $(localvar(idxvar))
+                for $idxvar in $(esc(idxset))
+                    $preblock
+                end
+            end)
+        end
+        preblock = quote
+            $len = 0
+            $preblock
+            _sizehint_expr!($aff,$len)
+        end
+        code = :($preblock;$code)
+    end
+    :($code; $newaff=$aff)
+end
+
+function parseGeneratorNorm(normp::Symbol, x::Expr, aff::Symbol, lcoeffs, rcoeffs, newaff)
+    @assert string(normp)[1:4] == "norm"
+    finalaff = gensym()
+    gennorm  = gensym()
+    len      = gensym()
+    normexpr = gensym()
+    # we have a filter condition
+    if isexpr(x.args[2],:filter)
+        cond = x.args[2].args[1]
+        # generate inner loop code first and then wrap in for loops
+        inneraff, innercode = parseExprToplevel(x.args[1], :normaff)
+        code = quote
+            if $(esc(cond))
+                normaff = 0.0
+                $innercode
+                push!($normexpr, $inneraff)
+            end
+        end
+        for level in length(x.args[2].args):-1:2
+            _idxvar, idxset = parseIdxSet(x.args[2].args[level]::Expr)
+            idxvar = esc(_idxvar)
+            code = :(let
+                $(localvar(idxvar))
+                for $idxvar in $(esc(idxset))
+                    $code
+                end
+            end)
+        end
+        preblock = :($normexpr = GenericAffExpr[])
+    else # no condition
+        inneraff, code = parseExprToplevel(x.args[1], :normaff)
+        code = :(normaff = 0.0; $code; push!($normexpr, $inneraff))
+        _, lastidxset = parseIdxSet(x.args[length(x.args)]::Expr)
+        preblock = :($len += length($(esc(lastidxset))))
+        for level in length(x.args):-1:2
+            _idxvar, idxset = parseIdxSet(x.args[level]::Expr)
+            idxvar = esc(_idxvar)
+            code = :(let
+                $(localvar(idxvar))
+                for $idxvar in $(esc(idxset))
+                    $code
+                end
+            end)
+            preblock = :(let
+                $(localvar(idxvar))
+                for $idxvar in $(esc(idxset))
+                    $preblock
+                end
+            end)
+        end
+        preblock = quote
+            $len = 0
+            $preblock
+            $normexpr = GenericAffExpr[]
+            _sizehint_expr!($normexpr, $len)
+        end
+    end
+    if normp == :norm2
+        param = 2
+    elseif normp == :norm1
+        param = 1
+    elseif normp ∈ [:norminf, :norm∞]
+        param = Inf
+    else
+        error("Unrecognized norm: $normp")
+    end
+    quote
+        $preblock
+        $code
+        $gennorm = _build_norm($param,$normexpr)
+        $newaff = $(Expr(:call, :addtoexpr_reorder, aff,lcoeffs...,gennorm,rcoeffs...))
+    end
+end
+
 is_complex_expr(ex) = isa(ex,Expr) && !isexpr(ex,:ref)
 
 parseExprToplevel(x, aff::Symbol) = parseExpr(x, aff, [], [])
@@ -522,6 +668,8 @@ function parseExpr(x, aff::Symbol, lcoeffs::Vector, rcoeffs::Vector, newaff::Sym
             numerator = x.args[2]
             denom = x.args[3]
             return parseExpr(numerator, aff, lcoeffs,vcat(esc(:(1/$denom)),rcoeffs),newaff)
+        elseif isexpr(x,:call) && length(x.args) >= 2 && isexpr(x.args[2],:generator)
+            return newaff, parseGenerator(x,aff,lcoeffs,rcoeffs,newaff)
         elseif x.head == :curly
             return newaff, parseCurly(x,aff,lcoeffs,rcoeffs,newaff)
         else # at lowest level?

@@ -42,6 +42,30 @@ facts("[macros] Check Julia expression parsing") do
     @fact sumexpr.args[4].head --> :(=)
 end
 
+# generator syntax only parses on 0.5
+if VERSION >= v"0.5-dev+5475"
+    eval("""
+facts("[macros] Check Julia expression parsing (0.5)") do
+    sumexpr = :(sum(x[i,j] * y[i,j] for i = 1:N, j in 1:M if i != j))
+    @fact sumexpr.head --> :call
+    @fact sumexpr.args[1] --> :sum
+    @fact sumexpr.args[2].head --> :generator
+    @fact sumexpr.args[2].args[1] --> :(x[i,j] * y[i,j])
+    @fact sumexpr.args[2].args[2].head --> :filter
+    @fact sumexpr.args[2].args[2].args[1] --> :(i != j)
+    @fact sumexpr.args[2].args[2].args[2] --> :(i = 1:N)
+    @fact sumexpr.args[2].args[2].args[3] --> :(j = 1:M)
+
+    sumexpr = :(sum(x[i,j] * y[i,j] for i = 1:N, j in 1:M))
+    @fact sumexpr.head --> :call
+    @fact sumexpr.args[1] --> :sum
+    @fact sumexpr.args[2].head --> :generator
+    @fact sumexpr.args[2].args[1] --> :(x[i,j] * y[i,j])
+    @fact sumexpr.args[2].args[2] --> :(i = 1:N)
+    @fact sumexpr.args[2].args[3] --> :(j = 1:M)
+end
+"""); end
+
 facts("[macros] Check @constraint basics") do
     m = Model()
     @variable(m, w)
@@ -105,6 +129,29 @@ facts("[macros] sum{}") do
     @fact string(m.linconstr[end]) --> "3 y $eq 0"
 
 end
+
+if VERSION >= v"0.5-dev+5475"
+eval("""
+facts("[macros] sum(generator)") do
+    m = Model()
+    @variable(m, x[1:3,1:3])
+    @variable(m, y)
+    C = [1 2 3; 4 5 6; 7 8 9]
+    @constraint(m, sum( C[i,j]*x[i,j] for i in 1:2, j = 2:3 ) <= 1)
+    @fact string(m.linconstr[end]) --> "2 x[1,2] + 3 x[1,3] + 5 x[2,2] + 6 x[2,3] $leq 1"
+    @constraint(m, sum( C[i,j]*x[i,j] for i = 1:3, j in 1:3 if i != j) == y)
+    @fact string(m.linconstr[end]) --> "2 x[1,2] + 3 x[1,3] + 4 x[2,1] + 6 x[2,3] + 7 x[3,1] + 8 x[3,2] - y $eq 0"
+
+    @constraint(m, sum( C[i,j]*x[i,j] for i = 1:3, j = 1:i) == 0);
+    @fact string(m.linconstr[end]) --> "x[1,1] + 4 x[2,1] + 5 x[2,2] + 7 x[3,1] + 8 x[3,2] + 9 x[3,3] $eq 0"
+
+    @constraint(m, sum( 0*x[i,1] for i=1:3) == 0)
+    @fact string(m.linconstr[end]) --> "0 $eq 0"
+
+    @constraint(m, sum( 0*x[i,1] + y for i=1:3) == 0)
+    @fact string(m.linconstr[end]) --> "3 y $eq 0"
+
+end"""); end
 
 facts("[macros] Problem modification") do
     m = Model()
@@ -386,6 +433,21 @@ facts("[macros] Norm parsing") do
     @fact_throws @constraint(model, (x[1,1]+1)*norm2{x[i,j], i=1:2, j=1:2} + x[1,2] >= -1)
     @fact_throws @constraint(model, norm2{x[i,j], i=1:2, j=1:2} + x[1,2] >= -1)
 end
+
+if VERSION >= v"0.5-dev+5475"
+eval("""
+facts("[macros] Generator norm parsing") do
+    model = Model()
+    @variable(model, x[1:2,1:2])
+    @constraint(model, -2norm2(x[i,j] for i in 1:2, j=1:2) + x[1,2] >= -1)
+    @constraint(model, -2norm2(x[i,j] for i=1:2, j in 1:2 if iseven(i+j)) + x[1,2] >= -1)
+    @constraint(model, 1 >= 2*norm2(x[i,1] for i in 1:2))
+    @fact string(model.socconstr[1]) --> "2.0 $Vert[x[1,1],x[1,2],x[2,1],x[2,2]]$Vert$sub2 $leq x[1,2] + 1"
+    @fact string(model.socconstr[2]) --> "2.0 $Vert[x[1,1],x[2,2]]$Vert$sub2 $leq x[1,2] + 1"
+    @fact string(model.socconstr[3]) --> "2.0 $Vert[x[1,1],x[2,1]]$Vert$sub2 $leq 1"
+    @fact_throws @constraint(model, (x[1,1]+1)*norm2(x[i,j] for i=1:2, j=1:2) + x[1,2] >= -1)
+    @fact_throws @constraint(model, norm2(x[i,j] for i=1:2, j=1:2) + x[1,2] >= -1)
+end""");end
 
 facts("[macros] Extraneous terms in QuadExpr (#535)") do
     model = Model()
