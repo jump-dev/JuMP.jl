@@ -570,18 +570,17 @@ facts("[print] User-created Array{Variable}") do
 
     v = [x,y,x]
     A = [x y; y x]
-    io_test(REPLMode,   v, "[x,y,x]")
-    io_test(IJuliaMode, v, "[x,y,x]")
+    if VERSION >= v"0.5.0-"
+        io_test(REPLMode,   v, "JuMP.Variable[x,y,x]")
+        io_test(IJuliaMode, v, "JuMP.Variable[x,y,x]")
+    else
+        io_test(REPLMode,   v, "[x,y,x]")
+        io_test(IJuliaMode, v, "[x,y,x]")
+    end
 
     if VERSION >= v"0.5.0-dev+3642"
-        io_test(REPLMode,   A, """
-2×2 Array{JuMP.Variable,2}:
- x  y
- y  x""")
-        io_test(IJuliaMode, A, """
-2×2 Array{JuMP.Variable,2}:
- x  y
- y  x""")
+        io_test(REPLMode,   A, "JuMP.Variable[x y; y x]")
+        io_test(IJuliaMode, A, "JuMP.Variable[x y; y x]")
     else
         io_test(REPLMode,   A, """
 2x2 Array{JuMP.Variable,2}:

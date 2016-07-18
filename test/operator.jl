@@ -476,7 +476,7 @@ module TestHelper # weird scoping behavior with FactCheck...
 
     vec_eq(x,y) = vec_eq([x;], [y;])
 
-    function vec_eq(x::Array, y::Array)
+    function vec_eq(x::AbstractArray, y::AbstractArray)
         size(x) == size(y) || return false
         for i in 1:length(x)
             v, w = convert(AffExpr,x[i]), convert(AffExpr,y[i])
@@ -608,7 +608,7 @@ context("Dot-ops") do
                                    3-x[2,1]  4-x[2,2]]) --> true
     @fact TestHelper.vec_eq(A.-x, B.-x) --> true
     @fact TestHelper.vec_eq(A.-x, A.-y) --> true
-    @fact TestHelper.vec_eq(x .- x, [zero(AffExpr) for _ in 1:2, _ in 1:2]) --> true
+    @fact TestHelper.vec_eq(x .- x, [zero(AffExpr) for _1 in 1:2, _2 in 1:2]) --> true
     # @fact TestHelper.vec_eq(A.-y, B.-y) --> true
     @fact TestHelper.vec_eq(x.-A, [-1+x[1,1]  -2+x[1,2];
                                    -3+x[2,1]  -4+x[2,2]]) --> true

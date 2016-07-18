@@ -181,7 +181,7 @@ context("With solver $(typeof(solver))") do
     @objective(mod, Min, sum(u))
     @constraint(mod, sum(x) <= n)
     for i=1:q
-        @SDconstraint(mod, [V*diagm(x./n)*V' eye(q)[:,i] ; eye(q)[i,:] u[i]] >= 0)
+        @SDconstraint(mod, [V*diagm(x./n)*V' eye(q)[:,i] ; eye(q)[i:i,:] u[i]] >= 0)
     end
     f, A, b, var_cones, con_cones = JuMP.conicdata(mod)
     @fact length(f) --> 8
