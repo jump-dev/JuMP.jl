@@ -66,6 +66,9 @@ function parseNLExpr(m, x, tapevar, parent, values)
         end
         return codeblock
     end
+    if isexpr(x,:call) && length(x.args) >= 2 && isexpr(x.args[2],:flatten)
+        flatten_error(x.args[2])
+    end
 
     if isexpr(x, :call)
         if length(x.args) == 2 # univariate

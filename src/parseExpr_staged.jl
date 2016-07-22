@@ -670,6 +670,8 @@ function parseExpr(x, aff::Symbol, lcoeffs::Vector, rcoeffs::Vector, newaff::Sym
             return parseExpr(numerator, aff, lcoeffs,vcat(esc(:(1/$denom)),rcoeffs),newaff)
         elseif isexpr(x,:call) && length(x.args) >= 2 && isexpr(x.args[2],:generator)
             return newaff, parseGenerator(x,aff,lcoeffs,rcoeffs,newaff)
+        elseif isexpr(x,:call) && length(x.args) >= 2 && isexpr(x.args[2],:flatten)
+            flatten_error(x.args[2])
         elseif x.head == :curly
             return newaff, parseCurly(x,aff,lcoeffs,rcoeffs,newaff)
         else # at lowest level?

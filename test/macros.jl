@@ -151,6 +151,8 @@ facts("[macros] sum(generator)") do
     @constraint(m, sum( 0*x[i,1] + y for i=1:3) == 0)
     @fact string(m.linconstr[end]) --> "3 y $eq 0"
 
+    @fact isexpr(macroexpand(:(@constraint(m, sum( 0*x[i,1] + y for i=1:3 for j in 1:3) == 0))),:error) --> true
+
 end"""); end
 
 facts("[macros] Problem modification") do

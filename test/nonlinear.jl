@@ -83,6 +83,8 @@ facts("[nonlinear] Test HS071 solves correctly (generators)") do
     @fact status --> :Optimal
     @fact getvalue(x)[:] --> roughly(
         [1.000000, 4.742999, 3.821150, 1.379408], 1e-5)
+
+    @fact isexpr(macroexpand(:(@NLconstraint(m, sum(x[i]^2 for i=1:4) == 40))),:error) --> true
 end""");end
 
 
