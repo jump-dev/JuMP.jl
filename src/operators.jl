@@ -555,7 +555,7 @@ end
 const op_hint = "Are you trying to build a nonlinear problem? Make sure you use @NLconstraint/@NLobjective."
 for (func,_) in Calculus.symbolic_derivatives_1arg(), typ in [:Variable,:AffExpr,:QuadExpr]
     errstr = "$func is not defined for type $typ. $op_hint"
-    @eval Base.($(quot(func)))(::$typ) = error($errstr)
+    @eval Base.$(func)(::$typ) = error($errstr)
 end
 
 *{T<:QuadExpr,S<:Union{Variable,AffExpr,QuadExpr}}(::T,::S) =
