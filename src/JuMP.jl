@@ -21,7 +21,7 @@ using ReverseDiffSparse
 using ForwardDiff
 using Compat
 
-import Compat.UTF8String
+import Compat: UTF8String, view
 
 @compat import Base.show
 
