@@ -51,26 +51,26 @@ _values(x) = Base.values(x)
 # Anything here: https://en.wikipedia.org/wiki/Windows-1252
 # should probably work fine on Windows
 const repl = Dict{Symbol,UTF8String}(
-    :leq        => (OS_NAME == :Windows ? "<=" : "≤"),
-    :geq        => (OS_NAME == :Windows ? ">=" : "≥"),
-    :eq         => (OS_NAME == :Windows ? "==" : "="),
+    :leq        => (is_windows() ? "<=" : "≤"),
+    :geq        => (is_windows() ? ">=" : "≥"),
+    :eq         => (is_windows() ? "==" : "="),
     :times      => "*",
     :sq         => "²",
     :ind_open   => "[",
     :ind_close  => "]",
-    :for_all    => (OS_NAME == :Windows ? "for all" : "∀"),
-    :in         => (OS_NAME == :Windows ? "in" : "∈"),
+    :for_all    => (is_windows() ? "for all" : "∀"),
+    :in         => (is_windows() ? "in" : "∈"),
     :open_set   => "{",
-    :dots       => (OS_NAME == :Windows ? ".." : "…"),
+    :dots       => (is_windows() ? ".." : "…"),
     :close_set  => "}",
-    :union      => (OS_NAME == :Windows ? "or" : "∪"),
-    :infty      => (OS_NAME == :Windows ? "Inf" : "∞"),
+    :union      => (is_windows() ? "or" : "∪"),
+    :infty      => (is_windows() ? "Inf" : "∞"),
     :open_rng   => "[",
     :close_rng  => "]",
     :integer    => "integer",
     :succeq0    => " is semidefinite",
-    :Vert       => (OS_NAME == :Windows ? "||" : "‖"),
-    :sub2       => (OS_NAME == :Windows ? "_2" : "₂"))
+    :Vert       => (is_windows() ? "||" : "‖"),
+    :sub2       => (is_windows() ? "_2" : "₂"))
 
 # IJulia-specific symbols
 const ijulia = Dict{Symbol,UTF8String}(
@@ -166,7 +166,7 @@ function Base.show(io::IO, m::Model)
         print(io, split(split(string(m.solver), "Solver")[1], ".")[2])
     end
 end
-Base.writemime(io::IO, ::MIME"text/latex", m::Model) =
+@compat Base.show(io::IO, ::MIME"text/latex", m::Model) =
     print(io, model_str(IJuliaMode,m))
 function model_str(mode, m::Model, sym::PrintSymbols)
     ijl = mode == IJuliaMode
@@ -293,7 +293,7 @@ model_str(::Type{IJuliaMode}, m::Model; mathmode=true) =
 ## Variable
 #------------------------------------------------------------------------
 Base.show(io::IO, v::Variable) = print(io, var_str(REPLMode,v))
-Base.writemime(io::IO, ::MIME"text/latex", v::Variable) =
+@compat Base.show(io::IO, ::MIME"text/latex", v::Variable) =
     print(io, var_str(IJuliaMode,v,mathmode=false))
 function var_str(mode, m::Model, col::Int; mathmode=true)
     colNames = mode == REPLMode ? m.colNames : m.colNamesIJulia
@@ -362,7 +362,7 @@ var_str(::Type{IJuliaMode}, v::Variable; mathmode=true) =
 ## Norm
 #------------------------------------------------------------------------
 Base.show(io::IO, j::Norm) = print(io, norm_str(REPLMode,j))
-Base.writemime(io::IO, ::MIME"text/latex", j::Norm) =
+@compat Base.show(io::IO, ::MIME"text/latex", j::Norm) =
     print(io, norm_str(IJuliaMode,j))
 
 function norm_str(mode, n::Norm, sym::PrintSymbols)
@@ -383,7 +383,7 @@ exprstr(n::Norm) = norm_str(REPLMode, n)
 ## JuMPContainer{Variable}
 #------------------------------------------------------------------------
 Base.show(io::IO, j::Union{JuMPContainer{Variable}, Array{Variable}}) = print(io, cont_str(REPLMode,j))
-Base.writemime(io::IO, ::MIME"text/latex", j::Union{JuMPContainer{Variable},Array{Variable}}) =
+@compat Base.show(io::IO, ::MIME"text/latex", j::Union{JuMPContainer{Variable},Array{Variable}}) =
     print(io, cont_str(IJuliaMode,j,mathmode=false))
 # Generic string converter, called by mode-specific handlers
 
@@ -643,7 +643,7 @@ end
 ## AffExpr  (not GenericAffExpr)
 #------------------------------------------------------------------------
 Base.show(io::IO, a::AffExpr) = print(io, aff_str(REPLMode,a))
-Base.writemime(io::IO, ::MIME"text/latex", a::AffExpr) =
+@compat Base.show(io::IO, ::MIME"text/latex", a::AffExpr) =
     print(io, math(aff_str(IJuliaMode,a),false))
 # Generic string converter, called by mode-specific handlers
 function aff_str(mode, a::AffExpr, show_constant=true)
@@ -710,7 +710,7 @@ Base.precompile(aff_str, (Type{JuMP.IJuliaMode}, AffExpr))
 ## GenericQuadExpr
 #------------------------------------------------------------------------
 Base.show(io::IO, q::GenericQuadExpr) = print(io, quad_str(REPLMode,q))
-Base.writemime(io::IO, ::MIME"text/latex", q::GenericQuadExpr) =
+@compat Base.show(io::IO, ::MIME"text/latex", q::GenericQuadExpr) =
     print(io, quad_str(IJuliaMode,q,mathmode=false))
 # Generic string converter, called by mode-specific handlers
 function quad_str(mode, q::GenericQuadExpr, sym)
@@ -768,7 +768,7 @@ quad_str(::Type{IJuliaMode}, q::GenericQuadExpr; mathmode=true) =
 ## SOCExpr
 #------------------------------------------------------------------------
 Base.show(io::IO, c::SOCExpr) = print(io, expr_str(REPLMode, c))
-Base.writemime(io::IO, ::MIME"text/latex", c::SOCExpr) =
+@compat Base.show(io::IO, ::MIME"text/latex", c::SOCExpr) =
     print(io, expr_str(IJuliaMode, c))
 function expr_str(mode, c::SOCExpr)
     coeff = (c.coeff == 1) ? "" : string(c.coeff, " ")
@@ -789,7 +789,7 @@ end
 ## GenericRangeConstraint
 #------------------------------------------------------------------------
 Base.show(io::IO, c::GenericRangeConstraint) = print(io, con_str(REPLMode,c))
-Base.writemime(io::IO, ::MIME"text/latex", c::GenericRangeConstraint) =
+@compat Base.show(io::IO, ::MIME"text/latex", c::GenericRangeConstraint) =
     print(io, con_str(IJuliaMode,c,mathmode=false))
 # Generic string converter, called by mode-specific handlers
 function con_str(mode, c::GenericRangeConstraint, sym)
@@ -814,7 +814,7 @@ con_str(::Type{IJuliaMode}, c::GenericRangeConstraint; mathmode=true) =
 ## QuadConstraint
 #------------------------------------------------------------------------
 Base.show(io::IO, c::QuadConstraint) = print(io, con_str(REPLMode,c))
-Base.writemime(io::IO, ::MIME"text/latex", c::QuadConstraint) =
+@compat Base.show(io::IO, ::MIME"text/latex", c::QuadConstraint) =
     print(io, con_str(IJuliaMode,c,mathmode=false))
 # Generic string converter, called by mode-specific handlers
 function con_str(mode, c::QuadConstraint, sym)
@@ -832,7 +832,7 @@ con_str(::Type{IJuliaMode}, c::QuadConstraint; mathmode=true) =
 ## SOCConstraint
 #------------------------------------------------------------------------
 Base.show(io::IO, c::SOCConstraint) = print(io, con_str(REPLMode,c))
-Base.writemime(io::IO, ::MIME"text/latex", c::SOCConstraint) =
+@compat Base.show(io::IO, ::MIME"text/latex", c::SOCConstraint) =
     print(io, con_str(IJuliaMode,c))
 function con_str(mode, c::SOCConstraint, sym::PrintSymbols)
     ne = c.normexpr
@@ -851,7 +851,7 @@ con_str(::Type{IJuliaMode}, c::SOCConstraint; mathmode=true) =
 ## SOSConstraint
 #------------------------------------------------------------------------
 Base.show(io::IO, c::SOSConstraint) = print(io, con_str(REPLMode,c))
-Base.writemime(io::IO, ::MIME"text/latex", c::SOSConstraint) =
+@compat Base.show(io::IO, ::MIME"text/latex", c::SOSConstraint) =
     print(io, con_str(IJuliaMode,c,mathmode=false))
 # Generic string converter, called by mode-specific handlers
 function con_str(mode, c::SOSConstraint, sym::PrintSymbols)
@@ -869,7 +869,7 @@ con_str(::Type{IJuliaMode}, c::SOSConstraint; mathmode=true) =
 ## SDConstraint
 #------------------------------------------------------------------------
 Base.show(io::IO, c::SDConstraint) = print(io, con_str(REPLMode,c))
-Base.writemime(io::IO, ::MIME"text/latex", c::SDConstraint) =
+@compat Base.show(io::IO, ::MIME"text/latex", c::SDConstraint) =
     print(io, con_str(IJuliaMode,c,mathmode=false))
 # Generic string converter, called by mode-specific handlers
 function con_str(mode, c::SDConstraint, succeq0)
@@ -897,9 +897,9 @@ Base.show(io::IO, c::ConstraintRef{Model,SDConstraint})     = print(io, con_str(
 function Base.show(io::IO, c::ConstraintRef{Model,NonlinearConstraint})
     print(io, "Reference to nonlinear constraint #$(linearindex(c))")
 end
-Base.writemime(io::IO, ::MIME"text/latex", c::ConstraintRef{Model,LinearConstraint}) =
+@compat Base.show(io::IO, ::MIME"text/latex", c::ConstraintRef{Model,LinearConstraint}) =
     print(io, con_str(IJuliaMode,c.m.linconstr[c.idx],mathmode=false))
-Base.writemime(io::IO, ::MIME"text/latex", c::ConstraintRef{Model,QuadConstraint}) =
+@compat Base.show(io::IO, ::MIME"text/latex", c::ConstraintRef{Model,QuadConstraint}) =
     print(io, con_str(IJuliaMode,c.m.quadconstr[c.idx],mathmode=false))
-Base.writemime(io::IO, ::MIME"text/latex", c::ConstraintRef{Model,SOSConstraint}) =
+@compat Base.show(io::IO, ::MIME"text/latex", c::ConstraintRef{Model,SOSConstraint}) =
     print(io, con_str(IJuliaMode,c.m.sosconstr[c.idx],mathmode=false))

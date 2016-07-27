@@ -771,7 +771,7 @@ end
 esc_nonconstant(x::Number) = x
 esc_nonconstant(x) = esc(x)
 
-const EMPTYSTRING = utf8("")
+const EMPTYSTRING = UTF8String("")
 
 variable_error(args, str) = error("In @variable($(join(args,","))): ", str)
 
@@ -930,7 +930,7 @@ macro variable(args...)
         variable_error(args, "Can only create one variable at a time when adding to existing constraints.")
 
         return assert_validmodel(m, quote
-            $variable = Variable($m,$lb,$ub,$(quot(t)),$obj,$inconstraints,$coefficients,utf8(string($quotvarname)),$value)
+            $variable = Variable($m,$lb,$ub,$(quot(t)),$obj,$inconstraints,$coefficients,UTF8String(string($quotvarname)),$value)
             $(anonvar ? variable : :($escvarname = $variable))
         end)
     end
@@ -940,7 +940,7 @@ macro variable(args...)
         sdp && variable_error(args, "Cannot add a semidefinite scalar variable")
         @assert !anonvar
         return assert_validmodel(m, quote
-            $variable = Variable($m,$lb,$ub,$(quot(t)),utf8(string($quotvarname)),$value)
+            $variable = Variable($m,$lb,$ub,$(quot(t)),UTF8String(string($quotvarname)),$value)
             registervar($m, $quotvarname, $variable)
             $escvarname = $variable
         end)

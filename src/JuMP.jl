@@ -21,6 +21,10 @@ using ReverseDiffSparse
 using ForwardDiff
 using Compat
 
+import Compat: UTF8String, view
+
+@compat import Base.show
+
 function __init__()
     ENABLE_NLP_RESOLVE[1] = false
 end

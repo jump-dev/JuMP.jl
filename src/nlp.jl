@@ -524,8 +524,8 @@ function MathProgBase.eval_g(d::NLPEvaluator, g, x)
     end
     A = d.A
     for i in 1:size(A,1); g[i] = 0.0; end
-    #fill!(sub(g,1:size(A,1)), 0.0)
-    A_mul_B!(sub(g,1:size(A,1)),A,x)
+    #fill!(view(g,1:size(A,1)), 0.0)
+    A_mul_B!(view(g,1:size(A,1)),A,x)
     idx = size(A,1)+1
     quadconstr = d.m.quadconstr::Vector{QuadConstraint}
     for c::QuadConstraint in quadconstr
@@ -922,7 +922,7 @@ function hessian_slice{CHUNK}(d, ex, x, H, scale, nzcount, recovery_tmp_storage,
 
     # Output is in R, now recover
 
-    #output_slice = sub(H, (nzcount+1):(nzcount+nzthis))
+    #output_slice = view(H, (nzcount+1):(nzcount+nzthis))
     output_slice = VectorView(nzcount, nzthis, pointer(H))
     Coloring.recover_from_matmat!(output_slice, R, ex.rinfo, recovery_tmp_storage)
     scale!(output_slice, scale)
