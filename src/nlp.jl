@@ -3,12 +3,13 @@
 #  License, v. 2.0. If a copy of the MPL was not distributed with this
 #  file, You can obtain one at http://mozilla.org/MPL/2.0/.
 
-include("nlpmacros.jl")
 
 type NonlinearExprData
     nd::Vector{NodeData}
     const_values::Vector{Float64}
 end
+
+include("parsenlp.jl")
 
 typealias NonlinearConstraint GenericRangeConstraint{NonlinearExprData}
 
@@ -1353,4 +1354,64 @@ end
 function register(s::Symbol, dimension::Integer, f::Function, ∇f::Function, ∇²f::Function)
     dimension == 1 || error("Providing hessians for multivariate functions is not yet supported")
     ReverseDiffSparse.register_univariate_operator(s, f, ∇f, ∇²f)
+end
+
+# Ex: setNLobjective(m, :Min, :($x + $y^2))
+function setNLobjective(m::Model, sense::Symbol, x)
+    initNLP(m)
+    setobjectivesense(m, sense)
+    ex = NonlinearExprData(m, x)
+    m.nlpdata.nlobj = ex
+    m.obj = zero(QuadExpr)
+    m.internalModelLoaded = false
+    return
+end
+
+# Ex: addNLconstraint(m, :($x + $y^2 <= 1))
+function addNLconstraint(m::Model, ex::Expr)
+    if VERSION < v"0.5.0-dev+3231"
+        ex = comparison_to_call(ex)
+    end
+    initNLP(m)
+    m.internalModelLoaded = false
+    if isexpr(ex, :call) # one-sided constraint
+        # Simple comparison - move everything to the LHS
+        op = ex.args[1]
+        if op == :(==)
+            lb = 0.0
+            ub = 0.0
+        elseif op == :(<=) || op == :(≤)
+            lb = -Inf
+            ub = 0.0
+        elseif op == :(>=) || op == :(≥)
+            lb = 0.0
+            ub = Inf
+        else
+            error("in addNLconstraint ($ex): expected comparison operator (<=, >=, or ==).")
+        end
+        lhs = :($(ex.args[2]) - $(ex.args[3]))
+        c = NonlinearConstraint(NonlinearExprData(m, lhs), lb, ub)
+        push!(m.nlpdata.nlconstr, c)
+        return ConstraintRef{Model,NonlinearConstraint}(m, length(m.nlpdata.nlconstr))
+    elseif isexpr(ex, :comparison)
+        # ranged row
+        if (ex.args[2] != :<= && ex.args[2] != :≤) || (ex.args[4] != :<= && ex.args[4] != :≤)
+            error("in addNLconstraint ($ex): only ranged rows of the form lb <= expr <= ub are supported.")
+        end
+        lb = ex.args[1]
+        ub = ex.args[5]
+        if !isa(lb,Number)
+            error(string("in addNLconstraint (",ex,"): expected ",lb," to be a number."))
+        elseif !isa(ub,Number)
+            error(string("in addNLconstraint (",ex,"): expected ",ub," to be a number."))
+        end
+        c = NonlinearConstraint(NonlinearExprData(m, ex.args[3]), lb, ub)
+        push!(m.nlpdata.nlconstr, c)
+        return ConstraintRef{Model,NonlinearConstraint}(m, length(m.nlpdata.nlconstr))
+    else
+        # Unknown
+        error("in addNLconstraint ($ex): constraints must be in one of the following forms:\n" *
+              "       expr1 <= expr2\n" * "       expr1 >= expr2\n" *
+              "       expr1 == expr2")
+    end
 end
