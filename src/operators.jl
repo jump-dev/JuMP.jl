@@ -325,6 +325,7 @@ Base.promote_rule(         ::Type{AffExpr}, ::Type{QuadExpr}) = QuadExpr
 Base.promote_rule{R<:Real}(::Type{QuadExpr},::Type{R}       ) = QuadExpr
 
 _throw_transpose_error() = error("Transpose not currently implemented for JuMPArrays with arbitrary index sets.")
+Base.transpose(x::AbstractJuMPScalar) = x
 Base.transpose( x::JuMPArray) = _throw_transpose_error()
 Base.ctranspose(x::JuMPArray) = _throw_transpose_error()
 

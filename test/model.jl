@@ -76,7 +76,7 @@ facts("[model] Test printing a model") do
     # Test LP writer
     writeLP(modA, modPath * "A.lp")
     modALP = if VERSION >= v"0.5.0-dev+1866" # leading zero, base Julia PR #14377
-        ASCIIString[
+        String[
         "Maximize",
         "obj: 0.16666666666666666 VAR1 + 0.16666666666666666 VAR2 + 1 VAR3 + 1 VAR4",
         "Subject To",
@@ -96,7 +96,7 @@ facts("[model] Test printing a model") do
         "VAR2",
         "End"]
     else
-        ASCIIString[
+        String[
         "Maximize",
         "obj: .16666666666666666 VAR1 + .16666666666666666 VAR2 + 1 VAR3 + 1 VAR4",
         "Subject To",
@@ -128,7 +128,7 @@ facts("[model] Test printing a model") do
     # Test MPS writer
     writeMPS(modA, modPath * "A.mps")
     if VERSION >= v"0.5.0-dev+1866" # leading zero, base Julia PR #14377
-        modAMPS = ASCIIString[
+        modAMPS = String[
         "NAME   JuMPModel",
         "ROWS",
         " N  OBJ",
@@ -172,7 +172,7 @@ facts("[model] Test printing a model") do
         "  UP BOUND VAR7 6",
         "ENDATA"]
     else
-        modAMPS = ASCIIString[
+        modAMPS = String[
         "NAME   JuMPModel",
         "ROWS",
         " N  OBJ",
@@ -244,7 +244,7 @@ facts("[model] Quadratic MPS writer") do
     #####################################################################
     # Test MPS writer
     writeMPS(modQ, modPath * "Q.mps")
-    modQMPS = ASCIIString[
+    modQMPS = String[
     "NAME   JuMPModel",
     "ROWS",
     " N  OBJ",
