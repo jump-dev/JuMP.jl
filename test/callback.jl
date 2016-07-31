@@ -262,3 +262,19 @@ context("With solver $(typeof(solver))") do
     addlazycallback(mod, mycallback)
     @fact solve(mod) --> :UserLimit
 end; end; end
+
+cbc && facts("[callback] Solver doesn't support callbacks") do
+    mycb(cb) = nothing
+    mod = Model(solver=Cbc.CbcSolver())
+    addlazycallback(mod, mycb)
+    @fact_throws ErrorException solve(mod)
+    mod = Model(solver=Cbc.CbcSolver())
+    addcutcallback(mod, mycb)
+    @fact_throws ErrorException solve(mod)
+    mod = Model(solver=Cbc.CbcSolver())
+    addheuristiccallback(mod, mycb)
+    @fact_throws ErrorException solve(mod)
+    mod = Model(solver=Cbc.CbcSolver())
+    addinfocallback(mod, mycb)
+    @fact_throws ErrorException solve(mod)
+end
