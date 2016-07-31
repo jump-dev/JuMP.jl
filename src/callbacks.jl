@@ -18,6 +18,7 @@ type HeuristicCallback <: JuMPCallback
 end
 type InfoCallback <: JuMPCallback
     f::Function
+    when::Symbol
 end
 
 type CallbackAbort <: Exception end
@@ -38,9 +39,22 @@ function addheuristiccallback(m::Model, f::Function)
     m.internalModelLoaded = false
     push!(m.callbacks, HeuristicCallback(f))
 end
-function addinfocallback(m::Model, f::Function)
+
+function _unspecifiedstate()
+    warn("""Info Callbacks without a when clause will currently default
+         to fire only in the :Intermediate state to preserve its behavior
+         with previous versions of JuMP.
+
+         This behavior will be deprecated in subsequent versions of JuMP, so
+         please rewrite all invocations of addinfocallbacks(m, f) to
+         addinfocallbacks(m, f, when = :Intermediate) instead.
+         """)
+    :Intermediate
+end
+
+function addinfocallback(m::Model, f::Function; when::Symbol = _unspecifiedstate())
     m.internalModelLoaded = false
-    push!(m.callbacks, InfoCallback(f))
+    push!(m.callbacks, InfoCallback(f, when))
 end
 
 function lazycallback(d::MathProgBase.MathProgCallbackData, m::Model, cbs::Vector{LazyCallback})
@@ -138,10 +152,16 @@ end
 
 function infocallback(d::MathProgBase.MathProgCallbackData, m::Model, cbs::Vector{InfoCallback})
     state = MathProgBase.cbgetstate(d)
-    @assert state == :MIPInfo
+    if state == :MIPSol
+        MathProgBase.cbgetmipsolution(d,m.colVal)
+    elseif state == :MIPNode
+        MathProgBase.cbgetlpsolution(d,m.colVal)
+    end
     try
         for cb in cbs
-            cb.f(d)
+            if cb.when == state
+                cb.f(d)
+            end
         end
     catch y
         if isa(y, CallbackAbort)
