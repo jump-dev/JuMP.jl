@@ -287,7 +287,7 @@ including::
 Informational Callbacks
 ^^^^^^^^^^^^^^^^^^^^^^^
 
-Sometimes it can be useful to track solver progress without actually changing the algorithm by adding cuts or heuristic solutions. In these cases, informational callbacks can be added, wherein statistics can be tracked via the ``cbget`` functions discussed in the previous section. Informational callbacks are added to a JuMP model with the ``addinfocallback(m::Model, f::Function)`` function.
+Sometimes it can be useful to track solver progress without actually changing the algorithm by adding cuts or heuristic solutions. In these cases, informational callbacks can be added, wherein statistics can be tracked via the ``cbget`` functions discussed in the previous section. Informational callbacks are added to a JuMP model with the ``addinfocallback(m::Model, f::Function; when::Symbol)`` function, where the `when` argument should be one of ``:MIPNode``, ``:MIPSol`` or ``:Intermediate`` (listed under ``cbgetstate()`` in the `MathProgBase documentation <https://mathprogbasejl.readthedocs.io/en/latest/lpqcqp.html#cbgetstate>`_)
 
 For a simple example, we can add a function that tracks the best bound and incumbent objective value as the solver progresses through the branch-and-bound tree::
 
@@ -308,7 +308,7 @@ For a simple example, we can add a function that tracks the best bound and incum
         bestbound = MathProgBase.cbgetbestbound(cb)
         push!(bbdata, NodeData(time(),node,obj,bestbound))
     end
-    addinfocallback(m, infocallback)
+    addinfocallback(m, infocallback, when = :Intermediate)
 
     solve(m)
 
@@ -320,6 +320,21 @@ For a simple example, we can add a function that tracks the best bound and incum
                         bb.obj, ",", bb.bestbound)
         end
     end
+
+For a second example, we can add a function that tracks the intermediate solutions at each integer-feasible solution in the Branch-and-Bound tree::
+
+    solutionvalues = Vector{Float64}[]
+
+    # build model ``m`` up here
+
+    function infocallback(cb)
+        push!(solutionvalues, JuMP.getvalue(x))
+    end
+    addinfocallback(m, infocallback, when = :MIPSol)
+
+    solve(m)
+
+    # all the intermediate solutions are now stored in `solutionvalues`
 
 
 Code Design Considerations

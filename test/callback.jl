@@ -216,8 +216,9 @@ for infosolver in info_solvers
 context("With solver $(typeof(infosolver))") do
     nodes      = Int[]
     objs       = Float64[]
+    objvals    = Float64[]
     bestbounds = Float64[]
-    entered = [false,false]
+    entered = fill(false, 2)
 
     N = 10000
     include(joinpath("data","informational.jl"))
@@ -226,16 +227,22 @@ context("With solver $(typeof(infosolver))") do
     @objective(mod, Max, dot(r1,x))
     @constraint(mod, c[i=1:10], dot(r2[i],x) <= rhs[i]*N/10)
     # Test that solver fills solution correctly
-    function myinfo(cb)
+    function myinfo1(cb)
+        @assert MathProgBase.cbgetstate(cb) == :Intermediate
         entered[1] = true
         push!(nodes,      MathProgBase.cbgetexplorednodes(cb))
         push!(objs,       MathProgBase.cbgetobj(cb))
         push!(bestbounds, MathProgBase.cbgetbestbound(cb))
     end
-    addinfocallback(mod, myinfo)
-    addinfocallback(mod, cb -> (entered[2] = true))
+    function myinfo2(cb)
+        @assert MathProgBase.cbgetstate(cb) == :MIPSol
+        push!(objvals, dot(r1,JuMP.getvalue(x[:])))
+    end
+    addinfocallback(mod, myinfo1, when = :Intermediate)
+    addinfocallback(mod, myinfo2, when = :MIPSol)
+    addinfocallback(mod, cb -> (entered[2] = true), when = :Intermediate)
     @fact solve(mod) --> :Optimal
-    @fact entered --> [true,true]
+    @fact entered --> fill(true, 2)
     mono_node, mono_obj, mono_bestbound = true, true, true
     for n in 2:length(nodes)
         mono_node &= (nodes[n-1] <= nodes[n] + 1e-8)
@@ -247,6 +254,9 @@ context("With solver $(typeof(infosolver))") do
     @fact mono_node      --> true
     @fact mono_obj       --> true
     @fact mono_bestbound --> true
+    for (s1,s2) in zip(objvals[1:end-1], objvals[2:end])
+        @fact  s1 <= s2 --> true
+    end
 end; end; end
 
 facts("[callback] Callback exit on CallbackAbort") do
@@ -275,6 +285,6 @@ cbc && facts("[callback] Solver doesn't support callbacks") do
     addheuristiccallback(mod, mycb)
     @fact_throws ErrorException solve(mod)
     mod = Model(solver=Cbc.CbcSolver())
-    addinfocallback(mod, mycb)
+    addinfocallback(mod, mycb, when = :Intermediate)
     @fact_throws ErrorException solve(mod)
 end
