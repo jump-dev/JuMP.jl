@@ -60,6 +60,31 @@ context("With solver $(typeof(nlp_solver))") do
         [1.000000, 4.742999, 3.821150, 1.379408], 1e-5)
 end; end; end
 
+facts("[nonlinear] Test HS071 solves correctly (no macros)") do
+for nlp_solver in nlp_solvers
+context("With solver $(typeof(nlp_solver))") do
+    # hs071
+    # Polynomial objective and constraints
+    # min x1 * x4 * (x1 + x2 + x3) + x3
+    # st  x1 * x2 * x3 * x4 >= 25
+    #     x1^2 + x2^2 + x3^2 + x4^2 = 40
+    #     1 <= x1, x2, x3, x4 <= 5
+    # Start at (1,5,5,1)
+    # End at (1.000..., 4.743..., 3.821..., 1.379...)
+    m = Model(solver=nlp_solver)
+    initval = [1,5,5,1]
+    @variable(m, 1 <= x[i=1:4] <= 5, start=initval[i])
+    JuMP.setNLobjective(m, :Min, :($(x[1])*$(x[4])*($(x[1])+$(x[2])+$(x[3])) + $(x[3])))
+    JuMP.addNLconstraint(m, :($(x[1])*$(x[2])*$(x[3])*$(x[4]) >= 25))
+    JuMP.addNLconstraint(m, :($(x[1])^2+$(x[2])^2+$(x[3])^2+$(x[4])^2 == 40))
+    @fact MathProgBase.numconstr(m) --> 2
+    status = solve(m)
+
+    @fact status --> :Optimal
+    @fact getvalue(x)[:] --> roughly(
+        [1.000000, 4.742999, 3.821150, 1.379408], 1e-5)
+end; end; end
+
 if VERSION >= v"0.5-dev+5475"
 eval("""
 facts("[nonlinear] Test HS071 solves correctly (generators)") do
@@ -222,6 +247,27 @@ context("With solver $(typeof(nlp_solver))") do
     @fact getobjectivevalue(m) --> roughly(u, 1e-6)
 
     @NLobjective(m, Min, x)
+    status = solve(m)
+
+    @fact status --> :Optimal
+    @fact getobjectivevalue(m) --> roughly(l, 1e-6)
+end; end; end
+
+facts("[nonlinear] Test two-sided nonlinear constraints (no macros)") do
+for nlp_solver in convex_nlp_solvers
+context("With solver $(typeof(nlp_solver))") do
+    m = Model(solver=nlp_solver)
+    @variable(m, x)
+    JuMP.setNLobjective(m, :Max, x)
+    l = -1
+    u = 1
+    JuMP.addNLconstraint(m, :($l <= $x <= $u))
+    status = solve(m)
+
+    @fact status --> :Optimal
+    @fact getobjectivevalue(m) --> roughly(u, 1e-6)
+
+    JuMP.setNLobjective(m, :Min, x)
     status = solve(m)
 
     @fact status --> :Optimal

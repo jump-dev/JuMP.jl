@@ -4,8 +4,6 @@
 #  file, You can obtain one at http://mozilla.org/MPL/2.0/.
 
 
-
-
 # generates code which converts an expression into a NodeData array (tape)
 # parent is the index of the parent expression
 # values is the name of the list of constants which appear in the expression
@@ -251,3 +249,20 @@ macro processNLExpr(m, ex)
         NonlinearExprData(tape, values)
     end
 end
+
+# Construct a NonlinearExprData from a Julia expression.
+# Variable objects should be spliced into the expression.
+function NonlinearExprData(m::Model, ex::Expr)
+    ex = spliceref(m,ex)
+    nd, values = ReverseDiffSparse.expr_to_nodedata(ex)
+    return NonlinearExprData(nd, values)
+end
+NonlinearExprData(m::Model, ex) = NonlinearExprData(m, :($ex + 0))
+
+# recursively replace Variable(m, i) with Expr(:ref,:x,i) in ex
+spliceref(m::Model, ex::Expr) = Expr(ex.head,map(e -> spliceref(m,e), ex.args)...)
+function spliceref(m::Model, v::Variable)
+    v.m === m || error("Variable $v does not belong to this model")
+    return Expr(:ref, :x, linearindex(v))
+end
+spliceref(m::Model, ex) = ex
