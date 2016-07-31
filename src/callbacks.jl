@@ -72,8 +72,14 @@ function lazycallback(d::MathProgBase.MathProgCallbackData, m::Model, cbs::Vecto
     :Continue
 end
 
-attach_callbacks(m::Model, cbs::Vector{LazyCallback}) =
-    MathProgBase.setlazycallback!(m.internalModel, d -> lazycallback(d,m,cbs))
+function attach_callbacks(m::Model, cbs::Vector{LazyCallback})
+    cb = d -> lazycallback(d,m,cbs)
+    if applicable(MathProgBase.setlazycallback!, m.internalModel, cb)
+        MathProgBase.setlazycallback!(m.internalModel, cb)
+    else
+        error("Solver does not support lazy callbacks")
+    end
+end
 
 function cutcallback(d::MathProgBase.MathProgCallbackData, m::Model, cbs::Vector{CutCallback})
     state = MathProgBase.cbgetstate(d)
@@ -93,8 +99,15 @@ function cutcallback(d::MathProgBase.MathProgCallbackData, m::Model, cbs::Vector
     :Continue
 end
 
-attach_callbacks(m::Model, cbs::Vector{CutCallback}) =
-    MathProgBase.setcutcallback!(m.internalModel, d -> cutcallback(d,m,cbs))
+function attach_callbacks(m::Model, cbs::Vector{CutCallback})
+    cb = d -> cutcallback(d,m,cbs)
+    if applicable(MathProgBase.setcutcallback!, m.internalModel, cb)
+        MathProgBase.setcutcallback!(m.internalModel, cb)
+    else
+        error("Solver does not support cut callbacks")
+    end
+end
+
 
 function heurcallback(d::MathProgBase.MathProgCallbackData, m::Model, cbs::Vector{HeuristicCallback})
     state = MathProgBase.cbgetstate(d)
@@ -114,8 +127,14 @@ function heurcallback(d::MathProgBase.MathProgCallbackData, m::Model, cbs::Vecto
     :Continue
 end
 
-attach_callbacks(m::Model, cbs::Vector{HeuristicCallback}) =
-    MathProgBase.setheuristiccallback!(m.internalModel, d -> heurcallback(d,m,cbs))
+function attach_callbacks(m::Model, cbs::Vector{HeuristicCallback})
+    cb = d -> heurcallback(d,m,cbs)
+    if applicable(MathProgBase.setheuristiccallback!, m.internalModel, cb)
+        MathProgBase.setheuristiccallback!(m.internalModel, cb)
+    else
+        error("Solver does not support heuristic callbacks")
+    end
+end
 
 function infocallback(d::MathProgBase.MathProgCallbackData, m::Model, cbs::Vector{InfoCallback})
     state = MathProgBase.cbgetstate(d)
@@ -134,8 +153,14 @@ function infocallback(d::MathProgBase.MathProgCallbackData, m::Model, cbs::Vecto
     :Continue
 end
 
-attach_callbacks(m::Model, cbs::Vector{InfoCallback}) =
-    MathProgBase.setinfocallback!(m.internalModel, d -> infocallback(d,m,cbs))
+function attach_callbacks(m::Model, cbs::Vector{InfoCallback})
+    cb = d -> infocallback(d,m,cbs)
+    if applicable(MathProgBase.setinfocallback!, m.internalModel, cb)
+        MathProgBase.setinfocallback!(m.internalModel, cb)
+    else
+        error("Solver does not support info callbacks")
+    end
+end
 
 function registercallbacks(m::Model)
     isempty(m.callbacks) && return # might as well avoid allocating the indexedVector
