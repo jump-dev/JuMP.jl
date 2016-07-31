@@ -1,15 +1,14 @@
 JuMP
 ====
-#### Julia for Mathematical Programming
 
-JuMP is a domain-specific modeling language for **[mathematical programming]**
+JuMP is a domain-specific modeling language for **[mathematical optimization]**
 embedded in **[Julia]**. It currently supports a number of open-source and
 commercial solvers ([Bonmin], [Cbc], [Clp], [Couenne], [CPLEX], [ECOS], [GLPK],
 [Gurobi], [Ipopt], [KNITRO], [MOSEK], [NLopt], [SCS]) for a variety of problem classes, including
 **[linear programming]**, **[(mixed) integer programming]**,
 **[second-order conic programming]**, **[semidefinite programming]**, and **[nonlinear programming]**.
 
-[mathematical programming]: http://en.wikipedia.org/wiki/Mathematical_optimization
+[mathematical optimization]: http://en.wikipedia.org/wiki/Mathematical_optimization
 [Julia]: http://julialang.org/
 [Bonmin]: https://projects.coin-or.org/Bonmin
 [Couenne]: https://projects.coin-or.org/Couenne
@@ -70,7 +69,7 @@ For full installation instructions, including how to install solvers, see the do
 
 ## Supported problem classes
 
-Mathematical programming encompasses a large variety of problem classes.
+Mathematical optimization encompasses a large variety of problem classes.
 We list below what is currently supported. See the documentation for more information.
 
 **Objective types**

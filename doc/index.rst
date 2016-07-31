@@ -1,14 +1,14 @@
-===========================================
-JuMP --- Julia for Mathematical Programming
-===========================================
+============================================
+JuMP --- Julia for Mathematical Optimization
+============================================
 
 .. include:: warn.rst
 
 .. module:: JuMP
-   :synopsis: Julia for Mathematical Programming
+   :synopsis: Julia for Mathematical Optimization
 
 `JuMP <https://github.com/JuliaOpt/JuMP.jl>`_ is a domain-specific modeling language for
-`mathematical programming <http://en.wikipedia.org/wiki/Mathematical_optimization>`_
+`mathematical optimization <http://en.wikipedia.org/wiki/Mathematical_optimization>`_
 embedded in `Julia <http://julialang.org/>`_.
 It currently supports a number of open-source and commercial solvers (see below)
 for a variety of problem classes, including **linear programming**, **mixed-integer programming**, **second-order conic programming**, **semidefinite programming**, and **nonlinear programming**.
