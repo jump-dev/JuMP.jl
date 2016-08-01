@@ -950,7 +950,7 @@ macro variable(args...)
     # We now build the code to generate the variables (and possibly the JuMPDict
     # to contain them)
     refcall, idxvars, idxsets, idxpairs, condition = buildrefsets(var, variable)
-    clear_dependencies(i) = (isdependent(idxvars,idxsets[i],i) ? nothing : idxsets[i])
+    clear_dependencies(i) = (isdependent(idxvars,idxsets[i],i) ? () : idxsets[i])
 
     code = :( $(refcall) = Variable($m, $lb, $ub, $(quot(t)), EMPTYSTRING, $value) )
     if symmetric
@@ -1007,7 +1007,7 @@ macro variable(args...)
 end
 
 storecontainerdata(m::Model, variable, varname, idxsets, idxpairs, condition) =
-    m.varData[variable] = JuMPContainerData(varname, idxsets, idxpairs, condition)
+    m.varData[variable] = JuMPContainerData(varname, map(collect,idxsets), idxpairs, condition)
 
 macro constraintref(var)
     if isa(var,Symbol)

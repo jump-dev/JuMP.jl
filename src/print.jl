@@ -507,6 +507,7 @@ end
 
 # UTILITY FUNCTIONS FOR cont_str
 function cont_str_set(idxset::Union{Range,Array}, dots)  # 2:2:20 -> {2,4..18,20}
+    length(idxset) == 0 && return dots
     length(idxset) == 1 && return string(idxset[1])
     length(idxset) == 2 && return string(idxset[1],",",idxset[2])
     length(idxset) == 3 && return string(idxset[1],",",idxset[2],",",idxset[3])
