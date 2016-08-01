@@ -79,8 +79,15 @@ function parseNLExpr(m, x, tapevar, parent, values)
             else
                 opname = quot(x.args[1])
                 errorstring = "Unrecognized function $opname used in nonlinear expression."
+                errorstring2 = "Incorrect number of arguments for $opname in nonlinear expression."
                 lookupcode = quote
-                    haskey(univariate_operator_to_id,$opname) || error($errorstring)
+                    if !haskey(univariate_operator_to_id,$opname)
+                        if haskey(operator_to_id,$opname)
+                            error($errorstring2)
+                        else
+                            error($errorstring)
+                        end
+                    end
                     operatorid = univariate_operator_to_id[$opname]
                 end
                 push!(block.args, :($lookupcode; push!($tapevar, NodeData(CALLUNIVAR, operatorid, $parent))))
@@ -102,8 +109,15 @@ function parseNLExpr(m, x, tapevar, parent, values)
             else # could be user defined
                 opname = quot(x.args[1])
                 errorstring = "Unrecognized function $opname used in nonlinear expression."
+                errorstring2 = "Incorrect number of arguments for $opname in nonlinear expression."
                 lookupcode = quote
-                    haskey(operator_to_id,$opname) || error($errorstring)
+                    if !haskey(operator_to_id,$opname)
+                        if haskey(univariate_operator_to_id,$opname)
+                            error($errorstring2)
+                        else
+                            error($errorstring)
+                        end
+                    end
                     operatorid = operator_to_id[$opname]
                 end
                 push!(block.args, :($lookupcode; push!($tapevar, NodeData(CALL, operatorid, $parent))))
