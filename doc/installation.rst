@@ -40,6 +40,8 @@ Solver support in Julia is currently provided by writing a solver-specific packa
 +----------------------------------------------------------------------------------+---------------------------------------------------------------------------------+-----------------------------+-------------+----+------+------+-----+-------+-----+
 | Solver                                                                           | Julia Package                                                                   | ``solver=``                 | License     | LP | SOCP | MILP | NLP | MINLP | SDP |
 +==================================================================================+=================================================================================+=============================+=============+====+======+======+=====+=======+=====+
+| `Artelys Knitro <http://artelys.com/en/optimization-tools/knitro>`_              | `KNITRO.jl <https://github.com/JuliaOpt/KNITRO.jl>`_                            | ``KnitroSolver()``          |  Comm.      |    |      |      |  X  |   X   |     |
++----------------------------------------------------------------------------------+---------------------------------------------------------------------------------+-----------------------------+-------------+----+------+------+-----+-------+-----+
 | `Bonmin <https://projects.coin-or.org/Bonmin>`_                                  | `AmplNLWriter.jl <https://github.com/JackDunnNZ/AmplNLWriter.jl>`_              | ``BonminNLSolver()`` *      |  EPL        | X  |      |  X   |  X  |   X   |     |
 +                                                                                  +---------------------------------------------------------------------------------+-----------------------------+             +    +      +      +     +       +     +
 |                                                                                  | `CoinOptServices.jl <https://github.com/JuliaOpt/CoinOptServices.jl>`_          | ``OsilBonminSolver()``      |             |    |      |      |     |       |     |
@@ -56,13 +58,13 @@ Solver support in Julia is currently provided by writing a solver-specific packa
 +----------------------------------------------------------------------------------+---------------------------------------------------------------------------------+-----------------------------+-------------+----+------+------+-----+-------+-----+
 | `ECOS <https://github.com/ifa-ethz/ecos>`_                                       | `ECOS.jl <https://github.com/JuliaOpt/ECOS.jl>`_                                |  ``ECOSSolver()``           |  GPL        | X  |  X   |      |     |       |     |
 +----------------------------------------------------------------------------------+---------------------------------------------------------------------------------+-----------------------------+-------------+----+------+------+-----+-------+-----+
+| `FICO Xpress <http://www.fico.com/en/products/fico-xpress-optimization-suite>`_  | `Xpress.jl <https://github.com/JuliaOpt/Xpress.jl>`_                            |  ``XpressSolver()``         |  Comm.      | X  |      |  X   |     |       |     |
++----------------------------------------------------------------------------------+---------------------------------------------------------------------------------+-----------------------------+-------------+----+------+------+-----+-------+-----+
 | `GLPK <http://www.gnu.org/software/glpk/>`_                                      | `GLPKMath... <https://github.com/JuliaOpt/GLPKMathProgInterface.jl>`_           |  ``GLPKSolver[LP|MIP]()``   |  GPL        | X  |      |  X   |     |       |     |
 +----------------------------------------------------------------------------------+---------------------------------------------------------------------------------+-----------------------------+-------------+----+------+------+-----+-------+-----+
 | `Gurobi <http://gurobi.com>`_                                                    | `Gurobi.jl <https://github.com/JuliaOpt/Gurobi.jl>`_                            | ``GurobiSolver()``          |  Comm.      | X  |   X  |  X   |     |       |     |
 +----------------------------------------------------------------------------------+---------------------------------------------------------------------------------+-----------------------------+-------------+----+------+------+-----+-------+-----+
 | `Ipopt <https://projects.coin-or.org/Ipopt>`_                                    | `Ipopt.jl <https://github.com/JuliaOpt/Ipopt.jl>`_                              | ``IpoptSolver()``           |  EPL        | X  |      |      |  X  |       |     |
-+----------------------------------------------------------------------------------+---------------------------------------------------------------------------------+-----------------------------+-------------+----+------+------+-----+-------+-----+
-| `KNITRO <http://www.ziena.com/knitro.htm>`_                                      | `KNITRO.jl <https://github.com/JuliaOpt/KNITRO.jl>`_                            | ``KnitroSolver()``          |  Comm.      |    |      |      |  X  |   X   |     |
 +----------------------------------------------------------------------------------+---------------------------------------------------------------------------------+-----------------------------+-------------+----+------+------+-----+-------+-----+
 | `MOSEK <http://www.mosek.com/>`_                                                 | `Mosek.jl <https://github.com/JuliaOpt/Mosek.jl>`_                              | ``MosekSolver()``           |  Comm.      | X  |   X  |  X   |  X  |       | X   |
 +----------------------------------------------------------------------------------+---------------------------------------------------------------------------------+-----------------------------+-------------+----+------+------+-----+-------+-----+
@@ -93,6 +95,11 @@ Setting solver options is discussed in the :ref:`Model <ref-model>` section.
 
 Solver-specific notes follow below.
 
+Artelys Knitro
+++++++++++++++
+
+Requires a license. The KNITRO.jl interface currently supports only nonlinear problems.
+
 COIN-OR Clp and Cbc
 +++++++++++++++++++
 
@@ -104,7 +111,7 @@ Clp and Cbc, if available, are the default choice of solver in JuMP. Cbc support
 CPLEX
 +++++
 
-Requires a working installation of CPLEX with a license (free for faculty members and graduate teaching assistants). The `CPLEX.jl <https://github.com/joehuchette/CPLEX.jl>`_ interface is experimental; it requires using CPLEX as a shared library, which is unsupported by the CPLEX developers. Special installation steps are required on OS X. CPLEX supports MIP callbacks and "SOS" constraints.
+Requires a working installation of CPLEX with a license (free for faculty members and graduate teaching assistants). The interface requires using CPLEX as a shared library, which is unsupported by the CPLEX developers. Special installation steps are required on OS X. CPLEX supports MIP callbacks and "SOS" constraints.
 
 
 ECOS
@@ -112,6 +119,10 @@ ECOS
 
 ECOS can be used by JuMP to solve LPs and SOCPs. ECOS does not support general quadratic objectives or constraints, only second-order conic constraints specified by using ``norm`` or the quadratic form ``x'x <= y^2``.
 
+FICO Xpress
++++++++++++
+
+Requires a license. The interface is experimental and has not been widely tested. Callbacks are not yet supported. SOCPs have not been tested.
 
 GLPK
 ++++
@@ -134,10 +145,6 @@ The default installation of Ipopt uses the open-source MUMPS library for sparse 
 Significant speedups can be obtained by manually compiling Ipopt to use proprietary sparse linear algebra libraries instead.
 Julia can be pointed to use a custom version of Ipopt; we suggest posting to the `julia-opt <https://groups.google.com/forum/#!forum/julia-opt>`_ mailing list with your platform details for guidance on how to do this.
 
-KNITRO
-++++++
-
-Requires a license. The KNITRO.jl interface currently supports only nonlinear problems.
 
 MOSEK
 +++++

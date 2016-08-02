@@ -82,13 +82,7 @@ For more complicated variable bounds, it may be clearer to specify them using th
     @variable(m, x[i=1:3], lowerbound=my_complex_function(i))
     @variable(m, x[i=1:3], lowerbound=my_complex_function(i), upperbound=another_function(i))
 
-Variables may also be constructed manually, one-by-one::
-
-    x = Variable(m::Model, lower::Number, upper::Number, category::Symbol, name::AbstractString)
-    x = Variable(m::Model, lower::Number, upper::Number, category::Symbol)
-
-where ``category`` is one of ``:Cont``, ``:Int``, ``:Bin``, ``:Fixed``, ``:SemiCont``, and ``:SemiInt``.
-This form of constructing variables is not considered idiomatic JuMP code.
+The constructor ``Variable(m::Model,idx::Int)`` may be used to create a variable object corresponding to an *existing* variable in the model (the constructor does not add a new variable to the model). The variable indices correspond to those of the internal MathProgBase model. The inverse of this operation is ``linearindex(x::Variable)``, which returns the flattened out (linear) index of a variable as JuMP provides it to a solver. We guarantee that ``Variable(m,linearindex(x))`` returns ``x`` itself. These methods are only useful if you intend to interact with solver properties which are not directly exposed through JuMP.
 
 .. note::
     ``@variable`` is equivalent to a simple assignment ``x = ...`` in Julia and therefore redefines variables without warning. The following code may lead to unexpected results::
@@ -99,14 +93,29 @@ This form of constructing variables is not considered idiomatic JuMP code.
     After the second line, the Julia variable ``x`` refers to a set of variables indexed
     by the range ``1:5``.
     The reference to the first set of variables has been lost, although they will remain
-    in the model.
+    in the model. See also the section on anonymous variables.
 
-The constructor ``Variable(m::Model,idx::Int)`` may be used to create a variable object corresponding to an *existing* variable in the model (the constructor does not add a new variable to the model). The variable indices correspond to those of the internal MathProgBase model. The inverse of this operation is ``linearindex(x::Variable)``, which returns the flattened out (linear) index of a variable as JuMP provides it to a solver. We guarantee that ``Variable(m,linearindex(x))`` returns ``x`` itself. These methods are only useful if you intend to interact with solver properties which are not directly exposed through JuMP.
+Anonymous variables
+^^^^^^^^^^^^^^^^^^^
+
+We also provide a syntax for constructing "anonymous" variables.
+In ``@variable``, you may omit the name of the variable
+and instead assign the return value as you would like::
+
+    x = @variable(m) # Equivalent to @variable(m, x)
+    x = @variable(m, [i=1:3], lowerbound = i, upperbound = 2i) # Equivalent to @variable(m, i <= x[i=1:3] <= 2i)
+
+The ``lowerbound`` and ``upperbound`` must be used instead of comparison operators for specifying variable bounds within the anonymous syntax. The **only** differences between anonymous and named variables are:
+
+    1. For the purposes of printing a model, JuMP will not have a name for anonymous variables and will instead use ``__anon__``. You may set the name of a variable for printing by using ``setname`` or the ``basename`` keyword argument described below.
+    2. Anonymous variables cannot be retrieved by using ``getvariable``.
 
 If you would like to change the name used when printing a variable or group of variables, you may use the ``basename`` keyword argument::
 
     i = 3
     @variable(m, x[1:3], basename="myvariable-$i")
+    # OR:
+    x = @variable(m, [1:3], basename="myvariable-$i")
 
 Printing ``x[2]`` will display ``myvariable-3[2]``.
 
@@ -123,6 +132,33 @@ Note in particular the indexing: 1) exactly two index sets must be specified, 2)
     @SDconstraint(m, X >= eye(n))
 
 Bounds can be provided as normal when using the ``Symmetric`` tag, with the stipulation that the bounds are symmetric themselves.
+
+``@variables`` blocks
+^^^^^^^^^^^^^^^^^^^^^
+
+JuMP provides a convenient syntax for defining multiple variables
+in a single block::
+
+    @variables m begin
+        x
+        y >= 0
+        Z[1:10], Bin
+        X[1:3,1:3], SDP
+        q[i=1:2], (lowerbound = i, start = 2i, upperbound = 3i)
+        t[j=1:3], (Int, start = j)
+    end
+
+    # Equivalent to:
+    @variable(m, x)
+    @variable(m, y >= 0)
+    @variable(m, Z[1:10], Bin)
+    @variable(m, X[1:3,1:3], SDP)
+    @variable(m, q[i=1:2], lowerbound = i, start = 2i, upperbound = 3i)
+    @variable(m, t[j=1:3], Int, start = j)
+
+The syntax follows that of ``@variable`` with each declaration separated
+by a new line. Note that unlike in ``@variable``, keyword arguments must be specified within
+parentheses.
 
 Methods
 ^^^^^^^
