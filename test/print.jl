@@ -84,6 +84,7 @@ facts("[print] JuMPContainer{Variable}") do
     @variable(m, tri_1[i=1:3,j=i:3])
     @variable(m, tri_2[i=1:3,j=-i])
     @variable(m, tri_3[(i,j)=[(i,i+2) for i in 1:5],k=i:j])
+    @variable(m, iter_1[keys(Dict(:a => 1))])
 
     io_test(REPLMode, rng_unit1, "rng_unit1[i] free $fa i $inset {1,2,$dots,9,10}")
     io_test(REPLMode, rng_unit2, "rng_unit2[i] free $fa i $inset {-2,-1,$dots,2,3}")
@@ -99,6 +100,7 @@ facts("[print] JuMPContainer{Variable}") do
     io_test(REPLMode, tri_1, "tri_1[i,j] free $fa i $inset {1,2,3}, j $inset {$dots}")
     io_test(REPLMode, tri_2, "tri_2[i,j] free $fa i $inset {1,2,3}, j $inset {$dots}")
     io_test(REPLMode, tri_3, "tri_3[(i,j),k] free $fa (i,j) $inset {(1,3),(2,4),$dots,(4,6),(5,7)}, k $inset {$dots}")
+    io_test(REPLMode, iter_1, "iter_1[i] free $fa i $inset {a}")
 
     io_test(IJuliaMode, rng_unit1, "rng_unit1_{i} free \\quad\\forall i \\in \\{1,2,\\dots,9,10\\}")
     io_test(IJuliaMode, rng_unit2, "rng_unit2_{i} free \\quad\\forall i \\in \\{-2,-1,\\dots,2,3\\}")
@@ -114,6 +116,7 @@ facts("[print] JuMPContainer{Variable}") do
     io_test(IJuliaMode, tri_1, "tri_1_{i,j} free \\quad\\forall i \\in \\{1,2,3\\}, j \\in \\{\\dots\\}")
     io_test(IJuliaMode, tri_2, "tri_2_{i,j} free \\quad\\forall i \\in \\{1,2,3\\}, j \\in \\{\\dots\\}")
     io_test(IJuliaMode, tri_3, "tri_3_{(i,j),k} free \\quad\\forall (i,j) \\in \\{(1,3),(2,4),\\dots,(4,6),(5,7)\\}, k \\in \\{\\dots\\}")
+    io_test(IJuliaMode, iter_1, "iter_1_{i} free \\quad\\forall i \\in \\{a\\}")
     end
 
     #------------------------------------------------------------------
