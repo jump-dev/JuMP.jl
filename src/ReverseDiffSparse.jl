@@ -5,6 +5,7 @@ using ForwardDiff
 import Calculus
 import Lazy
 import MathProgBase
+import Compat
 # Override basic math functions to return NaN instead of throwing errors.
 # This is what NLP solvers expect, and
 # sometimes the results aren't needed anyway,
