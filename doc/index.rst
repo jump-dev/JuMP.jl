@@ -32,19 +32,20 @@ JuMP's features include:
     `MathProgBase <https://github.com/mlubin/MathProgBase.jl>`_ package, making it easy
     to change between a number of open-source and commercial optimization software packages ("solvers").
   * Currently supported solvers include
+    `Artelys Knitro <http://artelys.com/en/optimization-tools/knitro>`_,
     `Bonmin <https://projects.coin-or.org/Bonmin>`_,
     `Cbc <https://projects.coin-or.org/Cbc>`_,
     `Clp <https://projects.coin-or.org/Clp>`_,
     `Couenne <https://projects.coin-or.org/Couenne>`_,
     `CPLEX <http://www-01.ibm.com/software/commerce/optimization/cplex-optimizer/>`_,
     `ECOS <https://github.com/ifa-ethz/ecos>`_,
+    `FICO Xpress <http://www.fico.com/en/products/fico-xpress-optimization-suite>`_,
     `GLPK <http://www.gnu.org/software/glpk/>`_,
     `Gurobi <http://www.gurobi.com>`_,
     `Ipopt <https://projects.coin-or.org/Ipopt>`_,
-    `KNITRO <http://www.ziena.com/knitro.htm>`_,
     `MOSEK <http://www.mosek.com/>`_,
-    `NLopt <http://ab-initio.mit.edu/wiki/index.php/NLopt>`_,
-    and `SCS <https://github.com/cvxgrp/scs>`_.
+    `NLopt <http://ab-initio.mit.edu/wiki/index.php/NLopt>`_, and
+    `SCS <https://github.com/cvxgrp/scs>`_.
 
 * Access to advanced algorithmic techniques
 

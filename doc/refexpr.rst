@@ -39,8 +39,8 @@ be a convex quadratic constraint.
 Methods
 ^^^^^^^
 
-* ``@constraint(m::Model, con)`` - efficient way to add linear or quadratic constraints.
-* ``@constraint(m::Model, ref, con)`` - efficient way to add groups of linear or quadratic constraints.
+* ``@constraint(m::Model, con)`` - add linear or quadratic constraints.
+* ``@constraint(m::Model, ref, con)`` - add groups of linear or quadratic constraints.
   See Constraint Reference section for details.
 * ``JuMP.addconstraint(m::Model, con)`` - general way to add linear and quadratic
   constraints.
@@ -61,6 +61,10 @@ Methods
 The ``ref`` accepts index sets in the same way as ``@variable``, and those indices can be used in the construction of the expressions::
 
     @expression(m, expr[i=1:3], i*sum{x[j], j=1:3})
+
+Anonymous syntax is also supported::
+
+    expr = @expression(m, [i=1:3], i*sum{x[j], j=1:3})
 * ``@SDconstraint(m::Model, expr)`` - adds a semidefinite constraint to the model ``m``. The expression ``expr`` must be a square, two-dimensional array.
 * ``addSOS1(m::Model, coll::Vector{AffExpr})`` - adds special ordered set constraint
   of type 1 (SOS1). Specify the set as a vector of weighted variables, e.g. ``coll = [3x, y, 2z]``.
@@ -114,6 +118,10 @@ A condition can be added following the indices; a semicolon is used to separate 
     @constraint(m, constr[i=1:5,j=1:5; i+j >= 3], x[i] - y[j] == 1)
 
 Note that only one condition can be added, although expressions can be built up by using the usual ``&&`` and ``||`` logical operators.
+
+Anonymous syntax is supported::
+
+    constr = @constraint(m, [i=1:5,j=1:5; i+j >= 3], x[i] - y[j] == 1)
 
 To obtain the dual of a constraint, call ``getdual`` on the constraint reference::
 

@@ -81,6 +81,11 @@ the syntax for linear and quadratic expressions. We note some important points b
     @NLexpression(m, myexpr[i=1:n], sin(x[i]))
     @NLconstraint(m, myconstr[i=1:n], myexpr[i] <= 0.5)
 
+- Anonymous syntax is supported in ``@NLexpression`` and ``@NLconstraint``::
+
+    myexpr = @NLexpression(m, [i=1:n], sin(x[i]))
+    myconstr = @NLconstraint(m, [i=1:n], myexpr[i] <= 0.5)
+
 .. _nonlinearprobmod:
 
 Nonlinear Parameters
