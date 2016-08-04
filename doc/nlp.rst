@@ -267,9 +267,6 @@ which can be queried using the ``JuMP.NLPEvaluator``.
 
 If you are writing a "solver", we *highly encourage* use of the `MathProgBase nonlinear interface <http://mathprogbasejl.readthedocs.org/en/latest/nlp.html>`_ over querying derivatives using the above methods. These methods are provided for convenience but do not fully integrate with JuMP's solver infrastructure. In particular, they do not allow users to specify your solver to the ``Model()`` constructor nor to call it using ``solve()`` nor to populate the solution back into the model. Use of the MathProgBase interface also has the advantage of being independent of JuMP itself; users of MathProgBase solvers are free to implement their own evaluation routines instead of expressing their model in JuMP.  You may use the ``JuMP.build`` method to ask JuMP to populate the "solver" without calling ``optimize!``.
 
-.. [1] Dunning, Huchette, and Lubin, "JuMP: A Modeling Language for Mathematical Optimization", `arXiv <http://arxiv.org/abs/1508.01982>`_.
-
-
 Raw expression input
 ^^^^^^^^^^^^^^^^^^^^
 
@@ -288,3 +285,6 @@ JuMP variables should be spliced into the expression object. For example::
     @NLconstraint(m, x[1]*x[2]*x[3]*x[4] >= 25)
 
 See the Julia documentation for more examples and description of Julia expressions.
+
+
+.. [1] Dunning, Huchette, and Lubin, "JuMP: A Modeling Language for Mathematical Optimization", `arXiv <http://arxiv.org/abs/1508.01982>`_.
