@@ -663,6 +663,17 @@ facts("[nonlinear] Expression graph for ifelse") do
     @fact MathProgBase.obj_expr(d) --> :(ifelse( x[1] <= 1, x[1]^2, x[1]))
 end
 
+facts("[nonlinear] Expression graphs for corner cases") do
+    m = Model()
+    @variable(m, x, start = 2)
+    @constraint(m, 0 <= 1)
+    @NLconstraint(m, x <= sum{0, i in []} + prod{1, i in []})
+    d = JuMP.NLPEvaluator(m)
+    MathProgBase.initialize(d, [:ExprGraph])
+    @fact MathProgBase.constr_expr(d,1) --> :(0 <= 1.0)
+    @fact MathProgBase.constr_expr(d,2) --> :(x[1] - (0 + 1) <= 0.0)
+end
+
 facts("[nonlinear] Hessians through MPB") do
     # Issue 435
     m = Model()

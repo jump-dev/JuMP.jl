@@ -1018,6 +1018,9 @@ end
 
 # currently don't merge duplicates (this isn't required by MPB standard)
 function affToExpr(aff::AffExpr, constant::Bool)
+    if length(aff.vars) == 0 && !constant
+        return 0
+    end
     ex = Expr(:call,:+)
     for k in 1:length(aff.vars)
         push!(ex.args, Expr(:call,:*,aff.coeffs[k],:(x[$(aff.vars[k].col)])))
@@ -1055,6 +1058,11 @@ function tapeToExpr(k, nd::Vector{NodeData}, adj, const_values, parameter_values
         op = nod.index
         opsymbol = operators[op]
         children_idx = nzrange(adj,k)
+        if opsymbol == :+ && length(children_idx) == 0
+            return 0
+        elseif opsymbol == :* && length(children_idx) == 0
+            return 1
+        end
         ex = Expr(:call,opsymbol)
         for cidx in children_idx
             push!(ex.args, tapeToExpr(children_arr[cidx], nd, adj, const_values, parameter_values, subexpressions))
