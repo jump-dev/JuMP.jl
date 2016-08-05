@@ -651,3 +651,16 @@ facts("[macros] Colons in index sets") do
     S = [:]
     @fact_throws ErrorException @variable(m, x[S])
 end
+
+facts("[macros] getconstraint") do
+    m = Model()
+    @variable(m, x)
+    _c1 = @constraint(m, c1, x == 1)
+    _c2 = @constraint(m, c2[i=1:3], x == i)
+    _c3 = @NLconstraint(m, c3, x^3 == 1)
+    _c4 = @NLconstraint(m, c4[i=1:3], x^i == 1)
+    @fact _c1 --> getconstraint(m, :c1)
+    @fact _c2 --> getconstraint(m, :c2)
+    @fact _c3 --> getconstraint(m, :c3)
+    @fact _c4 --> getconstraint(m, :c4)
+end

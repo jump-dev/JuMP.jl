@@ -5,6 +5,7 @@ Unversioned
 -----------
 
   * Support for "anonymous" variables, constraints, expressions, and parameters.
+  * Support for retrieving constraints from a model by name via ``getconstraint``.
 
 Version 0.13.2 (May 16, 2016)
 -----------------------------

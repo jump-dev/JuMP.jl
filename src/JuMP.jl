@@ -45,7 +45,7 @@ export
     # Variable
     setname, getname, setlowerbound, setupperbound, getlowerbound, getupperbound,
     getvalue, setvalue, getdual, setcategory, getcategory,
-    getvariable,
+    getvariable, getconstraint,
     linearindex,
     # Expressions and constraints
     linearterms,
@@ -124,6 +124,7 @@ type Model <: AbstractModel
     simplify_nonlinear_expressions::Bool
 
     varDict::Dict{Symbol,Any} # dictionary from variable names to variable objects
+    conDict::Dict{Symbol,Any} # dictionary from constraint names to constraint objects
     varData::ObjectIdDict
 
     getvalue_counter::Int # number of times we call getvalue on a JuMPContainer, so that we can print out a warning
@@ -177,6 +178,7 @@ function Model(;solver=UnsetSolver(), simplify_nonlinear_expressions::Bool=false
           nothing,                     # nlpdata
           simplify_nonlinear_expressions, # ...
           Dict{Symbol,Any}(),          # varDict
+          Dict{Symbol,Any}(),          # conDict
           ObjectIdDict(),              # varData
           0,                           # getvalue_counter
           0,                           # operator_counter
@@ -290,6 +292,12 @@ function Base.copy(source::Model)
     for (symb,v) in source.varDict
         dest.varDict[symb] = copy(v, dest)
     end
+
+    dest.conDict = Dict{Symbol,Any}()
+    # TODO: implement constraint copying
+    # for (symb,v) in source.conDict
+    #     dest.conDict[symb] = copy(v, dest)
+    # end
 
     # varData---possibly shouldn't copy
 
@@ -662,6 +670,16 @@ function registervar(m::Model, varname::Symbol, value)
 end
 registervar(m::Model, varname, value) = value # variable name isn't a simple symbol, ignore
 
+function registercon(m::Model, conname::Symbol, value)
+    if haskey(m.conDict, conname)
+        m.conDict[conname] = nothing # indicate duplicate variable
+    else
+        m.conDict[conname] = value
+    end
+    return value
+end
+registercon(m::Model, conname, value) = value # constraint name isn't a simple symbol, ignore
+
 function getvariable(m::Model, varname::Symbol)
     if !haskey(m.varDict, varname)
         error("No variable with name $varname")
@@ -669,6 +687,16 @@ function getvariable(m::Model, varname::Symbol)
         error("Multiple variables with name $varname")
     else
         return m.varDict[varname]
+    end
+end
+
+function getconstraint(m::Model, conname::Symbol)
+    if !haskey(m.conDict, conname)
+        error("No constraint with name $conname")
+    elseif m.conDict[conname] === nothing
+        error("Multiple constraints with name $conname")
+    else
+        return m.conDict[conname]
     end
 end
 
