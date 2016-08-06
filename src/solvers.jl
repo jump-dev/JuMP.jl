@@ -26,8 +26,8 @@ type ProblemTraits
     sos::Bool  # has an SOS constraint
     conic::Bool  # has an SDP or SOC constraint
 end
-function ProblemTraits(m::Model)
-    int = any(c-> !(c == :Cont || c == :Fixed), m.colCat)
+function ProblemTraits(m::Model; relaxation=false)
+    int = !relaxation && any(c-> !(c == :Cont || c == :Fixed), m.colCat)
     qp = !isempty(m.obj.qvars1)
     qc = !isempty(m.quadconstr)
     nlp = m.nlpdata !== nothing
@@ -128,10 +128,10 @@ function solve(m::Model; suppress_warnings=false,
     unset = m.solver == UnsetSolver()
 
     # Analyze the problems traits to determine what solvers we can use
-    traits = ProblemTraits(m)
+    traits = ProblemTraits(m, relaxation=relaxation)
 
     # Build the MathProgBase model from the JuMP model
-    build(m, traits, suppress_warnings=suppress_warnings, relaxation=relaxation)
+    build(m, traits=traits, suppress_warnings=suppress_warnings, relaxation=relaxation)
 
     # If the model is a general nonlinear, use different logic in
     # nlp.jl to solve the problem
@@ -303,8 +303,7 @@ end
 
 # Converts the JuMP Model into a MathProgBase model based on the
 # traits of the model
-function build(m::Model, traits=ProblemTraits(m);
-               suppress_warnings=false, relaxation=false)
+function build(m::Model; suppress_warnings=false, relaxation=false, traits=ProblemTraits(m,relaxation=relaxation))
     # Set solver based on the model's traits if it hasn't provided
     if isa(m.solver, UnsetSolver)
         m.solver = default_solver(traits)

@@ -890,3 +890,24 @@ facts("[model] Unrecognized keyword argument to solve") do
     m = Model()
     @fact_throws solve(m, this_should_throw=true)
 end
+
+facts("[model] Solve MIP relaxation with continuous solvers") do
+for solver in lp_solvers
+context("With solver $(typeof(solver))") do
+    m = Model(solver=solver)
+    @variable(m, x, Bin)
+    @constraint(m, x >= 0.5)
+    @objective(m, Min, x)
+    @fact solve(m, relaxation=true) --> :Optimal
+    @fact getvalue(x) --> roughly(0.5, TOL)
+end; end
+for solver in nlp_solvers
+context("With solver $(typeof(solver))") do
+    m = Model(solver=solver)
+    @variable(m, x, Bin)
+    @objective(m, Min, x)
+    @NLconstraint(m, x >= 0.5)
+    @fact solve(m, relaxation=true) --> :Optimal
+    @fact getvalue(x) --> roughly(0.5, TOL)
+end; end
+end
