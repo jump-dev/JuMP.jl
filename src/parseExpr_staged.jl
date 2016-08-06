@@ -656,13 +656,25 @@ function parseExpr(x, aff::Symbol, lcoeffs::Vector, rcoeffs::Vector, newaff::Sym
                 return newaff, blk
             end
         elseif x.head == :call && x.args[1] == :^ && is_complex_expr(x.args[2])
-            x.args[3] == 2 || error("Only exponents of 2 are currently supported")
-            blk = Expr(:block)
-            s = gensym()
-            newaff_, parsed = parseExprToplevel(x.args[2], s)
-            push!(blk.args, :($s = 0.0; $parsed))
-            push!(blk.args, :($newaff = $aff + $(Expr(:call,:*,lcoeffs...,newaff_,newaff_,rcoeffs...))))
-            return newaff, blk
+            if x.args[3] == 2
+                blk = Expr(:block)
+                s = gensym()
+                newaff_, parsed = parseExprToplevel(x.args[2], s)
+                push!(blk.args, :($s = 0.0; $parsed))
+                push!(blk.args, :($newaff = $aff + $(Expr(:call,:*,lcoeffs...,newaff_,newaff_,rcoeffs...))))
+                return newaff, blk
+            elseif x.args[3] == 1
+                return parseExpr(x.args[2], aff, lcoeffs, rcoeffs)
+            elseif x.args[3] == 0
+                return parseExpr(1, aff, lcoeffs, rcoeffs)
+            else
+                blk = Expr(:block)
+                s = gensym()
+                newaff_, parsed = parseExprToplevel(x.args[2], s)
+                push!(blk.args, :($s = 0.0; $parsed))
+                push!(blk.args, :($newaff = $aff + $(Expr(:call,:*,lcoeffs...,Expr(:call,:^,newaff_,esc(x.args[3])),rcoeffs...))))
+                return newaff, blk
+            end
         elseif x.head == :call && x.args[1] == :/
             @assert length(x.args) == 3
             numerator = x.args[2]

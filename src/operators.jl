@@ -113,10 +113,17 @@ end
 (*)(lhs::GenericAffExpr, rhs::Number) = (*)(rhs,lhs)
 (/)(lhs::GenericAffExpr, rhs::Number) = (*)(1.0/rhs,lhs)
 function (^)(lhs::Union{Variable,AffExpr}, rhs::Integer)
-    rhs == 2 || error("Only exponents of 2 are currently supported. Are you trying to build a nonlinear problem? Make sure you use @NLconstraint/@NLobjective.")
-    return lhs*lhs
+    if rhs == 2
+        return lhs*lhs
+    elseif rhs == 1
+        return QuadExpr(lhs)
+    elseif rhs == 0
+        return QuadExpr(1)
+    else
+        error("Only exponents of 0, 1, or 2 are currently supported. Are you trying to build a nonlinear problem? Make sure you use @NLconstraint/@NLobjective.")
+    end
 end
-(^)(lhs::Union{Variable,AffExpr}, rhs::Number) = error("Only exponents of 2 are currently supported. Are you trying to build a nonlinear problem? Make sure you use @NLconstraint/@NLobjective.")
+(^)(lhs::Union{Variable,AffExpr}, rhs::Number) = error("Only exponents of 0, 1, or 2 are currently supported. Are you trying to build a nonlinear problem? Make sure you use @NLconstraint/@NLobjective.")
 # AffExpr--Variable
 (+){C,V<:JuMPTypes}(lhs::GenericAffExpr{C,V}, rhs::V) = (+)(rhs,lhs)
 (-){C,V<:JuMPTypes}(lhs::GenericAffExpr{C,V}, rhs::V) = GenericAffExpr{C,V}(vcat(lhs.vars,rhs),vcat(lhs.coeffs,-one(C)),lhs.constant)
