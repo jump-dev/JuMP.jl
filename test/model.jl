@@ -911,3 +911,17 @@ context("With solver $(typeof(solver))") do
     @fact getvalue(x) --> roughly(0.5, TOL)
 end; end
 end
+
+facts("[model] Nonliteral exponents in @constraint") do
+    m = Model()
+    @variable(m, x)
+    foo() = 2
+    @constraint(m, x^(foo()) + x^(foo()-1) + x^(foo()-2) == 1)
+    @constraint(m, (x-1)^(foo()) + (x-1)^2 + (x-1)^1 + (x-1)^0 == 1)
+    @constraint(m, sum{x, i in 1:3}^(foo()) == 1)
+    @constraint(m, sum{x, i in 1:3}^(foo()-1) == 1)
+    @fact m.quadconstr[1].terms --> x^2 + x
+    @fact m.quadconstr[2].terms --> x^2 + x^2 - x - x - x - x + x + 1
+    @fact m.quadconstr[3].terms --> x^2 + x^2 + x^2 + x^2 + x^2 + x^2 + x^2 + x^2 + x^2 - 1
+    @fact m.quadconstr[4].terms --> QuadExpr(x + x + x - 1)
+end
