@@ -4,8 +4,23 @@ JuMP release notes
 Unversioned
 -----------
 
-  * Support for "anonymous" variables, constraints, expressions, and parameters.
-  * Support for retrieving constraints from a model by name via ``getconstraint``.
+  * Compatibility with Julia 0.5 and ForwardDiff 0.2
+  * Support for "anonymous" variables, constraints, expressions, and parameters, e.g.,
+    ``x = @variable(m, [1:N])`` instead of ``@variable(m, x[1:N])``
+  * Support for retrieving constraints from a model by name via ``getconstraint``
+  * ``@NLconstraint`` now returns constraint references (as expected).
+  * Support for vectorized expressions within lazy constraints
+  * On Julia 0.5, parse new comprehension syntax ``sum(x[i] for i in 1:N if isodd(i))``
+    instead of ``sum{ x[i], i in 1:N; isodd(i) }``. The old syntax with curly
+    braces will be deprecated in JuMP 0.15.
+  * Now possible to provide nonlinear expressions as "raw" Julia ``Expr`` objects
+    instead of using JuMP's nonlinear macros. This input format is useful for
+    programmatically generated expressions.
+  * ``s/Mathematical Programming/Mathematical Optimization/``
+  * Support for local cuts (Thanks to @madanim, Mehdi Madani)
+  * Document Xpress interface developed by @joaquimg, Joaquim Dias Garcia
+  * Minor bug and deprecation fixes (Thanks @odow, @jrevels)
+
 
 Version 0.13.2 (May 16, 2016)
 -----------------------------
