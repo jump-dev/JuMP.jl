@@ -1,8 +1,8 @@
 JuMP release notes
 ==================
 
-Unversioned
------------
+Version 0.14.0 (August 7, 2016)
+-------------------------------
 
   * Compatibility with Julia 0.5 and ForwardDiff 0.2
   * Support for "anonymous" variables, constraints, expressions, and parameters, e.g.,
