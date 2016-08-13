@@ -35,6 +35,7 @@ eco = try_import(:ECOS)
 osl = try_import(:CoinOptServices)
 scs = try_import(:SCS)
 nlw = try_import(:AmplNLWriter)
+brn = try_import(:BARON)
 
 # Create solver lists
 # LP solvers
@@ -116,6 +117,7 @@ nlo && push!(nlp_solvers, NLopt.NLoptSolver(algorithm=:LD_SLSQP))
 kni && push!(nlp_solvers, KNITRO.KnitroSolver(objrange=1e16,outlev=0))
 osl && push!(nlp_solvers, CoinOptServices.OsilSolver(CoinOptServices.OSOption("sb","yes",solver="ipopt")))
 nlw && osl && push!(nlp_solvers, AmplNLWriter.BonminNLSolver(["bonmin.nlp_log_level=0"; "bonmin.bb_log_level=0"]))
+brn && push!(nlp_solvers, BARON.BaronSolver())
 convex_nlp_solvers = copy(nlp_solvers)
 mos && push!(convex_nlp_solvers, Mosek.MosekSolver(LOG=0))
 # Mixed-Integer Nonlinear solvers
@@ -125,6 +127,7 @@ osl && push!(minlp_solvers, CoinOptServices.OsilBonminSolver(CoinOptServices.OSO
 osl && push!(minlp_solvers, CoinOptServices.OsilCouenneSolver())
 nlw && osl && push!(minlp_solvers, AmplNLWriter.BonminNLSolver(["bonmin.nlp_log_level=0"; "bonmin.bb_log_level=0"]))
 nlw && osl && push!(minlp_solvers, AmplNLWriter.CouenneNLSolver())
+brn && push!(minlp_solvers, BARON.BaronSolver())
 # Semidefinite solvers
 sdp_solvers = Any[]
 mos && push!(sdp_solvers, Mosek.MosekSolver(LOG=0))
