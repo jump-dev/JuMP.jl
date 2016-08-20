@@ -165,6 +165,11 @@ SCS
 
 SCS can be used by JuMP to solve LPs and SOCPs, and SDPs. SCS is a first order solver and has low accuracy (:math:`10^{-4}`) by default; see the SCS.jl documentation for more information.
 
+BARON
++++++
+
+Requires a license. A trial version is available for small problem instances.
+
 COIN-OR Bonmin and Couenne
 ++++++++++++++++++++++++++
 
