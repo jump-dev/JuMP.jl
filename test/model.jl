@@ -848,17 +848,21 @@ facts("[model] Relaxation keyword argument to solve") do
 
     # Force LP solver since not all MIP solvers
     # return duals (i.e. Cbc)
-    setsolver(m, lp_solvers[1])
-    @fact solve(m, relaxation=true) --> :Optimal
-    @fact getvalue(y) --> 1.5
-    @fact getvalue(z) --> 0
-    @fact getvalue(w) --> 0.5
-    @fact getvalue(v) --> 1
-    @fact getdual(y) --> 1
-    @fact getdual(z) --> 1
-    @fact getdual(w) --> 1
-    @fact getdual(v) --> 1
-    @fact getobjectivevalue(m) --> 1.5 + 0 + 0.5 + 1
+
+    for solver in lp_solvers
+    context("With solver $(typeof(solver))") do
+        setsolver(m, solver)
+        @fact solve(m, relaxation=true) --> :Optimal
+        @fact getvalue(y) --> 1.5
+        @fact getvalue(z) --> 0
+        @fact getvalue(w) --> 0.5
+        @fact getvalue(v) --> 1
+        @fact getdual(y) --> 1
+        @fact getdual(z) --> 1
+        @fact getdual(w) --> 1
+        @fact getdual(v) --> 1
+        @fact getobjectivevalue(m) --> 1.5 + 0 + 0.5 + 1
+    end; end
 
     # Let JuMP choose solver again
     setsolver(m, JuMP.UnsetSolver())

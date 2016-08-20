@@ -15,7 +15,7 @@ using FactCheck
 using Base.Test
 #FactCheck.setstyle(:compact)
 
-# Static tests - don't require a solver
+Static tests - don't require a solver
 include("print.jl")
 include("variable.jl")
 include("expr.jl")

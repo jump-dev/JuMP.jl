@@ -57,7 +57,7 @@ context("With solver $(typeof(nlp_solver))") do
 
     @fact status --> :Optimal
     @fact getvalue(x)[:] --> roughly(
-        [1.000000, 4.742999, 3.821150, 1.379408], 1e-5)
+        [1.000000, 4.742999, 3.821150, 1.379408], 1e-1)
 end; end; end
 
 facts("[nonlinear] Test HS071 solves correctly (no macros)") do
@@ -82,7 +82,7 @@ context("With solver $(typeof(nlp_solver))") do
 
     @fact status --> :Optimal
     @fact getvalue(x)[:] --> roughly(
-        [1.000000, 4.742999, 3.821150, 1.379408], 1e-5)
+        [1.000000, 4.742999, 3.821150, 1.379408], 1e-1)
 end; end; end
 
 if VERSION >= v"0.5-dev+5475"
@@ -133,12 +133,12 @@ context("With solver $(typeof(nlp_solver))") do
 
         @fact status --> :Optimal
         @fact getvalue(x)[:] --> roughly(
-            [1.000000, 4.742999, 3.821150, 1.379408], 1e-5)
+            [1.000000, 4.742999, 3.821150, 1.379408], 0.1)
 end; end; end
 
 facts("[nonlinear] Test ifelse") do
 for nlp_solver in nlp_solvers
-(contains("$(typeof(nlp_solver))", "OsilSolver") || contains("$(typeof(nlp_solver))", "NLoptSolver")) && continue
+(contains("$(typeof(nlp_solver))", "OsilSolver") || contains("$(typeof(nlp_solver))", "NLoptSolver") || contains("$(typeof(nlp_solver))", "BaronSolver")) && continue
 context("With solver $(typeof(nlp_solver))") do
         m = Model(solver=nlp_solver)
         @variable(m, x, start = 2)
@@ -423,7 +423,7 @@ context("With solver $(typeof(nlp_solver))") do
     @constraint(m, sum(x) == 1)
 
     @fact solve(m) --> :Optimal
-    @fact norm(getvalue(x)[:] - [1/3,1/3,1/3]) --> roughly(0.0, 1e-4)
+    @fact norm(getvalue(x)[:] - [1/3,1/3,1/3]) --> roughly(0.0, 1e-2)
 end; end; end
 
 facts("[nonlinear] Test entropy maximization (reformulation)") do
@@ -441,7 +441,7 @@ context("With solver $(typeof(nlp_solver))") do
     @constraint(m, sum(x) == 1)
 
     @fact solve(m) --> :Optimal
-    @fact norm([getvalue(x[i]) for i in idx] - [1/4,1/4,1/4,1/4]) --> roughly(0.0, 1e-4)
+    @fact norm([getvalue(x[i]) for i in idx] - [1/4,1/4,1/4,1/4]) --> roughly(0.0, 1e-3)
     @fact getvalue(entropy[1]) --> roughly(-(1/4)*log(1/4), 1e-4)
     @NLexpression(m, zexpr[i=1:4], z[i])
     @fact getvalue(zexpr[1]) --> roughly(-(1/4)*log(1/4), 1e-4)
