@@ -519,3 +519,15 @@ context("With solver $(typeof(solver))") do
     @fact getvalue(Q) --> roughly([1 0;0 0], 1e-3)
     @fact getobjectivevalue(model) --> roughly(1, TOL)
 end; end; end
+
+facts("[sdp] Internal Model not unloaded when SDP constraint added #830") do
+for solver in sdp_solvers
+context("With solver $(typeof(solver))") do
+    model = Model(solver=solver)
+    @variable(model, x)
+    solve(model)
+    T = [1 x; -x 1]
+    c = @SDconstraint(model, T ⪰ 0)
+    @fact typeof(c) --> JuMP.ConstraintRef{JuMP.Model,JuMP.SDConstraint}
+    @fact model.internalModelLoaded --> false
+end; end; end

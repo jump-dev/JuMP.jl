@@ -465,9 +465,7 @@ macro SDconstraint(m, x)
     assert_validmodel(m, quote
         q = zero(AffExpr)
         $parsecode
-        c = SDConstraint($newaff)
-        push!($(m).sdpconstr, c)
-        c
+        addconstraint($m, SDConstraint($newaff))
     end)
 end
 
