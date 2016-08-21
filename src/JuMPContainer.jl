@@ -151,10 +151,10 @@ Base.ndims{T,N}(x::JuMPDict{T,N}) = N
 Base.abs(x::JuMPDict) = map(abs, x)
 # avoid dangerous behavior with "end" (#730)
 Base.endof(x::JuMPArray) = error("endof() (and \"end\" syntax) not implemented for JuMPArray objects.")
-Base.size(x::JuMPArray) = error("size (and \"end\" syntax) not implemented for JuMPArray objects.")
-#"Use JuMP.size if you want to access the dimensions.")
-Base.size(x::JuMPArray,k) = error("size (and \"end\" syntax) not implemented for JuMPArray objects.")
-#" Use JuMP.size if you want to access the dimensions.")
+Base.size(x::JuMPArray) = error(string("size (and \"end\" syntax) not implemented for JuMPArray objects.",
+"Use JuMP.size if you want to access the dimensions."))
+Base.size(x::JuMPArray,k) = error(string("size (and \"end\" syntax) not implemented for JuMPArray objects.",
+" Use JuMP.size if you want to access the dimensions."))
 size(x::JuMPArray) = size(x.innerArray)
 size(x::JuMPArray,k) = size(x.innerArray,k)
 # for uses of size() within JuMP
