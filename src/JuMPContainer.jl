@@ -189,18 +189,18 @@ type KeyIterator{JA<:JuMPArray}
     state::Tuple
     done::Bool
     function KeyIterator(d)
-        t = tuple()
         n = ndims(d.innerArray)
-        for i in 1:n
-            t = tuple(t..., start(d.indexsets[i]))
-        end
-        new(d, n, t, false)
+        new(d, n, (), false)
     end
 end
 
 KeyIterator{JA}(d::JA) = KeyIterator{JA}(d)
 
 function Base.start(it::KeyIterator)
+    it.state = tuple()
+    for i in 1:it.dim
+        it.state = tuple(it.state..., start(it.x.indexsets[i]))
+    end
     it.state
 end
 
