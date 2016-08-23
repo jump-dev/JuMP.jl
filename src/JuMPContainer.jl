@@ -189,54 +189,54 @@ type KeyIterator{JA<:JuMPArray}
     state::Tuple
     done::Bool
     function KeyIterator(d)
-      t = tuple()
-      n = ndims(d.innerArray)
-      for i in 1:n
-        t = tuple(t..., start(d.indexsets[i]))
-      end
-      new(d, n, t, false)
+        t = tuple()
+        n = ndims(d.innerArray)
+        for i in 1:n
+            t = tuple(t..., start(d.indexsets[i]))
+        end
+        new(d, n, t, false)
     end
 end
 
 KeyIterator{JA}(d::JA) = KeyIterator{JA}(d)
 
 function Base.start(it::KeyIterator)
-  it.state
+    it.state
 end
 
 function Base.next(it::KeyIterator, k)
-  cartesian_key = ()
-  for i in 1:it.dim
-    cartesian_key = tuple(cartesian_key..., next(it.x.indexsets[i], k[i])[1])
-  end
-  #@show cartesian_key
-  next_k = ()
-  pos = -1
-  for i in 1:it.dim
-    if(!done(it.x.indexsets[i], next(it.x.indexsets[i], k[i])[2] ) )
-      pos = i
-      break
+    cartesian_key = ()
+    for i in 1:it.dim
+        cartesian_key = tuple(cartesian_key..., next(it.x.indexsets[i], k[i])[1])
     end
-  end
-  #@show pos
-  if pos == -1
-    it.done = true
-    return cartesian_key, nothing
-  end
-  for i in 1:it.dim
-    if i < pos
-      next_k = tuple(next_k..., start(it.x.indexsets[i]) )
-    elseif i == pos
-      next_k = tuple(next_k..., next(it.x.indexsets[i], k[i])[2])
-    else
-      next_k = tuple(next_k..., k[i])
+    #@show cartesian_key
+    next_k = ()
+    pos = -1
+    for i in 1:it.dim
+        if(!done(it.x.indexsets[i], next(it.x.indexsets[i], k[i])[2] ) )
+            pos = i
+            break
+        end
     end
-  end
-  cartesian_key, next_k
+    #@show pos
+    if pos == -1
+        it.done = true
+        return cartesian_key, nothing
+    end
+    for i in 1:it.dim
+        if i < pos
+            next_k = tuple(next_k..., start(it.x.indexsets[i]) )
+        elseif i == pos
+            next_k = tuple(next_k..., next(it.x.indexsets[i], k[i])[2])
+        else
+            next_k = tuple(next_k..., k[i])
+        end
+    end
+    cartesian_key, next_k
 end
 
 function Base.done(it::KeyIterator, k)
-  return it.done
+    return it.done
 end
 
 Base.length(it::KeyIterator)  = length(it.x.innerArray)
