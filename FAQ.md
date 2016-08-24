@@ -7,7 +7,7 @@ JuMP
 A: You can use the ``setvalue`` function on a variable to set its initial value, e.g.
 
 ```julia
-@defVar(m, x[1:3], Int)
+@variable(m, x[1:3], Int)
 setvalue(x[1], 10.0)
 setvalue(x[3], 2.0)
 ```
