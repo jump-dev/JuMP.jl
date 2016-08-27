@@ -78,6 +78,7 @@ context("With solver $(typeof(nlp_solver))") do
     JuMP.addNLconstraint(m, :($(x[1])*$(x[2])*$(x[3])*$(x[4]) >= 25))
     JuMP.addNLconstraint(m, :($(x[1])^2+$(x[2])^2+$(x[3])^2+$(x[4])^2 == 40))
     @fact MathProgBase.numconstr(m) --> 2
+    @fact_throws ErrorException JuMP.addNLconstraint(m, :(x[1]^2+x[2]^2+x[3]^2+x[4]^2 == 40))
     status = solve(m)
 
     @fact status --> :Optimal
