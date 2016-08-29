@@ -42,6 +42,8 @@ Solver support in Julia is currently provided by writing a solver-specific packa
 +==================================================================================+=================================================================================+=============================+=============+====+======+======+=====+=======+=====+
 | `Artelys Knitro <http://artelys.com/en/optimization-tools/knitro>`_              | `KNITRO.jl <https://github.com/JuliaOpt/KNITRO.jl>`_                            | ``KnitroSolver()``          |  Comm.      |    |      |      |  X  |   X   |     |
 +----------------------------------------------------------------------------------+---------------------------------------------------------------------------------+-----------------------------+-------------+----+------+------+-----+-------+-----+
+| `BARON <http://archimedes.cheme.cmu.edu/?q=baron>`_                              | `BARON.jl <https://github.com/joehuchette/BARON.jl>`_                           |  ``BaronSolver()``          |  Comm.      |    |      |      |  X  |   X   |     |
++----------------------------------------------------------------------------------+---------------------------------------------------------------------------------+-----------------------------+-------------+----+------+------+-----+-------+-----+
 | `Bonmin <https://projects.coin-or.org/Bonmin>`_                                  | `AmplNLWriter.jl <https://github.com/JackDunnNZ/AmplNLWriter.jl>`_              | ``BonminNLSolver()`` *      |  EPL        | X  |      |  X   |  X  |   X   |     |
 +                                                                                  +---------------------------------------------------------------------------------+-----------------------------+             +    +      +      +     +       +     +
 |                                                                                  | `CoinOptServices.jl <https://github.com/JuliaOpt/CoinOptServices.jl>`_          | ``OsilBonminSolver()``      |             |    |      |      |     |       |     |
@@ -72,8 +74,6 @@ Solver support in Julia is currently provided by writing a solver-specific packa
 +----------------------------------------------------------------------------------+---------------------------------------------------------------------------------+-----------------------------+-------------+----+------+------+-----+-------+-----+
 | `SCS <https://github.com/cvxgrp/scs>`_                                           | `SCS.jl <https://github.com/JuliaOpt/SCS.jl>`_                                  |  ``SCSSolver()``            |  MIT        | X  |  X   |      |     |       | X   |
 +----------------------------------------------------------------------------------+---------------------------------------------------------------------------------+-----------------------------+-------------+----+------+------+-----+-------+-----+
-| `BARON <http://archimedes.cheme.cmu.edu/?q=baron>`_                                           | `BARON.jl <https://github.com/joehuchette/BARON.jl>`_                                  |  ``BaronSolver()``            |  MIT        |    |      |      |  X   |  X   |    |
-+----------------------------------------------------------------------------------+---------------------------------------------------------------------------------+-----------------------------+-------------+----+------+------+-----+-------+-----+
 
 Where:
 
@@ -101,6 +101,11 @@ Artelys Knitro
 ++++++++++++++
 
 Requires a license. The KNITRO.jl interface currently supports only nonlinear problems.
+
+BARON
++++++
+
+Requires a license. A trial version is available for small problem instances.
 
 COIN-OR Clp and Cbc
 +++++++++++++++++++
@@ -164,11 +169,6 @@ SCS
 +++
 
 SCS can be used by JuMP to solve LPs and SOCPs, and SDPs. SCS is a first order solver and has low accuracy (:math:`10^{-4}`) by default; see the SCS.jl documentation for more information.
-
-BARON
-+++++
-
-Requires a license. A trial version is available for small problem instances.
 
 COIN-OR Bonmin and Couenne
 ++++++++++++++++++++++++++
