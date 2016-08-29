@@ -274,7 +274,12 @@ end
 NonlinearExprData(m::Model, ex) = NonlinearExprData(m, :($ex + 0))
 
 # recursively replace Variable(m, i) with Expr(:ref,:x,i) in ex
-spliceref(m::Model, ex::Expr) = Expr(ex.head,map(e -> spliceref(m,e), ex.args)...)
+function spliceref(m::Model, ex::Expr)
+    if ex.head == :ref # if we have x[1] already in there, something is wrong
+        error("Unrecognized expression $ex.")
+    end
+    return Expr(ex.head,map(e -> spliceref(m,e), ex.args)...)
+end
 function spliceref(m::Model, v::Variable)
     v.m === m || error("Variable $v does not belong to this model")
     return Expr(:ref, :x, linearindex(v))
