@@ -664,3 +664,11 @@ facts("[macros] getconstraint") do
     @fact _c3 --> getconstraint(m, :c3)
     @fact _c4 --> getconstraint(m, :c4)
 end
+
+facts("[macros] Anonymous singleton variables") do
+    m = Model()
+    x = @variable(m)
+    y = @variable(m, lowerbound=0, upperbound=1)
+    @fact x --> Variable(m, 1)
+    @fact y --> Variable(m, 2)
+end
