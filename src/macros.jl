@@ -775,11 +775,22 @@ const EMPTYSTRING = UTF8String("")
 variable_error(args, str) = error("In @variable($(join(args,","))): ", str)
 
 macro variable(args...)
-    length(args) <= 1 &&
-        variable_error(args, "Expected model as first argument, then variable information.")
     m = esc(args[1])
-    x = args[2]
-    extra = vcat(args[3:end]...)
+
+    extra = vcat(args[2:end]...)
+    # separate out keyword arguments
+    kwargs = filter(ex->isexpr(ex,:kw), extra)
+    extra = filter(ex->!isexpr(ex,:kw), extra)
+
+    # if there is only a single non-keyword argument, this is an anonymous
+    # variable spec and the one non-kwarg is the model
+    if length(kwargs) == length(args)-1
+        x = gensym()
+        anon_singleton = true
+    else
+        x = shift!(extra)
+        anon_singleton = false
+    end
 
     t = :Cont
     gottype = false
@@ -851,11 +862,7 @@ macro variable(args...)
         ub = Inf
     end
 
-    # separate out keyword arguments
-    kwargs = filter(ex->isexpr(ex,:kw), extra)
-    extra = filter(ex->!isexpr(ex,:kw), extra)
-
-    anonvar = isexpr(var, :vect) || isexpr(var, :vcat)
+    anonvar = isexpr(var, :vect) || isexpr(var, :vcat) || anon_singleton
     anonvar && explicit_comparison && error("Cannot use explicit bounds via >=, <= with an anonymous variable")
     variable = gensym()
     quotvarname = anonvar ? :(:__anon__) : quot(getname(var))
@@ -937,12 +944,15 @@ macro variable(args...)
     if isa(var,Symbol)
         # Easy case - a single variable
         sdp && variable_error(args, "Cannot add a semidefinite scalar variable")
-        @assert !anonvar
-        return assert_validmodel(m, quote
-            $variable = Variable($m,$lb,$ub,$(quot(t)),UTF8String(string($quotvarname)),$value)
-            registervar($m, $quotvarname, $variable)
-            $escvarname = $variable
-        end)
+        code = :($variable = Variable($m,$lb,$ub,$(quot(t)),UTF8String(string($quotvarname)),$value))
+        if !anonvar
+            code = quote
+                $code
+                registervar($m, $quotvarname, $variable)
+                $escvarname = $variable
+            end
+        end
+        return assert_validmodel(m, code)
     end
     isa(var,Expr) || variable_error(args, "Expected $var to be a variable name")
 
