@@ -789,6 +789,9 @@ macro variable(args...)
         anon_singleton = true
     else
         x = shift!(extra)
+        if x in [:Cont,:Int,:Bin,:SemiCont,:SemiInt,:SDP]
+            variable_error(args, "Ambiguous variable name $x detected. This conflicts with a possible variable type. Rename the variable.")
+        end
         anon_singleton = false
     end
 

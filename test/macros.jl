@@ -672,3 +672,12 @@ facts("[macros] Anonymous singleton variables") do
     @fact x --> Variable(m, 1)
     @fact y --> Variable(m, 2)
 end
+
+facts("[macros] Invalid variable names") do
+    m = Model()
+    @fact macroexpand(:(@variable(m, Bin))).head --> :error
+    @fact macroexpand(:(@variable(m, Int))).head --> :error
+    @fact macroexpand(:(@variable(m, Cont))).head --> :error
+    @fact macroexpand(:(@variable(m, SemiCont))).head --> :error
+    @fact macroexpand(:(@variable(m, SemiInt))).head --> :error
+end
