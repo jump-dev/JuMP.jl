@@ -210,7 +210,7 @@ Base.start(it::KeyIterator) = _start(it.x)
 end
 
 function Base.next(it::KeyIterator, k)
-    cartesian_key = _next(it.x, k)
+    cartesian_key = JuMPKey(_next(it.x, k))
     pos = -1
     for i in 1:it.dim
         if(!done(it.x.indexsets[i], next(it.x.indexsets[i], k[i+1])[2] ) )
