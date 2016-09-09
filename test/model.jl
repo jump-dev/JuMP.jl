@@ -73,8 +73,60 @@ facts("[model] Test printing a model") do
     constraints[2] = @constraint(modA, sum{r[i],i=3:5} <= (2 - x)/2.0)
     constraints[3] = @constraint(modA, 6y + y <= z + r[6]/1.9)
     #####################################################################
-    # Test LP writer
-    writeLP(modA, modPath * "A.lp")
+    # Test LP writer (given names)
+    writeLP(modA, modPath * "A.lp", generic=false)
+    modALP = if VERSION >= v"0.5.0-dev+1866" # leading zero, base Julia PR #14377
+        String[
+        "Maximize",
+        "obj: 0.16666666666666666 col_1 + 0.16666666666666666 y + 1 z + 1 r_3",
+        "Subject To",
+        "c1: 1 col_1 + 1 y >= 2",
+        "c2: 1 col_1 + 1 y <= 4",
+        "c3: 1 r_3 + 1 r_4 + 1 r_5 + 0.5 col_1 <= 1",
+        "c4: 6 y + 1 y - 1 z - 0.5263157894736842 r_6 <= 0",
+        "Bounds",
+        "0 <= col_1 <= +inf",
+        "-inf <= y <= 5",
+        "2 <= z <= 4",
+        "0 <= r_3 <= 3",
+        "0 <= r_4 <= 4",
+        "0 <= r_5 <= 5",
+        "0 <= r_6 <= 6",
+        "General",
+        "y",
+        "End"]
+    else
+        String[
+        "Maximize",
+        "obj: .16666666666666666 col_1 + .16666666666666666 y + 1 z + 1 r_3",
+        "Subject To",
+        "c1: 1 col_1 + 1 y >= 2",
+        "c2: 1 col_1 + 1 y <= 4",
+        "c3: 1 r_3 + 1 r_4 + 1 r_5 + .5 col_1 <= 1",
+        "c4: 6 y + 1 y - 1 z - .5263157894736842 r_6 <= 0",
+        "Bounds",
+        "0 <= col_1 <= +inf",
+        "-inf <= y <= 5",
+        "2 <= z <= 4",
+        "0 <= r_3 <= 3",
+        "0 <= r_4 <= 4",
+        "0 <= r_5 <= 5",
+        "0 <= r_6 <= 6",
+        "General",
+        "y",
+        "End"]
+    end
+    modAfp = open(modPath * "A.lp")
+    lineInd = 1
+    while !eof(modAfp)
+        line = readline(modAfp)
+        @fact strip(line) --> strip(modALP[lineInd])
+        lineInd += 1
+    end
+    close(modAfp)
+    #####################################################################
+    # Test LP writer (generic names)
+    writeLP(modA, modPath * "A.lp", generic=true)
     modALP = if VERSION >= v"0.5.0-dev+1866" # leading zero, base Julia PR #14377
         String[
         "Maximize",
