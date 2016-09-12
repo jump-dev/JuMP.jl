@@ -1,6 +1,11 @@
 JuMP release notes
 ==================
 
+Version 0.14.1 (September 12, 2016)
+-----------------------------------
+
+  * More consistent handling of states in informational callbacks
+
 Version 0.14.0 (August 7, 2016)
 -------------------------------
 
