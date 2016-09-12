@@ -36,8 +36,8 @@ end
 
 Base.getindex(d::JuMPArray, ::Colon) = d.innerArray[:]
 
-immutable JuMPKey
-    jk::Tuple
+immutable JuMPKey{T<:Tuple}
+    jk::T
 end
 
 Base.start(x::JuMPKey) = Base.start(x.jk)
@@ -53,7 +53,6 @@ Base.length(x::JuMPKey) = Base.length(x.jk)
 end
 
 Base.getindex(d::JuMPArray, x::JuMPKey) = Base.getindex(d, x.jk...)
-
 
 @generated function Base.setindex!{T,N,NT<:NTuple}(d::JuMPArray{T,N,NT}, v::T, idx...)
     if N != length(idx)

@@ -195,21 +195,42 @@ end
 
 KeyIterator{JA}(d::JA) = KeyIterator{JA}(d)
 
-@generated function _start{T,N,NT}(x::JuMPArray{T,N,NT})
+immutable IndexableIndexsets end
+immutable NotIndexableIndexsets end
+
+function indexability(x::JuMPArray)
+    allsetsindexable = true
+    for i in  1:length(x.indexsets)
+        if !method_exists(getindex, (typeof(x.indexsets[i]),))
+            allsetsindexable = false
+            break
+        end
+    end
+
+    if allsetsindexable
+        IndexableIndexsets()
+    else
+        NotIndexableIndexsets()
+    end
+end
+
+Base.start(it::KeyIterator) = _start(it, indexability(it.x))
+_start(it::KeyIterator, ::IndexableIndexsets) = start(it.x.innerArray)
+_start(it::KeyIterator, ::NotIndexableIndexsets) = notindexable_start(it.x)
+
+@generated function notindexable_start{T,N,NT}(x::JuMPArray{T,N,NT})
     quote
         $(Expr(:tuple, 0, [:(start(x.indexsets[$i])) for i in 1:N]...))
     end
 end
 
-Base.start(it::KeyIterator) = _start(it.x)
-
-@generated function _next{T,N,NT}(x::JuMPArray{T,N,NT}, k)
+@generated function _next{T,N,NT}(x::JuMPArray{T,N,NT}, k::Tuple)
     quote
         $(Expr(:tuple, [:(next(x.indexsets[$i], k[$i+1])[1]) for i in 1:N]...))
     end
 end
 
-function Base.next(it::KeyIterator, k)
+function Base.next(it::KeyIterator, k::Tuple)
     cartesian_key = JuMPKey(_next(it.x, k))
     pos = -1
     for i in 1:it.dim
@@ -219,7 +240,7 @@ function Base.next(it::KeyIterator, k)
         end
     end
     if pos == - 1
-        return cartesian_key, (1)
+        return cartesian_key, (1,1) #The second 1 is needed to ambiguity with ints
     end
     it.next_k_cache[1] = 0
     for i in 1:it.dim
@@ -234,8 +255,16 @@ function Base.next(it::KeyIterator, k)
     cartesian_key, tuple(it.next_k_cache...)
 end
 
-function Base.done(it::KeyIterator, k)
+function Base.done(it::KeyIterator, k::Tuple)
     return k[1] == 1
 end
+
+@generated __next{T,N,NT}(x::JuMPArray{T,N,NT}, k::Integer) =
+    quote
+        subidx = ind2sub(size(x),k)
+        JuMPKey($(Expr(:tuple, [:(x.indexsets[$i][subidx[$i]]) for i in 1:N]...))), next(x.innerArray,k)[2]
+    end
+Base.next(it::KeyIterator, k) = __next(it.x,k::Integer)
+Base.done(it::KeyIterator, k) = done(it.x.innerArray, k::Integer)
 
 Base.length(it::KeyIterator)  = length(it.x.innerArray)
