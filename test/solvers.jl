@@ -92,6 +92,7 @@ if glp
     push!(lazy_solvers, GLPKMathProgInterface.GLPKSolverMIP())
     push!( cut_solvers, GLPKMathProgInterface.GLPKSolverMIP())
     push!(heur_solvers, GLPKMathProgInterface.GLPKSolverMIP())
+    push!(info_solvers, GLPKMathProgInterface.GLPKSolverMIP())
 end
 # Quadratic support
 quad_solvers = Any[]
