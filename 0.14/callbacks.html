@@ -145,7 +145,7 @@
             
   <div id="officialwarn" class="admonition warning">
 <p class="first admonition-title">Warning</p>
-<p class="last">This documentation tracks the development branch of JuMP. For the documentation of the latest JuMP release, see <a href="http://www.juliaopt.org/JuMP.jl/0.13/">here</a>.</p>
+<p class="last">This documentation tracks the development branch of JuMP. For the documentation of the latest JuMP release, see <a href="http://www.juliaopt.org/JuMP.jl/0.14/">here</a>.</p>
 </div>
 <script type="text/javascript">
 if(!(location.hostname.match('readthedocs') || location.hostname.match('rtfd'))){
@@ -414,7 +414,7 @@ including:</p>
 </div>
 <div class="section" id="informational-callbacks">
 <h2>Informational Callbacks<a class="headerlink" href="#informational-callbacks" title="Permalink to this headline">¶</a></h2>
-<p>Sometimes it can be useful to track solver progress without actually changing the algorithm by adding cuts or heuristic solutions. In these cases, informational callbacks can be added, wherein statistics can be tracked via the <code class="docutils literal"><span class="pre">cbget</span></code> functions discussed in the previous section. Informational callbacks are added to a JuMP model with the <code class="docutils literal"><span class="pre">addinfocallback(m::Model,</span> <span class="pre">f::Function)</span></code> function.</p>
+<p>Sometimes it can be useful to track solver progress without actually changing the algorithm by adding cuts or heuristic solutions. In these cases, informational callbacks can be added, wherein statistics can be tracked via the <code class="docutils literal"><span class="pre">cbget</span></code> functions discussed in the previous section. Informational callbacks are added to a JuMP model with the <code class="docutils literal"><span class="pre">addinfocallback(m::Model,</span> <span class="pre">f::Function;</span> <span class="pre">when::Symbol)</span></code> function, where the <cite>when</cite> argument should be one of <code class="docutils literal"><span class="pre">:MIPNode</span></code>, <code class="docutils literal"><span class="pre">:MIPSol</span></code> or <code class="docutils literal"><span class="pre">:Intermediate</span></code> (listed under <code class="docutils literal"><span class="pre">cbgetstate()</span></code> in the <a class="reference external" href="https://mathprogbasejl.readthedocs.io/en/latest/lpqcqp.html#cbgetstate">MathProgBase documentation</a>)</p>
 <p>For a simple example, we can add a function that tracks the best bound and incumbent objective value as the solver progresses through the branch-and-bound tree:</p>
 <div class="highlight-julia"><div class="highlight"><pre><span class="k">type</span><span class="nc"> NodeData</span>
     <span class="n">time</span><span class="p">::</span><span class="kt">Float64</span>  <span class="c"># in seconds since the epoch</span>
@@ -433,7 +433,7 @@ including:</p>
     <span class="n">bestbound</span> <span class="o">=</span> <span class="n">MathProgBase</span><span class="o">.</span><span class="n">cbgetbestbound</span><span class="p">(</span><span class="n">cb</span><span class="p">)</span>
     <span class="n">push!</span><span class="p">(</span><span class="n">bbdata</span><span class="p">,</span> <span class="n">NodeData</span><span class="p">(</span><span class="n">time</span><span class="p">(),</span><span class="n">node</span><span class="p">,</span><span class="n">obj</span><span class="p">,</span><span class="n">bestbound</span><span class="p">))</span>
 <span class="k">end</span>
-<span class="n">addinfocallback</span><span class="p">(</span><span class="n">m</span><span class="p">,</span> <span class="n">infocallback</span><span class="p">)</span>
+<span class="n">addinfocallback</span><span class="p">(</span><span class="n">m</span><span class="p">,</span> <span class="n">infocallback</span><span class="p">,</span> <span class="n">when</span> <span class="o">=</span> <span class="p">:</span><span class="n">Intermediate</span><span class="p">)</span>
 
 <span class="n">solve</span><span class="p">(</span><span class="n">m</span><span class="p">)</span>
 
@@ -445,6 +445,21 @@ including:</p>
                     <span class="n">bb</span><span class="o">.</span><span class="n">obj</span><span class="p">,</span> <span class="s">&quot;,&quot;</span><span class="p">,</span> <span class="n">bb</span><span class="o">.</span><span class="n">bestbound</span><span class="p">)</span>
     <span class="k">end</span>
 <span class="k">end</span>
+</pre></div>
+</div>
+<p>For a second example, we can add a function that tracks the intermediate solutions at each integer-feasible solution in the Branch-and-Bound tree:</p>
+<div class="highlight-julia"><div class="highlight"><pre><span class="n">solutionvalues</span> <span class="o">=</span> <span class="n">Vector</span><span class="p">{</span><span class="kt">Float64</span><span class="p">}[]</span>
+
+<span class="c"># build model ``m`` up here</span>
+
+<span class="k">function</span><span class="nf"> infocallback</span><span class="p">(</span><span class="n">cb</span><span class="p">)</span>
+    <span class="n">push!</span><span class="p">(</span><span class="n">solutionvalues</span><span class="p">,</span> <span class="n">JuMP</span><span class="o">.</span><span class="n">getvalue</span><span class="p">(</span><span class="n">x</span><span class="p">))</span>
+<span class="k">end</span>
+<span class="n">addinfocallback</span><span class="p">(</span><span class="n">m</span><span class="p">,</span> <span class="n">infocallback</span><span class="p">,</span> <span class="n">when</span> <span class="o">=</span> <span class="p">:</span><span class="n">MIPSol</span><span class="p">)</span>
+
+<span class="n">solve</span><span class="p">(</span><span class="n">m</span><span class="p">)</span>
+
+<span class="c"># all the intermediate solutions are now stored in `solutionvalues`</span>
 </pre></div>
 </div>
 </div>

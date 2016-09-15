@@ -42,6 +42,8 @@ Solver support in Julia is currently provided by writing a solver-specific packa
 +==================================================================================+=================================================================================+=============================+=============+====+======+======+=====+=======+=====+
 | `Artelys Knitro <http://artelys.com/en/optimization-tools/knitro>`_              | `KNITRO.jl <https://github.com/JuliaOpt/KNITRO.jl>`_                            | ``KnitroSolver()``          |  Comm.      |    |      |      |  X  |   X   |     |
 +----------------------------------------------------------------------------------+---------------------------------------------------------------------------------+-----------------------------+-------------+----+------+------+-----+-------+-----+
+| `BARON <http://archimedes.cheme.cmu.edu/?q=baron>`_                              | `BARON.jl <https://github.com/joehuchette/BARON.jl>`_                           |  ``BaronSolver()``          |  Comm.      |    |      |      |  X  |   X   |     |
++----------------------------------------------------------------------------------+---------------------------------------------------------------------------------+-----------------------------+-------------+----+------+------+-----+-------+-----+
 | `Bonmin <https://projects.coin-or.org/Bonmin>`_                                  | `AmplNLWriter.jl <https://github.com/JackDunnNZ/AmplNLWriter.jl>`_              | ``BonminNLSolver()`` *      |  EPL        | X  |      |  X   |  X  |   X   |     |
 +                                                                                  +---------------------------------------------------------------------------------+-----------------------------+             +    +      +      +     +       +     +
 |                                                                                  | `CoinOptServices.jl <https://github.com/JuliaOpt/CoinOptServices.jl>`_          | ``OsilBonminSolver()``      |             |    |      |      |     |       |     |
@@ -99,6 +101,11 @@ Artelys Knitro
 ++++++++++++++
 
 Requires a license. The KNITRO.jl interface currently supports only nonlinear problems.
+
+BARON
++++++
+
+Requires a license. A trial version is available for small problem instances.
 
 COIN-OR Clp and Cbc
 +++++++++++++++++++
