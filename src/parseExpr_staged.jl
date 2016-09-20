@@ -490,7 +490,7 @@ function parseGeneratorSum(x::Expr, aff::Symbol, lcoeffs, rcoeffs, newaff)
                 end
             end)
         end
-        len = :len
+        len = gensym()
         # precompute the number of elements to add
         # this is unncessary if we're just summing constants
         _, lastidxset = parseIdxSet(x.args[length(x.args)]::Expr)
