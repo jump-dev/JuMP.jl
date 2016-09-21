@@ -195,28 +195,23 @@ end
 
 KeyIterator{JA}(d::JA) = KeyIterator{JA}(d)
 
-immutable IndexableIndexsets end
-immutable NotIndexableIndexsets end
-
 function indexability(x::JuMPArray)
-    allsetsindexable = true
     for i in  1:length(x.indexsets)
         if !method_exists(getindex, (typeof(x.indexsets[i]),))
-            allsetsindexable = false
-            break
+            return false
         end
     end
 
-    if allsetsindexable
-        IndexableIndexsets()
-    else
-        NotIndexableIndexsets()
-    end
+    return true
 end
 
-Base.start(it::KeyIterator) = _start(it, indexability(it.x))
-_start(it::KeyIterator, ::IndexableIndexsets) = start(it.x.innerArray)
-_start(it::KeyIterator, ::NotIndexableIndexsets) = notindexable_start(it.x)
+function Base.start(it::KeyIterator)
+    if indexability(it.x)
+        return start(it.x.innerArray)
+    else
+        return notindexable_start(it.x)
+    end
+end
 
 @generated function notindexable_start{T,N,NT}(x::JuMPArray{T,N,NT})
     quote
@@ -231,16 +226,17 @@ end
 end
 
 function Base.next(it::KeyIterator, k::Tuple)
-    cartesian_key = JuMPKey(_next(it.x, k))
+    cartesian_key = _next(it.x, k)
     pos = -1
     for i in 1:it.dim
-        if(!done(it.x.indexsets[i], next(it.x.indexsets[i], k[i+1])[2] ) )
+        if !done(it.x.indexsets[i], next(it.x.indexsets[i], k[i+1])[2] )
             pos = i
             break
         end
     end
     if pos == - 1
-        return cartesian_key, (1,1) #The second 1 is needed to ambiguity with ints
+        it.next_k_cache[1] = 1
+        return cartesian_key, tuple(it.next_k_cache...)
     end
     it.next_k_cache[1] = 0
     for i in 1:it.dim
@@ -255,14 +251,12 @@ function Base.next(it::KeyIterator, k::Tuple)
     cartesian_key, tuple(it.next_k_cache...)
 end
 
-function Base.done(it::KeyIterator, k::Tuple)
-    return k[1] == 1
-end
+Base.done(it::KeyIterator, k::Tuple) = (k[1] == 1)
 
 @generated __next{T,N,NT}(x::JuMPArray{T,N,NT}, k::Integer) =
     quote
         subidx = ind2sub(size(x),k)
-        JuMPKey($(Expr(:tuple, [:(x.indexsets[$i][subidx[$i]]) for i in 1:N]...))), next(x.innerArray,k)[2]
+        $(Expr(:tuple, [:(x.indexsets[$i][subidx[$i]]) for i in 1:N]...)), next(x.innerArray,k)[2]
     end
 Base.next(it::KeyIterator, k) = __next(it.x,k::Integer)
 Base.done(it::KeyIterator, k) = done(it.x.innerArray, k::Integer)
