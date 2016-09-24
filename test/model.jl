@@ -74,7 +74,7 @@ facts("[model] Test printing a model") do
     constraints[3] = @constraint(modA, 6y + y <= z + r[6]/1.9)
     #####################################################################
     # Test LP writer (given names)
-    writeLP(modA, modPath * "A.lp", generic=false)
+    writeLP(modA, modPath * "A.lp", genericnames=false)
     modALP = if VERSION >= v"0.5.0-dev+1866" # leading zero, base Julia PR #14377
         String[
         "Maximize",
@@ -126,7 +126,7 @@ facts("[model] Test printing a model") do
     close(modAfp)
     #####################################################################
     # Test LP writer (generic names)
-    writeLP(modA, modPath * "A.lp", generic=true)
+    writeLP(modA, modPath * "A.lp", genericnames=true)
     modALP = if VERSION >= v"0.5.0-dev+1866" # leading zero, base Julia PR #14377
         String[
         "Maximize",

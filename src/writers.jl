@@ -187,8 +187,8 @@ function varname_given(m::Model, col::Integer)
     name
 end
 
-function writeLP(m::Model, fname::AbstractString; generic=true)
-    varname = generic ? varname_generic : varname_given
+function writeLP(m::Model, fname::AbstractString; genericnames=true)
+    varname = genericnames ? varname_generic : varname_given
 
     f = open(fname, "w")
 
