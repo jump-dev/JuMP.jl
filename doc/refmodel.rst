@@ -65,7 +65,7 @@ Methods
 
 **Output**
 
-* ``writeLP(m::Model, filename::AbstractString)`` - write the model to ``filename`` in the LP file format.
+* ``writeLP(m::Model, filename::AbstractString; genericnames=true)`` - write the model to ``filename`` in the LP file format. Set ``genericnames=false`` for user-defined variable names.
 * ``writeMPS(m::Model, filename::AbstractString)`` - write the model to ``filename`` in the MPS file format.
 
 .. _solvestatus:
