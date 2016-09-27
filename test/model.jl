@@ -981,3 +981,24 @@ facts("[model] Nonliteral exponents in @constraint") do
     @fact m.quadconstr[3].terms --> x^2 + x^2 + x^2 + x^2 + x^2 + x^2 + x^2 + x^2 + x^2 - 1
     @fact m.quadconstr[4].terms --> QuadExpr(x + x + x - 1)
 end
+
+facts("[model] sets used as indexsets in JuMPArray") do
+    set = IntSet()
+    for i in 4:5
+        push!(set, i)
+    end
+    set2 = IntSet()
+    for i in 21:23
+        push!(set2, i)
+    end
+    m = Model()
+    @variable(m, x[set, set2], Bin)
+    @objective(m , Max, sum{sum{x[e,p], e in set}, p in set2})
+    solve(m)
+    sol = getvalue(x)
+    checked_objval = 0
+    for i in keys(sol)
+        checked_objval += sol[i...]
+    end
+    @fact checked_objval --> 6
+end

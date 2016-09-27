@@ -35,6 +35,7 @@ end
 end
 
 Base.getindex(d::JuMPArray, ::Colon) = d.innerArray[:]
+
 @generated function Base.getindex{T,N,NT<:NTuple}(d::JuMPArray{T,N,NT}, idx...)
     if N != length(idx)
         error("Indexed into a JuMPArray with $(length(idx)) indices (expected $N indices)")

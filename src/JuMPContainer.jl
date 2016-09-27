@@ -151,8 +151,10 @@ Base.ndims{T,N}(x::JuMPDict{T,N}) = N
 Base.abs(x::JuMPDict) = map(abs, x)
 # avoid dangerous behavior with "end" (#730)
 Base.endof(x::JuMPArray) = error("endof() (and \"end\" syntax) not implemented for JuMPArray objects.")
-Base.size(x::JuMPArray) = error("size (and \"end\" syntax) not implemented for JuMPArray objects. Use JuMP.size if you want to access the dimensions.")
-Base.size(x::JuMPArray,k) = error("size (and \"end\" syntax) not implemented for JuMPArray objects. Use JuMP.size if you want to access the dimensions.")
+Base.size(x::JuMPArray) = error(string("size (and \"end\" syntax) not implemented for JuMPArray objects.",
+"Use JuMP.size if you want to access the dimensions."))
+Base.size(x::JuMPArray,k) = error(string("size (and \"end\" syntax) not implemented for JuMPArray objects.",
+" Use JuMP.size if you want to access the dimensions."))
 size(x::JuMPArray) = size(x.innerArray)
 size(x::JuMPArray,k) = size(x.innerArray,k)
 # for uses of size() within JuMP
@@ -183,13 +185,80 @@ Base.length(it::ValueIterator)  = length(it.x)
 
 type KeyIterator{JA<:JuMPArray}
     x::JA
+    dim::Int
+    next_k_cache::Array{Any,1}
+    function KeyIterator(d)
+        n = ndims(d.innerArray)
+        new(d, n, Array(Any, n+1))
+    end
 end
-Base.start(it::KeyIterator)   =  start(it.x.innerArray)
-@generated __next{T,N,NT}(x::JuMPArray{T,N,NT}, k) =
+
+KeyIterator{JA}(d::JA) = KeyIterator{JA}(d)
+
+function indexability(x::JuMPArray)
+    for i in  1:length(x.indexsets)
+        if !method_exists(getindex, (typeof(x.indexsets[i]),))
+            return false
+        end
+    end
+
+    return true
+end
+
+function Base.start(it::KeyIterator)
+    if indexability(it.x)
+        return start(it.x.innerArray)
+    else
+        return notindexable_start(it.x)
+    end
+end
+
+@generated function notindexable_start{T,N,NT}(x::JuMPArray{T,N,NT})
+    quote
+        $(Expr(:tuple, 0, [:(start(x.indexsets[$i])) for i in 1:N]...))
+    end
+end
+
+@generated function _next{T,N,NT}(x::JuMPArray{T,N,NT}, k::Tuple)
+    quote
+        $(Expr(:tuple, [:(next(x.indexsets[$i], k[$i+1])[1]) for i in 1:N]...))
+    end
+end
+
+function Base.next(it::KeyIterator, k::Tuple)
+    cartesian_key = _next(it.x, k)
+    pos = -1
+    for i in 1:it.dim
+        if !done(it.x.indexsets[i], next(it.x.indexsets[i], k[i+1])[2] )
+            pos = i
+            break
+        end
+    end
+    if pos == - 1
+        it.next_k_cache[1] = 1
+        return cartesian_key, tuple(it.next_k_cache...)
+    end
+    it.next_k_cache[1] = 0
+    for i in 1:it.dim
+        if i < pos
+            it.next_k_cache[i+1] = start(it.x.indexsets[i])
+        elseif i == pos
+            it.next_k_cache[i+1] = next(it.x.indexsets[i], k[i+1])[2]
+        else
+            it.next_k_cache[i+1] = k[i+1]
+        end
+    end
+    cartesian_key, tuple(it.next_k_cache...)
+end
+
+Base.done(it::KeyIterator, k::Tuple) = (k[1] == 1)
+
+@generated __next{T,N,NT}(x::JuMPArray{T,N,NT}, k::Integer) =
     quote
         subidx = ind2sub(size(x),k)
         $(Expr(:tuple, [:(x.indexsets[$i][subidx[$i]]) for i in 1:N]...)), next(x.innerArray,k)[2]
     end
-Base.next(it::KeyIterator, k) = __next(it.x,k)
-Base.done(it::KeyIterator, k) =   done(it.x.innerArray, k)
+Base.next(it::KeyIterator, k) = __next(it.x,k::Integer)
+Base.done(it::KeyIterator, k) = done(it.x.innerArray, k::Integer)
+
 Base.length(it::KeyIterator)  = length(it.x.innerArray)
