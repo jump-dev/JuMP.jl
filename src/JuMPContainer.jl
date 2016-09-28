@@ -226,7 +226,7 @@ end
 end
 
 function Base.next(it::KeyIterator, k::Tuple)
-    cartesian_key = _next(it.x, k)
+    cartesian_key = JuMPKey(_next(it.x, k))
     pos = -1
     for i in 1:it.dim
         if !done(it.x.indexsets[i], next(it.x.indexsets[i], k[i+1])[2] )
@@ -256,7 +256,7 @@ Base.done(it::KeyIterator, k::Tuple) = (k[1] == 1)
 @generated __next{T,N,NT}(x::JuMPArray{T,N,NT}, k::Integer) =
     quote
         subidx = ind2sub(size(x),k)
-        $(Expr(:tuple, [:(x.indexsets[$i][subidx[$i]]) for i in 1:N]...)), next(x.innerArray,k)[2]
+        JuMPKey($(Expr(:tuple, [:(x.indexsets[$i][subidx[$i]]) for i in 1:N]...))), next(x.innerArray,k)[2]
     end
 Base.next(it::KeyIterator, k) = __next(it.x,k::Integer)
 Base.done(it::KeyIterator, k) = done(it.x.innerArray, k::Integer)
