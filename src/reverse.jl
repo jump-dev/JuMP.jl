@@ -22,7 +22,10 @@ function reverse_eval{T}(reverse_storage::Vector{T},partials_storage::Vector{T},
         if nod.nodetype == VALUE || nod.nodetype == LOGIC || nod.nodetype == COMPARISON || nod.nodetype == PARAMETER
             continue
         end
-        @inbounds reverse_storage[k] = reverse_storage[nod.parent]*partials_storage[k]
+        @inbounds rev_parent = reverse_storage[nod.parent]
+        @inbounds partial = partials_storage[k]
+        @inbounds reverse_storage[k] = ifelse(rev_parent == 0.0 && isnan(partial), rev_parent, rev_parent*partial)
+        #@inbounds reverse_storage[k] = reverse_storage[nod.parent]*partials_storage[k]
     end
     #@show storage
 
@@ -82,8 +85,13 @@ function reverse_eval_ϵ{N,T}(output_ϵ::DenseVector{ForwardDiff.Partials{N,T}},
         @inbounds parentval_ϵ = reverse_storage_ϵ[nod.parent]
         @inbounds partial = partials_storage[k]
         @inbounds partial_ϵ = partials_storage_ϵ[k]
+
         #reverse_storage_ϵ[k] = parentval*partial_ϵ + partial*parentval_ϵ
-        reverse_storage_ϵ[k] = ForwardDiff._mul_partials(partial_ϵ,parentval_ϵ,parentval,partial)
+        if isnan(partial) && parentval == 0.0
+            reverse_storage_ϵ[k] = zero(ForwardDiff.Partials{N,T})
+        else
+            reverse_storage_ϵ[k] = ForwardDiff._mul_partials(partial_ϵ,parentval_ϵ,parentval,partial)
+        end
 
         if nod.nodetype == VARIABLE
             @inbounds output_ϵ[nod.index] += reverse_storage_ϵ[k]
