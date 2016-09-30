@@ -181,6 +181,13 @@ reverse_eval(reverse_storage,partials_storage,nd,adj)
 reverse_extract(grad,reverse_storage,nd,adj,[],1.0)
 @test grad[1] == -6.0
 
+fval = forward_eval(storage,partials_storage,nd,adj,const_values,[],[2.0],[])
+@test fval == 0.0
+grad = zeros(1)
+reverse_eval(reverse_storage,partials_storage,nd,adj)
+reverse_extract(grad,reverse_storage,nd,adj,[],1.0)
+@test grad[1] == 0.0
+
 
 function test_linearity(ex,testval,IJ = [],indices=[])
     nd,const_values = expr_to_nodedata(ex)
