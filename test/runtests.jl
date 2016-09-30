@@ -165,6 +165,29 @@ reverse_eval(reverse_storage,partials_storage,nd,adj)
 reverse_extract(grad,reverse_storage,nd,adj,[],1.0)
 @test grad[1] == -1.0
 
+# https://github.com/JuliaOpt/JuMP.jl/issues/855
+ex = :(ifelse(x[1]<=3.0, (x[1]-2.0)^2, 2*log(x[1]-2.0)+1.0))
+
+nd,const_values = expr_to_nodedata(ex)
+adj = adjmat(nd)
+
+storage = zeros(length(nd))
+partials_storage = zeros(length(nd))
+reverse_storage = zeros(length(nd))
+fval = forward_eval(storage,partials_storage,nd,adj,const_values,[],[-1.0],[])
+@test fval == 9.0
+grad = zeros(1)
+reverse_eval(reverse_storage,partials_storage,nd,adj)
+reverse_extract(grad,reverse_storage,nd,adj,[],1.0)
+@test grad[1] == -6.0
+
+fval = forward_eval(storage,partials_storage,nd,adj,const_values,[],[2.0],[])
+@test fval == 0.0
+grad = zeros(1)
+reverse_eval(reverse_storage,partials_storage,nd,adj)
+reverse_extract(grad,reverse_storage,nd,adj,[],1.0)
+@test grad[1] == 0.0
+
 
 function test_linearity(ex,testval,IJ = [],indices=[])
     nd,const_values = expr_to_nodedata(ex)
