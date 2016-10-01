@@ -36,8 +36,11 @@ end
 
 Base.getindex(d::JuMPArray, ::Colon) = d.innerArray[:]
 
-immutable JuMPKey{T<:Tuple}
-    jk::T
+# immutable JuMPKey{T<:Tuple}
+#     jk::T
+# end
+immutable JuMPKey
+    jk::Tuple
 end
 
 Base.start(x::JuMPKey) = Base.start(x.jk)

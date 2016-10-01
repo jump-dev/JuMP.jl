@@ -1002,3 +1002,33 @@ facts("[model] sets used as indexsets in JuMPArray") do
     end
     @fact checked_objval --> 6
 end
+
+facts("[model] iteration on keys(::JuMPArray)") do
+    set = 4:5
+    set2 = 21:23
+    m = Model()
+    @variable(m, x[set, set2], Bin)
+    @objective(m , Max, sum{sum{x[e,p], e in set}, p in set2})
+    solve(m)
+    sol = getvalue(x)
+    checked_objval = 0
+    for i in keys(sol)
+        checked_objval += sol[i]
+    end
+    @fact checked_objval --> 6
+end
+
+facts("[model] iteration on keys(::JuMPDict)") do
+    set = 4:5
+    set2 = 21:23
+    m = Model()
+    @variable(m, x[i in set, j in set2; i < j], Bin)
+    @objective(m , Max, sum{sum{x[e,p], e in set}, p in set2})
+    solve(m)
+    sol = getvalue(x)
+    checked_objval = 0
+    for i in keys(sol)
+        checked_objval += sol[i]
+    end
+    @fact checked_objval --> 6
+end

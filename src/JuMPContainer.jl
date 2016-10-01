@@ -185,13 +185,13 @@ Base.next(it::ValueIterator, k) =   next(it.x, k)
 Base.done(it::ValueIterator, k) =   done(it.x, k)
 Base.length(it::ValueIterator)  = length(it.x)
 
-type JDKeyIterator{N,T}
-    x::Base.KeyIterator{Dict{NTuple{N,Any},T}}
+type JDKeyIterator{T<:Base.KeyIterator}
+    x::T
 end
 Base.start(it::JDKeyIterator)   =  start(it.x)
 function Base.next(it::JDKeyIterator, k)
-    tuple, next_k = next(it.x, k)
-    return JuMPKey(tuple), next_k
+    n = next(it.x, k)
+    JuMPKey(n[1]), n[2]
 end
 Base.done(it::JDKeyIterator, k) =   done(it.x, k)
 Base.length(it::JDKeyIterator)  = length(it.x)
