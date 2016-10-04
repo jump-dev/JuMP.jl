@@ -437,7 +437,7 @@ context("With solver $(typeof(nlp_solver))") do
     @NLexpression(m, entropy[i=idx], -x[i]*log(x[i]))
     @NLobjective(m, Max, sum{z[i], i = 1:2} + sum{z[i]/2, i=3:4})
     @NLconstraint(m, z_constr1[i=1], z[i] <= entropy[i])
-    @NLconstraint(m, z_constr1[i=2], z[i] <= entropy[i]) # duplicate expressions
+    @NLconstraint(m, z_constr1_dup[i=2], z[i] <= entropy[i]) # duplicate expressions
     @NLconstraint(m, z_constr2[i=3:4], z[i] <= 2*entropy[i])
     @constraint(m, sum(x) == 1)
 

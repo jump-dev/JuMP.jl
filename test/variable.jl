@@ -49,9 +49,9 @@ facts("[variable] get and set bounds") do
     @fact getlowerbound(x) --> 1
     setupperbound(x, 3)
     @fact getupperbound(x) --> 3
-    @variable(m, y, Bin)
-    @fact getlowerbound(y) --> 0
-    @fact getupperbound(y) --> 1
+    @variable(m, q, Bin)
+    @fact getlowerbound(q) --> 0
+    @fact getupperbound(q) --> 1
     @variable(m, 0 <= y <= 1, Bin)
     @fact getlowerbound(y) --> 0
     @fact getupperbound(y) --> 1

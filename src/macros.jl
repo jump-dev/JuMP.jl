@@ -326,7 +326,7 @@ macro constraint(args...)
     c = length(extra) == 1 ? x        : gensym()
     x = length(extra) == 1 ? extra[1] : x
 
-    anonvar = isexpr(c, :vect) || isexpr(c, :vcat)
+    anonvar = isexpr(c, :vect) || isexpr(c, :vcat) || length(extra) != 1
     variable = gensym()
     quotvarname = quot(getname(c))
     escvarname  = anonvar ? variable : esc(getname(c))
@@ -425,7 +425,7 @@ macro constraint(args...)
     end
     return assert_validmodel(m, quote
         $(getloopedcode(variable, code, condition, idxvars, idxsets, idxpairs, :ConstraintRef))
-        registercon($m, $quotvarname, $variable)
+        !$anonvar && registercon($m, $quotvarname, $variable)
         $(anonvar ? variable : :($escvarname = $variable))
     end)
 end
@@ -996,7 +996,7 @@ macro variable(args...)
                 end
             end)
             push!($(m).dictList, $variable)
-            registervar($m, $quotvarname, $variable)
+            !$anonvar && registervar($m, $quotvarname, $variable)
             storecontainerdata($m, $variable, $quotvarname,
                                $(Expr(:tuple,idxsets...)),
                                $idxpairs, $(quot(condition)))
@@ -1009,7 +1009,7 @@ macro variable(args...)
             $(getloopedcode(variable, code, condition, idxvars, idxsets, idxpairs, :Variable))
             isa($variable, JuMPContainer) && pushmeta!($variable, :model, $m)
             push!($(m).dictList, $variable)
-            registervar($m, $quotvarname, $variable)
+            !$anonvar && registervar($m, $quotvarname, $variable)
             storecontainerdata($m, $variable, $quotvarname,
                                $(Expr(:tuple,map(clear_dependencies,1:length(idxsets))...)),
                                $idxpairs, $(quot(condition)))
@@ -1068,7 +1068,7 @@ macro NLconstraint(m, x, extra...)
     c = length(extra) == 1 ? x        : gensym()
     x = length(extra) == 1 ? extra[1] : x
 
-    anonvar = isexpr(c, :vect) || isexpr(c, :vcat)
+    anonvar = isexpr(c, :vect) || isexpr(c, :vcat) || length(extra) != 1
     variable = gensym()
     quotvarname = anonvar ? :(:__anon__) : quot(getname(c))
     escvarname  = anonvar ? variable : esc(getname(c))
@@ -1130,7 +1130,7 @@ macro NLconstraint(m, x, extra...)
         initNLP($m)
         $m.internalModelLoaded = false
         $looped
-        registercon($m, $quotvarname, $variable)
+        !$anonvar && registercon($m, $quotvarname, $variable)
         $(anonvar ? variable : :($escvarname = $variable))
     end)
 end
