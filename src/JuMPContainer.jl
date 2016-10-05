@@ -87,10 +87,10 @@ function gendict(instancename,T,idxsets...)
     end
     sizes = Expr(:tuple, [:(length($rng)) for rng in idxsets]...)
     if truearray
-        :($instancename = Array($T, $sizes))
+        :($instancename = Array($T, $sizes...))
     else
         indexsets = Expr(:tuple, idxsets...)
-        :($instancename = JuMPArray(Array($T, $sizes), $indexsets))
+        :($instancename = JuMPArray(Array($T, $sizes...), $indexsets))
     end
 end
 
