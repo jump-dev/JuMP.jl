@@ -219,3 +219,10 @@ facts("[variable] Can't use end for indexing a JuMPContainer") do
     @fact_throws y[end,1]
     @fact_throws z[end]
 end
+
+facts("[variable] Unsigned dimension lengths") do
+    m = Model()
+    t = UInt(4)
+    @variable(m, x[1:t])
+    @constraintref(y[1:t])
+end
