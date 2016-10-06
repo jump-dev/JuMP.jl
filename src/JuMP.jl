@@ -429,7 +429,7 @@ function getvalue(arr::Array{Variable})
             end
         end
     end
-    # Copy printing data from @defVar for Array{Variable} to corresponding Array{Float64} of values
+    # Copy printing data from @variable for Array{Variable} to corresponding Array{Float64} of values
     if registered
         m.varData[ret] = m.varData[arr]
     end
@@ -662,6 +662,7 @@ end
 # handle dictionary of variables
 function registervar(m::Model, varname::Symbol, value)
     if haskey(m.varDict, varname)
+        Base.warn_once("A variable named $varname is already attached to this model. If creating variables programmatically, consider using the anonymous variable syntax x = @variable(m, [1:N], ...).")
         m.varDict[varname] = nothing # indicate duplicate variable
     else
         m.varDict[varname] = value
@@ -672,7 +673,8 @@ registervar(m::Model, varname, value) = value # variable name isn't a simple sym
 
 function registercon(m::Model, conname::Symbol, value)
     if haskey(m.conDict, conname)
-        m.conDict[conname] = nothing # indicate duplicate variable
+        Base.warn_once("A constraint named $conname is already attached to this model. If creating constraints programmatically, consider using the anonymous constraint syntax con = @constraint(m, ...).")
+        m.conDict[conname] = nothing # indicate duplicate constraint
     else
         m.conDict[conname] = value
     end

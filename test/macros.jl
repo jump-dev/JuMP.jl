@@ -473,19 +473,19 @@ facts("[macros] Indices in macros don't leak out of scope (#582)") do
     m = Model()
     cnt = 4
     for i in 5:8
-        @variable(m, x[i=1:3,j=1:3] ≤ i)
+        x = @variable(m, [i=1:3,j=1:3], upperbound = i)
         cnt += 1
         @fact i --> cnt
     end
     cnt = 4
     for i in 5:8
-        @variable(m, y[i=2:4,j=1:3] ≤ i)
+        y = @variable(m, [i=2:4,j=1:3], upperbound = i)
         cnt += 1
         @fact i --> cnt
     end
     cnt = 4
     for i in 5:8
-        @variable(m, z[i=[1:3;],j=1:3] ≤ i)
+        z = @variable(m, [i=[1:3;],j=1:3], upperbound = i)
         cnt += 1
         @fact i --> cnt
     end
@@ -507,7 +507,7 @@ facts("[macros] Indices in macros don't leak out of scope (#582)") do
     end
     cnt = 4
     for i in 5:8
-        @constraint(m, c[i=1:3,j=1:3], x[i] == 1)
+        @constraint(m, [i=1:3,j=1:3], x[i] == 1)
         cnt += 1
         @fact i --> cnt
     end
