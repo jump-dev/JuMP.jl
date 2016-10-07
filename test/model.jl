@@ -1002,3 +1002,9 @@ facts("[model] sets used as indexsets in JuMPArray") do
     end
     @fact checked_objval --> 6
 end
+
+facts("[model] .^ broadcasting") do
+    m = Model()
+    @variable(m, x[1:2])
+    @fact (x.^2)[1] --> x[1]^2
+end

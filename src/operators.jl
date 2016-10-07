@@ -124,6 +124,7 @@ function (^)(lhs::Union{Variable,AffExpr}, rhs::Integer)
     end
 end
 (^)(lhs::Union{Variable,AffExpr}, rhs::Number) = error("Only exponents of 0, 1, or 2 are currently supported. Are you trying to build a nonlinear problem? Make sure you use @NLconstraint/@NLobjective.")
+(.^)(lhs::Union{Variable,AffExpr}, rhs::Number) = lhs^rhs
 # AffExpr--Variable
 (+){C,V<:JuMPTypes}(lhs::GenericAffExpr{C,V}, rhs::V) = (+)(rhs,lhs)
 (-){C,V<:JuMPTypes}(lhs::GenericAffExpr{C,V}, rhs::V) = GenericAffExpr{C,V}(vcat(lhs.vars,rhs),vcat(lhs.coeffs,-one(C)),lhs.constant)
