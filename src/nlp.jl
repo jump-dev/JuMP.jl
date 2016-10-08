@@ -1157,15 +1157,15 @@ function MathProgBase.constr_expr(d::NLPEvaluator,i::Integer)
     end
 end
 
-const ENABLE_NLP_RESOLVE = Array(Bool,1)
 function EnableNLPResolve()
-    ENABLE_NLP_RESOLVE[1] = true
+    Base.warn_once("NLP resolve is now enabled by default. The EnableNLPResolve() method will be removed in a future release.")
+    return
 end
 function DisableNLPResolve()
-    ENABLE_NLP_RESOLVE[1] = false
+    Base.warn_once("NLP resolve is now enabled by default. The DisableNLPResolve() method will be removed in a future release.")
+    return
 end
 export EnableNLPResolve, DisableNLPResolve
-
 
 function _buildInternalModel_nlp(m::Model, traits)
 
@@ -1176,36 +1176,6 @@ function _buildInternalModel_nlp(m::Model, traits)
         @assert isa(nldata.evaluator, NLPEvaluator)
         d = nldata.evaluator
         fill!(d.last_x, NaN)
-        if length(nldata.nlparamvalues) == 0 && !ENABLE_NLP_RESOLVE[1]
-            # no parameters and haven't explicitly allowed resolves
-            # error to prevent potentially incorrect answers
-            msg = """
-            There was a recent **breaking** change in behavior
-            for solving sequences of nonlinear models.
-            Previously, users were allowed to modify the data in the model
-            by modifying the values stored in their own data arrays.
-            For example:
-
-            data = [1.0]
-            @NLconstraint(m, data[1]*x <= 1)
-            solve(m)
-            data[1] = 2.0
-            solve(m) # coefficient is updated
-
-            However, this behavior **no longer works**. Instead,
-            nonlinear parameters defined with @defNLParam should be used.
-            See the latest JuMP documentation for more information.
-            It is possible that this model was exploiting the previous behavior,
-            and out of extreme caution we have temporarily introduced
-            this error message.
-            If you are sure that you are solving the correct model,
-            then call `EnableNLPResolve()` at the top of this file to disable
-            this error message.
-            To return to the last version of JuMP which supported the
-            old behavior, run `Pkg.pin("JuMP",v"0.11.1")`.
-            """
-            error(msg)
-        end
     else
         d = NLPEvaluator(m)
         nldata.evaluator = d

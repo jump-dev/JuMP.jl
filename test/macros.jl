@@ -388,12 +388,6 @@ facts("[macros] @expression") do
     @expression(model, y[i=1:2], sum{x[i,1]; i == 1})
     @fact string(y[1]) --> "x[1,1]"
     @fact string(y[2]) --> "0"
-
-    # deprecated versions
-    @expression(expr2, sum{i*x[i,j] + j, i=1:3,j in 1:3})
-    @fact string(expr2) --> "x[1,1] + x[1,2] + x[1,3] + 2 x[2,1] + 2 x[2,2] + 2 x[2,3] + 3 x[3,1] + 3 x[3,2] + 3 x[3,3] + 18"
-    expr2 = @expression(sum{i*x[i,j] + j, i=1:3,j in 1:3})
-    @fact string(expr2) --> "x[1,1] + x[1,2] + x[1,3] + 2 x[2,1] + 2 x[2,2] + 2 x[2,3] + 3 x[3,1] + 3 x[3,2] + 3 x[3,3] + 18"
 end
 
 facts("[macros] Conditions in constraint indexing") do

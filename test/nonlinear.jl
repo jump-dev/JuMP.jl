@@ -160,13 +160,11 @@ context("With solver $(typeof(nlp_solver)), simplify = $simplify") do
     @variable(m, y ≥ 0)
     @objective(m, Min, y)
     @NLconstraint(m, y ≥ x^2)
-    EnableNLPResolve()
     for α in 1:4
         setvalue(x, α)
         solve(m)
         @fact getvalue(y) --> roughly(α^2, 1e-6)
     end
-    DisableNLPResolve()
 end; end; end; end
 
 facts("[nonlinear] Test QP solve through NL pathway") do
@@ -751,20 +749,6 @@ facts("[nonlinear] NaN corner case (#695)") do
     MathProgBase.eval_hesslag_prod(d, h, m.colVal, v, 1.0, Float64[])
     correct = [0.0 -1/(2*2^(3/2)); -1/(2*2^(3/2)) 3/(4*2^(5/2))]*v
     @fact h --> roughly(correct)
-end
-
-if length(convex_nlp_solvers) > 0
-    facts("[nonlinear] Error on NLP resolve") do
-        m = Model(solver=convex_nlp_solvers[1])
-        @variable(m, x, start = 1)
-        @NLobjective(m, Min, x^2)
-        solve(m)
-        setvalue(x, 2)
-        @fact_throws ErrorException solve(m)
-        EnableNLPResolve()
-        status = solve(m)
-        @fact status --> :Optimal
-    end
 end
 
 mysquare(x) = x^2

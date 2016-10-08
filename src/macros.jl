@@ -689,16 +689,6 @@ macro expression(args...)
         m = esc(args[1])
         c = args[2]
         x = args[3]
-    elseif length(args) == 1
-        m = nothing
-        c = gensym()
-        x = args[1]
-        Base.warn_once("The one-argument version of @defExpr is deprecated. The corresponding JuMP model is now required as the first argument, and a name for the expression or collection of expressions is required as the second argument. The new syntax is @expression(<JuMP model>, <name of expression(s)>, <expression>)")
-    elseif length(args) == 2
-        m = nothing
-        c = args[1]
-        x = args[2]
-        Base.warn_once("The two-argument version of @defExpr is deprecated. The corresponding JuMP model is now required as the first argument. The new syntax is @expression(<JuMP model>, <name of expression(s)>, <expression>)")
     else
         error("@expression: needs three arguments.")
     end
