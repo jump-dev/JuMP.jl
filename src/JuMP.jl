@@ -25,10 +25,6 @@ import Compat: UTF8String, view
 
 @compat import Base.show
 
-function __init__()
-    ENABLE_NLP_RESOLVE[1] = false
-end
-
 export
 # Objects
     Model, Variable, Norm, AffExpr, QuadExpr, SOCExpr,
