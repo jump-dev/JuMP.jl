@@ -161,7 +161,7 @@ size(x::JuMPArray,k) = size(x.innerArray,k)
 size(x) = Base.size(x)
 size(x,k) = Base.size(x,k)
 # delegate one-argument functions
-Compat.issymmetric(x::JuMPArray) = Compat.issymmetric(x.innerArray)
+Base.issymmetric(x::JuMPArray) = issymmetric(x.innerArray)
 
 Base.eltype{T}(x::JuMPContainer{T}) = T
 

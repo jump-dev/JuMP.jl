@@ -19,11 +19,6 @@ import MathProgBase
 using Calculus
 using ReverseDiffSparse
 using ForwardDiff
-using Compat
-
-import Compat: UTF8String, view
-
-@compat import Base.show
 
 export
 # Objects
@@ -75,8 +70,8 @@ type Model <: AbstractModel
 
     # Column data
     numCols::Int
-    colNames::Vector{UTF8String}
-    colNamesIJulia::Vector{UTF8String}
+    colNames::Vector{String}
+    colNamesIJulia::Vector{String}
     colLower::Vector{Float64}
     colUpper::Vector{Float64}
     colCat::Vector{Symbol}
@@ -148,10 +143,10 @@ function Model(;solver=UnsetSolver(), simplify_nonlinear_expressions::Bool=false
           QuadConstraint[],            # quadconstr
           SOSConstraint[],             # sosconstr
           SOCConstraint[],             # socconstr
-          SDConstraint[],             # sdpconstr
+          SDConstraint[],              # sdpconstr
           0,                           # numCols
-          UTF8String[],                # colNames
-          UTF8String[],                # colNamesIJulia
+          String[],                    # colNames
+          String[],                    # colNamesIJulia
           Float64[],                   # colLower
           Float64[],                   # colUpper
           Symbol[],                    # colCat

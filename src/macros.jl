@@ -8,15 +8,6 @@ using Base.Meta
 issum(s::Symbol) = (s == :sum) || (s == :∑) || (s == :Σ)
 isprod(s::Symbol) = (s == :prod) || (s == :∏)
 
-# for backward compatibility with 0.4
-function comparison_to_call(ex)
-    if isexpr(ex,:comparison) && length(ex.args) == 3
-        return Expr(:call,ex.args[2],ex.args[1],ex.args[3])
-    else
-        return ex
-    end
-end
-
 function flatten_error(ex)
     isexpr(ex, :flatten) || return
     error("The generator syntax \"$ex\" with multiple \"for\" statements is not yet supported. For JuMP, you should contract statements like \"for i in 1:N for j in 1:i\" into \"for i in 1:N, j in 1:i\"")
@@ -337,9 +328,6 @@ macro constraint(args...)
 
     (x.head == :block) &&
         constraint_error(args, "Code block passed as constraint. Perhaps you meant to use @constraints instead?")
-    if VERSION < v"0.5.0-dev+3231"
-        x = comparison_to_call(x)
-    end
 
     # Strategy: build up the code for non-macro addconstraint, and if needed
     # we will wrap in loops to assign to the ConstraintRefs
@@ -439,9 +427,6 @@ macro SDconstraint(m, x)
 
     (x.head == :block) &&
         error("Code block passed as constraint.")
-    if VERSION < v"0.5.0-dev+3231"
-        x = comparison_to_call(x)
-    end
     isexpr(x,:call) && length(x.args) == 3 || error("in @SDconstraint ($(string(x))): constraints must be in one of the following forms:\n" *
               "       expr1 <= expr2\n" * "       expr1 >= expr2")
     # Build the constraint
@@ -473,9 +458,6 @@ macro LinearConstraint(x)
     (x.head == :block) &&
         error("Code block passed as constraint. Perhaps you meant to use @LinearConstraints instead?")
 
-    if VERSION < v"0.5.0-dev+3231"
-        x = comparison_to_call(x)
-    end
     if isexpr(x, :call) && length(x.args) == 3
         (sense,vectorized) = _canonicalize_sense(x.args[1])
         # Simple comparison - move everything to the LHS
@@ -524,9 +506,6 @@ macro QuadConstraint(x)
     (x.head == :block) &&
         error("Code block passed as constraint. Perhaps you meant to use @QuadConstraints instead?")
 
-    if VERSION < v"0.5.0-dev+3231"
-        x = comparison_to_call(x)
-    end
     if isexpr(x, :call) && length(x.args) == 3
         (sense,vectorized) = _canonicalize_sense(x.args[1])
         # Simple comparison - move everything to the LHS
@@ -553,9 +532,6 @@ macro SOCConstraint(x)
     (x.head == :block) &&
         error("Code block passed as constraint. Perhaps you meant to use @SOCConstraints instead?")
 
-    if VERSION < v"0.5.0-dev+3231"
-        x = comparison_to_call(x)
-    end
     if isexpr(x, :call) && length(x.args) == 3
         (sense,vectorized) = _canonicalize_sense(x.args[1])
         # Simple comparison - move everything to the LHS
@@ -760,7 +736,7 @@ end
 esc_nonconstant(x::Number) = x
 esc_nonconstant(x) = esc(x)
 
-const EMPTYSTRING = UTF8String("")
+const EMPTYSTRING = ""
 
 variable_error(args, str) = error("In @variable($(join(args,","))): ", str)
 
@@ -791,9 +767,6 @@ macro variable(args...)
     hasub = false
     # Identify the variable bounds. Five (legal) possibilities are "x >= lb",
     # "x <= ub", "lb <= x <= ub", "x == val", or just plain "x"
-    if VERSION < v"0.5.0-dev+3231"
-        x = comparison_to_call(x)
-    end
     explicit_comparison = false
     if isexpr(x,:comparison) # two-sided
         explicit_comparison = true
@@ -929,7 +902,7 @@ macro variable(args...)
         variable_error(args, "Can only create one variable at a time when adding to existing constraints.")
 
         return assert_validmodel(m, quote
-            $variable = Variable($m,$lb,$ub,$(quot(t)),$obj,$inconstraints,$coefficients,UTF8String(string($quotvarname)),$value)
+            $variable = Variable($m,$lb,$ub,$(quot(t)),$obj,$inconstraints,$coefficients,string($quotvarname),$value)
             $(anonvar ? variable : :($escvarname = $variable))
         end)
     end
@@ -937,7 +910,7 @@ macro variable(args...)
     if isa(var,Symbol)
         # Easy case - a single variable
         sdp && variable_error(args, "Cannot add a semidefinite scalar variable")
-        code = :($variable = Variable($m,$lb,$ub,$(quot(t)),UTF8String(string($quotvarname)),$value))
+        code = :($variable = Variable($m,$lb,$ub,$(quot(t)),string($quotvarname),$value))
         if !anonvar
             code = quote
                 $code
@@ -978,7 +951,7 @@ macro variable(args...)
         end
         return assert_validmodel(m, quote
             $(esc(idxsets[1].args[1].args[2])) == $(esc(idxsets[2].args[1].args[2])) || error("Cannot construct symmetric variables with nonsquare dimensions")
-            (Compat.issymmetric($lb) && Compat.issymmetric($ub)) || error("Bounds on symmetric  variables must be symmetric")
+            (issymmetric($lb) && issymmetric($ub)) || error("Bounds on symmetric  variables must be symmetric")
             $(getloopedcode(variable, code, condition, idxvars, idxsets, idxpairs, :Variable; lowertri=symmetric))
             $(if sdp
                 quote
@@ -1062,10 +1035,6 @@ macro NLconstraint(m, x, extra...)
     variable = gensym()
     quotvarname = anonvar ? :(:__anon__) : quot(getname(c))
     escvarname  = anonvar ? variable : esc(getname(c))
-
-    if VERSION < v"0.5.0-dev+3231"
-        x = comparison_to_call(x)
-    end
 
     # Strategy: build up the code for non-macro addconstraint, and if needed
     # we will wrap in loops to assign to the ConstraintRefs
@@ -1176,9 +1145,6 @@ end
 # syntax is @NLparameter(m, p[i=1] == 2i)
 macro NLparameter(m, ex)
     m = esc(m)
-    if VERSION < v"0.5.0-dev+3231"
-        ex = comparison_to_call(ex)
-    end
     @assert isexpr(ex, :call)
     @assert length(ex.args) == 3
     @assert ex.args[1] == :(==)

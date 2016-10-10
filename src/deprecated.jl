@@ -13,13 +13,7 @@ macro deprecate_macro(old,new)
     oldmac = Symbol(string("@",old))
     newmac = Symbol(string("@",new))
     s = string(oldmac," is deprecated, use ", newmac, " instead.")
-    if VERSION > v"0.5-"
-        # backtraces are ok on 0.5
-        depwarn = :(Base.depwarn($s,$(quot(oldmac))))
-    else
-        # backtraces are junk on 0.4
-        depwarn = :(Base.warn_once($s))
-    end
+    depwarn = :(Base.depwarn($s,$(quot(oldmac))))
     @eval macro $old(args...)
         return Expr(:block, $depwarn, Expr(:macrocall, $(quot(newmac)), [esc(x) for x in args]...))
     end
