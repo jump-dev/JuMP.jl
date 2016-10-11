@@ -222,9 +222,6 @@ macro lazyconstraint(args...)
         end
     end
 
-    if VERSION < v"0.5.0-dev+3231"
-        x = comparison_to_call(x)
-    end
     if isexpr(x, :call) && length(x.args) == 3 # simple comparison
         lhs = :($(x.args[2]) - $(x.args[3])) # move everything to the lhs
         newaff, parsecode = parseExprToplevel(lhs, :aff)
@@ -291,9 +288,6 @@ macro usercut(args...)
     end
 
     #cbdata = esc(cbdata)
-    if VERSION < v"0.5.0-dev+3231"
-        x = comparison_to_call(x)
-    end
     if isexpr(x, :call) && length(x.args) == 3 # simple comparison
         lhs = :($(x.args[2]) - $(x.args[3])) # move everything to the lhs
         newaff, parsecode = parseExprToplevel(lhs, :aff)

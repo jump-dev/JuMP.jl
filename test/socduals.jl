@@ -1,5 +1,4 @@
 using JuMP, FactCheck
-using Compat
 
 !isdefined(:conic_solvers_with_duals) && include("solvers.jl")
 

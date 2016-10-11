@@ -642,7 +642,7 @@ function conicdata(m::Model)
         for i in 1:n, j in i:n
             nnz += length(c.terms[i,j].coeffs)
         end
-        if !Compat.issymmetric(c.terms)
+        if !issymmetric(c.terms)
             # symmetry constraints
             numSymRows += convert(Int, n*(n-1)/2)
         end
@@ -935,7 +935,7 @@ function conicdata(m::Model)
             b[c] = scale*terms.constant
         end
         push!(con_cones, (:SDP, sdp_start:c))
-        if !Compat.issymmetric(con.terms)
+        if !issymmetric(con.terms)
             sym_start = c + 1
             # add linear symmetry constraints
             for i in 1:n, j in 1:(i-1)
