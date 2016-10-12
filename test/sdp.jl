@@ -248,6 +248,7 @@ end; end; end
 facts("[sdp] Test problem #4") do
 for solver in sdp_solvers
 context("With solver $(typeof(solver))") do
+    solver = fixscs(solver, 2000000)
     m = Model(solver=solver)
     @variable(m, x >= 0)
     @variable(m, Y[1:3,1:3], SDP)
@@ -255,7 +256,7 @@ context("With solver $(typeof(solver))") do
     @constraint(m, Y[2,1] == 1)
     @objective(m, Min, x + Y[1,1])
     stat = solve(m)
-    # @fact stat --> :Optimal # TODO: remove this once SCS starts behaving
+    @fact stat --> :Optimal
     @fact getobjectivevalue(m) --> roughly(1, 1e-3)
 end; end; end
 

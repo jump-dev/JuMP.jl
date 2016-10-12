@@ -132,6 +132,16 @@ brn && push!(minlp_solvers, BARON.BaronSolver())
 # Semidefinite solvers
 sdp_solvers = Any[]
 mos && push!(sdp_solvers, Mosek.MosekSolver(LOG=0))
+# For some problems, SCS still cannot solve it even for very large value of max_iters
+# so the value of max_iters cannot just be large for every test
+# This function can be used to increase it just for one test
+function fixscs(solver, max_iters)
+    if isa(solver, SCS.SCSSolver)
+        SCS.SCSSolver(eps=1e-6,max_iters=max_iters,verbose=0)
+    else
+        solver
+    end
+end
 scs && push!(sdp_solvers, SCS.SCSSolver(eps=1e-6,verbose=0))
 
 const error_map = Dict()
