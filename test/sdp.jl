@@ -1,7 +1,11 @@
-ispsd(x::Matrix) = minimum(eigvals(x)) ≥ -1e-3
-ispsd(x::JuMP.JuMPArray) = ispsd(x.innerArray)
+using JuMP, FactCheck
+
+!isdefined(:sdp_solvers) && include("solvers.jl")
 
 const TOL = 1e-4
+
+ispsd(x::Matrix) = minimum(eigvals(x)) ≥ -1e-3
+ispsd(x::JuMP.JuMPArray) = ispsd(x.innerArray)
 
 facts("[sdp] Test simple SDP") do
 for solver in sdp_solvers
@@ -745,4 +749,29 @@ context("With solver $(typeof(solver))") do
     @fact X[2,1] --> roughly(0, 1e-5)
     @fact getdual(y) --> roughly(0, 1e-5)
     @fact getdual(z) --> roughly(0, 1e-5)
+end; end; end
+
+facts("[sdp] Test nonzero dual for a scalar variable with sdp solver") do
+for solver in sdp_solvers
+context("With solver $(typeof(solver))") do
+    m = Model(solver=solver)
+    @variable(m, x1 >= 0)
+    @variable(m, x2 >= 0)
+    @variable(m, x3 >= 0)
+    # The following constraint could be written as 2 linear constrains
+    # but and sdp constraint is used to make it a conic problem
+    c = @SDconstraint(m, [2x1-x2-x3 0; 0 x1-x2+x3] >= [3 0; 0 2])
+    @objective(m, Min, 2x1 - x2)
+    status = solve(m)
+
+    @fact status --> :Optimal
+    @fact getobjectivevalue(m) --> roughly(10/3, 1e-5)
+    @fact getvalue(x1) --> roughly(5/3, 1e-5)
+    @fact getvalue(x2) --> roughly(0, 1e-5)
+    @fact getvalue(x3) --> roughly(1/3, 1e-5)
+
+    @fact getdual(c) --> roughly([-2/3 0; 0 -2/3], 1e-4)
+    @fact getdual(x1) --> roughly(0, 1e-5)
+    @fact getdual(x2) --> roughly(1/3, 1e-5)
+    @fact getdual(x3) --> roughly(0, 1e-5)
 end; end; end
