@@ -558,7 +558,7 @@ context("With solver $(typeof(solver))") do
 end; end; end
 
 # min o                    max y + X11
-# Q11 - 1   = Q22        [y-X12-X21        [0 0
+# Q11 - 1   = Q22        [y-X12-X21  0     [0 0
 #                             0     -y] <=  0 0]
 # [1   Q11
 #  Q11 o  ] >= 0          -X[2,2] = 1
@@ -572,7 +572,8 @@ context("With solver $(typeof(solver))") do
     c1 = @constraint(model, Q[1,1] - 1 == Q[2,2])
     @variable(model, objective)
     T = [1 Q[1,1]; Q[1,1] objective]
-    c2 = @SDconstraint(model, T ⪰ 0)
+    @fact_throws SDConstraint(T, 1)
+    c2 = JuMP.addconstraint(model, SDConstraint(T, 0))
     @objective(model, Min, objective)
     @fact solve(model) --> :Optimal
     @fact getvalue(Q) --> roughly([1 0;0 0], 1e-3)
@@ -612,7 +613,6 @@ context("With solver $(typeof(solver))") do
 
     @fact status --> :Optimal
     @fact getobjectivevalue(m) --> roughly(1-sqrt(2), 1e-5)
-    @show getvalue(X)
     @fact getvalue(X) --> roughly([(2-sqrt(2))/4 -1/(2*sqrt(2)); -1/(2*sqrt(2)) (2+sqrt(2))/4], 1e-4)
     @fact getdual(X) --> roughly([1+sqrt(2) 1; 1 sqrt(2)-1], 1e-4)
     @fact getdual(c) --> roughly(1-sqrt(2), 1e-5)
@@ -689,4 +689,60 @@ context("With solver $(typeof(solver))") do
 
     @fact getdual(X) --> roughly([1 0; 0 0], 1e-4)
     @fact getdual(c) --> roughly(0, 1e-5)
+end; end; end
+
+# min X[1,1]     max y/2+z/2
+# X[1,2] = 1/2   [0 y     [1 0
+# X[2,1] = 1/2    z 0] ⪯   0 0]
+# X+Xᵀ ⪰ 0
+facts("[sdp] Test SDP with dual solution not attained without symmetric A_i") do
+for solver in sdp_solvers
+context("With solver $(typeof(solver))") do
+    solver = fixscs(solver, 10000000)
+    m = Model(solver=solver)
+    @variable(m, y)
+    @variable(m, z)
+    c = @SDconstraint(m, [0 y; z 0] <= [1 0; 0 0])
+    @objective(m, Max, y/2+z/2)
+    status = solve(m)
+
+    @fact status --> :Optimal
+    @fact getobjectivevalue(m) --> roughly(0, 1e-5)
+    @fact getvalue(y) --> roughly(0, 1e-5)
+    @fact getvalue(z) --> roughly(0, 1e-5)
+
+    X = getdual(c)
+    @fact X[1,1] --> roughly(0, 1e-5)
+    @fact X[1,2] --> roughly(1/2, 1e-5)
+    @fact X[2,1] --> roughly(1/2, 1e-5)
+    @fact getdual(y) --> roughly(0, 1e-5)
+    @fact getdual(z) --> roughly(0, 1e-5)
+end; end; end
+
+# min X[1,1]     max y
+# X[1,2] = 1     [0 y     [1 0
+# X[2,1] = 0      z 0] ⪯   0 0]
+# X+Xᵀ ⪰ 0
+facts("[sdp] Test SDP with dual solution not attained without symmetry") do
+for solver in sdp_solvers
+context("With solver $(typeof(solver))") do
+    solver = fixscs(solver, 10000000)
+    m = Model(solver=solver)
+    @variable(m, y)
+    @variable(m, z)
+    c = @SDconstraint(m, [0 y; z 0] <= [1 0; 0 0])
+    @objective(m, Max, y)
+    status = solve(m)
+
+    @fact status --> :Optimal
+    @fact getobjectivevalue(m) --> roughly(0, 1e-5)
+    @fact getvalue(y) --> roughly(0, 1e-5)
+    @fact getvalue(z) --> roughly(0, 1e-5)
+
+    X = getdual(c)
+    @fact X[1,1] --> roughly(0, 1e-5)
+    @fact X[1,2] --> roughly(1, 1e-5) # X is not symmetric !
+    @fact X[2,1] --> roughly(0, 1e-5)
+    @fact getdual(y) --> roughly(0, 1e-5)
+    @fact getdual(z) --> roughly(0, 1e-5)
 end; end; end
