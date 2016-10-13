@@ -422,7 +422,7 @@ macro SDconstraint(m, x)
     m = esc(m)
 
     if isa(x, Symbol)
-        error("in @SDConstraint: Incomplete constraint specification $x. Are you missing a comparison (<= or >=)?")
+        error("in @SDconstraint: Incomplete constraint specification $x. Are you missing a comparison (<= or >=)?")
     end
 
     (x.head == :block) &&
