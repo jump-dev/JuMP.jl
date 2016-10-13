@@ -57,9 +57,8 @@ function fillConicRedCosts(m::Model)
     bndidx = 0
     numlinconstr = length(m.linconstr)
     vardual = MathProgBase.getvardual(m.internalModel)
-    if m.objSense == :Min
-        scale!(vardual, -1)
-    end
+    offdiagvars = offdiagsdpvars(m)
+    vardual[offdiagvars] /= sqrt(2)
     for i in 1:m.numCols
         lower = false
         upper = false
