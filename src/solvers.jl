@@ -926,14 +926,14 @@ function conicdata(m::Model)
         n = size(con.terms,1)
         for i in 1:n, j in i:n
             c += 1
-            terms::AffExpr = con.terms[i,j]
+            terms::AffExpr = con.terms[i,j] + con.terms[j,i]
             collect_expr!(m, tmprow, terms)
             nnz = tmprow.nnz
             indices = tmpnzidx[1:nnz]
             append!(I, fill(c, nnz))
             append!(J, indices)
             # scale to svec form
-            scale = (i == j) ? 1.0 : sqrt(2)
+            scale = (i == j) ? 0.5 : 1/sqrt(2)
             append!(V, -scale*tmpelts[indices])
             b[c] = scale*terms.constant
         end
