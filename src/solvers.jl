@@ -57,9 +57,8 @@ function fillConicRedCosts(m::Model)
     bndidx = 0
     numlinconstr = length(m.linconstr)
     vardual = MathProgBase.getvardual(m.internalModel)
-    if m.objSense == :Min
-        scale!(vardual, -1)
-    end
+    offdiagvars = offdiagsdpvars(m)
+    vardual[offdiagvars] /= sqrt(2)
     for i in 1:m.numCols
         lower = false
         upper = false
@@ -91,10 +90,12 @@ function fillConicDuals(m::Model)
 
     numBndRows = getNumBndRows(m)
     numSOCRows = getNumSOCRows(m)
+    numSDPRows = getNumSDPRows(m)
+    numSymRows = getNumSymRows(m)
     m.conicconstrDuals = try
         MathProgBase.getdual(m.internalModel)
     catch
-        fill(NaN, numRows+numBndRows+numSOCRows)
+        fill(NaN, numRows+numBndRows+numSOCRows+numSDPRows+numSymRows)
     end
     if isfinite(m.conicconstrDuals[1]) # NaN could mean unavailable
         if m.objSense == :Min
@@ -164,8 +165,8 @@ function solve(m::Model; suppress_warnings=false,
                 fill(NaN, numRows)
             end
         end
-        # conic duals (currently, SOC only)
-        if !discrete && traits.soc && !traits.qp && !traits.qc && !traits.sdp
+        # conic duals (currently, SOC and SDP only)
+        if !discrete && traits.conic && !traits.qp && !traits.qc
             fillConicDuals(m)
         end
     else
@@ -196,8 +197,8 @@ function solve(m::Model; suppress_warnings=false,
                 end
             end
         end
-        # conic duals (currently, SOC only)
-        if !discrete && traits.soc && !traits.qp && !traits.qc && !traits.sdp
+        # conic duals (currently, SOC and SDP only)
+        if !discrete && traits.conic && !traits.qp && !traits.qc
             if stat == :Infeasible
                 fillConicDuals(m)
             end
@@ -773,8 +774,7 @@ function conicdata(m::Model)
 
     # should maintain the order of constraints in the above form
     # throughout the code c is the conic constraint index
-    # TODO: only added linear+bound+soc support, extend to all
-    constr_dual_map = Array(Vector{Int}, numLinRows + numBounds + numNormRows)
+    constr_dual_map = Array(Vector{Int}, numLinRows + numBounds + numNormRows + 2*length(m.sdpconstr))
 
     b = Array(Float64, numRows)
 
@@ -917,24 +917,29 @@ function conicdata(m::Model)
     end
     @assert c == numLinRows + numBounds + numQuadRows + numSOCRows
 
+    sdpconstr_sym = Vector{Vector{Tuple{Int,Int}}}(length(m.sdpconstr))
     numDroppedSym = 0
+    sdpidx = 0
     for con in m.sdpconstr
+        sdpidx += 1
         sdp_start = c + 1
         n = size(con.terms,1)
         for i in 1:n, j in i:n
             c += 1
-            terms::AffExpr = con.terms[i,j]
+            terms::AffExpr = con.terms[i,j] + con.terms[j,i]
             collect_expr!(m, tmprow, terms)
             nnz = tmprow.nnz
             indices = tmpnzidx[1:nnz]
             append!(I, fill(c, nnz))
             append!(J, indices)
             # scale to svec form
-            scale = (i == j) ? 1.0 : sqrt(2)
+            scale = (i == j) ? 0.5 : 1/sqrt(2)
             append!(V, -scale*tmpelts[indices])
             b[c] = scale*terms.constant
         end
         push!(con_cones, (:SDP, sdp_start:c))
+        constr_dual_map[numLinRows + numBounds + numNormRows + sdpidx] = collect(sdp_start:c)
+        syms = Tuple{Int,Int}[]
         if !issymmetric(con.terms)
             sym_start = c + 1
             # add linear symmetry constraints
@@ -946,6 +951,7 @@ function conicdata(m::Model)
                     numDroppedSym += 1
                     continue
                 end
+                push!(syms, (i,j))
                 c += 1
                 indices = tmpnzidx[1:nnz]
                 append!(I, fill(c, nnz))
@@ -954,13 +960,19 @@ function conicdata(m::Model)
                 b[c] = 0
             end
             push!(con_cones, (:Zero, sym_start:c))
+            constr_dual_map[numLinRows + numBounds + numNormRows + length(m.sdpconstr) + sdpidx] = collect(sym_start:c)
+            @assert length(syms) == length(sym_start:c)
+        else
+            constr_dual_map[numLinRows + numBounds + numNormRows + length(m.sdpconstr) + sdpidx] = Int[]
         end
+        sdpconstr_sym[sdpidx] = syms
     end
     numRows -= numDroppedSym
     resize!(b, numRows)
     @assert c == numRows
 
     m.constrDualMap = constr_dual_map
+    m.sdpconstrSym = sdpconstr_sym
 
     # Use only the objective coefficients from prepProblemBounds
     f,_,_ = prepProblemBounds(m)

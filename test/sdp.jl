@@ -1,3 +1,9 @@
+using JuMP, FactCheck
+
+!isdefined(:sdp_solvers) && include("solvers.jl")
+
+const TOL = 1e-4
+
 ispsd(x::Matrix) = minimum(eigvals(x)) ≥ -1e-3
 ispsd(x::JuMP.JuMPArray) = ispsd(x.innerArray)
 
@@ -219,45 +225,95 @@ end; end; end
 #     @fact getobjectivevalue(m) --> roughly(1, 1e-5)
 # end; end; end
 
+# min tr(Y)          max 4x_1 +3x2
+#     Y[2,1] <= 4        [ 0 y1 0    [1 0 0
+#     Y[2,2] >= 3         y1 y2 0  <= 0 1 0
+#     Y >= 0               0  0 0]    0 0 1]
+#                         y1 <= 0 y2 >= 0
 facts("[sdp] Test problem #2") do
 for solver in sdp_solvers
 context("With solver $(typeof(solver))") do
     m = Model(solver=solver)
     @variable(m, Y[1:3,1:3], SDP)
-    @constraint(m, Y[2,1] <= 4)
-    @constraint(m, Y[2,2] >= 3)
+    c1 = @constraint(m, Y[2,1] <= 4)
+    c2 = @constraint(m, Y[2,2] >= 3)
     @objective(m, Min, trace(Y))
     stat = solve(m)
     @fact stat --> :Optimal
     @fact getobjectivevalue(m) --> roughly(3, 1e-5)
+    @fact getdual(c1) --> roughly(0, 1e-5)
+    @fact getdual(c2) --> roughly(1, 1e-5)
+    @fact getdual(Y) --> roughly([1 0 0; 0 0 0; 0 0 1], 1e-5)
 end; end; end
 
+# min Y[1,2]          max y
+#     Y[2,1] = 1         [0   y/2 0     [ 0 .5 0
+#                         y/2 0   0  <=  .5  0 0
+#     Y >= 0              0   0   0]      0  0 0]
+#                         y free
 facts("[sdp] Test problem #3") do
 for solver in sdp_solvers
 context("With solver $(typeof(solver))") do
     m = Model(solver=solver)
     @variable(m, x >= 0)
     @variable(m, Y[1:3,1:3], SDP)
-    @constraint(m, Y[2,1] == 1)
+    c = @constraint(m, Y[2,1] == 1)
     @objective(m, Min, Y[1,2])
     stat = solve(m)
-    # @fact stat --> :Optimal
+    @fact stat --> :Optimal
     @fact getobjectivevalue(m) --> roughly(1, 1e-4)
+    Yval = getvalue(Y)
+    @fact Yval[1,2] --> roughly(1, 1e-4)
+    @fact Yval[2,1] --> roughly(1, 1e-4)
+    @fact getdual(c) --> roughly(1, 1e-5)
+    @fact getdual(Y) --> roughly(zeros(3,3), 1e-4)
 end; end; end
 
+# min x + Y[1,1]          max y + z
+#     Y[2,1] = 1         [0   y/2 0     [1 0 0
+#     x >= 1              y/2 0   0  <=  0 0 0
+#                         0   0   0]     0 0 0]
+#                         z <= 1
+#     Y >= 0              y free
+#     x >= 0              z <= 0
 facts("[sdp] Test problem #4") do
 for solver in sdp_solvers
 context("With solver $(typeof(solver))") do
+    solver = fixscs(solver, 2000000)
     m = Model(solver=solver)
     @variable(m, x >= 0)
     @variable(m, Y[1:3,1:3], SDP)
-    @constraint(m, x >= 1)
-    @constraint(m, Y[2,1] == 1)
+    c1 = @constraint(m, x >= 1)
+    c2 = @constraint(m, Y[2,1] == 1)
     @objective(m, Min, x + Y[1,1])
     stat = solve(m)
-    # @fact stat --> :Optimal # TODO: remove this once SCS starts behaving
+    @fact stat --> :Optimal
     @fact getobjectivevalue(m) --> roughly(1, 1e-3)
+    @fact getvalue(x) --> roughly(1, 1e-5)
+    @fact getvalue(Y)[1,1] --> roughly(0, 1e-4)
+    @fact getdual(x) --> roughly(0, 1e-5)
+    @fact getdual(Y) --> roughly([1 0 0; 0 0 0; 0 0 0], 1e-4)
+    @fact getdual(c1) --> roughly(1, 1e-5)
+    @fact getdual(c2) --> roughly(0, 1e-4)
 end; end; end
+
+# SCS cannot solve it
+#facts("[sdp] Test problem #4.5") do
+#for solver in sdp_solvers
+#context("With solver $(typeof(solver))") do
+#    solver = fixscs(solver, 10000000)
+#    m = Model(solver=solver)
+#    @variable(m, x >= 1)
+#    @variable(m, Y[1:3,1:3], SDP)
+#    c = @constraint(m, Y[2,1] == 1)
+#    @objective(m, Min, x + Y[1,1])
+#    stat = solve(m)
+#    @fact stat --> :Optimal
+#    @fact getobjectivevalue(m) --> roughly(1, 1e-3)
+#    @show getdual(x)
+#    @show getdual(Y)
+#    @show getdual(c)
+#end; end; end
 
 function nuclear_norm(model, A)
     m, n = size(A,1), size(A,2)
@@ -505,29 +561,217 @@ context("With solver $(typeof(solver))") do
     @fact_throws solve(model)
 end; end; end
 
+# min o                    max y + X11
+# Q11 - 1   = Q22        [y-X12-X21  0     [0 0
+#                             0     -y] <=  0 0]
+# [1   Q11
+#  Q11 o  ] >= 0          -X[2,2] = 1
+# Q >= 0                        y free
+# o free                        X <= 0
 facts("[sdp] Just another SDP") do
 for solver in sdp_solvers
 context("With solver $(typeof(solver))") do
     model = Model(solver=solver)
     @variable(model, Q[1:2, 1:2], SDP)
-    @constraint(model, Q[1,1] - 1 == Q[2,2])
+    c1 = @constraint(model, Q[1,1] - 1 == Q[2,2])
     @variable(model, objective)
     T = [1 Q[1,1]; Q[1,1] objective]
-    @SDconstraint(model, T ⪰ 0)
+    @fact_throws SDConstraint(T, 1)
+    c2 = JuMP.addconstraint(model, SDConstraint(T, 0))
     @objective(model, Min, objective)
     @fact solve(model) --> :Optimal
     @fact getvalue(Q) --> roughly([1 0;0 0], 1e-3)
     @fact getobjectivevalue(model) --> roughly(1, TOL)
+    @fact getvalue(objective) --> roughly(1, TOL)
+    @fact getdual(objective) --> roughly(0, 1e-5)
+    @fact getdual(Q) --> roughly([0 0; 0 2], 1e-3)
+    @fact getdual(c1) --> roughly(2, 1e-4) # y
+    @fact getdual(c2) --> roughly([-1 1; 1 -1], 1e-3) # X
 end; end; end
 
 facts("[sdp] Internal Model not unloaded when SDP constraint added #830") do
-for solver in sdp_solvers
-context("With solver $(typeof(solver))") do
-    model = Model(solver=solver)
+    model = Model()
     @variable(model, x)
     solve(model)
     T = [1 x; -x 1]
     c = @SDconstraint(model, T ⪰ 0)
     @fact typeof(c) --> JuMP.ConstraintRef{JuMP.Model,JuMP.SDConstraint}
     @fact model.internalModelLoaded --> false
+end
+
+# The four following tests are from Example 2.11, Example 2.13 and Example 2.27 of:
+# Blekherman, G., Parrilo, P. A., & Thomas, R. R. (Eds.).
+# Semidefinite optimization and convex algebraic geometry SIAM 2013
+
+# Example 2.11
+facts("[sdp] Test with SDP variable and optimal objective not rational") do
+for solver in sdp_solvers
+context("With solver $(typeof(solver))") do
+    solver = fixscs(solver, 7000000)
+    m = Model(solver=solver)
+    @variable(m, X[1:2,1:2], SDP)
+    c = @constraint(m, X[1,1]+X[2,2] == 1)
+    @objective(m, Min, 2*X[1,1]+2*X[1,2])
+    @fact_throws getdual(X)
+    status = solve(m)
+
+    @fact status --> :Optimal
+    @fact getobjectivevalue(m) --> roughly(1-sqrt(2), 1e-5)
+    @fact getvalue(X) --> roughly([(2-sqrt(2))/4 -1/(2*sqrt(2)); -1/(2*sqrt(2)) (2+sqrt(2))/4], 1e-4)
+    @fact getdual(X) --> roughly([1+sqrt(2) 1; 1 sqrt(2)-1], 1e-4)
+    @fact getdual(c) --> roughly(1-sqrt(2), 1e-5)
+end; end; end
+
+# Example 2.13
+facts("[sdp] Test with SDP constraint and optimal objective not rational") do
+for solver in sdp_solvers
+context("With solver $(typeof(solver))") do
+    solver = fixscs(solver, 7000000)
+    m = Model(solver=solver)
+    @variable(m, y)
+    c = @SDconstraint(m, [2-y 1; 1 -y] >= 0)
+    @objective(m, Max, y)
+    @fact_throws getdual(c)
+    status = solve(m)
+
+    @fact status --> :Optimal
+    @fact getobjectivevalue(m) --> roughly(1-sqrt(2), 1e-5)
+    @fact getvalue(y) --> roughly(1-sqrt(2), 1e-5)
+
+    X = getdual(c)
+    @fact getdual(c) --> roughly([(2-sqrt(2))/4 -1/(2*sqrt(2)); -1/(2*sqrt(2)) (2+sqrt(2))/4], 1e-4)
+    @fact getdual(y) --> roughly(0, 1e-5)
+end; end; end
+
+# Example 2.27
+# min X[1,1]   max y
+# 2X[1,2] = 1  [0 y     [1 0
+# X ⪰ 0         y 0] ⪯   0 0]
+# The dual optimal solution is y=0 and there is a primal solution
+# [ eps  1/2
+#   1/2  1/eps]
+# for any eps > 0 however there is no primal solution with objective value 0.
+facts("[sdp] Test SDP with dual solution not attained") do
+for solver in sdp_solvers
+context("With solver $(typeof(solver))") do
+    solver = fixscs(solver, 7000000)
+    m = Model(solver=solver)
+    @variable(m, y)
+    c = @SDconstraint(m, [0 y; y 0] <= [1 0; 0 0])
+    @objective(m, Max, y)
+    @fact_throws getdual(c)
+    status = solve(m)
+
+    @fact status --> :Optimal
+    @fact getobjectivevalue(m) --> roughly(0, 1e-5)
+    @fact getvalue(y) --> roughly(0, 1e-5)
+
+    X = getdual(c)
+    @fact X[1,1] --> roughly(0, 1e-5)
+    @fact X[1,2] --> roughly(1/2, 1e-5)
+    @fact X[2,1] --> roughly(1/2, 1e-5)
+    @fact getdual(y) --> roughly(0, 1e-5)
+end; end; end
+
+facts("[sdp] Test SDP with primal solution not attained") do
+for solver in sdp_solvers
+context("With solver $(typeof(solver))") do
+    solver = fixscs(solver, 7000000)
+    m = Model(solver=solver)
+    @variable(m, X[1:2,1:2], SDP)
+    c = @constraint(m, 2*X[1,2] == 1)
+    @objective(m, Min, X[1,1])
+    @fact_throws getdual(X)
+    status = solve(m)
+
+    @fact status --> :Optimal
+    @fact getobjectivevalue(m) --> roughly(0, 1e-5)
+    Xval = getvalue(X)
+    @fact Xval[1,1] --> roughly(0, 1e-5)
+    @fact Xval[1,2] --> roughly(1/2, 1e-5)
+    @fact Xval[2,1] --> roughly(1/2, 1e-5)
+
+    @fact getdual(X) --> roughly([1 0; 0 0], 1e-4)
+    @fact getdual(c) --> roughly(0, 1e-5)
+end; end; end
+
+# min X[1,1]     max y/2+z/2
+# X[1,2] = 1/2   [0 y     [1 0
+# X[2,1] = 1/2    z 0] ⪯   0 0]
+# X+Xᵀ ⪰ 0
+facts("[sdp] Test SDP with dual solution not attained without symmetric A_i") do
+for solver in sdp_solvers
+context("With solver $(typeof(solver))") do
+    solver = fixscs(solver, 10000000)
+    m = Model(solver=solver)
+    @variable(m, y)
+    @variable(m, z)
+    c = @SDconstraint(m, [0 y; z 0] <= [1 0; 0 0])
+    @objective(m, Max, y/2+z/2)
+    status = solve(m)
+
+    @fact status --> :Optimal
+    @fact getobjectivevalue(m) --> roughly(0, 1e-5)
+    @fact getvalue(y) --> roughly(0, 1e-5)
+    @fact getvalue(z) --> roughly(0, 1e-5)
+
+    X = getdual(c)
+    @fact X[1,1] --> roughly(0, 1e-5)
+    @fact X[1,2] --> roughly(1/2, 1e-5)
+    @fact X[2,1] --> roughly(1/2, 1e-5)
+    @fact getdual(y) --> roughly(0, 1e-5)
+    @fact getdual(z) --> roughly(0, 1e-5)
+end; end; end
+
+# min X[1,1]     max y
+# X[1,2] = 1     [0 y     [1 0
+# X[2,1] = 0      z 0] ⪯   0 0]
+# X+Xᵀ ⪰ 0
+facts("[sdp] Test SDP with dual solution not attained without symmetry") do
+for solver in sdp_solvers
+context("With solver $(typeof(solver))") do
+    solver = fixscs(solver, 10000000)
+    m = Model(solver=solver)
+    @variable(m, y)
+    @variable(m, z)
+    c = @SDconstraint(m, [0 y; z 0] <= [1 0; 0 0])
+    @objective(m, Max, y)
+    status = solve(m)
+
+    @fact status --> :Optimal
+    @fact getobjectivevalue(m) --> roughly(0, 1e-5)
+    @fact getvalue(y) --> roughly(0, 1e-5)
+    @fact getvalue(z) --> roughly(0, 1e-5)
+
+    X = getdual(c)
+    @fact X[1,1] --> roughly(0, 1e-5)
+    @fact X[1,2] --> roughly(1, 1e-5) # X is not symmetric !
+    @fact X[2,1] --> roughly(0, 1e-5)
+    @fact getdual(y) --> roughly(0, 1e-5)
+    @fact getdual(z) --> roughly(0, 1e-5)
+end; end; end
+
+facts("[sdp] Test nonzero dual for a scalar variable with sdp solver") do
+for solver in sdp_solvers
+context("With solver $(typeof(solver))") do
+    m = Model(solver=solver)
+    @variable(m, x1 >= 0)
+    @variable(m, x2 >= 0)
+    @variable(m, x3 >= 0)
+    # The following constraint could be written as 2 linear constrains
+    # but and sdp constraint is used to make it a conic problem
+    c = @SDconstraint(m, [2x1-x2-x3 0; 0 x1-x2+x3] >= [3 0; 0 2])
+    @objective(m, Min, 2x1 - x2)
+    status = solve(m)
+
+    @fact status --> :Optimal
+    @fact getobjectivevalue(m) --> roughly(10/3, 1e-5)
+    @fact getvalue(x1) --> roughly(5/3, 1e-5)
+    @fact getvalue(x2) --> roughly(0, 1e-5)
+    @fact getvalue(x3) --> roughly(1/3, 1e-5)
+
+    @fact getdual(c) --> roughly([-2/3 0; 0 -2/3], 1e-4)
+    @fact getdual(x1) --> roughly(0, 1e-5)
+    @fact getdual(x2) --> roughly(1/3, 1e-5)
+    @fact getdual(x3) --> roughly(0, 1e-5)
 end; end; end
