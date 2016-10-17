@@ -49,6 +49,12 @@ facts("[model] Check error cases") do
     @fact getvalue(x) --> isnan
 end
 
+facts("[model] Warning on non-symbol variable names") do
+    m = Model()
+    x = Dict()
+    @variable(m, x[1][1])
+end
+
 facts("[model] Performance warnings") do
     m = Model()
     @variable(m, x[1:2], start=0)
