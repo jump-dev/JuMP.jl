@@ -24,6 +24,7 @@ end
 # Load available solvers
 grb = try_import(:Gurobi)
 cpx = try_import(:CPLEX)
+xpr = try_import(:Xpress)
 mos = try_import(:Mosek)
 cbc = try_import(:Cbc)
 if cbc; import Clp; end
@@ -42,6 +43,7 @@ brn = try_import(:BARON)
 lp_solvers = Any[]
 grb && push!(lp_solvers, Gurobi.GurobiSolver(OutputFlag=0))
 cpx && push!(lp_solvers, CPLEX.CplexSolver(CPX_PARAM_SCRIND=0))
+xpr && push!(lp_solvers, Xpress.XpressSolver(OUTPUTLOG=0))
 mos && push!(lp_solvers, Mosek.MosekSolver(LOG=0))
 cbc && push!(lp_solvers, Clp.ClpSolver())
 glp && push!(lp_solvers, GLPKMathProgInterface.GLPKSolverLP())
@@ -53,6 +55,7 @@ scs && push!(lp_solvers, SCS.SCSSolver(eps=1e-6,verbose=0))
 ip_solvers = Any[]
 grb && push!(ip_solvers, Gurobi.GurobiSolver(OutputFlag=0))
 cpx && push!(ip_solvers, CPLEX.CplexSolver(CPX_PARAM_SCRIND=0))
+xpr && push!(ip_solvers, Xpress.XpressSolver(OUTPUTLOG=0))
 mos && push!(ip_solvers, Mosek.MosekSolver(LOG=0))
 cbc && push!(ip_solvers, Cbc.CbcSolver(logLevel=0))
 glp && push!(ip_solvers, GLPKMathProgInterface.GLPKSolverMIP())
@@ -61,10 +64,12 @@ osl && push!(ip_solvers, CoinOptServices.OsilSolver())
 semi_solvers = Any[]
 grb && push!(semi_solvers, Gurobi.GurobiSolver(OutputFlag=0))
 cpx && push!(semi_solvers, CPLEX.CplexSolver(CPX_PARAM_SCRIND=0))
+xpr && push!(semi_solvers, Xpress.XpressSolver(OUTPUTLOG=0))
 # SOS solvers
 sos_solvers = Any[]
 grb && push!(sos_solvers, Gurobi.GurobiSolver(OutputFlag=0))
 cpx && push!(sos_solvers, CPLEX.CplexSolver(CPX_PARAM_SCRIND=0))
+xpr && push!(sos_solvers, Xpress.XpressSolver(OUTPUTLOG=0))
 cbc && push!(sos_solvers, Cbc.CbcSolver())
 # Conic solvers with duals
 conic_solvers_with_duals = Any[]
@@ -98,6 +103,7 @@ end
 quad_solvers = Any[]
 grb && push!(quad_solvers, Gurobi.GurobiSolver(QCPDual=1,OutputFlag=0))
 cpx && push!(quad_solvers, CPLEX.CplexSolver(CPX_PARAM_SCRIND=0))
+xpr && push!(quad_solvers, Xpress.XpressSolver(OUTPUTLOG=0, FEASTOL = 1e-9, BARPRIMALSTOP = 1e-9, BARGAPSTOP = 1e-9, BARDUALSTOP = 1e-9))
 mos && push!(quad_solvers, Mosek.MosekSolver(LOG=0))
 quad_mip_solvers = copy(quad_solvers)
 osl && push!(quad_solvers, CoinOptServices.OsilSolver(CoinOptServices.OSOption("sb","yes",solver="ipopt")))
@@ -111,6 +117,7 @@ rsoc_solvers = Any[]
 mos && push!(rsoc_solvers, Mosek.MosekSolver(LOG=0))
 grb && push!(rsoc_solvers, Gurobi.GurobiSolver(QCPDual=1,OutputFlag=0))
 cpx && push!(rsoc_solvers, CPLEX.CplexSolver(CPX_PARAM_SCRIND=0))
+xpr && push!(rsoc_solvers, Xpress.XpressSolver(OUTPUTLOG=0, FEASTOL = 1e-9, BARPRIMALSTOP = 1e-9, BARGAPSTOP = 1e-9, BARDUALSTOP = 1e-9))
 # Nonlinear solvers
 nlp_solvers = Any[]
 ipt && push!(nlp_solvers, Ipopt.IpoptSolver(print_level=0))
