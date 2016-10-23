@@ -316,6 +316,10 @@ if cpx
     supp = (true,true,true,true,true,true,true,true,true,true,true,true,true,true,true,true,true,true)
     methods_test("CPLEX", CPLEX.CplexSolver(), supp)
 end
+if xpr
+    supp = (true,true,true,true,true,true,true,true,true,true,true,true,true,true,true,true,true,true)
+    methods_test("Xpress", Xpress.XpressSolver(), supp)
+end
 if cbc
     supp = (false,false,true,false,false,true,true,true,true,true,true,true,true,true,true,true,true,false)
     methods_test("Clp", Clp.ClpSolver(), supp)
