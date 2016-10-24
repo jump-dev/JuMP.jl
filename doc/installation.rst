@@ -129,7 +129,7 @@ ECOS can be used by JuMP to solve LPs and SOCPs. ECOS does not support general q
 FICO Xpress
 +++++++++++
 
-Requires a working installation of Xpress with an active license (it is possible to get free license for academic use). Supports SOCP and "SOS" constraints. The interface is experimental, but it does pass all JuMP and MathProgBase tests. Callbacks are not yet supported.
+Requires a working installation of Xpress with an active license (it is possible to get license for academic use, see `FICO Academic Partner Program <http://subscribe.fico.com/Academic-Partner-Program>`_). Supports SOCP and "SOS" constraints. The interface is experimental, but it does pass all JuMP and MathProgBase tests. Callbacks are not yet supported.
 
 .. warning::
    If you are using 64-bit Xpress, you must use 64-bit Julia (and similarly with 32-bit Xpress).
