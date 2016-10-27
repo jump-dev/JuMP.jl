@@ -834,7 +834,7 @@ macro variable(args...)
     quotvarname = anonvar ? :(:__anon__) : quot(getname(var))
     escvarname  = anonvar ? variable     : esc(getname(var))
 
-    if !isa(getname(var),Symbol)
+    if !isa(getname(var),Symbol) && !anonvar
         Base.warn_once("Expression $(getname(var)) should not be used as a variable name. Use the \"anonymous\" syntax $(getname(var)) = @variable(m, ...) instead.")
     end
 
