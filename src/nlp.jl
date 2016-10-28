@@ -1191,6 +1191,8 @@ function _buildInternalModel_nlp(m::Model, traits)
         MathProgBase.setwarmstart!(m.internalModel, min(max(m.colLower,initval),m.colUpper))
     end
 
+    registercallbacks(m)
+
     m.internalModelLoaded = true
 
     nothing
