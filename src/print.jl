@@ -875,7 +875,7 @@ Base.show(io::IO, ::MIME"text/latex", c::SDConstraint) =
 # Generic string converter, called by mode-specific handlers
 function con_str(mode, c::SDConstraint, succeq0)
     t = c.terms
-    str = sprint(print, t)
+    str = sprint(show, MIME"text/plain"(), t)
     splitted = split(str, "\n")[2:end]
     center = ceil(Int, length(splitted)/2)
     splitted[center] *= succeq0

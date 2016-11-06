@@ -617,3 +617,12 @@ facts("[print] basename keyword argument") do
     io_test(REPLMode,   w[1,3], "symm[1,3]")
     io_test(IJuliaMode, w[1,3], "symm_{1,3}")
 end
+
+facts("[print] SD constraints #883") do
+    m = Model()
+    A = [2.0  0.0;
+         0.0  1.0]
+    @variable(m, X[1:2,1:2], SDP)
+    s = @SDconstraint(m, X >= A)
+    io_test(REPLMode, s, " X[1,1] - 2  X[1,2]     is semidefinite\n X[1,2]      X[2,2] - 1")
+end
