@@ -143,7 +143,7 @@ mos && push!(sdp_solvers, Mosek.MosekSolver(LOG=0))
 # so the value of max_iters cannot just be large for every test
 # This function can be used to increase it just for one test
 function fixscs(solver, max_iters)
-    if isa(solver, SCS.SCSSolver)
+    if scs && isa(solver, SCS.SCSSolver)
         SCS.SCSSolver(eps=1e-6,max_iters=max_iters,verbose=0)
     else
         solver
