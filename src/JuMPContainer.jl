@@ -42,6 +42,9 @@ type JuMPContainerData
     condition
 end
 
+# Needed by getvaluewarn when called by _mapInner
+getname(data::JuMPContainerData) = data.name
+
 #JuMPDict{T,N}(name::AbstractString) =
 #    JuMPDict{T,N}(Dict{NTuple{N},T}(), name)
 
@@ -98,9 +101,15 @@ pushmeta!(x::JuMPContainer, sym::Symbol, val) = (x.meta[sym] = val)
 getmeta(x::JuMPContainer, sym::Symbol) = x.meta[sym]
 
 # duck typing approach -- if eltype(innerArray) doesn't support accessor, will fail
-for accessor in (:getdual, :getlowerbound, :getupperbound)
-    @eval $accessor(x::Union{JuMPContainer,Array}) = map($accessor,x)
+for accessor in (:getdual, :getlowerbound, :getupperbound, :getvalue)
+    @eval $accessor(x::AbstractArray) = map($accessor,x)
 end
+# With JuMPContainer, we take care in _mapInner of the warning if NaN values are returned
+# by the accessor so we use the inner accessor that does not generate warnings
+for (accessor, inner) in ((:getdual, :_getDual), (:getlowerbound, :getlowerbound), (:getupperbound, :getupperbound), (:getvalue, :_getValue))
+    @eval $accessor(x::JuMPContainer) = _map($inner,x)
+end
+
 
 _similar(x::Array) = Array(Float64,size(x))
 _similar{T}(x::Dict{T}) = Dict{T,Float64}()
@@ -108,15 +117,24 @@ _similar{T}(x::Dict{T}) = Dict{T,Float64}()
 _innercontainer(x::JuMPArray) = x.innerArray
 _innercontainer(x::JuMPDict)  = x.tupledict
 
-function _getValueInner(x)
+# Warning for getter returning NaN
+function _warnnan(f, data)
+    if f === _getValue
+        getvaluewarn(data)
+    elseif f === _getDual
+        getdualwarn(data)
+    end
+end
+
+function _mapInner(f, x::JuMPContainer)
     vars = _innercontainer(x)
     vals = _similar(vars)
     data = printdata(x)
     warnedyet = false
     for I in eachindex(vars)
-        tmp = _getValue(vars[I])
+        tmp = f(vars[I])
         if isnan(tmp) && !warnedyet
-            warn("Variable value not defined for entry of $(data.name). Check that the model was properly solved.")
+            _warnnan(f, data.name)
             warnedyet = true
         end
         vals[I] = tmp
@@ -127,9 +145,10 @@ end
 JuMPContainer_from(x::JuMPDict,inner) = JuMPDict(inner)
 JuMPContainer_from(x::JuMPArray,inner) = JuMPArray(inner, x.indexsets)
 
-function getvalue(x::JuMPContainer)
-    getvalue_warn(x)
-    ret = JuMPContainer_from(x,_getValueInner(x))
+# The name _map is used instead of map so that this function is called instead of map(::Function, ::JuMPArray)
+function _map(f, x::JuMPContainer)
+    mapcontainer_warn(f, x)
+    ret = JuMPContainer_from(x, _mapInner(f, x))
     # I guess copy!(::Dict, ::Dict) isn't defined, so...
     for (key,val) in x.meta
         ret.meta[key] = val

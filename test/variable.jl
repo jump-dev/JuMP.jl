@@ -224,3 +224,19 @@ end
         @test MathProgBase.numvar(m) == 4
     end
 end
+
+@testset "[variable] getvalue on sparse array #889" begin
+    m = Model()
+    @variable(m, x)
+    @variable(m, y)
+    X = sparse([1, 3], [2, 3], [x, y])
+
+    @test typeof(X) == SparseMatrixCSC{Variable, Int}
+
+    setvalue(x, 1)
+    setvalue(y, 2)
+
+    Y = getvalue(X)
+    @test typeof(Y) == SparseMatrixCSC{Float64, Int}
+    @test Y == sparse([1, 3], [2, 3], [1, 2])
+end
