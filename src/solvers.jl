@@ -390,10 +390,11 @@ function build(m::Model; suppress_warnings=false, relaxation=false, traits=Probl
                 addSOS(m)
             end
         end
-        # Update solver callbacks, if any
-        if !relaxation
-            registercallbacks(m)
-        end
+
+    end
+    # Update solver callbacks, if any
+    if !relaxation
+        registercallbacks(m)
     end
 
     # Update the type of each variable

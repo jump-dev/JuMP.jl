@@ -9,9 +9,10 @@
 #############################################################################
 # test/callback.jl
 # Testing callbacks
-# Must be run as part of runtests.jl, as it needs a list of solvers.
 #############################################################################
 using JuMP, MathProgBase, FactCheck
+
+!isdefined(:lp_solvers) && include("solvers.jl")
 
 facts("[callback] Test lazy constraints") do
 for lazysolver in lazy_solvers
@@ -22,6 +23,36 @@ context("With solver $(typeof(lazysolver))") do
     @variable(mod, 0 <= x <= 2, Int)
     @variable(mod, 0 <= y <= 2, Int)
     @objective(mod, Max, y + 0.5x)
+    function corners(cb)
+        x_val = getvalue(x)
+        y_val = getvalue(y)
+        TOL = 1e-6
+        # Check top right
+        if y_val + x_val > 3 + TOL
+            @lazyconstraint(cb, y + 0.5x + 0.5x <= 3)
+        end
+        entered[1] = true
+        @fact_throws ErrorException @variable(cb, z)
+        @fact_throws ErrorException @lazyconstraint(cb, x^2 <= 1)
+    end
+    addlazycallback(mod, corners)
+    addlazycallback(mod, cb -> (entered[2] = true))
+    @fact solve(mod) --> :Optimal
+    @fact entered --> [true,true]
+    @fact getvalue(x) --> roughly(1.0, 1e-6)
+    @fact getvalue(y) --> roughly(2.0, 1e-6)
+end; end; end
+
+facts("[callback] Test lazy constraints for MISOCP") do
+for lazysolver in lazy_soc_solvers
+context("With solver $(typeof(lazysolver))") do
+    entered = [false,false]
+
+    mod = Model(solver=lazysolver)
+    @variable(mod, 0 <= x <= 2, Int)
+    @variable(mod, 0 <= y <= 2, Int)
+    @objective(mod, Max, y + 0.5x)
+    @constraint(mod, norm(x) <= 10)
     function corners(cb)
         x_val = getvalue(x)
         y_val = getvalue(y)
