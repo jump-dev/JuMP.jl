@@ -6,12 +6,12 @@
 Solver Callbacks
 ----------------
 
-Many mixed-integer programming solvers offer the ability to modify the solve process.
+Many mixed-integer (linear, conic, and nonlinear) programming solvers offer the ability to modify the solve process.
 Examples include changing branching decisions in branch-and-bound, adding custom cutting planes, providing custom heuristics to find feasible solutions, or implementing on-demand separators to add new constraints only when they are violated by the current solution (also known as lazy constraints).
 
 While historically this functionality has been limited to solver-specific interfaces,
 JuMP provides *solver-independent* support for a number of commonly used solver callbacks. Currently, we support lazy constraints, user-provided cuts, and user-provided
-heuristics for the Gurobi, CPLEX, and GLPK solvers. We do not yet support any
+heuristics for the Gurobi, CPLEX, GLPK, and SCIP solvers. We do not yet support any
 other class of callbacks, but they may be accessible by using the solver's
 low-level interface.
 
