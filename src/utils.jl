@@ -25,6 +25,21 @@ function addelt!{T}(v::IndexedVector{T},i::Integer,val::T)
     return nothing
 end
 
+function rmz!{T}(v::IndexedVector{T})
+    i = 1
+    while i <= v.nnz
+        j = v.nzidx[i]
+        if v.elts[j] == zero(T)
+            v.empty[j] = true
+            # If i == v.nnz then this has no effect but it would be inefficient to branch
+            v.nzidx[i] = v.nzidx[v.nnz]
+            v.nnz -= 1
+        else
+            i += 1
+        end
+    end
+end
+
 function Base.empty!{T}(v::IndexedVector{T})
     elts = v.elts
     nzidx = v.nzidx

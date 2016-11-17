@@ -600,6 +600,7 @@ function collect_expr!(m, tmprow, terms::AffExpr)
         end
         addelt!(tmprow,vars[ind].col, coeffs[ind])
     end
+    rmz!(tmprow)
     tmprow
 end
 
@@ -818,6 +819,7 @@ function conicdata(m::Model)
             end
             addelt!(tmprow,vars[ind].col, coeffs[ind])
         end
+        rmz!(tmprow)
         nnz = tmprow.nnz
         append!(I, fill(c, nnz))
         indices = tmpnzidx[1:nnz]
@@ -1059,6 +1061,7 @@ function merge_duplicates{CoefType,IntType<:Integer}(::Type{IntType},aff::Generi
         is(var.m, m) || error("Variable does not belong to this model")
         addelt!(v, aff.vars[ind].col, aff.coeffs[ind])
     end
+    rmz!(v)
     indices = Array(IntType,v.nnz)
     coeffs = Array(CoefType,v.nnz)
     for i in 1:v.nnz
