@@ -76,7 +76,7 @@ facts("[model] Test printing a model") do
     @objective(modA, Max, ((x + y)/2.0 + 3.0)/3.0 + z + r[3])
     @constraintref constraints[1:3]
     constraints[1] = @constraint(modA, 2 <= x+y <= 4)
-    constraints[2] = @constraint(modA, sum{r[i],i=3:5} <= (2 - x)/2.0)
+    constraints[2] = @constraint(modA, sum(r[i] for i=3:5) <= (2 - x)/2.0)
     constraints[3] = @constraint(modA, 6y + y <= z + r[6]/1.9)
     #####################################################################
     # Test LP writer (given names)
@@ -347,7 +347,7 @@ context("With solver $(typeof(solver))") do
     @variable(modA, 0 <= r[i=3:6] <= i)
     @objective(modA, Max, ((x + y)/2.0 + 3.0)/3.0 + z + r[3])
     @constraint(modA, 2 <= x+y)
-    @constraint(modA, sum{r[i],i=3:5} <= (2 - x)/2.0)
+    @constraint(modA, sum(r[i] for i=3:5) <= (2 - x)/2.0)
     @constraint(modA, 7.0*y <= z + r[6]/1.9)
 
     @fact solve(modA)       --> :Optimal
@@ -376,7 +376,7 @@ context("With solver $(typeof(solver))") do
     @objective(modA, Min, -((x + y)/2.0 + 3.0)/3.0 - z - r[3])
     @constraintref cons[1:3]
     cons[1] = @constraint(modA, x+y >= 2)
-    cons[2] = @constraint(modA, sum{r[i],i=3:5} <= (2 - x)/2.0)
+    cons[2] = @constraint(modA, sum(r[i] for i=3:5) <= (2 - x)/2.0)
     cons[3] = @constraint(modA, 7.0*y <= z + r[6]/1.9)
 
     # Solution
@@ -418,7 +418,7 @@ context("With solver $(typeof(solver))") do
     @objective(modA, Max, ((x + y)/2.0 + 3.0)/3.0 + z + r[3])
     @constraintref cons[1:3]
     cons[1] = @constraint(modA, x+y >= 2)
-    cons[2] = @constraint(modA, sum{r[i],i=3:5} <= (2 - x)/2.0)
+    cons[2] = @constraint(modA, sum(r[i] for i=3:5) <= (2 - x)/2.0)
     cons[3] = @constraint(modA, 7.0*y <= z + r[6]/1.9)
 
     # Solution
@@ -743,8 +743,8 @@ context("With solver $(typeof(solver))") do
     a = [1,2,3]
     b = [5,4,7,2,1]
 
-    @constraint(modS, z == sum{a[i]*x[i], i=1:3})
-    @constraint(modS, w == sum{b[i]*y[i], i=1:5})
+    @constraint(modS, z == sum(a[i]*x[i] for i=1:3))
+    @constraint(modS, w == sum(b[i]*y[i] for i=1:5))
 
     @fact_throws constructSOS([x[1]+y[1]])
     @fact_throws constructSOS([1z])
@@ -787,10 +787,10 @@ facts("[model] Test vectorized model creation") do
     @variable(modS, x[1:10])
     @variable(modS, y[1:7])
     for i in 1:50
-        @constraint(modS, sum{A[i,j]*x[j], j=1:10} + sum{B[i,k]*y[k], k=1:7} <= 1)
+        @constraint(modS, sum(A[i,j]*x[j] for j=1:10) + sum(B[i,k]*y[k] for k=1:7) <= 1)
     end
     AA, BB = 4A'*A, 4B'*A
-    @objective(modS, Max, sum{AA[i,j]*x[i]*x[j], i=1:10,j=1:10} + sum{BB[i,j]*y[i]*y[j], i=1:7, j=1:7})
+    @objective(modS, Max, sum(AA[i,j]*x[i]*x[j] for i=1:10,j=1:10) + sum(BB[i,j]*y[i]*y[j] for i=1:7, j=1:7))
 
     @fact JuMP.prepConstrMatrix(modV) --> JuMP.prepConstrMatrix(modS)
     @fact JuMP.prepProblemBounds(modV) --> JuMP.prepProblemBounds(modS)
@@ -980,8 +980,8 @@ facts("[model] Nonliteral exponents in @constraint") do
     foo() = 2
     @constraint(m, x^(foo()) + x^(foo()-1) + x^(foo()-2) == 1)
     @constraint(m, (x-1)^(foo()) + (x-1)^2 + (x-1)^1 + (x-1)^0 == 1)
-    @constraint(m, sum{x, i in 1:3}^(foo()) == 1)
-    @constraint(m, sum{x, i in 1:3}^(foo()-1) == 1)
+    @constraint(m, sum(x for i in 1:3)^(foo()) == 1)
+    @constraint(m, sum(x for i in 1:3)^(foo()-1) == 1)
     @fact m.quadconstr[1].terms --> x^2 + x
     @fact m.quadconstr[2].terms --> x^2 + x^2 - x - x - x - x + x + 1
     @fact m.quadconstr[3].terms --> x^2 + x^2 + x^2 + x^2 + x^2 + x^2 + x^2 + x^2 + x^2 - 1
@@ -999,7 +999,7 @@ facts("[model] sets used as indexsets in JuMPArray") do
     end
     m = Model()
     @variable(m, x[set, set2], Bin)
-    @objective(m , Max, sum{sum{x[e,p], e in set}, p in set2})
+    @objective(m , Max, sum(sum(x[e,p] for e in set) for p in set2))
     solve(m)
     sol = getvalue(x)
     checked_objval = 0

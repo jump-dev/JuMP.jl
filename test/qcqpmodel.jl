@@ -244,7 +244,7 @@ context("With solver $(typeof(solver))") do
     @objective(modN, Min, t)
     @constraint(modN, x + y >= 1)
     tmp = [x,y]
-    @constraint(modN, norm2{tmp[i], i=1:2} <= t)
+    @constraint(modN, norm(tmp[i] for i=1:2) <= t)
 
     @fact solve(modN) --> :Optimal
     @fact modN.objVal --> roughly(sqrt(1/2), 1e-6)
@@ -322,7 +322,7 @@ for solver in soc_solvers
 context("With solver $(typeof(solver))") do
     m = Model(solver=solver);
     @variable(m, x[1:3]);
-    @constraint(m, 2norm2{x[i]-1, i=1:3} <= 2)
+    @constraint(m, 2norm(x[i]-1 for i=1:3) <= 2)
     @objective(m, Max, x[1]+x[2])
 
     @fact solve(m) --> :Optimal

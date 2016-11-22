@@ -86,8 +86,6 @@ context("With solver $(typeof(nlp_solver))") do
         [1.000000, 4.742999, 3.821150, 1.379408], 1e-3)
 end; end; end
 
-if VERSION >= v"0.5-dev+5475"
-eval("""
 facts("[nonlinear] Test HS071 solves correctly (generators)") do
     # hs071
     # Polynomial objective and constraints
@@ -109,9 +107,7 @@ facts("[nonlinear] Test HS071 solves correctly (generators)") do
     @fact status --> :Optimal
     @fact getvalue(x)[:] --> roughly(
         [1.000000, 4.742999, 3.821150, 1.379408], 1e-5)
-
-    @fact isexpr(macroexpand(:(@NLconstraint(m, sum(x[i]^2 for i=1:4) == 40))),:error) --> true
-end""");end
+end
 
 
 facts("[nonlinear] Test HS071 solves correctly, epigraph") do
@@ -569,15 +565,13 @@ context("With solver $(typeof(nlp_solver))") do
     @fact getvalue(x) --> roughly(ones(18),1e-4)
 end; end; end
 
-if VERSION >= v"0.5-dev+5475"
-eval("""
 facts("[nonlinear] Test Hessian chunking code (generators)") do
     m = Model()
     @variable(m, x[1:18] >= 1, start = 1.2)
     @NLobjective(m, Min, prod(x[i] for i=1:18))
     @fact solve(m) --> :Optimal
     @fact getvalue(x) --> roughly(ones(18),1e-4)
-end"""); end
+end
 
 #############################################################################
 # Test that output is produced in correct MPB form
@@ -594,11 +588,7 @@ function MathProgBase.loadproblem!(m::DummyNLPModel, numVar, numConstr, x_l, x_u
         @fact MathProgBase.isconstrlinear(d,1) --> true
         @fact MathProgBase.isconstrlinear(d,3) --> true
         @fact MathProgBase.constr_expr(d,1) --> :(2.0*x[1] + 1.0*x[2] <= 1.0)
-        if VERSION >= v"0.5.0-dev+3231"
-            @fact MathProgBase.constr_expr(d,2) --> :(2.0*x[1] + 1.0*x[2] <= -0.0)
-        else
-            @fact MathProgBase.constr_expr(d,2) --> :(2.0*x[1] + 1.0*x[2] <= 0.0)
-        end
+        @fact MathProgBase.constr_expr(d,2) --> :(2.0*x[1] + 1.0*x[2] <= -0.0)
         @fact MathProgBase.constr_expr(d,3) --> :(-5.0 <= 2.0*x[1] + 1.0*x[2] <= 5.0)
         if numConstr > 3
             @fact MathProgBase.constr_expr(d,4) --> :(2.0*x[1]*x[1] + 1.0*x[2] + -2.0 >= 0)

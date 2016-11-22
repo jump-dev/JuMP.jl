@@ -8,12 +8,6 @@ using Base.Meta
 issum(s::Symbol) = (s == :sum) || (s == :∑) || (s == :Σ)
 isprod(s::Symbol) = (s == :prod) || (s == :∏)
 
-function flatten_error(ex)
-    isexpr(ex, :flatten) || return
-    error("The generator syntax \"$ex\" with multiple \"for\" statements is not yet supported. For JuMP, you should contract statements like \"for i in 1:N for j in 1:i\" into \"for i in 1:N, j in 1:i\"")
-end
-
-
 include("parseExpr_staged.jl")
 
 ###############################################################################
