@@ -83,7 +83,7 @@ macros, e.g.::
 .. note::
     The ``sense`` passed to ``@objective`` must be a `symbol <http://docs.julialang.org/en/latest/manual/metaprogramming/#symbols>`_ type: ``:Min`` or ``:Max``, although the macro accepts ``:Min`` and ``:Max``, as well as ``Min`` and ``Max`` (without the colon) directly.
 
-The ``sum()`` syntax direcly follows Julia's own generator expression syntax. You may use conditions within sums, e.g.::
+The ``sum()`` syntax directly follows Julia's own generator expression syntax. You may use conditions within sums, e.g.::
 
     sum(expression for i = I1, j = I2 if cond}
 
@@ -99,6 +99,9 @@ which is equivalent to::
             ...
         end
     end
+
+.. note::
+    JuMP previously used a special curly brace syntax for ``sum{}``, ``prod{}``, and ``norm2{}``. This has been entirely replaced by ``sum()``, ``prod()``, and ``norm()`` since Julia 0.5. The curly brace syntax is deprecated and will be removed in a future release.
 
 
 .. Walks through a simple example
