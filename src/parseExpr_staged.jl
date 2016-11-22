@@ -446,7 +446,7 @@ end
 # with nested filters as specified
 function parsegen(ex,atleaf)
     if isexpr(ex,:flatten)
-        return parsegen(ex.args[1])
+        return parsegen(ex.args[1],atleaf)
     end
     if !isexpr(ex,:generator)
         return atleaf(ex)
@@ -488,7 +488,7 @@ end
 function parseGenerator(x::Expr, aff::Symbol, lcoeffs, rcoeffs, newaff=gensym())
     @assert isexpr(x,:call)
     @assert length(x.args) > 1
-    @assert isexpr(x.args[2],:generator)
+    @assert isexpr(x.args[2],:generator) || isexpr(x.args[2],:flatten)
     header = x.args[1]
     if issum(header)
         parseGeneratorSum(x.args[2], aff, lcoeffs, rcoeffs, newaff)
@@ -617,10 +617,8 @@ function parseExpr(x, aff::Symbol, lcoeffs::Vector, rcoeffs::Vector, newaff::Sym
             numerator = x.args[2]
             denom = x.args[3]
             return parseExpr(numerator, aff, lcoeffs,vcat(esc(:(1/$denom)),rcoeffs),newaff)
-        elseif isexpr(x,:call) && length(x.args) >= 2 && isexpr(x.args[2],:generator)
+        elseif isexpr(x,:call) && length(x.args) >= 2 && (isexpr(x.args[2],:generator) || isexpr(x.args[2],:flatten))
             return newaff, parseGenerator(x,aff,lcoeffs,rcoeffs,newaff)
-        elseif isexpr(x,:call) && length(x.args) >= 2 && isexpr(x.args[2],:flatten)
-            flatten_error(x.args[2])
         elseif x.head == :curly
             warn_curly(x)
             return newaff, parseCurly(x,aff,lcoeffs,rcoeffs,newaff)

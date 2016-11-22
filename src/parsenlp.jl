@@ -9,7 +9,7 @@
 # values is the name of the list of constants which appear in the expression
 function parseNLExpr(m, x, tapevar, parent, values)
 
-    if isexpr(x,:call) && length(x.args) >= 2 && isexpr(x.args[2],:generator)
+    if isexpr(x,:call) && length(x.args) >= 2 && (isexpr(x.args[2],:generator) || isexpr(x.args[2],:flatten))
         header = x.args[1]
         if issum(header)
             operatorid = operator_to_id[:+]
@@ -28,9 +28,6 @@ function parseNLExpr(m, x, tapevar, parent, values)
         code = parsegen(x.args[2], t -> parseNLExpr(m, t, tapevar, parentvar, values))
         push!(block.args, code)
         return codeblock
-    end
-    if isexpr(x,:call) && length(x.args) >= 2 && isexpr(x.args[2],:flatten)
-        flatten_error(x.args[2])
     end
 
     if isexpr(x, :call)

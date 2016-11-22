@@ -131,6 +131,15 @@ facts("[macros] sum(generator)") do
     @constraint(m, sum( C[i,j]*x[i,j] for i = 1:3, j = 1:i) == 0);
     @fact string(m.linconstr[end]) --> "x[1,1] + 4 x[2,1] + 5 x[2,2] + 7 x[3,1] + 8 x[3,2] + 9 x[3,3] $eq 0"
 
+    @constraint(m, sum( C[i,j]*x[i,j] for i = 1:3 for j = 1:i) == 0);
+    @fact string(m.linconstr[end]) --> "x[1,1] + 4 x[2,1] + 5 x[2,2] + 7 x[3,1] + 8 x[3,2] + 9 x[3,3] $eq 0"
+
+    @constraint(m, sum( C[i,j]*x[i,j] for i = 1:3 if true for j = 1:i) == 0);
+    @fact string(m.linconstr[end]) --> "x[1,1] + 4 x[2,1] + 5 x[2,2] + 7 x[3,1] + 8 x[3,2] + 9 x[3,3] $eq 0"
+
+    @constraint(m, sum( C[i,j]*x[i,j] for i = 1:3 if true for j = 1:i if true) == 0);
+    @fact string(m.linconstr[end]) --> "x[1,1] + 4 x[2,1] + 5 x[2,2] + 7 x[3,1] + 8 x[3,2] + 9 x[3,3] $eq 0"
+
     @constraint(m, sum( 0*x[i,1] for i=1:3) == 0)
     @fact string(m.linconstr[end]) --> "0 $eq 0"
 

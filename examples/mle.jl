@@ -16,7 +16,7 @@ m = Model()
 @variable(m, μ, start = 0.0)
 @variable(m, σ >= 0.0, start = 1.0)
 
-@NLobjective(m, Max, (n/2)*log(1/(2π*σ^2))-sum{(data[i]-μ)^2, i=1:n}/(2σ^2))
+@NLobjective(m, Max, (n/2)*log(1/(2π*σ^2))-sum((data[i]-μ)^2 for i=1:n)/(2σ^2))
 
 solve(m)
 

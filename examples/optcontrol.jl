@@ -31,7 +31,7 @@ let
     @variable(m, -0.05 <= x[1:(ni+1)] <= 0.05)
     @variable(m, u[1:(ni+1)])
 
-    @NLobjective(m, Min, sum{ 0.5*h*(u[i+1]^2 + u[i]^2) + 0.5*alpha*h*(cos(t[i+1]) + cos(t[i])), i = 1:ni})
+    @NLobjective(m, Min, sum( 0.5*h*(u[i+1]^2 + u[i]^2) + 0.5*alpha*h*(cos(t[i+1]) + cos(t[i])) for i = 1:ni))
 
     # cons1
     for i in 1:ni

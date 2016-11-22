@@ -64,7 +64,7 @@ function SolveDiet()
 
     # Nutrition constraints
     for j = 1:numCategories
-        @constraint(m, sum{nutritionValues[i,j]*buy[i], i=1:numFoods} == nutrition[j])
+        @constraint(m, sum(nutritionValues[i,j]*buy[i] for i=1:numFoods) == nutrition[j])
     end
 
     # Solve
