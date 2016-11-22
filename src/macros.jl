@@ -10,10 +10,14 @@ isprod(s::Symbol) = (s == :prod) || (s == :∏)
 
 function curly_to_generator(x)
     # we have a filter condition
+    x = copy(x)
     @assert isexpr(x,:curly)
     if isexpr(x.args[2],:parameters)
         cond = x.args[2].args[1]
         body = x.args[3]
+        if length(x.args) == 3 # no iteration set!
+            push!(x.args,:(_ in 1))
+        end
         for i in length(x.args):-1:4
             if i == length(x.args)
                 body = Expr(:generator,body,Expr(:filter,cond,x.args[i]))
@@ -24,6 +28,9 @@ function curly_to_generator(x)
     else
         cond = nothing
         body = x.args[2]
+        if length(x.args) == 2 # no iteration set!
+            push!(x.args,:(_ in 1))
+        end
         for i in length(x.args):-1:3
             body = Expr(:generator,body,x.args[i])
         end
