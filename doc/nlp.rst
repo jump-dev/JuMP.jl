@@ -14,8 +14,8 @@ performance.
 
 
 Nonlinear objectives and constraints are specified by using the ``@NLobjective``
-and ``@NLconstraint`` macros. The familiar ``sum{}`` syntax is supported within
-these macros, as well as ``prod{}`` which analogously represents the product of
+and ``@NLconstraint`` macros. The familiar ``sum()`` syntax is supported within
+these macros, as well as ``prod()`` which analogously represents the product of
 the terms within. Note that the ``@objective`` and ``@constraint``
 macros (and corresponding functions) do *not* currently support nonlinear expressions.
 However, a model can contain a mix of linear, quadratic, and nonlinear constraints or
@@ -53,7 +53,7 @@ the syntax for linear and quadratic expressions. We note some important points b
 
 - All expressions must be simple scalar operations. You cannot use ``dot``,
   matrix-vector products, vector slices, etc. Translate vector operations
-  into explicit ``sum{}`` operations or use the ``AffExpr`` plus auxiliary variable
+  into explicit ``sum()`` operations or use the ``AffExpr`` plus auxiliary variable
   trick described below.
 - There is no operator overloading provided to build up nonlinear expressions.
   For example, if ``x`` is a JuMP variable, the code ``3x`` will return an

@@ -119,9 +119,9 @@ Second-order cone constraints of the form :math:`||Ax-b||_2 + a^Tx + c \le 0` ca
 
     @constraint(m, norm(A*x) <= 2w - 1)
 
-The special ``norm2{...}`` construct may be used to build up normed expressions with complex indexing operations in much the same way as the ``sum{...}`` construct::
+You may use generator expressions within ``norm()`` to build up normed expressions with complex indexing operations in much the same way with ``sum(...)``::
 
-    @constraint(m, norm2{2x[i] - i, i=1:n; c[i] == 1} <= 1)
+    @constraint(m, norm(2x[i] - i for i=1:n if c[i] == 1) <= 1)
 
 Accessing the low-level model
 ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
