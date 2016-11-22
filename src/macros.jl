@@ -190,7 +190,7 @@ validmodel(m, name) = error("Expected $name to be a JuMP model, but it has type 
 function assert_validmodel(m, macrocode)
     # assumes m is already escaped
     quote
-        validmodel($m, $(quot(m.args[1])))
+        JuMP.validmodel($m, $(quot(m.args[1])))
         $macrocode
     end
 end

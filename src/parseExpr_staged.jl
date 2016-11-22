@@ -439,7 +439,7 @@ function parseNorm(normp::Symbol, x::Expr, aff::Symbol, lcoeffs, rcoeffs, newaff
         $preblock
         $code
         $gennorm = _build_norm($param,$normexpr)
-        $newaff = $(Expr(:call, :addtoexpr_reorder, aff,lcoeffs...,gennorm,rcoeffs...))
+        $newaff = $(Expr(:call, JuMP.:addtoexpr_reorder, aff,lcoeffs...,gennorm,rcoeffs...))
     end
 end
 
@@ -585,7 +585,7 @@ function parseGeneratorNorm(normp::Symbol, x::Expr, aff::Symbol, lcoeffs, rcoeff
         $preblock
         $code
         $gennorm = _build_norm($param,$normexpr)
-        $newaff = $(Expr(:call, :addtoexpr_reorder, aff,lcoeffs...,gennorm,rcoeffs...))
+        $newaff = $(Expr(:call, JuMP.:addtoexpr_reorder, aff,lcoeffs...,gennorm,rcoeffs...))
     end
 end
 
@@ -597,7 +597,7 @@ parseExprToplevel(x, aff::Symbol) = parseExpr(x, aff, [], [])
 function parseExpr(x, aff::Symbol, lcoeffs::Vector, rcoeffs::Vector, newaff::Symbol=gensym())
     if !isa(x,Expr)
         # at the lowest level
-        callexpr = Expr(:call,:addtoexpr_reorder,aff,lcoeffs...,esc(x),rcoeffs...)
+        callexpr = Expr(:call,JuMP.:addtoexpr_reorder,aff,lcoeffs...,esc(x),rcoeffs...)
         return newaff, :($newaff = $callexpr)
     else
         if x.head == :call && x.args[1] == :+
@@ -651,7 +651,7 @@ function parseExpr(x, aff::Symbol, lcoeffs::Vector, rcoeffs::Vector, newaff::Sym
                         x.args[i] = esc(x.args[i])
                     end
                 end
-                callexpr = Expr(:call,:addtoexpr_reorder,aff,lcoeffs...,x.args[2:end]...,rcoeffs...)
+                callexpr = Expr(:call,JuMP.:addtoexpr_reorder,aff,lcoeffs...,x.args[2:end]...,rcoeffs...)
                 push!(blk.args, :($newaff = $callexpr))
                 return newaff, blk
             end
@@ -688,7 +688,7 @@ function parseExpr(x, aff::Symbol, lcoeffs::Vector, rcoeffs::Vector, newaff::Sym
             return newaff, parseCurly(x,aff,lcoeffs,rcoeffs,newaff)
         else # at lowest level?
             !isexpr(x,:comparison) || error("Unexpected comparison in expression $x")
-            callexpr = Expr(:call,:addtoexpr_reorder,aff,lcoeffs...,esc(x),rcoeffs...)
+            callexpr = Expr(:call,JuMP.:addtoexpr_reorder,aff,lcoeffs...,esc(x),rcoeffs...)
             return newaff, :($newaff = $callexpr)
         end
     end
