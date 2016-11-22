@@ -43,12 +43,12 @@ end
 @variable(m, L[i] <= x[i=1:15] <= U[i])
 
 @NLobjective(m, Min,
-    sum{2.3     * x[3*k+1]   +
+    sum(2.3     * x[3*k+1]   +
         0.0001  * x[3*k+1]^2 +
         1.7     * x[3*k+2]   +
         0.0001  * x[3*k+2]^2 +
         2.2     * x[3*k+3] +
-        0.00015 * x[3*k+3]^2, k=0:4})
+        0.00015 * x[3*k+3]^2 for k=0:4))
 
 # setobjective(m, :Min,
 #   sum([(2.3     * x[3*k+1]   +

@@ -25,7 +25,7 @@ function pMedian(numFacility::Int,numCustomer::Int,numLocation::Int)
     @variable(m, 0 <= x[1:numLocation,1:numCustomer] <= 1)
 
     # Objective: min distance
-    @objective(m, Max, sum{abs(customerLocations[a]-i)*x[i,a], a = 1:numCustomer, i = 1:numLocation} )
+    @objective(m, Max, sum(abs(customerLocations[a]-i)*x[i,a] for a = 1:numCustomer, i = 1:numLocation) )
 
     # Constraints
     for a in 1:numCustomer
@@ -34,11 +34,11 @@ function pMedian(numFacility::Int,numCustomer::Int,numLocation::Int)
             @constraint(m, x[i,a] - s[i] <= 0)
         end
         # Subject to one of x must be 1
-        @constraint(m, sum{x[i,a],i=1:numLocation} == 1 )
+        @constraint(m, sum(x[i,a] for i=1:numLocation) == 1 )
     end
 
     # Subject to must allocate all facilities
-    @constraint(m, sum{s[i],i=1:numLocation} == numFacility )
+    @constraint(m, sum(s[i] for i=1:numLocation) == numFacility )
     buildTime = toq()
 
     tic()
@@ -64,8 +64,8 @@ function cont5(n)
     @variable(mod,  0 <= y[0:m,0:n] <= 1)
     @variable(mod, -1 <= u[1:m] <= 1)
     @objective(mod, Min, 0.25*dx*( (y[m,0] - yt[1])^2 +
-       2*sum{ (y[m,j]-yt[j+1])^2, j=1:n1} + (y[m,n]-yt[n+1])^2) +
-       0.25*a*dt*(2*sum{u[i]^2,i=1:m1} + u[m]^2))
+       2*sum( (y[m,j]-yt[j+1])^2 for j=1:n1) + (y[m,n]-yt[n+1])^2) +
+       0.25*a*dt*(2*sum(u[i]^2 for i=1:m1) + u[m]^2))
 
     # PDE
     for i = 0:m1

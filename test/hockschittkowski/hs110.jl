@@ -28,8 +28,8 @@ m = Model()
 @variable(m, -2.001 <= x[1:10] <= 9.999, start = 9)
 
 @NLobjective(m, Min,
-    sum{ log(x[j] - 2)^2 + log(10 - x[j])^2, j=1:10} -
-    prod{x[i],i=1:10} ^ 0.2
+    sum( log(x[j] - 2)^2 + log(10 - x[j])^2 for j=1:10) -
+    prod( x[i] for i=1:10) ^ 0.2
 )
 
 solve(m)

@@ -122,9 +122,9 @@ context("With solver $(typeof(lazylocalsolver))") do
         nodesexpl = MathProgBase.cbgetexplorednodes(cb)
         if  entered[1] == false && nodesexpl >= 1
             # the following lazy cut  constrains all x[i] to be zero, but applies only locally at the node of the first feasible solution found: it doesn't preclude the existence of "optimal" non-trival solutions
-            @lazyconstraint(cb, sum{x[i], i=1:length(weights)} <= 0, localcut=true)
-            # @lazyconstraint(cb, sum{x[i], i=1:length(weights)} <= 0) # applying the cut globally would lead the solver to x=0 as the optimal solution
-            @fact macroexpand(:(@lazyconstraint(cb, sum{x[i], i=1:length(weights)} <= 0, badkwarg=true))).head --> :error
+            @lazyconstraint(cb, sum(x) <= 0, localcut=true)
+            # @lazyconstraint(cb, sum(x) <= 0) # applying the cut globally would lead the solver to x=0 as the optimal solution
+            @fact macroexpand(:(@lazyconstraint(cb, sum(x) <= 0, badkwarg=true))).head --> :error
             entered[1] = true
         end
         entered[2] = true
@@ -151,7 +151,7 @@ context("With solver $(typeof(cutsolver))") do
     @constraint(mod, c[i=1:10], dot(r2[i],x) <= rhs[i]*N/10)
     function mycutgenerator(cb)
         # add a trivially valid cut
-        @usercut(cb, sum{x[i], i=1:N} <= N)
+        @usercut(cb, sum(x[i] for i=1:N) <= N)
         entered[1] = true
     end
     addcutcallback(mod, mycutgenerator)
@@ -178,9 +178,9 @@ context("With solver $(typeof(cutlocalsolver))") do
         nodesexpl = MathProgBase.cbgetexplorednodes(cb)
         if  entered[1] == false && nodesexpl >= 1
             # the following user cut  constrains all x[i] to be zero, but applies only locally at the first node after the root node, and doesn't preclude the existence non-trival "optimal" solutions
-            @usercut(cb, sum{x[i], i=1:length(weights)} <= 0, localcut=true)
-            # @usercut(cb, sum{x[i], i=1:length(weights)} <= 0) # applying the cut globally would lead the solver to x=0 as the optimal solution
-            @fact macroexpand(:(@usercut(cb, sum{x[i], i=1:length(weights)} <= 0, badkwarg=true))).head --> :error
+            @usercut(cb, sum(x) <= 0, localcut=true)
+            # @usercut(cb, sum(x) <= 0) # applying the cut globally would lead the solver to x=0 as the optimal solution
+            @fact macroexpand(:(@usercut(cb, sum(x) <= 0, badkwarg=true))).head --> :error
             entered[1] = true
         end
         entered[2] = true
