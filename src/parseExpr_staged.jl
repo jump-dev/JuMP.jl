@@ -622,6 +622,7 @@ function parseExpr(x, aff::Symbol, lcoeffs::Vector, rcoeffs::Vector, newaff::Sym
         elseif isexpr(x,:call) && length(x.args) >= 2 && isexpr(x.args[2],:flatten)
             flatten_error(x.args[2])
         elseif x.head == :curly
+            warn_curly(x)
             return newaff, parseCurly(x,aff,lcoeffs,rcoeffs,newaff)
         else # at lowest level?
             !isexpr(x,:comparison) || error("Unexpected comparison in expression $x")

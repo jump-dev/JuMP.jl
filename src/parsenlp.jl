@@ -124,6 +124,7 @@ function parseNLExpr(m, x, tapevar, parent, values)
         return code
     end
     if isexpr(x, :curly)
+        warn_curly(x)
         header = x.args[1]
         if length(x.args) < 3
             error("Need at least two arguments for $header")
