@@ -179,7 +179,7 @@ Consider the following example which is related to the lazy constraint example. 
             # Cut off this solution
             println("Fractional solution was in top right, cut it off")
             # Use the original variables
-            @addusercut(cb, y + x <= 3)
+            @usercut(cb, y + x <= 3)
         end
     end  # End of callback function
 
