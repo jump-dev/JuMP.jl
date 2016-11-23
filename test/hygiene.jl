@@ -15,8 +15,8 @@ mysense = :Min
 JuMP.@variable(mymod, x >= 0)
 r = 3:5
 JuMP.@variable(mymod, y[i=r] <= i)
-JuMP.@constraint(mymod, x + sum{ j*y[j], j=r } <= 1)
-JuMP.@constraint(mymod, sum{ y[j], j=r ; j == 4} <= 1)
+JuMP.@constraint(mymod, x + sum( j*y[j] for j=r ) <= 1)
+JuMP.@constraint(mymod, sum( y[j] for j=r if j == 4) <= 1)
 JuMP.@constraint(mymod, -1 <= x + y[3] <= 1)
 JuMP.@objective(mymod, mysense, y[4])
 JuMP.@NLconstraint(mymod, y[3] == 1)

@@ -482,13 +482,13 @@ context("With solver $(typeof(solver))") do
         @variable(m, t1 >= 0)
         @variable(m, L1[1:d])
         @constraint(m, L1 .== (μ-μhat))
-        @constraint(m, sum{L1[i]^2, i=1:d} <= t1^2)
+        @constraint(m, sum(L1[i]^2 for i=1:d) <= t1^2)
         @constraint(m, t1 <= Γ1(𝛿/2,N))
 
         @variable(m, t2 >= 0)
         @variable(m, L2[1:d,1:d])
         @constraint(m, L2 .== (Σ-Σhat))
-        @constraint(m, sum{L2[i,j]^2, i=1:d, j=1:d} <= t2^2)
+        @constraint(m, sum(L2[i,j]^2 for i=1:d, j=1:d) <= t2^2)
         @constraint(m, t2 <= Γ2(𝛿/2,N))
 
         A = [(1-ɛ)/ɛ (u-μ)';

@@ -84,22 +84,22 @@ multi = Model()
 length(cost)
 
 @objective(multi, Max,
-              sum{sum{sum{cost[j, i, p] * Trans[i,j, p],
-                        i=1:numorig}, j=1:numdest}, p=1:numprod})
+              sum(cost[j, i, p] * Trans[i,j, p] for
+                  i=1:numorig, j=1:numdest, p=1:numprod))
 
 #  CONSTRAINTS
 
 # Supply constraint
-@constraint(multi, xyconstr[i=1:numorig, p=1:numprod],
-               sum{Trans[i,j,p], j=1:numdest} == supply[p,i])
+@constraint(multi, supply_con[i=1:numorig, p=1:numprod],
+               sum(Trans[i,j,p] for j=1:numdest) == supply[p,i])
 
 # Demand constraint
-@constraint(multi, xyconstr[j=1:numdest, p=1:numprod],
-               sum{Trans[i,j,p], i=1:numorig} == demand[p,j])
+@constraint(multi, demand_con[j=1:numdest, p=1:numprod],
+               sum(Trans[i,j,p] for i=1:numorig) == demand[p,j])
 
 # Total shipment constraint
-@constraint(multi, xyconstr[i=1:numorig, j=1:numdest],
-               sum{Trans[i,j,p], p=1:numprod} - limit[i][j] <= 0)
+@constraint(multi, total_con[i=1:numorig, j=1:numdest],
+               sum(Trans[i,j,p] for p=1:numprod) - limit[i][j] <= 0)
 limit[2][3]
 status = solve(multi)
 if status == :Optimal

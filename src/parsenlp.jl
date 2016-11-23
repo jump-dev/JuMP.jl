@@ -9,7 +9,7 @@
 # values is the name of the list of constants which appear in the expression
 function parseNLExpr(m, x, tapevar, parent, values)
 
-    if isexpr(x,:call) && length(x.args) >= 2 && isexpr(x.args[2],:generator)
+    if isexpr(x,:call) && length(x.args) >= 2 && (isexpr(x.args[2],:generator) || isexpr(x.args[2],:flatten))
         header = x.args[1]
         if issum(header)
             operatorid = operator_to_id[:+]
@@ -24,48 +24,10 @@ function parseNLExpr(m, x, tapevar, parent, values)
         parentvar = gensym()
         push!(block.args, :($parentvar = length($tapevar)))
 
-        # we have a filter condition
-        if isexpr(x.args[2].args[2],:filter)
-            cond = x.args[2].args[2].args[1]
-            # generate inner loop code first and then wrap in for loops
-            innercode = parseNLExpr(m, x.args[2].args[1], tapevar, parentvar, values)
-            code = quote
-                if $(esc(cond))
-                    $innercode
-                end
-            end
-            for level in length(x.args[2].args[2]):-1:2
-                _idxvar, idxset = parseIdxSet(x.args[2].args[2].args[level]::Expr)
-                idxvar = esc(_idxvar)
-                code = :(let
-                    $(localvar(idxvar))
-                    for $idxvar in $(esc(idxset))
-                        $code
-                    end
-                end)
-            end
-            push!(block.args, code)
-        else # no condition
-            innercode = parseNLExpr(m, x.args[2].args[1], tapevar, parentvar, values)
-            code = quote
-                $innercode
-            end
-            for level in length(x.args[2].args):-1:2
-                _idxvar, idxset = parseIdxSet(x.args[2].args[level]::Expr)
-                idxvar = esc(_idxvar)
-                code = :(let
-                    $(localvar(idxvar))
-                    for $idxvar in $(esc(idxset))
-                        $code
-                    end
-                end)
-            end
-            push!(block.args, code)
-        end
+
+        code = parsegen(x.args[2], t -> parseNLExpr(m, t, tapevar, parentvar, values))
+        push!(block.args, code)
         return codeblock
-    end
-    if isexpr(x,:call) && length(x.args) >= 2 && isexpr(x.args[2],:flatten)
-        flatten_error(x.args[2])
     end
 
     if isexpr(x, :call)
@@ -159,6 +121,7 @@ function parseNLExpr(m, x, tapevar, parent, values)
         return code
     end
     if isexpr(x, :curly)
+        warn_curly(x)
         header = x.args[1]
         if length(x.args) < 3
             error("Need at least two arguments for $header")

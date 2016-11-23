@@ -29,7 +29,7 @@ c = [-6.089, -17.164, -34.054, -5.914, -24.721, -14.986, -24.100, -10.708, -26.6
 m = Model()
 @variable(m, x[1:10] >= 1e-6, start = 0.1)
 
-@NLobjective(m, Min, sum{x[j]*(c[j] + log(x[j]/sum{x[k],k=1:10})), j=1:10})
+@NLobjective(m, Min, sum(x[j]*(c[j] + log(x[j]/sum(x[k] for k=1:10))) for j=1:10))
 
 @NLconstraint(m, x[1] + 2*x[2] + 2*x[3] + x[6] + x[10] == 2)
 @NLconstraint(m, x[4] + 2*x[5] + x[6] + x[7] == 1)

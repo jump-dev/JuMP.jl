@@ -77,31 +77,15 @@ JuMP allows users to use a natural notation to describe linear expressions. To a
 macros, e.g.::
 
     @constraint(m, x[i] - s[i] <= 0)  # Other options: <= and >=
-    @constraint(m, sum{x[i], i=1:numLocation} == 1)
+    @constraint(m, sum(x[i] for i=1:numLocation) == 1)
     @objective(m, Max, 5x + 22y + (x+y)/2) # or Min
 
 .. note::
     The ``sense`` passed to ``@objective`` must be a `symbol <http://docs.julialang.org/en/latest/manual/metaprogramming/#symbols>`_ type: ``:Min`` or ``:Max``, although the macro accepts ``:Min`` and ``:Max``, as well as ``Min`` and ``Max`` (without the colon) directly.
 
-You may have noticed a special ``sum{}`` operator above. This is defined only for
-the second kind of function. The syntax is of the form (where ``IX`` can be any iterable)::
+The ``sum()`` syntax directly follows Julia's own generator expression syntax. You may use conditions within sums, e.g.::
 
-	sum{expression, i = I1, j = I2, ...}
-
-which is equivalent to::
-
-    a = zero(AffExpr)  # Create a new empty affine expression
-    for i = I1
-        for j = I2
-            ...
-            a += expression
-            ...
-        end
-    end
-
-You can also put a condition in::
-
-    sum{expression, i = I1, j = I2, ...; cond}
+    sum(expression for i = I1, j = I2 if cond}
 
 which is equivalent to::
 
@@ -115,6 +99,9 @@ which is equivalent to::
             ...
         end
     end
+
+.. note::
+    JuMP previously used a special curly brace syntax for ``sum{}``, ``prod{}``, and ``norm2{}``. This has been entirely replaced by ``sum()``, ``prod()``, and ``norm()`` since Julia 0.5. The curly brace syntax is deprecated and will be removed in a future release.
 
 
 .. Walks through a simple example

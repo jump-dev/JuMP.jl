@@ -117,7 +117,7 @@ function solveTSP(n, cities)
     @variable(m, x[1:n,1:n], Bin)
 
     # Minimize length of tour
-    @objective(m, Min, sum{dist[i,j]*x[i,j], i=1:n,j=i:n})
+    @objective(m, Min, sum(dist[i,j]*x[i,j] for i=1:n for j=i:n))
 
     # Make x_ij and x_ji be the same thing (undirectional)
     # Don't allow self-arcs
@@ -130,7 +130,7 @@ function solveTSP(n, cities)
 
     # We must enter and leave every city once and only once
     for i = 1:n
-        @constraint(m, sum{x[i,j], j=1:n} == 2)
+        @constraint(m, sum(x[i,j] for j=1:n) == 2)
     end
 
     function subtour(cb)

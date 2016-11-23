@@ -64,7 +64,7 @@ function pMedian(numFacility::Int,numCustomer::Int,numLocation::Int,useMPS)
     @variable(m, 0 <= x[1:numLocation,1:numCustomer] <= 1)
 
     # Objective: min distance
-    @objective(m, Max, sum{abs(customerLocations[a]-i)*x[i,a], a = 1:numCustomer, i = 1:numLocation} )
+    @objective(m, Max, sum(abs(customerLocations[a]-i)*x[i,a] for a = 1:numCustomer, i = 1:numLocation) )
 
     # Constraints
     for a in 1:numCustomer
@@ -73,11 +73,11 @@ function pMedian(numFacility::Int,numCustomer::Int,numLocation::Int,useMPS)
             @constraint(m, x[i,a] - s[i] <= 0)
         end
         # Subject to one of x must be 1
-        @constraint(m, sum{x[i,a],i=1:numLocation} == 1 )
+        @constraint(m, sum(x[i,a] for i=1:numLocation) == 1 )
     end
 
     # Subject to must allocate all facilities
-    @constraint(m, sum{s[i],i=1:numLocation} == numFacility )
+    @constraint(m, sum(s[i] for i=1:numLocation) == numFacility )
     buildTime = toq()
 
     tic()

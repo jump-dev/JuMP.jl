@@ -54,17 +54,17 @@ Methods
 
 * ``@expression(m::Model, ref, expr)`` - efficiently builds a linear, quadratic, or second-order cone expression but does not add to model immediately. Instead, returns the expression which can then be inserted in other constraints. For example::
 
-    @expression(m, shared, sum{i*x[i], i=1:5})
+    @expression(m, shared, sum(i*x[i] for i=1:5))
     @constraint(m, shared + y >= 5)
     @constraint(m, shared + z <= 10)
 
 The ``ref`` accepts index sets in the same way as ``@variable``, and those indices can be used in the construction of the expressions::
 
-    @expression(m, expr[i=1:3], i*sum{x[j], j=1:3})
+    @expression(m, expr[i=1:3], i*sum(x[j] for j=1:3))
 
 Anonymous syntax is also supported::
 
-    expr = @expression(m, [i=1:3], i*sum{x[j], j=1:3})
+    expr = @expression(m, [i=1:3], i*sum(x[j] for j=1:3))
 * ``@SDconstraint(m::Model, expr)`` - adds a semidefinite constraint to the model ``m``. The expression ``expr`` must be a square, two-dimensional array.
 * ``addSOS1(m::Model, coll::Vector{AffExpr})`` - adds special ordered set constraint
   of type 1 (SOS1). Specify the set as a vector of weighted variables, e.g. ``coll = [3x, y, 2z]``.
@@ -165,7 +165,7 @@ For example::
    @variable(m, x[1:2] >= 1)
    @variable(m, t)
    @objective(m, Min, t)
-   @constraint(m, soc, norm2{ x[i], i=1:2 } <= t)
+   @constraint(m, soc, norm( x[i] for i=1:2 ) <= t)
    status = solve(m)
 
    @show getvalue(x) # [1.000000000323643,1.0000000003235763]

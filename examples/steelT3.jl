@@ -61,34 +61,32 @@ print(market["coils"]["west"][1])
 @variable(Prod, Inv[p=prod, t=0:T] >= 0); # tons inventoried
 @variable(Prod, market[p][a][t] >= Sell[p=prod, a=area[p],t=1:T] >= 0); # tons sold
 
-@constraint(Prod, triconstr[p=prod, a=area[p], t=1:T],
+@constraint(Prod, [p=prod, a=area[p], t=1:T],
                Sell[p, a, t] - market[p][a][t] <= 0)
 
 
-@constraint(Prod, xyconst[t=1:T],
-               sum{(1/rate[p]) * Make[p,t], p=prod} <= avail[t])
+@constraint(Prod, [t=1:T],
+               sum((1/rate[p]) * Make[p,t] for p=prod) <= avail[t])
 
 # Total of hours used by all products
 # may not exceed hours available, in each week
 
-@constraint(Prod, xyconst[p=prod],
+@constraint(Prod, [p=prod],
                Inv[p,0] == inv0[p])
 # Initial inventory must equal given value
 
-@constraint(Prod, xyconst[p=prod, t=1:T],
-               Make[p,t] + Inv[p, t-1] == sum{Sell[p,a,t], a=area[p]} + Inv[p,t])
+@constraint(Prod, [p=prod, t=1:T],
+               Make[p,t] + Inv[p, t-1] == sum(Sell[p,a,t] for a=area[p]) + Inv[p,t])
 
 # Tons produced and taken from inventory
 # must equal tons sold and put into inventory
 
 
 @objective(Prod, Max,
-              sum{
-                sum{revenue[p][a][t] * Sell[p, a, t] -
-                      prodcost[p] * Make[p,t] -
-                      invcost[p]*Inv[p,t],
-                    a = area[p]},
-                p=prod, t=1:T})
+              sum( sum(
+                   revenue[p][a][t] * Sell[p, a, t] -
+                   prodcost[p] * Make[p,t] -
+                   invcost[p]*Inv[p,t] for a in area[p]) for p=prod, t=1:T))
 #maximize Total_Profit:
 # Total revenue less costs for all products in all weeks
 

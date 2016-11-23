@@ -30,36 +30,36 @@ function SolveUrban()
     @variable(m, 0 <= y[rowcol,points,i=1:5] <= 1, Int)
 
     # Objective - combine the positive and negative parts
-    @objective(m, Max, sum{
+    @objective(m, Max, sum(
       3*(y["R", 3,i] + y["C", 3,i])
     + 1*(y["R", 4,i] + y["C", 4,i])
     + 1*(y["R", 5,i] + y["C", 5,i])
     - 3*(y["R",-3,i] + y["C",-3,i])
     - 1*(y["R",-4,i] + y["C",-4,i])
-    - 1*(y["R",-5,i] + y["C",-5,i]), i=1:5})
+    - 1*(y["R",-5,i] + y["C",-5,i]) for i=1:5))
 
     # Constrain the number of residential lots
-    @constraint(m, sum{x[i,j], i=1:5, j=1:5} == 12)
+    @constraint(m, sum(x[i,j] for i=1:5, j=1:5) == 12)
 
     # Add the constraints that link the auxiliary y variables
     # to the x variables
     # Rows
     for i = 1:5
-        @constraint(m, y["R", 5,i] <=   1/5*sum{x[i,j], j=1:5}) # sum = 5
-        @constraint(m, y["R", 4,i] <=   1/4*sum{x[i,j], j=1:5}) # sum = 4
-        @constraint(m, y["R", 3,i] <=   1/3*sum{x[i,j], j=1:5}) # sum = 3
-        @constraint(m, y["R",-3,i] >= 1-1/3*sum{x[i,j], j=1:5}) # sum = 2
-        @constraint(m, y["R",-4,i] >= 1-1/2*sum{x[i,j], j=1:5}) # sum = 1
-        @constraint(m, y["R",-5,i] >= 1-1/1*sum{x[i,j], j=1:5}) # sum = 0
+        @constraint(m, y["R", 5,i] <=   1/5*sum(x[i,j] for j=1:5)) # sum = 5
+        @constraint(m, y["R", 4,i] <=   1/4*sum(x[i,j] for j=1:5)) # sum = 4
+        @constraint(m, y["R", 3,i] <=   1/3*sum(x[i,j] for j=1:5)) # sum = 3
+        @constraint(m, y["R",-3,i] >= 1-1/3*sum(x[i,j] for j=1:5)) # sum = 2
+        @constraint(m, y["R",-4,i] >= 1-1/2*sum(x[i,j] for j=1:5)) # sum = 1
+        @constraint(m, y["R",-5,i] >= 1-1/1*sum(x[i,j] for j=1:5)) # sum = 0
     end
     # Columns
     for j = 1:5
-        @constraint(m, y["C", 5,j] <=   1/5*sum{x[i,j], i=1:5}) # sum = 5
-        @constraint(m, y["C", 4,j] <=   1/4*sum{x[i,j], i=1:5}) # sum = 4
-        @constraint(m, y["C", 3,j] <=   1/3*sum{x[i,j], i=1:5}) # sum = 3
-        @constraint(m, y["C",-3,j] >= 1-1/3*sum{x[i,j], i=1:5}) # sum = 2
-        @constraint(m, y["C",-4,j] >= 1-1/2*sum{x[i,j], i=1:5}) # sum = 1
-        @constraint(m, y["C",-5,j] >= 1-1/1*sum{x[i,j], i=1:5}) # sum = 0
+        @constraint(m, y["C", 5,j] <=   1/5*sum(x[i,j] for i=1:5)) # sum = 5
+        @constraint(m, y["C", 4,j] <=   1/4*sum(x[i,j] for i=1:5)) # sum = 4
+        @constraint(m, y["C", 3,j] <=   1/3*sum(x[i,j] for i=1:5)) # sum = 3
+        @constraint(m, y["C",-3,j] >= 1-1/3*sum(x[i,j] for i=1:5)) # sum = 2
+        @constraint(m, y["C",-4,j] >= 1-1/2*sum(x[i,j] for i=1:5)) # sum = 1
+        @constraint(m, y["C",-5,j] >= 1-1/1*sum(x[i,j] for i=1:5)) # sum = 0
     end
 
     # Solve it with the default solver (CBC)

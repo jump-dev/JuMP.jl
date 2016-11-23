@@ -36,16 +36,16 @@ function solveCannery(plants, markets, capacity, demand, distance, freight)
   @variable(cannery, ship[1:numplants, 1:nummarkets] >= 0)
 
   # Ship no more than plant capacity
-  @constraint(cannery, xyconstr[i=1:numplants],
-                   sum{ship[i,j], j=1:nummarkets}<=capacity[i])
+  @constraint(cannery, capacity_con[i=1:numplants],
+               sum(ship[i,j] for j=1:nummarkets)<=capacity[i])
 
   # Ship at least market demand
-  @constraint(cannery, xyconstr[j=1:nummarkets],
-               sum{ship[i,j], i=1:numplants}>=demand[j])
+  @constraint(cannery, demand_con[j=1:nummarkets],
+               sum(ship[i,j] for i=1:numplants)>=demand[j])
 
   # Minimize transporatation cost
   @objective(cannery, Min,
-              sum{distance[i,j]* freight * ship[i,j], i=1:numplants, j=1:nummarkets})
+              sum(distance[i,j]* freight * ship[i,j] for i=1:numplants, j=1:nummarkets))
 
   solution = solve(cannery)
   if solution == :Optimal

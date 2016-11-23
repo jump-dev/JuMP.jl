@@ -51,7 +51,7 @@ context("With solver $(typeof(nlp_solver))") do
     @variable(m, 1 <= x[i=1:4] <= 5, start=initval[i])
     @NLobjective(m, Min, x[1]*x[4]*(x[1]+x[2]+x[3]) + x[3])
     @NLconstraint(m, x[1]*x[2]*x[3]*x[4] >= 25)
-    @NLconstraint(m, sum{x[i]^2,i=1:4} == 40)
+    @NLconstraint(m, sum(x[i]^2 for i=1:4) == 40)
     @fact MathProgBase.numconstr(m) --> 2
     status = solve(m)
 
@@ -86,8 +86,6 @@ context("With solver $(typeof(nlp_solver))") do
         [1.000000, 4.742999, 3.821150, 1.379408], 1e-3)
 end; end; end
 
-if VERSION >= v"0.5-dev+5475"
-eval("""
 facts("[nonlinear] Test HS071 solves correctly (generators)") do
     # hs071
     # Polynomial objective and constraints
@@ -109,9 +107,7 @@ facts("[nonlinear] Test HS071 solves correctly (generators)") do
     @fact status --> :Optimal
     @fact getvalue(x)[:] --> roughly(
         [1.000000, 4.742999, 3.821150, 1.379408], 1e-5)
-
-    @fact isexpr(macroexpand(:(@NLconstraint(m, sum(x[i]^2 for i=1:4) == 40))),:error) --> true
-end""");end
+end
 
 
 facts("[nonlinear] Test HS071 solves correctly, epigraph") do
@@ -418,7 +414,7 @@ context("With solver $(typeof(nlp_solver))") do
     N = 3
     @variable(m, x[1:N] >= 0, start = 1)
     @NLexpression(m, entropy[i=1:N], -x[i]*log(x[i]))
-    @NLobjective(m, Max, sum{entropy[i], i = 1:N})
+    @NLobjective(m, Max, sum(entropy[i] for i = 1:N))
     @constraint(m, sum(x) == 1)
 
     @fact solve(m) --> :Optimal
@@ -433,7 +429,7 @@ context("With solver $(typeof(nlp_solver))") do
     @variable(m, x[idx] >= 0, start = 1)
     @variable(m, z[1:4], start = 0)
     @NLexpression(m, entropy[i=idx], -x[i]*log(x[i]))
-    @NLobjective(m, Max, sum{z[i], i = 1:2} + sum{z[i]/2, i=3:4})
+    @NLobjective(m, Max, sum(z[i] for i = 1:2) + sum(z[i]/2 for i=3:4))
     @NLconstraint(m, z_constr1[i=1], z[i] <= entropy[i])
     @NLconstraint(m, z_constr1_dup[i=2], z[i] <= entropy[i]) # duplicate expressions
     @NLconstraint(m, z_constr2[i=3:4], z[i] <= 2*entropy[i])
@@ -470,7 +466,7 @@ context("With solver $(typeof(nlp_solver)), simplify = $simplify") do
     @variable(modA, 0 <= r[i=3:6] <= i)
     @NLobjective(modA, Min, -((x + y)/2.0 + 3.0)/3.0 - z - r[3])
     @constraint(modA, cons1, x+y >= 2)
-    @constraint(modA, cons2, sum{r[i],i=3:5} <= (2 - x)/2.0)
+    @constraint(modA, cons2, sum(r[i] for i=3:5) <= (2 - x)/2.0)
     @NLconstraint(modA, cons3, 7.0*y <= z + r[6]/1.9)
 
     # Solution
@@ -564,20 +560,10 @@ for nlp_solver in nlp_solvers
 context("With solver $(typeof(nlp_solver))") do
     m = Model(solver=nlp_solver)
     @variable(m, x[1:18] >= 1, start = 1.2)
-    @NLobjective(m, Min, prod{x[i],i=1:18})
-    @fact solve(m) --> :Optimal
-    @fact getvalue(x) --> roughly(ones(18),1e-4)
-end; end; end
-
-if VERSION >= v"0.5-dev+5475"
-eval("""
-facts("[nonlinear] Test Hessian chunking code (generators)") do
-    m = Model()
-    @variable(m, x[1:18] >= 1, start = 1.2)
     @NLobjective(m, Min, prod(x[i] for i=1:18))
     @fact solve(m) --> :Optimal
     @fact getvalue(x) --> roughly(ones(18),1e-4)
-end"""); end
+end; end; end
 
 #############################################################################
 # Test that output is produced in correct MPB form
@@ -594,11 +580,7 @@ function MathProgBase.loadproblem!(m::DummyNLPModel, numVar, numConstr, x_l, x_u
         @fact MathProgBase.isconstrlinear(d,1) --> true
         @fact MathProgBase.isconstrlinear(d,3) --> true
         @fact MathProgBase.constr_expr(d,1) --> :(2.0*x[1] + 1.0*x[2] <= 1.0)
-        if VERSION >= v"0.5.0-dev+3231"
-            @fact MathProgBase.constr_expr(d,2) --> :(2.0*x[1] + 1.0*x[2] <= -0.0)
-        else
-            @fact MathProgBase.constr_expr(d,2) --> :(2.0*x[1] + 1.0*x[2] <= 0.0)
-        end
+        @fact MathProgBase.constr_expr(d,2) --> :(2.0*x[1] + 1.0*x[2] <= -0.0)
         @fact MathProgBase.constr_expr(d,3) --> :(-5.0 <= 2.0*x[1] + 1.0*x[2] <= 5.0)
         if numConstr > 3
             @fact MathProgBase.constr_expr(d,4) --> :(2.0*x[1]*x[1] + 1.0*x[2] + -2.0 >= 0)
@@ -666,7 +648,7 @@ facts("[nonlinear] Expression graphs for corner cases") do
     m = Model()
     @variable(m, x, start = 2)
     @constraint(m, 0 <= 1)
-    @NLconstraint(m, x <= sum{0, i in []} + prod{1, i in []})
+    @NLconstraint(m, x <= sum(0 for i in []) + prod(1 for i in []))
     d = JuMP.NLPEvaluator(m)
     MathProgBase.initialize(d, [:ExprGraph])
     @fact MathProgBase.constr_expr(d,1) --> :(0 <= 1.0)

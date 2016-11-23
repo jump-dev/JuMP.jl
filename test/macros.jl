@@ -12,7 +12,7 @@ const  eq = JuMP.repl[:eq]
 const Vert = JuMP.repl[:Vert]
 const sub2 = JuMP.repl[:sub2]
 
-facts("[macros] Check Julia expression parsing") do
+facts("[macros] Check Julia curly expression parsing") do
     sumexpr = :(sum{x[i,j] * y[i,j], i = 1:N, j in 1:M; i != j})
     @fact sumexpr.head --> :curly
     @fact length(sumexpr.args) --> 5
@@ -20,32 +20,21 @@ facts("[macros] Check Julia expression parsing") do
     @fact sumexpr.args[2].head --> :parameters
     @fact sumexpr.args[3] --> :(x[i,j] * y[i,j])
     @fact sumexpr.args[4].head --> :(=)
-    if VERSION < v"0.5.0-dev+3231"
-        @fact sumexpr.args[5].head --> :in
-    else
-        @fact sumexpr.args[5].head --> :call
-        @fact sumexpr.args[5].args[1] --> :in
-    end
+    @fact sumexpr.args[5].head --> :call
+    @fact sumexpr.args[5].args[1] --> :in
 
     sumexpr = :(sum{x[i,j] * y[i,j], i in 1:N, j = 1:M})
     @fact sumexpr.head --> :curly
     @fact length(sumexpr.args) --> 4
     @fact sumexpr.args[1] --> :sum
     @fact sumexpr.args[2] --> :(x[i,j] * y[i,j])
-    if VERSION < v"0.5.0-dev+3231"
-        @fact sumexpr.args[3].head --> :in
-    else
-        @fact sumexpr.args[3].head --> :call
-        @fact sumexpr.args[3].args[1] --> :in
-    end
+    @fact sumexpr.args[3].head --> :call
+    @fact sumexpr.args[3].args[1] --> :in
 
     @fact sumexpr.args[4].head --> :(=)
 end
 
-# generator syntax only parses on 0.5
-if VERSION >= v"0.5-dev+5475"
-    eval("""
-facts("[macros] Check Julia expression parsing (0.5)") do
+facts("[macros] Check Julia generator expression parsing") do
     sumexpr = :(sum(x[i,j] * y[i,j] for i = 1:N, j in 1:M if i != j))
     @fact sumexpr.head --> :call
     @fact sumexpr.args[1] --> :sum
@@ -64,7 +53,6 @@ facts("[macros] Check Julia expression parsing (0.5)") do
     @fact sumexpr.args[2].args[2] --> :(i = 1:N)
     @fact sumexpr.args[2].args[3] --> :(j = 1:M)
 end
-"""); end
 
 facts("[macros] Check @constraint basics") do
     m = Model()
@@ -86,7 +74,7 @@ facts("[macros] Check @constraint basics") do
     @fact string(m.linconstr[end]) --> "-2 $leq x $leq 0"
     @constraint(m, -1 <= x <= 1)
     @fact string(m.linconstr[end]) --> "-1 $leq x $leq 1"
-    @constraint(m, -1 <= x <= sum{0.5, i = 1:2})
+    @constraint(m, -1 <= x <= sum(0.5 for i = 1:2))
     @fact string(m.linconstr[end]) --> "-1 $leq x $leq 1"
     @fact_throws @constraint(m, x <= t <= y)
     @fact macroexpand(:(@constraint(m, 1 >= x >= 0))).head --> :error
@@ -109,7 +97,7 @@ facts("[macros] Checking @variable with reverse direction bounds") do
     @fact m.colUpper --> [3.2]
 end
 
-facts("[macros] sum{}") do
+facts("[macros] sum{} (deprecated)") do
     m = Model()
     @variable(m, x[1:3,1:3])
     @variable(m, y)
@@ -130,8 +118,6 @@ facts("[macros] sum{}") do
 
 end
 
-if VERSION >= v"0.5-dev+5475"
-eval("""
 facts("[macros] sum(generator)") do
     m = Model()
     @variable(m, x[1:3,1:3])
@@ -145,25 +131,34 @@ facts("[macros] sum(generator)") do
     @constraint(m, sum( C[i,j]*x[i,j] for i = 1:3, j = 1:i) == 0);
     @fact string(m.linconstr[end]) --> "x[1,1] + 4 x[2,1] + 5 x[2,2] + 7 x[3,1] + 8 x[3,2] + 9 x[3,3] $eq 0"
 
+    @constraint(m, sum( C[i,j]*x[i,j] for i = 1:3 for j = 1:i) == 0);
+    @fact string(m.linconstr[end]) --> "x[1,1] + 4 x[2,1] + 5 x[2,2] + 7 x[3,1] + 8 x[3,2] + 9 x[3,3] $eq 0"
+
+    @constraint(m, sum( C[i,j]*x[i,j] for i = 1:3 if true for j = 1:i) == 0);
+    @fact string(m.linconstr[end]) --> "x[1,1] + 4 x[2,1] + 5 x[2,2] + 7 x[3,1] + 8 x[3,2] + 9 x[3,3] $eq 0"
+
+    @constraint(m, sum( C[i,j]*x[i,j] for i = 1:3 if true for j = 1:i if true) == 0);
+    @fact string(m.linconstr[end]) --> "x[1,1] + 4 x[2,1] + 5 x[2,2] + 7 x[3,1] + 8 x[3,2] + 9 x[3,3] $eq 0"
+
     @constraint(m, sum( 0*x[i,1] for i=1:3) == 0)
     @fact string(m.linconstr[end]) --> "0 $eq 0"
 
     @constraint(m, sum( 0*x[i,1] + y for i=1:3) == 0)
     @fact string(m.linconstr[end]) --> "3 y $eq 0"
 
-    @fact isexpr(macroexpand(:(@constraint(m, sum( 0*x[i,1] + y for i=1:3 for j in 1:3) == 0))),:error) --> true
+    #@fact isexpr(macroexpand(:(@constraint(m, sum( 0*x[i,1] + y for i=1:3 for j in 1:3) == 0))),:error) --> true
 
-end"""); end
+end
 
 facts("[macros] Problem modification") do
     m = Model()
     @variable(m, x[1:3,1:3])
     C = [1 2 3; 4 5 6; 7 8 9]
 
-    @constraint(m, sum{ x[i,j]*(C[i,j]-1), i in 1:3, j = 1:3; i != j} == 0)
+    @constraint(m, sum( x[i,j]*(C[i,j]-1) for i in 1:3, j = 1:3 if i != j) == 0)
     @fact string(m.linconstr[end]) --> "x[1,2] + 2 x[1,3] + 3 x[2,1] + 5 x[2,3] + 6 x[3,1] + 7 x[3,2] $eq 0"
 
-    con = @constraint(m, sum{ C[i,j]*x[i,j], i = 1:3, j = 1:3; i != j} == 0)
+    con = @constraint(m, sum( C[i,j]*x[i,j] for i = 1:3, j = 1:3 if i != j) == 0)
     @fact string(m.linconstr[end]) --> "2 x[1,2] + 3 x[1,3] + 4 x[2,1] + 6 x[2,3] + 7 x[3,1] + 8 x[3,2] $eq 0"
 
     @variable(m, y, objective = 0, inconstraints = [con], coefficients = [-1.0])
@@ -292,7 +287,7 @@ end
 facts("[macros] @objective with quadratic") do
     m = Model()
     @variable(m, x[1:5])
-    @objective(m, Max, sum{i*x[i]*x[j], i=1:5, j=5:-1:1; isodd(i) && iseven(j)} + 2x[5])
+    @objective(m, Max, sum(i*x[i]*x[j] for i=1:5, j=5:-1:1 if isodd(i) && iseven(j)) + 2x[5])
 
     @fact string(m.obj) --> "x[1]*x[2] + 3 x[2]*x[3] + x[1]*x[4] + 3 x[3]*x[4] + 5 x[2]*x[5] + 5 x[4]*x[5] + 2 x[5]"
 end
@@ -301,30 +296,30 @@ facts("[macros] @constraint with quadratic") do
     m = Model()
     @variable(m, x[1:5])
 
-    @constraint(m, x[3]*x[1] + sum{x[i]*x[5-i+1], i=1:5; 2 <= i <= 4} + 4x[5] == 1)
+    @constraint(m, x[3]*x[1] + sum(x[i]*x[5-i+1] for i=1:5 if 2 <= i <= 4) + 4x[5] == 1)
     @fact string(m.quadconstr[end]) --> "x[1]*x[3] + x[3]² + 2 x[2]*x[4] + 4 x[5] - 1 $eq 0"
 
-    @constraint(m, sum{sum{(x[i] - 2)*x[j],j=4:5},i=2:3} >= -3*x[2]*2*x[4])
+    @constraint(m, sum(sum((x[i] - 2)*x[j] for j=4:5) for i=2:3) >= -3*x[2]*2*x[4])
     @fact string(m.quadconstr[end]) --> "7 x[2]*x[4] + x[3]*x[4] + x[2]*x[5] + x[3]*x[5] - 4 x[4] - 4 x[5] $geq 0"
 
     foo(x) = x
     @constraint(m, x[1] ≤ foo(x[1])^2)
     @fact string(m.quadconstr[end]) --> "-x[1]² + x[1] $leq 0"
 
-    @constraint(m, sum{x[i],i=1:2}*sum{x[i],i=2:3} >= 0)
+    @constraint(m, sum(x[i] for i=1:2)*sum(x[i] for i=2:3) >= 0)
     @fact string(m.quadconstr[end]) --> "x[1]*x[2] + x[2]² + x[1]*x[3] + x[2]*x[3] $geq 0"
     @constraint(m, x[1]^2 + x[2]*x[3] >= 0)
     @fact string(m.quadconstr[end]) --> "x[1]² + x[2]*x[3] $geq 0"
     @constraint(m, x[1]^2 + (x[2]+3)*(x[3]-1) >= 0)
     @fact string(m.quadconstr[end]) --> "x[1]² + x[2]*x[3] + 3 x[3] - x[2] - 3 $geq 0"
-    @constraint(m, sum{x[i],i=1:2}^2 >= 0)
+    @constraint(m, sum(x[i] for i=1:2)^2 >= 0)
     @fact string(m.quadconstr[end]) --> "x[1]² + 2 x[1]*x[2] + x[2]² $geq 0"
 
     myquadexpr = x[1]*x[2]
-    @constraint(m, sum{i*myquadexpr + x[i], i=1:3} + sum{x[i] + myquadexpr*i, i=1:3} == 0)
+    @constraint(m, sum(i*myquadexpr + x[i] for i=1:3) + sum(x[i] + myquadexpr*i for i=1:3) == 0)
     @fact string(m.quadconstr[end]) --> "12 x[1]*x[2] + 2 x[1] + 2 x[2] + 2 x[3] $eq 0"
 
-    @constraint(m, (x[1] + x[2])*sum{ 0*x[i] + x[3], i=1:3} == 0)
+    @constraint(m, (x[1] + x[2])*sum( 0*x[i] + x[3] for i=1:3) == 0)
     @fact string(m.quadconstr[end]) --> "3 x[1]*x[3] + 3 x[2]*x[3] $eq 0"
 
     @fact string(@QuadConstraint(1 + 0*myquadexpr == 0)) --> "1 $eq 0"
@@ -380,12 +375,12 @@ end
 facts("[macros] @expression") do
     model = Model()
     @variable(model, x[1:3,1:3])
-    @expression(model, expr, sum{i*x[i,j] + j, i=1:3,j in 1:3})
+    @expression(model, expr, sum(i*x[i,j] + j for i=1:3,j in 1:3))
     @fact string(expr) --> "x[1,1] + x[1,2] + x[1,3] + 2 x[2,1] + 2 x[2,2] + 2 x[2,3] + 3 x[3,1] + 3 x[3,2] + 3 x[3,3] + 18"
 
     @fact_throws @expression(model, blah[i=1:3], x[i,1]^2)
 
-    @expression(model, y[i=1:2], sum{x[i,1]; i == 1})
+    @expression(model, y[i=1:2], sum(x[i,1] for _ in 1 if i == 1))
     @fact string(y[1]) --> "x[1,1]"
     @fact string(y[2]) --> "0"
 end
@@ -417,7 +412,7 @@ facts("[macros] Test changes in condition parsing") do
                       Expr(:(=), :j, :S)]
 end
 
-facts("[macros] Norm parsing") do
+facts("[macros] Curly norm parsing (deprecated)") do
     model = Model()
     @variable(model, x[1:2,1:2])
     @constraint(model, -2norm2{x[i,j], i in 1:2, j=1:2} + x[1,2] >= -1)
@@ -430,20 +425,18 @@ facts("[macros] Norm parsing") do
     @fact_throws @constraint(model, norm2{x[i,j], i=1:2, j=1:2} + x[1,2] >= -1)
 end
 
-if VERSION >= v"0.5-dev+5475"
-eval("""
 facts("[macros] Generator norm parsing") do
     model = Model()
     @variable(model, x[1:2,1:2])
-    @constraint(model, -2norm2(x[i,j] for i in 1:2, j=1:2) + x[1,2] >= -1)
-    @constraint(model, -2norm2(x[i,j] for i=1:2, j in 1:2 if iseven(i+j)) + x[1,2] >= -1)
-    @constraint(model, 1 >= 2*norm2(x[i,1] for i in 1:2))
+    @constraint(model, -2norm(x[i,j] for i in 1:2, j=1:2) + x[1,2] >= -1)
+    @constraint(model, -2norm(x[i,j] for i=1:2, j in 1:2 if iseven(i+j)) + x[1,2] >= -1)
+    @constraint(model, 1 >= 2*norm(x[i,1] for i in 1:2))
     @fact string(model.socconstr[1]) --> "2.0 $Vert[x[1,1],x[1,2],x[2,1],x[2,2]]$Vert$sub2 $leq x[1,2] + 1"
     @fact string(model.socconstr[2]) --> "2.0 $Vert[x[1,1],x[2,2]]$Vert$sub2 $leq x[1,2] + 1"
     @fact string(model.socconstr[3]) --> "2.0 $Vert[x[1,1],x[2,1]]$Vert$sub2 $leq 1"
-    @fact_throws @constraint(model, (x[1,1]+1)*norm2(x[i,j] for i=1:2, j=1:2) + x[1,2] >= -1)
-    @fact_throws @constraint(model, norm2(x[i,j] for i=1:2, j=1:2) + x[1,2] >= -1)
-end""");end
+    @fact_throws @constraint(model, (x[1,1]+1)*norm(x[i,j] for i=1:2, j=1:2) + x[1,2] >= -1)
+    @fact_throws @constraint(model, norm(x[i,j] for i=1:2, j=1:2) + x[1,2] >= -1)
+end
 
 facts("[macros] Extraneous terms in QuadExpr (#535)") do
     model = Model()
@@ -489,13 +482,13 @@ facts("[macros] Indices in macros don't leak out of scope (#582)") do
     @variable(m, x[i=1:3] ≤ i)
     cnt = 4
     for i in 5:8
-        @constraint(m, sum{x[i], i=1, j=1, k=1} == 1)
+        @constraint(m, sum(x[i] for i=1, j=1, k=1) == 1)
         cnt += 1
         @fact i --> cnt
     end
     cnt = 4
     for i in 5:8
-        @constraint(m, norm2{x[i], i=1, j=1, k=1} <= 1)
+        @constraint(m, norm(x[i] for i=1, j=1, k=1) <= 1)
         cnt += 1
         @fact i --> cnt
     end

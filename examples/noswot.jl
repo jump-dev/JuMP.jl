@@ -45,13 +45,12 @@ vtypes = MathProgBase.getvartype(m_internal)
 for i in 1:n
     setlowerbound(x[i], xlb[i])
     setupperbound(x[i], xub[i])
-    vtypes[i] == 'I' ? mod.colCat[x[i].col] = :Int : nothing # change vartype to integer when appropriate
+    if vtypes[i] == 'I'
+        setcategory(x[i], :Int)
+    end
 end
-At = A' # transpose to get useful row-wise sparse representation
-for i in 1:At.n
-    @constraint( mod, l[i] <= sum{ At.nzval[idx]*x[At.rowval[idx]], idx = At.colptr[i]:(At.colptr[i+1]-1) } <= u[i] )
-end
-@objective(mod, Min, sum{ c[i]*x[i], i=1:n })
+@constraint(mod, l .<= A*x .<= u)
+@objective(mod, Min, dot(c,x))
 
 function mycutgenerator(cb) # valid cuts
     x_val = getvalue(x)

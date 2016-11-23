@@ -8,11 +8,61 @@ using Base.Meta
 issum(s::Symbol) = (s == :sum) || (s == :∑) || (s == :Σ)
 isprod(s::Symbol) = (s == :prod) || (s == :∏)
 
-function flatten_error(ex)
-    isexpr(ex, :flatten) || return
-    error("The generator syntax \"$ex\" with multiple \"for\" statements is not yet supported. For JuMP, you should contract statements like \"for i in 1:N for j in 1:i\" into \"for i in 1:N, j in 1:i\"")
+function curly_to_generator(x)
+    # we have a filter condition
+    x = copy(x)
+    @assert isexpr(x,:curly)
+    if isexpr(x.args[2],:parameters)
+        cond = x.args[2].args[1]
+        body = x.args[3]
+        if length(x.args) == 3 # no iteration set!
+            push!(x.args,:(_ in 1))
+        end
+        for i in length(x.args):-1:4
+            if i == length(x.args)
+                body = Expr(:generator,body,Expr(:filter,cond,x.args[i]))
+            else
+                body = Expr(:generator,body,x.args[i])
+            end
+        end
+    else
+        cond = nothing
+        body = x.args[2]
+        if length(x.args) == 2 # no iteration set!
+            push!(x.args,:(_ in 1))
+        end
+        for i in length(x.args):-1:3
+            body = Expr(:generator,body,x.args[i])
+        end
+    end
+    if isexpr(body.args[1],:generator)
+        body = Expr(:flatten,body)
+    end
+    name = x.args[1]
+    if name == :norm2
+        return Expr(:call,:norm,body)
+    elseif name == :norm1
+        return Expr(:call,:norm,body,1)
+    elseif name == :norminf
+        return Expr(:call,:norm,body,Inf)
+    elseif name == :norm∞
+        return Expr(:call,:norm,body,Inf)
+    else
+        return Expr(:call,name,body)
+    end
 end
 
+function warn_curly(x)
+    genform = curly_to_generator(x)
+    if length(genform.args) == 2
+        # don't print extra parens
+        genstr = "$(genform.args[1])$(genform.args[2])"
+    else
+        genstr = "$genform"
+    end
+    Base.warn_once("The curly syntax (sum{},prod{},norm2{}) is deprecated in favor of the new generator syntax (sum(),prod(),norm()).")
+    Base.warn_once("Replace $x with $genstr.")
+end
 
 include("parseExpr_staged.jl")
 

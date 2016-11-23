@@ -166,14 +166,14 @@ prod = Model()
 
 ###  CONSTRAINTS  ###
 
-@constraint(prod, xyconstr[t=numperiods],
-               sum{pt[p] * Rprd[p,t], p=1:numprd} <= sl * dpp[t] * Crews[t])
+@constraint(prod, [t=numperiods],
+               sum(pt[p] * Rprd[p,t] for p=1:numprd) <= sl * dpp[t] * Crews[t])
 # Hours needed to accomplish all regular-time
 # production in a period must not exceed
 # hours available on all shifts
 
-@constraint(prod, xyconstr[t=numperiods],
-               sum{pt[p] * Oprd[p,t], p=1:numprd}  <= ol[t])
+@constraint(prod, [t=numperiods],
+               sum(pt[p] * Oprd[p,t] for p=1:numprd)  <= ol[t])
 # Hours needed to accomplish all overtime
 # production in a period must not exceed
 # the specified overtime limit
@@ -181,15 +181,15 @@ prod = Model()
 @constraint(prod, Crews[firstperiod-1]==iw)
 # Use given initial workforce
 
-@constraint(prod,xyconstr[t=numperiods],
+@constraint(prod,[t=numperiods],
                Crews[t]== Crews[t-1] + Hire[t]-Layoff[t])
 # Workforce changes by hiring or layoffs
 
-@constraint(prod, xyconstr[t=numperiods], cmin[t] <= Crews[t])
-@constraint(prod, xyconstr[t=numperiods], Crews[t] <= cmax[t])
+@constraint(prod, [t=numperiods], cmin[t] <= Crews[t])
+@constraint(prod, [t=numperiods], Crews[t] <= cmax[t])
 # Workforce must remain within specified bounds
 
-@constraint(prod, xyconstr[p=1:numprd],
+@constraint(prod, [p=1:numprd],
                Rprd[p, firstperiod] + Oprd[p,firstperiod] + Short[p, firstperiod]-Inv[p, firstperiod, 1]
                  == max(0,dem[p][firstperiod]-iinv[p]))
 # 'first demand requirement
@@ -197,32 +197,32 @@ prod = Model()
 # NOTE: JuMP xyconstr[] requires that indices be integer at compile time,
 # so firstperiod +1 could not be an index within xycontr or triconstr
 for t=(firstperiod+1:lastperiod)
-  @constraint(prod, xyconstr[p=1:numprd],
+  @constraint(prod, [p=1:numprd],
                  Rprd[p,t] + Oprd[p,t] + Short[p,t] - Short[p,t-1] +
-                   sum{Inv[p, t-1, a] - Inv[p,t,a], a=1:life} ==
+                   sum(Inv[p, t-1, a] - Inv[p,t,a] for a=1:life) ==
                    max(0, dem[p][t]-iil[p][t-1]))
 end
 # Production plus increase in shortage plus
 # decrease in inventory must equal demand
 
-@constraint(prod, xyconstr[p=1:numprd, t=numperiods],
-               sum{Inv[p,t,a] + iil[p][t], a=1:life} >= minv[p][t])
+@constraint(prod, [p=1:numprd, t=numperiods],
+               sum(Inv[p,t,a] + iil[p][t] for a=1:life) >= minv[p][t])
 # Inventory in storage at end of period t
 # must meet specified minimum
 
-@constraint(prod, triconstr[p=1:numprd, v=1:(life-1), a=v+1:life], Inv[p, firstperiod+v-1, a] ==0)
+@constraint(prod, [p=1:numprd, v=1:(life-1), a=v+1:life], Inv[p, firstperiod+v-1, a] ==0)
 
 # In the vth period (starting from first)
 # no inventory may be more than v numperiods old
 # (initial inventories are handled separately)
 
-@constraint(prod, xyconstr[p=1:numprd, t=numperiods],
+@constraint(prod, [p=1:numprd, t=numperiods],
                Inv[p,t,1] <= Rprd[p,t]+Oprd[p,t])
 # New inventory cannot exceed
 # production in the most recent period
 
 secondperiod = firstperiod + 1
-@constraint(prod, triconstr[p=1:numprd, t=2:lastperiod, a=2:life],
+@constraint(prod, [p=1:numprd, t=2:lastperiod, a=2:life],
                      Inv[p,t,a] <= Inv[p,t-1,a-1])
 # Inventory left from period (t+1)-p
 # can only decrease as time goes on
@@ -230,12 +230,12 @@ secondperiod = firstperiod + 1
 ###  OBJECTIVE  ###
 
 @objective(prod, Min,
-                sum{rtr * sl * dpp[t] * cs * Crews[t], t=numperiods} +
-                sum{hc[t] * Hire[t], t=numperiods} +
-                sum{lc[t] * Layoff[t], t=numperiods} +
-                sum{sum{ otr * cs * pt[p] * Oprd[p,t], t=numperiods}, p=1:numprd} +
-                sum{sum{sum{cri[p] * pc[p] * Inv[p,t,a], t=numperiods}, p=1:numprd}, a=1:life} +
-                sum{sum{ crs[p] * pc[p] * Short[p,t], t=numperiods},p=1:numprd})
+                sum(rtr * sl * dpp[t] * cs * Crews[t] for t=numperiods) +
+                sum(hc[t] * Hire[t] for t=numperiods) +
+                sum(lc[t] * Layoff[t] for t=numperiods) +
+                sum(otr * cs * pt[p] * Oprd[p,t] for t=numperiods, p=1:numprd) +
+                sum(cri[p] * pc[p] * Inv[p,t,a] for t=numperiods, p=1:numprd, a=1:life) +
+                sum(crs[p] * pc[p] * Short[p,t] for t=numperiods,p=1:numprd))
 
 # Full regular wages for all crews employed, plus
 # penalties for hiring and layoffs, plus
