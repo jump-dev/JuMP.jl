@@ -270,6 +270,27 @@ end
 end
 end
 
+facts("[probmod] Test switching from quadratic to linear objective") do
+for solver in quad_solvers
+context("With solver $(typeof(solver))") do
+    m = Model(solver=solver)
+    @variable(m, x >=0)
+    @variable(m, y >=0)
+
+    @constraint(m, x + 2*y <= 4)
+    @constraint(m, 2*x + y <= 4)
+
+    @objective(m, Min, x^2) # Quadratic objective function
+    @fact solve(m) --> :Optimal
+    @fact getobjectivevalue(m) --> roughly(0.0,1e-4)
+
+    @objective(m, Max, 3*x + 4*y)  # Change to linear objective function
+    @fact solve(m) --> :Optimal
+    @fact getobjectivevalue(m) --> roughly(9+1/3,1e-4)
+end
+end
+end
+
 facts("[probmod] Applicable regressions") do
 
 function methods_test(solvername, solverobj, supp)

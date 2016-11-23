@@ -99,8 +99,14 @@ function setobjective(m::Model, sense::Symbol, a::AffExpr)
         # A better approach would be to update and reuse the evaluator
         m.internalModelLoaded = false
     end
-    setobjectivesense(m, sense)
-    m.obj = convert(QuadExpr,a)
+    if length(m.obj.qvars1) != 0
+        # Go through the quadratic path so that we properly clear
+        # current quadratic terms.
+        setobjective(m, sense, convert(QuadExpr,a))
+    else
+        setobjectivesense(m, sense)
+        m.obj = convert(QuadExpr,a)
+    end
 end
 
 # Copy an affine expression to a new model by converting all the
