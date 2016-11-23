@@ -1014,3 +1014,15 @@ facts("[model] .^ broadcasting") do
     @variable(m, x[1:2])
     @fact (x.^2)[1] --> x[1]^2
 end
+
+facts("[model] Quadratic constraints with zero coefficients") do
+for solver in quad_solvers
+context("With solver $(typeof(solver))") do
+    m = Model(solver=solver)
+    @variable(m, 0 <= v <= 2)
+    @variable(m, 1 <= x <= 5)
+    @constraint(m, v >= 0.0 * x^2 + x)
+    @objective(m, Min, v)
+    @fact solve(m) --> :Optimal
+    @fact getvalue(v) --> roughly(1.0, TOL)
+end; end; end
