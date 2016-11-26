@@ -76,7 +76,7 @@ Objective and Constraints
 JuMP allows users to use a natural notation to describe linear expressions. To add constraints, use the ``@constraint()`` and ``@objective()``
 macros, e.g.::
 
-    @constraint(m, x[i] - s[i] <= 0)  # Other options: <= and >=
+    @constraint(m, x[i] - s[i] <= 0)  # Other options: == and >=
     @constraint(m, sum(x[i] for i=1:numLocation) == 1)
     @objective(m, Max, 5x + 22y + (x+y)/2) # or Min
 
