@@ -424,6 +424,13 @@ end; end; end
 facts("[nonlinear] Test entropy maximization (reformulation)") do
 for nlp_solver in convex_nlp_solvers
 context("With solver $(typeof(nlp_solver))") do
+    # the reformulation test can cause hanging in the NLopt test
+    # when xtol_abs is nothing (as per solver.jl included
+    # change nothing to 1.0; critical point somewhere < 0.34
+    if :xtol_abs in fieldnames(nlp_solver)
+        println("Using modified solver params: xtol_abs set to 1.0")
+        nlp_solver = NLopt.NLoptSolver(:LD_SLSQP,NaN,1.0e-7,NaN,1.0e-7, 1.0 ,1.0e-7,0,0,nothing,0,nothing,0) 
+    end
     m = Model(solver=nlp_solver)
     idx = [1,2,3,4]
     @variable(m, x[idx] >= 0, start = 1)
