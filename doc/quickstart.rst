@@ -85,7 +85,7 @@ macros, e.g.::
 
 The ``sum()`` syntax directly follows Julia's own generator expression syntax. You may use conditions within sums, e.g.::
 
-    sum(expression for i = I1, j = I2 if cond}
+    sum(expression for i = I1, j = I2 if cond)
 
 which is equivalent to::
 
