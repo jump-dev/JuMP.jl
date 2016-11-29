@@ -21,7 +21,7 @@
 using JuMP
 using Base.Test
 
-let
+@testset "HS116" begin
 
 N = 13
 a = 0.002
@@ -60,6 +60,6 @@ m = Model()
 
 solve(m)
 
-@test_approx_eq_eps getobjectivevalue(m) 97.588409 1e-3
+@test isapprox(getobjectivevalue(m), 97.588409, atol=1e-3)
 
 end

@@ -21,7 +21,7 @@
 using JuMP
 using Base.Test
 
-let
+@testset "HS118" begin
 
 m = Model()
 
@@ -104,10 +104,10 @@ solve(m)
 
 #println(getvalue(x))
 
-@test_approx_eq_eps getvalue(x[1]) 8.0  1e-5
-@test_approx_eq_eps getvalue(x[2]) 49.0 1e-5
-@test_approx_eq_eps getvalue(x[3]) 3.0  1e-5
-@test_approx_eq_eps getvalue(x[4]) 1.0  1e-5
-@test_approx_eq_eps getobjectivevalue(m) 664.82045 1e-5
+@test isapprox(getvalue(x[1]), 8.0, atol=1e-5)
+@test isapprox(getvalue(x[2]), 49.0, atol=1e-5)
+@test isapprox(getvalue(x[3]), 3.0, atol=1e-5)
+@test isapprox(getvalue(x[4]), 1.0, atol=1e-5)
+@test isapprox(getobjectivevalue(m), 664.82045, atol=1e-5)
 
 end

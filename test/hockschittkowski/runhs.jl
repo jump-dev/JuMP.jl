@@ -20,7 +20,7 @@
 
 if Pkg.installed("Ipopt") == nothing
     println("Cannot run NLP tests because Ipopt is not installed.")
-    exit(0)
+    exit(1)
 end
 
 HS_path = dirname(@__FILE__)
@@ -30,10 +30,5 @@ files = readdir(HS_path)
 println("Running HS Tests")
 for file in files
     contains(file, "runhs") && continue
-    try
-        include(file)
-        println("  $file  PASSED")
-    catch
-        println("  $file  FAILED")
-    end
+    include(file)
 end
