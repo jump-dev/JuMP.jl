@@ -100,10 +100,10 @@ function test_approx_equal_exprs(ex1, ex2)
     return res
 end
 
-println("[fuzzer] Check macros for expression construction")
-
-for _ in 1:100
-    raff = random_aff_expr(N, vars)
-    ex = @eval @JuMP.Expression($raff)
-    @fact test_approx_equal_exprs(ex, eval(raff)) --> true
+@testset "Fuzzing the macros" begin
+    for _ in 1:100
+        raff = random_aff_expr(N, vars)
+        ex = @eval @JuMP.Expression($raff)
+        @test test_approx_equal_exprs(ex, eval(raff))
+    end
 end

@@ -4,16 +4,14 @@
 #  file, You can obtain one at http://mozilla.org/MPL/2.0/.
 #############################################################################
 # JuMP
-# An algebraic modelling langauge for Julia
+# An algebraic modeling langauge for Julia
 # See http://github.com/JuliaOpt/JuMP.jl
 #############################################################################
 # test/runtests.jl
 #############################################################################
 
 using JuMP
-using FactCheck
 using Base.Test
-#FactCheck.setstyle(:compact)
 
 # Static tests - don't require a solver
 include("print.jl")
@@ -38,7 +36,7 @@ include("nonlinear.jl");    length(  nlp_solvers) == 0 && warn("Nonlinear tests 
 include("sdp.jl");          length(  sdp_solvers) == 0 && warn("Semidefinite tests not run!")
 include("socduals.jl");     length(conic_solvers_with_duals) == 0 && warn("Conic solvers with duals tests not run!")
 # Throw an error if anything failed
-FactCheck.exitstatus()
+#FactCheck.exitstatus()
 
 # hygiene.jl should be run separately
 # hockschittkowski/runhs.jl has additional nonlinear tests
