@@ -442,12 +442,12 @@ macro constraint(args...)
                 try
                     lbval = convert(CoefType, $newlb)
                 catch
-                    constraint_error(args, string("Expected ",$lb_str," to be a ", CoefType, "."))
+                    constraint_error($args, string("Expected ",$lb_str," to be a ", CoefType, "."))
                 end
                 try
                     ubval = convert(CoefType, $newub)
                 catch
-                    constraint_error(args, string("Expected ",$ub_str," to be a ", CoefType, "."))
+                    constraint_error($args, string("Expected ",$ub_str," to be a ", CoefType, "."))
                 end
             end
         end
