@@ -116,8 +116,8 @@ function forward_eval{T}(storage::Vector{T},partials_storage::Vector{T},nd::Vect
                 storage[k] = ifelse(condition == 1, lhs, rhs)
             elseif op >= USER_OPERATOR_ID_START
                 evaluator = user_operator_map[op]
-                f_input = Compat.view(user_input_buffer, 1:n_children)
-                grad_output = Compat.view(user_output_buffer, 1:n_children)
+                f_input = view(user_input_buffer, 1:n_children)
+                grad_output = view(user_output_buffer, 1:n_children)
                 r = 1
                 for c_idx in children_idx
                     ix = children_arr[c_idx]

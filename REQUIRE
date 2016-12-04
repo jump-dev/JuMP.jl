@@ -1,8 +1,7 @@
-julia 0.4
+julia 0.5
 Calculus
 Lazy
 DataStructures
 MathProgBase
 NaNMath 0.2.1
-ForwardDiff 0.2 0.3
-Compat 0.8.6
+ForwardDiff 0.3 0.4
