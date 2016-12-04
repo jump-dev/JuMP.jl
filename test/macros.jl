@@ -14,6 +14,7 @@ const sub2 = JuMP.repl[:sub2]
 
 @testset "Macros" begin
 
+
     @testset "Check Julia curly expression parsing" begin
         sumexpr = :(sum{x[i,j] * y[i,j], i = 1:N, j in 1:M; i != j})
         @test sumexpr.head == :curly
@@ -78,7 +79,7 @@ const sub2 = JuMP.repl[:sub2]
         @test string(m.linconstr[end]) == "-1 $leq x $leq 1"
         @constraint(m, -1 <= x <= sum(0.5 for i = 1:2))
         @test string(m.linconstr[end]) == "-1 $leq x $leq 1"
-        @test_throws UndefVarError @constraint(m, x <= t <= y)
+        @test_throws ErrorException @constraint(m, x <= t <= y)
         @test macroexpand(:(@constraint(m, 1 >= x >= 0))).head == :error
         @test macroexpand(:(@constraint(1 <= x <= 2, foo=:bar))).head == :error
 
@@ -669,5 +670,14 @@ const sub2 = JuMP.repl[:sub2]
         @test macroexpand(:(@variable(m, Cont))).head == :error
         @test macroexpand(:(@variable(m, SemiCont))).head == :error
         @test macroexpand(:(@variable(m, SemiInt))).head == :error
+    end
+
+    @testset "Invalid lb/ub in ranged row" begin
+        m = Model()
+        @variable m x
+        @variable m y
+        @test_throws ErrorException @constraint m 0 <= x <= y
+        @test_throws ErrorException @constraint m 2*x <= y <= 1
+        @test_throws ErrorException @constraint m x+y <= x <= x*y
     end
 end
