@@ -79,7 +79,7 @@ const sub2 = JuMP.repl[:sub2]
         @test string(m.linconstr[end]) == "-1 $leq x $leq 1"
         @constraint(m, -1 <= x <= sum(0.5 for i = 1:2))
         @test string(m.linconstr[end]) == "-1 $leq x $leq 1"
-        @test_throws UndefVarError @constraint(m, x <= t <= y)
+        @test_throws ErrorException @constraint(m, x <= t <= y)
         @test macroexpand(:(@constraint(m, 1 >= x >= 0))).head == :error
         @test macroexpand(:(@constraint(1 <= x <= 2, foo=:bar))).head == :error
 
