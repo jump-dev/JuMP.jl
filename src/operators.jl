@@ -403,9 +403,9 @@ _multiply!{T<:JuMPTypes}(ret::AbstractArray{T}, lhs::SparseMatrixCSC, rhs::Spars
 
 _multiply!(ret, lhs, rhs) = A_mul_B!(ret, lhs, ret)
 
-(*){T<:JuMPTypes}(             A::Union{Matrix{T},SparseMatrixCSC{T}}, x::Union{Matrix,   Vector,   SparseMatrixCSC})    = _matmul(A, x)
-(*){T<:JuMPTypes,R<:JuMPTypes}(A::Union{Matrix{T},SparseMatrixCSC{T}}, x::Union{Matrix{R},Vector{R},SparseMatrixCSC{R}}) = _matmul(A, x)
-(*){T<:JuMPTypes}(             A::Union{Matrix,   SparseMatrixCSC},    x::Union{Matrix{T},Vector{T},SparseMatrixCSC{T}}) = _matmul(A, x)
+(*){T<:JuMPTypes}(             A::Union{Matrix{T},Vector{T},SparseMatrixCSC{T}}, x::Union{Matrix,   Vector,   SparseMatrixCSC})    = _matmul(A, x)
+(*){T<:JuMPTypes,R<:JuMPTypes}(A::Union{Matrix{T},Vector{T},SparseMatrixCSC{T}}, x::Union{Matrix{R},Vector{R},SparseMatrixCSC{R}}) = _matmul(A, x)
+(*){T<:JuMPTypes}(             A::Union{Matrix,   Vector,   SparseMatrixCSC},    x::Union{Matrix{T},Vector{T},SparseMatrixCSC{T}}) = _matmul(A, x)
 
 function _matmul(A, x)
     m, n = size(A,1), size(A,2)
