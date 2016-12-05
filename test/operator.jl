@@ -525,6 +525,10 @@ const sub2 = JuMP.repl[:sub2]
              1 2 1
              0 1 2]
         B = sparse(A)
+        X = spzeros(JuMP.Variable, 3, 3)
+        X[1, 1] = @variable(m, X11)
+        X[2, 3] = @variable(m, X23)
+        v = [4, 5, 6]
         @test vec_eq(A*x, [2x[1] +  x[2]
                             2x[2] + x[1] + x[3]
                             x[2] + 2x[3]])
@@ -586,6 +590,25 @@ const sub2 = JuMP.repl[:sub2]
                                          x[2] + 3x[3]])
 
         @test vec_eq(@JuMP.Expression(A*x/2), A*x/2)
+        @test vec_eq(X*v,  [4X11; 6X23; 0])
+        @test vec_eq(v'*X, [4X11  0     5X23])
+        @test vec_eq(X*A,  [2X11  X11  0
+                            0     X23  2X23
+                            0     0    0   ])
+        @test vec_eq(A*X,  [2X11  0    X23
+                            X11   0    2X23
+                            0     0    X23])
+        @test vec_eq(A*X', [2X11  0    0
+                            X11   X23  0
+                            0     2X23 0])
+        @test vec_eq(X'*A, [2X11  X11  0
+                            0     0    0
+                            X23   2X23 X23])
+        @test vec_eq(X*A, X*B)
+        @test vec_eq(A*X, B*X)
+        @test vec_eq(A*X', B*X')
+        # TODO this is known to fail currently
+        @test vec_eq(X'*A, X'*B)
     end
 
     @testset "Dot-ops" begin
