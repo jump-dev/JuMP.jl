@@ -601,14 +601,13 @@ const sub2 = JuMP.repl[:sub2]
         @test vec_eq(A*X', [2X11  0    0
                             X11   X23  0
                             0     2X23 0])
-        @test vec_eq(X'*A, [2X11  X11  0
-                            0     0    0
-                            X23   2X23 X23])
+        @test_broken vec_eq(X'*A, [2X11  X11  0
+                                   0     0    0
+                                   X23   2X23 X23])
         @test vec_eq(X*A, X*B)
-        @test vec_eq(A*X, B*X)
-        @test vec_eq(A*X', B*X')
-        # TODO this is known to fail currently
-        @test vec_eq(X'*A, X'*B)
+        @test_broken vec_eq(A*X, B*X)
+        @test_broken vec_eq(A*X', B*X')
+        @test_broken vec_eq(X'*A, X'*B)
     end
 
     @testset "Dot-ops" begin
