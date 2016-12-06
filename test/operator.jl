@@ -591,7 +591,10 @@ const sub2 = JuMP.repl[:sub2]
 
         @test vec_eq(@JuMP.Expression(A*x/2), A*x/2)
         @test vec_eq(X*v,  [4X11; 6X23; 0])
-        @test vec_eq(v'*X, [4X11  0     5X23])
+        @test vec_eq(v'*X,  [4X11  0   5X23])
+        @test vec_eq(v.'*X, [4X11  0   5X23])
+        @test vec_eq(X'*v,  [4X11;  0;  5X23])
+        @test vec_eq(X.'*v, [4X11; 0;  5X23])
         @test vec_eq(X*A,  [2X11  X11  0
                             0     X23  2X23
                             0     0    0   ])
@@ -601,13 +604,17 @@ const sub2 = JuMP.repl[:sub2]
         @test vec_eq(A*X', [2X11  0    0
                             X11   X23  0
                             0     2X23 0])
-        @test_broken vec_eq(X'*A, [2X11  X11  0
-                                   0     0    0
-                                   X23   2X23 X23])
+        @test vec_eq(X'*A, [2X11  X11  0
+                            0     0    0
+                            X23   2X23 X23])
+        @test vec_eq(X.'*A, [2X11 X11  0 
+                             0    0    0
+                             X23  2X23 X23])
+        @test vec_eq(X.'*A, X'*A)
         @test vec_eq(X*A, X*B)
         @test_broken vec_eq(A*X, B*X)
         @test_broken vec_eq(A*X', B*X')
-        @test_broken vec_eq(X'*A, X'*B)
+        @test vec_eq(X'*A, X'*B)
     end
 
     @testset "Dot-ops" begin

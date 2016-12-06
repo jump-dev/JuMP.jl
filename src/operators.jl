@@ -369,6 +369,21 @@ function _multiply!{T<:JuMPTypes}(ret::Array{T}, lhs::Array, rhs::Array)
     ret
 end
 
+# this for transposed multiplication
+function _multiplyt!{T<:JuMPTypes}(ret::Array{T}, lhs::Array, rhs::Array)
+    m, n = size(lhs,2), size(lhs,1) # transpose
+    r, s = size(rhs,1), size(rhs,2)
+    for i ∈ 1:m, j ∈ 1:s
+        q = ret[i,j]
+        _sizehint_expr!(q, n)
+        for k ∈ 1:n
+            tmp = convert(T, lhs[k,i]*rhs[k,j]) # transpose
+            append!(q, tmp)
+        end
+    end
+    ret
+end
+
 function _multiply!{T<:Union{GenericAffExpr,GenericQuadExpr}}(ret::Array{T}, lhs::SparseMatrixCSC, rhs::Array)
     nzv = lhs.nzval
     rv  = lhs.rowval
@@ -380,6 +395,11 @@ function _multiply!{T<:Union{GenericAffExpr,GenericQuadExpr}}(ret::Array{T}, lhs
         end
     end
     ret
+end
+
+# this for transposed multiplication
+function _multiplyt!{T<:Union{GenericAffExpr,GenericQuadExpr}}(ret::Array{T}, lhs::SparseMatrixCSC, rhs::Array)
+    _multiply!(ret, transpose(lhs), rhs) # for sparse matrices this should be cheap
 end
 
 function _multiply!{T<:Union{GenericAffExpr,GenericQuadExpr}}(ret::Array{T}, lhs::Matrix, rhs::SparseMatrixCSC)
@@ -398,14 +418,44 @@ function _multiply!{T<:Union{GenericAffExpr,GenericQuadExpr}}(ret::Array{T}, lhs
     ret
 end
 
+# for transposed multiplication
+function _multiplyt!{T<:Union{GenericAffExpr,GenericQuadExpr}}(ret::Array{T}, lhs::Matrix, rhs::SparseMatrixCSC)
+    rowval = rhs.rowval
+    nzval  = rhs.nzval
+    for multivec_row ∈ 1:size(lhs,2) # transpose
+        for col ∈ 1:rhs.n
+            idxset = rhs.colptr[col]:(rhs.colptr[col+1]-1)
+            q = ret[multivec_row, col]
+            _sizehint_expr!(q, length(idxset))
+            for k ∈ idxset
+                append!(q, lhs[rowval[k], multivec_row] * nzval[k]) # transpose
+            end
+        end
+    end
+    ret
+end
+
+
 # TODO: implement sparse * sparse code as in base/sparse/linalg.jl (spmatmul)
 _multiply!{T<:JuMPTypes}(ret::AbstractArray{T}, lhs::SparseMatrixCSC, rhs::SparseMatrixCSC) = _multiply!(ret, lhs, full(rhs))
+_multiplyt!{T<:JuMPTypes}(ret::AbstractArray{T}, lhs::SparseMatrixCSC, rhs::SparseMatrixCSC) = _multiplyt!(ret, lhs, full(rhs))
 
 _multiply!(ret, lhs, rhs) = A_mul_B!(ret, lhs, ret)
 
-(*){T<:JuMPTypes}(             A::Union{Matrix{T},Vector{T},SparseMatrixCSC{T}}, x::Union{Matrix,   Vector,   SparseMatrixCSC})    = _matmul(A, x)
-(*){T<:JuMPTypes,R<:JuMPTypes}(A::Union{Matrix{T},Vector{T},SparseMatrixCSC{T}}, x::Union{Matrix{R},Vector{R},SparseMatrixCSC{R}}) = _matmul(A, x)
-(*){T<:JuMPTypes}(             A::Union{Matrix,   Vector,   SparseMatrixCSC},    x::Union{Matrix{T},Vector{T},SparseMatrixCSC{T}}) = _matmul(A, x)
+(*){T<:JuMPTypes}(             A::Union{Matrix{T},SparseMatrixCSC{T}}, x::Union{Matrix,   Vector,   SparseMatrixCSC})    = _matmul(A, x)
+(*){T<:JuMPTypes,R<:JuMPTypes}(A::Union{Matrix{T},SparseMatrixCSC{T}}, x::Union{Matrix{R},Vector{R},SparseMatrixCSC{R}}) = _matmul(A, x)
+(*){T<:JuMPTypes}(             A::Union{Matrix,   SparseMatrixCSC},    x::Union{Matrix{T},Vector{T},SparseMatrixCSC{T}}) = _matmul(A, x)
+
+import Base.At_mul_B
+import Base.Ac_mul_B
+# confusingly, these methods are called when one does A'*v or A.'*v respectively
+At_mul_B{T<:JuMPTypes}(A::Union{Matrix{T},SparseMatrixCSC{T}}, x::Union{Matrix, Vector, SparseMatrixCSC}) = _matmult(A, x)
+At_mul_B{T<:JuMPTypes,R<:JuMPTypes}(A::Union{Matrix{T},SparseMatrixCSC{T}}, x::Union{Matrix{R}, Vector{R}, SparseMatrixCSC{R}}) = _matmult(A, x)
+At_mul_B{T<:JuMPTypes}(A::Union{Matrix,SparseMatrixCSC}, x::Union{Matrix{T}, Vector{T}, SparseMatrixCSC{T}}) = _matmult(A, X)
+# these methods are the same as a bove since complex numbers are not implemented in JuMP
+Ac_mul_B{T<:JuMPTypes}(A::Union{Matrix{T},SparseMatrixCSC{T}}, x::Union{Matrix, Vector, SparseMatrixCSC}) = _matmult(A, x)
+Ac_mul_B{T<:JuMPTypes,R<:JuMPTypes}(A::Union{Matrix{T},SparseMatrixCSC{T}}, x::Union{Matrix{R}, Vector{R}, SparseMatrixCSC{R}}) = _matmult(A, x)
+Ac_mul_B{T<:JuMPTypes}(A::Union{Matrix,SparseMatrixCSC}, x::Union{Matrix{T}, Vector{T}, SparseMatrixCSC{T}}) = _matmult(A, X)
 
 function _matmul(A, x)
     m, n = size(A,1), size(A,2)
@@ -416,11 +466,23 @@ function _matmul(A, x)
     ret
 end
 
+function _matmult(A, x)
+    m, n = size(A,2), size(A,1) # transpose
+    r, s = size(x,1), size(x,2)
+    n == r || error("Incompatible sizes")
+    ret = _return_arrayt(A, x)
+    _multiplyt!(ret, A, x)
+    ret
+end
+
 _multiply_type(R,S) = typeof(one(R) * one(S))
 
 # Don't do size checks here in _return_array, defer that to (*)
 _return_array{R,S}(A::AbstractMatrix{R}, x::AbstractVector{S}) = _fillwithzeros(Array(_multiply_type(R,S), size(A,1)))
 _return_array{R,S}(A::AbstractMatrix{R}, x::AbstractMatrix{S}) = _fillwithzeros(Array(_multiply_type(R,S), size(A,1), size(x,2)))
+# these are for transpose return matrices
+_return_arrayt{R,S}(A::AbstractMatrix{R}, x::AbstractVector{S}) = _fillwithzeros(Array(_multiply_type(R,S), size(A,2)))
+_return_arrayt{R,S}(A::AbstractMatrix{R}, x::AbstractMatrix{S}) = _fillwithzeros(Array(_multiply_type(R,S), size(A,2), size(x, 2)))
 
 # helper so we don't fill the buffer array with the same object
 function _fillwithzeros{T}(arr::Array{T})
