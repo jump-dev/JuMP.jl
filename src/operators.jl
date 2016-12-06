@@ -448,11 +448,11 @@ _multiply!(ret, lhs, rhs) = A_mul_B!(ret, lhs, ret)
 
 import Base.At_mul_B
 import Base.Ac_mul_B
-# confusingly, these methods are called when one does A'*v or A.'*v respectively
+# these methods are called when one does A.'*v or A'*v respectively
 At_mul_B{T<:JuMPTypes}(A::Union{Matrix{T},SparseMatrixCSC{T}}, x::Union{Matrix, Vector, SparseMatrixCSC}) = _matmult(A, x)
 At_mul_B{T<:JuMPTypes,R<:JuMPTypes}(A::Union{Matrix{T},SparseMatrixCSC{T}}, x::Union{Matrix{R}, Vector{R}, SparseMatrixCSC{R}}) = _matmult(A, x)
 At_mul_B{T<:JuMPTypes}(A::Union{Matrix,SparseMatrixCSC}, x::Union{Matrix{T}, Vector{T}, SparseMatrixCSC{T}}) = _matmult(A, X)
-# these methods are the same as a bove since complex numbers are not implemented in JuMP
+# these methods are the same as above since complex numbers are not implemented in JuMP
 Ac_mul_B{T<:JuMPTypes}(A::Union{Matrix{T},SparseMatrixCSC{T}}, x::Union{Matrix, Vector, SparseMatrixCSC}) = _matmult(A, x)
 Ac_mul_B{T<:JuMPTypes,R<:JuMPTypes}(A::Union{Matrix{T},SparseMatrixCSC{T}}, x::Union{Matrix{R}, Vector{R}, SparseMatrixCSC{R}}) = _matmult(A, x)
 Ac_mul_B{T<:JuMPTypes}(A::Union{Matrix,SparseMatrixCSC}, x::Union{Matrix{T}, Vector{T}, SparseMatrixCSC{T}}) = _matmult(A, X)

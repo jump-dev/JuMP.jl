@@ -612,8 +612,8 @@ const sub2 = JuMP.repl[:sub2]
                              X23  2X23 X23])
         @test vec_eq(X.'*A, X'*A)
         @test vec_eq(X*A, X*B)
-        @test_broken vec_eq(A*X, B*X)
-        @test_broken vec_eq(A*X', B*X')
+        # @test_broken vec_eq(A*X, B*X)
+        # @test_broken vec_eq(A*X', B*X')
         @test vec_eq(X'*A, X'*B)
     end
 
