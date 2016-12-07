@@ -525,9 +525,18 @@ const sub2 = JuMP.repl[:sub2]
              1 2 1
              0 1 2]
         B = sparse(A)
-        X = spzeros(JuMP.Variable, 3, 3)
-        X[1, 1] = @variable(m, X11)
-        X[2, 3] = @variable(m, X23)
+        @variable(m, X11)
+        @variable(m, X23)
+        X = sparse([1, 2], [1, 3], [X11, X23], 3, 3) # for testing Variable
+        @variable(m, Xd[1:3, 1:3])
+        Y = sparse([1, 2], [1, 3], [2X11, 4X23], 3, 3) # for testing GenericAffExpr
+        Yd = [2X11 0    0
+              0    0 4X23
+              0    0    0]        
+        Z = sparse([1, 2], [1, 3], [X11^2, 2X23^2], 3, 3) # for testing GenericQuadExpr
+        Zd = [X11^2 0      0
+              0     0 2X23^2
+              0     0      0]
         v = [4, 5, 6]
         @test vec_eq(A*x, [2x[1] +  x[2]
                             2x[2] + x[1] + x[3]
@@ -610,11 +619,22 @@ const sub2 = JuMP.repl[:sub2]
         @test vec_eq(X.'*A, [2X11 X11  0 
                              0    0    0
                              X23  2X23 X23])
+        @test vec_eq(A'*X, [2X11  0 X23
+                            X11   0 2X23
+                            0     0 X23])
         @test vec_eq(X.'*A, X'*A)
+        @test vec_eq(A.'*X, A'*X)
         @test vec_eq(X*A, X*B)
+        @test vec_eq(Y'*A, Y.'*A)
+        @test vec_eq(A*Y', A*Y.')
+        @test vec_eq(Z'*A, Z.'*A)
+        @test vec_eq(Xd'*Y, Xd.'*Y)
+        @test vec_eq(Y'*Xd, Y.'*Xd)
+        @test vec_eq(Xd'*Xd, Xd.'*Xd)
         # @test_broken vec_eq(A*X, B*X)
         # @test_broken vec_eq(A*X', B*X')
         @test vec_eq(X'*A, X'*B)
+        # @test_broken(X'*X, X.'*X) # sparse quadratic known to be broken
     end
 
     @testset "Dot-ops" begin
