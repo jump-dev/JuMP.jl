@@ -634,7 +634,7 @@ const sub2 = JuMP.repl[:sub2]
         # @test_broken vec_eq(A*X, B*X)
         # @test_broken vec_eq(A*X', B*X')
         @test vec_eq(X'*A, X'*B)
-        # @test_broken(X'*X, X.'*X) # sparse quadratic known to be broken
+        # @test_broken(X'*X, X.'*X) # sparse quadratic known to be broken, see #912
     end
 
     @testset "Dot-ops" begin
