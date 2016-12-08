@@ -1,6 +1,23 @@
 JuMP release notes
 ==================
 
+Version 0.15.0 (Unreleased)
+---------------------------
+
+  * Julia 0.5.0 is the minimum required version for this release.
+  * Document support for BARON solver
+  * Enable info callbacks in more states than before, e.g. for recording solutions.
+    New ``when`` argument to ``addinfocallback`` [#814](https://github.com/JuliaOpt/JuMP.jl/pull/814) (Thanks @yeesian)
+  * Improved support for anonymous variables
+  * Improvements in iterating over JuMP containers [#836](https://github.com/JuliaOpt/JuMP.jl/pull/836) (Thanks @IssamT)
+  * Support for writing variable names in .lp file output (Thanks @leethargo)
+  * Support for querying duals to SDP problems (Thanks @blegat)
+  * The comprehension syntax with curly braces ``sum{}``, ``prod{}``, and ``norm2{}`` has been deprecated
+    in favor of Julia's native comprehension syntax ``sum()``, ``prod()`` and ``norm()`` as previously announced.
+    (For early adopters of the new syntax, ``norm2()`` was renamed to ``norm()`` without deprecation.)
+  * Unit tests rewritten to use Base.Test instead of FactCheck
+  * Minor bug fixes
+
 Version 0.14.1 (September 12, 2016)
 -----------------------------------
 
