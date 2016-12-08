@@ -358,10 +358,10 @@ Base.diagm(x::Vector{Variable}) = diagm(convert(Vector{AffExpr}, x))
 function _multiply!{T<:JuMPTypes}(ret::Array{T}, lhs::Array, rhs::Array)
     m, n = size(lhs,1), size(lhs,2)
     r, s = size(rhs,1), size(rhs,2)
-    for i in 1:m, j in 1:s
+    for i ∈ 1:m, j ∈ 1:s
         q = ret[i,j]
         _sizehint_expr!(q, n)
-        for k in 1:n
+        for k ∈ 1:n
             tmp = convert(T, lhs[i,k]*rhs[k,j])
             append!(q, tmp)
         end
@@ -385,11 +385,11 @@ function _multiplyt!{T<:JuMPTypes}(ret::Array{T}, lhs::Array, rhs::Array)
 end
 
 function _multiply!{T<:Union{GenericAffExpr,GenericQuadExpr}}(ret::Array{T}, lhs::SparseMatrixCSC, rhs::Array)
-    nzv = lhs.nzval
-    rv  = lhs.rowval
-    for col in 1:lhs.n
-        for k in 1:size(ret, 2)
-            for j in lhs.colptr[col]:(lhs.colptr[col+1]-1)
+    nzv = nonzeros(lhs)
+    rv  = rowvals(lhs)
+    for col ∈ 1:lhs.n
+        for k ∈ 1:size(ret, 2)
+            for j ∈ lhs.colptr[col]:(lhs.colptr[col+1]-1)
                 append!(ret[rv[j], k], nzv[j] * rhs[col,k])
             end
         end
@@ -403,14 +403,14 @@ function _multiplyt!{T<:Union{GenericAffExpr,GenericQuadExpr}}(ret::Array{T}, lh
 end
 
 function _multiply!{T<:Union{GenericAffExpr,GenericQuadExpr}}(ret::Array{T}, lhs::Matrix, rhs::SparseMatrixCSC)
-    rowval = rhs.rowval
-    nzval  = rhs.nzval
+    rowval = rowvals(rhs)
+    nzval  = nonzeros(rhs)
     for multivec_row in 1:size(lhs,1)
-        for col in 1:rhs.n
+        for col ∈ 1:rhs.n
             idxset = rhs.colptr[col]:(rhs.colptr[col+1]-1)
             q = ret[multivec_row, col]
             _sizehint_expr!(q, length(idxset))
-            for k in idxset
+            for k ∈ idxset
                 append!(q, lhs[multivec_row, rowval[k]] * nzval[k])
             end
         end
@@ -420,8 +420,8 @@ end
 
 # this computes lhs.'*rhs and places it in ret
 function _multiplyt!{T<:Union{GenericAffExpr,GenericQuadExpr}}(ret::Array{T}, lhs::Matrix, rhs::SparseMatrixCSC)
-    rowval = rhs.rowval
-    nzval  = rhs.nzval
+    rowval = rowvals(rhs)
+    nzval  = nonzeros(rhs)
     for multivec_row ∈ 1:size(lhs,2) # transpose
         for col ∈ 1:rhs.n
             idxset = rhs.colptr[col]:(rhs.colptr[col+1]-1)
