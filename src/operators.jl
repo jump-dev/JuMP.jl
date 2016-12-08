@@ -399,7 +399,7 @@ end
 
 # this computes lhs.'*rhs and places it in ret
 function _multiplyt!{T<:Union{GenericAffExpr,GenericQuadExpr}}(ret::Array{T}, lhs::SparseMatrixCSC, rhs::Array)
-    _multiply!(ret, transpose(lhs), rhs) # for sparse matrices this should be cheap
+    _multiply!(ret, transpose(lhs), rhs) # TODO fully implement
 end
 
 function _multiply!{T<:Union{GenericAffExpr,GenericQuadExpr}}(ret::Array{T}, lhs::Matrix, rhs::SparseMatrixCSC)
