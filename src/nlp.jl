@@ -1288,8 +1288,9 @@ function MathProgBase.eval_grad_f(d::UserFunctionEvaluator,grad,x)
     nothing
 end
 
-function UserAutoDiffEvaluator(dimension::Integer, f::Function)
-    ∇f = (out,y) -> ForwardDiff.gradient!(out, x -> f(x...), y)
+function UserAutoDiffEvaluator{T}(dimension::Integer, f::Function, ::Type{T} = Float64)
+    cfg = ForwardDiff.GradientConfig(zeros(T, dimension))
+    ∇f = (out, y) -> ForwardDiff.gradient!(out, x -> f(x...), y, cfg)
     return UserFunctionEvaluator(f, ∇f, dimension)
 end
 
