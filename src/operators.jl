@@ -369,7 +369,7 @@ function _multiply!{T<:JuMPTypes}(ret::Array{T}, lhs::Array, rhs::Array)
     ret
 end
 
-# this for transposed multiplication
+# this computes lhs.'*rhs and places it in ret
 function _multiplyt!{T<:JuMPTypes}(ret::Array{T}, lhs::Array, rhs::Array)
     m, n = size(lhs,2), size(lhs,1) # transpose
     r, s = size(rhs,1), size(rhs,2)
@@ -397,7 +397,7 @@ function _multiply!{T<:Union{GenericAffExpr,GenericQuadExpr}}(ret::Array{T}, lhs
     ret
 end
 
-# this for transposed multiplication
+# this computes lhs.'*rhs and places it in ret
 function _multiplyt!{T<:Union{GenericAffExpr,GenericQuadExpr}}(ret::Array{T}, lhs::SparseMatrixCSC, rhs::Array)
     _multiply!(ret, transpose(lhs), rhs) # for sparse matrices this should be cheap
 end
@@ -418,7 +418,7 @@ function _multiply!{T<:Union{GenericAffExpr,GenericQuadExpr}}(ret::Array{T}, lhs
     ret
 end
 
-# for transposed multiplication
+# this computes lhs.'*rhs and places it in ret
 function _multiplyt!{T<:Union{GenericAffExpr,GenericQuadExpr}}(ret::Array{T}, lhs::Matrix, rhs::SparseMatrixCSC)
     rowval = rhs.rowval
     nzval  = rhs.nzval
