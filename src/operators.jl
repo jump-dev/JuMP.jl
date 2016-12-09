@@ -389,7 +389,7 @@ function _multiply!{T<:Union{GenericAffExpr,GenericQuadExpr}}(ret::Array{T}, lhs
     rv  = rowvals(lhs)
     for col ∈ 1:lhs.n
         for k ∈ 1:size(ret, 2)
-            for j ∈ lhs.colptr[col]:(lhs.colptr[col+1]-1)
+            for j ∈ nzrange(lhs, col)
                 append!(ret[rv[j], k], nzv[j] * rhs[col,k])
             end
         end
@@ -407,7 +407,7 @@ function _multiply!{T<:Union{GenericAffExpr,GenericQuadExpr}}(ret::Array{T}, lhs
     nzval  = nonzeros(rhs)
     for multivec_row in 1:size(lhs,1)
         for col ∈ 1:rhs.n
-            idxset = rhs.colptr[col]:(rhs.colptr[col+1]-1)
+            idxset = nzrange(rhs, col)
             q = ret[multivec_row, col]
             _sizehint_expr!(q, length(idxset))
             for k ∈ idxset
@@ -424,7 +424,7 @@ function _multiplyt!{T<:Union{GenericAffExpr,GenericQuadExpr}}(ret::Array{T}, lh
     nzval  = nonzeros(rhs)
     for multivec_row ∈ 1:size(lhs,2) # transpose
         for col ∈ 1:rhs.n
-            idxset = rhs.colptr[col]:(rhs.colptr[col+1]-1)
+            idxset = nzrange(rhs, col)
             q = ret[multivec_row, col]
             _sizehint_expr!(q, length(idxset))
             for k ∈ idxset
