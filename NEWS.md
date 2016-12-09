@@ -8,7 +8,9 @@ Version 0.15.0 (Unreleased)
   * Document support for BARON solver
   * Enable info callbacks in more states than before, e.g. for recording solutions.
     New ``when`` argument to ``addinfocallback`` ([#814](https://github.com/JuliaOpt/JuMP.jl/pull/814), thanks @yeesian)
-  * Improved support for anonymous variables
+  * Improved support for anonymous variables. This includes new warnings for potentially confusing use of the traditional non-anonymous syntax:
+    * When multiple variables in a model are given the same name
+    * When non-symbols are used as names, e.g., ``@variable(m, x[1][1:N])``
   * Improvements in iterating over JuMP containers ([#836](https://github.com/JuliaOpt/JuMP.jl/pull/836), thanks @IssamT)
   * Support for writing variable names in .lp file output (Thanks @leethargo)
   * Support for querying duals to SDP problems (Thanks @blegat)
@@ -16,6 +18,7 @@ Version 0.15.0 (Unreleased)
     in favor of Julia's native comprehension syntax ``sum()``, ``prod()`` and ``norm()`` as previously announced.
     (For early adopters of the new syntax, ``norm2()`` was renamed to ``norm()`` without deprecation.)
   * Unit tests rewritten to use Base.Test instead of FactCheck
+  * Improved support for operations with matrices of JuMP types (Thanks @ExpandingMan)
   * Minor bug fixes
 
 Version 0.14.1 (September 12, 2016)
