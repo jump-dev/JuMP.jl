@@ -716,4 +716,13 @@ end
 
         end
     end
+
+    @testset "Anonymous nonlinear expression" begin
+        m = Model()
+        @variable(m, -1 <= x <= 1)
+        obj = @NLexpression(m, x^4 + 1)
+        @NLobjective(m, Min, obj)
+        @test solve(m) == :Optimal
+        @test isapprox(getvalue(x), 0, atol=1e-4)
+    end
 end
