@@ -1149,37 +1149,17 @@ macro NLconstraint(m, x, extra...)
 end
 
 macro NLexpression(args...)
-    if length(args) <= 2
-        s = IOBuffer()
-        print(s,args[1])
-        if length(args) == 2
-            print(s,",")
-            print(s,args[2])
-        end
-        msg = """
-        in @NLexpression($(takebuf_string(s))): three arguments are required.
-        Note that the syntax of @NLexpression has recently changed:
-        The first argument should be the model to which the expression is attached.
-        The second is the name of the expression (or collection of expressions).
-        The third is the expression itself.
-        Example:
-        @NLexpression(m, my_expr, x^2/y)
-        @NLexpression(m, my_expr_collection[i=1:2], sin(z[i])^2)
-        Support for the old syntax (with the model omitted) will be removed in an upcoming release.
-        """
-        Base.warn(msg)
-        m = :(__last_model[1])
-        if length(args) == 2
-            c = args[1]
-            x = args[2]
-        else
-            c = gensym()
-            x = args[1]
-        end
-    else
-        @assert length(args) == 3
+    if length(args) <= 1
+        error("in @NLexpression: To few arguments ($(length(args))); must pass the model and nonlinear expression as arguments.")
+    elseif length(args) == 2
+        m, x = args
+        m = esc(m)
+        c = gensym()
+    elseif length(args) == 3
         m, c, x = args
         m = esc(m)
+    else
+        error("in @NLexpression: To many arguments ($(length(args))).")
     end
 
     anonvar = isexpr(c, :vect) || isexpr(c, :vcat)
