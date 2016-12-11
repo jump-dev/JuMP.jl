@@ -85,7 +85,7 @@ For more complicated variable bounds, it may be clearer to specify them using th
 The constructor ``Variable(m::Model,idx::Int)`` may be used to create a variable object corresponding to an *existing* variable in the model (the constructor does not add a new variable to the model). The variable indices correspond to those of the internal MathProgBase model. The inverse of this operation is ``linearindex(x::Variable)``, which returns the flattened out (linear) index of a variable as JuMP provides it to a solver. We guarantee that ``Variable(m,linearindex(x))`` returns ``x`` itself. These methods are only useful if you intend to interact with solver properties which are not directly exposed through JuMP.
 
 .. note::
-    ``@variable`` is equivalent to a simple assignment ``x = ...`` in Julia and therefore redefines variables without warning. The following code may lead to unexpected results::
+    ``@variable`` is equivalent to a simple assignment ``x = ...`` in Julia and therefore redefines variables. The following code will generate a warning and may lead to unexpected results::
 
     @variable(m, x[1:10,1:10])
     @variable(m, x[1:5])
