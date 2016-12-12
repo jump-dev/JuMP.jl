@@ -463,8 +463,14 @@ macro constraint(args...)
     end
     return assert_validmodel(m, quote
         $(getloopedcode(variable, code, condition, idxvars, idxsets, idxpairs, :ConstraintRef))
-        !$anonvar && registercon($m, $quotvarname, $variable)
-        $(anonvar ? variable : :($escvarname = $variable))
+        $(if anonvar
+            variable
+        else
+            quote
+                registercon($m, $quotvarname, $variable)
+                $escvarname = $variable
+            end
+        end)
     end)
 end
 
@@ -1143,8 +1149,14 @@ macro NLconstraint(m, x, extra...)
         initNLP($m)
         $m.internalModelLoaded = false
         $looped
-        !$anonvar && registercon($m, $quotvarname, $variable)
-        $(anonvar ? variable : :($escvarname = $variable))
+        $(if anonvar
+            variable
+        else
+            quote
+                registercon($m, $quotvarname, $variable)
+                $escvarname = $variable
+            end
+        end)
     end)
 end
 
