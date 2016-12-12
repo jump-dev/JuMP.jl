@@ -444,7 +444,7 @@ end
     Min (nonlinear expression)
     Subject to
      3 nonlinear constraints
-     x[i] free $fa i $inset {1,2,$dots,4,5}
+     x[i] free $fa i $inset {1,2,3,4,5}
     """, repl=:print)
         io_test(REPLMode, mod_3, """
     Minimization problem with:
@@ -455,7 +455,7 @@ end
         io_test(IJuliaMode, mod_3, """
     \\begin{alignat*}{1}\\min\\quad & (nonlinear expression)\\\\
     \\text{Subject to} \\quad & 3 nonlinear constraints\\\\
-     & x_{i} free \\quad\\forall i \\in \\{1,2,\\dots,4,5\\}\\\\
+     & x_{i} free \\quad\\forall i \\in \\{1,2,3,4,5\\}\\\\
     \\end{alignat*}
     """, repl=:print)
     end
