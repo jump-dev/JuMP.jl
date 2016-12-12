@@ -90,7 +90,7 @@ end
         io_test(REPLMode, rng_unit1, "rng_unit1[i] free $fa i $inset {1,2,$dots,9,10}")
         io_test(REPLMode, rng_unit2, "rng_unit2[i] free $fa i $inset {-2,-1,$dots,2,3}")
         io_test(REPLMode, rng_unit3, "rng_unit3[i] free $fa i $inset {1,2,$dots,9,10}")
-        io_test(REPLMode, rng_step1, "rng_step1[i] free $fa i $inset {1,3,$dots,7,9}")
+        io_test(REPLMode, rng_step1, "rng_step1[i] free $fa i $inset {1,3,5,7,9}")
         io_test(REPLMode, rng_step2, "rng_step2[i] free $fa i $inset {-2,3,8}")
         io_test(REPLMode, rng_step3, "rng_step3[i] free $fa i $inset {1}")
         io_test(REPLMode, rng_step4, "rng_step4[i] free $fa i $inset {0,2}")
@@ -100,13 +100,13 @@ end
         io_test(REPLMode, rng2_1, "rng2_1[i,j] free $fa i $inset {1,2,$dots,9,10}, j $inset {a,b,c}")
         io_test(REPLMode, tri_1, "tri_1[i,j] free $fa i $inset {1,2,3}, j $inset {$dots}")
         io_test(REPLMode, tri_2, "tri_2[i,j] free $fa i $inset {1,2,3}, j $inset {$dots}")
-        io_test(REPLMode, tri_3, "tri_3[(i,j),k] free $fa (i,j) $inset {(1,3),(2,4),$dots,(4,6),(5,7)}, k $inset {$dots}")
+        io_test(REPLMode, tri_3, "tri_3[(i,j),k] free $fa (i,j) $inset {(1,3),(2,4),(3,5),(4,6),(5,7)}, k $inset {$dots}")
         io_test(REPLMode, iter_1, "iter_1[i] free $fa i $inset {a}")
 
         io_test(IJuliaMode, rng_unit1, "rng_unit1_{i} free \\quad\\forall i \\in \\{1,2,\\dots,9,10\\}")
         io_test(IJuliaMode, rng_unit2, "rng_unit2_{i} free \\quad\\forall i \\in \\{-2,-1,\\dots,2,3\\}")
         io_test(IJuliaMode, rng_unit3, "rng_unit3_{i} free \\quad\\forall i \\in \\{1,2,\\dots,9,10\\}")
-        io_test(IJuliaMode, rng_step1, "rng_step1_{i} free \\quad\\forall i \\in \\{1,3,\\dots,7,9\\}")
+        io_test(IJuliaMode, rng_step1, "rng_step1_{i} free \\quad\\forall i \\in \\{1,3,5,7,9\\}")
         io_test(IJuliaMode, rng_step2, "rng_step2_{i} free \\quad\\forall i \\in \\{-2,3,8\\}")
         io_test(IJuliaMode, rng_step3, "rng_step3_{i} free \\quad\\forall i \\in \\{1\\}")
         io_test(IJuliaMode, rng_step4, "rng_step4_{i} free \\quad\\forall i \\in \\{0,2\\}")
@@ -116,7 +116,7 @@ end
         io_test(IJuliaMode, rng2_1, "rng2_1_{i,j} free \\quad\\forall i \\in \\{1,2,\\dots,9,10\\}, j \\in \\{a,b,c\\}")
         io_test(IJuliaMode, tri_1, "tri_1_{i,j} free \\quad\\forall i \\in \\{1,2,3\\}, j \\in \\{\\dots\\}")
         io_test(IJuliaMode, tri_2, "tri_2_{i,j} free \\quad\\forall i \\in \\{1,2,3\\}, j \\in \\{\\dots\\}")
-        io_test(IJuliaMode, tri_3, "tri_3_{(i,j),k} free \\quad\\forall (i,j) \\in \\{(1,3),(2,4),\\dots,(4,6),(5,7)\\}, k \\in \\{\\dots\\}")
+        io_test(IJuliaMode, tri_3, "tri_3_{(i,j),k} free \\quad\\forall (i,j) \\in \\{(1,3),(2,4),(3,5),(4,6),(5,7)\\}, k \\in \\{\\dots\\}")
         io_test(IJuliaMode, iter_1, "iter_1_{i} free \\quad\\forall i \\in \\{a\\}")
         end
 
