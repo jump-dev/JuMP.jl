@@ -512,6 +512,7 @@ function cont_str_set(idxset::Union{Range,Array}, dots)  # 2:2:20 -> {2,4..18,20
     length(idxset) == 2 && return string(idxset[1],",",idxset[2])
     length(idxset) == 3 && return string(idxset[1],",",idxset[2],",",idxset[3])
     length(idxset) == 4 && return string(idxset[1],",",idxset[2],",",idxset[3],",",idxset[4])
+    length(idxset) == 5 && return string(idxset[1],",",idxset[2],",",idxset[3],",",idxset[4],",",idxset[5])
     return string(idxset[1],",",idxset[2],",",dots,",",idxset[end-1],",",idxset[end])
 end
 cont_str_set(idxset, dots) = return dots # Fallback
