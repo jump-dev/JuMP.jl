@@ -21,6 +21,11 @@ Version 0.15.0 (Unreleased)
   * Improved support for operations with matrices of JuMP types (Thanks @ExpandingMan)
   * Minor bug fixes
 
+Version 0.14.2 (December 12, 2016)
+----------------------------------
+
+  * Allow singeton anonymous variables (includes bugfix)
+
 Version 0.14.1 (September 12, 2016)
 -----------------------------------
 
