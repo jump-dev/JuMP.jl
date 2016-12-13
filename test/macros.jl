@@ -688,12 +688,12 @@ const sub2 = JuMP.repl[:sub2]
         u = [2, 3]
         v = [4, 5]
         expr_base = zero(JuMP.AffExpr)
-        @constraint(m, x*u .≤ x*v)
-        @test string(m.linconstr[1]) == "-2 x[1,1] - 2 x[1,2] ≤ 0"
-        @test string(m.linconstr[2]) == "-2 x[2,1] - 2 x[2,2] ≤ 0"
-        @constraint(m, x*u + y .≤ v)
-        @test string(m.linconstr[3]) == "2 x[1,1] + 3 x[1,2] + y[1] ≤ 4"
-        @test string(m.linconstr[4]) == "2 x[2,1] + 3 x[2,2] + y[2] ≤ 5"
+        @constraint(m, x*u .<= x*v) 
+        @test string(m.linconstr[1]) == "-2 x[1,1] - 2 x[1,2] $leq 0"
+        @test string(m.linconstr[2]) == "-2 x[2,1] - 2 x[2,2] $leq 0"
+        @constraint(m, x*u + y .<= v)
+        @test string(m.linconstr[3]) == "2 x[1,1] + 3 x[1,2] + y[1] $leq 4"
+        @test string(m.linconstr[4]) == "2 x[2,1] + 3 x[2,2] + y[2] $leq 5"
         expr = JuMP.addtoexpr(expr_base, x, u)
         expr2 = JuMP.addtoexpr(expr, y, 1.0)
         @test expr2 == [2.0x[1,1] + 3.0x[1,2] + y[1];
