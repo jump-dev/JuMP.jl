@@ -386,6 +386,9 @@ const sub2 = JuMP.repl[:sub2]
         @expression(model, y[i=1:2], sum(x[i,1] for _ in 1 if i == 1))
         @test string(y[1]) == "x[1,1]"
         @test string(y[2]) == "0"
+
+        t = @expression(model, sum(x[i,j] for i in 1:3 for j in 1:3 if isodd(i+j)))
+        @test string(t) == "x[1,2] + x[2,1] + x[2,3] + x[3,2]"
     end
 
     @testset "Conditions in constraint indexing" begin
