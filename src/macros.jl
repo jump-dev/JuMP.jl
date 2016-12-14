@@ -721,8 +721,12 @@ macro expression(args...)
         m = esc(args[1])
         c = args[2]
         x = args[3]
+    elseif length(args) == 2
+        m = esc(args[1])
+        c = gensym()
+        x = args[2]
     else
-        error("@expression: needs three arguments.")
+        error("@expression: needs at least two arguments.")
     end
 
     anonvar = isexpr(c, :vect) || isexpr(c, :vcat)
