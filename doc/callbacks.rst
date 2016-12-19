@@ -423,8 +423,8 @@ This code can also be found in ``/JuMP/examples/simplelazy2.jl``.
 Exiting a callback early
 ^^^^^^^^^^^^^^^^^^^^^^^^
 
-If you need to exit the optimization process earlier than a solver otherwise would, it is possible to throw a ``CallbackAbort`` exception in callback code::
+If you need to exit the optimization process earlier than a solver otherwise would, it is possible to return ``JuMP.StopTheSolver`` from the callback code::
 
-    throw(CallbackAbort())
+    return JuMP.StopTheSolver
 
 This will trigger the solver to exit immediately and return a ``:UserLimit`` status.
