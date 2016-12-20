@@ -714,6 +714,13 @@ end
             @test solve(m) == :Optimal
             @test isapprox(getvalue(x), [0.5,2.0], atol=1e-4)
 
+            # Test #927
+            m = Model()
+            @variable(m, x)
+            @NLobjective(m, Min, myf(x,x))
+            @test solve(m) == :Optimal
+            @test isapprox(getvalue(x), 1.5, atol=1e-4)
+
         end
     end
 
