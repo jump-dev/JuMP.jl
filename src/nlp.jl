@@ -131,8 +131,8 @@ type NLPEvaluator <: MathProgBase.AbstractNLPEvaluator
         d = new(m)
         numVar = m.numCols
         d.A = prepConstrMatrix(m)
-        d.jac_storage = Array(Float64,numVar)
-        d.user_output_buffer = Array(Float64,numVar)
+        d.jac_storage = Array(Float64,max(numVar,global_largest_input_dimension[1]))
+        d.user_output_buffer = Array(Float64,global_largest_input_dimension[1])
         # check if we have any user-defined operators, in which case we need to
         # disable hessians.
         if isa(m.nlpdata,NLPData)
@@ -1259,8 +1259,8 @@ function getvalue(x::NonlinearExpression)
 
     forward_storage = Array(Float64, max_len)
     partials_storage = Array(Float64, max_len)
-    user_input_buffer = zeros(m.numCols)
-    user_output_buffer = zeros(m.numCols)
+    user_input_buffer = zeros(global_largest_input_dimension[1])
+    user_output_buffer = zeros(global_largest_input_dimension[1])
 
     for k in subexpression_order # compute value of dependent subexpressions
         ex = nldata.nlexpr[k]
@@ -1294,6 +1294,8 @@ function UserAutoDiffEvaluator{T}(dimension::Integer, f::Function, ::Type{T} = F
     return UserFunctionEvaluator(f, ∇f, dimension)
 end
 
+const global_largest_input_dimension = [0]
+
 function register(s::Symbol, dimension::Integer, f::Function; autodiff::Bool=false)
     autodiff == true || error("If only the function is provided, must set autodiff=true")
 
@@ -1302,6 +1304,7 @@ function register(s::Symbol, dimension::Integer, f::Function; autodiff::Bool=fal
         fprimeprime = x -> ForwardDiff.derivative(fprime, x)
         ReverseDiffSparse.register_univariate_operator(s, f, fprime, fprimeprime)
     else
+        global_largest_input_dimension[1] = max(global_largest_input_dimension[1],dimension)
         ReverseDiffSparse.register_multivariate_operator(s, UserAutoDiffEvaluator(dimension, f))
     end
 
@@ -1314,6 +1317,7 @@ function register(s::Symbol, dimension::Integer, f::Function, ∇f::Function; au
         ReverseDiffSparse.register_univariate_operator(s, f, ∇f, fprimeprime)
     else
         autodiff == false || Base.warn_once("autodiff=true ignored since gradient is already provided.")
+        global_largest_input_dimension[1] = max(global_largest_input_dimension[1],dimension)
         d = UserFunctionEvaluator(f, (g,x)->∇f(g,x...), dimension)
         ReverseDiffSparse.register_multivariate_operator(s, d)
     end
