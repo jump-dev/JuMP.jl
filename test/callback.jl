@@ -277,7 +277,10 @@ using Base.Test
         end
     end
 
-    @testset "Callback exit on CallbackAbort with $solver" for solver in lazy_solvers
+    # throw CallbackAbort is somewhat broken on OS X due to upstream Julia issue
+    # https://github.com/JuliaOpt/Gurobi.jl/issues/47
+    # https://github.com/JuliaLang/julia/issues/14284
+    is_apple() || @testset "Callback exit on throw CallbackAbort (deprecated) with $solver" for solver in lazy_solvers
         mod = Model(solver=solver)
         @variable(mod, 0 <= x <= 2, Int)
         @variable(mod, 0 <= y <= 2, Int)
@@ -285,6 +288,18 @@ using Base.Test
         @constraint(mod, y + x <= 3.5)
 
         mycallback = _ -> throw(CallbackAbort())
+        addlazycallback(mod, mycallback)
+        @test solve(mod, suppress_warnings=true) == :UserLimit
+    end
+
+    @testset "Callback exit on return StopTheSolver with $solver" for solver in lazy_solvers
+        mod = Model(solver=solver)
+        @variable(mod, 0 <= x <= 2, Int)
+        @variable(mod, 0 <= y <= 2, Int)
+        @objective(mod, Max, x + 2y)
+        @constraint(mod, y + x <= 3.5)
+
+        mycallback = _ -> JuMP.StopTheSolver
         addlazycallback(mod, mycallback)
         @test solve(mod, suppress_warnings=true) == :UserLimit
     end
