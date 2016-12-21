@@ -441,13 +441,15 @@ end
 # internal method that doesn't print a warning if the value is NaN
 _getDual(v::Variable) = v.m.redCosts[v.col]
 
-getdualwarn(::Variable) = error("Variable bound duals (reduced costs) not available. Check that the model was properly solved and no integer variables are present.")
+getdualwarn(::Variable) = warn("Variable bound duals (reduced costs) not available. Check that the model was properly solved and no integer variables are present.")
 
 function getdual(v::Variable)
     if length(v.m.redCosts) < MathProgBase.numvar(v.m)
         getdualwarn(v)
+        NaN
+    else
+        _getDual(v)
     end
-    return _getDual(v)
 end
 
 const var_cats = [:Cont, :Int, :Bin, :SemiCont, :SemiInt]
@@ -550,13 +552,15 @@ linearindex(x::ConstraintRef) = x.idx
 # internal method that doesn't print a warning if the value is NaN
 _getDual(c::LinConstrRef) = c.m.linconstrDuals[c.idx]
 
-getdualwarn(::LinConstrRef) = error("Dual solution not available. Check that the model was properly solved and no integer variables are present.")
+getdualwarn{T<:Union{ConstraintRef, Int}}(::T) = warn("Dual solution not available. Check that the model was properly solved and no integer variables are present.")
 
 function getdual(c::LinConstrRef)
     if length(c.m.linconstrDuals) != MathProgBase.numlinconstr(c.m)
         getdualwarn(c)
+        NaN
+    else
+        _getDual(c)
     end
-    return _getDual(c)
 end
 
 # Returns the number of non-infinity and nonzero bounds on variables
@@ -586,24 +590,18 @@ function getNumBndRows(m::Model)
 end
 
 # Returns the number of second-order cone constraints
-function getNumSOCRows(m::Model)
-    numSOCRows = 0
-    for con in m.socconstr
-        numSOCRows += length(con.normexpr.norm.terms) + 1
-    end
-    return numSOCRows
-end
+getNumRows(c::SOCConstraint) = length(c.normexpr.norm.terms) + 1
+getNumSOCRows(m::Model) = sum(getNumRows.(m.socconstr))
 
 # Returns the number of rows used by SDP constraints in the MPB conic representation
 # (excluding symmetry constraints)
-function getNumSDPRows(m::Model)
-    numSDPRows = 0
-    for con in m.sdpconstr
-        n = size(con.terms, 1)
-        numSDPRows += convert(Int, n*(n+1)/2)
-    end
-    return numSDPRows
+#   Julia seems to not be able to infer the return type (probably because c.terms is Any)
+#   so getNumSDPRows tries to call zero(Any)... Using ::Int solves this issue
+function getNumRows(c::SDConstraint)::Int
+    n = size(c.terms, 1)
+    (n * (n+1)) ÷ 2
 end
+getNumSDPRows(m::Model) = sum(getNumRows.(m.sdpconstr))
 
 # Returns the number of symmetry-enforcing constraints for SDP constraints
 function getNumSymRows(m::Model)
@@ -613,26 +611,36 @@ end
 # Returns the dual variables corresponding to
 # m.sdpconstr[idx] if issdp is true
 # m.socconstr[idx] if sdp is not true
-function getconicdualaux(m::Model, idx, issdp)
+function getconicdualaux(m::Model, idx::Int, issdp::Bool)
     numLinRows = MathProgBase.numlinconstr(m)
     numBndRows = getNumBndRows(m)
     numSOCRows = getNumSOCRows(m)
     numSDPRows = getNumSDPRows(m)
     numSymRows = getNumSymRows(m)
-    if length(m.conicconstrDuals) != (numLinRows + numBndRows + numSOCRows + numSDPRows + numSymRows)
-        error("Dual solution not available. Check that the model was properly solved and no integer variables are present.")
-    end
-    offset = numLinRows + numBndRows
-    if issdp
-        offset += length(m.socconstr)
-    end
-    dual = m.conicconstrDuals[m.constrDualMap[offset + idx]]
-    if issdp
-        offset += length(m.sdpconstr)
-        symdual = m.conicconstrDuals[m.constrDualMap[offset + idx]]
-        dual, symdual
+    numRows = numLinRows + numBndRows + numSOCRows + numSDPRows + numSymRows
+    if length(m.conicconstrDuals) != numRows
+        # solve might not have been called so m.constrDualMap might be empty
+        getdualwarn(idx)
+        c = issdp ? m.sdpconstr[idx] : m.socconstr[idx]
+        duals = fill(NaN, getNumRows(c))
+        if issdp
+            duals, Float64[]
+        else
+            duals
+        end
     else
-        dual
+        offset = numLinRows + numBndRows
+        if issdp
+            offset += length(m.socconstr)
+        end
+        dual = m.conicconstrDuals[m.constrDualMap[offset + idx]]
+        if issdp
+            offset += length(m.sdpconstr)
+            symdual = m.conicconstrDuals[m.constrDualMap[offset + idx]]
+            dual, symdual
+        else
+            dual
+        end
     end
 end
 
@@ -691,13 +699,15 @@ function getdual(c::ConstraintRef{Model,SDConstraint})
             end
         end
     end
-    @assert length(symdual) == length(c.m.sdpconstrSym[c.idx])
-    idx = 0
-    for (i,j) in c.m.sdpconstrSym[c.idx]
-        idx += 1
-        s = symdual[idx]
-        X[i,j] -= s
-        X[j,i] += s
+    if !isempty(symdual)
+        @assert length(symdual) == length(c.m.sdpconstrSym[c.idx])
+        idx = 0
+        for (i,j) in c.m.sdpconstrSym[c.idx]
+            idx += 1
+            s = symdual[idx]
+            X[i,j] -= s
+            X[j,i] += s
+        end
     end
     X
 end
