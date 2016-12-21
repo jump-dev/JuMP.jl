@@ -121,7 +121,7 @@ function solve(m::Model; suppress_warnings=false,
     isempty(kwargs) || error("Unrecognized keyword arguments: $(join([k[1] for k in kwargs], ", "))")
 
     # Clear warning counters
-    m.getvalue_counter = 0
+    m.map_counter = 0
     m.operator_counter = 0
 
     # Remember if the solver was initially unset so we can restore

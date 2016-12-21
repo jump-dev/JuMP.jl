@@ -582,7 +582,7 @@ ispsd(x::JuMP.JuMPArray) = ispsd(x.innerArray)
         @variable(m, X[1:2,1:2], SDP)
         c = @constraint(m, X[1,1]+X[2,2] == 1)
         @objective(m, Min, 2*X[1,1]+2*X[1,2])
-        @test_throws ErrorException getdual(X)
+        @test all(isnan.(getdual(X)))
         status = solve(m)
 
         @test status == :Optimal
@@ -599,7 +599,7 @@ ispsd(x::JuMP.JuMPArray) = ispsd(x.innerArray)
         @variable(m, y)
         c = @SDconstraint(m, [2-y 1; 1 -y] >= 0)
         @objective(m, Max, y)
-        @test_throws ErrorException getdual(c)
+        @test all(isnan(getdual(c)))
         status = solve(m)
 
         @test status == :Optimal
@@ -625,7 +625,7 @@ ispsd(x::JuMP.JuMPArray) = ispsd(x.innerArray)
         @variable(m, y)
         c = @SDconstraint(m, [0 y; y 0] <= [1 0; 0 0])
         @objective(m, Max, y)
-        @test_throws ErrorException getdual(c)
+        @test all(isnan(getdual(c)))
         status = solve(m)
 
         @test status == :Optimal
@@ -645,7 +645,7 @@ ispsd(x::JuMP.JuMPArray) = ispsd(x.innerArray)
         @variable(m, X[1:2,1:2], SDP)
         c = @constraint(m, 2*X[1,2] == 1)
         @objective(m, Min, X[1,1])
-        @test_throws ErrorException getdual(X)
+        @test all(isnan(getdual(X)))
         status = solve(m)
 
         @test status == :Optimal

@@ -39,14 +39,14 @@ end
         @test_throws ErrorException setobjectivesense(modErr, :Maximum)
         @variable(modErr, errVar)
         @test isnan(getvalue(errVar))
-        @test_throws ErrorException getdual(errVar)
+        @test isnan(getdual(errVar))
 
         modErr = Model()
         @variable(modErr, x, Bin)
         @objective(modErr, Max, x)
         con = @constraint(modErr, x <= 0.5)
         solve(modErr)
-        @test_throws ErrorException getdual(con)
+        @test isnan(getdual(con))
 
         modErr = Model()
         @variable(modErr, 0 <= x <= 1)

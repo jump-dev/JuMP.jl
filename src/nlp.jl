@@ -54,9 +54,11 @@ function getdual(c::ConstraintRef{Model,NonlinearConstraint})
     initNLP(c.m)
     nldata::NLPData = c.m.nlpdata
     if length(nldata.nlconstrDuals) != length(nldata.nlconstr)
-        error("Dual solution not available. Check that the model was properly solved.")
+        getdualwarn(c)
+        NaN
+    else
+        nldata.nlconstrDuals[c.idx]
     end
-    return nldata.nlconstrDuals[c.idx]
 end
 
 type FunctionStorage

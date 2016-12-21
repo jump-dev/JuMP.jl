@@ -13,6 +13,7 @@ isdefined(Base, :__precompile__) && __precompile__()
 module JuMP
 
 importall Base.Operators
+import Base.map
 
 import MathProgBase
 
@@ -123,7 +124,7 @@ type Model <: AbstractModel
     conDict::Dict{Symbol,Any} # dictionary from constraint names to constraint objects
     varData::ObjectIdDict
 
-    getvalue_counter::Int # number of times we call getvalue on a JuMPContainer, so that we can print out a warning
+    map_counter::Int # number of times we call getvalue, getdual, getlowerbound and getupperbound on a JuMPContainer, so that we can print out a warning
     operator_counter::Int # number of times we add large expressions
 
     # Extension dictionary - e.g. for robust
@@ -177,7 +178,7 @@ function Model(;solver=UnsetSolver(), simplify_nonlinear_expressions::Bool=false
           Dict{Symbol,Any}(),          # varDict
           Dict{Symbol,Any}(),          # conDict
           ObjectIdDict(),              # varData
-          0,                           # getvalue_counter
+          0,                           # map_counter
           0,                           # operator_counter
           Dict{Symbol,Any}(),          # ext
     )
@@ -394,10 +395,12 @@ end
 # internal method that doesn't print a warning if the value is NaN
 _getValue(v::Variable) = v.m.colVal[v.col]
 
+getvaluewarn(v) = Base.warn("Variable value not defined for $(getname(v)). Check that the model was properly solved.")
+
 function getvalue(v::Variable)
     ret = _getValue(v)
     if isnan(ret)
-        Base.warn("Variable value not defined for $(getname(v)). Check that the model was properly solved.")
+        getvaluewarn(v)
     end
     ret
 end
@@ -434,11 +437,19 @@ function getvalue(arr::Array{Variable})
 end
 
 # Dual value (reduced cost) getter
+
+# internal method that doesn't print a warning if the value is NaN
+_getDual(v::Variable) = v.m.redCosts[v.col]
+
+getdualwarn(::Variable) = warn("Variable bound duals (reduced costs) not available. Check that the model was properly solved and no integer variables are present.")
+
 function getdual(v::Variable)
     if length(v.m.redCosts) < MathProgBase.numvar(v.m)
-        error("Variable bound duals (reduced costs) not available. Check that the model was properly solved and no integer variables are present.")
+        getdualwarn(v)
+        NaN
+    else
+        _getDual(v)
     end
-    return v.m.redCosts[v.col]
 end
 
 const var_cats = [:Cont, :Int, :Bin, :SemiCont, :SemiInt]
@@ -538,11 +549,18 @@ LinearConstraint(ref::LinConstrRef) = ref.m.linconstr[ref.idx]::LinearConstraint
 
 linearindex(x::ConstraintRef) = x.idx
 
+# internal method that doesn't print a warning if the value is NaN
+_getDual(c::LinConstrRef) = c.m.linconstrDuals[c.idx]
+
+getdualwarn{T<:Union{ConstraintRef, Int}}(::T) = warn("Dual solution not available. Check that the model was properly solved and no integer variables are present.")
+
 function getdual(c::LinConstrRef)
     if length(c.m.linconstrDuals) != MathProgBase.numlinconstr(c.m)
-        error("Dual solution not available. Check that the model was properly solved and no integer variables are present.")
+        getdualwarn(c)
+        NaN
+    else
+        _getDual(c)
     end
-    return c.m.linconstrDuals[c.idx]
 end
 
 # Returns the number of non-infinity and nonzero bounds on variables
@@ -572,24 +590,18 @@ function getNumBndRows(m::Model)
 end
 
 # Returns the number of second-order cone constraints
-function getNumSOCRows(m::Model)
-    numSOCRows = 0
-    for con in m.socconstr
-        numSOCRows += length(con.normexpr.norm.terms) + 1
-    end
-    return numSOCRows
-end
+getNumRows(c::SOCConstraint) = length(c.normexpr.norm.terms) + 1
+getNumSOCRows(m::Model) = sum(getNumRows.(m.socconstr))
 
 # Returns the number of rows used by SDP constraints in the MPB conic representation
 # (excluding symmetry constraints)
-function getNumSDPRows(m::Model)
-    numSDPRows = 0
-    for con in m.sdpconstr
-        n = size(con.terms, 1)
-        numSDPRows += convert(Int, n*(n+1)/2)
-    end
-    return numSDPRows
+#   Julia seems to not be able to infer the return type (probably because c.terms is Any)
+#   so getNumSDPRows tries to call zero(Any)... Using ::Int solves this issue
+function getNumRows(c::SDConstraint)::Int
+    n = size(c.terms, 1)
+    (n * (n+1)) ÷ 2
 end
+getNumSDPRows(m::Model) = sum(getNumRows.(m.sdpconstr))
 
 # Returns the number of symmetry-enforcing constraints for SDP constraints
 function getNumSymRows(m::Model)
@@ -599,26 +611,36 @@ end
 # Returns the dual variables corresponding to
 # m.sdpconstr[idx] if issdp is true
 # m.socconstr[idx] if sdp is not true
-function getconicdualaux(m::Model, idx, issdp)
+function getconicdualaux(m::Model, idx::Int, issdp::Bool)
     numLinRows = MathProgBase.numlinconstr(m)
     numBndRows = getNumBndRows(m)
     numSOCRows = getNumSOCRows(m)
     numSDPRows = getNumSDPRows(m)
     numSymRows = getNumSymRows(m)
-    if length(m.conicconstrDuals) != (numLinRows + numBndRows + numSOCRows + numSDPRows + numSymRows)
-        error("Dual solution not available. Check that the model was properly solved and no integer variables are present.")
-    end
-    offset = numLinRows + numBndRows
-    if issdp
-        offset += length(m.socconstr)
-    end
-    dual = m.conicconstrDuals[m.constrDualMap[offset + idx]]
-    if issdp
-        offset += length(m.sdpconstr)
-        symdual = m.conicconstrDuals[m.constrDualMap[offset + idx]]
-        dual, symdual
+    numRows = numLinRows + numBndRows + numSOCRows + numSDPRows + numSymRows
+    if length(m.conicconstrDuals) != numRows
+        # solve might not have been called so m.constrDualMap might be empty
+        getdualwarn(idx)
+        c = issdp ? m.sdpconstr[idx] : m.socconstr[idx]
+        duals = fill(NaN, getNumRows(c))
+        if issdp
+            duals, Float64[]
+        else
+            duals
+        end
     else
-        dual
+        offset = numLinRows + numBndRows
+        if issdp
+            offset += length(m.socconstr)
+        end
+        dual = m.conicconstrDuals[m.constrDualMap[offset + idx]]
+        if issdp
+            offset += length(m.sdpconstr)
+            symdual = m.conicconstrDuals[m.constrDualMap[offset + idx]]
+            dual, symdual
+        else
+            dual
+        end
     end
 end
 
@@ -677,13 +699,15 @@ function getdual(c::ConstraintRef{Model,SDConstraint})
             end
         end
     end
-    @assert length(symdual) == length(c.m.sdpconstrSym[c.idx])
-    idx = 0
-    for (i,j) in c.m.sdpconstrSym[c.idx]
-        idx += 1
-        s = symdual[idx]
-        X[i,j] -= s
-        X[j,i] += s
+    if !isempty(symdual)
+        @assert length(symdual) == length(c.m.sdpconstrSym[c.idx])
+        idx = 0
+        for (i,j) in c.m.sdpconstrSym[c.idx]
+            idx += 1
+            s = symdual[idx]
+            X[i,j] -= s
+            X[j,i] += s
+        end
     end
     X
 end
@@ -796,13 +820,14 @@ function getconstraint(m::Model, conname::Symbol)
 end
 
 # usage warnings
-function getvalue_warn(x::JuMPContainer{Variable})
+function mapcontainer_warn(f, x::JuMPContainer{Variable})
     isempty(x) && return
     v = first(values(x))
     m = v.m
-    m.getvalue_counter += 1
-    if m.getvalue_counter > 400
-        Base.warn_once("getvalue has been called on a collection of variables a large number of times. For performance reasons, this should be avoided. Instead of getvalue(x)[a,b,c], use getvalue(x[a,b,c]) to avoid temporary allocations.")
+    m.map_counter += 1
+    if m.map_counter > 400
+        # It might not be f that was called the 400 first times but most probably it is f
+        Base.warn_once("$f has been called on a collection of variables a large number of times. For performance reasons, this should be avoided. Instead of $f(x)[a,b,c], use $f(x[a,b,c]) to avoid temporary allocations.")
     end
     return
 end
