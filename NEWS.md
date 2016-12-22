@@ -1,8 +1,8 @@
 JuMP release notes
 ==================
 
-Version 0.15.0 (Unreleased)
----------------------------
+Version 0.15.0 (December 22, 2016)
+----------------------------------
 
   * Julia 0.5.0 is the minimum required version for this release.
   * Document support for BARON solver
@@ -19,6 +19,7 @@ Version 0.15.0 (Unreleased)
     (For early adopters of the new syntax, ``norm2()`` was renamed to ``norm()`` without deprecation.)
   * Unit tests rewritten to use Base.Test instead of FactCheck
   * Improved support for operations with matrices of JuMP types (Thanks @ExpandingMan)
+  * The syntax to halt a solver from inside a callback has changed from ``throw(CallbackAbort())`` to ``return JuMP.StopTheSolver``
   * Minor bug fixes
 
 Version 0.14.2 (December 12, 2016)
