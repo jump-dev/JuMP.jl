@@ -223,3 +223,5 @@ Two possible uses for fixed variables are:
    to change the value to which the variable is fixed. For LPs
    in particular, most solvers are able to efficiently hot-start when
    solving the resulting modified problem.
+   
+Note that ``setvalue(x, val)`` will not fix the value of a regular variable, it will only set a warmstart for non-fixed variables. One can fix existing, non-fixed variables with ``JuMP.fix(x, val)``.
