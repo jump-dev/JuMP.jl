@@ -393,10 +393,8 @@ end
 
 # Fix a variable that was not previously fixed
 function fix(v::Variable, val::Number)
-    v.m.colVal[v.col] = val
-    v.m.colCat[v.col] = :Fixed
-    v.m.colLower[v.col] = val
-    v.m.colUpper[v.col] = val
+    setcategory(v, :Fixed)
+    setvalue(v, val)
 end
 
 # internal method that doesn't print a warning if the value is NaN
