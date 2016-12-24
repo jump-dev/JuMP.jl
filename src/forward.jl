@@ -10,7 +10,7 @@
 # a general DAG. If we have a DAG, then need to associate storage with each edge of the DAG.
 # user_input_buffer and user_output_buffer are used as temporary storage
 # when handling user-defined functions
-function forward_eval{T}(storage::Vector{T},partials_storage::Vector{T},nd::Vector{NodeData},adj,const_values,parameter_values,x_values::Vector{T},subexpression_values,user_input_buffer=[],user_output_buffer=[])
+function forward_eval{T}(storage::Vector{T},partials_storage::Vector{T},nd::Vector{NodeData},adj,const_values,parameter_values,x_values::Vector{T},subexpression_values,user_input_buffer=[],user_output_buffer=[];user_operators::UserOperatorRegistry=UserOperatorRegistry())
 
     @assert length(storage) >= length(nd)
     @assert length(partials_storage) >= length(nd)
@@ -115,7 +115,7 @@ function forward_eval{T}(storage::Vector{T},partials_storage::Vector{T},nd::Vect
                 @inbounds partials_storage[children_arr[idx1+2]] = !(condition == 1)
                 storage[k] = ifelse(condition == 1, lhs, rhs)
             elseif op >= USER_OPERATOR_ID_START
-                evaluator = user_operator_map[op]
+                evaluator = user_operators.multivariate_operator_evaluator[op - USER_OPERATOR_ID_START+1]
                 f_input = view(user_input_buffer, 1:n_children)
                 grad_output = view(user_output_buffer, 1:n_children)
                 r = 1
@@ -143,8 +143,9 @@ function forward_eval{T}(storage::Vector{T},partials_storage::Vector{T},nd::Vect
             #@assert child_idx == children_arr[first(nzrange(adj,k))]
             child_val = storage[child_idx]
             if op >= USER_UNIVAR_OPERATOR_ID_START
-                f = user_univariate_operator_f[op]
-                fprime = user_univariate_operator_fprime[op]
+                userop = op - USER_UNIVAR_OPERATOR_ID_START + 1
+                f = user_operators.univariate_operator_f[userop]
+                fprime = user_operators.univariate_operator_fprime[userop]
                 fval = f(child_val)::T
                 fprimeval = fprime(child_val)::T
             else
@@ -206,7 +207,7 @@ export forward_eval
 # need to recompute the real components.
 # Computes partials_storage_ϵ as well
 # We assume that forward_eval has already been called.
-function forward_eval_ϵ{N,T}(storage::Vector{T},storage_ϵ::DenseVector{ForwardDiff.Partials{N,T}},partials_storage::Vector{T},partials_storage_ϵ::DenseVector{ForwardDiff.Partials{N,T}},nd::Vector{NodeData},adj,x_values_ϵ,subexpression_values_ϵ)
+function forward_eval_ϵ{N,T}(storage::Vector{T},storage_ϵ::DenseVector{ForwardDiff.Partials{N,T}},partials_storage::Vector{T},partials_storage_ϵ::DenseVector{ForwardDiff.Partials{N,T}},nd::Vector{NodeData},adj,x_values_ϵ,subexpression_values_ϵ;user_operators::UserOperatorRegistry=UserOperatorRegistry())
 
     @assert length(storage_ϵ) >= length(nd)
     @assert length(partials_storage_ϵ) >= length(nd)
@@ -317,7 +318,8 @@ function forward_eval_ϵ{N,T}(storage::Vector{T},storage_ϵ::DenseVector{Forward
                 @inbounds child_idx = children_arr[adj.colptr[k]]
                 child_val = storage[child_idx]
                 if op >= USER_UNIVAR_OPERATOR_ID_START
-                    fprimeprime = user_univariate_operator_fprimeprime[op](child_val)::T
+                    userop = op - USER_UNIVAR_OPERATOR_ID_START + 1
+                    fprimeprime = user_operators.univariate_operator_fprimeprime[userop](child_val)::T
                 else
                     fprimeprime = eval_univariate_2nd_deriv(op, child_val,storage[k])
                 end
