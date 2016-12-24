@@ -76,12 +76,14 @@ function compute_hessian_sparsity(nd::Vector{NodeData},adj,input_linearity::Vect
         par = nd[nod.parent]
         if par.nodetype == CALLUNIVAR
             op = par.index
-            if univariate_operators[op] != :+ && univariate_operators[op] != :-
+            if op >= USER_UNIVAR_OPERATOR_ID_START || univariate_operators[op] != :+ && univariate_operators[op] != :-
                 nonlinear_wrt_output[k] = true
             end
         elseif par.nodetype == CALL
             op = par.index
-            if operators[op] == :+ || operators[op] == :- || operators[op] == :ifelse
+            if op >= USER_OPERATOR_ID_START
+                nonlinear_wrt_output[k] = true
+            elseif operators[op] == :+ || operators[op] == :- || operators[op] == :ifelse
                 # pass
             elseif operators[op] == :*
                 # check if all siblings are constant

@@ -58,14 +58,16 @@ function classify_linearity(nd::Vector{NodeData},adj,subexpression_linearity,fix
             # if operator is nonlinear, then we're nonlinear
             op = nod.index
             if nod.nodetype == CALLUNIVAR
-                if univariate_operators[op] == :+ || univariate_operators[op] == :-
+                if op < USER_UNIVAR_OPERATOR_ID_START && (univariate_operators[op] == :+ || univariate_operators[op] == :-)
                     linearity[k] = LINEAR
                 else
                     linearity[k] = NONLINEAR
                 end
             elseif nod.nodetype == CALL
                 # operator with more than 1 argument
-                if operators[op] == :+ || operators[op] == :-
+                if op >= USER_OPERATOR_ID_START
+                    linearity[k] = NONLINEAR
+                elseif operators[op] == :+ || operators[op] == :-
                     linearity[k] = LINEAR
                 elseif operators[op] == :* && num_constant_children == length(children_idx) - 1
                     linearity[k] = LINEAR
