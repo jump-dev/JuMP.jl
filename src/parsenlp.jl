@@ -8,7 +8,6 @@
 # parent is the index of the parent expression
 # values is the name of the list of constants which appear in the expression
 function parseNLExpr(m, x, tapevar, parent, values)
-
     if isexpr(x,:call) && length(x.args) >= 2 && (isexpr(x.args[2],:generator) || isexpr(x.args[2],:flatten))
         header = x.args[1]
         if issum(header)
@@ -40,17 +39,20 @@ function parseNLExpr(m, x, tapevar, parent, values)
                 push!(block.args, :(push!($tapevar, NodeData(CALLUNIVAR, $operatorid, $parent))))
             else
                 opname = quot(x.args[1])
-                errorstring = "Unrecognized function $opname used in nonlinear expression."
-                errorstring2 = "Incorrect number of arguments for $opname in nonlinear expression."
+                errorstring = "Unrecognized function \"$(x.args[1])\" used in nonlinear expression."
+                errorstring2 = "Incorrect number of arguments for \"$(x.args[1])\" in nonlinear expression."
                 lookupcode = quote
-                    if !haskey(univariate_operator_to_id,$opname)
-                        if haskey(operator_to_id,$opname)
+                    if $(esc(m)).nlpdata === nothing
+                        error($errorstring)
+                    end
+                    if !haskey($(esc(m)).nlpdata.user_operators.univariate_operator_to_id,$opname)
+                        if haskey($(esc(m)).nlpdata.user_operators.multivariate_operator_to_id,$opname)
                             error($errorstring2)
                         else
                             error($errorstring)
                         end
                     end
-                    operatorid = univariate_operator_to_id[$opname]
+                    operatorid = $(esc(m)).nlpdata.user_operators.univariate_operator_to_id[$opname] + ReverseDiffSparse.USER_UNIVAR_OPERATOR_ID_START - 1
                 end
                 push!(block.args, :($lookupcode; push!($tapevar, NodeData(CALLUNIVAR, operatorid, $parent))))
             end
@@ -70,17 +72,20 @@ function parseNLExpr(m, x, tapevar, parent, values)
                 push!(block.args, :(push!($tapevar, NodeData(COMPARISON, $operatorid, $parent))))
             else # could be user defined
                 opname = quot(x.args[1])
-                errorstring = "Unrecognized function $opname used in nonlinear expression."
-                errorstring2 = "Incorrect number of arguments for $opname in nonlinear expression."
+                errorstring = "Unrecognized function \"$(x.args[1])\" used in nonlinear expression."
+                errorstring2 = "Incorrect number of arguments for \"$(x.args[1])\" in nonlinear expression."
                 lookupcode = quote
-                    if !haskey(operator_to_id,$opname)
-                        if haskey(univariate_operator_to_id,$opname)
+                    if $(esc(m)).nlpdata === nothing
+                        error($errorstring)
+                    end
+                    if !haskey($(esc(m)).nlpdata.user_operators.multivariate_operator_to_id,$opname)
+                        if haskey($(esc(m)).nlpdata.user_operators.univariate_operator_to_id,$opname)
                             error($errorstring2)
                         else
                             error($errorstring)
                         end
                     end
-                    operatorid = operator_to_id[$opname]
+                    operatorid = $(esc(m)).nlpdata.user_operators.multivariate_operator_to_id[$opname] + ReverseDiffSparse.USER_OPERATOR_ID_START - 1
                 end
                 push!(block.args, :($lookupcode; push!($tapevar, NodeData(CALL, operatorid, $parent))))
             end
@@ -231,7 +236,7 @@ end
 # Variable objects should be spliced into the expression.
 function NonlinearExprData(m::Model, ex::Expr)
     ex = spliceref(m,ex)
-    nd, values = ReverseDiffSparse.expr_to_nodedata(ex)
+    nd, values = ReverseDiffSparse.expr_to_nodedata(ex,m.nlpdata.user_operators)
     return NonlinearExprData(nd, values)
 end
 NonlinearExprData(m::Model, ex) = NonlinearExprData(m, :($ex + 0))

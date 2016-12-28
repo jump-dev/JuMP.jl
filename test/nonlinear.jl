@@ -517,6 +517,7 @@ end
                 @test MathProgBase.constr_expr(d,6) == :(1.0*x[1]^2 - 1.0 == 0.0)
                 @test MathProgBase.constr_expr(d,7) == :(2.0*x[1]^2 - 2.0 == 0.0)
                 @test MathProgBase.constr_expr(d,8) == :(-0.5 <= sin(x[1]) <= 0.5)
+                @test MathProgBase.constr_expr(d,9) == :(ψ(x[1]) + Ψ(x[1],x[2]) - 3.0 <= 0.0)
             end
         end
     end
@@ -541,17 +542,23 @@ end
         @test ub == [1.0,-0.0,5.0]
 
         @constraint(m, 2x^2+y >= 2)
+        ψ(x) = 1
+        Ψ(x,y) = 2
+        JuMP.register(m, :ψ, 1, ψ, autodiff=true)
+        JuMP.register(m, :Ψ, 2, Ψ, autodiff=true)
+
         @NLconstraint(m, sin(x)*cos(y) == 5)
         @NLconstraint(m, nlconstr[i=1:2], i*x^2 == i)
         @NLconstraint(m, -0.5 <= sin(x) <= 0.5)
+        @NLconstraint(m, ψ(x) + Ψ(x,y) <= 3)
         solve(m)
 
         @NLobjective(m, Min, x^y)
         solve(m)
 
         lb,ub = JuMP.constraintbounds(m)
-        @test lb == [-Inf,-Inf,-5.0,0.0,0.0,0.0,0.0,-0.5]
-        @test ub == [1.0,-0.0,5.0,Inf,0.0,0.0,0.0,0.5]
+        @test lb == [-Inf,-Inf,-5.0,0.0,0.0,0.0,0.0,-0.5,-Inf]
+        @test ub == [1.0,-0.0,5.0,Inf,0.0,0.0,0.0,0.5,0.0]
     end
     test_nl_mpb()
 
@@ -670,13 +677,13 @@ end
 
     if length(convex_nlp_solvers) > 0
         @testset "User-defined functions" begin
-            JuMP.register(:myf, 2, myf, autodiff=true)
-            JuMP.register(:myf_2, 2, myf, (g,x,y) -> (g[1] = 2(x-1); g[2] = 2(y-2)))
-            JuMP.register(:mysquare, 1, mysquare, autodiff=true)
-            JuMP.register(:mysquare_2, 1, mysquare, x-> 2x, autodiff=true)
-            JuMP.register(:mysquare_3, 1, mysquare, x-> 2x, x -> 2.0)
-
             m = Model(solver=convex_nlp_solvers[1])
+
+            JuMP.register(m, :myf, 2, myf, autodiff=true)
+            JuMP.register(m, :myf_2, 2, myf, (g,x,y) -> (g[1] = 2(x-1); g[2] = 2(y-2)))
+            JuMP.register(m, :mysquare, 1, mysquare, autodiff=true)
+            JuMP.register(m, :mysquare_2, 1, mysquare, x-> 2x, autodiff=true)
+            JuMP.register(m, :mysquare_3, 1, mysquare, x-> 2x, x -> 2.0)
 
             @variable(m, x[1:2] >= 0.5)
             @NLobjective(m, Min, myf(x[1],mysquare(x[2])))
@@ -716,6 +723,7 @@ end
 
             # Test #927
             m = Model()
+            JuMP.register(m, :myf, 2, myf, autodiff=true)
             @variable(m, x)
             @NLobjective(m, Min, myf(x,x))
             @test solve(m) == :Optimal
