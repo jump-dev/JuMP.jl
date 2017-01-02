@@ -284,7 +284,7 @@ function MathProgBase.initialize(d::NLPEvaluator, requested_features::Vector{Sym
         for k in d.subexpression_order
             ex = nldata.nlexpr[k]
             adj = adjmat(ex.nd)
-            d.subexpressions_as_julia_expressions[k] = tapeToExpr(1, ex.nd, adj, ex.const_values, d.parameter_values, d.subexpressions_as_julia_expressions, nldata.user_operators)
+            d.subexpressions_as_julia_expressions[k] = tapeToExpr(d.m, 1, ex.nd, adj, ex.const_values, d.parameter_values, d.subexpressions_as_julia_expressions, nldata.user_operators, true, true)
         end
     end
 
@@ -1047,20 +1047,61 @@ function quadToExpr(q::QuadExpr,constant::Bool)
     return ex
 end
 
+type VariablePrintWrapper
+    v::Variable
+    mode
+end
+Base.show(io::IO,v::VariablePrintWrapper) = print(io,var_str(v.mode,v.v))
+type ParameterPrintWrapper
+    idx::Int
+    mode
+end
+function Base.show(io::IO,p::ParameterPrintWrapper)
+    if p.mode == IJuliaMode
+        print(io,"parameter_{$(p.idx)}")
+    else
+        print(io,"parameter[$(p.idx)]")
+    end
+end
+type SubexpressionPrintWrapper
+    idx::Int
+    mode
+end
+function Base.show(io::IO,s::SubexpressionPrintWrapper)
+    if s.mode == IJuliaMode
+        print(io,"subexpression_{$(s.idx)}")
+    else
+        print(io,"subexpression[$(s.idx)]")
+    end
+end
+
 # we splat in the subexpressions (for now)
-function tapeToExpr(k, nd::Vector{NodeData}, adj, const_values, parameter_values, subexpressions::Vector{Any},user_operators::ReverseDiffSparse.UserOperatorRegistry)
+function tapeToExpr(m::Model, k, nd::Vector{NodeData}, adj, const_values, parameter_values, subexpressions::Vector{Any},user_operators::ReverseDiffSparse.UserOperatorRegistry, generic_variable_names::Bool, splat_subexpressions::Bool, print_mode=REPLMode)
 
     children_arr = rowvals(adj)
 
     nod = nd[k]
     if nod.nodetype == VARIABLE
-        return Expr(:ref,:x,nod.index)
+        if generic_variable_names
+            return Expr(:ref,:x,nod.index)
+        else
+            # mode only matters when generic_variable_names == false
+            return VariablePrintWrapper(Variable(m,nod.index),print_mode)
+        end
     elseif nod.nodetype == VALUE
         return const_values[nod.index]
     elseif nod.nodetype == SUBEXPRESSION
-        return subexpressions[nod.index]
+        if splat_subexpressions
+            return subexpressions[nod.index]
+        else
+            return SubexpressionPrintWrapper(nod.index,print_mode)
+        end
     elseif nod.nodetype == PARAMETER
-        return parameter_values[nod.index]
+        if splat_subexpressions
+            return parameter_values[nod.index]
+        else
+            return ParameterPrintWrapper(nod.index,print_mode)
+        end
     elseif nod.nodetype == CALL
         op = nod.index
         opsymbol = :error
@@ -1082,7 +1123,7 @@ function tapeToExpr(k, nd::Vector{NodeData}, adj, const_values, parameter_values
         end
         ex = Expr(:call,opsymbol)
         for cidx in children_idx
-            push!(ex.args, tapeToExpr(children_arr[cidx], nd, adj, const_values, parameter_values, subexpressions,user_operators))
+            push!(ex.args, tapeToExpr(m, children_arr[cidx], nd, adj, const_values, parameter_values, subexpressions, user_operators, generic_variable_names, splat_subexpressions, print_mode))
         end
         return ex
     elseif nod.nodetype == CALLUNIVAR
@@ -1099,7 +1140,7 @@ function tapeToExpr(k, nd::Vector{NodeData}, adj, const_values, parameter_values
         end
         @assert opsymbol != :error
         cidx = first(nzrange(adj,k))
-        return Expr(:call,opsymbol,tapeToExpr(children_arr[cidx], nd, adj, const_values, parameter_values, subexpressions,user_operators))
+        return Expr(:call,opsymbol,tapeToExpr(m, children_arr[cidx], nd, adj, const_values, parameter_values, subexpressions, user_operators, generic_variable_names, splat_subexpressions, print_mode))
     elseif nod.nodetype == COMPARISON
         op = nod.index
         opsymbol = comparison_operators[op]
@@ -1107,22 +1148,22 @@ function tapeToExpr(k, nd::Vector{NodeData}, adj, const_values, parameter_values
         if length(children_idx) > 2
             ex = Expr(:comparison)
             for cidx in children_idx
-                push!(ex.args, tapeToExpr(children_arr[cidx], nd, adj, const_values, parameter_values, subexpressions, user_operators))
+                push!(ex.args, tapeToExpr(m, children_arr[cidx], nd, adj, const_values, parameter_values, subexpressions, user_operators, generic_variable_names, splat_subexpressions, print_mode))
                 push!(ex.args, opsymbol)
             end
             pop!(ex.args)
         else
             ex = Expr(:call, opsymbol)
-            push!(ex.args, tapeToExpr(children_arr[children_idx[1]], nd, adj, const_values, parameter_values, subexpressions, user_operators))
-            push!(ex.args, tapeToExpr(children_arr[children_idx[2]], nd, adj, const_values, parameter_values, subexpressions, user_operators))
+            push!(ex.args, tapeToExpr(m, children_arr[children_idx[1]], nd, adj, const_values, parameter_values, subexpressions, user_operators, generic_variable_names, splat_subexpressions, print_mode))
+            push!(ex.args, tapeToExpr(m, children_arr[children_idx[2]], nd, adj, const_values, parameter_values, subexpressions, user_operators, generic_variable_names, splat_subexpressions, print_mode))
         end
         return ex
     elseif nod.nodetype == LOGIC
         op = nod.index
         opsymbol = logic_operators[op]
         children_idx = nzrange(adj,k)
-        lhs = tapeToExpr(children_arr[first(children_idx)], nd, adj, const_values, parameter_values, subexpressions, user_operators)
-        rhs = tapeToExpr(children_arr[last(children_idx)], nd, adj, const_values, parameter_values, subexpressions, user_operators)
+        lhs = tapeToExpr(m, children_arr[first(children_idx)], nd, adj, const_values, parameter_values, subexpressions, user_operators, generic_variable_names, splat_subexpressions, print_mode)
+        rhs = tapeToExpr(m, children_arr[last(children_idx)], nd, adj, const_values, parameter_values, subexpressions, user_operators, generic_variable_names, splat_subexpressions, print_mode)
         return Expr(opsymbol, lhs, rhs)
     end
     error()
@@ -1136,7 +1177,7 @@ function MathProgBase.obj_expr(d::NLPEvaluator)
         # for now, don't pass simplified expressions
         ex = d.m.nlpdata.nlobj
         adj = adjmat(ex.nd)
-        return tapeToExpr(1, ex.nd, adj, ex.const_values, d.parameter_values, d.subexpressions_as_julia_expressions,d.m.nlpdata.user_operators)
+        return tapeToExpr(d.m, 1, ex.nd, adj, ex.const_values, d.parameter_values, d.subexpressions_as_julia_expressions,d.m.nlpdata.user_operators, true, true)
     else
         return quadToExpr(d.m.obj, true)
     end
@@ -1163,7 +1204,7 @@ function MathProgBase.constr_expr(d::NLPEvaluator,i::Integer)
         constr = d.m.nlpdata.nlconstr[i]
         ex = constr.terms
         adj = adjmat(ex.nd)
-        julia_expr = tapeToExpr(1, ex.nd, adj, ex.const_values, d.parameter_values, d.subexpressions_as_julia_expressions,d.m.nlpdata.user_operators)
+        julia_expr = tapeToExpr(d.m, 1, ex.nd, adj, ex.const_values, d.parameter_values, d.subexpressions_as_julia_expressions,d.m.nlpdata.user_operators, true, true)
         if sense(constr) == :range
             return Expr(:comparison, constr.lb, :(<=), julia_expr, :(<=), constr.ub)
         else
