@@ -722,7 +722,7 @@ end
             @test isapprox(getvalue(x), [0.5,2.0], atol=1e-4)
 
             # Test #927
-            m = Model()
+            m = Model(solver=convex_nlp_solvers[1])
             JuMP.register(m, :myf, 2, myf, autodiff=true)
             @variable(m, x)
             @NLobjective(m, Min, myf(x,x))
@@ -732,7 +732,7 @@ end
         end
 
         @testset "Anonymous nonlinear expression" begin
-            m = Model()
+            m = Model(solver=convex_nlp_solvers[1])
             @variable(m, -1 <= x <= 1)
             obj = @NLexpression(m, x^4 + 1)
             @NLobjective(m, Min, obj)
