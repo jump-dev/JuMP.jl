@@ -180,7 +180,7 @@ function model_str(mode, m::Model, sym::PrintSymbols)
                       (m.objSense == :Max ? "Max" : "Min")
     str = obj_sense * sep
     if nlp !== nothing && nlp.nlobj !== nothing
-        str *= (qobj_str=="0"?"":"$qobj_str + ") * "(nonlinear expression)"
+        str *= (qobj_str=="0"?"":"$qobj_str + ") * expr_str(m, mode, nlp.nlobj)
     else
         str *= qobj_str
     end
@@ -200,9 +200,10 @@ function model_str(mode, m::Model, sym::PrintSymbols)
     for c in m.socconstr
         str *= sep * con_str(mode,c,mathmode=true) * eol
     end
-    if nlp !== nothing && length(nlp.nlconstr) > 0
-        num = length(nlp.nlconstr)
-        str *= sep * string("$num nonlinear constraint", num>1?"s":"") * eol
+    if nlp !== nothing
+        for c in nlp.nlconstr
+            str *= sep * con_str(m,mode,c,mathmode=true) * eol
+        end
     end
 
     # Display indexed variables
@@ -276,6 +277,16 @@ function model_str(mode, m::Model, sym::PrintSymbols)
             str *= string(", ", sym[:integer])
         end
         str *= eol
+    end
+
+    if nlp !== nothing
+        for i in 1:length(nlp.nlexpr)
+            if ijl
+                str *= "subexpression_{$i} = \\quad &" * expr_str(m,mode,nlp.nlexpr[i]) * eol
+            else
+                str *= "subexpression[$i]: " * expr_str(m,mode,nlp.nlexpr[i]) * eol
+            end
+        end
     end
 
     ijl ? "\$\$ \\begin{alignat*}{1}"*str*"\\end{alignat*}\n \$\$" :
@@ -788,6 +799,16 @@ function expr_str(mode, c::SOCExpr)
 end
 
 #------------------------------------------------------------------------
+## NonlinearExprData
+#------------------------------------------------------------------------
+#Base.show(io::IO, c::NonlinearExprData) = print(io, expr_str(REPLMode, c))
+#Base.show(io::IO, ::MIME"text/latex", c::NonlinearExprData) =
+#    print(io, expr_str(IJuliaMode, c))
+function expr_str(m::Model, mode, c::NonlinearExprData)
+    return string(tapeToExpr(m, 1, c.nd, adjmat(c.nd), c.const_values, [], [], m.nlpdata.user_operators, false, false, mode))
+end
+
+#------------------------------------------------------------------------
 ## GenericRangeConstraint
 #------------------------------------------------------------------------
 Base.show(io::IO, c::GenericRangeConstraint) = print(io, con_str(REPLMode,c))
@@ -889,6 +910,29 @@ con_str(::Type{IJuliaMode}, c::SDConstraint; mathmode=true) =
     math(con_str(IJuliaMode, c, ijulia[:succeq0], mathmode))
 
 #------------------------------------------------------------------------
+## NonlinearConstraint
+#------------------------------------------------------------------------
+Base.show(io::IO, c::NonlinearConstraint) = print(io, con_str(REPLMode,c))
+Base.show(io::IO, ::MIME"text/latex", c::NonlinearConstraint) =
+    print(io, con_str(IJuliaMode,c,mathmode=false))
+# Generic string converter, called by mode-specific handlers
+function con_str(m::Model, mode, c::NonlinearConstraint, sym)
+    s = sense(c)
+    nl = expr_str(m, mode, c.terms)
+    if s == :range
+        out_str = "$(str_round(c.lb)) $(sym[:leq]) $nl $(sym[:leq]) $(str_round(c.ub))"
+    else
+        rel = s == :<= ? sym[:leq] : (s == :>= ? sym[:geq] : sym[:eq])
+        out_str = string(nl," ",rel," ",str_round(rhs(c)))
+    end
+    out_str
+end
+# Handlers to use correct symbols
+con_str(m::Model, ::Type{REPLMode}, c::GenericRangeConstraint; args...) =
+    con_str(m, REPLMode, c, repl)
+con_str(m::Model, ::Type{IJuliaMode}, c::GenericRangeConstraint; mathmode=true) =
+    math(con_str(m, IJuliaMode, c, ijulia), mathmode)
+#------------------------------------------------------------------------
 ## ConstraintRef
 #------------------------------------------------------------------------
 Base.show(io::IO, c::ConstraintRef{Model,LinearConstraint}) = print(io, con_str(REPLMode,c.m.linconstr[c.idx]))
@@ -896,12 +940,18 @@ Base.show(io::IO, c::ConstraintRef{Model,QuadConstraint})   = print(io, con_str(
 Base.show(io::IO, c::ConstraintRef{Model,SOSConstraint})    = print(io, con_str(REPLMode,c.m.sosconstr[c.idx]))
 Base.show(io::IO, c::ConstraintRef{Model,SOCConstraint})    = print(io, con_str(REPLMode,c.m.socconstr[c.idx]))
 Base.show(io::IO, c::ConstraintRef{Model,SDConstraint})     = print(io, con_str(REPLMode,c.m.sdpconstr[c.idx]))
-function Base.show(io::IO, c::ConstraintRef{Model,NonlinearConstraint})
-    print(io, "Reference to nonlinear constraint #$(linearindex(c))")
-end
+Base.show(io::IO, c::ConstraintRef{Model,NonlinearConstraint}) = print(io, con_str(c.m, REPLMode, c.m.nlpdata.nlconstr[c.idx]))
+
 Base.show(io::IO, ::MIME"text/latex", c::ConstraintRef{Model,LinearConstraint}) =
     print(io, con_str(IJuliaMode,c.m.linconstr[c.idx],mathmode=false))
 Base.show(io::IO, ::MIME"text/latex", c::ConstraintRef{Model,QuadConstraint}) =
     print(io, con_str(IJuliaMode,c.m.quadconstr[c.idx],mathmode=false))
 Base.show(io::IO, ::MIME"text/latex", c::ConstraintRef{Model,SOSConstraint}) =
     print(io, con_str(IJuliaMode,c.m.sosconstr[c.idx],mathmode=false))
+Base.show(io::IO, ::MIME"text/latex", c::ConstraintRef{Model,NonlinearConstraint}) = print(io, con_str(c.m, IJuliaMode, c.m.nlpdata.nlconstr[c.idx],mathmode=false))
+
+#------------------------------------------------------------------------
+## Nonlinear expression/parameter reference
+#------------------------------------------------------------------------
+Base.show(io::IO, ex::NonlinearExpression) = Base.show(io, "Reference to nonlinear expression #$(ex.index)")
+Base.show(io::IO, p::NonlinearParameter) = Base.show(io, "Reference to nonlinear parameter #$(p.index)")
