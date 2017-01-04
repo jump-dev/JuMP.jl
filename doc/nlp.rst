@@ -61,12 +61,13 @@ the syntax for linear and quadratic expressions. We note some important points b
   linear constraints.
   However, the code ``sin(x)`` is an error. All nonlinear expressions must
   be inside of macros.
-- As a corollary, user-defined functions may not be used within nonlinear
-  expressions. See the example below::
+- :ref:`userfunctions` be used within nonlinear
+  expressions only after they are registered.
+  For example::
 
     myfunction(a,b) = exp(a)*b
     @variable(m, x); @variable(m, y)
-    @NLobjective(m, Min, myfunction(x,y)) # ERROR
+    @NLobjective(m, Min, myfunction(x,y)) # ERROR. Needs JuMP.register() first.
     @NLobjective(m, Min, exp(x)*y) # Okay
 
 - ``AffExpr`` and ``QuadExpr`` objects cannot currently be used inside nonlinear
@@ -132,6 +133,8 @@ Nonlinear parameters are useful when solving nonlinear models in a sequence::
 Using nonlinear parameters can be faster than creating a new model from scratch
 with updated data because JuMP is able to avoid repeating a number of steps
 in processing the model before handing it off to the solver.
+
+.. _userfunctions:
 
 User-defined functions
 ^^^^^^^^^^^^^^^^^^^^^^
