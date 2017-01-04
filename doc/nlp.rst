@@ -61,7 +61,7 @@ the syntax for linear and quadratic expressions. We note some important points b
   linear constraints.
   However, the code ``sin(x)`` is an error. All nonlinear expressions must
   be inside of macros.
-- :ref:`userfunctions` be used within nonlinear
+- :ref:`userfunctions` may be used within nonlinear
   expressions only after they are registered.
   For example::
 
