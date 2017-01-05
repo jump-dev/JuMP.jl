@@ -386,7 +386,7 @@ getupperbound(v::Variable) = v.m.colUpper[v.col]
 function setvalue(v::Variable, val::Number)
     v.m.colVal[v.col] = val
     if v.m.colCat[v.col] == :Fixed
-        error("setvalue use for setting bounds of fixed variables was deprecated in favour of JuMP.fix(v::Variable, val::Number), which changes bounds of fixed variables and fixes previously not fixed variables ")
+        error("setvalue for fixed variables is no longer supported. Use JuMP.fix instead.")
     end
 end
 
