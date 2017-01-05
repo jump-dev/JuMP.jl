@@ -65,6 +65,20 @@ const TOL = 1e-4
         @test isapprox(getvalue(y), 0.0, atol=TOL)
         @test isapprox(getvalue(z), 2.0, atol=TOL)
         m.internalModelLoaded = false
+
+        # Test fixing variable
+        # max 1.1x + 1.0y + 100.0z
+        # st     x +    y +      z <= 3
+        #     0.5 <= x <= 0.5
+        #     0 <= y <= 3
+        #     0 <= z <= 2
+        # x* = 0.5, y* = 0.5, z* = 2
+        JuMP.fix(x, 0.5)
+        @test solve(m) == :Optimal
+        @test isapprox(getvalue(x), 0.5, atol=TOL)
+        @test isapprox(getvalue(y), 0.5, atol=TOL)
+        @test isapprox(getvalue(z), 2.0, atol=TOL)
+        m.internalModelLoaded = false
     end
 
 
