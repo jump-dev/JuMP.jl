@@ -62,7 +62,7 @@ using Base.Test
         @test getvalue(fixedvar) == 2
         @test getlowerbound(fixedvar) == 2
         @test getupperbound(fixedvar) == 2
-        setvalue(fixedvar, 5)
+        JuMP.fix(fixedvar, 5)
         @test getvalue(fixedvar) == 5
         @test getlowerbound(fixedvar) == 5
         @test getupperbound(fixedvar) == 5
