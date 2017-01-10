@@ -279,14 +279,6 @@ function MathProgBase.initialize(d::NLPEvaluator, requested_features::Vector{Sym
         push!(main_expressions,nlconstr.terms.nd)
     end
     d.subexpression_order, individual_order = order_subexpressions(main_expressions,subexpr)
-    if :ExprGraph in requested_features
-        d.subexpressions_as_julia_expressions = Array(Any,length(subexpr))
-        for k in d.subexpression_order
-            ex = nldata.nlexpr[k]
-            adj = adjmat(ex.nd)
-            d.subexpressions_as_julia_expressions[k] = tapeToExpr(d.m, 1, ex.nd, adj, ex.const_values, d.parameter_values, d.subexpressions_as_julia_expressions, nldata.user_operators, true, true)
-        end
-    end
 
     d.subexpression_linearity = Array(Linearity, length(nldata.nlexpr))
     subexpression_variables = Array(Vector{Int}, length(nldata.nlexpr))
@@ -328,6 +320,18 @@ function MathProgBase.initialize(d::NLPEvaluator, requested_features::Vector{Sym
             subexpression_edgelist[k] = empty_edgelist
         end
 
+    end
+
+    if :ExprGraph in requested_features
+        d.subexpressions_as_julia_expressions = Array(Any,length(subexpr))
+        for k in d.subexpression_order
+            if d.subexpression_linearity[k] != CONSTANT || !SIMPLIFY
+                ex = d.subexpressions[k]
+                d.subexpressions_as_julia_expressions[k] = tapeToExpr(d.m, 1, ex.nd, ex.adj, ex.const_values, d.parameter_values, d.subexpressions_as_julia_expressions, nldata.user_operators, true, true)
+            else
+                d.subexpressions_as_julia_expressions[k] = d.subexpression_forward_values[k]
+            end
+        end
     end
 
     if SIMPLIFY
@@ -1174,10 +1178,9 @@ end
 
 function MathProgBase.obj_expr(d::NLPEvaluator)
     if d.has_nlobj
-        # for now, don't pass simplified expressions
-        ex = d.m.nlpdata.nlobj
-        adj = adjmat(ex.nd)
-        return tapeToExpr(d.m, 1, ex.nd, adj, ex.const_values, d.parameter_values, d.subexpressions_as_julia_expressions,d.m.nlpdata.user_operators, true, true)
+        # expressions are simplified if requested
+        ex = d.objective
+        return tapeToExpr(d.m, 1, ex.nd, ex.adj, ex.const_values, d.parameter_values, d.subexpressions_as_julia_expressions,d.m.nlpdata.user_operators, true, true)
     else
         return quadToExpr(d.m.obj, true)
     end
@@ -1200,11 +1203,9 @@ function MathProgBase.constr_expr(d::NLPEvaluator,i::Integer)
         return Expr(:call, qconstr.sense, quadToExpr(qconstr.terms, true), 0)
     else
         i -= nlin + nquad
-        # for now, don't pass simplified expressions
+        ex = d.constraints[i] # may be simplified
+        julia_expr = tapeToExpr(d.m, 1, ex.nd, ex.adj, ex.const_values, d.parameter_values, d.subexpressions_as_julia_expressions,d.m.nlpdata.user_operators, true, true)
         constr = d.m.nlpdata.nlconstr[i]
-        ex = constr.terms
-        adj = adjmat(ex.nd)
-        julia_expr = tapeToExpr(d.m, 1, ex.nd, adj, ex.const_values, d.parameter_values, d.subexpressions_as_julia_expressions,d.m.nlpdata.user_operators, true, true)
         if sense(constr) == :range
             return Expr(:comparison, constr.lb, :(<=), julia_expr, :(<=), constr.ub)
         else

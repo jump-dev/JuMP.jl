@@ -562,6 +562,23 @@ end
     end
     test_nl_mpb()
 
+    @testset "Simplified expression graphs" begin
+        m = Model(simplify_nonlinear_expressions=true)
+        # this is expert behavior, expression simplification is experimental
+        @variable(m, x == 2)
+        @variable(m, y)
+        @NLobjective(m, Min, x^2 + y^2)
+        @NLexpression(m, ex, exp(x))
+        @NLconstraint(m, ex - y == 0)
+        @NLconstraint(m, ex + 1 == 0)
+
+        d = JuMP.NLPEvaluator(m)
+        MathProgBase.initialize(d, [:ExprGraph])
+        @test MathProgBase.obj_expr(d) == :(4.0 + x[2] ^ 2.0)
+        @test MathProgBase.constr_expr(d,1) == :(($(exp(2)) - x[2]) - 0.0 == 0.0)
+        @test MathProgBase.constr_expr(d,2) == :($(exp(2) + 1) == 0.0)
+    end
+
     @testset "Expression graph for linear problem" begin
         m = Model()
         @variable(m, x)
