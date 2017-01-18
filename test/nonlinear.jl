@@ -131,7 +131,7 @@ end
         @objective(m, Min, y)
         @NLconstraint(m, y ≥ x^2)
         for α in 1:4
-            setvalue(x, α)
+            JuMP.fix(x, α)
             solve(m)
             @test isapprox(getvalue(y), α^2, atol=1e-6)
         end
