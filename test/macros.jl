@@ -602,7 +602,8 @@ const sub2 = JuMP.repl[:sub2]
         m = Model()
         x = @variable(m, [1:3], lowerbound=1.0)
         y = @variable(m, [2:3,1:3], upperbound=1.0, lowerbound=0.0, Bin)
-        z = @variable(m, [[:red,:blue]], Int)
+        cat = Dict(:red => :Int, :blue => :Bin)
+        z = @variable(m, [s=[:red,:blue]], category = cat[s])
         w = @variable(m, [i=1:4,j=1:4;isodd(i+j)], SemiCont)
         # v = @variable(m, [i=1:3,j=1:3], Symmetric, lowerbound = eye(3)[i,j])
         u = @variable(m, [1:4,1:4], SDP)
@@ -617,6 +618,7 @@ const sub2 = JuMP.repl[:sub2]
         @test getlowerbound(z[:red]) == -Inf
         @test getupperbound(z[:red]) == Inf
         @test getcategory(z[:red]) == :Int
+        @test getcategory(z[:blue]) == :Bin
         @test getlowerbound(w[1,2]) == -Inf
         @test getupperbound(w[1,2]) == Inf
         @test getcategory(w[1,2]) == :SemiCont
@@ -661,9 +663,10 @@ const sub2 = JuMP.repl[:sub2]
     @testset "Anonymous singleton variables" begin
         m = Model()
         x = @variable(m)
-        y = @variable(m, lowerbound=0, upperbound=1)
+        y = @variable(m, lowerbound=0, upperbound=1, category = :Int)
         @test x == Variable(m, 1)
         @test y == Variable(m, 2)
+        @test getcategory(y) == :Int
     end
 
     @testset "Invalid variable names" begin

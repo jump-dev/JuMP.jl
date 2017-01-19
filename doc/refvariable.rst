@@ -64,7 +64,7 @@ Conditions can be placed on the index values for which variables are created; th
 
     @variable(m, x[i=1:10,j=1:10; isodd(i+j)] >= 0)
 
-Note that only one condition can be added, although expressions can be built up by using the usual ``&&`` and ``||`` logical operators. **This condition syntax requires Julia 0.4 or later.**
+Note that only one condition can be added, although expressions can be built up by using the usual ``&&`` and ``||`` logical operators.
 
 An initial value of each variable may be provided with the ``start`` keyword to ``@variable``::
 
@@ -81,6 +81,13 @@ For more complicated variable bounds, it may be clearer to specify them using th
 
     @variable(m, x[i=1:3], lowerbound=my_complex_function(i))
     @variable(m, x[i=1:3], lowerbound=my_complex_function(i), upperbound=another_function(i))
+
+Variable categories may be set in a more programmatic way by providing
+the appropriate symbol to the ``category`` keyword argument::
+
+    t = [:Bin,:Int]
+    @variable(m, x[i=1:2], category=t[i])
+    @variable(m, y, category=:SemiCont)
 
 The constructor ``Variable(m::Model,idx::Int)`` may be used to create a variable object corresponding to an *existing* variable in the model (the constructor does not add a new variable to the model). The variable indices correspond to those of the internal MathProgBase model. The inverse of this operation is ``linearindex(x::Variable)``, which returns the flattened out (linear) index of a variable as JuMP provides it to a solver. We guarantee that ``Variable(m,linearindex(x))`` returns ``x`` itself. These methods are only useful if you intend to interact with solver properties which are not directly exposed through JuMP.
 
@@ -105,7 +112,12 @@ and instead assign the return value as you would like::
     x = @variable(m) # Equivalent to @variable(m, x)
     x = @variable(m, [i=1:3], lowerbound = i, upperbound = 2i) # Equivalent to @variable(m, i <= x[i=1:3] <= 2i)
 
-The ``lowerbound`` and ``upperbound`` must be used instead of comparison operators for specifying variable bounds within the anonymous syntax. The **only** differences between anonymous and named variables are:
+The ``lowerbound`` and ``upperbound`` keywords must be used instead of comparison operators for specifying variable bounds within the anonymous syntax. For creating noncontinuous anonymous variables, the ``category`` keyword must be used to avoid ambiguity, e.g.::
+
+    x = @variable(m, Bin) # error
+    x = @variable(m, category = :Bin) # ok
+
+Besides these syntax restrictions in the ``@variable`` macro, the **only** differences between anonymous and named variables are:
 
     1. For the purposes of printing a model, JuMP will not have a name for anonymous variables and will instead use ``__anon__``. You may set the name of a variable for printing by using ``setname`` or the ``basename`` keyword argument described below.
     2. Anonymous variables cannot be retrieved by using ``getvariable``.

@@ -794,6 +794,7 @@ function isdependent(idxvars,idxset,i)
 end
 
 esc_nonconstant(x::Number) = x
+esc_nonconstant(x::Expr) = isexpr(x,:quote) ? x : esc(x)
 esc_nonconstant(x) = esc(x)
 
 const EMPTYSTRING = ""
@@ -816,12 +817,12 @@ macro variable(args...)
     else
         x = shift!(extra)
         if x in [:Cont,:Int,:Bin,:SemiCont,:SemiInt,:SDP]
-            variable_error(args, "Ambiguous variable name $x detected. This conflicts with a possible variable type. Rename the variable.")
+            variable_error(args, "Ambiguous variable name $x detected. Use the \"category\" keyword argument to specify a category for an anonymous variable.")
         end
         anon_singleton = false
     end
 
-    t = :Cont
+    t = quot(:Cont)
     gottype = false
     haslb = false
     hasub = false
@@ -875,7 +876,7 @@ macro variable(args...)
             ub = esc(x.args[3])
             hasub = true
             gottype = true
-            t = :Fixed
+            t = quot(:Fixed)
         else
             # Its a comparsion, but not using <= ... <=
             variable_error(args, "Unexpected syntax $(string(x)).")
@@ -923,6 +924,10 @@ macro variable(args...)
             hasub && variable_error(args, "Cannot specify variable upperbound twice")
             ub = esc_nonconstant(ex.args[2])
             hasub = true
+        elseif kwarg == :category
+            (t == quot(:Fixed)) && variable_error(args, "Unexpected extra arguments when declaring a fixed variable")
+            t = esc_nonconstant(ex.args[2])
+            gottype = true
         else
             variable_error(args, "Unrecognized keyword argument $kwarg")
         end
@@ -940,15 +945,13 @@ macro variable(args...)
     # Determine variable type (if present).
     # Types: default is continuous (reals)
     if length(extra) > 0
-        if t == :Fixed
-            variable_error(args, "Unexpected extra arguments when declaring a fixed variable")
-        end
+        gottype && variable_error(args, "Variable category specified more than once")
         if extra[1] in [:Bin, :Int, :SemiCont, :SemiInt]
             gottype = true
-            t = extra[1]
+            t = quot(extra[1])
         end
 
-        if t == :Bin
+        if t == quot(:Bin)
             if (lb != -Inf || ub != Inf) && !(lb == 0.0 && ub == 1.0)
             variable_error(args, "Bounds other than [0, 1] may not be specified for binary variables.\nThese are always taken to have a lower bound of 0 and upper bound of 1.")
             else
@@ -966,7 +969,7 @@ macro variable(args...)
         variable_error(args, "Can only create one variable at a time when adding to existing constraints.")
 
         return assert_validmodel(m, quote
-            $variable = Variable($m,$lb,$ub,$(quot(t)),$obj,$inconstraints,$coefficients,string($quotvarname),$value)
+            $variable = Variable($m,$lb,$ub,$t,$obj,$inconstraints,$coefficients,string($quotvarname),$value)
             $(anonvar ? variable : :($escvarname = $variable))
         end)
     end
@@ -974,7 +977,7 @@ macro variable(args...)
     if isa(var,Symbol)
         # Easy case - a single variable
         sdp && variable_error(args, "Cannot add a semidefinite scalar variable")
-        code = :($variable = Variable($m,$lb,$ub,$(quot(t)),string($quotvarname),$value))
+        code = :($variable = Variable($m,$lb,$ub,$t,string($quotvarname),$value))
         if !anonvar
             code = quote
                 $code
@@ -991,7 +994,7 @@ macro variable(args...)
     refcall, idxvars, idxsets, idxpairs, condition = buildrefsets(var, variable)
     clear_dependencies(i) = (isdependent(idxvars,idxsets[i],i) ? () : idxsets[i])
 
-    code = :( $(refcall) = Variable($m, $lb, $ub, $(quot(t)), EMPTYSTRING, $value) )
+    code = :( $(refcall) = Variable($m, $lb, $ub, $t, EMPTYSTRING, $value) )
     if symmetric
         # Sanity checks on SDP input stuff
         condition == :() ||
