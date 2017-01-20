@@ -312,6 +312,11 @@ vecdot{T<:JuMPTypes,S,N}(lhs::Array{T,N},rhs::Array{S,N}) = _dot(lhs,rhs)
 vecdot{T<:JuMPTypes,S<:JuMPTypes,N}(lhs::Array{T,N},rhs::Array{S,N}) = _dot(lhs,rhs)
 vecdot{T,S<:JuMPTypes,N}(lhs::Array{T,N},rhs::Array{S,N}) = _dot(lhs,rhs)
 
+function _dot{T,S}(lhs::Vector{T}, rhs::Vector{S})
+    length(lhs) == length(rhs) || error("Incompatible dimensions")
+    sum(lhs[i] * rhs[i] for i = 1:length(lhs))
+end
+    
 function _dot{T,S}(lhs::Array{T}, rhs::Array{S})
     size(lhs) == size(rhs) || error("Incompatible dimensions")
     ret = zero(one(T)*one(S))
