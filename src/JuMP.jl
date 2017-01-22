@@ -387,9 +387,16 @@ getupperbound(v::Variable) = v.m.colUpper[v.col]
 function setvalue(v::Variable, val::Number)
     v.m.colVal[v.col] = val
     if v.m.colCat[v.col] == :Fixed
-        v.m.colLower[v.col] = val
-        v.m.colUpper[v.col] = val
+        error("setvalue for fixed variables is no longer supported. Use JuMP.fix instead.")
     end
+end
+
+# Fix a variable that was not previously fixed
+function fix(v::Variable, val::Number)
+    v.m.colCat[v.col] = :Fixed
+    v.m.colLower[v.col] = val
+    v.m.colUpper[v.col] = val
+    v.m.colVal[v.col] = val
 end
 
 # internal method that doesn't print a warning if the value is NaN

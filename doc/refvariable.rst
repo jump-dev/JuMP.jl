@@ -196,7 +196,7 @@ Methods
 * ``getvalue(x)`` - Get the value of this variable in the solution. If ``x`` is a single variable, this will simply return a number.
   If ``x`` is indexable then it will return an indexable dictionary of values. When the model is unbounded, ``getvalue`` will
   instead return the corresponding components of an unbounded ray, if available from the solver.
-* ``setvalue(x,v)`` - Provide an initial value ``v`` for this variable that can be used by supporting MILP solvers. If ``v`` is ``NaN``, the solver may attempt to fill in this value to construct a feasible solution.
+* ``setvalue(x,v)`` - Provide an initial value ``v`` for this variable that can be used by supporting MILP solvers. If ``v`` is ``NaN``, the solver may attempt to fill in this value to construct a feasible solution.  ``setvalue`` is not supported for fixed variables, their initial value is set with ``JuMP.fix(x,v)`` together with their bounds.
 * ``getdual(x)`` - Get the reduced cost of this variable in the solution. Similar behavior to ``getvalue`` for indexable variables.
 
 .. note::
@@ -231,7 +231,8 @@ Two possible uses for fixed variables are:
    the sensitivity of the objective with respect to the fixed value may be queried with ``getdual(x)``.
 
 2. For solving a sequence of problems with varying parameters.
-   One may call ``setvalue(x, val)``
-   to change the value to which the variable is fixed. For LPs
+   One may call ``JuMP.fix(x, val)``
+   to change the value of a fixed variable or to fix a 
+   previously unfixed variable. For LPs
    in particular, most solvers are able to efficiently hot-start when
    solving the resulting modified problem.
