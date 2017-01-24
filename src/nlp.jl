@@ -258,7 +258,8 @@ function MathProgBase.initialize(d::NLPEvaluator, requested_features::Vector{Sym
 
     tic()
 
-    d.linobj, linrowlb, linrowub = prepProblemBounds(d.m)
+    d.linobj = prepAffObjective(d.m)
+    linrowlb, linrowub = prepConstrBounds(d.m)
     numVar = length(d.linobj)
 
     d.want_hess = (:Hess in requested_features)
@@ -1226,7 +1227,8 @@ export EnableNLPResolve, DisableNLPResolve
 
 function _buildInternalModel_nlp(m::Model, traits)
 
-    linobj, linrowlb, linrowub = prepProblemBounds(m)
+    linobj = prepAffObjective(m)
+    linrowlb, linrowub = prepConstrBounds(m)
 
     nldata::NLPData = m.nlpdata
     if m.internalModelLoaded && !m.simplify_nonlinear_expressions
