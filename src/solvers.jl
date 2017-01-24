@@ -340,7 +340,8 @@ function build(m::Model; suppress_warnings=false, relaxation=false, traits=Probl
         MathProgBase.loadproblem!(m.internalModel, f, A, b, con_cones, var_cones)
     else
         # Extract objective coefficients and linear constraint bounds
-        f, rowlb, rowub = prepProblemBounds(m)
+        f = prepAffObjective(m)
+        rowlb, rowub = prepConstrBounds(m)
         # If we already have an MPB model for the solver...
         if m.internalModelLoaded
             # ... and if the solver supports updating bounds/objective
@@ -437,7 +438,7 @@ function addQuadratics(m::Model)
         # Check that no coefficients are NaN/Inf
         assert_isfinite(m.obj)
         # Check that quadratic term variables belong to this model
-        # Affine portion is checked in prepProblemBounds
+        # Affine portion is checked in prepAffObjective
         if !(verify_ownership(m, m.obj.qvars1) &&
                 verify_ownership(m, m.obj.qvars2))
             error("Variable not owned by model present in objective")
@@ -502,9 +503,8 @@ function addSOS(m::Model)
     end
 end
 
-# Returns coefficients for the affine part of the objective and the
-# affine constraint lower and upper bounds, all as dense vectors
-function prepProblemBounds(m::Model)
+# Returns coefficients for the affine part of the objective
+function prepAffObjective(m::Model)
 
     # Create dense objective vector
     objaff::AffExpr = m.obj.aff
@@ -518,6 +518,12 @@ function prepProblemBounds(m::Model)
         f[objaff.vars[ind].col] += objaff.coeffs[ind]
     end
 
+    return f
+end
+
+# Returns affine constraint lower and upper bounds, all as dense vectors
+function prepConstrBounds(m::Model)
+
     # Create dense affine constraint bound vectors
     linconstr = m.linconstr::Vector{LinearConstraint}
     numRows = length(linconstr)
@@ -529,10 +535,10 @@ function prepProblemBounds(m::Model)
         rowub[ind] = linconstr[ind].ub
     end
 
-    return f, rowlb, rowub
+    return rowlb, rowub
 end
 
-# Convert all the affine constraints into a sparse column-wise
+# Converts all the affine constraints into a sparse column-wise
 # matrix of coefficients.
 function prepConstrMatrix(m::Model)
 
@@ -977,8 +983,7 @@ function conicdata(m::Model)
     m.constrDualMap = constr_dual_map
     m.sdpconstrSym = sdpconstr_sym
 
-    # Use only the objective coefficients from prepProblemBounds
-    f,_,_ = prepProblemBounds(m)
+    f = prepAffObjective(m)
 
     # The conic MPB interface defines conic problems as
     # always being minimization problems, so flip if needed
@@ -1014,7 +1019,8 @@ function constraintbounds(m::Model,traits::ProblemTraits)
         error("Not implemented for SOS constraints")
     end
 
-    linobj, linrowlb, linrowub = prepProblemBounds(m)
+    linobj = prepAffObjective(m)
+    linrowlb, linrowub = prepConstrBounds(m)
 
     quadrowlb = Float64[]
     quadrowub = Float64[]

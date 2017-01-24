@@ -707,7 +707,8 @@ end
         @objective(modS, Max, sum(AA[i,j]*x[i]*x[j] for i=1:10,j=1:10) + sum(BB[i,j]*y[i]*y[j] for i=1:7, j=1:7))
 
         @test JuMP.prepConstrMatrix(modV) == JuMP.prepConstrMatrix(modS)
-        @test JuMP.prepProblemBounds(modV) == JuMP.prepProblemBounds(modS)
+        @test JuMP.prepAffObjective(modV) == JuMP.prepAffObjective(modS)
+        @test JuMP.prepConstrBounds(modV) == JuMP.prepConstrBounds(modS)
     end
 
     @testset "Test MIQP vectorization" begin

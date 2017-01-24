@@ -31,7 +31,8 @@ function writeMPS(m::Model, fname::AbstractString)
     end
     gc_enable(true)
 
-    objlincoef, rowlb, rowub = prepProblemBounds(m)
+    objlincoef = prepAffObjective(m)
+    rowlb, rowub = prepConstrBounds(m)
     if m.objSense == :Max
         println("Warning, MPS does not support maximization sense. Flipping objective coefficients.")
         objlincoef = -objlincoef
