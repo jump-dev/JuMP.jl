@@ -446,12 +446,16 @@ function build(m::Model; suppress_warnings=false, relaxation=false, traits=Probl
         error("Solver does not support discrete variables")
     end
 
-    # Provide a primal solution to the solve, if the problem is integer
-    # and the user has provided one.
-    # TODO: change this so you can warm start continuous problems?
-    if !relaxation && traits.int && !all(isnan(m.colVal))
+    # Provide a primal solution to the solver,
+    # if the user has provided a solution or a partial solution.
+    if !all(isnan(m.colVal))
         if applicable(MathProgBase.setwarmstart!, m.internalModel, m.colVal)
-            MathProgBase.setwarmstart!(m.internalModel, m.colVal)
+            if !traits.int || relaxation
+                MathProgBase.setwarmstart!(m.internalModel, tidy_warmstart(m))
+            else
+                # we can pass NaNs through
+                MathProgBase.setwarmstart!(m.internalModel, m.colVal)
+            end
         else
             suppress_warnings || Base.warn_once("Solver does not appear to support providing initial feasible solutions.")
         end
@@ -1088,6 +1092,17 @@ function constraintbounds(m::Model,traits::ProblemTraits)
 
     return lb, ub
 
+end
+
+# for continuous problems we probably don't want to pass NaNs to the solvers
+function tidy_warmstart(m::Model)
+    if !any(isnan, m.colVal)
+        return m.colVal
+    else
+        initval = copy(m.colVal)
+        initval[isnan(m.colVal)] = 0
+        return initval
+    end
 end
 
 
