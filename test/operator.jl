@@ -499,9 +499,9 @@ const sub2 = JuMP.repl[:sub2]
         # https://github.com/JuliaOpt/JuMP.jl/pull/943
         pull943 = Model()
         @variable(pull943, x[1 : 10^6]);
-        setvalue.(x, rand(n))
-        setvalue.(y, 1:n)
-        @expression(pull943, testsum, sum(x[i] * i for i = 1 : n))
+        setvalue.(x, rand(10^6))
+        setvalue.(y, 1 : 10^6)
+        @expression(pull943, testsum, sum(x[i] * i for i = 1 : 10^6))
         @expression(pull943, testdot1, dot(x, 1 : 10^6))
         @expression(pull943, testdot2, dot(1 : 10^6, x))
         @test isapprox(getvalue(testsum), getvalue(testdot1))
