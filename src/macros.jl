@@ -747,7 +747,7 @@ macro expression(args...)
     end
     code = quote
         $code
-        $(refcall) = $newaff
+        $(refcall) = convert(AffExpr,$newaff)
     end
     code = getloopedcode(variable, code, condition, idxvars, idxsets, idxpairs, :AffExpr)
     if m === nothing # deprecated usage
