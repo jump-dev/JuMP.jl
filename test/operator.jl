@@ -500,7 +500,6 @@ const sub2 = JuMP.repl[:sub2]
         pull943 = Model()
         @variable(pull943, x[1 : 10^6]);
         setvalue.(x, rand(10^6))
-        setvalue.(y, 1 : 10^6)
         @expression(pull943, testsum, sum(x[i] * i for i = 1 : 10^6))
         @expression(pull943, testdot1, dot(x, 1 : 10^6))
         @expression(pull943, testdot2, dot(1 : 10^6, x))
