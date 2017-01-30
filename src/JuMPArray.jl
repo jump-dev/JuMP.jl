@@ -43,7 +43,7 @@ Base.getindex(d::JuMPArray, ::Colon) = d.innerArray[:]
     Expr(:call, :getindex, :(d.innerArray), _to_cartesian(d,NT,idx)...)
 end
 
-@generated function Base.setindex!{T,N,NT<:NTuple}(d::JuMPArray{T,N,NT}, v::T, idx...)
+@generated function Base.setindex!{T,N,NT<:NTuple}(d::JuMPArray{T,N,NT}, v, idx...)
     if N != length(idx)
         error("Indexed into a JuMPArray with $(length(idx)) indices (expected $N indices)")
     end
