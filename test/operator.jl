@@ -495,6 +495,16 @@ const sub2 = JuMP.repl[:sub2]
         anys[1] = 10
         anys[2] = 20 + x
         @test dot(floats, anys) == 10 + 40 + 2x
+            
+        # https://github.com/JuliaOpt/JuMP.jl/pull/943
+        pull943 = Model()
+        @variable(pull943, x[1 : 10^6]);
+        setvalue.(x, 1 : 10^6)
+        @expression(pull943, testsum, sum(x[i] * i for i = 1 : 10^6))
+        @expression(pull943, testdot1, dot(x, 1 : 10^6))
+        @expression(pull943, testdot2, dot(1 : 10^6, x))
+        @test isapprox(getvalue(testsum), getvalue(testdot1))
+        @test isapprox(getvalue(testsum), getvalue(testdot2))
     end
     end
 
