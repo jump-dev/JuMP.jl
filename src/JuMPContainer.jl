@@ -49,6 +49,8 @@ getname(data::JuMPContainerData) = data.name
 #    JuMPDict{T,N}(Dict{NTuple{N},T}(), name)
 
 Base.getindex(d::JuMPDict, t...) = d.tupledict[t]
+Base.getindex(d::JuMPDict, x::JuMPKey) = Base.getindex(d, x.jk...)
+
 Base.setindex!(d::JuMPDict, value, t...) = (d.tupledict[t] = value)
 
 Base.map(f::Function, d::JuMPArray) =
@@ -187,7 +189,7 @@ Base.eltype{T}(x::JuMPContainer{T}) = T
 Base.full(x::JuMPContainer) = x
 
 # keys/vals iterations for JuMPContainers
-Base.keys(d::JuMPDict)    = keys(d.tupledict)
+Base.keys(d::JuMPDict)    = JDKeyIterator(keys(d.tupledict))
 Base.values(d::JuMPDict)  = values(d.tupledict)
 
 Base.keys(d::JuMPArray)   = KeyIterator(d)
@@ -201,6 +203,17 @@ Base.start(it::ValueIterator)   =  start(it.x)
 Base.next(it::ValueIterator, k) =   next(it.x, k)
 Base.done(it::ValueIterator, k) =   done(it.x, k)
 Base.length(it::ValueIterator)  = length(it.x)
+
+type JDKeyIterator{T<:Base.KeyIterator}
+    x::T
+end
+Base.start(it::JDKeyIterator)   =  start(it.x)
+function Base.next(it::JDKeyIterator, k)
+    n = next(it.x, k)
+    JuMPKey(n[1]), n[2]
+end
+Base.done(it::JDKeyIterator, k) =   done(it.x, k)
+Base.length(it::JDKeyIterator)  = length(it.x)
 
 type KeyIterator{JA<:JuMPArray}
     x::JA
@@ -245,7 +258,7 @@ end
 end
 
 function Base.next(it::KeyIterator, k::Tuple)
-    cartesian_key = _next(it.x, k)
+    cartesian_key = JuMPKey(_next(it.x, k))
     pos = -1
     for i in 1:it.dim
         if !done(it.x.indexsets[i], next(it.x.indexsets[i], k[i+1])[2] )
@@ -275,7 +288,7 @@ Base.done(it::KeyIterator, k::Tuple) = (k[1] == 1)
 @generated __next{T,N,NT}(x::JuMPArray{T,N,NT}, k::Integer) =
     quote
         subidx = ind2sub(size(x),k)
-        $(Expr(:tuple, [:(x.indexsets[$i][subidx[$i]]) for i in 1:N]...)), next(x.innerArray,k)[2]
+        JuMPKey($(Expr(:tuple, [:(x.indexsets[$i][subidx[$i]]) for i in 1:N]...))), next(x.innerArray,k)[2]
     end
 Base.next(it::KeyIterator, k) = __next(it.x,k::Integer)
 Base.done(it::KeyIterator, k) = done(it.x.innerArray, k::Integer)
