@@ -296,23 +296,23 @@ Base.dot(lhs::JuMPTypes, rhs::JuMPTypes) = lhs*rhs
 Base.dot(lhs::JuMPTypes, rhs::Number)    = lhs*rhs
 Base.dot(lhs::Number,    rhs::JuMPTypes) = lhs*rhs
 
-Base.dot{T,S,N}(lhs::Array{T,N}, rhs::JuMPArray{S,N})    = begin _dot_depr(); vecdot(lhs,rhs); end
-Base.dot{T,S,N}(lhs::JuMPArray{T,N},rhs::Array{S,N})     = begin _dot_depr(); vecdot(lhs,rhs); end
+Base.dot{T,S,N}(lhs::AbstractArray{T,N}, rhs::JuMPArray{S,N})    = begin _dot_depr(); vecdot(lhs,rhs); end
+Base.dot{T,S,N}(lhs::JuMPArray{T,N},rhs::AbstractArray{S,N})     = begin _dot_depr(); vecdot(lhs,rhs); end
 Base.dot{T,S,N}(lhs::JuMPArray{T,N},rhs::JuMPArray{S,N}) = begin _dot_depr(); vecdot(lhs,rhs); end
-Base.dot{T<:JuMPTypes,S,N}(lhs::Array{T,N}, rhs::Array{S,N}) = begin _dot_depr(); vecdot(lhs,rhs); end
-Base.dot{T<:JuMPTypes,S<:JuMPTypes,N}(lhs::Array{T,N}, rhs::Array{S,N}) = begin _dot_depr(); vecdot(lhs,rhs); end
-Base.dot{T,S<:JuMPTypes,N}(lhs::Array{T,N}, rhs::Array{S,N}) = begin _dot_depr(); vecdot(lhs,rhs); end
+Base.dot{T<:JuMPTypes,S,N}(lhs::AbstractArray{T,N}, rhs::AbstractArray{S,N}) = begin _dot_depr(); vecdot(lhs,rhs); end
+Base.dot{T<:JuMPTypes,S<:JuMPTypes,N}(lhs::AbstractArray{T,N}, rhs::AbstractArray{S,N}) = begin _dot_depr(); vecdot(lhs,rhs); end
+Base.dot{T,S<:JuMPTypes,N}(lhs::AbstractArray{T,N}, rhs::AbstractArray{S,N}) = begin _dot_depr(); vecdot(lhs,rhs); end
 
-Base.dot{T<:JuMPTypes,S<:JuMPTypes}(lhs::Vector{T},rhs::Vector{S}) = _dot(lhs,rhs)
-Base.dot{T<:JuMPTypes,S}(lhs::Vector{T},rhs::Vector{S}) = _dot(lhs,rhs)
-Base.dot{T,S<:JuMPTypes}(lhs::Vector{T},rhs::Vector{S}) = _dot(lhs,rhs)
+Base.dot{T<:JuMPTypes,S<:JuMPTypes}(lhs::AbstractVector{T},rhs::AbstractVector{S}) = _dot(lhs,rhs)
+Base.dot{T<:JuMPTypes,S}(lhs::AbstractVector{T},rhs::AbstractVector{S}) = _dot(lhs,rhs)
+Base.dot{T,S<:JuMPTypes}(lhs::AbstractVector{T},rhs::AbstractVector{S}) = _dot(lhs,rhs)
 
 # TODO: qualify Base.vecdot once v0.3 support is dropped
-vecdot{T<:JuMPTypes,S,N}(lhs::Array{T,N},rhs::Array{S,N}) = _dot(lhs,rhs)
-vecdot{T<:JuMPTypes,S<:JuMPTypes,N}(lhs::Array{T,N},rhs::Array{S,N}) = _dot(lhs,rhs)
-vecdot{T,S<:JuMPTypes,N}(lhs::Array{T,N},rhs::Array{S,N}) = _dot(lhs,rhs)
+vecdot{T<:JuMPTypes,S,N}(lhs::AbstractArray{T,N},rhs::AbstractArray{S,N}) = _dot(lhs,rhs)
+vecdot{T<:JuMPTypes,S<:JuMPTypes,N}(lhs::AbstractArray{T,N},rhs::AbstractArray{S,N}) = _dot(lhs,rhs)
+vecdot{T,S<:JuMPTypes,N}(lhs::AbstractArray{T,N},rhs::AbstractArray{S,N}) = _dot(lhs,rhs)
 
-function _dot{T,S}(lhs::Array{T}, rhs::Array{S})
+function _dot{T,S}(lhs::AbstractArray{T}, rhs::AbstractArray{S})
     size(lhs) == size(rhs) || error("Incompatible dimensions")
     ret = zero(one(T)*one(S))
     for (x,y) in zip(lhs,rhs)
