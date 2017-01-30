@@ -694,7 +694,7 @@ const sub2 = JuMP.repl[:sub2]
         u = [2, 3]
         v = [4, 5]
         expr_base = zero(JuMP.AffExpr)
-        @constraint(m, x*u .<= x*v) 
+        @constraint(m, x*u .<= x*v)
         @test string(m.linconstr[1]) == "-2 x[1,1] - 2 x[1,2] $leq 0"
         @test string(m.linconstr[2]) == "-2 x[2,1] - 2 x[2,2] $leq 0"
         @constraint(m, x*u + y .<= v)
@@ -704,5 +704,14 @@ const sub2 = JuMP.repl[:sub2]
         expr2 = JuMP.addtoexpr(expr, y, 1.0)
         @test expr2 == [2.0x[1,1] + 3.0x[1,2] + y[1];
                         2.0x[2,1] + 3.0x[2,2] + y[2]]
+    end
+
+    @testset "Filling @expression with a number" begin
+        m = Model()
+        @expression(m, y[1:3], 0.0)
+        sites = [:A,:B,:C]
+        @expression(m, z[i=sites], 0.0)
+        @test y[1] == y[2] == y[3] == AffExpr(0.0)
+        @test z[:A] == z[:B] == z[:C] == AffExpr(0.0)
     end
 end
