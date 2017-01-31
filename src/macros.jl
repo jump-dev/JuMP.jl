@@ -620,7 +620,7 @@ for (mac,sym) in [(:LinearConstraints, Symbol("@LinearConstraint")),
             for it in x.args
                 if it.head == :line
                     # do nothing
-                elseif it.head == :comparison # regular constraint
+                elseif it.head == :comparison || (it.head == :call && it.args[1] in (:<=,:≤,:>=,:≥,:(==))) # regular constraint
                     push!(code.args, Expr(:macrocall, $sym, esc(it)))
                 elseif it.head == :tuple # constraint ref
                     if all([isexpr(arg,:comparison) for arg in it.args]...)
