@@ -1,6 +1,12 @@
 JuMP release notes
 ==================
 
+Version 0.15.1 (January 31, 2017)
+---------------------------------
+
+  * Bugfix for ``@LinearConstraints`` and friends
+
+
 Version 0.15.0 (December 22, 2016)
 ----------------------------------
 
