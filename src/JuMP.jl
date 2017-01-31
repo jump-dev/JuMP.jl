@@ -188,6 +188,11 @@ end
 MathProgBase.numvar(m::Model) = m.numCols
 MathProgBase.numlinconstr(m::Model) = length(m.linconstr)
 MathProgBase.numquadconstr(m::Model) = length(m.quadconstr)
+MathProgBase.numsosconstr(m::Model) = length(m.sosconstr)
+MathProgBase.numsocconstr(m::Model) = length(m.socconstr)
+MathProgBase.numsdpconstr(m::Model) = length(m.sdpconstr)
+MathProgBase.numnlconstr(m::Model) = m.nlpdata !== nothing ? length(m.nlpdata.nlconstr) : 0
+
 function MathProgBase.numconstr(m::Model)
     c = length(m.linconstr) + length(m.quadconstr) + length(m.sosconstr)
     if m.nlpdata !== nothing
