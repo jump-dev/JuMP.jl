@@ -59,6 +59,7 @@ end
         @NLobjective(m, Min, x[1]*x[4]*(x[1]+x[2]+x[3]) + x[3])
         @NLconstraint(m, x[1]*x[2]*x[3]*x[4] >= 25)
         @NLconstraint(m, sum(x[i]^2 for i=1:4) == 40)
+        @test JuMP.numnlconstr(m) == 2
         @test MathProgBase.numconstr(m) == 2
         status = solve(m)
 
@@ -407,6 +408,10 @@ end
         @constraint(modA, cons1, x+y >= 2)
         @constraint(modA, cons2, sum(r[i] for i=3:5) <= (2 - x)/2.0)
         @NLconstraint(modA, cons3, 7.0*y <= z + r[6]/1.9)
+
+        # Getter/setters
+        @test MathProgBase.numconstr(modA) == 3
+        @test JuMP.numnlconstr(modA) == 1
 
         # Solution
         @test solve(modA) == :Optimal
