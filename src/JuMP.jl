@@ -194,7 +194,7 @@ numsdconstr(m::Model) = length(m.sdpconstr)
 numnlconstr(m::Model) = m.nlpdata !== nothing ? length(m.nlpdata.nlconstr) : 0
 
 function MathProgBase.numconstr(m::Model)
-    c = length(m.linconstr) + length(m.quadconstr) + length(m.sosconstr) #+ length(m.sdpconstr)
+    c = length(m.linconstr) + length(m.quadconstr) + length(m.sosconstr) + length(m.sdpconstr)
     if m.nlpdata !== nothing
         c += length(m.nlpdata.nlconstr)
     end
