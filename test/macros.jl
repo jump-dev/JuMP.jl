@@ -714,4 +714,18 @@ const sub2 = JuMP.repl[:sub2]
         @test y[1] == y[2] == y[3] == AffExpr(0.0)
         @test z[:A] == z[:B] == z[:C] == AffExpr(0.0)
     end
+
+    @testset "@LinearConstraints" begin
+        m = Model()
+        @variable(m, x[1:3])
+        lc = @LinearConstraints(begin
+           x[1] + x[2] + x[3] ≥ 1
+           x[1] + x[2] + x[3] ≤ 2
+        end)
+       @test lc[1].terms == lc[2].terms == x[1] + x[2] + x[3]
+       @test lc[1].lb == 1
+       @test lc[1].ub == Inf
+       @test lc[2].lb == -Inf
+       @test lc[2].ub == 2
+    end
 end
