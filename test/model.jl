@@ -681,6 +681,9 @@ end
         addSOS1(m, [x[1],2x[2]])
         addSOS1(m, [x[1],2x[3]])
 
+        # Getter/setters
+        @test JuMP.numsosconstr(m) == 2
+
         @test solve(m) == :Optimal
         @test isapprox(getvalue(x), [0.0,1.0,2.0], atol=TOL)
         @test isapprox(getobjectivevalue(m), 3.0, atol=TOL)

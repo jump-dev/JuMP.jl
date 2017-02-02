@@ -224,6 +224,10 @@ using Base.Test
         @constraint(modN, x + y >= 1)
         @constraint(modN, norm([x,y]) <= t)
 
+        # Getter/setters
+        @test JuMP.numsocconstr(modN) == 1
+        @test MathProgBase.numconstr(modN) == 2
+
         @test solve(modN) == :Optimal
         @test isapprox(getobjectivevalue(modN), sqrt(1/2), atol=1e-6)
         @test isapprox([getvalue(x), getvalue(y), getvalue(t)], [0.5,0.5,sqrt(1/2)], atol=1e-3)

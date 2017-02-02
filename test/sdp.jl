@@ -24,6 +24,9 @@ ispsd(x::JuMP.JuMPArray) = ispsd(x.innerArray)
         @constraint(m, trace(X) == 1)
         @constraint(m, trace(Y) == 3)
         @constraint(m, trace(Z) == -1)
+
+        @test JuMP.numsdconstr(source) == 4
+
         @objective(m, Max, X[1,2] + Y[1,2] + Z[1,2])
         solve(m)
 
@@ -36,6 +39,7 @@ ispsd(x::JuMP.JuMPArray) = ispsd(x.innerArray)
                   3.5 -1.5 1 1
                   1    1   1 1
                   1    1   1 1]
+
 
         @test isapprox(XX, Xtrue, atol=1e-2)
         @test isapprox(YY, Ytrue, atol=1e-2)
