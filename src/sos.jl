@@ -51,8 +51,7 @@ function addSOS1(m::Model, coll::Vector{AffExpr})
         if applicable(MathProgBase.addsos1!, m.internalModel, idx, weight)
             MathProgBase.addsos1!(m.internalModel, idx, weight)
         else
-            Base.warn_once("Solver does not appear to support adding constraints to an existing model. Hot-start is disabled.")
-            m.internalModelLoaded = false
+            error("Solver does not support SOS constraints")
         end
     end
     return ConstraintRef{Model,SOSConstraint}(m,length(m.sosconstr))
@@ -68,8 +67,7 @@ function addSOS2(m::Model, coll::Vector{AffExpr})
         if applicable(MathProgBase.addsos2!, m.internalModel, idx, weight)
             MathProgBase.addsos2!(m.internalModel, idx, weight)
         else
-            Base.warn_once("Solver does not appear to support adding constraints to an existing model. Hot-start is disabled.")
-            m.internalModelLoaded = false
+            error("Solver does not support SOS constraints")
         end
     end
     return ConstraintRef{Model,SOSConstraint}(m,length(m.sosconstr))
