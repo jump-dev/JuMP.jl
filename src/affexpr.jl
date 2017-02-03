@@ -175,7 +175,7 @@ function addconstraint(m::Model, c::LinearConstraint)
             indices, coeffs = merge_duplicates(Cint, c.terms, m.indexedVector, m)
             MathProgBase.addconstr!(m.internalModel,indices,coeffs,c.lb,c.ub)
         else
-            Base.warn_once("Solver does not appear to support adding constraints to an existing model. Hot-start is disabled.")
+            Base.warn_once("Solver does not appear to support adding constraints to an existing model. JuMP's internal model will be discarded.")
             m.internalModelLoaded = false
         end
     end

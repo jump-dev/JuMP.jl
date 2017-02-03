@@ -360,7 +360,7 @@ function Variable(m::Model,lower::Number,upper::Number,cat::Symbol,name::Abstrac
         if method_exists(MathProgBase.addvar!, (typeof(m.internalModel),Vector{Int},Vector{Float64},Float64,Float64,Float64))
             MathProgBase.addvar!(m.internalModel,float(lower),float(upper),0.0)
         else
-            Base.warn_once("Solver does not appear to support adding variables to an existing model. Hot-start is disabled.")
+            Base.warn_once("Solver does not appear to support adding variables to an existing model. JuMP's internal model will be discarded.")
             m.internalModelLoaded = false
         end
     end
@@ -780,7 +780,7 @@ function Variable(m::Model,lower::Number,upper::Number,cat::Symbol,objcoef::Numb
         if method_exists(MathProgBase.addvar!, (typeof(m.internalModel),Vector{Int},Vector{Float64},Float64,Float64,Float64))
             MathProgBase.addvar!(m.internalModel,Int[c.idx for c in constraints],coefficients,float(lower),float(upper),float(objcoef))
         else
-            Base.warn_once("Solver does not appear to support adding variables to an existing model. Hot-start is disabled.")
+            Base.warn_once("Solver does not appear to support adding variables to an existing model. JuMP's internal model will be discarded.")
             m.internalModelLoaded = false
         end
     end
