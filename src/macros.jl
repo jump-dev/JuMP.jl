@@ -344,8 +344,9 @@ macro constraint(args...)
     else
         kwargs = Expr(:parameters)
     end
-    append!(kwargs.args, collect(filter(x -> isexpr(x, :kw), args))) # comma separated
-    args = collect(filter(x->!isexpr(x, :kw), args))
+    kwsymbol = VERSION < v"0.6.0-dev" ? :kw : :(=)
+    append!(kwargs.args, collect(filter(x -> isexpr(x, kwsymbol), args))) # comma separated
+    args = collect(filter(x->!isexpr(x, kwsymbol), args))
 
     if length(args) < 2
         if length(kwargs.args) > 0
@@ -392,8 +393,8 @@ macro constraint(args...)
         newaff, parsecode = parseExprToplevel(lhs, :q)
         constraintcall = :($addconstr($m, constructconstraint!($newaff,$(quot(sense)))))
         for kw in kwargs.args
-            @assert isexpr(kw, :kw)
-            push!(constraintcall.args, esc(kw))
+            @assert isexpr(kw, kwsymbol)
+            push!(constraintcall.args, esc(Expr(:kw,kw.args...)))
         end
         code = quote
             q = zero(AffExpr)
@@ -666,7 +667,7 @@ for (mac,sym) in [(:constraints,  Symbol("@constraint")),
                     end
                     args_esc = []
                     for ex in args
-                        if isexpr(ex, :(=))
+                        if isexpr(ex, :(=)) && VERSION < v"0.6.0-dev"
                             push!(args_esc,Expr(:kw, ex.args[1], esc(ex.args[2])))
                         else
                             push!(args_esc, esc(ex))
@@ -806,8 +807,9 @@ macro variable(args...)
 
     extra = vcat(args[2:end]...)
     # separate out keyword arguments
-    kwargs = filter(ex->isexpr(ex,:kw), extra)
-    extra = filter(ex->!isexpr(ex,:kw), extra)
+    kwsymbol = VERSION < v"0.6.0-dev" ? :kw : :(=)
+    kwargs = filter(ex->isexpr(ex,kwsymbol), extra)
+    extra = filter(ex->!isexpr(ex,kwsymbol), extra)
 
     # if there is only a single non-keyword argument, this is an anonymous
     # variable spec and the one non-kwarg is the model
