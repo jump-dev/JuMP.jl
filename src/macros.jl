@@ -344,8 +344,9 @@ macro constraint(args...)
     else
         kwargs = Expr(:parameters)
     end
-    append!(kwargs.args, collect(filter(x -> isexpr(x, :kw), args))) # comma separated
-    args = collect(filter(x->!isexpr(x, :kw), args))
+    kwsymbol = VERSION < v"0.6.0-dev" ? :kw : :(=)
+    append!(kwargs.args, collect(filter(x -> isexpr(x, kwsymbol), args))) # comma separated
+    args = collect(filter(x->!isexpr(x, kwsymbol), args))
 
     if length(args) < 2
         if length(kwargs.args) > 0
@@ -392,8 +393,8 @@ macro constraint(args...)
         newaff, parsecode = parseExprToplevel(lhs, :q)
         constraintcall = :($addconstr($m, constructconstraint!($newaff,$(quot(sense)))))
         for kw in kwargs.args
-            @assert isexpr(kw, :kw)
-            push!(constraintcall.args, esc(kw))
+            @assert isexpr(kw, kwsymbol)
+            push!(constraintcall.args, esc(Expr(:kw,kw.args...)))
         end
         code = quote
             q = zero(AffExpr)
