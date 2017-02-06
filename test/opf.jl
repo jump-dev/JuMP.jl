@@ -177,7 +177,7 @@ end
 
 function prepdata(bus, branch)
 
-    buses = Array(Bus,size(bus,1))
+    buses = Array{Bus}(size(bus,1))
     refbus = 0
     shunt = 0
     busmap = Dict()
@@ -203,7 +203,7 @@ function prepdata(bus, branch)
     @show shunt
 
 
-    branches = Array(Branch,size(branch,1))
+    branches = Array{Branch}(size(branch,1))
     branchtap = 0
     phaseshift = 0
     for i in 1:size(branch,1)
