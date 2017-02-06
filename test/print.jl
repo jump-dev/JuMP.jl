@@ -181,8 +181,7 @@ end
     end
 
 
-    # TEMPORARY: default solvers aren't working on 0.6 yet
-    if VERSION < v"0.6.0-dev"; @testset "JuMPContainer{Number}" begin
+    @testset "JuMPContainer{Number}" begin
         # The same output for REPL and IJulia, so only testing one
         mod = Model()
         @variable(mod, i*j <= w[i=9:10, [:Apple,5,:Banana], j=-1:+1] <= i*j)
@@ -309,7 +308,7 @@ end
       [b,3] = 3.0
     """)
 
-    end; end
+    end
 
 
 
