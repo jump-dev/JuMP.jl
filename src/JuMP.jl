@@ -21,8 +21,6 @@ using Calculus
 using ReverseDiffSparse
 using ForwardDiff
 
-using Iterators.filter
-
 export
 # Objects
     Model, Variable, Norm, AffExpr, QuadExpr, SOCExpr,

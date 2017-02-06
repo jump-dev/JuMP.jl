@@ -345,8 +345,8 @@ macro constraint(args...)
         kwargs = Expr(:parameters)
     end
     kwsymbol = VERSION < v"0.6.0-dev" ? :kw : :(=)
-    append!(kwargs.args, collect(filter(x -> isexpr(x, kwsymbol), args))) # comma separated
-    args = collect(filter(x->!isexpr(x, kwsymbol), args))
+    append!(kwargs.args, filter(x -> isexpr(x, kwsymbol), collect(args))) # comma separated
+    args = filter(x->!isexpr(x, kwsymbol), collect(args))
 
     if length(args) < 2
         if length(kwargs.args) > 0

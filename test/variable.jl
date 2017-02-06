@@ -127,7 +127,7 @@ using Base.Test
         @variable(m, y[1:4,  2:1,1:3]) # JuMPArray
         @variable(m, z[1:4,Set(),1:3]) # JuMPDict
 
-        @test getvalue(x) == Array(Float64, 4, 0, 3)
+        @test getvalue(x) == Array{Float64}(4, 0, 3)
         @test typeof(getvalue(y)) <: JuMP.JuMPArray{Float64}
         @test JuMP.size(getvalue(y)) == (4,0,3)
         @test typeof(getvalue(z)) == JuMP.JuMPArray{Float64,3,Tuple{UnitRange{Int},Set{Any},UnitRange{Int}}}
@@ -137,7 +137,7 @@ using Base.Test
 # Slices three-dimensional JuMPContainer x[I,J,K]
 # I,J,K can be singletons, ranges, colons, etc.
 function sliceof(x, I, J, K)
-    y = Array(Variable, length(I), length(J), length(K))
+    y = Array{Variable}(length(I), length(J), length(K))
 
     ii = 1
     jj = 1
