@@ -25,7 +25,7 @@ ispsd(x::JuMP.JuMPArray) = ispsd(x.innerArray)
         @constraint(m, trace(Y) == 3)
         @constraint(m, trace(Z) == -1)
 
-        @test JuMP.numsdconstr(source) == 4
+        @test JuMP.numsdconstr(m) == 4
 
         @objective(m, Max, X[1,2] + Y[1,2] + Z[1,2])
         solve(m)
