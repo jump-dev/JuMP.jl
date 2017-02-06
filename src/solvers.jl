@@ -230,7 +230,7 @@ function solve(m::Model; suppress_warnings=false,
     numRows, numCols = length(m.linconstr), m.numCols
     m.objVal = NaN
     m.colVal = fill(NaN, numCols)
-    m.linconstrDuals = Array(Float64, 0)
+    m.linconstrDuals = Array{Float64}(0)
 
     discrete = !relaxation && (traits.int || traits.sos)
     if stat == :Optimal
@@ -636,11 +636,11 @@ function prepConstrMatrix(m::Model)
         nnz += length(linconstr[c].terms.coeffs)
     end
     # Non-zero row indices
-    I = Array(Int,nnz)
+    I = Array{Int}(nnz)
     # Non-zero column indices
-    J = Array(Int,nnz)
+    J = Array{Int}(nnz)
     # Non-zero values
-    V = Array(Float64,nnz)
+    V = Array{Float64}(nnz)
 
     # Fill it up!
     # Number of nonzeros seen so far
@@ -775,7 +775,7 @@ function conicdata(m::Model)
                 end
             end
         end
-        cone = Array(Int, nz)
+        cone = Array{Int}(nz)
         if n_pos_on_diag == nz-1 && neg_diag_idx > 0
             cone[1] = q.qvars1[neg_diag_idx].col
             r = 1
@@ -866,9 +866,9 @@ function conicdata(m::Model)
 
     # should maintain the order of constraints in the above form
     # throughout the code c is the conic constraint index
-    constr_dual_map = Array(Vector{Int}, numLinRows + numBounds + numNormRows + 2*length(m.sdpconstr))
+    constr_dual_map = Array{Vector{Int}}(numLinRows + numBounds + numNormRows + 2*length(m.sdpconstr))
 
-    b = Array(Float64, numRows)
+    b = Array{Float64}(numRows)
 
     I = Int[]
     J = Int[]
@@ -1152,8 +1152,8 @@ function merge_duplicates{CoefType,IntType<:Integer}(::Type{IntType},aff::Generi
         addelt!(v, aff.vars[ind].col, aff.coeffs[ind])
     end
     rmz!(v)
-    indices = Array(IntType,v.nnz)
-    coeffs = Array(CoefType,v.nnz)
+    indices = Array{IntType}(v.nnz)
+    coeffs = Array{CoefType}(v.nnz)
     for i in 1:v.nnz
         idx = v.nzidx[i]
         indices[i] = idx
