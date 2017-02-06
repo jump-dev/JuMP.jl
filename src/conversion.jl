@@ -66,8 +66,8 @@ export expr_to_nodedata
 # edges leaving any node (i.e., the children)
 function adjmat(nd::Vector{NodeData})
     len = length(nd)
-    I = Array(Int,len)
-    J = Array(Int,len)
+    I = Array{Int}(len)
+    J = Array{Int}(len)
     realnz = 0
     for nz in 1:len
         par = nd[nz].parent

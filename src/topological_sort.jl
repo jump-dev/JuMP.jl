@@ -31,7 +31,7 @@ type TopologicalSortVisitor
     parents::Vector{Int}
 
     function TopologicalSortVisitor(n::Int)
-        vs = Array(Int, 0)
+        vs = Array{Int}(0)
         sizehint!(vs, n)
         new(vs, zeros(Int,n))
     end
