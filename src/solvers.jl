@@ -152,22 +152,25 @@ function solve(m::Model; suppress_warnings=false,
     if stat == :Optimal
         # If we think dual information might be available, try to get it
         # If not, return an array of the correct length
-        if !discrete && !traits.conic
-            m.redCosts = try
-                MathProgBase.getreducedcosts(m.internalModel)[1:numCols]
-            catch
-                fill(NaN, numCols)
-            end
+        if discrete
+            m.redCosts = fill(NaN, numCols)
+            m.linconstrDuals = fill(NaN, numRows)
+        else
+            if !traits.conic
+                m.redCosts = try
+                    MathProgBase.getreducedcosts(m.internalModel)[1:numCols]
+                catch
+                    fill(NaN, numCols)
+                end
 
-            m.linconstrDuals = try
-                MathProgBase.getconstrduals(m.internalModel)[1:numRows]
-            catch
-                fill(NaN, numRows)
+                m.linconstrDuals = try
+                    MathProgBase.getconstrduals(m.internalModel)[1:numRows]
+                catch
+                    fill(NaN, numRows)
+                end
+            elseif !traits.qp && !traits.qc
+                fillConicDuals(m)
             end
-        end
-        # conic duals (currently, SOC and SDP only)
-        if !discrete && traits.conic && !traits.qp && !traits.qc
-            fillConicDuals(m)
         end
     else
         # Problem was not solved to optimality, attempt to extract useful
