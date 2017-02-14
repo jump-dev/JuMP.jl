@@ -940,4 +940,19 @@ end
         @test isapprox(getvalue(v), 1.0, atol=TOL)
     end
 
+    @testset "Clear duals after MIP -> LP -> MIP with $solver" for solver in ip_solvers
+        m = Model(solver=solver)
+        @variable(m, x, Bin)
+        @objective(m, Max, x)
+
+        @test solve(m) == :Optimal
+        @test isnan(getdual(x))
+
+        @test solve(m, relaxation=true) == :Optimal
+        @test isapprox(getdual(x), 1.0, atol=TOL)
+
+        @test solve(m) == :Optimal
+        @test isnan(getdual(x))
+    end
+
 end
