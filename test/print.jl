@@ -174,9 +174,9 @@ end
 
 
 
-    @testset "JuMPContainer{Number}" begin
+    @testset "JuMPContainer{Number}" for solver in lp_solvers
         # The same output for REPL and IJulia, so only testing one
-        mod = Model()
+        mod = Model(solver=solver)
         @variable(mod, i*j <= w[i=9:10, [:Apple,5,:Banana], j=-1:+1] <= i*j)
         @variable(mod, i*j*k <= x[i=9:11,j=99:101,k=3:4] <= i*j*k)
         @variable(mod, i*j <= y[i=9:11,j=i:11] <= i*j)
