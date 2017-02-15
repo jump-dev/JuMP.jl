@@ -392,6 +392,7 @@ function build(m::Model; suppress_warnings=false, relaxation=false, traits=Probl
     # Set solver based on the model's traits if it hasn't provided
     if isa(m.solver, UnsetSolver)
         m.solver = default_solver(traits)
+        suppress_warnings || println("JuMP is using $(m.solver) as the solver. Use the \"solver=\" keyword to Model() or setsolver() to change the solver or solver options.")
     end
 
     # If the model is nonlinear, use different logic in nlp.jl
