@@ -22,6 +22,7 @@ if Pkg.installed("Ipopt") == nothing
     println("Cannot run NLP tests because Ipopt is not installed.")
     exit(1)
 end
+using Ipopt
 
 HS_path = dirname(@__FILE__)
 
