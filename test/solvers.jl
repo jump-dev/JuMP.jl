@@ -60,6 +60,11 @@ mos && push!(ip_solvers, Mosek.MosekSolver(LOG=0))
 cbc && push!(ip_solvers, Cbc.CbcSolver(logLevel=0))
 glp && push!(ip_solvers, GLPKMathProgInterface.GLPKSolverMIP())
 #osl && push!(ip_solvers, CoinOptServices.OsilSolver())
+# IP solvers that give duals for relaxations
+ip_dual_solvers = Any[]
+grb && push!(ip_solvers, Gurobi.GurobiSolver(OutputFlag=0))
+cpx && push!(ip_solvers, CPLEX.CplexSolver(CPX_PARAM_SCRIND=0))
+mos && push!(ip_solvers, Mosek.MosekSolver(LOG=0))
 # Support semi-continuous, semi-integer solvers
 semi_solvers = Any[]
 grb && push!(semi_solvers, Gurobi.GurobiSolver(OutputFlag=0))
