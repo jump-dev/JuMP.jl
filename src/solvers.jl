@@ -90,34 +90,34 @@ for solvertype in ["LP", "MIP", "QP", "SDP", "NLP", "Conic"]
     solvers = Symbol(solvertype*"solvers")
     functionname = Symbol("default"*solvertype*"solver")
     if VERSION > v"0.6.0-"
-    @eval function ($functionname)()
-        for (pkgname,solvername) in $solvers
-            if isdefined(Main,pkgname)
-                return getfield(getfield(Main,pkgname),solvername)()
-            end
-        end
-        solvers = [String(p) for (p,s) in $solvers]
-        error("No ", $solvertype, " solver detected. The recognized solver packages are: ", solvers,". One of these solvers must be installed and explicitly loaded with a \"using\" statement.")
-    end
-    else
-    @eval function ($functionname)()
-        for (pkgname,solvername) in $solvers
-            alreadydefined = isdefined(Main,pkgname)
-            if !alreadydefined
-                try
-                    eval(Expr(:import,pkgname))
-                    # if we got here, package works but wasn't loaded,
-                    # print warning.
-                    Base.warn_once(string("The default ", $solvertype, " package is installed but not loaded. In Julia 0.6 and later, an explicit \"using ", pkgname, "\" statement will be required in order for the solver to be detected and used as a default."))
-                catch
-                    continue
+        @eval function ($functionname)()
+            for (pkgname,solvername) in $solvers
+                if isdefined(Main,pkgname)
+                    return getfield(getfield(Main,pkgname),solvername)()
                 end
             end
-            return getfield(getfield(Main,pkgname),solvername)()
+            solvers = [String(p) for (p,s) in $solvers]
+            error("No ", $solvertype, " solver detected. The recognized solver packages are: ", solvers,". One of these solvers must be installed and explicitly loaded with a \"using\" statement.")
         end
-        suggestions = join(["\"$(pkgname)\", " for (pkgname,solvername) in $solvers], ' ')
-        error("No ",$solvertype, " solver detected. Try installing one of the following packages: ", suggestions, " and restarting Julia")
-    end
+    else
+        @eval function ($functionname)()
+            for (pkgname,solvername) in $solvers
+                alreadydefined = isdefined(Main,pkgname)
+                if !alreadydefined
+                    try
+                        eval(Expr(:import,pkgname))
+                        # if we got here, package works but wasn't loaded,
+                        # print warning.
+                        Base.warn_once(string("The default ", $solvertype, " package is installed but not loaded. In Julia 0.6 and later, an explicit \"using ", pkgname, "\" statement will be required in order for the solver to be detected and used as a default."))
+                    catch
+                        continue
+                    end
+                end
+                return getfield(getfield(Main,pkgname),solvername)()
+            end
+            suggestions = join(["\"$(pkgname)\", " for (pkgname,solvername) in $solvers], ' ')
+            error("No ",$solvertype, " solver detected. Try installing one of the following packages: ", suggestions, " and restarting Julia")
+        end
     end
 end
 
