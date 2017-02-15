@@ -198,11 +198,7 @@ function parseNLExpr_runtime(m::Model, x::Number, tape, parent, values)
     nothing
 end
 
-# Temporary hack for deprecation of @defNLExpr syntax
-const __last_model = Array(Model,1)
-
 function parseNLExpr_runtime(m::Model, x::Variable, tape, parent, values)
-    __last_model[1] = x.m
     x.m === m || error("Variable in nonlinear expression does not belong to corresponding model")
     push!(tape, NodeData(VARIABLE, x.col, parent))
     nothing

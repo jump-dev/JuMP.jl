@@ -60,10 +60,10 @@ m = Model()
 N = 5
 vars = [:x, :y, :z, :w, :v, :(identity(x)), :(identity(y)), :(identity(z))]
 
-const ε = 10eps()
 nvars = length(vars)
 
 function test_approx_equal_exprs(ex1, ex2)
+    ε = 10eps()
     res = true
     # test constant term
     abs(ex1.aff.constant - ex2.aff.constant) < ε || (res = false)

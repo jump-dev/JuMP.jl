@@ -433,7 +433,7 @@ function cont_str(mode, j, sym::PrintSymbols)
         end
     end
     num_dims = length(data.indexsets)
-    idxvars = Array(String, num_dims)
+    idxvars = Array{String}(num_dims)
     dimidx = 1
     for i in 1:num_dims
         if data.indexexprs[i].idxvar == nothing
@@ -627,7 +627,7 @@ function val_str(mode, dict::JuMPDict{Float64})
 
     ndim = length(first(keys(dict.tupledict)))
 
-    key_strs = Array(AbstractString, length(dict), ndim)
+    key_strs = Array{String}(length(dict), ndim)
     for (i, key) in enumerate(sortedkeys)
         for j in 1:ndim
             key_strs[i,j] = string(key[j])
@@ -679,7 +679,7 @@ function aff_str(mode, a::AffExpr, show_constant=true)
     end
 
     elm = 1
-    term_str = Array(String, 2*length(a.vars))
+    term_str = Array{String}(2*length(a.vars))
     # For each model
     for m in keys(moddict)
         indvec = moddict[m]
@@ -741,7 +741,7 @@ function quad_str(mode, q::GenericQuadExpr, sym)
     Qnnz = length(V)
 
     # Odd terms are +/i, even terms are the variables/coeffs
-    term_str = Array(String, 2*Qnnz)
+    term_str = Array{String}(2*Qnnz)
     if Qnnz > 0
         for ind in 1:Qnnz
             val = abs(V[ind])

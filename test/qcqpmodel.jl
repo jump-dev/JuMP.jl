@@ -33,7 +33,11 @@ using Base.Test
         modV = Model(solver=solver)
         @variable(modV, 1.1*i <= x[i=1:3] <= 2.5*i, Int)
         obj = x'*[10 1.5 0; 1.5 5 0; 0 0 9]*x
-        @objective(modV, Min, obj[1])
+        if VERSION < v"0.6.0-dev"
+            @objective(modV, Min, obj[1])
+        else
+            @objective(modV, Min, obj)
+        end
         A = [  0  1 -1.7
              0.5 -1    0]
         @constraint(modV, A*x .<= zeros(2))
@@ -54,7 +58,11 @@ using Base.Test
         modV = Model(solver=solver)
         @variable(modV, 1.1*i <= x[i=1:3] <= 2.5*i, Int)
         obj = x'*sparse([10 1.5 0; 1.5 5 0; 0 0 9])*x
-        @objective(modV, Min, obj[1])
+        if VERSION < v"0.6.0-dev"
+            @objective(modV, Min, obj[1])
+        else
+            @objective(modV, Min, obj)
+        end
         A = sparse([  0  1 -1.7
                     0.5 -1    0])
         @constraint(modV, A*x .<= zeros(2))
@@ -76,7 +84,11 @@ using Base.Test
         @variable(modV, 1.1*i <= x[i=1:3] <= 2.5*i, Int)
         Q = [10 3 0; 0 5 0; 0 0 9]
         obj = x'Q*x
-        @objective(modV, Min, obj[1])
+        if VERSION < v"0.6.0-dev"
+            @objective(modV, Min, obj[1])
+        else
+            @objective(modV, Min, obj)
+        end
         A = [   0 -1 1.7
              -0.5  1   0]
         @constraint(modV, A*x .>= zeros(2))
@@ -100,8 +112,12 @@ using Base.Test
         modV = Model(solver=solver)
         @variable(modV, 0.5 <= x <= 2 )
         @variable(modV, 0 <= y <= 30 )
-        obj = [x y]*ones(2,2)*[x,y]
-        @objective(modV, Min, obj[1])
+        obj = [x,y]'ones(2,2)*[x,y]
+        if VERSION < v"0.6.0-dev"
+            @objective(modV, Min, obj[1])
+        else
+            @objective(modV, Min, obj)
+        end
         @constraint(modV, ones(1,2)*[x,y] .>= 1)
         @test solve(modV) == :Optimal
         @test isapprox(getobjectivevalue(modV), 1.0, atol=1e-6)

@@ -478,11 +478,11 @@ end
 _multiply_type(R,S) = typeof(one(R) * one(S))
 
 # Don't do size checks here in _return_array, defer that to (*)
-_return_array{R,S}(A::AbstractMatrix{R}, x::AbstractVector{S}) = _fillwithzeros(Array(_multiply_type(R,S), size(A,1)))
-_return_array{R,S}(A::AbstractMatrix{R}, x::AbstractMatrix{S}) = _fillwithzeros(Array(_multiply_type(R,S), size(A,1), size(x,2)))
+_return_array{R,S}(A::AbstractMatrix{R}, x::AbstractVector{S}) = _fillwithzeros(Array{_multiply_type(R,S)}(size(A,1)))
+_return_array{R,S}(A::AbstractMatrix{R}, x::AbstractMatrix{S}) = _fillwithzeros(Array{_multiply_type(R,S)}(size(A,1), size(x,2)))
 # these are for transpose return matrices
-_return_arrayt{R,S}(A::AbstractMatrix{R}, x::AbstractVector{S}) = _fillwithzeros(Array(_multiply_type(R,S), size(A,2)))
-_return_arrayt{R,S}(A::AbstractMatrix{R}, x::AbstractMatrix{S}) = _fillwithzeros(Array(_multiply_type(R,S), size(A,2), size(x, 2)))
+_return_arrayt{R,S}(A::AbstractMatrix{R}, x::AbstractVector{S}) = _fillwithzeros(Array{_multiply_type(R,S)}(size(A,2)))
+_return_arrayt{R,S}(A::AbstractMatrix{R}, x::AbstractMatrix{S}) = _fillwithzeros(Array{_multiply_type(R,S)}(size(A,2), size(x, 2)))
 
 # helper so we don't fill the buffer array with the same object
 function _fillwithzeros{T}(arr::Array{T})
@@ -497,28 +497,28 @@ typealias ArrayOrSparseMat{T} Union{Array{T}, SparseMatrixCSC{T}}
 
 for op in [:+, :-]; @eval begin
     function $op{T<:JuMPTypes}(lhs::Number,rhs::ArrayOrSparseMat{T})
-        ret = Array(typeof($op(lhs, zero(T))), size(rhs))
+        ret = Array{typeof($op(lhs, zero(T)))}(size(rhs))
         for I in eachindex(ret)
             ret[I] = $op(lhs, rhs[I])
         end
         ret
     end
     function $op{T<:JuMPTypes}(lhs::ArrayOrSparseMat{T},rhs::Number)
-        ret = Array(typeof($op(zero(T), rhs)), size(lhs))
+        ret = Array{typeof($op(zero(T), rhs))}(size(lhs))
         for I in eachindex(ret)
             ret[I] = $op(lhs[I], rhs)
         end
         ret
     end
     function $op{T<:JuMPTypes,S}(lhs::T,rhs::ArrayOrSparseMat{S})
-        ret = Array(typeof($op(lhs, zero(S))), size(rhs))
+        ret = Array{typeof($op(lhs, zero(S)))}(size(rhs))
         for I in eachindex(ret)
             ret[I] = $op(lhs, rhs[I])
         end
         ret
     end
     function $op{T<:JuMPTypes,S}(lhs::ArrayOrSparseMat{S},rhs::T)
-        ret = Array(typeof($op(zero(S), rhs)), size(lhs))
+        ret = Array{typeof($op(zero(S), rhs))}(size(lhs))
         for I in eachindex(ret)
             ret[I] = $op(lhs[I], rhs)
         end
@@ -528,28 +528,28 @@ end; end
 
 for op in [:*, :/]; @eval begin
     function $op{T<:JuMPTypes}(lhs::Number,rhs::Array{T})
-        ret = Array(typeof($op(lhs, zero(T))), size(rhs))
+        ret = Array{typeof($op(lhs, zero(T)))}(size(rhs))
         for I in eachindex(ret)
             ret[I] = $op(lhs, rhs[I])
         end
         ret
     end
     function $op{T<:JuMPTypes}(lhs::Array{T},rhs::Number)
-        ret = Array(typeof($op(zero(T), rhs)), size(lhs))
+        ret = Array{typeof($op(zero(T), rhs))}(size(lhs))
         for I in eachindex(ret)
             ret[I] = $op(lhs[I], rhs)
         end
         ret
     end
     function $op{T<:JuMPTypes,S}(lhs::T,rhs::Array{S})
-        ret = Array(typeof($op(lhs, zero(S))), size(rhs))
+        ret = Array{typeof($op(lhs, zero(S)))}(size(rhs))
         for I in eachindex(ret)
             ret[I] = $op(lhs, rhs[I])
         end
         ret
     end
     function $op{T<:JuMPTypes,S}(lhs::Array{S},rhs::T)
-        ret = Array(typeof($op(zero(S), rhs)), size(lhs))
+        ret = Array{typeof($op(zero(S), rhs))}(size(lhs))
         for I in eachindex(ret)
             ret[I] = $op(lhs[I], rhs)
         end
@@ -573,7 +573,7 @@ end; end
 for op in [:(+), :(-)]; @eval begin
     function $op(lhs::Array{Variable},rhs::Array{Variable})
         (sz = size(lhs)) == size(rhs) || error("Incompatible sizes for $op: $sz $op $(size(rhs))")
-        ret = Array(AffExpr, sz)
+        ret = Array{AffExpr}(sz)
         for I in eachindex(ret)
             ret[I] = $op(lhs[I], rhs[I])
         end
@@ -596,7 +596,7 @@ for (dotop,op) in [(:.+,:+), (:.-,:-), (:.*,:*), (:./,:/)]
             @eval begin
                 function $dotop{S<:$T1,T<:$T2}(lhs::$S1{S},rhs::$S2{T})
                     size(lhs) == size(rhs) || error("Incompatible dimensions")
-                    arr = Array(typeof($op(zero(S),zero(T))), size(rhs))
+                    arr = Array{typeof($op(zero(S),zero(T)))}(size(rhs))
                     @inbounds for i in eachindex(lhs)
                         arr[i] = $op(lhs[i], rhs[i])
                     end

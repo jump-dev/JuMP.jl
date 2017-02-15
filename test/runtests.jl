@@ -13,7 +13,10 @@
 using JuMP
 using Base.Test
 
-# Static tests - don't require a solver
+# Load solvers
+include("solvers.jl")
+
+# Static tests - most don't require a solver
 include("print.jl")
 include("variable.jl")
 include("expr.jl")
@@ -22,9 +25,6 @@ include("macros.jl")
 
 # Fuzzer of macros to build expressions
 include("fuzzer.jl")
-
-# Load solvers
-include("solvers.jl")
 
 # Solver-dependent tests
 include("model.jl");        length(   lp_solvers) == 0 && warn("Model tests not run!")

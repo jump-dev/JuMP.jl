@@ -550,7 +550,11 @@ end
         @variable(mod, 0 <= x <= 1)
         @variable(mod, 0 <= y <= 1)
         obj = [5,1]'*[x,y]
-        @objective(mod, Max, obj[1])
+        if VERSION < v"0.6.0-dev"
+            @objective(mod, Max, obj[1])
+        else
+            @objective(mod, Max, obj)
+        end
         A = [1 1
              2 1]
         @constraint(mod, A*[x,y] .<= [6,7])
@@ -698,7 +702,11 @@ end
         @variable(modV, y[1:7])
         @constraint(modV, A*x + B*y .<= 1)
         obj = (x'*2A')*(2A*x) + (B*2y)'*(B*(2y))
-        @objective(modV, Max, obj[1])
+        if VERSION < v"0.6.0-dev"
+            @objective(modV, Max, obj[1])
+        else
+            @objective(modV, Max, obj)
+        end
 
         modS = Model()
         @variable(modS, x[1:10])
@@ -726,7 +734,11 @@ end
                 @variable(mod, 0 <= z[1:p] <= 1)
             end
             obj = (y-X*β)'*(y-X*β)
-            @objective(mod, Min, obj[1])
+            if VERSION < v"0.6.0-dev"
+                @objective(mod, Min, obj[1])
+            else
+                @objective(mod, Min, obj)
+            end
             @constraint(mod, eye(p)*β .<=  M*eye(p)*z)
             @constraint(mod, eye(p)*β .>= -M*eye(p)*z)
             @constraint(mod, sum(z) == K)
