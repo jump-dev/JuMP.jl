@@ -940,7 +940,7 @@ end
         @test isapprox(getvalue(v), 1.0, atol=TOL)
     end
 
-    @testset "Clear duals after MIP -> LP -> MIP with $solver" for solver in ip_solvers
+    @testset "Clear duals after MIP -> LP -> MIP with $solver" for solver in ip_dual_solvers
         m = Model(solver=solver)
         @variable(m, x, Bin)
         @objective(m, Max, x)
