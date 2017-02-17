@@ -1305,7 +1305,8 @@ function solvenlp(m::Model, traits; suppress_warnings=false)
 end
 
 # getvalue for nonlinear subexpressions
-function getvalue(x::NonlinearExpression)
+getvalue(x::NonlinearExpression) = _getValue(x)
+function _getValue(x::NonlinearExpression)
     m = x.m
     # recompute EVERYTHING here
     # could be smarter and cache

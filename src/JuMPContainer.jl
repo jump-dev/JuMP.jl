@@ -126,15 +126,15 @@ function _warnnan(f, data)
     end
 end
 
-function _mapInner(f, x::JuMPContainer)
+function _mapInner{T}(f, x::JuMPContainer{T})
     vars = _innercontainer(x)
     vals = _similar(vars)
-    data = printdata(x)
+    name = T == Variable ? printdata(x).name : "__anon__"
     warnedyet = false
     for I in eachindex(vars)
         tmp = f(vars[I])
         if isnan(tmp) && !warnedyet
-            _warnnan(f, data.name)
+            _warnnan(f, name)
             warnedyet = true
         end
         vals[I] = tmp
@@ -146,16 +146,18 @@ JuMPContainer_from(x::JuMPDict,inner) = JuMPDict(inner)
 JuMPContainer_from(x::JuMPArray,inner) = JuMPArray(inner, x.indexsets)
 
 # The name _map is used instead of map so that this function is called instead of map(::Function, ::JuMPArray)
-function _map(f, x::JuMPContainer)
+function _map{T}(f, x::JuMPContainer{T})
     mapcontainer_warn(f, x)
     ret = JuMPContainer_from(x, _mapInner(f, x))
     # I guess copy!(::Dict, ::Dict) isn't defined, so...
     for (key,val) in x.meta
         ret.meta[key] = val
     end
-    m = getmeta(x, :model)
-    # cache indexing info for new container for printing purposes
-    m.varData[ret] = printdata(x)
+    if T == Variable
+        m = getmeta(x, :model)
+        # cache indexing info for new container for printing purposes
+        m.varData[ret] = printdata(x)
+    end
     ret
 end
 
