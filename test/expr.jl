@@ -82,4 +82,23 @@ using Base.Test
         end
         @test k == 0
     end
+
+    @testset "no method matching mapcontainer_warn(::JuMP.#_getValue, ::JuMP.JuMPArray{JuMP.NonlinearExpression,1,Tuple{UnitRange{Int64}}}) #964" begin
+        M = [0  0 -1 -1 ;
+             0  0  1 -2 ;
+             1 -1  2 -2 ;
+             1  2 -2  4 ]
+
+        q = [2; 2; -2; -6]
+
+        lb = zeros(4)
+        ub = Inf*ones(4)
+
+        items = 1:4
+        m = Model()
+        @variable(m, lb[i] <= x[i in items] <= ub[i])
+        @NLexpression(m, F[i in items], sum(M[i,j]*x[j] for j in items) + q[i])
+
+        @test typeof(getvalue(F)) == JuMP.JuMPArray{Float64,1,Tuple{UnitRange{Int64}}}
+    end
 end

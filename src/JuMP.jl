@@ -832,17 +832,18 @@ function getconstraint(m::Model, conname::Symbol)
 end
 
 # usage warnings
-function mapcontainer_warn(f, x::JuMPContainer{Variable})
+function mapcontainer_warn(f, x::JuMPContainer, var_or_expr)
     isempty(x) && return
     v = first(values(x))
     m = v.m
     m.map_counter += 1
     if m.map_counter > 400
         # It might not be f that was called the 400 first times but most probably it is f
-        Base.warn_once("$f has been called on a collection of variables a large number of times. For performance reasons, this should be avoided. Instead of $f(x)[a,b,c], use $f(x[a,b,c]) to avoid temporary allocations.")
+        Base.warn_once("$f has been called on a collection of $(var_or_expr)s a large number of times. For performance reasons, this should be avoided. Instead of $f(x)[a,b,c], use $f(x[a,b,c]) to avoid temporary allocations.")
     end
-    return
 end
+mapcontainer_warn(f, x::JuMPContainer{Variable}) = mapcontainer_warn(f, x, "variable")
+mapcontainer_warn{E}(f, x::JuMPContainer{E}) = mapcontainer_warn(f, x, "expression")
 getvalue_warn(x::JuMPContainer) = nothing
 
 function operator_warn(lhs::AffExpr,rhs::AffExpr)
