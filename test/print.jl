@@ -184,12 +184,16 @@ end
     @testset "JuMPContainer{Number}" begin
         # The same output for REPL and IJulia, so only testing one
         mod = Model()
+        @variable(mod, u[2:1])
         @variable(mod, w[i=9:10, [:Apple,5,:Banana], j=-1:+1] == i*j)
         @variable(mod, x[i=9:11,j=99:101,k=3:4] == i*j*k)
         @variable(mod, y[i=9:11,j=i:11] == i*j)
         @variable(mod, z[i=[:a,'b'],j=1:3] == j)
 
         # Deal with hashing variations
+        io_test(REPLMode, getvalue(u), """
+    u: 1 dimensions:
+      (no entries)""")
         if hash(5) < hash(:Apple)
             io_test(REPLMode, getvalue(w), """
     w: 3 dimensions:
@@ -218,8 +222,7 @@ end
       [10,Banana,:]
         [10,Banana,-1] = -10.0
         [10,Banana, 0] = 0.0
-        [10,Banana, 1] = 10.0
-    """, repl=:print)
+        [10,Banana, 1] = 10.0""", repl=:print)
         else
             io_test(REPLMode, getvalue(w), """
     w: 3 dimensions:
@@ -248,8 +251,7 @@ end
       [10,Banana,:]
         [10,Banana,-1] = -10.0
         [10,Banana, 0] = 0.0
-        [10,Banana, 1] = 10.0
-    """, repl=:print)
+        [10,Banana, 1] = 10.0""", repl=:print)
         end
 
         io_test(REPLMode, getvalue(x), """
@@ -283,8 +285,7 @@ end
         [11,100,4] = 4400.0
       [11,101,:]
         [11,101,3] = 3333.0
-        [11,101,4] = 4444.0
-    """, repl=:print)
+        [11,101,4] = 4444.0""", repl=:print)
 
         io_test(REPLMode, getvalue(y), """
     y: 2 dimensions, 6 entries:
@@ -304,8 +305,7 @@ end
     [b,:]
       [b,1] = 1.0
       [b,2] = 2.0
-      [b,3] = 3.0
-    """)
+      [b,3] = 3.0""")
 
     end
 
@@ -633,5 +633,36 @@ end
         @variable(m, X[1:2,1:2], SDP)
         s = @SDconstraint(m, X >= A)
         io_test(REPLMode, s, " X[1,1] - 2  X[1,2]     is semidefinite\n X[1,2]      X[2,2] - 1")
+    end
+
+    @testset "no method matching mapcontainer_warn(::JuMP.#_getValue, ::JuMP.JuMPArray{JuMP.NonlinearExpression,1,Tuple{UnitRange{Int64}}}) #964" begin
+        items = 1:4
+        m = Model()
+        @variable(m, x[i in items])
+        @NLexpression(m, A[i in items], x[i])
+        @NLexpression(m, B[i in items, j in 1:i], j * x[i])
+
+        a = getvalue(A)
+        @test typeof(a) == JuMP.JuMPArray{Float64,1,Tuple{UnitRange{Int}}}
+        io_test(REPLMode, a, """
+    __anon__: 1 dimensions:
+    [1] = NaN
+    [2] = NaN
+    [3] = NaN
+    [4] = NaN""")
+        b = getvalue(B)
+        @show typeof(b)
+        io_test(REPLMode, b, """
+    __anon__: 2 dimensions, 10 entries:
+     [1,1] = NaN
+     [2,1] = NaN
+     [2,2] = NaN
+     [3,1] = NaN
+     [3,2] = NaN
+     [3,3] = NaN
+     [4,1] = NaN
+     [4,2] = NaN
+     [4,3] = NaN
+     [4,4] = NaN""")
     end
 end

@@ -102,6 +102,7 @@ math(s,mathmode) = mathmode ? s : "\$\$ $s \$\$"
 
 # helper to look up corresponding JuMPContainerData
 printdata(v::JuMPContainer) = getmeta(v, :model).varData[v]
+getname(x::JuMPContainer) = hasmeta(x, :model) ? printdata(x).name : "__anon__"
 function printdata(v::Array{Variable})
     if isempty(v)
         error("Cannot locate printing data for an empty array")
@@ -552,16 +553,14 @@ cont_str(::Type{IJuliaMode}, j; mathmode=true) =
 #------------------------------------------------------------------------
 Base.show(io::IO, j::JuMPContainer{Float64}) = print(io, val_str(REPLMode,j))
 function val_str{N}(mode, j::JuMPArray{Float64,N})
-    m = _getmodel(j)
-    data = printdata(j)
-    out_str = "$(data.name): $N dimensions:\n"
+    out_str = "$(getname(j)): $N dimensions:"
     if isempty(j)
-        return out_str * "  (no entries)"
+        return out_str * "\n  (no entries)"
     end
 
     function val_str_rec(depth, parent_index::Vector{Any}, parent_str::AbstractString)
         # Turn index set into strings
-        indexset = data.indexsets[depth]
+        indexset = j.indexsets[depth]
         index_strs = map(string, indexset)
 
         # Determine longest index so we can align columns
@@ -586,14 +585,14 @@ function val_str{N}(mode, j::JuMPArray{Float64,N})
                 value = length(parent_index) == 0 ?
                             j[indexset[i]] :
                             j[parent_index...,indexset[i]]
-                out_str *= indent * "[" * index_strs[i] * "] = $value\n"
+                out_str *= "\n" * indent * "[" * index_strs[i] * "] = $value"
             end
         else
             # At least one more layer to go
             for i = 1:length(indexset)
                 index = indexset[i]
                 # Print the ":" version of indices we will recurse over
-                out_str *= indent * "[" * index_strs[i] * ",:"^(N-depth) * "]\n"
+                out_str *= "\n" * indent * "[" * index_strs[i] * ",:"^(N-depth) * "]"
                 val_str_rec(depth+1,
                      length(parent_index) == 0 ? Any[index] : Any[parent_index...,index],
                     index_strs[i] * ",")
@@ -614,12 +613,10 @@ function _isless(t1::Tuple, t2::Tuple)
     end
     return n1 < n2
 end
-function val_str(mode, dict::JuMPDict{Float64})
+function val_str{N}(mode, dict::JuMPDict{Float64,N})
     nelem = length(dict.tupledict)
     isempty(dict) && return ""
-    m = _getmodel(dict)
-    data = printdata(dict)
-    out_str  = "$(data.name): $(length(data.indexsets)) dimensions, $nelem "
+    out_str  = "$(getname(dict)): $N dimensions, $nelem "
     out_str *= nelem == 1 ? "entry" : "entries"
     out_str *= ":"
 
