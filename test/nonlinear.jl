@@ -243,6 +243,24 @@ end
         @test isapprox(getvalue(x), [sqrt(1/2), 0], atol=1e-6)
     end
 
+    if ipt
+        @testset "Passing starting solutions through QP pathway with Ipopt" begin
+            # https://discourse.julialang.org/t/create-quadratic-objective-will-objective-and-nlobjective-lead-to-different-solution-using-ipopt/1666
+            m = Model(solver=Ipopt.IpoptSolver(print_level=0))
+            @variable(m, 0<= x1 <= 1, start=1)
+            @variable(m, 0<= x2 <=1, start=1)
+            @variable(m, 0<= x3 <=1)
+            @variable(m, 0<= x4 <=1, start=1)
+            @variable(m, 0<= x5 <=1)
+            @constraint(m, 20*x1 + 12*x2 + 11*x3 + 7*x4 + 4*x5 <= 40)
+            @objective(m, Min, 42*x1 - 0.5*(100*x1*x1 + 100*x2*x2 + 100*x3*x3 + 100*x4*x4 + 100*x5*x5) + 44*x2 + 45*x3 + 47*x4 + 47.5*x5)
+            status=solve(m)
+
+            @test status == :Optimal
+            @test isapprox(getobjectivevalue(m), -17, atol=1e-4)
+        end
+    end
+
     @testset "Mixed integer nonlinear problems with $minlp_solver" for minlp_solver in minlp_solvers
         # Solve test problem 1 (Synthesis of processing system) in
         # M. Duran & I.E. Grossmann, "An outer approximation algorithm for

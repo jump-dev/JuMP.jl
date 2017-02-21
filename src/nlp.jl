@@ -1254,13 +1254,7 @@ function _buildInternalModel_nlp(m::Model, traits)
         end
     end
 
-    if !any(isnan,m.colVal)
-        MathProgBase.setwarmstart!(m.internalModel, m.colVal)
-    else
-        initval = copy(m.colVal)
-        initval[isnan(m.colVal)] = 0
-        MathProgBase.setwarmstart!(m.internalModel, min(max(m.colLower,initval),m.colUpper))
-    end
+    MathProgBase.setwarmstart!(m.internalModel, tidy_warmstart(m))
 
     registercallbacks(m)
 
