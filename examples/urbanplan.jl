@@ -4,7 +4,7 @@
 #  file, You can obtain one at http://mozilla.org/MPL/2.0/.
 #############################################################################
 # JuMP
-# An algebraic modelling langauge for Julia
+# An algebraic modeling langauge for Julia
 # See http://github.com/JuliaOpt/JuMP.jl
 #############################################################################
 # urbanplan.jl
@@ -14,11 +14,13 @@
 #  http://puzzlor.editme.com/urbanplanning
 #############################################################################
 
-using JuMP
+using JuMP, Cbc
+
+solver = CbcSolver()
 
 function SolveUrban()
 
-    m = Model()
+    m = Model(solver=solver)
 
     # x is indexed by row and column
     @variable(m, 0 <= x[1:5,1:5] <= 1, Int)

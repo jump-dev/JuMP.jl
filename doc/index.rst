@@ -96,7 +96,22 @@ Contents
 Citing JuMP
 -----------
 
-If you find JuMP useful in your work, we kindly request that you cite the following `paper <http://dx.doi.org/10.1287/ijoc.2014.0623>`_:
+
+
+If you find JuMP useful in your work, we kindly request that you cite the following `paper <http://arxiv.org/abs/1508.01982>`_:
+
+.. code-block:: none
+
+    @article{DunningHuchetteLubin2015,
+    title = {{JuMP}: {A} modeling language for mathematical optimization},
+    author = {Iain Dunning and Joey Huchette and Miles Lubin},
+    journal = {arXiv:1508.01982 [math.OC]},
+    year = {2015},
+    url = {http://arxiv.org/abs/1508.01982}
+    }
+
+For an earlier work where we presented a prototype implementation of JuMP, see
+`here <http://dx.doi.org/10.1287/ijoc.2014.0623>`_:
 
 .. code-block:: none
 
@@ -113,15 +128,3 @@ If you find JuMP useful in your work, we kindly request that you cite the follow
     }
 
 A preprint of this paper is freely available on `arXiv <http://arxiv.org/abs/1312.1431>`_.
-
-If you use the nonlinear or conic optimization functionality of JuMP, please cite the following `preprint <http://arxiv.org/abs/1508.01982>`_ which describes the methods implemented in JuMP. You may cite it as:
-
-.. code-block:: none
-
-    @article{DunningHuchetteLubin2015,
-    title = {{JuMP}: {A} modeling language for mathematical optimization},
-    author = {Iain Dunning and Joey Huchette and Miles Lubin},
-    journal = {arXiv:1508.01982 [math.OC]},
-    year = {2015},
-    url = {http://arxiv.org/abs/1508.01982}
-    }

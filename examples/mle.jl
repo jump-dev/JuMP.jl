@@ -2,7 +2,7 @@
 #  This Source Code Form is subject to the terms of the Mozilla Public
 #  License, v. 2.0. If a copy of the MPL was not distributed with this
 #  file, You can obtain one at http://mozilla.org/MPL/2.0/.
-using JuMP
+using JuMP, Ipopt
 
 # Use nonlinear optimization to compute the maximum likelihood estimate (MLE)
 # of the parameters of a normal distribution
@@ -11,7 +11,7 @@ using JuMP
 n = 1000
 data = randn(n)
 
-m = Model()
+m = Model(solver=IpoptSolver(print_level=0))
 
 @variable(m, μ, start = 0.0)
 @variable(m, σ >= 0.0, start = 1.0)

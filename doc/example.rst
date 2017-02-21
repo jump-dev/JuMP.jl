@@ -7,8 +7,9 @@ In this section we will construct a simple model and explain every step along th
 The are more complex examples in the ``JuMP/examples/`` `folder <https://github.com/JuliaOpt/JuMP.jl/tree/master/examples>`_. Here is the code we will walk through::
 
     using JuMP
+    using Clp
 
-    m = Model()
+    m = Model(solver = ClpSolver())
     @variable(m, 0 <= x <= 2 )
     @variable(m, 0 <= y <= 30 )
 
@@ -28,9 +29,14 @@ programs, you just need to say::
 
     using JuMP
 
-Models are created with the ``Model()`` function::
+We also need to include a Julia package which provides an appropriate solver.
+In this case, we'll use Clp::
 
-    m = Model()
+    using Clp
+
+Models are created with the ``Model()`` function. The ``solver=`` keyword argument is used to specify the solver to be used::
+
+    m = Model(solver = ClpSolver())
 
 .. note::
    Your model doesn't have to be called m - it's just a name.

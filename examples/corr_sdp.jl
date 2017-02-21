@@ -1,6 +1,6 @@
 #############################################################################
 # JuMP
-# An algebraic modelling langauge for Julia
+# An algebraic modeling langauge for Julia
 # See http://github.com/JuliaOpt/JuMP.jl
 #############################################################################
 # corr_sdp.jl
@@ -16,9 +16,9 @@
 # To determine bounds on ρ_AC by solving a SDP
 #############################################################################
 
-using JuMP
+using JuMP, SCS
 
-m = Model()
+m = Model(solver=SCSSolver())
 
 @variable(m, X[1:3,1:3], SDP)
 

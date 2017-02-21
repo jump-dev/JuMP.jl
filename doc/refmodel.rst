@@ -15,8 +15,7 @@ required arguments::
 
     m = Model()
 
-The constructor also accepts an optional keyword argument, ``solver``,
-which can be used to change the default solver behavior.
+The constructor also accepts an optional keyword argument, ``solver``. You may specify a solver either here or later on by calling ``setsolver``. JuMP will throw an error if you try to solve a problem without specifying a solver.
 
 ``solver`` must be an ``AbstractMathProgSolver`` object, which is constructed as follows::
 
@@ -105,7 +104,8 @@ Quadratic objectives are supported by JuMP using a solver which implements the
 corresponding extensions of the MathProgBase interface. Add them in the same way
 you would a linear objective::
 
-    m = Model()
+    using Ipopt
+    m = Model(solver=IpoptSolver())
     @variable(m, 0 <= x <= 2 )
     @variable(m, 0 <= y <= 30 )
 

@@ -13,7 +13,9 @@
 #   Programming, http://www.ampl.com/REFS/amplmod.ps.gz
 #   Appendix D
 #############################################################################
-using JuMP
+using JuMP, Clp
+
+solver = ClpSolver()
 
 ORIG = ["GARY", "CLEV", "PITT"];
 DEST = ["FRA", "DET", "LAN", "WIN", "STL", "FRE", "LAF"];
@@ -29,7 +31,7 @@ cost = [
 24   14   17   13   28   99   20
 ]
 
-m = Model();
+m = Model(solver=solver);
 
 @variable(m, Trans[i=1:length(ORIG), j=1:length(DEST)] >= 0);
 

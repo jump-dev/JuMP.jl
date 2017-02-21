@@ -4,7 +4,7 @@
 #  file, You can obtain one at http://mozilla.org/MPL/2.0/.
 #############################################################################
 # JuMP
-# An algebraic modelling langauge for Julia
+# An algebraic modeling langauge for Julia
 # See http://github.com/JuliaOpt/JuMP.jl
 #############################################################################
 # sudoku.jl
@@ -20,7 +20,9 @@
 # We will take the initial grid as a CSV file, where 0s are "blanks
 #############################################################################
 
-using JuMP
+using JuMP, Cbc
+
+solver = CbcSolver()
 
 # Load data
 function LoadData(filepath)
@@ -35,7 +37,7 @@ end
 
 # Solve model
 function SolveModel(initgrid)
-    m = Model()
+    m = Model(solver=solver)
 
     @variable(m, x[1:9, 1:9, 1:9], Bin)
 

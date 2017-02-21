@@ -23,9 +23,10 @@ Creating a Model
 
     m = Model()
 
-All variables and constraints are associated with a ``Model`` object. For
-a list of all functions related to ``Model``, including how to change the
-default solver and set solver parameters, see :ref:`ref-model`.
+All variables and constraints are associated with a ``Model`` object.
+Usually, you'll also want to provide a solver object here by using the 
+``solver=`` keyword argument; see the simple example below. For
+a list of all functions related to ``Model``, see :ref:`ref-model`.
 
 
 Defining Variables

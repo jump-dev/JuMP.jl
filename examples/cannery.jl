@@ -12,7 +12,9 @@
 # Date January 30, 2015
 #############################################################################
 
-using JuMP
+using JuMP, Clp
+
+solver = ClpSolver()
 
 function PrintSolution(status, plants, markets, ship)
     println("RESULTS:")
@@ -31,7 +33,7 @@ end
 function solveCannery(plants, markets, capacity, demand, distance, freight)
   numplants = length(plants)
   nummarkets = length(markets)
-  cannery = Model()
+  cannery = Model(solver=solver)
 
   @variable(cannery, ship[1:numplants, 1:nummarkets] >= 0)
 

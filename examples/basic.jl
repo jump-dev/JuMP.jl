@@ -4,7 +4,7 @@
 #  file, You can obtain one at http://mozilla.org/MPL/2.0/.
 #############################################################################
 # JuMP
-# An algebraic modelling langauge for Julia
+# An algebraic modeling langauge for Julia
 # See http://github.com/JuliaOpt/JuMP.jl
 #############################################################################
 # basic.jl
@@ -16,9 +16,9 @@
 #      0 <= y <= 20
 #############################################################################
 
-using JuMP
+using JuMP, Clp
 
-m = Model()
+m = Model(solver = ClpSolver())
 
 @variable(m, 0 <= x <= 2)
 @variable(m, 0 <= y <= 30)
