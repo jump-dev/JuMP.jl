@@ -4,7 +4,7 @@
 #  file, You can obtain one at http://mozilla.org/MPL/2.0/.
 #############################################################################
 # JuMP
-# An algebraic modelling langauge for Julia
+# An algebraic modeling langauge for Julia
 # See http://github.com/JuliaOpt/JuMP.jl
 #############################################################################
 # knapsack.jl
@@ -15,10 +15,10 @@
 #     x binary
 #############################################################################
 
-using JuMP
+using JuMP, Cbc
 
 # Maximization problem
-m = Model()
+m = Model(solver=CbcSolver())
 
 @variable(m, x[1:5], Bin)
 

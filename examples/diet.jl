@@ -4,7 +4,7 @@
 #  file, You can obtain one at http://mozilla.org/MPL/2.0/.
 #############################################################################
 # JuMP
-# An algebraic modelling langauge for Julia
+# An algebraic modeling langauge for Julia
 # See http://github.com/JuliaOpt/JuMP.jl
 #############################################################################
 # diet.jl
@@ -14,7 +14,9 @@
 #  http://www.gurobi.com/documentation/5.6/example-tour/diet_cpp_cpp
 #############################################################################
 
-using JuMP
+using JuMP, Clp
+
+solver = ClpSolver()
 
 function PrintSolution(status, foods, buy)
     println("RESULTS:")
@@ -52,7 +54,7 @@ function SolveDiet()
                        330  8 10 180]
 
     # Build model
-    m = Model()
+    m = Model(solver=solver)
 
     # Variables for nutrition info
     @variable(m, minNutrition[i] <= nutrition[i=1:numCategories] <= maxNutrition[i])

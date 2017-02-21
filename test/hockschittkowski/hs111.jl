@@ -19,14 +19,11 @@
 # exponents. Related to HS112.
 #############################################################################
 
-using JuMP
-using Base.Test
-
 @testset "HS111" begin
 
 c = [-6.089, -17.164, -34.054, -5.914, -24.721, -14.986, -24.100, -10.708, -26.662, -22.179]
 
-m = Model()
+m = Model(solver=nlp_solver)
 @variable(m, -100 <= x[1:10] <= 100, start = -2.3)
 
 @NLobjective(m, Min,

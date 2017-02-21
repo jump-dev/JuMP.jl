@@ -2,7 +2,9 @@
 #  This Source Code Form is subject to the terms of the Mozilla Public
 #  License, v. 2.0. If a copy of the MPL was not distributed with this
 #  file, You can obtain one at http://mozilla.org/MPL/2.0/.
-using JuMP
+using JuMP, Ipopt
+
+solver = IpoptSolver()
 
 # clnlbeam
 # Based on AMPL model
@@ -25,7 +27,7 @@ let
     h     = 1/ni
     alpha = 350
 
-    m = Model()
+    m = Model(solver=solver)
 
     @variable(m, -1 <= t[1:(ni+1)] <= 1)
     @variable(m, -0.05 <= x[1:(ni+1)] <= 0.05)

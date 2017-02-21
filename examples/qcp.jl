@@ -4,7 +4,7 @@
 #  file, You can obtain one at http://mozilla.org/MPL/2.0/.
 #############################################################################
 # JuMP
-# An algebraic modelling langauge for Julia
+# An algebraic modeling langauge for Julia
 # See http://github.com/JuliaOpt/JuMP.jl
 #############################################################################
 # qcp.jl
@@ -13,10 +13,10 @@
 # Based on http://www.gurobi.com/documentation/5.5/example-tour/node25
 #############################################################################
 
-using JuMP
+using JuMP, Gurobi
 
 # Will require either Gurobi.jl, CPLEX.jl, or Mosek.jl to run
-m = Model()
+m = Model(solver=GurobiSolver())
 
 # Need nonnegativity for (rotated) second-order cone
 @variable(m, x)

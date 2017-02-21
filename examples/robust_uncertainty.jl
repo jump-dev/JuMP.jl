@@ -1,6 +1,6 @@
 #############################################################################
 # JuMP
-# An algebraic modelling langauge for Julia
+# An algebraic modeling langauge for Julia
 # See http://github.com/JuliaOpt/JuMP.jl
 #############################################################################
 # robust_uncertainty.jl
@@ -11,7 +11,7 @@
 #############################################################################
 
 
-using JuMP
+using JuMP, SCS
 
 R = 1
 d = 3
@@ -26,7 +26,7 @@ N = ceil((2+2log(2/𝛿))^2) + 1
 M = rand(d,d)
 Σhat = 1/(d-1)*(M-ones(d)*μhat')'*(M-ones(d)*μhat')
 
-m = Model()
+m = Model(solver=SCSSolver(eps=1e-8))
 
 @variable(m, Σ[1:d,1:d], SDP)
 @variable(m, u[1:d])

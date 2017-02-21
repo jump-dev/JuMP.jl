@@ -1,6 +1,6 @@
 #############################################################################
 # JuMP
-# An algebraic modelling langauge for Julia
+# An algebraic modeling langauge for Julia
 # See http://github.com/JuliaOpt/JuMP.jl
 #############################################################################
 # maxcut_sdp.jl
@@ -17,13 +17,15 @@
 # then applies the Goemans-Williamson algorithm
 #############################################################################
 using JuMP
-using Mosek
+using SCS
+
+solver = SCSSolver(eps=1e-6)
 
 function solve_maxcut_sdp(n, W)
     L = 0.25 * (diagm(W*ones(n)) - W)
 
     # Solve the SDP relaxation
-    m = Model()
+    m = Model(solver=solver)
     @variable(m, X[1:n,1:n], SDP)
     @objective(m, Max, vecdot(L,X))
     @constraint(m, diag(X) .== 1)

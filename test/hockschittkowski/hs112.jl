@@ -19,14 +19,11 @@
 # the nominator and denominator have variables in them. Constraints linear.
 #############################################################################
 
-using JuMP
-using Base.Test
-
 @testset "HS112" begin
 
 c = [-6.089, -17.164, -34.054, -5.914, -24.721, -14.986, -24.100, -10.708, -26.662, -22.179]
 
-m = Model()
+m = Model(solver=nlp_solver)
 @variable(m, x[1:10] >= 1e-6, start = 0.1)
 
 @NLobjective(m, Min, sum(x[j]*(c[j] + log(x[j]/sum(x[k] for k=1:10))) for j=1:10))

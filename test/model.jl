@@ -40,20 +40,25 @@ end
         @variable(modErr, errVar)
         @test isnan(getvalue(errVar))
         @test isnan(getdual(errVar))
+        @test_throws ErrorException solve(modErr) # no solver provided
 
-        modErr = Model()
-        @variable(modErr, x, Bin)
-        @objective(modErr, Max, x)
-        con = @constraint(modErr, x <= 0.5)
-        solve(modErr)
-        @test isnan(getdual(con))
+        if length(ip_solvers) > 0
+            modErr = Model(solver=ip_solvers[1])
+            @variable(modErr, x, Bin)
+            @objective(modErr, Max, x)
+            con = @constraint(modErr, x <= 0.5)
+            solve(modErr)
+            @test isnan(getdual(con))
+        end
 
-        modErr = Model()
-        @variable(modErr, 0 <= x <= 1)
-        @objective(modErr, Max, x)
-        @constraint(modErr, x <= -1)
-        solve(modErr, suppress_warnings=true)
-        @test isnan(getvalue(x))
+        if length(lp_solvers) > 0
+            modErr = Model(solver=lp_solvers[1])
+            @variable(modErr, 0 <= x <= 1)
+            @objective(modErr, Max, x)
+            @constraint(modErr, x <= -1)
+            solve(modErr, suppress_warnings=true)
+            @test isnan(getvalue(x))
+        end
     end
 
     @testset "Warning on non-symbol variable names" begin
@@ -521,20 +526,22 @@ end
     end
     end
 
-    @testset "Test NaN checking" begin
-        mod = Model()
-        @variable(mod, x)
-        @objective(mod, Min, NaN*x)
-        @test_throws ErrorException solve(mod)
-        @objective(mod, Min, NaN*x^2)
-        @test_throws ErrorException solve(mod)
-        @objective(mod, Min, x)
-        @constraint(mod, Min, NaN*x == 0)
-        @test_throws ErrorException solve(mod)
+    if length(lp_solvers) > 0
+        @testset "Test NaN checking" begin
+            mod = Model(solver=lp_solvers[1])
+            @variable(mod, x)
+            @objective(mod, Min, NaN*x)
+            @test_throws ErrorException solve(mod)
+            @objective(mod, Min, NaN*x^2)
+            @test_throws ErrorException solve(mod)
+            @objective(mod, Min, x)
+            @constraint(mod, Min, NaN*x == 0)
+            @test_throws ErrorException solve(mod)
+        end
     end
 
-    @testset "Test column-wise modeling" begin
-        mod = Model()
+    @testset "Test column-wise modeling with $lp_solver" for lp_solver in lp_solvers
+        mod = Model(solver=lp_solver)
         @variable(mod, 0 <= x <= 1)
         @variable(mod, 0 <= y <= 1)
         @objective(mod, Max, 5x + 1y)
@@ -546,7 +553,7 @@ end
         @test isapprox(getvalue(z2), 1.0, atol=TOL)
 
         # do a vectorized version as well
-        mod = Model()
+        mod = Model(solver=lp_solver)
         @variable(mod, 0 <= x <= 1)
         @variable(mod, 0 <= y <= 1)
         obj = [5,1]'*[x,y]
@@ -565,7 +572,7 @@ end
         @test isapprox(getvalue(z2), 1.0, atol=TOL)
 
         # vectorized with sparse matrices
-        mod = Model()
+        mod = Model(solver=lp_solver)
         @variable(mod, 0 <= x <= 1)
         @variable(mod, 0 <= y <= 1)
         # TODO: get this to work by adding method for Ac_mul_B!
@@ -762,7 +769,6 @@ end
         m = Model()
         @variable(m, x[1:5])
         @constraint(m, con[i=1:5], x[6-i] == i)
-        @test solve(m) == :Optimal
 
         for solver in lp_solvers
             setsolver(m, solver)
@@ -825,20 +831,16 @@ end
         @test typeof(getvalue(x)) == Vector{Float64}
     end
 
-    @testset "Relaxation keyword argument to solve" begin
-        m = Model()
-        @variable(m, 1.5 <= y <= 2, Int)
-        @variable(m, z, Bin)
-        @variable(m, 0.5 <= w <= 1.5, Int)
-        @variable(m, 1 <= v <= 2)
+    if length(ip_solvers) > 0
+        @testset "Relaxation keyword argument to solve with $solver" for solver in ip_dual_solvers
+            m = Model(solver=ip_solvers[1])
+            @variable(m, 1.5 <= y <= 2, Int)
+            @variable(m, z, Bin)
+            @variable(m, 0.5 <= w <= 1.5, Int)
+            @variable(m, 1 <= v <= 2)
 
-        @objective(m, Min, y + z + w + v)
+            @objective(m, Min, y + z + w + v)
 
-        # Force LP solver since not all MIP solvers
-        # return duals (i.e. Cbc)
-
-        @testset "with $solver" for solver in lp_solvers
-            setsolver(m, solver)
             @test solve(m, relaxation=true) == :Optimal
             @test isapprox(getvalue(y), 1.5, atol=TOL)
             @test isapprox(getvalue(z), 0, atol=TOL)
@@ -849,32 +851,30 @@ end
             @test isapprox(getdual(w), 1, atol=TOL)
             @test isapprox(getdual(v), 1, atol=TOL)
             @test isapprox(getobjectivevalue(m), 1.5 + 0 + 0.5 + 1, atol=TOL)
+
+            @test solve(m) == :Optimal
+            @test getvalue(y) == 2
+            @test getvalue(z) == 0
+            @test getvalue(w) == 1
+            @test getvalue(v) == 1
+            @test getobjectivevalue(m) == 2 + 0 + 1 + 1
+
+            @variable(m, 1 <= x <= 2, SemiCont)
+            @variable(m, -2 <= t <= -1, SemiInt)
+
+            addSOS1(m, [x, 2y, 3z, 4w, 5v, 6t])
+            @objective(m, Min, x + y + z + w + v - t)
+
+            @test solve(m, relaxation=true) == :Optimal
+
+            @test getvalue(x) == 0
+            @test getvalue(y) == 1.5
+            @test getvalue(z) == 0
+            @test getvalue(w) == 0.5
+            @test getvalue(v) == 1
+            @test getvalue(t) == 0
+            @test getobjectivevalue(m) == 0 + 1.5 + 0 + 0.5 + 1 + 0
         end
-
-        # Let JuMP choose solver again
-        setsolver(m, JuMP.UnsetSolver())
-        @test solve(m) == :Optimal
-        @test getvalue(y) == 2
-        @test getvalue(z) == 0
-        @test getvalue(w) == 1
-        @test getvalue(v) == 1
-        @test getobjectivevalue(m) == 2 + 0 + 1 + 1
-
-        @variable(m, 1 <= x <= 2, SemiCont)
-        @variable(m, -2 <= t <= -1, SemiInt)
-
-        addSOS1(m, [x, 2y, 3z, 4w, 5v, 6t])
-        @objective(m, Min, x + y + z + w + v - t)
-
-        @test solve(m, relaxation=true) == :Optimal
-
-        @test getvalue(x) == 0
-        @test getvalue(y) == 1.5
-        @test getvalue(z) == 0
-        @test getvalue(w) == 0.5
-        @test getvalue(v) == 1
-        @test getvalue(t) == 0
-        @test getobjectivevalue(m) == 0 + 1.5 + 0 + 0.5 + 1 + 0
     end
 
     @testset "Unrecognized keyword argument to solve" begin
@@ -915,25 +915,27 @@ end
         @test m.quadconstr[4].terms == QuadExpr(x + x + x - 1)
     end
 
-    @testset "sets used as indexsets in JuMPArray" begin
-        set = IntSet()
-        for i in 4:5
-            push!(set, i)
+    if length(ip_solvers) > 0
+        @testset "sets used as indexsets in JuMPArray" begin
+            set = IntSet()
+            for i in 4:5
+                push!(set, i)
+            end
+            set2 = IntSet()
+            for i in 21:23
+                push!(set2, i)
+            end
+            m = Model(solver=ip_solvers[1])
+            @variable(m, x[set, set2], Bin)
+            @objective(m , Max, sum(sum(x[e,p] for e in set) for p in set2))
+            solve(m)
+            sol = getvalue(x)
+            checked_objval = 0
+            for i in keys(sol)
+                checked_objval += sol[i...]
+            end
+            @test checked_objval == 6
         end
-        set2 = IntSet()
-        for i in 21:23
-            push!(set2, i)
-        end
-        m = Model()
-        @variable(m, x[set, set2], Bin)
-        @objective(m , Max, sum(sum(x[e,p] for e in set) for p in set2))
-        solve(m)
-        sol = getvalue(x)
-        checked_objval = 0
-        for i in keys(sol)
-            checked_objval += sol[i...]
-        end
-        @test checked_objval == 6
     end
 
     @testset "[model] .^ broadcasting" begin

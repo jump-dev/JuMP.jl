@@ -19,12 +19,9 @@
 # of variables squared.
 #############################################################################
 
-using JuMP
-using Base.Test
-
 @testset "HS110" begin
 
-m = Model()
+m = Model(solver=nlp_solver)
 @variable(m, -2.001 <= x[1:10] <= 9.999, start = 9)
 
 @NLobjective(m, Min,

@@ -1,6 +1,6 @@
 ##############################################################################
 # JuMP
-# An algebraic modelling langauge for Julia
+# An algebraic modeling langauge for Julia
 # See http://github.com/JuliaOpt/JuMP.jl
 #############################################################################
 # cluster.jl
@@ -12,7 +12,9 @@
 #############################################################################
 
 using JuMP
-using Mosek
+using SCS
+
+solver = SCSSolver()
 
 # Data points
 n = 2
@@ -31,7 +33,7 @@ for i = 1:m
     end
 end
 
-mod = Model()
+mod = Model(solver=SCSSolver())
 
 # Z >= 0, PSD
 @variable(mod, Z[1:m,1:m], SDP)

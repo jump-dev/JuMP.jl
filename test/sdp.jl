@@ -565,14 +565,16 @@ ispsd(x::JuMP.JuMPArray) = ispsd(x.innerArray)
         @test isapprox(getdual(c2), [-1 1; 1 -1], atol=1e-3) # X
     end
 
-    @testset "Internal Model not unloaded when SDP constraint added #830" begin
-        model = Model()
-        @variable(model, x)
-        solve(model)
-        T = [1 x; -x 1]
-        c = @SDconstraint(model, T ⪰ 0)
-        @test typeof(c) == JuMP.ConstraintRef{JuMP.Model,JuMP.SDConstraint}
-        @test model.internalModelLoaded == false
+    if length(lp_solvers) > 0
+        @testset "Internal Model unloaded when SDP constraint added (#830)" begin
+            model = Model(solver=lp_solvers[1])
+            @variable(model, x)
+            solve(model)
+            T = [1 x; -x 1]
+            c = @SDconstraint(model, T ⪰ 0)
+            @test typeof(c) == JuMP.ConstraintRef{JuMP.Model,JuMP.SDConstraint}
+            @test model.internalModelLoaded == false
+        end
     end
 
     # The four following tests are from Example 2.11, Example 2.13 and Example 2.27 of:

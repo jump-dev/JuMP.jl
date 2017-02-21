@@ -13,8 +13,6 @@
 #   4-1 multi.mod and multi.dat
 #############################################################################
 
-using Compat
-
 function PrintSolution(status, Trans, ORIG, DEST, PROD)
     println("RESULTS:")
     if status == :Optimal
@@ -32,7 +30,9 @@ function PrintSolution(status, Trans, ORIG, DEST, PROD)
     println("")
 end
 
-using JuMP
+using JuMP, Clp
+
+solver = ClpSolver()
 
 
 # PARAMETERS
@@ -57,7 +57,7 @@ demand = [[  300   300   100    75   650   225   250]
 # limit(orig, dest) of total units from any origin to destination
 defaultlimit = float(625)
 
-limit = [[defaultlimit::AbstractFloat for j=1:numdest] for i=1:numorig]
+limit = [[defaultlimit for j=1:numdest] for i=1:numorig]
 
 # cost(dest, orig, prod) Shipment cost per unit
 cost = reshape([[[  30,   10,   8 ,  10,   11 ,  71,    6];
@@ -73,7 +73,7 @@ cost = reshape([[[  30,   10,   8 ,  10,   11 ,  71,    6];
 
 #  DECLARE MODEL
 
-multi = Model()
+multi = Model(solver=solver)
 
 #  VARIABLES
 

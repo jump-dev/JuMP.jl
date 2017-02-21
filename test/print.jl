@@ -184,11 +184,10 @@ end
     @testset "JuMPContainer{Number}" begin
         # The same output for REPL and IJulia, so only testing one
         mod = Model()
-        @variable(mod, i*j <= w[i=9:10, [:Apple,5,:Banana], j=-1:+1] <= i*j)
-        @variable(mod, i*j*k <= x[i=9:11,j=99:101,k=3:4] <= i*j*k)
-        @variable(mod, i*j <= y[i=9:11,j=i:11] <= i*j)
-        @variable(mod, j <= z[i=[:a,'b'],j=1:3] <= j)
-        solve(mod)
+        @variable(mod, w[i=9:10, [:Apple,5,:Banana], j=-1:+1] == i*j)
+        @variable(mod, x[i=9:11,j=99:101,k=3:4] == i*j*k)
+        @variable(mod, y[i=9:11,j=i:11] == i*j)
+        @variable(mod, z[i=[:a,'b'],j=1:3] == j)
 
         # Deal with hashing variations
         if hash(5) < hash(:Apple)

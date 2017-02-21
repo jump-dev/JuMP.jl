@@ -19,9 +19,6 @@
 # as a couple constraints that have fractions of variables.
 #############################################################################
 
-using JuMP
-using Base.Test
-
 @testset "HS114" begin
 
 n = 10
@@ -32,7 +29,7 @@ lower = [0.0001, 0.0001, 0.0001, 0.0001, 0.0001, 85, 90, 3, 1.2, 145]
 upper = [2000, 16000, 120, 5000, 2000, 93, 95, 12, 4, 162]
 start = [1745, 12000, 110, 3048, 1974, 89.2, 92.8, 8, 3.6, 145]
 
-m = Model()
+m = Model(solver=nlp_solver)
 @variable(m, lower[i] <= x[i=1:n] <= upper[i], start = start[i])
 
 @NLobjective(m, Min, 5.04*x[1] + .035*x[2] + 10*x[3] + 3.36*x[5] - .063*x[4]*x[7])

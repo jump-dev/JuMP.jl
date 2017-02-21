@@ -13,7 +13,9 @@
 #
 ################################################################################
 
-using JuMP
+using JuMP, Clp
+
+solver = ClpSolver()
 
 # Data
 
@@ -51,7 +53,7 @@ market = Dict("bands" => Dict("east" => [2000  2000  1500  2000],
 
 # Model
 
-Prod = Model()
+Prod = Model(solver=solver)
 print(area["bands"])
 print(market["coils"]["west"][1])
 

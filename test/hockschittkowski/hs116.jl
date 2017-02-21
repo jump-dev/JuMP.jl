@@ -18,9 +18,6 @@
 # This problem has a linear objective with quadratic constraints.
 #############################################################################
 
-using JuMP
-using Base.Test
-
 @testset "HS116" begin
 
 N = 13
@@ -35,7 +32,7 @@ lower = [0.1, 0.1, 0.1, 0.0001, 0.1, 0.1, 0.1, 0.1, 500, 0.1, 1.0, 0.0001, 0.000
 upper = [1.0, 1.0, 1.0, 0.1, 0.9, 0.9, 1000, 1000, 1000, 500, 150, 150, 150, Inf, Inf, Inf]
 start = [0.5  2 0.8  3 0.9  4 0.1  5 0.14  6 0.5  7 489  8 80  9 650 0.5  2 0.8  3 0.9  4 0.1  5 0.14  6 0.5  7 489  8 80  9 650]
 
-m = Model()
+m = Model(solver=nlp_solver)
 @variable(m, lower[i] <= x[i=1:N] <= upper[i], start = start[i])
 @NLobjective(m, Min, x[11] + x[12] + x[13])
 

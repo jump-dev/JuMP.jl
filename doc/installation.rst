@@ -110,9 +110,7 @@ Requires a license. A trial version is available for small problem instances.
 COIN-OR Clp and Cbc
 +++++++++++++++++++
 
-Binaries for Clp and Cbc are provided on OS X and Windows (32- and 64-bit) by default. On Linux, they will be compiled from source (be sure to have a C++ compiler installed).
-
-Clp and Cbc, if available, are the default choice of solver in JuMP. Cbc supports "SOS" constraints but does *not* support MIP callbacks.
+Binaries for Clp and Cbc are provided on OS X and Windows (32- and 64-bit) by default. On Linux, they will be compiled from source (be sure to have a C++ compiler installed). Cbc supports "SOS" constraints but does *not* support MIP callbacks.
 
 
 CPLEX

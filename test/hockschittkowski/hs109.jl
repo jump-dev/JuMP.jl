@@ -19,9 +19,6 @@
 # products of variables.
 #############################################################################
 
-using JuMP
-using Base.Test
-
 @testset "HS109" begin
 
 a  = 50.176
@@ -32,7 +29,7 @@ c = cos(b1)
 L = [0.0, 0.0, -0.55, -0.55, 196, 196, 196, -400, -400]
 U = [Inf, Inf,  0.55,  0.55, 252, 252, 252,  800,  800]
 
-m = Model()
+m = Model(solver=nlp_solver)
 @variable(m, L[i] <= x[i=1:9] <= U[i], start = 0.0)
 
 @NLobjective(m, Min, 3 * x[1] + 1e-6 * x[1]^3 + 2 * x[2] + .522074e-6 * x[2]^3)

@@ -18,12 +18,9 @@
 # This problem has a quadratic objective with linear constraints.
 #############################################################################
 
-using JuMP
-using Base.Test
-
 @testset "HS118" begin
 
-m = Model()
+m = Model(solver=nlp_solver)
 
 L = zeros(15)
 L[1] =  8.0

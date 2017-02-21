@@ -1,6 +1,6 @@
 #############################################################################
 # JuMP
-# An algebraic modelling langauge for Julia
+# An algebraic modeling langauge for Julia
 # See http://github.com/JuliaOpt/JuMP.jl
 #############################################################################
 # minellipse.jl
@@ -21,8 +21,10 @@
 #############################################################################
 
 using JuMP
-using Mosek
-using PyPlot  # Comment out if not installed
+using SCS
+#using PyPlot  # Comment out if not installed
+
+solver = SCSSolver(eps=1e-6)
 
 # We will use three ellipses
 m = 3
@@ -39,7 +41,7 @@ push!(As, (randA' * randA) * (rand()*2+1))
 W = [1.0 0.0
      0.0 1.0];
 
-mod = Model()
+mod = Model(solver=solver)
 @variable(mod, X[1:2,1:2], SDP)
 @objective(mod, Min, trace(W*X))
 for i = 1:m
@@ -49,6 +51,10 @@ solve(mod)
 
 X_val = getvalue(X)
 println(X_val)
+
+#= This code no longer seems to be working.
+ERROR: LoadError: PyError (:PyObject_Call) <type 'exceptions.ValueError'>
+ValueError('The truth value of an array with more than one element is ambiguous. Use a.any() or a.all()',)
 
 # Plot it, if desired (e.g. julia minellipse.jl plot)
 if length(ARGS) > 0 && Pkg.installed("PyPlot") !== nothing
@@ -85,3 +91,4 @@ if length(ARGS) > 0 && Pkg.installed("PyPlot") !== nothing
     fig[:canvas][:draw]()
     readline()
 end
+=#

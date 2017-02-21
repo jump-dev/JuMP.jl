@@ -41,7 +41,9 @@ function PrintSolution(status, CREWS, HIRE, LAYOFF)
 end
 
 
-using JuMP
+using JuMP, Clp
+
+solver = ClpSolver()
 
 ####  PRODUCTION SETS AND PARAMETERS  ###
 
@@ -140,7 +142,7 @@ end
 minv = [[dem[p][t+1] * checkpro(p,t, pro, pir, rir) for t=numperiods] for p=1:numprd]
 # Lower limit on inventory at end of period t
 
-prod = Model()
+prod = Model(solver=ClpSolver())
 
 ###  VARIABLES  ###
 @variable(prod, Crews[0:lastperiod] >= 0)
