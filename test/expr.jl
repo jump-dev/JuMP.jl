@@ -99,6 +99,6 @@ using Base.Test
         @variable(m, lb[i] <= x[i in items] <= ub[i])
         @NLexpression(m, F[i in items], sum(M[i,j]*x[j] for j in items) + q[i])
 
-        @test typeof(getvalue(F)) == JuMP.JuMPArray{Float64,1,Tuple{UnitRange{Int64}}}
+        @test typeof(getvalue(F)) == JuMP.JuMPArray{Float64,1,Tuple{UnitRange{Int}}}
     end
 end
