@@ -1,6 +1,18 @@
 JuMP release notes
 ==================
 
+Version 0.16.0 (Unreleased)
+---------------------------
+
+   * **Breaking change**: JuMP no longer has a mechanism for selecting solvers by default (the previous mechanism was flawed and incompatible with Julia 0.6). Not specifying a solver before calling ``solve()`` will result in an error.
+   * **Breaking change**: User-defined functions are no longer global. The first argument to ``JuMP.register`` is now a JuMP ``Model`` object within whose scope the function will be registered. Calling ``JuMP.register`` without a ``Model`` now produces an error.
+   * **Breaking change**: Use the new ``JuMP.fix`` method to fix a variable to a value or to update the value to which a variable is fixed. Calling ``setvalue`` on a fixed variable now results in an error in order to avoid silent behavior changes. (Thanks @joaquimg)
+   * Nonlinear expressions now print out similarly to linear/quadratic expressions (useful for debugging!)
+   * New ``category`` keyword to ``@variable``. Used for specifying categories of anonymous variables.
+   * Compatibility with Julia 0.6-dev.
+   * Minor fixes and improvements (Thanks @cossio, @ccoffrin, @blegat)
+
+
 Version 0.15.1 (January 31, 2017)
 ---------------------------------
 
