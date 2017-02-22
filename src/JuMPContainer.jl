@@ -99,6 +99,7 @@ end
 
 pushmeta!(x::JuMPContainer, sym::Symbol, val) = (x.meta[sym] = val)
 getmeta(x::JuMPContainer, sym::Symbol) = x.meta[sym]
+hasmeta(x::JuMPContainer, sym::Symbol) = haskey(x.meta, sym)
 
 # duck typing approach -- if eltype(innerArray) doesn't support accessor, will fail
 for accessor in (:getdual, :getlowerbound, :getupperbound, :getvalue)
@@ -129,12 +130,11 @@ end
 function _mapInner{T}(f, x::JuMPContainer{T})
     vars = _innercontainer(x)
     vals = _similar(vars)
-    name = T == Variable ? printdata(x).name : "__anon__"
     warnedyet = false
     for I in eachindex(vars)
         tmp = f(vars[I])
         if isnan(tmp) && !warnedyet
-            _warnnan(f, name)
+            _warnnan(f, getname(x))
             warnedyet = true
         end
         vals[I] = tmp
