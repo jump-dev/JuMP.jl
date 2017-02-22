@@ -25,7 +25,13 @@ function io_test(mode, obj, exp_str; repl=:both)
     end
 end
 
+type NoMetaContainer{T,N} <: JuMP.JuMPContainer{T,N}
+end
+
 @testset "Printing" begin
+    @testset "JuMPContainer with no field meta" begin
+        @test_throws ErrorException JuMP.metadata(NoMetaContainer{Float64,2}())
+    end
 
     @testset "JuMPContainer{Variable}" begin
         le, ge, fa = repl[:leq], repl[:geq], repl[:for_all]
