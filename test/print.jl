@@ -332,7 +332,7 @@ end
 
 
     @testset "Model" begin
-        le, ge, fa = repl[:leq], repl[:geq], repl[:for_all]
+        le, ge, eq, fa = repl[:leq], repl[:geq], repl[:eq], repl[:for_all]
         inset, dots = repl[:in], repl[:dots]
         infty, union = repl[:infty], repl[:union]
         Vert, sub2 = repl[:Vert], repl[:sub2]
@@ -455,9 +455,9 @@ end
         io_test(REPLMode, mod_3, """
     Min y[1] * y[3] - parameter[1]
     Subject to
-     y[1] * y[2] - 1.0 = 0
-     y[3] * y[4] - 1.0 = 0
-     (y[5] * y[1] - subexpression[1]) - 1.0 = 0
+     y[1] * y[2] - 1.0 $eq 0
+     y[3] * y[4] - 1.0 $eq 0
+     (y[5] * y[1] - subexpression[1]) - 1.0 $eq 0
      y[i] free $fa i $inset {1,2,3,4,5}
     subexpression[1]: y[2]
     """, repl=:print)
