@@ -41,7 +41,7 @@ Our documentation includes an installation guide, quick-start guide, and referen
   * [Documentation](http://www.juliaopt.org/JuMP.jl/0.16/)
   * [Examples](https://github.com/JuliaOpt/JuMP.jl/tree/release-0.16/examples)
   * Testing status:
-    * TravisCI: [![Build Status](https://travis-ci.org/JuliaOpt/JuMP.jl.svg?branch=release-0.15)](https://travis-ci.org/JuliaOpt/JuMP.jl)
+    * TravisCI: [![Build Status](https://travis-ci.org/JuliaOpt/JuMP.jl.svg?branch=release-0.16)](https://travis-ci.org/JuliaOpt/JuMP.jl)
     * PackageEvaluator:
       [![JuMP](http://pkg.julialang.org/badges/JuMP_0.5.svg)](http://pkg.julialang.org/?pkg=JuMP&ver=0.5)
       [![JuMP](http://pkg.julialang.org/badges/JuMP_0.6.svg)](http://pkg.julialang.org/?pkg=JuMP&ver=0.6)
