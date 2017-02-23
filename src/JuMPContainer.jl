@@ -97,9 +97,11 @@ function gendict(instancename,T,idxsets...)
     end
 end
 
-pushmeta!(x::JuMPContainer, sym::Symbol, val) = (x.meta[sym] = val)
-getmeta(x::JuMPContainer, sym::Symbol) = x.meta[sym]
-hasmeta(x::JuMPContainer, sym::Symbol) = haskey(x.meta, sym)
+metadata(x::Union{JuMPArray,JuMPDict}) = x.meta
+metadata{T<:JuMPContainer}(::T) = error("Type $T has no field meta. This field is used to store metadata such as the JuMP.Model at the key :model.")
+pushmeta!(x::JuMPContainer, sym::Symbol, val) = (metadata(x)[sym] = val)
+getmeta(x::JuMPContainer, sym::Symbol) = metadata(x)[sym]
+hasmeta(x::JuMPContainer, sym::Symbol) = haskey(metadata(x), sym)
 
 # duck typing approach -- if eltype(innerArray) doesn't support accessor, will fail
 for accessor in (:getdual, :getlowerbound, :getupperbound, :getvalue)
@@ -150,11 +152,11 @@ function _map{T}(f, x::JuMPContainer{T})
     mapcontainer_warn(f, x)
     ret = JuMPContainer_from(x, _mapInner(f, x))
     # I guess copy!(::Dict, ::Dict) isn't defined, so...
-    for (key,val) in x.meta
-        ret.meta[key] = val
+    for (key,val) in metadata(x)
+        pushmeta!(ret, key, val)
     end
     if T == Variable
-        m = getmeta(x, :model)
+        m = _getmodel(x)
         # cache indexing info for new container for printing purposes
         m.varData[ret] = printdata(x)
     end

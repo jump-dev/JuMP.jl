@@ -101,7 +101,7 @@ typealias PrintSymbols Dict{Symbol,String}
 math(s,mathmode) = mathmode ? s : "\$\$ $s \$\$"
 
 # helper to look up corresponding JuMPContainerData
-printdata(v::JuMPContainer) = getmeta(v, :model).varData[v]
+printdata(v::JuMPContainer) = _getmodel(v).varData[v]
 getname(x::JuMPContainer) = hasmeta(x, :model) ? printdata(x).name : "__anon__"
 function printdata(v::Array{Variable})
     if isempty(v)
