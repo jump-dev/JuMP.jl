@@ -1,4 +1,4 @@
-Copyright (c) 2016: Iain Dunning, Joey Huchette, Miles Lubin, and contributors
+Copyright (c) 2017: Iain Dunning, Joey Huchette, Miles Lubin, and contributors
 
 The JuMP Julia module is licensed under the **[MPL]** version 2.0:
 
