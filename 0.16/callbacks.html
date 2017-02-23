@@ -155,7 +155,7 @@ if(!(location.hostname.match('readthedocs') || location.hostname.match('rtfd')))
     document.getElementById("officialwarn").style.display = 'none';
 }
 </script><div class="section" id="solver-callbacks">
-<h1>Solver Callbacks<a class="headerlink" href="#solver-callbacks" title="Permalink to this headline">¶</a></h1>
+<span id="callbacks"></span><h1>Solver Callbacks<a class="headerlink" href="#solver-callbacks" title="Permalink to this headline">¶</a></h1>
 <p>Many mixed-integer (linear, conic, and nonlinear) programming solvers offer the ability to modify the solve process.
 Examples include changing branching decisions in branch-and-bound, adding custom cutting planes, providing custom heuristics to find feasible solutions, or implementing on-demand separators to add new constraints only when they are violated by the current solution (also known as lazy constraints).</p>
 <p>While historically this functionality has been limited to solver-specific interfaces,

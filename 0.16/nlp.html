@@ -153,7 +153,7 @@ if(!(location.hostname.match('readthedocs') || location.hostname.match('rtfd')))
     document.getElementById("officialwarn").style.display = 'none';
 }
 </script><div class="section" id="nonlinear-modeling">
-<h1>Nonlinear Modeling<a class="headerlink" href="#nonlinear-modeling" title="Permalink to this headline">¶</a></h1>
+<span id="nonlinear"></span><h1>Nonlinear Modeling<a class="headerlink" href="#nonlinear-modeling" title="Permalink to this headline">¶</a></h1>
 <p>JuMP has support for general smooth nonlinear (convex and
 nonconvex) optimization problems. JuMP is able to provide exact, sparse second-order
 derivatives to solvers. This information can improve solver accuracy and
@@ -339,7 +339,7 @@ in processing the model before handing it off to the solver.</p>
 Total CPU secs in NLP function evaluations           =      2.083
 </pre></div>
 </div>
-<p>For Ipopt in particular, one can improve the performance by installing advanced sparse linear algebra packages, see <span class="xref std std-ref">jump-installation</span>. For other solvers, see their respective documentation for performance tips.</p>
+<p>For Ipopt in particular, one can improve the performance by installing advanced sparse linear algebra packages, see <a class="reference internal" href="installation.html#jump-installation"><span class="std std-ref">Installation Guide</span></a>. For other solvers, see their respective documentation for performance tips.</p>
 <p>The function evaluation time, on the other hand, is the responsibility of the modeling language. JuMP computes derivatives by using the <a class="reference external" href="https://github.com/mlubin/ReverseDiffSparse.jl">ReverseDiffSparse</a> package, which implements, in pure Julia, reverse-mode automatic differentiation with graph coloring methods for exploiting sparsity of the Hessian matrix <a class="footnote-reference" href="#id2" id="id1">[1]</a>. As a conservative bound, JuMP&#8217;s performance here currently may be expected to be within a factor of 5 of AMPL&#8217;s.</p>
 </div>
 <div class="section" id="querying-derivatives-from-a-jump-model">

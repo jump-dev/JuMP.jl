@@ -152,7 +152,7 @@ if(!(location.hostname.match('readthedocs') || location.hostname.match('rtfd')))
     document.getElementById("officialwarn").style.display = 'none';
 }
 </script><div class="section" id="quick-start-guide">
-<h1>Quick Start Guide<a class="headerlink" href="#quick-start-guide" title="Permalink to this headline">¶</a></h1>
+<span id="quick-start"></span><h1>Quick Start Guide<a class="headerlink" href="#quick-start-guide" title="Permalink to this headline">¶</a></h1>
 <p>This quick start guide will introduce the main concepts of JuMP.
 If you are familiar with another modeling language embedded in a high-level
 language such as PuLP (Python) or a solver-specific interface you will find
@@ -170,7 +170,7 @@ the concepts novel but the general appearance will still be familiar.</p>
 <p>All variables and constraints are associated with a <code class="docutils literal"><span class="pre">Model</span></code> object.
 Usually, you&#8217;ll also want to provide a solver object here by using the
 <code class="docutils literal"><span class="pre">solver=</span></code> keyword argument; see the simple example below. For
-a list of all functions related to <code class="docutils literal"><span class="pre">Model</span></code>, see <span class="xref std std-ref">ref-model</span>.</p>
+a list of all functions related to <code class="docutils literal"><span class="pre">Model</span></code>, see <a class="reference internal" href="refmodel.html#ref-model"><span class="std std-ref">Models</span></a>.</p>
 </div>
 <div class="section" id="defining-variables">
 <h2>Defining Variables<a class="headerlink" href="#defining-variables" title="Permalink to this headline">¶</a></h2>
@@ -188,7 +188,7 @@ optionally allows specification of lower and upper bounds. For example:</p>
 <p>All these variations introduce a new variable <code class="docutils literal"><span class="pre">x</span></code> in the local scope.
 The names of your variables must be valid Julia variable names.
 For information about common operations on variables, e.g. changing their
-bounds, see the <span class="xref std std-ref">ref-variable</span> section.</p>
+bounds, see the <a class="reference internal" href="refvariable.html#ref-variable"><span class="std std-ref">Variables</span></a> section.</p>
 <p><strong>Integer</strong> and <strong>binary</strong> restrictions can optionally be specified with a
 third argument, <code class="docutils literal"><span class="pre">Int</span></code> or <code class="docutils literal"><span class="pre">Bin</span></code>.</p>
 <p>To create arrays of variables we append brackets to the variable name.

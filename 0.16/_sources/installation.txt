@@ -1,6 +1,7 @@
-.. _jump-installation:
 
 .. include:: warn.rst
+
+.. _jump-installation:
 
 ------------------
 Installation Guide

@@ -1,6 +1,8 @@
-.. _ref-variable:
 
 .. include:: warn.rst
+
+.. _ref-variable:
+
 ---------
 Variables
 ---------
