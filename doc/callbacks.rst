@@ -1,6 +1,7 @@
-.. _callbacks:
 
 .. include:: warn.rst
+
+.. _callbacks:
 
 ----------------
 Solver Callbacks

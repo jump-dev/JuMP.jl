@@ -1,6 +1,7 @@
-.. _ref-expr:
 
 .. include:: warn.rst
+
+.. _ref-expr:
 
 ---------------------------
 Expressions and Constraints
@@ -65,6 +66,7 @@ The ``ref`` accepts index sets in the same way as ``@variable``, and those indic
 Anonymous syntax is also supported::
 
     expr = @expression(m, [i=1:3], i*sum(x[j] for j=1:3))
+
 * ``@SDconstraint(m::Model, expr)`` - adds a semidefinite constraint to the model ``m``. The expression ``expr`` must be a square, two-dimensional array.
 * ``addSOS1(m::Model, coll::Vector{AffExpr})`` - adds special ordered set constraint
   of type 1 (SOS1). Specify the set as a vector of weighted variables, e.g. ``coll = [3x, y, 2z]``.

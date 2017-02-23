@@ -1,7 +1,8 @@
-.. _quick-start:
-
 
 .. include:: warn.rst
+
+.. _quick-start:
+
 -----------------
 Quick Start Guide
 -----------------
