@@ -3,8 +3,8 @@ JuMP
 
 JuMP is a domain-specific modeling language for **[mathematical optimization]**
 embedded in **[Julia]**. It currently supports a number of open-source and
-commercial solvers ([Bonmin], [Cbc], [Clp], [Couenne], [CPLEX], [ECOS], [FICO Xpress], [GLPK],
-[Gurobi], [Ipopt], [KNITRO], [MOSEK], [NLopt], [SCS], [BARON]) for a variety of problem classes, including
+commercial solvers ([Artelys Knitro], [BARON], [Bonmin], [Cbc], [Clp], [Couenne], [CPLEX], [ECOS], [FICO Xpress], [GLPK],
+[Gurobi], [Ipopt], [MOSEK], [NLopt], [SCS]) for a variety of problem classes, including
 **[linear programming]**, **[(mixed) integer programming]**,
 **[second-order conic programming]**, **[semidefinite programming]**, and **[nonlinear programming]**.
 
@@ -21,7 +21,7 @@ commercial solvers ([Bonmin], [Cbc], [Clp], [Couenne], [CPLEX], [ECOS], [FICO Xp
 [MOSEK]: http://mosek.com/
 [CPLEX]: http://www-01.ibm.com/software/commerce/optimization/cplex-optimizer/
 [Ipopt]: https://projects.coin-or.org/Ipopt
-[KNITRO]: http://www.ziena.com/knitro.htm
+[Artelys Knitro]: http://artelys.com/en/optimization-tools/knitro
 [NLopt]: http://ab-initio.mit.edu/wiki/index.php/NLopt
 [SCS]: https://github.com/cvxgrp/scs
 [BARON]: http://archimedes.cheme.cmu.edu/?q=baron
