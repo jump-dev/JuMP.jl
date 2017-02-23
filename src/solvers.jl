@@ -992,8 +992,12 @@ function conicdata(m::Model)
             for i in 1:n, j in 1:(i-1)
                 collect_expr!(m, tmprow, con.terms[i,j] - con.terms[j,i])
                 nnz = tmprow.nnz
-                # if the symmetry-enforcing row is empty, just drop it
-                if nnz == 0
+                # if the symmetry-enforcing row is empty or has only tiny coefficients due to unintended numerical asymmetry, drop it
+                largestabs = 0.0
+                for k in 1:nnz
+                    largestabs = max(largestabs,abs(tmpelts[tmpnzidx[k]]))
+                end
+                if largestabs < 1e-10
                     numDroppedSym += 1
                     continue
                 end
@@ -1005,7 +1009,9 @@ function conicdata(m::Model)
                 append!(V, tmpelts[indices])
                 b[c] = 0
             end
-            push!(con_cones, (:Zero, sym_start:c))
+            if c >= sym_start
+                push!(con_cones, (:Zero, sym_start:c))
+            end
             constr_dual_map[numLinRows + numBounds + numNormRows + length(m.sdpconstr) + sdpidx] = collect(sym_start:c)
             @assert length(syms) == length(sym_start:c)
         else

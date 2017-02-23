@@ -173,13 +173,14 @@ ispsd(x::JuMP.JuMPArray) = ispsd(x.innerArray)
         @test isapprox(getobjectivevalue(m), 1.293, atol=1e-2)
     end
 
-    @testset "Trivial symmetry constraints are removed (#766)" begin
+    @testset "Trivial symmetry constraints are removed (#766, #972)" begin
         q = 2
         m = 3
         angles1 = linspace(3*pi/4, pi, m)
         angles2 = linspace(0, -pi/2, m)
-        V = [3.*cos(angles1)' 1.5.*cos(angles2)';
-             3.*sin(angles1)' 1.5.*sin(angles2)']
+        V = [3.*cos.(angles1)' 1.5.*cos.(angles2)';
+             3.*sin.(angles1)' 1.5.*sin.(angles2)']
+        V[abs.(V) .< 1e-10] = 0.0
         p = 2*m
         n = 100
 
@@ -193,10 +194,11 @@ ispsd(x::JuMP.JuMPArray) = ispsd(x.innerArray)
         end
         f, A, b, var_cones, con_cones = JuMP.conicdata(mod)
         @test length(f) == 8
-        @test size(A) == (23,8)
-        @test length(b) == 23
+        @test size(A) == (21,8)
+        @test minimum(abs.(nonzeros(A))) > 0.01
+        @test length(b) == 21
         @test var_cones == [(:Free,[1,2,3,4,5,6,7,8])]
-        @test con_cones == [(:NonNeg,[1]),(:NonPos,[2,3,4,5,6,7,8,9]),(:SDP,10:15),(:Zero,16:16),(:SDP,17:22),(:Zero,23:23)]
+        @test con_cones == [(:NonNeg,[1]),(:NonPos,[2,3,4,5,6,7,8,9]),(:SDP,10:15),(:SDP,16:21)]
     end
 
     # Adapt SDP atom tests from Convex.jl:
