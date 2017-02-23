@@ -1,7 +1,7 @@
 JuMP release notes
 ==================
 
-Version 0.16.0 (Unreleased)
+Version 0.16.0 (February 23, 2017)
 ---------------------------
 
    * **Breaking change**: JuMP no longer has a mechanism for selecting solvers by default (the previous mechanism was flawed and incompatible with Julia 0.6). Not specifying a solver before calling ``solve()`` will result in an error.
