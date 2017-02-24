@@ -276,8 +276,8 @@ Base.sum(j::JuMPArray) = sum(j.innerArray)
 Base.sum(j::JuMPDict)  = sum(values(j.tupledict))
 Base.sum(j::JuMPArray{Variable}) = AffExpr(vec(j.innerArray), ones(length(j.innerArray)), 0.0)
 Base.sum(j::JuMPDict{Variable})  = AffExpr(collect(values(j.tupledict)), ones(length(j.tupledict)), 0.0)
-Base.sum(j::Array{Variable}) = AffExpr(vec(j), ones(length(j)), 0.0)
-function Base.sum{T<:GenericAffExpr}(affs::Array{T})
+Base.sum(j::AbstractArray{Variable}) = AffExpr(vec(j), ones(length(j)), 0.0)
+function Base.sum{T<:GenericAffExpr}(affs::AbstractArray{T})
     new_aff = zero(T)
     for aff in affs
         append!(new_aff, aff)
@@ -339,7 +339,7 @@ Base.ctranspose(x::JuMPArray) = _throw_transpose_error()
 
 # Can remove the following code once == overloading is removed
 
-function Base.issymmetric{T<:JuMPTypes}(x::Matrix{T})
+function Base.issymmetric{T<:JuMPTypes}(x::AbstractMatrix{T})
     (n = size(x,1)) == size(x,2) || return false
     for i in 1:n, j in (i+1):n
         isequal(x[i,j], x[j,i]) || return false
@@ -348,14 +348,14 @@ function Base.issymmetric{T<:JuMPTypes}(x::Matrix{T})
 end
 
 # Special-case because the the base version wants to do fill!(::Array{Variable}, zero(AffExpr))
-Base.diagm(x::Vector{Variable}) = diagm(convert(Vector{AffExpr}, x))
+Base.diagm(x::AbstractVector{Variable}) = diagm(convert(Vector{AffExpr}, x))
 
 ###############
 # The _multiply!(buf,y,z) adds the results of y*z into the buffer buf. No bounds/size
 # checks are performed; it is expected that the caller has done this, has ensured
 # that the eltype of buf is appropriate, and has zeroed the elements of buf (if desired).
 
-function _multiply!{T<:JuMPTypes}(ret::Array{T}, lhs::Array, rhs::Array)
+function _multiply!{T<:JuMPTypes}(ret::AbstractArray{T}, lhs::AbstractArray, rhs::AbstractArray)
     m, n = size(lhs,1), size(lhs,2)
     r, s = size(rhs,1), size(rhs,2)
     for i ∈ 1:m, j ∈ 1:s
@@ -370,7 +370,7 @@ function _multiply!{T<:JuMPTypes}(ret::Array{T}, lhs::Array, rhs::Array)
 end
 
 # this computes lhs.'*rhs and places it in ret
-function _multiplyt!{T<:JuMPTypes}(ret::Array{T}, lhs::Array, rhs::Array)
+function _multiplyt!{T<:JuMPTypes}(ret::AbstractArray{T}, lhs::AbstractArray, rhs::AbstractArray)
     m, n = size(lhs,2), size(lhs,1) # transpose
     r, s = size(rhs,1), size(rhs,2)
     for i ∈ 1:m, j ∈ 1:s
@@ -384,7 +384,7 @@ function _multiplyt!{T<:JuMPTypes}(ret::Array{T}, lhs::Array, rhs::Array)
     ret
 end
 
-function _multiply!{T<:Union{GenericAffExpr,GenericQuadExpr}}(ret::Array{T}, lhs::SparseMatrixCSC, rhs::Array)
+function _multiply!{T<:Union{GenericAffExpr,GenericQuadExpr}}(ret::AbstractArray{T}, lhs::SparseMatrixCSC, rhs::Array)
     nzv = nonzeros(lhs)
     rv  = rowvals(lhs)
     for col ∈ 1:lhs.n
@@ -398,11 +398,11 @@ function _multiply!{T<:Union{GenericAffExpr,GenericQuadExpr}}(ret::Array{T}, lhs
 end
 
 # this computes lhs.'*rhs and places it in ret
-function _multiplyt!{T<:Union{GenericAffExpr,GenericQuadExpr}}(ret::Array{T}, lhs::SparseMatrixCSC, rhs::Array)
+function _multiplyt!{T<:Union{GenericAffExpr,GenericQuadExpr}}(ret::AbstractArray{T}, lhs::SparseMatrixCSC, rhs::Array)
     _multiply!(ret, transpose(lhs), rhs) # TODO fully implement
 end
 
-function _multiply!{T<:Union{GenericAffExpr,GenericQuadExpr}}(ret::Array{T}, lhs::Matrix, rhs::SparseMatrixCSC)
+function _multiply!{T<:Union{GenericAffExpr,GenericQuadExpr}}(ret::AbstractArray{T}, lhs::Matrix, rhs::SparseMatrixCSC)
     rowval = rowvals(rhs)
     nzval  = nonzeros(rhs)
     for multivec_row in 1:size(lhs,1)
@@ -419,7 +419,7 @@ function _multiply!{T<:Union{GenericAffExpr,GenericQuadExpr}}(ret::Array{T}, lhs
 end
 
 # this computes lhs.'*rhs and places it in ret
-function _multiplyt!{T<:Union{GenericAffExpr,GenericQuadExpr}}(ret::Array{T}, lhs::Matrix, rhs::SparseMatrixCSC)
+function _multiplyt!{T<:Union{GenericAffExpr,GenericQuadExpr}}(ret::AbstractArray{T}, lhs::Matrix, rhs::SparseMatrixCSC)
     rowval = rowvals(rhs)
     nzval  = nonzeros(rhs)
     for multivec_row ∈ 1:size(lhs,2) # transpose
@@ -448,7 +448,7 @@ _multiply!(ret, lhs, rhs) = A_mul_B!(ret, lhs, ret)
 
 import Base.At_mul_B
 import Base.Ac_mul_B
-# these methods are called when one does A.'*v or A'*v respectively 
+# these methods are called when one does A.'*v or A'*v respectively
 At_mul_B{T<:JuMPTypes}(A::Union{Matrix{T},SparseMatrixCSC{T}}, x::Union{Matrix, Vector, SparseMatrixCSC}) = _matmult(A, x)
 At_mul_B{T<:JuMPTypes,R<:JuMPTypes}(A::Union{Matrix{T},SparseMatrixCSC{T}}, x::Union{Matrix{R}, Vector{R}, SparseMatrixCSC{R}}) = _matmult(A, x)
 At_mul_B{T<:JuMPTypes}(A::Union{Matrix,SparseMatrixCSC}, x::Union{Matrix{T}, Vector{T}, SparseMatrixCSC{T}}) = _matmult(A, x)
@@ -485,7 +485,7 @@ _return_arrayt{R,S}(A::AbstractMatrix{R}, x::AbstractVector{S}) = _fillwithzeros
 _return_arrayt{R,S}(A::AbstractMatrix{R}, x::AbstractMatrix{S}) = _fillwithzeros(Array{_multiply_type(R,S)}(size(A,2), size(x, 2)))
 
 # helper so we don't fill the buffer array with the same object
-function _fillwithzeros{T}(arr::Array{T})
+function _fillwithzeros{T}(arr::AbstractArray{T})
     for I in eachindex(arr)
         arr[I] = zero(T)
     end
@@ -527,28 +527,28 @@ for op in [:+, :-]; @eval begin
 end; end
 
 for op in [:*, :/]; @eval begin
-    function $op{T<:JuMPTypes}(lhs::Number,rhs::Array{T})
+    function $op{T<:JuMPTypes}(lhs::Number,rhs::AbstractArray{T})
         ret = Array{typeof($op(lhs, zero(T)))}(size(rhs))
         for I in eachindex(ret)
             ret[I] = $op(lhs, rhs[I])
         end
         ret
     end
-    function $op{T<:JuMPTypes}(lhs::Array{T},rhs::Number)
+    function $op{T<:JuMPTypes}(lhs::AbstractArray{T},rhs::Number)
         ret = Array{typeof($op(zero(T), rhs))}(size(lhs))
         for I in eachindex(ret)
             ret[I] = $op(lhs[I], rhs)
         end
         ret
     end
-    function $op{T<:JuMPTypes,S}(lhs::T,rhs::Array{S})
+    function $op{T<:JuMPTypes,S}(lhs::T,rhs::AbstractArray{S})
         ret = Array{typeof($op(lhs, zero(S)))}(size(rhs))
         for I in eachindex(ret)
             ret[I] = $op(lhs, rhs[I])
         end
         ret
     end
-    function $op{T<:JuMPTypes,S}(lhs::Array{S},rhs::T)
+    function $op{T<:JuMPTypes,S}(lhs::AbstractArray{S},rhs::T)
         ret = Array{typeof($op(zero(S), rhs))}(size(lhs))
         for I in eachindex(ret)
             ret[I] = $op(lhs[I], rhs)
@@ -571,7 +571,7 @@ end; end
 
 # The following are primarily there for internal use in the macro code for @constraint
 for op in [:(+), :(-)]; @eval begin
-    function $op(lhs::Array{Variable},rhs::Array{Variable})
+    function $op(lhs::AbstractArray{Variable},rhs::AbstractArray{Variable})
         (sz = size(lhs)) == size(rhs) || error("Incompatible sizes for $op: $sz $op $(size(rhs))")
         ret = Array{AffExpr}(sz)
         for I in eachindex(ret)
@@ -611,15 +611,15 @@ for (dotop,op) in [(:.+,:+), (:.-,:-), (:.*,:*), (:./,:/)]
 end
 
 
-(+){T<:JuMPTypes}(x::Array{T}) = x
-function (-){T<:JuMPTypes}(x::Array{T})
+(+){T<:JuMPTypes}(x::AbstractArray{T}) = x
+function (-){T<:JuMPTypes}(x::AbstractArray{T})
     ret = similar(x, typeof(-one(T)))
     for I in eachindex(ret)
         ret[I] = -x[I]
     end
     ret
 end
-(*){T<:JuMPTypes}(x::Array{T}) = x
+(*){T<:JuMPTypes}(x::AbstractArray{T}) = x
 
 ###############################################################################
 # Add nonlinear function fallbacks for JuMP built-in types

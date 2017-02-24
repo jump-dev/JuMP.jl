@@ -95,7 +95,7 @@ function getvalue(a::QuadExpr)
     end
     return ret
 end
-getvalue(arr::Array{QuadExpr}) = map(getvalue, arr)
+getvalue(arr::AbstractArray{QuadExpr}) = map(getvalue, arr)
 
 
 
@@ -149,10 +149,10 @@ function addconstraint(m::Model, c::QuadConstraint)
     end
     return ConstraintRef{Model,QuadConstraint}(m,length(m.quadconstr))
 end
-addconstraint(m::Model, c::Array{QuadConstraint}) =
+addconstraint(m::Model, c::AbstractArray{QuadConstraint}) =
     error("Vectorized constraint added without elementwise comparisons. Try using one of (.<=,.>=,.==).")
 
-function addVectorizedConstraint(m::Model, v::Array{QuadConstraint})
+function addVectorizedConstraint(m::Model, v::AbstractArray{QuadConstraint})
     ret = Array{ConstraintRef{Model,QuadConstraint}}(size(v))
     for I in eachindex(v)
         ret[I] = addconstraint(m, v[I])

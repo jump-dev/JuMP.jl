@@ -268,11 +268,11 @@ for T1 in (GenericAffExpr,GenericQuadExpr), T2 in (Number,Variable,GenericAffExp
     @eval addtoexpr(::$T1, ::_NLExpr, ::$T2) = _nlexprerr()
 end
 
-addtoexpr{T<:GenericAffExpr}(ex::Array{T}, c::AbstractArray, x::AbstractArray) = append!.(ex, c*x)
-addtoexpr{T<:GenericAffExpr}(ex::Array{T}, c::AbstractArray, x::Number) = append!.(ex, c*x)
-addtoexpr{T<:GenericAffExpr}(ex::Array{T}, c::Number, x::AbstractArray) = append!.(ex, c*x)
+addtoexpr{T<:GenericAffExpr}(ex::AbstractArray{T}, c::AbstractArray, x::AbstractArray) = append!.(ex, c*x)
+addtoexpr{T<:GenericAffExpr}(ex::AbstractArray{T}, c::AbstractArray, x::Number) = append!.(ex, c*x)
+addtoexpr{T<:GenericAffExpr}(ex::AbstractArray{T}, c::Number, x::AbstractArray) = append!.(ex, c*x)
 
-addtoexpr(ex, c, x) = ex + c*x  
+addtoexpr(ex, c, x) = ex + c*x
 
 @generated addtoexpr_reorder(ex, arg) = :(addtoexpr(ex, 1.0, arg))
 

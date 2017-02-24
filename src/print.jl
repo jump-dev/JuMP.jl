@@ -44,7 +44,7 @@ end
 
 # TODO: get rid of this! This is only a helper, and should be Base.values
 # (and probably live there, as well)
-_values(x::Array) = x
+_values(x::AbstractArray) = x
 _values(x) = Base.values(x)
 
 # REPL-specific symbols
@@ -103,7 +103,7 @@ math(s,mathmode) = mathmode ? s : "\$\$ $s \$\$"
 # helper to look up corresponding JuMPContainerData
 printdata(v::JuMPContainer) = _getmodel(v).varData[v]
 getname(x::JuMPContainer) = hasmeta(x, :model) ? printdata(x).name : "__anon__"
-function printdata(v::Array{Variable})
+function printdata(v::AbstractArray{Variable})
     if isempty(v)
         error("Cannot locate printing data for an empty array")
     end
@@ -344,7 +344,7 @@ function fill_var_names(mode, colNames, v::JuMPDict{Variable})
         end
     end
 end
-function fill_var_names(mode, colNames, v::Array{Variable})
+function fill_var_names(mode, colNames, v::AbstractArray{Variable})
     isempty(v) && return
     sizes = size(v)
     m = first(v).m
@@ -400,7 +400,7 @@ Base.show(io::IO, ::MIME"text/latex", j::Union{JuMPContainer{Variable},Array{Var
 # Generic string converter, called by mode-specific handlers
 
 # Assumes that !isempty(j)
-_getmodel(j::Array{Variable}) = first(j).m
+_getmodel(j::AbstractArray{Variable}) = first(j).m
 _getmodel(j::JuMPContainer) = getmeta(j, :model)
 
 function cont_str(mode, j, sym::PrintSymbols)

@@ -25,7 +25,7 @@ Base.copy(sos::SOSConstraint, new_model::Model) =
 
 # Given a vector of affine expressions, extract a vector of the single
 # variable in each expression and a vector of their coefficients
-function constructSOS(m::Model, coll::Vector{AffExpr})
+function constructSOS(m::Model, coll::AbstractVector{AffExpr})
     nvar = length(coll)
     vars = Array{Variable}(nvar)
     weight = Array{Float64}(nvar)
@@ -43,7 +43,7 @@ end
 
 addSOS1(m::Model, coll) = addSOS1(m, convert(Vector{AffExpr}, coll))
 
-function addSOS1(m::Model, coll::Vector{AffExpr})
+function addSOS1(m::Model, coll::AbstractVector{AffExpr})
     vars, weight = constructSOS(m,coll)
     push!(m.sosconstr, SOSConstraint(vars, weight, :SOS1))
     if m.internalModelLoaded
@@ -59,7 +59,7 @@ end
 
 addSOS2(m::Model, coll) = addSOS2(m, convert(Vector{AffExpr}, coll))
 
-function addSOS2(m::Model, coll::Vector{AffExpr})
+function addSOS2(m::Model, coll::AbstractVector{AffExpr})
     vars, weight = constructSOS(m,coll)
     push!(m.sosconstr, SOSConstraint(vars, weight, :SOS2))
     if m.internalModelLoaded

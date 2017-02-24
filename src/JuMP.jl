@@ -233,7 +233,7 @@ end
 setobjective(m::Model, something::Any) =
     error("in setobjective: needs three arguments: model, objective sense (:Max or :Min), and expression.")
 
-setobjective(::Model, ::Symbol, x::Array) =
+setobjective(::Model, ::Symbol, x::AbstractArray) =
     error("in setobjective: array of size $(size(x)) passed as objective; only scalar objectives are allowed")
 
 function setsolver(m::Model, solver::MathProgBase.AbstractMathProgSolver)
@@ -477,7 +477,7 @@ Base.zero(::Variable) = zero(Variable)
 Base.one(::Type{Variable}) = AffExpr(Variable[],Float64[],1.0)
 Base.one(::Variable) = one(Variable)
 
-function verify_ownership(m::Model, vec::Vector{Variable})
+function verify_ownership(m::Model, vec::AbstractVector{Variable})
     n = length(vec)
     @inbounds for i in 1:n
         vec[i].m !== m && return false
@@ -487,7 +487,7 @@ end
 
 Base.copy(v::Variable, new_model::Model) = Variable(new_model, v.col)
 Base.copy(x::Void, new_model::Model) = nothing
-function Base.copy(v::Array{Variable}, new_model::Model)
+function Base.copy(v::AbstractArray{Variable}, new_model::Model)
     ret = similar(v, Variable, size(v))
     for I in eachindex(v)
         ret[I] = Variable(new_model, v[I].col)
@@ -529,7 +529,7 @@ type SDConstraint <: AbstractConstraint
 end
 
 # Special-case X ≥ 0, which is often convenient
-function SDConstraint(lhs::Matrix, rhs::Number)
+function SDConstraint(lhs::AbstractMatrix, rhs::Number)
     rhs == 0 || error("Cannot construct a semidefinite constraint with nonzero scalar bound $rhs")
     SDConstraint(lhs)
 end
@@ -741,12 +741,12 @@ function setRHS(c::LinConstrRef, rhs::Number)
 end
 
 Variable(m::Model,lower::Number,upper::Number,cat::Symbol,objcoef::Number,
-    constraints::JuMPArray,coefficients::Vector{Float64}, name::AbstractString="", value::Number=NaN) =
+    constraints::JuMPArray,coefficients::AbstractVector{Float64}, name::AbstractString="", value::Number=NaN) =
     Variable(m, lower, upper, cat, objcoef, constraints.innerArray, coefficients, name, value)
 
 # add variable to existing constraints
 function Variable(m::Model,lower::Number,upper::Number,cat::Symbol,objcoef::Number,
-    constraints::Vector,coefficients::Vector{Float64}, name::AbstractString="", value::Number=NaN)
+    constraints::AbstractVector,coefficients::AbstractVector{Float64}, name::AbstractString="", value::Number=NaN)
     for c in constraints
         if !isa(c, LinConstrRef)
             error("Unexpected constraint of type $(typeof(c)). Column-wise modeling only supported for linear constraints")
@@ -909,9 +909,9 @@ include("print.jl")
 # Deprecations
 include("deprecated.jl")
 
-getvalue{T<:JuMPTypes}(arr::Array{T}) = map(getvalue, arr)
+getvalue{T<:JuMPTypes}(arr::AbstractArray{T}) = map(getvalue, arr)
 
-function setvalue{T<:AbstractJuMPScalar}(set::Array{T}, val::Array)
+function setvalue{T<:AbstractJuMPScalar}(set::AbstractArray{T}, val::AbstractArray)
     promote_shape(size(set), size(val)) # Check dimensions match
     for I in eachindex(set)
         setvalue(set[I], val[I])

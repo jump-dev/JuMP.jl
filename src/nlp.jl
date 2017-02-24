@@ -169,7 +169,7 @@ type NLPEvaluator <: MathProgBase.AbstractNLPEvaluator
     end
 end
 
-function simplify_expression(nd::Vector{NodeData}, const_values, subexpression_linearity, fixed_variables, parameter_values, x_values, subexpression_values)
+function simplify_expression(nd::AbstractVector{NodeData}, const_values, subexpression_linearity, fixed_variables, parameter_values, x_values, subexpression_values)
 
     adj = adjmat(nd)
     forward_storage = zeros(length(nd))
@@ -180,7 +180,7 @@ function simplify_expression(nd::Vector{NodeData}, const_values, subexpression_l
     return nd_new, forward_storage[1], linearity[1]
 end
 
-function FunctionStorage(nd::Vector{NodeData}, const_values,numVar, coloring_storage, want_hess::Bool, subexpr::Vector{Vector{NodeData}}, dependent_subexpressions, subexpression_linearity, subexpression_edgelist, subexpression_variables, fixed_variables)
+function FunctionStorage(nd::AbstractVector{NodeData}, const_values,numVar, coloring_storage, want_hess::Bool, subexpr::AbstractVector{Vector{NodeData}}, dependent_subexpressions, subexpression_linearity, subexpression_edgelist, subexpression_variables, fixed_variables)
 
     adj = adjmat(nd)
     forward_storage = zeros(length(nd))
@@ -215,7 +215,7 @@ function FunctionStorage(nd::Vector{NodeData}, const_values,numVar, coloring_sto
 
 end
 
-function SubexpressionStorage(nd::Vector{NodeData}, const_values,numVar, fixed_variables,subexpression_linearity)
+function SubexpressionStorage(nd::AbstractVector{NodeData}, const_values,numVar, fixed_variables,subexpression_linearity)
 
     adj = adjmat(nd)
     forward_storage = zeros(length(nd))
@@ -229,7 +229,7 @@ function SubexpressionStorage(nd::Vector{NodeData}, const_values,numVar, fixed_v
 
 end
 
-function MathProgBase.initialize(d::NLPEvaluator, requested_features::Vector{Symbol})
+function MathProgBase.initialize(d::NLPEvaluator, requested_features::AbstractVector{Symbol})
     for feat in requested_features
         if !(feat in MathProgBase.features_available(d))
             error("Unsupported feature $feat")
@@ -1081,7 +1081,7 @@ function Base.show(io::IO,s::SubexpressionPrintWrapper)
 end
 
 # we splat in the subexpressions (for now)
-function tapeToExpr(m::Model, k, nd::Vector{NodeData}, adj, const_values, parameter_values, subexpressions::Vector{Any},user_operators::ReverseDiffSparse.UserOperatorRegistry, generic_variable_names::Bool, splat_subexpressions::Bool, print_mode=REPLMode)
+function tapeToExpr(m::Model, k, nd::AbstractVector{NodeData}, adj, const_values, parameter_values, subexpressions::AbstractVector{Any},user_operators::ReverseDiffSparse.UserOperatorRegistry, generic_variable_names::Bool, splat_subexpressions::Bool, print_mode=REPLMode)
 
     children_arr = rowvals(adj)
 
