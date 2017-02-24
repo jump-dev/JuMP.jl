@@ -831,50 +831,57 @@ end
         @test typeof(getvalue(x)) == Vector{Float64}
     end
 
-    if length(ip_solvers) > 0
-        @testset "Relaxation keyword argument to solve with $solver" for solver in ip_dual_solvers
-            m = Model(solver=ip_solvers[1])
-            @variable(m, 1.5 <= y <= 2, Int)
-            @variable(m, z, Bin)
-            @variable(m, 0.5 <= w <= 1.5, Int)
-            @variable(m, 1 <= v <= 2)
+    @testset "Relaxation keyword argument to solve with $solver" for solver in ip_dual_solvers
+        m = Model(solver=solver)
+        @variable(m, 1.5 <= y <= 2, Int)
+        @variable(m, z, Bin)
+        @variable(m, 0.5 <= w <= 1.5, Int)
+        @variable(m, 1 <= v <= 2)
 
-            @objective(m, Min, y + z + w + v)
+        @objective(m, Min, y + z + w + v)
 
-            @test solve(m, relaxation=true) == :Optimal
-            @test isapprox(getvalue(y), 1.5, atol=TOL)
-            @test isapprox(getvalue(z), 0, atol=TOL)
-            @test isapprox(getvalue(w), 0.5, atol=TOL)
-            @test isapprox(getvalue(v), 1, atol=TOL)
-            @test isapprox(getdual(y), 1, atol=TOL)
-            @test isapprox(getdual(z), 1, atol=TOL)
-            @test isapprox(getdual(w), 1, atol=TOL)
-            @test isapprox(getdual(v), 1, atol=TOL)
-            @test isapprox(getobjectivevalue(m), 1.5 + 0 + 0.5 + 1, atol=TOL)
+        @test solve(m, relaxation=true) == :Optimal
+        @test isapprox(getvalue(y), 1.5, atol=TOL)
+        @test isapprox(getvalue(z), 0, atol=TOL)
+        @test isapprox(getvalue(w), 0.5, atol=TOL)
+        @test isapprox(getvalue(v), 1, atol=TOL)
+        @test isapprox(getdual(y), 1, atol=TOL)
+        @test isapprox(getdual(z), 1, atol=TOL)
+        @test isapprox(getdual(w), 1, atol=TOL)
+        @test isapprox(getdual(v), 1, atol=TOL)
+        @test isapprox(getobjectivevalue(m), 1.5 + 0 + 0.5 + 1, atol=TOL)
 
-            @test solve(m) == :Optimal
-            @test getvalue(y) == 2
-            @test getvalue(z) == 0
-            @test getvalue(w) == 1
-            @test getvalue(v) == 1
-            @test getobjectivevalue(m) == 2 + 0 + 1 + 1
+        @test solve(m) == :Optimal
+        @test getvalue(y) == 2
+        @test getvalue(z) == 0
+        @test getvalue(w) == 1
+        @test getvalue(v) == 1
+        @test getobjectivevalue(m) == 2 + 0 + 1 + 1
+    end
 
-            @variable(m, 1 <= x <= 2, SemiCont)
-            @variable(m, -2 <= t <= -1, SemiInt)
+    @testset "Relaxation keyword argument to solve (w/ SOS constraints) with $solver" for solver in sos_solvers
+        m = Model(solver=solver)
+        @variable(m, 1.5 <= y <= 2, Int)
+        @variable(m, z, Bin)
+        @variable(m, 0.5 <= w <= 1.5, Int)
+        @variable(m, 1 <= v <= 2)
 
-            addSOS1(m, [x, 2y, 3z, 4w, 5v, 6t])
-            @objective(m, Min, x + y + z + w + v - t)
+        @objective(m, Min, y + z + w + v)
+        @variable(m, 1 <= x <= 2, SemiCont)
+        @variable(m, -2 <= t <= -1, SemiInt)
 
-            @test solve(m, relaxation=true) == :Optimal
+        addSOS1(m, [x, 2y, 3z, 4w, 5v, 6t])
+        @objective(m, Min, x + y + z + w + v - t)
 
-            @test getvalue(x) == 0
-            @test getvalue(y) == 1.5
-            @test getvalue(z) == 0
-            @test getvalue(w) == 0.5
-            @test getvalue(v) == 1
-            @test getvalue(t) == 0
-            @test getobjectivevalue(m) == 0 + 1.5 + 0 + 0.5 + 1 + 0
-        end
+        @test solve(m, relaxation=true) == :Optimal
+
+        @test getvalue(x) == 0
+        @test getvalue(y) == 1.5
+        @test getvalue(z) == 0
+        @test getvalue(w) == 0.5
+        @test getvalue(v) == 1
+        @test getvalue(t) == 0
+        @test getobjectivevalue(m) == 0 + 1.5 + 0 + 0.5 + 1 + 0
     end
 
     @testset "Unrecognized keyword argument to solve" begin
