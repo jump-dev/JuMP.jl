@@ -557,7 +557,7 @@ end
         @variable(mod, 0 <= x <= 1)
         @variable(mod, 0 <= y <= 1)
         obj = [5,1]'*[x,y]
-        if VERSION < v"0.6.0-dev"
+        if VERSION < v"0.6.0-dev.2074" # julia PR #19670
             @objective(mod, Max, obj[1])
         else
             @objective(mod, Max, obj)
@@ -709,7 +709,7 @@ end
         @variable(modV, y[1:7])
         @constraint(modV, A*x + B*y .<= 1)
         obj = (x'*2A')*(2A*x) + (B*2y)'*(B*(2y))
-        if VERSION < v"0.6.0-dev"
+        if VERSION < v"0.6.0-dev.2074" # julia PR #19670
             @objective(modV, Max, obj[1])
         else
             @objective(modV, Max, obj)
@@ -741,7 +741,7 @@ end
                 @variable(mod, 0 <= z[1:p] <= 1)
             end
             obj = (y-X*β)'*(y-X*β)
-            if VERSION < v"0.6.0-dev"
+            if VERSION < v"0.6.0-dev.2074" # julia PR #19670
                 @objective(mod, Min, obj[1])
             else
                 @objective(mod, Min, obj)

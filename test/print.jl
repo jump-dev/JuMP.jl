@@ -106,7 +106,7 @@ end
         io_test(REPLMode, rng2_1, "rng2_1[i,j] free $fa i $inset {1,2,$dots,9,10}, j $inset {a,b,c}")
         io_test(REPLMode, tri_1, "tri_1[i,j] free $fa i $inset {1,2,3}, j $inset {$dots}")
         io_test(REPLMode, tri_2, "tri_2[i,j] free $fa i $inset {1,2,3}, j $inset {$dots}")
-        if VERSION < v"0.6.0-dev"
+        if VERSION < v"0.6.0-dev.2505" # julia PR #20288
             io_test(REPLMode, tri_3, "tri_3[(i,j),k] free $fa (i,j) $inset {(1,3),(2,4),(3,5),(4,6),(5,7)}, k $inset {$dots}")
         else
             io_test(REPLMode, tri_3, "tri_3[(i, j),k] free $fa (i, j) $inset {(1, 3),(2, 4),(3, 5),(4, 6),(5, 7)}, k $inset {$dots}")
@@ -126,7 +126,7 @@ end
         io_test(IJuliaMode, rng2_1, "rng2_1_{i,j} free \\quad\\forall i \\in \\{1,2,\\dots,9,10\\}, j \\in \\{a,b,c\\}")
         io_test(IJuliaMode, tri_1, "tri_1_{i,j} free \\quad\\forall i \\in \\{1,2,3\\}, j \\in \\{\\dots\\}")
         io_test(IJuliaMode, tri_2, "tri_2_{i,j} free \\quad\\forall i \\in \\{1,2,3\\}, j \\in \\{\\dots\\}")
-        if VERSION < v"0.6.0-dev"
+        if VERSION < v"0.6.0-dev.2505" # julia PR #20288
             io_test(IJuliaMode, tri_3, "tri_3_{(i,j),k} free \\quad\\forall (i,j) \\in \\{(1,3),(2,4),(3,5),(4,6),(5,7)\\}, k \\in \\{\\dots\\}")
         else
             io_test(IJuliaMode, tri_3, "tri_3_{(i, j),k} free \\quad\\forall (i, j) \\in \\{(1, 3),(2, 4),(3, 5),(4, 6),(5, 7)\\}, k \\in \\{\\dots\\}")
@@ -599,7 +599,7 @@ end
 
         v = [x,y,x]
         A = [x y; y x]
-        if VERSION < v"0.6.0-dev"
+        if VERSION < v"0.6.0-dev.2505" # julia PR #20288
             io_test(REPLMode,   v, "JuMP.Variable[x,y,x]")
             io_test(IJuliaMode, v, "JuMP.Variable[x,y,x]")
         else

@@ -344,7 +344,7 @@ macro constraint(args...)
     else
         kwargs = Expr(:parameters)
     end
-    kwsymbol = VERSION < v"0.6.0-dev" ? :kw : :(=)
+    kwsymbol = VERSION < v"0.6.0-dev.1934" ? :kw : :(=) # changed by julia PR #19868
     append!(kwargs.args, filter(x -> isexpr(x, kwsymbol), collect(args))) # comma separated
     args = filter(x->!isexpr(x, kwsymbol), collect(args))
 
@@ -667,7 +667,7 @@ for (mac,sym) in [(:constraints,  Symbol("@constraint")),
                     end
                     args_esc = []
                     for ex in args
-                        if isexpr(ex, :(=)) && VERSION < v"0.6.0-dev"
+                        if isexpr(ex, :(=)) && VERSION < v"0.6.0-dev.1934"
                             push!(args_esc,Expr(:kw, ex.args[1], esc(ex.args[2])))
                         else
                             push!(args_esc, esc(ex))
@@ -807,7 +807,7 @@ macro variable(args...)
 
     extra = vcat(args[2:end]...)
     # separate out keyword arguments
-    kwsymbol = VERSION < v"0.6.0-dev" ? :kw : :(=)
+    kwsymbol = VERSION < v"0.6.0-dev.1934" ? :kw : :(=)
     kwargs = filter(ex->isexpr(ex,kwsymbol), extra)
     extra = filter(ex->!isexpr(ex,kwsymbol), extra)
 
