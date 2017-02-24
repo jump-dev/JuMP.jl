@@ -709,7 +709,7 @@ const sub2 = JuMP.repl[:sub2]
              0 4 5
              6 0 7]
         B = sparse(A)
-        if VERSION < v"0.6.0-dev"
+        if VERSION < v"0.6.0-dev.2074" # julia PR #19670
             @constraint(m, x'*A*x .>= 1)
         else
             # force vector output
@@ -717,7 +717,7 @@ const sub2 = JuMP.repl[:sub2]
         end
         @test vec_eq(m.quadconstr[1].terms, [x[1]*x[1] + 2x[1]*x[2] + 4x[2]*x[2] + 9x[1]*x[3] + 5x[2]*x[3] + 7x[3]*x[3] - 1])
         @test m.quadconstr[1].sense == :(>=)
-        if VERSION < v"0.6.0-dev"
+        if VERSION < v"0.6.0-dev.2074" # julia PR #19670
             @constraint(m, x'*A*x .>= 1)
         else
             @constraint(m, x'*A*x >= 1)
