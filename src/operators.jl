@@ -355,7 +355,7 @@ Base.diagm(x::AbstractVector{Variable}) = diagm(convert(Vector{AffExpr}, x))
 # checks are performed; it is expected that the caller has done this, has ensured
 # that the eltype of buf is appropriate, and has zeroed the elements of buf (if desired).
 
-function _multiply!{T<:JuMPTypes}(ret::AbstractArray{T}, lhs::AbstractArray, rhs::AbstractArray)
+function _multiply!{T<:JuMPTypes}(ret::AbstractArray{T}, lhs::Array, rhs::Array)
     m, n = size(lhs,1), size(lhs,2)
     r, s = size(rhs,1), size(rhs,2)
     for i ∈ 1:m, j ∈ 1:s
@@ -370,7 +370,7 @@ function _multiply!{T<:JuMPTypes}(ret::AbstractArray{T}, lhs::AbstractArray, rhs
 end
 
 # this computes lhs.'*rhs and places it in ret
-function _multiplyt!{T<:JuMPTypes}(ret::AbstractArray{T}, lhs::AbstractArray, rhs::AbstractArray)
+function _multiplyt!{T<:JuMPTypes}(ret::AbstractArray{T}, lhs::Array, rhs::Array)
     m, n = size(lhs,2), size(lhs,1) # transpose
     r, s = size(rhs,1), size(rhs,2)
     for i ∈ 1:m, j ∈ 1:s

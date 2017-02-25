@@ -25,7 +25,7 @@ Base.copy(sos::SOSConstraint, new_model::Model) =
 
 # Given a vector of affine expressions, extract a vector of the single
 # variable in each expression and a vector of their coefficients
-function constructSOS(m::Model, coll::AbstractVector{AffExpr})
+function constructSOS(m::Model, coll::Vector{AffExpr})
     nvar = length(coll)
     vars = Array{Variable}(nvar)
     weight = Array{Float64}(nvar)

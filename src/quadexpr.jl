@@ -95,7 +95,7 @@ function getvalue(a::QuadExpr)
     end
     return ret
 end
-getvalue(arr::AbstractArray{QuadExpr}) = map(getvalue, arr)
+getvalue(arr::Array{QuadExpr}) = map(getvalue, arr)
 
 
 

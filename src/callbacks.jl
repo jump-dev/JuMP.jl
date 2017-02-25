@@ -59,7 +59,7 @@ function addinfocallback(m::Model, f::Function; when::Symbol = _unspecifiedstate
     push!(m.callbacks, InfoCallback(f, when))
 end
 
-function lazycallback(d::MathProgBase.MathProgCallbackData, m::Model, cbs::AbstractVector{LazyCallback})
+function lazycallback(d::MathProgBase.MathProgCallbackData, m::Model, cbs::Vector{LazyCallback})
     state = MathProgBase.cbgetstate(d)
     @assert state == :MIPSol || state == :MIPNode
     anyfrac = mapreduce(|, cbs) do cb
@@ -92,7 +92,7 @@ function lazycallback(d::MathProgBase.MathProgCallbackData, m::Model, cbs::Abstr
     :Continue
 end
 
-function attach_callbacks(m::Model, cbs::AbstractVector{LazyCallback})
+function attach_callbacks(m::Model, cbs::Vector{LazyCallback})
     cb = d -> lazycallback(d,m,cbs)
     if applicable(MathProgBase.setlazycallback!, m.internalModel, cb)
         MathProgBase.setlazycallback!(m.internalModel, cb)
@@ -101,7 +101,7 @@ function attach_callbacks(m::Model, cbs::AbstractVector{LazyCallback})
     end
 end
 
-function cutcallback(d::MathProgBase.MathProgCallbackData, m::Model, cbs::AbstractVector{CutCallback})
+function cutcallback(d::MathProgBase.MathProgCallbackData, m::Model, cbs::Vector{CutCallback})
     state = MathProgBase.cbgetstate(d)
     @assert state == :MIPNode
     MathProgBase.cbgetlpsolution(d,m.colVal)
@@ -119,7 +119,7 @@ function cutcallback(d::MathProgBase.MathProgCallbackData, m::Model, cbs::Abstra
     :Continue
 end
 
-function attach_callbacks(m::Model, cbs::AbstractVector{CutCallback})
+function attach_callbacks(m::Model, cbs::Vector{CutCallback})
     cb = d -> cutcallback(d,m,cbs)
     if applicable(MathProgBase.setcutcallback!, m.internalModel, cb)
         MathProgBase.setcutcallback!(m.internalModel, cb)
@@ -129,7 +129,7 @@ function attach_callbacks(m::Model, cbs::AbstractVector{CutCallback})
 end
 
 
-function heurcallback(d::MathProgBase.MathProgCallbackData, m::Model, cbs::AbstractVector{HeuristicCallback})
+function heurcallback(d::MathProgBase.MathProgCallbackData, m::Model, cbs::Vector{HeuristicCallback})
     state = MathProgBase.cbgetstate(d)
     @assert state == :MIPNode
     MathProgBase.cbgetlpsolution(d,m.colVal)
@@ -147,7 +147,7 @@ function heurcallback(d::MathProgBase.MathProgCallbackData, m::Model, cbs::Abstr
     :Continue
 end
 
-function attach_callbacks(m::Model, cbs::AbstractVector{HeuristicCallback})
+function attach_callbacks(m::Model, cbs::Vector{HeuristicCallback})
     cb = d -> heurcallback(d,m,cbs)
     if applicable(MathProgBase.setheuristiccallback!, m.internalModel, cb)
         MathProgBase.setheuristiccallback!(m.internalModel, cb)
@@ -156,7 +156,7 @@ function attach_callbacks(m::Model, cbs::AbstractVector{HeuristicCallback})
     end
 end
 
-function infocallback(d::MathProgBase.MathProgCallbackData, m::Model, cbs::AbstractVector{InfoCallback})
+function infocallback(d::MathProgBase.MathProgCallbackData, m::Model, cbs::Vector{InfoCallback})
     state = MathProgBase.cbgetstate(d)
     if state == :MIPSol
         MathProgBase.cbgetmipsolution(d,m.colVal)
@@ -179,7 +179,7 @@ function infocallback(d::MathProgBase.MathProgCallbackData, m::Model, cbs::Abstr
     :Continue
 end
 
-function attach_callbacks(m::Model, cbs::AbstractVector{InfoCallback})
+function attach_callbacks(m::Model, cbs::Vector{InfoCallback})
     cb = d -> infocallback(d,m,cbs)
     if applicable(MathProgBase.setinfocallback!, m.internalModel, cb)
         MathProgBase.setinfocallback!(m.internalModel, cb)

@@ -184,7 +184,7 @@ end
 addconstraint(m::Model, c::AbstractArray{LinearConstraint}) =
     error("The operators <=, >=, and == can only be used to specify scalar constraints. If you are trying to add a vectorized constraint, use the element-wise dot comparison operators (.<=, .>=, or .==) instead")
 
-function addVectorizedConstraint(m::Model, v::AbstractArray{LinearConstraint})
+function addVectorizedConstraint(m::Model, v::Array{LinearConstraint})
     ret = Array{LinConstrRef}(size(v))
     for I in eachindex(v)
         ret[I] = addconstraint(m, v[I])

@@ -10,7 +10,7 @@ immutable JuMPArray{T,N,NT} <: JuMPContainer{T,N}
     meta::Dict{Symbol,Any}
 end
 
-@generated function JuMPArray{T,N}(innerArray::AbstractArray{T,N}, indexsets::NTuple{N,Any})
+@generated function JuMPArray{T,N}(innerArray::Array{T,N}, indexsets::NTuple{N,Any})
     dicttuple = Expr(:tuple)
     for i in 1:N
         inner = quote

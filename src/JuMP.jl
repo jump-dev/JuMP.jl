@@ -909,9 +909,9 @@ include("print.jl")
 # Deprecations
 include("deprecated.jl")
 
-getvalue{T<:JuMPTypes}(arr::AbstractArray{T}) = map(getvalue, arr)
+getvalue{T<:JuMPTypes}(arr::Array{T}) = map(getvalue, arr)
 
-function setvalue{T<:AbstractJuMPScalar}(set::AbstractArray{T}, val::AbstractArray)
+function setvalue{T<:AbstractJuMPScalar}(set::Array{T}, val::AbstractArray)
     promote_shape(size(set), size(val)) # Check dimensions match
     for I in eachindex(set)
         setvalue(set[I], val[I])
