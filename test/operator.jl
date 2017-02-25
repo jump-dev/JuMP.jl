@@ -820,4 +820,24 @@ const sub2 = JuMP.repl[:sub2]
         B = full(A)
         @test vec_eq([A y], [B y])
     end
+
+    @testset "Operators for non-Array AbstractArrays" begin
+        m = Model()
+        @variable(m, x[1:3])
+        xview = view(x, :)
+        @test +x == +xview
+        @test -x == -xview
+        @test x + x[1] == xview + xview[1]
+        @test x - x[1] == xview - xview[1]
+        @test x[1] - x == xview[1] - xview
+        @test x[1] + x == xview[1] + xview
+    end
+
+    @testset "Norm and diagm for non-Array AbstractArrays" begin
+        m = Model()
+        @variable(m, x[1:3])
+        xview = view(x, :)
+        @test diagm(x) == diagm(xview)
+        @test norm(x).terms == norm(xview).terms
+    end
 end
