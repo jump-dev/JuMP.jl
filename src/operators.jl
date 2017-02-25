@@ -355,7 +355,7 @@ Base.diagm(x::AbstractVector{Variable}) = diagm(convert(Vector{AffExpr}, x))
 # checks are performed; it is expected that the caller has done this, has ensured
 # that the eltype of buf is appropriate, and has zeroed the elements of buf (if desired).
 
-function _multiply!{T<:JuMPTypes}(ret::AbstractArray{T}, lhs::Array, rhs::Array)
+function _multiply!{T<:JuMPTypes}(ret::Array{T}, lhs::Array, rhs::Array)
     m, n = size(lhs,1), size(lhs,2)
     r, s = size(rhs,1), size(rhs,2)
     for i ∈ 1:m, j ∈ 1:s
@@ -370,7 +370,7 @@ function _multiply!{T<:JuMPTypes}(ret::AbstractArray{T}, lhs::Array, rhs::Array)
 end
 
 # this computes lhs.'*rhs and places it in ret
-function _multiplyt!{T<:JuMPTypes}(ret::AbstractArray{T}, lhs::Array, rhs::Array)
+function _multiplyt!{T<:JuMPTypes}(ret::Array{T}, lhs::Array, rhs::Array)
     m, n = size(lhs,2), size(lhs,1) # transpose
     r, s = size(rhs,1), size(rhs,2)
     for i ∈ 1:m, j ∈ 1:s
@@ -384,7 +384,7 @@ function _multiplyt!{T<:JuMPTypes}(ret::AbstractArray{T}, lhs::Array, rhs::Array
     ret
 end
 
-function _multiply!{T<:Union{GenericAffExpr,GenericQuadExpr}}(ret::AbstractArray{T}, lhs::SparseMatrixCSC, rhs::Array)
+function _multiply!{T<:Union{GenericAffExpr,GenericQuadExpr}}(ret::Array{T}, lhs::SparseMatrixCSC, rhs::Array)
     nzv = nonzeros(lhs)
     rv  = rowvals(lhs)
     for col ∈ 1:lhs.n
@@ -398,11 +398,11 @@ function _multiply!{T<:Union{GenericAffExpr,GenericQuadExpr}}(ret::AbstractArray
 end
 
 # this computes lhs.'*rhs and places it in ret
-function _multiplyt!{T<:Union{GenericAffExpr,GenericQuadExpr}}(ret::AbstractArray{T}, lhs::SparseMatrixCSC, rhs::Array)
+function _multiplyt!{T<:Union{GenericAffExpr,GenericQuadExpr}}(ret::Array{T}, lhs::SparseMatrixCSC, rhs::Array)
     _multiply!(ret, transpose(lhs), rhs) # TODO fully implement
 end
 
-function _multiply!{T<:Union{GenericAffExpr,GenericQuadExpr}}(ret::AbstractArray{T}, lhs::Matrix, rhs::SparseMatrixCSC)
+function _multiply!{T<:Union{GenericAffExpr,GenericQuadExpr}}(ret::Array{T}, lhs::Matrix, rhs::SparseMatrixCSC)
     rowval = rowvals(rhs)
     nzval  = nonzeros(rhs)
     for multivec_row in 1:size(lhs,1)
@@ -419,7 +419,7 @@ function _multiply!{T<:Union{GenericAffExpr,GenericQuadExpr}}(ret::AbstractArray
 end
 
 # this computes lhs.'*rhs and places it in ret
-function _multiplyt!{T<:Union{GenericAffExpr,GenericQuadExpr}}(ret::AbstractArray{T}, lhs::Matrix, rhs::SparseMatrixCSC)
+function _multiplyt!{T<:Union{GenericAffExpr,GenericQuadExpr}}(ret::Array{T}, lhs::Matrix, rhs::SparseMatrixCSC)
     rowval = rowvals(rhs)
     nzval  = nonzeros(rhs)
     for multivec_row ∈ 1:size(lhs,2) # transpose

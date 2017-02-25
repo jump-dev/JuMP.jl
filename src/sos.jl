@@ -43,7 +43,7 @@ end
 
 addSOS1(m::Model, coll) = addSOS1(m, convert(Vector{AffExpr}, coll))
 
-function addSOS1(m::Model, coll::AbstractVector{AffExpr})
+function addSOS1(m::Model, coll::Vector{AffExpr})
     vars, weight = constructSOS(m,coll)
     push!(m.sosconstr, SOSConstraint(vars, weight, :SOS1))
     if m.internalModelLoaded
@@ -59,7 +59,7 @@ end
 
 addSOS2(m::Model, coll) = addSOS2(m, convert(Vector{AffExpr}, coll))
 
-function addSOS2(m::Model, coll::AbstractVector{AffExpr})
+function addSOS2(m::Model, coll::Vector{AffExpr})
     vars, weight = constructSOS(m,coll)
     push!(m.sosconstr, SOSConstraint(vars, weight, :SOS2))
     if m.internalModelLoaded

@@ -44,7 +44,7 @@ end
 
 # TODO: get rid of this! This is only a helper, and should be Base.values
 # (and probably live there, as well)
-_values(x::AbstractArray) = x
+_values(x::Array) = x
 _values(x) = Base.values(x)
 
 # REPL-specific symbols
@@ -103,7 +103,7 @@ math(s,mathmode) = mathmode ? s : "\$\$ $s \$\$"
 # helper to look up corresponding JuMPContainerData
 printdata(v::JuMPContainer) = _getmodel(v).varData[v]
 getname(x::JuMPContainer) = hasmeta(x, :model) ? printdata(x).name : "__anon__"
-function printdata(v::AbstractArray{Variable})
+function printdata(v::Array{Variable})
     if isempty(v)
         error("Cannot locate printing data for an empty array")
     end
