@@ -976,4 +976,13 @@ end
         @test isnan(getdual(x))
     end
 
+    @testset "Constraints with non-Array AbstractArrays" begin
+        m = Model()
+        x = sparse(@variable(m, [1: 3]))
+        @constraint(m, x + x[1] .== 0)
+        @constraint(m, x - x[1] .== 0)
+        @constraint(m, (x + 1) + x[1] .== 0)
+        @constraint(m, (x + 1) - x[1] .== 0)
+    end
+
 end
