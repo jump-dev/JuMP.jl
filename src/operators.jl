@@ -495,28 +495,28 @@ end
 for op in [:+, :-]; @eval begin
     function $op{T<:JuMPTypes}(lhs::Number,rhs::AbstractArray{T})
         ret = Array{typeof($op(lhs, zero(T)))}(size(rhs))
-        for I in eachindex(ret)
+        for I in eachindex(ret, rhs)
             ret[I] = $op(lhs, rhs[I])
         end
         ret
     end
     function $op{T<:JuMPTypes}(lhs::AbstractArray{T},rhs::Number)
         ret = Array{typeof($op(zero(T), rhs))}(size(lhs))
-        for I in eachindex(ret)
+        for I in eachindex(ret, lhs)
             ret[I] = $op(lhs[I], rhs)
         end
         ret
     end
     function $op{T<:JuMPTypes,S}(lhs::T,rhs::AbstractArray{S})
         ret = Array{typeof($op(lhs, zero(S)))}(size(rhs))
-        for I in eachindex(ret)
+        for I in eachindex(ret, rhs)
             ret[I] = $op(lhs, rhs[I])
         end
         ret
     end
     function $op{T<:JuMPTypes,S}(lhs::AbstractArray{S},rhs::T)
         ret = Array{typeof($op(zero(S), rhs))}(size(lhs))
-        for I in eachindex(ret)
+        for I in eachindex(ret, lhs)
             ret[I] = $op(lhs[I], rhs)
         end
         ret
@@ -526,28 +526,28 @@ end; end
 for op in [:*, :/]; @eval begin
     function $op{T<:JuMPTypes}(lhs::Number,rhs::AbstractArray{T})
         ret = Array{typeof($op(lhs, zero(T)))}(size(rhs))
-        for I in eachindex(ret)
+        for I in eachindex(ret, rhs)
             ret[I] = $op(lhs, rhs[I])
         end
         ret
     end
     function $op{T<:JuMPTypes}(lhs::AbstractArray{T},rhs::Number)
         ret = Array{typeof($op(zero(T), rhs))}(size(lhs))
-        for I in eachindex(ret)
+        for I in eachindex(ret, lhs)
             ret[I] = $op(lhs[I], rhs)
         end
         ret
     end
     function $op{T<:JuMPTypes,S}(lhs::T,rhs::AbstractArray{S})
         ret = Array{typeof($op(lhs, zero(S)))}(size(rhs))
-        for I in eachindex(ret)
+        for I in eachindex(ret, rhs)
             ret[I] = $op(lhs, rhs[I])
         end
         ret
     end
     function $op{T<:JuMPTypes,S}(lhs::AbstractArray{S},rhs::T)
         ret = Array{typeof($op(zero(S), rhs))}(size(lhs))
-        for I in eachindex(ret)
+        for I in eachindex(ret, lhs)
             ret[I] = $op(lhs[I], rhs)
         end
         ret
@@ -571,7 +571,7 @@ for op in [:(+), :(-)]; @eval begin
     function $op(lhs::AbstractArray{Variable},rhs::AbstractArray{Variable})
         (sz = size(lhs)) == size(rhs) || error("Incompatible sizes for $op: $sz $op $(size(rhs))")
         ret = Array{AffExpr}(sz)
-        for I in eachindex(ret)
+        for I in eachindex(ret, lhs, rhs)
             ret[I] = $op(lhs[I], rhs[I])
         end
         ret
