@@ -492,32 +492,29 @@ function _fillwithzeros{T}(arr::AbstractArray{T})
     arr
 end
 
-# Let's be conservative and only define arithmetic for the basic types
-typealias ArrayOrSparseMat{T} Union{Array{T}, SparseMatrixCSC{T}}
-
 for op in [:+, :-]; @eval begin
-    function $op{T<:JuMPTypes}(lhs::Number,rhs::ArrayOrSparseMat{T})
+    function $op{T<:JuMPTypes}(lhs::Number,rhs::AbstractArray{T})
         ret = Array{typeof($op(lhs, zero(T)))}(size(rhs))
         for I in eachindex(ret)
             ret[I] = $op(lhs, rhs[I])
         end
         ret
     end
-    function $op{T<:JuMPTypes}(lhs::ArrayOrSparseMat{T},rhs::Number)
+    function $op{T<:JuMPTypes}(lhs::AbstractArray{T},rhs::Number)
         ret = Array{typeof($op(zero(T), rhs))}(size(lhs))
         for I in eachindex(ret)
             ret[I] = $op(lhs[I], rhs)
         end
         ret
     end
-    function $op{T<:JuMPTypes,S}(lhs::T,rhs::ArrayOrSparseMat{S})
+    function $op{T<:JuMPTypes,S}(lhs::T,rhs::AbstractArray{S})
         ret = Array{typeof($op(lhs, zero(S)))}(size(rhs))
         for I in eachindex(ret)
             ret[I] = $op(lhs, rhs[I])
         end
         ret
     end
-    function $op{T<:JuMPTypes,S}(lhs::ArrayOrSparseMat{S},rhs::T)
+    function $op{T<:JuMPTypes,S}(lhs::AbstractArray{S},rhs::T)
         ret = Array{typeof($op(zero(S), rhs))}(size(lhs))
         for I in eachindex(ret)
             ret[I] = $op(lhs[I], rhs)
