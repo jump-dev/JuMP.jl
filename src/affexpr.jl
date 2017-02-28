@@ -181,15 +181,13 @@ function addconstraint(m::Model, c::LinearConstraint)
     end
     return LinConstrRef(m,length(m.linconstr))
 end
-addconstraint(m::Model, c::AbstractArray{LinearConstraint}) =
+addconstraint(m::Model, c::Array{LinearConstraint}) =
     error("The operators <=, >=, and == can only be used to specify scalar constraints. If you are trying to add a vectorized constraint, use the element-wise dot comparison operators (.<=, .>=, or .==) instead")
 
-function addVectorizedConstraint(m::Model, v::AbstractArray{LinearConstraint})
-    # Can't use map! because map! for sparse vectors needs zero to be defined for
-    # JuMP.GenericRangeConstraint{JuMP.GenericAffExpr{Float64,JuMP.Variable}} on 0.6
-    ret = similar(v, LinConstrRef)
-    for i in eachindex(v)
-        ret[i] = addconstraint(m, v[i])
+function addVectorizedConstraint(m::Model, v::Array{LinearConstraint})
+    ret = Array{LinConstrRef}(size(v))
+    for I in eachindex(v)
+        ret[I] = addconstraint(m, v[I])
     end
     ret
 end
