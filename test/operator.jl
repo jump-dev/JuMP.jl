@@ -12,6 +12,7 @@
 #############################################################################
 using JuMP
 using Base.Test
+using OffsetArrays
 
 # To ensure the tests work on both Windows and Linux/OSX, we need
 # to use the correct comparison operators in the strings
@@ -495,7 +496,7 @@ const sub2 = JuMP.repl[:sub2]
         anys[1] = 10
         anys[2] = 20 + x
         @test dot(floats, anys) == 10 + 40 + 2x
-            
+
         # https://github.com/JuliaOpt/JuMP.jl/pull/943
         pull943 = Model()
         @variable(pull943, x[1 : 10^6]);
@@ -542,7 +543,7 @@ const sub2 = JuMP.repl[:sub2]
         Y = sparse([1, 2], [1, 3], [2X11, 4X23], 3, 3) # for testing GenericAffExpr
         Yd = [2X11 0    0
               0    0 4X23
-              0    0    0]        
+              0    0    0]
         Z = sparse([1, 2], [1, 3], [X11^2, 2X23^2], 3, 3) # for testing GenericQuadExpr
         Zd = [X11^2 0      0
               0     0 2X23^2
@@ -626,7 +627,7 @@ const sub2 = JuMP.repl[:sub2]
         @test vec_eq(X'*A, [2X11  X11  0
                             0     0    0
                             X23   2X23 X23])
-        @test vec_eq(X.'*A, [2X11 X11  0 
+        @test vec_eq(X.'*A, [2X11 X11  0
                              0    0    0
                              X23  2X23 X23])
         @test vec_eq(A'*X, [2X11  0 X23
@@ -824,20 +825,37 @@ const sub2 = JuMP.repl[:sub2]
     @testset "Operators for non-Array AbstractArrays" begin
         m = Model()
         @variable(m, x[1:3])
-        xview = view(x, :)
-        @test +x == +xview
-        @test -x == -xview
-        @test x + x[1] == xview + xview[1]
-        @test x - x[1] == xview - xview[1]
-        @test x[1] - x == xview[1] - xview
-        @test x[1] + x == xview[1] + xview
+
+        # This is needed to compare arrays that have nonstandard indexing
+        elements_equal{T, N}(A::AbstractArray{T, N}, B::AbstractArray{T, N}) = all(a == b for (a, b) in zip(A, B))
+
+        for x2 in (OffsetArray(x, -length(x)), view(x, :), sparse(x))
+            @test elements_equal(+x, +x2)
+            @test elements_equal(-x, -x2)
+            @test elements_equal(x + first(x), x2 + first(x2))
+            @test elements_equal(x - first(x), x2 - first(x2))
+            @test elements_equal(first(x) - x, first(x2) - x2)
+            @test elements_equal(first(x) + x, first(x2) + x2)
+            @test elements_equal(2 * x, 2 * x2)
+            @test elements_equal(first(x) + x2, first(x2) + x)
+            @test sum(x) == sum(x2)
+            if !JuMP.one_indexed(x2)
+                @test_throws DimensionMismatch x + x2
+            end
+        end
     end
 
     @testset "Norm and diagm for non-Array AbstractArrays" begin
         m = Model()
         @variable(m, x[1:3])
-        xview = view(x, :)
-        @test diagm(x) == diagm(xview)
-        @test norm(x).terms == norm(xview).terms
+
+        for x2 in (OffsetArray(x, -length(x)), view(x, :), sparse(x))
+            if !JuMP.one_indexed(x2)
+                @test_throws AssertionError diagm(x2)
+            else
+                @test diagm(x) == diagm(x2)
+            end
+            @test norm(x).terms == norm(x2).terms
+        end
     end
 end

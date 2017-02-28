@@ -344,7 +344,7 @@ function fill_var_names(mode, colNames, v::JuMPDict{Variable})
         end
     end
 end
-function fill_var_names(mode, colNames, v::AbstractArray{Variable})
+function fill_var_names(mode, colNames, v::Array{Variable})
     isempty(v) && return
     sizes = size(v)
     m = first(v).m
@@ -400,7 +400,7 @@ Base.show(io::IO, ::MIME"text/latex", j::Union{JuMPContainer{Variable},Array{Var
 # Generic string converter, called by mode-specific handlers
 
 # Assumes that !isempty(j)
-_getmodel(j::AbstractArray{Variable}) = first(j).m
+_getmodel(j::Array{Variable}) = first(j).m
 _getmodel(j::JuMPContainer) = getmeta(j, :model)
 
 function cont_str(mode, j, sym::PrintSymbols)

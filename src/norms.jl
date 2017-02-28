@@ -37,6 +37,9 @@ function GenericNorm{C,V}(P, terms::Vector{GenericAffExpr{C,V}})
     end
     GenericNorm{P,C,V}(terms)
 end
+function GenericNorm{C, V}(P, terms::AbstractVector{GenericAffExpr{C,V}})
+    GenericNorm(P, [terms...])
+end
 Base.copy{P,C,V}(x::GenericNorm{P,C,V}) = GenericNorm{P,C,V}(copy(x.terms))
 
 # Handle the norm() function by flattening arguments into a vector

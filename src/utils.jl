@@ -101,3 +101,11 @@ function reinterpret_unsafe{T,R}(::Type{T},x::Vector{R})
     p = reinterpret(Ptr{T},pointer(x))
     return VectorView(0,div(len,sizeof(T)),p)
 end
+
+# For non-zero index arrays on 0.5; see
+# https://github.com/alsam/OffsetArrays.jl#special-note-for-julia-05.
+_size(A::AbstractArray) = map(length, indices(A))
+_size(A) = size(A)
+_size(A::AbstractArray, d) = d <= ndims(A) ? _size(A)[d] : 1
+
+one_indexed(A) = all(x -> isa(x, Base.OneTo), indices(A))

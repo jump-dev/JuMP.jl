@@ -977,18 +977,25 @@ end
     end
 
     @testset "Constraints with non-Array AbstractArrays" begin
-        # no tests, just to make sure that there are no MethodErrors
         m = Model()
-        x = sparse(@variable(m, [1:3]))
-        @constraint(m, x + x[1] .== 0)
-        @constraint(m, x - x[1] .== 0)
-        @constraint(m, (x + 1) + x[1] .== 0)
-        @constraint(m, (x + 1) - x[1] .== 0)
-        @constraint(m, -x .<= 0)
-        @constraint(m, +x .<= 0)
-        @SDconstraint(m, diagm(x) >= 0)
-        @SDconstraint(m, view(diagm(x), :, :) >= 0)
+        v = @variable(m, [1:3])
+        for x in (OffsetArray(v, -length(v)), view(v, :), sparse(v))
+            # Version of diagm that works for OffsetArrays:
+            A = similar(x, typeof(zero(eltype(x))), (eachindex(x), eachindex(x)))
+            for i in eachindex(x), j in eachindex(x)
+                A[i, j] = ifelse(i == j, x[i], zero(eltype(x)))
+            end
 
-        @test_throws ErrorException @objective(m, Min, x) # vector objective
+            # No tests, just to make sure that there are no MethodErrors.
+            @constraint(m, x + first(x) .== 0)
+            @constraint(m, x - first(x) .== 0)
+            @constraint(m, (x + 1) + first(x) .== 0)
+            @constraint(m, (x + 1) - first(x) .== 0)
+            @constraint(m, -x .<= 0)
+            @constraint(m, +x .<= 0)
+            @SDconstraint(m, A >= 0)
+
+            @test_throws ErrorException @objective(m, Min, x) # vector objective
+        end
     end
 end

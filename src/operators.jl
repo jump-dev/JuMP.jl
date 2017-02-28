@@ -276,7 +276,8 @@ Base.sum(j::JuMPArray) = sum(j.innerArray)
 Base.sum(j::JuMPDict)  = sum(values(j.tupledict))
 Base.sum(j::JuMPArray{Variable}) = AffExpr(vec(j.innerArray), ones(length(j.innerArray)), 0.0)
 Base.sum(j::JuMPDict{Variable})  = AffExpr(collect(values(j.tupledict)), ones(length(j.tupledict)), 0.0)
-Base.sum(j::AbstractArray{Variable}) = AffExpr(vec(j), ones(length(j)), 0.0)
+Base.sum(j::Array{Variable}) = AffExpr(vec(j), ones(length(j)), 0.0)
+Base.sum(j::AbstractArray{Variable}) = sum([j...]) # to handle non-one-indexed arrays.
 function Base.sum{T<:GenericAffExpr}(affs::AbstractArray{T})
     new_aff = zero(T)
     for aff in affs
@@ -339,7 +340,7 @@ Base.ctranspose(x::JuMPArray) = _throw_transpose_error()
 
 # Can remove the following code once == overloading is removed
 
-function Base.issymmetric{T<:JuMPTypes}(x::AbstractMatrix{T})
+function Base.issymmetric{T<:JuMPTypes}(x::Matrix{T})
     (n = size(x,1)) == size(x,2) || return false
     for i in 1:n, j in (i+1):n
         isequal(x[i,j], x[j,i]) || return false
@@ -348,7 +349,10 @@ function Base.issymmetric{T<:JuMPTypes}(x::AbstractMatrix{T})
 end
 
 # Special-case because the the base version wants to do fill!(::Array{Variable}, zero(AffExpr))
-Base.diagm(x::AbstractVector{Variable}) = diagm(convert(Vector{AffExpr}, x))
+function Base.diagm(x::AbstractVector{Variable})
+    @assert one_indexed(x) # Base.diagm doesn't work for non-one-indexed arrays in general.
+    diagm(copy!(similar(x, AffExpr), x))
+end
 
 ###############
 # The _multiply!(buf,y,z) adds the results of y*z into the buffer buf. No bounds/size
@@ -494,29 +498,29 @@ end
 
 for op in [:+, :-]; @eval begin
     function $op{T<:JuMPTypes}(lhs::Number,rhs::AbstractArray{T})
-        ret = Array{typeof($op(lhs, zero(T)))}(size(rhs))
-        for I in eachindex(ret, rhs)
+        ret = similar(rhs, typeof($op(lhs, zero(T))))
+        for I in eachindex(ret)
             ret[I] = $op(lhs, rhs[I])
         end
         ret
     end
     function $op{T<:JuMPTypes}(lhs::AbstractArray{T},rhs::Number)
-        ret = Array{typeof($op(zero(T), rhs))}(size(lhs))
-        for I in eachindex(ret, lhs)
+        ret = similar(lhs, typeof($op(zero(T), rhs)))
+        for I in eachindex(ret)
             ret[I] = $op(lhs[I], rhs)
         end
         ret
     end
     function $op{T<:JuMPTypes,S}(lhs::T,rhs::AbstractArray{S})
-        ret = Array{typeof($op(lhs, zero(S)))}(size(rhs))
-        for I in eachindex(ret, rhs)
+        ret = similar(rhs, typeof($op(lhs, zero(S))))
+        for I in eachindex(ret)
             ret[I] = $op(lhs, rhs[I])
         end
         ret
     end
     function $op{T<:JuMPTypes,S}(lhs::AbstractArray{S},rhs::T)
-        ret = Array{typeof($op(zero(S), rhs))}(size(lhs))
-        for I in eachindex(ret, lhs)
+        ret = similar(lhs, typeof($op(zero(S), rhs)))
+        for I in eachindex(ret)
             ret[I] = $op(lhs[I], rhs)
         end
         ret
@@ -525,29 +529,29 @@ end; end
 
 for op in [:*, :/]; @eval begin
     function $op{T<:JuMPTypes}(lhs::Number,rhs::AbstractArray{T})
-        ret = Array{typeof($op(lhs, zero(T)))}(size(rhs))
-        for I in eachindex(ret, rhs)
+        ret = similar(rhs, typeof($op(lhs, zero(T))))
+        for I in eachindex(ret)
             ret[I] = $op(lhs, rhs[I])
         end
         ret
     end
     function $op{T<:JuMPTypes}(lhs::AbstractArray{T},rhs::Number)
-        ret = Array{typeof($op(zero(T), rhs))}(size(lhs))
-        for I in eachindex(ret, lhs)
+        ret = similar(lhs, typeof($op(zero(T), rhs)))
+        for I in eachindex(ret)
             ret[I] = $op(lhs[I], rhs)
         end
         ret
     end
     function $op{T<:JuMPTypes,S}(lhs::T,rhs::AbstractArray{S})
-        ret = Array{typeof($op(lhs, zero(S)))}(size(rhs))
-        for I in eachindex(ret, rhs)
+        ret = similar(rhs, typeof($op(lhs, zero(S))))
+        for I in eachindex(ret)
             ret[I] = $op(lhs, rhs[I])
         end
         ret
     end
     function $op{T<:JuMPTypes,S}(lhs::AbstractArray{S},rhs::T)
-        ret = Array{typeof($op(zero(S), rhs))}(size(lhs))
-        for I in eachindex(ret, lhs)
+        ret = similar(lhs, typeof($op(zero(S), rhs)))
+        for I in eachindex(ret)
             ret[I] = $op(lhs[I], rhs)
         end
         ret
@@ -565,18 +569,6 @@ end; end
     SparseMatrixCSC(lhs.m, lhs.n, copy(lhs.colptr), copy(lhs.rowval), lhs.nzval .* rhs)
 (/){T<:JuMPTypes}(lhs::SparseMatrixCSC{T}, rhs::Number) =
     SparseMatrixCSC(lhs.m, lhs.n, copy(lhs.colptr), copy(lhs.rowval), lhs.nzval ./ rhs)
-
-# The following are primarily there for internal use in the macro code for @constraint
-for op in [:(+), :(-)]; @eval begin
-    function $op(lhs::AbstractArray{Variable},rhs::AbstractArray{Variable})
-        (sz = size(lhs)) == size(rhs) || error("Incompatible sizes for $op: $sz $op $(size(rhs))")
-        ret = Array{AffExpr}(sz)
-        for I in eachindex(ret, lhs, rhs)
-            ret[I] = $op(lhs[I], rhs[I])
-        end
-        ret
-    end
-end; end
 
 for (dotop,op) in [(:.+,:+), (:.-,:-), (:.*,:*), (:./,:/)]
     @eval begin

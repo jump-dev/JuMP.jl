@@ -234,7 +234,7 @@ setobjective(m::Model, something::Any) =
     error("in setobjective: needs three arguments: model, objective sense (:Max or :Min), and expression.")
 
 setobjective(::Model, ::Symbol, x::AbstractArray) =
-    error("in setobjective: array of size $(size(x)) passed as objective; only scalar objectives are allowed")
+    error("in setobjective: array of size $(_size(x)) passed as objective; only scalar objectives are allowed")
 
 function setsolver(m::Model, solver::MathProgBase.AbstractMathProgSolver)
     m.solver = solver
@@ -477,7 +477,7 @@ Base.zero(::Variable) = zero(Variable)
 Base.one(::Type{Variable}) = AffExpr(Variable[],Float64[],1.0)
 Base.one(::Variable) = one(Variable)
 
-function verify_ownership(m::Model, vec::AbstractVector{Variable})
+function verify_ownership(m::Model, vec::Vector{Variable})
     n = length(vec)
     @inbounds for i in 1:n
         vec[i].m !== m && return false
@@ -487,13 +487,7 @@ end
 
 Base.copy(v::Variable, new_model::Model) = Variable(new_model, v.col)
 Base.copy(x::Void, new_model::Model) = nothing
-function Base.copy(v::AbstractArray{Variable}, new_model::Model)
-    ret = similar(v, Variable, size(v))
-    for I in eachindex(v)
-        ret[I] = Variable(new_model, v[I].col)
-    end
-    ret
-end
+Base.copy(v::AbstractArray{Variable}, new_model::Model) = (var -> Variable(new_model, var.col)).(v)
 
 # Copy methods for variable containers
 Base.copy(d::JuMPContainer) = map(copy, d)
@@ -741,12 +735,12 @@ function setRHS(c::LinConstrRef, rhs::Number)
 end
 
 Variable(m::Model,lower::Number,upper::Number,cat::Symbol,objcoef::Number,
-    constraints::JuMPArray,coefficients::AbstractVector{Float64}, name::AbstractString="", value::Number=NaN) =
+    constraints::JuMPArray,coefficients::Vector{Float64}, name::AbstractString="", value::Number=NaN) =
     Variable(m, lower, upper, cat, objcoef, constraints.innerArray, coefficients, name, value)
 
 # add variable to existing constraints
 function Variable(m::Model,lower::Number,upper::Number,cat::Symbol,objcoef::Number,
-    constraints::AbstractVector,coefficients::AbstractVector{Float64}, name::AbstractString="", value::Number=NaN)
+    constraints::Vector,coefficients::Vector{Float64}, name::AbstractString="", value::Number=NaN)
     for c in constraints
         if !isa(c, LinConstrRef)
             error("Unexpected constraint of type $(typeof(c)). Column-wise modeling only supported for linear constraints")
@@ -911,7 +905,7 @@ include("deprecated.jl")
 
 getvalue{T<:JuMPTypes}(arr::Array{T}) = map(getvalue, arr)
 
-function setvalue{T<:AbstractJuMPScalar}(set::Array{T}, val::AbstractArray)
+function setvalue{T<:AbstractJuMPScalar}(set::Array{T}, val::Array)
     promote_shape(size(set), size(val)) # Check dimensions match
     for I in eachindex(set)
         setvalue(set[I], val[I])
