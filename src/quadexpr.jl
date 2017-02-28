@@ -152,4 +152,12 @@ end
 addconstraint(m::Model, c::AbstractArray{QuadConstraint}) =
     error("Vectorized constraint added without elementwise comparisons. Try using one of (.<=,.>=,.==).")
 
-addVectorizedConstraint(m::Model, v::AbstractArray{QuadConstraint}) = (constraint -> addconstraint(m, constraint)).(v)
+function addVectorizedConstraint(m::Model, v::AbstractArray{QuadConstraint})
+    # Can't use map! because map! for sparse vectors needs zero to be defined for
+    # JuMP.GenericRangeConstraint{JuMP.GenericAffExpr{Float64,JuMP.Variable}} on 0.6
+    ret = similar(v, ConstraintRef{Model,QuadConstraint})
+    for i in eachindex(v)
+        ret[i] = addconstraint(m, v[i])
+    end
+    ret
+end
