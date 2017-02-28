@@ -277,7 +277,7 @@ Base.sum(j::JuMPDict)  = sum(values(j.tupledict))
 Base.sum(j::JuMPArray{Variable}) = AffExpr(vec(j.innerArray), ones(length(j.innerArray)), 0.0)
 Base.sum(j::JuMPDict{Variable})  = AffExpr(collect(values(j.tupledict)), ones(length(j.tupledict)), 0.0)
 Base.sum(j::Array{Variable}) = AffExpr(vec(j), ones(length(j)), 0.0)
-Base.sum(j::AbstractArray{Variable}) = sum([j...]) # to handle non-one-indexed arrays.
+Base.sum(j::AbstractArray{Variable}) = sum([j(i) for i in eachindex(j)]) # to handle non-one-indexed arrays.
 function Base.sum{T<:GenericAffExpr}(affs::AbstractArray{T})
     new_aff = zero(T)
     for aff in affs
