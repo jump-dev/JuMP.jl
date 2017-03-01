@@ -305,7 +305,7 @@ function constructconstraint!(normexpr::SOCExpr, sense::Symbol)
 end
 
 constructconstraint!(x::Array, sense::Symbol) = map(c->constructconstraint!(c,sense), x)
-constructconstraint!(x::AbstractArray, sense::Symbol) = constructconstraint!([x[i] for i in eachindex(x)], sense::Symbol)
+constructconstraint!(x::AbstractArray, sense::Symbol) = constructconstraint!([x[i] for i in eachindex(x)], sense)
 
 _vectorize_like(x::Number, y::AbstractArray{AffExpr}) = (ret = similar(y, typeof(x)); fill!(ret, x))
 function _vectorize_like{R<:Number}(x::AbstractArray{R}, y::AbstractArray{AffExpr})
