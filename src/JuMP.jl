@@ -233,8 +233,8 @@ end
 setobjective(m::Model, something::Any) =
     error("in setobjective: needs three arguments: model, objective sense (:Max or :Min), and expression.")
 
-setobjective(::Model, ::Symbol, x::Array) =
-    error("in setobjective: array of size $(size(x)) passed as objective; only scalar objectives are allowed")
+setobjective(::Model, ::Symbol, x::AbstractArray) =
+    error("in setobjective: array of size $(_size(x)) passed as objective; only scalar objectives are allowed")
 
 function setsolver(m::Model, solver::MathProgBase.AbstractMathProgSolver)
     m.solver = solver
@@ -487,13 +487,7 @@ end
 
 Base.copy(v::Variable, new_model::Model) = Variable(new_model, v.col)
 Base.copy(x::Void, new_model::Model) = nothing
-function Base.copy(v::Array{Variable}, new_model::Model)
-    ret = similar(v, Variable, size(v))
-    for I in eachindex(v)
-        ret[I] = Variable(new_model, v[I].col)
-    end
-    ret
-end
+Base.copy(v::AbstractArray{Variable}, new_model::Model) = (var -> Variable(new_model, var.col)).(v)
 
 # Copy methods for variable containers
 Base.copy(d::JuMPContainer) = map(copy, d)
@@ -529,7 +523,7 @@ type SDConstraint <: AbstractConstraint
 end
 
 # Special-case X ≥ 0, which is often convenient
-function SDConstraint(lhs::Matrix, rhs::Number)
+function SDConstraint(lhs::AbstractMatrix, rhs::Number)
     rhs == 0 || error("Cannot construct a semidefinite constraint with nonzero scalar bound $rhs")
     SDConstraint(lhs)
 end

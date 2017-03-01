@@ -305,20 +305,21 @@ function constructconstraint!(normexpr::SOCExpr, sense::Symbol)
 end
 
 constructconstraint!(x::Array, sense::Symbol) = map(c->constructconstraint!(c,sense), x)
+constructconstraint!(x::AbstractArray, sense::Symbol) = constructconstraint!([x[i] for i in eachindex(x)], sense)
 
-_vectorize_like(x::Number, y::Array{AffExpr}) = fill(x, size(y))
-function _vectorize_like{R<:Number}(x::Array{R}, y::Array{AffExpr})
+_vectorize_like(x::Number, y::AbstractArray{AffExpr}) = (ret = similar(y, typeof(x)); fill!(ret, x))
+function _vectorize_like{R<:Number}(x::AbstractArray{R}, y::AbstractArray{AffExpr})
     for i in 1:max(ndims(x),ndims(y))
-        size(x,i) == size(y,i) || error("Unequal sizes for ranged constraint")
+        _size(x,i) == _size(y,i) || error("Unequal sizes for ranged constraint")
     end
     x
 end
 
-function constructconstraint!(x::Array{AffExpr}, lb, ub)
+function constructconstraint!(x::AbstractArray{AffExpr}, lb, ub)
     LB = _vectorize_like(lb,x)
     UB = _vectorize_like(ub,x)
     ret = similar(x, LinearConstraint)
-    map!(ret, 1:length(ret)) do i
+    map!(ret, eachindex(ret)) do i
         constructconstraint!(x[i], LB[i], UB[i])
     end
 end

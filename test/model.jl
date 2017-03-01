@@ -976,4 +976,26 @@ end
         @test isnan(getdual(x))
     end
 
+    @testset "Constraints with non-Array AbstractArrays" begin
+        m = Model()
+        v = @variable(m, [1:3])
+        for x in (OffsetArray(v, -length(v)), view(v, :), sparse(v))
+            # Version of diagm that works for OffsetArrays:
+            A = similar(x, typeof(zero(eltype(x))), (eachindex(x), eachindex(x)))
+            for i in eachindex(x), j in eachindex(x)
+                A[i, j] = ifelse(i == j, x[i], zero(eltype(x)))
+            end
+
+            # No tests, just to make sure that there are no MethodErrors.
+            @constraint(m, x + first(x) .== 0)
+            @constraint(m, x - first(x) .== 0)
+            @constraint(m, (x + 1) + first(x) .== 0)
+            @constraint(m, (x + 1) - first(x) .== 0)
+            @constraint(m, -x .<= 0)
+            @constraint(m, +x .<= 0)
+            @SDconstraint(m, A >= 0)
+
+            @test_throws ErrorException @objective(m, Min, x) # vector objective
+        end
+    end
 end
