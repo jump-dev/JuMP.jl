@@ -561,6 +561,7 @@ function val_str{N}(mode, j::JuMPArray{Float64,N})
     function val_str_rec(depth, parent_index::Vector{Any}, parent_str::AbstractString)
         # Turn index set into strings
         indexset = j.indexsets[depth]
+        isa(indexset, AbstractArray) || (indexset = collect(indexset))
         index_strs = map(string, indexset)
 
         # Determine longest index so we can align columns
