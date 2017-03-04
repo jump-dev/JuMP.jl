@@ -657,7 +657,7 @@ end
     [3] = NaN
     [4] = NaN""")
         b = getvalue(B)
-        @show typeof(b)
+        @test typeof(b) == JuMP.JuMPDict{Float64,2}
         io_test(REPLMode, b, """
     __anon__: 2 dimensions, 10 entries:
      [1,1] = NaN
@@ -670,5 +670,17 @@ end
      [4,2] = NaN
      [4,3] = NaN
      [4,4] = NaN""")
+    end
+
+    @testset "error printing value of variable with weird index set #982" begin
+        m = Model()
+        @variable(m, x[1:2,1], start=0)
+        io_test(REPLMode, x, "x[i,j] free ∀ i ∈ {1,2}, j ∈ {1}")
+        io_test(REPLMode, getvalue(x), """
+    x: 2 dimensions:
+    [1,:]
+      [1,1] = 0.0
+    [2,:]
+      [2,1] = 0.0""")
     end
 end
