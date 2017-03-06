@@ -672,10 +672,11 @@ end
      [4,4] = NaN""")
     end
 
+    for_all, inset = repl[:for_all], repl[:in]
     @testset "error printing value of variable with weird index set #982" begin
         m = Model()
         @variable(m, x[1:2,1], start=0)
-        io_test(REPLMode, x, "x[i,j] free ∀ i ∈ {1,2}, j ∈ {1}")
+        io_test(REPLMode, x, "x[i,j] free $for_all i $inset {1,2}, j $inset {1}")
         io_test(REPLMode, getvalue(x), """
     x: 2 dimensions:
     [1,:]
