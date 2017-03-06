@@ -421,8 +421,8 @@ macro constraint(args...)
 
         constraintcall = :($addconstr($m, constructconstraint!($newaff,$newlb,$newub)))
         for kw in kwargs.args
-            @assert isexpr(kw, :kw)
-            push!(constraintcall.args, esc(kw))
+            @assert isexpr(kw, kwsymbol)
+            push!(constraintcall.args, esc(Expr(:kw,kw.args...)))
         end
         code = quote
             aff = zero(AffExpr)
