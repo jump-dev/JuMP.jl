@@ -37,7 +37,7 @@ Our documentation includes an installation guide, quick-start guide, and referen
 
 [juliaopt-notebooks]: https://github.com/JuliaOpt/juliaopt-notebooks
 
-**Latest Release**: 0.16.0 (via ``Pkg.add``)
+**Latest Release**: 0.16.1 (via ``Pkg.add``)
   * [Documentation](http://www.juliaopt.org/JuMP.jl/0.16/)
   * [Examples](https://github.com/JuliaOpt/JuMP.jl/tree/release-0.16/examples)
   * Testing status:

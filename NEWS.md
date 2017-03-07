@@ -1,6 +1,12 @@
 JuMP release notes
 ==================
 
+Version 0.16.1 (March 7, 2017)
+------------------------------
+
+   * Better support for ``AbstractArray`` in JuMP (Thanks @tkoolen)
+   * Minor bug fixes
+
 Version 0.16.0 (February 23, 2017)
 ---------------------------
 
