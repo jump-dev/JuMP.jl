@@ -53,7 +53,7 @@ end
         @variable(m, i <= bnd_difflo_with_up[i=2:5] <= 5)
         @variable(m, 2 <= bnd_diffup_with_lo[i=2:5] <= i)
 
-        io_test(REPLMode, bnd_free, "bnd_free[i] free $fa i $inset {2,3,4,5}")
+        io_test(REPLMode, bnd_free, "bnd_free[i] $fa i $inset {2,3,4,5}")
         io_test(REPLMode, bnd_lowb, "bnd_lowb[i] $ge 2 $fa i $inset {2,3,4,5}")
         io_test(REPLMode, bnd_high, "bnd_high[i] $le 5 $fa i $inset {2,3,4,5}")
         io_test(REPLMode, bnd_both, "2 $le bnd_both[i] $le 5 $fa i $inset {2,3,4,5}")
@@ -63,7 +63,7 @@ end
         io_test(REPLMode, bnd_difflo_with_up, "$dots $le bnd_difflo_with_up[i] $le 5 $fa i $inset {2,3,4,5}")
         io_test(REPLMode, bnd_diffup_with_lo, "2 $le bnd_diffup_with_lo[i] $le $dots $fa i $inset {2,3,4,5}")
 
-        io_test(IJuliaMode, bnd_free, "bnd_free_{i} free \\quad\\forall i \\in \\{2,3,4,5\\}")
+        io_test(IJuliaMode, bnd_free, "bnd_free_{i} \\quad\\forall i \\in \\{2,3,4,5\\}")
         io_test(IJuliaMode, bnd_lowb, "bnd_lowb_{i} \\geq 2 \\quad\\forall i \\in \\{2,3,4,5\\}")
         io_test(IJuliaMode, bnd_high, "bnd_high_{i} \\leq 5 \\quad\\forall i \\in \\{2,3,4,5\\}")
         io_test(IJuliaMode, bnd_both, "2 \\leq bnd_both_{i} \\leq 5 \\quad\\forall i \\in \\{2,3,4,5\\}")
@@ -93,45 +93,45 @@ end
         @variable(m, tri_3[(i,j)=[(i,i+2) for i in 1:5],k=i:j])
         @variable(m, iter_1[keys(Dict(:a => 1))])
 
-        io_test(REPLMode, rng_unit1, "rng_unit1[i] free $fa i $inset {1,2,$dots,9,10}")
-        io_test(REPLMode, rng_unit2, "rng_unit2[i] free $fa i $inset {-2,-1,$dots,2,3}")
-        io_test(REPLMode, rng_unit3, "rng_unit3[i] free $fa i $inset {1,2,$dots,9,10}")
-        io_test(REPLMode, rng_step1, "rng_step1[i] free $fa i $inset {1,3,5,7,9}")
-        io_test(REPLMode, rng_step2, "rng_step2[i] free $fa i $inset {-2,3,8}")
-        io_test(REPLMode, rng_step3, "rng_step3[i] free $fa i $inset {1}")
-        io_test(REPLMode, rng_step4, "rng_step4[i] free $fa i $inset {0,2}")
-        io_test(REPLMode, arr_1, "arr_1[i] free $fa i $inset {a,b,c}")
-        io_test(REPLMode, arr_2, "arr_2[i] free $fa i $inset {a,1,test}")
-        io_test(REPLMode, arr_3, "arr_3[i] free $fa i $inset {apple,banana,carrot,diamonds}")
-        io_test(REPLMode, rng2_1, "rng2_1[i,j] free $fa i $inset {1,2,$dots,9,10}, j $inset {a,b,c}")
-        io_test(REPLMode, tri_1, "tri_1[i,j] free $fa i $inset {1,2,3}, j $inset {$dots}")
-        io_test(REPLMode, tri_2, "tri_2[i,j] free $fa i $inset {1,2,3}, j $inset {$dots}")
+        io_test(REPLMode, rng_unit1, "rng_unit1[i] $fa i $inset {1,2,$dots,9,10}")
+        io_test(REPLMode, rng_unit2, "rng_unit2[i] $fa i $inset {-2,-1,$dots,2,3}")
+        io_test(REPLMode, rng_unit3, "rng_unit3[i] $fa i $inset {1,2,$dots,9,10}")
+        io_test(REPLMode, rng_step1, "rng_step1[i] $fa i $inset {1,3,5,7,9}")
+        io_test(REPLMode, rng_step2, "rng_step2[i] $fa i $inset {-2,3,8}")
+        io_test(REPLMode, rng_step3, "rng_step3[i] $fa i $inset {1}")
+        io_test(REPLMode, rng_step4, "rng_step4[i] $fa i $inset {0,2}")
+        io_test(REPLMode, arr_1, "arr_1[i] $fa i $inset {a,b,c}")
+        io_test(REPLMode, arr_2, "arr_2[i] $fa i $inset {a,1,test}")
+        io_test(REPLMode, arr_3, "arr_3[i] $fa i $inset {apple,banana,carrot,diamonds}")
+        io_test(REPLMode, rng2_1, "rng2_1[i,j] $fa i $inset {1,2,$dots,9,10}, j $inset {a,b,c}")
+        io_test(REPLMode, tri_1, "tri_1[i,j] $fa i $inset {1,2,3}, j $inset {$dots}")
+        io_test(REPLMode, tri_2, "tri_2[i,j] $fa i $inset {1,2,3}, j $inset {$dots}")
         if VERSION < v"0.6.0-dev.2505" # julia PR #20288
-            io_test(REPLMode, tri_3, "tri_3[(i,j),k] free $fa (i,j) $inset {(1,3),(2,4),(3,5),(4,6),(5,7)}, k $inset {$dots}")
+            io_test(REPLMode, tri_3, "tri_3[(i,j),k] $fa (i,j) $inset {(1,3),(2,4),(3,5),(4,6),(5,7)}, k $inset {$dots}")
         else
-            io_test(REPLMode, tri_3, "tri_3[(i, j),k] free $fa (i, j) $inset {(1, 3),(2, 4),(3, 5),(4, 6),(5, 7)}, k $inset {$dots}")
+            io_test(REPLMode, tri_3, "tri_3[(i, j),k] $fa (i, j) $inset {(1, 3),(2, 4),(3, 5),(4, 6),(5, 7)}, k $inset {$dots}")
         end
-        io_test(REPLMode, iter_1, "iter_1[i] free $fa i $inset {a}")
+        io_test(REPLMode, iter_1, "iter_1[i] $fa i $inset {a}")
 
-        io_test(IJuliaMode, rng_unit1, "rng_unit1_{i} free \\quad\\forall i \\in \\{1,2,\\dots,9,10\\}")
-        io_test(IJuliaMode, rng_unit2, "rng_unit2_{i} free \\quad\\forall i \\in \\{-2,-1,\\dots,2,3\\}")
-        io_test(IJuliaMode, rng_unit3, "rng_unit3_{i} free \\quad\\forall i \\in \\{1,2,\\dots,9,10\\}")
-        io_test(IJuliaMode, rng_step1, "rng_step1_{i} free \\quad\\forall i \\in \\{1,3,5,7,9\\}")
-        io_test(IJuliaMode, rng_step2, "rng_step2_{i} free \\quad\\forall i \\in \\{-2,3,8\\}")
-        io_test(IJuliaMode, rng_step3, "rng_step3_{i} free \\quad\\forall i \\in \\{1\\}")
-        io_test(IJuliaMode, rng_step4, "rng_step4_{i} free \\quad\\forall i \\in \\{0,2\\}")
-        io_test(IJuliaMode, arr_1, "arr_1_{i} free \\quad\\forall i \\in \\{a,b,c\\}")
-        io_test(IJuliaMode, arr_2, "arr_2_{i} free \\quad\\forall i \\in \\{a,1,test\\}")
-        io_test(IJuliaMode, arr_3, "arr_3_{i} free \\quad\\forall i \\in \\{apple,banana,carrot,diamonds\\}")
-        io_test(IJuliaMode, rng2_1, "rng2_1_{i,j} free \\quad\\forall i \\in \\{1,2,\\dots,9,10\\}, j \\in \\{a,b,c\\}")
-        io_test(IJuliaMode, tri_1, "tri_1_{i,j} free \\quad\\forall i \\in \\{1,2,3\\}, j \\in \\{\\dots\\}")
-        io_test(IJuliaMode, tri_2, "tri_2_{i,j} free \\quad\\forall i \\in \\{1,2,3\\}, j \\in \\{\\dots\\}")
+        io_test(IJuliaMode, rng_unit1, "rng_unit1_{i} \\quad\\forall i \\in \\{1,2,\\dots,9,10\\}")
+        io_test(IJuliaMode, rng_unit2, "rng_unit2_{i} \\quad\\forall i \\in \\{-2,-1,\\dots,2,3\\}")
+        io_test(IJuliaMode, rng_unit3, "rng_unit3_{i} \\quad\\forall i \\in \\{1,2,\\dots,9,10\\}")
+        io_test(IJuliaMode, rng_step1, "rng_step1_{i} \\quad\\forall i \\in \\{1,3,5,7,9\\}")
+        io_test(IJuliaMode, rng_step2, "rng_step2_{i} \\quad\\forall i \\in \\{-2,3,8\\}")
+        io_test(IJuliaMode, rng_step3, "rng_step3_{i} \\quad\\forall i \\in \\{1\\}")
+        io_test(IJuliaMode, rng_step4, "rng_step4_{i} \\quad\\forall i \\in \\{0,2\\}")
+        io_test(IJuliaMode, arr_1, "arr_1_{i} \\quad\\forall i \\in \\{a,b,c\\}")
+        io_test(IJuliaMode, arr_2, "arr_2_{i} \\quad\\forall i \\in \\{a,1,test\\}")
+        io_test(IJuliaMode, arr_3, "arr_3_{i} \\quad\\forall i \\in \\{apple,banana,carrot,diamonds\\}")
+        io_test(IJuliaMode, rng2_1, "rng2_1_{i,j} \\quad\\forall i \\in \\{1,2,\\dots,9,10\\}, j \\in \\{a,b,c\\}")
+        io_test(IJuliaMode, tri_1, "tri_1_{i,j} \\quad\\forall i \\in \\{1,2,3\\}, j \\in \\{\\dots\\}")
+        io_test(IJuliaMode, tri_2, "tri_2_{i,j} \\quad\\forall i \\in \\{1,2,3\\}, j \\in \\{\\dots\\}")
         if VERSION < v"0.6.0-dev.2505" # julia PR #20288
-            io_test(IJuliaMode, tri_3, "tri_3_{(i,j),k} free \\quad\\forall (i,j) \\in \\{(1,3),(2,4),(3,5),(4,6),(5,7)\\}, k \\in \\{\\dots\\}")
+            io_test(IJuliaMode, tri_3, "tri_3_{(i,j),k} \\quad\\forall (i,j) \\in \\{(1,3),(2,4),(3,5),(4,6),(5,7)\\}, k \\in \\{\\dots\\}")
         else
-            io_test(IJuliaMode, tri_3, "tri_3_{(i, j),k} free \\quad\\forall (i, j) \\in \\{(1, 3),(2, 4),(3, 5),(4, 6),(5, 7)\\}, k \\in \\{\\dots\\}")
+            io_test(IJuliaMode, tri_3, "tri_3_{(i, j),k} \\quad\\forall (i, j) \\in \\{(1, 3),(2, 4),(3, 5),(4, 6),(5, 7)\\}, k \\in \\{\\dots\\}")
         end
-        io_test(IJuliaMode, iter_1, "iter_1_{i} free \\quad\\forall i \\in \\{a\\}")
+        io_test(IJuliaMode, iter_1, "iter_1_{i} \\quad\\forall i \\in \\{a\\}")
         end
 
         #------------------------------------------------------------------
@@ -380,8 +380,8 @@ end
      b1 $le 1, integer
      -1 $le c1 $le 1, integer
      x $inset {0,1}
-     y free
-     z free, integer
+     y
+     z, integer
      si $inset {2,$dots,3} $union {0}
      sc $inset [2,3] $union {0}
      fi = 9
@@ -410,8 +410,8 @@ end
      & b1 \\leq 1, \\in \\mathbb{Z}\\\\
      & -1 \\leq c1 \\leq 1, \\in \\mathbb{Z}\\\\
      & x \\in \\{0,1\\}\\\\
-     & y free\\\\
-     & z free, \\in \\mathbb{Z}\\\\
+     & y\\\\
+     & z, \\in \\mathbb{Z}\\\\
      & si \\in \\{2,\\dots,3\\} \\cup \\{0\\}\\\\
      & sc \\in \\[2,3\\] \\cup \\{0\\}\\\\
      & fi = 9\\\\
@@ -464,7 +464,7 @@ end
      y[1] * y[2] - 1.0 $eq 0
      y[3] * y[4] - 1.0 $eq 0
      (y[5] * y[1] - subexpression[1]) - 1.0 $eq 0
-     y[i] free $fa i $inset {1,2,3,4,5}
+     y[i] $fa i $inset {1,2,3,4,5}
     subexpression[1]: y[2]
     """, repl=:print)
         io_test(REPLMode, mod_3, """
@@ -478,7 +478,7 @@ end
     \\text{Subject to} \\quad & y_{1} * y_{2} - 1.0 = 0\\\\
      & y_{3} * y_{4} - 1.0 = 0\\\\
      & (y_{5} * y_{1} - subexpression_{1}) - 1.0 = 0\\\\
-     & y_{i} free \\quad\\forall i \\in \\{1,2,3,4,5\\}\\\\
+     & y_{i} \\quad\\forall i \\in \\{1,2,3,4,5\\}\\\\
     subexpression_{1} = \\quad &y_{2}\\\\
     \\end{alignat*}
     """, repl=:print)
@@ -498,28 +498,28 @@ end
         io_test(REPLMode, mod, """
     Min 0
     Subject to
-     x[1] free
-     x[2] free
+     x[1]
+     x[2]
      x[3] $inset [-$infty,$infty] $union {0}
-     y[1,1] free
-     y[1,2] free
-     y[1,3] free, integer
-     y[2,2] free
-     y[2,3] free
-     y[3,3] free
+     y[1,1]
+     y[1,2]
+     y[1,3], integer
+     y[2,2]
+     y[2,3]
+     y[3,3]
     """, repl=:print)
 
         io_test(IJuliaMode, mod, """
     \\begin{alignat*}{1}\\min\\quad & 0\\\\
-    \\text{Subject to} \\quad & x_{1} free\\\\
-     & x_{2} free\\\\
+    \\text{Subject to} \\quad & x_{1}\\\\
+     & x_{2}\\\\
      & x_{3} \\in \\[-\\infty,\\infty\\] \\cup \\{0\\}\\\\
-     & y_{1,1} free\\\\
-     & y_{1,2} free\\\\
-     & y_{1,3} free, \\in \\mathbb{Z}\\\\
-     & y_{2,2} free\\\\
-     & y_{2,3} free\\\\
-     & y_{3,3} free\\\\
+     & y_{1,1}\\\\
+     & y_{1,2}\\\\
+     & y_{1,3}, \\in \\mathbb{Z}\\\\
+     & y_{2,2}\\\\
+     & y_{2,3}\\\\
+     & y_{3,3}\\\\
     \\end{alignat*}
     """)
     end
@@ -676,7 +676,7 @@ end
     @testset "error printing value of variable with weird index set #982" begin
         m = Model()
         @variable(m, x[1:2,1], start=0)
-        io_test(REPLMode, x, "x[i,j] free $for_all i $inset {1,2}, j $inset {1}")
+        io_test(REPLMode, x, "x[i,j] $for_all i $inset {1,2}, j $inset {1}")
         io_test(REPLMode, getvalue(x), """
     x: 2 dimensions:
     [1,:]

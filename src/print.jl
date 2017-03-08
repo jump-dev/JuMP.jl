@@ -264,7 +264,7 @@ function model_str(mode, m::Model, sym::PrintSymbols)
         elseif var_cat == :Fixed
             str *= string(sep, var_name, " = ", str_lb)
         elseif var_lb == -Inf && var_ub == +Inf # Free variable
-            str *= string(sep, var_name, " free")
+            str *= string(sep, var_name)
         elseif var_lb == -Inf  # No lower bound
             str *= string(sep, var_name, " ", sym[:leq], " ", str_ub)
         elseif var_ub == +Inf  # No upper bound
@@ -498,7 +498,7 @@ function cont_str(mode, j, sym::PrintSymbols)
     idx_sets = var_cat == :Int ? ", $(sym[:integer]), $idx_sets" : " $idx_sets"
     if all_same_lb && all_same_ub
         # Free variable
-        var_lb == -Inf && var_ub == +Inf && return "$name_idx free$idx_sets"
+        var_lb == -Inf && var_ub == +Inf && return "$name_idx$idx_sets"
         # No lower bound
         var_lb == -Inf && return "$name_idx $(sym[:leq]) $str_ub$idx_sets"
         # No upper bound

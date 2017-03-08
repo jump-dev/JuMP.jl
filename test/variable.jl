@@ -103,7 +103,7 @@ using Base.Test
         @variable(condmod, y[j=1:10,k=3:2:9; isodd(j+k) && k <= 8])
         @test length(x.tupledict) == 5
         @test length(y.tupledict) == 15
-        @test string(condmod) == "Min 0\nSubject to\n x[i] free $fa i $inset {1,2,$dots,9,10} s.t. iseven(i)\n y[j,k] free $fa j $inset {1,2,$dots,9,10}, k $inset {3,5,7,9} s.t. isodd(j + k) and k <= 8\n"
+        @test string(condmod) == "Min 0\nSubject to\n x[i] $fa i $inset {1,2,$dots,9,10} s.t. iseven(i)\n y[j,k] $fa j $inset {1,2,$dots,9,10}, k $inset {3,5,7,9} s.t. isodd(j + k) and k <= 8\n"
     end
 
     @testset "@variable returning Array{Variable}" begin
