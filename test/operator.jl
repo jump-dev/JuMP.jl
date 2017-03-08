@@ -22,6 +22,23 @@ const   eq = JuMP.repl[:eq]
 const Vert = JuMP.repl[:Vert]
 const sub2 = JuMP.repl[:sub2]
 
+# For "DimensionMismatch when performing vector-matrix multiplication with custom types #988"
+import Base: +, *
+immutable MyType{T}
+    a::T
+end
+immutable MySumType{T}
+    a::T
+end
+Base.one{T}(::Type{MyType{T}}) = MyType(one(T))
+Base.zero{T}(::Type{MySumType{T}}) = MySumType(zero(T))
+Base.zero{T}(::MySumType{T}) = MySumType(zero(T))
+Base.transpose(t::MyType) = MyType(t.a)
+Base.transpose(t::MySumType) = MySumType(t.a)
++{MyT<:Union{MyType, MySumType}, MyS<:Union{MyType, MySumType}}(t1::MyT, t2::MyS) = MySumType(t1.a+t2.a)
+*{S, T}(t1::MyType{S}, t2::T) = MyType(t1.a*t2)
+*{S, T}(t1::S, t2::MyType{T}) = MyType(t1*t2.a)
+*{S, T}(t1::MyType{S}, t2::MyType{T}) = MyType(t1.a*t2.a)
 
 
 @testset "Operator overloads" begin
@@ -856,6 +873,29 @@ const sub2 = JuMP.repl[:sub2]
                 @test diagm(x) == diagm(x2)
             end
             @test norm(x).terms == norm(x2).terms
+        end
+    end
+
+    @testset "DimensionMismatch when performing vector-matrix multiplication with custom types #988" begin
+        m = Model()
+        @variable m Q[1:3, 1:3] SDP
+
+        x = [MyType(1), MyType(2), MyType(3)]
+        y = Q * x
+        z = x' * Q
+        ElemT = MySumType{JuMP.GenericAffExpr{Float64,JuMP.Variable}}
+        @test typeof(y) == Vector{ElemT}
+        @test size(y) == (3,)
+        @test typeof(z) == (isdefined(Base, :RowVector) ? RowVector{ElemT, ConjArray{ElemT, 1, Vector{ElemT}}} : Matrix{ElemT})
+        @test size(z) == (1, 3)
+        for i in 1:3
+            # Q is symmetric
+            a = zero(JuMP.GenericAffExpr{Float64,JuMP.Variable})
+            a += Q[1,i]
+            a += 2Q[2,i]
+            a += 3Q[3,i]
+            # Q[1,i] + 2Q[2,i] + 3Q[3,i] is rearranged as 2 Q[2,3] + Q[1,3] + 3 Q[3,3]
+            @test z[i].a == y[i].a == a
         end
     end
 end

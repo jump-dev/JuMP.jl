@@ -446,7 +446,8 @@ end
 _multiply!{T<:JuMPTypes}(ret::AbstractArray{T}, lhs::SparseMatrixCSC, rhs::SparseMatrixCSC) = _multiply!(ret, lhs, full(rhs))
 _multiplyt!{T<:JuMPTypes}(ret::AbstractArray{T}, lhs::SparseMatrixCSC, rhs::SparseMatrixCSC) = _multiplyt!(ret, lhs, full(rhs))
 
-_multiply!(ret, lhs, rhs) = A_mul_B!(ret, lhs, ret)
+_multiply!(ret, lhs, rhs) = A_mul_B!(ret, lhs, rhs)
+_multiplyt!(ret, lhs, rhs) = At_mul_B!(ret, lhs, rhs)
 
 (*){T<:JuMPTypes}(             A::Union{Matrix{T},SparseMatrixCSC{T}}, x::Union{Matrix,   Vector,   SparseMatrixCSC})    = _matmul(A, x)
 (*){T<:JuMPTypes,R<:JuMPTypes}(A::Union{Matrix{T},SparseMatrixCSC{T}}, x::Union{Matrix{R},Vector{R},SparseMatrixCSC{R}}) = _matmul(A, x)
@@ -481,14 +482,14 @@ function _matmult(A, x)
     ret
 end
 
-_multiply_type(R,S) = typeof(one(R) * one(S))
-
+# See https://github.com/JuliaLang/julia/pull/18218
+_matprod_type(R, S) = typeof(one(R) * one(S) + one(R) * one(S))
 # Don't do size checks here in _return_array, defer that to (*)
-_return_array{R,S}(A::AbstractMatrix{R}, x::AbstractVector{S}) = _fillwithzeros(Array{_multiply_type(R,S)}(size(A,1)))
-_return_array{R,S}(A::AbstractMatrix{R}, x::AbstractMatrix{S}) = _fillwithzeros(Array{_multiply_type(R,S)}(size(A,1), size(x,2)))
+_return_array{R,S}(A::AbstractMatrix{R}, x::AbstractVector{S}) = _fillwithzeros(Array{_matprod_type(R,S)}(size(A,1)))
+_return_array{R,S}(A::AbstractMatrix{R}, x::AbstractMatrix{S}) = _fillwithzeros(Array{_matprod_type(R,S)}(size(A,1), size(x,2)))
 # these are for transpose return matrices
-_return_arrayt{R,S}(A::AbstractMatrix{R}, x::AbstractVector{S}) = _fillwithzeros(Array{_multiply_type(R,S)}(size(A,2)))
-_return_arrayt{R,S}(A::AbstractMatrix{R}, x::AbstractMatrix{S}) = _fillwithzeros(Array{_multiply_type(R,S)}(size(A,2), size(x, 2)))
+_return_arrayt{R,S}(A::AbstractMatrix{R}, x::AbstractVector{S}) = _fillwithzeros(Array{_matprod_type(R,S)}(size(A,2)))
+_return_arrayt{R,S}(A::AbstractMatrix{R}, x::AbstractMatrix{S}) = _fillwithzeros(Array{_matprod_type(R,S)}(size(A,2), size(x, 2)))
 
 # helper so we don't fill the buffer array with the same object
 function _fillwithzeros{T}(arr::AbstractArray{T})
