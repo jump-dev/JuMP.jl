@@ -256,7 +256,7 @@ end
 
 # Catch nonlinear expressions and parameters being used in addconstraint, etc.
 
-typealias _NLExpr Union{NonlinearExpression,NonlinearParameter}
+const _NLExpr = Union{NonlinearExpression,NonlinearParameter}
 _nlexprerr() = error("""Cannot use nonlinear expression or parameter in @constraint or @objective.
                         Use @NLconstraint or @NLobjective instead.""")
 # Following three definitions avoid ambiguity warnings

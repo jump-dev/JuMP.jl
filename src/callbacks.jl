@@ -5,7 +5,7 @@
 
 export addlazycallback, addcutcallback, addheuristiccallback, addinfocallback
 
-abstract JuMPCallback
+@compat abstract type JuMPCallback end
 type LazyCallback <: JuMPCallback
     f::Function
     fractional::Bool

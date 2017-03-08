@@ -77,7 +77,7 @@ end
 
 
 # Alias for (Float64, Variable), the specific GenericAffExpr used by JuMP
-typealias AffExpr GenericAffExpr{Float64,Variable}
+const AffExpr = GenericAffExpr{Float64,Variable}
 AffExpr() = zero(AffExpr)
 
 Base.isempty(a::AffExpr) = (length(a.vars) == 0 && a.constant == 0.)
@@ -161,7 +161,7 @@ function rhs(c::GenericRangeConstraint)
 end
 
 # Alias for AffExpr
-typealias LinearConstraint GenericRangeConstraint{AffExpr}
+const LinearConstraint = GenericRangeConstraint{AffExpr}
 
 function Base.copy(c::LinearConstraint, new_model::Model)
     return LinearConstraint(copy(c.terms, new_model), c.lb, c.ub)

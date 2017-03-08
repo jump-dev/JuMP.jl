@@ -8,9 +8,11 @@
 # See http://github.com/JuliaOpt/JuMP.jl
 #############################################################################
 
-isdefined(Base, :__precompile__) && __precompile__()
+__precompile__()
 
 module JuMP
+
+using Compat
 
 importall Base.Operators
 import Base.map
@@ -58,7 +60,7 @@ include("utils.jl")
 ###############################################################################
 # Model class
 # Keeps track of all model and column info
-abstract AbstractModel
+@compat abstract type AbstractModel end
 type Model <: AbstractModel
     obj#::QuadExpr
     objSense::Symbol
@@ -320,10 +322,10 @@ setprinthook(m::Model, f) = (m.printhook = f)
 #############################################################################
 # AbstractConstraint
 # Abstract base type for all constraint types
-abstract AbstractConstraint
+@compat abstract type AbstractConstraint end
 # Abstract base type for all scalar types
 # In JuMP, used only for Variable. Useful primarily for extensions
-abstract AbstractJuMPScalar
+@compat abstract type AbstractJuMPScalar end
 
 Base.start(::AbstractJuMPScalar) = false
 Base.next(x::AbstractJuMPScalar, state) = (x, true)
@@ -549,7 +551,7 @@ immutable ConstraintRef{M<:AbstractModel,T<:AbstractConstraint}
     idx::Int
 end
 
-typealias LinConstrRef ConstraintRef{Model,LinearConstraint}
+const LinConstrRef = ConstraintRef{Model,LinearConstraint}
 
 LinearConstraint(ref::LinConstrRef) = ref.m.linconstr[ref.idx]::LinearConstraint
 
@@ -870,13 +872,13 @@ end
 ##########################################################################
 # Behavior that's uniform across all JuMP "scalar" objects
 
-typealias JuMPTypes Union{AbstractJuMPScalar,
-                          NonlinearExpression,
-                          Norm,
-                          GenericAffExpr,
-                          QuadExpr,
-                          SOCExpr}
-typealias JuMPScalars Union{Number,JuMPTypes}
+const JuMPTypes = Union{AbstractJuMPScalar,
+                        NonlinearExpression,
+                        Norm,
+                        GenericAffExpr,
+                        QuadExpr,
+                        SOCExpr}
+const JuMPScalars = Union{Number,JuMPTypes}
 
 # would really want to do this on ::Type{T}, but doesn't work on v0.4
 Base.eltype{T<:JuMPTypes}(::T) = T

@@ -23,9 +23,9 @@
 #############################################################################
 
 # Used for dispatching
-abstract PrintMode
-abstract REPLMode <: PrintMode
-abstract IJuliaMode <: PrintMode
+@compat abstract type PrintMode end
+@compat abstract type REPLMode <: PrintMode end
+@compat abstract type IJuliaMode <: PrintMode end
 
 # Whether something is zero or not for the purposes of printing it
 const PRINT_ZERO_TOL = 1e-10
@@ -95,7 +95,7 @@ const ijulia = Dict{Symbol,String}(
     :Vert       => "\\Vert",
     :sub2       => "_2")
 
-typealias PrintSymbols Dict{Symbol,String}
+const PrintSymbols = Dict{Symbol,String}
 
 # If not already mathmode, then wrap in MathJax start/close tags
 math(s,mathmode) = mathmode ? s : "\$\$ $s \$\$"
