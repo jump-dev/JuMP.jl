@@ -6,7 +6,7 @@
 using Base.Meta
 # multivarate "dictionary" used for collections of variables/constraints
 
-abstract JuMPContainer{T,N}
+@compat abstract type JuMPContainer{T,N} end
 
 include("JuMPArray.jl")
 
@@ -19,7 +19,7 @@ type JuMPDict{T,N} <: JuMPContainer{T,N}
     tupledict::Dict{NTuple{N,Any},T}
     meta::Dict{Symbol,Any}
 
-    JuMPDict() = new(Dict{NTuple{N,Any},T}(), Dict{Symbol,Any}())
+    (::Type{JuMPDict{T,N}}){T,N}() = new{T,N}(Dict{NTuple{N,Any},T}(), Dict{Symbol,Any}())
 end
 
 function JuMPDict{T,N}(d::Dict{NTuple{N,Any},T})
@@ -210,9 +210,9 @@ type KeyIterator{JA<:JuMPArray}
     x::JA
     dim::Int
     next_k_cache::Array{Any,1}
-    function KeyIterator(d)
+    function (::Type{KeyIterator{JA}}){JA}(d)
         n = ndims(d.innerArray)
-        new(d, n, Array{Any}(n+1))
+        new{JA}(d, n, Array{Any}(n+1))
     end
 end
 

@@ -11,7 +11,7 @@ end
 
 include("parsenlp.jl")
 
-typealias NonlinearConstraint GenericRangeConstraint{NonlinearExprData}
+const NonlinearConstraint = GenericRangeConstraint{NonlinearExprData}
 
 type NLPData
     nlobj

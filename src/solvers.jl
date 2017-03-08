@@ -448,7 +448,7 @@ function build(m::Model; suppress_warnings=false, relaxation=false, traits=Probl
 
     # Provide a primal solution to the solver,
     # if the user has provided a solution or a partial solution.
-    if !all(isnan(m.colVal))
+    if !all(isnan,m.colVal)
         if applicable(MathProgBase.setwarmstart!, m.internalModel, m.colVal)
             if !traits.int || relaxation
                 MathProgBase.setwarmstart!(m.internalModel, tidy_warmstart(m))
@@ -638,7 +638,7 @@ function collect_expr!(m, tmprow, terms::AffExpr)
     vars = terms.vars
     # collect duplicates
     for ind in 1:length(coeffs)
-        if !is(vars[ind].m, m)
+        if vars[ind].m !== m
             error("Variable not owned by model present in constraints")
         end
         addelt!(tmprow,vars[ind].col, coeffs[ind])
@@ -857,7 +857,7 @@ function conicdata(m::Model)
         vars = linconstr[c].terms.vars
         # collect duplicates
         for ind in 1:length(coeffs)
-            if !is(vars[ind].m, m)
+            if vars[ind].m !== m
                 error("Variable not owned by model present in constraints")
             end
             addelt!(tmprow,vars[ind].col, coeffs[ind])
@@ -1106,7 +1106,7 @@ function tidy_warmstart(m::Model)
         return m.colVal
     else
         initval = copy(m.colVal)
-        initval[isnan(m.colVal)] = 0
+        initval[isnan.(m.colVal)] = 0
         return initval
     end
 end
@@ -1118,7 +1118,7 @@ function merge_duplicates{CoefType,IntType<:Integer}(::Type{IntType},aff::Generi
     resize!(v, m.numCols)
     for ind in 1:length(aff.coeffs)
         var = aff.vars[ind]
-        is(var.m, m) || error("Variable does not belong to this model")
+        var.m === m || error("Variable does not belong to this model")
         addelt!(v, aff.vars[ind].col, aff.coeffs[ind])
     end
     rmz!(v)

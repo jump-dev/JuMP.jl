@@ -124,7 +124,9 @@ function (^)(lhs::Union{Variable,AffExpr}, rhs::Integer)
     end
 end
 (^)(lhs::Union{Variable,AffExpr}, rhs::Number) = error("Only exponents of 0, 1, or 2 are currently supported. Are you trying to build a nonlinear problem? Make sure you use @NLconstraint/@NLobjective.")
-(.^)(lhs::Union{Variable,AffExpr}, rhs::Number) = lhs^rhs
+if VERSION < v"0.6.0-"
+    @eval (.^)(lhs::Union{Variable,AffExpr}, rhs::Number) = lhs^rhs
+end
 # AffExpr--Variable
 (+){C,V<:JuMPTypes}(lhs::GenericAffExpr{C,V}, rhs::V) = (+)(rhs,lhs)
 (-){C,V<:JuMPTypes}(lhs::GenericAffExpr{C,V}, rhs::V) = GenericAffExpr{C,V}(vcat(lhs.vars,rhs),vcat(lhs.coeffs,-one(C)),lhs.constant)
@@ -570,31 +572,40 @@ end; end
 (/){T<:JuMPTypes}(lhs::SparseMatrixCSC{T}, rhs::Number) =
     SparseMatrixCSC(lhs.m, lhs.n, copy(lhs.colptr), copy(lhs.rowval), lhs.nzval ./ rhs)
 
-for (dotop,op) in [(:.+,:+), (:.-,:-), (:.*,:*), (:./,:/)]
-    @eval begin
-        $dotop(lhs::Number,rhs::JuMPTypes) = $op(lhs,rhs)
-        $dotop(lhs::JuMPTypes,rhs::Number) = $op(lhs,rhs)
-    end
-    for (T1,T2) in [(:JuMPTypes,:Number),(:JuMPTypes,:JuMPTypes),(:Number,:JuMPTypes)]
-        # Need these looks over S1,S2 for v0.3 because Union{Array,SparseMatrix}
-        # gives ambiguity warnings
-        for S1 in (:Array,:SparseMatrixCSC)
-            @eval $dotop{S<:$T1}(lhs::$S1{S},rhs::$T2) = $op(lhs,rhs)
+if VERSION >= v"0.6.0-"
+    for (op,opsymbol) in [(+,:+), (-,:-), (*,:*), (/,:/)]
+        @eval begin
+            Base.broadcast(::typeof($op),lhs::Number,rhs::JuMPTypes) = $opsymbol(lhs,rhs)
+            Base.broadcast(::typeof($op),lhs::JuMPTypes,rhs::Number) = $opsymbol(lhs,rhs)
         end
-        for (S1,S2) in [(:Array,:Array),(:Array,:SparseMatrixCSC),(:SparseMatrixCSC,:Array)]
-            @eval begin
-                function $dotop{S<:$T1,T<:$T2}(lhs::$S1{S},rhs::$S2{T})
-                    size(lhs) == size(rhs) || error("Incompatible dimensions")
-                    arr = Array{typeof($op(zero(S),zero(T)))}(size(rhs))
-                    @inbounds for i in eachindex(lhs)
-                        arr[i] = $op(lhs[i], rhs[i])
+    end
+else
+    for (dotop,op) in [(:.+,:+), (:.-,:-), (:.*,:*), (:./,:/)]
+        @eval begin
+            $dotop(lhs::Number,rhs::JuMPTypes) = $op(lhs,rhs)
+            $dotop(lhs::JuMPTypes,rhs::Number) = $op(lhs,rhs)
+        end
+        for (T1,T2) in [(:JuMPTypes,:Number),(:JuMPTypes,:JuMPTypes),(:Number,:JuMPTypes)]
+            # Need these looks over S1,S2 for v0.3 because Union{Array,SparseMatrix}
+            # gives ambiguity warnings
+            for S1 in (:Array,:SparseMatrixCSC)
+                @eval $dotop{S<:$T1}(lhs::$S1{S},rhs::$T2) = $op(lhs,rhs)
+            end
+            for (S1,S2) in [(:Array,:Array),(:Array,:SparseMatrixCSC),(:SparseMatrixCSC,:Array)]
+                @eval begin
+                    function $dotop{S<:$T1,T<:$T2}(lhs::$S1{S},rhs::$S2{T})
+                        size(lhs) == size(rhs) || error("Incompatible dimensions")
+                        arr = Array{typeof($op(zero(S),zero(T)))}(size(rhs))
+                        @inbounds for i in eachindex(lhs)
+                            arr[i] = $op(lhs[i], rhs[i])
+                        end
+                        arr
                     end
-                    arr
                 end
             end
-        end
-        for S2 in (:Array,:SparseMatrixCSC)
-            @eval $dotop{T<:$T2}(lhs::$T1,rhs::$S2{T}) = $op(lhs,rhs)
+            for S2 in (:Array,:SparseMatrixCSC)
+                @eval $dotop{T<:$T2}(lhs::$T1,rhs::$S2{T}) = $op(lhs,rhs)
+            end
         end
     end
 end

@@ -62,7 +62,7 @@ function Base.isequal{T,S}(q::GenericQuadExpr{T,S},other::GenericQuadExpr{T,S})
 end
 
 # Alias for (Float64, Variable)
-typealias QuadExpr GenericQuadExpr{Float64,Variable}
+const QuadExpr = GenericQuadExpr{Float64,Variable}
 Base.convert(::Type{QuadExpr}, v::Union{Real,Variable,AffExpr}) = QuadExpr(Variable[], Variable[], Float64[], AffExpr(v))
 QuadExpr() = zero(QuadExpr)
 
@@ -111,7 +111,7 @@ Base.copy{CON<:GenericQuadConstraint}(c::CON, new_model::Model) = CON(copy(c.ter
 
 
 # Alias for (Float64, Variable)
-typealias QuadConstraint GenericQuadConstraint{QuadExpr}
+const QuadConstraint = GenericQuadConstraint{QuadExpr}
 
 function Base.copy(c::QuadConstraint, new_model::Model)
     return QuadConstraint(copy(c.terms, new_model), c.sense)
