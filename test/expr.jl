@@ -36,6 +36,8 @@ using Base.Test
             @test string(a1) == "x[1] + 3 LongName + 9 x[2] + 7"
             append!(a1, LongName)
             @test string(a1) == "x[1] + 4 LongName + 9 x[2] + 7"
+            append!(a1, 2)
+            @test string(a1) == "x[1] + 4 LongName + 9 x[2] + 9"
         end
 
         @testset "QuadExpr" begin
