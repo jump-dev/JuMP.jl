@@ -63,6 +63,10 @@ function Base.append!{C,V}(aff::GenericAffExpr{C,V}, other::C)
     aff.constant += other
     aff
 end
+function Base.append!{C,V}(aff::GenericAffExpr{C,V}, other::Real)
+    aff.constant += other
+    aff
+end
 Base.append!{C,V}(aff::GenericAffExpr{C,V}, other::V) = push!(aff,one(C),other)
 
 function Base.isequal{C,V}(aff::GenericAffExpr{C,V},other::GenericAffExpr{C,V})
