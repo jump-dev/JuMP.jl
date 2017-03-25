@@ -282,60 +282,6 @@ function solve(m::Model; suppress_warnings=false,
     stat
 end
 
-function isquadsoc(m::Model)
-    # check if all quadratic constraints are actually conic
-    all_conic = true
-    for qconstr in m.quadconstr
-        q = copy(qconstr.terms)
-        if qconstr.sense == :(>=)
-            q *= -1
-        end
-        if !(all(t->t==0, q.aff.coeffs) && q.aff.constant == 0)
-            all_conic = false
-            break
-        end
-        n_pos_on_diag = 0
-        off_diag_idx  = 0
-        neg_diag_idx  = 0
-        n = length(q.qvars1)
-        nz = 0
-        for i in 1:n
-            q.qcoeffs[i] == 0 && continue
-            nz += 1
-            if q.qvars1[i].col == q.qvars2[i].col
-                if q.qcoeffs[i] == 1
-                    n_pos_on_diag += 1
-                elseif q.qcoeffs[i] == -1
-                    if !(neg_diag_idx == off_diag_idx == 0)
-                        all_conic = false; break
-                    end
-                    neg_diag_idx = i
-                else
-                    all_conic = false; break
-                end
-            else
-                if q.qcoeffs[i] == -1
-                    if !(neg_diag_idx == off_diag_idx == 0)
-                        all_conic = false; break
-                    end
-                    off_diag_idx = i
-                else
-                    all_conic = false; break
-                end
-            end
-        end
-        if n_pos_on_diag == nz-1 && neg_diag_idx > 0
-            # Plain SOC
-        elseif n_pos_on_diag == nz-1 && off_diag_idx > 0
-            # Rotated SOC
-        else
-            all_conic = false
-        end
-    end
-    return all_conic && length(m.quadconstr) > 0
-
-end
-
 # Converts the JuMP Model into a MathProgBase model based on the
 # traits of the model
 function build(m::Model; suppress_warnings=false, relaxation=false, traits=ProblemTraits(m,relaxation=relaxation))
@@ -347,11 +293,6 @@ function build(m::Model; suppress_warnings=false, relaxation=false, traits=Probl
     # to build the problem
     traits.nlp && return _buildInternalModel_nlp(m, traits)
 
-    ## Temporary hack for Mosek, see https://github.com/JuliaOpt/Mosek.jl/pull/67
-    if contains("$(typeof(m.solver))","MosekSolver") && isquadsoc(m)
-        traits.conic = true
-    end
-
     if traits.conic
         # If there are semicontinuous/semi-integer variables, we will have to
         # adjust the b vector below to construct a valid relaxation. This seems
@@ -361,6 +302,7 @@ function build(m::Model; suppress_warnings=false, relaxation=false, traits=Probl
         end
 
         traits.qp && error("JuMP does not support quadratic objectives for conic problems")
+        traits.qc && error("JuMP does not support mixing quadratic and conic constraints")
 
         # Obtain a fresh MPB model for the solver
         # If the problem is conic, we rebuild the problem from
@@ -696,63 +638,6 @@ function conicdata(m::Model)
 
     soc_cones  = Any[]
     rsoc_cones = Any[]
-    numQuadRows = 0
-    for qconstr in m.quadconstr
-        q = copy(qconstr.terms)
-        if qconstr.sense == :(>=)
-            q *= -1
-        end
-        if !(all(t->t==0, q.aff.coeffs) && q.aff.constant == 0)
-            error("Quadratic constraint $qconstr must be in second-order cone form")
-        end
-        n_pos_on_diag = 0
-        off_diag_idx  = 0
-        neg_diag_idx  = 0
-        n = length(q.qvars1)
-        nz = 0
-        for i in 1:n
-            q.qcoeffs[i] == 0 && continue
-            nz += 1
-            if q.qvars1[i].col == q.qvars2[i].col
-                if q.qcoeffs[i] == 1
-                    n_pos_on_diag += 1
-                elseif q.qcoeffs[i] == -1
-                    neg_diag_idx == off_diag_idx == 0 || error("Invalid SOC constraint $qconstr")
-                    neg_diag_idx = i
-                end
-            else
-                if q.qcoeffs[i] == -1
-                    neg_diag_idx == off_diag_idx == 0 || error("Invalid rotated SOC constraint $qconstr")
-                    off_diag_idx = i
-                    nz += 1
-                end
-            end
-        end
-        cone = Array{Int}(nz)
-        if n_pos_on_diag == nz-1 && neg_diag_idx > 0
-            cone[1] = q.qvars1[neg_diag_idx].col
-            r = 1
-            for i in 1:n
-                (q.qcoeffs[i] == 0 || i == neg_diag_idx) && continue
-                r += 1
-                cone[r] = q.qvars1[i].col
-            end
-            push!(soc_cones, cone)
-        elseif n_pos_on_diag == nz-2 && off_diag_idx > 0
-            cone[1] = q.qvars1[off_diag_idx].col
-            cone[2] = q.qvars2[off_diag_idx].col
-            r = 2
-            for i in 1:n
-                (q.qcoeffs[i] == 0 || i == off_diag_idx) && continue
-                r += 1
-                cone[r] = q.qvars1[i].col
-            end
-            push!(rsoc_cones, cone)
-        else
-            error("Quadratic constraint $qconstr is not conic representable")
-        end
-        numQuadRows += length(cone)
-    end
 
     linconstr = m.linconstr::Vector{LinearConstraint}
     numLinRows = length(linconstr)
@@ -815,7 +700,7 @@ function conicdata(m::Model)
         numNormRows += 1
         numSOCRows += length(con.normexpr.norm.terms) + 1
     end
-    numRows = numLinRows + numBounds + numQuadRows + numSOCRows + numSDPRows + numSymRows
+    numRows = numLinRows + numBounds + numSOCRows + numSDPRows + numSymRows
 
     # should maintain the order of constraints in the above form
     # throughout the code c is the conic constraint index
@@ -931,7 +816,7 @@ function conicdata(m::Model)
         b[rng] = 0
         c += n
     end
-    @assert c == numLinRows + numBounds + numQuadRows
+    @assert c == numLinRows + numBounds
 
     tmpelts = tmprow.elts
     tmpnzidx = tmprow.nzidx
@@ -961,7 +846,7 @@ function conicdata(m::Model)
         push!(con_cones, (:SOC, soc_start:c))
         constr_dual_map[numLinRows + numBounds + socidx] = collect(soc_start:c)
     end
-    @assert c == numLinRows + numBounds + numQuadRows + numSOCRows
+    @assert c == numLinRows + numBounds + numSOCRows
 
     sdpconstr_sym = Vector{Vector{Tuple{Int,Int}}}(length(m.sdpconstr))
     numDroppedSym = 0

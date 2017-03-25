@@ -113,6 +113,11 @@ cpx && push!(quad_solvers, CPLEX.CplexSolver(CPX_PARAM_SCRIND=0))
 xpr && push!(quad_solvers, Xpress.XpressSolver(OUTPUTLOG=0, FEASTOL = 1e-9, BARPRIMALSTOP = 1e-9, BARGAPSTOP = 1e-9, BARDUALSTOP = 1e-9))
 mos && push!(quad_solvers, Mosek.MosekSolver(LOG=0))
 quad_mip_solvers = copy(quad_solvers)
+# Solvers that take SOC in quadratic form
+quad_soc_solvers = Any[]
+grb && push!(quad_soc_solvers, Gurobi.GurobiSolver(QCPDual=1,OutputFlag=0))
+cpx && push!(quad_soc_solvers, CPLEX.CplexSolver(CPX_PARAM_SCRIND=0))
+xpr && push!(quad_soc_solvers, Xpress.XpressSolver(OUTPUTLOG=0, FEASTOL = 1e-9, BARPRIMALSTOP = 1e-9, BARGAPSTOP = 1e-9, BARDUALSTOP = 1e-9))
 #osl && push!(quad_solvers, CoinOptServices.OsilSolver(CoinOptServices.OSOption("sb","yes",solver="ipopt")))
 soc_solvers = copy(quad_solvers)
 ipt && push!(quad_solvers, Ipopt.IpoptSolver(print_level=0))
