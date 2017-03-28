@@ -1,6 +1,6 @@
 julia 0.5
 MathProgBase 0.6 0.7
 ReverseDiffSparse 0.7 0.8
-ForwardDiff 0.3 0.4
+ForwardDiff 0.3 0.5
 Calculus
 Compat 0.18
