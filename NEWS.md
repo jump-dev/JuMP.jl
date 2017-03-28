@@ -1,6 +1,12 @@
 JuMP release notes
 ==================
 
+Version 0.16.2 (March 28, 2017)
+-------------------------------
+
+   * Minor bug fixes and printing tweaks
+   * Address deprecation warnings for Julia 0.6
+
 Version 0.16.1 (March 7, 2017)
 ------------------------------
 
