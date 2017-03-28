@@ -124,7 +124,7 @@ function (^)(lhs::Union{Variable,AffExpr}, rhs::Integer)
     end
 end
 (^)(lhs::Union{Variable,AffExpr}, rhs::Number) = error("Only exponents of 0, 1, or 2 are currently supported. Are you trying to build a nonlinear problem? Make sure you use @NLconstraint/@NLobjective.")
-if VERSION < v"0.6.0-"
+if VERSION < v"0.6.0-dev.1632" # julia PR #17623
     @eval (.^)(lhs::Union{Variable,AffExpr}, rhs::Number) = lhs^rhs
 end
 # AffExpr--Variable
@@ -573,7 +573,7 @@ end; end
 (/){T<:JuMPTypes}(lhs::SparseMatrixCSC{T}, rhs::Number) =
     SparseMatrixCSC(lhs.m, lhs.n, copy(lhs.colptr), copy(lhs.rowval), lhs.nzval ./ rhs)
 
-if VERSION >= v"0.6.0-"
+if VERSION >= v"0.6.0-dev.1632" # julia PR #17623
     for (op,opsymbol) in [(+,:+), (-,:-), (*,:*), (/,:/)]
         @eval begin
             Base.broadcast(::typeof($op),lhs::Number,rhs::JuMPTypes) = $opsymbol(lhs,rhs)
