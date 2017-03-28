@@ -150,12 +150,11 @@ ispsd(x::JuMP.JuMPArray) = ispsd(x.innerArray)
         @test macroexpand(:(@variable(m, -rand(5,5) <= nonsymmetric[1:5,1:5] <= rand(5,5), Symmetric))).head == :error
     end
 
-    @testset "SDP with quadratics with $solver" for solver in sdp_solvers
+    @testset "SDP with SOC with $solver" for solver in sdp_solvers
         m = Model(solver=solver)
         @variable(m, X[1:2,1:2], SDP)
         @variable(m, y[0:2])
-        @constraint(m, y[0] >= 0)
-        @constraint(m, y[1]^2 + y[2]^2 <= y[0]^2)
+        @constraint(m, norm([y[1],y[2]]) <= y[0])
         @SDconstraint(m, X <= eye(2))
         @constraint(m, X[1,1] + X[1,2] == y[1] + y[2])
         @objective(m, Max, trace(X) - y[0])
@@ -463,17 +462,13 @@ ispsd(x::JuMP.JuMPArray) = ispsd(x.innerArray)
             @variable(m, u[1:d])
             @variable(m, μ[1:d])
 
-            @variable(m, t1 >= 0)
             @variable(m, L1[1:d])
             @constraint(m, L1 .== (μ-μhat))
-            @constraint(m, sum(L1[i]^2 for i=1:d) <= t1^2)
-            @constraint(m, t1 <= Γ1(𝛿/2,N))
+            @constraint(m, norm(L1) <= Γ1(𝛿/2,N))
 
-            @variable(m, t2 >= 0)
             @variable(m, L2[1:d,1:d])
             @constraint(m, L2 .== (Σ-Σhat))
-            @constraint(m, sum(L2[i,j]^2 for i=1:d, j=1:d) <= t2^2)
-            @constraint(m, t2 <= Γ2(𝛿/2,N))
+            @constraint(m, vecnorm(L2) <= Γ2(𝛿/2,N))
 
             A = [(1-ɛ)/ɛ (u-μ)';
                  (u-μ)     Σ   ]
@@ -636,7 +631,13 @@ ispsd(x::JuMP.JuMPArray) = ispsd(x.innerArray)
         @test all(isnan(getdual(c)))
         status = solve(m)
 
-        @test status == :Optimal
+        if contains(string(typeof(solver)),"MosekSolver")
+            # Mosek returns Stall on this instance
+            # Hack until we fix statuses in MPB
+            JuMP.fillConicDuals(m)
+        else
+            @test status == :Optimal
+        end
         @test isapprox(getobjectivevalue(m), 0, atol=1e-5)
         @test isapprox(getvalue(y), 0, atol=1e-5)
 
@@ -680,7 +681,13 @@ ispsd(x::JuMP.JuMPArray) = ispsd(x.innerArray)
         @objective(m, Max, y/2+z/2)
         status = solve(m)
 
-        @test status == :Optimal
+        if contains(string(typeof(solver)),"MosekSolver")
+            # Mosek returns Stall on this instance
+            # Hack until we fix statuses in MPB
+            JuMP.fillConicDuals(m)
+        else
+            @test status == :Optimal
+        end
         @test isapprox(getobjectivevalue(m), 0, atol=1e-5)
         @test isapprox(getvalue(y), 0, atol=1e-5)
         @test isapprox(getvalue(z), 0, atol=1e-5)
@@ -706,7 +713,13 @@ ispsd(x::JuMP.JuMPArray) = ispsd(x.innerArray)
         @objective(m, Max, y)
         status = solve(m)
 
-        @test status == :Optimal
+        if contains(string(typeof(solver)),"MosekSolver")
+            # Mosek returns Stall on this instance
+            # Hack until we fix statuses in MPB
+            JuMP.fillConicDuals(m)
+        else
+            @test status == :Optimal
+        end
         @test isapprox(getobjectivevalue(m), 0, atol=1e-5)
         @test isapprox(getvalue(y), 0, atol=1e-5)
         @test isapprox(getvalue(z), 0, atol=1e-5)

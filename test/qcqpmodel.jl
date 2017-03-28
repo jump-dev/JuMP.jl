@@ -145,7 +145,6 @@ using Base.Test
         @test MathProgBase.numquadconstr(modQ) == 1
         @test MathProgBase.numlinconstr(modQ) == 0
         @test MathProgBase.numconstr(modQ) == 1
-        @test JuMP.isquadsoc(modQ) == false
 
         @test solve(modQ) == :Optimal
         @test isapprox(getobjectivevalue(modQ), -1-4/sqrt(3), atol=1e-6)
@@ -186,6 +185,40 @@ using Base.Test
 
     @testset "SOC constraints (continuous) with $solver" for solver in soc_solvers
 
+        # SOC version 1
+        modN = Model(solver=solver)
+        @variable(modN, x)
+        @variable(modN, y)
+        @variable(modN, t >= 0)
+        @objective(modN, Min, t)
+        @constraint(modN, x + y >= 1)
+        @constraint(modN, norm([x,y]) <= t)
+
+        # Getter/setters
+        @test JuMP.numsocconstr(modN) == 1
+        @test MathProgBase.numconstr(modN) == 2
+
+        @test solve(modN) == :Optimal
+        @test isapprox(getobjectivevalue(modN), sqrt(1/2), atol=1e-6)
+        @test isapprox([getvalue(x), getvalue(y), getvalue(t)], [0.5,0.5,sqrt(1/2)], atol=1e-3)
+
+        # SOC version 2
+        modN = Model(solver=solver)
+        @variable(modN, x)
+        @variable(modN, y)
+        @variable(modN, t >= 0)
+        @objective(modN, Min, t)
+        @constraint(modN, x + y >= 1)
+        tmp = [x,y]
+        @constraint(modN, norm(tmp[i] for i=1:2) <= t)
+
+        @test solve(modN) == :Optimal
+        @test isapprox(getobjectivevalue(modN), sqrt(1/2), atol=1e-6)
+        @test isapprox([getvalue(x), getvalue(y), getvalue(t)], [0.5,0.5,sqrt(1/2)], atol=1e-3)
+    end
+
+    @testset "SOC constraints (continuous) in quadratic form with $solver" for solver in quad_soc_solvers
+
         modQ = Model(solver=solver)
         @variable(modQ, x)
         @variable(modQ, y)
@@ -193,7 +226,6 @@ using Base.Test
         @objective(modQ, Min, t)
         @constraint(modQ, x+y >= 1)
         @constraint(modQ, x^2 + y^2 <= t^2)
-        @test JuMP.isquadsoc(modQ) == true
 
         @test solve(modQ) == :Optimal
         @test isapprox(getobjectivevalue(modQ), sqrt(1/2), atol=1e-6)
@@ -229,37 +261,6 @@ using Base.Test
 
         @test solve(modV) == :Optimal
         @test isapprox(getobjectivevalue(modV), sqrt(1/2), atol=1e-6)
-        @test isapprox([getvalue(x), getvalue(y), getvalue(t)], [0.5,0.5,sqrt(1/2)], atol=1e-3)
-
-        # SOC version 1
-        modN = Model(solver=solver)
-        @variable(modN, x)
-        @variable(modN, y)
-        @variable(modN, t >= 0)
-        @objective(modN, Min, t)
-        @constraint(modN, x + y >= 1)
-        @constraint(modN, norm([x,y]) <= t)
-
-        # Getter/setters
-        @test JuMP.numsocconstr(modN) == 1
-        @test MathProgBase.numconstr(modN) == 2
-
-        @test solve(modN) == :Optimal
-        @test isapprox(getobjectivevalue(modN), sqrt(1/2), atol=1e-6)
-        @test isapprox([getvalue(x), getvalue(y), getvalue(t)], [0.5,0.5,sqrt(1/2)], atol=1e-3)
-
-        # SOC version 2
-        modN = Model(solver=solver)
-        @variable(modN, x)
-        @variable(modN, y)
-        @variable(modN, t >= 0)
-        @objective(modN, Min, t)
-        @constraint(modN, x + y >= 1)
-        tmp = [x,y]
-        @constraint(modN, norm(tmp[i] for i=1:2) <= t)
-
-        @test solve(modN) == :Optimal
-        @test isapprox(getobjectivevalue(modN), sqrt(1/2), atol=1e-6)
         @test isapprox([getvalue(x), getvalue(y), getvalue(t)], [0.5,0.5,sqrt(1/2)], atol=1e-3)
     end
 
@@ -365,16 +366,18 @@ using Base.Test
         @test isapprox(getobjectivevalue(modQ), -0.75, atol=1e-6)
     end
 
-    @testset "Rotated second-order cones with $solver" for solver in rsoc_solvers
+    @testset "Rotated second-order cones with $solver" for solver in quad_soc_solvers
         mod = Model(solver=solver)
 
         @variable(mod, x[1:5] >= 0)
         @variable(mod, 0 <= u <= 5)
         @variable(mod, v)
+        @variable(mod, t1 == 1)
+        @variable(mod, t2 == 1)
 
         @objective(mod, Max, v)
 
-        @constraint(mod, norm(x) <= 1)
+        @constraint(mod, sum(x.^2) <= t1*t2)
         @constraint(mod, v^2 <= u * x[1])
 
         @test solve(mod) == :Optimal
