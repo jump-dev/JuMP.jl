@@ -336,21 +336,38 @@ end
 export forward_eval_ϵ
 
 
-switchblock = Expr(:block)
+exprs = Expr[]
 for i = 1:length(univariate_operators)
     op = univariate_operators[i]
     deriv_expr = univariate_operator_deriv[i]
-	ex = :(return $op(x), $deriv_expr::T)
-    push!(switchblock.args,i,ex)
+    ex = :(return $op(x), $deriv_expr::T)
+    push!(exprs, ex)
 end
-switchexpr = Expr(:macrocall, Expr(:.,:Lazy,quot(Symbol("@switch"))), :operator_id,switchblock)
+
+function binaryswitch(ids, exprs)
+    if length(exprs) <= 3
+        out = Expr(:if, Expr(:call, :(==), :operator_id, ids[1]), exprs[1])
+        if length(exprs) > 1
+            push!(out.args, binaryswitch(ids[2:end], exprs[2:end]))
+        end
+        return out
+    else
+        mid = length(exprs) >>> 1
+        return Expr(:if, Expr(:call, :(<=), :operator_id, ids[mid]),
+            binaryswitch(ids[1:mid], exprs[1:mid]),
+            binaryswitch(ids[mid+1:end], exprs[mid+1:end]))
+    end
+end
+switchexpr = binaryswitch(1:length(exprs), exprs)
 
 @eval @inline function eval_univariate{T}(operator_id,x::T)
     $switchexpr
+    error("No match for operator_id")
 end
 
 # TODO: optimize sin/cos/exp
-switchblock = Expr(:block)
+ids = Int[]
+exprs = Expr[]
 for i = 1:length(univariate_operators)
     op = univariate_operators[i]
     if op == :asec || op == :acsc || op == :asecd || op == :acscd || op == :acsch || op == :trigamma
@@ -366,11 +383,13 @@ for i = 1:length(univariate_operators)
     else
         deriv_expr = Calculus.differentiate(univariate_operator_deriv[i],:x)
     end
-	ex = :(return $deriv_expr::T)
-    push!(switchblock.args,i,ex)
+    ex = :(return $deriv_expr::T)
+    push!(ids, i)
+    push!(exprs, ex)
 end
-switchexpr = Expr(:macrocall, Expr(:.,:Lazy,quot(Symbol("@switch"))), :operator_id,switchblock)
+switchexpr = binaryswitch(ids, exprs)
 
 @eval @inline function eval_univariate_2nd_deriv{T}(operator_id,x::T,fval::T)
     $switchexpr
+    error("No match for operator_id")
 end

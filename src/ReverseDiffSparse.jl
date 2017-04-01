@@ -3,7 +3,6 @@ module ReverseDiffSparse
 using Base.Meta
 using ForwardDiff
 import Calculus
-import Lazy
 import MathProgBase
 # Override basic math functions to return NaN instead of throwing errors.
 # This is what NLP solvers expect, and
