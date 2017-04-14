@@ -915,6 +915,7 @@ function setvalue{T<:AbstractJuMPScalar}(set::Array{T}, val::Array)
     nothing
 end
 
+include("precompile.jl")
 
 ##########################################################################
 end

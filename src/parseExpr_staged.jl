@@ -634,5 +634,3 @@ function parseExpr(x, aff::Symbol, lcoeffs::Vector, rcoeffs::Vector, newaff::Sym
     end
 end
 
-# Semi-automatically generated precompilation hints
-include("precompile.jl")
