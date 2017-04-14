@@ -1258,6 +1258,8 @@ function _buildInternalModel_nlp(m::Model, traits)
 
     registercallbacks(m)
 
+    registercallbacks(m)
+
     m.internalModelLoaded = true
 
     nothing
