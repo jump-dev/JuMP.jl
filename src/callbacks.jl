@@ -132,7 +132,7 @@ end
 function heurcallback(d::MathProgBase.MathProgCallbackData, m::Model, cbs::Vector{HeuristicCallback})
     state = MathProgBase.cbgetstate(d)
     @assert state == :MIPNode
-    MathProgBase.cbgetlpsolution(d,m.colVal)
+    #MathProgBase.cbgetlpsolution(d,m.colVal)
     try
         for cb in cbs
             cb.f(d)
