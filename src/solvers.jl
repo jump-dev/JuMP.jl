@@ -636,9 +636,6 @@ function conicdata(m::Model)
         end
     end
 
-    soc_cones  = Any[]
-    rsoc_cones = Any[]
-
     linconstr = m.linconstr::Vector{LinearConstraint}
     numLinRows = length(linconstr)
     numBounds = 0
@@ -793,28 +790,6 @@ function conicdata(m::Model)
     end
     if !isempty(eq_rows)
         push!(con_cones, (:Zero,eq_rows))
-    end
-    @assert c == numLinRows + numBounds
-
-    for cone in soc_cones
-        n = length(cone)
-        rng = (c+1):(c+n)
-        append!(I, rng)
-        append!(J, copy(cone))
-        append!(V, [-1.0; ones(n-1)])
-        push!(con_cones, (:SOC,rng))
-        b[rng] = 0
-        c += n
-    end
-    for cone in rsoc_cones
-        n = length(cone)
-        rng = (c+1):(c+n)
-        append!(I, rng)
-        append!(J, copy(cone))
-        append!(V, [-1/sqrt(2); -1/sqrt(2); ones(n-2)])
-        push!(con_cones, (:SOCRotated,rng))
-        b[rng] = 0
-        c += n
     end
     @assert c == numLinRows + numBounds
 
