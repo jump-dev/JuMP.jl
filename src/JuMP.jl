@@ -26,7 +26,7 @@ using ForwardDiff
 export
 # Objects
     Model, Variable, Norm, AffExpr, QuadExpr, SOCExpr,
-    LinearConstraint, QuadConstraint, SDConstraint, SOCConstraint,
+    LinearConstraint, QuadConstraint, SDConstraint, ConicConstraint, SOCConstraint,
     NonlinearConstraint,
     ConstraintRef,
 # Functions
@@ -50,7 +50,7 @@ export
     @expression, @expressions, @NLexpression, @NLexpressions,
     @variable, @variables, @constraint, @constraints,
     @NLconstraint, @NLconstraints,
-    @SDconstraint, @SDconstraints,
+    @SDconstraint, @SDconstraints, @Conicconstraint, @Conicconstraints,
     @objective, @NLobjective,
     @NLparameter, @constraintref
 
@@ -70,6 +70,7 @@ type Model <: AbstractModel
     sosconstr
     socconstr
     sdpconstr
+    conicconstr
 
     # Column data
     numCols::Int
@@ -152,6 +153,7 @@ function Model(;solver=UnsetSolver(), simplify_nonlinear_expressions::Bool=false
           SOSConstraint[],             # sosconstr
           SOCConstraint[],             # socconstr
           SDConstraint[],              # sdpconstr
+          ConicConstraint[],           # conicconstr
           0,                           # numCols
           String[],                    # colNames
           String[],                    # colNamesIJulia
@@ -542,6 +544,19 @@ Base.copy(x::Number, new_model::Model) = copy(x)
 Base.copy(c::SDConstraint, new_model::Model) =
     SDConstraint(map(t -> copy(t, new_model), c.terms))
 
+##########################################################################
+# Conicconstraint is a vector cone constraint of the form
+# b + Ax in K (AffExpr vector terms in cone).
+type ConicConstraint <: AbstractConstraint
+    terms::Vector{AffExpr}
+    cone::Symbol
+end
+
+function addconstraint(m::Model, c::ConicConstraint)
+    push!(m.conicconstr,c)
+    m.internalModelLoaded = false
+    ConstraintRef{Model,ConicConstraint}(m,length(m.conicconstr))
+end
 
 ##########################################################################
 # ConstraintRef
@@ -610,6 +625,10 @@ function getNumRows(c::SDConstraint)::Int
     (n * (n+1)) ÷ 2
 end
 getNumSDPRows(m::Model) = sum(getNumRows.(m.sdpconstr))
+
+# Returns the number of rows used by conic constraints
+getNumRows(c::ConicConstraint) = length(c.terms)
+getNumConicRows(m::Model) = sum(getNumRows.(m.conicconstr))
 
 # Returns the number of symmetry-enforcing constraints for SDP constraints
 function getNumSymRows(m::Model)
