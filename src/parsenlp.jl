@@ -240,7 +240,7 @@ NonlinearExprData(m::Model, ex) = NonlinearExprData(m, :($ex + 0))
 # recursively replace Variable(m, i) with Expr(:ref,:x,i) in ex
 function spliceref(m::Model, ex::Expr)
     if ex.head == :ref # if we have x[1] already in there, something is wrong
-        error("Unrecognized expression $ex.")
+        error("Unrecognized expression $ex. JuMP variable objects and input coefficients should be spliced directly into expressions.")
     end
     return Expr(ex.head,map(e -> spliceref(m,e), ex.args)...)
 end
