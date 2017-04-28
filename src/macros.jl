@@ -512,6 +512,46 @@ macro SDconstraint(m, x)
     end)
 end
 
+macro Conicconstraint(m, x, cone)
+    m = esc(m)
+
+    if isa(x, Symbol)
+        error("in @Conicconstraint: Incomplete constraint specification $x. Are you missing a comparison (<= or >=)?")
+    end
+
+    if !isexpr(cone, :quote) || !isa(cone.args[1], Symbol)
+        error("in @Conicconstraint: Incomplete constraint specification $cone. This should be a symbol.")
+    end
+
+    (x.head == :block) &&
+        error("Code block passed as constraint.")
+    isexpr(x,:call) && length(x.args) == 3 || error("in @Conicconstraint ($(string(x))): constraints must be in one of the following forms:\n" *
+              "       expr1 <= expr2, cone\n" * "       expr1 >= expr2, cone")
+    # Build the constraint
+    # Simple comparison - move everything to the LHS
+    sense = x.args[1]
+    if sense == :⪰
+        sense = :(>=)
+    elseif sense == :⪯
+        sense = :(<=)
+    end
+    sense,_ = _canonicalize_sense(sense)
+    lhs = :()
+    if sense == :(>=)
+        lhs = :($(x.args[2]) - $(x.args[3]))
+    elseif sense == :(<=)
+        lhs = :($(x.args[3]) - $(x.args[2]))
+    else
+        error("Invalid sense $sense in conic constraint")
+    end
+    newaff, parsecode = parseExprToplevel(lhs, :q)
+    assert_validmodel(m, quote
+        q = zero(AffExpr)
+        $parsecode
+        addconstraint($m, ConicConstraint($newaff, $cone))
+    end)
+end
+
 macro LinearConstraint(x)
     (x.head == :block) &&
         error("Code block passed as constraint. Perhaps you meant to use @LinearConstraints instead?")
@@ -646,6 +686,7 @@ end
 for (mac,sym) in [(:constraints,  Symbol("@constraint")),
                   (:NLconstraints,Symbol("@NLconstraint")),
                   (:SDconstraints,Symbol("@SDconstraint")),
+                  (:Conicconstraints,Symbol("@Conicconstraint")),
                   (:variables,Symbol("@variable")),
                   (:expressions, Symbol("@expression")),
                   (:NLexpressions, Symbol("@NLexpression"))]

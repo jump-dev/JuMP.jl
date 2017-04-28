@@ -24,7 +24,7 @@ type ProblemTraits
     soc::Bool  # has a second-order cone constraint
     sdp::Bool  # has an SDP constraint (or SDP variable bounds)
     sos::Bool  # has an SOS constraint
-    conic::Bool  # has an SDP or SOC constraint
+    conic::Bool  # has an SDP or SOC or other conic constraint
 end
 function ProblemTraits(m::Model; relaxation=false)
     int = !relaxation && any(c-> !(c == :Cont || c == :Fixed), m.colCat)
@@ -35,7 +35,7 @@ function ProblemTraits(m::Model; relaxation=false)
     # will need to change this when we add support for arbitrary variable cones
     sdp = !isempty(m.sdpconstr) || !isempty(m.varCones)
     sos = !isempty(m.sosconstr)
-    ProblemTraits(int, !(qp|qc|nlp|soc|sdp|sos), qp, qc, nlp, soc, sdp, sos, soc|sdp)
+    ProblemTraits(int, !(qp|qc|nlp|soc|sdp|sos), qp, qc, nlp, soc, sdp, sos, soc|sdp|(!isempty(m.conicconstr)))
 end
 
 const suggestedsolvers = Dict("LP" => [(:Clp,:ClpSolver),
@@ -122,11 +122,12 @@ function fillConicDuals(m::Model)
     numBndRows = getNumBndRows(m)
     numSOCRows = getNumSOCRows(m)
     numSDPRows = getNumSDPRows(m)
+    numConicRows = getNumConicRows(m)
     numSymRows = getNumSymRows(m)
     m.conicconstrDuals = try
         MathProgBase.getdual(m.internalModel)
     catch
-        fill(NaN, numRows+numBndRows+numSOCRows+numSDPRows+numSymRows)
+        fill(NaN, numRows+numBndRows+numSOCRows+numSDPRows+numConicRows+numSymRows)
     end
     if isfinite(m.conicconstrDuals[1]) # NaN could mean unavailable
         if m.objSense == :Min
@@ -697,11 +698,17 @@ function conicdata(m::Model)
         numNormRows += 1
         numSOCRows += length(con.normexpr.norm.terms) + 1
     end
-    numRows = numLinRows + numBounds + numSOCRows + numSDPRows + numSymRows
+
+    numConicRows = 0
+    for con in m.conicconstr
+        numConicRows += length(con.terms)
+    end
+
+    numRows = numLinRows + numBounds + numSOCRows + numSDPRows + numSymRows + numConicRows
 
     # should maintain the order of constraints in the above form
     # throughout the code c is the conic constraint index
-    constr_dual_map = Array{Vector{Int}}(numLinRows + numBounds + numNormRows + 2*length(m.sdpconstr))
+    constr_dual_map = Array{Vector{Int}}(numLinRows + numBounds + numNormRows + 2*length(m.sdpconstr) + numConicRows)
 
     b = Array{Float64}(numRows)
 
@@ -880,6 +887,29 @@ function conicdata(m::Model)
         sdpconstr_sym[sdpidx] = syms
     end
     numRows -= numDroppedSym
+
+    tmpelts = tmprow.elts
+    tmpnzidx = tmprow.nzidx
+    coneidx = 0
+    for con in m.conicconstr
+        coneidx += 1
+        cone_start = c + 1
+        n = length(con.terms)
+        for i in 1:n
+            c += 1
+            term_i::AffExpr = con.terms[i]
+            collect_expr!(m, tmprow, term_i)
+            nnz = tmprow.nnz
+            indices = tmpnzidx[1:nnz]
+            append!(I, fill(c, nnz))
+            append!(J, indices)
+            append!(V, -tmpelts[indices])
+            b[c] = term_i.constant
+        end
+        push!(con_cones, (con.cone, cone_start:c))
+        constr_dual_map[numLinRows + numBounds + numNormRows + 2*length(m.sdpconstr) + coneidx] = collect(cone_start:c)
+    end
+    
     resize!(b, numRows)
     @assert c == numRows
 
