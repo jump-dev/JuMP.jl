@@ -585,7 +585,7 @@ function collect_expr!(m::Model, tmprow::IndexedVector, terms::AffExpr, ignore_n
     for ind in 1:length(coeffs)
         if vars[ind].m === m
             addelt!(tmprow, vars[ind].col, coeffs[ind])
-        elseif checkowned
+        elseif ignore_not_owned
             error("Variable not owned by model present in constraints")
         end
     end
@@ -749,14 +749,14 @@ end
 # starting at row index `c+1`, and specifies the indices of each constraint in `constr_dual_map`,
 # starting at index `d+1`.
 # It returns the last row index `c` used and the last index `d` used.
-function fillconstrLHS!(I, J, V, tmprow::IndexedVector, constr_dual_map, c, d, linconstr::Vector{LinearConstraint}, m::Model, checkowned=true)
+function fillconstrLHS!(I, J, V, tmprow::IndexedVector, constr_dual_map, c, d, linconstr::Vector{LinearConstraint}, m::Model, ignore_not_owned::Bool=false)
     numLinRows = length(linconstr)
     tmpelts = tmprow.elts
     tmpnzidx = tmprow.nzidx
     for con in linconstr
         c += 1
         d += 1
-        collect_expr!(m, tmprow, con.terms, checkowned)
+        collect_expr!(m, tmprow, con.terms, ignore_not_owned)
         nnz = tmprow.nnz
         append!(I, fill(c, nnz))
         indices = tmpnzidx[1:nnz]
@@ -768,7 +768,7 @@ function fillconstrLHS!(I, J, V, tmprow::IndexedVector, constr_dual_map, c, d, l
     c, d
 end
 
-function fillconstrLHS!(I, J, V, tmprow::IndexedVector, constr_dual_map, c, d, socconstr::Vector{SOCConstraint}, m::Model, checkowned=true)
+function fillconstrLHS!(I, J, V, tmprow::IndexedVector, constr_dual_map, c, d, socconstr::Vector{SOCConstraint}, m::Model, ignore_not_owned::Bool=false)
     tmpelts = tmprow.elts
     tmpnzidx = tmprow.nzidx
     for con in socconstr
@@ -776,7 +776,7 @@ function fillconstrLHS!(I, J, V, tmprow::IndexedVector, constr_dual_map, c, d, s
         d += 1
         expr = con.normexpr
         soc_start = c
-        collect_expr!(m, tmprow, expr.aff, checkowned)
+        collect_expr!(m, tmprow, expr.aff, ignore_not_owned)
         nnz = tmprow.nnz
         indices = tmpnzidx[1:nnz]
         append!(I, fill(c, nnz))
@@ -784,7 +784,7 @@ function fillconstrLHS!(I, J, V, tmprow::IndexedVector, constr_dual_map, c, d, s
         append!(V, tmpelts[indices])
         for term in expr.norm.terms
             c += 1
-            collect_expr!(m, tmprow, term, checkowned)
+            collect_expr!(m, tmprow, term, ignore_not_owned)
             nnz = tmprow.nnz
             indices = tmpnzidx[1:nnz]
             append!(I, fill(c, nnz))
@@ -809,12 +809,12 @@ function rescaleSDcols!(f, J, V, m)
 end
 
 # Combination of fillconstrRHS! and `fillconstrLHS!`
-function fillconstr!(I, J, V, b, con_cones, tmprow::IndexedVector, constr_dual_map, c, d, constrs, m, checkowned=true)
+function fillconstr!(I, J, V, b, con_cones, tmprow::IndexedVector, constr_dual_map, c, d, constrs, m, ignore_not_owned::Bool=false)
     fillconstrRHS!(b, con_cones, c, constrs)
     fillconstrLHS!(I, J, V, tmprow, constr_dual_map, c, d, constrs, m)
 end
 
-function fillconstr!(I, J, V, b, con_cones, tmprow::IndexedVector, constr_dual_map, c, d, constrs::Vector{SDConstraint}, m::Model, checkowned=true)
+function fillconstr!(I, J, V, b, con_cones, tmprow::IndexedVector, constr_dual_map, c, d, constrs::Vector{SDConstraint}, m::Model, ignore_not_owned::Bool=false)
     tmpelts = tmprow.elts
     tmpnzidx = tmprow.nzidx
     sdpconstr_sym = Vector{Vector{Tuple{Int,Int}}}(length(constrs))
@@ -826,7 +826,7 @@ function fillconstr!(I, J, V, b, con_cones, tmprow::IndexedVector, constr_dual_m
         for i in 1:n, j in i:n
             c += 1
             terms::AffExpr = con.terms[i,j] + con.terms[j,i]
-            collect_expr!(m, tmprow, terms, checkowned)
+            collect_expr!(m, tmprow, terms, ignore_not_owned)
             nnz = tmprow.nnz
             indices = tmpnzidx[1:nnz]
             append!(I, fill(c, nnz))
@@ -843,7 +843,7 @@ function fillconstr!(I, J, V, b, con_cones, tmprow::IndexedVector, constr_dual_m
             sym_start = c + 1
             # add linear symmetry constraints
             for i in 1:n, j in 1:(i-1)
-                collect_expr!(m, tmprow, con.terms[i,j] - con.terms[j,i], checkowned)
+                collect_expr!(m, tmprow, con.terms[i,j] - con.terms[j,i], ignore_not_owned)
                 nnz = tmprow.nnz
                 # if the symmetry-enforcing row is empty or has only tiny coefficients due to unintended numerical asymmetry, drop it
                 largestabs = 0.0

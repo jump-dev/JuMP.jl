@@ -13,6 +13,7 @@
 #############################################################################
 using JuMP
 using Base.Test
+using OffsetArrays
 
 # If solvers not loaded, load them (i.e running just these tests)
 !isdefined(:lp_solvers) && include("solvers.jl")
@@ -997,5 +998,13 @@ end
 
             @test_throws ErrorException @objective(m, Min, x) # vector objective
         end
+    end
+
+    @testset "Variable not owned by the model" begin
+        m = Model()
+        M = Model()
+        @variable(m, x)
+        @constraint(M, x == 1)
+        @test_throws ErrorException solve(M)
     end
 end
