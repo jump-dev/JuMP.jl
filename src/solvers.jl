@@ -746,10 +746,10 @@ end
 # Represents the constraints `constr` as
 # `b - Ax ∈ K`,
 # writes the matrix `A` of this representation in the sparse format using `I`, `J` and `V`,
-# starting at row index `c+1`, and specifies the indices of each constraint in `constr_dual_map`,
-# starting at index `d+1`.
+# starting at row index `c+1`, and stores the list of rows used for each constraint in
+# `constr_to_row` at consecutive indices starting from `d+1`.
 # It returns the last row index `c` used and the last index `d` used.
-function fillconstrLHS!(I, J, V, tmprow::IndexedVector, constr_dual_map, c, d, linconstr::Vector{LinearConstraint}, m::Model, ignore_not_owned::Bool=false)
+function fillconstrLHS!(I, J, V, tmprow::IndexedVector, constr_to_row, c, d, linconstr::Vector{LinearConstraint}, m::Model, ignore_not_owned::Bool=false)
     numLinRows = length(linconstr)
     tmpelts = tmprow.elts
     tmpnzidx = tmprow.nzidx
@@ -763,12 +763,12 @@ function fillconstrLHS!(I, J, V, tmprow::IndexedVector, constr_dual_map, c, d, l
         append!(J, indices)
         append!(V, tmpelts[indices])
         empty!(tmprow)
-        constr_dual_map[d] = vec(collect(c))
+        constr_to_row[d] = vec(collect(c))
     end
     c, d
 end
 
-function fillconstrLHS!(I, J, V, tmprow::IndexedVector, constr_dual_map, c, d, socconstr::Vector{SOCConstraint}, m::Model, ignore_not_owned::Bool=false)
+function fillconstrLHS!(I, J, V, tmprow::IndexedVector, constr_to_row, c, d, socconstr::Vector{SOCConstraint}, m::Model, ignore_not_owned::Bool=false)
     tmpelts = tmprow.elts
     tmpnzidx = tmprow.nzidx
     for con in socconstr
@@ -791,7 +791,7 @@ function fillconstrLHS!(I, J, V, tmprow::IndexedVector, constr_dual_map, c, d, s
             append!(J, indices)
             append!(V, -expr.coeff*tmpelts[indices])
         end
-        constr_dual_map[d] = collect(soc_start:c)
+        constr_to_row[d] = collect(soc_start:c)
     end
     c, d
 end
@@ -809,12 +809,12 @@ function rescaleSDcols!(f, J, V, m)
 end
 
 # Combination of fillconstrRHS! and `fillconstrLHS!`
-function fillconstr!(I, J, V, b, con_cones, tmprow::IndexedVector, constr_dual_map, c, d, constrs, m, ignore_not_owned::Bool=false)
+function fillconstr!(I, J, V, b, con_cones, tmprow::IndexedVector, constr_to_row, c, d, constrs, m, ignore_not_owned::Bool=false)
     fillconstrRHS!(b, con_cones, c, constrs)
-    fillconstrLHS!(I, J, V, tmprow, constr_dual_map, c, d, constrs, m)
+    fillconstrLHS!(I, J, V, tmprow, constr_to_row, c, d, constrs, m)
 end
 
-function fillconstr!(I, J, V, b, con_cones, tmprow::IndexedVector, constr_dual_map, c, d, constrs::Vector{SDConstraint}, m::Model, ignore_not_owned::Bool=false)
+function fillconstr!(I, J, V, b, con_cones, tmprow::IndexedVector, constr_to_row, c, d, constrs::Vector{SDConstraint}, m::Model, ignore_not_owned::Bool=false)
     tmpelts = tmprow.elts
     tmpnzidx = tmprow.nzidx
     sdpconstr_sym = Vector{Vector{Tuple{Int,Int}}}(length(constrs))
@@ -837,7 +837,7 @@ function fillconstr!(I, J, V, b, con_cones, tmprow::IndexedVector, constr_dual_m
             b[c] = scale*terms.constant
         end
         push!(con_cones, (:SDP, sdp_start:c))
-        constr_dual_map[d + sdpidx] = collect(sdp_start:c)
+        constr_to_row[d + sdpidx] = collect(sdp_start:c)
         syms = Tuple{Int,Int}[]
         if !issymmetric(con.terms)
             sym_start = c + 1
@@ -864,10 +864,10 @@ function fillconstr!(I, J, V, b, con_cones, tmprow::IndexedVector, constr_dual_m
             if c >= sym_start
                 push!(con_cones, (:Zero, sym_start:c))
             end
-            constr_dual_map[d + length(constrs) + sdpidx] = collect(sym_start:c)
+            constr_to_row[d + length(constrs) + sdpidx] = collect(sym_start:c)
             @assert length(syms) == length(sym_start:c)
         else
-            constr_dual_map[d + length(constrs) + sdpidx] = Int[]
+            constr_to_row[d + length(constrs) + sdpidx] = Int[]
         end
         sdpconstr_sym[sdpidx] = syms
     end
@@ -877,7 +877,7 @@ function fillconstr!(I, J, V, b, con_cones, tmprow::IndexedVector, constr_dual_m
     c, d + 2 * length(constrs)
 end
 
-function fill_bounds_constr!(I, J, V, b, con_cones, constr_dual_map, c, d, m)
+function fill_bounds_constr!(I, J, V, b, con_cones, constr_to_row, c, d, m)
     nonneg_rows = Int[]
     nonpos_rows = Int[]
     eq_rows     = Int[]
@@ -892,7 +892,7 @@ function fill_bounds_constr!(I, J, V, b, con_cones, constr_dual_map, c, d, m)
             push!(V, 1.0)
             b[c] = lb
             push!(nonpos_rows, c)
-            constr_dual_map[d] = vec(collect(c))
+            constr_to_row[d] = vec(collect(c))
         end
         ub = m.colUpper[idx]
         if ub != Inf && ub != 0
@@ -903,7 +903,7 @@ function fill_bounds_constr!(I, J, V, b, con_cones, constr_dual_map, c, d, m)
             push!(V, 1.0)
             b[c] = ub
             push!(nonneg_rows, c)
-            constr_dual_map[d] = vec(collect(c))
+            constr_to_row[d] = vec(collect(c))
         end
     end
 
@@ -944,7 +944,7 @@ function conicdata(m::Model)
 
     # should maintain the order of constraints in the above form
     # throughout the code c is the conic constraint index
-    constr_dual_map = Array{Vector{Int}}(numLinRows + numBounds + numNormRows + 2*length(m.sdpconstr))
+    constr_to_row = Array{Vector{Int}}(numLinRows + numBounds + numNormRows + 2*length(m.sdpconstr))
 
     b = Array{Float64}(numRows)
 
@@ -958,29 +958,29 @@ function conicdata(m::Model)
     # Fill it up
     tmprow = IndexedVector(Float64, m.numCols)
 
-    c, d = fillconstr!(I, J, V, b, con_cones, tmprow, constr_dual_map, 0, 0, m.linconstr, m)
+    c, d = fillconstr!(I, J, V, b, con_cones, tmprow, constr_to_row, 0, 0, m.linconstr, m)
 
     @assert c == numLinRows
     @assert d == numLinRows
 
-    c, d = fill_bounds_constr!(I, J, V, b, con_cones, constr_dual_map, c, d, m)
+    c, d = fill_bounds_constr!(I, J, V, b, con_cones, constr_to_row, c, d, m)
 
     @assert c == numLinRows + numBounds
     @assert d == numLinRows + numBounds
 
-    c, d = fillconstr!(I, J, V, b, con_cones, tmprow, constr_dual_map, c, d, m.socconstr, m)
+    c, d = fillconstr!(I, J, V, b, con_cones, tmprow, constr_to_row, c, d, m.socconstr, m)
 
     @assert c == numLinRows + numBounds + numSOCRows
     @assert d == numLinRows + numBounds + numNormRows
 
-    c, d = fillconstr!(I, J, V, b, con_cones, tmprow, constr_dual_map, c, d, m.sdpconstr, m)
+    c, d = fillconstr!(I, J, V, b, con_cones, tmprow, constr_to_row, c, d, m.sdpconstr, m)
 
     if c < length(b)
         # This happens for example when symmetry constraints are dropped with SDP
         resize!(b, c)
     end
 
-    m.constrDualMap = constr_dual_map
+    m.constr_to_row = constr_to_row
 
     f = prepAffObjective(m)
 
