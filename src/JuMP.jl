@@ -90,7 +90,7 @@ type Model <: AbstractModel
     redCosts::Vector{Float64}
     linconstrDuals::Vector{Float64}
     conicconstrDuals::Vector{Float64}
-    constrDualMap::Vector{Vector{Int}}
+    constr_to_row::Vector{Vector{Int}}
     # Vector of the same length as sdpconstr.
     # sdpconstrSym[c] is the list of pairs (i,j), i > j
     # such that a symmetry-enforcing constraint has been created
@@ -165,7 +165,7 @@ function Model(;solver=UnsetSolver(), simplify_nonlinear_expressions::Bool=false
           Float64[],                   # redCosts
           Float64[],                   # linconstrDuals
           Float64[],                   # conicconstrDuals
-          Vector{Int}[],               # constrDualMap
+          Vector{Int}[],               # constr_to_row
           Vector{Tuple{Int,Int}}[],    # sdpconstrSym
           nothing,                     # internalModel
           solver,                      # solver
@@ -627,7 +627,7 @@ function getconicdualaux(m::Model, idx::Int, issdp::Bool)
     numSymRows = getNumSymRows(m)
     numRows = numLinRows + numBndRows + numSOCRows + numSDPRows + numSymRows
     if length(m.conicconstrDuals) != numRows
-        # solve might not have been called so m.constrDualMap might be empty
+        # solve might not have been called so m.constr_to_row might be empty
         getdualwarn(idx)
         c = issdp ? m.sdpconstr[idx] : m.socconstr[idx]
         duals = fill(NaN, getNumRows(c))
@@ -641,10 +641,10 @@ function getconicdualaux(m::Model, idx::Int, issdp::Bool)
         if issdp
             offset += length(m.socconstr)
         end
-        dual = m.conicconstrDuals[m.constrDualMap[offset + idx]]
+        dual = m.conicconstrDuals[m.constr_to_row[offset + idx]]
         if issdp
             offset += length(m.sdpconstr)
-            symdual = m.conicconstrDuals[m.constrDualMap[offset + idx]]
+            symdual = m.conicconstrDuals[m.constr_to_row[offset + idx]]
             dual, symdual
         else
             dual

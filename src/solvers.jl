@@ -573,17 +573,21 @@ function vartypes_without_fixed(m::Model)
     return colCats
 end
 
-function collect_expr!(m, tmprow, terms::AffExpr)
+# Collect the terms of the expression `terms` for which the model of the variable is `m`
+# into `tmprow`. If the variable of one of the terms does not belong to the model `m` and
+# `ignore_not_owned` is `false` then an error is thrown.
+function collect_expr!(m::Model, tmprow::IndexedVector, terms::AffExpr, ignore_not_owned::Bool=false)
     empty!(tmprow)
     assert_isfinite(terms)
     coeffs = terms.coeffs
     vars = terms.vars
     # collect duplicates
     for ind in 1:length(coeffs)
-        if vars[ind].m !== m
+        if vars[ind].m === m
+            addelt!(tmprow, vars[ind].col, coeffs[ind])
+        elseif ignore_not_owned
             error("Variable not owned by model present in constraints")
         end
-        addelt!(tmprow,vars[ind].col, coeffs[ind])
     end
     rmz!(tmprow)
     tmprow
@@ -614,12 +618,9 @@ function offdiagsdpvars(m::Model)
     return offdiagvars
 end
 
-function conicdata(m::Model)
-    var_cones = Any[cone for cone in m.varCones]
-    con_cones = Any[]
-    nnz = 0
-
+function getSDrowsinfo(m::Model)
     # find starting column indices for sdp matrices
+    nnz = 0
     numSDPRows = 0
     numSymRows = 0
     for c in m.sdpconstr
@@ -635,9 +636,10 @@ function conicdata(m::Model)
             numSymRows += convert(Int, n*(n-1)/2)
         end
     end
+    numSDPRows, numSymRows, nnz
+end
 
-    linconstr = m.linconstr::Vector{LinearConstraint}
-    numLinRows = length(linconstr)
+function variable_range_to_cone!(var_cones, m::Model)
     numBounds = 0
     nonNeg  = Int[]
     nonPos  = Int[]
@@ -646,7 +648,7 @@ function conicdata(m::Model)
     for i in 1:m.numCols
         seen = false
         lb, ub = m.colLower[i], m.colUpper[i]
-        for (_,cone) in m.varCones
+        for (_, cone) in m.varCones
             if i in cone
                 seen = true
                 @assert lb == -Inf && ub == Inf
@@ -685,100 +687,32 @@ function conicdata(m::Model)
     if !isempty(free)
         push!(var_cones, (:Free,free))
     end
+    numBounds
+end
 
-    nnz += numBounds
-    for c in 1:numLinRows
-        nnz += length(linconstr[c].terms.coeffs)
-    end
-
-    numSOCRows = 0
-    numNormRows = 0
-    for con in m.socconstr
-        numNormRows += 1
-        numSOCRows += length(con.normexpr.norm.terms) + 1
-    end
-    numRows = numLinRows + numBounds + numSOCRows + numSDPRows + numSymRows
-
-    # should maintain the order of constraints in the above form
-    # throughout the code c is the conic constraint index
-    constr_dual_map = Array{Vector{Int}}(numLinRows + numBounds + numNormRows + 2*length(m.sdpconstr))
-
-    b = Array{Float64}(numRows)
-
-    I = Int[]
-    J = Int[]
-    V = Float64[]
-    sizehint!(I, nnz)
-    sizehint!(J, nnz)
-    sizehint!(V, nnz)
-
-    # Fill it up
-    nnz = 0
-    tmprow = IndexedVector(Float64,m.numCols)
-    tmpelts = tmprow.elts
-    tmpnzidx = tmprow.nzidx
+# Represents the constraints `constr` as
+# `b - Ax ∈ K`,
+# writes the vector `b` of this representation in the argument `b`, starting at index
+# `c+1`, and specifies the cone `K` of the corresponding indices in `con_cones`.
+# It returns the last index used.
+function fillconstrRHS!(b, con_cones, c, constrs::Vector{LinearConstraint})
     nonneg_rows = Int[]
     nonpos_rows = Int[]
     eq_rows     = Int[]
-    for c in 1:numLinRows
-        if linconstr[c].lb == -Inf
-            b[c] = linconstr[c].ub
+
+    for con in constrs
+        c += 1
+        if con.lb == -Inf
+            b[c] = con.ub
             push!(nonneg_rows, c)
-        elseif linconstr[c].ub == Inf
-            b[c] = linconstr[c].lb
+        elseif con.ub == Inf
+            b[c] = con.lb
             push!(nonpos_rows, c)
-        elseif linconstr[c].lb == linconstr[c].ub
-            b[c] = linconstr[c].lb
+        elseif con.lb == con.ub
+            b[c] = con.lb
             push!(eq_rows, c)
         else
             error("We currently do not support ranged constraints with conic solvers")
-        end
-
-        assert_isfinite(linconstr[c].terms)
-        coeffs = linconstr[c].terms.coeffs
-        vars = linconstr[c].terms.vars
-        # collect duplicates
-        for ind in 1:length(coeffs)
-            if vars[ind].m !== m
-                error("Variable not owned by model present in constraints")
-            end
-            addelt!(tmprow,vars[ind].col, coeffs[ind])
-        end
-        rmz!(tmprow)
-        nnz = tmprow.nnz
-        append!(I, fill(c, nnz))
-        indices = tmpnzidx[1:nnz]
-        append!(J, indices)
-        append!(V, tmpelts[indices])
-        empty!(tmprow)
-        constr_dual_map[c] = vec(collect(c))
-    end
-
-    c = numLinRows
-    bndidx = 0
-    for idx in 1:m.numCols
-        lb = m.colLower[idx]
-        if lb != -Inf && lb != 0
-            bndidx += 1
-            nnz += 1
-            c   += 1
-            push!(I, c)
-            push!(J, idx)
-            push!(V, 1.0)
-            b[c] = lb
-            push!(nonpos_rows, c)
-            constr_dual_map[numLinRows + bndidx] = vec(collect(c))
-        end
-        ub = m.colUpper[idx]
-        if ub != Inf && ub != 0
-            bndidx += 1
-            c   += 1
-            push!(I, c)
-            push!(J, idx)
-            push!(V, 1.0)
-            b[c] = ub
-            push!(nonneg_rows, c)
-            constr_dual_map[numLinRows + bndidx] = vec(collect(c))
         end
     end
 
@@ -791,49 +725,108 @@ function conicdata(m::Model)
     if !isempty(eq_rows)
         push!(con_cones, (:Zero,eq_rows))
     end
-    @assert c == numLinRows + numBounds
+    c
+end
 
-    tmpelts = tmprow.elts
-    tmpnzidx = tmprow.nzidx
-    socidx = 0
-    for con in m.socconstr
-        socidx += 1
+function fillconstrRHS!(b, con_cones, c, socconstr::Vector{SOCConstraint})
+    for con in socconstr
         expr = con.normexpr
         c += 1
         soc_start = c
-        collect_expr!(m, tmprow, expr.aff)
+        b[c] = -expr.aff.constant
+        for term in expr.norm.terms
+            c += 1
+            b[c] = expr.coeff*term.constant
+        end
+        push!(con_cones, (:SOC, soc_start:c))
+    end
+    c
+end
+
+# Represents the constraints `constr` as
+# `b - Ax ∈ K`,
+# writes the matrix `A` of this representation in the sparse format using `I`, `J` and `V`,
+# starting at row index `c+1`, and stores the list of rows used for each constraint in
+# `constr_to_row` at consecutive indices starting from `d+1`.
+# It returns the last row index `c` used and the last index `d` used.
+function fillconstrLHS!(I, J, V, tmprow::IndexedVector, constr_to_row, c, d, linconstr::Vector{LinearConstraint}, m::Model, ignore_not_owned::Bool=false)
+    numLinRows = length(linconstr)
+    tmpelts = tmprow.elts
+    tmpnzidx = tmprow.nzidx
+    for con in linconstr
+        c += 1
+        d += 1
+        collect_expr!(m, tmprow, con.terms, ignore_not_owned)
+        nnz = tmprow.nnz
+        append!(I, fill(c, nnz))
+        indices = tmpnzidx[1:nnz]
+        append!(J, indices)
+        append!(V, tmpelts[indices])
+        empty!(tmprow)
+        constr_to_row[d] = vec(collect(c))
+    end
+    c, d
+end
+
+function fillconstrLHS!(I, J, V, tmprow::IndexedVector, constr_to_row, c, d, socconstr::Vector{SOCConstraint}, m::Model, ignore_not_owned::Bool=false)
+    tmpelts = tmprow.elts
+    tmpnzidx = tmprow.nzidx
+    for con in socconstr
+        c += 1
+        d += 1
+        expr = con.normexpr
+        soc_start = c
+        collect_expr!(m, tmprow, expr.aff, ignore_not_owned)
         nnz = tmprow.nnz
         indices = tmpnzidx[1:nnz]
         append!(I, fill(c, nnz))
         append!(J, indices)
         append!(V, tmpelts[indices])
-        b[c] = -expr.aff.constant
         for term in expr.norm.terms
             c += 1
-            collect_expr!(m, tmprow, term)
+            collect_expr!(m, tmprow, term, ignore_not_owned)
             nnz = tmprow.nnz
             indices = tmpnzidx[1:nnz]
             append!(I, fill(c, nnz))
             append!(J, indices)
             append!(V, -expr.coeff*tmpelts[indices])
-            b[c] = expr.coeff*term.constant
         end
-        push!(con_cones, (:SOC, soc_start:c))
-        constr_dual_map[numLinRows + numBounds + socidx] = collect(soc_start:c)
+        constr_to_row[d] = collect(soc_start:c)
     end
-    @assert c == numLinRows + numBounds + numSOCRows
+    c, d
+end
 
-    sdpconstr_sym = Vector{Vector{Tuple{Int,Int}}}(length(m.sdpconstr))
-    numDroppedSym = 0
+function rescaleSDcols!(f, J, V, m)
+    # Objective coefficients and columns of A matrix are
+    # rescaled for SDP variables
+    offdiagvars = offdiagsdpvars(m)
+    f[offdiagvars] /= sqrt(2)
+    for k in 1:length(J)
+        if offdiagvars[J[k]]
+            V[k] /= sqrt(2)
+        end
+    end
+end
+
+# Combination of fillconstrRHS! and `fillconstrLHS!`
+function fillconstr!(I, J, V, b, con_cones, tmprow::IndexedVector, constr_to_row, c, d, constrs, m, ignore_not_owned::Bool=false)
+    fillconstrRHS!(b, con_cones, c, constrs)
+    fillconstrLHS!(I, J, V, tmprow, constr_to_row, c, d, constrs, m)
+end
+
+function fillconstr!(I, J, V, b, con_cones, tmprow::IndexedVector, constr_to_row, c, d, constrs::Vector{SDConstraint}, m::Model, ignore_not_owned::Bool=false)
+    tmpelts = tmprow.elts
+    tmpnzidx = tmprow.nzidx
+    sdpconstr_sym = Vector{Vector{Tuple{Int,Int}}}(length(constrs))
     sdpidx = 0
-    for con in m.sdpconstr
+    for con in constrs
         sdpidx += 1
         sdp_start = c + 1
         n = size(con.terms,1)
         for i in 1:n, j in i:n
             c += 1
             terms::AffExpr = con.terms[i,j] + con.terms[j,i]
-            collect_expr!(m, tmprow, terms)
+            collect_expr!(m, tmprow, terms, ignore_not_owned)
             nnz = tmprow.nnz
             indices = tmpnzidx[1:nnz]
             append!(I, fill(c, nnz))
@@ -844,13 +837,13 @@ function conicdata(m::Model)
             b[c] = scale*terms.constant
         end
         push!(con_cones, (:SDP, sdp_start:c))
-        constr_dual_map[numLinRows + numBounds + numNormRows + sdpidx] = collect(sdp_start:c)
+        constr_to_row[d + sdpidx] = collect(sdp_start:c)
         syms = Tuple{Int,Int}[]
         if !issymmetric(con.terms)
             sym_start = c + 1
             # add linear symmetry constraints
             for i in 1:n, j in 1:(i-1)
-                collect_expr!(m, tmprow, con.terms[i,j] - con.terms[j,i])
+                collect_expr!(m, tmprow, con.terms[i,j] - con.terms[j,i], ignore_not_owned)
                 nnz = tmprow.nnz
                 # if the symmetry-enforcing row is empty or has only tiny coefficients due to unintended numerical asymmetry, drop it
                 largestabs = 0.0
@@ -858,7 +851,6 @@ function conicdata(m::Model)
                     largestabs = max(largestabs,abs(tmpelts[tmpnzidx[k]]))
                 end
                 if largestabs < 1e-10
-                    numDroppedSym += 1
                     continue
                 end
                 push!(syms, (i,j))
@@ -872,19 +864,123 @@ function conicdata(m::Model)
             if c >= sym_start
                 push!(con_cones, (:Zero, sym_start:c))
             end
-            constr_dual_map[numLinRows + numBounds + numNormRows + length(m.sdpconstr) + sdpidx] = collect(sym_start:c)
+            constr_to_row[d + length(constrs) + sdpidx] = collect(sym_start:c)
             @assert length(syms) == length(sym_start:c)
         else
-            constr_dual_map[numLinRows + numBounds + numNormRows + length(m.sdpconstr) + sdpidx] = Int[]
+            constr_to_row[d + length(constrs) + sdpidx] = Int[]
         end
         sdpconstr_sym[sdpidx] = syms
     end
-    numRows -= numDroppedSym
-    resize!(b, numRows)
-    @assert c == numRows
 
-    m.constrDualMap = constr_dual_map
     m.sdpconstrSym = sdpconstr_sym
+
+    c, d + 2 * length(constrs)
+end
+
+function fill_bounds_constr!(I, J, V, b, con_cones, constr_to_row, c, d, m)
+    nonneg_rows = Int[]
+    nonpos_rows = Int[]
+    eq_rows     = Int[]
+
+    for idx in 1:m.numCols
+        lb = m.colLower[idx]
+        if lb != -Inf && lb != 0
+            c   += 1
+            d   += 1
+            push!(I, c)
+            push!(J, idx)
+            push!(V, 1.0)
+            b[c] = lb
+            push!(nonpos_rows, c)
+            constr_to_row[d] = vec(collect(c))
+        end
+        ub = m.colUpper[idx]
+        if ub != Inf && ub != 0
+            c += 1
+            d += 1
+            push!(I, c)
+            push!(J, idx)
+            push!(V, 1.0)
+            b[c] = ub
+            push!(nonneg_rows, c)
+            constr_to_row[d] = vec(collect(c))
+        end
+    end
+
+    if !isempty(nonneg_rows)
+        push!(con_cones, (:NonNeg,nonneg_rows))
+    end
+    if !isempty(nonpos_rows)
+        push!(con_cones, (:NonPos,nonpos_rows))
+    end
+    if !isempty(eq_rows)
+        push!(con_cones, (:Zero,eq_rows))
+    end
+
+    c, d
+end
+
+function conicdata(m::Model)
+    var_cones = Any[cone for cone in m.varCones]
+    con_cones = Any[]
+    nnz = 0
+
+    numSDPRows, numSymRows, nnz = getSDrowsinfo(m)
+
+    linconstr = m.linconstr::Vector{LinearConstraint}
+    numLinRows = length(linconstr)
+
+    numBounds = variable_range_to_cone!(var_cones, m)
+
+    nnz += numBounds
+    for c in 1:numLinRows
+        nnz += length(linconstr[c].terms.coeffs)
+    end
+
+    numSOCRows = getNumSOCRows(m)
+    numNormRows = length(m.socconstr)
+
+    numRows = numLinRows + numBounds + numSOCRows + numSDPRows + numSymRows
+
+    # should maintain the order of constraints in the above form
+    # throughout the code c is the conic constraint index
+    constr_to_row = Array{Vector{Int}}(numLinRows + numBounds + numNormRows + 2*length(m.sdpconstr))
+
+    b = Array{Float64}(numRows)
+
+    I = Int[]
+    J = Int[]
+    V = Float64[]
+    sizehint!(I, nnz)
+    sizehint!(J, nnz)
+    sizehint!(V, nnz)
+
+    # Fill it up
+    tmprow = IndexedVector(Float64, m.numCols)
+
+    c, d = fillconstr!(I, J, V, b, con_cones, tmprow, constr_to_row, 0, 0, m.linconstr, m)
+
+    @assert c == numLinRows
+    @assert d == numLinRows
+
+    c, d = fill_bounds_constr!(I, J, V, b, con_cones, constr_to_row, c, d, m)
+
+    @assert c == numLinRows + numBounds
+    @assert d == numLinRows + numBounds
+
+    c, d = fillconstr!(I, J, V, b, con_cones, tmprow, constr_to_row, c, d, m.socconstr, m)
+
+    @assert c == numLinRows + numBounds + numSOCRows
+    @assert d == numLinRows + numBounds + numNormRows
+
+    c, d = fillconstr!(I, J, V, b, con_cones, tmprow, constr_to_row, c, d, m.sdpconstr, m)
+
+    if c < length(b)
+        # This happens for example when symmetry constraints are dropped with SDP
+        resize!(b, c)
+    end
+
+    m.constr_to_row = constr_to_row
 
     f = prepAffObjective(m)
 
@@ -892,17 +988,9 @@ function conicdata(m::Model)
     # always being minimization problems, so flip if needed
     m.objSense == :Max && scale!(f, -1.0)
 
-    # Objective coefficients and columns of A matrix are
-    # rescaled for SDP variables
-    offdiagvars = offdiagsdpvars(m)
-    f[offdiagvars] /= sqrt(2)
-    for k in 1:length(J)
-        if offdiagvars[J[k]]
-            V[k] /= sqrt(2)
-        end
-    end
+    rescaleSDcols!(f, J, V, m)
 
-    A = sparse(I, J, V, numRows, m.numCols)
+    A = sparse(I, J, V, c, m.numCols)
     # @show full(A), b
     # @show var_cones, con_cones
 
