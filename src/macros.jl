@@ -386,13 +386,19 @@ macro constraint(args...)
     refcall, idxvars, idxsets, idxpairs, condition = buildrefsets(c, variable)
     # Build the constraint
     if isexpr(x, :call)
-        # Simple comparison - move everything to the LHS
-        @assert length(x.args) == 3
-        (sense,vectorized) = _canonicalize_sense(x.args[1])
-        lhs = :($(x.args[2]) - $(x.args[3]))
-        addconstr = (vectorized ? :addVectorizedConstraint : :addconstraint)
-        newaff, parsecode = parseExprToplevel(lhs, :q)
-        constraintcall = :($addconstr($m, constructconstraint!($newaff,$(quot(sense)))))
+        if x.args[1] == :in
+            @assert length(x.args) == 3
+            newaff, parsecode = parseExprToplevel(x.args[2], :q)
+            constraintcall = :(addconstraint($m, constructconstraint!($newaff,$(x.args[3]))))
+        else
+            # Simple comparison - move everything to the LHS
+            @assert length(x.args) == 3
+            (sense,vectorized) = _canonicalize_sense(x.args[1])
+            lhs = :($(x.args[2]) - $(x.args[3]))
+            addconstr = (vectorized ? :addVectorizedConstraint : :addconstraint)
+            newaff, parsecode = parseExprToplevel(lhs, :q)
+            constraintcall = :($addconstr($m, constructconstraint!($newaff,$(quot(sense)))))
+        end
         for kw in kwargs.args
             @assert isexpr(kw, kwsymbol)
             push!(constraintcall.args, esc(Expr(:kw,kw.args...)))
