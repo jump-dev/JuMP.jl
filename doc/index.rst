@@ -129,7 +129,6 @@ For an earlier work where we presented a prototype implementation of JuMP, see
     pages = {238-248},
     year = {2015},
     doi = {10.1287/ijoc.2014.0623},
-    URL = {http://dx.doi.org/10.1287/ijoc.2014.0623}
     }
 
 A preprint of this paper is also `freely available <http://arxiv.org/abs/1312.1431>`_.
