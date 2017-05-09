@@ -728,4 +728,15 @@ const sub2 = JuMP.repl[:sub2]
        @test lc[2].lb == -Inf
        @test lc[2].ub == 2
     end
+
+    @testset "Set constraint syntax" begin
+        m = Model()
+        @variable(m, x)
+
+        immutable Cone end
+        JuMP.constructconstraint!(aff, ::Cone) = (m.ext[:ConeTest] = 1; LinearConstraint(aff, 0, 0))
+
+        @constraint(m, 2x in Cone())
+        @test m.ext[:ConeTest] == 1
+    end
 end

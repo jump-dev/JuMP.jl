@@ -389,7 +389,7 @@ macro constraint(args...)
         if x.args[1] == :in
             @assert length(x.args) == 3
             newaff, parsecode = parseExprToplevel(x.args[2], :q)
-            constraintcall = :(addconstraint($m, constructconstraint!($newaff,$(x.args[3]))))
+            constraintcall = :(addconstraint($m, constructconstraint!($newaff,$(esc(x.args[3])))))
         else
             # Simple comparison - move everything to the LHS
             @assert length(x.args) == 3
