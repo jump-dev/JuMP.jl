@@ -737,7 +737,7 @@ immutable __Cone__ end
 
         JuMP.constructconstraint!(aff, ::__Cone__) = (m.ext[:ConeTest] = 1; LinearConstraint(aff, 0, 0))
 
-        @test @constraint(m, 2x in __Cone__()) == LinearConstraint(2x, 0, 0)
+        @constraint(m, 2x in __Cone__())
         @test m.ext[:ConeTest] == 1
     end
 end
