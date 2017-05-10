@@ -12,6 +12,8 @@ const  eq = JuMP.repl[:eq]
 const Vert = JuMP.repl[:Vert]
 const sub2 = JuMP.repl[:sub2]
 
+immutable __Cone__ end
+
 @testset "Macros" begin
 
 
@@ -733,10 +735,9 @@ const sub2 = JuMP.repl[:sub2]
         m = Model()
         @variable(m, x)
 
-        immutable Cone end
-        JuMP.constructconstraint!(aff, ::Cone) = (m.ext[:ConeTest] = 1; LinearConstraint(aff, 0, 0))
+        JuMP.constructconstraint!(aff, ::__Cone__) = (m.ext[:ConeTest] = 1; LinearConstraint(aff, 0, 0))
 
-        @constraint(m, 2x in Cone())
+        @test @constraint(m, 2x in __Cone__()) == LinearConstraint(2x, 0, 0)
         @test m.ext[:ConeTest] == 1
     end
 end
