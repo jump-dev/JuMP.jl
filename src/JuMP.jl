@@ -294,8 +294,14 @@ function Base.copy(source::Model)
         end
     end
     dest.varDict = Dict{Symbol,Any}()
+    dest.varData = ObjectIdDict()
     for (symb,v) in source.varDict
-        dest.varDict[symb] = copy(v, dest)
+        newvar = copy(v, dest)
+        dest.varDict[symb] = newvar
+        if haskey(source.varData, v)
+            dest.varData[newvar] = source.varData[v]
+            #dest.varData[newvar] = copy(source.varData[v]) # should we copy this too ? We need to define copy(::JuMPContainerData) too then
+        end
     end
 
     dest.conDict = Dict{Symbol,Any}()
@@ -303,8 +309,6 @@ function Base.copy(source::Model)
     # for (symb,v) in source.conDict
     #     dest.conDict[symb] = copy(v, dest)
     # end
-
-    # varData---possibly shouldn't copy
 
     if source.nlpdata !== nothing
         dest.nlpdata = copy(source.nlpdata)
@@ -493,7 +497,11 @@ Base.copy(v::AbstractArray{Variable}, new_model::Model) = (var -> Variable(new_m
 
 # Copy methods for variable containers
 Base.copy(d::JuMPContainer) = map(copy, d)
-Base.copy(d::JuMPContainer, new_model::Model) = map(x -> copy(x, new_model), d)
+function Base.copy(d::JuMPContainer, new_model::Model)
+    new_d = map(x -> copy(x, new_model), d)
+    new_d.meta[:model] = new_model
+    new_d
+end
 
 ###############################################################################
 # GenericAffineExpression, AffExpr
