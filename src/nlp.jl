@@ -1274,6 +1274,11 @@ function solvenlp(m::Model, traits; suppress_warnings=false)
     if stat != :Infeasible && stat != :Unbounded
         m.objVal = MathProgBase.getobjval(m.internalModel)
         m.colVal = MathProgBase.getsolution(m.internalModel)
+        try
+            objBound = MathProgBase.getobjbound(m.internalModel) + m.obj.aff.constant
+            # Don't corrupt objBound if the above call fails
+            m.objBound = objBound
+        end
     end
 
     if stat != :Optimal

@@ -31,7 +31,7 @@ export
     ConstraintRef,
 # Functions
     # Model related
-    getobjectivevalue, getobjective,
+    getobjectivebound, getobjectivevalue, getobjective,
     getobjectivesense, setobjectivesense, setsolver,
     writeLP, writeMPS,
     addSOS1, addSOS2, solve,
@@ -85,6 +85,7 @@ type Model <: AbstractModel
     varCones::Vector{Tuple{Symbol,Any}}
 
     # Solution data
+    objBound
     objVal
     colVal::Vector{Float64}
     redCosts::Vector{Float64}
@@ -160,6 +161,7 @@ function Model(;solver=UnsetSolver(), simplify_nonlinear_expressions::Bool=false
           Symbol[],                    # colCat
           Variable[],                  # customNames
           Vector{Tuple{Symbol,Any}}[], # varCones
+          0,                           # objBound
           0,                           # objVal
           Float64[],                   # colVal
           Float64[],                   # redCosts
@@ -224,6 +226,7 @@ function getobjective(m::Model)
     return m.obj
 end
 
+getobjectivebound(m::Model) = m.objBound
 getobjectivevalue(m::Model) = m.objVal
 getobjectivesense(m::Model) = m.objSense
 function setobjectivesense(m::Model, newSense::Symbol)

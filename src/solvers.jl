@@ -175,6 +175,7 @@ function solve(m::Model; suppress_warnings=false,
 
     # Extract solution from the solver
     numRows, numCols = length(m.linconstr), m.numCols
+    m.objBound = NaN
     m.objVal = NaN
     m.colVal = fill(NaN, numCols)
     m.linconstrDuals = Array{Float64}(0)
@@ -244,6 +245,11 @@ function solve(m::Model; suppress_warnings=false,
     # limit or tolerance is set (:UserLimit)
     if !(stat == :Infeasible || stat == :Unbounded)
         try
+            # Do a separate try since getobjval could work while getobjbound does not and vice versa
+            objBound = MathProgBase.getobjbound(m.internalModel) + m.obj.aff.constant
+            m.objBound = objBound
+        end
+        try
             objVal = MathProgBase.getobjval(m.internalModel) + m.obj.aff.constant
             colVal = MathProgBase.getsolution(m.internalModel)[1:numCols]
             # Rescale off-diagonal terms of SDP variables
@@ -261,6 +267,7 @@ function solve(m::Model; suppress_warnings=false,
     # a minimization problem, so we need to flip the objective before
     # reporting it to the user
     if traits.conic && m.objSense == :Max
+        m.objBound *= -1
         m.objVal *= -1
     end
 
