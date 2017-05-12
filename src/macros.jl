@@ -384,7 +384,13 @@ macro constraint(args...)
     # Strategy: build up the code for non-macro addconstraint, and if needed
     # we will wrap in loops to assign to the ConstraintRefs
     refcall, idxvars, idxsets, idxpairs, condition = buildrefsets(c, variable)
-    # Build the constraint
+    # JuMP accepts constraint syntax of the form @constraint(m, foo in bar).
+    # This will be rewritten to a call to constructconstraint!(foo, bar). To
+    # extend JuMP to accept set-based constraints of this form, it is necessary
+    # to add the corresponding methods to constructconstraint!. Note that this
+    # will likely mean that bar will be some custom type, rather than e.g. a
+    # Symbol, since we will likely want to dispatch on the type of the set
+    # appearing in the constraint.
     if isexpr(x, :call)
         if x.args[1] == :in
             @assert length(x.args) == 3
