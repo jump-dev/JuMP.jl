@@ -479,6 +479,13 @@ Base.zero(::Variable) = zero(Variable)
 Base.one(::Type{Variable}) = AffExpr(Variable[],Float64[],1.0)
 Base.one(::Variable) = one(Variable)
 
+type VariableNotOwnedError <: Exception
+    context::String
+end
+function Base.showerror(io::IO, ex::VariableNotOwnedError)
+    print(io, "VariableNotOwnedError: Variable not owned by model present in $context")
+end
+
 function verify_ownership(m::Model, vec::Vector{Variable})
     n = length(vec)
     @inbounds for i in 1:n

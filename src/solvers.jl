@@ -420,7 +420,7 @@ function addQuadratics(m::Model)
         # Affine portion is checked in prepAffObjective
         if !(verify_ownership(m, m.obj.qvars1) &&
                 verify_ownership(m, m.obj.qvars2))
-            error("Variable not owned by model present in objective")
+            throw(VariableNotOwnedException("objective"))
         end
         # Check for solver support for quadratic objectives happens in MPB
         MathProgBase.setquadobjterms!(m.internalModel,
@@ -444,7 +444,7 @@ function addQuadratics(m::Model)
         if !(verify_ownership(m, terms.qvars1) &&
                 verify_ownership(m, terms.qvars2) &&
                 verify_ownership(m, terms.aff.vars))
-            error("Variable not owned by model present in quadratic constraint")
+            throw(VariableNotOwnedError("quadratic constraint"))
         end
         # Extract indices for MPB, and add the constraint (if we can)
         affidx  = Cint[v.col for v in terms.aff.vars]
@@ -490,7 +490,7 @@ function prepAffObjective(m::Model)
     # Check that no coefficients are NaN/Inf
     assert_isfinite(objaff)
     if !verify_ownership(m, objaff.vars)
-        error("Variable not owned by model present in objective")
+        throw(VariableNotOwnedError("objective"))
     end
     f = zeros(m.numCols)
     @inbounds for ind in 1:length(objaff.vars)
@@ -547,7 +547,7 @@ function prepConstrMatrix(m::Model)
         vars   = linconstr[c].terms.vars
         # Check that variables belong to this model
         if !verify_ownership(m, vars)
-            error("Variable not owned by model present in a constraint")
+            throw(VariableNotOwnedError("constraint"))
         end
         # Record all (i,j,v) triplets
         @inbounds for ind in 1:length(coeffs)
@@ -585,8 +585,8 @@ function collect_expr!(m::Model, tmprow::IndexedVector, terms::AffExpr, ignore_n
     for ind in 1:length(coeffs)
         if vars[ind].m === m
             addelt!(tmprow, vars[ind].col, coeffs[ind])
-        elseif ignore_not_owned
-            error("Variable not owned by model present in constraints")
+        elseif !ignore_not_owned
+            throw(VariableNotOwnedError("constraints"))
         end
     end
     rmz!(tmprow)

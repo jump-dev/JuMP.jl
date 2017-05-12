@@ -34,7 +34,7 @@ function constructSOS(m::Model, coll::Vector{AffExpr})
             error("Must specify set in terms of single variables")
         end
         vars[i] = aff.vars[1]
-        vars[i].m === m || error("Variable in constraint is not owned by the model")
+        vars[i].m === m || throw(VariableNotOwnedError("model"))
         weight[i] = aff.coeffs[1]
     end
     return vars, weight
