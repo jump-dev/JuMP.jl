@@ -384,15 +384,27 @@ macro constraint(args...)
     # Strategy: build up the code for non-macro addconstraint, and if needed
     # we will wrap in loops to assign to the ConstraintRefs
     refcall, idxvars, idxsets, idxpairs, condition = buildrefsets(c, variable)
-    # Build the constraint
+    # JuMP accepts constraint syntax of the form @constraint(m, foo in bar).
+    # This will be rewritten to a call to constructconstraint!(foo, bar). To
+    # extend JuMP to accept set-based constraints of this form, it is necessary
+    # to add the corresponding methods to constructconstraint!. Note that this
+    # will likely mean that bar will be some custom type, rather than e.g. a
+    # Symbol, since we will likely want to dispatch on the type of the set
+    # appearing in the constraint.
     if isexpr(x, :call)
-        # Simple comparison - move everything to the LHS
-        @assert length(x.args) == 3
-        (sense,vectorized) = _canonicalize_sense(x.args[1])
-        lhs = :($(x.args[2]) - $(x.args[3]))
-        addconstr = (vectorized ? :addVectorizedConstraint : :addconstraint)
-        newaff, parsecode = parseExprToplevel(lhs, :q)
-        constraintcall = :($addconstr($m, constructconstraint!($newaff,$(quot(sense)))))
+        if x.args[1] == :in
+            @assert length(x.args) == 3
+            newaff, parsecode = parseExprToplevel(x.args[2], :q)
+            constraintcall = :(addconstraint($m, constructconstraint!($newaff,$(esc(x.args[3])))))
+        else
+            # Simple comparison - move everything to the LHS
+            @assert length(x.args) == 3
+            (sense,vectorized) = _canonicalize_sense(x.args[1])
+            lhs = :($(x.args[2]) - $(x.args[3]))
+            addconstr = (vectorized ? :addVectorizedConstraint : :addconstraint)
+            newaff, parsecode = parseExprToplevel(lhs, :q)
+            constraintcall = :($addconstr($m, constructconstraint!($newaff,$(quot(sense)))))
+        end
         for kw in kwargs.args
             @assert isexpr(kw, kwsymbol)
             push!(constraintcall.args, esc(Expr(:kw,kw.args...)))
