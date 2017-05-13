@@ -52,7 +52,7 @@ Base.getindex(d::JuMPDict, t...) = d.tupledict[t]
 Base.setindex!(d::JuMPDict, value, t...) = (d.tupledict[t] = value)
 
 Base.map(f::Function, d::JuMPArray) =
-    JuMPArray(map(f, d.innerArray), d.indexsets, d.lookup, d.meta)
+    JuMPArray(map(f, d.innerArray), d.indexsets, d.lookup, copy(d.meta))
 
 function Base.map{T,N}(f::Function, d::JuMPDict{T,N})
     ret = Base.return_types(f, Tuple{T})
@@ -61,6 +61,7 @@ function Base.map{T,N}(f::Function, d::JuMPDict{T,N})
     for (k,v) in d.tupledict
         x.tupledict[k] = f(v)
     end
+    x.meta = copy(d.meta)
     return x
 end
 

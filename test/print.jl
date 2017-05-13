@@ -672,8 +672,8 @@ end
      [4,4] = NaN""")
     end
 
-    for_all, inset = repl[:for_all], repl[:in]
     @testset "error printing value of variable with weird index set #982" begin
+        for_all, inset = repl[:for_all], repl[:in]
         m = Model()
         @variable(m, x[1:2,1], start=0)
         io_test(REPLMode, x, "x[i,j] $for_all i $inset {1,2}, j $inset {1}")
@@ -683,5 +683,21 @@ end
       [1,1] = 0.0
     [2,:]
       [2,1] = 0.0""")
+    end
+
+    @testset "Printing variables in a copied model #1019" begin
+        ge, for_all, inset = repl[:geq], repl[:for_all], repl[:in]
+        m1 = Model()
+        @variable(m1, x[1:2] >= 0)
+        n1 = copy(m1)
+        io_test(REPLMode, m1.varDict[:x], "x[i] $ge 0 $for_all i $inset {1,2}")
+        io_test(REPLMode, n1.varDict[:x], "x[i] $ge 0 $for_all i $inset {1,2}")
+
+        a = [:a; :b]
+        m2 = Model()
+        @variable(m2, x[a] >= 0)
+        n2 = copy(m2)
+        io_test(REPLMode, m2.varDict[:x], "x[i] $ge 0 $for_all i $inset {a,b}")
+        io_test(REPLMode, n2.varDict[:x], "x[i] $ge 0 $for_all i $inset {a,b}")
     end
 end
