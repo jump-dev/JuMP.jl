@@ -880,7 +880,6 @@ end
 function fill_bounds_constr!(I, J, V, b, con_cones, constr_to_row, c, d, m)
     nonneg_rows = Int[]
     nonpos_rows = Int[]
-    eq_rows     = Int[]
 
     for idx in 1:m.numCols
         lb = m.colLower[idx]
@@ -912,9 +911,6 @@ function fill_bounds_constr!(I, J, V, b, con_cones, constr_to_row, c, d, m)
     end
     if !isempty(nonpos_rows)
         push!(con_cones, (:NonPos,nonpos_rows))
-    end
-    if !isempty(eq_rows)
-        push!(con_cones, (:Zero,eq_rows))
     end
 
     c, d
