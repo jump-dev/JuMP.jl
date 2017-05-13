@@ -1000,11 +1000,23 @@ end
         end
     end
 
-    @testset "Variable not owned by the model" begin
-        m = Model()
-        M = Model()
-        @variable(m, x)
-        @constraint(M, x == 1)
-        @test_throws ErrorException solve(M)
+    @testset "Variable not owned by the conic model" begin
+        if !isempty(soc_solvers)
+            m = Model()
+            M = Model(solver=first(soc_solvers))
+            @variable(m, x[1:3])
+            @constraint(M, norm(x[1:2]) <= x[3])
+            @test_throws JuMP.VariableNotOwnedError solve(M)
+        end
     end
+
+   @testset "Variable not owned by the linear model" begin
+       if !isempty(lp_solvers)
+           m = Model()
+           M = Model(solver=first(lp_solvers))
+           @variable(m, x)
+           @constraint(M, x >= 0)
+           @test_throws JuMP.VariableNotOwnedError solve(M)
+       end
+   end
 end
