@@ -740,4 +740,10 @@ immutable __Cone__ end
         @constraint(m, 2x in __Cone__())
         @test m.ext[:ConeTest] == 1
     end
+
+    @testset "Binary variable with invalid bounds" begin
+        m = Model()
+        @test macroexpand(:(@variable(m, 2 <= x <= 3, Bin))).head == :error
+        @test macroexpand(:(@variable(m, 2 <= x <= 3, category=:Bin))).head == :error
+    end
 end
