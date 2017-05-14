@@ -969,15 +969,6 @@ macro variable(args...)
         !gottype && variable_error(args, "Syntax error")
     end
 
-    if t == quot(:Bin)
-        if (lb != -Inf || ub != Inf) && !(lb == 0.0 && ub == 1.0)
-            variable_error(args, "Bounds other than [0, 1] may not be specified for binary variables.\nThese are always taken to have a lower bound of 0 and upper bound of 1.")
-        else
-            lb = 0.0
-            ub = 1.0
-        end
-    end
-
     # Handle the column generation functionality
     if coefficients !== nothing
         !isa(var,Symbol) &&
