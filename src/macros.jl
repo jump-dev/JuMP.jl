@@ -811,11 +811,42 @@ esc_nonconstant(x::Number) = x
 esc_nonconstant(x::Expr) = isexpr(x,:quote) ? x : esc(x)
 esc_nonconstant(x) = esc(x)
 
+variabletype(m::Model) = Variable
+function constructvariable!(m::Model; _error::Function=error, lowerbound::Number=-Inf, upperbound::Number=Inf, category::Symbol=:Default, objective::Number=0., inconstraints::Vector=[], coefficients::Vector{Float64}=Float64[], basename::AbstractString="", start::Number=NaN, extra_kwargs...)
+    for (kwarg, _) in extra_kwargs
+        _error("Unrecognized keyword argument $kwarg")
+    end
+    if category == :Default
+        category = :Cont
+    end
+    if objective == 0 && isempty(inconstraints)
+        Variable(m, lowerbound, upperbound, category, basename, start)
+    else
+        Variable(m, lowerbound, upperbound, category, objective, inconstraints, coefficients, basename, start)
+    end
+end
+
+variabletype(m::Model, t::Union{Type{Val{:Cont}}, Type{Val{:Int}}, Type{Val{:Bin}}, Type{Val{:SemiCont}}, Type{Val{:SemiInt}}}) = variabletype(m)
+function constructvariable!(m::Model, t::Union{Type{Val{:Cont}}, Type{Val{:Int}}, Type{Val{:Bin}}, Type{Val{:SemiCont}}, Type{Val{:SemiInt}}}; category::Symbol=:Default, extra_kwargs...)
+    cat = t.parameters[1]
+    if category != :Default && category != cat
+        _error("A variable cannot be both of category $cat and $category. Please specify only one category.")
+    end
+    constructvariable!(m; category=cat, extra_kwargs...)
+end
+
+variabletype(m::Model, t::Symbol) = variabletype(m, Val{t})
+function constructvariable!(m::Model, t::Symbol; extra_kwargs...)
+    constructvariable!(m, Val{t}; extra_kwargs...)
+end
+
 const EMPTYSTRING = ""
 
 variable_error(args, str) = error("In @variable($(join(args,","))): ", str)
 
 macro variable(args...)
+    _error(str) = variable_error(args, str)
+
     m = esc(args[1])
 
     extra = vcat(args[2:end]...)
@@ -832,12 +863,12 @@ macro variable(args...)
     else
         x = shift!(extra)
         if x in [:Cont,:Int,:Bin,:SemiCont,:SemiInt,:SDP]
-            variable_error(args, "Ambiguous variable name $x detected. Use the \"category\" keyword argument to specify a category for an anonymous variable.")
+            _error("Ambiguous variable name $x detected. Use the \"category\" keyword argument to specify a category for an anonymous variable.")
         end
         anon_singleton = false
     end
 
-    t = quot(:Cont)
+    t = quot(:Default)
     gottype = false
     haslb = false
     hasub = false
@@ -850,7 +881,7 @@ macro variable(args...)
         hasub = true
         if x.args[2] == :>= || x.args[2] == :≥
             # ub >= x >= lb
-            x.args[4] == :>= || x.args[4] == :≥ || variable_error(args, "Invalid variable bounds")
+            x.args[4] == :>= || x.args[4] == :≥ || _error("Invalid variable bounds")
             var = x.args[3]
             lb = esc_nonconstant(x.args[5])
             ub = esc_nonconstant(x.args[1])
@@ -858,11 +889,11 @@ macro variable(args...)
             # lb <= x <= u
             var = x.args[3]
             (x.args[4] != :<= && x.args[4] != :≤) &&
-                variable_error(args, "Expected <= operator after variable name.")
+                _error("Expected <= operator after variable name.")
             lb = esc_nonconstant(x.args[1])
             ub = esc_nonconstant(x.args[5])
         else
-            variable_error(args, "Use the form lb <= ... <= ub.")
+            _error("Use the form lb <= ... <= ub.")
         end
     elseif isexpr(x,:call)
         explicit_comparison = true
@@ -894,7 +925,7 @@ macro variable(args...)
             t = quot(:Fixed)
         else
             # Its a comparsion, but not using <= ... <=
-            variable_error(args, "Unexpected syntax $(string(x)).")
+            _error("Unexpected syntax $(string(x)).")
         end
     else
         # No bounds provided - free variable
@@ -919,6 +950,7 @@ macro variable(args...)
     obj = nothing
     inconstraints = nothing
     coefficients = nothing
+    extra_kwargs = []
     for ex in kwargs
         kwarg = ex.args[1]
         if kwarg == :start
@@ -932,58 +964,47 @@ macro variable(args...)
         elseif kwarg == :basename
             quotvarname = esc(ex.args[2])
         elseif kwarg == :lowerbound
-            haslb && variable_error(args, "Cannot specify variable lowerbound twice")
+            haslb && _error("Cannot specify variable lowerbound twice")
             lb = esc_nonconstant(ex.args[2])
             haslb = true
         elseif kwarg == :upperbound
-            hasub && variable_error(args, "Cannot specify variable upperbound twice")
+            hasub && _error("Cannot specify variable upperbound twice")
             ub = esc_nonconstant(ex.args[2])
             hasub = true
         elseif kwarg == :category
-            (t == quot(:Fixed)) && variable_error(args, "Unexpected extra arguments when declaring a fixed variable")
+            (t == quot(:Fixed)) && _error("Unexpected extra arguments when declaring a fixed variable")
             t = esc_nonconstant(ex.args[2])
             gottype = true
         else
-            variable_error(args, "Unrecognized keyword argument $kwarg")
+            push!(extra_kwargs, (kwarg, esc(ex.args[2])))
         end
     end
 
     if (obj !== nothing || inconstraints !== nothing || coefficients !== nothing) &&
        (obj === nothing || inconstraints === nothing || coefficients === nothing)
-        variable_error(args, "Must provide 'objective', 'inconstraints', and 'coefficients' arguments all together for column-wise modeling")
+        _error("Must provide 'objective', 'inconstraints', and 'coefficients' arguments all together for column-wise modeling")
     end
 
     sdp = any(t -> (t == :SDP), extra)
     symmetric = (sdp || any(t -> (t == :Symmetric), extra))
     extra = filter(x -> (x != :SDP && x != :Symmetric), extra) # filter out SDP and sym tag
-
-    # Determine variable type (if present).
-    # Types: default is continuous (reals)
-    if length(extra) > 0
-        gottype && variable_error(args, "Variable category specified more than once")
-        if extra[1] in [:Bin, :Int, :SemiCont, :SemiInt]
-            gottype = true
-            t = quot(extra[1])
-        end
-
-        !gottype && variable_error(args, "Syntax error")
-    end
+    extra = map(ex -> ex in var_cats ? quot(ex) : ex, extra) # quot Bin, Int, Cont, ... so that it will be valuated as the symbols :Bin, :Int, :Cont, ...
 
     # Handle the column generation functionality
     if coefficients !== nothing
         !isa(var,Symbol) &&
-        variable_error(args, "Can only create one variable at a time when adding to existing constraints.")
+        _error("Can only create one variable at a time when adding to existing constraints.")
 
         return assert_validmodel(m, quote
-            $variable = Variable($m,$lb,$ub,$t,$obj,$inconstraints,$coefficients,string($quotvarname),$value)
+            $variable = constructvariable!($m, $(extra...); _error=$_error, lowerbound=$lb, upperbound=$ub, category=$t, objective=$obj, inconstraints=$inconstraints, coefficients=$coefficients, basename=string($quotvarname), start=$value, $(extra_kwargs...))
             $(anonvar ? variable : :($escvarname = $variable))
         end)
     end
 
     if isa(var,Symbol)
         # Easy case - a single variable
-        sdp && variable_error(args, "Cannot add a semidefinite scalar variable")
-        code = :($variable = Variable($m,$lb,$ub,$t,string($quotvarname),$value))
+        sdp && _error("Cannot add a semidefinite scalar variable")
+        code = :($variable = constructvariable!($m, $(extra...); _error=$_error, lowerbound=$lb, upperbound=$ub, category=$t, basename=string($quotvarname), start=$value, $(extra_kwargs...)))
         if !anonvar
             code = quote
                 $code
@@ -993,39 +1014,46 @@ macro variable(args...)
         end
         return assert_validmodel(m, code)
     end
-    isa(var,Expr) || variable_error(args, "Expected $var to be a variable name")
+    isa(var,Expr) || _error("Expected $var to be a variable name")
 
     # We now build the code to generate the variables (and possibly the JuMPDict
     # to contain them)
     refcall, idxvars, idxsets, idxpairs, condition = buildrefsets(var, variable)
     clear_dependencies(i) = (isdependent(idxvars,idxsets[i],i) ? () : idxsets[i])
 
-    code = :( $(refcall) = Variable($m, $lb, $ub, $t, EMPTYSTRING, $value) )
+    code = :( $(refcall) = constructvariable!($m, $(extra...); _error=$_error, lowerbound=$lb, upperbound=$ub, category=$t, basename=EMPTYSTRING, start=$value, $(extra_kwargs...)) )
+
+    # Determine the return type of constructvariable!. This is needed to create the container holding them
+    # we could try to do Core.Inference.return_type(constructvariable!, tuple(Model, $(typeof.(extra)...)))
+    # if isdefined(Core, :Inference)
+    # however, since there could be symbols in extra, which are only thansformed with Val after, the type could be not inferrable
+    vartype = :( variabletype($m, $(extra...)) )
+
     if symmetric
         # Sanity checks on SDP input stuff
         condition == :() ||
-            variable_error(args, "Cannot have conditional indexing for SDP variables")
+            _error("Cannot have conditional indexing for SDP variables")
         length(idxvars) == length(idxsets) == 2 ||
-            variable_error(args, "SDP variables must be 2-dimensional")
+            _error("SDP variables must be 2-dimensional")
         !symmetric || (length(idxvars) == length(idxsets) == 2) ||
-            variable_error(args, "Symmetric variables must be 2-dimensional")
+            _error("Symmetric variables must be 2-dimensional")
         hasdependentsets(idxvars, idxsets) &&
-            variable_error(args, "Cannot have index dependencies in symmetric variables")
+            _error("Cannot have index dependencies in symmetric variables")
         for _rng in idxsets
             isexpr(_rng, :escape) ||
-                variable_error(args, "Internal error 1")
+                _error("Internal error 1")
             rng = _rng.args[1] # undo escaping
             (isexpr(rng,:(:)) && rng.args[1] == 1 && length(rng.args) == 2) ||
-                variable_error(args, "Index sets for SDP variables must be ranges of the form 1:N")
+                _error("Index sets for SDP variables must be ranges of the form 1:N")
         end
 
         if !(lb == -Inf && ub == Inf)
-            variable_error(args, "Semidefinite or symmetric variables cannot be provided bounds")
+            _error("Semidefinite or symmetric variables cannot be provided bounds")
         end
         return assert_validmodel(m, quote
             $(esc(idxsets[1].args[1].args[2])) == $(esc(idxsets[2].args[1].args[2])) || error("Cannot construct symmetric variables with nonsquare dimensions")
             (issymmetric($lb) && issymmetric($ub)) || error("Bounds on symmetric  variables must be symmetric")
-            $(getloopedcode(variable, code, condition, idxvars, idxsets, idxpairs, :Variable; lowertri=symmetric))
+            $(getloopedcode(variable, code, condition, idxvars, idxsets, idxpairs, vartype; lowertri=symmetric))
             $(if sdp
                 quote
                     push!($(m).varCones, (:SDP, first($variable).col : last($variable).col))
@@ -1042,7 +1070,7 @@ macro variable(args...)
         coloncheckcode = Expr(:call,:coloncheck,refcall.args[2:end]...)
         code = :($coloncheckcode; $code)
         return assert_validmodel(m, quote
-            $(getloopedcode(variable, code, condition, idxvars, idxsets, idxpairs, :Variable))
+            $(getloopedcode(variable, code, condition, idxvars, idxsets, idxpairs, vartype))
             isa($variable, JuMPContainer) && pushmeta!($variable, :model, $m)
             push!($(m).dictList, $variable)
             !$anonvar && registervar($m, $quotvarname, $variable)
