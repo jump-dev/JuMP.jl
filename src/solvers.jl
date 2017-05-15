@@ -750,7 +750,6 @@ end
 # `constr_to_row` at consecutive indices starting from `d+1`.
 # It returns the last row index `c` used and the last index `d` used.
 function fillconstrLHS!(I, J, V, tmprow::IndexedVector, constr_to_row, c, d, linconstr::Vector{LinearConstraint}, m::Model, ignore_not_owned::Bool=false)
-    numLinRows = length(linconstr)
     tmpelts = tmprow.elts
     tmpnzidx = tmprow.nzidx
     for con in linconstr
