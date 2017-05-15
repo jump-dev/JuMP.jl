@@ -1019,12 +1019,4 @@ end
            @test_throws JuMP.VariableNotOwnedError solve(M)
        end
    end
-
-# Not working for Mosek and GLPK yet, see https://github.com/JuliaOpt/JuMP.jl/pull/1026
-#   @testset "Binary variable with invalid bounds with $solver" for solver in ip_solvers
-#       m = Model(solver=solver)
-#       @variable(m, 2 <= x <= 3, category=:Bin)
-#       status = solve(m)
-#       @test status == :Infeasible
-#   end
 end

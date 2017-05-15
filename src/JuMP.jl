@@ -351,6 +351,16 @@ Variable(m::Model, lower, upper, cat::Symbol, name::AbstractString="", value::Nu
     error("Attempt to create scalar Variable with lower bound of type $(typeof(lower)) and upper bound of type $(typeof(upper)). Bounds must be scalars in Variable constructor.")
 
 function Variable(m::Model,lower::Number,upper::Number,cat::Symbol,name::AbstractString="",value::Number=NaN)
+    if cat == :Fixed
+        @assert lower == upper
+        value = lower
+    elseif cat == :Bin
+        lower = max(lower, 0)
+        upper = min(upper, 1)
+        lower == 0 || throw(ArgumentError("Invalid lower bound $lower for binary variable"))
+        upper == 1 || throw(ArgumentError("Invalid upper bound $upper for binary variable"))
+    end
+    # Only increment numCols if there are no errors
     m.numCols += 1
     push!(m.colNames, name)
     push!(m.colNamesIJulia, name)
@@ -358,10 +368,6 @@ function Variable(m::Model,lower::Number,upper::Number,cat::Symbol,name::Abstrac
     push!(m.colUpper, convert(Float64,upper))
     push!(m.colCat, cat)
     push!(m.colVal,value)
-    if cat == :Fixed
-        @assert lower == upper
-        m.colVal[end] = lower
-    end
     if m.internalModelLoaded
         if method_exists(MathProgBase.addvar!, (typeof(m.internalModel),Vector{Int},Vector{Float64},Float64,Float64,Float64))
             MathProgBase.addvar!(m.internalModel,float(lower),float(upper),0.0)
