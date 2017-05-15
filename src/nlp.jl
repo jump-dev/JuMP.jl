@@ -1271,24 +1271,29 @@ function solvenlp(m::Model, traits; suppress_warnings=false)
     MathProgBase.optimize!(m.internalModel)
     stat = MathProgBase.status(m.internalModel)
 
-    if stat != :Infeasible && stat != :Unbounded
-        m.objVal = MathProgBase.getobjval(m.internalModel)
-        m.colVal = MathProgBase.getsolution(m.internalModel)
+    if stat == :Infeasible || stat == :Unbounded
+        suppress_warnings || warn("Saving objective value and design variable data even though, status: $stat")
     end
+    m.objVal = MathProgBase.getobjval(m.internalModel)
+    m.colVal = MathProgBase.getsolution(m.internalModel)
 
     if stat != :Optimal
         suppress_warnings || warn("Not solved to optimality, status: $stat")
     end
-    if stat == :Optimal && !traits.int
-        if applicable(MathProgBase.getconstrduals, m.internalModel) && applicable(MathProgBase.getreducedcosts, m.internalModel)
-            nlduals = MathProgBase.getconstrduals(m.internalModel)
-            m.linconstrDuals = nlduals[1:length(m.linconstr)]
-            # quadratic duals currently not available, formulate as nonlinear constraint if needed
-            m.nlpdata.nlconstrDuals = nlduals[length(m.linconstr)+length(m.quadconstr)+1:end]
-            m.redCosts = MathProgBase.getreducedcosts(m.internalModel)
-        else
-            suppress_warnings || Base.warn_once("Nonlinear solver does not provide dual solutions")
-        end
+
+    if !traits.int
+      if stat != :Optimal
+        suppress_warnings || warn("Saving constraint data even though, status: $stat")
+      end
+      if applicable(MathProgBase.getconstrduals, m.internalModel) && applicable(MathProgBase.getreducedcosts, m.internalModel)
+          nlduals = MathProgBase.getconstrduals(m.internalModel)
+          m.linconstrDuals = nlduals[1:length(m.linconstr)]
+          # quadratic duals currently not available, formulate as nonlinear constraint if needed
+          m.nlpdata.nlconstrDuals = nlduals[length(m.linconstr)+length(m.quadconstr)+1:end]
+          m.redCosts = MathProgBase.getreducedcosts(m.internalModel)
+      else
+          suppress_warnings || Base.warn_once("Nonlinear solver does not provide dual solutions")
+      end
     end
 
     #d = m.nlpdata.evaluator
