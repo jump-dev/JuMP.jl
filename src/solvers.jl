@@ -746,15 +746,13 @@ end
 # Represents the constraints `constr` as
 # `b - Ax ∈ K`,
 # writes the matrix `A` of this representation in the sparse format using `I`, `J` and `V`,
-# starting at row index `c+1`, and stores the list of rows used for each constraint in
-# `constr_to_row` at consecutive indices starting from `d+1`.
-# It returns the last row index `c` used and the last index `d` used.
-function fillconstrLHS!(I, J, V, tmprow::IndexedVector, constr_to_row, c, d, linconstr::Vector{LinearConstraint}, m::Model, ignore_not_owned::Bool=false)
+# starting at row index `c+1`.
+# It returns the last index used.
+function fillconstrLHS!(I, J, V, tmprow::IndexedVector, c, linconstr::Vector{LinearConstraint}, m::Model, ignore_not_owned::Bool=false)
     tmpelts = tmprow.elts
     tmpnzidx = tmprow.nzidx
     for con in linconstr
         c += 1
-        d += 1
         collect_expr!(m, tmprow, con.terms, ignore_not_owned)
         nnz = tmprow.nnz
         append!(I, fill(c, nnz))
@@ -762,19 +760,16 @@ function fillconstrLHS!(I, J, V, tmprow::IndexedVector, constr_to_row, c, d, lin
         append!(J, indices)
         append!(V, tmpelts[indices])
         empty!(tmprow)
-        constr_to_row[d] = vec(collect(c))
     end
-    c, d
+    c
 end
 
-function fillconstrLHS!(I, J, V, tmprow::IndexedVector, constr_to_row, c, d, socconstr::Vector{SOCConstraint}, m::Model, ignore_not_owned::Bool=false)
+function fillconstrLHS!(I, J, V, tmprow::IndexedVector, c, socconstr::Vector{SOCConstraint}, m::Model, ignore_not_owned::Bool=false)
     tmpelts = tmprow.elts
     tmpnzidx = tmprow.nzidx
     for con in socconstr
         c += 1
-        d += 1
         expr = con.normexpr
-        soc_start = c
         collect_expr!(m, tmprow, expr.aff, ignore_not_owned)
         nnz = tmprow.nnz
         indices = tmpnzidx[1:nnz]
@@ -790,7 +785,30 @@ function fillconstrLHS!(I, J, V, tmprow::IndexedVector, constr_to_row, c, d, soc
             append!(J, indices)
             append!(V, -expr.coeff*tmpelts[indices])
         end
-        constr_to_row[d] = collect(soc_start:c)
+    end
+    c
+end
+
+# Represents the constraints `constr` as
+# `b - Ax ∈ K`,
+# stores the list of rows used for each constraint in
+# `constr_to_row` at consecutive indices starting from `d+1`.
+# It returns the last row index `c` used and the last index `d` used.
+function fillconstrtorow!(constr_to_row, c, d, linconstr::Vector{LinearConstraint})
+    for con in linconstr
+        c += 1
+        d += 1
+        constr_to_row[d] = vec(collect(c))
+    end
+    c, d
+end
+function fillconstrtorow!(constr_to_row, c, d, socconstr::Vector{SOCConstraint})
+    for con in socconstr
+        c += 1
+        d += 1
+        nterms = length(con.normexpr.norm.terms)
+        constr_to_row[d] = collect(c:c+nterms)
+        c += nterms
     end
     c, d
 end
@@ -807,10 +825,11 @@ function rescaleSDcols!(f, J, V, m)
     end
 end
 
-# Combination of fillconstrRHS! and `fillconstrLHS!`
+# Combination of `fillconstrRHS!`, `fillconstrLHS!` and `fillconstrtorow!`
 function fillconstr!(I, J, V, b, con_cones, tmprow::IndexedVector, constr_to_row, c, d, constrs, m, ignore_not_owned::Bool=false)
     fillconstrRHS!(b, con_cones, c, constrs)
-    fillconstrLHS!(I, J, V, tmprow, constr_to_row, c, d, constrs, m)
+    fillconstrLHS!(I, J, V, tmprow, c, constrs, m)
+    fillconstrtorow!(constr_to_row, c, d, constrs)
 end
 
 function fillconstr!(I, J, V, b, con_cones, tmprow::IndexedVector, constr_to_row, c, d, constrs::Vector{SDConstraint}, m::Model, ignore_not_owned::Bool=false)
