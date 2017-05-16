@@ -239,5 +239,4 @@ end
         @test typeof(Y) == SparseMatrixCSC{Float64, Int}
         @test Y == sparse([1, 3], [2, 3], [1, 2])
     end
-
 end

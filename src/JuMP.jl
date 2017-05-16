@@ -845,7 +845,7 @@ function getconstraint(m::Model, conname::Symbol)
     end
 end
 
-# allow easy accessing of JuMP Variables
+# allow easy accessing of JuMP Variables and Constraints
 function Base.getindex(m::JuMP.Model, name::Symbol)
     isvariable   = haskey(m.varDict, name)
     isconstraint = haskey(m.conDict, name)
