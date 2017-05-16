@@ -39,7 +39,6 @@ export
     # Variable
     setname, getname, setlowerbound, setupperbound, getlowerbound, getupperbound,
     getvalue, setvalue, getdual, setcategory, getcategory,
-    getvariable, getconstraint,
     linearindex,
     # Expressions and constraints
     linearterms,
@@ -123,8 +122,8 @@ type Model <: AbstractModel
     nlpdata#::NLPData
     simplify_nonlinear_expressions::Bool
 
-    varDict::Dict{Symbol,Any} # dictionary from variable names to variable objects
-    conDict::Dict{Symbol,Any} # dictionary from constraint names to constraint objects
+    objDict::Dict{Symbol,Any} # dictionary from variable and constraint names to objects
+
     varData::ObjectIdDict
 
     map_counter::Int # number of times we call getvalue, getdual, getlowerbound and getupperbound on a JuMPContainer, so that we can print out a warning
@@ -179,8 +178,7 @@ function Model(;solver=UnsetSolver(), simplify_nonlinear_expressions::Bool=false
           IndexedVector(Float64,0),    # indexedVector
           nothing,                     # nlpdata
           simplify_nonlinear_expressions, # ...
-          Dict{Symbol,Any}(),          # varDict
-          Dict{Symbol,Any}(),          # conDict
+          Dict{Symbol,Any}(),          # objDict
           ObjectIdDict(),              # varData
           0,                           # map_counter
           0,                           # operator_counter
@@ -296,22 +294,16 @@ function Base.copy(source::Model)
             end
         end
     end
-    dest.varDict = Dict{Symbol,Any}()
+    dest.objDict = Dict{Symbol,Any}()
     dest.varData = ObjectIdDict()
-    for (symb,v) in source.varDict
-        newvar = copy(v, dest)
-        dest.varDict[symb] = newvar
-        if haskey(source.varData, v)
-            dest.varData[newvar] = source.varData[v]
+    for (symb,o) in source.objDict
+        newo = copy(o, dest)
+        dest.objDict[symb] = newo
+        if haskey(source.varData, o)
+            dest.varData[newo] = source.varData[o]
             #dest.varData[newvar] = copy(source.varData[v]) # should we copy this too ? We need to define copy(::JuMPContainerData) too then
         end
     end
-
-    dest.conDict = Dict{Symbol,Any}()
-    # TODO: implement constraint copying
-    # for (symb,v) in source.conDict
-    #     dest.conDict[symb] = copy(v, dest)
-    # end
 
     if source.nlpdata !== nothing
         dest.nlpdata = copy(source.nlpdata)
@@ -568,6 +560,7 @@ immutable ConstraintRef{M<:AbstractModel,T<:AbstractConstraint}
     m::M
     idx::Int
 end
+Base.copy{M,T}(c::ConstraintRef{M,T}, new_model::M) = ConstraintRef{M,T}(new_model, c.idx)
 
 const LinConstrRef = ConstraintRef{Model,LinearConstraint}
 
@@ -804,59 +797,30 @@ end
 
 # handle dictionary of variables
 function registervar(m::Model, varname::Symbol, value)
-    if haskey(m.varDict, varname)
-        Base.warn_once("A variable named $varname is already attached to this model. If creating variables programmatically, consider using the anonymous variable syntax x = @variable(m, [1:N], ...).")
-        m.varDict[varname] = nothing # indicate duplicate variable
-    else
-        m.varDict[varname] = value
-    end
-    return value
+    registerobject(m, varname, value, "A variable or constraint named $varname is already attached to this model. If creating variables programmatically, use the anonymous variable syntax x = @variable(m, [1:N], ...).")
 end
 registervar(m::Model, varname, value) = value # variable name isn't a simple symbol, ignore
 
 function registercon(m::Model, conname::Symbol, value)
-    if haskey(m.conDict, conname)
-        Base.warn_once("A constraint named $conname is already attached to this model. If creating constraints programmatically, consider using the anonymous constraint syntax con = @constraint(m, ...).")
-        m.conDict[conname] = nothing # indicate duplicate constraint
-    else
-        m.conDict[conname] = value
-    end
-    return value
+    registerobject(m, conname, value, "A variable or constraint named $conname is already attached to this model. If creating constraints programmatically, use the anonymous constraint syntax con = @constraint(m, ...).")
 end
 registercon(m::Model, conname, value) = value # constraint name isn't a simple symbol, ignore
 
-function getvariable(m::Model, varname::Symbol)
-    if !haskey(m.varDict, varname)
-        error("No variable with name $varname")
-    elseif m.varDict[varname] === nothing
-        error("Multiple variables with name $varname")
+function registerobject(m::Model, name::Symbol, value, warnstring::String)
+    if haskey(m.objDict, name)
+        error(warnstring)
     else
-        return m.varDict[varname]
+        m.objDict[name] = value
     end
-end
-
-function getconstraint(m::Model, conname::Symbol)
-    if !haskey(m.conDict, conname)
-        error("No constraint with name $conname")
-    elseif m.conDict[conname] === nothing
-        error("Multiple constraints with name $conname")
-    else
-        return m.conDict[conname]
-    end
+    return value
 end
 
 # allow easy accessing of JuMP Variables and Constraints
 function Base.getindex(m::JuMP.Model, name::Symbol)
-    isvariable   = haskey(m.varDict, name)
-    isconstraint = haskey(m.conDict, name)
-    if isvariable && !isconstraint
-        return getvariable(m, name)
-    elseif !isvariable && isconstraint
-        return getconstraint(m, name)
-    elseif isvariable && isconstraint
-        error("$name is both a variable and a constraint. Use getconstraint(m, name) or getvariable(m, name) to specify.")
+    if !haskey(m.objDict, name)
+        error("No object with name $name")
     else
-        error("No variable or constraint with name $name")
+        return m.objDict[name]
     end
 end
 

@@ -690,14 +690,14 @@ end
         m1 = Model()
         @variable(m1, x[1:2] >= 0)
         n1 = copy(m1)
-        io_test(REPLMode, m1.varDict[:x], "x[i] $ge 0 $for_all i $inset {1,2}")
-        io_test(REPLMode, n1.varDict[:x], "x[i] $ge 0 $for_all i $inset {1,2}")
+        io_test(REPLMode, m1.objDict[:x], "x[i] $ge 0 $for_all i $inset {1,2}")
+        io_test(REPLMode, n1.objDict[:x], "x[i] $ge 0 $for_all i $inset {1,2}")
 
         a = [:a; :b]
         m2 = Model()
         @variable(m2, x[a] >= 0)
         n2 = copy(m2)
-        io_test(REPLMode, m2.varDict[:x], "x[i] $ge 0 $for_all i $inset {a,b}")
-        io_test(REPLMode, n2.varDict[:x], "x[i] $ge 0 $for_all i $inset {a,b}")
+        io_test(REPLMode, m2.objDict[:x], "x[i] $ge 0 $for_all i $inset {a,b}")
+        io_test(REPLMode, n2.objDict[:x], "x[i] $ge 0 $for_all i $inset {a,b}")
     end
 end

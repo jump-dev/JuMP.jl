@@ -453,12 +453,12 @@ end
 
         @test dest.solvehook(dest) == :Optimal
 
-        @test Set(collect(keys(dest.varDict))) == Set([:x,:y,:z,:w,:v])
-        @test isequal(dest.varDict[:x], Variable(dest, 1))
-        @test isequal(dest.varDict[:y], Variable(dest, 2))
-        @test all(t -> isequal(t[1], t[2]), zip(dest.varDict[:z], [Variable(dest, 3), Variable(dest, 4), Variable(dest, 5)]))
-        @test all(t -> isequal(t[1], t[2]), zip(dest.varDict[:w].innerArray, [Variable(dest, 6), Variable(dest, 7), Variable(dest, 8)]))
-        td = dest.varDict[:v].tupledict
+        @test Set(collect(keys(dest.objDict))) == Set([:x,:y,:z,:w,:v])
+        @test isequal(dest.objDict[:x], Variable(dest, 1))
+        @test isequal(dest.objDict[:y], Variable(dest, 2))
+        @test all(t -> isequal(t[1], t[2]), zip(dest.objDict[:z], [Variable(dest, 3), Variable(dest, 4), Variable(dest, 5)]))
+        @test all(t -> isequal(t[1], t[2]), zip(dest.objDict[:w].innerArray, [Variable(dest, 6), Variable(dest, 7), Variable(dest, 8)]))
+        td = dest.objDict[:v].tupledict
         @test length(td) == 2
         @test isequal(td[:red,1], Variable(dest, 9))
         @test isequal(td[:red,3], Variable(dest, 10))
@@ -470,12 +470,6 @@ end
         JuMP.setprinthook(source, m -> 2)
         dest2 = copy(source)
         @test dest2.printhook(dest2) == 2
-
-        # Test copying model with multiple variables of same name
-        @variable(source, x)
-        dest3 = copy(source)
-        @test_throws ErrorException getvariable(dest3, :x)
-        @test dest3.varDict[:x] == nothing
 
         addlazycallback(source, cb -> 3)
         @test_throws ErrorException copy(source)
@@ -1051,7 +1045,6 @@ end
         @test_throws Exception m[:y]
         @constraint(m, c, x <= 1)
         @test m[:c] == c
-        @variable(m, c)
-        @test_throws Exception m[:c]
+        @test_throws Exception @variable(m, c)
     end
 end
