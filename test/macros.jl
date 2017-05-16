@@ -740,4 +740,27 @@ immutable __Cone__ end
         @constraint(m, 2x in __Cone__())
         @test m.ext[:ConeTest] == 1
     end
+
+    @testset "Binary variable with invalid bounds" begin
+        m = Model()
+        @test_throws ArgumentError @variable(m, 2 <= x <= 3, Bin)
+        @test_throws ArgumentError @variable(m, 2 <= x <= 3, category=:Bin)
+        cat = :Bin
+        @test_throws ArgumentError @variable(m, 2 <= x <= 3, category=cat)
+        @test m.numCols == 0
+        l = 0
+        u = 1
+        @variable(m, l <= x <= u, category=:Bin)
+        @test getcategory(x) == :Bin
+        @test getlowerbound(x) == 0
+        @test getupperbound(x) == 1
+        @variable(m, -1 <= y <= Inf, category=:Bin)
+        @test getcategory(y) == :Bin
+        @test getlowerbound(y) == 0
+        @test getupperbound(y) == 1
+        @variable(m, -Inf <= z <= Inf, category=:Bin)
+        @test getcategory(z) == :Bin
+        @test getlowerbound(z) == 0
+        @test getupperbound(z) == 1
+    end
 end
