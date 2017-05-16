@@ -1019,4 +1019,28 @@ end
            @test_throws JuMP.VariableNotOwnedError solve(M)
        end
    end
+
+    @testset "Inconsistency between getobjbound() and getobjectivevalue() #1021" begin
+        if !isempty(ip_solvers)
+            m = Model(solver=first(ip_solvers))
+            @variable(m, 0 <= x <= 5)
+            @variable(m, y, Bin)
+            @constraint(m, x >= y)
+            @objective(m, Min, x - 5)
+
+            @test_throws ErrorException getobjbound(m)
+
+            solve(m)
+
+            @test getobjectivevalue(m) == -5
+            @test getobjbound(m) == 0
+            @test getobjectivebound(m) == -5
+
+            @objective(m, Min, x - 3)
+
+            @test getobjectivevalue(m) == -5
+            @test getobjbound(m) == 0
+            @test getobjectivebound(m) == -5
+        end
+    end
 end

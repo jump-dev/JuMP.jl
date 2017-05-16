@@ -66,6 +66,7 @@ Methods
 * ``getobjectivesense(m::Model)`` - returns objective sense, either ``:Min`` or ``:Max``.
 * ``setobjectivesense(m::Model, newSense::Symbol)`` - sets the objective sense (``newSense`` is either ``:Min`` or ``:Max``).
 * ``getobjectivevalue(m::Model)`` - returns objective value after a call to ``solve``.
+* ``getobjectivebound(m::Model)`` - returns the best known bound on the optimal objective value after a call to ``solve``.
 
 **Output**
 
