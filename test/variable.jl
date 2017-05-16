@@ -240,10 +240,4 @@ end
         @test Y == sparse([1, 3], [2, 3], [1, 2])
     end
 
-    @testset "Get Index on variable" begin
-        m = Model()
-        @variable(m, x)
-        @test m[:x] == x
-        @test_throws Exception m[:y]
-    end
 end

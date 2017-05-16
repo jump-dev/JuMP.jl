@@ -1043,4 +1043,15 @@ end
             @test getobjectivebound(m) == -5
         end
     end
+
+    @testset "getindex for variables and constraints" begin
+        m = Model()
+        @variable(m, x)
+        @test m[:x] == x
+        @test_throws Exception m[:y]
+        @constraint(m, c, x <= 1)
+        @test m[:c] == c
+        @variable(m, c)
+        @test_throws Exception m[:c]
+    end
 end

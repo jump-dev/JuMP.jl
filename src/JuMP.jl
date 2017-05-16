@@ -835,9 +835,6 @@ function getvariable(m::Model, varname::Symbol)
     end
 end
 
-# allow easy accessing of JuMP Variables
-Base.getindex(m::JuMP.Model, varname::Symbol) = getvariable(m, varname)
-
 function getconstraint(m::Model, conname::Symbol)
     if !haskey(m.conDict, conname)
         error("No constraint with name $conname")
@@ -845,6 +842,21 @@ function getconstraint(m::Model, conname::Symbol)
         error("Multiple constraints with name $conname")
     else
         return m.conDict[conname]
+    end
+end
+
+# allow easy accessing of JuMP Variables
+function Base.getindex(m::JuMP.Model, name::Symbol)
+    isvariable   = haskey(m.varDict, name)
+    isconstraint = haskey(m.conDict, name)
+    if isvariable && !isconstraint
+        return getvariable(m, name)
+    elseif !isvariable && isconstraint
+        return getconstraint(m, name)
+    elseif isvariable && isconstraint
+        error("$name is both a variable and a constraint. Use getconstraint(m, name) or getvariable(m, name) to specify.")
+    else
+        error("No variable or constraint with name $name")
     end
 end
 
