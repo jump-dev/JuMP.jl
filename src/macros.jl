@@ -829,20 +829,6 @@ function constructvariable!(m::Model; _error::Function=error, lowerbound::Number
     end
 end
 
-variabletype(m::Model, t::Union{Type{Val{:Cont}}, Type{Val{:Int}}, Type{Val{:Bin}}, Type{Val{:SemiCont}}, Type{Val{:SemiInt}}}) = variabletype(m)
-function constructvariable!(m::Model, t::Union{Type{Val{:Cont}}, Type{Val{:Int}}, Type{Val{:Bin}}, Type{Val{:SemiCont}}, Type{Val{:SemiInt}}}; category::Symbol=:Default, extra_kwargs...)
-    cat = t.parameters[1]
-    if category != :Default && category != cat
-        _error("A variable cannot be both of category $cat and $category. Please specify only one category.")
-    end
-    constructvariable!(m; category=cat, extra_kwargs...)
-end
-
-variabletype(m::Model, t::Symbol) = variabletype(m, Val{t})
-function constructvariable!(m::Model, t::Symbol; extra_kwargs...)
-    constructvariable!(m, Val{t}; extra_kwargs...)
-end
-
 const EMPTYSTRING = ""
 
 variable_error(args, str) = error("In @variable($(join(args,","))): ", str)
@@ -856,8 +842,7 @@ variable_error(args, str) = error("In @variable($(join(args,","))): ", str)
 # * The `SDP` and `Symmetric` positional arguments in `extra` will not be passed to `constructvariable!`. Instead,
 #    * the `Symmetric` argument will check that the container is symmetric and only allocate one variable for each pair of non-diagonal entries.
 #    * the `SDP` argument will do the same as `Symmetric` but in addition it will specify that the variables created belongs to the SDP cone in the `varCones` field of the model.
-#   Moreover, if a category is passed in `extra` not as a symbol (e.g. `Bin` instead of `:Bin`), it will be transformed to a symbol before being
-#   passed to `constructvariable!`.
+#   Moreover, if a category is passed in `extra`, it will be passed using the `category` keyword to `constructvariable!`.
 # * The keyword arguments start, objective, inconstraints, coefficients, basename, lowerbound, upperbound, category may not be passed as is to
 #   `constructvariable!` since they may be altered by the parsing of `expr` and we may need to pass it pointwise if it is a container since
 #   `constructvariable!` is called separately for each variable of the container.
@@ -1005,7 +990,16 @@ macro variable(args...)
     sdp = any(t -> (t == :SDP), extra)
     symmetric = (sdp || any(t -> (t == :Symmetric), extra))
     extra = filter(x -> (x != :SDP && x != :Symmetric), extra) # filter out SDP and sym tag
-    extra = map(ex -> ex in var_cats ? quot(ex) : ex, extra) # quot Bin, Int, Cont, ... so that it will be valuated as the symbols :Bin, :Int, :Cont, ...
+    for ex in extra
+        if ex in var_cats
+            if t != quot(:Default) && t != quot(ex)
+                _error("A variable cannot be both of category $cat and $category. Please specify only one category.")
+            else
+                t = quot(ex)
+            end
+        end
+    end
+    extra = filter(ex -> !(ex in var_cats), extra)
 
     # Handle the column generation functionality
     if coefficients !== nothing
@@ -1041,10 +1035,11 @@ macro variable(args...)
     code = :( $(refcall) = constructvariable!($m, $(extra...); _error=$_error, lowerbound=$lb, upperbound=$ub, category=$t, basename=EMPTYSTRING, start=$value, $(extra_kwargs...)) )
 
     # Determine the return type of constructvariable!. This is needed to create the container holding them
-    # we could try to do Core.Inference.return_type(constructvariable!, tuple(Model, $(typeof.(extra)...)))
-    # if isdefined(Core, :Inference)
-    # however, since there could be symbols in extra, which are only thansformed with Val after, the type could be not inferrable
-    vartype = :( variabletype($m, $(extra...)) )
+    if isdefined(Core, :Inference)
+        vartype = :( Core.Inference.return_type(constructvariable!, tuple(Model, $(typeof.(extra)...))) )
+    else
+        vartype = :( variabletype($m, $(extra...)) )
+    end
 
     if symmetric
         # Sanity checks on SDP input stuff
