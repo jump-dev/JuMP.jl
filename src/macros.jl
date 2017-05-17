@@ -811,7 +811,10 @@ esc_nonconstant(x::Number) = x
 esc_nonconstant(x::Expr) = isexpr(x,:quote) ? x : esc(x)
 esc_nonconstant(x) = esc(x)
 
+# Returns the type of what `constructvariable!` would return with the same positional arguments.
 variabletype(m::Model) = Variable
+# Returns a new variable belonging to the model `m`. Additional positional arguments can be used to dispatch the call to a different method.
+# The return type should only depends on the positional arguments for `variabletype` to make sense.
 function constructvariable!(m::Model; _error::Function=error, lowerbound::Number=-Inf, upperbound::Number=Inf, category::Symbol=:Default, objective::Number=0., inconstraints::Vector=[], coefficients::Vector{Float64}=Float64[], basename::AbstractString="", start::Number=NaN, extra_kwargs...)
     for (kwarg, _) in extra_kwargs
         _error("Unrecognized keyword argument $kwarg")
@@ -844,6 +847,20 @@ const EMPTYSTRING = ""
 
 variable_error(args, str) = error("In @variable($(join(args,","))): ", str)
 
+# @variable(m, expr, extra...; kwargs...)
+# where `extra` is a list of extra positional arguments and `extra_kwargs` is a list of keyword arguments.
+# It creates a new variable (resp. a container of new variables) belonging to the model `m` using `constructvariable!` to create the variable (resp. each variable of the container).
+# The following modifications will be made to the arguments before being passed to `constructvariable!`
+# * The `expr` argument will not be passed but the expression will be parsed to determine the kind of container needed (if one is needed) and
+#   additional information that will be passed as keyword arguments. The latter can always be given directly as keyword arguments to the macro.
+# * The `SDP` and `Symmetric` positional arguments in `extra` will not be passed to `constructvariable!`. Instead,
+#    * the `Symmetric` argument will check that the container is symmetric and only allocate one variable for each pair of non-diagonal entries.
+#    * the `SDP` argument will do the same as `Symmetric` but in addition it will specify that the variables created belongs to the SDP cone in the `varCones` field of the model.
+#   Moreover, if a category is passed in `extra` not as a symbol (e.g. `Bin` instead of `:Bin`), it will be transformed to a symbol before being
+#   passed to `constructvariable!`.
+# * The keyword arguments start, objective, inconstraints, coefficients, basename, lowerbound, upperbound, category may not be passed as is to
+#   `constructvariable!` since they may be altered by the parsing of `expr` and we may need to pass it pointwise if it is a container since
+#   `constructvariable!` is called separately for each variable of the container.
 macro variable(args...)
     _error(str) = variable_error(args, str)
 
