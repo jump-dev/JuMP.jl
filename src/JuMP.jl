@@ -823,6 +823,12 @@ function Base.getindex(m::JuMP.Model, name::Symbol)
         return m.objDict[name]
     end
 end
+function Base.setindex!(m::JuMP.Model, value, name::Symbol)
+    if haskey(m.objDict, name)
+        error("There is already an object in the model with the name $name")
+    end
+    m.objDict[name] = value
+end
 
 # usage warnings
 function mapcontainer_warn(f, x::JuMPContainer, var_or_expr)

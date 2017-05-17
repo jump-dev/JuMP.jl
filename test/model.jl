@@ -1047,4 +1047,13 @@ end
         @test m[:c] == c
         @test_throws Exception @variable(m, c)
     end
+
+    @testset "setindex! for variables and constraints" begin
+        m = Model()
+        m[:x] = @variable(m)
+        @test isa(m[:x], Variable)
+        m[:c] = @constraint(m, m[:x] <= 1)
+        @test isa(m[:c], JuMP.ConstraintRef)
+        @test_throws Exception m[:c] = @variable(m)
+    end
 end
