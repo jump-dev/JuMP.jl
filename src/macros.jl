@@ -835,6 +835,7 @@ variable_error(args, str) = error("In @variable($(join(args,","))): ", str)
 
 # @variable(m, expr, extra...; kwargs...)
 # where `extra` is a list of extra positional arguments and `extra_kwargs` is a list of keyword arguments.
+#
 # It creates a new variable (resp. a container of new variables) belonging to the model `m` using `constructvariable!` to create the variable (resp. each variable of the container).
 # The following modifications will be made to the arguments before being passed to `constructvariable!`
 # * The `expr` argument will not be passed but the expression will be parsed to determine the kind of container needed (if one is needed) and
@@ -842,10 +843,22 @@ variable_error(args, str) = error("In @variable($(join(args,","))): ", str)
 # * The `SDP` and `Symmetric` positional arguments in `extra` will not be passed to `constructvariable!`. Instead,
 #    * the `Symmetric` argument will check that the container is symmetric and only allocate one variable for each pair of non-diagonal entries.
 #    * the `SDP` argument will do the same as `Symmetric` but in addition it will specify that the variables created belongs to the SDP cone in the `varCones` field of the model.
-#   Moreover, if a category is passed in `extra`, it will be passed using the `category` keyword to `constructvariable!`.
+#   Moreover, if a Cont, Int, Bin, SemiCont or SemiInt is passed in `extra`, it will be passed as a symbol using the `category` keyword to `constructvariable!`.
 # * The keyword arguments start, objective, inconstraints, coefficients, basename, lowerbound, upperbound, category may not be passed as is to
 #   `constructvariable!` since they may be altered by the parsing of `expr` and we may need to pass it pointwise if it is a container since
 #   `constructvariable!` is called separately for each variable of the container.
+#
+# Examples:
+# * `@variable(m, x >= 0)` is equivalent to `x = constructvariable!(m, lowerbound=0, basename="x")
+# * `@variable(m, x[1:N,1:N], Symmetric, Poly(X))` is equivalent to
+#   ```
+#   x = Matrix{...}(N, N)
+#   for i in 1:N
+#       for j in 1:N
+#           x[i,j] = x[j,i] = constructvariable!(m, Poly(X))
+#       end
+#   end
+#   ```
 macro variable(args...)
     _error(str) = variable_error(args, str)
 
@@ -1032,14 +1045,10 @@ macro variable(args...)
     refcall, idxvars, idxsets, idxpairs, condition = buildrefsets(var, variable)
     clear_dependencies(i) = (isdependent(idxvars,idxsets[i],i) ? () : idxsets[i])
 
+    # Code to be used to create each variable of the container.
     code = :( $(refcall) = constructvariable!($m, $(extra...); _error=$_error, lowerbound=$lb, upperbound=$ub, category=$t, basename=EMPTYSTRING, start=$value, $(extra_kwargs...)) )
-
-    # Determine the return type of constructvariable!. This is needed to create the container holding them
-    if isdefined(Core, :Inference)
-        vartype = :( Core.Inference.return_type(constructvariable!, tuple(Model, $(typeof.(extra)...))) )
-    else
-        vartype = :( variabletype($m, $(extra...)) )
-    end
+    # Determine the return type of constructvariable!. This is needed to create the container holding them.
+    vartype = :( variabletype($m, $(extra...)) )
 
     if symmetric
         # Sanity checks on SDP input stuff
