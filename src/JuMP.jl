@@ -808,7 +808,8 @@ registercon(m::Model, conname, value) = value # constraint name isn't a simple s
 
 function registerobject(m::Model, name::Symbol, value, warnstring::String)
     if haskey(m.objDict, name)
-        error(warnstring)
+        warn(warnstring)
+        m.objDict[name] = nothing
     else
         m.objDict[name] = value
     end
@@ -818,15 +819,17 @@ end
 # allow easy accessing of JuMP Variables and Constraints
 function Base.getindex(m::JuMP.Model, name::Symbol)
     if !haskey(m.objDict, name)
-        error("No object with name $name")
+        throw(KeyError("No object with name $name"))
+    elseif m.objDict[name] === nothing
+        error("There are multiple variables and/or constraints named $name that are already attached to this model. If creating variables programmatically, use the anonymous variable syntax x = @variable(m, [1:N], ...). If creating constraints programmatically, use the anonymous constraint syntax con = @constraint(m, ...).")
     else
         return m.objDict[name]
     end
 end
 function Base.setindex!(m::JuMP.Model, value, name::Symbol)
-    if haskey(m.objDict, name)
-        error("There is already an object in the model with the name $name")
-    end
+    # if haskey(m.objDict, name)
+    #     warn("Overwriting the object $name stored in the model. Consider using anonymous variables and constraints instead")
+    # end
     m.objDict[name] = value
 end
 

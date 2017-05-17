@@ -1042,10 +1042,11 @@ end
         m = Model()
         @variable(m, x)
         @test m[:x] == x
-        @test_throws Exception m[:y]
+        @test_throws KeyError m[:y]
         @constraint(m, c, x <= 1)
         @test m[:c] == c
-        @test_throws Exception @variable(m, c)
+        @variable(m, c)
+        @test_throws Exception m[:c]
     end
 
     @testset "setindex! for variables and constraints" begin
@@ -1054,6 +1055,7 @@ end
         @test isa(m[:x], Variable)
         m[:c] = @constraint(m, m[:x] <= 1)
         @test isa(m[:c], JuMP.ConstraintRef)
-        @test_throws Exception m[:c] = @variable(m)
+        m[:c] = @variable(m) # user purposely changes object in m[:c]
+        @test isa(m[:c], JuMP.Variable)
     end
 end
