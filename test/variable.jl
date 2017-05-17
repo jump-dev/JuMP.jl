@@ -33,8 +33,9 @@ using Base.Test
         @test isequal(mcon[:lbonly],lbonly)
         @test isequal(mcon[:ubonly],ubonly)
         @test isequal(mcon[:onerangeub][-7],onerangeub[-7])
-        @test_throws ErrorException @variable(mcon, lbonly)
-        @test_throws ErrorException mcon[:foo]
+        @variable(mcon, lbonly)
+        @test_throws ErrorException mcon[:lbonly]
+        @test_throws KeyError mcon[:foo]
         d = Dict()
         @variable(mcon, d["bar"][1:10] == 1)
         @test getvalue(d["bar"][1]) == 1
