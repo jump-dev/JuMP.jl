@@ -9,14 +9,16 @@
 # Test time to build model in memory.
 #############################################################################
 
+include("../solvers.jl")
+
 using JuMP
 
-function pMedian(numFacility::Int,numCustomer::Int,numLocation::Int)
+function pMedian(solver, numFacility::Int,numCustomer::Int,numLocation::Int)
     srand(10)
     customerLocations = [rand(1:numLocation) for a = 1:numCustomer ]
 
     tic()
-    m = Model()
+    m = Model(solver=solver)
 
     # Facility locations
     @variable(m, 0 <= s[1:numLocation] <= 1)
@@ -48,7 +50,7 @@ function pMedian(numFacility::Int,numCustomer::Int,numLocation::Int)
     return buildTime, writeTime
 end
 
-function cont5(n)
+function cont5(solver, n)
     m = n
     n1 = n-1
     m1 = m-1
@@ -60,7 +62,7 @@ function cont5(n)
     yt = [0.5*(1 - (j*dx)^2) for j=0:n]
 
     tic()
-    mod = Model()
+    mod = Model(solver=solver)
     @variable(mod,  0 <= y[0:m,0:n] <= 1)
     @variable(mod, -1 <= u[1:m] <= 1)
     @objective(mod, Min, 0.25*dx*( (y[m,0] - yt[1])^2 +
@@ -96,30 +98,38 @@ end
 
 function RunTests()
     # Pmedian
-    pmedian_build = Float64[]
-    pmedian_write = Float64[]
-    for runs = 1:9
-        bt, wt = pMedian(100,100,5000)
-        push!(pmedian_build, bt)
-        push!(pmedian_write, wt)
+    if !isempty(lp_solvers)
+        pmedian_build = Float64[]
+        pmedian_write = Float64[]
+        for runs = 1:9
+            bt, wt = pMedian(first(lp_solvers),100,100,5000)
+            push!(pmedian_build, bt)
+            push!(pmedian_write, wt)
+        end
+        sort!(pmedian_build)
+        sort!(pmedian_write)
+        print("PMEDIAN BUILD MIN=",minimum(pmedian_build),"  MED=",pmedian_build[5],"\n")
+        print("PMEDIAN INTRN MIN=",minimum(pmedian_write),"  MED=",pmedian_write[5],"\n")
+    else
+        warn("PMEDIAN NOT RUN!")
     end
-    sort!(pmedian_build)
-    sort!(pmedian_write)
-    print("PMEDIAN BUILD MIN=",minimum(pmedian_build),"  MED=",pmedian_build[5],"\n")
-    print("PMEDIAN INTRN MIN=",minimum(pmedian_write),"  MED=",pmedian_write[5],"\n")
 
     # Cont5
-    cont5_build = Float64[]
-    cont5_write = Float64[]
-    for runs = 1:9
-        bt, wt = cont5(500)
-        push!(cont5_build, bt)
-        push!(cont5_write, wt)
+    if !isempty(quad_solvers)
+        cont5_build = Float64[]
+        cont5_write = Float64[]
+        for runs = 1:9
+            bt, wt = cont5(first(quad_solvers), 500)
+            push!(cont5_build, bt)
+            push!(cont5_write, wt)
+        end
+        sort!(cont5_build)
+        sort!(cont5_write)
+        print("CONT5 BUILD   MIN=",minimum(cont5_build),"  MED=",cont5_build[5],"\n")
+        print("CONT5 INTRN   MIN=",minimum(cont5_write),"  MED=",cont5_write[5],"\n")
+    else
+        warn("CONT5 NOT RUN!")
     end
-    sort!(cont5_build)
-    sort!(cont5_write)
-    print("CONT5 BUILD   MIN=",minimum(cont5_build),"  MED=",cont5_build[5],"\n")
-    print("CONT5 INTRN   MIN=",minimum(cont5_write),"  MED=",cont5_write[5],"\n")
 
 end
 
