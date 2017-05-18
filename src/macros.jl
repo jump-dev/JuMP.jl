@@ -815,18 +815,18 @@ esc_nonconstant(x) = esc(x)
 variabletype(m::Model) = Variable
 # Returns a new variable belonging to the model `m`. Additional positional arguments can be used to dispatch the call to a different method.
 # The return type should only depends on the positional arguments for `variabletype` to make sense.
-function constructvariable!(m::Model; _error::Function=error, lowerbound::Number=-Inf, upperbound::Number=Inf, category::Symbol=:Default, objective::Number=0., inconstraints::Vector=[], coefficients::Vector{Float64}=Float64[], basename::AbstractString="", start::Number=NaN, extra_kwargs...)
+function constructvariable!(m::Model, _error::Function, lowerbound::Number, upperbound::Number, category::Symbol, objective::Number, inconstraints::Vector, coefficients::Vector{Float64}, basename::AbstractString, start::Number; extra_kwargs...)
     for (kwarg, _) in extra_kwargs
         _error("Unrecognized keyword argument $kwarg")
     end
-    if category == :Default
-        category = :Cont
+    Variable(m, lowerbound, upperbound, category == :Default ? :Cont : category, objective, inconstraints, coefficients, basename, start)
+end
+
+function constructvariable!(m::Model, _error::Function, lowerbound::Number, upperbound::Number, category::Symbol, basename::AbstractString, start::Number; extra_kwargs...)
+    for (kwarg, _) in extra_kwargs
+        _error("Unrecognized keyword argument $kwarg")
     end
-    if objective == 0 && isempty(inconstraints)
-        Variable(m, lowerbound, upperbound, category, basename, start)
-    else
-        Variable(m, lowerbound, upperbound, category, objective, inconstraints, coefficients, basename, start)
-    end
+    Variable(m, lowerbound, upperbound, category == :Default ? :Cont : category, basename, start)
 end
 
 const EMPTYSTRING = ""
@@ -1020,7 +1020,7 @@ macro variable(args...)
         _error("Can only create one variable at a time when adding to existing constraints.")
 
         return assert_validmodel(m, quote
-            $variable = constructvariable!($m, $(extra...); _error=$_error, lowerbound=$lb, upperbound=$ub, category=$t, objective=$obj, inconstraints=$inconstraints, coefficients=$coefficients, basename=string($quotvarname), start=$value, $(extra_kwargs...))
+            $variable = constructvariable!($m, $(extra...), $_error, $lb, $ub, $t, $obj, $inconstraints, $coefficients, string($quotvarname), $value; $(extra_kwargs...))
             $(anonvar ? variable : :($escvarname = $variable))
         end)
     end
@@ -1028,7 +1028,7 @@ macro variable(args...)
     if isa(var,Symbol)
         # Easy case - a single variable
         sdp && _error("Cannot add a semidefinite scalar variable")
-        code = :($variable = constructvariable!($m, $(extra...); _error=$_error, lowerbound=$lb, upperbound=$ub, category=$t, basename=string($quotvarname), start=$value, $(extra_kwargs...)))
+        code = :($variable = constructvariable!($m, $(extra...), $_error, $lb, $ub, $t, string($quotvarname), $value); $(extra_kwargs...))
         if !anonvar
             code = quote
                 $code
@@ -1046,7 +1046,7 @@ macro variable(args...)
     clear_dependencies(i) = (isdependent(idxvars,idxsets[i],i) ? () : idxsets[i])
 
     # Code to be used to create each variable of the container.
-    code = :( $(refcall) = constructvariable!($m, $(extra...); _error=$_error, lowerbound=$lb, upperbound=$ub, category=$t, basename=EMPTYSTRING, start=$value, $(extra_kwargs...)) )
+    code = :( $(refcall) = constructvariable!($m, $(extra...), $_error, $lb, $ub, $t, EMPTYSTRING, $value; $(extra_kwargs...)) )
     # Determine the return type of constructvariable!. This is needed to create the container holding them.
     vartype = :( variabletype($m, $(extra...)) )
 
