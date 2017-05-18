@@ -79,6 +79,8 @@ end
 @deprecate setSolver setsolver
 @deprecate setUpper setupperbound
 @deprecate setValue setvalue
+@deprecate getvariable getindex
+@deprecate getconstraint getindex
 
 function registerNLFunction(args...;autodiff=false)
     Base.depwarn("registerNLFunction is deprecated, use JuMP.register instead.",:registerNLFunction)

@@ -649,17 +649,17 @@ immutable __Cone__ end
         @test_throws ErrorException @variable(m, x[S])
     end
 
-    @testset "getconstraint" begin
+    @testset "getindex constraint" begin
         m = Model()
         @variable(m, x)
         _c1 = @constraint(m, c1, x == 1)
         _c2 = @constraint(m, c2[i=1:3], x == i)
         _c3 = @NLconstraint(m, c3, x^3 == 1)
         _c4 = @NLconstraint(m, c4[i=1:3], x^i == 1)
-        @test _c1 == getconstraint(m, :c1)
-        @test _c2 == getconstraint(m, :c2)
-        @test _c3 == getconstraint(m, :c3)
-        @test _c4 == getconstraint(m, :c4)
+        @test _c1 == m[:c1]
+        @test _c2 == m[:c2]
+        @test _c3 == m[:c3]
+        @test _c4 == m[:c4]
     end
 
     @testset "Anonymous singleton variables" begin

@@ -122,7 +122,7 @@ The ``lowerbound`` and ``upperbound`` keywords must be used instead of compariso
 Besides these syntax restrictions in the ``@variable`` macro, the **only** differences between anonymous and named variables are:
 
     1. For the purposes of printing a model, JuMP will not have a name for anonymous variables and will instead use ``__anon__``. You may set the name of a variable for printing by using ``setname`` or the ``basename`` keyword argument described below.
-    2. Anonymous variables cannot be retrieved by using ``getvariable``.
+    2. Anonymous variables cannot be retrieved by using ``getindex`` or ``m[name]``.
 
 If you would like to change the name used when printing a variable or group of variables, you may use the ``basename`` keyword argument::
 
@@ -234,7 +234,7 @@ Two possible uses for fixed variables are:
 
 2. For solving a sequence of problems with varying parameters.
    One may call ``JuMP.fix(x, val)``
-   to change the value of a fixed variable or to fix a 
+   to change the value of a fixed variable or to fix a
    previously unfixed variable. For LPs
    in particular, most solvers are able to efficiently hot-start when
    solving the resulting modified problem.

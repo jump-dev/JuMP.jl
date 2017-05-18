@@ -57,8 +57,8 @@ Methods
 * ``solve(m::Model; suppress_warnings=false, relaxation=false)`` - solves the model using the selected solver (or a default for the problem class), and takes two optional arguments that are disabled by default. Setting ``suppress_warnings`` to ``true`` will suppress all JuMP-specific output (e.g. warnings about infeasibility and lack of dual information) but will not suppress solver output (which should be done by passing options to the solver). Setting ``relaxation=true`` solves the standard continuous relaxation for the model: that is, integrality is dropped, special ordered set constraints are not enforced, and semi-continuous and semi-integer variables with bounds ``[l,u]`` are replaced with bounds ``[min(l,0),max(u,0)]``.
 * ``JuMP.build(m::Model)`` - builds the model in memory at the MathProgBase level without optimizing.
 * ``setsolver(m::Model,s::AbstractMathProgSolver)`` - changes the solver which will be used for the next call to ``solve()``, discarding the current internal model if present.
-* ``getvariable(m::Model,name::Symbol)`` - returns the variable or group of variables of the given name which were added to the model with ``@variable``. Throws an error if multiple variables were created with the same name.
-* ``getconstraint(m::Model,name::Symbol)`` - returns the constraint or group of constraint of the given name which were added to the model with ``@constraint`` or ``@NLconstraint``. Throws an error if multiple constraints were created with the same name.
+* ``getindex(m::Model,name::Symbol)`` - returns the variable, or group of variables, or constraint, or group of constraints, of the given name which were added to the model. This errors if multiple variables or constraints share the same name.
+* ``setindex!(m::Model, value, name::Symbol)`` - stores the object ``value`` in the model ``m`` so that it can be accessed via ``getindex``.
 
 **Objective**
 

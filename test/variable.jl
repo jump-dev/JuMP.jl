@@ -30,12 +30,12 @@ using Base.Test
         @variable(mcon, x[i=-10:10,s] <= 5.5, Int, start=i+1)
         @test getupperbound(x[-4,"Green"]) == 5.5
         @test getvalue(x[-3,"Blue"]) == -2
-        @test isequal(getvariable(mcon, :lbonly),lbonly)
-        @test isequal(getvariable(mcon, :ubonly),ubonly)
-        @test isequal(getvariable(mcon, :onerangeub)[-7],onerangeub[-7])
+        @test isequal(mcon[:lbonly],lbonly)
+        @test isequal(mcon[:ubonly],ubonly)
+        @test isequal(mcon[:onerangeub][-7],onerangeub[-7])
         @variable(mcon, lbonly)
-        @test_throws ErrorException getvariable(mcon, :lbonly)
-        @test_throws ErrorException getvariable(mcon, :foo)
+        @test_throws ErrorException mcon[:lbonly]
+        @test_throws KeyError mcon[:foo]
         d = Dict()
         @variable(mcon, d["bar"][1:10] == 1)
         @test getvalue(d["bar"][1]) == 1
