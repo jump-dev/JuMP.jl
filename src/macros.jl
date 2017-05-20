@@ -124,6 +124,44 @@ buildrefsets(c, cname)  = (cname, Any[], Any[], IndexPair[], :())
 buildrefsets(c) = buildrefsets(c, getname(c))
 
 ###############################################################################
+# getloopedtype
+# Unexported. Determines the element type need for the container created in
+# getloopedcode.
+function getloopedtype(idxvars, idxsets, sym)
+    # We assume that sym will gives the same type for any iterate of the nested loop
+    # so we just need to start the nested loop and end it as soon as we have found the
+    # type.
+    # Note that the idxset could be like [i=1:2,j=2:i] in which case for i=1, there is
+    # no possible value for j so we cannot just take the first element of the index set
+    # for each variable.
+    T = gensym()
+    typefound = gensym()
+    code = quote
+        $T = $(sym)
+        $typefound = true
+    end
+    for (idxvar, idxset) in zip(reverse(idxvars),reverse(idxsets))
+        code = quote
+            let
+                $(localvar(esc(idxvar)))
+                for $(esc(idxvar)) in $idxset
+                    $code
+                    if $typefound
+                        break
+                    end
+                end
+            end
+        end
+    end
+    code = quote
+        $T = Variable
+        $typefound = false
+        $code
+    end
+    T, code
+end
+
+###############################################################################
 # getloopedcode
 # Unexported. Takes a bit of code and corresponding looping information and
 # returns that code nested in corresponding loops, along with preceding code
@@ -187,12 +225,17 @@ function getloopedcode(varname, code, condition, idxvars, idxsets, idxpairs, sym
             end
         end
     end
+    T, Tcode = getloopedtype(idxvars, idxsets, sym)
     if hascond || hasdependentsets(idxvars,idxsets)
         # force a JuMPDict
         N = length(idxsets)
-        mac = :($varname = JuMPDict{$(sym),$N}())
+        mac = :($varname = JuMPDict{$T,$N}())
     else
-        mac = gendict(varname, sym, idxsets...)
+        mac = gendict(varname, T, idxsets...)
+    end
+    mac = quote
+        $Tcode
+        $mac
     end
     return quote
         $mac
