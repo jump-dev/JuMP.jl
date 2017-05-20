@@ -822,6 +822,7 @@ function constructvariable!(m::Model, _error::Function, lowerbound::Number, uppe
     Variable(m, lowerbound, upperbound, category == :Default ? :Cont : category, objective, inconstraints, coefficients, basename, start)
 end
 
+variabletype(m::Model, _error::Function, lowerbound::Number, upperbound::Number, category::Symbol, basename::AbstractString, start::Number) = Variable
 function constructvariable!(m::Model, _error::Function, lowerbound::Number, upperbound::Number, category::Symbol, basename::AbstractString, start::Number; extra_kwargs...)
     for (kwarg, _) in extra_kwargs
         _error("Unrecognized keyword argument $kwarg")
