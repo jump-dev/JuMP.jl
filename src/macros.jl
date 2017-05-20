@@ -812,7 +812,7 @@ esc_nonconstant(x::Expr) = isexpr(x,:quote) ? x : esc(x)
 esc_nonconstant(x) = esc(x)
 
 # Returns the type of what `constructvariable!` would return with the same positional arguments.
-variabletype(m::Model) = Variable
+variabletype(m::Model, _error::Function, lowerbound::Number, upperbound::Number, category::Symbol, objective::Number, inconstraints::Vector, coefficients::Vector{Float64}, basename::AbstractString, start::Number) = Variable
 # Returns a new variable belonging to the model `m`. Additional positional arguments can be used to dispatch the call to a different method.
 # The return type should only depends on the positional arguments for `variabletype` to make sense.
 function constructvariable!(m::Model, _error::Function, lowerbound::Number, upperbound::Number, category::Symbol, objective::Number, inconstraints::Vector, coefficients::Vector{Float64}, basename::AbstractString, start::Number; extra_kwargs...)
@@ -837,25 +837,28 @@ variable_error(args, str) = error("In @variable($(join(args,","))): ", str)
 # where `extra` is a list of extra positional arguments and `extra_kwargs` is a list of keyword arguments.
 #
 # It creates a new variable (resp. a container of new variables) belonging to the model `m` using `constructvariable!` to create the variable (resp. each variable of the container).
-# The following modifications will be made to the arguments before being passed to `constructvariable!`
+# The following modifications will be made to the arguments before they are passed to `constructvariable!`:
 # * The `expr` argument will not be passed but the expression will be parsed to determine the kind of container needed (if one is needed) and
-#   additional information that will be passed as keyword arguments. The latter can always be given directly as keyword arguments to the macro.
+#   additional information that will alter what is passed with the keywords `lowerbound`, `upperbound`, `basename` and `start`.
 # * The `SDP` and `Symmetric` positional arguments in `extra` will not be passed to `constructvariable!`. Instead,
 #    * the `Symmetric` argument will check that the container is symmetric and only allocate one variable for each pair of non-diagonal entries.
 #    * the `SDP` argument will do the same as `Symmetric` but in addition it will specify that the variables created belongs to the SDP cone in the `varCones` field of the model.
-#   Moreover, if a Cont, Int, Bin, SemiCont or SemiInt is passed in `extra`, it will be passed as a symbol using the `category` keyword to `constructvariable!`.
+#   Moreover, if a Cont, Int, Bin, SemiCont or SemiInt is passed in `extra`, it will alter what is passed with the keyword `category`.
 # * The keyword arguments start, objective, inconstraints, coefficients, basename, lowerbound, upperbound, category may not be passed as is to
 #   `constructvariable!` since they may be altered by the parsing of `expr` and we may need to pass it pointwise if it is a container since
-#   `constructvariable!` is called separately for each variable of the container.
+#   `constructvariable!` is called separately for each variable of the container. Moreover it will be passed as positional argument to `constructvariable!`.
+#   If `objective`, `inconstraints` and `coefficients` are not present, they won't be passed as positional argument but for the other five arguments,
+#   default values are passed when they are not present.
+# * A custom error function is passed as positional argument to print the full @variable call before the error message.
 #
-# Examples:
-# * `@variable(m, x >= 0)` is equivalent to `x = constructvariable!(m, lowerbound=0, basename="x")
+# Examples (... is the custom error function):
+# * `@variable(m, x >= 0)` is equivalent to `x = constructvariable!(m, msg -> error("In @variable(m, x >= 0): ", msg), 0, Inf, :Cont, "x", NaN)
 # * `@variable(m, x[1:N,1:N], Symmetric, Poly(X))` is equivalent to
 #   ```
 #   x = Matrix{...}(N, N)
 #   for i in 1:N
 #       for j in 1:N
-#           x[i,j] = x[j,i] = constructvariable!(m, Poly(X))
+#           x[i,j] = x[j,i] = constructvariable!(m, Poly(X), msg -> error("In @variable(m, x[1:N,1:N], Symmetric, Poly(X)): ", msg), -Inf, Inf, :Cont, "", NaN)
 #       end
 #   end
 #   ```
@@ -1012,7 +1015,7 @@ macro variable(args...)
             end
         end
     end
-    extra = filter(ex -> !(ex in var_cats), extra)
+    extra = esc.(filter(ex -> !(ex in var_cats), extra))
 
     # Handle the column generation functionality
     if coefficients !== nothing
@@ -1048,7 +1051,7 @@ macro variable(args...)
     # Code to be used to create each variable of the container.
     code = :( $(refcall) = constructvariable!($m, $(extra...), $_error, $lb, $ub, $t, EMPTYSTRING, $value; $(extra_kwargs...)) )
     # Determine the return type of constructvariable!. This is needed to create the container holding them.
-    vartype = :( variabletype($m, $(extra...)) )
+    vartype = :( variabletype($m, $(extra...), $_error, $lb, $ub, $t, EMPTYSTRING, $value) )
 
     if symmetric
         # Sanity checks on SDP input stuff
