@@ -14,6 +14,15 @@ const sub2 = JuMP.repl[:sub2]
 
 immutable __Cone__ end
 
+type MyType
+    lowerbound
+    upperbound
+    category
+    basename::String
+    start
+    test_kw::Int
+end
+
 @testset "Macros" begin
 
 
@@ -762,5 +771,31 @@ immutable __Cone__ end
         @test getcategory(z) == :Bin
         @test getlowerbound(z) == 0
         @test getupperbound(z) == 1
+    end
+
+    @testset "Extension of @variable with constructvariable! #1029" begin
+        JuMP.variabletype(m::Model, ::Type{MyType}) = MyType
+        function JuMP.constructvariable!(m::Model, ::Type{MyType}, _error::Function, lowerbound::Number, upperbound::Number, category::Symbol, basename::AbstractString, start::Number; test_kw::Int = 0)
+            MyType(lowerbound, upperbound, category, basename, start, test_kw)
+        end
+        m = Model()
+        @variable(m, 1 <= x <= 2, MyType, category = :Bin, test_kw = 1, start = 3)
+        @test isa(x, MyType)
+        @test x.lowerbound == 1
+        @test x.upperbound == 2
+        @test x.category == :Bin
+        @test x.basename == "x"
+        @test x.start == 3
+        @test x.test_kw == 1
+        @variable(m, y[1:3] >= 0, MyType, test_kw = 2)
+        @test isa(y, Vector{MyType})
+        for i in 1:3
+            @test y[i].lowerbound == 0
+            @test y[i].upperbound == Inf
+            @test y[i].category == :Default
+            @test isempty(y[i].basename)
+            @test isnan(y[i].start)
+            @test y[i].test_kw == 2
+        end
     end
 end
