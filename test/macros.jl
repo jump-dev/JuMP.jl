@@ -14,7 +14,7 @@ const sub2 = JuMP.repl[:sub2]
 
 immutable __Cone__ end
 
-type MyType
+type MyVariable
     lowerbound
     upperbound
     category
@@ -774,21 +774,21 @@ end
     end
 
     @testset "Extension of @variable with constructvariable! #1029" begin
-        JuMP.variabletype(m::Model, ::Type{MyType}) = MyType
-        function JuMP.constructvariable!(m::Model, ::Type{MyType}, _error::Function, lowerbound::Number, upperbound::Number, category::Symbol, basename::AbstractString, start::Number; test_kw::Int = 0)
-            MyType(lowerbound, upperbound, category, basename, start, test_kw)
+        JuMP.variabletype(m::Model, ::Type{MyVariable}) = MyVariable
+        function JuMP.constructvariable!(m::Model, ::Type{MyVariable}, _error::Function, lowerbound::Number, upperbound::Number, category::Symbol, basename::AbstractString, start::Number; test_kw::Int = 0)
+            MyVariable(lowerbound, upperbound, category, basename, start, test_kw)
         end
         m = Model()
-        @variable(m, 1 <= x <= 2, MyType, category = :Bin, test_kw = 1, start = 3)
-        @test isa(x, MyType)
+        @variable(m, 1 <= x <= 2, MyVariable, category = :Bin, test_kw = 1, start = 3)
+        @test isa(x, MyVariable)
         @test x.lowerbound == 1
         @test x.upperbound == 2
         @test x.category == :Bin
         @test x.basename == "x"
         @test x.start == 3
         @test x.test_kw == 1
-        @variable(m, y[1:3] >= 0, MyType, test_kw = 2)
-        @test isa(y, Vector{MyType})
+        @variable(m, y[1:3] >= 0, MyVariable, test_kw = 2)
+        @test isa(y, Vector{MyVariable})
         for i in 1:3
             @test y[i].lowerbound == 0
             @test y[i].upperbound == Inf
