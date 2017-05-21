@@ -128,37 +128,44 @@ buildrefsets(c) = buildrefsets(c, getname(c))
 # Unexported. Determines the element type need for the container created in
 # getloopedcode.
 function getloopedtype(idxvars, idxsets, sym)
-    # We assume that sym will gives the same type for any iterate of the nested loop
-    # so we just need to start the nested loop and end it as soon as we have found the
-    # type.
-    # Note that the idxset could be like [i=1:2,j=2:i] in which case for i=1, there is
-    # no possible value for j so we cannot just take the first element of the index set
-    # for each variable.
-    T = gensym()
-    typefound = gensym()
-    code = quote
-        $T = $(sym)
-        $typefound = true
-    end
-    for (idxvar, idxset) in zip(reverse(idxvars),reverse(idxsets))
+    if !isdependent(idxvars, sym, -1)
+        # If sym does not depends on any variable of idxvars, we have nothing to do
+        sym, :()
+    else
+        # Otherwise, we assume that sym will gives the same type for any value of the idxvars
+        # so we just need to start the nested loop and end it as soon as we have found the
+        # type.
+        # Note that the idxset could be like [i=1:2,j=2:i] in which case for i=1, there is
+        # no possible value for j so we cannot just take the first element of the index set
+        # for each variable.
+        T = gensym()
+        typefound = gensym()
         code = quote
-            let
-                $(localvar(esc(idxvar)))
-                for $(esc(idxvar)) in $idxset
-                    $code
-                    if $typefound
-                        break
+            $T = $(sym)
+            $typefound = true
+        end
+        for (idxvar, idxset) in zip(reverse(idxvars),reverse(idxsets))
+            code = quote
+                let
+                    $(localvar(esc(idxvar)))
+                    for $(esc(idxvar)) in $idxset
+                        $code
+                        if $typefound
+                            break
+                        end
                     end
                 end
             end
         end
+        code = quote
+            # Any will be the type for empty container with sym depending on idxvars like
+            # @variable m x[i=1:0] == i -> container of Any
+            $T = Any
+            $typefound = false
+            $code
+        end
+        T, code
     end
-    code = quote
-        $T = Variable
-        $typefound = false
-        $code
-    end
-    T, code
 end
 
 ###############################################################################
