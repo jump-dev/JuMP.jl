@@ -124,51 +124,6 @@ buildrefsets(c, cname)  = (cname, Any[], Any[], IndexPair[], :())
 buildrefsets(c) = buildrefsets(c, getname(c))
 
 ###############################################################################
-# getloopedtype
-# Unexported. Determines the element type need for the container created in
-# getloopedcode.
-function getloopedtype(idxvars, idxsets, sym)
-    if !isdependent(idxvars, sym, -1)
-        # If sym does not depends on any variable of idxvars, we have nothing to do
-        sym, :()
-    else
-        # Otherwise, we assume that sym will gives the same type for any value of the idxvars
-        # so we just need to start the nested loop and end it as soon as we have found the
-        # type.
-        # Note that the idxset could be like [i=1:2,j=2:i] in which case for i=1, there is
-        # no possible value for j so we cannot just take the first element of the index set
-        # for each variable.
-        T = gensym()
-        typefound = gensym()
-        code = quote
-            $T = $(sym)
-            $typefound = true
-        end
-        for (idxvar, idxset) in zip(reverse(idxvars),reverse(idxsets))
-            code = quote
-                let
-                    $(localvar(esc(idxvar)))
-                    for $(esc(idxvar)) in $idxset
-                        $code
-                        if $typefound
-                            break
-                        end
-                    end
-                end
-            end
-        end
-        code = quote
-            # Any will be the type for empty container with sym depending on idxvars like
-            # @variable m x[i=1:0] == i -> container of Any
-            $T = Any
-            $typefound = false
-            $code
-        end
-        T, code
-    end
-end
-
-###############################################################################
 # getloopedcode
 # Unexported. Takes a bit of code and corresponding looping information and
 # returns that code nested in corresponding loops, along with preceding code
@@ -232,17 +187,12 @@ function getloopedcode(varname, code, condition, idxvars, idxsets, idxpairs, sym
             end
         end
     end
-    T, Tcode = getloopedtype(idxvars, idxsets, sym)
     if hascond || hasdependentsets(idxvars,idxsets)
         # force a JuMPDict
         N = length(idxsets)
-        mac = :($varname = JuMPDict{$T,$N}())
+        mac = :($varname = JuMPDict{$(sym),$N}())
     else
-        mac = gendict(varname, T, idxsets...)
-    end
-    mac = quote
-        $Tcode
-        $mac
+        mac = gendict(varname, sym, idxsets...)
     end
     return quote
         $mac
@@ -861,8 +811,8 @@ esc_nonconstant(x::Number) = x
 esc_nonconstant(x::Expr) = isexpr(x,:quote) ? x : esc(x)
 esc_nonconstant(x) = esc(x)
 
-# Returns the type of what `constructvariable!` would return with the same positional arguments.
-variabletype(m::Model, _error::Function, lowerbound::Number, upperbound::Number, category::Symbol, objective::Number, inconstraints::Vector, coefficients::Vector{Float64}, basename::AbstractString, start::Number) = Variable
+# Returns the type of what `constructvariable!` would return with these starting positional arguments.
+variabletype(m::Model) = Variable
 # Returns a new variable belonging to the model `m`. Additional positional arguments can be used to dispatch the call to a different method.
 # The return type should only depends on the positional arguments for `variabletype` to make sense.
 function constructvariable!(m::Model, _error::Function, lowerbound::Number, upperbound::Number, category::Symbol, objective::Number, inconstraints::Vector, coefficients::Vector{Float64}, basename::AbstractString, start::Number; extra_kwargs...)
@@ -872,7 +822,6 @@ function constructvariable!(m::Model, _error::Function, lowerbound::Number, uppe
     Variable(m, lowerbound, upperbound, category == :Default ? :Cont : category, objective, inconstraints, coefficients, basename, start)
 end
 
-variabletype(m::Model, _error::Function, lowerbound::Number, upperbound::Number, category::Symbol, basename::AbstractString, start::Number) = Variable
 function constructvariable!(m::Model, _error::Function, lowerbound::Number, upperbound::Number, category::Symbol, basename::AbstractString, start::Number; extra_kwargs...)
     for (kwarg, _) in extra_kwargs
         _error("Unrecognized keyword argument $kwarg")
@@ -1102,7 +1051,7 @@ macro variable(args...)
     # Code to be used to create each variable of the container.
     code = :( $(refcall) = constructvariable!($m, $(extra...), $_error, $lb, $ub, $t, EMPTYSTRING, $value; $(extra_kwargs...)) )
     # Determine the return type of constructvariable!. This is needed to create the container holding them.
-    vartype = :( variabletype($m, $(extra...), $_error, $lb, $ub, $t, EMPTYSTRING, $value) )
+    vartype = :( variabletype($m, $(extra...)) )
 
     if symmetric
         # Sanity checks on SDP input stuff
