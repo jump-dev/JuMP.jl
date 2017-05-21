@@ -222,11 +222,11 @@ function _localvar(x::Expr)
     args
 end
 
-function addkwargs(call, kwargs)
+function addkwargs!(call, kwargs)
     kwsymbol = VERSION < v"0.6.0-dev.1934" ? :kw : :(=) # changed by julia PR #19868
     for kw in kwargs
         @assert isexpr(kw, kwsymbol)
-        push!(call.args, esc(Expr(kwsymbol, kw.args...)))
+        push!(call.args, esc(Expr(:kw, kw.args...)))
     end
 end
 
@@ -413,7 +413,7 @@ macro constraint(args...)
             newaff, parsecode = parseExprToplevel(lhs, :q)
             constraintcall = :($addconstr($m, constructconstraint!($newaff,$(quot(sense)))))
         end
-        addkwargs(constraintcall, kwargs.args)
+        addkwargs!(constraintcall, kwargs.args)
         code = quote
             q = zero(AffExpr)
             $parsecode
@@ -437,7 +437,7 @@ macro constraint(args...)
         newub, parseub = parseExprToplevel(x.args[5],:ub)
 
         constraintcall = :($addconstr($m, constructconstraint!($newaff,$newlb,$newub)))
-        addkwargs(constraintcall, kwargs.args)
+        addkwargs!(constraintcall, kwargs.args)
         code = quote
             aff = zero(AffExpr)
             $parsecode
@@ -1025,7 +1025,7 @@ macro variable(args...)
         _error("Can only create one variable at a time when adding to existing constraints.")
 
         variablecall = :( constructvariable!($m, $(extra...), $_error, $lb, $ub, $t, $obj, $inconstraints, $coefficients, string($quotvarname), $value) )
-        addkwargs(variablecall, extra_kwargs)
+        addkwargs!(variablecall, extra_kwargs)
         return assert_validmodel(m, quote
             $variable = $variablecall
             $(anonvar ? variable : :($escvarname = $variable))
@@ -1036,7 +1036,7 @@ macro variable(args...)
         # Easy case - a single variable
         sdp && _error("Cannot add a semidefinite scalar variable")
         variablecall = :( constructvariable!($m, $(extra...), $_error, $lb, $ub, $t, string($quotvarname), $value) )
-        addkwargs(variablecall, extra_kwargs)
+        addkwargs!(variablecall, extra_kwargs)
         code = :($variable = $variablecall)
         if !anonvar
             code = quote
@@ -1056,7 +1056,7 @@ macro variable(args...)
 
     # Code to be used to create each variable of the container.
     variablecall = :( constructvariable!($m, $(extra...), $_error, $lb, $ub, $t, EMPTYSTRING, $value) )
-    addkwargs(variablecall, extra_kwargs)
+    addkwargs!(variablecall, extra_kwargs)
     code = :( $(refcall) = $variablecall )
     # Determine the return type of constructvariable!. This is needed to create the container holding them.
     vartype = :( variabletype($m, $(extra...)) )
