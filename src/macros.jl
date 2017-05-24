@@ -836,7 +836,7 @@ const EMPTYSTRING = ""
 variable_error(args, str) = error("In @variable($(join(args,","))): ", str)
 
 # @variable(m, expr, extra...; kwargs...)
-# where `extra` is a list of extra positional arguments and `extra_kwargs` is a list of keyword arguments.
+# where `extra` is a list of extra positional arguments and `kwargs` is a list of keyword arguments.
 #
 # It creates a new variable (resp. a container of new variables) belonging to the model `m` using `constructvariable!` to create the variable (resp. each variable of the container).
 # The following modifications will be made to the arguments before they are passed to `constructvariable!`:
