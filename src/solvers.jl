@@ -170,7 +170,7 @@ function solve(m::Model; suppress_warnings=false,
     MathProgBase.optimize!(m.internalModel)
     stat::Symbol = MathProgBase.status(m.internalModel)
 
-    postsolveupdate!(m, stat, traits, relaxation)
+    postsolveupdate!(m, stat, traits, relaxation, suppress_warnings)
 
     # Return the solve status
     stat
@@ -302,7 +302,7 @@ function build(m::Model; suppress_warnings=false, relaxation=false, traits=Probl
     nothing
 end
 
-function postsolveupdate!(m::Model, status::Symbol, traits::ProblemTraits, relaxation::Bool)
+function postsolveupdate!(m::Model, status::Symbol, traits::ProblemTraits, relaxation::Bool, suppress_warnings::Bool)
     # Extract solution from the solver
     numRows, numCols = length(m.linconstr), m.numCols
     m.objBound = NaN
