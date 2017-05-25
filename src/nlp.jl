@@ -1264,13 +1264,7 @@ function _buildInternalModel_nlp(m::Model, traits)
 end
 
 
-function solvenlp(m::Model, traits; suppress_warnings=false)
-
-    @assert m.internalModelLoaded
-
-    MathProgBase.optimize!(m.internalModel)
-    stat = MathProgBase.status(m.internalModel)
-
+function postsolveupdate_nlp!(m::Model, traits::ProblemTraits, suppress_warnings::Bool=false)
     if stat != :Infeasible && stat != :Unbounded
         m.objVal = MathProgBase.getobjval(m.internalModel)
         m.colVal = MathProgBase.getsolution(m.internalModel)
@@ -1280,7 +1274,6 @@ function solvenlp(m::Model, traits; suppress_warnings=false)
             m.objBound = objBound
         end
     end
-
     if stat != :Optimal
         suppress_warnings || warn("Not solved to optimality, status: $stat")
     end
@@ -1295,12 +1288,8 @@ function solvenlp(m::Model, traits; suppress_warnings=false)
             suppress_warnings || Base.warn_once("Nonlinear solver does not provide dual solutions")
         end
     end
-
     #d = m.nlpdata.evaluator
     #println("feval $(d.eval_f_timer)\nfgrad $(d.eval_grad_f_timer)\ngeval $(d.eval_g_timer)\njaceval $(d.eval_jac_g_timer)\nhess $(d.eval_hesslag_timer)")
-
-    return stat::Symbol
-
 end
 
 # getvalue for nonlinear subexpressions

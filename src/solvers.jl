@@ -164,7 +164,7 @@ function solve(m::Model; suppress_warnings=false,
 
     # If the model is a general nonlinear, use different logic in
     # nlp.jl to solve the problem
-    traits.nlp && return solvenlp(m, traits, suppress_warnings=suppress_warnings)
+    traits.nlp && @assert m.internalModelLoaded
 
     # Solve the problem
     MathProgBase.optimize!(m.internalModel)
@@ -302,7 +302,11 @@ function build(m::Model; suppress_warnings=false, relaxation=false, traits=Probl
     nothing
 end
 
-function postsolveupdate!(m::Model, status::Symbol, traits::ProblemTraits, relaxation::Bool, suppress_warnings::Bool)
+function postsolveupdate!(m::Model, stat::Symbol, traits::ProblemTraits, relaxation::Bool, suppress_warnings::Bool)
+    # If the model is nonlinear, use different logic in nlp.jl
+    # to postprocess the model
+    traits.nlp && return postsolveupdate_nlp!(m, traits, suppress_warnings)
+
     # Extract solution from the solver
     numRows, numCols = length(m.linconstr), m.numCols
     m.objBound = NaN
@@ -414,6 +418,8 @@ function postsolveupdate!(m::Model, status::Symbol, traits::ProblemTraits, relax
 
     # don't keep relaxed model in memory
     relaxation && (m.internalModelLoaded = false)
+
+    return
 end
 
 # Add the quadratic part of the objective and all quadratic constraints
