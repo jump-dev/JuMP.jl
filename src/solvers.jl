@@ -173,117 +173,7 @@ function solve(m::Model; suppress_warnings=false,
     MathProgBase.optimize!(m.internalModel)
     stat::Symbol = MathProgBase.status(m.internalModel)
 
-    # Extract solution from the solver
-    numRows, numCols = length(m.linconstr), m.numCols
-    m.objBound = NaN
-    m.objVal = NaN
-    m.colVal = fill(NaN, numCols)
-    m.linconstrDuals = Array{Float64}(0)
-
-    discrete = !relaxation && (traits.int || traits.sos)
-    if stat == :Optimal
-        # If we think dual information might be available, try to get it
-        # If not, return an array of the correct length
-        if discrete
-            m.redCosts = fill(NaN, numCols)
-            m.linconstrDuals = fill(NaN, numRows)
-        else
-            if !traits.conic
-                m.redCosts = try
-                    MathProgBase.getreducedcosts(m.internalModel)[1:numCols]
-                catch
-                    fill(NaN, numCols)
-                end
-
-                m.linconstrDuals = try
-                    MathProgBase.getconstrduals(m.internalModel)[1:numRows]
-                catch
-                    fill(NaN, numRows)
-                end
-            elseif !traits.qp && !traits.qc
-                fillConicDuals(m)
-            end
-        end
-    else
-        # Problem was not solved to optimality, attempt to extract useful
-        # information anyway
-        suppress_warnings || warn("Not solved to optimality, status: $stat")
-        # Some solvers provide infeasibility rays (dual) or unbounded
-        # rays (primal) for linear problems. Store these as the solution
-        # if the exist.
-        if traits.lin
-            if stat == :Infeasible
-                m.linconstrDuals = try
-                    infray = MathProgBase.getinfeasibilityray(m.internalModel)
-                    @assert length(infray) == numRows
-                    infray
-                catch
-                    suppress_warnings || warn("Infeasibility ray (Farkas proof) not available")
-                    fill(NaN, numRows)
-                end
-            elseif stat == :Unbounded
-                m.colVal = try
-                    unbdray = MathProgBase.getunboundedray(m.internalModel)
-                    @assert length(unbdray) == numCols
-                    unbdray
-                catch
-                    suppress_warnings || warn("Unbounded ray not available")
-                    fill(NaN, numCols)
-                end
-            end
-        end
-        # conic duals (currently, SOC and SDP only)
-        if !discrete && traits.conic && !traits.qp && !traits.qc
-            if stat == :Infeasible
-                fillConicDuals(m)
-            end
-        end
-    end
-
-    # If the problem was solved, or if it terminated prematurely, try
-    # to extract a solution anyway. This commonly occurs when a time
-    # limit or tolerance is set (:UserLimit)
-    if !(stat == :Infeasible || stat == :Unbounded)
-        try
-            # Do a separate try since getobjval could work while getobjbound does not and vice versa
-            objBound = MathProgBase.getobjbound(m.internalModel) + m.obj.aff.constant
-            m.objBound = objBound
-        end
-        try
-            objVal = MathProgBase.getobjval(m.internalModel) + m.obj.aff.constant
-            colVal = MathProgBase.getsolution(m.internalModel)[1:numCols]
-            # Rescale off-diagonal terms of SDP variables
-            if traits.sdp
-                offdiagvars = offdiagsdpvars(m)
-                colVal[offdiagvars] /= sqrt(2)
-            end
-            # Don't corrupt the answers if one of the above two calls fails
-            m.objVal = objVal
-            m.colVal = colVal
-        end
-    end
-
-    # The MathProgBase interface defines a conic problem to always be
-    # a minimization problem, so we need to flip the objective before
-    # reporting it to the user
-    if traits.conic && m.objSense == :Max
-        m.objBound *= -1
-        m.objVal *= -1
-    end
-
-    # If the solver was initially not set, we will restore this status
-    # and drop the internal MPB model. This is important for the case
-    # where the solver used changes between solves because the user
-    # has changed the problem class (e.g. LP to MILP)
-    if unset
-        m.solver = UnsetSolver()
-        if traits.int
-            m.internalModelLoaded = false
-        end
-    end
-
-    # don't keep relaxed model in memory
-    relaxation && (m.internalModelLoaded = false)
+    postsolveupdate!(m, stat, traits, relaxation)
 
     # Return the solve status
     stat
@@ -413,6 +303,120 @@ function build(m::Model; suppress_warnings=false, relaxation=false, traits=Probl
     # Record that we have a MPB model constructed
     m.internalModelLoaded = true
     nothing
+end
+
+function postsolveupdate!(m::Model, status::Symbol, traits::ProblemTraits, relaxation::Bool)
+    # Extract solution from the solver
+    numRows, numCols = length(m.linconstr), m.numCols
+    m.objBound = NaN
+    m.objVal = NaN
+    m.colVal = fill(NaN, numCols)
+    m.linconstrDuals = Array{Float64}(0)
+
+    discrete = !relaxation && (traits.int || traits.sos)
+    if stat == :Optimal
+        # If we think dual information might be available, try to get it
+        # If not, return an array of the correct length
+        if discrete
+            m.redCosts = fill(NaN, numCols)
+            m.linconstrDuals = fill(NaN, numRows)
+        else
+            if !traits.conic
+                m.redCosts = try
+                    MathProgBase.getreducedcosts(m.internalModel)[1:numCols]
+                catch
+                    fill(NaN, numCols)
+                end
+
+                m.linconstrDuals = try
+                    MathProgBase.getconstrduals(m.internalModel)[1:numRows]
+                catch
+                    fill(NaN, numRows)
+                end
+            elseif !traits.qp && !traits.qc
+                fillConicDuals(m)
+            end
+        end
+    else
+        # Problem was not solved to optimality, attempt to extract useful
+        # information anyway
+        suppress_warnings || warn("Not solved to optimality, status: $stat")
+        # Some solvers provide infeasibility rays (dual) or unbounded
+        # rays (primal) for linear problems. Store these as the solution
+        # if the exist.
+        if traits.lin
+            if stat == :Infeasible
+                m.linconstrDuals = try
+                    infray = MathProgBase.getinfeasibilityray(m.internalModel)
+                    @assert length(infray) == numRows
+                    infray
+                catch
+                    suppress_warnings || warn("Infeasibility ray (Farkas proof) not available")
+                    fill(NaN, numRows)
+                end
+            elseif stat == :Unbounded
+                m.colVal = try
+                    unbdray = MathProgBase.getunboundedray(m.internalModel)
+                    @assert length(unbdray) == numCols
+                    unbdray
+                catch
+                    suppress_warnings || warn("Unbounded ray not available")
+                    fill(NaN, numCols)
+                end
+            end
+        end
+        # conic duals (currently, SOC and SDP only)
+        if !discrete && traits.conic && !traits.qp && !traits.qc
+            if stat == :Infeasible
+                fillConicDuals(m)
+            end
+        end
+    end
+
+    # If the problem was solved, or if it terminated prematurely, try
+    # to extract a solution anyway. This commonly occurs when a time
+    # limit or tolerance is set (:UserLimit)
+    if !(stat == :Infeasible || stat == :Unbounded)
+        try
+            # Do a separate try since getobjval could work while getobjbound does not and vice versa
+            objBound = MathProgBase.getobjbound(m.internalModel) + m.obj.aff.constant
+            m.objBound = objBound
+        end
+        try
+            objVal = MathProgBase.getobjval(m.internalModel) + m.obj.aff.constant
+            colVal = MathProgBase.getsolution(m.internalModel)[1:numCols]
+            # Rescale off-diagonal terms of SDP variables
+            if traits.sdp
+                offdiagvars = offdiagsdpvars(m)
+                colVal[offdiagvars] /= sqrt(2)
+            end
+            # Don't corrupt the answers if one of the above two calls fails
+            m.objVal = objVal
+            m.colVal = colVal
+        end
+    end
+
+    # The MathProgBase interface defines a conic problem to always be
+    # a minimization problem, so we need to flip the objective before
+    # reporting it to the user
+    if traits.conic && m.objSense == :Max
+        m.objBound *= -1
+        m.objVal *= -1
+    end
+
+    # If the solver was initially not set, we will restore this status
+    # and drop the internal MPB model. This is important for the case
+    # where the solver used changes between solves because the user
+    # has changed the problem class (e.g. LP to MILP)
+    if unset
+        m.solver = UnsetSolver()
+        if traits.int
+            m.internalModelLoaded = false
+        end
+    end
+
+    # don't keep relaxed model in memory
+    relaxation && (m.internalModelLoaded = false)
 end
 
 # Add the quadratic part of the objective and all quadratic constraints
