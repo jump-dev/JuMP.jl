@@ -25,6 +25,7 @@ type ProblemTraits
     sdp::Bool  # has an SDP constraint (or SDP variable bounds)
     sos::Bool  # has an SOS constraint
     conic::Bool  # has an SDP or SOC constraint
+    unsetsolver::Bool # has not set a solver
 end
 function ProblemTraits(m::Model; relaxation=false)
     int = !relaxation && any(c-> !(c == :Cont || c == :Fixed), m.colCat)
@@ -35,7 +36,7 @@ function ProblemTraits(m::Model; relaxation=false)
     # will need to change this when we add support for arbitrary variable cones
     sdp = !isempty(m.sdpconstr) || !isempty(m.varCones)
     sos = !isempty(m.sosconstr)
-    ProblemTraits(int, !(qp|qc|nlp|soc|sdp|sos), qp, qc, nlp, soc, sdp, sos, soc|sdp)
+    ProblemTraits(int, !(qp|qc|nlp|soc|sdp|sos), qp, qc, nlp, soc, sdp, sos, soc|sdp, m.solver == UnsetSolver())
 end
 
 const suggestedsolvers = Dict("LP" => [(:Clp,:ClpSolver),
@@ -154,10 +155,6 @@ function solve(m::Model; suppress_warnings=false,
     # Clear warning counters
     m.map_counter = 0
     m.operator_counter = 0
-
-    # Remember if the solver was initially unset so we can restore
-    # it to be unset later
-    unset = m.solver == UnsetSolver()
 
     # Analyze the problems traits to determine what solvers we can use
     traits = ProblemTraits(m, relaxation=relaxation)
@@ -408,7 +405,7 @@ function postsolveupdate!(m::Model, status::Symbol, traits::ProblemTraits, relax
     # and drop the internal MPB model. This is important for the case
     # where the solver used changes between solves because the user
     # has changed the problem class (e.g. LP to MILP)
-    if unset
+    if traits.unsetsolver
         m.solver = UnsetSolver()
         if traits.int
             m.internalModelLoaded = false
