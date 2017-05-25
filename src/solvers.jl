@@ -166,6 +166,7 @@ function solve(m::Model; suppress_warnings=false,
     MathProgBase.optimize!(m.internalModel)
     stat::Symbol = MathProgBase.status(m.internalModel)
 
+    # Update attributes in m::Model based on the solve stat::Symbol and problem traits
     postsolveupdate!(m, stat, traits, relaxation, suppress_warnings)
 
     # Return the solve status
