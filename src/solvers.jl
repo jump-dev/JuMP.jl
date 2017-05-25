@@ -162,10 +162,6 @@ function solve(m::Model; suppress_warnings=false,
     # Build the MathProgBase model from the JuMP model
     build(m, traits=traits, suppress_warnings=suppress_warnings, relaxation=relaxation)
 
-    # If the model is a general nonlinear, use different logic in
-    # nlp.jl to solve the problem
-    traits.nlp && @assert m.internalModelLoaded
-
     # Solve the problem
     MathProgBase.optimize!(m.internalModel)
     stat::Symbol = MathProgBase.status(m.internalModel)
