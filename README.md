@@ -42,6 +42,7 @@ Our documentation includes an installation guide, quick-start guide, and referen
   * [Examples](https://github.com/JuliaOpt/JuMP.jl/tree/release-0.16/examples)
   * Testing status:
     * TravisCI: [![Build Status](https://travis-ci.org/JuliaOpt/JuMP.jl.svg?branch=release-0.16)](https://travis-ci.org/JuliaOpt/JuMP.jl)
+    * AppVeyor: [![Build Status](https://ci.appveyor.com/api/projects/status/5c52lkg38ggfq0vt/branch/release-0.16?svg=true)](https://ci.appveyor.com/api/projects/status/5c52lkg38ggfq0vt/branch/release-0.16)
     * PackageEvaluator:
       [![JuMP](http://pkg.julialang.org/badges/JuMP_0.5.svg)](http://pkg.julialang.org/?pkg=JuMP&ver=0.5)
       [![JuMP](http://pkg.julialang.org/badges/JuMP_0.6.svg)](http://pkg.julialang.org/?pkg=JuMP&ver=0.6)
@@ -52,6 +53,7 @@ Our documentation includes an installation guide, quick-start guide, and referen
   * [Examples](https://github.com/JuliaOpt/JuMP.jl/tree/master/examples)
   * Testing status:
     * TravisCI: [![Build Status](https://travis-ci.org/JuliaOpt/JuMP.jl.svg?branch=master)](https://travis-ci.org/JuliaOpt/JuMP.jl)
+    * AppVeyor: [![Build Status](https://ci.appveyor.com/api/projects/status/5c52lkg38ggfq0vt/branch/master?svg=true)](https://ci.appveyor.com/api/projects/status/5c52lkg38ggfq0vt/branch/master)
     * Test coverage:
       [![Coverage Status](https://coveralls.io/repos/JuliaOpt/JuMP.jl/badge.svg?branch=master)](https://coveralls.io/r/JuliaOpt/JuMP.jl?branch=master)
       [![codecov](https://codecov.io/gh/JuliaOpt/JuMP.jl/branch/master/graph/badge.svg)](https://codecov.io/gh/JuliaOpt/JuMP.jl)
