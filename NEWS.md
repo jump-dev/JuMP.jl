@@ -4,13 +4,18 @@ JuMP release notes
 Version 0.17.0 (May 27, 2017)
 -------------------------------
 
-   * **Breaking change**: JuMP no longer automatically transform quadratic constraints into conic form.
-   * **Breaking change**: The ``getvariable`` and ``getconstraint`` functions are replaced by indexing on the corresponding symbol. For instance to access the variable with name ``x``, one should now write ``m[:x]`` instead of ``getvariable(m, :x)``. As a consequence creating a variable and a constraint with the same name now triggers a warning and trying to access one of them afterwards throws an error.
+   * **Breaking change**: Mixing quadratic and conic constraints is no longer supported.
+   * **Breaking change**: The ``getvariable`` and ``getconstraint`` functions are replaced by indexing on the corresponding symbol. For instance to access the variable with name ``x``, one should now write ``m[:x]`` instead of ``getvariable(m, :x)``. As a consequence, creating a variable and constraint with the same name now triggers a warning, and accessing one of them afterwards throws an error. This change is breaking only in the latter case.
+   * Addition of the ``getobjectivebound`` function that mirrors the functionality of the MathProgBase ``getobjbound`` function except that it takes into account the constant part of the objective.
+   * Minor bug fixes.
+
+The following changes are primarily of interest to developers of JuMP extensions:
+
    * The new syntax ``@constraint(model, expr in Cone)`` creates the constraint ensuring that ``expr`` is inside ``Cone``. The ``Cone`` argument is passed to ``constructconstraint!`` which enables the call to the dispatched to an extension.
    * The ``@variable`` macro now calls ``constructvariable!`` instead of directly calling the ``Variable`` constructor. Extra arguments and keyword arguments passed to ``@variable`` are passed to ``constructvariable!`` which enables the call to be dispatched to an extension.
    * Refactor the internal function ``conicdata`` (used build the MathProgBase conic model) into smaller subfunctions to make these parts reusable by extensions.
-   * Addition of the ``getobjectivebound`` function that mirrors the functionality of the MathProgBase ``getobjbound`` function except that it takes into account the constant part of the objective.
-   * Minor bug fixes.
+
+
 
 Version 0.16.2 (March 28, 2017)
 -------------------------------
