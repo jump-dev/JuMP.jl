@@ -1,0 +1,347 @@
+
+
+<!DOCTYPE html>
+<!--[if IE 8]><html class="no-js lt-ie9" lang="en" > <![endif]-->
+<!--[if gt IE 8]><!--> <html class="no-js" lang="en" > <!--<![endif]-->
+<head>
+  <meta charset="utf-8">
+  
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  
+  <title>Problem Modification &mdash; JuMP -- Julia for Mathematical Optimization 0.17 documentation</title>
+  
+
+  
+  
+  
+  
+
+  
+
+  
+  
+    
+
+  
+
+  
+  
+    <link rel="stylesheet" href="_static/css/theme.css" type="text/css" />
+  
+
+  
+
+  
+        <link rel="index" title="Index"
+              href="genindex.html"/>
+        <link rel="search" title="Search" href="search.html"/>
+    <link rel="top" title="JuMP -- Julia for Mathematical Optimization 0.17 documentation" href="index.html"/>
+        <link rel="next" title="Solver Callbacks" href="callbacks.html"/>
+        <link rel="prev" title="Expressions and Constraints" href="refexpr.html"/> 
+
+  
+  <script src="_static/js/modernizr.min.js"></script>
+
+</head>
+
+<body class="wy-body-for-nav" role="document">
+
+   
+  <div class="wy-grid-for-nav">
+
+    
+    <nav data-toggle="wy-nav-shift" class="wy-nav-side">
+      <div class="wy-side-scroll">
+        <div class="wy-side-nav-search">
+          
+
+          
+            <a href="index.html" class="icon icon-home"> JuMP -- Julia for Mathematical Optimization
+          
+
+          
+          </a>
+
+          
+            
+            
+              <div class="version">
+                0.17
+              </div>
+            
+          
+
+          
+<div role="search">
+  <form id="rtd-search-form" class="wy-form" action="search.html" method="get">
+    <input type="text" name="q" placeholder="Search docs" />
+    <input type="hidden" name="check_keywords" value="yes" />
+    <input type="hidden" name="area" value="default" />
+  </form>
+</div>
+
+          
+        </div>
+
+        <div class="wy-menu wy-menu-vertical" data-spy="affix" role="navigation" aria-label="main navigation">
+          
+            
+            
+              
+            
+            
+              <ul class="current">
+<li class="toctree-l1"><a class="reference internal" href="installation.html">Installation Guide</a></li>
+<li class="toctree-l1"><a class="reference internal" href="quickstart.html">Quick Start Guide</a></li>
+<li class="toctree-l1"><a class="reference internal" href="refmodel.html">Models</a></li>
+<li class="toctree-l1"><a class="reference internal" href="refvariable.html">Variables</a></li>
+<li class="toctree-l1"><a class="reference internal" href="refexpr.html">Expressions and Constraints</a></li>
+<li class="toctree-l1 current"><a class="current reference internal" href="#">Problem Modification</a><ul>
+<li class="toctree-l2"><a class="reference internal" href="#differences-in-solvers">Differences in Solvers</a></li>
+<li class="toctree-l2"><a class="reference internal" href="#modifying-variables">Modifying variables</a></li>
+<li class="toctree-l2"><a class="reference internal" href="#modifying-constraints">Modifying constraints</a></li>
+<li class="toctree-l2"><a class="reference internal" href="#modifying-the-objective">Modifying the objective</a></li>
+<li class="toctree-l2"><a class="reference internal" href="#modifying-nonlinear-models">Modifying nonlinear models</a></li>
+</ul>
+</li>
+<li class="toctree-l1"><a class="reference internal" href="callbacks.html">Solver Callbacks</a></li>
+<li class="toctree-l1"><a class="reference internal" href="nlp.html">Nonlinear Modeling</a></li>
+</ul>
+
+            
+          
+        </div>
+      </div>
+    </nav>
+
+    <section data-toggle="wy-nav-shift" class="wy-nav-content-wrap">
+
+      
+      <nav class="wy-nav-top" role="navigation" aria-label="top navigation">
+        
+          <i data-toggle="wy-nav-top" class="fa fa-bars"></i>
+          <a href="index.html">JuMP -- Julia for Mathematical Optimization</a>
+        
+      </nav>
+
+
+      
+      <div class="wy-nav-content">
+        <div class="rst-content">
+          
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+<div role="navigation" aria-label="breadcrumbs navigation">
+
+  <ul class="wy-breadcrumbs">
+    
+      <li><a href="index.html">Docs</a> &raquo;</li>
+        
+      <li>Problem Modification</li>
+    
+    
+      <li class="wy-breadcrumbs-aside">
+        
+            
+            <a href="_sources/probmod.rst.txt" rel="nofollow"> View page source</a>
+          
+        
+      </li>
+    
+  </ul>
+
+  
+  <hr/>
+</div>
+          <div role="main" class="document" itemscope="itemscope" itemtype="http://schema.org/Article">
+           <div itemprop="articleBody">
+            
+  <div id="officialwarn" class="admonition warning">
+<p class="first admonition-title">Warning</p>
+<p class="last">This documentation tracks the development branch of JuMP. For the documentation of the latest JuMP release, see <a href="http://www.juliaopt.org/JuMP.jl/0.17/">here</a>.</p>
+</div>
+<script type="text/javascript">
+if(!(location.hostname.match('readthedocs') || location.hostname.match('rtfd'))){
+    document.getElementById("officialwarn").style.display = 'none';
+}
+</script><div class="section" id="problem-modification">
+<span id="probmod"></span><h1>Problem Modification<a class="headerlink" href="#problem-modification" title="Permalink to this headline">¶</a></h1>
+<p>It can be useful to modify models after they have been created and solved, for
+example when we are solving many similar models in succession or generating the
+model dynamically (e.g. column generation). Additionally it is sometimes
+desirable for the solver to re-start from the last solution to reduce running
+times for successive solves (“hot-start”). Where available, JuMP exposes this
+functionality.</p>
+<div class="section" id="differences-in-solvers">
+<h2>Differences in Solvers<a class="headerlink" href="#differences-in-solvers" title="Permalink to this headline">¶</a></h2>
+<p>Some solvers do not expose the ability to modify a model after creation - the
+model must be constructed from scratch each time. JuMP will use the ability to
+modify problems exposed by the solver if possible, and will still work even if
+the solver does not support this functionality by passing the complete problem
+to the solver every time.</p>
+</div>
+<div class="section" id="modifying-variables">
+<h2>Modifying variables<a class="headerlink" href="#modifying-variables" title="Permalink to this headline">¶</a></h2>
+<p>As before, variables can be added using the <code class="docutils literal"><span class="pre">&#64;variable</span></code> macro. To remove a variable,
+one can set the bounds on that variable to zero, e.g.:</p>
+<div class="highlight-julia"><div class="highlight"><pre><span></span><span class="n">setlowerbound</span><span class="p">(</span><span class="n">x</span><span class="p">,</span> <span class="mf">0.0</span><span class="p">)</span>
+<span class="n">setupperbound</span><span class="p">(</span><span class="n">x</span><span class="p">,</span> <span class="mf">0.0</span><span class="p">)</span>
+</pre></div>
+</div>
+<p>While bound updates are applied immediately in JuMP, variable bound changes are not
+transmitted to the solver until <code class="docutils literal"><span class="pre">solve</span></code> is called again.</p>
+<p>To add variables that appear in existing constraints, e.g. in column generation,
+there is an alternative form of the <code class="docutils literal"><span class="pre">&#64;variable</span></code> macro:</p>
+<div class="highlight-julia"><div class="highlight"><pre><span></span><span class="nd">@variable</span><span class="p">(</span><span class="n">m</span><span class="p">,</span> <span class="n">x</span><span class="p">,</span> <span class="n">objective</span> <span class="o">=</span> <span class="n">objcoef</span><span class="p">,</span> <span class="n">inconstraints</span> <span class="o">=</span> <span class="n">constrrefs</span><span class="p">,</span> <span class="n">coefficients</span> <span class="o">=</span> <span class="n">values</span><span class="p">)</span>
+<span class="nd">@variable</span><span class="p">(</span><span class="n">m</span><span class="p">,</span> <span class="n">x</span> <span class="o">&gt;=</span> <span class="n">lb</span><span class="p">,</span> <span class="n">objective</span> <span class="o">=</span> <span class="n">objcoef</span><span class="p">,</span> <span class="n">inconstraints</span> <span class="o">=</span> <span class="n">constrrefs</span><span class="p">,</span> <span class="n">coefficients</span> <span class="o">=</span> <span class="n">values</span><span class="p">)</span>
+<span class="nd">@variable</span><span class="p">(</span><span class="n">m</span><span class="p">,</span> <span class="n">x</span> <span class="o">&lt;=</span> <span class="n">ub</span><span class="p">,</span> <span class="n">objective</span> <span class="o">=</span> <span class="n">objcoef</span><span class="p">,</span> <span class="n">inconstraints</span> <span class="o">=</span> <span class="n">constrrefs</span><span class="p">,</span> <span class="n">coefficients</span> <span class="o">=</span> <span class="n">values</span><span class="p">)</span>
+<span class="nd">@variable</span><span class="p">(</span><span class="n">m</span><span class="p">,</span> <span class="n">lb</span> <span class="o">&lt;=</span> <span class="n">x</span> <span class="o">&lt;=</span> <span class="n">ub</span><span class="p">,</span> <span class="n">objective</span> <span class="o">=</span> <span class="n">objcoef</span><span class="p">,</span> <span class="n">inconstraints</span> <span class="o">=</span> <span class="n">constrrefs</span><span class="p">,</span> <span class="n">coefficients</span> <span class="o">=</span> <span class="n">values</span><span class="p">)</span>
+<span class="nd">@variable</span><span class="p">(</span><span class="n">m</span><span class="p">,</span> <span class="n">lb</span> <span class="o">&lt;=</span> <span class="n">x</span> <span class="o">&lt;=</span> <span class="n">ub</span><span class="p">,</span> <span class="kt">Int</span><span class="p">,</span> <span class="n">objective</span> <span class="o">=</span> <span class="n">objcoef</span><span class="p">,</span> <span class="n">inconstraints</span> <span class="o">=</span> <span class="n">constrrefs</span><span class="p">,</span> <span class="n">coefficients</span> <span class="o">=</span> <span class="n">values</span><span class="p">)</span>  <span class="c"># Types are supported</span>
+</pre></div>
+</div>
+<p>where <code class="docutils literal"><span class="pre">objcoef</span></code> is the coefficient of the variable in the new problem,
+<code class="docutils literal"><span class="pre">constrrefs</span></code> is a vector of <code class="docutils literal"><span class="pre">ConstraintRef</span></code>, and <code class="docutils literal"><span class="pre">values</span></code> is a vector
+of numbers. To give an example, consider the following code snippet:</p>
+<div class="highlight-julia"><div class="highlight"><pre><span></span><span class="n">m</span> <span class="o">=</span> <span class="n">Model</span><span class="p">()</span>
+<span class="nd">@variable</span><span class="p">(</span><span class="n">m</span><span class="p">,</span> <span class="mi">0</span> <span class="o">&lt;=</span> <span class="n">x</span> <span class="o">&lt;=</span> <span class="mi">1</span><span class="p">)</span>
+<span class="nd">@variable</span><span class="p">(</span><span class="n">m</span><span class="p">,</span> <span class="mi">0</span> <span class="o">&lt;=</span> <span class="n">y</span> <span class="o">&lt;=</span> <span class="mi">1</span><span class="p">)</span>
+<span class="nd">@objective</span><span class="p">(</span><span class="n">m</span><span class="p">,</span> <span class="n">Max</span><span class="p">,</span> <span class="mi">5</span><span class="n">x</span> <span class="o">+</span> <span class="mi">1</span><span class="n">y</span><span class="p">)</span>
+<span class="nd">@constraint</span><span class="p">(</span><span class="n">m</span><span class="p">,</span> <span class="n">con</span><span class="p">,</span> <span class="n">x</span> <span class="o">+</span> <span class="n">y</span> <span class="o">&lt;=</span> <span class="mi">1</span><span class="p">)</span>
+<span class="n">solve</span><span class="p">(</span><span class="n">m</span><span class="p">)</span>  <span class="c"># x = 1, y = 0</span>
+<span class="nd">@variable</span><span class="p">(</span><span class="n">m</span><span class="p">,</span> <span class="mi">0</span> <span class="o">&lt;=</span> <span class="n">z</span> <span class="o">&lt;=</span> <span class="mi">1</span><span class="p">,</span> <span class="n">objective</span> <span class="o">=</span> <span class="mf">10.0</span><span class="p">,</span> <span class="n">inconstraints</span> <span class="o">=</span> <span class="p">[</span><span class="n">con</span><span class="p">],</span> <span class="n">coefficients</span> <span class="o">=</span> <span class="p">[</span><span class="mf">1.0</span><span class="p">])</span>
+<span class="c"># The constraint is now x + y + z &lt;= 1</span>
+<span class="c"># The objective is now 5x + 1y + 10z</span>
+<span class="n">solve</span><span class="p">(</span><span class="n">m</span><span class="p">)</span>  <span class="c"># z = 1</span>
+</pre></div>
+</div>
+<p>In some situations you may be adding all variables in this way. To do so, first
+define a set of empty constraints, e.g.</p>
+<div class="highlight-julia"><div class="highlight"><pre><span></span><span class="n">m</span> <span class="o">=</span> <span class="n">Model</span><span class="p">()</span>
+<span class="nd">@constraint</span><span class="p">(</span><span class="n">m</span><span class="p">,</span> <span class="n">con</span><span class="p">,</span> <span class="mi">0</span> <span class="o">&lt;=</span> <span class="mi">1</span><span class="p">)</span>
+<span class="nd">@objective</span><span class="p">(</span><span class="n">m</span><span class="p">,</span> <span class="n">Max</span><span class="p">,</span> <span class="mi">0</span><span class="p">)</span>
+<span class="nd">@variable</span><span class="p">(</span><span class="n">m</span><span class="p">,</span> <span class="mi">0</span> <span class="o">&lt;=</span> <span class="n">x</span> <span class="o">&lt;=</span> <span class="mi">1</span><span class="p">,</span> <span class="n">objective</span> <span class="o">=</span> <span class="mi">5</span><span class="p">,</span> <span class="n">inconstraints</span> <span class="o">=</span> <span class="p">[</span><span class="n">con</span><span class="p">],</span> <span class="n">coefficients</span> <span class="o">=</span> <span class="p">[</span><span class="mf">1.0</span><span class="p">])</span>
+<span class="nd">@variable</span><span class="p">(</span><span class="n">m</span><span class="p">,</span> <span class="mi">0</span> <span class="o">&lt;=</span> <span class="n">y</span> <span class="o">&lt;=</span> <span class="mi">1</span><span class="p">,</span> <span class="n">objective</span> <span class="o">=</span> <span class="mi">1</span><span class="p">,</span> <span class="n">inconstraints</span> <span class="o">=</span> <span class="p">[</span><span class="n">con</span><span class="p">],</span> <span class="n">coefficients</span> <span class="o">=</span> <span class="p">[</span><span class="mf">1.0</span><span class="p">])</span>
+<span class="nd">@variable</span><span class="p">(</span><span class="n">m</span><span class="p">,</span> <span class="mi">0</span> <span class="o">&lt;=</span> <span class="n">z</span> <span class="o">&lt;=</span> <span class="mi">1</span><span class="p">,</span> <span class="n">objective</span> <span class="o">=</span> <span class="mi">10</span><span class="p">,</span> <span class="n">inconstraints</span> <span class="o">=</span> <span class="p">[</span><span class="n">con</span><span class="p">],</span> <span class="n">coefficients</span> <span class="o">=</span> <span class="p">[</span><span class="mf">1.0</span><span class="p">])</span>
+<span class="n">solve</span><span class="p">(</span><span class="n">m</span><span class="p">)</span>
+</pre></div>
+</div>
+</div>
+<div class="section" id="modifying-constraints">
+<h2>Modifying constraints<a class="headerlink" href="#modifying-constraints" title="Permalink to this headline">¶</a></h2>
+<p>JuMP does not currently support changing constraint coefficients. For less-than
+and greater-than constraints, the right-hand-side can be changed, e.g.:</p>
+<div class="highlight-julia"><div class="highlight"><pre><span></span><span class="nd">@constraint</span><span class="p">(</span><span class="n">m</span><span class="p">,</span> <span class="n">mycon</span><span class="p">,</span> <span class="n">x</span> <span class="o">+</span> <span class="n">y</span> <span class="o">&lt;=</span> <span class="mi">4</span><span class="p">)</span>
+<span class="n">solve</span><span class="p">(</span><span class="n">m</span><span class="p">)</span>
+<span class="n">JuMP</span><span class="o">.</span><span class="n">setRHS</span><span class="p">(</span><span class="n">mycon</span><span class="p">,</span> <span class="mi">3</span><span class="p">)</span>  <span class="c"># Now x + y &lt;= 3</span>
+<span class="n">solve</span><span class="p">(</span><span class="n">m</span><span class="p">)</span>  <span class="c"># Hot-start for LPs</span>
+</pre></div>
+</div>
+</div>
+<div class="section" id="modifying-the-objective">
+<h2>Modifying the objective<a class="headerlink" href="#modifying-the-objective" title="Permalink to this headline">¶</a></h2>
+<p>To change the objective, simply call <code class="docutils literal"><span class="pre">&#64;objective</span></code> again - the previous objective
+function and sense will be replaced.</p>
+</div>
+<div class="section" id="modifying-nonlinear-models">
+<h2>Modifying nonlinear models<a class="headerlink" href="#modifying-nonlinear-models" title="Permalink to this headline">¶</a></h2>
+<p>See <a class="reference internal" href="nlp.html#nonlinearprobmod"><span class="std std-ref">nonlinear parameters</span></a>.</p>
+</div>
+</div>
+
+
+           </div>
+           <div class="articleComments">
+            
+           </div>
+          </div>
+          <footer>
+  
+    <div class="rst-footer-buttons" role="navigation" aria-label="footer navigation">
+      
+        <a href="callbacks.html" class="btn btn-neutral float-right" title="Solver Callbacks" accesskey="n" rel="next">Next <span class="fa fa-arrow-circle-right"></span></a>
+      
+      
+        <a href="refexpr.html" class="btn btn-neutral" title="Expressions and Constraints" accesskey="p" rel="prev"><span class="fa fa-arrow-circle-left"></span> Previous</a>
+      
+    </div>
+  
+
+  <hr/>
+
+  <div role="contentinfo">
+    <p>
+        &copy; Copyright 2017, Miles Lubin, Iain Dunning, and Joey Huchette.
+
+    </p>
+  </div>
+  Built with <a href="http://sphinx-doc.org/">Sphinx</a> using a <a href="https://github.com/snide/sphinx_rtd_theme">theme</a> provided by <a href="https://readthedocs.org">Read the Docs</a>. 
+
+</footer>
+
+        </div>
+      </div>
+
+    </section>
+
+  </div>
+  
+
+
+  
+
+    <script type="text/javascript">
+        var DOCUMENTATION_OPTIONS = {
+            URL_ROOT:'./',
+            VERSION:'0.17',
+            COLLAPSE_INDEX:false,
+            FILE_SUFFIX:'.html',
+            HAS_SOURCE:  true,
+            SOURCELINK_SUFFIX: '.txt'
+        };
+    </script>
+      <script type="text/javascript" src="_static/jquery.js"></script>
+      <script type="text/javascript" src="_static/underscore.js"></script>
+      <script type="text/javascript" src="_static/doctools.js"></script>
+      <script type="text/javascript" src="https://cdnjs.cloudflare.com/ajax/libs/mathjax/2.7.0/MathJax.js?config=TeX-AMS-MML_HTMLorMML"></script>
+
+  
+
+  
+  
+    <script type="text/javascript" src="_static/js/theme.js"></script>
+  
+
+  
+  
+  <script type="text/javascript">
+      jQuery(function () {
+          SphinxRtdTheme.StickyNav.enable();
+      });
+  </script>
+  
+ 
+<!-- Google Analytics -->
+<script>
+window.ga=window.ga||function(){(ga.q=ga.q||[]).push(arguments)};ga.l=+new Date;
+ga('create', 'UA-44252521-1', 'auto');
+ga('send', 'pageview');
+</script>
+<script async src='https://www.google-analytics.com/analytics.js'></script>
+<!-- End Google Analytics -->
+
+
+</body>
+</html>
