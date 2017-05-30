@@ -273,12 +273,12 @@ end
 
 function _construct_constraint!(args...)
     warn("_construct_constraint! is deprecated. Use constructconstraint! instead")
-    constructconstraint(args...)
+    constructconstraint!(args...)
 end
 
 # two-argument constructconstraint! is used for one-sided constraints.
 # Right-hand side is zero.
-constructconstraint!(v::Variable, sense::Symbol) = constructconstraint(convert(AffExpr,v), sense)
+constructconstraint!(v::Variable, sense::Symbol) = constructconstraint!(convert(AffExpr,v), sense)
 function constructconstraint!(aff::AffExpr, sense::Symbol)
     offset = aff.constant
     aff.constant = 0.0

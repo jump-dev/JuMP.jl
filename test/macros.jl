@@ -798,4 +798,12 @@ end
             @test y[i].test_kw == 2
         end
     end
+
+    @testset "constructconstraint! on variable" begin
+        m = Model()
+        @variable(m, x)
+        @test string(JuMP.constructconstraint!(x, :(>=))) == "x $geq 0"
+        @test string(JuMP.constructconstraint!(x, :(<=))) == "x $leq 0"
+        @test string(JuMP.constructconstraint!(x, :(==))) == "x $eq 0"
+    end
 end
