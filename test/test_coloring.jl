@@ -1,21 +1,21 @@
 using Base.Test
-using Graphs
+using LightGraphs
 
-function to_adjlist(g::SimpleGraph)
+function to_adjlist(g::Graph)
     I = Int[]
     J = Int[]
     for e in edges(g)
-        push!(I,source(e,g))
-        push!(J,target(e,g))
+        push!(I,src(e))
+        push!(J,dst(e))
     end
-    return gen_adjlist(I,J,num_vertices(g))
+    return gen_adjlist(I,J,length(vertices(g)))
 end
 
 import ReverseDiffSparse.Coloring: acyclic_coloring, recovery_preprocess, reverse_topological_sort_by_dfs, gen_adjlist, hessian_color_preprocess, prepare_seed_matrix!, recover_from_matmat!, seed_matrix
 
 # tests for acyclic coloring
 
-g = simple_graph(10, is_directed=false)
+g = Graph(10)
 color, numcolors = acyclic_coloring(to_adjlist(g))
 @test numcolors == 1
 
@@ -34,13 +34,13 @@ color, numcolors = acyclic_coloring(to_adjlist(g))
 @test numcolors == 3
 recovery_preprocess(to_adjlist(g), color, numcolors, Int[])
 
-g = simple_graph(3, is_directed=false)
+g = Graph(3)
 add_edge!(g, 1, 3)
 add_edge!(g, 2, 3)
 color, numcolors = acyclic_coloring(to_adjlist(g))
 @test numcolors == 2
 
-g = simple_graph(4, is_directed=false)
+g = Graph(4)
 add_edge!(g, 1, 2)
 add_edge!(g, 2, 3)
 add_edge!(g, 3, 4)
@@ -50,7 +50,7 @@ color, numcolors = acyclic_coloring(to_adjlist(g))
 
 # test our topological sort method
 #=
-g = simple_graph(6, is_directed=false)
+g = Graph(6)
 add_edge!(g, 1,2)
 add_edge!(g, 1,3)
 add_edge!(g, 1,6)
