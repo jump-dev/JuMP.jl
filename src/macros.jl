@@ -833,6 +833,66 @@ function constructvariable!(m::Model, _error::Function, lowerbound::Number, uppe
     end
     Variable(m, lowerbound, upperbound, category == :Default ? :Cont : category, basename, start)
 end
+function constructvariable!(m::Model, ::PSDCone, _error::Function, lowerbound::Number, upperbound::Number, category::Symbol, basename::AbstractString, start::Number; extra_kwargs...)
+    _error("Cannot add a semidefinite scalar variable")
+end
+
+function _constructvariablecontainer!(m, coloncheck, lowertri, variable, refcall, idxvars, idxsets, idxpairs, condition, _error::Function, lowerbound, upperbound, category, basename::AbstractString, start, extra_kwargs, extra...)
+    # Code to be used to create each variable of the container.
+    variablecall = :( constructvariable!($m, $(extra...), $_error, $lowerbound, $upperbound, $category, $basename, $start) )
+    addkwargs!(variablecall, extra_kwargs)
+    code = :( $(refcall) = $variablecall )
+    # Determine the return type of constructvariable!. This is needed to create the container holding them.
+    vartype = :( variabletype($m, $(extra...)) )
+
+    getloopedcode(variable, coloncheck(refcall, code), condition, idxvars, idxsets, idxpairs, vartype; lowertri=lowertri)
+end
+
+function _addcoloncheckcode(refcall, code)
+    coloncheckcode = Expr(:call,:coloncheck,refcall.args[2:end]...)
+    :($coloncheckcode; $code)
+end
+function constructvariablecontainer!(m, variable, refcall, idxvars, idxsets, idxpairs, condition, _error::Function, lowerbound, upperbound, category, basename::AbstractString, start, extra_kwargs, extra...)
+    _constructvariablecontainer!(m, _addcoloncheckcode, false, variable, refcall, idxvars, idxsets, idxpairs, condition, _error, lowerbound, upperbound, category, basename, start, extra_kwargs, extra...)
+end
+
+function constructvariablecontainer!(m, variable, refcall, idxvars, idxsets, idxpairs, condition, _error::Function, lowerbound, upperbound, category, basename::AbstractString, start, extra_kwargs, ::Type{Symmetric}, extra...)
+    # Sanity checks on SDP input stuff
+    condition == :() ||
+        _error("Cannot have conditional indexing for SDP variables")
+    length(idxvars) == length(idxsets) == 2 ||
+        _error("SDP variables must be 2-dimensional")
+    (length(idxvars) == length(idxsets) == 2) ||
+        _error("Symmetric variables must be 2-dimensional")
+    hasdependentsets(idxvars, idxsets) &&
+        _error("Cannot have index dependencies in symmetric variables")
+    for _rng in idxsets
+        isexpr(_rng, :escape) ||
+            _error("Internal error 1")
+        rng = _rng.args[1] # undo escaping
+        (isexpr(rng,:(:)) && rng.args[1] == 1 && length(rng.args) == 2) ||
+            _error("Index sets for SDP variables must be ranges of the form 1:N")
+    end
+
+    if !(lowerbound == -Inf && upperbound == Inf)
+        _error("Semidefinite or symmetric variables cannot be provided bounds")
+    end
+
+    code = _constructvariablecontainer!(m, (refcall, code) -> code, true, variable, refcall, idxvars, idxsets, idxpairs, condition, _error, lowerbound, upperbound, category, basename, start, extra_kwargs, extra...)
+    quote
+        $(esc(idxsets[1].args[1].args[2])) == $(esc(idxsets[2].args[1].args[2])) || error("Cannot construct symmetric variables with nonsquare dimensions")
+        (issymmetric($lowerbound) && issymmetric($upperbound)) || error("Bounds on symmetric  variables must be symmetric")
+        $code
+    end
+end
+
+function constructvariablecontainer!(m, variable, refcall, idxvars, idxsets, idxpairs, condition, _error::Function, lowerbound, upperbound, category, basename::AbstractString, start, extra_kwargs, ::PSDCone, extra...)
+    code = constructvariablecontainer!(m, variable, refcall, idxvars, idxsets, idxpairs, condition, _error, lowerbound, upperbound, category, basename, start, extra_kwargs, Symmetric, extra...)
+    quote
+        $code
+        push!($(m).varCones, (:SDP, first($variable).col : last($variable).col))
+    end
+end
 
 const EMPTYSTRING = ""
 
@@ -1008,9 +1068,6 @@ macro variable(args...)
         _error("Must provide 'objective', 'inconstraints', and 'coefficients' arguments all together for column-wise modeling")
     end
 
-    sdp = any(t -> (t == :SDP), extra)
-    symmetric = (sdp || any(t -> (t == :Symmetric), extra))
-    extra = filter(x -> (x != :SDP && x != :Symmetric), extra) # filter out SDP and sym tag
     for ex in extra
         if ex in var_cats
             if t != quot(:Default) && t != quot(ex)
@@ -1020,7 +1077,8 @@ macro variable(args...)
             end
         end
     end
-    extra = esc.(filter(ex -> !(ex in var_cats), extra))
+    extra = filter(ex -> !(ex in var_cats), extra)
+    extra = map(ex -> ex == :SDP ? PSDCone() : ex == :Symmetric ? Symmetric : esc(ex), extra)
 
     # Handle the column generation functionality
     if coefficients !== nothing
@@ -1037,7 +1095,6 @@ macro variable(args...)
 
     if isa(var,Symbol)
         # Easy case - a single variable
-        sdp && _error("Cannot add a semidefinite scalar variable")
         variablecall = :( constructvariable!($m, $(extra...), $_error, $lb, $ub, $t, string($quotvarname), $value) )
         addkwargs!(variablecall, extra_kwargs)
         code = :($variable = $variablecall)
@@ -1057,64 +1114,18 @@ macro variable(args...)
     refcall, idxvars, idxsets, idxpairs, condition = buildrefsets(var, variable)
     clear_dependencies(i) = (isdependent(idxvars,idxsets[i],i) ? () : idxsets[i])
 
-    # Code to be used to create each variable of the container.
-    variablecall = :( constructvariable!($m, $(extra...), $_error, $lb, $ub, $t, EMPTYSTRING, $value) )
-    addkwargs!(variablecall, extra_kwargs)
-    code = :( $(refcall) = $variablecall )
-    # Determine the return type of constructvariable!. This is needed to create the container holding them.
-    vartype = :( variabletype($m, $(extra...)) )
+    code = constructvariablecontainer!(m, variable, refcall, idxvars, idxsets, idxpairs, condition, _error, lb, ub, t, EMPTYSTRING, value, extra_kwargs, extra...)
 
-    if symmetric
-        # Sanity checks on SDP input stuff
-        condition == :() ||
-            _error("Cannot have conditional indexing for SDP variables")
-        length(idxvars) == length(idxsets) == 2 ||
-            _error("SDP variables must be 2-dimensional")
-        !symmetric || (length(idxvars) == length(idxsets) == 2) ||
-            _error("Symmetric variables must be 2-dimensional")
-        hasdependentsets(idxvars, idxsets) &&
-            _error("Cannot have index dependencies in symmetric variables")
-        for _rng in idxsets
-            isexpr(_rng, :escape) ||
-                _error("Internal error 1")
-            rng = _rng.args[1] # undo escaping
-            (isexpr(rng,:(:)) && rng.args[1] == 1 && length(rng.args) == 2) ||
-                _error("Index sets for SDP variables must be ranges of the form 1:N")
-        end
-
-        if !(lb == -Inf && ub == Inf)
-            _error("Semidefinite or symmetric variables cannot be provided bounds")
-        end
-        return assert_validmodel(m, quote
-            $(esc(idxsets[1].args[1].args[2])) == $(esc(idxsets[2].args[1].args[2])) || error("Cannot construct symmetric variables with nonsquare dimensions")
-            (issymmetric($lb) && issymmetric($ub)) || error("Bounds on symmetric  variables must be symmetric")
-            $(getloopedcode(variable, code, condition, idxvars, idxsets, idxpairs, vartype; lowertri=symmetric))
-            $(if sdp
-                quote
-                    push!($(m).varCones, (:SDP, first($variable).col : last($variable).col))
-                end
-            end)
-            push!($(m).dictList, $variable)
-            !$anonvar && registervar($m, $quotvarname, $variable)
-            storecontainerdata($m, $variable, $quotvarname,
-                               $(Expr(:tuple,idxsets...)),
-                               $idxpairs, $(quot(condition)))
-            $(anonvar ? variable : :($escvarname = $variable))
-        end)
-    else
-        coloncheckcode = Expr(:call,:coloncheck,refcall.args[2:end]...)
-        code = :($coloncheckcode; $code)
-        return assert_validmodel(m, quote
-            $(getloopedcode(variable, code, condition, idxvars, idxsets, idxpairs, vartype))
-            isa($variable, JuMPContainer) && pushmeta!($variable, :model, $m)
-            push!($(m).dictList, $variable)
-            !$anonvar && registervar($m, $quotvarname, $variable)
-            storecontainerdata($m, $variable, $quotvarname,
-                               $(Expr(:tuple,map(clear_dependencies,1:length(idxsets))...)),
-                               $idxpairs, $(quot(condition)))
-            $(anonvar ? variable : :($escvarname = $variable))
-        end)
-    end
+    return assert_validmodel(m, quote
+        $code
+        isa($variable, JuMPContainer) && pushmeta!($variable, :model, $m)
+        push!($(m).dictList, $variable)
+        !$anonvar && registervar($m, $quotvarname, $variable)
+        storecontainerdata($m, $variable, $quotvarname,
+                           $(Expr(:tuple,map(clear_dependencies,1:length(idxsets))...)),
+                           $idxpairs, $(quot(condition)))
+        $(anonvar ? variable : :($escvarname = $variable))
+    end)
 end
 
 storecontainerdata(m::Model, variable, varname, idxsets, idxpairs, condition) =
