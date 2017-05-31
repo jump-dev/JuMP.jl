@@ -29,6 +29,8 @@ export
     LinearConstraint, QuadConstraint, SDConstraint, SOCConstraint,
     NonlinearConstraint,
     ConstraintRef,
+# Cones
+    PSDCone,
 # Functions
     # Model related
     getobjectivebound, getobjectivevalue, getobjective,
@@ -530,6 +532,9 @@ include("norms.jl")
 ##########################################################################
 # SOSConstraint  (special ordered set constraints)
 include("sos.jl")
+
+# Used in @constraint m X in SDP
+immutable PSDCone end
 
 ##########################################################################
 # SDConstraint is a (dual) semidefinite constraint of the form
