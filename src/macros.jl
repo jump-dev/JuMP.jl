@@ -156,7 +156,8 @@ function getloopedcode(varname, code, condition, idxvars, idxsets, idxpairs, sym
         i, j = esc(idxvars[1]), esc(idxvars[2])
         expr = copy(code)
         vname = expr.args[1].args[1]
-        expr.args[1] = :tmp
+        tmp = gensym()
+        expr.args[1] = tmp
         code = quote
             let
                 $(localvar(i))
@@ -164,8 +165,8 @@ function getloopedcode(varname, code, condition, idxvars, idxsets, idxpairs, sym
                 for $i in $(idxsets[1]), $j in $(idxsets[2])
                     $i <= $j || continue
                     $expr
-                    $vname[$i,$j] = tmp
-                    $vname[$j,$i] = tmp
+                    $vname[$i,$j] = $tmp
+                    $vname[$j,$i] = $tmp
                 end
             end
         end
