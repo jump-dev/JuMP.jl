@@ -9,6 +9,7 @@ julia:
 notifications:
     email: false
 sudo: false
+dist: trusty
 addons:
     apt_packages:
         - gfortran
