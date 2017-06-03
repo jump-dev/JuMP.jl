@@ -344,6 +344,8 @@ constructconstraint!(aff::Variable, lb::Real, ub::Real) = constructconstraint!(c
 
 constructconstraint!(q::QuadExpr, lb, ub) = error("Two-sided quadratic constraints not supported. (Try @NLconstraint instead.)")
 
+constructconstraint!(x::AbstractMatrix, ::PSDCone) = SDConstraint(x)
+
 constraint_error(args, str) = error("In @constraint($(join(args,","))): ", str)
 
 macro constraint(args...)
@@ -523,7 +525,7 @@ macro SDconstraint(m, x)
     assert_validmodel(m, quote
         q = zero(AffExpr)
         $parsecode
-        addconstraint($m, SDConstraint($newaff))
+        addconstraint($m, constructconstraint!($newaff, PSDCone()))
     end)
 end
 
