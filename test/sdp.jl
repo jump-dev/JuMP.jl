@@ -754,4 +754,17 @@ ispsd(x::JuMP.JuMPArray) = ispsd(x.innerArray)
         @test isapprox(getdual(x2), 1/3, atol=1e-5)
         @test isapprox(getdual(x3), 0, atol=1e-5)
     end
+
+    @testset "No constraint with $solver" for solver in sdp_solvers
+        println(solver)
+        m = Model(solver=solver)
+        @variable(m, X[1:3,1:3], SDP)
+        @objective(m, Min, trace(X))
+        status = solve(m)
+
+        @test status == :Optimal
+        @test abs(getobjectivevalue(m)) < 1e-5
+        @test norm(getvalue(X)) < 1e-5
+        @test isapprox(getdual(X), eye(3), atol=1e-5)
+    end
 end

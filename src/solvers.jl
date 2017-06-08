@@ -117,22 +117,24 @@ end
 
 function fillConicDuals(m::Model)
 
-    numRows, numCols = length(m.linconstr), m.numCols
-
+    numLinRows, numCols = length(m.linconstr), m.numCols
     numBndRows = getNumBndRows(m)
     numSOCRows = getNumSOCRows(m)
     numSDPRows = getNumSDPRows(m)
     numSymRows = getNumSymRows(m)
+    numRows = numLinRows+numBndRows+numSOCRows+numSDPRows+numSymRows
+
     m.conicconstrDuals = try
         MathProgBase.getdual(m.internalModel)
     catch
-        fill(NaN, numRows+numBndRows+numSOCRows+numSDPRows+numSymRows)
+        fill(NaN, numRows)
     end
-    if isfinite(m.conicconstrDuals[1]) # NaN could mean unavailable
+
+    if numRows == 0 || isfinite(m.conicconstrDuals[1]) # NaN could mean unavailable
         if m.objSense == :Min
             scale!(m.conicconstrDuals, -1)
         end
-        m.linconstrDuals = m.conicconstrDuals[1:length(m.linconstr)]
+        m.linconstrDuals = m.conicconstrDuals[1:numLinRows]
         m.redCosts = zeros(numCols)
         fillConicRedCosts(m)
     end
