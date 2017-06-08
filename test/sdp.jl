@@ -763,9 +763,6 @@ ispsd(x::JuMP.JuMPArray) = ispsd(x.innerArray)
         status = solve(m)
 
         @test status == :Optimal
-        getobjectivevalue(m) = -7.587633351277403e-12
-        getvalue(X) = [-2.52921e-12 0.0 0.0; 0.0 -2.52921e-12 0.0; 0.0 0.0 -2.52921e-12]
-        getdual(X) = [1.0 0.0 0.0; 0.0 1.0 0.0; 0.0 0.0 1.0]
         @test abs(getobjectivevalue(m)) < 1e-5
         @test norm(getvalue(X)) < 1e-5
         @test isapprox(getdual(X), eye(3), atol=1e-5)
