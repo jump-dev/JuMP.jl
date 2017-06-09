@@ -1,6 +1,12 @@
 JuMP release notes
 ==================
 
+Version 0.17.1 (June 9, 2017)
+-------------------------------
+
+   * Use of `constructconstraint!` in `@SDconstraint`.
+   * Minor bug fixes.
+
 Version 0.17.0 (May 27, 2017)
 -------------------------------
 
