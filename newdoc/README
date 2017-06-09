@@ -1,0 +1,50 @@
+## To build
+
+1) Get Boostrap 3, e.g. http://getbootstrap.com/getting-started/#download
+2) Stick in build/
+2) Install Mustache.jl
+3) julia build.jl
+4) Docs are in build/
+
+
+## Plan
+
+From the whiteboard:
+
+1. Install
+  - JuMP
+  - solvers
+2. Getting started
+  - MILP
+    - Variable (indices, bin/int)
+    - Constraints (sum{})
+    - get solution
+  - QP
+  - Norm (vec syntax)
+  - SDP
+  - NLP
+3. Adv. Model Building
+  - Build up exprs
+  - SOS
+  - Fixed, semicont, semiint
+  - Performance
+4. Solutions
+  - getVal, getDual
+  - setVal
+  - sol status
+5. Modifying the model
+  - Col gen
+  - add rows
+  - warm starts
+  - chgConstrRHS
+  - change category
+  - relaxation
+6. Callbacks
+7. MPB
+  - buildInternalModel
+  - var hints, IIS
+8. Solver options
+  - changing solver
+9. JuMP internals
+  - devdocs
+  - extensions
