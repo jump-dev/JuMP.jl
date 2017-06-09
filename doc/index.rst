@@ -91,6 +91,7 @@ Contents
     probmod.rst
     callbacks.rst
     nlp.rst
+    extensions.rst
 
 -----------
 Citing JuMP
