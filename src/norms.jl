@@ -74,7 +74,7 @@ _build_norm{C,V}(P,terms::Vector{GenericAffExpr{C,V}}) = GenericNorm(P,terms)
 _build_norm(Lp, terms::Vector{GenericAffExpr}) = _build_norm(Lp, [terms...])
 
 # Alias for AffExprs. Short-hand used in operator overloads, etc.
-@compat Norm{P} = GenericNorm{P,Float64,Variable}
+Norm{P} = GenericNorm{P,Float64,Variable}
 
 getvalue{P,C,V}(n::GenericNorm{P,C,V}) = norm(getvalue(n.terms),P)
 
@@ -95,7 +95,7 @@ Base.convert{P,C,V}(::Type{GenericNormExpr{P,C,V}}, x::GenericNorm{P,C,V}) =
     GenericNormExpr{P,C,V}(x, one(C), zero(GenericAffExpr{C,V}))
 
 # Alias for ‖Ax‖₂ case
-@compat GenericSOCExpr{C,V} = GenericNormExpr{2,C,V}
+GenericSOCExpr{C,V} = GenericNormExpr{2,C,V}
 
 # Alias for ‖Ax‖₂ and AffExpr case
 const SOCExpr = GenericSOCExpr{Float64,Variable}
