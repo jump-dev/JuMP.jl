@@ -602,7 +602,7 @@ ispsd(x::JuMP.JuMPArray) = ispsd(x.innerArray)
         @variable(m, y)
         c = @SDconstraint(m, [2-y 1; 1 -y] >= 0)
         @objective(m, Max, y)
-        @test all(isnan(getdual(c)))
+        @test all(isnan, getdual(c))
         status = solve(m)
 
         @test status == :Optimal
@@ -628,7 +628,7 @@ ispsd(x::JuMP.JuMPArray) = ispsd(x.innerArray)
         @variable(m, y)
         c = @SDconstraint(m, [0 y; y 0] <= [1 0; 0 0])
         @objective(m, Max, y)
-        @test all(isnan(getdual(c)))
+        @test all(isnan, getdual(c))
         status = solve(m)
 
         if contains(string(typeof(solver)),"MosekSolver")
@@ -654,7 +654,7 @@ ispsd(x::JuMP.JuMPArray) = ispsd(x.innerArray)
         @variable(m, X[1:2,1:2], SDP)
         c = @constraint(m, 2*X[1,2] == 1)
         @objective(m, Min, X[1,1])
-        @test all(isnan(getdual(X)))
+        @test all(isnan, getdual(X))
         status = solve(m)
 
         @test status == :Optimal
