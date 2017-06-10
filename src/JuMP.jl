@@ -12,8 +12,6 @@ __precompile__()
 
 module JuMP
 
-using Compat
-
 importall Base.Operators
 import Base.map
 
@@ -61,7 +59,7 @@ include("utils.jl")
 ###############################################################################
 # Model class
 # Keeps track of all model and column info
-@compat abstract type AbstractModel end
+abstract type AbstractModel end
 type Model <: AbstractModel
     obj#::QuadExpr
     objSense::Symbol
@@ -323,10 +321,10 @@ setprinthook(m::Model, f) = (m.printhook = f)
 #############################################################################
 # AbstractConstraint
 # Abstract base type for all constraint types
-@compat abstract type AbstractConstraint end
+abstract type AbstractConstraint end
 # Abstract base type for all scalar types
 # In JuMP, used only for Variable. Useful primarily for extensions
-@compat abstract type AbstractJuMPScalar end
+abstract type AbstractJuMPScalar end
 
 Base.start(::AbstractJuMPScalar) = false
 Base.next(x::AbstractJuMPScalar, state) = (x, true)

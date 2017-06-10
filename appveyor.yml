@@ -1,9 +1,7 @@
 environment:
   matrix:
-  - JULIA_URL: "https://julialang-s3.julialang.org/bin/winnt/x86/0.5/julia-0.5-latest-win32.exe"
-  - JULIA_URL: "https://julialang-s3.julialang.org/bin/winnt/x64/0.5/julia-0.5-latest-win64.exe"
-  - JULIA_URL: "https://julialangnightlies-s3.julialang.org/bin/winnt/x86/julia-latest-win32.exe"
-  - JULIA_URL: "https://julialangnightlies-s3.julialang.org/bin/winnt/x64/julia-latest-win64.exe"
+  - JULIA_URL: "https://julialang-s3.julialang.org/bin/winnt/x86/0.6/julia-0.6-latest-win32.exe"
+  - JULIA_URL: "https://julialang-s3.julialang.org/bin/winnt/x64/0.6/julia-0.6-latest-win64.exe"
 
 branches:
   only:
@@ -27,7 +25,7 @@ install:
 build_script:
 # Need to convert from shallow to complete for Pkg.clone to work
 #  - git fetch --unshallow
-  - C:\projects\julia\bin\julia-debug -e "versioninfo(); Pkg.init(); Pkg.add(\"WinRPM\"); Pkg.clone(pwd(), \"JuMP\");"
+  - C:\projects\julia\bin\julia -e "versioninfo(); Pkg.init(); Pkg.add(\"WinRPM\"); Pkg.clone(pwd(), \"JuMP\");"
 
 test_script:
-  - C:\projects\julia\bin\julia-debug -e "Pkg.test(\"JuMP\")"
+  - C:\projects\julia\bin\julia -e "Pkg.test(\"JuMP\")"
