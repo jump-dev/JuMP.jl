@@ -6,7 +6,7 @@
 using Base.Meta
 # multivarate "dictionary" used for collections of variables/constraints
 
-@compat abstract type JuMPContainer{T,N} end
+abstract type JuMPContainer{T,N} end
 
 include("JuMPArray.jl")
 

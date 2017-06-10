@@ -23,9 +23,9 @@
 #############################################################################
 
 # Used for dispatching
-@compat abstract type PrintMode end
-@compat abstract type REPLMode <: PrintMode end
-@compat abstract type IJuliaMode <: PrintMode end
+abstract type PrintMode end
+abstract type REPLMode <: PrintMode end
+abstract type IJuliaMode <: PrintMode end
 
 # Whether something is zero or not for the purposes of printing it
 const PRINT_ZERO_TOL = 1e-10
