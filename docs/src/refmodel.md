@@ -67,44 +67,16 @@ Solve status
 
 The call `status = solve(m)` returns a symbol recording the status of the optimization process, as reported by the solver. Typical values are listed in the table below, although the code can take solver-dependent values. For instance, certain solvers prove infeasibility or unboundedness during presolve, but do not report which of the two cases holds. See your solver interface documentation (as linked to in the solver table &lt;jump-solvertable&gt;) for more information.
 
-<table style="width:83%;">
-<colgroup>
-<col width="25%" />
-<col width="58%" />
-</colgroup>
-<thead>
-<tr class="header">
-<th>Status</th>
-<th>Meaning</th>
-</tr>
-</thead>
-<tbody>
-<tr class="odd">
-<td><code>:Optimal</code></td>
-<td>Problem solved to optimality</td>
-</tr>
-<tr class="even">
-<td><code>:Unbounded</code></td>
-<td>Problem is unbounded</td>
-</tr>
-<tr class="odd">
-<td><code>:Infeasible</code></td>
-<td>Problem is infeasible</td>
-</tr>
-<tr class="even">
-<td><code>:UserLimit</code></td>
-<td>Iteration limit or timeout</td>
-</tr>
-<tr class="odd">
-<td><code>:Error</code></td>
-<td>Solver exited with an error</td>
-</tr>
-<tr class="even">
-<td><code>:NotSolved</code></td>
-<td>Model built in memory but not optimized</td>
-</tr>
-</tbody>
-</table>
+
+| Status        | Meaning                                 |
+| ------------- | --------------------------------------- |
+| `:Optimal`    | Problem solved to optimality            |
+| `:Unbounded`  | Problem is unbounded                    |
+| `:Infeasible` | Problem is infeasible                   |
+| `:UserLimit`  | Iteration limit or timeout              |
+| `:Error`      | Solver exited with an error             |
+| `:NotSolved`  | Model built in memory but not optimized |
+
 
 Quadratic Objectives
 --------------------
