@@ -633,7 +633,7 @@ for (mac,sym) in [(:LinearConstraints, Symbol("@LinearConstraint")),
                   (:SOCConstraints,    Symbol("@SOCConstraint"))]
     @eval begin
         macro $mac(x)
-            x.head == :block || error(string("Invalid syntax for ", $(quot(sym))))
+            x.head == :block || error(string("Invalid syntax for @", $(string(mac))))
             @assert x.args[1].head == :line
             code = Expr(:vect)
             for it in x.args
@@ -648,9 +648,9 @@ for (mac,sym) in [(:LinearConstraints, Symbol("@LinearConstraint")),
                         #     x <= 1,
                         #     x >= 1
                         # end)
-                        error(string("Invalid syntax in ", $(quot(sym)), ". Do you have commas at the end of a line specifying a constraint?"))
+                        error(string("Invalid syntax in @", $(string(mac)), ". Do you have commas at the end of a line specifying a constraint?"))
                     end
-                    error(string($(quot(sym)), " does not currently support the two argument syntax for specifying groups of constraints in one line."))
+                    error("@", string($(string(mac)), " does not currently support the two argument syntax for specifying groups of constraints in one line."))
                 else
                     error("Unexpected constraint expression $it")
                 end
@@ -668,7 +668,7 @@ for (mac,sym) in [(:constraints,  Symbol("@constraint")),
                   (:NLexpressions, Symbol("@NLexpression"))]
     @eval begin
         macro $mac(m, x)
-            x.head == :block || error("Invalid syntax for @$mac")
+            x.head == :block || error("Invalid syntax for @",$(string(mac)))
             @assert x.args[1].head == :line
             code = quote end
             for it in x.args
