@@ -62,7 +62,7 @@ Methods
 -   `writeLP(m::Model, filename::AbstractString; genericnames=true)` - write the model to `filename` in the LP file format. Set `genericnames=false` for user-defined variable names.
 -   `writeMPS(m::Model, filename::AbstractString)` - write the model to `filename` in the MPS file format.
 
-Solve status
+Solve Status
 ------------
 
 The call `status = solve(m)` returns a symbol recording the status of the optimization process, as reported by the solver. Typical values are listed in the table below, although the code can take solver-dependent values. For instance, certain solvers prove infeasibility or unboundedness during presolve, but do not report which of the two cases holds. See your solver interface documentation (as linked to in the solver table &lt;jump-solvertable&gt;) for more information.
