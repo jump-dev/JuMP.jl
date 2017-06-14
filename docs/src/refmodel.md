@@ -16,7 +16,8 @@ The constructor also accepts an optional keyword argument, `solver`. You may spe
 
 where `solvername` is one of the supported solvers. See the solver table &lt;jump-solvertable&gt; for the list of available solvers and corresponding parameter names. All options are solver-dependent; see corresponding solver packages for more information.
 
-Be sure that the solver provided supports the problem class of the model. For example `ClpSolver` and `GLPKSolverLP` support only linear programming problems. `CbcSolver` and `GLPKSolverMIP` support only mixed-integer programming problems.
+!!! note
+    Be sure that the solver provided supports the problem class of the model. For example `ClpSolver` and `GLPKSolverLP` support only linear programming problems. `CbcSolver` and `GLPKSolverMIP` support only mixed-integer programming problems.
 
 As an example, we can create a `Model` object that will use GLPK's exact solver for LPs as follows:
 
@@ -38,11 +39,11 @@ Methods
 -   `getsolvetime(m::Model)` - returns the solve time reported by the solver if it is implemented.
 -   `getnodecount(m::Model)` - returns the number of explored branch-and-bound nodes, if it is implemented.
 -   `getobjbound(m::Model)` - returns the best known bound on the optimal objective value. This is used, for example, when a branch-and-bound method is stopped before finishing.
--   `getobjgap(m::Model)` - returns the final relative optimality gap as optimization terminated. That is, it returns $\\frac{|b-f|}{|f|}$, where *b* is the best bound and *f* is the best feasible objective value.
+-   `getobjgap(m::Model)` - returns the final relative optimality gap as optimization terminated. That is, it returns ``\frac{|b-f|}{|f|}``, where *b* is the best bound and *f* is the best feasible objective value.
 -   `getrawsolver(m::Model)` - returns an object that may be used to access a solver-specific API.
 -   `getsimplexiter(m::Model)` - returns the cumulative number of simplex iterations during the optimization process. In particular, for a MIP it returns the total simplex iterations for all nodes.
 -   `getbarrieriter(m::Model)` - returns the cumulative number of barrier iterations during the optimization process.
--   `internalmodel(m::Model)` - returns the internal low-level `AbstractMathProgModel` object which can be used to access any functionality that is not exposed by JuMP. See the MathProgBase [documentation](https://mathprogbasejl.readthedocs.org/en/latest/lowlevel.html).
+-   `internalmodel(m::Model)` - returns the internal low-level `AbstractMathProgModel` object which can be used to access any functionality that is not exposed by JuMP. See the MathProgBase [documentation](https://mathprogbasejl.readthedocs.org/en/latest/).
 -   `solve(m::Model; suppress_warnings=false, relaxation=false)` - solves the model using the selected solver (or a default for the problem class), and takes two optional arguments that are disabled by default. Setting `suppress_warnings` to `true` will suppress all JuMP-specific output (e.g. warnings about infeasibility and lack of dual information) but will not suppress solver output (which should be done by passing options to the solver). Setting `relaxation=true` solves the standard continuous relaxation for the model: that is, integrality is dropped, special ordered set constraints are not enforced, and semi-continuous and semi-integer variables with bounds `[l,u]` are replaced with bounds `[min(l,0),max(u,0)]`.
 -   `JuMP.build(m::Model)` - builds the model in memory at the MathProgBase level without optimizing.
 -   `setsolver(m::Model,s::AbstractMathProgSolver)` - changes the solver which will be used for the next call to `solve()`, discarding the current internal model if present.
@@ -98,7 +99,7 @@ Quadratic objectives are supported by JuMP using a solver which implements the c
 Second-order cone constraints
 -----------------------------
 
-Second-order cone constraints of the form ||*A**x* − *b*||<sub>2</sub> + *a*<sup>*T*</sup>*x* + *c* ≤ 0 can be added directly using the `norm` function:
+Second-order cone constraints of the form ``||Ax − b||_2 + a^Tx + c \leq 0`` can be added directly using the `norm` function:
 
     @constraint(m, norm(A*x) <= 2w - 1)
 
