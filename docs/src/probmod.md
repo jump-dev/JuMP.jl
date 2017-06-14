@@ -67,4 +67,4 @@ To change the objective, simply call `@objective` again - the previous objective
 Modifying nonlinear models
 --------------------------
 
-See nonlinear parameters &lt;nonlinearprobmod&gt;.
+See nonlinear parameters [Nonlinear Parameters](@ref).

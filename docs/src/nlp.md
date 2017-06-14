@@ -31,7 +31,7 @@ The syntax accepted in nonlinear expressions is more restricted than the syntax 
 
 -   All expressions must be simple scalar operations. You cannot use `dot`, matrix-vector products, vector slices, etc. Translate vector operations into explicit `sum()` operations or use the `AffExpr` plus auxiliary variable trick described below.
 -   There is no operator overloading provided to build up nonlinear expressions. For example, if `x` is a JuMP variable, the code `3x` will return an `AffExpr` object that can be used inside of future expressions and linear constraints. However, the code `sin(x)` is an error. All nonlinear expressions must be inside of macros.
--   userfunctions may be used within nonlinear expressions only after they are registered. For example:
+-   [User-defined Functions](@ref) may be used within nonlinear expressions only after they are registered. For example:
 
         myfunction(a,b) = exp(a)*b
         @variable(m, x); @variable(m, y)
@@ -92,7 +92,7 @@ Nonlinear parameters are useful when solving nonlinear models in a sequence:
 
 Using nonlinear parameters can be faster than creating a new model from scratch with updated data because JuMP is able to avoid repeating a number of steps in processing the model before handing it off to the solver.
 
-User-defined functions
+User-defined Functions
 ----------------------
 
 JuMP's library of recognized univariate functions is derived from the [Calculus.jl](https://github.com/johnmyleswhite/Calculus.jl) package. If you encounter a standard special function not currently supported by JuMP, consider contributing to the [list of derivative rules](https://github.com/johnmyleswhite/Calculus.jl/blob/cb42f3699177449a42bdc3461c8aea8777aa8c39/src/differentiate.jl#L115) there. In addition to this built-in list of functions, it is possible to register custom (*user-defined*) nonlinear functions to use within nonlinear expressions. JuMP does not support black-box optimization, so all user-defined functions must provide derivatives in some form. Fortunately, JuMP supports **automatic differentiation of user-defined functions**, a feature to our knowledge not available in any comparable modeling systems.
@@ -114,7 +114,8 @@ JuMP uses [ForwardDiff.jl](https://github.com/JuliaDiff/ForwardDiff.jl) to perfo
 
 The above code creates a JuMP model with the objective function `(x[1]-1)^2 + (x[2]^2-2)^2`. The first argument to `JuMP.register` the model for which the functions are registered. The second argument is a Julia symbol object which serves as the name of the user-defined function in JuMP expressions; the JuMP name need not be the same as the name of the corresponding Julia method. The third argument specifies how many arguments the function takes. The fourth argument is the name of the Julia method which computes the function, and `autodiff=true` instructs JuMP to compute exact gradients automatically.
 
-All arguments to user-defined functions are scalars, not vectors. To define a function which takes a large number of arguments, you may use the splatting syntax `f(x...) = ...`.
+!!! note
+    All arguments to user-defined functions are scalars, not vectors. To define a function which takes a large number of arguments, you may use the splatting syntax `f(x...) = ...`.
 
 Forward-mode automatic differentiation as implemented by ForwardDiff.jl has a computational cost that scales linearly with the number of input dimensions. As such, it is not the most efficient way to compute gradients of user-defined functions if the number of input arguments is large. In this case, users may want to provide their own routines for evaluating gradients. The more general syntax for `JuMP.register` which accepts user-provided derivative evaluation routines is:
 
@@ -150,9 +151,9 @@ Total CPU secs in IPOPT (w/o function evaluations)   =      7.412
 Total CPU secs in NLP function evaluations           =      2.083
 ```
 
-For Ipopt in particular, one can improve the performance by installing advanced sparse linear algebra packages, see jump-installation. For other solvers, see their respective documentation for performance tips.
+For Ipopt in particular, one can improve the performance by installing advanced sparse linear algebra packages, see [Installation Guide](@ref). For other solvers, see their respective documentation for performance tips.
 
-The function evaluation time, on the other hand, is the responsibility of the modeling language. JuMP computes derivatives by using the [ReverseDiffSparse](https://github.com/mlubin/ReverseDiffSparse.jl) package, which implements, in pure Julia, reverse-mode automatic differentiation with graph coloring methods for exploiting sparsity of the Hessian matrix[1]. As a conservative bound, JuMP's performance here currently may be expected to be within a factor of 5 of AMPL's.
+The function evaluation time, on the other hand, is the responsibility of the modeling language. JuMP computes derivatives by using the [ReverseDiffSparse](https://github.com/mlubin/ReverseDiffSparse.jl) package, which implements, in pure Julia, reverse-mode automatic differentiation with graph coloring methods for exploiting sparsity of the Hessian matrix [^1]. As a conservative bound, JuMP's performance here currently may be expected to be within a factor of 5 of AMPL's.
 
 Querying derivatives from a JuMP model
 --------------------------------------
@@ -215,4 +216,4 @@ In addition to the `@NLobjective` and `@NLconstraint` macros, it is also possibl
 
 See the Julia documentation for more examples and description of Julia expressions.
 
-[1] Dunning, Huchette, and Lubin, "JuMP: A Modeling Language for Mathematical Optimization", [arXiv](http://arxiv.org/abs/1508.01982).
+[^1]: Dunning, Huchette, and Lubin, "JuMP: A Modeling Language for Mathematical Optimization", [arXiv](http://arxiv.org/abs/1508.01982).
