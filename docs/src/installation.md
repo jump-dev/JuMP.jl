@@ -108,7 +108,8 @@ GLPK binaries are provided on OS X and Windows (32- and 64-bit) by default. On L
 
 Requires a working installation of Gurobi with an activated license (free for academic use). Gurobi supports MIP callbacks and "SOS" constraints.
 
-If you are using 64-bit Gurobi, you must use 64-bit Julia (and similarly with 32-bit Gurobi).
+!!! warning
+    If you are using 64-bit Gurobi, you must use 64-bit Julia (and similarly with 32-bit Gurobi).
 
 ### Ipopt
 
@@ -124,7 +125,7 @@ NLopt supports only nonlinear models. An algorithm must be specified as an optio
 
 ### SCS
 
-SCS can be used by JuMP to solve LPs and SOCPs, and SDPs. SCS is a first order solver and has low accuracy (10<sup>−4</sup>) by default; see the SCS.jl documentation for more information.
+SCS can be used by JuMP to solve LPs and SOCPs, and SDPs. SCS is a first order solver and has low accuracy (``10^{−4}``) by default; see the SCS.jl documentation for more information.
 
 ### COIN-OR Bonmin and Couenne
 

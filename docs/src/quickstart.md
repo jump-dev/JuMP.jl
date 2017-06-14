@@ -10,7 +10,7 @@ Creating a Model
 
     m = Model()
 
-All variables and constraints are associated with a `Model` object. Usually, you'll also want to provide a solver object here by using the `solver=` keyword argument; see the simple example below. For a list of all functions related to `Model`, see ref-model.
+All variables and constraints are associated with a `Model` object. Usually, you'll also want to provide a solver object here by using the `solver=` keyword argument; see the simple example below. For a list of all functions related to `Model`, see [Models](@ref).
 
 Defining Variables
 ------------------
@@ -22,7 +22,7 @@ Defining Variables
     @variable(m, x <= ub )        # Upper bound only
     @variable(m, lb <= x <= ub )  # Lower and upper bounds
 
-All these variations introduce a new variable `x` in the local scope. The names of your variables must be valid Julia variable names. For information about common operations on variables, e.g. changing their bounds, see the ref-variable section.
+All these variations introduce a new variable `x` in the local scope. The names of your variables must be valid Julia variable names. For information about common operations on variables, e.g. changing their bounds, see the [Variables](@ref) section.
 
 **Integer** and **binary** restrictions can optionally be specified with a third argument, `Int` or `Bin`.
 
@@ -49,7 +49,8 @@ JuMP allows users to use a natural notation to describe linear expressions. To a
     @constraint(m, sum(x[i] for i=1:numLocation) == 1)
     @objective(m, Max, 5x + 22y + (x+y)/2) # or Min
 
-The `sense` passed to `@objective` must be a [symbol](http://docs.julialang.org/en/latest/manual/metaprogramming/#symbols) type: `:Min` or `:Max`, although the macro accepts `:Min` and `:Max`, as well as `Min` and `Max` (without the colon) directly.
+!!! note
+    The `sense` passed to `@objective` must be a [symbol](http://docs.julialang.org/en/latest/manual/metaprogramming/#symbols) type: `:Min` or `:Max`, although the macro accepts `:Min` and `:Max`, as well as `Min` and `Max` (without the colon) directly.
 
 The `sum()` syntax directly follows Julia's own generator expression syntax. You may use conditions within sums, e.g.:
 
@@ -68,4 +69,6 @@ which is equivalent to:
         end
     end
 
-JuMP previously used a special curly brace syntax for `sum{}`, `prod{}`, and `norm2{}`. This has been entirely replaced by `sum()`, `prod()`, and `norm()` since Julia 0.5. The curly brace syntax is deprecated and will be removed in a future release.
+!!! note
+    JuMP previously used a special curly brace syntax for `sum{}`, `prod{}`, and `norm2{}`. This has been entirely replaced by `sum()`, `prod()`, and `norm()` since Julia 0.5. The curly brace syntax is deprecated and will be removed in a future release.
+
