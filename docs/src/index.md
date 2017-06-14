@@ -38,6 +38,18 @@ Then read the quick-start and/or see a simple-example. The subsequent sections d
 Contents
 --------
 
+```@contents
+Pages = ["installation.md",
+    "quickstart.md",
+    "refmodel.md",
+    "refvariable.md",
+    "refexpr.md",
+    "probmod.md",
+    "callbacks.md",
+    "nlp.md"]
+Depth = 2
+```
+
 ### Citing JuMP
 
 If you find JuMP useful in your work, we kindly request that you cite the following [paper](http://dx.doi.org/10.1137/15M1020575):
