@@ -1,38 +1,21 @@
 JuMP.jl Documentation README
 ================================
 
-JuMP.jl's documentation is written in reStructuredText, a good reference for which
-is the [Documenting Python](http://docs.python.org/devguide/documenting.html)
-chapter of the Python Developer's Guide.
+JuMP.jl's documentation is written with [Documenter.jl](https://github.com/JuliaDocs/Documenter.jl). To install it, run the following command in a julia session:
+
+```julia
+Pkg.add("Documenter")
+```
 
 
 Building the documentation
 --------------------------
 
-The documentation is built using [Sphinx](http://sphinx.pocoo.org/) and LaTeX.
-On ubuntu, you'll need the following packages installed:
+The documentation is built using the following command:
 
-    python-sphinx
-    texlive
-    texlive-latex-extra
+```julia
+julia make.jl
+```
 
-To install the required Sphinx theme, run:
-
-    $ pip install sphinx_rtd_theme
-
-Then run
-
-    $ make helpdb.jl
-    $ make html
-    $ make latexpdf
-
-
-File layout
------------
-
-    conf.py             Sphinx configuration
-    helpdb.jl           REPL help database
-    sphinx/             Sphinx extensions and plugins
-    sphinx/jlhelp.py    Sphinx plugin to build helpdb.jl
-    _themes/            Sphinx html themes
+The compiled documents can be viewed at `build/index.html`.
 

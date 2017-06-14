@@ -1,48 +1,18 @@
-
-.. include:: warn.rst
-
-.. _callbacks:
-
-----------------
 Solver Callbacks
-----------------
+================
 
-Many mixed-integer (linear, conic, and nonlinear) programming solvers offer the ability to modify the solve process.
-Examples include changing branching decisions in branch-and-bound, adding custom cutting planes, providing custom heuristics to find feasible solutions, or implementing on-demand separators to add new constraints only when they are violated by the current solution (also known as lazy constraints).
+Many mixed-integer (linear, conic, and nonlinear) programming solvers offer the ability to modify the solve process. Examples include changing branching decisions in branch-and-bound, adding custom cutting planes, providing custom heuristics to find feasible solutions, or implementing on-demand separators to add new constraints only when they are violated by the current solution (also known as lazy constraints).
 
-While historically this functionality has been limited to solver-specific interfaces,
-JuMP provides *solver-independent* support for a number of commonly used solver callbacks. Currently, we support lazy constraints, user-provided cuts, and user-provided
-heuristics for the Gurobi, CPLEX, GLPK, and SCIP solvers. We do not yet support any
-other class of callbacks, but they may be accessible by using the solver's
-low-level interface.
+While historically this functionality has been limited to solver-specific interfaces, JuMP provides *solver-independent* support for a number of commonly used solver callbacks. Currently, we support lazy constraints, user-provided cuts, and user-provided heuristics for the Gurobi, CPLEX, GLPK, and SCIP solvers. We do not yet support any other class of callbacks, but they may be accessible by using the solver's low-level interface.
 
 Lazy Constraints
-^^^^^^^^^^^^^^^^
+----------------
 
-Lazy constraints are useful when the full set of constraints is too large to
-explicitly include in the initial formulation. When a MIP solver reaches a new
-solution, for example with a heuristic or by solving a problem at a node in the
-branch-and-bound tree, it will give the user the chance to provide constraint(s)
-that would make the current solution infeasible. For some more information about
-lazy constraints, see this blog post by `Paul Rubin <http://orinanobworld.blogspot.com/2012/08/user-cuts-versus-lazy-constraints.html>`_.
+Lazy constraints are useful when the full set of constraints is too large to explicitly include in the initial formulation. When a MIP solver reaches a new solution, for example with a heuristic or by solving a problem at a node in the branch-and-bound tree, it will give the user the chance to provide constraint(s) that would make the current solution infeasible. For some more information about lazy constraints, see this blog post by [Paul Rubin](http://orinanobworld.blogspot.com/2012/08/user-cuts-versus-lazy-constraints.html).
 
-There are three important steps to providing a lazy constraint callback. First we
-must write a function that will analyze the current solution that takes a
-single argument, e.g. ``function myLazyConGenerator(cb)``, where cb is a reference
-to the callback management code inside JuMP. Next you will do whatever
-analysis of the solution you need to inside your function to generate the new
-constraint before adding it to the model with
-``@lazyconstraint(cb, myconstraint)``.
-There is an optional keyword option ``localcut`` to ``@lazyconstraint``, which indicates if the lazy constraint that will be added will only apply at the current node and the tree rooted at that node.
-For example, ``@lazyconstraint(cb, myconstraint, localcut=true)``. By default, ``localcut`` is set to ``false``.
-Finally we notify JuMP that this function should be used for lazy constraint
-generation using the ``addlazycallback(m, myLazyConGenerator)`` function
-before we call ``solve(m)``.
+There are three important steps to providing a lazy constraint callback. First we must write a function that will analyze the current solution that takes a single argument, e.g. `function myLazyConGenerator(cb)`, where cb is a reference to the callback management code inside JuMP. Next you will do whatever analysis of the solution you need to inside your function to generate the new constraint before adding it to the model with `@lazyconstraint(cb, myconstraint)`. There is an optional keyword option `localcut` to `@lazyconstraint`, which indicates if the lazy constraint that will be added will only apply at the current node and the tree rooted at that node. For example, `@lazyconstraint(cb, myconstraint, localcut=true)`. By default, `localcut` is set to `false`. Finally we notify JuMP that this function should be used for lazy constraint generation using the `addlazycallback(m, myLazyConGenerator)` function before we call `solve(m)`.
 
-The following is a simple example to make this more clear. In this two-dimensional
-problem we have a set of box constraints explicitly provided and a set of two
-lazy constraints we can add on the fly. The solution without the lazy constraints
-will be either (0,2) or (2,2), and the final solution will be (1,2)::
+The following is a simple example to make this more clear. In this two-dimensional problem we have a set of box constraints explicitly provided and a set of two lazy constraints we can add on the fly. The solution without the lazy constraints will be either (0,2) or (2,2), and the final solution will be (1,2):
 
     using JuMP
     using Gurobi
@@ -103,7 +73,7 @@ will be either (0,2) or (2,2), and the final solution will be (1,2)::
     # Print our final solution
     println("Final solution: [ $(getvalue(x)), $(getvalue(y)) ]")
 
-The code should print something like (amongst the output from Gurobi)::
+The code should print something like (amongst the output from Gurobi):
 
     In callback function, x=2.0, y=2.0
     Solution was in top right, cut it off
@@ -112,36 +82,20 @@ The code should print something like (amongst the output from Gurobi)::
     In callback function, x=1.0, y=2.0
     Final solution: [ 1.0, 2.0 ]
 
-This code can also be found in ``/JuMP/examples/simplelazy.jl``.
+This code can also be found in `/JuMP/examples/simplelazy.jl`.
 
-There is an optional ``fractional`` keyword option to ``addlazycallback`` which
-indicates that the callback may be called at solutions that do not satisfy
-integrality constraints. For example, ``addlazycallback(m, myLazyConGenerator,
-fractional=true)``. Depending on the solver, this may invoke the callback
-after solving each LP relaxation in the Branch and Bound tree. By default, ``fractional`` is set to ``false``.
-
+There is an optional `fractional` keyword option to `addlazycallback` which indicates that the callback may be called at solutions that do not satisfy integrality constraints. For example, `addlazycallback(m, myLazyConGenerator, fractional=true)`. Depending on the solver, this may invoke the callback after solving each LP relaxation in the Branch and Bound tree. By default, `fractional` is set to `false`.
 
 User Cuts
-^^^^^^^^^
+---------
 
-User cuts, or simply cuts, provide a way for the user to tighten the LP relaxation using problem-specific knowledge that the solver cannot or is unable to infer from the model. Just like with lazy constraints, when a MIP solver reaches a new node in the branch-and-bound tree, it will give the user the chance to provide cuts to make the current relaxed (fractional) solution infeasible in the hopes of obtaining an integer solution. For more details about the difference between user cuts and lazy constraints see the aforementioned `blog post <http://orinanobworld.blogspot.com/2012/08/user-cuts-versus-lazy-constraints.html>`_.
+User cuts, or simply cuts, provide a way for the user to tighten the LP relaxation using problem-specific knowledge that the solver cannot or is unable to infer from the model. Just like with lazy constraints, when a MIP solver reaches a new node in the branch-and-bound tree, it will give the user the chance to provide cuts to make the current relaxed (fractional) solution infeasible in the hopes of obtaining an integer solution. For more details about the difference between user cuts and lazy constraints see the aforementioned [blog post](http://orinanobworld.blogspot.com/2012/08/user-cuts-versus-lazy-constraints.html).
 
 Your user cuts should not change the set of integer feasible solutions. Equivalently, your cuts can only remove fractional solutions - that is, "tighten" the LP relaxation of the MILP. If you add a cut that removes an integer solution, the solver may return an incorrect solution.
 
-Adding a user cut callback is similar to adding a lazy constraint callback. First we
-must write a function that will analyze the current solution that takes a
-single argument, e.g. ``function myUserCutGenerator(cb)``, where cb is a reference
-to the callback management code inside JuMP. Next you will do whatever
-analysis of the solution you need to inside your function to generate the new
-constraint before adding it to the model with the JuMP macro
-``@usercut(cb, myconstraint)`` (same limitations as addConstraint).
-There is an optional keyword option ``localcut`` to ``@usercut``, which indicates if the user cut that will be added will only apply at the current node and the tree rooted at that node.
-For example, ``@usercut(cb, myconstraint, localcut=true)``. By default, ``localcut`` is set to ``false``.
-Finally we notify JuMP that this function should be used for user cut
-generation using the ``addcutcallback(m, myUserCutGenerator)`` function
-before we call ``solve(m)``.
+Adding a user cut callback is similar to adding a lazy constraint callback. First we must write a function that will analyze the current solution that takes a single argument, e.g. `function myUserCutGenerator(cb)`, where cb is a reference to the callback management code inside JuMP. Next you will do whatever analysis of the solution you need to inside your function to generate the new constraint before adding it to the model with the JuMP macro `@usercut(cb, myconstraint)` (same limitations as addConstraint). There is an optional keyword option `localcut` to `@usercut`, which indicates if the user cut that will be added will only apply at the current node and the tree rooted at that node. For example, `@usercut(cb, myconstraint, localcut=true)`. By default, `localcut` is set to `false`. Finally we notify JuMP that this function should be used for user cut generation using the `addcutcallback(m, myUserCutGenerator)` function before we call `solve(m)`.
 
-Consider the following example which is related to the lazy constraint example. The problem is two-dimensional, and the objective sense prefers solution in the top-right of a 2-by-2 square. There is a single constraint that cuts off the top-right corner to make the LP relaxation solution fractional. We will exploit our knowledge of the problem structure to add a user cut that will make the LP relaxation integer, and thus solve the problem at the root node::
+Consider the following example which is related to the lazy constraint example. The problem is two-dimensional, and the objective sense prefers solution in the top-right of a 2-by-2 square. There is a single constraint that cuts off the top-right corner to make the LP relaxation solution fractional. We will exploit our knowledge of the problem structure to add a user cut that will make the LP relaxation integer, and thus solve the problem at the root node:
 
     using JuMP
     using Gurobi
@@ -193,26 +147,25 @@ Consider the following example which is related to the lazy constraint example. 
     # Print our final solution
     println("Final solution: [ $(getvalue(x)), $(getvalue(y)) ]")
 
-The code should print something like (amongst the output from Gurobi)::
+The code should print something like (amongst the output from Gurobi):
 
     In callback function, x=1.5, y=2.0
     Fractional solution was in top right, cut it off
     In callback function, x=1.0, y=2.0
     Final solution: [ 1.0, 2.0 ]
 
-This code can also be found in ``/JuMP/examples/simpleusercut.jl``.
-
+This code can also be found in `/JuMP/examples/simpleusercut.jl`.
 
 User Heuristics
-^^^^^^^^^^^^^^^
+---------------
 
 Integer programming solvers frequently include heuristics that run at the nodes of the branch-and-bound tree. They aim to find integer solutions quicker than plain branch-and-bound would to tighten the bound, allowing us to fathom nodes quicker and to tighten the integrality gap. Some heuristics take integer solutions and explore their "local neighborhood" (e.g. flipping binary variables, fix some variables and solve a smaller MILP, ...) and others take fractional solutions and attempt to round them in an intelligent way. You may want to add a heuristic of your own if you have some special insight into the problem structure that the solver is not aware of, e.g. you can consistently take fractional solutions and intelligently guess integer solutions from them.
 
-The user heuristic callback is somewhat different from the previous two heuristics. The general concept is that we can create multiple partial solutions and submit them back to the solver - each solution must be submitted before a new solution is constructed. As before we provide a function that analyzes the current solution and takes a single argument, e.g. ``function myHeuristic(cb)``, where cb is a reference to the callback management code inside JuMP. You can build your solutions using ``setsolutionvalue(cb, x, value)`` and submit them with ``addsolution(cb)``. Note that ``addsolution`` will "wipe" the previous (partial) solution. Notify JuMP that this function should be used as a heuristic using the ``addheuristiccallback(m, myHeuristic)`` function before calling ``solve(m)``.
+The user heuristic callback is somewhat different from the previous two heuristics. The general concept is that we can create multiple partial solutions and submit them back to the solver - each solution must be submitted before a new solution is constructed. As before we provide a function that analyzes the current solution and takes a single argument, e.g. `function myHeuristic(cb)`, where cb is a reference to the callback management code inside JuMP. You can build your solutions using `setsolutionvalue(cb, x, value)` and submit them with `addsolution(cb)`. Note that `addsolution` will "wipe" the previous (partial) solution. Notify JuMP that this function should be used as a heuristic using the `addheuristiccallback(m, myHeuristic)` function before calling `solve(m)`.
 
-There is some unavoidable (for performance reasons) solver-dependent behavior - you should check your solver documentation for details. For example: GLPK will not check the feasibility of your heuristic solution. If you need to submit many heuristic solutions in one callback, there may be performance impacts from the "wiping" behavior of ``addsolution`` - please file an issue and we can address this issue.
+There is some unavoidable (for performance reasons) solver-dependent behavior - you should check your solver documentation for details. For example: GLPK will not check the feasibility of your heuristic solution. If you need to submit many heuristic solutions in one callback, there may be performance impacts from the "wiping" behavior of `addsolution` - please file an issue and we can address this issue.
 
-Consider the following example, which is the same problem as seen in the user cuts section. The heuristic simply rounds the fractional variable to generate integer solutions.::
+Consider the following example, which is the same problem as seen in the user cuts section. The heuristic simply rounds the fractional variable to generate integer solutions.:
 
     using JuMP
     using Gurobi
@@ -260,37 +213,30 @@ Consider the following example, which is the same problem as seen in the user cu
     # Print our final solution
     println("Final solution: [ $(getvalue(x)), $(getvalue(y)) ]")
 
-The code should print something like::
+The code should print something like:
 
     In callback function, x=1.5, y=2.0
          0     0    5.50000    0    1          -    5.50000     -      -    0s
     H    1     0                       5.0000000    5.50000  10.0%   0.0    0s
 
-where the ``H`` denotes a solution found with a heuristic - our heuristic in this case. This code can also be found in ``/JuMP/examples/simpleheur.jl``.
-
-
+where the `H` denotes a solution found with a heuristic - our heuristic in this case. This code can also be found in `/JuMP/examples/simpleheur.jl`.
 
 Querying Solver Progress
-^^^^^^^^^^^^^^^^^^^^^^^^
+------------------------
 
-All JuMP callback methods must take a single argument, called ``cb`` by convention.
-``cb`` is a handle to the internal callback system used by the underlying solver, and
-allows the user to query solver state. There are a variety of methods available which
-are listed in the `MathProgBase documentation <http://mathprogbasejl.readthedocs.org/en/latest/lpqcqp.html#mip-callbacks>`_
-including::
+All JuMP callback methods must take a single argument, called `cb` by convention. `cb` is a handle to the internal callback system used by the underlying solver, and allows the user to query solver state. There are a variety of methods available which are listed in the [MathProgBase documentation](http://mathprogbasejl.readthedocs.org/en/latest/lpqcqp.html#mip-callbacks) including:
 
     cbgetobj(cb)
     cbgetbestbound(cb)
     cbgetexplorednodes(cb)
     cbgetstate(cb)
 
-
 Informational Callbacks
-^^^^^^^^^^^^^^^^^^^^^^^
+-----------------------
 
-Sometimes it can be useful to track solver progress without actually changing the algorithm by adding cuts or heuristic solutions. In these cases, informational callbacks can be added, wherein statistics can be tracked via the ``cbget`` functions discussed in the previous section. Informational callbacks are added to a JuMP model with the ``addinfocallback(m::Model, f::Function; when::Symbol)`` function, where the `when` argument should be one of ``:MIPNode``, ``:MIPSol`` or ``:Intermediate`` (listed under ``cbgetstate()`` in the `MathProgBase documentation <https://mathprogbasejl.readthedocs.io/en/latest/lpqcqp.html#cbgetstate>`_)
+Sometimes it can be useful to track solver progress without actually changing the algorithm by adding cuts or heuristic solutions. In these cases, informational callbacks can be added, wherein statistics can be tracked via the `cbget` functions discussed in the previous section. Informational callbacks are added to a JuMP model with the `addinfocallback(m::Model, f::Function; when::Symbol)` function, where the when argument should be one of `:MIPNode`, `:MIPSol` or `:Intermediate` (listed under `cbgetstate()` in the [MathProgBase documentation](https://mathprogbasejl.readthedocs.io/en/latest/lpqcqp.html#cbgetstate))
 
-For a simple example, we can add a function that tracks the best bound and incumbent objective value as the solver progresses through the branch-and-bound tree::
+For a simple example, we can add a function that tracks the best bound and incumbent objective value as the solver progresses through the branch-and-bound tree:
 
     type NodeData
         time::Float64  # in seconds since the epoch
@@ -322,7 +268,7 @@ For a simple example, we can add a function that tracks the best bound and incum
         end
     end
 
-For a second example, we can add a function that tracks the intermediate solutions at each integer-feasible solution in the Branch-and-Bound tree::
+For a second example, we can add a function that tracks the intermediate solutions at each integer-feasible solution in the Branch-and-Bound tree:
 
     solutionvalues = Vector{Float64}[]
 
@@ -337,11 +283,10 @@ For a second example, we can add a function that tracks the intermediate solutio
 
     # all the intermediate solutions are now stored in `solutionvalues`
 
-
 Code Design Considerations
-^^^^^^^^^^^^^^^^^^^^^^^^^^
+--------------------------
 
-In the above examples the callback function is defined in the same scope as the model and variable definitions, allowing us to access them. If we defined the function in some other scope, or even file, we would not be able to access them directly. The proposed solution to this design problem is to separate the logic of analyzing the current solution values from the callback itself. This has many benefits, including writing unit tests for the callback function to check its correctness. The callback function passed to JuMP is then simply a stub that extracts the current solution and any other relevant information and passes that to the constraint generation logic. To apply this to our previous lazy constraint example, consider the following code::
+In the above examples the callback function is defined in the same scope as the model and variable definitions, allowing us to access them. If we defined the function in some other scope, or even file, we would not be able to access them directly. The proposed solution to this design problem is to separate the logic of analyzing the current solution values from the callback itself. This has many benefits, including writing unit tests for the callback function to check its correctness. The callback function passed to JuMP is then simply a stub that extracts the current solution and any other relevant information and passes that to the constraint generation logic. To apply this to our previous lazy constraint example, consider the following code:
 
     using JuMP
     using Gurobi
@@ -419,13 +364,13 @@ In the above examples the callback function is defined in the same scope as the 
     # Solve it
     solveProblem()
 
-This code can also be found in ``/JuMP/examples/simplelazy2.jl``.
+This code can also be found in `/JuMP/examples/simplelazy2.jl`.
 
 Exiting a callback early
-^^^^^^^^^^^^^^^^^^^^^^^^
+------------------------
 
-If you need to exit the optimization process earlier than a solver otherwise would, it is possible to return ``JuMP.StopTheSolver`` from the callback code::
+If you need to exit the optimization process earlier than a solver otherwise would, it is possible to return `JuMP.StopTheSolver` from the callback code:
 
     return JuMP.StopTheSolver
 
-This will trigger the solver to exit immediately and return a ``:UserLimit`` status.
+This will trigger the solver to exit immediately and return a `:UserLimit` status.

@@ -7,13 +7,13 @@ makedocs(
     analytics = "UA-44252521-1",
     pages = [
         "Introduction" => "index.md",
-        "Installation Guide" => "installation.md"
-        "Quick Start Guide" => "quickstart.md"
-        "Models" => "refmodel.md"
-        "Variables" => "refvariable.md"
-        "Expressions and Constraints" => "refexpr.md"
-        "Problem Modification" => "probmod.md"
-        "Solver Callbacks" => "callbacks.md"
+        "Installation Guide" => "installation.md",
+        "Quick Start Guide" => "quickstart.md",
+        "Models" => "refmodel.md",
+        "Variables" => "refvariable.md",
+        "Expressions and Constraints" => "refexpr.md",
+        "Problem Modification" => "probmod.md",
+        "Solver Callbacks" => "callbacks.md",
         "Nonlinear Modeling" => "nlp.md"
     ]
 )
