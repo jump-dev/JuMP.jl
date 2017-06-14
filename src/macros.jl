@@ -348,6 +348,11 @@ constructconstraint!(x::AbstractMatrix, ::PSDCone) = SDConstraint(x)
 
 constraint_error(args, str) = error("In @constraint($(join(args,","))): ", str)
 
+"""
+    @constraint
+
+Add constraints to the model.
+"""
 macro constraint(args...)
     # Pick out keyword arguments
     if isexpr(args[1],:parameters) # these come if using a semicolon
