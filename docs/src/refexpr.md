@@ -56,7 +56,7 @@ Anonymous syntax is also supported:
 -   `append!(aff::AffExpr, other::AffExpr)` - efficiently append the terms of an affine expression to an existing affine expression. For example, given `aff = 5.0*x` and `other = 7.0*y + 3.0*z`, we can grow `aff` using `append!(aff, other)` which results in `aff` equaling `5x + 7y + 3z`. This is significantly more efficient than using `aff += other`.
 -   `sum(affs::Array{AffExpr})` - efficiently sum an array of affine expressions.
 -   `getvalue(expr)` - evaluate an `AffExpr` or `QuadExpr`, given the current solution values.
--   `linearterms{C,V}(aff::GenericAffExpr{C,V})` - provides an iterator over the `(a_i::C,x_i::V)` terms in affine expression ∑<sub>*i*</sub>*a*<sub>*i*</sub>*x*<sub>*i*</sub> + *b*.
+-   `linearterms{C,V}(aff::GenericAffExpr{C,V})` - provides an iterator over the `(a_i::C,x_i::V)` terms in affine expression ``\sum_i a_i x_i + b``.
 
 Constraint References
 ---------------------
