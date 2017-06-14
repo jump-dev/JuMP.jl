@@ -6,7 +6,7 @@ Variables, also known as columns or decision variables, are the results of the o
 Constructors
 ------------
 
-The primary way to create variables is with the `@variable` macro. The first argument will always be a `Model`. In the examples below we assume `m` is already defined. The second argument is an expression that declares the variable name and optionally allows specification of lower and upper bounds. Adding variables "column-wise", e.g., as in column generation, is supported as well; see the syntax discussed in the probmod section.
+The primary way to create variables is with the `@variable` macro. The first argument will always be a `Model`. In the examples below we assume `m` is already defined. The second argument is an expression that declares the variable name and optionally allows specification of lower and upper bounds. Adding variables "column-wise", e.g., as in column generation, is supported as well; see the syntax discussed in the [Problem Modification](@ref) section.
 
     @variable(m, x )              # No bounds
     @variable(m, x >= lb )        # Lower bound only (note: 'lb <= x' is not valid)
@@ -66,12 +66,13 @@ Variable categories may be set in a more programmatic way by providing the appro
 
 The constructor `Variable(m::Model,idx::Int)` may be used to create a variable object corresponding to an *existing* variable in the model (the constructor does not add a new variable to the model). The variable indices correspond to those of the internal MathProgBase model. The inverse of this operation is `linearindex(x::Variable)`, which returns the flattened out (linear) index of a variable as JuMP provides it to a solver. We guarantee that `Variable(m,linearindex(x))` returns `x` itself. These methods are only useful if you intend to interact with solver properties which are not directly exposed through JuMP.
 
-`@variable` is equivalent to a simple assignment `x = ...` in Julia and therefore redefines variables. The following code will generate a warning and may lead to unexpected results:
+!!! note
+    `@variable` is equivalent to a simple assignment `x = ...` in Julia and therefore redefines variables. The following code will generate a warning and may lead to unexpected results:
 
-    @variable(m, x[1:10,1:10])
-    @variable(m, x[1:5])
+        @variable(m, x[1:10,1:10])
+        @variable(m, x[1:5])
 
-After the second line, the Julia variable `x` refers to a set of variables indexed by the range `1:5`. The reference to the first set of variables has been lost, although they will remain in the model. See also the section on anonymous variables.
+    After the second line, the Julia variable `x` refers to a set of variables indexed by the range `1:5`. The reference to the first set of variables has been lost, although they will remain in the model. See also the section on anonymous variables.
 
 Anonymous variables
 -------------------
@@ -103,11 +104,11 @@ Printing `x[2]` will display `myvariable-3[2]`.
 Semidefinite and symmetric variables
 ------------------------------------
 
-JuMP supports modeling with [semidefinite variables](https://en.wikipedia.org/wiki/Semidefinite_programming). A square symmetric matrix *X* is positive semidefinite if all eigenvalues are nonnegative; this is typically denoted by *X* ≽ 0. You can declare a matrix of variables to be positive semidefinite as follows:
+JuMP supports modeling with [semidefinite variables](https://en.wikipedia.org/wiki/Semidefinite_programming). A square symmetric matrix ``X`` is positive semidefinite if all eigenvalues are nonnegative; this is typically denoted by ``X \succeq 0``. You can declare a matrix of variables to be positive semidefinite as follows:
 
     @variable(m, X[1:3,1:3], SDP)
 
-Note in particular the indexing: 1) exactly two index sets must be specified, 2) they must both be unit ranges starting at 1, 3) no bounds can be provided alongside the `SDP` tag. If you wish to impose more complex semidefinite constraints on the variables, e.g. *X* − *I* ≽ 0, you may instead use the `Symmetric` tag, along with a semidefinite constraint:
+Note in particular the indexing: 1) exactly two index sets must be specified, 2) they must both be unit ranges starting at 1, 3) no bounds can be provided alongside the `SDP` tag. If you wish to impose more complex semidefinite constraints on the variables, e.g. ``X − I \succeq 0``, you may instead use the `Symmetric` tag, along with a semidefinite constraint:
 
     @variable(m, X[1:n,1:n], Symmetric)
     @SDconstraint(m, X >= eye(n))
@@ -162,7 +163,8 @@ Methods
 -   `setvalue(x,v)` - Provide an initial value `v` for this variable that can be used by supporting MILP solvers. If `v` is `NaN`, the solver may attempt to fill in this value to construct a feasible solution. `setvalue` cannot be used with fixed variables; instead their value may be set with `JuMP.fix(x,v)`.
 -   `getdual(x)` - Get the reduced cost of this variable in the solution. Similar behavior to `getvalue` for indexable variables.
 
-The `getvalue` function always returns a floating-point value, even when a variable is constrained to take integer values, as most solvers only guarantee integrality up to a particular numerical tolerance. The built-in `round` function should be used to obtain integer values, e.g., by calling `round(Integer, getvalue(x))`.
+!!! note
+    The `getvalue` function always returns a floating-point value, even when a variable is constrained to take integer values, as most solvers only guarantee integrality up to a particular numerical tolerance. The built-in `round` function should be used to obtain integer values, e.g., by calling `round(Integer, getvalue(x))`.
 
 **Names**
 
