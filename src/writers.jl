@@ -3,6 +3,11 @@
 #  License, v. 2.0. If a copy of the MPL was not distributed with this
 #  file, You can obtain one at http://mozilla.org/MPL/2.0/.
 
+"""
+    writeMPS(m::Model, fname::AbstractString)
+
+write the model to `fname` in the MPS file format.
+"""
 function writeMPS(m::Model, fname::AbstractString)
     f = open(fname, "w")
 
@@ -188,6 +193,11 @@ function varname_given(m::Model, col::Integer)
     name
 end
 
+"""
+    writeLP(m::Model, fname::AbstractString; genericnames=true)
+
+write the model to `fname` in the LP file format. Set `genericnames=false` for user-defined variable names.
+"""
 function writeLP(m::Model, fname::AbstractString; genericnames=true)
     varname = genericnames ? varname_generic : varname_given
 
