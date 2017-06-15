@@ -245,7 +245,7 @@ var documenterSearchIndex = {"docs": [
     "page": "Models",
     "title": "Models",
     "category": "page",
-    "text": ""
+    "text": "CurrentModule = JuMP"
 },
 
 {
@@ -265,11 +265,235 @@ var documenterSearchIndex = {"docs": [
 },
 
 {
+    "location": "refmodel.html#MathProgBase.SolverInterface.numvar",
+    "page": "Models",
+    "title": "MathProgBase.SolverInterface.numvar",
+    "category": "Function",
+    "text": "MathProgBase.numvar(m::Model)\n\nreturns the number of variables associated with the Model m.\n\n\n\n"
+},
+
+{
+    "location": "refmodel.html#MathProgBase.SolverInterface.numlinconstr",
+    "page": "Models",
+    "title": "MathProgBase.SolverInterface.numlinconstr",
+    "category": "Function",
+    "text": "MathProgBase.numlinconstr(m::Model)\n\nreturns the number of linear constraints associated with the Model m\n\n\n\n"
+},
+
+{
+    "location": "refmodel.html#MathProgBase.SolverInterface.numquadconstr",
+    "page": "Models",
+    "title": "MathProgBase.SolverInterface.numquadconstr",
+    "category": "Function",
+    "text": "MathProgBase.numquadconstr(m::Model)\n\nreturns the number of quadratic constraints associated with the Model m\n\n\n\n"
+},
+
+{
+    "location": "refmodel.html#JuMP.numsocconstr",
+    "page": "Models",
+    "title": "JuMP.numsocconstr",
+    "category": "Function",
+    "text": "numsocconstr(m::Model)\n\nreturns the number of second order cone constraints associated with the Model m\n\n\n\n"
+},
+
+{
+    "location": "refmodel.html#JuMP.numsosconstr",
+    "page": "Models",
+    "title": "JuMP.numsosconstr",
+    "category": "Function",
+    "text": "numsosconstr(m::Model)\n\nreturns the number of sos constraints associated with the Model m\n\n\n\n"
+},
+
+{
+    "location": "refmodel.html#JuMP.numsdconstr",
+    "page": "Models",
+    "title": "JuMP.numsdconstr",
+    "category": "Function",
+    "text": "numsdconstr(m::Model)\n\nreturns the number of semi-definite constraints associated with the Model m\n\n\n\n"
+},
+
+{
+    "location": "refmodel.html#JuMP.numnlconstr",
+    "page": "Models",
+    "title": "JuMP.numnlconstr",
+    "category": "Function",
+    "text": "numnlconstr(m::Model)\n\nreturns the number of nonlinear constraints associated with the Model m\n\n\n\n"
+},
+
+{
+    "location": "refmodel.html#MathProgBase.SolverInterface.numconstr",
+    "page": "Models",
+    "title": "MathProgBase.SolverInterface.numconstr",
+    "category": "Function",
+    "text": "MathProgBase.numconstr(m::Model)\n\nreturns the total number of constraints associated with the Model m\n\n\n\n"
+},
+
+{
+    "location": "refmodel.html#JuMP.internalmodel",
+    "page": "Models",
+    "title": "JuMP.internalmodel",
+    "category": "Function",
+    "text": "internalmodel(m::Model)\n\nreturns the internal low-level AbstractMathProgModel object which can be used to access any functionality that is not exposed by JuMP. See the MathProgBase documentation\n\n\n\n"
+},
+
+{
+    "location": "refmodel.html#JuMP.solve",
+    "page": "Models",
+    "title": "JuMP.solve",
+    "category": "Function",
+    "text": "solve(m::Model; suppress_warnings=false,\n            ignore_solve_hook=(m.solvehook===nothing),\n            relaxation=false,\n            kwargs...)\n\nsolves the model using the selected solver (or a default for the problem class), and takes two optional arguments that are disabled by default. Setting suppress_warnings to true will suppress all JuMP-specific output (e.g. warnings about infeasibility and lack of dual information) but will not suppress solver output (which should be done by passing options to the solver). Setting relaxation=true solves the standard continuous relaxation for the model: that is, integrality is dropped, special ordered set constraints are not enforced, and semi-continuous and semi-integer variables with bounds [l,u] are replaced with bounds [min(l,0),max(u,0)]\n\n\n\n"
+},
+
+{
+    "location": "refmodel.html#JuMP.build",
+    "page": "Models",
+    "title": "JuMP.build",
+    "category": "Function",
+    "text": "build(m::Model; suppress_warnings=false, \n    relaxation=false, \n    traits=ProblemTraits(m,relaxation=relaxation))\n\nbuilds the model in memory at the MathProgBase level without optimizing.\n\n\n\n"
+},
+
+{
+    "location": "refmodel.html#JuMP.setsolver",
+    "page": "Models",
+    "title": "JuMP.setsolver",
+    "category": "Function",
+    "text": "setsolver(m::Model, solver::MathProgBase.AbstractMathProgSolver)\n\nchanges the solver which will be used for the next call to solve(), discarding the current internal model if present.\n\n\n\n"
+},
+
+{
+    "location": "refmodel.html#Base.getindex-Tuple{JuMP.Model,Symbol}",
+    "page": "Models",
+    "title": "Base.getindex",
+    "category": "Method",
+    "text": "Base.getindex(m::JuMP.Model, name::Symbol)\n\nTo allow easy accessing of JuMP Variables and Constraints via [] syntax. Returns the variable, or group of variables, or constraint, or group of constraints, of the given name which were added to the model. This errors if multiple variables or constraints share the same name.\n\n\n\n"
+},
+
+{
+    "location": "refmodel.html#Base.setindex!-Tuple{JuMP.Model,Any,Symbol}",
+    "page": "Models",
+    "title": "Base.setindex!",
+    "category": "Method",
+    "text": "Base.setindex!(m::JuMP.Model, value, name::Symbol)\n\nstores the object value in the model m using so that it can be accessed via getindex.  Can be called with [] syntax.\n\n\n\n"
+},
+
+{
+    "location": "refmodel.html#JuMP.getobjective",
+    "page": "Models",
+    "title": "JuMP.getobjective",
+    "category": "Function",
+    "text": "getobjective(m::Model)\n\nreturns the objective function as a QuadExpr\n\n\n\n"
+},
+
+{
+    "location": "refmodel.html#JuMP.getobjectivesense",
+    "page": "Models",
+    "title": "JuMP.getobjectivesense",
+    "category": "Function",
+    "text": "getobjectivesense(m::Model)\n\nreturns objective sense, either :Min or :Max\n\n\n\n"
+},
+
+{
+    "location": "refmodel.html#JuMP.setobjectivesense",
+    "page": "Models",
+    "title": "JuMP.setobjectivesense",
+    "category": "Function",
+    "text": "setobjectivesense(m::Model, newSense::Symbol)\n\nsets the objective sense (newSense is either :Min or :Max)\n\n\n\n"
+},
+
+{
+    "location": "refmodel.html#JuMP.getobjectivevalue",
+    "page": "Models",
+    "title": "JuMP.getobjectivevalue",
+    "category": "Function",
+    "text": "getobjectivevalue(m::Model)\n\nreturns objective value after a call to solve\n\n\n\n"
+},
+
+{
+    "location": "refmodel.html#JuMP.getobjectivebound",
+    "page": "Models",
+    "title": "JuMP.getobjectivebound",
+    "category": "Function",
+    "text": "getobjectivebound(m::Model)\n\nreturns the best known bound on the optimal objective value after a call to solve\n\n\n\n"
+},
+
+{
+    "location": "refmodel.html#MathProgBase.SolverInterface.getsolvetime",
+    "page": "Models",
+    "title": "MathProgBase.SolverInterface.getsolvetime",
+    "category": "Function",
+    "text": "getsolvetime(m::Model)\n\nreturns the solve time reported by the solver if it is implemented.\n\n\n\n"
+},
+
+{
+    "location": "refmodel.html#MathProgBase.SolverInterface.getnodecount",
+    "page": "Models",
+    "title": "MathProgBase.SolverInterface.getnodecount",
+    "category": "Function",
+    "text": "getnodecount(m::Model)\n\nreturns the number of explored branch-and-bound nodes, if it is implemented.\n\n\n\n"
+},
+
+{
+    "location": "refmodel.html#MathProgBase.SolverInterface.getobjbound",
+    "page": "Models",
+    "title": "MathProgBase.SolverInterface.getobjbound",
+    "category": "Function",
+    "text": "getobjbound(m::Model)\n\nreturns the best known bound on the optimal objective value. This is used, for example, when a branch-and-bound method is stopped before finishing.\n\n\n\n"
+},
+
+{
+    "location": "refmodel.html#MathProgBase.SolverInterface.getobjgap",
+    "page": "Models",
+    "title": "MathProgBase.SolverInterface.getobjgap",
+    "category": "Function",
+    "text": "getobjgap(m::Model)\n\nreturns the final relative optimality gap as optimization terminated. That is, it returns fracb-ff, where b is the best bound and f is the best feasible objective value.\n\n\n\n"
+},
+
+{
+    "location": "refmodel.html#MathProgBase.SolverInterface.getrawsolver",
+    "page": "Models",
+    "title": "MathProgBase.SolverInterface.getrawsolver",
+    "category": "Function",
+    "text": "getrawsolver(m::Model)\n\nreturns an object that may be used to access a solver-specific API.\n\n\n\n"
+},
+
+{
+    "location": "refmodel.html#MathProgBase.SolverInterface.getsimplexiter",
+    "page": "Models",
+    "title": "MathProgBase.SolverInterface.getsimplexiter",
+    "category": "Function",
+    "text": "getsimplexiter(m::Model)\n\nreturns the cumulative number of simplex iterations during the optimization process. In particular, for a MIP it returns the total simplex iterations for all nodes.\n\n\n\n"
+},
+
+{
+    "location": "refmodel.html#MathProgBase.SolverInterface.getbarrieriter",
+    "page": "Models",
+    "title": "MathProgBase.SolverInterface.getbarrieriter",
+    "category": "Function",
+    "text": "getbarrieriter(m::Model)\n\nreturns the cumulative number of barrier iterations during the optimization process.\n\n\n\n"
+},
+
+{
+    "location": "refmodel.html#JuMP.writeLP",
+    "page": "Models",
+    "title": "JuMP.writeLP",
+    "category": "Function",
+    "text": "writeLP(m::Model, fname::AbstractString; genericnames=true)\n\nwrite the model to fname in the LP file format. Set genericnames=false for user-defined variable names.\n\n\n\n"
+},
+
+{
+    "location": "refmodel.html#JuMP.writeMPS",
+    "page": "Models",
+    "title": "JuMP.writeMPS",
+    "category": "Function",
+    "text": "writeMPS(m::Model, fname::AbstractString)\n\nwrite the model to fname in the MPS file format.\n\n\n\n"
+},
+
+{
     "location": "refmodel.html#Methods-1",
     "page": "Models",
     "title": "Methods",
     "category": "section",
-    "text": "GeneralMathProgBase.numvar(m::Model) - returns the number of variables associated with the Model m.\nMathProgBase.numlinconstr(m::Model) - returns the number of linear constraints associated with the Model m.\nMathProgBase.numquadconstr(m::Model) - returns the number of quadratic constraints associated with the Model m.\nJuMP.numsocconstr(m::Model) - returns the number of second order cone constraints associated with the Model m.\nJuMP.numsosconstr(m::Model) - returns the number of sos constraints associated with the Model m.\nJuMP.numsdconstr(m::Model) - returns the number of semi-definite constraints associated with the Model m.\nJuMP.numnlconstr(m::Model) - returns the number of nonlinear constraints associated with the Model m.\nMathProgBase.numconstr(m::Model) - returns the total number of constraints associated with the Model m.\ngetsolvetime(m::Model) - returns the solve time reported by the solver if it is implemented.\ngetnodecount(m::Model) - returns the number of explored branch-and-bound nodes, if it is implemented.\ngetobjbound(m::Model) - returns the best known bound on the optimal objective value. This is used, for example, when a branch-and-bound method is stopped before finishing.\ngetobjgap(m::Model) - returns the final relative optimality gap as optimization terminated. That is, it returns fracb-ff, where b is the best bound and f is the best feasible objective value.\ngetrawsolver(m::Model) - returns an object that may be used to access a solver-specific API.\ngetsimplexiter(m::Model) - returns the cumulative number of simplex iterations during the optimization process. In particular, for a MIP it returns the total simplex iterations for all nodes.\ngetbarrieriter(m::Model) - returns the cumulative number of barrier iterations during the optimization process.\ninternalmodel(m::Model) - returns the internal low-level AbstractMathProgModel object which can be used to access any functionality that is not exposed by JuMP. See the MathProgBase documentation.\nsolve(m::Model; suppress_warnings=false, relaxation=false) - solves the model using the selected solver (or a default for the problem class), and takes two optional arguments that are disabled by default. Setting suppress_warnings to true will suppress all JuMP-specific output (e.g. warnings about infeasibility and lack of dual information) but will not suppress solver output (which should be done by passing options to the solver). Setting relaxation=true solves the standard continuous relaxation for the model: that is, integrality is dropped, special ordered set constraints are not enforced, and semi-continuous and semi-integer variables with bounds [l,u] are replaced with bounds [min(l,0),max(u,0)].\nJuMP.build(m::Model) - builds the model in memory at the MathProgBase level without optimizing.\nsetsolver(m::Model,s::AbstractMathProgSolver) - changes the solver which will be used for the next call to solve(), discarding the current internal model if present.\ngetindex(m::Model,name::Symbol) - returns the variable, or group of variables, or constraint, or group of constraints, of the given name which were added to the model. This errors if multiple variables or constraints share the same name.\nsetindex!(m::Model, value, name::Symbol) - stores the object value in the model m so that it can be accessed via getindex.Objectivegetobjective(m::Model) - returns the objective function as a QuadExpr.\ngetobjectivesense(m::Model) - returns objective sense, either :Min or :Max.\nsetobjectivesense(m::Model, newSense::Symbol) - sets the objective sense (newSense is either :Min or :Max).\ngetobjectivevalue(m::Model) - returns objective value after a call to solve.\ngetobjectivebound(m::Model) - returns the best known bound on the optimal objective value after a call to solve.OutputwriteLP(m::Model, filename::AbstractString; genericnames=true) - write the model to filename in the LP file format. Set genericnames=false for user-defined variable names.\nwriteMPS(m::Model, filename::AbstractString) - write the model to filename in the MPS file format."
+    "text": "GeneralMathProgBase.numvar\nMathProgBase.numlinconstr\nMathProgBase.numquadconstr\nnumsocconstr\nnumsosconstr\nnumsdconstr\nnumnlconstr\nMathProgBase.numconstr\ninternalmodel\nsolve\nbuild\nsetsolver\nBase.getindex(m::Model, name::Symbol)\nBase.setindex!(m::Model, value, name::Symbol)Objectivegetobjective\ngetobjectivesense\nsetobjectivesense\ngetobjectivevalue\ngetobjectiveboundSolverThese functions are JuMP versions of the similarly named functions in MathProgBase.getsolvetime\ngetnodecount\ngetobjbound\ngetobjgap\ngetrawsolver\ngetsimplexiter\ngetbarrieriterOutputwriteLP\nwriteMPS"
 },
 
 {
@@ -309,7 +533,7 @@ var documenterSearchIndex = {"docs": [
     "page": "Variables",
     "title": "Variables",
     "category": "page",
-    "text": ""
+    "text": "CurrentModule = JuMP"
 },
 
 {
@@ -353,11 +577,115 @@ var documenterSearchIndex = {"docs": [
 },
 
 {
+    "location": "refvariable.html#JuMP.setlowerbound",
+    "page": "Variables",
+    "title": "JuMP.setlowerbound",
+    "category": "Function",
+    "text": "setlowerbound(v::Variable,lower::Number)\n\nset the lower bound of a variable.\n\n\n\n"
+},
+
+{
+    "location": "refvariable.html#JuMP.getlowerbound",
+    "page": "Variables",
+    "title": "JuMP.getlowerbound",
+    "category": "Function",
+    "text": "getlowerbound(v::Variable)\n\nget the lower bound of a variable.\n\n\n\n"
+},
+
+{
+    "location": "refvariable.html#JuMP.setupperbound",
+    "page": "Variables",
+    "title": "JuMP.setupperbound",
+    "category": "Function",
+    "text": "setupperbound(v::Variable,upper::Number)\n\nset the upper bound of a variable.\n\n\n\n"
+},
+
+{
+    "location": "refvariable.html#JuMP.getupperbound",
+    "page": "Variables",
+    "title": "JuMP.getupperbound",
+    "category": "Function",
+    "text": "getupperbound(v::Variable)\n\nget the upper bound of a variable.\n\n\n\n"
+},
+
+{
+    "location": "refvariable.html#JuMP.setcategory",
+    "page": "Variables",
+    "title": "JuMP.setcategory",
+    "category": "Function",
+    "text": "setcategory(v::Variable, cat::Symbol)\n\nSet the variable category for v after construction. Possible categories are :Cont, :Int, :Bin, :SemiCont, :SemiInt.\n\n\n\n"
+},
+
+{
+    "location": "refvariable.html#JuMP.getcategory",
+    "page": "Variables",
+    "title": "JuMP.getcategory",
+    "category": "Function",
+    "text": "getcategory(v::Variable)\n\nGet the variable category for v\n\n\n\n"
+},
+
+{
+    "location": "refvariable.html#JuMP.getvalue-Tuple{JuMP.Variable}",
+    "page": "Variables",
+    "title": "JuMP.getvalue",
+    "category": "Method",
+    "text": "getvalue(v::Variable)\n\nGet the value of this variable in the solution.\n\n\n\n"
+},
+
+{
+    "location": "refvariable.html#JuMP.getvalue-Tuple{Array{JuMP.Variable,N} where N}",
+    "page": "Variables",
+    "title": "JuMP.getvalue",
+    "category": "Method",
+    "text": "getvalue(arr::Array{Variable})\n\nReturns an indexable dictionary of values. When the model is unbounded, returns the corresponding components of an unbounded ray, if available from the solver.\n\n\n\n"
+},
+
+{
+    "location": "refvariable.html#JuMP.setvalue",
+    "page": "Variables",
+    "title": "JuMP.setvalue",
+    "category": "Function",
+    "text": "setvalue(v::Variable, val::Number)\n\nProvide an initial value v for this variable that can be used by supporting MILP solvers. If v is NaN, the solver may attempt to fill in this value to construct a feasible solution. setvalue cannot be used with fixed variables; instead their value may be set with JuMP.fix(x,v)\n\n\n\n"
+},
+
+{
+    "location": "refvariable.html#JuMP.getdual",
+    "page": "Variables",
+    "title": "JuMP.getdual",
+    "category": "Function",
+    "text": "getdual(v::Variable)\n\nGet the reduced cost of this variable in the solution. Similar behavior to getvalue for indexable variables.\n\n\n\ngetdual(c::LinConstrRef)\n\n\n\ngetdual(c::ConstraintRef{Model,SOCConstraint})\n\n\n\ngetdual(c::ConstraintRef{Model,SDConstraint})\n\n\n\n"
+},
+
+{
+    "location": "refvariable.html#JuMP.setname",
+    "page": "Variables",
+    "title": "JuMP.setname",
+    "category": "Function",
+    "text": "setname(v::Variable,n::AbstractString)\n\nSet the variable's internal name.\n\n\n\n"
+},
+
+{
+    "location": "refvariable.html#JuMP.getname",
+    "page": "Variables",
+    "title": "JuMP.getname",
+    "category": "Function",
+    "text": "getname(m::Model, col)\n\nGet the variable's internal name.\n\n\n\ngetname(v::Variable)\n\nGet the variable's internal name.\n\n\n\n"
+},
+
+{
     "location": "refvariable.html#Methods-1",
     "page": "Variables",
     "title": "Methods",
     "category": "section",
-    "text": "Boundssetlowerbound(x::Variable, lower), getlowerbound(x::Variable) - Set/get the lower bound of a variable.\nsetupperbound(x::Variable, upper), getupperbound(x::Variable) - Set/get the upper bound of a variable.Variable Categorysetcategory(x::Variable, v_type::Symbol) - Set the variable category for x after construction. Possible categories are listed above.\ngetcategory(x::Variable) - Get the variable category for x.Helper functionssum(x) - Operates on arrays of variables, efficiently produces an affine expression. Available in macros.\ndot(x, coeffs) - Performs a generalized \"dot product\" for arrays of variables and coefficients up to three dimensions, or equivalently the sum of the elements of the Hadamard product. Available in macros, and also as dot(coeffs, x).Valuesgetvalue(x) - Get the value of this variable in the solution. If x is a single variable, this will simply return a number. If x is indexable then it will return an indexable dictionary of values. When the model is unbounded, getvalue will instead return the corresponding components of an unbounded ray, if available from the solver.\nsetvalue(x,v) - Provide an initial value v for this variable that can be used by supporting MILP solvers. If v is NaN, the solver may attempt to fill in this value to construct a feasible solution. setvalue cannot be used with fixed variables; instead their value may be set with JuMP.fix(x,v).\ngetdual(x) - Get the reduced cost of this variable in the solution. Similar behavior to getvalue for indexable variables.note: Note\nThe getvalue function always returns a floating-point value, even when a variable is constrained to take integer values, as most solvers only guarantee integrality up to a particular numerical tolerance. The built-in round function should be used to obtain integer values, e.g., by calling round(Integer, getvalue(x)).NamesVariables (in the sense of columns) can have internal names (different from the Julia variable name) that can be used for writing models to file. This feature is disabled for performance reasons, but will be added if there is demand or a special use case.setname(x::Variable, newName), getname(x::Variable) - Set/get the variable's internal name."
+    "text": "Boundssetlowerbound\ngetlowerbound\nsetupperbound\ngetupperboundVariable Categorysetcategory\ngetcategoryValuesgetvalue(v::Variable)\ngetvalue(arr::Array{Variable})\nsetvalue\ngetdualnote: Note\nThe getvalue function always returns a floating-point value, even when a variable is constrained to take integer values, as most solvers only guarantee integrality up to a particular numerical tolerance. The built-in round function should be used to obtain integer values, e.g., by calling round(Integer, getvalue(x)).NamesVariables (in the sense of columns) can have internal names (different from the Julia variable name) that can be used for writing models to file. This feature is disabled for performance reasons, but will be added if there is demand or a special use case.setname\ngetname"
+},
+
+{
+    "location": "refvariable.html#Helper-functions-1",
+    "page": "Variables",
+    "title": "Helper functions",
+    "category": "section",
+    "text": "The following built-in functions are overloaded to provide easy construction of expressions from variables,sum(x) - Operates on arrays of variables, efficiently produces an affine expression. Available in macros.\ndot(x, coeffs) - Performs a generalized \"dot product\" for arrays of variables and coefficients up to three dimensions, or equivalently the sum of the elements of the Hadamard product. Available in macros, and also as dot(coeffs, x)."
 },
 
 {
@@ -373,7 +701,7 @@ var documenterSearchIndex = {"docs": [
     "page": "Expressions and Constraints",
     "title": "Expressions and Constraints",
     "category": "page",
-    "text": ""
+    "text": "CurrentModule = JuMP"
 },
 
 {
@@ -393,11 +721,139 @@ var documenterSearchIndex = {"docs": [
 },
 
 {
+    "location": "refexpr.html#JuMP.addconstraint",
+    "page": "Expressions and Constraints",
+    "title": "JuMP.addconstraint",
+    "category": "Function",
+    "text": "addconstraint(m::Model, c::LinearConstraint)\n\nAdd a linear constraint to Model m.\n\n\n\naddconstraint(m::Model, c::QuadConstraint)\n\nAdd a quadratic constraint to Model m.\n\n\n\naddconstraint(m::Model, c::SOCConstraint)\n\nAdd a SOC constraint to Model m.\n\n\n\naddconstraint(m::Model, c::SDConstraint)\n\nAdd a SD constraint to Model m.\n\n\n\n"
+},
+
+{
+    "location": "refexpr.html#JuMP.@constraint",
+    "page": "Expressions and Constraints",
+    "title": "JuMP.@constraint",
+    "category": "Macro",
+    "text": "@constraint(m::Model, con)\n\nadd linear or quadratic constraints.\n\n@constraint(m::Model, ref, con)\n\nadd groups of linear or quadratic constraints.\n\n\n\n"
+},
+
+{
+    "location": "refexpr.html#JuMP.@constraints",
+    "page": "Expressions and Constraints",
+    "title": "JuMP.@constraints",
+    "category": "Macro",
+    "text": "@constraints(m, args...)\n\nadds groups of constraints at once, in the same fashion as @constraint. The model must be the first argument, and multiple constraints can be added on multiple lines wrapped in a begin ... end block. For example:\n\n@constraints(m, begin\n  x >= 1\n  y - w <= 2\n  sum_to_one[i=1:3], z[i] + y == 1\nend)\n\n\n\n"
+},
+
+{
+    "location": "refexpr.html#JuMP.@expression",
+    "page": "Expressions and Constraints",
+    "title": "JuMP.@expression",
+    "category": "Macro",
+    "text": "@expression(args...)\n\nefficiently builds a linear, quadratic, or second-order cone expression but does not add to model immediately. Instead, returns the expression which can then be inserted in other constraints. For example:\n\n@expression(m, shared, sum(i*x[i] for i=1:5))\n@constraint(m, shared + y >= 5)\n@constraint(m, shared + z <= 10)\n\nThe ref accepts index sets in the same way as @variable, and those indices can be used in the construction of the expressions:\n\n@expression(m, expr[i=1:3], i*sum(x[j] for j=1:3))\n\nAnonymous syntax is also supported:\n\nexpr = @expression(m, [i=1:3], i*sum(x[j] for j=1:3))\n\n\n\n"
+},
+
+{
+    "location": "refexpr.html#JuMP.@SDconstraint",
+    "page": "Expressions and Constraints",
+    "title": "JuMP.@SDconstraint",
+    "category": "Macro",
+    "text": "@SDconstraint(m, x)\n\nAdds a semidefinite constraint to the Model m. The expression x must be a square, two-dimensional array.\n\n\n\n"
+},
+
+{
+    "location": "refexpr.html#JuMP.addSOS1",
+    "page": "Expressions and Constraints",
+    "title": "JuMP.addSOS1",
+    "category": "Function",
+    "text": "addSOS1(m::Model, coll::Vector{AffExpr})\n\nAdds special ordered set constraint of type 1 (SOS1). Specify the set as a vector of weighted variables, e.g. coll = [3x, y, 2z]. Note that solvers expect the weights to be unique. See here for more details. If there is no inherent weighting in your model, an SOS constraint is probably unnecessary.\n\n\n\n"
+},
+
+{
+    "location": "refexpr.html#JuMP.addSOS2",
+    "page": "Expressions and Constraints",
+    "title": "JuMP.addSOS2",
+    "category": "Function",
+    "text": "addSOS2(m::Model, coll::Vector{AffExpr})\n\nAdds special ordered set constraint of type 2 (SOS2). Specify the set as a vector of weighted variables, e.g. coll = [3x, y, 2z]. Note that solvers expect the weights to be unique. See here for more details.\n\n\n\n"
+},
+
+{
+    "location": "refexpr.html#JuMP.@LinearConstraint",
+    "page": "Expressions and Constraints",
+    "title": "JuMP.@LinearConstraint",
+    "category": "Macro",
+    "text": "@LinearConstraint(x)\n\nConstructs a LinearConstraint instance efficiently by parsing the x. The same as @constraint, except it does not attach the constraint to any model.\n\n\n\n"
+},
+
+{
+    "location": "refexpr.html#JuMP.@LinearConstraints",
+    "page": "Expressions and Constraints",
+    "title": "JuMP.@LinearConstraints",
+    "category": "Macro",
+    "text": "@LinearConstraints(m, args...)\n\nConstructs a vector of LinearConstraint objects. Similar to @LinearConstraint, except it accepts multiple constraints as input as long as they are separated by newlines.\n\n\n\n"
+},
+
+{
+    "location": "refexpr.html#JuMP.@QuadConstraint",
+    "page": "Expressions and Constraints",
+    "title": "JuMP.@QuadConstraint",
+    "category": "Macro",
+    "text": "@QuadConstraint(x)\n\nConstructs a QuadConstraint instance efficiently by parsing the x. The same as @constraint, except it does not attach the constraint to any model.\n\n\n\n"
+},
+
+{
+    "location": "refexpr.html#JuMP.@QuadConstraints",
+    "page": "Expressions and Constraints",
+    "title": "JuMP.@QuadConstraints",
+    "category": "Macro",
+    "text": "@QuadConstraints(m, args...)\n\nConstructs a vector of QuadConstraint objects. Similar to @QuadConstraint, except it accepts multiple constraints as input as long as they are separated by newlines.\n\n\n\n"
+},
+
+{
+    "location": "refexpr.html#Base.push!-Union{Tuple{C}, Tuple{JuMP.GenericAffExpr{C,V},C,V}, Tuple{V}} where V where C",
+    "page": "Expressions and Constraints",
+    "title": "Base.push!",
+    "category": "Method",
+    "text": "Base.push!{C,V}(aff::GenericAffExpr{C,V}, new_coeff::C, new_var::V)\n\nAn efficient way to grow an affine expression by one term. For example, to add 5x to an existing expression aff, use push!(aff, 5.0, x). This is significantly more efficient than aff += 5.0*x.\n\n\n\n"
+},
+
+{
+    "location": "refexpr.html#Base.append!-Union{Tuple{C}, Tuple{JuMP.GenericAffExpr{C,V},JuMP.GenericAffExpr{C,V}}, Tuple{V}} where V where C",
+    "page": "Expressions and Constraints",
+    "title": "Base.append!",
+    "category": "Method",
+    "text": "Base.append!{C,V}(aff::GenericAffExpr{C,V}, other::GenericAffExpr{C,V})\n\nEfficiently append the terms of an affine expression to an existing affine expression. For example, given aff = 5.0*x and other = 7.0*y + 3.0*z, we can grow aff using append!(aff, other) which results in aff equaling 5x + 7y + 3z. This is significantly more efficient than using aff += other.\n\n\n\n"
+},
+
+{
+    "location": "refexpr.html#JuMP.linearterms",
+    "page": "Expressions and Constraints",
+    "title": "JuMP.linearterms",
+    "category": "Function",
+    "text": "linearterms(aff::GenericAffExpr)\n\nProvides an iterator over the (a_i::C,x_i::V) terms in affine expression sum_i a_i x_i+b.\n\n\n\n"
+},
+
+{
+    "location": "refexpr.html#JuMP.getvalue-Tuple{JuMP.GenericAffExpr{Float64,JuMP.Variable}}",
+    "page": "Expressions and Constraints",
+    "title": "JuMP.getvalue",
+    "category": "Method",
+    "text": "getvalue(a::AffExpr)\n\nEvaluate an AffExpr given the current solution values.\n\n\n\n"
+},
+
+{
+    "location": "refexpr.html#JuMP.getvalue-Tuple{JuMP.GenericQuadExpr{Float64,JuMP.Variable}}",
+    "page": "Expressions and Constraints",
+    "title": "JuMP.getvalue",
+    "category": "Method",
+    "text": "getvalue(a::QuadExpr)\n\nEvaluate a QuadExpr given the current solution values.\n\n\n\n"
+},
+
+{
     "location": "refexpr.html#Methods-1",
     "page": "Expressions and Constraints",
     "title": "Methods",
     "category": "section",
-    "text": "@constraint(m::Model, con) - add linear or quadratic constraints.\n@constraint(m::Model, ref, con) - add groups of linear or quadratic constraints. See Constraint Reference section for details.\nJuMP.addconstraint(m::Model, con) - general way to add linear and quadratic constraints.\n@constraints - add groups of constraints at once, in the same fashion as @constraint. The model must be the first argument, and multiple constraints can be added on multiple lines wrapped in a begin ... end block. For example:    @constraints(m, begin\n      x >= 1\n      y - w <= 2\n      sum_to_one[i=1:3], z[i] + y == 1\n    end)@expression(m::Model, ref, expr) - efficiently builds a linear, quadratic, or second-order cone expression but does not add to model immediately. Instead, returns the expression which can then be inserted in other constraints. For example:    @expression(m, shared, sum(i*x[i] for i=1:5))\n    @constraint(m, shared + y >= 5)\n    @constraint(m, shared + z <= 10)The ref accepts index sets in the same way as @variable, and those indices can be used in the construction of the expressions:@expression(m, expr[i=1:3], i*sum(x[j] for j=1:3))Anonymous syntax is also supported:expr = @expression(m, [i=1:3], i*sum(x[j] for j=1:3))@SDconstraint(m::Model, expr) - adds a semidefinite constraint to the model m. The expression expr must be a square, two-dimensional array.\naddSOS1(m::Model, coll::Vector{AffExpr}) - adds special ordered set constraint of type 1 (SOS1). Specify the set as a vector of weighted variables, e.g. coll = [3x, y, 2z]. Note that solvers expect the weights to be unique. See here for more details. If there is no inherent weighting in your model, an SOS constraint is probably unnecessary.\naddSOS2(m::Model, coll::Vector{AffExpr}) - adds special ordered set constraint of type 2 (SOS2). Specify the set as a vector of weighted variables, e.g. coll = [3x, y, 2z]. Note that solvers expect the weights to be unique. See here for more details.\n@LinearConstraint(expr) - Constructs a LinearConstraint instance efficiently by parsing the expr. The same as @constraint, except it does not attach the constraint to any model.\n@LinearConstraints(expr) - Constructs a vector of LinearConstraint objects. Similar to @LinearConstraint, except it accepts multiple constraints as input as long as they are separated by newlines.\n@QuadConstraint(expr) - Constructs a QuadConstraint instance efficiently by parsing the expr. The same as @constraint, except it does not attach the constraint to any model.\n@QuadConstraints(expr) - Constructs a vector of QuadConstraint objects. Similar to @QuadConstraint, except it accepts multiple constraints as input as long as they are separated by newlines.\npush!(aff::AffExpr, new_coeff::Float64, new_var::Variable) - efficient way to grow an affine expression by one term. For example, to add 5x to an existing expression aff, use push!(aff, 5.0, x). This is significantly more efficient than aff += 5.0*x.\nappend!(aff::AffExpr, other::AffExpr) - efficiently append the terms of an affine expression to an existing affine expression. For example, given aff = 5.0*x and other = 7.0*y + 3.0*z, we can grow aff using append!(aff, other) which results in aff equaling 5x + 7y + 3z. This is significantly more efficient than using aff += other.\nsum(affs::Array{AffExpr}) - efficiently sum an array of affine expressions.\ngetvalue(expr) - evaluate an AffExpr or QuadExpr, given the current solution values.\nlinearterms{C,V}(aff::GenericAffExpr{C,V}) - provides an iterator over the (a_i::C,x_i::V) terms in affine expression sum_i a_i x_i+b."
+    "text": "addconstraint\n@constraint\n@constraints\n@expression\n@SDconstraint\naddSOS1\naddSOS2\n@LinearConstraint\n@LinearConstraints\n@QuadConstraint\n@QuadConstraints\nBase.push!{C,V}(aff::GenericAffExpr{C,V}, new_coeff::C, new_var::V)\nBase.append!{C,V}(aff::GenericAffExpr{C,V}, other::GenericAffExpr{C,V})\nlinearterms\ngetvalue(a::AffExpr)\ngetvalue(a::QuadExpr)"
 },
 
 {
