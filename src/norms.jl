@@ -121,6 +121,11 @@ end
 # Alias for the AffExpr case
 const SOCConstraint = GenericSOCConstraint{SOCExpr}
 
+"""
+    addconstraint(m::Model, c::SOCConstraint)
+
+Add a SOC constraint to `Model m`.
+"""
 function addconstraint(m::Model, c::SOCConstraint)
     push!(m.socconstr,c)
     m.internalModelLoaded = false

@@ -348,6 +348,16 @@ constructconstraint!(x::AbstractMatrix, ::PSDCone) = SDConstraint(x)
 
 constraint_error(args, str) = error("In @constraint($(join(args,","))): ", str)
 
+"""
+    @constraint(m::Model, con)
+
+add linear or quadratic constraints.
+
+    @constraint(m::Model, ref, con)
+
+add groups of linear or quadratic constraints.
+
+"""
 macro constraint(args...)
     # Pick out keyword arguments
     if isexpr(args[1],:parameters) # these come if using a semicolon
@@ -493,6 +503,12 @@ macro constraint(args...)
     end)
 end
 
+
+"""
+    @SDconstraint(m, x)
+
+Adds a semidefinite constraint to the `Model m`. The expression `x` must be a square, two-dimensional array.
+"""
 macro SDconstraint(m, x)
     m = esc(m)
 
@@ -529,6 +545,12 @@ macro SDconstraint(m, x)
     end)
 end
 
+
+"""
+    @LinearConstraint(x)
+
+Constructs a `LinearConstraint` instance efficiently by parsing the `x`. The same as `@constraint`, except it does not attach the constraint to any model.
+"""
 macro LinearConstraint(x)
     (x.head == :block) &&
         error("Code block passed as constraint. Perhaps you meant to use @LinearConstraints instead?")
@@ -577,6 +599,11 @@ macro LinearConstraint(x)
     end
 end
 
+"""
+    @QuadConstraint(x)
+
+Constructs a `QuadConstraint` instance efficiently by parsing the `x`. The same as `@constraint`, except it does not attach the constraint to any model.
+"""
 macro QuadConstraint(x)
     (x.head == :block) &&
         error("Code block passed as constraint. Perhaps you meant to use @QuadConstraints instead?")
@@ -703,6 +730,37 @@ for (mac,sym) in [(:constraints,  Symbol("@constraint")),
     end
 end
 
+
+# Doc strings for the auto-generated macro pluralizations
+@doc """
+    @constraints(m, args...)
+
+adds groups of constraints at once, in the same fashion as @constraint. The model must be the first argument, and multiple constraints can be added on multiple lines wrapped in a `begin ... end` block. For example:
+
+    @constraints(m, begin
+      x >= 1
+      y - w <= 2
+      sum_to_one[i=1:3], z[i] + y == 1
+    end)
+""" :(@constraints)
+
+@doc """
+    @LinearConstraints(m, args...)
+
+Constructs a vector of `LinearConstraint` objects. Similar to `@LinearConstraint`, except it accepts multiple constraints as input as long as they are separated by newlines.
+""" :(@LinearConstraints)
+
+@doc """
+    @QuadConstraints(m, args...)
+
+Constructs a vector of `QuadConstraint` objects. Similar to `@QuadConstraint`, except it accepts multiple constraints as input as long as they are separated by newlines.
+""" :(@QuadConstraints)
+
+
+
+
+
+
 macro objective(m, args...)
     m = esc(m)
     if length(args) != 2
@@ -735,6 +793,29 @@ macro Expression(x)
 end
 
 
+"""
+    @expression(args...)
+
+efficiently builds a linear, quadratic, or second-order cone expression but does not add to model immediately. Instead, returns the expression which can then be inserted in other constraints. For example:
+
+```julia
+@expression(m, shared, sum(i*x[i] for i=1:5))
+@constraint(m, shared + y >= 5)
+@constraint(m, shared + z <= 10)
+```
+
+The `ref` accepts index sets in the same way as `@variable`, and those indices can be used in the construction of the expressions:
+
+```julia
+@expression(m, expr[i=1:3], i*sum(x[j] for j=1:3))
+```
+
+Anonymous syntax is also supported:
+
+```julia
+expr = @expression(m, [i=1:3], i*sum(x[j] for j=1:3))
+```
+"""
 macro expression(args...)
     if length(args) == 3
         m = esc(args[1])

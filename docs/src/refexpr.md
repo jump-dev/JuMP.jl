@@ -1,3 +1,7 @@
+```@meta
+CurrentModule = JuMP
+```
+
 Expressions and Constraints
 ===========================
 
@@ -24,50 +28,25 @@ The corresponding constraint is `QuadConstraint`, which is expected to be a conv
 Methods
 -------
 
--   `@constraint(m::Model, con)` - add linear or quadratic constraints.
--   `@constraint(m::Model, ref, con)` - add groups of linear or quadratic constraints. See Constraint Reference section for details.
--   `JuMP.addconstraint(m::Model, con)` - general way to add linear and quadratic constraints.
--   `@constraints` - add groups of constraints at once, in the same fashion as @constraint. The model must be the first argument, and multiple constraints can be added on multiple lines wrapped in a `begin ... end` block. For example:
-
-```julia
-    @constraints(m, begin
-      x >= 1
-      y - w <= 2
-      sum_to_one[i=1:3], z[i] + y == 1
-    end)
-```
--   `@expression(m::Model, ref, expr)` - efficiently builds a linear, quadratic, or second-order cone expression but does not add to model immediately. Instead, returns the expression which can then be inserted in other constraints. For example:
-
-```julia
-    @expression(m, shared, sum(i*x[i] for i=1:5))
-    @constraint(m, shared + y >= 5)
-    @constraint(m, shared + z <= 10)
-```
-
-The `ref` accepts index sets in the same way as `@variable`, and those indices can be used in the construction of the expressions:
-
-```julia
-@expression(m, expr[i=1:3], i*sum(x[j] for j=1:3))
+```@docs
+addconstraint
+@constraint
+@constraints
+@expression
+@SDconstraint
+addSOS1
+addSOS2
+@LinearConstraint
+@LinearConstraints
+@QuadConstraint
+@QuadConstraints
+Base.push!{C,V}(aff::GenericAffExpr{C,V}, new_coeff::C, new_var::V)
+Base.append!{C,V}(aff::GenericAffExpr{C,V}, other::GenericAffExpr{C,V})
+linearterms
+getvalue(a::AffExpr)
+getvalue(a::QuadExpr)
 ```
 
-Anonymous syntax is also supported:
-
-```julia
-expr = @expression(m, [i=1:3], i*sum(x[j] for j=1:3))
-```
-
--   `@SDconstraint(m::Model, expr)` - adds a semidefinite constraint to the model `m`. The expression `expr` must be a square, two-dimensional array.
--   `addSOS1(m::Model, coll::Vector{AffExpr})` - adds special ordered set constraint of type 1 (SOS1). Specify the set as a vector of weighted variables, e.g. `coll = [3x, y, 2z]`. Note that solvers expect the weights to be unique. See [here](http://lpsolve.sourceforge.net/5.5/SOS.htm) for more details. If there is no inherent weighting in your model, an SOS constraint is probably unnecessary.
--   `addSOS2(m::Model, coll::Vector{AffExpr})` - adds special ordered set constraint of type 2 (SOS2). Specify the set as a vector of weighted variables, e.g. `coll = [3x, y, 2z]`. Note that solvers expect the weights to be unique. See [here](http://lpsolve.sourceforge.net/5.5/SOS.htm) for more details.
--   `@LinearConstraint(expr)` - Constructs a `LinearConstraint` instance efficiently by parsing the `expr`. The same as `@constraint`, except it does not attach the constraint to any model.
--   `@LinearConstraints(expr)` - Constructs a vector of `LinearConstraint` objects. Similar to `@LinearConstraint`, except it accepts multiple constraints as input as long as they are separated by newlines.
--   `@QuadConstraint(expr)` - Constructs a `QuadConstraint` instance efficiently by parsing the `expr`. The same as `@constraint`, except it does not attach the constraint to any model.
--   `@QuadConstraints(expr)` - Constructs a vector of `QuadConstraint` objects. Similar to `@QuadConstraint`, except it accepts multiple constraints as input as long as they are separated by newlines.
--   `push!(aff::AffExpr, new_coeff::Float64, new_var::Variable)` - efficient way to grow an affine expression by one term. For example, to add `5x` to an existing expression `aff`, use `push!(aff, 5.0, x)`. This is significantly more efficient than `aff += 5.0*x`.
--   `append!(aff::AffExpr, other::AffExpr)` - efficiently append the terms of an affine expression to an existing affine expression. For example, given `aff = 5.0*x` and `other = 7.0*y + 3.0*z`, we can grow `aff` using `append!(aff, other)` which results in `aff` equaling `5x + 7y + 3z`. This is significantly more efficient than using `aff += other`.
--   `sum(affs::Array{AffExpr})` - efficiently sum an array of affine expressions.
--   `getvalue(expr)` - evaluate an `AffExpr` or `QuadExpr`, given the current solution values.
--   `linearterms{C,V}(aff::GenericAffExpr{C,V})` - provides an iterator over the `(a_i::C,x_i::V)` terms in affine expression ``\sum_i a_i x_i + b``.
 
 Constraint References
 ---------------------

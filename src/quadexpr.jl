@@ -88,6 +88,11 @@ function Base.copy(q::QuadExpr, new_model::Model)
                 copy(q.qcoeffs), copy(q.aff, new_model))
 end
 
+"""
+    getvalue(a::QuadExpr)
+
+Evaluate a `QuadExpr` given the current solution values.
+"""
 function getvalue(a::QuadExpr)
     ret = getvalue(a.aff)
     for it in 1:length(a.qvars1)
@@ -117,6 +122,11 @@ function Base.copy(c::QuadConstraint, new_model::Model)
     return QuadConstraint(copy(c.terms, new_model), c.sense)
 end
 
+"""
+    addconstraint(m::Model, c::QuadConstraint)
+
+Add a quadratic constraint to `Model m`.
+"""
 function addconstraint(m::Model, c::QuadConstraint)
     push!(m.quadconstr,c)
     if m.internalModelLoaded
