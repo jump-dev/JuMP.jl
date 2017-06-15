@@ -32,14 +32,28 @@ Methods
 
 **General**
 
+```@docs
+MathProgBase.numvar
+MathProgBase.numlinconstr
+MathProgBase.numquadconstr
+numsocconstr
+numsosconstr
+numsdconstr
+numnlconstr
+MathProgBase.numconstr
+```
+
 -   `MathProgBase.numvar(m::Model)` - returns the number of variables associated with the `Model m`.
 -   `MathProgBase.numlinconstr(m::Model)` - returns the number of linear constraints associated with the `Model m`.
 -   `MathProgBase.numquadconstr(m::Model)` - returns the number of quadratic constraints associated with the `Model m`.
+
 -   `JuMP.numsocconstr(m::Model)` - returns the number of second order cone constraints associated with the `Model m`.
 -   `JuMP.numsosconstr(m::Model)` - returns the number of sos constraints associated with the `Model m`.
 -   `JuMP.numsdconstr(m::Model)` - returns the number of semi-definite constraints associated with the `Model m`.
 -   `JuMP.numnlconstr(m::Model)` - returns the number of nonlinear constraints associated with the `Model m`.
+
 -   `MathProgBase.numconstr(m::Model)` - returns the total number of constraints associated with the `Model m`.
+
 -   `getsolvetime(m::Model)` - returns the solve time reported by the solver if it is implemented.
 -   `getnodecount(m::Model)` - returns the number of explored branch-and-bound nodes, if it is implemented.
 -   `getobjbound(m::Model)` - returns the best known bound on the optimal objective value. This is used, for example, when a branch-and-bound method is stopped before finishing.
@@ -63,12 +77,6 @@ setobjectivesense
 getobjectivevalue
 getobjectivebound
 ```
-
--   `getobjective(m::Model)` - returns the objective function as a `QuadExpr`.
--   `getobjectivesense(m::Model)` - returns objective sense, either `:Min` or `:Max`.
--   `setobjectivesense(m::Model, newSense::Symbol)` - sets the objective sense (`newSense` is either `:Min` or `:Max`).
--   `getobjectivevalue(m::Model)` - returns objective value after a call to `solve`.
--   `getobjectivebound(m::Model)` - returns the best known bound on the optimal objective value after a call to `solve`.
 
 **Output**
 

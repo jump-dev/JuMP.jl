@@ -187,14 +187,61 @@ function Model(;solver=UnsetSolver(), simplify_nonlinear_expressions::Bool=false
 end
 
 # Getters/setters
+
+"""
+    MathProgBase.numvar(m::Model)
+
+returns the number of variables associated with the `Model m`.
+"""
 MathProgBase.numvar(m::Model) = m.numCols
+
+"""
+    MathProgBase.numlinconstr(m::Model)
+
+returns the number of linear constraints associated with the `Model m`
+"""
 MathProgBase.numlinconstr(m::Model) = length(m.linconstr)
+
+"""
+    MathProgBase.numquadconstr(m::Model)
+
+returns the number of quadratic constraints associated with the `Model m`
+"""
 MathProgBase.numquadconstr(m::Model) = length(m.quadconstr)
+
+"""
+    numsocconstr(m::Model)
+
+returns the number of second order cone constraints associated with the `Model m`
+"""
 numsocconstr(m::Model) = length(m.socconstr)
+
+"""
+    numsosconstr(m::Model)
+
+returns the number of sos constraints associated with the `Model m`
+"""
 numsosconstr(m::Model) = length(m.sosconstr)
+
+"""
+    numsdconstr(m::Model)
+
+returns the number of semi-definite constraints associated with the `Model m`
+"""
 numsdconstr(m::Model) = length(m.sdpconstr)
+
+"""
+    numnlconstr(m::Model)
+
+returns the number of nonlinear constraints associated with the `Model m`
+"""
 numnlconstr(m::Model) = m.nlpdata !== nothing ? length(m.nlpdata.nlconstr) : 0
 
+"""
+    MathProgBase.numconstr(m::Model)
+
+returns the total number of constraints associated with the `Model m`
+"""
 function MathProgBase.numconstr(m::Model)
     c = length(m.linconstr) + length(m.quadconstr) + length(m.socconstr) + length(m.sosconstr) + length(m.sdpconstr)
     if m.nlpdata !== nothing
