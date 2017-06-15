@@ -730,6 +730,37 @@ for (mac,sym) in [(:constraints,  Symbol("@constraint")),
     end
 end
 
+
+# Doc strings for the auto-generated macro pluralizations
+@doc """
+    @constraints(m, args...)
+
+adds groups of constraints at once, in the same fashion as @constraint. The model must be the first argument, and multiple constraints can be added on multiple lines wrapped in a `begin ... end` block. For example:
+
+    @constraints(m, begin
+      x >= 1
+      y - w <= 2
+      sum_to_one[i=1:3], z[i] + y == 1
+    end)
+""" :(@constraints)
+
+@doc """
+    @LinearConstraints(m, args...)
+
+Constructs a vector of `LinearConstraint` objects. Similar to `@LinearConstraint`, except it accepts multiple constraints as input as long as they are separated by newlines.
+""" :(@LinearConstraints)
+
+@doc """
+    @QuadConstraints(m, args...)
+
+Constructs a vector of `QuadConstraint` objects. Similar to `@QuadConstraint`, except it accepts multiple constraints as input as long as they are separated by newlines.
+""" :(@QuadConstraints)
+
+
+
+
+
+
 macro objective(m, args...)
     m = esc(m)
     if length(args) != 2

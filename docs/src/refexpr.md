@@ -27,28 +27,21 @@ Methods
 ```@docs
 addconstraint
 @constraint
+@constraints
 @expression
 @SDconstraint
 addSOS1
 addSOS2
 @LinearConstraint
+@LinearConstraints
 @QuadConstraint
+@QuadConstraints
 Base.push!{C,V}(aff::GenericAffExpr{C,V}, new_coeff::C, new_var::V)
 Base.append!{C,V}(aff::GenericAffExpr{C,V}, other::GenericAffExpr{C,V})
 linearterms
 getvalue(a::AffExpr)
 getvalue(a::QuadExpr)
 ```
-
--   `@constraints` - add groups of constraints at once, in the same fashion as @constraint. The model must be the first argument, and multiple constraints can be added on multiple lines wrapped in a `begin ... end` block. For example:
-
-        @constraints(m, begin
-          x >= 1
-          y - w <= 2
-          sum_to_one[i=1:3], z[i] + y == 1
-        end)
--   `@LinearConstraints(expr)` - Constructs a vector of `LinearConstraint` objects. Similar to `@LinearConstraint`, except it accepts multiple constraints as input as long as they are separated by newlines.
--   `@QuadConstraints(expr)` - Constructs a vector of `QuadConstraint` objects. Similar to `@QuadConstraint`, except it accepts multiple constraints as input as long as they are separated by newlines.
 
 
 Constraint References
