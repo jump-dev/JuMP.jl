@@ -1,3 +1,7 @@
+```@meta
+CurrentModule = JuMP
+```
+
 Variables
 =========
 
@@ -144,13 +148,19 @@ Methods
 
 **Bounds**
 
--   `setlowerbound(x::Variable, lower)`, `getlowerbound(x::Variable)` - Set/get the lower bound of a variable.
--   `setupperbound(x::Variable, upper)`, `getupperbound(x::Variable)` - Set/get the upper bound of a variable.
+```@docs
+setlowerbound
+getlowerbound
+setupperbound
+getupperbound
+```
 
 **Variable Category**
 
--   `setcategory(x::Variable, v_type::Symbol)` - Set the variable category for `x` after construction. Possible categories are listed above.
--   `getcategory(x::Variable)` - Get the variable category for `x`.
+```@docs
+setcategory
+getcategory
+```
 
 **Helper functions**
 
@@ -159,9 +169,11 @@ Methods
 
 **Values**
 
--   `getvalue(x)` - Get the value of this variable in the solution. If `x` is a single variable, this will simply return a number. If `x` is indexable then it will return an indexable dictionary of values. When the model is unbounded, `getvalue` will instead return the corresponding components of an unbounded ray, if available from the solver.
--   `setvalue(x,v)` - Provide an initial value `v` for this variable that can be used by supporting MILP solvers. If `v` is `NaN`, the solver may attempt to fill in this value to construct a feasible solution. `setvalue` cannot be used with fixed variables; instead their value may be set with `JuMP.fix(x,v)`.
--   `getdual(x)` - Get the reduced cost of this variable in the solution. Similar behavior to `getvalue` for indexable variables.
+```@docs
+getvalue
+setvalue
+getdual
+```
 
 !!! note
     The `getvalue` function always returns a floating-point value, even when a variable is constrained to take integer values, as most solvers only guarantee integrality up to a particular numerical tolerance. The built-in `round` function should be used to obtain integer values, e.g., by calling `round(Integer, getvalue(x))`.
@@ -170,7 +182,11 @@ Methods
 
 Variables (in the sense of columns) can have internal names (different from the Julia variable name) that can be used for writing models to file. This feature is disabled for performance reasons, but will be added if there is demand or a special use case.
 
--   `setname(x::Variable, newName)`, `getname(x::Variable)` - Set/get the variable's internal name.
+```@docs
+setname
+getname
+```
+
 
 Fixed variables
 ---------------
