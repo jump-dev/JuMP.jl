@@ -6,13 +6,17 @@ Constructor
 
 `Model` is a type defined by JuMP. All variables and constraints are associated with a `Model` object. It has a constructor that has no required arguments:
 
-    m = Model()
+```julia
+m = Model()
+```
 
 The constructor also accepts an optional keyword argument, `solver`. You may specify a solver either here or later on by calling `setsolver`. JuMP will throw an error if you try to solve a problem without specifying a solver.
 
 `solver` must be an `AbstractMathProgSolver` object, which is constructed as follows:
 
-    solver = solvername(Option1=Value1, Option2=Value2, ...)
+```julia
+solver = solvername(Option1=Value1, Option2=Value2, ...)
+```
 
 where `solvername` is one of the supported solvers. See the solver table &lt;jump-solvertable&gt; for the list of available solvers and corresponding parameter names. All options are solver-dependent; see corresponding solver packages for more information.
 
@@ -21,7 +25,9 @@ where `solvername` is one of the supported solvers. See the solver table &lt;jum
 
 As an example, we can create a `Model` object that will use GLPK's exact solver for LPs as follows:
 
-    m = Model(solver = GLPKSolverLP(method=:Exact))
+```julia
+m = Model(solver = GLPKSolverLP(method=:Exact))
+```
 
 Methods
 -------
@@ -84,28 +90,34 @@ Quadratic Objectives
 
 Quadratic objectives are supported by JuMP using a solver which implements the corresponding extensions of the MathProgBase interface. Add them in the same way you would a linear objective:
 
-    using Ipopt
-    m = Model(solver=IpoptSolver())
-    @variable(m, 0 <= x <= 2 )
-    @variable(m, 0 <= y <= 30 )
+```julia
+using Ipopt
+m = Model(solver=IpoptSolver())
+@variable(m, 0 <= x <= 2 )
+@variable(m, 0 <= y <= 30 )
 
-    @objective(m, Min, x*x+ 2x*y + y*y )
-    @constraint(m, x + y >= 1 )
+@objective(m, Min, x*x+ 2x*y + y*y )
+@constraint(m, x + y >= 1 )
 
-    print(m)
+print(m)
 
-    status = solve(m)
+status = solve(m)
+```
 
 Second-order cone constraints
 -----------------------------
 
 Second-order cone constraints of the form ``||Ax − b||_2 + a^Tx + c \leq 0`` can be added directly using the `norm` function:
 
-    @constraint(m, norm(A*x) <= 2w - 1)
+```julia
+@constraint(m, norm(A*x) <= 2w - 1)
+```
 
 You may use generator expressions within `norm()` to build up normed expressions with complex indexing operations in much the same way as with `sum(...)`:
 
-    @constraint(m, norm(2x[i] - i for i=1:n if c[i] == 1) <= 1)
+```julia
+@constraint(m, norm(2x[i] - i for i=1:n if c[i] == 1) <= 1)
+```
 
 Accessing the low-level model
 -----------------------------
