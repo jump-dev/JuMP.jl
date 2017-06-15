@@ -162,11 +162,6 @@ setcategory
 getcategory
 ```
 
-**Helper functions**
-
--   `sum(x)` - Operates on arrays of variables, efficiently produces an affine expression. Available in macros.
--   `dot(x, coeffs)` - Performs a generalized "dot product" for arrays of variables and coefficients up to three dimensions, or equivalently the sum of the elements of the Hadamard product. Available in macros, and also as `dot(coeffs, x)`.
-
 **Values**
 
 ```@docs
@@ -187,6 +182,15 @@ Variables (in the sense of columns) can have internal names (different from the 
 setname
 getname
 ```
+
+
+Helper functions
+----------------
+The following built-in functions are overloaded to provide easy construction of expressions from variables,
+
+-   `sum(x)` - Operates on arrays of variables, efficiently produces an affine expression. Available in macros.
+-   `dot(x, coeffs)` - Performs a generalized "dot product" for arrays of variables and coefficients up to three dimensions, or equivalently the sum of the elements of the Hadamard product. Available in macros, and also as `dot(coeffs, x)`.
+
 
 
 Fixed variables
