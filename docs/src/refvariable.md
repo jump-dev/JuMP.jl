@@ -170,7 +170,8 @@ getcategory
 **Values**
 
 ```@docs
-getvalue
+getvalue(v::Variable)
+getvalue(arr::Array{Variable})
 setvalue
 getdual
 ```

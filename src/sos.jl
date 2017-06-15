@@ -43,6 +43,11 @@ end
 
 addSOS1(m::Model, coll) = addSOS1(m, convert(Vector{AffExpr}, coll))
 
+"""
+    addSOS1(m::Model, coll::Vector{AffExpr})
+
+Adds special ordered set constraint of type 1 (SOS1). Specify the set as a vector of weighted variables, e.g. `coll = [3x, y, 2z]`. Note that solvers expect the weights to be unique. See [here](http://lpsolve.sourceforge.net/5.5/SOS.htm) for more details. If there is no inherent weighting in your model, an SOS constraint is probably unnecessary.
+"""
 function addSOS1(m::Model, coll::Vector{AffExpr})
     vars, weight = constructSOS(m,coll)
     push!(m.sosconstr, SOSConstraint(vars, weight, :SOS1))
@@ -59,6 +64,11 @@ end
 
 addSOS2(m::Model, coll) = addSOS2(m, convert(Vector{AffExpr}, coll))
 
+"""
+    addSOS2(m::Model, coll::Vector{AffExpr})
+
+Adds special ordered set constraint of type 2 (SOS2). Specify the set as a vector of weighted variables, e.g. `coll = [3x, y, 2z]`. Note that solvers expect the weights to be unique. See [here](http://lpsolve.sourceforge.net/5.5/SOS.htm) for more details.
+"""
 function addSOS2(m::Model, coll::Vector{AffExpr})
     vars, weight = constructSOS(m,coll)
     push!(m.sosconstr, SOSConstraint(vars, weight, :SOS2))

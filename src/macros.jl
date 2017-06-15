@@ -348,6 +348,16 @@ constructconstraint!(x::AbstractMatrix, ::PSDCone) = SDConstraint(x)
 
 constraint_error(args, str) = error("In @constraint($(join(args,","))): ", str)
 
+"""
+    @constraint(m::Model, con)
+
+add linear or quadratic constraints.
+
+    @constraint(m::Model, ref, con)
+
+add groups of linear or quadratic constraints.
+
+"""
 macro constraint(args...)
     # Pick out keyword arguments
     if isexpr(args[1],:parameters) # these come if using a semicolon
@@ -493,6 +503,12 @@ macro constraint(args...)
     end)
 end
 
+
+"""
+    @SDconstraint(m, x)
+
+Adds a semidefinite constraint to the `Model m`. The expression `x` must be a square, two-dimensional array.
+"""
 macro SDconstraint(m, x)
     m = esc(m)
 
@@ -529,6 +545,12 @@ macro SDconstraint(m, x)
     end)
 end
 
+
+"""
+    @LinearConstraint(x)
+
+Constructs a `LinearConstraint` instance efficiently by parsing the `x`. The same as `@constraint`, except it does not attach the constraint to any model.
+"""
 macro LinearConstraint(x)
     (x.head == :block) &&
         error("Code block passed as constraint. Perhaps you meant to use @LinearConstraints instead?")
@@ -577,6 +599,11 @@ macro LinearConstraint(x)
     end
 end
 
+"""
+    @QuadConstraint(x)
+
+Constructs a `QuadConstraint` instance efficiently by parsing the `x`. The same as `@constraint`, except it does not attach the constraint to any model.
+"""
 macro QuadConstraint(x)
     (x.head == :block) &&
         error("Code block passed as constraint. Perhaps you meant to use @QuadConstraints instead?")
@@ -735,6 +762,24 @@ macro Expression(x)
 end
 
 
+"""
+    @expression(args...)
+
+efficiently builds a linear, quadratic, or second-order cone expression but does not add to model immediately. Instead, returns the expression which can then be inserted in other constraints. For example:
+
+    @expression(m, shared, sum(i*x[i] for i=1:5))
+    @constraint(m, shared + y >= 5)
+    @constraint(m, shared + z <= 10)
+
+The `ref` accepts index sets in the same way as `@variable`, and those indices can be used in the construction of the expressions:
+
+    @expression(m, expr[i=1:3], i*sum(x[j] for j=1:3))
+
+Anonymous syntax is also supported:
+
+    expr = @expression(m, [i=1:3], i*sum(x[j] for j=1:3))
+
+"""
 macro expression(args...)
     if length(args) == 3
         m = esc(args[1])

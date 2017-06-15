@@ -707,6 +707,11 @@ function SDConstraint(lhs::AbstractMatrix, rhs::Number)
     SDConstraint(lhs)
 end
 
+"""
+    addconstraint(m::Model, c::SDConstraint)
+
+Add a SD constraint to `Model m`.
+"""
 function addconstraint(m::Model, c::SDConstraint)
     push!(m.sdpconstr,c)
     m.internalModelLoaded = false

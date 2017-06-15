@@ -37,20 +37,34 @@ immutable LinearTermIterator{GAE<:GenericAffExpr}
     aff::GAE
 end
 
+"""
+    linearterms(aff::GenericAffExpr)
+
+Provides an iterator over the `(a_i::C,x_i::V)` terms in affine expression ``\sum_i a_i x_i + b``.
+"""
 linearterms(aff::GenericAffExpr) = LinearTermIterator(aff)
 
 Base.start(lti::LinearTermIterator) = 1
 Base.done( lti::LinearTermIterator, state::Int) = state > length(lti.aff.vars)
 Base.next( lti::LinearTermIterator, state::Int) = ((lti.aff.coeffs[state], lti.aff.vars[state]), state+1)
 
-# More efficient ways to grow an affine expression
-# Add a single term to an affine expression
+"""
+    Base.push!{C,V}(aff::GenericAffExpr{C,V}, new_coeff::C, new_var::V)
+
+An efficient way to grow an affine expression by one term. For example, to add `5x` to an existing expression `aff`, use `push!(aff, 5.0, x)`. This is significantly more efficient than `aff += 5.0*x`.
+"""
 function Base.push!{C,V}(aff::GenericAffExpr{C,V}, new_coeff::C, new_var::V)
     push!(aff.coeffs, new_coeff)
     push!(aff.vars, new_var)
     aff
 end
+
 # Add an affine expression to an existing affine expression
+"""
+    Base.append!{C,V}(aff::GenericAffExpr{C,V}, other::GenericAffExpr{C,V})
+
+Efficiently append the terms of an affine expression to an existing affine expression. For example, given `aff = 5.0*x` and `other = 7.0*y + 3.0*z`, we can grow `aff` using `append!(aff, other)` which results in `aff` equaling `5x + 7y + 3z`. This is significantly more efficient than using `aff += other`.
+"""
 function Base.append!{C,V}(aff::GenericAffExpr{C,V}, other::GenericAffExpr{C,V})
     append!(aff.vars, other.vars)
     append!(aff.coeffs, other.coeffs)
@@ -119,6 +133,11 @@ function Base.copy(a::AffExpr, new_model::Model)
     AffExpr(copy(a.vars, new_model), copy(a.coeffs), a.constant)
 end
 
+"""
+    getvalue(a::AffExpr)
+
+Evaluate an `AffExpr` given the current solution values.
+"""
 function getvalue(a::AffExpr)
     ret = a.constant
     for it in 1:length(a.vars)
@@ -171,6 +190,11 @@ function Base.copy(c::LinearConstraint, new_model::Model)
     return LinearConstraint(copy(c.terms, new_model), c.lb, c.ub)
 end
 
+"""
+    addconstraint(m::Model, c::LinearConstraint)
+
+Add a linear constraint to `Model m`.
+"""
 function addconstraint(m::Model, c::LinearConstraint)
     push!(m.linconstr,c)
     if m.internalModelLoaded
