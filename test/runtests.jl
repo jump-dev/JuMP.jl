@@ -315,14 +315,14 @@ function dualforward(ex, x; ignore_nan=false)
     @test isapprox(fval_ϵ[1], dot(grad,ones(length(x))))
 
     # compare with running dual numbers
-    forward_dual_storage = zeros(Dual{Float64},length(nd))
-    partials_dual_storage = zeros(Dual{Float64},length(nd))
-    output_dual_storage = zeros(Dual{Float64},length(x))
-    reverse_dual_storage = zeros(Dual{Float64},length(nd))
-    x_dual = [Dual(x[i],1.0) for i in 1:length(x)]
+    forward_dual_storage = zeros(DualNumbers.Dual{Float64},length(nd))
+    partials_dual_storage = zeros(DualNumbers.Dual{Float64},length(nd))
+    output_dual_storage = zeros(DualNumbers.Dual{Float64},length(x))
+    reverse_dual_storage = zeros(DualNumbers.Dual{Float64},length(nd))
+    x_dual = [DualNumbers.Dual(x[i],1.0) for i in 1:length(x)]
     fval = forward_eval(forward_dual_storage,partials_dual_storage,nd,adj,const_values,[],x_dual,[])
     reverse_eval(reverse_dual_storage,partials_dual_storage,nd,adj)
-    reverse_extract(output_dual_storage,reverse_dual_storage,nd,adj,[],Dual(2.0))
+    reverse_extract(output_dual_storage,reverse_dual_storage,nd,adj,[],DualNumbers.Dual(2.0))
     for k in 1:length(nd)
         @test isapprox(epsilon(forward_dual_storage[k]), forward_storage_ϵ[k][1])
         if !(isnan(epsilon(partials_dual_storage[k])) && ignore_nan)

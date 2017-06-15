@@ -4,6 +4,9 @@ using Base.Meta
 using ForwardDiff
 import Calculus
 import MathProgBase
+
+const TAG = :rds_tag
+
 # Override basic math functions to return NaN instead of throwing errors.
 # This is what NLP solvers expect, and
 # sometimes the results aren't needed anyway,
