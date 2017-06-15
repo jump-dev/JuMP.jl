@@ -216,6 +216,11 @@ for f in MathProgBase.SolverInterface.methods_by_tag[:rewrap]
     eval(Expr(:export,f))
 end
 
+"""
+    getobjective(m::Model)
+
+returns the objective function as a `QuadExpr`
+"""
 function getobjective(m::Model)
     traits = ProblemTraits(m)
     if traits.nlp
@@ -224,9 +229,32 @@ function getobjective(m::Model)
     return m.obj
 end
 
+"""
+    getobjectivebound(m::Model)
+
+returns the best known bound on the optimal objective value after a call to `solve`
+"""
 getobjectivebound(m::Model) = m.objBound
+
+"""
+    getobjectivevalue(m::Model)
+
+returns objective value after a call to `solve`
+"""
 getobjectivevalue(m::Model) = m.objVal
+
+"""
+    getobjectivesense(m::Model)
+
+returns objective sense, either `:Min` or `:Max`
+"""
 getobjectivesense(m::Model) = m.objSense
+
+"""
+    setobjectivesense(m::Model, newSense::Symbol)
+
+sets the objective sense (`newSense` is either `:Min` or `:Max`)
+"""
 function setobjectivesense(m::Model, newSense::Symbol)
     if (newSense != :Max && newSense != :Min)
         error("Model sense must be :Max or :Min")

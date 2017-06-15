@@ -56,6 +56,14 @@ Methods
 
 **Objective**
 
+```@docs
+getobjective
+getobjectivesense
+setobjectivesense
+getobjectivevalue
+getobjectivebound
+```
+
 -   `getobjective(m::Model)` - returns the objective function as a `QuadExpr`.
 -   `getobjectivesense(m::Model)` - returns objective sense, either `:Min` or `:Max`.
 -   `setobjectivesense(m::Model, newSense::Symbol)` - sets the objective sense (`newSense` is either `:Min` or `:Max`).
