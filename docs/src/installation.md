@@ -15,13 +15,17 @@ Getting JuMP
 
 Once you've installed Julia, installing JuMP is simple. Julia has a git-based package system. To use it, open Julia in interactive mode (i.e. `julia` at the command line) and use the package manager:
 
-    julia> Pkg.add("JuMP")
+```julia
+julia> Pkg.add("JuMP")
+```
 
 This command checks [METADATA.jl](https://github.com/JuliaLang/METADATA.jl) to determine what the most recent version of JuMP is and then downloads it from its repository on GitHub.
 
 To start using JuMP (after installing a solver), it should be imported into the local scope:
 
-    julia> using JuMP
+```julia
+julia> using JuMP
+```
 
 Getting Solvers
 ---------------
@@ -57,17 +61,19 @@ Where:
 -   MILP = Mixed-integer linear programming
 -   NLP = Nonlinear programming
 -   MINLP = Mixed-integer nonlinear programming
--   SDP = Semidefinite programming 
+-   SDP = Semidefinite programming
 
 \* requires CoinOptServices installed, see below.
 
 To install Gurobi, for example, and use it with a JuMP model `m`, run:
 
-    Pkg.add("Gurobi")
-    using JuMP
-    using Gurobi
+```julia
+Pkg.add("Gurobi")
+using JuMP
+using Gurobi
 
-    m = Model(solver=GurobiSolver())
+m = Model(solver=GurobiSolver())
+```
 
 Setting solver options is discussed in the Model &lt;ref-model&gt; section.
 
