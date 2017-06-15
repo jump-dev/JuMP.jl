@@ -40,7 +40,7 @@ end
 """
     linearterms(aff::GenericAffExpr)
 
-Provides an iterator over the `(a_i::C,x_i::V)` terms in affine expression ``\sum_i a_i x_i + b``.
+Provides an iterator over the `(a_i::C,x_i::V)` terms in affine expression ``\\sum_i a_i x_i + b``.
 """
 linearterms(aff::GenericAffExpr) = LinearTermIterator(aff)
 

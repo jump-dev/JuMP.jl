@@ -288,7 +288,7 @@ returns the best known bound on the optimal objective value. This is used, for e
 @doc """
     getobjgap(m::Model)
 
-returns the final relative optimality gap as optimization terminated. That is, it returns ``\frac{|b-f|}{|f|}``, where *b* is the best bound and *f* is the best feasible objective value.
+returns the final relative optimality gap as optimization terminated. That is, it returns ``\\frac{|b-f|}{|f|}``, where *b* is the best bound and *f* is the best feasible objective value.
 """ getobjgap(m::Model)
 
 @doc """
