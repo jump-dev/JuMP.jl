@@ -49,15 +49,6 @@ Base.getindex(m::Model, name::Symbol)
 Base.setindex!(m::Model, value, name::Symbol)
 ```
 
--   `getsolvetime(m::Model)` - returns the solve time reported by the solver if it is implemented.
--   `getnodecount(m::Model)` - returns the number of explored branch-and-bound nodes, if it is implemented.
--   `getobjbound(m::Model)` - returns the best known bound on the optimal objective value. This is used, for example, when a branch-and-bound method is stopped before finishing.
--   `getobjgap(m::Model)` - returns the final relative optimality gap as optimization terminated. That is, it returns ``\frac{|b-f|}{|f|}``, where *b* is the best bound and *f* is the best feasible objective value.
--   `getrawsolver(m::Model)` - returns an object that may be used to access a solver-specific API.
--   `getsimplexiter(m::Model)` - returns the cumulative number of simplex iterations during the optimization process. In particular, for a MIP it returns the total simplex iterations for all nodes.
--   `getbarrieriter(m::Model)` - returns the cumulative number of barrier iterations during the optimization process.
-
-
 **Objective**
 
 ```@docs
@@ -67,6 +58,21 @@ setobjectivesense
 getobjectivevalue
 getobjectivebound
 ```
+
+**Solver**
+
+These functions are JuMP versions of the similarly named functions in MathProgBase.
+
+```@docs
+getsolvetime
+getnodecount
+getobjbound
+getobjgap
+getrawsolver
+getsimplexiter
+getbarrieriter
+```
+
 
 **Output**
 
