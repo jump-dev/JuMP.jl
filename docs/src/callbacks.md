@@ -14,64 +14,66 @@ There are three important steps to providing a lazy constraint callback. First w
 
 The following is a simple example to make this more clear. In this two-dimensional problem we have a set of box constraints explicitly provided and a set of two lazy constraints we can add on the fly. The solution without the lazy constraints will be either (0,2) or (2,2), and the final solution will be (1,2):
 
-    using JuMP
-    using Gurobi
+```julia
+using JuMP
+using Gurobi
 
-    # We will use Gurobi
-    m = Model(solver=GurobiSolver())
+# We will use Gurobi
+m = Model(solver=GurobiSolver())
 
-    # Define our variables to be inside a box, and integer
-    @variable(m, 0 <= x <= 2, Int)
-    @variable(m, 0 <= y <= 2, Int)
+# Define our variables to be inside a box, and integer
+@variable(m, 0 <= x <= 2, Int)
+@variable(m, 0 <= y <= 2, Int)
 
-    @objective(m, Max, y)
+@objective(m, Max, y)
 
-    # We now define our callback function that takes one argument,
-    # the callback handle. Note that we can access m, x, and y because
-    # this function is defined inside the same scope
-    function corners(cb)
-        x_val = getvalue(x)
-        y_val = getvalue(y)
-        println("In callback function, x=$x_val, y=$y_val")
+# We now define our callback function that takes one argument,
+# the callback handle. Note that we can access m, x, and y because
+# this function is defined inside the same scope
+function corners(cb)
+    x_val = getvalue(x)
+    y_val = getvalue(y)
+    println("In callback function, x=$x_val, y=$y_val")
 
-        # We have two constraints, one cutting off the top
-        # left corner and one cutting off the top right corner, e.g.
-        # (0,2) +---+---+ (2,2)
-        #       |xx/ \xx|
-        #       |x/   \x|
-        #       |/     \|
-        #       +       +
-        #       |       |
-        #       |       |
-        #       |       |
-        # (0,0) +---+---+ (2,0)
+    # We have two constraints, one cutting off the top
+    # left corner and one cutting off the top right corner, e.g.
+    # (0,2) +---+---+ (2,2)
+    #       |xx/ \xx|
+    #       |x/   \x|
+    #       |/     \|
+    #       +       +
+    #       |       |
+    #       |       |
+    #       |       |
+    # (0,0) +---+---+ (2,0)
 
-        # Allow for some impreciseness in the solution
-        TOL = 1e-6
+    # Allow for some impreciseness in the solution
+    TOL = 1e-6
 
-        # Check top left, allowing some tolerance
-        if y_val - x_val > 1 + TOL
-            # Cut off this solution
-            println("Solution was in top left, cut it off")
-            # Use the original variables, but not m - cb instead
-            @lazyconstraint(cb, y - x <= 1)
-        # Check top right
-        elseif y_val + x_val > 3 + TOL
-            # Cut off this solution
-            println("Solution was in top right, cut it off")
-            # Use the original variables, but not m - cb instead
-            @lazyconstraint(cb, y + x <= 3)
-        end
-    end  # End of callback function
+    # Check top left, allowing some tolerance
+    if y_val - x_val > 1 + TOL
+        # Cut off this solution
+        println("Solution was in top left, cut it off")
+        # Use the original variables, but not m - cb instead
+        @lazyconstraint(cb, y - x <= 1)
+    # Check top right
+    elseif y_val + x_val > 3 + TOL
+        # Cut off this solution
+        println("Solution was in top right, cut it off")
+        # Use the original variables, but not m - cb instead
+        @lazyconstraint(cb, y + x <= 3)
+    end
+end  # End of callback function
 
-    # Tell JuMP/Gurobi to use our callback function
-    addlazycallback(m, corners)
+# Tell JuMP/Gurobi to use our callback function
+addlazycallback(m, corners)
 
-    # Solve the problem
-    solve(m)
+# Solve the problem
+solve(m)
 
-    # Print our final solution
-    println("Final solution: [ $(getvalue(x)), $(getvalue(y)) ]")
+# Print our final solution
+println("Final solution: [ $(getvalue(x)), $(getvalue(y)) ]")
+```
 
 The code should print something like (amongst the output from Gurobi):
 
@@ -97,55 +99,57 @@ Adding a user cut callback is similar to adding a lazy constraint callback. Firs
 
 Consider the following example which is related to the lazy constraint example. The problem is two-dimensional, and the objective sense prefers solution in the top-right of a 2-by-2 square. There is a single constraint that cuts off the top-right corner to make the LP relaxation solution fractional. We will exploit our knowledge of the problem structure to add a user cut that will make the LP relaxation integer, and thus solve the problem at the root node:
 
-    using JuMP
-    using Gurobi
+```julia
+using JuMP
+using Gurobi
 
-    # We will use Gurobi, which requires that we manually set the attribute
-    # PreCrush to 1 if we have user cuts. We will also disable PreSolve, Cuts,
-    # and Heuristics so only our cut will be used
-    m = Model(solver=GurobiSolver(PreCrush=1, Cuts=0, Presolve=0, Heuristics=0.0))
+# We will use Gurobi, which requires that we manually set the attribute
+# PreCrush to 1 if we have user cuts. We will also disable PreSolve, Cuts,
+# and Heuristics so only our cut will be used
+m = Model(solver=GurobiSolver(PreCrush=1, Cuts=0, Presolve=0, Heuristics=0.0))
 
-    # Define our variables to be inside a box, and integer
-    @variable(m, 0 <= x <= 2, Int)
-    @variable(m, 0 <= y <= 2, Int)
+# Define our variables to be inside a box, and integer
+@variable(m, 0 <= x <= 2, Int)
+@variable(m, 0 <= y <= 2, Int)
 
-    # Optimal solution is trying to go towards top-right corner (2.0, 2.0)
-    @objective(m, Max, x + 2y)
+# Optimal solution is trying to go towards top-right corner (2.0, 2.0)
+@objective(m, Max, x + 2y)
 
-    # We have one constraint that cuts off the top right corner
-    @constraint(m, y + x <= 3.5)
+# We have one constraint that cuts off the top right corner
+@constraint(m, y + x <= 3.5)
 
-    # Optimal solution of relaxed problem will be (1.5, 2.0)
-    # We can add a user cut that will cut of this fractional solution.
+# Optimal solution of relaxed problem will be (1.5, 2.0)
+# We can add a user cut that will cut of this fractional solution.
 
-    # We now define our callback function that takes one argument,
-    # the callback handle. Note that we can access m, x, and y because
-    # this function is defined inside the same scope
-    function mycutgenerator(cb)
-        x_val = getvalue(x)
-        y_val = getvalue(y)
-        println("In callback function, x=$x_val, y=$y_val")
+# We now define our callback function that takes one argument,
+# the callback handle. Note that we can access m, x, and y because
+# this function is defined inside the same scope
+function mycutgenerator(cb)
+    x_val = getvalue(x)
+    y_val = getvalue(y)
+    println("In callback function, x=$x_val, y=$y_val")
 
-        # Allow for some impreciseness in the solution
-        TOL = 1e-6
+    # Allow for some impreciseness in the solution
+    TOL = 1e-6
 
-        # Check top right
-        if y_val + x_val > 3 + TOL
-            # Cut off this solution
-            println("Fractional solution was in top right, cut it off")
-            # Use the original variables
-            @usercut(cb, y + x <= 3)
-        end
-    end  # End of callback function
+    # Check top right
+    if y_val + x_val > 3 + TOL
+        # Cut off this solution
+        println("Fractional solution was in top right, cut it off")
+        # Use the original variables
+        @usercut(cb, y + x <= 3)
+    end
+end  # End of callback function
 
-    # Tell JuMP/Gurobi to use our callback function
-    addcutcallback(m, mycutgenerator)
+# Tell JuMP/Gurobi to use our callback function
+addcutcallback(m, mycutgenerator)
 
-    # Solve the problem
-    solve(m)
+# Solve the problem
+solve(m)
 
-    # Print our final solution
-    println("Final solution: [ $(getvalue(x)), $(getvalue(y)) ]")
+# Print our final solution
+println("Final solution: [ $(getvalue(x)), $(getvalue(y)) ]")
+```
 
 The code should print something like (amongst the output from Gurobi):
 
@@ -167,51 +171,53 @@ There is some unavoidable (for performance reasons) solver-dependent behavior - 
 
 Consider the following example, which is the same problem as seen in the user cuts section. The heuristic simply rounds the fractional variable to generate integer solutions.:
 
-    using JuMP
-    using Gurobi
+```julia
+using JuMP
+using Gurobi
 
-    # We will use Gurobi and disable PreSolve, Cuts, and (in-built) Heuristics so
-    # only our heuristic will be used
-    m = Model(solver=GurobiSolver(Cuts=0, Presolve=0, Heuristics=0.0))
+# We will use Gurobi and disable PreSolve, Cuts, and (in-built) Heuristics so
+# only our heuristic will be used
+m = Model(solver=GurobiSolver(Cuts=0, Presolve=0, Heuristics=0.0))
 
-    # Define our variables to be inside a box, and integer
-    @variable(m, 0 <= x <= 2, Int)
-    @variable(m, 0 <= y <= 2, Int)
+# Define our variables to be inside a box, and integer
+@variable(m, 0 <= x <= 2, Int)
+@variable(m, 0 <= y <= 2, Int)
 
-    # Optimal solution is trying to go towards top-right corner (2.0, 2.0)
-    @objective(m, Max, x + 2y)
+# Optimal solution is trying to go towards top-right corner (2.0, 2.0)
+@objective(m, Max, x + 2y)
 
-    # We have one constraint that cuts off the top right corner
-    @constraint(m, y + x <= 3.5)
+# We have one constraint that cuts off the top right corner
+@constraint(m, y + x <= 3.5)
 
-    # Optimal solution of relaxed problem will be (1.5, 2.0)
+# Optimal solution of relaxed problem will be (1.5, 2.0)
 
-    # We now define our callback function that takes one argument,
-    # the callback handle. Note that we can access m, x, and y because
-    # this function is defined inside the same scope
-    function myheuristic(cb)
-        x_val = getvalue(x)
-        y_val = getvalue(y)
-        println("In callback function, x=$x_val, y=$y_val")
+# We now define our callback function that takes one argument,
+# the callback handle. Note that we can access m, x, and y because
+# this function is defined inside the same scope
+function myheuristic(cb)
+    x_val = getvalue(x)
+    y_val = getvalue(y)
+    println("In callback function, x=$x_val, y=$y_val")
 
-        setsolutionvalue(cb, x, floor(x_val))
-        # Leave y undefined - solver should handle as it sees fit. In the case
-        # of Gurobi it will try to figure out what it should be.
-        addsolution(cb)
+    setsolutionvalue(cb, x, floor(x_val))
+    # Leave y undefined - solver should handle as it sees fit. In the case
+    # of Gurobi it will try to figure out what it should be.
+    addsolution(cb)
 
-        # Submit a second solution
-        setsolutionvalue(cb, x, ceil(x_val))
-        addsolution(cb)
-    end  # End of callback function
+    # Submit a second solution
+    setsolutionvalue(cb, x, ceil(x_val))
+    addsolution(cb)
+end  # End of callback function
 
-    # Tell JuMP/Gurobi to use our callback function
-    addheuristiccallback(m, myheuristic)
+# Tell JuMP/Gurobi to use our callback function
+addheuristiccallback(m, myheuristic)
 
-    # Solve the problem
-    solve(m)
+# Solve the problem
+solve(m)
 
-    # Print our final solution
-    println("Final solution: [ $(getvalue(x)), $(getvalue(y)) ]")
+# Print our final solution
+println("Final solution: [ $(getvalue(x)), $(getvalue(y)) ]")
+```
 
 The code should print something like:
 
@@ -226,10 +232,12 @@ Querying Solver Progress
 
 All JuMP callback methods must take a single argument, called `cb` by convention. `cb` is a handle to the internal callback system used by the underlying solver, and allows the user to query solver state. There are a variety of methods available which are listed in the [MathProgBase documentation](http://mathprogbasejl.readthedocs.org/en/latest/lpqcqp.html#mip-callbacks) including:
 
-    cbgetobj(cb)
-    cbgetbestbound(cb)
-    cbgetexplorednodes(cb)
-    cbgetstate(cb)
+```julia
+cbgetobj(cb)
+cbgetbestbound(cb)
+cbgetexplorednodes(cb)
+cbgetstate(cb)
+```
 
 Informational Callbacks
 -----------------------
@@ -238,131 +246,137 @@ Sometimes it can be useful to track solver progress without actually changing th
 
 For a simple example, we can add a function that tracks the best bound and incumbent objective value as the solver progresses through the branch-and-bound tree:
 
-    type NodeData
-        time::Float64  # in seconds since the epoch
-        node::Int
-        obj::Float64
-        bestbound::Float64
+```julia
+type NodeData
+    time::Float64  # in seconds since the epoch
+    node::Int
+    obj::Float64
+    bestbound::Float64
+end
+
+# build model ``m`` up here
+
+bbdata = NodeData[]
+
+function infocallback(cb)
+    node      = MathProgBase.cbgetexplorednodes(cb)
+    obj       = MathProgBase.cbgetobj(cb)
+    bestbound = MathProgBase.cbgetbestbound(cb)
+    push!(bbdata, NodeData(time(),node,obj,bestbound))
+end
+addinfocallback(m, infocallback, when = :Intermediate)
+
+solve(m)
+
+# Save results to file for analysis later
+open("bbtrack.csv","w") do fp
+    println(fp, "time,node,obj,bestbound")
+    for bb in bbdata
+        println(fp, bb.time, ",", bb.node, ",",
+                    bb.obj, ",", bb.bestbound)
     end
-
-    # build model ``m`` up here
-
-    bbdata = NodeData[]
-
-    function infocallback(cb)
-        node      = MathProgBase.cbgetexplorednodes(cb)
-        obj       = MathProgBase.cbgetobj(cb)
-        bestbound = MathProgBase.cbgetbestbound(cb)
-        push!(bbdata, NodeData(time(),node,obj,bestbound))
-    end
-    addinfocallback(m, infocallback, when = :Intermediate)
-
-    solve(m)
-
-    # Save results to file for analysis later
-    open("bbtrack.csv","w") do fp
-        println(fp, "time,node,obj,bestbound")
-        for bb in bbdata
-            println(fp, bb.time, ",", bb.node, ",",
-                        bb.obj, ",", bb.bestbound)
-        end
-    end
+end
+```
 
 For a second example, we can add a function that tracks the intermediate solutions at each integer-feasible solution in the Branch-and-Bound tree:
 
-    solutionvalues = Vector{Float64}[]
+```julia
+solutionvalues = Vector{Float64}[]
 
-    # build model ``m`` up here
+# build model ``m`` up here
 
-    function infocallback(cb)
-        push!(solutionvalues, JuMP.getvalue(x))
-    end
-    addinfocallback(m, infocallback, when = :MIPSol)
+function infocallback(cb)
+    push!(solutionvalues, JuMP.getvalue(x))
+end
+addinfocallback(m, infocallback, when = :MIPSol)
 
-    solve(m)
+solve(m)
 
-    # all the intermediate solutions are now stored in `solutionvalues`
+# all the intermediate solutions are now stored in `solutionvalues`
+```
 
 Code Design Considerations
 --------------------------
 
 In the above examples the callback function is defined in the same scope as the model and variable definitions, allowing us to access them. If we defined the function in some other scope, or even file, we would not be able to access them directly. The proposed solution to this design problem is to separate the logic of analyzing the current solution values from the callback itself. This has many benefits, including writing unit tests for the callback function to check its correctness. The callback function passed to JuMP is then simply a stub that extracts the current solution and any other relevant information and passes that to the constraint generation logic. To apply this to our previous lazy constraint example, consider the following code:
 
-    using JuMP
-    using Gurobi
-    using Base.Test
+```julia
+using JuMP
+using Gurobi
+using Base.Test
 
-    function cornerChecker(x_val, y_val)
-        # This function does not depend on the model, and could
-        # be written anywhere. Instead, it returns a tuple of
-        # values (newcut, x_coeff, y_coeff, rhs) where newcut is a
-        # boolean if a cut is needed, x_coeff is the coefficient
-        # on the x variable, y_coeff is the coefficient on
-        # the y variable, and rhs is the right hand side
-        TOL = 1e-6
-        if y_val - x_val > 1 + TOL
-            return (true, -1.0, 1.0, 1.0)  # Top left
-        elseif y_val + x_val > 3 + TOL
-            return (true,  1.0, 1.0, 3.0)  # Top right
-        else
-            return (false, 0.0, 0.0, 0.0)  # No cut
+function cornerChecker(x_val, y_val)
+    # This function does not depend on the model, and could
+    # be written anywhere. Instead, it returns a tuple of
+    # values (newcut, x_coeff, y_coeff, rhs) where newcut is a
+    # boolean if a cut is needed, x_coeff is the coefficient
+    # on the x variable, y_coeff is the coefficient on
+    # the y variable, and rhs is the right hand side
+    TOL = 1e-6
+    if y_val - x_val > 1 + TOL
+        return (true, -1.0, 1.0, 1.0)  # Top left
+    elseif y_val + x_val > 3 + TOL
+        return (true,  1.0, 1.0, 3.0)  # Top right
+    else
+        return (false, 0.0, 0.0, 0.0)  # No cut
+    end
+end
+
+# A unit test for the cornerChecker function
+function test_cornerChecker()
+    # Test the four corners - only two should produce cuts
+
+    newcut, x_coeff, y_coeff, rhs = cornerChecker(0, 0)
+    @test !newcut
+
+    newcut, x_coeff, y_coeff, rhs = cornerChecker(2, 0)
+    @test !newcut
+
+    newcut, x_coeff, y_coeff, rhs = cornerChecker(0, 2)
+    @test newcut
+    @test x_coeff == -1.0
+    @test y_coeff ==  1.0
+    @test rhs == 1.0
+
+    newcut, x_coeff, y_coeff, rhs = cornerChecker(2, 2)
+    @test newcut
+    @test x_coeff ==  1.0
+    @test y_coeff ==  1.0
+    @test rhs == 3.0
+end
+
+function solveProblem()
+    m = Model(solver=GurobiSolver())
+
+    @variable(m, 0 <= x <= 2, Int)
+    @variable(m, 0 <= y <= 2, Int)
+    @objective(m, Max, y)
+
+    # Note that the callback is now a stub that passes off
+    # the work to the "algorithm"
+    function corners(cb)
+        x_val = getvalue(x)
+        y_val = getvalue(y)
+        println("In callback function, x=$x_val, y=$y_val")
+
+        newcut, x_coeff, y_coeff, rhs = cornerChecker(x_val, y_val)
+
+        if newcut
+            @lazyconstraint(cb, x_coeff*x + y_coeff*y <= rhs)
         end
-    end
+    end  # End of callback function
 
-    # A unit test for the cornerChecker function
-    function test_cornerChecker()
-        # Test the four corners - only two should produce cuts
+    addlazycallback(m, corners)
+    solve(m)
+    println("Final solution: [ $(getvalue(x)), $(getvalue(y)) ]")
+end
 
-        newcut, x_coeff, y_coeff, rhs = cornerChecker(0, 0)
-        @test !newcut
+# Run tests
+test_cornerChecker()
 
-        newcut, x_coeff, y_coeff, rhs = cornerChecker(2, 0)
-        @test !newcut
-
-        newcut, x_coeff, y_coeff, rhs = cornerChecker(0, 2)
-        @test newcut
-        @test x_coeff == -1.0
-        @test y_coeff ==  1.0
-        @test rhs == 1.0
-
-        newcut, x_coeff, y_coeff, rhs = cornerChecker(2, 2)
-        @test newcut
-        @test x_coeff ==  1.0
-        @test y_coeff ==  1.0
-        @test rhs == 3.0
-    end
-
-    function solveProblem()
-        m = Model(solver=GurobiSolver())
-
-        @variable(m, 0 <= x <= 2, Int)
-        @variable(m, 0 <= y <= 2, Int)
-        @objective(m, Max, y)
-
-        # Note that the callback is now a stub that passes off
-        # the work to the "algorithm"
-        function corners(cb)
-            x_val = getvalue(x)
-            y_val = getvalue(y)
-            println("In callback function, x=$x_val, y=$y_val")
-
-            newcut, x_coeff, y_coeff, rhs = cornerChecker(x_val, y_val)
-
-            if newcut
-                @lazyconstraint(cb, x_coeff*x + y_coeff*y <= rhs)
-            end
-        end  # End of callback function
-
-        addlazycallback(m, corners)
-        solve(m)
-        println("Final solution: [ $(getvalue(x)), $(getvalue(y)) ]")
-    end
-
-    # Run tests
-    test_cornerChecker()
-
-    # Solve it
-    solveProblem()
+# Solve it
+solveProblem()
+```
 
 This code can also be found in `/JuMP/examples/simplelazy2.jl`.
 
@@ -371,6 +385,8 @@ Exiting a callback early
 
 If you need to exit the optimization process earlier than a solver otherwise would, it is possible to return `JuMP.StopTheSolver` from the callback code:
 
-    return JuMP.StopTheSolver
+```julia
+return JuMP.StopTheSolver
+```
 
 This will trigger the solver to exit immediately and return a `:UserLimit` status.

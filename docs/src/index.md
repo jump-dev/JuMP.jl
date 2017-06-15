@@ -27,11 +27,15 @@ Installing JuMP
 
 If you are familiar with Julia you can get started quickly by using the package manager to install JuMP:
 
-    julia> Pkg.add("JuMP")
+```julia
+julia> Pkg.add("JuMP")
+```
 
 And a solver, e.g.:
 
-    julia> Pkg.add("Clp")  # Will install Cbc as well
+```julia
+julia> Pkg.add("Clp")  # Will install Cbc as well
+```
 
 Then read the quick-start and/or see a simple-example. The subsequent sections detail the complete functionality of JuMP.
 
