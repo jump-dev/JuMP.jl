@@ -653,7 +653,7 @@ var documenterSearchIndex = {"docs": [
     "page": "Variables",
     "title": "JuMP.getdual",
     "category": "Function",
-    "text": "getdual(v::Variable)\n\nGet the reduced cost of this variable in the solution. Similar behavior to getvalue for indexable variables.\n\n\n\ngetdual(c::LinConstrRef)\n\n\n\ngetdual(c::ConstraintRef{Model,SOCConstraint})\n\n\n\ngetdual(c::ConstraintRef{Model,SDConstraint})\n\n\n\n"
+    "text": "getdual(v::Variable)\n\nGet the reduced cost of this variable in the solution. Similar behavior to getvalue for indexable variables.\n\n\n\ngetdual(c::ConstraintRef{Model,SDConstraint})\n\n\n\ngetdual(c::LinConstrRef)\n\n\n\ngetdual(c::ConstraintRef{Model,SOCConstraint})\n\n\n\n"
 },
 
 {
