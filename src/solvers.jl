@@ -616,51 +616,6 @@ function collect_expr!(m::Model, tmprow::IndexedVector, terms::AffExpr, ignore_n
     tmprow
 end
 
-# Returns a boolean vector indicating if variable in the model
-# is an off-diagonal element of an SDP matrix.
-# This is needed because we have to rescale coefficients that
-# touch these variables.
-function offdiagsdpvars(m::Model)
-    offdiagvars = falses(m.numCols)
-    for (name,idx) in m.varCones
-        if name == :SDP
-            conelen = length(idx)
-            n = round(Int,sqrt(1/4+2*conelen)-1/2)
-            @assert n*(n+1)/2 == conelen
-            r = 1
-            for i in 1:n
-                for j in i:n
-                    if i != j
-                        offdiagvars[idx[r]] = true
-                    end
-                    r += 1
-                end
-            end
-        end
-    end
-    return offdiagvars
-end
-
-function getSDrowsinfo(m::Model)
-    # find starting column indices for sdp matrices
-    nnz = 0
-    numSDPRows = 0
-    numSymRows = 0
-    for c in m.sdpconstr
-        n = size(c.terms,1)
-        @assert n == size(c.terms,2)
-        @assert ndims(c.terms) == 2
-        numSDPRows += convert(Int, n*(n+1)/2)
-        for i in 1:n, j in i:n
-            nnz += length(c.terms[i,j].coeffs)
-        end
-        if !issymmetric(c.terms)
-            # symmetry constraints
-            numSymRows += convert(Int, n*(n-1)/2)
-        end
-    end
-    numSDPRows, numSymRows, nnz
-end
 
 function variable_range_to_cone!(var_cones, m::Model)
     numBounds = 0
@@ -836,86 +791,11 @@ function fillconstrtorow!(constr_to_row, c, d, socconstr::Vector{SOCConstraint})
     c, d
 end
 
-function rescaleSDcols!(f, J, V, m)
-    # Objective coefficients and columns of A matrix are
-    # rescaled for SDP variables
-    offdiagvars = offdiagsdpvars(m)
-    f[offdiagvars] /= sqrt(2)
-    for k in 1:length(J)
-        if offdiagvars[J[k]]
-            V[k] /= sqrt(2)
-        end
-    end
-end
-
 # Combination of `fillconstrRHS!`, `fillconstrLHS!` and `fillconstrtorow!`
 function fillconstr!(I, J, V, b, con_cones, tmprow::IndexedVector, constr_to_row, c, d, constrs, m, ignore_not_owned::Bool=false)
     fillconstrRHS!(b, con_cones, c, constrs)
     fillconstrLHS!(I, J, V, tmprow, c, constrs, m)
     fillconstrtorow!(constr_to_row, c, d, constrs)
-end
-
-function fillconstr!(I, J, V, b, con_cones, tmprow::IndexedVector, constr_to_row, c, d, constrs::Vector{SDConstraint}, m::Model, ignore_not_owned::Bool=false)
-    tmpelts = tmprow.elts
-    tmpnzidx = tmprow.nzidx
-    sdpconstr_sym = Vector{Vector{Tuple{Int,Int}}}(length(constrs))
-    sdpidx = 0
-    for con in constrs
-        sdpidx += 1
-        sdp_start = c + 1
-        n = size(con.terms,1)
-        for i in 1:n, j in i:n
-            c += 1
-            terms::AffExpr = con.terms[i,j] + con.terms[j,i]
-            collect_expr!(m, tmprow, terms, ignore_not_owned)
-            nnz = tmprow.nnz
-            indices = tmpnzidx[1:nnz]
-            append!(I, fill(c, nnz))
-            append!(J, indices)
-            # scale to svec form
-            scale = (i == j) ? 0.5 : 1/sqrt(2)
-            append!(V, -scale*tmpelts[indices])
-            b[c] = scale*terms.constant
-        end
-        push!(con_cones, (:SDP, sdp_start:c))
-        constr_to_row[d + sdpidx] = collect(sdp_start:c)
-        syms = Tuple{Int,Int}[]
-        if !issymmetric(con.terms)
-            sym_start = c + 1
-            # add linear symmetry constraints
-            for i in 1:n, j in 1:(i-1)
-                collect_expr!(m, tmprow, con.terms[i,j] - con.terms[j,i], ignore_not_owned)
-                nnz = tmprow.nnz
-                # if the symmetry-enforcing row is empty or has only tiny coefficients due to unintended numerical asymmetry, drop it
-                largestabs = 0.0
-                for k in 1:nnz
-                    largestabs = max(largestabs,abs(tmpelts[tmpnzidx[k]]))
-                end
-                if largestabs < 1e-10
-                    continue
-                end
-                push!(syms, (i,j))
-                c += 1
-                indices = tmpnzidx[1:nnz]
-                append!(I, fill(c, nnz))
-                append!(J, indices)
-                append!(V, tmpelts[indices])
-                b[c] = 0
-            end
-            if c >= sym_start
-                push!(con_cones, (:Zero, sym_start:c))
-            end
-            constr_to_row[d + length(constrs) + sdpidx] = collect(sym_start:c)
-            @assert length(syms) == length(sym_start:c)
-        else
-            constr_to_row[d + length(constrs) + sdpidx] = Int[]
-        end
-        sdpconstr_sym[sdpidx] = syms
-    end
-
-    m.sdpconstrSym = sdpconstr_sym
-
-    c, d + 2 * length(constrs)
 end
 
 function fill_bounds_constr!(I, J, V, b, con_cones, constr_to_row, c, d, m)
