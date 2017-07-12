@@ -693,7 +693,7 @@ type VariableNotOwnedError <: Exception
     context::String
 end
 function Base.showerror(io::IO, ex::VariableNotOwnedError)
-    print(io, "VariableNotOwnedError: Variable not owned by model present in $context")
+    print(io, "VariableNotOwnedError: Variable not owned by model present in $(ex.context)")
 end
 
 function verify_ownership(m::Model, vec::Vector{Variable})
