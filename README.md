@@ -37,6 +37,8 @@ Our documentation includes an installation guide, quick-start guide, and referen
 
 [juliaopt-notebooks]: https://github.com/JuliaOpt/juliaopt-notebooks
 
+**Read about the upcoming transition to MathOptInterface and breaking changes in JuMP 0.18 [here](https://discourse.julialang.org/t/mathoptinterface-and-upcoming-breaking-changes-in-jump-0-18).**
+
 **Latest Release**: 0.17.1 (via ``Pkg.add``)
   * [Documentation](http://www.juliaopt.org/JuMP.jl/0.17/)
   * [Examples](https://github.com/JuliaOpt/JuMP.jl/tree/release-0.17/examples)
