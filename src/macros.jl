@@ -60,8 +60,7 @@ function warn_curly(x)
     else
         genstr = "$genform"
     end
-    Base.warn_once("The curly syntax (sum{},prod{},norm2{}) is deprecated in favor of the new generator syntax (sum(),prod(),norm()).")
-    Base.warn_once("Replace $x with $genstr.")
+    Base.error("The curly syntax (sum{},prod{},norm2{}) is no longer supported. Replace $x with $genstr.")
 end
 
 include("parseExpr_staged.jl")
@@ -279,26 +278,40 @@ end
 
 # two-argument constructconstraint! is used for one-sided constraints.
 # Right-hand side is zero.
-constructconstraint!(v::Variable, sense::Symbol) = constructconstraint!(convert(AffExpr,v), sense)
-function constructconstraint!(aff::AffExpr, sense::Symbol)
-    offset = aff.constant
-    aff.constant = 0.0
-    if sense == :(<=) || sense == :≤
-        return LinearConstraint(aff, -Inf, -offset)
-    elseif sense == :(>=) || sense == :≥
-        return LinearConstraint(aff, -offset, Inf)
-    elseif sense == :(==)
-        return LinearConstraint(aff, -offset, -offset)
+function sense_to_set(sense::Symbol)
+    if sense == :(<=)
+        return MOI.LessThan(0.0)
+    elseif sense == :(>=)
+        return MOI.GreaterThan(0.0)
     else
-        error("Cannot handle ranged constraint")
+        @assert sense == :(==)
+        return MOI.EqualTo(0.0)
     end
 end
+const ScalarPolyhedralSets = Union{MOI.LessThan,MOI.GreaterThan,MOI.EqualTo,MOI.Interval}
 
-function constructconstraint!(aff::AffExpr, lb, ub)
+constructconstraint!(v::Variable, sense::Symbol) = constructconstraint!(convert(AffExpr,v), sense)
+function constructconstraint!(aff::AffExpr, set::MOI.LessThan)
     offset = aff.constant
     aff.constant = 0.0
-    LinearConstraint(aff, lb-offset, ub-offset)
+    return LinearConstraint(aff, MOI.LessThan(set.upper-offset))
 end
+function constructconstraint!(aff::AffExpr, set::MOI.GreaterThan)
+    offset = aff.constant
+    aff.constant = 0.0
+    return LinearConstraint(aff, MOI.GreaterThan(set.lower-offset))
+end
+function constructconstraint!(aff::AffExpr, set::MOI.EqualTo)
+    offset = aff.constant
+    aff.constant = 0.0
+    return LinearConstraint(aff, MOI.EqualTo(set.value-offset))
+end
+
+# function constructconstraint!(aff::AffExpr, lb, ub)
+#     offset = aff.constant
+#     aff.constant = 0.0
+#     LinearConstraint(aff, lb-offset, ub-offset)
+# end
 
 constructconstraint!(quad::QuadExpr, sense::Symbol) = QuadConstraint(quad, sense)
 
@@ -421,10 +434,14 @@ macro constraint(args...)
             # Simple comparison - move everything to the LHS
             @assert length(x.args) == 3
             (sense,vectorized) = _canonicalize_sense(x.args[1])
+            set = sense_to_set(sense)
             lhs = :($(x.args[2]) - $(x.args[3]))
-            addconstr = (vectorized ? :addVectorizedConstraint : :addconstraint)
             newaff, parsecode = parseExprToplevel(lhs, :q)
-            constraintcall = :($addconstr($m, constructconstraint!($newaff,$(quot(sense)))))
+            if vectorized
+                constraintcall = :(addconstraint.($m, constructconstraint!($newaff,$set)))
+            else
+                constraintcall = :(addconstraint($m, constructconstraint!($newaff,$set)))
+            end
         end
         addkwargs!(constraintcall, kwargs.args)
         code = quote
@@ -901,18 +918,35 @@ esc_nonconstant(x) = esc(x)
 variabletype(m::Model) = Variable
 # Returns a new variable belonging to the model `m`. Additional positional arguments can be used to dispatch the call to a different method.
 # The return type should only depends on the positional arguments for `variabletype` to make sense.
-function constructvariable!(m::Model, _error::Function, lowerbound::Number, upperbound::Number, category::Symbol, objective::Number, inconstraints::Vector, coefficients::Vector{Float64}, basename::AbstractString, start::Number; extra_kwargs...)
+function constructvariable!(m::Model, _error::Function, haslb::Bool, lowerbound::Number, hasub::Bool, upperbound::Number,
+                            hasfix::Bool, fixedvalue::Number, binary::Bool, integer::Bool, name::AbstractString,
+                            hasstart::Bool, start::Number; extra_kwargs...)
     for (kwarg, _) in extra_kwargs
         _error("Unrecognized keyword argument $kwarg")
     end
-    Variable(m, lowerbound, upperbound, category == :Default ? :Cont : category, objective, inconstraints, coefficients, basename, start)
-end
-
-function constructvariable!(m::Model, _error::Function, lowerbound::Number, upperbound::Number, category::Symbol, basename::AbstractString, start::Number; extra_kwargs...)
-    for (kwarg, _) in extra_kwargs
-        _error("Unrecognized keyword argument $kwarg")
+    v = Variable(m)
+    if haslb
+        setlowerbound(v, lowerbound)
     end
-    Variable(m, lowerbound, upperbound, category == :Default ? :Cont : category, basename, start)
+    if hasub
+        setupperbound(v, upperbound)
+    end
+    if hasfix
+        fix(v, fixedvalue)
+    end
+    if binary
+        setbinary(v)
+    end
+    if integer
+        setinteger(v)
+    end
+    if hasstart
+        setstart(v, start)
+    end
+    if name != EMPTYSTRING
+        m.variablenames[v] = name
+    end
+    return v
 end
 
 const EMPTYSTRING = ""
@@ -925,26 +959,24 @@ variable_error(args, str) = error("In @variable($(join(args,","))): ", str)
 # It creates a new variable (resp. a container of new variables) belonging to the model `m` using `constructvariable!` to create the variable (resp. each variable of the container).
 # The following modifications will be made to the arguments before they are passed to `constructvariable!`:
 # * The `expr` argument will not be passed but the expression will be parsed to determine the kind of container needed (if one is needed) and
-#   additional information that will alter what is passed with the keywords `lowerbound`, `upperbound`, `basename` and `start`.
+#   additional information that will alter what is passed with the keywords `lowerbound`, `upperbound`, `basename`, `start`, `binary`, and `integer`.
 # * The `SDP` and `Symmetric` positional arguments in `extra` will not be passed to `constructvariable!`. Instead,
 #    * the `Symmetric` argument will check that the container is symmetric and only allocate one variable for each pair of non-diagonal entries.
 #    * the `SDP` argument will do the same as `Symmetric` but in addition it will specify that the variables created belongs to the SDP cone in the `varCones` field of the model.
-#   Moreover, if a Cont, Int, Bin, SemiCont or SemiInt is passed in `extra`, it will alter what is passed with the keyword `category`.
-# * The keyword arguments start, objective, inconstraints, coefficients, basename, lowerbound, upperbound, category may not be passed as is to
+#   Moreover, Int and Bin are special keywords that are equivalent to `integer=true` and `binary=true`.
+# * The keyword arguments start, basename, lowerbound, upperbound, binary, and integer category may not be passed as is to
 #   `constructvariable!` since they may be altered by the parsing of `expr` and we may need to pass it pointwise if it is a container since
 #   `constructvariable!` is called separately for each variable of the container. Moreover it will be passed as positional argument to `constructvariable!`.
-#   If `objective`, `inconstraints` and `coefficients` are not present, they won't be passed as positional argument but for the other five arguments,
-#   default values are passed when they are not present.
 # * A custom error function is passed as positional argument to print the full @variable call before the error message.
 #
 # Examples (... is the custom error function):
-# * `@variable(m, x >= 0)` is equivalent to `x = constructvariable!(m, msg -> error("In @variable(m, x >= 0): ", msg), 0, Inf, :Cont, "x", NaN)
+# * `@variable(m, x >= 0)` is equivalent to `x = constructvariable!(m, msg -> error("In @variable(m, x >= 0): ", msg), true, 0, false, NaN, false, NaN, false, false, "x", false, NaN)
 # * `@variable(m, x[1:N,1:N], Symmetric, Poly(X))` is equivalent to
 #   ```
 #   x = Matrix{...}(N, N)
 #   for i in 1:N
 #       for j in 1:N
-#           x[i,j] = x[j,i] = constructvariable!(m, Poly(X), msg -> error("In @variable(m, x[1:N,1:N], Symmetric, Poly(X)): ", msg), -Inf, Inf, :Cont, "", NaN)
+#           x[i,j] = x[j,i] = constructvariable!(m, Poly(X), msg -> error("In @variable(m, x[1:N,1:N], Symmetric, Poly(X)): ", msg), false, NaN, false, NaN, false, NaN, false, false, "", false, NaN)
 #       end
 #   end
 #   ```
@@ -955,7 +987,7 @@ macro variable(args...)
 
     extra = vcat(args[2:end]...)
     # separate out keyword arguments
-    kwsymbol = VERSION < v"0.6.0-dev.1934" ? :kw : :(=)
+    kwsymbol = :(=)
     kwargs = filter(ex->isexpr(ex,kwsymbol), extra)
     extra = filter(ex->!isexpr(ex,kwsymbol), extra)
 
@@ -966,23 +998,27 @@ macro variable(args...)
         anon_singleton = true
     else
         x = shift!(extra)
-        if x in [:Cont,:Int,:Bin,:SemiCont,:SemiInt,:SDP]
+        if x in [:Int,:Bin,:SDP]
             _error("Ambiguous variable name $x detected. Use the \"category\" keyword argument to specify a category for an anonymous variable.")
         end
         anon_singleton = false
     end
 
-    t = quot(:Default)
-    gottype = false
     haslb = false
     hasub = false
+    hasfix = false
+    hasstart = false
+    fixedvalue = NaN
+    var = x
+    lb = NaN
+    ub = NaN
     # Identify the variable bounds. Five (legal) possibilities are "x >= lb",
     # "x <= ub", "lb <= x <= ub", "x == val", or just plain "x"
     explicit_comparison = false
     if isexpr(x,:comparison) # two-sided
         explicit_comparison = true
-        haslb = true
         hasub = true
+        haslb = true
         if x.args[2] == :>= || x.args[2] == :≥
             # ub >= x >= lb
             x.args[4] == :>= || x.args[4] == :≥ || _error("Invalid variable bounds")
@@ -1021,22 +1057,12 @@ macro variable(args...)
             # fixed variable
             var = x.args[2]
             @assert length(x.args) == 3
-            lb = esc(x.args[3])
-            haslb = true
-            ub = esc(x.args[3])
-            hasub = true
-            gottype = true
-            t = quot(:Fixed)
+            fixedvalue = esc(x.args[3])
+            hasfix = true
         else
             # Its a comparsion, but not using <= ... <=
             _error("Unexpected syntax $(string(x)).")
         end
-    else
-        # No bounds provided - free variable
-        # If it isn't, e.g. something odd like f(x), we'll handle later
-        var = x
-        lb = -Inf
-        ub = Inf
     end
 
     anonvar = isexpr(var, :vect) || isexpr(var, :vcat) || anon_singleton
@@ -1046,25 +1072,20 @@ macro variable(args...)
     escvarname  = anonvar ? variable     : esc(getname(var))
 
     if !isa(getname(var),Symbol) && !anonvar
-        Base.warn_once("Expression $(getname(var)) should not be used as a variable name. Use the \"anonymous\" syntax $(getname(var)) = @variable(m, ...) instead.")
+        Base.error("Expression $(getname(var)) should not be used as a variable name. Use the \"anonymous\" syntax $(getname(var)) = @variable(m, ...) instead.")
     end
 
     # process keyword arguments
     value = NaN
     obj = nothing
-    inconstraints = nothing
-    coefficients = nothing
+    binary = false
+    integer = false
     extra_kwargs = []
     for ex in kwargs
         kwarg = ex.args[1]
         if kwarg == :start
+            hasstart = true
             value = esc(ex.args[2])
-        elseif kwarg == :objective
-            obj = esc(ex.args[2])
-        elseif kwarg == :inconstraints
-            inconstraints = esc(ex.args[2])
-        elseif kwarg == :coefficients
-            coefficients = esc(ex.args[2])
         elseif kwarg == :basename
             quotvarname = esc(ex.args[2])
         elseif kwarg == :lowerbound
@@ -1075,51 +1096,37 @@ macro variable(args...)
             hasub && _error("Cannot specify variable upperbound twice")
             ub = esc_nonconstant(ex.args[2])
             hasub = true
-        elseif kwarg == :category
-            (t == quot(:Fixed)) && _error("Unexpected extra arguments when declaring a fixed variable")
-            t = esc_nonconstant(ex.args[2])
-            gottype = true
+        elseif kwarg == :integer
+            integer = esc_nonconstant(ex.args[2])
+        elseif kwarg == :binary
+            binary = esc_nonconstant(ex.args[2])
         else
             push!(extra_kwargs, ex)
         end
-    end
-
-    if (obj !== nothing || inconstraints !== nothing || coefficients !== nothing) &&
-       (obj === nothing || inconstraints === nothing || coefficients === nothing)
-        _error("Must provide 'objective', 'inconstraints', and 'coefficients' arguments all together for column-wise modeling")
     end
 
     sdp = any(t -> (t == :SDP), extra)
     symmetric = (sdp || any(t -> (t == :Symmetric), extra))
     extra = filter(x -> (x != :SDP && x != :Symmetric), extra) # filter out SDP and sym tag
     for ex in extra
-        if ex in var_cats
-            if t != quot(:Default) && t != quot(ex)
-                _error("A variable cannot be both of category $cat and $category. Please specify only one category.")
-            else
-                t = quot(ex)
+        if ex == :Int
+            if integer != false
+                _error("'Int' and 'integer' keyword argument cannot both be specified.")
             end
+            integer = true
+        elseif ex == :Bin
+            if binary != false
+                _error("'Bin' and 'binary' keyword argument cannot both be specified.")
+            end
+            binary = true
         end
     end
-    extra = esc.(filter(ex -> !(ex in var_cats), extra))
-
-    # Handle the column generation functionality
-    if coefficients !== nothing
-        !isa(var,Symbol) &&
-        _error("Can only create one variable at a time when adding to existing constraints.")
-
-        variablecall = :( constructvariable!($m, $(extra...), $_error, $lb, $ub, $t, $obj, $inconstraints, $coefficients, string($quotvarname), $value) )
-        addkwargs!(variablecall, extra_kwargs)
-        return assert_validmodel(m, quote
-            $variable = $variablecall
-            $(anonvar ? variable : :($escvarname = $variable))
-        end)
-    end
+    extra = esc.(filter(ex -> !(ex in [:Int,:Bin]), extra))
 
     if isa(var,Symbol)
         # Easy case - a single variable
         sdp && _error("Cannot add a semidefinite scalar variable")
-        variablecall = :( constructvariable!($m, $(extra...), $_error, $lb, $ub, $t, string($quotvarname), $value) )
+        variablecall = :( constructvariable!($m, $(extra...), $_error, $haslb, $lb, $hasub, $ub, $hasfix, $fixedvalue, $binary, $integer, string($quotvarname), $hasstart, $value) )
         addkwargs!(variablecall, extra_kwargs)
         code = :($variable = $variablecall)
         if !anonvar
@@ -1139,7 +1146,7 @@ macro variable(args...)
     clear_dependencies(i) = (isdependent(idxvars,idxsets[i],i) ? () : idxsets[i])
 
     # Code to be used to create each variable of the container.
-    variablecall = :( constructvariable!($m, $(extra...), $_error, $lb, $ub, $t, EMPTYSTRING, $value) )
+    variablecall = :( constructvariable!($m, $(extra...), $_error, $haslb, $lb, $hasub, $ub, $hasfix, $fixedvalue, $binary, $integer, EMPTYSTRING, $hasstart, $value) )
     addkwargs!(variablecall, extra_kwargs)
     code = :( $(refcall) = $variablecall )
     # Determine the return type of constructvariable!. This is needed to create the container holding them.
@@ -1175,7 +1182,7 @@ macro variable(args...)
                     push!($(m).varCones, (:SDP, first($variable).col : last($variable).col))
                 end
             end)
-            push!($(m).dictList, $variable)
+            push!($(m).dictlist, $variable)
             !$anonvar && registervar($m, $quotvarname, $variable)
             storecontainerdata($m, $variable, $quotvarname,
                                $(Expr(:tuple,idxsets...)),
@@ -1188,7 +1195,7 @@ macro variable(args...)
         return assert_validmodel(m, quote
             $(getloopedcode(variable, code, condition, idxvars, idxsets, idxpairs, vartype))
             isa($variable, JuMPContainer) && pushmeta!($variable, :model, $m)
-            push!($(m).dictList, $variable)
+            push!($(m).dictlist, $variable)
             !$anonvar && registervar($m, $quotvarname, $variable)
             storecontainerdata($m, $variable, $quotvarname,
                                $(Expr(:tuple,map(clear_dependencies,1:length(idxsets))...)),
@@ -1199,7 +1206,7 @@ macro variable(args...)
 end
 
 storecontainerdata(m::Model, variable, varname, idxsets, idxpairs, condition) =
-    m.varData[variable] = JuMPContainerData(varname, map(collect,idxsets), idxpairs, condition)
+    m.vardata[variable] = JuMPContainerData(varname, map(collect,idxsets), idxpairs, condition)
 
 macro constraintref(var)
     if isa(var,Symbol)

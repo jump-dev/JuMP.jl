@@ -101,204 +101,207 @@ const PrintSymbols = Dict{Symbol,String}
 math(s,mathmode) = mathmode ? s : "\$\$ $s \$\$"
 
 # helper to look up corresponding JuMPContainerData
-printdata(v::JuMPContainer) = _getmodel(v).varData[v]
+printdata(v::JuMPContainer) = _getmodel(v).vardata[v]
 getname(x::JuMPContainer) = hasmeta(x, :model) ? printdata(x).name : "__anon__"
 function printdata(v::Array{Variable})
     if isempty(v)
         error("Cannot locate printing data for an empty array")
     end
     m = first(v).m
-    m.varData[v]
+    m.vardata[v]
 end
 
 #------------------------------------------------------------------------
 ## Model
 #------------------------------------------------------------------------
-function Base.print(io::IO, m::Model; ignore_print_hook=(m.printhook==nothing))
-    ignore_print_hook || return m.printhook(io, m)
-    print(io, model_str(REPLMode,m))
+function Base.show(io::IO, m::Model) # TODO temporary
+    print(io, "A JuMP Model")
 end
-
-function Base.show(io::IO, m::Model)
-    plural(n) = (n==1 ? "" : "s")
-    print(io, m.objSense == :Max ? "Maximization" : ((m.objSense == :Min && (!isempty(m.obj) || (m.nlpdata !== nothing && isa(m.nlpdata.nlobj, NonlinearExprData)))) ? "Minimization" : "Feasibility"))
-    println(io, " problem with:")
-    nlin = length(m.linconstr)
-    println(io, " * $(nlin) linear constraint$(plural(nlin))")
-    nquad = length(m.quadconstr)
-    if nquad > 0
-        println(io, " * $(nquad) quadratic constraint$(plural(nquad))")
-    end
-    nsos = length(m.sosconstr)
-    if nsos > 0
-        println(io, " * $(nsos) SOS constraint$(plural(nsos))")
-    end
-    nsoc = length(m.socconstr)
-    if nsoc > 0
-        println(io, " * $(nsoc) SOC constraint$(plural(nsoc))")
-    end
-    nsdp = length(m.sdpconstr)
-    if nsdp > 0
-        println(io, " * $(nsdp) semidefinite constraint$(plural(nsdp))")
-    end
-    nlp = m.nlpdata
-    if nlp !== nothing && length(nlp.nlconstr) > 0
-        println(io, " * $(length(nlp.nlconstr)) nonlinear constraint$(plural(length(nlp.nlconstr)))")
-    end
-    print(io, " * $(m.numCols) variable$(plural(m.numCols))")
-    nbin = sum(m.colCat .== :Bin)
-    nint = sum(m.colCat .== :Int)
-    nsc = sum(m.colCat .== :SemiCont)
-    nsi = sum(m.colCat .== :SemiInt)
-    varstr = Any[]
-    nbin == 0 || push!(varstr, "$nbin binary")
-    nint == 0 || push!(varstr, "$nint integer")
-    nsc  == 0 || push!(varstr, "$nsc semicontinuous")
-    nsi  == 0 || push!(varstr, "$nsi semi-integer")
-    if isempty(varstr)
-        println(io,)
-    else
-        println(io, ": $(join(varstr, ", "))")
-    end
-    print(io, "Solver is ")
-    if isa(m.solver, UnsetSolver)
-        print(io, "default solver")
-    else
-        print(io, split(split(string(m.solver), "Solver")[1], ".")[2])
-    end
-end
-Base.show(io::IO, ::MIME"text/latex", m::Model) =
-    print(io, model_str(IJuliaMode,m))
-function model_str(mode, m::Model, sym::PrintSymbols)
-    ijl = mode == IJuliaMode
-    sep = ijl ? " & " : " "
-    eol = ijl ? "\\\\\n" : "\n"
-    nlp = m.nlpdata
-
-    # Objective
-    qobj_str = quad_str(mode, m.obj)
-    obj_sense = ijl ? (m.objSense == :Max ? "\\max" : "\\min")*"\\quad" :
-                      (m.objSense == :Max ? "Max" : "Min")
-    str = obj_sense * sep
-    if nlp !== nothing && nlp.nlobj !== nothing
-        str *= (qobj_str=="0"?"":"$qobj_str + ") * expr_str(m, mode, nlp.nlobj)
-    else
-        str *= qobj_str
-    end
-    str *= eol
-
-    # Constraints
-    str *= ijl ? "\\text{Subject to} \\quad" : "Subject to" * eol
-    for c in m.linconstr
-        str *= sep * con_str(mode,c,mathmode=true) * eol
-    end
-    for c in m.quadconstr
-        str *= sep * con_str(mode,c,mathmode=true) * eol
-    end
-    for c in m.sosconstr
-        str *= sep * con_str(mode,c,mathmode=true) * eol
-    end
-    for c in m.socconstr
-        str *= sep * con_str(mode,c,mathmode=true) * eol
-    end
-    if nlp !== nothing
-        for c in nlp.nlconstr
-            str *= sep * con_str(m,mode,c,mathmode=true) * eol
-        end
-    end
-
-    # Display indexed variables
-    in_dictlist = falses(m.numCols)
-    for d in m.dictList
-        # make sure that you haven't changed a variable type in the collection
-        firstval = first(_values(d))
-        cat = getcategory(firstval)
-        lb, ub = getlowerbound(firstval), getupperbound(firstval)
-        allsame = true
-        for v in _values(d)
-            if !(getcategory(v) == cat && getlowerbound(v) == lb && getupperbound(v) == ub)
-                allsame = false
-                break
-            elseif v in m.customNames
-                allsame = false
-                break
-            end
-        end
-        if allsame
-            for it in _values(d)  # Mark variables in JuMPContainer as printed
-                in_dictlist[it.col] = true
-            end
-            str *= sep * cont_str(mode,d,mathmode=true)  * eol
-        end
-    end
-
-    # Display non-indexed variables
-    for i in 1:m.numCols
-        in_dictlist[i] && continue
-        var_name = var_str(mode,m,i)
-        var_lb, var_ub = m.colLower[i], m.colUpper[i]
-        str_lb = var_lb == -Inf ? "-"*sym[:infty] : str_round(var_lb)
-        str_ub = var_ub == +Inf ?     sym[:infty] : str_round(var_ub)
-        var_cat = m.colCat[i]
-        if var_cat == :Bin  # x binary
-            str *= string(sep, var_name,
-                            " ", sym[:in],
-                            " ", sym[:open_set],
-                            "0,1", sym[:close_set])
-        elseif var_cat == :SemiInt  # x in union of 0 and {lb,...,ub}
-            str *= string(sep, var_name,
-                            " ", sym[:in],
-                            " ", sym[:open_set],
-                            str_lb, ",", sym[:dots], ",", str_ub,
-                            sym[:close_set],
-                            " ", sym[:union], " ",
-                            sym[:open_set], "0", sym[:close_set])
-        elseif var_cat == :SemiCont  # x in union of 0 and [lb,ub]
-            str *= string(sep, var_name,
-                            " ", sym[:in],
-                            " ", sym[:open_rng],
-                            str_lb, ",", str_ub,
-                            sym[:close_rng],
-                            " ", sym[:union], " ",
-                            sym[:open_set], "0", sym[:close_set])
-        elseif var_cat == :Fixed
-            str *= string(sep, var_name, " = ", str_lb)
-        elseif var_lb == -Inf && var_ub == +Inf # Free variable
-            str *= string(sep, var_name)
-        elseif var_lb == -Inf  # No lower bound
-            str *= string(sep, var_name, " ", sym[:leq], " ", str_ub)
-        elseif var_ub == +Inf  # No upper bound
-            str *= string(sep, var_name, " ", sym[:geq], " ", str_lb)
-        else
-            str *= string(sep, str_lb, " ", sym[:leq],
-                            " ", var_name, " ",
-                            sym[:leq], " ", str_ub)
-        end
-        if var_cat == :Int
-            str *= string(", ", sym[:integer])
-        end
-        str *= eol
-    end
-
-    if nlp !== nothing
-        for i in 1:length(nlp.nlexpr)
-            if ijl
-                str *= "subexpression_{$i} = \\quad &" * expr_str(m,mode,nlp.nlexpr[i]) * eol
-            else
-                str *= "subexpression[$i]: " * expr_str(m,mode,nlp.nlexpr[i]) * eol
-            end
-        end
-    end
-
-    ijl ? "\$\$ \\begin{alignat*}{1}"*str*"\\end{alignat*}\n \$\$" :
-          str
-end
-
-# Handlers to use correct symbols
-model_str(::Type{REPLMode}, m::Model) =
-    model_str(REPLMode, m, repl)
-model_str(::Type{IJuliaMode}, m::Model; mathmode=true) =
-    math(model_str(IJuliaMode, m, ijulia), mathmode)
+# function Base.print(io::IO, m::Model; ignore_print_hook=(m.printhook==nothing))
+#     ignore_print_hook || return m.printhook(io, m)
+#     print(io, model_str(REPLMode,m))
+# end
+#
+# function Base.show(io::IO, m::Model)
+#     plural(n) = (n==1 ? "" : "s")
+#     print(io, m.objSense == :Max ? "Maximization" : ((m.objSense == :Min && (!isempty(m.obj) || (m.nlpdata !== nothing && isa(m.nlpdata.nlobj, NonlinearExprData)))) ? "Minimization" : "Feasibility"))
+#     println(io, " problem with:")
+#     nlin = length(m.linconstr)
+#     println(io, " * $(nlin) linear constraint$(plural(nlin))")
+#     nquad = length(m.quadconstr)
+#     if nquad > 0
+#         println(io, " * $(nquad) quadratic constraint$(plural(nquad))")
+#     end
+#     nsos = length(m.sosconstr)
+#     if nsos > 0
+#         println(io, " * $(nsos) SOS constraint$(plural(nsos))")
+#     end
+#     nsoc = length(m.socconstr)
+#     if nsoc > 0
+#         println(io, " * $(nsoc) SOC constraint$(plural(nsoc))")
+#     end
+#     nsdp = length(m.sdpconstr)
+#     if nsdp > 0
+#         println(io, " * $(nsdp) semidefinite constraint$(plural(nsdp))")
+#     end
+#     nlp = m.nlpdata
+#     if nlp !== nothing && length(nlp.nlconstr) > 0
+#         println(io, " * $(length(nlp.nlconstr)) nonlinear constraint$(plural(length(nlp.nlconstr)))")
+#     end
+#     print(io, " * $(m.numCols) variable$(plural(m.numCols))")
+#     nbin = sum(m.colCat .== :Bin)
+#     nint = sum(m.colCat .== :Int)
+#     nsc = sum(m.colCat .== :SemiCont)
+#     nsi = sum(m.colCat .== :SemiInt)
+#     varstr = Any[]
+#     nbin == 0 || push!(varstr, "$nbin binary")
+#     nint == 0 || push!(varstr, "$nint integer")
+#     nsc  == 0 || push!(varstr, "$nsc semicontinuous")
+#     nsi  == 0 || push!(varstr, "$nsi semi-integer")
+#     if isempty(varstr)
+#         println(io,)
+#     else
+#         println(io, ": $(join(varstr, ", "))")
+#     end
+#     print(io, "Solver is ")
+#     if isa(m.solver, UnsetSolver)
+#         print(io, "default solver")
+#     else
+#         print(io, split(split(string(m.solver), "Solver")[1], ".")[2])
+#     end
+# end
+# Base.show(io::IO, ::MIME"text/latex", m::Model) =
+#     print(io, model_str(IJuliaMode,m))
+# function model_str(mode, m::Model, sym::PrintSymbols)
+#     ijl = mode == IJuliaMode
+#     sep = ijl ? " & " : " "
+#     eol = ijl ? "\\\\\n" : "\n"
+#     nlp = m.nlpdata
+#
+#     # Objective
+#     qobj_str = quad_str(mode, m.obj)
+#     obj_sense = ijl ? (m.objSense == :Max ? "\\max" : "\\min")*"\\quad" :
+#                       (m.objSense == :Max ? "Max" : "Min")
+#     str = obj_sense * sep
+#     if nlp !== nothing && nlp.nlobj !== nothing
+#         str *= (qobj_str=="0"?"":"$qobj_str + ") * expr_str(m, mode, nlp.nlobj)
+#     else
+#         str *= qobj_str
+#     end
+#     str *= eol
+#
+#     # Constraints
+#     str *= ijl ? "\\text{Subject to} \\quad" : "Subject to" * eol
+#     for c in m.linconstr
+#         str *= sep * con_str(mode,c,mathmode=true) * eol
+#     end
+#     for c in m.quadconstr
+#         str *= sep * con_str(mode,c,mathmode=true) * eol
+#     end
+#     for c in m.sosconstr
+#         str *= sep * con_str(mode,c,mathmode=true) * eol
+#     end
+#     for c in m.socconstr
+#         str *= sep * con_str(mode,c,mathmode=true) * eol
+#     end
+#     if nlp !== nothing
+#         for c in nlp.nlconstr
+#             str *= sep * con_str(m,mode,c,mathmode=true) * eol
+#         end
+#     end
+#
+#     # Display indexed variables
+#     in_dictlist = falses(m.numCols)
+#     for d in m.dictList
+#         # make sure that you haven't changed a variable type in the collection
+#         firstval = first(_values(d))
+#         cat = getcategory(firstval)
+#         lb, ub = getlowerbound(firstval), getupperbound(firstval)
+#         allsame = true
+#         for v in _values(d)
+#             if !(getcategory(v) == cat && getlowerbound(v) == lb && getupperbound(v) == ub)
+#                 allsame = false
+#                 break
+#             elseif v in m.customNames
+#                 allsame = false
+#                 break
+#             end
+#         end
+#         if allsame
+#             for it in _values(d)  # Mark variables in JuMPContainer as printed
+#                 in_dictlist[it.col] = true
+#             end
+#             str *= sep * cont_str(mode,d,mathmode=true)  * eol
+#         end
+#     end
+#
+#     # Display non-indexed variables
+#     for i in 1:m.numCols
+#         in_dictlist[i] && continue
+#         var_name = var_str(mode,m,i)
+#         var_lb, var_ub = m.colLower[i], m.colUpper[i]
+#         str_lb = var_lb == -Inf ? "-"*sym[:infty] : str_round(var_lb)
+#         str_ub = var_ub == +Inf ?     sym[:infty] : str_round(var_ub)
+#         var_cat = m.colCat[i]
+#         if var_cat == :Bin  # x binary
+#             str *= string(sep, var_name,
+#                             " ", sym[:in],
+#                             " ", sym[:open_set],
+#                             "0,1", sym[:close_set])
+#         elseif var_cat == :SemiInt  # x in union of 0 and {lb,...,ub}
+#             str *= string(sep, var_name,
+#                             " ", sym[:in],
+#                             " ", sym[:open_set],
+#                             str_lb, ",", sym[:dots], ",", str_ub,
+#                             sym[:close_set],
+#                             " ", sym[:union], " ",
+#                             sym[:open_set], "0", sym[:close_set])
+#         elseif var_cat == :SemiCont  # x in union of 0 and [lb,ub]
+#             str *= string(sep, var_name,
+#                             " ", sym[:in],
+#                             " ", sym[:open_rng],
+#                             str_lb, ",", str_ub,
+#                             sym[:close_rng],
+#                             " ", sym[:union], " ",
+#                             sym[:open_set], "0", sym[:close_set])
+#         elseif var_cat == :Fixed
+#             str *= string(sep, var_name, " = ", str_lb)
+#         elseif var_lb == -Inf && var_ub == +Inf # Free variable
+#             str *= string(sep, var_name)
+#         elseif var_lb == -Inf  # No lower bound
+#             str *= string(sep, var_name, " ", sym[:leq], " ", str_ub)
+#         elseif var_ub == +Inf  # No upper bound
+#             str *= string(sep, var_name, " ", sym[:geq], " ", str_lb)
+#         else
+#             str *= string(sep, str_lb, " ", sym[:leq],
+#                             " ", var_name, " ",
+#                             sym[:leq], " ", str_ub)
+#         end
+#         if var_cat == :Int
+#             str *= string(", ", sym[:integer])
+#         end
+#         str *= eol
+#     end
+#
+#     if nlp !== nothing
+#         for i in 1:length(nlp.nlexpr)
+#             if ijl
+#                 str *= "subexpression_{$i} = \\quad &" * expr_str(m,mode,nlp.nlexpr[i]) * eol
+#             else
+#                 str *= "subexpression[$i]: " * expr_str(m,mode,nlp.nlexpr[i]) * eol
+#             end
+#         end
+#     end
+#
+#     ijl ? "\$\$ \\begin{alignat*}{1}"*str*"\\end{alignat*}\n \$\$" :
+#           str
+# end
+#
+# # Handlers to use correct symbols
+# model_str(::Type{REPLMode}, m::Model) =
+#     model_str(REPLMode, m, repl)
+# model_str(::Type{IJuliaMode}, m::Model; mathmode=true) =
+#     math(model_str(IJuliaMode, m, ijulia), mathmode)
 
 
 #------------------------------------------------------------------------
@@ -307,16 +310,17 @@ model_str(::Type{IJuliaMode}, m::Model; mathmode=true) =
 Base.show(io::IO, v::Variable) = print(io, var_str(REPLMode,v))
 Base.show(io::IO, ::MIME"text/latex", v::Variable) =
     print(io, var_str(IJuliaMode,v,mathmode=false))
-function var_str(mode, m::Model, col::Int; mathmode=true)
-    colNames = mode == REPLMode ? m.colNames : m.colNamesIJulia
-    if colNames[col] === EMPTYSTRING
-        for cont in m.dictList
-            fill_var_names(mode, colNames, cont)
+function var_str(mode, v::Variable; mathmode=true)
+    #colNames = mode == REPLMode ? m.colNames : m.colNamesIJulia
+    varnames = v.m.variablenames::VariableToValueMap{String}
+    if !haskey(varnames,v)
+        for cont in v.m.dictlist
+            fill_var_names(mode, varnames, cont)
         end
     end
-    return math(colNames[col] == "" ? "col_$col" : colNames[col], mathmode)
+    return math(haskey(varnames,v) ? varnames[v] : "noname", mathmode)
 end
-function fill_var_names{N}(mode, colNames, v::JuMPArray{Variable,N})
+function fill_var_names{N}(mode, varnames, v::JuMPArray{Variable,N})
     data = printdata(v)
     idxsets = data.indexsets
     lengths = map(length, idxsets)
@@ -328,23 +332,23 @@ function fill_var_names{N}(mode, colNames, v::JuMPArray{Variable,N})
             push!(idx_strs, string(idxsets[i][Int(ceil(mod1(ind,cprod[i]) / cprod[i-1]))]))
         end
         if mode == IJuliaMode
-            colNames[var.col] = string(name, "_{", join(idx_strs,",") , "}")
+            varnames[var] = string(name, "_{", join(idx_strs,",") , "}")
         else
-            colNames[var.col] = string(name,  "[", join(idx_strs,",") , "]")
+            varnames[var] = string(name,  "[", join(idx_strs,",") , "]")
         end
     end
 end
-function fill_var_names(mode, colNames, v::JuMPDict{Variable})
+function fill_var_names(mode, varnames, v::JuMPDict{Variable})
     name = printdata(v).name
     for (ind,var) in zip(keys(v),values(v))
         if mode == IJuliaMode
-            colNames[var.col] = string(name, "_{", join([string(i) for i in ind],","), "}")
+            varnames[var] = string(name, "_{", join([string(i) for i in ind],","), "}")
         else
-            colNames[var.col] = string(name,  "[", join([string(i) for i in ind],","), "]")
+            varnames[var] = string(name,  "[", join([string(i) for i in ind],","), "]")
         end
     end
 end
-function fill_var_names(mode, colNames, v::Array{Variable})
+function fill_var_names(mode, varnames, v::Array{Variable})
     isempty(v) && return
     sizes = size(v)
     m = first(v).m
@@ -355,7 +359,7 @@ function fill_var_names(mode, colNames, v::Array{Variable})
     for (ii,var) in enumerate(v)
         @assert var.m === m
         ind = ind2sub(sizes, ii)
-        colNames[var.col] = if mode === IJuliaMode
+        varnames[var] = if mode === IJuliaMode
             string(name, "_{", join(ind, ","), "}")
         else
             string(name,  "[", join(ind, ","), "]")
@@ -363,12 +367,6 @@ function fill_var_names(mode, colNames, v::Array{Variable})
     end
     return
 end
-
-# Handlers to use correct symbols
-var_str(::Type{REPLMode}, v::Variable) =
-    var_str(REPLMode, v.m, v.col)
-var_str(::Type{IJuliaMode}, v::Variable; mathmode=true) =
-    var_str(IJuliaMode, v.m, v.col, mathmode=mathmode)
 
 #------------------------------------------------------------------------
 ## Norm
@@ -413,7 +411,7 @@ function cont_str(mode, j, sym::PrintSymbols)
     m = _getmodel(j)
 
     # If this looks like a user-created Array, then defer to base printing
-    if !haskey(m.varData, j)
+    if !haskey(m.vardata, j)
         @assert isa(j, Array{Variable})
         if ndims(j) == 1
             return sprint((io,v) -> Base.show_vector(io, v, "[", "]"), j)
