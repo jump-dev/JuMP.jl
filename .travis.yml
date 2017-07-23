@@ -23,9 +23,9 @@ script:
     - julia -e 'Pkg.clone("https://github.com/JuliaOpt/MathOptInterfaceUtilities.jl.git")'
     - julia -e 'Pkg.clone(pwd())'
     - julia -e 'Pkg.test("JuMP", coverage=true)'
-    - julia test/hygiene.jl
-    - julia -e 'Pkg.add("Ipopt")' # needed for below tests
-    - julia test/hockschittkowski/runhs.jl
+#    - julia test/hygiene.jl
+#    - julia -e 'Pkg.add("Ipopt")' # needed for below tests
+#    - julia test/hockschittkowski/runhs.jl
 after_success:
     - echo $TRAVIS_JULIA_VERSION
     - julia -e 'Pkg.add("Coverage"); cd(Pkg.dir("JuMP")); using Coverage; Coveralls.submit(process_folder()); Codecov.submit(process_folder())'
