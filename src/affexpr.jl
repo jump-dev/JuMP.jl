@@ -33,7 +33,7 @@ Base.one( a::GenericAffExpr) =  one(typeof(a))
 Base.copy(a::GenericAffExpr) = GenericAffExpr(copy(a.vars),copy(a.coeffs),copy(a.constant))
 
 # Old iterator protocol - iterates over tuples (aᵢ,xᵢ)
-immutable LinearTermIterator{GAE<:GenericAffExpr}
+struct LinearTermIterator{GAE<:GenericAffExpr}
     aff::GAE
 end
 
@@ -93,6 +93,22 @@ function Base.isequal{C,V}(aff::GenericAffExpr{C,V},other::GenericAffExpr{C,V})
     return true
 end
 
+# Check if two AffExprs are equal regardless of the order, and after merging duplicates
+# Mostly useful for testing.
+function isequal_canonical(aff::GenericAffExpr{C,V}, other::GenericAffExpr{C,V}) where {C,V}
+    function canonicalize(a)
+        d = Dict{V,C}()
+        @assert length(a.vars) == length(a.coeffs)
+        for k in 1:length(a.vars)
+            d[a.vars[k]] = a.coeffs[k] + get(d, a.vars[k], zero(C))
+        end
+        return d
+    end
+    d1 = canonicalize(aff)
+    d2 = canonicalize(other)
+    return isequal(d1,d1) && aff.constant == other.constant
+end
+
 
 # Alias for (Float64, Variable), the specific GenericAffExpr used by JuMP
 const AffExpr = GenericAffExpr{Float64,Variable}
@@ -110,22 +126,41 @@ function assert_isfinite(a::AffExpr)
     end
 end
 
-setobjective(m::Model, sense::Symbol, x::Variable) = setobjective(m, sense, convert(AffExpr,x))
-function setobjective(m::Model, sense::Symbol, a::AffExpr)
-    if isa(m.internalModel, MathProgBase.AbstractNonlinearModel)
-        # Give the correct answer when changing objectives in an NLP.
-        # A better approach would be to update and reuse the evaluator
-        m.internalModelLoaded = false
-    end
-    if length(m.obj.qvars1) != 0
-        # Go through the quadratic path so that we properly clear
-        # current quadratic terms.
-        setobjective(m, sense, convert(QuadExpr,a))
-    else
-        setobjectivesense(m, sense)
-        m.obj = convert(QuadExpr,a)
-    end
+function MOI.ScalarAffineFunction(a::AffExpr)
+    return MOI.ScalarAffineFunction(instancereference.(a.vars), a.coeffs, a.constant)
 end
+
+function AffExpr(m::Model, f::MOI.ScalarAffineFunction)
+    return AffExpr(Variable.(m,f.variables), f.coefficients, f.constant)
+end
+
+# TODO this could be interpreted as a SingleVariable objective, but that should require explict syntax
+setobjective(m::Model, sense::Symbol, x::Variable) = setobjective(m, sense, convert(AffExpr,x))
+
+
+function setobjective(m::Model, sense::Symbol, a::AffExpr)
+    @assert !m.solverinstanceattached # TODO
+    if sense == :Min
+        moisense = MOI.MinSense
+    else
+        @assert sense == :Max
+        moisense = MOI.MaxSense
+    end
+    MOI.setobjective!(m.instance, moisense, MOI.ScalarAffineFunction(a))
+    nothing
+end
+
+"""
+    getobjective(m::Model, ::Type{AffExpr})
+
+Return an `AffExpr` object representing the objective function.
+Error if the objective is not linear.
+"""
+function getobjective(m::Model, ::Type{AffExpr})
+    f = MOI.getattribute(m.instance, MOI.ObjectiveFunction())::MOI.ScalarAffineFunction
+    return AffExpr(m, f)
+end
+
 
 # Copy an affine expression to a new model by converting all the
 # variables to the new model's variables
@@ -150,45 +185,49 @@ end
 # GenericRangeConstraint
 # l ≤ ∑ aᵢ xᵢ ≤ u
 # The constant part of the internal expression is assumed to be zero
-type GenericRangeConstraint{TermsType} <: AbstractConstraint
+mutable struct GenericRangeConstraint{TermsType} <: AbstractConstraint
     terms::TermsType
     lb::Float64
     ub::Float64
 end
+#
+# #  b ≤ expr ≤ b   →   ==
+# # -∞ ≤ expr ≤ u   →   <=
+# #  l ≤ expr ≤ ∞   →   >=
+# #  l ≤ expr ≤ u   →   range
+# function sense(c::GenericRangeConstraint)
+#     if c.lb != -Inf
+#         if c.ub != Inf
+#             if c.ub == c.lb
+#                 return :(==)
+#             else
+#                 return :range
+#             end
+#         else
+#                 return :(>=)
+#         end
+#     else #if c.lb == -Inf
+#         c.ub == Inf && error("'Free' constraint sense not supported")
+#         return :(<=)
+#     end
+# end
+#
+# function rhs(c::GenericRangeConstraint)
+#     s = sense(c)
+#     s == :range && error("Range constraints do not have a well-defined RHS")
+#     s == :(<=) ? c.ub : c.lb
+# end
 
-#  b ≤ expr ≤ b   →   ==
-# -∞ ≤ expr ≤ u   →   <=
-#  l ≤ expr ≤ ∞   →   >=
-#  l ≤ expr ≤ u   →   range
-function sense(c::GenericRangeConstraint)
-    if c.lb != -Inf
-        if c.ub != Inf
-            if c.ub == c.lb
-                return :(==)
-            else
-                return :range
-            end
-        else
-                return :(>=)
-        end
-    else #if c.lb == -Inf
-        c.ub == Inf && error("'Free' constraint sense not supported")
-        return :(<=)
-    end
+# TODO GenericLinearConstraint
+
+struct LinearConstraint{S <: MOI.AbstractScalarSet}
+    func::AffExpr
+    set::S
 end
 
-function rhs(c::GenericRangeConstraint)
-    s = sense(c)
-    s == :range && error("Range constraints do not have a well-defined RHS")
-    s == :(<=) ? c.ub : c.lb
-end
-
-# Alias for AffExpr
-const LinearConstraint = GenericRangeConstraint{AffExpr}
-
-function Base.copy(c::LinearConstraint, new_model::Model)
-    return LinearConstraint(copy(c.terms, new_model), c.lb, c.ub)
-end
+# function Base.copy(c::LinearConstraint, new_model::Model)
+#     return LinearConstraint(copy(c.terms, new_model), c.lb, c.ub)
+# end
 
 """
     addconstraint(m::Model, c::LinearConstraint)
@@ -196,26 +235,9 @@ end
 Add a linear constraint to `Model m`.
 """
 function addconstraint(m::Model, c::LinearConstraint)
-    push!(m.linconstr,c)
-    if m.internalModelLoaded
-        if method_exists(MathProgBase.addconstr!, (typeof(m.internalModel),Vector{Int},Vector{Float64},Float64,Float64))
-            assert_isfinite(c.terms)
-            indices, coeffs = merge_duplicates(Cint, c.terms, m.indexedVector, m)
-            MathProgBase.addconstr!(m.internalModel,indices,coeffs,c.lb,c.ub)
-        else
-            Base.warn_once("Solver does not appear to support adding constraints to an existing model. JuMP's internal model will be discarded.")
-            m.internalModelLoaded = false
-        end
-    end
-    return LinConstrRef(m,length(m.linconstr))
+    @assert !m.solverinstanceattached # TODO
+    cref = MOI.addconstraint!(m.instance, MOI.ScalarAffineFunction(c.func), c.set)
+    return ConstraintRef(m, cref)
 end
 addconstraint(m::Model, c::Array{LinearConstraint}) =
     error("The operators <=, >=, and == can only be used to specify scalar constraints. If you are trying to add a vectorized constraint, use the element-wise dot comparison operators (.<=, .>=, or .==) instead")
-
-function addVectorizedConstraint(m::Model, v::Array{LinearConstraint})
-    ret = Array{LinConstrRef}(size(v))
-    for I in eachindex(v)
-        ret[I] = addconstraint(m, v[I])
-    end
-    ret
-end

@@ -110,7 +110,7 @@ for accessor in (:getdual, :getlowerbound, :getupperbound, :getvalue)
 end
 # With JuMPContainer, we take care in _mapInner of the warning if NaN values are returned
 # by the accessor so we use the inner accessor that does not generate warnings
-for (accessor, inner) in ((:getdual, :_getDual), (:getlowerbound, :getlowerbound), (:getupperbound, :getupperbound), (:getvalue, :_getValue))
+for (accessor, inner) in ((:getdual, :_getDual), (:getlowerbound, :getlowerbound), (:getupperbound, :getupperbound), (:getstart, :getstart))
     @eval $accessor(x::JuMPContainer) = _map($inner,x)
 end
 
@@ -156,11 +156,11 @@ function _map{T}(f, x::JuMPContainer{T})
     for (key,val) in metadata(x)
         pushmeta!(ret, key, val)
     end
-    if T == Variable
-        m = _getmodel(x)
-        # cache indexing info for new container for printing purposes
-        m.varData[ret] = printdata(x)
-    end
+    # if T == Variable
+    #     m = _getmodel(x)
+    #     # cache indexing info for new container for printing purposes
+    #     m.varData[ret] = printdata(x)
+    # end
     ret
 end
 

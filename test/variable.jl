@@ -19,26 +19,57 @@ using Base.Test
         # Constructors
         mcon = Model()
         @variable(mcon, nobounds)
-        @variable(mcon, lbonly >= 0)
-        @variable(mcon, ubonly <= 1)
+        @test !JuMP.haslowerbound(nobounds)
+        @test !JuMP.hasupperbound(nobounds)
+        @test !JuMP.isfixed(nobounds)
+        @test getname(nobounds) == "nobounds"
+
+        @variable(mcon, lbonly >= 0, Bin)
+        @test JuMP.haslowerbound(lbonly)
+        @test JuMP.getlowerbound(lbonly) == 0.0
+        @test !JuMP.hasupperbound(lbonly)
+        @test !JuMP.isfixed(lbonly)
+        @test JuMP.isbinary(lbonly)
+        @test !JuMP.isinteger(lbonly)
+
+        @variable(mcon, ubonly <= 1, Int)
+        @test !JuMP.haslowerbound(ubonly)
+        @test JuMP.hasupperbound(ubonly)
+        @test JuMP.getupperbound(ubonly) == 1.0
+        @test !JuMP.isfixed(ubonly)
+        @test !JuMP.isbinary(ubonly)
+        @test JuMP.isinteger(ubonly)
+
         @variable(mcon, 0 <= bothb <= 1)
-        @variable(mcon, 0 <= onerange[-5:5] <= 10)
+        @test JuMP.haslowerbound(bothb)
+        @test JuMP.getlowerbound(bothb) == 0.0
+        @test JuMP.hasupperbound(bothb)
+        @test JuMP.getupperbound(bothb) == 1.0
+        @test !JuMP.isfixed(bothb)
+
+        @variable(mcon, fixed == 1.0)
+        @test !JuMP.haslowerbound(fixed)
+        @test !JuMP.hasupperbound(fixed)
+        @test JuMP.isfixed(fixed)
+        @test JuMP.getfixvalue(fixed) == 1.0
+
         @variable(mcon, onerangeub[-7:1] <= 10, Int)
         @variable(mcon, manyrangelb[0:1,10:20,1:1] >= 2)
-        @test getlowerbound(manyrangelb[0,15,1]) == 2
+        @test JuMP.haslowerbound(manyrangelb[0,15,1])
+        @test JuMP.getlowerbound(manyrangelb[0,15,1]) == 2
+        @test !JuMP.hasupperbound(manyrangelb[0,15,1])
+
         s = ["Green","Blue"]
         @variable(mcon, x[i=-10:10,s] <= 5.5, Int, start=i+1)
-        @test getupperbound(x[-4,"Green"]) == 5.5
-        @test getvalue(x[-3,"Blue"]) == -2
+        @test JuMP.getupperbound(x[-4,"Green"]) == 5.5
+        @test getname(x[-10,"Green"]) == "x[-10,Green]"
+        @test getstart(x[-3,"Blue"]) == -2
         @test isequal(mcon[:lbonly],lbonly)
         @test isequal(mcon[:ubonly],ubonly)
         @test isequal(mcon[:onerangeub][-7],onerangeub[-7])
-        @variable(mcon, lbonly)
-        @test_throws ErrorException mcon[:lbonly]
+        @test_throws ErrorException @variable(mcon, lbonly)
         @test_throws KeyError mcon[:foo]
-        d = Dict()
-        @variable(mcon, d["bar"][1:10] == 1)
-        @test getvalue(d["bar"][1]) == 1
+
         @test typeof(zero(nobounds)) == AffExpr
         @test typeof(one(nobounds)) == AffExpr
     end
@@ -53,85 +84,95 @@ using Base.Test
         setupperbound(x, 3)
         @test getupperbound(x) == 3
         @variable(m, q, Bin)
-        @test getlowerbound(q) == 0
-        @test getupperbound(q) == 1
+        @test !JuMP.haslowerbound(q)
+        @test !JuMP.hasupperbound(q)
+
         @variable(m, 0 <= y <= 1, Bin)
         @test getlowerbound(y) == 0
         @test getupperbound(y) == 1
+
         @variable(m, fixedvar == 2)
-        @test getvalue(fixedvar) == 2
-        @test getlowerbound(fixedvar) == 2
-        @test getupperbound(fixedvar) == 2
+        @test JuMP.getfixvalue(fixedvar) == 2.0
         JuMP.fix(fixedvar, 5)
-        @test getvalue(fixedvar) == 5
-        @test getlowerbound(fixedvar) == 5
-        @test getupperbound(fixedvar) == 5
+        @test JuMP.getfixvalue(fixedvar) == 5
+        @test_throws AssertionError getlowerbound(fixedvar)
+        @test_throws AssertionError getupperbound(fixedvar)
     end
 
-    @testset "get and set values" begin
+    @testset "get and set start" begin
         m = Model()
         @variable(m, x[1:3])
         x0 = collect(1:3)
-        setvalue(x, x0)
-        @test getvalue(x) == x0
-        @test getvalue([x[1],x[2],x[3]]) == x0
+        setstart.(x, x0)
+        @test getstart.(x) == x0
+        @test getstart.([x[1],x[2],x[3]]) == x0
 
         @variable(m, y[1:3,1:2])
-        @test_throws DimensionMismatch setvalue(y, collect(1:6))
+        @test_throws DimensionMismatch setstart.(y, collect(1:6))
     end
 
-    @testset "get and set category" begin
+    @testset "get and set integer/binary" begin
         m = Model()
         @variable(m, x[1:3])
-        setcategory(x[2], :Int)
-        @test getcategory(x[3]) == :Cont
-        @test getcategory(x[2]) == :Int
+
+        JuMP.setinteger(x[2])
+        @test JuMP.isinteger(x[2])
+        JuMP.unsetinteger(x[2])
+        @test !JuMP.isinteger(x[2])
+
+        JuMP.setbinary(x[1])
+        @test JuMP.isbinary(x[1])
+        @test_throws AssertionError JuMP.setinteger(x[1])
+        JuMP.unsetbinary(x[1])
+        @test !JuMP.isbinary(x[1])
+        # TODO test binary/integer keyword arguments
     end
 
     @testset "repeated elements in index set (issue #199)" begin
         repeatmod = Model()
         s = [:x,:x,:y]
         @variable(repeatmod, x[s])
-        @test MathProgBase.numvar(repeatmod) == 3
+        @test JuMP.numvar(repeatmod) == 3
     end
 
-    @testset "condition in indexing" begin
-        fa = repl[:for_all]
-        inset, dots = repl[:in], repl[:dots]
-        condmod = Model()
-        @variable(condmod, x[i=1:10; iseven(i)])
-        @variable(condmod, y[j=1:10,k=3:2:9; isodd(j+k) && k <= 8])
-        @test length(x.tupledict) == 5
-        @test length(y.tupledict) == 15
-        @test string(condmod) == "Min 0\nSubject to\n x[i] $fa i $inset {1,2,$dots,9,10} s.t. iseven(i)\n y[j,k] $fa j $inset {1,2,$dots,9,10}, k $inset {3,5,7,9} s.t. isodd(j + k) and k <= 8\n"
-    end
+    # TODO reenable when printing comes back
+    # @testset "condition in indexing" begin
+    #    fa = repl[:for_all]
+    #    inset, dots = repl[:in], repl[:dots]
+    #    condmod = Model()
+    #    @variable(condmod, x[i=1:10; iseven(i)])
+    #    @variable(condmod, y[j=1:10,k=3:2:9; isodd(j+k) && k <= 8])
+    #    @test length(x.tupledict) == 5
+    #    @test length(y.tupledict) == 15
+    #    @test string(condmod) == "Min 0\nSubject to\n x[i] $fa i $inset {1,2,$dots,9,10} s.t. iseven(i)\n y[j,k] $fa j $inset {1,2,$dots,9,10}, k $inset {3,5,7,9} s.t. isodd(j + k) and k <= 8\n"
+    # end
 
     @testset "@variable returning Array{Variable}" begin
         m = Model()
-        @variable(m, x[1:3,1:4,1:2])
-        @variable(m, y[1:0])
-        @variable(m, z[1:4])
+        @variable(m, x[1:3,1:4,1:2], start = 0)
+        @variable(m, y[1:0], start = 0)
+        @variable(m, z[1:4], start = 0)
 
         @test typeof(x) == Array{Variable,3}
         @test typeof(y) == Array{Variable,1}
         @test typeof(z) == Array{Variable,1}
 
-        @test typeof(getvalue(x)) == Array{Float64,3}
-        @test typeof(getvalue(y)) == Array{Float64,1}
-        @test typeof(getvalue(z)) == Array{Float64,1}
+        @test typeof(getstart.(x)) == Array{Float64,3}
+        @test typeof(getstart.(y)) == Array{Float64,1}
+        @test typeof(getstart.(z)) == Array{Float64,1}
     end
 
-    @testset "getvalue on empty things" begin
+    @testset "getstart on empty things" begin
         m = Model()
-        @variable(m, x[1:4,  1:0,1:3])   # Array{Variable}
-        @variable(m, y[1:4,  2:1,1:3]) # JuMPArray
-        @variable(m, z[1:4,Set(),1:3]) # JuMPDict
+        @variable(m, x[1:4,  1:0,1:3], start = 0) # Array{Variable}
+        @variable(m, y[1:4,  2:1,1:3], start = 0) # JuMPArray
+        @variable(m, z[1:4,Set(),1:3], start = 0) # JuMPDict
 
         @test getvalue(x) == Array{Float64}(4, 0, 3)
-        @test typeof(getvalue(y)) <: JuMP.JuMPArray{Float64}
-        @test JuMP.size(getvalue(y)) == (4,0,3)
-        @test typeof(getvalue(z)) == JuMP.JuMPArray{Float64,3,Tuple{UnitRange{Int},Set{Any},UnitRange{Int}}}
-        @test length(getvalue(z)) == 0
+        @test typeof(getstart(y)) <: JuMP.JuMPArray{Float64}
+        @test JuMP.size(getstart(y)) == (4,0,3)
+        @test typeof(getstart(z)) == JuMP.JuMPArray{Float64,3,Tuple{UnitRange{Int},Set{Any},UnitRange{Int}}}
+        @test length(getstart(z)) == 0
     end
 
 # Slices three-dimensional JuMPContainer x[I,J,K]
@@ -221,22 +262,23 @@ end
         t = UInt(4)
         @variable(m, x[1:t])
         @constraintref(y[1:t])
-        @test MathProgBase.numvar(m) == 4
+        @test JuMP.numvar(m) == 4
     end
 
-    @testset "getvalue on sparse array (#889)" begin
-        m = Model()
-        @variable(m, x)
-        @variable(m, y)
-        X = sparse([1, 3], [2, 3], [x, y])
-
-        @test typeof(X) == SparseMatrixCSC{Variable, Int}
-
-        setvalue(x, 1)
-        setvalue(y, 2)
-
-        Y = getvalue(X)
-        @test typeof(Y) == SparseMatrixCSC{Float64, Int}
-        @test Y == sparse([1, 3], [2, 3], [1, 2])
-    end
+    # TODO decide what to do here
+    # @testset "getstart on sparse array (#889)" begin
+    #     m = Model()
+    #     @variable(m, x)
+    #     @variable(m, y)
+    #     X = sparse([1, 3], [2, 3], [x, y])
+    #
+    #     @test typeof(X) == SparseMatrixCSC{Variable, Int}
+    #
+    #     setstart(x, 1)
+    #     setstart(y, 2)
+    #
+    #     Y = getstart.(X)
+    #     @test typeof(Y) == SparseMatrixCSC{Float64, Int}
+    #     @test Y == sparse([1, 3], [2, 3], [1, 2])
+    # end
 end
