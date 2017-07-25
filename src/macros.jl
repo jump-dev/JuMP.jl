@@ -291,20 +291,10 @@ end
 const ScalarPolyhedralSets = Union{MOI.LessThan,MOI.GreaterThan,MOI.EqualTo,MOI.Interval}
 
 constructconstraint!(v::Variable, sense::Symbol) = constructconstraint!(convert(AffExpr,v), sense)
-function constructconstraint!(aff::AffExpr, set::MOI.LessThan)
+function constructconstraint!(aff::AffExpr, set::S) where S <: Union{MOI.LessThan,MOI.GreaterThan,MOI.EqualTo}
     offset = aff.constant
     aff.constant = 0.0
-    return LinearConstraint(aff, MOI.LessThan(set.upper-offset))
-end
-function constructconstraint!(aff::AffExpr, set::MOI.GreaterThan)
-    offset = aff.constant
-    aff.constant = 0.0
-    return LinearConstraint(aff, MOI.GreaterThan(set.lower-offset))
-end
-function constructconstraint!(aff::AffExpr, set::MOI.EqualTo)
-    offset = aff.constant
-    aff.constant = 0.0
-    return LinearConstraint(aff, MOI.EqualTo(set.value-offset))
+    return LinearConstraint(aff, S(MOIU.getconstant(set)-offset))
 end
 
 # function constructconstraint!(aff::AffExpr, lb, ub)
