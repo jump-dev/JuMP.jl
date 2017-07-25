@@ -542,8 +542,7 @@ end
 ##########################################################################
 # ConstraintRef
 # Reference to a constraint for retrieving solution info
-# struct ConstraintRef{M<:AbstractModel,C <: MOICON}
-struct ConstraintRef{M<:AbstractModel,C} # TODO temporary
+struct ConstraintRef{M<:AbstractModel,C}
     m::M
     instanceref::C
 end
