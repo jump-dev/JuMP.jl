@@ -1352,7 +1352,7 @@ end
 
 function MathProgBase.eval_f(d::UserFunctionEvaluator,x)
     @assert length(x) == d.len
-    return d.f(x...)::eltype(x)
+    return d.f(x)::eltype(x)
 end
 function MathProgBase.eval_grad_f(d::UserFunctionEvaluator,grad,x)
     d.∇f(grad,x)
@@ -1360,9 +1360,10 @@ function MathProgBase.eval_grad_f(d::UserFunctionEvaluator,grad,x)
 end
 
 function UserAutoDiffEvaluator{T}(dimension::Integer, f::Function, ::Type{T} = Float64)
-    cfg = ForwardDiff.GradientConfig(zeros(T, dimension))
-    ∇f = (out, y) -> ForwardDiff.gradient!(out, x -> f(x...), y, cfg)
-    return UserFunctionEvaluator(f, ∇f, dimension)
+    g = x -> f(x...)
+    cfg = ForwardDiff.GradientConfig(g, zeros(T, dimension))
+    ∇f = (out, y) -> ForwardDiff.gradient!(out, g, y, cfg)
+    return UserFunctionEvaluator(g, ∇f, dimension)
 end
 
 function register(m::Model, s::Symbol, dimension::Integer, f::Function; autodiff::Bool=false)
@@ -1389,7 +1390,7 @@ function register(m::Model, s::Symbol, dimension::Integer, f::Function, ∇f::Fu
     else
         autodiff == false || Base.warn_once("autodiff=true ignored since gradient is already provided.")
         m.nlpdata.largest_user_input_dimension = max(m.nlpdata.largest_user_input_dimension,dimension)
-        d = UserFunctionEvaluator(f, (g,x)->∇f(g,x...), dimension)
+        d = UserFunctionEvaluator(x -> f(x...), (g,x)->∇f(g,x...), dimension)
         ReverseDiffSparse.register_multivariate_operator!(m.nlpdata.user_operators, s, d)
     end
 
