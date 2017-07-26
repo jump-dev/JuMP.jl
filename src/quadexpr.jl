@@ -66,20 +66,20 @@ const QuadExpr = GenericQuadExpr{Float64,Variable}
 Base.convert(::Type{QuadExpr}, v::Union{Real,Variable,AffExpr}) = QuadExpr(Variable[], Variable[], Float64[], AffExpr(v))
 QuadExpr() = zero(QuadExpr)
 
-function setobjective(m::Model, sense::Symbol, q::QuadExpr)
-    m.obj = q
-    if m.internalModelLoaded
-        if method_exists(MathProgBase.setquadobjterms!, (typeof(m.internalModel), Vector{Cint}, Vector{Cint}, Vector{Float64}))
-            verify_ownership(m, m.obj.qvars1)
-            verify_ownership(m, m.obj.qvars2)
-            MathProgBase.setquadobjterms!(m.internalModel, Cint[v.col for v in m.obj.qvars1], Cint[v.col for v in m.obj.qvars2], m.obj.qcoeffs)
-        else
-            isa(m.internalModel, MathProgBase.AbstractLinearQuadraticModel) && Base.warn_once("Solver does not support adding a quadratic objective to an existing model. JuMP's internal model will be discarded.")
-            m.internalModelLoaded = false
-        end
-    end
-    setobjectivesense(m, sense)
-end
+# function setobjective(m::Model, sense::Symbol, q::QuadExpr)
+#     m.obj = q
+#     if m.internalModelLoaded
+#         if method_exists(MathProgBase.setquadobjterms!, (typeof(m.internalModel), Vector{Cint}, Vector{Cint}, Vector{Float64}))
+#             verify_ownership(m, m.obj.qvars1)
+#             verify_ownership(m, m.obj.qvars2)
+#             MathProgBase.setquadobjterms!(m.internalModel, Cint[v.col for v in m.obj.qvars1], Cint[v.col for v in m.obj.qvars2], m.obj.qcoeffs)
+#         else
+#             isa(m.internalModel, MathProgBase.AbstractLinearQuadraticModel) && Base.warn_once("Solver does not support adding a quadratic objective to an existing model. JuMP's internal model will be discarded.")
+#             m.internalModelLoaded = false
+#         end
+#     end
+#     setobjectivesense(m, sense)
+# end
 
 # Copy a quadratic expression to a new model by converting all the
 # variables to the new model's variables
@@ -88,19 +88,19 @@ function Base.copy(q::QuadExpr, new_model::Model)
                 copy(q.qcoeffs), copy(q.aff, new_model))
 end
 
-"""
-    getvalue(a::QuadExpr)
-
-Evaluate a `QuadExpr` given the current solution values.
-"""
-function getvalue(a::QuadExpr)
-    ret = getvalue(a.aff)
-    for it in 1:length(a.qvars1)
-        ret += a.qcoeffs[it] * getvalue(a.qvars1[it]) * getvalue(a.qvars2[it])
-    end
-    return ret
-end
-getvalue(arr::Array{QuadExpr}) = map(getvalue, arr)
+# """
+#     getvalue(a::QuadExpr)
+#
+# Evaluate a `QuadExpr` given the current solution values.
+# """
+# function getvalue(a::QuadExpr)
+#     ret = getvalue(a.aff)
+#     for it in 1:length(a.qvars1)
+#         ret += a.qcoeffs[it] * getvalue(a.qvars1[it]) * getvalue(a.qvars2[it])
+#     end
+#     return ret
+# end
+# getvalue(arr::Array{QuadExpr}) = map(getvalue, arr)
 
 
 
@@ -122,50 +122,50 @@ function Base.copy(c::QuadConstraint, new_model::Model)
     return QuadConstraint(copy(c.terms, new_model), c.sense)
 end
 
-"""
-    addconstraint(m::Model, c::QuadConstraint)
-
-Add a quadratic constraint to `Model m`.
-"""
-function addconstraint(m::Model, c::QuadConstraint)
-    push!(m.quadconstr,c)
-    if m.internalModelLoaded
-        if method_exists(MathProgBase.addquadconstr!, (typeof(m.internalModel),
-                                                       Vector{Cint},
-                                                       Vector{Float64},
-                                                       Vector{Cint},
-                                                       Vector{Cint},
-                                                       Vector{Float64},
-                                                       Char,
-                                                       Float64))
-            if !((s = string(c.sense)[1]) in ['<', '>', '='])
-                error("Invalid sense for quadratic constraint")
-            end
-            terms = c.terms
-            verify_ownership(m, terms.qvars1)
-            verify_ownership(m, terms.qvars2)
-            MathProgBase.addquadconstr!(m.internalModel,
-                                        Cint[v.col for v in c.terms.aff.vars],
-                                        c.terms.aff.coeffs,
-                                        Cint[v.col for v in c.terms.qvars1],
-                                        Cint[v.col for v in c.terms.qvars2],
-                                        c.terms.qcoeffs,
-                                        s,
-                                        -c.terms.aff.constant)
-        else
-            Base.warn_once("Solver does not appear to support adding quadratic constraints to an existing model. JuMP's internal model will be discarded.")
-            m.internalModelLoaded = false
-        end
-    end
-    return ConstraintRef{Model,QuadConstraint}(m,length(m.quadconstr))
-end
-addconstraint(m::Model, c::Array{QuadConstraint}) =
-    error("Vectorized constraint added without elementwise comparisons. Try using one of (.<=,.>=,.==).")
-
-function addVectorizedConstraint(m::Model, v::Array{QuadConstraint})
-    ret = Array{ConstraintRef{Model,QuadConstraint}}(size(v))
-    for I in eachindex(v)
-        ret[I] = addconstraint(m, v[I])
-    end
-    ret
-end
+# """
+#     addconstraint(m::Model, c::QuadConstraint)
+#
+# Add a quadratic constraint to `Model m`.
+# """
+# function addconstraint(m::Model, c::QuadConstraint)
+#     push!(m.quadconstr,c)
+#     if m.internalModelLoaded
+#         if method_exists(MathProgBase.addquadconstr!, (typeof(m.internalModel),
+#                                                        Vector{Cint},
+#                                                        Vector{Float64},
+#                                                        Vector{Cint},
+#                                                        Vector{Cint},
+#                                                        Vector{Float64},
+#                                                        Char,
+#                                                        Float64))
+#             if !((s = string(c.sense)[1]) in ['<', '>', '='])
+#                 error("Invalid sense for quadratic constraint")
+#             end
+#             terms = c.terms
+#             verify_ownership(m, terms.qvars1)
+#             verify_ownership(m, terms.qvars2)
+#             MathProgBase.addquadconstr!(m.internalModel,
+#                                         Cint[v.col for v in c.terms.aff.vars],
+#                                         c.terms.aff.coeffs,
+#                                         Cint[v.col for v in c.terms.qvars1],
+#                                         Cint[v.col for v in c.terms.qvars2],
+#                                         c.terms.qcoeffs,
+#                                         s,
+#                                         -c.terms.aff.constant)
+#         else
+#             Base.warn_once("Solver does not appear to support adding quadratic constraints to an existing model. JuMP's internal model will be discarded.")
+#             m.internalModelLoaded = false
+#         end
+#     end
+#     return ConstraintRef{Model,QuadConstraint}(m,length(m.quadconstr))
+# end
+# addconstraint(m::Model, c::Array{QuadConstraint}) =
+#     error("Vectorized constraint added without elementwise comparisons. Try using one of (.<=,.>=,.==).")
+#
+# function addVectorizedConstraint(m::Model, v::Array{QuadConstraint})
+#     ret = Array{ConstraintRef{Model,QuadConstraint}}(size(v))
+#     for I in eachindex(v)
+#         ret[I] = addconstraint(m, v[I])
+#     end
+#     ret
+# end

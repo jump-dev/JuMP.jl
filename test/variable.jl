@@ -168,7 +168,7 @@ using Base.Test
         @variable(m, y[1:4,  2:1,1:3], start = 0) # JuMPArray
         @variable(m, z[1:4,Set(),1:3], start = 0) # JuMPDict
 
-        @test getvalue(x) == Array{Float64}(4, 0, 3)
+        @test getstart(x) == Array{Float64}(4, 0, 3)
         @test typeof(getstart(y)) <: JuMP.JuMPArray{Float64}
         @test JuMP.size(getstart(y)) == (4,0,3)
         @test typeof(getstart(z)) == JuMP.JuMPArray{Float64,3,Tuple{UnitRange{Int},Set{Any},UnitRange{Int}}}

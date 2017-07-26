@@ -580,11 +580,11 @@ include("norms.jl")
 
 ##########################################################################
 # SOSConstraint  (special ordered set constraints)
-include("sos.jl")
+# include("sos.jl")
 
 ##########################################################################
 # SDConstraint
-include("sd.jl")
+# include("sd.jl")
 
 # # internal method that doesn't print a warning if the value is NaN
 # _getDual(c::LinConstrRef) = c.m.linconstrDuals[c.idx]
@@ -605,79 +605,79 @@ include("sd.jl")
 # end
 
 # Returns the number of non-infinity and nonzero bounds on variables
-function getNumBndRows(m::Model)
-    numBounds = 0
-    for i in 1:m.numCols
-        seen = false
-        lb, ub = m.colLower[i], m.colUpper[i]
-        for (_,cone) in m.varCones
-            if i in cone
-                seen = true
-                @assert lb == -Inf && ub == Inf
-                break
-            end
-        end
-
-        if !seen
-            if lb != -Inf && lb != 0
-                numBounds += 1
-            end
-            if ub != Inf && ub != 0
-                numBounds += 1
-            end
-        end
-    end
-    return numBounds
-end
+# function getNumBndRows(m::Model)
+#     numBounds = 0
+#     for i in 1:m.numCols
+#         seen = false
+#         lb, ub = m.colLower[i], m.colUpper[i]
+#         for (_,cone) in m.varCones
+#             if i in cone
+#                 seen = true
+#                 @assert lb == -Inf && ub == Inf
+#                 break
+#             end
+#         end
+#
+#         if !seen
+#             if lb != -Inf && lb != 0
+#                 numBounds += 1
+#             end
+#             if ub != Inf && ub != 0
+#                 numBounds += 1
+#             end
+#         end
+#     end
+#     return numBounds
+# end
 
 # Returns the number of second-order cone constraints
-getNumRows(c::SOCConstraint) = length(c.normexpr.norm.terms) + 1
-getNumSOCRows(m::Model) = sum(getNumRows.(m.socconstr))
+# getNumRows(c::SOCConstraint) = length(c.normexpr.norm.terms) + 1
+# getNumSOCRows(m::Model) = sum(getNumRows.(m.socconstr))
 
 # Returns the dual variables corresponding to
 # m.sdpconstr[idx] if issdp is true
 # m.socconstr[idx] if sdp is not true
-function getconicdualaux(m::Model, idx::Int, issdp::Bool)
-    numLinRows = MathProgBase.numlinconstr(m)
-    numBndRows = getNumBndRows(m)
-    numSOCRows = getNumSOCRows(m)
-    numSDPRows = getNumSDPRows(m)
-    numSymRows = getNumSymRows(m)
-    numRows = numLinRows + numBndRows + numSOCRows + numSDPRows + numSymRows
-    if length(m.conicconstrDuals) != numRows
-        # solve might not have been called so m.constr_to_row might be empty
-        getdualwarn(idx)
-        c = issdp ? m.sdpconstr[idx] : m.socconstr[idx]
-        duals = fill(NaN, getNumRows(c))
-        if issdp
-            duals, Float64[]
-        else
-            duals
-        end
-    else
-        offset = numLinRows + numBndRows
-        if issdp
-            offset += length(m.socconstr)
-        end
-        dual = m.conicconstrDuals[m.constr_to_row[offset + idx]]
-        if issdp
-            offset += length(m.sdpconstr)
-            symdual = m.conicconstrDuals[m.constr_to_row[offset + idx]]
-            dual, symdual
-        else
-            dual
-        end
-    end
-end
+# function getconicdualaux(m::Model, idx::Int, issdp::Bool)
+#     numLinRows = MathProgBase.numlinconstr(m)
+#     numBndRows = getNumBndRows(m)
+#     numSOCRows = getNumSOCRows(m)
+#     numSDPRows = getNumSDPRows(m)
+#     numSymRows = getNumSymRows(m)
+#     numRows = numLinRows + numBndRows + numSOCRows + numSDPRows + numSymRows
+#     if length(m.conicconstrDuals) != numRows
+#         # solve might not have been called so m.constr_to_row might be empty
+#         getdualwarn(idx)
+#         c = issdp ? m.sdpconstr[idx] : m.socconstr[idx]
+#         duals = fill(NaN, getNumRows(c))
+#         if issdp
+#             duals, Float64[]
+#         else
+#             duals
+#         end
+#     else
+#         offset = numLinRows + numBndRows
+#         if issdp
+#             offset += length(m.socconstr)
+#         end
+#         dual = m.conicconstrDuals[m.constr_to_row[offset + idx]]
+#         if issdp
+#             offset += length(m.sdpconstr)
+#             symdual = m.conicconstrDuals[m.constr_to_row[offset + idx]]
+#             dual, symdual
+#         else
+#             dual
+#         end
+#     end
+# end
 
-"""
-    getdual(c::ConstraintRef{Model,SOCConstraint})
-
-
-"""
-function getdual(c::ConstraintRef{Model,SOCConstraint})
-    getconicdualaux(c.m, c.idx, false)
-end
+# """
+#     getdual(c::ConstraintRef{Model,SOCConstraint})
+#
+#
+# """
+# function getdual(c::ConstraintRef{Model,SOCConstraint})
+#     getconicdualaux(c.m, c.idx, false)
+# end
 
 # function setRHS(c::LinConstrRef, rhs::Number)
 #     constr = c.m.linconstr[c.idx]
@@ -790,12 +790,13 @@ end
 ##########################################################################
 # Behavior that's uniform across all JuMP "scalar" objects
 
+# TODO why do we need this?
 const JuMPTypes = Union{AbstractJuMPScalar,
-                        NonlinearExpression,
-                        Norm,
                         GenericAffExpr,
-                        QuadExpr,
-                        SOCExpr}
+                        NonlinearExpression}
+                    #    Norm,
+                    #    QuadExpr,
+                    #    SOCExpr}
 const JuMPScalars = Union{Number,JuMPTypes}
 
 # would really want to do this on ::Type{T}, but doesn't work on v0.4
@@ -809,29 +810,27 @@ Base.ndims(::JuMPTypes) = 0
 # Operator overloads
 include("operators.jl")
 # Writers - we support MPS (MILP + QuadObj), LP (MILP)
-include("writers.jl")
+# include("writers.jl")
 # Macros - @defVar, sum{}, etc.
 include("macros.jl")
 # Solvers
-include("solvers.jl")
+# include("solvers.jl")
 # Callbacks - lazy, cuts, ...
-include("callbacks.jl")
+# include("callbacks.jl")
 # Nonlinear-specific code
 include("nlp.jl")
 # Pretty-printing of JuMP-defined types.
 include("print.jl")
-# Deprecations
-include("deprecated.jl")
 
-getvalue{T<:JuMPTypes}(arr::Array{T}) = map(getvalue, arr)
-
-function setvalue{T<:AbstractJuMPScalar}(set::Array{T}, val::Array)
-    promote_shape(size(set), size(val)) # Check dimensions match
-    for I in eachindex(set)
-        setvalue(set[I], val[I])
-    end
-    nothing
-end
+# getvalue{T<:JuMPTypes}(arr::Array{T}) = map(getvalue, arr)
+#
+# function setvalue{T<:AbstractJuMPScalar}(set::Array{T}, val::Array)
+#     promote_shape(size(set), size(val)) # Check dimensions match
+#     for I in eachindex(set)
+#         setvalue(set[I], val[I])
+#     end
+#     nothing
+# end
 
 
 ##########################################################################

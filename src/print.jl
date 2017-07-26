@@ -807,103 +807,103 @@ end
 #------------------------------------------------------------------------
 ## GenericRangeConstraint
 #------------------------------------------------------------------------
-Base.show(io::IO, c::GenericRangeConstraint) = print(io, con_str(REPLMode,c))
-Base.show(io::IO, ::MIME"text/latex", c::GenericRangeConstraint) =
-    print(io, con_str(IJuliaMode,c,mathmode=false))
-# Generic string converter, called by mode-specific handlers
-function con_str(mode, c::GenericRangeConstraint, sym)
-    s = sense(c)
-    a = aff_str(mode,c.terms,false)
-    if s == :range
-        out_str = "$(str_round(c.lb)) $(sym[:leq]) $a $(sym[:leq]) $(str_round(c.ub))"
-    else
-        rel = s == :<= ? sym[:leq] : (s == :>= ? sym[:geq] : sym[:eq])
-        out_str = string(a," ",rel," ",str_round(rhs(c)))
-    end
-    out_str
-end
-# Handlers to use correct symbols
-con_str(::Type{REPLMode}, c::GenericRangeConstraint; args...) =
-    con_str(REPLMode, c, repl)
-con_str(::Type{IJuliaMode}, c::GenericRangeConstraint; mathmode=true) =
-    math(con_str(IJuliaMode, c, ijulia), mathmode)
+# Base.show(io::IO, c::GenericRangeConstraint) = print(io, con_str(REPLMode,c))
+# Base.show(io::IO, ::MIME"text/latex", c::GenericRangeConstraint) =
+#     print(io, con_str(IJuliaMode,c,mathmode=false))
+# # Generic string converter, called by mode-specific handlers
+# function con_str(mode, c::GenericRangeConstraint, sym)
+#     s = sense(c)
+#     a = aff_str(mode,c.terms,false)
+#     if s == :range
+#         out_str = "$(str_round(c.lb)) $(sym[:leq]) $a $(sym[:leq]) $(str_round(c.ub))"
+#     else
+#         rel = s == :<= ? sym[:leq] : (s == :>= ? sym[:geq] : sym[:eq])
+#         out_str = string(a," ",rel," ",str_round(rhs(c)))
+#     end
+#     out_str
+# end
+# # Handlers to use correct symbols
+# con_str(::Type{REPLMode}, c::GenericRangeConstraint; args...) =
+#     con_str(REPLMode, c, repl)
+# con_str(::Type{IJuliaMode}, c::GenericRangeConstraint; mathmode=true) =
+#     math(con_str(IJuliaMode, c, ijulia), mathmode)
 
 
 #------------------------------------------------------------------------
 ## QuadConstraint
 #------------------------------------------------------------------------
-Base.show(io::IO, c::QuadConstraint) = print(io, con_str(REPLMode,c))
-Base.show(io::IO, ::MIME"text/latex", c::QuadConstraint) =
-    print(io, con_str(IJuliaMode,c,mathmode=false))
-# Generic string converter, called by mode-specific handlers
-function con_str(mode, c::QuadConstraint, sym)
-    s = c.sense
-    r = (s == :<=) ? sym[:leq] : (s == :>= ? sym[:geq] : sym[:eq])
-    "$(quad_str(mode,c.terms)) $r 0"
-end
-# Handlers to use correct symbols
-con_str(::Type{REPLMode}, c::QuadConstraint; args...) =
-    con_str(REPLMode, c, repl)
-con_str(::Type{IJuliaMode}, c::QuadConstraint; mathmode=true) =
-    math(con_str(IJuliaMode, c, ijulia), mathmode)
+# Base.show(io::IO, c::QuadConstraint) = print(io, con_str(REPLMode,c))
+# Base.show(io::IO, ::MIME"text/latex", c::QuadConstraint) =
+#     print(io, con_str(IJuliaMode,c,mathmode=false))
+# # Generic string converter, called by mode-specific handlers
+# function con_str(mode, c::QuadConstraint, sym)
+#     s = c.sense
+#     r = (s == :<=) ? sym[:leq] : (s == :>= ? sym[:geq] : sym[:eq])
+#     "$(quad_str(mode,c.terms)) $r 0"
+# end
+# # Handlers to use correct symbols
+# con_str(::Type{REPLMode}, c::QuadConstraint; args...) =
+#     con_str(REPLMode, c, repl)
+# con_str(::Type{IJuliaMode}, c::QuadConstraint; mathmode=true) =
+#     math(con_str(IJuliaMode, c, ijulia), mathmode)
 
 #------------------------------------------------------------------------
 ## SOCConstraint
 #------------------------------------------------------------------------
-Base.show(io::IO, c::SOCConstraint) = print(io, con_str(REPLMode,c))
-Base.show(io::IO, ::MIME"text/latex", c::SOCConstraint) =
-    print(io, con_str(IJuliaMode,c))
-function con_str(mode, c::SOCConstraint, sym::PrintSymbols)
-    ne = c.normexpr
-    coeff = ne.coeff == 1 ? "" : string(ne.coeff, " ")
-    nrm   = norm_str(mode, ne.norm)
-    aff   = aff_str(mode, -ne.aff)
-    string(coeff, nrm, " $(repl[:leq]) ", aff)
-end
-# Handlers to use correct symbols
-con_str(::Type{REPLMode}, c::SOCConstraint; args...) =
-    con_str(REPLMode, c, repl)
-con_str(::Type{IJuliaMode}, c::SOCConstraint; mathmode=true) =
-    math(con_str(IJuliaMode, c, ijulia), mathmode)
+# Base.show(io::IO, c::SOCConstraint) = print(io, con_str(REPLMode,c))
+# Base.show(io::IO, ::MIME"text/latex", c::SOCConstraint) =
+#     print(io, con_str(IJuliaMode,c))
+# function con_str(mode, c::SOCConstraint, sym::PrintSymbols)
+#     ne = c.normexpr
+#     coeff = ne.coeff == 1 ? "" : string(ne.coeff, " ")
+#     nrm   = norm_str(mode, ne.norm)
+#     aff   = aff_str(mode, -ne.aff)
+#     string(coeff, nrm, " $(repl[:leq]) ", aff)
+# end
+# # Handlers to use correct symbols
+# con_str(::Type{REPLMode}, c::SOCConstraint; args...) =
+#     con_str(REPLMode, c, repl)
+# con_str(::Type{IJuliaMode}, c::SOCConstraint; mathmode=true) =
+#     math(con_str(IJuliaMode, c, ijulia), mathmode)
 
 #------------------------------------------------------------------------
 ## SOSConstraint
 #------------------------------------------------------------------------
-Base.show(io::IO, c::SOSConstraint) = print(io, con_str(REPLMode,c))
-Base.show(io::IO, ::MIME"text/latex", c::SOSConstraint) =
-    print(io, con_str(IJuliaMode,c,mathmode=false))
-# Generic string converter, called by mode-specific handlers
-function con_str(mode, c::SOSConstraint, sym::PrintSymbols)
-    term_str = [string(str_round(c.weights[i]), " ", c.terms[i])
-                    for i in 1:length(c.terms)]
-    "$(c.sostype): $(sym[:open_set])$(join(term_str,", "))$(sym[:close_set])"
-end
-# Handlers to use correct symbols
-con_str(::Type{REPLMode}, c::SOSConstraint; args...) =
-    con_str(REPLMode, c, repl)
-con_str(::Type{IJuliaMode}, c::SOSConstraint; mathmode=true) =
-    math(con_str(IJuliaMode, c, ijulia), mathmode)
+# Base.show(io::IO, c::SOSConstraint) = print(io, con_str(REPLMode,c))
+# Base.show(io::IO, ::MIME"text/latex", c::SOSConstraint) =
+#     print(io, con_str(IJuliaMode,c,mathmode=false))
+# # Generic string converter, called by mode-specific handlers
+# function con_str(mode, c::SOSConstraint, sym::PrintSymbols)
+#     term_str = [string(str_round(c.weights[i]), " ", c.terms[i])
+#                     for i in 1:length(c.terms)]
+#     "$(c.sostype): $(sym[:open_set])$(join(term_str,", "))$(sym[:close_set])"
+# end
+# # Handlers to use correct symbols
+# con_str(::Type{REPLMode}, c::SOSConstraint; args...) =
+#     con_str(REPLMode, c, repl)
+# con_str(::Type{IJuliaMode}, c::SOSConstraint; mathmode=true) =
+#     math(con_str(IJuliaMode, c, ijulia), mathmode)
 
 #------------------------------------------------------------------------
 ## SDConstraint
 #------------------------------------------------------------------------
-Base.show(io::IO, c::SDConstraint) = print(io, con_str(REPLMode,c))
-Base.show(io::IO, ::MIME"text/latex", c::SDConstraint) =
-    print(io, con_str(IJuliaMode,c,mathmode=false))
-# Generic string converter, called by mode-specific handlers
-function con_str(mode, c::SDConstraint, succeq0)
-    t = c.terms
-    str = sprint(show, MIME"text/plain"(), t)
-    splitted = split(str, "\n")[2:end]
-    center = ceil(Int, length(splitted)/2)
-    splitted[center] *= succeq0
-    join(splitted, "\n")
-end
-# Handlers to use correct symbols
-con_str(::Type{REPLMode}, c::SDConstraint; args...) =
-    con_str(REPLMode, c, repl[:succeq0])
-con_str(::Type{IJuliaMode}, c::SDConstraint; mathmode=true) =
-    math(con_str(IJuliaMode, c, ijulia[:succeq0], mathmode))
+# Base.show(io::IO, c::SDConstraint) = print(io, con_str(REPLMode,c))
+# Base.show(io::IO, ::MIME"text/latex", c::SDConstraint) =
+#     print(io, con_str(IJuliaMode,c,mathmode=false))
+# # Generic string converter, called by mode-specific handlers
+# function con_str(mode, c::SDConstraint, succeq0)
+#     t = c.terms
+#     str = sprint(show, MIME"text/plain"(), t)
+#     splitted = split(str, "\n")[2:end]
+#     center = ceil(Int, length(splitted)/2)
+#     splitted[center] *= succeq0
+#     join(splitted, "\n")
+# end
+# # Handlers to use correct symbols
+# con_str(::Type{REPLMode}, c::SDConstraint; args...) =
+#     con_str(REPLMode, c, repl[:succeq0])
+# con_str(::Type{IJuliaMode}, c::SDConstraint; mathmode=true) =
+#     math(con_str(IJuliaMode, c, ijulia[:succeq0], mathmode))
 
 #------------------------------------------------------------------------
 ## NonlinearConstraint
@@ -924,27 +924,27 @@ function con_str(m::Model, mode, c::NonlinearConstraint, sym)
     out_str
 end
 # Handlers to use correct symbols
-con_str(m::Model, ::Type{REPLMode}, c::GenericRangeConstraint; args...) =
-    con_str(m, REPLMode, c, repl)
-con_str(m::Model, ::Type{IJuliaMode}, c::GenericRangeConstraint; mathmode=true) =
-    math(con_str(m, IJuliaMode, c, ijulia), mathmode)
+# con_str(m::Model, ::Type{REPLMode}, c::GenericRangeConstraint; args...) =
+#     con_str(m, REPLMode, c, repl)
+# con_str(m::Model, ::Type{IJuliaMode}, c::GenericRangeConstraint; mathmode=true) =
+#     math(con_str(m, IJuliaMode, c, ijulia), mathmode)
 #------------------------------------------------------------------------
 ## ConstraintRef
 #------------------------------------------------------------------------
-Base.show(io::IO, c::ConstraintRef{Model,LinearConstraint}) = print(io, con_str(REPLMode,c.m.linconstr[c.idx]))
-Base.show(io::IO, c::ConstraintRef{Model,QuadConstraint})   = print(io, con_str(REPLMode,c.m.quadconstr[c.idx]))
-Base.show(io::IO, c::ConstraintRef{Model,SOSConstraint})    = print(io, con_str(REPLMode,c.m.sosconstr[c.idx]))
-Base.show(io::IO, c::ConstraintRef{Model,SOCConstraint})    = print(io, con_str(REPLMode,c.m.socconstr[c.idx]))
-Base.show(io::IO, c::ConstraintRef{Model,SDConstraint})     = print(io, con_str(REPLMode,c.m.sdpconstr[c.idx]))
-Base.show(io::IO, c::ConstraintRef{Model,NonlinearConstraint}) = print(io, con_str(c.m, REPLMode, c.m.nlpdata.nlconstr[c.idx]))
-
-Base.show(io::IO, ::MIME"text/latex", c::ConstraintRef{Model,LinearConstraint}) =
-    print(io, con_str(IJuliaMode,c.m.linconstr[c.idx],mathmode=false))
-Base.show(io::IO, ::MIME"text/latex", c::ConstraintRef{Model,QuadConstraint}) =
-    print(io, con_str(IJuliaMode,c.m.quadconstr[c.idx],mathmode=false))
-Base.show(io::IO, ::MIME"text/latex", c::ConstraintRef{Model,SOSConstraint}) =
-    print(io, con_str(IJuliaMode,c.m.sosconstr[c.idx],mathmode=false))
-Base.show(io::IO, ::MIME"text/latex", c::ConstraintRef{Model,NonlinearConstraint}) = print(io, con_str(c.m, IJuliaMode, c.m.nlpdata.nlconstr[c.idx],mathmode=false))
+# Base.show(io::IO, c::ConstraintRef{Model,LinearConstraint}) = print(io, con_str(REPLMode,c.m.linconstr[c.idx]))
+# Base.show(io::IO, c::ConstraintRef{Model,QuadConstraint})   = print(io, con_str(REPLMode,c.m.quadconstr[c.idx]))
+# Base.show(io::IO, c::ConstraintRef{Model,SOSConstraint})    = print(io, con_str(REPLMode,c.m.sosconstr[c.idx]))
+# Base.show(io::IO, c::ConstraintRef{Model,SOCConstraint})    = print(io, con_str(REPLMode,c.m.socconstr[c.idx]))
+# Base.show(io::IO, c::ConstraintRef{Model,SDConstraint})     = print(io, con_str(REPLMode,c.m.sdpconstr[c.idx]))
+# Base.show(io::IO, c::ConstraintRef{Model,NonlinearConstraint}) = print(io, con_str(c.m, REPLMode, c.m.nlpdata.nlconstr[c.idx]))
+#
+# Base.show(io::IO, ::MIME"text/latex", c::ConstraintRef{Model,LinearConstraint}) =
+#     print(io, con_str(IJuliaMode,c.m.linconstr[c.idx],mathmode=false))
+# Base.show(io::IO, ::MIME"text/latex", c::ConstraintRef{Model,QuadConstraint}) =
+#     print(io, con_str(IJuliaMode,c.m.quadconstr[c.idx],mathmode=false))
+# Base.show(io::IO, ::MIME"text/latex", c::ConstraintRef{Model,SOSConstraint}) =
+#     print(io, con_str(IJuliaMode,c.m.sosconstr[c.idx],mathmode=false))
+# Base.show(io::IO, ::MIME"text/latex", c::ConstraintRef{Model,NonlinearConstraint}) = print(io, con_str(c.m, IJuliaMode, c.m.nlpdata.nlconstr[c.idx],mathmode=false))
 
 #------------------------------------------------------------------------
 ## Nonlinear expression/parameter reference

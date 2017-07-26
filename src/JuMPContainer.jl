@@ -104,14 +104,10 @@ pushmeta!(x::JuMPContainer, sym::Symbol, val) = (metadata(x)[sym] = val)
 getmeta(x::JuMPContainer, sym::Symbol) = metadata(x)[sym]
 hasmeta(x::JuMPContainer, sym::Symbol) = haskey(metadata(x), sym)
 
-# duck typing approach -- if eltype(innerArray) doesn't support accessor, will fail
-for accessor in (:getdual, :getlowerbound, :getupperbound, :getvalue)
+# TODO do we want this or should we use broadcast syntax?
+for accessor in (:getdual, :getlowerbound, :getupperbound, :getstart)
     @eval $accessor(x::AbstractArray) = map($accessor,x)
-end
-# With JuMPContainer, we take care in _mapInner of the warning if NaN values are returned
-# by the accessor so we use the inner accessor that does not generate warnings
-for (accessor, inner) in ((:getdual, :_getDual), (:getlowerbound, :getlowerbound), (:getupperbound, :getupperbound), (:getstart, :getstart))
-    @eval $accessor(x::JuMPContainer) = _map($inner,x)
+    @eval $accessor(x::JuMPContainer) = map($accessor,x)
 end
 
 
@@ -121,48 +117,8 @@ _similar{T}(x::Dict{T}) = Dict{T,Float64}()
 _innercontainer(x::JuMPArray) = x.innerArray
 _innercontainer(x::JuMPDict)  = x.tupledict
 
-# Warning for getter returning NaN
-function _warnnan(f, data)
-    if f === _getValue
-        getvaluewarn(data)
-    elseif f === _getDual
-        getdualwarn(data)
-    end
-end
-
-function _mapInner{T}(f, x::JuMPContainer{T})
-    vars = _innercontainer(x)
-    vals = _similar(vars)
-    warnedyet = false
-    for I in eachindex(vars)
-        tmp = f(vars[I])
-        if isnan(tmp) && !warnedyet
-            _warnnan(f, getname(x))
-            warnedyet = true
-        end
-        vals[I] = tmp
-    end
-    vals
-end
-
 JuMPContainer_from(x::JuMPDict,inner) = JuMPDict(inner)
 JuMPContainer_from(x::JuMPArray,inner) = JuMPArray(inner, x.indexsets)
-
-# The name _map is used instead of map so that this function is called instead of map(::Function, ::JuMPArray)
-function _map{T}(f, x::JuMPContainer{T})
-    mapcontainer_warn(f, x)
-    ret = JuMPContainer_from(x, _mapInner(f, x))
-    # I guess copy!(::Dict, ::Dict) isn't defined, so...
-    for (key,val) in metadata(x)
-        pushmeta!(ret, key, val)
-    end
-    # if T == Variable
-    #     m = _getmodel(x)
-    #     # cache indexing info for new container for printing purposes
-    #     m.varData[ret] = printdata(x)
-    # end
-    ret
-end
 
 # delegate zero-argument functions
 for f in (:(Base.ndims), :(Base.length), :(Base.abs))
