@@ -168,54 +168,17 @@ function Base.copy(a::AffExpr, new_model::Model)
     AffExpr(copy(a.vars, new_model), copy(a.coeffs), a.constant)
 end
 
-"""
-    getvalue(a::AffExpr)
-
-Evaluate an `AffExpr` given the current solution values.
-"""
-function getvalue(a::AffExpr)
-    ret = a.constant
-    for it in 1:length(a.vars)
-        ret += a.coeffs[it] * getvalue(a.vars[it])
-    end
-    ret
-end
-
-##########################################################################
-# GenericRangeConstraint
-# l ≤ ∑ aᵢ xᵢ ≤ u
-# The constant part of the internal expression is assumed to be zero
-mutable struct GenericRangeConstraint{TermsType} <: AbstractConstraint
-    terms::TermsType
-    lb::Float64
-    ub::Float64
-end
+# """
+#     getvalue(a::AffExpr)
 #
-# #  b ≤ expr ≤ b   →   ==
-# # -∞ ≤ expr ≤ u   →   <=
-# #  l ≤ expr ≤ ∞   →   >=
-# #  l ≤ expr ≤ u   →   range
-# function sense(c::GenericRangeConstraint)
-#     if c.lb != -Inf
-#         if c.ub != Inf
-#             if c.ub == c.lb
-#                 return :(==)
-#             else
-#                 return :range
-#             end
-#         else
-#                 return :(>=)
-#         end
-#     else #if c.lb == -Inf
-#         c.ub == Inf && error("'Free' constraint sense not supported")
-#         return :(<=)
+# Evaluate an `AffExpr` given the current solution values.
+# """
+# function getvalue(a::AffExpr)
+#     ret = a.constant
+#     for it in 1:length(a.vars)
+#         ret += a.coeffs[it] * getvalue(a.vars[it])
 #     end
-# end
-#
-# function rhs(c::GenericRangeConstraint)
-#     s = sense(c)
-#     s == :range && error("Range constraints do not have a well-defined RHS")
-#     s == :(<=) ? c.ub : c.lb
+#     ret
 # end
 
 # TODO GenericLinearConstraint

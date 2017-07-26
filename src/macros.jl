@@ -8,62 +8,11 @@ using Base.Meta
 issum(s::Symbol) = (s == :sum) || (s == :∑) || (s == :Σ)
 isprod(s::Symbol) = (s == :prod) || (s == :∏)
 
-function curly_to_generator(x)
-    # we have a filter condition
-    x = copy(x)
-    @assert isexpr(x,:curly)
-    if isexpr(x.args[2],:parameters)
-        cond = x.args[2].args[1]
-        body = x.args[3]
-        if length(x.args) == 3 # no iteration set!
-            push!(x.args,:(_ in 1))
-        end
-        for i in length(x.args):-1:4
-            if i == length(x.args)
-                body = Expr(:generator,body,Expr(:filter,cond,x.args[i]))
-            else
-                body = Expr(:generator,body,x.args[i])
-            end
-        end
-    else
-        cond = nothing
-        body = x.args[2]
-        if length(x.args) == 2 # no iteration set!
-            push!(x.args,:(_ in 1))
-        end
-        for i in length(x.args):-1:3
-            body = Expr(:generator,body,x.args[i])
-        end
-    end
-    if isexpr(body.args[1],:generator)
-        body = Expr(:flatten,body)
-    end
-    name = x.args[1]
-    if name == :norm2
-        return Expr(:call,:norm,body)
-    elseif name == :norm1
-        return Expr(:call,:norm,body,1)
-    elseif name == :norminf
-        return Expr(:call,:norm,body,Inf)
-    elseif name == :norm∞
-        return Expr(:call,:norm,body,Inf)
-    else
-        return Expr(:call,name,body)
-    end
+function error_curly(x)
+    Base.error("The curly syntax (sum{},prod{},norm2{}) is no longer supported. Expression: $x.")
 end
 
-function warn_curly(x)
-    genform = curly_to_generator(x)
-    if length(genform.args) == 2
-        # don't print extra parens
-        genstr = "$(genform.args[1])$(genform.args[2])"
-    else
-        genstr = "$genform"
-    end
-    Base.error("The curly syntax (sum{},prod{},norm2{}) is no longer supported. Replace $x with $genstr.")
-end
-
-include("parseExpr_staged.jl")
+include("parseexpr.jl")
 
 ###############################################################################
 # buildrefsets
@@ -343,11 +292,11 @@ function constructconstraint!(aff::AffExpr, lb::Real, ub::Real)
     LinearConstraint(aff,lb-offset,ub-offset)
 end
 
-constructconstraint!(aff::Variable, lb::Real, ub::Real) = constructconstraint!(convert(AffExpr,v),lb,ub)
+# constructconstraint!(aff::Variable, lb::Real, ub::Real) = constructconstraint!(convert(AffExpr,v),lb,ub)
 
 constructconstraint!(q::QuadExpr, lb, ub) = error("Two-sided quadratic constraints not supported. (Try @NLconstraint instead.)")
 
-constructconstraint!(x::AbstractMatrix, ::PSDCone) = SDConstraint(x)
+# constructconstraint!(x::AbstractMatrix, ::PSDCone) = SDConstraint(x)
 
 constraint_error(args, str) = error("In @constraint($(join(args,","))): ", str)
 
@@ -511,188 +460,188 @@ macro constraint(args...)
 end
 
 
-"""
-    @SDconstraint(m, x)
+# """
+#     @SDconstraint(m, x)
+#
+# Adds a semidefinite constraint to the `Model m`. The expression `x` must be a square, two-dimensional array.
+# """
+# macro SDconstraint(m, x)
+#     m = esc(m)
+#
+#     if isa(x, Symbol)
+#         error("in @SDconstraint: Incomplete constraint specification $x. Are you missing a comparison (<= or >=)?")
+#     end
+#
+#     (x.head == :block) &&
+#         error("Code block passed as constraint.")
+#     isexpr(x,:call) && length(x.args) == 3 || error("in @SDconstraint ($(string(x))): constraints must be in one of the following forms:\n" *
+#               "       expr1 <= expr2\n" * "       expr1 >= expr2")
+#     # Build the constraint
+#     # Simple comparison - move everything to the LHS
+#     sense = x.args[1]
+#     if sense == :⪰
+#         sense = :(>=)
+#     elseif sense == :⪯
+#         sense = :(<=)
+#     end
+#     sense,_ = _canonicalize_sense(sense)
+#     lhs = :()
+#     if sense == :(>=)
+#         lhs = :($(x.args[2]) - $(x.args[3]))
+#     elseif sense == :(<=)
+#         lhs = :($(x.args[3]) - $(x.args[2]))
+#     else
+#         error("Invalid sense $sense in SDP constraint")
+#     end
+#     newaff, parsecode = parseExprToplevel(lhs, :q)
+#     assert_validmodel(m, quote
+#         q = zero(AffExpr)
+#         $parsecode
+#         addconstraint($m, constructconstraint!($newaff, PSDCone()))
+#     end)
+# end
 
-Adds a semidefinite constraint to the `Model m`. The expression `x` must be a square, two-dimensional array.
-"""
-macro SDconstraint(m, x)
-    m = esc(m)
 
-    if isa(x, Symbol)
-        error("in @SDconstraint: Incomplete constraint specification $x. Are you missing a comparison (<= or >=)?")
-    end
+# """
+#     @LinearConstraint(x)
+#
+# Constructs a `LinearConstraint` instance efficiently by parsing the `x`. The same as `@constraint`, except it does not attach the constraint to any model.
+# """
+# macro LinearConstraint(x)
+#     (x.head == :block) &&
+#         error("Code block passed as constraint. Perhaps you meant to use @LinearConstraints instead?")
+#
+#     if isexpr(x, :call) && length(x.args) == 3
+#         (sense,vectorized) = _canonicalize_sense(x.args[1])
+#         # Simple comparison - move everything to the LHS
+#         vectorized &&
+#             error("in @LinearConstraint ($(string(x))): Cannot add vectorized constraints")
+#         lhs = :($(x.args[2]) - $(x.args[3]))
+#         return quote
+#             newaff = @Expression($(esc(lhs)))
+#             c = constructconstraint!(newaff,$(quot(sense)))
+#             isa(c, LinearConstraint) ||
+#                 error("Constraint in @LinearConstraint is really a $(typeof(c))")
+#             c
+#         end
+#     elseif isexpr(x, :comparison)
+#         # Ranged row
+#         (lsense,lvectorized) = _canonicalize_sense(x.args[2])
+#         (rsense,rvectorized) = _canonicalize_sense(x.args[4])
+#         if (lsense != :<=) || (rsense != :<=)
+#             error("in @constraint ($(string(x))): only ranged rows of the form lb <= expr <= ub are supported.")
+#         end
+#         (lvectorized || rvectorized) &&
+#             error("in @LinearConstraint ($(string(x))): Cannot add vectorized constraints")
+#         lb = x.args[1]
+#         ub = x.args[5]
+#         return quote
+#             if !isa($(esc(lb)),Number)
+#                 error(string("in @LinearConstraint (",$(string(x)),"): expected ",$(string(lb))," to be a number."))
+#             elseif !isa($(esc(ub)),Number)
+#                 error(string("in @LinearConstraint (",$(string(x)),"): expected ",$(string(ub))," to be a number."))
+#             end
+#             newaff = @Expression($(esc(x.args[3])))
+#             offset = newaff.constant
+#             newaff.constant = 0.0
+#             isa(newaff,AffExpr) || error("Ranged quadratic constraints are not allowed")
+#             LinearConstraint(newaff,$(esc(lb))-offset,$(esc(ub))-offset)
+#         end
+#     else
+#         # Unknown
+#         error("in @LinearConstraint ($(string(x))): constraints must be in one of the following forms:\n" *
+#               "       expr1 <= expr2\n" * "       expr1 >= expr2\n" *
+#               "       expr1 == expr2\n" * "       lb <= expr <= ub")
+#     end
+# end
 
-    (x.head == :block) &&
-        error("Code block passed as constraint.")
-    isexpr(x,:call) && length(x.args) == 3 || error("in @SDconstraint ($(string(x))): constraints must be in one of the following forms:\n" *
-              "       expr1 <= expr2\n" * "       expr1 >= expr2")
-    # Build the constraint
-    # Simple comparison - move everything to the LHS
-    sense = x.args[1]
-    if sense == :⪰
-        sense = :(>=)
-    elseif sense == :⪯
-        sense = :(<=)
-    end
-    sense,_ = _canonicalize_sense(sense)
-    lhs = :()
-    if sense == :(>=)
-        lhs = :($(x.args[2]) - $(x.args[3]))
-    elseif sense == :(<=)
-        lhs = :($(x.args[3]) - $(x.args[2]))
-    else
-        error("Invalid sense $sense in SDP constraint")
-    end
-    newaff, parsecode = parseExprToplevel(lhs, :q)
-    assert_validmodel(m, quote
-        q = zero(AffExpr)
-        $parsecode
-        addconstraint($m, constructconstraint!($newaff, PSDCone()))
-    end)
-end
+# """
+#     @QuadConstraint(x)
+#
+# Constructs a `QuadConstraint` instance efficiently by parsing the `x`. The same as `@constraint`, except it does not attach the constraint to any model.
+# """
+# macro QuadConstraint(x)
+#     (x.head == :block) &&
+#         error("Code block passed as constraint. Perhaps you meant to use @QuadConstraints instead?")
+#
+#     if isexpr(x, :call) && length(x.args) == 3
+#         (sense,vectorized) = _canonicalize_sense(x.args[1])
+#         # Simple comparison - move everything to the LHS
+#         vectorized &&
+#             error("in @QuadConstraint ($(string(x))): Cannot add vectorized constraints")
+#         lhs = :($(x.args[2]) - $(x.args[3]))
+#         return quote
+#             newaff = @Expression($(esc(lhs)))
+#             q = constructconstraint!(newaff,$(quot(sense)))
+#             isa(q, QuadConstraint) || error("Constraint in @QuadConstraint is really a $(typeof(q))")
+#             q
+#         end
+#     elseif isexpr(x, :comparison)
+#         error("Ranged quadratic constraints are not allowed")
+#     else
+#         # Unknown
+#         error("in @QuadConstraint ($(string(x))): constraints must be in one of the following forms:\n" *
+#               "       expr1 <= expr2\n" * "       expr1 >= expr2\n" *
+#               "       expr1 == expr2")
+#     end
+# end
 
+# macro SOCConstraint(x)
+#     (x.head == :block) &&
+#         error("Code block passed as constraint. Perhaps you meant to use @SOCConstraints instead?")
+#
+#     if isexpr(x, :call) && length(x.args) == 3
+#         (sense,vectorized) = _canonicalize_sense(x.args[1])
+#         # Simple comparison - move everything to the LHS
+#         vectorized &&
+#             error("in @SOCConstraint ($(string(x))): Cannot add vectorized constraints")
+#         lhs = :($(x.args[2]) - $(x.args[3]))
+#         return quote
+#             newaff = @Expression($(esc(lhs)))
+#             q = constructconstraint!(newaff,$(quot(sense)))
+#             isa(q, SOCConstraint) || error("Constraint in @SOCConstraint is really a $(typeof(q))")
+#             q
+#         end
+#     elseif isexpr(x, :comparison)
+#         error("Ranged second-order cone constraints are not allowed")
+#     else
+#         # Unknown
+#         error("in @SOCConstraint ($(string(x))): constraints must be in one of the following forms:\n" *
+#               "       expr1 <= expr2\n" * "       expr1 >= expr2")
+#     end
+# end
 
-"""
-    @LinearConstraint(x)
-
-Constructs a `LinearConstraint` instance efficiently by parsing the `x`. The same as `@constraint`, except it does not attach the constraint to any model.
-"""
-macro LinearConstraint(x)
-    (x.head == :block) &&
-        error("Code block passed as constraint. Perhaps you meant to use @LinearConstraints instead?")
-
-    if isexpr(x, :call) && length(x.args) == 3
-        (sense,vectorized) = _canonicalize_sense(x.args[1])
-        # Simple comparison - move everything to the LHS
-        vectorized &&
-            error("in @LinearConstraint ($(string(x))): Cannot add vectorized constraints")
-        lhs = :($(x.args[2]) - $(x.args[3]))
-        return quote
-            newaff = @Expression($(esc(lhs)))
-            c = constructconstraint!(newaff,$(quot(sense)))
-            isa(c, LinearConstraint) ||
-                error("Constraint in @LinearConstraint is really a $(typeof(c))")
-            c
-        end
-    elseif isexpr(x, :comparison)
-        # Ranged row
-        (lsense,lvectorized) = _canonicalize_sense(x.args[2])
-        (rsense,rvectorized) = _canonicalize_sense(x.args[4])
-        if (lsense != :<=) || (rsense != :<=)
-            error("in @constraint ($(string(x))): only ranged rows of the form lb <= expr <= ub are supported.")
-        end
-        (lvectorized || rvectorized) &&
-            error("in @LinearConstraint ($(string(x))): Cannot add vectorized constraints")
-        lb = x.args[1]
-        ub = x.args[5]
-        return quote
-            if !isa($(esc(lb)),Number)
-                error(string("in @LinearConstraint (",$(string(x)),"): expected ",$(string(lb))," to be a number."))
-            elseif !isa($(esc(ub)),Number)
-                error(string("in @LinearConstraint (",$(string(x)),"): expected ",$(string(ub))," to be a number."))
-            end
-            newaff = @Expression($(esc(x.args[3])))
-            offset = newaff.constant
-            newaff.constant = 0.0
-            isa(newaff,AffExpr) || error("Ranged quadratic constraints are not allowed")
-            LinearConstraint(newaff,$(esc(lb))-offset,$(esc(ub))-offset)
-        end
-    else
-        # Unknown
-        error("in @LinearConstraint ($(string(x))): constraints must be in one of the following forms:\n" *
-              "       expr1 <= expr2\n" * "       expr1 >= expr2\n" *
-              "       expr1 == expr2\n" * "       lb <= expr <= ub")
-    end
-end
-
-"""
-    @QuadConstraint(x)
-
-Constructs a `QuadConstraint` instance efficiently by parsing the `x`. The same as `@constraint`, except it does not attach the constraint to any model.
-"""
-macro QuadConstraint(x)
-    (x.head == :block) &&
-        error("Code block passed as constraint. Perhaps you meant to use @QuadConstraints instead?")
-
-    if isexpr(x, :call) && length(x.args) == 3
-        (sense,vectorized) = _canonicalize_sense(x.args[1])
-        # Simple comparison - move everything to the LHS
-        vectorized &&
-            error("in @QuadConstraint ($(string(x))): Cannot add vectorized constraints")
-        lhs = :($(x.args[2]) - $(x.args[3]))
-        return quote
-            newaff = @Expression($(esc(lhs)))
-            q = constructconstraint!(newaff,$(quot(sense)))
-            isa(q, QuadConstraint) || error("Constraint in @QuadConstraint is really a $(typeof(q))")
-            q
-        end
-    elseif isexpr(x, :comparison)
-        error("Ranged quadratic constraints are not allowed")
-    else
-        # Unknown
-        error("in @QuadConstraint ($(string(x))): constraints must be in one of the following forms:\n" *
-              "       expr1 <= expr2\n" * "       expr1 >= expr2\n" *
-              "       expr1 == expr2")
-    end
-end
-
-macro SOCConstraint(x)
-    (x.head == :block) &&
-        error("Code block passed as constraint. Perhaps you meant to use @SOCConstraints instead?")
-
-    if isexpr(x, :call) && length(x.args) == 3
-        (sense,vectorized) = _canonicalize_sense(x.args[1])
-        # Simple comparison - move everything to the LHS
-        vectorized &&
-            error("in @SOCConstraint ($(string(x))): Cannot add vectorized constraints")
-        lhs = :($(x.args[2]) - $(x.args[3]))
-        return quote
-            newaff = @Expression($(esc(lhs)))
-            q = constructconstraint!(newaff,$(quot(sense)))
-            isa(q, SOCConstraint) || error("Constraint in @SOCConstraint is really a $(typeof(q))")
-            q
-        end
-    elseif isexpr(x, :comparison)
-        error("Ranged second-order cone constraints are not allowed")
-    else
-        # Unknown
-        error("in @SOCConstraint ($(string(x))): constraints must be in one of the following forms:\n" *
-              "       expr1 <= expr2\n" * "       expr1 >= expr2")
-    end
-end
-
-for (mac,sym) in [(:LinearConstraints, Symbol("@LinearConstraint")),
-                  (:QuadConstraints,   Symbol("@QuadConstraint")),
-                  (:SOCConstraints,    Symbol("@SOCConstraint"))]
-    @eval begin
-        macro $mac(x)
-            x.head == :block || error(string("Invalid syntax for @", $(string(mac))))
-            @assert x.args[1].head == :line
-            code = Expr(:vect)
-            for it in x.args
-                if it.head == :line
-                    # do nothing
-                elseif it.head == :comparison || (it.head == :call && it.args[1] in (:<=,:≤,:>=,:≥,:(==))) # regular constraint
-                    push!(code.args, Expr(:macrocall, $sym, esc(it)))
-                elseif it.head == :tuple # constraint ref
-                    if all([isexpr(arg,:comparison) for arg in it.args]...)
-                        # the user probably had trailing commas at end of lines, e.g.
-                        # @LinearConstraints(m, begin
-                        #     x <= 1,
-                        #     x >= 1
-                        # end)
-                        error(string("Invalid syntax in @", $(string(mac)), ". Do you have commas at the end of a line specifying a constraint?"))
-                    end
-                    error("@", string($(string(mac)), " does not currently support the two argument syntax for specifying groups of constraints in one line."))
-                else
-                    error("Unexpected constraint expression $it")
-                end
-            end
-            return code
-        end
-    end
-end
+# for (mac,sym) in [(:LinearConstraints, Symbol("@LinearConstraint")),
+#                   (:QuadConstraints,   Symbol("@QuadConstraint")),
+#                   (:SOCConstraints,    Symbol("@SOCConstraint"))]
+#     @eval begin
+#         macro $mac(x)
+#             x.head == :block || error(string("Invalid syntax for @", $(string(mac))))
+#             @assert x.args[1].head == :line
+#             code = Expr(:vect)
+#             for it in x.args
+#                 if it.head == :line
+#                     # do nothing
+#                 elseif it.head == :comparison || (it.head == :call && it.args[1] in (:<=,:≤,:>=,:≥,:(==))) # regular constraint
+#                     push!(code.args, Expr(:macrocall, $sym, esc(it)))
+#                 elseif it.head == :tuple # constraint ref
+#                     if all([isexpr(arg,:comparison) for arg in it.args]...)
+#                         # the user probably had trailing commas at end of lines, e.g.
+#                         # @LinearConstraints(m, begin
+#                         #     x <= 1,
+#                         #     x >= 1
+#                         # end)
+#                         error(string("Invalid syntax in @", $(string(mac)), ". Do you have commas at the end of a line specifying a constraint?"))
+#                     end
+#                     error("@", string($(string(mac)), " does not currently support the two argument syntax for specifying groups of constraints in one line."))
+#                 else
+#                     error("Unexpected constraint expression $it")
+#                 end
+#             end
+#             return code
+#         end
+#     end
+# end
 
 for (mac,sym) in [(:constraints,  Symbol("@constraint")),
                   (:NLconstraints,Symbol("@NLconstraint")),

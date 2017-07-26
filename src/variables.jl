@@ -369,25 +369,25 @@ function getresult(arr::Array{Variable})
 end
 
 # Dual value (reduced cost) getter
-
-# internal method that doesn't print a warning if the value is NaN
-_getDual(v::Variable) = v.m.redCosts[v.col]
-
-getdualwarn(::Variable) = warn("Variable bound duals (reduced costs) not available. Check that the model was properly solved and no integer variables are present.")
-
-"""
-    getdual(v::Variable)
-
-Get the reduced cost of this variable in the solution. Similar behavior to `getvalue` for indexable variables.
-"""
-function getdual(v::Variable)
-    if length(v.m.redCosts) < MathProgBase.numvar(v.m)
-        getdualwarn(v)
-        NaN
-    else
-        _getDual(v)
-    end
-end
+#
+# # internal method that doesn't print a warning if the value is NaN
+# _getDual(v::Variable) = v.m.redCosts[v.col]
+#
+# getdualwarn(::Variable) = warn("Variable bound duals (reduced costs) not available. Check that the model was properly solved and no integer variables are present.")
+#
+# """
+#     getdual(v::Variable)
+#
+# Get the reduced cost of this variable in the solution. Similar behavior to `getvalue` for indexable variables.
+# """
+# function getdual(v::Variable)
+#     if length(v.m.redCosts) < MathProgBase.numvar(v.m)
+#         getdualwarn(v)
+#         NaN
+#     else
+#         _getDual(v)
+#     end
+# end
 
 # const var_cats = [:Cont, :Int, :Bin, :SemiCont, :SemiInt]
 #
