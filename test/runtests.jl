@@ -16,8 +16,11 @@ using Base.Test
 using MathOptInterface
 const MOI = MathOptInterface
 
+
+using CSDP
+
 # Load solvers
-include("solvers.jl")
+#include("solvers.jl")
 
 # Static tests - most don't require a solver
 #include("print.jl")
