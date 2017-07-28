@@ -35,15 +35,20 @@ export
     PSDCone,
 # Functions
     # Model related
-    getobjectivebound, getobjectivevalue, getobjective,
-    getobjectivesense, setobjectivesense, setsolver,
+    setobjectivesense, setsolver,
     writeLP, writeMPS,
-    addSOS1, addSOS2, solve,
+    #addSOS1, addSOS2,
+    solve,
     internalmodel,
     # Variable
-    setname, getname, setlowerbound, setupperbound, getlowerbound, getupperbound,
-    getvalue, setvalue, getdual, setcategory, getcategory,
-    getstart, setstart,
+    setname,
+    #getname,
+    setlowerbound, setupperbound,
+    #getlowerbound, getupperbound,
+    #getvalue, setvalue,
+    getdual,
+    #setcategory, getcategory,
+    setstart,
     linearindex,
     # Expressions and constraints
     linearterms,
@@ -72,7 +77,7 @@ const BINREF = MOICON{MOI.SingleVariable,MOI.ZeroOne}
 @MOIU.instance JuMPInstance (ZeroOne, Integer) (EqualTo, GreaterThan, LessThan, Interval) (Zeros, Nonnegatives, Nonpositives) () (SingleVariable,) (ScalarAffineFunction,) (VectorOfVariables,) (VectorAffineFunction,)
 
 # dummy solver
-type UnsetSolver <: MathProgBase.AbstractMathProgSolver
+type UnsetSolver <: MathOptInterface.AbstractSolver
 end
 
 ###############################################################################
@@ -89,6 +94,7 @@ mutable struct Model <: AbstractModel
     variabletofix::Dict{MOIVAR,FIXREF}
     variabletointegrality::Dict{MOIVAR,INTREF}
     variabletozeroone::Dict{MOIVAR,BINREF}
+    variabletosolvervariable::Dict{MOIVAR,MOIVAR}
 
     # convenient solution objects to keep in the model
     variablestart #VariableToValueMap{Float64}
@@ -145,9 +151,9 @@ mutable struct Model <: AbstractModel
 
     # hook into a solve call...function of the form f(m::Model; kwargs...),
     # where kwargs get passed along to subsequent solve calls
-    solvehook
-    # ditto for a print hook
-    printhook
+    # solvehook
+    # # ditto for a print hook
+    # printhook
 
     # List of JuMPContainer{Variables} associated with model
     dictlist::Vector
@@ -172,8 +178,9 @@ mutable struct Model <: AbstractModel
     ext::Dict{Symbol,Any}
     # Default constructor
     function Model(;solver=UnsetSolver(), simplify_nonlinear_expressions::Bool=false)
-        if !isa(solver,MathProgBase.AbstractMathProgSolver)
-            error("solver argument ($solver) must be an AbstractMathProgSolver")
+        # TODO need to support MPB also
+        if !isa(solver,MOI.AbstractSolver)
+            error("solver argument ($solver) must be an AbstractSolver")
         end
         m = new()
         # TODO make pretty
@@ -190,10 +197,11 @@ mutable struct Model <: AbstractModel
         m.objbound = 0.0
         m.objval = 0.0
         m.solverinstance = nothing
+        m.solver = solver
         m.solverinstanceattached = false
         m.callbacks = Any[]
-        m.solvehook = nothing
-        m.printhook = nothing
+        # m.solvehook = nothing
+        # m.printhook = nothing
         m.dictlist = Any[]
         m.nlpdata = nothing
         m.simplify_nonlinear_expressions = simplify_nonlinear_expressions
@@ -353,25 +361,25 @@ numnlconstr(m::Model) = m.nlpdata !== nothing ? length(m.nlpdata.nlconstr) : 0
 
 
 """
-    getobjectivebound(m::Model)
+    objectivebound(m::Model)
 
-returns the best known bound on the optimal objective value after a call to `solve`
+Return the best known bound on the optimal objective value after a call to `solve`.
 """
-getobjectivebound(m::Model) = m.objbound
-
-"""
-    getobjectivevalue(m::Model)
-
-returns objective value after a call to `solve`
-"""
-getobjectivevalue(m::Model) = m.objval
+objectivebound(m::Model) = MOI.getattribute(m, MOI.ObjectiveBound())
 
 """
-    getobjectivesense(m::Model)
+    objectivevalue(m::Model)
+
+Return the objective value after a call to `solve`.
+"""
+objectivevalue(m::Model) = MOI.getattribute(m, MOI.ObjectiveValue())
+
+"""
+    objectivesense(m::Model)
 
 Return the objective sense, `:Min`, `:Max`, or `:Feasibility`.
 """
-function getobjectivesense(m::Model)
+function objectivesense(m::Model)
     moisense = MOI.getattribute(m.instance, MOI.Sense())
     if moisense == MOI.MinSense
         return :Min
@@ -383,6 +391,8 @@ function getobjectivesense(m::Model)
     end
 end
 
+terminationstatus(m::Model) = MOI.getattribute(m, MOI.TerminationStatus())
+primalstatus(m::Model) = MOI.getattribute(m, MOI.PrimalStatus())
 
 # """
 #     setobjectivesense(m::Model, newSense::Symbol)
@@ -402,11 +412,11 @@ end
 #     error("in setobjective: array of size $(_size(x)) passed as objective; only scalar objectives are allowed")
 
 """
-    setsolver(m::Model, solver::MathProgBase.AbstractMathProgSolver)
+    setsolver(m::Model, solver::MathOptInterface.AbstractSolver)
 
 Change the solver which will be used for the next call to `solve()`, discarding the current internal model if present.
 """
-function setsolver(m::Model, solver::MathProgBase.AbstractMathProgSolver)
+function setsolver(m::Model, solver::MOI.AbstractSolver)
     m.solver = solver
     m.solverinstance = nothing
     m.solverinstanceattached = false
@@ -560,7 +570,7 @@ include("affexpr.jl")
 # LinearConstraint(ref::LinConstrRef) = ref.m.linconstr[ref.idx]::LinearConstraint
 
 
-function getconstraint(cref::ConstraintRef{Model}, ::Type{AffExpr})
+function constraintobject(cref::ConstraintRef{Model}, ::Type{AffExpr})
     m = cref.m
     f = MOI.getattribute(m.instance, MOI.ConstraintFunction(), cref.instanceref)
     s = MOI.getattribute(m.instance, MOI.ConstraintSet(), cref.instanceref)
@@ -807,19 +817,12 @@ Base.ndims(::JuMPTypes) = 0
 
 
 ##########################################################################
-# Operator overloads
 include("operators.jl")
-# Writers - we support MPS (MILP + QuadObj), LP (MILP)
 # include("writers.jl")
-# Macros - @defVar, sum{}, etc.
 include("macros.jl")
-# Solvers
-# include("solvers.jl")
-# Callbacks - lazy, cuts, ...
+include("solverinterface.jl")
 # include("callbacks.jl")
-# Nonlinear-specific code
 include("nlp.jl")
-# Pretty-printing of JuMP-defined types.
 include("print.jl")
 
 # getvalue{T<:JuMPTypes}(arr::Array{T}) = map(getvalue, arr)

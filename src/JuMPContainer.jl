@@ -105,10 +105,10 @@ getmeta(x::JuMPContainer, sym::Symbol) = metadata(x)[sym]
 hasmeta(x::JuMPContainer, sym::Symbol) = haskey(metadata(x), sym)
 
 # TODO do we want this or should we use broadcast syntax?
-for accessor in (:getdual, :getlowerbound, :getupperbound, :getstart)
-    @eval $accessor(x::AbstractArray) = map($accessor,x)
-    @eval $accessor(x::JuMPContainer) = map($accessor,x)
-end
+# for accessor in (:getdual, :getlowerbound, :getupperbound, :getstart)
+#     @eval $accessor(x::AbstractArray) = map($accessor,x)
+#     @eval $accessor(x::JuMPContainer) = map($accessor,x)
+# end
 
 
 _similar(x::Array) = Array{Float64}(size(x))

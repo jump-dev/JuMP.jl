@@ -151,12 +151,12 @@ function setobjective(m::Model, sense::Symbol, a::AffExpr)
 end
 
 """
-    getobjective(m::Model, ::Type{AffExpr})
+    objectivefunction(m::Model, ::Type{AffExpr})
 
 Return an `AffExpr` object representing the objective function.
 Error if the objective is not linear.
 """
-function getobjective(m::Model, ::Type{AffExpr})
+function objectivefunction(m::Model, ::Type{AffExpr})
     f = MOI.getattribute(m.instance, MOI.ObjectiveFunction())::MOI.ScalarAffineFunction
     return AffExpr(m, f)
 end
