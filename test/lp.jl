@@ -1,7 +1,3 @@
-
-using CSDP
-
-
 @testset "Linear Programming" begin
     @testset "LP1" begin
         # simple 2 variable, 1 constraint problem
