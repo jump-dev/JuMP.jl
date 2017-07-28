@@ -1,3 +1,9 @@
+#  Copyright 2017, Iain Dunning, Joey Huchette, Miles Lubin, and contributors
+#  This Source Code Form is subject to the terms of the Mozilla Public
+#  License, v. 2.0. If a copy of the MPL was not distributed with this
+#  file, You can obtain one at http://mozilla.org/MPL/2.0/.
+
+
 #############################################################################
 # Variable class
 # Holds a reference to the model and the corresponding
@@ -82,11 +88,11 @@ end
 # end
 
 """
-    getname(v::Variable)
+    name(v::Variable)
 
 Get a variable's internal name.
 """
-getname(v::Variable) = var_str(REPLMode, v)
+name(v::Variable) = var_str(REPLMode, v)
 
 
 ## Bound setter/getters
@@ -95,7 +101,7 @@ getname(v::Variable) = var_str(REPLMode, v)
 
 haslowerbound(v::Variable) = haskey(v.m.variabletolowerbound,instancereference(v))
 
-function getlowerboundreference(v::Variable)
+function lowerboundreference(v::Variable)
     @assert haslowerbound(v) # TODO error message
     return v.m.variabletolowerbound[instancereference(v)]
 end
@@ -112,7 +118,7 @@ function setlowerbound(v::Variable,lower::Number)
     newset = MOI.GreaterThan(convert(Float64,lower))
     # do we have a lower bound already?
     if haslowerbound(v)
-        cref = getlowerboundreference(v)
+        cref = lowerboundreference(v)
         MOI.modifyconstraint!(v.m.instance, cref, newset)
         @assert !v.m.solverinstanceattached # TODO
     else
@@ -129,7 +135,7 @@ end
 Delete the lower bound constraint of a variable.
 """
 function deletelowerbound(v::Variable)
-    cref = getlowerboundreference(v)
+    cref = lowerboundreference(v)
     delete!(v.m.instance, cref)
     delete!(v.m.variabletolowerbound, instancereference(v))
     @assert !v.m.solverinstanceattached # TODO
@@ -137,12 +143,12 @@ function deletelowerbound(v::Variable)
 end
 
 """
-    getlowerbound(v::Variable)
+    lowerbound(v::Variable)
 
 Return the lower bound of a variable. Error if one does not exist.
 """
-function getlowerbound(v::Variable)
-    cref = getlowerboundreference(v)
+function lowerbound(v::Variable)
+    cref = lowerboundreference(v)
     cset = MOI.getattribute(v.m.instance, MOI.ConstraintSet(), cref)::MOI.GreaterThan
     return cset.lower
 end
@@ -151,7 +157,7 @@ end
 
 hasupperbound(v::Variable) = haskey(v.m.variabletoupperbound,instancereference(v))
 
-function getupperboundreference(v::Variable)
+function upperboundreference(v::Variable)
     @assert hasupperbound(v) # TODO error message
     return v.m.variabletoupperbound[instancereference(v)]
 end
@@ -168,7 +174,7 @@ function setupperbound(v::Variable,upper::Number)
     newset = MOI.LessThan(convert(Float64,upper))
     # do we have an upper bound already?
     if hasupperbound(v)
-        cref = getupperboundreference(v)
+        cref = upperboundreference(v)
         MOI.modifyconstraint!(v.m.instance, cref, newset)
         @assert !v.m.solverinstanceattached # TODO
     else
@@ -193,12 +199,12 @@ function deleteupperbound(v::Variable)
 end
 
 """
-    getupperbound(v::Variable)
+    upperbound(v::Variable)
 
 Return the upper bound of a variable. Error if one does not exist.
 """
-function getupperbound(v::Variable)
-    cref = getupperboundreference(v)
+function upperbound(v::Variable)
+    cref = upperboundreference(v)
     cset = MOI.getattribute(v.m.instance, MOI.ConstraintSet(), cref)::MOI.LessThan
     return cset.upper
 end
@@ -207,7 +213,7 @@ end
 
 isfixed(v::Variable) = haskey(v.m.variabletofix,instancereference(v))
 
-function getfixreference(v::Variable)
+function fixreference(v::Variable)
     @assert isfixed(v) # TODO error message
     return v.m.variabletofix[instancereference(v)]
 end
@@ -224,7 +230,7 @@ function fix(v::Variable,upper::Number)
     newset = MOI.EqualTo(convert(Float64,upper))
     # are we already fixed?
     if isfixed(v)
-        cref = getfixreference(v)
+        cref = fixreference(v)
         MOI.modifyconstraint!(v.m.instance, cref, newset)
         @assert !v.m.solverinstanceattached # TODO
     else
@@ -249,12 +255,12 @@ function unfix(v::Variable)
 end
 
 """
-    getfixvalue(v::Variable)
+    fixvalue(v::Variable)
 
 Return the value to which a variable is fixed. Error if one does not exist.
 """
-function getfixvalue(v::Variable)
-    cref = getfixreference(v)
+function fixvalue(v::Variable)
+    cref = fixreference(v)
     cset = MOI.getattribute(v.m.instance, MOI.ConstraintSet(), cref)::MOI.EqualTo
     return cset.value
 end
@@ -263,7 +269,7 @@ end
 
 isinteger(v::Variable) = haskey(v.m.variabletointegrality,instancereference(v))
 
-function getintegerreference(v::Variable)
+function integerreference(v::Variable)
     @assert isinteger(v) # TODO error message
     return v.m.variabletointegrality[instancereference(v)]
 end
@@ -285,7 +291,7 @@ function setinteger(v::Variable)
 end
 
 function unsetinteger(v::Variable)
-    cref = getintegerreference(v)
+    cref = integerreference(v)
     delete!(v.m.instance, cref)
     delete!(v.m.variabletointegrality, instancereference(v))
     @assert !v.m.solverinstanceattached # TODO
@@ -293,7 +299,7 @@ end
 
 isbinary(v::Variable) = haskey(v.m.variabletozeroone,instancereference(v))
 
-function getbinaryreference(v::Variable)
+function binaryreference(v::Variable)
     @assert isbinary(v) # TODO error message
     return v.m.variabletozeroone[instancereference(v)]
 end
@@ -315,7 +321,7 @@ function setbinary(v::Variable)
 end
 
 function unsetbinary(v::Variable)
-    cref = getbinaryreference(v)
+    cref = binaryreference(v)
     delete!(v.m.instance, cref)
     delete!(v.m.variabletozeroone, instancereference(v))
     @assert !v.m.solverinstanceattached # TODO
@@ -324,49 +330,45 @@ end
 
 # solution objects
 
-getvariablestart(m::Model) = m.variablestart::VariableToValueMap{Float64}
+variablestart(m::Model) = m.variablestart::VariableToValueMap{Float64}
 # TODO do we want these or should we have people use the variablestart object directly?
-getstart(v::Variable) = getvariablestart(v.m)[v]
-setstart(v::Variable, val::Number) = getvariablestart(v.m)[v] = val
+startvalue(v::Variable) = variablestart(v.m)[v]
+setstartvalue(v::Variable, val::Number) = variablestart(v.m)[v] = val
 
-getvariableresult(m::Model) = m.variableresult::VariableToValueMap{Float64}
-hasvariableresult(m::Model) = !isempty(getvariableresult(m))
+variableresult(m::Model) = m.variableresult::VariableToValueMap{Float64}
+hasvariableresult(m::Model) = !isempty(variableresult(m))
 
 """
-    getresult(v::Variable)
+    resultvalue(v::Variable)
 
 Get the value of this variable in the result returned by a solver.
 Use `hasvariableresult` to check if a result exists before asking for values.
 Replaces `getvalue` for most use cases.
 """
-getresult(v::Variable) = getvariableresult(v.m)[v]
+resultvalue(v::Variable) = variableresult(v.m)[v]
 
 @Base.deprecate setvalue(v::Variable, val::Number) setstart(v, val)
 
 
-"""
-    getvalue(arr::Array{Variable})
 
-
-"""
-function getresult(arr::Array{Variable})
-    ret = similar(arr, Float64)
-    # return immediately for empty array
-    if isempty(ret)
-        return ret
-    end
-    m = first(arr).m
-    # whether this was constructed via @variable, essentially
-    registered = haskey(m.varData, arr)
-    for I in eachindex(arr)
-        ret[I] = getresult(arr[I])
-    end
-    # Copy printing data from @variable for Array{Variable} to corresponding Array{Float64} of values
-    if registered
-        m.varData[ret] = m.varData[arr]
-    end
-    ret
-end
+# function resultvalue(arr::Array{Variable})
+#     ret = similar(arr, Float64)
+#     # return immediately for empty array
+#     if isempty(ret)
+#         return ret
+#     end
+#     m = first(arr).m
+#     # whether this was constructed via @variable, essentially
+#     registered = haskey(m.varData, arr)
+#     for I in eachindex(arr)
+#         ret[I] = resultvalue(arr[I])
+#     end
+#     # Copy printing data from @variable for Array{Variable} to corresponding Array{Float64} of values
+#     if registered
+#         m.varData[ret] = m.varData[arr]
+#     end
+#     ret
+# end
 
 # Dual value (reduced cost) getter
 #

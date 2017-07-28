@@ -22,11 +22,11 @@ using Base.Test
         @test !JuMP.haslowerbound(nobounds)
         @test !JuMP.hasupperbound(nobounds)
         @test !JuMP.isfixed(nobounds)
-        @test getname(nobounds) == "nobounds"
+        @test JuMP.name(nobounds) == "nobounds"
 
         @variable(mcon, lbonly >= 0, Bin)
         @test JuMP.haslowerbound(lbonly)
-        @test JuMP.getlowerbound(lbonly) == 0.0
+        @test JuMP.lowerbound(lbonly) == 0.0
         @test !JuMP.hasupperbound(lbonly)
         @test !JuMP.isfixed(lbonly)
         @test JuMP.isbinary(lbonly)
@@ -35,35 +35,35 @@ using Base.Test
         @variable(mcon, ubonly <= 1, Int)
         @test !JuMP.haslowerbound(ubonly)
         @test JuMP.hasupperbound(ubonly)
-        @test JuMP.getupperbound(ubonly) == 1.0
+        @test JuMP.upperbound(ubonly) == 1.0
         @test !JuMP.isfixed(ubonly)
         @test !JuMP.isbinary(ubonly)
         @test JuMP.isinteger(ubonly)
 
         @variable(mcon, 0 <= bothb <= 1)
         @test JuMP.haslowerbound(bothb)
-        @test JuMP.getlowerbound(bothb) == 0.0
+        @test JuMP.lowerbound(bothb) == 0.0
         @test JuMP.hasupperbound(bothb)
-        @test JuMP.getupperbound(bothb) == 1.0
+        @test JuMP.upperbound(bothb) == 1.0
         @test !JuMP.isfixed(bothb)
 
         @variable(mcon, fixed == 1.0)
         @test !JuMP.haslowerbound(fixed)
         @test !JuMP.hasupperbound(fixed)
         @test JuMP.isfixed(fixed)
-        @test JuMP.getfixvalue(fixed) == 1.0
+        @test JuMP.fixvalue(fixed) == 1.0
 
         @variable(mcon, onerangeub[-7:1] <= 10, Int)
         @variable(mcon, manyrangelb[0:1,10:20,1:1] >= 2)
         @test JuMP.haslowerbound(manyrangelb[0,15,1])
-        @test JuMP.getlowerbound(manyrangelb[0,15,1]) == 2
+        @test JuMP.lowerbound(manyrangelb[0,15,1]) == 2
         @test !JuMP.hasupperbound(manyrangelb[0,15,1])
 
         s = ["Green","Blue"]
         @variable(mcon, x[i=-10:10,s] <= 5.5, Int, start=i+1)
-        @test JuMP.getupperbound(x[-4,"Green"]) == 5.5
-        @test getname(x[-10,"Green"]) == "x[-10,Green]"
-        @test getstart(x[-3,"Blue"]) == -2
+        @test JuMP.upperbound(x[-4,"Green"]) == 5.5
+        @test JuMP.name(x[-10,"Green"]) == "x[-10,Green]"
+        @test JuMP.startvalue(x[-3,"Blue"]) == -2
         @test isequal(mcon[:lbonly],lbonly)
         @test isequal(mcon[:ubonly],ubonly)
         @test isequal(mcon[:onerangeub][-7],onerangeub[-7])
@@ -77,38 +77,38 @@ using Base.Test
     @testset "get and set bounds" begin
         m = Model()
         @variable(m, 0 <= x <= 2)
-        @test getlowerbound(x) == 0
-        @test getupperbound(x) == 2
+        @test JuMP.lowerbound(x) == 0
+        @test JuMP.upperbound(x) == 2
         setlowerbound(x, 1)
-        @test getlowerbound(x) == 1
+        @test JuMP.lowerbound(x) == 1
         setupperbound(x, 3)
-        @test getupperbound(x) == 3
+        @test JuMP.upperbound(x) == 3
         @variable(m, q, Bin)
         @test !JuMP.haslowerbound(q)
         @test !JuMP.hasupperbound(q)
 
         @variable(m, 0 <= y <= 1, Bin)
-        @test getlowerbound(y) == 0
-        @test getupperbound(y) == 1
+        @test JuMP.lowerbound(y) == 0
+        @test JuMP.upperbound(y) == 1
 
         @variable(m, fixedvar == 2)
-        @test JuMP.getfixvalue(fixedvar) == 2.0
+        @test JuMP.fixvalue(fixedvar) == 2.0
         JuMP.fix(fixedvar, 5)
-        @test JuMP.getfixvalue(fixedvar) == 5
-        @test_throws AssertionError getlowerbound(fixedvar)
-        @test_throws AssertionError getupperbound(fixedvar)
+        @test JuMP.fixvalue(fixedvar) == 5
+        @test_throws AssertionError JuMP.lowerbound(fixedvar)
+        @test_throws AssertionError JuMP.upperbound(fixedvar)
     end
 
     @testset "get and set start" begin
         m = Model()
         @variable(m, x[1:3])
         x0 = collect(1:3)
-        setstart.(x, x0)
-        @test getstart.(x) == x0
-        @test getstart.([x[1],x[2],x[3]]) == x0
+        JuMP.setstartvalue.(x, x0)
+        @test JuMP.startvalue.(x) == x0
+        @test JuMP.startvalue.([x[1],x[2],x[3]]) == x0
 
         @variable(m, y[1:3,1:2])
-        @test_throws DimensionMismatch setstart.(y, collect(1:6))
+        @test_throws DimensionMismatch JuMP.setstartvalue.(y, collect(1:6))
     end
 
     @testset "get and set integer/binary" begin
@@ -157,22 +157,22 @@ using Base.Test
         @test typeof(y) == Array{Variable,1}
         @test typeof(z) == Array{Variable,1}
 
-        @test typeof(getstart.(x)) == Array{Float64,3}
-        @test typeof(getstart.(y)) == Array{Float64,1}
-        @test typeof(getstart.(z)) == Array{Float64,1}
+        @test typeof(JuMP.startvalue.(x)) == Array{Float64,3}
+        @test typeof(JuMP.startvalue.(y)) == Array{Float64,1}
+        @test typeof(JuMP.startvalue.(z)) == Array{Float64,1}
     end
 
-    @testset "getstart on empty things" begin
+    @testset "startvalue on empty things" begin
         m = Model()
         @variable(m, x[1:4,  1:0,1:3], start = 0) # Array{Variable}
         @variable(m, y[1:4,  2:1,1:3], start = 0) # JuMPArray
         @variable(m, z[1:4,Set(),1:3], start = 0) # JuMPDict
 
-        @test getstart(x) == Array{Float64}(4, 0, 3)
-        @test typeof(getstart(y)) <: JuMP.JuMPArray{Float64}
-        @test JuMP.size(getstart(y)) == (4,0,3)
-        @test typeof(getstart(z)) == JuMP.JuMPArray{Float64,3,Tuple{UnitRange{Int},Set{Any},UnitRange{Int}}}
-        @test length(getstart(z)) == 0
+        @test JuMP.startvalue.(x) == Array{Float64}(4, 0, 3)
+        # @test typeof(JuMP.startvalue(y)) <: JuMP.JuMPArray{Float64}
+        # @test JuMP.size(JuMP.startvalue(y)) == (4,0,3)
+        # @test typeof(JuMP.startvalue(z)) == JuMP.JuMPArray{Float64,3,Tuple{UnitRange{Int},Set{Any},UnitRange{Int}}}
+        # @test length(JuMP.startvalue(z)) == 0
     end
 
 # Slices three-dimensional JuMPContainer x[I,J,K]
