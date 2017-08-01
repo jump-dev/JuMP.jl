@@ -100,34 +100,58 @@ GenericSOCExpr{C,V} = GenericNormExpr{2,C,V}
 # Alias for ‖Ax‖₂ and AffExpr case
 const SOCExpr = GenericSOCExpr{Float64,Variable}
 
-# getvalue(n::GenericNormExpr) = n.coeff * getvalue(n.norm) + getvalue(n.aff)
-#
-# ##########################################################################
-# # GenericSOCConstraint
-# # Second-order cone constraint of form
-# # α||Ax-b||₂ + cᵀx + d ≤ 0
-# type GenericSOCConstraint{T<:GenericSOCExpr} <: AbstractConstraint
-#     normexpr::T
-#     function (::Type{GenericSOCConstraint{T}}){T}(normexpr::T)
-#         if normexpr.coeff < 0
-#             # The coefficient in front of the norm is negative, which
-#             # means we have `norm >= c`, which is not convex.
-#             error("Invalid second-order cone constraint $(normexpr) ≤ 0")
-#         end
-#         new{T}(normexpr)
-#     end
-# end
-#
-# # Alias for the AffExpr case
-# const SOCConstraint = GenericSOCConstraint{SOCExpr}
-#
-# """
-#     addconstraint(m::Model, c::SOCConstraint)
-#
-# Add a SOC constraint to `Model m`.
-# """
-# function addconstraint(m::Model, c::SOCConstraint)
-#     push!(m.socconstr,c)
-#     m.internalModelLoaded = false
-#     ConstraintRef{Model,SOCConstraint}(m,length(m.socconstr))
-# end
+getvalue(n::GenericNormExpr) = n.coeff * getvalue(n.norm) + getvalue(n.aff)
+
+##########################################################################
+# GenericSOCConstraint
+# Second-order cone constraint of form
+# α||Ax-b||₂ + cᵀx + d ≤ 0
+type GenericSOCConstraint{T<:GenericSOCExpr} <: AbstractConstraint
+    normexpr::T
+    function (::Type{GenericSOCConstraint{T}}){T}(normexpr::T)
+        if normexpr.coeff < 0
+            # The coefficient in front of the norm is negative, which
+            # means we have `norm >= c`, which is not convex.
+            error("Invalid second-order cone constraint $(normexpr) ≤ 0")
+        end
+        new{T}(normexpr)
+    end
+end
+
+# Alias for the AffExpr case
+const SOCConstraint = GenericSOCConstraint{SOCExpr}
+
+function _fillvaf!(outputindex, variables, coefficients, offset::Int, oi::Int, coeff, aff::AffExpr)
+    for i in 1:length(aff.vars)
+        outputindex[offset+i] = oi
+        variables[offset+i] = instancereference(aff.vars[i])
+        coefficients[offset+i] = coeff * aff.coeffs[i]
+    end
+    offset + length(aff.vars)
+end
+
+function MOI.VectorAffineFunction(expr::SOCExpr)
+    len = length(expr.aff.vars) + sum(term -> length(term.vars), expr.norm.terms)
+    outputindex = Vector{Int}(len)
+    variables = Vector{MOI.VariableReference}(len)
+    coefficients = Vector{Float64}(len)
+    constant = Vector{Float64}(1 + length(expr.norm.terms))
+    constant[1] = -expr.aff.constant
+    offset = _fillvaf!(outputindex, variables, coefficients, 0, 1, -1.0, expr.aff)
+    for (i, term) in enumerate(expr.norm.terms)
+        constant[1+i] = expr.coeff * term.constant
+        offset = _fillvaf!(outputindex, variables, coefficients, offset, 1+i, expr.coeff, term)
+    end
+    MOI.VectorAffineFunction(outputindex, variables, coefficients, constant)
+end
+
+"""
+    addconstraint(m::Model, c::SOCConstraint)
+
+Add a SOC constraint to `Model m`.
+"""
+function addconstraint(m::Model, c::SOCConstraint)
+    @assert !m.solverinstanceattached # TODO
+    cref = MOI.addconstraint!(m.instance, MOI.VectorAffineFunction(c.normexpr), MOI.SecondOrderCone(1 + length(c.normexpr.norm.terms)))
+    return ConstraintRef(m, cref)
+end

@@ -351,24 +351,24 @@ resultvalue(v::Variable) = variableresult(v.m)[v]
 
 
 
-# function resultvalue(arr::Array{Variable})
-#     ret = similar(arr, Float64)
-#     # return immediately for empty array
-#     if isempty(ret)
-#         return ret
-#     end
-#     m = first(arr).m
-#     # whether this was constructed via @variable, essentially
-#     registered = haskey(m.varData, arr)
-#     for I in eachindex(arr)
-#         ret[I] = resultvalue(arr[I])
-#     end
-#     # Copy printing data from @variable for Array{Variable} to corresponding Array{Float64} of values
-#     if registered
-#         m.varData[ret] = m.varData[arr]
-#     end
-#     ret
-# end
+function resultvalue(arr::Array{Variable})
+    ret = similar(arr, Float64)
+    # return immediately for empty array
+    if isempty(ret)
+        return ret
+    end
+#   m = first(arr).m
+#   # whether this was constructed via @variable, essentially
+#   registered = haskey(m.varData, arr)
+    for I in eachindex(arr)
+        ret[I] = resultvalue(arr[I])
+    end
+    # Copy printing data from @variable for Array{Variable} to corresponding Array{Float64} of values
+#   if registered
+#       m.varData[ret] = m.varData[arr]
+#   end
+    ret
+end
 
 # Dual value (reduced cost) getter
 #

@@ -252,18 +252,12 @@ end
 #     LinearConstraint(aff, lb-offset, ub-offset)
 # end
 
-constructconstraint!(quad::QuadExpr, sense::Symbol) = QuadConstraint(quad, sense)
+constructconstraint!(quad::QuadExpr, set::Symbol) = QuadConstraint(quad, sense)
 
-function constructconstraint!(normexpr::SOCExpr, sense::Symbol)
-    # check that the constraint is SOC representable
-    if sense == :(<=)
-        SOCConstraint(normexpr)
-    elseif sense == :(>=)
-        SOCConstraint(-normexpr)
-    else
-        error("Invalid sense $sense in SOC constraint")
-    end
-end
+# check that the constraint is SOC representable
+constructconstraint!(normexpr::SOCExpr, set) = error("Invalid sense $sense in SOC constraint")
+constructconstraint!(normexpr::SOCExpr, set::MOI.LessThan) = SOCConstraint(normexpr - set.upper)
+constructconstraint!(normexpr::SOCExpr, set::MOI.GreaterThan) = SOCConstraint(set.lower - normexpr)
 
 constructconstraint!(x::Array, sense::Symbol) = map(c->constructconstraint!(c,sense), x)
 constructconstraint!(x::AbstractArray, sense::Symbol) = constructconstraint!([x[i] for i in eachindex(x)], sense)
@@ -1109,16 +1103,15 @@ macro variable(args...)
                 _error("Index sets for SDP variables must be ranges of the form 1:N")
         end
 
-        if !(lb == -Inf && ub == Inf)
+        if haslb || hasub
             _error("Semidefinite or symmetric variables cannot be provided bounds")
         end
         return assert_validmodel(m, quote
             $(esc(idxsets[1].args[1].args[2])) == $(esc(idxsets[2].args[1].args[2])) || error("Cannot construct symmetric variables with nonsquare dimensions")
-            (issymmetric($lb) && issymmetric($ub)) || error("Bounds on symmetric  variables must be symmetric")
             $(getloopedcode(variable, code, condition, idxvars, idxsets, idxpairs, vartype; lowertri=symmetric))
             $(if sdp
                 quote
-                    push!($(m).varCones, (:SDP, first($variable).col : last($variable).col))
+                    JuMP.addconstraint($m, JuMP.constructconstraint!($variable, JuMP.PSDCone()))
                 end
             end)
             push!($(m).dictlist, $variable)
