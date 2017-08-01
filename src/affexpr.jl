@@ -183,7 +183,7 @@ end
 
 # TODO GenericLinearConstraint
 
-struct LinearConstraint{S <: MOI.AbstractScalarSet}
+struct LinearConstraint{S <: MOI.AbstractScalarSet} <: AbstractConstraint
     func::AffExpr
     set::S
 end
