@@ -6,9 +6,10 @@ struct SDVariableConstraint <: AbstractConstraint
     Q::Matrix{JuMP.Variable}
 end
 
-# Used by the @variable macro but can also be used through the @constraint macro
-function constructconstraint!(Q::Matrix{JuMP.Variable}, ::PSDCone)
-    @assert issymmetric(Q) # TODO it could be nonsymmetric if used through the @constraint macro
+# Used by the @variable macro. Currently cannot also be used through the @constraint macro because of the underscore
+# It needs a larger discussion on whether we want to allow adding VectorOfVariable in cone using the @constraint macro.
+function _constructconstraint!(Q::Matrix{JuMP.Variable}, ::PSDCone)
+    #@assert issymmetric(Q) # TODO it could be nonsymmetric if used through the @constraint macro
     SDVariableConstraint(Q)
 end
 

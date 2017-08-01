@@ -1111,7 +1111,7 @@ macro variable(args...)
             $(getloopedcode(variable, code, condition, idxvars, idxsets, idxpairs, vartype; lowertri=symmetric))
             $(if sdp
                 quote
-                    JuMP.addconstraint($m, JuMP.constructconstraint!($variable, JuMP.PSDCone()))
+                    JuMP.addconstraint($m, JuMP._constructconstraint!($variable, JuMP.PSDCone()))
                 end
             end)
             push!($(m).dictlist, $variable)
