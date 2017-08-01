@@ -565,6 +565,22 @@ end
 # GenericRangeConstraint, LinearConstraint
 include("affexpr.jl")
 
+struct VectorAffineConstraint{S <: MOI.AbstractVectorSet} <: AbstractConstraint
+    func::MOI.VectorAffineFunction{Float64}
+    set::S
+end
+
+"""
+    addconstraint(m::Model, c::VectorAffineConstraint)
+
+Add the vector constraint `c` to `Model m`.
+"""
+function addconstraint(m::Model, c::VectorAffineConstraint)
+    @assert !m.solverinstanceattached # TODO
+    cref = MOI.addconstraint!(m.instance, c.func, c.set)
+    return ConstraintRef(m, cref)
+end
+
 # const LinConstrRef = ConstraintRef{Model,LinearConstraint}
 
 # LinearConstraint(ref::LinConstrRef) = ref.m.linconstr[ref.idx]::LinearConstraint

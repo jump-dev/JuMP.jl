@@ -1,5 +1,5 @@
 export PSDCone
-# Used in @constraint m X in SDP
+# Used in @constraint m X in PSDCone
 struct PSDCone end
 
 struct SDVariableConstraint <: AbstractConstraint
@@ -7,7 +7,7 @@ struct SDVariableConstraint <: AbstractConstraint
 end
 
 # Used by the @variable macro but can also be used through the @constraint macro
-function constructconstraint!(Q::Matrix{JuMP.Variable}, PSDCone)
+function constructconstraint!(Q::Matrix{JuMP.Variable}, ::PSDCone)
     @assert issymmetric(Q) # TODO it could be nonsymmetric if used through the @constraint macro
     SDVariableConstraint(Q)
 end

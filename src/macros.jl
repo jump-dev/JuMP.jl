@@ -252,12 +252,12 @@ end
 #     LinearConstraint(aff, lb-offset, ub-offset)
 # end
 
-constructconstraint!(quad::QuadExpr, set::Symbol) = QuadConstraint(quad, sense)
+constructconstraint!(quad::QuadExpr, sense::Symbol) = QuadConstraint(quad, sense)
 
 # check that the constraint is SOC representable
 constructconstraint!(normexpr::SOCExpr, set) = error("Invalid sense $sense in SOC constraint")
-constructconstraint!(normexpr::SOCExpr, set::MOI.LessThan) = SOCConstraint(normexpr - set.upper)
-constructconstraint!(normexpr::SOCExpr, set::MOI.GreaterThan) = SOCConstraint(set.lower - normexpr)
+constructconstraint!(normexpr::SOCExpr, set::MOI.LessThan) = VectorAffineConstraint(normexpr - set.upper)
+constructconstraint!(normexpr::SOCExpr, set::MOI.GreaterThan) = VectorAffineConstraint(set.lower - normexpr)
 
 constructconstraint!(x::Array, sense::Symbol) = map(c->constructconstraint!(c,sense), x)
 constructconstraint!(x::AbstractArray, sense::Symbol) = constructconstraint!([x[i] for i in eachindex(x)], sense)
@@ -893,9 +893,9 @@ variable_error(args, str) = error("In @variable($(join(args,","))): ", str)
 # The following modifications will be made to the arguments before they are passed to `constructvariable!`:
 # * The `expr` argument will not be passed but the expression will be parsed to determine the kind of container needed (if one is needed) and
 #   additional information that will alter what is passed with the keywords `lowerbound`, `upperbound`, `basename`, `start`, `binary`, and `integer`.
-# * The `SDP` and `Symmetric` positional arguments in `extra` will not be passed to `constructvariable!`. Instead,
+# * The `PSD` and `Symmetric` positional arguments in `extra` will not be passed to `constructvariable!`. Instead,
 #    * the `Symmetric` argument will check that the container is symmetric and only allocate one variable for each pair of non-diagonal entries.
-#    * the `SDP` argument will do the same as `Symmetric` but in addition it will specify that the variables created belongs to the SDP cone in the `varCones` field of the model.
+#    * the `PSD` argument will do the same as `Symmetric` but in addition it will specify that the variables created belongs to the PSD cone in the `varCones` field of the model.
 #   Moreover, Int and Bin are special keywords that are equivalent to `integer=true` and `binary=true`.
 # * The keyword arguments start, basename, lowerbound, upperbound, binary, and integer category may not be passed as is to
 #   `constructvariable!` since they may be altered by the parsing of `expr` and we may need to pass it pointwise if it is a container since
@@ -931,7 +931,7 @@ macro variable(args...)
         anon_singleton = true
     else
         x = shift!(extra)
-        if x in [:Int,:Bin,:SDP]
+        if x in [:Int,:Bin,:PSD]
             _error("Ambiguous variable name $x detected. Use the \"category\" keyword argument to specify a category for an anonymous variable.")
         end
         anon_singleton = false
@@ -1038,9 +1038,9 @@ macro variable(args...)
         end
     end
 
-    sdp = any(t -> (t == :SDP), extra)
+    sdp = any(t -> (t == :PSD), extra)
     symmetric = (sdp || any(t -> (t == :Symmetric), extra))
-    extra = filter(x -> (x != :SDP && x != :Symmetric), extra) # filter out SDP and sym tag
+    extra = filter(x -> (x != :PSD && x != :Symmetric), extra) # filter out PSD and sym tag
     for ex in extra
         if ex == :Int
             if integer != false
@@ -1086,11 +1086,11 @@ macro variable(args...)
     vartype = :( variabletype($m, $(extra...)) )
 
     if symmetric
-        # Sanity checks on SDP input stuff
+        # Sanity checks on PSD input stuff
         condition == :() ||
-            _error("Cannot have conditional indexing for SDP variables")
+            _error("Cannot have conditional indexing for PSD variables")
         length(idxvars) == length(idxsets) == 2 ||
-            _error("SDP variables must be 2-dimensional")
+            _error("PSD variables must be 2-dimensional")
         !symmetric || (length(idxvars) == length(idxsets) == 2) ||
             _error("Symmetric variables must be 2-dimensional")
         hasdependentsets(idxvars, idxsets) &&
@@ -1100,7 +1100,7 @@ macro variable(args...)
                 _error("Internal error 1")
             rng = _rng.args[1] # undo escaping
             (isexpr(rng,:(:)) && rng.args[1] == 1 && length(rng.args) == 2) ||
-                _error("Index sets for SDP variables must be ranges of the form 1:N")
+                _error("Index sets for PSD variables must be ranges of the form 1:N")
         end
 
         if haslb || hasub
