@@ -116,7 +116,7 @@ JuMP's library of recognized univariate functions is derived from the [Calculus.
 
 Automatic differentiation is *not* finite differencing. JuMP's automatically computed derivatives are not subject to approximation error.
 
-JuMP uses [ForwardDiff.jl](https://github.com/JuliaDiff/ForwardDiff.jl) to perform automatic differentiation; see the ForwardDiff.jl [documentation](http://www.juliadiff.org/ForwardDiff.jl/perf_diff.html#restrictions-on-the-target-function) for a description of how to write a function suitable for automatic differentiation. The general guideline is to write code that is generic with respect to the number type; don't assume that the input to the function is `Float64`. To register a user-defined function with derivatives computed by automatic differentiation, use the `JuMP.register` method as in the following example:
+JuMP uses [ForwardDiff.jl](https://github.com/JuliaDiff/ForwardDiff.jl) to perform automatic differentiation; see the ForwardDiff.jl [documentation](http://www.juliadiff.org/ForwardDiff.jl/v0.5.0/user/limitations.html) for a description of how to write a function suitable for automatic differentiation. The general guideline is to write code that is generic with respect to the number type; don't assume that the input to the function is `Float64`. To register a user-defined function with derivatives computed by automatic differentiation, use the `JuMP.register` method as in the following example:
 
 ```julia
 mysquare(x) = x^2
