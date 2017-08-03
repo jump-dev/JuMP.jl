@@ -135,7 +135,7 @@ function AffExpr(m::Model, f::MOI.ScalarAffineFunction)
 end
 
 """
-    _fillvaf!(outputindex, variables, coefficients, offset::Int, oi::Int, coeff, aff::AffExpr)
+    _fillvaf!(outputindex, variables, coefficients, offset::Int, oi::Int, aff::AffExpr)
 
 Fills the vectors outputindex, variables, coefficients at indices starting at `offset+1` with the terms of `aff`.
 The output index for all terms is `oi`.
