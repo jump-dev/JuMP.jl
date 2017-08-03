@@ -39,11 +39,11 @@ Our documentation includes an installation guide, quick-start guide, and referen
 
 **Read about the upcoming transition to MathOptInterface and breaking changes in JuMP 0.19 [here](https://discourse.julialang.org/t/mathoptinterface-and-upcoming-breaking-changes-in-jump-0-19).**
 
-**Latest Release**: 0.17.1 (via ``Pkg.add``)
-  * [Documentation](http://www.juliaopt.org/JuMP.jl/0.17/)
-  * [Examples](https://github.com/JuliaOpt/JuMP.jl/tree/release-0.17/examples)
+**Latest Release**: 0.18.0 (via ``Pkg.add``)
+  * [Documentation](http://www.juliaopt.org/JuMP.jl/0.18/)
+  * [Examples](https://github.com/JuliaOpt/JuMP.jl/tree/release-0.18/examples)
   * Testing status:
-    * TravisCI: [![Build Status](https://travis-ci.org/JuliaOpt/JuMP.jl.svg?branch=release-0.17)](https://travis-ci.org/JuliaOpt/JuMP.jl)
+    * TravisCI: [![Build Status](https://travis-ci.org/JuliaOpt/JuMP.jl.svg?branch=release-0.18)](https://travis-ci.org/JuliaOpt/JuMP.jl)
     * PackageEvaluator:
       [![JuMP](http://pkg.julialang.org/badges/JuMP_0.5.svg)](http://pkg.julialang.org/?pkg=JuMP&ver=0.5)
       [![JuMP](http://pkg.julialang.org/badges/JuMP_0.6.svg)](http://pkg.julialang.org/?pkg=JuMP&ver=0.6)

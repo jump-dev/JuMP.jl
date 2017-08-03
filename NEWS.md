@@ -1,6 +1,14 @@
 JuMP release notes
 ==================
 
+Version 0.18.0 (July 27, 2017)
+------------------------------
+
+   * Drop support for Julia 0.5.
+   * Update for ForwardDiff 0.5.
+   * Minor bug fixes.
+
+
 Version 0.17.1 (June 9, 2017)
 -------------------------------
 
