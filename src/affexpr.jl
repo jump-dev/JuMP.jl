@@ -134,6 +134,35 @@ function AffExpr(m::Model, f::MOI.ScalarAffineFunction)
     return AffExpr(Variable.(m,f.variables), f.coefficients, f.constant)
 end
 
+"""
+    _fillvaf!(outputindex, variables, coefficients, offset::Int, oi::Int, coeff, aff::AffExpr)
+
+Fills the vectors outputindex, variables, coefficients at indices starting at `offset+1` with the terms of `aff`.
+The output index for all terms is `oi`.
+"""
+function _fillvaf!(outputindex, variables, coefficients, offset::Int, oi::Int, aff::AffExpr)
+    for i in 1:length(aff.vars)
+        outputindex[offset+i] = oi
+        variables[offset+i] = instancereference(aff.vars[i])
+        coefficients[offset+i] = aff.coeffs[i]
+    end
+    offset + length(aff.vars)
+end
+
+function MOI.VectorAffineFunction(affs::Vector{AffExpr})
+    len = sum(aff -> length(aff.vars), affs)
+    outputindex = Vector{Int}(len)
+    variables = Vector{MOI.VariableReference}(len)
+    coefficients = Vector{Float64}(len)
+    constant = Vector{Float64}(length(affs))
+    offset = 0
+    for (i, aff) in enumerate(affs)
+        constant[i] = aff.constant
+        offset = _fillvaf!(outputindex, variables, coefficients, offset, i, aff)
+    end
+    MOI.VectorAffineFunction(outputindex, variables, coefficients, constant)
+end
+
 # TODO this could be interpreted as a SingleVariable objective, but that should require explict syntax
 setobjective(m::Model, sense::Symbol, x::Variable) = setobjective(m, sense, convert(AffExpr,x))
 
