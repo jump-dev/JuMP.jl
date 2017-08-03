@@ -22,7 +22,7 @@ function attach(m::Model)
         m.variabletosolvervariable[MOIVAR(i)] = solvervariables[i]
     end
 
-    MOI.setobjective!(m.solverinstance, MOI.getattribute(m.instance, MOI.Sense()), MOI.getattribute(m.instance, MOI.ObjectiveFunction()))
+    MOI.setobjective!(m.solverinstance, MOI.getattribute(m.instance, MOI.ObjectiveSense()), MOI.getattribute(m.instance, MOI.ObjectiveFunction()))
 
     # TODO: replace with ListOfConstraintReferences()
     # This would be a bit more transparent than the call below
