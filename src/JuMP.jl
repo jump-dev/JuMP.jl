@@ -380,7 +380,7 @@ objectivevalue(m::Model) = MOI.getattribute(m, MOI.ObjectiveValue())
 Return the objective sense, `:Min`, `:Max`, or `:Feasibility`.
 """
 function objectivesense(m::Model)
-    moisense = MOI.getattribute(m.instance, MOI.Sense())
+    moisense = MOI.getattribute(m.instance, MOI.ObjectiveSense())
     if moisense == MOI.MinSense
         return :Min
     elseif moisense == MOI.MaxSense
@@ -566,8 +566,37 @@ end
 include("affexpr.jl")
 
 struct VectorAffineConstraint{S <: MOI.AbstractVectorSet} <: AbstractConstraint
-    func::MOI.VectorAffineFunction{Float64}
+    func::Vector{AffExpr}
     set::S
+end
+
+"""
+    _fillvaf!(outputindex, variables, coefficients, offset::Int, oi::Int, coeff, aff::AffExpr)
+
+Fills the vectors outputindex, variables, coefficients at indices starting at `offset+1` with the terms of `aff`.
+The output index for all terms is `oi`.
+"""
+function _fillvaf!(outputindex, variables, coefficients, offset::Int, oi::Int, aff::AffExpr)
+    for i in 1:length(aff.vars)
+        outputindex[offset+i] = oi
+        variables[offset+i] = instancereference(aff.vars[i])
+        coefficients[offset+i] = aff.coeffs[i]
+    end
+    offset + length(aff.vars)
+end
+
+function MOI.VectorAffineFunction(affs::Vector{AffExpr})
+    len = sum(aff -> length(aff.vars), affs)
+    outputindex = Vector{Int}(len)
+    variables = Vector{MOI.VariableReference}(len)
+    coefficients = Vector{Float64}(len)
+    constant = Vector{Float64}(length(affs))
+    offset = 0
+    for (i, aff) in enumerate(affs)
+        constant[i] = aff.constant
+        offset = _fillvaf!(outputindex, variables, coefficients, offset, i, aff)
+    end
+    MOI.VectorAffineFunction(outputindex, variables, coefficients, constant)
 end
 
 """
@@ -577,7 +606,7 @@ Add the vector constraint `c` to `Model m`.
 """
 function addconstraint(m::Model, c::VectorAffineConstraint)
     @assert !m.solverinstanceattached # TODO
-    cref = MOI.addconstraint!(m.instance, c.func, c.set)
+    cref = MOI.addconstraint!(m.instance, MOI.VectorAffineFunction(c.func), c.set)
     return ConstraintRef(m, cref)
 end
 

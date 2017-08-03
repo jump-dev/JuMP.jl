@@ -121,36 +121,11 @@ const SOCExpr = GenericSOCExpr{Float64,Variable}
 #   # Alias for the AffExpr case
 #   const SOCConstraint = GenericSOCConstraint{SOCExpr}
 
-"""
-    _fillvaf!(outputindex, variables, coefficients, offset::Int, oi::Int, coeff, aff::AffExpr)
-
-Fills the vectors outputindex, variables, coefficients at indices starting at `offset+1` with the terms of `aff`.
-The output index for all terms is `oi`.
-"""
-function _fillvaf!(outputindex, variables, coefficients, offset::Int, oi::Int, coeff, aff::AffExpr)
-    for i in 1:length(aff.vars)
-        outputindex[offset+i] = oi
-        variables[offset+i] = instancereference(aff.vars[i])
-        coefficients[offset+i] = coeff * aff.coeffs[i]
-    end
-    offset + length(aff.vars)
-end
-
-function MOI.VectorAffineFunction(expr::SOCExpr)
-    len = length(expr.aff.vars) + sum(term -> length(term.vars), expr.norm.terms)
-    outputindex = Vector{Int}(len)
-    variables = Vector{MOI.VariableReference}(len)
-    coefficients = Vector{Float64}(len)
-    constant = Vector{Float64}(1 + length(expr.norm.terms))
-    constant[1] = -expr.aff.constant
-    offset = _fillvaf!(outputindex, variables, coefficients, 0, 1, -1.0, expr.aff)
-    for (i, term) in enumerate(expr.norm.terms)
-        constant[1+i] = expr.coeff * term.constant
-        offset = _fillvaf!(outputindex, variables, coefficients, offset, 1+i, expr.coeff, term)
-    end
-    MOI.VectorAffineFunction(outputindex, variables, coefficients, constant)
-end
-
 function VectorAffineConstraint(expr::SOCExpr)
-    VectorAffineConstraint(MOI.VectorAffineFunction(expr), MOI.SecondOrderCone(1 + length(expr.norm.terms)))
+    affs = Vector{AffExpr}(1 + length(expr.norm.terms))
+    affs[1] = -expr.aff
+    for i in 1:length(expr.norm.terms)
+        affs[1+i] = expr.coeff * expr.norm.terms[i]
+    end
+    VectorAffineConstraint(affs, MOI.SecondOrderCone(1 + length(expr.norm.terms)))
 end
