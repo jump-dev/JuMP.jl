@@ -11,7 +11,7 @@
 #
 # An "urban planning" problem.
 # Based on
-#  http://puzzlor.editme.com/urbanplanning
+#  http://www.puzzlor.com/2013-08_UrbanPlanning.html
 #############################################################################
 
 using JuMP, Cbc
