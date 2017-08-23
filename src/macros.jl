@@ -220,11 +220,6 @@ function _canonicalize_sense(sns::Symbol)
     end
 end
 
-function _construct_constraint!(args...)
-    warn("_construct_constraint! is deprecated. Use constructconstraint! instead")
-    constructconstraint!(args...)
-end
-
 # two-argument constructconstraint! is used for one-sided constraints.
 # Right-hand side is zero.
 function sense_to_set(sense::Symbol)
@@ -239,7 +234,7 @@ function sense_to_set(sense::Symbol)
 end
 const ScalarPolyhedralSets = Union{MOI.LessThan,MOI.GreaterThan,MOI.EqualTo,MOI.Interval}
 
-constructconstraint!(v::Variable, sense::Symbol) = constructconstraint!(convert(AffExpr,v), sense)
+#constructconstraint!(v::Variable, sense::Symbol) = constructconstraint!(convert(AffExpr,v), sense)
 function constructconstraint!(aff::AffExpr, set::S) where S <: Union{MOI.LessThan,MOI.GreaterThan,MOI.EqualTo}
     offset = aff.constant
     aff.constant = 0.0
@@ -252,15 +247,14 @@ end
 #     LinearConstraint(aff, lb-offset, ub-offset)
 # end
 
-constructconstraint!(quad::QuadExpr, sense::Symbol) = QuadConstraint(quad, sense)
+#constructconstraint!(quad::QuadExpr, sense::Symbol) = QuadConstraint(quad, sense)
 
-# check that the constraint is SOC representable
-constructconstraint!(normexpr::SOCExpr, set) = error("Invalid sense $sense in SOC constraint")
-constructconstraint!(normexpr::SOCExpr, set::MOI.LessThan) = VectorAffineConstraint(normexpr - set.upper)
-constructconstraint!(normexpr::SOCExpr, set::MOI.GreaterThan) = VectorAffineConstraint(set.lower - normexpr)
 
-constructconstraint!(x::Array, sense::Symbol) = map(c->constructconstraint!(c,sense), x)
-constructconstraint!(x::AbstractArray, sense::Symbol) = constructconstraint!([x[i] for i in eachindex(x)], sense)
+#constructconstraint!(x::Array, sense::Symbol) = map(c->constructconstraint!(c,sense), x)
+#constructconstraint!(x::AbstractArray, sense::Symbol) = constructconstraint!([x[i] for i in eachindex(x)], sense)
+
+constructconstraint!(x::Vector{AffExpr}, set::MOI.AbstractVectorSet) = VectorAffineConstraint(x, set)
+
 
 _vectorize_like(x::Number, y::AbstractArray{AffExpr}) = (ret = similar(y, typeof(x)); fill!(ret, x))
 function _vectorize_like{R<:Number}(x::AbstractArray{R}, y::AbstractArray{AffExpr})
