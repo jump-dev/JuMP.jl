@@ -294,20 +294,6 @@ end
     :(addtoexpr(ex, $coef, args[$idx]))
 end
 
-function parseCurly(x::Expr, aff::Symbol, lcoeffs, rcoeffs, newaff=gensym())
-    header = x.args[1]
-    if length(x.args) < 3
-        error("Need at least two arguments for $header")
-    end
-    if issum(header)
-        parseSum(x, aff, lcoeffs, rcoeffs, newaff)
-    elseif header ∈ [:norm1, :norm2, :norminf, :norm∞]
-        parseNorm(header, x, aff, lcoeffs, rcoeffs, newaff)
-    else
-        error("Expected sum or norm2 outside curly braces; got $header")
-    end
-end
-
 function parseSum(x::Expr, aff::Symbol, lcoeffs, rcoeffs, newaff)
     # we have a filter condition
     if isexpr(x.args[2],:parameters)
@@ -624,8 +610,7 @@ function parseExpr(x, aff::Symbol, lcoeffs::Vector, rcoeffs::Vector, newaff::Sym
         elseif isexpr(x,:call) && length(x.args) >= 2 && (isexpr(x.args[2],:generator) || isexpr(x.args[2],:flatten))
             return newaff, parseGenerator(x,aff,lcoeffs,rcoeffs,newaff)
         elseif x.head == :curly
-            warn_curly(x)
-            return newaff, parseCurly(x,aff,lcoeffs,rcoeffs,newaff)
+            error_curly(x)
         else # at lowest level?
             !isexpr(x,:comparison) || error("Unexpected comparison in expression $x")
             callexpr = Expr(:call,:addtoexpr_reorder,aff,lcoeffs...,esc(x),rcoeffs...)
