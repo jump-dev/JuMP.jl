@@ -5,7 +5,7 @@
         # st   x + y <= 1   (x + y - 1 ∈ Nonpositives)
         #       x, y >= 0   (x, y ∈ Nonnegatives)
 
-        m = Model(solver=CSDPSolver(verbose=false))
+        m = Model(solver=CSDPSolver(printlevel=0))
         @variable(m, x >= 0.0)
         @variable(m, y >= 0.0)
         @objective(m, Min, -x)
