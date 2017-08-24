@@ -27,10 +27,10 @@
         #      (x1,x2,x3) in C^3_q
         #      X in C_sdp
 
-        m = Model(solver=CSDPSolver())
+        m = Model(solver=CSDPSolver(printlevel=0))
 
         @variable(m, x[1:3])
-        @constraint(m, norm([x[2], x[3]]) <= x[1])
+        @constraint(m, x in MOI.SecondOrderCone(3))
         @variable(m, X[1:3, 1:3], PSD)
 
         C = [2 1 0
@@ -86,7 +86,7 @@
     # Q >= 0                        y free
     # o free                        X <= 0
 #   @testset "Just another SDP" begin
-#       model = Model(solver=CSDPSolver())
+#       model = Model(solver=CSDPSolver(printlevel=0))
 #       @variable(model, Q[1:2, 1:2], PSD)
 #       c1 = @constraint(model, Q[1,1] - 1 == Q[2,2])
 #       @variable(model, objective)
@@ -116,7 +116,7 @@
     # Example 2.11
     @testset "SDP variable and optimal objective not rational" begin
 #       solver = fixscs(solver, 7000000)
-        m = Model(solver=CSDPSolver())
+        m = Model(solver=CSDPSolver(printlevel=0))
         @variable(m, X[1:2,1:2], PSD)
         c = @constraint(m, X[1,1]+X[2,2] == 1)
         @objective(m, Min, 2*X[1,1]+2*X[1,2])
@@ -188,7 +188,7 @@
 
     @testset "SDP with primal solution not attained" begin
 #       solver = fixscs(solver, 7000000)
-        m = Model(solver=CSDPSolver())
+        m = Model(solver=CSDPSolver(printlevel=0))
         @variable(m, X[1:2,1:2], PSD)
         c = @constraint(m, 2*X[1,2] == 1)
         @objective(m, Min, X[1,1])
@@ -209,7 +209,7 @@
     end
 
     @testset "No constraint" begin
-        m = Model(solver=CSDPSolver())
+        m = Model(solver=CSDPSolver(printlevel=0))
         @variable(m, X[1:3,1:3], PSD)
         @objective(m, Min, trace(X))
 

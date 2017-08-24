@@ -369,27 +369,6 @@ function fill_var_names(mode, varnames, v::Array{Variable})
 end
 
 #------------------------------------------------------------------------
-## Norm
-#------------------------------------------------------------------------
-Base.show(io::IO, j::Norm) = print(io, norm_str(REPLMode,j))
-Base.show(io::IO, ::MIME"text/latex", j::Norm) =
-    print(io, norm_str(IJuliaMode,j))
-
-function norm_str(mode, n::Norm, sym::PrintSymbols)
-    string(sym[:Vert], "[",
-            join(map(t->aff_str(mode,t),n.terms),","),
-            "]", sym[:Vert], sym[:sub2])
-end
-
-# Handlers to use correct symbols
-norm_str(::Type{REPLMode}, n::Norm) =
-    norm_str(REPLMode, n, repl)
-norm_str(::Type{IJuliaMode}, n::Norm; mathmode=true) =
-    math(norm_str(IJuliaMode, n, ijulia), mathmode)
-
-exprstr(n::Norm) = norm_str(REPLMode, n)
-
-#------------------------------------------------------------------------
 ## JuMPContainer{Variable}
 #------------------------------------------------------------------------
 Base.show(io::IO, j::Union{JuMPContainer{Variable}, Array{Variable}}) = print(io, cont_str(REPLMode,j))
@@ -772,27 +751,6 @@ quad_str(::Type{REPLMode}, q::GenericQuadExpr) =
     quad_str(REPLMode, q, repl)
 quad_str(::Type{IJuliaMode}, q::GenericQuadExpr; mathmode=true) =
     math(quad_str(IJuliaMode, q, ijulia), mathmode)
-
-#------------------------------------------------------------------------
-## SOCExpr
-#------------------------------------------------------------------------
-Base.show(io::IO, c::SOCExpr) = print(io, expr_str(REPLMode, c))
-Base.show(io::IO, ::MIME"text/latex", c::SOCExpr) =
-    print(io, expr_str(IJuliaMode, c))
-function expr_str(mode, c::SOCExpr)
-    coeff = (c.coeff == 1) ? "" : string(c.coeff, " ")
-    aff   = aff_str(mode, c.aff)
-    if aff[1] == '-'
-        chain = " - "
-        aff = aff[2:end]
-    elseif aff == "0"
-        aff = ""
-        chain = ""
-    else  # positive
-        chain = " + "
-    end
-    string(coeff, norm_str(mode, c.norm), chain, aff)
-end
 
 #------------------------------------------------------------------------
 ## NonlinearExprData

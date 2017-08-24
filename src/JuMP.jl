@@ -74,7 +74,7 @@ const FIXREF = MOICON{MOI.SingleVariable,MOI.EqualTo{Float64}}
 const INTREF = MOICON{MOI.SingleVariable,MOI.Integer}
 const BINREF = MOICON{MOI.SingleVariable,MOI.ZeroOne}
 
-@MOIU.instance JuMPInstance (ZeroOne, Integer) (EqualTo, GreaterThan, LessThan, Interval) (Zeros, Nonnegatives, Nonpositives, SecondOrderCone, PositiveSemidefiniteConeTriangle) () (SingleVariable,) (ScalarAffineFunction,) (VectorOfVariables,) (VectorAffineFunction,)
+@MOIU.instance JuMPInstance (ZeroOne, Integer) (EqualTo, GreaterThan, LessThan, Interval) (Zeros, Nonnegatives, Nonpositives, SecondOrderCone, RotatedSecondOrderCone, PositiveSemidefiniteConeTriangle) () (SingleVariable,) (ScalarAffineFunction,) (VectorOfVariables,) (VectorAffineFunction,)
 
 # dummy solver
 type UnsetSolver <: MathOptInterface.AbstractSolver
@@ -597,12 +597,6 @@ end
 # GenericQuadExpr, QuadExpr
 # GenericQuadConstraint, QuadConstraint
 include("quadexpr.jl")
-
-##########################################################################
-# GenericNorm, Norm
-# GenericNormExpr. GenericSOCExpr, SOCExpr
-# GenericSOCConstraint, SOCConstraint
-include("norms.jl")
 
 ##########################################################################
 # SOSConstraint  (special ordered set constraints)
