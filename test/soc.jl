@@ -21,7 +21,6 @@
 
     end
 
-    # TODO: This fails because of an issue in SOI
     @testset "RotatedSOC1" begin
         m = Model(solver=CSDPSolver(printlevel=0))
 
