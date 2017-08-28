@@ -247,7 +247,7 @@ Sometimes it can be useful to track solver progress without actually changing th
 For a simple example, we can add a function that tracks the best bound and incumbent objective value as the solver progresses through the branch-and-bound tree:
 
 ```julia
-type NodeData
+mutable struct NodeData
     time::Float64  # in seconds since the epoch
     node::Int
     obj::Float64

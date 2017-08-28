@@ -60,7 +60,7 @@ include("utils.jl")
 # Model class
 # Keeps track of all model and column info
 abstract type AbstractModel end
-type Model <: AbstractModel
+mutable struct Model <: AbstractModel
     obj#::QuadExpr
     objSense::Symbol
 
@@ -137,7 +137,7 @@ type Model <: AbstractModel
 end
 
 # dummy solver
-type UnsetSolver <: MathProgBase.AbstractMathProgSolver
+mutable struct UnsetSolver <: MathProgBase.AbstractMathProgSolver
 end
 
 # Default constructor
@@ -467,7 +467,7 @@ Base.isempty(::AbstractJuMPScalar) = false
 #############################################################################
 # Variable class
 # Doesn't actually do much, just a pointer back to the model
-immutable Variable <: AbstractJuMPScalar
+struct Variable <: AbstractJuMPScalar
     m::Model
     col::Int
 end
@@ -689,7 +689,7 @@ Base.zero(::Variable) = zero(Variable)
 Base.one(::Type{Variable}) = AffExpr(Variable[],Float64[],1.0)
 Base.one(::Variable) = one(Variable)
 
-type VariableNotOwnedError <: Exception
+mutable struct VariableNotOwnedError <: Exception
     context::String
 end
 function Base.showerror(io::IO, ex::VariableNotOwnedError)
@@ -719,11 +719,11 @@ end
 ##########################################################################
 # ConstraintRef
 # Reference to a constraint for retrieving solution info
-immutable ConstraintRef{M<:AbstractModel,T<:AbstractConstraint}
+struct ConstraintRef{M<:AbstractModel,T<:AbstractConstraint}
     m::M
     idx::Int
 end
-Base.copy{M,T}(c::ConstraintRef{M,T}, new_model::M) = ConstraintRef{M,T}(new_model, c.idx)
+Base.copy(c::ConstraintRef{M,T}, new_model::M) where {M,T} = ConstraintRef{M,T}(new_model, c.idx)
 
 linearindex(x::ConstraintRef) = x.idx
 
@@ -758,7 +758,7 @@ include("sd.jl")
 # internal method that doesn't print a warning if the value is NaN
 _getDual(c::LinConstrRef) = c.m.linconstrDuals[c.idx]
 
-getdualwarn{T<:Union{ConstraintRef, Int}}(::T) = warn("Dual solution not available. Check that the model was properly solved and no integer variables are present.")
+getdualwarn(::T) where {T<:Union{ConstraintRef, Int}} = warn("Dual solution not available. Check that the model was properly solved and no integer variables are present.")
 
 """
     getdual(c::LinConstrRef)
@@ -974,7 +974,7 @@ function mapcontainer_warn(f, x::JuMPContainer, var_or_expr)
     end
 end
 mapcontainer_warn(f, x::JuMPContainer{Variable}) = mapcontainer_warn(f, x, "variable")
-mapcontainer_warn{E}(f, x::JuMPContainer{E}) = mapcontainer_warn(f, x, "expression")
+mapcontainer_warn(f, x::JuMPContainer{E}) where {E} = mapcontainer_warn(f, x, "expression")
 getvalue_warn(x::JuMPContainer) = nothing
 
 function operator_warn(lhs::AffExpr,rhs::AffExpr)
@@ -993,12 +993,12 @@ operator_warn(lhs,rhs) = nothing
 
 ##########################################################################
 # Types used in the nonlinear code
-immutable NonlinearExpression
+struct NonlinearExpression
     m::Model
     index::Int
 end
 
-immutable NonlinearParameter <: AbstractJuMPScalar
+struct NonlinearParameter <: AbstractJuMPScalar
     m::Model
     index::Int
 end
@@ -1016,7 +1016,7 @@ const JuMPTypes = Union{AbstractJuMPScalar,
 const JuMPScalars = Union{Number,JuMPTypes}
 
 # would really want to do this on ::Type{T}, but doesn't work on v0.4
-Base.eltype{T<:JuMPTypes}(::T) = T
+Base.eltype(::T) where {T<:JuMPTypes} = T
 Base.size(::JuMPTypes) = ()
 Base.size(x::JuMPTypes,d::Int) = 1
 Base.ndims(::JuMPTypes) = 0
@@ -1040,9 +1040,9 @@ include("print.jl")
 # Deprecations
 include("deprecated.jl")
 
-getvalue{T<:JuMPTypes}(arr::Array{T}) = map(getvalue, arr)
+getvalue(arr::Array{T}) where {T<:JuMPTypes} = map(getvalue, arr)
 
-function setvalue{T<:AbstractJuMPScalar}(set::Array{T}, val::Array)
+function setvalue(set::Array{T}, val::Array) where T<:AbstractJuMPScalar
     promote_shape(size(set), size(val)) # Check dimensions match
     for I in eachindex(set)
         setvalue(set[I], val[I])

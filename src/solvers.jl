@@ -15,7 +15,7 @@
 
 # Analyze a JuMP Model to determine its traits, and thus what solvers can
 # be used to solve the problem
-type ProblemTraits
+mutable struct ProblemTraits
     int::Bool  # has integer variables
     lin::Bool  # has only linear objectives and constraints
     qp ::Bool  # has a quadratic objective function
@@ -979,7 +979,7 @@ end
 
 # returns (unsorted) column indices and coefficient terms for merged vector
 # assume that v is zero'd
-function merge_duplicates{CoefType,IntType<:Integer}(::Type{IntType},aff::GenericAffExpr{CoefType,Variable}, v::IndexedVector{CoefType}, m::Model)
+function merge_duplicates(::Type{IntType},aff::GenericAffExpr{CoefType,Variable}, v::IndexedVector{CoefType}, m::Model) where {CoefType,IntType<:Integer}
     resize!(v, m.numCols)
     for ind in 1:length(aff.coeffs)
         var = aff.vars[ind]

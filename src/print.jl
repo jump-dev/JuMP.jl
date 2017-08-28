@@ -181,7 +181,7 @@ function model_str(mode, m::Model, sym::PrintSymbols)
                       (m.objSense == :Max ? "Max" : "Min")
     str = obj_sense * sep
     if nlp !== nothing && nlp.nlobj !== nothing
-        str *= (qobj_str=="0"?"":"$qobj_str + ") * expr_str(m, mode, nlp.nlobj)
+        str *= (qobj_str=="0" ? "" : "$qobj_str + ") * expr_str(m, mode, nlp.nlobj)
     else
         str *= qobj_str
     end
@@ -316,7 +316,7 @@ function var_str(mode, m::Model, col::Int; mathmode=true)
     end
     return math(colNames[col] == "" ? "col_$col" : colNames[col], mathmode)
 end
-function fill_var_names{N}(mode, colNames, v::JuMPArray{Variable,N})
+function fill_var_names(mode, colNames, v::JuMPArray{Variable,N}) where N
     data = printdata(v)
     idxsets = data.indexsets
     lengths = map(length, idxsets)
@@ -552,7 +552,7 @@ cont_str(::Type{IJuliaMode}, j; mathmode=true) =
 ## JuMPContainer{Float64}
 #------------------------------------------------------------------------
 Base.show(io::IO, j::JuMPContainer{Float64}) = print(io, val_str(REPLMode,j))
-function val_str{N}(mode, j::JuMPArray{Float64,N})
+function val_str(mode, j::JuMPArray{Float64,N}) where N
     out_str = "$(getname(j)): $N dimensions:"
     if isempty(j)
         return out_str * "\n  (no entries)"
@@ -614,7 +614,7 @@ function _isless(t1::Tuple, t2::Tuple)
     end
     return n1 < n2
 end
-function val_str{N}(mode, dict::JuMPDict{Float64,N})
+function val_str(mode, dict::JuMPDict{Float64,N}) where N
     nelem = length(dict.tupledict)
     isempty(dict) && return ""
     out_str  = "$(getname(dict)): $N dimensions, $nelem "
