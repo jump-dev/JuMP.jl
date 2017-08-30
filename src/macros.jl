@@ -997,6 +997,7 @@ macro variable(args...)
     variable = gensym()
     quotvarname = anonvar ? :(:__anon__) : quot(getname(var))
     escvarname  = anonvar ? variable     : esc(getname(var))
+    basename = string(getname(var))
 
     if !isa(getname(var),Symbol) && !anonvar
         Base.error("Expression $(getname(var)) should not be used as a variable name. Use the \"anonymous\" syntax $(getname(var)) = @variable(m, ...) instead.")
@@ -1014,7 +1015,7 @@ macro variable(args...)
             hasstart = true
             value = esc(ex.args[2])
         elseif kwarg == :basename
-            quotvarname = esc(ex.args[2])
+            basename = esc(ex.args[2])
         elseif kwarg == :lowerbound
             haslb && _error("Cannot specify variable lowerbound twice")
             lb = esc_nonconstant(ex.args[2])
@@ -1053,7 +1054,7 @@ macro variable(args...)
     if isa(var,Symbol)
         # Easy case - a single variable
         sdp && _error("Cannot add a semidefinite scalar variable")
-        variablecall = :( constructvariable!($m, $(extra...), $_error, $haslb, $lb, $hasub, $ub, $hasfix, $fixedvalue, $binary, $integer, string($quotvarname), $hasstart, $value) )
+        variablecall = :( constructvariable!($m, $(extra...), $_error, $haslb, $lb, $hasub, $ub, $hasfix, $fixedvalue, $binary, $integer, $basename, $hasstart, $value) )
         addkwargs!(variablecall, extra_kwargs)
         code = :($variable = $variablecall)
         if !anonvar
@@ -1073,7 +1074,13 @@ macro variable(args...)
     clear_dependencies(i) = (isdependent(idxvars,idxsets[i],i) ? () : idxsets[i])
 
     # Code to be used to create each variable of the container.
-    variablecall = :( constructvariable!($m, $(extra...), $_error, $haslb, $lb, $hasub, $ub, $hasfix, $fixedvalue, $binary, $integer, EMPTYSTRING, $hasstart, $value) )
+    namecall = Expr(:call,:string,basename,"[")
+    for i in 1:length(idxvars)
+        push!(namecall.args, esc(idxvars[i]))
+        i < length(idxvars) && push!(namecall.args,",")
+    end
+    push!(namecall.args,"]")
+    variablecall = :( constructvariable!($m, $(extra...), $_error, $haslb, $lb, $hasub, $ub, $hasfix, $fixedvalue, $binary, $integer, $namecall, $hasstart, $value) )
     addkwargs!(variablecall, extra_kwargs)
     code = :( $(refcall) = $variablecall )
     # Determine the return type of constructvariable!. This is needed to create the container holding them.
@@ -1108,11 +1115,7 @@ macro variable(args...)
                     JuMP.addconstraint($m, JuMP._constructconstraint!($variable, JuMP.PSDCone()))
                 end
             end)
-            push!($(m).dictlist, $variable)
             !$anonvar && registervar($m, $quotvarname, $variable)
-            storecontainerdata($m, $variable, $quotvarname,
-                               $(Expr(:tuple,idxsets...)),
-                               $idxpairs, $(quot(condition)))
             $(anonvar ? variable : :($escvarname = $variable))
         end)
     else
@@ -1121,18 +1124,11 @@ macro variable(args...)
         return assert_validmodel(m, quote
             $(getloopedcode(variable, code, condition, idxvars, idxsets, idxpairs, vartype))
             isa($variable, JuMPContainer) && pushmeta!($variable, :model, $m)
-            push!($(m).dictlist, $variable)
             !$anonvar && registervar($m, $quotvarname, $variable)
-            storecontainerdata($m, $variable, $quotvarname,
-                               $(Expr(:tuple,map(clear_dependencies,1:length(idxsets))...)),
-                               $idxpairs, $(quot(condition)))
             $(anonvar ? variable : :($escvarname = $variable))
         end)
     end
 end
-
-storecontainerdata(m::Model, variable, varname, idxsets, idxpairs, condition) =
-    m.vardata[variable] = JuMPContainerData(varname, map(collect,idxsets), idxpairs, condition)
 
 macro constraintref(var)
     if isa(var,Symbol)

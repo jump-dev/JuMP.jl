@@ -35,15 +35,15 @@ function JuMPDict{T,N}(d::Dict{NTuple{N,Any},T}, meta::Dict{Symbol,Any})
     tmp
 end
 
-type JuMPContainerData
-    name
-    indexsets
-    indexexprs::Vector{IndexPair}
-    condition
-end
-
-# Needed by getvaluewarn when called by _mapInner
-getname(data::JuMPContainerData) = data.name
+# type JuMPContainerData
+#     name
+#     indexsets
+#     indexexprs::Vector{IndexPair}
+#     condition
+# end
+#
+# # Needed by getvaluewarn when called by _mapInner
+# getname(data::JuMPContainerData) = data.name
 
 #JuMPDict{T,N}(name::AbstractString) =
 #    JuMPDict{T,N}(Dict{NTuple{N},T}(), name)
