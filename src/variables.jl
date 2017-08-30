@@ -40,6 +40,11 @@ end
 
 Base.setindex!(vm::VariableToValueMap{T}, value, v::Variable) where T = setindex!(vm, convert(T, value), v)
 
+function Base.delete!(vm::VariableToValueMap,v::Variable)
+    delete!(vm.d, instancereference(v))
+    vm
+end
+
 Base.empty!(vm::VariableToValueMap) = empty!(vm.d)
 Base.isempty(vm::VariableToValueMap) = isempty(vm.d)
 
@@ -93,6 +98,10 @@ end
 Get a variable's internal name.
 """
 name(v::Variable) = var_str(REPLMode, v)
+
+setname(v::Variable, s::String) = v.m.variablenames[v] = s
+
+deletename(v::Variable) = delete!(v.m.variablenames, v)
 
 
 ## Bound setter/getters

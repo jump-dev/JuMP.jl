@@ -155,8 +155,6 @@ mutable struct Model <: AbstractModel
     # # ditto for a print hook
     # printhook
 
-    # List of JuMPContainer{Variables} associated with model
-    dictlist::Vector
 
     # # storage vector for merging duplicate terms
     # indexedVector::IndexedVector{Float64}
@@ -165,8 +163,6 @@ mutable struct Model <: AbstractModel
     simplify_nonlinear_expressions::Bool
 
     objdict::Dict{Symbol,Any} # dictionary from variable and constraint names to objects
-
-    vardata::ObjectIdDict
 
     map_counter::Int # number of times we call getvalue, getdual, getlowerbound and getupperbound on a JuMPContainer, so that we can print out a warning
     operator_counter::Int # number of times we add large expressions
@@ -202,11 +198,9 @@ mutable struct Model <: AbstractModel
         m.callbacks = Any[]
         # m.solvehook = nothing
         # m.printhook = nothing
-        m.dictlist = Any[]
         m.nlpdata = nothing
         m.simplify_nonlinear_expressions = simplify_nonlinear_expressions
         m.objdict = Dict{Symbol,Any}()
-        m.vardata = ObjectIdDict()
         m.map_counter = 0
         m.operator_counter = 0
         m.ext = Dict{Symbol,Any}()
