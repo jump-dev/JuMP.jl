@@ -92,7 +92,7 @@ end
 Simple Example
 ==============
 
-In this section we will construct a simple model and explain every step along the way. The are more complex examples in the `JuMP/examples/` [folder](https://github.com/JuliaOpt/JuMP.jl/tree/master/examples). Here is the code we will walk through:
+In this section we will construct a simple model and explain every step along the way. There are more complex examples in the `JuMP/examples/` [folder](https://github.com/JuliaOpt/JuMP.jl/tree/master/examples). Here is the code we will walk through:
 
 ```julia
 using JuMP
