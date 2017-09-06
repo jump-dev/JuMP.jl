@@ -20,22 +20,22 @@
 #############################################################################
 # GenericQuadExpr
 # ∑qᵢⱼ xᵢⱼ  +  ∑ aᵢ xᵢ  +  c
-type GenericQuadExpr{CoefType,VarType} <: AbstractJuMPScalar
+mutable struct GenericQuadExpr{CoefType,VarType} <: AbstractJuMPScalar
     qvars1::Vector{VarType}
     qvars2::Vector{VarType}
     qcoeffs::Vector{CoefType}
     aff::GenericAffExpr{CoefType,VarType}
 end
-coeftype{C,V}(::GenericQuadExpr{C,V}) = C
+coeftype(::GenericQuadExpr{C,V}) where {C,V} = C
 
 Base.isempty(q::GenericQuadExpr) = (length(q.qvars1) == 0 && isempty(q.aff))
-Base.zero{C,V}(::Type{GenericQuadExpr{C,V}}) = GenericQuadExpr(V[], V[], C[], zero(GenericAffExpr{C,V}))
-Base.one{C,V}(::Type{GenericQuadExpr{C,V}})  = GenericQuadExpr(V[], V[], C[],  one(GenericAffExpr{C,V}))
+Base.zero(::Type{GenericQuadExpr{C,V}}) where {C,V} = GenericQuadExpr(V[], V[], C[], zero(GenericAffExpr{C,V}))
+Base.one(::Type{GenericQuadExpr{C,V}}) where {C,V}  = GenericQuadExpr(V[], V[], C[],  one(GenericAffExpr{C,V}))
 Base.zero(q::GenericQuadExpr) = zero(typeof(q))
 Base.one(q::GenericQuadExpr)  =  one(typeof(q))
 Base.copy(q::GenericQuadExpr) = GenericQuadExpr(copy(q.qvars1),copy(q.qvars2),copy(q.qcoeffs),copy(q.aff))
 
-function Base.append!{T,S}(q::GenericQuadExpr{T,S}, other::GenericQuadExpr{T,S})
+function Base.append!(q::GenericQuadExpr{T,S}, other::GenericQuadExpr{T,S}) where {T,S}
     append!(q.qvars1, other.qvars1)
     append!(q.qvars2, other.qvars2)
     append!(q.qcoeffs, other.qcoeffs)
@@ -50,7 +50,7 @@ function assert_isfinite(q::GenericQuadExpr)
     end
 end
 
-function Base.isequal{T,S}(q::GenericQuadExpr{T,S},other::GenericQuadExpr{T,S})
+function Base.isequal(q::GenericQuadExpr{T,S},other::GenericQuadExpr{T,S}) where {T,S}
     isequal(q.aff,other.aff)   || return false
     length(q.qvars1) == length(other.qvars1) || return false
     for i in 1:length(q.qvars1)
@@ -108,11 +108,11 @@ getvalue(arr::Array{QuadExpr}) = map(getvalue, arr)
 # GenericQuadConstraint
 # ∑qᵢⱼ xᵢⱼ  +  ∑ aᵢ xᵢ  +  c  [≤,≥]  0
 # As RHS is implicitly taken to be zero, we store only LHS and sense
-type GenericQuadConstraint{QuadType} <: AbstractConstraint
+mutable struct GenericQuadConstraint{QuadType} <: AbstractConstraint
     terms::QuadType
     sense::Symbol
 end
-Base.copy{CON<:GenericQuadConstraint}(c::CON, new_model::Model) = CON(copy(c.terms, new_model), c.sense)
+Base.copy(c::CON, new_model::Model) where {CON<:GenericQuadConstraint} = CON(copy(c.terms, new_model), c.sense)
 
 
 # Alias for (Float64, Variable)

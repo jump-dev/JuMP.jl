@@ -24,21 +24,21 @@ const sub2 = JuMP.repl[:sub2]
 
 # For "DimensionMismatch when performing vector-matrix multiplication with custom types #988"
 import Base: +, *
-immutable MyType{T}
+struct MyType{T}
     a::T
 end
-immutable MySumType{T}
+struct MySumType{T}
     a::T
 end
-Base.one{T}(::Type{MyType{T}}) = MyType(one(T))
-Base.zero{T}(::Type{MySumType{T}}) = MySumType(zero(T))
-Base.zero{T}(::MySumType{T}) = MySumType(zero(T))
+Base.one(::Type{MyType{T}}) where {T} = MyType(one(T))
+Base.zero(::Type{MySumType{T}}) where {T} = MySumType(zero(T))
+Base.zero(::MySumType{T}) where {T} = MySumType(zero(T))
 Base.transpose(t::MyType) = MyType(t.a)
 Base.transpose(t::MySumType) = MySumType(t.a)
-+{MyT<:Union{MyType, MySumType}, MyS<:Union{MyType, MySumType}}(t1::MyT, t2::MyS) = MySumType(t1.a+t2.a)
-*{S, T}(t1::MyType{S}, t2::T) = MyType(t1.a*t2)
-*{S, T}(t1::S, t2::MyType{T}) = MyType(t1*t2.a)
-*{S, T}(t1::MyType{S}, t2::MyType{T}) = MyType(t1.a*t2.a)
++(t1::MyT, t2::MyS) where {MyT<:Union{MyType, MySumType}, MyS<:Union{MyType, MySumType}} = MySumType(t1.a+t2.a)
+*(t1::MyType{S}, t2::T) where {S, T} = MyType(t1.a*t2)
+*(t1::S, t2::MyType{T}) where {S, T} = MyType(t1*t2.a)
+*(t1::MyType{S}, t2::MyType{T}) where {S, T} = MyType(t1.a*t2.a)
 
 
 @testset "Operator overloads" begin
@@ -844,7 +844,7 @@ Base.transpose(t::MySumType) = MySumType(t.a)
         @variable(m, x[1:3])
 
         # This is needed to compare arrays that have nonstandard indexing
-        elements_equal{T, N}(A::AbstractArray{T, N}, B::AbstractArray{T, N}) = all(a == b for (a, b) in zip(A, B))
+        elements_equal(A::AbstractArray{T, N}, B::AbstractArray{T, N}) where {T, N} = all(a == b for (a, b) in zip(A, B))
 
         for x2 in (OffsetArray(x, -length(x)), view(x, :), sparse(x))
             @test elements_equal(+x, +x2)
