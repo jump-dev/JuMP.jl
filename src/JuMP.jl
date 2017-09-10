@@ -63,7 +63,7 @@ export
     @objective, @NLobjective,
     @NLparameter, @constraintref
 
-include("JuMPContainer.jl")
+
 include("utils.jl")
 
 const MOIVAR = MOI.VariableReference
@@ -164,7 +164,6 @@ mutable struct Model <: AbstractModel
 
     objdict::Dict{Symbol,Any} # dictionary from variable and constraint names to objects
 
-    map_counter::Int # number of times we call getvalue, getdual, getlowerbound and getupperbound on a JuMPContainer, so that we can print out a warning
     operator_counter::Int # number of times we add large expressions
 
     # Extension dictionary - e.g. for robust
@@ -201,7 +200,6 @@ mutable struct Model <: AbstractModel
         m.nlpdata = nothing
         m.simplify_nonlinear_expressions = simplify_nonlinear_expressions
         m.objdict = Dict{Symbol,Any}()
-        m.map_counter = 0
         m.operator_counter = 0
         m.ext = Dict{Symbol,Any}()
 
@@ -535,14 +533,6 @@ Base.copy(v::Variable, new_model::Model) = Variable(new_model, v.col)
 Base.copy(x::Void, new_model::Model) = nothing
 Base.copy(v::AbstractArray{Variable}, new_model::Model) = (var -> Variable(new_model, var.col)).(v)
 
-# Copy methods for variable containers
-Base.copy(d::JuMPContainer) = map(copy, d)
-function Base.copy(d::JuMPContainer, new_model::Model)
-    new_d = map(x -> copy(x, new_model), d)
-    new_d.meta[:model] = new_model
-    new_d
-end
-
 ##########################################################################
 # ConstraintRef
 # Reference to a constraint for retrieving solution info
@@ -760,20 +750,6 @@ function Base.setindex!(m::JuMP.Model, value, name::Symbol)
 end
 
 # usage warnings
-function mapcontainer_warn(f, x::JuMPContainer, var_or_expr)
-    isempty(x) && return
-    v = first(values(x))
-    m = v.m
-    m.map_counter += 1
-    if m.map_counter > 400
-        # It might not be f that was called the 400 first times but most probably it is f
-        Base.warn_once("$f has been called on a collection of $(var_or_expr)s a large number of times. For performance reasons, this should be avoided. Instead of $f(x)[a,b,c], use $f(x[a,b,c]) to avoid temporary allocations.")
-    end
-end
-mapcontainer_warn(f, x::JuMPContainer{Variable}) = mapcontainer_warn(f, x, "variable")
-mapcontainer_warn{E}(f, x::JuMPContainer{E}) = mapcontainer_warn(f, x, "expression")
-getvalue_warn(x::JuMPContainer) = nothing
-
 function operator_warn(lhs::AffExpr,rhs::AffExpr)
     if length(lhs.vars) > 50 || length(rhs.vars) > 50
         if length(lhs.vars) > 1
@@ -821,6 +797,7 @@ Base.ndims(::JuMPTypes) = 0
 
 
 ##########################################################################
+include("containers.jl")
 include("operators.jl")
 # include("writers.jl")
 include("macros.jl")

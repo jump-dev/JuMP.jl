@@ -206,10 +206,7 @@ _sizehint_expr!(q, n) = nothing
 #  - dot
 #############################################################################
 
-Base.sum(j::JuMPArray) = sum(j.innerArray)
-Base.sum(j::JuMPDict)  = sum(values(j.tupledict))
-Base.sum(j::JuMPArray{Variable}) = AffExpr(vec(j.innerArray), ones(length(j.innerArray)), 0.0)
-Base.sum(j::JuMPDict{Variable})  = AffExpr(collect(values(j.tupledict)), ones(length(j.tupledict)), 0.0)
+# TODO: specialize sum for Dict and JuMPArray of JuMP objects?
 Base.sum(j::Array{Variable}) = AffExpr(vec(j), ones(length(j)), 0.0)
 Base.sum(j::AbstractArray{Variable}) = sum([j[i] for i in eachindex(j)]) # to handle non-one-indexed arrays.
 function Base.sum{T<:GenericAffExpr}(affs::AbstractArray{T})
@@ -222,21 +219,12 @@ end
 
 import Base.vecdot
 
-_dot_depr() = warn("dot is deprecated for multidimensional arrays. Use vecdot instead.")
-
 # Base Julia's generic fallback vecdot requires that dot be defined
 # for scalars, so instead of defining them one-by-one, we will
 # fallback to the multiplication operator
 Base.dot(lhs::JuMPTypes, rhs::JuMPTypes) = lhs*rhs
 Base.dot(lhs::JuMPTypes, rhs::Number)    = lhs*rhs
 Base.dot(lhs::Number,    rhs::JuMPTypes) = lhs*rhs
-
-Base.dot{T,S,N}(lhs::AbstractArray{T,N}, rhs::JuMPArray{S,N})    = begin _dot_depr(); vecdot(lhs,rhs); end
-Base.dot{T,S,N}(lhs::JuMPArray{T,N},rhs::AbstractArray{S,N})     = begin _dot_depr(); vecdot(lhs,rhs); end
-Base.dot{T,S,N}(lhs::JuMPArray{T,N},rhs::JuMPArray{S,N}) = begin _dot_depr(); vecdot(lhs,rhs); end
-Base.dot{T<:JuMPTypes,S,N}(lhs::AbstractArray{T,N}, rhs::AbstractArray{S,N}) = begin _dot_depr(); vecdot(lhs,rhs); end
-Base.dot{T<:JuMPTypes,S<:JuMPTypes,N}(lhs::AbstractArray{T,N}, rhs::AbstractArray{S,N}) = begin _dot_depr(); vecdot(lhs,rhs); end
-Base.dot{T,S<:JuMPTypes,N}(lhs::AbstractArray{T,N}, rhs::AbstractArray{S,N}) = begin _dot_depr(); vecdot(lhs,rhs); end
 
 Base.dot{T<:JuMPTypes,S<:JuMPTypes}(lhs::AbstractVector{T},rhs::AbstractVector{S}) = _dot(lhs,rhs)
 Base.dot{T<:JuMPTypes,S}(lhs::AbstractVector{T},rhs::AbstractVector{S}) = _dot(lhs,rhs)
@@ -267,10 +255,7 @@ Base.promote_rule{R<:Real}(::Type{AffExpr}, ::Type{R}       ) = AffExpr
 Base.promote_rule(         ::Type{AffExpr}, ::Type{QuadExpr}) = QuadExpr
 Base.promote_rule{R<:Real}(::Type{QuadExpr},::Type{R}       ) = QuadExpr
 
-_throw_transpose_error() = error("Transpose not currently implemented for JuMPArrays with arbitrary index sets.")
 Base.transpose(x::AbstractJuMPScalar) = x
-Base.transpose( x::JuMPArray) = _throw_transpose_error()
-Base.ctranspose(x::JuMPArray) = _throw_transpose_error()
 
 # Can remove the following code once == overloading is removed
 
