@@ -45,7 +45,7 @@ Solver support in Julia is currently provided by writing a solver-specific packa
 | ''                                                                               | [CoinOptServices.jl](https://github.com/JuliaOpt/CoinOptServices.jl)            | `OsilCouenneSolver()`     |  ''         |       |       |       |       |       |       |
 | [CPLEX](http://www-01.ibm.com/software/commerce/optimization/cplex-optimizer/)   | [CPLEX.jl](https://github.com/JuliaOpt/CPLEX.jl)                                | `CplexSolver()`           |  Comm.      | X     | X     | X     |       |       |       |
 | [ECOS](https://github.com/ifa-ethz/ecos)                                         | [ECOS.jl](https://github.com/JuliaOpt/ECOS.jl)                                  | `ECOSSolver()`            |  GPL        | X     | X     |       |       |       |       |
-| [FICO Xpress](http://www.fico.com/en/products/fico-xpress-optimization-suite)    | [Xpress.jl](https://github.com/JuliaOpt/Xpress.jl)                              | `XpressSolver()`          |  Comm.      | X     | X     | X     |       |       |       |
+| [FICO Xpress](http://www.fico.com/en/products/fico-xpress-optimization-suite)    | [Xpress.jl](https://github.com/JuliaOpt/Xpress.jl)                              | `Xpress.XpressSolver()`          |  Comm.      | X     | X     | X     |       |       |       |
 | [GLPK](http://www.gnu.org/software/glpk/)                                        | [GLPKMath...](https://github.com/JuliaOpt/GLPKMathProgInterface.jl)             | `GLPKSolver[LP\|MIP]()`   |  GPL        | X     |       | X     |       |       |       |
 | [Gurobi](http://gurobi.com)                                                      | [Gurobi.jl](https://github.com/JuliaOpt/Gurobi.jl)                              | `GurobiSolver()`          |  Comm.      | X     | X     | X     |       |       |       |
 | [Ipopt](https://projects.coin-or.org/Ipopt)                                      | [Ipopt.jl](https://github.com/JuliaOpt/Ipopt.jl)                                | `IpoptSolver()`           |  EPL        | X     |       |       | X     |       |       |
@@ -101,10 +101,13 @@ ECOS can be used by JuMP to solve LPs and SOCPs. ECOS does not support general q
 
 ### FICO Xpress
 
-Requires a working installation of Xpress with an active license (it is possible to get license for academic use, see [FICO Academic Partner Program](http://subscribe.fico.com/Academic-Partner-Program)). Supports SOCP and "SOS" constraints. The interface is experimental, but it does pass all JuMP and MathProgBase tests. Callbacks are not yet supported.
+Requires a working installation of Xpress with an active license (it is possible to get license for academic use, see [FICO Academic Partner Program](http://subscribe.fico.com/Academic-Partner-Program)). Supports SOCP and "SOS" constraints. Callbacks are not yet supported.
 
 !!! warning
     If you are using 64-bit Xpress, you must use 64-bit Julia (and similarly with 32-bit Xpress).
+
+!!! warning
+    `XpressSolver` is not exported by default, thus one must use `Xpress.XpressSolver` or import it explicitly.
 
 ### GLPK
 
