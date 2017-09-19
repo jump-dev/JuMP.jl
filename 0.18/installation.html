@@ -432,14 +432,14 @@ if(!(location.hostname.match('readthedocs') || location.hostname.match('rtfd')))
 </div>
 <div class="section" id="id7">
 <h3>FICO Xpress<a class="headerlink" href="#id7" title="Permalink to this headline">¶</a></h3>
-<p>Requires a license. Callbacks are not yet supported. SOCPs have not been tested.</p>
+<p>Requires a working installation of Xpress with an active license (it is possible to get license for academic use, see <a class="reference external" href="http://subscribe.fico.com/Academic-Partner-Program">FICO Academic Partner Program</a>). Supports SOCP and &#8220;SOS&#8221; constraints. Callbacks are not yet supported.</p>
 <div class="admonition warning">
-  <p class="first admonition-title">Warning</p>
-  <p class="last">If you are using 64-bit Xpress, you must use 64-bit Julia (and similarly with 32-bit Xpress).</p>
+<p class="first admonition-title">Warning</p>
+<p class="last">If you are using 64-bit Xpress, you must use 64-bit Julia (and similarly with 32-bit Xpress).</p>
 </div>
 <div class="admonition warning">
-  <p class="first admonition-title">Warning</p>
-  <p class="last"><code class="docutils literal">XpressSolver</code> is not exported by default, thus one must use <code class="docutils literal">Xpress.XpressSolver</code> or import it explicitly.</p>
+<p class="first admonition-title">Warning</p>
+<p class="last"><code class="docutils literal">XpressSolver</code> is not exported by default, thus one must use <code class="docutils literal">Xpress.XpressSolver</code> or import it explicitly.</p>
 </div>
 </div>
 <div class="section" id="id8">
