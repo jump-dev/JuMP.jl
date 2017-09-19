@@ -13,13 +13,13 @@
 struct JuMPArray{T,N,Ax} <: AbstractArray{T,N}
     data::Array{T,N}
     axes::Ax
-    lookup::Vector{Dict} # TODO: correctly type return type of the Dict as Int
+    lookup::Vector{Dict{S,Int} where S}
 end
 
 export JuMPArray
 
 function JuMPArray(data::Array{T,N}, axs...) where {T,N}
-    lookup = Vector{Dict}(N)
+    lookup = Vector{Dict{S,Int} where S}(N)
     for i in 1:N
         d = Dict{eltype(axs[i]),Int}()
         cnt = 1
