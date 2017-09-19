@@ -309,7 +309,7 @@ if(!(location.hostname.match('readthedocs') || location.hostname.match('rtfd')))
 </tr>
 <tr class="row-even"><td><a class="reference external" href="http://www.fico.com/en/products/fico-xpress-optimization-suite">FICO Xpress</a></td>
 <td><a class="reference external" href="https://github.com/JuliaOpt/Xpress.jl">Xpress.jl</a></td>
-<td><code class="docutils literal"><span class="pre">XpressSolver()</span></code></td>
+<td><code class="docutils literal"><span class="pre">Xpress.XpressSolver()</span></code></td>
 <td>Comm.</td>
 <td>X</td>
 <td>&nbsp;</td>
@@ -429,7 +429,15 @@ if(!(location.hostname.match('readthedocs') || location.hostname.match('rtfd')))
 </div>
 <div class="section" id="id7">
 <h3>FICO Xpress<a class="headerlink" href="#id7" title="Permalink to this headline">¶</a></h3>
-<p>Requires a license. The interface is experimental and has not been widely tested. Callbacks are not yet supported. SOCPs have not been tested.</p>
+<p>Requires a license. Callbacks are not yet supported. SOCPs have not been tested.</p>
+<div class="admonition warning">
+  <p class="first admonition-title">Warning</p>
+  <p class="last">If you are using 64-bit Xpress, you must use 64-bit Julia (and similarly with 32-bit Xpress).</p>
+</div>
+<div class="admonition warning">
+  <p class="first admonition-title">Warning</p>
+  <p class="last"><code class="docutils literal">XpressSolver</code> is not exported by default, thus one must use <code class="docutils literal">Xpress.XpressSolver</code> or import it explicitly.</p>
+</div>
 </div>
 <div class="section" id="id8">
 <h3>GLPK<a class="headerlink" href="#id8" title="Permalink to this headline">¶</a></h3>
