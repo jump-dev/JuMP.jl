@@ -58,6 +58,7 @@ Base.setindex!(A::JuMPArray, v, idx::CartesianIndex) = A.data[idx] = v
 # AbstractArray interface
 
 Base.linearindices(A::JuMPArray) = error("JuMPArray does not support this operation.")
+# We don't define size because it causes 'end' to behave incorrectly. Better to error.
 Base.size(A::JuMPArray) = error("JuMPArray does not define this operation")
 Base.indices(A::JuMPArray) = A.axes
 
