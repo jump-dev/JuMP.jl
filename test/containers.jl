@@ -94,6 +94,8 @@ end
     A = JuMPArray([1.0,2.0], s1)
     @test A[2] == 1.0
     @test A[3] == 2.0
+    @test isassigned(A, 2)
+    @test !isassigned(A, 1)
     @test length.(indices(A)) == (2,)
     B = plus1.(A)
     @test B[2] == 2.0
@@ -137,6 +139,12 @@ And data, a 2×2 Array{Int64,2}:
 
     A = JuMPArray(zeros(2,2,2,2), 2:3, [:a, :b], -1:0, ["a","b"])
     A[2,:a,-1,"a"] = 1.0
+    f = 0.0
+    for I in eachindex(A)
+        f += A[I]
+    end
+    @test f == 1.0
+    @test isassigned(A, 2, :a, -1, "a")
     @test A[:,:,-1,"a"] == JuMPArray([1.0 0.0; 0.0 0.0], 2:3, [:a,:b])
     @test_throws KeyError A[2,:a,-1,:a]
     @test sprint(show, A) == """
@@ -161,4 +169,14 @@ And data, a 2×2×2×2 Array{Float64,4}:
 [:, :, 0, "b"] =
  0.0  0.0
  0.0  0.0"""
+
+    a = Array{Int,0}()
+    a[] = 10
+    A = JuMPArray(a)
+    @test A[] == 10
+    A[] = 1
+    @test sprint(show, A) == """
+0-dimensional JuMPArray{Int64,0,...} with index sets:
+And data, a 0-dimensional Array{Int64,0}:
+1"""
 end
