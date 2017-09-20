@@ -72,6 +72,11 @@ using Base.Test
 
         @test typeof(zero(nobounds)) == AffExpr
         @test typeof(one(nobounds)) == AffExpr
+
+        @test_throws ErrorException @variable(mcon, [(0,0)]) # #922
+        x = @variable(mcon, [(0,2)])
+        @test JuMP.name(x[0]) == "__anon__[0]"
+        @test JuMP.name(x[2]) == "__anon__[2]"
     end
 
     @testset "get and set bounds" begin
@@ -131,8 +136,23 @@ using Base.Test
     @testset "repeated elements in index set (issue #199)" begin
         repeatmod = Model()
         s = [:x,:x,:y]
-        @variable(repeatmod, x[s])
-        @test JuMP.numvar(repeatmod) == 3
+        @test_throws ErrorException @variable(repeatmod, x[s], container = JuMPArray)
+        @test_throws ErrorException @variable(repeatmod, x[s], container = Dict)
+        @test_throws ErrorException @variable(repeatmod, x[s,[1]], container = JuMPArray)
+        @test_throws ErrorException @variable(repeatmod, x[s,[1]], container = Dict)
+    end
+
+    @testset "Base.OneTo as index set (#933)" begin
+        m = Model()
+        x = @variable(m, [Base.OneTo(3), 1:2], container=Auto)
+        @test x isa Matrix{Variable}
+        @test size(x) == (3,2)
+        x = @variable(m, [Base.OneTo(3), 1:2], container=Array)
+        @test x isa Matrix{Variable}
+        @test size(x) == (3,2)
+        x = @variable(m, [Base.OneTo(3), 1:2], container=JuMPArray)
+        @test x isa JuMPArray{Variable}
+        @test length.(indices(x)) == (3,2)
     end
 
     # TODO reenable when printing comes back
@@ -166,7 +186,7 @@ using Base.Test
         m = Model()
         @variable(m, x[1:4,  1:0,1:3], start = 0) # Array{Variable}
         @variable(m, y[1:4,  2:1,1:3], start = 0) # JuMPArray
-        @variable(m, z[1:4,Set(),1:3], start = 0) # JuMPDict
+        @variable(m, z[1:4,Set(),1:3], start = 0) # Dict
 
         @test JuMP.startvalue.(x) == Array{Float64}(4, 0, 3)
         # @test typeof(JuMP.startvalue(y)) <: JuMP.JuMPArray{Float64}
@@ -175,7 +195,7 @@ using Base.Test
         # @test length(JuMP.startvalue(z)) == 0
     end
 
-# Slices three-dimensional JuMPContainer x[I,J,K]
+# Slices three-dimensional JuMPArray x[I,J,K]
 # I,J,K can be singletons, ranges, colons, etc.
 function sliceof(x, I, J, K)
     y = Array{Variable}(length(I), length(J), length(K))
@@ -201,50 +221,51 @@ end
 
     @testset "Slices of JuMPArray (#684)" begin
         m = Model()
-        @variable(m, x[1:3, 1:4,1:2])
+        @variable(m, x[1:3, 1:4,1:2], container=JuMPArray)
         @variable(m, y[1:3,-1:2,3:4])
         @variable(m, z[1:3,-1:2:4,3:4])
         @variable(m, w[1:3,-1:2,[:red,"blue"]])
 
-        @test x[:] == vec(sliceof(x, 1:3, 1:4, 1:2))
-        @test x[:,:,:] == sliceof(x, 1:3, 1:4, 1:2)
-        @test x[1,:,:] == sliceof(x, 1, 1:4, 1:2)
-        @test x[1,:,2] == sliceof(x, 1, 1:4, 2)
-        @test_throws BoundsError x[1,:,3]
-        @test x[1:2,:,:] == sliceof(x, 1:2, 1:4, 1:2)
-        @test x[1:2,:,2] == sliceof(x, 1:2, 1:4, 2)
-        @test x[1:2,:,1:2] == sliceof(x, 1:2, 1:4, 1:2)
-        @test_throws BoundsError x[1:2,:,1:3]
+        #@test x[:] == vec(sliceof(x, 1:3, 1:4, 1:2))
+        @test x isa JuMPArray
+        @test x[:,:,:].data == sliceof(x, 1:3, 1:4, 1:2)
+        @test x[1,:,:].data == sliceof(x, 1, 1:4, 1:2)
+        @test x[1,:,2].data == sliceof(x, 1, 1:4, 2)
+        @test_throws KeyError x[1,:,3]
+        #@test x[1:2,:,:].data == sliceof(x, 1:2, 1:4, 1:2)
+        #@test x[1:2,:,2].data == sliceof(x, 1:2, 1:4, 2)
+        #@test x[1:2,:,1:2].data == sliceof(x, 1:2, 1:4, 1:2)
+        @test_throws KeyError x[1:2,:,1:3]
 
-        @test y[:] == vec(sliceof(y, 1:3, -1:2, 3:4))
-        @test y[:,:,:] == sliceof(y, 1:3, -1:2, 3:4)
-        @test y[1,:,:] == sliceof(y, 1, -1:2, 3:4)
-        @test y[1,:,4] == sliceof(y, 1, -1:2, 4)
-        @test_throws ErrorException y[1,:,5]
-        @test y[1:2,:,:] == sliceof(y, 1:2, -1:2, 3:4)
-        @test y[1:2,:,4] == sliceof(y, 1:2, -1:2, 4)
-        @test y[1:2,:,3:4] == sliceof(y, 1:2, -1:2, 3:4)
-        @test_throws BoundsError y[1:2,:,1:3]
+        #@test y[:] == vec(sliceof(y, 1:3, -1:2, 3:4))
+        @test y[:,:,:].data == sliceof(y, 1:3, -1:2, 3:4)
+        @test y[1,:,:].data == sliceof(y, 1, -1:2, 3:4)
+        @test y[1,:,4].data == sliceof(y, 1, -1:2, 4)
+        @test_throws KeyError y[1,:,5]
+        # @test y[1:2,:,:] == sliceof(y, 1:2, -1:2, 3:4)
+        # @test y[1:2,:,4] == sliceof(y, 1:2, -1:2, 4)
+        # @test y[1:2,:,3:4] == sliceof(y, 1:2, -1:2, 3:4)
+        # @test_throws BoundsError y[1:2,:,1:3]
 
-        @test z[:] == vec(sliceof(z, 1:3, -1:2:4, 3:4))
-        @test z[:,1,:] == sliceof(z, 1:3, 1, 3:4)
-        @test z[1,1,:] == sliceof(z, 1, 1, 3:4)
-        @test_throws ErrorException z[:,5,3]
-        @test z[1:2,1,:] == sliceof(z, 1:2, 1, 3:4)
-        @test z[1:2,1,4] == sliceof(z, 1:2, 1, 4)
-        @test z[1:2,1,3:4] == sliceof(z, 1:2, 1, 3:4)
-        @test_throws BoundsError z[1:2,1,1:3]
+        #@test z[:] == vec(sliceof(z, 1:3, -1:2:4, 3:4))
+        @test z[:,1,:].data == sliceof(z, 1:3, 1, 3:4)
+        @test z[1,1,:].data == sliceof(z, 1, 1, 3:4)
+        @test_throws KeyError z[:,5,3]
+        # @test z[1:2,1,:] == sliceof(z, 1:2, 1, 3:4)
+        # @test z[1:2,1,4] == sliceof(z, 1:2, 1, 4)
+        # @test z[1:2,1,3:4] == sliceof(z, 1:2, 1, 3:4)
+        # @test_throws BoundsError z[1:2,1,1:3]
 
-        @test w[:] == vec(sliceof(w, 1:3, -1:2, [:red,"blue"]))
-        @test_throws ErrorException w[:,:,:]
-        @test w[1,:,"blue"] == sliceof(w, 1, -1:2, ["blue"])
-        @test w[1,:,:red] == sliceof(w, 1, -1:2, [:red])
-        @test_throws ErrorException w[1,:,"green"]
-        @test w[1:2,:,"blue"] == sliceof(w, 1:2, -1:2, ["blue"])
-        @test_throws ErrorException w[1:2,:,[:red,"blue"]]
+        #@test w[:] == vec(sliceof(w, 1:3, -1:2, [:red,"blue"]))
+        @test w[:,:,:] == w
+        @test w[1,:,"blue"].data == sliceof(w, 1, -1:2, ["blue"])
+        @test w[1,:,:red].data == sliceof(w, 1, -1:2, [:red])
+        @test_throws KeyError w[1,:,"green"]
+        # @test w[1:2,:,"blue"] == sliceof(w, 1:2, -1:2, ["blue"])
+        # @test_throws ErrorException w[1:2,:,[:red,"blue"]]
     end
 
-    @testset "Can't use end for indexing a JuMPContainer" begin
+    @testset "Can't use end for indexing a JuMPArray or Dict" begin
         m = Model()
         @variable(m, x[0:2,1:4])
         @variable(m, y[i=1:4,j=1:4;true])
@@ -261,7 +282,7 @@ end
         m = Model()
         t = UInt(4)
         @variable(m, x[1:t])
-        @constraintref(y[1:t])
+        #@constraintref(y[1:t])
         @test JuMP.numvar(m) == 4
     end
 

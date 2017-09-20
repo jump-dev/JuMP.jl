@@ -19,11 +19,10 @@ include("parseexpr.jl")
 # Unexported. Takes as input an object representing a name, associated index
 # sets, and conditions on those sets, for example
 # buildrefsets(:(x[i=1:3,[:red,:blue]],k=S; i+k <= 6))
-# Used internally in macros to build JuMPContainers and constraints. Returns
+# Used internally in macros to build containers and constraints. Returns
 #       refcall:  Expr to reference a particular element, e.g. :(x[i,j,k])
-#       idxvars:  Index names used in referencing, e.g.g {:i,:j,:k}
-#       idxsets:  Index sets for indexing, e.g. {1:3, [:red,:blue], S}
-#       idxpairs: Vector of IndexPair
+#       idxvars:  Index names used in referencing, e.g.g []:i,:j,:k]
+#       idxsets:  Index sets for indexing, e.g. [1:3, [:red,:blue], S]
 #       condition: Expr containing any condition present for indexing
 # Note in particular that it does not actually evaluate the condition, and so
 # it returns just the cartesian product of possible indices.
@@ -31,7 +30,6 @@ function buildrefsets(expr::Expr, cname)
     c = copy(expr)
     idxvars = Any[]
     idxsets = Any[]
-    idxpairs = IndexPair[]
     # Creating an indexed set of refs
     refcall = Expr(:ref, cname)
     if isexpr(c, :typed_vcat) || isexpr(c, :ref)
@@ -53,22 +51,20 @@ function buildrefsets(expr::Expr, cname)
             parse_done, idxvar, _idxset = tryParseIdxSet(s::Expr)
             if parse_done
                 idxset = esc(_idxset)
-                push!(idxpairs, IndexPair(idxvar, _idxset))
             end
         end
         if !parse_done # No index variable specified
             idxvar = gensym()
             idxset = esc(s)
-            push!(idxpairs, IndexPair(nothing,s))
         end
         push!(idxvars, idxvar)
         push!(idxsets, idxset)
         push!(refcall.args, esc(idxvar))
     end
-    return refcall, idxvars, idxsets, idxpairs, condition
+    return refcall, idxvars, idxsets, condition
 end
 
-buildrefsets(c, cname)  = (cname, Any[], Any[], IndexPair[], :())
+buildrefsets(c, cname)  = (cname, Any[], Any[], :())
 buildrefsets(c) = buildrefsets(c, getname(c))
 
 ###############################################################################
@@ -83,10 +79,11 @@ buildrefsets(c) = buildrefsets(c, getname(c))
 #                  If none, pass :().
 #       idxvars: As defined for buildrefsets
 #       idxsets: As defined for buildrefsets
-#       idxpairs: As defined for buildrefsets
 #       sym: A symbol or expression containing the element type of the
 #            resulting container, e.g. :AffExpr or :Variable
-function getloopedcode(varname, code, condition, idxvars, idxsets, idxpairs, sym; lowertri=false)
+#       requestedcontainer: `:Auto`, `:Array`, `:JuMPArray`, `:Dict` passed
+#                           through to generatecontainer()
+function getloopedcode(varname, code, condition, idxvars, idxsets, sym, requestedcontainer::Symbol; lowertri=false)
 
     # if we don't have indexing, just return to avoid allocating stuff
     if isempty(idxsets)
@@ -95,10 +92,20 @@ function getloopedcode(varname, code, condition, idxvars, idxsets, idxpairs, sym
 
     hascond = (condition != :())
 
+    requestedcontainer in [:Auto, :Array, :JuMPArray, :Dict] || return :(error("Invalid container type $container. Must be Auto, Array, JuMPArray, or Dict."))
+
+    if hascond
+        if requestedcontainer == :Auto
+            requestedcontainer = :Dict
+        elseif requestedcontainer == :Array || requestedcontainer == :JuMPArray
+            return :(error("Requested container type is incompatible with conditional indexing. Use :Dict or :Auto instead."))
+        end
+    end
+    containercode, autoduplicatecheck = generatecontainer(sym, idxvars, idxsets, requestedcontainer)
+
     if lowertri
         @assert !hascond
         @assert length(idxvars)  == 2
-        @assert length(idxpairs) == 2
         @assert !hasdependentsets(idxvars, idxsets)
 
         i, j = esc(idxvars[1]), esc(idxvars[2])
@@ -119,6 +126,19 @@ function getloopedcode(varname, code, condition, idxvars, idxsets, idxpairs, sym
             end
         end
     else
+        if !autoduplicatecheck # we need to check for duplicate keys in the index set
+            if length(idxvars) > 1
+                keytuple = Expr(:tuple, esc.(idxvars)...)
+            else
+                keytuple = esc(idxvars[1])
+            end
+            code = quote
+                if haskey($varname, $keytuple)
+                    error(string("Repeated index ", $keytuple,". Index sets must have unique elements."))
+                end
+                $code
+            end
+        end
         if hascond
             code = quote
                 $(esc(condition)) || continue
@@ -136,15 +156,10 @@ function getloopedcode(varname, code, condition, idxvars, idxsets, idxpairs, sym
             end
         end
     end
-    if hascond || hasdependentsets(idxvars,idxsets)
-        # force a JuMPDict
-        N = length(idxsets)
-        mac = :($varname = JuMPDict{$(sym),$N}())
-    else
-        mac = gendict(varname, sym, idxsets...)
-    end
+
+
     return quote
-        $mac
+        $varname = $containercode
         $code
         nothing
     end
@@ -171,10 +186,28 @@ function _localvar(x::Expr)
     args
 end
 
+"""
+    extract_kwargs(args)
+
+Process the arguments to a macro, separating out the keyword arguments.
+Return a tuple of (flat_arguments, keyword arguments, and requestedcontainer),
+where `requestedcontainer` is a symbol to be passed to `getloopedcode`.
+"""
+function extract_kwargs(args)
+    kwargs = filter(x -> isexpr(x, :(=)) && x.args[1] != :container , collect(args))
+    flat_args = filter(x->!isexpr(x, :(=)), collect(args))
+    requestedcontainer = :Auto
+    for kw in args
+        if isexpr(kw, :(=)) && kw.args[1] == :container
+            requestedcontainer = kw.args[2]
+        end
+    end
+    return flat_args, kwargs, requestedcontainer
+end
+
 function addkwargs!(call, kwargs)
-    kwsymbol = VERSION < v"0.6.0-dev.1934" ? :kw : :(=) # changed by julia PR #19868
     for kw in kwargs
-        @assert isexpr(kw, kwsymbol)
+        @assert isexpr(kw, :(=))
         push!(call.args, esc(Expr(:kw, kw.args...)))
     end
 end
@@ -299,19 +332,11 @@ add groups of linear or quadratic constraints.
 
 """
 macro constraint(args...)
-    # Pick out keyword arguments
-    if isexpr(args[1],:parameters) # these come if using a semicolon
-        kwargs = args[1]
-        args = args[2:end]
-    else
-        kwargs = Expr(:parameters)
-    end
-    kwsymbol = VERSION < v"0.6.0-dev.1934" ? :kw : :(=) # changed by julia PR #19868
-    append!(kwargs.args, filter(x -> isexpr(x, kwsymbol), collect(args))) # comma separated
-    args = filter(x->!isexpr(x, kwsymbol), collect(args))
+
+    args, kwargs, requestedcontainer = extract_kwargs(args)
 
     if length(args) < 2
-        if length(kwargs.args) > 0
+        if length(kwargs) > 0
             constraint_error(args, "Not enough positional arguments")
         else
             constraint_error(args, "Not enough arguments")
@@ -344,7 +369,7 @@ macro constraint(args...)
 
     # Strategy: build up the code for non-macro addconstraint, and if needed
     # we will wrap in loops to assign to the ConstraintRefs
-    refcall, idxvars, idxsets, idxpairs, condition = buildrefsets(c, variable)
+    refcall, idxvars, idxsets, condition = buildrefsets(c, variable)
     # JuMP accepts constraint syntax of the form @constraint(m, foo in bar).
     # This will be rewritten to a call to constructconstraint!(foo, bar). To
     # extend JuMP to accept set-based constraints of this form, it is necessary
@@ -370,7 +395,7 @@ macro constraint(args...)
                 constraintcall = :(addconstraint($m, constructconstraint!($newaff,$set)))
             end
         end
-        addkwargs!(constraintcall, kwargs.args)
+        addkwargs!(constraintcall, kwargs)
         code = quote
             q = zero(AffExpr)
             $parsecode
@@ -394,7 +419,7 @@ macro constraint(args...)
         newub, parseub = parseExprToplevel(x.args[5],:ub)
 
         constraintcall = :($addconstr($m, constructconstraint!($newaff,$newlb,$newub)))
-        addkwargs!(constraintcall, kwargs.args)
+        addkwargs!(constraintcall, kwargs)
         code = quote
             aff = zero(AffExpr)
             $parsecode
@@ -435,7 +460,7 @@ macro constraint(args...)
               "       expr1 == expr2\n" * "       lb <= expr <= ub"))
     end
     return assert_validmodel(m, quote
-        $(getloopedcode(variable, code, condition, idxvars, idxsets, idxpairs, :ConstraintRef))
+        $(getloopedcode(variable, code, condition, idxvars, idxsets, :ConstraintRef, requestedcontainer))
         $(if anonvar
             variable
         else
@@ -761,6 +786,8 @@ expr = @expression(m, [i=1:3], i*sum(x[j] for j=1:3))
 ```
 """
 macro expression(args...)
+
+    args, kwargs, requestedcontainer = extract_kwargs(args)
     if length(args) == 3
         m = esc(args[1])
         c = args[2]
@@ -772,12 +799,13 @@ macro expression(args...)
     else
         error("@expression: needs at least two arguments.")
     end
+    length(kwargs) == 0 || error("@expression: unrecognized keyword argument")
 
     anonvar = isexpr(c, :vect) || isexpr(c, :vcat)
     variable = gensym()
     escvarname  = anonvar ? variable : esc(getname(c))
 
-    refcall, idxvars, idxsets, idxpairs, condition = buildrefsets(c, variable)
+    refcall, idxvars, idxsets, condition = buildrefsets(c, variable)
     newaff, parsecode = parseExprToplevel(x, :q)
     code = quote
         q = 0.0
@@ -793,7 +821,7 @@ macro expression(args...)
         $code
         $(refcall) = $newaff
     end
-    code = getloopedcode(variable, code, condition, idxvars, idxsets, idxpairs, :AffExpr)
+    code = getloopedcode(variable, code, condition, idxvars, idxsets, :AffExpr, requestedcontainer)
     if m === nothing # deprecated usage
         return quote
             $code
@@ -912,15 +940,11 @@ macro variable(args...)
 
     m = esc(args[1])
 
-    extra = vcat(args[2:end]...)
-    # separate out keyword arguments
-    kwsymbol = :(=)
-    kwargs = filter(ex->isexpr(ex,kwsymbol), extra)
-    extra = filter(ex->!isexpr(ex,kwsymbol), extra)
+    extra, kwargs, requestedcontainer = extract_kwargs(args[2:end])
 
     # if there is only a single non-keyword argument, this is an anonymous
     # variable spec and the one non-kwarg is the model
-    if length(kwargs) == length(args)-1
+    if length(extra) == 0
         x = gensym()
         anon_singleton = true
     else
@@ -997,7 +1021,7 @@ macro variable(args...)
     variable = gensym()
     quotvarname = anonvar ? :(:__anon__) : quot(getname(var))
     escvarname  = anonvar ? variable     : esc(getname(var))
-    basename = string(getname(var))
+    basename = anonvar ? "__anon__" : string(getname(var))
 
     if !isa(getname(var),Symbol) && !anonvar
         Base.error("Expression $(getname(var)) should not be used as a variable name. Use the \"anonymous\" syntax $(getname(var)) = @variable(m, ...) instead.")
@@ -1070,7 +1094,7 @@ macro variable(args...)
 
     # We now build the code to generate the variables (and possibly the JuMPDict
     # to contain them)
-    refcall, idxvars, idxsets, idxpairs, condition = buildrefsets(var, variable)
+    refcall, idxvars, idxsets, condition = buildrefsets(var, variable)
     clear_dependencies(i) = (isdependent(idxvars,idxsets[i],i) ? () : idxsets[i])
 
     # Code to be used to create each variable of the container.
@@ -1109,7 +1133,7 @@ macro variable(args...)
         end
         return assert_validmodel(m, quote
             $(esc(idxsets[1].args[1].args[2])) == $(esc(idxsets[2].args[1].args[2])) || error("Cannot construct symmetric variables with nonsquare dimensions")
-            $(getloopedcode(variable, code, condition, idxvars, idxsets, idxpairs, vartype; lowertri=symmetric))
+            $(getloopedcode(variable, code, condition, idxvars, idxsets, vartype, requestedcontainer; lowertri=symmetric))
             $(if sdp
                 quote
                     JuMP.addconstraint($m, JuMP._constructconstraint!($variable, JuMP.PSDCone()))
@@ -1119,37 +1143,34 @@ macro variable(args...)
             $(anonvar ? variable : :($escvarname = $variable))
         end)
     else
-        coloncheckcode = Expr(:call,:coloncheck,refcall.args[2:end]...)
-        code = :($coloncheckcode; $code)
         return assert_validmodel(m, quote
-            $(getloopedcode(variable, code, condition, idxvars, idxsets, idxpairs, vartype))
-            isa($variable, JuMPContainer) && pushmeta!($variable, :model, $m)
+            $(getloopedcode(variable, code, condition, idxvars, idxsets, vartype, requestedcontainer))
             !$anonvar && registervar($m, $quotvarname, $variable)
             $(anonvar ? variable : :($escvarname = $variable))
         end)
     end
 end
 
-macro constraintref(var)
-    if isa(var,Symbol)
-        # easy case
-        return esc(:(local $var))
-    else
-        if !isexpr(var,:ref)
-            error("Syntax error: Expected $var to be of form var[...]")
-        end
-
-        varname = var.args[1]
-        idxsets = var.args[2:end]
-        idxpairs = IndexPair[]
-
-        code = quote
-            $(esc(gendict(varname, :ConstraintRef, idxsets...)))
-            nothing
-        end
-        return code
-    end
-end
+# TODO: replace with a general macro that can construct any container type
+# macro constraintref(var)
+#     if isa(var,Symbol)
+#         # easy case
+#         return esc(:(local $var))
+#     else
+#         if !isexpr(var,:ref)
+#             error("Syntax error: Expected $var to be of form var[...]")
+#         end
+#
+#         varname = var.args[1]
+#         idxsets = var.args[2:end]
+#
+#         code = quote
+#             $(esc(gendict(varname, :ConstraintRef, idxsets...)))
+#             nothing
+#         end
+#         return code
+#     end
+# end
 
 macro NLobjective(m, sense, x)
     m = esc(m)
@@ -1172,7 +1193,8 @@ macro NLconstraint(m, x, extra...)
     # Two formats:
     # - @NLconstraint(m, a*x <= 5)
     # - @NLconstraint(m, myref[a=1:5], sin(x^a) <= 5)
-    length(extra) > 1 && error("in @NLconstraint: too many arguments.")
+    extra, kwargs, requestedcontainer = extract_kwargs(extra)
+    (length(extra) > 1 || length(kwargs) > 0) && error("in @NLconstraint: too many arguments.")
     # Canonicalize the arguments
     c = length(extra) == 1 ? x        : gensym()
     x = length(extra) == 1 ? extra[1] : x
@@ -1184,7 +1206,7 @@ macro NLconstraint(m, x, extra...)
 
     # Strategy: build up the code for non-macro addconstraint, and if needed
     # we will wrap in loops to assign to the ConstraintRefs
-    refcall, idxvars, idxsets, idxpairs, condition = buildrefsets(c, variable)
+    refcall, idxvars, idxsets, condition = buildrefsets(c, variable)
     # Build the constraint
     if isexpr(x, :call) # one-sided constraint
         # Simple comparison - move everything to the LHS
@@ -1230,7 +1252,7 @@ macro NLconstraint(m, x, extra...)
               "       expr1 <= expr2\n" * "       expr1 >= expr2\n" *
               "       expr1 == expr2")
     end
-    looped = getloopedcode(variable, code, condition, idxvars, idxsets, idxpairs, :(ConstraintRef{Model,NonlinearConstraint}))
+    looped = getloopedcode(variable, code, condition, idxvars, idxsets, :(ConstraintRef{Model,NonlinearConstraint}), requestedcontainer)
     return assert_validmodel(m, quote
         initNLP($m)
         $m.internalModelLoaded = false
@@ -1247,6 +1269,7 @@ macro NLconstraint(m, x, extra...)
 end
 
 macro NLexpression(args...)
+    args, kwargs, requestedcontainer = extract_kwargs(args)
     if length(args) <= 1
         error("in @NLexpression: To few arguments ($(length(args))); must pass the model and nonlinear expression as arguments.")
     elseif length(args) == 2
@@ -1256,7 +1279,8 @@ macro NLexpression(args...)
     elseif length(args) == 3
         m, c, x = args
         m = esc(m)
-    else
+    end
+    if length(args) > 3 || length(kwargs) > 0
         error("in @NLexpression: To many arguments ($(length(args))).")
     end
 
@@ -1264,18 +1288,21 @@ macro NLexpression(args...)
     variable = gensym()
     escvarname  = anonvar ? variable : esc(getname(c))
 
-    refcall, idxvars, idxsets, idxpairs, condition = buildrefsets(c, variable)
+    refcall, idxvars, idxsets, condition = buildrefsets(c, variable)
     code = quote
         $(refcall) = NonlinearExpression($m, @processNLExpr($m, $(esc(x))))
     end
     return assert_validmodel(m, quote
-        $(getloopedcode(variable, code, condition, idxvars, idxsets, idxpairs, :NonlinearExpression))
+        $(getloopedcode(variable, code, condition, idxvars, idxsets, :NonlinearExpression, requestedcontainer))
         $(anonvar ? variable : :($escvarname = $variable))
     end)
 end
 
 # syntax is @NLparameter(m, p[i=1] == 2i)
-macro NLparameter(m, ex)
+macro NLparameter(m, ex, extra...)
+
+    extra, kwargs, requestedcontainer = extract_kwargs(extra)
+    (length(extra) == 0 && length(kwargs) == 0) || error("in @NLperameter: too many arguments.")
     m = esc(m)
     @assert isexpr(ex, :call)
     @assert length(ex.args) == 3
@@ -1290,12 +1317,12 @@ macro NLparameter(m, ex)
     variable = gensym()
     escvarname  = anonvar ? variable : esc(getname(c))
 
-    refcall, idxvars, idxsets, idxpairs, condition = buildrefsets(c, variable)
+    refcall, idxvars, idxsets, condition = buildrefsets(c, variable)
     code = quote
         $(refcall) = newparameter($m, $(esc(x)))
     end
     return assert_validmodel(m, quote
-        $(getloopedcode(variable, code, condition, idxvars, idxsets, idxpairs, :NonlinearParameter))
+        $(getloopedcode(variable, code, condition, idxvars, idxsets, :NonlinearParameter, :Auto))
         $(anonvar ? variable : :($escvarname = $variable))
     end)
 end

@@ -24,6 +24,7 @@ using CSDP
 
 # Static tests - most don't require a solver
 #include("print.jl")
+include("containers.jl")
 include("variable.jl")
 include("objective.jl")
 include("constraint.jl")
