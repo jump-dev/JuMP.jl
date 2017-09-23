@@ -271,13 +271,13 @@ const ScalarPolyhedralSets = Union{MOI.LessThan,MOI.GreaterThan,MOI.EqualTo,MOI.
 function constructconstraint!(aff::AffExpr, set::S) where S <: Union{MOI.LessThan,MOI.GreaterThan,MOI.EqualTo}
     offset = aff.constant
     aff.constant = 0.0
-    return LinearConstraint(aff, S(MOIU.getconstant(set)-offset))
+    return AffExprConstraint(aff, S(MOIU.getconstant(set)-offset))
 end
 
 # function constructconstraint!(aff::AffExpr, lb, ub)
 #     offset = aff.constant
 #     aff.constant = 0.0
-#     LinearConstraint(aff, lb-offset, ub-offset)
+#     AffExprConstraint(aff, lb-offset, ub-offset)
 # end
 
 #constructconstraint!(quad::QuadExpr, sense::Symbol) = QuadConstraint(quad, sense)
@@ -286,31 +286,37 @@ end
 #constructconstraint!(x::Array, sense::Symbol) = map(c->constructconstraint!(c,sense), x)
 #constructconstraint!(x::AbstractArray, sense::Symbol) = constructconstraint!([x[i] for i in eachindex(x)], sense)
 
-constructconstraint!(x::Vector{AffExpr}, set::MOI.AbstractVectorSet) = VectorAffineConstraint(x, set)
+constructconstraint!(x::Vector{AffExpr}, set::MOI.AbstractVectorSet) = VectorAffExprConstraint(x, set)
 
-
-_vectorize_like(x::Number, y::AbstractArray{AffExpr}) = (ret = similar(y, typeof(x)); fill!(ret, x))
-function _vectorize_like{R<:Number}(x::AbstractArray{R}, y::AbstractArray{AffExpr})
-    for i in 1:max(ndims(x),ndims(y))
-        _size(x,i) == _size(y,i) || error("Unequal sizes for ranged constraint")
-    end
-    x
+function constructconstraint!(quad::QuadExpr, set::S) where S <: Union{MOI.LessThan,MOI.GreaterThan,MOI.EqualTo}
+    offset = quad.aff.constant
+    quad.aff.constant = 0.0
+    return QuadExprConstraint(quad, S(MOIU.getconstant(set)-offset))
 end
 
-function constructconstraint!(x::AbstractArray{AffExpr}, lb, ub)
-    LB = _vectorize_like(lb,x)
-    UB = _vectorize_like(ub,x)
-    ret = similar(x, LinearConstraint)
-    map!(ret, eachindex(ret)) do i
-        constructconstraint!(x[i], LB[i], UB[i])
-    end
-end
+
+# _vectorize_like(x::Number, y::AbstractArray{AffExpr}) = (ret = similar(y, typeof(x)); fill!(ret, x))
+# function _vectorize_like{R<:Number}(x::AbstractArray{R}, y::AbstractArray{AffExpr})
+#     for i in 1:max(ndims(x),ndims(y))
+#         _size(x,i) == _size(y,i) || error("Unequal sizes for ranged constraint")
+#     end
+#     x
+# end
+#
+# function constructconstraint!(x::AbstractArray{AffExpr}, lb, ub)
+#     LB = _vectorize_like(lb,x)
+#     UB = _vectorize_like(ub,x)
+#     ret = similar(x, AffExprConstraint)
+#     map!(ret, eachindex(ret)) do i
+#         constructconstraint!(x[i], LB[i], UB[i])
+#     end
+# end
 
 # three-argument constructconstraint! is used for two-sided constraints.
 function constructconstraint!(aff::AffExpr, lb::Real, ub::Real)
     offset = aff.constant
     aff.constant = 0.0
-    LinearConstraint(aff,lb-offset,ub-offset)
+    AffExprConstraint(aff,lb-offset,ub-offset)
 end
 
 # constructconstraint!(aff::Variable, lb::Real, ub::Real) = constructconstraint!(convert(AffExpr,v),lb,ub)

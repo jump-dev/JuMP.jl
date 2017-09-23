@@ -400,35 +400,59 @@ Base.show(io::IO, ::MIME"text/latex", q::GenericQuadExpr) =
 function quad_str(mode, q::GenericQuadExpr, sym)
     length(q.qvars1) == 0 && return aff_str(mode,q.aff)
 
-    # Canonicalize x_i * x_j so i <= j
-    for ind in 1:length(q.qvars1)
-        if q.qvars2[ind].col < q.qvars1[ind].col
-            q.qvars1[ind],q.qvars2[ind] = q.qvars2[ind],q.qvars1[ind]
+    # Map from unordered variable pair to index of first appearance in the QuadExpr
+    idxmap = Dict{Set{Variable},Int}()
+    # Map from unordered variable pair to ordered tuple of variables as first appeared in the QuadExpr
+    # (to respect the order the user wrote the terms, e.g., x_1*x_2 vs x_2*x_1)
+    ordermap = Dict{Set{Variable},Tuple{Variable,Variable}}()
+    # Map from unordered variable pair to coefficient (duplicates summed) in the Quadxpr
+    coefmap = Dict{Set{Variable},Float64}()
+
+    for i in 1:length(q.qvars1)
+        v1 = q.qvars1[i]
+        v2 = q.qvars2[i]
+        vtuple = (v1,v2)
+        vset = Set(vtuple)
+        if haskey(idxmap, vset)
+            # already seen, just add coefficient
+            coefmap[vset] += q.qcoeffs[i]
+        else
+            idxmap[vset] = i
+            ordermap[vset] = vtuple
+            coefmap[vset] = q.qcoeffs[i]
         end
     end
-    # Merge duplicates
-    Q = sparse([v.col for v in q.qvars1], [v.col for v in q.qvars2], q.qcoeffs)
-    I,J,V = findnz(Q)
-    Qnnz = length(V)
 
     # Odd terms are +/i, even terms are the variables/coeffs
-    term_str = Array{String}(2*Qnnz)
-    if Qnnz > 0
-        for ind in 1:Qnnz
-            val = abs(V[ind])
-            pre = (val == 1.0 ? "" : str_round(val)*" ")
+    term_str = Array{String}(2*length(idxmap))
+    elm = 1
+    if length(term_str) > 0
+        for i in 1:length(q.qvars1)
+            vtuple = (q.qvars1[i],q.qvars2[i])
+            vset = Set(vtuple)
+            idxmap[vset] == i || continue
 
-            x = var_str(mode,q.qvars1[ind].m,I[ind])
-            y = var_str(mode,q.qvars1[ind].m,J[ind])
+            coef = coefmap[vset]
+            vtuple = ordermap[vset]
 
-            term_str[2*ind-1] = V[ind] < 0 ? " - " : " + "
-            term_str[2*ind  ] = "$pre$x" * (x == y ? sym[:sq] : "$(sym[:times])$y")
+            abs(coef) < PRINT_ZERO_TOL && continue  # e.g. x - x
+
+            pre = abs(abs(coef)-1) < PRINT_ZERO_TOL ? "" : str_round(abs(coef)) * " "
+
+            x = var_str(mode,vtuple[1])
+            y = var_str(mode,vtuple[2])
+
+            term_str[2*elm-1] = coef < 0 ? " - " : " + "
+            term_str[2*elm  ] = "$pre$x" * (x == y ? sym[:sq] : "$(sym[:times])$y")
+            if elm == 1
+                # Correction for first term as there is no space
+                # between - and variable coefficient/name
+                term_str[1] = coef < 0 ? "-" : ""
+            end
+            elm += 1
         end
-        # Correction for first term as there is no space
-        # between - and variable coefficient/name
-        term_str[1] = V[1] < 0 ? "-" : ""
     end
-    ret = join(term_str)
+    ret = join(term_str[1:2*(elm-1)])
 
     if q.aff.constant == 0 && length(q.aff.vars) == 0
         return ret
@@ -499,25 +523,6 @@ end
 # con_str(::Type{REPLMode}, c::QuadConstraint; args...) =
 #     con_str(REPLMode, c, repl)
 # con_str(::Type{IJuliaMode}, c::QuadConstraint; mathmode=true) =
-#     math(con_str(IJuliaMode, c, ijulia), mathmode)
-
-#------------------------------------------------------------------------
-## SOCConstraint
-#------------------------------------------------------------------------
-# Base.show(io::IO, c::SOCConstraint) = print(io, con_str(REPLMode,c))
-# Base.show(io::IO, ::MIME"text/latex", c::SOCConstraint) =
-#     print(io, con_str(IJuliaMode,c))
-# function con_str(mode, c::SOCConstraint, sym::PrintSymbols)
-#     ne = c.normexpr
-#     coeff = ne.coeff == 1 ? "" : string(ne.coeff, " ")
-#     nrm   = norm_str(mode, ne.norm)
-#     aff   = aff_str(mode, -ne.aff)
-#     string(coeff, nrm, " $(repl[:leq]) ", aff)
-# end
-# # Handlers to use correct symbols
-# con_str(::Type{REPLMode}, c::SOCConstraint; args...) =
-#     con_str(REPLMode, c, repl)
-# con_str(::Type{IJuliaMode}, c::SOCConstraint; mathmode=true) =
 #     math(con_str(IJuliaMode, c, ijulia), mathmode)
 
 #------------------------------------------------------------------------
