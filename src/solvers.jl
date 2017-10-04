@@ -254,10 +254,14 @@ function solve(m::Model; suppress_warnings=false,
     # to extract a solution anyway. This commonly occurs when a time
     # limit or tolerance is set (:UserLimit)
     if !(stat == :Infeasible || stat == :Unbounded)
-        try
-            # Do a separate try since getobjval could work while getobjbound does not and vice versa
-            objBound = MathProgBase.getobjbound(m.internalModel) + m.obj.aff.constant
-            m.objBound = objBound
+        if discrete
+            # solvers will error when solving LP's which can cause significant
+            # performance penalties ref #1110
+            try
+                # Do a separate try since getobjval could work while getobjbound does not and vice versa
+                objBound = MathProgBase.getobjbound(m.internalModel) + m.obj.aff.constant
+                m.objBound = objBound
+            end
         end
         try
             objVal = MathProgBase.getobjval(m.internalModel) + m.obj.aff.constant
