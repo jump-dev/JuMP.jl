@@ -290,6 +290,26 @@ function writeLP(m::Model, fname::AbstractString; genericnames=true)
             constrcount += 2
         end
     end
+    # SOS constraints
+    for i in 1:length(m.sosconstr)
+        @printf(f, " c%d: ", constrcount)
+
+        c::SOSConstraint = m.sosconstr[i]
+        if c.sostype == :SOS1
+            @printf(f, "S1::")
+        elseif  c.sostype == :SOS2
+            @printf(f, "S2::")
+        end
+
+        @assert length(c.terms) == length(c.weights)
+        for j in 1:length(c.terms)
+            @printf(f, " %s:", varname(m, c.terms[j].col))
+            print_shortest(f, c.weights[j])
+        end
+
+        println(f)
+        constrcount += 1
+    end
 
     # Bounds
     write(f,"Bounds\n")
