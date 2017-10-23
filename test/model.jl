@@ -91,6 +91,8 @@ end
         constraints[1] = @constraint(modA, 2 <= x+y <= 4)
         constraints[2] = @constraint(modA, sum(r[i] for i=3:5) <= (2 - x)/2.0)
         constraints[3] = @constraint(modA, 6y + y <= z + r[6]/1.9)
+        addSOS1(modA, [x, 2y, 3z])
+        addSOS2(modA, [30x, 20y, 10z])
         #####################################################################
         # Test LP writer (given names)
         writeLP(modA, modPath * "A.lp", genericnames=false)
@@ -103,6 +105,8 @@ end
             "c2: 1 col_1 + 1 y <= 4",
             "c3: 1 r_3 + 1 r_4 + 1 r_5 + 0.5 col_1 <= 1",
             "c4: 6 y + 1 y - 1 z - 0.5263157894736842 r_6 <= 0",
+            "c5: S1:: col_1:1 y:2 z:3",
+            "c6: S2:: col_1:30 y:20 z:10",
             "Bounds",
             "0 <= col_1 <= +inf",
             "-inf <= y <= 5",
@@ -123,6 +127,8 @@ end
             "c2: 1 col_1 + 1 y <= 4",
             "c3: 1 r_3 + 1 r_4 + 1 r_5 + .5 col_1 <= 1",
             "c4: 6 y + 1 y - 1 z - .5263157894736842 r_6 <= 0",
+            "c5: S1:: col_1:1 y:2 z:3",
+            "c6: S2:: col_2:30 y:20 z:10",
             "Bounds",
             "0 <= col_1 <= +inf",
             "-inf <= y <= 5",
@@ -154,6 +160,8 @@ end
         "c2: 1 VAR1 + 1 VAR2 <= 4",
         "c3: 1 VAR4 + 1 VAR5 + 1 VAR6 + 0.5 VAR1 <= 1",
         "c4: 6 VAR2 + 1 VAR2 - 1 VAR3 - 0.5263157894736842 VAR7 <= 0",
+        "c5: S1:: VAR1:1 VAR2:2 VAR3:3",
+        "c6: S2:: VAR1:30 VAR2:20 VAR3:10",
         "Bounds",
         "0 <= VAR1 <= +inf",
         "-inf <= VAR2 <= 5",
@@ -234,7 +242,7 @@ end
         @test MathProgBase.numvar(modA) == 7
         @test MathProgBase.numlinconstr(modA) == 3
         @test MathProgBase.numquadconstr(modA) == 0
-        @test MathProgBase.numconstr(modA) == 3
+        @test MathProgBase.numconstr(modA) == 5
         @test getobjectivesense(modA) == :Max
         setobjectivesense(modA, :Min)
         @test getobjectivesense(modA) == :Min
