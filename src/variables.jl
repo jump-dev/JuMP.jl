@@ -158,7 +158,7 @@ Return the lower bound of a variable. Error if one does not exist.
 """
 function lowerbound(v::Variable)
     cref = lowerboundreference(v)
-    cset = MOI.getattribute(v.m.instance, MOI.ConstraintSet(), cref)::MOI.GreaterThan
+    cset = MOI.get(v.m.instance, MOI.ConstraintSet(), cref)::MOI.GreaterThan
     return cset.lower
 end
 
@@ -214,7 +214,7 @@ Return the upper bound of a variable. Error if one does not exist.
 """
 function upperbound(v::Variable)
     cref = upperboundreference(v)
-    cset = MOI.getattribute(v.m.instance, MOI.ConstraintSet(), cref)::MOI.LessThan
+    cset = MOI.get(v.m.instance, MOI.ConstraintSet(), cref)::MOI.LessThan
     return cset.upper
 end
 
@@ -270,7 +270,7 @@ Return the value to which a variable is fixed. Error if one does not exist.
 """
 function fixvalue(v::Variable)
     cref = fixreference(v)
-    cset = MOI.getattribute(v.m.instance, MOI.ConstraintSet(), cref)::MOI.EqualTo
+    cset = MOI.get(v.m.instance, MOI.ConstraintSet(), cref)::MOI.EqualTo
     return cset.value
 end
 

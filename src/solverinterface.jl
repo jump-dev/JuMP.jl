@@ -22,7 +22,8 @@ function attach(m::Model)
         m.variabletosolvervariable[MOIVAR(i)] = solvervariables[i]
     end
 
-    MOI.setobjective!(m.solverinstance, MOI.getattribute(m.instance, MOI.ObjectiveSense()), MOI.getattribute(m.instance, MOI.ObjectiveFunction()))
+    MOI.set!(m.solverinstance, MOI.ObjectiveSense(), MOI.get(m.instance, MOI.ObjectiveSense()))
+    MOI.set!(m.solverinstance, MOI.ObjectiveFunction(), MOI.get(m.instance, MOI.ObjectiveFunction()))
 
     # TODO: replace with ListOfConstraintReferences()
     # This would be a bit more transparent than the call below
@@ -59,26 +60,26 @@ function detach(m::Model)
 end
 
 """
-    cangetattribute(m::JuMP.Model, attr::MathOptInterface.AbstractSolverInstanceAttribute)::Bool
+    canget(m::JuMP.Model, attr::MathOptInterface.AbstractSolverInstanceAttribute)::Bool
 
 Return `true` if one may query the attribute `attr` from the solver instance attached to the JuMP model,
 false if not.
 Throws an error if no solver instance is currently attached.
 """
-function MOI.cangetattribute(m::Model, attr::MOI.AbstractSolverInstanceAttribute)
+function MOI.canget(m::Model, attr::MOI.AbstractSolverInstanceAttribute)
     @assert m.solverinstanceattached
-    return MOI.cangetattribute(m.solverinstance, attr)
+    return MOI.canget(m.solverinstance, attr)
 end
 
 """
-    getattribute(m::JuMP.Model, attr::MathOptInterface.AbstractSolverInstanceAttribute)
+    get(m::JuMP.Model, attr::MathOptInterface.AbstractSolverInstanceAttribute)
 
 Return the value of the attribute `attr` from the solver instance attached to the JuMP model.
 Throws an error if no solver instance is currently attached.
 """
-function MOI.getattribute(m::Model, attr::MOI.AbstractSolverInstanceAttribute)
+function MOI.get(m::Model, attr::MOI.AbstractSolverInstanceAttribute)
     @assert m.solverinstanceattached
-    return MOI.getattribute(m.solverinstance, attr)
+    return MOI.get(m.solverinstance, attr)
 end
 
 function solve(m::Model)
@@ -89,9 +90,9 @@ function solve(m::Model)
 
     empty!(m.variableresult)
     # If any variable has a result then all must have
-    if MOI.cangetattribute(m.solverinstance, MOI.VariablePrimal(), first(m.variabletosolvervariable).second)
+    if MOI.canget(m.solverinstance, MOI.VariablePrimal(), first(m.variabletosolvervariable).second)
         for vref in keys(m.variabletosolvervariable)
-            m.variableresult[Variable(m,vref)] = MOI.getattribute(m.solverinstance, MOI.VariablePrimal(), m.variabletosolvervariable[vref])
+            m.variableresult[Variable(m,vref)] = MOI.get(m.solverinstance, MOI.VariablePrimal(), m.variabletosolvervariable[vref])
         end
     end
 

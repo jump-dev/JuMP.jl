@@ -214,7 +214,7 @@ end
 # Getters/setters
 
 # temporary name
-numvar(m::Model) = MOI.getattribute(m.instance, MOI.NumberOfVariables())
+numvar(m::Model) = MOI.get(m.instance, MOI.NumberOfVariables())
 
 # """
 #     MathProgBase.numvar(m::Model)
@@ -357,14 +357,14 @@ numnlconstr(m::Model) = m.nlpdata !== nothing ? length(m.nlpdata.nlconstr) : 0
 
 Return the best known bound on the optimal objective value after a call to `solve`.
 """
-objectivebound(m::Model) = MOI.getattribute(m, MOI.ObjectiveBound())
+objectivebound(m::Model) = MOI.get(m, MOI.ObjectiveBound())
 
 """
     objectivevalue(m::Model)
 
 Return the objective value after a call to `solve`.
 """
-objectivevalue(m::Model) = MOI.getattribute(m, MOI.ObjectiveValue())
+objectivevalue(m::Model) = MOI.get(m, MOI.ObjectiveValue())
 
 """
     objectivesense(m::Model)
@@ -372,7 +372,7 @@ objectivevalue(m::Model) = MOI.getattribute(m, MOI.ObjectiveValue())
 Return the objective sense, `:Min`, `:Max`, or `:Feasibility`.
 """
 function objectivesense(m::Model)
-    moisense = MOI.getattribute(m.instance, MOI.ObjectiveSense())
+    moisense = MOI.get(m.instance, MOI.ObjectiveSense())
     if moisense == MOI.MinSense
         return :Min
     elseif moisense == MOI.MaxSense
@@ -383,8 +383,8 @@ function objectivesense(m::Model)
     end
 end
 
-terminationstatus(m::Model) = MOI.getattribute(m, MOI.TerminationStatus())
-primalstatus(m::Model) = MOI.getattribute(m, MOI.PrimalStatus())
+terminationstatus(m::Model) = MOI.get(m, MOI.TerminationStatus())
+primalstatus(m::Model) = MOI.get(m, MOI.PrimalStatus())
 
 # """
 #     setobjectivesense(m::Model, newSense::Symbol)
@@ -572,8 +572,8 @@ end
 
 function constraintobject(cref::ConstraintRef{Model}, ::Type{AffExpr})
     m = cref.m
-    f = MOI.getattribute(m.instance, MOI.ConstraintFunction(), cref.instanceref)
-    s = MOI.getattribute(m.instance, MOI.ConstraintSet(), cref.instanceref)
+    f = MOI.get(m.instance, MOI.ConstraintFunction(), cref.instanceref)
+    s = MOI.get(m.instance, MOI.ConstraintSet(), cref.instanceref)
     return LinearConstraint(AffExpr(m, f), s)
 end
 
