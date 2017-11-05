@@ -74,7 +74,7 @@ const FIXREF = MOICON{MOI.SingleVariable,MOI.EqualTo{Float64}}
 const INTREF = MOICON{MOI.SingleVariable,MOI.Integer}
 const BINREF = MOICON{MOI.SingleVariable,MOI.ZeroOne}
 
-@MOIU.instance JuMPInstance (ZeroOne, Integer) (EqualTo, GreaterThan, LessThan, Interval) (Zeros, Nonnegatives, Nonpositives, SecondOrderCone, RotatedSecondOrderCone, PositiveSemidefiniteConeTriangle) () (SingleVariable,) (ScalarAffineFunction,) (VectorOfVariables,) (VectorAffineFunction,)
+@MOIU.instance JuMPInstance (ZeroOne, Integer) (EqualTo, GreaterThan, LessThan, Interval) (Zeros, Nonnegatives, Nonpositives, SecondOrderCone, RotatedSecondOrderCone, PositiveSemidefiniteConeTriangle) () (SingleVariable,) (ScalarAffineFunction,ScalarQuadraticFunction) (VectorOfVariables,) (VectorAffineFunction,)
 
 # dummy solver
 type UnsetSolver <: MathOptInterface.AbstractSolver
@@ -545,37 +545,10 @@ end
 # linearindex(x::ConstraintRef) = x.idx
 
 ###############################################################################
-# GenericAffineExpression, AffExpr
-# GenericRangeConstraint, LinearConstraint
+# GenericAffineExpression, AffExpr, AffExprConstraint
 include("affexpr.jl")
 
-struct VectorAffineConstraint{S <: MOI.AbstractVectorSet} <: AbstractConstraint
-    func::Vector{AffExpr}
-    set::S
-end
 
-"""
-    addconstraint(m::Model, c::VectorAffineConstraint)
-
-Add the vector constraint `c` to `Model m`.
-"""
-function addconstraint(m::Model, c::VectorAffineConstraint)
-    @assert !m.solverinstanceattached # TODO
-    cref = MOI.addconstraint!(m.instance, MOI.VectorAffineFunction(c.func), c.set)
-    return ConstraintRef(m, cref)
-end
-
-# const LinConstrRef = ConstraintRef{Model,LinearConstraint}
-
-# LinearConstraint(ref::LinConstrRef) = ref.m.linconstr[ref.idx]::LinearConstraint
-
-
-function constraintobject(cref::ConstraintRef{Model}, ::Type{AffExpr})
-    m = cref.m
-    f = MOI.get(m.instance, MOI.ConstraintFunction(), cref.instanceref)
-    s = MOI.get(m.instance, MOI.ConstraintSet(), cref.instanceref)
-    return LinearConstraint(AffExpr(m, f), s)
-end
 
 ###############################################################################
 # GenericQuadExpr, QuadExpr

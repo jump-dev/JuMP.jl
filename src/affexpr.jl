@@ -11,8 +11,7 @@
 # Defines all types relating to affine expressions
 # - GenericAffExpr              ∑ aᵢ xᵢ  +  c
 #   - AffExpr                   Alias for (Float64, Variable)
-# - GenericRangeConstraint      l ≤ ∑ aᵢ xᵢ ≤ u
-#   - LinearConstraint          Alias for AffExpr
+#   - AffExprConstraint         AffExpr-in-set constraint
 # Operator overloads in src/operators.jl
 #############################################################################
 
@@ -211,26 +210,50 @@ end
 #     ret
 # end
 
-# TODO GenericLinearConstraint
+# TODO GenericAffExprConstraint
 
-struct LinearConstraint{S <: MOI.AbstractScalarSet} <: AbstractConstraint
+struct AffExprConstraint{S <: MOI.AbstractScalarSet} <: AbstractConstraint
     func::AffExpr
     set::S
 end
 
-# function Base.copy(c::LinearConstraint, new_model::Model)
-#     return LinearConstraint(copy(c.terms, new_model), c.lb, c.ub)
+# function Base.copy(c::AffExprConstraint, new_model::Model)
+#     return AffExprConstraint(copy(c.terms, new_model), c.lb, c.ub)
 # end
 
 """
-    addconstraint(m::Model, c::LinearConstraint)
+    addconstraint(m::Model, c::AffExprConstraint)
 
-Add a linear constraint to `Model m`.
+Add an `AffExpr` constraint to `Model m`.
 """
-function addconstraint(m::Model, c::LinearConstraint)
+function addconstraint(m::Model, c::AffExprConstraint)
     @assert !m.solverinstanceattached # TODO
     cref = MOI.addconstraint!(m.instance, MOI.ScalarAffineFunction(c.func), c.set)
     return ConstraintRef(m, cref)
 end
-addconstraint(m::Model, c::Array{LinearConstraint}) =
+addconstraint(m::Model, c::Array{AffExprConstraint}) =
     error("The operators <=, >=, and == can only be used to specify scalar constraints. If you are trying to add a vectorized constraint, use the element-wise dot comparison operators (.<=, .>=, or .==) instead")
+
+struct VectorAffExprConstraint{S <: MOI.AbstractVectorSet} <: AbstractConstraint
+    func::Vector{AffExpr}
+    set::S
+end
+
+"""
+    addconstraint(m::Model, c::VectorAffExprConstraint)
+
+Add the vector constraint `c` to `Model m`.
+"""
+function addconstraint(m::Model, c::VectorAffExprConstraint)
+    @assert !m.solverinstanceattached # TODO
+    cref = MOI.addconstraint!(m.instance, MOI.VectorAffineFunction(c.func), c.set)
+    return ConstraintRef(m, cref)
+end
+
+
+function constraintobject(cref::ConstraintRef{Model}, ::Type{AffExpr}, ::Type{SetType}) where {SetType <: MOI.AbstractScalarSet}
+    m = cref.m
+    f = MOI.get(m.instance, MOI.ConstraintFunction(), cref.instanceref)::MOI.ScalarAffineFunction
+    s = MOI.get(m.instance, MOI.ConstraintSet(), cref.instanceref)::SetType
+    return AffExprConstraint(AffExpr(m, f), s)
+end

@@ -87,9 +87,17 @@ if VERSION < v"0.6.0-dev.1632" # julia PR #17623
     @eval (.^)(lhs::Union{Variable,AffExpr}, rhs::Number) = lhs^rhs
 end
 # AffExpr--Variable
-(+){C,V<:JuMPTypes}(lhs::GenericAffExpr{C,V}, rhs::V) = (+)(rhs,lhs)
+(+){C,V<:JuMPTypes}(lhs::GenericAffExpr{C,V}, rhs::V) = GenericAffExpr{C,V}(vcat(lhs.vars,rhs),vcat(lhs.coeffs,one(C)), lhs.constant)
 (-){C,V<:JuMPTypes}(lhs::GenericAffExpr{C,V}, rhs::V) = GenericAffExpr{C,V}(vcat(lhs.vars,rhs),vcat(lhs.coeffs,-one(C)),lhs.constant)
-(*)(lhs::AffExpr, rhs::Variable) = (*)(rhs,lhs)
+# Don't fall back on Variable*AffExpr to preserve lhs/rhs consistency (appears in printing)
+function (*)(lhs::AffExpr, rhs::Variable)
+    n = length(lhs.vars)
+    if lhs.constant != 0.
+        ret = QuadExpr(copy(lhs.vars),[rhs for i=1:n],copy(lhs.coeffs),AffExpr([rhs], [lhs.constant], 0.))
+    else
+        ret = QuadExpr(copy(lhs.vars),[rhs for i=1:n],copy(lhs.coeffs),zero(AffExpr))
+    end
+end
 (/)(lhs::AffExpr, rhs::Variable) = error("Cannot divide affine expression by a variable")
 # AffExpr--AffExpr
 (+){C,V<:JuMPTypes}(lhs::GenericAffExpr{C,V}, rhs::GenericAffExpr{C,V}) = (operator_warn(lhs,rhs); GenericAffExpr(vcat(lhs.vars,rhs.vars),vcat(lhs.coeffs, rhs.coeffs),lhs.constant+rhs.constant))
