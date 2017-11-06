@@ -82,7 +82,15 @@ function MOI.get(m::Model, attr::MOI.AbstractSolverInstanceAttribute)
     return MOI.get(m.solverinstance, attr)
 end
 
-function solve(m::Model)
+function solve(m::Model;
+                ignore_solve_hook=(m.solvehook===nothing))
+
+    # If the user or an extension has provided a solve hook, call
+    # that instead of solving the model ourselves
+    if !ignore_solve_hook
+        return m.solvehook(m)
+    end
+
     if !m.solverinstanceattached
         attach(m)
     end
