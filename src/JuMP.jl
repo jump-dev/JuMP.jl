@@ -151,7 +151,7 @@ mutable struct Model <: AbstractModel
 
     # hook into a solve call...function of the form f(m::Model; kwargs...),
     # where kwargs get passed along to subsequent solve calls
-    # solvehook
+    solvehook
     # # ditto for a print hook
     # printhook
 
@@ -195,7 +195,7 @@ mutable struct Model <: AbstractModel
         m.solver = solver
         m.solverinstanceattached = false
         m.callbacks = Any[]
-        # m.solvehook = nothing
+        m.solvehook = nothing
         # m.printhook = nothing
         m.nlpdata = nothing
         m.simplify_nonlinear_expressions = simplify_nonlinear_expressions
