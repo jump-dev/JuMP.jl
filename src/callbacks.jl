@@ -216,8 +216,9 @@ macro lazyconstraint(args...)
     x = args[2]
     extra = vcat(args[3:end]...)
     # separate out keyword arguments
-    kwargs = filter(ex->isexpr(ex,:kw), extra) # filtering expressions corresponding to kw args specs
-    extra = filter(ex->!isexpr(ex,:kw), extra) # others
+    kwsymbol = VERSION < v"0.6.0-dev.1934" ? :kw : :(=) # changed by julia PR #19868
+    kwargs = filter(ex->isexpr(ex,kwsymbol), extra) # filtering expressions corresponding to kw args specs
+    extra = filter(ex->!isexpr(ex,kwsymbol), extra) # others
 
     localcut_val = false # by default, the lazy constraint is global
     for ex in kwargs
@@ -281,8 +282,9 @@ macro usercut(args...)
     x = args[2]
     extra = vcat(args[3:end]...)
     # separate out keyword arguments
-    kwargs = filter(ex->isexpr(ex,:kw), extra) # filtering expressions corresponding to kw args specs
-    extra = filter(ex->!isexpr(ex,:kw), extra) # others
+    kwsymbol = VERSION < v"0.6.0-dev.1934" ? :kw : :(=) # changed by julia PR #19868
+    kwargs = filter(ex->isexpr(ex,kwsymbol), extra) # filtering expressions corresponding to kw args specs
+    extra = filter(ex->!isexpr(ex,kwsymbol), extra) # others
 
     localcut_val = false # by default, the user cut is global
     for ex in kwargs
