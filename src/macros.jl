@@ -323,8 +323,6 @@ end
 
 constructconstraint!(q::QuadExpr, lb, ub) = error("Two-sided quadratic constraints not supported. (Try @NLconstraint instead.)")
 
-# constructconstraint!(x::AbstractMatrix, ::PSDCone) = SDConstraint(x)
-
 constraint_error(args, str) = error("In @constraint($(join(args,","))): ", str)
 
 """
@@ -479,46 +477,46 @@ macro constraint(args...)
 end
 
 
-# """
-#     @SDconstraint(m, x)
-#
-# Adds a semidefinite constraint to the `Model m`. The expression `x` must be a square, two-dimensional array.
-# """
-# macro SDconstraint(m, x)
-#     m = esc(m)
-#
-#     if isa(x, Symbol)
-#         error("in @SDconstraint: Incomplete constraint specification $x. Are you missing a comparison (<= or >=)?")
-#     end
-#
-#     (x.head == :block) &&
-#         error("Code block passed as constraint.")
-#     isexpr(x,:call) && length(x.args) == 3 || error("in @SDconstraint ($(string(x))): constraints must be in one of the following forms:\n" *
-#               "       expr1 <= expr2\n" * "       expr1 >= expr2")
-#     # Build the constraint
-#     # Simple comparison - move everything to the LHS
-#     sense = x.args[1]
-#     if sense == :⪰
-#         sense = :(>=)
-#     elseif sense == :⪯
-#         sense = :(<=)
-#     end
-#     sense,_ = _canonicalize_sense(sense)
-#     lhs = :()
-#     if sense == :(>=)
-#         lhs = :($(x.args[2]) - $(x.args[3]))
-#     elseif sense == :(<=)
-#         lhs = :($(x.args[3]) - $(x.args[2]))
-#     else
-#         error("Invalid sense $sense in SDP constraint")
-#     end
-#     newaff, parsecode = parseExprToplevel(lhs, :q)
-#     assert_validmodel(m, quote
-#         q = zero(AffExpr)
-#         $parsecode
-#         addconstraint($m, constructconstraint!($newaff, PSDCone()))
-#     end)
-# end
+"""
+    @SDconstraint(m, x)
+
+Adds a semidefinite constraint to the `Model m`. The expression `x` must be a square, two-dimensional array.
+"""
+macro SDconstraint(m, x)
+    m = esc(m)
+
+    if isa(x, Symbol)
+        error("in @SDconstraint: Incomplete constraint specification $x. Are you missing a comparison (<= or >=)?")
+    end
+
+    (x.head == :block) &&
+        error("Code block passed as constraint.")
+    isexpr(x,:call) && length(x.args) == 3 || error("in @SDconstraint ($(string(x))): constraints must be in one of the following forms:\n" *
+              "       expr1 <= expr2\n" * "       expr1 >= expr2")
+    # Build the constraint
+    # Simple comparison - move everything to the LHS
+    sense = x.args[1]
+    if sense == :⪰
+        sense = :(>=)
+    elseif sense == :⪯
+        sense = :(<=)
+    end
+    sense,_ = _canonicalize_sense(sense)
+    lhs = :()
+    if sense == :(>=)
+        lhs = :($(x.args[2]) - $(x.args[3]))
+    elseif sense == :(<=)
+        lhs = :($(x.args[3]) - $(x.args[2]))
+    else
+        error("Invalid sense $sense in SDP constraint")
+    end
+    newaff, parsecode = parseExprToplevel(lhs, :q)
+    assert_validmodel(m, quote
+        q = zero(AffExpr)
+        $parsecode
+        addconstraint($m, constructconstraint!($newaff, PSDCone()))
+    end)
+end
 
 
 # """
