@@ -71,7 +71,7 @@ end
 constructconstraint!(x::AbstractMatrix, ::PSDCone) = SDConstraint(x)
 
 _constrain_symmetry(m::Model, c::SDConstraint{T, MT}, sdref) where {T, MT<:Symmetric} = sdref
-function fill_expr!(m::Model, expr::Dict{Variable, T}, terms, coeff=1) where T
+function fill_expr!(m::Model, expr::Dict{Variable, T}, terms, coeff=one(T)) where T
     assert_isfinite(terms)
     coeffs = terms.coeffs
     vars = terms.vars
