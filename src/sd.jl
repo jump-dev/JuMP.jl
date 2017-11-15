@@ -22,6 +22,6 @@ function addconstraint(m::Model, c::SDVariableConstraint)
     @assert issymmetric(c.Q)
     @assert !m.solverinstanceattached # TODO
     n = Base.LinAlg.checksquare(c.Q)
-    cref = MOI.addconstraint!(m.instance, MOI.VectorOfVariables([instancereference(c.Q[i, j]) for i in 1:n for j in i:n]), MOI.PositiveSemidefiniteConeTriangle(n))
+    cref = MOI.addconstraint!(m.instance, MOI.VectorOfVariables([instancereference(c.Q[i, j]) for j in 1:n for i in 1:j]), MOI.PositiveSemidefiniteConeTriangle(n))
     return ConstraintRef(m, cref)
 end
