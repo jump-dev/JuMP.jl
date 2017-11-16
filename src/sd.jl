@@ -63,7 +63,7 @@ end
 struct SDSymInstanceRef{T}
     sd::MOICON{MOI.VectorAffineFunction{T}, MOI.PositiveSemidefiniteConeTriangle}
     # symmetry enforcing constraints, it is null if the matrix is symmetric
-    symref::Nullable{MOICON{MOI.VectorAffineFunction{T}, MOI.Zeros}}
+    symref::Union{MOICON{MOI.VectorAffineFunction{T}, MOI.Zeros}, Void}
     # if k in symidx then invtrimap(k) has a symmetry enforcing constraint in symref
     symidx::IntSet
 end
@@ -99,10 +99,10 @@ function _constrain_symmetry(m::Model, c::SDConstraint{T}, sdref) where T
         push!(symaff, aff)
     end
     if isempty(symaff)
-        symref = Nullable{MOICON{MOI.VectorAffineFunction{Float64}, MOI.Zeros}}()
+        symref = nothing
     else
         symcon = VectorAffExprConstraint(symaff, MOI.Zeros(length(symaff)))
-        symref = Nullable{MOICON{MOI.VectorAffineFunction{Float64}, MOI.Zeros}}(addconstraint(m, symcon).instanceref)
+        symref = addconstraint(m, symcon).instanceref
     end
     SDSymInstanceRef(sdref, symref, symidx)
 end
