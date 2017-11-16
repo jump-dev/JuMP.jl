@@ -18,6 +18,7 @@
         @test JuMP.objectivevalue(m) ≈ sqrt(1/2) atol=1e-6
 
         @test JuMP.resultvalue.([x,y,t]) ≈ [0.5,0.5,sqrt(1/2)] atol=1e-3
+        @test JuMP.resultvalue(x + y) ≈ 1.0 atol=1e-3
 
     end
 

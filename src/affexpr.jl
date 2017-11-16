@@ -125,6 +125,20 @@ function assert_isfinite(a::AffExpr)
     end
 end
 
+"""
+    resultvalue(v::AffExpr)
+
+Evaluate an `AffExpr` given the result returned by a solver.
+Replaces `getvalue` for most use cases.
+"""
+function resultvalue(a::AffExpr)
+    ret = a.constant
+    for it in eachindex(a.vars)
+        ret += a.coeffs[it] * resultvalue(a.vars[it])
+    end
+    ret
+end
+
 function MOI.ScalarAffineFunction(a::AffExpr)
     return MOI.ScalarAffineFunction(instancereference.(a.vars), a.coeffs, a.constant)
 end

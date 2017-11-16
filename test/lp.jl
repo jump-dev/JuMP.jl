@@ -22,6 +22,7 @@
 
         @test JuMP.resultvalue(x) ≈ 1.0 atol=1e-6
         @test JuMP.resultvalue(y) ≈ 0.0 atol=1e-6
+        @test JuMP.resultvalue(x + y) ≈ 1.0 atol=1e-6
         @test JuMP.objectivevalue(m) ≈ -1.0 atol=1e-6
 
     end
