@@ -304,28 +304,28 @@ ispsd(x::Matrix) = minimum(eigvals(x)) ≥ -1e-3
         #@test isapprox(getdual(c2), 0, atol=1e-4)
     end
 
-    function nuclear_norm(model, A)
-        m, n = size(A,1), size(A,2)
-        @variable(model, U[1:m,1:m])
-        @variable(model, V[1:n,1:n])
-        @SDconstraint(model, 0 ⪯ [U A; A' V])
-        return 0.5(trace(U) + trace(V'))
-    end
-
-    @testset "Test problem #5" begin
-        m = Model(solver=CSDPSolver(printlevel=0))
-        @variable(m, Y[1:3,1:3], PSD)
-        @constraint(m, Y[2,1] <= 4)
-        @constraint(m, Y[2,2] >= 3)
-        @constraint(m, Y[3,3] <= 2)
-        @objective(m, Min, nuclear_norm(m, Y))
-
-        JuMP.solve(m)
-        @test JuMP.terminationstatus(m) == MOI.Success
-        @test JuMP.primalstatus(m) == MOI.FeasiblePoint
-
-        @test isapprox(JuMP.objectivevalue(m), 3, atol=1e-5)
-    end
+#    function nuclear_norm(model, A)
+#        m, n = size(A,1), size(A,2)
+#        @variable(model, U[1:m,1:m])
+#        @variable(model, V[1:n,1:n])
+#        @SDconstraint(model, 0 ⪯ [U A; A' V])
+#        return 0.5(trace(U) + trace(V'))
+#    end
+#
+#    @testset "Test problem #5" begin
+#        m = Model(solver=CSDPSolver(printlevel=0))
+#        @variable(m, Y[1:3,1:3], PSD)
+#        @constraint(m, Y[2,1] <= 4)
+#        @constraint(m, Y[2,2] >= 3)
+#        @constraint(m, Y[3,3] <= 2)
+#        @objective(m, Min, nuclear_norm(m, Y))
+#
+#        JuMP.solve(m)
+#        @test JuMP.terminationstatus(m) == MOI.Success
+#        @test JuMP.primalstatus(m) == MOI.FeasiblePoint
+#
+#        @test isapprox(JuMP.objectivevalue(m), 3, atol=1e-5)
+#    end
 
     function operator_norm(model, A)
         m, n = size(A,1), size(A,2)
@@ -349,26 +349,26 @@ ispsd(x::Matrix) = minimum(eigvals(x)) ≥ -1e-3
         @test isapprox(JuMP.objectivevalue(m), 4, atol=1e-5)
     end
 
-    function lambda_max(model, A)
-        m, n = size(A,1), size(A,2)
-        @variable(model, t)
-        @SDconstraint(model, speye(n)*t - A ⪰ 0)
-        @SDconstraint(model, A >= 0)
-        return t
-    end
-
-    @testset "Test problem #7" begin
-        m = Model(solver=CSDPSolver(printlevel=0))
-        @variable(m, Y[1:3,1:3])
-        @constraint(m, Y[1,1] >= 4)
-        @objective(m, Min, lambda_max(m, Y))
-
-        JuMP.solve(m)
-        @test JuMP.terminationstatus(m) == MOI.Success
-        @test JuMP.primalstatus(m) == MOI.FeasiblePoint
-
-        @test isapprox(JuMP.objectivevalue(m), 4, atol=1e-5)
-    end
+#    function lambda_max(model, A)
+#        m, n = size(A,1), size(A,2)
+#        @variable(model, t)
+#        @SDconstraint(model, speye(n)*t - A ⪰ 0)
+#        @SDconstraint(model, A >= 0)
+#        return t
+#    end
+#
+#    @testset "Test problem #7" begin
+#        m = Model(solver=CSDPSolver(printlevel=0))
+#        @variable(m, Y[1:3,1:3])
+#        @constraint(m, Y[1,1] >= 4)
+#        @objective(m, Min, lambda_max(m, Y))
+#
+#        JuMP.solve(m)
+#        @test JuMP.terminationstatus(m) == MOI.Success
+#        @test JuMP.primalstatus(m) == MOI.FeasiblePoint
+#
+#        @test isapprox(JuMP.objectivevalue(m), 4, atol=1e-5)
+#    end
 
     function lambda_min(model, A)
         m, n = size(A,1), size(A,2)
@@ -573,60 +573,60 @@ ispsd(x::Matrix) = minimum(eigvals(x)) ≥ -1e-3
 #       @test isapprox(getdual(c), 0, atol=1e-5)
     end
 
-    # min X[1,1]     max y/2+z/2
-    # X[1,2] = 1/2   [0 y     [1 0
-    # X[2,1] = 1/2    z 0] ⪯   0 0]
-    # X+Xᵀ ⪰ 0
-    @testset "SDP with dual solution not attained without symmetric A_i" begin
-        #solver = fixscs(solver, 10000000)
-        m = Model(solver=CSDPSolver(printlevel=0))
-        @variable(m, y)
-        @variable(m, z)
-        c = @SDconstraint(m, [0 y; z 0] <= [1 0; 0 0])
-        @objective(m, Max, y/2+z/2)
-        JuMP.solve(m)
-        @test JuMP.terminationstatus(m) == MOI.Success
-        @test JuMP.primalstatus(m) == MOI.FeasiblePoint
+#    # min X[1,1]     max y/2+z/2
+#    # X[1,2] = 1/2   [0 y     [1 0
+#    # X[2,1] = 1/2    z 0] ⪯   0 0]
+#    # X+Xᵀ ⪰ 0
+#    @testset "SDP with dual solution not attained without symmetric A_i" begin
+#        #solver = fixscs(solver, 10000000)
+#        m = Model(solver=CSDPSolver(printlevel=0))
+#        @variable(m, y)
+#        @variable(m, z)
+#        c = @SDconstraint(m, [0 y; z 0] <= [1 0; 0 0])
+#        @objective(m, Max, y/2+z/2)
+#        JuMP.solve(m)
+#        @test JuMP.terminationstatus(m) == MOI.Success
+#        @test JuMP.primalstatus(m) == MOI.FeasiblePoint
+#
+#        @test isapprox(JuMP.objectivevalue(m), 0, atol=1e-5)
+#        @test isapprox(JuMP.resultvalue(y), 0, atol=1e-5)
+#        @test isapprox(JuMP.resultvalue(z), 0, atol=1e-5)
+#
+#        #X = getdual(c)
+#        #@test isapprox(X[1,1], 0, atol=1e-5)
+#        #@test isapprox(X[1,2], 1/2, atol=1e-5)
+#        #@test isapprox(X[2,1], 1/2, atol=1e-5)
+#        #@test isapprox(getdual(y), 0, atol=1e-5)
+#        #@test isapprox(getdual(z), 0, atol=1e-5)
+#    end
 
-        @test isapprox(JuMP.objectivevalue(m), 0, atol=1e-5)
-        @test isapprox(JuMP.resultvalue(y), 0, atol=1e-5)
-        @test isapprox(JuMP.resultvalue(z), 0, atol=1e-5)
-
-        #X = getdual(c)
-        #@test isapprox(X[1,1], 0, atol=1e-5)
-        #@test isapprox(X[1,2], 1/2, atol=1e-5)
-        #@test isapprox(X[2,1], 1/2, atol=1e-5)
-        #@test isapprox(getdual(y), 0, atol=1e-5)
-        #@test isapprox(getdual(z), 0, atol=1e-5)
-    end
-
-    # min X[1,1]     max y
-    # X[1,2] = 1     [0 y     [1 0
-    # X[2,1] = 0      z 0] ⪯   0 0]
-    # X+Xᵀ ⪰ 0
-    @testset "SDP with dual solution not attained without symmetry" begin
-        #solver = fixscs(solver, 10000000)
-        m = Model(solver=CSDPSolver(printlevel=0))
-        @variable(m, y)
-        @variable(m, z)
-        c = @SDconstraint(m, [0 y; z 0] <= [1 0; 0 0])
-        @objective(m, Max, y)
-
-        JuMP.solve(m)
-        @test JuMP.terminationstatus(m) == MOI.Success
-        @test JuMP.primalstatus(m) == MOI.FeasiblePoint
-
-        @test isapprox(JuMP.objectivevalue(m), 0, atol=1e-5)
-        @test isapprox(JuMP.resultvalue(y), 0, atol=1e-5)
-        @test isapprox(JuMP.resultvalue(z), 0, atol=1e-5)
-
-        #X = getdual(c)
-        #@test isapprox(X[1,1], 0, atol=1e-5)
-        #@test isapprox(X[1,2], 1, atol=1e-5) # X is not symmetric !
-        #@test isapprox(X[2,1], 0, atol=1e-5)
-        #@test isapprox(getdual(y), 0, atol=1e-5)
-        #@test isapprox(getdual(z), 0, atol=1e-5)
-    end
+#    # min X[1,1]     max y
+#    # X[1,2] = 1     [0 y     [1 0
+#    # X[2,1] = 0      z 0] ⪯   0 0]
+#    # X+Xᵀ ⪰ 0
+#    @testset "SDP with dual solution not attained without symmetry" begin
+#        #solver = fixscs(solver, 10000000)
+#        m = Model(solver=CSDPSolver(printlevel=0))
+#        @variable(m, y)
+#        @variable(m, z)
+#        c = @SDconstraint(m, [0 y; z 0] <= [1 0; 0 0])
+#        @objective(m, Max, y)
+#
+#        JuMP.solve(m)
+#        @test JuMP.terminationstatus(m) == MOI.Success
+#        @test JuMP.primalstatus(m) == MOI.FeasiblePoint
+#
+#        @test isapprox(JuMP.objectivevalue(m), 0, atol=1e-5)
+#        @test isapprox(JuMP.resultvalue(y), 0, atol=1e-5)
+#        @test isapprox(JuMP.resultvalue(z), 0, atol=1e-5)
+#
+#        #X = getdual(c)
+#        #@test isapprox(X[1,1], 0, atol=1e-5)
+#        #@test isapprox(X[1,2], 1, atol=1e-5) # X is not symmetric !
+#        #@test isapprox(X[2,1], 0, atol=1e-5)
+#        #@test isapprox(getdual(y), 0, atol=1e-5)
+#        #@test isapprox(getdual(z), 0, atol=1e-5)
+#    end
 
     @testset "Nonzero dual for a scalar variable with sdp solver" begin
         m = Model(solver=CSDPSolver(printlevel=0))

@@ -31,26 +31,6 @@ Base.zero(a::GenericAffExpr) = zero(typeof(a))
 Base.one( a::GenericAffExpr) =  one(typeof(a))
 Base.copy(a::GenericAffExpr) = GenericAffExpr(copy(a.vars),copy(a.coeffs),copy(a.constant))
 
-"""
-    fill_expr!(m::Model, expr::Dict{Variable, T}, terms::GenericAffExpr{T, Variable}, coeff=one(T))
-
-Fills the dictionary `expr` with the terms of `terms` multipled by `coeff`. If `v` is a `Variable`, `expr[v]` will the sum of the terms in `terms` with variable `v` summed with the value `expr[v]` has when at the start of the function or `zero(T)` if `v` is not a key of `expr`.
-"""
-function fill_expr!(m::Model, expr::Dict{Variable, T}, terms::GenericAffExpr{T, Variable}, coeff=one(T)) where T
-    assert_isfinite(terms)
-    coeffs = terms.coeffs
-    vars = terms.vars
-    # collect duplicates
-    for ind in eachindex(coeffs)
-        if vars[ind].m === m
-            var = vars[ind]
-            expr[var] = get(expr, var, zero(T)) + coeff * coeffs[ind]
-        else
-            throw(VariableNotOwnedError("constraints"))
-        end
-    end
-end
-
 # Old iterator protocol - iterates over tuples (aᵢ,xᵢ)
 struct LinearTermIterator{GAE<:GenericAffExpr}
     aff::GAE

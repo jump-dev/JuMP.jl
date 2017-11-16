@@ -61,27 +61,4 @@
         @test macroexpand(:(@variable(m, -rand(5,5) <= nonsymmetric[1:5,1:5] <= rand(5,5), Symmetric))).head == :error
     end
 
-    @testset "Trivial symmetry constraints are removed (#766, #972)" begin
-        q = 2
-        m = 3
-        angles1 = linspace(3*pi/4, pi, m)
-        angles2 = linspace(0, -pi/2, m)
-        V = [3.*cos.(angles1)' 1.5.*cos.(angles2)';
-             3.*sin.(angles1)' 1.5.*sin.(angles2)']
-        V[abs.(V) .< 1e-10] = 0.0
-        p = 2*m
-        n = 100
-
-        mod = Model()
-        @variable(mod, x[j=1:p] >= 1, Int)
-        @variable(mod, u[i=1:q] >= 1)
-        @objective(mod, Min, sum(u))
-        @constraint(mod, sum(x) <= n)
-        for i=1:q
-            cref = @SDconstraint(mod, [V*diagm(x./n)*V' eye(q)[:,i] ; eye(q)[i:i,:] u[i]] >= 0)
-            @test cref.instanceref.symref === nothing
-            @test isempty(cref.instanceref.symidx)
-        end
-    end
-
 end
