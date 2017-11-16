@@ -201,21 +201,6 @@ ispsd(x::Matrix) = minimum(eigvals(x)) ≥ -1e-3
 #        @test isapprox(YY, [0 0;0 1], atol=1e-3)
 #    end
 
-
-    @testset "Nonsensical SDPs" begin
-        m = Model()
-        @test_throws ErrorException @variable(m, unequal[1:5,1:6], PSD)
-        # Some of these errors happen at compile time, so we can't use @test_throws
-        @test macroexpand(:(@variable(m, notone[1:5,2:6], PSD))).head == :error
-        @test macroexpand(:(@variable(m, oneD[1:5], PSD))).head == :error
-        @test macroexpand(:(@variable(m, threeD[1:5,1:5,1:5], PSD))).head == :error
-        @test macroexpand(:(@variable(m, psd[2] <= rand(2,2), PSD))).head == :error
-        @test macroexpand(:(@variable(m, -ones(3,4) <= foo[1:4,1:4] <= ones(4,4), PSD))).head == :error
-        @test macroexpand(:(@variable(m, -ones(3,4) <= foo[1:4,1:4] <= ones(4,4), Symmetric))).head == :error
-        @test macroexpand(:(@variable(m, -ones(4,4) <= foo[1:4,1:4] <= ones(4,5), Symmetric))).head == :error
-        @test macroexpand(:(@variable(m, -rand(5,5) <= nonsymmetric[1:5,1:5] <= rand(5,5), Symmetric))).head == :error
-    end
-
 #    @testset "SDP with SOC" begin
 #        m = Model(solver=CSDPSolver(printlevel=0))
 #        @variable(m, X[1:2,1:2], PSD)
@@ -239,29 +224,6 @@ ispsd(x::Matrix) = minimum(eigvals(x)) ≥ -1e-3
 #        @test isapprox(yy[:], [1/sqrt(2), 0.5, 0.5], atol=1e-4)
 #        @test isapprox(JuMP.objectivevalue(m), 1.293, atol=1e-2)
 #    end
-
-    @testset "Trivial symmetry constraints are removed (#766, #972)" begin
-        q = 2
-        m = 3
-        angles1 = linspace(3*pi/4, pi, m)
-        angles2 = linspace(0, -pi/2, m)
-        V = [3.*cos.(angles1)' 1.5.*cos.(angles2)';
-             3.*sin.(angles1)' 1.5.*sin.(angles2)']
-        V[abs.(V) .< 1e-10] = 0.0
-        p = 2*m
-        n = 100
-
-        mod = Model()
-        @variable(mod, x[j=1:p] >= 1, Int)
-        @variable(mod, u[i=1:q] >= 1)
-        @objective(mod, Min, sum(u))
-        @constraint(mod, sum(x) <= n)
-        for i=1:q
-            cref = @SDconstraint(mod, [V*diagm(x./n)*V' eye(q)[:,i] ; eye(q)[i:i,:] u[i]] >= 0)
-            @test isnull(cref.instanceref.symref)
-            @test isempty(cref.instanceref.symidx)
-        end
-    end
 
     # min tr(Y)          max 4x_1 +3x2
     #     Y[2,1] <= 4        [ 0 y1 0    [1 0 0
