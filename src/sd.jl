@@ -71,20 +71,7 @@ end
 constructconstraint!(x::AbstractMatrix, ::PSDCone) = SDConstraint(x)
 
 _constrain_symmetry(m::Model, c::SDConstraint{T, MT}, sdref) where {T, MT<:Symmetric} = sdref
-function fill_expr!(m::Model, expr::Dict{Variable, T}, terms, coeff=one(T)) where T
-    assert_isfinite(terms)
-    coeffs = terms.coeffs
-    vars = terms.vars
-    # collect duplicates
-    for ind in eachindex(coeffs)
-        if vars[ind].m === m
-            var = vars[ind]
-            expr[var] = get(expr, var, zero(T)) + coeff * coeffs[ind]
-        else
-            throw(VariableNotOwnedError("constraints"))
-        end
-    end
-end
+
 function _constrain_symmetry(m::Model, c::SDConstraint{T}, sdref) where T
     expr = Dict{Variable, Float64}()
     symaff = AffExpr[]
