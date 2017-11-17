@@ -27,6 +27,7 @@ using CSDP
 include("containers.jl")
 include("model.jl")
 include("variable.jl")
+include("expr.jl")
 include("objective.jl")
 include("constraint.jl")
 include("lp.jl")
