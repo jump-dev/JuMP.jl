@@ -2,8 +2,8 @@ export PSDCone
 # Used in @constraint m X in PSDCone
 struct PSDCone end
 
-struct SDVariableConstraint <: AbstractConstraint
-    Q::Matrix{JuMP.Variable}
+struct SDVariableConstraint{MT<:AbstractMatrix{JuMP.Variable}} <: AbstractConstraint
+    Q::MT
 end
 
 # Used by the @variable macro. Currently cannot also be used through the @constraint macro because of the underscore
