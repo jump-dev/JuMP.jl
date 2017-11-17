@@ -385,6 +385,7 @@ end
 
 terminationstatus(m::Model) = MOI.get(m, MOI.TerminationStatus())
 primalstatus(m::Model) = MOI.get(m, MOI.PrimalStatus())
+dualstatus(m::Model) = MOI.get(m, MOI.DualStatus())
 
 # """
 #     setobjectivesense(m::Model, newSense::Symbol)

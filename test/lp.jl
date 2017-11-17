@@ -19,6 +19,7 @@
 
         @test JuMP.terminationstatus(m) == MOI.Success
         @test JuMP.primalstatus(m) == MOI.FeasiblePoint
+        @test JuMP.dualstatus(m) == MOI.FeasiblePoint
 
         @test JuMP.resultvalue(x) ≈ 1.0 atol=1e-6
         @test JuMP.resultvalue(y) ≈ 0.0 atol=1e-6
