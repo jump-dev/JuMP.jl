@@ -31,6 +31,21 @@ Base.zero(a::GenericAffExpr) = zero(typeof(a))
 Base.one( a::GenericAffExpr) =  one(typeof(a))
 Base.copy(a::GenericAffExpr) = GenericAffExpr(copy(a.vars),copy(a.coeffs),copy(a.constant))
 
+"""
+    value(a::GenericAffExpr, map::Function)
+
+Evaluate `a` given the value `map(v)` for each variable `v`.
+"""
+function value(a::GenericAffExpr{T, V}, map::Function) where {T, V}
+    S = Base.promote_op(map, V)
+    U = Base.promote_op(*, T, S)
+    ret = U(a.constant)
+    for it in eachindex(a.vars)
+        ret += a.coeffs[it] * map(a.vars[it])
+    end
+    ret
+end
+
 # Old iterator protocol - iterates over tuples (aᵢ,xᵢ)
 struct LinearTermIterator{GAE<:GenericAffExpr}
     aff::GAE
@@ -131,13 +146,7 @@ end
 Evaluate an `AffExpr` given the result returned by a solver.
 Replaces `getvalue` for most use cases.
 """
-function resultvalue(a::AffExpr)
-    ret = a.constant
-    for it in eachindex(a.vars)
-        ret += a.coeffs[it] * resultvalue(a.vars[it])
-    end
-    ret
-end
+resultvalue(a::AffExpr) = value(a, resultvalue)
 
 function MOI.ScalarAffineFunction(a::AffExpr)
     return MOI.ScalarAffineFunction(instancereference.(a.vars), a.coeffs, a.constant)
