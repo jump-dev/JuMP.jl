@@ -47,6 +47,19 @@
         # @test c.set == MOI.SecondOrderCone(1)
     end
 
+    @testset "SDP constraint" begin
+        m = Model()
+        @variable(m, x)
+        @variable(m, y)
+
+        cref = @SDconstraint(m, [x 1; 1 -y] ⪰ [1 x; x -2])
+        c = JuMP.constraintobject(cref, Vector{AffExpr}, MOI.PositiveSemidefiniteConeTriangle)
+        @test JuMP.isequal_canonical(c.func[1], x-1)
+        @test JuMP.isequal_canonical(c.func[2], 1-x)
+        @test JuMP.isequal_canonical(c.func[3], 2-y)
+        @test c.set == MOI.PositiveSemidefiniteConeTriangle(2)
+    end
+
     @testset "Nonsensical SDPs" begin
         m = Model()
         @test_throws ErrorException @variable(m, unequal[1:5,1:6], PSD)
