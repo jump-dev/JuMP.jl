@@ -262,5 +262,5 @@ function constraintobject(cref::ConstraintRef{Model}, ::Type{Vector{AffExpr}}, :
     m = cref.m
     f = MOI.get(m.instance, MOI.ConstraintFunction(), cref.instanceref)::MOI.VectorAffineFunction
     s = MOI.get(m.instance, MOI.ConstraintSet(), cref.instanceref)::SetType
-    return VectorAffExprConstraint(map(f -> AffExpr(m, f), f), s)
+    return VectorAffExprConstraint(map(f -> AffExpr(m, f), MOIU.eachscalar(f)), s)
 end
