@@ -25,3 +25,15 @@ function addconstraint(m::Model, c::SDVariableConstraint)
     cref = MOI.addconstraint!(m.instance, MOI.VectorOfVariables([instancereference(c.Q[i, j]) for j in 1:n for i in 1:j]), MOI.PositiveSemidefiniteConeTriangle(n))
     return ConstraintRef(m, cref)
 end
+
+function constructconstraint!(x::AbstractMatrix, ::PSDCone)
+    n = Base.LinAlg.checksquare(x)
+    # Support for non-symmetric matrices as done prior to JuMP v0.19
+    # will be added once the appropriate cone has been added in MathOptInterface
+    # as discussed in the following PR:
+    # https://github.com/JuliaOpt/JuMP.jl/pull/1122#issuecomment-344980944
+    @assert issymmetric(x)
+    aff = [x[i, j] for j in 1:n for i in 1:j]
+    s = MOI.PositiveSemidefiniteConeTriangle(n)
+    return VectorAffExprConstraint(aff, s)
+end
