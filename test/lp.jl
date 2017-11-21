@@ -10,7 +10,7 @@
         @variable(m, y >= 0.0)
         @objective(m, Min, -x)
 
-        @constraint(m, x + y <= 1)
+        c = @constraint(m, x + y <= 1)
 
         JuMP.attach(m, CSDPInstance(printlevel=0))
         JuMP.solve(m)
@@ -27,5 +27,6 @@
         @test JuMP.resultvalue(x + y) ≈ 1.0 atol=1e-6
         @test JuMP.objectivevalue(m) ≈ -1.0 atol=1e-6
 
+        @test JuMP.resultdual(c) ≈ -1 atol=1e-6
     end
 end

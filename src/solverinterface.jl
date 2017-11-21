@@ -3,6 +3,22 @@
 #  License, v. 2.0. If a copy of the MPL was not distributed with this
 #  file, You can obtain one at http://mozilla.org/MPL/2.0/.
 
+
+"""
+    copyconstraints!(m::JuMP.Model, ::Type{F}, ::Type{S}) where {F<:MOI.AbstractFunction, S<:MOI.AbstractSet}
+
+Transfer the constraints of type `F`-in-`S` to the solver instance.
+"""
+function copyconstraints!(m::Model, ::Type{F}, ::Type{S}) where {F<:MOI.AbstractFunction, S<:MOI.AbstractSet}
+    for cref in MOI.get(m.instance, MOI.ListOfConstraintReferences{F, S}())
+        f = MOI.get(m.instance, MOI.ConstraintFunction(), cref)
+        s = MOI.get(m.instance, MOI.ConstraintSet(), cref)
+        solvercref = MOI.addconstraint!(m.solverinstance, f, s)
+        @assert !haskey(m.constrainttosolverconstraint, cref.value)
+        m.constrainttosolverconstraint[cref.value] = solvercref.value
+    end
+end
+
 """
     attach(m::JuMP.Model)
 
@@ -16,6 +32,7 @@ function attach(m::Model, solverinstance::MOI.AbstractSolverInstance)
     solvervariables = MOI.addvariables!(m.solverinstance, numvar(m)) # TODO numvar shouldn't return unsigned int
 
     m.variabletosolvervariable = Dict{MOIVAR,MOIVAR}()
+    m.constrainttosolverconstraint = Dict{UInt64,UInt64}()
     # TODO: replace with ListOfVariableReferences()
     # Now we're assuming all instance variables are numbered sequentially
     for i in 1:numvar(m)
@@ -25,10 +42,10 @@ function attach(m::Model, solverinstance::MOI.AbstractSolverInstance)
     MOI.set!(m.solverinstance, MOI.ObjectiveSense(), MOI.get(m.instance, MOI.ObjectiveSense()))
     MOI.set!(m.solverinstance, MOI.ObjectiveFunction(), MOI.get(m.instance, MOI.ObjectiveFunction()))
 
-    # TODO: replace with ListOfConstraintReferences()
-    # This would be a bit more transparent than the call below
-    # TODO: keep track of constraint references!
-    MOIU.broadcastcall( constrs -> for (cref, f, s) in constrs; MOI.addconstraint!(m.solverinstance, f, s) end, m.instance)
+    for (F, S) in MOI.get(m.instance, MOI.ListOfConstraints())
+        # do the rest in copyconstraints! which is type stable
+        copyconstraints!(m, F, S)
+    end
 
     m.solverinstanceattached = true
     nothing
