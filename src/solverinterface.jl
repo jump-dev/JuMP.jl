@@ -10,9 +10,9 @@ Attach the JuMP model `m` to a new solver instance. All instance data is transfe
 and while the solver instance remains attached, all modifications to the JuMP model are immediately mirrored
 in the solver instance. See also `isattached()` and `detach()`.
 """
-function attach(m::Model)
+function attach(m::Model, solverinstance::MOI.AbstractSolverInstance)
     @assert !m.solverinstanceattached
-    m.solverinstance = MOI.SolverInstance(m.solver)
+    m.solverinstance = solverinstance
     solvervariables = MOI.addvariables!(m.solverinstance, numvar(m)) # TODO numvar shouldn't return unsigned int
 
     m.variabletosolvervariable = Dict{MOIVAR,MOIVAR}()
@@ -60,24 +60,24 @@ function detach(m::Model)
 end
 
 """
-    canget(m::JuMP.Model, attr::MathOptInterface.AbstractSolverInstanceAttribute)::Bool
+    canget(m::JuMP.Model, attr::MathOptInterface.AbstractInstanceAttribute)::Bool
 
 Return `true` if one may query the attribute `attr` from the solver instance attached to the JuMP model,
 false if not.
 Throws an error if no solver instance is currently attached.
 """
-function MOI.canget(m::Model, attr::MOI.AbstractSolverInstanceAttribute)
+function MOI.canget(m::Model, attr::MOI.AbstractInstanceAttribute)
     @assert m.solverinstanceattached
     return MOI.canget(m.solverinstance, attr)
 end
 
 """
-    get(m::JuMP.Model, attr::MathOptInterface.AbstractSolverInstanceAttribute)
+    get(m::JuMP.Model, attr::MathOptInterface.AbstractInstanceAttribute)
 
 Return the value of the attribute `attr` from the solver instance attached to the JuMP model.
 Throws an error if no solver instance is currently attached.
 """
-function MOI.get(m::Model, attr::MOI.AbstractSolverInstanceAttribute)
+function MOI.get(m::Model, attr::MOI.AbstractInstanceAttribute)
     @assert m.solverinstanceattached
     return MOI.get(m.solverinstance, attr)
 end
@@ -91,9 +91,7 @@ function solve(m::Model;
         return m.solvehook(m)
     end
 
-    if !m.solverinstanceattached
-        attach(m)
-    end
+    @assert m.solverinstanceattached
     MOI.optimize!(m.solverinstance)
 
     empty!(m.variableresult)
