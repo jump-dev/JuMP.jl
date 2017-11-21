@@ -30,7 +30,7 @@ ispsd(x::Matrix) = minimum(eigvals(x)) ≥ -1e-3
         #      (x1,x2,x3) in C^3_q
         #      X in C_sdp
 
-        m = Model(solver=CSDPSolver(printlevel=0))
+        m = Model()
 
         @variable(m, x[1:3])
         @constraint(m, x in MOI.SecondOrderCone(3))
@@ -51,6 +51,7 @@ ispsd(x::Matrix) = minimum(eigvals(x)) ≥ -1e-3
         @constraint(m, vecdot(A1, X) + x[1] == 1)
         @constraint(m, vecdot(A2, X) + x[2] + x[3] == 1/2)
 
+        JuMP.attach(m, CSDPInstance(printlevel=0))
         JuMP.solve(m)
 
         @test JuMP.isattached(m)
@@ -202,7 +203,7 @@ ispsd(x::Matrix) = minimum(eigvals(x)) ≥ -1e-3
 #    end
 
 #    @testset "SDP with SOC" begin
-#        m = Model(solver=CSDPSolver(printlevel=0))
+#        m = Model()
 #        @variable(m, X[1:2,1:2], PSD)
 #        @variable(m, y[0:2])
 #        @constraint(m, norm([y[1],y[2]]) <= y[0])
@@ -231,12 +232,13 @@ ispsd(x::Matrix) = minimum(eigvals(x)) ≥ -1e-3
     #     Y >= 0               0  0 0]    0 0 1]
     #                         y1 <= 0 y2 >= 0
     @testset "Test problem #2" begin
-        m = Model(solver=CSDPSolver(printlevel=0))
+        m = Model()
         @variable(m, Y[1:3,1:3], PSD)
         c1 = @constraint(m, Y[2,1] <= 4)
         c2 = @constraint(m, Y[2,2] >= 3)
         @objective(m, Min, trace(Y))
 
+        JuMP.attach(m, CSDPInstance(printlevel=0))
         JuMP.solve(m)
         @test JuMP.terminationstatus(m) == MOI.Success
         @test JuMP.primalstatus(m) == MOI.FeasiblePoint
@@ -253,16 +255,13 @@ ispsd(x::Matrix) = minimum(eigvals(x)) ≥ -1e-3
     #     Y >= 0              0   0   0]      0  0 0]
     #                         y free
     @testset "Test problem #3" begin
-        m = Model(solver=CSDPSolver(printlevel=0))
+        m = Model()
         @variable(m, x >= 0)
         @variable(m, Y[1:3,1:3], PSD)
         c = @constraint(m, Y[2,1] == 1)
         @objective(m, Min, Y[1,2])
 
-        JuMP.solve(m)
-        @test JuMP.terminationstatus(m) == MOI.Success
-        @test JuMP.primalstatus(m) == MOI.FeasiblePoint
-
+        JuMP.attach(m, CSDPInstance(printlevel=0))
         JuMP.solve(m)
         @test JuMP.terminationstatus(m) == MOI.Success
         @test JuMP.primalstatus(m) == MOI.FeasiblePoint
@@ -284,13 +283,14 @@ ispsd(x::Matrix) = minimum(eigvals(x)) ≥ -1e-3
     #     x >= 0              z <= 0
     @testset "Test problem #4" begin
         #solver = fixscs(solver, 2000000)
-        m = Model(solver=CSDPSolver(printlevel=0))
+        m = Model()
         @variable(m, x >= 0)
         @variable(m, Y[1:3,1:3], PSD)
         c1 = @constraint(m, x >= 1)
         c2 = @constraint(m, Y[2,1] == 1)
         @objective(m, Min, x + Y[1,1])
 
+        JuMP.attach(m, CSDPInstance(printlevel=0))
         JuMP.solve(m)
         @test JuMP.terminationstatus(m) == MOI.Success
         @test JuMP.primalstatus(m) == MOI.FeasiblePoint
@@ -313,7 +313,7 @@ ispsd(x::Matrix) = minimum(eigvals(x)) ≥ -1e-3
 #    end
 #
 #    @testset "Test problem #5" begin
-#        m = Model(solver=CSDPSolver(printlevel=0))
+#        m = Model()
 #        @variable(m, Y[1:3,1:3], PSD)
 #        @constraint(m, Y[2,1] <= 4)
 #        @constraint(m, Y[2,2] >= 3)
@@ -335,13 +335,14 @@ ispsd(x::Matrix) = minimum(eigvals(x)) ≥ -1e-3
     end
 
     @testset "Test problem #6" begin
-        m = Model(solver=CSDPSolver(printlevel=0))
+        m = Model()
         @variable(m, Y[1:3,1:3])
         @constraint(m, Y[2,1] <= 4)
         @constraint(m, Y[2,2] >= 3)
         @constraint(m, sum(Y) >= 12)
         @objective(m, Min, operator_norm(m, Y))
 
+        JuMP.attach(m, CSDPInstance(printlevel=0))
         JuMP.solve(m)
         @test JuMP.terminationstatus(m) == MOI.Success
         @test JuMP.primalstatus(m) == MOI.FeasiblePoint
@@ -358,7 +359,7 @@ ispsd(x::Matrix) = minimum(eigvals(x)) ≥ -1e-3
 #    end
 #
 #    @testset "Test problem #7" begin
-#        m = Model(solver=CSDPSolver(printlevel=0))
+#        m = Model()
 #        @variable(m, Y[1:3,1:3])
 #        @constraint(m, Y[1,1] >= 4)
 #        @objective(m, Min, lambda_max(m, Y))
@@ -379,11 +380,12 @@ ispsd(x::Matrix) = minimum(eigvals(x)) ≥ -1e-3
     end
 
     @testset "Test problem #8" begin
-        m = Model(solver=CSDPSolver(printlevel=0))
+        m = Model()
         @variable(m, Y[1:3,1:3], PSD)
         @constraint(m, trace(Y) <= 6)
         @objective(m, Max, lambda_min(m, Y))
 
+        JuMP.attach(m, CSDPInstance(printlevel=0))
         JuMP.solve(m)
         @test JuMP.terminationstatus(m) == MOI.Success
         @test JuMP.primalstatus(m) == MOI.FeasiblePoint
@@ -402,7 +404,7 @@ ispsd(x::Matrix) = minimum(eigvals(x)) ≥ -1e-3
     end
 
 #    @testset "Test problem #9" begin
-#        m = Model(solver=CSDPSolver(printlevel=0))
+#        m = Model()
 #        n = 3
 #        x = [1,2,3]
 #        lb = 0.5eye(n)
@@ -418,7 +420,7 @@ ispsd(x::Matrix) = minimum(eigvals(x)) ≥ -1e-3
 #    end
 
     @testset "Correlation example" begin
-        m = Model(solver=CSDPSolver(printlevel=0))
+        m = Model()
 
         @variable(m, X[1:3,1:3], PSD)
 
@@ -435,6 +437,8 @@ ispsd(x::Matrix) = minimum(eigvals(x)) ≥ -1e-3
 
         # Find upper bound
         @objective(m, Max, X[1,3])
+
+        JuMP.attach(m, CSDPInstance(printlevel=0))
         JuMP.solve(m)
         @test JuMP.terminationstatus(m) == MOI.Success
         @test JuMP.primalstatus(m) == MOI.FeasiblePoint
@@ -456,13 +460,14 @@ ispsd(x::Matrix) = minimum(eigvals(x)) ≥ -1e-3
     # Q >= 0                        y free
     # o free                        X <= 0
     @testset "Just another SDP" begin
-        m = Model(solver=CSDPSolver(printlevel=0))
+        m = Model()
         @variable(m, Q[1:2, 1:2], PSD)
         c1 = @constraint(m, Q[1,1] - 1 == Q[2,2])
         @variable(m, objective)
         @SDconstraint(m, [1 Q[1,1]; Q[1,1] objective] ⪰ 0)
         @objective(m, Min, objective)
 
+        JuMP.attach(m, CSDPInstance(printlevel=0))
         JuMP.solve(m)
         @test JuMP.terminationstatus(m) == MOI.Success
         @test JuMP.primalstatus(m) == MOI.FeasiblePoint
@@ -483,14 +488,14 @@ ispsd(x::Matrix) = minimum(eigvals(x)) ≥ -1e-3
     # Example 2.11
     @testset "SDP variable and optimal objective not rational" begin
 #       solver = fixscs(solver, 7000000)
-        m = Model(solver=CSDPSolver(printlevel=0))
+        m = Model()
         @variable(m, X[1:2,1:2], PSD)
         c = @constraint(m, X[1,1]+X[2,2] == 1)
         @objective(m, Min, 2*X[1,1]+2*X[1,2])
 #       @test all(isnan.(getdual(X)))
 
+        JuMP.attach(m, CSDPInstance(printlevel=0))
         JuMP.solve(m)
-
         @test JuMP.terminationstatus(m) == MOI.Success
         @test JuMP.primalstatus(m) == MOI.FeasiblePoint
 
@@ -503,11 +508,13 @@ ispsd(x::Matrix) = minimum(eigvals(x)) ≥ -1e-3
     # Example 2.13
     @testset "SDP constraint and optimal objective not rational" begin
         #solver = fixscs(solver, 7000000)
-        m = Model(solver=CSDPSolver(printlevel=0))
+        m = Model()
         @variable(m, y)
         c = @SDconstraint(m, [2-y 1; 1 -y] >= 0)
         @objective(m, Max, y)
         #@test all(isnan, getdual(c))
+
+        JuMP.attach(m, CSDPInstance(printlevel=0))
         JuMP.solve(m)
         @test JuMP.terminationstatus(m) == MOI.Success
         @test JuMP.primalstatus(m) == MOI.FeasiblePoint
@@ -530,11 +537,13 @@ ispsd(x::Matrix) = minimum(eigvals(x)) ≥ -1e-3
     # for any eps > 0 however there is no primal solution with objective value 0.
     @testset "SDP with dual solution not attained" begin
         #solver = fixscs(solver, 7000000)
-        m = Model(solver=CSDPSolver(printlevel=0))
+        m = Model()
         @variable(m, y)
         c = @SDconstraint(m, [0 y; y 0] <= [1 0; 0 0])
         @objective(m, Max, y)
         #@test all(isnan, getdual(c))
+
+        JuMP.attach(m, CSDPInstance(printlevel=0))
         JuMP.solve(m)
         @test JuMP.terminationstatus(m) == MOI.Success
         @test JuMP.primalstatus(m) == MOI.FeasiblePoint
@@ -551,11 +560,13 @@ ispsd(x::Matrix) = minimum(eigvals(x)) ≥ -1e-3
 
     @testset "SDP with primal solution not attained" begin
 #       solver = fixscs(solver, 7000000)
-        m = Model(solver=CSDPSolver(printlevel=0))
+        m = Model()
         @variable(m, X[1:2,1:2], PSD)
         c = @constraint(m, 2*X[1,2] == 1)
         @objective(m, Min, X[1,1])
 #       @test all(isnan, getdual(X))
+
+        JuMP.attach(m, CSDPInstance(printlevel=0))
         JuMP.solve(m)
         @test JuMP.terminationstatus(m) == MOI.Success
         @test JuMP.primalstatus(m) == MOI.FeasiblePoint
@@ -579,7 +590,7 @@ ispsd(x::Matrix) = minimum(eigvals(x)) ≥ -1e-3
 #    # X+Xᵀ ⪰ 0
 #    @testset "SDP with dual solution not attained without symmetric A_i" begin
 #        #solver = fixscs(solver, 10000000)
-#        m = Model(solver=CSDPSolver(printlevel=0))
+#        m = Model()
 #        @variable(m, y)
 #        @variable(m, z)
 #        c = @SDconstraint(m, [0 y; z 0] <= [1 0; 0 0])
@@ -606,7 +617,7 @@ ispsd(x::Matrix) = minimum(eigvals(x)) ≥ -1e-3
 #    # X+Xᵀ ⪰ 0
 #    @testset "SDP with dual solution not attained without symmetry" begin
 #        #solver = fixscs(solver, 10000000)
-#        m = Model(solver=CSDPSolver(printlevel=0))
+#        m = Model()
 #        @variable(m, y)
 #        @variable(m, z)
 #        c = @SDconstraint(m, [0 y; z 0] <= [1 0; 0 0])
@@ -629,7 +640,7 @@ ispsd(x::Matrix) = minimum(eigvals(x)) ≥ -1e-3
 #    end
 
     @testset "Nonzero dual for a scalar variable with sdp solver" begin
-        m = Model(solver=CSDPSolver(printlevel=0))
+        m = Model()
         @variable(m, x1 >= 0)
         @variable(m, x2 >= 0)
         @variable(m, x3 >= 0)
@@ -638,6 +649,7 @@ ispsd(x::Matrix) = minimum(eigvals(x)) ≥ -1e-3
         c = @SDconstraint(m, [2x1-x2-x3 0; 0 x1-x2+x3] >= [3 0; 0 2])
         @objective(m, Min, 2x1 - x2)
 
+        JuMP.attach(m, CSDPInstance(printlevel=0))
         JuMP.solve(m)
         @test JuMP.terminationstatus(m) == MOI.Success
         @test JuMP.primalstatus(m) == MOI.FeasiblePoint
@@ -655,10 +667,11 @@ ispsd(x::Matrix) = minimum(eigvals(x)) ≥ -1e-3
 
 
     @testset "No constraint" begin
-        m = Model(solver=CSDPSolver(printlevel=0))
+        m = Model()
         @variable(m, X[1:3,1:3], PSD)
         @objective(m, Min, trace(X))
 
+        JuMP.attach(m, CSDPInstance(printlevel=0))
         JuMP.solve(m)
         @test JuMP.terminationstatus(m) == MOI.Success
         @test JuMP.primalstatus(m) == MOI.FeasiblePoint

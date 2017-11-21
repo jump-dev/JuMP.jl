@@ -1,6 +1,6 @@
 @testset "Second-order Cone Programming" begin
     @testset "SOC1" begin
-        m = Model(solver=CSDPSolver(printlevel=0))
+        m = Model()
         @variable(m, x)
         @variable(m, y)
         @variable(m, t >= 0)
@@ -8,6 +8,7 @@
         @constraint(m, x + y >= 1)
         @constraint(m, [t,x,y] in MOI.SecondOrderCone(3))
 
+        JuMP.attach(m, CSDPInstance(printlevel=0))
         JuMP.solve(m)
 
         @test JuMP.isattached(m)
@@ -23,7 +24,7 @@
     end
 
     @testset "RotatedSOC1" begin
-        m = Model(solver=CSDPSolver(printlevel=0))
+        m = Model()
 
         @variable(m, x[1:5] >= 0)
         @variable(m, 0 <= u <= 5)
@@ -36,6 +37,7 @@
         @constraint(m, [t1/sqrt(2),t2/sqrt(2),x...] in MOI.RotatedSecondOrderCone(7))
         @constraint(m, [x[1]/sqrt(2), u/sqrt(2), v] in MOI.RotatedSecondOrderCone(3))
 
+        JuMP.attach(m, CSDPInstance(printlevel=0))
         JuMP.solve(m)
 
         @test JuMP.isattached(m)

@@ -35,7 +35,7 @@ export
     PSDCone,
 # Functions
     # Model related
-    setobjectivesense, setsolver,
+    setobjectivesense,
     writeLP, writeMPS,
     #addSOS1, addSOS2,
     solve,
@@ -75,10 +75,6 @@ const INTREF = MOICON{MOI.SingleVariable,MOI.Integer}
 const BINREF = MOICON{MOI.SingleVariable,MOI.ZeroOne}
 
 @MOIU.instance JuMPInstance (ZeroOne, Integer) (EqualTo, GreaterThan, LessThan, Interval) (Zeros, Nonnegatives, Nonpositives, SecondOrderCone, RotatedSecondOrderCone, PositiveSemidefiniteConeTriangle) () (SingleVariable,) (ScalarAffineFunction,ScalarQuadraticFunction) (VectorOfVariables,) (VectorAffineFunction,)
-
-# dummy solver
-type UnsetSolver <: MathOptInterface.AbstractSolver
-end
 
 ###############################################################################
 # Model class
@@ -141,7 +137,6 @@ mutable struct Model <: AbstractModel
     # internal solver instance object
     solverinstance
     # Solver+option object from MPB or MOI
-    solver
     solverinstanceattached::Bool
     # callbacks
     callbacks
@@ -172,11 +167,8 @@ mutable struct Model <: AbstractModel
     # dictionary keyed on an extension-specific symbol
     ext::Dict{Symbol,Any}
     # Default constructor
-    function Model(;solver=UnsetSolver(), simplify_nonlinear_expressions::Bool=false)
+    function Model(; simplify_nonlinear_expressions::Bool=false)
         # TODO need to support MPB also
-        if !isa(solver,MOI.AbstractSolver)
-            error("solver argument ($solver) must be an AbstractSolver")
-        end
         m = new()
         # TODO make pretty
         m.instance = JuMPInstance{Float64}()
@@ -192,7 +184,6 @@ mutable struct Model <: AbstractModel
         m.objbound = 0.0
         m.objval = 0.0
         m.solverinstance = nothing
-        m.solver = solver
         m.solverinstanceattached = false
         m.callbacks = Any[]
         m.solvehook = nothing
@@ -403,18 +394,6 @@ dualstatus(m::Model) = MOI.get(m, MOI.DualStatus())
 #
 # setobjective(::Model, ::Symbol, x::AbstractArray) =
 #     error("in setobjective: array of size $(_size(x)) passed as objective; only scalar objectives are allowed")
-
-"""
-    setsolver(m::Model, solver::MathOptInterface.AbstractSolver)
-
-Change the solver which will be used for the next call to `solve()`, discarding the current internal model if present.
-"""
-function setsolver(m::Model, solver::MOI.AbstractSolver)
-    m.solver = solver
-    m.solverinstance = nothing
-    m.solverinstanceattached = false
-    nothing
-end
 
 # # Deep copy the model
 # function Base.copy(source::Model)
