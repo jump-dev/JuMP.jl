@@ -100,7 +100,8 @@ mutable struct Model <: AbstractModel
     # obj#::QuadExpr
     # objSense::Symbol
 
-    # We use the constraint reference value to have a concrete type
+    # Mapping from the constraint reference in `instance`
+    # and the constraint reference in `solverinstance`
     constrainttosolverconstraint::Dict{MOICON,MOICON}
 
     # linconstr#::Vector{LinearConstraint}
