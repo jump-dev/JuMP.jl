@@ -101,7 +101,7 @@ mutable struct Model <: AbstractModel
     # objSense::Symbol
 
     # We use the constraint reference value to have a concrete type
-    constrainttosolverconstraint::Dict{UInt64,UInt64}
+    constrainttosolverconstraint::Dict{MOICON,MOICON}
 
     # linconstr#::Vector{LinearConstraint}
     # quadconstr
@@ -528,7 +528,7 @@ end
 # linearindex(x::ConstraintRef) = x.idx
 
 function solverinstanceref(cr::ConstraintRef{Model, MOICON{F, S}}) where {F, S}
-    MOICON{F, S}(cr.m.constrainttosolverconstraint[cr.instanceref.value])
+    cr.m.constrainttosolverconstraint[cr.instanceref]::MOICON{F, S}
 end
 
 function hasresultdual(cr::ConstraintRef{Model, <:MOICON})

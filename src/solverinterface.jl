@@ -14,8 +14,8 @@ function copyconstraints!(m::Model, ::Type{F}, ::Type{S}) where {F<:MOI.Abstract
         f = MOI.get(m.instance, MOI.ConstraintFunction(), cref)
         s = MOI.get(m.instance, MOI.ConstraintSet(), cref)
         solvercref = MOI.addconstraint!(m.solverinstance, f, s)
-        @assert !haskey(m.constrainttosolverconstraint, cref.value)
-        m.constrainttosolverconstraint[cref.value] = solvercref.value
+        @assert !haskey(m.constrainttosolverconstraint, cref)
+        m.constrainttosolverconstraint[cref] = solvercref
     end
 end
 
