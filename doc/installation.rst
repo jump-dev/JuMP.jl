@@ -45,7 +45,7 @@ Solver support in Julia is currently provided by writing a solver-specific packa
 +----------------------------------------------------------------------------------+---------------------------------------------------------------------------------+-----------------------------+-------------+----+------+------+-----+-------+-----+
 | `BARON <http://archimedes.cheme.cmu.edu/?q=baron>`_                              | `BARON.jl <https://github.com/joehuchette/BARON.jl>`_                           |  ``BaronSolver()``          |  Comm.      |    |      |      |  X  |   X   |     |
 +----------------------------------------------------------------------------------+---------------------------------------------------------------------------------+-----------------------------+-------------+----+------+------+-----+-------+-----+
-| `Bonmin <https://projects.coin-or.org/Bonmin>`_                                  | `AmplNLWriter.jl <https://github.com/JackDunnNZ/AmplNLWriter.jl>`_              | ``BonminNLSolver()`` *      |  EPL        | X  |      |  X   |  X  |   X   |     |
+| `Bonmin <https://projects.coin-or.org/Bonmin>`_                                  | `AmplNLWriter.jl <https://github.com/JuliaOpt/AmplNLWriter.jl>`_              | ``AmplNLWriter(CoinOptServices.bonmin)`` *      |  EPL        | X  |      |  X   |  X  |   X   |     |
 +                                                                                  +---------------------------------------------------------------------------------+-----------------------------+             +    +      +      +     +       +     +
 |                                                                                  | `CoinOptServices.jl <https://github.com/JuliaOpt/CoinOptServices.jl>`_          | ``OsilBonminSolver()``      |             |    |      |      |     |       |     |
 +----------------------------------------------------------------------------------+---------------------------------------------------------------------------------+-----------------------------+-------------+----+------+------+-----+-------+-----+
@@ -53,7 +53,7 @@ Solver support in Julia is currently provided by writing a solver-specific packa
 +----------------------------------------------------------------------------------+---------------------------------------------------------------------------------+-----------------------------+-------------+----+------+------+-----+-------+-----+
 | `Clp <https://projects.coin-or.org/Clp>`_                                        | `Clp.jl <https://github.com/JuliaOpt/Clp.jl>`_                                  | ``ClpSolver()``             |  EPL        | X  |      |      |     |       |     |
 +----------------------------------------------------------------------------------+---------------------------------------------------------------------------------+-----------------------------+-------------+----+------+------+-----+-------+-----+
-|  `Couenne <https://projects.coin-or.org/Couenne>`_                               | `AmplNLWriter.jl <https://github.com/JackDunnNZ/AmplNLWriter.jl>`_              | ``CouenneNLSolver()`` *     |  EPL        | X  |      |  X   |  X  |   X   |     |
+|  `Couenne <https://projects.coin-or.org/Couenne>`_                               | `AmplNLWriter.jl <https://github.com/JuliaOpt/AmplNLWriter.jl>`_              | ``AmplNLWriter(CoinOptServices.couenne)`` *     |  EPL        | X  |      |  X   |  X  |   X   |     |
 +                                                                                  +---------------------------------------------------------------------------------+-----------------------------+             +    +      +      +     +       +     +
 |                                                                                  | `CoinOptServices.jl <https://github.com/JuliaOpt/CoinOptServices.jl>`_          | ``OsilCouenneSolver()``     |             |    |      |      |     |       |     |
 +----------------------------------------------------------------------------------+---------------------------------------------------------------------------------+-----------------------------+-------------+----+------+------+-----+-------+-----+
@@ -175,10 +175,7 @@ SCS can be used by JuMP to solve LPs and SOCPs, and SDPs. SCS is a first order s
 COIN-OR Bonmin and Couenne
 ++++++++++++++++++++++++++
 
-Binaries of Bonmin and Couenne are provided on OS X and Windows (32- and 64-bit) by the `CoinOptServices.jl <https://github.com/JuliaOpt/CoinOptServices.jl>`_ package.
-On Linux, they will be compiled from source. Once installed, they can be called either via ``.osil`` files using
-``OsilBonminSolver`` and ``OsilCouenneSolver`` from `CoinOptServices.jl <https://github.com/JuliaOpt/CoinOptServices.jl>`_,
-or via ``.nl`` files using ``BonminNLSolver`` and ``CouenneNLSolver`` from `AmplNLWriter.jl <https://github.com/JackDunnNZ/AmplNLWriter.jl>`_.
+Binaries of Bonmin and Couenne are provided on OS X and Windows (32- and 64-bit) by the [CoinOptServices.jl](https://github.com/JuliaOpt/CoinOptServices.jl) package. On Linux, they will be compiled from source. Once installed, they can be called either via `.osil` files using `OsilBonminSolver` and `OsilCouenneSolver` from [CoinOptServices.jl](https://github.com/JuliaOpt/CoinOptServices.jl), or via `.nl` files using `AmplNLWriter(CoinOptServices.bonmin)` and `AmplNLWriter(CoinOptServices.couenne)` from [AmplNLWriter.jl](https://github.com/JuliaOpt/AmplNLWriter.jl).
 We recommend using the ``.nl`` format option, which is currently more stable and has better performance for derivative computations.
 Since both Bonmin and Couenne use Ipopt for continuous subproblems, the same MUMPS sparse linear algebra performance caveat applies.
 
