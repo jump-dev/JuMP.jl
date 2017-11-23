@@ -58,6 +58,7 @@ ispsd(x::Matrix) = minimum(eigvals(x)) ≥ -1e-3
         @test JuMP.hasvariableresult(m)
         @test JuMP.terminationstatus(m) == MOI.Success
         @test JuMP.primalstatus(m) == MOI.FeasiblePoint
+        @test JuMP.dualstatus(m) == MOI.FeasiblePoint
 
         @test JuMP.objectivevalue(m) ≈ 0.705710509 atol=1e-6
 
@@ -242,11 +243,12 @@ ispsd(x::Matrix) = minimum(eigvals(x)) ≥ -1e-3
         JuMP.solve(m)
         @test JuMP.terminationstatus(m) == MOI.Success
         @test JuMP.primalstatus(m) == MOI.FeasiblePoint
+        @test JuMP.dualstatus(m) == MOI.FeasiblePoint
 
         @test isapprox(JuMP.objectivevalue(m), 3, atol=1e-5)
-        #@test isapprox(getdual(c1), 0, atol=1e-5)
-        #@test isapprox(getdual(c2), 1, atol=1e-5)
-        #@test isapprox(getdual(Y), [1 0 0; 0 0 0; 0 0 1], atol=1e-5)
+        @test isapprox(JuMP.resultdual(c1), 0, atol=1e-5)
+        @test isapprox(JuMP.resultdual(c2), 1, atol=1e-5)
+        #@test isapprox(JuMP.resultdual(Y), [1 0 0; 0 0 0; 0 0 1], atol=1e-5)
     end
 
     # min Y[1,2]          max y
@@ -265,13 +267,14 @@ ispsd(x::Matrix) = minimum(eigvals(x)) ≥ -1e-3
         JuMP.solve(m)
         @test JuMP.terminationstatus(m) == MOI.Success
         @test JuMP.primalstatus(m) == MOI.FeasiblePoint
+        @test JuMP.dualstatus(m) == MOI.FeasiblePoint
 
         @test isapprox(JuMP.objectivevalue(m), 1, atol=1e-4)
         Yval = JuMP.resultvalue.(Y)
         @test isapprox(Yval[1,2], 1, atol=1e-4)
         @test isapprox(Yval[2,1], 1, atol=1e-4)
-        #@test isapprox(getdual(c), 1, atol=1e-5)
-        #@test isapprox(getdual(Y), zeros(3,3), atol=1e-4)
+        @test isapprox(JuMP.resultdual(c), 1, atol=1e-5)
+        #@test isapprox(JuMP.resultdual(Y), zeros(3,3), atol=1e-4)
     end
 
     # min x + Y[1,1]          max y + z
@@ -294,14 +297,15 @@ ispsd(x::Matrix) = minimum(eigvals(x)) ≥ -1e-3
         JuMP.solve(m)
         @test JuMP.terminationstatus(m) == MOI.Success
         @test JuMP.primalstatus(m) == MOI.FeasiblePoint
+        @test JuMP.dualstatus(m) == MOI.FeasiblePoint
 
         @test isapprox(JuMP.objectivevalue(m), 1, atol=1e-3)
         @test isapprox(JuMP.resultvalue(x), 1, atol=1e-5)
         @test isapprox(JuMP.resultvalue.(Y)[1,1], 0, atol=1e-4)
-        #@test isapprox(getdual(x), 0, atol=1e-5)
-        #@test isapprox(getdual(Y), [1 0 0; 0 0 0; 0 0 0], atol=1e-4)
-        #@test isapprox(getdual(c1), 1, atol=1e-5)
-        #@test isapprox(getdual(c2), 0, atol=1e-4)
+        #@test isapprox(JuMP.resultdual(x), 0, atol=1e-5)
+        #@test isapprox(JuMP.resultdual(Y), [1 0 0; 0 0 0; 0 0 0], atol=1e-4)
+        @test isapprox(JuMP.resultdual(c1), 1, atol=1e-5)
+        @test isapprox(JuMP.resultdual(c2), 0, atol=1e-4)
     end
 
 #    function nuclear_norm(model, A)
@@ -346,6 +350,7 @@ ispsd(x::Matrix) = minimum(eigvals(x)) ≥ -1e-3
         JuMP.solve(m)
         @test JuMP.terminationstatus(m) == MOI.Success
         @test JuMP.primalstatus(m) == MOI.FeasiblePoint
+        @test JuMP.dualstatus(m) == MOI.FeasiblePoint
 
         @test isapprox(JuMP.objectivevalue(m), 4, atol=1e-5)
     end
@@ -389,6 +394,7 @@ ispsd(x::Matrix) = minimum(eigvals(x)) ≥ -1e-3
         JuMP.solve(m)
         @test JuMP.terminationstatus(m) == MOI.Success
         @test JuMP.primalstatus(m) == MOI.FeasiblePoint
+        @test JuMP.dualstatus(m) == MOI.FeasiblePoint
 
         @test isapprox(JuMP.objectivevalue(m), 2, atol=1e-5)
     end
@@ -464,21 +470,24 @@ ispsd(x::Matrix) = minimum(eigvals(x)) ≥ -1e-3
         @variable(m, Q[1:2, 1:2], PSD)
         c1 = @constraint(m, Q[1,1] - 1 == Q[2,2])
         @variable(m, objective)
-        @SDconstraint(m, [1 Q[1,1]; Q[1,1] objective] ⪰ 0)
+        c2 = @SDconstraint(m, [1 Q[1,1]; Q[1,1] objective] ⪰ 0)
         @objective(m, Min, objective)
 
         JuMP.attach(m, CSDPInstance(printlevel=0))
         JuMP.solve(m)
         @test JuMP.terminationstatus(m) == MOI.Success
         @test JuMP.primalstatus(m) == MOI.FeasiblePoint
+        @test JuMP.dualstatus(m) == MOI.FeasiblePoint
 
         @test JuMP.resultvalue.(Q) ≈ [1 0; 0 0] atol=1e-3
         @test JuMP.objectivevalue(m) ≈ 1 atol=1e-4
         @test JuMP.resultvalue(objective) ≈ 1 atol=1e-4
-        #@test getdual(objective) ≈ 0 atol=1e-5
-        #@test getdual(Q) ≈ [0 0; 0 2] atol=1e-3
-        #@test getdual(c1) ≈ 2 atol=1e-4 # y
-        #@test getdual(c2) ≈ [-1 1; 1 -1] atol=1e-3 # X
+        #@test JuMP.resultdual(objective) ≈ 0 atol=1e-5
+        #@test JuMP.resultdual(Q) ≈ [0 0; 0 2] atol=1e-3
+        @test JuMP.resultdual(c1) ≈ 2 atol=1e-4 # y
+        @test JuMP.resultdual(c2) ≈ [1, -1, 1] atol=1e-3 # X
+        # TODO
+        #@test JuMP.resultdual(c2) ≈ [1 -1; -1 1] atol=1e-3 # X
     end
 
     # The four following tests are from Example 2.11, Example 2.13 and Example 2.27 of:
@@ -492,17 +501,18 @@ ispsd(x::Matrix) = minimum(eigvals(x)) ≥ -1e-3
         @variable(m, X[1:2,1:2], PSD)
         c = @constraint(m, X[1,1]+X[2,2] == 1)
         @objective(m, Min, 2*X[1,1]+2*X[1,2])
-#       @test all(isnan.(getdual(X)))
+#       @test all(isnan.(JuMP.resultdual(X)))
 
         JuMP.attach(m, CSDPInstance(printlevel=0))
         JuMP.solve(m)
         @test JuMP.terminationstatus(m) == MOI.Success
         @test JuMP.primalstatus(m) == MOI.FeasiblePoint
+        @test JuMP.dualstatus(m) == MOI.FeasiblePoint
 
         @test JuMP.objectivevalue(m) ≈ 1-sqrt(2) atol=1e-5
         @test JuMP.resultvalue.(X) ≈ [(2-sqrt(2))/4 -1/(2*sqrt(2)); -1/(2*sqrt(2)) (2+sqrt(2))/4] atol=1e-4
-#       @test getdual(X) ≈ [1+sqrt(2) 1; 1 sqrt(2)-1] atol=1e-4
-#       @test getdual(c) ≈ 1-sqrt(2) atol=1e-5
+#       @test JuMP.resultdual(X) ≈ [1+sqrt(2) 1; 1 sqrt(2)-1] atol=1e-4
+        @test JuMP.resultdual(c) ≈ 1-sqrt(2) atol=1e-5
     end
 
     # Example 2.13
@@ -512,19 +522,22 @@ ispsd(x::Matrix) = minimum(eigvals(x)) ≥ -1e-3
         @variable(m, y)
         c = @SDconstraint(m, [2-y 1; 1 -y] >= 0)
         @objective(m, Max, y)
-        #@test all(isnan, getdual(c))
+        #@test all(isnan, JuMP.resultdual(c))
 
         JuMP.attach(m, CSDPInstance(printlevel=0))
         JuMP.solve(m)
         @test JuMP.terminationstatus(m) == MOI.Success
         @test JuMP.primalstatus(m) == MOI.FeasiblePoint
+        @test JuMP.dualstatus(m) == MOI.FeasiblePoint
 
         @test isapprox(JuMP.objectivevalue(m), 1-sqrt(2), atol=1e-5)
         @test isapprox(JuMP.resultvalue(y), 1-sqrt(2), atol=1e-5)
 
-        #X = getdual(c)
-        #@test isapprox(getdual(c), [(2-sqrt(2))/4 -1/(2*sqrt(2)); -1/(2*sqrt(2)) (2+sqrt(2))/4], atol=1e-4)
-        #@test isapprox(getdual(y), 0, atol=1e-5)
+        X = JuMP.resultdual(c)
+        @test isapprox(JuMP.resultdual(c), [(2-sqrt(2))/4, -1/(2*sqrt(2)), (2+sqrt(2))/4], atol=1e-4)
+        # TODO
+        #@test isapprox(JuMP.resultdual(c), [(2-sqrt(2))/4 -1/(2*sqrt(2)); -1/(2*sqrt(2)) (2+sqrt(2))/4], atol=1e-4)
+        #@test isapprox(JuMP.resultdual(y), 0, atol=1e-5)
     end
 
     # Example 2.27
@@ -541,21 +554,25 @@ ispsd(x::Matrix) = minimum(eigvals(x)) ≥ -1e-3
         @variable(m, y)
         c = @SDconstraint(m, [0 y; y 0] <= [1 0; 0 0])
         @objective(m, Max, y)
-        #@test all(isnan, getdual(c))
+        #@test all(isnan, JuMP.resultdual(c))
 
         JuMP.attach(m, CSDPInstance(printlevel=0))
         JuMP.solve(m)
         @test JuMP.terminationstatus(m) == MOI.Success
         @test JuMP.primalstatus(m) == MOI.FeasiblePoint
+        @test JuMP.dualstatus(m) == MOI.FeasiblePoint
 
         @test isapprox(JuMP.objectivevalue(m), 0, atol=1e-5)
         @test isapprox(JuMP.resultvalue(y), 0, atol=1e-5)
 
-        #X = getdual(c)
+        X = JuMP.resultdual(c)
+        @test isapprox(X[1], 0, atol=1e-5)
+        @test isapprox(X[2], 1/2, atol=1e-5)
+        # TODO
         #@test isapprox(X[1,1], 0, atol=1e-5)
         #@test isapprox(X[1,2], 1/2, atol=1e-5)
         #@test isapprox(X[2,1], 1/2, atol=1e-5)
-        #@test isapprox(getdual(y), 0, atol=1e-5)
+        #@test isapprox(JuMP.resultdual(y), 0, atol=1e-5)
     end
 
     @testset "SDP with primal solution not attained" begin
@@ -564,15 +581,13 @@ ispsd(x::Matrix) = minimum(eigvals(x)) ≥ -1e-3
         @variable(m, X[1:2,1:2], PSD)
         c = @constraint(m, 2*X[1,2] == 1)
         @objective(m, Min, X[1,1])
-#       @test all(isnan, getdual(X))
+#       @test all(isnan, JuMP.resultdual(X))
 
         JuMP.attach(m, CSDPInstance(printlevel=0))
         JuMP.solve(m)
         @test JuMP.terminationstatus(m) == MOI.Success
         @test JuMP.primalstatus(m) == MOI.FeasiblePoint
-
-        @test JuMP.terminationstatus(m) == MOI.Success
-        @test JuMP.primalstatus(m) == MOI.FeasiblePoint
+        @test JuMP.dualstatus(m) == MOI.FeasiblePoint
 
         @test JuMP.objectivevalue(m) ≈ 0 atol=1e-5
         Xval = JuMP.resultvalue.(X)
@@ -580,8 +595,8 @@ ispsd(x::Matrix) = minimum(eigvals(x)) ≥ -1e-3
         @test Xval[1,2] ≈ 1/2 atol=1e-5
         @test Xval[2,1] ≈ 1/2 atol=1e-5
 
-#       @test isapprox(getdual(X), [1 0; 0 0], atol=1e-4)
-#       @test isapprox(getdual(c), 0, atol=1e-5)
+#       @test isapprox(JuMP.resultdual(X), [1 0; 0 0], atol=1e-4)
+        @test isapprox(JuMP.resultdual(c), 0, atol=1e-4)
     end
 
 #    # min X[1,1]     max y/2+z/2
@@ -603,12 +618,12 @@ ispsd(x::Matrix) = minimum(eigvals(x)) ≥ -1e-3
 #        @test isapprox(JuMP.resultvalue(y), 0, atol=1e-5)
 #        @test isapprox(JuMP.resultvalue(z), 0, atol=1e-5)
 #
-#        #X = getdual(c)
+#        #X = JuMP.resultdual(c)
 #        #@test isapprox(X[1,1], 0, atol=1e-5)
 #        #@test isapprox(X[1,2], 1/2, atol=1e-5)
 #        #@test isapprox(X[2,1], 1/2, atol=1e-5)
-#        #@test isapprox(getdual(y), 0, atol=1e-5)
-#        #@test isapprox(getdual(z), 0, atol=1e-5)
+#        #@test isapprox(JuMP.resultdual(y), 0, atol=1e-5)
+#        #@test isapprox(JuMP.resultdual(z), 0, atol=1e-5)
 #    end
 
 #    # min X[1,1]     max y
@@ -631,12 +646,12 @@ ispsd(x::Matrix) = minimum(eigvals(x)) ≥ -1e-3
 #        @test isapprox(JuMP.resultvalue(y), 0, atol=1e-5)
 #        @test isapprox(JuMP.resultvalue(z), 0, atol=1e-5)
 #
-#        #X = getdual(c)
+#        #X = JuMP.resultdual(c)
 #        #@test isapprox(X[1,1], 0, atol=1e-5)
 #        #@test isapprox(X[1,2], 1, atol=1e-5) # X is not symmetric !
 #        #@test isapprox(X[2,1], 0, atol=1e-5)
-#        #@test isapprox(getdual(y), 0, atol=1e-5)
-#        #@test isapprox(getdual(z), 0, atol=1e-5)
+#        #@test isapprox(JuMP.resultdual(y), 0, atol=1e-5)
+#        #@test isapprox(JuMP.resultdual(z), 0, atol=1e-5)
 #    end
 
     @testset "Nonzero dual for a scalar variable with sdp solver" begin
@@ -653,16 +668,19 @@ ispsd(x::Matrix) = minimum(eigvals(x)) ≥ -1e-3
         JuMP.solve(m)
         @test JuMP.terminationstatus(m) == MOI.Success
         @test JuMP.primalstatus(m) == MOI.FeasiblePoint
+        @test JuMP.dualstatus(m) == MOI.FeasiblePoint
 
         @test isapprox(JuMP.objectivevalue(m), 10/3, atol=1e-5)
         @test isapprox(JuMP.resultvalue(x1), 5/3, atol=1e-5)
         @test isapprox(JuMP.resultvalue(x2), 0, atol=1e-5)
         @test isapprox(JuMP.resultvalue(x3), 1/3, atol=1e-5)
 
-        #@test isapprox(getdual(c), [-2/3 0; 0 -2/3], atol=1e-4)
-        #@test isapprox(getdual(x1), 0, atol=1e-5)
-        #@test isapprox(getdual(x2), 1/3, atol=1e-5)
-        #@test isapprox(getdual(x3), 0, atol=1e-5)
+        @test isapprox(JuMP.resultdual(c), [2/3, 0, 2/3], atol=1e-4)
+        # TODO
+        #@test isapprox(JuMP.resultdual(c), [-2/3 0; 0 -2/3], atol=1e-4)
+        #@test isapprox(JuMP.resultdual(x1), 0, atol=1e-5)
+        #@test isapprox(JuMP.resultdual(x2), 1/3, atol=1e-5)
+        #@test isapprox(JuMP.resultdual(x3), 0, atol=1e-5)
     end
 
 
@@ -678,7 +696,7 @@ ispsd(x::Matrix) = minimum(eigvals(x)) ≥ -1e-3
 
         @test abs(JuMP.objectivevalue(m)) < 1e-5
         @test norm(JuMP.resultvalue.(X)) < 1e-5
-        #@test isapprox(getdual(X), eye(3), atol=1e-5)
+        #@test isapprox(JuMP.resultdual(X), eye(3), atol=1e-5)
     end
 
 end

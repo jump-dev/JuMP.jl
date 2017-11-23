@@ -46,7 +46,7 @@ export
     setlowerbound, setupperbound,
     #getlowerbound, getupperbound,
     #getvalue, setvalue,
-    getdual,
+    #getdual,
     #setcategory, getcategory,
     setstart,
     linearindex,
@@ -99,6 +99,10 @@ mutable struct Model <: AbstractModel
 
     # obj#::QuadExpr
     # objSense::Symbol
+
+    # Mapping from the constraint reference in `instance`
+    # and the constraint reference in `solverinstance`
+    constrainttosolverconstraint::Dict{MOICON,MOICON}
 
     # linconstr#::Vector{LinearConstraint}
     # quadconstr
@@ -523,6 +527,25 @@ end
 # Base.copy{M,T}(c::ConstraintRef{M,T}, new_model::M) = ConstraintRef{M,T}(new_model, c.idx)
 
 # linearindex(x::ConstraintRef) = x.idx
+
+function solverinstanceref(cr::ConstraintRef{Model, MOICON{F, S}}) where {F, S}
+    cr.m.constrainttosolverconstraint[cr.instanceref]::MOICON{F, S}
+end
+
+function hasresultdual(cr::ConstraintRef{Model, <:MOICON})
+    MOI.get(cr.m.solverinstance, MOI.ConstraintDual(), cr.instanceref)
+end
+
+"""
+    resultdual(cr::ConstraintRef)
+
+Get the dual value of this constraint in the result returned by a solver.
+Use `hasresultdual` to check if a result exists before asking for values.
+Replaces `getdual` for most use cases.
+"""
+function resultdual(cr::ConstraintRef{Model, MOICON{F, S}}) where {F, S}
+    MOI.get(cr.m.solverinstance, MOI.ConstraintDual(), solverinstanceref(cr))
+end
 
 ###############################################################################
 # GenericAffineExpression, AffExpr, AffExprConstraint

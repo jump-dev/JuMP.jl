@@ -5,8 +5,8 @@
         @variable(m, y)
         @variable(m, t >= 0)
         @objective(m, Min, t)
-        @constraint(m, x + y >= 1)
-        @constraint(m, [t,x,y] in MOI.SecondOrderCone(3))
+        gtc = @constraint(m, x + y >= 1)
+        socc = @constraint(m, [t,x,y] in MOI.SecondOrderCone(3))
 
         JuMP.attach(m, CSDPInstance(printlevel=0))
         JuMP.solve(m)
@@ -15,12 +15,15 @@
         @test JuMP.hasvariableresult(m)
         @test JuMP.terminationstatus(m) == MOI.Success
         @test JuMP.primalstatus(m) == MOI.FeasiblePoint
+        @test JuMP.dualstatus(m) == MOI.FeasiblePoint
 
         @test JuMP.objectivevalue(m) ≈ sqrt(1/2) atol=1e-6
 
         @test JuMP.resultvalue.([x,y,t]) ≈ [0.5,0.5,sqrt(1/2)] atol=1e-3
         @test JuMP.resultvalue(x + y) ≈ 1.0 atol=1e-3
 
+        @test JuMP.resultdual(gtc) ≈ sqrt(1/2) atol=1e-6
+        @test JuMP.resultdual(socc) ≈ [1., -sqrt(1/2), -sqrt(1/2)] atol=1e-3
     end
 
     @testset "RotatedSOC1" begin
@@ -34,8 +37,8 @@
 
         @objective(m, Max, v)
 
-        @constraint(m, [t1/sqrt(2),t2/sqrt(2),x...] in MOI.RotatedSecondOrderCone(7))
-        @constraint(m, [x[1]/sqrt(2), u/sqrt(2), v] in MOI.RotatedSecondOrderCone(3))
+        c1 = @constraint(m, [t1/sqrt(2),t2/sqrt(2),x...] in MOI.RotatedSecondOrderCone(7))
+        c2 = @constraint(m, [x[1]/sqrt(2), u/sqrt(2), v] in MOI.RotatedSecondOrderCone(3))
 
         JuMP.attach(m, CSDPInstance(printlevel=0))
         JuMP.solve(m)
@@ -48,5 +51,8 @@
         @test JuMP.resultvalue.(x) ≈ [1,0,0,0,0] atol=1e-2
         @test JuMP.resultvalue(u) ≈ 5 atol=1e-4
         @test JuMP.resultvalue(v) ≈ sqrt(5) atol=1e-6
+
+        @test JuMP.resultdual(c1) ≈ [sqrt(5/8), sqrt(5/8), -sqrt(5/4), 0., 0., 0., 0.] atol=1e-3
+        @test JuMP.resultdual(c2) ≈ [sqrt(5/2), sqrt(1/10), -1.] atol=1e-5
     end
 end
