@@ -1,5 +1,6 @@
 using ReverseDiffSparse
 using Base.Test
+using MathProgBase
 
 
 ex = :(sin(x[1]^2) + cos(x[2]*4)/5-2.0)
