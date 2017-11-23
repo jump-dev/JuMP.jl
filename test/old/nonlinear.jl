@@ -16,9 +16,9 @@ using Base.Test
 # If solvers not loaded, load them (i.e running just these tests)
 !isdefined(:nlp_solvers) && include("solvers.jl")
 
-type DummyNLPSolver <: MathProgBase.AbstractMathProgSolver
+mutable struct DummyNLPSolver <: MathProgBase.AbstractMathProgSolver
 end
-type DummyNLPModel <: MathProgBase.AbstractNonlinearModel
+mutable struct DummyNLPModel <: MathProgBase.AbstractNonlinearModel
 end
 
 

@@ -3,16 +3,16 @@
 #  License, v. 2.0. If a copy of the MPL was not distributed with this
 #  file, You can obtain one at http://mozilla.org/MPL/2.0/.
 
-type IndexedVector{T}
+mutable struct IndexedVector{T}
     elts::Vector{T}
     nzidx::Vector{Int}
     nnz::Int
     empty::BitArray{1}
 end
 
-IndexedVector{T}(::Type{T},n::Integer) = IndexedVector(zeros(T,n),zeros(Int,n),0,trues(n))
+IndexedVector(::Type{T},n::Integer) where {T} = IndexedVector(zeros(T,n),zeros(Int,n),0,trues(n))
 
-function addelt!{T}(v::IndexedVector{T},i::Integer,val::T)
+function addelt!(v::IndexedVector{T},i::Integer,val::T) where T
     if val != zero(T)
         if v.empty[i]  # new index
             v.elts[i] = val
@@ -25,7 +25,7 @@ function addelt!{T}(v::IndexedVector{T},i::Integer,val::T)
     return nothing
 end
 
-function rmz!{T}(v::IndexedVector{T})
+function rmz!(v::IndexedVector{T}) where T
     i = 1
     while i <= v.nnz
         j = v.nzidx[i]
@@ -40,7 +40,7 @@ function rmz!{T}(v::IndexedVector{T})
     end
 end
 
-function Base.empty!{T}(v::IndexedVector{T})
+function Base.empty!(v::IndexedVector{T}) where T
     elts = v.elts
     nzidx = v.nzidx
     empty = v.empty
@@ -67,7 +67,7 @@ end
 # it seems that the only way to avoid triggering
 # allocations is to have only bitstype fields, so
 # we store a pointer.
-immutable VectorView{T} <: DenseVector{T}
+struct VectorView{T} <: DenseVector{T}
     offset::Int
     len::Int
     ptr::Ptr{T}
@@ -75,26 +75,26 @@ end
 
 Base.getindex(v::VectorView,idx::Integer) = unsafe_load(v.ptr, idx+v.offset)
 Base.setindex!(v::VectorView,value,idx::Integer) = unsafe_store!(v.ptr,value,idx+v.offset)
-function Base.setindex!{T}(v::VectorView{T},value::T,idx::Vector{Int})
+function Base.setindex!(v::VectorView{T},value::T,idx::Vector{Int}) where T
     for i in idx
         v[i] = value
     end
 end
 Base.length(v::VectorView) = v.len
-function Base.fill!{T}(v::VectorView{T},value)
+function Base.fill!(v::VectorView{T},value) where T
     val = convert(T,value)
     for i in 1:length(v)
         v[i] = val
     end
     nothing
 end
-function Base.scale!{T<:Number}(v::VectorView{T},value::T)
+function Base.scale!(v::VectorView{T},value::T) where T<:Number
     for i in 1:length(v)
         v[i] *= value
     end
     nothing
 end
-function reinterpret_unsafe{T,R}(::Type{T},x::Vector{R})
+function reinterpret_unsafe(::Type{T},x::Vector{R}) where {T,R}
     # how many T's fit into x?
     @assert isbits(T) && isbits(R)
     len = length(x)*sizeof(R)

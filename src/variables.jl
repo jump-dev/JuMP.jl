@@ -24,7 +24,7 @@ struct VariableToValueMap{T}
     d::Dict{MOIVAR,T}
 end
 
-function (::Type{VariableToValueMap{T}})(m::Model) where T
+function VariableToValueMap{T}(m::Model) where T
     return VariableToValueMap{T}(m, Dict{MOIVAR,T}())
 end
 
