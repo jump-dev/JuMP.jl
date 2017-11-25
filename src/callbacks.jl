@@ -6,27 +6,27 @@
 export addlazycallback, addcutcallback, addheuristiccallback, addinfocallback
 
 abstract type JuMPCallback end
-type LazyCallback <: JuMPCallback
+mutable struct LazyCallback <: JuMPCallback
     f::Function
     fractional::Bool
 end
-type CutCallback <: JuMPCallback
+mutable struct CutCallback <: JuMPCallback
     f::Function
 end
-type HeuristicCallback <: JuMPCallback
+mutable struct HeuristicCallback <: JuMPCallback
     f::Function
 end
-type InfoCallback <: JuMPCallback
+mutable struct InfoCallback <: JuMPCallback
     f::Function
     when::Symbol
 end
 
-type StopTheSolver end
+mutable struct StopTheSolver end
 
-type CallbackAbort <: Exception end
+mutable struct CallbackAbort <: Exception end
 export CallbackAbort
 
-Base.copy{T<:JuMPCallback}(c::T) = T(copy(c))
+Base.copy(c::T) where {T<:JuMPCallback} = T(copy(c))
 Base.copy(c::LazyCallback) = LazyCallback(copy(c.f), c.fractional)
 
 function addlazycallback(m::Model, f::Function; fractional::Bool=false)

@@ -25,7 +25,7 @@ function io_test(mode, obj, exp_str; repl=:both)
     end
 end
 
-type NoMetaContainer{T,N} <: JuMP.JuMPContainer{T,N}
+mutable struct NoMetaContainer{T,N} <: JuMP.JuMPContainer{T,N}
 end
 
 @testset "Printing" begin

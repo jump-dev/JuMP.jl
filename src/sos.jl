@@ -14,7 +14,7 @@
 #############################################################################
 
 
-type SOSConstraint <: AbstractConstraint
+mutable struct SOSConstraint <: AbstractConstraint
     terms::Vector{Variable}
     weights::Vector{Float64}
     sostype::Symbol

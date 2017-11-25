@@ -19,21 +19,21 @@
 #############################################################################
 # GenericAffExpr
 # ∑ aᵢ xᵢ  +  c
-type GenericAffExpr{CoefType,VarType} <: AbstractJuMPScalar
+mutable struct GenericAffExpr{CoefType,VarType} <: AbstractJuMPScalar
     vars::Vector{VarType}
     coeffs::Vector{CoefType}
     constant::CoefType
 end
-coeftype{C,V}(::GenericAffExpr{C,V}) = C
+coeftype(::GenericAffExpr{C,V}) where {C,V} = C
 
-Base.zero{C,V}(::Type{GenericAffExpr{C,V}}) = GenericAffExpr{C,V}(V[],C[],zero(C))
-Base.one{ C,V}(::Type{GenericAffExpr{C,V}}) = GenericAffExpr{C,V}(V[],C[], one(C))
+Base.zero(::Type{GenericAffExpr{C,V}}) where {C,V} = GenericAffExpr{C,V}(V[],C[],zero(C))
+Base.one(::Type{GenericAffExpr{C,V}}) where { C,V} = GenericAffExpr{C,V}(V[],C[], one(C))
 Base.zero(a::GenericAffExpr) = zero(typeof(a))
 Base.one( a::GenericAffExpr) =  one(typeof(a))
 Base.copy(a::GenericAffExpr) = GenericAffExpr(copy(a.vars),copy(a.coeffs),copy(a.constant))
 
 # Old iterator protocol - iterates over tuples (aᵢ,xᵢ)
-immutable LinearTermIterator{GAE<:GenericAffExpr}
+struct LinearTermIterator{GAE<:GenericAffExpr}
     aff::GAE
 end
 
@@ -45,31 +45,31 @@ Base.next( lti::LinearTermIterator, state::Int) = ((lti.aff.coeffs[state], lti.a
 
 # More efficient ways to grow an affine expression
 # Add a single term to an affine expression
-function Base.push!{C,V}(aff::GenericAffExpr{C,V}, new_coeff::C, new_var::V)
+function Base.push!(aff::GenericAffExpr{C,V}, new_coeff::C, new_var::V) where {C,V}
     push!(aff.coeffs, new_coeff)
     push!(aff.vars, new_var)
     aff
 end
 # Add an affine expression to an existing affine expression
-function Base.append!{C,V}(aff::GenericAffExpr{C,V}, other::GenericAffExpr{C,V})
+function Base.append!(aff::GenericAffExpr{C,V}, other::GenericAffExpr{C,V}) where {C,V}
     append!(aff.vars, other.vars)
     append!(aff.coeffs, other.coeffs)
     aff.constant += other.constant
     aff
 end
 # For consistency, allow appending constants and individual variables
-Base.append!{C}(aff::GenericAffExpr{C,C}, other::C) = error() # for ambiguity
-function Base.append!{C,V}(aff::GenericAffExpr{C,V}, other::C)
+Base.append!(aff::GenericAffExpr{C,C}, other::C) where {C} = error() # for ambiguity
+function Base.append!(aff::GenericAffExpr{C,V}, other::C) where {C,V}
     aff.constant += other
     aff
 end
-function Base.append!{C,V}(aff::GenericAffExpr{C,V}, other::Real)
+function Base.append!(aff::GenericAffExpr{C,V}, other::Real) where {C,V}
     aff.constant += other
     aff
 end
-Base.append!{C,V}(aff::GenericAffExpr{C,V}, other::V) = push!(aff,one(C),other)
+Base.append!(aff::GenericAffExpr{C,V}, other::V) where {C,V} = push!(aff,one(C),other)
 
-function Base.isequal{C,V}(aff::GenericAffExpr{C,V},other::GenericAffExpr{C,V})
+function Base.isequal(aff::GenericAffExpr{C,V},other::GenericAffExpr{C,V}) where {C,V}
     isequal(aff.constant, other.constant)  || return false
     length(aff.vars) == length(other.vars) || return false
     for i in 1:length(aff.vars)
@@ -131,7 +131,7 @@ end
 # GenericRangeConstraint
 # l ≤ ∑ aᵢ xᵢ ≤ u
 # The constant part of the internal expression is assumed to be zero
-type GenericRangeConstraint{TermsType} <: AbstractConstraint
+mutable struct GenericRangeConstraint{TermsType} <: AbstractConstraint
     terms::TermsType
     lb::Float64
     ub::Float64
