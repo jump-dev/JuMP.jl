@@ -5,7 +5,7 @@ import DataStructures
 include("topological_sort.jl")
 
 # workaround for slow tuples
-immutable MyPair{T}
+struct MyPair{T}
     first::T
     second::T
 end
@@ -14,7 +14,7 @@ end
 Base.hash(x::MyPair{Int},h::UInt) = hash(x.first,hash(x.second,h))
 
 # indexed sparse set of integers
-type IndexedSet
+mutable struct IndexedSet
     nzidx::Vector{Int}
     empty::BitArray{1}
     nnz::Int
@@ -60,7 +60,7 @@ end
 
 # compact storage for an undirected graph
 # neighbors of vertex i start at adjlist[offsets[i]]
-immutable UndirectedGraph
+struct UndirectedGraph
     adjlist::Vector{Int}
     edgeindex::Vector{Int} # corresponding edge number, indexed as adjlist
     offsets::Vector{Int}
@@ -117,7 +117,7 @@ end
 
 export gen_adjlist
 
-immutable Edge
+struct Edge
     index::Int
     source::Int
     target::Int
@@ -248,7 +248,7 @@ function acyclic_coloring(g::UndirectedGraph)
     return color, num_colors
 end
 
-immutable RecoveryInfo
+struct RecoveryInfo
     vertexmap::Vector{Vector{Int}}
     postorder::Vector{Vector{Int}}
     parents::Vector{Vector{Int}}

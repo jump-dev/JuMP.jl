@@ -2,7 +2,7 @@
 
 # returns a new Vector{NodeData} with constants simplified
 # basically, lob off all of the children of constant nodes
-function simplify_constants{T}(forward_storage::Vector{T},nd::Vector{NodeData},adj,const_values,linearity)
+function simplify_constants(forward_storage::Vector{T},nd::Vector{NodeData},adj,const_values,linearity) where T
 
     new_nd = NodeData[]
     old_index_to_new_index = fill(-1,length(nd))

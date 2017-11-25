@@ -3,7 +3,7 @@
 
 export CALL, CALLUNIVAR, VARIABLE, VALUE, PARAMETER, SUBEXPRESSION, LOGIC, COMPARISON
 
-immutable NodeData
+struct NodeData
     nodetype::NodeType
     index::Int
     parent::Int
@@ -60,7 +60,7 @@ export comparison_operator_to_id, comparison_operators
 
 
 # user-provided operators
-type UserOperatorRegistry
+mutable struct UserOperatorRegistry
     multivariate_operator_to_id::Dict{Symbol,Int}
     multivariate_operator_evaluator::Vector{MathProgBase.AbstractNLPEvaluator}
     univariate_operator_to_id::Dict{Symbol,Int}
