@@ -222,7 +222,7 @@ function writeLP(m::Model, fname::AbstractString; genericnames=true)
         else
             print_shortest(f, abs(objaff.coeffs[ind]))
         end
-        @printf(f, " %s %s ", varname(m, objaff.vars[ind].col), (objaff.coeffs[ind+1] < 0)? "-" : "+")
+        @printf(f, " %s %s ", varname(m, objaff.vars[ind].col), (objaff.coeffs[ind+1] < 0) ? "-" : "+")
     end
     if nnz >= 1
         if nnz == 1
@@ -242,7 +242,7 @@ function writeLP(m::Model, fname::AbstractString; genericnames=true)
             else
                 print_shortest(f, abs(c.terms.coeffs[ind]))
             end
-            @printf(f, " %s %s ", varname(m, c.terms.vars[ind].col), (c.terms.coeffs[ind+1] < 0)? "-" : "+")
+            @printf(f, " %s %s ", varname(m, c.terms.vars[ind].col), (c.terms.coeffs[ind+1] < 0) ? "-" : "+")
         end
         if nnz >= 1
             if nnz == 1

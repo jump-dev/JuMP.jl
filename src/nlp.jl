@@ -4,7 +4,7 @@
 #  file, You can obtain one at http://mozilla.org/MPL/2.0/.
 
 
-type NonlinearExprData
+mutable struct NonlinearExprData
     nd::Vector{NodeData}
     const_values::Vector{Float64}
 end
@@ -49,7 +49,7 @@ end
 
 const NonlinearConstraint = GenericRangeConstraint{NonlinearExprData}
 
-type NLPData
+mutable struct NLPData
     nlobj
     nlconstr::Vector{NonlinearConstraint}
     nlexpr::Vector{NonlinearExprData}
@@ -99,7 +99,7 @@ function getdual(c::ConstraintRef{Model,NonlinearConstraint})
     end
 end
 
-type FunctionStorage
+mutable struct FunctionStorage
     nd::Vector{NodeData}
     adj::SparseMatrixCSC{Bool,Int}
     const_values::Vector{Float64}
@@ -115,7 +115,7 @@ type FunctionStorage
     dependent_subexpressions::Vector{Int} # subexpressions which this function depends on, ordered for forward pass
 end
 
-type SubexpressionStorage
+mutable struct SubexpressionStorage
     nd::Vector{NodeData}
     adj::SparseMatrixCSC{Bool,Int}
     const_values::Vector{Float64}
@@ -128,7 +128,7 @@ type SubexpressionStorage
     linearity::Linearity
 end
 
-type NLPEvaluator <: MathProgBase.AbstractNLPEvaluator
+mutable struct NLPEvaluator <: MathProgBase.AbstractNLPEvaluator
     m::Model
     A::SparseMatrixCSC{Float64,Int} # linear constraint matrix
     parameter_values::Vector{Float64}
@@ -850,7 +850,7 @@ function MathProgBase.eval_hesslag(
 
 end
 
-function hessian_slice_inner{CHUNK}(d, ex, R, input_ϵ, output_ϵ, ::Type{Val{CHUNK}})
+function hessian_slice_inner(d, ex, R, input_ϵ, output_ϵ, ::Type{Val{CHUNK}}) where CHUNK
 
     subexpr_forward_values_ϵ = reinterpret_unsafe(ForwardDiff.Partials{CHUNK,Float64},d.subexpression_forward_values_ϵ)
     subexpr_reverse_values_ϵ = reinterpret_unsafe(ForwardDiff.Partials{CHUNK,Float64},d.subexpression_reverse_values_ϵ)
@@ -890,7 +890,7 @@ function hessian_slice_inner{CHUNK}(d, ex, R, input_ϵ, output_ϵ, ::Type{Val{CH
     end
 end
 
-function hessian_slice{CHUNK}(d, ex, x, H, scale, nzcount, recovery_tmp_storage,::Type{Val{CHUNK}})
+function hessian_slice(d, ex, x, H, scale, nzcount, recovery_tmp_storage,::Type{Val{CHUNK}}) where CHUNK
 
     nzthis = length(ex.hess_I)
     if ex.linearity == LINEAR
@@ -1088,12 +1088,12 @@ function quadToExpr(q::QuadExpr,constant::Bool)
     return ex
 end
 
-type VariablePrintWrapper
+mutable struct VariablePrintWrapper
     v::Variable
     mode
 end
 Base.show(io::IO,v::VariablePrintWrapper) = print(io,var_str(v.mode,v.v))
-type ParameterPrintWrapper
+mutable struct ParameterPrintWrapper
     idx::Int
     mode
 end
@@ -1104,7 +1104,7 @@ function Base.show(io::IO,p::ParameterPrintWrapper)
         print(io,"parameter[$(p.idx)]")
     end
 end
-type SubexpressionPrintWrapper
+mutable struct SubexpressionPrintWrapper
     idx::Int
     mode
 end
@@ -1380,7 +1380,7 @@ function _getValue(x::NonlinearExpression)
     return forward_eval(forward_storage,partials_storage,this_subexpr.nd,adj,this_subexpr.const_values,nldata.nlparamvalues,m.colVal,subexpr_values,user_input_buffer,user_output_buffer)
 end
 
-type UserFunctionEvaluator <: MathProgBase.AbstractNLPEvaluator
+mutable struct UserFunctionEvaluator <: MathProgBase.AbstractNLPEvaluator
     f
     ∇f
     len::Int
@@ -1395,7 +1395,7 @@ function MathProgBase.eval_grad_f(d::UserFunctionEvaluator,grad,x)
     nothing
 end
 
-function UserAutoDiffEvaluator{T}(dimension::Integer, f::Function, ::Type{T} = Float64)
+function UserAutoDiffEvaluator(dimension::Integer, f::Function, ::Type{T} = Float64) where T
     g = x -> f(x...)
     cfg = ForwardDiff.GradientConfig(g, zeros(T, dimension))
     ∇f = (out, y) -> ForwardDiff.gradient!(out, g, y, cfg)

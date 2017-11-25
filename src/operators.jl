@@ -45,9 +45,9 @@
 (-)(lhs::Variable, rhs::Variable) = AffExpr([lhs,rhs], [1.,-1.], 0.)
 (*)(lhs::Variable, rhs::Variable) = QuadExpr([lhs],[rhs],[1.],AffExpr(Variable[],Float64[],0.))
 # Variable--AffExpr
-(+){C,V<:JuMPTypes}(lhs::V, rhs::GenericAffExpr{C,V}) =
+(+)(lhs::V, rhs::GenericAffExpr{C,V}) where {C,V<:JuMPTypes} =
     GenericAffExpr{C,V}(vcat(rhs.vars,lhs),vcat(rhs.coeffs,one(C)), rhs.constant)
-(-){C,V<:JuMPTypes}(lhs::V, rhs::GenericAffExpr{C,V}) =
+(-)(lhs::V, rhs::GenericAffExpr{C,V}) where {C,V<:JuMPTypes} =
     GenericAffExpr{C,V}(vcat(rhs.vars,lhs),vcat(-rhs.coeffs,one(C)),-rhs.constant)
 function (*)(lhs::Variable, rhs::AffExpr)
     n = length(rhs.vars)
@@ -83,12 +83,9 @@ function (^)(lhs::Union{Variable,AffExpr}, rhs::Integer)
     end
 end
 (^)(lhs::Union{Variable,AffExpr}, rhs::Number) = error("Only exponents of 0, 1, or 2 are currently supported. Are you trying to build a nonlinear problem? Make sure you use @NLconstraint/@NLobjective.")
-if VERSION < v"0.6.0-dev.1632" # julia PR #17623
-    @eval (.^)(lhs::Union{Variable,AffExpr}, rhs::Number) = lhs^rhs
-end
 # AffExpr--Variable
-(+){C,V<:JuMPTypes}(lhs::GenericAffExpr{C,V}, rhs::V) = GenericAffExpr{C,V}(vcat(lhs.vars,rhs),vcat(lhs.coeffs,one(C)), lhs.constant)
-(-){C,V<:JuMPTypes}(lhs::GenericAffExpr{C,V}, rhs::V) = GenericAffExpr{C,V}(vcat(lhs.vars,rhs),vcat(lhs.coeffs,-one(C)),lhs.constant)
+(+)(lhs::GenericAffExpr{C,V}, rhs::V) where {C,V<:JuMPTypes} = GenericAffExpr{C,V}(vcat(lhs.vars,rhs),vcat(lhs.coeffs,one(C)), lhs.constant)
+(-)(lhs::GenericAffExpr{C,V}, rhs::V) where {C,V<:JuMPTypes} = GenericAffExpr{C,V}(vcat(lhs.vars,rhs),vcat(lhs.coeffs,-one(C)),lhs.constant)
 # Don't fall back on Variable*AffExpr to preserve lhs/rhs consistency (appears in printing)
 function (*)(lhs::AffExpr, rhs::Variable)
     n = length(lhs.vars)
@@ -100,8 +97,8 @@ function (*)(lhs::AffExpr, rhs::Variable)
 end
 (/)(lhs::AffExpr, rhs::Variable) = error("Cannot divide affine expression by a variable")
 # AffExpr--AffExpr
-(+){C,V<:JuMPTypes}(lhs::GenericAffExpr{C,V}, rhs::GenericAffExpr{C,V}) = (operator_warn(lhs,rhs); GenericAffExpr(vcat(lhs.vars,rhs.vars),vcat(lhs.coeffs, rhs.coeffs),lhs.constant+rhs.constant))
-(-){C,V<:JuMPTypes}(lhs::GenericAffExpr{C,V}, rhs::GenericAffExpr{C,V}) = GenericAffExpr(vcat(lhs.vars,rhs.vars),vcat(lhs.coeffs,-rhs.coeffs),lhs.constant-rhs.constant)
+(+)(lhs::GenericAffExpr{C,V}, rhs::GenericAffExpr{C,V}) where {C,V<:JuMPTypes} = (operator_warn(lhs,rhs); GenericAffExpr(vcat(lhs.vars,rhs.vars),vcat(lhs.coeffs, rhs.coeffs),lhs.constant+rhs.constant))
+(-)(lhs::GenericAffExpr{C,V}, rhs::GenericAffExpr{C,V}) where {C,V<:JuMPTypes} = GenericAffExpr(vcat(lhs.vars,rhs.vars),vcat(lhs.coeffs,-rhs.coeffs),lhs.constant-rhs.constant)
 function (*)(lhs::AffExpr, rhs::AffExpr)
     ret = QuadExpr(Variable[],Variable[],Float64[],AffExpr(Variable[],Float64[],0.))
 
@@ -217,7 +214,7 @@ _sizehint_expr!(q, n) = nothing
 # TODO: specialize sum for Dict and JuMPArray of JuMP objects?
 Base.sum(j::Array{Variable}) = AffExpr(vec(j), ones(length(j)), 0.0)
 Base.sum(j::AbstractArray{Variable}) = sum([j[i] for i in eachindex(j)]) # to handle non-one-indexed arrays.
-function Base.sum{T<:GenericAffExpr}(affs::AbstractArray{T})
+function Base.sum(affs::AbstractArray{T}) where T<:GenericAffExpr
     new_aff = zero(T)
     for aff in affs
         append!(new_aff, aff)
@@ -234,16 +231,16 @@ Base.dot(lhs::JuMPTypes, rhs::JuMPTypes) = lhs*rhs
 Base.dot(lhs::JuMPTypes, rhs::Number)    = lhs*rhs
 Base.dot(lhs::Number,    rhs::JuMPTypes) = lhs*rhs
 
-Base.dot{T<:JuMPTypes,S<:JuMPTypes}(lhs::AbstractVector{T},rhs::AbstractVector{S}) = _dot(lhs,rhs)
-Base.dot{T<:JuMPTypes,S}(lhs::AbstractVector{T},rhs::AbstractVector{S}) = _dot(lhs,rhs)
-Base.dot{T,S<:JuMPTypes}(lhs::AbstractVector{T},rhs::AbstractVector{S}) = _dot(lhs,rhs)
+Base.dot(lhs::AbstractVector{T},rhs::AbstractVector{S}) where {T<:JuMPTypes,S<:JuMPTypes} = _dot(lhs,rhs)
+Base.dot(lhs::AbstractVector{T},rhs::AbstractVector{S}) where {T<:JuMPTypes,S} = _dot(lhs,rhs)
+Base.dot(lhs::AbstractVector{T},rhs::AbstractVector{S}) where {T,S<:JuMPTypes} = _dot(lhs,rhs)
 
 # TODO: qualify Base.vecdot once v0.3 support is dropped
-vecdot{T<:JuMPTypes,S,N}(lhs::AbstractArray{T,N},rhs::AbstractArray{S,N}) = _dot(lhs,rhs)
-vecdot{T<:JuMPTypes,S<:JuMPTypes,N}(lhs::AbstractArray{T,N},rhs::AbstractArray{S,N}) = _dot(lhs,rhs)
-vecdot{T,S<:JuMPTypes,N}(lhs::AbstractArray{T,N},rhs::AbstractArray{S,N}) = _dot(lhs,rhs)
+vecdot(lhs::AbstractArray{T,N},rhs::AbstractArray{S,N}) where {T<:JuMPTypes,S,N} = _dot(lhs,rhs)
+vecdot(lhs::AbstractArray{T,N},rhs::AbstractArray{S,N}) where {T<:JuMPTypes,S<:JuMPTypes,N} = _dot(lhs,rhs)
+vecdot(lhs::AbstractArray{T,N},rhs::AbstractArray{S,N}) where {T,S<:JuMPTypes,N} = _dot(lhs,rhs)
 
-function _dot{T,S}(lhs::AbstractArray{T}, rhs::AbstractArray{S})
+function _dot(lhs::AbstractArray{T}, rhs::AbstractArray{S}) where {T,S}
     size(lhs) == size(rhs) || error("Incompatible dimensions")
     ret = zero(one(T)*one(S))
     for (x,y) in zip(lhs,rhs)
@@ -256,18 +253,18 @@ end
 # A bunch of operator junk to make matrix multiplication and friends act
 # reasonably sane with JuMP types
 
-Base.promote_rule{R<:Real}(::Type{Variable},::Type{R}       ) = AffExpr
+Base.promote_rule(::Type{Variable},::Type{R}       ) where {R<:Real} = AffExpr
 Base.promote_rule(         ::Type{Variable},::Type{AffExpr} ) = AffExpr
 Base.promote_rule(         ::Type{Variable},::Type{QuadExpr}) = QuadExpr
-Base.promote_rule{R<:Real}(::Type{AffExpr}, ::Type{R}       ) = AffExpr
+Base.promote_rule(::Type{AffExpr}, ::Type{R}       ) where {R<:Real} = AffExpr
 Base.promote_rule(         ::Type{AffExpr}, ::Type{QuadExpr}) = QuadExpr
-Base.promote_rule{R<:Real}(::Type{QuadExpr},::Type{R}       ) = QuadExpr
+Base.promote_rule(::Type{QuadExpr},::Type{R}       ) where {R<:Real} = QuadExpr
 
 Base.transpose(x::AbstractJuMPScalar) = x
 
 # Can remove the following code once == overloading is removed
 
-function Base.issymmetric{T<:JuMPTypes}(x::Matrix{T})
+function Base.issymmetric(x::Matrix{T}) where T<:JuMPTypes
     (n = size(x,1)) == size(x,2) || return false
     for i in 1:n, j in (i+1):n
         isequal(x[i,j], x[j,i]) || return false
@@ -286,7 +283,7 @@ end
 # checks are performed; it is expected that the caller has done this, has ensured
 # that the eltype of buf is appropriate, and has zeroed the elements of buf (if desired).
 
-function _multiply!{T<:JuMPTypes}(ret::Array{T}, lhs::Array, rhs::Array)
+function _multiply!(ret::Array{T}, lhs::Array, rhs::Array) where T<:JuMPTypes
     m, n = size(lhs,1), size(lhs,2)
     r, s = size(rhs,1), size(rhs,2)
     for i ∈ 1:m, j ∈ 1:s
@@ -301,7 +298,7 @@ function _multiply!{T<:JuMPTypes}(ret::Array{T}, lhs::Array, rhs::Array)
 end
 
 # this computes lhs.'*rhs and places it in ret
-function _multiplyt!{T<:JuMPTypes}(ret::Array{T}, lhs::Array, rhs::Array)
+function _multiplyt!(ret::Array{T}, lhs::Array, rhs::Array) where T<:JuMPTypes
     m, n = size(lhs,2), size(lhs,1) # transpose
     r, s = size(rhs,1), size(rhs,2)
     for i ∈ 1:m, j ∈ 1:s
@@ -315,7 +312,7 @@ function _multiplyt!{T<:JuMPTypes}(ret::Array{T}, lhs::Array, rhs::Array)
     ret
 end
 
-function _multiply!{T<:Union{GenericAffExpr,GenericQuadExpr}}(ret::Array{T}, lhs::SparseMatrixCSC, rhs::Array)
+function _multiply!(ret::Array{T}, lhs::SparseMatrixCSC, rhs::Array) where T<:Union{GenericAffExpr,GenericQuadExpr}
     nzv = nonzeros(lhs)
     rv  = rowvals(lhs)
     for col ∈ 1:lhs.n
@@ -329,11 +326,11 @@ function _multiply!{T<:Union{GenericAffExpr,GenericQuadExpr}}(ret::Array{T}, lhs
 end
 
 # this computes lhs.'*rhs and places it in ret
-function _multiplyt!{T<:Union{GenericAffExpr,GenericQuadExpr}}(ret::Array{T}, lhs::SparseMatrixCSC, rhs::Array)
+function _multiplyt!(ret::Array{T}, lhs::SparseMatrixCSC, rhs::Array) where T<:Union{GenericAffExpr,GenericQuadExpr}
     _multiply!(ret, transpose(lhs), rhs) # TODO fully implement
 end
 
-function _multiply!{T<:Union{GenericAffExpr,GenericQuadExpr}}(ret::Array{T}, lhs::Matrix, rhs::SparseMatrixCSC)
+function _multiply!(ret::Array{T}, lhs::Matrix, rhs::SparseMatrixCSC) where T<:Union{GenericAffExpr,GenericQuadExpr}
     rowval = rowvals(rhs)
     nzval  = nonzeros(rhs)
     for multivec_row in 1:size(lhs,1)
@@ -350,7 +347,7 @@ function _multiply!{T<:Union{GenericAffExpr,GenericQuadExpr}}(ret::Array{T}, lhs
 end
 
 # this computes lhs.'*rhs and places it in ret
-function _multiplyt!{T<:Union{GenericAffExpr,GenericQuadExpr}}(ret::Array{T}, lhs::Matrix, rhs::SparseMatrixCSC)
+function _multiplyt!(ret::Array{T}, lhs::Matrix, rhs::SparseMatrixCSC) where T<:Union{GenericAffExpr,GenericQuadExpr}
     rowval = rowvals(rhs)
     nzval  = nonzeros(rhs)
     for multivec_row ∈ 1:size(lhs,2) # transpose
@@ -368,26 +365,26 @@ end
 
 
 # TODO: implement sparse * sparse code as in base/sparse/linalg.jl (spmatmul)
-_multiply!{T<:JuMPTypes}(ret::AbstractArray{T}, lhs::SparseMatrixCSC, rhs::SparseMatrixCSC) = _multiply!(ret, lhs, full(rhs))
-_multiplyt!{T<:JuMPTypes}(ret::AbstractArray{T}, lhs::SparseMatrixCSC, rhs::SparseMatrixCSC) = _multiplyt!(ret, lhs, full(rhs))
+_multiply!(ret::AbstractArray{T}, lhs::SparseMatrixCSC, rhs::SparseMatrixCSC) where {T<:JuMPTypes} = _multiply!(ret, lhs, full(rhs))
+_multiplyt!(ret::AbstractArray{T}, lhs::SparseMatrixCSC, rhs::SparseMatrixCSC) where {T<:JuMPTypes} = _multiplyt!(ret, lhs, full(rhs))
 
 _multiply!(ret, lhs, rhs) = A_mul_B!(ret, lhs, rhs)
 _multiplyt!(ret, lhs, rhs) = At_mul_B!(ret, lhs, rhs)
 
-(*){T<:JuMPTypes}(             A::Union{Matrix{T},SparseMatrixCSC{T}}, x::Union{Matrix,   Vector,   SparseMatrixCSC})    = _matmul(A, x)
-(*){T<:JuMPTypes,R<:JuMPTypes}(A::Union{Matrix{T},SparseMatrixCSC{T}}, x::Union{Matrix{R},Vector{R},SparseMatrixCSC{R}}) = _matmul(A, x)
-(*){T<:JuMPTypes}(             A::Union{Matrix,   SparseMatrixCSC},    x::Union{Matrix{T},Vector{T},SparseMatrixCSC{T}}) = _matmul(A, x)
+(*)(             A::Union{Matrix{T},SparseMatrixCSC{T}}, x::Union{Matrix,   Vector,   SparseMatrixCSC}) where {T<:JuMPTypes}    = _matmul(A, x)
+(*)(A::Union{Matrix{T},SparseMatrixCSC{T}}, x::Union{Matrix{R},Vector{R},SparseMatrixCSC{R}}) where {T<:JuMPTypes,R<:JuMPTypes} = _matmul(A, x)
+(*)(             A::Union{Matrix,   SparseMatrixCSC},    x::Union{Matrix{T},Vector{T},SparseMatrixCSC{T}}) where {T<:JuMPTypes} = _matmul(A, x)
 
 import Base.At_mul_B
 import Base.Ac_mul_B
 # these methods are called when one does A.'*v or A'*v respectively
-At_mul_B{T<:JuMPTypes}(A::Union{Matrix{T},SparseMatrixCSC{T}}, x::Union{Matrix, Vector, SparseMatrixCSC}) = _matmult(A, x)
-At_mul_B{T<:JuMPTypes,R<:JuMPTypes}(A::Union{Matrix{T},SparseMatrixCSC{T}}, x::Union{Matrix{R}, Vector{R}, SparseMatrixCSC{R}}) = _matmult(A, x)
-At_mul_B{T<:JuMPTypes}(A::Union{Matrix,SparseMatrixCSC}, x::Union{Matrix{T}, Vector{T}, SparseMatrixCSC{T}}) = _matmult(A, x)
+At_mul_B(A::Union{Matrix{T},SparseMatrixCSC{T}}, x::Union{Matrix, Vector, SparseMatrixCSC}) where {T<:JuMPTypes} = _matmult(A, x)
+At_mul_B(A::Union{Matrix{T},SparseMatrixCSC{T}}, x::Union{Matrix{R}, Vector{R}, SparseMatrixCSC{R}}) where {T<:JuMPTypes,R<:JuMPTypes} = _matmult(A, x)
+At_mul_B(A::Union{Matrix,SparseMatrixCSC}, x::Union{Matrix{T}, Vector{T}, SparseMatrixCSC{T}}) where {T<:JuMPTypes} = _matmult(A, x)
 # these methods are the same as above since complex numbers are not implemented in JuMP
-Ac_mul_B{T<:JuMPTypes}(A::Union{Matrix{T},SparseMatrixCSC{T}}, x::Union{Matrix, Vector, SparseMatrixCSC}) = _matmult(A, x)
-Ac_mul_B{T<:JuMPTypes,R<:JuMPTypes}(A::Union{Matrix{T},SparseMatrixCSC{T}}, x::Union{Matrix{R}, Vector{R}, SparseMatrixCSC{R}}) = _matmult(A, x)
-Ac_mul_B{T<:JuMPTypes}(A::Union{Matrix,SparseMatrixCSC}, x::Union{Matrix{T}, Vector{T}, SparseMatrixCSC{T}}) = _matmult(A, x)
+Ac_mul_B(A::Union{Matrix{T},SparseMatrixCSC{T}}, x::Union{Matrix, Vector, SparseMatrixCSC}) where {T<:JuMPTypes} = _matmult(A, x)
+Ac_mul_B(A::Union{Matrix{T},SparseMatrixCSC{T}}, x::Union{Matrix{R}, Vector{R}, SparseMatrixCSC{R}}) where {T<:JuMPTypes,R<:JuMPTypes} = _matmult(A, x)
+Ac_mul_B(A::Union{Matrix,SparseMatrixCSC}, x::Union{Matrix{T}, Vector{T}, SparseMatrixCSC{T}}) where {T<:JuMPTypes} = _matmult(A, x)
 
 function _matmul(A, x)
     m, n = size(A,1), size(A,2)
@@ -410,14 +407,14 @@ end
 # See https://github.com/JuliaLang/julia/pull/18218
 _matprod_type(R, S) = typeof(one(R) * one(S) + one(R) * one(S))
 # Don't do size checks here in _return_array, defer that to (*)
-_return_array{R,S}(A::AbstractMatrix{R}, x::AbstractVector{S}) = _fillwithzeros(Array{_matprod_type(R,S)}(size(A,1)))
-_return_array{R,S}(A::AbstractMatrix{R}, x::AbstractMatrix{S}) = _fillwithzeros(Array{_matprod_type(R,S)}(size(A,1), size(x,2)))
+_return_array(A::AbstractMatrix{R}, x::AbstractVector{S}) where {R,S} = _fillwithzeros(Array{_matprod_type(R,S)}(size(A,1)))
+_return_array(A::AbstractMatrix{R}, x::AbstractMatrix{S}) where {R,S} = _fillwithzeros(Array{_matprod_type(R,S)}(size(A,1), size(x,2)))
 # these are for transpose return matrices
-_return_arrayt{R,S}(A::AbstractMatrix{R}, x::AbstractVector{S}) = _fillwithzeros(Array{_matprod_type(R,S)}(size(A,2)))
-_return_arrayt{R,S}(A::AbstractMatrix{R}, x::AbstractMatrix{S}) = _fillwithzeros(Array{_matprod_type(R,S)}(size(A,2), size(x, 2)))
+_return_arrayt(A::AbstractMatrix{R}, x::AbstractVector{S}) where {R,S} = _fillwithzeros(Array{_matprod_type(R,S)}(size(A,2)))
+_return_arrayt(A::AbstractMatrix{R}, x::AbstractMatrix{S}) where {R,S} = _fillwithzeros(Array{_matprod_type(R,S)}(size(A,2), size(x, 2)))
 
 # helper so we don't fill the buffer array with the same object
-function _fillwithzeros{T}(arr::AbstractArray{T})
+function _fillwithzeros(arr::AbstractArray{T}) where T
     for I in eachindex(arr)
         arr[I] = zero(T)
     end
@@ -425,28 +422,28 @@ function _fillwithzeros{T}(arr::AbstractArray{T})
 end
 
 for op in [:+, :-]; @eval begin
-    function $op{T<:JuMPTypes}(lhs::Number,rhs::AbstractArray{T})
+    function $op(lhs::Number,rhs::AbstractArray{T}) where T<:JuMPTypes
         ret = similar(rhs, typeof($op(lhs, zero(T))))
         for I in eachindex(ret)
             ret[I] = $op(lhs, rhs[I])
         end
         ret
     end
-    function $op{T<:JuMPTypes}(lhs::AbstractArray{T},rhs::Number)
+    function $op(lhs::AbstractArray{T},rhs::Number) where T<:JuMPTypes
         ret = similar(lhs, typeof($op(zero(T), rhs)))
         for I in eachindex(ret)
             ret[I] = $op(lhs[I], rhs)
         end
         ret
     end
-    function $op{T<:JuMPTypes,S}(lhs::T,rhs::AbstractArray{S})
+    function $op(lhs::T,rhs::AbstractArray{S}) where {T<:JuMPTypes,S}
         ret = similar(rhs, typeof($op(lhs, zero(S))))
         for I in eachindex(ret)
             ret[I] = $op(lhs, rhs[I])
         end
         ret
     end
-    function $op{T<:JuMPTypes,S}(lhs::AbstractArray{S},rhs::T)
+    function $op(lhs::AbstractArray{S},rhs::T) where {T<:JuMPTypes,S}
         ret = similar(lhs, typeof($op(zero(S), rhs)))
         for I in eachindex(ret)
             ret[I] = $op(lhs[I], rhs)
@@ -456,28 +453,28 @@ for op in [:+, :-]; @eval begin
 end; end
 
 for op in [:*, :/]; @eval begin
-    function $op{T<:JuMPTypes}(lhs::Number,rhs::AbstractArray{T})
+    function $op(lhs::Number,rhs::AbstractArray{T}) where T<:JuMPTypes
         ret = similar(rhs, typeof($op(lhs, zero(T))))
         for I in eachindex(ret)
             ret[I] = $op(lhs, rhs[I])
         end
         ret
     end
-    function $op{T<:JuMPTypes}(lhs::AbstractArray{T},rhs::Number)
+    function $op(lhs::AbstractArray{T},rhs::Number) where T<:JuMPTypes
         ret = similar(lhs, typeof($op(zero(T), rhs)))
         for I in eachindex(ret)
             ret[I] = $op(lhs[I], rhs)
         end
         ret
     end
-    function $op{T<:JuMPTypes,S}(lhs::T,rhs::AbstractArray{S})
+    function $op(lhs::T,rhs::AbstractArray{S}) where {T<:JuMPTypes,S}
         ret = similar(rhs, typeof($op(lhs, zero(S))))
         for I in eachindex(ret)
             ret[I] = $op(lhs, rhs[I])
         end
         ret
     end
-    function $op{T<:JuMPTypes,S}(lhs::AbstractArray{S},rhs::T)
+    function $op(lhs::AbstractArray{S},rhs::T) where {T<:JuMPTypes,S}
         ret = similar(lhs, typeof($op(zero(S), rhs)))
         for I in eachindex(ret)
             ret[I] = $op(lhs[I], rhs)
@@ -487,15 +484,15 @@ for op in [:*, :/]; @eval begin
 end; end
 
 # Special-case sparse matrix scalar multiplication/division
-(*){T<:JuMPTypes}(lhs::Number, rhs::SparseMatrixCSC{T}) =
+(*)(lhs::Number, rhs::SparseMatrixCSC{T}) where {T<:JuMPTypes} =
     SparseMatrixCSC(rhs.m, rhs.n, copy(rhs.colptr), copy(rhs.rowval), lhs .* rhs.nzval)
 (*)(lhs::JuMPTypes, rhs::SparseMatrixCSC) =
     SparseMatrixCSC(rhs.m, rhs.n, copy(rhs.colptr), copy(rhs.rowval), lhs .* rhs.nzval)
-(*){T<:JuMPTypes}(lhs::SparseMatrixCSC{T}, rhs::Number) =
+(*)(lhs::SparseMatrixCSC{T}, rhs::Number) where {T<:JuMPTypes} =
     SparseMatrixCSC(lhs.m, lhs.n, copy(lhs.colptr), copy(lhs.rowval), lhs.nzval .* rhs)
 (*)(lhs::SparseMatrixCSC, rhs::JuMPTypes) =
     SparseMatrixCSC(lhs.m, lhs.n, copy(lhs.colptr), copy(lhs.rowval), lhs.nzval .* rhs)
-(/){T<:JuMPTypes}(lhs::SparseMatrixCSC{T}, rhs::Number) =
+(/)(lhs::SparseMatrixCSC{T}, rhs::Number) where {T<:JuMPTypes} =
     SparseMatrixCSC(lhs.m, lhs.n, copy(lhs.colptr), copy(lhs.rowval), lhs.nzval ./ rhs)
 
 
@@ -507,15 +504,15 @@ for (op,opsymbol) in [(+,:+), (-,:-), (*,:*), (/,:/)]
 end
 
 
-(+){T<:JuMPTypes}(x::AbstractArray{T}) = x
-function (-){T<:JuMPTypes}(x::AbstractArray{T})
+(+)(x::AbstractArray{T}) where {T<:JuMPTypes} = x
+function (-)(x::AbstractArray{T}) where T<:JuMPTypes
     ret = similar(x, typeof(-one(T)))
     for I in eachindex(ret)
         ret[I] = -x[I]
     end
     ret
 end
-(*){T<:JuMPTypes}(x::AbstractArray{T}) = x
+(*)(x::AbstractArray{T}) where {T<:JuMPTypes} = x
 
 ###############################################################################
 # Add nonlinear function fallbacks for JuMP built-in types
@@ -525,11 +522,11 @@ for (func,_) in Calculus.symbolic_derivatives_1arg(), typ in [:Variable,:AffExpr
     @eval Base.$(func)(::$typ) = error($errstr)
 end
 
-*{T<:QuadExpr,S<:Union{Variable,AffExpr,QuadExpr}}(::T,::S) =
+*(::T,::S) where {T<:QuadExpr,S<:Union{Variable,AffExpr,QuadExpr}} =
     error( "*(::$T,::$S) is not defined. $op_hint")
 (*)(lhs::QuadExpr, rhs::QuadExpr) =
     error( "*(::QuadExpr,::QuadExpr) is not defined. $op_hint")
-*{T<:QuadExpr,S<:Union{Variable,AffExpr,QuadExpr}}(::S,::T) =
+*(::S,::T) where {T<:QuadExpr,S<:Union{Variable,AffExpr,QuadExpr}} =
     error( "*(::$S,::$T) is not defined. $op_hint")
-/{S<:Union{Number,Variable,AffExpr,QuadExpr},T<:Union{Variable,AffExpr,QuadExpr}}(::S,::T) =
+/(::S,::T) where {S<:Union{Number,Variable,AffExpr,QuadExpr},T<:Union{Variable,AffExpr,QuadExpr}} =
     error( "/(::$S,::$T) is not defined. $op_hint")

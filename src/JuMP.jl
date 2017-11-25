@@ -498,7 +498,7 @@ Base.zero(::Variable) = zero(Variable)
 Base.one(::Type{Variable}) = AffExpr(Variable[],Float64[],1.0)
 Base.one(::Variable) = one(Variable)
 
-type VariableNotOwnedError <: Exception
+mutable struct VariableNotOwnedError <: Exception
     context::String
 end
 function Base.showerror(io::IO, ex::VariableNotOwnedError)
@@ -742,12 +742,12 @@ operator_warn(lhs,rhs) = nothing
 
 ##########################################################################
 # Types used in the nonlinear code
-immutable NonlinearExpression
+struct NonlinearExpression
     m::Model
     index::Int
 end
 
-immutable NonlinearParameter <: AbstractJuMPScalar
+struct NonlinearParameter <: AbstractJuMPScalar
     m::Model
     index::Int
 end
@@ -766,7 +766,7 @@ const JuMPTypes = Union{AbstractJuMPScalar,
 const JuMPScalars = Union{Number,JuMPTypes}
 
 # would really want to do this on ::Type{T}, but doesn't work on v0.4
-Base.eltype{T<:JuMPTypes}(::T) = T
+Base.eltype(::T) where {T<:JuMPTypes} = T
 Base.size(::JuMPTypes) = ()
 Base.size(x::JuMPTypes,d::Int) = 1
 Base.ndims(::JuMPTypes) = 0

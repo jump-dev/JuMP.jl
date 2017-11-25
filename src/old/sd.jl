@@ -1,12 +1,12 @@
 # Used in @constraint m X in SDP
-immutable PSDCone end
+struct PSDCone end
 
 ##########################################################################
 # SDConstraint is a (dual) semidefinite constraint of the form
 # ∑ cᵢ Xᵢ ≥ D, where D is a n×n symmetric data matrix, cᵢ are
 # scalars, and Xᵢ are n×n symmetric variable matrices. The inequality
 # is taken w.r.t. the psd partial order.
-type SDConstraint <: AbstractConstraint
+mutable struct SDConstraint <: AbstractConstraint
     terms
 end
 
