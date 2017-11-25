@@ -11,8 +11,7 @@
 # Defines all types relating to expressions with a quadratic and affine part
 # - GenericQuadExpr             ∑qᵢⱼ xᵢⱼ  +  ∑ aᵢ xᵢ  +  c
 #   - QuadExpr                  Alias for (Float64, Variable)
-# - GenericQuadConstraint       ∑qᵢⱼ xᵢⱼ  +  ∑ aᵢ xᵢ  +  c  [≤,≥]  0
-#   - QuadConstraint            Alias for (Float64, Variable)
+# - QuadExprConstraint       ∑qᵢⱼ xᵢⱼ  +  ∑ aᵢ xᵢ  +  c  in set
 # Operator overloads in src/operators.jl
 #############################################################################
 
@@ -61,24 +60,58 @@ function Base.isequal{T,S}(q::GenericQuadExpr{T,S},other::GenericQuadExpr{T,S})
     return true
 end
 
+# Check if two QuadExprs are equal regardless of the order, and after merging duplicates
+# Mostly useful for testing.
+function isequal_canonical(quad::GenericQuadExpr{CoefType,VarType}, other::GenericQuadExpr{CoefType,VarType}) where {CoefType,VarType}
+    function canonicalize(q)
+        d = Dict{Set{VarType},CoefType}()
+        @assert length(q.qvars1) == length(q.qvars2) == length(q.qcoeffs)
+        for (v1,v2,c) in zip(q.qvars1, q.qvars2, q.qcoeffs)
+            vset = Set((v1,v2))
+            d[vset] = c + get(d, vset, zero(CoefType))
+        end
+        return d
+    end
+    d1 = canonicalize(quad)
+    d2 = canonicalize(other)
+    return isequal(d1,d1) && isequal_canonical(quad.aff, other.aff)
+end
+
 # Alias for (Float64, Variable)
 const QuadExpr = GenericQuadExpr{Float64,Variable}
 Base.convert(::Type{QuadExpr}, v::Union{Real,Variable,AffExpr}) = QuadExpr(Variable[], Variable[], Float64[], AffExpr(v))
 QuadExpr() = zero(QuadExpr)
 
-function setobjective(m::Model, sense::Symbol, q::QuadExpr)
-    m.obj = q
-    if m.internalModelLoaded
-        if method_exists(MathProgBase.setquadobjterms!, (typeof(m.internalModel), Vector{Cint}, Vector{Cint}, Vector{Float64}))
-            verify_ownership(m, m.obj.qvars1)
-            verify_ownership(m, m.obj.qvars2)
-            MathProgBase.setquadobjterms!(m.internalModel, Cint[v.col for v in m.obj.qvars1], Cint[v.col for v in m.obj.qvars2], m.obj.qcoeffs)
-        else
-            isa(m.internalModel, MathProgBase.AbstractLinearQuadraticModel) && Base.warn_once("Solver does not support adding a quadratic objective to an existing model. JuMP's internal model will be discarded.")
-            m.internalModelLoaded = false
-        end
+function MOI.ScalarQuadraticFunction(q::QuadExpr)
+    return MOI.ScalarQuadraticFunction(instancereference.(q.aff.vars), q.aff.coeffs, instancereference.(q.qvars1), instancereference.(q.qvars2), q.qcoeffs, q.aff.constant)
+end
+
+function QuadExpr(m::Model, f::MOI.ScalarQuadraticFunction)
+    return QuadExpr(Variable.(m,f.quadratic_rowvariables), Variable.(m, f.quadratic_colvariables), f.quadratic_coefficients, AffExpr(Variable.(m,f.affine_variables), f.affine_coefficients, f.constant))
+end
+
+function setobjective(m::Model, sense::Symbol, a::QuadExpr)
+    @assert !m.solverinstanceattached # TODO
+    if sense == :Min
+        moisense = MOI.MinSense
+    else
+        @assert sense == :Max
+        moisense = MOI.MaxSense
     end
-    setobjectivesense(m, sense)
+    MOI.set!(m.instance, MOI.ObjectiveSense(), moisense)
+    MOI.set!(m.instance, MOI.ObjectiveFunction(), MOI.ScalarQuadraticFunction(a))
+    nothing
+end
+
+"""
+    objectivefunction(m::Model, ::Type{QuadExpr})
+
+Return a `QuadExpr` object representing the objective function.
+Error if the objective is not quadratic.
+"""
+function objectivefunction(m::Model, ::Type{QuadExpr})
+    f = MOI.get(m.instance, MOI.ObjectiveFunction())::MOI.ScalarQuadraticFunction
+    return QuadExpr(m, f)
 end
 
 # Copy a quadratic expression to a new model by converting all the
@@ -88,84 +121,44 @@ function Base.copy(q::QuadExpr, new_model::Model)
                 copy(q.qcoeffs), copy(q.aff, new_model))
 end
 
-"""
-    getvalue(a::QuadExpr)
-
-Evaluate a `QuadExpr` given the current solution values.
-"""
-function getvalue(a::QuadExpr)
-    ret = getvalue(a.aff)
-    for it in 1:length(a.qvars1)
-        ret += a.qcoeffs[it] * getvalue(a.qvars1[it]) * getvalue(a.qvars2[it])
-    end
-    return ret
-end
-getvalue(arr::Array{QuadExpr}) = map(getvalue, arr)
+# """
+#     getvalue(a::QuadExpr)
+#
+# Evaluate a `QuadExpr` given the current solution values.
+# """
+# function getvalue(a::QuadExpr)
+#     ret = getvalue(a.aff)
+#     for it in 1:length(a.qvars1)
+#         ret += a.qcoeffs[it] * getvalue(a.qvars1[it]) * getvalue(a.qvars2[it])
+#     end
+#     return ret
+# end
+# getvalue(arr::Array{QuadExpr}) = map(getvalue, arr)
 
 
 
 ##########################################################################
-# GenericQuadConstraint
-# ∑qᵢⱼ xᵢⱼ  +  ∑ aᵢ xᵢ  +  c  [≤,≥]  0
-# As RHS is implicitly taken to be zero, we store only LHS and sense
-type GenericQuadConstraint{QuadType} <: AbstractConstraint
-    terms::QuadType
-    sense::Symbol
-end
-Base.copy{CON<:GenericQuadConstraint}(c::CON, new_model::Model) = CON(copy(c.terms, new_model), c.sense)
+# TODO: GenericQuadExprConstraint
 
-
-# Alias for (Float64, Variable)
-const QuadConstraint = GenericQuadConstraint{QuadExpr}
-
-function Base.copy(c::QuadConstraint, new_model::Model)
-    return QuadConstraint(copy(c.terms, new_model), c.sense)
+struct QuadExprConstraint{S <: MOI.AbstractScalarSet} <: AbstractConstraint
+    func::QuadExpr
+    set::S
 end
 
 """
-    addconstraint(m::Model, c::QuadConstraint)
+    addconstraint(m::Model, c::QuadExprConstraint)
 
-Add a quadratic constraint to `Model m`.
+Add a `QuadExpr` constraint to `Model m`.
 """
-function addconstraint(m::Model, c::QuadConstraint)
-    push!(m.quadconstr,c)
-    if m.internalModelLoaded
-        if method_exists(MathProgBase.addquadconstr!, (typeof(m.internalModel),
-                                                       Vector{Cint},
-                                                       Vector{Float64},
-                                                       Vector{Cint},
-                                                       Vector{Cint},
-                                                       Vector{Float64},
-                                                       Char,
-                                                       Float64))
-            if !((s = string(c.sense)[1]) in ['<', '>', '='])
-                error("Invalid sense for quadratic constraint")
-            end
-            terms = c.terms
-            verify_ownership(m, terms.qvars1)
-            verify_ownership(m, terms.qvars2)
-            MathProgBase.addquadconstr!(m.internalModel,
-                                        Cint[v.col for v in c.terms.aff.vars],
-                                        c.terms.aff.coeffs,
-                                        Cint[v.col for v in c.terms.qvars1],
-                                        Cint[v.col for v in c.terms.qvars2],
-                                        c.terms.qcoeffs,
-                                        s,
-                                        -c.terms.aff.constant)
-        else
-            Base.warn_once("Solver does not appear to support adding quadratic constraints to an existing model. JuMP's internal model will be discarded.")
-            m.internalModelLoaded = false
-        end
-    end
-    return ConstraintRef{Model,QuadConstraint}(m,length(m.quadconstr))
+function addconstraint(m::Model, c::QuadExprConstraint)
+    @assert !m.solverinstanceattached # TODO
+    cref = MOI.addconstraint!(m.instance, MOI.ScalarQuadraticFunction(c.func), c.set)
+    return ConstraintRef(m, cref)
 end
-addconstraint(m::Model, c::Array{QuadConstraint}) =
-    error("Vectorized constraint added without elementwise comparisons. Try using one of (.<=,.>=,.==).")
 
-function addVectorizedConstraint(m::Model, v::Array{QuadConstraint})
-    ret = Array{ConstraintRef{Model,QuadConstraint}}(size(v))
-    for I in eachindex(v)
-        ret[I] = addconstraint(m, v[I])
-    end
-    ret
+function constraintobject(cref::ConstraintRef{Model}, ::Type{QuadExpr}, ::Type{SetType}) where {SetType <: MOI.AbstractScalarSet}
+    m = cref.m
+    f = MOI.get(m.instance, MOI.ConstraintFunction(), cref.instanceref)::MOI.ScalarQuadraticFunction
+    s = MOI.get(m.instance, MOI.ConstraintSet(), cref.instanceref)::SetType
+    return QuadExprConstraint(QuadExpr(m, f), s)
 end

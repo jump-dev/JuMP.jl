@@ -1,7 +1,2 @@
-Cbc
-Clp
-GLPKMathProgInterface
-Ipopt
-ECOS
-SCS
+CSDP
 OffsetArrays 0.2.13

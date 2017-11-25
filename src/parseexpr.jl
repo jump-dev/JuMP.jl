@@ -294,20 +294,6 @@ end
     :(addtoexpr(ex, $coef, args[$idx]))
 end
 
-function parseCurly(x::Expr, aff::Symbol, lcoeffs, rcoeffs, newaff=gensym())
-    header = x.args[1]
-    if length(x.args) < 3
-        error("Need at least two arguments for $header")
-    end
-    if issum(header)
-        parseSum(x, aff, lcoeffs, rcoeffs, newaff)
-    elseif header ∈ [:norm1, :norm2, :norminf, :norm∞]
-        parseNorm(header, x, aff, lcoeffs, rcoeffs, newaff)
-    else
-        error("Expected sum or norm2 outside curly braces; got $header")
-    end
-end
-
 function parseSum(x::Expr, aff::Symbol, lcoeffs, rcoeffs, newaff)
     # we have a filter condition
     if isexpr(x.args[2],:parameters)
@@ -369,83 +355,6 @@ function parseSum(x::Expr, aff::Symbol, lcoeffs, rcoeffs, newaff)
     :($code; $newaff=$aff)
 end
 
-function parseNorm(normp::Symbol, x::Expr, aff::Symbol, lcoeffs, rcoeffs, newaff)
-    @assert string(x.args[1])[1:4] == "norm"
-    # we have a filter condition
-    finalaff = gensym()
-    gennorm  = gensym()
-    len      = gensym()
-    normexpr = gensym()
-    if isexpr(x.args[2],:parameters)
-        cond = x.args[2]
-        if length(cond.args) != 1
-            error("No commas after semicolon allowed in sum expression, use && for multiple conditions")
-        end
-        # generate inner loop code first and then wrap in for loops
-        inneraff, innercode = parseExprToplevel(x.args[3], :normaff)
-        code = quote
-            if $(esc(cond.args[1]))
-                normaff = 0.0
-                $innercode
-                push!($normexpr, $inneraff)
-            end
-        end
-        for level in length(x.args):-1:4
-            _idxvar, idxset = parseIdxSet(x.args[level]::Expr)
-            idxvar = esc(_idxvar)
-            code = :(let
-                $(localvar(idxvar))
-                for $idxvar in $(esc(idxset))
-                    $code
-                end
-            end)
-        end
-        preblock = :($normexpr = GenericAffExpr[])
-    else # no condition
-        inneraff, code = parseExprToplevel(x.args[2], :normaff)
-        code = :(normaff = 0.0; $code; push!($normexpr, $inneraff))
-        _, lastidxset = parseIdxSet(x.args[length(x.args)]::Expr)
-        preblock = :($len += length($(esc(lastidxset))))
-        for level in length(x.args):-1:3
-            _idxvar, idxset = parseIdxSet(x.args[level]::Expr)
-            idxvar = esc(_idxvar)
-            code = :(let
-                $(localvar(idxvar))
-                for $idxvar in $(esc(idxset))
-                    $code
-                end
-            end)
-            preblock = :(let
-                $(localvar(idxvar))
-                for $idxvar in $(esc(idxset))
-                    $preblock
-                end
-            end)
-        end
-        preblock = quote
-            $len = 0
-            $preblock
-            $normexpr = GenericAffExpr[]
-            _sizehint_expr!($normexpr, $len)
-        end
-    end
-    if normp == :norm2
-        param = 2
-    elseif normp == :norm1
-        param = 1
-    elseif normp ∈ [:norminf, :norm∞]
-        param = Inf
-    else
-        error("Unrecognized norm: $normp")
-    end
-    quote
-        $preblock
-        $code
-        $gennorm = _build_norm($param,$normexpr)
-        $newaff = $(Expr(:call, :addtoexpr_reorder, aff,lcoeffs...,gennorm,rcoeffs...))
-    end
-end
-
 # takes a generator statement and returns a properly nested for loop
 # with nested filters as specified
 function parsegen(ex,atleaf)
@@ -496,10 +405,8 @@ function parseGenerator(x::Expr, aff::Symbol, lcoeffs, rcoeffs, newaff=gensym())
     header = x.args[1]
     if issum(header)
         parseGeneratorSum(x.args[2], aff, lcoeffs, rcoeffs, newaff)
-    elseif header == :norm
-        parseGeneratorNorm(x.args[2], aff, lcoeffs, rcoeffs, newaff, length(x.args) > 2 ? x.args[3] : 2)
     else
-        error("Expected sum or norm2 outside generator expression; got $header")
+        error("Expected sum outside generator expression; got $header")
     end
 end
 
@@ -509,25 +416,6 @@ function parseGeneratorSum(x::Expr, aff::Symbol, lcoeffs, rcoeffs, newaff)
     # seem to help anymore, so might as well keep the code simple.
     code = parsegen(x, t -> parseExpr(t, aff, lcoeffs, rcoeffs, aff)[2])
     return :($code; $newaff=$aff)
-end
-
-function parseGeneratorNorm(x::Expr, aff::Symbol, lcoeffs, rcoeffs, newaff, normp)
-    finalaff = gensym()
-    gennorm  = gensym()
-    len      = gensym()
-    normexpr = gensym()
-    function atleaf(t)
-        inneraff, innercode = parseExprToplevel(t, :normaff)
-        return Expr(:block, :(normaff = 0.0), innercode, :(push!($normexpr,$inneraff)))
-    end
-    code = parsegen(x, atleaf)
-
-    quote
-        $normexpr = GenericAffExpr[]
-        $code
-        $gennorm = _build_norm($(esc(normp)),$normexpr)
-        $newaff = $(Expr(:call, :addtoexpr_reorder, aff,lcoeffs...,gennorm,rcoeffs...))
-    end
 end
 
 is_complex_expr(ex) = isa(ex,Expr) && !isexpr(ex,:ref)
@@ -624,8 +512,7 @@ function parseExpr(x, aff::Symbol, lcoeffs::Vector, rcoeffs::Vector, newaff::Sym
         elseif isexpr(x,:call) && length(x.args) >= 2 && (isexpr(x.args[2],:generator) || isexpr(x.args[2],:flatten))
             return newaff, parseGenerator(x,aff,lcoeffs,rcoeffs,newaff)
         elseif x.head == :curly
-            warn_curly(x)
-            return newaff, parseCurly(x,aff,lcoeffs,rcoeffs,newaff)
+            error_curly(x)
         else # at lowest level?
             !isexpr(x,:comparison) || error("Unexpected comparison in expression $x")
             callexpr = Expr(:call,:addtoexpr_reorder,aff,lcoeffs...,esc(x),rcoeffs...)
@@ -633,6 +520,3 @@ function parseExpr(x, aff::Symbol, lcoeffs::Vector, rcoeffs::Vector, newaff::Sym
         end
     end
 end
-
-# Semi-automatically generated precompilation hints
-include("precompile.jl")

@@ -13,10 +13,8 @@
 # Different objects that must all interact:
 # 1. Number
 # 2. Variable
-# 3. [Generic]Norm
 # 4. [Generic]AffExpr
 # 5. QuadExpr
-# 6. [Generic]NormExpr
 
 # Number
 # Number--Number obviously already taken care of!
@@ -24,10 +22,6 @@
 (+)(lhs::Number, rhs::Variable) = AffExpr([rhs],[+1.],convert(Float64,lhs))
 (-)(lhs::Number, rhs::Variable) = AffExpr([rhs],[-1.],convert(Float64,lhs))
 (*)(lhs::Number, rhs::Variable) = AffExpr([rhs],[convert(Float64,lhs)], 0.)
-# Number--GenericNorm
-(+){P,C,V}(lhs::Number, rhs::GenericNorm{P,C,V}) = GenericNormExpr{P,C,V}(copy(rhs),  one(C), convert(C,lhs))
-(-){P,C,V}(lhs::Number, rhs::GenericNorm{P,C,V}) = GenericNormExpr{P,C,V}(copy(rhs), -one(C), convert(C,lhs))
-(*){P,C,V}(lhs::Number, rhs::GenericNorm{P,C,V}) = GenericNormExpr{P,C,V}(copy(rhs),     lhs, zero(GenericAffExpr{C,V}))
 # Number--GenericAffExpr
 (+)(lhs::Number, rhs::GenericAffExpr) = GenericAffExpr(copy(rhs.vars),copy(rhs.coeffs),lhs+rhs.constant)
 (-)(lhs::Number, rhs::GenericAffExpr) = GenericAffExpr(copy(rhs.vars),    -rhs.coeffs ,lhs-rhs.constant)
@@ -36,10 +30,6 @@
 (+)(lhs::Number, rhs::QuadExpr) = QuadExpr(copy(rhs.qvars1),copy(rhs.qvars2),copy(rhs.qcoeffs),lhs+rhs.aff)
 (-)(lhs::Number, rhs::QuadExpr) = QuadExpr(copy(rhs.qvars1),copy(rhs.qvars2),    -rhs.qcoeffs ,lhs-rhs.aff)
 (*)(lhs::Number, rhs::QuadExpr) = QuadExpr(copy(rhs.qvars1),copy(rhs.qvars2), lhs*rhs.qcoeffs ,lhs*rhs.aff)
-# Number--GenericNormExpr
-(+){T<:GenericNormExpr}(lhs::Number, rhs::T) = T(copy(rhs.norm),     rhs.coeff, lhs+rhs.aff)
-(-){T<:GenericNormExpr}(lhs::Number, rhs::T) = T(copy(rhs.norm),    -rhs.coeff, lhs-rhs.aff)
-(*){T<:GenericNormExpr}(lhs::Number, rhs::T) = T(copy(rhs.norm), lhs*rhs.coeff, lhs*rhs.aff)
 
 # Variable (or, AbstractJuMPScalar)
 (+)(lhs::AbstractJuMPScalar) = lhs
@@ -54,9 +44,6 @@
 (+)(lhs::Variable, rhs::Variable) = AffExpr([lhs,rhs], [1.,+1.], 0.)
 (-)(lhs::Variable, rhs::Variable) = AffExpr([lhs,rhs], [1.,-1.], 0.)
 (*)(lhs::Variable, rhs::Variable) = QuadExpr([lhs],[rhs],[1.],AffExpr(Variable[],Float64[],0.))
-# Variable--Norm
-(+){C,V<:Variable}(lhs::Variable, rhs::GenericNorm{2,C,V}) = GenericSOCExpr{C,V}(copy(rhs),  one(C), GenericAffExpr{C,V}(lhs))
-(-){C,V<:Variable}(lhs::Variable, rhs::GenericNorm{2,C,V}) = GenericSOCExpr{C,V}(copy(rhs), -one(C), GenericAffExpr{C,V}(lhs))
 # Variable--AffExpr
 (+){C,V<:JuMPTypes}(lhs::V, rhs::GenericAffExpr{C,V}) =
     GenericAffExpr{C,V}(vcat(rhs.vars,lhs),vcat(rhs.coeffs,one(C)), rhs.constant)
@@ -74,34 +61,6 @@ end
 # Variable--QuadExpr
 (+)(v::Variable, q::QuadExpr) = QuadExpr(copy(q.qvars1),copy(q.qvars2),copy(q.qcoeffs),v+q.aff)
 (-)(v::Variable, q::QuadExpr) = QuadExpr(copy(q.qvars1),copy(q.qvars2),    -q.qcoeffs ,v-q.aff)
-# Variable--GenericSOCExpr
-(+){C,V<:Variable}(lhs::Variable, rhs::GenericSOCExpr{C,V}) = GenericSOCExpr{C,V}(copy(rhs.norm),  rhs.coeff, lhs+rhs.aff)
-(-){C,V<:Variable}(lhs::Variable, rhs::GenericSOCExpr{C,V}) = GenericSOCExpr{C,V}(copy(rhs.norm), -rhs.coeff, lhs-rhs.aff)
-
-# GenericNorm
-(+)(lhs::GenericNorm) = lhs
-(-){P,C,V}(lhs::GenericNorm{P,C,V}) = GenericNormExpr{P,C,V}(copy(lhs), -one(C), zero(GenericAffExpr{C,V}))
-(*)(lhs::GenericNorm) = lhs
-# GenericNorm--Number
-(+){P,C,V}(lhs::GenericNorm{P,C,V},rhs::Number) =
-    GenericNormExpr{P,C,V}(copy(lhs), one(C), GenericAffExpr{C,V}( rhs))
-(-){P,C,V}(lhs::GenericNorm{P,C,V},rhs::Number) =
-    GenericNormExpr{P,C,V}(copy(lhs), one(C), GenericAffExpr{C,V}(-rhs))
-(*){P,C,V}(lhs::GenericNorm{P,C,V},rhs::Number) =
-    GenericNormExpr{P,C,V}(copy(lhs), rhs, zero(GenericAffExpr{C,V}))
-(/){P,C,V}(lhs::GenericNorm{P,C,V},rhs::Number) =
-    GenericNormExpr{P,C,V}(copy(lhs), 1/rhs, zero(GenericAffExpr{C,V}))
-# Norm--Variable
-(+)(lhs::Norm,rhs::Variable) = SOCExpr(copy(lhs), 1.0, AffExpr( rhs))
-(-)(lhs::Norm,rhs::Variable) = SOCExpr(copy(lhs), 1.0, AffExpr(-rhs))
-# GenericNorm--GenericNorm
-# GenericNorm--GenericAffExpr
-(+){P,C,V}(lhs::GenericNorm{P,C,V},rhs::GenericAffExpr{C,V}) =
-    GenericNormExpr{P,C,V}(copy(lhs), one(C), copy(rhs))
-(-){P,C,V}(lhs::GenericNorm{P,C,V},rhs::GenericAffExpr{C,V}) =
-    GenericNormExpr{P,C,V}(copy(lhs), one(C),     -rhs)
-# Norm--QuadExpr
-# Norm--SOCExpr
 
 # GenericAffExpr
 (+)(lhs::GenericAffExpr) = lhs
@@ -128,13 +87,18 @@ if VERSION < v"0.6.0-dev.1632" # julia PR #17623
     @eval (.^)(lhs::Union{Variable,AffExpr}, rhs::Number) = lhs^rhs
 end
 # AffExpr--Variable
-(+){C,V<:JuMPTypes}(lhs::GenericAffExpr{C,V}, rhs::V) = (+)(rhs,lhs)
+(+){C,V<:JuMPTypes}(lhs::GenericAffExpr{C,V}, rhs::V) = GenericAffExpr{C,V}(vcat(lhs.vars,rhs),vcat(lhs.coeffs,one(C)), lhs.constant)
 (-){C,V<:JuMPTypes}(lhs::GenericAffExpr{C,V}, rhs::V) = GenericAffExpr{C,V}(vcat(lhs.vars,rhs),vcat(lhs.coeffs,-one(C)),lhs.constant)
-(*)(lhs::AffExpr, rhs::Variable) = (*)(rhs,lhs)
+# Don't fall back on Variable*AffExpr to preserve lhs/rhs consistency (appears in printing)
+function (*)(lhs::AffExpr, rhs::Variable)
+    n = length(lhs.vars)
+    if lhs.constant != 0.
+        ret = QuadExpr(copy(lhs.vars),[rhs for i=1:n],copy(lhs.coeffs),AffExpr([rhs], [lhs.constant], 0.))
+    else
+        ret = QuadExpr(copy(lhs.vars),[rhs for i=1:n],copy(lhs.coeffs),zero(AffExpr))
+    end
+end
 (/)(lhs::AffExpr, rhs::Variable) = error("Cannot divide affine expression by a variable")
-# AffExpr--Norm
-(+){P,C,V}(lhs::GenericAffExpr{C,V}, rhs::GenericNorm{P,C,V}) = GenericNormExpr{P,C,V}(copy(rhs),  one(C), copy(lhs))
-(-){P,C,V}(lhs::GenericAffExpr{C,V}, rhs::GenericNorm{P,C,V}) = GenericNormExpr{P,C,V}(copy(rhs), -one(C), copy(lhs))
 # AffExpr--AffExpr
 (+){C,V<:JuMPTypes}(lhs::GenericAffExpr{C,V}, rhs::GenericAffExpr{C,V}) = (operator_warn(lhs,rhs); GenericAffExpr(vcat(lhs.vars,rhs.vars),vcat(lhs.coeffs, rhs.coeffs),lhs.constant+rhs.constant))
 (-){C,V<:JuMPTypes}(lhs::GenericAffExpr{C,V}, rhs::GenericAffExpr{C,V}) = GenericAffExpr(vcat(lhs.vars,rhs.vars),vcat(lhs.coeffs,-rhs.coeffs),lhs.constant-rhs.constant)
@@ -195,9 +159,6 @@ end
 # AffExpr--QuadExpr
 (+)(a::AffExpr, q::QuadExpr) = QuadExpr(copy(q.qvars1),copy(q.qvars2),copy(q.qcoeffs),a+q.aff)
 (-)(a::AffExpr, q::QuadExpr) = QuadExpr(copy(q.qvars1),copy(q.qvars2),    -q.qcoeffs ,a-q.aff)
-# AffExpr--SOCExpr
-(+){C,V}(lhs::GenericAffExpr{C,V}, rhs::GenericSOCExpr{C,V}) = GenericSOCExpr{C,V}(copy(rhs.norm),  copy(rhs.coeff), lhs+rhs.aff)
-(-){C,V}(lhs::GenericAffExpr{C,V}, rhs::GenericSOCExpr{C,V}) = GenericSOCExpr{C,V}(copy(rhs.norm), -copy(rhs.coeff), lhs-rhs.aff)
 
 # QuadExpr
 (+)(lhs::QuadExpr) = lhs
@@ -223,27 +184,6 @@ end
                                             vcat(q1.qcoeffs, q2.qcoeffs),   q1.aff + q2.aff)
 (-)(q1::QuadExpr, q2::QuadExpr) = QuadExpr( vcat(q1.qvars1, q2.qvars1),     vcat(q1.qvars2, q2.qvars2),
                                             vcat(q1.qcoeffs, -q2.qcoeffs),  q1.aff - q2.aff)
-
-# GenericNormExpr
-(+)(lhs::GenericNormExpr) = lhs
-(-){T<:GenericNormExpr}(lhs::T) = T(copy(lhs.norm), -lhs.coeff, -lhs.aff)
-(*)(lhs::GenericNormExpr) = lhs
-# GenericNormExpr--Number
-(+){T<:GenericNormExpr}(lhs::T,rhs::Number) = T(copy(lhs.norm), lhs.coeff, lhs.aff+rhs)
-(-){T<:GenericNormExpr}(lhs::T,rhs::Number) = T(copy(lhs.norm), lhs.coeff, lhs.aff-rhs)
-(*){T<:GenericNormExpr}(lhs::T,rhs::Number) = T(copy(lhs.norm), lhs.coeff*rhs, lhs.aff*rhs)
-(/){T<:GenericNormExpr}(lhs::T,rhs::Number) = T(copy(lhs.norm), lhs.coeff/rhs, lhs.aff/rhs)
-# SOCExpr--Variable
-(+)(lhs::SOCExpr,rhs::Variable) = SOCExpr(copy(lhs.norm), lhs.coeff, lhs.aff+rhs)
-(-)(lhs::SOCExpr,rhs::Variable) = SOCExpr(copy(lhs.norm), lhs.coeff, lhs.aff-rhs)
-# GenericNormExpr--GenericNorm
-# GenericNormExpr--GenericAffExpr
-(+){P,C,V}(lhs::GenericNormExpr{P,C,V},rhs::GenericAffExpr{C,V}) =
-    GenericNormExpr{P,C,V}(copy(lhs.norm), lhs.coeff, lhs.aff+rhs)
-(-){P,C,V}(lhs::GenericNormExpr{P,C,V},rhs::GenericAffExpr{C,V}) =
-    GenericNormExpr{P,C,V}(copy(lhs.norm), lhs.coeff, lhs.aff-rhs)
-# SOCExpr--QuadExpr
-# SOCExpr--SOCExpr
 
 (==)(lhs::AffExpr,rhs::AffExpr) = (lhs.vars == rhs.vars) && (lhs.coeffs == rhs.coeffs) && (lhs.constant == rhs.constant)
 (==)(lhs::QuadExpr,rhs::QuadExpr) = (lhs.qvars1 == rhs.qvars1) && (lhs.qvars2 == rhs.qvars2) && (lhs.qcoeffs == rhs.qcoeffs) && (lhs.aff == rhs.aff)
@@ -274,10 +214,7 @@ _sizehint_expr!(q, n) = nothing
 #  - dot
 #############################################################################
 
-Base.sum(j::JuMPArray) = sum(j.innerArray)
-Base.sum(j::JuMPDict)  = sum(values(j.tupledict))
-Base.sum(j::JuMPArray{Variable}) = AffExpr(vec(j.innerArray), ones(length(j.innerArray)), 0.0)
-Base.sum(j::JuMPDict{Variable})  = AffExpr(collect(values(j.tupledict)), ones(length(j.tupledict)), 0.0)
+# TODO: specialize sum for Dict and JuMPArray of JuMP objects?
 Base.sum(j::Array{Variable}) = AffExpr(vec(j), ones(length(j)), 0.0)
 Base.sum(j::AbstractArray{Variable}) = sum([j[i] for i in eachindex(j)]) # to handle non-one-indexed arrays.
 function Base.sum{T<:GenericAffExpr}(affs::AbstractArray{T})
@@ -290,21 +227,12 @@ end
 
 import Base.vecdot
 
-_dot_depr() = warn("dot is deprecated for multidimensional arrays. Use vecdot instead.")
-
 # Base Julia's generic fallback vecdot requires that dot be defined
 # for scalars, so instead of defining them one-by-one, we will
 # fallback to the multiplication operator
 Base.dot(lhs::JuMPTypes, rhs::JuMPTypes) = lhs*rhs
 Base.dot(lhs::JuMPTypes, rhs::Number)    = lhs*rhs
 Base.dot(lhs::Number,    rhs::JuMPTypes) = lhs*rhs
-
-Base.dot{T,S,N}(lhs::AbstractArray{T,N}, rhs::JuMPArray{S,N})    = begin _dot_depr(); vecdot(lhs,rhs); end
-Base.dot{T,S,N}(lhs::JuMPArray{T,N},rhs::AbstractArray{S,N})     = begin _dot_depr(); vecdot(lhs,rhs); end
-Base.dot{T,S,N}(lhs::JuMPArray{T,N},rhs::JuMPArray{S,N}) = begin _dot_depr(); vecdot(lhs,rhs); end
-Base.dot{T<:JuMPTypes,S,N}(lhs::AbstractArray{T,N}, rhs::AbstractArray{S,N}) = begin _dot_depr(); vecdot(lhs,rhs); end
-Base.dot{T<:JuMPTypes,S<:JuMPTypes,N}(lhs::AbstractArray{T,N}, rhs::AbstractArray{S,N}) = begin _dot_depr(); vecdot(lhs,rhs); end
-Base.dot{T,S<:JuMPTypes,N}(lhs::AbstractArray{T,N}, rhs::AbstractArray{S,N}) = begin _dot_depr(); vecdot(lhs,rhs); end
 
 Base.dot{T<:JuMPTypes,S<:JuMPTypes}(lhs::AbstractVector{T},rhs::AbstractVector{S}) = _dot(lhs,rhs)
 Base.dot{T<:JuMPTypes,S}(lhs::AbstractVector{T},rhs::AbstractVector{S}) = _dot(lhs,rhs)
@@ -335,10 +263,7 @@ Base.promote_rule{R<:Real}(::Type{AffExpr}, ::Type{R}       ) = AffExpr
 Base.promote_rule(         ::Type{AffExpr}, ::Type{QuadExpr}) = QuadExpr
 Base.promote_rule{R<:Real}(::Type{QuadExpr},::Type{R}       ) = QuadExpr
 
-_throw_transpose_error() = error("Transpose not currently implemented for JuMPArrays with arbitrary index sets.")
 Base.transpose(x::AbstractJuMPScalar) = x
-Base.transpose( x::JuMPArray) = _throw_transpose_error()
-Base.ctranspose(x::JuMPArray) = _throw_transpose_error()
 
 # Can remove the following code once == overloading is removed
 
@@ -573,41 +498,11 @@ end; end
 (/){T<:JuMPTypes}(lhs::SparseMatrixCSC{T}, rhs::Number) =
     SparseMatrixCSC(lhs.m, lhs.n, copy(lhs.colptr), copy(lhs.rowval), lhs.nzval ./ rhs)
 
-if VERSION >= v"0.6.0-dev.1632" # julia PR #17623
-    for (op,opsymbol) in [(+,:+), (-,:-), (*,:*), (/,:/)]
-        @eval begin
-            Base.broadcast(::typeof($op),lhs::Number,rhs::JuMPTypes) = $opsymbol(lhs,rhs)
-            Base.broadcast(::typeof($op),lhs::JuMPTypes,rhs::Number) = $opsymbol(lhs,rhs)
-        end
-    end
-else
-    for (dotop,op) in [(:.+,:+), (:.-,:-), (:.*,:*), (:./,:/)]
-        @eval begin
-            $dotop(lhs::Number,rhs::JuMPTypes) = $op(lhs,rhs)
-            $dotop(lhs::JuMPTypes,rhs::Number) = $op(lhs,rhs)
-        end
-        for (T1,T2) in [(:JuMPTypes,:Number),(:JuMPTypes,:JuMPTypes),(:Number,:JuMPTypes)]
-            # Need these looks over S1,S2 for v0.3 because Union{Array,SparseMatrix}
-            # gives ambiguity warnings
-            for S1 in (:Array,:SparseMatrixCSC)
-                @eval $dotop{S<:$T1}(lhs::$S1{S},rhs::$T2) = $op(lhs,rhs)
-            end
-            for (S1,S2) in [(:Array,:Array),(:Array,:SparseMatrixCSC),(:SparseMatrixCSC,:Array)]
-                @eval begin
-                    function $dotop{S<:$T1,T<:$T2}(lhs::$S1{S},rhs::$S2{T})
-                        size(lhs) == size(rhs) || error("Incompatible dimensions")
-                        arr = Array{typeof($op(zero(S),zero(T)))}(size(rhs))
-                        @inbounds for i in eachindex(lhs)
-                            arr[i] = $op(lhs[i], rhs[i])
-                        end
-                        arr
-                    end
-                end
-            end
-            for S2 in (:Array,:SparseMatrixCSC)
-                @eval $dotop{T<:$T2}(lhs::$T1,rhs::$S2{T}) = $op(lhs,rhs)
-            end
-        end
+
+for (op,opsymbol) in [(+,:+), (-,:-), (*,:*), (/,:/)]
+    @eval begin
+        Base.broadcast(::typeof($op),lhs::Number,rhs::JuMPTypes) = $opsymbol(lhs,rhs)
+        Base.broadcast(::typeof($op),lhs::JuMPTypes,rhs::Number) = $opsymbol(lhs,rhs)
     end
 end
 
