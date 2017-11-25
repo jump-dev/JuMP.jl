@@ -37,19 +37,21 @@ Our documentation includes an installation guide, quick-start guide, and referen
 
 [juliaopt-notebooks]: https://github.com/JuliaOpt/juliaopt-notebooks
 
-**Read about the upcoming transition to MathOptInterface and breaking changes in JuMP 0.19 [here](https://discourse.julialang.org/t/mathoptinterface-and-upcoming-breaking-changes-in-jump-0-19).**
 
-**Latest Release**: 0.18.0 (via ``Pkg.add``)
+**Latest Release**: 0.18.0 (`release-0.18` branch)
   * [Documentation](http://www.juliaopt.org/JuMP.jl/0.18/)
   * [Examples](https://github.com/JuliaOpt/JuMP.jl/tree/release-0.18/examples)
   * Testing status:
     * TravisCI: [![Build Status](https://travis-ci.org/JuliaOpt/JuMP.jl.svg?branch=release-0.18)](https://travis-ci.org/JuliaOpt/JuMP.jl)
     * PackageEvaluator:
-      [![JuMP](http://pkg.julialang.org/badges/JuMP_0.5.svg)](http://pkg.julialang.org/?pkg=JuMP&ver=0.5)
       [![JuMP](http://pkg.julialang.org/badges/JuMP_0.6.svg)](http://pkg.julialang.org/?pkg=JuMP&ver=0.6)
 
 
-**Development version**:
+**Read about the upcoming transition to MathOptInterface (MOI) and breaking changes in JuMP 0.19 [here](https://discourse.julialang.org/t/mathoptinterface-and-upcoming-breaking-changes-in-jump-0-19).**
+
+The `master` branch now includes these breaking changes, but **we do not yet recommend using this branch unless you are a JuMP developer or solver developer**.
+
+**Development version** (`master` branch):
   * [Documentation](http://www.juliaopt.org/JuMP.jl/latest/)
   * [Examples](https://github.com/JuliaOpt/JuMP.jl/tree/master/examples)
   * Testing status:
@@ -109,7 +111,7 @@ Please report any issues via the Github **[issue tracker]**. All types of issues
 
 ## Citing JuMP
 
-If you find JuMP useful in your work, we kindly request that you cite the following [paper](http://dx.doi.org/10.1137/15M1020575):
+If you find JuMP useful in your work, we kindly request that you cite the following paper ([pdf](https://mlubin.github.io/pdf/jump-sirev.pdf)):
 
     @article{DunningHuchetteLubin2017,
     author = {Iain Dunning and Joey Huchette and Miles Lubin},
@@ -121,8 +123,6 @@ If you find JuMP useful in your work, we kindly request that you cite the follow
     year = {2017},
     doi = {10.1137/15M1020575},
     }
-
-A preprint of this paper is freely available on [arXiv](https://arxiv.org/abs/1508.01982).
 
 For an earlier work where we presented a prototype implementation of JuMP, see [here](http://dx.doi.org/10.1287/ijoc.2014.0623):
 
@@ -137,4 +137,4 @@ For an earlier work where we presented a prototype implementation of JuMP, see [
     doi = {10.1287/ijoc.2014.0623},
     }
 
-A preprint of this paper is also [freely available](http://arxiv.org/abs/1312.1431).
+A preprint of this paper is [freely available](http://arxiv.org/abs/1312.1431).
