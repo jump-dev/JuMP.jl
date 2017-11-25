@@ -28,7 +28,7 @@ const TOL = 1e-4
 
 modPath = joinpath(dirname(@__FILE__), "mod")
 
-type TemporaryExtensionTestType
+mutable struct TemporaryExtensionTestType
     x::Int
 end
 

@@ -10,32 +10,32 @@ abstract type JuMPContainer{T,N} end
 
 include("JuMPArray.jl")
 
-type IndexPair
+mutable struct IndexPair
     idxvar
     idxset
 end
 
-type JuMPDict{T,N} <: JuMPContainer{T,N}
+mutable struct JuMPDict{T,N} <: JuMPContainer{T,N}
     tupledict::Dict{NTuple{N,Any},T}
     meta::Dict{Symbol,Any}
 
     (::Type{JuMPDict{T,N}}){T,N}() = new{T,N}(Dict{NTuple{N,Any},T}(), Dict{Symbol,Any}())
 end
 
-function JuMPDict{T,N}(d::Dict{NTuple{N,Any},T})
+function JuMPDict(d::Dict{NTuple{N,Any},T}) where {T,N}
     tmp = JuMPDict{T,N}()
     tmp.tupledict = d
     tmp
 end
 
-function JuMPDict{T,N}(d::Dict{NTuple{N,Any},T}, meta::Dict{Symbol,Any})
+function JuMPDict(d::Dict{NTuple{N,Any},T}, meta::Dict{Symbol,Any}) where {T,N}
     tmp = JuMPDict{T,N}()
     tmp.tupledict = d
     tmp.meta = meta
     tmp
 end
 
-type JuMPContainerData
+mutable struct JuMPContainerData
     name
     indexsets
     indexexprs::Vector{IndexPair}
@@ -54,7 +54,7 @@ Base.setindex!(d::JuMPDict, value, t...) = (d.tupledict[t] = value)
 Base.map(f::Function, d::JuMPArray) =
     JuMPArray(map(f, d.innerArray), d.indexsets, d.lookup, copy(d.meta))
 
-function Base.map{T,N}(f::Function, d::JuMPDict{T,N})
+function Base.map(f::Function, d::JuMPDict{T,N}) where {T,N}
     ret = Base.return_types(f, Tuple{T})
     R = (length(ret) == 1 ? ret[1] : Any)
     x = JuMPDict{R,N}()
@@ -99,7 +99,7 @@ function gendict(instancename,T,idxsets...)
 end
 
 metadata(x::Union{JuMPArray,JuMPDict}) = x.meta
-metadata{T<:JuMPContainer}(::T) = error("Type $T has no field meta. This field is used to store metadata such as the JuMP.Model at the key :model.")
+metadata(::T) where {T<:JuMPContainer} = error("Type $T has no field meta. This field is used to store metadata such as the JuMP.Model at the key :model.")
 pushmeta!(x::JuMPContainer, sym::Symbol, val) = (metadata(x)[sym] = val)
 getmeta(x::JuMPContainer, sym::Symbol) = metadata(x)[sym]
 hasmeta(x::JuMPContainer, sym::Symbol) = haskey(metadata(x), sym)
@@ -116,7 +116,7 @@ end
 
 
 _similar(x::Array) = Array{Float64}(size(x))
-_similar{T}(x::Dict{T}) = Dict{T,Float64}()
+_similar(x::Dict{T}) where {T} = Dict{T,Float64}()
 
 _innercontainer(x::JuMPArray) = x.innerArray
 _innercontainer(x::JuMPDict)  = x.tupledict
@@ -130,7 +130,7 @@ function _warnnan(f, data)
     end
 end
 
-function _mapInner{T}(f, x::JuMPContainer{T})
+function _mapInner(f, x::JuMPContainer{T}) where T
     vars = _innercontainer(x)
     vals = _similar(vars)
     warnedyet = false
@@ -149,7 +149,7 @@ JuMPContainer_from(x::JuMPDict,inner) = JuMPDict(inner)
 JuMPContainer_from(x::JuMPArray,inner) = JuMPArray(inner, x.indexsets)
 
 # The name _map is used instead of map so that this function is called instead of map(::Function, ::JuMPArray)
-function _map{T}(f, x::JuMPContainer{T})
+function _map(f, x::JuMPContainer{T}) where T
     mapcontainer_warn(f, x)
     ret = JuMPContainer_from(x, _mapInner(f, x))
     # I guess copy!(::Dict, ::Dict) isn't defined, so...
@@ -171,7 +171,7 @@ end
 
 Base.length(x::JuMPDict) = length(x.tupledict)
 
-Base.ndims{T,N}(x::JuMPDict{T,N}) = N
+Base.ndims(x::JuMPDict{T,N}) where {T,N} = N
 Base.abs(x::JuMPDict) = map(abs, x)
 # avoid dangerous behavior with "end" (#730)
 Base.endof(x::JuMPArray) = error("endof() (and \"end\" syntax) not implemented for JuMPArray objects.")
@@ -187,7 +187,7 @@ size(x,k) = Base.size(x,k)
 # delegate one-argument functions
 Base.issymmetric(x::JuMPArray) = issymmetric(x.innerArray)
 
-Base.eltype{T}(x::JuMPContainer{T}) = T
+Base.eltype(x::JuMPContainer{T}) where {T} = T
 
 Base.full(x::JuMPContainer) = x
 
@@ -199,7 +199,7 @@ Base.keys(d::JuMPArray)   = KeyIterator(d)
 Base.values(d::JuMPArray) = ValueIterator(d.innerArray)
 
 # Wrapper type so that you can't access the values directly
-type ValueIterator{T,N}
+mutable struct ValueIterator{T,N}
     x::Array{T,N}
 end
 Base.start(it::ValueIterator)   =  start(it.x)
@@ -207,7 +207,7 @@ Base.next(it::ValueIterator, k) =   next(it.x, k)
 Base.done(it::ValueIterator, k) =   done(it.x, k)
 Base.length(it::ValueIterator)  = length(it.x)
 
-type KeyIterator{JA<:JuMPArray}
+mutable struct KeyIterator{JA<:JuMPArray}
     x::JA
     dim::Int
     next_k_cache::Array{Any,1}
@@ -217,7 +217,7 @@ type KeyIterator{JA<:JuMPArray}
     end
 end
 
-KeyIterator{JA}(d::JA) = KeyIterator{JA}(d)
+KeyIterator(d::JA) where {JA} = KeyIterator{JA}(d)
 
 function indexability(x::JuMPArray)
     for i in  1:length(x.indexsets)
@@ -237,13 +237,13 @@ function Base.start(it::KeyIterator)
     end
 end
 
-@generated function notindexable_start{T,N,NT}(x::JuMPArray{T,N,NT})
+@generated function notindexable_start(x::JuMPArray{T,N,NT}) where {T,N,NT}
     quote
         $(Expr(:tuple, 0, [:(start(x.indexsets[$i])) for i in 1:N]...))
     end
 end
 
-@generated function _next{T,N,NT}(x::JuMPArray{T,N,NT}, k::Tuple)
+@generated function _next(x::JuMPArray{T,N,NT}, k::Tuple) where {T,N,NT}
     quote
         $(Expr(:tuple, [:(next(x.indexsets[$i], k[$i+1])[1]) for i in 1:N]...))
     end
@@ -277,7 +277,7 @@ end
 
 Base.done(it::KeyIterator, k::Tuple) = (k[1] == 1)
 
-@generated __next{T,N,NT}(x::JuMPArray{T,N,NT}, k::Integer) =
+@generated __next(x::JuMPArray{T,N,NT}, k::Integer) where {T,N,NT} =
     quote
         subidx = ind2sub(size(x),k)
         $(Expr(:tuple, [:(x.indexsets[$i][subidx[$i]]) for i in 1:N]...)), next(x.innerArray,k)[2]

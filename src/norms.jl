@@ -23,11 +23,11 @@
 #############################################################################
 # GenericNorm
 # Container for Lp norms, ‖Ax‖p
-type GenericNorm{P,C,V}
+mutable struct GenericNorm{P,C,V}
     terms::Vector{GenericAffExpr{C,V}}
 end
 # Preferred constructor, validates the norm type based on the expression
-function GenericNorm{C,V}(P, terms::Vector{GenericAffExpr{C,V}})
+function GenericNorm(P, terms::Vector{GenericAffExpr{C,V}}) where {C,V}
     if C == Float64 && V == Variable
         # JuMP doesn't support anything else than the L2 Norm
         # Throw an error now before going any further
@@ -37,36 +37,36 @@ function GenericNorm{C,V}(P, terms::Vector{GenericAffExpr{C,V}})
     end
     GenericNorm{P,C,V}(terms)
 end
-function GenericNorm{C, V}(P, terms::AbstractVector{GenericAffExpr{C,V}})
+function GenericNorm(P, terms::AbstractVector{GenericAffExpr{C,V}}) where {C, V}
     GenericNorm(P, [terms[i] for i in eachindex(terms)])
 end
-Base.copy{P,C,V}(x::GenericNorm{P,C,V}) = GenericNorm{P,C,V}(copy(x.terms))
+Base.copy(x::GenericNorm{P,C,V}) where {P,C,V} = GenericNorm{P,C,V}(copy(x.terms))
 
 # Handle the norm() function by flattening arguments into a vector
-Base.norm{V<:AbstractJuMPScalar}(x::V,                  p::Real=2) = vecnorm(x,p)
-Base.norm{V<:AbstractJuMPScalar}(x::AbstractVector{V},  p::Real=2) = vecnorm(x,p)
-Base.norm{V<:AbstractJuMPScalar}(x::AbstractMatrix{V},  p::Real=2) = vecnorm(x,p)
-Base.norm{V<:AbstractJuMPScalar}(x::JuMPArray{V},       p::Real=2) = vecnorm(x,p)
-Base.norm{V<:AbstractJuMPScalar}(x::JuMPDict{V},        p::Real=2) = vecnorm(x,p)
-Base.norm{C,V}(x::GenericAffExpr{C,V},                  p::Real=2) = vecnorm(x,p)
-Base.norm{C,V}(x::AbstractVector{GenericAffExpr{C,V}},  p::Real=2) = vecnorm(x,p)
-Base.norm{C,V}(x::AbstractMatrix{GenericAffExpr{C,V}},  p::Real=2) = vecnorm(x,p)
-Base.norm{C,V}(x::JuMPArray{GenericAffExpr{C,V}},       p::Real=2) = vecnorm(x,p)
-Base.norm{C,V}(x::JuMPDict{GenericAffExpr{C,V}},        p::Real=2) = vecnorm(x,p)
+Base.norm(x::V,                  p::Real=2) where {V<:AbstractJuMPScalar} = vecnorm(x,p)
+Base.norm(x::AbstractVector{V},  p::Real=2) where {V<:AbstractJuMPScalar} = vecnorm(x,p)
+Base.norm(x::AbstractMatrix{V},  p::Real=2) where {V<:AbstractJuMPScalar} = vecnorm(x,p)
+Base.norm(x::JuMPArray{V},       p::Real=2) where {V<:AbstractJuMPScalar} = vecnorm(x,p)
+Base.norm(x::JuMPDict{V},        p::Real=2) where {V<:AbstractJuMPScalar} = vecnorm(x,p)
+Base.norm(x::GenericAffExpr{C,V},                  p::Real=2) where {C,V} = vecnorm(x,p)
+Base.norm(x::AbstractVector{GenericAffExpr{C,V}},  p::Real=2) where {C,V} = vecnorm(x,p)
+Base.norm(x::AbstractMatrix{GenericAffExpr{C,V}},  p::Real=2) where {C,V} = vecnorm(x,p)
+Base.norm(x::JuMPArray{GenericAffExpr{C,V}},       p::Real=2) where {C,V} = vecnorm(x,p)
+Base.norm(x::JuMPDict{GenericAffExpr{C,V}},        p::Real=2) where {C,V} = vecnorm(x,p)
 
 _vecaff(C,V,x) = map(GenericAffExpr{C,V},vec(x))
-Base.vecnorm{V<:AbstractJuMPScalar}(x::V,                   p::Real=2) = GenericNorm(p, [GenericAffExpr{Float64,V}(x)] )
-Base.vecnorm{V<:AbstractJuMPScalar}(x::AbstractArray{V},    p::Real=2) = GenericNorm(p, _vecaff(Float64,V,x) )
-Base.vecnorm{V<:AbstractJuMPScalar}(x::JuMPArray{V},        p::Real=2) = GenericNorm(p, _vecaff(Float64,V,x.innerArray) )
-Base.vecnorm{V<:AbstractJuMPScalar}(x::JuMPDict{V},         p::Real=2) = GenericNorm(p, _vecaff(Float64,V,collect(values(x))) )
-Base.vecnorm{C,V}(x::GenericAffExpr{C,V},                   p::Real=2) = GenericNorm(p, [x])
-Base.vecnorm{C,V}(x::AbstractArray{GenericAffExpr{C,V}},    p::Real=2) = GenericNorm(p, vec(x))
-Base.vecnorm{C,V}(x::JuMPArray{GenericAffExpr{C,V}},        p::Real=2) = GenericNorm(p, vec(x.innerArray))
-Base.vecnorm{C,V}(x::JuMPDict{GenericAffExpr{C,V}},         p::Real=2) = GenericNorm(p, collect(values(x)))
+Base.vecnorm(x::V,                   p::Real=2) where {V<:AbstractJuMPScalar} = GenericNorm(p, [GenericAffExpr{Float64,V}(x)] )
+Base.vecnorm(x::AbstractArray{V},    p::Real=2) where {V<:AbstractJuMPScalar} = GenericNorm(p, _vecaff(Float64,V,x) )
+Base.vecnorm(x::JuMPArray{V},        p::Real=2) where {V<:AbstractJuMPScalar} = GenericNorm(p, _vecaff(Float64,V,x.innerArray) )
+Base.vecnorm(x::JuMPDict{V},         p::Real=2) where {V<:AbstractJuMPScalar} = GenericNorm(p, _vecaff(Float64,V,collect(values(x))) )
+Base.vecnorm(x::GenericAffExpr{C,V},                   p::Real=2) where {C,V} = GenericNorm(p, [x])
+Base.vecnorm(x::AbstractArray{GenericAffExpr{C,V}},    p::Real=2) where {C,V} = GenericNorm(p, vec(x))
+Base.vecnorm(x::JuMPArray{GenericAffExpr{C,V}},        p::Real=2) where {C,V} = GenericNorm(p, vec(x.innerArray))
+Base.vecnorm(x::JuMPDict{GenericAffExpr{C,V}},         p::Real=2) where {C,V} = GenericNorm(p, collect(values(x)))
 
 # Called by the parseNorm macro for e.g. norm2{...}
 # If the arguments are tightly typed, just pass to the constructor
-_build_norm{C,V}(P,terms::Vector{GenericAffExpr{C,V}}) = GenericNorm(P,terms)
+_build_norm(P,terms::Vector{GenericAffExpr{C,V}}) where {C,V} = GenericNorm(P,terms)
 # The terms vector produced by the macro may not be tightly typed,
 # so we need to repackage in a tighter typed vector ourselves.
 # This function is needed for performance reasons on only 0.3, as
@@ -76,22 +76,22 @@ _build_norm(Lp, terms::Vector{GenericAffExpr}) = _build_norm(Lp, [terms...])
 # Alias for AffExprs. Short-hand used in operator overloads, etc.
 Norm{P} = GenericNorm{P,Float64,Variable}
 
-getvalue{P,C,V}(n::GenericNorm{P,C,V}) = norm(getvalue(n.terms),P)
+getvalue(n::GenericNorm{P,C,V}) where {P,C,V} = norm(getvalue(n.terms),P)
 
 ##########################################################################
 # GenericNormExpr
 # Container for expressions containing GenericNorm and GenericAffExpr
-type GenericNormExpr{P,C,V}
+mutable struct GenericNormExpr{P,C,V}
     norm::GenericNorm{P,C,V}
     coeff::C
     aff::GenericAffExpr{C,V}
 end
 
-GenericNormExpr{P,C,V}(norm::GenericNorm{P,C,V}) =
+GenericNormExpr(norm::GenericNorm{P,C,V}) where {P,C,V} =
     GenericNormExpr{C,V}(norm, one(C), zero(GenericAffExpr{C,V}))
-Base.copy{P,C,V}(x::GenericNormExpr{P,C,V}) =
+Base.copy(x::GenericNormExpr{P,C,V}) where {P,C,V} =
     GenericNormExpr{P,C,V}(copy(x.norm), copy(x.coeff), copy(x.aff))
-Base.convert{P,C,V}(::Type{GenericNormExpr{P,C,V}}, x::GenericNorm{P,C,V}) =
+Base.convert(::Type{GenericNormExpr{P,C,V}}, x::GenericNorm{P,C,V}) where {P,C,V} =
     GenericNormExpr{P,C,V}(x, one(C), zero(GenericAffExpr{C,V}))
 
 # Alias for ‖Ax‖₂ case
@@ -106,7 +106,7 @@ getvalue(n::GenericNormExpr) = n.coeff * getvalue(n.norm) + getvalue(n.aff)
 # GenericSOCConstraint
 # Second-order cone constraint of form
 # α||Ax-b||₂ + cᵀx + d ≤ 0
-type GenericSOCConstraint{T<:GenericSOCExpr} <: AbstractConstraint
+mutable struct GenericSOCConstraint{T<:GenericSOCExpr} <: AbstractConstraint
     normexpr::T
     function (::Type{GenericSOCConstraint{T}}){T}(normexpr::T)
         if normexpr.coeff < 0

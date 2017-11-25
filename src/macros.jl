@@ -317,7 +317,7 @@ constructconstraint!(x::Array, sense::Symbol) = map(c->constructconstraint!(c,se
 constructconstraint!(x::AbstractArray, sense::Symbol) = constructconstraint!([x[i] for i in eachindex(x)], sense)
 
 _vectorize_like(x::Number, y::AbstractArray{AffExpr}) = (ret = similar(y, typeof(x)); fill!(ret, x))
-function _vectorize_like{R<:Number}(x::AbstractArray{R}, y::AbstractArray{AffExpr})
+function _vectorize_like(x::AbstractArray{R}, y::AbstractArray{AffExpr}) where R<:Number
     for i in 1:max(ndims(x),ndims(y))
         _size(x,i) == _size(y,i) || error("Unequal sizes for ranged constraint")
     end
