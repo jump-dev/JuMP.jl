@@ -10,44 +10,71 @@
 # https://github.com/JuliaArrays/AxisArrays.jl/issues/84
 
 
-struct JuMPArray{T,N,Ax} <: AbstractArray{T,N}
+struct JuMPArray{T,N,Ax,L<:NTuple{N,Dict}} <: AbstractArray{T,N}
     data::Array{T,N}
     axes::Ax
-    lookup::Vector{Dict{S,Int} where S}
+    lookup::L
 end
 
 export JuMPArray
 
-function JuMPArray(data::Array{T,N}, axs...) where {T,N}
-    lookup = Vector{Dict{S,Int} where S}(N)
-    for i in 1:N
-        d = Dict{eltype(axs[i]),Int}()
-        cnt = 1
-        for el in axs[i]
-            if haskey(d, el)
-                error("Repeated index $el. Index sets must have unique elements.")
-            end
-            d[el] = cnt
-            cnt += 1
+function build_lookup(ax)
+    d = Dict{eltype(ax),Int}()
+    cnt = 1
+    for el in ax
+        if haskey(d, el)
+            error("Repeated index $el. Index sets must have unique elements.")
         end
-        lookup[i] = d
+        d[el] = cnt
+        cnt += 1
     end
-    return JuMPArray(data, axs, lookup)
+    d
 end
 
-# TODO: use generated function to make this fast
-function to_index(A::JuMPArray{T,N}, idx...) where {T,N}
-    return tuple((isa(i,Colon) ? Colon() : (k <= N ? A.lookup[k][i] : (((i == 1) ? 1 : error("invalid index $i")))) for (k,i) in enumerate(idx))...)
+JuMPArray(data::Array, axs...) = JuMPArray(data, axs, build_lookup.(axs))
+
+lookup_index(i, lookup::Dict) = isa(i, Colon) ? Colon() : lookup[i]
+
+# Lisp-y tuple recursion trick to handle indexing in a nice type-
+# stable way. The idea here is that `_to_index_tuple(idx, lookup)`
+# performs a lookup on the first element of `idx` and `lookup`, 
+# then recurses using the remaining elements of both tuples. 
+# The compiler knows the lengths and types of each tuple, so
+# all of the types are inferable. 
+function _to_index_tuple(idx::Tuple, lookup::Tuple)
+    tuple(lookup_index(first(idx), first(lookup)), 
+          _to_index_tuple(Base.tail(idx), Base.tail(lookup))...)
 end
 
-# TODO: use generated function to make this fast and type stable
+# Handle the base case when we have more indices than lookups:
+function _to_index_tuple(idx::NTuple{N}, ::NTuple{0}) where {N}
+    ntuple(k -> begin
+        i = idx[k]
+        (i == 1) ? 1 : error("invalid index $i")
+    end, Val(N))
+end
+
+# Handle the base case when we have fewer indices than lookups:
+_to_index_tuple(idx::NTuple{0}, lookup::Tuple) = ()
+
+# Resolve ambiguity with the above two base cases
+_to_index_tuple(idx::NTuple{0}, lookup::NTuple{0}) = ()
+
+to_index(A::JuMPArray, idx...) = _to_index_tuple(idx, A.lookup)
+
+# Doing `Colon() in idx` is relatively slow because it involves
+# a non-unrolled loop through the `idx` tuple which may be of
+# varying element type. Another lisp-y recursion trick fixes that
+has_colon(idx::Tuple{}) = false
+has_colon(idx::Tuple) = isa(first(idx), Colon) || has_colon(Base.tail(idx))
+
 # TODO: better error (or just handle correctly) when user tries to index with a range like a:b
 # The only kind of slicing we support is dropping a dimension with colons
-function Base.getindex(A::JuMPArray{T}, idx...) where {T}
-    if Colon() in idx
+function Base.getindex(A::JuMPArray, idx...)
+    if has_colon(idx)
         JuMPArray(A.data[to_index(A,idx...)...], (ax for (i,ax) in enumerate(A.axes) if idx[i] == Colon())...)
     else
-        return A.data[to_index(A,idx...)...]::T
+        return A.data[to_index(A,idx...)...]
     end
 end
 Base.getindex(A::JuMPArray, idx::CartesianIndex) = A.data[idx]
