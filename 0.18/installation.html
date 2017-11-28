@@ -240,8 +240,8 @@ if(!(location.hostname.match('readthedocs') || location.hostname.match('rtfd')))
 <td>&#160;</td>
 </tr>
 <tr class="row-even"><td rowspan="2"><a class="reference external" href="https://projects.coin-or.org/Bonmin">Bonmin</a></td>
-<td><a class="reference external" href="https://github.com/JackDunnNZ/AmplNLWriter.jl">AmplNLWriter.jl</a></td>
-<td><code class="docutils literal"><span class="pre">BonminNLSolver()</span></code> *</td>
+<td><a class="reference external" href="https://github.com/JuliaOpt/AmplNLWriter.jl">AmplNLWriter.jl</a></td>
+<td><code class="docutils literal"><span class="pre">AmplNLWriter(...)</span></code> *</td>
 <td rowspan="2">EPL</td>
 <td rowspan="2">X</td>
 <td rowspan="2">&#160;</td>
@@ -276,8 +276,8 @@ if(!(location.hostname.match('readthedocs') || location.hostname.match('rtfd')))
 <td>&#160;</td>
 </tr>
 <tr class="row-even"><td rowspan="2"><a class="reference external" href="https://projects.coin-or.org/Couenne">Couenne</a></td>
-<td><a class="reference external" href="https://github.com/JackDunnNZ/AmplNLWriter.jl">AmplNLWriter.jl</a></td>
-<td><code class="docutils literal"><span class="pre">CouenneNLSolver()</span></code> *</td>
+<td><a class="reference external" href="https://github.com/JuliaOpt/AmplNLWriter.jl">AmplNLWriter.jl</a></td>
+<td><code class="docutils literal"><span class="pre">AmplNLWriter(...)</span></code> **</td>
 <td rowspan="2">EPL</td>
 <td rowspan="2">X</td>
 <td rowspan="2">&#160;</td>
@@ -399,7 +399,8 @@ if(!(location.hostname.match('readthedocs') || location.hostname.match('rtfd')))
 <li>MINLP = Mixed-integer nonlinear programming</li>
 <li>SDP = Semidefinite programming</li>
 </ul>
-<p><cite>*</cite> requires CoinOptServices installed, see below.</p>
+<p><cite>*</cite> = <code class="docutils literal"><span class="pre">AmplNLWriter(CoinOptServices.bonmin)</span></code>
+<cite>**</cite> = <code class="docutils literal"><span class="pre">AmplNLWriter(CoinOptServices.couenne)</span></code></p>
 <p>To install Gurobi, for example, and use it with a JuMP model <code class="docutils literal"><span class="pre">m</span></code>, run:</p>
 <div class="highlight-julia"><div class="highlight"><pre><span></span><span class="n">Pkg</span><span class="o">.</span><span class="n">add</span><span class="p">(</span><span class="s">&quot;Gurobi&quot;</span><span class="p">)</span>
 <span class="k">using</span> <span class="n">JuMP</span>
@@ -439,7 +440,7 @@ if(!(location.hostname.match('readthedocs') || location.hostname.match('rtfd')))
 </div>
 <div class="admonition warning">
 <p class="first admonition-title">Warning</p>
-<p class="last"><code class="docutils literal">XpressSolver</code> is not exported by default, thus one must use <code class="docutils literal">Xpress.XpressSolver</code> or import it explicitly.</p>
+<p class="last"><code class="docutils literal"><span class="pre">XpressSolver</span></code> is not exported by default, thus one must use  <code class="docutils literal"><span class="pre">Xpress.XpressSolver</span></code> or import it explicitly.</p>
 </div>
 </div>
 <div class="section" id="id8">
@@ -477,10 +478,7 @@ The Mosek interface is maintained by the Mosek team. (Thanks!)</p>
 </div>
 <div class="section" id="coin-or-bonmin-and-couenne">
 <h3>COIN-OR Bonmin and Couenne<a class="headerlink" href="#coin-or-bonmin-and-couenne" title="Permalink to this headline">¶</a></h3>
-<p>Binaries of Bonmin and Couenne are provided on OS X and Windows (32- and 64-bit) by the <a class="reference external" href="https://github.com/JuliaOpt/CoinOptServices.jl">CoinOptServices.jl</a> package.
-On Linux, they will be compiled from source. Once installed, they can be called either via <code class="docutils literal"><span class="pre">.osil</span></code> files using
-<code class="docutils literal"><span class="pre">OsilBonminSolver</span></code> and <code class="docutils literal"><span class="pre">OsilCouenneSolver</span></code> from <a class="reference external" href="https://github.com/JuliaOpt/CoinOptServices.jl">CoinOptServices.jl</a>,
-or via <code class="docutils literal"><span class="pre">.nl</span></code> files using <code class="docutils literal"><span class="pre">BonminNLSolver</span></code> and <code class="docutils literal"><span class="pre">CouenneNLSolver</span></code> from <a class="reference external" href="https://github.com/JackDunnNZ/AmplNLWriter.jl">AmplNLWriter.jl</a>.
+<p>Binaries of Bonmin and Couenne are provided on OS X and Windows (32- and 64-bit) by the [CoinOptServices.jl](<a class="reference external" href="https://github.com/JuliaOpt/CoinOptServices.jl">https://github.com/JuliaOpt/CoinOptServices.jl</a>) package. On Linux, they will be compiled from source. Once installed, they can be called either via <cite>.osil</cite> files using <cite>OsilBonminSolver</cite> and <cite>OsilCouenneSolver</cite> from [CoinOptServices.jl](<a class="reference external" href="https://github.com/JuliaOpt/CoinOptServices.jl">https://github.com/JuliaOpt/CoinOptServices.jl</a>), or via <cite>.nl</cite> files using <cite>AmplNLWriter(CoinOptServices.bonmin)</cite> and <cite>AmplNLWriter(CoinOptServices.couenne)</cite> from [AmplNLWriter.jl](<a class="reference external" href="https://github.com/JuliaOpt/AmplNLWriter.jl">https://github.com/JuliaOpt/AmplNLWriter.jl</a>).
 We recommend using the <code class="docutils literal"><span class="pre">.nl</span></code> format option, which is currently more stable and has better performance for derivative computations.
 Since both Bonmin and Couenne use Ipopt for continuous subproblems, the same MUMPS sparse linear algebra performance caveat applies.</p>
 </div>
