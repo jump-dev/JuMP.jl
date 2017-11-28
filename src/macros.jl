@@ -8,74 +8,21 @@ using Base.Meta
 issum(s::Symbol) = (s == :sum) || (s == :∑) || (s == :Σ)
 isprod(s::Symbol) = (s == :prod) || (s == :∏)
 
-function curly_to_generator(x)
-    # we have a filter condition
-    x = copy(x)
-    @assert isexpr(x,:curly)
-    if isexpr(x.args[2],:parameters)
-        cond = x.args[2].args[1]
-        body = x.args[3]
-        if length(x.args) == 3 # no iteration set!
-            push!(x.args,:(_ in 1))
-        end
-        for i in length(x.args):-1:4
-            if i == length(x.args)
-                body = Expr(:generator,body,Expr(:filter,cond,x.args[i]))
-            else
-                body = Expr(:generator,body,x.args[i])
-            end
-        end
-    else
-        cond = nothing
-        body = x.args[2]
-        if length(x.args) == 2 # no iteration set!
-            push!(x.args,:(_ in 1))
-        end
-        for i in length(x.args):-1:3
-            body = Expr(:generator,body,x.args[i])
-        end
-    end
-    if isexpr(body.args[1],:generator)
-        body = Expr(:flatten,body)
-    end
-    name = x.args[1]
-    if name == :norm2
-        return Expr(:call,:norm,body)
-    elseif name == :norm1
-        return Expr(:call,:norm,body,1)
-    elseif name == :norminf
-        return Expr(:call,:norm,body,Inf)
-    elseif name == :norm∞
-        return Expr(:call,:norm,body,Inf)
-    else
-        return Expr(:call,name,body)
-    end
+function error_curly(x)
+    Base.error("The curly syntax (sum{},prod{},norm2{}) is no longer supported. Expression: $x.")
 end
 
-function warn_curly(x)
-    genform = curly_to_generator(x)
-    if length(genform.args) == 2
-        # don't print extra parens
-        genstr = "$(genform.args[1])$(genform.args[2])"
-    else
-        genstr = "$genform"
-    end
-    Base.warn_once("The curly syntax (sum{},prod{},norm2{}) is deprecated in favor of the new generator syntax (sum(),prod(),norm()).")
-    Base.warn_once("Replace $x with $genstr.")
-end
-
-include("parseExpr_staged.jl")
+include("parseexpr.jl")
 
 ###############################################################################
 # buildrefsets
 # Unexported. Takes as input an object representing a name, associated index
 # sets, and conditions on those sets, for example
 # buildrefsets(:(x[i=1:3,[:red,:blue]],k=S; i+k <= 6))
-# Used internally in macros to build JuMPContainers and constraints. Returns
+# Used internally in macros to build containers and constraints. Returns
 #       refcall:  Expr to reference a particular element, e.g. :(x[i,j,k])
-#       idxvars:  Index names used in referencing, e.g.g {:i,:j,:k}
-#       idxsets:  Index sets for indexing, e.g. {1:3, [:red,:blue], S}
-#       idxpairs: Vector of IndexPair
+#       idxvars:  Index names used in referencing, e.g.g []:i,:j,:k]
+#       idxsets:  Index sets for indexing, e.g. [1:3, [:red,:blue], S]
 #       condition: Expr containing any condition present for indexing
 # Note in particular that it does not actually evaluate the condition, and so
 # it returns just the cartesian product of possible indices.
@@ -83,7 +30,6 @@ function buildrefsets(expr::Expr, cname)
     c = copy(expr)
     idxvars = Any[]
     idxsets = Any[]
-    idxpairs = IndexPair[]
     # Creating an indexed set of refs
     refcall = Expr(:ref, cname)
     if isexpr(c, :typed_vcat) || isexpr(c, :ref)
@@ -105,22 +51,20 @@ function buildrefsets(expr::Expr, cname)
             parse_done, idxvar, _idxset = tryParseIdxSet(s::Expr)
             if parse_done
                 idxset = esc(_idxset)
-                push!(idxpairs, IndexPair(idxvar, _idxset))
             end
         end
         if !parse_done # No index variable specified
             idxvar = gensym()
             idxset = esc(s)
-            push!(idxpairs, IndexPair(nothing,s))
         end
         push!(idxvars, idxvar)
         push!(idxsets, idxset)
         push!(refcall.args, esc(idxvar))
     end
-    return refcall, idxvars, idxsets, idxpairs, condition
+    return refcall, idxvars, idxsets, condition
 end
 
-buildrefsets(c, cname)  = (cname, Any[], Any[], IndexPair[], :())
+buildrefsets(c, cname)  = (cname, Any[], Any[], :())
 buildrefsets(c) = buildrefsets(c, getname(c))
 
 ###############################################################################
@@ -135,10 +79,11 @@ buildrefsets(c) = buildrefsets(c, getname(c))
 #                  If none, pass :().
 #       idxvars: As defined for buildrefsets
 #       idxsets: As defined for buildrefsets
-#       idxpairs: As defined for buildrefsets
 #       sym: A symbol or expression containing the element type of the
 #            resulting container, e.g. :AffExpr or :Variable
-function getloopedcode(varname, code, condition, idxvars, idxsets, idxpairs, sym; lowertri=false)
+#       requestedcontainer: `:Auto`, `:Array`, `:JuMPArray`, `:Dict` passed
+#                           through to generatecontainer()
+function getloopedcode(varname, code, condition, idxvars, idxsets, sym, requestedcontainer::Symbol; lowertri=false)
 
     # if we don't have indexing, just return to avoid allocating stuff
     if isempty(idxsets)
@@ -147,10 +92,20 @@ function getloopedcode(varname, code, condition, idxvars, idxsets, idxpairs, sym
 
     hascond = (condition != :())
 
+    requestedcontainer in [:Auto, :Array, :JuMPArray, :Dict] || return :(error("Invalid container type $container. Must be Auto, Array, JuMPArray, or Dict."))
+
+    if hascond
+        if requestedcontainer == :Auto
+            requestedcontainer = :Dict
+        elseif requestedcontainer == :Array || requestedcontainer == :JuMPArray
+            return :(error("Requested container type is incompatible with conditional indexing. Use :Dict or :Auto instead."))
+        end
+    end
+    containercode, autoduplicatecheck = generatecontainer(sym, idxvars, idxsets, requestedcontainer)
+
     if lowertri
         @assert !hascond
         @assert length(idxvars)  == 2
-        @assert length(idxpairs) == 2
         @assert !hasdependentsets(idxvars, idxsets)
 
         i, j = esc(idxvars[1]), esc(idxvars[2])
@@ -171,6 +126,19 @@ function getloopedcode(varname, code, condition, idxvars, idxsets, idxpairs, sym
             end
         end
     else
+        if !autoduplicatecheck # we need to check for duplicate keys in the index set
+            if length(idxvars) > 1
+                keytuple = Expr(:tuple, esc.(idxvars)...)
+            else
+                keytuple = esc(idxvars[1])
+            end
+            code = quote
+                if haskey($varname, $keytuple)
+                    error(string("Repeated index ", $keytuple,". Index sets must have unique elements."))
+                end
+                $code
+            end
+        end
         if hascond
             code = quote
                 $(esc(condition)) || continue
@@ -188,15 +156,10 @@ function getloopedcode(varname, code, condition, idxvars, idxsets, idxpairs, sym
             end
         end
     end
-    if hascond || hasdependentsets(idxvars,idxsets)
-        # force a JuMPDict
-        N = length(idxsets)
-        mac = :($varname = JuMPDict{$(sym),$N}())
-    else
-        mac = gendict(varname, sym, idxsets...)
-    end
+
+
     return quote
-        $mac
+        $varname = $containercode
         $code
         nothing
     end
@@ -223,10 +186,28 @@ function _localvar(x::Expr)
     args
 end
 
+"""
+    extract_kwargs(args)
+
+Process the arguments to a macro, separating out the keyword arguments.
+Return a tuple of (flat_arguments, keyword arguments, and requestedcontainer),
+where `requestedcontainer` is a symbol to be passed to `getloopedcode`.
+"""
+function extract_kwargs(args)
+    kwargs = filter(x -> isexpr(x, :(=)) && x.args[1] != :container , collect(args))
+    flat_args = filter(x->!isexpr(x, :(=)), collect(args))
+    requestedcontainer = :Auto
+    for kw in args
+        if isexpr(kw, :(=)) && kw.args[1] == :container
+            requestedcontainer = kw.args[2]
+        end
+    end
+    return flat_args, kwargs, requestedcontainer
+end
+
 function addkwargs!(call, kwargs)
-    kwsymbol = VERSION < v"0.6.0-dev.1934" ? :kw : :(=) # changed by julia PR #19868
     for kw in kwargs
-        @assert isexpr(kw, kwsymbol)
+        @assert isexpr(kw, :(=))
         push!(call.args, esc(Expr(:kw, kw.args...)))
     end
 end
@@ -272,79 +253,75 @@ function _canonicalize_sense(sns::Symbol)
     end
 end
 
-function _construct_constraint!(args...)
-    warn("_construct_constraint! is deprecated. Use constructconstraint! instead")
-    constructconstraint!(args...)
-end
-
 # two-argument constructconstraint! is used for one-sided constraints.
 # Right-hand side is zero.
-constructconstraint!(v::Variable, sense::Symbol) = constructconstraint!(convert(AffExpr,v), sense)
-function constructconstraint!(aff::AffExpr, sense::Symbol)
-    offset = aff.constant
-    aff.constant = 0.0
-    if sense == :(<=) || sense == :≤
-        return LinearConstraint(aff, -Inf, -offset)
-    elseif sense == :(>=) || sense == :≥
-        return LinearConstraint(aff, -offset, Inf)
-    elseif sense == :(==)
-        return LinearConstraint(aff, -offset, -offset)
-    else
-        error("Cannot handle ranged constraint")
-    end
-end
-
-function constructconstraint!(aff::AffExpr, lb, ub)
-    offset = aff.constant
-    aff.constant = 0.0
-    LinearConstraint(aff, lb-offset, ub-offset)
-end
-
-constructconstraint!(quad::QuadExpr, sense::Symbol) = QuadConstraint(quad, sense)
-
-function constructconstraint!(normexpr::SOCExpr, sense::Symbol)
-    # check that the constraint is SOC representable
+function sense_to_set(sense::Symbol)
     if sense == :(<=)
-        SOCConstraint(normexpr)
+        return MOI.LessThan(0.0)
     elseif sense == :(>=)
-        SOCConstraint(-normexpr)
+        return MOI.GreaterThan(0.0)
     else
-        error("Invalid sense $sense in SOC constraint")
+        @assert sense == :(==)
+        return MOI.EqualTo(0.0)
     end
 end
+const ScalarPolyhedralSets = Union{MOI.LessThan,MOI.GreaterThan,MOI.EqualTo,MOI.Interval}
 
-constructconstraint!(x::Array, sense::Symbol) = map(c->constructconstraint!(c,sense), x)
-constructconstraint!(x::AbstractArray, sense::Symbol) = constructconstraint!([x[i] for i in eachindex(x)], sense)
-
-_vectorize_like(x::Number, y::AbstractArray{AffExpr}) = (ret = similar(y, typeof(x)); fill!(ret, x))
-function _vectorize_like{R<:Number}(x::AbstractArray{R}, y::AbstractArray{AffExpr})
-    for i in 1:max(ndims(x),ndims(y))
-        _size(x,i) == _size(y,i) || error("Unequal sizes for ranged constraint")
-    end
-    x
+#constructconstraint!(v::Variable, sense::Symbol) = constructconstraint!(convert(AffExpr,v), sense)
+function constructconstraint!(aff::AffExpr, set::S) where S <: Union{MOI.LessThan,MOI.GreaterThan,MOI.EqualTo}
+    offset = aff.constant
+    aff.constant = 0.0
+    return AffExprConstraint(aff, S(MOIU.getconstant(set)-offset))
 end
 
-function constructconstraint!(x::AbstractArray{AffExpr}, lb, ub)
-    LB = _vectorize_like(lb,x)
-    UB = _vectorize_like(ub,x)
-    ret = similar(x, LinearConstraint)
-    map!(ret, eachindex(ret)) do i
-        constructconstraint!(x[i], LB[i], UB[i])
-    end
+# function constructconstraint!(aff::AffExpr, lb, ub)
+#     offset = aff.constant
+#     aff.constant = 0.0
+#     AffExprConstraint(aff, lb-offset, ub-offset)
+# end
+
+#constructconstraint!(quad::QuadExpr, sense::Symbol) = QuadConstraint(quad, sense)
+
+
+#constructconstraint!(x::Array, sense::Symbol) = map(c->constructconstraint!(c,sense), x)
+#constructconstraint!(x::AbstractArray, sense::Symbol) = constructconstraint!([x[i] for i in eachindex(x)], sense)
+
+constructconstraint!(x::Vector{AffExpr}, set::MOI.AbstractVectorSet) = VectorAffExprConstraint(x, set)
+
+function constructconstraint!(quad::QuadExpr, set::S) where S <: Union{MOI.LessThan,MOI.GreaterThan,MOI.EqualTo}
+    offset = quad.aff.constant
+    quad.aff.constant = 0.0
+    return QuadExprConstraint(quad, S(MOIU.getconstant(set)-offset))
 end
+
+
+# _vectorize_like(x::Number, y::AbstractArray{AffExpr}) = (ret = similar(y, typeof(x)); fill!(ret, x))
+# function _vectorize_like{R<:Number}(x::AbstractArray{R}, y::AbstractArray{AffExpr})
+#     for i in 1:max(ndims(x),ndims(y))
+#         _size(x,i) == _size(y,i) || error("Unequal sizes for ranged constraint")
+#     end
+#     x
+# end
+#
+# function constructconstraint!(x::AbstractArray{AffExpr}, lb, ub)
+#     LB = _vectorize_like(lb,x)
+#     UB = _vectorize_like(ub,x)
+#     ret = similar(x, AffExprConstraint)
+#     map!(ret, eachindex(ret)) do i
+#         constructconstraint!(x[i], LB[i], UB[i])
+#     end
+# end
 
 # three-argument constructconstraint! is used for two-sided constraints.
 function constructconstraint!(aff::AffExpr, lb::Real, ub::Real)
     offset = aff.constant
     aff.constant = 0.0
-    LinearConstraint(aff,lb-offset,ub-offset)
+    AffExprConstraint(aff,lb-offset,ub-offset)
 end
 
-constructconstraint!(aff::Variable, lb::Real, ub::Real) = constructconstraint!(convert(AffExpr,v),lb,ub)
+# constructconstraint!(aff::Variable, lb::Real, ub::Real) = constructconstraint!(convert(AffExpr,v),lb,ub)
 
 constructconstraint!(q::QuadExpr, lb, ub) = error("Two-sided quadratic constraints not supported. (Try @NLconstraint instead.)")
-
-constructconstraint!(x::AbstractMatrix, ::PSDCone) = SDConstraint(x)
 
 constraint_error(args, str) = error("In @constraint($(join(args,","))): ", str)
 
@@ -359,19 +336,11 @@ add groups of linear or quadratic constraints.
 
 """
 macro constraint(args...)
-    # Pick out keyword arguments
-    if isexpr(args[1],:parameters) # these come if using a semicolon
-        kwargs = args[1]
-        args = args[2:end]
-    else
-        kwargs = Expr(:parameters)
-    end
-    kwsymbol = VERSION < v"0.6.0-dev.1934" ? :kw : :(=) # changed by julia PR #19868
-    append!(kwargs.args, filter(x -> isexpr(x, kwsymbol), collect(args))) # comma separated
-    args = filter(x->!isexpr(x, kwsymbol), collect(args))
+
+    args, kwargs, requestedcontainer = extract_kwargs(args)
 
     if length(args) < 2
-        if length(kwargs.args) > 0
+        if length(kwargs) > 0
             constraint_error(args, "Not enough positional arguments")
         else
             constraint_error(args, "Not enough arguments")
@@ -404,7 +373,7 @@ macro constraint(args...)
 
     # Strategy: build up the code for non-macro addconstraint, and if needed
     # we will wrap in loops to assign to the ConstraintRefs
-    refcall, idxvars, idxsets, idxpairs, condition = buildrefsets(c, variable)
+    refcall, idxvars, idxsets, condition = buildrefsets(c, variable)
     # JuMP accepts constraint syntax of the form @constraint(m, foo in bar).
     # This will be rewritten to a call to constructconstraint!(foo, bar). To
     # extend JuMP to accept set-based constraints of this form, it is necessary
@@ -421,12 +390,16 @@ macro constraint(args...)
             # Simple comparison - move everything to the LHS
             @assert length(x.args) == 3
             (sense,vectorized) = _canonicalize_sense(x.args[1])
+            set = sense_to_set(sense)
             lhs = :($(x.args[2]) - $(x.args[3]))
-            addconstr = (vectorized ? :addVectorizedConstraint : :addconstraint)
             newaff, parsecode = parseExprToplevel(lhs, :q)
-            constraintcall = :($addconstr($m, constructconstraint!($newaff,$(quot(sense)))))
+            if vectorized
+                constraintcall = :(addconstraint.($m, constructconstraint!($newaff,$set)))
+            else
+                constraintcall = :(addconstraint($m, constructconstraint!($newaff,$set)))
+            end
         end
-        addkwargs!(constraintcall, kwargs.args)
+        addkwargs!(constraintcall, kwargs)
         code = quote
             q = zero(AffExpr)
             $parsecode
@@ -450,7 +423,7 @@ macro constraint(args...)
         newub, parseub = parseExprToplevel(x.args[5],:ub)
 
         constraintcall = :($addconstr($m, constructconstraint!($newaff,$newlb,$newub)))
-        addkwargs!(constraintcall, kwargs.args)
+        addkwargs!(constraintcall, kwargs)
         code = quote
             aff = zero(AffExpr)
             $parsecode
@@ -491,7 +464,7 @@ macro constraint(args...)
               "       expr1 == expr2\n" * "       lb <= expr <= ub"))
     end
     return assert_validmodel(m, quote
-        $(getloopedcode(variable, code, condition, idxvars, idxsets, idxpairs, :ConstraintRef))
+        $(getloopedcode(variable, code, condition, idxvars, idxsets, :ConstraintRef, requestedcontainer))
         $(if anonvar
             variable
         else
@@ -546,146 +519,146 @@ macro SDconstraint(m, x)
 end
 
 
-"""
-    @LinearConstraint(x)
+# """
+#     @LinearConstraint(x)
+#
+# Constructs a `LinearConstraint` instance efficiently by parsing the `x`. The same as `@constraint`, except it does not attach the constraint to any model.
+# """
+# macro LinearConstraint(x)
+#     (x.head == :block) &&
+#         error("Code block passed as constraint. Perhaps you meant to use @LinearConstraints instead?")
+#
+#     if isexpr(x, :call) && length(x.args) == 3
+#         (sense,vectorized) = _canonicalize_sense(x.args[1])
+#         # Simple comparison - move everything to the LHS
+#         vectorized &&
+#             error("in @LinearConstraint ($(string(x))): Cannot add vectorized constraints")
+#         lhs = :($(x.args[2]) - $(x.args[3]))
+#         return quote
+#             newaff = @Expression($(esc(lhs)))
+#             c = constructconstraint!(newaff,$(quot(sense)))
+#             isa(c, LinearConstraint) ||
+#                 error("Constraint in @LinearConstraint is really a $(typeof(c))")
+#             c
+#         end
+#     elseif isexpr(x, :comparison)
+#         # Ranged row
+#         (lsense,lvectorized) = _canonicalize_sense(x.args[2])
+#         (rsense,rvectorized) = _canonicalize_sense(x.args[4])
+#         if (lsense != :<=) || (rsense != :<=)
+#             error("in @constraint ($(string(x))): only ranged rows of the form lb <= expr <= ub are supported.")
+#         end
+#         (lvectorized || rvectorized) &&
+#             error("in @LinearConstraint ($(string(x))): Cannot add vectorized constraints")
+#         lb = x.args[1]
+#         ub = x.args[5]
+#         return quote
+#             if !isa($(esc(lb)),Number)
+#                 error(string("in @LinearConstraint (",$(string(x)),"): expected ",$(string(lb))," to be a number."))
+#             elseif !isa($(esc(ub)),Number)
+#                 error(string("in @LinearConstraint (",$(string(x)),"): expected ",$(string(ub))," to be a number."))
+#             end
+#             newaff = @Expression($(esc(x.args[3])))
+#             offset = newaff.constant
+#             newaff.constant = 0.0
+#             isa(newaff,AffExpr) || error("Ranged quadratic constraints are not allowed")
+#             LinearConstraint(newaff,$(esc(lb))-offset,$(esc(ub))-offset)
+#         end
+#     else
+#         # Unknown
+#         error("in @LinearConstraint ($(string(x))): constraints must be in one of the following forms:\n" *
+#               "       expr1 <= expr2\n" * "       expr1 >= expr2\n" *
+#               "       expr1 == expr2\n" * "       lb <= expr <= ub")
+#     end
+# end
 
-Constructs a `LinearConstraint` instance efficiently by parsing the `x`. The same as `@constraint`, except it does not attach the constraint to any model.
-"""
-macro LinearConstraint(x)
-    (x.head == :block) &&
-        error("Code block passed as constraint. Perhaps you meant to use @LinearConstraints instead?")
+# """
+#     @QuadConstraint(x)
+#
+# Constructs a `QuadConstraint` instance efficiently by parsing the `x`. The same as `@constraint`, except it does not attach the constraint to any model.
+# """
+# macro QuadConstraint(x)
+#     (x.head == :block) &&
+#         error("Code block passed as constraint. Perhaps you meant to use @QuadConstraints instead?")
+#
+#     if isexpr(x, :call) && length(x.args) == 3
+#         (sense,vectorized) = _canonicalize_sense(x.args[1])
+#         # Simple comparison - move everything to the LHS
+#         vectorized &&
+#             error("in @QuadConstraint ($(string(x))): Cannot add vectorized constraints")
+#         lhs = :($(x.args[2]) - $(x.args[3]))
+#         return quote
+#             newaff = @Expression($(esc(lhs)))
+#             q = constructconstraint!(newaff,$(quot(sense)))
+#             isa(q, QuadConstraint) || error("Constraint in @QuadConstraint is really a $(typeof(q))")
+#             q
+#         end
+#     elseif isexpr(x, :comparison)
+#         error("Ranged quadratic constraints are not allowed")
+#     else
+#         # Unknown
+#         error("in @QuadConstraint ($(string(x))): constraints must be in one of the following forms:\n" *
+#               "       expr1 <= expr2\n" * "       expr1 >= expr2\n" *
+#               "       expr1 == expr2")
+#     end
+# end
 
-    if isexpr(x, :call) && length(x.args) == 3
-        (sense,vectorized) = _canonicalize_sense(x.args[1])
-        # Simple comparison - move everything to the LHS
-        vectorized &&
-            error("in @LinearConstraint ($(string(x))): Cannot add vectorized constraints")
-        lhs = :($(x.args[2]) - $(x.args[3]))
-        return quote
-            newaff = @Expression($(esc(lhs)))
-            c = constructconstraint!(newaff,$(quot(sense)))
-            isa(c, LinearConstraint) ||
-                error("Constraint in @LinearConstraint is really a $(typeof(c))")
-            c
-        end
-    elseif isexpr(x, :comparison)
-        # Ranged row
-        (lsense,lvectorized) = _canonicalize_sense(x.args[2])
-        (rsense,rvectorized) = _canonicalize_sense(x.args[4])
-        if (lsense != :<=) || (rsense != :<=)
-            error("in @constraint ($(string(x))): only ranged rows of the form lb <= expr <= ub are supported.")
-        end
-        (lvectorized || rvectorized) &&
-            error("in @LinearConstraint ($(string(x))): Cannot add vectorized constraints")
-        lb = x.args[1]
-        ub = x.args[5]
-        return quote
-            if !isa($(esc(lb)),Number)
-                error(string("in @LinearConstraint (",$(string(x)),"): expected ",$(string(lb))," to be a number."))
-            elseif !isa($(esc(ub)),Number)
-                error(string("in @LinearConstraint (",$(string(x)),"): expected ",$(string(ub))," to be a number."))
-            end
-            newaff = @Expression($(esc(x.args[3])))
-            offset = newaff.constant
-            newaff.constant = 0.0
-            isa(newaff,AffExpr) || error("Ranged quadratic constraints are not allowed")
-            LinearConstraint(newaff,$(esc(lb))-offset,$(esc(ub))-offset)
-        end
-    else
-        # Unknown
-        error("in @LinearConstraint ($(string(x))): constraints must be in one of the following forms:\n" *
-              "       expr1 <= expr2\n" * "       expr1 >= expr2\n" *
-              "       expr1 == expr2\n" * "       lb <= expr <= ub")
-    end
-end
+# macro SOCConstraint(x)
+#     (x.head == :block) &&
+#         error("Code block passed as constraint. Perhaps you meant to use @SOCConstraints instead?")
+#
+#     if isexpr(x, :call) && length(x.args) == 3
+#         (sense,vectorized) = _canonicalize_sense(x.args[1])
+#         # Simple comparison - move everything to the LHS
+#         vectorized &&
+#             error("in @SOCConstraint ($(string(x))): Cannot add vectorized constraints")
+#         lhs = :($(x.args[2]) - $(x.args[3]))
+#         return quote
+#             newaff = @Expression($(esc(lhs)))
+#             q = constructconstraint!(newaff,$(quot(sense)))
+#             isa(q, SOCConstraint) || error("Constraint in @SOCConstraint is really a $(typeof(q))")
+#             q
+#         end
+#     elseif isexpr(x, :comparison)
+#         error("Ranged second-order cone constraints are not allowed")
+#     else
+#         # Unknown
+#         error("in @SOCConstraint ($(string(x))): constraints must be in one of the following forms:\n" *
+#               "       expr1 <= expr2\n" * "       expr1 >= expr2")
+#     end
+# end
 
-"""
-    @QuadConstraint(x)
-
-Constructs a `QuadConstraint` instance efficiently by parsing the `x`. The same as `@constraint`, except it does not attach the constraint to any model.
-"""
-macro QuadConstraint(x)
-    (x.head == :block) &&
-        error("Code block passed as constraint. Perhaps you meant to use @QuadConstraints instead?")
-
-    if isexpr(x, :call) && length(x.args) == 3
-        (sense,vectorized) = _canonicalize_sense(x.args[1])
-        # Simple comparison - move everything to the LHS
-        vectorized &&
-            error("in @QuadConstraint ($(string(x))): Cannot add vectorized constraints")
-        lhs = :($(x.args[2]) - $(x.args[3]))
-        return quote
-            newaff = @Expression($(esc(lhs)))
-            q = constructconstraint!(newaff,$(quot(sense)))
-            isa(q, QuadConstraint) || error("Constraint in @QuadConstraint is really a $(typeof(q))")
-            q
-        end
-    elseif isexpr(x, :comparison)
-        error("Ranged quadratic constraints are not allowed")
-    else
-        # Unknown
-        error("in @QuadConstraint ($(string(x))): constraints must be in one of the following forms:\n" *
-              "       expr1 <= expr2\n" * "       expr1 >= expr2\n" *
-              "       expr1 == expr2")
-    end
-end
-
-macro SOCConstraint(x)
-    (x.head == :block) &&
-        error("Code block passed as constraint. Perhaps you meant to use @SOCConstraints instead?")
-
-    if isexpr(x, :call) && length(x.args) == 3
-        (sense,vectorized) = _canonicalize_sense(x.args[1])
-        # Simple comparison - move everything to the LHS
-        vectorized &&
-            error("in @SOCConstraint ($(string(x))): Cannot add vectorized constraints")
-        lhs = :($(x.args[2]) - $(x.args[3]))
-        return quote
-            newaff = @Expression($(esc(lhs)))
-            q = constructconstraint!(newaff,$(quot(sense)))
-            isa(q, SOCConstraint) || error("Constraint in @SOCConstraint is really a $(typeof(q))")
-            q
-        end
-    elseif isexpr(x, :comparison)
-        error("Ranged second-order cone constraints are not allowed")
-    else
-        # Unknown
-        error("in @SOCConstraint ($(string(x))): constraints must be in one of the following forms:\n" *
-              "       expr1 <= expr2\n" * "       expr1 >= expr2")
-    end
-end
-
-for (mac,sym) in [(:LinearConstraints, Symbol("@LinearConstraint")),
-                  (:QuadConstraints,   Symbol("@QuadConstraint")),
-                  (:SOCConstraints,    Symbol("@SOCConstraint"))]
-    @eval begin
-        macro $mac(x)
-            x.head == :block || error(string("Invalid syntax for @", $(string(mac))))
-            @assert x.args[1].head == :line
-            code = Expr(:vect)
-            for it in x.args
-                if it.head == :line
-                    # do nothing
-                elseif it.head == :comparison || (it.head == :call && it.args[1] in (:<=,:≤,:>=,:≥,:(==))) # regular constraint
-                    push!(code.args, Expr(:macrocall, $sym, esc(it)))
-                elseif it.head == :tuple # constraint ref
-                    if all([isexpr(arg,:comparison) for arg in it.args]...)
-                        # the user probably had trailing commas at end of lines, e.g.
-                        # @LinearConstraints(m, begin
-                        #     x <= 1,
-                        #     x >= 1
-                        # end)
-                        error(string("Invalid syntax in @", $(string(mac)), ". Do you have commas at the end of a line specifying a constraint?"))
-                    end
-                    error("@", string($(string(mac)), " does not currently support the two argument syntax for specifying groups of constraints in one line."))
-                else
-                    error("Unexpected constraint expression $it")
-                end
-            end
-            return code
-        end
-    end
-end
+# for (mac,sym) in [(:LinearConstraints, Symbol("@LinearConstraint")),
+#                   (:QuadConstraints,   Symbol("@QuadConstraint")),
+#                   (:SOCConstraints,    Symbol("@SOCConstraint"))]
+#     @eval begin
+#         macro $mac(x)
+#             x.head == :block || error(string("Invalid syntax for @", $(string(mac))))
+#             @assert x.args[1].head == :line
+#             code = Expr(:vect)
+#             for it in x.args
+#                 if it.head == :line
+#                     # do nothing
+#                 elseif it.head == :comparison || (it.head == :call && it.args[1] in (:<=,:≤,:>=,:≥,:(==))) # regular constraint
+#                     push!(code.args, Expr(:macrocall, $sym, esc(it)))
+#                 elseif it.head == :tuple # constraint ref
+#                     if all([isexpr(arg,:comparison) for arg in it.args]...)
+#                         # the user probably had trailing commas at end of lines, e.g.
+#                         # @LinearConstraints(m, begin
+#                         #     x <= 1,
+#                         #     x >= 1
+#                         # end)
+#                         error(string("Invalid syntax in @", $(string(mac)), ". Do you have commas at the end of a line specifying a constraint?"))
+#                     end
+#                     error("@", string($(string(mac)), " does not currently support the two argument syntax for specifying groups of constraints in one line."))
+#                 else
+#                     error("Unexpected constraint expression $it")
+#                 end
+#             end
+#             return code
+#         end
+#     end
+# end
 
 for (mac,sym) in [(:constraints,  Symbol("@constraint")),
                   (:NLconstraints,Symbol("@NLconstraint")),
@@ -817,6 +790,8 @@ expr = @expression(m, [i=1:3], i*sum(x[j] for j=1:3))
 ```
 """
 macro expression(args...)
+
+    args, kwargs, requestedcontainer = extract_kwargs(args)
     if length(args) == 3
         m = esc(args[1])
         c = args[2]
@@ -828,12 +803,13 @@ macro expression(args...)
     else
         error("@expression: needs at least two arguments.")
     end
+    length(kwargs) == 0 || error("@expression: unrecognized keyword argument")
 
     anonvar = isexpr(c, :vect) || isexpr(c, :vcat)
     variable = gensym()
     escvarname  = anonvar ? variable : esc(getname(c))
 
-    refcall, idxvars, idxsets, idxpairs, condition = buildrefsets(c, variable)
+    refcall, idxvars, idxsets, condition = buildrefsets(c, variable)
     newaff, parsecode = parseExprToplevel(x, :q)
     code = quote
         q = 0.0
@@ -849,7 +825,7 @@ macro expression(args...)
         $code
         $(refcall) = $newaff
     end
-    code = getloopedcode(variable, code, condition, idxvars, idxsets, idxpairs, :AffExpr)
+    code = getloopedcode(variable, code, condition, idxvars, idxsets, :AffExpr, requestedcontainer)
     if m === nothing # deprecated usage
         return quote
             $code
@@ -901,18 +877,35 @@ esc_nonconstant(x) = esc(x)
 variabletype(m::Model) = Variable
 # Returns a new variable belonging to the model `m`. Additional positional arguments can be used to dispatch the call to a different method.
 # The return type should only depends on the positional arguments for `variabletype` to make sense.
-function constructvariable!(m::Model, _error::Function, lowerbound::Number, upperbound::Number, category::Symbol, objective::Number, inconstraints::Vector, coefficients::Vector{Float64}, basename::AbstractString, start::Number; extra_kwargs...)
+function constructvariable!(m::Model, _error::Function, haslb::Bool, lowerbound::Number, hasub::Bool, upperbound::Number,
+                            hasfix::Bool, fixedvalue::Number, binary::Bool, integer::Bool, name::AbstractString,
+                            hasstart::Bool, start::Number; extra_kwargs...)
     for (kwarg, _) in extra_kwargs
         _error("Unrecognized keyword argument $kwarg")
     end
-    Variable(m, lowerbound, upperbound, category == :Default ? :Cont : category, objective, inconstraints, coefficients, basename, start)
-end
-
-function constructvariable!(m::Model, _error::Function, lowerbound::Number, upperbound::Number, category::Symbol, basename::AbstractString, start::Number; extra_kwargs...)
-    for (kwarg, _) in extra_kwargs
-        _error("Unrecognized keyword argument $kwarg")
+    v = Variable(m)
+    if haslb
+        setlowerbound(v, lowerbound)
     end
-    Variable(m, lowerbound, upperbound, category == :Default ? :Cont : category, basename, start)
+    if hasub
+        setupperbound(v, upperbound)
+    end
+    if hasfix
+        fix(v, fixedvalue)
+    end
+    if binary
+        setbinary(v)
+    end
+    if integer
+        setinteger(v)
+    end
+    if hasstart
+        setstartvalue(v, start)
+    end
+    if name != EMPTYSTRING
+        m.variablenames[v] = name
+    end
+    return v
 end
 
 const EMPTYSTRING = ""
@@ -925,26 +918,24 @@ variable_error(args, str) = error("In @variable($(join(args,","))): ", str)
 # It creates a new variable (resp. a container of new variables) belonging to the model `m` using `constructvariable!` to create the variable (resp. each variable of the container).
 # The following modifications will be made to the arguments before they are passed to `constructvariable!`:
 # * The `expr` argument will not be passed but the expression will be parsed to determine the kind of container needed (if one is needed) and
-#   additional information that will alter what is passed with the keywords `lowerbound`, `upperbound`, `basename` and `start`.
-# * The `SDP` and `Symmetric` positional arguments in `extra` will not be passed to `constructvariable!`. Instead,
+#   additional information that will alter what is passed with the keywords `lowerbound`, `upperbound`, `basename`, `start`, `binary`, and `integer`.
+# * The `PSD` and `Symmetric` positional arguments in `extra` will not be passed to `constructvariable!`. Instead,
 #    * the `Symmetric` argument will check that the container is symmetric and only allocate one variable for each pair of non-diagonal entries.
-#    * the `SDP` argument will do the same as `Symmetric` but in addition it will specify that the variables created belongs to the SDP cone in the `varCones` field of the model.
-#   Moreover, if a Cont, Int, Bin, SemiCont or SemiInt is passed in `extra`, it will alter what is passed with the keyword `category`.
-# * The keyword arguments start, objective, inconstraints, coefficients, basename, lowerbound, upperbound, category may not be passed as is to
+#    * the `PSD` argument will do the same as `Symmetric` but in addition it will specify that the variables created belongs to the PSD cone in the `varCones` field of the model.
+#   Moreover, Int and Bin are special keywords that are equivalent to `integer=true` and `binary=true`.
+# * The keyword arguments start, basename, lowerbound, upperbound, binary, and integer category may not be passed as is to
 #   `constructvariable!` since they may be altered by the parsing of `expr` and we may need to pass it pointwise if it is a container since
 #   `constructvariable!` is called separately for each variable of the container. Moreover it will be passed as positional argument to `constructvariable!`.
-#   If `objective`, `inconstraints` and `coefficients` are not present, they won't be passed as positional argument but for the other five arguments,
-#   default values are passed when they are not present.
 # * A custom error function is passed as positional argument to print the full @variable call before the error message.
 #
 # Examples (... is the custom error function):
-# * `@variable(m, x >= 0)` is equivalent to `x = constructvariable!(m, msg -> error("In @variable(m, x >= 0): ", msg), 0, Inf, :Cont, "x", NaN)
+# * `@variable(m, x >= 0)` is equivalent to `x = constructvariable!(m, msg -> error("In @variable(m, x >= 0): ", msg), true, 0, false, NaN, false, NaN, false, false, "x", false, NaN)
 # * `@variable(m, x[1:N,1:N], Symmetric, Poly(X))` is equivalent to
 #   ```
 #   x = Matrix{...}(N, N)
 #   for i in 1:N
 #       for j in 1:N
-#           x[i,j] = x[j,i] = constructvariable!(m, Poly(X), msg -> error("In @variable(m, x[1:N,1:N], Symmetric, Poly(X)): ", msg), -Inf, Inf, :Cont, "", NaN)
+#           x[i,j] = x[j,i] = constructvariable!(m, Poly(X), msg -> error("In @variable(m, x[1:N,1:N], Symmetric, Poly(X)): ", msg), false, NaN, false, NaN, false, NaN, false, false, "", false, NaN)
 #       end
 #   end
 #   ```
@@ -953,36 +944,36 @@ macro variable(args...)
 
     m = esc(args[1])
 
-    extra = vcat(args[2:end]...)
-    # separate out keyword arguments
-    kwsymbol = VERSION < v"0.6.0-dev.1934" ? :kw : :(=)
-    kwargs = filter(ex->isexpr(ex,kwsymbol), extra)
-    extra = filter(ex->!isexpr(ex,kwsymbol), extra)
+    extra, kwargs, requestedcontainer = extract_kwargs(args[2:end])
 
     # if there is only a single non-keyword argument, this is an anonymous
     # variable spec and the one non-kwarg is the model
-    if length(kwargs) == length(args)-1
+    if length(extra) == 0
         x = gensym()
         anon_singleton = true
     else
         x = shift!(extra)
-        if x in [:Cont,:Int,:Bin,:SemiCont,:SemiInt,:SDP]
+        if x in [:Int,:Bin,:PSD]
             _error("Ambiguous variable name $x detected. Use the \"category\" keyword argument to specify a category for an anonymous variable.")
         end
         anon_singleton = false
     end
 
-    t = quot(:Default)
-    gottype = false
     haslb = false
     hasub = false
+    hasfix = false
+    hasstart = false
+    fixedvalue = NaN
+    var = x
+    lb = NaN
+    ub = NaN
     # Identify the variable bounds. Five (legal) possibilities are "x >= lb",
     # "x <= ub", "lb <= x <= ub", "x == val", or just plain "x"
     explicit_comparison = false
     if isexpr(x,:comparison) # two-sided
         explicit_comparison = true
-        haslb = true
         hasub = true
+        haslb = true
         if x.args[2] == :>= || x.args[2] == :≥
             # ub >= x >= lb
             x.args[4] == :>= || x.args[4] == :≥ || _error("Invalid variable bounds")
@@ -1021,22 +1012,12 @@ macro variable(args...)
             # fixed variable
             var = x.args[2]
             @assert length(x.args) == 3
-            lb = esc(x.args[3])
-            haslb = true
-            ub = esc(x.args[3])
-            hasub = true
-            gottype = true
-            t = quot(:Fixed)
+            fixedvalue = esc(x.args[3])
+            hasfix = true
         else
             # Its a comparsion, but not using <= ... <=
             _error("Unexpected syntax $(string(x)).")
         end
-    else
-        # No bounds provided - free variable
-        # If it isn't, e.g. something odd like f(x), we'll handle later
-        var = x
-        lb = -Inf
-        ub = Inf
     end
 
     anonvar = isexpr(var, :vect) || isexpr(var, :vcat) || anon_singleton
@@ -1044,29 +1025,25 @@ macro variable(args...)
     variable = gensym()
     quotvarname = anonvar ? :(:__anon__) : quot(getname(var))
     escvarname  = anonvar ? variable     : esc(getname(var))
+    basename = anonvar ? "__anon__" : string(getname(var))
 
     if !isa(getname(var),Symbol) && !anonvar
-        Base.warn_once("Expression $(getname(var)) should not be used as a variable name. Use the \"anonymous\" syntax $(getname(var)) = @variable(m, ...) instead.")
+        Base.error("Expression $(getname(var)) should not be used as a variable name. Use the \"anonymous\" syntax $(getname(var)) = @variable(m, ...) instead.")
     end
 
     # process keyword arguments
     value = NaN
     obj = nothing
-    inconstraints = nothing
-    coefficients = nothing
+    binary = false
+    integer = false
     extra_kwargs = []
     for ex in kwargs
         kwarg = ex.args[1]
         if kwarg == :start
+            hasstart = true
             value = esc(ex.args[2])
-        elseif kwarg == :objective
-            obj = esc(ex.args[2])
-        elseif kwarg == :inconstraints
-            inconstraints = esc(ex.args[2])
-        elseif kwarg == :coefficients
-            coefficients = esc(ex.args[2])
         elseif kwarg == :basename
-            quotvarname = esc(ex.args[2])
+            basename = esc(ex.args[2])
         elseif kwarg == :lowerbound
             haslb && _error("Cannot specify variable lowerbound twice")
             lb = esc_nonconstant(ex.args[2])
@@ -1075,51 +1052,37 @@ macro variable(args...)
             hasub && _error("Cannot specify variable upperbound twice")
             ub = esc_nonconstant(ex.args[2])
             hasub = true
-        elseif kwarg == :category
-            (t == quot(:Fixed)) && _error("Unexpected extra arguments when declaring a fixed variable")
-            t = esc_nonconstant(ex.args[2])
-            gottype = true
+        elseif kwarg == :integer
+            integer = esc_nonconstant(ex.args[2])
+        elseif kwarg == :binary
+            binary = esc_nonconstant(ex.args[2])
         else
             push!(extra_kwargs, ex)
         end
     end
 
-    if (obj !== nothing || inconstraints !== nothing || coefficients !== nothing) &&
-       (obj === nothing || inconstraints === nothing || coefficients === nothing)
-        _error("Must provide 'objective', 'inconstraints', and 'coefficients' arguments all together for column-wise modeling")
-    end
-
-    sdp = any(t -> (t == :SDP), extra)
+    sdp = any(t -> (t == :PSD), extra)
     symmetric = (sdp || any(t -> (t == :Symmetric), extra))
-    extra = filter(x -> (x != :SDP && x != :Symmetric), extra) # filter out SDP and sym tag
+    extra = filter(x -> (x != :PSD && x != :Symmetric), extra) # filter out PSD and sym tag
     for ex in extra
-        if ex in var_cats
-            if t != quot(:Default) && t != quot(ex)
-                _error("A variable cannot be both of category $cat and $category. Please specify only one category.")
-            else
-                t = quot(ex)
+        if ex == :Int
+            if integer != false
+                _error("'Int' and 'integer' keyword argument cannot both be specified.")
             end
+            integer = true
+        elseif ex == :Bin
+            if binary != false
+                _error("'Bin' and 'binary' keyword argument cannot both be specified.")
+            end
+            binary = true
         end
     end
-    extra = esc.(filter(ex -> !(ex in var_cats), extra))
-
-    # Handle the column generation functionality
-    if coefficients !== nothing
-        !isa(var,Symbol) &&
-        _error("Can only create one variable at a time when adding to existing constraints.")
-
-        variablecall = :( constructvariable!($m, $(extra...), $_error, $lb, $ub, $t, $obj, $inconstraints, $coefficients, string($quotvarname), $value) )
-        addkwargs!(variablecall, extra_kwargs)
-        return assert_validmodel(m, quote
-            $variable = $variablecall
-            $(anonvar ? variable : :($escvarname = $variable))
-        end)
-    end
+    extra = esc.(filter(ex -> !(ex in [:Int,:Bin]), extra))
 
     if isa(var,Symbol)
         # Easy case - a single variable
         sdp && _error("Cannot add a semidefinite scalar variable")
-        variablecall = :( constructvariable!($m, $(extra...), $_error, $lb, $ub, $t, string($quotvarname), $value) )
+        variablecall = :( constructvariable!($m, $(extra...), $_error, $haslb, $lb, $hasub, $ub, $hasfix, $fixedvalue, $binary, $integer, $basename, $hasstart, $value) )
         addkwargs!(variablecall, extra_kwargs)
         code = :($variable = $variablecall)
         if !anonvar
@@ -1135,22 +1098,28 @@ macro variable(args...)
 
     # We now build the code to generate the variables (and possibly the JuMPDict
     # to contain them)
-    refcall, idxvars, idxsets, idxpairs, condition = buildrefsets(var, variable)
+    refcall, idxvars, idxsets, condition = buildrefsets(var, variable)
     clear_dependencies(i) = (isdependent(idxvars,idxsets[i],i) ? () : idxsets[i])
 
     # Code to be used to create each variable of the container.
-    variablecall = :( constructvariable!($m, $(extra...), $_error, $lb, $ub, $t, EMPTYSTRING, $value) )
+    namecall = Expr(:call,:string,basename,"[")
+    for i in 1:length(idxvars)
+        push!(namecall.args, esc(idxvars[i]))
+        i < length(idxvars) && push!(namecall.args,",")
+    end
+    push!(namecall.args,"]")
+    variablecall = :( constructvariable!($m, $(extra...), $_error, $haslb, $lb, $hasub, $ub, $hasfix, $fixedvalue, $binary, $integer, $namecall, $hasstart, $value) )
     addkwargs!(variablecall, extra_kwargs)
     code = :( $(refcall) = $variablecall )
     # Determine the return type of constructvariable!. This is needed to create the container holding them.
     vartype = :( variabletype($m, $(extra...)) )
 
     if symmetric
-        # Sanity checks on SDP input stuff
+        # Sanity checks on PSD input stuff
         condition == :() ||
-            _error("Cannot have conditional indexing for SDP variables")
+            _error("Cannot have conditional indexing for PSD variables")
         length(idxvars) == length(idxsets) == 2 ||
-            _error("SDP variables must be 2-dimensional")
+            _error("PSD variables must be 2-dimensional")
         !symmetric || (length(idxvars) == length(idxsets) == 2) ||
             _error("Symmetric variables must be 2-dimensional")
         hasdependentsets(idxvars, idxsets) &&
@@ -1160,67 +1129,52 @@ macro variable(args...)
                 _error("Internal error 1")
             rng = _rng.args[1] # undo escaping
             (isexpr(rng,:(:)) && rng.args[1] == 1 && length(rng.args) == 2) ||
-                _error("Index sets for SDP variables must be ranges of the form 1:N")
+                _error("Index sets for PSD variables must be ranges of the form 1:N")
         end
 
-        if !(lb == -Inf && ub == Inf)
+        if haslb || hasub
             _error("Semidefinite or symmetric variables cannot be provided bounds")
         end
         return assert_validmodel(m, quote
             $(esc(idxsets[1].args[1].args[2])) == $(esc(idxsets[2].args[1].args[2])) || error("Cannot construct symmetric variables with nonsquare dimensions")
-            (issymmetric($lb) && issymmetric($ub)) || error("Bounds on symmetric  variables must be symmetric")
-            $(getloopedcode(variable, code, condition, idxvars, idxsets, idxpairs, vartype; lowertri=symmetric))
+            $(getloopedcode(variable, code, condition, idxvars, idxsets, vartype, requestedcontainer; lowertri=symmetric))
             $(if sdp
                 quote
-                    push!($(m).varCones, (:SDP, first($variable).col : last($variable).col))
+                    JuMP.addconstraint($m, JuMP._constructconstraint!($variable, JuMP.PSDCone()))
                 end
             end)
-            push!($(m).dictList, $variable)
             !$anonvar && registervar($m, $quotvarname, $variable)
-            storecontainerdata($m, $variable, $quotvarname,
-                               $(Expr(:tuple,idxsets...)),
-                               $idxpairs, $(quot(condition)))
             $(anonvar ? variable : :($escvarname = $variable))
         end)
     else
-        coloncheckcode = Expr(:call,:coloncheck,refcall.args[2:end]...)
-        code = :($coloncheckcode; $code)
         return assert_validmodel(m, quote
-            $(getloopedcode(variable, code, condition, idxvars, idxsets, idxpairs, vartype))
-            isa($variable, JuMPContainer) && pushmeta!($variable, :model, $m)
-            push!($(m).dictList, $variable)
+            $(getloopedcode(variable, code, condition, idxvars, idxsets, vartype, requestedcontainer))
             !$anonvar && registervar($m, $quotvarname, $variable)
-            storecontainerdata($m, $variable, $quotvarname,
-                               $(Expr(:tuple,map(clear_dependencies,1:length(idxsets))...)),
-                               $idxpairs, $(quot(condition)))
             $(anonvar ? variable : :($escvarname = $variable))
         end)
     end
 end
 
-storecontainerdata(m::Model, variable, varname, idxsets, idxpairs, condition) =
-    m.varData[variable] = JuMPContainerData(varname, map(collect,idxsets), idxpairs, condition)
-
-macro constraintref(var)
-    if isa(var,Symbol)
-        # easy case
-        return esc(:(local $var))
-    else
-        if !isexpr(var,:ref)
-            error("Syntax error: Expected $var to be of form var[...]")
-        end
-
-        varname = var.args[1]
-        idxsets = var.args[2:end]
-        idxpairs = IndexPair[]
-
-        code = quote
-            $(esc(gendict(varname, :ConstraintRef, idxsets...)))
-            nothing
-        end
-        return code
-    end
-end
+# TODO: replace with a general macro that can construct any container type
+# macro constraintref(var)
+#     if isa(var,Symbol)
+#         # easy case
+#         return esc(:(local $var))
+#     else
+#         if !isexpr(var,:ref)
+#             error("Syntax error: Expected $var to be of form var[...]")
+#         end
+#
+#         varname = var.args[1]
+#         idxsets = var.args[2:end]
+#
+#         code = quote
+#             $(esc(gendict(varname, :ConstraintRef, idxsets...)))
+#             nothing
+#         end
+#         return code
+#     end
+# end
 
 macro NLobjective(m, sense, x)
     m = esc(m)
@@ -1243,7 +1197,8 @@ macro NLconstraint(m, x, extra...)
     # Two formats:
     # - @NLconstraint(m, a*x <= 5)
     # - @NLconstraint(m, myref[a=1:5], sin(x^a) <= 5)
-    length(extra) > 1 && error("in @NLconstraint: too many arguments.")
+    extra, kwargs, requestedcontainer = extract_kwargs(extra)
+    (length(extra) > 1 || length(kwargs) > 0) && error("in @NLconstraint: too many arguments.")
     # Canonicalize the arguments
     c = length(extra) == 1 ? x        : gensym()
     x = length(extra) == 1 ? extra[1] : x
@@ -1255,7 +1210,7 @@ macro NLconstraint(m, x, extra...)
 
     # Strategy: build up the code for non-macro addconstraint, and if needed
     # we will wrap in loops to assign to the ConstraintRefs
-    refcall, idxvars, idxsets, idxpairs, condition = buildrefsets(c, variable)
+    refcall, idxvars, idxsets, condition = buildrefsets(c, variable)
     # Build the constraint
     if isexpr(x, :call) # one-sided constraint
         # Simple comparison - move everything to the LHS
@@ -1301,7 +1256,7 @@ macro NLconstraint(m, x, extra...)
               "       expr1 <= expr2\n" * "       expr1 >= expr2\n" *
               "       expr1 == expr2")
     end
-    looped = getloopedcode(variable, code, condition, idxvars, idxsets, idxpairs, :(ConstraintRef{Model,NonlinearConstraint}))
+    looped = getloopedcode(variable, code, condition, idxvars, idxsets, :(ConstraintRef{Model,NonlinearConstraint}), requestedcontainer)
     return assert_validmodel(m, quote
         initNLP($m)
         $m.internalModelLoaded = false
@@ -1318,6 +1273,7 @@ macro NLconstraint(m, x, extra...)
 end
 
 macro NLexpression(args...)
+    args, kwargs, requestedcontainer = extract_kwargs(args)
     if length(args) <= 1
         error("in @NLexpression: To few arguments ($(length(args))); must pass the model and nonlinear expression as arguments.")
     elseif length(args) == 2
@@ -1327,7 +1283,8 @@ macro NLexpression(args...)
     elseif length(args) == 3
         m, c, x = args
         m = esc(m)
-    else
+    end
+    if length(args) > 3 || length(kwargs) > 0
         error("in @NLexpression: To many arguments ($(length(args))).")
     end
 
@@ -1335,18 +1292,21 @@ macro NLexpression(args...)
     variable = gensym()
     escvarname  = anonvar ? variable : esc(getname(c))
 
-    refcall, idxvars, idxsets, idxpairs, condition = buildrefsets(c, variable)
+    refcall, idxvars, idxsets, condition = buildrefsets(c, variable)
     code = quote
         $(refcall) = NonlinearExpression($m, @processNLExpr($m, $(esc(x))))
     end
     return assert_validmodel(m, quote
-        $(getloopedcode(variable, code, condition, idxvars, idxsets, idxpairs, :NonlinearExpression))
+        $(getloopedcode(variable, code, condition, idxvars, idxsets, :NonlinearExpression, requestedcontainer))
         $(anonvar ? variable : :($escvarname = $variable))
     end)
 end
 
 # syntax is @NLparameter(m, p[i=1] == 2i)
-macro NLparameter(m, ex)
+macro NLparameter(m, ex, extra...)
+
+    extra, kwargs, requestedcontainer = extract_kwargs(extra)
+    (length(extra) == 0 && length(kwargs) == 0) || error("in @NLperameter: too many arguments.")
     m = esc(m)
     @assert isexpr(ex, :call)
     @assert length(ex.args) == 3
@@ -1361,12 +1321,12 @@ macro NLparameter(m, ex)
     variable = gensym()
     escvarname  = anonvar ? variable : esc(getname(c))
 
-    refcall, idxvars, idxsets, idxpairs, condition = buildrefsets(c, variable)
+    refcall, idxvars, idxsets, condition = buildrefsets(c, variable)
     code = quote
         $(refcall) = newparameter($m, $(esc(x)))
     end
     return assert_validmodel(m, quote
-        $(getloopedcode(variable, code, condition, idxvars, idxsets, idxpairs, :NonlinearParameter))
+        $(getloopedcode(variable, code, condition, idxvars, idxsets, :NonlinearParameter, :Auto))
         $(anonvar ? variable : :($escvarname = $variable))
     end)
 end

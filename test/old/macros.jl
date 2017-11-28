@@ -12,9 +12,9 @@ const  eq = JuMP.repl[:eq]
 const Vert = JuMP.repl[:Vert]
 const sub2 = JuMP.repl[:sub2]
 
-immutable __Cone__ end
+struct __Cone__ end
 
-type MyVariable
+mutable struct MyVariable
     lowerbound
     upperbound
     category
