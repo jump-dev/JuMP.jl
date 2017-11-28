@@ -45,7 +45,7 @@ Solver support in Julia is currently provided by writing a solver-specific packa
 +----------------------------------------------------------------------------------+---------------------------------------------------------------------------------+-----------------------------+-------------+----+------+------+-----+-------+-----+
 | `BARON <http://archimedes.cheme.cmu.edu/?q=baron>`_                              | `BARON.jl <https://github.com/joehuchette/BARON.jl>`_                           |  ``BaronSolver()``          |  Comm.      |    |      |      |  X  |   X   |     |
 +----------------------------------------------------------------------------------+---------------------------------------------------------------------------------+-----------------------------+-------------+----+------+------+-----+-------+-----+
-| `Bonmin <https://projects.coin-or.org/Bonmin>`_                                  | `AmplNLWriter.jl <https://github.com/JuliaOpt/AmplNLWriter.jl>`_              | ``AmplNLWriter(CoinOptServices.bonmin)`` *      |  EPL        | X  |      |  X   |  X  |   X   |     |
+| `Bonmin <https://projects.coin-or.org/Bonmin>`_                                  | `AmplNLWriter.jl <https://github.com/JuliaOpt/AmplNLWriter.jl>`_                | ``AmplNLWriter(...)`` *     |  EPL        | X  |      |  X   |  X  |   X   |     |
 +                                                                                  +---------------------------------------------------------------------------------+-----------------------------+             +    +      +      +     +       +     +
 |                                                                                  | `CoinOptServices.jl <https://github.com/JuliaOpt/CoinOptServices.jl>`_          | ``OsilBonminSolver()``      |             |    |      |      |     |       |     |
 +----------------------------------------------------------------------------------+---------------------------------------------------------------------------------+-----------------------------+-------------+----+------+------+-----+-------+-----+
@@ -53,7 +53,7 @@ Solver support in Julia is currently provided by writing a solver-specific packa
 +----------------------------------------------------------------------------------+---------------------------------------------------------------------------------+-----------------------------+-------------+----+------+------+-----+-------+-----+
 | `Clp <https://projects.coin-or.org/Clp>`_                                        | `Clp.jl <https://github.com/JuliaOpt/Clp.jl>`_                                  | ``ClpSolver()``             |  EPL        | X  |      |      |     |       |     |
 +----------------------------------------------------------------------------------+---------------------------------------------------------------------------------+-----------------------------+-------------+----+------+------+-----+-------+-----+
-|  `Couenne <https://projects.coin-or.org/Couenne>`_                               | `AmplNLWriter.jl <https://github.com/JuliaOpt/AmplNLWriter.jl>`_              | ``AmplNLWriter(CoinOptServices.couenne)`` *     |  EPL        | X  |      |  X   |  X  |   X   |     |
+|  `Couenne <https://projects.coin-or.org/Couenne>`_                               | `AmplNLWriter.jl <https://github.com/JuliaOpt/AmplNLWriter.jl>`_                | ``AmplNLWriter(...)`` **    |  EPL        | X  |      |  X   |  X  |   X   |     |
 +                                                                                  +---------------------------------------------------------------------------------+-----------------------------+             +    +      +      +     +       +     +
 |                                                                                  | `CoinOptServices.jl <https://github.com/JuliaOpt/CoinOptServices.jl>`_          | ``OsilCouenneSolver()``     |             |    |      |      |     |       |     |
 +----------------------------------------------------------------------------------+---------------------------------------------------------------------------------+-----------------------------+-------------+----+------+------+-----+-------+-----+
@@ -61,7 +61,7 @@ Solver support in Julia is currently provided by writing a solver-specific packa
 +----------------------------------------------------------------------------------+---------------------------------------------------------------------------------+-----------------------------+-------------+----+------+------+-----+-------+-----+
 | `ECOS <https://github.com/ifa-ethz/ecos>`_                                       | `ECOS.jl <https://github.com/JuliaOpt/ECOS.jl>`_                                |  ``ECOSSolver()``           |  GPL        | X  |  X   |      |     |       |     |
 +----------------------------------------------------------------------------------+---------------------------------------------------------------------------------+-----------------------------+-------------+----+------+------+-----+-------+-----+
-| `FICO Xpress <http://www.fico.com/en/products/fico-xpress-optimization-suite>`_  | `Xpress.jl <https://github.com/JuliaOpt/Xpress.jl>`_                            |  ``Xpress.XpressSolver()``         |  Comm.      | X  |   X  |  X   |     |       |     |
+| `FICO Xpress <http://www.fico.com/en/products/fico-xpress-optimization-suite>`_  | `Xpress.jl <https://github.com/JuliaOpt/Xpress.jl>`_                            |  ``Xpress.XpressSolver()``  |  Comm.      | X  |   X  |  X   |     |       |     |
 +----------------------------------------------------------------------------------+---------------------------------------------------------------------------------+-----------------------------+-------------+----+------+------+-----+-------+-----+
 | `GLPK <http://www.gnu.org/software/glpk/>`_                                      | `GLPKMath... <https://github.com/JuliaOpt/GLPKMathProgInterface.jl>`_           |  ``GLPKSolver[LP|MIP]()``   |  GPL        | X  |      |  X   |     |       |     |
 +----------------------------------------------------------------------------------+---------------------------------------------------------------------------------+-----------------------------+-------------+----+------+------+-----+-------+-----+
@@ -84,7 +84,8 @@ Where:
 - NLP = Nonlinear programming
 - MINLP = Mixed-integer nonlinear programming
 - SDP = Semidefinite programming
-`*` requires CoinOptServices installed, see below.
+`*` = ``AmplNLWriter(CoinOptServices.bonmin)``
+`**` = ``AmplNLWriter(CoinOptServices.couenne)``
 
 To install Gurobi, for example, and use it with a JuMP model ``m``, run::
 
