@@ -57,12 +57,12 @@ buildrefsets(c, cname)  = (cname, Any[], Any[], :())
 """
     JuMP.buildrefsets(expr::Expr)
 
-Helper function for macros to construct container objects. Takes an Expr that specifies the container, e.g. `:(x[i=1:3,[:red,:blue]],k=S; i+k <= 6)`, and returns:
+Helper function for macros to construct container objects. Takes an `Expr` that specifies the container, e.g. `:(x[i=1:3,[:red,:blue]],k=S; i+k <= 6)`, and returns:
 
-    1. `refcall`: Expr to reference a particular element in the container, e.g. :(x[i,red,s])
-    2. `idxvars`: Names for the index variables, e.g. [:i, gensym(), :k]
-    3. `idxsets`: Sets used for indexing, e.g. [1:3, [:red,:blue], S]
-    4. `condition`: Expr containing any conditional imposed on indexing, or :() if none is present
+    1. `refcall`: Expr to reference a particular element in the container, e.g. `:(x[i,red,s])`
+    2. `idxvars`: Names for the index variables, e.g. `[:i, gensym(), :k]`
+    3. `idxsets`: Sets used for indexing, e.g. `[1:3, [:red,:blue], S]`
+    4. `condition`: Expr containing any conditional imposed on indexing, or `:()` if none is present
 """
 buildrefsets(c) = buildrefsets(c, getname(c))
 
@@ -71,14 +71,14 @@ buildrefsets(c) = buildrefsets(c, getname(c))
 
 Helper function for macros to transform expression objects containing kernel code, index sets, conditionals, etc. to an expression that performs the desired loops that iterate over the kernel code. Arguments to the function are:
 
-    1. `varname`: name and appropriate indexing sets (if any) for container that is assigned to in the kernel code, e.g. :myvar or :(x[i=1:3,[:red,:blue]])
-    2. `code`: Expression containing kernel code
-    3. `condition`: Expression that is evaluated immediately before kernel code in each iteration. If none, pass :().
-    4. `idxvars`: Names for the index variables for each loop, e.g. [:i, gensym(), :k]
-    5. `idxsets`: Sets used to define iteration for each loop, e.g. [1:3, [:red,:blue], S]
-    6. `sym`: A Symbol/Expr containing the element type of the container that is being iterated over, e.g. `:AffExpr` or `:Variable`
+    1. `varname`: name and appropriate indexing sets (if any) for container that is assigned to in the kernel code, e.g. `:myvar` or `:(x[i=1:3,[:red,:blue]])`
+    2. `code`: `Expr` containing kernel code
+    3. `condition`: `Expr` that is evaluated immediately before kernel code in each iteration. If none, pass `:()`.
+    4. `idxvars`: Names for the index variables for each loop, e.g. `[:i, gensym(), :k]`
+    5. `idxsets`: Sets used to define iteration for each loop, e.g. `[1:3, [:red,:blue], S]`
+    6. `sym`: A `Symbol`/`Expr` containing the element type of the container that is being iterated over, e.g. `:AffExpr` or `:Variable`
     7. `requestedcontainer`: Argument that is passed through to `generatedcontainer`. Either `:Auto`, `:Array`, `:JuMPArray`, or `:Dict`.
-    8. `lowertri`: Boolean keyword argument that is `true` if the iteration is over a cartesian array and should only iterate over the lower triangular entries, filling upper triangular entries with copies, e.g. `x[1,3] === x[3,1]`
+    8. `lowertri`: `Bool` keyword argument that is `true` if the iteration is over a cartesian array and should only iterate over the lower triangular entries, filling upper triangular entries with copies, e.g. `x[1,3] === x[3,1]`, and `false` otherwise.
 """
 function getloopedcode(varname, code, condition, idxvars, idxsets, sym, requestedcontainer::Symbol; lowertri=false)
 
