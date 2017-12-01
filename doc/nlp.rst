@@ -29,8 +29,8 @@ locally optimal. Convexity detection is not currently provided.
 
 For example, we can solve the classical Rosenbrock problem (with a twist) as follows::
 
-    using JuMP
-    m = Model()
+    using JuMP, Ipopt
+    m = Model(solver=IpoptSolver())
     @variable(m, x, start = 0.0)
     @variable(m, y, start = 0.0)
 
