@@ -14,18 +14,6 @@ end
 
 include("parseexpr.jl")
 
-###############################################################################
-# buildrefsets
-# Unexported. Takes as input an object representing a name, associated index
-# sets, and conditions on those sets, for example
-# buildrefsets(:(x[i=1:3,[:red,:blue]],k=S; i+k <= 6))
-# Used internally in macros to build containers and constraints. Returns
-#       refcall:  Expr to reference a particular element, e.g. :(x[i,j,k])
-#       idxvars:  Index names used in referencing, e.g.g []:i,:j,:k]
-#       idxsets:  Index sets for indexing, e.g. [1:3, [:red,:blue], S]
-#       condition: Expr containing any condition present for indexing
-# Note in particular that it does not actually evaluate the condition, and so
-# it returns just the cartesian product of possible indices.
 function buildrefsets(expr::Expr, cname)
     c = copy(expr)
     idxvars = Any[]
@@ -65,24 +53,33 @@ function buildrefsets(expr::Expr, cname)
 end
 
 buildrefsets(c, cname)  = (cname, Any[], Any[], :())
+
+"""
+    JuMP.buildrefsets(expr::Expr)
+
+Helper function for macros to construct container objects. Takes an `Expr` that specifies the container, e.g. `:(x[i=1:3,[:red,:blue]],k=S; i+k <= 6)`, and returns:
+
+    1. `refcall`: Expr to reference a particular element in the container, e.g. `:(x[i,red,s])`
+    2. `idxvars`: Names for the index variables, e.g. `[:i, gensym(), :k]`
+    3. `idxsets`: Sets used for indexing, e.g. `[1:3, [:red,:blue], S]`
+    4. `condition`: Expr containing any conditional imposed on indexing, or `:()` if none is present
+"""
 buildrefsets(c) = buildrefsets(c, getname(c))
 
-###############################################################################
-# getloopedcode
-# Unexported. Takes a bit of code and corresponding looping information and
-# returns that code nested in corresponding loops, along with preceding code
-# to construct an appropriate container. Input is:
-#       c: symbolic representation of name and appropriate indexing sets, if
-#          any. E.g. :(myvar) or :(x[i=1:3,[:red,:blue]])
-#       code: inner loop code kernel to be nested in the loops
-#       condition: a boolean expression to be evaluated before each kernel.
-#                  If none, pass :().
-#       idxvars: As defined for buildrefsets
-#       idxsets: As defined for buildrefsets
-#       sym: A symbol or expression containing the element type of the
-#            resulting container, e.g. :AffExpr or :Variable
-#       requestedcontainer: `:Auto`, `:Array`, `:JuMPArray`, `:Dict` passed
-#                           through to generatecontainer()
+"""
+    JuMP.getloopedcode(varname, code, condition, idxvars, idxsets, sym, requestedcontainer::Symbol; lowertri=false)
+
+Helper function for macros to transform expression objects containing kernel code, index sets, conditionals, etc. to an expression that performs the desired loops that iterate over the kernel code. Arguments to the function are:
+
+    1. `varname`: name and appropriate indexing sets (if any) for container that is assigned to in the kernel code, e.g. `:myvar` or `:(x[i=1:3,[:red,:blue]])`
+    2. `code`: `Expr` containing kernel code
+    3. `condition`: `Expr` that is evaluated immediately before kernel code in each iteration. If none, pass `:()`.
+    4. `idxvars`: Names for the index variables for each loop, e.g. `[:i, gensym(), :k]`
+    5. `idxsets`: Sets used to define iteration for each loop, e.g. `[1:3, [:red,:blue], S]`
+    6. `sym`: A `Symbol`/`Expr` containing the element type of the container that is being iterated over, e.g. `:AffExpr` or `:Variable`
+    7. `requestedcontainer`: Argument that is passed through to `generatedcontainer`. Either `:Auto`, `:Array`, `:JuMPArray`, or `:Dict`.
+    8. `lowertri`: `Bool` keyword argument that is `true` if the iteration is over a cartesian array and should only iterate over the lower triangular entries, filling upper triangular entries with copies, e.g. `x[1,3] === x[3,1]`, and `false` otherwise.
+"""
 function getloopedcode(varname, code, condition, idxvars, idxsets, sym, requestedcontainer::Symbol; lowertri=false)
 
     # if we don't have indexing, just return to avoid allocating stuff
