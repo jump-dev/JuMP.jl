@@ -362,7 +362,7 @@ macro constraint(args...)
 
     if length(args) < 2
         if length(kwargs.args) > 0
-            constraint_error(args, "Not enough positional arguments")
+            constraint_error(args, "Not enough positional arguments. Do you have a constraint like x=1 instead of x==1?")
         else
             constraint_error(args, "Not enough arguments")
         end
