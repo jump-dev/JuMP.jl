@@ -174,7 +174,7 @@ end
 function MOI.VectorAffineFunction(affs::Vector{AffExpr})
     len = sum(aff -> length(aff.vars), affs)
     outputindex = Vector{Int}(len)
-    variables = Vector{MOI.VariableReference}(len)
+    variables = Vector{MOIVAR}(len)
     coefficients = Vector{Float64}(len)
     constant = Vector{Float64}(length(affs))
     offset = 0

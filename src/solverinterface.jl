@@ -10,7 +10,7 @@
 Transfer the constraints of type `F`-in-`S` to the solver instance.
 """
 function copyconstraints!(m::Model, ::Type{F}, ::Type{S}) where {F<:MOI.AbstractFunction, S<:MOI.AbstractSet}
-    for cref in MOI.get(m.instance, MOI.ListOfConstraintReferences{F, S}())
+    for cref in MOI.get(m.instance, MOI.ListOfConstraintIndices{F, S}())
         f = MOI.get(m.instance, MOI.ConstraintFunction(), cref)
         s = MOI.get(m.instance, MOI.ConstraintSet(), cref)
         solvercref = MOI.addconstraint!(m.solverinstance, f, s)
@@ -33,7 +33,7 @@ function attach(m::Model, solverinstance::MOI.AbstractSolverInstance)
 
     m.variabletosolvervariable = Dict{MOIVAR,MOIVAR}()
     m.constrainttosolverconstraint = Dict{UInt64,UInt64}()
-    # TODO: replace with ListOfVariableReferences()
+    # TODO: replace with ListOfVariableIndices()
     # Now we're assuming all instance variables are numbered sequentially
     for i in 1:numvar(m)
         m.variabletosolvervariable[MOIVAR(i)] = solvervariables[i]

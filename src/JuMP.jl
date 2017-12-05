@@ -66,8 +66,8 @@ export
 
 include("utils.jl")
 
-const MOIVAR = MOI.VariableReference
-const MOICON{F,S} = MOI.ConstraintReference{F,S}
+const MOIVAR = MOI.VariableIndex
+const MOICON{F,S} = MOI.ConstraintIndex{F,S}
 const LBREF = MOICON{MOI.SingleVariable,MOI.GreaterThan{Float64}}
 const UBREF = MOICON{MOI.SingleVariable,MOI.LessThan{Float64}}
 const FIXREF = MOICON{MOI.SingleVariable,MOI.EqualTo{Float64}}

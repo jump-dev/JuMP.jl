@@ -7,7 +7,7 @@
 #############################################################################
 # Variable class
 # Holds a reference to the model and the corresponding
-# VariableReference for the internal instance
+# VariableIndex for the internal instance
 struct Variable <: AbstractJuMPScalar
     m::Model
     instanceref::MOIVAR
