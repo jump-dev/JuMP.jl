@@ -107,7 +107,10 @@ function cutcallback(d::MathProgBase.MathProgCallbackData, m::Model, cbs::Vector
     MathProgBase.cbgetlpsolution(d,m.colVal)
     try
         for cb in cbs
-            cb.f(d)
+            ret = cb.f(d)
+            if ret === StopTheSolver
+                return :Exit
+            end
         end
     catch y
         if isa(y, CallbackAbort)
@@ -135,7 +138,10 @@ function heurcallback(d::MathProgBase.MathProgCallbackData, m::Model, cbs::Vecto
     MathProgBase.cbgetlpsolution(d,m.colVal)
     try
         for cb in cbs
-            cb.f(d)
+            ret = cb.f(d)
+            if ret === StopTheSolver
+                return :Exit
+            end
         end
     catch y
         if isa(y, CallbackAbort)
@@ -166,7 +172,10 @@ function infocallback(d::MathProgBase.MathProgCallbackData, m::Model, cbs::Vecto
     try
         for cb in cbs
             if cb.when == state
-                cb.f(d)
+                ret = cb.f(d)
+                if ret === StopTheSolver
+                    return :Exit
+                end
             end
         end
     catch y
