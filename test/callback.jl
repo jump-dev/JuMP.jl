@@ -320,7 +320,7 @@ using Base.Test
 
         N = 10000
         include(joinpath("data","informational.jl"))
-        mod = Model(solver=GurobiSolver())
+        mod = Model(solver=infosolver)
         @variable(mod, x[1:N], Bin)
         @objective(mod, Max, dot(r1,x))
         @constraint(mod, c[i=1:10], dot(r2[i],x) <= rhs[i]*N/10)
