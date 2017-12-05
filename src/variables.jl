@@ -10,7 +10,7 @@
 # VariableIndex for the internal instance
 struct Variable <: AbstractJuMPScalar
     m::Model
-    instanceref::MOIVAR
+    instanceindex::MOIVAR
 end
 
 
@@ -30,29 +30,29 @@ end
 
 function Base.getindex(vm::VariableToValueMap, v::Variable)
     @assert v.m === vm.m # TODO: better error message
-    return vm.d[instancereference(v)]
+    return vm.d[instanceindex(v)]
 end
 
 function Base.setindex!(vm::VariableToValueMap{T}, value::T, v::Variable) where T
     @assert v.m === vm.m # TODO: better error message
-    vm.d[instancereference(v)] = value
+    vm.d[instanceindex(v)] = value
 end
 
 Base.setindex!(vm::VariableToValueMap{T}, value, v::Variable) where T = setindex!(vm, convert(T, value), v)
 
 function Base.delete!(vm::VariableToValueMap,v::Variable)
-    delete!(vm.d, instancereference(v))
+    delete!(vm.d, instanceindex(v))
     vm
 end
 
 Base.empty!(vm::VariableToValueMap) = empty!(vm.d)
 Base.isempty(vm::VariableToValueMap) = isempty(vm.d)
 
-Base.haskey(vm::VariableToValueMap, v::Variable) = (vm.m === v.m) && haskey(vm.d, instancereference(v))
+Base.haskey(vm::VariableToValueMap, v::Variable) = (vm.m === v.m) && haskey(vm.d, instanceindex(v))
 
 
 
-instancereference(v::Variable) = v.instanceref
+instanceindex(v::Variable) = v.instanceindex
 
 # linearindex(x::Variable) = x.col
 
@@ -60,9 +60,9 @@ instancereference(v::Variable) = v.instanceref
 #     error("Attempt to create scalar Variable with lower bound of type $(typeof(lower)) and upper bound of type $(typeof(upper)). Bounds must be scalars in Variable constructor.")
 
 function Variable(m::Model,name::AbstractString="")
-    ref = MOI.addvariable!(m.instance)
+    index = MOI.addvariable!(m.instance)
 
-    v = Variable(m, ref)
+    v = Variable(m, index)
 
     if name != ""
         m.variablenames[v] = name
@@ -77,7 +77,7 @@ function Variable(m::Model,name::AbstractString="")
     #         m.internalModelLoaded = false
     #     end
     # end
-    return Variable(m, ref)
+    return Variable(m, index)
 end
 
 # Name setter/getters
@@ -108,14 +108,14 @@ deletename(v::Variable) = delete!(v.m.variablenames, v)
 
 # lower bounds
 
-haslowerbound(v::Variable) = haskey(v.m.variabletolowerbound,instancereference(v))
+haslowerbound(v::Variable) = haskey(v.m.variabletolowerbound,instanceindex(v))
 
-function lowerboundreference(v::Variable)
+function lowerboundindex(v::Variable)
     @assert haslowerbound(v) # TODO error message
-    return v.m.variabletolowerbound[instancereference(v)]
+    return v.m.variabletolowerbound[instanceindex(v)]
 end
-function setlowerboundreference(v::Variable, cref::LBREF)
-    v.m.variabletolowerbound[instancereference(v)] = cref
+function setlowerboundindex(v::Variable, cindex::MOILB)
+    v.m.variabletolowerbound[instanceindex(v)] = cindex
 end
 
 """
@@ -127,13 +127,13 @@ function setlowerbound(v::Variable,lower::Number)
     newset = MOI.GreaterThan(convert(Float64,lower))
     # do we have a lower bound already?
     if haslowerbound(v)
-        cref = lowerboundreference(v)
-        MOI.modifyconstraint!(v.m.instance, cref, newset)
+        cindex = lowerboundindex(v)
+        MOI.modifyconstraint!(v.m.instance, cindex, newset)
         @assert !v.m.solverinstanceattached # TODO
     else
         @assert !isfixed(v)
-        cref = MOI.addconstraint!(v.m.instance, MOI.SingleVariable(instancereference(v)), newset)
-        setlowerboundreference(v, cref)
+        cindex = MOI.addconstraint!(v.m.instance, MOI.SingleVariable(instanceindex(v)), newset)
+        setlowerboundindex(v, cindex)
     end
     nothing
 end
@@ -144,9 +144,9 @@ end
 Delete the lower bound constraint of a variable.
 """
 function deletelowerbound(v::Variable)
-    cref = lowerboundreference(v)
-    delete!(v.m.instance, cref)
-    delete!(v.m.variabletolowerbound, instancereference(v))
+    cindex = lowerboundindex(v)
+    delete!(v.m.instance, cindex)
+    delete!(v.m.variabletolowerbound, instanceindex(v))
     @assert !v.m.solverinstanceattached # TODO
     nothing
 end
@@ -157,21 +157,21 @@ end
 Return the lower bound of a variable. Error if one does not exist.
 """
 function lowerbound(v::Variable)
-    cref = lowerboundreference(v)
-    cset = MOI.get(v.m.instance, MOI.ConstraintSet(), cref)::MOI.GreaterThan
+    cindex = lowerboundindex(v)
+    cset = MOI.get(v.m.instance, MOI.ConstraintSet(), cindex)::MOI.GreaterThan
     return cset.lower
 end
 
 # upper bounds
 
-hasupperbound(v::Variable) = haskey(v.m.variabletoupperbound,instancereference(v))
+hasupperbound(v::Variable) = haskey(v.m.variabletoupperbound,instanceindex(v))
 
-function upperboundreference(v::Variable)
+function upperboundindex(v::Variable)
     @assert hasupperbound(v) # TODO error message
-    return v.m.variabletoupperbound[instancereference(v)]
+    return v.m.variabletoupperbound[instanceindex(v)]
 end
-function setupperboundreference(v::Variable, cref::UBREF)
-    v.m.variabletoupperbound[instancereference(v)] = cref
+function setupperboundindex(v::Variable, cindex::MOIUB)
+    v.m.variabletoupperbound[instanceindex(v)] = cindex
 end
 
 """
@@ -183,13 +183,13 @@ function setupperbound(v::Variable,upper::Number)
     newset = MOI.LessThan(convert(Float64,upper))
     # do we have an upper bound already?
     if hasupperbound(v)
-        cref = upperboundreference(v)
-        MOI.modifyconstraint!(v.m.instance, cref, newset)
+        cindex = upperboundindex(v)
+        MOI.modifyconstraint!(v.m.instance, cindex, newset)
         @assert !v.m.solverinstanceattached # TODO
     else
         @assert !isfixed(v)
-        cref = MOI.addconstraint!(v.m.instance, MOI.SingleVariable(instancereference(v)), newset)
-        setupperboundreference(v, cref)
+        cindex = MOI.addconstraint!(v.m.instance, MOI.SingleVariable(instanceindex(v)), newset)
+        setupperboundindex(v, cindex)
     end
     nothing
 end
@@ -200,9 +200,9 @@ end
 Delete the upper bound constraint of a variable.
 """
 function deleteupperbound(v::Variable)
-    cref = upperboundreference(v)
-    delete!(v.m.instance, cref)
-    delete!(v.m.variabletoupperbound, instancereference(v))
+    cindex = upperboundindex(v)
+    delete!(v.m.instance, cindex)
+    delete!(v.m.variabletoupperbound, instanceindex(v))
     @assert !v.m.solverinstanceattached # TODO
     nothing
 end
@@ -213,21 +213,21 @@ end
 Return the upper bound of a variable. Error if one does not exist.
 """
 function upperbound(v::Variable)
-    cref = upperboundreference(v)
-    cset = MOI.get(v.m.instance, MOI.ConstraintSet(), cref)::MOI.LessThan
+    cindex = upperboundindex(v)
+    cset = MOI.get(v.m.instance, MOI.ConstraintSet(), cindex)::MOI.LessThan
     return cset.upper
 end
 
 # fixed value
 
-isfixed(v::Variable) = haskey(v.m.variabletofix,instancereference(v))
+isfixed(v::Variable) = haskey(v.m.variabletofix,instanceindex(v))
 
-function fixreference(v::Variable)
+function fixindex(v::Variable)
     @assert isfixed(v) # TODO error message
-    return v.m.variabletofix[instancereference(v)]
+    return v.m.variabletofix[instanceindex(v)]
 end
-function setfixreference(v::Variable, cref::FIXREF)
-    v.m.variabletofix[instancereference(v)] = cref
+function setfixindex(v::Variable, cindex::MOIFIX)
+    v.m.variabletofix[instanceindex(v)] = cindex
 end
 
 """
@@ -239,13 +239,13 @@ function fix(v::Variable,upper::Number)
     newset = MOI.EqualTo(convert(Float64,upper))
     # are we already fixed?
     if isfixed(v)
-        cref = fixreference(v)
-        MOI.modifyconstraint!(v.m.instance, cref, newset)
+        cindex = fixindex(v)
+        MOI.modifyconstraint!(v.m.instance, cindex, newset)
         @assert !v.m.solverinstanceattached # TODO
     else
         @assert !hasupperbound(v) && !haslowerbound(v) # Do we want to remove these instead of throwing an error?
-        cref = MOI.addconstraint!(v.m.instance, MOI.SingleVariable(instancereference(v)), newset)
-        setfixreference(v, cref)
+        cindex = MOI.addconstraint!(v.m.instance, MOI.SingleVariable(instanceindex(v)), newset)
+        setfixindex(v, cindex)
     end
     nothing
 end
@@ -256,9 +256,9 @@ end
 Delete the fixing constraint of a variable.
 """
 function unfix(v::Variable)
-    cref = getfixreference(v)
-    delete!(v.m.instance, cref)
-    delete!(v.m.variabletofix, instancereference(v))
+    cindex = getfixindex(v)
+    delete!(v.m.instance, cindex)
+    delete!(v.m.variabletofix, instanceindex(v))
     @assert !v.m.solverinstanceattached # TODO
     nothing
 end
@@ -269,21 +269,21 @@ end
 Return the value to which a variable is fixed. Error if one does not exist.
 """
 function fixvalue(v::Variable)
-    cref = fixreference(v)
-    cset = MOI.get(v.m.instance, MOI.ConstraintSet(), cref)::MOI.EqualTo
+    cindex = fixindex(v)
+    cset = MOI.get(v.m.instance, MOI.ConstraintSet(), cindex)::MOI.EqualTo
     return cset.value
 end
 
 # integer and binary constraints
 
-isinteger(v::Variable) = haskey(v.m.variabletointegrality,instancereference(v))
+isinteger(v::Variable) = haskey(v.m.variabletointegrality,instanceindex(v))
 
-function integerreference(v::Variable)
+function integerindex(v::Variable)
     @assert isinteger(v) # TODO error message
-    return v.m.variabletointegrality[instancereference(v)]
+    return v.m.variabletointegrality[instanceindex(v)]
 end
-function setintegerreference(v::Variable, cref::INTREF)
-    v.m.variabletointegrality[instancereference(v)] = cref
+function setintegerindex(v::Variable, cindex::MOIINT)
+    v.m.variabletointegrality[instanceindex(v)] = cindex
 end
 
 """
@@ -294,26 +294,26 @@ Add an integrality constraint on the variable `v`.
 function setinteger(v::Variable)
     isinteger(v) && return
     @assert !isbinary(v) # TODO error message
-    cref = MOI.addconstraint!(v.m.instance, MOI.SingleVariable(instancereference(v)), MOI.Integer())
-    setintegerreference(v, cref)
+    cindex = MOI.addconstraint!(v.m.instance, MOI.SingleVariable(instanceindex(v)), MOI.Integer())
+    setintegerindex(v, cindex)
     nothing
 end
 
 function unsetinteger(v::Variable)
-    cref = integerreference(v)
-    delete!(v.m.instance, cref)
-    delete!(v.m.variabletointegrality, instancereference(v))
+    cindex = integerindex(v)
+    delete!(v.m.instance, cindex)
+    delete!(v.m.variabletointegrality, instanceindex(v))
     @assert !v.m.solverinstanceattached # TODO
 end
 
-isbinary(v::Variable) = haskey(v.m.variabletozeroone,instancereference(v))
+isbinary(v::Variable) = haskey(v.m.variabletozeroone,instanceindex(v))
 
-function binaryreference(v::Variable)
+function binaryindex(v::Variable)
     @assert isbinary(v) # TODO error message
-    return v.m.variabletozeroone[instancereference(v)]
+    return v.m.variabletozeroone[instanceindex(v)]
 end
-function setbinaryreference(v::Variable, cref::BINREF)
-    v.m.variabletozeroone[instancereference(v)] = cref
+function setbinaryindex(v::Variable, cindex::MOIBIN)
+    v.m.variabletozeroone[instanceindex(v)] = cindex
 end
 
 """
@@ -324,15 +324,15 @@ Add a constraint on the variable `v` that it must take values in the set ``\{0,1
 function setbinary(v::Variable)
     isbinary(v) && return
     @assert !isinteger(v) # TODO error message
-    cref = MOI.addconstraint!(v.m.instance, MOI.SingleVariable(instancereference(v)), MOI.ZeroOne())
-    setbinaryreference(v, cref)
+    cindex = MOI.addconstraint!(v.m.instance, MOI.SingleVariable(instanceindex(v)), MOI.ZeroOne())
+    setbinaryindex(v, cindex)
     nothing
 end
 
 function unsetbinary(v::Variable)
-    cref = binaryreference(v)
-    delete!(v.m.instance, cref)
-    delete!(v.m.variabletozeroone, instancereference(v))
+    cindex = binaryindex(v)
+    delete!(v.m.instance, cindex)
+    delete!(v.m.variabletozeroone, instanceindex(v))
     @assert !v.m.solverinstanceattached # TODO
 end
 

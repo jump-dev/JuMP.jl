@@ -149,7 +149,7 @@ Replaces `getvalue` for most use cases.
 resultvalue(a::AffExpr) = value(a, resultvalue)
 
 function MOI.ScalarAffineFunction(a::AffExpr)
-    return MOI.ScalarAffineFunction(instancereference.(a.vars), a.coeffs, a.constant)
+    return MOI.ScalarAffineFunction(instanceindex.(a.vars), a.coeffs, a.constant)
 end
 
 function AffExpr(m::Model, f::MOI.ScalarAffineFunction)
@@ -165,7 +165,7 @@ The output index for all terms is `oi`.
 function _fillvaf!(outputindex, variables, coefficients, offset::Int, oi::Int, aff::AffExpr)
     for i in 1:length(aff.vars)
         outputindex[offset+i] = oi
-        variables[offset+i] = instancereference(aff.vars[i])
+        variables[offset+i] = instanceindex(aff.vars[i])
         coefficients[offset+i] = aff.coeffs[i]
     end
     offset + length(aff.vars)
@@ -251,8 +251,8 @@ Add an `AffExpr` constraint to `Model m`.
 """
 function addconstraint(m::Model, c::AffExprConstraint)
     @assert !m.solverinstanceattached # TODO
-    cref = MOI.addconstraint!(m.instance, MOI.ScalarAffineFunction(c.func), c.set)
-    return ConstraintRef(m, cref)
+    cindex = MOI.addconstraint!(m.instance, MOI.ScalarAffineFunction(c.func), c.set)
+    return ConstraintRef(m, cindex)
 end
 addconstraint(m::Model, c::Array{AffExprConstraint}) =
     error("The operators <=, >=, and == can only be used to specify scalar constraints. If you are trying to add a vectorized constraint, use the element-wise dot comparison operators (.<=, .>=, or .==) instead")
@@ -269,21 +269,21 @@ Add the vector constraint `c` to `Model m`.
 """
 function addconstraint(m::Model, c::VectorAffExprConstraint)
     @assert !m.solverinstanceattached # TODO
-    cref = MOI.addconstraint!(m.instance, MOI.VectorAffineFunction(c.func), c.set)
-    return ConstraintRef(m, cref)
+    cindex = MOI.addconstraint!(m.instance, MOI.VectorAffineFunction(c.func), c.set)
+    return ConstraintRef(m, cindex)
 end
 
 
-function constraintobject(cref::ConstraintRef{Model}, ::Type{AffExpr}, ::Type{SetType}) where {SetType <: MOI.AbstractScalarSet}
-    m = cref.m
-    f = MOI.get(m.instance, MOI.ConstraintFunction(), cref.instanceref)::MOI.ScalarAffineFunction
-    s = MOI.get(m.instance, MOI.ConstraintSet(), cref.instanceref)::SetType
+function constraintobject(cindex::ConstraintRef{Model}, ::Type{AffExpr}, ::Type{SetType}) where {SetType <: MOI.AbstractScalarSet}
+    m = cindex.m
+    f = MOI.get(m.instance, MOI.ConstraintFunction(), cindex.instanceindex)::MOI.ScalarAffineFunction
+    s = MOI.get(m.instance, MOI.ConstraintSet(), cindex.instanceindex)::SetType
     return AffExprConstraint(AffExpr(m, f), s)
 end
 
-function constraintobject(cref::ConstraintRef{Model}, ::Type{Vector{AffExpr}}, ::Type{SetType}) where {SetType <: MOI.AbstractVectorSet}
-    m = cref.m
-    f = MOI.get(m.instance, MOI.ConstraintFunction(), cref.instanceref)::MOI.VectorAffineFunction
-    s = MOI.get(m.instance, MOI.ConstraintSet(), cref.instanceref)::SetType
+function constraintobject(cindex::ConstraintRef{Model}, ::Type{Vector{AffExpr}}, ::Type{SetType}) where {SetType <: MOI.AbstractVectorSet}
+    m = cindex.m
+    f = MOI.get(m.instance, MOI.ConstraintFunction(), cindex.instanceindex)::MOI.VectorAffineFunction
+    s = MOI.get(m.instance, MOI.ConstraintSet(), cindex.instanceindex)::SetType
     return VectorAffExprConstraint(map(f -> AffExpr(m, f), MOIU.eachscalar(f)), s)
 end
