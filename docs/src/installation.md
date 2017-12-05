@@ -37,11 +37,11 @@ Solver support in Julia is currently provided by writing a solver-specific packa
 | -------------------------------------------------------------------------------- | ------------------------------------------------------------------------------- | ------------------------- | ----------- | ----- | ----- | ----- | ----- | ----- | ----- |
 | [Artelys Knitro](http://artelys.com/en/optimization-tools/knitro)                | [KNITRO.jl](https://github.com/JuliaOpt/KNITRO.jl)                              | `KnitroSolver()`          |  Comm.      |       |       |       | X     | X     |       |
 | [BARON](http://archimedes.cheme.cmu.edu/?q=baron>)                               | [BARON.jl](https://github.com/joehuchette/BARON.jl)                             | `BaronSolver()`           |  Comm.      |       |       |       | X     | X     |       |
-| [Bonmin](https://projects.coin-or.org/Bonmin)                                    | [AmplNLWriter.jl](https://github.com/JackDunnNZ/AmplNLWriter.jl)                | `BonminNLSolver()` *      |  EPL        | X     |       | X     | X     | X     |       |
+| [Bonmin](https://projects.coin-or.org/Bonmin)                                    | [AmplNLWriter.jl](https://github.com/JuliaOpt/AmplNLWriter.jl)                | `AmplNLWriter(CoinOptServices.bonmin)` *      |  EPL        | X     |       | X     | X     | X     |       |
 | ''                                                                               | [CoinOptServices.jl](https://github.com/JuliaOpt/CoinOptServices.jl)            | `OsilBonminSolver()`      |  ''         |       |       |       |       |       |       |
 | [Cbc](https://projects.coin-or.org/Cbc)                                          | [Cbc.jl](https://github.com/JuliaOpt/Cbc.jl)                                    | `CbcSolver()`             |  EPL        |       |       | X     |       |       |       |
 | [Clp](https://projects.coin-or.org/Clp)                                          | [Clp.jl](https://github.com/JuliaOpt/Clp.jl)                                    | `ClpSolver()`             |  EPL        | X     |       |       |       |       |       |
-| [Couenne](https://projects.coin-or.org/Couenne)                                  | [AmplNLWriter.jl](https://github.com/JackDunnNZ/AmplNLWriter.jl)                | `CouenneNLSolver()` *     |  EPL        | X     |       | X     | X     | X     |       |
+| [Couenne](https://projects.coin-or.org/Couenne)                                  | [AmplNLWriter.jl](https://github.com/JuliaOpt/AmplNLWriter.jl)                | `AmplNLWriter(CoinOptServices.couenne)` *     |  EPL        | X     |       | X     | X     | X     |       |
 | ''                                                                               | [CoinOptServices.jl](https://github.com/JuliaOpt/CoinOptServices.jl)            | `OsilCouenneSolver()`     |  ''         |       |       |       |       |       |       |
 | [CPLEX](http://www-01.ibm.com/software/commerce/optimization/cplex-optimizer/)   | [CPLEX.jl](https://github.com/JuliaOpt/CPLEX.jl)                                | `CplexSolver()`           |  Comm.      | X     | X     | X     |       |       |       |
 | [ECOS](https://github.com/ifa-ethz/ecos)                                         | [ECOS.jl](https://github.com/JuliaOpt/ECOS.jl)                                  | `ECOSSolver()`            |  GPL        | X     | X     |       |       |       |       |
@@ -105,4 +105,3 @@ Requires a working installation of Xpress with an active license (it is possible
 
 !!! warning
     If you are using 64-bit Xpress, you must use 64-bit Julia (and similarly with 32-bit Xpress).
-
