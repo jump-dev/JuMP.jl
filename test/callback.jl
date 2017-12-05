@@ -304,7 +304,7 @@ using Base.Test
         @test solve(mod, suppress_warnings=true) == :UserLimit
     end
 
-    @testset "Callback exit on return StopTheSolver with $solver" for infosolver in info_solvers
+    @testset "Callback exit on return StopTheSolver with $infosolver" for infosolver in info_solvers
         mod = Model(solver=infosolver)
         @variable(mod, 0 <= x <= 2, Int)
         @variable(mod, 0 <= y <= 2, Int)
