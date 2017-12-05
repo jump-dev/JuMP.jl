@@ -10,12 +10,12 @@
 Transfer the constraints of type `F`-in-`S` to the solver instance.
 """
 function copyconstraints!(m::Model, ::Type{F}, ::Type{S}) where {F<:MOI.AbstractFunction, S<:MOI.AbstractSet}
-    for cref in MOI.get(m.instance, MOI.ListOfConstraintReferences{F, S}())
-        f = MOI.get(m.instance, MOI.ConstraintFunction(), cref)
-        s = MOI.get(m.instance, MOI.ConstraintSet(), cref)
-        solvercref = MOI.addconstraint!(m.solverinstance, f, s)
-        @assert !haskey(m.constrainttosolverconstraint, cref)
-        m.constrainttosolverconstraint[cref] = solvercref
+    for cindex in MOI.get(m.instance, MOI.ListOfConstraintIndices{F, S}())
+        f = MOI.get(m.instance, MOI.ConstraintFunction(), cindex)
+        s = MOI.get(m.instance, MOI.ConstraintSet(), cindex)
+        solvercindex = MOI.addconstraint!(m.solverinstance, f, s)
+        @assert !haskey(m.constrainttosolverconstraint, cindex)
+        m.constrainttosolverconstraint[cindex] = solvercindex
     end
 end
 
@@ -33,7 +33,7 @@ function attach(m::Model, solverinstance::MOI.AbstractSolverInstance)
 
     m.variabletosolvervariable = Dict{MOIVAR,MOIVAR}()
     m.constrainttosolverconstraint = Dict{UInt64,UInt64}()
-    # TODO: replace with ListOfVariableReferences()
+    # TODO: replace with ListOfVariableIndices()
     # Now we're assuming all instance variables are numbered sequentially
     for i in 1:numvar(m)
         m.variabletosolvervariable[MOIVAR(i)] = solvervariables[i]
@@ -114,8 +114,8 @@ function solve(m::Model;
     empty!(m.variableresult)
     # If any variable has a result then all must have
     if MOI.canget(m.solverinstance, MOI.VariablePrimal(), first(m.variabletosolvervariable).second)
-        for vref in keys(m.variabletosolvervariable)
-            m.variableresult[Variable(m,vref)] = MOI.get(m.solverinstance, MOI.VariablePrimal(), m.variabletosolvervariable[vref])
+        for vindex in keys(m.variabletosolvervariable)
+            m.variableresult[Variable(m,vindex)] = MOI.get(m.solverinstance, MOI.VariablePrimal(), m.variabletosolvervariable[vindex])
         end
     end
 

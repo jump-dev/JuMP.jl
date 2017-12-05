@@ -66,13 +66,13 @@ export
 
 include("utils.jl")
 
-const MOIVAR = MOI.VariableReference
-const MOICON{F,S} = MOI.ConstraintReference{F,S}
-const LBREF = MOICON{MOI.SingleVariable,MOI.GreaterThan{Float64}}
-const UBREF = MOICON{MOI.SingleVariable,MOI.LessThan{Float64}}
-const FIXREF = MOICON{MOI.SingleVariable,MOI.EqualTo{Float64}}
-const INTREF = MOICON{MOI.SingleVariable,MOI.Integer}
-const BINREF = MOICON{MOI.SingleVariable,MOI.ZeroOne}
+const MOIVAR = MOI.VariableIndex
+const MOICON{F,S} = MOI.ConstraintIndex{F,S}
+const MOILB = MOICON{MOI.SingleVariable,MOI.GreaterThan{Float64}}
+const MOIUB = MOICON{MOI.SingleVariable,MOI.LessThan{Float64}}
+const MOIFIX = MOICON{MOI.SingleVariable,MOI.EqualTo{Float64}}
+const MOIINT = MOICON{MOI.SingleVariable,MOI.Integer}
+const MOIBIN = MOICON{MOI.SingleVariable,MOI.ZeroOne}
 
 @MOIU.instance JuMPInstance (ZeroOne, Integer) (EqualTo, GreaterThan, LessThan, Interval) (Zeros, Nonnegatives, Nonpositives, SecondOrderCone, RotatedSecondOrderCone, GeometricMeanCone, PositiveSemidefiniteConeTriangle, PositiveSemidefiniteConeSquare, RootDetConeTriangle, RootDetConeSquare, LogDetConeTriangle, LogDetConeSquare) () (SingleVariable,) (ScalarAffineFunction,ScalarQuadraticFunction) (VectorOfVariables,) (VectorAffineFunction,)
 
@@ -85,11 +85,11 @@ mutable struct Model <: AbstractModel
     instance::JuMPInstance{Float64}
     # special variablewise properties that we keep track of:
     # lower bound, upper bound, fixed, integrality, binary
-    variabletolowerbound::Dict{MOIVAR,LBREF}
-    variabletoupperbound::Dict{MOIVAR,UBREF}
-    variabletofix::Dict{MOIVAR,FIXREF}
-    variabletointegrality::Dict{MOIVAR,INTREF}
-    variabletozeroone::Dict{MOIVAR,BINREF}
+    variabletolowerbound::Dict{MOIVAR,MOILB}
+    variabletoupperbound::Dict{MOIVAR,MOIUB}
+    variabletofix::Dict{MOIVAR,MOIFIX}
+    variabletointegrality::Dict{MOIVAR,MOIINT}
+    variabletozeroone::Dict{MOIVAR,MOIBIN}
     variabletosolvervariable::Dict{MOIVAR,MOIVAR}
 
     # convenient solution objects to keep in the model
@@ -100,8 +100,8 @@ mutable struct Model <: AbstractModel
     # obj#::QuadExpr
     # objSense::Symbol
 
-    # Mapping from the constraint reference in `instance`
-    # and the constraint reference in `solverinstance`
+    # Mapping from the constraint index in `instance`
+    # and the constraint index in `solverinstance`
     constrainttosolverconstraint::Dict{MOICON,MOICON}
 
     # linconstr#::Vector{LinearConstraint}
@@ -176,11 +176,11 @@ mutable struct Model <: AbstractModel
         m = new()
         # TODO make pretty
         m.instance = JuMPInstance{Float64}()
-        m.variabletolowerbound = Dict{MOIVAR,LBREF}()
-        m.variabletoupperbound = Dict{MOIVAR,UBREF}()
-        m.variabletofix = Dict{MOIVAR,FIXREF}()
-        m.variabletointegrality = Dict{MOIVAR,INTREF}()
-        m.variabletozeroone = Dict{MOIVAR,BINREF}()
+        m.variabletolowerbound = Dict{MOIVAR,MOILB}()
+        m.variabletoupperbound = Dict{MOIVAR,MOIUB}()
+        m.variabletofix = Dict{MOIVAR,MOIFIX}()
+        m.variabletointegrality = Dict{MOIVAR,MOIINT}()
+        m.variabletozeroone = Dict{MOIVAR,MOIBIN}()
         m.variablestart = VariableToValueMap{Float64}(m)
         m.variableresult = VariableToValueMap{Float64}(m)
         m.variablenames = VariableToValueMap{String}(m)
@@ -522,18 +522,18 @@ Base.copy(v::AbstractArray{Variable}, new_model::Model) = (var -> Variable(new_m
 # Reference to a constraint for retrieving solution info
 struct ConstraintRef{M<:AbstractModel,C}
     m::M
-    instanceref::C
+    instanceindex::C
 end
 # Base.copy{M,T}(c::ConstraintRef{M,T}, new_model::M) = ConstraintRef{M,T}(new_model, c.idx)
 
 # linearindex(x::ConstraintRef) = x.idx
 
-function solverinstanceref(cr::ConstraintRef{Model, MOICON{F, S}}) where {F, S}
-    cr.m.constrainttosolverconstraint[cr.instanceref]::MOICON{F, S}
+function solverinstanceindex(cr::ConstraintRef{Model, MOICON{F, S}}) where {F, S}
+    cr.m.constrainttosolverconstraint[cr.instanceindex]::MOICON{F, S}
 end
 
 function hasresultdual(cr::ConstraintRef{Model, <:MOICON})
-    MOI.get(cr.m.solverinstance, MOI.ConstraintDual(), cr.instanceref)
+    MOI.get(cr.m.solverinstance, MOI.ConstraintDual(), cr.instanceindex)
 end
 
 """
@@ -544,7 +544,7 @@ Use `hasresultdual` to check if a result exists before asking for values.
 Replaces `getdual` for most use cases.
 """
 function resultdual(cr::ConstraintRef{Model, MOICON{F, S}}) where {F, S}
-    MOI.get(cr.m.solverinstance, MOI.ConstraintDual(), solverinstanceref(cr))
+    MOI.get(cr.m.solverinstance, MOI.ConstraintDual(), solverinstanceindex(cr))
 end
 
 ###############################################################################
