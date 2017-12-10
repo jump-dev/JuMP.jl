@@ -391,7 +391,7 @@ macro constraint(args...)
             lhs = :($(x.args[2]) - $(x.args[3]))
             newaff, parsecode = parseExprToplevel(lhs, :q)
             if vectorized
-                constraintcall = :(addconstraint.($m, constructconstraint!($newaff,$set)))
+                constraintcall = :(addconstraint.($m, constructconstraint!.($newaff,$set)))
             else
                 constraintcall = :(addconstraint($m, constructconstraint!($newaff,$set)))
             end
