@@ -283,7 +283,7 @@ end
 #constructconstraint!(x::Array, sense::Symbol) = map(c->constructconstraint!(c,sense), x)
 #constructconstraint!(x::AbstractArray, sense::Symbol) = constructconstraint!([x[i] for i in eachindex(x)], sense)
 
-constructconstraint!(x::AbstractArray, set::MOI.AbstractScalarSet) = error("Dot operators should be used to compare array expressions.")
+constructconstraint!(x::AbstractArray, set::MOI.AbstractScalarSet) = error("Unexpected vector in scalar constraint. Did you mean to use the dot comparison operators like .==, .<=, and .>= instead?")
 constructconstraint!(x::Vector{AffExpr}, set::MOI.AbstractVectorSet) = VectorAffExprConstraint(x, set)
 
 function constructconstraint!(quad::QuadExpr, set::S) where S <: Union{MOI.LessThan,MOI.GreaterThan,MOI.EqualTo}
