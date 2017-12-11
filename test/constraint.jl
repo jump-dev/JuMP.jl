@@ -22,6 +22,7 @@
         @test JuMP.isequal_canonical(c.func, 1.0x)
         @test c.set == MOI.EqualTo(-1.0)
 
+        @test_throws ErrorException @constraint(m, [x, 2x] == [1-x, 3])
         cref = @constraint(m, [x, 2x] .== [1-x, 3])
         c = JuMP.constraintobject.(cref, AffExpr, MOI.EqualTo)
         @test JuMP.isequal_canonical(c[1].func, 2.0x)

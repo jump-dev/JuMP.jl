@@ -283,6 +283,7 @@ end
 #constructconstraint!(x::Array, sense::Symbol) = map(c->constructconstraint!(c,sense), x)
 #constructconstraint!(x::AbstractArray, sense::Symbol) = constructconstraint!([x[i] for i in eachindex(x)], sense)
 
+constructconstraint!(x::AbstractArray, set::MOI.AbstractScalarSet) = error("Dot operators should be used to compare array expressions.")
 constructconstraint!(x::Vector{AffExpr}, set::MOI.AbstractVectorSet) = VectorAffExprConstraint(x, set)
 
 function constructconstraint!(quad::QuadExpr, set::S) where S <: Union{MOI.LessThan,MOI.GreaterThan,MOI.EqualTo}
@@ -390,6 +391,8 @@ macro constraint(args...)
             set = sense_to_set(sense)
             lhs = :($(x.args[2]) - $(x.args[3]))
             newaff, parsecode = parseExprToplevel(lhs, :q)
+            # `set` is an MOI.AbstractScalarSet, if `newaff` is not scalar, vectorized should be true.
+            # Otherwise, `constructconstraint!(::AbstractArray, ::MOI.AbstractScalarSet)` throws an helpful error
             if vectorized
                 constraintcall = :(addconstraint.($m, constructconstraint!.($newaff,$set)))
             else
