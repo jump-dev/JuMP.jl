@@ -304,6 +304,40 @@ using Base.Test
         @test solve(mod, suppress_warnings=true) == :UserLimit
     end
 
+    @testset "Callback exit on return StopTheSolver with $infosolver" for infosolver in info_solvers
+        mod = Model(solver=infosolver)
+        @variable(mod, 0 <= x <= 2, Int)
+        @variable(mod, 0 <= y <= 2, Int)
+        @objective(mod, Max, x + 2y)
+        @constraint(mod, y + x <= 3.5)
+
+        mycallback = _ -> JuMP.StopTheSolver
+        addinfocallback(mod, mycallback, when = :MIPSol)
+        @test solve(mod, suppress_warnings=true) == :UserLimit
+
+        nodes      = Int[]
+        entered = fill(false, 2)
+
+        N = 10000
+        include(joinpath("data","informational.jl"))
+        mod = Model(solver=infosolver)
+        @variable(mod, x[1:N], Bin)
+        @objective(mod, Max, dot(r1,x))
+        @constraint(mod, c[i=1:10], dot(r2[i],x) <= rhs[i]*N/10)
+        # Test that solver fills solution correctly
+        function myinfo1(cb)
+            @assert MathProgBase.cbgetstate(cb) == :Intermediate
+            entered[1] = true
+            push!(nodes,      MathProgBase.cbgetexplorednodes(cb))
+            if MathProgBase.cbgetexplorednodes(cb) >= 2
+                return JuMP.StopTheSolver
+            end
+        end
+        addinfocallback(mod, myinfo1, when = :Intermediate)
+        @test solve(mod, suppress_warnings=true) == :UserLimit
+        @test maximum(nodes) >= 2
+    end
+
     if cbc
         @testset "Solver doesn't support callbacks" begin
             mycb(cb) = nothing
