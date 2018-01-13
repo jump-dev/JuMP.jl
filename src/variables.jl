@@ -59,14 +59,10 @@ instanceindex(v::Variable) = v.instanceindex
 # Variable(m::Model, lower, upper, cat::Symbol, name::AbstractString="", value::Number=NaN) =
 #     error("Attempt to create scalar Variable with lower bound of type $(typeof(lower)) and upper bound of type $(typeof(upper)). Bounds must be scalars in Variable constructor.")
 
-function Variable(m::Model,name::AbstractString="")
+function Variable(m::Model)
     index = MOI.addvariable!(m.instance)
 
     v = Variable(m, index)
-
-    if name != ""
-        m.variablenames[v] = name
-    end
 
     # TODO: try to update solver instance
     # if m.internalModelLoaded
@@ -99,9 +95,9 @@ Get a variable's internal name.
 """
 name(v::Variable) = var_str(REPLMode, v)
 
-setname(v::Variable, s::String) = v.m.variablenames[v] = s
+setname(v::Variable, s::String) = MOI.set!(v.m.instance, MOI.VariableName(), instanceindex(v), s)
 
-deletename(v::Variable) = delete!(v.m.variablenames, v)
+deletename(v::Variable) = setname(v, "")
 
 
 ## Bound setter/getters

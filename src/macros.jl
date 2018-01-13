@@ -903,7 +903,7 @@ function constructvariable!(m::Model, _error::Function, haslb::Bool, lowerbound:
         setstartvalue(v, start)
     end
     if name != EMPTYSTRING
-        m.variablenames[v] = name
+        setname(v, name)
     end
     return v
 end
