@@ -12,7 +12,32 @@
 
         c = @constraint(m, x + y <= 1)
 
-        JuMP.attach(m, CSDPInstance(printlevel=0))
+        JuMP.setlowerboundname(x, "xlb")
+        JuMP.setlowerboundname(y, "ylb")
+        JuMP.setname(c, "c")
+
+        modelstring = """
+        variables: x, y
+        minobjective: -1.0*x
+        xlb: x >= 0.0
+        ylb: y >= 0.0
+        c: x + y <= 1.0
+        """
+
+        instance = JuMP.JuMPInstance{Float64}()
+        MOIU.loadfromstring!(instance, modelstring)
+        MOIU.test_instances_equal(m.instance, instance, ["x","y"], ["c", "xlb", "ylb"])
+
+        mocksolver = MOIU.MockSolverInstance(JuMP.JuMPInstance{Float64}())
+        JuMP.attach(m, mocksolver)
+
+        MOI.set!(mocksolver, MOI.TerminationStatus(), MOI.Success)
+        MOI.set!(mocksolver, MOI.ObjectiveValue(), -1.0)
+        MOI.set!(mocksolver, MOI.ResultCount(), 1)
+        MOI.set!(mocksolver, MOI.PrimalStatus(), MOI.FeasiblePoint)
+        MOI.set!(mocksolver, MOI.VariablePrimal(), JuMP.solverinstanceindex(x), 1.0)
+        MOI.set!(mocksolver, MOI.VariablePrimal(), JuMP.solverinstanceindex(y), 0.0)
+
         JuMP.solve(m)
 
         @test JuMP.isattached(m)
@@ -20,13 +45,14 @@
 
         @test JuMP.terminationstatus(m) == MOI.Success
         @test JuMP.primalstatus(m) == MOI.FeasiblePoint
-        @test JuMP.dualstatus(m) == MOI.FeasiblePoint
 
-        @test JuMP.resultvalue(x) ≈ 1.0 atol=1e-6
-        @test JuMP.resultvalue(y) ≈ 0.0 atol=1e-6
-        @test JuMP.resultvalue(x + y) ≈ 1.0 atol=1e-6
-        @test JuMP.objectivevalue(m) ≈ -1.0 atol=1e-6
+        @test JuMP.resultvalue(x) == 1.0
+        @test JuMP.resultvalue(y) == 0.0
+        @test JuMP.resultvalue(x + y) == 1.0
+        @test JuMP.objectivevalue(m) == -1.0
 
-        @test JuMP.resultdual(c) ≈ -1 atol=1e-6
+        # TODO: support duals in MockSolverInstance
+        #@test JuMP.dualstatus(m) == MOI.FeasiblePoint
+        #@test JuMP.resultdual(c) ≈ -1 atol=1e-6
     end
 end

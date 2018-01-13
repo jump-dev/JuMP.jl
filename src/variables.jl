@@ -54,6 +54,10 @@ Base.haskey(vm::VariableToValueMap, v::Variable) = (vm.m === v.m) && haskey(vm.d
 
 instanceindex(v::Variable) = v.instanceindex
 
+function solverinstanceindex(v::Variable)
+    v.m.variabletosolvervariable[instanceindex(v)]
+end
+
 # linearindex(x::Variable) = x.col
 
 # Variable(m::Model, lower, upper, cat::Symbol, name::AbstractString="", value::Number=NaN) =
@@ -130,6 +134,11 @@ function setlowerbound(v::Variable,lower::Number)
         setlowerboundindex(v, cindex)
     end
     nothing
+end
+
+function setlowerboundname(v::Variable, name::String)
+    @assert haslowerbound(v)
+    MOI.set!(v.m.instance, MOI.ConstraintName(), lowerboundindex(v), name)
 end
 
 """
