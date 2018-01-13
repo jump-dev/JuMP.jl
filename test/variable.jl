@@ -75,6 +75,7 @@ using Base.Test
 
         @test_throws ErrorException @variable(mcon, [(0,0)]) # #922
         x = @variable(mcon, [(0,2)])
+        # TODO: This behavior needs to change because names must be empty or unique.
         @test JuMP.name(x[0]) == "__anon__[0]"
         @test JuMP.name(x[2]) == "__anon__[2]"
     end

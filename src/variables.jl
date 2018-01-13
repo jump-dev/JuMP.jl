@@ -89,15 +89,13 @@ end
 # end
 
 """
-    name(v::Variable)
+    name(v::Variable)::String
 
-Get a variable's internal name.
+Get a variable's name.
 """
 name(v::Variable) = var_str(REPLMode, v)
 
 setname(v::Variable, s::String) = MOI.set!(v.m.instance, MOI.VariableName(), instanceindex(v), s)
-
-deletename(v::Variable) = setname(v, "")
 
 
 ## Bound setter/getters

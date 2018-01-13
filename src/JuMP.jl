@@ -517,6 +517,7 @@ Base.copy(v::AbstractArray{Variable}, new_model::Model) = (var -> Variable(new_m
 ##########################################################################
 # ConstraintRef
 # Reference to a constraint for retrieving solution info
+# TODO: Consider renaming this to be consistent with Variable.
 struct ConstraintRef{M<:AbstractModel,C}
     m::M
     instanceindex::C
@@ -524,6 +525,8 @@ end
 # Base.copy{M,T}(c::ConstraintRef{M,T}, new_model::M) = ConstraintRef{M,T}(new_model, c.idx)
 
 # linearindex(x::ConstraintRef) = x.idx
+
+instanceindex(cr::ConstraintRef) = cr.instanceindex
 
 function solverinstanceindex(cr::ConstraintRef{Model, MOICON{F, S}}) where {F, S}
     cr.m.constrainttosolverconstraint[cr.instanceindex]::MOICON{F, S}
@@ -540,9 +543,18 @@ Get the dual value of this constraint in the result returned by a solver.
 Use `hasresultdual` to check if a result exists before asking for values.
 Replaces `getdual` for most use cases.
 """
-function resultdual(cr::ConstraintRef{Model, MOICON{F, S}}) where {F, S}
+function resultdual(cr::ConstraintRef{Model, <:MOICON})
     MOI.get(cr.m.solverinstance, MOI.ConstraintDual(), solverinstanceindex(cr))
 end
+
+"""
+    name(v::ConstraintRef)
+
+Get a constraint's name.
+"""
+name(cr::ConstraintRef{Model,<:MOICON}) = MOI.get(cr.m.instance, MOI.ConstraintName(), instanceindex(cr))
+
+setname(cr::ConstraintRef{Model,<:MOICON}, s::String) = MOI.set!(cr.m.instance, MOI.ConstraintName(), instanceindex(cr), s)
 
 ###############################################################################
 # GenericAffineExpression, AffExpr, AffExprConstraint
