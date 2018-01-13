@@ -77,7 +77,7 @@ end
         io_test(REPLMode,   x, "x2")
         io_test(IJuliaMode, x, "x2")
 
-        JuMP.deletename(x)
+        JuMP.setname(x, "")
         @test    JuMP.name(x) == "noname"
         io_test(REPLMode,   x, "noname")
         io_test(IJuliaMode, x, "noname")

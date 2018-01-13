@@ -6,6 +6,10 @@
         @variable(m, x)
 
         cref = @constraint(m, 2x <= 10)
+        @test JuMP.name(cref) == ""
+        JuMP.setname(cref, "c")
+        @test JuMP.name(cref) == "c"
+
         c = JuMP.constraintobject(cref, AffExpr, MOI.LessThan)
         @test JuMP.isequal_canonical(c.func, 2x)
         @test c.set == MOI.LessThan(10.0)
