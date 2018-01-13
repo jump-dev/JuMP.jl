@@ -118,8 +118,6 @@ mutable struct Model <: AbstractModel
     # colUpper::Vector{Float64}
     # colCat::Vector{Symbol}
 
-    variablenames # VariableToValueMap{String}
-
     customnames::Vector
 
     # # Variable cones of the form, e.g. (:SDP, 1:9)
@@ -183,7 +181,6 @@ mutable struct Model <: AbstractModel
         m.variabletozeroone = Dict{MOIVAR,MOIBIN}()
         m.variablestart = VariableToValueMap{Float64}(m)
         m.variableresult = VariableToValueMap{Float64}(m)
-        m.variablenames = VariableToValueMap{String}(m)
         m.customnames = Variable[]
         m.objbound = 0.0
         m.objval = 0.0
