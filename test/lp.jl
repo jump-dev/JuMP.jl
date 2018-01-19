@@ -35,8 +35,10 @@
         MOI.set!(mocksolver, MOI.ObjectiveValue(), -1.0)
         MOI.set!(mocksolver, MOI.ResultCount(), 1)
         MOI.set!(mocksolver, MOI.PrimalStatus(), MOI.FeasiblePoint)
+        MOI.set!(mocksolver, MOI.DualStatus(), MOI.FeasiblePoint)
         MOI.set!(mocksolver, MOI.VariablePrimal(), JuMP.solverinstanceindex(x), 1.0)
         MOI.set!(mocksolver, MOI.VariablePrimal(), JuMP.solverinstanceindex(y), 0.0)
+        MOI.set!(mocksolver, MOI.ConstraintDual(), JuMP.solverinstanceindex(c), -1.0)
 
         JuMP.solve(m)
 
@@ -51,8 +53,7 @@
         @test JuMP.resultvalue(x + y) == 1.0
         @test JuMP.objectivevalue(m) == -1.0
 
-        # TODO: support duals in MockSolverInstance
-        #@test JuMP.dualstatus(m) == MOI.FeasiblePoint
-        #@test JuMP.resultdual(c) ≈ -1 atol=1e-6
+        @test JuMP.dualstatus(m) == MOI.FeasiblePoint
+        @test JuMP.resultdual(c) ≈ -1 atol=1e-6
     end
 end

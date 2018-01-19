@@ -17,13 +17,6 @@ using MathOptInterface, MathOptInterfaceUtilities
 const MOI = MathOptInterface
 const MOIU = MathOptInterfaceUtilities
 
-
-using CSDP
-
-# Load solvers
-#include("solvers.jl")
-
-# Static tests - most don't require a solver
 #include("print.jl")
 include("containers.jl")
 include("model.jl")
