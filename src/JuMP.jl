@@ -532,8 +532,8 @@ function solverinstanceindex(cr::ConstraintRef{Model, MOICON{F, S}}) where {F, S
     cr.m.constrainttosolverconstraint[cr.instanceindex]::MOICON{F, S}
 end
 
-function hasresultdual(cr::ConstraintRef{Model, <:MOICON})
-    MOI.get(cr.m.solverinstance, MOI.ConstraintDual(), cr.instanceindex)
+function hasresultdual(cr::ConstraintRef{Model, T}) where {T <: MOICON}
+    MOI.canget(cr.m.solverinstance, MOI.ConstraintDual(), T)
 end
 
 """
