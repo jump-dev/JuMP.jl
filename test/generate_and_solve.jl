@@ -100,9 +100,9 @@
         @test JuMP.resultvalue(y) == 0.0
         @test JuMP.objectivevalue(m) == 1.0
 
-        @test !JuMP.hasresultdual(JuMP.FixRef(x))
-        @test !JuMP.hasresultdual(JuMP.IntegerRef(x))
-        @test !JuMP.hasresultdual(JuMP.BinaryRef(y))
+        @test !JuMP.hasresultdual(m, typeof(JuMP.FixRef(x)))
+        @test !JuMP.hasresultdual(m, typeof(JuMP.IntegerRef(x)))
+        @test !JuMP.hasresultdual(m, typeof(JuMP.BinaryRef(y)))
     end
 
     @testset "SOC" begin
@@ -157,7 +157,55 @@
         @test JuMP.resultvalue(y) == 0.0
         @test JuMP.resultvalue(z) == 0.0
 
-        @test JuMP.hasresultdual(affsoc)
+        @test JuMP.hasresultdual(m, typeof(affsoc))
         @test JuMP.resultdual(affsoc) == [1.0, 2.0, 3.0]
+    end
+
+    @testset "SDP" begin
+        m = Model()
+        # TODO: PSD variable construction needs to be redone to make it possible
+        # to access the corresponding MOI constraint.
+        @variable(m, x[1:2,1:2], Symmetric) #, PSD)
+        setname(x[1,1], "x11")
+        setname(x[1,2], "x12")
+        setname(x[2,2], "x22")
+        @objective(m, Max, trace(x))
+        conpsd = @SDconstraint(m, x ⪰ [1.0 0.0; 0.0 1.0])
+        setname(conpsd, "conpsd")
+
+        modelstring = """
+        variables: x11, x12, x22
+        maxobjective: 1.0*x11 + 1.0*x22
+        conpsd: [x11 + -1.0,x12,x22 + -1.0] in PositiveSemidefiniteConeTriangle(2)
+        """
+
+        instance = JuMP.JuMPInstance{Float64}()
+        MOIU.loadfromstring!(instance, modelstring)
+        MOIU.test_instances_equal(m.instance, instance, ["x11","x12","x22"], ["conpsd"])
+
+        mocksolver = MOIU.MockSolverInstance(JuMP.JuMPInstance{Float64}())
+        JuMP.attach(m, mocksolver)
+
+        MOI.set!(mocksolver, MOI.TerminationStatus(), MOI.Success)
+        MOI.set!(mocksolver, MOI.ResultCount(), 1)
+        MOI.set!(mocksolver, MOI.PrimalStatus(), MOI.FeasiblePoint)
+        MOI.set!(mocksolver, MOI.DualStatus(), MOI.FeasiblePoint)
+        MOI.set!(mocksolver, MOI.VariablePrimal(), JuMP.solverinstanceindex(x[1,1]), 1.0)
+        MOI.set!(mocksolver, MOI.VariablePrimal(), JuMP.solverinstanceindex(x[1,2]), 2.0)
+        MOI.set!(mocksolver, MOI.VariablePrimal(), JuMP.solverinstanceindex(x[2,2]), 1.0)
+        MOI.set!(mocksolver, MOI.ConstraintDual(), JuMP.solverinstanceindex(conpsd), [1.0,2.0,3.0])
+
+        JuMP.solve(m)
+
+        @test JuMP.isattached(m)
+        @test JuMP.hasvariableresult(m)
+
+        @test JuMP.terminationstatus(m) == MOI.Success
+        @test JuMP.primalstatus(m) == MOI.FeasiblePoint
+
+        @test JuMP.resultvalue.(x) == [1.0 2.0; 2.0 1.0]
+        @test JuMP.hasresultdual(m, typeof(conpsd))
+        @test JuMP.resultdual(conpsd) == [1.0,2.0,3.0]
+
     end
 end

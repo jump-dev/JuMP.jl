@@ -16,15 +16,10 @@ addons:
         - gfortran
         - liblapack-dev
         - libblas-dev
-        - libgmp-dev
-        - libglpk-dev
 script:
     - if [[ -a .git/shallow ]]; then git fetch --unshallow; fi
     - julia -e 'Pkg.clone("https://github.com/JuliaOpt/MathOptInterface.jl.git")'
     - julia -e 'Pkg.clone("https://github.com/JuliaOpt/MathOptInterfaceUtilities.jl.git")'
-#    - julia -e 'Pkg.clone("https://github.com/JuliaOpt/SemidefiniteOptInterface.jl.git")'
-#    - julia -e 'Pkg.clone("https://github.com/JuliaOpt/CSDP.jl.git")'
-#    - julia -e 'Pkg.build("CSDP")'
     - julia -e 'Pkg.clone(pwd())'
     - julia -e 'Pkg.test("JuMP", coverage=true)'
 #    - julia test/hygiene.jl

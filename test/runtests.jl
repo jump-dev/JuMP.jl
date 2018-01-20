@@ -25,8 +25,6 @@ include("expr.jl")
 include("objective.jl")
 include("constraint.jl")
 include("generate_and_solve.jl")
-# TODO: re-enable sdp tests when CSDP is updated (https://github.com/JuliaOpt/SemidefiniteOptInterface.jl/issues/9) or convert the tests to use the mock solver
-#include("sdp.jl")
 include("print.jl")
 #include("expr.jl")
 #include("operator.jl")
