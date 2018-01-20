@@ -1,3 +1,15 @@
+#  Copyright 2017, Iain Dunning, Joey Huchette, Miles Lubin, and contributors
+#  This Source Code Form is subject to the terms of the Mozilla Public
+#  License, v. 2.0. If a copy of the MPL was not distributed with this
+#  file, You can obtain one at http://mozilla.org/MPL/2.0/.
+
+# The tests here check JuMP's model generation and communication with solvers.
+# Model generation is checked by comparing the internal instance with a serialized
+# test instance (in MOIU's lightweight text format).
+# Communication with solvers is tested by using a mock solver with solution data
+# that we feed to it. Prior to using this testing approach, we would test JuMP
+# by calling real solvers, which was flakey and slow.
+
 @testset "Generation and solve with fake solver" begin
     @testset "LP" begin
         m = Model()
