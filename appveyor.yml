@@ -36,9 +36,6 @@ build_script:
   - C:\projects\julia\bin\julia -e "versioninfo(); Pkg.init();
         Pkg.clone(\"https://github.com/JuliaOpt/MathOptInterface.jl.git\");
         Pkg.clone(\"https://github.com/JuliaOpt/MathOptInterfaceUtilities.jl.git\");
-        Pkg.clone(\"https://github.com/JuliaOpt/SemidefiniteOptInterface.jl.git\");
-        Pkg.clone(\"https://github.com/JuliaOpt/CSDP.jl.git\");
-        Pkg.build(\"CSDP\");
         Pkg.clone(pwd(), \"JuMP\");"
 
 test_script:

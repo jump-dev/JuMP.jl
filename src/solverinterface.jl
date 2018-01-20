@@ -112,7 +112,6 @@ function solve(m::Model;
     MOI.optimize!(m.solverinstance)
 
     empty!(m.variableresult)
-    # If any variable has a result then all must have
     if MOI.canget(m.solverinstance, MOI.VariablePrimal(), MOI.VariableIndex)
         for vindex in keys(m.variabletosolvervariable)
             m.variableresult[Variable(m,vindex)] = MOI.get(m.solverinstance, MOI.VariablePrimal(), m.variabletosolvervariable[vindex])

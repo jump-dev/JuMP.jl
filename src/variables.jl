@@ -54,6 +54,10 @@ Base.haskey(vm::VariableToValueMap, v::Variable) = (vm.m === v.m) && haskey(vm.d
 
 instanceindex(v::Variable) = v.instanceindex
 
+function solverinstanceindex(v::Variable)
+    v.m.variabletosolvervariable[instanceindex(v)]
+end
+
 # linearindex(x::Variable) = x.col
 
 # Variable(m::Model, lower, upper, cat::Symbol, name::AbstractString="", value::Number=NaN) =
@@ -132,6 +136,10 @@ function setlowerbound(v::Variable,lower::Number)
     nothing
 end
 
+function LowerBoundRef(v::Variable)
+    return ConstraintRef{Model, MOILB}(v.m, lowerboundindex(v))
+end
+
 """
     deletelowerbound(v::Variable)
 
@@ -186,6 +194,10 @@ function setupperbound(v::Variable,upper::Number)
         setupperboundindex(v, cindex)
     end
     nothing
+end
+
+function UpperBoundRef(v::Variable)
+    return ConstraintRef{Model, MOIUB}(v.m, upperboundindex(v))
 end
 
 """
@@ -268,6 +280,10 @@ function fixvalue(v::Variable)
     return cset.value
 end
 
+function FixRef(v::Variable)
+    return ConstraintRef{Model,MOIFIX}(v.m, fixindex(v))
+end
+
 # integer and binary constraints
 
 isinteger(v::Variable) = haskey(v.m.variabletointegrality,instanceindex(v))
@@ -300,6 +316,10 @@ function unsetinteger(v::Variable)
     @assert !v.m.solverinstanceattached # TODO
 end
 
+function IntegerRef(v::Variable)
+    return ConstraintRef{Model,MOIINT}(v.m, integerindex(v))
+end
+
 isbinary(v::Variable) = haskey(v.m.variabletozeroone,instanceindex(v))
 
 function binaryindex(v::Variable)
@@ -328,6 +348,10 @@ function unsetbinary(v::Variable)
     delete!(v.m.instance, cindex)
     delete!(v.m.variabletozeroone, instanceindex(v))
     @assert !v.m.solverinstanceattached # TODO
+end
+
+function BinaryRef(v::Variable)
+    return ConstraintRef{Model,MOIBIN}(v.m, binaryindex(v))
 end
 
 

@@ -13,16 +13,10 @@
 using JuMP
 using Base.Test
 
-using MathOptInterface
+using MathOptInterface, MathOptInterfaceUtilities
 const MOI = MathOptInterface
+const MOIU = MathOptInterfaceUtilities
 
-
-using CSDP
-
-# Load solvers
-#include("solvers.jl")
-
-# Static tests - most don't require a solver
 #include("print.jl")
 include("containers.jl")
 include("model.jl")
@@ -30,9 +24,7 @@ include("variable.jl")
 include("expr.jl")
 include("objective.jl")
 include("constraint.jl")
-include("lp.jl")
-include("soc.jl")
-include("sdp.jl")
+include("generate_and_solve.jl")
 include("print.jl")
 #include("expr.jl")
 #include("operator.jl")
