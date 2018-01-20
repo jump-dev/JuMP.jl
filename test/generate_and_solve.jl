@@ -10,6 +10,10 @@
 # that we feed to it. Prior to using this testing approach, we would test JuMP
 # by calling real solvers, which was flakey and slow.
 
+# Note: No attempt is made to use correct solution data. We're only testing
+# that the plumbing works. This could change if JuMP gains the ability to verify
+# feasibility independently of a solver.
+
 @testset "Generation and solve with fake solver" begin
     @testset "LP" begin
         m = Model()
@@ -204,7 +208,7 @@
         MOI.set!(mocksolver, MOI.DualStatus(), MOI.FeasiblePoint)
         MOI.set!(mocksolver, MOI.VariablePrimal(), JuMP.solverinstanceindex(x[1,1]), 1.0)
         MOI.set!(mocksolver, MOI.VariablePrimal(), JuMP.solverinstanceindex(x[1,2]), 2.0)
-        MOI.set!(mocksolver, MOI.VariablePrimal(), JuMP.solverinstanceindex(x[2,2]), 1.0)
+        MOI.set!(mocksolver, MOI.VariablePrimal(), JuMP.solverinstanceindex(x[2,2]), 4.0)
         MOI.set!(mocksolver, MOI.ConstraintDual(), JuMP.solverinstanceindex(conpsd), [1.0,2.0,3.0])
 
         JuMP.solve(m)
@@ -215,7 +219,7 @@
         @test JuMP.terminationstatus(m) == MOI.Success
         @test JuMP.primalstatus(m) == MOI.FeasiblePoint
 
-        @test JuMP.resultvalue.(x) == [1.0 2.0; 2.0 1.0]
+        @test JuMP.resultvalue.(x) == [1.0 2.0; 2.0 4.0]
         @test JuMP.hasresultdual(m, typeof(conpsd))
         @test JuMP.resultdual(conpsd) == [1.0,2.0,3.0]
 
