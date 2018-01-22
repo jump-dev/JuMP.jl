@@ -20,9 +20,8 @@ Add a SD variable constraint to `Model m`.
 """
 function addconstraint(m::Model, c::SDVariableConstraint)
     @assert issymmetric(c.Q)
-    @assert !m.solverinstanceattached # TODO
     n = Base.LinAlg.checksquare(c.Q)
-    cindex = MOI.addconstraint!(m.instance, MOI.VectorOfVariables([instanceindex(c.Q[i, j]) for j in 1:n for i in 1:j]), MOI.PositiveSemidefiniteConeTriangle(n))
+    cindex = MOI.addconstraint!(m.moibackend, MOI.VectorOfVariables([index(c.Q[i, j]) for j in 1:n for i in 1:j]), MOI.PositiveSemidefiniteConeTriangle(n))
     return ConstraintRef(m, cindex)
 end
 

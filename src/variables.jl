@@ -5,13 +5,19 @@
 
 
 #############################################################################
-# Variable class
-# Holds a reference to the model and the corresponding
-# VariableIndex for the internal instance
+# VariableIndex
+# Holds a reference to the model and the corresponding MOI.VariableIndex.
 struct Variable <: AbstractJuMPScalar
     m::Model
-    instanceindex::MOIVAR
+    index::MOIVAR
 end
+
+function MOI.delete!(m::Model, v::Variable)
+    @assert m === v.m
+    MOI.delete!(m.moibackend, v.index)
+end
+
+MOI.isvalid(m::Model, v::Variable) = (v.m === m) && MOI.isvalid(m.moibackend, v.index)
 
 
 """
@@ -30,53 +36,35 @@ end
 
 function Base.getindex(vm::VariableToValueMap, v::Variable)
     @assert v.m === vm.m # TODO: better error message
-    return vm.d[instanceindex(v)]
+    return vm.d[index(v)]
 end
 
 function Base.setindex!(vm::VariableToValueMap{T}, value::T, v::Variable) where T
     @assert v.m === vm.m # TODO: better error message
-    vm.d[instanceindex(v)] = value
+    vm.d[index(v)] = value
 end
 
 Base.setindex!(vm::VariableToValueMap{T}, value, v::Variable) where T = setindex!(vm, convert(T, value), v)
 
 function Base.delete!(vm::VariableToValueMap,v::Variable)
-    delete!(vm.d, instanceindex(v))
+    delete!(vm.d, index(v))
     vm
 end
 
 Base.empty!(vm::VariableToValueMap) = empty!(vm.d)
 Base.isempty(vm::VariableToValueMap) = isempty(vm.d)
 
-Base.haskey(vm::VariableToValueMap, v::Variable) = (vm.m === v.m) && haskey(vm.d, instanceindex(v))
+Base.haskey(vm::VariableToValueMap, v::Variable) = (vm.m === v.m) && haskey(vm.d, index(v))
 
 
 
-instanceindex(v::Variable) = v.instanceindex
-
-function solverinstanceindex(v::Variable)
-    v.m.variabletosolvervariable[instanceindex(v)]
-end
-
-# linearindex(x::Variable) = x.col
+index(v::Variable) = v.index
 
 # Variable(m::Model, lower, upper, cat::Symbol, name::AbstractString="", value::Number=NaN) =
 #     error("Attempt to create scalar Variable with lower bound of type $(typeof(lower)) and upper bound of type $(typeof(upper)). Bounds must be scalars in Variable constructor.")
 
 function Variable(m::Model)
-    index = MOI.addvariable!(m.instance)
-
-    v = Variable(m, index)
-
-    # TODO: try to update solver instance
-    # if m.internalModelLoaded
-    #     if method_exists(MathProgBase.addvar!, (typeof(m.internalModel),Vector{Int},Vector{Float64},Float64,Float64,Float64))
-    #         MathProgBase.addvar!(m.internalModel,float(lower),float(upper),0.0)
-    #     else
-    #         Base.warn_once("Solver does not appear to support adding variables to an existing model. JuMP's internal model will be discarded.")
-    #         m.internalModelLoaded = false
-    #     end
-    # end
+    index = MOI.addvariable!(m.moibackend)
     return Variable(m, index)
 end
 
@@ -99,21 +87,21 @@ Get a variable's name.
 """
 name(v::Variable) = var_str(REPLMode, v)
 
-setname(v::Variable, s::String) = MOI.set!(v.m.instance, MOI.VariableName(), instanceindex(v), s)
+setname(v::Variable, s::String) = MOI.set!(v.m, MOI.VariableName(), v, s)
 
 
 ## Bound setter/getters
 
 # lower bounds
 
-haslowerbound(v::Variable) = haskey(v.m.variabletolowerbound,instanceindex(v))
+haslowerbound(v::Variable) = haskey(v.m.variabletolowerbound,index(v))
 
 function lowerboundindex(v::Variable)
     @assert haslowerbound(v) # TODO error message
-    return v.m.variabletolowerbound[instanceindex(v)]
+    return v.m.variabletolowerbound[index(v)]
 end
 function setlowerboundindex(v::Variable, cindex::MOILB)
-    v.m.variabletolowerbound[instanceindex(v)] = cindex
+    v.m.variabletolowerbound[index(v)] = cindex
 end
 
 """
@@ -126,11 +114,10 @@ function setlowerbound(v::Variable,lower::Number)
     # do we have a lower bound already?
     if haslowerbound(v)
         cindex = lowerboundindex(v)
-        MOI.modifyconstraint!(v.m.instance, cindex, newset)
-        @assert !v.m.solverinstanceattached # TODO
+        MOI.modifyconstraint!(v.m.moibackend, cindex, newset)
     else
         @assert !isfixed(v)
-        cindex = MOI.addconstraint!(v.m.instance, MOI.SingleVariable(instanceindex(v)), newset)
+        cindex = MOI.addconstraint!(v.m.moibackend, MOI.SingleVariable(index(v)), newset)
         setlowerboundindex(v, cindex)
     end
     nothing
@@ -146,10 +133,8 @@ end
 Delete the lower bound constraint of a variable.
 """
 function deletelowerbound(v::Variable)
-    cindex = lowerboundindex(v)
-    delete!(v.m.instance, cindex)
-    delete!(v.m.variabletolowerbound, instanceindex(v))
-    @assert !v.m.solverinstanceattached # TODO
+    MOI.delete!(v.m, LowerBoundRef(v))
+    delete!(v.m.variabletolowerbound, index(v))
     nothing
 end
 
@@ -159,21 +144,20 @@ end
 Return the lower bound of a variable. Error if one does not exist.
 """
 function lowerbound(v::Variable)
-    cindex = lowerboundindex(v)
-    cset = MOI.get(v.m.instance, MOI.ConstraintSet(), cindex)::MOI.GreaterThan
+    cset = MOI.get(v.m, MOI.ConstraintSet(), LowerBoundRef(v))::MOI.GreaterThan
     return cset.lower
 end
 
 # upper bounds
 
-hasupperbound(v::Variable) = haskey(v.m.variabletoupperbound,instanceindex(v))
+hasupperbound(v::Variable) = haskey(v.m.variabletoupperbound,index(v))
 
 function upperboundindex(v::Variable)
     @assert hasupperbound(v) # TODO error message
-    return v.m.variabletoupperbound[instanceindex(v)]
+    return v.m.variabletoupperbound[index(v)]
 end
 function setupperboundindex(v::Variable, cindex::MOIUB)
-    v.m.variabletoupperbound[instanceindex(v)] = cindex
+    v.m.variabletoupperbound[index(v)] = cindex
 end
 
 """
@@ -186,11 +170,10 @@ function setupperbound(v::Variable,upper::Number)
     # do we have an upper bound already?
     if hasupperbound(v)
         cindex = upperboundindex(v)
-        MOI.modifyconstraint!(v.m.instance, cindex, newset)
-        @assert !v.m.solverinstanceattached # TODO
+        MOI.modifyconstraint!(v.m.moibackend, cindex, newset)
     else
         @assert !isfixed(v)
-        cindex = MOI.addconstraint!(v.m.instance, MOI.SingleVariable(instanceindex(v)), newset)
+        cindex = MOI.addconstraint!(v.m.moibackend, MOI.SingleVariable(index(v)), newset)
         setupperboundindex(v, cindex)
     end
     nothing
@@ -206,10 +189,8 @@ end
 Delete the upper bound constraint of a variable.
 """
 function deleteupperbound(v::Variable)
-    cindex = upperboundindex(v)
-    delete!(v.m.instance, cindex)
-    delete!(v.m.variabletoupperbound, instanceindex(v))
-    @assert !v.m.solverinstanceattached # TODO
+    MOI.delete!(v.m, UpperBoundRef(v))
+    delete!(v.m.variabletoupperbound, index(v))
     nothing
 end
 
@@ -219,21 +200,20 @@ end
 Return the upper bound of a variable. Error if one does not exist.
 """
 function upperbound(v::Variable)
-    cindex = upperboundindex(v)
-    cset = MOI.get(v.m.instance, MOI.ConstraintSet(), cindex)::MOI.LessThan
+    cset = MOI.get(v.m, MOI.ConstraintSet(), UpperBoundRef(v))::MOI.LessThan
     return cset.upper
 end
 
 # fixed value
 
-isfixed(v::Variable) = haskey(v.m.variabletofix,instanceindex(v))
+isfixed(v::Variable) = haskey(v.m.variabletofix,index(v))
 
 function fixindex(v::Variable)
     @assert isfixed(v) # TODO error message
-    return v.m.variabletofix[instanceindex(v)]
+    return v.m.variabletofix[index(v)]
 end
 function setfixindex(v::Variable, cindex::MOIFIX)
-    v.m.variabletofix[instanceindex(v)] = cindex
+    v.m.variabletofix[index(v)] = cindex
 end
 
 """
@@ -246,11 +226,10 @@ function fix(v::Variable,upper::Number)
     # are we already fixed?
     if isfixed(v)
         cindex = fixindex(v)
-        MOI.modifyconstraint!(v.m.instance, cindex, newset)
-        @assert !v.m.solverinstanceattached # TODO
+        MOI.modifyconstraint!(v.m.moibackend, cindex, newset)
     else
         @assert !hasupperbound(v) && !haslowerbound(v) # Do we want to remove these instead of throwing an error?
-        cindex = MOI.addconstraint!(v.m.instance, MOI.SingleVariable(instanceindex(v)), newset)
+        cindex = MOI.addconstraint!(v.m.moibackend, MOI.SingleVariable(index(v)), newset)
         setfixindex(v, cindex)
     end
     nothing
@@ -262,10 +241,8 @@ end
 Delete the fixing constraint of a variable.
 """
 function unfix(v::Variable)
-    cindex = getfixindex(v)
-    delete!(v.m.instance, cindex)
-    delete!(v.m.variabletofix, instanceindex(v))
-    @assert !v.m.solverinstanceattached # TODO
+    MOI.delete!(v.m, FixRef(v))
+    delete!(v.m.variabletofix, index(v))
     nothing
 end
 
@@ -275,8 +252,7 @@ end
 Return the value to which a variable is fixed. Error if one does not exist.
 """
 function fixvalue(v::Variable)
-    cindex = fixindex(v)
-    cset = MOI.get(v.m.instance, MOI.ConstraintSet(), cindex)::MOI.EqualTo
+    cset = MOI.get(v.m, MOI.ConstraintSet(), FixRef(v))::MOI.EqualTo
     return cset.value
 end
 
@@ -286,14 +262,14 @@ end
 
 # integer and binary constraints
 
-isinteger(v::Variable) = haskey(v.m.variabletointegrality,instanceindex(v))
+isinteger(v::Variable) = haskey(v.m.variabletointegrality,index(v))
 
 function integerindex(v::Variable)
     @assert isinteger(v) # TODO error message
-    return v.m.variabletointegrality[instanceindex(v)]
+    return v.m.variabletointegrality[index(v)]
 end
 function setintegerindex(v::Variable, cindex::MOIINT)
-    v.m.variabletointegrality[instanceindex(v)] = cindex
+    v.m.variabletointegrality[index(v)] = cindex
 end
 
 """
@@ -304,30 +280,28 @@ Add an integrality constraint on the variable `v`.
 function setinteger(v::Variable)
     isinteger(v) && return
     @assert !isbinary(v) # TODO error message
-    cindex = MOI.addconstraint!(v.m.instance, MOI.SingleVariable(instanceindex(v)), MOI.Integer())
+    cindex = MOI.addconstraint!(v.m.moibackend, MOI.SingleVariable(index(v)), MOI.Integer())
     setintegerindex(v, cindex)
     nothing
 end
 
 function unsetinteger(v::Variable)
-    cindex = integerindex(v)
-    delete!(v.m.instance, cindex)
-    delete!(v.m.variabletointegrality, instanceindex(v))
-    @assert !v.m.solverinstanceattached # TODO
+    MOI.delete!(v.m, IntegerRef(v))
+    delete!(v.m.variabletointegrality, index(v))
 end
 
 function IntegerRef(v::Variable)
     return ConstraintRef{Model,MOIINT}(v.m, integerindex(v))
 end
 
-isbinary(v::Variable) = haskey(v.m.variabletozeroone,instanceindex(v))
+isbinary(v::Variable) = haskey(v.m.variabletozeroone,index(v))
 
 function binaryindex(v::Variable)
     @assert isbinary(v) # TODO error message
-    return v.m.variabletozeroone[instanceindex(v)]
+    return v.m.variabletozeroone[index(v)]
 end
 function setbinaryindex(v::Variable, cindex::MOIBIN)
-    v.m.variabletozeroone[instanceindex(v)] = cindex
+    v.m.variabletozeroone[index(v)] = cindex
 end
 
 """
@@ -338,16 +312,14 @@ Add a constraint on the variable `v` that it must take values in the set ``\{0,1
 function setbinary(v::Variable)
     isbinary(v) && return
     @assert !isinteger(v) # TODO error message
-    cindex = MOI.addconstraint!(v.m.instance, MOI.SingleVariable(instanceindex(v)), MOI.ZeroOne())
+    cindex = MOI.addconstraint!(v.m.moibackend, MOI.SingleVariable(index(v)), MOI.ZeroOne())
     setbinaryindex(v, cindex)
     nothing
 end
 
 function unsetbinary(v::Variable)
-    cindex = binaryindex(v)
-    delete!(v.m.instance, cindex)
-    delete!(v.m.variabletozeroone, instanceindex(v))
-    @assert !v.m.solverinstanceattached # TODO
+    MOI.delete!(v.m, BinaryRef(v))
+    delete!(v.m.variabletozeroone, index(v))
 end
 
 function BinaryRef(v::Variable)
@@ -355,24 +327,18 @@ function BinaryRef(v::Variable)
 end
 
 
-# solution objects
-
-variablestart(m::Model) = m.variablestart::VariableToValueMap{Float64}
-# TODO do we want these or should we have people use the variablestart object directly?
-startvalue(v::Variable) = variablestart(v.m)[v]
-setstartvalue(v::Variable, val::Number) = variablestart(v.m)[v] = val
-
-variableresult(m::Model) = m.variableresult::VariableToValueMap{Float64}
-hasvariableresult(m::Model) = !isempty(variableresult(m))
+startvalue(v::Variable) = MOI.get(v.m, MOI.VariablePrimalStart())
+setstartvalue(v::Variable, val::Number) = MOI.set!(v.m, MOI.VariablePrimalStart(), v, val)
 
 """
     resultvalue(v::Variable)
 
 Get the value of this variable in the result returned by a solver.
-Use `hasvariableresult` to check if a result exists before asking for values.
+Use `hasresultvalues` to check if a result exists before asking for values.
 Replaces `getvalue` for most use cases.
 """
-resultvalue(v::Variable) = variableresult(v.m)[v]
+resultvalue(v::Variable) = MOI.get(v.m, MOI.VariablePrimal(), v)
+hasresultvalues(m::Model) = MOI.canget(m, MOI.VariablePrimal(), Variable)
 
 @Base.deprecate setvalue(v::Variable, val::Number) setstart(v, val)
 

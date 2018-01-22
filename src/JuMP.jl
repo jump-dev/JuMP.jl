@@ -77,12 +77,18 @@ const MOIBIN = MOICON{MOI.SingleVariable,MOI.ZeroOne}
 @MOIU.instance JuMPInstance (ZeroOne, Integer) (EqualTo, GreaterThan, LessThan, Interval) (Zeros, Nonnegatives, Nonpositives, SecondOrderCone, RotatedSecondOrderCone, GeometricMeanCone, PositiveSemidefiniteConeTriangle, PositiveSemidefiniteConeSquare, RootDetConeTriangle, RootDetConeSquare, LogDetConeTriangle, LogDetConeSquare) () (SingleVariable,) (ScalarAffineFunction,ScalarQuadraticFunction) (VectorOfVariables,) (VectorAffineFunction,)
 
 ###############################################################################
-# Model class
-# Keeps track of all model and column info
+# Model
+
+# Model has three modes:
+# 1) Automatic: moibackend field holds an InstanceManager in Automatic mode.
+# 2) Manual: moibackend field holds an InstanceManager in Manual mode.
+# 3) Direct: moibackend field holds an AbstractSolverInstance. No extra copy of the instance is stored. The moibackend must support adddconstraint! etc.
+# Methods to interact with the InstanceManager are defined in solverinterface.jl.
+@enum ModelMode Automatic Manual Direct
+
 abstract type AbstractModel end
 mutable struct Model <: AbstractModel
 
-    instance::JuMPInstance{Float64}
     # special variablewise properties that we keep track of:
     # lower bound, upper bound, fixed, integrality, binary
     variabletolowerbound::Dict{MOIVAR,MOILB}
@@ -90,19 +96,9 @@ mutable struct Model <: AbstractModel
     variabletofix::Dict{MOIVAR,MOIFIX}
     variabletointegrality::Dict{MOIVAR,MOIINT}
     variabletozeroone::Dict{MOIVAR,MOIBIN}
-    variabletosolvervariable::Dict{MOIVAR,MOIVAR}
-
-    # convenient solution objects to keep in the model
-    variablestart #VariableToValueMap{Float64}
-    variableresult #VariableToValueMap{Float64}
-
 
     # obj#::QuadExpr
     # objSense::Symbol
-
-    # Mapping from the constraint index in `instance`
-    # and the constraint index in `solverinstance`
-    constrainttosolverconstraint::Dict{MOICON,MOICON}
 
     # linconstr#::Vector{LinearConstraint}
     # quadconstr
@@ -136,10 +132,7 @@ mutable struct Model <: AbstractModel
     # # such that a symmetry-enforcing constraint has been created
     # # between sdpconstr[c].terms[i,j] and sdpconstr[c].terms[j,i]
     # sdpconstrSym::Vector{Vector{Tuple{Int,Int}}}
-    # internal solver instance object
-    solverinstance
-    # Solver+option object from MPB or MOI
-    solverinstanceattached::Bool
+    moibackend::Union{MOI.AbstractSolverInstance,MOIU.InstanceManager}
     # callbacks
     callbacks
     # lazycallback
@@ -169,23 +162,29 @@ mutable struct Model <: AbstractModel
     # dictionary keyed on an extension-specific symbol
     ext::Dict{Symbol,Any}
     # Default constructor
-    function Model(; simplify_nonlinear_expressions::Bool=false)
+    function Model(; mode::ModelMode=Automatic, solver=nothing, simplify_nonlinear_expressions::Bool=false)
         # TODO need to support MPB also
         m = new()
         # TODO make pretty
-        m.instance = JuMPInstance{Float64}()
         m.variabletolowerbound = Dict{MOIVAR,MOILB}()
         m.variabletoupperbound = Dict{MOIVAR,MOIUB}()
         m.variabletofix = Dict{MOIVAR,MOIFIX}()
         m.variabletointegrality = Dict{MOIVAR,MOIINT}()
         m.variabletozeroone = Dict{MOIVAR,MOIBIN}()
-        m.variablestart = VariableToValueMap{Float64}(m)
-        m.variableresult = VariableToValueMap{Float64}(m)
         m.customnames = Variable[]
         m.objbound = 0.0
         m.objval = 0.0
-        m.solverinstance = nothing
-        m.solverinstanceattached = false
+        if mode == Automatic
+            @assert solver === nothing
+            m.moibackend = MOIU.InstanceManager(JuMPInstance{Float64}(), MOIU.Automatic)
+        elseif mode == Manual
+            @assert solver === nothing
+            m.moibackend = MOIU.InstanceManager(JuMPInstance{Float64}(), MOIU.Manual)
+        else # Direct
+            @assert solver isa MOI.AbstractSolverInstance
+            @assert MOI.isempty(solver)
+            m.moibackend = solver
+        end
         m.callbacks = Any[]
         m.solvehook = nothing
         # m.printhook = nothing
@@ -199,14 +198,20 @@ mutable struct Model <: AbstractModel
     end
 end
 
-
-
-
-
 # Getters/setters
 
+function mode(m::Model)
+    if m.moibackend isa MOI.AbstractSolverInstance
+        return Direct
+    elseif m.moibackend.mode == MOIU.Automatic
+        return Automatic
+    else
+        return Manual
+    end
+end
+
 # temporary name
-numvar(m::Model) = MOI.get(m.instance, MOI.NumberOfVariables())
+numvar(m::Model) = MOI.get(m, MOI.NumberOfVariables())
 
 # """
 #     MathProgBase.numvar(m::Model)
@@ -364,7 +369,7 @@ objectivevalue(m::Model) = MOI.get(m, MOI.ObjectiveValue())
 Return the objective sense, `:Min`, `:Max`, or `:Feasibility`.
 """
 function objectivesense(m::Model)
-    moisense = MOI.get(m.instance, MOI.ObjectiveSense())
+    moisense = MOI.get(m, MOI.ObjectiveSense())
     if moisense == MOI.MinSense
         return :Min
     elseif moisense == MOI.MaxSense
@@ -463,13 +468,13 @@ dualstatus(m::Model) = MOI.get(m, MOI.DualStatus())
 #     return dest
 # end
 
-"""
-    solverinstance(m::Model)
-
-returns the internal `AbstractSolverInstance` object which can be used to access any functionality that is not exposed by JuMP.
-See the MathOptInterface [documentation](XXX).
-"""
-solverinstance(m::Model) = m.solverinstance
+# """
+#     solverinstance(m::Model)
+#
+# returns the internal `AbstractSolverInstance` object which can be used to access any functionality that is not exposed by JuMP.
+# See the MathOptInterface [documentation](XXX).
+# """
+# solverinstance(m::Model) = m.solverinstance
 
 setsolvehook(m::Model, f) = (m.solvehook = f)
 setprinthook(m::Model, f) = (m.printhook = f)
@@ -515,25 +520,46 @@ Base.copy(x::Void, new_model::Model) = nothing
 Base.copy(v::AbstractArray{Variable}, new_model::Model) = (var -> Variable(new_model, var.col)).(v)
 
 ##########################################################################
-# ConstraintRef
-# Reference to a constraint for retrieving solution info
+# Constraint
+# Holds the index of a constraint in a Model.
 # TODO: Consider renaming this to be consistent with Variable.
 struct ConstraintRef{M<:AbstractModel,C}
     m::M
-    instanceindex::C
+    index::C
 end
 # Base.copy{M,T}(c::ConstraintRef{M,T}, new_model::M) = ConstraintRef{M,T}(new_model, c.idx)
 
-# linearindex(x::ConstraintRef) = x.idx
-
-instanceindex(cr::ConstraintRef) = cr.instanceindex
-
-function solverinstanceindex(cr::ConstraintRef{Model, MOICON{F, S}}) where {F, S}
-    cr.m.constrainttosolverconstraint[cr.instanceindex]::MOICON{F, S}
+# TODO: should model be a parameter here?
+function MOI.delete!(m::Model, cr::ConstraintRef{Model})
+    @assert m === cr.m
+    MOI.delete!(m.moibackend, index(cr))
 end
 
+MOI.isvalid(m::Model, cr::ConstraintRef{Model}) = cr.m === m && MOI.isvalid(m.moibackend, cr.index)
+
+
+function solverindex(v::Variable)
+    if mode(v.m) == Direct
+        return index(v)
+    else
+        @assert v.m.moibackend.state == MOIU.AttachedSolver
+        return v.m.moibackend.instancetosolvermap[index(v)]
+    end
+end
+
+function solverindex(cr::ConstraintRef{Model})
+    if mode(cr.m) == Direct
+        return index(cr)
+    else
+        @assert cr.m.moibackend.state == MOIU.AttachedSolver
+        return cr.m.moibackend.instancetosolvermap[index(cr)]
+    end
+end
+
+index(cr::ConstraintRef) = cr.index
+
 function hasresultdual(m::Model, REF::Type{<:ConstraintRef{Model, T}}) where {T <: MOICON}
-    MOI.canget(m.solverinstance, MOI.ConstraintDual(), T)
+    MOI.canget(m, MOI.ConstraintDual(), REF)
 end
 
 """
@@ -544,7 +570,7 @@ Use `hasresultdual` to check if a result exists before asking for values.
 Replaces `getdual` for most use cases.
 """
 function resultdual(cr::ConstraintRef{Model, <:MOICON})
-    MOI.get(cr.m.solverinstance, MOI.ConstraintDual(), solverinstanceindex(cr))
+    MOI.get(cr.m, MOI.ConstraintDual(), cr)
 end
 
 """
@@ -552,9 +578,44 @@ end
 
 Get a constraint's name.
 """
-name(cr::ConstraintRef{Model,<:MOICON}) = MOI.get(cr.m.instance, MOI.ConstraintName(), instanceindex(cr))
+name(cr::ConstraintRef{Model,<:MOICON}) = MOI.get(cr.m, MOI.ConstraintName(), cr)
 
-setname(cr::ConstraintRef{Model,<:MOICON}, s::String) = MOI.set!(cr.m.instance, MOI.ConstraintName(), instanceindex(cr), s)
+setname(cr::ConstraintRef{Model,<:MOICON}, s::String) = MOI.set!(cr.m, MOI.ConstraintName(), cr, s)
+
+"""
+    canget(m::JuMP.Model, attr::MathOptInterface.AbstractInstanceAttribute)::Bool
+
+Return `true` if one may query the attribute `attr` from the model's MOI backend.
+false if not.
+"""
+MOI.canget(m::Model, attr::MOI.AbstractInstanceAttribute) = MOI.canget(m.moibackend, attr)
+MOI.canget(m::Model, attr::MOI.AbstractVariableAttribute, ::Type{Variable}) = MOI.canget(m.moibackend, attr, MOIVAR)
+MOI.canget(m::Model, attr::MOI.AbstractConstraintAttribute, ::Type{ConstraintRef{Model,T}}) where {T <: MOICON} = MOI.canget(m.moibackend, attr, T)
+
+"""
+    get(m::JuMP.Model, attr::MathOptInterface.AbstractInstanceAttribute)
+
+Return the value of the attribute `attr` from model's MOI backend.
+"""
+MOI.get(m::Model, attr::MOI.AbstractInstanceAttribute) = MOI.get(m.moibackend, attr)
+function MOI.get(m::Model, attr::MOI.AbstractVariableAttribute, v::Variable)
+    @assert m === v.m
+    MOI.get(m.moibackend, attr, index(v))
+end
+function MOI.get(m::Model, attr::MOI.AbstractConstraintAttribute, cr::ConstraintRef)
+    @assert m === cr.m
+    MOI.get(m.moibackend, attr, index(cr))
+end
+
+MOI.set!(m::Model, attr::MOI.AbstractInstanceAttribute, value) = MOI.set!(m.moibackend, attr, value)
+function MOI.set!(m::Model, attr::MOI.AbstractVariableAttribute, v::Variable, value)
+    @assert m === v.m
+    MOI.set!(m.moibackend, attr, index(v), value)
+end
+function MOI.set!(m::Model, attr::MOI.AbstractConstraintAttribute, cr::ConstraintRef, value)
+    @assert m === cr.m
+    MOI.set!(m.moibackend, attr, index(cr), value)
+end
 
 ###############################################################################
 # GenericAffineExpression, AffExpr, AffExprConstraint
