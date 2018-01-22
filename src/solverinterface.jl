@@ -39,8 +39,13 @@ function attach(m::Model, solverinstance::MOI.AbstractSolverInstance)
         m.variabletosolvervariable[MOIVAR(i)] = solvervariables[i]
     end
 
-    MOI.set!(m.solverinstance, MOI.ObjectiveSense(), MOI.get(m.instance, MOI.ObjectiveSense()))
-    MOI.set!(m.solverinstance, MOI.ObjectiveFunction(), MOI.get(m.instance, MOI.ObjectiveFunction()))
+    # Copy instance attributes
+    for attr in MOI.get(m.instance, MOI.ListOfInstanceAttributesSet())
+        if MOI.canget(m.instance, attr)
+            @assert MOI.canset(solverinstance, attr)
+            MOI.set!(solverinstance, attr, MOI.get(m.instance, attr))
+        end
+    end
 
     for (F, S) in MOI.get(m.instance, MOI.ListOfConstraints())
         # do the rest in copyconstraints! which is type stable
