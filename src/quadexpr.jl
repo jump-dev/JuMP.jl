@@ -83,7 +83,7 @@ Base.convert(::Type{QuadExpr}, v::Union{Real,Variable,AffExpr}) = QuadExpr(Varia
 QuadExpr() = zero(QuadExpr)
 
 function MOI.ScalarQuadraticFunction(q::QuadExpr)
-    return MOI.ScalarQuadraticFunction(instanceindex.(q.aff.vars), q.aff.coeffs, instanceindex.(q.qvars1), instanceindex.(q.qvars2), q.qcoeffs, q.aff.constant)
+    return MOI.ScalarQuadraticFunction(index.(q.aff.vars), q.aff.coeffs, index.(q.qvars1), index.(q.qvars2), q.qcoeffs, q.aff.constant)
 end
 
 function QuadExpr(m::Model, f::MOI.ScalarQuadraticFunction)
@@ -91,15 +91,14 @@ function QuadExpr(m::Model, f::MOI.ScalarQuadraticFunction)
 end
 
 function setobjective(m::Model, sense::Symbol, a::QuadExpr)
-    @assert !m.solverinstanceattached # TODO
     if sense == :Min
         moisense = MOI.MinSense
     else
         @assert sense == :Max
         moisense = MOI.MaxSense
     end
-    MOI.set!(m.instance, MOI.ObjectiveSense(), moisense)
-    MOI.set!(m.instance, MOI.ObjectiveFunction{MOI.ScalarQuadraticFunction{Float64}}(), MOI.ScalarQuadraticFunction(a))
+    MOI.set!(m.moibackend, MOI.ObjectiveSense(), moisense)
+    MOI.set!(m.moibackend, MOI.ObjectiveFunction{MOI.ScalarQuadraticFunction{Float64}}(), MOI.ScalarQuadraticFunction(a))
     nothing
 end
 
@@ -110,7 +109,7 @@ Return a `QuadExpr` object representing the objective function.
 Error if the objective is not quadratic.
 """
 function objectivefunction(m::Model, ::Type{QuadExpr})
-    f = MOI.get(m.instance, MOI.ObjectiveFunction{MOI.ScalarQuadraticFunction{Float64}}())::MOI.ScalarQuadraticFunction{Float64}
+    f = MOI.get(m.moibackend, MOI.ObjectiveFunction{MOI.ScalarQuadraticFunction{Float64}}())::MOI.ScalarQuadraticFunction
     return QuadExpr(m, f)
 end
 
@@ -151,14 +150,13 @@ end
 Add a `QuadExpr` constraint to `Model m`.
 """
 function addconstraint(m::Model, c::QuadExprConstraint)
-    @assert !m.solverinstanceattached # TODO
-    cindex = MOI.addconstraint!(m.instance, MOI.ScalarQuadraticFunction(c.func), c.set)
+    cindex = MOI.addconstraint!(m.moibackend, MOI.ScalarQuadraticFunction(c.func), c.set)
     return ConstraintRef(m, cindex)
 end
 
-function constraintobject(cindex::ConstraintRef{Model}, ::Type{QuadExpr}, ::Type{SetType}) where {SetType <: MOI.AbstractScalarSet}
-    m = cindex.m
-    f = MOI.get(m.instance, MOI.ConstraintFunction(), cindex.instanceindex)::MOI.ScalarQuadraticFunction
-    s = MOI.get(m.instance, MOI.ConstraintSet(), cindex.instanceindex)::SetType
+function constraintobject(cr::ConstraintRef{Model}, ::Type{QuadExpr}, ::Type{SetType}) where {SetType <: MOI.AbstractScalarSet}
+    m = cr.m
+    f = MOI.get(m.moibackend, MOI.ConstraintFunction(), index(cr))::MOI.ScalarQuadraticFunction
+    s = MOI.get(m.moibackend, MOI.ConstraintSet(), index(cr))::SetType
     return QuadExprConstraint(QuadExpr(m, f), s)
 end

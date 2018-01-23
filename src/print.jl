@@ -300,7 +300,7 @@ Base.show(io::IO, v::Variable) = print(io, var_str(REPLMode,v))
 Base.show(io::IO, ::MIME"text/latex", v::Variable) =
     print(io, var_str(IJuliaMode,v,mathmode=false))
 function var_str(::Type{REPLMode}, v::Variable; mathmode=true)
-    name = MOI.get(v.m.instance, MOI.VariableName(), instanceindex(v))
+    name = MOI.get(v.m, MOI.VariableName(), v)
     if name != ""
         return name
     else
@@ -308,7 +308,7 @@ function var_str(::Type{REPLMode}, v::Variable; mathmode=true)
     end
 end
 function var_str(::Type{IJuliaMode}, v::Variable; mathmode=true)
-    name = MOI.get(v.m.instance, MOI.VariableName(), instanceindex(v))
+    name = MOI.get(v.m, MOI.VariableName(), v)
     if name != ""
         # TODO: This is wrong if variable name constains extra "]"
         return math(replace(replace(name,"[","_{",1),"]","}"), mathmode)

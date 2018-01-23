@@ -149,7 +149,7 @@ Replaces `getvalue` for most use cases.
 resultvalue(a::AffExpr) = value(a, resultvalue)
 
 function MOI.ScalarAffineFunction(a::AffExpr)
-    return MOI.ScalarAffineFunction(instanceindex.(a.vars), a.coeffs, a.constant)
+    return MOI.ScalarAffineFunction(index.(a.vars), a.coeffs, a.constant)
 end
 
 function AffExpr(m::Model, f::MOI.ScalarAffineFunction)
@@ -165,7 +165,7 @@ The output index for all terms is `oi`.
 function _fillvaf!(outputindex, variables, coefficients, offset::Int, oi::Int, aff::AffExpr)
     for i in 1:length(aff.vars)
         outputindex[offset+i] = oi
-        variables[offset+i] = instanceindex(aff.vars[i])
+        variables[offset+i] = index(aff.vars[i])
         coefficients[offset+i] = aff.coeffs[i]
     end
     offset + length(aff.vars)
@@ -190,15 +190,14 @@ setobjective(m::Model, sense::Symbol, x::Variable) = setobjective(m, sense, conv
 
 
 function setobjective(m::Model, sense::Symbol, a::AffExpr)
-    @assert !m.solverinstanceattached # TODO
     if sense == :Min
         moisense = MOI.MinSense
     else
         @assert sense == :Max
         moisense = MOI.MaxSense
     end
-    MOI.set!(m.instance, MOI.ObjectiveSense(), moisense)
-    MOI.set!(m.instance, MOI.ObjectiveFunction{MOI.ScalarAffineFunction{Float64}}(), MOI.ScalarAffineFunction(a))
+    MOI.set!(m.moibackend, MOI.ObjectiveSense(), moisense)
+    MOI.set!(m.moibackend, MOI.ObjectiveFunction{MOI.ScalarAffineFunction{Float64}}(), MOI.ScalarAffineFunction(a))
     nothing
 end
 
@@ -209,7 +208,7 @@ Return an `AffExpr` object representing the objective function.
 Error if the objective is not linear.
 """
 function objectivefunction(m::Model, ::Type{AffExpr})
-    f = MOI.get(m.instance, MOI.ObjectiveFunction{MOI.ScalarAffineFunction{Float64}}())::MOI.ScalarAffineFunction{Float64}
+    f = MOI.get(m.moibackend, MOI.ObjectiveFunction{MOI.ScalarAffineFunction{Float64}}())::MOI.ScalarAffineFunction
     return AffExpr(m, f)
 end
 
@@ -250,8 +249,7 @@ end
 Add an `AffExpr` constraint to `Model m`.
 """
 function addconstraint(m::Model, c::AffExprConstraint)
-    @assert !m.solverinstanceattached # TODO
-    cindex = MOI.addconstraint!(m.instance, MOI.ScalarAffineFunction(c.func), c.set)
+    cindex = MOI.addconstraint!(m.moibackend, MOI.ScalarAffineFunction(c.func), c.set)
     return ConstraintRef(m, cindex)
 end
 addconstraint(m::Model, c::Array{AffExprConstraint}) =
@@ -268,22 +266,20 @@ end
 Add the vector constraint `c` to `Model m`.
 """
 function addconstraint(m::Model, c::VectorAffExprConstraint)
-    @assert !m.solverinstanceattached # TODO
-    cindex = MOI.addconstraint!(m.instance, MOI.VectorAffineFunction(c.func), c.set)
+    cindex = MOI.addconstraint!(m.moibackend, MOI.VectorAffineFunction(c.func), c.set)
     return ConstraintRef(m, cindex)
 end
 
 
-function constraintobject(cindex::ConstraintRef{Model}, ::Type{AffExpr}, ::Type{SetType}) where {SetType <: MOI.AbstractScalarSet}
-    m = cindex.m
-    f = MOI.get(m.instance, MOI.ConstraintFunction(), cindex.instanceindex)::MOI.ScalarAffineFunction
-    s = MOI.get(m.instance, MOI.ConstraintSet(), cindex.instanceindex)::SetType
-    return AffExprConstraint(AffExpr(m, f), s)
+function constraintobject(cr::ConstraintRef{Model}, ::Type{AffExpr}, ::Type{SetType}) where {SetType <: MOI.AbstractScalarSet}
+    f = MOI.get(cr.m, MOI.ConstraintFunction(), cr)::MOI.ScalarAffineFunction
+    s = MOI.get(cr.m, MOI.ConstraintSet(), cr)::SetType
+    return AffExprConstraint(AffExpr(cr.m, f), s)
 end
 
-function constraintobject(cindex::ConstraintRef{Model}, ::Type{Vector{AffExpr}}, ::Type{SetType}) where {SetType <: MOI.AbstractVectorSet}
-    m = cindex.m
-    f = MOI.get(m.instance, MOI.ConstraintFunction(), cindex.instanceindex)::MOI.VectorAffineFunction
-    s = MOI.get(m.instance, MOI.ConstraintSet(), cindex.instanceindex)::SetType
+function constraintobject(cr::ConstraintRef{Model}, ::Type{Vector{AffExpr}}, ::Type{SetType}) where {SetType <: MOI.AbstractVectorSet}
+    m = cr.m
+    f = MOI.get(m, MOI.ConstraintFunction(), cr)::MOI.VectorAffineFunction
+    s = MOI.get(m, MOI.ConstraintSet(), cr)::SetType
     return VectorAffExprConstraint(map(f -> AffExpr(m, f), MOIU.eachscalar(f)), s)
 end

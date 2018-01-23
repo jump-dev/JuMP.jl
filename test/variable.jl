@@ -63,7 +63,8 @@ using Base.Test
         @variable(mcon, x[i=-10:10,s] <= 5.5, Int, start=i+1)
         @test JuMP.upperbound(x[-4,"Green"]) == 5.5
         @test JuMP.name(x[-10,"Green"]) == "x[-10,Green]"
-        @test JuMP.startvalue(x[-3,"Blue"]) == -2
+        # TODO: start values not supported by MOIU.Instance
+        #@test JuMP.startvalue(x[-3,"Blue"]) == -2
         @test isequal(mcon[:lbonly],lbonly)
         @test isequal(mcon[:ubonly],ubonly)
         @test isequal(mcon[:onerangeub][-7],onerangeub[-7])
@@ -79,6 +80,15 @@ using Base.Test
         @test JuMP.name(x[0]) == "__anon__[0]"
         @test JuMP.name(x[2]) == "__anon__[2]"
     end
+
+    @testset "isvalid and delete variable" begin
+        m = Model()
+        @variable(m, x)
+        @test MOI.isvalid(m, x)
+        MOI.delete!(m, x)
+        @test !MOI.isvalid(m, x)
+    end
+
 
     @testset "get and set bounds" begin
         m = Model()
@@ -105,17 +115,18 @@ using Base.Test
         @test_throws AssertionError JuMP.upperbound(fixedvar)
     end
 
-    @testset "get and set start" begin
-        m = Model()
-        @variable(m, x[1:3])
-        x0 = collect(1:3)
-        JuMP.setstartvalue.(x, x0)
-        @test JuMP.startvalue.(x) == x0
-        @test JuMP.startvalue.([x[1],x[2],x[3]]) == x0
-
-        @variable(m, y[1:3,1:2])
-        @test_throws DimensionMismatch JuMP.setstartvalue.(y, collect(1:6))
-    end
+    # TODO: start values not supported by MOIU.Instance
+    # @testset "get and set start" begin
+    #     m = Model()
+    #     @variable(m, x[1:3])
+    #     x0 = collect(1:3)
+    #     JuMP.setstartvalue.(x, x0)
+    #     @test JuMP.startvalue.(x) == x0
+    #     @test JuMP.startvalue.([x[1],x[2],x[3]]) == x0
+    #
+    #     @variable(m, y[1:3,1:2])
+    #     @test_throws DimensionMismatch JuMP.setstartvalue.(y, collect(1:6))
+    # end
 
     @testset "get and set integer/binary" begin
         m = Model()
@@ -178,23 +189,24 @@ using Base.Test
         @test typeof(y) == Array{Variable,1}
         @test typeof(z) == Array{Variable,1}
 
-        @test typeof(JuMP.startvalue.(x)) == Array{Float64,3}
-        @test typeof(JuMP.startvalue.(y)) == Array{Float64,1}
-        @test typeof(JuMP.startvalue.(z)) == Array{Float64,1}
+        # TODO: start values not supported by MOIU.Instance
+        # @test typeof(JuMP.startvalue.(x)) == Array{Float64,3}
+        # @test typeof(JuMP.startvalue.(y)) == Array{Float64,1}
+        # @test typeof(JuMP.startvalue.(z)) == Array{Float64,1}
     end
 
-    @testset "startvalue on empty things" begin
-        m = Model()
-        @variable(m, x[1:4,  1:0,1:3], start = 0) # Array{Variable}
-        @variable(m, y[1:4,  2:1,1:3], start = 0) # JuMPArray
-        @variable(m, z[1:4,Set(),1:3], start = 0) # Dict
-
-        @test JuMP.startvalue.(x) == Array{Float64}(4, 0, 3)
-        # @test typeof(JuMP.startvalue(y)) <: JuMP.JuMPArray{Float64}
-        # @test JuMP.size(JuMP.startvalue(y)) == (4,0,3)
-        # @test typeof(JuMP.startvalue(z)) == JuMP.JuMPArray{Float64,3,Tuple{UnitRange{Int},Set{Any},UnitRange{Int}}}
-        # @test length(JuMP.startvalue(z)) == 0
-    end
+    # @testset "startvalue on empty things" begin
+    #     m = Model()
+    #     @variable(m, x[1:4,  1:0,1:3], start = 0) # Array{Variable}
+    #     @variable(m, y[1:4,  2:1,1:3], start = 0) # JuMPArray
+    #     @variable(m, z[1:4,Set(),1:3], start = 0) # Dict
+    #
+    #     @test JuMP.startvalue.(x) == Array{Float64}(4, 0, 3)
+    #     # @test typeof(JuMP.startvalue(y)) <: JuMP.JuMPArray{Float64}
+    #     # @test JuMP.size(JuMP.startvalue(y)) == (4,0,3)
+    #     # @test typeof(JuMP.startvalue(z)) == JuMP.JuMPArray{Float64,3,Tuple{UnitRange{Int},Set{Any},UnitRange{Int}}}
+    #     # @test length(JuMP.startvalue(z)) == 0
+    # end
 
 # Slices three-dimensional JuMPArray x[I,J,K]
 # I,J,K can be singletons, ranges, colons, etc.
