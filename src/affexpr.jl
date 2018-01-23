@@ -198,7 +198,7 @@ function setobjective(m::Model, sense::Symbol, a::AffExpr)
         moisense = MOI.MaxSense
     end
     MOI.set!(m.instance, MOI.ObjectiveSense(), moisense)
-    MOI.set!(m.instance, MOI.ObjectiveFunction(), MOI.ScalarAffineFunction(a))
+    MOI.set!(m.instance, MOI.ObjectiveFunction{MOI.ScalarAffineFunction{Float64}}(), MOI.ScalarAffineFunction(a))
     nothing
 end
 
@@ -209,7 +209,7 @@ Return an `AffExpr` object representing the objective function.
 Error if the objective is not linear.
 """
 function objectivefunction(m::Model, ::Type{AffExpr})
-    f = MOI.get(m.instance, MOI.ObjectiveFunction())::MOI.ScalarAffineFunction
+    f = MOI.get(m.instance, MOI.ObjectiveFunction{MOI.ScalarAffineFunction{Float64}}())::MOI.ScalarAffineFunction{Float64}
     return AffExpr(m, f)
 end
 
