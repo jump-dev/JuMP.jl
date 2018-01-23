@@ -175,11 +175,15 @@ mutable struct Model <: AbstractModel
         m.objbound = 0.0
         m.objval = 0.0
         if mode == Automatic
-            @assert solver === nothing
             m.moibackend = MOIU.InstanceManager(JuMPInstance{Float64}(), MOIU.Automatic)
+            if solver !== nothing
+                MOIU.resetsolver!(m, solver)
+            end
         elseif mode == Manual
-            @assert solver === nothing
             m.moibackend = MOIU.InstanceManager(JuMPInstance{Float64}(), MOIU.Manual)
+            if solver !== nothing
+                MOIU.resetsolver!(m, solver)
+            end
         else # Direct
             @assert solver isa MOI.AbstractSolverInstance
             @assert MOI.isempty(solver)

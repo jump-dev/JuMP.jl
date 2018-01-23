@@ -115,7 +115,9 @@
     # TODO: test Manual mode
 
     @testset "IP" begin
-        m = Model()
+        mocksolver = MOIU.MockSolverInstance(JuMP.JuMPInstance{Float64}())
+        # Tests the solver= keyword.
+        m = Model(mode = JuMP.Automatic, solver = mocksolver)
         @variable(m, x == 1.0, Int)
         @variable(m, y, Bin)
         @objective(m, Max, x)
@@ -136,8 +138,6 @@
         MOIU.loadfromstring!(instance, modelstring)
         MOIU.test_instances_equal(m.moibackend.instance, instance, ["x","y"], ["xfix", "xint", "ybin"])
 
-        mocksolver = MOIU.MockSolverInstance(JuMP.JuMPInstance{Float64}())
-        MOIU.resetsolver!(m, mocksolver)
         MOIU.attachsolver!(m)
 
         MOI.set!(mocksolver, MOI.TerminationStatus(), MOI.Success)

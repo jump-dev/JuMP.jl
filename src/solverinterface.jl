@@ -32,7 +32,6 @@ end
 
 function solve(m::Model;
                 ignore_solve_hook=(m.solvehook===nothing))
-
     # If the user or an extension has provided a solve hook, call
     # that instead of solving the model ourselves
     if !ignore_solve_hook
@@ -41,5 +40,5 @@ function solve(m::Model;
 
     MOI.optimize!(m.moibackend)
 
-    nothing
+    return
 end
