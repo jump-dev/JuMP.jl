@@ -83,7 +83,8 @@ Base.convert(::Type{QuadExpr}, v::Union{Real,Variable,AffExpr}) = QuadExpr(Varia
 QuadExpr() = zero(QuadExpr)
 
 function MOI.ScalarQuadraticFunction(q::QuadExpr)
-    return MOI.ScalarQuadraticFunction(index.(q.aff.vars), q.aff.coeffs, index.(q.qvars1), index.(q.qvars2), q.qcoeffs, q.aff.constant)
+    scaledcoef = [(v1 == v2) ? 2coef : coef for (v1,v2,coef) in zip(q.qvars1, q.qvars2, q.qcoeffs)]
+    return MOI.ScalarQuadraticFunction(index.(q.aff.vars), q.aff.coeffs, index.(q.qvars1), index.(q.qvars2), scaledcoef, q.aff.constant)
 end
 
 function QuadExpr(m::Model, f::MOI.ScalarQuadraticFunction)
