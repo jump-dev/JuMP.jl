@@ -164,6 +164,65 @@
         @test !JuMP.hasresultdual(m, typeof(JuMP.BinaryRef(y)))
     end
 
+    @testset "QCQP" begin
+        m = Model()
+        @variable(m, x)
+        @variable(m, y)
+        @objective(m, Min, x^2)
+
+        c1 = @constraint(m, 2x*y <= 1)
+        c2 = @constraint(m, y^2 == x^2)
+        c3 = @constraint(m, 2x + 3y*x >= 2)
+
+        JuMP.setname(c1, "c1")
+        JuMP.setname(c2, "c2")
+        JuMP.setname(c3, "c3")
+
+        modelstring = """
+        variables: x, y
+        minobjective: 1*x*x
+        c1: 2*x*y <= 1.0
+        c2: 1*y*y + -1*x*x == 0.0
+        c3: 2x + 3*y*x >= 2.0
+        """
+
+        instance = JuMP.JuMPInstance{Float64}()
+        MOIU.loadfromstring!(instance, modelstring)
+        MOIU.test_instances_equal(m.moibackend.instance, instance, ["x","y"], ["c1", "c2", "c3"])
+
+        mocksolver = MOIU.MockSolverInstance(JuMP.JuMPInstance{Float64}())
+        MOIU.resetsolver!(m, mocksolver)
+        MOIU.attachsolver!(m)
+
+        MOI.set!(mocksolver, MOI.TerminationStatus(), MOI.Success)
+        MOI.set!(mocksolver, MOI.ObjectiveValue(), -1.0)
+        MOI.set!(mocksolver, MOI.ResultCount(), 1)
+        MOI.set!(mocksolver, MOI.PrimalStatus(), MOI.FeasiblePoint)
+        MOI.set!(mocksolver, MOI.DualStatus(), MOI.FeasiblePoint)
+        MOI.set!(mocksolver, MOI.VariablePrimal(), JuMP.solverindex(x), 1.0)
+        MOI.set!(mocksolver, MOI.VariablePrimal(), JuMP.solverindex(y), 0.0)
+        MOI.set!(mocksolver, MOI.ConstraintDual(), JuMP.solverindex(c1), -1.0)
+        MOI.set!(mocksolver, MOI.ConstraintDual(), JuMP.solverindex(c2), 2.0)
+        MOI.set!(mocksolver, MOI.ConstraintDual(), JuMP.solverindex(c3), 3.0)
+
+        JuMP.solve(m)
+
+        #@test JuMP.isattached(m)
+        @test JuMP.hasresultvalues(m)
+
+        @test JuMP.terminationstatus(m) == MOI.Success
+        @test JuMP.primalstatus(m) == MOI.FeasiblePoint
+
+        @test JuMP.resultvalue(x) == 1.0
+        @test JuMP.resultvalue(y) == 0.0
+        @test JuMP.objectivevalue(m) == -1.0
+
+        @test JuMP.dualstatus(m) == MOI.FeasiblePoint
+        @test JuMP.resultdual(c1) == -1.0
+        @test JuMP.resultdual(c2) == 2.0
+        @test JuMP.resultdual(c3) == 3.0
+    end
+
     @testset "SOC" begin
         m = Model()
         @variables m begin
