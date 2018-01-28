@@ -497,6 +497,24 @@ Base.next(x::AbstractJuMPScalar, state) = (x, true)
 Base.done(::AbstractJuMPScalar, state) = state
 Base.isempty(::AbstractJuMPScalar) = false
 
+##########################################################################
+# Constraint
+# Holds the index of a constraint in a Model.
+# TODO: Consider renaming this to be consistent with Variable.
+struct ConstraintRef{M<:AbstractModel,C}
+    m::M
+    index::C
+end
+# Base.copy{M,T}(c::ConstraintRef{M,T}, new_model::M) = ConstraintRef{M,T}(new_model, c.idx)
+
+# TODO: should model be a parameter here?
+function MOI.delete!(m::Model, cr::ConstraintRef{Model})
+    @assert m === cr.m
+    MOI.delete!(m.moibackend, index(cr))
+end
+
+MOI.isvalid(m::Model, cr::ConstraintRef{Model}) = cr.m === m && MOI.isvalid(m.moibackend, cr.index)
+
 include("variables.jl")
 
 Base.zero(::Type{Variable}) = AffExpr(Variable[],Float64[],0.0)
@@ -522,24 +540,6 @@ end
 Base.copy(v::Variable, new_model::Model) = Variable(new_model, v.col)
 Base.copy(x::Void, new_model::Model) = nothing
 Base.copy(v::AbstractArray{Variable}, new_model::Model) = (var -> Variable(new_model, var.col)).(v)
-
-##########################################################################
-# Constraint
-# Holds the index of a constraint in a Model.
-# TODO: Consider renaming this to be consistent with Variable.
-struct ConstraintRef{M<:AbstractModel,C}
-    m::M
-    index::C
-end
-# Base.copy{M,T}(c::ConstraintRef{M,T}, new_model::M) = ConstraintRef{M,T}(new_model, c.idx)
-
-# TODO: should model be a parameter here?
-function MOI.delete!(m::Model, cr::ConstraintRef{Model})
-    @assert m === cr.m
-    MOI.delete!(m.moibackend, index(cr))
-end
-
-MOI.isvalid(m::Model, cr::ConstraintRef{Model}) = cr.m === m && MOI.isvalid(m.moibackend, cr.index)
 
 
 function solverindex(v::Variable)

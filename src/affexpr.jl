@@ -148,6 +148,8 @@ Replaces `getvalue` for most use cases.
 """
 resultvalue(a::AffExpr) = value(a, resultvalue)
 
+# Note: No validation is performed that the variables in the AffExpr belong to
+# the same model.
 function MOI.ScalarAffineFunction(a::AffExpr)
     return MOI.ScalarAffineFunction(index.(a.vars), a.coeffs, a.constant)
 end
@@ -184,10 +186,6 @@ function MOI.VectorAffineFunction(affs::Vector{AffExpr})
     end
     MOI.VectorAffineFunction(outputindex, variables, coefficients, constant)
 end
-
-# TODO this could be interpreted as a SingleVariable objective, but that should require explict syntax
-setobjective(m::Model, sense::Symbol, x::Variable) = setobjective(m, sense, convert(AffExpr,x))
-
 
 function setobjective(m::Model, sense::Symbol, a::AffExpr)
     if sense == :Min

@@ -264,7 +264,9 @@ function sense_to_set(sense::Symbol)
 end
 const ScalarPolyhedralSets = Union{MOI.LessThan,MOI.GreaterThan,MOI.EqualTo,MOI.Interval}
 
-#constructconstraint!(v::Variable, sense::Symbol) = constructconstraint!(convert(AffExpr,v), sense)
+constructconstraint!(v::Variable, set::MOI.AbstractScalarSet) = SingleVariableConstraint(v, set)
+constructconstraint!(v::Vector{Variable}, set::MOI.AbstractVectorSet) = VectorOfVariablesConstraint(v, set)
+
 function constructconstraint!(aff::AffExpr, set::S) where S <: Union{MOI.LessThan,MOI.GreaterThan,MOI.EqualTo}
     offset = aff.constant
     aff.constant = 0.0
@@ -277,12 +279,6 @@ end
 #     AffExprConstraint(aff, lb-offset, ub-offset)
 # end
 
-#constructconstraint!(quad::QuadExpr, sense::Symbol) = QuadConstraint(quad, sense)
-
-
-#constructconstraint!(x::Array, sense::Symbol) = map(c->constructconstraint!(c,sense), x)
-#constructconstraint!(x::AbstractArray, sense::Symbol) = constructconstraint!([x[i] for i in eachindex(x)], sense)
-
 constructconstraint!(x::AbstractArray, set::MOI.AbstractScalarSet) = error("Unexpected vector in scalar constraint. Did you mean to use the dot comparison operators like .==, .<=, and .>= instead?")
 constructconstraint!(x::Vector{AffExpr}, set::MOI.AbstractVectorSet) = VectorAffExprConstraint(x, set)
 
@@ -291,6 +287,7 @@ function constructconstraint!(quad::QuadExpr, set::S) where S <: Union{MOI.LessT
     quad.aff.constant = 0.0
     return QuadExprConstraint(quad, S(MOIU.getconstant(set)-offset))
 end
+#constructconstraint!(x::Vector{QuadExpr}, set::MOI.AbstractVectorSet) = VectorQuadExprConstraint(x, set)
 
 
 # _vectorize_like(x::Number, y::AbstractArray{AffExpr}) = (ret = similar(y, typeof(x)); fill!(ret, x))
@@ -403,7 +400,7 @@ macro constraint(args...)
         end
         addkwargs!(constraintcall, kwargs)
         code = quote
-            q = zero(AffExpr)
+            q = Val{false}()
             $parsecode
             $(refcall) = $constraintcall
         end
@@ -748,7 +745,7 @@ macro objective(m, args...)
     end
     newaff, parsecode = parseExprToplevel(x, :q)
     code = quote
-        q = zero(AffExpr)
+        q = Val{false}()
         $parsecode
         setobjective($m, $(esc(sense)), $newaff)
     end
@@ -761,7 +758,7 @@ end
 macro Expression(x)
     newaff, parsecode = parseExprToplevel(x, :q)
     return quote
-        q = 0.0
+        q = Val{false}()
         $parsecode
         $newaff
     end
@@ -814,7 +811,7 @@ macro expression(args...)
     refcall, idxvars, idxsets, condition = buildrefsets(c, variable)
     newaff, parsecode = parseExprToplevel(x, :q)
     code = quote
-        q = 0.0
+        q = Val{false}()
         $parsecode
     end
     if isa(c,Expr)

@@ -274,7 +274,11 @@ addtoexpr(ex::AbstractArray{T}, c::Number, x::AbstractArray) where {T<:GenericAf
 
 addtoexpr(ex, c, x) = ex + c*x
 
-@generated addtoexpr_reorder(ex, arg) = :(addtoexpr(ex, 1.0, arg))
+addtoexpr_reorder(ex, arg) = addtoexpr(ex, 1.0, arg)
+# Special case because "Val{false}()" is used as the default empty expression.
+addtoexpr_reorder(ex::Val{false}, arg) = arg
+addtoexpr_reorder(ex::Val{false}, args...) = (*)(args...)
+
 
 @generated function addtoexpr_reorder(ex, x, y)
     if x <: Union{Variable,AffExpr} && y <: Number

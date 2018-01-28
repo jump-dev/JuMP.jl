@@ -60,25 +60,12 @@ Base.haskey(vm::VariableToValueMap, v::Variable) = (vm.m === v.m) && haskey(vm.d
 
 index(v::Variable) = v.index
 
-# Variable(m::Model, lower, upper, cat::Symbol, name::AbstractString="", value::Number=NaN) =
-#     error("Attempt to create scalar Variable with lower bound of type $(typeof(lower)) and upper bound of type $(typeof(upper)). Bounds must be scalars in Variable constructor.")
-
 function Variable(m::Model)
     index = MOI.addvariable!(m.moibackend)
     return Variable(m, index)
 end
 
 # Name setter/getters
-# """
-#     setname(v::Variable,n::AbstractString)
-#
-# Set the variable's internal name.
-# """
-# function setname(v::Variable,n::AbstractString)
-#     push!(v.m.customNames, v)
-#     v.m.colNames[v.col] = n
-#     v.m.colNamesIJulia[v.col] = n
-# end
 
 """
     name(v::Variable)::String
@@ -87,7 +74,88 @@ Get a variable's name.
 """
 name(v::Variable) = var_str(REPLMode, v)
 
+"""
+    setname(v::Variable,s::AbstractString)
+
+Set a variable's name.
+"""
 setname(v::Variable, s::String) = MOI.set!(v.m, MOI.VariableName(), v, s)
+
+MOI.SingleVariable(v::Variable) = MOI.SingleVariable(index(v))
+
+# Note: No validation is performed that the variables belong to the same model.
+MOI.VectorOfVariables(vars::Vector{Variable}) = MOI.VectorOfVariables(index.(vars))
+
+Variable(m::Model, f::MOI.SingleVariable) = Variable(m, f.variable)
+
+function setobjective(m::Model, sense::Symbol, x::Variable)
+    # TODO: This code is repeated here, for AffExpr, and for QuadExpr.
+    if sense == :Min
+        moisense = MOI.MinSense
+    else
+        @assert sense == :Max
+        moisense = MOI.MaxSense
+    end
+    MOI.set!(m.moibackend, MOI.ObjectiveSense(), moisense)
+    MOI.set!(m.moibackend, MOI.ObjectiveFunction{MOI.SingleVariable}(), MOI.SingleVariable(x))
+end
+
+"""
+    objectivefunction(m::Model, ::Type{Variable})
+
+Return a `Variable` object representing the objective function.
+Error if the objective is not a `SingleVariable`.
+"""
+function objectivefunction(m::Model, ::Type{Variable})
+    f = MOI.get(m.moibackend, MOI.ObjectiveFunction{MOI.SingleVariable}())::MOI.SingleVariable
+    return Variable(m, f)
+end
+
+struct SingleVariableConstraint{S <: MOI.AbstractScalarSet} <: AbstractConstraint
+    func::Variable
+    set::S
+end
+
+"""
+    addconstraint(m::Model, c::SingleVariableConstraint)
+
+Add a `SingleVariable` constraint to `Model m`.
+"""
+function addconstraint(m::Model, c::SingleVariableConstraint)
+    cindex = MOI.addconstraint!(m.moibackend, MOI.SingleVariable(c.func), c.set)
+    return ConstraintRef(m, cindex)
+end
+addconstraint(m::Model, c::Array{SingleVariableConstraint}) =
+    error("The operators <=, >=, and == can only be used to specify scalar constraints. If you are trying to add a vectorized constraint, use the element-wise dot comparison operators (.<=, .>=, or .==) instead")
+
+struct VectorOfVariablesConstraint{S <: MOI.AbstractVectorSet} <: AbstractConstraint
+    func::Vector{Variable}
+    set::S
+end
+
+"""
+    addconstraint(m::Model, c::VectorOfVariablesConstraint)
+
+Add the vector constraint `c` to `Model m`.
+"""
+function addconstraint(m::Model, c::VectorOfVariablesConstraint)
+    cindex = MOI.addconstraint!(m.moibackend, MOI.VectorOfVariables(c.func), c.set)
+    return ConstraintRef(m, cindex)
+end
+
+
+function constraintobject(cr::ConstraintRef{Model}, ::Type{Variable}, ::Type{SetType}) where {SetType <: MOI.AbstractScalarSet}
+    f = MOI.get(cr.m, MOI.ConstraintFunction(), cr)::MOI.SingleVariable
+    s = MOI.get(cr.m, MOI.ConstraintSet(), cr)::SetType
+    return SingleVariableConstraint(Variable(cr.m, f), s)
+end
+
+function constraintobject(cr::ConstraintRef{Model}, ::Type{Vector{Variable}}, ::Type{SetType}) where {SetType <: MOI.AbstractVectorSet}
+    m = cr.m
+    f = MOI.get(m, MOI.ConstraintFunction(), cr)::MOI.VectorOfVariables
+    s = MOI.get(m, MOI.ConstraintSet(), cr)::SetType
+    return VectorOfVariablesConstraint(map(v -> Variable(m, v), f.variables), s)
+end
 
 
 ## Bound setter/getters

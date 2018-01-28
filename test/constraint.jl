@@ -1,6 +1,37 @@
 
 
 @testset "Constraints" begin
+    @testset "SingleVariable constraints" begin
+        m = Model()
+        @variable(m, x)
+
+        # x <= 10.0 doesn't translate to a SingleVariable constraint because
+        # the LHS is first subtracted to form x - 10.0 <= 0.
+        cref = @constraint(m, x in MOI.LessThan(10.0))
+        c = JuMP.constraintobject(cref, Variable, MOI.LessThan)
+        @test c.func == x
+        @test c.set == MOI.LessThan(10.0)
+        @test_throws TypeError JuMP.constraintobject(cref, QuadExpr, MOI.LessThan)
+        @test_throws TypeError JuMP.constraintobject(cref, AffExpr, MOI.EqualTo)
+    end
+
+    @testset "VectorOfVariables constraints" begin
+        m = Model()
+        @variable(m, x[1:2])
+
+        cref = @constraint(m, x in MOI.Zeros(2))
+        c = JuMP.constraintobject(cref, Vector{Variable}, MOI.Zeros)
+        @test c.func == x
+        @test c.set == MOI.Zeros(2)
+        @test_throws TypeError JuMP.constraintobject(cref, Vector{AffExpr}, MOI.Nonnegatives)
+        @test_throws TypeError JuMP.constraintobject(cref, AffExpr, MOI.EqualTo)
+
+        cref = @constraint(m, [x[2],x[1]] in MOI.Zeros(2))
+        c = JuMP.constraintobject(cref, Vector{Variable}, MOI.Zeros)
+        @test c.func == [x[2],x[1]]
+        @test c.set == MOI.Zeros(2)
+    end
+
     @testset "AffExpr constraints" begin
         m = Model()
         @variable(m, x)
