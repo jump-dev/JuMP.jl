@@ -121,21 +121,7 @@ function Base.copy(q::QuadExpr, new_model::Model)
                 copy(q.qcoeffs), copy(q.aff, new_model))
 end
 
-# """
-#     getvalue(a::QuadExpr)
-#
-# Evaluate a `QuadExpr` given the current solution values.
-# """
-# function getvalue(a::QuadExpr)
-#     ret = getvalue(a.aff)
-#     for it in 1:length(a.qvars1)
-#         ret += a.qcoeffs[it] * getvalue(a.qvars1[it]) * getvalue(a.qvars2[it])
-#     end
-#     return ret
-# end
-# getvalue(arr::Array{QuadExpr}) = map(getvalue, arr)
-
-
+# TODO: resultvalue for QuadExpr
 
 ##########################################################################
 # TODO: GenericQuadExprConstraint

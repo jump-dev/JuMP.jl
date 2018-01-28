@@ -97,23 +97,6 @@ mutable struct Model <: AbstractModel
     variabletointegrality::Dict{MOIVAR,MOIINT}
     variabletozeroone::Dict{MOIVAR,MOIBIN}
 
-    # obj#::QuadExpr
-    # objSense::Symbol
-
-    # linconstr#::Vector{LinearConstraint}
-    # quadconstr
-    # sosconstr
-    # socconstr
-    # sdpconstr
-
-    # Column data
-    # numCols::Int
-    # colNames::Vector{String}
-    # colNamesIJulia::Vector{String}
-    # colLower::Vector{Float64}
-    # colUpper::Vector{Float64}
-    # colCat::Vector{Symbol}
-
     customnames::Vector
 
     # # Variable cones of the form, e.g. (:SDP, 1:9)
@@ -217,140 +200,12 @@ end
 # temporary name
 numvar(m::Model) = MOI.get(m, MOI.NumberOfVariables())
 
-# """
-#     MathProgBase.numvar(m::Model)
-#
-# returns the number of variables associated with the `Model m`.
-# """
-# MathProgBase.numvar(m::Model) = m.numCols
-#
-# """
-#     MathProgBase.numlinconstr(m::Model)
-#
-# returns the number of linear constraints associated with the `Model m`
-# """
-# MathProgBase.numlinconstr(m::Model) = length(m.linconstr)
-#
-# """
-#     MathProgBase.numquadconstr(m::Model)
-#
-# returns the number of quadratic constraints associated with the `Model m`
-# """
-# MathProgBase.numquadconstr(m::Model) = length(m.quadconstr)
-
-# """
-#     numsocconstr(m::Model)
-#
-# returns the number of second order cone constraints associated with the `Model m`
-# """
-# numsocconstr(m::Model) = length(m.socconstr)
-#
-# """
-#     numsosconstr(m::Model)
-#
-# returns the number of sos constraints associated with the `Model m`
-# """
-# numsosconstr(m::Model) = length(m.sosconstr)
-
-# """
-#     numsdconstr(m::Model)
-#
-# returns the number of semi-definite constraints associated with the `Model m`
-# """
-# numsdconstr(m::Model) = length(m.sdpconstr)
-
 """
     numnlconstr(m::Model)
 
 returns the number of nonlinear constraints associated with the `Model m`
 """
 numnlconstr(m::Model) = m.nlpdata !== nothing ? length(m.nlpdata.nlconstr) : 0
-
-# """
-#     MathProgBase.numconstr(m::Model)
-#
-# returns the total number of constraints associated with the `Model m`
-# """
-# function MathProgBase.numconstr(m::Model)
-#     c = length(m.linconstr) + length(m.quadconstr) + length(m.socconstr) + length(m.sosconstr) + length(m.sdpconstr)
-#     if m.nlpdata !== nothing
-#         c += length(m.nlpdata.nlconstr)
-#     end
-#     return c
-# end
-#
-# for f in MathProgBase.SolverInterface.methods_by_tag[:rewrap]
-#     eval(Expr(:import,:MathProgBase,f))
-#     @eval function $f(m::Model)
-#         # check internal model exists
-#         if !m.internalModelLoaded
-#             error("Model not solved")
-#         else
-#             return $f(internalmodel(m))
-#         end
-#     end
-#     eval(Expr(:export,f))
-# end
-
-
-# Doc strings for the auto-wrapped MPB functions above
-# it would be preferable to problematically use the docstrings from MPB functions instead
-
-# @doc """
-#     getsolvetime(m::Model)
-#
-# returns the solve time reported by the solver if it is implemented.
-# """ getsolvetime(m::Model)
-#
-# @doc """
-#     getnodecount(m::Model)
-#
-# returns the number of explored branch-and-bound nodes, if it is implemented.
-# """ getnodecount(m::Model)
-#
-# @doc """
-#     getobjbound(m::Model)
-#
-# returns the best known bound on the optimal objective value. This is used, for example, when a branch-and-bound method is stopped before finishing.
-# """ getobjbound(m::Model)
-#
-# @doc """
-#     getobjgap(m::Model)
-#
-# returns the final relative optimality gap as optimization terminated. That is, it returns ``\\frac{|b-f|}{|f|}``, where *b* is the best bound and *f* is the best feasible objective value.
-# """ getobjgap(m::Model)
-#
-# @doc """
-#     getrawsolver(m::Model)
-#
-# returns an object that may be used to access a solver-specific API.
-# """ getrawsolver(m::Model)
-#
-# @doc """
-#     getsimplexiter(m::Model)
-#
-# returns the cumulative number of simplex iterations during the optimization process. In particular, for a MIP it returns the total simplex iterations for all nodes.
-# """ getsimplexiter(m::Model)
-#
-# @doc """
-#     getbarrieriter(m::Model)
-#
-# returns the cumulative number of barrier iterations during the optimization process.
-# """ getbarrieriter(m::Model)
-
-
-# """
-#     getobjective(m::Model)
-#
-# returns the objective function as a `QuadExpr`
-# """
-# function getobjective(m::Model)
-#     traits = ProblemTraits(m)
-#     if traits.nlp
-#         error("getobjective() not supported for nonlinear models")
-#     end
-#     return m.obj
-# end
 
 
 """
@@ -388,97 +243,7 @@ terminationstatus(m::Model) = MOI.get(m, MOI.TerminationStatus())
 primalstatus(m::Model) = MOI.get(m, MOI.PrimalStatus())
 dualstatus(m::Model) = MOI.get(m, MOI.DualStatus())
 
-# """
-#     setobjectivesense(m::Model, newSense::Symbol)
-#
-# sets the objective sense (`newSense` is either `:Min` or `:Max`)
-# """
-# function setobjectivesense(m::Model, newSense::Symbol)
-#     if (newSense != :Max && newSense != :Min)
-#         error("Model sense must be :Max or :Min")
-#     end
-#     m.objSense = newSense
-# end
-# setobjective(m::Model, something::Any) =
-#     error("in setobjective: needs three arguments: model, objective sense (:Max or :Min), and expression.")
-#
-# setobjective(::Model, ::Symbol, x::AbstractArray) =
-#     error("in setobjective: array of size $(_size(x)) passed as objective; only scalar objectives are allowed")
-
-# # Deep copy the model
-# function Base.copy(source::Model)
-#
-#     dest = Model()
-#     dest.solver = source.solver  # The two models are linked by this
-#
-#     # Objective
-#     dest.obj = copy(source.obj, dest)
-#     dest.objSense = source.objSense
-#
-#     # Constraints
-#     dest.linconstr  = map(c->copy(c, dest), source.linconstr)
-#     dest.quadconstr = map(c->copy(c, dest), source.quadconstr)
-#     dest.sosconstr  = map(c->copy(c, dest), source.sosconstr)
-#     dest.sdpconstr  = map(c->copy(c, dest), source.sdpconstr)
-#
-#     # Variables
-#     dest.numCols = source.numCols
-#     dest.colNames = source.colNames[:]
-#     dest.colNamesIJulia = source.colNamesIJulia[:]
-#     dest.colLower = source.colLower[:]
-#     dest.colUpper = source.colUpper[:]
-#     dest.colCat = source.colCat[:]
-#
-#     # varCones
-#     dest.varCones = copy(source.varCones)
-#
-#     # callbacks and hooks
-#     if !isempty(source.callbacks)
-#         error("Copying callbacks is not supported")
-#     end
-#     if source.solvehook !== nothing
-#         dest.solvehook = source.solvehook
-#     end
-#     if source.printhook !== nothing
-#         dest.printhook = source.printhook
-#     end
-#
-#     # variable/extension dicts
-#     if !isempty(source.ext)
-#         dest.ext = similar(source.ext)
-#         for (key, val) in source.ext
-#             dest.ext[key] = try
-#                 copy(source.ext[key])
-#             catch
-#                 error("Error copying extension dictionary. Is `copy` defined for all your user types?")
-#             end
-#         end
-#     end
-#     dest.objDict = Dict{Symbol,Any}()
-#     dest.varData = ObjectIdDict()
-#     for (symb,o) in source.objDict
-#         newo = copy(o, dest)
-#         dest.objDict[symb] = newo
-#         if haskey(source.varData, o)
-#             dest.varData[newo] = source.varData[o]
-#             #dest.varData[newvar] = copy(source.varData[v]) # should we copy this too ? We need to define copy(::JuMPContainerData) too then
-#         end
-#     end
-#
-#     if source.nlpdata !== nothing
-#         dest.nlpdata = copy(source.nlpdata)
-#     end
-#
-#     return dest
-# end
-
-# """
-#     solverinstance(m::Model)
-#
-# returns the internal `AbstractSolverInstance` object which can be used to access any functionality that is not exposed by JuMP.
-# See the MathOptInterface [documentation](XXX).
-# """
-# solverinstance(m::Model) = m.solverinstance
+# TODO: Implement Base.copy.
 
 setsolvehook(m::Model, f) = (m.solvehook = f)
 setprinthook(m::Model, f) = (m.printhook = f)
@@ -505,7 +270,6 @@ struct ConstraintRef{M<:AbstractModel,C}
     m::M
     index::C
 end
-# Base.copy{M,T}(c::ConstraintRef{M,T}, new_model::M) = ConstraintRef{M,T}(new_model, c.idx)
 
 # TODO: should model be a parameter here?
 function MOI.delete!(m::Model, cr::ConstraintRef{Model})
@@ -640,115 +404,6 @@ include("quadexpr.jl")
 # SDConstraint
 include("sd.jl")
 
-# # internal method that doesn't print a warning if the value is NaN
-# _getDual(c::LinConstrRef) = c.m.linconstrDuals[c.idx]
-#
-# getdualwarn{T<:Union{ConstraintRef, Int}}(::T) = warn("Dual solution not available. Check that the model was properly solved and no integer variables are present.")
-#
-# """
-#     getdual(c::LinConstrRef)
-#
-# """
-# function getdual(c::LinConstrRef)
-#     if length(c.m.linconstrDuals) != MathProgBase.numlinconstr(c.m)
-#         getdualwarn(c)
-#         NaN
-#     else
-#         _getDual(c)
-#     end
-# end
-
-# Returns the number of non-infinity and nonzero bounds on variables
-# function getNumBndRows(m::Model)
-#     numBounds = 0
-#     for i in 1:m.numCols
-#         seen = false
-#         lb, ub = m.colLower[i], m.colUpper[i]
-#         for (_,cone) in m.varCones
-#             if i in cone
-#                 seen = true
-#                 @assert lb == -Inf && ub == Inf
-#                 break
-#             end
-#         end
-#
-#         if !seen
-#             if lb != -Inf && lb != 0
-#                 numBounds += 1
-#             end
-#             if ub != Inf && ub != 0
-#                 numBounds += 1
-#             end
-#         end
-#     end
-#     return numBounds
-# end
-
-# Returns the number of second-order cone constraints
-# getNumRows(c::SOCConstraint) = length(c.normexpr.norm.terms) + 1
-# getNumSOCRows(m::Model) = sum(getNumRows.(m.socconstr))
-
-# Returns the dual variables corresponding to
-# m.sdpconstr[idx] if issdp is true
-# m.socconstr[idx] if sdp is not true
-# function getconicdualaux(m::Model, idx::Int, issdp::Bool)
-#     numLinRows = MathProgBase.numlinconstr(m)
-#     numBndRows = getNumBndRows(m)
-#     numSOCRows = getNumSOCRows(m)
-#     numSDPRows = getNumSDPRows(m)
-#     numSymRows = getNumSymRows(m)
-#     numRows = numLinRows + numBndRows + numSOCRows + numSDPRows + numSymRows
-#     if length(m.conicconstrDuals) != numRows
-#         # solve might not have been called so m.constr_to_row might be empty
-#         getdualwarn(idx)
-#         c = issdp ? m.sdpconstr[idx] : m.socconstr[idx]
-#         duals = fill(NaN, getNumRows(c))
-#         if issdp
-#             duals, Float64[]
-#         else
-#             duals
-#         end
-#     else
-#         offset = numLinRows + numBndRows
-#         if issdp
-#             offset += length(m.socconstr)
-#         end
-#         dual = m.conicconstrDuals[m.constr_to_row[offset + idx]]
-#         if issdp
-#             offset += length(m.sdpconstr)
-#             symdual = m.conicconstrDuals[m.constr_to_row[offset + idx]]
-#             dual, symdual
-#         else
-#             dual
-#         end
-#     end
-# end
-
-# """
-#     getdual(c::ConstraintRef{Model,SOCConstraint})
-#
-#
-# """
-# function getdual(c::ConstraintRef{Model,SOCConstraint})
-#     getconicdualaux(c.m, c.idx, false)
-# end
-
-# function setRHS(c::LinConstrRef, rhs::Number)
-#     constr = c.m.linconstr[c.idx]
-#     sen = sense(constr)
-#     if sen == :range
-#         error("Modifying range constraints is currently unsupported.")
-#     elseif sen == :(==)
-#         constr.lb = float(rhs)
-#         constr.ub = float(rhs)
-#     elseif sen == :>=
-#         constr.lb = float(rhs)
-#     else
-#         @assert sen == :<=
-#         constr.ub = float(rhs)
-#     end
-# end
-
 # handle dictionary of variables
 function registervar(m::Model, varname::Symbol, value)
     registerobject(m, varname, value, "A variable or constraint named $varname is already attached to this model. If creating variables programmatically, use the anonymous variable syntax x = @variable(m, [1:N], ...).")
@@ -855,16 +510,6 @@ include("solverinterface.jl")
 # include("callbacks.jl")
 include("nlp.jl")
 include("print.jl")
-
-# getvalue{T<:JuMPTypes}(arr::Array{T}) = map(getvalue, arr)
-#
-# function setvalue{T<:AbstractJuMPScalar}(set::Array{T}, val::Array)
-#     promote_shape(size(set), size(val)) # Check dimensions match
-#     for I in eachindex(set)
-#         setvalue(set[I], val[I])
-#     end
-#     nothing
-# end
 
 
 ##########################################################################
