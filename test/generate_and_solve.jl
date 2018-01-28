@@ -128,7 +128,7 @@
 
         modelstring = """
         variables: x, y
-        maxobjective: 1.0*x
+        maxobjective: x
         xfix: x == 1.0
         xint: x in Integer()
         ybin: y in ZeroOne()
@@ -230,10 +230,9 @@
             y
             z
         end
-        @objective(m, Max, x)
-        # TODO: JuMP should generate a VectorOfVariables constraint here
-        #varsoc = @constraint(m, [x,y,z] in MOI.SecondOrderCone(3))
-        #JuMP.setname(varsoc, "varsoc")
+        @objective(m, Max, 1.0*x)
+        varsoc = @constraint(m, [x,y,z] in MOI.SecondOrderCone(3))
+        JuMP.setname(varsoc, "varsoc")
         affsoc = @constraint(m, [x+y,z,1.0] in MOI.SecondOrderCone(3))
         JuMP.setname(affsoc, "affsoc")
         rotsoc = @constraint(m, [x+1,y,z] in MOI.RotatedSecondOrderCone(3))
@@ -242,14 +241,14 @@
         modelstring = """
         variables: x, y, z
         maxobjective: 1.0*x
-        #varsoc: [x,y,z] in SecondOrderCone(3)
+        varsoc: [x,y,z] in SecondOrderCone(3)
         affsoc: [x+y,z,1.0] in SecondOrderCone(3)
         rotsoc: [x+1,y,z] in RotatedSecondOrderCone(3)
         """
 
         instance = JuMP.JuMPInstance{Float64}()
         MOIU.loadfromstring!(instance, modelstring)
-        MOIU.test_instances_equal(m.moibackend.instance, instance, ["x","y","z"], ["affsoc", "rotsoc"])
+        MOIU.test_instances_equal(m.moibackend.instance, instance, ["x","y","z"], ["varsoc", "affsoc", "rotsoc"])
 
         mocksolver = MOIU.MockSolverInstance(JuMP.JuMPInstance{Float64}())
         MOIU.resetsolver!(m, mocksolver)
@@ -262,6 +261,7 @@
         MOI.set!(mocksolver, MOI.VariablePrimal(), JuMP.solverindex(x), 1.0)
         MOI.set!(mocksolver, MOI.VariablePrimal(), JuMP.solverindex(y), 0.0)
         MOI.set!(mocksolver, MOI.VariablePrimal(), JuMP.solverindex(z), 0.0)
+        MOI.set!(mocksolver, MOI.ConstraintDual(), JuMP.solverindex(varsoc), [-1.0,-2.0,-3.0])
         MOI.set!(mocksolver, MOI.ConstraintDual(), JuMP.solverindex(affsoc), [1.0,2.0,3.0])
 
         JuMP.solve(m)
@@ -275,6 +275,9 @@
         @test JuMP.resultvalue(x) == 1.0
         @test JuMP.resultvalue(y) == 0.0
         @test JuMP.resultvalue(z) == 0.0
+
+        @test JuMP.hasresultdual(m, typeof(varsoc))
+        @test JuMP.resultdual(varsoc) == [-1.0, -2.0, -3.0]
 
         @test JuMP.hasresultdual(m, typeof(affsoc))
         @test JuMP.resultdual(affsoc) == [1.0, 2.0, 3.0]

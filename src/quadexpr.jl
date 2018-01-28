@@ -161,3 +161,5 @@ function constraintobject(cr::ConstraintRef{Model}, ::Type{QuadExpr}, ::Type{Set
     s = MOI.get(m.moibackend, MOI.ConstraintSet(), index(cr))::SetType
     return QuadExprConstraint(QuadExpr(m, f), s)
 end
+
+# TODO: VectorQuadExprConstraint
