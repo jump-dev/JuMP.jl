@@ -825,18 +825,11 @@ macro expression(args...)
         $(refcall) = $newaff
     end
     code = getloopedcode(variable, code, condition, idxvars, idxsets, :AffExpr, requestedcontainer)
-    if m === nothing # deprecated usage
-        return quote
-            $code
-            $(anonvar ? variable : :($escvarname = $variable))
-        end
-    else
-        # don't do anything with the model, but check that it's valid anyway
-        return assert_validmodel(m, quote
-            $code
-            $(anonvar ? variable : :($escvarname = $variable))
-        end)
-    end
+    # don't do anything with the model, but check that it's valid anyway
+    return assert_validmodel(m, quote
+        $code
+        $(anonvar ? variable : :($escvarname = $variable))
+    end)
 end
 
 function hasdependentsets(idxvars, idxsets)

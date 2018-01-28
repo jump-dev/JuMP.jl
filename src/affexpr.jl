@@ -217,29 +217,12 @@ function Base.copy(a::AffExpr, new_model::Model)
     AffExpr(copy(a.vars, new_model), copy(a.coeffs), a.constant)
 end
 
-# """
-#     getvalue(a::AffExpr)
-#
-# Evaluate an `AffExpr` given the current solution values.
-# """
-# function getvalue(a::AffExpr)
-#     ret = a.constant
-#     for it in 1:length(a.vars)
-#         ret += a.coeffs[it] * getvalue(a.vars[it])
-#     end
-#     ret
-# end
-
 # TODO GenericAffExprConstraint
 
 struct AffExprConstraint{S <: MOI.AbstractScalarSet} <: AbstractConstraint
     func::AffExpr
     set::S
 end
-
-# function Base.copy(c::AffExprConstraint, new_model::Model)
-#     return AffExprConstraint(copy(c.terms, new_model), c.lb, c.ub)
-# end
 
 """
     addconstraint(m::Model, c::AffExprConstraint)
