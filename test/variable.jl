@@ -167,6 +167,19 @@ using Base.Test
         @test length.(indices(x)) == (3,2)
     end
 
+    @testset "basename= in @variable" begin
+        m = Model()
+        @variable(m, x)
+        @test JuMP.name(x) == "x"
+
+        y = @variable(m, basename="foo")
+        @test JuMP.name(y) == "foo"
+
+        z = @variable(m, z[i=2:3], basename="t")
+        @test JuMP.name(z[2]) == "t[2]"
+        @test JuMP.name(z[3]) == "t[3]"
+    end
+
     # TODO reenable when printing comes back
     # @testset "condition in indexing" begin
     #    fa = repl[:for_all]

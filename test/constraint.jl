@@ -7,12 +7,20 @@
 
         # x <= 10.0 doesn't translate to a SingleVariable constraint because
         # the LHS is first subtracted to form x - 10.0 <= 0.
-        cref = @constraint(m, x in MOI.LessThan(10.0))
+        @constraint(m, cref, x in MOI.LessThan(10.0))
+        @test JuMP.name(cref) == "cref"
         c = JuMP.constraintobject(cref, Variable, MOI.LessThan)
         @test c.func == x
         @test c.set == MOI.LessThan(10.0)
         @test_throws TypeError JuMP.constraintobject(cref, QuadExpr, MOI.LessThan)
         @test_throws TypeError JuMP.constraintobject(cref, AffExpr, MOI.EqualTo)
+
+        @variable(m, y[1:2])
+        @constraint(m, cref2[i=1:2], y[i] in MOI.LessThan(float(i)))
+        @test JuMP.name(cref2[1]) == "cref2[1]"
+        c = JuMP.constraintobject(cref2[1], Variable, MOI.LessThan)
+        @test c.func == y[1]
+        @test c.set == MOI.LessThan(1.0)
     end
 
     @testset "VectorOfVariables constraints" begin

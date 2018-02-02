@@ -13,16 +13,10 @@ function _constructconstraint!(Q::Matrix{JuMP.Variable}, ::PSDCone)
     SDVariableConstraint(Q)
 end
 
-"""
-    addconstraint(m::Model, c::SDVariableConstraint)
-
-Add a SD variable constraint to `Model m`.
-"""
-function addconstraint(m::Model, c::SDVariableConstraint)
+function moi_function_and_set(c::SDVariableConstraint)
     @assert issymmetric(c.Q)
     n = Base.LinAlg.checksquare(c.Q)
-    cindex = MOI.addconstraint!(m.moibackend, MOI.VectorOfVariables([index(c.Q[i, j]) for j in 1:n for i in 1:j]), MOI.PositiveSemidefiniteConeTriangle(n))
-    return ConstraintRef(m, cindex)
+    return (MOI.VectorOfVariables([index(c.Q[i, j]) for j in 1:n for i in 1:j]), MOI.PositiveSemidefiniteConeTriangle(n))
 end
 
 function constructconstraint!(x::AbstractMatrix, ::PSDCone)

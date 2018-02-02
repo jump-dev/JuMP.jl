@@ -170,13 +170,9 @@
         @variable(m, y)
         @objective(m, Min, x^2)
 
-        c1 = @constraint(m, 2x*y <= 1)
-        c2 = @constraint(m, y^2 == x^2)
-        c3 = @constraint(m, 2x + 3y*x >= 2)
-
-        JuMP.setname(c1, "c1")
-        JuMP.setname(c2, "c2")
-        JuMP.setname(c3, "c3")
+        @constraint(m, c1, 2x*y <= 1)
+        @constraint(m, c2, y^2 == x^2)
+        @constraint(m, c3, 2x + 3y*x >= 2)
 
         modelstring = """
         variables: x, y
@@ -231,12 +227,9 @@
             z
         end
         @objective(m, Max, 1.0*x)
-        varsoc = @constraint(m, [x,y,z] in MOI.SecondOrderCone(3))
-        JuMP.setname(varsoc, "varsoc")
-        affsoc = @constraint(m, [x+y,z,1.0] in MOI.SecondOrderCone(3))
-        JuMP.setname(affsoc, "affsoc")
-        rotsoc = @constraint(m, [x+1,y,z] in MOI.RotatedSecondOrderCone(3))
-        JuMP.setname(rotsoc, "rotsoc")
+        @constraint(m, varsoc, [x,y,z] in MOI.SecondOrderCone(3))
+        @constraint(m, affsoc, [x+y,z,1.0] in MOI.SecondOrderCone(3))
+        @constraint(m, rotsoc, [x+1,y,z] in MOI.RotatedSecondOrderCone(3))
 
         modelstring = """
         variables: x, y, z

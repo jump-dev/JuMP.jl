@@ -116,33 +116,14 @@ struct SingleVariableConstraint{S <: MOI.AbstractScalarSet} <: AbstractConstrain
     set::S
 end
 
-"""
-    addconstraint(m::Model, c::SingleVariableConstraint)
-
-Add a `SingleVariable` constraint to `Model m`.
-"""
-function addconstraint(m::Model, c::SingleVariableConstraint)
-    cindex = MOI.addconstraint!(m.moibackend, MOI.SingleVariable(c.func), c.set)
-    return ConstraintRef(m, cindex)
-end
-addconstraint(m::Model, c::Array{SingleVariableConstraint}) =
-    error("The operators <=, >=, and == can only be used to specify scalar constraints. If you are trying to add a vectorized constraint, use the element-wise dot comparison operators (.<=, .>=, or .==) instead")
+moi_function_and_set(c::SingleVariableConstraint) = (MOI.SingleVariable(c.func), c.set)
 
 struct VectorOfVariablesConstraint{S <: MOI.AbstractVectorSet} <: AbstractConstraint
     func::Vector{Variable}
     set::S
 end
 
-"""
-    addconstraint(m::Model, c::VectorOfVariablesConstraint)
-
-Add the vector constraint `c` to `Model m`.
-"""
-function addconstraint(m::Model, c::VectorOfVariablesConstraint)
-    cindex = MOI.addconstraint!(m.moibackend, MOI.VectorOfVariables(c.func), c.set)
-    return ConstraintRef(m, cindex)
-end
-
+moi_function_and_set(c::VectorOfVariablesConstraint) = (MOI.VectorOfVariables(c.func), c.set)
 
 function constraintobject(cr::ConstraintRef{Model}, ::Type{Variable}, ::Type{SetType}) where {SetType <: MOI.AbstractScalarSet}
     f = MOI.get(cr.m, MOI.ConstraintFunction(), cr)::MOI.SingleVariable

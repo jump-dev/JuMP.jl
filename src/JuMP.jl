@@ -279,6 +279,20 @@ end
 
 MOI.isvalid(m::Model, cr::ConstraintRef{Model}) = cr.m === m && MOI.isvalid(m.moibackend, cr.index)
 
+"""
+    addconstraint(m::Model, c::AbstractConstraint, name::String="")
+
+Add a constraint `c` to `Model m` and sets its name.
+"""
+function addconstraint(m::Model, c::AbstractConstraint, name::String="")
+    cindex = MOI.addconstraint!(m.moibackend, moi_function_and_set(c)...)
+    cref = ConstraintRef(m, cindex)
+    if !isempty(name)
+        setname(cref, name)
+    end
+    return cref
+end
+
 include("variables.jl")
 
 Base.zero(::Type{Variable}) = AffExpr(Variable[],Float64[],0.0)
