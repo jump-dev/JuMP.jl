@@ -360,6 +360,8 @@ macro constraint(args...)
     variable = gensym()
     quotvarname = quot(getname(c))
     escvarname  = anonvar ? variable : esc(getname(c))
+    basename = anonvar ? "" : string(getname(c))
+    # TODO: support the basename keyword argument
 
     if isa(x, Symbol)
         constraint_error(args, "Incomplete constraint specification $x. Are you missing a comparison (<=, >=, or ==)?")
@@ -382,7 +384,7 @@ macro constraint(args...)
         if x.args[1] == :in
             @assert length(x.args) == 3
             newaff, parsecode = parseExprToplevel(x.args[2], :q)
-            constraintcall = :(addconstraint($m, constructconstraint!($newaff,$(esc(x.args[3])))))
+            constraintcall = :(addconstraint($m, constructconstraint!($newaff,$(esc(x.args[3]))), $(namecall(basename, idxvars))))
         else
             # Simple comparison - move everything to the LHS
             @assert length(x.args) == 3
@@ -393,9 +395,10 @@ macro constraint(args...)
             # `set` is an MOI.AbstractScalarSet, if `newaff` is not scalar, vectorized should be true.
             # Otherwise, `constructconstraint!(::AbstractArray, ::MOI.AbstractScalarSet)` throws an helpful error
             if vectorized
+                # TODO: Pass through names here.
                 constraintcall = :(addconstraint.($m, constructconstraint!.($newaff,$set)))
             else
-                constraintcall = :(addconstraint($m, constructconstraint!($newaff,$set)))
+                constraintcall = :(addconstraint($m, constructconstraint!($newaff,$set), $(namecall(basename, idxvars))))
             end
         end
         addkwargs!(constraintcall, kwargs)
@@ -421,7 +424,7 @@ macro constraint(args...)
         newlb, parselb = parseExprToplevel(x.args[1],:lb)
         newub, parseub = parseExprToplevel(x.args[5],:ub)
 
-        constraintcall = :($addconstr($m, constructconstraint!($newaff,$newlb,$newub)))
+        constraintcall = :($addconstr($m, constructconstraint!($newaff,$newlb,$newub), $(namecall(basename, idxvars))))
         addkwargs!(constraintcall, kwargs)
         code = quote
             aff = zero(AffExpr)
@@ -870,7 +873,7 @@ variabletype(m::Model) = Variable
 # Returns a new variable belonging to the model `m`. Additional positional arguments can be used to dispatch the call to a different method.
 # The return type should only depends on the positional arguments for `variabletype` to make sense.
 function constructvariable!(m::Model, _error::Function, haslb::Bool, lowerbound::Number, hasub::Bool, upperbound::Number,
-                            hasfix::Bool, fixedvalue::Number, binary::Bool, integer::Bool, name::AbstractString,
+                            hasfix::Bool, fixedvalue::Number, binary::Bool, integer::Bool, name::String,
                             hasstart::Bool, start::Number; extra_kwargs...)
     for (kwarg, _) in extra_kwargs
         _error("Unrecognized keyword argument $kwarg")
@@ -904,6 +907,19 @@ end
 const EMPTYSTRING = ""
 
 variable_error(args, str) = error("In @variable($(join(args,","))): ", str)
+
+# Given a basename and idxvars, returns an expression that constructs the name
+# of the object. For use within macros only.
+function namecall(basename, idxvars)
+    length(idxvars) == 0 && return basename
+    ex = Expr(:call,:string,basename,"[")
+    for i in 1:length(idxvars)
+        push!(ex.args, esc(idxvars[i]))
+        i < length(idxvars) && push!(ex.args,",")
+    end
+    push!(ex.args,"]")
+    return ex
+end
 
 # @variable(m, expr, extra...; kwargs...)
 # where `extra` is a list of extra positional arguments and `kwargs` is a list of keyword arguments.
@@ -1095,13 +1111,7 @@ macro variable(args...)
     clear_dependencies(i) = (isdependent(idxvars,idxsets[i],i) ? () : idxsets[i])
 
     # Code to be used to create each variable of the container.
-    namecall = Expr(:call,:string,basename,"[")
-    for i in 1:length(idxvars)
-        push!(namecall.args, esc(idxvars[i]))
-        i < length(idxvars) && push!(namecall.args,",")
-    end
-    push!(namecall.args,"]")
-    variablecall = :( constructvariable!($m, $(extra...), $_error, $haslb, $lb, $hasub, $ub, $hasfix, $fixedvalue, $binary, $integer, $namecall, $hasstart, $value) )
+    variablecall = :( constructvariable!($m, $(extra...), $_error, $haslb, $lb, $hasub, $ub, $hasfix, $fixedvalue, $binary, $integer, $(namecall(basename, idxvars)), $hasstart, $value) )
     addkwargs!(variablecall, extra_kwargs)
     code = :( $(refcall) = $variablecall )
     # Determine the return type of constructvariable!. This is needed to create the container holding them.

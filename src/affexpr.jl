@@ -224,33 +224,18 @@ struct AffExprConstraint{S <: MOI.AbstractScalarSet} <: AbstractConstraint
     set::S
 end
 
-"""
-    addconstraint(m::Model, c::AffExprConstraint)
+moi_function_and_set(c::AffExprConstraint) = (MOI.ScalarAffineFunction(c.func), c.set)
 
-Add an `AffExpr` constraint to `Model m`.
-"""
-function addconstraint(m::Model, c::AffExprConstraint)
-    cindex = MOI.addconstraint!(m.moibackend, MOI.ScalarAffineFunction(c.func), c.set)
-    return ConstraintRef(m, cindex)
-end
-addconstraint(m::Model, c::Array{AffExprConstraint}) =
-    error("The operators <=, >=, and == can only be used to specify scalar constraints. If you are trying to add a vectorized constraint, use the element-wise dot comparison operators (.<=, .>=, or .==) instead")
+# TODO: Find somewhere to put this error message.
+#addconstraint(m::Model, c::Array{AffExprConstraint}) =
+#    error("The operators <=, >=, and == can only be used to specify scalar constraints. If you are trying to add a vectorized constraint, use the element-wise dot comparison operators (.<=, .>=, or .==) instead")
 
 struct VectorAffExprConstraint{S <: MOI.AbstractVectorSet} <: AbstractConstraint
     func::Vector{AffExpr}
     set::S
 end
 
-"""
-    addconstraint(m::Model, c::VectorAffExprConstraint)
-
-Add the vector constraint `c` to `Model m`.
-"""
-function addconstraint(m::Model, c::VectorAffExprConstraint)
-    cindex = MOI.addconstraint!(m.moibackend, MOI.VectorAffineFunction(c.func), c.set)
-    return ConstraintRef(m, cindex)
-end
-
+moi_function_and_set(c::VectorAffExprConstraint) = (MOI.VectorAffineFunction(c.func), c.set)
 
 function constraintobject(cr::ConstraintRef{Model}, ::Type{AffExpr}, ::Type{SetType}) where {SetType <: MOI.AbstractScalarSet}
     f = MOI.get(cr.m, MOI.ConstraintFunction(), cr)::MOI.ScalarAffineFunction

@@ -131,15 +131,7 @@ struct QuadExprConstraint{S <: MOI.AbstractScalarSet} <: AbstractConstraint
     set::S
 end
 
-"""
-    addconstraint(m::Model, c::QuadExprConstraint)
-
-Add a `QuadExpr` constraint to `Model m`.
-"""
-function addconstraint(m::Model, c::QuadExprConstraint)
-    cindex = MOI.addconstraint!(m.moibackend, MOI.ScalarQuadraticFunction(c.func), c.set)
-    return ConstraintRef(m, cindex)
-end
+moi_function_and_set(c::QuadExprConstraint) = (MOI.ScalarQuadraticFunction(c.func), c.set)
 
 function constraintobject(cr::ConstraintRef{Model}, ::Type{QuadExpr}, ::Type{SetType}) where {SetType <: MOI.AbstractScalarSet}
     m = cr.m
