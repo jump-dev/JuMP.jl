@@ -252,23 +252,22 @@ new_nd = simplify_constants(storage,nd,adj,const_values,linearity)
 @test length(new_nd) == 1
 
 # user-defined functions
-using Distributions
-#Φ(x,y) = Φ(y) - Φ(x)
+#Φ(x,y) = 1/3(y)^3 - 2x^2
 # c(x) = cos(x)
-type CDFEvaluator <: MathProgBase.AbstractNLPEvaluator
+type ΦEvaluator <: MathProgBase.AbstractNLPEvaluator
 end
-function MathProgBase.eval_f(::CDFEvaluator,x)
+function MathProgBase.eval_f(::ΦEvaluator,x)
     @assert length(x) == 2
-    return cdf(Normal(0,1),x[2])-cdf(Normal(0,1),x[1])
+    return (1/3)*x[2]^3-2x[1]^2
 end
-function MathProgBase.eval_grad_f(::CDFEvaluator,grad,x)
-    grad[1] = -pdf(Normal(0,1),x[1])
-    grad[2] = pdf(Normal(0,1),x[2])
+function MathProgBase.eval_grad_f(::ΦEvaluator,grad,x)
+    grad[1] = -4x[1]
+    grad[2] = x[2]^2
 end
 r = ReverseDiffSparse.UserOperatorRegistry()
-register_multivariate_operator!(r,:Φ,CDFEvaluator())
+register_multivariate_operator!(r,:Φ,ΦEvaluator())
 register_univariate_operator!(r,:c,cos,x->-sin(x),x->-cos(x))
-Φ(x,y) = MathProgBase.eval_f(CDFEvaluator(),[x,y])
+Φ(x,y) = MathProgBase.eval_f(ΦEvaluator(),[x,y])
 ex = :(Φ(x[2],x[1]-1)*c(x[3]))
 nd,const_values = expr_to_nodedata(ex,r)
 @test ReverseDiffSparse.has_user_multivariate_operators(nd)
@@ -284,7 +283,7 @@ grad = zeros(3)
 reverse_eval(reverse_storage,partials_storage,nd,adj)
 reverse_extract(grad,reverse_storage,nd,adj,[],1.0)
 
-true_grad = [cos(x[3])*pdf(Normal(0,1),x[1]-1), -cos(x[3])*pdf(Normal(0,1),x[2]), -sin(x[3])*Φ(x[2],x[1]-1)]
+true_grad = [cos(x[3])*(x[1]-1)^2, -4cos(x[3])*x[2], -sin(x[3])*Φ(x[2],x[1]-1)]
 @test isapprox(grad,true_grad)
 
 
