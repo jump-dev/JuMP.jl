@@ -78,7 +78,20 @@
         @test !MOI.isvalid(m, cref[1])
     end
 
-    @testset "Broadcast constraint (.==)" begin
+    @testset "Two-sided constraints" begin
+        m = Model()
+        @variable(m, x)
+        @variable(m, y)
+
+        @constraint(m, cref, 1.0 <= x + y + 1.0 <= 2.0)
+        @test JuMP.name(cref) == "cref"
+
+        c = JuMP.constraintobject(cref, AffExpr, MOI.Interval)
+        @test JuMP.isequal_canonical(c.func, x + y)
+        @test c.set == MOI.Interval(0.0, 1.0)
+    end
+
+    @testset "Broadcasted constraint (.==)" begin
         m = Model()
         @variable(m, x[1:2])
 
@@ -96,7 +109,7 @@
         @test c2.set == MOI.EqualTo(5.0)
     end
 
-    @testset "Broadcast constraint (.<=)" begin
+    @testset "Broadcasted constraint (.<=)" begin
         m = Model()
         @variable(m, x[1:2,1:2])
 
@@ -113,6 +126,22 @@
         end
     end
 
+    @testset "Broadcasted two-sided constraint" begin
+        m = Model()
+        @variable(m, x[1:2])
+        @variable(m, y[1:2])
+        l = [1.0, 2.0]
+        u = [3.0, 4.0]
+
+        cref = @constraint(m, l .<= x + y + 1 .<= u)
+        @test size(cref) == (2,)
+
+        for i in 1:2
+            c = JuMP.constraintobject(cref[i], AffExpr, MOI.Interval)
+            @test JuMP.isequal_canonical(c.func, x[i] + y[i])
+            @test c.set == MOI.Interval(l[i]-1, u[i]-1)
+        end
+    end
 
     @testset "QuadExpr constraints" begin
         m = Model()

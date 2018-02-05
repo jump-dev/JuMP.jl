@@ -311,7 +311,7 @@ end
 function constructconstraint!(aff::AffExpr, lb::Real, ub::Real)
     offset = aff.constant
     aff.constant = 0.0
-    AffExprConstraint(aff,lb-offset,ub-offset)
+    AffExprConstraint(aff,MOI.Interval(lb-offset,ub-offset))
 end
 
 # constructconstraint!(aff::Variable, lb::Real, ub::Real) = constructconstraint!(convert(AffExpr,v),lb,ub)
@@ -412,10 +412,9 @@ macro constraint(args...)
         (lsign,lvectorized) = _canonicalize_sense(x.args[2])
         (rsign,rvectorized) = _canonicalize_sense(x.args[4])
         if (lsign != :(<=)) || (rsign != :(<=))
-            constraint_error(args, "Only ranged rows of the form lb <= expr <= ub are supported.")
+            constraint_error(args, "Only two-sided rows of the form lb <= expr <= ub are supported.")
         end
         ((vectorized = lvectorized) == rvectorized) || constraint_error("Signs are inconsistently vectorized")
-        addconstr = (lvectorized ? :addVectorizedConstraint : :addconstraint)
         x_str = string(x)
         lb_str = string(x.args[1])
         ub_str = string(x.args[5])
@@ -424,7 +423,12 @@ macro constraint(args...)
         newlb, parselb = parseExprToplevel(x.args[1],:lb)
         newub, parseub = parseExprToplevel(x.args[5],:ub)
 
-        constraintcall = :($addconstr($m, constructconstraint!($newaff,$newlb,$newub), $(namecall(basename, idxvars))))
+        if lvectorized
+            # TODO: Pass through names here.
+            constraintcall = :(addconstraint.($m, constructconstraint!.($newaff,$newlb,$newub)))
+        else
+            constraintcall = :(addconstraint($m, constructconstraint!($newaff,$newlb,$newub), $(namecall(basename, idxvars))))
+        end
         addkwargs!(constraintcall, kwargs)
         code = quote
             aff = zero(AffExpr)
