@@ -15,9 +15,6 @@ using JuMP
 using Base.Test
 using OffsetArrays
 
-# If solvers not loaded, load them (i.e running just these tests)
-!isdefined(:lp_solvers) && include("solvers.jl")
-
 # To ensure the tests work on Windows and Linux/OSX, we need
 # to use the correct comparison operators
 const leq = JuMP.repl[:leq]
@@ -283,120 +280,6 @@ end
         @test getobjectivesense(modQ) == :Min
     end
 
-
-    @testset "Solving a MILP with $solver" for solver in ip_solvers
-        modA = Model(solver=solver)
-        @variable(modA, x >= 0)
-        @variable(modA, y <= 5, Int)
-        @variable(modA, 2 <= z <= 4)
-        @variable(modA, 0 <= r[i=3:6] <= i)
-        @objective(modA, Max, ((x + y)/2.0 + 3.0)/3.0 + z + r[3])
-        @constraint(modA, 2 <= x+y)
-        @constraint(modA, sum(r[i] for i=3:5) <= (2 - x)/2.0)
-        @constraint(modA, 7.0*y <= z + r[6]/1.9)
-
-        @test solve(modA)       == :Optimal
-        @test isapprox(modA.objVal, 1.0+4.833334, atol=TOL)
-        @test isapprox(getvalue(x), 1.0, atol=TOL)
-        @test isapprox(getvalue(y), 1.0, atol=TOL)
-        @test isapprox(getvalue(z), 4.0, atol=TOL)
-        @test isapprox(getvalue(r)[3], 0.5, atol=TOL)
-        @test isapprox(getvalue(r)[4], 0.0, atol=TOL)
-        @test isapprox(getvalue(r)[5], 0.0, atol=TOL)
-        @test getvalue(r)[6] ≥ 5.7-TOL
-        @test getvalue(r)[6] ≤ 6.0+TOL
-        @test getobjective(modA).aff == ((x + y)/2.0 + 3.0)/3.0 + z + r[3]
-    end
-
-    @testset "Solving an LP (Min) with $solver" for solver in lp_solvers
-        modA = Model(solver=solver)
-        @variable(modA, x >= 0)
-        @variable(modA, y <= 5)
-        @variable(modA, 2 <= z <= 4)
-        @variable(modA, 0 <= r[i=3:6] <= i)
-        @objective(modA, Min, -((x + y)/2.0 + 3.0)/3.0 - z - r[3])
-        @constraintref cons[1:3]
-        cons[1] = @constraint(modA, x+y >= 2)
-        cons[2] = @constraint(modA, sum(r[i] for i=3:5) <= (2 - x)/2.0)
-        cons[3] = @constraint(modA, 7.0*y <= z + r[6]/1.9)
-
-        # Solution
-        @test solve(modA) == :Optimal
-        @test isapprox(getobjectivevalue(modA), -5.8446115, atol=TOL)
-        @test isapprox(getvalue(x), 0.9774436, atol=TOL)
-        @test isapprox(getvalue(y), 1.0225563, atol=TOL)
-        @test isapprox(getvalue(z), 4.0, atol=TOL)
-        @test isapprox(getvalue(r)[3], 0.5112781, atol=TOL)
-        @test isapprox(getvalue(r)[4], 0.0, atol=TOL)
-        @test isapprox(getvalue(r)[5], 0.0, atol=TOL)
-        @test isapprox(getvalue(r)[6], 6.0, atol=TOL)
-
-        # Reduced costs
-        @test isapprox(getdual(x), 0.0, atol=TOL)
-        @test isapprox(getdual(y), 0.0, atol=TOL)
-        @test isapprox(getdual(z), -1.0714286, atol=TOL)
-        @test isapprox(getdual(r)[3], 0.0, atol=TOL)
-        @test isapprox(getdual(r)[4], 1.0, atol=TOL)
-        @test isapprox(getdual(r)[5], 1.0, atol=TOL)
-        @test isapprox(getdual(r)[6], -0.03759398, atol=TOL)
-
-        # Row duals
-        @test isapprox(getdual(cons)[1], 0.333333, atol=TOL)
-        @test isapprox(getdual(cons)[2], -1.0, atol=TOL)
-        @test isapprox(getdual(cons)[3], -0.0714286, atol=TOL)
-    end
-
-    @testset "Test solving an LP (Max) with $solver" for solver in lp_solvers
-        modA = Model(solver=solver)
-        @variable(modA, x >= 0)
-        @variable(modA, y <= 5)
-        @variable(modA, 2 <= z <= 4)
-        @variable(modA, 0 <= r[i=3:6] <= i)
-        @objective(modA, Max, ((x + y)/2.0 + 3.0)/3.0 + z + r[3])
-        @constraintref cons[1:3]
-        cons[1] = @constraint(modA, x+y >= 2)
-        cons[2] = @constraint(modA, sum(r[i] for i=3:5) <= (2 - x)/2.0)
-        cons[3] = @constraint(modA, 7.0*y <= z + r[6]/1.9)
-
-        # Solution
-        @test solve(modA) == :Optimal
-        @test isapprox(getobjectivevalue(modA), 5.8446115, atol=TOL)
-        @test isapprox(getvalue(x), 0.9774436, atol=TOL)
-        @test isapprox(getvalue(y), 1.0225563, atol=TOL)
-        @test isapprox(getvalue(z), 4.0, atol=TOL)
-        @test isapprox(getvalue(r)[3], 0.5112781, atol=TOL)
-        @test isapprox(getvalue(r)[4], 0.0, atol=TOL)
-        @test isapprox(getvalue(r)[5], 0.0, atol=TOL)
-        @test isapprox(getvalue(r)[6], 6.0, atol=TOL)
-
-        # Reduced costs
-        @test isapprox(getdual(x), 0.0, atol=TOL)
-        @test isapprox(getdual(y), 0.0, atol=TOL)
-        @test isapprox(getdual(z), 1.0714286, atol=TOL)
-        @test isapprox(getdual(r)[3], 0.0, atol=TOL)
-        @test isapprox(getdual(r)[4], -1.0, atol=TOL)
-        @test isapprox(getdual(r)[5], -1.0, atol=TOL)
-        @test isapprox(getdual(r)[6], 0.03759398, atol=TOL)
-
-        # Row duals
-        @test isapprox(getdual(cons)[1], -0.333333, atol=TOL)
-        @test isapprox(getdual(cons)[2], 1.0, atol=TOL)
-        @test isapprox(getdual(cons)[3], 0.0714286, atol=TOL)
-    end
-
-
-
-    @testset "Test binary variable handling with $solver" for solver in ip_solvers
-        modB = Model(solver=solver)
-        @variable(modB, x, Bin)
-        @objective(modB, Max, x)
-        @constraint(modB, x <= 10)
-        status = solve(modB)
-        @test status == :Optimal
-        @test isapprox(getvalue(x), 1.0, atol=TOL)
-    end
-
-
     @testset "Test model copying" begin
         source = Model()
         @variable(source, 2 <= x <= 5)
@@ -521,69 +404,6 @@ end
     end
     end
 
-    if length(lp_solvers) > 0
-        @testset "Test NaN checking" begin
-            mod = Model(solver=lp_solvers[1])
-            @variable(mod, x)
-            @objective(mod, Min, NaN*x)
-            @test_throws ErrorException solve(mod)
-            @objective(mod, Min, NaN*x^2)
-            @test_throws ErrorException solve(mod)
-            @objective(mod, Min, x)
-            @constraint(mod, Min, NaN*x == 0)
-            @test_throws ErrorException solve(mod)
-        end
-    end
-
-    @testset "Test column-wise modeling with $lp_solver" for lp_solver in lp_solvers
-        mod = Model(solver=lp_solver)
-        @variable(mod, 0 <= x <= 1)
-        @variable(mod, 0 <= y <= 1)
-        @objective(mod, Max, 5x + 1y)
-        @constraint(mod, con[i=1:2], i*x + y <= i+5)
-        @variable(mod, 0 <= z1 <= 1, objective=10.0, inconstraints=con, coefficients=[1.0,-2.0])
-        @variable(mod, 0 <= z2 <= 1, objective=10.0, inconstraints=Any[con[i] for i in 1:2], coefficients=[1.0,-2.0])
-        @test solve(mod) == :Optimal
-        @test isapprox(getvalue(z1), 1.0, atol=TOL)
-        @test isapprox(getvalue(z2), 1.0, atol=TOL)
-
-        # do a vectorized version as well
-        mod = Model(solver=lp_solver)
-        @variable(mod, 0 <= x <= 1)
-        @variable(mod, 0 <= y <= 1)
-        obj = [5,1]'*[x,y]
-        if VERSION < v"0.6.0-dev.2074" # julia PR #19670
-            @objective(mod, Max, obj[1])
-        else
-            @objective(mod, Max, obj)
-        end
-        A = [1 1
-             2 1]
-        @constraint(mod, A*[x,y] .<= [6,7])
-        @variable(mod, 0 <= z1 <= 1, objective=10.0, inconstraints=con, coefficients=[1.0,-2.0])
-        @variable(mod, 0 <= z2 <= 1, objective=10.0, inconstraints=Any[con[i] for i in 1:2], coefficients=[1.0,-2.0])
-        @test solve(mod) == :Optimal
-        @test isapprox(getvalue(z1), 1.0, atol=TOL)
-        @test isapprox(getvalue(z2), 1.0, atol=TOL)
-
-        # vectorized with sparse matrices
-        mod = Model(solver=lp_solver)
-        @variable(mod, 0 <= x <= 1)
-        @variable(mod, 0 <= y <= 1)
-        # TODO: get this to work by adding method for Ac_mul_B!
-        # obj = sparse([5,1])'*[x,y]
-        obj = sparse([5,1]')*[x,y]
-        @objective(mod, Max, obj[1])
-        A = sparse([1 1
-                    2 1])
-        @constraint(mod, A*[x,y] .<= [6,7])
-        @variable(mod, 0 <= z1 <= 1, objective=10.0, inconstraints=con, coefficients=[1.0,-2.0])
-        @variable(mod, 0 <= z2 <= 1, objective=10.0, inconstraints=Any[con[i] for i in 1:2], coefficients=[1.0,-2.0])
-        @test solve(mod) == :Optimal
-        @test isapprox(getvalue(z1), 1.0, atol=TOL)
-        @test isapprox(getvalue(z2), 1.0, atol=TOL)
-    end
-
     @testset "[model] Test all MPS paths" begin
         mod = Model()
         @variable(mod, free_var)
@@ -606,95 +426,6 @@ end
         writeLP(mod,"test.lp")
     end
 
-    @testset "Test semi-continuous variables with $solver" for solver in semi_solvers
-        mod = Model(solver=solver)
-        @variable(mod, x >= 3, SemiCont)
-        @variable(mod, y >= 2, SemiCont)
-        @constraint(mod, x + y >= 1)
-        @objective(mod, Min, x+y)
-        solve(mod)
-        @test isapprox(getvalue(x), 0.0, atol=TOL)
-        @test isapprox(getvalue(y), 2.0, atol=TOL)
-    end
-
-    @testset "Test semi-integer variables with $solver" for solver in semi_solvers
-        mod = Model(solver=solver)
-        @variable(mod, x >= 3, SemiInt)
-        @variable(mod, y >= 2, SemiInt)
-        @constraint(mod, x + y >= 2.5)
-        @objective(mod, Min, x+1.1y)
-        solve(mod)
-        @test isapprox(getvalue(x), 3.0, atol=TOL)
-        @test isapprox(getvalue(y), 0.0)
-    end
-
-    @testset "Test fixed variables don't leak through MPB with $solver" for solver in lp_solvers
-        mod = Model(solver=solver)
-        @variable(mod, 0 <= x[1:3] <= 2)
-        @variable(mod, y[k=1:2] == k)
-        @objective(mod, Min, x[1] + x[2] + x[3] + y[1] + y[2])
-        solve(mod)
-        for i in 1:3
-            @test isapprox(getvalue(x[i]), 0, atol=TOL)
-        end
-        for k in 1:2
-            @test isapprox(getvalue(y[k]), k, atol=TOL)
-        end
-    end
-    @testset "Fixed variables with $solver" for solver in ip_solvers
-        mod = Model(solver=solver)
-        @variable(mod, x[1:3], Bin)
-        @variable(mod, y[k=1:2] == k)
-        JuMP.build(mod)
-        @test MathProgBase.getvartype(internalmodel(mod)) == [:Bin,:Bin,:Bin,:Cont,:Cont]
-    end
-
-
-    @testset "Test SOS constraints with $solver" for solver in sos_solvers
-        modS = Model(solver=solver)
-
-        @variable(modS, x[1:3], Bin)
-        @variable(modS, y[1:5], Bin)
-        @variable(modS, z)
-        @variable(modS, w)
-
-        @objective(modS, Max, z+w)
-
-        a = [1,2,3]
-        b = [5,4,7,2,1]
-
-        @constraint(modS, z == sum(a[i]*x[i] for i=1:3))
-        @constraint(modS, w == sum(b[i]*y[i] for i=1:5))
-
-        @test_throws MethodError addSOS1([x[1]+y[1]])
-        @test_throws MethodError addSOS1([1z])
-
-        addSOS1(modS, [a[i]x[i] for i in 1:3])
-        addSOS2(modS, [b[i]y[i] for i in 1:5])
-
-        @test_throws ErrorException addSOS1(modS, [x[1], x[1]+x[2]])
-
-        @test solve(modS) == :Optimal
-        @test isapprox(modS.objVal, 15.0, atol=TOL)
-        @test isapprox(getvalue(z),  3.0, atol=TOL)
-        @test isapprox(getvalue(w), 12.0, atol=TOL)
-
-
-        m = Model(solver=solver)
-        ub = [1,1,2]
-        @variable(m, x[i=1:3] <= ub[i])
-        @objective(m, Max, 2x[1]+x[2]+x[3])
-        addSOS1(m, [x[1],2x[2]])
-        addSOS1(m, [x[1],2x[3]])
-
-        # Getter/setters
-        @test JuMP.numsosconstr(m) == 2
-
-        @test solve(m) == :Optimal
-        @test isapprox(getvalue(x), [0.0,1.0,2.0], atol=TOL)
-        @test isapprox(getobjectivevalue(m), 3.0, atol=TOL)
-    end
-
     @testset "Test vectorized model creation" begin
 
         A = sprand(50,10,0.15)
@@ -704,11 +435,7 @@ end
         @variable(modV, y[1:7])
         @constraint(modV, A*x + B*y .<= 1)
         obj = (x'*2A')*(2A*x) + (B*2y)'*(B*(2y))
-        if VERSION < v"0.6.0-dev.2074" # julia PR #19670
-            @objective(modV, Max, obj[1])
-        else
-            @objective(modV, Max, obj)
-        end
+        @objective(modV, Max, obj)
 
         modS = Model()
         @variable(modS, x[1:10])
@@ -722,57 +449,6 @@ end
         @test JuMP.prepConstrMatrix(modV) == JuMP.prepConstrMatrix(modS)
         @test JuMP.prepAffObjective(modV) == JuMP.prepAffObjective(modS)
         @test JuMP.prepConstrBounds(modV) == JuMP.prepConstrBounds(modS)
-    end
-
-    @testset "Test MIQP vectorization" begin
-        n = 1000
-        p = 4
-        function bestsubset(solver,X,y,K,M,integer)
-            mod = Model(solver=solver)
-            @variable(mod, β[1:p])
-            if integer
-                @variable(mod, z[1:p], Bin)
-            else
-                @variable(mod, 0 <= z[1:p] <= 1)
-            end
-            obj = (y-X*β)'*(y-X*β)
-            if VERSION < v"0.6.0-dev.2074" # julia PR #19670
-                @objective(mod, Min, obj[1])
-            else
-                @objective(mod, Min, obj)
-            end
-            @constraint(mod, eye(p)*β .<=  M*eye(p)*z)
-            @constraint(mod, eye(p)*β .>= -M*eye(p)*z)
-            @constraint(mod, sum(z) == K)
-            solve(mod)
-            return getvalue(β)
-        end
-        include(joinpath("data","miqp_vector.jl")) # loads X and q
-        y = X * [100, 50, 10, 1] + 20*q
-        @testset "with $solver" for solver in quad_solvers
-            @test isapprox(bestsubset(solver,X,y,2,500,false), [101.789,49.414,8.63904,1.72663], atol=10TOL)
-            @test isapprox(bestsubset(solver,sparse(X),y,2,500,false), [101.789,49.414,8.63904,1.72663], atol=10TOL)
-        end
-        @testset "with $solver" for solver in quad_mip_solvers
-            y = X * [100, 50, 10, 1] + 20*q
-            @test isapprox(bestsubset(solver,X,y,2,500,true), [106.25,53.7799,0.0,0.0], atol=1.0)
-            @test isapprox(bestsubset(solver,sparse(X),y,2,500,true), [106.25,53.7799,0.0,0.0], atol=1.0)
-        end
-    end
-
-    @testset "Test setsolver" begin
-        m = Model()
-        @variable(m, x[1:5])
-        @constraint(m, con[i=1:5], x[6-i] == i)
-
-        for solver in lp_solvers
-            setsolver(m, solver)
-            @test m.solver == solver
-            @test (m.internalModel == nothing) == true
-            @test solve(m) == :Optimal
-            @test m.solver == solver
-            @test (m.internalModel == nothing) == false
-        end
     end
 
     @testset "[model] Setting solve hook" begin
@@ -826,81 +502,9 @@ end
         @test typeof(getvalue(x)) == Vector{Float64}
     end
 
-    @testset "Relaxation keyword argument to solve with $solver" for solver in ip_dual_solvers
-        m = Model(solver=solver)
-        @variable(m, 1.5 <= y <= 2, Int)
-        @variable(m, z, Bin)
-        @variable(m, 0.5 <= w <= 1.5, Int)
-        @variable(m, 1 <= v <= 2)
-
-        @objective(m, Min, y + z + w + v)
-
-        @test solve(m, relaxation=true) == :Optimal
-        @test isapprox(getvalue(y), 1.5, atol=TOL)
-        @test isapprox(getvalue(z), 0, atol=TOL)
-        @test isapprox(getvalue(w), 0.5, atol=TOL)
-        @test isapprox(getvalue(v), 1, atol=TOL)
-        @test isapprox(getdual(y), 1, atol=TOL)
-        @test isapprox(getdual(z), 1, atol=TOL)
-        @test isapprox(getdual(w), 1, atol=TOL)
-        @test isapprox(getdual(v), 1, atol=TOL)
-        @test isapprox(getobjectivevalue(m), 1.5 + 0 + 0.5 + 1, atol=TOL)
-
-        @test solve(m) == :Optimal
-        @test getvalue(y) == 2
-        @test getvalue(z) == 0
-        @test getvalue(w) == 1
-        @test getvalue(v) == 1
-        @test getobjectivevalue(m) == 2 + 0 + 1 + 1
-    end
-
-    @testset "Relaxation keyword argument to solve (w/ SOS constraints) with $solver" for solver in sos_solvers
-        m = Model(solver=solver)
-        @variable(m, 1.5 <= y <= 2, Int)
-        @variable(m, z, Bin)
-        @variable(m, 0.5 <= w <= 1.5, Int)
-        @variable(m, 1 <= v <= 2)
-
-        @objective(m, Min, y + z + w + v)
-        @variable(m, 1 <= x <= 2, SemiCont)
-        @variable(m, -2 <= t <= -1, SemiInt)
-
-        addSOS1(m, [x, 2y, 3z, 4w, 5v, 6t])
-        @objective(m, Min, x + y + z + w + v - t)
-
-        @test solve(m, relaxation=true) == :Optimal
-
-        @test getvalue(x) == 0
-        @test getvalue(y) == 1.5
-        @test getvalue(z) == 0
-        @test getvalue(w) == 0.5
-        @test getvalue(v) == 1
-        @test getvalue(t) == 0
-        @test getobjectivevalue(m) == 0 + 1.5 + 0 + 0.5 + 1 + 0
-    end
-
     @testset "Unrecognized keyword argument to solve" begin
         m = Model()
         @test_throws ErrorException solve(m, this_should_throw=true)
-    end
-
-    @testset "Solve MIP relaxation with continuous solvers" begin
-    @testset "with $solver" for solver in lp_solvers
-        m = Model(solver=solver)
-        @variable(m, x, Bin)
-        @constraint(m, x >= 0.5)
-        @objective(m, Min, x)
-        @test solve(m, relaxation=true) == :Optimal
-        @test isapprox(getvalue(x), 0.5, atol=TOL)
-    end
-    @testset "with $solver" for solver in nlp_solvers
-        m = Model(solver=solver)
-        @variable(m, x, Bin)
-        @objective(m, Min, x)
-        @NLconstraint(m, x >= 0.5)
-        @test solve(m, relaxation=true) == :Optimal
-        @test isapprox(getvalue(x), 0.5, atol=TOL)
-    end
     end
 
     @testset "Nonliteral exponents in @constraint" begin
@@ -917,58 +521,10 @@ end
         @test m.quadconstr[4].terms == QuadExpr(x + x + x - 1)
     end
 
-    if length(ip_solvers) > 0
-        @testset "sets used as indexsets in JuMPArray" begin
-            set = IntSet()
-            for i in 4:5
-                push!(set, i)
-            end
-            set2 = IntSet()
-            for i in 21:23
-                push!(set2, i)
-            end
-            m = Model(solver=ip_solvers[1])
-            @variable(m, x[set, set2], Bin)
-            @objective(m , Max, sum(sum(x[e,p] for e in set) for p in set2))
-            solve(m)
-            sol = getvalue(x)
-            checked_objval = 0
-            for i in keys(sol)
-                checked_objval += sol[i...]
-            end
-            @test checked_objval == 6
-        end
-    end
-
     @testset "[model] .^ broadcasting" begin
         m = Model()
         @variable(m, x[1:2])
         @test (x.^2)[1] == x[1]^2
-    end
-
-    @testset "Quadratic constraints with zero coefficients with $solver" for solver in quad_solvers
-        m = Model(solver=solver)
-        @variable(m, 0 <= v <= 2)
-        @variable(m, 1 <= x <= 5)
-        @constraint(m, v >= 0.0 * x^2 + x)
-        @objective(m, Min, v)
-        @test solve(m) == :Optimal
-        @test isapprox(getvalue(v), 1.0, atol=TOL)
-    end
-
-    @testset "Clear duals after MIP -> LP -> MIP with $solver" for solver in ip_dual_solvers
-        m = Model(solver=solver)
-        @variable(m, x, Bin)
-        @objective(m, Max, x)
-
-        @test solve(m) == :Optimal
-        @test isnan(getdual(x))
-
-        @test solve(m, relaxation=true) == :Optimal
-        @test isapprox(getdual(x), 1.0, atol=TOL)
-
-        @test solve(m) == :Optimal
-        @test isnan(getdual(x))
     end
 
     @testset "Constraints with non-Array AbstractArrays" begin
