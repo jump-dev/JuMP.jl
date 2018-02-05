@@ -356,7 +356,7 @@ end
 """
     setbinary(v::Variable)
 
-Add a constraint on the variable `v` that it must take values in the set ``\{0,1\\}``.
+Add a constraint on the variable `v` that it must take values in the set ``\{0,1\}``.
 """
 function setbinary(v::Variable)
     isbinary(v) && return
