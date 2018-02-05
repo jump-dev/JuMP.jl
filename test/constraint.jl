@@ -78,6 +78,42 @@
         @test !MOI.isvalid(m, cref[1])
     end
 
+    @testset "Broadcast constraint (.==)" begin
+        m = Model()
+        @variable(m, x[1:2])
+
+        A = [1.0 2.0; 3.0 4.0]
+        b = [4.0, 5.0]
+
+        cref = @constraint(m, A*x .== b)
+        @test size(cref) == (2,)
+
+        c1 = JuMP.constraintobject(cref[1], AffExpr, MOI.EqualTo)
+        @test JuMP.isequal_canonical(c1.func, x[1] + 2x[2])
+        @test c1.set == MOI.EqualTo(4.0)
+        c2 = JuMP.constraintobject(cref[2], AffExpr, MOI.EqualTo)
+        @test JuMP.isequal_canonical(c2.func, 3x[1] + 4x[2])
+        @test c2.set == MOI.EqualTo(5.0)
+    end
+
+    @testset "Broadcast constraint (.<=)" begin
+        m = Model()
+        @variable(m, x[1:2,1:2])
+
+        UB = [1.0 2.0; 3.0 4.0]
+
+        cref = @constraint(m, x + 1 .<= UB)
+        @test size(cref) == (2,2)
+        for i in 1:2
+            for j in 1:2
+                c = JuMP.constraintobject(cref[i,j], AffExpr, MOI.LessThan)
+                @test JuMP.isequal_canonical(c.func, AffExpr(x[i,j]))
+                @test c.set == MOI.LessThan(UB[i,j] - 1)
+            end
+        end
+    end
+
+
     @testset "QuadExpr constraints" begin
         m = Model()
         @variable(m, x)
