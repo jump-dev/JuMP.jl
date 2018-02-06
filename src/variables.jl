@@ -72,7 +72,7 @@ end
 
 Get a variable's name.
 """
-name(v::Variable) = var_str(REPLMode, v)
+name(v::Variable) = MOI.get(v.m, MOI.VariableName(), v)
 
 """
     setname(v::Variable,s::AbstractString)
