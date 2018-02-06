@@ -915,7 +915,9 @@ variable_error(args, str) = error("In @variable($(join(args,","))): ", str)
 # Given a basename and idxvars, returns an expression that constructs the name
 # of the object. For use within macros only.
 function namecall(basename, idxvars)
-    length(idxvars) == 0 && return basename
+    if length(idxvars) == 0 || basename == ""
+        return basename
+    end
     ex = Expr(:call,:string,basename,"[")
     for i in 1:length(idxvars)
         push!(ex.args, esc(idxvars[i]))
@@ -1038,7 +1040,8 @@ macro variable(args...)
     variable = gensym()
     quotvarname = anonvar ? :(:__anon__) : quot(getname(var))
     escvarname  = anonvar ? variable     : esc(getname(var))
-    basename = anonvar ? "__anon__" : string(getname(var))
+    # TODO: Should we generate non-empty default names for variables?
+    basename = anonvar ? "" : string(getname(var))
 
     if !isa(getname(var),Symbol) && !anonvar
         Base.error("Expression $(getname(var)) should not be used as a variable name. Use the \"anonymous\" syntax $(getname(var)) = @variable(m, ...) instead.")
