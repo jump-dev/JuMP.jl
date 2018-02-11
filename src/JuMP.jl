@@ -38,7 +38,7 @@ export
     setobjectivesense,
     writeLP, writeMPS,
     #addSOS1, addSOS2,
-    solve,
+    optimize,
     internalmodel,
     # Variable
     setname,
@@ -74,16 +74,16 @@ const MOIFIX = MOICON{MOI.SingleVariable,MOI.EqualTo{Float64}}
 const MOIINT = MOICON{MOI.SingleVariable,MOI.Integer}
 const MOIBIN = MOICON{MOI.SingleVariable,MOI.ZeroOne}
 
-@MOIU.instance JuMPInstance (ZeroOne, Integer) (EqualTo, GreaterThan, LessThan, Interval) (Zeros, Nonnegatives, Nonpositives, SecondOrderCone, RotatedSecondOrderCone, GeometricMeanCone, PositiveSemidefiniteConeTriangle, PositiveSemidefiniteConeSquare, RootDetConeTriangle, RootDetConeSquare, LogDetConeTriangle, LogDetConeSquare) () (SingleVariable,) (ScalarAffineFunction,ScalarQuadraticFunction) (VectorOfVariables,) (VectorAffineFunction,)
+@MOIU.model JuMPMOIModel (ZeroOne, Integer) (EqualTo, GreaterThan, LessThan, Interval) (Zeros, Nonnegatives, Nonpositives, SecondOrderCone, RotatedSecondOrderCone, GeometricMeanCone, PositiveSemidefiniteConeTriangle, PositiveSemidefiniteConeSquare, RootDetConeTriangle, RootDetConeSquare, LogDetConeTriangle, LogDetConeSquare) () (SingleVariable,) (ScalarAffineFunction,ScalarQuadraticFunction) (VectorOfVariables,) (VectorAffineFunction,)
 
 ###############################################################################
 # Model
 
 # Model has three modes:
-# 1) Automatic: moibackend field holds an InstanceManager in Automatic mode.
-# 2) Manual: moibackend field holds an InstanceManager in Manual mode.
-# 3) Direct: moibackend field holds an AbstractSolverInstance. No extra copy of the instance is stored. The moibackend must support adddconstraint! etc.
-# Methods to interact with the InstanceManager are defined in solverinterface.jl.
+# 1) Automatic: moibackend field holds a CachingOptimizer in Automatic mode.
+# 2) Manual: moibackend field holds a CachingOptimizer in Manual mode.
+# 3) Direct: moibackend field holds an AbstractOptimizer. No extra copy of the model is stored. The moibackend must support adddconstraint! etc.
+# Methods to interact with the CachingOptimizer are defined in solverinterface.jl.
 @enum ModelMode Automatic Manual Direct
 
 abstract type AbstractModel end
@@ -115,7 +115,7 @@ mutable struct Model <: AbstractModel
     # # such that a symmetry-enforcing constraint has been created
     # # between sdpconstr[c].terms[i,j] and sdpconstr[c].terms[j,i]
     # sdpconstrSym::Vector{Vector{Tuple{Int,Int}}}
-    moibackend::Union{MOI.AbstractSolverInstance,MOIU.InstanceManager}
+    moibackend::Union{MOI.AbstractOptimizer,MOIU.CachingOptimizer}
     # callbacks
     callbacks
     # lazycallback
@@ -124,7 +124,7 @@ mutable struct Model <: AbstractModel
 
     # hook into a solve call...function of the form f(m::Model; kwargs...),
     # where kwargs get passed along to subsequent solve calls
-    solvehook
+    optimizehook
     # # ditto for a print hook
     # printhook
 
@@ -145,8 +145,7 @@ mutable struct Model <: AbstractModel
     # dictionary keyed on an extension-specific symbol
     ext::Dict{Symbol,Any}
     # Default constructor
-    function Model(; mode::ModelMode=Automatic, solver=nothing, simplify_nonlinear_expressions::Bool=false)
-        # TODO need to support MPB also
+    function Model(; mode::ModelMode=Automatic, backend=nothing, optimizer=nothing, simplify_nonlinear_expressions::Bool=false)
         m = new()
         # TODO make pretty
         m.variabletolowerbound = Dict{MOIVAR,MOILB}()
@@ -157,23 +156,28 @@ mutable struct Model <: AbstractModel
         m.customnames = Variable[]
         m.objbound = 0.0
         m.objval = 0.0
-        if mode == Automatic
-            m.moibackend = MOIU.InstanceManager(JuMPInstance{Float64}(), MOIU.Automatic)
-            if solver !== nothing
-                MOIU.resetsolver!(m, solver)
+        if backend != nothing
+            # TODO: It would make more sense to not force users to specify Direct mode if they also provide a backend.
+            @assert mode == Direct
+            @assert optimizer === nothing
+            @assert MOI.isempty(backend)
+            m.moibackend = backend
+        else
+            @assert mode != Direct
+            if mode == Automatic
+                m.moibackend = MOIU.CachingOptimizer(JuMPMOIModel{Float64}(), MOIU.Automatic)
+                if optimizer !== nothing
+                    MOIU.resetoptimizer!(m, optimizer)
+                end
+            elseif mode == Manual
+                m.moibackend = MOIU.CachingOptimizer(JuMPMOIModel{Float64}(), MOIU.Manual)
+                if optimizer !== nothing
+                    MOIU.resetoptimizer!(m, optimizer)
+                end
             end
-        elseif mode == Manual
-            m.moibackend = MOIU.InstanceManager(JuMPInstance{Float64}(), MOIU.Manual)
-            if solver !== nothing
-                MOIU.resetsolver!(m, solver)
-            end
-        else # Direct
-            @assert solver isa MOI.AbstractSolverInstance
-            @assert MOI.isempty(solver)
-            m.moibackend = solver
         end
         m.callbacks = Any[]
-        m.solvehook = nothing
+        m.optimizehook = nothing
         # m.printhook = nothing
         m.nlpdata = nothing
         m.simplify_nonlinear_expressions = simplify_nonlinear_expressions
@@ -188,7 +192,7 @@ end
 # Getters/setters
 
 function mode(m::Model)
-    if m.moibackend isa MOI.AbstractSolverInstance
+    if !(m.moibackend isa MOIU.CachingOptimizer)
         return Direct
     elseif m.moibackend.mode == MOIU.Automatic
         return Automatic
@@ -245,7 +249,7 @@ dualstatus(m::Model) = MOI.get(m, MOI.DualStatus())
 
 # TODO: Implement Base.copy.
 
-setsolvehook(m::Model, f) = (m.solvehook = f)
+setoptimizehook(m::Model, f) = (m.optimizehook = f)
 setprinthook(m::Model, f) = (m.printhook = f)
 
 
@@ -320,21 +324,21 @@ Base.copy(x::Void, new_model::Model) = nothing
 Base.copy(v::AbstractArray{Variable}, new_model::Model) = (var -> Variable(new_model, var.col)).(v)
 
 
-function solverindex(v::Variable)
+function optimizerindex(v::Variable)
     if mode(v.m) == Direct
         return index(v)
     else
-        @assert v.m.moibackend.state == MOIU.AttachedSolver
-        return v.m.moibackend.instancetosolvermap[index(v)]
+        @assert v.m.moibackend.state == MOIU.AttachedOptimizer
+        return v.m.moibackend.model_to_optimizer_map[index(v)]
     end
 end
 
-function solverindex(cr::ConstraintRef{Model})
+function optimizerindex(cr::ConstraintRef{Model})
     if mode(cr.m) == Direct
         return index(cr)
     else
-        @assert cr.m.moibackend.state == MOIU.AttachedSolver
-        return cr.m.moibackend.instancetosolvermap[index(cr)]
+        @assert cr.m.moibackend.state == MOIU.AttachedOptimizer
+        return cr.m.moibackend.model_to_optimizer_map[index(cr)]
     end
 end
 
@@ -365,21 +369,21 @@ name(cr::ConstraintRef{Model,<:MOICON}) = MOI.get(cr.m, MOI.ConstraintName(), cr
 setname(cr::ConstraintRef{Model,<:MOICON}, s::String) = MOI.set!(cr.m, MOI.ConstraintName(), cr, s)
 
 """
-    canget(m::JuMP.Model, attr::MathOptInterface.AbstractInstanceAttribute)::Bool
+    canget(m::JuMP.Model, attr::MathOptInterface.AbstractModelAttribute)::Bool
 
 Return `true` if one may query the attribute `attr` from the model's MOI backend.
 false if not.
 """
-MOI.canget(m::Model, attr::MOI.AbstractInstanceAttribute) = MOI.canget(m.moibackend, attr)
+MOI.canget(m::Model, attr::MOI.AbstractModelAttribute) = MOI.canget(m.moibackend, attr)
 MOI.canget(m::Model, attr::MOI.AbstractVariableAttribute, ::Type{Variable}) = MOI.canget(m.moibackend, attr, MOIVAR)
 MOI.canget(m::Model, attr::MOI.AbstractConstraintAttribute, ::Type{ConstraintRef{Model,T}}) where {T <: MOICON} = MOI.canget(m.moibackend, attr, T)
 
 """
-    get(m::JuMP.Model, attr::MathOptInterface.AbstractInstanceAttribute)
+    get(m::JuMP.Model, attr::MathOptInterface.AbstractModelAttribute)
 
 Return the value of the attribute `attr` from model's MOI backend.
 """
-MOI.get(m::Model, attr::MOI.AbstractInstanceAttribute) = MOI.get(m.moibackend, attr)
+MOI.get(m::Model, attr::MOI.AbstractModelAttribute) = MOI.get(m.moibackend, attr)
 function MOI.get(m::Model, attr::MOI.AbstractVariableAttribute, v::Variable)
     @assert m === v.m
     MOI.get(m.moibackend, attr, index(v))
@@ -389,7 +393,7 @@ function MOI.get(m::Model, attr::MOI.AbstractConstraintAttribute, cr::Constraint
     MOI.get(m.moibackend, attr, index(cr))
 end
 
-MOI.set!(m::Model, attr::MOI.AbstractInstanceAttribute, value) = MOI.set!(m.moibackend, attr, value)
+MOI.set!(m::Model, attr::MOI.AbstractModelAttribute, value) = MOI.set!(m.moibackend, attr, value)
 function MOI.set!(m::Model, attr::MOI.AbstractVariableAttribute, v::Variable, value)
     @assert m === v.m
     MOI.set!(m.moibackend, attr, index(v), value)
@@ -520,7 +524,7 @@ include("containers.jl")
 include("operators.jl")
 # include("writers.jl")
 include("macros.jl")
-include("solverinterface.jl")
+include("optimizerinterface.jl")
 # include("callbacks.jl")
 include("nlp.jl")
 include("print.jl")
