@@ -1,12 +1,12 @@
-@testset "Solvehook" begin
+@testset "optimizehook" begin
     m = Model()
-    @test m.solvehook === nothing
+    @test m.optimizehook === nothing
     called = false
     function hook(m)
         called = true
     end
-    JuMP.setsolvehook(m, hook)
+    JuMP.setoptimizehook(m, hook)
     @test !called
-    solve(m)
+    optimize(m)
     @test called
 end

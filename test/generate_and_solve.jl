@@ -4,8 +4,8 @@
 #  file, You can obtain one at http://mozilla.org/MPL/2.0/.
 
 # The tests here check JuMP's model generation and communication with solvers.
-# Model generation is checked by comparing the internal instance with a serialized
-# test instance (in MOIU's lightweight text format).
+# Model generation is checked by comparing the internal model with a serialized
+# test model (in MOIU's lightweight text format).
 # Communication with solvers is tested by using a mock solver with solution data
 # that we feed to it. Prior to using this testing approach, we would test JuMP
 # by calling real solvers, which was flakey and slow.
@@ -35,26 +35,26 @@
         c: x + y <= 1.0
         """
 
-        instance = JuMP.JuMPInstance{Float64}()
-        MOIU.loadfromstring!(instance, modelstring)
-        MOIU.test_instances_equal(m.moibackend.instance, instance, ["x","y"], ["c", "xub", "ylb"])
+        model = JuMP.JuMPMOIModel{Float64}()
+        MOIU.loadfromstring!(model, modelstring)
+        MOIU.test_models_equal(m.moibackend.model_cache, model, ["x","y"], ["c", "xub", "ylb"])
 
-        mocksolver = MOIU.MockSolverInstance(JuMP.JuMPInstance{Float64}())
-        MOIU.resetsolver!(m, mocksolver)
-        MOIU.attachsolver!(m)
+        mocksolver = MOIU.MockOptimizer(JuMP.JuMPMOIModel{Float64}())
+        MOIU.resetoptimizer!(m, mocksolver)
+        MOIU.attachoptimizer!(m)
 
         MOI.set!(mocksolver, MOI.TerminationStatus(), MOI.Success)
         MOI.set!(mocksolver, MOI.ObjectiveValue(), -1.0)
         MOI.set!(mocksolver, MOI.ResultCount(), 1)
         MOI.set!(mocksolver, MOI.PrimalStatus(), MOI.FeasiblePoint)
         MOI.set!(mocksolver, MOI.DualStatus(), MOI.FeasiblePoint)
-        MOI.set!(mocksolver, MOI.VariablePrimal(), JuMP.solverindex(x), 1.0)
-        MOI.set!(mocksolver, MOI.VariablePrimal(), JuMP.solverindex(y), 0.0)
-        MOI.set!(mocksolver, MOI.ConstraintDual(), JuMP.solverindex(c), -1.0)
-        MOI.set!(mocksolver, MOI.ConstraintDual(), JuMP.solverindex(JuMP.UpperBoundRef(x)), 0.0)
-        MOI.set!(mocksolver, MOI.ConstraintDual(), JuMP.solverindex(JuMP.LowerBoundRef(y)), 1.0)
+        MOI.set!(mocksolver, MOI.VariablePrimal(), JuMP.optimizerindex(x), 1.0)
+        MOI.set!(mocksolver, MOI.VariablePrimal(), JuMP.optimizerindex(y), 0.0)
+        MOI.set!(mocksolver, MOI.ConstraintDual(), JuMP.optimizerindex(c), -1.0)
+        MOI.set!(mocksolver, MOI.ConstraintDual(), JuMP.optimizerindex(JuMP.UpperBoundRef(x)), 0.0)
+        MOI.set!(mocksolver, MOI.ConstraintDual(), JuMP.optimizerindex(JuMP.LowerBoundRef(y)), 1.0)
 
-        JuMP.solve(m)
+        JuMP.optimize(m)
 
         #@test JuMP.isattached(m)
         @test JuMP.hasresultvalues(m)
@@ -74,9 +74,9 @@
     end
 
     @testset "LP (Direct mode)" begin
-        mocksolver = MOIU.MockSolverInstance(JuMP.JuMPInstance{Float64}())
+        mocksolver = MOIU.MockOptimizer(JuMP.JuMPMOIModel{Float64}())
 
-        m = Model(mode = JuMP.Direct, solver = mocksolver)
+        m = Model(mode = JuMP.Direct, backend = mocksolver)
         @variable(m, x <= 2.0)
         @variable(m, y >= 0.0)
         @objective(m, Min, -x)
@@ -87,13 +87,13 @@
         MOI.set!(mocksolver, MOI.ResultCount(), 1)
         MOI.set!(mocksolver, MOI.PrimalStatus(), MOI.FeasiblePoint)
         MOI.set!(mocksolver, MOI.DualStatus(), MOI.FeasiblePoint)
-        MOI.set!(mocksolver, MOI.VariablePrimal(), JuMP.solverindex(x), 1.0)
-        MOI.set!(mocksolver, MOI.VariablePrimal(), JuMP.solverindex(y), 0.0)
-        MOI.set!(mocksolver, MOI.ConstraintDual(), JuMP.solverindex(c), -1.0)
-        MOI.set!(mocksolver, MOI.ConstraintDual(), JuMP.solverindex(JuMP.UpperBoundRef(x)), 0.0)
-        MOI.set!(mocksolver, MOI.ConstraintDual(), JuMP.solverindex(JuMP.LowerBoundRef(y)), 1.0)
+        MOI.set!(mocksolver, MOI.VariablePrimal(), JuMP.optimizerindex(x), 1.0)
+        MOI.set!(mocksolver, MOI.VariablePrimal(), JuMP.optimizerindex(y), 0.0)
+        MOI.set!(mocksolver, MOI.ConstraintDual(), JuMP.optimizerindex(c), -1.0)
+        MOI.set!(mocksolver, MOI.ConstraintDual(), JuMP.optimizerindex(JuMP.UpperBoundRef(x)), 0.0)
+        MOI.set!(mocksolver, MOI.ConstraintDual(), JuMP.optimizerindex(JuMP.LowerBoundRef(y)), 1.0)
 
-        JuMP.solve(m)
+        JuMP.optimize(m)
 
         #@test JuMP.isattached(m)
         @test JuMP.hasresultvalues(m)
@@ -115,9 +115,9 @@
     # TODO: test Manual mode
 
     @testset "IP" begin
-        mocksolver = MOIU.MockSolverInstance(JuMP.JuMPInstance{Float64}())
+        mocksolver = MOIU.MockOptimizer(JuMP.JuMPMOIModel{Float64}())
         # Tests the solver= keyword.
-        m = Model(mode = JuMP.Automatic, solver = mocksolver)
+        m = Model(mode = JuMP.Automatic, optimizer = mocksolver)
         @variable(m, x == 1.0, Int)
         @variable(m, y, Bin)
         @objective(m, Max, x)
@@ -134,20 +134,20 @@
         ybin: y in ZeroOne()
         """
 
-        instance = JuMP.JuMPInstance{Float64}()
-        MOIU.loadfromstring!(instance, modelstring)
-        MOIU.test_instances_equal(m.moibackend.instance, instance, ["x","y"], ["xfix", "xint", "ybin"])
+        model = JuMP.JuMPMOIModel{Float64}()
+        MOIU.loadfromstring!(model, modelstring)
+        MOIU.test_models_equal(m.moibackend.model_cache, model, ["x","y"], ["xfix", "xint", "ybin"])
 
-        MOIU.attachsolver!(m)
+        MOIU.attachoptimizer!(m)
 
         MOI.set!(mocksolver, MOI.TerminationStatus(), MOI.Success)
         MOI.set!(mocksolver, MOI.ObjectiveValue(), 1.0)
         MOI.set!(mocksolver, MOI.ResultCount(), 1)
         MOI.set!(mocksolver, MOI.PrimalStatus(), MOI.FeasiblePoint)
-        MOI.set!(mocksolver, MOI.VariablePrimal(), JuMP.solverindex(x), 1.0)
-        MOI.set!(mocksolver, MOI.VariablePrimal(), JuMP.solverindex(y), 0.0)
+        MOI.set!(mocksolver, MOI.VariablePrimal(), JuMP.optimizerindex(x), 1.0)
+        MOI.set!(mocksolver, MOI.VariablePrimal(), JuMP.optimizerindex(y), 0.0)
 
-        JuMP.solve(m)
+        JuMP.optimize(m)
 
         #@test JuMP.isattached(m)
         @test JuMP.hasresultvalues(m)
@@ -182,26 +182,26 @@
         c3: 2x + 3*y*x >= 2.0
         """
 
-        instance = JuMP.JuMPInstance{Float64}()
-        MOIU.loadfromstring!(instance, modelstring)
-        MOIU.test_instances_equal(m.moibackend.instance, instance, ["x","y"], ["c1", "c2", "c3"])
+        model = JuMP.JuMPMOIModel{Float64}()
+        MOIU.loadfromstring!(model, modelstring)
+        MOIU.test_models_equal(m.moibackend.model_cache, model, ["x","y"], ["c1", "c2", "c3"])
 
-        mocksolver = MOIU.MockSolverInstance(JuMP.JuMPInstance{Float64}())
-        MOIU.resetsolver!(m, mocksolver)
-        MOIU.attachsolver!(m)
+        mocksolver = MOIU.MockOptimizer(JuMP.JuMPMOIModel{Float64}())
+        MOIU.resetoptimizer!(m, mocksolver)
+        MOIU.attachoptimizer!(m)
 
         MOI.set!(mocksolver, MOI.TerminationStatus(), MOI.Success)
         MOI.set!(mocksolver, MOI.ObjectiveValue(), -1.0)
         MOI.set!(mocksolver, MOI.ResultCount(), 1)
         MOI.set!(mocksolver, MOI.PrimalStatus(), MOI.FeasiblePoint)
         MOI.set!(mocksolver, MOI.DualStatus(), MOI.FeasiblePoint)
-        MOI.set!(mocksolver, MOI.VariablePrimal(), JuMP.solverindex(x), 1.0)
-        MOI.set!(mocksolver, MOI.VariablePrimal(), JuMP.solverindex(y), 0.0)
-        MOI.set!(mocksolver, MOI.ConstraintDual(), JuMP.solverindex(c1), -1.0)
-        MOI.set!(mocksolver, MOI.ConstraintDual(), JuMP.solverindex(c2), 2.0)
-        MOI.set!(mocksolver, MOI.ConstraintDual(), JuMP.solverindex(c3), 3.0)
+        MOI.set!(mocksolver, MOI.VariablePrimal(), JuMP.optimizerindex(x), 1.0)
+        MOI.set!(mocksolver, MOI.VariablePrimal(), JuMP.optimizerindex(y), 0.0)
+        MOI.set!(mocksolver, MOI.ConstraintDual(), JuMP.optimizerindex(c1), -1.0)
+        MOI.set!(mocksolver, MOI.ConstraintDual(), JuMP.optimizerindex(c2), 2.0)
+        MOI.set!(mocksolver, MOI.ConstraintDual(), JuMP.optimizerindex(c3), 3.0)
 
-        JuMP.solve(m)
+        JuMP.optimize(m)
 
         #@test JuMP.isattached(m)
         @test JuMP.hasresultvalues(m)
@@ -239,25 +239,25 @@
         rotsoc: [x+1,y,z] in RotatedSecondOrderCone(3)
         """
 
-        instance = JuMP.JuMPInstance{Float64}()
-        MOIU.loadfromstring!(instance, modelstring)
-        MOIU.test_instances_equal(m.moibackend.instance, instance, ["x","y","z"], ["varsoc", "affsoc", "rotsoc"])
+        model = JuMP.JuMPMOIModel{Float64}()
+        MOIU.loadfromstring!(model, modelstring)
+        MOIU.test_models_equal(m.moibackend.model_cache, model, ["x","y","z"], ["varsoc", "affsoc", "rotsoc"])
 
-        mocksolver = MOIU.MockSolverInstance(JuMP.JuMPInstance{Float64}())
-        MOIU.resetsolver!(m, mocksolver)
-        MOIU.attachsolver!(m)
+        mocksolver = MOIU.MockOptimizer(JuMP.JuMPMOIModel{Float64}())
+        MOIU.resetoptimizer!(m, mocksolver)
+        MOIU.attachoptimizer!(m)
 
         MOI.set!(mocksolver, MOI.TerminationStatus(), MOI.Success)
         MOI.set!(mocksolver, MOI.ResultCount(), 1)
         MOI.set!(mocksolver, MOI.PrimalStatus(), MOI.FeasiblePoint)
         MOI.set!(mocksolver, MOI.DualStatus(), MOI.FeasiblePoint)
-        MOI.set!(mocksolver, MOI.VariablePrimal(), JuMP.solverindex(x), 1.0)
-        MOI.set!(mocksolver, MOI.VariablePrimal(), JuMP.solverindex(y), 0.0)
-        MOI.set!(mocksolver, MOI.VariablePrimal(), JuMP.solverindex(z), 0.0)
-        MOI.set!(mocksolver, MOI.ConstraintDual(), JuMP.solverindex(varsoc), [-1.0,-2.0,-3.0])
-        MOI.set!(mocksolver, MOI.ConstraintDual(), JuMP.solverindex(affsoc), [1.0,2.0,3.0])
+        MOI.set!(mocksolver, MOI.VariablePrimal(), JuMP.optimizerindex(x), 1.0)
+        MOI.set!(mocksolver, MOI.VariablePrimal(), JuMP.optimizerindex(y), 0.0)
+        MOI.set!(mocksolver, MOI.VariablePrimal(), JuMP.optimizerindex(z), 0.0)
+        MOI.set!(mocksolver, MOI.ConstraintDual(), JuMP.optimizerindex(varsoc), [-1.0,-2.0,-3.0])
+        MOI.set!(mocksolver, MOI.ConstraintDual(), JuMP.optimizerindex(affsoc), [1.0,2.0,3.0])
 
-        JuMP.solve(m)
+        JuMP.optimize(m)
 
         #@test JuMP.isattached(m)
         @test JuMP.hasresultvalues(m)
@@ -294,24 +294,24 @@
         conpsd: [x11 + -1.0,x12,x22 + -1.0] in PositiveSemidefiniteConeTriangle(2)
         """
 
-        instance = JuMP.JuMPInstance{Float64}()
-        MOIU.loadfromstring!(instance, modelstring)
-        MOIU.test_instances_equal(m.moibackend.instance, instance, ["x11","x12","x22"], ["conpsd"])
+        model = JuMP.JuMPMOIModel{Float64}()
+        MOIU.loadfromstring!(model, modelstring)
+        MOIU.test_models_equal(m.moibackend.model_cache, model, ["x11","x12","x22"], ["conpsd"])
 
-        mocksolver = MOIU.MockSolverInstance(JuMP.JuMPInstance{Float64}())
-        MOIU.resetsolver!(m, mocksolver)
-        MOIU.attachsolver!(m)
+        mocksolver = MOIU.MockOptimizer(JuMP.JuMPMOIModel{Float64}())
+        MOIU.resetoptimizer!(m, mocksolver)
+        MOIU.attachoptimizer!(m)
 
         MOI.set!(mocksolver, MOI.TerminationStatus(), MOI.Success)
         MOI.set!(mocksolver, MOI.ResultCount(), 1)
         MOI.set!(mocksolver, MOI.PrimalStatus(), MOI.FeasiblePoint)
         MOI.set!(mocksolver, MOI.DualStatus(), MOI.FeasiblePoint)
-        MOI.set!(mocksolver, MOI.VariablePrimal(), JuMP.solverindex(x[1,1]), 1.0)
-        MOI.set!(mocksolver, MOI.VariablePrimal(), JuMP.solverindex(x[1,2]), 2.0)
-        MOI.set!(mocksolver, MOI.VariablePrimal(), JuMP.solverindex(x[2,2]), 4.0)
-        MOI.set!(mocksolver, MOI.ConstraintDual(), JuMP.solverindex(conpsd), [1.0,2.0,3.0])
+        MOI.set!(mocksolver, MOI.VariablePrimal(), JuMP.optimizerindex(x[1,1]), 1.0)
+        MOI.set!(mocksolver, MOI.VariablePrimal(), JuMP.optimizerindex(x[1,2]), 2.0)
+        MOI.set!(mocksolver, MOI.VariablePrimal(), JuMP.optimizerindex(x[2,2]), 4.0)
+        MOI.set!(mocksolver, MOI.ConstraintDual(), JuMP.optimizerindex(conpsd), [1.0,2.0,3.0])
 
-        JuMP.solve(m)
+        JuMP.optimize(m)
 
         #@test JuMP.isattached(m)
         @test JuMP.hasresultvalues(m)
