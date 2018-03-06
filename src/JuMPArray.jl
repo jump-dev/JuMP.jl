@@ -31,18 +31,21 @@ function build_lookup(ax)
     d
 end
 
-JuMPArray(data::Array, axs...) = JuMPArray(data, axs, build_lookup.(axs))
+function JuMPArray(data::Array{T,N}, axs...) where {T,N}
+    @assert length(axs) == N
+    return JuMPArray(data, axs, build_lookup.(axs))
+end
 
 lookup_index(i, lookup::Dict) = isa(i, Colon) ? Colon() : lookup[i]
 
 # Lisp-y tuple recursion trick to handle indexing in a nice type-
 # stable way. The idea here is that `_to_index_tuple(idx, lookup)`
-# performs a lookup on the first element of `idx` and `lookup`, 
-# then recurses using the remaining elements of both tuples. 
+# performs a lookup on the first element of `idx` and `lookup`,
+# then recurses using the remaining elements of both tuples.
 # The compiler knows the lengths and types of each tuple, so
-# all of the types are inferable. 
+# all of the types are inferable.
 function _to_index_tuple(idx::Tuple, lookup::Tuple)
-    tuple(lookup_index(first(idx), first(lookup)), 
+    tuple(lookup_index(first(idx), first(lookup)),
           _to_index_tuple(Base.tail(idx), Base.tail(lookup))...)
 end
 
@@ -86,8 +89,12 @@ Base.setindex!(A::JuMPArray, v, idx::CartesianIndex) = A.data[idx] = v
 
 Base.linearindices(A::JuMPArray) = error("JuMPArray does not support this operation.")
 # We don't define size because it causes 'end' to behave incorrectly. Better to error.
-Base.size(A::JuMPArray) = error("JuMPArray does not define this operation")
-Base.indices(A::JuMPArray) = A.axes
+Base.size(A::JuMPArray) = error("JuMPArray does not define size().")
+if VERSION < v"0.7-"
+    Base.indices(A::JuMPArray) = A.axes
+else
+    Base.axes(A::JuMPArray) = A.axes
+end
 
 # Arbitrary typed indices. Linear indexing not supported.
 struct IndexAnyCartesian <: Base.IndexStyle end
@@ -123,7 +130,7 @@ Base.eachindex(A::JuMPArray) = CartesianRange(size(A.data))
 # The above copyright notice and this permission notice shall be
 # included in all copies or substantial portions of the Software.
 
-function summaryio(io::IO, A::JuMPArray)
+function Base.summary(io::IO, A::JuMPArray)
     _summary(io, A)
     for (k,ax) in enumerate(A.axes)
         print(io, "    Dimension $k, ")
@@ -136,55 +143,17 @@ _summary(io, A::JuMPArray{T,N}) where {T,N} = println(io, "$N-dimensional JuMPAr
 
 function Base.summary(A::JuMPArray)
     io = IOBuffer()
-    summaryio(io, A)
+    Base.summary(io, A)
     String(io)
 end
 
-function Base.showarray(io::IO, X::JuMPArray, repr::Bool = true; header = true)
-    repr = false
-    #if repr && ndims(X) == 1
-    #    return Base.show_vector(io, X, "[", "]")
-    #end
-    if !haskey(io, :compact)
-        io = IOContext(io, :compact => true)
-    end
-    if !repr && get(io, :limit, false) && eltype(X) === Method
-        # override usual show method for Vector{Method}: don't abbreviate long lists
-        io = IOContext(io, :limit => false)
-    end
-    (!repr && header) && print(io, summary(X))
-    if !isempty(X.data)
-        (!repr && header) && println(io, ":")
-        if ndims(X.data) == 0
-            if isassigned(X.data)
-                return show(io, X.data[])
-            else
-                return print(io, undef_ref_str)
-            end
-        end
-        #if repr
-        #    if ndims(X.data) <= 2
-        #        Base.print_matrix_repr(io, X)
-        #    else
-        #        show_nd(io, X, print_matrix_repr, false)
-        #    end
-        #else
-        punct = (" ", "  ", "")
-        if ndims(X.data) <= 2
-            Base.print_matrix(io, X.data, punct...)
-        else
-            show_nd(io, X,
-                    (io, slice) -> Base.print_matrix(io, slice, punct...),
-                    !repr)
-        end
-        #end
-    elseif repr
-        Base.repremptyarray(io, X.data)
-    end
+if isdefined(Base, :print_array) # 0.7 and later
+    Base.print_array(io::IO, X::JuMPArray{T,1}) where {T} = Base.print_matrix(io, X.data)
+    Base.print_array(io::IO, X::JuMPArray{T,2}) where {T} = Base.print_matrix(io, X.data)
 end
 
 # n-dimensional arrays
-function show_nd(io::IO, a::JuMPArray, print_matrix, label_slices)
+function Base.show_nd(io::IO, a::JuMPArray, print_matrix::Function, label_slices::Bool)
     limit::Bool = get(io, :limit, false)
     if isempty(a)
         return
@@ -226,5 +195,50 @@ function show_nd(io::IO, a::JuMPArray, print_matrix, label_slices)
         Base.print_matrix(io, slice)
         print(io, idxs == map(last,tailinds) ? "" : "\n\n")
         @label skip
+    end
+end
+
+if VERSION < v"0.7-"
+    function Base.showarray(io::IO, X::JuMPArray, repr::Bool = true; header = true)
+        repr = false
+        #if repr && ndims(X) == 1
+        #    return Base.show_vector(io, X, "[", "]")
+        #end
+        if !haskey(io, :compact)
+            io = IOContext(io, :compact => true)
+        end
+        if !repr && get(io, :limit, false) && eltype(X) === Method
+            # override usual show method for Vector{Method}: don't abbreviate long lists
+            io = IOContext(io, :limit => false)
+        end
+        (!repr && header) && print(io, summary(X))
+        if !isempty(X.data)
+            (!repr && header) && println(io, ":")
+            if ndims(X.data) == 0
+                if isassigned(X.data)
+                    return show(io, X.data[])
+                else
+                    return print(io, undef_ref_str)
+                end
+            end
+            #if repr
+            #    if ndims(X.data) <= 2
+            #        Base.print_matrix_repr(io, X)
+            #    else
+            #        show_nd(io, X, print_matrix_repr, false)
+            #    end
+            #else
+            punct = (" ", "  ", "")
+            if ndims(X.data) <= 2
+                Base.print_matrix(io, X.data, punct...)
+            else
+                Base.show_nd(io, X,
+                        (io, slice) -> Base.print_matrix(io, slice, punct...),
+                        !repr)
+            end
+            #end
+        elseif repr
+            Base.repremptyarray(io, X.data)
+        end
     end
 end
