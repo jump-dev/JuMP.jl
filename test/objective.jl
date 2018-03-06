@@ -34,6 +34,6 @@
         @objective(m, Min, x^2 + 2x)
         @test JuMP.objectivesense(m) == :Min
         @test JuMP.isequal_canonical(JuMP.objectivefunction(m, QuadExpr), x^2 + 2x)
-        @test_throws TypeError JuMP.objectivefunction(m, AffExpr)
+        @test_throws ErrorException JuMP.objectivefunction(m, AffExpr)
     end
 end

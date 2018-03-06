@@ -13,9 +13,9 @@
 using JuMP
 using Base.Test
 
-using MathOptInterface, MathOptInterfaceUtilities
+using MathOptInterface
 const MOI = MathOptInterface
-const MOIU = MathOptInterfaceUtilities
+const MOIU = MOI.Utilities
 
 #include("print.jl")
 include("containers.jl")

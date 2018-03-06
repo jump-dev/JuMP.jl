@@ -17,9 +17,8 @@ import Base.map
 
 import MathProgBase
 import MathOptInterface
-import MathOptInterfaceUtilities
 const MOI = MathOptInterface
-const MOIU = MathOptInterfaceUtilities
+const MOIU = MOI.Utilities
 
 using Calculus
 using ReverseDiffSparse
