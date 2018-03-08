@@ -272,7 +272,7 @@ addtoexpr(ex::AbstractArray{T}, c::AbstractArray, x::AbstractArray) where {T<:Ge
 addtoexpr(ex::AbstractArray{T}, c::AbstractArray, x::Number) where {T<:GenericAffExpr} = append!.(ex, c*x)
 addtoexpr(ex::AbstractArray{T}, c::Number, x::AbstractArray) where {T<:GenericAffExpr} = append!.(ex, c*x)
 
-addtoexpr(ex, c, x) = ex + c*x
+addtoexpr(ex, c, x) = ex .+ c*x
 
 addtoexpr_reorder(ex, arg) = addtoexpr(ex, 1.0, arg)
 # Special case because "Val{false}()" is used as the default empty expression.
@@ -494,7 +494,7 @@ function parseExpr(x, aff::Symbol, lcoeffs::Vector, rcoeffs::Vector, newaff::Sym
                 s = gensym()
                 newaff_, parsed = parseExprToplevel(x.args[2], s)
                 push!(blk.args, :($s = 0.0; $parsed))
-                push!(blk.args, :($newaff = $aff + $(Expr(:call,:*,lcoeffs...,newaff_,newaff_,rcoeffs...))))
+                push!(blk.args, :($newaff = $aff .+ $(Expr(:call,:*,lcoeffs...,newaff_,newaff_,rcoeffs...))))
                 return newaff, blk
             elseif x.args[3] == 1
                 return parseExpr(x.args[2], aff, lcoeffs, rcoeffs)
@@ -505,7 +505,7 @@ function parseExpr(x, aff::Symbol, lcoeffs::Vector, rcoeffs::Vector, newaff::Sym
                 s = gensym()
                 newaff_, parsed = parseExprToplevel(x.args[2], s)
                 push!(blk.args, :($s = 0.0; $parsed))
-                push!(blk.args, :($newaff = $aff + $(Expr(:call,:*,lcoeffs...,Expr(:call,:^,newaff_,esc(x.args[3])),rcoeffs...))))
+                push!(blk.args, :($newaff = $aff .+ $(Expr(:call,:*,lcoeffs...,Expr(:call,:^,newaff_,esc(x.args[3])),rcoeffs...))))
                 return newaff, blk
             end
         elseif x.head == :call && x.args[1] == :/

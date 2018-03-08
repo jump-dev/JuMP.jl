@@ -278,25 +278,26 @@
 
     @testset "SDP" begin
         m = Model()
-        # TODO: PSD variable construction needs to be redone to make it possible
-        # to access the corresponding MOI constraint.
-        @variable(m, x[1:2,1:2], Symmetric) #, PSD)
+        @variable(m, x[1:2,1:2], Symmetric)
         setname(x[1,1], "x11")
         setname(x[1,2], "x12")
         setname(x[2,2], "x22")
         @objective(m, Max, trace(x))
+        varpsd = @constraint(m, x in PSDCone())
+        setname(varpsd, "varpsd")
         conpsd = @SDconstraint(m, x ⪰ [1.0 0.0; 0.0 1.0])
         setname(conpsd, "conpsd")
 
         modelstring = """
         variables: x11, x12, x22
         maxobjective: 1.0*x11 + 1.0*x22
+        varpsd: [x11,x12,x22] in PositiveSemidefiniteConeTriangle(2)
         conpsd: [x11 + -1.0,x12,x22 + -1.0] in PositiveSemidefiniteConeTriangle(2)
         """
 
         model = JuMP.JuMPMOIModel{Float64}()
         MOIU.loadfromstring!(model, modelstring)
-        MOIU.test_models_equal(m.moibackend.model_cache, model, ["x11","x12","x22"], ["conpsd"])
+        MOIU.test_models_equal(m.moibackend.model_cache, model, ["x11","x12","x22"], ["varpsd", "conpsd"])
 
         mocksolver = MOIU.MockOptimizer(JuMP.JuMPMOIModel{Float64}())
         MOIU.resetoptimizer!(m, mocksolver)
@@ -309,7 +310,8 @@
         MOI.set!(mocksolver, MOI.VariablePrimal(), JuMP.optimizerindex(x[1,1]), 1.0)
         MOI.set!(mocksolver, MOI.VariablePrimal(), JuMP.optimizerindex(x[1,2]), 2.0)
         MOI.set!(mocksolver, MOI.VariablePrimal(), JuMP.optimizerindex(x[2,2]), 4.0)
-        MOI.set!(mocksolver, MOI.ConstraintDual(), JuMP.optimizerindex(conpsd), [1.0,2.0,3.0])
+        MOI.set!(mocksolver, MOI.ConstraintDual(), JuMP.optimizerindex(varpsd), [1.0,2.0,3.0])
+        MOI.set!(mocksolver, MOI.ConstraintDual(), JuMP.optimizerindex(conpsd), [4.0,5.0,6.0])
 
         JuMP.optimize(m)
 
@@ -320,8 +322,10 @@
         @test JuMP.primalstatus(m) == MOI.FeasiblePoint
 
         @test JuMP.resultvalue.(x) == [1.0 2.0; 2.0 4.0]
+        @test JuMP.hasresultdual(m, typeof(varpsd))
+        @test JuMP.resultdual(varpsd) == [1.0,2.0,3.0]
         @test JuMP.hasresultdual(m, typeof(conpsd))
-        @test JuMP.resultdual(conpsd) == [1.0,2.0,3.0]
+        @test JuMP.resultdual(conpsd) == [4.0,5.0,6.0]
 
     end
 end
