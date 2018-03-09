@@ -431,7 +431,7 @@ macro constraint(args...)
         end
         addkwargs!(constraintcall, kwargs)
         code = quote
-            aff = zero(AffExpr)
+            aff = Val{false}()
             $parsecode
             lb = 0.0
             $parselb
@@ -518,7 +518,7 @@ macro SDconstraint(m, x)
     end
     newaff, parsecode = parseExprToplevel(lhs, :q)
     assert_validmodel(m, quote
-        q = zero(AffExpr)
+        q = Val{false}()
         $parsecode
         addconstraint($m, constructconstraint!($newaff, PSDCone()))
     end)
