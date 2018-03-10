@@ -1,22 +1,20 @@
 export PSDCone
-# Used in @constraint m X in PSDCone
+# Used in @constraint m x in PSDCone
 struct PSDCone end
 
-struct SDVariableConstraint{MT<:AbstractMatrix{JuMP.Variable}} <: AbstractConstraint
-    Q::MT
+# Used by the @variable macro. It can also be used with the @constraint macro,
+# this allows to get the constraint reference, e.g.
+# @variable m x[1:2,1:2] Symmetric # x is Symmetric{Variable,Matrix{Variable}}
+# varpsd = @constraint m x in PSDCone()
+function constructconstraint!(Q::Symmetric{Variable,Matrix{Variable}}, ::PSDCone)
+    n = Base.LinAlg.checksquare(Q)
+    VectorOfVariablesConstraint([Q[i, j] for j in 1:n for i in 1:j], MOI.PositiveSemidefiniteConeTriangle(n))
 end
-
-# Used by the @variable macro. Currently cannot also be used through the @constraint macro because of the underscore
-# It needs a larger discussion on whether we want to allow adding VectorOfVariable in cone using the @constraint macro.
-function _constructconstraint!(Q::Matrix{JuMP.Variable}, ::PSDCone)
-    #@assert issymmetric(Q) # TODO it could be nonsymmetric if used through the @constraint macro
-    SDVariableConstraint(Q)
-end
-
-function moi_function_and_set(c::SDVariableConstraint)
-    @assert issymmetric(c.Q)
-    n = Base.LinAlg.checksquare(c.Q)
-    return (MOI.VectorOfVariables([index(c.Q[i, j]) for j in 1:n for i in 1:j]), MOI.PositiveSemidefiniteConeTriangle(n))
+# @variable m x[1:2,1:2] # x is Matrix{Variable}
+# varpsd = @constraint m x in PSDCone()
+function constructconstraint!(Q::Matrix{Variable}, ::PSDCone)
+    n = Base.LinAlg.checksquare(Q)
+    VectorOfVariablesConstraint(vec(Q), MOI.PositiveSemidefiniteConeSquare(n))
 end
 
 function constructconstraint!(x::AbstractMatrix, ::PSDCone)

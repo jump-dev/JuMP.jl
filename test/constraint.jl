@@ -170,6 +170,13 @@
         m = Model()
         @variable(m, x)
         @variable(m, y)
+        @variable(m, z)
+        @variable(m, w)
+
+        cref = @constraint(m, [x y; z w] in PSDCone())
+        c = JuMP.constraintobject(cref, Vector{Variable}, MOI.PositiveSemidefiniteConeSquare)
+        @test c.func == [x, z, y, w]
+        @test c.set == MOI.PositiveSemidefiniteConeSquare(2)
 
         cref = @SDconstraint(m, [x 1; 1 -y] ⪰ [1 x; x -2])
         c = JuMP.constraintobject(cref, Vector{AffExpr}, MOI.PositiveSemidefiniteConeTriangle)

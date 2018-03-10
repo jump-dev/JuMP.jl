@@ -421,68 +421,6 @@ function _fillwithzeros(arr::AbstractArray{T}) where T
     arr
 end
 
-for op in [:+, :-]; @eval begin
-    function $op(lhs::Number,rhs::AbstractArray{T}) where T<:JuMPTypes
-        ret = similar(rhs, typeof($op(lhs, zero(T))))
-        for I in eachindex(ret)
-            ret[I] = $op(lhs, rhs[I])
-        end
-        ret
-    end
-    function $op(lhs::AbstractArray{T},rhs::Number) where T<:JuMPTypes
-        ret = similar(lhs, typeof($op(zero(T), rhs)))
-        for I in eachindex(ret)
-            ret[I] = $op(lhs[I], rhs)
-        end
-        ret
-    end
-    function $op(lhs::T,rhs::AbstractArray{S}) where {T<:JuMPTypes,S}
-        ret = similar(rhs, typeof($op(lhs, zero(S))))
-        for I in eachindex(ret)
-            ret[I] = $op(lhs, rhs[I])
-        end
-        ret
-    end
-    function $op(lhs::AbstractArray{S},rhs::T) where {T<:JuMPTypes,S}
-        ret = similar(lhs, typeof($op(zero(S), rhs)))
-        for I in eachindex(ret)
-            ret[I] = $op(lhs[I], rhs)
-        end
-        ret
-    end
-end; end
-
-for op in [:*, :/]; @eval begin
-    function $op(lhs::Number,rhs::AbstractArray{T}) where T<:JuMPTypes
-        ret = similar(rhs, typeof($op(lhs, zero(T))))
-        for I in eachindex(ret)
-            ret[I] = $op(lhs, rhs[I])
-        end
-        ret
-    end
-    function $op(lhs::AbstractArray{T},rhs::Number) where T<:JuMPTypes
-        ret = similar(lhs, typeof($op(zero(T), rhs)))
-        for I in eachindex(ret)
-            ret[I] = $op(lhs[I], rhs)
-        end
-        ret
-    end
-    function $op(lhs::T,rhs::AbstractArray{S}) where {T<:JuMPTypes,S}
-        ret = similar(rhs, typeof($op(lhs, zero(S))))
-        for I in eachindex(ret)
-            ret[I] = $op(lhs, rhs[I])
-        end
-        ret
-    end
-    function $op(lhs::AbstractArray{S},rhs::T) where {T<:JuMPTypes,S}
-        ret = similar(lhs, typeof($op(zero(S), rhs)))
-        for I in eachindex(ret)
-            ret[I] = $op(lhs[I], rhs)
-        end
-        ret
-    end
-end; end
-
 # Special-case sparse matrix scalar multiplication/division
 (*)(lhs::Number, rhs::SparseMatrixCSC{T}) where {T<:JuMPTypes} =
     SparseMatrixCSC(rhs.m, rhs.n, copy(rhs.colptr), copy(rhs.rowval), lhs .* rhs.nzval)

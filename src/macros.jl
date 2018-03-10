@@ -431,7 +431,7 @@ macro constraint(args...)
         end
         addkwargs!(constraintcall, kwargs)
         code = quote
-            aff = zero(AffExpr)
+            aff = Val{false}()
             $parsecode
             lb = 0.0
             $parselb
@@ -518,7 +518,7 @@ macro SDconstraint(m, x)
     end
     newaff, parsecode = parseExprToplevel(lhs, :q)
     assert_validmodel(m, quote
-        q = zero(AffExpr)
+        q = Val{false}()
         $parsecode
         addconstraint($m, constructconstraint!($newaff, PSDCone()))
     end)
@@ -1150,11 +1150,11 @@ macro variable(args...)
             $(getloopedcode(variable, code, condition, idxvars, idxsets, vartype, requestedcontainer; lowertri=symmetric))
             $(if sdp
                 quote
-                    JuMP.addconstraint($m, JuMP._constructconstraint!($variable, JuMP.PSDCone()))
+                    JuMP.addconstraint($m, JuMP.constructconstraint!(Symmetric($variable), JuMP.PSDCone()))
                 end
             end)
             !$anonvar && registervar($m, $quotvarname, $variable)
-            $(anonvar ? variable : :($escvarname = $variable))
+            $(anonvar ? variable : :($escvarname = Symmetric($variable)))
         end)
     else
         return assert_validmodel(m, quote
