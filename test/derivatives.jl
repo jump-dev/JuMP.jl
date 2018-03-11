@@ -1,7 +1,11 @@
-using ReverseDiffSparse
+using JuMP.Derivatives
 using Base.Test
 using MathProgBase
 
+struct ΦEvaluator <: MathProgBase.AbstractNLPEvaluator
+end
+
+@testset "Derivatives" begin
 
 ex = :(sin(x[1]^2) + cos(x[2]*4)/5-2.0)
 
@@ -254,8 +258,7 @@ new_nd = simplify_constants(storage,nd,adj,const_values,linearity)
 # user-defined functions
 #Φ(x,y) = 1/3(y)^3 - 2x^2
 # c(x) = cos(x)
-type ΦEvaluator <: MathProgBase.AbstractNLPEvaluator
-end
+
 function MathProgBase.eval_f(::ΦEvaluator,x)
     @assert length(x) == 2
     return (1/3)*x[2]^3-2x[1]^2
@@ -264,13 +267,13 @@ function MathProgBase.eval_grad_f(::ΦEvaluator,grad,x)
     grad[1] = -4x[1]
     grad[2] = x[2]^2
 end
-r = ReverseDiffSparse.UserOperatorRegistry()
+r = Derivatives.UserOperatorRegistry()
 register_multivariate_operator!(r,:Φ,ΦEvaluator())
 register_univariate_operator!(r,:c,cos,x->-sin(x),x->-cos(x))
 Φ(x,y) = MathProgBase.eval_f(ΦEvaluator(),[x,y])
 ex = :(Φ(x[2],x[1]-1)*c(x[3]))
 nd,const_values = expr_to_nodedata(ex,r)
-@test ReverseDiffSparse.has_user_multivariate_operators(nd)
+@test Derivatives.has_user_multivariate_operators(nd)
 adj = adjmat(nd)
 storage = zeros(length(nd))
 partials_storage = zeros(length(nd))
@@ -350,5 +353,4 @@ dualforward(:(sin(x[1]^x[2]) + cos(x[2]*4)/5-2.0),[1.0,2.0])
 dualforward(:(sin(x[1]^3) + cos(x[1]*x[2]*4)/5-2.0),[1.0,0.0])
 dualforward(:(x[1]*x[2]),[3.427139283036299e-206,1.0], ignore_nan=true)
 
-
-include("test_coloring.jl")
+end

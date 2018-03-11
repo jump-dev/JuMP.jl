@@ -1,4 +1,4 @@
-module ReverseDiffSparse
+module Derivatives
 
 using Base.Meta
 using ForwardDiff

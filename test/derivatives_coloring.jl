@@ -11,9 +11,10 @@ function to_adjlist(g::Graph)
     return gen_adjlist(I,J,length(vertices(g)))
 end
 
-import ReverseDiffSparse.Coloring: acyclic_coloring, recovery_preprocess, reverse_topological_sort_by_dfs, gen_adjlist, hessian_color_preprocess, prepare_seed_matrix!, recover_from_matmat!, seed_matrix
+import JuMP.Derivatives.Coloring: acyclic_coloring, recovery_preprocess, reverse_topological_sort_by_dfs, gen_adjlist, hessian_color_preprocess, prepare_seed_matrix!, recover_from_matmat!, seed_matrix
 
 # tests for acyclic coloring
+@testset "Derivatives (coloring)" begin
 
 g = Graph(10)
 color, numcolors = acyclic_coloring(to_adjlist(g))
@@ -77,3 +78,5 @@ matmat = hess*R
 V = zeros(3)
 recover_from_matmat!(V, matmat, rinfo, zeros(3))
 @test V == [3.4,1.3,2.1]
+
+end

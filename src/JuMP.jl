@@ -20,9 +20,10 @@ import MathOptInterface
 const MOI = MathOptInterface
 const MOIU = MOI.Utilities
 
-using Calculus
-using ReverseDiffSparse
+import Calculus
 using ForwardDiff
+include("Derivatives/Derivatives.jl")
+using .Derivatives
 
 export
 # Objects

@@ -52,7 +52,7 @@ function parseNLExpr(m, x, tapevar, parent, values)
                             error($errorstring)
                         end
                     end
-                    operatorid = $(esc(m)).nlpdata.user_operators.univariate_operator_to_id[$opname] + ReverseDiffSparse.USER_UNIVAR_OPERATOR_ID_START - 1
+                    operatorid = $(esc(m)).nlpdata.user_operators.univariate_operator_to_id[$opname] + Derivatives.USER_UNIVAR_OPERATOR_ID_START - 1
                 end
                 push!(block.args, :($lookupcode; push!($tapevar, NodeData(CALLUNIVAR, operatorid, $parent))))
             end
@@ -85,7 +85,7 @@ function parseNLExpr(m, x, tapevar, parent, values)
                             error($errorstring)
                         end
                     end
-                    operatorid = $(esc(m)).nlpdata.user_operators.multivariate_operator_to_id[$opname] + ReverseDiffSparse.USER_OPERATOR_ID_START - 1
+                    operatorid = $(esc(m)).nlpdata.user_operators.multivariate_operator_to_id[$opname] + Derivatives.USER_OPERATOR_ID_START - 1
                 end
                 push!(block.args, :($lookupcode; push!($tapevar, NodeData(CALL, operatorid, $parent))))
             end
@@ -232,7 +232,7 @@ end
 # Variable objects should be spliced into the expression.
 function NonlinearExprData(m::Model, ex::Expr)
     ex = spliceref(m,ex)
-    nd, values = ReverseDiffSparse.expr_to_nodedata(ex,m.nlpdata.user_operators)
+    nd, values = Derivatives.expr_to_nodedata(ex,m.nlpdata.user_operators)
     return NonlinearExprData(nd, values)
 end
 NonlinearExprData(m::Model, ex) = NonlinearExprData(m, :($ex + 0))
