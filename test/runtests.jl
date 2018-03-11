@@ -17,6 +17,9 @@ using MathOptInterface
 const MOI = MathOptInterface
 const MOIU = MOI.Utilities
 
+include("derivatives.jl")
+include("derivatives_coloring.jl")
+
 #include("print.jl")
 include("containers.jl")
 include("model.jl")

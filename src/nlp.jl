@@ -55,7 +55,7 @@ mutable struct NLPData
     nlexpr::Vector{NonlinearExprData}
     nlconstrDuals::Vector{Float64}
     nlparamvalues::Vector{Float64}
-    user_operators::ReverseDiffSparse.UserOperatorRegistry
+    user_operators::Derivatives.UserOperatorRegistry
     largest_user_input_dimension::Int
     evaluator
 end
@@ -78,7 +78,7 @@ getvalue(p::NonlinearParameter) = p.m.nlpdata.nlparamvalues[p.index]::Float64
 
 setvalue(p::NonlinearParameter,v::Number) = (p.m.nlpdata.nlparamvalues[p.index] = v)
 
-NLPData() = NLPData(nothing, NonlinearConstraint[], NonlinearExprData[], Float64[], Float64[], ReverseDiffSparse.UserOperatorRegistry(), 0, nothing)
+NLPData() = NLPData(nothing, NonlinearConstraint[], NonlinearExprData[], Float64[], Float64[], Derivatives.UserOperatorRegistry(), 0, nothing)
 
 Base.copy(::NLPData) = error("Copying nonlinear problems not yet implemented")
 
@@ -140,7 +140,7 @@ mutable struct NLPEvaluator <: MathProgBase.AbstractNLPEvaluator
     subexpression_order::Vector{Int}
     subexpression_forward_values::Vector{Float64}
     subexpression_reverse_values::Vector{Float64}
-    subexpression_linearity::Vector{ReverseDiffSparse.Linearity}
+    subexpression_linearity::Vector{Derivatives.Linearity}
     subexpressions_as_julia_expressions::Vector{Any}
     last_x::Vector{Float64}
     jac_storage::Vector{Float64} # temporary storage for computing jacobians
@@ -178,14 +178,14 @@ mutable struct NLPEvaluator <: MathProgBase.AbstractNLPEvaluator
             has_nlobj = isa(nldata.nlobj, NonlinearExprData)
             has_user_mv_operator = false
             for nlexpr in nldata.nlexpr
-                has_user_mv_operator |= ReverseDiffSparse.has_user_multivariate_operators(nlexpr.nd)
+                has_user_mv_operator |= Derivatives.has_user_multivariate_operators(nlexpr.nd)
             end
             if has_nlobj
 
-                has_user_mv_operator |= ReverseDiffSparse.has_user_multivariate_operators(nldata.nlobj.nd)
+                has_user_mv_operator |= Derivatives.has_user_multivariate_operators(nldata.nlobj.nd)
             end
             for nlconstr in nldata.nlconstr
-                has_user_mv_operator |= ReverseDiffSparse.has_user_multivariate_operators(nlconstr.terms.nd)
+                has_user_mv_operator |= Derivatives.has_user_multivariate_operators(nlconstr.terms.nd)
             end
             d.disable_2ndorder = has_user_mv_operator
             d.user_output_buffer = Array{Float64}(m.nlpdata.largest_user_input_dimension)
@@ -300,7 +300,7 @@ function MathProgBase.initialize(d::NLPEvaluator, requested_features::Vector{Sym
 
     d.want_hess = (:Hess in requested_features)
     want_hess_storage = (:HessVec in requested_features) || d.want_hess
-    coloring_storage = ReverseDiffSparse.Coloring.IndexedSet(numVar)
+    coloring_storage = Derivatives.Coloring.IndexedSet(numVar)
 
     d.has_nlobj = isa(nldata.nlobj, NonlinearExprData)
     max_expr_length = 0
@@ -467,7 +467,7 @@ end
 function forward_eval_all(d::NLPEvaluator,x)
     # do a forward pass on all expressions at x
     subexpr_values = d.subexpression_forward_values
-    user_operators = d.m.nlpdata.user_operators::ReverseDiffSparse.UserOperatorRegistry
+    user_operators = d.m.nlpdata.user_operators::Derivatives.UserOperatorRegistry
     user_input_buffer = d.jac_storage
     user_output_buffer = d.user_output_buffer
     SIMPLIFY = d.m.simplify_nonlinear_expressions
@@ -859,7 +859,7 @@ function hessian_slice_inner(d, ex, R, input_ϵ, output_ϵ, ::Type{Val{CHUNK}}) 
     partials_storage_ϵ = reinterpret_unsafe(ForwardDiff.Partials{CHUNK,Float64},d.partials_storage_ϵ)
     zero_ϵ = zero(ForwardDiff.Partials{CHUNK,Float64})
 
-    user_operators = d.m.nlpdata.user_operators::ReverseDiffSparse.UserOperatorRegistry
+    user_operators = d.m.nlpdata.user_operators::Derivatives.UserOperatorRegistry
     SIMPLIFY = d.m.simplify_nonlinear_expressions
     # do a forward pass
     for expridx in ex.dependent_subexpressions
@@ -1117,7 +1117,7 @@ function Base.show(io::IO,s::SubexpressionPrintWrapper)
 end
 
 # we splat in the subexpressions (for now)
-function tapeToExpr(m::Model, k, nd::Vector{NodeData}, adj, const_values, parameter_values, subexpressions::Vector{Any},user_operators::ReverseDiffSparse.UserOperatorRegistry, generic_variable_names::Bool, splat_subexpressions::Bool, print_mode=REPLMode)
+function tapeToExpr(m::Model, k, nd::Vector{NodeData}, adj, const_values, parameter_values, subexpressions::Vector{Any},user_operators::Derivatives.UserOperatorRegistry, generic_variable_names::Bool, splat_subexpressions::Bool, print_mode=REPLMode)
 
     children_arr = rowvals(adj)
 
@@ -1146,11 +1146,11 @@ function tapeToExpr(m::Model, k, nd::Vector{NodeData}, adj, const_values, parame
     elseif nod.nodetype == CALL
         op = nod.index
         opsymbol = :error
-        if op < ReverseDiffSparse.USER_OPERATOR_ID_START
+        if op < Derivatives.USER_OPERATOR_ID_START
             opsymbol = operators[op]
         else
             for (key,value) in user_operators.multivariate_operator_to_id
-                if value == op - ReverseDiffSparse.USER_OPERATOR_ID_START + 1
+                if value == op - Derivatives.USER_OPERATOR_ID_START + 1
                     opsymbol = key
                 end
             end
@@ -1170,11 +1170,11 @@ function tapeToExpr(m::Model, k, nd::Vector{NodeData}, adj, const_values, parame
     elseif nod.nodetype == CALLUNIVAR
         op = nod.index
         opsymbol = :error
-        if op < ReverseDiffSparse.USER_UNIVAR_OPERATOR_ID_START
+        if op < Derivatives.USER_UNIVAR_OPERATOR_ID_START
             opsymbol = univariate_operators[op]
         else
             for (key,value) in user_operators.univariate_operator_to_id
-                if value == op - ReverseDiffSparse.USER_UNIVAR_OPERATOR_ID_START + 1
+                if value == op - Derivatives.USER_UNIVAR_OPERATOR_ID_START + 1
                     opsymbol = key
                 end
             end
@@ -1409,10 +1409,10 @@ function register(m::Model, s::Symbol, dimension::Integer, f::Function; autodiff
     if dimension == 1
         fprime = x -> ForwardDiff.derivative(f, x)
         fprimeprime = x -> ForwardDiff.derivative(fprime, x)
-        ReverseDiffSparse.register_univariate_operator!(m.nlpdata.user_operators, s, f, fprime, fprimeprime)
+        Derivatives.register_univariate_operator!(m.nlpdata.user_operators, s, f, fprime, fprimeprime)
     else
         m.nlpdata.largest_user_input_dimension = max(m.nlpdata.largest_user_input_dimension,dimension)
-        ReverseDiffSparse.register_multivariate_operator!(m.nlpdata.user_operators, s, UserAutoDiffEvaluator(dimension, f))
+        Derivatives.register_multivariate_operator!(m.nlpdata.user_operators, s, UserAutoDiffEvaluator(dimension, f))
     end
 
 end
@@ -1422,12 +1422,12 @@ function register(m::Model, s::Symbol, dimension::Integer, f::Function, ∇f::Fu
     if dimension == 1
         autodiff == true || error("Currently must provide 2nd order derivatives of univariate functions. Try setting autodiff=true.")
         fprimeprime = x -> ForwardDiff.derivative(∇f, x)
-        ReverseDiffSparse.register_univariate_operator!(m.nlpdata.user_operators, s, f, ∇f, fprimeprime)
+        Derivatives.register_univariate_operator!(m.nlpdata.user_operators, s, f, ∇f, fprimeprime)
     else
         autodiff == false || Base.warn_once("autodiff=true ignored since gradient is already provided.")
         m.nlpdata.largest_user_input_dimension = max(m.nlpdata.largest_user_input_dimension,dimension)
         d = UserFunctionEvaluator(x -> f(x...), (g,x)->∇f(g,x...), dimension)
-        ReverseDiffSparse.register_multivariate_operator!(m.nlpdata.user_operators, s, d)
+        Derivatives.register_multivariate_operator!(m.nlpdata.user_operators, s, d)
     end
 
 end
@@ -1435,7 +1435,7 @@ end
 function register(m::Model, s::Symbol, dimension::Integer, f::Function, ∇f::Function, ∇²f::Function)
     dimension == 1 || error("Providing hessians for multivariate functions is not yet supported")
     initNLP(m)
-    ReverseDiffSparse.register_univariate_operator!(m.nlpdata.user_operators, s, f, ∇f, ∇²f)
+    Derivatives.register_univariate_operator!(m.nlpdata.user_operators, s, f, ∇f, ∇²f)
 end
 
 register(s::Symbol, dimension::Integer, f::Function; autodiff::Bool=false) = error("Function registration is now local to JuMP models. JuMP.register requires the model object as the first argument.")
