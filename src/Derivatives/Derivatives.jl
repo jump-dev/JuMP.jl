@@ -3,7 +3,8 @@ module Derivatives
 using Base.Meta
 using ForwardDiff
 import Calculus
-import MathProgBase
+import MathOptInterface
+const MOI = MathOptInterface
 
 const TAG = :rds_tag
 

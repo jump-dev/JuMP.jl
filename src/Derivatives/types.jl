@@ -62,20 +62,20 @@ export comparison_operator_to_id, comparison_operators
 # user-provided operators
 mutable struct UserOperatorRegistry
     multivariate_operator_to_id::Dict{Symbol,Int}
-    multivariate_operator_evaluator::Vector{MathProgBase.AbstractNLPEvaluator}
+    multivariate_operator_evaluator::Vector{MOI.AbstractNLPEvaluator}
     univariate_operator_to_id::Dict{Symbol,Int}
     univariate_operator_f::Vector{Any}
     univariate_operator_fprime::Vector{Any}
     univariate_operator_fprimeprime::Vector{Any}
 end
 
-UserOperatorRegistry() = UserOperatorRegistry(Dict{Symbol,Int}(),Vector{MathProgBase.AbstractNLPEvaluator}(0),Dict{Symbol,Int}(),[],[],[])
+UserOperatorRegistry() = UserOperatorRegistry(Dict{Symbol,Int}(),Vector{MOI.AbstractNLPEvaluator}(0),Dict{Symbol,Int}(),[],[],[])
 
-# we use the MathProgBase NLPEvaluator interface, where the
+# we use the MathOptInterface NLPEvaluator interface, where the
 # operator takes the place of the objective function.
 # users should implement eval_f and eval_grad_f for now.
 # we will eventually support hessians too
-function register_multivariate_operator!(r::UserOperatorRegistry,s::Symbol,f::MathProgBase.AbstractNLPEvaluator)
+function register_multivariate_operator!(r::UserOperatorRegistry,s::Symbol,f::MOI.AbstractNLPEvaluator)
     haskey(r.multivariate_operator_to_id, s) && error("Operator $s has already been defined")
     id = length(r.multivariate_operator_evaluator)+1
     r.multivariate_operator_to_id[s] = id
