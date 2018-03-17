@@ -126,66 +126,7 @@ function parseNLExpr(m, x, tapevar, parent, values)
         return code
     end
     if isexpr(x, :curly)
-        warn_curly(x)
-        header = x.args[1]
-        if length(x.args) < 3
-            error("Need at least two arguments for $header")
-        end
-        if issum(header)
-            operatorid = operator_to_id[:+]
-        elseif isprod(header)
-            operatorid = operator_to_id[:*]
-        else
-            error("Unrecognized expression $header{...}")
-        end
-        codeblock = :(let; end)
-        block = codeblock.args[1]
-        push!(block.args, :(push!($tapevar, NodeData(CALL, $operatorid, $parent))))
-        parentvar = gensym()
-        push!(block.args, :($parentvar = length($tapevar)))
-        
-        # we have a filter condition
-        if isexpr(x.args[2],:parameters)
-            cond = x.args[2]
-            if length(cond.args) != 1
-                error("No commas after semicolon allowed in $header{} expression, use && for multiple conditions")
-            end
-            # generate inner loop code first and then wrap in for loops
-            innercode = parseNLExpr(m, x.args[3], tapevar, parentvar, values)
-            code = quote
-                if $(esc(cond.args[1]))
-                    $innercode
-                end
-            end
-            for level in length(x.args):-1:4
-                _idxvar, idxset = parseIdxSet(x.args[level]::Expr)
-                idxvar = esc(_idxvar)
-                code = :(let
-                    $(localvar(idxvar))
-                    for $idxvar in $(esc(idxset))
-                        $code
-                    end
-                end)
-            end
-            push!(block.args, code)
-        else # no condition
-            innercode = parseNLExpr(m, x.args[2], tapevar, parentvar, values)
-            code = quote
-                $innercode
-            end
-            for level in length(x.args):-1:3
-                _idxvar, idxset = parseIdxSet(x.args[level]::Expr)
-                idxvar = esc(_idxvar)
-                code = :(let
-                    $(localvar(idxvar))
-                    for $idxvar in $(esc(idxset))
-                        $code
-                    end
-                end)
-            end
-            push!(block.args, code)
-        end
-        return codeblock
+        error_curly(x)
     end
     # at the lowest level?
     return :( parseNLExpr_runtime($(esc(m)),$(esc(x)), $tapevar, $parent, $values) )
@@ -200,7 +141,7 @@ end
 
 function parseNLExpr_runtime(m::Model, x::Variable, tape, parent, values)
     x.m === m || error("Variable in nonlinear expression does not belong to corresponding model")
-    push!(tape, NodeData(VARIABLE, x.col, parent))
+    push!(tape, NodeData(MOIVARIABLE, x.index.value, parent))
     nothing
 end
 
@@ -228,24 +169,40 @@ macro processNLExpr(m, ex)
     end
 end
 
+function Derivatives.expr_to_nodedata(ex::Variable,nd::Vector{NodeData},values::Vector{Float64},parentid,r::Derivatives.UserOperatorRegistry)
+    push!(nd, NodeData(MOIVARIABLE, ex.index.value, parentid))
+    nothing
+end
+
+function Derivatives.expr_to_nodedata(ex::NonlinearExpression,nd::Vector{NodeData},values::Vector{Float64},parentid,r::Derivatives.UserOperatorRegistry)
+    push!(nd, NodeData(SUBEXPRESSION, ex.index, parentid))
+    nothing
+end
+
 # Construct a NonlinearExprData from a Julia expression.
 # Variable objects should be spliced into the expression.
 function NonlinearExprData(m::Model, ex::Expr)
-    ex = spliceref(m,ex)
+    initNLP(m)
+    checkexpr(m,ex)
     nd, values = Derivatives.expr_to_nodedata(ex,m.nlpdata.user_operators)
     return NonlinearExprData(nd, values)
 end
 NonlinearExprData(m::Model, ex) = NonlinearExprData(m, :($ex + 0))
 
-# recursively replace Variable(m, i) with Expr(:ref,:x,i) in ex
-function spliceref(m::Model, ex::Expr)
+# Error if:
+# 1) Unexpected expression
+# 2) Variable doesn't match the model
+function checkexpr(m::Model, ex::Expr)
     if ex.head == :ref # if we have x[1] already in there, something is wrong
         error("Unrecognized expression $ex. JuMP variable objects and input coefficients should be spliced directly into expressions.")
     end
-    return Expr(ex.head,map(e -> spliceref(m,e), ex.args)...)
+    for e in ex.args
+        checkexpr(m, e)
+    end
+    return
 end
-function spliceref(m::Model, v::Variable)
+function checkexpr(m::Model, v::Variable)
     v.m === m || error("Variable $v does not belong to this model")
-    return Expr(:ref, :x, linearindex(v))
+    return
 end
-spliceref(m::Model, ex) = ex
+checkexpr(m::Model, ex) = nothing

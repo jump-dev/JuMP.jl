@@ -930,7 +930,7 @@ function tapeToExpr(m::Model, k, nd::Vector{NodeData}, adj, const_values, parame
     children_arr = rowvals(adj)
 
     nod = nd[k]
-    if nod.nodetype == VARIABLE
+    if nod.nodetype == VARIABLE # TODO: MOIVARIABLE?
         if generic_variable_names
             return Expr(:ref,:x,nod.index)
         else
