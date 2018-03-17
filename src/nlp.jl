@@ -14,8 +14,8 @@ include("parsenlp.jl")
 # GenericRangeConstraint
 # l ≤ ∑ aᵢ xᵢ ≤ u
 # The constant part of the internal expression is assumed to be zero
-mutable struct GenericRangeConstraint{TermsType} <: AbstractConstraint
-    terms::TermsType
+mutable struct NonlinearConstraint <: AbstractConstraint
+    terms::NonlinearExprData
     lb::Float64
     ub::Float64
 end
@@ -24,7 +24,7 @@ end
 # -∞ ≤ expr ≤ u   →   <=
 #  l ≤ expr ≤ ∞   →   >=
 #  l ≤ expr ≤ u   →   range
-function sense(c::GenericRangeConstraint)
+function sense(c::NonlinearConstraint)
     if c.lb != -Inf
         if c.ub != Inf
             if c.ub == c.lb
@@ -41,13 +41,11 @@ function sense(c::GenericRangeConstraint)
     end
 end
 
-function rhs(c::GenericRangeConstraint)
+function rhs(c::NonlinearConstraint)
     s = sense(c)
     s == :range && error("Range constraints do not have a well-defined RHS")
     s == :(<=) ? c.ub : c.lb
 end
-
-const NonlinearConstraint = GenericRangeConstraint{NonlinearExprData}
 
 mutable struct NLPData
     nlobj
@@ -128,12 +126,10 @@ mutable struct SubexpressionStorage
     linearity::Linearity
 end
 
-mutable struct NLPEvaluator <: MathProgBase.AbstractNLPEvaluator
+mutable struct NLPEvaluator <: MOI.AbstractNLPEvaluator
     m::Model
-    A::SparseMatrixCSC{Float64,Int} # linear constraint matrix
     parameter_values::Vector{Float64}
     has_nlobj::Bool
-    linobj::Vector{Float64}
     objective::FunctionStorage
     constraints::Vector{FunctionStorage}
     subexpressions::Vector{SubexpressionStorage}
@@ -162,15 +158,14 @@ mutable struct NLPEvaluator <: MathProgBase.AbstractNLPEvaluator
     hess_J::Vector{Int}
     max_chunk::Int # chunk size for which we've allocated storage
     # timers
-    eval_f_timer::Float64
-    eval_g_timer::Float64
-    eval_grad_f_timer::Float64
-    eval_jac_g_timer::Float64
-    eval_hesslag_timer::Float64
+    eval_objective_timer::Float64
+    eval_constraint_timer::Float64
+    eval_objective_gradient_timer::Float64
+    eval_constraint_jacobian_timer::Float64
+    eval_hessian_lagrangian_timer::Float64
     function NLPEvaluator(m::Model)
         d = new(m)
         numVar = m.numCols
-        d.A = prepConstrMatrix(m)
         # check if we have any user-defined operators, in which case we need to
         # disable hessians.
         if isa(m.nlpdata,NLPData)
@@ -196,11 +191,11 @@ mutable struct NLPEvaluator <: MathProgBase.AbstractNLPEvaluator
             d.jac_storage = Array{Float64}(numVar)
         end
 
-        d.eval_f_timer = 0
-        d.eval_g_timer = 0
-        d.eval_grad_f_timer = 0
-        d.eval_jac_g_timer = 0
-        d.eval_hesslag_timer = 0
+        d.eval_objective_timer = 0
+        d.eval_constraint_timer = 0
+        d.eval_objective_gradient_timer = 0
+        d.eval_constraint_jacobian_timer = 0
+        d.eval_hessian_lagrangian_timer = 0
         return d
     end
 end
@@ -265,15 +260,15 @@ function SubexpressionStorage(nd::Vector{NodeData}, const_values,numVar, fixed_v
 
 end
 
-function MathProgBase.initialize(d::NLPEvaluator, requested_features::Vector{Symbol})
+function MOI.initialize!(d::NLPEvaluator, requested_features::Vector{Symbol})
     for feat in requested_features
-        if !(feat in MathProgBase.features_available(d))
+        if !(feat in MOI.features_available(d))
             error("Unsupported feature $feat")
             # TODO: implement Jac-vec products
             # for solvers that need them
         end
     end
-    if d.eval_f_timer != 0
+    if d.eval_objective_timer != 0
         # we've already been initialized
         # assume no new features are being requested.
         return
@@ -295,7 +290,6 @@ function MathProgBase.initialize(d::NLPEvaluator, requested_features::Vector{Sym
     tic()
 
     d.linobj = prepAffObjective(d.m)
-    linrowlb, linrowub = prepConstrBounds(d.m)
     numVar = length(d.linobj)
 
     d.want_hess = (:Hess in requested_features)
@@ -430,32 +424,34 @@ function MathProgBase.initialize(d::NLPEvaluator, requested_features::Vector{Sym
         end
         d.max_chunk = max_chunk
         if d.want_hess
-            d.hess_I, d.hess_J = _hesslag_structure(d)
+            d.hess_I, d.hess_J = _hessian_lagrangian_structure(d)
             # JIT warm-up
-            MathProgBase.eval_hesslag(d, Array{Float64}(length(d.hess_I)), d.m.colVal, 1.0, ones(MathProgBase.numconstr(d.m)))
+            # TODO: rewrite without MPB
+            #MathProgBase.eval_hessian_lagrangian(d, Array{Float64}(length(d.hess_I)), d.m.colVal, 1.0, ones(MathProgBase.numconstr(d.m)))
         end
     end
 
     # JIT warm-up
-    if :Grad in requested_features
-        MathProgBase.eval_grad_f(d, zeros(numVar), d.m.colVal)
-        MathProgBase.eval_g(d, zeros(MathProgBase.numconstr(d.m)), d.m.colVal)
-    end
+    # TODO: rewrite without MPB
+    # if :Grad in requested_features
+    #     MOI.eval_objective_gradient(d, zeros(numVar), d.m.colVal)
+    #     MOI.eval_constraint(d, zeros(MathProgBase.numconstr(d.m)), d.m.colVal)
+    # end
 
     tprep = toq()
     #println("Prep time: $tprep")
 
     # reset timers
-    d.eval_f_timer = 0
-    d.eval_grad_f_timer = 0
-    d.eval_g_timer = 0
-    d.eval_jac_g_timer = 0
-    d.eval_hesslag_timer = 0
+    d.eval_objective_timer = 0
+    d.eval_objective_gradient_timer = 0
+    d.eval_constraint_timer = 0
+    d.eval_constraint_jacobian_timer = 0
+    d.eval_hessian_lagrangian_timer = 0
 
     nothing
 end
 
-function MathProgBase.features_available(d::NLPEvaluator)
+function MOI.features_available(d::NLPEvaluator)
     features = [:Grad, :Jac, :ExprGraph]
     if !d.disable_2ndorder
         push!(features,:Hess)
@@ -510,7 +506,7 @@ function reverse_eval_all(d::NLPEvaluator,x)
     copy!(d.last_x,x)
 end
 
-function MathProgBase.eval_f(d::NLPEvaluator, x)
+function MOI.eval_objective(d::NLPEvaluator, x)
     tic()
     if d.last_x != x
         forward_eval_all(d,x)
@@ -520,17 +516,13 @@ function MathProgBase.eval_f(d::NLPEvaluator, x)
     if d.has_nlobj
         val = d.objective.forward_storage[1]
     else
-        qobj = d.m.obj::QuadExpr
-        val = dot(x,d.linobj) + qobj.aff.constant
-        for k in 1:length(qobj.qvars1)
-            val += qobj.qcoeffs[k]*x[qobj.qvars1[k].col]*x[qobj.qvars2[k].col]
-        end
+        error("No nonlinar objective.")
     end
-    d.eval_f_timer += toq()
+    d.eval_objective_timer += toq()
     return val
 end
 
-function MathProgBase.eval_grad_f(d::NLPEvaluator, g, x)
+function MOI.eval_objective_gradient(d::NLPEvaluator, g, x)
     tic()
     if d.last_x != x
         forward_eval_all(d,x)
@@ -550,91 +542,40 @@ function MathProgBase.eval_grad_f(d::NLPEvaluator, g, x)
             end
             subexpr = d.subexpressions[k]
             reverse_extract(g,subexpr.reverse_storage,subexpr.nd,subexpr.adj,subexpr_reverse_values,subexpr_reverse_values[k])
-
         end
     else
-        copy!(g,d.linobj)
-        qobj::QuadExpr = d.m.obj
-        for k in 1:length(qobj.qvars1)
-            coef = qobj.qcoeffs[k]
-            g[qobj.qvars1[k].col] += coef*x[qobj.qvars2[k].col]
-            g[qobj.qvars2[k].col] += coef*x[qobj.qvars1[k].col]
-        end
+        error("No nonlinear objective.")
     end
-    d.eval_grad_f_timer += toq()
+    d.eval_objective_gradient_timer += toq()
     return
 end
 
-function MathProgBase.eval_g(d::NLPEvaluator, g, x)
+function MOI.eval_constraint(d::NLPEvaluator, g, x)
     tic()
     if d.last_x != x
         forward_eval_all(d,x)
         reverse_eval_all(d,x)
     end
-    A = d.A
-    for i in 1:size(A,1); g[i] = 0.0; end
-    #fill!(view(g,1:size(A,1)), 0.0)
-    A_mul_B!(view(g,1:size(A,1)),A,x)
-    idx = size(A,1)+1
-    quadconstr = d.m.quadconstr::Vector{QuadConstraint}
-    for c::QuadConstraint in quadconstr
-        aff = c.terms.aff
-        v = aff.constant
-        for k in 1:length(aff.vars)
-            v += aff.coeffs[k]*x[aff.vars[k].col]
-        end
-        for k in 1:length(c.terms.qvars1)
-            v += c.terms.qcoeffs[k]*x[c.terms.qvars1[k].col]*x[c.terms.qvars2[k].col]
-        end
-        g[idx] = v
-        idx += 1
-    end
+
     for ex in d.constraints
         g[idx] = ex.forward_storage[1]
         idx += 1
     end
-
-    d.eval_g_timer += toq()
-    #print("x = ");show(x);println()
-    #println(size(A,1), " g(x) = ");show(g);println()
+    d.eval_constraint_timer += toq()
     return
 end
 
-function MathProgBase.eval_jac_g(d::NLPEvaluator, J, x)
+function MOI.eval_constraint_jacobian(d::NLPEvaluator, J, x)
     tic()
     if d.last_x != x
         forward_eval_all(d,x)
         reverse_eval_all(d,x)
     end
     fill!(J,0.0)
-    idx = 1
-    A = d.A
-    for col = 1:size(A,2)
-        for pos = nzrange(A,col)
-            J[idx] = A.nzval[pos]
-            idx += 1
-        end
-    end
-    quadconstr = d.m.quadconstr::Vector{QuadConstraint}
-    for c::QuadConstraint in quadconstr
-        aff = c.terms.aff
-        for k in 1:length(aff.vars)
-            J[idx] = aff.coeffs[k]
-            idx += 1
-        end
-        for k in 1:length(c.terms.qvars1)
-            coef = c.terms.qcoeffs[k]
-            qidx1 = c.terms.qvars1[k].col
-            qidx2 = c.terms.qvars2[k].col
-
-            J[idx] = coef*x[qidx2]
-            J[idx+1] = coef*x[qidx1]
-            idx += 2
-        end
-    end
     grad_storage = d.jac_storage
     subexpr_reverse_values = d.subexpression_reverse_values
     SIMPLIFY = d.m.simplify_nonlinear_expressions
+    idx = 0
     for ex in d.constraints
         nzidx = ex.grad_sparsity
         grad_storage[nzidx] = 0.0
@@ -651,20 +592,18 @@ function MathProgBase.eval_jac_g(d::NLPEvaluator, J, x)
         end
 
         for k in 1:length(nzidx)
-            J[idx+k-1] = grad_storage[nzidx[k]]
+            J[idx+k] = grad_storage[nzidx[k]]
         end
         idx += length(nzidx)
     end
 
     d.eval_jac_g_timer += toq()
-    #print("x = ");show(x);println()
-    #print("V ");show(J);println()
     return
 end
 
 
 
-function MathProgBase.eval_hesslag_prod(
+function MOI.eval_hessian_lagrangian_product(
     d::NLPEvaluator,
     h::Vector{Float64}, # output vector
     x::Vector{Float64}, # current solution
@@ -680,39 +619,6 @@ function MathProgBase.eval_hesslag_prod(
     end
 
     fill!(h, 0.0)
-
-    # quadratic objective
-    qobj::QuadExpr = d.m.obj
-    for k in 1:length(qobj.qvars1)
-        col1 = qobj.qvars1[k].col
-        col2 = qobj.qvars2[k].col
-        coef = qobj.qcoeffs[k]
-        if col1 == col2
-            h[col1] += σ*2*coef*v[col1]
-        else
-            h[col1] += σ*coef*v[col2]
-            h[col2] += σ*coef*v[col1]
-        end
-    end
-
-    # quadratic constraints
-    row = size(d.A,1)+1
-    quadconstr = d.m.quadconstr::Vector{QuadConstraint}
-    for c in quadconstr
-        l = μ[row]
-        for k in 1:length(c.terms.qvars1)
-            col1 = c.terms.qvars1[k].col
-            col2 = c.terms.qvars2[k].col
-            coef = c.terms.qcoeffs[k]
-            if col1 == col2
-                h[col1] += l*2*coef*v[col1]
-            else
-                h[col1] += l*coef*v[col2]
-                h[col2] += l*coef*v[col1]
-            end
-        end
-        row += 1
-    end
 
     input_ϵ = reinterpret(ForwardDiff.Partials{1,Float64}, d.input_ϵ)
     output_ϵ = reinterpret(ForwardDiff.Partials{1,Float64}, d.output_ϵ)
@@ -774,17 +680,16 @@ function MathProgBase.eval_hesslag_prod(
 
 end
 
-function MathProgBase.eval_hesslag(
+function MOI.eval_hessian_lagrangian(
     d::NLPEvaluator,
     H::Vector{Float64},         # Sparse hessian entry vector
     x::Vector{Float64},         # Current solution
     obj_factor::Float64,        # Lagrangian multiplier for objective
     lambda::Vector{Float64})    # Multipliers for each constraint
 
-    qobj = d.m.obj::QuadExpr
     nldata = d.m.nlpdata::NLPData
 
-    d.want_hess || error("Hessian computations were not requested on the call to MathProgBase.initialize.")
+    d.want_hess || error("Hessian computations were not requested on the call to initialize!.")
 
     if d.last_x != x
         forward_eval_all(d,x)
@@ -793,34 +698,9 @@ function MathProgBase.eval_hesslag(
 
     tic()
 
-    # quadratic objective
-    nzcount = 1
-    for k in 1:length(qobj.qvars1)
-        if qobj.qvars1[k].col == qobj.qvars2[k].col
-            H[nzcount] = obj_factor*2*qobj.qcoeffs[k]
-        else
-            H[nzcount] = obj_factor*qobj.qcoeffs[k]
-        end
-        nzcount += 1
-    end
-    # quadratic constraints
-    quadconstr = d.m.quadconstr::Vector{QuadConstraint}
-    for i in 1:length(quadconstr)
-        c = quadconstr[i]
-        l = lambda[length(d.m.linconstr)+i]
-        for k in 1:length(c.terms.qvars1)
-            if c.terms.qvars1[k].col == c.terms.qvars2[k].col
-                H[nzcount] = l*2*c.terms.qcoeffs[k]
-            else
-                H[nzcount] = l*c.terms.qcoeffs[k]
-            end
-            nzcount += 1
-        end
-    end
-
     fill!(d.input_ϵ,0.0)
     recovery_tmp_storage = d.output_ϵ
-    nzcount -= 1
+    nzcount = 0
 
     if d.has_nlobj
         ex = d.objective
@@ -832,20 +712,23 @@ function MathProgBase.eval_hesslag(
             nzthis = hessian_slice(d, ex, x, H, obj_factor, nzcount, recovery_tmp_storage, Val{chunk})::Int
         end
         nzcount += nzthis
+    else
+        obj_factor == 0 || error("No nonlinear objective.")
     end
+
 
     for i in 1:length(d.constraints)
         ex = d.constraints[i]
         chunk = min(size(ex.seed_matrix,2),d.max_chunk)
         if chunk == 1
-            nzthis = hessian_slice(d, ex, x, H, lambda[i+length(quadconstr)+length(d.m.linconstr)], nzcount, recovery_tmp_storage, Val{1})::Int
+            nzthis = hessian_slice(d, ex, x, H, lambda[i], nzcount, recovery_tmp_storage, Val{1})::Int
         else
-            nzthis = hessian_slice(d, ex, x, H, lambda[i+length(quadconstr)+length(d.m.linconstr)], nzcount, recovery_tmp_storage, Val{chunk})::Int
+            nzthis = hessian_slice(d, ex, x, H, lambda[i], nzcount, recovery_tmp_storage, Val{chunk})::Int
         end
         nzcount += nzthis
     end
 
-    d.eval_hesslag_timer += toq()
+    d.eval_hessian_lagrangian_timer += toq()
     return
 
 end
@@ -979,38 +862,10 @@ function hessian_slice(d, ex, x, H, scale, nzcount, recovery_tmp_storage,::Type{
 
 end
 
-MathProgBase.isobjlinear(d::NLPEvaluator) = !d.has_nlobj && (length(d.m.obj.qvars1) == 0)
-# interpret quadratic to include purely linear
-MathProgBase.isobjquadratic(d::NLPEvaluator) = !d.has_nlobj
-
-MathProgBase.isconstrlinear(d::NLPEvaluator, i::Integer) = (i <= length(d.m.linconstr))
-
-function MathProgBase.jac_structure(d::NLPEvaluator)
-    # Jacobian structure
+function MOI.jacobian_structure(d::NLPEvaluator)
     jac_I = Int[]
     jac_J = Int[]
-    A = d.A
-    for col = 1:size(A,2)
-        for pos = nzrange(A,col)
-            push!(jac_I, A.rowval[pos])
-            push!(jac_J, col)
-        end
-    end
-    rowoffset = size(A,1)+1
-    for c::QuadConstraint in d.m.quadconstr
-        aff = c.terms.aff
-        for k in 1:length(aff.vars)
-            push!(jac_I, rowoffset)
-            push!(jac_J, aff.vars[k].col)
-        end
-        for k in 1:length(c.terms.qvars1)
-            push!(jac_I, rowoffset)
-            push!(jac_I, rowoffset)
-            push!(jac_J, c.terms.qvars1[k].col)
-            push!(jac_J, c.terms.qvars2[k].col)
-        end
-        rowoffset += 1
-    end
+    rowoffset = 1
     for ex in d.constraints
         idx = ex.grad_sparsity
         for i in 1:length(idx)
@@ -1021,36 +876,13 @@ function MathProgBase.jac_structure(d::NLPEvaluator)
     end
     return jac_I, jac_J
 end
-function MathProgBase.hesslag_structure(d::NLPEvaluator)
-    d.want_hess || error("Hessian computations were not requested on the call to MathProgBase.initialize.")
+function MOI.hessian_lagrangian_structure(d::NLPEvaluator)
+    d.want_hess || error("Hessian computations were not requested on the call to initialize!.")
     return d.hess_I,d.hess_J
 end
-function _hesslag_structure(d::NLPEvaluator)
+function _hessian_lagrangian_structure(d::NLPEvaluator)
     hess_I = Int[]
     hess_J = Int[]
-
-    qobj::QuadExpr = d.m.obj
-    for k in 1:length(qobj.qvars1)
-        qidx1 = qobj.qvars1[k].col
-        qidx2 = qobj.qvars2[k].col
-        if qidx2 > qidx1
-            qidx1, qidx2 = qidx2, qidx1
-        end
-        push!(hess_I, qidx1)
-        push!(hess_J, qidx2)
-    end
-    # quadratic constraints
-    for c::QuadConstraint in d.m.quadconstr
-        for k in 1:length(c.terms.qvars1)
-            qidx1 = c.terms.qvars1[k].col
-            qidx2 = c.terms.qvars2[k].col
-            if qidx2 > qidx1
-                qidx1, qidx2 = qidx2, qidx1
-            end
-            push!(hess_I, qidx1)
-            push!(hess_J, qidx2)
-        end
-    end
 
     if d.has_nlobj
         append!(hess_I, d.objective.hess_I)
@@ -1062,30 +894,6 @@ function _hesslag_structure(d::NLPEvaluator)
     end
 
     return hess_I, hess_J
-end
-
-# currently don't merge duplicates (this isn't required by MPB standard)
-function affToExpr(aff::AffExpr, constant::Bool)
-    if length(aff.vars) == 0 && !constant
-        return 0
-    end
-    ex = Expr(:call,:+)
-    for k in 1:length(aff.vars)
-        push!(ex.args, Expr(:call,:*,aff.coeffs[k],:(x[$(aff.vars[k].col)])))
-    end
-    if constant && aff.constant != 0
-        push!(ex.args, aff.constant)
-    end
-    return ex
-end
-
-function quadToExpr(q::QuadExpr,constant::Bool)
-    ex = Expr(:call,:+)
-    for k in 1:length(q.qvars1)
-        push!(ex.args, Expr(:call,:*,q.qcoeffs[k],:(x[$(q.qvars1[k].col)]), :(x[$(q.qvars2[k].col)])))
-    end
-    append!(ex.args, affToExpr(q.aff,constant).args[2:end])
-    return ex
 end
 
 mutable struct VariablePrintWrapper
@@ -1213,7 +1021,7 @@ function tapeToExpr(m::Model, k, nd::Vector{NodeData}, adj, const_values, parame
 end
 
 
-function MathProgBase.obj_expr(d::NLPEvaluator)
+function MOI.objective_expr(d::NLPEvaluator)
     if d.has_nlobj
         # expressions are simplified if requested
         ex = d.objective
@@ -1223,7 +1031,7 @@ function MathProgBase.obj_expr(d::NLPEvaluator)
     end
 end
 
-function MathProgBase.constr_expr(d::NLPEvaluator,i::Integer)
+function MOI.constraint_expr(d::NLPEvaluator,i::Integer)
     nlin = length(d.m.linconstr)
     nquad = length(d.m.quadconstr)
     if i <= nlin
@@ -1249,94 +1057,6 @@ function MathProgBase.constr_expr(d::NLPEvaluator,i::Integer)
             return Expr(:call, sense(constr), julia_expr, rhs(constr))
         end
     end
-end
-
-function EnableNLPResolve()
-    Base.warn_once("NLP resolve is now enabled by default. The EnableNLPResolve() method will be removed in a future release.")
-    return
-end
-function DisableNLPResolve()
-    Base.warn_once("NLP resolve is now enabled by default. The DisableNLPResolve() method will be removed in a future release.")
-    return
-end
-export EnableNLPResolve, DisableNLPResolve
-
-function _buildInternalModel_nlp(m::Model, traits)
-
-    linobj = prepAffObjective(m)
-    linrowlb, linrowub = prepConstrBounds(m)
-
-    nldata::NLPData = m.nlpdata
-    if m.internalModelLoaded && !m.simplify_nonlinear_expressions
-        @assert isa(nldata.evaluator, NLPEvaluator)
-        d = nldata.evaluator
-        fill!(d.last_x, NaN)
-    else
-        d = NLPEvaluator(m)
-        nldata.evaluator = d
-    end
-
-    nlp_lb, nlp_ub = constraintbounds(m)
-    numConstr = length(nlp_lb)
-
-    m.internalModel = MathProgBase.NonlinearModel(m.solver)
-
-    MathProgBase.loadproblem!(m.internalModel, m.numCols, numConstr, m.colLower, m.colUpper, nlp_lb, nlp_ub, m.objSense, d)
-    if traits.int
-        if applicable(MathProgBase.setvartype!, m.internalModel, m.colCat)
-            MathProgBase.setvartype!(m.internalModel, vartypes_without_fixed(m))
-        else
-            error("Solver does not support discrete variables")
-        end
-    end
-
-    MathProgBase.setwarmstart!(m.internalModel, tidy_warmstart(m))
-
-    registercallbacks(m)
-
-    m.internalModelLoaded = true
-
-    nothing
-end
-
-
-function solvenlp(m::Model, traits; suppress_warnings=false)
-
-    @assert m.internalModelLoaded
-
-    MathProgBase.optimize!(m.internalModel)
-    stat = MathProgBase.status(m.internalModel)
-
-    if stat != :Infeasible && stat != :Unbounded
-        m.objVal = MathProgBase.getobjval(m.internalModel)
-        m.colVal = MathProgBase.getsolution(m.internalModel)
-        try
-            objBound = MathProgBase.getobjbound(m.internalModel) + m.obj.aff.constant
-            # Don't corrupt objBound if the above call fails
-            m.objBound = objBound
-        end
-    end
-
-    if stat != :Optimal
-        suppress_warnings || warn("Not solved to optimality, status: $stat")
-    end
-    if stat == :Optimal && !traits.int
-        if applicable(MathProgBase.getconstrduals, m.internalModel) && applicable(MathProgBase.getreducedcosts, m.internalModel)
-            nlduals = MathProgBase.getconstrduals(m.internalModel)
-            m.linconstrDuals = nlduals[1:length(m.linconstr)]
-            # quadratic duals currently not available, formulate as nonlinear constraint if needed
-            m.nlpdata.nlconstrDuals = nlduals[length(m.linconstr)+length(m.quadconstr)+1:end]
-            m.redCosts = MathProgBase.getreducedcosts(m.internalModel)
-        else
-            suppress_warnings || Base.warn_once("Nonlinear solver does not provide dual solutions")
-        end
-    end
-
-    #d = m.nlpdata.evaluator
-    #println("feval $(d.eval_f_timer)\nfgrad $(d.eval_grad_f_timer)\ngeval $(d.eval_g_timer)\njaceval $(d.eval_jac_g_timer)\nhess $(d.eval_hesslag_timer)")
-
-    return stat::Symbol
-
 end
 
 # getvalue for nonlinear subexpressions
@@ -1380,17 +1100,19 @@ function _getValue(x::NonlinearExpression)
     return forward_eval(forward_storage,partials_storage,this_subexpr.nd,adj,this_subexpr.const_values,nldata.nlparamvalues,m.colVal,subexpr_values,user_input_buffer,user_output_buffer)
 end
 
-mutable struct UserFunctionEvaluator <: MathProgBase.AbstractNLPEvaluator
+mutable struct UserFunctionEvaluator <: MOI.AbstractNLPEvaluator
     f
     ∇f
     len::Int
 end
 
-function MathProgBase.eval_f(d::UserFunctionEvaluator,x)
+# TODO: This is a slightly confusing use for AbstractNLPEvaluator. Switch to a
+# better data structure.
+function MOI.eval_objective(d::UserFunctionEvaluator,x)
     @assert length(x) == d.len
     return d.f(x)::eltype(x)
 end
-function MathProgBase.eval_grad_f(d::UserFunctionEvaluator,grad,x)
+function MOI.eval_objective_gradient(d::UserFunctionEvaluator,grad,x)
     d.∇f(grad,x)
     nothing
 end
@@ -1437,11 +1159,6 @@ function register(m::Model, s::Symbol, dimension::Integer, f::Function, ∇f::Fu
     initNLP(m)
     Derivatives.register_univariate_operator!(m.nlpdata.user_operators, s, f, ∇f, ∇²f)
 end
-
-register(s::Symbol, dimension::Integer, f::Function; autodiff::Bool=false) = error("Function registration is now local to JuMP models. JuMP.register requires the model object as the first argument.")
-register(s::Symbol, dimension::Integer, f::Function, ∇f::Function; autodiff::Bool=false) = error("Function registration is now local to JuMP models. JuMP.register requires the model object as the first argument.")
-register(s::Symbol, dimension::Integer, f::Function, ∇f::Function, ∇²f::Function) = error("Function registration is now local to JuMP models. JuMP.register requires the model object as the first argument.")
-
 
 # Ex: setNLobjective(m, :Min, :($x + $y^2))
 function setNLobjective(m::Model, sense::Symbol, x)

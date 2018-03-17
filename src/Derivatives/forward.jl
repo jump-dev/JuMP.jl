@@ -125,8 +125,10 @@ function forward_eval{T}(storage::Vector{T},partials_storage::Vector{T},nd::Vect
                     grad_output[r] = 0.0
                     r += 1
                 end
-                fval = MathProgBase.eval_f(evaluator, f_input)::T
-                MathProgBase.eval_grad_f(evaluator, grad_output, f_input)
+                # TODO: The function names are confusing here. This just
+                # evaluates the function value and gradient.
+                fval = MOI.eval_objective(evaluator, f_input)::T
+                MOI.eval_objective_gradient(evaluator, grad_output, f_input)
                 storage[k] = fval
                 r = 1
                 for c_idx in children_idx

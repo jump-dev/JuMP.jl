@@ -221,7 +221,6 @@ function getname(c::Expr)
 end
 
 validmodel(m::AbstractModel, name) = nothing
-validmodel(m::MathProgBase.MathProgCallbackData, name) = error("Expected $name to be a JuMP model, but it is a callback object. Use of this macro is not supported within callbacks.")
 validmodel(m, name) = error("Expected $name to be a JuMP model, but it has type ", typeof(m))
 
 function assert_validmodel(m, macrocode)

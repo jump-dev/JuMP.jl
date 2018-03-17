@@ -1,8 +1,8 @@
 using JuMP.Derivatives
 using Base.Test
-using MathProgBase
+using MathOptInterface
 
-struct ΦEvaluator <: MathProgBase.AbstractNLPEvaluator
+struct ΦEvaluator <: MathOptInterface.AbstractNLPEvaluator
 end
 
 @testset "Derivatives" begin
@@ -259,18 +259,18 @@ new_nd = simplify_constants(storage,nd,adj,const_values,linearity)
 #Φ(x,y) = 1/3(y)^3 - 2x^2
 # c(x) = cos(x)
 
-function MathProgBase.eval_f(::ΦEvaluator,x)
+function MathOptInterface.eval_objective(::ΦEvaluator,x)
     @assert length(x) == 2
     return (1/3)*x[2]^3-2x[1]^2
 end
-function MathProgBase.eval_grad_f(::ΦEvaluator,grad,x)
+function MathOptInterface.eval_objective_gradient(::ΦEvaluator,grad,x)
     grad[1] = -4x[1]
     grad[2] = x[2]^2
 end
 r = Derivatives.UserOperatorRegistry()
 register_multivariate_operator!(r,:Φ,ΦEvaluator())
 register_univariate_operator!(r,:c,cos,x->-sin(x),x->-cos(x))
-Φ(x,y) = MathProgBase.eval_f(ΦEvaluator(),[x,y])
+Φ(x,y) = MathOptInterface.eval_objective(ΦEvaluator(),[x,y])
 ex = :(Φ(x[2],x[1]-1)*c(x[3]))
 nd,const_values = expr_to_nodedata(ex,r)
 @test Derivatives.has_user_multivariate_operators(nd)

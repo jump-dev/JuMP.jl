@@ -15,7 +15,6 @@ module JuMP
 importall Base.Operators
 import Base.map
 
-import MathProgBase
 import MathOptInterface
 const MOI = MathOptInterface
 const MOIU = MOI.Utilities
