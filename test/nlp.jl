@@ -67,6 +67,13 @@
                                 NonlinearExprData(m, :(ifelse(1 == 2 || 3 == 4 && 5 == 6, $x, 0.0))))
     end
 
+    @testset "Parse ifelse (3-way comparison)" begin
+        m = Model()
+        @variable(m, x)
+        @test expressions_equal(@JuMP.processNLExpr(m, ifelse(1 <= 2 <= 3, x, 0.0)),
+                                NonlinearExprData(m, :(ifelse(1 <= 2 <= 3, $x, 0.0))))
+    end
+
     @testset "Parse sum" begin
         m = Model()
         @variable(m, x[1:2])
@@ -87,6 +94,13 @@
         @NLexpression(m, ex, x^2)
         @test expressions_equal(@JuMP.processNLExpr(m, ex + 1),
                                 NonlinearExprData(m, :($ex + 1)))
+    end
+
+    @testset "Parse subexpressions" begin
+        m = Model()
+        @NLparameter(m, param == 10)
+        @test expressions_equal(@JuMP.processNLExpr(m, param + 1),
+                                NonlinearExprData(m, :($param + 1)))
     end
 
     @testset "Parse user-defined function (univariate)" begin

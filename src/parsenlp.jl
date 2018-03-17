@@ -179,6 +179,11 @@ function Derivatives.expr_to_nodedata(ex::NonlinearExpression,nd::Vector{NodeDat
     nothing
 end
 
+function Derivatives.expr_to_nodedata(ex::NonlinearParameter,nd::Vector{NodeData},values::Vector{Float64},parentid,r::Derivatives.UserOperatorRegistry)
+    push!(nd, NodeData(PARAMETER, ex.index, parentid))
+    nothing
+end
+
 # Construct a NonlinearExprData from a Julia expression.
 # Variable objects should be spliced into the expression.
 function NonlinearExprData(m::Model, ex::Expr)
