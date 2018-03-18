@@ -132,7 +132,6 @@ mutable struct Model <: AbstractModel
     # indexedVector::IndexedVector{Float64}
 
     nlpdata#::NLPData
-    simplify_nonlinear_expressions::Bool
 
     objdict::Dict{Symbol,Any} # dictionary from variable and constraint names to objects
 
@@ -144,7 +143,7 @@ mutable struct Model <: AbstractModel
     # dictionary keyed on an extension-specific symbol
     ext::Dict{Symbol,Any}
     # Default constructor
-    function Model(; mode::ModelMode=Automatic, backend=nothing, optimizer=nothing, simplify_nonlinear_expressions::Bool=false)
+    function Model(; mode::ModelMode=Automatic, backend=nothing, optimizer=nothing)
         m = new()
         # TODO make pretty
         m.variabletolowerbound = Dict{MOIVAR,MOILB}()
@@ -179,7 +178,6 @@ mutable struct Model <: AbstractModel
         m.optimizehook = nothing
         # m.printhook = nothing
         m.nlpdata = nothing
-        m.simplify_nonlinear_expressions = simplify_nonlinear_expressions
         m.objdict = Dict{Symbol,Any}()
         m.operator_counter = 0
         m.ext = Dict{Symbol,Any}()

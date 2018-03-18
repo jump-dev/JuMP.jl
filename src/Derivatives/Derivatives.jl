@@ -23,6 +23,5 @@ include("sparsity.jl")
 include("forward.jl")
 include("reverse.jl")
 include("subexpressions.jl")
-include("simplify.jl")
 
 end # module
