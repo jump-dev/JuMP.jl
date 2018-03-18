@@ -200,17 +200,6 @@ mutable struct NLPEvaluator <: MOI.AbstractNLPEvaluator
     end
 end
 
-function simplify_expression(nd::Vector{NodeData}, const_values, subexpression_linearity, fixed_variables, parameter_values, x_values, subexpression_values)
-
-    adj = adjmat(nd)
-    forward_storage = zeros(length(nd))
-    partials_storage = zeros(length(nd))
-    linearity = classify_linearity(nd, adj, subexpression_linearity, fixed_variables)
-    forward_eval(forward_storage, partials_storage, nd, adj, const_values, parameter_values, x_values, subexpression_values)
-    nd_new = simplify_constants(forward_storage, nd, adj, const_values, linearity)
-    return nd_new, forward_storage[1], linearity[1]
-end
-
 function FunctionStorage(nd::Vector{NodeData}, const_values,numVar, coloring_storage, want_hess::Bool, subexpr::Vector{Vector{NodeData}}, dependent_subexpressions, subexpression_linearity, subexpression_edgelist, subexpression_variables, fixed_variables)
 
     adj = adjmat(nd)
@@ -280,11 +269,6 @@ function MOI.initialize!(d::NLPEvaluator, requested_features::Vector{Symbol})
     d.constraints = FunctionStorage[]
     d.last_x = fill(NaN, d.m.numCols)
 
-    SIMPLIFY = d.m.simplify_nonlinear_expressions
-
-    fixed_variables = SIMPLIFY ? d.m.colLower .== d.m.colUpper : d.m.colLower .== NaN
-    d.m.colVal[fixed_variables] = d.m.colLower[fixed_variables]
-
     d.parameter_values = nldata.nlparamvalues
 
     tic()
@@ -320,74 +304,37 @@ function MOI.initialize!(d::NLPEvaluator, requested_features::Vector{Symbol})
 
     empty_edgelist = Set{Tuple{Int,Int}}()
     for k in d.subexpression_order # only load expressions which actually are used
-        if SIMPLIFY
-            nd_new, forward_value, simplified_linearity = simplify_expression(nldata.nlexpr[k].nd, nldata.nlexpr[k].const_values,d.subexpression_linearity, fixed_variables, d.parameter_values, d.m.colVal, d.subexpression_forward_values)
-        else
-            nd_new = nldata.nlexpr[k].nd
-            forward_value = NaN
-            simplified_linearity = NONLINEAR
-        end
+        nd_new = nldata.nlexpr[k].nd
+        forward_value = NaN
         d.subexpression_forward_values[k] = forward_value
-        if simplified_linearity != CONSTANT
-            d.subexpressions[k] = SubexpressionStorage(nd_new, nldata.nlexpr[k].const_values, numVar, fixed_variables, d.subexpression_linearity)
-            subex = d.subexpressions[k]
-            d.subexpression_linearity[k] = subex.linearity
-            @assert !SIMPLIFY || subex.linearity != CONSTANT
-            if d.want_hess
-                empty!(coloring_storage)
-                compute_gradient_sparsity!(coloring_storage,subex.nd)
-                # union with all dependent expressions
-                for idx in list_subexpressions(subex.nd)
-                    union!(coloring_storage, subexpression_variables[idx])
-                end
-                subexpression_variables[k] = collect(coloring_storage)
-                empty!(coloring_storage)
-                linearity = classify_linearity(subex.nd, subex.adj, d.subexpression_linearity, fixed_variables)
-                edgelist = compute_hessian_sparsity(subex.nd, subex.adj, linearity,coloring_storage,subexpression_edgelist, subexpression_variables)
-                subexpression_edgelist[k] = edgelist
+        d.subexpressions[k] = SubexpressionStorage(nd_new, nldata.nlexpr[k].const_values, numVar, fixed_variables, d.subexpression_linearity)
+        subex = d.subexpressions[k]
+        d.subexpression_linearity[k] = subex.linearity
+        @assert subex.linearity != CONSTANT
+        if d.want_hess
+            empty!(coloring_storage)
+            compute_gradient_sparsity!(coloring_storage,subex.nd)
+            # union with all dependent expressions
+            for idx in list_subexpressions(subex.nd)
+                union!(coloring_storage, subexpression_variables[idx])
             end
-        else
-            d.subexpression_linearity[k] = simplified_linearity
-            subexpression_edgelist[k] = empty_edgelist
+            subexpression_variables[k] = collect(coloring_storage)
+            empty!(coloring_storage)
+            linearity = classify_linearity(subex.nd, subex.adj, d.subexpression_linearity, fixed_variables)
+            edgelist = compute_hessian_sparsity(subex.nd, subex.adj, linearity,coloring_storage,subexpression_edgelist, subexpression_variables)
+            subexpression_edgelist[k] = edgelist
         end
-
     end
 
     if :ExprGraph in requested_features
         d.subexpressions_as_julia_expressions = Array{Any}(length(subexpr))
         for k in d.subexpression_order
-            if d.subexpression_linearity[k] != CONSTANT || !SIMPLIFY
-                ex = d.subexpressions[k]
-                d.subexpressions_as_julia_expressions[k] = tapeToExpr(d.m, 1, ex.nd, ex.adj, ex.const_values, d.parameter_values, d.subexpressions_as_julia_expressions, nldata.user_operators, true, true)
-            else
-                d.subexpressions_as_julia_expressions[k] = d.subexpression_forward_values[k]
-            end
-        end
-    end
-
-    if SIMPLIFY
-        main_expressions = Array{Vector{NodeData}}(0)
-
-        # simplify objective and constraint expressions
-        if d.has_nlobj
-            nd_new, forward_value = simplify_expression(nldata.nlobj.nd, nldata.nlobj.const_values,d.subexpression_linearity, fixed_variables, d.parameter_values, d.m.colVal, d.subexpression_forward_values)
-            push!(main_expressions,nd_new)
-        end
-        for k in 1:length(nldata.nlconstr)
-            nd_new, forward_value = simplify_expression(nldata.nlconstr[k].terms.nd, nldata.nlconstr[k].terms.const_values,d.subexpression_linearity, fixed_variables, d.parameter_values, d.m.colVal, d.subexpression_forward_values)
-            push!(main_expressions,nd_new)
-        end
-        # recompute dependencies after simplification
-        d.subexpression_order, individual_order = order_subexpressions(main_expressions,subexpr)
-
-        subexpr = Array{Vector{NodeData}}(length(d.subexpressions))
-        for k in d.subexpression_order
-            subexpr[k] = d.subexpressions[k].nd
+            ex = d.subexpressions[k]
+            d.subexpressions_as_julia_expressions[k] = tapeToExpr(d.m, 1, ex.nd, ex.adj, ex.const_values, d.parameter_values, d.subexpressions_as_julia_expressions, nldata.user_operators, true, true)
         end
     end
 
     max_chunk = 1
-
 
     if d.has_nlobj
         @assert length(d.m.obj.qvars1) == 0 && length(d.m.obj.aff.vars) == 0
@@ -466,11 +413,7 @@ function forward_eval_all(d::NLPEvaluator,x)
     user_operators = d.m.nlpdata.user_operators::Derivatives.UserOperatorRegistry
     user_input_buffer = d.jac_storage
     user_output_buffer = d.user_output_buffer
-    SIMPLIFY = d.m.simplify_nonlinear_expressions
     for k in d.subexpression_order
-        if SIMPLIFY && d.subexpression_linearity[k] == CONSTANT
-            continue
-        end
         ex = d.subexpressions[k]
         subexpr_values[k] = forward_eval(ex.forward_storage,ex.partials_storage,ex.nd,ex.adj,ex.const_values,d.parameter_values,x,subexpr_values,user_input_buffer,user_output_buffer, user_operators=user_operators)
     end
@@ -488,11 +431,7 @@ function reverse_eval_all(d::NLPEvaluator,x)
     subexpr_reverse_values = d.subexpression_reverse_values
     subexpr_values = d.subexpression_forward_values
     grad_storage = d.jac_storage
-    SIMPLIFY = d.m.simplify_nonlinear_expressions
     for k in d.subexpression_order
-        if SIMPLIFY && d.subexpression_linearity[k] == CONSTANT
-            continue
-        end
         ex = d.subexpressions[k]
         reverse_eval(ex.reverse_storage,ex.partials_storage,ex.nd,ex.adj)
     end
@@ -528,7 +467,6 @@ function MOI.eval_objective_gradient(d::NLPEvaluator, g, x)
         forward_eval_all(d,x)
         reverse_eval_all(d,x)
     end
-    SIMPLIFY = d.m.simplify_nonlinear_expressions
     if d.has_nlobj
         fill!(g,0.0)
         ex = d.objective
@@ -537,9 +475,6 @@ function MOI.eval_objective_gradient(d::NLPEvaluator, g, x)
         reverse_extract(g,ex.reverse_storage,ex.nd,ex.adj,subexpr_reverse_values,1.0)
         for i in length(ex.dependent_subexpressions):-1:1
             k = ex.dependent_subexpressions[i]
-            if SIMPLIFY && d.subexpression_linearity[k] == CONSTANT
-                continue
-            end
             subexpr = d.subexpressions[k]
             reverse_extract(g,subexpr.reverse_storage,subexpr.nd,subexpr.adj,subexpr_reverse_values,subexpr_reverse_values[k])
         end
@@ -574,7 +509,6 @@ function MOI.eval_constraint_jacobian(d::NLPEvaluator, J, x)
     fill!(J,0.0)
     grad_storage = d.jac_storage
     subexpr_reverse_values = d.subexpression_reverse_values
-    SIMPLIFY = d.m.simplify_nonlinear_expressions
     idx = 0
     for ex in d.constraints
         nzidx = ex.grad_sparsity
@@ -584,9 +518,6 @@ function MOI.eval_constraint_jacobian(d::NLPEvaluator, J, x)
         reverse_extract(grad_storage,ex.reverse_storage,ex.nd,ex.adj,subexpr_reverse_values,1.0)
         for i in length(ex.dependent_subexpressions):-1:1
             k = ex.dependent_subexpressions[i]
-            if SIMPLIFY && d.subexpression_linearity[k] == CONSTANT
-                continue
-            end
             subexpr = d.subexpressions[k]
             reverse_extract(grad_storage,subexpr.reverse_storage,subexpr.nd,subexpr.adj,subexpr_reverse_values,subexpr_reverse_values[k])
         end
@@ -632,11 +563,7 @@ function MOI.eval_hessian_lagrangian_product(
     forward_storage_ϵ = reinterpret(ForwardDiff.Partials{1,Float64},d.forward_storage_ϵ)
     reverse_storage_ϵ = reinterpret(ForwardDiff.Partials{1,Float64},d.reverse_storage_ϵ)
     partials_storage_ϵ = reinterpret(ForwardDiff.Partials{1,Float64},d.partials_storage_ϵ)
-    SIMPLIFY = d.m.simplify_nonlinear_expressions
     for expridx in d.subexpression_order
-        if SIMPLIFY && d.subexpression_linearity[expridx] == CONSTANT
-            continue
-        end
         subexpr = d.subexpressions[expridx]
         sub_forward_storage_ϵ = reinterpret(ForwardDiff.Partials{1,Float64},subexpr.forward_storage_ϵ)
         sub_partials_storage_ϵ = reinterpret(ForwardDiff.Partials{1,Float64},subexpr.partials_storage_ϵ)
@@ -665,9 +592,6 @@ function MOI.eval_hessian_lagrangian_product(
 
     for i in length(ex.dependent_subexpressions):-1:1
         expridx = ex.dependent_subexpressions[i]
-        if SIMPLIFY && d.subexpression_linearity[expridx] == CONSTANT
-            continue
-        end
         subexpr = d.subexpressions[expridx]
         sub_reverse_storage_ϵ = reinterpret(ForwardDiff.Partials{1,Float64},subexpr.reverse_storage_ϵ)
         sub_partials_storage_ϵ = reinterpret(ForwardDiff.Partials{1,Float64},subexpr.partials_storage_ϵ)
@@ -743,12 +667,8 @@ function hessian_slice_inner(d, ex, R, input_ϵ, output_ϵ, ::Type{Val{CHUNK}}) 
     zero_ϵ = zero(ForwardDiff.Partials{CHUNK,Float64})
 
     user_operators = d.m.nlpdata.user_operators::Derivatives.UserOperatorRegistry
-    SIMPLIFY = d.m.simplify_nonlinear_expressions
     # do a forward pass
     for expridx in ex.dependent_subexpressions
-        if SIMPLIFY && d.subexpression_linearity[expridx] == CONSTANT
-            continue
-        end
         subexpr = d.subexpressions[expridx]
         sub_forward_storage_ϵ = reinterpret_unsafe(ForwardDiff.Partials{CHUNK,Float64},subexpr.forward_storage_ϵ)
         sub_partials_storage_ϵ = reinterpret_unsafe(ForwardDiff.Partials{CHUNK,Float64},subexpr.partials_storage_ϵ)
@@ -763,9 +683,6 @@ function hessian_slice_inner(d, ex, R, input_ϵ, output_ϵ, ::Type{Val{CHUNK}}) 
     reverse_eval_ϵ(output_ϵ, ex.reverse_storage, reverse_storage_ϵ,ex.partials_storage, partials_storage_ϵ,ex.nd,ex.adj,d.subexpression_reverse_values,subexpr_reverse_values_ϵ, 1.0, zero_ϵ)
     for i in length(ex.dependent_subexpressions):-1:1
         expridx = ex.dependent_subexpressions[i]
-        if SIMPLIFY && d.subexpression_linearity[expridx] == CONSTANT
-            continue
-        end
         subexpr = d.subexpressions[expridx]
         sub_reverse_storage_ϵ = reinterpret_unsafe(ForwardDiff.Partials{CHUNK,Float64},subexpr.reverse_storage_ϵ)
         sub_partials_storage_ϵ = reinterpret_unsafe(ForwardDiff.Partials{CHUNK,Float64},subexpr.partials_storage_ϵ)
