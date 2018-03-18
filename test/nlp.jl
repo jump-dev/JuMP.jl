@@ -246,6 +246,26 @@
         @test MOI.constraint_expr(d,5) == :(ψ(x[$xidx]) + t(x[$xidx],x[$yidx]) - 3.0 <= 0.0)
     end
 
+    @testset "Expression graph for ifelse" begin
+        m = Model()
+        @variable(m, x)
+        @NLobjective(m, Min, ifelse( x <= 1, x^2, x) )
+        d = JuMP.NLPEvaluator(m)
+        MOI.initialize!(d, [:ExprGraph])
+        xidx = x.index
+        @test MOI.objective_expr(d) == :(ifelse( x[$xidx] <= 1, x[$xidx]^2, x[$xidx]))
+    end
+
+    @testset "Expression graph for empty sum and prod" begin
+        m = Model()
+        @variable(m, x)
+        @NLconstraint(m, x <= sum(0 for i in []) + prod(1 for i in []))
+        d = JuMP.NLPEvaluator(m)
+        MOI.initialize!(d, [:ExprGraph])
+        xidx = x.index
+        @test MOI.constraint_expr(d,1) == :(x[$xidx] - (0 + 1) <= 0.0)
+    end
+
     # This covers the code that computes Hessians in odd chunks of Hess-vec
     # products.
     @testset "Dense Hessian" begin
@@ -317,7 +337,6 @@
         jac_values = zeros(4)
         jac_values[J] = jac_nonzeros
         @test isapprox(jac_values, [1.0, 0.0, 1.0, 3.0])
-
     end
 
 

@@ -523,26 +523,6 @@ end
         @test MathProgBase.obj_expr(d) == :(+(1.0 * x[1]))
     end
 
-    @testset "Expression graph for ifelse" begin
-        m = Model()
-        @variable(m, x, start = 2)
-        @NLobjective(m, Min, ifelse( x <= 1, x^2, x) )
-        d = JuMP.NLPEvaluator(m)
-        MathProgBase.initialize(d, [:ExprGraph])
-        @test MathProgBase.obj_expr(d) == :(ifelse( x[1] <= 1, x[1]^2, x[1]))
-    end
-
-    @testset "Expression graphs for corner cases" begin
-        m = Model()
-        @variable(m, x, start = 2)
-        @constraint(m, 0 <= 1)
-        @NLconstraint(m, x <= sum(0 for i in []) + prod(1 for i in []))
-        d = JuMP.NLPEvaluator(m)
-        MathProgBase.initialize(d, [:ExprGraph])
-        @test MathProgBase.constr_expr(d,1) == :(0 <= 1.0)
-        @test MathProgBase.constr_expr(d,2) == :(x[1] - (0 + 1) <= 0.0)
-    end
-
     mysquare(x) = x^2
     function myf(x,y)
         return (x-1)^2+(y-2)^2
