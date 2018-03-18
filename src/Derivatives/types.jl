@@ -1,12 +1,12 @@
 
-@enum NodeType CALL CALLUNIVAR VARIABLE VALUE PARAMETER SUBEXPRESSION LOGIC COMPARISON EXTRA
+@enum NodeType CALL CALLUNIVAR MOIVARIABLE VARIABLE VALUE PARAMETER SUBEXPRESSION LOGIC COMPARISON EXTRA
 
-export CALL, CALLUNIVAR, VARIABLE, VALUE, PARAMETER, SUBEXPRESSION, LOGIC, COMPARISON
+export CALL, CALLUNIVAR, MOIVARIABLE, VARIABLE, VALUE, PARAMETER, SUBEXPRESSION, LOGIC, COMPARISON
 
 struct NodeData
     nodetype::NodeType
-    index::Int
-    parent::Int
+    index::Int64
+    parent::Int64
 end
 
 export NodeData
@@ -15,7 +15,8 @@ export NodeData
 
 # for CALL, index is into list of operators
 # for CALLUNIVAR, index is into list of univariate operators
-# for VARIABLE, index is variable index
+# for MOIVARIABLE, index is MOI variable index (not consecutive)
+# for VARIABLE, index is internal (consecutive) variable index (see variable_order in MOI.initialize!)
 # for VALUE, index is into list of constants
 # for PARAMETER, index is into list of parameters
 # for SUBEXPRESSION, index is into list of subexpressions
