@@ -192,8 +192,9 @@ function forward_eval{T}(storage::Vector{T},partials_storage::Vector{T},nd::Vect
             elseif op == 2
                 storage[k] = cval_lhs || cval_rhs
             end
+        else
+            error("Unrecognized node type $(nod.nodetype).")
         end
-
     end
     #@show storage
 
