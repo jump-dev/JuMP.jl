@@ -122,6 +122,13 @@
                                 NonlinearExprData(m, :(f($x,$y))))
     end
 
+    # Converts the lower-triangular sparse Hessian in MOI format into a dense
+    # matrix.
+    function dense_hessian(I, J, V, n)
+        raw = sparse(I, J, V, n, n)
+        return full(raw + raw' - sparse(diagm(diag(raw))))
+    end
+
     @testset "Hessian evaluation (Issue #435)" begin
         m = Model()
         @variable(m, a)
@@ -137,10 +144,7 @@
         V = zeros(length(I))
         values = [1.0, 2.0, 3.0] # Values for a, b, and c, respectively.
         MOI.eval_hessian_lagrangian(d, V, values, 1.0, Float64[])
-        hess_raw = sparse(I,J,V)
-        # Convert from lower triangular
-        hess_sparse = hess_raw + hess_raw' - sparse(diagm(diag(hess_raw)))
-        @test isapprox(hess_sparse, [0.0 1.0 0.0; 1.0 0.0 0.0; 0.0 0.0 2.0])
+        @test isapprox(dense_hessian(I, J, V, 3), [0.0 1.0 0.0; 1.0 0.0 0.0; 0.0 0.0 2.0])
 
         # make sure we don't get NaNs in this case
         @NLobjective(m, Min, a * b + 3*c^2)
@@ -149,17 +153,13 @@
         values = [1.0, 2.0, -1.0]
         V = zeros(length(I))
         MOI.eval_hessian_lagrangian(d, V, values, 1.0, Float64[])
-        hess_raw = sparse(I,J,V)
-        hess_sparse = hess_raw + hess_raw' - sparse(diagm(diag(hess_raw)))
-        @test isapprox(hess_sparse, [0.0 1.0 0.0; 1.0 0.0 0.0; 0.0 0.0 6.0])
+        @test isapprox(dense_hessian(I, J, V, 3), [0.0 1.0 0.0; 1.0 0.0 0.0; 0.0 0.0 6.0])
 
         # Initialize again
         MOI.initialize!(d, [:Hess])
         V = zeros(length(I))
         MOI.eval_hessian_lagrangian(d, V, values, 1.0, Float64[])
-        hess_raw = sparse(I,J,V)
-        hess_sparse = hess_raw + hess_raw' - sparse(diagm(diag(hess_raw)))
-        @test isapprox(hess_sparse, [0.0 1.0 0.0; 1.0 0.0 0.0; 0.0 0.0 6.0])
+        @test isapprox(dense_hessian(I, J, V, 3), [0.0 1.0 0.0; 1.0 0.0 0.0; 0.0 0.0 6.0])
     end
 
     @testset "NaN corner case (Issue #695)" begin
@@ -181,7 +181,7 @@
         @test isapprox(h, correct)
     end
 
-    @testset "Hess-vec" begin
+    @testset "Hessians and Hess-vec" begin
         m = Model()
         @variable(m, a)
         @variable(m, b)
@@ -191,13 +191,46 @@
         @NLconstraint(m, c*b <= 1)
         @NLconstraint(m, a^2/2 <= 1)
         d = JuMP.NLPEvaluator(m)
-        MOI.initialize!(d, [:HessVec])
-        h = ones(3) # test that input values are overwritten
-        v = [2.4,3.5,1.2]
+        MOI.initialize!(d, [:HessVec, :Hess])
+
         values = [1.0, 2.0, 3.0] # For a, b, c.
+        I,J = MOI.hessian_lagrangian_structure(d)
+        V = zeros(length(I))
+        MOI.eval_hessian_lagrangian(d, V, values, 1.0, [2.0, 3.0])
+        correct_hessian = [3.0 1.0 0.0; 1.0 0.0 2.0; 0.0 2.0 2.0]
+        @test isapprox(dense_hessian(I, J, V, 3), correct_hessian)
+
+        h = ones(3) # The input values should be overwritten.
+        v = [2.4,3.5,1.2]
         MOI.eval_hessian_lagrangian_product(d, h, values, v, 1.0, [2.0,3.0])
-        correct = [3.0 1.0 0.0; 1.0 0.0 2.0; 0.0 2.0 2.0]*v
-        @test isapprox(h, correct)
+        @test isapprox(h, correct_hessian*v)
+    end
+
+    @testset "Hessians and Hess-vec with subexpressions" begin
+        m = Model()
+        @variable(m, a)
+        @variable(m, b)
+        @variable(m, c)
+
+        @NLexpression(m, ab, a*b)
+        @NLobjective(m, Min, ab + c^2)
+        @NLconstraint(m, c*b <= 1)
+        @NLconstraint(m, a^2/2 <= 1)
+        d = JuMP.NLPEvaluator(m)
+        MOI.initialize!(d, [:HessVec, :Hess])
+
+        values = [1.0, 2.0, 3.0] # For a, b, c.
+        I,J = MOI.hessian_lagrangian_structure(d)
+        V = zeros(length(I))
+        MOI.eval_hessian_lagrangian(d, V, values, 1.0, [2.0, 3.0])
+        correct_hessian = [3.0 1.0 0.0; 1.0 0.0 2.0; 0.0 2.0 2.0]
+        @test isapprox(dense_hessian(I, J, V, 3), correct_hessian)
+
+        h = ones(3) # The input values should be overwritten.
+        v = [2.4,3.5,1.2]
+        MOI.eval_hessian_lagrangian_product(d, h, values, v, 1.0, [2.0,3.0])
+        # TODO: This a pre-existing bug also present in JuMP/MPB.
+        @test_broken isapprox(h, correct_hessian*v)
     end
 
     @testset "Expression graphs" begin
@@ -279,16 +312,13 @@
         V = zeros(length(I))
         values = ones(18)
         MOI.eval_hessian_lagrangian(d, V, values, 1.0, Float64[])
-        hess_raw = sparse(I,J,V)
-        hess_sparse = hess_raw + hess_raw' - sparse(diagm(diag(hess_raw)))
-        @test isapprox(hess_sparse, ones(18,18)-diagm(ones(18)))
+        @test isapprox(dense_hessian(I, J, V, 18), ones(18,18)-diagm(ones(18)))
 
         values[1] = 0.5
         MOI.eval_hessian_lagrangian(d, V, values, 1.0, Float64[])
-        hess_raw = sparse(I,J,V)
-        hess_sparse = hess_raw + hess_raw' - sparse(diagm(diag(hess_raw)))
-        @test isapprox(hess_sparse, [0 ones(17)'
-                                     ones(17)  (ones(17,17) - diagm(ones(17)))/2 ])
+        @test isapprox(dense_hessian(I, J, V, 18),
+                       [0 ones(17)'
+                        ones(17)  (ones(17,17) - diagm(ones(17)))/2 ])
     end
 
     @testset "eval_objective and eval_objective_gradient" begin
