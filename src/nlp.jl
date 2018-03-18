@@ -205,7 +205,7 @@ function replace_moi_variables(nd::Vector{NodeData}, moi_index_to_consecutive_in
     return new_nd
 end
 
-function FunctionStorage(nd::Vector{NodeData}, const_values, num_variables, coloring_storage, want_hess::Bool, subexpr::Vector{Vector{NodeData}}, dependent_subexpressions, subexpression_linearity, subexpression_edgelist, subexpression_variables, moi_index_to_consecutive_index)
+function FunctionStorage(nd::Vector{NodeData}, const_values, num_variables, coloring_storage, want_hess::Bool, subexpressions::Vector{SubexpressionStorage}, dependent_subexpressions, subexpression_linearity, subexpression_edgelist, subexpression_variables, moi_index_to_consecutive_index)
 
     nd = replace_moi_variables(nd, moi_index_to_consecutive_index)
     adj = adjmat(nd)
@@ -216,7 +216,7 @@ function FunctionStorage(nd::Vector{NodeData}, const_values, num_variables, colo
     compute_gradient_sparsity!(coloring_storage, nd)
 
     for k in dependent_subexpressions
-        compute_gradient_sparsity!(coloring_storage,subexpr[k])
+        compute_gradient_sparsity!(coloring_storage,subexpressions[k].nd)
     end
     grad_sparsity = sort!(collect(coloring_storage))
     empty!(coloring_storage)
@@ -361,7 +361,7 @@ function MOI.initialize!(d::NLPEvaluator, requested_features::Vector{Symbol})
 
     if d.has_nlobj
         nd = main_expressions[1]
-        d.objective = FunctionStorage(nd, nldata.nlobj.const_values, num_variables, coloring_storage, d.want_hess, subexpr, individual_order[1], d.subexpression_linearity, subexpression_edgelist, subexpression_variables, moi_index_to_consecutive_index)
+        d.objective = FunctionStorage(nd, nldata.nlobj.const_values, num_variables, coloring_storage, d.want_hess, d.subexpressions, individual_order[1], d.subexpression_linearity, subexpression_edgelist, subexpression_variables, moi_index_to_consecutive_index)
         max_expr_length = max(max_expr_length, length(d.objective.nd))
         max_chunk = max(max_chunk, size(d.objective.seed_matrix,2))
     end
@@ -370,7 +370,7 @@ function MOI.initialize!(d::NLPEvaluator, requested_features::Vector{Symbol})
         nlconstr = nldata.nlconstr[k]
         idx = (d.has_nlobj) ? k+1 : k
         nd = main_expressions[idx]
-        push!(d.constraints, FunctionStorage(nd, nlconstr.terms.const_values, num_variables, coloring_storage, d.want_hess, subexpr, individual_order[idx], d.subexpression_linearity, subexpression_edgelist, subexpression_variables, moi_index_to_consecutive_index))
+        push!(d.constraints, FunctionStorage(nd, nlconstr.terms.const_values, num_variables, coloring_storage, d.want_hess, d.subexpressions, individual_order[idx], d.subexpression_linearity, subexpression_edgelist, subexpression_variables, moi_index_to_consecutive_index))
         max_expr_length = max(max_expr_length, length(d.constraints[end].nd))
         max_chunk = max(max_chunk, size(d.constraints[end].seed_matrix,2))
     end
@@ -514,9 +514,8 @@ function MOI.eval_constraint(d::NLPEvaluator, g, x)
         reverse_eval_all(d,x)
     end
 
-    for ex in d.constraints
-        g[idx] = ex.forward_storage[1]
-        idx += 1
+    for i in 1:length(d.constraints)
+        g[i] = d.constraints[i].forward_storage[1]
     end
     d.eval_constraint_timer += toq()
     return
@@ -550,7 +549,7 @@ function MOI.eval_constraint_jacobian(d::NLPEvaluator, J, x)
         idx += length(nzidx)
     end
 
-    d.eval_jac_g_timer += toq()
+    d.eval_constraint_jacobian_timer += toq()
     return
 end
 
@@ -803,14 +802,12 @@ end
 function MOI.jacobian_structure(d::NLPEvaluator)
     jac_I = Int[]
     jac_J = Int[]
-    rowoffset = 1
-    for ex in d.constraints
-        idx = ex.grad_sparsity
-        for i in 1:length(idx)
-            push!(jac_I, rowoffset)
-            push!(jac_J, idx[i])
+    for row in 1:length(d.constraints)
+        row_sparsity = d.constraints[row].grad_sparsity
+        for idx in row_sparsity
+            push!(jac_I, row)
+            push!(jac_J, idx)
         end
-        rowoffset += 1
     end
     return jac_I, jac_J
 end

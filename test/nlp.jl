@@ -218,4 +218,107 @@
         @test MOI.constraint_expr(d,2) == :((exp(x[$xidx]) + 1) - 0.0 == 0.0)
     end
 
+    @testset "More expression graphs" begin
+        m = Model()
+        @variable(m, x)
+        @variable(m, y)
+
+        ψ(x) = 1
+        t(x,y) = 2
+        JuMP.register(m, :ψ, 1, ψ, autodiff=true)
+        JuMP.register(m, :t, 2, t, autodiff=true)
+
+        @NLobjective(m, Min, x^y)
+        @NLconstraint(m, sin(x)*cos(y) == 5)
+        @NLconstraint(m, nlconstr[i=1:2], i*x^2 == i)
+        @NLconstraint(m, -0.5 <= sin(x) <= 0.5)
+        @NLconstraint(m, ψ(x) + t(x,y) <= 3)
+
+        d = JuMP.NLPEvaluator(m)
+        MOI.initialize!(d, [:ExprGraph])
+        xidx = x.index
+        yidx = y.index
+        @test MOI.objective_expr(d) == :(x[$xidx]^x[$yidx])
+        @test MOI.constraint_expr(d,1) == :(sin(x[$xidx]) * cos(x[$yidx]) - 5 == 0.0)
+        @test MOI.constraint_expr(d,2) == :(1.0*x[$xidx]^2 - 1.0 == 0.0)
+        @test MOI.constraint_expr(d,3) == :(2.0*x[$xidx]^2 - 2.0 == 0.0)
+        @test MOI.constraint_expr(d,4) == :(-0.5 <= sin(x[$xidx]) <= 0.5)
+        @test MOI.constraint_expr(d,5) == :(ψ(x[$xidx]) + t(x[$xidx],x[$yidx]) - 3.0 <= 0.0)
+    end
+
+    # This covers the code that computes Hessians in odd chunks of Hess-vec
+    # products.
+    @testset "Dense Hessian" begin
+        m = Model()
+        @variable(m, x[1:18])
+        @NLobjective(m, Min, prod(x[i] for i=1:18))
+
+        d = JuMP.NLPEvaluator(m)
+        MOI.initialize!(d, [:Hess])
+        I,J = MOI.hessian_lagrangian_structure(d)
+        V = zeros(length(I))
+        values = ones(18)
+        MOI.eval_hessian_lagrangian(d, V, values, 1.0, Float64[])
+        hess_raw = sparse(I,J,V)
+        hess_sparse = hess_raw + hess_raw' - sparse(diagm(diag(hess_raw)))
+        @test isapprox(hess_sparse, ones(18,18)-diagm(ones(18)))
+
+        values[1] = 0.5
+        MOI.eval_hessian_lagrangian(d, V, values, 1.0, Float64[])
+        hess_raw = sparse(I,J,V)
+        hess_sparse = hess_raw + hess_raw' - sparse(diagm(diag(hess_raw)))
+        @test isapprox(hess_sparse, [0 ones(17)'
+                                     ones(17)  (ones(17,17) - diagm(ones(17)))/2 ])
+    end
+
+    @testset "eval_objective and eval_objective_gradient" begin
+        m = Model()
+        @variable(m, x[1:4])
+        @NLparameter(m, p == 2)
+        @NLexpression(m, ex, p*x[1])
+
+        ψ(x) = sin(x)
+        t(x,y) = x+3y
+        JuMP.register(m, :ψ, 1, ψ, autodiff=true)
+        JuMP.register(m, :t, 2, t, autodiff=true)
+
+        @NLobjective(m, Min, ex/2 + sin(x[2])/ψ(x[2]) + t(x[3],x[4]))
+        d = JuMP.NLPEvaluator(m)
+        MOI.initialize!(d, [:Grad])
+        variable_values = fill(2.0, (4,))
+        @test isapprox(MOI.eval_objective(d, variable_values), variable_values[1] + 1 + variable_values[3] + 3variable_values[4])
+        grad = zeros(4)
+        MOI.eval_objective_gradient(d, grad, variable_values)
+        @test isapprox(grad, [1.0, 0.0, 1.0, 3.0])
+    end
+
+    @testset "eval_constraint and Jacobians" begin
+        m = Model()
+        @variable(m, x[1:4])
+        @NLparameter(m, p == 2)
+        @NLexpression(m, ex, p*x[1])
+
+        ψ(x) = sin(x)
+        t(x,y) = x+3y
+        JuMP.register(m, :ψ, 1, ψ, autodiff=true)
+        JuMP.register(m, :t, 2, t, autodiff=true)
+
+        @NLconstraint(m, Min, ex/2 + sin(x[2])/ψ(x[2]) + t(x[3],x[4]) <= 0.0)
+        d = JuMP.NLPEvaluator(m)
+        MOI.initialize!(d, [:Jac])
+        variable_values = fill(2.0, (4,))
+        constraint_value = zeros(1)
+        MOI.eval_constraint(d, constraint_value, variable_values)
+        @test isapprox(constraint_value[1], variable_values[1] + 1 + variable_values[3] + 3variable_values[4])
+        I,J = MOI.jacobian_structure(d)
+        @test all(I .== 1)
+        jac_nonzeros = zeros(length(J))
+        MOI.eval_constraint_jacobian(d, jac_nonzeros, variable_values)
+        jac_values = zeros(4)
+        jac_values[J] = jac_nonzeros
+        @test isapprox(jac_values, [1.0, 0.0, 1.0, 3.0])
+
+    end
+
+
 end

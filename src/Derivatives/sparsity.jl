@@ -22,6 +22,8 @@ function compute_gradient_sparsity!(indices::Coloring.IndexedSet,nd::Vector{Node
         nod = nd[k]
         if nod.nodetype == VARIABLE
             push!(indices, nod.index)
+        elseif nod.nodetype == MOIVARIABLE
+            error("Internal error: Invalid to compute sparsity if MOIVARIABLE nodes are present.")
         end
     end
     nothing
@@ -46,14 +48,14 @@ function compute_hessian_sparsity(nd::Vector{NodeData},adj,input_linearity::Vect
     # By "nonlinear with respect to the output", we mean that the output
     # depends nonlinearly on the value of the node, regardless of
     # how the node itself depends on the input.
-   
+
     # So start at the root of the tree and classify the linearity wrt the output.
     # For each nonlinear node, do a mini DFS and collect the list of children.
     # Add a nonlinear interaction between all children of a nonlinear node.
-    
+
     edgelist = Set{Tuple{Int,Int}}()
     nonlinear_wrt_output = fill(false,length(nd))
-    
+
     children_arr = rowvals(adj)
 
     stack = Int[]
@@ -68,6 +70,9 @@ function compute_hessian_sparsity(nd::Vector{NodeData},adj,input_linearity::Vect
 
     for k in 2:length(nd)
         nod = nd[k]
+        if nod.nodetype == MOIVARIABLE
+            error("Internal error: Invalid to compute sparsity if MOIVARIABLE nodes are present.")
+        end
         nonlinear_wrt_output[k] && continue # already seen this node one way or another
         input_linearity[k] == CONSTANT && continue # definitely not nonlinear
 
@@ -109,9 +114,9 @@ function compute_hessian_sparsity(nd::Vector{NodeData},adj,input_linearity::Vect
                 push!(edgelist,ij)
             end
         end
-        
+
         nonlinear_wrt_output[k] || continue
-        
+
         # do a DFS from here, including all children
         @assert isempty(stack)
         @assert isempty(stack_ignore)

@@ -1252,7 +1252,7 @@ macro NLconstraint(m, x, extra...)
             end
             c = NonlinearConstraint(@processNLExpr($m, $(esc(x.args[3]))), $(esc(lb)), $(esc(ub)))
             push!($m.nlpdata.nlconstr, c)
-            $(refcall) = ConstraintRef{Model,NonlinearConstraint}($m, length($m.nlpdata.nlconstr))
+            $(refcall) = ConstraintRef($m, NonlinearConstraintIndex(length($m.nlpdata.nlconstr)))
         end
     else
         # Unknown
@@ -1260,7 +1260,7 @@ macro NLconstraint(m, x, extra...)
               "       expr1 <= expr2\n" * "       expr1 >= expr2\n" *
               "       expr1 == expr2")
     end
-    looped = getloopedcode(variable, code, condition, idxvars, idxsets, :(ConstraintRef{Model,NonlinearConstraint}), requestedcontainer)
+    looped = getloopedcode(variable, code, condition, idxvars, idxsets, :(ConstraintRef{Model,NonlinearConstraintIndex}), requestedcontainer)
     return assert_validmodel(m, quote
         initNLP($m)
         $looped
