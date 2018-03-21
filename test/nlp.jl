@@ -181,6 +181,22 @@
         @test isapprox(h, correct)
     end
 
+    # TODO: Still broken!
+    @testset "NaN corner case (Issue #1205)" begin
+        m = Model()
+        @variable(m, x)
+
+        @NLobjective(m, Min, x^1.0)
+
+        d = JuMP.NLPEvaluator(m)
+        MOI.initialize!(d, [:Hess])
+        I,J = MOI.hessian_lagrangian_structure(d)
+        V = zeros(length(I))
+        values = zeros(1)
+        MOI.eval_hessian_lagrangian(d, V, values, 1.0, Float64[])
+        @test_broken isapprox(dense_hessian(I, J, V, 1), [0.0])
+    end
+
     @testset "Hessians and Hess-vec" begin
         m = Model()
         @variable(m, a)
