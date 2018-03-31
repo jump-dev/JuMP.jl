@@ -135,10 +135,10 @@ And data, a 2-element Array{Float64,1}:
     @test @inferred A[:,:a] == JuMPArray([1,3], s1)
     @test A[2, :] == JuMPArray([1,2], s2)
     @test sprint(show, A) == """
-2-dimensional JuMPArray{Int64,2,...} with index sets:
+2-dimensional JuMPArray{$Int,2,...} with index sets:
     Dimension 1, 2:3
     Dimension 2, Symbol[:a, :b]
-And data, a 2×2 Array{Int64,2}:
+And data, a 2×2 Array{$Int,2}:
  1  2
  3  4"""
 
@@ -181,7 +181,7 @@ And data, a 2×2×2×2 Array{Float64,4}:
     @test A[] == 10
     A[] = 1
     @test sprint(show, A) == """
-0-dimensional JuMPArray{Int64,0,...} with index sets:
-And data, a 0-dimensional Array{Int64,0}:
+0-dimensional JuMPArray{$Int,0,...} with index sets:
+And data, a 0-dimensional Array{$Int,0}:
 1"""
 end
