@@ -15,6 +15,7 @@ using Base.Test
 
 using MathOptInterface
 const MOI = MathOptInterface
+const MOIT = MOI.Test
 const MOIU = MOI.Utilities
 
 include("derivatives.jl")
