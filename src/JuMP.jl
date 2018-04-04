@@ -162,16 +162,9 @@ mutable struct Model <: AbstractModel
             m.moibackend = backend
         else
             @assert mode != Direct
-            if mode == Automatic
-                m.moibackend = MOIU.CachingOptimizer(JuMPMOIModel{Float64}(), MOIU.Automatic)
-                if optimizer !== nothing
-                    MOIU.resetoptimizer!(m, optimizer)
-                end
-            elseif mode == Manual
-                m.moibackend = MOIU.CachingOptimizer(JuMPMOIModel{Float64}(), MOIU.Manual)
-                if optimizer !== nothing
-                    MOIU.resetoptimizer!(m, optimizer)
-                end
+            m.moibackend = MOIU.CachingOptimizer(MOIU.UniversalFallback(JuMPMOIModel{Float64}()), mode == Automatic ? MOIU.Automatic : MOIU.Manual)
+            if optimizer !== nothing
+                MOIU.resetoptimizer!(m, optimizer)
             end
         end
         m.callbacks = Any[]

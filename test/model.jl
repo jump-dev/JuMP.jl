@@ -10,3 +10,8 @@
     optimize(m)
     @test called
 end
+@testset "UniversalFallback" begin
+    m = Model()
+    MOI.set!(m, MOIT.UnknownModelAttribute(), 1)
+    @test MOI.get(m, MOIT.UnknownModelAttribute()) == 1
+end
