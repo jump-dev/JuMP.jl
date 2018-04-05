@@ -806,4 +806,13 @@ end
         @test string(JuMP.constructconstraint!(x, :(<=))) == "x $leq 0"
         @test string(JuMP.constructconstraint!(x, :(==))) == "x $eq 0"
     end
+
+    @testset "Nested tuple destructuring" begin
+    m = Model()
+    @variable(m, x)
+    d = Dict((1,2) => 3)
+    @constraint(m, x == sum(i+j+k for ((i,j),k) in d))
+    @test m.linconstr[1].lb == m.linconstr[1].ub == 6
+    @test m.linconstr[1].terms == 1x
+    end
 end
