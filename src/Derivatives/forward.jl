@@ -88,6 +88,9 @@ function forward_eval{T}(storage::Vector{T},partials_storage::Vector{T},nd::Vect
                 if exponent == 2
                     @inbounds storage[k] = base*base
                     @inbounds partials_storage[ix1] = 2*base
+                elseif exponent == 1
+                    @inbounds storage[k] = base
+                    @inbounds partials_storage[ix1] = 1.0
                 else
                     storage[k] = pow(base,exponent)
                     partials_storage[ix1] = exponent*pow(base,exponent-1)
@@ -295,6 +298,8 @@ function forward_eval_ϵ{N,T}(storage::Vector{T},storage_ϵ::DenseVector{Forward
                     exponent_gnum = ForwardDiff.Dual{TAG}(exponent,exponent_ϵ)
                     if exponent == 2
                         partials_storage_ϵ[ix1] = 2*base_ϵ
+                    elseif exponent == 1
+                        partials_storage_ϵ[ix1] = zero_ϵ
                     else
                         partials_storage_ϵ[ix1] = ForwardDiff.partials(exponent_gnum*pow(base_gnum,exponent_gnum-1))
                     end
