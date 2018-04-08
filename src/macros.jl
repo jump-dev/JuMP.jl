@@ -162,11 +162,13 @@ function getloopedcode(varname, code, condition, idxvars, idxsets, sym, requeste
     end
 end
 
-localvar(x::Symbol) = _localvar(x)
+# TODO: Remove all localvar calls for Julia 0.7. The scope of loop variables
+# has changed to match the behavior we enforce here.
+ localvar(x::Symbol) = _localvar(x)
 localvar(x::Expr) = Expr(:block, _localvar(x)...)
 _localvar(x::Symbol) = :(local $(esc(x)))
 function _localvar(x::Expr)
-    @assert x.head == :escape
+    @assert x.head in (:escape, :tuple)
     args = Any[]
     for t in x.args
         if isa(t, Symbol)
