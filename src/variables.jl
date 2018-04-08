@@ -376,7 +376,7 @@ function BinaryRef(v::Variable)
 end
 
 
-startvalue(v::Variable) = MOI.get(v.m, MOI.VariablePrimalStart())
+startvalue(v::Variable) = MOI.get(v.m, MOI.VariablePrimalStart(), v)
 setstartvalue(v::Variable, val::Number) = MOI.set!(v.m, MOI.VariablePrimalStart(), v, val)
 
 """
