@@ -76,6 +76,15 @@ mutable struct NLPData
     evaluator
 end
 
+function create_nlp_block_data(m::Model)
+    @assert m.nlpdata !== nothing
+    bounds = MOI.NLPBoundsPair[]
+    for constr in m.nlpdata.nlconstr
+        push!(bounds, MOI.NLPBoundsPair(constr.lb, constr.ub))
+    end
+    return MOI.NLPBlockData(bounds, NLPEvaluator(m), isa(m.nlpdata.nlobj, NonlinearExprData))
+end
+
 function NonlinearExpression(m::Model,ex::NonlinearExprData)
     initNLP(m)
     nldata::NLPData = m.nlpdata
@@ -555,11 +564,11 @@ end
 
 function MOI.eval_hessian_lagrangian_product(
     d::NLPEvaluator,
-    h::Vector{Float64}, # output vector
+    h::AbstractVector{Float64}, # output vector
     x::Vector{Float64}, # current solution
     v::Vector{Float64}, # rhs vector
     σ::Float64,         # multiplier for objective
-    μ::Vector{Float64}) # multipliers for each constraint
+    μ::AbstractVector{Float64}) # multipliers for each constraint
 
     nldata = d.m.nlpdata::NLPData
 
@@ -624,10 +633,10 @@ end
 
 function MOI.eval_hessian_lagrangian(
     d::NLPEvaluator,
-    H::Vector{Float64},         # Sparse hessian entry vector
-    x::Vector{Float64},         # Current solution
-    obj_factor::Float64,        # Lagrangian multiplier for objective
-    lambda::Vector{Float64})    # Multipliers for each constraint
+    H::AbstractVector{Float64},      # Sparse hessian entry vector
+    x::Vector{Float64},              # Current solution
+    obj_factor::Float64,             # Lagrangian multiplier for objective
+    lambda::AbstractVector{Float64}) # Multipliers for each constraint
 
     nldata = d.m.nlpdata::NLPData
 
