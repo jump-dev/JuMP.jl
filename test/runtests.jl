@@ -33,7 +33,7 @@ include("generate_and_solve.jl")
 include("print.jl")
 #include("expr.jl")
 #include("operator.jl")
-#include("macros.jl")
+include("macros.jl")
 
 # Fuzzer of macros to build expressions
 #include("fuzzer.jl")
