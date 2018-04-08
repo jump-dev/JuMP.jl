@@ -206,7 +206,7 @@ localvar(x::Symbol) = _localvar(x)
 localvar(x::Expr) = Expr(:block, _localvar(x)...)
 _localvar(x::Symbol) = :(local $(esc(x)))
 function _localvar(x::Expr)
-    @assert x.head == :escape
+    @assert x.head in (:escape,:tuple)
     args = Any[]
     for t in x.args
         if isa(t, Symbol)
