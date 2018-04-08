@@ -899,10 +899,9 @@ function constructvariable!(m::Model, _error::Function, haslb::Bool, lowerbound:
     if integer
         setinteger(v)
     end
-    # TODO: MOIU.Model does not support VariablePrimalStart
-    #if hasstart
-    #    setstartvalue(v, start)
-    #end
+    if hasstart
+        setstartvalue(v, start)
+    end
     if name != EMPTYSTRING
         setname(v, name)
     end
