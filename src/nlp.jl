@@ -171,9 +171,7 @@ mutable struct NLPEvaluator <: MOI.AbstractNLPEvaluator
     output_ϵ::Vector{Float64}# (number of variables)
     subexpression_forward_values_ϵ::Vector{Float64} # (number of subexpressions)
     subexpression_reverse_values_ϵ::Vector{Float64} # (number of subexpressions)
-    # hessian sparsity pattern
-    hess_I::Vector{Int}
-    hess_J::Vector{Int}
+    hessian_sparsity::Vector{Tuple{Int64,Int64}}
     max_chunk::Int # chunk size for which we've allocated storage
     # timers
     eval_objective_timer::Float64
@@ -393,7 +391,7 @@ function MOI.initialize!(d::NLPEvaluator, requested_features::Vector{Symbol})
         end
         d.max_chunk = max_chunk
         if d.want_hess
-            d.hess_I, d.hess_J = _hessian_lagrangian_structure(d)
+            d.hessian_sparsity = _hessian_lagrangian_structure(d)
             # JIT warm-up
             # TODO: rewrite without MPB
             #MathProgBase.eval_hessian_lagrangian(d, Array{Float64}(length(d.hess_I)), d.m.colVal, 1.0, ones(MathProgBase.numconstr(d.m)))
@@ -800,35 +798,32 @@ function hessian_slice(d, ex, x, H, scale, nzcount, recovery_tmp_storage,::Type{
 end
 
 function MOI.jacobian_structure(d::NLPEvaluator)
-    jac_I = Int[]
-    jac_J = Int[]
+    jacobian_sparsity = Tuple{Int64,Int64}[]
     for row in 1:length(d.constraints)
         row_sparsity = d.constraints[row].grad_sparsity
         for idx in row_sparsity
-            push!(jac_I, row)
-            push!(jac_J, idx)
+            push!(jacobian_sparsity, (row, idx))
         end
     end
-    return jac_I, jac_J
+    return jacobian_sparsity
 end
 function MOI.hessian_lagrangian_structure(d::NLPEvaluator)
     d.want_hess || error("Hessian computations were not requested on the call to initialize!.")
-    return d.hess_I,d.hess_J
+    return d.hessian_sparsity
 end
 function _hessian_lagrangian_structure(d::NLPEvaluator)
-    hess_I = Int[]
-    hess_J = Int[]
-
+    hessian_sparsity = Tuple{Int64,Int64}[]
     if d.has_nlobj
-        append!(hess_I, d.objective.hess_I)
-        append!(hess_J, d.objective.hess_J)
+        for idx in 1:length(d.objective.hess_I)
+            push!(hessian_sparsity, (d.objective.hess_I[idx], d.objective.hess_J[idx]))
+        end
     end
     for ex in d.constraints
-        append!(hess_I, ex.hess_I)
-        append!(hess_J, ex.hess_J)
+        for idx in 1:length(ex.hess_I)
+            push!(hessian_sparsity, (ex.hess_I[idx], ex.hess_J[idx]))
+        end
     end
-
-    return hess_I, hess_J
+    return hessian_sparsity
 end
 
 mutable struct VariablePrintWrapper
