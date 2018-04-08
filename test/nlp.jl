@@ -124,7 +124,9 @@
 
     # Converts the lower-triangular sparse Hessian in MOI format into a dense
     # matrix.
-    function dense_hessian(I, J, V, n)
+    function dense_hessian(hessian_sparsity, V, n)
+        I = [i for (i,j) in hessian_sparsity]
+        J = [j for (i,j) in hessian_sparsity]
         raw = sparse(I, J, V, n, n)
         return full(raw + raw' - sparse(diagm(diag(raw))))
     end
@@ -140,26 +142,26 @@
         @NLobjective(m, Min, foo)
         d = JuMP.NLPEvaluator(m)
         MOI.initialize!(d, [:Hess])
-        I,J = MOI.hessian_lagrangian_structure(d)
-        V = zeros(length(I))
+        hessian_sparsity = MOI.hessian_lagrangian_structure(d)
+        V = zeros(length(hessian_sparsity))
         values = [1.0, 2.0, 3.0] # Values for a, b, and c, respectively.
         MOI.eval_hessian_lagrangian(d, V, values, 1.0, Float64[])
-        @test isapprox(dense_hessian(I, J, V, 3), [0.0 1.0 0.0; 1.0 0.0 0.0; 0.0 0.0 2.0])
+        @test isapprox(dense_hessian(hessian_sparsity, V, 3), [0.0 1.0 0.0; 1.0 0.0 0.0; 0.0 0.0 2.0])
 
         # make sure we don't get NaNs in this case
         @NLobjective(m, Min, a * b + 3*c^2)
         d = JuMP.NLPEvaluator(m)
         MOI.initialize!(d, [:Hess])
         values = [1.0, 2.0, -1.0]
-        V = zeros(length(I))
+        V = zeros(length(hessian_sparsity))
         MOI.eval_hessian_lagrangian(d, V, values, 1.0, Float64[])
-        @test isapprox(dense_hessian(I, J, V, 3), [0.0 1.0 0.0; 1.0 0.0 0.0; 0.0 0.0 6.0])
+        @test isapprox(dense_hessian(hessian_sparsity, V, 3), [0.0 1.0 0.0; 1.0 0.0 0.0; 0.0 0.0 6.0])
 
         # Initialize again
         MOI.initialize!(d, [:Hess])
-        V = zeros(length(I))
+        V = zeros(length(hessian_sparsity))
         MOI.eval_hessian_lagrangian(d, V, values, 1.0, Float64[])
-        @test isapprox(dense_hessian(I, J, V, 3), [0.0 1.0 0.0; 1.0 0.0 0.0; 0.0 0.0 6.0])
+        @test isapprox(dense_hessian(hessian_sparsity, V, 3), [0.0 1.0 0.0; 1.0 0.0 0.0; 0.0 0.0 6.0])
     end
 
     @testset "NaN corner case (Issue #695)" begin
@@ -189,11 +191,11 @@
 
         d = JuMP.NLPEvaluator(m)
         MOI.initialize!(d, [:Hess])
-        I,J = MOI.hessian_lagrangian_structure(d)
-        V = zeros(length(I))
+        hessian_sparsity = MOI.hessian_lagrangian_structure(d)
+        V = zeros(length(hessian_sparsity))
         values = zeros(1)
         MOI.eval_hessian_lagrangian(d, V, values, 1.0, Float64[])
-        @test isapprox(dense_hessian(I, J, V, 1), [0.0])
+        @test isapprox(dense_hessian(hessian_sparsity, V, 1), [0.0])
     end
 
     @testset "NaN corner case - ifelse (Issue #1205)" begin
@@ -204,11 +206,11 @@
 
         d = JuMP.NLPEvaluator(m)
         MOI.initialize!(d, [:Hess])
-        I,J = MOI.hessian_lagrangian_structure(d)
-        V = zeros(length(I))
+        hessian_sparsity = MOI.hessian_lagrangian_structure(d)
+        V = zeros(length(hessian_sparsity))
         values = zeros(1)
         MOI.eval_hessian_lagrangian(d, V, values, 1.0, Float64[])
-        @test isapprox(dense_hessian(I, J, V, 1), [0.0])
+        @test isapprox(dense_hessian(hessian_sparsity, V, 1), [0.0])
     end
 
     @testset "Hessians and Hess-vec" begin
@@ -224,11 +226,11 @@
         MOI.initialize!(d, [:HessVec, :Hess])
 
         values = [1.0, 2.0, 3.0] # For a, b, c.
-        I,J = MOI.hessian_lagrangian_structure(d)
-        V = zeros(length(I))
+        hessian_sparsity = MOI.hessian_lagrangian_structure(d)
+        V = zeros(length(hessian_sparsity))
         MOI.eval_hessian_lagrangian(d, V, values, 1.0, [2.0, 3.0])
         correct_hessian = [3.0 1.0 0.0; 1.0 0.0 2.0; 0.0 2.0 2.0]
-        @test isapprox(dense_hessian(I, J, V, 3), correct_hessian)
+        @test isapprox(dense_hessian(hessian_sparsity, V, 3), correct_hessian)
 
         h = ones(3) # The input values should be overwritten.
         v = [2.4,3.5,1.2]
@@ -250,11 +252,11 @@
         MOI.initialize!(d, [:HessVec, :Hess])
 
         values = [1.0, 2.0, 3.0] # For a, b, c.
-        I,J = MOI.hessian_lagrangian_structure(d)
-        V = zeros(length(I))
+        hessian_sparsity = MOI.hessian_lagrangian_structure(d)
+        V = zeros(length(hessian_sparsity))
         MOI.eval_hessian_lagrangian(d, V, values, 1.0, [2.0, 3.0])
         correct_hessian = [3.0 1.0 0.0; 1.0 0.0 2.0; 0.0 2.0 2.0]
-        @test isapprox(dense_hessian(I, J, V, 3), correct_hessian)
+        @test isapprox(dense_hessian(hessian_sparsity, V, 3), correct_hessian)
 
         h = ones(3) # The input values should be overwritten.
         v = [2.4,3.5,1.2]
@@ -338,15 +340,15 @@
 
         d = JuMP.NLPEvaluator(m)
         MOI.initialize!(d, [:Hess])
-        I,J = MOI.hessian_lagrangian_structure(d)
-        V = zeros(length(I))
+        hessian_sparsity = MOI.hessian_lagrangian_structure(d)
+        V = zeros(length(hessian_sparsity))
         values = ones(18)
         MOI.eval_hessian_lagrangian(d, V, values, 1.0, Float64[])
-        @test isapprox(dense_hessian(I, J, V, 18), ones(18,18)-diagm(ones(18)))
+        @test isapprox(dense_hessian(hessian_sparsity, V, 18), ones(18,18)-diagm(ones(18)))
 
         values[1] = 0.5
         MOI.eval_hessian_lagrangian(d, V, values, 1.0, Float64[])
-        @test isapprox(dense_hessian(I, J, V, 18),
+        @test isapprox(dense_hessian(hessian_sparsity, V, 18),
                        [0 ones(17)'
                         ones(17)  (ones(17,17) - diagm(ones(17)))/2 ])
     end
@@ -390,7 +392,9 @@
         constraint_value = zeros(1)
         MOI.eval_constraint(d, constraint_value, variable_values)
         @test isapprox(constraint_value[1], variable_values[1] + 1 + variable_values[3] + 3variable_values[4])
-        I,J = MOI.jacobian_structure(d)
+        jacobian_sparsity = MOI.jacobian_structure(d)
+        I = [i for (i,j) in jacobian_sparsity]
+        J = [j for (i,j) in jacobian_sparsity]
         @test all(I .== 1)
         jac_nonzeros = zeros(length(J))
         MOI.eval_constraint_jacobian(d, jac_nonzeros, variable_values)
