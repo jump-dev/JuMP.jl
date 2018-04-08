@@ -32,6 +32,12 @@ end
 
 function optimize(m::Model;
                 ignore_optimize_hook=(m.optimizehook===nothing))
+    # The NLPData is not kept in sync, so re-set it here.
+    # TODO: Consider how to handle incremental solves.
+    if m.nlpdata !== nothing
+        MOI.set!(m, MOI.NLPBlock(), create_nlp_block_data(m))
+    end
+
     # If the user or an extension has provided an optimize hook, call
     # that instead of solving the model ourselves
     if !ignore_optimize_hook
