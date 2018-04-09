@@ -39,7 +39,7 @@ Our documentation includes an installation guide, quick-start guide, and referen
 
 **Read about the upcoming transition to MathOptInterface and breaking changes in JuMP 0.19 [here](https://discourse.julialang.org/t/mathoptinterface-and-upcoming-breaking-changes-in-jump-0-19).**
 
-**Latest Release**: 0.18.0 (via ``Pkg.add``)
+**Latest Release**: 0.18.1 (via ``Pkg.add``)
   * [Documentation](http://www.juliaopt.org/JuMP.jl/0.18/)
   * [Examples](https://github.com/JuliaOpt/JuMP.jl/tree/release-0.18/examples)
 >>>>>>> 4feabb4... prep for 0.18.0
