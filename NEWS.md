@@ -1,6 +1,13 @@
 JuMP release notes
 ==================
 
+Version 0.18.1 (April 9, 2018)
+------------------------------
+
+   * Fix for nested tuple destructuring (#1193)
+   * Preserve internal model when relaxation=true (#1209)
+   * Minor bug fixes and updates for example
+
 Version 0.18.0 (July 27, 2017)
 ------------------------------
 
