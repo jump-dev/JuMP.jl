@@ -211,17 +211,19 @@ function model_str(mode, m::Model, sym::PrintSymbols)
     in_dictlist = falses(m.numCols)
     for d in m.dictList
         # make sure that you haven't changed a variable type in the collection
-        firstval = first(_values(d))
-        cat = getcategory(firstval)
-        lb, ub = getlowerbound(firstval), getupperbound(firstval)
         allsame = true
-        for v in _values(d)
-            if !(getcategory(v) == cat && getlowerbound(v) == lb && getupperbound(v) == ub)
-                allsame = false
-                break
-            elseif v in m.customNames
-                allsame = false
-                break
+        if !isempty(d)
+            firstval = first(_values(d))
+            cat = getcategory(firstval)
+            lb, ub = getlowerbound(firstval), getupperbound(firstval)
+            for v in _values(d)
+                if !(getcategory(v) == cat && getlowerbound(v) == lb && getupperbound(v) == ub)
+                    allsame = false
+                    break
+                elseif v in m.customNames
+                    allsame = false
+                    break
+                end
             end
         end
         if allsame
