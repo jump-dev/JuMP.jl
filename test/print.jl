@@ -177,12 +177,19 @@ end
         #------------------------------------------------------------------
         # Tests for particular issues
         @testset "Empty JuMPContainer printing (#124)" begin
+        m = Model()
         @variable(m, empty_free[1:0])
         io_test(REPLMode, empty_free, "Empty Array{Variable} (no indices)")
         io_test(IJuliaMode, empty_free, "Empty Array{Variable} (no indices)")
         @variable(m, empty_set[[]])
         io_test(REPLMode, empty_set, "empty_set (no indices)")
         io_test(IJuliaMode, empty_set, "empty_set (no indices)")
+        @variable(m, empty_dic[i=1:2;i>3])
+        io_test(REPLMode, empty_dic, "empty_dic (no indices)")
+        io_test(IJuliaMode, empty_dic, "empty_dic (no indices)")
+        io_test(REPLMode, m, "Feasibility problem with:\n * 0 linear constraints\n * 0 variables\nSolver is default solver", repl=:show)
+        io_test(REPLMode, m, "Min 0\nSubject to\n Empty Array{Variable} (no indices)\n empty_set (no indices)\n empty_dic (no indices)\n", repl=:print)
+        io_test(IJuliaMode, m, "\\begin{alignat*}{1}\\min\\quad & 0\\\\\n\\text{Subject to} \\quad & Empty Array{Variable} (no indices)\\\\\n & empty_set (no indices)\\\\\n & empty_dic (no indices)\\\\\n\\end{alignat*}\n")
         end
     end
 
