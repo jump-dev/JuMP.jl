@@ -233,36 +233,88 @@ function assert_validmodel(m, macrocode)
     end
 end
 
-function _canonicalize_sense(sns::Symbol)
-    if sns == :(==)
-        return (:(==),false)
-    elseif sns == :(>=) || sns == :(≥)
-        return (:(>=),false)
-    elseif sns == :(<=) || sns == :(≤)
-        return (:(<=),false)
-    elseif sns == :(.==)
-        return (:(==),true)
-    elseif sns == :(.>=) || sns == :(.≥)
-        return (:(>=),true)
-    elseif sns == :(.<=) || sns == :(.≤)
-        return (:(<=),true)
+function _check_vectorized(sense::Symbol)
+    sense_str = string(sense)
+    if sense_str[1] == '.'
+        Symbol(sense_str[2:end]), true
     else
-        error("Unrecognized sense $sns")
+        sense, false
     end
 end
 
 # two-argument constructconstraint! is used for one-sided constraints.
 # Right-hand side is zero.
-function sense_to_set(sense::Symbol)
-    if sense == :(<=)
-        return MOI.LessThan(0.0)
-    elseif sense == :(>=)
-        return MOI.GreaterThan(0.0)
+sense_to_set(_error::Function, ::Union{Val{:(<=)}, Val{:(≤)}}) = MOI.LessThan(0.0)
+sense_to_set(_error::Function, ::Union{Val{:(>=)}, Val{:(≥)}}) = MOI.GreaterThan(0.0)
+sense_to_set(_error::Function, ::Val{:(==)}) = MOI.EqualTo(0.0)
+sense_to_set(_error::Function, ::Val{S}) where S = _error("Unrecognized sense $S")
+
+function parsebinaryconstraint(_error::Function, vectorized::Bool, ::Val{:in}, aff, set)
+    newaff, parseaff = parseExprToplevel(aff, :q)
+    parsecode = :(q = Val{false}(); $parseaff)
+    if vectorized
+        constructcall = :(constructconstraint!.($_error, $newaff, $(esc(set))))
     else
-        @assert sense == :(==)
-        return MOI.EqualTo(0.0)
+        constructcall = :(constructconstraint!($_error, $newaff, $(esc(set))))
     end
+    parsecode, constructcall
 end
+
+function parsebinaryconstraint(_error::Function, vectorized::Bool, sense::Val, lhs, rhs)
+    # Simple comparison - move everything to the LHS
+    aff = :($lhs - $rhs)
+    set = sense_to_set(_error, sense)
+    parsebinaryconstraint(_error, vectorized, Val(:in), aff, set)
+end
+
+function parseconstraint(_error::Function, sense::Symbol, lhs, rhs)
+    (sense, vectorized) = _check_vectorized(sense)
+    vectorized, parsebinaryconstraint(_error, vectorized, Val(sense), lhs, rhs)...
+end
+
+function parseternaryconstraint(_error::Function, vectorized::Bool, lb, ::Union{Val{:(<=)}, Val{:(≤)}}, aff, rsign::Union{Val{:(<=)}, Val{:(≤)}}, ub)
+    newaff, parseaff = parseExprToplevel(aff, :aff)
+    newlb, parselb = parseExprToplevel(lb, :lb)
+    newub, parseub = parseExprToplevel(ub, :ub)
+    if vectorized
+        constructcall = :(constructconstraint!.($_error, $newaff, $newlb, $newub))
+    else
+        constructcall = :(constructconstraint!($_error, $newaff, $newlb, $newub))
+    end
+    parseaff, parselb, parseub, constructcall
+end
+
+function parseternaryconstraint(_error::Function, vectorized::Bool, ub, ::Union{Val{:(>=)}, Val{:(≥)}}, aff, rsign::Union{Val{:(>=)}, Val{:(≥)}}, lb)
+    parseternaryconstraint(_error, vectorized, lb, Val(:(<=)), aff, Val(:(<=)), ub)
+end
+
+function parseternaryconstraint(_error::Function, args...)
+    _error("Only two-sided rows of the form lb <= expr <= ub or ub >= expr >= lb are supported.")
+end
+
+function parseconstraint(_error::Function, lb, lsign::Symbol, aff, rsign::Symbol, ub)
+    (lsign, lvectorized) = _check_vectorized(lsign)
+    (rsign, rvectorized) = _check_vectorized(rsign)
+    ((vectorized = lvectorized) == rvectorized) || _error("Signs are inconsistently vectorized")
+    parseaff, parselb, parseub, constructcall = parseternaryconstraint(_error, vectorized, lb, Val(lsign), aff, Val(rsign), ub)
+    parsecode = quote
+        aff = Val{false}()
+        $parseaff
+        lb = 0.0
+        $parselb
+        ub = 0.0
+        $parseub
+    end
+    vectorized, parsecode, constructcall
+end
+
+function parseconstraint(args...)
+    # Unknown
+    constraint_error(args, string("Constraints must be in one of the following forms:\n" *
+          "       expr1 <= expr2\n" * "       expr1 >= expr2\n" *
+          "       expr1 == expr2\n" * "       lb <= expr <= ub"))
+end
+
 const ScalarPolyhedralSets = Union{MOI.LessThan,MOI.GreaterThan,MOI.EqualTo,MOI.Interval}
 
 constructconstraint!(_error::Function, v::Variable, set::MOI.AbstractScalarSet) = SingleVariableConstraint(v, set)
@@ -383,63 +435,7 @@ macro constraint(args...)
     # will likely mean that bar will be some custom type, rather than e.g. a
     # Symbol, since we will likely want to dispatch on the type of the set
     # appearing in the constraint.
-    if isexpr(x, :call)
-        if x.args[1] == :in
-            @assert length(x.args) == 3
-            newaff, parsecode = parseExprToplevel(x.args[2], :q)
-            vectorized = false
-            constructcall = :(constructconstraint!($_error,$newaff,$(esc(x.args[3]))))
-        else
-            # Simple comparison - move everything to the LHS
-            @assert length(x.args) == 3
-            (sense,vectorized) = _canonicalize_sense(x.args[1])
-            set = sense_to_set(sense)
-            lhs = :($(x.args[2]) - $(x.args[3]))
-            newaff, parsecode = parseExprToplevel(lhs, :q)
-            # `set` is an MOI.AbstractScalarSet, if `newaff` is not scalar, vectorized should be true.
-            # Otherwise, `constructconstraint!($_error,::AbstractArray, ::MOI.AbstractScalarSet)` throws an helpful error
-            if vectorized
-                constructcall = :(constructconstraint!.($_error,$newaff,$set))
-            else
-                constructcall = :(constructconstraint!($_error,$newaff,$set))
-            end
-        end
-        code = quote
-            q = Val{false}()
-            $parsecode
-        end
-    elseif isexpr(x, :comparison)
-        # Ranged row
-        (lsign,lvectorized) = _canonicalize_sense(x.args[2])
-        (rsign,rvectorized) = _canonicalize_sense(x.args[4])
-        if (lsign != :(<=)) || (rsign != :(<=))
-            _error("Only two-sided rows of the form lb <= expr <= ub are supported.")
-        end
-        ((vectorized = lvectorized) == rvectorized) || _error("Signs are inconsistently vectorized")
-        newaff, parsecode = parseExprToplevel(x.args[3],:aff)
-
-        newlb, parselb = parseExprToplevel(x.args[1],:lb)
-        newub, parseub = parseExprToplevel(x.args[5],:ub)
-
-        if vectorized
-            constructcall = :(constructconstraint!.($_error,$newaff,$newlb,$newub))
-        else
-            constructcall = :(constructconstraint!($_error,$newaff,$newlb,$newub))
-        end
-        code = quote
-            aff = Val{false}()
-            $parsecode
-            lb = 0.0
-            $parselb
-            ub = 0.0
-            $parseub
-        end
-    else
-        # Unknown
-        _error(string("Constraints must be in one of the following forms:\n" *
-              "       expr1 <= expr2\n" * "       expr1 >= expr2\n" *
-              "       expr1 == expr2\n" * "       lb <= expr <= ub"))
-    end
+    vectorized, parsecode, constructcall = parseconstraint(_error, x.args...)
     if vectorized
         # TODO: Pass through names here.
         constraintcall = :(addconstraint.($m, $constructcall))
@@ -448,7 +444,7 @@ macro constraint(args...)
     end
     addkwargs!(constraintcall, kwargs)
     code = quote
-        $code
+        $parsecode
         $(refcall) = $constraintcall
     end
     return assert_validmodel(m, quote
@@ -485,25 +481,23 @@ macro SDconstraint(m, x)
     # Build the constraint
     # Simple comparison - move everything to the LHS
     sense = x.args[1]
-    if sense == :⪰
+    if sense == :⪰ || sense == :(≥)
         sense = :(>=)
-    elseif sense == :⪯
+    elseif sense == :⪯ || sense == :(≤)
         sense = :(<=)
     end
-    sense,_ = _canonicalize_sense(sense)
-    lhs = :()
+    aff = :()
     if sense == :(>=)
-        lhs = :($(x.args[2]) - $(x.args[3]))
+        aff = :($(x.args[2]) - $(x.args[3]))
     elseif sense == :(<=)
-        lhs = :($(x.args[3]) - $(x.args[2]))
+        aff = :($(x.args[3]) - $(x.args[2]))
     else
         _error("Invalid sense $sense in SDP constraint")
     end
-    newaff, parsecode = parseExprToplevel(lhs, :q)
+    parsecode, constructcall = parsebinaryconstraint(_error, false, Val(:in), aff, :(PSDCone()))
     assert_validmodel(m, quote
-        q = Val{false}()
         $parsecode
-        addconstraint($m, constructconstraint!($_error, $newaff, PSDCone()))
+        addconstraint($m, $constructcall)
     end)
 end
 

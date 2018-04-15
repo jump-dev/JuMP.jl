@@ -102,9 +102,13 @@ end
         @test c.func == x
         @test c.set == MOI.Interval(-1.0, 1.0)
 
+        cref = @constraint(m, 1 >= x >= 0)
+        c = JuMP.constraintobject(cref, Variable, MOI.Interval)
+        @test c.func == x
+        @test c.set == MOI.Interval(0.0, 1.0)
+
         @test_throws ErrorException @constraint(m, x <= t <= y)
         @test_throws ErrorException @constraint(m, 0 <= nothing <= 1)
-        @test macroexpand(:(@constraint(m, 1 >= x >= 0))).head == :error
         @test macroexpand(:(@constraint(1 <= x <= 2, foo=:bar))).head == :error
 
         @test JuMP.isequal_canonical(@expression(m, 3x - y - 3.3(w + 2z) + 5), 3*x - y - 3.3*w - 6.6*z + 5)
