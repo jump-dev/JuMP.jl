@@ -74,7 +74,7 @@ function isequal_canonical(quad::GenericQuadExpr{CoefType,VarType}, other::Gener
     end
     d1 = canonicalize(quad)
     d2 = canonicalize(other)
-    return isequal(d1,d1) && isequal_canonical(quad.aff, other.aff)
+    return isequal(d1,d2) && isequal_canonical(quad.aff, other.aff)
 end
 
 # Alias for (Float64, Variable)
@@ -88,7 +88,8 @@ function MOI.ScalarQuadraticFunction(q::QuadExpr)
 end
 
 function QuadExpr(m::Model, f::MOI.ScalarQuadraticFunction)
-    return QuadExpr(Variable.(m,f.quadratic_rowvariables), Variable.(m, f.quadratic_colvariables), f.quadratic_coefficients, AffExpr(Variable.(m,f.affine_variables), f.affine_coefficients, f.constant))
+    scaledcoef = [(v1 == v2) ? coef/2 : coef for (v1, v2, coef) in zip(f.quadratic_rowvariables, f.quadratic_colvariables, f.quadratic_coefficients)]
+    return QuadExpr(Variable.(m,f.quadratic_rowvariables), Variable.(m, f.quadratic_colvariables), scaledcoef, AffExpr(Variable.(m,f.affine_variables), f.affine_coefficients, f.constant))
 end
 
 function setobjective(m::Model, sense::Symbol, a::QuadExpr)
