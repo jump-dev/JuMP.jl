@@ -116,21 +116,6 @@ end
     end
 
 
-    @testset "Quad con solve through NL pathway" for nlp_solver in convex_nlp_solvers
-        # Solve a problem with linear objective with quadratic
-        # constraints, but force it to use the nonlinear code.
-        m = Model(solver=nlp_solver)
-        @variable(m, -2 <= x <= 2)
-        @variable(m, -2 <= y <= 2)
-        @NLobjective(m, Min, x - y)
-        @constraint(m, x + x^2 + x*y + y^2 <= 1)
-        status = solve(m)
-
-        @test status == :Optimal
-        @test isapprox(getobjectivevalue(m), -1-4/sqrt(3), atol=1e-6)
-        @test isapprox(getvalue(x) + getvalue(y), -1/3, atol=1e-3)
-    end
-
     @testset "Resolve with parameter with $nlp_solver (simplify = $simplify)" for nlp_solver in convex_nlp_solvers, simplify in [true,false]
         m = Model(solver=nlp_solver, simplify_nonlinear_expressions=simplify)
         @variable(m, z)
@@ -144,17 +129,6 @@ end
         status = solve(m)
         @test status == :Optimal
         @test isapprox(getvalue(z), 5.0, atol=1e-3)
-    end
-
-    @testset "Quadratic equality constraints with $nlp_solver" for nlp_solver in nlp_solvers
-        m = Model(solver=nlp_solver)
-        @variable(m, 0 <= x[1:2] <= 1)
-        @constraint(m, x[1]^2 + x[2]^2 == 1/2)
-        @NLobjective(m, Max, x[1] - x[2])
-        status = solve(m)
-
-        @test status == :Optimal
-        @test isapprox(getvalue(x), [sqrt(1/2), 0], atol=1e-6)
     end
 
     if ipt
