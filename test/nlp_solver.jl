@@ -441,4 +441,48 @@ new_optimizer() = IpoptOptimizer(print_level=0)
         test_result()
         @test JuMP.objectivevalue(m) ≈ 5.8446115 atol=1e-6
     end
+
+    @testset "Quadratic inequality constraints, linear objective" begin
+        m = Model(optimizer=new_optimizer())
+        @variable(m, -2 <= x <= 2)
+        @variable(m, -2 <= y <= 2)
+        @objective(m, Min, x - y)
+        @constraint(m, x + x^2 + x*y + y^2 <= 1)
+        JuMP.optimize(m)
+
+        @test JuMP.hasresultvalues(m)
+        @test JuMP.terminationstatus(m) == MOI.Success
+        @test JuMP.primalstatus(m) == MOI.FeasiblePoint
+        @test JuMP.objectivevalue(m) ≈ -1-4/sqrt(3) atol=1e-6
+        @test JuMP.resultvalue(x) + JuMP.resultvalue(y) ≈ -1/3 atol=1e-3
+    end
+
+    @testset "Quadratic inequality constraints, NL objective" begin
+        m = Model(optimizer=new_optimizer())
+        @variable(m, -2 <= x <= 2)
+        @variable(m, -2 <= y <= 2)
+        @NLobjective(m, Min, x - y)
+        @constraint(m, x + x^2 + x*y + y^2 <= 1)
+        JuMP.optimize(m)
+
+        @test JuMP.hasresultvalues(m)
+        @test JuMP.terminationstatus(m) == MOI.Success
+        @test JuMP.primalstatus(m) == MOI.FeasiblePoint
+        @test JuMP.objectivevalue(m) ≈ -1-4/sqrt(3) atol=1e-6
+        @test JuMP.resultvalue(x) + JuMP.resultvalue(y) ≈ -1/3 atol=1e-3
+    end
+
+    @testset "Quadratic equality constraints" begin
+        m = Model(optimizer=new_optimizer())
+        @variable(m, 0 <= x[1:2] <= 1)
+        @constraint(m, x[1]^2 + x[2]^2 == 1/2)
+        @NLobjective(m, Max, x[1] - x[2])
+        JuMP.optimize(m)
+
+        @test JuMP.hasresultvalues(m)
+        @test JuMP.terminationstatus(m) == MOI.Success
+        @test JuMP.primalstatus(m) == MOI.FeasiblePoint
+        @test JuMP.objectivevalue(m) ≈ sqrt(1/2) atol=1e-6
+        @test JuMP.resultvalue.(x) ≈ [sqrt(1/2), 0] atol=1e-6
+    end
 end
