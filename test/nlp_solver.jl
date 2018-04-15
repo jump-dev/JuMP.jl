@@ -22,19 +22,65 @@
 # separately from the solver, as it is for everything except NLP.
 
 using Ipopt, JuMP, Base.Test
+using MathOptInterface
+const MOI = MathOptInterface
 
 new_optimizer() = IpoptOptimizer(print_level=0)
-function new_model(direct)
-    if direct
-        return Model(backend=new_optimizer(), mode=JuMP.Direct)
-    else
-        return Model(optimizer=new_optimizer())
+
+@testset "NLP solver tests" begin
+
+    @testset "HS071" begin
+        # hs071
+        # Polynomial objective and constraints
+        # min x1 * x4 * (x1 + x2 + x3) + x3
+        # st  x1 * x2 * x3 * x4 >= 25
+        #     x1^2 + x2^2 + x3^2 + x4^2 = 40
+        #     1 <= x1, x2, x3, x4 <= 5
+        # Start at (1,5,5,1)
+        # End at (1.000..., 4.743..., 3.821..., 1.379...)
+        m = Model(optimizer=new_optimizer())
+        initval = [1,5,5,1]
+        @variable(m, 1 <= x[i=1:4] <= 5, start=initval[i])
+        @NLobjective(m, Min, x[1]*x[4]*(x[1]+x[2]+x[3]) + x[3])
+        @NLconstraint(m, x[1]*x[2]*x[3]*x[4] >= 25)
+        @NLconstraint(m, sum(x[i]^2 for i=1:4) == 40)
+
+        JuMP.optimize(m)
+
+        @test JuMP.hasresultvalues(m)
+        @test JuMP.terminationstatus(m) == MOI.Success
+        @test JuMP.primalstatus(m) == MOI.FeasiblePoint
+
+        @test JuMP.resultvalue.(x) ≈ [1.000000, 4.742999, 3.821150, 1.379408] atol=1e-3
     end
-end
 
-@testset "Hock-Schittkowski NLP tests" begin
+    @testset "HS071 (no macros)" begin
+        # hs071
+        # Polynomial objective and constraints
+        # min x1 * x4 * (x1 + x2 + x3) + x3
+        # st  x1 * x2 * x3 * x4 >= 25
+        #     x1^2 + x2^2 + x3^2 + x4^2 = 40
+        #     1 <= x1, x2, x3, x4 <= 5
+        # Start at (1,5,5,1)
+        # End at (1.000..., 4.743..., 3.821..., 1.379...)
+        m = Model(optimizer=new_optimizer())
+        initval = [1,5,5,1]
+        @variable(m, 1 <= x[i=1:4] <= 5, start=initval[i])
+        JuMP.setNLobjective(m, :Min, :($(x[1])*$(x[4])*($(x[1])+$(x[2])+$(x[3])) + $(x[3])))
+        JuMP.addNLconstraint(m, :($(x[1])*$(x[2])*$(x[3])*$(x[4]) >= 25))
+        JuMP.addNLconstraint(m, :($(x[1])^2+$(x[2])^2+$(x[3])^2+$(x[4])^2 == 40))
+        @test_throws ErrorException JuMP.addNLconstraint(m, :(x[1]^2+x[2]^2+x[3]^2+x[4]^2 == 40))
 
-    @testset "HS109 - direct=$direct" for direct in (true, false)
+        JuMP.optimize(m)
+
+        @test JuMP.hasresultvalues(m)
+        @test JuMP.terminationstatus(m) == MOI.Success
+        @test JuMP.primalstatus(m) == MOI.FeasiblePoint
+
+        @test JuMP.resultvalue.(x) ≈ [1.000000, 4.742999, 3.821150, 1.379408] atol=1e-3
+    end
+
+    @testset "HS109" begin
         a  = 50.176
         b1 = 0.25
         b = sin(b1)
@@ -43,7 +89,7 @@ end
         L = [0.0, 0.0, -0.55, -0.55, 196, 196, 196, -400, -400]
         U = [Inf, Inf,  0.55,  0.55, 252, 252, 252,  800,  800]
 
-        m = new_model(direct)
+        m = Model(optimizer=new_optimizer())
         @variable(m, L[i] <= x[i=1:9] <= U[i], start = 0.0)
 
         @NLobjective(m, Min, 3 * x[1] + 1e-6 * x[1]^3 + 2 * x[2] + .522074e-6 * x[2]^3)
@@ -75,11 +121,15 @@ end
 
         JuMP.optimize(m)
 
+        @test JuMP.hasresultvalues(m)
+        @test JuMP.terminationstatus(m) == MOI.Success
+        @test JuMP.primalstatus(m) == MOI.FeasiblePoint
+
         @test JuMP.objectivevalue(m) ≈ 5326.851310161077 atol=1e-5
     end
 
-    @testset "HS110 - direct=$direct" for direct in (true, false)
-        m = new_model(direct)
+    @testset "HS110" begin
+        m = Model(optimizer=new_optimizer())
         @variable(m, -2.001 <= x[1:10] <= 9.999, start = 9)
 
         @NLobjective(m, Min,
@@ -89,13 +139,18 @@ end
 
         JuMP.optimize(m)
 
+        @test JuMP.hasresultvalues(m)
+        # Ipopt returns AlmostSuccess and NearlyFeasiblePoint on this instance.
+        # @test JuMP.terminationstatus(m) == MOI.Success
+        # @test JuMP.primalstatus(m) == MOI.FeasiblePoint
+
         @test JuMP.objectivevalue(m) ≈ -45.77846971 atol=1e-5
     end
 
-    @testset "HS111 - direct=$direct" for direct in (true, false)
+    @testset "HS111" begin
         c = [-6.089, -17.164, -34.054, -5.914, -24.721, -14.986, -24.100, -10.708, -26.662, -22.179]
 
-        m = new_model(direct)
+        m = Model(optimizer=new_optimizer())
         @variable(m, -100 <= x[1:10] <= 100, start = -2.3)
 
         @NLobjective(m, Min,
@@ -107,13 +162,17 @@ end
 
         JuMP.optimize(m)
 
+        @test JuMP.hasresultvalues(m)
+        @test JuMP.terminationstatus(m) == MOI.Success
+        @test JuMP.primalstatus(m) == MOI.FeasiblePoint
+
         @test JuMP.objectivevalue(m) ≈ -47.76109026 atol=1e-5
     end
 
-    @testset "HS112 - direct=$direct" for direct in (true, false)
+    @testset "HS112" begin
         c = [-6.089, -17.164, -34.054, -5.914, -24.721, -14.986, -24.100, -10.708, -26.662, -22.179]
 
-        m = new_model(direct)
+        m = Model(optimizer=new_optimizer())
         @variable(m, x[1:10] >= 1e-6, start = 0.1)
 
         @NLobjective(m, Min, sum(x[j]*(c[j] + log(x[j]/sum(x[k] for k=1:10))) for j=1:10))
@@ -124,10 +183,14 @@ end
 
         JuMP.optimize(m)
 
+        @test JuMP.hasresultvalues(m)
+        @test JuMP.terminationstatus(m) == MOI.Success
+        @test JuMP.primalstatus(m) == MOI.FeasiblePoint
+
         @test JuMP.objectivevalue(m) ≈ -47.76109026 atol=1e-5
     end
 
-    @testset "HS114 - direct=$direct" for direct in (true, false)
+    @testset "HS114" begin
         n = 10
         a = 0.99
         b = 0.9
@@ -136,7 +199,7 @@ end
         upper = [2000, 16000, 120, 5000, 2000, 93, 95, 12, 4, 162]
         start = [1745, 12000, 110, 3048, 1974, 89.2, 92.8, 8, 3.6, 145]
 
-        m = new_model(direct)
+        m = Model(optimizer=new_optimizer())
         @variable(m, lower[i] <= x[i=1:n] <= upper[i], start = start[i])
 
         @NLobjective(m, Min, 5.04*x[1] + .035*x[2] + 10*x[3] + 3.36*x[5] - .063*x[4]*x[7])
@@ -155,10 +218,14 @@ end
 
         JuMP.optimize(m)
 
+        @test JuMP.hasresultvalues(m)
+        @test JuMP.terminationstatus(m) == MOI.Success
+        @test JuMP.primalstatus(m) == MOI.FeasiblePoint
+
         @test JuMP.objectivevalue(m) ≈ -1768.80696 atol=1e-3
     end
 
-    @testset "HS116 - direct=$direct" for direct in (true, false)
+    @testset "HS116" begin
         N = 13
         a = 0.002
         b = 1.262626
@@ -171,7 +238,7 @@ end
         upper = [1.0, 1.0, 1.0, 0.1, 0.9, 0.9, 1000, 1000, 1000, 500, 150, 150, 150, Inf, Inf, Inf]
         start = [0.5  2 0.8  3 0.9  4 0.1  5 0.14  6 0.5  7 489  8 80  9 650 0.5  2 0.8  3 0.9  4 0.1  5 0.14  6 0.5  7 489  8 80  9 650]
 
-        m = new_model(direct)
+        m = Model(optimizer=new_optimizer())
         @variable(m, lower[i] <= x[i=1:N] <= upper[i], start = start[i])
         @NLobjective(m, Min, x[11] + x[12] + x[13])
 
@@ -197,11 +264,16 @@ end
 
         JuMP.optimize(m)
 
+        @test JuMP.hasresultvalues(m)
+        @test JuMP.terminationstatus(m) == MOI.Success
+        @test JuMP.primalstatus(m) == MOI.FeasiblePoint
+
+        # This test occasionally fails, for unknown reasons.
         @test JuMP.objectivevalue(m) ≈ 97.588409 atol=1e-3
     end
 
-    @testset "HS118 - direct=$direct" for direct in (true, false)
-        m = new_model(direct)
+    @testset "HS118" begin
+        m = Model(optimizer=new_optimizer())
 
         L = zeros(15)
         L[1] =  8.0
@@ -260,8 +332,113 @@ end
 
         JuMP.optimize(m)
 
+        @test JuMP.hasresultvalues(m)
+        @test JuMP.terminationstatus(m) == MOI.Success
+        @test JuMP.primalstatus(m) == MOI.FeasiblePoint
+
         @test JuMP.resultvalue.(x[1:4]) ≈ [8.0, 49.0, 3.0, 1.0] atol=1e-4
         @test JuMP.objectivevalue(m) ≈ 664.82045 atol=1e-5
     end
 
+    @testset "Two-sided constraints" begin
+        m = Model(optimizer=new_optimizer())
+        @variable(m, x)
+        @NLobjective(m, Max, x)
+        l = -1
+        u = 1
+        @NLconstraint(m, l <= x <= u)
+        JuMP.optimize(m)
+
+        @test JuMP.hasresultvalues(m)
+        @test JuMP.terminationstatus(m) == MOI.Success
+        @test JuMP.primalstatus(m) == MOI.FeasiblePoint
+        @test JuMP.objectivevalue(m) ≈ u atol=1e-6
+
+        @NLobjective(m, Min, x)
+        JuMP.optimize(m)
+
+        @test JuMP.hasresultvalues(m)
+        @test JuMP.terminationstatus(m) == MOI.Success
+        @test JuMP.primalstatus(m) == MOI.FeasiblePoint
+        @test JuMP.objectivevalue(m) ≈ l atol=1e-6
+    end
+
+    @testset "Two-sided constraints (no macros)" begin
+        m = Model(optimizer=new_optimizer())
+        @variable(m, x)
+        JuMP.setNLobjective(m, :Max, x)
+        l = -1
+        u = 1
+        JuMP.addNLconstraint(m, :($l <= $x <= $u))
+        JuMP.optimize(m)
+
+        @test JuMP.hasresultvalues(m)
+        @test JuMP.terminationstatus(m) == MOI.Success
+        @test JuMP.primalstatus(m) == MOI.FeasiblePoint
+        @test JuMP.objectivevalue(m) ≈ u atol=1e-6
+
+        JuMP.setNLobjective(m, :Min, x)
+        JuMP.optimize(m)
+
+        @test JuMP.hasresultvalues(m)
+        @test JuMP.terminationstatus(m) == MOI.Success
+        @test JuMP.primalstatus(m) == MOI.FeasiblePoint
+        @test JuMP.objectivevalue(m) ≈ l atol=1e-6
+    end
+
+    @testset "Duals" begin
+        m = Model(optimizer=new_optimizer())
+        @variable(m, x >= 0)
+        @variable(m, y <= 5)
+        @variable(m, 2 <= z <= 4)
+        @variable(m, 0 <= r[i=3:6] <= i)
+        @NLobjective(m, Min, -((x + y)/2.0 + 3.0)/3.0 - z - r[3])
+        @constraint(m, cons1, x+y >= 2)
+        @constraint(m, cons2, sum(r[i] for i=3:5) <= (2 - x)/2.0)
+        @NLconstraint(m, cons3, 7.0*y <= z + r[6]/1.9)
+
+        function test_result()
+            @test JuMP.hasresultvalues(m)
+            @test JuMP.terminationstatus(m) == MOI.Success
+            @test JuMP.primalstatus(m) == MOI.FeasiblePoint
+
+
+            @test JuMP.resultvalue(x) ≈ 0.9774436 atol=1e-6
+            @test JuMP.resultvalue(y) ≈ 1.0225563 atol=1e-6
+            @test JuMP.resultvalue(z) ≈ 4.0 atol=1e-6
+            @test JuMP.resultvalue(r[3]) ≈ 0.5112781 atol=1e-6
+            @test JuMP.resultvalue(r[4]) ≈ 0.0 atol=1e-6
+            @test JuMP.resultvalue(r[5]) ≈ 0.0 atol=1e-6
+            @test JuMP.resultvalue(r[6]) ≈ 6.0 atol=1e-6
+            @test JuMP.dualstatus(m) == MOI.FeasiblePoint
+            # Reduced costs
+            @test JuMP.resultdual(JuMP.LowerBoundRef(x)) ≈ 0.0 atol=1e-6
+            @test JuMP.resultdual(JuMP.UpperBoundRef(y)) ≈ 0.0 atol=1e-6
+            @test JuMP.resultdual(JuMP.UpperBoundRef(z)) ≈ -1.0714286 atol=1e-6
+            @test JuMP.resultdual(JuMP.LowerBoundRef(r[3])) ≈ 0.0 atol=1e-6
+            @test JuMP.resultdual(JuMP.UpperBoundRef(r[3])) ≈ 0.0 atol=1e-6
+            @test JuMP.resultdual(JuMP.LowerBoundRef(r[4])) ≈ 1.0 atol=1e-6
+            @test JuMP.resultdual(JuMP.UpperBoundRef(r[4])) ≈ 0.0 atol=1e-6
+            @test JuMP.resultdual(JuMP.LowerBoundRef(r[5])) ≈ 1.0 atol=1e-6
+            @test JuMP.resultdual(JuMP.UpperBoundRef(r[5])) ≈ 0.0 atol=1e-6
+            @test JuMP.resultdual(JuMP.UpperBoundRef(r[6])) ≈ -0.03759398 atol=1e-6
+            @test JuMP.resultdual(JuMP.LowerBoundRef(r[6])) ≈ 0.0 atol=1e-6
+
+            # Constraint duals
+            @test JuMP.resultdual(cons1) ≈ 0.333333 atol=1e-6
+            @test JuMP.resultdual(cons2) ≈ -1.0 atol=1e-6
+            @test JuMP.resultdual(cons3) ≈ -0.0714286 atol=1e-6
+        end
+
+        JuMP.optimize(m)
+        test_result()
+        @test JuMP.objectivevalue(m) ≈ -5.8446115 atol=1e-6
+
+        # Same objective with sense/sign flipped.
+        @NLobjective(m, Max, ((x + y)/2.0 + 3.0)/3.0 + z + r[3])
+
+        JuMP.optimize(m)
+        test_result()
+        @test JuMP.objectivevalue(m) ≈ 5.8446115 atol=1e-6
+    end
 end

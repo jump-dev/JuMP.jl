@@ -69,7 +69,7 @@ mutable struct NLPData
     nlobj
     nlconstr::Vector{NonlinearConstraint}
     nlexpr::Vector{NonlinearExprData}
-    nlconstrDuals::Vector{Float64}
+    nlconstr_duals::Vector{Float64}
     nlparamvalues::Vector{Float64}
     user_operators::Derivatives.UserOperatorRegistry
     largest_user_input_dimension::Int
@@ -113,15 +113,17 @@ function initNLP(m::Model)
     end
 end
 
-function getdual(c::ConstraintRef{Model,NonlinearConstraint})
+function resultdual(c::ConstraintRef{Model,NonlinearConstraintIndex})
     initNLP(c.m)
     nldata::NLPData = c.m.nlpdata
-    if length(nldata.nlconstrDuals) != length(nldata.nlconstr)
-        getdualwarn(c)
-        NaN
-    else
-        nldata.nlconstrDuals[c.idx]
+    if !MOI.canget(c.m, MOI.NLPBlockDual())
+        error("Duals not available.")
     end
+    # The array is cleared on every solve.
+    if length(nldata.nlconstr_duals) != length(nldata.nlconstr)
+        nldata.nlconstr_duals = MOI.get(c.m, MOI.NLPBlockDual())
+    end
+    return nldata.nlconstr_duals[c.index.value]
 end
 
 mutable struct FunctionStorage
@@ -1087,7 +1089,6 @@ setNLobjective(m::Model, sense::Symbol, x) = setobjective(m, sense, NonlinearExp
 # Ex: addNLconstraint(m, :($x + $y^2 <= 1))
 function addNLconstraint(m::Model, ex::Expr)
     initNLP(m)
-    m.internalModelLoaded = false
     if isexpr(ex, :call) # one-sided constraint
         # Simple comparison - move everything to the LHS
         op = ex.args[1]
@@ -1106,7 +1107,7 @@ function addNLconstraint(m::Model, ex::Expr)
         lhs = :($(ex.args[2]) - $(ex.args[3]))
         c = NonlinearConstraint(NonlinearExprData(m, lhs), lb, ub)
         push!(m.nlpdata.nlconstr, c)
-        return ConstraintRef{Model,NonlinearConstraint}(m, length(m.nlpdata.nlconstr))
+        return ConstraintRef(m, NonlinearConstraintIndex(length(m.nlpdata.nlconstr)))
     elseif isexpr(ex, :comparison)
         # ranged row
         if (ex.args[2] != :<= && ex.args[2] != :≤) || (ex.args[4] != :<= && ex.args[4] != :≤)
@@ -1121,7 +1122,7 @@ function addNLconstraint(m::Model, ex::Expr)
         end
         c = NonlinearConstraint(NonlinearExprData(m, ex.args[3]), lb, ub)
         push!(m.nlpdata.nlconstr, c)
-        return ConstraintRef{Model,NonlinearConstraint}(m, length(m.nlpdata.nlconstr))
+        return ConstraintRef(m, NonlinearConstraintIndex(length(m.nlpdata.nlconstr)))
     else
         # Unknown
         error("in addNLconstraint ($ex): constraints must be in one of the following forms:\n" *

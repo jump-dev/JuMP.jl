@@ -36,6 +36,7 @@ function optimize(m::Model;
     # TODO: Consider how to handle incremental solves.
     if m.nlpdata !== nothing
         MOI.set!(m, MOI.NLPBlock(), create_nlp_block_data(m))
+        empty!(m.nlpdata.nlconstr_duals)
     end
 
     # If the user or an extension has provided an optimize hook, call

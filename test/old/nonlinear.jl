@@ -44,54 +44,6 @@ end
         @test getvalue(vparam) == v
     end
 
-    @testset "HS071 solves correctly with $nlp_solver" for nlp_solver in nlp_solvers
-        # hs071
-        # Polynomial objective and constraints
-        # min x1 * x4 * (x1 + x2 + x3) + x3
-        # st  x1 * x2 * x3 * x4 >= 25
-        #     x1^2 + x2^2 + x3^2 + x4^2 = 40
-        #     1 <= x1, x2, x3, x4 <= 5
-        # Start at (1,5,5,1)
-        # End at (1.000..., 4.743..., 3.821..., 1.379...)
-        m = Model(solver=nlp_solver)
-        initval = [1,5,5,1]
-        @variable(m, 1 <= x[i=1:4] <= 5, start=initval[i])
-        @NLobjective(m, Min, x[1]*x[4]*(x[1]+x[2]+x[3]) + x[3])
-        @NLconstraint(m, x[1]*x[2]*x[3]*x[4] >= 25)
-        @NLconstraint(m, sum(x[i]^2 for i=1:4) == 40)
-        @test JuMP.numnlconstr(m) == 2
-        @test MathProgBase.numconstr(m) == 2
-        status = solve(m)
-
-        @test status == :Optimal
-        @test isapprox(getvalue(x),
-            [1.000000, 4.742999, 3.821150, 1.379408], atol=1e-3)
-    end
-
-    @testset "HS071 solves correctly (no macros) with $nlp_solver" for nlp_solver in nlp_solvers
-        # hs071
-        # Polynomial objective and constraints
-        # min x1 * x4 * (x1 + x2 + x3) + x3
-        # st  x1 * x2 * x3 * x4 >= 25
-        #     x1^2 + x2^2 + x3^2 + x4^2 = 40
-        #     1 <= x1, x2, x3, x4 <= 5
-        # Start at (1,5,5,1)
-        # End at (1.000..., 4.743..., 3.821..., 1.379...)
-        m = Model(solver=nlp_solver)
-        initval = [1,5,5,1]
-        @variable(m, 1 <= x[i=1:4] <= 5, start=initval[i])
-        JuMP.setNLobjective(m, :Min, :($(x[1])*$(x[4])*($(x[1])+$(x[2])+$(x[3])) + $(x[3])))
-        JuMP.addNLconstraint(m, :($(x[1])*$(x[2])*$(x[3])*$(x[4]) >= 25))
-        JuMP.addNLconstraint(m, :($(x[1])^2+$(x[2])^2+$(x[3])^2+$(x[4])^2 == 40))
-        @test MathProgBase.numconstr(m) == 2
-        @test_throws ErrorException JuMP.addNLconstraint(m, :(x[1]^2+x[2]^2+x[3]^2+x[4]^2 == 40))
-        status = solve(m)
-
-        @test status == :Optimal
-        @test isapprox(getvalue(x),
-            [1.000000, 4.742999, 3.821150, 1.379408], atol=1e-3)
-    end
-
     @testset "HS071 solves correctly (epigraph) with $nlp_solver" for nlp_solver in nlp_solvers
         # hs071, with epigraph formulation
         # Linear objective, nonlinear constraints
@@ -192,44 +144,6 @@ end
         status = solve(m)
         @test status == :Optimal
         @test isapprox(getvalue(z), 5.0, atol=1e-3)
-    end
-
-    @testset "Two-sided nonlinear constraints with $nlp_solver" for nlp_solver in convex_nlp_solvers
-        m = Model(solver=nlp_solver)
-        @variable(m, x)
-        @NLobjective(m, Max, x)
-        l = -1
-        u = 1
-        @NLconstraint(m, l <= x <= u)
-        status = solve(m)
-
-        @test status == :Optimal
-        @test isapprox(getobjectivevalue(m), u, atol=1e-6)
-
-        @NLobjective(m, Min, x)
-        status = solve(m)
-
-        @test status == :Optimal
-        @test isapprox(getobjectivevalue(m), l, atol=1e-6)
-    end
-
-    @testset "Two-sided nonlinear constraints (no macros) with $nlp_solver" for nlp_solver in convex_nlp_solvers
-        m = Model(solver=nlp_solver)
-        @variable(m, x)
-        JuMP.setNLobjective(m, :Max, x)
-        l = -1
-        u = 1
-        JuMP.addNLconstraint(m, :($l <= $x <= $u))
-        status = solve(m)
-
-        @test status == :Optimal
-        @test isapprox(getobjectivevalue(m), u, atol=1e-6)
-
-        JuMP.setNLobjective(m, :Min, x)
-        status = solve(m)
-
-        @test status == :Optimal
-        @test isapprox(getobjectivevalue(m), l, atol=1e-6)
     end
 
     @testset "Quadratic equality constraints with $nlp_solver" for nlp_solver in nlp_solvers
@@ -413,86 +327,6 @@ end
 
         @test status == :Optimal
         @test isapprox(getvalue(x), 0.0, atol=1e-2)
-    end
-
-    @testset "Nonlinear duals with $nlp_solver (simplify = $simplify)" for nlp_solver in nlp_solvers, simplify in [true,false]
-        applicable(MathProgBase.getconstrduals, MathProgBase.NonlinearModel(nlp_solver)) || continue
-        modA = Model(solver=nlp_solver, simplify_nonlinear_expressions=simplify)
-        @variable(modA, x >= 0)
-        @variable(modA, y <= 5)
-        @variable(modA, 2 <= z <= 4)
-        @variable(modA, 0 <= r[i=3:6] <= i)
-        @NLobjective(modA, Min, -((x + y)/2.0 + 3.0)/3.0 - z - r[3])
-        @constraint(modA, cons1, x+y >= 2)
-        @constraint(modA, cons2, sum(r[i] for i=3:5) <= (2 - x)/2.0)
-        @NLconstraint(modA, cons3, 7.0*y <= z + r[6]/1.9)
-
-        # Getter/setters
-        @test MathProgBase.numconstr(modA) == 3
-        @test JuMP.numnlconstr(modA) == 1
-
-        # Solution
-        @test solve(modA) == :Optimal
-        @test isapprox(getobjectivevalue(modA), -5.8446115, atol=1e-6)
-        @test isapprox(getvalue(x), 0.9774436, atol=1e-6)
-        @test isapprox(getvalue(y), 1.0225563, atol=1e-6)
-        @test isapprox(getvalue(z), 4.0, atol=1e-6)
-        @test isapprox(getvalue(r)[3], 0.5112781, atol=1e-6)
-        @test isapprox(getvalue(r)[4], 0.0, atol=1e-6)
-        @test isapprox(getvalue(r)[5], 0.0, atol=1e-6)
-        @test isapprox(getvalue(r)[6], 6.0, atol=1e-6)
-
-        # Reduced costs
-        @test isapprox(getdual(x), 0.0, atol=1e-6)
-        @test isapprox(getdual(y), 0.0, atol=1e-6)
-        @test isapprox(getdual(z), -1.0714286, atol=1e-6)
-        @test isapprox(getdual(r)[3], 0.0, atol=1e-6)
-        @test isapprox(getdual(r)[4], 1.0, atol=1e-6)
-        @test isapprox(getdual(r)[5], 1.0, atol=1e-6)
-        @test isapprox(getdual(r)[6], -0.03759398, atol=1e-6)
-
-        # Row duals
-        @test isapprox(getdual(cons1), 0.333333, atol=1e-6)
-        @test isapprox(getdual(cons2), -1.0, atol=1e-6)
-        @test isapprox(getdual(cons3), -0.0714286, atol=1e-6)
-    end
-
-    @testset "Nonlinear duals (Max) with $nlp_solver" for nlp_solver in nlp_solvers
-        applicable(MathProgBase.getconstrduals, MathProgBase.NonlinearModel(nlp_solver)) || continue
-        modA = Model(solver=nlp_solver)
-        @variable(modA, x >= 0)
-        @variable(modA, y <= 5)
-        @variable(modA, 2 <= z <= 4)
-        @variable(modA, 0 <= r[i=3:6] <= i)
-        @NLobjective(modA, Max, ((x + y)/2.0 + 3.0)/3.0 + z + r[3])
-        @constraint(modA, cons1, x+y >= 2)
-        @constraint(modA, cons2, sum{r[i],i=3:5} <= (2 - x)/2.0)
-        cons3 = @NLconstraint(modA, 7.0*y <= z + r[6]/1.9)
-
-        # Solution
-        @test solve(modA) == :Optimal
-        @test isapprox(getobjectivevalue(modA), 5.8446115, atol=1e-6)
-        @test isapprox(getvalue(x), 0.9774436, atol=1e-6)
-        @test isapprox(getvalue(y), 1.0225563, atol=1e-6)
-        @test isapprox(getvalue(z), 4.0, atol=1e-6)
-        @test isapprox(getvalue(r)[3], 0.5112781, atol=1e-6)
-        @test isapprox(getvalue(r)[4], 0.0, atol=1e-6)
-        @test isapprox(getvalue(r)[5], 0.0, atol=1e-6)
-        @test isapprox(getvalue(r)[6], 6.0, atol=1e-6)
-
-        # Reduced costs
-        @test isapprox(getdual(x), 0.0, atol=1e-6)
-        @test isapprox(getdual(y), 0.0, atol=1e-6)
-        @test isapprox(getdual(z), 1.0714286, atol=1e-6)
-        @test isapprox(getdual(r)[3], 0.0, atol=1e-6)
-        @test isapprox(getdual(r)[4], -1.0, atol=1e-6)
-        @test isapprox(getdual(r)[5], -1.0, atol=1e-6)
-        @test isapprox(getdual(r)[6], 0.03759398, atol=1e-6)
-
-        # Row duals
-        @test isapprox(getdual(cons1), -0.333333, atol=1e-6)
-        @test isapprox(getdual(cons2), 1.0, atol=1e-6)
-        @test isapprox(getdual(cons3), 0.0714286, atol=1e-6)
     end
 
     @testset "Changing objectives with $nlp_solver" for nlp_solver in nlp_solvers
