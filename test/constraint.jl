@@ -200,4 +200,11 @@
         @test macroexpand(:(@variable(m, -rand(5,5) <= nonsymmetric[1:5,1:5] <= rand(5,5), Symmetric))).head == :error
     end
 
+    @testset "constructconstraint! on variable" begin
+        m = Model()
+        @variable(m, x)
+        @test JuMP.constructconstraint!(x, MOI.GreaterThan(0.0)) isa JuMP.SingleVariableConstraint{MOI.GreaterThan{Float64}}
+        @test JuMP.constructconstraint!(x, MOI.LessThan(0.0)) isa JuMP.SingleVariableConstraint{MOI.LessThan{Float64}}
+        @test JuMP.constructconstraint!(x, MOI.EqualTo(0)) isa JuMP.SingleVariableConstraint{MOI.EqualTo{Int}}
+    end
 end
