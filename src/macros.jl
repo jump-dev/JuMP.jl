@@ -950,17 +950,17 @@ end
 #   Moreover, Int and Bin are special keywords that are equivalent to `integer=true` and `binary=true`.
 # * The keyword arguments start, basename, lowerbound, upperbound, binary, and integer category may not be passed as is to
 #   `constructvariable!` since they may be altered by the parsing of `expr` and we may need to pass it pointwise if it is a container since
-#   `constructvariable!` is called separately for each variable of the container. Moreover it will be passed as positional argument to `constructvariable!`.
+#   `constructvariable!` is called separately for each variable of the container. Moreover they will be passed inside the VariableInfo object.
 # * A custom error function is passed as positional argument to print the full @variable call before the error message.
 #
-# Examples (... is the custom error function):
-# * `@variable(m, x >= 0)` is equivalent to `x = constructvariable!(m, msg -> error("In @variable(m, x >= 0): ", msg), true, 0, false, NaN, false, NaN, false, false, "x", false, NaN)
+# Examples:
+# * `@variable(m, x >= 0)` is equivalent to `x = constructvariable!(m, msg -> error("In @variable(m, x >= 0): ", msg), VariableInfo(true, 0, false, NaN, false, NaN, false, false, false, NaN), "x")
 # * `@variable(m, x[1:N,1:N], Symmetric, Poly(X))` is equivalent to
 #   ```
 #   x = Matrix{...}(N, N)
 #   for i in 1:N
 #       for j in 1:N
-#           x[i,j] = x[j,i] = constructvariable!(m, Poly(X), msg -> error("In @variable(m, x[1:N,1:N], Symmetric, Poly(X)): ", msg), false, NaN, false, NaN, false, NaN, false, false, "", false, NaN)
+#           x[i,j] = x[j,i] = constructvariable!(m, Poly(X), msg -> error("In @variable(m, x[1:N,1:N], Symmetric, Poly(X)): ", msg), VariableInfo(false, NaN, false, NaN, false, NaN, false, false, false, NaN), "")
 #       end
 #   end
 #   ```
