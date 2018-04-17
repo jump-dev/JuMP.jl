@@ -485,4 +485,17 @@ new_optimizer() = IpoptOptimizer(print_level=0)
         @test JuMP.objectivevalue(m) ≈ sqrt(1/2) atol=1e-6
         @test JuMP.resultvalue.(x) ≈ [sqrt(1/2), 0] atol=1e-6
     end
+
+    @testset "Fixed variables" begin
+        m = Model(optimizer=new_optimizer())
+        @variable(m, x == 0)
+        @variable(m, y ≥ 0)
+        @objective(m, Min, y)
+        @NLconstraint(m, y ≥ x^2)
+        for α in 1:4
+            JuMP.fix(x, α)
+            JuMP.optimize(m)
+            @test JuMP.resultvalue(y) ≈ α^2 atol=1e-6
+        end
+    end
 end
