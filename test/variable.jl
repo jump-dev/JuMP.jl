@@ -15,17 +15,8 @@ import JuMP.repl
 using Base.Test
 
 mutable struct MyVariable
-    haslb::Bool
-    lowerbound::Number
-    hasub::Bool
-    upperbound::Number
-    hasfix::Bool
-    fixedvalue::Number
-    binary::Bool
-    integer::Bool
+    info::JuMP.VariableInfo
     name::String
-    hasstart::Bool
-    start::Number
     test_kw::Int
 end
 
@@ -324,44 +315,6 @@ end
         @variable(m, x[1:t])
         #@constraintref(y[1:t])
         @test JuMP.numvar(m) == 4
-    end
-
-    @testset "Extension of @variable with constructvariable! #1029" begin
-        JuMP.variabletype(m::Model, ::Type{MyVariable}) = MyVariable
-        function JuMP.constructvariable!(m::Model, ::Type{MyVariable}, _error::Function, args...; test_kw::Int = 0)
-            MyVariable(args..., test_kw)
-        end
-        m = Model()
-        @variable(m, 1 <= x <= 2, MyVariable, binary = true, test_kw = 1, start = 3)
-        @test isa(x, MyVariable)
-        @test x.haslb
-        @test x.lowerbound == 1
-        @test x.hasub
-        @test x.upperbound == 2
-        @test !x.hasfix
-        @test isnan(x.fixedvalue)
-        @test x.binary
-        @test !x.integer
-        @test x.name == "x"
-        @test x.hasstart
-        @test x.start == 3
-        @test x.test_kw == 1
-        @variable(m, y[1:3] >= 0, MyVariable, test_kw = 2)
-        @test isa(y, Vector{MyVariable})
-        for i in 1:3
-            @test y[i].haslb
-            @test y[i].lowerbound == 0
-            @test !y[i].hasub
-            @test y[i].upperbound == Inf
-            @test !y[i].hasfix
-            @test isnan(y[i].fixedvalue)
-            @test !y[i].binary
-            @test !y[i].integer
-            @test y[i].name == "y[$i]"
-            @test !y[i].hasstart
-            @test isnan(y[i].start)
-            @test y[i].test_kw == 2
-        end
     end
 
     # TODO decide what to do here
