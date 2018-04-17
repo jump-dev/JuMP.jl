@@ -402,11 +402,9 @@ macro constraint(args...)
                 constraintcall = :(addconstraint($m, constructconstraint!($newaff,$set), $(namecall(basename, idxvars))))
             end
         end
-        addkwargs!(constraintcall, kwargs)
         code = quote
             q = Val{false}()
             $parsecode
-            $(refcall) = $constraintcall
         end
     elseif isexpr(x, :comparison)
         # Ranged row
@@ -430,7 +428,6 @@ macro constraint(args...)
         else
             constraintcall = :(addconstraint($m, constructconstraint!($newaff,$newlb,$newub), $(namecall(basename, idxvars))))
         end
-        addkwargs!(constraintcall, kwargs)
         code = quote
             aff = Val{false}()
             $parsecode
@@ -460,15 +457,16 @@ macro constraint(args...)
                 end
             end
         end
-        code = quote
-            $code
-            $(refcall) = $constraintcall
-        end
     else
         # Unknown
         constraint_error(args, string("Constraints must be in one of the following forms:\n" *
               "       expr1 <= expr2\n" * "       expr1 >= expr2\n" *
               "       expr1 == expr2\n" * "       lb <= expr <= ub"))
+    end
+    addkwargs!(constraintcall, kwargs)
+    code = quote
+        $code
+        $(refcall) = $constraintcall
     end
     return assert_validmodel(m, quote
         $(getloopedcode(variable, code, condition, idxvars, idxsets, :ConstraintRef, requestedcontainer))
