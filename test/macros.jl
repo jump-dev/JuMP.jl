@@ -1,5 +1,11 @@
 # TODO: Copy over tests that are still relevant from old/macros.jl.
 
+mutable struct MyVariable
+    info::JuMP.VariableInfo
+    name::String
+    test_kw::Int
+end
+
 @testset "Macros" begin
     @testset "Nested tuple destructuring" begin
         m = Model()

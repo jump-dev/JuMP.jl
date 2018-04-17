@@ -14,12 +14,6 @@ using JuMP
 import JuMP.repl
 using Base.Test
 
-mutable struct MyVariable
-    info::JuMP.VariableInfo
-    name::String
-    test_kw::Int
-end
-
 @testset "Variables" begin
     @testset "constructors" begin
         # Constructors
