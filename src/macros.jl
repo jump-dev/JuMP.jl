@@ -334,14 +334,15 @@ add groups of linear or quadratic constraints.
 
 """
 macro constraint(args...)
+    _error(str) = constraint_error(args, str)
 
     args, kwargs, requestedcontainer = extract_kwargs(args)
 
     if length(args) < 2
         if length(kwargs) > 0
-            constraint_error(args, "Not enough positional arguments")
+            _error("Not enough positional arguments")
         else
-            constraint_error(args, "Not enough arguments")
+            _error("Not enough arguments")
         end
     end
     m = args[1]
@@ -352,7 +353,7 @@ macro constraint(args...)
     # Two formats:
     # - @constraint(m, a*x <= 5)
     # - @constraint(m, myref[a=1:5], a*x <= 5)
-    length(extra) > 1 && constraint_error(args, "Too many arguments.")
+    length(extra) > 1 && _error("Too many arguments.")
     # Canonicalize the arguments
     c = length(extra) == 1 ? x        : gensym()
     x = length(extra) == 1 ? extra[1] : x
@@ -365,11 +366,11 @@ macro constraint(args...)
     # TODO: support the basename keyword argument
 
     if isa(x, Symbol)
-        constraint_error(args, "Incomplete constraint specification $x. Are you missing a comparison (<=, >=, or ==)?")
+        _error("Incomplete constraint specification $x. Are you missing a comparison (<=, >=, or ==)?")
     end
 
     (x.head == :block) &&
-        constraint_error(args, "Code block passed as constraint. Perhaps you meant to use @constraints instead?")
+        _error("Code block passed as constraint. Perhaps you meant to use @constraints instead?")
 
     # Strategy: build up the code for non-macro addconstraint, and if needed
     # we will wrap in loops to assign to the ConstraintRefs
@@ -413,9 +414,9 @@ macro constraint(args...)
         (lsign,lvectorized) = _canonicalize_sense(x.args[2])
         (rsign,rvectorized) = _canonicalize_sense(x.args[4])
         if (lsign != :(<=)) || (rsign != :(<=))
-            constraint_error(args, "Only two-sided rows of the form lb <= expr <= ub are supported.")
+            _error("Only two-sided rows of the form lb <= expr <= ub are supported.")
         end
-        ((vectorized = lvectorized) == rvectorized) || constraint_error("Signs are inconsistently vectorized")
+        ((vectorized = lvectorized) == rvectorized) || _error("Signs are inconsistently vectorized")
         x_str = string(x)
         lb_str = string(x.args[1])
         ub_str = string(x.args[5])
@@ -451,12 +452,12 @@ macro constraint(args...)
                 try
                     lbval = convert(CoefType, $newlb)
                 catch
-                    constraint_error($args, string("Expected ",$lb_str," to be a ", CoefType, "."))
+                    _error(string("Expected ",$lb_str," to be a ", CoefType, "."))
                 end
                 try
                     ubval = convert(CoefType, $newub)
                 catch
-                    constraint_error($args, string("Expected ",$ub_str," to be a ", CoefType, "."))
+                    _error(string("Expected ",$ub_str," to be a ", CoefType, "."))
                 end
             end
         end
@@ -466,7 +467,7 @@ macro constraint(args...)
         end
     else
         # Unknown
-        constraint_error(args, string("Constraints must be in one of the following forms:\n" *
+        _error(string("Constraints must be in one of the following forms:\n" *
               "       expr1 <= expr2\n" * "       expr1 >= expr2\n" *
               "       expr1 == expr2\n" * "       lb <= expr <= ub"))
     end
