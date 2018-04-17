@@ -200,4 +200,55 @@
         @test macroexpand(:(@variable(m, -rand(5,5) <= nonsymmetric[1:5,1:5] <= rand(5,5), Symmetric))).head == :error
     end
 
+    @testset "[macros] sum(generator)" begin
+        m = Model()
+        @variable(m, x[1:3,1:3])
+        @variable(m, y)
+        C = [1 2 3; 4 5 6; 7 8 9]
+
+        cref = @constraint(m, sum( C[i,j]*x[i,j] for i in 1:2, j = 2:3 ) <= 1)
+        c = JuMP.constraintobject(cref, AffExpr, MOI.LessThan)
+        @test JuMP.isequal_canonical(c.func, sum( C[i,j]*x[i,j] for i in 1:2, j = 2:3 ))
+        @test c.set == MOI.LessThan(1.0)
+
+        cref = @constraint(m, sum( C[i,j]*x[i,j] for i = 1:3, j in 1:3 if i != j) == y)
+        c = JuMP.constraintobject(cref, AffExpr, MOI.EqualTo)
+        @test JuMP.isequal_canonical(c.func, sum( C[i,j]*x[i,j] for i = 1:3, j in 1:3 if i != j) - y)
+        @test c.set == MOI.EqualTo(0.0)
+
+        cref = @constraint(m, sum( C[i,j]*x[i,j] for i = 1:3, j = 1:i) == 0)
+        c = JuMP.constraintobject(cref, AffExpr, MOI.EqualTo)
+        @test JuMP.isequal_canonical(c.func, sum( C[i,j]*x[i,j] for i = 1:3 for j = 1:i))
+        @test c.set == MOI.EqualTo(0.0)
+
+        cref = @constraint(m, sum( C[i,j]*x[i,j] for i = 1:3 for j = 1:i) == 0)
+        c = JuMP.constraintobject(cref, AffExpr, MOI.EqualTo)
+        @test JuMP.isequal_canonical(c.func, sum( C[i,j]*x[i,j] for i = 1:3 for j = 1:i))
+        @test c.set == MOI.EqualTo(0.0)
+
+        cref = @constraint(m, sum( C[i,j]*x[i,j] for i = 1:3 if true for j = 1:i) == 0)
+        c = JuMP.constraintobject(cref, AffExpr, MOI.EqualTo)
+        @test JuMP.isequal_canonical(c.func, sum( C[i,j]*x[i,j] for i = 1:3 if true for j = 1:i))
+        @test c.set == MOI.EqualTo(0.0)
+
+        cref = @constraint(m, sum( C[i,j]*x[i,j] for i = 1:3 if true for j = 1:i if true) == 0)
+        c = JuMP.constraintobject(cref, AffExpr, MOI.EqualTo)
+        @test JuMP.isequal_canonical(c.func, sum( C[i,j]*x[i,j] for i = 1:3 if true for j = 1:i if true))
+        @test c.set == MOI.EqualTo(0.0)
+
+        cref = @constraint(m, sum( 0*x[i,1] for i=1:3) == 0)
+        c = JuMP.constraintobject(cref, AffExpr, MOI.EqualTo)
+        @test JuMP.isequal_canonical(c.func, sum( 0*x[i,1] for i=1:3))
+        @test c.set == MOI.EqualTo(0.0)
+
+        cref = @constraint(m, sum( 0*x[i,1] + y for i=1:3) == 0)
+        c = JuMP.constraintobject(cref, AffExpr, MOI.EqualTo)
+        @test JuMP.isequal_canonical(c.func, sum( 0*x[i,1] + y for i=1:3))
+        @test c.set == MOI.EqualTo(0.0)
+
+        #@test isexpr(macroexpand(:(@constraint(m, sum( 0*x[i,1] + y for i=1:3 for j in 1:3) == 0))),:error) == true
+
+    end
+
+
 end
