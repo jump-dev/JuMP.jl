@@ -665,10 +665,7 @@ function MOI.eval_hessian_lagrangian(
             nzthis = hessian_slice(d, ex, x, H, obj_factor, nzcount, recovery_tmp_storage, Val{chunk})::Int
         end
         nzcount += nzthis
-    else
-        obj_factor == 0 || error("No nonlinear objective.")
-    end
-
+    end # else, obj_factor is ignored.
 
     for i in 1:length(d.constraints)
         ex = d.constraints[i]
