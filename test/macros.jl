@@ -2,7 +2,6 @@
 
 mutable struct MyVariable
     info::JuMP.VariableInfo
-    name::String
     test_kw::Int
 end
 
@@ -40,7 +39,7 @@ end
         @test !x.info.integer
         @test x.info.hasstart
         @test x.info.start == 3
-        @test x.name == "x"
+        @test x.info.name == "x"
         @test x.test_kw == 1
         @variable(m, y[1:3] >= 0, MyVariable, test_kw = 2)
         @test isa(y, Vector{MyVariable})
@@ -55,7 +54,7 @@ end
             @test !y[i].info.integer
             @test !y[i].info.hasstart
             @test isnan(y[i].info.start)
-            @test y[i].name == "y[$i]"
+            @test y[i].info.name == "y[$i]"
             @test y[i].test_kw == 2
         end
     end

@@ -879,17 +879,18 @@ mutable struct VariableInfo{S, T, U, V}
     upperbound::T
     hasfix::Bool
     fixedvalue::U
-    binary::Bool
-    integer::Bool
     hasstart::Bool
     start::V
+    binary::Bool
+    integer::Bool
+    name::String
 end
 
 # Returns the type of what `constructvariable!` would return with these starting positional arguments.
 variabletype(m::Model) = Variable
 # Returns a new variable belonging to the model `m`. Additional positional arguments can be used to dispatch the call to a different method.
 # The return type should only depends on the positional arguments for `variabletype` to make sense.
-function constructvariable!(m::Model, _error::Function, info::VariableInfo, name::String; extra_kwargs...)
+function constructvariable!(m::Model, _error::Function, info::VariableInfo; extra_kwargs...)
     for (kwarg, _) in extra_kwargs
         _error("Unrecognized keyword argument $kwarg")
     end
@@ -912,8 +913,8 @@ function constructvariable!(m::Model, _error::Function, info::VariableInfo, name
     if info.hasstart
         setstartvalue(v, info.start)
     end
-    if name != EMPTYSTRING
-        setname(v, name)
+    if info.name != EMPTYSTRING
+        setname(v, info.name)
     end
     return v
 end
@@ -1105,12 +1106,11 @@ macro variable(args...)
     end
     extra = esc.(filter(ex -> !(ex in [:Int,:Bin]), extra))
 
-    info = :(VariableInfo($haslb, $lb, $hasub, $ub, $hasfix, $fixedvalue, $binary, $integer, $hasstart, $value))
-
     if isa(var,Symbol)
         # Easy case - a single variable
         sdp && _error("Cannot add a semidefinite scalar variable")
-        variablecall = :( constructvariable!($m, $(extra...), $_error, $info, $basename) )
+        info = :(VariableInfo($haslb, $lb, $hasub, $ub, $hasfix, $fixedvalue, $hasstart, $value, $binary, $integer, $basename))
+        variablecall = :( constructvariable!($m, $(extra...), $_error, $info) )
         addkwargs!(variablecall, extra_kwargs)
         code = :($variable = $variablecall)
         if !anonvar
@@ -1130,7 +1130,8 @@ macro variable(args...)
     clear_dependencies(i) = (isdependent(idxvars,idxsets[i],i) ? () : idxsets[i])
 
     # Code to be used to create each variable of the container.
-    variablecall = :( constructvariable!($m, $(extra...), $_error, $info, $(namecall(basename, idxvars))) )
+    info = :(VariableInfo($haslb, $lb, $hasub, $ub, $hasfix, $fixedvalue, $hasstart, $value, $binary, $integer, $(namecall(basename, idxvars))))
+    variablecall = :( constructvariable!($m, $(extra...), $_error, $info) )
     addkwargs!(variablecall, extra_kwargs)
     code = :( $(refcall) = $variablecall )
     # Determine the return type of constructvariable!. This is needed to create the container holding them.
