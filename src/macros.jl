@@ -955,13 +955,13 @@ end
 # * A custom error function is passed as positional argument to print the full @variable call before the error message.
 #
 # Examples:
-# * `@variable(m, x >= 0)` is equivalent to `x = constructvariable!(m, msg -> error("In @variable(m, x >= 0): ", msg), VariableInfo(true, 0, false, NaN, false, NaN, false, false, false, NaN), "x")
+# * `@variable(m, x >= 0)` is equivalent to `x = constructvariable!(m, msg -> error("In @variable(m, x >= 0): ", msg), VariableInfo(true, 0, false, NaN, false, NaN, false, NaN, false, false, "x"))
 # * `@variable(m, x[1:N,1:N], Symmetric, Poly(X))` is equivalent to
 #   ```
 #   x = Matrix{...}(N, N)
 #   for i in 1:N
 #       for j in 1:N
-#           x[i,j] = x[j,i] = constructvariable!(m, Poly(X), msg -> error("In @variable(m, x[1:N,1:N], Symmetric, Poly(X)): ", msg), VariableInfo(false, NaN, false, NaN, false, NaN, false, false, false, NaN), "")
+#           x[i,j] = x[j,i] = constructvariable!(m, Poly(X), msg -> error("In @variable(m, x[1:N,1:N], Symmetric, Poly(X)): ", msg), VariableInfo(false, NaN, false, NaN, false, NaN, false, NaN, false, false, ""))
 #       end
 #   end
 #   ```
