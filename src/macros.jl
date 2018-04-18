@@ -268,17 +268,12 @@ const ScalarPolyhedralSets = Union{MOI.LessThan,MOI.GreaterThan,MOI.EqualTo,MOI.
 constructconstraint!(v::Variable, set::MOI.AbstractScalarSet) = SingleVariableConstraint(v, set)
 constructconstraint!(v::Vector{Variable}, set::MOI.AbstractVectorSet) = VectorOfVariablesConstraint(v, set)
 
+constructconstraint!(α::Number, set::MOI.AbstractScalarSet) = constructconstraint!(convert(AffExpr, α), set)
 function constructconstraint!(aff::AffExpr, set::S) where S <: Union{MOI.LessThan,MOI.GreaterThan,MOI.EqualTo}
     offset = aff.constant
     aff.constant = 0.0
     return AffExprConstraint(aff, S(MOIU.getconstant(set)-offset))
 end
-
-# function constructconstraint!(aff::AffExpr, lb, ub)
-#     offset = aff.constant
-#     aff.constant = 0.0
-#     AffExprConstraint(aff, lb-offset, ub-offset)
-# end
 
 constructconstraint!(x::AbstractArray, set::MOI.AbstractScalarSet) = error("Unexpected vector in scalar constraint. Did you mean to use the dot comparison operators like .==, .<=, and .>= instead?")
 constructconstraint!(x::Vector{AffExpr}, set::MOI.AbstractVectorSet) = VectorAffExprConstraint(x, set)
@@ -309,17 +304,19 @@ end
 # end
 
 # three-argument constructconstraint! is used for two-sided constraints.
+constructconstraint!(v::Variable, lb::Real, ub::Real) = SingleVariableConstraint(v, MOI.Interval(lb, ub))
+
 function constructconstraint!(aff::AffExpr, lb::Real, ub::Real)
     offset = aff.constant
     aff.constant = 0.0
     AffExprConstraint(aff,MOI.Interval(lb-offset,ub-offset))
 end
 
-# constructconstraint!(aff::Variable, lb::Real, ub::Real) = constructconstraint!(convert(AffExpr,v),lb,ub)
-
 constructconstraint!(q::QuadExpr, lb, ub) = error("Two-sided quadratic constraints not supported. (Try @NLconstraint instead.)")
 
 constraint_error(args, str) = error("In @constraint($(join(args,","))): ", str)
+
+coeftype(::T) where T<:Number = T
 
 # TODO: update 3-argument @constraint macro to pass through names like @variable
 
@@ -448,12 +445,12 @@ macro constraint(args...)
                 try
                     lbval = convert(CoefType, $newlb)
                 catch
-                    _error(string("Expected ",$lb_str," to be a ", CoefType, "."))
+                    $_error(string("Expected ",$lb_str," to be a ", CoefType, "."))
                 end
                 try
                     ubval = convert(CoefType, $newub)
                 catch
-                    _error(string("Expected ",$ub_str," to be a ", CoefType, "."))
+                    $_error(string("Expected ",$ub_str," to be a ", CoefType, "."))
                 end
             end
         end

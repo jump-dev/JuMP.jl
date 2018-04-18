@@ -11,6 +11,7 @@ struct Variable <: AbstractJuMPScalar
     m::Model
     index::MOIVAR
 end
+coeftype(::Variable) = Float64
 
 function MOI.delete!(m::Model, v::Variable)
     @assert m === v.m

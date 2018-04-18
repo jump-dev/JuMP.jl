@@ -68,42 +68,6 @@ end
         @test sumexpr.args[2].args[3] == :(j = 1:M)
     end
 
-    @testset "Check @constraint basics" begin
-        m = Model()
-        @variable(m, w)
-        @variable(m, x)
-        @variable(m, y)
-        @variable(m, z)
-        t = 10
-
-        @constraint(m, 3x - y == 3.3(w + 2z) + 5)
-        @test string(m.linconstr[end]) == "3 x - y - 3.3 w - 6.6 z $eq 5"
-        @constraint(m, 3x - y == (w + 2z)*3.3 + 5)
-        @test string(m.linconstr[end]) == "3 x - y - 3.3 w - 6.6 z $eq 5"
-        @constraint(m, (x+y)/2 == 1)
-        @test string(m.linconstr[end]) == "0.5 x + 0.5 y $eq 1"
-        @constraint(m, -1 <= x-y <= t)
-        @test string(m.linconstr[end]) == "-1 $leq x - y $leq 10"
-        @constraint(m, -1 <= x+1 <= 1)
-        @test string(m.linconstr[end]) == "-2 $leq x $leq 0"
-        @constraint(m, -1 <= x <= 1)
-        @test string(m.linconstr[end]) == "-1 $leq x $leq 1"
-        @constraint(m, -1 <= x <= sum(0.5 for i = 1:2))
-        @test string(m.linconstr[end]) == "-1 $leq x $leq 1"
-        @test_throws ErrorException @constraint(m, x <= t <= y)
-        @test macroexpand(:(@constraint(m, 1 >= x >= 0))).head == :error
-        @test macroexpand(:(@constraint(1 <= x <= 2, foo=:bar))).head == :error
-
-        @expression(m, aff, 3x - y - 3.3(w + 2z) + 5)
-        @test string(aff) == "3 x - y - 3.3 w - 6.6 z + 5"
-
-        @constraint(m, 3 + 5*7 <= 0)
-        @test string(m.linconstr[end]) == "0 $leq -38"
-
-        @expression(m, qaff, (w+3)*(2x+1)+10)
-        @test string(qaff) == "2 w*x + 6 x + w + 13"
-    end
-
     @testset "Checking @variable with reverse direction bounds" begin
         m = Model()
         @variable(m, 3.2 >= x >= 1)
