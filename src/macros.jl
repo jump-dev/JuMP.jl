@@ -386,7 +386,8 @@ macro constraint(args...)
         if x.args[1] == :in
             @assert length(x.args) == 3
             newaff, parsecode = parseExprToplevel(x.args[2], :q)
-            constraintcall = :(addconstraint($m, constructconstraint!($newaff,$(esc(x.args[3]))), $(namecall(basename, idxvars))))
+            vectorized = false
+            constructcall = :(constructconstraint!($newaff,$(esc(x.args[3]))))
         else
             # Simple comparison - move everything to the LHS
             @assert length(x.args) == 3
@@ -397,10 +398,9 @@ macro constraint(args...)
             # `set` is an MOI.AbstractScalarSet, if `newaff` is not scalar, vectorized should be true.
             # Otherwise, `constructconstraint!(::AbstractArray, ::MOI.AbstractScalarSet)` throws an helpful error
             if vectorized
-                # TODO: Pass through names here.
-                constraintcall = :(addconstraint.($m, constructconstraint!.($newaff,$set)))
+                constructcall = :(constructconstraint!.($newaff,$set))
             else
-                constraintcall = :(addconstraint($m, constructconstraint!($newaff,$set), $(namecall(basename, idxvars))))
+                constructcall = :(constructconstraint!($newaff,$set))
             end
         end
         code = quote
@@ -423,11 +423,10 @@ macro constraint(args...)
         newlb, parselb = parseExprToplevel(x.args[1],:lb)
         newub, parseub = parseExprToplevel(x.args[5],:ub)
 
-        if lvectorized
-            # TODO: Pass through names here.
-            constraintcall = :(addconstraint.($m, constructconstraint!.($newaff,$newlb,$newub)))
+        if vectorized
+            constructcall = :(constructconstraint!.($newaff,$newlb,$newub))
         else
-            constraintcall = :(addconstraint($m, constructconstraint!($newaff,$newlb,$newub), $(namecall(basename, idxvars))))
+            constructcall = :(constructconstraint!($newaff,$newlb,$newub))
         end
         code = quote
             aff = Val{false}()
@@ -463,6 +462,12 @@ macro constraint(args...)
         _error(string("Constraints must be in one of the following forms:\n" *
               "       expr1 <= expr2\n" * "       expr1 >= expr2\n" *
               "       expr1 == expr2\n" * "       lb <= expr <= ub"))
+    end
+    if vectorized
+        # TODO: Pass through names here.
+        constraintcall = :(addconstraint.($m, $constructcall))
+    else
+        constraintcall = :(addconstraint($m, $constructcall, $(namecall(basename, idxvars))))
     end
     addkwargs!(constraintcall, kwargs)
     code = quote
