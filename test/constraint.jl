@@ -1,4 +1,8 @@
-
+macro test_expr(expr)
+    esc(quote
+            @test JuMP.isequal_canonical(@expression(m, $expr), $expr)
+    end)
+end
 
 @testset "Constraints" begin
     @testset "SingleVariable constraints" begin
@@ -206,24 +210,16 @@
         @variable(m, y)
         C = [1 2 3; 4 5 6; 7 8 9]
 
-        @test JuMP.isequal_canonical(@expression(m, sum( C[i,j]*x[i,j] for i in 1:2, j = 2:3 )),
-                                                    sum( C[i,j]*x[i,j] for i in 1:2, j = 2:3 ))
-        @test JuMP.isequal_canonical(@expression(m, sum( C[i,j]*x[i,j] for i = 1:3, j in 1:3 if i != j) - y),
-                                                    sum( C[i,j]*x[i,j] for i = 1:3, j in 1:3 if i != j) - y)
+        @test_expr sum( C[i,j]*x[i,j] for i in 1:2, j = 2:3 )
+        @test_expr sum( C[i,j]*x[i,j] for i = 1:3, j in 1:3 if i != j) - y
         @test JuMP.isequal_canonical(@expression(m, sum( C[i,j]*x[i,j] for i = 1:3, j = 1:i)),
                                                     sum( C[i,j]*x[i,j] for i = 1:3 for j = 1:i))
-        @test JuMP.isequal_canonical(@expression(m, sum( C[i,j]*x[i,j] for i = 1:3 for j = 1:i)),
-                                                    sum( C[i,j]*x[i,j] for i = 1:3 for j = 1:i))
-        @test JuMP.isequal_canonical(@expression(m, sum( C[i,j]*x[i,j] for i = 1:3 if true for j = 1:i)),
-                                                    sum( C[i,j]*x[i,j] for i = 1:3 if true for j = 1:i))
-        @test JuMP.isequal_canonical(@expression(m, sum( C[i,j]*x[i,j] for i = 1:3 if true for j = 1:i if true)),
-                                                    sum( C[i,j]*x[i,j] for i = 1:3 if true for j = 1:i if true))
-        @test JuMP.isequal_canonical(@expression(m, sum( 0*x[i,1] for i=1:3)),
-                                                    sum( 0*x[i,1] for i=1:3))
-        @test JuMP.isequal_canonical(@expression(m, sum( 0*x[i,1] + y for i=1:3)),
-                                                    sum( 0*x[i,1] + y for i=1:3))
-        @test JuMP.isequal_canonical(@expression(m, sum( 0*x[i,1] + y for i=1:3 for j in 1:3)),
-                                                    sum( 0*x[i,1] + y for i=1:3 for j in 1:3))
+        @test_expr sum( C[i,j]*x[i,j] for i = 1:3 for j = 1:i)
+        @test_expr sum( C[i,j]*x[i,j] for i = 1:3 if true for j = 1:i)
+        @test_expr sum( C[i,j]*x[i,j] for i = 1:3 if true for j = 1:i if true)
+        @test_expr sum( 0*x[i,1] for i=1:3)
+        @test_expr sum( 0*x[i,1] + y for i=1:3)
+        @test_expr sum( 0*x[i,1] + y for i=1:3 for j in 1:3)
     end
 
 
