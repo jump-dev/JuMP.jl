@@ -1,4 +1,8 @@
-
+macro test_expr(expr)
+    esc(quote
+            @test JuMP.isequal_canonical(@expression(m, $expr), $expr)
+    end)
+end
 
 @testset "Constraints" begin
     @testset "SingleVariable constraints" begin
@@ -199,5 +203,24 @@
         @test macroexpand(:(@variable(m, -ones(4,4) <= foo[1:4,1:4] <= ones(4,5), Symmetric))).head == :error
         @test macroexpand(:(@variable(m, -rand(5,5) <= nonsymmetric[1:5,1:5] <= rand(5,5), Symmetric))).head == :error
     end
+
+    @testset "[macros] sum(generator)" begin
+        m = Model()
+        @variable(m, x[1:3,1:3])
+        @variable(m, y)
+        C = [1 2 3; 4 5 6; 7 8 9]
+
+        @test_expr sum( C[i,j]*x[i,j] for i in 1:2, j = 2:3 )
+        @test_expr sum( C[i,j]*x[i,j] for i = 1:3, j in 1:3 if i != j) - y
+        @test JuMP.isequal_canonical(@expression(m, sum( C[i,j]*x[i,j] for i = 1:3, j = 1:i)),
+                                                    sum( C[i,j]*x[i,j] for i = 1:3 for j = 1:i))
+        @test_expr sum( C[i,j]*x[i,j] for i = 1:3 for j = 1:i)
+        @test_expr sum( C[i,j]*x[i,j] for i = 1:3 if true for j = 1:i)
+        @test_expr sum( C[i,j]*x[i,j] for i = 1:3 if true for j = 1:i if true)
+        @test_expr sum( 0*x[i,1] for i=1:3)
+        @test_expr sum( 0*x[i,1] + y for i=1:3)
+        @test_expr sum( 0*x[i,1] + y for i=1:3 for j in 1:3)
+    end
+
 
 end
