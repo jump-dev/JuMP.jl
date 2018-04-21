@@ -275,7 +275,7 @@ function constructconstraint!(_error::Function, aff::AffExpr, set::S) where S <:
     return AffExprConstraint(aff, S(MOIU.getconstant(set)-offset))
 end
 
-constructconstraint!(_error::Function, x::AbstractArray, set::MOI.AbstractScalarSet) = error("Unexpected vector in scalar constraint. Did you mean to use the dot comparison operators like .==, .<=, and .>= instead?")
+constructconstraint!(_error::Function, x::AbstractArray, set::MOI.AbstractScalarSet) = _error("Unexpected vector in scalar constraint. Did you mean to use the dot comparison operators like .==, .<=, and .>= instead?")
 constructconstraint!(_error::Function, x::Vector{AffExpr}, set::MOI.AbstractVectorSet) = VectorAffExprConstraint(x, set)
 
 function constructconstraint!(_error::Function, quad::QuadExpr, set::S) where S <: Union{MOI.LessThan,MOI.GreaterThan,MOI.EqualTo}
@@ -312,7 +312,7 @@ function constructconstraint!(_error::Function, aff::AffExpr, lb::Real, ub::Real
     AffExprConstraint(aff,MOI.Interval(lb-offset,ub-offset))
 end
 
-constructconstraint!(_error::Function, q::QuadExpr, lb, ub) = error("Two-sided quadratic constraints not supported. (Try @NLconstraint instead.)")
+constructconstraint!(_error::Function, q::QuadExpr, lb, ub) = _error("Two-sided quadratic constraints not supported. (Try @NLconstraint instead.)")
 
 function constructconstraint!(_error::Function, expr, lb, ub)
     @assert !(lb isa Number) || !(ub isa Number)
