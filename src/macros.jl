@@ -316,6 +316,7 @@ constructconstraint!(q::QuadExpr, lb, ub) = error("Two-sided quadratic constrain
 
 constraint_error(args, str) = error("In @constraint($(join(args,","))): ", str)
 
+coeftype(::Variable) = Float64
 coeftype(::T) where T<:Number = T
 
 # TODO: update 3-argument @constraint macro to pass through names like @variable
