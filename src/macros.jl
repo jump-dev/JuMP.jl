@@ -877,37 +877,49 @@ esc_nonconstant(x::Number) = x
 esc_nonconstant(x::Expr) = isexpr(x,:quote) ? x : esc(x)
 esc_nonconstant(x) = esc(x)
 
+mutable struct VariableInfo{S, T, U, V}
+    haslb::Bool
+    lowerbound::S
+    hasub::Bool
+    upperbound::T
+    hasfix::Bool
+    fixedvalue::U
+    hasstart::Bool
+    start::V
+    binary::Bool
+    integer::Bool
+    name::String
+end
+
 # Returns the type of what `constructvariable!` would return with these starting positional arguments.
 variabletype(m::Model) = Variable
 # Returns a new variable belonging to the model `m`. Additional positional arguments can be used to dispatch the call to a different method.
 # The return type should only depends on the positional arguments for `variabletype` to make sense.
-function constructvariable!(m::Model, _error::Function, haslb::Bool, lowerbound::Number, hasub::Bool, upperbound::Number,
-                            hasfix::Bool, fixedvalue::Number, binary::Bool, integer::Bool, name::String,
-                            hasstart::Bool, start::Number; extra_kwargs...)
+function constructvariable!(m::Model, _error::Function, info::VariableInfo; extra_kwargs...)
     for (kwarg, _) in extra_kwargs
         _error("Unrecognized keyword argument $kwarg")
     end
     v = Variable(m)
-    if haslb
-        setlowerbound(v, lowerbound)
+    if info.haslb
+        setlowerbound(v, info.lowerbound)
     end
-    if hasub
-        setupperbound(v, upperbound)
+    if info.hasub
+        setupperbound(v, info.upperbound)
     end
-    if hasfix
-        fix(v, fixedvalue)
+    if info.hasfix
+        fix(v, info.fixedvalue)
     end
-    if binary
+    if info.binary
         setbinary(v)
     end
-    if integer
+    if info.integer
         setinteger(v)
     end
-    if hasstart
-        setstartvalue(v, start)
+    if info.hasstart
+        setstartvalue(v, info.start)
     end
-    if name != EMPTYSTRING
-        setname(v, name)
+    if info.name != EMPTYSTRING
+        setname(v, info.name)
     end
     return v
 end
@@ -944,17 +956,17 @@ end
 #   Moreover, Int and Bin are special keywords that are equivalent to `integer=true` and `binary=true`.
 # * The keyword arguments start, basename, lowerbound, upperbound, binary, and integer category may not be passed as is to
 #   `constructvariable!` since they may be altered by the parsing of `expr` and we may need to pass it pointwise if it is a container since
-#   `constructvariable!` is called separately for each variable of the container. Moreover it will be passed as positional argument to `constructvariable!`.
+#   `constructvariable!` is called separately for each variable of the container. Moreover they will be passed inside the VariableInfo object.
 # * A custom error function is passed as positional argument to print the full @variable call before the error message.
 #
-# Examples (... is the custom error function):
-# * `@variable(m, x >= 0)` is equivalent to `x = constructvariable!(m, msg -> error("In @variable(m, x >= 0): ", msg), true, 0, false, NaN, false, NaN, false, false, "x", false, NaN)
+# Examples:
+# * `@variable(m, x >= 0)` is equivalent to `x = constructvariable!(m, msg -> error("In @variable(m, x >= 0): ", msg), VariableInfo(true, 0, false, NaN, false, NaN, false, NaN, false, false, "x"))
 # * `@variable(m, x[1:N,1:N], Symmetric, Poly(X))` is equivalent to
 #   ```
 #   x = Matrix{...}(N, N)
 #   for i in 1:N
 #       for j in 1:N
-#           x[i,j] = x[j,i] = constructvariable!(m, Poly(X), msg -> error("In @variable(m, x[1:N,1:N], Symmetric, Poly(X)): ", msg), false, NaN, false, NaN, false, NaN, false, false, "", false, NaN)
+#           x[i,j] = x[j,i] = constructvariable!(m, Poly(X), msg -> error("In @variable(m, x[1:N,1:N], Symmetric, Poly(X)): ", msg), VariableInfo(false, NaN, false, NaN, false, NaN, false, NaN, false, false, ""))
 #       end
 #   end
 #   ```
@@ -1102,7 +1114,8 @@ macro variable(args...)
     if isa(var,Symbol)
         # Easy case - a single variable
         sdp && _error("Cannot add a semidefinite scalar variable")
-        variablecall = :( constructvariable!($m, $(extra...), $_error, $haslb, $lb, $hasub, $ub, $hasfix, $fixedvalue, $binary, $integer, $basename, $hasstart, $value) )
+        info = :(VariableInfo($haslb, $lb, $hasub, $ub, $hasfix, $fixedvalue, $hasstart, $value, $binary, $integer, $basename))
+        variablecall = :( constructvariable!($m, $(extra...), $_error, $info) )
         addkwargs!(variablecall, extra_kwargs)
         code = :($variable = $variablecall)
         if !anonvar
@@ -1122,7 +1135,8 @@ macro variable(args...)
     clear_dependencies(i) = (isdependent(idxvars,idxsets[i],i) ? () : idxsets[i])
 
     # Code to be used to create each variable of the container.
-    variablecall = :( constructvariable!($m, $(extra...), $_error, $haslb, $lb, $hasub, $ub, $hasfix, $fixedvalue, $binary, $integer, $(namecall(basename, idxvars)), $hasstart, $value) )
+    info = :(VariableInfo($haslb, $lb, $hasub, $ub, $hasfix, $fixedvalue, $hasstart, $value, $binary, $integer, $(namecall(basename, idxvars))))
+    variablecall = :( constructvariable!($m, $(extra...), $_error, $info) )
     addkwargs!(variablecall, extra_kwargs)
     code = :( $(refcall) = $variablecall )
     # Determine the return type of constructvariable!. This is needed to create the container holding them.
