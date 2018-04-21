@@ -315,6 +315,10 @@ end
 constructconstraint!(_error::Function, q::QuadExpr, lb, ub) = _error("Two-sided quadratic constraints not supported. (Try @NLconstraint instead.)")
 
 function constructconstraint!(_error::Function, expr, lb, ub)
+    # It could happen that a call is dispatched to this method with `lb` and `ub` that are `Number`,
+    # e.g. if there is not `constructconstraint!` method defined for the type of `expr`.
+    # In that case, no error will be thrown and `@constraint` will silently do nothing.
+    # We want to avoid that so we use this assert.
     @assert !(lb isa Number) || !(ub isa Number)
     lb isa Number || _error(string("Expected $lb to be a number."))
     ub isa Number || _error(string("Expected $ub to be a number."))
