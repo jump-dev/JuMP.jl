@@ -265,20 +265,20 @@ function sense_to_set(sense::Symbol)
 end
 const ScalarPolyhedralSets = Union{MOI.LessThan,MOI.GreaterThan,MOI.EqualTo,MOI.Interval}
 
-constructconstraint!(v::Variable, set::MOI.AbstractScalarSet) = SingleVariableConstraint(v, set)
-constructconstraint!(v::Vector{Variable}, set::MOI.AbstractVectorSet) = VectorOfVariablesConstraint(v, set)
+constructconstraint!(_error::Function, v::Variable, set::MOI.AbstractScalarSet) = SingleVariableConstraint(v, set)
+constructconstraint!(_error::Function, v::Vector{Variable}, set::MOI.AbstractVectorSet) = VectorOfVariablesConstraint(v, set)
 
-constructconstraint!(α::Number, set::MOI.AbstractScalarSet) = constructconstraint!(convert(AffExpr, α), set)
-function constructconstraint!(aff::AffExpr, set::S) where S <: Union{MOI.LessThan,MOI.GreaterThan,MOI.EqualTo}
+constructconstraint!(_error::Function, α::Number, set::MOI.AbstractScalarSet) = constructconstraint!(_error, convert(AffExpr, α), set)
+function constructconstraint!(_error::Function, aff::AffExpr, set::S) where S <: Union{MOI.LessThan,MOI.GreaterThan,MOI.EqualTo}
     offset = aff.constant
     aff.constant = 0.0
     return AffExprConstraint(aff, S(MOIU.getconstant(set)-offset))
 end
 
-constructconstraint!(x::AbstractArray, set::MOI.AbstractScalarSet) = error("Unexpected vector in scalar constraint. Did you mean to use the dot comparison operators like .==, .<=, and .>= instead?")
-constructconstraint!(x::Vector{AffExpr}, set::MOI.AbstractVectorSet) = VectorAffExprConstraint(x, set)
+constructconstraint!(_error::Function, x::AbstractArray, set::MOI.AbstractScalarSet) = error("Unexpected vector in scalar constraint. Did you mean to use the dot comparison operators like .==, .<=, and .>= instead?")
+constructconstraint!(_error::Function, x::Vector{AffExpr}, set::MOI.AbstractVectorSet) = VectorAffExprConstraint(x, set)
 
-function constructconstraint!(quad::QuadExpr, set::S) where S <: Union{MOI.LessThan,MOI.GreaterThan,MOI.EqualTo}
+function constructconstraint!(_error::Function, quad::QuadExpr, set::S) where S <: Union{MOI.LessThan,MOI.GreaterThan,MOI.EqualTo}
     offset = quad.aff.constant
     quad.aff.constant = 0.0
     return QuadExprConstraint(quad, S(MOIU.getconstant(set)-offset))
@@ -304,17 +304,21 @@ end
 # end
 
 # three-argument constructconstraint! is used for two-sided constraints.
-constructconstraint!(v::Variable, lb::Real, ub::Real) = SingleVariableConstraint(v, MOI.Interval(lb, ub))
+constructconstraint!(_error::Function, v::Variable, lb::Real, ub::Real) = SingleVariableConstraint(v, MOI.Interval(lb, ub))
 
-function constructconstraint!(aff::AffExpr, lb::Real, ub::Real)
+function constructconstraint!(_error::Function, aff::AffExpr, lb::Real, ub::Real)
     offset = aff.constant
     aff.constant = 0.0
     AffExprConstraint(aff,MOI.Interval(lb-offset,ub-offset))
 end
 
-constructconstraint!(q::QuadExpr, lb, ub) = error("Two-sided quadratic constraints not supported. (Try @NLconstraint instead.)")
+constructconstraint!(_error::Function, q::QuadExpr, lb, ub) = error("Two-sided quadratic constraints not supported. (Try @NLconstraint instead.)")
 
-constraint_error(args, str) = error("In @constraint($(join(args,","))): ", str)
+function constructconstraint!(_error::Function, expr, lb, ub)
+    @assert !(lb isa Number) || !(ub isa Number)
+    lb isa Number || _error(string("Expected $lb to be a number."))
+    ub isa Number || _error(string("Expected $ub to be a number."))
+end
 
 coeftype(::Variable) = Float64
 coeftype(::T) where T<:Number = T
@@ -332,7 +336,7 @@ add groups of linear or quadratic constraints.
 
 """
 macro constraint(args...)
-    _error(str) = constraint_error(args, str)
+    _error(str) = macro_error(:constraint, args, str)
 
     args, kwargs, requestedcontainer = extract_kwargs(args)
 
@@ -374,7 +378,7 @@ macro constraint(args...)
     # we will wrap in loops to assign to the ConstraintRefs
     refcall, idxvars, idxsets, condition = buildrefsets(c, variable)
     # JuMP accepts constraint syntax of the form @constraint(m, foo in bar).
-    # This will be rewritten to a call to constructconstraint!(foo, bar). To
+    # This will be rewritten to a call to constructconstraint!(_error,foo, bar). To
     # extend JuMP to accept set-based constraints of this form, it is necessary
     # to add the corresponding methods to constructconstraint!. Note that this
     # will likely mean that bar will be some custom type, rather than e.g. a
@@ -385,7 +389,7 @@ macro constraint(args...)
             @assert length(x.args) == 3
             newaff, parsecode = parseExprToplevel(x.args[2], :q)
             vectorized = false
-            constructcall = :(constructconstraint!($newaff,$(esc(x.args[3]))))
+            constructcall = :(constructconstraint!($_error,$newaff,$(esc(x.args[3]))))
         else
             # Simple comparison - move everything to the LHS
             @assert length(x.args) == 3
@@ -394,11 +398,11 @@ macro constraint(args...)
             lhs = :($(x.args[2]) - $(x.args[3]))
             newaff, parsecode = parseExprToplevel(lhs, :q)
             # `set` is an MOI.AbstractScalarSet, if `newaff` is not scalar, vectorized should be true.
-            # Otherwise, `constructconstraint!(::AbstractArray, ::MOI.AbstractScalarSet)` throws an helpful error
+            # Otherwise, `constructconstraint!($_error,::AbstractArray, ::MOI.AbstractScalarSet)` throws an helpful error
             if vectorized
-                constructcall = :(constructconstraint!.($newaff,$set))
+                constructcall = :(constructconstraint!.($_error,$newaff,$set))
             else
-                constructcall = :(constructconstraint!($newaff,$set))
+                constructcall = :(constructconstraint!($_error,$newaff,$set))
             end
         end
         code = quote
@@ -413,18 +417,15 @@ macro constraint(args...)
             _error("Only two-sided rows of the form lb <= expr <= ub are supported.")
         end
         ((vectorized = lvectorized) == rvectorized) || _error("Signs are inconsistently vectorized")
-        x_str = string(x)
-        lb_str = string(x.args[1])
-        ub_str = string(x.args[5])
         newaff, parsecode = parseExprToplevel(x.args[3],:aff)
 
         newlb, parselb = parseExprToplevel(x.args[1],:lb)
         newub, parseub = parseExprToplevel(x.args[5],:ub)
 
         if vectorized
-            constructcall = :(constructconstraint!.($newaff,$newlb,$newub))
+            constructcall = :(constructconstraint!.($_error,$newaff,$newlb,$newub))
         else
-            constructcall = :(constructconstraint!($newaff,$newlb,$newub))
+            constructcall = :(constructconstraint!($_error,$newaff,$newlb,$newub))
         end
         code = quote
             aff = Val{false}()
@@ -433,27 +434,6 @@ macro constraint(args...)
             $parselb
             ub = 0.0
             $parseub
-        end
-        if vectorized
-            code = quote
-                $code
-                lbval, ubval = $newlb, $newub
-            end
-        else
-            code = quote
-                $code
-                CoefType = coeftype($newaff)
-                try
-                    lbval = convert(CoefType, $newlb)
-                catch
-                    $_error(string("Expected ",$lb_str," to be a ", CoefType, "."))
-                end
-                try
-                    ubval = convert(CoefType, $newub)
-                catch
-                    $_error(string("Expected ",$ub_str," to be a ", CoefType, "."))
-                end
-            end
         end
     else
         # Unknown
@@ -492,15 +472,16 @@ end
 Adds a semidefinite constraint to the `Model m`. The expression `x` must be a square, two-dimensional array.
 """
 macro SDconstraint(m, x)
+    _error(str) = macro_error(:SDconstraint, (m, x), str)
     m = esc(m)
 
     if isa(x, Symbol)
-        error("in @SDconstraint: Incomplete constraint specification $x. Are you missing a comparison (<= or >=)?")
+        _error("Incomplete constraint specification $x. Are you missing a comparison (<= or >=)?")
     end
 
     (x.head == :block) &&
-        error("Code block passed as constraint.")
-    isexpr(x,:call) && length(x.args) == 3 || error("in @SDconstraint ($(string(x))): constraints must be in one of the following forms:\n" *
+        _error("Code block passed as constraint.")
+    isexpr(x,:call) && length(x.args) == 3 || _error("Constraints must be in one of the following forms:\n" *
               "       expr1 <= expr2\n" * "       expr1 >= expr2")
     # Build the constraint
     # Simple comparison - move everything to the LHS
@@ -517,13 +498,13 @@ macro SDconstraint(m, x)
     elseif sense == :(<=)
         lhs = :($(x.args[3]) - $(x.args[2]))
     else
-        error("Invalid sense $sense in SDP constraint")
+        _error("Invalid sense $sense in SDP constraint")
     end
     newaff, parsecode = parseExprToplevel(lhs, :q)
     assert_validmodel(m, quote
         q = Val{false}()
         $parsecode
-        addconstraint($m, constructconstraint!($newaff, PSDCone()))
+        addconstraint($m, constructconstraint!($_error, $newaff, PSDCone()))
     end)
 end
 
@@ -924,7 +905,7 @@ end
 
 const EMPTYSTRING = ""
 
-variable_error(args, str) = error("In @variable($(join(args,","))): ", str)
+macro_error(macroname, args, str) = error("In @$macroname($(join(args,","))): ", str)
 
 # Given a basename and idxvars, returns an expression that constructs the name
 # of the object. For use within macros only.
@@ -969,7 +950,7 @@ end
 #   end
 #   ```
 macro variable(args...)
-    _error(str) = variable_error(args, str)
+    _error(str) = macro_error(:variable, args, str)
 
     m = esc(args[1])
 
@@ -1166,7 +1147,7 @@ macro variable(args...)
             $(getloopedcode(variable, code, condition, idxvars, idxsets, vartype, requestedcontainer; lowertri=symmetric))
             $(if sdp
                 quote
-                    JuMP.addconstraint($m, JuMP.constructconstraint!(Symmetric($variable), JuMP.PSDCone()))
+                    JuMP.addconstraint($m, JuMP.constructconstraint!($_error, Symmetric($variable), JuMP.PSDCone()))
                 end
             end)
             !$anonvar && registervar($m, $quotvarname, $variable)
