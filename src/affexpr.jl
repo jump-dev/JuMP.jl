@@ -23,7 +23,6 @@ mutable struct GenericAffExpr{CoefType,VarType} <: AbstractJuMPScalar
     coeffs::Vector{CoefType}
     constant::CoefType
 end
-coeftype(::GenericAffExpr{C,V}) where {C,V} = C
 
 Base.zero(::Type{GenericAffExpr{C,V}}) where {C,V} = GenericAffExpr{C,V}(V[],C[],zero(C))
 Base.one(::Type{GenericAffExpr{C,V}}) where { C,V} = GenericAffExpr{C,V}(V[],C[], one(C))

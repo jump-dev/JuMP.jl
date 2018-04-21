@@ -320,9 +320,6 @@ function constructconstraint!(_error::Function, expr, lb, ub)
     ub isa Number || _error(string("Expected $ub to be a number."))
 end
 
-coeftype(::Variable) = Float64
-coeftype(::T) where T<:Number = T
-
 # TODO: update 3-argument @constraint macro to pass through names like @variable
 
 """
