@@ -139,7 +139,7 @@ function parseNLExpr_runtime(m::Model, x::Number, tape, parent, values)
     nothing
 end
 
-function parseNLExpr_runtime(m::Model, x::Variable, tape, parent, values)
+function parseNLExpr_runtime(m::Model, x::VariableRef, tape, parent, values)
     x.m === m || error("Variable in nonlinear expression does not belong to corresponding model")
     push!(tape, NodeData(MOIVARIABLE, x.index.value, parent))
     nothing
@@ -169,7 +169,7 @@ macro processNLExpr(m, ex)
     end
 end
 
-function Derivatives.expr_to_nodedata(ex::Variable,nd::Vector{NodeData},values::Vector{Float64},parentid,r::Derivatives.UserOperatorRegistry)
+function Derivatives.expr_to_nodedata(ex::VariableRef,nd::Vector{NodeData},values::Vector{Float64},parentid,r::Derivatives.UserOperatorRegistry)
     push!(nd, NodeData(MOIVARIABLE, ex.index.value, parentid))
     nothing
 end
@@ -185,7 +185,7 @@ function Derivatives.expr_to_nodedata(ex::NonlinearParameter,nd::Vector{NodeData
 end
 
 # Construct a NonlinearExprData from a Julia expression.
-# Variable objects should be spliced into the expression.
+# VariableRef objects should be spliced into the expression.
 function NonlinearExprData(m::Model, ex::Expr)
     initNLP(m)
     checkexpr(m,ex)
@@ -196,7 +196,7 @@ NonlinearExprData(m::Model, ex) = NonlinearExprData(m, :($ex + 0))
 
 # Error if:
 # 1) Unexpected expression
-# 2) Variable doesn't match the model
+# 2) VariableRef doesn't match the model
 function checkexpr(m::Model, ex::Expr)
     if ex.head == :ref # if we have x[1] already in there, something is wrong
         error("Unrecognized expression $ex. JuMP variable objects and input coefficients should be spliced directly into expressions.")
@@ -206,7 +206,7 @@ function checkexpr(m::Model, ex::Expr)
     end
     return
 end
-function checkexpr(m::Model, v::Variable)
+function checkexpr(m::Model, v::VariableRef)
     v.m === m || error("Variable $v does not belong to this model")
     return
 end

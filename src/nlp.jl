@@ -835,7 +835,7 @@ function _hessian_lagrangian_structure(d::NLPEvaluator)
 end
 
 mutable struct VariablePrintWrapper
-    v::Variable
+    v::VariableRef
     mode
 end
 Base.show(io::IO,v::VariablePrintWrapper) = print(io,var_str(v.mode,v.v))
@@ -873,7 +873,7 @@ function tapeToExpr(m::Model, k, nd::Vector{NodeData}, adj, const_values, parame
             return Expr(:ref,:x,MOIVAR(nod.index))
         else
             # mode only matters when generic_variable_names == false
-            return VariablePrintWrapper(Variable(m,MOIVAR(nod.index)),print_mode)
+            return VariablePrintWrapper(VariableRef(m,MOIVAR(nod.index)),print_mode)
         end
     elseif nod.nodetype == VALUE
         return const_values[nod.index]

@@ -7,11 +7,11 @@
 
         @objective(m, Min, x)
         @test JuMP.objectivesense(m) == :Min
-        @test JuMP.objectivefunction(m, Variable) == x
+        @test JuMP.objectivefunction(m, VariableRef) == x
 
         @objective(m, Max, x)
         @test JuMP.objectivesense(m) == :Max
-        @test JuMP.objectivefunction(m, Variable) == x
+        @test JuMP.objectivefunction(m, VariableRef) == x
     end
 
     @testset "Linear objectives" begin

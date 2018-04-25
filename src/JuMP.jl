@@ -23,7 +23,7 @@ using .Derivatives
 
 export
 # Objects
-    Model, Variable, Norm, AffExpr, QuadExpr, SOCExpr,
+    Model, VariableRef, Norm, AffExpr, QuadExpr, SOCExpr,
     # LinearConstraint, QuadConstraint, SDConstraint, SOCConstraint,
     NonlinearConstraint,
     ConstraintRef,
@@ -36,7 +36,7 @@ export
     #addSOS1, addSOS2,
     optimize,
     internalmodel,
-    # Variable
+    # VariableRef
     setname,
     #getname,
     setlowerbound, setupperbound,
@@ -148,7 +148,7 @@ mutable struct Model <: AbstractModel
         m.variabletofix = Dict{MOIVAR,MOIFIX}()
         m.variabletointegrality = Dict{MOIVAR,MOIINT}()
         m.variabletozeroone = Dict{MOIVAR,MOIBIN}()
-        m.customnames = Variable[]
+        m.customnames = VariableRef[]
         m.objbound = 0.0
         m.objval = 0.0
         if backend != nothing
@@ -245,7 +245,7 @@ setprinthook(m::Model, f) = (m.printhook = f)
 # Abstract base type for all constraint types
 abstract type AbstractConstraint end
 # Abstract base type for all scalar types
-# In JuMP, used only for Variable. Useful primarily for extensions
+# In JuMP, used only for VariableRef. Useful primarily for extensions
 abstract type AbstractJuMPScalar end
 
 Base.start(::AbstractJuMPScalar) = false
@@ -256,7 +256,7 @@ Base.isempty(::AbstractJuMPScalar) = false
 ##########################################################################
 # Constraint
 # Holds the index of a constraint in a Model.
-# TODO: Consider renaming this to be consistent with Variable.
+# TODO: Consider renaming this to be consistent with VariableRef.
 struct ConstraintRef{M<:AbstractModel,C}
     m::M
     index::C
@@ -286,10 +286,10 @@ end
 
 include("variables.jl")
 
-Base.zero(::Type{Variable}) = AffExpr(Variable[],Float64[],0.0)
-Base.zero(::Variable) = zero(Variable)
-Base.one(::Type{Variable}) = AffExpr(Variable[],Float64[],1.0)
-Base.one(::Variable) = one(Variable)
+Base.zero(::Type{VariableRef}) = AffExpr(VariableRef[],Float64[],0.0)
+Base.zero(::VariableRef) = zero(VariableRef)
+Base.one(::Type{VariableRef}) = AffExpr(VariableRef[],Float64[],1.0)
+Base.one(::VariableRef) = one(VariableRef)
 
 mutable struct VariableNotOwnedError <: Exception
     context::String
@@ -298,7 +298,7 @@ function Base.showerror(io::IO, ex::VariableNotOwnedError)
     print(io, "VariableNotOwnedError: Variable not owned by model present in $(ex.context)")
 end
 
-function verify_ownership(m::Model, vec::Vector{Variable})
+function verify_ownership(m::Model, vec::Vector{VariableRef})
     n = length(vec)
     @inbounds for i in 1:n
         vec[i].m !== m && return false
@@ -306,12 +306,12 @@ function verify_ownership(m::Model, vec::Vector{Variable})
     return true
 end
 
-Base.copy(v::Variable, new_model::Model) = Variable(new_model, v.col)
+Base.copy(v::VariableRef, new_model::Model) = VariableRef(new_model, v.col)
 Base.copy(x::Void, new_model::Model) = nothing
-Base.copy(v::AbstractArray{Variable}, new_model::Model) = (var -> Variable(new_model, var.col)).(v)
+Base.copy(v::AbstractArray{VariableRef}, new_model::Model) = (var -> VariableRef(new_model, var.col)).(v)
 
 
-function optimizerindex(v::Variable)
+function optimizerindex(v::VariableRef)
     if mode(v.m) == Direct
         return index(v)
     else
@@ -362,7 +362,7 @@ Return `true` if one may query the attribute `attr` from the model's MOI backend
 false if not.
 """
 MOI.canget(m::Model, attr::MOI.AbstractModelAttribute) = MOI.canget(m.moibackend, attr)
-MOI.canget(m::Model, attr::MOI.AbstractVariableAttribute, ::Type{Variable}) = MOI.canget(m.moibackend, attr, MOIVAR)
+MOI.canget(m::Model, attr::MOI.AbstractVariableAttribute, ::Type{VariableRef}) = MOI.canget(m.moibackend, attr, MOIVAR)
 MOI.canget(m::Model, attr::MOI.AbstractConstraintAttribute, ::Type{ConstraintRef{Model,T}}) where {T <: MOICON} = MOI.canget(m.moibackend, attr, T)
 
 """
@@ -371,7 +371,7 @@ MOI.canget(m::Model, attr::MOI.AbstractConstraintAttribute, ::Type{ConstraintRef
 Return the value of the attribute `attr` from model's MOI backend.
 """
 MOI.get(m::Model, attr::MOI.AbstractModelAttribute) = MOI.get(m.moibackend, attr)
-function MOI.get(m::Model, attr::MOI.AbstractVariableAttribute, v::Variable)
+function MOI.get(m::Model, attr::MOI.AbstractVariableAttribute, v::VariableRef)
     @assert m === v.m
     MOI.get(m.moibackend, attr, index(v))
 end
@@ -381,7 +381,7 @@ function MOI.get(m::Model, attr::MOI.AbstractConstraintAttribute, cr::Constraint
 end
 
 MOI.set!(m::Model, attr::MOI.AbstractModelAttribute, value) = MOI.set!(m.moibackend, attr, value)
-function MOI.set!(m::Model, attr::MOI.AbstractVariableAttribute, v::Variable, value)
+function MOI.set!(m::Model, attr::MOI.AbstractVariableAttribute, v::VariableRef, value)
     @assert m === v.m
     MOI.set!(m.moibackend, attr, index(v), value)
 end
@@ -434,7 +434,7 @@ end
 """
     Base.getindex(m::JuMP.Model, name::Symbol)
 
-To allow easy accessing of JuMP Variables and Constraints via `[]` syntax.
+To allow easy accessing of JuMP tVariables and Constraints via `[]` syntax.
 Returns the variable, or group of variables, or constraint, or group of constraints, of the given name which were added to the model. This errors if multiple variables or constraints share the same name.
 """
 function Base.getindex(m::JuMP.Model, name::Symbol)

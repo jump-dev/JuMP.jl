@@ -10,7 +10,7 @@
 # src/quadexpr.jl
 # Defines all types relating to expressions with a quadratic and affine part
 # - GenericQuadExpr             ∑qᵢⱼ xᵢⱼ  +  ∑ aᵢ xᵢ  +  c
-#   - QuadExpr                  Alias for (Float64, Variable)
+#   - QuadExpr                  Alias for (Float64, VariableRef)
 # - QuadExprConstraint       ∑qᵢⱼ xᵢⱼ  +  ∑ aᵢ xᵢ  +  c  in set
 # Operator overloads in src/operators.jl
 #############################################################################
@@ -76,9 +76,9 @@ function isequal_canonical(quad::GenericQuadExpr{CoefType,VarType}, other::Gener
     return isequal(d1,d2) && isequal_canonical(quad.aff, other.aff)
 end
 
-# Alias for (Float64, Variable)
-const QuadExpr = GenericQuadExpr{Float64,Variable}
-Base.convert(::Type{QuadExpr}, v::Union{Real,Variable,AffExpr}) = QuadExpr(Variable[], Variable[], Float64[], AffExpr(v))
+# Alias for (Float64, VariableRef)
+const QuadExpr = GenericQuadExpr{Float64,VariableRef}
+Base.convert(::Type{QuadExpr}, v::Union{Real,VariableRef,AffExpr}) = QuadExpr(VariableRef[], VariableRef[], Float64[], AffExpr(v))
 QuadExpr() = zero(QuadExpr)
 
 function MOI.ScalarQuadraticFunction(q::QuadExpr)
@@ -88,7 +88,7 @@ end
 
 function QuadExpr(m::Model, f::MOI.ScalarQuadraticFunction)
     scaledcoef = [(v1 == v2) ? coef/2 : coef for (v1, v2, coef) in zip(f.quadratic_rowvariables, f.quadratic_colvariables, f.quadratic_coefficients)]
-    return QuadExpr(Variable.(m,f.quadratic_rowvariables), Variable.(m, f.quadratic_colvariables), scaledcoef, AffExpr(Variable.(m,f.affine_variables), f.affine_coefficients, f.constant))
+    return QuadExpr(VariableRef.(m,f.quadratic_rowvariables), VariableRef.(m, f.quadratic_colvariables), scaledcoef, AffExpr(VariableRef.(m,f.affine_variables), f.affine_coefficients, f.constant))
 end
 
 function setobjective(m::Model, sense::Symbol, a::QuadExpr)

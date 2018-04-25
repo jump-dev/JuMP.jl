@@ -4,15 +4,15 @@ struct PSDCone end
 
 # Used by the @variable macro. It can also be used with the @constraint macro,
 # this allows to get the constraint reference, e.g.
-# @variable m x[1:2,1:2] Symmetric # x is Symmetric{Variable,Matrix{Variable}}
+# @variable m x[1:2,1:2] Symmetric # x is Symmetric{VariableRef,Matrix{VariableRef}}
 # varpsd = @constraint m x in PSDCone()
-function buildconstraint(_error::Function, Q::Symmetric{Variable,Matrix{Variable}}, ::PSDCone)
+function buildconstraint(_error::Function, Q::Symmetric{VariableRef,Matrix{VariableRef}}, ::PSDCone)
     n = Base.LinAlg.checksquare(Q)
     VectorOfVariablesConstraint([Q[i, j] for j in 1:n for i in 1:j], MOI.PositiveSemidefiniteConeTriangle(n))
 end
-# @variable m x[1:2,1:2] # x is Matrix{Variable}
+# @variable m x[1:2,1:2] # x is Matrix{VariableRef}
 # varpsd = @constraint m x in PSDCone()
-function buildconstraint(_error::Function, Q::Matrix{Variable}, ::PSDCone)
+function buildconstraint(_error::Function, Q::Matrix{VariableRef}, ::PSDCone)
     n = Base.LinAlg.checksquare(Q)
     VectorOfVariablesConstraint(vec(Q), MOI.PositiveSemidefiniteConeSquare(n))
 end

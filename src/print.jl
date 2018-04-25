@@ -108,12 +108,12 @@ function Base.show(io::IO, m::Model) # TODO temporary
 end
 
 #------------------------------------------------------------------------
-## Variable
+## VariableRef
 #------------------------------------------------------------------------
-Base.show(io::IO, v::Variable) = print(io, var_str(REPLMode,v))
-Base.show(io::IO, ::MIME"text/latex", v::Variable) =
+Base.show(io::IO, v::VariableRef) = print(io, var_str(REPLMode,v))
+Base.show(io::IO, ::MIME"text/latex", v::VariableRef) =
     print(io, var_str(IJuliaMode,v,mathmode=false))
-function var_str(::Type{REPLMode}, v::Variable; mathmode=true)
+function var_str(::Type{REPLMode}, v::VariableRef; mathmode=true)
     name = MOI.get(v.m, MOI.VariableName(), v)
     if name != ""
         return name
@@ -121,7 +121,7 @@ function var_str(::Type{REPLMode}, v::Variable; mathmode=true)
         return "noname"
     end
 end
-function var_str(::Type{IJuliaMode}, v::Variable; mathmode=true)
+function var_str(::Type{IJuliaMode}, v::VariableRef; mathmode=true)
     name = MOI.get(v.m, MOI.VariableName(), v)
     if name != ""
         # TODO: This is wrong if variable name constains extra "]"
@@ -149,10 +149,10 @@ function aff_str(mode, a::AffExpr, show_constant=true)
     # the original ordering of the expression.
 
     # Map from variable to index of first appearance in the AffExpr
-    idxmap = Dict{Variable,Int}()
+    idxmap = Dict{VariableRef,Int}()
 
     # Map from variable to coefficient (duplicates summed) in the AffExpr
-    coefmap = Dict{Variable,Float64}()
+    coefmap = Dict{VariableRef,Float64}()
 
     for i in 1:length(a.vars)
         v = a.vars[i]
@@ -215,12 +215,12 @@ function quad_str(mode, q::GenericQuadExpr, sym)
     length(q.qvars1) == 0 && return aff_str(mode,q.aff)
 
     # Map from unordered variable pair to index of first appearance in the QuadExpr
-    idxmap = Dict{Set{Variable},Int}()
+    idxmap = Dict{Set{VariableRef},Int}()
     # Map from unordered variable pair to ordered tuple of variables as first appeared in the QuadExpr
     # (to respect the order the user wrote the terms, e.g., x_1*x_2 vs x_2*x_1)
-    ordermap = Dict{Set{Variable},Tuple{Variable,Variable}}()
+    ordermap = Dict{Set{VariableRef},Tuple{VariableRef,VariableRef}}()
     # Map from unordered variable pair to coefficient (duplicates summed) in the Quadxpr
-    coefmap = Dict{Set{Variable},Float64}()
+    coefmap = Dict{Set{VariableRef},Float64}()
 
     for i in 1:length(q.qvars1)
         v1 = q.qvars1[i]

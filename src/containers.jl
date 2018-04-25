@@ -30,21 +30,21 @@ automatically checks for duplicate terms in the index sets and `false` otherwise
 
 ### Examples
 
-    generatecontainer(Variable, [:i,:j], [:(1:N), :(1:T)], :Auto)
+    generatecontainer(VariableRef, [:i,:j], [:(1:N), :(1:T)], :Auto)
     # Returns code equivalent to:
-    # :(Array{Variable}(length(1:N), length(1:T))
+    # :(Array{VariableRef}(length(1:N), length(1:T))
 
-    generatecontainer(Variable, [:i,:j], [:(1:N), :(2:T)], :Auto)
+    generatecontainer(VariableRef, [:i,:j], [:(1:N), :(2:T)], :Auto)
     # Returns code equivalent to:
-    # :(JuMPArray(Array{Variable}(length(1:N), length(2:T)), \$indexvars...))
+    # :(JuMPArray(Array{VariableRef}(length(1:N), length(2:T)), \$indexvars...))
 
-    generatecontainer(Variable, [:i,:j], [:(1:N), :(S)], :Auto)
+    generatecontainer(VariableRef, [:i,:j], [:(1:N), :(S)], :Auto)
     # Returns code that generates an Array if S is of type Base.OneTo,
     # otherwise an JuMPArray.
 
-    generatecontainer(Variable, [:i,:j], [:(1:N), :(1:j)], :Auto)
+    generatecontainer(VariableRef, [:i,:j], [:(1:N), :(1:j)], :Auto)
     # Returns code equivalent to:
-    # :(Dict{Any,Variable}())
+    # :(Dict{Any,VariableRef}())
 """
 function generatecontainer(T, indexvars, indexsets, requestedtype)
     hasdependent = hasdependentsets(indexvars,indexsets)
