@@ -3,6 +3,25 @@
 #  License, v. 2.0. If a copy of the MPL was not distributed with this
 #  file, You can obtain one at http://mozilla.org/MPL/2.0/.
 
+abstract type AbstractVariable end
+
+mutable struct VariableInfo{S, T, U, V}
+    haslb::Bool
+    lowerbound::S
+    hasub::Bool
+    upperbound::T
+    hasfix::Bool
+    fixedvalue::U
+    hasstart::Bool
+    start::V
+    binary::Bool
+    integer::Bool
+end
+
+struct ScalarVariable{S, T, U, V}
+    info::VariableInfo{S, T, U, V}
+end
+
 #############################################################################
 # VariableRef
 # Holds a reference to the model and the corresponding MOI.VariableIndex.
@@ -389,3 +408,35 @@ resultvalue(v::VariableRef) = MOI.get(v.m, MOI.VariablePrimal(), v)
 hasresultvalues(m::Model) = MOI.canget(m, MOI.VariablePrimal(), VariableRef)
 
 @Base.deprecate setvalue(v::VariableRef, val::Number) setstart(v, val)
+
+"""
+    addvariable(m::Model, v::AbstractVariable, name::String="")
+
+Add a variable `v` to `Model m` and sets its name.
+"""
+function addvariable(m::Model, v::ScalarVariable, name::String="")
+    info = v.info
+    vref = VariableRef(m)
+    if info.haslb
+        setlowerbound(vref, info.lowerbound)
+    end
+    if info.hasub
+        setupperbound(vref, info.upperbound)
+    end
+    if info.hasfix
+        fix(vref, info.fixedvalue)
+    end
+    if info.binary
+        setbinary(vref)
+    end
+    if info.integer
+        setinteger(vref)
+    end
+    if info.hasstart
+        setstartvalue(vref, info.start)
+    end
+    if !isempty(name)
+        setname(vref, name)
+    end
+    return vref
+end
