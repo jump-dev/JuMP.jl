@@ -1078,8 +1078,13 @@ macro variable(args...)
             isexpr(_rng, :escape) ||
                 _error("Internal error 1")
             rng = _rng.args[1] # undo escaping
-            (isexpr(rng,:(:)) && rng.args[1] == 1 && length(rng.args) == 2) ||
-                _error("Index sets for SDP variables must be ranges of the form 1:N")
+            if VERSION >= v"0.7-"
+                (isexpr(rng,:call) && length(rng.args) == 3 && rng.args[1] == :(:) && rng.args[2] == 1) ||
+                    _error("Index sets for SDP variables must be ranges of the form 1:N")
+            else
+                (isexpr(rng,:(:)) && rng.args[1] == 1 && length(rng.args) == 2) ||
+                    _error("Index sets for SDP variables must be ranges of the form 1:N")
+            end
         end
 
         if !(lb == -Inf && ub == Inf)
