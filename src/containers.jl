@@ -19,7 +19,7 @@ one of `:Array`, `:JuMPArray`, `:Dict`, or `:Auto`. Return error-producing code 
 requested type is incompatible. For the case of `:Auto`, the following rules are
 used to determine the appropriate container:
 
-1. If all index sets are either explicit `Expr(:(:), 1, B)` objects for any `B` or symbols which refer to objects of type `Base.OneTo`, then an `Array` is generated of the appropriate size. Types of symbols/expressions are not known at compile time, so we defer to type-safe functions to check the `Base.OneTo` condition.
+1. If all index sets are either explicit `1:B` objects for any `B` or symbols which refer to objects of type `Base.OneTo`, then an `Array` is generated of the appropriate size. Types of symbols/expressions are not known at compile time, so we defer to type-safe functions to check the `Base.OneTo` condition.
 
 2. If condition (1) does not hold, and the index sets are independent (the index variable for one set does not appear in the definition of another), then an `JuMPArray` is generated of the appropriate size.
 
@@ -51,8 +51,14 @@ function generatecontainer(T, indexvars, indexsets, requestedtype)
     onetosets = falses(length(indexsets))
     for (i,indexset) in enumerate(indexsets)
         s = isexpr(indexset,:escape) ? indexset.args[1] : indexset
-        if isexpr(s,:(:)) && length(s.args) == 2 && s.args[1] == 1
-            onetosets[i] = true
+        if VERSION >= v"0.7-"
+            if isexpr(s,:call) && length(s.args) == 3 && s.args[1] == :(:) && s.args[2] == 1
+                onetosets[i] = true
+            end
+        else
+            if isexpr(s,:(:)) && length(s.args) == 2 && s.args[1] == 1
+                onetosets[i] = true
+            end
         end
     end
 
