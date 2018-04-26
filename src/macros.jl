@@ -249,7 +249,7 @@ sense_to_set(_error::Function, ::Union{Val{:(>=)}, Val{:(≥)}}) = MOI.GreaterTh
 sense_to_set(_error::Function, ::Val{:(==)}) = MOI.EqualTo(0.0)
 sense_to_set(_error::Function, ::Val{S}) where S = _error("Unrecognized sense $S")
 
-function parseoneoperatorconstraint(_error::Function, vectorized::Bool, ::Val{:in}, aff, set)
+function parse_one_operator_constraint(_error::Function, vectorized::Bool, ::Val{:in}, aff, set)
     newaff, parseaff = parseExprToplevel(aff, :q)
     parsecode = :(q = Val{false}(); $parseaff)
     if vectorized
@@ -260,16 +260,16 @@ function parseoneoperatorconstraint(_error::Function, vectorized::Bool, ::Val{:i
     parsecode, constructcall
 end
 
-function parseoneoperatorconstraint(_error::Function, vectorized::Bool, sense::Val, lhs, rhs)
+function parse_one_operator_constraint(_error::Function, vectorized::Bool, sense::Val, lhs, rhs)
     # Simple comparison - move everything to the LHS
     aff = :($lhs - $rhs)
     set = sense_to_set(_error, sense)
-    parseoneoperatorconstraint(_error, vectorized, Val(:in), aff, set)
+    parse_one_operator_constraint(_error, vectorized, Val(:in), aff, set)
 end
 
 function parseconstraint(_error::Function, sense::Symbol, lhs, rhs)
     (sense, vectorized) = _check_vectorized(sense)
-    vectorized, parseoneoperatorconstraint(_error, vectorized, Val(sense), lhs, rhs)...
+    vectorized, parse_one_operator_constraint(_error, vectorized, Val(sense), lhs, rhs)...
 end
 
 function parseternaryconstraint(_error::Function, vectorized::Bool, lb, ::Union{Val{:(<=)}, Val{:(≤)}}, aff, rsign::Union{Val{:(<=)}, Val{:(≤)}}, ub)
@@ -494,7 +494,7 @@ macro SDconstraint(m, x)
     else
         _error("Invalid sense $sense in SDP constraint")
     end
-    parsecode, constructcall = parseoneoperatorconstraint(_error, false, Val(:in), aff, :(PSDCone()))
+    parsecode, constructcall = parse_one_operator_constraint(_error, false, Val(:in), aff, :(PSDCone()))
     assert_validmodel(m, quote
         $parsecode
         addconstraint($m, $constructcall)
