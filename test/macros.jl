@@ -23,7 +23,12 @@ end
 
     @testset "Extension of @variable with constructvariable! #1029" begin
         JuMP.variabletype(m::Model, ::Type{MyVariable}) = MyVariable
-        function JuMP.constructvariable!(m::Model, ::Type{MyVariable}, _error::Function, args...; test_kw::Int = 0)
+        names = Dict{MyVariable, String}()
+        function JuMP.addvariable(m::Model, v::MyVariable, name::String)
+            names[v] = name
+            v
+        end
+        function JuMP.constructvariable!(::Type{MyVariable}, _error::Function, args...; test_kw::Int = 0)
             MyVariable(args..., test_kw)
         end
         m = Model()
@@ -39,7 +44,7 @@ end
         @test !x.info.integer
         @test x.info.hasstart
         @test x.info.start == 3
-        @test x.info.name == "x"
+        @test names[x] == "x"
         @test x.test_kw == 1
         @variable(m, y[1:3] >= 0, MyVariable, test_kw = 2)
         @test isa(y, Vector{MyVariable})
@@ -54,7 +59,7 @@ end
             @test !y[i].info.integer
             @test !y[i].info.hasstart
             @test isnan(y[i].info.start)
-            @test y[i].info.name == "y[$i]"
+            @test names[y[i]] == "y[$i]"
             @test y[i].test_kw == 2
         end
     end

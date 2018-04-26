@@ -1053,8 +1053,8 @@ macro variable(args...)
         sdp && _error("Cannot add a semidefinite scalar variable")
         info = :(VariableInfo($haslb, $lb, $hasub, $ub, $hasfix, $fixedvalue, $hasstart, $value, $binary, $integer))
         constructcall = :( constructvariable!($(extra...), $_error, $info) )
+        addkwargs!(constructcall, extra_kwargs)
         variablecall = :( addvariable($m, $constructcall, $basename) )
-        addkwargs!(variablecall, extra_kwargs)
         code = :($variable = $variablecall)
         if !anonvar
             code = quote
@@ -1075,8 +1075,8 @@ macro variable(args...)
     # Code to be used to create each variable of the container.
     info = :(VariableInfo($haslb, $lb, $hasub, $ub, $hasfix, $fixedvalue, $hasstart, $value, $binary, $integer))
     constructcall = :( constructvariable!($(extra...), $_error, $info) )
+    addkwargs!(constructcall, extra_kwargs)
     variablecall = :( addvariable($m, $constructcall, $(namecall(basename, idxvars))) )
-    addkwargs!(variablecall, extra_kwargs)
     code = :( $(refcall) = $variablecall )
     # Determine the return type of constructvariable!. This is needed to create the container holding them.
     vartype = :( variabletype($m, $(extra...)) )
