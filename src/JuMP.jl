@@ -12,8 +12,6 @@ __precompile__()
 
 module JuMP
 
-import Base.map
-
 import MathOptInterface
 const MOI = MathOptInterface
 const MOIU = MOI.Utilities
