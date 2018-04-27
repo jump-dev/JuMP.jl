@@ -579,7 +579,7 @@ end
 
 
 Base.:+(x::AbstractArray{T}) where {T<:JuMPTypes} = x
-function (-)(x::AbstractArray{T}) where T<:JuMPTypes
+function Base.:-(x::AbstractArray{T}) where T<:JuMPTypes
     ret = similar(x, typeof(-one(T)))
     for I in eachindex(ret)
         ret[I] = -x[I]
