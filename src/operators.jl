@@ -222,8 +222,6 @@ function Base.sum(affs::AbstractArray{T}) where T<:GenericAffExpr
     return new_aff
 end
 
-import Base.vecdot
-
 # Base Julia's generic fallback vecdot requires that dot be defined
 # for scalars, so instead of defining them one-by-one, we will
 # fallback to the multiplication operator
@@ -235,10 +233,9 @@ Base.dot(lhs::AbstractVector{T},rhs::AbstractVector{S}) where {T<:JuMPTypes,S<:J
 Base.dot(lhs::AbstractVector{T},rhs::AbstractVector{S}) where {T<:JuMPTypes,S} = _dot(lhs,rhs)
 Base.dot(lhs::AbstractVector{T},rhs::AbstractVector{S}) where {T,S<:JuMPTypes} = _dot(lhs,rhs)
 
-# TODO: qualify Base.vecdot once v0.3 support is dropped
-vecdot(lhs::AbstractArray{T,N},rhs::AbstractArray{S,N}) where {T<:JuMPTypes,S,N} = _dot(lhs,rhs)
-vecdot(lhs::AbstractArray{T,N},rhs::AbstractArray{S,N}) where {T<:JuMPTypes,S<:JuMPTypes,N} = _dot(lhs,rhs)
-vecdot(lhs::AbstractArray{T,N},rhs::AbstractArray{S,N}) where {T,S<:JuMPTypes,N} = _dot(lhs,rhs)
+Base.vecdot(lhs::AbstractArray{T,N},rhs::AbstractArray{S,N}) where {T<:JuMPTypes,S,N} = _dot(lhs,rhs)
+Base.vecdot(lhs::AbstractArray{T,N},rhs::AbstractArray{S,N}) where {T<:JuMPTypes,S<:JuMPTypes,N} = _dot(lhs,rhs)
+Base.vecdot(lhs::AbstractArray{T,N},rhs::AbstractArray{S,N}) where {T,S<:JuMPTypes,N} = _dot(lhs,rhs)
 
 function _dot(lhs::AbstractArray{T}, rhs::AbstractArray{S}) where {T,S}
     size(lhs) == size(rhs) || error("Incompatible dimensions")
