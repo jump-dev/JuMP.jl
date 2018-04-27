@@ -13,12 +13,12 @@ end
         @test ex == 6
     end
 
-    @testset "constructconstraint! on variable" begin
+    @testset "buildconstraint on variable" begin
         m = Model()
         @variable(m, x)
-        @test JuMP.constructconstraint!(error, x, MOI.GreaterThan(0.0)) isa JuMP.SingleVariableConstraint{MOI.GreaterThan{Float64}}
-        @test JuMP.constructconstraint!(error, x, MOI.LessThan(0.0)) isa JuMP.SingleVariableConstraint{MOI.LessThan{Float64}}
-        @test JuMP.constructconstraint!(error, x, MOI.EqualTo(0)) isa JuMP.SingleVariableConstraint{MOI.EqualTo{Int}}
+        @test JuMP.buildconstraint(error, x, MOI.GreaterThan(0.0)) isa JuMP.SingleVariableConstraint{MOI.GreaterThan{Float64}}
+        @test JuMP.buildconstraint(error, x, MOI.LessThan(0.0)) isa JuMP.SingleVariableConstraint{MOI.LessThan{Float64}}
+        @test JuMP.buildconstraint(error, x, MOI.EqualTo(0)) isa JuMP.SingleVariableConstraint{MOI.EqualTo{Int}}
     end
 
     @testset "Extension of @variable with constructvariable! #1029" begin

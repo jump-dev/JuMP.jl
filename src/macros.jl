@@ -242,7 +242,7 @@ function _check_vectorized(sense::Symbol)
     end
 end
 
-# two-argument constructconstraint! is used for one-sided constraints.
+# two-argument buildconstraint is used for one-sided constraints.
 # Right-hand side is zero.
 sense_to_set(_error::Function, ::Union{Val{:(<=)}, Val{:(≤)}}) = MOI.LessThan(0.0)
 sense_to_set(_error::Function, ::Union{Val{:(>=)}, Val{:(≥)}}) = MOI.GreaterThan(0.0)
@@ -253,9 +253,9 @@ function parse_one_operator_constraint(_error::Function, vectorized::Bool, ::Val
     newaff, parseaff = parseExprToplevel(aff, :q)
     parsecode = :(q = Val{false}(); $parseaff)
     if vectorized
-        constructcall = :(constructconstraint!.($_error, $newaff, $(esc(set))))
+        constructcall = :(buildconstraint.($_error, $newaff, $(esc(set))))
     else
-        constructcall = :(constructconstraint!($_error, $newaff, $(esc(set))))
+        constructcall = :(buildconstraint($_error, $newaff, $(esc(set))))
     end
     parsecode, constructcall
 end
@@ -277,9 +277,9 @@ function parseternaryconstraint(_error::Function, vectorized::Bool, lb, ::Union{
     newlb, parselb = parseExprToplevel(lb, :lb)
     newub, parseub = parseExprToplevel(ub, :ub)
     if vectorized
-        constructcall = :(constructconstraint!.($_error, $newaff, $newlb, $newub))
+        constructcall = :(buildconstraint.($_error, $newaff, $newlb, $newub))
     else
-        constructcall = :(constructconstraint!($_error, $newaff, $newlb, $newub))
+        constructcall = :(buildconstraint($_error, $newaff, $newlb, $newub))
     end
     parseaff, parselb, parseub, constructcall
 end
@@ -317,25 +317,25 @@ end
 
 const ScalarPolyhedralSets = Union{MOI.LessThan,MOI.GreaterThan,MOI.EqualTo,MOI.Interval}
 
-constructconstraint!(_error::Function, v::Variable, set::MOI.AbstractScalarSet) = SingleVariableConstraint(v, set)
-constructconstraint!(_error::Function, v::Vector{Variable}, set::MOI.AbstractVectorSet) = VectorOfVariablesConstraint(v, set)
+buildconstraint(_error::Function, v::Variable, set::MOI.AbstractScalarSet) = SingleVariableConstraint(v, set)
+buildconstraint(_error::Function, v::Vector{Variable}, set::MOI.AbstractVectorSet) = VectorOfVariablesConstraint(v, set)
 
-constructconstraint!(_error::Function, α::Number, set::MOI.AbstractScalarSet) = constructconstraint!(_error, convert(AffExpr, α), set)
-function constructconstraint!(_error::Function, aff::AffExpr, set::S) where S <: Union{MOI.LessThan,MOI.GreaterThan,MOI.EqualTo}
+buildconstraint(_error::Function, α::Number, set::MOI.AbstractScalarSet) = buildconstraint(_error, convert(AffExpr, α), set)
+function buildconstraint(_error::Function, aff::AffExpr, set::S) where S <: Union{MOI.LessThan,MOI.GreaterThan,MOI.EqualTo}
     offset = aff.constant
     aff.constant = 0.0
     return AffExprConstraint(aff, S(MOIU.getconstant(set)-offset))
 end
 
-constructconstraint!(_error::Function, x::AbstractArray, set::MOI.AbstractScalarSet) = _error("Unexpected vector in scalar constraint. Did you mean to use the dot comparison operators like .==, .<=, and .>= instead?")
-constructconstraint!(_error::Function, x::Vector{AffExpr}, set::MOI.AbstractVectorSet) = VectorAffExprConstraint(x, set)
+buildconstraint(_error::Function, x::AbstractArray, set::MOI.AbstractScalarSet) = _error("Unexpected vector in scalar constraint. Did you mean to use the dot comparison operators like .==, .<=, and .>= instead?")
+buildconstraint(_error::Function, x::Vector{AffExpr}, set::MOI.AbstractVectorSet) = VectorAffExprConstraint(x, set)
 
-function constructconstraint!(_error::Function, quad::QuadExpr, set::S) where S <: Union{MOI.LessThan,MOI.GreaterThan,MOI.EqualTo}
+function buildconstraint(_error::Function, quad::QuadExpr, set::S) where S <: Union{MOI.LessThan,MOI.GreaterThan,MOI.EqualTo}
     offset = quad.aff.constant
     quad.aff.constant = 0.0
     return QuadExprConstraint(quad, S(MOIU.getconstant(set)-offset))
 end
-#constructconstraint!(x::Vector{QuadExpr}, set::MOI.AbstractVectorSet) = VectorQuadExprConstraint(x, set)
+#buildconstraint(x::Vector{QuadExpr}, set::MOI.AbstractVectorSet) = VectorQuadExprConstraint(x, set)
 
 
 # _vectorize_like(x::Number, y::AbstractArray{AffExpr}) = (ret = similar(y, typeof(x)); fill!(ret, x))
@@ -346,27 +346,27 @@ end
 #     x
 # end
 #
-# function constructconstraint!(x::AbstractArray{AffExpr}, lb, ub)
+# function buildconstraint(x::AbstractArray{AffExpr}, lb, ub)
 #     LB = _vectorize_like(lb,x)
 #     UB = _vectorize_like(ub,x)
 #     ret = similar(x, AffExprConstraint)
 #     map!(ret, eachindex(ret)) do i
-#         constructconstraint!(x[i], LB[i], UB[i])
+#         buildconstraint(x[i], LB[i], UB[i])
 #     end
 # end
 
-# three-argument constructconstraint! is used for two-sided constraints.
-constructconstraint!(_error::Function, v::Variable, lb::Real, ub::Real) = SingleVariableConstraint(v, MOI.Interval(lb, ub))
+# three-argument buildconstraint is used for two-sided constraints.
+buildconstraint(_error::Function, v::Variable, lb::Real, ub::Real) = SingleVariableConstraint(v, MOI.Interval(lb, ub))
 
-function constructconstraint!(_error::Function, aff::AffExpr, lb::Real, ub::Real)
+function buildconstraint(_error::Function, aff::AffExpr, lb::Real, ub::Real)
     offset = aff.constant
     aff.constant = 0.0
     AffExprConstraint(aff,MOI.Interval(lb-offset,ub-offset))
 end
 
-constructconstraint!(_error::Function, q::QuadExpr, lb, ub) = _error("Two-sided quadratic constraints not supported. (Try @NLconstraint instead.)")
+buildconstraint(_error::Function, q::QuadExpr, lb, ub) = _error("Two-sided quadratic constraints not supported. (Try @NLconstraint instead.)")
 
-function constructconstraint!(_error::Function, expr, lb, ub)
+function buildconstraint(_error::Function, expr, lb, ub)
     lb isa Number || _error(string("Expected $lb to be a number."))
     ub isa Number || _error(string("Expected $ub to be a number."))
     if lb isa Number && ub isa Number
@@ -429,9 +429,9 @@ macro constraint(args...)
     # we will wrap in loops to assign to the ConstraintRefs
     refcall, idxvars, idxsets, condition = buildrefsets(c, variable)
     # JuMP accepts constraint syntax of the form @constraint(m, foo in bar).
-    # This will be rewritten to a call to constructconstraint!(_error,foo, bar). To
+    # This will be rewritten to a call to buildconstraint(_error,foo, bar). To
     # extend JuMP to accept set-based constraints of this form, it is necessary
-    # to add the corresponding methods to constructconstraint!. Note that this
+    # to add the corresponding methods to buildconstraint. Note that this
     # will likely mean that bar will be some custom type, rather than e.g. a
     # Symbol, since we will likely want to dispatch on the type of the set
     # appearing in the constraint.
@@ -519,7 +519,7 @@ end
 #         lhs = :($(x.args[2]) - $(x.args[3]))
 #         return quote
 #             newaff = @Expression($(esc(lhs)))
-#             c = constructconstraint!(newaff,$(quot(sense)))
+#             c = buildconstraint(newaff,$(quot(sense)))
 #             isa(c, LinearConstraint) ||
 #                 error("Constraint in @LinearConstraint is really a $(typeof(c))")
 #             c
@@ -572,7 +572,7 @@ end
 #         lhs = :($(x.args[2]) - $(x.args[3]))
 #         return quote
 #             newaff = @Expression($(esc(lhs)))
-#             q = constructconstraint!(newaff,$(quot(sense)))
+#             q = buildconstraint(newaff,$(quot(sense)))
 #             isa(q, QuadConstraint) || error("Constraint in @QuadConstraint is really a $(typeof(q))")
 #             q
 #         end
@@ -598,7 +598,7 @@ end
 #         lhs = :($(x.args[2]) - $(x.args[3]))
 #         return quote
 #             newaff = @Expression($(esc(lhs)))
-#             q = constructconstraint!(newaff,$(quot(sense)))
+#             q = buildconstraint(newaff,$(quot(sense)))
 #             isa(q, SOCConstraint) || error("Constraint in @SOCConstraint is really a $(typeof(q))")
 #             q
 #         end
@@ -1145,7 +1145,7 @@ macro variable(args...)
             $(getloopedcode(variable, code, condition, idxvars, idxsets, vartype, requestedcontainer; lowertri=symmetric))
             $(if sdp
                 quote
-                    JuMP.addconstraint($m, JuMP.constructconstraint!($_error, Symmetric($variable), JuMP.PSDCone()))
+                    JuMP.addconstraint($m, JuMP.buildconstraint($_error, Symmetric($variable), JuMP.PSDCone()))
                 end
             end)
             !$anonvar && registervar($m, $quotvarname, $variable)
