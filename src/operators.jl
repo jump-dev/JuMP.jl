@@ -497,28 +497,28 @@ function _fillwithzeros(arr::AbstractArray{T}) where T
 end
 
 for op in [:+, :-]; @eval begin
-    function $op(lhs::Number,rhs::AbstractArray{T}) where T<:JuMPTypes
+    function Base.$op(lhs::Number,rhs::AbstractArray{T}) where T<:JuMPTypes
         ret = similar(rhs, typeof($op(lhs, zero(T))))
         for I in eachindex(ret)
             ret[I] = $op(lhs, rhs[I])
         end
         ret
     end
-    function $op(lhs::AbstractArray{T},rhs::Number) where T<:JuMPTypes
+    function Base.$op(lhs::AbstractArray{T},rhs::Number) where T<:JuMPTypes
         ret = similar(lhs, typeof($op(zero(T), rhs)))
         for I in eachindex(ret)
             ret[I] = $op(lhs[I], rhs)
         end
         ret
     end
-    function $op(lhs::T,rhs::AbstractArray{S}) where {T<:JuMPTypes,S}
+    function Base.$op(lhs::T,rhs::AbstractArray{S}) where {T<:JuMPTypes,S}
         ret = similar(rhs, typeof($op(lhs, zero(S))))
         for I in eachindex(ret)
             ret[I] = $op(lhs, rhs[I])
         end
         ret
     end
-    function $op(lhs::AbstractArray{S},rhs::T) where {T<:JuMPTypes,S}
+    function Base.$op(lhs::AbstractArray{S},rhs::T) where {T<:JuMPTypes,S}
         ret = similar(lhs, typeof($op(zero(S), rhs)))
         for I in eachindex(ret)
             ret[I] = $op(lhs[I], rhs)
@@ -528,28 +528,28 @@ for op in [:+, :-]; @eval begin
 end; end
 
 for op in [:*, :/]; @eval begin
-    function $op(lhs::Number,rhs::AbstractArray{T}) where T<:JuMPTypes
+    function Base.$op(lhs::Number,rhs::AbstractArray{T}) where T<:JuMPTypes
         ret = similar(rhs, typeof($op(lhs, zero(T))))
         for I in eachindex(ret)
             ret[I] = $op(lhs, rhs[I])
         end
         ret
     end
-    function $op(lhs::AbstractArray{T},rhs::Number) where T<:JuMPTypes
+    function Base.$op(lhs::AbstractArray{T},rhs::Number) where T<:JuMPTypes
         ret = similar(lhs, typeof($op(zero(T), rhs)))
         for I in eachindex(ret)
             ret[I] = $op(lhs[I], rhs)
         end
         ret
     end
-    function $op(lhs::T,rhs::AbstractArray{S}) where {T<:JuMPTypes,S}
+    function Base.$op(lhs::T,rhs::AbstractArray{S}) where {T<:JuMPTypes,S}
         ret = similar(rhs, typeof($op(lhs, zero(S))))
         for I in eachindex(ret)
             ret[I] = $op(lhs, rhs[I])
         end
         ret
     end
-    function $op(lhs::AbstractArray{S},rhs::T) where {T<:JuMPTypes,S}
+    function Base.$op(lhs::AbstractArray{S},rhs::T) where {T<:JuMPTypes,S}
         ret = similar(lhs, typeof($op(zero(S), rhs)))
         for I in eachindex(ret)
             ret[I] = $op(lhs[I], rhs)
