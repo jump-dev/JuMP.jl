@@ -12,7 +12,6 @@ __precompile__()
 
 module JuMP
 
-importall Base.Operators
 import Base.map
 
 import MathOptInterface
