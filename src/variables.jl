@@ -3,21 +3,20 @@
 #  License, v. 2.0. If a copy of the MPL was not distributed with this
 #  file, You can obtain one at http://mozilla.org/MPL/2.0/.
 
-
 #############################################################################
-# VariableIndex
+# VariableRef
 # Holds a reference to the model and the corresponding MOI.VariableIndex.
-struct Variable <: AbstractJuMPScalar
+struct VariableRef <: AbstractJuMPScalar
     m::Model
     index::MOIVAR
 end
 
-function MOI.delete!(m::Model, v::Variable)
+function MOI.delete!(m::Model, v::VariableRef)
     @assert m === v.m
     MOI.delete!(m.moibackend, v.index)
 end
 
-MOI.isvalid(m::Model, v::Variable) = (v.m === m) && MOI.isvalid(m.moibackend, v.index)
+MOI.isvalid(m::Model, v::VariableRef) = (v.m === m) && MOI.isvalid(m.moibackend, v.index)
 
 
 """
@@ -34,19 +33,19 @@ function VariableToValueMap{T}(m::Model) where T
     return VariableToValueMap{T}(m, Dict{MOIVAR,T}())
 end
 
-function Base.getindex(vm::VariableToValueMap, v::Variable)
+function Base.getindex(vm::VariableToValueMap, v::VariableRef)
     @assert v.m === vm.m # TODO: better error message
     return vm.d[index(v)]
 end
 
-function Base.setindex!(vm::VariableToValueMap{T}, value::T, v::Variable) where T
+function Base.setindex!(vm::VariableToValueMap{T}, value::T, v::VariableRef) where T
     @assert v.m === vm.m # TODO: better error message
     vm.d[index(v)] = value
 end
 
-Base.setindex!(vm::VariableToValueMap{T}, value, v::Variable) where T = setindex!(vm, convert(T, value), v)
+Base.setindex!(vm::VariableToValueMap{T}, value, v::VariableRef) where T = setindex!(vm, convert(T, value), v)
 
-function Base.delete!(vm::VariableToValueMap,v::Variable)
+function Base.delete!(vm::VariableToValueMap,v::VariableRef)
     delete!(vm.d, index(v))
     vm
 end
@@ -54,41 +53,41 @@ end
 Base.empty!(vm::VariableToValueMap) = empty!(vm.d)
 Base.isempty(vm::VariableToValueMap) = isempty(vm.d)
 
-Base.haskey(vm::VariableToValueMap, v::Variable) = (vm.m === v.m) && haskey(vm.d, index(v))
+Base.haskey(vm::VariableToValueMap, v::VariableRef) = (vm.m === v.m) && haskey(vm.d, index(v))
 
 
 
-index(v::Variable) = v.index
+index(v::VariableRef) = v.index
 
-function Variable(m::Model)
+function VariableRef(m::Model)
     index = MOI.addvariable!(m.moibackend)
-    return Variable(m, index)
+    return VariableRef(m, index)
 end
 
 # Name setter/getters
 
 """
-    name(v::Variable)::String
+    name(v::VariableRef)::String
 
 Get a variable's name.
 """
-name(v::Variable) = MOI.get(v.m, MOI.VariableName(), v)
+name(v::VariableRef) = MOI.get(v.m, MOI.VariableName(), v)
 
 """
-    setname(v::Variable,s::AbstractString)
+    setname(v::VariableRef,s::AbstractString)
 
 Set a variable's name.
 """
-setname(v::Variable, s::String) = MOI.set!(v.m, MOI.VariableName(), v, s)
+setname(v::VariableRef, s::String) = MOI.set!(v.m, MOI.VariableName(), v, s)
 
-MOI.SingleVariable(v::Variable) = MOI.SingleVariable(index(v))
+MOI.SingleVariable(v::VariableRef) = MOI.SingleVariable(index(v))
 
 # Note: No validation is performed that the variables belong to the same model.
-MOI.VectorOfVariables(vars::Vector{Variable}) = MOI.VectorOfVariables(index.(vars))
+MOI.VectorOfVariables(vars::Vector{VariableRef}) = MOI.VectorOfVariables(index.(vars))
 
-Variable(m::Model, f::MOI.SingleVariable) = Variable(m, f.variable)
+VariableRef(m::Model, f::MOI.SingleVariable) = VariableRef(m, f.variable)
 
-function setobjective(m::Model, sense::Symbol, x::Variable)
+function setobjective(m::Model, sense::Symbol, x::VariableRef)
     # TODO: This code is repeated here, for AffExpr, and for QuadExpr.
     if sense == :Min
         moisense = MOI.MinSense
@@ -101,41 +100,41 @@ function setobjective(m::Model, sense::Symbol, x::Variable)
 end
 
 """
-    objectivefunction(m::Model, ::Type{Variable})
+    objectivefunction(m::Model, ::Type{VariableRef})
 
-Return a `Variable` object representing the objective function.
+Return a `VariableRef` object representing the objective function.
 Error if the objective is not a `SingleVariable`.
 """
-function objectivefunction(m::Model, ::Type{Variable})
+function objectivefunction(m::Model, ::Type{VariableRef})
     f = MOI.get(m.moibackend, MOI.ObjectiveFunction{MOI.SingleVariable}())::MOI.SingleVariable
-    return Variable(m, f)
+    return VariableRef(m, f)
 end
 
 struct SingleVariableConstraint{S <: MOI.AbstractScalarSet} <: AbstractConstraint
-    func::Variable
+    func::VariableRef
     set::S
 end
 
 moi_function_and_set(c::SingleVariableConstraint) = (MOI.SingleVariable(c.func), c.set)
 
 struct VectorOfVariablesConstraint{S <: MOI.AbstractVectorSet} <: AbstractConstraint
-    func::Vector{Variable}
+    func::Vector{VariableRef}
     set::S
 end
 
 moi_function_and_set(c::VectorOfVariablesConstraint) = (MOI.VectorOfVariables(c.func), c.set)
 
-function constraintobject(cr::ConstraintRef{Model}, ::Type{Variable}, ::Type{SetType}) where {SetType <: MOI.AbstractScalarSet}
+function constraintobject(cr::ConstraintRef{Model}, ::Type{VariableRef}, ::Type{SetType}) where {SetType <: MOI.AbstractScalarSet}
     f = MOI.get(cr.m, MOI.ConstraintFunction(), cr)::MOI.SingleVariable
     s = MOI.get(cr.m, MOI.ConstraintSet(), cr)::SetType
-    return SingleVariableConstraint(Variable(cr.m, f), s)
+    return SingleVariableConstraint(VariableRef(cr.m, f), s)
 end
 
-function constraintobject(cr::ConstraintRef{Model}, ::Type{Vector{Variable}}, ::Type{SetType}) where {SetType <: MOI.AbstractVectorSet}
+function constraintobject(cr::ConstraintRef{Model}, ::Type{Vector{VariableRef}}, ::Type{SetType}) where {SetType <: MOI.AbstractVectorSet}
     m = cr.m
     f = MOI.get(m, MOI.ConstraintFunction(), cr)::MOI.VectorOfVariables
     s = MOI.get(m, MOI.ConstraintSet(), cr)::SetType
-    return VectorOfVariablesConstraint(map(v -> Variable(m, v), f.variables), s)
+    return VectorOfVariablesConstraint(map(v -> VariableRef(m, v), f.variables), s)
 end
 
 
@@ -143,22 +142,22 @@ end
 
 # lower bounds
 
-haslowerbound(v::Variable) = haskey(v.m.variabletolowerbound,index(v))
+haslowerbound(v::VariableRef) = haskey(v.m.variabletolowerbound,index(v))
 
-function lowerboundindex(v::Variable)
+function lowerboundindex(v::VariableRef)
     @assert haslowerbound(v) # TODO error message
     return v.m.variabletolowerbound[index(v)]
 end
-function setlowerboundindex(v::Variable, cindex::MOILB)
+function setlowerboundindex(v::VariableRef, cindex::MOILB)
     v.m.variabletolowerbound[index(v)] = cindex
 end
 
 """
-    setlowerbound(v::Variable,lower::Number)
+    setlowerbound(v::VariableRef,lower::Number)
 
 Set the lower bound of a variable. If one does not exist, create a new lower bound constraint.
 """
-function setlowerbound(v::Variable,lower::Number)
+function setlowerbound(v::VariableRef,lower::Number)
     newset = MOI.GreaterThan(convert(Float64,lower))
     # do we have a lower bound already?
     if haslowerbound(v)
@@ -172,49 +171,49 @@ function setlowerbound(v::Variable,lower::Number)
     nothing
 end
 
-function LowerBoundRef(v::Variable)
+function LowerBoundRef(v::VariableRef)
     return ConstraintRef{Model, MOILB}(v.m, lowerboundindex(v))
 end
 
 """
-    deletelowerbound(v::Variable)
+    deletelowerbound(v::VariableRef)
 
 Delete the lower bound constraint of a variable.
 """
-function deletelowerbound(v::Variable)
+function deletelowerbound(v::VariableRef)
     MOI.delete!(v.m, LowerBoundRef(v))
     delete!(v.m.variabletolowerbound, index(v))
     nothing
 end
 
 """
-    lowerbound(v::Variable)
+    lowerbound(v::VariableRef)
 
 Return the lower bound of a variable. Error if one does not exist.
 """
-function lowerbound(v::Variable)
+function lowerbound(v::VariableRef)
     cset = MOI.get(v.m, MOI.ConstraintSet(), LowerBoundRef(v))::MOI.GreaterThan
     return cset.lower
 end
 
 # upper bounds
 
-hasupperbound(v::Variable) = haskey(v.m.variabletoupperbound,index(v))
+hasupperbound(v::VariableRef) = haskey(v.m.variabletoupperbound,index(v))
 
-function upperboundindex(v::Variable)
+function upperboundindex(v::VariableRef)
     @assert hasupperbound(v) # TODO error message
     return v.m.variabletoupperbound[index(v)]
 end
-function setupperboundindex(v::Variable, cindex::MOIUB)
+function setupperboundindex(v::VariableRef, cindex::MOIUB)
     v.m.variabletoupperbound[index(v)] = cindex
 end
 
 """
-    setupperbound(v::Variable,upper::Number)
+    setupperbound(v::VariableRef,upper::Number)
 
 Set the upper bound of a variable. If one does not exist, create an upper bound constraint.
 """
-function setupperbound(v::Variable,upper::Number)
+function setupperbound(v::VariableRef,upper::Number)
     newset = MOI.LessThan(convert(Float64,upper))
     # do we have an upper bound already?
     if hasupperbound(v)
@@ -228,49 +227,49 @@ function setupperbound(v::Variable,upper::Number)
     nothing
 end
 
-function UpperBoundRef(v::Variable)
+function UpperBoundRef(v::VariableRef)
     return ConstraintRef{Model, MOIUB}(v.m, upperboundindex(v))
 end
 
 """
-    deleteupperbound(v::Variable)
+    deleteupperbound(v::VariableRef)
 
 Delete the upper bound constraint of a variable.
 """
-function deleteupperbound(v::Variable)
+function deleteupperbound(v::VariableRef)
     MOI.delete!(v.m, UpperBoundRef(v))
     delete!(v.m.variabletoupperbound, index(v))
     nothing
 end
 
 """
-    upperbound(v::Variable)
+    upperbound(v::VariableRef)
 
 Return the upper bound of a variable. Error if one does not exist.
 """
-function upperbound(v::Variable)
+function upperbound(v::VariableRef)
     cset = MOI.get(v.m, MOI.ConstraintSet(), UpperBoundRef(v))::MOI.LessThan
     return cset.upper
 end
 
 # fixed value
 
-isfixed(v::Variable) = haskey(v.m.variabletofix,index(v))
+isfixed(v::VariableRef) = haskey(v.m.variabletofix,index(v))
 
-function fixindex(v::Variable)
+function fixindex(v::VariableRef)
     @assert isfixed(v) # TODO error message
     return v.m.variabletofix[index(v)]
 end
-function setfixindex(v::Variable, cindex::MOIFIX)
+function setfixindex(v::VariableRef, cindex::MOIFIX)
     v.m.variabletofix[index(v)] = cindex
 end
 
 """
-    fix(v::Variable,upper::Number)
+    fix(v::VariableRef,upper::Number)
 
 Fix a variable to a value. Update the fixing constraint if one exists, otherwise create a new one.
 """
-function fix(v::Variable,upper::Number)
+function fix(v::VariableRef,upper::Number)
     newset = MOI.EqualTo(convert(Float64,upper))
     # are we already fixed?
     if isfixed(v)
@@ -285,48 +284,48 @@ function fix(v::Variable,upper::Number)
 end
 
 """
-    unfix(v::Variable)
+    unfix(v::VariableRef)
 
 Delete the fixing constraint of a variable.
 """
-function unfix(v::Variable)
+function unfix(v::VariableRef)
     MOI.delete!(v.m, FixRef(v))
     delete!(v.m.variabletofix, index(v))
     nothing
 end
 
 """
-    fixvalue(v::Variable)
+    fixvalue(v::VariableRef)
 
 Return the value to which a variable is fixed. Error if one does not exist.
 """
-function fixvalue(v::Variable)
+function fixvalue(v::VariableRef)
     cset = MOI.get(v.m, MOI.ConstraintSet(), FixRef(v))::MOI.EqualTo
     return cset.value
 end
 
-function FixRef(v::Variable)
+function FixRef(v::VariableRef)
     return ConstraintRef{Model,MOIFIX}(v.m, fixindex(v))
 end
 
 # integer and binary constraints
 
-isinteger(v::Variable) = haskey(v.m.variabletointegrality,index(v))
+isinteger(v::VariableRef) = haskey(v.m.variabletointegrality,index(v))
 
-function integerindex(v::Variable)
+function integerindex(v::VariableRef)
     @assert isinteger(v) # TODO error message
     return v.m.variabletointegrality[index(v)]
 end
-function setintegerindex(v::Variable, cindex::MOIINT)
+function setintegerindex(v::VariableRef, cindex::MOIINT)
     v.m.variabletointegrality[index(v)] = cindex
 end
 
 """
-    setinteger(v::Variable)
+    setinteger(v::VariableRef)
 
 Add an integrality constraint on the variable `v`.
 """
-function setinteger(v::Variable)
+function setinteger(v::VariableRef)
     isinteger(v) && return
     @assert !isbinary(v) # TODO error message
     cindex = MOI.addconstraint!(v.m.moibackend, MOI.SingleVariable(index(v)), MOI.Integer())
@@ -334,31 +333,31 @@ function setinteger(v::Variable)
     nothing
 end
 
-function unsetinteger(v::Variable)
+function unsetinteger(v::VariableRef)
     MOI.delete!(v.m, IntegerRef(v))
     delete!(v.m.variabletointegrality, index(v))
 end
 
-function IntegerRef(v::Variable)
+function IntegerRef(v::VariableRef)
     return ConstraintRef{Model,MOIINT}(v.m, integerindex(v))
 end
 
-isbinary(v::Variable) = haskey(v.m.variabletozeroone,index(v))
+isbinary(v::VariableRef) = haskey(v.m.variabletozeroone,index(v))
 
-function binaryindex(v::Variable)
+function binaryindex(v::VariableRef)
     @assert isbinary(v) # TODO error message
     return v.m.variabletozeroone[index(v)]
 end
-function setbinaryindex(v::Variable, cindex::MOIBIN)
+function setbinaryindex(v::VariableRef, cindex::MOIBIN)
     v.m.variabletozeroone[index(v)] = cindex
 end
 
 """
-    setbinary(v::Variable)
+    setbinary(v::VariableRef)
 
 Add a constraint on the variable `v` that it must take values in the set ``\\{0,1\\}``.
 """
-function setbinary(v::Variable)
+function setbinary(v::VariableRef)
     isbinary(v) && return
     @assert !isinteger(v) # TODO error message
     cindex = MOI.addconstraint!(v.m.moibackend, MOI.SingleVariable(index(v)), MOI.ZeroOne())
@@ -366,27 +365,27 @@ function setbinary(v::Variable)
     nothing
 end
 
-function unsetbinary(v::Variable)
+function unsetbinary(v::VariableRef)
     MOI.delete!(v.m, BinaryRef(v))
     delete!(v.m.variabletozeroone, index(v))
 end
 
-function BinaryRef(v::Variable)
+function BinaryRef(v::VariableRef)
     return ConstraintRef{Model,MOIBIN}(v.m, binaryindex(v))
 end
 
 
-startvalue(v::Variable) = MOI.get(v.m, MOI.VariablePrimalStart(), v)
-setstartvalue(v::Variable, val::Number) = MOI.set!(v.m, MOI.VariablePrimalStart(), v, val)
+startvalue(v::VariableRef) = MOI.get(v.m, MOI.VariablePrimalStart(), v)
+setstartvalue(v::VariableRef, val::Number) = MOI.set!(v.m, MOI.VariablePrimalStart(), v, val)
 
 """
-    resultvalue(v::Variable)
+    resultvalue(v::VariableRef)
 
 Get the value of this variable in the result returned by a solver.
 Use `hasresultvalues` to check if a result exists before asking for values.
 Replaces `getvalue` for most use cases.
 """
-resultvalue(v::Variable) = MOI.get(v.m, MOI.VariablePrimal(), v)
-hasresultvalues(m::Model) = MOI.canget(m, MOI.VariablePrimal(), Variable)
+resultvalue(v::VariableRef) = MOI.get(v.m, MOI.VariablePrimal(), v)
+hasresultvalues(m::Model) = MOI.canget(m, MOI.VariablePrimal(), VariableRef)
 
-@Base.deprecate setvalue(v::Variable, val::Number) setstart(v, val)
+@Base.deprecate setvalue(v::VariableRef, val::Number) setstart(v, val)

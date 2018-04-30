@@ -13,7 +13,7 @@ end
         # the LHS is first subtracted to form x - 10.0 <= 0.
         @constraint(m, cref, x in MOI.LessThan(10.0))
         @test JuMP.name(cref) == "cref"
-        c = JuMP.constraintobject(cref, Variable, MOI.LessThan)
+        c = JuMP.constraintobject(cref, VariableRef, MOI.LessThan)
         @test c.func == x
         @test c.set == MOI.LessThan(10.0)
         @test_throws TypeError JuMP.constraintobject(cref, QuadExpr, MOI.LessThan)
@@ -22,7 +22,7 @@ end
         @variable(m, y[1:2])
         @constraint(m, cref2[i=1:2], y[i] in MOI.LessThan(float(i)))
         @test JuMP.name(cref2[1]) == "cref2[1]"
-        c = JuMP.constraintobject(cref2[1], Variable, MOI.LessThan)
+        c = JuMP.constraintobject(cref2[1], VariableRef, MOI.LessThan)
         @test c.func == y[1]
         @test c.set == MOI.LessThan(1.0)
     end
@@ -32,14 +32,14 @@ end
         @variable(m, x[1:2])
 
         cref = @constraint(m, x in MOI.Zeros(2))
-        c = JuMP.constraintobject(cref, Vector{Variable}, MOI.Zeros)
+        c = JuMP.constraintobject(cref, Vector{VariableRef}, MOI.Zeros)
         @test c.func == x
         @test c.set == MOI.Zeros(2)
         @test_throws TypeError JuMP.constraintobject(cref, Vector{AffExpr}, MOI.Nonnegatives)
         @test_throws TypeError JuMP.constraintobject(cref, AffExpr, MOI.EqualTo)
 
         cref = @constraint(m, [x[2],x[1]] in MOI.Zeros(2))
-        c = JuMP.constraintobject(cref, Vector{Variable}, MOI.Zeros)
+        c = JuMP.constraintobject(cref, Vector{VariableRef}, MOI.Zeros)
         @test c.func == [x[2],x[1]]
         @test c.set == MOI.Zeros(2)
     end
@@ -178,7 +178,7 @@ end
         @variable(m, w)
 
         cref = @constraint(m, [x y; z w] in PSDCone())
-        c = JuMP.constraintobject(cref, Vector{Variable}, MOI.PositiveSemidefiniteConeSquare)
+        c = JuMP.constraintobject(cref, Vector{VariableRef}, MOI.PositiveSemidefiniteConeSquare)
         @test c.func == [x, z, y, w]
         @test c.set == MOI.PositiveSemidefiniteConeSquare(2)
 

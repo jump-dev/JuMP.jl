@@ -26,7 +26,7 @@ end
 
 addtoexpr(ex::Number, c::Number, x::Number) = ex + c*x
 
-addtoexpr(ex::Number, c::Number, x::Variable) = AffExpr([x],[c],ex)
+addtoexpr(ex::Number, c::Number, x::VariableRef) = AffExpr([x],[c],ex)
 
 function addtoexpr(ex::Number, c::Number, x::T) where T<:GenericAffExpr
     # It's only safe to mutate the first argument.
@@ -55,7 +55,7 @@ function addtoexpr(ex::Number, c::Number, x::T) where T<:GenericQuadExpr
     end
 end
 
-addtoexpr(ex::Number, c::Variable, x::Variable) = QuadExpr([c],[x],[1.0],zero(AffExpr))
+addtoexpr(ex::Number, c::VariableRef, x::VariableRef) = QuadExpr([c],[x],[1.0],zero(AffExpr))
 
 function addtoexpr(ex::Number, c::T, x::T) where T<:GenericAffExpr
     q = c*x
@@ -119,13 +119,13 @@ addtoexpr(aff::GenericAffExpr{C,V},c::V,x::V) where {C,V} =
     GenericQuadExpr{C,V}([c],[x],[one(C)],aff)
 
 # TODO: add generic versions of following two methods
-addtoexpr(aff::AffExpr,c::AffExpr,x::Variable) =
+addtoexpr(aff::AffExpr,c::AffExpr,x::VariableRef) =
     QuadExpr(c.vars,
              fill(x,length(c.vars)),
              c.coeffs,
              addtoexpr(aff,c.constant,x))
 
-addtoexpr(aff::AffExpr,c::Variable,x::AffExpr) =
+addtoexpr(aff::AffExpr,c::VariableRef,x::AffExpr) =
     QuadExpr(fill(c,length(x.vars)),
              x.vars,
              x.coeffs,
@@ -263,7 +263,7 @@ _nlexprerr() = error("""Cannot use nonlinear expression or parameter in @constra
 addtoexpr(expr::GenericQuadExpr{C,V}, c::GenericAffExpr{C,V}, x::V) where {C,V<:_NLExpr} = _nlexprerr()
 addtoexpr(expr::GenericQuadExpr{C,V}, c::Number, x::V) where {C,V<:_NLExpr} = _nlexprerr()
 addtoexpr(expr::GenericQuadExpr{C,V}, c::V, x::GenericAffExpr{C,V}) where {C,V<:_NLExpr} = _nlexprerr()
-for T1 in (GenericAffExpr,GenericQuadExpr), T2 in (Number,Variable,GenericAffExpr,GenericQuadExpr)
+for T1 in (GenericAffExpr,GenericQuadExpr), T2 in (Number,VariableRef,GenericAffExpr,GenericQuadExpr)
     @eval addtoexpr(::$T1, ::$T2, ::_NLExpr) = _nlexprerr()
     @eval addtoexpr(::$T1, ::_NLExpr, ::$T2) = _nlexprerr()
 end
@@ -281,7 +281,7 @@ addtoexpr_reorder(ex::Val{false}, args...) = (*)(args...)
 
 
 @generated function addtoexpr_reorder(ex, x, y)
-    if x <: Union{Variable,AffExpr} && y <: Number
+    if x <: Union{VariableRef,AffExpr} && y <: Number
         :(addtoexpr(ex, y, x))
     else
         :(addtoexpr(ex, x, y))
@@ -291,7 +291,7 @@ end
 @generated function addtoexpr_reorder(ex, args...)
     n = length(args)
     @assert n ≥ 3
-    varidx = find(t -> (t == Variable || t == AffExpr), collect(args))
+    varidx = find(t -> (t == VariableRef || t == AffExpr), collect(args))
     allscalar = all(t -> (t <: Number), args[setdiff(1:n, varidx)])
     idx = (allscalar && length(varidx) == 1) ? varidx[1] : n
     coef = Expr(:call, :*, [:(args[$i]) for i in setdiff(1:n,idx)]...)

@@ -8,13 +8,13 @@
 # See http://github.com/JuliaOpt/JuMP.jl
 #############################################################################
 # test/variable.jl
-# Testing for Variable
+# Testing for VariableRef
 #############################################################################
 using JuMP
 import JuMP.repl
 using Base.Test
 
-@testset "Variables" begin
+@testset "VariableRefs" begin
     @testset "constructors" begin
         # Constructors
         mcon = Model()
@@ -155,13 +155,13 @@ using Base.Test
     @testset "Base.OneTo as index set (#933)" begin
         m = Model()
         x = @variable(m, [Base.OneTo(3), 1:2], container=Auto)
-        @test x isa Matrix{Variable}
+        @test x isa Matrix{VariableRef}
         @test size(x) == (3,2)
         x = @variable(m, [Base.OneTo(3), 1:2], container=Array)
-        @test x isa Matrix{Variable}
+        @test x isa Matrix{VariableRef}
         @test size(x) == (3,2)
         x = @variable(m, [Base.OneTo(3), 1:2], container=JuMPArray)
-        @test x isa JuMPArray{Variable}
+        @test x isa JuMPArray{VariableRef}
         @test length.(indices(x)) == (3,2)
     end
 
@@ -190,15 +190,15 @@ using Base.Test
     #    @test string(condmod) == "Min 0\nSubject to\n x[i] $fa i $inset {1,2,$dots,9,10} s.t. iseven(i)\n y[j,k] $fa j $inset {1,2,$dots,9,10}, k $inset {3,5,7,9} s.t. isodd(j + k) and k <= 8\n"
     # end
 
-    @testset "@variable returning Array{Variable}" begin
+    @testset "@variable returning Array{VariableRef}" begin
         m = Model()
         @variable(m, x[1:3,1:4,1:2], start = 0.0)
         @variable(m, y[1:0], start = 0.0)
         @variable(m, z[1:4], start = 0.0)
 
-        @test typeof(x) == Array{Variable,3}
-        @test typeof(y) == Array{Variable,1}
-        @test typeof(z) == Array{Variable,1}
+        @test typeof(x) == Array{VariableRef,3}
+        @test typeof(y) == Array{VariableRef,1}
+        @test typeof(z) == Array{VariableRef,1}
 
         @test typeof(JuMP.startvalue.(x)) == Array{Float64,3}
         # No type to infer for an empty collection.
@@ -208,7 +208,7 @@ using Base.Test
 
     @testset "startvalue on empty things" begin
         m = Model()
-        @variable(m, x[1:4,  1:0,1:3], start = 0) # Array{Variable}
+        @variable(m, x[1:4,  1:0,1:3], start = 0) # Array{VariableRef}
         @variable(m, y[1:4,  2:1,1:3], start = 0) # JuMPArray
         @variable(m, z[1:4,Set(),1:3], start = 0) # Dict
 
@@ -223,7 +223,7 @@ using Base.Test
 # Slices three-dimensional JuMPArray x[I,J,K]
 # I,J,K can be singletons, ranges, colons, etc.
 function sliceof(x, I, J, K)
-    y = Array{Variable}(length(I), length(J), length(K))
+    y = Array{VariableRef}(length(I), length(J), length(K))
 
     ii = 1
     jj = 1
@@ -318,7 +318,7 @@ end
     #     @variable(m, y)
     #     X = sparse([1, 3], [2, 3], [x, y])
     #
-    #     @test typeof(X) == SparseMatrixCSC{Variable, Int}
+    #     @test typeof(X) == SparseMatrixCSC{VariableRef, Int}
     #
     #     setstart(x, 1)
     #     setstart(y, 2)

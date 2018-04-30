@@ -64,7 +64,7 @@ end
         io_test(IJuliaMode, ex, "-2 z\\times x_{1} + x_{1}\\times x_{2}")
     end
 
-    @testset "Variable" begin
+    @testset "VariableRef" begin
         m = Model()
         @variable(m, 0 <= x <= 2)
 
@@ -106,18 +106,18 @@ end
         io_test(IJuliaMode, a_v, "v_{4,5,2,3,2,2,4}")
     end
 
-    @testset "User-created Array{Variable}" begin
+    @testset "User-created Array{VariableRef}" begin
         m = Model()
         @variable(m, x)
         @variable(m, y)
 
         v = [x,y,x]
         A = [x y; y x]
-        io_test(REPLMode,   v, "JuMP.Variable[x, y, x]")
-        #io_test(IJuliaMode, v, "JuMP.Variable[x, y, x]")
+        io_test(REPLMode,   v, "JuMP.VariableRef[x, y, x]")
+        #io_test(IJuliaMode, v, "JuMP.VariableRef[x, y, x]")
 
-        io_test(REPLMode,   A, "JuMP.Variable[x y; y x]")
-        #io_test(IJuliaMode, A, "JuMP.Variable[x y; y x]")
+        io_test(REPLMode,   A, "JuMP.VariableRef[x y; y x]")
+        #io_test(IJuliaMode, A, "JuMP.VariableRef[x y; y x]")
     end
 
     @testset "basename keyword argument" begin

@@ -10,7 +10,7 @@
 # src/affexpr.jl
 # Defines all types relating to affine expressions
 # - GenericAffExpr              ∑ aᵢ xᵢ  +  c
-#   - AffExpr                   Alias for (Float64, Variable)
+#   - AffExpr                   Alias for (Float64, VariableRef)
 #   - AffExprConstraint         AffExpr-in-set constraint
 # Operator overloads in src/operators.jl
 #############################################################################
@@ -123,13 +123,13 @@ function isequal_canonical(aff::GenericAffExpr{C,V}, other::GenericAffExpr{C,V})
 end
 
 
-# Alias for (Float64, Variable), the specific GenericAffExpr used by JuMP
-const AffExpr = GenericAffExpr{Float64,Variable}
+# Alias for (Float64, VariableRef), the specific GenericAffExpr used by JuMP
+const AffExpr = GenericAffExpr{Float64,VariableRef}
 AffExpr() = zero(AffExpr)
 
 Base.isempty(a::AffExpr) = (length(a.vars) == 0 && a.constant == 0.)
-Base.convert(::Type{AffExpr}, v::Variable) = AffExpr([v], [1.], 0.)
-Base.convert(::Type{AffExpr}, v::Real) = AffExpr(Variable[], Float64[], v)
+Base.convert(::Type{AffExpr}, v::VariableRef) = AffExpr([v], [1.], 0.)
+Base.convert(::Type{AffExpr}, v::Real) = AffExpr(VariableRef[], Float64[], v)
 
 # Check all coefficients are finite, i.e. not NaN, not Inf, not -Inf
 function assert_isfinite(a::AffExpr)
@@ -154,7 +154,7 @@ function MOI.ScalarAffineFunction(a::AffExpr)
 end
 
 function AffExpr(m::Model, f::MOI.ScalarAffineFunction)
-    return AffExpr(Variable.(m,f.variables), f.coefficients, f.constant)
+    return AffExpr(VariableRef.(m,f.variables), f.coefficients, f.constant)
 end
 
 """
