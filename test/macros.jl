@@ -109,7 +109,7 @@ end
 
         @test_throws ErrorException @constraint(m, x <= t <= y)
         @test_throws ErrorException @constraint(m, 0 <= nothing <= 1)
-        @test_macro_throws @constraint(1 <= x <= 2, foo=:bar)
+        @test_macro_throws ErrorException @constraint(1 <= x <= 2, foo=:bar)
 
         @test JuMP.isequal_canonical(@expression(m, 3x - y - 3.3(w + 2z) + 5), 3*x - y - 3.3*w - 6.6*z + 5)
         @test JuMP.isequal_canonical(@expression(m, quad, (w+3)*(2x+1)+10), 2*w*x + 6*x + w + 13)

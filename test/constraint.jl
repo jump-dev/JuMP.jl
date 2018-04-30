@@ -194,14 +194,14 @@ end
         m = Model()
         @test_throws ErrorException @variable(m, unequal[1:5,1:6], PSD)
         # Some of these errors happen at compile time, so we can't use @test_throws
-        @test_macro_throws @variable(m, notone[1:5,2:6], PSD)
-        @test_macro_throws @variable(m, oneD[1:5], PSD)
-        @test_macro_throws @variable(m, threeD[1:5,1:5,1:5], PSD)
-        @test_macro_throws @variable(m, psd[2] <= rand(2,2), PSD)
-        @test_macro_throws @variable(m, -ones(3,4) <= foo[1:4,1:4] <= ones(4,4), PSD)
-        @test_macro_throws @variable(m, -ones(3,4) <= foo[1:4,1:4] <= ones(4,4), Symmetric)
-        @test_macro_throws @variable(m, -ones(4,4) <= foo[1:4,1:4] <= ones(4,5), Symmetric)
-        @test_macro_throws @variable(m, -rand(5,5) <= nonsymmetric[1:5,1:5] <= rand(5,5), Symmetric)
+        @test_macro_throws ErrorException @variable(m, notone[1:5,2:6], PSD)
+        @test_macro_throws ErrorException @variable(m, oneD[1:5], PSD)
+        @test_macro_throws ErrorException @variable(m, threeD[1:5,1:5,1:5], PSD)
+        @test_macro_throws ErrorException @variable(m, psd[2] <= rand(2,2), PSD)
+        @test_macro_throws ErrorException @variable(m, -ones(3,4) <= foo[1:4,1:4] <= ones(4,4), PSD)
+        @test_macro_throws ErrorException @variable(m, -ones(3,4) <= foo[1:4,1:4] <= ones(4,4), Symmetric)
+        @test_macro_throws ErrorException @variable(m, -ones(4,4) <= foo[1:4,1:4] <= ones(4,5), Symmetric)
+        @test_macro_throws ErrorException @variable(m, -rand(5,5) <= nonsymmetric[1:5,1:5] <= rand(5,5), Symmetric)
     end
 
     @testset "[macros] sum(generator)" begin
