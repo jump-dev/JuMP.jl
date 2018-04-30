@@ -404,11 +404,11 @@ end
 # See https://github.com/JuliaLang/julia/pull/18218
 _matprod_type(R, S) = typeof(one(R) * one(S) + one(R) * one(S))
 # Don't do size checks here in _return_array, defer that to (*)
-_return_array(A::AbstractMatrix{R}, x::AbstractVector{S}) where {R,S} = _fillwithzeros(Array{_matprod_type(R,S)}(size(A,1)))
-_return_array(A::AbstractMatrix{R}, x::AbstractMatrix{S}) where {R,S} = _fillwithzeros(Array{_matprod_type(R,S)}(size(A,1), size(x,2)))
+_return_array(A::AbstractMatrix{R}, x::AbstractVector{S}) where {R,S} = _fillwithzeros(Array{_matprod_type(R,S)}(undef,size(A,1)))
+_return_array(A::AbstractMatrix{R}, x::AbstractMatrix{S}) where {R,S} = _fillwithzeros(Array{_matprod_type(R,S)}(undef,size(A,1), size(x,2)))
 # these are for transpose return matrices
-_return_arrayt(A::AbstractMatrix{R}, x::AbstractVector{S}) where {R,S} = _fillwithzeros(Array{_matprod_type(R,S)}(size(A,2)))
-_return_arrayt(A::AbstractMatrix{R}, x::AbstractMatrix{S}) where {R,S} = _fillwithzeros(Array{_matprod_type(R,S)}(size(A,2), size(x, 2)))
+_return_arrayt(A::AbstractMatrix{R}, x::AbstractVector{S}) where {R,S} = _fillwithzeros(Array{_matprod_type(R,S)}(undef,size(A,2)))
+_return_arrayt(A::AbstractMatrix{R}, x::AbstractMatrix{S}) where {R,S} = _fillwithzeros(Array{_matprod_type(R,S)}(undef,size(A,2), size(x, 2)))
 
 # helper so we don't fill the buffer array with the same object
 function _fillwithzeros(arr::AbstractArray{T}) where T

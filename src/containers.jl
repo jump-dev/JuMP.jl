@@ -67,7 +67,7 @@ function generatecontainer(T, indexvars, indexsets, requestedtype)
     end
 
     sizes = Expr(:tuple, [:(length($rng)) for rng in indexsets]...)
-    arrayexpr = :(Array{$T}($sizes...))
+    arrayexpr = :(Array{$T}(undef, $sizes...))
 
     if requestedtype == :Array
         hasdependent && return :(error("Unable to create requested Array because index sets are dependent.")), true
@@ -85,7 +85,7 @@ function generatecontainer(T, indexvars, indexsets, requestedtype)
         end
     end
 
-    axisexpr = :(JuMP.JuMPArray(Array{$T}($sizes...)))
+    axisexpr = :(JuMP.JuMPArray(Array{$T}(undef, $sizes...)))
     append!(axisexpr.args, indexsets)
 
     if requestedtype == :JuMPArray

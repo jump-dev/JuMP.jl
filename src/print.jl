@@ -165,7 +165,7 @@ function aff_str(mode, a::AffExpr, show_constant=true)
         end
     end
 
-    term_str = Array{String}(2*length(a.vars))
+    term_str = Array{String}(undef,2*length(a.vars))
     elm = 1
     # For each non-zero for this model
     for i in 1:length(a.vars)
@@ -238,7 +238,7 @@ function quad_str(mode, q::GenericQuadExpr, sym)
     end
 
     # Odd terms are +/i, even terms are the variables/coeffs
-    term_str = Array{String}(2*length(idxmap))
+    term_str = Array{String}(undef,2*length(idxmap))
     elm = 1
     if length(term_str) > 0
         for i in 1:length(q.qvars1)

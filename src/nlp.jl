@@ -242,7 +242,7 @@ function FunctionStorage(nd::Vector{NodeData}, const_values, num_variables, colo
     else
         hess_I = hess_J = Int[]
         rinfo = Coloring.RecoveryInfo()
-        seed_matrix = Array{Float64}(0,0)
+        seed_matrix = Array{Float64}(undef,0,0)
         linearity = [NONLINEAR]
     end
 
@@ -259,7 +259,7 @@ function SubexpressionStorage(nd::Vector{NodeData}, const_values, num_variables,
     reverse_storage = zeros(length(nd))
     linearity = classify_linearity(nd, adj, subexpression_linearity)
 
-    empty_arr = Array{Float64}(0)
+    empty_arr = Array{Float64}(undef,0)
 
     return SubexpressionStorage(nd, adj, const_values, forward_storage, partials_storage, reverse_storage, empty_arr, empty_arr, empty_arr, linearity[1])
 
@@ -300,8 +300,8 @@ function MOI.initialize!(d::NLPEvaluator, requested_features::Vector{Symbol})
 
     moi_index_to_consecutive_index = Dict(moi_index => consecutive_index for (consecutive_index, moi_index) in enumerate(MOI.get(d.m, MOI.ListOfVariableIndices())))
 
-    d.user_output_buffer = Array{Float64}(d.m.nlpdata.largest_user_input_dimension)
-    d.jac_storage = Array{Float64}(max(num_variables, d.m.nlpdata.largest_user_input_dimension))
+    d.user_output_buffer = Array{Float64}(undef,d.m.nlpdata.largest_user_input_dimension)
+    d.jac_storage = Array{Float64}(undef,max(num_variables, d.m.nlpdata.largest_user_input_dimension))
 
     d.constraints = FunctionStorage[]
     d.last_x = fill(NaN, num_variables)
@@ -316,8 +316,8 @@ function MOI.initialize!(d::NLPEvaluator, requested_features::Vector{Symbol})
 
     d.has_nlobj = isa(nldata.nlobj, NonlinearExprData)
     max_expr_length = 0
-    main_expressions = Array{Vector{NodeData}}(0)
-    subexpr = Array{Vector{NodeData}}(0)
+    main_expressions = Array{Vector{NodeData}}(undef,0)
+    subexpr = Array{Vector{NodeData}}(undef,0)
     for nlexpr in nldata.nlexpr
         push!(subexpr, nlexpr.nd)
     end
@@ -329,12 +329,12 @@ function MOI.initialize!(d::NLPEvaluator, requested_features::Vector{Symbol})
     end
     d.subexpression_order, individual_order = order_subexpressions(main_expressions,subexpr)
 
-    d.subexpression_linearity = Array{Linearity}(length(nldata.nlexpr))
-    subexpression_variables = Array{Vector{Int}}(length(nldata.nlexpr))
-    subexpression_edgelist = Array{Set{Tuple{Int,Int}}}(length(nldata.nlexpr))
-    d.subexpressions = Array{SubexpressionStorage}(length(nldata.nlexpr))
-    d.subexpression_forward_values = Array{Float64}(length(d.subexpressions))
-    d.subexpression_reverse_values = Array{Float64}(length(d.subexpressions))
+    d.subexpression_linearity = Array{Linearity}(undef,length(nldata.nlexpr))
+    subexpression_variables = Array{Vector{Int}}(undef,length(nldata.nlexpr))
+    subexpression_edgelist = Array{Set{Tuple{Int,Int}}}(undef,length(nldata.nlexpr))
+    d.subexpressions = Array{SubexpressionStorage}(undef,length(nldata.nlexpr))
+    d.subexpression_forward_values = Array{Float64}(undef,length(d.subexpressions))
+    d.subexpression_reverse_values = Array{Float64}(undef,length(d.subexpressions))
 
     empty_edgelist = Set{Tuple{Int,Int}}()
     for k in d.subexpression_order # only load expressions which actually are used
@@ -359,7 +359,7 @@ function MOI.initialize!(d::NLPEvaluator, requested_features::Vector{Symbol})
     end
 
     if :ExprGraph in requested_features
-        d.subexpressions_as_julia_expressions = Array{Any}(length(subexpr))
+        d.subexpressions_as_julia_expressions = Array{Any}(undef,length(subexpr))
         for k in d.subexpression_order
             ex = d.subexpressions[k]
             d.subexpressions_as_julia_expressions[k] = tapeToExpr(d.m, 1, nldata.nlexpr[k].nd, ex.adj, ex.const_values, d.parameter_values, d.subexpressions_as_julia_expressions, nldata.user_operators, true, true)
@@ -387,13 +387,13 @@ function MOI.initialize!(d::NLPEvaluator, requested_features::Vector{Symbol})
     max_chunk = min(max_chunk, 10) # 10 is hardcoded upper bound to avoid excess memory allocation
 
     if d.want_hess || want_hess_storage # storage for Hess or HessVec
-        d.input_ϵ = Array{Float64}(max_chunk*num_variables)
-        d.output_ϵ = Array{Float64}(max_chunk*num_variables)
-        d.forward_storage_ϵ = Array{Float64}(max_chunk*max_expr_length)
-        d.partials_storage_ϵ = Array{Float64}(max_chunk*max_expr_length)
-        d.reverse_storage_ϵ = Array{Float64}(max_chunk*max_expr_length)
-        d.subexpression_forward_values_ϵ = Array{Float64}(max_chunk*length(d.subexpressions))
-        d.subexpression_reverse_values_ϵ = Array{Float64}(max_chunk*length(d.subexpressions))
+        d.input_ϵ = Array{Float64}(undef,max_chunk*num_variables)
+        d.output_ϵ = Array{Float64}(undef,max_chunk*num_variables)
+        d.forward_storage_ϵ = Array{Float64}(undef,max_chunk*max_expr_length)
+        d.partials_storage_ϵ = Array{Float64}(undef,max_chunk*max_expr_length)
+        d.reverse_storage_ϵ = Array{Float64}(undef,max_chunk*max_expr_length)
+        d.subexpression_forward_values_ϵ = Array{Float64}(undef,max_chunk*length(d.subexpressions))
+        d.subexpression_reverse_values_ϵ = Array{Float64}(undef,max_chunk*length(d.subexpressions))
         for k in d.subexpression_order
             subex = d.subexpressions[k]
             subex.forward_storage_ϵ = zeros(Float64,max_chunk*length(subex.nd))
@@ -405,7 +405,7 @@ function MOI.initialize!(d::NLPEvaluator, requested_features::Vector{Symbol})
             d.hessian_sparsity = _hessian_lagrangian_structure(d)
             # JIT warm-up
             # TODO: rewrite without MPB
-            #MathProgBase.eval_hessian_lagrangian(d, Array{Float64}(length(d.hess_I)), d.m.colVal, 1.0, ones(MathProgBase.numconstr(d.m)))
+            #MathProgBase.eval_hessian_lagrangian(d, Array{Float64}(undef,length(d.hess_I)), d.m.colVal, 1.0, ones(MathProgBase.numconstr(d.m)))
         end
     end
 
@@ -987,7 +987,7 @@ function _getValue(x::NonlinearExpression)
     # could be smarter and cache
 
     nldata::NLPData = m.nlpdata
-    subexpr = Array{Vector{NodeData}}(0)
+    subexpr = Array{Vector{NodeData}}(undef,0)
     for nlexpr in nldata.nlexpr
         push!(subexpr, nlexpr.nd)
     end
@@ -998,14 +998,14 @@ function _getValue(x::NonlinearExpression)
 
     subexpression_order, individual_order = order_subexpressions(Vector{NodeData}[this_subexpr.nd],subexpr)
 
-    subexpr_values = Array{Float64}(length(subexpr))
+    subexpr_values = Array{Float64}(undef,length(subexpr))
 
     for k in subexpression_order
         max_len = max(max_len, length(nldata.nlexpr[k].nd))
     end
 
-    forward_storage = Array{Float64}(max_len)
-    partials_storage = Array{Float64}(max_len)
+    forward_storage = Array{Float64}(undef,max_len)
+    partials_storage = Array{Float64}(undef,max_len)
     user_input_buffer = zeros(nldata.largest_user_input_dimension)
     user_output_buffer = zeros(nldata.largest_user_input_dimension)
 
