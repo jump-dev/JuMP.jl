@@ -12,6 +12,8 @@ __precompile__()
 
 module JuMP
 
+using Compat
+
 import MathOptInterface
 const MOI = MathOptInterface
 const MOIU = MOI.Utilities

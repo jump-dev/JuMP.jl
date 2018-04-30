@@ -5,6 +5,7 @@
 
 using JuMP
 using Base.Test
+using Compat # For undef
 
 macro dummycontainer(expr, requestedtype)
     name = gensym()
@@ -31,43 +32,43 @@ containermatches(c1::Dict, c2::Dict) = (eltype(c1) == eltype(c2))
 containermatches(c1, c2) = false
 
 @testset "Container syntax" begin
-    @test containermatches(@dummycontainer([i=1:10], Auto), Vector{Bool}(10))
-    @test containermatches(@dummycontainer([i=1:10], Array), Vector{Bool}(10))
-    @test containermatches(@dummycontainer([i=1:10], JuMPArray), JuMPArray(Vector{Bool}(10), 1:10))
+    @test containermatches(@dummycontainer([i=1:10], Auto), Vector{Bool}(undef,10))
+    @test containermatches(@dummycontainer([i=1:10], Array), Vector{Bool}(undef,10))
+    @test containermatches(@dummycontainer([i=1:10], JuMPArray), JuMPArray(Vector{Bool}(undef,10), 1:10))
     @test containermatches(@dummycontainer([i=1:10], Dict), Dict{Any,Bool}())
 
-    @test containermatches(@dummycontainer([i=1:10,1:2], Auto), Matrix{Bool}(10,2))
-    @test containermatches(@dummycontainer([i=1:10,1:2], Array), Matrix{Bool}(10,2))
-    @test containermatches(@dummycontainer([i=1:10,n=1:2], JuMPArray), JuMPArray(Matrix{Bool}(10,2), 1:10, 1:2))
+    @test containermatches(@dummycontainer([i=1:10,1:2], Auto), Matrix{Bool}(undef,10,2))
+    @test containermatches(@dummycontainer([i=1:10,1:2], Array), Matrix{Bool}(undef,10,2))
+    @test containermatches(@dummycontainer([i=1:10,n=1:2], JuMPArray), JuMPArray(Matrix{Bool}(undef,10,2), 1:10, 1:2))
     @test containermatches(@dummycontainer([i=1:10,1:2], Dict), Dict{Any,Bool}())
 
-    @test containermatches(@dummycontainer([i=1:10,n=2:3], Auto), JuMPArray(Matrix{Bool}(10,2), 1:10, 2:3))
+    @test containermatches(@dummycontainer([i=1:10,n=2:3], Auto), JuMPArray(Matrix{Bool}(undef,10,2), 1:10, 2:3))
     @test_throws ErrorException @dummycontainer([i=1:10,2:3], Array)
-    @test containermatches(@dummycontainer([i=1:10,n=2:3], JuMPArray), JuMPArray(Matrix{Bool}(10,2), 1:10, 2:3))
+    @test containermatches(@dummycontainer([i=1:10,n=2:3], JuMPArray), JuMPArray(Matrix{Bool}(undef,10,2), 1:10, 2:3))
     @test containermatches(@dummycontainer([i=1:10,n=2:3], Dict), Dict{Any,Bool}())
 
 
     S = Base.OneTo(10)
-    @test containermatches(@dummycontainer([i=S], Auto), Vector{Bool}(10))
-    @test containermatches(@dummycontainer([i=S], Array), Vector{Bool}(10))
-    @test containermatches(@dummycontainer([i=S], JuMPArray), JuMPArray(Vector{Bool}(10), S))
+    @test containermatches(@dummycontainer([i=S], Auto), Vector{Bool}(undef,10))
+    @test containermatches(@dummycontainer([i=S], Array), Vector{Bool}(undef,10))
+    @test containermatches(@dummycontainer([i=S], JuMPArray), JuMPArray(Vector{Bool}(undef,10), S))
     @test containermatches(@dummycontainer([i=S], Dict), Dict{Any,Bool}())
 
-    @test containermatches(@dummycontainer([i=S,1:2], Auto), Matrix{Bool}(10,2))
-    @test containermatches(@dummycontainer([i=S,1:2], Array), Matrix{Bool}(10,2))
-    @test containermatches(@dummycontainer([i=S,n=1:2], JuMPArray), JuMPArray(Matrix{Bool}(10,2), S, 1:2))
+    @test containermatches(@dummycontainer([i=S,1:2], Auto), Matrix{Bool}(undef,10,2))
+    @test containermatches(@dummycontainer([i=S,1:2], Array), Matrix{Bool}(undef,10,2))
+    @test containermatches(@dummycontainer([i=S,n=1:2], JuMPArray), JuMPArray(Matrix{Bool}(undef,10,2), S, 1:2))
     @test containermatches(@dummycontainer([i=S,1:2], Dict), Dict{Any,Bool}())
 
     S = 1:10
     # Not type stable to return an Array by default even when S is one-based interval
-    @test containermatches(@dummycontainer([i=S], Auto), JuMPArray(Vector{Bool}(10), S))
-    @test containermatches(@dummycontainer([i=S], Array), Vector{Bool}(10))
-    @test containermatches(@dummycontainer([i=S], JuMPArray), JuMPArray(Vector{Bool}(10), S))
+    @test containermatches(@dummycontainer([i=S], Auto), JuMPArray(Vector{Bool}(undef,10), S))
+    @test containermatches(@dummycontainer([i=S], Array), Vector{Bool}(undef,10))
+    @test containermatches(@dummycontainer([i=S], JuMPArray), JuMPArray(Vector{Bool}(undef,10), S))
     @test containermatches(@dummycontainer([i=S], Dict), Dict{Any,Bool}())
 
-    @test containermatches(@dummycontainer([i=S,n=1:2], Auto), JuMPArray(Matrix{Bool}(10,2), S, 1:2))
-    @test containermatches(@dummycontainer([i=S,1:2], Array), Matrix{Bool}(10,2))
-    @test containermatches(@dummycontainer([i=S,n=1:2], JuMPArray), JuMPArray(Matrix{Bool}(10,2), S, 1:2))
+    @test containermatches(@dummycontainer([i=S,n=1:2], Auto), JuMPArray(Matrix{Bool}(undef,10,2), S, 1:2))
+    @test containermatches(@dummycontainer([i=S,1:2], Array), Matrix{Bool}(undef,10,2))
+    @test containermatches(@dummycontainer([i=S,n=1:2], JuMPArray), JuMPArray(Matrix{Bool}(undef,10,2), S, 1:2))
     @test containermatches(@dummycontainer([i=S,1:2], Dict), Dict{Any,Bool}())
 
     # TODO: test case where S is index set not supported by JuMPArrays (does this exist?)
