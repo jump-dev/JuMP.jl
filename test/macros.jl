@@ -1,8 +1,8 @@
 # TODO: Copy over tests that are still relevant from old/macros.jl.
 
 mutable struct MyVariable
-    info::JuMP.VariableInfo
     test_kw::Int
+    info::JuMP.VariableInfo
 end
 
 @testset "Macros" begin
@@ -22,45 +22,49 @@ end
     end
 
     @testset "Extension of @variable with constructvariable! #1029" begin
+        const MyVariable = Tuple{JuMP.VariableInfo, Int}
         JuMP.variabletype(m::Model, ::Type{MyVariable}) = MyVariable
         names = Dict{MyVariable, String}()
         function JuMP.addvariable(m::Model, v::MyVariable, name::String)
             names[v] = name
             v
         end
-        function JuMP.constructvariable!(::Type{MyVariable}, _error::Function, args...; test_kw::Int = 0)
-            MyVariable(args..., test_kw)
+        function JuMP.constructvariable!(::Type{MyVariable}, _error::Function, info::JuMP.VariableInfo; test_kw::Int = 0)
+            (info, test_kw)
         end
         m = Model()
         @variable(m, 1 <= x <= 2, MyVariable, binary = true, test_kw = 1, start = 3)
         @test isa(x, MyVariable)
-        @test x.info.haslb
-        @test x.info.lowerbound == 1
-        @test x.info.hasub
-        @test x.info.upperbound == 2
-        @test !x.info.hasfix
-        @test isnan(x.info.fixedvalue)
-        @test x.info.binary
-        @test !x.info.integer
-        @test x.info.hasstart
-        @test x.info.start == 3
+        info = x[1]
+        test_kw = x[2]
+        @test info.lowerbound == 1
+        @test info.hasub
+        @test info.upperbound == 2
+        @test !info.hasfix
+        @test isnan(info.fixedvalue)
+        @test info.binary
+        @test !info.integer
+        @test info.hasstart
+        @test info.start == 3
         @test names[x] == "x"
-        @test x.test_kw == 1
+        @test test_kw == 1
         @variable(m, y[1:3] >= 0, MyVariable, test_kw = 2)
         @test isa(y, Vector{MyVariable})
         for i in 1:3
-            @test y[i].info.haslb
-            @test y[i].info.lowerbound == 0
-            @test !y[i].info.hasub
-            @test y[i].info.upperbound == Inf
-            @test !y[i].info.hasfix
-            @test isnan(y[i].info.fixedvalue)
-            @test !y[i].info.binary
-            @test !y[i].info.integer
-            @test !y[i].info.hasstart
-            @test isnan(y[i].info.start)
+            info = y[i][1]
+            test_kw = y[i][2]
+            @test info.haslb
+            @test info.lowerbound == 0
+            @test !info.hasub
+            @test info.upperbound == Inf
+            @test !info.hasfix
+            @test isnan(info.fixedvalue)
+            @test !info.binary
+            @test !info.integer
+            @test !info.hasstart
+            @test isnan(info.start)
             @test names[y[i]] == "y[$i]"
-            @test y[i].test_kw == 2
+            @test test_kw == 2
         end
     end
 
