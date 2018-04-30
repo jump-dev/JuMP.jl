@@ -20,12 +20,8 @@ const MOIU = MOI.Utilities
 
 # Test that the macro call `m` throws an error exception during pre-compilation
 macro test_macro_throws(m)
-    if VERSION >= v"0.7.0-DEV.1676" # See https://github.com/JuliaLang/julia/pull/23533
-        # See https://discourse.julialang.org/t/test-throws-with-macros-after-pr-23533/5878
-        :(@test_throws ErrorException try @eval $m catch err; throw(err.error) end)
-    else
-        :(@test macroexpand(m).head == :error)
-    end
+    # See https://discourse.julialang.org/t/test-throws-with-macros-after-pr-23533/5878
+    :(@test_throws ErrorException try @eval $m catch err; throw(err.error) end)
 end
 
 include("derivatives.jl")
