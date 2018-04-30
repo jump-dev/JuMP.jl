@@ -849,11 +849,11 @@ esc_nonconstant(x::Number) = x
 esc_nonconstant(x::Expr) = isexpr(x,:quote) ? x : esc(x)
 esc_nonconstant(x) = esc(x)
 
-# Returns the type of what `constructvariable!` would return with these starting positional arguments.
+# Returns the type of what `buildvariable` would return with these starting positional arguments.
 variabletype(m::Model) = VariableRef
 # Returns a new variable belonging to the model `m`. Additional positional arguments can be used to dispatch the call to a different method.
 # The return type should only depends on the positional arguments for `variabletype` to make sense.
-function constructvariable!(_error::Function, info::VariableInfo; extra_kwargs...)
+function buildvariable(_error::Function, info::VariableInfo; extra_kwargs...)
     for (kwarg, _) in extra_kwargs
         _error("Unrecognized keyword argument $kwarg")
     end
@@ -882,28 +882,28 @@ end
 # @variable(m, expr, extra...; kwargs...)
 # where `extra` is a list of extra positional arguments and `kwargs` is a list of keyword arguments.
 #
-# It creates a new variable (resp. a container of new variables) belonging to the model `m` using `constructvariable!` to create the variable (resp. each variable of the container) and `addvariable` to add it to the model.
-# The following modifications will be made to the arguments before they are passed to `constructvariable!`:
+# It creates a new variable (resp. a container of new variables) belonging to the model `m` using `buildvariable` to create the variable (resp. each variable of the container) and `addvariable` to add it to the model.
+# The following modifications will be made to the arguments before they are passed to `buildvariable`:
 # * The `expr` argument will not be passed but the expression will be parsed to determine the kind of container needed (if one is needed) and
 #   additional information that will alter what is passed with the keywords `lowerbound`, `upperbound`, `basename`, `start`, `binary`, and `integer`.
-# * The `PSD` and `Symmetric` positional arguments in `extra` will not be passed to `constructvariable!`. Instead,
+# * The `PSD` and `Symmetric` positional arguments in `extra` will not be passed to `buildvariable`. Instead,
 #    * the `Symmetric` argument will check that the container is symmetric and only allocate one variable for each pair of non-diagonal entries.
 #    * the `PSD` argument will do the same as `Symmetric` but in addition it will specify that the variables created belongs to the PSD cone in the `varCones` field of the model.
 #   Moreover, Int and Bin are special keywords that are equivalent to `integer=true` and `binary=true`.
 # * The keyword arguments start, lowerbound, upperbound, binary, and integer category may not be passed as is to
-#   `constructvariable!` since they may be altered by the parsing of `expr` and we may need to pass it pointwise if it is a container since
-#   `constructvariable!` is called separately for each variable of the container. Moreover they will be passed inside the VariableInfo object.
+#   `buildvariable` since they may be altered by the parsing of `expr` and we may need to pass it pointwise if it is a container since
+#   `buildvariable` is called separately for each variable of the container. Moreover they will be passed inside the VariableInfo object.
 # * A custom error function is passed as positional argument to print the full @variable call before the error message.
 # * The keyword argument basename is not passed to `constructconstraint!` but rather to `addvariable`.
 #
 # Examples:
-# * `@variable(m, x >= 0)` is equivalent to `x = addvariable(m, constructvariable!(m, msg -> error("In @variable(m, x >= 0): ", msg), VariableInfo(true, 0, false, NaN, false, NaN, false, NaN, false, false)), "x")`
+# * `@variable(m, x >= 0)` is equivalent to `x = addvariable(m, buildvariable(m, msg -> error("In @variable(m, x >= 0): ", msg), VariableInfo(true, 0, false, NaN, false, NaN, false, NaN, false, false)), "x")`
 # * `@variable(m, x[1:N,1:N], Symmetric, Poly(X))` is equivalent to
 #   ```
 #   x = Matrix{...}(N, N)
 #   for i in 1:N
 #       for j in 1:N
-#           x[i,j] = x[j,i] = addvariable(m, constructvariable!(m, Poly(X), msg -> error("In @variable(m, x[1:N,1:N], Symmetric, Poly(X)): ", msg), VariableInfo(false, NaN, false, NaN, false, NaN, false, NaN, false, false)), "")
+#           x[i,j] = x[j,i] = addvariable(m, buildvariable(m, Poly(X), msg -> error("In @variable(m, x[1:N,1:N], Symmetric, Poly(X)): ", msg), VariableInfo(false, NaN, false, NaN, false, NaN, false, NaN, false, false)), "")
 #       end
 #   end
 #   ```
@@ -1052,9 +1052,9 @@ macro variable(args...)
         # Easy case - a single variable
         sdp && _error("Cannot add a semidefinite scalar variable")
         info = :(VariableInfo($haslb, $lb, $hasub, $ub, $hasfix, $fixedvalue, $hasstart, $value, $binary, $integer))
-        constructcall = :( constructvariable!($(extra...), $_error, $info) )
-        addkwargs!(constructcall, extra_kwargs)
-        variablecall = :( addvariable($m, $constructcall, $basename) )
+        buildcall = :( buildvariable($(extra...), $_error, $info) )
+        addkwargs!(buildcall, extra_kwargs)
+        variablecall = :( addvariable($m, $buildcall, $basename) )
         code = :($variable = $variablecall)
         if !anonvar
             code = quote
@@ -1074,11 +1074,11 @@ macro variable(args...)
 
     # Code to be used to create each variable of the container.
     info = :(VariableInfo($haslb, $lb, $hasub, $ub, $hasfix, $fixedvalue, $hasstart, $value, $binary, $integer))
-    constructcall = :( constructvariable!($(extra...), $_error, $info) )
-    addkwargs!(constructcall, extra_kwargs)
-    variablecall = :( addvariable($m, $constructcall, $(namecall(basename, idxvars))) )
+    buildcall = :( buildvariable($(extra...), $_error, $info) )
+    addkwargs!(buildcall, extra_kwargs)
+    variablecall = :( addvariable($m, $buildcall, $(namecall(basename, idxvars))) )
     code = :( $(refcall) = $variablecall )
-    # Determine the return type of constructvariable!. This is needed to create the container holding them.
+    # Determine the return type of buildvariable. This is needed to create the container holding them.
     vartype = :( variabletype($m, $(extra...)) )
 
     if symmetric

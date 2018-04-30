@@ -21,7 +21,7 @@ end
         @test JuMP.buildconstraint(error, x, MOI.EqualTo(0)) isa JuMP.SingleVariableConstraint{MOI.EqualTo{Int}}
     end
 
-    @testset "Extension of @variable with constructvariable! #1029" begin
+    @testset "Extension of @variable with buildvariable #1029" begin
         const MyVariable = Tuple{JuMP.VariableInfo, Int}
         JuMP.variabletype(m::Model, ::Type{MyVariable}) = MyVariable
         names = Dict{MyVariable, String}()
@@ -29,7 +29,7 @@ end
             names[v] = name
             v
         end
-        function JuMP.constructvariable!(::Type{MyVariable}, _error::Function, info::JuMP.VariableInfo; test_kw::Int = 0)
+        function JuMP.buildvariable(::Type{MyVariable}, _error::Function, info::JuMP.VariableInfo; test_kw::Int = 0)
             (info, test_kw)
         end
         m = Model()
