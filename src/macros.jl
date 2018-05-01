@@ -852,8 +852,9 @@ esc_nonconstant(x) = esc(x)
 # Returns the type of what `addvariable(::Model, buildvariable(...))` would return where `...` represents the positional arguments.
 # E.g.: @variable m [1:3] foo will allocate an vector of element type `variabletype(foo())`
 variabletype(m::Model) = VariableRef
-# Returns a new variable belonging to the model `m`. Additional positional arguments can be used to dispatch the call to a different method.
-# The return type should only depends on the positional arguments for `variabletype` to make sense.
+# Returns a new variable. Additional positional arguments can be used to dispatch the call to a different method.
+# The return type should only depends on the positional arguments for `variabletype` to make sense. See the @variable macro doc for more details.
+# E.g.: @variable m x foo will call buildvariable(foo, _error, info)
 function buildvariable(_error::Function, info::VariableInfo; extra_kwargs...)
     for (kwarg, _) in extra_kwargs
         _error("Unrecognized keyword argument $kwarg")
@@ -898,13 +899,13 @@ end
 # * The keyword argument basename is not passed to `constructconstraint!` but rather to `addvariable`.
 #
 # Examples:
-# * `@variable(m, x >= 0)` is equivalent to `x = addvariable(m, buildvariable(m, msg -> error("In @variable(m, x >= 0): ", msg), VariableInfo(true, 0, false, NaN, false, NaN, false, NaN, false, false)), "x")`
+# * `@variable(m, x >= 0)` is equivalent to `x = addvariable(m, buildvariable(msg -> error("In @variable(m, x >= 0): ", msg), VariableInfo(true, 0, false, NaN, false, NaN, false, NaN, false, false)), "x")`
 # * `@variable(m, x[1:N,1:N], Symmetric, Poly(X))` is equivalent to
 #   ```
 #   x = Matrix{...}(N, N)
 #   for i in 1:N
 #       for j in 1:N
-#           x[i,j] = x[j,i] = addvariable(m, buildvariable(m, Poly(X), msg -> error("In @variable(m, x[1:N,1:N], Symmetric, Poly(X)): ", msg), VariableInfo(false, NaN, false, NaN, false, NaN, false, NaN, false, false)), "")
+#           x[i,j] = x[j,i] = addvariable(m, buildvariable(Poly(X), msg -> error("In @variable(m, x[1:N,1:N], Symmetric, Poly(X)): ", msg), VariableInfo(false, NaN, false, NaN, false, NaN, false, NaN, false, false)), "")
 #       end
 #   end
 #   ```
