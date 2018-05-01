@@ -253,11 +253,11 @@ function parse_one_operator_constraint(_error::Function, vectorized::Bool, ::Val
     newaff, parseaff = parseExprToplevel(aff, :q)
     parsecode = :(q = Val{false}(); $parseaff)
     if vectorized
-        constructcall = :(buildconstraint.($_error, $newaff, $(esc(set))))
+        buildcall = :(buildconstraint.($_error, $newaff, $(esc(set))))
     else
-        constructcall = :(buildconstraint($_error, $newaff, $(esc(set))))
+        buildcall = :(buildconstraint($_error, $newaff, $(esc(set))))
     end
-    parsecode, constructcall
+    parsecode, buildcall
 end
 
 function parse_one_operator_constraint(_error::Function, vectorized::Bool, sense::Val, lhs, rhs)
@@ -277,11 +277,11 @@ function parseternaryconstraint(_error::Function, vectorized::Bool, lb, ::Union{
     newlb, parselb = parseExprToplevel(lb, :lb)
     newub, parseub = parseExprToplevel(ub, :ub)
     if vectorized
-        constructcall = :(buildconstraint.($_error, $newaff, $newlb, $newub))
+        buildcall = :(buildconstraint.($_error, $newaff, $newlb, $newub))
     else
-        constructcall = :(buildconstraint($_error, $newaff, $newlb, $newub))
+        buildcall = :(buildconstraint($_error, $newaff, $newlb, $newub))
     end
-    parseaff, parselb, parseub, constructcall
+    parseaff, parselb, parseub, buildcall
 end
 
 function parseternaryconstraint(_error::Function, vectorized::Bool, ub, ::Union{Val{:(>=)}, Val{:(≥)}}, aff, rsign::Union{Val{:(>=)}, Val{:(≥)}}, lb)
@@ -296,7 +296,7 @@ function parseconstraint(_error::Function, lb, lsign::Symbol, aff, rsign::Symbol
     (lsign, lvectorized) = _check_vectorized(lsign)
     (rsign, rvectorized) = _check_vectorized(rsign)
     ((vectorized = lvectorized) == rvectorized) || _error("Signs are inconsistently vectorized")
-    parseaff, parselb, parseub, constructcall = parseternaryconstraint(_error, vectorized, lb, Val(lsign), aff, Val(rsign), ub)
+    parseaff, parselb, parseub, buildcall = parseternaryconstraint(_error, vectorized, lb, Val(lsign), aff, Val(rsign), ub)
     parsecode = quote
         aff = Val{false}()
         $parseaff
@@ -305,7 +305,7 @@ function parseconstraint(_error::Function, lb, lsign::Symbol, aff, rsign::Symbol
         ub = 0.0
         $parseub
     end
-    vectorized, parsecode, constructcall
+    vectorized, parsecode, buildcall
 end
 
 function parseconstraint(args...)
@@ -435,12 +435,12 @@ macro constraint(args...)
     # will likely mean that bar will be some custom type, rather than e.g. a
     # Symbol, since we will likely want to dispatch on the type of the set
     # appearing in the constraint.
-    vectorized, parsecode, constructcall = parseconstraint(_error, x.args...)
+    vectorized, parsecode, buildcall = parseconstraint(_error, x.args...)
     if vectorized
         # TODO: Pass through names here.
-        constraintcall = :(addconstraint.($m, $constructcall))
+        constraintcall = :(addconstraint.($m, $buildcall))
     else
-        constraintcall = :(addconstraint($m, $constructcall, $(namecall(basename, idxvars))))
+        constraintcall = :(addconstraint($m, $buildcall, $(namecall(basename, idxvars))))
     end
     addkwargs!(constraintcall, kwargs)
     code = quote
@@ -494,10 +494,10 @@ macro SDconstraint(m, x)
     else
         _error("Invalid sense $sense in SDP constraint")
     end
-    parsecode, constructcall = parse_one_operator_constraint(_error, false, Val(:in), aff, :(PSDCone()))
+    parsecode, buildcall = parse_one_operator_constraint(_error, false, Val(:in), aff, :(PSDCone()))
     assert_validmodel(m, quote
         $parsecode
-        addconstraint($m, $constructcall)
+        addconstraint($m, $buildcall)
     end)
 end
 
