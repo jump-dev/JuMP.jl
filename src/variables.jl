@@ -18,7 +18,7 @@ mutable struct VariableInfo{S, T, U, V}
     integer::Bool
 end
 
-struct ScalarVariable{S, T, U, V}
+struct ScalarVariable{S, T, U, V} <: AbstractVariable
     info::VariableInfo{S, T, U, V}
 end
 
