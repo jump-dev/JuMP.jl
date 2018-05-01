@@ -12,16 +12,16 @@
 #
 # Different objects that must all interact:
 # 1. Number
-# 2. VariableRef
+# 2. [Abstract]VariableRef
 # 4. [Generic]AffExpr
 # 5. QuadExpr
 
 # Number
 # Number--Number obviously already taken care of!
-# Number--VariableRef
-Base.:+(lhs::Number, rhs::VariableRef) = AffExpr([rhs],[+1.],convert(Float64,lhs))
-Base.:-(lhs::Number, rhs::VariableRef) = AffExpr([rhs],[-1.],convert(Float64,lhs))
-Base.:*(lhs::Number, rhs::VariableRef) = AffExpr([rhs],[convert(Float64,lhs)], 0.)
+# Number--AbstractVariableRef
+Base.:+(lhs::Number, rhs::AbstractVariableRef) = GenericAffExpr([rhs],[+1.],convert(Float64,lhs))
+Base.:-(lhs::Number, rhs::AbstractVariableRef) = GenericAffExpr([rhs],[-1.],convert(Float64,lhs))
+Base.:*(lhs::Number, rhs::AbstractVariableRef) = GenericAffExpr([rhs],[convert(Float64,lhs)], 0.)
 # Number--GenericAffExpr
 Base.:+(lhs::Number, rhs::GenericAffExpr) = GenericAffExpr(copy(rhs.vars),copy(rhs.coeffs),lhs+rhs.constant)
 Base.:-(lhs::Number, rhs::GenericAffExpr) = GenericAffExpr(copy(rhs.vars),    -rhs.coeffs ,lhs-rhs.constant)
@@ -31,36 +31,36 @@ Base.:+(lhs::Number, rhs::QuadExpr) = QuadExpr(copy(rhs.qvars1),copy(rhs.qvars2)
 Base.:-(lhs::Number, rhs::QuadExpr) = QuadExpr(copy(rhs.qvars1),copy(rhs.qvars2),    -rhs.qcoeffs ,lhs-rhs.aff)
 Base.:*(lhs::Number, rhs::QuadExpr) = QuadExpr(copy(rhs.qvars1),copy(rhs.qvars2), lhs*rhs.qcoeffs ,lhs*rhs.aff)
 
-# VariableRef (or, AbstractJuMPScalar)
+# AbstractVariableRef (or, AbstractJuMPScalar)
 Base.:+(lhs::AbstractJuMPScalar) = lhs
-Base.:-(lhs::VariableRef) = AffExpr([lhs],[-1.0],0.0)
+Base.:-(lhs::AbstractVariableRef) = GenericAffExpr([lhs],[-1.0],0.0)
 Base.:*(lhs::AbstractJuMPScalar) = lhs # make this more generic so extensions don't have to define unary multiplication for our macros
-# VariableRef--Number
-Base.:+(lhs::VariableRef, rhs::Number) = (+)( rhs,lhs)
-Base.:-(lhs::VariableRef, rhs::Number) = (+)(-rhs,lhs)
-Base.:*(lhs::VariableRef, rhs::Number) = (*)(rhs,lhs)
-Base.:/(lhs::VariableRef, rhs::Number) = (*)(1./rhs,lhs)
-# VariableRef--VariableRef
-Base.:+(lhs::VariableRef, rhs::VariableRef) = AffExpr([lhs,rhs], [1.,+1.], 0.)
-Base.:-(lhs::VariableRef, rhs::VariableRef) = AffExpr([lhs,rhs], [1.,-1.], 0.)
-Base.:*(lhs::VariableRef, rhs::VariableRef) = QuadExpr([lhs],[rhs],[1.],AffExpr(VariableRef[],Float64[],0.))
-# VariableRef--AffExpr
+# AbstractVariableRef--Number
+Base.:+(lhs::AbstractVariableRef, rhs::Number) = (+)( rhs,lhs)
+Base.:-(lhs::AbstractVariableRef, rhs::Number) = (+)(-rhs,lhs)
+Base.:*(lhs::AbstractVariableRef, rhs::Number) = (*)(rhs,lhs)
+Base.:/(lhs::AbstractVariableRef, rhs::Number) = (*)(1./rhs,lhs)
+# AbstractVariableRef--AbstractVariableRef
+Base.:+(lhs::V, rhs::V) where V<:AbstractVariableRef = GenericAffExpr([lhs,rhs], [1.,+1.], 0.)
+Base.:-(lhs::V, rhs::V) where V<:AbstractVariableRef = GenericAffExpr([lhs,rhs], [1.,-1.], 0.)
+Base.:*(lhs::V, rhs::V) where V<:AbstractVariableRef = GenericQuadExpr{Float64,V}([lhs],[rhs],[1.],zero(GenericAffExpr{Float64,V}))
+# AbstractVariableRef--AffExpr
 Base.:+(lhs::V, rhs::GenericAffExpr{C,V}) where {C,V<:JuMPTypes} =
     GenericAffExpr{C,V}(vcat(lhs,rhs.vars),vcat(one(C),rhs.coeffs), rhs.constant)
 Base.:-(lhs::V, rhs::GenericAffExpr{C,V}) where {C,V<:JuMPTypes} =
     GenericAffExpr{C,V}(vcat(lhs,rhs.vars),vcat(one(C),-rhs.coeffs),-rhs.constant)
-function Base.:*(lhs::VariableRef, rhs::AffExpr)
+function Base.:*(lhs::V, rhs::GenericAffExpr{T,V}) where {T,V}
     n = length(rhs.vars)
     if !iszero(rhs.constant)
-        ret = QuadExpr([lhs for i=1:n],copy(rhs.vars),copy(rhs.coeffs),AffExpr([lhs], [rhs.constant], 0.))
+        ret = GenericQuadExpr{T,V}([lhs for i=1:n],copy(rhs.vars),copy(rhs.coeffs),GenericAffExpr{T,V}([lhs], [rhs.constant], zero(T)))
     else
-        ret = QuadExpr([lhs for i=1:n],copy(rhs.vars),copy(rhs.coeffs),zero(AffExpr))
+        ret = GenericQuadExpr{T,V}([lhs for i=1:n],copy(rhs.vars),copy(rhs.coeffs),zero(GenericAffExpr{T,V}))
     end
 end
-Base.:/(lhs::VariableRef, rhs::AffExpr) = error("Cannot divide a variable by an affine expression")
-# VariableRef--QuadExpr
-Base.:+(v::VariableRef, q::QuadExpr) = QuadExpr(copy(q.qvars1),copy(q.qvars2),copy(q.qcoeffs),v+q.aff)
-Base.:-(v::VariableRef, q::QuadExpr) = QuadExpr(copy(q.qvars1),copy(q.qvars2),    -q.qcoeffs ,v-q.aff)
+Base.:/(lhs::AbstractVariableRef, rhs::GenericAffExpr) = error("Cannot divide a variable by an affine expression")
+# AbstractVariableRef--GenericQuadExpr
+Base.:+(v::AbstractVariableRef, q::GenericQuadExpr) = GenericQuadExpr(copy(q.qvars1),copy(q.qvars2),copy(q.qcoeffs),v+q.aff)
+Base.:-(v::AbstractVariableRef, q::GenericQuadExpr) = GenericQuadExpr(copy(q.qvars1),copy(q.qvars2),    -q.qcoeffs ,v-q.aff)
 
 # GenericAffExpr
 Base.:+(lhs::GenericAffExpr) = lhs
@@ -69,37 +69,37 @@ Base.:-(lhs::GenericAffExpr) = GenericAffExpr(lhs.vars, -lhs.coeffs, -lhs.consta
 Base.:+(lhs::GenericAffExpr, rhs::Number) = (+)(+rhs,lhs)
 Base.:-(lhs::GenericAffExpr, rhs::Number) = (+)(-rhs,lhs)
 Base.:*(lhs::GenericAffExpr, rhs::Number) = (*)(rhs,lhs)
-Base.:/(lhs::GenericAffExpr, rhs::Number) = (*)(1.0/rhs,lhs)
-function Base.:^(lhs::Union{VariableRef,AffExpr}, rhs::Integer)
+Base.:/(lhs::GenericAffExpr, rhs::Number) = (*)(inv(rhs),lhs)
+function Base.:^(lhs::Union{AbstractVariableRef,GenericAffExpr}, rhs::Integer)
     if rhs == 2
         return lhs*lhs
     elseif rhs == 1
-        return QuadExpr(lhs)
+        return GenericQuadExpr(lhs)
     elseif rhs == 0
-        return QuadExpr(1)
+        return GenericQuadExpr(1.0)
     else
         error("Only exponents of 0, 1, or 2 are currently supported. Are you trying to build a nonlinear problem? Make sure you use @NLconstraint/@NLobjective.")
     end
 end
-Base.:^(lhs::Union{VariableRef,AffExpr}, rhs::Number) = error("Only exponents of 0, 1, or 2 are currently supported. Are you trying to build a nonlinear problem? Make sure you use @NLconstraint/@NLobjective.")
-# AffExpr--VariableRef
+Base.:^(lhs::Union{AbstractVariableRef,GenericAffExpr}, rhs::Number) = error("Only exponents of 0, 1, or 2 are currently supported. Are you trying to build a nonlinear problem? Make sure you use @NLconstraint/@NLobjective.")
+# GenericAffExpr--AbstractVariableRef
 Base.:+(lhs::GenericAffExpr{C,V}, rhs::V) where {C,V<:JuMPTypes} = GenericAffExpr{C,V}(vcat(lhs.vars,rhs),vcat(lhs.coeffs,one(C)), lhs.constant)
 Base.:-(lhs::GenericAffExpr{C,V}, rhs::V) where {C,V<:JuMPTypes} = GenericAffExpr{C,V}(vcat(lhs.vars,rhs),vcat(lhs.coeffs,-one(C)),lhs.constant)
-# Don't fall back on VariableRef*AffExpr to preserve lhs/rhs consistency (appears in printing)
-function Base.:*(lhs::AffExpr, rhs::VariableRef)
+# Don't fall back on AbstractVariableRef*GenericAffExpr to preserve lhs/rhs consistency (appears in printing)
+function Base.:*(lhs::GenericAffExpr{T,V}, rhs::V) where {T,V}
     n = length(lhs.vars)
     if !iszero(lhs.constant)
-        ret = QuadExpr(copy(lhs.vars),[rhs for i=1:n],copy(lhs.coeffs),AffExpr([rhs], [lhs.constant], 0.))
+        ret = GenericQuadExpr(copy(lhs.vars),[rhs for i=1:n],copy(lhs.coeffs),AffExpr([rhs], [lhs.constant], zero(T)))
     else
-        ret = QuadExpr(copy(lhs.vars),[rhs for i=1:n],copy(lhs.coeffs),zero(AffExpr))
+        ret = GenericQuadExpr(copy(lhs.vars),[rhs for i=1:n],copy(lhs.coeffs),zero(GenericAffExpr{T,V}))
     end
 end
-Base.:/(lhs::AffExpr, rhs::VariableRef) = error("Cannot divide affine expression by a variable")
+Base.:/(lhs::GenericAffExpr, rhs::AbstractVariableRef) = error("Cannot divide affine expression by a variable")
 # AffExpr--AffExpr
 Base.:+(lhs::GenericAffExpr{C,V}, rhs::GenericAffExpr{C,V}) where {C,V<:JuMPTypes} = (operator_warn(lhs,rhs); GenericAffExpr(vcat(lhs.vars,rhs.vars),vcat(lhs.coeffs, rhs.coeffs),lhs.constant+rhs.constant))
 Base.:-(lhs::GenericAffExpr{C,V}, rhs::GenericAffExpr{C,V}) where {C,V<:JuMPTypes} = GenericAffExpr(vcat(lhs.vars,rhs.vars),vcat(lhs.coeffs,-rhs.coeffs),lhs.constant-rhs.constant)
-function Base.:*(lhs::AffExpr, rhs::AffExpr)
-    ret = QuadExpr(VariableRef[],VariableRef[],Float64[],AffExpr(VariableRef[],Float64[],0.))
+function Base.:*(lhs::GenericAffExpr{T,V}, rhs::GenericAffExpr{T,V}) where {T,V}
+    ret = zero(GenericQuadExpr{T,V})
 
     # Quadratic terms
     n = length(lhs.coeffs)
@@ -153,35 +153,35 @@ function Base.:*(lhs::AffExpr, rhs::AffExpr)
     return ret
 end
 # AffExpr--QuadExpr
-Base.:+(a::AffExpr, q::QuadExpr) = QuadExpr(copy(q.qvars1),copy(q.qvars2),copy(q.qcoeffs),a+q.aff)
-Base.:-(a::AffExpr, q::QuadExpr) = QuadExpr(copy(q.qvars1),copy(q.qvars2),    -q.qcoeffs ,a-q.aff)
+Base.:+(a::GenericAffExpr, q::GenericQuadExpr) = GenericQuadExpr(copy(q.qvars1),copy(q.qvars2),copy(q.qcoeffs),a+q.aff)
+Base.:-(a::GenericAffExpr, q::GenericQuadExpr) = GenericQuadExpr(copy(q.qvars1),copy(q.qvars2),    -q.qcoeffs ,a-q.aff)
 
 # QuadExpr
-Base.:+(lhs::QuadExpr) = lhs
-Base.:-(lhs::QuadExpr) = 0.0-lhs
+Base.:+(lhs::GenericQuadExpr) = lhs
+Base.:-(lhs::GenericQuadExpr{T}) where T = zero(T)-lhs
 # QuadExpr--Number
-Base.:+(lhs::QuadExpr, rhs::Number) = (+)(+rhs,lhs)
-Base.:-(lhs::QuadExpr, rhs::Number) = (+)(-rhs,lhs)
-Base.:*(lhs::QuadExpr, rhs::Number) = (*)(rhs,lhs)
-Base.:/(lhs::QuadExpr, rhs::Number) = (*)(1.0/rhs,lhs)
-# QuadExpr--VariableRef
-Base.:+(q::QuadExpr, v::VariableRef) = (+)(v,q)
-Base.:-(q::QuadExpr, v::VariableRef) = QuadExpr(copy(q.qvars1),copy(q.qvars2),copy(q.qcoeffs),q.aff-v)
-Base.:*(q::QuadExpr, v::VariableRef) = error("Cannot multiply a quadratic expression by a variable")
-Base.:/(q::QuadExpr, v::VariableRef) = error("Cannot divide a quadratic expression by a variable")
+Base.:+(lhs::GenericQuadExpr, rhs::Number) = (+)(+rhs,lhs)
+Base.:-(lhs::GenericQuadExpr, rhs::Number) = (+)(-rhs,lhs)
+Base.:*(lhs::GenericQuadExpr, rhs::Number) = (*)(rhs,lhs)
+Base.:/(lhs::GenericQuadExpr, rhs::Number) = (*)(inv(rhs),lhs)
+# QuadExpr--AbstractVariableRef
+Base.:+(q::GenericQuadExpr, v::AbstractVariableRef) = (+)(v,q)
+Base.:-(q::GenericQuadExpr, v::AbstractVariableRef) = GenericQuadExpr(copy(q.qvars1),copy(q.qvars2),copy(q.qcoeffs),q.aff-v)
+Base.:*(q::GenericQuadExpr, v::AbstractVariableRef) = error("Cannot multiply a quadratic expression by a variable")
+Base.:/(q::GenericQuadExpr, v::AbstractVariableRef) = error("Cannot divide a quadratic expression by a variable")
 # QuadExpr--AffExpr
-Base.:+(q::QuadExpr, a::AffExpr) = QuadExpr(copy(q.qvars1),copy(q.qvars2),copy(q.qcoeffs),q.aff+a)
-Base.:-(q::QuadExpr, a::AffExpr) = QuadExpr(copy(q.qvars1),copy(q.qvars2),copy(q.qcoeffs),q.aff-a)
-Base.:*(q::QuadExpr, a::AffExpr) = error("Cannot multiply a quadratic expression by an aff. expression")
-Base.:/(q::QuadExpr, a::AffExpr) = error("Cannot divide a quadratic expression by an aff. expression")
+Base.:+(q::GenericQuadExpr, a::GenericAffExpr) = GenericQuadExpr(copy(q.qvars1),copy(q.qvars2),copy(q.qcoeffs),q.aff+a)
+Base.:-(q::GenericQuadExpr, a::GenericAffExpr) = GenericQuadExpr(copy(q.qvars1),copy(q.qvars2),copy(q.qcoeffs),q.aff-a)
+Base.:*(q::GenericQuadExpr, a::GenericAffExpr) = error("Cannot multiply a quadratic expression by an aff. expression")
+Base.:/(q::GenericQuadExpr, a::GenericAffExpr) = error("Cannot divide a quadratic expression by an aff. expression")
 # QuadExpr--QuadExpr
-Base.:+(q1::QuadExpr, q2::QuadExpr) = QuadExpr( vcat(q1.qvars1, q2.qvars1),     vcat(q1.qvars2, q2.qvars2),
-                                            vcat(q1.qcoeffs, q2.qcoeffs),   q1.aff + q2.aff)
-Base.:-(q1::QuadExpr, q2::QuadExpr) = QuadExpr( vcat(q1.qvars1, q2.qvars1),     vcat(q1.qvars2, q2.qvars2),
-                                            vcat(q1.qcoeffs, -q2.qcoeffs),  q1.aff - q2.aff)
+Base.:+(q1::GenericQuadExpr, q2::GenericQuadExpr) = GenericQuadExpr( vcat(q1.qvars1, q2.qvars1),     vcat(q1.qvars2, q2.qvars2),
+                                                                     vcat(q1.qcoeffs, q2.qcoeffs),   q1.aff + q2.aff)
+Base.:-(q1::GenericQuadExpr, q2::GenericQuadExpr) = GenericQuadExpr( vcat(q1.qvars1, q2.qvars1),     vcat(q1.qvars2, q2.qvars2),
+                                                                     vcat(q1.qcoeffs, -q2.qcoeffs),  q1.aff - q2.aff)
 
-Base.:(==)(lhs::AffExpr,rhs::AffExpr) = (lhs.vars == rhs.vars) && (lhs.coeffs == rhs.coeffs) && (lhs.constant == rhs.constant)
-Base.:(==)(lhs::QuadExpr,rhs::QuadExpr) = (lhs.qvars1 == rhs.qvars1) && (lhs.qvars2 == rhs.qvars2) && (lhs.qcoeffs == rhs.qcoeffs) && (lhs.aff == rhs.aff)
+Base.:(==)(lhs::GenericAffExpr,rhs::GenericAffExpr) = (lhs.vars == rhs.vars) && (lhs.coeffs == rhs.coeffs) && (lhs.constant == rhs.constant)
+Base.:(==)(lhs::GenericQuadExpr,rhs::GenericQuadExpr) = (lhs.qvars1 == rhs.qvars1) && (lhs.qvars2 == rhs.qvars2) && (lhs.qcoeffs == rhs.qcoeffs) && (lhs.aff == rhs.aff)
 
 #############################################################################
 # Helpers to initialize memory for AffExpr/QuadExpr
@@ -210,8 +210,8 @@ _sizehint_expr!(q, n) = nothing
 #############################################################################
 
 # TODO: specialize sum for Dict and JuMPArray of JuMP objects?
-Base.sum(j::Array{VariableRef}) = AffExpr(vec(j), ones(length(j)), 0.0)
-Base.sum(j::AbstractArray{VariableRef}) = sum([j[i] for i in eachindex(j)]) # to handle non-one-indexed arrays.
+Base.sum(j::Array{<:AbstractVariableRef}) = GenericAffExpr(vec(j), ones(length(j)), 0.0)
+Base.sum(j::AbstractArray{<:AbstractVariableRef}) = sum([j[i] for i in eachindex(j)]) # to handle non-one-indexed arrays.
 function Base.sum(affs::AbstractArray{T}) where T<:GenericAffExpr
     new_aff = zero(T)
     for aff in affs
@@ -248,12 +248,12 @@ end
 # A bunch of operator junk to make matrix multiplication and friends act
 # reasonably sane with JuMP types
 
-Base.promote_rule(::Type{VariableRef},::Type{R}       ) where {R<:Real} = AffExpr
-Base.promote_rule(         ::Type{VariableRef},::Type{AffExpr} ) = AffExpr
-Base.promote_rule(         ::Type{VariableRef},::Type{QuadExpr}) = QuadExpr
-Base.promote_rule(::Type{AffExpr}, ::Type{R}       ) where {R<:Real} = AffExpr
-Base.promote_rule(         ::Type{AffExpr}, ::Type{QuadExpr}) = QuadExpr
-Base.promote_rule(::Type{QuadExpr},::Type{R}       ) where {R<:Real} = QuadExpr
+Base.promote_rule(V::Type{<:AbstractVariableRef},R::Type{<:Real}                 )                 = GenericAffExpr{Float64, V}
+Base.promote_rule(V::Type{<:AbstractVariableRef}, ::Type{<:GenericAffExpr{T}}    ) where T         = GenericAffExpr{T, V}
+Base.promote_rule(V::Type{<:AbstractVariableRef}, ::Type{<:GenericQuadExpr{T}}   ) where T         = GenericQuadExpr{T, V}
+Base.promote_rule(::Type{GenericAffExpr{S, V}},  R::Type{<:Real}                 ) where {S, V}    = GenericAffExpr{promote_type(S, R), V}
+Base.promote_rule(::Type{<:GenericAffExpr{S, V}}, ::Type{<:GenericQuadExpr{T, V}}) where {S, T, V} = GenericQuadExpr{promote_type(S, T), V}
+Base.promote_rule(::Type{GenericQuadExpr{S, V}}, R::Type{<:Real}                 ) where {S, V}    = GenericQuadExpr{promote_type(S, R), V}
 
 Base.transpose(x::AbstractJuMPScalar) = x
 
@@ -267,10 +267,10 @@ function Compat.LinearAlgebra.issymmetric(x::Matrix{T}) where T<:JuMPTypes
     true
 end
 
-# Special-case because the the base version wants to do fill!(::Array{VariableRef}, zero(AffExpr))
-function Compat.LinearAlgebra.diagm(x::AbstractVector{VariableRef})
+# Special-case because the the base version wants to do fill!(::Array{AbstractVariableRef}, zero(AffExpr))
+function Compat.LinearAlgebra.diagm(x::AbstractVector{<:AbstractVariableRef})
     @assert one_indexed(x) # Base.diagm doesn't work for non-one-indexed arrays in general.
-    diagm(copy!(similar(x, AffExpr), x))
+    diagm(copy!(similar(x, GenericAffExpr{Float64,eltype(x)}), x))
 end
 
 ###############
@@ -461,18 +461,18 @@ Base.:*(x::AbstractArray{T}) where {T<:JuMPTypes} = x
 ###############################################################################
 # Add nonlinear function fallbacks for JuMP built-in types
 const op_hint = "Are you trying to build a nonlinear problem? Make sure you use @NLconstraint/@NLobjective."
-for (func,_) in Calculus.symbolic_derivatives_1arg(), typ in [:VariableRef,:AffExpr,:QuadExpr]
+for (func,_) in Calculus.symbolic_derivatives_1arg(), typ in [:AbstractVariableRef,:AffExpr,:QuadExpr]
     errstr = "$func is not defined for type $typ. $op_hint"
     if isdefined(Base, func)
         @eval Base.$(func)(::$typ) = error($errstr)
     end
 end
 
-Base.:*(::T,::S) where {T<:QuadExpr,S<:Union{VariableRef,AffExpr,QuadExpr}} =
+Base.:*(::T,::S) where {T<:QuadExpr,S<:Union{AbstractVariableRef,AffExpr,QuadExpr}} =
     error( "*(::$T,::$S) is not defined. $op_hint")
 Base.:*(lhs::QuadExpr, rhs::QuadExpr) =
     error( "*(::QuadExpr,::QuadExpr) is not defined. $op_hint")
-Base.:*(::S,::T) where {T<:QuadExpr,S<:Union{VariableRef,AffExpr,QuadExpr}} =
+Base.:*(::S,::T) where {T<:QuadExpr,S<:Union{AbstractVariableRef,AffExpr,QuadExpr}} =
     error( "*(::$S,::$T) is not defined. $op_hint")
-Base.:/(::S,::T) where {S<:Union{Number,VariableRef,AffExpr,QuadExpr},T<:Union{VariableRef,AffExpr,QuadExpr}} =
+Base.:/(::S,::T) where {S<:Union{Number,AbstractVariableRef,AffExpr,QuadExpr},T<:Union{AbstractVariableRef,AffExpr,QuadExpr}} =
     error( "/(::$S,::$T) is not defined. $op_hint")

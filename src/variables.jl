@@ -22,10 +22,12 @@ struct ScalarVariable{S, T, U, V} <: AbstractVariable
     info::VariableInfo{S, T, U, V}
 end
 
+abstract type AbstractVariableRef <: AbstractJuMPScalar end
+
 #############################################################################
 # VariableRef
 # Holds a reference to the model and the corresponding MOI.VariableIndex.
-struct VariableRef <: AbstractJuMPScalar
+struct VariableRef <: AbstractVariableRef
     m::Model
     index::MOIVAR
 end
