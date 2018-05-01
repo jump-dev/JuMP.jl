@@ -51,7 +51,7 @@ Base.:-(lhs::V, rhs::GenericAffExpr{C,V}) where {C,V<:JuMPTypes} =
     GenericAffExpr{C,V}(vcat(lhs,rhs.vars),vcat(one(C),-rhs.coeffs),-rhs.constant)
 function Base.:*(lhs::VariableRef, rhs::AffExpr)
     n = length(rhs.vars)
-    if rhs.constant != 0.
+    if !iszero(rhs.constant)
         ret = QuadExpr([lhs for i=1:n],copy(rhs.vars),copy(rhs.coeffs),AffExpr([lhs], [rhs.constant], 0.))
     else
         ret = QuadExpr([lhs for i=1:n],copy(rhs.vars),copy(rhs.coeffs),zero(AffExpr))
@@ -89,7 +89,7 @@ Base.:-(lhs::GenericAffExpr{C,V}, rhs::V) where {C,V<:JuMPTypes} = GenericAffExp
 # Don't fall back on VariableRef*AffExpr to preserve lhs/rhs consistency (appears in printing)
 function Base.:*(lhs::AffExpr, rhs::VariableRef)
     n = length(lhs.vars)
-    if lhs.constant != 0.
+    if !iszero(lhs.constant)
         ret = QuadExpr(copy(lhs.vars),[rhs for i=1:n],copy(lhs.coeffs),AffExpr([rhs], [lhs.constant], 0.))
     else
         ret = QuadExpr(copy(lhs.vars),[rhs for i=1:n],copy(lhs.coeffs),zero(AffExpr))
@@ -117,19 +117,19 @@ function Base.:*(lhs::AffExpr, rhs::AffExpr)
     end
 
     # Try to preallocate space for aff
-    if lhs.constant != 0 && rhs.constant != 0
+    if !iszero(lhs.constant) && !iszero(rhs.constant)
         sizehint!(ret.aff.vars, n+m)
         sizehint!(ret.aff.coeffs, n+m)
-    elseif lhs.constant != 0
+    elseif !iszero(lhs.constant)
         sizehint!(ret.aff.vars, n)
         sizehint!(ret.aff.coeffs, n)
-    elseif rhs.constant != 0
+    elseif !iszero(rhs.constant)
         sizehint!(ret.aff.vars, m)
         sizehint!(ret.aff.coeffs, m)
     end
 
     # [LHS constant] * RHS
-    if lhs.constant != 0
+    if !iszero(lhs.constant)
         c = lhs.constant
         for j = 1:m
             push!(ret.aff.vars,   rhs.vars[j])
@@ -139,7 +139,7 @@ function Base.:*(lhs::AffExpr, rhs::AffExpr)
     end
 
     # [RHS constant] * LHS
-    if rhs.constant != 0
+    if !iszero(rhs.constant)
         c = rhs.constant
         for i = 1:n
             push!(ret.aff.vars,   lhs.vars[i])
