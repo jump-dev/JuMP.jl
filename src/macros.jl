@@ -850,11 +850,11 @@ esc_nonconstant(x::Expr) = isexpr(x,:quote) ? x : esc(x)
 esc_nonconstant(x) = esc(x)
 
 # Returns the type of what `addvariable(::Model, buildvariable(...))` would return where `...` represents the positional arguments.
-# E.g.: @variable m [1:3] foo will allocate an vector of element type `variabletype(foo())`
+# Example: `@variable m [1:3] foo` will allocate an vector of element type `variabletype(foo())`
 variabletype(m::Model) = VariableRef
 # Returns a new variable. Additional positional arguments can be used to dispatch the call to a different method.
 # The return type should only depends on the positional arguments for `variabletype` to make sense. See the @variable macro doc for more details.
-# E.g.: @variable m x foo will call buildvariable(foo, _error, info)
+# Example: `@variable m x` foo will call `buildvariable(_error, info, foo)`
 function buildvariable(_error::Function, info::VariableInfo; extra_kwargs...)
     for (kwarg, _) in extra_kwargs
         _error("Unrecognized keyword argument $kwarg")
@@ -905,7 +905,7 @@ end
 #   x = Matrix{...}(N, N)
 #   for i in 1:N
 #       for j in 1:N
-#           x[i,j] = x[j,i] = addvariable(m, buildvariable(Poly(X), msg -> error("In @variable(m, x[1:N,1:N], Symmetric, Poly(X)): ", msg), VariableInfo(false, NaN, false, NaN, false, NaN, false, NaN, false, false)), "")
+#           x[i,j] = x[j,i] = addvariable(m, buildvariable(msg -> error("In @variable(m, x[1:N,1:N], Symmetric, Poly(X)): ", msg), VariableInfo(false, NaN, false, NaN, false, NaN, false, NaN, false, false), Poly(X)), "")
 #       end
 #   end
 #   ```
@@ -1054,7 +1054,7 @@ macro variable(args...)
         # Easy case - a single variable
         sdp && _error("Cannot add a semidefinite scalar variable")
         info = :(VariableInfo($haslb, $lb, $hasub, $ub, $hasfix, $fixedvalue, $hasstart, $value, $binary, $integer))
-        buildcall = :( buildvariable($(extra...), $_error, $info) )
+        buildcall = :( buildvariable($_error, $info, $(extra...)) )
         addkwargs!(buildcall, extra_kwargs)
         variablecall = :( addvariable($m, $buildcall, $basename) )
         code = :($variable = $variablecall)
@@ -1076,7 +1076,7 @@ macro variable(args...)
 
     # Code to be used to create each variable of the container.
     info = :(VariableInfo($haslb, $lb, $hasub, $ub, $hasfix, $fixedvalue, $hasstart, $value, $binary, $integer))
-    buildcall = :( buildvariable($(extra...), $_error, $info) )
+    buildcall = :( buildvariable($_error, $info, $(extra...)) )
     addkwargs!(buildcall, extra_kwargs)
     variablecall = :( addvariable($m, $buildcall, $(namecall(basename, idxvars))) )
     code = :( $(refcall) = $variablecall )

@@ -29,7 +29,7 @@ end
             names[v] = name
             v
         end
-        function JuMP.buildvariable(::Type{MyVariable}, _error::Function, info::JuMP.VariableInfo; test_kw::Int = 0)
+        function JuMP.buildvariable(_error::Function, info::JuMP.VariableInfo, ::Type{MyVariable}; test_kw::Int = 0)
             (info, test_kw)
         end
         m = Model()
