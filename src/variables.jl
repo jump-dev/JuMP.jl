@@ -22,11 +22,18 @@ struct ScalarVariable{S, T, U, V} <: AbstractVariable
     info::VariableInfo{S, T, U, V}
 end
 
+"""
+    AbstractVariableRef
+
+Variable returned by [`addvariable`](@ref). Affine (resp. quadratic) operations with variables of type `V<:AbstractVariableRef` and coefficients of type `T` creates a `GenericAffExpr{T,V}` (resp. `GenericQuadExpr{T,V}`).
+"""
 abstract type AbstractVariableRef <: AbstractJuMPScalar end
 
-#############################################################################
-# VariableRef
-# Holds a reference to the model and the corresponding MOI.VariableIndex.
+"""
+    VariableRef <: AbstractVariableRef
+
+Holds a reference to the model and the corresponding MOI.VariableIndex.
+"""
 struct VariableRef <: AbstractVariableRef
     m::Model
     index::MOIVAR
