@@ -414,6 +414,8 @@ hasresultvalues(m::Model) = MOI.canget(m, MOI.VariablePrimal(), VariableRef)
 
 Add a variable `v` to `Model m` and sets its name.
 """
+function addvariable end
+
 function addvariable(m::Model, v::ScalarVariable, name::String="")
     info = v.info
     vref = VariableRef(m)
