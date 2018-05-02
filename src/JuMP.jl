@@ -308,7 +308,7 @@ function verify_ownership(m::Model, vec::Vector{VariableRef})
 end
 
 Base.copy(v::VariableRef, new_model::Model) = VariableRef(new_model, v.col)
-Base.copy(x::Void, new_model::Model) = nothing
+Base.copy(x::Nothing, new_model::Model) = nothing
 Base.copy(v::AbstractArray{VariableRef}, new_model::Model) = (var -> VariableRef(new_model, var.col)).(v)
 
 
