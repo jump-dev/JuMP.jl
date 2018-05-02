@@ -23,7 +23,7 @@ const MOIU = MOI.Utilities
 
 macro test_expr(expr)
     esc(quote
-            @test JuMP.isequal_canonical(@expression(m, $expr), @inferred $expr)
+            @test JuMP.isequal_canonical(@expression(m, $expr), $expr)
     end)
 end
 
