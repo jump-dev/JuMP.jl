@@ -51,26 +51,26 @@ _values(x) = Base.values(x)
 # Anything here: https://en.wikipedia.org/wiki/Windows-1252
 # should probably work fine on Windows
 const repl = Dict{Symbol,String}(
-    :leq        => (is_windows() ? "<=" : "≤"),
-    :geq        => (is_windows() ? ">=" : "≥"),
-    :eq         => (is_windows() ? "==" : "="),
+    :leq        => (Compat.Sys.iswindows() ? "<=" : "≤"),
+    :geq        => (Compat.Sys.iswindows() ? ">=" : "≥"),
+    :eq         => (Compat.Sys.iswindows() ? "==" : "="),
     :times      => "*",
     :sq         => "²",
     :ind_open   => "[",
     :ind_close  => "]",
-    :for_all    => (is_windows() ? "for all" : "∀"),
-    :in         => (is_windows() ? "in" : "∈"),
+    :for_all    => (Compat.Sys.iswindows() ? "for all" : "∀"),
+    :in         => (Compat.Sys.iswindows() ? "in" : "∈"),
     :open_set   => "{",
-    :dots       => (is_windows() ? ".." : "…"),
+    :dots       => (Compat.Sys.iswindows() ? ".." : "…"),
     :close_set  => "}",
-    :union      => (is_windows() ? "or" : "∪"),
-    :infty      => (is_windows() ? "Inf" : "∞"),
+    :union      => (Compat.Sys.iswindows() ? "or" : "∪"),
+    :infty      => (Compat.Sys.iswindows() ? "Inf" : "∞"),
     :open_rng   => "[",
     :close_rng  => "]",
     :integer    => "integer",
     :succeq0    => " is semidefinite",
-    :Vert       => (is_windows() ? "||" : "‖"),
-    :sub2       => (is_windows() ? "_2" : "₂"))
+    :Vert       => (Compat.Sys.iswindows() ? "||" : "‖"),
+    :sub2       => (Compat.Sys.iswindows() ? "_2" : "₂"))
 
 # IJulia-specific symbols
 const ijulia = Dict{Symbol,String}(
