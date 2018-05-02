@@ -850,7 +850,7 @@ esc_nonconstant(x::Expr) = isexpr(x,:quote) ? x : esc(x)
 esc_nonconstant(x) = esc(x)
 
 # Returns the type of what `addvariable(::Model, buildvariable(...))` would return where `...` represents the positional arguments.
-# Example: `@variable m [1:3] foo` will allocate an vector of element type `variabletype(foo())`
+# Example: `@variable m [1:3] foo` will allocate an vector of element type `variabletype(m, foo)`
 variabletype(m::Model) = VariableRef
 # Returns a new variable. Additional positional arguments can be used to dispatch the call to a different method.
 # The return type should only depends on the positional arguments for `variabletype` to make sense. See the @variable macro doc for more details.
