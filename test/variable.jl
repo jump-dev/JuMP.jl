@@ -12,7 +12,8 @@
 #############################################################################
 using JuMP
 import JuMP.repl
-using Base.Test
+using Compat
+using Compat.Test
 
 @testset "VariableRefs" begin
     @testset "constructors" begin

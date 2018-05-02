@@ -21,7 +21,9 @@
 # TODO: Move these tests out of JuMP and into MOI so that JuMP can be tested
 # separately from the solver, as it is for everything except NLP.
 
-using Ipopt, JuMP, Base.Test
+using Ipopt, JuMP
+using Compat
+using Compat.Test
 using MathOptInterface
 const MOI = MathOptInterface
 

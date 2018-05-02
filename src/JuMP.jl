@@ -13,6 +13,8 @@ __precompile__()
 module JuMP
 
 using Compat
+using Compat.LinearAlgebra
+using Compat.SparseArrays
 
 import MathOptInterface
 const MOI = MathOptInterface

@@ -4,8 +4,8 @@
 #  file, You can obtain one at http://mozilla.org/MPL/2.0/.
 
 using JuMP
-using Base.Test
 using Compat # For undef
+using Compat.Test
 
 macro dummycontainer(expr, requestedtype)
     name = gensym()

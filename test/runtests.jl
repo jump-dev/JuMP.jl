@@ -11,7 +11,10 @@
 #############################################################################
 
 using JuMP
-using Base.Test
+
+using Compat
+using Compat.LinearAlgebra # for dot
+using Compat.Test
 
 using MathOptInterface
 const MOI = MathOptInterface
