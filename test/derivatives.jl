@@ -1,5 +1,6 @@
 using JuMP.Derivatives
-using Base.Test
+using Compat
+using Compat.Test
 using MathOptInterface
 
 struct ΦEvaluator <: MathOptInterface.AbstractNLPEvaluator
