@@ -1,9 +1,3 @@
-macro test_expr(expr)
-    esc(quote
-            @test JuMP.isequal_canonical(@expression(m, $expr), $expr)
-    end)
-end
-
 @testset "Constraints" begin
     @testset "SingleVariable constraints" begin
         m = Model()

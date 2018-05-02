@@ -119,7 +119,7 @@ function isequal_canonical(aff::GenericAffExpr{C,V}, other::GenericAffExpr{C,V})
     end
     d1 = canonicalize(aff)
     d2 = canonicalize(other)
-    return isequal(d1,d1) && aff.constant == other.constant
+    return isequal(d1,d2) && aff.constant == other.constant
 end
 
 

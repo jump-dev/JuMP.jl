@@ -30,6 +30,8 @@ struct VariableRef <: AbstractJuMPScalar
     index::MOIVAR
 end
 
+Base.copy(v::VariableRef) = VariableRef(v.m, v.index)
+
 function MOI.delete!(m::Model, v::VariableRef)
     @assert m === v.m
     MOI.delete!(m.moibackend, v.index)

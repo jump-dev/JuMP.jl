@@ -21,6 +21,19 @@ const MOI = MathOptInterface
 const MOIT = MOI.Test
 const MOIU = MOI.Utilities
 
+macro test_expr(expr)
+    esc(quote
+            @test JuMP.isequal_canonical(@expression(m, $expr), @inferred $expr)
+    end)
+end
+
+macro test_expr_str(expr, str)
+    esc(quote
+            @test string(@inferred $expr) == $str
+            @test_expr $expr
+    end)
+end
+
 # Test that the macro call `m` throws an error exception during pre-compilation
 macro test_macro_throws(errortype, m)
     # See https://discourse.julialang.org/t/test-throws-with-macros-after-pr-23533/5878
@@ -41,7 +54,7 @@ include("nlp.jl")
 include("generate_and_solve.jl")
 include("print.jl")
 #include("expr.jl")
-#include("operator.jl")
+include("operator.jl")
 include("macros.jl")
 
 # Fuzzer of macros to build expressions
