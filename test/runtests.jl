@@ -21,16 +21,16 @@ const MOI = MathOptInterface
 const MOIT = MOI.Test
 const MOIU = MOI.Utilities
 
-macro test_expr(expr)
+macro test_expression(expr)
     esc(quote
             @test JuMP.isequal_canonical(@expression(m, $expr), $expr)
     end)
 end
 
-macro test_expr_str(expr, str)
+macro test_expression_with_string(expr, str)
     esc(quote
             @test string(@inferred $expr) == $str
-            @test_expr $expr
+            @test_expression $expr
     end)
 end
 
