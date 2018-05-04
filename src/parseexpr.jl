@@ -276,7 +276,7 @@ addtoexpr(ex, c, x) = ex + c*x
 
 addtoexpr_reorder(ex, arg) = addtoexpr(ex, 1.0, arg)
 # Special case because "Val{false}()" is used as the default empty expression.
-addtoexpr_reorder(ex::Val{false}, arg) = arg
+addtoexpr_reorder(ex::Val{false}, arg) = copy(arg)
 addtoexpr_reorder(ex::Val{false}, args...) = (*)(args...)
 
 

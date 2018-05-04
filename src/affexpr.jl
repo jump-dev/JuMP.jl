@@ -115,11 +115,16 @@ function isequal_canonical(aff::GenericAffExpr{C,V}, other::GenericAffExpr{C,V})
         for k in 1:length(a.vars)
             d[a.vars[k]] = a.coeffs[k] + get(d, a.vars[k], zero(C))
         end
+        for k in keys(d)
+            if iszero(d[k])
+                delete!(d, k)
+            end
+        end
         return d
     end
     d1 = canonicalize(aff)
     d2 = canonicalize(other)
-    return isequal(d1,d1) && aff.constant == other.constant
+    return isequal(d1,d2) && aff.constant == other.constant
 end
 
 
