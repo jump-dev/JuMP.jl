@@ -461,18 +461,18 @@ Base.:*(x::AbstractArray{T}) where {T<:JuMPTypes} = x
 ###############################################################################
 # Add nonlinear function fallbacks for JuMP built-in types
 const op_hint = "Are you trying to build a nonlinear problem? Make sure you use @NLconstraint/@NLobjective."
-for (func,_) in Calculus.symbolic_derivatives_1arg(), typ in [:AbstractVariableRef,:AffExpr,:QuadExpr]
+for (func,_) in Calculus.symbolic_derivatives_1arg(), typ in [:AbstractVariableRef,:GenericAffExpr,:GenericQuadExpr]
     errstr = "$func is not defined for type $typ. $op_hint"
     if isdefined(Base, func)
         @eval Base.$(func)(::$typ) = error($errstr)
     end
 end
 
-Base.:*(::T,::S) where {T<:QuadExpr,S<:Union{AbstractVariableRef,AffExpr,QuadExpr}} =
+Base.:*(::T,::S) where {T<:GenericQuadExpr,S<:Union{AbstractVariableRef,GenericAffExpr,GenericQuadExpr}} =
     error( "*(::$T,::$S) is not defined. $op_hint")
-Base.:*(lhs::QuadExpr, rhs::QuadExpr) =
-    error( "*(::QuadExpr,::QuadExpr) is not defined. $op_hint")
-Base.:*(::S,::T) where {T<:QuadExpr,S<:Union{AbstractVariableRef,AffExpr,QuadExpr}} =
+Base.:*(lhs::GenericQuadExpr, rhs::GenericQuadExpr) =
+    error( "*(::GenericQuadExpr,::GenericQuadExpr) is not defined. $op_hint")
+Base.:*(::S,::T) where {T<:GenericQuadExpr,S<:Union{AbstractVariableRef,GenericAffExpr,GenericQuadExpr}} =
     error( "*(::$S,::$T) is not defined. $op_hint")
-Base.:/(::S,::T) where {S<:Union{Number,AbstractVariableRef,AffExpr,QuadExpr},T<:Union{AbstractVariableRef,AffExpr,QuadExpr}} =
+Base.:/(::S,::T) where {S<:Union{Number,AbstractVariableRef,GenericAffExpr,GenericQuadExpr},T<:Union{AbstractVariableRef,GenericAffExpr,GenericQuadExpr}} =
     error( "/(::$S,::$T) is not defined. $op_hint")
