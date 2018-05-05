@@ -409,7 +409,7 @@ Replaces `getvalue` for most use cases.
 resultvalue(v::VariableRef) = MOI.get(v.m, MOI.VariablePrimal(), v)
 hasresultvalues(m::Model) = MOI.canget(m, MOI.VariablePrimal(), VariableRef)
 
-@Base.deprecate setvalue(v::VariableRef, val::Number) setstart(v, val)
+@Base.deprecate setvalue(v::VariableRef, val::Number) setstartvalue(v, val)
 
 """
     addvariable(m::Model, v::AbstractVariable, name::String="")
