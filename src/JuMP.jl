@@ -48,7 +48,7 @@ export
     #getvalue, setvalue,
     #getdual,
     #setcategory, getcategory,
-    setstart,
+    setstartvalue,
     linearindex,
     # Expressions and constraints
     linearterms,
