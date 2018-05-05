@@ -191,7 +191,7 @@
         MOIU.attachoptimizer!(m)
 
         MOI.set!(mocksolver, MOI.TerminationStatus(), MOI.Success)
-        MOI.set!(mocksolver, MOI.ObjectiveValue(), -1.0)
+        MOI.set!(mocksolver, MOI.ObjectiveValue(), 1.0)
         MOI.set!(mocksolver, MOI.ResultCount(), 1)
         MOI.set!(mocksolver, MOI.PrimalStatus(), MOI.FeasiblePoint)
         MOI.set!(mocksolver, MOI.DualStatus(), MOI.FeasiblePoint)
@@ -211,7 +211,7 @@
 
         @test JuMP.resultvalue(x) == 1.0
         @test JuMP.resultvalue(y) == 0.0
-        @test JuMP.objectivevalue(m) == -1.0
+        @test JuMP.objectivevalue(m) == 1.0
 
         @test JuMP.dualstatus(m) == MOI.FeasiblePoint
         @test JuMP.resultdual(c1) == -1.0
