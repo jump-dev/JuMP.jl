@@ -39,7 +39,7 @@
         MOIU.loadfromstring!(model, modelstring)
         MOIU.test_models_equal(m.moibackend.model_cache, model, ["x","y"], ["c", "xub", "ylb"])
 
-        mocksolver = MOIU.MockOptimizer(JuMP.JuMPMOIModel{Float64}())
+        mocksolver = MOIU.MockOptimizer(JuMP.JuMPMOIModel{Float64}(), evalobjective=false)
         MOIU.resetoptimizer!(m, mocksolver)
         MOIU.attachoptimizer!(m)
 
@@ -74,7 +74,7 @@
     end
 
     @testset "LP (Direct mode)" begin
-        mocksolver = MOIU.MockOptimizer(JuMP.JuMPMOIModel{Float64}())
+        mocksolver = MOIU.MockOptimizer(JuMP.JuMPMOIModel{Float64}(), evalobjective=false)
 
         m = Model(mode = JuMP.Direct, backend = mocksolver)
         @variable(m, x <= 2.0)
@@ -115,7 +115,7 @@
     # TODO: test Manual mode
 
     @testset "IP" begin
-        mocksolver = MOIU.MockOptimizer(JuMP.JuMPMOIModel{Float64}())
+        mocksolver = MOIU.MockOptimizer(JuMP.JuMPMOIModel{Float64}(), evalobjective=false)
         # Tests the solver= keyword.
         m = Model(mode = JuMP.Automatic, optimizer = mocksolver)
         @variable(m, x == 1.0, Int)
@@ -186,7 +186,7 @@
         MOIU.loadfromstring!(model, modelstring)
         MOIU.test_models_equal(m.moibackend.model_cache, model, ["x","y"], ["c1", "c2", "c3"])
 
-        mocksolver = MOIU.MockOptimizer(JuMP.JuMPMOIModel{Float64}())
+        mocksolver = MOIU.MockOptimizer(JuMP.JuMPMOIModel{Float64}(), evalobjective=false)
         MOIU.resetoptimizer!(m, mocksolver)
         MOIU.attachoptimizer!(m)
 
@@ -243,7 +243,7 @@
         MOIU.loadfromstring!(model, modelstring)
         MOIU.test_models_equal(m.moibackend.model_cache, model, ["x","y","z"], ["varsoc", "affsoc", "rotsoc"])
 
-        mocksolver = MOIU.MockOptimizer(JuMP.JuMPMOIModel{Float64}())
+        mocksolver = MOIU.MockOptimizer(JuMP.JuMPMOIModel{Float64}(), evalobjective=false)
         MOIU.resetoptimizer!(m, mocksolver)
         MOIU.attachoptimizer!(m)
 
@@ -299,7 +299,7 @@
         MOIU.loadfromstring!(model, modelstring)
         MOIU.test_models_equal(m.moibackend.model_cache, model, ["x11","x12","x22"], ["varpsd", "conpsd"])
 
-        mocksolver = MOIU.MockOptimizer(JuMP.JuMPMOIModel{Float64}())
+        mocksolver = MOIU.MockOptimizer(JuMP.JuMPMOIModel{Float64}(), evalobjective=false)
         MOIU.resetoptimizer!(m, mocksolver)
         MOIU.attachoptimizer!(m)
 
