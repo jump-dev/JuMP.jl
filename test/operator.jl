@@ -229,7 +229,7 @@ using Compat.Test
                 issue656 = Model()
                 @variable(issue656, x)
                 floats = Float64[i for i in 1:2]
-                anys   = Array{Any}(2)
+                anys   = Array{Any}(undef, 2)
                 anys[1] = 10
                 anys[2] = 20 + x
                 @test dot(floats, anys) == 10 + 40 + 2x
