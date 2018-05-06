@@ -167,25 +167,31 @@ using Compat.Test
         @testset "sum" begin
             sum_m = Model()
             @variable(sum_m, 0 ≤ matrix[1:3,1:3] ≤ 1, start = 1)
-            # sum(j::JuMPArray{Variable})
-            @test_expression_with_string sum(matrix) "matrix[1,1] + matrix[2,1] + matrix[3,1] + matrix[1,2] + matrix[2,2] + matrix[3,2] + matrix[1,3] + matrix[2,3] + matrix[3,3]"
+            @testset "sum(j::JuMPArray{Variable})" begin
+                @test_expression_with_string sum(matrix) "matrix[1,1] + matrix[2,1] + matrix[3,1] + matrix[1,2] + matrix[2,2] + matrix[3,2] + matrix[1,3] + matrix[2,3] + matrix[3,3]"
+            end
 
-            # sum{T<:Real}(j::JuMPArray{T})
-            @test sum(JuMP.startvalue.(matrix)) ≈ 9
-            # sum(j::Array{Variable})
-            @test string(sum(matrix[1:3,1:3])) == string(sum(matrix))
-            # sum(affs::Array{AffExpr})
-            @test_expression_with_string sum([2*matrix[i,j] for i in 1:3, j in 1:3]) "2 matrix[1,1] + 2 matrix[2,1] + 2 matrix[3,1] + 2 matrix[1,2] + 2 matrix[2,2] + 2 matrix[3,2] + 2 matrix[1,3] + 2 matrix[2,3] + 2 matrix[3,3]"
+            @testset "sum(j::JuMPArray{T}) where T<:Real" begin
+                @test sum(JuMP.startvalue.(matrix)) ≈ 9
+            end
+            @testset "sum(j::Array{VariableRef})" begin
+                @test string(sum(matrix[1:3,1:3])) == string(sum(matrix))
+            end
+            @testset "sum(affs::Array{AffExpr})" begin
+                @test_expression_with_string sum([2*matrix[i,j] for i in 1:3, j in 1:3]) "2 matrix[1,1] + 2 matrix[2,1] + 2 matrix[3,1] + 2 matrix[1,2] + 2 matrix[2,2] + 2 matrix[3,2] + 2 matrix[1,3] + 2 matrix[2,3] + 2 matrix[3,3]"
+            end
 
             S = [1,3]
             @variable(sum_m, x[S], start=1)
-            # sum(j::JuMPDict{Variable})
-            @test_expression sum(x)
-            @test length(string(sum(x))) == 11 # order depends on hashing
-            @test contains(string(sum(x)),"x[1]")
-            @test contains(string(sum(x)),"x[3]")
-            # sum{T<:Real}(j::JuMPDict{T})
-            @test sum(JuMP.startvalue.(x)) == 2
+            @testset "sum(j::JuMPDict{VariableRef})" begin
+                @test_expression sum(x)
+                @test length(string(sum(x))) == 11 # order depends on hashing
+                @test contains(string(sum(x)),"x[1]")
+                @test contains(string(sum(x)),"x[3]")
+            end
+            @testset "sum(j::JuMPDict{T}) where T<:Real" begin
+                @test sum(JuMP.startvalue.(x)) == 2
+            end
         end
 
         @testset "dot" begin
@@ -219,24 +225,26 @@ using Compat.Test
             @test vecdot(A, JuMP.startvalue.(y)) ≈ 10
             @test vecdot(B, JuMP.startvalue.(z)) ≈ 8
 
-            # https://github.com/JuliaOpt/JuMP.jl/issues/656
-            issue656 = Model()
-            @variable(issue656, x)
-            floats = Float64[i for i in 1:2]
-            anys   = Array{Any}(2)
-            anys[1] = 10
-            anys[2] = 20 + x
-            @test dot(floats, anys) == 10 + 40 + 2x
+            @testset "JuMP issue #656" begin
+                issue656 = Model()
+                @variable(issue656, x)
+                floats = Float64[i for i in 1:2]
+                anys   = Array{Any}(2)
+                anys[1] = 10
+                anys[2] = 20 + x
+                @test dot(floats, anys) == 10 + 40 + 2x
+            end
 
-            # https://github.com/JuliaOpt/JuMP.jl/pull/943
-            pull943 = Model()
-            @variable(pull943, x[1 : 10^6]);
-            JuMP.setstartvalue.(x, 1 : 10^6)
-            @expression(pull943, testsum, sum(x[i] * i for i = 1 : 10^6))
-            @expression(pull943, testdot1, dot(x, 1 : 10^6))
-            @expression(pull943, testdot2, dot(1 : 10^6, x))
-            @test JuMP.value(testsum, JuMP.startvalue) ≈ JuMP.value(testdot1, JuMP.startvalue)
-            @test JuMP.value(testsum, JuMP.startvalue) ≈ JuMP.value(testdot2, JuMP.startvalue)
+            @testset "JuMP PR #943" begin
+                pull943 = Model()
+                @variable(pull943, x[1 : 10^6]);
+                JuMP.setstartvalue.(x, 1 : 10^6)
+                @expression(pull943, testsum, sum(x[i] * i for i = 1 : 10^6))
+                @expression(pull943, testdot1, dot(x, 1 : 10^6))
+                @expression(pull943, testdot2, dot(1 : 10^6, x))
+                @test JuMP.value(testsum, JuMP.startvalue) ≈ JuMP.value(testdot1, JuMP.startvalue)
+                @test JuMP.value(testsum, JuMP.startvalue) ≈ JuMP.value(testdot2, JuMP.startvalue)
+            end
         end
     end
 end
