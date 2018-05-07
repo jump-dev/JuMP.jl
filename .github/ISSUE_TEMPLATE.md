@@ -3,7 +3,7 @@ please search or post to our Discourse site: https://discourse.julialang.org/c/d
 the GitHub issue tracker for bug reports and feature requests only.
 
 If the bug you're experiencing is solver-specific (e.g., it only happens when you use Gurobi),
-the issue is best raised at the relevent solver-wrapper repository. If you are unsure, you should
+the issue is best raised at the relevant solver-wrapper repository. If you are unsure, you should
 raise the problem on Discourse.
 
 If you're reasonably sure that the behavior is a bug, and it relates to JuMP, this is the right place.
