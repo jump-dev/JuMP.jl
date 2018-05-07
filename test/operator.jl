@@ -307,8 +307,8 @@ using Compat.Test
                   0     0      0]
             v = [4, 5, 6]
             @test vec_eq(A*x, [2x[1] +  x[2]
-                               2x[2] + x[1] + x[3]
-                               x[2] + 2x[3]])
+                               2x[2] +  x[1] + x[3]
+                                x[2] + 2x[3]])
             @test vec_eq(A*x, B*x)
             @test vec_eq(A*x, @JuMP.Expression(B*x))
             @test vec_eq(@JuMP.Expression(A*x), @JuMP.Expression(B*x))
@@ -324,47 +324,47 @@ using Compat.Test
             y = A*x
             @test vec_eq(-x, [-x[1], -x[2], -x[3]])
             @test vec_eq(-y, [-2x[1] -  x[2]
-                              -x[1] - 2x[2] -  x[3]
-                              -x[2] - 2x[3]])
+                               -x[1] - 2x[2] -  x[3]
+                                       -x[2] - 2x[3]])
             @test vec_eq(y + 1, [2x[1] +  x[2]         + 1
-                                 x[1] + 2x[2] +  x[3] + 1
-                                 x[2] + 2x[3] + 1])
+                                  x[1] + 2x[2] +  x[3] + 1
+                                  x[2] + 2x[3] + 1])
             @test vec_eq(y - 1, [2x[1] +  x[2]         - 1
-                                 x[1] + 2x[2] +  x[3] - 1
-                                 x[2] + 2x[3] - 1])
+                                  x[1] + 2x[2] +  x[3] - 1
+                                          x[2] + 2x[3] - 1])
             @test vec_eq(y + 2ones(3), [2x[1] +  x[2]         + 2
-                                        x[1] + 2x[2] +  x[3] + 2
-                                        x[2] + 2x[3] + 2])
+                                         x[1] + 2x[2] +  x[3] + 2
+                                         x[2] + 2x[3] + 2])
             @test vec_eq(y - 2ones(3), [2x[1] +  x[2]         - 2
-                                        x[1] + 2x[2] +  x[3] - 2
-                                        x[2] + 2x[3] - 2])
+                                         x[1] + 2x[2] +  x[3] - 2
+                                         x[2] + 2x[3] - 2])
             @test vec_eq(2ones(3) + y, [2x[1] +  x[2]         + 2
-                                        x[1] + 2x[2] +  x[3] + 2
-                                        x[2] + 2x[3] + 2])
+                                         x[1] + 2x[2] +  x[3] + 2
+                                         x[2] + 2x[3] + 2])
             @test vec_eq(2ones(3) - y, [-2x[1] -  x[2]         + 2
-                                        -x[1] - 2x[2] -  x[3] + 2
-                                        -x[2] - 2x[3] + 2])
+                                         -x[1] - 2x[2] -  x[3] + 2
+                                         -x[2] - 2x[3] + 2])
             @test vec_eq(y + x, [3x[1] +  x[2]
-                                 x[1] + 3x[2] +  x[3]
-                                 x[2] + 3x[3]])
+                                  x[1] + 3x[2] +  x[3]
+                                          x[2] + 3x[3]])
             @test vec_eq(x + y, [3x[1] +  x[2]
-                                 x[1] + 3x[2] +  x[3]
-                                 x[2] + 3x[3]])
+                                  x[1] + 3x[2] +  x[3]
+                                  x[2] + 3x[3]])
             @test vec_eq(2y + 2x, [6x[1] + 2x[2]
                                    2x[1] + 6x[2] + 2x[3]
                                    2x[2] + 6x[3]])
             @test vec_eq(y - x, [ x[1] + x[2]
-                                 x[1] + x[2] + x[3]
-                                 x[2] + x[3]])
+                                  x[1] + x[2] + x[3]
+                                         x[2] + x[3]])
             @test vec_eq(x - y, [-x[1] - x[2]
                                  -x[1] - x[2] - x[3]
                                  -x[2] - x[3]])
             @test vec_eq(y + x[:], [3x[1] +  x[2]
-                                    x[1] + 3x[2] +  x[3]
-                                    x[2] + 3x[3]])
+                                     x[1] + 3x[2] +  x[3]
+                                             x[2] + 3x[3]])
             @test vec_eq(x[:] + y, [3x[1] +  x[2]
-                                    x[1] + 3x[2] +  x[3]
-                                    x[2] + 3x[3]])
+                                     x[1] + 3x[2] +  x[3]
+                                             x[2] + 3x[3]])
 
             @test vec_eq(@JuMP.Expression(A*x/2), A*x/2)
             @test vec_eq(X*v,  [4X11; 6X23; 0])
