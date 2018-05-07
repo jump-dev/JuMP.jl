@@ -6,7 +6,10 @@ If the bug you're experiencing is solver-specific (e.g., it only happens when yo
 the issue is best raised at the relevent solver-wrapper repository. If you are unsure, you should
 raise the problem on Discourse.
 
-If you've confirmed that the behaviour is a bug, and it relates to JuMP, this is the right place.
+If you're reasonably sure that the behavior is a bug, and it relates to JuMP, this is the right place.
 Be sure to include as much relevant information as possible, including a [minimal reproducible example](https://stackoverflow.com/help/mcve).
+
+Alternatively, if you have a feature request for JuMP, this is also the right place. Just make it clear 
+by making the title of your issue `Feature Request: my cool new feature`.
 
 Thanks for contributing to JuMP!
