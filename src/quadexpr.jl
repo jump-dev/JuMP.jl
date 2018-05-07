@@ -69,6 +69,11 @@ function isequal_canonical(quad::GenericQuadExpr{CoefType,VarType}, other::Gener
             vset = Set((v1,v2))
             d[vset] = c + get(d, vset, zero(CoefType))
         end
+        for k in keys(d)
+            if iszero(d[k])
+                delete!(d, k)
+            end
+        end
         return d
     end
     d1 = canonicalize(quad)
