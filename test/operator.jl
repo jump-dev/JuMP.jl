@@ -296,6 +296,7 @@ using Compat.Test
             @variable(m, X11)
             @variable(m, X23)
             X = sparse([1, 2], [1, 3], [X11, X23], 3, 3) # for testing Variable
+            @test vec_eq([X11 0. 0.; 0. 0. X23; 0. 0. 0.], @inferred Matrix(X))
             @variable(m, Xd[1:3, 1:3])
             Y = sparse([1, 2], [1, 3], [2X11, 4X23], 3, 3) # for testing GenericAffExpr
             Yd = [2X11 0    0
@@ -399,10 +400,13 @@ using Compat.Test
             @test vec_eq(Xd'*Y, Xd.'*Y)
             @test vec_eq(Y'*Xd, Y.'*Xd)
             @test vec_eq(Xd'*Xd, Xd.'*Xd)
-            # @test_broken vec_eq(A*X, B*X)
-            # @test_broken vec_eq(A*X', B*X')
+            @test vec_eq(A*X, B*X)
+            # B * X' fails is handled by Base.A_mul_Bc which promotes B and X to AffExpr
+            # but allocates a matrix of AffExpr to old the result of the product which has type QuadExpr
+            # TODO B shouldn't be promoted to AffExpr and keep the number type
+            @test_broken vec_eq(A*X', B*X')
             @test vec_eq(X'*A, X'*B)
-            # @test_broken(X'*X, X.'*X) # sparse quadratic known to be broken, see #912
+            @test vec_eq(X'*X, X.'*X)
         end
 
         @testset "Dot-ops" begin
@@ -415,36 +419,36 @@ using Compat.Test
             @test vec_eq(A.+x, [1+x[1,1]  2+x[1,2];
                                 3+x[2,1]  4+x[2,2]])
             @test vec_eq(A.+x, B.+x)
-            # @test vec_eq(A.+x, A.+y)
-            # @test vec_eq(A.+y, B.+y)
+            @test vec_eq(A.+x, A.+y)
+            @test vec_eq(A.+y, B.+y)
             @test vec_eq(x.+A, [1+x[1,1]  2+x[1,2];
                                 3+x[2,1]  4+x[2,2]])
             @test vec_eq(x.+A, x.+B)
             @test vec_eq(x.+A, y.+A)
             @test vec_eq(x .+ x, [2x[1,1] 2x[1,2]; 2x[2,1] 2x[2,2]])
-            # @test vec_eq(y.+A, y.+B)
+            @test vec_eq(y.+A, y.+B)
             @test vec_eq(A.-x, [1-x[1,1]  2-x[1,2];
                                 3-x[2,1]  4-x[2,2]])
             @test vec_eq(A.-x, B.-x)
             @test vec_eq(A.-x, A.-y)
             @test vec_eq(x .- x, [zero(AffExpr) for _1 in 1:2, _2 in 1:2])
-            # @test vec_eq(A.-y, B.-y)
+            @test vec_eq(A.-y, B.-y)
             @test vec_eq(x.-A, [-1+x[1,1]  -2+x[1,2];
                                 -3+x[2,1]  -4+x[2,2]])
             @test vec_eq(x.-A, x.-B)
             @test vec_eq(x.-A, y.-A)
-            # @test vec_eq(y.-A, y.-B)
+            @test vec_eq(y.-A, y.-B)
             @test vec_eq(A.*x, [1*x[1,1]  2*x[1,2];
                                 3*x[2,1]  4*x[2,2]])
             @test vec_eq(A.*x, B.*x)
             @test vec_eq(A.*x, A.*y)
-            # @test vec_eq(A.*y, B.*y)
+            @test vec_eq(A.*y, B.*y)
 
             @test vec_eq(x.*A, [1*x[1,1]  2*x[1,2];
                                 3*x[2,1]  4*x[2,2]])
             @test vec_eq(x.*A, x.*B)
             @test vec_eq(x.*A, y.*A)
-            # @test vec_eq(y.*A, y.*B)
+            @test vec_eq(y.*A, y.*B)
 
             @test vec_eq(x .* x, [x[1,1]^2 x[1,2]^2; x[2,1]^2 x[2,2]^2])
             @test_throws ErrorException vec_eq(A./x, [1*x[1,1]  2*x[1,2];
@@ -453,7 +457,8 @@ using Compat.Test
                                 1/3*x[2,1]  1/4*x[2,2]])
             @test vec_eq(x./A, x./B)
             @test vec_eq(x./A, y./A)
-            # @test vec_eq(A./y, B./y)
+            @test_throws ErrorException A./y
+            @test_throws ErrorException B./y
 
             @test vec_eq((2*x) / 3, full((2*y) / 3))
             @test vec_eq(2 * (x/3), full(2 * (y/3)))
