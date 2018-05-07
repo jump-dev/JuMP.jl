@@ -401,10 +401,7 @@ using Compat.Test
             @test vec_eq(Y'*Xd, Y.'*Xd)
             @test vec_eq(Xd'*Xd, Xd.'*Xd)
             @test vec_eq(A*X, B*X)
-            # B * X' fails is handled by Base.A_mul_Bc which promotes B and X to AffExpr
-            # but allocates a matrix of AffExpr to old the result of the product which has type QuadExpr
-            # TODO B shouldn't be promoted to AffExpr and keep the number type
-            @test_broken vec_eq(A*X', B*X')
+            @test_broken vec_eq(A*X', B*X') # See https://github.com/JuliaOpt/JuMP.jl/issues/1276
             @test vec_eq(X'*A, X'*B)
             @test vec_eq(X'*X, X.'*X)
         end
