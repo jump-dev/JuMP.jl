@@ -529,4 +529,47 @@ using Compat.Test
             @test all(c -> c.set.upper == 3, c7)
         end
     end
+
+    @testset "JuMPArray concatenation" begin
+        m = Model()
+        @variable(m, x[1:3])
+        @variable(m, y[1:3,1:3])
+        @variable(m, z[1:1])
+        @variable(m, w[1:1,1:3])
+
+        @test vec_eq([x y], [x[1] y[1,1] y[1,2] y[1,3]
+                             x[2] y[2,1] y[2,2] y[2,3]
+                             x[3] y[3,1] y[3,2] y[3,3]])
+
+        @test vec_eq([x 2y+1], [x[1] 2y[1,1]+1 2y[1,2]+1 2y[1,3]+1
+                                x[2] 2y[2,1]+1 2y[2,2]+1 2y[2,3]+1
+                                x[3] 2y[3,1]+1 2y[3,2]+1 2y[3,3]+1])
+
+        @test vec_eq([1 x'], [1 x[1] x[2] x[3]])
+        @test vec_eq([2x;x], [2x[1],2x[2],2x[3],x[1],x[2],x[3]])
+        # vcat on JuMPArray
+        @test vec_eq([x;x], [x[1],x[2],x[3],x[1],x[2],x[3]])
+        # hcat on JuMPArray
+        @test vec_eq([x x], [x[1] x[1]
+                             x[2] x[2]
+                             x[3] x[3]])
+        # hvcat on JuMPArray
+        tmp1 = [z w; x y]
+        tmp2 = [z[1] w[1,1] w[1,2] w[1,3]
+                x[1] y[1,1] y[1,2] y[1,3]
+                x[2] y[2,1] y[2,2] y[2,3]
+                x[3] y[3,1] y[3,2] y[3,3]]
+        @test vec_eq(tmp1, tmp2)
+        tmp3 = [1 2x'
+                x 2y-x*x']
+        tmp4 = [1    2x[1]               2x[2]               2x[3]
+                x[1] -x[1]*x[1]+2y[1,1]  -x[1]*x[2]+2y[1,2]  -x[1]*x[3] + 2y[1,3]
+                x[2] -x[1]*x[2]+2y[2,1]  -x[2]*x[2]+2y[2,2]  -x[2]*x[3] + 2y[2,3]
+                x[3] -x[1]*x[3]+2y[3,1]  -x[2]*x[3]+2y[3,2]  -x[3]*x[3] + 2y[3,3]]
+        @test vec_eq(tmp3, tmp4)
+
+        A = sprand(3, 3, 0.2)
+        B = full(A)
+        @test vec_eq([A y], [B y])
+    end
 end
