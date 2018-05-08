@@ -79,6 +79,11 @@ using Compat.Test
             @test_expression_with_string w / 2.00 "0.5 w"
             @test w == w
             @test_expression_with_string x*y - 1 "x*y - 1"
+            @test_expression_with_string x^2 "x²"
+            @test_expression_with_string x^1 "x"
+            @test_expression_with_string x^0 "1"
+            @test_throws ErrorException x^3
+            @test_throws ErrorException x^1.5
             # 2-2 Variable--Variable
             @test_expression_with_string w + x "w + x"
             @test_expression_with_string w - x "w - x"
@@ -115,6 +120,11 @@ using Compat.Test
             @test aff == aff
             @test_throws MethodError aff ≥ 1
             @test_expression_with_string aff - 1 "7.1 x + 1.5"
+            @test_expression_with_string aff^2 "50.41 x² + 35.5 x + 6.25"
+            @test_expression_with_string aff^1 "7.1 x + 2.5"
+            @test_expression_with_string aff^0 "1"
+            @test_throws ErrorException aff^3
+            @test_throws ErrorException aff^1.5
             # 3-2 AffExpr--Variable
             @test_expression_with_string aff + z "7.1 x + z + 2.5"
             @test_expression_with_string aff - z "7.1 x - z + 2.5"
