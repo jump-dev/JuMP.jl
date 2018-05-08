@@ -360,10 +360,21 @@ function _multiplyt!(ret::Array{T}, lhs::Matrix, rhs::SparseMatrixCSC) where T<:
     ret
 end
 
-
+# See https://github.com/JuliaLang/julia/issues/27015
+function Base.Matrix(S::SparseMatrixCSC{VariableRef})
+    A = zeros(AffExpr, S.m, S.n)
+    for Sj in 1:S.n
+        for Sk in nzrange(S, Sj)
+            Si = S.rowval[Sk]
+            Sv = S.nzval[Sk]
+            A[Si, Sj] = Sv
+        end
+    end
+    return A
+end
 # TODO: implement sparse * sparse code as in base/sparse/linalg.jl (spmatmul)
-_multiply!(ret::AbstractArray{T}, lhs::SparseMatrixCSC, rhs::SparseMatrixCSC) where {T<:JuMPTypes} = _multiply!(ret, lhs, full(rhs))
-_multiplyt!(ret::AbstractArray{T}, lhs::SparseMatrixCSC, rhs::SparseMatrixCSC) where {T<:JuMPTypes} = _multiplyt!(ret, lhs, full(rhs))
+_multiply!(ret::AbstractArray{T}, lhs::SparseMatrixCSC, rhs::SparseMatrixCSC) where {T<:JuMPTypes} = _multiply!(ret, lhs, Matrix(rhs))
+_multiplyt!(ret::AbstractArray{T}, lhs::SparseMatrixCSC, rhs::SparseMatrixCSC) where {T<:JuMPTypes} = _multiplyt!(ret, lhs, Matrix(rhs))
 
 _multiply!(ret, lhs, rhs) = A_mul_B!(ret, lhs, rhs)
 _multiplyt!(ret, lhs, rhs) = At_mul_B!(ret, lhs, rhs)
