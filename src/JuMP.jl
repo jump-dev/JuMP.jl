@@ -495,7 +495,6 @@ end
 
 # TODO why do we need this?
 const JuMPTypes = Union{AbstractJuMPScalar,
-                        GenericAffExpr,
                         NonlinearExpression}
                     #    Norm,
                     #    QuadExpr,
