@@ -261,8 +261,6 @@ using Compat.Test
         end
     end
 
-    vec_eq(x,y) = vec_eq([x;], [y;])
-
     function vec_eq(x::AbstractArray, y::AbstractArray)
         size(x) == size(y) || return false
         for i in 1:length(x)
@@ -491,7 +489,7 @@ using Compat.Test
 
             cref2 = @constraint(m, x'*A*x >= 1)
             c2 = JuMP.constraintobject.(cref2, QuadExpr, MOI.GreaterThan)
-            @test vec_eq(f1[1], c2.func)
+            @test JuMP.isequal_canonical(f1[1], c2.func)
 
             mat = [ 3x[1] + 12x[3] +  4x[2]
                     2x[1] + 12x[2] + 10x[3]
