@@ -298,67 +298,6 @@ end
     :(addtoexpr(ex, $coef, args[$idx]))
 end
 
-function parseSum(x::Expr, aff::Symbol, lcoeffs, rcoeffs, newaff)
-    # we have a filter condition
-    if isexpr(x.args[2],:parameters)
-        cond = x.args[2]
-        if length(cond.args) != 1
-            error("No commas after semicolon allowed in sum expression, use && for multiple conditions")
-        end
-        # generate inner loop code first and then wrap in for loops
-        inneraff, innercode = parseExpr(x.args[3], aff, lcoeffs, rcoeffs, aff)
-        code = quote
-            if $(esc(cond.args[1]))
-                $innercode
-            end
-        end
-        for level in length(x.args):-1:4
-            _idxvar, idxset = parseIdxSet(x.args[level]::Expr)
-            idxvar = esc(_idxvar)
-            code = :(let
-                $(localvar(idxvar))
-                for $idxvar in $(esc(idxset))
-                    $code
-                end
-            end)
-        end
-    else # no condition
-        inneraff, code = parseExpr(x.args[2], aff, lcoeffs, rcoeffs, aff)
-        for level in length(x.args):-1:3
-            _idxvar, idxset = parseIdxSet(x.args[level]::Expr)
-            idxvar = esc(_idxvar)
-            code = :(let
-                $(localvar(idxvar))
-                for $idxvar in $(esc(idxset))
-                    $code
-                end
-            end)
-        end
-        len = :len
-        # precompute the number of elements to add
-        # this is unncessary if we're just summing constants
-        _, lastidxset = parseIdxSet(x.args[length(x.args)]::Expr)
-        preblock = :($len += length($(esc(lastidxset))))
-        for level in (length(x.args)-1):-1:3
-            _idxvar, idxset = parseIdxSet(x.args[level]::Expr)
-            idxvar = esc(_idxvar)
-            preblock = :(let
-                $(localvar(idxvar))
-                for $idxvar in $(esc(idxset))
-                    $preblock
-                end
-            end)
-        end
-        preblock = quote
-            $len = 0
-            $preblock
-            _sizehint_expr!($aff,$len)
-        end
-        code = :($preblock;$code)
-    end
-    :($code; $newaff=$aff)
-end
-
 # takes a generator statement and returns a properly nested for loop
 # with nested filters as specified
 function parsegen(ex,atleaf)
