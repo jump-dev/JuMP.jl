@@ -140,10 +140,15 @@ Base.transpose(t::MySumType) = MySumType(t.a)
             @test_throws MethodError aff ≥ 1
             @test_expression_with_string aff - 1 "7.1 x + 1.5"
             @test_expression_with_string aff^2 "50.41 x² + 35.5 x + 6.25"
+            @test_expression_with_string (7.1*x + 2.5)^2 "50.41 x² + 35.5 x + 6.25"
             @test_expression_with_string aff^1 "7.1 x + 2.5"
+            @test_expression_with_string (7.1*x + 2.5)^1 "7.1 x + 2.5"
             @test_expression_with_string aff^0 "1"
+            @test_expression_with_string (7.1*x + 2.5)^0 "1"
             @test_throws ErrorException aff^3
+            @test_throws ErrorException (7.1*x + 2.5)^3
             @test_throws ErrorException aff^1.5
+            @test_throws ErrorException (7.1*x + 2.5)^1.5
             # 3-2 AffExpr--Variable
             @test_expression_with_string aff + z "7.1 x + z + 2.5"
             @test_expression_with_string aff - z "7.1 x - z + 2.5"
