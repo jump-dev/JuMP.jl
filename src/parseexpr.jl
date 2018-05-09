@@ -443,8 +443,8 @@ function parseExpr(x, aff::Symbol, lcoeffs::Vector, rcoeffs::Vector, newaff::Sym
                 blk = Expr(:block)
                 s = gensym()
                 newaff_, parsed = parseExprToplevel(x.args[2], s)
-                push!(blk.args, :($s = 0.0; $parsed))
-                push!(blk.args, :($newaff = $aff + $(Expr(:call,:*,lcoeffs...,Expr(:call,:^,newaff_,esc(x.args[3])),rcoeffs...))))
+                push!(blk.args, :($s = Val(false); $parsed))
+                push!(blk.args, :($newaff = addtoexpr_reorder($aff, $(Expr(:call,:*,lcoeffs...,Expr(:call,:^,newaff_,esc(x.args[3])),rcoeffs...)))))
                 return newaff, blk
             end
         elseif x.head == :call && x.args[1] == :/
