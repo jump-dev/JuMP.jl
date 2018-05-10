@@ -32,6 +32,8 @@ end
 
 Base.copy(v::VariableRef) = VariableRef(v.m, v.index)
 
+isequal_canonical(v::VariableRef, other::VariableRef) = isequal(v, other)
+
 function MOI.delete!(m::Model, v::VariableRef)
     @assert m === v.m
     MOI.delete!(m.moibackend, v.index)

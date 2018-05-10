@@ -285,35 +285,36 @@ Base.transpose(t::MySumType) = MySumType(t.a)
         end
     end
 
-    function vec_eq(x::AbstractArray, y::AbstractArray)
-        size(x) == size(y) || return false
-        for i in 1:length(x)
-            v, w = convert(AffExpr,x[i]), convert(AffExpr,y[i])
-            JuMP.isequal_canonical(v, w) || return false
-        end
-        return true
-    end
-
-    function vec_eq(x::Array{QuadExpr}, y::Array{QuadExpr})
-        size(x) == size(y) || return false
-        for i in 1:length(x)
-            JuMP.isequal_canonical(x[i], y[i]) || return false
-        end
-        return true
-    end
-
     @testset "Vectorized operations" begin
+        @testset "Array creation" begin
+            m = Model()
+            @variable(m, x)
+            # @inferred requires a call expression so [x, 1] does not work but Base.vect(x, 1) works
+            @test_expression_with_string Base.vect(x, 1)     "JuMP.GenericAffExpr{Float64,JuMP.VariableRef}[x, 1]"
+            @test_expression_with_string Base.vect(1, x)     "JuMP.GenericAffExpr{Float64,JuMP.VariableRef}[1, x]"
+            @test_expression_with_string Base.vect(x+1, 1)   "JuMP.GenericAffExpr{Float64,JuMP.VariableRef}[x + 1, 1]"
+            @test_expression_with_string Base.vect(1, x+1)   "JuMP.GenericAffExpr{Float64,JuMP.VariableRef}[1, x + 1]"
+            @test_expression_with_string Base.vect(x+1, x)   "JuMP.GenericAffExpr{Float64,JuMP.VariableRef}[x + 1, x]"
+            @test_expression_with_string Base.vect(x, x+1)   "JuMP.GenericAffExpr{Float64,JuMP.VariableRef}[x, x + 1]"
+            @test_expression_with_string Base.vect(x^2, 1)   "JuMP.GenericQuadExpr{Float64,JuMP.VariableRef}[x², 1]"
+            @test_expression_with_string Base.vect(1, x^2)   "JuMP.GenericQuadExpr{Float64,JuMP.VariableRef}[1, x²]"
+            @test_expression_with_string Base.vect(x^2, x)   "JuMP.GenericQuadExpr{Float64,JuMP.VariableRef}[x², x]"
+            @test_expression_with_string Base.vect(x, x^2)   "JuMP.GenericQuadExpr{Float64,JuMP.VariableRef}[x, x²]"
+            @test_expression_with_string Base.vect(x^2, x+1) "JuMP.GenericQuadExpr{Float64,JuMP.VariableRef}[x², x + 1]"
+            @test_expression_with_string Base.vect(x+1, x^2) "JuMP.GenericQuadExpr{Float64,JuMP.VariableRef}[x + 1, x²]"
+        end
+
         @testset "Transpose" begin
             m = Model()
             @variable(m, x[1:3])
             @variable(m, y[1:2,1:3])
             @variable(m, z[2:5])
-            @test vec_eq(x', [x[1] x[2] x[3]])
-            @test vec_eq(transpose(x), [x[1] x[2] x[3]])
-            @test vec_eq(y', [y[1,1] y[2,1]
+            @test JuMP.isequal_canonical(x', [x[1] x[2] x[3]])
+            @test JuMP.isequal_canonical(transpose(x), [x[1] x[2] x[3]])
+            @test JuMP.isequal_canonical(y', [y[1,1] y[2,1]
                               y[1,2] y[2,2]
                               y[1,3] y[2,3]])
-            @test vec_eq(transpose(y),
+            @test JuMP.isequal_canonical(transpose(y),
                          [y[1,1] y[2,1]
                           y[1,2] y[2,2]
                           y[1,3] y[2,3]])
@@ -331,7 +332,7 @@ Base.transpose(t::MySumType) = MySumType(t.a)
             @variable(m, X11)
             @variable(m, X23)
             X = sparse([1, 2], [1, 3], [X11, X23], 3, 3) # for testing Variable
-            @test vec_eq([X11 0. 0.; 0. 0. X23; 0. 0. 0.], @inferred Matrix(X))
+            @test JuMP.isequal_canonical([X11 0. 0.; 0. 0. X23; 0. 0. 0.], @inferred Matrix(X))
             @variable(m, Xd[1:3, 1:3])
             Y = sparse([1, 2], [1, 3], [2X11, 4X23], 3, 3) # for testing GenericAffExpr
             Yd = [2X11 0    0
@@ -342,103 +343,103 @@ Base.transpose(t::MySumType) = MySumType(t.a)
                   0     0 2X23^2
                   0     0      0]
             v = [4, 5, 6]
-            @test vec_eq(A*x, [2x[1] +  x[2]
+            @test JuMP.isequal_canonical(A*x, [2x[1] +  x[2]
                                2x[2] +  x[1] + x[3]
                                 x[2] + 2x[3]])
-            @test vec_eq(A*x, B*x)
-            @test vec_eq(A*x, @JuMP.Expression(B*x))
-            @test vec_eq(@JuMP.Expression(A*x), @JuMP.Expression(B*x))
-            @test vec_eq(x'*A, [2x[1]+x[2]; 2x[2]+x[1]+x[3]; x[2]+2x[3]]')
-            @test vec_eq(x'*A, x'*B)
-            @test vec_eq(x'*A, @JuMP.Expression(x'*B))
-            @test vec_eq(@JuMP.Expression(x'*A), @JuMP.Expression(x'*B))
+            @test JuMP.isequal_canonical(A*x, B*x)
+            @test JuMP.isequal_canonical(A*x, @JuMP.Expression(B*x))
+            @test JuMP.isequal_canonical(@JuMP.Expression(A*x), @JuMP.Expression(B*x))
+            @test JuMP.isequal_canonical(x'*A, [2x[1]+x[2]; 2x[2]+x[1]+x[3]; x[2]+2x[3]]')
+            @test JuMP.isequal_canonical(x'*A, x'*B)
+            @test JuMP.isequal_canonical(x'*A, @JuMP.Expression(x'*B))
+            @test JuMP.isequal_canonical(@JuMP.Expression(x'*A), @JuMP.Expression(x'*B))
             @test JuMP.isequal_canonical(x'*A*x, 2x[1]*x[1] + 2x[1]*x[2] + 2x[2]*x[2] + 2x[2]*x[3] + 2x[3]*x[3])
             @test JuMP.isequal_canonical(x'A*x, x'*B*x)
             @test JuMP.isequal_canonical(x'*A*x, @JuMP.Expression(x'*B*x))
             @test JuMP.isequal_canonical(@JuMP.Expression(x'*A*x), @JuMP.Expression(x'*B*x))
 
             y = A*x
-            @test vec_eq(-x, [-x[1], -x[2], -x[3]])
-            @test vec_eq(-y, [-2x[1] -  x[2]
+            @test JuMP.isequal_canonical(-x, [-x[1], -x[2], -x[3]])
+            @test JuMP.isequal_canonical(-y, [-2x[1] -  x[2]
                                -x[1] - 2x[2] -  x[3]
                                        -x[2] - 2x[3]])
-            @test vec_eq(y + 1, [2x[1] +  x[2]         + 1
+            @test JuMP.isequal_canonical(y + 1, [2x[1] +  x[2]         + 1
                                   x[1] + 2x[2] +  x[3] + 1
                                   x[2] + 2x[3] + 1])
-            @test vec_eq(y - 1, [2x[1] +  x[2]         - 1
+            @test JuMP.isequal_canonical(y - 1, [2x[1] +  x[2]         - 1
                                   x[1] + 2x[2] +  x[3] - 1
                                           x[2] + 2x[3] - 1])
-            @test vec_eq(y + 2ones(3), [2x[1] +  x[2]         + 2
+            @test JuMP.isequal_canonical(y + 2ones(3), [2x[1] +  x[2]         + 2
                                          x[1] + 2x[2] +  x[3] + 2
                                          x[2] + 2x[3] + 2])
-            @test vec_eq(y - 2ones(3), [2x[1] +  x[2]         - 2
+            @test JuMP.isequal_canonical(y - 2ones(3), [2x[1] +  x[2]         - 2
                                          x[1] + 2x[2] +  x[3] - 2
                                          x[2] + 2x[3] - 2])
-            @test vec_eq(2ones(3) + y, [2x[1] +  x[2]         + 2
+            @test JuMP.isequal_canonical(2ones(3) + y, [2x[1] +  x[2]         + 2
                                          x[1] + 2x[2] +  x[3] + 2
                                          x[2] + 2x[3] + 2])
-            @test vec_eq(2ones(3) - y, [-2x[1] -  x[2]         + 2
+            @test JuMP.isequal_canonical(2ones(3) - y, [-2x[1] -  x[2]         + 2
                                          -x[1] - 2x[2] -  x[3] + 2
                                          -x[2] - 2x[3] + 2])
-            @test vec_eq(y + x, [3x[1] +  x[2]
+            @test JuMP.isequal_canonical(y + x, [3x[1] +  x[2]
                                   x[1] + 3x[2] +  x[3]
                                           x[2] + 3x[3]])
-            @test vec_eq(x + y, [3x[1] +  x[2]
+            @test JuMP.isequal_canonical(x + y, [3x[1] +  x[2]
                                   x[1] + 3x[2] +  x[3]
                                   x[2] + 3x[3]])
-            @test vec_eq(2y + 2x, [6x[1] + 2x[2]
+            @test JuMP.isequal_canonical(2y + 2x, [6x[1] + 2x[2]
                                    2x[1] + 6x[2] + 2x[3]
                                    2x[2] + 6x[3]])
-            @test vec_eq(y - x, [ x[1] + x[2]
+            @test JuMP.isequal_canonical(y - x, [ x[1] + x[2]
                                   x[1] + x[2] + x[3]
                                          x[2] + x[3]])
-            @test vec_eq(x - y, [-x[1] - x[2]
+            @test JuMP.isequal_canonical(x - y, [-x[1] - x[2]
                                  -x[1] - x[2] - x[3]
                                  -x[2] - x[3]])
-            @test vec_eq(y + x[:], [3x[1] +  x[2]
+            @test JuMP.isequal_canonical(y + x[:], [3x[1] +  x[2]
                                      x[1] + 3x[2] +  x[3]
                                              x[2] + 3x[3]])
-            @test vec_eq(x[:] + y, [3x[1] +  x[2]
+            @test JuMP.isequal_canonical(x[:] + y, [3x[1] +  x[2]
                                      x[1] + 3x[2] +  x[3]
                                              x[2] + 3x[3]])
 
-            @test vec_eq(@JuMP.Expression(A*x/2), A*x/2)
-            @test vec_eq(X*v,  [4X11; 6X23; 0])
-            @test vec_eq(v'*X,  [4X11  0   5X23])
-            @test vec_eq(v.'*X, [4X11  0   5X23])
-            @test vec_eq(X'*v,  [4X11;  0;  5X23])
-            @test vec_eq(X.'*v, [4X11; 0;  5X23])
-            @test vec_eq(X*A,  [2X11  X11  0
+            @test JuMP.isequal_canonical(@JuMP.Expression(A*x/2), A*x/2)
+            @test JuMP.isequal_canonical(X*v,  [4X11; 6X23; 0])
+            @test JuMP.isequal_canonical(v'*X,  [4X11  0   5X23])
+            @test JuMP.isequal_canonical(v.'*X, [4X11  0   5X23])
+            @test JuMP.isequal_canonical(X'*v,  [4X11;  0;  5X23])
+            @test JuMP.isequal_canonical(X.'*v, [4X11; 0;  5X23])
+            @test JuMP.isequal_canonical(X*A,  [2X11  X11  0
                                 0     X23  2X23
                                 0     0    0   ])
-            @test vec_eq(A*X,  [2X11  0    X23
+            @test JuMP.isequal_canonical(A*X,  [2X11  0    X23
                                 X11   0    2X23
                                 0     0    X23])
-            @test vec_eq(A*X', [2X11  0    0
+            @test JuMP.isequal_canonical(A*X', [2X11  0    0
                                 X11   X23  0
                                 0     2X23 0])
-            @test vec_eq(X'*A, [2X11  X11  0
+            @test JuMP.isequal_canonical(X'*A, [2X11  X11  0
                                 0     0    0
                                 X23   2X23 X23])
-            @test vec_eq(X.'*A, [2X11 X11  0
+            @test JuMP.isequal_canonical(X.'*A, [2X11 X11  0
                                  0    0    0
                                  X23  2X23 X23])
-            @test vec_eq(A'*X, [2X11  0 X23
+            @test JuMP.isequal_canonical(A'*X, [2X11  0 X23
                                 X11   0 2X23
                                 0     0 X23])
-            @test vec_eq(X.'*A, X'*A)
-            @test vec_eq(A.'*X, A'*X)
-            @test vec_eq(X*A, X*B)
-            @test vec_eq(Y'*A, Y.'*A)
-            @test vec_eq(A*Y', A*Y.')
-            @test vec_eq(Z'*A, Z.'*A)
-            @test vec_eq(Xd'*Y, Xd.'*Y)
-            @test vec_eq(Y'*Xd, Y.'*Xd)
-            @test vec_eq(Xd'*Xd, Xd.'*Xd)
-            @test vec_eq(A*X, B*X)
-            @test_broken vec_eq(A*X', B*X') # See https://github.com/JuliaOpt/JuMP.jl/issues/1276
-            @test vec_eq(X'*A, X'*B)
-            @test vec_eq(X'*X, X.'*X)
+            @test JuMP.isequal_canonical(X.'*A, X'*A)
+            @test JuMP.isequal_canonical(A.'*X, A'*X)
+            @test JuMP.isequal_canonical(X*A, X*B)
+            @test JuMP.isequal_canonical(Y'*A, Y.'*A)
+            @test JuMP.isequal_canonical(A*Y', A*Y.')
+            @test JuMP.isequal_canonical(Z'*A, Z.'*A)
+            @test JuMP.isequal_canonical(Xd'*Y, Xd.'*Y)
+            @test JuMP.isequal_canonical(Y'*Xd, Y.'*Xd)
+            @test JuMP.isequal_canonical(Xd'*Xd, Xd.'*Xd)
+            @test JuMP.isequal_canonical(A*X, B*X)
+            @test_broken JuMP.isequal_canonical(A*X', B*X') # See https://github.com/JuliaOpt/JuMP.jl/issues/1276
+            @test JuMP.isequal_canonical(X'*A, X'*B)
+            @test JuMP.isequal_canonical(X'*X, X.'*X)
         end
 
         @testset "Dot-ops" begin
@@ -448,53 +449,53 @@ Base.transpose(t::MySumType) = MySumType(t.a)
                  3 4]
             B = sparse(A)
             y = SparseMatrixCSC(2, 2, copy(B.colptr), copy(B.rowval), vec(x))
-            @test vec_eq(A.+x, [1+x[1,1]  2+x[1,2];
+            @test JuMP.isequal_canonical(A.+x, [1+x[1,1]  2+x[1,2];
                                 3+x[2,1]  4+x[2,2]])
-            @test vec_eq(A.+x, B.+x)
-            @test vec_eq(A.+x, A.+y)
-            @test vec_eq(A.+y, B.+y)
-            @test vec_eq(x.+A, [1+x[1,1]  2+x[1,2];
+            @test JuMP.isequal_canonical(A.+x, B.+x)
+            @test JuMP.isequal_canonical(A.+x, A.+y)
+            @test JuMP.isequal_canonical(A.+y, B.+y)
+            @test JuMP.isequal_canonical(x.+A, [1+x[1,1]  2+x[1,2];
                                 3+x[2,1]  4+x[2,2]])
-            @test vec_eq(x.+A, x.+B)
-            @test vec_eq(x.+A, y.+A)
-            @test vec_eq(x .+ x, [2x[1,1] 2x[1,2]; 2x[2,1] 2x[2,2]])
-            @test vec_eq(y.+A, y.+B)
-            @test vec_eq(A.-x, [1-x[1,1]  2-x[1,2];
+            @test JuMP.isequal_canonical(x.+A, x.+B)
+            @test JuMP.isequal_canonical(x.+A, y.+A)
+            @test JuMP.isequal_canonical(x .+ x, [2x[1,1] 2x[1,2]; 2x[2,1] 2x[2,2]])
+            @test JuMP.isequal_canonical(y.+A, y.+B)
+            @test JuMP.isequal_canonical(A.-x, [1-x[1,1]  2-x[1,2];
                                 3-x[2,1]  4-x[2,2]])
-            @test vec_eq(A.-x, B.-x)
-            @test vec_eq(A.-x, A.-y)
-            @test vec_eq(x .- x, [zero(AffExpr) for _1 in 1:2, _2 in 1:2])
-            @test vec_eq(A.-y, B.-y)
-            @test vec_eq(x.-A, [-1+x[1,1]  -2+x[1,2];
+            @test JuMP.isequal_canonical(A.-x, B.-x)
+            @test JuMP.isequal_canonical(A.-x, A.-y)
+            @test JuMP.isequal_canonical(x .- x, [zero(AffExpr) for _1 in 1:2, _2 in 1:2])
+            @test JuMP.isequal_canonical(A.-y, B.-y)
+            @test JuMP.isequal_canonical(x.-A, [-1+x[1,1]  -2+x[1,2];
                                 -3+x[2,1]  -4+x[2,2]])
-            @test vec_eq(x.-A, x.-B)
-            @test vec_eq(x.-A, y.-A)
-            @test vec_eq(y.-A, y.-B)
-            @test vec_eq(A.*x, [1*x[1,1]  2*x[1,2];
+            @test JuMP.isequal_canonical(x.-A, x.-B)
+            @test JuMP.isequal_canonical(x.-A, y.-A)
+            @test JuMP.isequal_canonical(y.-A, y.-B)
+            @test JuMP.isequal_canonical(A.*x, [1*x[1,1]  2*x[1,2];
                                 3*x[2,1]  4*x[2,2]])
-            @test vec_eq(A.*x, B.*x)
-            @test vec_eq(A.*x, A.*y)
-            @test vec_eq(A.*y, B.*y)
+            @test JuMP.isequal_canonical(A.*x, B.*x)
+            @test JuMP.isequal_canonical(A.*x, A.*y)
+            @test JuMP.isequal_canonical(A.*y, B.*y)
 
-            @test vec_eq(x.*A, [1*x[1,1]  2*x[1,2];
+            @test JuMP.isequal_canonical(x.*A, [1*x[1,1]  2*x[1,2];
                                 3*x[2,1]  4*x[2,2]])
-            @test vec_eq(x.*A, x.*B)
-            @test vec_eq(x.*A, y.*A)
-            @test vec_eq(y.*A, y.*B)
+            @test JuMP.isequal_canonical(x.*A, x.*B)
+            @test JuMP.isequal_canonical(x.*A, y.*A)
+            @test JuMP.isequal_canonical(y.*A, y.*B)
 
-            @test vec_eq(x .* x, [x[1,1]^2 x[1,2]^2; x[2,1]^2 x[2,2]^2])
-            @test_throws ErrorException vec_eq(A./x, [1*x[1,1]  2*x[1,2];
+            @test JuMP.isequal_canonical(x .* x, [x[1,1]^2 x[1,2]^2; x[2,1]^2 x[2,2]^2])
+            @test_throws ErrorException JuMP.isequal_canonical(A./x, [1*x[1,1]  2*x[1,2];
                                                       3*x[2,1]  4*x[2,2]])
-            @test vec_eq(x./A, [1/1*x[1,1]  1/2*x[1,2];
+            @test JuMP.isequal_canonical(x./A, [1/1*x[1,1]  1/2*x[1,2];
                                 1/3*x[2,1]  1/4*x[2,2]])
-            @test vec_eq(x./A, x./B)
-            @test vec_eq(x./A, y./A)
+            @test JuMP.isequal_canonical(x./A, x./B)
+            @test JuMP.isequal_canonical(x./A, y./A)
             @test_throws ErrorException A./y
             @test_throws ErrorException B./y
 
-            @test vec_eq((2*x) / 3, full((2*y) / 3))
-            @test vec_eq(2 * (x/3), full(2 * (y/3)))
-            @test vec_eq(x[1,1] .* A, full(x[1,1] .* B))
+            @test JuMP.isequal_canonical((2*x) / 3, full((2*y) / 3))
+            @test JuMP.isequal_canonical(2 * (x/3), full(2 * (y/3)))
+            @test JuMP.isequal_canonical(x[1,1] .* A, full(x[1,1] .* B))
         end
 
         @testset "Vectorized comparisons" begin
@@ -508,7 +509,7 @@ Base.transpose(t::MySumType) = MySumType(t.a)
             cref1 = @constraint(m, reshape(x,(1,3))*A*x .>= 1)
             c1 = JuMP.constraintobject.(cref1, QuadExpr, MOI.GreaterThan)
             f1 = map(c -> c.func, c1)
-            @test vec_eq(f1, [x[1]*x[1] + 2x[1]*x[2] + 4x[2]*x[2] + 9x[1]*x[3] + 5x[2]*x[3] + 7x[3]*x[3]])
+            @test JuMP.isequal_canonical(f1, [x[1]*x[1] + 2x[1]*x[2] + 4x[2]*x[2] + 9x[1]*x[3] + 5x[2]*x[3] + 7x[3]*x[3]])
             @test all(c -> c.set.lower == 1, c1)
 
             cref2 = @constraint(m, x'*A*x >= 1)
@@ -522,41 +523,41 @@ Base.transpose(t::MySumType) = MySumType(t.a)
             cref3 = @constraint(m, (x'A)' + 2A*x .<= 1)
             c3 = JuMP.constraintobject.(cref3, AffExpr, MOI.LessThan)
             f3 = map(c->c.func, c3)
-            @test vec_eq(f3, mat)
+            @test JuMP.isequal_canonical(f3, mat)
             @test all(c -> c.set.upper == 1, c3)
-            @test vec_eq((x'A)' + 2A*x, (x'A)' + 2B*x)
-            @test vec_eq((x'A)' + 2A*x, (x'B)' + 2A*x)
-            @test vec_eq((x'A)' + 2A*x, (x'B)' + 2B*x)
-            @test vec_eq((x'A)' + 2A*x, @JuMP.Expression((x'A)' + 2A*x))
-            @test vec_eq((x'A)' + 2A*x, @JuMP.Expression((x'B)' + 2A*x))
-            @test vec_eq((x'A)' + 2A*x, @JuMP.Expression((x'A)' + 2B*x))
-            @test vec_eq((x'A)' + 2A*x, @JuMP.Expression((x'B)' + 2B*x))
+            @test JuMP.isequal_canonical((x'A)' + 2A*x, (x'A)' + 2B*x)
+            @test JuMP.isequal_canonical((x'A)' + 2A*x, (x'B)' + 2A*x)
+            @test JuMP.isequal_canonical((x'A)' + 2A*x, (x'B)' + 2B*x)
+            @test JuMP.isequal_canonical((x'A)' + 2A*x, @JuMP.Expression((x'A)' + 2A*x))
+            @test JuMP.isequal_canonical((x'A)' + 2A*x, @JuMP.Expression((x'B)' + 2A*x))
+            @test JuMP.isequal_canonical((x'A)' + 2A*x, @JuMP.Expression((x'A)' + 2B*x))
+            @test JuMP.isequal_canonical((x'A)' + 2A*x, @JuMP.Expression((x'B)' + 2B*x))
 
             cref4 = @constraint(m, -1 .<= (x'A)' + 2A*x .<= 1)
             c4 = JuMP.constraintobject.(cref4, AffExpr, MOI.Interval)
             f4 = map(c->c.func, c4)
-            @test vec_eq(f4, mat)
+            @test JuMP.isequal_canonical(f4, mat)
             @test all(c -> c.set.lower == -1, c4)
             @test all(c -> c.set.upper == 1, c4)
 
             cref5 = @constraint(m, -[1:3;] .<= (x'A)' + 2A*x .<= 1)
             c5 = JuMP.constraintobject.(cref5, AffExpr, MOI.Interval)
             f5 = map(c->c.func, c5)
-            @test vec_eq(f5, mat)
+            @test JuMP.isequal_canonical(f5, mat)
             @test map(c -> c.set.lower, c5) == -[1:3;]
             @test all(c -> c.set.upper == 1, c4)
 
             cref6 = @constraint(m, -[1:3;] .<= (x'A)' + 2A*x .<= [3:-1:1;])
             c6 = JuMP.constraintobject.(cref6, AffExpr, MOI.Interval)
             f6 = map(c->c.func, c6)
-            @test vec_eq(f6, mat)
+            @test JuMP.isequal_canonical(f6, mat)
             @test map(c -> c.set.lower, c6) == -[1:3;]
             @test map(c -> c.set.upper, c6) == [3:-1:1;]
 
             cref7 = @constraint(m, -[1:3;] .<= (x'A)' + 2A*x .<= 3)
             c7 = JuMP.constraintobject.(cref7, AffExpr, MOI.Interval)
             f7 = map(c->c.func, c7)
-            @test vec_eq(f7, mat)
+            @test JuMP.isequal_canonical(f7, mat)
             @test map(c -> c.set.lower, c7) == -[1:3;]
             @test all(c -> c.set.upper == 3, c7)
         end
