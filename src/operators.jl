@@ -34,6 +34,7 @@ Base.:*(lhs::Number, rhs::QuadExpr) = QuadExpr(copy(rhs.qvars1),copy(rhs.qvars2)
 # VariableRef (or, AbstractJuMPScalar)
 Base.:+(lhs::AbstractJuMPScalar) = lhs
 Base.:-(lhs::VariableRef) = AffExpr([lhs],[-1.0],0.0)
+Base.:*(lhs::AbstractJuMPScalar) = lhs # make this more generic so extensions don't have to define unary multiplication for our macros
 # VariableRef--Number
 Base.:+(lhs::VariableRef, rhs::Number) = (+)( rhs,lhs)
 Base.:-(lhs::VariableRef, rhs::Number) = (+)(-rhs,lhs)
