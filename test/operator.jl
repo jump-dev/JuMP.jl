@@ -234,6 +234,11 @@ Base.transpose(t::MySumType) = MySumType(t.a)
         @testset "dot" begin
             dot_m = Model()
             @variable(dot_m, 0 ≤ x[1:3] ≤ 1)
+
+            @test_expression_with_string dot(x[1],x[1]) "x[1]²"
+            @test_expression_with_string dot(2,x[1]) "2 x[1]"
+            @test_expression_with_string dot(x[1],2) "2 x[1]"
+
             c = vcat(1:3)
             @test_expression_with_string dot(c,x) "x[1] + 2 x[2] + 3 x[3]"
             @test_expression_with_string dot(x,c) "x[1] + 2 x[2] + 3 x[3]"
