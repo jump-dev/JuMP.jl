@@ -65,7 +65,6 @@ Base.:-(v::VariableRef, q::QuadExpr) = QuadExpr(copy(q.qvars1),copy(q.qvars2),  
 # GenericAffExpr
 Base.:+(lhs::GenericAffExpr) = lhs
 Base.:-(lhs::GenericAffExpr) = GenericAffExpr(lhs.vars, -lhs.coeffs, -lhs.constant)
-Base.:*(lhs::GenericAffExpr) = lhs
 # AffExpr--Number
 Base.:+(lhs::GenericAffExpr, rhs::Number) = (+)(+rhs,lhs)
 Base.:-(lhs::GenericAffExpr, rhs::Number) = (+)(-rhs,lhs)
@@ -160,7 +159,6 @@ Base.:-(a::AffExpr, q::QuadExpr) = QuadExpr(copy(q.qvars1),copy(q.qvars2),    -q
 # QuadExpr
 Base.:+(lhs::QuadExpr) = lhs
 Base.:-(lhs::QuadExpr) = 0.0-lhs
-Base.:*(lhs::QuadExpr) = lhs
 # QuadExpr--Number
 Base.:+(lhs::QuadExpr, rhs::Number) = (+)(+rhs,lhs)
 Base.:-(lhs::QuadExpr, rhs::Number) = (+)(-rhs,lhs)
