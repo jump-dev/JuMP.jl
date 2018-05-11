@@ -289,10 +289,10 @@ end
 
 include("variables.jl")
 
-Base.zero(::Type{VariableRef}) = AffExpr(VariableRef[],Float64[],0.0)
-Base.zero(::VariableRef) = zero(VariableRef)
-Base.one(::Type{VariableRef}) = AffExpr(VariableRef[],Float64[],1.0)
-Base.one(::VariableRef) = one(VariableRef)
+Base.zero(::Type{V}) where V<:AbstractVariableRef = zero(GenericAffExpr{Float64, V})
+Base.zero(v::AbstractVariableRef) = zero(typeof(v))
+Base.one(::Type{V}) where V<:AbstractVariableRef = one(GenericAffExpr{Float64, V})
+Base.one(v::AbstractVariableRef) = one(typeof(v))
 
 mutable struct VariableNotOwnedError <: Exception
     context::String
@@ -463,7 +463,7 @@ function Base.setindex!(m::JuMP.Model, value, name::Symbol)
 end
 
 # usage warnings
-function operator_warn(lhs::AffExpr,rhs::AffExpr)
+function operator_warn(lhs::GenericAffExpr,rhs::GenericAffExpr)
     if length(lhs.vars) > 50 || length(rhs.vars) > 50
         if length(lhs.vars) > 1
             m = lhs.vars[1].m

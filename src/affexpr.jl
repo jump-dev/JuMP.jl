@@ -135,13 +135,13 @@ Base.convert(::Type{GenericAffExpr{T,V}}, v::Real) where {T,V} = GenericAffExpr(
 
 # Alias for (Float64, VariableRef), the specific GenericAffExpr used by JuMP
 const AffExpr = GenericAffExpr{Float64,VariableRef}
-AffExpr() = zero(AffExpr)
 
 Base.convert(::Type{AffExpr}, v::VariableRef) = AffExpr([v], [1.], 0.)
 Base.convert(::Type{AffExpr}, v::Real) = AffExpr(VariableRef[], Float64[], v)
+GenericAffExpr{C, V}() where {C, V} = zero(GenericAffExpr{C, V})
 
 # Check all coefficients are finite, i.e. not NaN, not Inf, not -Inf
-function assert_isfinite(a::AffExpr)
+function assert_isfinite(a::GenericAffExpr)
     coeffs = a.coeffs
     for i in 1:length(a.vars)
         isfinite(coeffs[i]) || error("Invalid coefficient $(coeffs[i]) on variable $(a.vars[i])")
@@ -149,12 +149,12 @@ function assert_isfinite(a::AffExpr)
 end
 
 """
-    resultvalue(v::AffExpr)
+    resultvalue(v::GenericAffExpr)
 
-Evaluate an `AffExpr` given the result returned by a solver.
+Evaluate an `GenericAffExpr` given the result returned by a solver.
 Replaces `getvalue` for most use cases.
 """
-resultvalue(a::AffExpr) = value(a, resultvalue)
+resultvalue(a::GenericAffExpr) = value(a, resultvalue)
 
 # Note: No validation is performed that the variables in the AffExpr belong to
 # the same model.
@@ -221,8 +221,8 @@ end
 
 # Copy an affine expression to a new model by converting all the
 # variables to the new model's variables
-function Base.copy(a::AffExpr, new_model::Model)
-    AffExpr(copy(a.vars, new_model), copy(a.coeffs), a.constant)
+function Base.copy(a::GenericAffExpr, new_model::Model)
+    GenericAffExpr(copy(a.vars, new_model), copy(a.coeffs), a.constant)
 end
 
 # TODO GenericAffExprConstraint
