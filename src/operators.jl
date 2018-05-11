@@ -74,9 +74,9 @@ function Base.:^(lhs::Union{AbstractVariableRef,GenericAffExpr}, rhs::Integer)
     if rhs == 2
         return lhs*lhs
     elseif rhs == 1
-        return GenericQuadExpr(lhs)
+        return GenericQuadExpr{Float64, variablereftype(lhs)}(lhs)
     elseif rhs == 0
-        return GenericQuadExpr(1.0)
+        return one(GenericQuadExpr{Float64, variablereftype(lhs)})
     else
         error("Only exponents of 0, 1, or 2 are currently supported. Are you trying to build a nonlinear problem? Make sure you use @NLconstraint/@NLobjective.")
     end

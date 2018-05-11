@@ -29,6 +29,8 @@ Variable returned by [`addvariable`](@ref). Affine (resp. quadratic) operations 
 """
 abstract type AbstractVariableRef <: AbstractJuMPScalar end
 
+variablereftype(v::AbstractVariableRef) = typeof(v)
+
 """
     VariableRef <: AbstractVariableRef
 

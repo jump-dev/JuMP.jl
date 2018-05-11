@@ -24,6 +24,8 @@ mutable struct GenericAffExpr{CoefType,VarType} <: AbstractJuMPScalar
     constant::CoefType
 end
 
+variablereftype(::GenericAffExpr{C, V}) where {C, V} = V
+
 Base.iszero(a::GenericAffExpr) = isempty(a.vars) && iszero(a.constant)
 Base.zero(::Type{GenericAffExpr{C,V}}) where {C,V} = GenericAffExpr{C,V}(V[],C[],zero(C))
 Base.one(::Type{GenericAffExpr{C,V}}) where { C,V} = GenericAffExpr{C,V}(V[],C[], one(C))
@@ -107,7 +109,7 @@ function Base.isequal(aff::GenericAffExpr{C,V},other::GenericAffExpr{C,V}) where
     return true
 end
 
-# Check if two AffExprs are equal regardless of the order, and after merging duplicates
+# Check if two GenericAffExprs are equal regardless of the order, and after merging duplicates
 # Mostly useful for testing.
 function isequal_canonical(aff::GenericAffExpr{C,V}, other::GenericAffExpr{C,V}) where {C,V}
     function canonicalize(a)
