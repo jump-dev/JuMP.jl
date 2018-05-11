@@ -24,6 +24,7 @@ mutable struct GenericAffExpr{CoefType,VarType} <: AbstractJuMPScalar
     constant::CoefType
 end
 
+Base.iszero(a::GenericAffExpr) = isempty(a.vars) && iszero(a.constant)
 Base.zero(::Type{GenericAffExpr{C,V}}) where {C,V} = GenericAffExpr{C,V}(V[],C[],zero(C))
 Base.one(::Type{GenericAffExpr{C,V}}) where { C,V} = GenericAffExpr{C,V}(V[],C[], one(C))
 Base.zero(a::GenericAffExpr) = zero(typeof(a))
@@ -132,7 +133,6 @@ end
 const AffExpr = GenericAffExpr{Float64,VariableRef}
 AffExpr() = zero(AffExpr)
 
-Base.isempty(a::AffExpr) = (length(a.vars) == 0 && a.constant == 0.)
 Base.convert(::Type{AffExpr}, v::VariableRef) = AffExpr([v], [1.], 0.)
 Base.convert(::Type{AffExpr}, v::Real) = AffExpr(VariableRef[], Float64[], v)
 
