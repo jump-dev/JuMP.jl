@@ -22,6 +22,28 @@ Base.transpose(t::MySumType) = MySumType(t.a)
 *(t1::MyType{S}, t2::MyType{T}) where {S, T} = MyType(t1.a*t2.a)
 
 @testset "Operator" begin
+    @testset "Promotion" begin
+        m = Model()
+        I = Int
+        V = VariableRef
+        A = AffExpr
+        Q = QuadExpr
+        @test promote_type(V, I) == A
+        @test promote_type(I, V) == A
+        @test promote_type(A, I) == A
+        @test promote_type(I, A) == A
+        @test promote_type(A, V) == A
+        @test promote_type(V, A) == A
+        @test promote_type(Q, I) == Q
+        @test promote_type(I, Q) == Q
+        @test promote_type(Q, A) == Q
+        @test promote_type(A, Q) == Q
+        @test promote_type(Q, V) == Q
+        @test promote_type(V, Q) == Q
+        @test promote_type(Q, A) == Q
+        @test promote_type(A, Q) == Q
+    end
+
     @testset "Basic operator overloads" begin
         m = Model()
         @variable(m, w)
@@ -286,24 +308,6 @@ Base.transpose(t::MySumType) = MySumType(t.a)
     end
 
     @testset "Vectorized operations" begin
-        @testset "Array creation" begin
-            m = Model()
-            @variable(m, x)
-            # @inferred requires a call expression so [x, 1] does not work but Base.vect(x, 1) works
-            @test_expression_with_string Base.vect(x, 1)     "JuMP.GenericAffExpr{Float64,JuMP.VariableRef}[x, 1]"
-            @test_expression_with_string Base.vect(1, x)     "JuMP.GenericAffExpr{Float64,JuMP.VariableRef}[1, x]"
-            @test_expression_with_string Base.vect(x+1, 1)   "JuMP.GenericAffExpr{Float64,JuMP.VariableRef}[x + 1, 1]"
-            @test_expression_with_string Base.vect(1, x+1)   "JuMP.GenericAffExpr{Float64,JuMP.VariableRef}[1, x + 1]"
-            @test_expression_with_string Base.vect(x+1, x)   "JuMP.GenericAffExpr{Float64,JuMP.VariableRef}[x + 1, x]"
-            @test_expression_with_string Base.vect(x, x+1)   "JuMP.GenericAffExpr{Float64,JuMP.VariableRef}[x, x + 1]"
-            @test_expression_with_string Base.vect(x^2, 1)   "JuMP.GenericQuadExpr{Float64,JuMP.VariableRef}[x², 1]"
-            @test_expression_with_string Base.vect(1, x^2)   "JuMP.GenericQuadExpr{Float64,JuMP.VariableRef}[1, x²]"
-            @test_expression_with_string Base.vect(x^2, x)   "JuMP.GenericQuadExpr{Float64,JuMP.VariableRef}[x², x]"
-            @test_expression_with_string Base.vect(x, x^2)   "JuMP.GenericQuadExpr{Float64,JuMP.VariableRef}[x, x²]"
-            @test_expression_with_string Base.vect(x^2, x+1) "JuMP.GenericQuadExpr{Float64,JuMP.VariableRef}[x², x + 1]"
-            @test_expression_with_string Base.vect(x+1, x^2) "JuMP.GenericQuadExpr{Float64,JuMP.VariableRef}[x + 1, x²]"
-        end
-
         @testset "Transpose" begin
             m = Model()
             @variable(m, x[1:3])
