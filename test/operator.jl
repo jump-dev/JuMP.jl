@@ -39,25 +39,35 @@ Base.transpose(t::MySumType) = MySumType(t.a)
         @test_expression_with_string 8 * x * z + aff2 "8 x*z + 1.2 y + 1.2"
         @test_expression_with_string 2 * x * x + 1 * y * y + z + 3 "2 x² + y² + z + 3"
 
-        @testset "isequal_canonical" begin
-            @test JuMP.isequal_canonical((@inferred 3w + 2y), @inferred 2y + 3w)
-            @test !JuMP.isequal_canonical((@inferred 3w + 2y + 1), @inferred 3w + 2y)
-            @test !JuMP.isequal_canonical((@inferred 3w + 2y), @inferred 3y + 2w)
-            @test !JuMP.isequal_canonical((@inferred 3w + 2y), @inferred 3w + y)
+        @testset "Comparison" begin
+            @testset "iszero" begin
+                @test !iszero(x)
+                @test !iszero(aff)
+                @test iszero(zero(aff))
+                @test !iszero(q)
+                @test iszero(zero(q))
+            end
 
-            @test !JuMP.isequal_canonical(aff, aff2)
-            @test !JuMP.isequal_canonical(aff2, aff)
+            @testset "isequal_canonical" begin
+                @test JuMP.isequal_canonical((@inferred 3w + 2y), @inferred 2y + 3w)
+                @test !JuMP.isequal_canonical((@inferred 3w + 2y + 1), @inferred 3w + 2y)
+                @test !JuMP.isequal_canonical((@inferred 3w + 2y), @inferred 3y + 2w)
+                @test !JuMP.isequal_canonical((@inferred 3w + 2y), @inferred 3w + y)
 
-            @test  JuMP.isequal_canonical(q, @inferred 2.5z*y + aff)
-            @test !JuMP.isequal_canonical(q, @inferred 2.5y*z + aff2)
-            @test !JuMP.isequal_canonical(q, @inferred 2.5x*z + aff)
-            @test !JuMP.isequal_canonical(q, @inferred 2.5y*x + aff)
-            @test !JuMP.isequal_canonical(q, @inferred 1.5y*z + aff)
-            @test  JuMP.isequal_canonical(q2, @inferred 8z*x + aff2)
-            @test !JuMP.isequal_canonical(q2, @inferred 8x*z + aff)
-            @test !JuMP.isequal_canonical(q2, @inferred 7x*z + aff2)
-            @test !JuMP.isequal_canonical(q2, @inferred 8x*y + aff2)
-            @test !JuMP.isequal_canonical(q2, @inferred 8y*z + aff2)
+                @test !JuMP.isequal_canonical(aff, aff2)
+                @test !JuMP.isequal_canonical(aff2, aff)
+
+                @test  JuMP.isequal_canonical(q, @inferred 2.5z*y + aff)
+                @test !JuMP.isequal_canonical(q, @inferred 2.5y*z + aff2)
+                @test !JuMP.isequal_canonical(q, @inferred 2.5x*z + aff)
+                @test !JuMP.isequal_canonical(q, @inferred 2.5y*x + aff)
+                @test !JuMP.isequal_canonical(q, @inferred 1.5y*z + aff)
+                @test  JuMP.isequal_canonical(q2, @inferred 8z*x + aff2)
+                @test !JuMP.isequal_canonical(q2, @inferred 8x*z + aff)
+                @test !JuMP.isequal_canonical(q2, @inferred 7x*z + aff2)
+                @test !JuMP.isequal_canonical(q2, @inferred 8x*y + aff2)
+                @test !JuMP.isequal_canonical(q2, @inferred 8y*z + aff2)
+            end
         end
 
         # Different objects that must all interact:

@@ -26,7 +26,7 @@ mutable struct GenericQuadExpr{CoefType,VarType} <: AbstractJuMPScalar
     aff::GenericAffExpr{CoefType,VarType}
 end
 
-Base.isempty(q::GenericQuadExpr) = (length(q.qvars1) == 0 && isempty(q.aff))
+Base.iszero(q::GenericQuadExpr) = isempty(q.qvars1) && iszero(q.aff)
 Base.zero(::Type{GenericQuadExpr{C,V}}) where {C,V} = GenericQuadExpr(V[], V[], C[], zero(GenericAffExpr{C,V}))
 Base.one(::Type{GenericQuadExpr{C,V}}) where {C,V}  = GenericQuadExpr(V[], V[], C[],  one(GenericAffExpr{C,V}))
 Base.zero(q::GenericQuadExpr) = zero(typeof(q))
