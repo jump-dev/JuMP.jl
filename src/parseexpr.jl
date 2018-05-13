@@ -22,20 +22,21 @@ function parseIdxSet(arg::Expr)
     error("Invalid syntax: $arg")
 end
 
+# TODO: addtoexpr should be refactored to be more coherent with push!, append!,
+# and operators.jl.
+
 # addtoexpr(ex::Number, c::Number) = ex + c
 
 addtoexpr(ex::Number, c::Number, x::Number) = ex + c*x
 
-addtoexpr(ex::Number, c::Number, x::VariableRef) = AffExpr([x],[c],ex)
+addtoexpr(ex::Number, c::Number, x::VariableRef) = AffExpr(ex, x => c)
 
 function addtoexpr(ex::Number, c::Number, x::T) where T<:GenericAffExpr
     # It's only safe to mutate the first argument.
-    if c == 0
-        T(ex)
+    if iszero(c)
+        convert(T, ex)
     else
-        x = copy(x)
-        scale!(x.coeffs, c)
-        x.constant *= c
+        x = map_coefficients(x, coef -> c*coef)
         x.constant += ex
         x
     end
@@ -43,15 +44,12 @@ end
 
 function addtoexpr(ex::Number, c::Number, x::T) where T<:GenericQuadExpr
     # It's only safe to mutate the first argument.
-    if c == 0
+    if iszero(c)
         T(ex)
     else
-        x = copy(x)
-        scale!(x.qcoeffs, c)
-        scale!(x.aff.coeffs, c)
-        x.aff.constant *= c
-        x.aff.constant += ex
-        x
+        result = c*x
+        result.aff.constant += ex
+        result
     end
 end
 
@@ -70,8 +68,8 @@ function addtoexpr(ex::Number, c::GenericAffExpr{C,V}, x::V) where {C,V}
 end
 
 function addtoexpr(ex::Number, c::T, x::Number) where T<:GenericQuadExpr
-    if x == 0
-        T(ex)
+    if iszero(x)
+        convert(T, ex)
     else
         q = c*x
         q.aff.constant += ex
@@ -85,19 +83,15 @@ function addtoexpr(aff::GenericAffExpr, c::Number, x::Number)
 end
 
 function addtoexpr(aff::GenericAffExpr{C,V}, c::Number, x::V) where {C,V}
-    if c != 0
-        push!(aff.vars,   x)
-        push!(aff.coeffs, c)
-    end
+    push!(aff, convert(C, c), x)
     aff
 end
 
 function addtoexpr(aff::GenericAffExpr{C,V},c::Number,x::GenericAffExpr{C,V}) where {C,V}
-    if c != 0
-        append!(aff.vars, x.vars)
-        sizehint!(aff.coeffs, length(aff.coeffs)+length(x.coeffs))
-        for i in 1:length(x.coeffs)
-            push!(aff.coeffs, c*x.coeffs[i])
+    if !iszero(c)
+        sizehint!(aff, length(linearterms(aff)) + length(linearterms(x)))
+        for (coef, var) in linearterms(x)
+            push!(aff, c*coef, var)
         end
         aff.constant += c*x.constant
     end
@@ -108,57 +102,49 @@ end
 addtoexpr(aff::GenericAffExpr{C,V}, c::Number, x::Number) where {C,V<:Number} = aff + c*x
 
 function addtoexpr(aff::GenericAffExpr{C,V}, c::V, x::Number) where {C,V}
-    if x != 0
-        push!(aff.vars,   c)
-        push!(aff.coeffs, x)
+    if !iszero(x)
+        push!(aff, convert(C, x), c)
     end
     aff
 end
 
 addtoexpr(aff::GenericAffExpr{C,V},c::V,x::V) where {C,V} =
-    GenericQuadExpr{C,V}([c],[x],[one(C)],aff)
+    GenericQuadExpr{C,V}(aff, UnorderedPair(c,x) => 1.0)
 
 # TODO: add generic versions of following two methods
-addtoexpr(aff::AffExpr,c::AffExpr,x::VariableRef) =
-    QuadExpr(c.vars,
-             fill(x,length(c.vars)),
-             c.coeffs,
-             addtoexpr(aff,c.constant,x))
+function addtoexpr(aff::AffExpr,c::AffExpr,x::VariableRef)
+    quad = c*x
+    addtoexpr(quad.aff, 1.0, aff)
+    quad
+end
 
-addtoexpr(aff::AffExpr,c::VariableRef,x::AffExpr) =
-    QuadExpr(fill(c,length(x.vars)),
-             x.vars,
-             x.coeffs,
-             addtoexpr(aff,c,x.constant))
+function addtoexpr(aff::AffExpr,c::VariableRef,x::AffExpr)
+    quad = c*x
+    addtoexpr(quad.aff, 1.0, aff)
+    quad
+end
 
 function addtoexpr(aff::GenericAffExpr{C,V},c::GenericAffExpr{C,V},x::Number) where {C,V}
-    if x != 0
-        append!(aff.vars, c.vars)
-        append!(aff.coeffs, c.coeffs * x)
-        aff.constant += c.constant * x
-    end
-    aff
+    addtoexpr(aff, x, c)
 end
 
 function addtoexpr(aff::GenericAffExpr{C,V}, c::GenericQuadExpr{C,V}, x::Number) where {C,V}
-    if x == 0
+    if iszero(x)
         GenericQuadExpr{C,V}(aff)
     else
-        GenericQuadExpr{C,V}(copy(c.qvars1),
-                            copy(c.qvars2),
-                            c.qcoeffs*x,
-                            addtoexpr(aff,c.aff,x))
+        result = c*x
+        append!(result.aff, aff)
+        result
     end
 end
 
 function addtoexpr(aff::GenericAffExpr{C,V}, c::Number, x::GenericQuadExpr{C,V}) where {C,V}
-    if c == 0
+    if iszero(c)
         GenericQuadExpr{C,V}(aff)
     else
-        GenericQuadExpr{C,V}(copy(x.qvars1),
-                            copy(x.qvars2),
-                            c*x.qcoeffs,
-                            addtoexpr(aff,c,x.aff))
+        result = c*x
+        append!(result.aff, aff)
+        result
     end
 end
 
@@ -169,8 +155,8 @@ function addtoexpr(ex::GenericAffExpr{C,V}, c::GenericAffExpr{C,V}, x::GenericAf
 end
 
 function addtoexpr(quad::GenericQuadExpr{C,V},c::Number,x::V) where {C,V}
-    if c != 0
-        push!(quad.aff, convert(C,c), x)
+    if !iszero(c)
+        push!(quad.aff, convert(C, c), x)
     end
     quad
 end
@@ -181,69 +167,56 @@ function addtoexpr(quad::GenericQuadExpr,c::Number,x::Number)
 end
 
 function addtoexpr(quad::GenericQuadExpr{C,V},x::V,y::V) where {C,V}
-    push!(quad.qvars1, x)
-    push!(quad.qvars2, y)
-    push!(quad.qcoeffs, one(C))
+    push!(quad, one(C), x, y)
     quad
 end
 
 function addtoexpr(quad::GenericQuadExpr{C,V},c::Number,x::GenericAffExpr{C,V}) where {C,V}
-    if c != 0
-        append!(quad.aff.vars, x.vars)
-        sizehint!(quad.aff.coeffs, length(quad.aff.coeffs)+length(x.coeffs))
-        for i in 1:length(x.coeffs)
-            push!(quad.aff.coeffs, c*x.coeffs[i])
-        end
-        quad.aff.constant += c*x.constant
-    end
+    addtoexpr(quad.aff, c, x)
     quad
 end
 
 function addtoexpr(quad::GenericQuadExpr{C,V},c::GenericAffExpr{C,V},x::Number) where {C,V}
-    if x != 0
-        addtoexpr(quad.aff,c,x)
-    end
+    addtoexpr(quad.aff,c,x)
     quad
 end
 
 function addtoexpr(quad::GenericQuadExpr{C,V},c::GenericAffExpr{C,V},x::V) where {C,V}
-    append!(quad.qvars1, c.vars)
-    append!(quad.qvars2, fill(x,length(c.vars)))
-    append!(quad.qcoeffs, c.coeffs)
-    addtoexpr(quad.aff,c.constant,x)
+    for (coef, var) in linearterms(c)
+        push!(quad, coef, var, x)
+    end
+    if !iszero(c.constant)
+        addtoexpr(quad.aff,c.constant,x)
+    end
     quad
 end
 
 function addtoexpr(quad::GenericQuadExpr{C,V},c::V,x::GenericAffExpr{C,V}) where {C,V}
-    append!(quad.qvars1, fill(c,length(x.vars)))
-    append!(quad.qvars2, x.vars)
-    append!(quad.qcoeffs, x.coeffs)
-    addtoexpr(quad.aff,c,x.constant)
+    for (coef, var) in linearterms(x)
+        push!(quad, coef, c, var)
+    end
+    if !iszero(x.constant)
+        addtoexpr(quad.aff,c,x.constant)
+    end
     quad
 end
 
 function addtoexpr(quad::GenericQuadExpr{C,V},c::GenericQuadExpr{C,V},x::Number) where {C,V}
-    if x != 0
-        append!(quad.qvars1,c.qvars1)
-        append!(quad.qvars2,c.qvars2)
-        sizehint!(quad.qcoeffs, length(quad.qcoeffs)+length(c.qcoeffs))
-        for i in 1:length(c.qcoeffs)
-            push!(quad.qcoeffs, c.qcoeffs[i]*x)
+    if !iszero(x)
+        for (coef, var1, var2) in quadterms(c)
+            push!(quad, x*coef, var1, var2)
         end
-        addtoexpr(quad,c.aff,x)
+        addtoexpr(quad.aff,c.aff,x)
     end
     quad
 end
 
 function addtoexpr(quad::GenericQuadExpr{C,V},c::Number,x::GenericQuadExpr{C,V}) where {C,V}
-    if c != 0
-        append!(quad.qvars1,x.qvars1)
-        append!(quad.qvars2,x.qvars2)
-        sizehint!(quad.qcoeffs, length(quad.qcoeffs)+length(x.qcoeffs))
-        for i in 1:length(x.qcoeffs)
-            push!(quad.qcoeffs, c*x.qcoeffs[i])
+    if !iszero(c)
+        for (coef, var1, var2) in quadterms(x)
+            push!(quad, c*coef, var1, var2)
         end
-        addtoexpr(quad,c,x.aff)
+        addtoexpr(quad.aff,c,x.aff)
     end
     quad
 end

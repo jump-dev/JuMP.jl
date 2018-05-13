@@ -141,45 +141,20 @@ Base.show(io::IO, ::MIME"text/latex", a::AffExpr) =
 # Generic string converter, called by mode-specific handlers
 function aff_str(mode, a::AffExpr, show_constant=true)
     # If the expression is empty, return the constant (or 0)
-    if length(a.vars) == 0
+    if length(linearterms(a)) == 0
         return show_constant ? str_round(a.constant) : "0"
     end
 
-    # Do some work to combine duplicate coefficients, but otherwise respecting
-    # the original ordering of the expression.
-
-    # Map from variable to index of first appearance in the AffExpr
-    idxmap = Dict{VariableRef,Int}()
-
-    # Map from variable to coefficient (duplicates summed) in the AffExpr
-    coefmap = Dict{VariableRef,Float64}()
-
-    for i in 1:length(a.vars)
-        v = a.vars[i]
-        if haskey(idxmap, v)
-            # already seen, just add coefficient
-            coefmap[v] += a.coeffs[i]
-        else
-            idxmap[v] = i
-            coefmap[v] = a.coeffs[i]
-        end
-    end
-
-    term_str = Array{String}(undef,2*length(a.vars))
+    term_str = Array{String}(undef,2*length(linearterms(a)))
     elm = 1
     # For each non-zero for this model
-    for i in 1:length(a.vars)
-        v = a.vars[i]
-        idxmap[v] == i || continue
-        coef = coefmap[v]
-
+    for (coef, var) in linearterms(a)
         abs(coef) < PRINT_ZERO_TOL && continue  # e.g. x - x
 
         pre = abs(abs(coef)-1) < PRINT_ZERO_TOL ? "" : str_round(abs(coef)) * " "
-        var = var_str(mode,v)
 
         term_str[2*elm-1] = coef < 0 ? " - " : " + "
-        term_str[2*elm  ] = "$pre$var"
+        term_str[2*elm  ] = string(pre, var_str(mode, var))
         elm += 1
     end
 
@@ -212,49 +187,19 @@ Base.show(io::IO, ::MIME"text/latex", q::GenericQuadExpr) =
     print(io, quad_str(IJuliaMode,q,mathmode=false))
 # Generic string converter, called by mode-specific handlers
 function quad_str(mode, q::GenericQuadExpr, sym)
-    length(q.qvars1) == 0 && return aff_str(mode,q.aff)
-
-    # Map from unordered variable pair to index of first appearance in the QuadExpr
-    idxmap = Dict{Set{VariableRef},Int}()
-    # Map from unordered variable pair to ordered tuple of variables as first appeared in the QuadExpr
-    # (to respect the order the user wrote the terms, e.g., x_1*x_2 vs x_2*x_1)
-    ordermap = Dict{Set{VariableRef},Tuple{VariableRef,VariableRef}}()
-    # Map from unordered variable pair to coefficient (duplicates summed) in the Quadxpr
-    coefmap = Dict{Set{VariableRef},Float64}()
-
-    for i in 1:length(q.qvars1)
-        v1 = q.qvars1[i]
-        v2 = q.qvars2[i]
-        vtuple = (v1,v2)
-        vset = Set(vtuple)
-        if haskey(idxmap, vset)
-            # already seen, just add coefficient
-            coefmap[vset] += q.qcoeffs[i]
-        else
-            idxmap[vset] = i
-            ordermap[vset] = vtuple
-            coefmap[vset] = q.qcoeffs[i]
-        end
-    end
+    length(quadterms(q)) == 0 && return aff_str(mode,q.aff)
 
     # Odd terms are +/i, even terms are the variables/coeffs
-    term_str = Array{String}(undef,2*length(idxmap))
+    term_str = Array{String}(undef,2*length(quadterms(q)))
     elm = 1
     if length(term_str) > 0
-        for i in 1:length(q.qvars1)
-            vtuple = (q.qvars1[i],q.qvars2[i])
-            vset = Set(vtuple)
-            idxmap[vset] == i || continue
-
-            coef = coefmap[vset]
-            vtuple = ordermap[vset]
-
+        for (coef, var1, var2) in quadterms(q)
             abs(coef) < PRINT_ZERO_TOL && continue  # e.g. x - x
 
             pre = abs(abs(coef)-1) < PRINT_ZERO_TOL ? "" : str_round(abs(coef)) * " "
 
-            x = var_str(mode,vtuple[1])
-            y = var_str(mode,vtuple[2])
+            x = var_str(mode,var1)
+            y = var_str(mode,var2)
 
             term_str[2*elm-1] = coef < 0 ? " - " : " + "
             term_str[2*elm  ] = "$pre$x" * (x == y ? sym[:sq] : "$(sym[:times])$y")
@@ -268,14 +213,14 @@ function quad_str(mode, q::GenericQuadExpr, sym)
     end
     ret = join(term_str[1:2*(elm-1)])
 
-    if q.aff.constant == 0 && length(q.aff.vars) == 0
+    aff_string = aff_str(mode, q.aff)
+    if aff_string == "0"
         return ret
     else
-        aff = aff_str(mode,q.aff)
-        if aff[1] == '-'
-            return string(ret, " - ", aff[2:end])
+        if aff_string[1] == '-'
+            return string(ret, " - ", aff_string[2:end])
         else
-            return string(ret, " + ", aff)
+            return string(ret, " + ", aff_string)
         end
     end
 end

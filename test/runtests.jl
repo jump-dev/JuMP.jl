@@ -21,6 +21,8 @@ const MOI = MathOptInterface
 const MOIT = MOI.Test
 const MOIU = MOI.Utilities
 
+# TODO: This should be defined in JuMP source with the other versions of
+# isequal_canonical.
 function JuMP.isequal_canonical(x::AbstractArray{<:JuMP.AbstractJuMPScalar}, y::AbstractArray{<:JuMP.AbstractJuMPScalar})
     size(x) == size(y) && all(JuMP.isequal_canonical.(x, y))
 end

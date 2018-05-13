@@ -21,6 +21,7 @@ const MOI = MathOptInterface
 const MOIU = MOI.Utilities
 
 import Calculus
+import DataStructures.OrderedDict
 using ForwardDiff
 include("Derivatives/Derivatives.jl")
 using .Derivatives
@@ -464,9 +465,9 @@ end
 
 # usage warnings
 function operator_warn(lhs::GenericAffExpr,rhs::GenericAffExpr)
-    if length(lhs.vars) > 50 || length(rhs.vars) > 50
-        if length(lhs.vars) > 1
-            m = lhs.vars[1].m
+    if length(linearterms(lhs)) > 50 || length(linearterms(rhs)) > 50
+        if length(linearterms(lhs)) > 1
+            m = first(linearterms(lhs))[1].m
             m.operator_counter += 1
             if m.operator_counter > 20000
                 Base.warn_once("The addition operator has been used on JuMP expressions a large number of times. This warning is safe to ignore but may indicate that model generation is slower than necessary. For performance reasons, you should not add expressions in a loop. Instead of x += y, use append!(x,y) to modify x in place. If y is a single variable, you may also use push!(x, coef, y) in place of x += coef*y.")
