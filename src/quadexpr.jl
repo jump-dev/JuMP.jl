@@ -83,8 +83,8 @@ end
 
 # Alias for (Float64, VariableRef)
 const QuadExpr = GenericQuadExpr{Float64,VariableRef}
-Base.convert(::Type{QuadExpr}, v::Union{Real,VariableRef,AffExpr}) = QuadExpr(VariableRef[], VariableRef[], Float64[], AffExpr(v))
-QuadExpr() = zero(QuadExpr)
+Base.convert(::Type{GenericQuadExpr{C, V}}, v::Union{Real,VariableRef,GenericAffExpr}) where {C, V} = GenericQuadExpr(V[], V[], C[], GenericAffExpr{C, V}(v))
+GenericQuadExpr{C, V}() where {C, V} = zero(GenericQuadExpr{C, V})
 
 function MOI.ScalarQuadraticFunction(q::QuadExpr)
     scaledcoef = [(v1 == v2) ? 2coef : coef for (v1,v2,coef) in zip(q.qvars1, q.qvars2, q.qcoeffs)]
@@ -93,7 +93,7 @@ end
 
 function QuadExpr(m::Model, f::MOI.ScalarQuadraticFunction)
     scaledcoef = [(v1 == v2) ? coef/2 : coef for (v1, v2, coef) in zip(f.quadratic_rowvariables, f.quadratic_colvariables, f.quadratic_coefficients)]
-    return QuadExpr(VariableRef.(m,f.quadratic_rowvariables), VariableRef.(m, f.quadratic_colvariables), scaledcoef, AffExpr(VariableRef.(m,f.affine_variables), f.affine_coefficients, f.constant))
+    return QuadExpr(VariableRef.(m,f.quadratic_rowvariables), VariableRef.(m, f.quadratic_colvariables), scaledcoef, GenericAffExpr(VariableRef.(m,f.affine_variables), f.affine_coefficients, f.constant))
 end
 
 function setobjective(m::Model, sense::Symbol, a::QuadExpr)
@@ -121,8 +121,8 @@ end
 
 # Copy a quadratic expression to a new model by converting all the
 # variables to the new model's variables
-function Base.copy(q::QuadExpr, new_model::Model)
-    QuadExpr(copy(q.qvars1, new_model), copy(q.qvars2, new_model),
+function Base.copy(q::GenericQuadExpr, new_model::Model)
+    GenericQuadExpr(copy(q.qvars1, new_model), copy(q.qvars2, new_model),
                 copy(q.qcoeffs), copy(q.aff, new_model))
 end
 
