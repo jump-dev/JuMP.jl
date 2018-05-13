@@ -25,7 +25,7 @@ end
 """
     AbstractVariableRef
 
-Variable returned by [`addvariable`](@ref). Affine (resp. quadratic) operations with variables of type `V<:AbstractVariableRef` and coefficients of type `T` creates a `GenericAffExpr{T,V}` (resp. `GenericQuadExpr{T,V}`).
+Variable returned by [`addvariable`](@ref). Affine (resp. quadratic) operations with variables of type `V<:AbstractVariableRef` and coefficients of type `T` create a `GenericAffExpr{T,V}` (resp. `GenericQuadExpr{T,V}`).
 """
 abstract type AbstractVariableRef <: AbstractJuMPScalar end
 
