@@ -49,6 +49,10 @@ function MOI.delete!(m::MyModel, vref::MyVariableRef)
     delete!(m.varnames, vref.idx)
 end
 MOI.isvalid(m::MyModel, vref::MyVariableRef) = vref.idx in keys(m.variables)
+JuMP.startvalue(vref::MyVariableRef) = vref.model.variables[vref.idx].info.start
+function JuMP.setstartvalue(vref::MyVariableRef, start)
+    vref.model.variables[vref.idx].info.start = start
+end
 
 # Constraints
 struct MyConstraintRef
