@@ -56,7 +56,7 @@ end
 # Names
 JuMP.name(vref::MyVariableRef) = vref.model.varnames[vref.idx]
 function JuMP.setname(vref::MyVariableRef, name::String)
-    cref.model.varnames[vref.idx] = name
+    vref.model.varnames[vref.idx] = name
 end
 JuMP.name(cref::MyConstraintRef) = cref.model.connames[cref.idx]
 function JuMP.setname(cref::MyConstraintRef, name::String)
