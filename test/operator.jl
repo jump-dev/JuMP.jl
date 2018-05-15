@@ -21,7 +21,10 @@ Base.transpose(t::MySumType) = MySumType(t.a)
 *(t1::S, t2::MyType{T}) where {S, T} = MyType(t1*t2.a)
 *(t1::MyType{S}, t2::MyType{T}) where {S, T} = MyType(t1.a*t2.a)
 
-@testset "Operator" begin
+function operators_test(Model::Type{<:JuMP.AbstractModel}, VariableRef::Type{<:JuMP.AbstractVariableRef})
+    AffExpr = JuMP.GenericAffExpr{Float64, VariableRef}
+    QuadExpr = JuMP.GenericQuadExpr{Float64, VariableRef}
+
     @testset "Promotion" begin
         m = Model()
         I = Int
@@ -643,4 +646,12 @@ Base.transpose(t::MySumType) = MySumType(t.a)
             @test z[i].a == y[i].a == a
         end
     end
+end
+
+@testset "Operators for JuMP.Model" begin
+    operators_test(Model, VariableRef)
+end
+
+@testset "Operators for JuMPExtension.MyModel" begin
+    operators_test(JuMPExtension.MyModel, JuMPExtension.MyVariableRef)
 end
