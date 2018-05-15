@@ -4,17 +4,21 @@ module JuMPExtension
 # `JuMP.Model` applies the modification to its `moibackend` field while
 # `JuMPExtension.MyModel` stores the `AbstractVariable` (resp. `AbstractConstraint`) in a list.
 
+using MathOptInterface
+const MOI = MathOptInterface
 using JuMP
 
 mutable struct MyModel <: JuMP.AbstractModel
-    variables::Vector{JuMP.AbstractVariable}
-    varnames::Vector{String}
-    constraints::Vector{JuMP.AbstractConstraint}
-    connames::Vector{String}
-    objdict::Dict{Symbol, Any}
+    nextvaridx::Int                                 # Next variable index is nextvaridx+1
+    variables::Dict{Int, JuMP.AbstractVariable}     # Map varidx -> variable
+    varnames::Dict{Int, String}                     # Map varidx -> name
+    nextconidx::Int                                 # Next constraint index is nextconidx+1
+    constraints::Dict{Int, JuMP.AbstractConstraint} # Map conidx -> variable
+    connames::Dict{Int, String}                     # Map varidx -> name
+    objdict::Dict{Symbol, Any}                      # Same that JuMP.Model's field `objdict`
     function MyModel()
-        new(JuMP.AbstractVariable[], String[],   # Variables
-            JuMP.AbstractConstraint[], String[], # Constraints
+        new(0, Dict{Int, JuMP.AbstractVariable}(),   Dict{Int, String}(), # Variables
+            0, Dict{Int, JuMP.AbstractConstraint}(), Dict{Int, String}(), # Constraints
             Dict{Symbol, Any}())
     end
 end
@@ -29,21 +33,36 @@ end
 Base.copy(v::MyVariableRef) = v
 JuMP.variabletype(::MyModel) = MyVariableRef
 function JuMP.addvariable(m::MyModel, v::JuMP.AbstractVariable, name::String="")
-    push!(m.variables, v)
-    push!(m.varnames, name)
-    MyVariableRef(m, length(m.variables))
+    m.nextvaridx += 1
+    vref = MyVariableRef(m, m.nextvaridx)
+    m.variables[vref.idx] = v
+    JuMP.setname(vref, name)
+    vref
 end
+function MOI.delete!(m::MyModel, vref::MyVariableRef)
+    delete!(m.variables, vref.idx)
+    delete!(m.varnames, vref.idx)
+end
+MOI.isvalid(m::MyModel, vref::MyVariableRef) = vref.idx in keys(m.variables)
 
 # Constraints
 struct MyConstraintRef
     model::MyModel # `model` owning the constraint
     idx::Int       # Index in `model.constraints`
 end
+JuMP.constrainttype(::MyModel) = MyConstraintRef
 function JuMP.addconstraint(m::MyModel, c::JuMP.AbstractConstraint, name::String="")
-    push!(m.constraints, c)
-    push!(m.connames, name)
-    MyConstraintRef(m, length(m.constraints))
+    m.nextconidx += 1
+    cref = MyConstraintRef(m, m.nextconidx)
+    m.constraints[cref.idx] = c
+    JuMP.setname(cref, name)
+    cref
 end
+function MOI.delete!(m::MyModel, cref::MyConstraintRef)
+    delete!(m.constraints, cref.idx)
+    delete!(m.connames, cref.idx)
+end
+MOI.isvalid(m::MyModel, cref::MyConstraintRef) = cref.idx in keys(m.constraints)
 function JuMP.constraintobject(cref::MyConstraintRef, F::Type, S::Type)
     c = cref.model.constraints[cref.idx]
     # `TypeError` should be thrown is `F` and `S` are not correct
