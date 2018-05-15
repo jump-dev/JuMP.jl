@@ -376,6 +376,8 @@ end
 
 # TODO: update 3-argument @constraint macro to pass through names like @variable
 
+constrainttype(m::Model) = ConstraintRef{typeof(m)}
+
 """
     @constraint(m::Model, con)
 
@@ -447,8 +449,10 @@ macro constraint(args...)
         $parsecode
         $(refcall) = $constraintcall
     end
+    # Determine the return type of addconstraint. This is needed for JuMP extensions for which this is different than ConstraintRef
+    contype = :( constrainttype($m) )
     return assert_validmodel(m, quote
-        $(getloopedcode(variable, code, condition, idxvars, idxsets, :ConstraintRef, requestedcontainer))
+        $(getloopedcode(variable, code, condition, idxvars, idxsets, contype, requestedcontainer))
         $(if anonvar
             variable
         else
