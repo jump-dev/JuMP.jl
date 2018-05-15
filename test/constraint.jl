@@ -225,7 +225,6 @@ end
     constraints_test(Model, VariableRef)
 end
 
-include("JuMPExtension.jl")
 @testset "Constraints for JuMPExtension.MyModel" begin
     constraints_test(JuMPExtension.MyModel, JuMPExtension.MyVariableRef)
 end

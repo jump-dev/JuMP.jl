@@ -46,6 +46,8 @@ macro test_macro_throws(errortype, m)
     :(@test_throws $errortype try @eval $m catch err; throw(err.error) end)
 end
 
+include("JuMPExtension.jl")
+
 include("derivatives.jl")
 include("derivatives_coloring.jl")
 
