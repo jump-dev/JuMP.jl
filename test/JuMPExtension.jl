@@ -15,10 +15,13 @@ mutable struct MyModel <: JuMP.AbstractModel
     nextconidx::Int                                 # Next constraint index is nextconidx+1
     constraints::Dict{Int, JuMP.AbstractConstraint} # Map conidx -> variable
     connames::Dict{Int, String}                     # Map varidx -> name
+    objectivesense::Symbol
+    objectivefunction::JuMP.AbstractJuMPScalar
     objdict::Dict{Symbol, Any}                      # Same that JuMP.Model's field `objdict`
     function MyModel()
         new(0, Dict{Int, JuMP.AbstractVariable}(),   Dict{Int, String}(), # Variables
             0, Dict{Int, JuMP.AbstractConstraint}(), Dict{Int, String}(), # Constraints
+            :Min, zero(JuMP.GenericAffExpr{Float64, MyVariableRef}),
             Dict{Symbol, Any}())
     end
 end
@@ -70,6 +73,12 @@ function JuMP.constraintobject(cref::MyConstraintRef, F::Type, S::Type)
     c.func::F
     c.set::S
     c
+end
+
+# Objective
+function JuMP.setobjective(m::MyModel, sense::Symbol, f::JuMP.AbstractJuMPScalar)
+    m.objectivesense = sense
+    m.objectivefunction = f
 end
 
 # Names
