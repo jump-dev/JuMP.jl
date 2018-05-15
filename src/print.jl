@@ -110,36 +110,33 @@ end
 #------------------------------------------------------------------------
 ## VariableRef
 #------------------------------------------------------------------------
-Base.show(io::IO, v::VariableRef) = print(io, var_str(REPLMode,v))
-Base.show(io::IO, ::MIME"text/latex", v::VariableRef) =
+Base.show(io::IO, v::AbstractVariableRef) = print(io, var_str(REPLMode,v))
+Base.show(io::IO, ::MIME"text/latex", v::AbstractVariableRef) =
     print(io, var_str(IJuliaMode,v,mathmode=false))
-function var_str(::Type{REPLMode}, v::VariableRef; mathmode=true)
-    name = MOI.get(v.m, MOI.VariableName(), v)
-    if name != ""
-        return name
+function var_str(::Type{REPLMode}, v::AbstractVariableRef; mathmode=true)
+    var_name = name(v)
+    if !isempty(var_name)
+        return var_name
     else
         return "noname"
     end
 end
-function var_str(::Type{IJuliaMode}, v::VariableRef; mathmode=true)
-    name = MOI.get(v.m, MOI.VariableName(), v)
-    if name != ""
+function var_str(::Type{IJuliaMode}, v::AbstractVariableRef; mathmode=true)
+    var_name = name(v)
+    if !isempty(var_name)
         # TODO: This is wrong if variable name constains extra "]"
-        return math(replace(replace(name,"[","_{",1),"]","}"), mathmode)
+        return math(replace(replace(var_name,"[","_{",1),"]","}"), mathmode)
     else
         return math("noname", mathmode)
     end
 end
 
 
-#------------------------------------------------------------------------
-## AffExpr  (not GenericAffExpr)
-#------------------------------------------------------------------------
-Base.show(io::IO, a::AffExpr) = print(io, aff_str(REPLMode,a))
-Base.show(io::IO, ::MIME"text/latex", a::AffExpr) =
+Base.show(io::IO, a::GenericAffExpr) = print(io, aff_str(REPLMode,a))
+Base.show(io::IO, ::MIME"text/latex", a::GenericAffExpr) =
     print(io, math(aff_str(IJuliaMode,a),false))
 # Generic string converter, called by mode-specific handlers
-function aff_str(mode, a::AffExpr, show_constant=true)
+function aff_str(mode, a::GenericAffExpr{C, V}, show_constant=true) where {C, V}
     # If the expression is empty, return the constant (or 0)
     if length(linearterms(a)) == 0
         return show_constant ? str_round(a.constant) : "0"

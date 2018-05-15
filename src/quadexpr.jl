@@ -218,8 +218,8 @@ end
 ##########################################################################
 # TODO: GenericQuadExprConstraint
 
-struct QuadExprConstraint{S <: MOI.AbstractScalarSet} <: AbstractConstraint
-    func::QuadExpr
+struct QuadExprConstraint{V <: AbstractVariableRef, S <: MOI.AbstractScalarSet} <: AbstractConstraint
+    func::GenericQuadExpr{Float64, V}
     set::S
 end
 

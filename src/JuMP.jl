@@ -412,40 +412,44 @@ include("quadexpr.jl")
 include("sd.jl")
 
 # handle dictionary of variables
-function registervar(m::Model, varname::Symbol, value)
+function registervar(m::AbstractModel, varname::Symbol, value)
     registerobject(m, varname, value, "A variable or constraint named $varname is already attached to this model. If creating variables programmatically, use the anonymous variable syntax x = @variable(m, [1:N], ...).")
 end
-registervar(m::Model, varname, value) = error("Invalid variable name $varname")
+registervar(m::AbstractModel, varname, value) = error("Invalid variable name $varname")
 
-function registercon(m::Model, conname::Symbol, value)
+function registercon(m::AbstractModel, conname::Symbol, value)
     registerobject(m, conname, value, "A variable or constraint named $conname is already attached to this model. If creating constraints programmatically, use the anonymous constraint syntax con = @constraint(m, ...).")
 end
-registercon(m::Model, conname, value) = error("Invalid constraint name $conname")
+registercon(m::AbstractModel, conname, value) = error("Invalid constraint name $conname")
 
-function registerobject(m::Model, name::Symbol, value, errorstring::String)
-    if haskey(m.objdict, name)
+object_dictionary(m::Model) = m.objdict
+
+function registerobject(m::AbstractModel, name::Symbol, value, errorstring::String)
+    objdict = object_dictionary(m)
+    if haskey(objdict, name)
         error(errorstring)
-        m.objdict[name] = nothing
+        objdict[name] = nothing
     else
-        m.objdict[name] = value
+        objdict[name] = value
     end
     return value
 end
 
 
 """
-    Base.getindex(m::JuMP.Model, name::Symbol)
+    Base.getindex(m::JuMP.AbstractModel, name::Symbol)
 
 To allow easy accessing of JuMP tVariables and Constraints via `[]` syntax.
 Returns the variable, or group of variables, or constraint, or group of constraints, of the given name which were added to the model. This errors if multiple variables or constraints share the same name.
 """
-function Base.getindex(m::JuMP.Model, name::Symbol)
-    if !haskey(m.objdict, name)
+function Base.getindex(m::JuMP.AbstractModel, name::Symbol)
+    objdict = object_dictionary(m)
+    if !haskey(objdict, name)
         throw(KeyError("No object with name $name"))
-    elseif m.objdict[name] === nothing
+    elseif objdict[name] === nothing
         error("There are multiple variables and/or constraints named $name that are already attached to this model. If creating variables programmatically, use the anonymous variable syntax x = @variable(m, [1:N], ...). If creating constraints programmatically, use the anonymous constraint syntax con = @constraint(m, ...).")
     else
-        return m.objdict[name]
+        return objdict[name]
     end
 end
 

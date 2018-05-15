@@ -1,4 +1,8 @@
-@testset "Constraints" begin
+# The parameter names correspond to the JuMP types so that the test can serve as examples that can be copy pasted
+function constraints_test(Model::Type{<:JuMP.AbstractModel}, VariableRef::Type{<:JuMP.AbstractVariableRef})
+    AffExpr = JuMP.GenericAffExpr{Float64, VariableRef}
+    QuadExpr = JuMP.GenericQuadExpr{Float64, VariableRef}
+
     @testset "SingleVariable constraints" begin
         m = Model()
         @variable(m, x)
@@ -215,6 +219,13 @@
         @test_expression sum( 0*x[i,1] + y for i=1:3)
         @test_expression sum( 0*x[i,1] + y for i=1:3 for j in 1:3)
     end
+end
 
+@testset "Constraints for JuMP.Model" begin
+    constraints_test(Model, VariableRef)
+end
 
+include("JuMPExtension.jl")
+@testset "Constraints for JuMPExtension.MyModel" begin
+    constraints_test(JuMPExtension.MyModel, JuMPExtension.MyVariableRef)
 end

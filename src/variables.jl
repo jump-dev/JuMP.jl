@@ -129,7 +129,7 @@ MOI.VectorOfVariables(vars::Vector{VariableRef}) = MOI.VectorOfVariables(index.(
 VariableRef(m::Model, f::MOI.SingleVariable) = VariableRef(m, f.variable)
 
 function setobjective(m::Model, sense::Symbol, x::VariableRef)
-    # TODO: This code is repeated here, for AffExpr, and for QuadExpr.
+    # TODO: This code is repeated here, for GenericAffExpr, and for GenericQuadExpr.
     if sense == :Min
         moisense = MOI.MinSense
     else
@@ -151,15 +151,15 @@ function objectivefunction(m::Model, ::Type{VariableRef})
     return VariableRef(m, f)
 end
 
-struct SingleVariableConstraint{S <: MOI.AbstractScalarSet} <: AbstractConstraint
-    func::VariableRef
+struct SingleVariableConstraint{V <: AbstractVariableRef, S <: MOI.AbstractScalarSet} <: AbstractConstraint
+    func::V
     set::S
 end
 
 moi_function_and_set(c::SingleVariableConstraint) = (MOI.SingleVariable(c.func), c.set)
 
-struct VectorOfVariablesConstraint{S <: MOI.AbstractVectorSet} <: AbstractConstraint
-    func::Vector{VariableRef}
+struct VectorOfVariablesConstraint{V <: AbstractVariableRef, S <: MOI.AbstractVectorSet} <: AbstractConstraint
+    func::Vector{V}
     set::S
 end
 
