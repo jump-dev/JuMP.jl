@@ -60,7 +60,7 @@ function destructive_add!(ex::Number, c::Number, x::T) where T<:GenericQuadExpr
     end
 end
 
-function destructive_add!(ex::Number, c::VariableRef, x::VariableRef)
+function destructive_add!(ex::Number, c::AbstractVariableRef, x::AbstractVariableRef)
     result = c*x
     result.aff.constant += ex
     result
