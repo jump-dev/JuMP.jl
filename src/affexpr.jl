@@ -54,7 +54,7 @@ end
 variablereftype(::GenericAffExpr{C, V}) where {C, V} = V
 
 function GenericAffExpr(constant::V, kv::AbstractArray{Pair{K,V}}) where {K,V}
-    result = GenericAffExpr{V,K}(constant, new_ordered_dict(K, V, kv))
+    return GenericAffExpr{V,K}(constant, new_ordered_dict(K, V, kv))
 end
 
 function GenericAffExpr(constant::V, kv::Pair{K,V}...) where {K,V}
@@ -180,6 +180,10 @@ function Base.dropzeros(aff::GenericAffExpr)
             delete!(result.terms, var)
         end
     end
+    if iszero(result.constant)
+        # This is to work around isequal(0.0, -0.0) == false.
+        result.constant = zero(typeof(result.constant))
+    end
     return result
 end
 
@@ -190,7 +194,7 @@ function isequal_canonical(aff::GenericAffExpr{C,V}, other::GenericAffExpr{C,V})
     other_nozeros = dropzeros(other)
     # Note: This depends on equality of OrderedDicts ignoring order.
     # This is the current behavior, but it seems questionable.
-    return isequal(aff_nozeros.terms, other_nozeros.terms) && aff.constant == other.constant
+    return isequal(aff_nozeros, other_nozeros)
 end
 
 Base.convert(::Type{GenericAffExpr{T,V}}, v::V)    where {T,V} = GenericAffExpr(zero(T), v => one(T))

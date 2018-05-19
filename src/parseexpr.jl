@@ -36,7 +36,7 @@ function addtoexpr(ex::Number, c::Number, x::T) where T<:GenericAffExpr
     if iszero(c)
         convert(T, ex)
     else
-        x = map_coefficients(x, coef -> c*coef)
+        x = c*x
         x.constant += ex
         x
     end
