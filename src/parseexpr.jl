@@ -32,7 +32,7 @@ of `expression + 2*x`. `expression` should not be referred to after this call.
 
 Note: Discarding the result of `destructive_add!` suggests an improper usage.
 """
-function destuctive_add! end
+function destructive_add! end
 
 destructive_add!(ex::Number, c::Number, x::Number) = ex + c*x
 
@@ -260,13 +260,13 @@ end
 
 destructive_add!(ex, c, x) = ex + c*x
 
-reorder_for_destructive_add(ex, arg) = destructive_add!(ex, 1.0, arg)
+destructive_add_with_reorder!(ex, arg) = destructive_add!(ex, 1.0, arg)
 # Special case because "Val{false}()" is used as the default empty expression.
-reorder_for_destructive_add(ex::Val{false}, arg) = copy(arg)
-reorder_for_destructive_add(ex::Val{false}, args...) = (*)(args...)
+destructive_add_with_reorder!(ex::Val{false}, arg) = copy(arg)
+destructive_add_with_reorder!(ex::Val{false}, args...) = (*)(args...)
 
 
-@generated function reorder_for_destructive_add(ex, x, y)
+@generated function destructive_add_with_reorder!(ex, x, y)
     if x <: Union{VariableRef,AffExpr} && y <: Number
         :(destructive_add!(ex, y, x))
     else
@@ -274,7 +274,7 @@ reorder_for_destructive_add(ex::Val{false}, args...) = (*)(args...)
     end
 end
 
-@generated function reorder_for_destructive_add(ex, args...)
+@generated function destructive_add_with_reorder!(ex, args...)
     n = length(args)
     @assert n ≥ 3
     varidx = find(t -> (t == VariableRef || t == AffExpr), collect(args))
@@ -355,7 +355,7 @@ parseExprToplevel(x, aff::Symbol) = parseExpr(x, aff, [], [])
 function parseExpr(x, aff::Symbol, lcoeffs::Vector, rcoeffs::Vector, newaff::Symbol=gensym())
     if !isa(x,Expr)
         # at the lowest level
-        callexpr = Expr(:call,:reorder_for_destructive_add,aff,lcoeffs...,esc(x),rcoeffs...)
+        callexpr = Expr(:call,:destructive_add_with_reorder!,aff,lcoeffs...,esc(x),rcoeffs...)
         return newaff, :($newaff = $callexpr)
     else
         if x.head == :call && x.args[1] == :+
@@ -409,7 +409,7 @@ function parseExpr(x, aff::Symbol, lcoeffs::Vector, rcoeffs::Vector, newaff::Sym
                         x.args[i] = esc(x.args[i])
                     end
                 end
-                callexpr = Expr(:call,:reorder_for_destructive_add,aff,lcoeffs...,x.args[2:end]...,rcoeffs...)
+                callexpr = Expr(:call,:destructive_add_with_reorder!,aff,lcoeffs...,x.args[2:end]...,rcoeffs...)
                 push!(blk.args, :($newaff = $callexpr))
                 return newaff, blk
             end
@@ -419,7 +419,7 @@ function parseExpr(x, aff::Symbol, lcoeffs::Vector, rcoeffs::Vector, newaff::Sym
                 s = gensym()
                 newaff_, parsed = parseExprToplevel(x.args[2], s)
                 push!(blk.args, :($s = Val(false); $parsed))
-                push!(blk.args, :($newaff = reorder_for_destructive_add($aff, $(Expr(:call,:*,lcoeffs...,newaff_,newaff_,rcoeffs...)))))
+                push!(blk.args, :($newaff = destructive_add_with_reorder!($aff, $(Expr(:call,:*,lcoeffs...,newaff_,newaff_,rcoeffs...)))))
                 return newaff, blk
             elseif x.args[3] == 1
                 return parseExpr(:(QuadExpr($(x.args[2]))), aff, lcoeffs, rcoeffs)
@@ -430,7 +430,7 @@ function parseExpr(x, aff::Symbol, lcoeffs::Vector, rcoeffs::Vector, newaff::Sym
                 s = gensym()
                 newaff_, parsed = parseExprToplevel(x.args[2], s)
                 push!(blk.args, :($s = Val(false); $parsed))
-                push!(blk.args, :($newaff = reorder_for_destructive_add($aff, $(Expr(:call,:*,lcoeffs...,Expr(:call,:^,newaff_,esc(x.args[3])),rcoeffs...)))))
+                push!(blk.args, :($newaff = destructive_add_with_reorder!($aff, $(Expr(:call,:*,lcoeffs...,Expr(:call,:^,newaff_,esc(x.args[3])),rcoeffs...)))))
                 return newaff, blk
             end
         elseif x.head == :call && x.args[1] == :/
@@ -444,7 +444,7 @@ function parseExpr(x, aff::Symbol, lcoeffs::Vector, rcoeffs::Vector, newaff::Sym
             error_curly(x)
         else # at lowest level?
             !isexpr(x,:comparison) || error("Unexpected comparison in expression $x")
-            callexpr = Expr(:call,:reorder_for_destructive_add,aff,lcoeffs...,esc(x),rcoeffs...)
+            callexpr = Expr(:call,:destructive_add_with_reorder!,aff,lcoeffs...,esc(x),rcoeffs...)
             return newaff, :($newaff = $callexpr)
         end
     end

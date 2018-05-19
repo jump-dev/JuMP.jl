@@ -18,7 +18,8 @@
 # Utilities for OrderedDict
 function add_or_set!(dict::OrderedDict{K,V}, k::K, v::V) where {K,V}
     # TODO: This unnecessarily requires two lookups for k.
-    # TODO: Decide if we want to drop zeros here.
+    # TODO: Decide if we want to drop zeros here after understanding the
+    # performance implications.
     dict[k] = get!(dict, k, zero(V)) + v
     return dict
 end
