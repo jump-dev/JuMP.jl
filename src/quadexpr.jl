@@ -148,9 +148,7 @@ end
 function isequal_canonical(quad::GenericQuadExpr{CoefType,VarType}, other::GenericQuadExpr{CoefType,VarType}) where {CoefType,VarType}
     quad_nozeros = dropzeros(quad)
     other_nozeros = dropzeros(other)
-    return isequal(quad_nozeros.terms, other_nozeros.terms) &&
-           isequal(quad_nozeros.aff.terms, other_nozeros.aff.terms) &&
-           isequal(quad_nozeros.aff.constant, other_nozeros.aff.constant)
+    return isequal(quad_nozeros, other_nozeros)
 end
 
 # Alias for (Float64, VariableRef)
@@ -161,6 +159,7 @@ end
 GenericQuadExpr{C, V}() where {C, V} = zero(GenericQuadExpr{C, V})
 
 function MOI.ScalarQuadraticFunction(q::QuadExpr)
+    assert_isfinite(q)
     qvars1 = MOIVAR[]
     qvars2 = MOIVAR[]
     coefs = Float64[]

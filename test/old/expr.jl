@@ -60,28 +60,4 @@ using Base.Test
         @test isapprox(getvalue(x[1]*x[1]-2x[2]*x[1]+3x[2]+1), 4.0)
     end
 
-    @testset "Test expression iterators" begin
-        m = Model()
-        @variable(m, x[1:10])
-
-        a1 = 1*x[1] + 2*x[2]
-        k = 1
-        for (coeff,var) in linearterms(a1)
-            if k == 1
-                @test coeff == 1
-                @test var === x[1]
-            elseif k == 2
-                @test coeff == 2
-                @test var === x[2]
-            end
-            k += 1
-        end
-
-        k = 0
-        a2 = zero(AffExpr)
-        for (coeff, var) in linearterms(a2)
-            k += 1
-        end
-        @test k == 0
-    end
 end

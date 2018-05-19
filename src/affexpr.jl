@@ -163,8 +163,7 @@ function add_to_expression!(aff::GenericAffExpr{C,V}, other::GenericAffExpr{C,V}
     aff.constant += other.constant
     aff
 end
-# TODO: do we need this?
-#add_to_expression!(aff::GenericAffExpr{C,C}, other::C) where {C} = error() # for ambiguity
+
 function add_to_expression!(aff::GenericAffExpr{C,V}, other::C) where {C,V}
     aff.constant += other
     aff
@@ -226,6 +225,7 @@ resultvalue(a::GenericAffExpr) = value(a, resultvalue)
 # Note: No validation is performed that the variables in the AffExpr belong to
 # the same model.
 function MOI.ScalarAffineFunction(a::AffExpr)
+    assert_isfinite(a)
     vars = MOIVAR[]
     coefs = Float64[]
     sizehint!(vars, length(a.terms))
@@ -306,7 +306,7 @@ end
 function Base.copy(a::GenericAffExpr, new_model::Model)
     result = zero(a)
     for (coef, var) in linearterms(a)
-        add_to_expression!(result, coef, copy(v, new_model))
+        add_to_expression!(result, coef, copy(var, new_model))
     end
     result.constant = a.constant
     return result
