@@ -61,25 +61,25 @@ function Base.:*(lhs::V, rhs::V) where V <: AbstractVariableRef
 end
 # AbstractVariableRef--GenericAffExpr
 function Base.:+(lhs::V, rhs::GenericAffExpr{C,V}) where {C, V <: AbstractVariableRef}
-    # For the variables to have the proper order in the result, we need to push the lhs first.
+    # For the variables to have the proper order in the result, we need to add the lhs first.
     result = zero(rhs)
     result.constant = rhs.constant
     sizehint!(result, length(linearterms(rhs)) + 1)
-    push!(result, one(C), lhs)
+    add_to_expression!(result, one(C), lhs)
     for (coef, var) in linearterms(rhs)
-        push!(result, coef, var)
+        add_to_expression!(result, coef, var)
     end
     return result
 end
 
 function Base.:-(lhs::V, rhs::GenericAffExpr{C,V}) where {C,V <: AbstractVariableRef}
-    # For the variables to have the proper order in the result, we need to push the lhs first.
+    # For the variables to have the proper order in the result, we need to add the lhs first.
     result = zero(rhs)
     result.constant = -rhs.constant
     sizehint!(result, length(linearterms(rhs)) + 1)
-    push!(result, one(C), lhs)
+    add_to_expression!(result, one(C), lhs)
     for (coef, var) in linearterms(rhs)
-        push!(result, -coef, var)
+        add_to_expression!(result, -coef, var)
     end
     return result
 end
@@ -91,7 +91,7 @@ function Base.:*(lhs::V, rhs::GenericAffExpr{C,V}) where {C, V <: AbstractVariab
         result = zero(GenericQuadExpr{C,V})
     end
     for (coef, var) in linearterms(rhs)
-        push!(result, coef, lhs, var)
+        add_to_expression!(result, coef, lhs, var)
     end
     return result
 end
@@ -128,10 +128,10 @@ end
 Base.:^(lhs::Union{AbstractVariableRef,GenericAffExpr}, rhs::Number) = error("Only exponents of 0, 1, or 2 are currently supported. Are you trying to build a nonlinear problem? Make sure you use @NLconstraint/@NLobjective.")
 # GenericAffExpr--AbstractVariableRef
 function Base.:+(lhs::GenericAffExpr{C,V}, rhs::V) where {C, V <: AbstractVariableRef}
-    return push!(copy(lhs), one(C), rhs)
+    return add_to_expression!(copy(lhs), one(C), rhs)
 end
 function Base.:-(lhs::GenericAffExpr{C,V}, rhs::V) where {C, V <: AbstractVariableRef}
-    return push!(copy(lhs), -one(C), rhs)
+    return add_to_expression!(copy(lhs), -one(C), rhs)
 end
 # Don't fall back on AbstractVariableRef*GenericAffExpr to preserve lhs/rhs
 # consistency (appears in printing).
@@ -142,7 +142,7 @@ function Base.:*(lhs::GenericAffExpr{C,V}, rhs::V) where {C, V <: AbstractVariab
         result = zero(GenericQuadExpr{C,V})
     end
     for (coef, var) in linearterms(lhs)
-        push!(result, coef, var, rhs)
+        add_to_expression!(result, coef, var, rhs)
     end
     return result
 end
@@ -162,7 +162,7 @@ function Base.:-(lhs::GenericAffExpr{C,V}, rhs::GenericAffExpr{C,V}) where {C,V<
     result.constant -= rhs.constant
     sizehint!(result, length(linearterms(lhs)) + length(linearterms(rhs)))
     for (coef, var) in linearterms(rhs)
-        push!(result, -coef, var)
+        add_to_expression!(result, -coef, var)
     end
     return result
 end
@@ -176,7 +176,7 @@ function Base.:*(lhs::GenericAffExpr{C,V}, rhs::GenericAffExpr{C,V}) where {C,V<
     # Quadratic terms
     for (lhscoef, lhsvar) in linearterms(lhs)
         for (rhscoef, rhsvar) in linearterms(rhs)
-            push!(result, lhscoef*rhscoef, lhsvar, rhsvar)
+            add_to_expression!(result, lhscoef*rhscoef, lhsvar, rhsvar)
         end
     end
 
@@ -193,7 +193,7 @@ function Base.:*(lhs::GenericAffExpr{C,V}, rhs::GenericAffExpr{C,V}) where {C,V<
     if !iszero(lhs.constant)
         c = lhs.constant
         for (rhscoef, rhsvar) in linearterms(rhs)
-            push!(result.aff, c*rhscoef, rhsvar)
+            add_to_expression!(result.aff, c*rhscoef, rhsvar)
         end
     end
 
@@ -201,7 +201,7 @@ function Base.:*(lhs::GenericAffExpr{C,V}, rhs::GenericAffExpr{C,V}) where {C,V<
     if !iszero(rhs.constant)
         c = rhs.constant
         for (lhscoef, lhsvar) in linearterms(lhs)
-            push!(result.aff, c*lhscoef, lhsvar)
+            add_to_expression!(result.aff, c*lhscoef, lhsvar)
         end
     end
 
@@ -241,10 +241,10 @@ Base.:/(q::GenericQuadExpr, a::GenericAffExpr) = error("Cannot divide a quadrati
 function Base.:+(q1::GenericQuadExpr, q2::GenericQuadExpr)
     result = copy(q1)
     for (coef, var1, var2) in quadterms(q2)
-        push!(result, coef, var1, var2)
+        add_to_expression!(result, coef, var1, var2)
     end
     for (coef, var) in linearterms(q2)
-        push!(result, coef, var)
+        add_to_expression!(result, coef, var)
     end
     result.aff.constant += q2.aff.constant
     return result
@@ -252,10 +252,10 @@ end
 function Base.:-(q1::GenericQuadExpr, q2::GenericQuadExpr)
     result = copy(q1)
     for (coef, var1, var2) in quadterms(q2)
-        push!(result, -coef, var1, var2)
+        add_to_expression!(result, -coef, var1, var2)
     end
     for (coef, var) in linearterms(q2)
-        push!(result, -coef, var)
+        add_to_expression!(result, -coef, var)
     end
     result.aff.constant -= q2.aff.constant
     return result
@@ -291,7 +291,7 @@ Base.sum(j::AbstractArray{<:AbstractVariableRef}) = sum([j[i] for i in eachindex
 function Base.sum(affs::AbstractArray{T}) where T<:GenericAffExpr
     new_aff = zero(T)
     for aff in affs
-        append!(new_aff, aff)
+        add_to_expression!(new_aff, aff)
     end
     return new_aff
 end
@@ -315,7 +315,7 @@ function _dot(lhs::AbstractArray{T}, rhs::AbstractArray{S}) where {T,S}
     size(lhs) == size(rhs) || error("Incompatible dimensions")
     ret = zero(one(T)*one(S))
     for (x,y) in zip(lhs,rhs)
-        ret = addtoexpr(ret, x, y)
+        ret = destructive_add!(ret, x, y)
     end
     ret
 end
@@ -362,7 +362,7 @@ function _multiply!(ret::Array{T}, lhs::Array, rhs::Array) where T<:JuMPTypes
         _sizehint_expr!(q, n)
         for k ∈ 1:n
             tmp = convert(T, lhs[i,k]*rhs[k,j])
-            append!(q, tmp)
+            add_to_expression!(q, tmp)
         end
     end
     ret
@@ -377,7 +377,7 @@ function _multiplyt!(ret::Array{T}, lhs::Array, rhs::Array) where T<:JuMPTypes
         _sizehint_expr!(q, n)
         for k ∈ 1:n
             tmp = convert(T, lhs[k,i]*rhs[k,j]) # transpose
-            append!(q, tmp)
+            add_to_expression!(q, tmp)
         end
     end
     ret
@@ -389,7 +389,7 @@ function _multiply!(ret::Array{T}, lhs::SparseMatrixCSC, rhs::Array) where T<:Un
     for col ∈ 1:lhs.n
         for k ∈ 1:size(ret, 2)
             for j ∈ nzrange(lhs, col)
-                append!(ret[rv[j], k], nzv[j] * rhs[col,k])
+                add_to_expression!(ret[rv[j], k], nzv[j] * rhs[col,k])
             end
         end
     end
@@ -410,7 +410,7 @@ function _multiply!(ret::Array{T}, lhs::Matrix, rhs::SparseMatrixCSC) where T<:U
             q = ret[multivec_row, col]
             _sizehint_expr!(q, length(idxset))
             for k ∈ idxset
-                append!(q, lhs[multivec_row, rowval[k]] * nzval[k])
+                add_to_expression!(q, lhs[multivec_row, rowval[k]] * nzval[k])
             end
         end
     end
@@ -427,7 +427,7 @@ function _multiplyt!(ret::Array{T}, lhs::Matrix, rhs::SparseMatrixCSC) where T<:
             q = ret[multivec_row, col]
             _sizehint_expr!(q, length(idxset))
             for k ∈ idxset
-                append!(q, lhs[rowval[k], multivec_row] * nzval[k]) # transpose
+                add_to_expression!(q, lhs[rowval[k], multivec_row] * nzval[k]) # transpose
             end
         end
     end

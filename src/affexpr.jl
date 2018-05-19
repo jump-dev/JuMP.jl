@@ -128,46 +128,50 @@ Base.done( lti::LinearTermIterator, state::Int) = done(lti.aff.terms, state)
 Base.next( lti::LinearTermIterator, state::Int) = reorder_iterator(next(lti.aff.terms, state)...)
 Base.length(lti::LinearTermIterator) = length(lti.aff.terms)
 
-# TODO: Consider renaming. push! is an unusual name to update a term in a
-# dictionary.
 """
-    Base.push!{C,V}(aff::GenericAffExpr{C,V}, new_coef::C, new_var::V)
+    add_to_expression!(expression, terms...)
 
-An efficient way to add to an affine expression in place. For example, to add
-`5x` to an existing expression `aff`, use `push!(aff, 5.0, x)`. This is
-*significantly* more efficient than `aff += 5.0*x`.
+Updates `expression` *in place* to `expression + (*)(terms...)`. This is
+typically much more efficient than `expression += (*)(terms...)`. For example,
+`add_to_expression!(expression, a, b)` produces the same result as `expression
++= a*b`, and `add_to_expression!(expression, a)` produces the same result as
+`expression += a`.
+
+Only a few methods are defined, mostly for internal use, and only for the cases
+when (1) they can be implemented efficiently and (2) `expression` is capable of
+storing the result. For example, `add_to_expression!(::AffExpr, ::VariableRef,
+::VariableRef)` is not defined because a `GenericAffExpr` cannot store the
+product of two variables.
 """
-function Base.push!(aff::GenericAffExpr{C,V}, new_coef::C, new_var::V) where {C,V}
+function add_to_expression! end
+
+# TODO: add deprecations for Base.push! and Base.append!
+
+function add_to_expression!(aff::GenericAffExpr{C,V}, new_coef::C, new_var::V) where {C,V}
     add_or_set!(aff.terms, new_var, new_coef)
     aff
 end
 
-# TODO: Consider renaming. append! is an unusual name to add two expressions.
-"""
-    Base.append!{C,V}(aff::GenericAffExpr{C,V}, other::GenericAffExpr{C,V})
+function add_to_expression!(aff::GenericAffExpr{C,V}, new_var::V) where {C,V}
+    add_or_set!(aff.terms, new_var, one(C))
+    aff
+end
 
-Efficiently append the terms of an affine expression to an existing affine
-expression. For example, given `aff = 5.0*x` and `other = 7.0*y + 3.0*z`,
-we can add to `aff` in place by using `append!(aff, other)`.This results in
-`aff` equal to `5x + 7y + 3z`. `append!` is *significantly* more efficient than
-`aff += other`.
-"""
-function Base.append!(aff::GenericAffExpr{C,V}, other::GenericAffExpr{C,V}) where {C,V}
+function add_to_expression!(aff::GenericAffExpr{C,V}, other::GenericAffExpr{C,V}) where {C,V}
     merge!(+, aff.terms, other.terms)
     aff.constant += other.constant
     aff
 end
-# For consistency, allow appending constants and individual variables
-Base.append!(aff::GenericAffExpr{C,C}, other::C) where {C} = error() # for ambiguity
-function Base.append!(aff::GenericAffExpr{C,V}, other::C) where {C,V}
+# TODO: do we need this?
+#add_to_expression!(aff::GenericAffExpr{C,C}, other::C) where {C} = error() # for ambiguity
+function add_to_expression!(aff::GenericAffExpr{C,V}, other::C) where {C,V}
     aff.constant += other
     aff
 end
-function Base.append!(aff::GenericAffExpr{C,V}, other::Real) where {C,V}
+function add_to_expression!(aff::GenericAffExpr{C,V}, other::Real) where {C,V}
     aff.constant += other
     aff
 end
-Base.append!(aff::GenericAffExpr{C,V}, other::V) where {C,V} = push!(aff,one(C),other)
 
 function Base.isequal(aff::GenericAffExpr{C,V},other::GenericAffExpr{C,V}) where {C,V}
     return isequal(aff.constant, other.constant) && isequal(aff.terms, other.terms)
@@ -235,7 +239,7 @@ end
 function AffExpr(m::Model, f::MOI.ScalarAffineFunction)
     aff = AffExpr()
     for i in 1:length(f.variables)
-        push!(aff, f.coefficients[i], VariableRef(m,f.variables[i]))
+        add_to_expression!(aff, f.coefficients[i], VariableRef(m,f.variables[i]))
     end
     aff.constant = f.constant
     return aff
@@ -301,7 +305,7 @@ end
 function Base.copy(a::GenericAffExpr, new_model::Model)
     result = zero(a)
     for (coef, var) in linearterms(a)
-        push!(result, coef, copy(v, new_model))
+        add_to_expression!(result, coef, copy(v, new_model))
     end
     result.constant = a.constant
     return result

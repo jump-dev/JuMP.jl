@@ -102,7 +102,7 @@ Base.done(qti::QuadTermIterator, state::Int) = done(qti.quad.terms, state)
 Base.next(qti::QuadTermIterator, state::Int) = reorder_iterator(next(qti.quad.terms, state)...)
 Base.length(qti::QuadTermIterator) = length(qti.quad.terms)
 
-function Base.push!(quad::GenericQuadExpr{C,V}, new_coef::C, new_var1::V, new_var2::V) where {C,V}
+function add_to_expression!(quad::GenericQuadExpr{C,V}, new_coef::C, new_var1::V, new_var2::V) where {C,V}
     # Node: OrderedDict updates the *key* as well. That is, if there was a
     # previous value for UnorderedPair(new_var2, new_var1), it's key will now be
     # UnorderedPair(new_var1, new_var2) (because these are defined as equal).
@@ -111,14 +111,14 @@ function Base.push!(quad::GenericQuadExpr{C,V}, new_coef::C, new_var1::V, new_va
     quad
 end
 
-function Base.push!(quad::GenericQuadExpr{C, V}, new_coef::C, new_var::V) where {C,V}
-    push!(quad.aff, new_coef, new_var)
+function add_to_expression!(quad::GenericQuadExpr{C, V}, new_coef::C, new_var::V) where {C,V}
+    add_to_expression!(quad.aff, new_coef, new_var)
     quad
 end
 
-function Base.append!(q::GenericQuadExpr{T,S}, other::GenericQuadExpr{T,S}) where {T,S}
+function add_to_expression!(q::GenericQuadExpr{T,S}, other::GenericQuadExpr{T,S}) where {T,S}
     merge!(+, q.terms, other.terms)
-    append!(q.aff, other.aff)
+    add_to_expression!(q.aff, other.aff)
     q
 end
 
@@ -192,7 +192,7 @@ function QuadExpr(m::Model, f::MOI.ScalarQuadraticFunction)
         if v1 == v2
             coef /= 2
         end
-        push!(quad, coef, VariableRef(m, v1), VariableRef(m, v2))
+        add_to_expression!(quad, coef, VariableRef(m, v1), VariableRef(m, v2))
     end
     return quad
 end
