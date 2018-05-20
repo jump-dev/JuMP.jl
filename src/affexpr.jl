@@ -79,7 +79,7 @@ Base.copy(a::GenericAffExpr) = GenericAffExpr(copy(a.constant), copy(a.terms))
 
 GenericAffExpr{C, V}() where {C, V} = zero(GenericAffExpr{C, V})
 
-function map_coefficients!(a::GenericAffExpr, f::Function)
+function map_coefficients_inplace!(f::Function, a::GenericAffExpr)
     # The iterator remains valid if existing elements are updated.
     for (coef, var) in linearterms(a)
         a.terms[var] = f(coef)
@@ -88,8 +88,8 @@ function map_coefficients!(a::GenericAffExpr, f::Function)
     return a
 end
 
-function map_coefficients(a::GenericAffExpr, f::Function)
-    return map_coefficients!(copy(a), f)
+function map_coefficients(f::Function, a::GenericAffExpr)
+    return map_coefficients_inplace!(f, copy(a))
 end
 
 Base.sizehint!(a::GenericAffExpr, n::Int) = sizehint!(a.terms, n)

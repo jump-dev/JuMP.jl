@@ -33,7 +33,7 @@ function Base.:-(lhs::Number, rhs::GenericAffExpr)
     result.constant += lhs
     return result
 end
-Base.:*(lhs::Number, rhs::GenericAffExpr) = map_coefficients(rhs, c -> lhs * c)
+Base.:*(lhs::Number, rhs::GenericAffExpr) = map_coefficients(c -> lhs * c, rhs)
 # Number--QuadExpr
 Base.:+(lhs::Number, rhs::GenericQuadExpr) = GenericQuadExpr(lhs+rhs.aff, copy(rhs.terms))
 function Base.:-(lhs::Number, rhs::GenericQuadExpr)
@@ -41,13 +41,13 @@ function Base.:-(lhs::Number, rhs::GenericQuadExpr)
     result.aff.constant += lhs
     return result
 end
-Base.:*(lhs::Number, rhs::GenericQuadExpr) = map_coefficients(rhs, c -> lhs * c)
+Base.:*(lhs::Number, rhs::GenericQuadExpr) = map_coefficients(c -> lhs * c, rhs)
 
 # AbstractVariableRef (or, AbstractJuMPScalar)
 # TODO: What is the role of AbstractJuMPScalar??
 Base.:+(lhs::AbstractJuMPScalar) = lhs
 Base.:-(lhs::AbstractVariableRef) = GenericAffExpr(0.0, lhs => -1.0)
-Base.:*(lhs::AbstractVariableRef) = lhs # make this more generic so extensions don't have to define unary multiplication for our macros
+Base.:*(lhs::AbstractJuMPScalar) = lhs # make this more generic so extensions don't have to define unary multiplication for our macros
 # AbstractVariableRef--Number
 Base.:+(lhs::AbstractVariableRef, rhs::Number) = (+)( rhs,lhs)
 Base.:-(lhs::AbstractVariableRef, rhs::Number) = (+)(-rhs,lhs)
@@ -108,12 +108,12 @@ end
 
 # GenericAffExpr
 Base.:+(lhs::GenericAffExpr) = lhs
-Base.:-(lhs::GenericAffExpr) = map_coefficients(lhs, -)
+Base.:-(lhs::GenericAffExpr) = map_coefficients(-, lhs)
 # GenericAffExpr--Number
 Base.:+(lhs::GenericAffExpr, rhs::Number) = (+)(+rhs,lhs)
 Base.:-(lhs::GenericAffExpr, rhs::Number) = (+)(-rhs,lhs)
 Base.:*(lhs::GenericAffExpr, rhs::Number) = (*)(rhs,lhs)
-Base.:/(lhs::GenericAffExpr, rhs::Number) = map_coefficients(lhs, c -> c/rhs)
+Base.:/(lhs::GenericAffExpr, rhs::Number) = map_coefficients(c -> c/rhs, lhs)
 function Base.:^(lhs::Union{AbstractVariableRef,GenericAffExpr}, rhs::Integer)
     if rhs == 2
         return lhs*lhs
@@ -221,12 +221,12 @@ end
 
 # GenericQuadExpr
 Base.:+(lhs::GenericQuadExpr) = lhs
-Base.:-(lhs::GenericQuadExpr) = map_coefficients(lhs, -)
+Base.:-(lhs::GenericQuadExpr) = map_coefficients(-, lhs)
 # GenericQuadExpr--Number
 Base.:+(lhs::GenericQuadExpr, rhs::Number) = (+)(+rhs,lhs)
 Base.:-(lhs::GenericQuadExpr, rhs::Number) = (+)(-rhs,lhs)
 Base.:*(lhs::GenericQuadExpr, rhs::Number) = (*)(rhs,lhs)
-Base.:/(lhs::GenericQuadExpr, rhs::Number) = (*)(1.0/rhs,lhs)
+Base.:/(lhs::GenericQuadExpr, rhs::Number) = (*)(inv(rhs),lhs)
 # GenericQuadExpr--AbstractVariableRef
 Base.:+(q::GenericQuadExpr, v::AbstractVariableRef) = GenericQuadExpr(q.aff+v, copy(q.terms))
 Base.:-(q::GenericQuadExpr, v::AbstractVariableRef) = GenericQuadExpr(q.aff-v, copy(q.terms))

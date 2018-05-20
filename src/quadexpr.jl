@@ -60,17 +60,17 @@ Base.zero(q::GenericQuadExpr) = zero(typeof(q))
 Base.one(q::GenericQuadExpr)  = one(typeof(q))
 Base.copy(q::GenericQuadExpr) = GenericQuadExpr(copy(q.aff), copy(q.terms))
 
-function map_coefficients!(q::GenericQuadExpr, f::Function)
+function map_coefficients_inplace!(f::Function, q::GenericQuadExpr)
     # The iterator remains valid if existing elements are updated.
     for (key, value) in q.terms
         q.terms[key] = f(value)
     end
-    map_coefficients!(q.aff, f)
+    map_coefficients_inplace!(f, q.aff)
     return q
 end
 
-function map_coefficients(q::GenericQuadExpr, f::Function)
-    return map_coefficients!(copy(q), f)
+function map_coefficients(f::Function, q::GenericQuadExpr)
+    return map_coefficients_inplace!(f, copy(q))
 end
 
 """

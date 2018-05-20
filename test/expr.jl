@@ -167,6 +167,24 @@ Base.copy(x::PowVariable) = x
         @test_expression_with_string JuMP.destructive_add!(x^2 + x, x + 0, x + 1) "2 x² + 2 x"
     end
 
+    @testset "(+)(::AffExpr)" begin
+        m = Model()
+        @variable(m, x)
+        @test_expression_with_string (+)(x + 1) "x + 1"
+    end
+
+    @testset "(+)(::QuadExpr)" begin
+        m = Model()
+        @variable(m, x)
+        @test_expression_with_string (+)(x^2 + 1) "x² + 1"
+    end
+
+    @testset "sum(::Vector{VariableRef})" begin
+        m = Model()
+        @variable(m, x[1:2])
+        @test_expression_with_string sum(x) "x[1] + x[2]"
+    end
+
     @testset "expression^3 and unary*" begin
         m = Model()
         x = PowVariable(1)
