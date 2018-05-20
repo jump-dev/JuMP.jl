@@ -3,66 +3,6 @@
 #  License, v. 2.0. If a copy of the MPL was not distributed with this
 #  file, You can obtain one at http://mozilla.org/MPL/2.0/.
 
-mutable struct IndexedVector{T}
-    elts::Vector{T}
-    nzidx::Vector{Int}
-    nnz::Int
-    empty::BitArray{1}
-end
-
-IndexedVector(::Type{T},n::Integer) where {T} = IndexedVector(zeros(T,n),zeros(Int,n),0,trues(n))
-
-function addelt!(v::IndexedVector{T},i::Integer,val::T) where T
-    if val != zero(T)
-        if v.empty[i]  # new index
-            v.elts[i] = val
-            v.nzidx[v.nnz += 1] = i
-            v.empty[i] = false
-        else
-            v.elts[i] += val
-        end
-    end
-    return nothing
-end
-
-function rmz!(v::IndexedVector{T}) where T
-    i = 1
-    while i <= v.nnz
-        j = v.nzidx[i]
-        if v.elts[j] == zero(T)
-            v.empty[j] = true
-            # If i == v.nnz then this has no effect but it would be inefficient to branch
-            v.nzidx[i] = v.nzidx[v.nnz]
-            v.nnz -= 1
-        else
-            i += 1
-        end
-    end
-end
-
-function Base.empty!(v::IndexedVector{T}) where T
-    elts = v.elts
-    nzidx = v.nzidx
-    empty = v.empty
-    for i in 1:v.nnz
-        elts[nzidx[i]] = zero(T)
-        empty[nzidx[i]] = true
-    end
-    v.nnz = 0
-end
-
-Base.length(v::IndexedVector) = length(v.elts)
-function Base.resize!(v::IndexedVector, n::Integer)
-    if n > length(v)
-        @assert v.nnz == 0 # only resize empty vector
-        resize!(v.elts, n)
-        fill!(v.elts,0)
-        resize!(v.nzidx, n)
-        resize!(v.empty, n)
-        fill!(v.empty,true)
-    end
-end
-
 # lightweight unsafe view for vectors
 # it seems that the only way to avoid triggering
 # allocations is to have only bitstype fields, so
