@@ -60,7 +60,11 @@ function destructive_add!(ex::Number, c::Number, x::T) where T<:GenericQuadExpr
     end
 end
 
-destructive_add!(ex::Number, c::VariableRef, x::VariableRef) = QuadExpr([c],[x],[1.0],zero(AffExpr))
+function destructive_add!(ex::Number, c::VariableRef, x::VariableRef)
+    result = c*x
+    result.aff.constant += ex
+    result
+end
 
 function destructive_add!(ex::Number, c::T, x::T) where T<:GenericAffExpr
     q = c*x
@@ -230,8 +234,7 @@ function destructive_add!(quad::GenericQuadExpr{C,V},c::Number,x::GenericQuadExp
 end
 
 function destructive_add!(ex::GenericQuadExpr{C,V}, c::GenericAffExpr{C,V}, x::GenericAffExpr{C,V}) where {C,V}
-    q = c*x
-    destructive_add!(ex, 1.0, q)
+    destructive_add!(ex, 1.0, c*x)
 end
 
 # Catch nonlinear expressions and parameters being used in addconstraint, etc.
