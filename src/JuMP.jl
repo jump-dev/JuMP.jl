@@ -129,9 +129,6 @@ mutable struct Model <: AbstractModel
     # printhook
 
 
-    # # storage vector for merging duplicate terms
-    # indexedVector::IndexedVector{Float64}
-
     nlpdata#::NLPData
 
     objdict::Dict{Symbol,Any} # dictionary from variable and constraint names to objects
