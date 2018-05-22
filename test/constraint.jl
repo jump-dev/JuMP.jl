@@ -118,7 +118,7 @@
         for i in 1:2
             for j in 1:2
                 c = JuMP.constraintobject(cref[i,j], AffExpr, MOI.LessThan)
-                @test JuMP.isequal_canonical(c.func, AffExpr(x[i,j]))
+                @test JuMP.isequal_canonical(c.func, convert(AffExpr, x[i,j]))
                 @test c.set == MOI.LessThan(UB[i,j] - 1)
             end
         end

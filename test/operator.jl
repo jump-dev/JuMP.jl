@@ -202,6 +202,9 @@ Base.transpose(t::MySumType) = MySumType(t.a)
         end
 
         # 4. QuadExpr
+        # TODO: This test block and others above should be rewritten to be
+        # self-contained. The definitions of q, w, and aff2 are too far to
+        # easily check correctness of the tests.
         @testset "QuadExpr--???" begin
             # 4-0 QuadExpr unary
             @test_expression_with_string +q "2.5 y*z + 7.1 x + 2.5"
@@ -214,7 +217,7 @@ Base.transpose(t::MySumType) = MySumType(t.a)
             @test q == q
             @test_expression_with_string aff2 - q "-2.5 y*z + 1.2 y - 7.1 x - 1.3"
             # 4-2 QuadExpr--Variable
-            @test_expression_with_string q + w "2.5 y*z + w + 7.1 x + 2.5"
+            @test_expression_with_string q + w "2.5 y*z + 7.1 x + w + 2.5"
             @test_expression_with_string q - w "2.5 y*z + 7.1 x - w + 2.5"
             @test_throws ErrorException q*w
             @test_throws ErrorException q/w

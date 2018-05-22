@@ -18,22 +18,35 @@
 
 # Number
 # Number--Number obviously already taken care of!
-# Number--AbstractVariableRef
-Base.:+(lhs::Number, rhs::AbstractVariableRef) = GenericAffExpr([rhs],[+1.],convert(Float64,lhs))
-Base.:-(lhs::Number, rhs::AbstractVariableRef) = GenericAffExpr([rhs],[-1.],convert(Float64,lhs))
-Base.:*(lhs::Number, rhs::AbstractVariableRef) = GenericAffExpr([rhs],[convert(Float64,lhs)], 0.)
+# Number--VariableRef
+Base.:+(lhs::Number, rhs::AbstractVariableRef) = GenericAffExpr(convert(Float64, lhs), rhs => 1.0)
+Base.:-(lhs::Number, rhs::AbstractVariableRef) = GenericAffExpr(convert(Float64, lhs), rhs => -1.0)
+Base.:*(lhs::Number, rhs::AbstractVariableRef) = GenericAffExpr(0.0, rhs => convert(Float64,lhs))
 # Number--GenericAffExpr
-Base.:+(lhs::Number, rhs::GenericAffExpr) = GenericAffExpr(copy(rhs.vars),copy(rhs.coeffs),lhs+rhs.constant)
-Base.:-(lhs::Number, rhs::GenericAffExpr) = GenericAffExpr(copy(rhs.vars),    -rhs.coeffs ,lhs-rhs.constant)
-Base.:*(lhs::Number, rhs::GenericAffExpr) = GenericAffExpr(copy(rhs.vars),[lhs*rhs.coeffs[i] for i=1:length(rhs.coeffs)],lhs*rhs.constant)
-# Number--GenericQuadExpr
-Base.:+(lhs::Number, rhs::GenericQuadExpr) = GenericQuadExpr(copy(rhs.qvars1),copy(rhs.qvars2),copy(rhs.qcoeffs),lhs+rhs.aff)
-Base.:-(lhs::Number, rhs::GenericQuadExpr) = GenericQuadExpr(copy(rhs.qvars1),copy(rhs.qvars2),    -rhs.qcoeffs ,lhs-rhs.aff)
-Base.:*(lhs::Number, rhs::GenericQuadExpr) = GenericQuadExpr(copy(rhs.qvars1),copy(rhs.qvars2), lhs*rhs.qcoeffs ,lhs*rhs.aff)
+function Base.:+(lhs::Number, rhs::GenericAffExpr)
+    result = copy(rhs)
+    result.constant += lhs
+    return result
+end
+function Base.:-(lhs::Number, rhs::GenericAffExpr)
+    result = -rhs
+    result.constant += lhs
+    return result
+end
+Base.:*(lhs::Number, rhs::GenericAffExpr) = map_coefficients(c -> lhs * c, rhs)
+# Number--QuadExpr
+Base.:+(lhs::Number, rhs::GenericQuadExpr) = GenericQuadExpr(lhs+rhs.aff, copy(rhs.terms))
+function Base.:-(lhs::Number, rhs::GenericQuadExpr)
+    result = -rhs
+    result.aff.constant += lhs
+    return result
+end
+Base.:*(lhs::Number, rhs::GenericQuadExpr) = map_coefficients(c -> lhs * c, rhs)
 
 # AbstractVariableRef (or, AbstractJuMPScalar)
+# TODO: What is the role of AbstractJuMPScalar??
 Base.:+(lhs::AbstractJuMPScalar) = lhs
-Base.:-(lhs::AbstractVariableRef) = GenericAffExpr([lhs],[-1.0],0.0)
+Base.:-(lhs::AbstractVariableRef) = GenericAffExpr(0.0, lhs => -1.0)
 Base.:*(lhs::AbstractJuMPScalar) = lhs # make this more generic so extensions don't have to define unary multiplication for our macros
 # AbstractVariableRef--Number
 Base.:+(lhs::AbstractVariableRef, rhs::Number) = (+)( rhs,lhs)
@@ -41,40 +54,71 @@ Base.:-(lhs::AbstractVariableRef, rhs::Number) = (+)(-rhs,lhs)
 Base.:*(lhs::AbstractVariableRef, rhs::Number) = (*)(rhs,lhs)
 Base.:/(lhs::AbstractVariableRef, rhs::Number) = (*)(1./rhs,lhs)
 # AbstractVariableRef--AbstractVariableRef
-Base.:+(lhs::V, rhs::V) where V<:AbstractVariableRef = GenericAffExpr([lhs,rhs], [1.,+1.], 0.)
-Base.:-(lhs::V, rhs::V) where V<:AbstractVariableRef = GenericAffExpr([lhs,rhs], [1.,-1.], 0.)
-Base.:*(lhs::V, rhs::V) where V<:AbstractVariableRef = GenericQuadExpr{Float64,V}([lhs],[rhs],[1.],zero(GenericAffExpr{Float64,V}))
+Base.:+(lhs::V, rhs::V) where V <: AbstractVariableRef = GenericAffExpr(0.0, lhs => 1.0, rhs => 1.0)
+Base.:-(lhs::V, rhs::V) where V <: AbstractVariableRef = GenericAffExpr(0.0, lhs => 1.0, rhs => -1.0)
+function Base.:*(lhs::V, rhs::V) where V <: AbstractVariableRef
+    GenericQuadExpr(GenericAffExpr{Float64, V}(), UnorderedPair(lhs, rhs) => 1.0)
+end
 # AbstractVariableRef--GenericAffExpr
-Base.:+(lhs::V, rhs::GenericAffExpr{C,V}) where {C,V<:JuMPTypes} =
-    GenericAffExpr{C,V}(vcat(lhs,rhs.vars),vcat(one(C),rhs.coeffs), rhs.constant)
-Base.:-(lhs::V, rhs::GenericAffExpr{C,V}) where {C,V<:JuMPTypes} =
-    GenericAffExpr{C,V}(vcat(lhs,rhs.vars),vcat(one(C),-rhs.coeffs),-rhs.constant)
-function Base.:*(lhs::V, rhs::GenericAffExpr{T,V}) where {T,V}
-    n = length(rhs.vars)
-    if !iszero(rhs.constant)
-        ret = GenericQuadExpr{T,V}([lhs for i=1:n],copy(rhs.vars),copy(rhs.coeffs),GenericAffExpr{T,V}([lhs], [rhs.constant], zero(T)))
-    else
-        ret = GenericQuadExpr{T,V}([lhs for i=1:n],copy(rhs.vars),copy(rhs.coeffs),zero(GenericAffExpr{T,V}))
+function Base.:+(lhs::V, rhs::GenericAffExpr{C,V}) where {C, V <: AbstractVariableRef}
+    # For the variables to have the proper order in the result, we need to add the lhs first.
+    result = zero(rhs)
+    result.constant = rhs.constant
+    sizehint!(result, length(linearterms(rhs)) + 1)
+    add_to_expression!(result, one(C), lhs)
+    for (coef, var) in linearterms(rhs)
+        add_to_expression!(result, coef, var)
     end
+    return result
+end
+
+function Base.:-(lhs::V, rhs::GenericAffExpr{C,V}) where {C,V <: AbstractVariableRef}
+    # For the variables to have the proper order in the result, we need to add the lhs first.
+    result = zero(rhs)
+    result.constant = -rhs.constant
+    sizehint!(result, length(linearterms(rhs)) + 1)
+    add_to_expression!(result, one(C), lhs)
+    for (coef, var) in linearterms(rhs)
+        add_to_expression!(result, -coef, var)
+    end
+    return result
+end
+
+function Base.:*(lhs::V, rhs::GenericAffExpr{C,V}) where {C, V <: AbstractVariableRef}
+    if !iszero(rhs.constant)
+        result = GenericQuadExpr{C,V}(lhs*rhs.constant)
+    else
+        result = zero(GenericQuadExpr{C,V})
+    end
+    for (coef, var) in linearterms(rhs)
+        add_to_expression!(result, coef, lhs, var)
+    end
+    return result
 end
 Base.:/(lhs::AbstractVariableRef, rhs::GenericAffExpr) = error("Cannot divide a variable by an affine expression")
 # AbstractVariableRef--GenericQuadExpr
-Base.:+(v::AbstractVariableRef, q::GenericQuadExpr) = GenericQuadExpr(copy(q.qvars1),copy(q.qvars2),copy(q.qcoeffs),v+q.aff)
-Base.:-(v::AbstractVariableRef, q::GenericQuadExpr) = GenericQuadExpr(copy(q.qvars1),copy(q.qvars2),    -q.qcoeffs ,v-q.aff)
+Base.:+(v::AbstractVariableRef, q::GenericQuadExpr) = QuadExpr(v+q.aff, copy(q.terms))
+function Base.:-(v::AbstractVariableRef, q::GenericQuadExpr)
+    result = -q
+    # This makes an unnecessary copy of aff, but it's important for v to appear
+    # first.
+    result.aff = v + result.aff
+    return result
+end
 
 # GenericAffExpr
 Base.:+(lhs::GenericAffExpr) = lhs
-Base.:-(lhs::GenericAffExpr) = GenericAffExpr(lhs.vars, -lhs.coeffs, -lhs.constant)
+Base.:-(lhs::GenericAffExpr) = map_coefficients(-, lhs)
 # GenericAffExpr--Number
 Base.:+(lhs::GenericAffExpr, rhs::Number) = (+)(+rhs,lhs)
 Base.:-(lhs::GenericAffExpr, rhs::Number) = (+)(-rhs,lhs)
 Base.:*(lhs::GenericAffExpr, rhs::Number) = (*)(rhs,lhs)
-Base.:/(lhs::GenericAffExpr, rhs::Number) = (*)(inv(rhs),lhs)
+Base.:/(lhs::GenericAffExpr, rhs::Number) = map_coefficients(c -> c/rhs, lhs)
 function Base.:^(lhs::Union{AbstractVariableRef,GenericAffExpr}, rhs::Integer)
     if rhs == 2
         return lhs*lhs
     elseif rhs == 1
-        return GenericQuadExpr{Float64, variablereftype(lhs)}(lhs)
+        return convert(GenericQuadExpr{Float64, variablereftype(lhs)}, lhs)
     elseif rhs == 0
         return one(GenericQuadExpr{Float64, variablereftype(lhs)})
     else
@@ -83,120 +127,152 @@ function Base.:^(lhs::Union{AbstractVariableRef,GenericAffExpr}, rhs::Integer)
 end
 Base.:^(lhs::Union{AbstractVariableRef,GenericAffExpr}, rhs::Number) = error("Only exponents of 0, 1, or 2 are currently supported. Are you trying to build a nonlinear problem? Make sure you use @NLconstraint/@NLobjective.")
 # GenericAffExpr--AbstractVariableRef
-Base.:+(lhs::GenericAffExpr{C,V}, rhs::V) where {C,V<:JuMPTypes} = GenericAffExpr{C,V}(vcat(lhs.vars,rhs),vcat(lhs.coeffs,one(C)), lhs.constant)
-Base.:-(lhs::GenericAffExpr{C,V}, rhs::V) where {C,V<:JuMPTypes} = GenericAffExpr{C,V}(vcat(lhs.vars,rhs),vcat(lhs.coeffs,-one(C)),lhs.constant)
-# Don't fall back on AbstractVariableRef*GenericAffExpr to preserve lhs/rhs consistency (appears in printing)
-function Base.:*(lhs::GenericAffExpr{T,V}, rhs::V) where {T,V}
-    n = length(lhs.vars)
+function Base.:+(lhs::GenericAffExpr{C,V}, rhs::V) where {C, V <: AbstractVariableRef}
+    return add_to_expression!(copy(lhs), one(C), rhs)
+end
+function Base.:-(lhs::GenericAffExpr{C,V}, rhs::V) where {C, V <: AbstractVariableRef}
+    return add_to_expression!(copy(lhs), -one(C), rhs)
+end
+# Don't fall back on AbstractVariableRef*GenericAffExpr to preserve lhs/rhs
+# consistency (appears in printing).
+function Base.:*(lhs::GenericAffExpr{C,V}, rhs::V) where {C, V <: AbstractVariableRef}
     if !iszero(lhs.constant)
-        ret = GenericQuadExpr(copy(lhs.vars),[rhs for i=1:n],copy(lhs.coeffs),GenericAffExpr([rhs], [lhs.constant], zero(T)))
+        result = GenericQuadExpr{C,V}(lhs.constant*rhs)
     else
-        ret = GenericQuadExpr(copy(lhs.vars),[rhs for i=1:n],copy(lhs.coeffs),zero(GenericAffExpr{T,V}))
+        result = zero(GenericQuadExpr{C,V})
     end
+    for (coef, var) in linearterms(lhs)
+        add_to_expression!(result, coef, var, rhs)
+    end
+    return result
 end
 Base.:/(lhs::GenericAffExpr, rhs::AbstractVariableRef) = error("Cannot divide affine expression by a variable")
-# GenericAffExpr--GenericAffExpr
-Base.:+(lhs::GenericAffExpr{C,V}, rhs::GenericAffExpr{C,V}) where {C,V<:JuMPTypes} = (operator_warn(lhs,rhs); GenericAffExpr(vcat(lhs.vars,rhs.vars),vcat(lhs.coeffs, rhs.coeffs),lhs.constant+rhs.constant))
-Base.:-(lhs::GenericAffExpr{C,V}, rhs::GenericAffExpr{C,V}) where {C,V<:JuMPTypes} = GenericAffExpr(vcat(lhs.vars,rhs.vars),vcat(lhs.coeffs,-rhs.coeffs),lhs.constant-rhs.constant)
-function Base.:*(lhs::GenericAffExpr{T,V}, rhs::GenericAffExpr{T,V}) where {T,V}
-    ret = zero(GenericQuadExpr{T,V})
+# AffExpr--AffExpr
+function Base.:+(lhs::GenericAffExpr{C,V}, rhs::GenericAffExpr{C,V}) where {C,V<:JuMPTypes}
+    operator_warn(lhs,rhs)
+    result_terms = copy(lhs.terms)
+    # merge() returns a Dict(), so we need to call merge!() instead.
+    # Note: merge!() doesn't appear to call sizehint!(). Is this important?
+    merge!(+, result_terms, rhs.terms)
+    return GenericAffExpr(lhs.constant + rhs.constant, result_terms)
+end
+
+function Base.:-(lhs::GenericAffExpr{C,V}, rhs::GenericAffExpr{C,V}) where {C,V<:JuMPTypes}
+    result = copy(lhs)
+    result.constant -= rhs.constant
+    sizehint!(result, length(linearterms(lhs)) + length(linearterms(rhs)))
+    for (coef, var) in linearterms(rhs)
+        add_to_expression!(result, -coef, var)
+    end
+    return result
+end
+
+function Base.:*(lhs::GenericAffExpr{C,V}, rhs::GenericAffExpr{C,V}) where {C,V<:JuMPTypes}
+    result = zero(GenericQuadExpr{C,V})
+
+    lhs_length = length(linearterms(lhs))
+    rhs_length = length(linearterms(rhs))
 
     # Quadratic terms
-    n = length(lhs.coeffs)
-    m = length(rhs.coeffs)
-    sizehint!(ret.qvars1, n*m)
-    sizehint!(ret.qvars2, n*m)
-    sizehint!(ret.qcoeffs, n*m)
-    for i = 1:n
-        for j = 1:m
-            push!(ret.qvars1,  lhs.vars[i])
-            push!(ret.qvars2,  rhs.vars[j])
-            push!(ret.qcoeffs, lhs.coeffs[i]*rhs.coeffs[j])
+    for (lhscoef, lhsvar) in linearterms(lhs)
+        for (rhscoef, rhsvar) in linearterms(rhs)
+            add_to_expression!(result, lhscoef*rhscoef, lhsvar, rhsvar)
         end
     end
 
     # Try to preallocate space for aff
     if !iszero(lhs.constant) && !iszero(rhs.constant)
-        sizehint!(ret.aff.vars, n+m)
-        sizehint!(ret.aff.coeffs, n+m)
+        sizehint!(result.aff, lhs_length + rhs_length)
     elseif !iszero(lhs.constant)
-        sizehint!(ret.aff.vars, n)
-        sizehint!(ret.aff.coeffs, n)
+        sizehint!(result.aff, rhs_length)
     elseif !iszero(rhs.constant)
-        sizehint!(ret.aff.vars, m)
-        sizehint!(ret.aff.coeffs, m)
+        sizehint!(result.aff, lhs_length)
     end
 
-    # [LHS constant] * RHS
+    # [LHS constant] * [RHS linear terms]
     if !iszero(lhs.constant)
         c = lhs.constant
-        for j = 1:m
-            push!(ret.aff.vars,   rhs.vars[j])
-            push!(ret.aff.coeffs, rhs.coeffs[j] * c)
+        for (rhscoef, rhsvar) in linearterms(rhs)
+            add_to_expression!(result.aff, c*rhscoef, rhsvar)
         end
-        ret.aff.constant += c * rhs.constant
     end
 
-    # [RHS constant] * LHS
+    # [RHS constant] * [LHS linear terms]
     if !iszero(rhs.constant)
         c = rhs.constant
-        for i = 1:n
-            push!(ret.aff.vars,   lhs.vars[i])
-            push!(ret.aff.coeffs, lhs.coeffs[i] * c)
+        for (lhscoef, lhsvar) in linearterms(lhs)
+            add_to_expression!(result.aff, c*lhscoef, lhsvar)
         end
-        # Don't do the following line
-        #ret.aff.constant += c * lhs.constant
-        # If lhs.constant is 0, its a waste of time
-        # If lhs.constant is non-zero, its already done
     end
 
-    return ret
+    result.aff.constant = lhs.constant * rhs.constant
+
+    return result
 end
 # GenericAffExpr--GenericQuadExpr
-Base.:+(a::GenericAffExpr, q::GenericQuadExpr) = GenericQuadExpr(copy(q.qvars1),copy(q.qvars2),copy(q.qcoeffs),a+q.aff)
-Base.:-(a::GenericAffExpr, q::GenericQuadExpr) = GenericQuadExpr(copy(q.qvars1),copy(q.qvars2),    -q.qcoeffs ,a-q.aff)
+Base.:+(a::GenericAffExpr, q::GenericQuadExpr) = GenericQuadExpr(a+q.aff, copy(q.terms))
+function Base.:-(a::GenericAffExpr, q::GenericQuadExpr)
+    result = -q
+    # This makes an unnecessary copy of aff, but it's important for a to appear
+    # first.
+    result.aff = a + result.aff
+    return result
+end
 
 # GenericQuadExpr
 Base.:+(lhs::GenericQuadExpr) = lhs
-Base.:-(lhs::GenericQuadExpr{T}) where T = zero(T)-lhs
+Base.:-(lhs::GenericQuadExpr) = map_coefficients(-, lhs)
 # GenericQuadExpr--Number
 Base.:+(lhs::GenericQuadExpr, rhs::Number) = (+)(+rhs,lhs)
 Base.:-(lhs::GenericQuadExpr, rhs::Number) = (+)(-rhs,lhs)
 Base.:*(lhs::GenericQuadExpr, rhs::Number) = (*)(rhs,lhs)
 Base.:/(lhs::GenericQuadExpr, rhs::Number) = (*)(inv(rhs),lhs)
 # GenericQuadExpr--AbstractVariableRef
-Base.:+(q::GenericQuadExpr, v::AbstractVariableRef) = (+)(v,q)
-Base.:-(q::GenericQuadExpr, v::AbstractVariableRef) = GenericQuadExpr(copy(q.qvars1),copy(q.qvars2),copy(q.qcoeffs),q.aff-v)
+Base.:+(q::GenericQuadExpr, v::AbstractVariableRef) = GenericQuadExpr(q.aff+v, copy(q.terms))
+Base.:-(q::GenericQuadExpr, v::AbstractVariableRef) = GenericQuadExpr(q.aff-v, copy(q.terms))
 Base.:*(q::GenericQuadExpr, v::AbstractVariableRef) = error("Cannot multiply a quadratic expression by a variable")
 Base.:/(q::GenericQuadExpr, v::AbstractVariableRef) = error("Cannot divide a quadratic expression by a variable")
 # GenericQuadExpr--GenericAffExpr
-Base.:+(q::GenericQuadExpr, a::GenericAffExpr) = GenericQuadExpr(copy(q.qvars1),copy(q.qvars2),copy(q.qcoeffs),q.aff+a)
-Base.:-(q::GenericQuadExpr, a::GenericAffExpr) = GenericQuadExpr(copy(q.qvars1),copy(q.qvars2),copy(q.qcoeffs),q.aff-a)
+Base.:+(q::GenericQuadExpr, a::GenericAffExpr) = GenericQuadExpr(q.aff+a, copy(q.terms))
+Base.:-(q::GenericQuadExpr, a::GenericAffExpr) = GenericQuadExpr(q.aff-a, copy(q.terms))
 Base.:*(q::GenericQuadExpr, a::GenericAffExpr) = error("Cannot multiply a quadratic expression by an aff. expression")
 Base.:/(q::GenericQuadExpr, a::GenericAffExpr) = error("Cannot divide a quadratic expression by an aff. expression")
 # GenericQuadExpr--GenericQuadExpr
-Base.:+(q1::GenericQuadExpr, q2::GenericQuadExpr) = GenericQuadExpr( vcat(q1.qvars1, q2.qvars1),     vcat(q1.qvars2, q2.qvars2),
-                                                                     vcat(q1.qcoeffs, q2.qcoeffs),   q1.aff + q2.aff)
-Base.:-(q1::GenericQuadExpr, q2::GenericQuadExpr) = GenericQuadExpr( vcat(q1.qvars1, q2.qvars1),     vcat(q1.qvars2, q2.qvars2),
-                                                                     vcat(q1.qcoeffs, -q2.qcoeffs),  q1.aff - q2.aff)
+function Base.:+(q1::GenericQuadExpr, q2::GenericQuadExpr)
+    result = copy(q1)
+    for (coef, var1, var2) in quadterms(q2)
+        add_to_expression!(result, coef, var1, var2)
+    end
+    for (coef, var) in linearterms(q2)
+        add_to_expression!(result, coef, var)
+    end
+    result.aff.constant += q2.aff.constant
+    return result
+end
+function Base.:-(q1::GenericQuadExpr, q2::GenericQuadExpr)
+    result = copy(q1)
+    for (coef, var1, var2) in quadterms(q2)
+        add_to_expression!(result, -coef, var1, var2)
+    end
+    for (coef, var) in linearterms(q2)
+        add_to_expression!(result, -coef, var)
+    end
+    result.aff.constant -= q2.aff.constant
+    return result
+end
 
-Base.:(==)(lhs::GenericAffExpr,rhs::GenericAffExpr) = (lhs.vars == rhs.vars) && (lhs.coeffs == rhs.coeffs) && (lhs.constant == rhs.constant)
-Base.:(==)(lhs::GenericQuadExpr,rhs::GenericQuadExpr) = (lhs.qvars1 == rhs.qvars1) && (lhs.qvars2 == rhs.qvars2) && (lhs.qcoeffs == rhs.qcoeffs) && (lhs.aff == rhs.aff)
+Base.:(==)(lhs::GenericAffExpr,rhs::GenericAffExpr) = (lhs.terms == rhs.terms) && (lhs.constant == rhs.constant)
+Base.:(==)(lhs::GenericQuadExpr,rhs::GenericQuadExpr) = (lhs.terms == rhs.terms) && (lhs.aff == rhs.aff)
 
 #############################################################################
 # Helpers to initialize memory for GenericAffExpr/GenericQuadExpr
 #############################################################################
 
-_sizehint_expr!(q::GenericAffExpr, n::Int) = begin
-        sizehint!(q.vars,   length(q.vars)   + n)
-        sizehint!(q.coeffs, length(q.coeffs) + n)
-        nothing
-end
+_sizehint_expr!(a::GenericAffExpr, n::Int) = sizehint!(a, n)
 
-_sizehint_expr!(q::GenericQuadExpr, n::Int) = begin
-        sizehint!(q.qvars1,  length(q.qvars1)  + n)
-        sizehint!(q.qvars2,  length(q.qvars2)  + n)
-        sizehint!(q.qcoeffs, length(q.qcoeffs) + n)
+# TODO: Why do we allocate the same size for the quadratic and affine parts?
+function _sizehint_expr!(q::GenericQuadExpr, n::Int)
+        sizehint!(q.terms,  length(q.terms) + n)
         _sizehint_expr!(q.aff, n)
         nothing
 end
@@ -210,12 +286,12 @@ _sizehint_expr!(q, n) = nothing
 #############################################################################
 
 # TODO: specialize sum for Dict and JuMPArray of JuMP objects?
-Base.sum(j::Array{<:AbstractVariableRef}) = GenericAffExpr(vec(j), ones(length(j)), 0.0)
+Base.sum(vars::Array{<:AbstractVariableRef}) = GenericAffExpr(0.0, [v => 1.0 for v in vars])
 Base.sum(j::AbstractArray{<:AbstractVariableRef}) = sum([j[i] for i in eachindex(j)]) # to handle non-one-indexed arrays.
 function Base.sum(affs::AbstractArray{T}) where T<:GenericAffExpr
     new_aff = zero(T)
     for aff in affs
-        append!(new_aff, aff)
+        add_to_expression!(new_aff, aff)
     end
     return new_aff
 end
@@ -239,7 +315,7 @@ function _dot(lhs::AbstractArray{T}, rhs::AbstractArray{S}) where {T,S}
     size(lhs) == size(rhs) || error("Incompatible dimensions")
     ret = zero(one(T)*one(S))
     for (x,y) in zip(lhs,rhs)
-        ret = addtoexpr(ret, x, y)
+        ret = destructive_add!(ret, x, y)
     end
     ret
 end
@@ -286,7 +362,7 @@ function _multiply!(ret::Array{T}, lhs::Array, rhs::Array) where T<:JuMPTypes
         _sizehint_expr!(q, n)
         for k ∈ 1:n
             tmp = convert(T, lhs[i,k]*rhs[k,j])
-            append!(q, tmp)
+            add_to_expression!(q, tmp)
         end
     end
     ret
@@ -301,7 +377,7 @@ function _multiplyt!(ret::Array{T}, lhs::Array, rhs::Array) where T<:JuMPTypes
         _sizehint_expr!(q, n)
         for k ∈ 1:n
             tmp = convert(T, lhs[k,i]*rhs[k,j]) # transpose
-            append!(q, tmp)
+            add_to_expression!(q, tmp)
         end
     end
     ret
@@ -313,7 +389,7 @@ function _multiply!(ret::Array{T}, lhs::SparseMatrixCSC, rhs::Array) where T<:Un
     for col ∈ 1:lhs.n
         for k ∈ 1:size(ret, 2)
             for j ∈ nzrange(lhs, col)
-                append!(ret[rv[j], k], nzv[j] * rhs[col,k])
+                add_to_expression!(ret[rv[j], k], nzv[j] * rhs[col,k])
             end
         end
     end
@@ -334,7 +410,7 @@ function _multiply!(ret::Array{T}, lhs::Matrix, rhs::SparseMatrixCSC) where T<:U
             q = ret[multivec_row, col]
             _sizehint_expr!(q, length(idxset))
             for k ∈ idxset
-                append!(q, lhs[multivec_row, rowval[k]] * nzval[k])
+                add_to_expression!(q, lhs[multivec_row, rowval[k]] * nzval[k])
             end
         end
     end
@@ -351,7 +427,7 @@ function _multiplyt!(ret::Array{T}, lhs::Matrix, rhs::SparseMatrixCSC) where T<:
             q = ret[multivec_row, col]
             _sizehint_expr!(q, length(idxset))
             for k ∈ idxset
-                append!(q, lhs[rowval[k], multivec_row] * nzval[k]) # transpose
+                add_to_expression!(q, lhs[rowval[k], multivec_row] * nzval[k]) # transpose
             end
         end
     end

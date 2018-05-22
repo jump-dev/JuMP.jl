@@ -16,84 +16,184 @@
 #############################################################################
 
 
-#############################################################################
+struct UnorderedPair{T}
+    a::T
+    b::T
+end
+
+Base.hash(p::UnorderedPair, h::UInt) = hash(hash(p.a) + hash(p.b), h)
+function Base.isequal(p1::UnorderedPair, p2::UnorderedPair)
+    return (p1.a == p2.a && p1.b == p2.b) || (p1.a == p2.b && p1.b == p2.a)
+end
+
 # GenericQuadExpr
 # ∑qᵢⱼ xᵢⱼ  +  ∑ aᵢ xᵢ  +  c
 mutable struct GenericQuadExpr{CoefType,VarType} <: AbstractJuMPScalar
-    qvars1::Vector{VarType}
-    qvars2::Vector{VarType}
-    qcoeffs::Vector{CoefType}
     aff::GenericAffExpr{CoefType,VarType}
+    terms::OrderedDict{UnorderedPair{VarType}, CoefType}
 end
 
-Base.iszero(q::GenericQuadExpr) = isempty(q.qvars1) && iszero(q.aff)
-Base.zero(::Type{GenericQuadExpr{C,V}}) where {C,V} = GenericQuadExpr(V[], V[], C[], zero(GenericAffExpr{C,V}))
-Base.one(::Type{GenericQuadExpr{C,V}}) where {C,V}  = GenericQuadExpr(V[], V[], C[],  one(GenericAffExpr{C,V}))
-Base.zero(q::GenericQuadExpr) = zero(typeof(q))
-Base.one(q::GenericQuadExpr)  =  one(typeof(q))
-Base.copy(q::GenericQuadExpr) = GenericQuadExpr(copy(q.qvars1),copy(q.qvars2),copy(q.qcoeffs),copy(q.aff))
+function GenericQuadExpr(aff::GenericAffExpr{V,K}, kv::AbstractArray{Pair{UnorderedPair{K},V}}) where {K,V}
+    return GenericQuadExpr{V,K}(aff, new_ordered_dict(UnorderedPair{K}, V, kv))
+end
 
-function Base.append!(q::GenericQuadExpr{T,S}, other::GenericQuadExpr{T,S}) where {T,S}
-    append!(q.qvars1, other.qvars1)
-    append!(q.qvars2, other.qvars2)
-    append!(q.qcoeffs, other.qcoeffs)
-    append!(q.aff, other.aff)
+function GenericQuadExpr(aff::GenericAffExpr{V,K}, kv::Pair{UnorderedPair{K},V}...) where {K,V}
+    return GenericQuadExpr{V,K}(aff, new_ordered_dict(UnorderedPair{K}, V, kv...))
+end
+
+function GenericAffExpr{V,K}(aff::GenericAffExpr{V,K}, kv::AbstractArray{<:Pair}) where {K,V}
+    return GenericQuadExpr{V,K}(aff, new_ordered_dict(UnorderedPair{K}, V, kv))
+end
+
+function GenericQuadExpr{V,K}(aff::GenericAffExpr{V,K}, kv::Pair...) where {K,V}
+    return GenericQuadExpr{V,K}(aff, new_ordered_dict(UnorderedPair{K}, V, kv...))
+end
+
+Base.iszero(q::GenericQuadExpr) = isempty(q.terms) && iszero(q.aff)
+function Base.zero(::Type{GenericQuadExpr{C,V}}) where {C,V}
+    return GenericQuadExpr(zero(GenericAffExpr{C,V}), OrderedDict{UnorderedPair{V}, C}())
+end
+function Base.one(::Type{GenericQuadExpr{C,V}}) where {C,V}
+    return GenericQuadExpr(one(GenericAffExpr{C,V}), OrderedDict{UnorderedPair{V}, C}())
+end
+Base.zero(q::GenericQuadExpr) = zero(typeof(q))
+Base.one(q::GenericQuadExpr)  = one(typeof(q))
+Base.copy(q::GenericQuadExpr) = GenericQuadExpr(copy(q.aff), copy(q.terms))
+
+function map_coefficients_inplace!(f::Function, q::GenericQuadExpr)
+    # The iterator remains valid if existing elements are updated.
+    for (key, value) in q.terms
+        q.terms[key] = f(value)
+    end
+    map_coefficients_inplace!(f, q.aff)
+    return q
+end
+
+function map_coefficients(f::Function, q::GenericQuadExpr)
+    return map_coefficients_inplace!(f, copy(q))
+end
+
+"""
+    linearterms(aff::GenericQuadExpr{C, V})
+
+Provides an iterator over tuples `(coefficient::C, variable::V)` in the
+linear part of the quadratic expression.
+"""
+linearterms(quad::GenericQuadExpr) = LinearTermIterator(quad.aff)
+
+struct QuadTermIterator{GQE<:GenericQuadExpr}
+    quad::GQE
+end
+
+"""
+    quadterms(quad::GenericQuadExpr{C, V})
+
+Provides an iterator over tuples `(coefficient::C, var_1::V, var_2::V)` in the
+quadratic part of the quadratic expression.
+"""
+quadterms(quad::GenericQuadExpr) = QuadTermIterator(quad)
+
+function reorder_iterator(p::Pair{UnorderedPair{V},C}, state::Int) where {C,V}
+    return ((p.second, p.first.a, p.first.b), state)
+end
+
+Base.start(qti::QuadTermIterator) = start(qti.quad.terms)
+Base.done(qti::QuadTermIterator, state::Int) = done(qti.quad.terms, state)
+Base.next(qti::QuadTermIterator, state::Int) = reorder_iterator(next(qti.quad.terms, state)...)
+Base.length(qti::QuadTermIterator) = length(qti.quad.terms)
+
+function add_to_expression!(quad::GenericQuadExpr{C,V}, new_coef::C, new_var1::V, new_var2::V) where {C,V}
+    # Node: OrderedDict updates the *key* as well. That is, if there was a
+    # previous value for UnorderedPair(new_var2, new_var1), it's key will now be
+    # UnorderedPair(new_var1, new_var2) (because these are defined as equal).
+    key = UnorderedPair(new_var1, new_var2)
+    add_or_set!(quad.terms, key, new_coef)
+    quad
+end
+
+function add_to_expression!(quad::GenericQuadExpr{C, V}, new_coef::C, new_var::V) where {C,V}
+    add_to_expression!(quad.aff, new_coef, new_var)
+    quad
+end
+
+function add_to_expression!(q::GenericQuadExpr{T,S}, other::GenericQuadExpr{T,S}) where {T,S}
+    merge!(+, q.terms, other.terms)
+    add_to_expression!(q.aff, other.aff)
     q
 end
 
 function assert_isfinite(q::GenericQuadExpr)
     assert_isfinite(q.aff)
-    for i in 1:length(q.qcoeffs)
-        isfinite(q.qcoeffs[i]) || error("Invalid coefficient $(q.qcoeffs[i]) on quadratic term $(q.qvars1[i])*$(q.qvars2[i])")
+    for (coef, var1, var2) in quadterms(q)
+        isfinite(coef) || error("Invalid coefficient $coef on quadratic term $var1*$var2.")
     end
 end
 
-function Base.isequal(q::GenericQuadExpr{T,S},other::GenericQuadExpr{T,S}) where {T,S}
-    isequal(q.aff,other.aff)   || return false
-    length(q.qvars1) == length(other.qvars1) || return false
-    for i in 1:length(q.qvars1)
-        isequal(q.qvars1[i],  other.qvars1[i]) || return false
-        isequal(q.qvars2[i],  other.qvars2[i]) || return false
-        isequal(q.qcoeffs[i],other.qcoeffs[i]) || return false
-    end
-    return true
+function Base.isequal(q::GenericQuadExpr{T,S}, other::GenericQuadExpr{T,S}) where {T,S}
+    return isequal(q.aff,other.aff) && isequal(q.terms, other.terms)
 end
 
-# Check if two QuadExprs are equal regardless of the order, and after merging duplicates
+function Base.dropzeros(quad::GenericQuadExpr)
+    quad_terms = copy(quad.terms)
+    for (key, value) in quad.terms
+        if iszero(value)
+            delete!(quad_terms, key)
+        end
+    end
+    return GenericQuadExpr(dropzeros(quad.aff), quad_terms)
+end
+
+# Check if two QuadExprs are equal regardless of the order, and after dropping zeros.
 # Mostly useful for testing.
 function isequal_canonical(quad::GenericQuadExpr{CoefType,VarType}, other::GenericQuadExpr{CoefType,VarType}) where {CoefType,VarType}
-    function canonicalize(q)
-        d = Dict{Set{VarType},CoefType}()
-        @assert length(q.qvars1) == length(q.qvars2) == length(q.qcoeffs)
-        for (v1,v2,c) in zip(q.qvars1, q.qvars2, q.qcoeffs)
-            vset = Set((v1,v2))
-            d[vset] = c + get(d, vset, zero(CoefType))
-        end
-        for k in keys(d)
-            if iszero(d[k])
-                delete!(d, k)
-            end
-        end
-        return d
-    end
-    d1 = canonicalize(quad)
-    d2 = canonicalize(other)
-    return isequal(d1,d2) && isequal_canonical(quad.aff, other.aff)
+    quad_nozeros = dropzeros(quad)
+    other_nozeros = dropzeros(other)
+    return isequal(quad_nozeros, other_nozeros)
 end
 
 # Alias for (Float64, VariableRef)
 const QuadExpr = GenericQuadExpr{Float64,VariableRef}
-Base.convert(::Type{GenericQuadExpr{C, V}}, v::Union{Real,VariableRef,GenericAffExpr}) where {C, V} = GenericQuadExpr(V[], V[], C[], GenericAffExpr{C, V}(v))
+function Base.convert(::Type{GenericQuadExpr{C, V}}, v::Union{Real,VariableRef,GenericAffExpr}) where {C, V}
+    return GenericQuadExpr(convert(GenericAffExpr{C, V}, v))
+end
 GenericQuadExpr{C, V}() where {C, V} = zero(GenericQuadExpr{C, V})
 
 function MOI.ScalarQuadraticFunction(q::QuadExpr)
-    scaledcoef = [(v1 == v2) ? 2coef : coef for (v1,v2,coef) in zip(q.qvars1, q.qvars2, q.qcoeffs)]
-    return MOI.ScalarQuadraticFunction(index.(q.aff.vars), q.aff.coeffs, index.(q.qvars1), index.(q.qvars2), scaledcoef, q.aff.constant)
+    assert_isfinite(q)
+    qvars1 = MOIVAR[]
+    qvars2 = MOIVAR[]
+    coefs = Float64[]
+    sizehint!(qvars1, length(quadterms(q)))
+    sizehint!(qvars2, length(quadterms(q)))
+    sizehint!(coefs, length(quadterms(q)))
+    for (coef, var1, var2) in quadterms(q)
+        push!(qvars1, index(var1))
+        push!(qvars2, index(var2))
+        if var1 == var2
+            push!(coefs, 2coef)
+        else
+            push!(coefs, coef)
+        end
+    end
+    moi_aff = MOI.ScalarAffineFunction(q.aff)
+    return MOI.ScalarQuadraticFunction(moi_aff.variables, moi_aff.coefficients,
+                                       qvars1, qvars2, coefs, moi_aff.constant)
 end
 
 function QuadExpr(m::Model, f::MOI.ScalarQuadraticFunction)
-    scaledcoef = [(v1 == v2) ? coef/2 : coef for (v1, v2, coef) in zip(f.quadratic_rowvariables, f.quadratic_colvariables, f.quadratic_coefficients)]
-    return QuadExpr(VariableRef.(m,f.quadratic_rowvariables), VariableRef.(m, f.quadratic_colvariables), scaledcoef, GenericAffExpr(VariableRef.(m,f.affine_variables), f.affine_coefficients, f.constant))
+    quad = QuadExpr(AffExpr(m, MOI.ScalarAffineFunction(f.affine_variables,
+                                                        f.affine_coefficients,
+                                                        f.constant)))
+    for i in 1:length(f.quadratic_rowvariables)
+        v1 = f.quadratic_rowvariables[i]
+        v2 = f.quadratic_colvariables[i]
+        coef = f.quadratic_coefficients[i]
+        if v1 == v2
+            coef /= 2
+        end
+        add_to_expression!(quad, coef, VariableRef(m, v1), VariableRef(m, v2))
+    end
+    return quad
 end
 
 function setobjective(m::Model, sense::Symbol, a::QuadExpr)

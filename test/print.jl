@@ -48,6 +48,8 @@ end
         io_test(REPLMode, ex, "2 x[1] + 2 y[2,3]")
         io_test(IJuliaMode, ex, "2 x_{1} + 2 y_{2,3}")
 
+        # TODO: These tests shouldn't depend on order of the two variables in
+        # quadratic terms, i.e., x*y vs y*x.
         ex = @expression(mod, (x[1]+x[2])*(y[2,2]+3.0))
         io_test(REPLMode, ex, "x[1]*y[2,2] + x[2]*y[2,2] + 3 x[1] + 3 x[2]")
         io_test(IJuliaMode, ex, "x_{1}\\times y_{2,2} + x_{2}\\times y_{2,2} + 3 x_{1} + 3 x_{2}")
@@ -61,8 +63,8 @@ end
         io_test(IJuliaMode, ex, "x_{1}\\times y_{2,2} + x_{2}\\times y_{2,2} + z$(ijulia[:sq]) + 3 x_{1} + 3 x_{2} - 1")
 
         ex = @expression(mod, -z*x[1] - x[1]*z + x[1]*x[2] + 0*z^2)
-        io_test(REPLMode, ex, "-2 z*x[1] + x[1]*x[2]")
-        io_test(IJuliaMode, ex, "-2 z\\times x_{1} + x_{1}\\times x_{2}")
+        io_test(REPLMode, ex, "-2 x[1]*z + x[1]*x[2]")
+        io_test(IJuliaMode, ex, "-2 x_{1}\\times z + x_{1}\\times x_{2}")
     end
 
     @testset "VariableRef" begin

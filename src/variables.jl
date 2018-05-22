@@ -53,6 +53,12 @@ end
 
 MOI.isvalid(m::Model, v::VariableRef) = (v.m === m) && MOI.isvalid(m.moibackend, v.index)
 
+# The default hash is slow. It's important for the performance of AffExpr to
+# define our own.
+# https://github.com/JuliaOpt/MathOptInterface.jl/issues/234#issuecomment-366868878
+Base.hash(v::VariableRef, h::UInt) = hash(object_id(v.m), hash(v.index.value, h))
+Base.isequal(v1::VariableRef, v2::VariableRef) = v1.m === v2.m && v1.index == v2.index
+
 
 """
     VariableToValueMap{T}
