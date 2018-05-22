@@ -18,7 +18,6 @@ addons:
         - libblas-dev
 script:
     - if [[ -a .git/shallow ]]; then git fetch --unshallow; fi
-    - julia -e 'Pkg.clone("https://github.com/JuliaOpt/MathOptInterface.jl.git")'
     - julia -e 'Pkg.clone(pwd())'
     - julia -e 'Pkg.test("JuMP", coverage=true)'
 #    - julia test/hygiene.jl
