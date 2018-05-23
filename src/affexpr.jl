@@ -248,10 +248,10 @@ The output index for all terms is `oi`.
 function _fillvaf!(terms, offset::Int, oi::Int, aff::AffExpr)
     i = 1
     for (coef, var) in linearterms(aff)
-        terms[offset+i] = MOI.VectorAffineTerm(oi, MOI.ScalarAffineTerm(coef, index(var)))
+        terms[offset+i] = MOI.VectorAffineTerm(Int64(oi), MOI.ScalarAffineTerm(coef, index(var)))
         i += 1
     end
-    offset + length(aff.terms)
+    offset + length(linearterms(aff))
 end
 
 function MOI.VectorAffineFunction(affs::Vector{AffExpr})
