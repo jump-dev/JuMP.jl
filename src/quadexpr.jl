@@ -160,34 +160,21 @@ GenericQuadExpr{C, V}() where {C, V} = zero(GenericQuadExpr{C, V})
 
 function MOI.ScalarQuadraticFunction(q::QuadExpr)
     assert_isfinite(q)
-    qvars1 = MOIVAR[]
-    qvars2 = MOIVAR[]
-    coefs = Float64[]
-    sizehint!(qvars1, length(quadterms(q)))
-    sizehint!(qvars2, length(quadterms(q)))
-    sizehint!(coefs, length(quadterms(q)))
-    for (coef, var1, var2) in quadterms(q)
-        push!(qvars1, index(var1))
-        push!(qvars2, index(var2))
-        if var1 == var2
-            push!(coefs, 2coef)
-        else
-            push!(coefs, coef)
-        end
-    end
+    qterms = map(t -> MOI.ScalarQuadraticTerm(t[2] == t[3] ? 2t[1] : t[1],
+                                              index(t[2]),
+                                              index(t[3])), quadterms(q))
     moi_aff = MOI.ScalarAffineFunction(q.aff)
-    return MOI.ScalarQuadraticFunction(moi_aff.variables, moi_aff.coefficients,
-                                       qvars1, qvars2, coefs, moi_aff.constant)
+    return MOI.ScalarQuadraticFunction(moi_aff.terms,
+                                       qterms, moi_aff.constant)
 end
 
 function QuadExpr(m::Model, f::MOI.ScalarQuadraticFunction)
-    quad = QuadExpr(AffExpr(m, MOI.ScalarAffineFunction(f.affine_variables,
-                                                        f.affine_coefficients,
+    quad = QuadExpr(AffExpr(m, MOI.ScalarAffineFunction(f.affine_terms,
                                                         f.constant)))
-    for i in 1:length(f.quadratic_rowvariables)
-        v1 = f.quadratic_rowvariables[i]
-        v2 = f.quadratic_colvariables[i]
-        coef = f.quadratic_coefficients[i]
+    for t in f.quadratic_terms
+        v1 = t.variable_index_1
+        v2 = t.variable_index_2
+        coef = t.coefficient
         if v1 == v2
             coef /= 2
         end
