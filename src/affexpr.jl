@@ -226,55 +226,44 @@ resultvalue(a::GenericAffExpr) = value(a, resultvalue)
 # the same model.
 function MOI.ScalarAffineFunction(a::AffExpr)
     assert_isfinite(a)
-    vars = MOIVAR[]
-    coefs = Float64[]
-    sizehint!(vars, length(a.terms))
-    sizehint!(coefs, length(a.terms))
-    for (coef, var) in linearterms(a)
-        push!(vars, index(var))
-        push!(coefs, coef)
-    end
-    return MOI.ScalarAffineFunction(vars, coefs, a.constant)
+    terms = map(t -> MOI.ScalarAffineTerm(t[1], index(t[2])), linearterms(a))
+    return MOI.ScalarAffineFunction(terms, a.constant)
 end
 
 function AffExpr(m::Model, f::MOI.ScalarAffineFunction)
     aff = AffExpr()
-    for i in 1:length(f.variables)
-        add_to_expression!(aff, f.coefficients[i], VariableRef(m,f.variables[i]))
+    for t in f.terms
+        add_to_expression!(aff, t.coefficient, VariableRef(m, t.variable_index))
     end
     aff.constant = f.constant
     return aff
 end
 
 """
-    _fillvaf!(outputindex, variables, coefficients, offset::Int, oi::Int, aff::AffExpr)
+    _fillvaf!(terms, offset::Int, oi::Int, aff::AffExpr)
 
-Fills the vectors outputindex, variables, coefficients at indices starting at `offset+1` with the terms of `aff`.
+Fills the vectors terms at indices starting at `offset+1` with the terms of `aff`.
 The output index for all terms is `oi`.
 """
-function _fillvaf!(outputindex, variables, coefficients, offset::Int, oi::Int, aff::AffExpr)
+function _fillvaf!(terms, offset::Int, oi::Int, aff::AffExpr)
     i = 1
     for (coef, var) in linearterms(aff)
-        outputindex[offset+i] = oi
-        variables[offset+i] = index(var)
-        coefficients[offset+i] = coef
+        terms[offset+i] = MOI.VectorAffineTerm(Int64(oi), MOI.ScalarAffineTerm(coef, index(var)))
         i += 1
     end
-    offset + length(aff.terms)
+    offset + length(linearterms(aff))
 end
 
 function MOI.VectorAffineFunction(affs::Vector{AffExpr})
     len = sum(aff -> length(linearterms(aff)), affs)
-    outputindex = Vector{Int}(len)
-    variables = Vector{MOIVAR}(len)
-    coefficients = Vector{Float64}(len)
+    terms = Vector{MOI.VectorAffineTerm{Float64}}(len)
     constant = Vector{Float64}(length(affs))
     offset = 0
     for (i, aff) in enumerate(affs)
         constant[i] = aff.constant
-        offset = _fillvaf!(outputindex, variables, coefficients, offset, i, aff)
+        offset = _fillvaf!(terms, offset, i, aff)
     end
-    MOI.VectorAffineFunction(outputindex, variables, coefficients, constant)
+    MOI.VectorAffineFunction(terms, constant)
 end
 
 function setobjective(m::Model, sense::Symbol, a::AffExpr)
