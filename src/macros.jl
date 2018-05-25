@@ -376,6 +376,7 @@ end
 
 # TODO: update 3-argument @constraint macro to pass through names like @variable
 
+# This function needs to be implemented by all `AbstractModel`s
 constrainttype(m::Model) = ConstraintRef{typeof(m)}
 
 """
@@ -855,6 +856,7 @@ esc_nonconstant(x) = esc(x)
 
 # Returns the type of what `addvariable(::Model, buildvariable(...))` would return where `...` represents the positional arguments.
 # Example: `@variable m [1:3] foo` will allocate an vector of element type `variabletype(m, foo)`
+# Note: it needs to be implemented by all `AbstractModel`s
 variabletype(m::Model) = VariableRef
 # Returns a new variable. Additional positional arguments can be used to dispatch the call to a different method.
 # The return type should only depends on the positional arguments for `variabletype` to make sense. See the @variable macro doc for more details.

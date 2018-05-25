@@ -422,6 +422,7 @@ function registercon(m::AbstractModel, conname::Symbol, value)
 end
 registercon(m::AbstractModel, conname, value) = error("Invalid constraint name $conname")
 
+# This function needs to be implemented by all `AbstractModel`s
 object_dictionary(m::Model) = m.objdict
 
 function registerobject(m::AbstractModel, name::Symbol, value, errorstring::String)
