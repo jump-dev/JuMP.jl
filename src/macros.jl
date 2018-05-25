@@ -965,7 +965,7 @@ macro variable(args...)
         if x.args[1] == :>= || x.args[1] == :≥
             # x >= lb
             var = x.args[2]
-            var isa Number && _error("Variable declaration of the form `ub $(x.args[1]) x` is not supported. Use `$(x.args[3]) <= $var` instead.")
+            var isa Number && _error("Variable declaration of the form `$(x.args[3]) $(x.args[1]) $var` is not supported. Use `$(x.args[3]) <= $var` instead.")
             @assert length(x.args) == 3
             lb = esc_nonconstant(x.args[3])
             haslb = true
@@ -973,7 +973,7 @@ macro variable(args...)
         elseif x.args[1] == :<= || x.args[1] == :≤
             # x <= ub
             var = x.args[2]
-            var isa Number && _error("Variable declaration of the form `lb $(x.args[1]) x` is not supported. Use `$(x.args[3]) >= $var` instead.")
+            var isa Number && _error("Variable declaration of the form `$(x.args[3]) $(x.args[1]) $var` is not supported. Use `$(x.args[3]) >= $var` instead.")
             @assert length(x.args) == 3
             ub = esc_nonconstant(x.args[3])
             hasub = true
