@@ -128,4 +128,10 @@ end
         @test JuMP.isequal_canonical(c.func, zero(AffExpr))
         @test c.set == MOI.LessThan(-38.0)
     end
+
+    @testset "Helpful error for variable declaration with misplaced constant" begin
+        m = Model()
+        @test_macro_throws ErrorException @variable m 0 <= x
+        @test_macro_throws ErrorException @variable m 0 >= x
+    end
 end
