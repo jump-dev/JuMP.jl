@@ -33,8 +33,6 @@ build_script:
 # Need to convert from shallow to complete for Pkg.clone to work
 #  - git fetch --unshallow
   - C:\projects\julia\bin\julia -e "versioninfo(); Pkg.init();
-        Pkg.clone(\"https://github.com/JuliaOpt/MathOptInterface.jl.git\");
-        Pkg.clone(\"https://github.com/JuliaOpt/MathOptInterfaceUtilities.jl.git\");
         Pkg.clone(pwd(), \"JuMP\");"
 
 test_script:
