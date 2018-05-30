@@ -643,4 +643,14 @@ Base.transpose(t::MySumType) = MySumType(t.a)
             @test z[i].a == y[i].a == a
         end
     end
+
+    @testset "operator_warn" begin
+        m = Model()
+        @variable m x[1:51]
+        @test m.operator_counter == 0
+        # Triggers the increment of operator_counter since sum(x) has more than 50 terms
+        @test_expression(sum(x) + 2x[1])
+        # The following check verifies that this test covers the code incrementing `operator_counter`
+        @test m.operator_counter == 1
+    end
 end
