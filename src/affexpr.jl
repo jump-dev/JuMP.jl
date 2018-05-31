@@ -303,8 +303,8 @@ end
 
 # TODO GenericAffExprConstraint
 
-struct AffExprConstraint{S <: MOI.AbstractScalarSet} <: AbstractConstraint
-    func::AffExpr
+struct AffExprConstraint{V <: AbstractVariableRef, S <: MOI.AbstractScalarSet} <: AbstractConstraint
+    func::GenericAffExpr{Float64, V}
     set::S
 end
 
@@ -314,8 +314,8 @@ moi_function_and_set(c::AffExprConstraint) = (MOI.ScalarAffineFunction(c.func), 
 #addconstraint(m::Model, c::Array{AffExprConstraint}) =
 #    error("The operators <=, >=, and == can only be used to specify scalar constraints. If you are trying to add a vectorized constraint, use the element-wise dot comparison operators (.<=, .>=, or .==) instead")
 
-struct VectorAffExprConstraint{S <: MOI.AbstractVectorSet} <: AbstractConstraint
-    func::Vector{AffExpr}
+struct VectorAffExprConstraint{V <: AbstractVariableRef, S <: MOI.AbstractVectorSet} <: AbstractConstraint
+    func::Vector{GenericAffExpr{Float64, V}}
     set::S
 end
 

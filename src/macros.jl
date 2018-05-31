@@ -317,25 +317,25 @@ end
 
 const ScalarPolyhedralSets = Union{MOI.LessThan,MOI.GreaterThan,MOI.EqualTo,MOI.Interval}
 
-buildconstraint(_error::Function, v::VariableRef, set::MOI.AbstractScalarSet) = SingleVariableConstraint(v, set)
-buildconstraint(_error::Function, v::Vector{VariableRef}, set::MOI.AbstractVectorSet) = VectorOfVariablesConstraint(v, set)
+buildconstraint(_error::Function, v::AbstractVariableRef, set::MOI.AbstractScalarSet) = SingleVariableConstraint(v, set)
+buildconstraint(_error::Function, v::Vector{<:AbstractVariableRef}, set::MOI.AbstractVectorSet) = VectorOfVariablesConstraint(v, set)
 
 buildconstraint(_error::Function, α::Number, set::MOI.AbstractScalarSet) = buildconstraint(_error, convert(AffExpr, α), set)
-function buildconstraint(_error::Function, aff::AffExpr, set::S) where S <: Union{MOI.LessThan,MOI.GreaterThan,MOI.EqualTo}
+function buildconstraint(_error::Function, aff::GenericAffExpr, set::S) where S <: Union{MOI.LessThan,MOI.GreaterThan,MOI.EqualTo}
     offset = aff.constant
     aff.constant = 0.0
     return AffExprConstraint(aff, S(MOIU.getconstant(set)-offset))
 end
 
 buildconstraint(_error::Function, x::AbstractArray, set::MOI.AbstractScalarSet) = _error("Unexpected vector in scalar constraint. Did you mean to use the dot comparison operators like .==, .<=, and .>= instead?")
-buildconstraint(_error::Function, x::Vector{AffExpr}, set::MOI.AbstractVectorSet) = VectorAffExprConstraint(x, set)
+buildconstraint(_error::Function, x::Vector{<:GenericAffExpr}, set::MOI.AbstractVectorSet) = VectorAffExprConstraint(x, set)
 
-function buildconstraint(_error::Function, quad::QuadExpr, set::S) where S <: Union{MOI.LessThan,MOI.GreaterThan,MOI.EqualTo}
+function buildconstraint(_error::Function, quad::GenericQuadExpr, set::S) where S <: Union{MOI.LessThan,MOI.GreaterThan,MOI.EqualTo}
     offset = quad.aff.constant
     quad.aff.constant = 0.0
     return QuadExprConstraint(quad, S(MOIU.getconstant(set)-offset))
 end
-#buildconstraint(x::Vector{QuadExpr}, set::MOI.AbstractVectorSet) = VectorQuadExprConstraint(x, set)
+#buildconstraint(x::Vector{<:GenericQuadExpr}, set::MOI.AbstractVectorSet) = VectorQuadExprConstraint(x, set)
 
 
 # _vectorize_like(x::Number, y::AbstractArray{AffExpr}) = (ret = similar(y, typeof(x)); fill!(ret, x))
@@ -356,15 +356,15 @@ end
 # end
 
 # three-argument buildconstraint is used for two-sided constraints.
-buildconstraint(_error::Function, v::VariableRef, lb::Real, ub::Real) = SingleVariableConstraint(v, MOI.Interval(lb, ub))
+buildconstraint(_error::Function, v::AbstractVariableRef, lb::Real, ub::Real) = SingleVariableConstraint(v, MOI.Interval(lb, ub))
 
-function buildconstraint(_error::Function, aff::AffExpr, lb::Real, ub::Real)
+function buildconstraint(_error::Function, aff::GenericAffExpr, lb::Real, ub::Real)
     offset = aff.constant
     aff.constant = 0.0
     AffExprConstraint(aff,MOI.Interval(lb-offset,ub-offset))
 end
 
-buildconstraint(_error::Function, q::QuadExpr, lb, ub) = _error("Two-sided quadratic constraints not supported. (Try @NLconstraint instead.)")
+buildconstraint(_error::Function, q::GenericQuadExpr, lb, ub) = _error("Two-sided quadratic constraints not supported. (Try @NLconstraint instead.)")
 
 function buildconstraint(_error::Function, expr, lb, ub)
     lb isa Number || _error(string("Expected $lb to be a number."))
@@ -375,6 +375,9 @@ function buildconstraint(_error::Function, expr, lb, ub)
 end
 
 # TODO: update 3-argument @constraint macro to pass through names like @variable
+
+# This function needs to be implemented by all `AbstractModel`s
+constrainttype(m::Model) = ConstraintRef{typeof(m)}
 
 """
     @constraint(m::Model, con)
@@ -447,8 +450,10 @@ macro constraint(args...)
         $parsecode
         $(refcall) = $constraintcall
     end
+    # Determine the return type of addconstraint. This is needed for JuMP extensions for which this is different than ConstraintRef
+    contype = :( constrainttype($m) )
     return assert_validmodel(m, quote
-        $(getloopedcode(variable, code, condition, idxvars, idxsets, :ConstraintRef, requestedcontainer))
+        $(getloopedcode(variable, code, condition, idxvars, idxsets, contype, requestedcontainer))
         $(if anonvar
             variable
         else
@@ -851,6 +856,7 @@ esc_nonconstant(x) = esc(x)
 
 # Returns the type of what `addvariable(::Model, buildvariable(...))` would return where `...` represents the positional arguments.
 # Example: `@variable m [1:3] foo` will allocate an vector of element type `variabletype(m, foo)`
+# Note: it needs to be implemented by all `AbstractModel`s
 variabletype(m::Model) = VariableRef
 # Returns a new variable. Additional positional arguments can be used to dispatch the call to a different method.
 # The return type should only depends on the positional arguments for `variabletype` to make sense. See the @variable macro doc for more details.
@@ -1080,7 +1086,7 @@ macro variable(args...)
     addkwargs!(buildcall, extra_kwargs)
     variablecall = :( addvariable($m, $buildcall, $(namecall(basename, idxvars))) )
     code = :( $(refcall) = $variablecall )
-    # Determine the return type of buildvariable. This is needed to create the container holding them.
+    # Determine the return type of addvariable. This is needed to create the container holding them.
     vartype = :( variabletype($m, $(extra...)) )
 
     if symmetric

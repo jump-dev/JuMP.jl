@@ -21,13 +21,16 @@ Base.transpose(t::MySumType) = MySumType(t.a)
 *(t1::S, t2::MyType{T}) where {S, T} = MyType(t1*t2.a)
 *(t1::MyType{S}, t2::MyType{T}) where {S, T} = MyType(t1.a*t2.a)
 
-@testset "Operator" begin
+function operators_test(ModelType::Type{<:JuMP.AbstractModel}, VariableRefType::Type{<:JuMP.AbstractVariableRef})
+    AffExprType = JuMP.GenericAffExpr{Float64, VariableRefType}
+    QuadExprType = JuMP.GenericQuadExpr{Float64, VariableRefType}
+
     @testset "Promotion" begin
-        m = Model()
+        m = ModelType()
         I = Int
-        V = VariableRef
-        A = AffExpr
-        Q = QuadExpr
+        V = VariableRefType
+        A = AffExprType
+        Q = QuadExprType
         @test promote_type(V, I) == A
         @test promote_type(I, V) == A
         @test promote_type(A, I) == A
@@ -45,7 +48,7 @@ Base.transpose(t::MySumType) = MySumType(t.a)
     end
 
     @testset "Basic operator overloads" begin
-        m = Model()
+        m = ModelType()
         @variable(m, w)
         @variable(m, x)
         @variable(m, y)
@@ -235,9 +238,9 @@ Base.transpose(t::MySumType) = MySumType(t.a)
     end
 
     @testset "Higher-level operators" begin
-        m = Model()
+        m = ModelType()
         @testset "sum" begin
-            sum_m = Model()
+            sum_m = ModelType()
             @variable(sum_m, 0 ≤ matrix[1:3,1:3] ≤ 1, start = 1)
             @testset "sum(j::JuMPArray{Variable})" begin
                 @test_expression_with_string sum(matrix) "matrix[1,1] + matrix[2,1] + matrix[3,1] + matrix[1,2] + matrix[2,2] + matrix[3,2] + matrix[1,3] + matrix[2,3] + matrix[3,3]"
@@ -267,7 +270,7 @@ Base.transpose(t::MySumType) = MySumType(t.a)
         end
 
         @testset "dot" begin
-            dot_m = Model()
+            dot_m = ModelType()
             @variable(dot_m, 0 ≤ x[1:3] ≤ 1)
 
             @test_expression_with_string dot(x[1],x[1]) "x[1]²"
@@ -303,7 +306,7 @@ Base.transpose(t::MySumType) = MySumType(t.a)
             @test vecdot(B, JuMP.startvalue.(z)) ≈ 8
 
             @testset "JuMP issue #656" begin
-                issue656 = Model()
+                issue656 = ModelType()
                 @variable(issue656, x)
                 floats = Float64[i for i in 1:2]
                 anys   = Array{Any}(undef, 2)
@@ -313,7 +316,7 @@ Base.transpose(t::MySumType) = MySumType(t.a)
             end
 
             @testset "JuMP PR #943" begin
-                pull943 = Model()
+                pull943 = ModelType()
                 @variable(pull943, x[1 : 10^6]);
                 JuMP.setstartvalue.(x, 1 : 10^6)
                 @expression(pull943, testsum, sum(x[i] * i for i = 1 : 10^6))
@@ -327,7 +330,7 @@ Base.transpose(t::MySumType) = MySumType(t.a)
 
     @testset "Vectorized operations" begin
         @testset "Transpose" begin
-            m = Model()
+            m = ModelType()
             @variable(m, x[1:3])
             @variable(m, y[1:2,1:3])
             @variable(m, z[2:5])
@@ -345,7 +348,7 @@ Base.transpose(t::MySumType) = MySumType(t.a)
         end
 
         @testset "Vectorized arithmetic" begin
-            m = Model()
+            m = ModelType()
             @variable(m, x[1:3])
             A = [2 1 0
                  1 2 1
@@ -465,7 +468,7 @@ Base.transpose(t::MySumType) = MySumType(t.a)
         end
 
         @testset "Dot-ops" begin
-            m = Model()
+            m = ModelType()
             @variable(m, x[1:2,1:2])
             A = [1 2;
                  3 4]
@@ -486,7 +489,7 @@ Base.transpose(t::MySumType) = MySumType(t.a)
                                 3-x[2,1]  4-x[2,2]])
             @test JuMP.isequal_canonical(A.-x, B.-x)
             @test JuMP.isequal_canonical(A.-x, A.-y)
-            @test JuMP.isequal_canonical(x .- x, [zero(AffExpr) for _1 in 1:2, _2 in 1:2])
+            @test JuMP.isequal_canonical(x .- x, [zero(AffExprType) for _1 in 1:2, _2 in 1:2])
             @test JuMP.isequal_canonical(A.-y, B.-y)
             @test JuMP.isequal_canonical(x.-A, [-1+x[1,1]  -2+x[1,2];
                                 -3+x[2,1]  -4+x[2,2]])
@@ -521,7 +524,7 @@ Base.transpose(t::MySumType) = MySumType(t.a)
         end
 
         @testset "Vectorized comparisons" begin
-            m = Model()
+            m = ModelType()
             @variable(m, x[1:3])
             A = [1 2 3
                  0 4 5
@@ -529,13 +532,13 @@ Base.transpose(t::MySumType) = MySumType(t.a)
             B = sparse(A)
             # force vector output
             cref1 = @constraint(m, reshape(x,(1,3))*A*x .>= 1)
-            c1 = JuMP.constraintobject.(cref1, QuadExpr, MOI.GreaterThan)
+            c1 = JuMP.constraintobject.(cref1, QuadExprType, MOI.GreaterThan)
             f1 = map(c -> c.func, c1)
             @test JuMP.isequal_canonical(f1, [x[1]*x[1] + 2x[1]*x[2] + 4x[2]*x[2] + 9x[1]*x[3] + 5x[2]*x[3] + 7x[3]*x[3]])
             @test all(c -> c.set.lower == 1, c1)
 
             cref2 = @constraint(m, x'*A*x >= 1)
-            c2 = JuMP.constraintobject.(cref2, QuadExpr, MOI.GreaterThan)
+            c2 = JuMP.constraintobject.(cref2, QuadExprType, MOI.GreaterThan)
             @test JuMP.isequal_canonical(f1[1], c2.func)
 
             mat = [ 3x[1] + 12x[3] +  4x[2]
@@ -543,7 +546,7 @@ Base.transpose(t::MySumType) = MySumType(t.a)
                    15x[1] +  5x[2] + 21x[3]]
 
             cref3 = @constraint(m, (x'A)' + 2A*x .<= 1)
-            c3 = JuMP.constraintobject.(cref3, AffExpr, MOI.LessThan)
+            c3 = JuMP.constraintobject.(cref3, AffExprType, MOI.LessThan)
             f3 = map(c->c.func, c3)
             @test JuMP.isequal_canonical(f3, mat)
             @test all(c -> c.set.upper == 1, c3)
@@ -556,28 +559,28 @@ Base.transpose(t::MySumType) = MySumType(t.a)
             @test JuMP.isequal_canonical((x'A)' + 2A*x, @JuMP.Expression((x'B)' + 2B*x))
 
             cref4 = @constraint(m, -1 .<= (x'A)' + 2A*x .<= 1)
-            c4 = JuMP.constraintobject.(cref4, AffExpr, MOI.Interval)
+            c4 = JuMP.constraintobject.(cref4, AffExprType, MOI.Interval)
             f4 = map(c->c.func, c4)
             @test JuMP.isequal_canonical(f4, mat)
             @test all(c -> c.set.lower == -1, c4)
             @test all(c -> c.set.upper == 1, c4)
 
             cref5 = @constraint(m, -[1:3;] .<= (x'A)' + 2A*x .<= 1)
-            c5 = JuMP.constraintobject.(cref5, AffExpr, MOI.Interval)
+            c5 = JuMP.constraintobject.(cref5, AffExprType, MOI.Interval)
             f5 = map(c->c.func, c5)
             @test JuMP.isequal_canonical(f5, mat)
             @test map(c -> c.set.lower, c5) == -[1:3;]
             @test all(c -> c.set.upper == 1, c4)
 
             cref6 = @constraint(m, -[1:3;] .<= (x'A)' + 2A*x .<= [3:-1:1;])
-            c6 = JuMP.constraintobject.(cref6, AffExpr, MOI.Interval)
+            c6 = JuMP.constraintobject.(cref6, AffExprType, MOI.Interval)
             f6 = map(c->c.func, c6)
             @test JuMP.isequal_canonical(f6, mat)
             @test map(c -> c.set.lower, c6) == -[1:3;]
             @test map(c -> c.set.upper, c6) == [3:-1:1;]
 
             cref7 = @constraint(m, -[1:3;] .<= (x'A)' + 2A*x .<= 3)
-            c7 = JuMP.constraintobject.(cref7, AffExpr, MOI.Interval)
+            c7 = JuMP.constraintobject.(cref7, AffExprType, MOI.Interval)
             f7 = map(c->c.func, c7)
             @test JuMP.isequal_canonical(f7, mat)
             @test map(c -> c.set.lower, c7) == -[1:3;]
@@ -586,7 +589,7 @@ Base.transpose(t::MySumType) = MySumType(t.a)
     end
 
     @testset "Operators for non-Array AbstractArrays" begin
-        m = Model()
+        m = ModelType()
         @variable(m, x[1:3])
 
         # This is needed to compare arrays that have nonstandard indexing
@@ -609,7 +612,7 @@ Base.transpose(t::MySumType) = MySumType(t.a)
     end
 
     @testset "diagm for non-Array AbstractArrays" begin
-        m = Model()
+        m = ModelType()
         @variable(m, x[1:3])
 
         for x2 in (OffsetArray(x, -length(x)), view(x, :), sparse(x))
@@ -622,20 +625,20 @@ Base.transpose(t::MySumType) = MySumType(t.a)
     end
 
     @testset "DimensionMismatch when performing vector-matrix multiplication with custom types #988" begin
-        m = Model()
+        m = ModelType()
         @variable m Q[1:3, 1:3] PSD
 
         x = [MyType(1), MyType(2), MyType(3)]
         y = Q * x
         z = x' * Q
-        ElemT = MySumType{AffExpr}
+        ElemT = MySumType{AffExprType}
         @test y isa Vector{ElemT}
         @test size(y) == (3,)
         @test z isa RowVector{ElemT, ConjArray{ElemT, 1, Vector{ElemT}}}
         @test size(z) == (1, 3)
         for i in 1:3
             # Q is symmetric
-            a = zero(AffExpr)
+            a = zero(AffExprType)
             a += Q[1,i]
             a += 2Q[2,i]
             a += 3Q[3,i]
@@ -653,4 +656,12 @@ Base.transpose(t::MySumType) = MySumType(t.a)
         # The following check verifies that this test covers the code incrementing `operator_counter`
         @test m.operator_counter == 1
     end
+end
+
+@testset "Operators for JuMP.Model" begin
+    operators_test(Model, VariableRef)
+end
+
+@testset "Operators for JuMPExtension.MyModel" begin
+    operators_test(JuMPExtension.MyModel, JuMPExtension.MyVariableRef)
 end

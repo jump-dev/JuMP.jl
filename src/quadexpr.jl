@@ -153,7 +153,7 @@ end
 
 # Alias for (Float64, VariableRef)
 const QuadExpr = GenericQuadExpr{Float64,VariableRef}
-function Base.convert(::Type{GenericQuadExpr{C, V}}, v::Union{Real,VariableRef,GenericAffExpr}) where {C, V}
+function Base.convert(::Type{GenericQuadExpr{C, V}}, v::Union{Real,AbstractVariableRef,GenericAffExpr}) where {C, V}
     return GenericQuadExpr(convert(GenericAffExpr{C, V}, v))
 end
 GenericQuadExpr{C, V}() where {C, V} = zero(GenericQuadExpr{C, V})
@@ -218,8 +218,8 @@ end
 ##########################################################################
 # TODO: GenericQuadExprConstraint
 
-struct QuadExprConstraint{S <: MOI.AbstractScalarSet} <: AbstractConstraint
-    func::QuadExpr
+struct QuadExprConstraint{V <: AbstractVariableRef, S <: MOI.AbstractScalarSet} <: AbstractConstraint
+    func::GenericQuadExpr{Float64, V}
     set::S
 end
 

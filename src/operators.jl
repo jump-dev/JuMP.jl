@@ -97,7 +97,7 @@ function Base.:*(lhs::V, rhs::GenericAffExpr{C,V}) where {C, V <: AbstractVariab
 end
 Base.:/(lhs::AbstractVariableRef, rhs::GenericAffExpr) = error("Cannot divide a variable by an affine expression")
 # AbstractVariableRef--GenericQuadExpr
-Base.:+(v::AbstractVariableRef, q::GenericQuadExpr) = QuadExpr(v+q.aff, copy(q.terms))
+Base.:+(v::AbstractVariableRef, q::GenericQuadExpr) = GenericQuadExpr(v+q.aff, copy(q.terms))
 function Base.:-(v::AbstractVariableRef, q::GenericQuadExpr)
     result = -q
     # This makes an unnecessary copy of aff, but it's important for v to appear
