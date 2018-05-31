@@ -106,7 +106,7 @@ function VariableRef(m::Model)
 end
 
 # Name setter/getters
-# These functions need to be implemented by all `AbstractModel`s
+# These functions need to be implemented for all `AbstractVariableRef`s
 """
     name(v::VariableRef)::String
 
