@@ -42,7 +42,6 @@ Our documentation includes an installation guide, quick-start guide, and referen
 **Latest Release**: 0.18.1 (via ``Pkg.add``)
   * [Documentation](http://www.juliaopt.org/JuMP.jl/0.18/)
   * [Examples](https://github.com/JuliaOpt/JuMP.jl/tree/release-0.18/examples)
->>>>>>> 4feabb4... prep for 0.18.0
   * Testing status:
     * TravisCI: [![Build Status](https://travis-ci.org/JuliaOpt/JuMP.jl.svg?branch=release-0.18)](https://travis-ci.org/JuliaOpt/JuMP.jl)
     * PackageEvaluator:
