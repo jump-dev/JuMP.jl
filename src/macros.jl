@@ -538,9 +538,19 @@ function parseSDconstraint(_error::Function, args...)
 end
 
 """
-    @SDconstraint(m, x)
+    @SDconstraint(m::Model, expr)
 
-Adds a semidefinite constraint to the `Model m`. The expression `x` must be a square, two-dimensional array.
+Add a semidefinite constraint described by the expression `expr`.
+
+    @SDconstraint(m::Model, ref[i=..., j=..., ...], expr)
+
+Add a group of semidefinite constraints described by the expression `expr`
+parametrized by `i`, `j`, ...
+
+The expression `expr` needs to be of the form `a sign b` where `sign` is `⪰`,
+`≥`, `>=`, `⪯`, `≤` or `<=` and `a` and `b` are `square` matrices. It
+constrains that `a - b` (or `b - a` if the sign is `⪯`, `≤` or `<=`) is
+positive semidefinite.
 """
 macro SDconstraint(args...)
     constraint_macro(args, :SDconstraint, parseSDconstraint)
