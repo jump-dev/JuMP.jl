@@ -478,7 +478,7 @@ Add a group of constraints described by the expression `expr` parametrized by
 The expression `expr` can either be
 
 * of the form `func in set` constraining the function `func` to belong to the
-  set `set`, e.g. `@constraint(m, [1, x-1, y-2] in MOI.SecondOrderCone)`
+  set `set`, e.g. `@constraint(m, [1, x-1, y-2] in MOI.SecondOrderCone(3))`
   constrains the norm of `[x-1, y-2]` be less than 1;
 * of the form `a sign b`, where `sign` is one of `==`, `≥`, `>=`, `≤` and
   `<=` building the single constraint enforcing the comparison to hold for the
