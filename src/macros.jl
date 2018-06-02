@@ -355,6 +355,7 @@ end
 #     end
 # end
 
+# TODO replace these with buildconstraint(_error, fun, ::Interval) for more consistency, quad exprs in Interval should now be supported with MOI anyway
 # three-argument buildconstraint is used for two-sided constraints.
 buildconstraint(_error::Function, v::AbstractVariableRef, lb::Real, ub::Real) = SingleVariableConstraint(v, MOI.Interval(lb, ub))
 
@@ -376,21 +377,22 @@ end
 
 # TODO: update 3-argument @constraint macro to pass through names like @variable
 
-# This function needs to be implemented by all `AbstractModel`s
-constrainttype(m::Model) = ConstraintRef{typeof(m)}
-
 """
-    @constraint(m::Model, con)
+    constraint_macro(args, macro_name::Symbol, parsefun::Function)
 
-add linear or quadratic constraints.
-
-    @constraint(m::Model, ref, con)
-
-add groups of linear or quadratic constraints.
-
+Returns the code for the macro `@constraint_like args...` of syntax
+```julia
+@constraint_like con     # Single constraint
+@constraint_like ref con # group of constraints
+```
+where `@constraint_like` is either `@constraint` or `@SDconstraint`.
+The expression `con` is parsed by `parsefun` which returns a code that, when
+executed, returns an `AbstractConstraint`. This `AbstractConstraint` is passed
+to `addconstraint` with the macro keyword arguments (except the `container`
+keyword argument which is used to determine the container type).
 """
-macro constraint(args...)
-    _error(str) = macro_error(:constraint, args, str)
+function constraint_macro(args, macro_name::Symbol, parsefun::Function)
+    _error(str) = macro_error(macro_name, args, str)
 
     args, kwargs, requestedcontainer = extract_kwargs(args)
 
@@ -407,8 +409,8 @@ macro constraint(args...)
 
     m = esc(m)
     # Two formats:
-    # - @constraint(m, a*x <= 5)
-    # - @constraint(m, myref[a=1:5], a*x <= 5)
+    # - @constraint_like(m, a*x <= 5)
+    # - @constraint_like(m, myref[a=1:5], a*x <= 5)
     length(extra) > 1 && _error("Too many arguments.")
     # Canonicalize the arguments
     c = length(extra) == 1 ? x        : gensym()
@@ -428,17 +430,11 @@ macro constraint(args...)
     (x.head == :block) &&
         _error("Code block passed as constraint. Perhaps you meant to use @constraints instead?")
 
-    # Strategy: build up the code for non-macro addconstraint, and if needed
+    # Strategy: build up the code for addconstraint, and if needed
     # we will wrap in loops to assign to the ConstraintRefs
     refcall, idxvars, idxsets, condition = buildrefsets(c, variable)
-    # JuMP accepts constraint syntax of the form @constraint(m, foo in bar).
-    # This will be rewritten to a call to buildconstraint(_error,foo, bar). To
-    # extend JuMP to accept set-based constraints of this form, it is necessary
-    # to add the corresponding methods to buildconstraint. Note that this
-    # will likely mean that bar will be some custom type, rather than e.g. a
-    # Symbol, since we will likely want to dispatch on the type of the set
-    # appearing in the constraint.
-    vectorized, parsecode, buildcall = parseconstraint(_error, x.args...)
+
+    vectorized, parsecode, buildcall = parsefun(_error, x.args...)
     if vectorized
         # TODO: Pass through names here.
         constraintcall = :(addconstraint.($m, $buildcall))
@@ -452,6 +448,7 @@ macro constraint(args...)
     end
     # Determine the return type of addconstraint. This is needed for JuMP extensions for which this is different than ConstraintRef
     contype = :( constrainttype($m) )
+
     return assert_validmodel(m, quote
         $(getloopedcode(variable, code, condition, idxvars, idxsets, contype, requestedcontainer))
         $(if anonvar
@@ -465,45 +462,98 @@ macro constraint(args...)
     end)
 end
 
+# This function needs to be implemented by all `AbstractModel`s
+constrainttype(m::Model) = ConstraintRef{typeof(m)}
 
 """
-    @SDconstraint(m, x)
+    @constraint(m::Model, expr)
 
-Adds a semidefinite constraint to the `Model m`. The expression `x` must be a square, two-dimensional array.
+Add a constraint described by the expression `expr`.
+
+    @constraint(m::Model, ref[i=..., j=..., ...], expr)
+
+Add a group of constraints described by the expression `expr` parametrized by
+`i`, `j`, ...
+
+The expression `expr` can either be
+
+* of the form `func in set` constraining the function `func` to belong to the
+  set `set`, e.g. `@constraint(m, [1, x-1, y-2] in MOI.SecondOrderCone(3))`
+  constrains the norm of `[x-1, y-2]` be less than 1;
+* of the form `a sign b`, where `sign` is one of `==`, `≥`, `>=`, `≤` and
+  `<=` building the single constraint enforcing the comparison to hold for the
+  expression `a` and `b`, e.g. `@constraint(m, x^2 + y^2 == 1)` constrains `x`
+  and `y` to lie on the unit circle;
+* of the form `a ≤ b ≤ c` or `a ≥ b ≥ c` (where `≤` and `<=` (resp. `≥` and
+  `>=`) can be used interchangeably) constraining the paired the expression
+  `b` to lie between `a` and `c`;
+* of the forms `@constraint(m, a .sign b)` or
+  `@constraint(m, a .sign b .sign c)` which broadcast the constraint creation to
+  each element of the vectors.
+
+## Note for extending the constraint macro
+
+Each constraint will be created using
+`addconstraint(m, buildconstraint(_error, func, set))` where
+* `_error` is an error function showing the constraint call in addition to the
+  error message given as argument,
+* `func` is the expression that is constrained
+* and `set` is the set in which it is constrained to belong.
+
+For `expr` of the first type (i.e. `@constraint(m, func in set)`), `func` and
+`set` are passed unchanged to `buildconstraint` but for the other types, they
+are determined from the expressions and signs. For instance,
+`@constraint(m, x^2 + y^2 == 1)` is transformed into
+`addconstraint(m, buildconstraint(_error, x^2 + y^2, MOI.EqualTo(1.0)))`.
+
+To extend JuMP to accept new constraints of this form, it is necessary to add
+the corresponding methods to `buildconstraint`. Note that this will likely mean
+that either `func` or `set` will be some custom type, rather than e.g. a
+`Symbol`, since we will likely want to dispatch on the type of the function or
+set appearing in the constraint.
 """
-macro SDconstraint(m, x)
-    _error(str) = macro_error(:SDconstraint, (m, x), str)
-    m = esc(m)
+macro constraint(args...)
+    constraint_macro(args, :constraint, parseconstraint)
+end
 
-    if isa(x, Symbol)
-        _error("Incomplete constraint specification $x. Are you missing a comparison (<= or >=)?")
-    end
-
-    (x.head == :block) &&
-        _error("Code block passed as constraint.")
-    isexpr(x,:call) && length(x.args) == 3 || _error("Constraints must be in one of the following forms:\n" *
-              "       expr1 <= expr2\n" * "       expr1 >= expr2")
-    # Build the constraint
+function parseSDconstraint(_error::Function, sense::Symbol, lhs, rhs)
     # Simple comparison - move everything to the LHS
-    sense = x.args[1]
-    if sense == :⪰ || sense == :(≥)
-        sense = :(>=)
-    elseif sense == :⪯ || sense == :(≤)
-        sense = :(<=)
-    end
     aff = :()
-    if sense == :(>=)
-        aff = :($(x.args[2]) - $(x.args[3]))
-    elseif sense == :(<=)
-        aff = :($(x.args[3]) - $(x.args[2]))
+    if sense == :⪰ || sense == :(≥) || sense == :(>=)
+        aff = :($lhs - $rhs)
+    elseif sense == :⪯ || sense == :(≤) || sense == :(<=)
+        aff = :($rhs - $lhs)
     else
         _error("Invalid sense $sense in SDP constraint")
     end
+    vectorized = false
     parsecode, buildcall = parse_one_operator_constraint(_error, false, Val(:in), aff, :(PSDCone()))
-    assert_validmodel(m, quote
-        $parsecode
-        addconstraint($m, $buildcall)
-    end)
+    vectorized, parsecode, buildcall
+end
+
+function parseSDconstraint(_error::Function, args...)
+    _error("Constraints must be in one of the following forms:\n" *
+           "       expr1 <= expr2\n" *
+           "       expr1 >= expr2")
+end
+
+"""
+    @SDconstraint(m::Model, expr)
+
+Add a semidefinite constraint described by the expression `expr`.
+
+    @SDconstraint(m::Model, ref[i=..., j=..., ...], expr)
+
+Add a group of semidefinite constraints described by the expression `expr`
+parametrized by `i`, `j`, ...
+
+The expression `expr` needs to be of the form `a sign b` where `sign` is `⪰`,
+`≥`, `>=`, `⪯`, `≤` or `<=` and `a` and `b` are `square` matrices. It
+constrains that `a - b` (or `b - a` if the sign is `⪯`, `≤` or `<=`) is
+positive semidefinite.
+"""
+macro SDconstraint(args...)
+    constraint_macro(args, :SDconstraint, parseSDconstraint)
 end
 
 

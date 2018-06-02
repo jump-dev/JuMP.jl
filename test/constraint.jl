@@ -180,12 +180,27 @@ function constraints_test(ModelType::Type{<:JuMP.AbstractModel}, VariableRefType
         @test c.func == [x, z, y, w]
         @test c.set == MOI.PositiveSemidefiniteConeSquare(2)
 
-        cref = @SDconstraint(m, [x 1; 1 -y] ⪰ [1 x; x -2])
+        @SDconstraint(m, cref, [x 1; 1 -y] ⪰ [1 x; x -2])
+        @test JuMP.name(cref) == "cref"
         c = JuMP.constraintobject(cref, Vector{AffExprType}, MOI.PositiveSemidefiniteConeTriangle)
         @test JuMP.isequal_canonical(c.func[1], x-1)
         @test JuMP.isequal_canonical(c.func[2], 1-x)
         @test JuMP.isequal_canonical(c.func[3], 2-y)
         @test c.set == MOI.PositiveSemidefiniteConeTriangle(2)
+
+        @SDconstraint(m, iref[i=1:2], 0 ⪯ [x+i x+y; x+y -y])
+        for i in 1:2
+            @test JuMP.name(iref[i]) == "iref[$i]"
+            c = JuMP.constraintobject(iref[i], Vector{AffExprType}, MOI.PositiveSemidefiniteConeTriangle)
+            @test JuMP.isequal_canonical(c.func[1], x+i)
+            @test JuMP.isequal_canonical(c.func[2], x+y)
+            @test JuMP.isequal_canonical(c.func[3], -y)
+            @test c.set == MOI.PositiveSemidefiniteConeTriangle(2)
+        end
+
+        # Should throw "ERROR: function JuMP.addconstraint does not accept keyword arguments"
+        # This tests that the keyword arguments are passed to addconstraint
+        @test_macro_throws ErrorException @SDconstraint(m, [x 1; 1 -y] ⪰ [1 x; x -2], unknown_kw=1)
     end
 
     @testset "Nonsensical SDPs" begin
