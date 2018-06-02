@@ -429,7 +429,7 @@ function constraint_macro(args, macro_name::Symbol, parsefun::Function)
     (x.head == :block) &&
         _error("Code block passed as constraint. Perhaps you meant to use @constraints instead?")
 
-    # Strategy: build up the code for non-macro addconstraint, and if needed
+    # Strategy: build up the code for addconstraint, and if needed
     # we will wrap in loops to assign to the ConstraintRefs
     refcall, idxvars, idxsets, condition = buildrefsets(c, variable)
 
