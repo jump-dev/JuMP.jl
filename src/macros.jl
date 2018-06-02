@@ -355,6 +355,7 @@ end
 #     end
 # end
 
+# TODO replace these with buildconstraint(_error, fun, ::Interval) for more consistency, quad expres in Interval should now be supported with MOI anyway
 # three-argument buildconstraint is used for two-sided constraints.
 buildconstraint(_error::Function, v::AbstractVariableRef, lb::Real, ub::Real) = SingleVariableConstraint(v, MOI.Interval(lb, ub))
 
@@ -465,23 +466,53 @@ end
 constrainttype(m::Model) = ConstraintRef{typeof(m)}
 
 """
-    @constraint(m::Model, con)
+    @constraint(m::Model, expr)
 
-add linear or quadratic constraints.
+Add a constraint described by the expression `expr`.
 
-    @constraint(m::Model, ref, con)
+    @constraint(m::Model, ref[i=..., j=..., ...], expr)
 
-add groups of linear or quadratic constraints.
+Add a group of constraints described by the expression `expr` parametrized by
+`i`, `j`, ...
 
+The expression `expr` can either be
+
+* of the form `func in set` constraining the function `func` to belong to the
+  set `set`, e.g. `@constraint(m, [1, x-1, y-2] in MOI.SecondOrderCone)`
+  constrains the norm of `[x-1, y-2]` be less than 1;
+* of the form `a sign b`, where `sign` is one of `==`, `≥`, `>=`, `≤` and
+  `<=` building the single constraint enforcing the comparison to hold for the
+  expression `a` and `b`, e.g. `@constraint(m, x^2 + y^2 == 1)` constrains `x`
+  and `y` to lie on the unit circle;
+* of the form `a ≤ b ≤ c` or `a ≥ b ≥ c` (where `≤` and `<=` (resp. `≥` and
+  `>=`) can be used interchangeably) constraining the paired the expression
+  `b` to lie between `a` and `c`;
+* of the forms `@constraint(m, a .sign b)` or
+  `@constraint(m, a .sign b .sign c)` which broadcast the constraint creation to
+  each element of the vectors.
+
+## Note for extending the constraint macro
+
+Each constraint will be created using
+`addconstraint(m, buildconstraint(_error, func, set))` where
+* `_error` is an error function showing the constraint call in addition to the
+  error message given as argument,
+* `func` is the expression that is constrained
+* and `set` is the set in which it is constrained to belong.
+
+For `expr` of the first type (i.e. `@constraint(m, func in set)`), `func` and
+`set` are passed unchanged to `buildconstraint` but for the other types, they
+are determined from the expressions and signs. For instance,
+`@constraint(m, x^2 + y^2 == 1)` is transformed into
+`addconstraint(m, buildconstraint(_error, x^2 + y^2, MOI.EqualTo(1.0)))`.
+
+To extend JuMP to accept new constraints of this form, it is necessary to add
+the corresponding methods to `buildconstraint`. Note that this will likely mean
+that either `func` or `set` will be some custom type, rather than e.g. a
+`Symbol`, since we will likely want to dispatch on the type of the function or
+set appearing in the constraint.
 """
 macro constraint(args...)
-    # JuMP accepts constraint syntax of the form @constraint(m, foo in bar).
-    # This will be rewritten to a call to buildconstraint(_error,foo, bar). To
-    # extend JuMP to accept set-based constraints of this form, it is necessary
-    # to add the corresponding methods to buildconstraint. Note that this
-    # will likely mean that bar will be some custom type, rather than e.g. a
-    # Symbol, since we will likely want to dispatch on the type of the set
-    # appearing in the constraint.
     constraint_macro(args, :constraint, parseconstraint)
 end
 
