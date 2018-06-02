@@ -377,7 +377,7 @@ end
 # TODO: update 3-argument @constraint macro to pass through names like @variable
 
 """
-    constraintlike(args, macro_name::Symbol, parsefun::Function)
+    constraint_macro(args, macro_name::Symbol, parsefun::Function)
 
 Returns the code for the macro `@macro_name args...` of syntax
 ```julia
@@ -388,7 +388,7 @@ The expression `con` is parsed by `parsefun` which returns a code for building c
 The building call is passed to `addconstraint` with the macro keyword arguments
 (except the `container` keyword argument which is used to determine the container type).
 """
-function constraintlike(args, macro_name::Symbol, parsefun::Function)
+function constraint_macro(args, macro_name::Symbol, parsefun::Function)
     _error(str) = macro_error(macro_name, args, str)
 
     args, kwargs, requestedcontainer = extract_kwargs(args)
@@ -480,7 +480,7 @@ macro constraint(args...)
     # will likely mean that bar will be some custom type, rather than e.g. a
     # Symbol, since we will likely want to dispatch on the type of the set
     # appearing in the constraint.
-    constraintlike(args, :constraint, parseconstraint)
+    constraint_macro(args, :constraint, parseconstraint)
 end
 
 function parseSDconstraint(_error::Function, sense::Symbol, lhs, rhs)
@@ -510,7 +510,7 @@ end
 Adds a semidefinite constraint to the `Model m`. The expression `x` must be a square, two-dimensional array.
 """
 macro SDconstraint(args...)
-    constraintlike(args, :SDconstraint, parseSDconstraint)
+    constraint_macro(args, :SDconstraint, parseSDconstraint)
 end
 
 
