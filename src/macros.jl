@@ -355,7 +355,7 @@ end
 #     end
 # end
 
-# TODO replace these with buildconstraint(_error, fun, ::Interval) for more consistency, quad expres in Interval should now be supported with MOI anyway
+# TODO replace these with buildconstraint(_error, fun, ::Interval) for more consistency, quad exprs in Interval should now be supported with MOI anyway
 # three-argument buildconstraint is used for two-sided constraints.
 buildconstraint(_error::Function, v::AbstractVariableRef, lb::Real, ub::Real) = SingleVariableConstraint(v, MOI.Interval(lb, ub))
 
