@@ -376,21 +376,20 @@ end
 
 # TODO: update 3-argument @constraint macro to pass through names like @variable
 
-# This function needs to be implemented by all `AbstractModel`s
-constrainttype(m::Model) = ConstraintRef{typeof(m)}
-
 """
-    @constraint(m::Model, con)
+    constraintlike(args, macro_name::Symbol, parsefun::Function)
 
-add linear or quadratic constraints.
-
-    @constraint(m::Model, ref, con)
-
-add groups of linear or quadratic constraints.
-
+Returns the code for the macro `@macro_name args...` of syntax
+```julia
+@macro_name con     # Single constraint
+@macro_name ref con # group of constraints
+```
+The expression `con` is parsed by `parsefun` which returns a code for building call.
+The building call is passed to `addconstraint` with the macro keyword arguments
+(except the `container` keyword argument which is used to determine the container type).
 """
-macro constraint(args...)
-    _error(str) = macro_error(:constraint, args, str)
+function constraintlike(args, macro_name::Symbol, parsefun::Function)
+    _error(str) = macro_error(macro_name, args, str)
 
     args, kwargs, requestedcontainer = extract_kwargs(args)
 
@@ -431,14 +430,8 @@ macro constraint(args...)
     # Strategy: build up the code for non-macro addconstraint, and if needed
     # we will wrap in loops to assign to the ConstraintRefs
     refcall, idxvars, idxsets, condition = buildrefsets(c, variable)
-    # JuMP accepts constraint syntax of the form @constraint(m, foo in bar).
-    # This will be rewritten to a call to buildconstraint(_error,foo, bar). To
-    # extend JuMP to accept set-based constraints of this form, it is necessary
-    # to add the corresponding methods to buildconstraint. Note that this
-    # will likely mean that bar will be some custom type, rather than e.g. a
-    # Symbol, since we will likely want to dispatch on the type of the set
-    # appearing in the constraint.
-    vectorized, parsecode, buildcall = parseconstraint(_error, x.args...)
+
+    vectorized, parsecode, buildcall = parsefun(_error, x.args...)
     if vectorized
         # TODO: Pass through names here.
         constraintcall = :(addconstraint.($m, $buildcall))
@@ -452,6 +445,7 @@ macro constraint(args...)
     end
     # Determine the return type of addconstraint. This is needed for JuMP extensions for which this is different than ConstraintRef
     contype = :( constrainttype($m) )
+
     return assert_validmodel(m, quote
         $(getloopedcode(variable, code, condition, idxvars, idxsets, contype, requestedcontainer))
         $(if anonvar
@@ -465,45 +459,58 @@ macro constraint(args...)
     end)
 end
 
+# This function needs to be implemented by all `AbstractModel`s
+constrainttype(m::Model) = ConstraintRef{typeof(m)}
+
+"""
+    @constraint(m::Model, con)
+
+add linear or quadratic constraints.
+
+    @constraint(m::Model, ref, con)
+
+add groups of linear or quadratic constraints.
+
+"""
+macro constraint(args...)
+    # JuMP accepts constraint syntax of the form @constraint(m, foo in bar).
+    # This will be rewritten to a call to buildconstraint(_error,foo, bar). To
+    # extend JuMP to accept set-based constraints of this form, it is necessary
+    # to add the corresponding methods to buildconstraint. Note that this
+    # will likely mean that bar will be some custom type, rather than e.g. a
+    # Symbol, since we will likely want to dispatch on the type of the set
+    # appearing in the constraint.
+    constraintlike(args, :constraint, parseconstraint)
+end
+
+function parseSDconstraint(_error::Function, sense::Symbol, lhs, rhs)
+    # Simple comparison - move everything to the LHS
+    aff = :()
+    if sense == :⪰ || sense == :(≥)
+        aff = :($lhs - $rhs)
+    elseif sense == :⪯ || sense == :(≤)
+        aff = :($rhs - $lhs)
+    else
+        _error("Invalid sense $sense in SDP constraint")
+    end
+    vectorized = false
+    parsecode, buildcall = parse_one_operator_constraint(_error, false, Val(:in), aff, :(PSDCone()))
+    vectorized, parsecode, buildcall
+end
+
+function parseSDconstraint(_error::Function, args...)
+    _error("Constraints must be in one of the following forms:\n" *
+           "       expr1 <= expr2\n" *
+           "       expr1 >= expr2")
+end
 
 """
     @SDconstraint(m, x)
 
 Adds a semidefinite constraint to the `Model m`. The expression `x` must be a square, two-dimensional array.
 """
-macro SDconstraint(m, x)
-    _error(str) = macro_error(:SDconstraint, (m, x), str)
-    m = esc(m)
-
-    if isa(x, Symbol)
-        _error("Incomplete constraint specification $x. Are you missing a comparison (<= or >=)?")
-    end
-
-    (x.head == :block) &&
-        _error("Code block passed as constraint.")
-    isexpr(x,:call) && length(x.args) == 3 || _error("Constraints must be in one of the following forms:\n" *
-              "       expr1 <= expr2\n" * "       expr1 >= expr2")
-    # Build the constraint
-    # Simple comparison - move everything to the LHS
-    sense = x.args[1]
-    if sense == :⪰ || sense == :(≥)
-        sense = :(>=)
-    elseif sense == :⪯ || sense == :(≤)
-        sense = :(<=)
-    end
-    aff = :()
-    if sense == :(>=)
-        aff = :($(x.args[2]) - $(x.args[3]))
-    elseif sense == :(<=)
-        aff = :($(x.args[3]) - $(x.args[2]))
-    else
-        _error("Invalid sense $sense in SDP constraint")
-    end
-    parsecode, buildcall = parse_one_operator_constraint(_error, false, Val(:in), aff, :(PSDCone()))
-    assert_validmodel(m, quote
-        $parsecode
-        addconstraint($m, $buildcall)
-    end)
+macro SDconstraint(args...)
+    constraintlike(args, :SDconstraint, parseSDconstraint)
 end
 
 
