@@ -408,8 +408,8 @@ function constraint_macro(args, macro_name::Symbol, parsefun::Function)
 
     m = esc(m)
     # Two formats:
-    # - @constraint(m, a*x <= 5)
-    # - @constraint(m, myref[a=1:5], a*x <= 5)
+    # - @constraint_like(m, a*x <= 5)
+    # - @constraint_like(m, myref[a=1:5], a*x <= 5)
     length(extra) > 1 && _error("Too many arguments.")
     # Canonicalize the arguments
     c = length(extra) == 1 ? x        : gensym()
