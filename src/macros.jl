@@ -519,9 +519,9 @@ end
 function parseSDconstraint(_error::Function, sense::Symbol, lhs, rhs)
     # Simple comparison - move everything to the LHS
     aff = :()
-    if sense == :⪰ || sense == :(≥)
+    if sense == :⪰ || sense == :(≥) || sense == :(>=)
         aff = :($lhs - $rhs)
-    elseif sense == :⪯ || sense == :(≤)
+    elseif sense == :⪯ || sense == :(≤) || sense == :(<=)
         aff = :($rhs - $lhs)
     else
         _error("Invalid sense $sense in SDP constraint")
