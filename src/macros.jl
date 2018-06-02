@@ -379,14 +379,16 @@ end
 """
     constraint_macro(args, macro_name::Symbol, parsefun::Function)
 
-Returns the code for the macro `@macro_name args...` of syntax
+Returns the code for the macro `@constraint_like args...` of syntax
 ```julia
-@macro_name con     # Single constraint
-@macro_name ref con # group of constraints
+@constraint_like con     # Single constraint
+@constraint_like ref con # group of constraints
 ```
-The expression `con` is parsed by `parsefun` which returns a code for building call.
-The building call is passed to `addconstraint` with the macro keyword arguments
-(except the `container` keyword argument which is used to determine the container type).
+where `@constraint_like` is either `@constraint` or `@SDconstraint`.
+The expression `con` is parsed by `parsefun` which returns a code that, when
+executed, returns an `AbstractConstraint`. This `AbstractConstraint` is passed
+to `addconstraint` with the macro keyword arguments (except the `container`
+keyword argument which is used to determine the container type).
 """
 function constraint_macro(args, macro_name::Symbol, parsefun::Function)
     _error(str) = macro_error(macro_name, args, str)
