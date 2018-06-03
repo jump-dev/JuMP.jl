@@ -446,19 +446,28 @@ function constraint_macro(args, macro_name::Symbol, parsefun::Function)
         $parsecode
         $(refcall) = $constraintcall
     end
+
     # Determine the return type of addconstraint. This is needed for JuMP extensions for which this is different than ConstraintRef
     contype = :( constrainttype($m) )
+    creationcode = getloopedcode(variable, code, condition, idxvars, idxsets, contype, requestedcontainer)
+
+    if anonvar
+        # Anonymous constraint, no need to register it in the model-level
+        # dictionary nor to assign it to a variable in the user scope.
+        # We simply return the constraint reference
+        assignmentcode = variable
+    else
+        # We register the constraint reference to its name and
+        # we assign it to a variable in the local scope of this name
+        assignmentcode = quote
+            registercon($m, $quotvarname, $variable)
+            $escvarname = $variable
+        end
+    end
 
     return assert_validmodel(m, quote
-        $(getloopedcode(variable, code, condition, idxvars, idxsets, contype, requestedcontainer))
-        $(if anonvar
-            variable
-        else
-            quote
-                registercon($m, $quotvarname, $variable)
-                $escvarname = $variable
-            end
-        end)
+        $creationcode
+        $assignmentcode
     end)
 end
 
@@ -1175,13 +1184,13 @@ macro variable(args...)
         end
     end
     if anonvar
-        # Anonymous variable, no need to register it to a name
-        # nor to assign it to a variable in the user scope.
+        # Anonymous variable, no need to register it in the model-level
+        # dictionary nor to assign it to a variable in the user scope.
         # We simply return the variable
         assignmentcode = finalvariable
     else
-        # We register the variable to its name and
-        # we assign it to a variable of this name
+        # We register the variable reference to its name and
+        # we assign it to a variable in the local scope of this name
         assignmentcode = quote
             registervar($m, $quotvarname, $variable)
             $escvarname = $finalvariable
