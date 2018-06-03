@@ -328,4 +328,16 @@ end
     #     @test typeof(Y) == SparseMatrixCSC{Float64, Int}
     #     @test Y == sparse([1, 3], [2, 3], [1, 2])
     # end
+
+    @testset "Symmetric variable" begin
+        m = Model()
+
+        @variable m x[1:2, 1:2] Symmetric
+        @test x isa Symmetric
+        @test x[1, 2] === x[2, 1]
+
+        y = @variable m [1:2, 1:2] Symmetric
+        @test y isa Symmetric
+        @test y[1, 2] === y[2, 1]
+    end
 end
