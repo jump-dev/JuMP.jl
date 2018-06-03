@@ -201,6 +201,8 @@ function constraints_test(ModelType::Type{<:JuMP.AbstractModel}, VariableRefType
         # Should throw "ERROR: function JuMP.addconstraint does not accept keyword arguments"
         # This tests that the keyword arguments are passed to addconstraint
         @test_macro_throws ErrorException @SDconstraint(m, [x 1; 1 -y] ⪰ [1 x; x -2], unknown_kw=1)
+        # Invalid sense == in SDP constraint
+        @test_macro_throws ErrorException @SDconstraint(m, [x 1; 1 -y] == [1 x; x -2])
     end
 
     @testset "Nonsensical SDPs" begin
