@@ -1114,7 +1114,7 @@ macro variable(args...)
         addkwargs!(buildcall, extra_kwargs)
         variablecall = :( addvariable($m, $buildcall, $basename) )
         # The looped code is trivial here since there is a single variable
-        loopedcode = :($variable = $variablecall)
+        creationcode = :($variable = $variablecall)
         finalvariable = variable
     else
         isa(var,Expr) || _error("Expected $var to be a variable name")
@@ -1159,7 +1159,7 @@ macro variable(args...)
             if haslb || hasub
                 _error("Semidefinite or symmetric variables cannot be provided bounds")
             end
-            loopedcode = quote
+            creationcode = quote
                 $(esc(idxsets[1].args[1].args[2])) == $(esc(idxsets[2].args[1].args[2])) || error("Cannot construct symmetric variables with nonsquare dimensions")
                 $(getloopedcode(variable, code, condition, idxvars, idxsets, vartype, requestedcontainer; lowertri=symmetric))
                 $(if sdp
@@ -1170,20 +1170,26 @@ macro variable(args...)
             end
             finalvariable = :(Symmetric($variable))
         else
-            loopedcode = getloopedcode(variable, code, condition, idxvars, idxsets, vartype, requestedcontainer)
+            creationcode = getloopedcode(variable, code, condition, idxvars, idxsets, vartype, requestedcontainer)
             finalvariable = variable
         end
     end
+    if anonvar
+        # Anonymous variable, no need to register it to a name
+        # nor to assign it to a variable in the user scope.
+        # We simply return the variable
+        assignmentcode = finalvariable
+    else
+        # We register the variable to its name and
+        # we assign it to a variable of this name
+        assignmentcode = quote
+            registervar($m, $quotvarname, $variable)
+            $escvarname = $finalvariable
+        end
+    end
     return assert_validmodel(m, quote
-        $loopedcode
-        $(if anonvar
-            variable
-        else
-            quote
-                registervar($m, $quotvarname, $variable)
-                $escvarname = $finalvariable
-            end
-        end)
+        $creationcode
+        $assignmentcode
     end)
 end
 
