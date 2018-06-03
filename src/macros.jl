@@ -452,15 +452,15 @@ function constraint_macro(args, macro_name::Symbol, parsefun::Function)
     creationcode = getloopedcode(variable, code, condition, idxvars, idxsets, contype, requestedcontainer)
 
     if anonvar
-        # Anonymous constraint, no need to register it to a name
-        # nor to assign it to a variable in the user scope.
+        # Anonymous constraint, no need to register it in the model-level
+        # dictionary nor to assign it to a variable in the user scope.
         # We simply return the constraint reference
         assignmentcode = variable
     else
         # We register the constraint reference to its name and
-        # we assign it to a variable of this name
+        # we assign it to a variable in the local scope of this name
         assignmentcode = quote
-            registervar($m, $quotvarname, $variable)
+            registercon($m, $quotvarname, $variable)
             $escvarname = $variable
         end
     end
@@ -1184,13 +1184,13 @@ macro variable(args...)
         end
     end
     if anonvar
-        # Anonymous variable, no need to register it to a name
-        # nor to assign it to a variable in the user scope.
+        # Anonymous variable, no need to register it in the model-level
+        # dictionary nor to assign it to a variable in the user scope.
         # We simply return the variable
         assignmentcode = finalvariable
     else
-        # We register the variable to its name and
-        # we assign it to a variable of this name
+        # We register the variable reference to its name and
+        # we assign it to a variable in the local scope of this name
         assignmentcode = quote
             registervar($m, $quotvarname, $variable)
             $escvarname = $finalvariable
