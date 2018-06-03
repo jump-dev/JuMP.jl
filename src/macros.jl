@@ -1113,76 +1113,78 @@ macro variable(args...)
         buildcall = :( buildvariable($_error, $info, $(extra...)) )
         addkwargs!(buildcall, extra_kwargs)
         variablecall = :( addvariable($m, $buildcall, $basename) )
-        code = :($variable = $variablecall)
-        if !anonvar
-            code = quote
-                $code
-                registervar($m, $quotvarname, $variable)
-                $escvarname = $variable
-            end
-        end
-        return assert_validmodel(m, code)
-    end
-    isa(var,Expr) || _error("Expected $var to be a variable name")
-
-    # We now build the code to generate the variables (and possibly the JuMPDict
-    # to contain them)
-    refcall, idxvars, idxsets, condition = buildrefsets(var, variable)
-    clear_dependencies(i) = (isdependent(idxvars,idxsets[i],i) ? () : idxsets[i])
-
-    # Code to be used to create each variable of the container.
-    info = :(VariableInfo($haslb, $lb, $hasub, $ub, $hasfix, $fixedvalue, $hasstart, $value, $binary, $integer))
-    buildcall = :( buildvariable($_error, $info, $(extra...)) )
-    addkwargs!(buildcall, extra_kwargs)
-    variablecall = :( addvariable($m, $buildcall, $(namecall(basename, idxvars))) )
-    code = :( $(refcall) = $variablecall )
-    # Determine the return type of addvariable. This is needed to create the container holding them.
-    vartype = :( variabletype($m, $(extra...)) )
-
-    if symmetric
-        # Sanity checks on PSD input stuff
-        condition == :() ||
-            _error("Cannot have conditional indexing for PSD variables")
-        length(idxvars) == length(idxsets) == 2 ||
-            _error("PSD variables must be 2-dimensional")
-        !symmetric || (length(idxvars) == length(idxsets) == 2) ||
-            _error("Symmetric variables must be 2-dimensional")
-        hasdependentsets(idxvars, idxsets) &&
-            _error("Cannot have index dependencies in symmetric variables")
-        for _rng in idxsets
-            isexpr(_rng, :escape) ||
-                _error("Internal error 1")
-            rng = _rng.args[1] # undo escaping
-            if VERSION >= v"0.7-"
-                (isexpr(rng,:call) && length(rng.args) == 3 && rng.args[1] == :(:) && rng.args[2] == 1) ||
-                    _error("Index sets for SDP variables must be ranges of the form 1:N")
-            else
-                (isexpr(rng,:(:)) && rng.args[1] == 1 && length(rng.args) == 2) ||
-                    _error("Index sets for SDP variables must be ranges of the form 1:N")
-            end
-        end
-
-        if haslb || hasub
-            _error("Semidefinite or symmetric variables cannot be provided bounds")
-        end
-        return assert_validmodel(m, quote
-            $(esc(idxsets[1].args[1].args[2])) == $(esc(idxsets[2].args[1].args[2])) || error("Cannot construct symmetric variables with nonsquare dimensions")
-            $(getloopedcode(variable, code, condition, idxvars, idxsets, vartype, requestedcontainer; lowertri=symmetric))
-            $(if sdp
-                quote
-                    JuMP.addconstraint($m, JuMP.buildconstraint($_error, Symmetric($variable), JuMP.PSDCone()))
-                end
-            end)
-            !$anonvar && registervar($m, $quotvarname, $variable)
-            $(anonvar ? variable : :($escvarname = Symmetric($variable)))
-        end)
+        # The looped code is trivial here since there is a single variable
+        loopedcode = :($variable = $variablecall)
+        finalvariable = variable
     else
-        return assert_validmodel(m, quote
-            $(getloopedcode(variable, code, condition, idxvars, idxsets, vartype, requestedcontainer))
-            !$anonvar && registervar($m, $quotvarname, $variable)
-            $(anonvar ? variable : :($escvarname = $variable))
-        end)
+        isa(var,Expr) || _error("Expected $var to be a variable name")
+
+        # We now build the code to generate the variables (and possibly the JuMPDict
+        # to contain them)
+        refcall, idxvars, idxsets, condition = buildrefsets(var, variable)
+        clear_dependencies(i) = (isdependent(idxvars,idxsets[i],i) ? () : idxsets[i])
+
+        # Code to be used to create each variable of the container.
+        info = :(VariableInfo($haslb, $lb, $hasub, $ub, $hasfix, $fixedvalue, $hasstart, $value, $binary, $integer))
+        buildcall = :( buildvariable($_error, $info, $(extra...)) )
+        addkwargs!(buildcall, extra_kwargs)
+        variablecall = :( addvariable($m, $buildcall, $(namecall(basename, idxvars))) )
+        code = :( $(refcall) = $variablecall )
+        # Determine the return type of addvariable. This is needed to create the container holding them.
+        vartype = :( variabletype($m, $(extra...)) )
+
+        if symmetric
+            # Sanity checks on PSD input stuff
+            condition == :() ||
+                _error("Cannot have conditional indexing for PSD variables")
+            length(idxvars) == length(idxsets) == 2 ||
+                _error("PSD variables must be 2-dimensional")
+            !symmetric || (length(idxvars) == length(idxsets) == 2) ||
+                _error("Symmetric variables must be 2-dimensional")
+            hasdependentsets(idxvars, idxsets) &&
+                _error("Cannot have index dependencies in symmetric variables")
+            for _rng in idxsets
+                isexpr(_rng, :escape) ||
+                    _error("Internal error 1")
+                rng = _rng.args[1] # undo escaping
+                if VERSION >= v"0.7-"
+                    (isexpr(rng,:call) && length(rng.args) == 3 && rng.args[1] == :(:) && rng.args[2] == 1) ||
+                        _error("Index sets for SDP variables must be ranges of the form 1:N")
+                else
+                    (isexpr(rng,:(:)) && rng.args[1] == 1 && length(rng.args) == 2) ||
+                        _error("Index sets for SDP variables must be ranges of the form 1:N")
+                end
+            end
+
+            if haslb || hasub
+                _error("Semidefinite or symmetric variables cannot be provided bounds")
+            end
+            loopedcode = quote
+                $(esc(idxsets[1].args[1].args[2])) == $(esc(idxsets[2].args[1].args[2])) || error("Cannot construct symmetric variables with nonsquare dimensions")
+                $(getloopedcode(variable, code, condition, idxvars, idxsets, vartype, requestedcontainer; lowertri=symmetric))
+                $(if sdp
+                    quote
+                        JuMP.addconstraint($m, JuMP.buildconstraint($_error, Symmetric($variable), JuMP.PSDCone()))
+                    end
+                end)
+            end
+            finalvariable = :(Symmetric($variable))
+        else
+            loopedcode = getloopedcode(variable, code, condition, idxvars, idxsets, vartype, requestedcontainer)
+            finalvariable = variable
+        end
     end
+    return assert_validmodel(m, quote
+        $loopedcode
+        $(if anonvar
+            variable
+        else
+            quote
+                registervar($m, $quotvarname, $variable)
+                $escvarname = $finalvariable
+            end
+        end)
+    end)
 end
 
 # TODO: replace with a general macro that can construct any container type
