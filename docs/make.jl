@@ -14,9 +14,9 @@ makedocs(
         "Expressions" => "expressions.md",
         "Constraints" => "constraints.md",
         "Solvers" => "solvers.md",
+        "Nonlinear Modeling" => "nlp.md",
         "Style Guide" => "style.md",
         "Extensions" => "extensions.md",
-        "Nonlinear Modeling" => "nlp.md",
         "Updating Guide" => "updating.md",
         "How do I ...? (FAQ)" => "howdoi.md"
     ]

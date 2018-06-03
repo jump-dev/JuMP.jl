@@ -96,9 +96,9 @@ Pages = ["installation.md",
     "expressions.md",
     "constraints.md",
     "solvers.md",
+    "nlp.md",
     "style.md",
     "extensions.md",
-    "nlp.md",
     "updating.md",
     "howdoi.md"]
 Depth = 2
