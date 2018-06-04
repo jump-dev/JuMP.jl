@@ -721,8 +721,8 @@ function MathProgBase.eval_hesslag_prod(
         row += 1
     end
 
-    for i in length(ex.dependent_subexpressions):-1:1
-        expridx = ex.dependent_subexpressions[i]
+    for i in length(d.subexpression_order):-1:1
+        expridx = d.subexpression_order[i]
         if SIMPLIFY && d.subexpression_linearity[expridx] == CONSTANT
             continue
         end
