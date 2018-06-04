@@ -690,6 +690,25 @@ end
         @test isapprox(h, correct)
     end
 
+    @testset "Hess-vec through MPB with subexpressions" begin
+        m = Model()
+        @variable(m, a, start = 1)
+        @variable(m, b, start = 2)
+        @variable(m, c, start = 3)
+
+        @NLexpression(m, ab, a*b)
+        @NLobjective(m, Min, ab + c^2)
+        @constraint(m, c*b <= 1)
+        @NLconstraint(m, a^2/2 <= 1)
+        d = JuMP.NLPEvaluator(m)
+        MathProgBase.initialize(d, [:HessVec])
+        h = ones(3) # test that input values are overwritten
+        v = [2.4,3.5,1.2]
+        MathProgBase.eval_hesslag_prod(d, h, m.colVal, v, 1.0, [2.0,3.0])
+        correct = [3.0 1.0 0.0; 1.0 0.0 2.0; 0.0 2.0 2.0]*v
+        @test isapprox(h, correct)
+    end
+
     @testset "NaN corner case (#695)" begin
 
         m = Model()
