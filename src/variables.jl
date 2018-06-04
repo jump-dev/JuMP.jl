@@ -5,45 +5,42 @@
 
 abstract type AbstractVariable end
 
-mutable struct VariableInfo{S, T, U, V, BT, IT}
+# Any fields can usually be either a number or an expression
+mutable struct VariableInfoExpr
     haslb::Bool
-    lowerbound::S
+    lowerbound::Any
     hasub::Bool
-    upperbound::T
+    upperbound::Any
     hasfix::Bool
-    fixedvalue::U
+    fixedvalue::Any
     hasstart::Bool
-    start::V
-    binary::BT
-    integer::IT
+    start::Any
+    binary::Any
+    integer::Any
 end
 
-function setlowerbound(info::VariableInfo, lower, _error::Function)
+function setlowerbound(info::VariableInfoExpr, lower, _error::Function)
     info.haslb && _error("Cannot specify variable lowerbound twice")
     info.haslb = true
     info.lowerbound = lower
-    # lowerbound might be of different type than info.lowerbound
-    VariableInfo(true, lower, info.hasub, info.upperbound, info.hasfix, info.fixedvalue, info.hasstart, info.start, info.binary, info.integer)
 end
-function setupperbound(info::VariableInfo, upper, _error::Function)
+function setupperbound(info::VariableInfoExpr, upper, _error::Function)
     info.hasub && _error("Cannot specify variable lowerbound twice")
-    # upperbound might be of different type than info.upperbound
-    VariableInfo(info.haslb, info.lowerbound, true, upper, info.hasfix, info.fixedvalue, info.hasstart, info.start, info.binary, info.integer)
+    info.hasub = true
+    info.upperbound = upper
 end
-function fix(info::VariableInfo, value, _error::Function)
+function fix(info::VariableInfoExpr, value, _error::Function)
     info.hasfix && _error("Cannot specify variable fixed value twice")
-    # value might be of different type than info.value
-    VariableInfo(info.haslb, info.lowerbound, info.hasub, info.upperbound, true, value, info.hasstart, info.start, info.binary, info.integer)
+    info.hasfix = true
+    info.fixedvalue = value
 end
-function setbinary(info::VariableInfo, _error::Function)
-    info.binary && _error("'Bin' and 'binary' keyword argument cannot both be specified.")
-    # info.integer can be an expresion
-    VariableInfo(info.haslb, info.lowerbound, info.hasub, info.upperbound, info.hasfix, info.fixedvalue, info.hasstart, info.start, true, info.integer)
+function setbinary(info::VariableInfoExpr, _error::Function)
+    info.binary === false || _error("'Bin' and 'binary' keyword argument cannot both be specified.")
+    info.binary = true
 end
-function setinteger(info::VariableInfo, _error::Function)
-    info.integer === true && _error("'Int' and 'integer' keyword argument cannot both be specified.")
-    # info.integer can be an expresion
-    VariableInfo(info.haslb, info.lowerbound, info.hasub, info.upperbound, info.hasfix, info.fixedvalue, info.hasstart, info.start, info.binary, true)
+function setinteger(info::VariableInfoExpr, _error::Function)
+    info.integer === false || _error("'Int' and 'integer' keyword argument cannot both be specified.")
+    info.integer = true
 end
 
 function isinfokeyword(kw::Expr)
@@ -54,11 +51,24 @@ end
 function keywordify(kw::Expr)
     (kw.args[1], esc_nonconstant(kw.args[2]))
 end
-function VariableInfo(; lowerbound=NaN, upperbound=NaN, start=NaN, binary=false, integer=false)
-    VariableInfo(lowerbound !== NaN, lowerbound, upperbound !== NaN, upperbound, false, NaN, start !== NaN, start, binary, integer)
+function VariableInfoExpr(; lowerbound=NaN, upperbound=NaN, start=NaN, binary=false, integer=false)
+    VariableInfoExpr(lowerbound !== NaN, lowerbound, upperbound !== NaN, upperbound, false, NaN, start !== NaN, start, binary, integer)
 end
 
-evalcode(info::VariableInfo) = :(VariableInfo($(info.haslb), $(info.lowerbound), $(info.hasub), $(info.upperbound), $(info.hasfix), $(info.fixedvalue), $(info.hasstart), $(info.start), $(info.binary), $(info.integer)))
+mutable struct VariableInfo{S, T, U, V}
+    haslb::Bool
+    lowerbound::S
+    hasub::Bool
+    upperbound::T
+    hasfix::Bool
+    fixedvalue::U
+    hasstart::Bool
+    start::V
+    binary::Bool
+    integer::Bool
+end
+
+evalcode(info::VariableInfoExpr) = :(VariableInfo($(info.haslb), $(info.lowerbound), $(info.hasub), $(info.upperbound), $(info.hasfix), $(info.fixedvalue), $(info.hasstart), $(info.start), $(info.binary), $(info.integer)))
 
 struct ScalarVariable{S, T, U, V} <: AbstractVariable
     info::VariableInfo{S, T, U, V}
