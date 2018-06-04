@@ -619,8 +619,8 @@ function MOI.eval_hessian_lagrangian_product(
         reverse_eval_ϵ(output_ϵ, ex.reverse_storage, reverse_storage_ϵ, ex.partials_storage, partials_storage_ϵ, ex.nd,ex.adj,d.subexpression_reverse_values,subexpr_reverse_values_ϵ, l, zero_ϵ)
     end
 
-    for i in length(ex.dependent_subexpressions):-1:1
-        expridx = ex.dependent_subexpressions[i]
+    for i in length(d.subexpression_order):-1:1
+        expridx = d.subexpression_order[i]
         subexpr = d.subexpressions[expridx]
         sub_reverse_storage_ϵ = reinterpret(ForwardDiff.Partials{1,Float64},subexpr.reverse_storage_ϵ)
         sub_partials_storage_ϵ = reinterpret(ForwardDiff.Partials{1,Float64},subexpr.partials_storage_ϵ)

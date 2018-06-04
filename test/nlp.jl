@@ -1,4 +1,4 @@
-
+# TODO: Replace isapprox with ≈ everywhere.
 @testset "Nonlinear" begin
 
     import JuMP: NonlinearExprData
@@ -256,13 +256,12 @@
         V = zeros(length(hessian_sparsity))
         MOI.eval_hessian_lagrangian(d, V, values, 1.0, [2.0, 3.0])
         correct_hessian = [3.0 1.0 0.0; 1.0 0.0 2.0; 0.0 2.0 2.0]
-        @test isapprox(dense_hessian(hessian_sparsity, V, 3), correct_hessian)
+        @test dense_hessian(hessian_sparsity, V, 3) ≈ correct_hessian
 
         h = ones(3) # The input values should be overwritten.
         v = [2.4,3.5,1.2]
         MOI.eval_hessian_lagrangian_product(d, h, values, v, 1.0, [2.0,3.0])
-        # TODO: This a pre-existing bug also present in JuMP/MPB.
-        @test_broken isapprox(h, correct_hessian*v)
+        @test h ≈ correct_hessian*v
     end
 
     @testset "Expression graphs" begin
