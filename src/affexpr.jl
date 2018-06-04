@@ -177,6 +177,8 @@ function Base.isequal(aff::GenericAffExpr{C,V},other::GenericAffExpr{C,V}) where
     return isequal(aff.constant, other.constant) && isequal(aff.terms, other.terms)
 end
 
+Base.hash(aff::GenericAffExpr, h::UInt) = hash(aff.constant, hash(aff.terms, h))
+
 function Base.dropzeros(aff::GenericAffExpr)
     result = copy(aff)
     for (coef, var) in linearterms(aff)

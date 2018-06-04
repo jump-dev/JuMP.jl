@@ -133,6 +133,8 @@ function Base.isequal(q::GenericQuadExpr{T,S}, other::GenericQuadExpr{T,S}) wher
     return isequal(q.aff,other.aff) && isequal(q.terms, other.terms)
 end
 
+Base.hash(quad::GenericQuadExpr, h::UInt) = hash(quad.aff, hash(quad.terms, h))
+
 function Base.dropzeros(quad::GenericQuadExpr)
     quad_terms = copy(quad.terms)
     for (key, value) in quad.terms
