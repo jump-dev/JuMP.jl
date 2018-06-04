@@ -994,34 +994,29 @@ macro variable(args...)
         anon_singleton = false
     end
 
-    haslb = false
-    hasub = false
-    hasfix = false
-    hasstart = false
-    fixedvalue = NaN
+    info_kwargs = filter(isinfokeyword, kwargs)
+    extra_kwargs = filter(kw -> kw.args[1] != :basename && !isinfokeyword(kw), kwargs)
+    basename_kwargs = filter(kw -> kw.args[1] == :basename, kwargs)
+    infoexpr = VariableInfo(; keywordify.(info_kwargs)...)
     var = x
-    lb = NaN
-    ub = NaN
     # Identify the variable bounds. Five (legal) possibilities are "x >= lb",
     # "x <= ub", "lb <= x <= ub", "x == val", or just plain "x"
     explicit_comparison = false
     if isexpr(x,:comparison) # two-sided
         explicit_comparison = true
-        hasub = true
-        haslb = true
         if x.args[2] == :>= || x.args[2] == :≥
             # ub >= x >= lb
             x.args[4] == :>= || x.args[4] == :≥ || _error("Invalid variable bounds")
             var = x.args[3]
-            lb = esc_nonconstant(x.args[5])
-            ub = esc_nonconstant(x.args[1])
+            infoexpr = setlowerbound(infoexpr, esc_nonconstant(x.args[5]), _error)
+            infoexpr = setupperbound(infoexpr, esc_nonconstant(x.args[1]), _error)
         elseif x.args[2] == :<= || x.args[2] == :≤
             # lb <= x <= u
             var = x.args[3]
             (x.args[4] != :<= && x.args[4] != :≤) &&
                 _error("Expected <= operator after variable name.")
-            lb = esc_nonconstant(x.args[1])
-            ub = esc_nonconstant(x.args[5])
+            infoexpr = setlowerbound(infoexpr, esc_nonconstant(x.args[1]), _error)
+            infoexpr = setupperbound(infoexpr, esc_nonconstant(x.args[5]), _error)
         else
             _error("Use the form lb <= ... <= ub.")
         end
@@ -1032,23 +1027,24 @@ macro variable(args...)
             var = x.args[2]
             var isa Number && _error("Variable declaration of the form `$(x.args[3]) $(x.args[1]) $var` is not supported. Use `$(x.args[3]) <= $var` instead.")
             @assert length(x.args) == 3
-            lb = esc_nonconstant(x.args[3])
-            haslb = true
-            ub = Inf
+            infoexpr = setlowerbound(infoexpr, esc_nonconstant(x.args[3]), _error)
+            if !infoexpr.hasub
+                infoexpr.upperbound = Inf # Change NaN -> Inf which has same type
+            end
         elseif x.args[1] == :<= || x.args[1] == :≤
             # x <= ub
             var = x.args[2]
             var isa Number && _error("Variable declaration of the form `$(x.args[3]) $(x.args[1]) $var` is not supported. Use `$(x.args[3]) >= $var` instead.")
             @assert length(x.args) == 3
-            ub = esc_nonconstant(x.args[3])
-            hasub = true
-            lb = -Inf
+            infoexpr = setupperbound(infoexpr, esc_nonconstant(x.args[3]), _error)
+            if !infoexpr.haslb
+                infoexpr.lowerbound = -Inf # Change NaN -> -Inf which has same type
+            end
         elseif x.args[1] == :(==)
             # fixed variable
             var = x.args[2]
             @assert length(x.args) == 3
-            fixedvalue = esc(x.args[3])
-            hasfix = true
+            infoexpr = fix(infoexpr, esc(x.args[3]), _error)
         else
             # Its a comparsion, but not using <= ... <=
             _error("Unexpected syntax $(string(x)).")
@@ -1061,64 +1057,35 @@ macro variable(args...)
     quotvarname = anonvar ? :(:__anon__) : quot(getname(var))
     escvarname  = anonvar ? variable     : esc(getname(var))
     # TODO: Should we generate non-empty default names for variables?
-    basename = anonvar ? "" : string(getname(var))
+    if isempty(basename_kwargs)
+        basename = anonvar ? "" : string(getname(var))
+    else
+        basename = esc(basename_kwargs[1].args[2])
+    end
 
     if !isa(getname(var),Symbol) && !anonvar
         Base.error("Expression $(getname(var)) should not be used as a variable name. Use the \"anonymous\" syntax $(getname(var)) = @variable(m, ...) instead.")
     end
 
     # process keyword arguments
-    value = NaN
     obj = nothing
-    binary = false
-    integer = false
-    extra_kwargs = []
-    for ex in kwargs
-        kwarg = ex.args[1]
-        if kwarg == :start
-            hasstart = true
-            value = esc(ex.args[2])
-        elseif kwarg == :basename
-            basename = esc(ex.args[2])
-        elseif kwarg == :lowerbound
-            haslb && _error("Cannot specify variable lowerbound twice")
-            lb = esc_nonconstant(ex.args[2])
-            haslb = true
-        elseif kwarg == :upperbound
-            hasub && _error("Cannot specify variable upperbound twice")
-            ub = esc_nonconstant(ex.args[2])
-            hasub = true
-        elseif kwarg == :integer
-            integer = esc_nonconstant(ex.args[2])
-        elseif kwarg == :binary
-            binary = esc_nonconstant(ex.args[2])
-        else
-            push!(extra_kwargs, ex)
-        end
-    end
 
     sdp = any(t -> (t == :PSD), extra)
     symmetric = (sdp || any(t -> (t == :Symmetric), extra))
     extra = filter(x -> (x != :PSD && x != :Symmetric), extra) # filter out PSD and sym tag
     for ex in extra
         if ex == :Int
-            if integer != false
-                _error("'Int' and 'integer' keyword argument cannot both be specified.")
-            end
-            integer = true
+            infoexpr = setinteger(infoexpr, _error)
         elseif ex == :Bin
-            if binary != false
-                _error("'Bin' and 'binary' keyword argument cannot both be specified.")
-            end
-            binary = true
+            infoexpr = setbinary(infoexpr, _error)
         end
     end
     extra = esc.(filter(ex -> !(ex in [:Int,:Bin]), extra))
 
+    info = evalcode(infoexpr)
     if isa(var,Symbol)
         # Easy case - a single variable
         sdp && _error("Cannot add a semidefinite scalar variable")
-        info = :(VariableInfo($haslb, $lb, $hasub, $ub, $hasfix, $fixedvalue, $hasstart, $value, $binary, $integer))
         buildcall = :( buildvariable($_error, $info, $(extra...)) )
         addkwargs!(buildcall, extra_kwargs)
         variablecall = :( addvariable($m, $buildcall, $basename) )
@@ -1134,7 +1101,6 @@ macro variable(args...)
         clear_dependencies(i) = (isdependent(idxvars,idxsets[i],i) ? () : idxsets[i])
 
         # Code to be used to create each variable of the container.
-        info = :(VariableInfo($haslb, $lb, $hasub, $ub, $hasfix, $fixedvalue, $hasstart, $value, $binary, $integer))
         buildcall = :( buildvariable($_error, $info, $(extra...)) )
         addkwargs!(buildcall, extra_kwargs)
         variablecall = :( addvariable($m, $buildcall, $(namecall(basename, idxvars))) )
@@ -1165,7 +1131,7 @@ macro variable(args...)
                 end
             end
 
-            if haslb || hasub
+            if infoexpr.haslb || infoexpr.hasub
                 _error("Semidefinite or symmetric variables cannot be provided bounds")
             end
             creationcode = quote
