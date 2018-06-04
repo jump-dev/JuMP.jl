@@ -1,36 +1,18 @@
 Installation Guide
 ==================
 
-This guide will briefly guide you through installing Julia, JuMP and\[a\] solver\[s\] of your choice.
-
-Getting Julia
--------------
-
-At the time of writing this documentation the latest release of Julia is version `0.5`, which is the version required by JuMP. You can easily build from source on OS X and Linux, but the binaries will work well for most people.
-
-Download links and more detailed instructions are available on the [Julia website](http://julialang.org).
-
-Getting JuMP
-------------
-
-Once you've installed Julia, installing JuMP is simple. Julia has a git-based package system. To use it, open Julia in interactive mode (i.e. `julia` at the command line) and use the package manager:
-
-```julia
-julia> Pkg.add("JuMP")
-```
-
-This command checks [METADATA.jl](https://github.com/JuliaLang/METADATA.jl) to determine what the most recent version of JuMP is and then downloads it from its repository on GitHub.
-
-To start using JuMP (after installing a solver), it should be imported into the local scope:
-
-```julia
-julia> using JuMP
-```
+DRAFT: Install Julia. Install JuMP.
 
 Getting Solvers
 ---------------
 
-Solver support in Julia is currently provided by writing a solver-specific package that provides a very thin wrapper around the solver's C interface and providing a standard interface that JuMP can call. If you are interested in providing an interface to your solver, please get in touch. The table below lists the currently supported solvers and their capabilities.
+TODO: Not yet updated for MOI.
+
+Solver support in Julia is currently provided by writing a solver-specific
+package that provides a very thin wrapper around the solver's C interface and
+providing a standard interface that JuMP can call. If you are interested in
+providing an interface to your solver, please get in touch. The table below
+lists the currently supported solvers and their capabilities.
 
 
 | Solver                                                                           | Julia Package                                                                   | `solver=`                 | License     | LP    | SOCP  | MILP  | NLP   | MINLP | SDP   |

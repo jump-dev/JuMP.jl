@@ -9,8 +9,16 @@ makedocs(
         "Introduction" => "index.md",
         "Installation Guide" => "installation.md",
         "Quick Start Guide" => "quickstart.md",
-        "Expressions and Constraints" => "refexpr.md",
-        "Nonlinear Modeling" => "nlp.md"
+        "Concepts" => "concepts.md",
+        "Variables" => "variables.md",
+        "Expressions" => "expressions.md",
+        "Constraints" => "constraints.md",
+        "Solvers" => "solvers.md",
+        "Nonlinear Modeling" => "nlp.md",
+        "Style Guide" => "style.md",
+        "Extensions" => "extensions.md",
+        "Updating Guide" => "updating.md",
+        "How do I ...? (FAQ)" => "howdoi.md"
     ]
 )
 

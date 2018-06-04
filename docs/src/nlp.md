@@ -1,6 +1,8 @@
 Nonlinear Modeling
 ==================
 
+TODO: This is out of date and has not yet been updated for MOI.
+
 JuMP has support for general smooth nonlinear (convex and nonconvex) optimization problems. JuMP is able to provide exact, sparse second-order derivatives to solvers. This information can improve solver accuracy and performance.
 
 Nonlinear objectives and constraints are specified by using the `@NLobjective` and `@NLconstraint` macros. The familiar `sum()` syntax is supported within these macros, as well as `prod()` which analogously represents the product of the terms within. Note that the `@objective` and `@constraint` macros (and corresponding functions) do *not* currently support nonlinear expressions. However, a model can contain a mix of linear, quadratic, and nonlinear constraints or objective functions. Starting points may be provided by using the `start` keyword argument to `@variable`. If a starting value is not provided for a variable, it will be set to the projection of zero onto the interval defined by the variable bounds. For nonconvex problems, the returned solution is only guaranteed to be locally optimal. Convexity detection is not currently provided.
