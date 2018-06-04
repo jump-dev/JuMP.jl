@@ -7,6 +7,30 @@ Base.:*(x::PowVariable, y::PowVariable) = PowVariable(x.pow + y.pow)
 Base.copy(x::PowVariable) = x
 
 @testset "Expression" begin
+    @testset "isequal(::GenericAffExpr)" begin
+        m = Model()
+        @variable(m, x)
+        @test isequal(x + 1, x + 1)
+    end
+
+    @testset "hash(::GenericAffExpr)" begin
+        m = Model()
+        @variable(m, x)
+        @test hash(x + 1) == hash(x + 1)
+    end
+
+    @testset "isequal(::GenericQuadExpr)" begin
+        m = Model()
+        @variable(m, x)
+        @test isequal(x^2 + 1, x^2 + 1)
+    end
+
+    @testset "hash(::GenericQuadExpr)" begin
+        m = Model()
+        @variable(m, x)
+        @test hash(x^2 + 1) == hash(x^2 + 1)
+    end
+
     @testset "value for GenericAffExpr" begin
         expr1 = JuMP.GenericAffExpr(3.0, 3 => -5.0, 2 => 4.0)
         @test @inferred(JuMP.value(expr1, -)) == 10.0
