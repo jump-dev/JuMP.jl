@@ -1028,18 +1028,12 @@ macro variable(args...)
             var isa Number && _error("Variable declaration of the form `$(x.args[3]) $(x.args[1]) $var` is not supported. Use `$(x.args[3]) <= $var` instead.")
             @assert length(x.args) == 3
             setlowerbound(infoexpr, esc_nonconstant(x.args[3]), _error)
-            if !infoexpr.hasub
-                infoexpr.upperbound = Inf # Change NaN -> Inf which has same type
-            end
         elseif x.args[1] == :<= || x.args[1] == :≤
             # x <= ub
             var = x.args[2]
             var isa Number && _error("Variable declaration of the form `$(x.args[3]) $(x.args[1]) $var` is not supported. Use `$(x.args[3]) >= $var` instead.")
             @assert length(x.args) == 3
             setupperbound(infoexpr, esc_nonconstant(x.args[3]), _error)
-            if !infoexpr.haslb
-                infoexpr.lowerbound = -Inf # Change NaN -> -Inf which has same type
-            end
         elseif x.args[1] == :(==)
             # fixed variable
             var = x.args[2]
