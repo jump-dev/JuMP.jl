@@ -1082,7 +1082,7 @@ macro variable(args...)
     end
     extra = esc.(filter(ex -> !(ex in [:Int,:Bin]), extra))
 
-    info = evalcode(infoexpr)
+    info = constructor_expr(infoexpr)
     if isa(var,Symbol)
         # Easy case - a single variable
         sdp && _error("Cannot add a semidefinite scalar variable")
