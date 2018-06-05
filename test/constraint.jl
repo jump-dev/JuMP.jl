@@ -1,5 +1,5 @@
 # The parameter names correspond to the JuMP types so that the test can serve as examples that can be copy pasted
-function constraints_test(ModelType::Type{<:JuMP.AbstractModel}, VariableRefType::Type{<:JuMP.AbstractVariableRef})
+function constraints_test(ModelType::Type{<:JuMP.AbstractModel}, VariableRefType::Type{<:JuMP.AbstractVariableRef}, ConstraintRefType::Type)
     AffExprType = JuMP.GenericAffExpr{Float64, VariableRefType}
     QuadExprType = JuMP.GenericQuadExpr{Float64, VariableRefType}
 
@@ -145,6 +145,18 @@ function constraints_test(ModelType::Type{<:JuMP.AbstractModel}, VariableRefType
         end
     end
 
+    @testset "Broadcasted constraint with indices" begin
+        m = ModelType()
+        @variable m x[1:2]
+        @constraint m cref1[i=2:4] x .== [i, i+1]
+        @test cref1 isa JuMP.JuMPArray{AbstractArray{ConstraintRefType}}
+        @constraint m cref2[i=1:3, j=1:4] x .≤ [i+j, i-j]
+        @test cref2 isa Matrix{AbstractArray{ConstraintRefType}}
+        @variable m y[1:2, 1:2]
+        @constraint m cref3[i=1:2] x[i,:] .== 1
+        @test cref3 isa Vector{AbstractArray{ConstraintRefType}}
+    end
+
     @testset "QuadExprType constraints" begin
         m = ModelType()
         @variable(m, x)
@@ -239,9 +251,9 @@ function constraints_test(ModelType::Type{<:JuMP.AbstractModel}, VariableRefType
 end
 
 @testset "Constraints for JuMP.Model" begin
-    constraints_test(Model, VariableRef)
+    constraints_test(Model, VariableRef, ConstraintRef{Model})
 end
 
 @testset "Constraints for JuMPExtension.MyModel" begin
-    constraints_test(JuMPExtension.MyModel, JuMPExtension.MyVariableRef)
+    constraints_test(JuMPExtension.MyModel, JuMPExtension.MyVariableRef, JuMPExtension.MyConstraintRef)
 end
