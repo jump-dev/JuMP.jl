@@ -308,11 +308,11 @@ function parseconstraint(_error::Function, lb, lsign::Symbol, aff, rsign::Symbol
     vectorized, parsecode, buildcall
 end
 
-function parseconstraint(args...)
+function parseconstraint(_error::Function, args...)
     # Unknown
-    constraint_error(args, string("Constraints must be in one of the following forms:\n" *
+    _error("Constraints must be in one of the following forms:\n" *
           "       expr1 <= expr2\n" * "       expr1 >= expr2\n" *
-          "       expr1 == expr2\n" * "       lb <= expr <= ub"))
+          "       expr1 == expr2\n" * "       lb <= expr <= ub")
 end
 
 const ScalarPolyhedralSets = Union{MOI.LessThan,MOI.GreaterThan,MOI.EqualTo,MOI.Interval}
