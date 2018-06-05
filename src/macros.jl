@@ -1008,15 +1008,15 @@ macro variable(args...)
             # ub >= x >= lb
             x.args[4] == :>= || x.args[4] == :≥ || _error("Invalid variable bounds")
             var = x.args[3]
-            setlowerbound(infoexpr, esc_nonconstant(x.args[5]), _error)
-            setupperbound(infoexpr, esc_nonconstant(x.args[1]), _error)
+            setlowerbound_or_error(infoexpr, esc_nonconstant(x.args[5]), _error)
+            setupperbound_or_error(infoexpr, esc_nonconstant(x.args[1]), _error)
         elseif x.args[2] == :<= || x.args[2] == :≤
             # lb <= x <= u
             var = x.args[3]
             (x.args[4] != :<= && x.args[4] != :≤) &&
                 _error("Expected <= operator after variable name.")
-            setlowerbound(infoexpr, esc_nonconstant(x.args[1]), _error)
-            setupperbound(infoexpr, esc_nonconstant(x.args[5]), _error)
+            setlowerbound_or_error(infoexpr, esc_nonconstant(x.args[1]), _error)
+            setupperbound_or_error(infoexpr, esc_nonconstant(x.args[5]), _error)
         else
             _error("Use the form lb <= ... <= ub.")
         end
@@ -1027,18 +1027,18 @@ macro variable(args...)
             var = x.args[2]
             var isa Number && _error("Variable declaration of the form `$(x.args[3]) $(x.args[1]) $var` is not supported. Use `$(x.args[3]) <= $var` instead.")
             @assert length(x.args) == 3
-            setlowerbound(infoexpr, esc_nonconstant(x.args[3]), _error)
+            setlowerbound_or_error(infoexpr, esc_nonconstant(x.args[3]), _error)
         elseif x.args[1] == :<= || x.args[1] == :≤
             # x <= ub
             var = x.args[2]
             var isa Number && _error("Variable declaration of the form `$(x.args[3]) $(x.args[1]) $var` is not supported. Use `$(x.args[3]) >= $var` instead.")
             @assert length(x.args) == 3
-            setupperbound(infoexpr, esc_nonconstant(x.args[3]), _error)
+            setupperbound_or_error(infoexpr, esc_nonconstant(x.args[3]), _error)
         elseif x.args[1] == :(==)
             # fixed variable
             var = x.args[2]
             @assert length(x.args) == 3
-            fix(infoexpr, esc(x.args[3]), _error)
+            fix_or_error(infoexpr, esc(x.args[3]), _error)
         else
             # Its a comparsion, but not using <= ... <=
             _error("Unexpected syntax $(string(x)).")
@@ -1069,9 +1069,9 @@ macro variable(args...)
     extra = filter(x -> (x != :PSD && x != :Symmetric), extra) # filter out PSD and sym tag
     for ex in extra
         if ex == :Int
-            setinteger(infoexpr, _error)
+            setinteger_or_error(infoexpr, _error)
         elseif ex == :Bin
-            setbinary(infoexpr, _error)
+            setbinary_or_error(infoexpr, _error)
         end
     end
     extra = esc.(filter(ex -> !(ex in [:Int,:Bin]), extra))

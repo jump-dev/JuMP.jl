@@ -19,26 +19,26 @@ mutable struct VariableInfoExpr
     integer::Any
 end
 
-function setlowerbound(info::VariableInfoExpr, lower, _error::Function)
+function setlowerbound_or_error(info::VariableInfoExpr, lower, _error::Function)
     info.haslb && _error("Cannot specify variable lowerbound twice")
     info.haslb = true
     info.lowerbound = lower
 end
-function setupperbound(info::VariableInfoExpr, upper, _error::Function)
+function setupperbound_or_error(info::VariableInfoExpr, upper, _error::Function)
     info.hasub && _error("Cannot specify variable lowerbound twice")
     info.hasub = true
     info.upperbound = upper
 end
-function fix(info::VariableInfoExpr, value, _error::Function)
+function fix_or_error(info::VariableInfoExpr, value, _error::Function)
     info.hasfix && _error("Cannot specify variable fixed value twice")
     info.hasfix = true
     info.fixedvalue = value
 end
-function setbinary(info::VariableInfoExpr, _error::Function)
+function setbinary_or_error(info::VariableInfoExpr, _error::Function)
     info.binary === false || _error("'Bin' and 'binary' keyword argument cannot both be specified.")
     info.binary = true
 end
-function setinteger(info::VariableInfoExpr, _error::Function)
+function setinteger_or_error(info::VariableInfoExpr, _error::Function)
     info.integer === false || _error("'Int' and 'integer' keyword argument cannot both be specified.")
     info.integer = true
 end
