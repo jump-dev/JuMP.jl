@@ -52,6 +52,7 @@ function keywordify(kw::Expr)
     (kw.args[1], esc_nonconstant(kw.args[2]))
 end
 function VariableInfoExpr(; lowerbound=NaN, upperbound=NaN, start=NaN, binary=false, integer=false)
+    # isnan(::Expr) is not defined so we need to do !== NaN
     VariableInfoExpr(lowerbound !== NaN, lowerbound, upperbound !== NaN, upperbound, false, NaN, start !== NaN, start, binary, integer)
 end
 
