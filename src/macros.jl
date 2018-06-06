@@ -449,7 +449,7 @@ function constraint_macro(args, macro_name::Symbol, parsefun::Function)
 
     # Determine the return type of addconstraint. This is needed for JuMP extensions for which this is different than ConstraintRef
     if vectorized
-        contype = :( AbstractArray{constrainttype($m)} )
+        contype = :( AbstractArray{constrainttype($m)} ) # TODO use a concrete type instead of AbstractArray, see #525, #1310
     else
         contype = :( constrainttype($m) )
     end
