@@ -5,6 +5,57 @@
 
 abstract type AbstractVariable end
 
+# Any fields can usually be either a number or an expression
+mutable struct VariableInfoExpr
+    haslb::Bool
+    lowerbound::Any
+    hasub::Bool
+    upperbound::Any
+    hasfix::Bool
+    fixedvalue::Any
+    hasstart::Bool
+    start::Any
+    binary::Any
+    integer::Any
+end
+
+function setlowerbound_or_error(_error::Function, info::VariableInfoExpr, lower)
+    info.haslb && _error("Cannot specify variable lowerbound twice")
+    info.haslb = true
+    info.lowerbound = lower
+end
+function setupperbound_or_error(_error::Function, info::VariableInfoExpr, upper)
+    info.hasub && _error("Cannot specify variable lowerbound twice")
+    info.hasub = true
+    info.upperbound = upper
+end
+function fix_or_error(_error::Function, info::VariableInfoExpr, value)
+    info.hasfix && _error("Cannot specify variable fixed value twice")
+    info.hasfix = true
+    info.fixedvalue = value
+end
+function setbinary_or_error(_error::Function, info::VariableInfoExpr)
+    info.binary === false || _error("'Bin' and 'binary' keyword argument cannot both be specified.")
+    info.binary = true
+end
+function setinteger_or_error(_error::Function, info::VariableInfoExpr)
+    info.integer === false || _error("'Int' and 'integer' keyword argument cannot both be specified.")
+    info.integer = true
+end
+
+function isinfokeyword(kw::Expr)
+    kw.args[1] in [:lowerbound, :upperbound, :start, :binary, :integer]
+end
+# :(start = 0)     -> (:start, 0)
+# :(start = i + 1) -> (:start, :($(Expr(:escape, :(i + 1)))))
+function keywordify(kw::Expr)
+    (kw.args[1], esc_nonconstant(kw.args[2]))
+end
+function VariableInfoExpr(; lowerbound=NaN, upperbound=NaN, start=NaN, binary=false, integer=false)
+    # isnan(::Expr) is not defined so we need to do !== NaN
+    VariableInfoExpr(lowerbound !== NaN, lowerbound, upperbound !== NaN, upperbound, false, NaN, start !== NaN, start, binary, integer)
+end
+
 mutable struct VariableInfo{S, T, U, V}
     haslb::Bool
     lowerbound::S
@@ -17,6 +68,8 @@ mutable struct VariableInfo{S, T, U, V}
     binary::Bool
     integer::Bool
 end
+
+constructor_expr(info::VariableInfoExpr) = :(VariableInfo($(info.haslb), $(info.lowerbound), $(info.hasub), $(info.upperbound), $(info.hasfix), $(info.fixedvalue), $(info.hasstart), $(info.start), $(info.binary), $(info.integer)))
 
 struct ScalarVariable{S, T, U, V} <: AbstractVariable
     info::VariableInfo{S, T, U, V}

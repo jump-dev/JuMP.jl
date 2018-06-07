@@ -56,7 +56,7 @@ end
             @test info.haslb
             @test info.lowerbound == 0
             @test !info.hasub
-            @test info.upperbound == Inf
+            @test isnan(info.upperbound)
             @test !info.hasfix
             @test isnan(info.fixedvalue)
             @test !info.binary
