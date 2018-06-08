@@ -239,4 +239,11 @@ end
         @test typeof(Y) == SparseMatrixCSC{Float64, Int}
         @test Y == sparse([1, 3], [2, 3], [1, 2])
     end
+
+    @testset "@constraintref does not work with JuMPArray #1329" begin
+        m = Model()
+        cities = [:LA, :NY]
+        @constraintref cref[cities]
+        @test cref.indexsets[1] == cities
+    end
 end

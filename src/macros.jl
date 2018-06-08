@@ -1139,7 +1139,7 @@ macro constraintref(var)
         idxpairs = IndexPair[]
 
         code = quote
-            $(esc(gendict(varname, :ConstraintRef, idxsets...)))
+            $(gendict(esc(varname), :ConstraintRef, esc.(idxsets)...))
             nothing
         end
         return code
