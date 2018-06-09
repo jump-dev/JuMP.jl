@@ -41,17 +41,22 @@ using Compat.Test
         @test !JuMP.isbinary(ubonly)
         @test JuMP.isinteger(ubonly)
 
-        @variable(mcon, 0 <= bothb1 <= 1)
-        @variable(mcon, 0 ≤  bothb2 ≤  1)
-        @variable(mcon, 1 >= bothb3 >= 0)
-        @variable(mcon, 1 ≥  bothb4 ≥  0)
-        for bothb in (bothb1, bothb2, bothb3, bothb4)
-            @test JuMP.haslowerbound(bothb)
-            @test JuMP.lowerbound(bothb) == 0.0
-            @test JuMP.hasupperbound(bothb)
-            @test JuMP.upperbound(bothb) == 1.0
-            @test !JuMP.isfixed(bothb)
+        function has_bounds(var, lb, ub)
+            @test JuMP.haslowerbound(var)
+            @test JuMP.lowerbound(var) == lb
+            @test JuMP.hasupperbound(var)
+            @test JuMP.upperbound(var) == ub
+            @test !JuMP.isfixed(var)
         end
+
+        @variable(mcon, 0 <= bothb1 <= 1)
+        has_bounds(bothb1, 0.0, 1.0)
+        @variable(mcon, 0 ≤  bothb2 ≤  1)
+        has_bounds(bothb2, 0.0, 1.0)
+        @variable(mcon, 1 >= bothb3 >= 0)
+        has_bounds(bothb3, 0.0, 1.0)
+        @variable(mcon, 1 ≥  bothb4 ≥  0)
+        has_bounds(bothb4, 0.0, 1.0)
         @test_macro_throws ErrorException @variable(mcon, 1 ≥ bothb5 ≤ 0)
         @test_macro_throws ErrorException @variable(mcon, 1 ≤ bothb6 ≥ 0)
 
