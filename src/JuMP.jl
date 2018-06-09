@@ -81,8 +81,8 @@ const MOIBIN = MOICON{MOI.SingleVariable,MOI.ZeroOne}
 # Model
 
 # Model has three modes:
-# 1) Automatic: moibackend field holds a CachingOptimizer in Automatic mode.
-# 2) Manual: moibackend field holds a CachingOptimizer in Manual mode.
+# 1) Automatic: moibackend field holds a LazyBridgeOptimizer{CachingOptimizer} in Automatic mode.
+# 2) Manual: moibackend field holds a LazyBridgeOptimizer{CachingOptimizer} in Manual mode.
 # 3) Direct: moibackend field holds an AbstractOptimizer. No extra copy of the model is stored. The moibackend must support addconstraint! etc.
 # Methods to interact with the CachingOptimizer are defined in solverinterface.jl.
 @enum ModelMode Automatic Manual Direct
@@ -116,7 +116,7 @@ mutable struct Model <: AbstractModel
     # # such that a symmetry-enforcing constraint has been created
     # # between sdpconstr[c].terms[i,j] and sdpconstr[c].terms[j,i]
     # sdpconstrSym::Vector{Vector{Tuple{Int,Int}}}
-    moibackend::Union{MOI.AbstractOptimizer,MOIU.CachingOptimizer}
+    moibackend::MOI.AbstractOptimizer
     # callbacks
     callbacks
     # lazycallback
@@ -161,7 +161,8 @@ mutable struct Model <: AbstractModel
             m.moibackend = backend
         else
             @assert mode != Direct
-            m.moibackend = MOIU.CachingOptimizer(MOIU.UniversalFallback(JuMPMOIModel{Float64}()), mode == Automatic ? MOIU.Automatic : MOIU.Manual)
+            cached_optimizer = MOIU.CachingOptimizer(MOIU.UniversalFallback(JuMPMOIModel{Float64}()), mode == Automatic ? MOIU.Automatic : MOIU.Manual)
+            m.moibackend = MOI.Bridges.fullbridgeoptimizer(cached_optimizer, Float64)
             if optimizer !== nothing
                 MOIU.resetoptimizer!(m, optimizer)
             end
@@ -181,9 +182,9 @@ end
 # Getters/setters
 
 function mode(m::Model)
-    if !(m.moibackend isa MOIU.CachingOptimizer)
+    if !(m.moibackend isa MOI.Bridges.LazyBridgeOptimizer{<:MOIU.CachingOptimizer})
         return Direct
-    elseif m.moibackend.mode == MOIU.Automatic
+    elseif m.moibackend.model.mode == MOIU.Automatic
         return Automatic
     else
         return Manual
@@ -326,7 +327,7 @@ function optimizerindex(v::VariableRef)
         return index(v)
     else
         @assert v.m.moibackend.state == MOIU.AttachedOptimizer
-        return v.m.moibackend.model_to_optimizer_map[index(v)]
+        return v.m.moibackend.model.model_to_optimizer_map[index(v)]
     end
 end
 
@@ -335,7 +336,7 @@ function optimizerindex(cr::ConstraintRef{Model})
         return index(cr)
     else
         @assert cr.m.moibackend.state == MOIU.AttachedOptimizer
-        return cr.m.moibackend.model_to_optimizer_map[index(cr)]
+        return cr.m.moibackend.model.model_to_optimizer_map[index(cr)]
     end
 end
 
