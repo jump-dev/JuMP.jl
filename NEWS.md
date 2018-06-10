@@ -1,6 +1,12 @@
 JuMP release notes
 ==================
 
+Version 0.18.2 (June 10, 2018)
+------------------------------
+
+   * Fix a bug in second-order derivatives when expressions are present (#1319)
+   * Fix a bug in `@constraintref` (#1330)
+
 Version 0.18.1 (April 9, 2018)
 ------------------------------
 
