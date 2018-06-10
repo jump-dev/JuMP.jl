@@ -39,6 +39,8 @@ using Compat.Test
             @test !JuMP.isfixed(lbonly)
             @test JuMP.isbinary(lbonly)
             @test !JuMP.isinteger(lbonly)
+            @test isequal(mcon[:lbonly],lbonly)
+            @test_throws ErrorException @variable(mcon, lbonly)
         end
 
         @testset "Upper bound" begin
@@ -49,6 +51,7 @@ using Compat.Test
             @test !JuMP.isfixed(ubonly)
             @test !JuMP.isbinary(ubonly)
             @test JuMP.isinteger(ubonly)
+            @test isequal(mcon[:ubonly],ubonly)
         end
 
         @testset "Interval" begin
@@ -93,10 +96,7 @@ using Compat.Test
             @test JuMP.name(x[-10,"Green"]) == "x[-10,Green]"
             # TODO: broken because of https://github.com/JuliaOpt/MathOptInterface.jl/issues/302
             #@test JuMP.startvalue(x[-3,"Blue"]) == -2
-            @test isequal(mcon[:lbonly],lbonly)
-            @test isequal(mcon[:ubonly],ubonly)
             @test isequal(mcon[:onerangeub][-7],onerangeub[-7])
-            @test_throws ErrorException @variable(mcon, lbonly)
             @test_throws KeyError mcon[:foo]
         end
 
