@@ -83,7 +83,7 @@ const MOIBIN = MOICON{MOI.SingleVariable,MOI.ZeroOne}
 # Model has three modes:
 # 1) Automatic: moibackend field holds a CachingOptimizer in Automatic mode.
 # 2) Manual: moibackend field holds a CachingOptimizer in Manual mode.
-# 3) Direct: moibackend field holds an AbstractOptimizer. No extra copy of the model is stored. The moibackend must support adddconstraint! etc.
+# 3) Direct: moibackend field holds an AbstractOptimizer. No extra copy of the model is stored. The moibackend must support addconstraint! etc.
 # Methods to interact with the CachingOptimizer are defined in solverinterface.jl.
 @enum ModelMode Automatic Manual Direct
 
