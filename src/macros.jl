@@ -950,6 +950,61 @@ function namecall(basename, idxvars)
     return ex
 end
 
+reverse_sense(::Val{:<=})   = :>=
+reverse_sense(::Val{:≤})    = :≥
+reverse_sense(::Val{:>=})   = :<=
+reverse_sense(::Val{:≥})    = :≤
+reverse_sense(::Val{:(==)}) = :(==)
+
+"""
+    parse_one_operator_variable(_error::Function, infoexpr::VariableInfoExpr, sense::Val{S}, value) where S
+
+Update `infoexr` for a variable expression in the `@variable` macro of the form `variable name S value`.
+"""
+parse_one_operator_variable(_error::Function, infoexpr::VariableInfoExpr, ::Union{Val{:<=}, Val{:≤}}, upper) = setupperbound_or_error(_error, infoexpr, upper)
+parse_one_operator_variable(_error::Function, infoexpr::VariableInfoExpr, ::Union{Val{:>=}, Val{:≥}}, lower) = setlowerbound_or_error(_error, infoexpr, lower)
+parse_one_operator_variable(_error::Function, infoexpr::VariableInfoExpr, ::Val{:(==)}, value) = fix_or_error(_error, infoexpr, value)
+parse_one_operator_variable(_error::Function, infoexpr::VariableInfoExpr, ::Val{S}, value) where S = _error("Unknown sense $S.")
+function parsevariable(_error::Function, infoexpr::VariableInfoExpr, sense::Symbol, var, value)
+    # Variable declaration of the form: var sense value
+
+    # There is not way to determine at parsing time which of lhs or rhs is the
+    # variable name and which is the value. For instance, lhs could be the
+    # Symbol `:x` and rhs could be the Symbol `:a` where a variable `a` is
+    # assigned to 1 in the local scope. Knowing this, we know that `x` is the
+    # variable name but at parse time there is now way to know that `a` has
+    # a value.
+    # Therefore, we always assume that the variable is the `lhs` and throw
+    # an helpful error in the the case were we can easily determine that the
+    # user placed the variable in the rhs, i.e. the case where the rhs is a
+    # constant number.
+    var isa Number && _error("Variable declaration of the form `$var $S $value` is not supported. Use `$value $(reverse_sense(sense)) $var` instead.")
+    parse_one_operator_variable(_error, infoexpr, Val(sense), esc_nonconstant(value))
+    var
+end
+
+function parseternaryvariable(_error::Function, infoexpr::VariableInfoExpr,
+                              ::Union{Val{:<=}, Val{:≤}}, lower,
+                              ::Union{Val{:<=}, Val{:≤}}, upper)
+    setlowerbound_or_error(_error, infoexpr, lower)
+    setupperbound_or_error(_error, infoexpr, upper)
+end
+function parseternaryvariable(_error::Function, infoexpr::VariableInfoExpr,
+                              ::Union{Val{:>=}, Val{:≥}}, upper,
+                              ::Union{Val{:>=}, Val{:≥}}, lower)
+    parseternaryvariable(_error, infoexpr, Val(:≤), lower, Val(:≤), upper)
+end
+function parseternaryvariable(_error::Function, infoexpr::VariableInfoExpr,
+                              ::Val, lvalue,
+                              ::Val, rvalue)
+    _error("Use the form lb <= ... <= ub.")
+end
+function parsevariable(_error::Function, infoexpr::VariableInfoExpr, lvalue, lsign::Symbol, var, rsign::Symbol, rvalue)
+    # lvalue lsign var rsign rvalue
+    parseternaryvariable(_error, infoexpr, Val(lsign), esc_nonconstant(lvalue), Val(rsign), esc_nonconstant(rvalue))
+    var
+end
+
 # @variable(m, expr, extra...; kwargs...)
 # where `extra` is a list of extra positional arguments and `kwargs` is a list of keyword arguments.
 #
@@ -1002,51 +1057,20 @@ macro variable(args...)
     extra_kwargs = filter(kw -> kw.args[1] != :basename && !isinfokeyword(kw), kwargs)
     basename_kwargs = filter(kw -> kw.args[1] == :basename, kwargs)
     infoexpr = VariableInfoExpr(; keywordify.(info_kwargs)...)
-    var = x
-    # Identify the variable bounds. Five (legal) possibilities are "x >= lb",
-    # "x <= ub", "lb <= x <= ub", "x == val", or just plain "x"
-    explicit_comparison = false
-    if isexpr(x,:comparison) # two-sided
-        explicit_comparison = true
-        if x.args[2] == :>= || x.args[2] == :≥
-            # ub >= x >= lb
-            x.args[4] == :>= || x.args[4] == :≥ || _error("Invalid variable bounds")
-            var = x.args[3]
-            setlowerbound_or_error(_error, infoexpr, esc_nonconstant(x.args[5]))
-            setupperbound_or_error(_error, infoexpr, esc_nonconstant(x.args[1]))
-        elseif x.args[2] == :<= || x.args[2] == :≤
-            # lb <= x <= u
-            var = x.args[3]
-            (x.args[4] != :<= && x.args[4] != :≤) &&
-                _error("Expected <= operator after variable name.")
-            setlowerbound_or_error(_error, infoexpr, esc_nonconstant(x.args[1]))
-            setupperbound_or_error(_error, infoexpr, esc_nonconstant(x.args[5]))
-        else
-            _error("Use the form lb <= ... <= ub.")
-        end
-    elseif isexpr(x,:call)
-        explicit_comparison = true
-        if x.args[1] == :>= || x.args[1] == :≥
-            # x >= lb
-            var = x.args[2]
-            var isa Number && _error("Variable declaration of the form `$(x.args[3]) $(x.args[1]) $var` is not supported. Use `$(x.args[3]) <= $var` instead.")
-            @assert length(x.args) == 3
-            setlowerbound_or_error(_error, infoexpr, esc_nonconstant(x.args[3]))
-        elseif x.args[1] == :<= || x.args[1] == :≤
-            # x <= ub
-            var = x.args[2]
-            var isa Number && _error("Variable declaration of the form `$(x.args[3]) $(x.args[1]) $var` is not supported. Use `$(x.args[3]) >= $var` instead.")
-            @assert length(x.args) == 3
-            setupperbound_or_error(_error, infoexpr, esc_nonconstant(x.args[3]))
-        elseif x.args[1] == :(==)
-            # fixed variable
-            var = x.args[2]
-            @assert length(x.args) == 3
-            fix_or_error(_error, infoexpr, esc(x.args[3]))
-        else
-            # Its a comparsion, but not using <= ... <=
-            _error("Unexpected syntax $(string(x)).")
-        end
+
+    # There are four cases to consider:
+    # x                                       | type of x | x.head
+    # ----------------------------------------+-----------+------------
+    # var                                     | Symbol    | NA
+    # var[1:2]                                | Expr      | :ref
+    # var <= ub or var[1:2] <= ub             | Expr      | :call
+    # lb <= var <= ub or lb <= var[1:2] <= ub | Expr      | :comparison
+    # In the two last cases, we call parsevariable
+    explicit_comparison = isexpr(x, :comparison) || isexpr(x, :call)
+    if explicit_comparison
+        var = parsevariable(_error, infoexpr, x.args...)
+    else
+        var = x
     end
 
     anonvar = isexpr(var, :vect) || isexpr(var, :vcat) || anon_singleton

@@ -19,66 +19,93 @@ using Compat.Test
     @testset "constructors" begin
         # Constructors
         mcon = Model()
-        @variable(mcon, nobounds)
-        @test !JuMP.haslowerbound(nobounds)
-        @test !JuMP.hasupperbound(nobounds)
-        @test !JuMP.isfixed(nobounds)
-        @test JuMP.name(nobounds) == "nobounds"
 
-        @variable(mcon, lbonly >= 0, Bin)
-        @test JuMP.haslowerbound(lbonly)
-        @test JuMP.lowerbound(lbonly) == 0.0
-        @test !JuMP.hasupperbound(lbonly)
-        @test !JuMP.isfixed(lbonly)
-        @test JuMP.isbinary(lbonly)
-        @test !JuMP.isinteger(lbonly)
+        @testset "No bound" begin
+            @variable(mcon, nobounds)
+            @test !JuMP.haslowerbound(nobounds)
+            @test !JuMP.hasupperbound(nobounds)
+            @test !JuMP.isfixed(nobounds)
+            @test JuMP.name(nobounds) == "nobounds"
 
-        @variable(mcon, ubonly <= 1, Int)
-        @test !JuMP.haslowerbound(ubonly)
-        @test JuMP.hasupperbound(ubonly)
-        @test JuMP.upperbound(ubonly) == 1.0
-        @test !JuMP.isfixed(ubonly)
-        @test !JuMP.isbinary(ubonly)
-        @test JuMP.isinteger(ubonly)
+            @test typeof(zero(nobounds)) == AffExpr
+            @test typeof(one(nobounds)) == AffExpr
+        end
 
-        @variable(mcon, 0 <= bothb <= 1)
-        @test JuMP.haslowerbound(bothb)
-        @test JuMP.lowerbound(bothb) == 0.0
-        @test JuMP.hasupperbound(bothb)
-        @test JuMP.upperbound(bothb) == 1.0
-        @test !JuMP.isfixed(bothb)
+        @testset "Lower bound" begin
+            @variable(mcon, lbonly >= 0, Bin)
+            @test JuMP.haslowerbound(lbonly)
+            @test JuMP.lowerbound(lbonly) == 0.0
+            @test !JuMP.hasupperbound(lbonly)
+            @test !JuMP.isfixed(lbonly)
+            @test JuMP.isbinary(lbonly)
+            @test !JuMP.isinteger(lbonly)
+            @test isequal(mcon[:lbonly],lbonly)
+            @test_throws ErrorException @variable(mcon, lbonly)
+        end
 
-        @variable(mcon, fixed == 1.0)
-        @test !JuMP.haslowerbound(fixed)
-        @test !JuMP.hasupperbound(fixed)
-        @test JuMP.isfixed(fixed)
-        @test JuMP.fixvalue(fixed) == 1.0
+        @testset "Upper bound" begin
+            @variable(mcon, ubonly <= 1, Int)
+            @test !JuMP.haslowerbound(ubonly)
+            @test JuMP.hasupperbound(ubonly)
+            @test JuMP.upperbound(ubonly) == 1.0
+            @test !JuMP.isfixed(ubonly)
+            @test !JuMP.isbinary(ubonly)
+            @test JuMP.isinteger(ubonly)
+            @test isequal(mcon[:ubonly],ubonly)
+        end
 
-        @variable(mcon, onerangeub[-7:1] <= 10, Int)
-        @variable(mcon, manyrangelb[0:1,10:20,1:1] >= 2)
-        @test JuMP.haslowerbound(manyrangelb[0,15,1])
-        @test JuMP.lowerbound(manyrangelb[0,15,1]) == 2
-        @test !JuMP.hasupperbound(manyrangelb[0,15,1])
+        @testset "Interval" begin
+            function has_bounds(var, lb, ub)
+                @test JuMP.haslowerbound(var)
+                @test JuMP.lowerbound(var) == lb
+                @test JuMP.hasupperbound(var)
+                @test JuMP.upperbound(var) == ub
+                @test !JuMP.isfixed(var)
+            end
 
-        s = ["Green","Blue"]
-        @variable(mcon, x[i=-10:10,s] <= 5.5, Int, start=i+1)
-        @test JuMP.upperbound(x[-4,"Green"]) == 5.5
-        @test JuMP.name(x[-10,"Green"]) == "x[-10,Green]"
-        # TODO: broken because of https://github.com/JuliaOpt/MathOptInterface.jl/issues/302
-        #@test JuMP.startvalue(x[-3,"Blue"]) == -2
-        @test isequal(mcon[:lbonly],lbonly)
-        @test isequal(mcon[:ubonly],ubonly)
-        @test isequal(mcon[:onerangeub][-7],onerangeub[-7])
-        @test_throws ErrorException @variable(mcon, lbonly)
-        @test_throws KeyError mcon[:foo]
+            @variable(mcon, 0 <= bothb1 <= 1)
+            has_bounds(bothb1, 0.0, 1.0)
+            @variable(mcon, 0 ≤  bothb2 ≤  1)
+            has_bounds(bothb2, 0.0, 1.0)
+            @variable(mcon, 1 >= bothb3 >= 0)
+            has_bounds(bothb3, 0.0, 1.0)
+            @variable(mcon, 1 ≥  bothb4 ≥  0)
+            has_bounds(bothb4, 0.0, 1.0)
+            @test_macro_throws ErrorException @variable(mcon, 1 ≥ bothb5 ≤ 0)
+            @test_macro_throws ErrorException @variable(mcon, 1 ≤ bothb6 ≥ 0)
+        end
 
-        @test typeof(zero(nobounds)) == AffExpr
-        @test typeof(one(nobounds)) == AffExpr
+        @testset "Fix" begin
+            @variable(mcon, fixed == 1.0)
+            @test !JuMP.haslowerbound(fixed)
+            @test !JuMP.hasupperbound(fixed)
+            @test JuMP.isfixed(fixed)
+            @test JuMP.fixvalue(fixed) == 1.0
+        end
 
-        @test_throws ErrorException @variable(mcon, [(0,0)]) # #922
-        x = @variable(mcon, [(0,2)])
-        @test JuMP.name(x[0]) == ""
-        @test JuMP.name(x[2]) == ""
+        @testset "Custom index sets" begin
+            @variable(mcon, onerangeub[-7:1] <= 10, Int)
+            @variable(mcon, manyrangelb[0:1,10:20,1:1] >= 2)
+            @test JuMP.haslowerbound(manyrangelb[0,15,1])
+            @test JuMP.lowerbound(manyrangelb[0,15,1]) == 2
+            @test !JuMP.hasupperbound(manyrangelb[0,15,1])
+
+            s = ["Green","Blue"]
+            @variable(mcon, x[i=-10:10,s] <= 5.5, Int, start=i+1)
+            @test JuMP.upperbound(x[-4,"Green"]) == 5.5
+            @test JuMP.name(x[-10,"Green"]) == "x[-10,Green]"
+            # TODO: broken because of https://github.com/JuliaOpt/MathOptInterface.jl/issues/302
+            #@test JuMP.startvalue(x[-3,"Blue"]) == -2
+            @test isequal(mcon[:onerangeub][-7],onerangeub[-7])
+            @test_throws KeyError mcon[:foo]
+        end
+
+        @testset "Anonymous variable" begin
+            @test_throws ErrorException @variable(mcon, [(0,0)]) # #922
+            x = @variable(mcon, [(0,2)])
+            @test JuMP.name(x[0]) == ""
+            @test JuMP.name(x[2]) == ""
+        end
     end
 
     @testset "isvalid and delete variable" begin
