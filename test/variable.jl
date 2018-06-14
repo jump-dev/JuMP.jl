@@ -15,10 +15,12 @@ import JuMP.repl
 using Compat
 using Compat.Test
 
-@testset "VariableRefs" begin
+function variables_test(ModelType::Type{<:JuMP.AbstractModel}, VariableRefType::Type{<:JuMP.AbstractVariableRef})
+    AffExprType = JuMP.GenericAffExpr{Float64, VariableRefType}
+
     @testset "constructors" begin
         # Constructors
-        mcon = Model()
+        mcon = ModelType()
 
         @testset "No bound" begin
             @variable(mcon, nobounds)
@@ -27,8 +29,8 @@ using Compat.Test
             @test !JuMP.isfixed(nobounds)
             @test JuMP.name(nobounds) == "nobounds"
 
-            @test typeof(zero(nobounds)) == AffExpr
-            @test typeof(one(nobounds)) == AffExpr
+            @test zero(nobounds) isa AffExprType
+            @test one(nobounds) isa AffExprType
         end
 
         @testset "Lower bound" begin
@@ -109,7 +111,7 @@ using Compat.Test
     end
 
     @testset "isvalid and delete variable" begin
-        m = Model()
+        m = ModelType()
         @variable(m, x)
         @test MOI.isvalid(m, x)
         MOI.delete!(m, x)
@@ -118,7 +120,7 @@ using Compat.Test
 
 
     @testset "get and set bounds" begin
-        m = Model()
+        m = ModelType()
         @variable(m, 0 <= x <= 2)
         @test JuMP.lowerbound(x) == 0
         @test JuMP.upperbound(x) == 2
@@ -143,7 +145,7 @@ using Compat.Test
     end
 
     @testset "get and set start" begin
-        m = Model()
+        m = ModelType()
         @variable(m, x[1:3])
         x0 = collect(1:3)
         JuMP.setstartvalue.(x, x0)
@@ -155,7 +157,7 @@ using Compat.Test
     end
 
     @testset "get and set integer/binary" begin
-        m = Model()
+        m = ModelType()
         @variable(m, x[1:3])
 
         JuMP.setinteger(x[2])
@@ -172,7 +174,7 @@ using Compat.Test
     end
 
     @testset "repeated elements in index set (issue #199)" begin
-        repeatmod = Model()
+        repeatmod = ModelType()
         s = [:x,:x,:y]
         @test_throws ErrorException @variable(repeatmod, x[s], container = JuMPArray)
         @test_throws ErrorException @variable(repeatmod, x[s], container = Dict)
@@ -181,20 +183,20 @@ using Compat.Test
     end
 
     @testset "Base.OneTo as index set (#933)" begin
-        m = Model()
+        m = ModelType()
         x = @variable(m, [Base.OneTo(3), 1:2], container=Auto)
-        @test x isa Matrix{VariableRef}
+        @test x isa Matrix{VariableRefType}
         @test size(x) == (3,2)
         x = @variable(m, [Base.OneTo(3), 1:2], container=Array)
-        @test x isa Matrix{VariableRef}
+        @test x isa Matrix{VariableRefType}
         @test size(x) == (3,2)
         x = @variable(m, [Base.OneTo(3), 1:2], container=JuMPArray)
-        @test x isa JuMPArray{VariableRef}
+        @test x isa JuMPArray{VariableRefType}
         @test length.(indices(x)) == (3,2)
     end
 
     @testset "basename= in @variable" begin
-        m = Model()
+        m = ModelType()
         @variable(m, x)
         @test JuMP.name(x) == "x"
 
@@ -210,7 +212,7 @@ using Compat.Test
     # @testset "condition in indexing" begin
     #    fa = repl[:for_all]
     #    inset, dots = repl[:in], repl[:dots]
-    #    condmod = Model()
+    #    condmod = ModelType()
     #    @variable(condmod, x[i=1:10; iseven(i)])
     #    @variable(condmod, y[j=1:10,k=3:2:9; isodd(j+k) && k <= 8])
     #    @test length(x.tupledict) == 5
@@ -219,14 +221,14 @@ using Compat.Test
     # end
 
     @testset "@variable returning Array{VariableRef}" begin
-        m = Model()
+        m = ModelType()
         @variable(m, x[1:3,1:4,1:2], start = 0.0)
         @variable(m, y[1:0], start = 0.0)
         @variable(m, z[1:4], start = 0.0)
 
-        @test typeof(x) == Array{VariableRef,3}
-        @test typeof(y) == Array{VariableRef,1}
-        @test typeof(z) == Array{VariableRef,1}
+        @test typeof(x) == Array{VariableRefType,3}
+        @test typeof(y) == Vector{VariableRefType}
+        @test typeof(z) == Vector{VariableRefType}
 
         @test typeof(JuMP.startvalue.(x)) == Array{Float64,3}
         # No type to infer for an empty collection.
@@ -235,7 +237,7 @@ using Compat.Test
     end
 
     @testset "startvalue on empty things" begin
-        m = Model()
+        m = ModelType()
         @variable(m, x[1:4,  1:0,1:3], start = 0) # Array{VariableRef}
         @variable(m, y[1:4,  2:1,1:3], start = 0) # JuMPArray
         @variable(m, z[1:4,Set(),1:3], start = 0) # Dict
@@ -251,7 +253,7 @@ using Compat.Test
 # Slices three-dimensional JuMPArray x[I,J,K]
 # I,J,K can be singletons, ranges, colons, etc.
 function sliceof(x, I, J, K)
-    y = Array{VariableRef}(length(I), length(J), length(K))
+    y = Array{VariableRefType}(length(I), length(J), length(K))
 
     ii = 1
     jj = 1
@@ -273,7 +275,7 @@ function sliceof(x, I, J, K)
 end
 
     @testset "Slices of JuMPArray (#684)" begin
-        m = Model()
+        m = ModelType()
         @variable(m, x[1:3, 1:4,1:2], container=JuMPArray)
         @variable(m, y[1:3,-1:2,3:4])
         @variable(m, z[1:3,-1:2:4,3:4])
@@ -319,7 +321,7 @@ end
     end
 
     @testset "Can't use end for indexing a JuMPArray or Dict" begin
-        m = Model()
+        m = ModelType()
         @variable(m, x[0:2,1:4])
         @variable(m, y[i=1:4,j=1:4;true])
         @variable(m, z[0:2])
@@ -332,7 +334,7 @@ end
     end
 
     @testset "Unsigned dimension lengths" begin
-        m = Model()
+        m = ModelType()
         t = UInt(4)
         @variable(m, x[1:t])
         #@constraintref(y[1:t])
@@ -341,12 +343,12 @@ end
 
     # TODO decide what to do here
     # @testset "getstart on sparse array (#889)" begin
-    #     m = Model()
+    #     m = ModelType()
     #     @variable(m, x)
     #     @variable(m, y)
     #     X = sparse([1, 3], [2, 3], [x, y])
     #
-    #     @test typeof(X) == SparseMatrixCSC{VariableRef, Int}
+    #     @test typeof(X) == SparseMatrixCSC{VariableRefType, Int}
     #
     #     setstart(x, 1)
     #     setstart(y, 2)
@@ -357,7 +359,7 @@ end
     # end
 
     @testset "Symmetric variable" begin
-        m = Model()
+        m = ModelType()
 
         @variable m x[1:2, 1:2] Symmetric
         @test x isa Symmetric
@@ -367,4 +369,12 @@ end
         @test y isa Symmetric
         @test y[1, 2] === y[2, 1]
     end
+end
+
+@testset "Variables for JuMP.Model" begin
+    variables_test(Model, VariableRef)
+end
+
+@testset "Variables for JuMPExtension.MyModel" begin
+    variables_test(JuMPExtension.MyModel, JuMPExtension.MyVariableRef)
 end
