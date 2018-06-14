@@ -10,7 +10,6 @@
 # src/affexpr.jl
 # Defines all types relating to affine expressions
 # - GenericAffExpr              ∑ aᵢ xᵢ  +  c
-#   - AffExpr                   Alias for (Float64, VariableRef)
 #   - AffExprConstraint         AffExpr-in-set constraint
 # Operator overloads in src/operators.jl
 #############################################################################
@@ -206,11 +205,8 @@ end
 Base.convert(::Type{GenericAffExpr{T,V}}, v::V)    where {T,V} = GenericAffExpr(zero(T), v => one(T))
 Base.convert(::Type{GenericAffExpr{T,V}}, v::Real) where {T,V} = GenericAffExpr{T,V}(convert(T, v))
 
-# Alias for (Float64, VariableRef), the specific GenericAffExpr used by JuMP
-const AffExpr = GenericAffExpr{Float64,VariableRef}
-
 # Check all coefficients are finite, i.e. not NaN, not Inf, not -Inf
-function assert_isfinite(a::AffExpr)
+function assert_isfinite(a::GenericAffExpr)
     for (coef, var) in linearterms(a)
         isfinite(coef) || error("Invalid coefficient $coef on variable $var.")
     end
@@ -224,16 +220,16 @@ Replaces `getvalue` for most use cases.
 """
 resultvalue(a::GenericAffExpr) = value(a, resultvalue)
 
-# Note: No validation is performed that the variables in the AffExpr belong to
-# the same model.
-function MOI.ScalarAffineFunction(a::AffExpr)
+# Note: No validation is performed that the variables in the GenericAffExpr
+# belong to the same model.
+function MOI.ScalarAffineFunction(a::GenericAffExpr)
     assert_isfinite(a)
     terms = map(t -> MOI.ScalarAffineTerm(t[1], index(t[2])), linearterms(a))
     return MOI.ScalarAffineFunction(terms, a.constant)
 end
 
-function AffExpr(m::Model, f::MOI.ScalarAffineFunction)
-    aff = AffExpr()
+function GenericAffExpr{T, VariableRef{MT}}(m::MT, f::MOI.ScalarAffineFunction) where {T, MT}
+    aff = GenericAffExpr{T, VariableRef{MT}}()
     for t in f.terms
         add_to_expression!(aff, t.coefficient, VariableRef(m, t.variable_index))
     end
@@ -242,12 +238,12 @@ function AffExpr(m::Model, f::MOI.ScalarAffineFunction)
 end
 
 """
-    _fillvaf!(terms, offset::Int, oi::Int, aff::AffExpr)
+    _fillvaf!(terms, offset::Int, oi::Int, aff::GenericAffExpr)
 
 Fills the vectors terms at indices starting at `offset+1` with the terms of `aff`.
 The output index for all terms is `oi`.
 """
-function _fillvaf!(terms, offset::Int, oi::Int, aff::AffExpr)
+function _fillvaf!(terms, offset::Int, oi::Int, aff::GenericAffExpr)
     i = 1
     for (coef, var) in linearterms(aff)
         terms[offset+i] = MOI.VectorAffineTerm(Int64(oi), MOI.ScalarAffineTerm(coef, index(var)))
@@ -256,7 +252,7 @@ function _fillvaf!(terms, offset::Int, oi::Int, aff::AffExpr)
     offset + length(linearterms(aff))
 end
 
-function MOI.VectorAffineFunction(affs::Vector{AffExpr})
+function MOI.VectorAffineFunction(affs::Vector{<:GenericAffExpr})
     len = sum(aff -> length(linearterms(aff)), affs)
     terms = Vector{MOI.VectorAffineTerm{Float64}}(len)
     constant = Vector{Float64}(length(affs))
@@ -268,7 +264,7 @@ function MOI.VectorAffineFunction(affs::Vector{AffExpr})
     MOI.VectorAffineFunction(terms, constant)
 end
 
-function setobjective(m::Model, sense::Symbol, a::AffExpr)
+function setobjective(m::Model, sense::Symbol, a::GenericAffExpr)
     if sense == :Min
         moisense = MOI.MinSense
     else
@@ -281,14 +277,14 @@ function setobjective(m::Model, sense::Symbol, a::AffExpr)
 end
 
 """
-    objectivefunction(m::Model, ::Type{AffExpr})
+    objectivefunction(m::Model, ::Type{<:GenericAffExpr})
 
-Return an `AffExpr` object representing the objective function.
+Return an `GenericAffExpr` object representing the objective function.
 Error if the objective is not linear.
 """
-function objectivefunction(m::Model, ::Type{AffExpr})
+function objectivefunction(m::Model, AffExprType::Type{<:GenericAffExpr})
     f = MOI.get(m.moibackend, MOI.ObjectiveFunction{MOI.ScalarAffineFunction{Float64}}())::MOI.ScalarAffineFunction
-    return AffExpr(m, f)
+    return AffExprType(m, f)
 end
 
 
@@ -323,15 +319,15 @@ end
 
 moi_function_and_set(c::VectorAffExprConstraint) = (MOI.VectorAffineFunction(c.func), c.set)
 
-function constraintobject(cr::ConstraintRef{Model}, ::Type{AffExpr}, ::Type{SetType}) where {SetType <: MOI.AbstractScalarSet}
+function constraintobject(cr::ConstraintRef{<:Model}, AffExprType::Type{<:GenericAffExpr}, ::Type{SetType}) where {SetType <: MOI.AbstractScalarSet}
     f = MOI.get(cr.m, MOI.ConstraintFunction(), cr)::MOI.ScalarAffineFunction
     s = MOI.get(cr.m, MOI.ConstraintSet(), cr)::SetType
-    return AffExprConstraint(AffExpr(cr.m, f), s)
+    return AffExprConstraint(AffExprType(cr.m, f), s)
 end
 
-function constraintobject(cr::ConstraintRef{Model}, ::Type{Vector{AffExpr}}, ::Type{SetType}) where {SetType <: MOI.AbstractVectorSet}
+function constraintobject(cr::ConstraintRef{<:Model}, ::Type{Vector{AffExprType}}, ::Type{SetType}) where {AffExprType <: GenericAffExpr, SetType <: MOI.AbstractVectorSet}
     m = cr.m
     f = MOI.get(m, MOI.ConstraintFunction(), cr)::MOI.VectorAffineFunction
     s = MOI.get(m, MOI.ConstraintSet(), cr)::SetType
-    return VectorAffExprConstraint(map(f -> AffExpr(m, f), MOIU.eachscalar(f)), s)
+    return VectorAffExprConstraint(map(f -> AffExprType(m, f), MOIU.eachscalar(f)), s)
 end

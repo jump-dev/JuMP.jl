@@ -136,7 +136,7 @@ function macros_test(ModelType::Type{<:JuMP.AbstractModel}, VariableRefType::Typ
 end
 
 @testset "Macros for JuMP.Model" begin
-    macros_test(Model, VariableRef)
+    macros_test(Model, VariableRef{Model{JuMP.NonDirectBackendType}})
 end
 
 @testset "Macros for JuMPExtension.MyModel" begin

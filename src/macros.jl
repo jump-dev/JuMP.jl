@@ -76,7 +76,7 @@ Helper function for macros to transform expression objects containing kernel cod
     3. `condition`: `Expr` that is evaluated immediately before kernel code in each iteration. If none, pass `:()`.
     4. `idxvars`: Names for the index variables for each loop, e.g. `[:i, gensym(), :k]`
     5. `idxsets`: Sets used to define iteration for each loop, e.g. `[1:3, [:red,:blue], S]`
-    6. `sym`: A `Symbol`/`Expr` containing the element type of the container that is being iterated over, e.g. `:AffExpr` or `:VariableRef`
+    6. `sym`: A `Symbol`/`Expr` containing the element type of the container that is being iterated over, e.g. `:GenericAffExpr` or `:VariableRef`
     7. `requestedcontainer`: Argument that is passed through to `generatedcontainer`. Either `:Auto`, `:Array`, `:JuMPArray`, or `:Dict`.
     8. `lowertri`: `Bool` keyword argument that is `true` if the iteration is over a cartesian array and should only iterate over the lower triangular entries, filling upper triangular entries with copies, e.g. `x[1,3] === x[3,1]`, and `false` otherwise.
 """
@@ -320,7 +320,8 @@ const ScalarPolyhedralSets = Union{MOI.LessThan,MOI.GreaterThan,MOI.EqualTo,MOI.
 buildconstraint(_error::Function, v::AbstractVariableRef, set::MOI.AbstractScalarSet) = SingleVariableConstraint(v, set)
 buildconstraint(_error::Function, v::Vector{<:AbstractVariableRef}, set::MOI.AbstractVectorSet) = VectorOfVariablesConstraint(v, set)
 
-buildconstraint(_error::Function, α::Number, set::MOI.AbstractScalarSet) = buildconstraint(_error, convert(AffExpr, α), set)
+# We cannot support this as we do not know the type of the model so we cannot convert `α` to an affine expression
+buildconstraint(_error::Function, α::Number, set::MOI.AbstractScalarSet) = _error("Constraint with constant expression not depending on variables is not supported")
 function buildconstraint(_error::Function, aff::GenericAffExpr, set::S) where S <: Union{MOI.LessThan,MOI.GreaterThan,MOI.EqualTo}
     offset = aff.constant
     aff.constant = 0.0
@@ -869,14 +870,14 @@ macro expression(args...)
     if isa(c,Expr)
         code = quote
             $code
-            (isa($newaff,AffExpr) || isa($newaff,Number) || isa($newaff,VariableRef)) || error("Collection of expressions with @expression must be linear. For quadratic expressions, use your own array.")
+            (isa($newaff,GenericAffExpr) || isa($newaff,Number) || isa($newaff,VariableRef)) || error("Collection of expressions with @expression must be linear. For quadratic expressions, use your own array.")
         end
     end
     code = quote
         $code
         $(refcall) = $newaff
     end
-    code = getloopedcode(variable, code, condition, idxvars, idxsets, :AffExpr, requestedcontainer)
+    code = getloopedcode(variable, code, condition, idxvars, idxsets, :(GenericAffExpr{Float64, VariableRef{typeof(m)}}), requestedcontainer)
     # don't do anything with the model, but check that it's valid anyway
     return assert_validmodel(m, quote
         $code
@@ -920,7 +921,7 @@ esc_nonconstant(x) = esc(x)
 # Returns the type of what `addvariable(::Model, buildvariable(...))` would return where `...` represents the positional arguments.
 # Example: `@variable m [1:3] foo` will allocate an vector of element type `variabletype(m, foo)`
 # Note: it needs to be implemented by all `AbstractModel`s
-variabletype(m::Model) = VariableRef
+variabletype(m::Model) = VariableRef{typeof(m)}
 # Returns a new variable. Additional positional arguments can be used to dispatch the call to a different method.
 # The return type should only depends on the positional arguments for `variabletype` to make sense. See the @variable macro doc for more details.
 # Example: `@variable m x` foo will call `buildvariable(_error, info, foo)`
@@ -1286,7 +1287,7 @@ macro NLconstraint(m, x, extra...)
               "       expr1 <= expr2\n" * "       expr1 >= expr2\n" *
               "       expr1 == expr2")
     end
-    looped = getloopedcode(variable, code, condition, idxvars, idxsets, :(ConstraintRef{Model,NonlinearConstraintIndex}), requestedcontainer)
+    looped = getloopedcode(variable, code, condition, idxvars, idxsets, :(ConstraintRef{typeof($m),NonlinearConstraintIndex}), requestedcontainer)
     return assert_validmodel(m, quote
         initNLP($m)
         $looped

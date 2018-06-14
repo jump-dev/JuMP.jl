@@ -224,7 +224,7 @@ function expressions_test(ModelType::Type{<:JuMP.AbstractModel}, VariableRefType
 end
 
 @testset "Expressions for JuMP.Model" begin
-    expressions_test(Model, VariableRef)
+    expressions_test(Model, VariableRef{Model{JuMP.NonDirectBackendType}})
 end
 
 @testset "Expressions for JuMPExtension.MyModel" begin

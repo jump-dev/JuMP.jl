@@ -28,7 +28,7 @@ using .Derivatives
 
 export
 # Objects
-    Model, VariableRef, Norm, AffExpr, QuadExpr, SOCExpr,
+    Model, VariableRef,
     # LinearConstraint, QuadConstraint, SDConstraint, SOCConstraint,
     NonlinearConstraint,
     ConstraintRef,
@@ -78,7 +78,8 @@ const MOIBIN = MOICON{MOI.SingleVariable,MOI.ZeroOne}
 @MOIU.model JuMPMOIModel (ZeroOne, Integer) (EqualTo, GreaterThan, LessThan, Interval) (Zeros, Nonnegatives, Nonpositives, SecondOrderCone, RotatedSecondOrderCone, GeometricMeanCone, PositiveSemidefiniteConeTriangle, PositiveSemidefiniteConeSquare, RootDetConeTriangle, RootDetConeSquare, LogDetConeTriangle, LogDetConeSquare) () (SingleVariable,) (ScalarAffineFunction,ScalarQuadraticFunction) (VectorOfVariables,) (VectorAffineFunction,)
 
 ###############################################################################
-# Model
+# Model{BT}
+# Model with an MOI backend of type `BT`
 
 # Model has three modes:
 # 1) Automatic: moibackend field holds a CachingOptimizer in Automatic mode.
@@ -88,7 +89,7 @@ const MOIBIN = MOICON{MOI.SingleVariable,MOI.ZeroOne}
 @enum ModelMode Automatic Manual Direct
 
 abstract type AbstractModel end
-mutable struct Model <: AbstractModel
+mutable struct Model{BT} <: AbstractModel
 
     # special variablewise properties that we keep track of:
     # lower bound, upper bound, fixed, integrality, binary
@@ -116,7 +117,7 @@ mutable struct Model <: AbstractModel
     # # such that a symmetry-enforcing constraint has been created
     # # between sdpconstr[c].terms[i,j] and sdpconstr[c].terms[j,i]
     # sdpconstrSym::Vector{Vector{Tuple{Int,Int}}}
-    moibackend::Union{MOI.AbstractOptimizer,MOIU.CachingOptimizer}
+    moibackend::BT
     # callbacks
     callbacks
     # lazycallback
@@ -141,49 +142,47 @@ mutable struct Model <: AbstractModel
     # their functionality, and store an instance of the type in this
     # dictionary keyed on an extension-specific symbol
     ext::Dict{Symbol,Any}
-    # Default constructor
-    function Model(; mode::ModelMode=Automatic, backend=nothing, optimizer=nothing)
-        m = new()
-        # TODO make pretty
-        m.variabletolowerbound = Dict{MOIVAR,MOILB}()
-        m.variabletoupperbound = Dict{MOIVAR,MOIUB}()
-        m.variabletofix = Dict{MOIVAR,MOIFIX}()
-        m.variabletointegrality = Dict{MOIVAR,MOIINT}()
-        m.variabletozeroone = Dict{MOIVAR,MOIBIN}()
-        m.customnames = VariableRef[]
-        m.objbound = 0.0
-        m.objval = 0.0
-        if backend != nothing
-            # TODO: It would make more sense to not force users to specify Direct mode if they also provide a backend.
-            @assert mode == Direct
-            @assert optimizer === nothing
-            @assert MOI.isempty(backend)
-            m.moibackend = backend
-        else
-            @assert mode != Direct
-            m.moibackend = MOIU.CachingOptimizer(MOIU.UniversalFallback(JuMPMOIModel{Float64}()), mode == Automatic ? MOIU.Automatic : MOIU.Manual)
-            if optimizer !== nothing
-                MOIU.resetoptimizer!(m, optimizer)
-            end
-        end
-        m.callbacks = Any[]
-        m.optimizehook = nothing
-        # m.printhook = nothing
-        m.nlpdata = nothing
-        m.objdict = Dict{Symbol,Any}()
-        m.operator_counter = 0
-        m.ext = Dict{Symbol,Any}()
-
-        return m
+end
+# Low-level constructor
+# If the type of `backend` is not `CachingOptimizer{Union{Void,
+# MOI.AbstractOptimizer}}`, then this create a model in Direct mode.
+function Model(backend::MOI.AbstractOptimizer)
+    @assert MOI.isempty(backend)
+    # TODO make pretty
+    m = Model(Dict{MOIVAR,MOILB}(),  # variabletolowerbound
+              Dict{MOIVAR,MOIUB}(),  # variabletoupperbound
+              Dict{MOIVAR,MOIFIX}(), # variabletofix
+              Dict{MOIVAR,MOIINT}(), # variabletointegrality
+              Dict{MOIVAR,MOIBIN}(), # variabletozeroone
+              VariableRef[],         # customnames
+              0.0,                   # objbound
+              0.0,                   # objval
+              backend,               # moibackend
+              Any[],                 # callbacks
+              nothing,               # optimizehook
+    #         nothing,               # printhook
+              nothing,               # nlpdata
+              Dict{Symbol,Any}(),    # objdict
+              0,                     # operator_counter
+              Dict{Symbol,Any}())    # ext
+end
+# Automatic and Manual modes constructor
+function Model(; mode::ModelMode=Automatic, optimizer=nothing)
+    @assert mode != Direct
+    backend = MOIU.CachingOptimizer(MOIU.UniversalFallback(JuMPMOIModel{Float64}()), mode == Automatic ? MOIU.Automatic : MOIU.Manual)
+    m = Model(backend)
+    if optimizer !== nothing
+        MOIU.resetoptimizer!(m, optimizer)
     end
+    return m
 end
 
 # Getters/setters
 
-function mode(m::Model)
-    if !(m.moibackend isa MOIU.CachingOptimizer)
-        return Direct
-    elseif m.moibackend.mode == MOIU.Automatic
+const NonDirectBackendType = MOIU.CachingOptimizer{Union{Void, MOI.AbstractOptimizer}, MOIU.UniversalFallback{JuMP.JuMPMOIModel{Float64}}}
+mode(m::Model) = Direct
+function mode(m::Model{NonDirectBackendType})
+    if m.moibackend.mode == MOIU.Automatic
         return Automatic
     else
         return Manual
@@ -264,12 +263,12 @@ struct ConstraintRef{M<:AbstractModel,C}
 end
 
 # TODO: should model be a parameter here?
-function MOI.delete!(m::Model, cr::ConstraintRef{Model})
+function MOI.delete!(m::Model, cr::ConstraintRef{<:Model})
     @assert m === cr.m
     MOI.delete!(m.moibackend, index(cr))
 end
 
-MOI.isvalid(m::Model, cr::ConstraintRef{Model}) = cr.m === m && MOI.isvalid(m.moibackend, cr.index)
+MOI.isvalid(m::Model, cr::ConstraintRef{<:Model}) = cr.m === m && MOI.isvalid(m.moibackend, cr.index)
 
 """
     addconstraint(m::Model, c::AbstractConstraint, name::String="")
@@ -322,7 +321,7 @@ function optimizerindex(v::VariableRef)
     end
 end
 
-function optimizerindex(cr::ConstraintRef{Model})
+function optimizerindex(cr::ConstraintRef{<:Model})
     if mode(cr.m) == Direct
         return index(cr)
     else
@@ -333,7 +332,7 @@ end
 
 index(cr::ConstraintRef) = cr.index
 
-function hasresultdual(m::Model, REF::Type{<:ConstraintRef{Model, T}}) where {T <: MOICON}
+function hasresultdual(m::Model, REF::Type{<:ConstraintRef{M, T}}) where {M <: Model, T <: MOICON}
     MOI.canget(m, MOI.ConstraintDual(), REF)
 end
 
@@ -344,7 +343,7 @@ Get the dual value of this constraint in the result returned by a solver.
 Use `hasresultdual` to check if a result exists before asking for values.
 Replaces `getdual` for most use cases.
 """
-function resultdual(cr::ConstraintRef{Model, <:MOICON})
+function resultdual(cr::ConstraintRef{<:Model, <:MOICON})
     MOI.get(cr.m, MOI.ConstraintDual(), cr)
 end
 
@@ -353,9 +352,9 @@ end
 
 Get a constraint's name.
 """
-name(cr::ConstraintRef{Model,<:MOICON}) = MOI.get(cr.m, MOI.ConstraintName(), cr)
+name(cr::ConstraintRef{<:Model,<:MOICON}) = MOI.get(cr.m, MOI.ConstraintName(), cr)
 
-setname(cr::ConstraintRef{Model,<:MOICON}, s::String) = MOI.set!(cr.m, MOI.ConstraintName(), cr, s)
+setname(cr::ConstraintRef{<:Model,<:MOICON}, s::String) = MOI.set!(cr.m, MOI.ConstraintName(), cr, s)
 
 """
     canget(m::JuMP.Model, attr::MathOptInterface.AbstractModelAttribute)::Bool
@@ -365,7 +364,7 @@ false if not.
 """
 MOI.canget(m::Model, attr::MOI.AbstractModelAttribute) = MOI.canget(m.moibackend, attr)
 MOI.canget(m::Model, attr::MOI.AbstractVariableAttribute, ::Type{VariableRef}) = MOI.canget(m.moibackend, attr, MOIVAR)
-MOI.canget(m::Model, attr::MOI.AbstractConstraintAttribute, ::Type{ConstraintRef{Model,T}}) where {T <: MOICON} = MOI.canget(m.moibackend, attr, T)
+MOI.canget(m::Model, attr::MOI.AbstractConstraintAttribute, ::Type{ConstraintRef{M,T}}) where {M <: Model, T <: MOICON} = MOI.canget(m.moibackend, attr, T)
 
 """
     get(m::JuMP.Model, attr::MathOptInterface.AbstractModelAttribute)

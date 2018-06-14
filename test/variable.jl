@@ -372,7 +372,7 @@ end
 end
 
 @testset "Variables for JuMP.Model" begin
-    variables_test(Model, VariableRef)
+    variables_test(Model, VariableRef{Model{JuMP.NonDirectBackendType}})
 end
 
 @testset "Variables for JuMPExtension.MyModel" begin

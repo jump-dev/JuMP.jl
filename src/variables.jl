@@ -89,8 +89,8 @@ variablereftype(v::AbstractVariableRef) = typeof(v)
 
 Holds a reference to the model and the corresponding MOI.VariableIndex.
 """
-struct VariableRef <: AbstractVariableRef
-    m::Model
+struct VariableRef{M<:AbstractModel} <: AbstractVariableRef
+    m::M
     index::MOIVAR
 end
 
@@ -177,7 +177,7 @@ setname(v::VariableRef, s::String) = MOI.set!(v.m, MOI.VariableName(), v, s)
 MOI.SingleVariable(v::VariableRef) = MOI.SingleVariable(index(v))
 
 # Note: No validation is performed that the variables belong to the same model.
-MOI.VectorOfVariables(vars::Vector{VariableRef}) = MOI.VectorOfVariables(index.(vars))
+MOI.VectorOfVariables(vars::Vector{<:VariableRef}) = MOI.VectorOfVariables(index.(vars))
 
 VariableRef(m::Model, f::MOI.SingleVariable) = VariableRef(m, f.variable)
 
@@ -194,12 +194,12 @@ function setobjective(m::Model, sense::Symbol, x::VariableRef)
 end
 
 """
-    objectivefunction(m::Model, ::Type{VariableRef})
+    objectivefunction(model::MT, ::Type{VariableRef{MT}}) where MT
 
 Return a `VariableRef` object representing the objective function.
 Error if the objective is not a `SingleVariable`.
 """
-function objectivefunction(m::Model, ::Type{VariableRef})
+function objectivefunction(m::MT, ::Type{VariableRef{MT}}) where MT
     f = MOI.get(m.moibackend, MOI.ObjectiveFunction{MOI.SingleVariable}())::MOI.SingleVariable
     return VariableRef(m, f)
 end
@@ -218,13 +218,13 @@ end
 
 moi_function_and_set(c::VectorOfVariablesConstraint) = (MOI.VectorOfVariables(c.func), c.set)
 
-function constraintobject(cr::ConstraintRef{Model}, ::Type{VariableRef}, ::Type{SetType}) where {SetType <: MOI.AbstractScalarSet}
+function constraintobject(cr::ConstraintRef{MT}, ::Type{VariableRef{MT}}, ::Type{SetType}) where {MT, SetType <: MOI.AbstractScalarSet}
     f = MOI.get(cr.m, MOI.ConstraintFunction(), cr)::MOI.SingleVariable
     s = MOI.get(cr.m, MOI.ConstraintSet(), cr)::SetType
     return SingleVariableConstraint(VariableRef(cr.m, f), s)
 end
 
-function constraintobject(cr::ConstraintRef{Model}, ::Type{Vector{VariableRef}}, ::Type{SetType}) where {SetType <: MOI.AbstractVectorSet}
+function constraintobject(cr::ConstraintRef{MT}, ::Type{Vector{VariableRef{MT}}}, ::Type{SetType}) where {MT, SetType <: MOI.AbstractVectorSet}
     m = cr.m
     f = MOI.get(m, MOI.ConstraintFunction(), cr)::MOI.VectorOfVariables
     s = MOI.get(m, MOI.ConstraintSet(), cr)::SetType
@@ -265,8 +265,8 @@ function setlowerbound(v::VariableRef,lower::Number)
     nothing
 end
 
-function LowerBoundRef(v::VariableRef)
-    return ConstraintRef{Model, MOILB}(v.m, lowerboundindex(v))
+function LowerBoundRef(v::VariableRef{M}) where M
+    return ConstraintRef{M, MOILB}(v.m, lowerboundindex(v))
 end
 
 """
@@ -321,8 +321,8 @@ function setupperbound(v::VariableRef,upper::Number)
     nothing
 end
 
-function UpperBoundRef(v::VariableRef)
-    return ConstraintRef{Model, MOIUB}(v.m, upperboundindex(v))
+function UpperBoundRef(v::VariableRef{M}) where M
+    return ConstraintRef{M, MOIUB}(v.m, upperboundindex(v))
 end
 
 """
@@ -398,8 +398,8 @@ function fixvalue(v::VariableRef)
     return cset.value
 end
 
-function FixRef(v::VariableRef)
-    return ConstraintRef{Model,MOIFIX}(v.m, fixindex(v))
+function FixRef(v::VariableRef{M}) where M
+    return ConstraintRef{M,MOIFIX}(v.m, fixindex(v))
 end
 
 # integer and binary constraints
@@ -432,8 +432,8 @@ function unsetinteger(v::VariableRef)
     delete!(v.m.variabletointegrality, index(v))
 end
 
-function IntegerRef(v::VariableRef)
-    return ConstraintRef{Model,MOIINT}(v.m, integerindex(v))
+function IntegerRef(v::VariableRef{M}) where M
+    return ConstraintRef{M,MOIINT}(v.m, integerindex(v))
 end
 
 isbinary(v::VariableRef) = haskey(v.m.variabletozeroone,index(v))
@@ -464,8 +464,8 @@ function unsetbinary(v::VariableRef)
     delete!(v.m.variabletozeroone, index(v))
 end
 
-function BinaryRef(v::VariableRef)
-    return ConstraintRef{Model,MOIBIN}(v.m, binaryindex(v))
+function BinaryRef(v::VariableRef{M}) where M
+    return ConstraintRef{M,MOIBIN}(v.m, binaryindex(v))
 end
 
 

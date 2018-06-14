@@ -76,7 +76,13 @@
     @testset "LP (Direct mode)" begin
         mocksolver = MOIU.MockOptimizer(JuMP.JuMPMOIModel{Float64}(), evalobjective=false)
 
-        m = Model(mode = JuMP.Direct, backend = mocksolver)
+        m = Model(mocksolver)
+        @test m isa Model{typeof(mocksolver)}
+        # Direct mode so these functions are not supported
+        @test_throws AssertionError MOIU.dropoptimizer!(m)
+        @test_throws AssertionError MOIU.resetoptimizer!(m, mocksolver)
+        @test_throws AssertionError MOIU.attachoptimizer!(m)
+        @test_throws AssertionError MOIU.resetoptimizer!(m)
         @variable(m, x <= 2.0)
         @variable(m, y >= 0.0)
         @objective(m, Min, -x)

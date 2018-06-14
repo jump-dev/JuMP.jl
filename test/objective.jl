@@ -41,7 +41,7 @@ end
 
 
 @testset "Objectives for JuMP.Model" begin
-    objectives_test(Model, VariableRef)
+    objectives_test(Model, VariableRef{Model{JuMP.NonDirectBackendType}})
 end
 
 @testset "Objectives for JuMPExtension.MyModel" begin

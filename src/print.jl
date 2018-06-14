@@ -170,10 +170,10 @@ function aff_str(mode, a::GenericAffExpr{C, V}, show_constant=true) where {C, V}
     end
 end
 # Precompile for faster boot times
-Base.precompile(aff_str, (Type{JuMP.REPLMode}, AffExpr, Bool))
-Base.precompile(aff_str, (Type{JuMP.IJuliaMode}, AffExpr, Bool))
-Base.precompile(aff_str, (Type{JuMP.REPLMode}, AffExpr))
-Base.precompile(aff_str, (Type{JuMP.IJuliaMode}, AffExpr))
+Base.precompile(aff_str, (Type{JuMP.REPLMode}, GenericAffExpr{Float64, VariableRef{Model{NonDirectBackendType}}}, Bool))
+Base.precompile(aff_str, (Type{JuMP.IJuliaMode}, GenericAffExpr{Float64, VariableRef{Model{NonDirectBackendType}}}, Bool))
+Base.precompile(aff_str, (Type{JuMP.REPLMode}, GenericAffExpr{Float64, VariableRef{Model{NonDirectBackendType}}}))
+Base.precompile(aff_str, (Type{JuMP.IJuliaMode}, GenericAffExpr{Float64, VariableRef{Model{NonDirectBackendType}}}))
 
 
 #------------------------------------------------------------------------

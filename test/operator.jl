@@ -659,7 +659,7 @@ function operators_test(ModelType::Type{<:JuMP.AbstractModel}, VariableRefType::
 end
 
 @testset "Operators for JuMP.Model" begin
-    operators_test(Model, VariableRef)
+    operators_test(Model, VariableRef{Model{JuMP.NonDirectBackendType}})
 end
 
 @testset "Operators for JuMPExtension.MyModel" begin

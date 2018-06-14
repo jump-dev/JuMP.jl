@@ -113,7 +113,7 @@ function initNLP(m::Model)
     end
 end
 
-function resultdual(c::ConstraintRef{Model,NonlinearConstraintIndex})
+function resultdual(c::ConstraintRef{<:Model,NonlinearConstraintIndex})
     initNLP(c.m)
     nldata::NLPData = c.m.nlpdata
     if !MOI.canget(c.m, MOI.NLPBlockDual())

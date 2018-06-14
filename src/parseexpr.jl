@@ -36,7 +36,7 @@ function destructive_add! end
 
 destructive_add!(ex::Number, c::Number, x::Number) = ex + c*x
 
-destructive_add!(ex::Number, c::Number, x::VariableRef) = AffExpr(ex, x => c)
+destructive_add!(ex::Number, c::Number, x::VariableRef) = GenericAffExpr{Float64, typeof(x)}(ex, x => c)
 
 function destructive_add!(ex::Number, c::Number, x::T) where T<:GenericAffExpr
     # It's only safe to mutate the first argument.
@@ -123,13 +123,13 @@ destructive_add!(aff::GenericAffExpr{C,V},c::V,x::V) where {C,V} =
     GenericQuadExpr{C,V}(aff, UnorderedPair(c,x) => 1.0)
 
 # TODO: add generic versions of following two methods
-function destructive_add!(aff::AffExpr,c::AffExpr,x::VariableRef)
+function destructive_add!(aff::GenericAffExpr,c::GenericAffExpr,x::VariableRef)
     quad = c*x
     quad.aff = destructive_add!(quad.aff, 1.0, aff)
     quad
 end
 
-function destructive_add!(aff::AffExpr,c::VariableRef,x::AffExpr)
+function destructive_add!(aff::GenericAffExpr,c::VariableRef,x::GenericAffExpr)
     quad = c*x
     # TODO: Consider implementing the add_to_expression! method for cases like
     # this and below.

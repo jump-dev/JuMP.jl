@@ -10,7 +10,6 @@
 # src/quadexpr.jl
 # Defines all types relating to expressions with a quadratic and affine part
 # - GenericQuadExpr             ∑qᵢⱼ xᵢⱼ  +  ∑ aᵢ xᵢ  +  c
-#   - QuadExpr                  Alias for (Float64, VariableRef)
 # - QuadExprConstraint       ∑qᵢⱼ xᵢⱼ  +  ∑ aᵢ xᵢ  +  c  in set
 # Operator overloads in src/operators.jl
 #############################################################################
@@ -154,13 +153,12 @@ function isequal_canonical(quad::GenericQuadExpr{CoefType,VarType}, other::Gener
 end
 
 # Alias for (Float64, VariableRef)
-const QuadExpr = GenericQuadExpr{Float64,VariableRef}
 function Base.convert(::Type{GenericQuadExpr{C, V}}, v::Union{Real,AbstractVariableRef,GenericAffExpr}) where {C, V}
     return GenericQuadExpr(convert(GenericAffExpr{C, V}, v))
 end
 GenericQuadExpr{C, V}() where {C, V} = zero(GenericQuadExpr{C, V})
 
-function MOI.ScalarQuadraticFunction(q::QuadExpr)
+function MOI.ScalarQuadraticFunction(q::GenericQuadExpr)
     assert_isfinite(q)
     qterms = map(t -> MOI.ScalarQuadraticTerm(t[2] == t[3] ? 2t[1] : t[1],
                                               index(t[2]),
@@ -170,9 +168,9 @@ function MOI.ScalarQuadraticFunction(q::QuadExpr)
                                        qterms, moi_aff.constant)
 end
 
-function QuadExpr(m::Model, f::MOI.ScalarQuadraticFunction)
-    quad = QuadExpr(AffExpr(m, MOI.ScalarAffineFunction(f.affine_terms,
-                                                        f.constant)))
+function GenericQuadExpr{T, VariableRef{MT}}(m::MT, f::MOI.ScalarQuadraticFunction) where {T, MT}
+    quad = GenericQuadExpr(GenericAffExpr{T, VariableRef{MT}}(m, MOI.ScalarAffineFunction(f.affine_terms,
+                                                                                          f.constant)))
     for t in f.quadratic_terms
         v1 = t.variable_index_1
         v2 = t.variable_index_2
@@ -185,7 +183,7 @@ function QuadExpr(m::Model, f::MOI.ScalarQuadraticFunction)
     return quad
 end
 
-function setobjective(m::Model, sense::Symbol, a::QuadExpr)
+function setobjective(m::Model, sense::Symbol, a::GenericQuadExpr)
     if sense == :Min
         moisense = MOI.MinSense
     else
@@ -198,14 +196,14 @@ function setobjective(m::Model, sense::Symbol, a::QuadExpr)
 end
 
 """
-    objectivefunction(m::Model, ::Type{QuadExpr})
+    objectivefunction(m::Model, ::Type{<:GenericQuadExpr})
 
-Return a `QuadExpr` object representing the objective function.
+Return a `GenericQuadExpr` object representing the objective function.
 Error if the objective is not quadratic.
 """
-function objectivefunction(m::Model, ::Type{QuadExpr})
+function objectivefunction(m::Model, QuadExprType::Type{<:GenericQuadExpr})
     f = MOI.get(m.moibackend, MOI.ObjectiveFunction{MOI.ScalarQuadraticFunction{Float64}}())::MOI.ScalarQuadraticFunction
-    return QuadExpr(m, f)
+    return QuadExprType(m, f)
 end
 
 # Copy a quadratic expression to a new model by converting all the
@@ -227,11 +225,11 @@ end
 
 moi_function_and_set(c::QuadExprConstraint) = (MOI.ScalarQuadraticFunction(c.func), c.set)
 
-function constraintobject(cr::ConstraintRef{Model}, ::Type{QuadExpr}, ::Type{SetType}) where {SetType <: MOI.AbstractScalarSet}
+function constraintobject(cr::ConstraintRef{<:Model}, QuadExprType::Type{<:GenericQuadExpr}, ::Type{SetType}) where {SetType <: MOI.AbstractScalarSet}
     m = cr.m
     f = MOI.get(m.moibackend, MOI.ConstraintFunction(), index(cr))::MOI.ScalarQuadraticFunction
     s = MOI.get(m.moibackend, MOI.ConstraintSet(), index(cr))::SetType
-    return QuadExprConstraint(QuadExpr(m, f), s)
+    return QuadExprConstraint(QuadExprType(m, f), s)
 end
 
 # TODO: VectorQuadExprConstraint

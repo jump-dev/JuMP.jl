@@ -251,7 +251,7 @@ function constraints_test(ModelType::Type{<:JuMP.AbstractModel}, VariableRefType
 end
 
 @testset "Constraints for JuMP.Model" begin
-    constraints_test(Model, VariableRef, ConstraintRef{Model})
+    constraints_test(Model, VariableRef{Model{JuMP.NonDirectBackendType}}, ConstraintRef{Model{JuMP.NonDirectBackendType}})
 end
 
 @testset "Constraints for JuMPExtension.MyModel" begin
