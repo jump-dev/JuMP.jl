@@ -1,4 +1,3 @@
-# The parameter names correspond to the JuMP types so that the test can serve as examples that can be copy pasted
 function constraints_test(ModelType::Type{<:JuMP.AbstractModel}, VariableRefType::Type{<:JuMP.AbstractVariableRef}, ConstraintRefType::Type)
     AffExprType = JuMP.GenericAffExpr{Float64, VariableRefType}
     QuadExprType = JuMP.GenericQuadExpr{Float64, VariableRefType}
