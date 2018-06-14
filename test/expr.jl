@@ -6,7 +6,10 @@ Base.:^(x::PowVariable, i::Int) = PowVariable(x.pow*i)
 Base.:*(x::PowVariable, y::PowVariable) = PowVariable(x.pow + y.pow)
 Base.copy(x::PowVariable) = x
 
-@testset "Expression" begin
+function expressions_test(ModelType::Type{<:JuMP.AbstractModel}, VariableRefType::Type{<:JuMP.AbstractVariableRef})
+    AffExprType = JuMP.GenericAffExpr{Float64, VariableRefType}
+    QuadExprType = JuMP.GenericQuadExpr{Float64, VariableRefType}
+
     @testset "isequal(::GenericAffExpr)" begin
         m = Model()
         @variable(m, x)
@@ -73,7 +76,7 @@ Base.copy(x::PowVariable) = x
 
     @testset "linearterms(::AffExpr) for empty expression" begin
         k = 0
-        aff = zero(AffExpr)
+        aff = zero(AffExprType)
         @test length(linearterms(aff)) == 0
         for (coeff, var) in linearterms(aff)
             k += 1
@@ -96,8 +99,8 @@ Base.copy(x::PowVariable) = x
     end
 
     @testset "destructive_add!(ex::Number, c::Number, x::GenericQuadExpr) with c == 0" begin
-        quad = JuMP.destructive_add!(2.0, 0.0, QuadExpr())
-        @test JuMP.isequal_canonical(quad, convert(QuadExpr, 2.0))
+        quad = JuMP.destructive_add!(2.0, 0.0, QuadExprType())
+        @test JuMP.isequal_canonical(quad, convert(QuadExprType, 2.0))
     end
 
     @testset "destructive_add!(ex::Number, c::VariableRef, x::VariableRef)" begin
@@ -218,4 +221,12 @@ Base.copy(x::PowVariable) = x
         z = @inferred (x*x)^3
         @test z.pow == 6
     end
+end
+
+@testset "Expressions for JuMP.Model" begin
+    expressions_test(Model, VariableRef)
+end
+
+@testset "Expressions for JuMPExtension.MyModel" begin
+    expressions_test(JuMPExtension.MyModel, JuMPExtension.MyVariableRef)
 end
