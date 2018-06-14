@@ -4,7 +4,9 @@ about: Help us track down bugs in JuMP
 
 ---
 
-Welcome to JuMP! The JuMP developers use the GitHub issue tracker for bug reports and feature requests only. Please read the following before posting a new issue:
+Welcome to JuMP! The JuMP developers use the GitHub issue tracker for bug reports and feature requests only. 
+
+Please read the following before posting a new bug report:
 
 - If you have a question or are unsure if the behavior you're experiencing is a bug, please search or post to our Discourse site: https://discourse.julialang.org/c/domain/opt. Questions posted to Discourse have broader visibility and are likely to be answered more quickly than issues filed here.
 
