@@ -125,10 +125,7 @@ function macros_test(ModelType::Type{<:JuMP.AbstractModel}, VariableRefType::Typ
         @test JuMP.isequal_canonical(@expression(m, 3x - y - 3.3(w + 2z) + 5), 3*x - y - 3.3*w - 6.6*z + 5)
         @test JuMP.isequal_canonical(@expression(m, quad, (w+3)*(2x+1)+10), 2*w*x + 6*x + w + 13)
 
-        cref = @constraint(m, 3 + 5*7 <= 0)
-        c = JuMP.constraintobject(cref, AffExpr, MOI.LessThan)
-        @test JuMP.isequal_canonical(c.func, zero(AffExpr))
-        @test c.set == MOI.LessThan(-38.0)
+        @test_throws ErrorException @constraint(m, 3 + 5*7 <= 0)
     end
 
     @testset "Helpful error for variable declaration with misplaced constant" begin
