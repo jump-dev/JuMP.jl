@@ -4,7 +4,7 @@ about: Help us track down bugs in JuMP
 
 ---
 
-Welcome to JuMP! The JuMP developers use the GitHub issue tracker for bug reports and feature requests only. 
+Welcome to JuMP!
 
 Please read the following before posting a new bug report:
 
