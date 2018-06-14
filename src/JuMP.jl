@@ -466,10 +466,20 @@ function Base.setindex!(m::JuMP.Model, value, name::Symbol)
     m.objdict[name] = value
 end
 
-# usage warnings
-# If extensions do not overwrite this, the warning won't be shown
-function _operator_warn(::AbstractVariableRef) end
-function _operator_warn(vref::VariableRef)
+"""
+    operator_warn_with_variable(vref::AbstractVariableRef)
+
+Everytime two expression are summed not using `desctructive_add!` and one of
+the two expressions have more than 50 terms, this function is called on one
+of the variables of the expression.
+
+## Notes for extension
+
+By default it does nothing so every new variable type must implement this
+function in order to print a warning.
+"""
+function operator_warn_with_variable(::AbstractVariableRef) end
+function operator_warn_with_variable(vref::VariableRef)
     m = vref.m
     m.operator_counter += 1
     if m.operator_counter > 20000
@@ -479,7 +489,7 @@ end
 function operator_warn(lhs::GenericAffExpr,rhs::GenericAffExpr)
     if length(linearterms(lhs)) > 50 || length(linearterms(rhs)) > 50
         if length(linearterms(lhs)) > 1
-            _operator_warn(first(linearterms(lhs))[2])
+            operator_warn_with_variable(first(linearterms(lhs))[2])
         end
     end
     return
