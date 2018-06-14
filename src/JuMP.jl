@@ -467,14 +467,19 @@ function Base.setindex!(m::JuMP.Model, value, name::Symbol)
 end
 
 # usage warnings
+# If extensions do not overwrite this, the warning won't be shown
+function _operator_warn(::AbstractVariableRef) end
+function _operator_warn(vref::VariableRef)
+    m = vref.m
+    m.operator_counter += 1
+    if m.operator_counter > 20000
+        Base.warn_once("The addition operator has been used on JuMP expressions a large number of times. This warning is safe to ignore but may indicate that model generation is slower than necessary. For performance reasons, you should not add expressions in a loop. Instead of x += y, use append!(x,y) to modify x in place. If y is a single variable, you may also use push!(x, coef, y) in place of x += coef*y.")
+    end
+end
 function operator_warn(lhs::GenericAffExpr,rhs::GenericAffExpr)
     if length(linearterms(lhs)) > 50 || length(linearterms(rhs)) > 50
         if length(linearterms(lhs)) > 1
-            m = first(linearterms(lhs))[2].m
-            m.operator_counter += 1
-            if m.operator_counter > 20000
-                Base.warn_once("The addition operator has been used on JuMP expressions a large number of times. This warning is safe to ignore but may indicate that model generation is slower than necessary. For performance reasons, you should not add expressions in a loop. Instead of x += y, use append!(x,y) to modify x in place. If y is a single variable, you may also use push!(x, coef, y) in place of x += coef*y.")
-            end
+            _operator_warn(first(linearterms(lhs))[2])
         end
     end
     return
