@@ -190,7 +190,7 @@ function mode(m::Model)
     end
 end
 
-# temporary name
+# Needs to defined by all `AbstractModel`
 num_variables(m::Model) = MOI.get(m, MOI.NumberOfVariables())
 
 """
