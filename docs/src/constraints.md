@@ -9,3 +9,8 @@ they're parameterized by function-set type. Describe constraints vs.
 How to modify constraints by setting attributes and `MOI.modifyconstraint!`.
 Describe semidefinite constraints and symmetry handling. Refer to NLP docs for
 nonlinear constraints.
+
+```@docs
+@constraint
+@SDconstraint
+```
