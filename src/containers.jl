@@ -6,7 +6,7 @@
 include("JuMPArray.jl")
 
 validarrayindexset(::Base.OneTo) = true
-validarrayindexset(r::UnitRange) = start(r) == 1
+validarrayindexset(r::UnitRange) = first(r) == 1
 validarrayindexset(s) = false
 
 """

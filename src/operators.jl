@@ -52,7 +52,7 @@ Base.:*(lhs::AbstractJuMPScalar) = lhs # make this more generic so extensions do
 Base.:+(lhs::AbstractVariableRef, rhs::Number) = (+)( rhs,lhs)
 Base.:-(lhs::AbstractVariableRef, rhs::Number) = (+)(-rhs,lhs)
 Base.:*(lhs::AbstractVariableRef, rhs::Number) = (*)(rhs,lhs)
-Base.:/(lhs::AbstractVariableRef, rhs::Number) = (*)(1./rhs,lhs)
+Base.:/(lhs::AbstractVariableRef, rhs::Number) = (*)(1.0/rhs,lhs)
 # AbstractVariableRef--AbstractVariableRef
 Base.:+(lhs::V, rhs::V) where V <: AbstractVariableRef = GenericAffExpr(0.0, lhs => 1.0, rhs => 1.0)
 Base.:-(lhs::V, rhs::V) where V <: AbstractVariableRef = GenericAffExpr(0.0, lhs => 1.0, rhs => -1.0)
