@@ -296,15 +296,15 @@ function MOI.initialize!(d::NLPEvaluator, requested_features::Vector{Symbol})
         return
     end
 
-    nvariables = num_variables(d.m)
+    num_variables_ = num_variables(d.m)
 
     moi_index_to_consecutive_index = Dict(moi_index => consecutive_index for (consecutive_index, moi_index) in enumerate(MOI.get(d.m, MOI.ListOfVariableIndices())))
 
     d.user_output_buffer = Array{Float64}(undef,d.m.nlpdata.largest_user_input_dimension)
-    d.jac_storage = Array{Float64}(undef,max(nvariables, d.m.nlpdata.largest_user_input_dimension))
+    d.jac_storage = Array{Float64}(undef,max(num_variables_, d.m.nlpdata.largest_user_input_dimension))
 
     d.constraints = FunctionStorage[]
-    d.last_x = fill(NaN, nvariables)
+    d.last_x = fill(NaN, num_variables_)
 
     d.parameter_values = nldata.nlparamvalues
 
@@ -312,7 +312,7 @@ function MOI.initialize!(d::NLPEvaluator, requested_features::Vector{Symbol})
 
     d.want_hess = (:Hess in requested_features)
     want_hess_storage = (:HessVec in requested_features) || d.want_hess
-    coloring_storage = Derivatives.Coloring.IndexedSet(nvariables)
+    coloring_storage = Derivatives.Coloring.IndexedSet(num_variables_)
 
     d.has_nlobj = isa(nldata.nlobj, NonlinearExprData)
     max_expr_length = 0
@@ -339,7 +339,7 @@ function MOI.initialize!(d::NLPEvaluator, requested_features::Vector{Symbol})
     empty_edgelist = Set{Tuple{Int,Int}}()
     for k in d.subexpression_order # only load expressions which actually are used
         d.subexpression_forward_values[k] = NaN
-        d.subexpressions[k] = SubexpressionStorage(nldata.nlexpr[k].nd, nldata.nlexpr[k].const_values, nvariables, d.subexpression_linearity, moi_index_to_consecutive_index)
+        d.subexpressions[k] = SubexpressionStorage(nldata.nlexpr[k].nd, nldata.nlexpr[k].const_values, num_variables_, d.subexpression_linearity, moi_index_to_consecutive_index)
         subex = d.subexpressions[k]
         d.subexpression_linearity[k] = subex.linearity
         @assert subex.linearity != CONSTANT
@@ -370,7 +370,7 @@ function MOI.initialize!(d::NLPEvaluator, requested_features::Vector{Symbol})
 
     if d.has_nlobj
         nd = main_expressions[1]
-        d.objective = FunctionStorage(nd, nldata.nlobj.const_values, nvariables, coloring_storage, d.want_hess, d.subexpressions, individual_order[1], d.subexpression_linearity, subexpression_edgelist, subexpression_variables, moi_index_to_consecutive_index)
+        d.objective = FunctionStorage(nd, nldata.nlobj.const_values, num_variables_, coloring_storage, d.want_hess, d.subexpressions, individual_order[1], d.subexpression_linearity, subexpression_edgelist, subexpression_variables, moi_index_to_consecutive_index)
         max_expr_length = max(max_expr_length, length(d.objective.nd))
         max_chunk = max(max_chunk, size(d.objective.seed_matrix,2))
     end
@@ -379,7 +379,7 @@ function MOI.initialize!(d::NLPEvaluator, requested_features::Vector{Symbol})
         nlconstr = nldata.nlconstr[k]
         idx = (d.has_nlobj) ? k+1 : k
         nd = main_expressions[idx]
-        push!(d.constraints, FunctionStorage(nd, nlconstr.terms.const_values, nvariables, coloring_storage, d.want_hess, d.subexpressions, individual_order[idx], d.subexpression_linearity, subexpression_edgelist, subexpression_variables, moi_index_to_consecutive_index))
+        push!(d.constraints, FunctionStorage(nd, nlconstr.terms.const_values, num_variables_, coloring_storage, d.want_hess, d.subexpressions, individual_order[idx], d.subexpression_linearity, subexpression_edgelist, subexpression_variables, moi_index_to_consecutive_index))
         max_expr_length = max(max_expr_length, length(d.constraints[end].nd))
         max_chunk = max(max_chunk, size(d.constraints[end].seed_matrix,2))
     end
@@ -387,8 +387,8 @@ function MOI.initialize!(d::NLPEvaluator, requested_features::Vector{Symbol})
     max_chunk = min(max_chunk, 10) # 10 is hardcoded upper bound to avoid excess memory allocation
 
     if d.want_hess || want_hess_storage # storage for Hess or HessVec
-        d.input_ϵ = Array{Float64}(undef,max_chunk*nvariables)
-        d.output_ϵ = Array{Float64}(undef,max_chunk*nvariables)
+        d.input_ϵ = Array{Float64}(undef,max_chunk*num_variables_)
+        d.output_ϵ = Array{Float64}(undef,max_chunk*num_variables_)
         d.forward_storage_ϵ = Array{Float64}(undef,max_chunk*max_expr_length)
         d.partials_storage_ϵ = Array{Float64}(undef,max_chunk*max_expr_length)
         d.reverse_storage_ϵ = Array{Float64}(undef,max_chunk*max_expr_length)
