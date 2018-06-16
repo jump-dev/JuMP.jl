@@ -49,7 +49,7 @@ function MOI.delete!(m::MyModel, vref::MyVariableRef)
     delete!(m.varnames, vref.idx)
 end
 MOI.isvalid(m::MyModel, vref::MyVariableRef) = vref.idx in keys(m.variables)
-JuMP.numvar(m::MyModel) = length(m.variables)
+JuMP.num_variables(m::MyModel) = length(m.variables)
 
 JuMP.haslowerbound(vref::MyVariableRef) = vref.model.variables[vref.idx].info.haslb
 function JuMP.lowerbound(vref::MyVariableRef)

@@ -338,7 +338,7 @@ end
         t = UInt(4)
         @variable(m, x[1:t])
         #@constraintref(y[1:t])
-        @test JuMP.numvar(m) == 4
+        @test JuMP.num_variables(m) == 4
     end
 
     # TODO decide what to do here
