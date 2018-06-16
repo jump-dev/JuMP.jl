@@ -191,7 +191,7 @@ function mode(m::Model)
 end
 
 # temporary name
-numvar(m::Model) = MOI.get(m, MOI.NumberOfVariables())
+num_variables(m::Model) = MOI.get(m, MOI.NumberOfVariables())
 
 """
     numnlconstr(m::Model)
