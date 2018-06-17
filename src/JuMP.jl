@@ -143,9 +143,18 @@ mutable struct Model{BT} <: AbstractModel
     # dictionary keyed on an extension-specific symbol
     ext::Dict{Symbol,Any}
 end
-# Low-level constructor
-# If the type of `backend` is not `CachingOptimizer{Union{Void,
-# MOI.AbstractOptimizer}}`, then this create a model in Direct mode.
+
+"""
+    Model(backend::MOI.AbstractOptimizer)
+
+Construct a JuMP model in direct mode with the optimizer `backend`.
+The type of the model returned is `Model{typeof(backend)}`.
+JuMP does not assume anything on the structure of `backend` and treat it as a
+black-box optimizer. The user is responsible to handle the structure of the
+`backend` optimizer. That is, even if `backend` is a caching optimizer,
+the JuMP model does not support caching optimizer methods and the user is
+expected to call them directly on the `moibackend`.
+"""
 function Model(backend::MOI.AbstractOptimizer)
     @assert MOI.isempty(backend)
     # TODO make pretty
@@ -166,7 +175,27 @@ function Model(backend::MOI.AbstractOptimizer)
               0,                     # operator_counter
               Dict{Symbol,Any}())    # ext
 end
-# Automatic and Manual modes constructor
+
+"""
+    Model(; mode::ModelMode=Automatic, optimizer=nothing)
+
+Construct a JuMP model in caching mode. The model stores a cache of the problem
+data that is independent to the optimizer. The problem data is copied to the
+optimizer when [`optimize`](@ref) is called. Then, further problem
+modifications are applied on both the cache and the optimizer until an
+operation that the optimizer does not support is applied or the solver is
+explicitely reset using `MOIU.resetoptimizer!`.
+
+* If the mode is `Automatic`, applying an operation not supported by the optimizer will be equivalent to explicitely calling `MOIU.resetoptimizer!` before its application.
+* If the mode is `Manual`, this will throw an error.
+
+The mode `Automatic` is more appropriate in applications where several
+optimizers are used and you know some need to be reset for some operations and
+you want this to be handled transparently whenever needed.
+The mode `Manual` is more appropriate in applications where you know when
+optimizers need to be reset and you want to be informed when an optimizers
+unexpectedly reports that an operation is not supported.
+"""
 function Model(; mode::ModelMode=Automatic, optimizer=nothing)
     @assert mode != Direct
     backend = MOIU.CachingOptimizer(MOIU.UniversalFallback(JuMPMOIModel{Float64}()), mode == Automatic ? MOIU.Automatic : MOIU.Manual)
