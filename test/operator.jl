@@ -650,8 +650,7 @@ function operators_test(ModelType::Type{<:JuMP.AbstractModel}, VariableRefType::
     @testset "operator_warn" begin
         m = ModelType()
         @variable m x[1:51]
-        # JuMPExtension does not have the operator_counter but this test
-        # check that it does not make it fail
+        # JuMPExtension does not have the `operator_counter` field
         if ModelType <: Model
             @test m.operator_counter == 0
         end
