@@ -116,11 +116,11 @@ end
 
         v = [x,y,x]
         A = [x y; y x]
-        io_test(REPLMode,   v, "JuMP.VariableRef{JuMP.Model{MathOptInterface.Utilities.CachingOptimizer{Union{MathOptInterface.AbstractOptimizer, Void},MathOptInterface.Utilities.UniversalFallback{JuMP.JuMPMOIModel{Float64}}}}}[x, y, x]")
-        #io_test(IJuliaMode, v, "JuMP.VariableRef[x, y, x]")
+        io_test(REPLMode,   v, "JuMP.VariableRef[x, y, x]")
+        #io_test(IJuliaMode, v, "3-element AbstractArray{JuMP.VariableRef,1}:\n x\n y\n x")
 
-        io_test(REPLMode,   A, "JuMP.VariableRef{JuMP.Model{MathOptInterface.Utilities.CachingOptimizer{Union{MathOptInterface.AbstractOptimizer, Void},MathOptInterface.Utilities.UniversalFallback{JuMP.JuMPMOIModel{Float64}}}}}[x y; y x]")
-        #io_test(IJuliaMode, A, "JuMP.VariableRef[x y; y x]")
+        io_test(REPLMode,   A, "JuMP.VariableRef[x y; y x]")
+        #io_test(IJuliaMode, A, "2×2 AbstractArray{JuMP.VariableRef,2}:\n z  y\n y  z")
     end
 
     @testset "basename keyword argument" begin
