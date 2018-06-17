@@ -1,39 +1,49 @@
+function objectives_test(ModelType::Type{<:JuMP.AbstractModel}, VariableRefType::Type{<:JuMP.AbstractVariableRef})
+    AffExprType = JuMP.GenericAffExpr{Float64, VariableRefType}
+    QuadExprType = JuMP.GenericQuadExpr{Float64, VariableRefType}
 
-
-@testset "Objectives" begin
     @testset "SingleVariable objectives" begin
-        m = Model()
+        m = ModelType()
         @variable(m, x)
 
         @objective(m, Min, x)
         @test JuMP.objectivesense(m) == :Min
-        @test JuMP.objectivefunction(m, VariableRef) == x
+        @test JuMP.objectivefunction(m, VariableRefType) == x
 
         @objective(m, Max, x)
         @test JuMP.objectivesense(m) == :Max
-        @test JuMP.objectivefunction(m, VariableRef) == x
+        @test JuMP.objectivefunction(m, VariableRefType) == x
     end
 
     @testset "Linear objectives" begin
-        m = Model()
+        m = ModelType()
         @variable(m, x)
 
         @objective(m, Min, 2x)
         @test JuMP.objectivesense(m) == :Min
-        @test JuMP.isequal_canonical(JuMP.objectivefunction(m, AffExpr), 2x)
+        @test JuMP.isequal_canonical(JuMP.objectivefunction(m, AffExprType), 2x)
 
         @objective(m, Max, x + 3x + 1)
         @test JuMP.objectivesense(m) == :Max
-        @test JuMP.isequal_canonical(JuMP.objectivefunction(m, AffExpr), 4x + 1)
+        @test JuMP.isequal_canonical(JuMP.objectivefunction(m, AffExprType), 4x + 1)
     end
 
     @testset "Quadratic objectives" begin
-        m = Model()
+        m = ModelType()
         @variable(m, x)
 
         @objective(m, Min, x^2 + 2x)
         @test JuMP.objectivesense(m) == :Min
-        @test JuMP.isequal_canonical(JuMP.objectivefunction(m, QuadExpr), x^2 + 2x)
-        @test_throws ErrorException JuMP.objectivefunction(m, AffExpr)
+        @test JuMP.isequal_canonical(JuMP.objectivefunction(m, QuadExprType), x^2 + 2x)
+        @test_throws ErrorException JuMP.objectivefunction(m, AffExprType)
     end
+end
+
+
+@testset "Objectives for JuMP.Model" begin
+    objectives_test(Model, VariableRef)
+end
+
+@testset "Objectives for JuMPExtension.MyModel" begin
+    objectives_test(JuMPExtension.MyModel, JuMPExtension.MyVariableRef)
 end

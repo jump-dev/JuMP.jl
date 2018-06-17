@@ -49,9 +49,50 @@ function MOI.delete!(m::MyModel, vref::MyVariableRef)
     delete!(m.varnames, vref.idx)
 end
 MOI.isvalid(m::MyModel, vref::MyVariableRef) = vref.idx in keys(m.variables)
+JuMP.num_variables(m::MyModel) = length(m.variables)
+
+JuMP.haslowerbound(vref::MyVariableRef) = vref.model.variables[vref.idx].info.haslb
+function JuMP.lowerbound(vref::MyVariableRef)
+    @assert !JuMP.isfixed(vref)
+    vref.model.variables[vref.idx].info.lowerbound
+end
+function JuMP.setlowerbound(vref::MyVariableRef, lower)
+    vref.model.variables[vref.idx].info.haslb = true
+    vref.model.variables[vref.idx].info.lowerbound = lower
+end
+JuMP.hasupperbound(vref::MyVariableRef) = vref.model.variables[vref.idx].info.hasub
+function JuMP.upperbound(vref::MyVariableRef)
+    @assert !JuMP.isfixed(vref)
+    vref.model.variables[vref.idx].info.upperbound
+end
+function JuMP.setupperbound(vref::MyVariableRef, upper)
+    vref.model.variables[vref.idx].info.hasub = true
+    vref.model.variables[vref.idx].info.upperbound = upper
+end
+JuMP.isfixed(vref::MyVariableRef) = vref.model.variables[vref.idx].info.hasfix
+JuMP.fixvalue(vref::MyVariableRef) = vref.model.variables[vref.idx].info.fixedvalue
+function JuMP.fix(vref::MyVariableRef, value)
+    vref.model.variables[vref.idx].info.fixedvalue = value
+end
 JuMP.startvalue(vref::MyVariableRef) = vref.model.variables[vref.idx].info.start
 function JuMP.setstartvalue(vref::MyVariableRef, start)
     vref.model.variables[vref.idx].info.start = start
+end
+JuMP.isbinary(vref::MyVariableRef) = vref.model.variables[vref.idx].info.binary
+function JuMP.setbinary(vref::MyVariableRef)
+    @assert !JuMP.isinteger(vref)
+    vref.model.variables[vref.idx].info.binary = true
+end
+function JuMP.unsetbinary(vref::MyVariableRef)
+    vref.model.variables[vref.idx].info.binary = false
+end
+JuMP.isinteger(vref::MyVariableRef) = vref.model.variables[vref.idx].info.integer
+function JuMP.setinteger(vref::MyVariableRef)
+    @assert !JuMP.isbinary(vref)
+    vref.model.variables[vref.idx].info.integer = true
+end
+function JuMP.unsetinteger(vref::MyVariableRef)
+    vref.model.variables[vref.idx].info.integer = false
 end
 
 # Constraints
@@ -85,6 +126,12 @@ end
 function JuMP.setobjective(m::MyModel, sense::Symbol, f::JuMP.AbstractJuMPScalar)
     m.objectivesense = sense
     m.objectivefunction = f
+end
+JuMP.objectivesense(m::MyModel) = m.objectivesense
+function JuMP.objectivefunction(m::MyModel, FT::Type)
+    # ErrorException should be thrown, this is needed in `objective.jl`
+    m.objectivefunction isa FT || error("The objective function is not of type $FT")
+    m.objectivefunction
 end
 
 # Names
