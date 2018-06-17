@@ -179,7 +179,7 @@ end
 
 # Getters/setters
 
-const NonDirectBackendType = MOIU.CachingOptimizer{Union{Void, MOI.AbstractOptimizer}, MOIU.UniversalFallback{JuMP.JuMPMOIModel{Float64}}}
+const NonDirectBackendType = MOIU.CachingOptimizer{MOIU.UniversalFallback{JuMP.JuMPMOIModel{Float64}}}
 mode(m::Model) = Direct
 function mode(m::Model{NonDirectBackendType})
     if m.moibackend.mode == MOIU.Automatic
