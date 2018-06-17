@@ -35,6 +35,7 @@ struct MyVariableRef <: JuMP.AbstractVariableRef
 end
 Base.copy(v::MyVariableRef) = v
 Base.:(==)(v::MyVariableRef, w::MyVariableRef) = v.model === w.model && v.idx == w.idx
+JuMP.model(v::MyVariableRef) = v.model
 JuMP.isequal_canonical(v::MyVariableRef, w::MyVariableRef) = v == w
 JuMP.variabletype(::MyModel) = MyVariableRef
 function JuMP.addvariable(m::MyModel, v::JuMP.AbstractVariable, name::String="")
