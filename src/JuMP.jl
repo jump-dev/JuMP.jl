@@ -469,7 +469,7 @@ end
 """
     operator_warn_with_variable(vref::AbstractVariableRef)
 
-Everytime two expression are summed not using `desctructive_add!` and one of
+Everytime two expressions are summed not using `desctructive_add!` and one of
 the two expressions have more than 50 terms, this function is called on one
 of the variables of the expression.
 
