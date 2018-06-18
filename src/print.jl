@@ -130,17 +130,7 @@ function var_str(::Type{IJuliaMode}, v::AbstractVariableRef; mathmode=true)
         return math("noname", mathmode)
     end
 end
-# We want arrays of variables to be printed with `JuMP.VariableRef` as eltype
-# instead of `JuMP.VariableRef{...}`.
-# For show/print, we just need the following method
-Base.print_without_params(::Type{<:JuMP.VariableRef}) = true
-# For display, we need to redefine summary
-Base.summary(a::AbstractArray{<:JuMP.VariableRef}) = _summary(a, Compat.axes(a))
-# Taken from Base.show but we replace typeof(a) by vrefarraytype(a)
-_summary(a, inds::Tuple{Vararg{Base.OneTo}}) = string(Base.dims2string(length.(inds)), " ", vrefarraytype(a))
-_summary(a, inds) = string(vrefarraytype(a), " with indices ", Base.inds2string(inds))
-# Array type shown for array of JuMP.VariableRef
-vrefarraytype(::AbstractArray{<:JuMP.VariableRef, N}) where N = string("AbstractArray{JuMP.VariableRef,", N, "}")
+
 
 Base.show(io::IO, a::GenericAffExpr) = print(io, aff_str(REPLMode,a))
 Base.show(io::IO, ::MIME"text/latex", a::GenericAffExpr) =
