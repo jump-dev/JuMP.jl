@@ -31,7 +31,7 @@ mutable struct TopologicalSortVisitor
     parents::Vector{Int}
 
     function TopologicalSortVisitor(n::Int)
-        vs = Vector{Int}[]
+        vs = Int[]
         sizehint!(vs, n)
         new(vs, zeros(Int,n))
     end

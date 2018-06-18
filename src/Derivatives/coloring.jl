@@ -178,7 +178,7 @@ function acyclic_coloring(g::UndirectedGraph)
     end
     num_colors = 0
     forbiddenColors = Int[]
-    firstNeighbor = Array{Edge}[]
+    firstNeighbor = Edge[]
     firstVisitToTree = fill(Edge(0,0,0),num_edges(g))
     color = fill(0, num_vertices(g))
     # disjoint set forest of edges in the graph
@@ -272,7 +272,7 @@ function recovery_preprocess(g::UndirectedGraph,color,num_colors, local_indices)
     twocolorindex = zeros(Int32,num_colors, num_colors)
     seen_twocolors = 0
     # count of edges in each subgraph
-    edge_count = Array{Int}[]
+    edge_count = Int[]
     for k in 1:length(g.edges)
         e = g.edges[k]
         u = e.first
