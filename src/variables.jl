@@ -95,7 +95,7 @@ struct VariableRef <: AbstractVariableRef
 end
 
 # Should be implemented by all `AbstractVariableRef`
-model(v::VariableRef) = v.m
+owner_model(v::VariableRef) = v.m
 
 Base.iszero(::VariableRef) = false
 Base.copy(v::VariableRef) = VariableRef(v.m, v.index)

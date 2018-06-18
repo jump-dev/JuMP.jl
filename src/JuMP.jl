@@ -252,11 +252,11 @@ abstract type AbstractJuMPScalar end
 
 
 """
-    model(s::AbstractJuMPScalar)
+    owner_model(s::AbstractJuMPScalar)
 
 Return the model owning the scalar `s`.
 """
-function model end
+function owner_model end
 
 Base.start(::AbstractJuMPScalar) = false
 Base.next(x::AbstractJuMPScalar, state) = (x, true)
@@ -477,12 +477,12 @@ end
 """
     operator_warn(m::AbstractModel)
 
-Everytime two expressions are summed not using `desctructive_add!` and one of
+Everytime two expressions are summed not using `destructive_add!` and one of
 the two expressions have more than 50 terms, this function is called on the model.
 
-## Notes for extension
+## Notes for extensions
 
-By default it does nothing so every new model type must implement this
+By default this method does nothing so every new model type must implement this
 function in order to print a warning.
 """
 function operator_warn(::AbstractModel) end
@@ -495,7 +495,7 @@ end
 function operator_warn(lhs::GenericAffExpr,rhs::GenericAffExpr)
     if length(linearterms(lhs)) > 50 || length(linearterms(rhs)) > 50
         if length(linearterms(lhs)) > 1
-            operator_warn(model(first(linearterms(lhs))[2]))
+            operator_warn(owner_model(first(linearterms(lhs))[2]))
         end
     end
     return
