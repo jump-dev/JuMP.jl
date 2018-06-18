@@ -1,5 +1,7 @@
 module Coloring
 
+using Compat
+
 import DataStructures
 
 include("topological_sort.jl")
@@ -82,16 +84,16 @@ function gen_adjlist(I,J,nel)
         adjcount[i] += 1
         adjcount[j] += 1
     end
-    offsets = Array{Int}(nel+1)
+    offsets = Array{Int}(undef, nel+1)
     offsets[1] = 1
     for k in 1:nel
         offsets[k+1] = offsets[k] + adjcount[k]
     end
     fill!(adjcount,0)
 
-    edges = Array{MyPair{Int}}(n_edges)
-    adjlist = Array{Int}(offsets[nel+1]-1)
-    edgeindex = Array{Int}(length(adjlist))
+    edges = Array{MyPair{Int}}(undef, n_edges)
+    adjlist = Array{Int}(undef, offsets[nel+1]-1)
+    edgeindex = Array{Int}(undef, length(adjlist))
     edge_count = 0
 
     for k in 1:length(I)
@@ -176,7 +178,7 @@ function acyclic_coloring(g::UndirectedGraph)
     end
     num_colors = 0
     forbiddenColors = Int[]
-    firstNeighbor = Array{Edge}(0)
+    firstNeighbor = Edge[]
     firstVisitToTree = fill(Edge(0,0,0),num_edges(g))
     color = fill(0, num_vertices(g))
     # disjoint set forest of edges in the graph
@@ -270,7 +272,7 @@ function recovery_preprocess(g::UndirectedGraph,color,num_colors, local_indices)
     twocolorindex = zeros(Int32,num_colors, num_colors)
     seen_twocolors = 0
     # count of edges in each subgraph
-    edge_count = Array{Int}(0)
+    edge_count = Int[]
     for k in 1:length(g.edges)
         e = g.edges[k]
         u = e.first
@@ -286,9 +288,9 @@ function recovery_preprocess(g::UndirectedGraph,color,num_colors, local_indices)
         edge_count[idx] += 1
     end
     # edges sorted by twocolor subgraph
-    sorted_edges = Array{Vector{MyPair{Int}}}(seen_twocolors)
+    sorted_edges = Array{Vector{MyPair{Int}}}(undef, seen_twocolors)
     for idx in 1:seen_twocolors
-        sorted_edges[idx] = Array{MyPair{Int}}(0)
+        sorted_edges[idx] = MyPair{Int}[]
         sizehint!(sorted_edges[idx],edge_count[idx])
     end
 
@@ -303,10 +305,10 @@ function recovery_preprocess(g::UndirectedGraph,color,num_colors, local_indices)
     end
 
     # list of unique vertices in each twocolor subgraph
-    vertexmap = Array{Vector{Int}}(seen_twocolors)
+    vertexmap = Array{Vector{Int}}(undef, seen_twocolors)
 
-    postorder = Array{Vector{Int}}(seen_twocolors)
-    parents = Array{Vector{Int}}(seen_twocolors)
+    postorder = Array{Vector{Int}}(undef, seen_twocolors)
+    parents = Array{Vector{Int}}(undef, seen_twocolors)
 
     # temporary lookup map from global index to subgraph index
     revmap = zeros(Int,num_vertices(g))
@@ -342,7 +344,7 @@ function recovery_preprocess(g::UndirectedGraph,color,num_colors, local_indices)
         end
 
         # set up offsets for adjlist
-        offset = Array{Int}(length(vlist)+1)
+        offset = Array{Int}(undef, length(vlist)+1)
         offset[1] = 1
         for k in 1:length(vlist)
             offset[k+1] = offset[k] + adjcount[vlist[k]]
@@ -351,7 +353,7 @@ function recovery_preprocess(g::UndirectedGraph,color,num_colors, local_indices)
         # adjlist for node u in twocolor idx starts at
         # vec[offset[u]]
         # u has global index vlist[u]
-        vec = Array{Int}(offset[length(vlist)+1]-1)
+        vec = Array{Int}(undef, offset[length(vlist)+1]-1)
 
         # now fill in
         for k in 1:length(my_edges)
@@ -471,7 +473,7 @@ end
 export hessian_color_preprocess
 
 # allocate a seed matrix
-seed_matrix(rinfo::RecoveryInfo) = Array{Float64}(length(rinfo.local_indices),rinfo.num_colors)
+seed_matrix(rinfo::RecoveryInfo) = Array{Float64}(undef,length(rinfo.local_indices),rinfo.num_colors)
 
 export seed_matrix
 
@@ -512,7 +514,7 @@ function recover_from_matmat!(V, R, rinfo::RecoveryInfo, stored_values)
         vmap = rinfo.vertexmap[t]
         order = rinfo.postorder[t]
         parent = rinfo.parents[t]
-        stored_values[1:length(order)] = 0.0
+        stored_values[1:length(order)] .= 0.0
 
         @inbounds for z in 1:length(order)
             v = order[z]

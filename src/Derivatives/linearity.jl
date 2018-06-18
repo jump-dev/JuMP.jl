@@ -8,7 +8,7 @@ export CONSTANT, LINEAR, PIECEWISE_LINEAR, NONLINEAR
 
 function classify_linearity(nd::Vector{NodeData},adj,subexpression_linearity)
 
-    linearity = Array{Linearity}(length(nd))
+    linearity = Array{Linearity}(undef, length(nd))
 
     # do a forward pass through the graph, which is reverse order of nd
 

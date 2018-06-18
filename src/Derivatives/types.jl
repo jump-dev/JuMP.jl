@@ -70,7 +70,7 @@ mutable struct UserOperatorRegistry
     univariate_operator_fprimeprime::Vector{Any}
 end
 
-UserOperatorRegistry() = UserOperatorRegistry(Dict{Symbol,Int}(),Vector{MOI.AbstractNLPEvaluator}(0),Dict{Symbol,Int}(),[],[],[])
+UserOperatorRegistry() = UserOperatorRegistry(Dict{Symbol,Int}(),MOI.AbstractNLPEvaluator[],Dict{Symbol,Int}(),[],[],[])
 
 # we use the MathOptInterface NLPEvaluator interface, where the
 # operator takes the place of the objective function.

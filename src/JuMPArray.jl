@@ -108,7 +108,7 @@ Base.isassigned(A::JuMPArray{T,N}, idx...) where {T,N} = length(idx) == N && all
 # For ambiguity
 Base.isassigned(A::JuMPArray{T,N}, idx::Int...) where {T,N} = length(idx) == N && all(t -> haskey(A.lookup[t[1]], t[2]), enumerate(idx))
 
-Base.eachindex(A::JuMPArray) = CartesianRange(size(A.data))
+Base.eachindex(A::JuMPArray) = CartesianIndices(size(A.data))
 
 # TODO: similar
 
@@ -160,7 +160,7 @@ function Base.show_nd(io::IO, a::JuMPArray, print_matrix::Function, label_slices
     end
     tailinds = Base.tail(Base.tail(indices(a.data)))
     nd = ndims(a)-2
-    for I in CartesianRange(tailinds)
+    for I in CartesianIndices(tailinds)
         idxs = I.I
         if limit
             for i = 1:nd
