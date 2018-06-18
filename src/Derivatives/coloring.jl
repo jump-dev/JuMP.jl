@@ -288,9 +288,9 @@ function recovery_preprocess(g::UndirectedGraph,color,num_colors, local_indices)
         edge_count[idx] += 1
     end
     # edges sorted by twocolor subgraph
-    sorted_edges = Array{Vector{MyPair{Int}}}(seen_twocolors)
+    sorted_edges = Array{Vector{MyPair{Int}}}(undef, seen_twocolors)
     for idx in 1:seen_twocolors
-        sorted_edges[idx] = Array{MyPair{Int}}(0)
+        sorted_edges[idx] = MyPair{Int}[]
         sizehint!(sorted_edges[idx],edge_count[idx])
     end
 
