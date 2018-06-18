@@ -648,13 +648,18 @@ function operators_test(ModelType::Type{<:JuMP.AbstractModel}, VariableRefType::
     end
 
     @testset "operator_warn" begin
-        m = Model()
+        m = ModelType()
         @variable m x[1:51]
-        @test m.operator_counter == 0
+        # JuMPExtension does not have the `operator_counter` field
+        if ModelType <: Model
+            @test m.operator_counter == 0
+        end
         # Triggers the increment of operator_counter since sum(x) has more than 50 terms
         @test_expression(sum(x) + 2x[1])
-        # The following check verifies that this test covers the code incrementing `operator_counter`
-        @test m.operator_counter == 1
+        if ModelType <: Model
+            # The following check verifies that this test covers the code incrementing `operator_counter`
+            @test m.operator_counter == 1
+        end
     end
 end
 

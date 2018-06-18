@@ -250,6 +250,14 @@ abstract type AbstractConstraint end
 # In JuMP, used only for VariableRef. Useful primarily for extensions
 abstract type AbstractJuMPScalar end
 
+
+"""
+    owner_model(s::AbstractJuMPScalar)
+
+Return the model owning the scalar `s`.
+"""
+function owner_model end
+
 Base.start(::AbstractJuMPScalar) = false
 Base.next(x::AbstractJuMPScalar, state) = (x, true)
 Base.done(::AbstractJuMPScalar, state) = state
@@ -466,15 +474,28 @@ function Base.setindex!(m::JuMP.Model, value, name::Symbol)
     m.objdict[name] = value
 end
 
-# usage warnings
+"""
+    operator_warn(m::AbstractModel)
+
+Everytime two expressions are summed not using `destructive_add!` and one of
+the two expressions have more than 50 terms, this function is called on the model.
+
+## Notes for extensions
+
+By default this method does nothing so every new model type must implement this
+function in order to print a warning.
+"""
+function operator_warn(::AbstractModel) end
+function operator_warn(m::Model)
+    m.operator_counter += 1
+    if m.operator_counter > 20000
+        Base.warn_once("The addition operator has been used on JuMP expressions a large number of times. This warning is safe to ignore but may indicate that model generation is slower than necessary. For performance reasons, you should not add expressions in a loop. Instead of x += y, use append!(x,y) to modify x in place. If y is a single variable, you may also use push!(x, coef, y) in place of x += coef*y.")
+    end
+end
 function operator_warn(lhs::GenericAffExpr,rhs::GenericAffExpr)
     if length(linearterms(lhs)) > 50 || length(linearterms(rhs)) > 50
         if length(linearterms(lhs)) > 1
-            m = first(linearterms(lhs))[2].m
-            m.operator_counter += 1
-            if m.operator_counter > 20000
-                Base.warn_once("The addition operator has been used on JuMP expressions a large number of times. This warning is safe to ignore but may indicate that model generation is slower than necessary. For performance reasons, you should not add expressions in a loop. Instead of x += y, use append!(x,y) to modify x in place. If y is a single variable, you may also use push!(x, coef, y) in place of x += coef*y.")
-            end
+            operator_warn(owner_model(first(linearterms(lhs))[2]))
         end
     end
     return
