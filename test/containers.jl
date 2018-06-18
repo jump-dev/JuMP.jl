@@ -25,7 +25,7 @@ function containermatches(c1::AbstractArray,c2::AbstractArray)
 end
 
 function containermatches(c1::JuMPArray,c2::JuMPArray)
-    return typeof(c1) == typeof(c2) && axes(c1) == axes(c2)
+    return typeof(c1) == typeof(c2) && Compat.axes(c1) == Compat.axes(c2)
 end
 
 containermatches(c1::Dict, c2::Dict) = (eltype(c1) == eltype(c2))
@@ -99,7 +99,7 @@ end
     @test A[3,1,1,1,1] == 2.0
     @test isassigned(A, 2)
     @test !isassigned(A, 1)
-    @test length.(axes(A)) == (2,)
+    @test length.(Compat.axes(A)) == (2,)
     B = plus1.(A)
     @test B[2] == 2.0
     @test B[3] == 3.0
@@ -113,7 +113,7 @@ And data, a 2-element Array{Float64,1}:
     A = @inferred JuMPArray([1.0,2.0], s2)
     @test @inferred A[:a] == 1.0
     @test A[:b] == 2.0
-    @test length.(axes(A)) == (2,)
+    @test length.(Compat.axes(A)) == (2,)
     B = plus1.(A)
     @test B[:a] == 2.0
     @test B[:b] == 3.0
@@ -125,7 +125,7 @@ And data, a 2-element Array{Float64,1}:
  3.0"""
 
     A = @inferred JuMPArray([1 2; 3 4], s1, s2)
-    @test length.(axes(A)) == (2,2)
+    @test length.(Compat.axes(A)) == (2,2)
     @test @inferred A[2,:a] == 1
     @test A[3,:a] == 3
     @test A[2,:b] == 2
