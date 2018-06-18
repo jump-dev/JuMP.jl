@@ -116,10 +116,10 @@ end
 
         v = [x,y,x]
         A = [x y; y x]
-        io_test(REPLMode,   v, "JuMP.VariableRef{JuMP.Model{MathOptInterface.Utilities.CachingOptimizer{Union{MathOptInterface.AbstractOptimizer, Void},MathOptInterface.Utilities.UniversalFallback{JuMP.JuMPMOIModel{Float64}}}}}[x, y, x]")
+        io_test(REPLMode,   v, "JuMP.VariableRef{JuMP.Model{MathOptInterface.Utilities.CachingOptimizer{MathOptInterface.Utilities.UniversalFallback{JuMP.JuMPMOIModel{Float64}}}}}[x, y, x]")
         #io_test(IJuliaMode, v, "JuMP.VariableRef[x, y, x]")
 
-        io_test(REPLMode,   A, "JuMP.VariableRef{JuMP.Model{MathOptInterface.Utilities.CachingOptimizer{Union{MathOptInterface.AbstractOptimizer, Void},MathOptInterface.Utilities.UniversalFallback{JuMP.JuMPMOIModel{Float64}}}}}[x y; y x]")
+        io_test(REPLMode,   A, "JuMP.VariableRef{JuMP.Model{MathOptInterface.Utilities.CachingOptimizer{MathOptInterface.Utilities.UniversalFallback{JuMP.JuMPMOIModel{Float64}}}}}[x y; y x]")
         #io_test(IJuliaMode, A, "JuMP.VariableRef[x y; y x]")
     end
 
