@@ -28,7 +28,12 @@ abstract type REPLMode <: PrintMode end
 abstract type IJuliaMode <: PrintMode end
 
 # Whether something is zero or not for the purposes of printing it
-const PRINT_ZERO_TOL = 1e-10
+# oneunit is useful e.g. if coef is a Unitful quantity
+iszeroforprinting(coef) = abs(coef) < 1e-10 * oneunit(coef)
+# Whether something is one or not for the purposes of printing it
+isoneforprinting(coef) = iszeroforprinting(abs(coef) - oneunit(coef))
+str_sign(coef) = coef < zero(coef) ? "-" : "+"
+spaced_str_sign(coef) = " " * str_sign(coef) * " "
 
 # List of indices available for variable printing
 const DIMS = ["i","j","k","l","m","n"]
@@ -37,10 +42,11 @@ const DIMS = ["i","j","k","l","m","n"]
 # e.g.   5.3  =>  5.3
 #        1.0  =>  1
 function str_round(f::Float64)
-    abs(f) == 0.0 && return "0" # strip sign off zero
+    iszero(f) && return "0" # strip sign off zero
     str = string(f)
     length(str) >= 2 && str[end-1:end] == ".0" ? str[1:end-2] : str
 end
+str_round(f) = string(f)
 
 # TODO: get rid of this! This is only a helper, and should be Base.values
 # (and probably live there, as well)
@@ -131,7 +137,6 @@ function var_str(::Type{IJuliaMode}, v::AbstractVariableRef; mathmode=true)
     end
 end
 
-
 Base.show(io::IO, a::GenericAffExpr) = print(io, aff_str(REPLMode,a))
 Base.show(io::IO, ::MIME"text/latex", a::GenericAffExpr) =
     print(io, math(aff_str(IJuliaMode,a),false))
@@ -146,11 +151,11 @@ function aff_str(mode, a::GenericAffExpr{C, V}, show_constant=true) where {C, V}
     elm = 1
     # For each non-zero for this model
     for (coef, var) in linearterms(a)
-        abs(coef) < PRINT_ZERO_TOL && continue  # e.g. x - x
+        iszeroforprinting(coef) && continue  # e.g. x - x
 
-        pre = abs(abs(coef)-1) < PRINT_ZERO_TOL ? "" : str_round(abs(coef)) * " "
+        pre = isoneforprinting(coef) ? "" : str_round(abs(coef)) * " "
 
-        term_str[2*elm-1] = coef < 0 ? " - " : " + "
+        term_str[2*elm-1] = spaced_str_sign(coef)
         term_str[2*elm  ] = string(pre, var_str(mode, var))
         elm += 1
     end
@@ -163,8 +168,8 @@ function aff_str(mode, a::GenericAffExpr{C, V}, show_constant=true) where {C, V}
         # Correction for very first term - don't want a " + "/" - "
         term_str[1] = (term_str[1] == " - ") ? "-" : ""
         ret = join(term_str[1:2*(elm-1)])
-        if abs(a.constant) >= PRINT_ZERO_TOL && show_constant
-            ret = string(ret, a.constant < 0 ? " - " : " + ", str_round(abs(a.constant)))
+        if !iszeroforprinting(a.constant) && show_constant
+            ret = string(ret, spaced_str_sign(a.constant), str_round(abs(a.constant)))
         end
         return ret
     end
@@ -191,19 +196,19 @@ function quad_str(mode, q::GenericQuadExpr, sym)
     elm = 1
     if length(term_str) > 0
         for (coef, var1, var2) in quadterms(q)
-            abs(coef) < PRINT_ZERO_TOL && continue  # e.g. x - x
+            iszeroforprinting(coef) && continue  # e.g. x - x
 
-            pre = abs(abs(coef)-1) < PRINT_ZERO_TOL ? "" : str_round(abs(coef)) * " "
+            pre = isoneforprinting(coef) ? "" : str_round(abs(coef)) * " "
 
             x = var_str(mode,var1)
             y = var_str(mode,var2)
 
-            term_str[2*elm-1] = coef < 0 ? " - " : " + "
+            term_str[2*elm-1] = spaced_str_sign(coef)
             term_str[2*elm  ] = "$pre$x" * (x == y ? sym[:sq] : "$(sym[:times])$y")
             if elm == 1
                 # Correction for first term as there is no space
                 # between - and variable coefficient/name
-                term_str[1] = coef < 0 ? "-" : ""
+                term_str[1] = str_sign(coef)
             end
             elm += 1
         end
