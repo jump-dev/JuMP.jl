@@ -32,8 +32,7 @@ abstract type IJuliaMode <: PrintMode end
 iszeroforprinting(coef) = abs(coef) < 1e-10 * oneunit(coef)
 # Whether something is one or not for the purposes of printing it
 isoneforprinting(coef) = iszeroforprinting(abs(coef) - oneunit(coef))
-str_sign(coef) = coef < zero(coef) ? "-" : "+"
-spaced_str_sign(coef) = " " * str_sign(coef) * " "
+str_sign(coef) = coef < zero(coef) ? " - " : " + "
 
 # List of indices available for variable printing
 const DIMS = ["i","j","k","l","m","n"]
@@ -155,7 +154,7 @@ function aff_str(mode, a::GenericAffExpr{C, V}, show_constant=true) where {C, V}
 
         pre = isoneforprinting(coef) ? "" : str_round(abs(coef)) * " "
 
-        term_str[2*elm-1] = spaced_str_sign(coef)
+        term_str[2*elm-1] = str_sign(coef)
         term_str[2*elm  ] = string(pre, var_str(mode, var))
         elm += 1
     end
@@ -169,7 +168,7 @@ function aff_str(mode, a::GenericAffExpr{C, V}, show_constant=true) where {C, V}
         term_str[1] = (term_str[1] == " - ") ? "-" : ""
         ret = join(term_str[1:2*(elm-1)])
         if !iszeroforprinting(a.constant) && show_constant
-            ret = string(ret, spaced_str_sign(a.constant), str_round(abs(a.constant)))
+            ret = string(ret, str_sign(a.constant), str_round(abs(a.constant)))
         end
         return ret
     end
@@ -203,12 +202,12 @@ function quad_str(mode, q::GenericQuadExpr, sym)
             x = var_str(mode,var1)
             y = var_str(mode,var2)
 
-            term_str[2*elm-1] = spaced_str_sign(coef)
+            term_str[2*elm-1] = str_sign(coef)
             term_str[2*elm  ] = "$pre$x" * (x == y ? sym[:sq] : "$(sym[:times])$y")
             if elm == 1
                 # Correction for first term as there is no space
                 # between - and variable coefficient/name
-                term_str[1] = str_sign(coef)
+                term_str[1] = coef < zero(coef) ? "-" : ""
             end
             elm += 1
         end
