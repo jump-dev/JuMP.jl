@@ -26,6 +26,18 @@ function io_test(mode, obj, exp_str; repl=:both)
     end
 end
 
+# Used to test that JuMP printing works correctly for types for which
+# oneunit is not convertible to Float64
+struct UnitNumber <: Number
+    α::Float64
+end
+Base.zero(::Union{UnitNumber, Type{UnitNumber}}) = UnitNumber(0.0)
+Base.oneunit(::Union{UnitNumber, Type{UnitNumber}}) = UnitNumber(1.0)
+Base.:(+)(u::UnitNumber, v::UnitNumber) = UnitNumber(u.α + v.α)
+Base.:(-)(u::UnitNumber, v::UnitNumber) = UnitNumber(u.α - v.α)
+Base.:(*)(α::Float64, u::UnitNumber) = UnitNumber(α * u.α)
+Base.abs(u::UnitNumber) = UnitNumber(abs(u.α))
+Base.isless(u::UnitNumber, v::UnitNumber) = isless(u.α, v.α)
 
 @testset "Printing" begin
 
@@ -144,4 +156,17 @@ end
         io_test(IJuliaMode, w[1,3], "symm_{1,3}")
     end
 
+    # See https://github.com/JuliaOpt/JuMP.jl/pull/1352
+    @testset "Expression of coefficient type with unit" begin
+        m = Model()
+        @variable m x
+        @variable m y
+        u = UnitNumber(2.0)
+        aff = JuMP.GenericAffExpr(zero(u), x => u, y => zero(u))
+        io_test(REPLMode,   aff, "UnitNumber(2.0) x")
+        io_test(IJuliaMode, aff, "UnitNumber(2.0) x")
+        quad = aff * x
+        io_test(REPLMode,   quad, "UnitNumber(2.0) x² + UnitNumber(0.0)")
+        io_test(IJuliaMode, quad, "UnitNumber(2.0) x^2 + UnitNumber(0.0)")
+    end
 end
