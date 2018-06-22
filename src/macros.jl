@@ -1006,13 +1006,13 @@ end
 """
     @variable(m; kwargs...)
 
-Add an *anonymous* (see the "Variable naming" section below) variable described
-by the keyword arguments `kwargs` that belongs to the model `m`.
+Add an *anonymous* (see the "Variable naming" section below) variable to the
+model `m` described by the keyword arguments `kwargs` that belongs.
 
     @variable(m, expr, args...; kwargs...)
 
-Add a variable described by the expression `expr`, the positional arguments
-`args` and the keyword arguments `kwargs` that belongs to the model `m`.
+Add a variable to the model `m` described by the expression `expr`, the
+positional arguments `args` and the keyword arguments `kwargs` that belongs.
 The expression `expr` can either be (note that in the following the symbol
 `<=` can be used instead of `≤` and the symbol `>=`can be used instead of
 `≥`)
