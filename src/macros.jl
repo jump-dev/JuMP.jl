@@ -1007,21 +1007,20 @@ end
     @variable(m; kwargs...)
 
 Add an *anonymous* (see the "Variable naming" section below) variable to the
-model `m` described by the keyword arguments `kwargs` that belongs.
+model `m` described by the keyword arguments `kwargs`.
 
     @variable(m, expr, args...; kwargs...)
 
 Add a variable to the model `m` described by the expression `expr`, the
-positional arguments `args` and the keyword arguments `kwargs` that belongs.
-The expression `expr` can either be (note that in the following the symbol
-`<=` can be used instead of `≤` and the symbol `>=`can be used instead of
-`≥`)
+positional arguments `args` and the keyword arguments `kwargs`. The expression
+`expr` can either be (note that in the following the symbol `<=` can be used
+instead of `≤` and the symbol `>=`can be used instead of `≥`)
 
 * of the form `varexpr` creating variables described by `varexpr`;
 * of the form `varexpr ≤ ub` (resp. `varexpr ≥ lb`) creating variables described by
   `varexpr` with upper bounds given by `ub` (resp. lower bounds given by `lb`);
 * of the form `varexpr == value` creating variables described by `varexpr` with
-  fixed values given by `value`;
+  fixed values given by `value`; or
 * of the form `lb ≤ varexpr ≤ ub` or `ub ≥ varexpr ≥ lb` creating variables
   described by `varexpr` with lower bounds given by `lb` and upper bounds given
   by `ub`.
@@ -1030,7 +1029,7 @@ The expression `varexpr` can either be
 
 * of the form `varname` creating a scalar real variable of name `varname`;
 * of the form `varname[idxs1,idxs2,...,idxn]` creating an `n`-dimensional
-  `Array` or `JuMPArray` of scalar real variables.
+  `Array` or `JuMPArray` of scalar real variables; or
 * of the form `[idxs1,idxs2,...,idxsn]` creating an `n`-dimensional *anonymous*
   (see the "Variable naming" section below) `Array` or `JuMPArray` of scalar
   real variables.
@@ -1038,12 +1037,12 @@ The expression `varexpr` can either be
 Each expression `idxsi` can either be
 
 * of the form `idxset` specifying that the `i`th index set of the container
-  is `idxset`.
+  is `idxset`; or
 * of the form `idxname=idxset` specifying that the `i`th index set of the
   container is `idxset` and allowing values used in `expr` and keyword
   arguments to be expressions depending on the `idxname`.
 
-If each `idxset` is of the form `1:s`, the container creating is an `Array`.
+If each `idxset` is of the form `1:s`, the container created is an `Array`.
 Otherwise, it is a `JuMPArray`.
 
 The recognized positional arguments in `args` are the following:
@@ -1062,18 +1061,18 @@ The recognized keyword arguments in `kwargs` are the following:
 
 * `basename`: Sets the base name used to generate variable names. It
   corresponds to the variable name for scalar variable, otherwise, the
-  variable names are `basename[...]` for each indices `...` of the axes `axes`
+  variable names are `basename[...]` for each indices `...` of the axes `axes`.
 * `lowerbound`: Sets the value of the variable lower bound.
 * `upperbound`: Sets the value of the variable upper bound.
 * `start`: Sets the variable starting value used as initial guess in optimization.
 * `binary`: Sets whether the variable is binary or not.
 * `integer`: Sets whether the variable is integer or not.
-* `variabletype`: See the "Note for extending the variable macro " section below.
+* `variabletype`: See the "Note for extending the variable macro" section below.
 
 ## Variable naming
 
 There a two different aspects of the variable naming that needs to be
-distinguished when created a scalar variable (resp. a container of variables)
+distinguished when created a scalar variable (resp. a container of variables):
 
 * The name of the local variable created (if any) holding the variable (resp.
   the container of variables) which corresponds to the name that can be used
@@ -1099,7 +1098,7 @@ specified, the name depends on whether the variable is anonymous:
 
 * if the variable is anonymous, then the
   [`MathOptInterface.VariableName`](@ref) attribute is not set and the name
-  used for printing is `noname`.
+  used for printing is `noname`,
 * otherwise, the base name is set to `varname`.
 
 The name of the variables set to the [`MathOptInterface.VariableName`](@ref)
@@ -1122,13 +1121,14 @@ extra_kwargs...))` where
   and `PSD`);
 * `extra_args` are the unrecognized positional arguments of `args` plus the
   value of the `variabletype` keyword argument if present. The `variabletype`
-  keyword argument allows to pass a positional argument to `buildvariable`
-  without the need to give a positional argument to `@variable`. This allows to
-  have a positional argument in the `buildvariable` call when using the
-  anonymous single variable syntax `@variable(m; kwargs...)`;
+  keyword argument allows the user to pass a position argument to
+  `buildvariable` without the need to give a positional argument to
+  `@variable`. In particular, this allows the user to give a positional
+  argument to the `buildvariable` call when using the anonymous single variable
+  syntax `@variable(m; kwargs...)`; and
 * `extra_kwargs` are the unrecognized keyword argument of `kwargs`.
 
-## Examples:
+## Examples
 
 The following are equivalent ways of creating a variable `x` of name `x` with
 lowerbound 0:
