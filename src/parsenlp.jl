@@ -30,6 +30,13 @@ function parseNLExpr(m, x, tapevar, parent, values)
     end
 
     if isexpr(x, :call)
+        if issum(x.args[1]) || isprod(x.args[1])
+            opname = x.args[1]
+            errorstring = "$opname() can appear in nonlinear expressions " *
+            " only if the argument is a generator statement, for example, " *
+            "$opname(x[i] for i in 1:N)."
+            return :(error($errorstring))
+        end
         if length(x.args) == 2 # univariate
             code = :(let; end)
             block = code.args[1]

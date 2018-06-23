@@ -122,6 +122,12 @@
                                 NonlinearExprData(m, :(f($x,$y))))
     end
 
+    @testset "Error on sum(x)" begin
+        m = Model()
+        x = [1,2,3]
+        @test_throws ErrorException @NLexpression(m, sum(x))
+    end
+
     # Converts the lower-triangular sparse Hessian in MOI format into a dense
     # matrix.
     function dense_hessian(hessian_sparsity, V, n)
