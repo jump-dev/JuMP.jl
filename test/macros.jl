@@ -55,13 +55,6 @@ end
 function macros_test(ModelType::Type{<:JuMP.AbstractModel}, VariableRefType::Type{<:JuMP.AbstractVariableRef})
     AffExprType = JuMP.GenericAffExpr{Float64, VariableRefType}
 
-    @testset "Nested tuple destructuring" begin
-        m = ModelType()
-        d = Dict((1,2) => 3)
-        ex = @expression(m, sum(i+j+k for ((i,j),k) in d))
-        @test ex == 6
-    end
-
     @testset "buildconstraint on variable" begin
         m = ModelType()
         @variable(m, x)
@@ -131,15 +124,34 @@ function macros_test(ModelType::Type{<:JuMP.AbstractModel}, VariableRefType::Typ
         @test c.set == MOI.LessThan(-38.0)
     end
 
-    @testset "Helpful error for variable declaration with misplaced constant" begin
-        m = ModelType()
-        @test_macro_throws ErrorException @variable m 0 <= x
-        @test_macro_throws ErrorException @variable m 0 >= x
-    end
 end
 
 @testset "Macros for JuMP.Model" begin
     macros_test(Model, VariableRef)
+
+    @testset "Nested tuple destructuring" begin
+        m = Model()
+        d = Dict((1,2) => 3)
+        ex = @expression(m, sum(i+j+k for ((i,j),k) in d))
+        @test ex == 6
+    end
+
+    @testset "Helpful error for variable declaration with misplaced constant" begin
+        m = Model()
+        @test_macro_throws ErrorException @variable m 0 <= x
+        @test_macro_throws ErrorException @variable m 0 >= x
+    end
+
+    @testset "Error on unexpected comparison" begin
+        m = Model()
+        @variable(m, x)
+        @test_macro_throws ErrorException @expression(m, x <= 1)
+    end
+
+    @testset "Warn on unexpected assignmnet" begin
+        @test_warn "Unexpected assignment" macroexpand(
+                                             :(@constraint(m, x[i=1] <= 1)))
+    end
 end
 
 @testset "Macros for JuMPExtension.MyModel" begin
