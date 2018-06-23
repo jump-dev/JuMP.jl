@@ -159,7 +159,22 @@ function parseNLExpr_runtime(m::Model, x::Vector, tape, parent, values)
     error("Unexpected vector $x in nonlinear expression. Nonlinear expressions may contain only scalar expressions.")
 end
 
+function expression_complexity(ex::Expr)
+    return isempty(ex.args) ? 1 : sum(expression_complexity, ex.args)
+end
+expression_complexity(other) = 1
+
 macro processNLExpr(m, ex)
+    # This is an arbitrary cutoff. See issue #1355.
+    if expression_complexity(ex) > 5000
+        Compat.@warn "Processing a very large nonlinear expression with " *
+                     "@NLexpression/@NLconstraint/@NLobjective. This may be " *
+                     "very slow. Consider using setNLobjective() and " *
+                     "addNLconstraint() instead of the macros or " *
+                     "reformulating the expressions using sum() and prod() " *
+                     "to make them more compact. The macros are designed to " *
+                     "process smaller, human-readable expressions."
+    end
     parsed = parseNLExpr(m, ex, :tape, -1, :values)
     quote
         tape = NodeData[]
