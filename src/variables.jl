@@ -259,7 +259,7 @@ function setlowerbound(v::VariableRef,lower::Number)
     # do we have a lower bound already?
     if haslowerbound(v)
         cindex = lowerboundindex(v)
-        MOI.modifyconstraint!(v.m.moibackend, cindex, newset)
+        MOI.set!(v.m.moibackend, MOI.ConstraintSet(), cindex, newset)
     else
         @assert !isfixed(v)
         cindex = MOI.addconstraint!(v.m.moibackend, MOI.SingleVariable(index(v)), newset)
@@ -315,7 +315,7 @@ function setupperbound(v::VariableRef,upper::Number)
     # do we have an upper bound already?
     if hasupperbound(v)
         cindex = upperboundindex(v)
-        MOI.modifyconstraint!(v.m.moibackend, cindex, newset)
+        MOI.set!(v.m.moibackend, MOI.ConstraintSet(), cindex, newset)
     else
         @assert !isfixed(v)
         cindex = MOI.addconstraint!(v.m.moibackend, MOI.SingleVariable(index(v)), newset)
@@ -371,7 +371,7 @@ function fix(v::VariableRef,upper::Number)
     # are we already fixed?
     if isfixed(v)
         cindex = fixindex(v)
-        MOI.modifyconstraint!(v.m.moibackend, cindex, newset)
+        MOI.set!(v.m.moibackend, MOI.ConstraintSet(), cindex, newset)
     else
         @assert !hasupperbound(v) && !haslowerbound(v) # Do we want to remove these instead of throwing an error?
         cindex = MOI.addconstraint!(v.m.moibackend, MOI.SingleVariable(index(v)), newset)
