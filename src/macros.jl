@@ -736,11 +736,7 @@ for (mac,sym) in [(:constraints,  Symbol("@constraint")),
                     end
                     args_esc = []
                     for ex in args
-                        if isexpr(ex, :(=)) && VERSION < v"0.6.0-dev.1934"
-                            push!(args_esc,Expr(:kw, ex.args[1], esc(ex.args[2])))
-                        else
-                            push!(args_esc, esc(ex))
-                        end
+                        push!(args_esc, esc(ex))
                     end
                     mac = Expr(:macrocall,$(quot(sym)), esc(m), args_esc...)
                     push!(code.args, mac)
