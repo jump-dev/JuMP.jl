@@ -354,6 +354,30 @@ is_complex_expr(ex) = isa(ex,Expr) && !isexpr(ex,:ref)
 
 parseExprToplevel(x, aff::Symbol) = parseExpr(x, aff, [], [])
 
+function is_comparison(ex::Expr)
+    if isexpr(ex, :comparison)
+        return true
+    elseif isexpr(ex, :call)
+        if ex.args[1] in (:<=, :≤, :>=, :≥, :(==))
+            return true
+        else
+            return false
+        end
+    else
+        return false
+    end
+end
+
+# x[i=1] <= 2 is a somewhat common user error. Catch it here.
+function has_assignment_in_ref(ex::Expr)
+    if isexpr(ex, :ref)
+        return any(x -> isexpr(x, :(=)), ex.args)
+    else
+        return any(has_assignment_in_ref, ex.args)
+    end
+end
+has_assignment_in_ref(other) = false
+
 # output is assigned to newaff
 function parseExpr(x, aff::Symbol, lcoeffs::Vector, rcoeffs::Vector, newaff::Symbol=gensym())
     if !isa(x,Expr)
@@ -446,7 +470,13 @@ function parseExpr(x, aff::Symbol, lcoeffs::Vector, rcoeffs::Vector, newaff::Sym
         elseif x.head == :curly
             error_curly(x)
         else # at lowest level?
-            !isexpr(x,:comparison) || error("Unexpected comparison in expression $x")
+            if is_comparison(x)
+                error("Unexpected comparison in expression $x.")
+            end
+            if has_assignment_in_ref(x)
+                Compat.@warn "Unexpected assignment in expression $x. This " *
+                             "will become a syntax error in a future release."
+            end
             callexpr = Expr(:call,:destructive_add_with_reorder!,aff,lcoeffs...,esc(x),rcoeffs...)
             return newaff, :($newaff = $callexpr)
         end
