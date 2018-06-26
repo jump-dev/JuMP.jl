@@ -13,6 +13,8 @@ makedocs(
         "Variables" => "variables.md",
         "Expressions" => "expressions.md",
         "Constraints" => "constraints.md",
+        "Containers" => "containers.md",
+        "Names" => "names.md",
         "Solvers" => "solvers.md",
         "Nonlinear Modeling" => "nlp.md",
         "Style Guide" => "style.md",

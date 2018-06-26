@@ -1006,8 +1006,8 @@ end
 """
     @variable(m; kwargs...)
 
-Add an *anonymous* (see the "Variable naming" section below) variable to the
-model `m` described by the keyword arguments `kwargs`.
+Add an *anonymous* (see [Names](@ref)) variable to the model `m`
+described by the keyword arguments `kwargs`.
 
     @variable(m, expr, args...; kwargs...)
 
@@ -1028,22 +1028,8 @@ instead of `≤` and the symbol `>=`can be used instead of `≥`)
 The expression `varexpr` can either be
 
 * of the form `varname` creating a scalar real variable of name `varname`;
-* of the form `varname[idxs1,idxs2,...,idxn]` creating an `n`-dimensional
-  `Array` or `JuMPArray` of scalar real variables; or
-* of the form `[idxs1,idxs2,...,idxsn]` creating an `n`-dimensional *anonymous*
-  (see the "Variable naming" section below) `Array` or `JuMPArray` of scalar
-  real variables.
-
-Each expression `idxsi` can either be
-
-* of the form `idxset` specifying that the `i`th index set of the container
-  is `idxset`; or
-* of the form `idxname=idxset` specifying that the `i`th index set of the
-  container is `idxset` and allowing values used in `expr` and keyword
-  arguments to be expressions depending on the `idxname`.
-
-If each `idxset` is of the form `1:s`, the container created is an `Array`.
-Otherwise, it is a `JuMPArray`.
+* of the form `varname[...]` or `[...]` creating a container of variables (see
+  [Containers in macro](@ref).
 
 The recognized positional arguments in `args` are the following:
 
@@ -1068,43 +1054,7 @@ The recognized keyword arguments in `kwargs` are the following:
 * `binary`: Sets whether the variable is binary or not.
 * `integer`: Sets whether the variable is integer or not.
 * `variabletype`: See the "Note for extending the variable macro" section below.
-
-## Variable naming
-
-There a two different aspects of the variable naming that needs to be
-distinguished when created a scalar variable (resp. a container of variables):
-
-* The name of the local variable created (if any) holding the variable (resp.
-  the container of variables) which corresponds to the name that can be used
-  to retrieve it using `m[:varname]`.
-* The name of the variable (resp. each variable in the container) used for
-  printing. This corresponds to the [`MathOptInterface.VariableName`](@ref)
-  attribute.
-
-When creating a variable using the syntax `@variable(m; kwargs...)` or when
-`varexpr` is of the form `[...]`, we say that the variable is *anonymous*.
-For anonymous variables, no local variable is created holding the result
-and it is not stored in the model, i.e. it is not possible to retrieve the
-variable using `m[:varname]`.
-
-Otherwise, when the variable is not anonymous, the name used both for the
-local variable created and the key for retrieving the variable in the model
-are determined from `varexpr`. The name is `varname` when `varexpr` is
-`varname` or `varname[...]`.
-
-The name of the variable is based on the base name which is specified by the
-`basename` keyword argument. When the `basename` keyword argument is not
-specified, the name depends on whether the variable is anonymous:
-
-* if the variable is anonymous, then the
-  [`MathOptInterface.VariableName`](@ref) attribute is not set and the name
-  used for printing is `noname`,
-* otherwise, the base name is set to `varname`.
-
-The name of the variables set to the [`MathOptInterface.VariableName`](@ref)
-attribute and used for printing is then `basename` for scalar variables
-and `basename[i1,i2,...,in]` for the variable at indices `i1`, `i2`, ..., `in`
-in a container of variables.
+* `container`: Specify the container type, see [Containers in macro](@ref).
 
 ## Note for extending the variable macro
 
