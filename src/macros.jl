@@ -1113,8 +1113,8 @@ using `addvariable(m, buildvariable(_error, info, extra_args...;
 extra_kwargs...))` where
 
 * `m` is the model passed to the `@variable` macro;
-* `_error` is an error function showing the `@variable` call in addition to the
-  error message given as argument;
+* `_error` is an error function with a single `String` argument showing the
+  `@variable` call in addition to the error message given as argument;
 * `info` is the `VariableInfo` struct containing the information gathered in
   `expr`, the recognized keyword arguments (except `basename` and
   `variabletype`) and the recognized positional arguments (except `Symmetric`
