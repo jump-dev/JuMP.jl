@@ -7,25 +7,25 @@
 # They cannot be called in Direct mode.
 function MOIU.resetoptimizer!(m::Model, optimizer::MOI.AbstractOptimizer)
     @assert mode(m) != Direct
-    MOIU.resetoptimizer!(m.moibackend.model, optimizer)
+    MOIU.resetoptimizer!(caching_optimizer(m), optimizer)
 end
 
 function MOIU.resetoptimizer!(m::Model)
     @assert mode(m) != Direct
-    MOIU.resetoptimizer!(m.moibackend.model)
+    MOIU.resetoptimizer!(caching_optimizer(m))
 end
 
 function MOIU.dropoptimizer!(m::Model)
     @assert mode(m) != Direct
-    MOIU.dropoptimizer!(m.moibackend.model)
+    MOIU.dropoptimizer!(caching_optimizer(m))
 end
 
 function MOIU.attachoptimizer!(m::Model)
     @assert mode(m) != Direct
-    copyresult = MOIU.attachoptimizer!(m.moibackend.model)
+    copyresult = MOIU.attachoptimizer!(caching_optimizer(m))
     # TODO: more reliable error reporting
     @assert copyresult.status == MOI.CopySuccess
-    @assert m.moibackend.model.state == MOIU.AttachedOptimizer
+    @assert caching_optimizer(m).state == MOIU.AttachedOptimizer
     return copyresult
 end
 

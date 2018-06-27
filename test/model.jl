@@ -23,7 +23,8 @@ end
         optimizer = MOIU.MockOptimizer(LPModel{Float64}());
         m = Model(optimizer=optimizer)
         @variable m x
-        @constraint m 0 <= x+1 <= 1
+        cref = @constraint m 0 <= x+1 <= 1
+        @test cref isa JuMP.ConstraintRef{JuMP.Model,MOI.ConstraintIndex{MOI.ScalarAffineFunction{Float64},MOI.Interval{Float64}}}
     end
     @testset "No bridge automatically added in Direct mode" begin
         optimizer = MOIU.MockOptimizer(LPModel{Float64}());

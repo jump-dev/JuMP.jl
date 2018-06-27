@@ -179,12 +179,16 @@ mutable struct Model <: AbstractModel
     end
 end
 
+# In Automatic and Manual mode, `m.moibackend` is a `LazyBridgeOptimizer` and
+# the `CachingOptimizer` is stored in the `model` field
+caching_optimizer(m::Model) = m.moibackend.model
+
 # Getters/setters
 
 function mode(m::Model)
     if !(m.moibackend isa MOI.Bridges.LazyBridgeOptimizer{<:MOIU.CachingOptimizer})
         return Direct
-    elseif m.moibackend.model.mode == MOIU.Automatic
+    elseif caching_optimizer(m).mode == MOIU.Automatic
         return Automatic
     else
         return Manual
@@ -321,13 +325,12 @@ Base.copy(x::Nothing, new_model::Model) = nothing
 # TODO: Replace with vectorized copy?
 Base.copy(v::AbstractArray{VariableRef}, new_model::Model) = (var -> VariableRef(new_model, var.index)).(v)
 
-
 function optimizerindex(v::VariableRef)
     if mode(v.m) == Direct
         return index(v)
     else
-        @assert v.m.moibackend.state == MOIU.AttachedOptimizer
-        return v.m.moibackend.model.model_to_optimizer_map[index(v)]
+        @assert caching_optimizer(v.m).state == MOIU.AttachedOptimizer
+        return caching_optimizer(v.m).model_to_optimizer_map[index(v)]
     end
 end
 
@@ -335,8 +338,8 @@ function optimizerindex(cr::ConstraintRef{Model})
     if mode(cr.m) == Direct
         return index(cr)
     else
-        @assert cr.m.moibackend.state == MOIU.AttachedOptimizer
-        return cr.m.moibackend.model.model_to_optimizer_map[index(cr)]
+        @assert caching_optimizer(cr.m).state == MOIU.AttachedOptimizer
+        return caching_optimizer(cr.m).model_to_optimizer_map[index(cr)]
     end
 end
 
