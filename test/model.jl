@@ -15,3 +15,20 @@ end
     MOI.set!(m, MOIT.UnknownModelAttribute(), 1)
     @test MOI.get(m, MOIT.UnknownModelAttribute()) == 1
 end
+# Simple LP model not supporting Interval
+@MOIU.model LPModel () (EqualTo, GreaterThan, LessThan) () () (SingleVariable,) (ScalarAffineFunction,) () ()
+@testset "Bridges" begin
+    @testset "Automatic bridging" begin
+        # optimizer not supporting Interval
+        optimizer = MOIU.MockOptimizer(LPModel{Float64}());
+        m = Model(optimizer=optimizer)
+        @variable m x
+        @constraint m 0 <= x+1 <= 1
+    end
+    @testset "No bridge automatically added in Direct mode" begin
+        optimizer = MOIU.MockOptimizer(LPModel{Float64}());
+        m = Model(backend=optimizer, mode=JuMP.Direct)
+        @variable m x
+        @test_throws MethodError @constraint m 0 <= x + 1 <= 1
+    end
+end
