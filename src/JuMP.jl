@@ -25,7 +25,7 @@ using Compat.LinearAlgebra
 using Compat.SparseArrays
 using Compat.Printf
 
-if VERSION < v"0.7"
+if VERSION < v"0.7-"
     const IdDict = Base.ObjectIdDict
     const LinearAlgebra = Compat.LinearAlgebra
     const SparseArrays = Compat.SparseArrays
