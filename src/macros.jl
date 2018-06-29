@@ -946,11 +946,11 @@ function namecall(basename, idxvars)
     return ex
 end
 
-reverse_sense(::Val{:<=})   = :>=
-reverse_sense(::Val{:≤})    = :≥
-reverse_sense(::Val{:>=})   = :<=
-reverse_sense(::Val{:≥})    = :≤
-reverse_sense(::Val{:(==)}) = :(==)
+reverse_sense(::Val{:<=})   = Val(:>=)
+reverse_sense(::Val{:≤})    = Val(:≥)
+reverse_sense(::Val{:>=})   = Val(:<=)
+reverse_sense(::Val{:≥})    = Val(:≤)
+reverse_sense(::Val{:(==)}) = Val(:(==))
 
 """
     parse_one_operator_variable(_error::Function, infoexpr::VariableInfoExpr, sense::Val{S}, value) where S
@@ -965,18 +965,22 @@ function parsevariable(_error::Function, infoexpr::VariableInfoExpr, sense::Symb
     # Variable declaration of the form: var sense value
 
     # There is not way to determine at parsing time which of lhs or rhs is the
-    # variable name and which is the value. For instance, lhs could be the
-    # Symbol `:x` and rhs could be the Symbol `:a` where a variable `a` is
-    # assigned to 1 in the local scope. Knowing this, we know that `x` is the
-    # variable name but at parse time there is now way to know that `a` has
-    # a value.
-    # Therefore, we always assume that the variable is the `lhs` and throw
-    # an helpful error in the the case were we can easily determine that the
-    # user placed the variable in the rhs, i.e. the case where the rhs is a
-    # constant number.
-    var isa Number && _error("Variable declaration of the form `$var $sense $value` is not supported. Use `$value $(reverse_sense(Val(sense))) $var` instead.")
-    parse_one_operator_variable(_error, infoexpr, Val(sense), esc_nonconstant(value))
-    var
+    # variable name and which is the value if both are symbols. For instance,
+    # lhs could be the Symbol `:x` and rhs could be the Symbol `:a` where a
+    # variable `a` is assigned to 1 in the local scope. Knowing this, we know
+    # that `x` is the variable name but at parse time there is now way to know
+    # that `a` has a value.
+    # In that case we assume the variable is the lhs.
+
+    # If the lhs is a number and not the rhs, we can deduce that the rhs is
+    # the variable.
+    if var isa Number && !(value isa Number)
+        parse_one_operator_variable(_error, infoexpr, reverse_sense(Val(sense)), esc_nonconstant(var))
+        return value
+    else
+        parse_one_operator_variable(_error, infoexpr, Val(sense), esc_nonconstant(value))
+        return var
+    end
 end
 
 function parseternaryvariable(_error::Function, infoexpr::VariableInfoExpr,

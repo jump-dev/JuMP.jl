@@ -136,12 +136,6 @@ end
         @test ex == 6
     end
 
-    @testset "Helpful error for variable declaration with misplaced constant" begin
-        m = Model()
-        @test_macro_throws ErrorException @variable m 0 <= x
-        @test_macro_throws ErrorException @variable m 0 >= x
-    end
-
     @testset "Error on unexpected comparison" begin
         m = Model()
         @variable(m, x)

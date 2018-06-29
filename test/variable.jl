@@ -34,26 +34,35 @@ function variables_test(ModelType::Type{<:JuMP.AbstractModel}, VariableRefType::
         end
 
         @testset "Lower bound" begin
-            @variable(mcon, lbonly >= 0, Bin)
-            @test JuMP.haslowerbound(lbonly)
-            @test JuMP.lowerbound(lbonly) == 0.0
-            @test !JuMP.hasupperbound(lbonly)
-            @test !JuMP.isfixed(lbonly)
-            @test JuMP.isbinary(lbonly)
-            @test !JuMP.isinteger(lbonly)
-            @test isequal(mcon[:lbonly],lbonly)
-            @test_throws ErrorException @variable(mcon, lbonly)
+            @variable(mcon, lbonly1 >= 0, Bin)
+            @test isequal(mcon[:lbonly1],lbonly1)
+            @variable(mcon, 0 <= lbonly2, Bin)
+            @test isequal(mcon[:lbonly2],lbonly2)
+            for lbonly in (lbonly1, lbonly2)
+                @test JuMP.haslowerbound(lbonly)
+                @test JuMP.lowerbound(lbonly) == 0.0
+                @test !JuMP.hasupperbound(lbonly)
+                @test !JuMP.isfixed(lbonly)
+                @test JuMP.isbinary(lbonly)
+                @test !JuMP.isinteger(lbonly)
+            end
+            # Name already used
+            @test_throws ErrorException @variable(mcon, lbonly1)
         end
 
         @testset "Upper bound" begin
-            @variable(mcon, ubonly <= 1, Int)
-            @test !JuMP.haslowerbound(ubonly)
-            @test JuMP.hasupperbound(ubonly)
-            @test JuMP.upperbound(ubonly) == 1.0
-            @test !JuMP.isfixed(ubonly)
-            @test !JuMP.isbinary(ubonly)
-            @test JuMP.isinteger(ubonly)
-            @test isequal(mcon[:ubonly],ubonly)
+            @variable(mcon, ubonly1 <= 1, Int)
+            @test isequal(mcon[:ubonly1],ubonly1)
+            @variable(mcon, 1 >= ubonly2, Int)
+            @test isequal(mcon[:ubonly2],ubonly2)
+            for ubonly in (ubonly1, ubonly2)
+                @test !JuMP.haslowerbound(ubonly)
+                @test JuMP.hasupperbound(ubonly)
+                @test JuMP.upperbound(ubonly) == 1.0
+                @test !JuMP.isfixed(ubonly)
+                @test !JuMP.isbinary(ubonly)
+                @test JuMP.isinteger(ubonly)
+            end
         end
 
         @testset "Interval" begin
