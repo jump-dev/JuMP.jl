@@ -974,7 +974,7 @@ function parsevariable(_error::Function, infoexpr::VariableInfoExpr, sense::Symb
     # an helpful error in the the case were we can easily determine that the
     # user placed the variable in the rhs, i.e. the case where the rhs is a
     # constant number.
-    var isa Number && _error("Variable declaration of the form `$var $S $value` is not supported. Use `$value $(reverse_sense(sense)) $var` instead.")
+    var isa Number && _error("Variable declaration of the form `$var $sense $value` is not supported. Use `$value $(reverse_sense(Val(sense))) $var` instead.")
     parse_one_operator_variable(_error, infoexpr, Val(sense), esc_nonconstant(value))
     var
 end
