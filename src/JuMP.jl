@@ -25,6 +25,14 @@ using Compat.LinearAlgebra
 using Compat.SparseArrays
 using Compat.Printf
 
+if VERSION < v"0.7"
+    const IdDict = Base.ObjectIdDict
+    const LinearAlgebra = Compat.LinearAlgebra
+    const SparseArrays = Compat.SparseArrays
+    const Printf = Compat.Printf
+    const Sys = Compat.Sys
+end
+
 export
 # Objects
     Model, Variable, Norm, AffExpr, QuadExpr, SOCExpr,

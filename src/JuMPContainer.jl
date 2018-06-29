@@ -211,7 +211,7 @@ mutable struct KeyIterator{JA<:JuMPArray}
     x::JA
     dim::Int
     next_k_cache::Array{Any,1}
-    function (::Type{KeyIterator{JA}})(d) where JA
+    function KeyIterator{JA}(d) where JA
         n = ndims(d.innerArray)
         new{JA}(d, n, Array{Any}(n+1))
     end
