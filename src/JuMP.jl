@@ -19,9 +19,11 @@ import MathProgBase
 using Calculus
 using ReverseDiffSparse
 using ForwardDiff
-using LinearAlgebra
-using SparseArrays
-using Printf
+
+using Compat
+using Compat.LinearAlgebra
+using Compat.SparseArrays
+using Compat.Printf
 
 export
 # Objects
