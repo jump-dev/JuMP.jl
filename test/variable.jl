@@ -34,35 +34,49 @@ function variables_test(ModelType::Type{<:JuMP.AbstractModel}, VariableRefType::
         end
 
         @testset "Lower bound" begin
-            @variable(mcon, lbonly1 >= 0, Bin)
-            @test isequal(mcon[:lbonly1],lbonly1)
-            @variable(mcon, 0 <= lbonly2, Bin)
-            @test isequal(mcon[:lbonly2],lbonly2)
-            for lbonly in (lbonly1, lbonly2)
-                @test JuMP.haslowerbound(lbonly)
-                @test JuMP.lowerbound(lbonly) == 0.0
-                @test !JuMP.hasupperbound(lbonly)
-                @test !JuMP.isfixed(lbonly)
-                @test JuMP.isbinary(lbonly)
-                @test !JuMP.isinteger(lbonly)
-            end
+            @variable(mcon, lbonly >= 0, Bin)
+            @test JuMP.haslowerbound(lbonly)
+            @test JuMP.lowerbound(lbonly) == 0.0
+            @test !JuMP.hasupperbound(lbonly)
+            @test !JuMP.isfixed(lbonly)
+            @test JuMP.isbinary(lbonly)
+            @test !JuMP.isinteger(lbonly)
+            @test isequal(mcon[:lbonly],lbonly)
             # Name already used
-            @test_throws ErrorException @variable(mcon, lbonly1)
+            @test_throws ErrorException @variable(mcon, lbonly)
+        end
+
+        @testset "Lower bound with constant on lhs" begin
+            @variable(mcon, 0 <= lblhs, Bin)
+            @test JuMP.haslowerbound(lblhs)
+            @test JuMP.lowerbound(lblhs) == 0.0
+            @test !JuMP.hasupperbound(lblhs)
+            @test !JuMP.isfixed(lblhs)
+            @test JuMP.isbinary(lblhs)
+            @test !JuMP.isinteger(lblhs)
+            @test isequal(mcon[:lblhs],lblhs)
         end
 
         @testset "Upper bound" begin
-            @variable(mcon, ubonly1 <= 1, Int)
-            @test isequal(mcon[:ubonly1],ubonly1)
-            @variable(mcon, 1 >= ubonly2, Int)
-            @test isequal(mcon[:ubonly2],ubonly2)
-            for ubonly in (ubonly1, ubonly2)
-                @test !JuMP.haslowerbound(ubonly)
-                @test JuMP.hasupperbound(ubonly)
-                @test JuMP.upperbound(ubonly) == 1.0
-                @test !JuMP.isfixed(ubonly)
-                @test !JuMP.isbinary(ubonly)
-                @test JuMP.isinteger(ubonly)
-            end
+            @variable(mcon, ubonly <= 1, Int)
+            @test !JuMP.haslowerbound(ubonly)
+            @test JuMP.hasupperbound(ubonly)
+            @test JuMP.upperbound(ubonly) == 1.0
+            @test !JuMP.isfixed(ubonly)
+            @test !JuMP.isbinary(ubonly)
+            @test JuMP.isinteger(ubonly)
+            @test isequal(mcon[:ubonly],ubonly)
+        end
+
+        @testset "Upper bound" begin
+            @variable(mcon, 1 >= ublhs, Int)
+            @test !JuMP.haslowerbound(ublhs)
+            @test JuMP.hasupperbound(ublhs)
+            @test JuMP.upperbound(ublhs) == 1.0
+            @test !JuMP.isfixed(ublhs)
+            @test !JuMP.isbinary(ublhs)
+            @test JuMP.isinteger(ublhs)
+            @test isequal(mcon[:ublhs],ublhs)
         end
 
         @testset "Interval" begin
