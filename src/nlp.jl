@@ -1278,6 +1278,8 @@ function solvenlp(m::Model, traits; suppress_warnings=false)
             objBound = MathProgBase.getobjbound(m.internalModel) + m.obj.aff.constant
             # Don't corrupt objBound if the above call fails
             m.objBound = objBound
+        catch
+            nothing
         end
     end
 

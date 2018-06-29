@@ -49,7 +49,7 @@ Base.:*(lhs::AbstractJuMPScalar) = lhs # make this more generic so extensions do
 Base.:+(lhs::Variable, rhs::Number) = (+)( rhs,lhs)
 Base.:-(lhs::Variable, rhs::Number) = (+)(-rhs,lhs)
 Base.:*(lhs::Variable, rhs::Number) = (*)(rhs,lhs)
-Base.:/(lhs::Variable, rhs::Number) = (*)(1./rhs,lhs)
+Base.:/(lhs::Variable, rhs::Number) = (*)(1 ./ rhs,lhs)
 # Variable--Variable
 Base.:+(lhs::Variable, rhs::Variable) = AffExpr([lhs,rhs], [1.,+1.], 0.)
 Base.:-(lhs::Variable, rhs::Variable) = AffExpr([lhs,rhs], [1.,-1.], 0.)
@@ -285,27 +285,27 @@ function Base.sum(affs::AbstractArray{T}) where T<:GenericAffExpr
     return new_aff
 end
 
-import Base.vecdot
+import LinearAlgebra.vecdot
 
 _dot_depr() = warn("dot is deprecated for multidimensional arrays. Use vecdot instead.")
 
 # Base Julia's generic fallback vecdot requires that dot be defined
 # for scalars, so instead of defining them one-by-one, we will
 # fallback to the multiplication operator
-Base.dot(lhs::JuMPTypes, rhs::JuMPTypes) = lhs*rhs
-Base.dot(lhs::JuMPTypes, rhs::Number)    = lhs*rhs
-Base.dot(lhs::Number,    rhs::JuMPTypes) = lhs*rhs
+LinearAlgebra.dot(lhs::JuMPTypes, rhs::JuMPTypes) = lhs*rhs
+LinearAlgebra.dot(lhs::JuMPTypes, rhs::Number)    = lhs*rhs
+LinearAlgebra.dot(lhs::Number,    rhs::JuMPTypes) = lhs*rhs
 
-Base.dot(lhs::AbstractArray{T,N}, rhs::JuMPArray{S,N}) where {T,S,N}    = begin _dot_depr(); vecdot(lhs,rhs); end
-Base.dot(lhs::JuMPArray{T,N},rhs::AbstractArray{S,N}) where {T,S,N}     = begin _dot_depr(); vecdot(lhs,rhs); end
-Base.dot(lhs::JuMPArray{T,N},rhs::JuMPArray{S,N}) where {T,S,N} = begin _dot_depr(); vecdot(lhs,rhs); end
-Base.dot(lhs::AbstractArray{T,N}, rhs::AbstractArray{S,N}) where {T<:JuMPTypes,S,N} = begin _dot_depr(); vecdot(lhs,rhs); end
-Base.dot(lhs::AbstractArray{T,N}, rhs::AbstractArray{S,N}) where {T<:JuMPTypes,S<:JuMPTypes,N} = begin _dot_depr(); vecdot(lhs,rhs); end
-Base.dot(lhs::AbstractArray{T,N}, rhs::AbstractArray{S,N}) where {T,S<:JuMPTypes,N} = begin _dot_depr(); vecdot(lhs,rhs); end
+LinearAlgebra.dot(lhs::AbstractArray{T,N}, rhs::JuMPArray{S,N}) where {T,S,N}    = begin _dot_depr(); vecdot(lhs,rhs); end
+LinearAlgebra.dot(lhs::JuMPArray{T,N},rhs::AbstractArray{S,N}) where {T,S,N}     = begin _dot_depr(); vecdot(lhs,rhs); end
+LinearAlgebra.dot(lhs::JuMPArray{T,N},rhs::JuMPArray{S,N}) where {T,S,N} = begin _dot_depr(); vecdot(lhs,rhs); end
+LinearAlgebra.dot(lhs::AbstractArray{T,N}, rhs::AbstractArray{S,N}) where {T<:JuMPTypes,S,N} = begin _dot_depr(); vecdot(lhs,rhs); end
+LinearAlgebra.dot(lhs::AbstractArray{T,N}, rhs::AbstractArray{S,N}) where {T<:JuMPTypes,S<:JuMPTypes,N} = begin _dot_depr(); vecdot(lhs,rhs); end
+LinearAlgebra.dot(lhs::AbstractArray{T,N}, rhs::AbstractArray{S,N}) where {T,S<:JuMPTypes,N} = begin _dot_depr(); vecdot(lhs,rhs); end
 
-Base.dot(lhs::AbstractVector{T},rhs::AbstractVector{S}) where {T<:JuMPTypes,S<:JuMPTypes} = _dot(lhs,rhs)
-Base.dot(lhs::AbstractVector{T},rhs::AbstractVector{S}) where {T<:JuMPTypes,S} = _dot(lhs,rhs)
-Base.dot(lhs::AbstractVector{T},rhs::AbstractVector{S}) where {T,S<:JuMPTypes} = _dot(lhs,rhs)
+LinearAlgebra.dot(lhs::AbstractVector{T},rhs::AbstractVector{S}) where {T<:JuMPTypes,S<:JuMPTypes} = _dot(lhs,rhs)
+LinearAlgebra.dot(lhs::AbstractVector{T},rhs::AbstractVector{S}) where {T<:JuMPTypes,S} = _dot(lhs,rhs)
+LinearAlgebra.dot(lhs::AbstractVector{T},rhs::AbstractVector{S}) where {T,S<:JuMPTypes} = _dot(lhs,rhs)
 
 # TODO: qualify Base.vecdot once v0.3 support is dropped
 vecdot(lhs::AbstractArray{T,N},rhs::AbstractArray{S,N}) where {T<:JuMPTypes,S,N} = _dot(lhs,rhs)
@@ -339,7 +339,7 @@ Base.ctranspose(x::JuMPArray) = _throw_transpose_error()
 
 # Can remove the following code once == overloading is removed
 
-function Base.issymmetric(x::Matrix{T}) where T<:JuMPTypes
+function LinearAlgebra.issymmetric(x::Matrix{T}) where T<:JuMPTypes
     (n = size(x,1)) == size(x,2) || return false
     for i in 1:n, j in (i+1):n
         isequal(x[i,j], x[j,i]) || return false
@@ -348,7 +348,7 @@ function Base.issymmetric(x::Matrix{T}) where T<:JuMPTypes
 end
 
 # Special-case because the the base version wants to do fill!(::Array{Variable}, zero(AffExpr))
-function Base.diagm(x::AbstractVector{Variable})
+function LinearAlgebra.diagm(x::AbstractVector{Variable})
     @assert one_indexed(x) # Base.diagm doesn't work for non-one-indexed arrays in general.
     diagm(copy!(similar(x, AffExpr), x))
 end

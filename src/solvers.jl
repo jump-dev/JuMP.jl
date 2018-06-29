@@ -250,6 +250,8 @@ function solve(m::Model; suppress_warnings=false,
             # Do a separate try since getobjval could work while getobjbound does not and vice versa
             objBound = MathProgBase.getobjbound(m.internalModel) + m.obj.aff.constant
             m.objBound = objBound
+        catch
+            nothing
         end
         try
             objVal = MathProgBase.getobjval(m.internalModel) + m.obj.aff.constant
@@ -262,6 +264,8 @@ function solve(m::Model; suppress_warnings=false,
             # Don't corrupt the answers if one of the above two calls fails
             m.objVal = objVal
             m.colVal = colVal
+        catch
+            nothing
         end
     end
 
@@ -435,7 +439,7 @@ function addQuadratics(m::Model)
     end
 
     # Add quadratic constraint to solver
-    const sensemap = Dict(:(<=) => '<', :(>=) => '>', :(==) => '=')
+    sensemap = Dict(:(<=) => '<', :(>=) => '>', :(==) => '=')
     for k in 1:length(m.quadconstr)
         qconstr = m.quadconstr[k]::QuadConstraint
         if !haskey(sensemap, qconstr.sense)

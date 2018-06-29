@@ -232,7 +232,7 @@ function addkwargs!(call, kwargs)
 end
 
 getname(c::Symbol) = c
-getname(c::Void) = ()
+getname(c::Nothing) = ()
 getname(c::AbstractString) = c
 function getname(c::Expr)
     if c.head == :string

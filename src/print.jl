@@ -51,26 +51,26 @@ _values(x) = Base.values(x)
 # Anything here: https://en.wikipedia.org/wiki/Windows-1252
 # should probably work fine on Windows
 const repl = Dict{Symbol,String}(
-    :leq        => (is_windows() ? "<=" : "≤"),
-    :geq        => (is_windows() ? ">=" : "≥"),
-    :eq         => (is_windows() ? "==" : "="),
+    :leq        => (Sys.iswindows() ? "<=" : "≤"),
+    :geq        => (Sys.iswindows() ? ">=" : "≥"),
+    :eq         => (Sys.iswindows() ? "==" : "="),
     :times      => "*",
     :sq         => "²",
     :ind_open   => "[",
     :ind_close  => "]",
-    :for_all    => (is_windows() ? "for all" : "∀"),
-    :in         => (is_windows() ? "in" : "∈"),
+    :for_all    => (Sys.iswindows() ? "for all" : "∀"),
+    :in         => (Sys.iswindows() ? "in" : "∈"),
     :open_set   => "{",
-    :dots       => (is_windows() ? ".." : "…"),
+    :dots       => (Sys.iswindows() ? ".." : "…"),
     :close_set  => "}",
-    :union      => (is_windows() ? "or" : "∪"),
-    :infty      => (is_windows() ? "Inf" : "∞"),
+    :union      => (Sys.iswindows() ? "or" : "∪"),
+    :infty      => (Sys.iswindows() ? "Inf" : "∞"),
     :open_rng   => "[",
     :close_rng  => "]",
     :integer    => "integer",
     :succeq0    => " is semidefinite",
-    :Vert       => (is_windows() ? "||" : "‖"),
-    :sub2       => (is_windows() ? "_2" : "₂"))
+    :Vert       => (Sys.iswindows() ? "||" : "‖"),
+    :sub2       => (Sys.iswindows() ? "_2" : "₂"))
 
 # IJulia-specific symbols
 const ijulia = Dict{Symbol,String}(
@@ -520,7 +520,7 @@ function cont_str(mode, j, sym::PrintSymbols)
 end
 
 # UTILITY FUNCTIONS FOR cont_str
-function cont_str_set(idxset::Union{Range,Array}, dots)  # 2:2:20 -> {2,4..18,20}
+function cont_str_set(idxset::Union{AbstractRange,Array}, dots)  # 2:2:20 -> {2,4..18,20}
     length(idxset) == 0 && return dots
     length(idxset) == 1 && return string(idxset[1])
     length(idxset) == 2 && return string(idxset[1],",",idxset[2])
