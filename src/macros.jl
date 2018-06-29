@@ -961,26 +961,24 @@ parse_one_operator_variable(_error::Function, infoexpr::VariableInfoExpr, ::Unio
 parse_one_operator_variable(_error::Function, infoexpr::VariableInfoExpr, ::Union{Val{:>=}, Val{:≥}}, lower) = setlowerbound_or_error(_error, infoexpr, lower)
 parse_one_operator_variable(_error::Function, infoexpr::VariableInfoExpr, ::Val{:(==)}, value) = fix_or_error(_error, infoexpr, value)
 parse_one_operator_variable(_error::Function, infoexpr::VariableInfoExpr, ::Val{S}, value) where S = _error("Unknown sense $S.")
+
+# There is not way to determine at parsing time which of lhs or rhs is the
+# variable name and which is the value if both are symbols. For instance,
+# lhs could be the Symbol `:x` and rhs could be the Symbol `:a` where a
+# variable `a` is assigned to 1 in the local scope. Knowing this, we know
+# that `x` is the variable name but at parse time there is now way to know
+# that `a` has a value.
+# In that case we assume the variable is the lhs.
 function parsevariable(_error::Function, infoexpr::VariableInfoExpr, sense::Symbol, var, value)
-    # Variable declaration of the form: var sense value
+    parse_one_operator_variable(_error, infoexpr, Val(sense), esc_nonconstant(value))
+    var
+end
 
-    # There is not way to determine at parsing time which of lhs or rhs is the
-    # variable name and which is the value if both are symbols. For instance,
-    # lhs could be the Symbol `:x` and rhs could be the Symbol `:a` where a
-    # variable `a` is assigned to 1 in the local scope. Knowing this, we know
-    # that `x` is the variable name but at parse time there is now way to know
-    # that `a` has a value.
-    # In that case we assume the variable is the lhs.
-
-    # If the lhs is a number and not the rhs, we can deduce that the rhs is
-    # the variable.
-    if var isa Number && !(value isa Number)
-        parse_one_operator_variable(_error, infoexpr, reverse_sense(Val(sense)), esc_nonconstant(var))
-        return value
-    else
-        parse_one_operator_variable(_error, infoexpr, Val(sense), esc_nonconstant(value))
-        return var
-    end
+# If the lhs is a number and not the rhs, we can deduce that the rhs is
+# the variable.
+function parsevariable(_error::Function, infoexpr::VariableInfoExpr, sense::Symbol, value::Number, var)
+    parse_one_operator_variable(_error, infoexpr, reverse_sense(Val(sense)), esc_nonconstant(value))
+    var
 end
 
 function parseternaryvariable(_error::Function, infoexpr::VariableInfoExpr,
