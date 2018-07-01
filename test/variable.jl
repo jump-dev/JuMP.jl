@@ -42,7 +42,19 @@ function variables_test(ModelType::Type{<:JuMP.AbstractModel}, VariableRefType::
             @test JuMP.isbinary(lbonly)
             @test !JuMP.isinteger(lbonly)
             @test isequal(mcon[:lbonly],lbonly)
+            # Name already used
             @test_throws ErrorException @variable(mcon, lbonly)
+        end
+
+        @testset "Lower bound with constant on lhs" begin
+            @variable(mcon, 0 <= lblhs, Bin)
+            @test JuMP.haslowerbound(lblhs)
+            @test JuMP.lowerbound(lblhs) == 0.0
+            @test !JuMP.hasupperbound(lblhs)
+            @test !JuMP.isfixed(lblhs)
+            @test JuMP.isbinary(lblhs)
+            @test !JuMP.isinteger(lblhs)
+            @test isequal(mcon[:lblhs],lblhs)
         end
 
         @testset "Upper bound" begin
@@ -54,6 +66,17 @@ function variables_test(ModelType::Type{<:JuMP.AbstractModel}, VariableRefType::
             @test !JuMP.isbinary(ubonly)
             @test JuMP.isinteger(ubonly)
             @test isequal(mcon[:ubonly],ubonly)
+        end
+
+        @testset "Upper bound" begin
+            @variable(mcon, 1 >= ublhs, Int)
+            @test !JuMP.haslowerbound(ublhs)
+            @test JuMP.hasupperbound(ublhs)
+            @test JuMP.upperbound(ublhs) == 1.0
+            @test !JuMP.isfixed(ublhs)
+            @test !JuMP.isbinary(ublhs)
+            @test JuMP.isinteger(ublhs)
+            @test isequal(mcon[:ublhs],ublhs)
         end
 
         @testset "Interval" begin
