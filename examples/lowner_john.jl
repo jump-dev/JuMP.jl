@@ -220,8 +220,8 @@ if Pkg.installed("Plots") != nothing && Pkg.installed("GR") != nothing
                 t -> Poinv[2,:]' * ( [cos(t),sin(t)] + c ),
                 0,2*pi)
     
-    println("Plot done.")
-    sleep(20)
+    println("Plot done. Press enter to continue.")
+    readline()
 else
     println("Install Plots package to plot solution")    
 end
