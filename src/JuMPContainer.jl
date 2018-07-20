@@ -91,10 +91,10 @@ function gendict(instancename,T,idxsets...)
     end
     sizes = Expr(:tuple, [:(length($rng)) for rng in idxsets]...)
     if truearray
-        :($instancename = Array{$T}($sizes...))
+        :($instancename = Array{$T}(undef, $sizes...))
     else
         indexsets = Expr(:tuple, idxsets...)
-        :($instancename = JuMPArray(Array{$T}($sizes...), $indexsets))
+        :($instancename = JuMPArray(Array{$T}(undef, $sizes...), $indexsets))
     end
 end
 
@@ -115,7 +115,7 @@ for (accessor, inner) in ((:getdual, :_getDual), (:getlowerbound, :getlowerbound
 end
 
 
-_similar(x::Array) = Array{Float64}(size(x))
+_similar(x::Array) = Array{Float64}(undef, size(x))
 _similar(x::Dict{T}) where {T} = Dict{T,Float64}()
 
 _innercontainer(x::JuMPArray) = x.innerArray
