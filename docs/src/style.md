@@ -73,12 +73,12 @@ operation. We discuss these cases below.
 Julia allows both `for x = 1:N` and `for x in 1:N`. Always prefer to use
 `in` over `=`, because `in` generalizes better to other index sets like `for x in eachindex(A)`.
 
-### Empty vectors
+#### Empty vectors
 
 For a type `T`, `T[]` and `Vector{T}()` are equivalent ways to create an
 empty vector with element type `T`. Prefer `T[]` because it is more concise.
 
-### Trailing periods in floating-point constants
+#### Trailing periods in floating-point constants
 
 Both `1.0` and `1.` create a `Float64` with value `1.0`. Prefer `1.0` over
 `1.` because it is more easily distinguished from the integer constant `1`.
