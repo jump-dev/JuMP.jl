@@ -4,7 +4,7 @@ Style guide and design principles
 Style guide
 -----------
 
-This section describes the coding style rules that apply for JuMP code and that
+This section describes the coding style rules that apply to JuMP code and that
 we recommend for JuMP models and surrounding Julia code. The motivations for
 a style guide include:
 
@@ -38,7 +38,7 @@ For consistency:
 - Use spaces between binary operators
 - Use a single space after commas and semicolons
 - Do not use extra spaces for unary operators, parentheses, or braces
-- Intent within new blocks (except `module`) using 4 spaces
+- Indent within new blocks (except `module`) using 4 spaces
 
 Good:
 ```julia
