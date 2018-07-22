@@ -325,7 +325,63 @@ var documenterSearchIndex = {"docs": [
     "page": "Style Guide",
     "title": "Style guide",
     "category": "section",
-    "text": "TODO: A style guide for JuMP, JuMP models and surrounding Julia code. Formatting, naming, use of macros, comments, TODOs, docstrings, etc."
+    "text": "This section describes the coding style rules that apply to JuMP code and that we recommend for JuMP models and surrounding Julia code. The motivations for a style guide include:conveying best practices for writing readable and maintainable code\nreducing the amount of time spent on bike-shedding by establishing basic naming and formatting conventions\nlowering the barrier for new contributors by codifying the existing practices (e.g., you can be more confident your code will pass review if you follow the style guide)In some cases, the JuMP style guide diverges from the Julia style guide. All such cases will be explicitly noted and justified.info: Info\nThe style guide is always a work in progress, and not all JuMP code follows the rules. When modifying JuMP, please fix the style violations of the surrounding code (i.e., leave the code tidier than when you started). If large changes are needed, consider separating them into another PR."
+},
+
+{
+    "location": "style.html#Formatting-1",
+    "page": "Style Guide",
+    "title": "Formatting",
+    "category": "section",
+    "text": "Julia unfortunately does not have an autoformatting tool like gofmt. Until a reliable autoformatting tool is available, we adopt the following conventions."
+},
+
+{
+    "location": "style.html#Whitespace-1",
+    "page": "Style Guide",
+    "title": "Whitespace",
+    "category": "section",
+    "text": "Julia is mostly insensitive to whitespace characters within lines. For consistency:Use spaces between binary operators\nUse a single space after commas and semicolons\nDo not use extra spaces for unary operators, parentheses, or braces\nIndent within new blocks (except module) using 4 spacesGood:f(x, y) = [3 * dot(x, y); x\']Bad:f(x,y) = [ 3*dot(x,y) ; x\' ]Good:module Foo\n\nfunction f(x)\n    return x + 1\nend\n\nend # module Foo"
+},
+
+{
+    "location": "style.html#TODO:-Line-breaks-1",
+    "page": "Style Guide",
+    "title": "TODO: Line breaks",
+    "category": "section",
+    "text": ""
+},
+
+{
+    "location": "style.html#Syntax-1",
+    "page": "Style Guide",
+    "title": "Syntax",
+    "category": "section",
+    "text": "Julia sometimes provides equivalent syntax to express the same basic operation. We discuss these cases below."
+},
+
+{
+    "location": "style.html#for-loops-1",
+    "page": "Style Guide",
+    "title": "for loops",
+    "category": "section",
+    "text": "Julia allows both for x = 1:N and for x in 1:N. Always prefer to use in over =, because in generalizes better to other index sets like for x in eachindex(A)."
+},
+
+{
+    "location": "style.html#Empty-vectors-1",
+    "page": "Style Guide",
+    "title": "Empty vectors",
+    "category": "section",
+    "text": "For a type T, T[] and Vector{T}() are equivalent ways to create an empty vector with element type T. Prefer T[] because it is more concise."
+},
+
+{
+    "location": "style.html#Trailing-periods-in-floating-point-constants-1",
+    "page": "Style Guide",
+    "title": "Trailing periods in floating-point constants",
+    "category": "section",
+    "text": "Both 1.0 and 1. create a Float64 with value 1.0. Prefer 1.0 over 1. because it is more easily distinguished from the integer constant 1."
 },
 
 {
