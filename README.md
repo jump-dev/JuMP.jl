@@ -1,5 +1,5 @@
-JuMP
-====
+![JuMP logo](https://www.juliaopt.org/images/jump-logo-with-text.svg "JuMP logo")
+---
 
 [![Powered by NumFOCUS](https://img.shields.io/badge/powered%20by-NumFOCUS-orange.svg?style=flat&colorA=E1523D&colorB=007D8A)](http://numfocus.org)
 
