@@ -1,5 +1,7 @@
-JuMP
-====
+![JuMP logo](https://www.juliaopt.org/images/jump-logo-with-text.svg "JuMP logo")
+---
+
+[![Powered by NumFOCUS](https://img.shields.io/badge/powered%20by-NumFOCUS-orange.svg?style=flat&colorA=E1523D&colorB=007D8A)](http://numfocus.org)
 
 JuMP is a domain-specific modeling language for **[mathematical optimization]**
 embedded in **[Julia]**. It currently supports a number of open-source and
@@ -138,3 +140,8 @@ For an earlier work where we presented a prototype implementation of JuMP, see [
     }
 
 A preprint of this paper is [freely available](http://arxiv.org/abs/1312.1431).
+
+---
+
+JuMP is a fiscally sponsored project of NumFOCUS, a nonprofit dedicated
+to supporting the open source scientific computing community.
