@@ -128,6 +128,12 @@
         @test_throws ErrorException @NLexpression(m, sum(x))
     end
 
+    @testset "Error on non-scalar expressions" begin
+        m = Model()
+        x = [1,2,3]
+        @test_throws ErrorException @NLexpression(m, x + 1)
+    end
+
     # Converts the lower-triangular sparse Hessian in MOI format into a dense
     # matrix.
     function dense_hessian(hessian_sparsity, V, n)
