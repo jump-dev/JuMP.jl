@@ -162,8 +162,8 @@ function parseNLExpr_runtime(m::Model, x::NonlinearParameter, tape, parent, valu
     nothing
 end
 
-function parseNLExpr_runtime(m::Model, x::Vector, tape, parent, values)
-    error("Unexpected vector $x in nonlinear expression. Nonlinear expressions may contain only scalar expressions.")
+function parseNLExpr_runtime(m::Model, x::AbstractArray, tape, parent, values)
+    error("Unexpected array $x in nonlinear expression. Nonlinear expressions may contain only scalar expressions.")
 end
 
 function expression_complexity(ex::Expr)
