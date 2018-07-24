@@ -33,7 +33,7 @@ export
     NonlinearConstraint,
     ConstraintRef,
 # Cones
-    PSDCone,
+    SOCone, RSOCone, PSDCone,
 # Functions
     # Model related
     setobjectivesense,
@@ -414,6 +414,8 @@ include("quadexpr.jl")
 ##########################################################################
 # SOSConstraint  (special ordered set constraints)
 # include("sos.jl")
+
+include("sets.jl")
 
 ##########################################################################
 # SDConstraint
