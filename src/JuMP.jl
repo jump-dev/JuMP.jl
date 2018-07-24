@@ -142,53 +142,68 @@ mutable struct Model <: AbstractModel
     # dictionary keyed on an extension-specific symbol
     ext::Dict{Symbol,Any}
     # Default constructor
-    function Model(; mode::ModelMode=Automatic, backend=nothing, optimizer=nothing)
-        m = new()
+    function Model(; mode::ModelMode=Automatic, backend=nothing, optimizer=nothing, bridge=true)
+        model = new()
         # TODO make pretty
-        m.variabletolowerbound = Dict{MOIVAR,MOILB}()
-        m.variabletoupperbound = Dict{MOIVAR,MOIUB}()
-        m.variabletofix = Dict{MOIVAR,MOIFIX}()
-        m.variabletointegrality = Dict{MOIVAR,MOIINT}()
-        m.variabletozeroone = Dict{MOIVAR,MOIBIN}()
-        m.customnames = VariableRef[]
-        m.objbound = 0.0
-        m.objval = 0.0
+        model.variabletolowerbound = Dict{MOIVAR,MOILB}()
+        model.variabletoupperbound = Dict{MOIVAR,MOIUB}()
+        model.variabletofix = Dict{MOIVAR,MOIFIX}()
+        model.variabletointegrality = Dict{MOIVAR,MOIINT}()
+        model.variabletozeroone = Dict{MOIVAR,MOIBIN}()
+        model.customnames = VariableRef[]
+        model.objbound = 0.0
+        model.objval = 0.0
         if backend != nothing
             # TODO: It would make more sense to not force users to specify Direct mode if they also provide a backend.
             @assert mode == Direct
             @assert optimizer === nothing
             @assert MOI.isempty(backend)
-            m.moibackend = backend
+            model.moibackend = backend
         else
             @assert mode != Direct
-            cached_optimizer = MOIU.CachingOptimizer(MOIU.UniversalFallback(JuMPMOIModel{Float64}()), mode == Automatic ? MOIU.Automatic : MOIU.Manual)
-            m.moibackend = MOI.Bridges.fullbridgeoptimizer(cached_optimizer, Float64)
+            caching_optimizer = MOIU.CachingOptimizer(MOIU.UniversalFallback(JuMPMOIModel{Float64}()), mode == Automatic ? MOIU.Automatic : MOIU.Manual)
+            if bridge
+                model.moibackend = MOI.Bridges.fullbridgeoptimizer(caching_optimizer, Float64)
+            else
+                model.moibackend = caching_optimizer
+            end
             if optimizer !== nothing
-                MOIU.resetoptimizer!(m, optimizer)
+                MOIU.resetoptimizer!(model, optimizer)
             end
         end
-        m.callbacks = Any[]
-        m.optimizehook = nothing
-        # m.printhook = nothing
-        m.nlpdata = nothing
-        m.objdict = Dict{Symbol,Any}()
-        m.operator_counter = 0
-        m.ext = Dict{Symbol,Any}()
+        model.callbacks = Any[]
+        model.optimizehook = nothing
+        # model.printhook = nothing
+        model.nlpdata = nothing
+        model.objdict = Dict{Symbol,Any}()
+        model.operator_counter = 0
+        model.ext = Dict{Symbol,Any}()
 
-        return m
+        return model
     end
 end
 
-# In Automatic and Manual mode, `m.moibackend` is a `LazyBridgeOptimizer` and
-# the `CachingOptimizer` is stored in the `model` field
-caching_optimizer(m::Model) = m.moibackend.model
+# In Automatic and Manual mode, `model.moibackend` is either directly the
+# `CachingOptimizer` if `bridge=false` was passed in the constructor or it is a
+# `LazyBridgeOptimizer` and the `CachingOptimizer` is stored in the `model`
+# field
+function caching_optimizer(model::Model)
+    if model.moibackend isa MOIU.CachingOptimizer
+        model.moibackend
+    elseif model.moibackend isa MOI.Bridges.LazyBridgeOptimizer{<:MOIU.CachingOptimizer}
+        model.moibackend.model
+    else
+        error("The function `caching_optimizer` cannot be called on a model in `Direct` mode")
+    end
+end
 
 # Getters/setters
 
-function mode(m::Model)
-    if !(m.moibackend isa MOI.Bridges.LazyBridgeOptimizer{<:MOIU.CachingOptimizer})
+function mode(model::Model)
+    if !(model.moibackend isa MOI.Bridges.LazyBridgeOptimizer{<:MOIU.CachingOptimizer} ||
+         model.moibackend isa MOIU.CachingOptimizer)
         return Direct
-    elseif caching_optimizer(m).mode == MOIU.Automatic
+    elseif caching_optimizer(model).mode == MOIU.Automatic
         return Automatic
     else
         return Manual

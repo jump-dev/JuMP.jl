@@ -5,47 +5,47 @@
 
 # These methods directly map to CachingOptimizer methods.
 # They cannot be called in Direct mode.
-function MOIU.resetoptimizer!(m::Model, optimizer::MOI.AbstractOptimizer)
-    @assert mode(m) != Direct
-    MOIU.resetoptimizer!(caching_optimizer(m), optimizer)
+function MOIU.resetoptimizer!(model::Model, optimizer::MOI.AbstractOptimizer)
+    @assert mode(model) != Direct
+    MOIU.resetoptimizer!(caching_optimizer(model), optimizer)
 end
 
-function MOIU.resetoptimizer!(m::Model)
-    @assert mode(m) != Direct
-    MOIU.resetoptimizer!(caching_optimizer(m))
+function MOIU.resetoptimizer!(model::Model)
+    @assert mode(model) != Direct
+    MOIU.resetoptimizer!(caching_optimizer(model))
 end
 
-function MOIU.dropoptimizer!(m::Model)
-    @assert mode(m) != Direct
-    MOIU.dropoptimizer!(caching_optimizer(m))
+function MOIU.dropoptimizer!(model::Model)
+    @assert mode(model) != Direct
+    MOIU.dropoptimizer!(caching_optimizer(model))
 end
 
-function MOIU.attachoptimizer!(m::Model)
-    @assert mode(m) != Direct
-    copyresult = MOIU.attachoptimizer!(caching_optimizer(m))
+function MOIU.attachoptimizer!(model::Model)
+    @assert mode(model) != Direct
+    copyresult = MOIU.attachoptimizer!(caching_optimizer(model))
     # TODO: more reliable error reporting
     @assert copyresult.status == MOI.CopySuccess
-    @assert caching_optimizer(m).state == MOIU.AttachedOptimizer
+    @assert caching_optimizer(model).state == MOIU.AttachedOptimizer
     return copyresult
 end
 
 
-function optimize(m::Model;
-                ignore_optimize_hook=(m.optimizehook===nothing))
+function optimize(model::Model;
+                ignore_optimize_hook=(model.optimizehook===nothing))
     # The NLPData is not kept in sync, so re-set it here.
     # TODO: Consider how to handle incremental solves.
-    if m.nlpdata !== nothing
-        MOI.set!(m, MOI.NLPBlock(), create_nlp_block_data(m))
-        empty!(m.nlpdata.nlconstr_duals)
+    if model.nlpdata !== nothing
+        MOI.set!(model, MOI.NLPBlock(), create_nlp_block_data(model))
+        empty!(model.nlpdata.nlconstr_duals)
     end
 
     # If the user or an extension has provided an optimize hook, call
     # that instead of solving the model ourselves
     if !ignore_optimize_hook
-        return m.optimizehook(m)
+        return model.optimizehook(model)
     end
 
-    MOI.optimize!(m.moibackend)
+    MOI.optimize!(model.moibackend)
 
     return
 end

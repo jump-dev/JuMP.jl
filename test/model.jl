@@ -21,15 +21,25 @@ end
     @testset "Automatic bridging" begin
         # optimizer not supporting Interval
         optimizer = MOIU.MockOptimizer(LPModel{Float64}());
-        m = Model(optimizer=optimizer)
-        @variable m x
-        cref = @constraint m 0 <= x+1 <= 1
+        model = Model(optimizer=optimizer)
+        @variable model x
+        cref = @constraint model 0 <= x + 1 <= 1
         @test cref isa JuMP.ConstraintRef{JuMP.Model,MOI.ConstraintIndex{MOI.ScalarAffineFunction{Float64},MOI.Interval{Float64}}}
+        JuMP.optimize(model)
+    end
+    @testset "Automatic bridging disabled with `bridge` keyword" begin
+        optimizer = MOIU.MockOptimizer(LPModel{Float64}());
+        model = Model(optimizer=optimizer, bridge=false)
+        @test model.moibackend isa MOIU.CachingOptimizer
+        @test model.moibackend === JuMP.caching_optimizer(model)
+        @variable model x
+        @constraint model 0 <= x + 1 <= 1
+        @test_throws ErrorException JuMP.optimize(model)
     end
     @testset "No bridge automatically added in Direct mode" begin
         optimizer = MOIU.MockOptimizer(LPModel{Float64}());
-        m = Model(backend=optimizer, mode=JuMP.Direct)
-        @variable m x
-        @test_throws MethodError @constraint m 0 <= x + 1 <= 1
+        model = Model(backend=optimizer, mode=JuMP.Direct)
+        @variable model x
+        @test_throws MethodError @constraint model 0 <= x + 1 <= 1
     end
 end
