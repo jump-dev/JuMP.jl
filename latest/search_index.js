@@ -21,7 +21,7 @@ var documenterSearchIndex = {"docs": [
     "page": "Introduction",
     "title": "Contents",
     "category": "section",
-    "text": "Pages = [\"installation.md\",\n    \"quickstart.md\",\n    \"concepts.md\",\n    \"variables.md\",\n    \"expressions.md\",\n    \"constraints.md\",\n    \"solvers.md\",\n    \"nlp.md\",\n    \"style.md\",\n    \"extensions.md\",\n    \"updating.md\",\n    \"howdoi.md\"]\nDepth = 2"
+    "text": "Pages = [\"installation.md\",\n    \"quickstart.md\",\n    \"concepts.md\",\n    \"variables.md\",\n    \"expressions.md\",\n    \"constraints.md\",\n    \"containers.md\",\n    \"names.md\",\n    \"solvers.md\",\n    \"nlp.md\",\n    \"style.md\",\n    \"extensions.md\",\n    \"updating.md\",\n    \"howdoi.md\"]\nDepth = 2"
 },
 
 {
@@ -161,11 +161,19 @@ var documenterSearchIndex = {"docs": [
 },
 
 {
+    "location": "variables.html#JuMP.@variable",
+    "page": "Variables",
+    "title": "JuMP.@variable",
+    "category": "macro",
+    "text": "@variable(model, kwargs...)\n\nAdd an anonymous (see Names) variable to the model model described by the keyword arguments kwargs and returns the variable.\n\n@variable(model, expr, args..., kwargs...)\n\nAdd a variable to the model model described by the expression expr, the positional arguments args and the keyword arguments kwargs. The expression expr can either be (note that in the following the symbol <= can be used instead of ≤ and the symbol >=can be used instead of ≥)\n\nof the form varexpr creating variables described by varexpr;\nof the form varexpr ≤ ub (resp. varexpr ≥ lb) creating variables described by varexpr with upper bounds given by ub (resp. lower bounds given by lb);\nof the form varexpr == value creating variables described by varexpr with fixed values given by value; or\nof the form lb ≤ varexpr ≤ ub or ub ≥ varexpr ≥ lb creating variables described by varexpr with lower bounds given by lb and upper bounds given by ub.\n\nThe expression varexpr can either be\n\nof the form varname creating a scalar real variable of name varname;\nof the form varname[...] or [...] creating a container of variables (see Containers in macro.\n\nThe recognized positional arguments in args are the following:\n\nBin: Sets the variable to be binary, i.e. either 0 or 1.\nInt: Sets the variable to be integer, i.e. one of ..., -2, -1, 0, 1, 2, ...\nSymmetric: Only available when creating a square matrix of variables, i.e. when varexpr is of the form varname[1:n,1:n] or varname[i=1:n,j=1:n]. It creates a symmetric matrix of variable, that is, it only creates a new variable for varname[i,j] with i ≤ j and sets varname[j,i] to the same variable as varname[i,j].\nPSD: The square matrix of variable is both Symmetric and constrained to be positive semidefinite.\n\nThe recognized keyword arguments in kwargs are the following:\n\nbasename: Sets the base name used to generate variable names. It corresponds to the variable name for scalar variable, otherwise, the variable names are basename[...] for each indices ... of the axes axes.\nlowerbound: Sets the value of the variable lower bound.\nupperbound: Sets the value of the variable upper bound.\nstart: Sets the variable starting value used as initial guess in optimization.\nbinary: Sets whether the variable is binary or not.\ninteger: Sets whether the variable is integer or not.\nvariabletype: See the \"Note for extending the variable macro\" section below.\ncontainer: Specify the container type, see Containers in macro.\n\nExamples\n\nThe following are equivalent ways of creating a variable x of name x with lowerbound 0:\n\n# Specify everything in `expr`\n@variable(model, x >= 0)\n# Specify the lower bound using a keyword argument\n@variable(model, x, lowerbound=0)\n# Specify everything in `kwargs`\nx = @variable(model, basename=\"x\", lowerbound=0)\n\nThe following are equivalent ways of creating a JuMPArray of index set [:a, :b] and with respective upper bounds 2 and 3 and names x[a] and `x[b].\n\nub = Dict(:a => 2, :b => 3)\n# Specify everything in `expr`\n@variable(model, x[i=keys(ub)] <= ub[i])\n# Specify the upper bound using a keyword argument\n@variable(model, x[i=keys(ub)], upperbound=ub[i])\n\nNote for extending the variable macro\n\nThe single scalar variable or each scalar variable of the container are created using addvariable(model, buildvariable(_error, info, extra_args...; extra_kwargs...)) where\n\nmodel is the model passed to the @variable macro;\n_error is an error function with a single String argument showing the @variable call in addition to the error message given as argument;\ninfo is the VariableInfo struct containing the information gathered in expr, the recognized keyword arguments (except basename and variabletype) and the recognized positional arguments (except Symmetric and PSD);\nextra_args are the unrecognized positional arguments of args plus the value of the variabletype keyword argument if present. The variabletype keyword argument allows the user to pass a position argument to buildvariable without the need to give a positional argument to @variable. In particular, this allows the user to give a positional argument to the buildvariable call when using the anonymous single variable syntax @variable(model, kwargs...); and\nextra_kwargs are the unrecognized keyword argument of kwargs.\n\nExamples\n\nThe following creates a variable x of name x with lowerbound 0 as with the first example above but does it without using the @variable macro\n\ninfo = VariableInfo(true, 0, false, NaN, false, NaN, false, NaN, false, false)\nJuMP.addvariable(model, JuMP.buildvariable(error, info), \"x\")\n\nThe following creates a JuMPArray of index set [:a, :b] and with respective upper bounds 2 and 3 and names x[a] and x[b] as with the second example above but does it without using the @variable macro\n\n# Without the `@variable` macro\ndata = Vector{JuMP.variabletype(model)}(undef, length(keys(ub)))\nx = JuMPArray(data, keys(ub))\nfor i in keys(ub)\n    info = VariableInfo(false, NaN, true, ub[i], false, NaN, false, NaN, false, false)\n    x[i] = JuMP.addvariable(model, JuMP.buildvariable(error, info), \"x[$i]\")\nend\n\nThe following are equivalent ways of creating a Matrix of size N x N with variables custom variables created with a JuMP extension using the Poly(X) positional argument to specify its variables:\n\n# Using the `@variable` macro\n@variable(model, x[1:N,1:N], Symmetric, Poly(X))\n# Without the `@variable` macro\nx = Matrix{JuMP.variabletype(model, Poly(X))}(N, N)\ninfo = VariableInfo(false, NaN, false, NaN, false, NaN, false, NaN, false, false)\nfor i in 1:N, j in i:N\n    x[i,j] = x[j,i] = JuMP.addvariable(model, buildvariable(error, info, Poly(X)), \"x[$i,$j]\")\nend\n\n\n\n"
+},
+
+{
     "location": "variables.html#The-@variable-macro-1",
     "page": "Variables",
     "title": "The @variable macro",
     "category": "section",
-    "text": "DRAFT: Describe the complete syntax of the @variable macro. Anonymous versus named variables. Describe the three possible container types returned and how to use them (Array, JuMPArray, and Dict).How to delete variables."
+    "text": "DRAFT: Describe the complete syntax of the @variable macro. Anonymous versus named variables. Describe the three possible container types returned and how to use them (Array, JuMPArray, and Dict).@variableHow to delete variables."
 },
 
 {
@@ -222,6 +230,54 @@ var documenterSearchIndex = {"docs": [
     "title": "Constraints",
     "category": "section",
     "text": "DRAFT: Describe how constraints are represented (link to MOI docs). Constraints are very similar to variables in (1) how names work (2) how attributes work, and (3) the macro syntax for constructing them. They\'re a bit different because they\'re parameterized by function-set type. Describe constraints vs. ConstraintRefs. Describe JuMP.constraintobject. How to delete constraints. How to modify constraints by setting attributes and MOI.modifyconstraint!. Describe semidefinite constraints and symmetry handling. Refer to NLP docs for nonlinear constraints.@constraint\n@SDconstraint"
+},
+
+{
+    "location": "containers.html#",
+    "page": "Containers",
+    "title": "Containers",
+    "category": "page",
+    "text": ""
+},
+
+{
+    "location": "containers.html#JuMP.generatecontainer",
+    "page": "Containers",
+    "title": "JuMP.generatecontainer",
+    "category": "function",
+    "text": "generatecontainer(T, indexvars, indexsets, requestedtype)\n\nReturn a tuple, the first element of which is code that generates a container for objects of type T given the index variables, index sets, and requestedtype. requestedtype may be one of :Array, :JuMPArray, :Dict, or :Auto. Return error-producing code if requested type is incompatible. For the case of :Auto, the following rules are used to determine the appropriate container:\n\nIf all index sets are either explicit 1:B objects for any B or symbols which refer to objects of type Base.OneTo, then an Array is generated of the appropriate size. Types of symbols/expressions are not known at compile time, so we defer to type-safe functions to check the Base.OneTo condition.\nIf condition (1) does not hold, and the index sets are independent (the index variable for one set does not appear in the definition of another), then an JuMPArray is generated of the appropriate size.\nOtherwise, generate an empty Dict{Any,T}.\n\nThe second element of the return tuple is a Bool, true if the container type automatically checks for duplicate terms in the index sets and false otherwise.\n\nExamples\n\ngeneratecontainer(VariableRef, [:i,:j], [:(1:N), :(1:T)], :Auto)\n# Returns code equivalent to:\n# :(Array{VariableRef}(length(1:N), length(1:T))\n\ngeneratecontainer(VariableRef, [:i,:j], [:(1:N), :(2:T)], :Auto)\n# Returns code equivalent to:\n# :(JuMPArray(Array{VariableRef}(length(1:N), length(2:T)), $indexvars...))\n\ngeneratecontainer(VariableRef, [:i,:j], [:(1:N), :(S)], :Auto)\n# Returns code that generates an Array if S is of type Base.OneTo,\n# otherwise an JuMPArray.\n\ngeneratecontainer(VariableRef, [:i,:j], [:(1:N), :(1:j)], :Auto)\n# Returns code equivalent to:\n# :(Dict{Any,VariableRef}())\n\n\n\n"
+},
+
+{
+    "location": "containers.html#Containers-1",
+    "page": "Containers",
+    "title": "Containers",
+    "category": "section",
+    "text": "Containers can be created using the generatecontainer functionJuMP.generatecontainer"
+},
+
+{
+    "location": "containers.html#Containers-in-macro-1",
+    "page": "Containers",
+    "title": "Containers in macro",
+    "category": "section",
+    "text": "In the @variable (resp. @constraint) macro, containers of variables (resp. constraints) can be created the following syntaxname[index_set_1,index_set_2,...,index_set_n] creating an n-dimensional container of name name; or\n[index_set_1,index_set_2,...,index_set_n] creating an anonymous (see Names) n-dimensional container.Each expression index_set_i can either beof the form index_set specifying that the ith index set of the container is index_set; or\nof the form index_name=index_set specifying that the ith index set of the container is index_set and allowing values used in the macro expression and keyword arguments to be expressions depending on the index_name.The macro then creates the container using the JuMP.generatecontainer function with the following arguments:VariableRef for the @variable macro and ConstraintRef for the @constraint macro.\nThe index variables and arbitrary symbols for dimensions for which no variable index is specified.\nThe index sets specified.\nThe value of the keyword argument if given or :Auto."
+},
+
+{
+    "location": "names.html#",
+    "page": "Names",
+    "title": "Names",
+    "category": "page",
+    "text": ""
+},
+
+{
+    "location": "names.html#Names-1",
+    "page": "Names",
+    "title": "Names",
+    "category": "section",
+    "text": "There a two different naming aspects that need to be distinguished when creating variables/contraints (resp. a container of variables/constraints):The name of the local variable created (if any) holding the reference (resp. the container of references) which corresponds to the name that can be used to retrieve it using m[:name].\nThe name of the variable/constraint (resp. each variable/constraint in the container) used for printing. This corresponds to the MOI.VariableName/MOI.ConstraintName attribute.When creating a variable using the syntax @variable(m; kwargs...), creating a constraint using the syntax @constraint(m, expr) or when creating a container with the syntax [...] in a macro, we say that the variable or constraint is anonymous. For anonymous variables/constraints, no local variable is created holding the reference or container of references and it is not stored in the model, i.e. it is not possible to retrieve it using m[:name].Otherwise, when it is not anonymous, the name used both for the local variable created and the key for retrieving the reference or container of references in the model are determined from the macro expression. For instance, when creating a container with the syntax name[...] or when creating a constraint with @constraint(m, name, expr), the name used is name.The name of the variable/constraint used for printing is based on the base name which is specified by the basename keyword argument. When the basename keyword argument is not specified, the name depends on whether the variable is anonymous:if the variable/constraint is anonymous, then the MOI.VariableName/MOI.ConstraintName attribute is not set and the name used for printing is noname,\notherwise, the base name is set to the name used for the local variable created.The name of the variable/constraint set to the MOI.VariableName/MOI.ConstraintName attribute and used for printing is then basename for single variable/constraint and basename[i1,i2,...,in] for the reference at indices i1, i2, ..., in in a container."
 },
 
 {
