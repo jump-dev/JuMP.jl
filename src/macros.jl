@@ -87,13 +87,13 @@ function buildrefsets(expr::Expr, cname)
     # Creating an indexed set of refs
     refcall = Expr(:ref, cname)
     if isexpr(c, :typed_vcat) || isexpr(c, :ref)
-        shift!(c.args)
+        popfirst!(c.args)
     end
     condition = :()
     if isexpr(c, :vcat) || isexpr(c, :typed_vcat)
         if isexpr(c.args[1], :parameters)
             @assert length(c.args[1].args) == 1
-            condition = shift!(c.args).args[1]
+            condition = popfirst!(c.args).args[1]
         else
             condition = pop!(c.args)
         end
@@ -232,7 +232,7 @@ function addkwargs!(call, kwargs)
 end
 
 getname(c::Symbol) = c
-getname(c::Void) = ()
+getname(c::Nothing) = ()
 getname(c::AbstractString) = c
 function getname(c::Expr)
     if c.head == :string
@@ -884,7 +884,7 @@ macro variable(args...)
         x = gensym()
         anon_singleton = true
     else
-        x = shift!(extra)
+        x = popfirst!(extra)
         if x in [:Cont,:Int,:Bin,:SemiCont,:SemiInt,:SDP]
             _error("Ambiguous variable name $x detected. Use the \"category\" keyword argument to specify a category for an anonymous variable.")
         end

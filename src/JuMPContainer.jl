@@ -19,7 +19,7 @@ mutable struct JuMPDict{T,N} <: JuMPContainer{T,N}
     tupledict::Dict{NTuple{N,Any},T}
     meta::Dict{Symbol,Any}
 
-    (::Type{JuMPDict{T,N}}){T,N}() = new{T,N}(Dict{NTuple{N,Any},T}(), Dict{Symbol,Any}())
+    (::Type{JuMPDict{T,N}})() where {T,N} = new{T,N}(Dict{NTuple{N,Any},T}(), Dict{Symbol,Any}())
 end
 
 function JuMPDict(d::Dict{NTuple{N,Any},T}) where {T,N}
@@ -91,10 +91,10 @@ function gendict(instancename,T,idxsets...)
     end
     sizes = Expr(:tuple, [:(length($rng)) for rng in idxsets]...)
     if truearray
-        :($instancename = Array{$T}($sizes...))
+        :($instancename = Array{$T}(undef, $sizes...))
     else
         indexsets = Expr(:tuple, idxsets...)
-        :($instancename = JuMPArray(Array{$T}($sizes...), $indexsets))
+        :($instancename = JuMPArray(Array{$T}(undef, $sizes...), $indexsets))
     end
 end
 
@@ -115,7 +115,7 @@ for (accessor, inner) in ((:getdual, :_getDual), (:getlowerbound, :getlowerbound
 end
 
 
-_similar(x::Array) = Array{Float64}(size(x))
+_similar(x::Array) = Array{Float64}(undef, size(x))
 _similar(x::Dict{T}) where {T} = Dict{T,Float64}()
 
 _innercontainer(x::JuMPArray) = x.innerArray
@@ -185,7 +185,7 @@ size(x::JuMPArray,k) = size(x.innerArray,k)
 size(x) = Base.size(x)
 size(x,k) = Base.size(x,k)
 # delegate one-argument functions
-Base.issymmetric(x::JuMPArray) = issymmetric(x.innerArray)
+LinearAlgebra.issymmetric(x::JuMPArray) = issymmetric(x.innerArray)
 
 Base.eltype(x::JuMPContainer{T}) where {T} = T
 
@@ -211,7 +211,7 @@ mutable struct KeyIterator{JA<:JuMPArray}
     x::JA
     dim::Int
     next_k_cache::Array{Any,1}
-    function (::Type{KeyIterator{JA}}){JA}(d)
+    function KeyIterator{JA}(d) where JA
         n = ndims(d.innerArray)
         new{JA}(d, n, Array{Any}(n+1))
     end

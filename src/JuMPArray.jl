@@ -58,7 +58,7 @@ function _to_cartesian(d,NT,idx...)
             if idxtype == Colon
                 # special stuff
                 push!(indexing, Colon())
-            elseif idxtype <: Range
+            elseif idxtype <: AbstractRange
                 push!(indexing, quote
                     rng = d.indexsets[$i]
                     I = idx[$i]

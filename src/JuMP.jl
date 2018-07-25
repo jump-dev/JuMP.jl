@@ -20,6 +20,19 @@ using Calculus
 using ReverseDiffSparse
 using ForwardDiff
 
+using Compat
+using Compat.LinearAlgebra
+using Compat.SparseArrays
+using Compat.Printf
+
+if VERSION < v"0.7-"
+    const IdDict = Base.ObjectIdDict
+    const LinearAlgebra = Compat.LinearAlgebra
+    const SparseArrays = Compat.SparseArrays
+    const Printf = Compat.Printf
+    const Sys = Compat.Sys
+end
+
 export
 # Objects
     Model, Variable, Norm, AffExpr, QuadExpr, SOCExpr,
@@ -123,7 +136,7 @@ mutable struct Model <: AbstractModel
 
     objDict::Dict{Symbol,Any} # dictionary from variable and constraint names to objects
 
-    varData::ObjectIdDict
+    varData::IdDict
 
     map_counter::Int # number of times we call getvalue, getdual, getlowerbound and getupperbound on a JuMPContainer, so that we can print out a warning
     operator_counter::Int # number of times we add large expressions
@@ -178,7 +191,7 @@ function Model(;solver=UnsetSolver(), simplify_nonlinear_expressions::Bool=false
           nothing,                     # nlpdata
           simplify_nonlinear_expressions, # ...
           Dict{Symbol,Any}(),          # objDict
-          ObjectIdDict(),              # varData
+          IdDict(),                    # varData
           0,                           # map_counter
           0,                           # operator_counter
           Dict{Symbol,Any}(),          # ext
@@ -294,7 +307,7 @@ function Base.copy(source::Model)
         end
     end
     dest.objDict = Dict{Symbol,Any}()
-    dest.varData = ObjectIdDict()
+    dest.varData = IdDict()
     for (symb,o) in source.objDict
         newo = copy(o, dest)
         dest.objDict[symb] = newo
@@ -499,7 +512,7 @@ function verify_ownership(m::Model, vec::Vector{Variable})
 end
 
 Base.copy(v::Variable, new_model::Model) = Variable(new_model, v.col)
-Base.copy(x::Void, new_model::Model) = nothing
+Base.copy(x::Nothing, new_model::Model) = nothing
 Base.copy(v::AbstractArray{Variable}, new_model::Model) = (var -> Variable(new_model, var.col)).(v)
 
 # Copy methods for variable containers
