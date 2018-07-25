@@ -1003,38 +1003,144 @@ function parsevariable(_error::Function, infoexpr::VariableInfoExpr, lvalue, lsi
     var
 end
 
-# @variable(m, expr, extra...; kwargs...)
-# where `extra` is a list of extra positional arguments and `kwargs` is a list of keyword arguments.
-#
-# It creates a new variable (resp. a container of new variables) belonging to the model `m` using `buildvariable` to create the variable (resp. each variable of the container) and `addvariable` to add it to the model.
-# The following modifications will be made to the arguments before they are passed to `buildvariable`:
-# * The `expr` argument will not be passed but the expression will be parsed to determine the kind of container needed (if one is needed) and
-#   additional information that will alter what is passed with the keywords `lowerbound`, `upperbound`, `basename`, `start`, `binary`, and `integer`.
-# * The `PSD` and `Symmetric` positional arguments in `extra` will not be passed to `buildvariable`. Instead,
-#    * the `Symmetric` argument will check that the container is symmetric and only allocate one variable for each pair of non-diagonal entries.
-#    * the `PSD` argument will do the same as `Symmetric` but in addition it will specify that the variables created belongs to the PSD cone in the `varCones` field of the model.
-#   Moreover, Int and Bin are special keywords that are equivalent to `integer=true` and `binary=true`.
-# * The keyword arguments start, lowerbound, upperbound, binary, and integer category may not be passed as is to
-#   `buildvariable` since they may be altered by the parsing of `expr` and we may need to pass it pointwise if it is a container since
-#   `buildvariable` is called separately for each variable of the container. Moreover they will be passed inside the VariableInfo object.
-# * A custom error function is passed as positional argument to print the full @variable call before the error message.
-# * The keyword argument basename is not passed to `constructconstraint!` but rather to `addvariable`.
-#
-# Examples:
-# * `@variable(m, x >= 0)` is equivalent to `x = addvariable(m, buildvariable(msg -> error("In @variable(m, x >= 0): ", msg), VariableInfo(true, 0, false, NaN, false, NaN, false, NaN, false, false)), "x")`
-# * `@variable(m, x[1:N,1:N], Symmetric, Poly(X))` is equivalent to
-#   ```
-#   x = Matrix{...}(N, N)
-#   for i in 1:N
-#       for j in 1:N
-#           x[i,j] = x[j,i] = addvariable(m, buildvariable(msg -> error("In @variable(m, x[1:N,1:N], Symmetric, Poly(X)): ", msg), VariableInfo(false, NaN, false, NaN, false, NaN, false, NaN, false, false), Poly(X)), "")
-#       end
-#   end
-#   ```
+"""
+    @variable(model, kwargs...)
+
+Add an *anonymous* (see [Names](@ref)) variable to the model `model` described
+by the keyword arguments `kwargs` and returns the variable.
+
+    @variable(model, expr, args..., kwargs...)
+
+Add a variable to the model `model` described by the expression `expr`, the
+positional arguments `args` and the keyword arguments `kwargs`. The expression
+`expr` can either be (note that in the following the symbol `<=` can be used
+instead of `≤` and the symbol `>=`can be used instead of `≥`)
+
+* of the form `varexpr` creating variables described by `varexpr`;
+* of the form `varexpr ≤ ub` (resp. `varexpr ≥ lb`) creating variables described by
+  `varexpr` with upper bounds given by `ub` (resp. lower bounds given by `lb`);
+* of the form `varexpr == value` creating variables described by `varexpr` with
+  fixed values given by `value`; or
+* of the form `lb ≤ varexpr ≤ ub` or `ub ≥ varexpr ≥ lb` creating variables
+  described by `varexpr` with lower bounds given by `lb` and upper bounds given
+  by `ub`.
+
+The expression `varexpr` can either be
+
+* of the form `varname` creating a scalar real variable of name `varname`;
+* of the form `varname[...]` or `[...]` creating a container of variables (see
+  [Containers in macro](@ref).
+
+The recognized positional arguments in `args` are the following:
+
+* `Bin`: Sets the variable to be binary, i.e. either 0 or 1.
+* `Int`: Sets the variable to be integer, i.e. one of ..., -2, -1, 0, 1, 2, ...
+* `Symmetric`: Only available when creating a square matrix of variables, i.e.
+  when `varexpr` is of the form `varname[1:n,1:n]` or `varname[i=1:n,j=1:n]`.
+  It creates a symmetric matrix of variable, that is, it only creates a
+  new variable for `varname[i,j]` with `i ≤ j` and sets `varname[j,i]` to the
+  same variable as `varname[i,j]`.
+* `PSD`: The square matrix of variable is both `Symmetric` and constrained to be
+  positive semidefinite.
+
+The recognized keyword arguments in `kwargs` are the following:
+
+* `basename`: Sets the base name used to generate variable names. It
+  corresponds to the variable name for scalar variable, otherwise, the
+  variable names are `basename[...]` for each indices `...` of the axes `axes`.
+* `lowerbound`: Sets the value of the variable lower bound.
+* `upperbound`: Sets the value of the variable upper bound.
+* `start`: Sets the variable starting value used as initial guess in optimization.
+* `binary`: Sets whether the variable is binary or not.
+* `integer`: Sets whether the variable is integer or not.
+* `variabletype`: See the "Note for extending the variable macro" section below.
+* `container`: Specify the container type, see [Containers in macro](@ref).
+
+## Examples
+
+The following are equivalent ways of creating a variable `x` of name `x` with
+lowerbound 0:
+```julia
+# Specify everything in `expr`
+@variable(model, x >= 0)
+# Specify the lower bound using a keyword argument
+@variable(model, x, lowerbound=0)
+# Specify everything in `kwargs`
+x = @variable(model, basename="x", lowerbound=0)
+```
+
+The following are equivalent ways of creating a `JuMPArray` of index set
+`[:a, :b]` and with respective upper bounds 2 and 3 and names `x[a]` and `x[b].
+```julia
+ub = Dict(:a => 2, :b => 3)
+# Specify everything in `expr`
+@variable(model, x[i=keys(ub)] <= ub[i])
+# Specify the upper bound using a keyword argument
+@variable(model, x[i=keys(ub)], upperbound=ub[i])
+```
+
+## Note for extending the variable macro
+
+The single scalar variable or each scalar variable of the container are created
+using `addvariable(model, buildvariable(_error, info, extra_args...;
+extra_kwargs...))` where
+
+* `model` is the model passed to the `@variable` macro;
+* `_error` is an error function with a single `String` argument showing the
+  `@variable` call in addition to the error message given as argument;
+* `info` is the `VariableInfo` struct containing the information gathered in
+  `expr`, the recognized keyword arguments (except `basename` and
+  `variabletype`) and the recognized positional arguments (except `Symmetric`
+  and `PSD`);
+* `extra_args` are the unrecognized positional arguments of `args` plus the
+  value of the `variabletype` keyword argument if present. The `variabletype`
+  keyword argument allows the user to pass a position argument to
+  `buildvariable` without the need to give a positional argument to
+  `@variable`. In particular, this allows the user to give a positional
+  argument to the `buildvariable` call when using the anonymous single variable
+  syntax `@variable(model, kwargs...)`; and
+* `extra_kwargs` are the unrecognized keyword argument of `kwargs`.
+
+## Examples
+
+The following creates a variable `x` of name `x` with lowerbound 0 as with the first
+example above but does it without using the `@variable` macro
+```julia
+info = VariableInfo(true, 0, false, NaN, false, NaN, false, NaN, false, false)
+JuMP.addvariable(model, JuMP.buildvariable(error, info), "x")
+```
+
+The following creates a `JuMPArray` of index set `[:a, :b]` and with respective
+upper bounds 2 and 3 and names `x[a]` and `x[b]` as with the second example
+above but does it without using the `@variable` macro
+```julia
+# Without the `@variable` macro
+data = Vector{JuMP.variabletype(model)}(undef, length(keys(ub)))
+x = JuMPArray(data, keys(ub))
+for i in keys(ub)
+    info = VariableInfo(false, NaN, true, ub[i], false, NaN, false, NaN, false, false)
+    x[i] = JuMP.addvariable(model, JuMP.buildvariable(error, info), "x[\$i]")
+end
+```
+
+The following are equivalent ways of creating a `Matrix` of size
+`N x N` with variables custom variables created with a JuMP extension using
+the `Poly(X)` positional argument to specify its variables:
+```julia
+# Using the `@variable` macro
+@variable(model, x[1:N,1:N], Symmetric, Poly(X))
+# Without the `@variable` macro
+x = Matrix{JuMP.variabletype(model, Poly(X))}(N, N)
+info = VariableInfo(false, NaN, false, NaN, false, NaN, false, NaN, false, false)
+for i in 1:N, j in i:N
+    x[i,j] = x[j,i] = JuMP.addvariable(model, buildvariable(error, info, Poly(X)), "x[\$i,\$j]")
+end
+```
+"""
 macro variable(args...)
     _error(str) = macro_error(:variable, args, str)
 
-    m = esc(args[1])
+    model = esc(args[1])
 
     extra, kwargs, requestedcontainer = extract_kwargs(args[2:end])
 
@@ -1052,8 +1158,9 @@ macro variable(args...)
     end
 
     info_kwargs = filter(isinfokeyword, kwargs)
-    extra_kwargs = filter(kw -> kw.args[1] != :basename && !isinfokeyword(kw), kwargs)
+    extra_kwargs = filter(kw -> kw.args[1] != :basename && kw.args[1] != :variabletype && !isinfokeyword(kw), kwargs)
     basename_kwargs = filter(kw -> kw.args[1] == :basename, kwargs)
+    variabletype_kwargs = filter(kw -> kw.args[1] == :variabletype, kwargs)
     infoexpr = VariableInfoExpr(; keywordify.(info_kwargs)...)
 
     # There are four cases to consider:
@@ -1084,7 +1191,7 @@ macro variable(args...)
     end
 
     if !isa(getname(var),Symbol) && !anonvar
-        Base.error("Expression $(getname(var)) should not be used as a variable name. Use the \"anonymous\" syntax $(getname(var)) = @variable(m, ...) instead.")
+        Base.error("Expression $(getname(var)) should not be used as a variable name. Use the \"anonymous\" syntax $(getname(var)) = @variable(model, ...) instead.")
     end
 
     # process keyword arguments
@@ -1101,6 +1208,9 @@ macro variable(args...)
         end
     end
     extra = esc.(filter(ex -> !(ex in [:Int,:Bin]), extra))
+    if !isempty(variabletype_kwargs)
+        push!(extra, esc(variabletype_kwargs[1].args[2]))
+    end
 
     info = constructor_expr(infoexpr)
     if isa(var,Symbol)
@@ -1108,7 +1218,7 @@ macro variable(args...)
         sdp && _error("Cannot add a semidefinite scalar variable")
         buildcall = :( buildvariable($_error, $info, $(extra...)) )
         addkwargs!(buildcall, extra_kwargs)
-        variablecall = :( addvariable($m, $buildcall, $basename) )
+        variablecall = :( addvariable($model, $buildcall, $basename) )
         # The looped code is trivial here since there is a single variable
         creationcode = :($variable = $variablecall)
         finalvariable = variable
@@ -1123,10 +1233,10 @@ macro variable(args...)
         # Code to be used to create each variable of the container.
         buildcall = :( buildvariable($_error, $info, $(extra...)) )
         addkwargs!(buildcall, extra_kwargs)
-        variablecall = :( addvariable($m, $buildcall, $(namecall(basename, idxvars))) )
+        variablecall = :( addvariable($model, $buildcall, $(namecall(basename, idxvars))) )
         code = :( $(refcall) = $variablecall )
         # Determine the return type of addvariable. This is needed to create the container holding them.
-        vartype = :( variabletype($m, $(extra...)) )
+        vartype = :( variabletype($model, $(extra...)) )
 
         if symmetric
             # Sanity checks on PSD input stuff
@@ -1159,7 +1269,7 @@ macro variable(args...)
                 $(getloopedcode(variable, code, condition, idxvars, idxsets, vartype, requestedcontainer; lowertri=symmetric))
                 $(if sdp
                     quote
-                        JuMP.addconstraint($m, JuMP.buildconstraint($_error, Symmetric($variable), JuMP.PSDCone()))
+                        JuMP.addconstraint($model, JuMP.buildconstraint($_error, Symmetric($variable), JuMP.PSDCone()))
                     end
                 end)
             end
@@ -1178,11 +1288,11 @@ macro variable(args...)
         # We register the variable reference to its name and
         # we assign it to a variable in the local scope of this name
         assignmentcode = quote
-            registervar($m, $quotvarname, $variable)
+            registervar($model, $quotvarname, $variable)
             $escvarname = $finalvariable
         end
     end
-    return assert_validmodel(m, quote
+    return assert_validmodel(model, quote
         $creationcode
         $assignmentcode
     end)

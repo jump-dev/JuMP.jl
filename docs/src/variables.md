@@ -16,4 +16,8 @@ DRAFT: Describe the complete syntax of the `@variable` macro. Anonymous versus
 named variables. Describe the three possible container types returned and how
 to use them (`Array`, `JuMPArray`, and `Dict`).
 
+```@docs
+@variable
+```
+
 How to delete variables.

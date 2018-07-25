@@ -9,7 +9,7 @@ end
     const MyVariable = Tuple{JuMP.VariableInfo, Int}
     JuMP.variabletype(m::Model, ::Type{MyVariable}) = MyVariable
     names = Dict{MyVariable, String}()
-    function JuMP.addvariable(m::Model, v::MyVariable, name::String)
+    function JuMP.addvariable(m::Model, v::MyVariable, name::String="")
         names[v] = name
         v
     end
@@ -21,6 +21,7 @@ end
     @test isa(x, MyVariable)
     info = x[1]
     test_kw = x[2]
+    @test info.haslb
     @test info.lowerbound == 1
     @test info.hasub
     @test info.upperbound == 2
@@ -32,6 +33,7 @@ end
     @test info.start == 3
     @test names[x] == "x"
     @test test_kw == 1
+
     @variable(m, y[1:3] >= 0, MyVariable, test_kw = 2)
     @test isa(y, Vector{MyVariable})
     for i in 1:3
@@ -50,6 +52,23 @@ end
         @test names[y[i]] == "y[$i]"
         @test test_kw == 2
     end
+
+    z = @variable(m, variabletype=MyVariable, upperbound=3, test_kw=5)
+    info = z[1]
+    test_kw = z[2]
+    @test isa(z, MyVariable)
+    @test !info.haslb
+    @test isnan(info.lowerbound)
+    @test info.hasub
+    @test info.upperbound == 3
+    @test !info.hasfix
+    @test isnan(info.fixedvalue)
+    @test !info.binary
+    @test !info.integer
+    @test !info.hasstart
+    @test isnan(info.start)
+    @test names[z] == ""
+    @test test_kw == 5
 end
 
 function macros_test(ModelType::Type{<:JuMP.AbstractModel}, VariableRefType::Type{<:JuMP.AbstractVariableRef})
