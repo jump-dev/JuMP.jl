@@ -27,9 +27,9 @@ end
         @test cref isa JuMP.ConstraintRef{JuMP.Model,MOI.ConstraintIndex{MOI.ScalarAffineFunction{Float64},MOI.Interval{Float64}}}
         JuMP.optimize(model)
     end
-    @testset "Automatic bridging disabled with `bridge` keyword" begin
+    @testset "Automatic bridging disabled with `bridge_constraints` keyword" begin
         optimizer = MOIU.MockOptimizer(LPModel{Float64}());
-        model = Model(optimizer=optimizer, bridge=false)
+        model = Model(optimizer=optimizer, bridge_constraints=false)
         @test model.moibackend isa MOIU.CachingOptimizer
         @test model.moibackend === JuMP.caching_optimizer(model)
         @variable model x

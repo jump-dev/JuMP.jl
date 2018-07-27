@@ -142,7 +142,7 @@ mutable struct Model <: AbstractModel
     # dictionary keyed on an extension-specific symbol
     ext::Dict{Symbol,Any}
     # Default constructor
-    function Model(; mode::ModelMode=Automatic, backend=nothing, optimizer=nothing, bridge=true)
+    function Model(; mode::ModelMode=Automatic, backend=nothing, optimizer=nothing, bridge_constraints=true)
         model = new()
         # TODO make pretty
         model.variabletolowerbound = Dict{MOIVAR,MOILB}()
@@ -162,7 +162,7 @@ mutable struct Model <: AbstractModel
         else
             @assert mode != Direct
             caching_optimizer = MOIU.CachingOptimizer(MOIU.UniversalFallback(JuMPMOIModel{Float64}()), mode == Automatic ? MOIU.Automatic : MOIU.Manual)
-            if bridge
+            if bridge_constraints
                 model.moibackend = MOI.Bridges.fullbridgeoptimizer(caching_optimizer, Float64)
             else
                 model.moibackend = caching_optimizer
@@ -184,9 +184,9 @@ mutable struct Model <: AbstractModel
 end
 
 # In Automatic and Manual mode, `model.moibackend` is either directly the
-# `CachingOptimizer` if `bridge=false` was passed in the constructor or it is a
-# `LazyBridgeOptimizer` and the `CachingOptimizer` is stored in the `model`
-# field
+# `CachingOptimizer` if `bridge_constraints=false` was passed in the constructor
+# or it is a `LazyBridgeOptimizer` and the `CachingOptimizer` is stored in the
+# `model` field
 function caching_optimizer(model::Model)
     if model.moibackend isa MOIU.CachingOptimizer
         model.moibackend
