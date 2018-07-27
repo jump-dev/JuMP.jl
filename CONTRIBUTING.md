@@ -13,27 +13,69 @@ Github issue (more on this below).
 Aside from asking questions, the easiest way you can contribute to JuMP is to
 help answer questions on Discourse!
 
+## Improve the documentation
+
+Chances are, if you asked (or answered) a question on Discourse, then it is
+usually a sign that the documentation could be improved. Moreover, since it is
+your question, you are probably the best-placed person to improve it!
+
+If your change is small (like fixing typos, or one or two sentence corrections),
+the easiest way to do this is via Github's online editor. (Github has
+[help](https://help.github.com/articles/editing-files-in-another-user-s-repository/)
+on how to do this.)
+
+If your change is larger, or touches multiple files, you will need to make the
+change locally and then use Git to submit a pull request. (See [Contribute code to JuMP](#Contribute code to JuMP)
+below for more on this.)
+
+If you need any help, come join our [Gitter](https://gitter.im/JuliaOpt/JuMP-dev)
+channel and we will walk you through the process.
+
+## Write examples
+
+Another way to contribute to JuMP is to add examples. The easiest way to do this
+is to write your example as a Jupyter notebook, and then upload it to the [juliaopt-notebooks](https://github.com/JuliaOpt/juliaopt-notebooks) repository.
+
+A good example to follow is the
+[Sudoku solver example](https://github.com/JuliaOpt/juliaopt-notebooks/blob/master/notebooks/JuMP-Sudoku.ipynb).
+
+You can upload a notebook using [this link](https://github.com/JuliaOpt/juliaopt-notebooks/upload/master),
+or by clicking on the `Upload files` button from the [repository page](https://github.com/JuliaOpt/juliaopt-notebooks).
+
 ## File a bug report
 
-Another way to contribute to JuMP is to file [bug reports](https://github.com/JuliaOpt/JuMP.jl/issues/new?template=bug_report.md).
+A fourth way to contribute to JuMP is to file [bug reports](https://github.com/JuliaOpt/JuMP.jl/issues/new?template=bug_report.md).
 
-Before you do however, make sure you read the following before posting a new bug
-report:
+(Make sure you read the info in the box where you write the body of the issue
+before posting. You can also find a copy of that info [here](https://github.com/JuliaOpt/JuMP.jl/blob/master/.github/ISSUE_TEMPLATE/bug_report.md).)
 
-- If you have a question or are unsure if the behavior you're experiencing is a
-  bug, please search or post to our [Discourse site](https://discourse.julialang.org/c/domain/opt).
-  Questions posted to Discourse have broader visibility and are likely to be
-  answered more quickly than Github issues.
+## Contribute code to JuMP
 
-- If you're experiencing a bug that is solver-specific (e.g., it only happens
-  when you use Gurobi), the issue is best raised at the relevant solver-wrapper
-  repository (e.g., [Gurobi.jl](https://github.com/JuliaOpt/Gurobi.jl)). If you
-  are unsure, you should raise the problem on Discourse first.
+Finally, you can also contribute code to JuMP!
 
-- If you are reasonably confident your issue is a bug in JuMP, opening a [Github issue]((https://github.com/JuliaOpt/JuMP.jl/issues/new?template=bug_report.md))
-  is the right step. Be sure to include as much relevant information as
-  possible, including a [minimal reproducible example](https://stackoverflow.com/help/mcve).
-  (See [here](https://help.github.com/articles/basic-writing-and-formatting-syntax/)
-  for background on how to format text and code on GitHub issues.)
+If you don't have experience with Git, Github, and Julia development, the first
+steps can be a little daunting. However, there are lots of tutorials available
+online (such as [this](http://try.github.io/), [this](https://guides.github.com/activities/hello-world/),
+and [this](https://docs.julialang.org/en/stable/manual/packages/#Making-changes-to-an-existing-package-1)).
+If you need any help, come join our [Gitter](https://gitter.im/JuliaOpt/JuMP-dev)
+channel and we will walk you through the process.
+
+Once you are familiar with Git, the workflow for contributing code to JuMP is
+along the lines of the following:
+1. Find an [open issue](https://github.com/JuliaOpt/JuMP.jl/issues) (or open a
+    new one) for the problem you want to solve
+2. Discuss (in the issue, or on [Gitter](https://gitter.im/JuliaOpt/JuMP-dev))
+_before_ spending too much time on it to test the waters first and see if other
+contributors are fine with these changes or not
+3. Make your changes locally. (The Julia manual has a [guide ](https://docs.julialang.org/en/stable/manual/packages/#Making-changes-to-an-existing-package-1)
+on how to do this.) Make sure you:
+    - Follow the [style guide](http://www.juliaopt.org/JuMP.jl/latest/style.html)
+    - Add tests and documentation for any changes or new features
+4. Submit a pull request to Github
+5. Update your pull request, responding to any comments
+
+Remember to be patient and polite; you may get _alot_ of comments on your PR!
+However, don't be afraid! A lot of comments means that people are willing to
+help you improve the code that you are contributing to JuMP.
 
 Thanks for contributing to JuMP!
