@@ -79,15 +79,40 @@ const MOIBIN = MOICON{MOI.SingleVariable,MOI.ZeroOne}
 @MOIU.model JuMPMOIModel (ZeroOne, Integer) (EqualTo, GreaterThan, LessThan, Interval) (Zeros, Nonnegatives, Nonpositives, SecondOrderCone, RotatedSecondOrderCone, GeometricMeanCone, PositiveSemidefiniteConeTriangle, PositiveSemidefiniteConeSquare, RootDetConeTriangle, RootDetConeSquare, LogDetConeTriangle, LogDetConeSquare) () (SingleVariable,) (ScalarAffineFunction,ScalarQuadraticFunction) (VectorOfVariables,) (VectorAffineFunction,)
 
 struct Factory
-    ModelType
+    # The constructor can be
+    # * `Function`: a function, or
+    # * `DataType`: a type, or
+    # * `UnionAll`: a type with missing parameters.
+    constructor::Union{Function, DataType, UnionAll}
     args::Tuple
-    kwargs # type changes from Julia v0.6 to v0.7
+    kwargs # type changes from Julia v0.6 to v0.7 so we leave it untyped for now
 end
-function with_optimizer(ModelType::Type, args...; kwargs...)
-    return Factory(ModelType, args, kwargs)
+
+"""
+    with_optimizer(constructor::Type, args...; kwargs...)
+
+Return a factory that creates optimizers using the constructor `constructor`
+with positional arguments `args` and keyword arguments `kwargs`.
+
+## Examples
+
+The following returns a factory that creates `IpoptOptimizer`s using the
+constructor call `IpoptOptimizer(print_level=0)`:
+```julia
+with_optimizer(IpoptOptimizer, print_level=0)
+```
+"""
+function with_optimizer(constructor::Type, args...; kwargs...)
+    return Factory(constructor, args, kwargs)
 end
+
+"""
+    create_model(factory::Factory)
+
+Creates a new model with the factory `factory`.
+"""
 function create_model(factory::Factory)
-    return factory.ModelType(factory.args...; factory.kwargs...)
+    return factory.constructor(factory.args...; factory.kwargs...)
 end
 
 ###############################################################################
@@ -159,7 +184,18 @@ mutable struct Model <: AbstractModel
     end
 end
 
-# TODO doc
+"""
+    Model(; caching_mode::MOIU.CachingOptimizerMode=MOIU.Automatic,
+            bridge_constraints::Bool=true)
+
+Return a new JuMP model without any optimizer storing the model in a cache.
+The mode of the `CachingOptimizer` storing this cache is `caching_mode`.
+The optimizer can be set later with [`setoptimizer`](@ref). If
+`bridge_constraints` is true, constraints that are not supported by the
+optimizer are automatically bridged to equivalent supported constraints when
+an appropriate is defined in the `MathOptInterface.Bridges` module or is
+defined in another module and is explicitely added.
+"""
 function Model(; caching_mode::MOIU.CachingOptimizerMode=MOIU.Automatic,
                  bridge_constraints::Bool=true)
     universal_fallback = MOIU.UniversalFallback(JuMPMOIModel{Float64}())
@@ -174,16 +210,54 @@ function Model(; caching_mode::MOIU.CachingOptimizerMode=MOIU.Automatic,
     return Model(nothing, backend)
 end
 
-# TODO doc
+"""
+    Model(factory::Factory;
+          caching_mode::MOIU.CachingOptimizerMode=MOIU.Automatic,
+          bridge_constraints::Bool=true)
+
+Return a new JuMP model using the factory `factory` to create the optimizer.
+This is equivalent to calling `Model` with the same keyword arguments and then
+calling [`setoptimizer`](@ref) on the created model with the `factory`. The
+factory can be created by the [`with_optimizer`](@ref) function.
+
+## Examples
+
+The following creates a model using the optimizer
+`IpoptOptimizer(print_level=0)`:
+```julia
+model = JuMP.Model(with_optimizer(IpoptOptimizer, print_level=0))
+```
+"""
 function Model(factory::Factory; kwargs...)
     model = Model(; kwargs...)
-    model.factory = factory # useful for implementing Base.copy
-    optimizer = create_model(factory)
-    MOIU.resetoptimizer!(model, optimizer)
+    setoptimizer(model, factory)
     return model
 end
 
-# TODO doc
+"""
+    direct_model(backend::MOI.ModelLike)
+
+Return a new JuMP model using `backend` to store the model and solve it. As
+opposed to the [`Model`](@ref) constructor, no cache of the model is stored
+outside of `backend` and no bridges are automatically applied to `backend`.
+The absence of cache reduces the memory footprint but it is importnat to bear
+in mind the following implications of creating models using this *direct* mode:
+
+* When `backend` does not support an operation such as adding
+  variables/constraints after solver or modifying constraints, an error is
+  thrown. With models created using the [`Model`](@ref) constructor, such
+  situations can be dealt with modifying the cache only and copying the model
+  cache once `JuMP.optimize` is called.
+* When `backend` does not support a constraint type, the constraint is not
+  automatically bridged to constraints supported by `backend`.
+* The optimizer used cannot be changed. With models created using the
+  [`Model`](@ref) constuctor, the variable and constraint indices used
+  are the indices corresponding to the cached model so the optimizer can be
+  changed but in direct mode, changing the backend would render all variable
+  and constraint references invalid are their internal indices corresponds to
+  the previous backend.
+* The model created cannot be copied.
+"""
 function direct_model(backend::MOI.ModelLike)
     return Model(nothing, backend)
 end

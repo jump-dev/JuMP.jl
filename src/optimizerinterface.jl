@@ -3,6 +3,27 @@
 #  License, v. 2.0. If a copy of the MPL was not distributed with this
 #  file, You can obtain one at http://mozilla.org/MPL/2.0/.
 
+"""
+    setoptimizer(model::Model, factory::Factory)
+
+Sets the optimizer of the model `model` as the optimizers created by the
+factory `factory`. The factory can be created by the [`with_optimizer`](@ref)
+function.
+
+## Examples
+
+The following sets the optimizer of `model` to be
+`IpoptOptimizer(print_level=0)`:
+```julia
+setoptimizer(model, with_optimizer(IpoptOptimizer, print_level=0))
+```
+"""
+function setoptimizer(model::Model, factory::Factory)
+    model.factory = factory # useful for implementing Base.copy
+    optimizer = create_model(factory)
+    MOIU.resetoptimizer!(model, optimizer)
+end
+
 # These methods directly map to CachingOptimizer methods.
 # They cannot be called in Direct mode.
 function MOIU.resetoptimizer!(model::Model, optimizer::MOI.AbstractOptimizer)
