@@ -88,97 +88,83 @@ const MOIBIN = MOICON{MOI.SingleVariable,MOI.ZeroOne}
 @enum ModelMode Automatic Manual Direct
 
 abstract type AbstractModel end
+# All `AbstractModels` must define `num_variables`.
+
+"""
+    Model
+
+A mathematical model of an optimization problem.
+"""
 mutable struct Model <: AbstractModel
 
-    # special variablewise properties that we keep track of:
+    # Special variablewise properties that we keep track of:
     # lower bound, upper bound, fixed, integrality, binary
-    variabletolowerbound::Dict{MOIVAR,MOILB}
-    variabletoupperbound::Dict{MOIVAR,MOIUB}
-    variabletofix::Dict{MOIVAR,MOIFIX}
-    variabletointegrality::Dict{MOIVAR,MOIINT}
-    variabletozeroone::Dict{MOIVAR,MOIBIN}
+    variabletolowerbound::Dict{MOIVAR, MOILB}
+    variabletoupperbound::Dict{MOIVAR, MOIUB}
+    variabletofix::Dict{MOIVAR, MOIFIX}
+    variabletointegrality::Dict{MOIVAR, MOIINT}
+    variabletozeroone::Dict{MOIVAR, MOIBIN}
 
     customnames::Vector
 
-    # # Variable cones of the form, e.g. (:SDP, 1:9)
-    # varCones::Vector{Tuple{Symbol,Any}}
-
-    # Solution data
-    objbound
-    objval
-    # colVal::Vector{Float64}
-    # redCosts::Vector{Float64}
-    # linconstrDuals::Vector{Float64}
-    # conicconstrDuals::Vector{Float64}
-    # constr_to_row::Vector{Vector{Int}}
-    # # Vector of the same length as sdpconstr.
-    # # sdpconstrSym[c] is the list of pairs (i,j), i > j
-    # # such that a symmetry-enforcing constraint has been created
-    # # between sdpconstr[c].terms[i,j] and sdpconstr[c].terms[j,i]
-    # sdpconstrSym::Vector{Vector{Tuple{Int,Int}}}
+    # In Manual and Automatic modes, LazyBridgeOptimizer{CachingOptimizer}.
+    # In Direct mode, will hold an AbstractOptimizer.
     moibackend::MOI.AbstractOptimizer
-    # callbacks
-    callbacks
-    # lazycallback
-    # cutcallback
-    # heurcallback
-
-    # hook into a solve call...function of the form f(m::Model; kwargs...),
-    # where kwargs get passed along to subsequent solve calls
+    # Hook into a solve call...function of the form f(m::Model; kwargs...),
+    # where kwargs get passed along to subsequent solve calls.
     optimizehook
-    # # ditto for a print hook
-    # printhook
-
-
+    # TODO: Document.
     nlpdata#::NLPData
+    # Dictionary from variable and constraint names to objects.
+    objdict::Dict{Symbol, Any}
+    # Number of times we add large expressions. Incremented and checked by
+    # the `operator_warn` method.
+    operator_counter::Int
+    # Enable extensions to attach arbitrary information to a JuMP model by
+    # using an extension-specific symbol as a key.
+    ext::Dict{Symbol, Any}
 
-    objdict::Dict{Symbol,Any} # dictionary from variable and constraint names to objects
-
-    operator_counter::Int # number of times we add large expressions
-
-    # Extension dictionary - e.g. for robust
-    # Extensions should define a type to hold information particular to
-    # their functionality, and store an instance of the type in this
-    # dictionary keyed on an extension-specific symbol
-    ext::Dict{Symbol,Any}
-    # Default constructor
-    function Model(; mode::ModelMode=Automatic, backend=nothing, optimizer=nothing, bridge_constraints=true)
+    # Default constructor.
+    function Model(;
+            mode::ModelMode=Automatic,
+            backend=nothing,
+            optimizer=nothing,
+            bridge_constraints=true)
         model = new()
-        # TODO make pretty
-        model.variabletolowerbound = Dict{MOIVAR,MOILB}()
-        model.variabletoupperbound = Dict{MOIVAR,MOIUB}()
-        model.variabletofix = Dict{MOIVAR,MOIFIX}()
-        model.variabletointegrality = Dict{MOIVAR,MOIINT}()
-        model.variabletozeroone = Dict{MOIVAR,MOIBIN}()
+        model.variabletolowerbound = Dict{MOIVAR, MOILB}()
+        model.variabletoupperbound = Dict{MOIVAR, MOIUB}()
+        model.variabletofix = Dict{MOIVAR, MOIFIX}()
+        model.variabletointegrality = Dict{MOIVAR, MOIINT}()
+        model.variabletozeroone = Dict{MOIVAR, MOIBIN}()
         model.customnames = VariableRef[]
-        model.objbound = 0.0
-        model.objval = 0.0
         if backend != nothing
-            # TODO: It would make more sense to not force users to specify Direct mode if they also provide a backend.
+            # TODO: It would make more sense to not force users to specify
+            # Direct mode if they also provide a backend.
             @assert mode == Direct
             @assert optimizer === nothing
             @assert MOI.isempty(backend)
             model.moibackend = backend
         else
             @assert mode != Direct
-            caching_optimizer = MOIU.CachingOptimizer(MOIU.UniversalFallback(JuMPMOIModel{Float64}()), mode == Automatic ? MOIU.Automatic : MOIU.Manual)
+            universal_fallback = MOIU.UniversalFallback(JuMPMOIModel{Float64}())
+            caching_mode = (mode == Automatic) ? MOIU.Automatic : MOIU.Manual
+            caching_opt = MOIU.CachingOptimizer(universal_fallback,
+                                                caching_mode)
             if bridge_constraints
-                model.moibackend = MOI.Bridges.fullbridgeoptimizer(caching_optimizer, Float64)
+                model.moibackend = MOI.Bridges.fullbridgeoptimizer(caching_opt,
+                                                                   Float64)
             else
-                model.moibackend = caching_optimizer
+                model.moibackend = caching_opt
             end
             if optimizer !== nothing
                 MOIU.resetoptimizer!(model, optimizer)
             end
         end
-        model.callbacks = Any[]
         model.optimizehook = nothing
-        # model.printhook = nothing
         model.nlpdata = nothing
-        model.objdict = Dict{Symbol,Any}()
+        model.objdict = Dict{Symbol, Any}()
         model.operator_counter = 0
-        model.ext = Dict{Symbol,Any}()
-
+        model.ext = Dict{Symbol, Any}()
         return model
     end
 end
@@ -189,16 +175,21 @@ end
 # `model` field
 function caching_optimizer(model::Model)
     if model.moibackend isa MOIU.CachingOptimizer
-        model.moibackend
-    elseif model.moibackend isa MOI.Bridges.LazyBridgeOptimizer{<:MOIU.CachingOptimizer}
-        model.moibackend.model
+        return model.moibackend
+    elseif (model.moibackend isa
+            MOI.Bridges.LazyBridgeOptimizer{<:MOIU.CachingOptimizer})
+        return model.moibackend.model
     else
-        error("The function `caching_optimizer` cannot be called on a model in `Direct` mode")
+        error("The function `caching_optimizer` cannot be called on a model " *
+              "in `Direct` mode.")
     end
 end
 
-# Getters/setters
+"""
+    mode(model::Model)
 
+Return mode (Direct, Automatic, Manual) of model.
+"""
 function mode(model::Model)
     if !(model.moibackend isa MOI.Bridges.LazyBridgeOptimizer{<:MOIU.CachingOptimizer} ||
          model.moibackend isa MOIU.CachingOptimizer)
@@ -210,38 +201,44 @@ function mode(model::Model)
     end
 end
 
-# Needs to defined by all `AbstractModel`
-num_variables(m::Model) = MOI.get(m, MOI.NumberOfVariables())
+"""
+    num_variables(model::Model)
+
+Returns number of variables in `model`.
+"""
+num_variables(model::Model) = MOI.get(model, MOI.NumberOfVariables())
 
 """
-    numnlconstr(m::Model)
+    numnlconstr(model::Model)
 
-returns the number of nonlinear constraints associated with the `Model m`
+Returns the number of nonlinear constraints associated with the `model`.
 """
-numnlconstr(m::Model) = m.nlpdata !== nothing ? length(m.nlpdata.nlconstr) : 0
-
-
-"""
-    objectivebound(m::Model)
-
-Return the best known bound on the optimal objective value after a call to `solve`.
-"""
-objectivebound(m::Model) = MOI.get(m, MOI.ObjectiveBound())
+function numnlconstr(model::Model)
+    return model.nlpdata !== nothing ? length(model.nlpdata.nlconstr) : 0
+end
 
 """
-    objectivevalue(m::Model)
+    objectivebound(model::Model)
 
-Return the objective value after a call to `solve`.
+Return the best known bound on the optimal objective value after a call to
+`optimize(model)`.
 """
-objectivevalue(m::Model) = MOI.get(m, MOI.ObjectiveValue())
+objectivebound(model::Model) = MOI.get(model, MOI.ObjectiveBound())
 
 """
-    objectivesense(m::Model)
+    objectivevalue(model::Model)
+
+Return the objective value after a call to `optimize(model)`.
+"""
+objectivevalue(model::Model) = MOI.get(model, MOI.ObjectiveValue())
+
+"""
+    objectivesense(model::Model)
 
 Return the objective sense, `:Min`, `:Max`, or `:Feasibility`.
 """
-function objectivesense(m::Model)
-    moisense = MOI.get(m, MOI.ObjectiveSense())
+function objectivesense(model::Model)
+    moisense = MOI.get(model, MOI.ObjectiveSense())
     if moisense == MOI.MinSense
         return :Min
     elseif moisense == MOI.MaxSense
@@ -252,14 +249,12 @@ function objectivesense(m::Model)
     end
 end
 
+# TODO(IainNZ): Document these too.
+# TODO(#1381): Implement Base.copy for Model.
 terminationstatus(m::Model) = MOI.get(m, MOI.TerminationStatus())
 primalstatus(m::Model) = MOI.get(m, MOI.PrimalStatus())
 dualstatus(m::Model) = MOI.get(m, MOI.DualStatus())
-
-# TODO: Implement Base.copy.
-
 setoptimizehook(m::Model, f) = (m.optimizehook = f)
-setprinthook(m::Model, f) = (m.printhook = f)
 
 
 #############################################################################
