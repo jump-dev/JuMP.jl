@@ -179,7 +179,7 @@ function Model(factory::Factory; kwargs...)
     model = Model(; kwargs...)
     model.factory = factory # useful for implementing Base.copy
     optimizer = create_model(factory)
-    MOIU.resetoptimizer!(model.moibackend, optimizer)
+    MOIU.resetoptimizer!(model, optimizer)
     return model
 end
 
