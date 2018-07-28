@@ -13,7 +13,7 @@ function buildconstraint(_error::Function, f::AbstractVector,
     return buildconstraint(_error, f, moi_set(s, length(f)))
 end
 
-struct SOCone <: AbstractVectorSet end
-moi_set(::SOCone, dim::Int) = MOI.SecondOrderCone(dim)
-struct RSOCone <: AbstractVectorSet end
-moi_set(::RSOCone, dim::Int) = MOI.RotatedSecondOrderCone(dim)
+struct SecondOrderCone <: AbstractVectorSet end
+moi_set(::SecondOrderCone, dim::Int) = MOI.SecondOrderCone(dim)
+struct RotatedSecondOrderCone <: AbstractVectorSet end
+moi_set(::RotatedSecondOrderCone, dim::Int) = MOI.RotatedSecondOrderCone(dim)
