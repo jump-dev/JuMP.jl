@@ -28,12 +28,12 @@ using .Derivatives
 
 export
 # Objects
-    Model, VariableRef, Norm, AffExpr, QuadExpr, SOCExpr,
-    # LinearConstraint, QuadConstraint, SDConstraint, SOCConstraint,
+    Model, VariableRef, Norm, AffExpr, QuadExpr,
+    # LinearConstraint, QuadConstraint, SDConstraint,
     NonlinearConstraint,
     ConstraintRef,
 # Cones
-    PSDCone,
+    SecondOrderCone, RotatedSecondOrderCone, PSDCone,
 # Functions
     # Model related
     setobjectivesense,
@@ -433,6 +433,8 @@ include("quadexpr.jl")
 ##########################################################################
 # SOSConstraint  (special ordered set constraints)
 # include("sos.jl")
+
+include("sets.jl")
 
 ##########################################################################
 # SDConstraint

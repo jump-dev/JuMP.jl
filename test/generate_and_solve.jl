@@ -227,9 +227,10 @@
             z
         end
         @objective(m, Max, 1.0*x)
-        @constraint(m, varsoc, [x,y,z] in MOI.SecondOrderCone(3))
+        @constraint(m, varsoc, [x,y,z] in SecondOrderCone())
+        # Equivalent to `[x+y,z,1.0] in MOI.SOCone()`
         @constraint(m, affsoc, [x+y,z,1.0] in MOI.SecondOrderCone(3))
-        @constraint(m, rotsoc, [x+1,y,z] in MOI.RotatedSecondOrderCone(3))
+        @constraint(m, rotsoc, [x+1,y,z] in RotatedSecondOrderCone())
 
         modelstring = """
         variables: x, y, z
