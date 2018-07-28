@@ -221,17 +221,20 @@ end
 
 moi_function_and_set(c::VectorOfVariablesConstraint) = (MOI.VectorOfVariables(c.func), c.set)
 
-function constraintobject(cr::ConstraintRef{Model}, ::Type{VariableRef}, ::Type{SetType}) where {SetType <: MOI.AbstractScalarSet}
-    f = MOI.get(cr.m, MOI.ConstraintFunction(), cr)::MOI.SingleVariable
-    s = MOI.get(cr.m, MOI.ConstraintSet(), cr)::SetType
-    return SingleVariableConstraint(VariableRef(cr.m, f), s)
+function constraintobject(ref::ConstraintRef{Model, MOICON{FuncType, SetType}}) where
+        {FuncType <: MOI.SingleVariable, SetType <: MOI.AbstractScalarSet}
+    model = ref.m
+    f = MOI.get(model, MOI.ConstraintFunction(), ref)::FuncType
+    s = MOI.get(model, MOI.ConstraintSet(), ref)::SetType
+    return SingleVariableConstraint(VariableRef(model, f), s)
 end
 
-function constraintobject(cr::ConstraintRef{Model}, ::Type{Vector{VariableRef}}, ::Type{SetType}) where {SetType <: MOI.AbstractVectorSet}
-    m = cr.m
-    f = MOI.get(m, MOI.ConstraintFunction(), cr)::MOI.VectorOfVariables
-    s = MOI.get(m, MOI.ConstraintSet(), cr)::SetType
-    return VectorOfVariablesConstraint(map(v -> VariableRef(m, v), f.variables), s)
+function constraintobject(ref::ConstraintRef{Model, MOICON{FuncType, SetType}}) where
+        {FuncType <: MOI.VectorOfVariables, SetType <: MOI.AbstractVectorSet}
+    model = ref.m
+    f = MOI.get(model, MOI.ConstraintFunction(), ref)::FuncType
+    s = MOI.get(model, MOI.ConstraintSet(), ref)::SetType
+    return VectorOfVariablesConstraint(map(v -> VariableRef(model, v), f.variables), s)
 end
 
 

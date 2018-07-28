@@ -303,8 +303,6 @@ function Base.copy(a::GenericAffExpr, new_model::Model)
     return result
 end
 
-# TODO GenericAffExprConstraint
-
 struct AffExprConstraint{V <: AbstractVariableRef, S <: MOI.AbstractScalarSet} <: AbstractConstraint
     func::GenericAffExpr{Float64, V}
     set::S
@@ -323,15 +321,18 @@ end
 
 moi_function_and_set(c::VectorAffExprConstraint) = (MOI.VectorAffineFunction(c.func), c.set)
 
-function constraintobject(cr::ConstraintRef{Model}, ::Type{AffExpr}, ::Type{SetType}) where {SetType <: MOI.AbstractScalarSet}
-    f = MOI.get(cr.m, MOI.ConstraintFunction(), cr)::MOI.ScalarAffineFunction
-    s = MOI.get(cr.m, MOI.ConstraintSet(), cr)::SetType
-    return AffExprConstraint(AffExpr(cr.m, f), s)
+function constraintobject(ref::ConstraintRef{Model, MOICON{FuncType, SetType}}) where
+        {FuncType <: MOI.ScalarAffineFunction, SetType <: MOI.AbstractScalarSet}
+    model = ref.m
+    f = MOI.get(model, MOI.ConstraintFunction(), ref)::FuncType
+    s = MOI.get(model, MOI.ConstraintSet(), ref)::SetType
+    return AffExprConstraint(AffExpr(model, f), s)
 end
 
-function constraintobject(cr::ConstraintRef{Model}, ::Type{Vector{AffExpr}}, ::Type{SetType}) where {SetType <: MOI.AbstractVectorSet}
-    m = cr.m
-    f = MOI.get(m, MOI.ConstraintFunction(), cr)::MOI.VectorAffineFunction
-    s = MOI.get(m, MOI.ConstraintSet(), cr)::SetType
-    return VectorAffExprConstraint(map(f -> AffExpr(m, f), MOIU.eachscalar(f)), s)
+function constraintobject(ref::ConstraintRef{Model, MOICON{FuncType, SetType}}) where
+        {FuncType <: MOI.VectorAffineFunction, SetType <: MOI.AbstractVectorSet}
+    model = ref.m
+    f = MOI.get(model, MOI.ConstraintFunction(), ref)::MOI.VectorAffineFunction
+    s = MOI.get(model, MOI.ConstraintSet(), ref)::SetType
+    return VectorAffExprConstraint(map(f -> AffExpr(model, f), MOIU.eachscalar(f)), s)
 end

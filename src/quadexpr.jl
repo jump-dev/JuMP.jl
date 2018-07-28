@@ -227,11 +227,12 @@ end
 
 moi_function_and_set(c::QuadExprConstraint) = (MOI.ScalarQuadraticFunction(c.func), c.set)
 
-function constraintobject(cr::ConstraintRef{Model}, ::Type{QuadExpr}, ::Type{SetType}) where {SetType <: MOI.AbstractScalarSet}
-    m = cr.m
-    f = MOI.get(m.moibackend, MOI.ConstraintFunction(), index(cr))::MOI.ScalarQuadraticFunction
-    s = MOI.get(m.moibackend, MOI.ConstraintSet(), index(cr))::SetType
-    return QuadExprConstraint(QuadExpr(m, f), s)
+function constraintobject(ref::ConstraintRef{Model, MOICON{FuncType, SetType}}) where
+        {FuncType <: MOI.ScalarQuadraticFunction, SetType <: MOI.AbstractScalarSet}
+    model = ref.m
+    f = MOI.get(model, MOI.ConstraintFunction(), ref)::FuncType
+    s = MOI.get(model, MOI.ConstraintSet(), ref)::SetType
+    return QuadExprConstraint(QuadExpr(model, f), s)
 end
 
 # TODO: VectorQuadExprConstraint

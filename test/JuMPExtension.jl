@@ -114,13 +114,8 @@ function MOI.delete!(m::MyModel, cref::MyConstraintRef)
     delete!(m.connames, cref.idx)
 end
 MOI.isvalid(m::MyModel, cref::MyConstraintRef) = cref.idx in keys(m.constraints)
-function JuMP.constraintobject(cref::MyConstraintRef, F::Type, S::Type)
-    c = cref.model.constraints[cref.idx]
-    # `TypeError` should be thrown is `F` and `S` are not correct
-    # This is needed for the tests in `constraints.jl`
-    c.func::F
-    c.set::S
-    c
+function JuMP.constraintobject(cref::MyConstraintRef)
+    return cref.model.constraints[cref.idx]
 end
 
 # Objective

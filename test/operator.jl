@@ -532,13 +532,13 @@ function operators_test(ModelType::Type{<:JuMP.AbstractModel}, VariableRefType::
             B = sparse(A)
             # force vector output
             cref1 = @constraint(m, reshape(x,(1,3))*A*x .>= 1)
-            c1 = JuMP.constraintobject.(cref1, QuadExprType, MOI.GreaterThan)
+            c1 = JuMP.constraintobject.(cref1)
             f1 = map(c -> c.func, c1)
             @test JuMP.isequal_canonical(f1, [x[1]*x[1] + 2x[1]*x[2] + 4x[2]*x[2] + 9x[1]*x[3] + 5x[2]*x[3] + 7x[3]*x[3]])
             @test all(c -> c.set.lower == 1, c1)
 
             cref2 = @constraint(m, x'*A*x >= 1)
-            c2 = JuMP.constraintobject.(cref2, QuadExprType, MOI.GreaterThan)
+            c2 = JuMP.constraintobject.(cref2)
             @test JuMP.isequal_canonical(f1[1], c2.func)
 
             mat = [ 3x[1] + 12x[3] +  4x[2]
@@ -546,7 +546,7 @@ function operators_test(ModelType::Type{<:JuMP.AbstractModel}, VariableRefType::
                    15x[1] +  5x[2] + 21x[3]]
 
             cref3 = @constraint(m, (x'A)' + 2A*x .<= 1)
-            c3 = JuMP.constraintobject.(cref3, AffExprType, MOI.LessThan)
+            c3 = JuMP.constraintobject.(cref3)
             f3 = map(c->c.func, c3)
             @test JuMP.isequal_canonical(f3, mat)
             @test all(c -> c.set.upper == 1, c3)
@@ -559,28 +559,28 @@ function operators_test(ModelType::Type{<:JuMP.AbstractModel}, VariableRefType::
             @test JuMP.isequal_canonical((x'A)' + 2A*x, @JuMP.Expression((x'B)' + 2B*x))
 
             cref4 = @constraint(m, -1 .<= (x'A)' + 2A*x .<= 1)
-            c4 = JuMP.constraintobject.(cref4, AffExprType, MOI.Interval)
+            c4 = JuMP.constraintobject.(cref4)
             f4 = map(c->c.func, c4)
             @test JuMP.isequal_canonical(f4, mat)
             @test all(c -> c.set.lower == -1, c4)
             @test all(c -> c.set.upper == 1, c4)
 
             cref5 = @constraint(m, -[1:3;] .<= (x'A)' + 2A*x .<= 1)
-            c5 = JuMP.constraintobject.(cref5, AffExprType, MOI.Interval)
+            c5 = JuMP.constraintobject.(cref5)
             f5 = map(c->c.func, c5)
             @test JuMP.isequal_canonical(f5, mat)
             @test map(c -> c.set.lower, c5) == -[1:3;]
             @test all(c -> c.set.upper == 1, c4)
 
             cref6 = @constraint(m, -[1:3;] .<= (x'A)' + 2A*x .<= [3:-1:1;])
-            c6 = JuMP.constraintobject.(cref6, AffExprType, MOI.Interval)
+            c6 = JuMP.constraintobject.(cref6)
             f6 = map(c->c.func, c6)
             @test JuMP.isequal_canonical(f6, mat)
             @test map(c -> c.set.lower, c6) == -[1:3;]
             @test map(c -> c.set.upper, c6) == [3:-1:1;]
 
             cref7 = @constraint(m, -[1:3;] .<= (x'A)' + 2A*x .<= 3)
-            c7 = JuMP.constraintobject.(cref7, AffExprType, MOI.Interval)
+            c7 = JuMP.constraintobject.(cref7)
             f7 = map(c->c.func, c7)
             @test JuMP.isequal_canonical(f7, mat)
             @test map(c -> c.set.lower, c7) == -[1:3;]
