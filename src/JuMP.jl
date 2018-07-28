@@ -305,7 +305,16 @@ MOI.isvalid(m::Model, cr::ConstraintRef{Model}) = cr.m === m && MOI.isvalid(m.mo
 Add a constraint `c` to `Model m` and sets its name.
 """
 function addconstraint(m::Model, c::AbstractConstraint, name::String="")
-    cindex = MOI.addconstraint!(m.moibackend, moi_function_and_set(c)...)
+    f, s = moi_function_and_set(c)
+    if !MOI.supportsconstraint(m.moibackend, typeof(f), typeof(s))
+        if m.moibackend isa MOI.LazyBridgeOptimizer
+            bridge_message = " and there are no bridges that can reformulate it into supported constraints."
+        else
+            bridge_message = ", try using `bridge_constraints=true` in the `JuMP.Model` constructor if you believe the constraint can be reformulated to constraints supported by the solver."
+        end
+        error("Constraints of type $(typeof(f))-in-$(typeof(s)) are not supported by the solver $(MOI.get(m.moibackend, MOI.SolverName()))" * bridge_message)
+    end
+    cindex = MOI.addconstraint!(m.moibackend, f, s)
     cref = ConstraintRef(m, cindex)
     if !isempty(name)
         setname(cref, name)
