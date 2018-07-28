@@ -81,8 +81,8 @@ const MOIBIN = MOICON{MOI.SingleVariable,MOI.ZeroOne}
 # Model
 
 # Model has three modes:
-# 1) Automatic: moibackend field holds a CachingOptimizer in Automatic mode.
-# 2) Manual: moibackend field holds a CachingOptimizer in Manual mode.
+# 1) Automatic: moibackend field holds a LazyBridgeOptimizer{CachingOptimizer} in Automatic mode.
+# 2) Manual: moibackend field holds a LazyBridgeOptimizer{CachingOptimizer} in Manual mode.
 # 3) Direct: moibackend field holds an AbstractOptimizer. No extra copy of the model is stored. The moibackend must support addconstraint! etc.
 # Methods to interact with the CachingOptimizer are defined in solverinterface.jl.
 @enum ModelMode Automatic Manual Direct
@@ -116,7 +116,7 @@ mutable struct Model <: AbstractModel
     # # such that a symmetry-enforcing constraint has been created
     # # between sdpconstr[c].terms[i,j] and sdpconstr[c].terms[j,i]
     # sdpconstrSym::Vector{Vector{Tuple{Int,Int}}}
-    moibackend::Union{MOI.AbstractOptimizer,MOIU.CachingOptimizer}
+    moibackend::MOI.AbstractOptimizer
     # callbacks
     callbacks
     # lazycallback
@@ -142,48 +142,68 @@ mutable struct Model <: AbstractModel
     # dictionary keyed on an extension-specific symbol
     ext::Dict{Symbol,Any}
     # Default constructor
-    function Model(; mode::ModelMode=Automatic, backend=nothing, optimizer=nothing)
-        m = new()
+    function Model(; mode::ModelMode=Automatic, backend=nothing, optimizer=nothing, bridge_constraints=true)
+        model = new()
         # TODO make pretty
-        m.variabletolowerbound = Dict{MOIVAR,MOILB}()
-        m.variabletoupperbound = Dict{MOIVAR,MOIUB}()
-        m.variabletofix = Dict{MOIVAR,MOIFIX}()
-        m.variabletointegrality = Dict{MOIVAR,MOIINT}()
-        m.variabletozeroone = Dict{MOIVAR,MOIBIN}()
-        m.customnames = VariableRef[]
-        m.objbound = 0.0
-        m.objval = 0.0
+        model.variabletolowerbound = Dict{MOIVAR,MOILB}()
+        model.variabletoupperbound = Dict{MOIVAR,MOIUB}()
+        model.variabletofix = Dict{MOIVAR,MOIFIX}()
+        model.variabletointegrality = Dict{MOIVAR,MOIINT}()
+        model.variabletozeroone = Dict{MOIVAR,MOIBIN}()
+        model.customnames = VariableRef[]
+        model.objbound = 0.0
+        model.objval = 0.0
         if backend != nothing
             # TODO: It would make more sense to not force users to specify Direct mode if they also provide a backend.
             @assert mode == Direct
             @assert optimizer === nothing
             @assert MOI.isempty(backend)
-            m.moibackend = backend
+            model.moibackend = backend
         else
             @assert mode != Direct
-            m.moibackend = MOIU.CachingOptimizer(MOIU.UniversalFallback(JuMPMOIModel{Float64}()), mode == Automatic ? MOIU.Automatic : MOIU.Manual)
+            caching_optimizer = MOIU.CachingOptimizer(MOIU.UniversalFallback(JuMPMOIModel{Float64}()), mode == Automatic ? MOIU.Automatic : MOIU.Manual)
+            if bridge_constraints
+                model.moibackend = MOI.Bridges.fullbridgeoptimizer(caching_optimizer, Float64)
+            else
+                model.moibackend = caching_optimizer
+            end
             if optimizer !== nothing
-                MOIU.resetoptimizer!(m, optimizer)
+                MOIU.resetoptimizer!(model, optimizer)
             end
         end
-        m.callbacks = Any[]
-        m.optimizehook = nothing
-        # m.printhook = nothing
-        m.nlpdata = nothing
-        m.objdict = Dict{Symbol,Any}()
-        m.operator_counter = 0
-        m.ext = Dict{Symbol,Any}()
+        model.callbacks = Any[]
+        model.optimizehook = nothing
+        # model.printhook = nothing
+        model.nlpdata = nothing
+        model.objdict = Dict{Symbol,Any}()
+        model.operator_counter = 0
+        model.ext = Dict{Symbol,Any}()
 
-        return m
+        return model
+    end
+end
+
+# In Automatic and Manual mode, `model.moibackend` is either directly the
+# `CachingOptimizer` if `bridge_constraints=false` was passed in the constructor
+# or it is a `LazyBridgeOptimizer` and the `CachingOptimizer` is stored in the
+# `model` field
+function caching_optimizer(model::Model)
+    if model.moibackend isa MOIU.CachingOptimizer
+        model.moibackend
+    elseif model.moibackend isa MOI.Bridges.LazyBridgeOptimizer{<:MOIU.CachingOptimizer}
+        model.moibackend.model
+    else
+        error("The function `caching_optimizer` cannot be called on a model in `Direct` mode")
     end
 end
 
 # Getters/setters
 
-function mode(m::Model)
-    if !(m.moibackend isa MOIU.CachingOptimizer)
+function mode(model::Model)
+    if !(model.moibackend isa MOI.Bridges.LazyBridgeOptimizer{<:MOIU.CachingOptimizer} ||
+         model.moibackend isa MOIU.CachingOptimizer)
         return Direct
-    elseif m.moibackend.mode == MOIU.Automatic
+    elseif caching_optimizer(model).mode == MOIU.Automatic
         return Automatic
     else
         return Manual
@@ -320,13 +340,12 @@ Base.copy(x::Nothing, new_model::Model) = nothing
 # TODO: Replace with vectorized copy?
 Base.copy(v::AbstractArray{VariableRef}, new_model::Model) = (var -> VariableRef(new_model, var.index)).(v)
 
-
 function optimizerindex(v::VariableRef)
     if mode(v.m) == Direct
         return index(v)
     else
-        @assert v.m.moibackend.state == MOIU.AttachedOptimizer
-        return v.m.moibackend.model_to_optimizer_map[index(v)]
+        @assert caching_optimizer(v.m).state == MOIU.AttachedOptimizer
+        return caching_optimizer(v.m).model_to_optimizer_map[index(v)]
     end
 end
 
@@ -334,8 +353,8 @@ function optimizerindex(cr::ConstraintRef{Model})
     if mode(cr.m) == Direct
         return index(cr)
     else
-        @assert cr.m.moibackend.state == MOIU.AttachedOptimizer
-        return cr.m.moibackend.model_to_optimizer_map[index(cr)]
+        @assert caching_optimizer(cr.m).state == MOIU.AttachedOptimizer
+        return caching_optimizer(cr.m).model_to_optimizer_map[index(cr)]
     end
 end
 

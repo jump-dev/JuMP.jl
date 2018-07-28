@@ -37,7 +37,7 @@
 
         model = JuMP.JuMPMOIModel{Float64}()
         MOIU.loadfromstring!(model, modelstring)
-        MOIU.test_models_equal(m.moibackend.model_cache, model, ["x","y"], ["c", "xub", "ylb"])
+        MOIU.test_models_equal(JuMP.caching_optimizer(m).model_cache, model, ["x","y"], ["c", "xub", "ylb"])
 
         mocksolver = MOIU.MockOptimizer(JuMP.JuMPMOIModel{Float64}(), evalobjective=false)
         MOIU.resetoptimizer!(m, mocksolver)
@@ -136,7 +136,7 @@
 
         model = JuMP.JuMPMOIModel{Float64}()
         MOIU.loadfromstring!(model, modelstring)
-        MOIU.test_models_equal(m.moibackend.model_cache, model, ["x","y"], ["xfix", "xint", "ybin"])
+        MOIU.test_models_equal(JuMP.caching_optimizer(m).model_cache, model, ["x","y"], ["xfix", "xint", "ybin"])
 
         MOIU.attachoptimizer!(m)
 
@@ -184,7 +184,7 @@
 
         model = JuMP.JuMPMOIModel{Float64}()
         MOIU.loadfromstring!(model, modelstring)
-        MOIU.test_models_equal(m.moibackend.model_cache, model, ["x","y"], ["c1", "c2", "c3"])
+        MOIU.test_models_equal(JuMP.caching_optimizer(m).model_cache, model, ["x","y"], ["c1", "c2", "c3"])
 
         mocksolver = MOIU.MockOptimizer(JuMP.JuMPMOIModel{Float64}(), evalobjective=false)
         MOIU.resetoptimizer!(m, mocksolver)
@@ -241,7 +241,7 @@
 
         model = JuMP.JuMPMOIModel{Float64}()
         MOIU.loadfromstring!(model, modelstring)
-        MOIU.test_models_equal(m.moibackend.model_cache, model, ["x","y","z"], ["varsoc", "affsoc", "rotsoc"])
+        MOIU.test_models_equal(JuMP.caching_optimizer(m).model_cache, model, ["x","y","z"], ["varsoc", "affsoc", "rotsoc"])
 
         mocksolver = MOIU.MockOptimizer(JuMP.JuMPMOIModel{Float64}(), evalobjective=false)
         MOIU.resetoptimizer!(m, mocksolver)
@@ -297,7 +297,7 @@
 
         model = JuMP.JuMPMOIModel{Float64}()
         MOIU.loadfromstring!(model, modelstring)
-        MOIU.test_models_equal(m.moibackend.model_cache, model, ["x11","x12","x22"], ["varpsd", "conpsd"])
+        MOIU.test_models_equal(JuMP.caching_optimizer(m).model_cache, model, ["x11","x12","x22"], ["varpsd", "conpsd"])
 
         mocksolver = MOIU.MockOptimizer(JuMP.JuMPMOIModel{Float64}(), evalobjective=false)
         MOIU.resetoptimizer!(m, mocksolver)
