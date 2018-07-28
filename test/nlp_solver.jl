@@ -27,8 +27,6 @@ using Compat.Test
 using MathOptInterface
 const MOI = MathOptInterface
 
-new_optimizer() = IpoptOptimizer(print_level=0)
-
 @testset "NLP solver tests" begin
 
     @testset "HS071" begin
@@ -40,7 +38,7 @@ new_optimizer() = IpoptOptimizer(print_level=0)
         #     1 <= x1, x2, x3, x4 <= 5
         # Start at (1,5,5,1)
         # End at (1.000..., 4.743..., 3.821..., 1.379...)
-        m = Model(optimizer=new_optimizer())
+        m = Model(with_optimizer(IpoptOptimize, print_level=0))
         initval = [1,5,5,1]
         @variable(m, 1 <= x[i=1:4] <= 5, start=initval[i])
         @NLobjective(m, Min, x[1]*x[4]*(x[1]+x[2]+x[3]) + x[3])
@@ -65,7 +63,7 @@ new_optimizer() = IpoptOptimizer(print_level=0)
         #     1 <= x1, x2, x3, x4 <= 5
         # Start at (1,5,5,1)
         # End at (1.000..., 4.743..., 3.821..., 1.379...)
-        m = Model(optimizer=new_optimizer())
+        m = Model(with_optimizer(IpoptOptimize, print_level=0))
         initval = [1,5,5,1]
         @variable(m, 1 <= x[i=1:4] <= 5, start=initval[i])
         JuMP.setNLobjective(m, :Min, :($(x[1])*$(x[4])*($(x[1])+$(x[2])+$(x[3])) + $(x[3])))
@@ -91,7 +89,7 @@ new_optimizer() = IpoptOptimizer(print_level=0)
         L = [0.0, 0.0, -0.55, -0.55, 196, 196, 196, -400, -400]
         U = [Inf, Inf,  0.55,  0.55, 252, 252, 252,  800,  800]
 
-        m = Model(optimizer=new_optimizer())
+        m = Model(with_optimizer(IpoptOptimize, print_level=0))
         @variable(m, L[i] <= x[i=1:9] <= U[i], start = 0.0)
 
         @NLobjective(m, Min, 3 * x[1] + 1e-6 * x[1]^3 + 2 * x[2] + .522074e-6 * x[2]^3)
@@ -131,7 +129,7 @@ new_optimizer() = IpoptOptimizer(print_level=0)
     end
 
     @testset "HS110" begin
-        m = Model(optimizer=new_optimizer())
+        m = Model(with_optimizer(IpoptOptimize, print_level=0))
         @variable(m, -2.001 <= x[1:10] <= 9.999, start = 9)
 
         @NLobjective(m, Min,
@@ -152,7 +150,7 @@ new_optimizer() = IpoptOptimizer(print_level=0)
     @testset "HS111" begin
         c = [-6.089, -17.164, -34.054, -5.914, -24.721, -14.986, -24.100, -10.708, -26.662, -22.179]
 
-        m = Model(optimizer=new_optimizer())
+        m = Model(with_optimizer(IpoptOptimize, print_level=0))
         @variable(m, -100 <= x[1:10] <= 100, start = -2.3)
 
         @NLobjective(m, Min,
@@ -174,7 +172,7 @@ new_optimizer() = IpoptOptimizer(print_level=0)
     @testset "HS112" begin
         c = [-6.089, -17.164, -34.054, -5.914, -24.721, -14.986, -24.100, -10.708, -26.662, -22.179]
 
-        m = Model(optimizer=new_optimizer())
+        m = Model(with_optimizer(IpoptOptimize, print_level=0))
         @variable(m, x[1:10] >= 1e-6, start = 0.1)
 
         @NLobjective(m, Min, sum(x[j]*(c[j] + log(x[j]/sum(x[k] for k=1:10))) for j=1:10))
@@ -201,7 +199,7 @@ new_optimizer() = IpoptOptimizer(print_level=0)
         upper = [2000, 16000, 120, 5000, 2000, 93, 95, 12, 4, 162]
         start = [1745, 12000, 110, 3048, 1974, 89.2, 92.8, 8, 3.6, 145]
 
-        m = Model(optimizer=new_optimizer())
+        m = Model(with_optimizer(IpoptOptimize, print_level=0))
         @variable(m, lower[i] <= x[i=1:n] <= upper[i], start = start[i])
 
         @NLobjective(m, Min, 5.04*x[1] + .035*x[2] + 10*x[3] + 3.36*x[5] - .063*x[4]*x[7])
@@ -240,7 +238,7 @@ new_optimizer() = IpoptOptimizer(print_level=0)
         upper = [1.0, 1.0, 1.0, 0.1, 0.9, 0.9, 1000, 1000, 1000, 500, 150, 150, 150, Inf, Inf, Inf]
         start = [0.5  2 0.8  3 0.9  4 0.1  5 0.14  6 0.5  7 489  8 80  9 650 0.5  2 0.8  3 0.9  4 0.1  5 0.14  6 0.5  7 489  8 80  9 650]
 
-        m = Model(optimizer=new_optimizer())
+        m = Model(with_optimizer(IpoptOptimize, print_level=0))
         @variable(m, lower[i] <= x[i=1:N] <= upper[i], start = start[i])
         @NLobjective(m, Min, x[11] + x[12] + x[13])
 
@@ -275,7 +273,7 @@ new_optimizer() = IpoptOptimizer(print_level=0)
     end
 
     @testset "HS118" begin
-        m = Model(optimizer=new_optimizer())
+        m = Model(with_optimizer(IpoptOptimize, print_level=0))
 
         L = zeros(15)
         L[1] =  8.0
@@ -343,7 +341,7 @@ new_optimizer() = IpoptOptimizer(print_level=0)
     end
 
     @testset "Two-sided constraints" begin
-        m = Model(optimizer=new_optimizer())
+        m = Model(with_optimizer(IpoptOptimize, print_level=0))
         @variable(m, x)
         @NLobjective(m, Max, x)
         l = -1
@@ -366,7 +364,7 @@ new_optimizer() = IpoptOptimizer(print_level=0)
     end
 
     @testset "Two-sided constraints (no macros)" begin
-        m = Model(optimizer=new_optimizer())
+        m = Model(with_optimizer(IpoptOptimize, print_level=0))
         @variable(m, x)
         JuMP.setNLobjective(m, :Max, x)
         l = -1
@@ -389,7 +387,7 @@ new_optimizer() = IpoptOptimizer(print_level=0)
     end
 
     @testset "Duals" begin
-        m = Model(optimizer=new_optimizer())
+        m = Model(with_optimizer(IpoptOptimize, print_level=0))
         @variable(m, x >= 0)
         @variable(m, y <= 5)
         @variable(m, 2 <= z <= 4)
@@ -445,7 +443,7 @@ new_optimizer() = IpoptOptimizer(print_level=0)
     end
 
     @testset "Quadratic inequality constraints, linear objective" begin
-        m = Model(optimizer=new_optimizer())
+        m = Model(with_optimizer(IpoptOptimize, print_level=0))
         @variable(m, -2 <= x <= 2)
         @variable(m, -2 <= y <= 2)
         @objective(m, Min, x - y)
@@ -460,7 +458,7 @@ new_optimizer() = IpoptOptimizer(print_level=0)
     end
 
     @testset "Quadratic inequality constraints, NL objective" begin
-        m = Model(optimizer=new_optimizer())
+        m = Model(with_optimizer(IpoptOptimize, print_level=0))
         @variable(m, -2 <= x <= 2)
         @variable(m, -2 <= y <= 2)
         @NLobjective(m, Min, x - y)
@@ -475,7 +473,7 @@ new_optimizer() = IpoptOptimizer(print_level=0)
     end
 
     @testset "Quadratic equality constraints" begin
-        m = Model(optimizer=new_optimizer())
+        m = Model(with_optimizer(IpoptOptimize, print_level=0))
         @variable(m, 0 <= x[1:2] <= 1)
         @constraint(m, x[1]^2 + x[2]^2 == 1/2)
         @NLobjective(m, Max, x[1] - x[2])
@@ -489,7 +487,7 @@ new_optimizer() = IpoptOptimizer(print_level=0)
     end
 
     @testset "Fixed variables" begin
-        m = Model(optimizer=new_optimizer())
+        m = Model(with_optimizer(IpoptOptimize, print_level=0))
         @variable(m, x == 0)
         @variable(m, y ≥ 0)
         @objective(m, Min, y)

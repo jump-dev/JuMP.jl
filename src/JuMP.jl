@@ -29,6 +29,7 @@ using .Derivatives
 export
 # Objects
     Model, VariableRef, Norm, AffExpr, QuadExpr,
+    with_optimizer,
     # LinearConstraint, QuadConstraint, SDConstraint,
     NonlinearConstraint,
     ConstraintRef,
@@ -78,9 +79,12 @@ const MOIBIN = MOICON{MOI.SingleVariable,MOI.ZeroOne}
 @MOIU.model JuMPMOIModel (ZeroOne, Integer) (EqualTo, GreaterThan, LessThan, Interval) (Zeros, Nonnegatives, Nonpositives, SecondOrderCone, RotatedSecondOrderCone, GeometricMeanCone, PositiveSemidefiniteConeTriangle, PositiveSemidefiniteConeSquare, RootDetConeTriangle, RootDetConeSquare, LogDetConeTriangle, LogDetConeSquare) () (SingleVariable,) (ScalarAffineFunction,ScalarQuadraticFunction) (VectorOfVariables,) (VectorAffineFunction,)
 
 struct Factory
-    ModelType::DataType
+    ModelType
     args::Tuple
     kwargs # type changes from Julia v0.6 to v0.7
+end
+function with_optimizer(ModelType::Type, args...; kwargs...)
+    return Factory(ModelType, args, kwargs)
 end
 function create_model(factory::Factory)
     return factory.ModelType(factory.args...; factory.kwargs...)
@@ -116,7 +120,7 @@ mutable struct Model <: AbstractModel
 
     customnames::Vector
 
-    factory::Factory
+    factory::Union{Nothing, Factory}
     # In Manual and Automatic modes, LazyBridgeOptimizer{CachingOptimizer}.
     # In Direct mode, will hold an AbstractOptimizer.
     moibackend::MOI.AbstractOptimizer
@@ -135,7 +139,7 @@ mutable struct Model <: AbstractModel
     ext::Dict{Symbol, Any}
 
     # Inner constructor
-    function Model(factory::Factory, moibackend::MOI.ModelLike)
+    function Model(factory::Union{Nothing, Factory}, moibackend::MOI.ModelLike)
         @assert MOI.isempty(moibackend)
         model = new()
         model.variabletolowerbound = Dict{MOIVAR, MOILB}()
