@@ -31,20 +31,9 @@ below for more on this.)
 If you need any help, come join our [Gitter](https://gitter.im/JuliaOpt/JuMP-dev)
 channel and we will walk you through the process.
 
-## Write examples
-
-Another way to contribute to JuMP is to add examples. The easiest way to do this
-is to write your example as a Jupyter notebook, and then upload it to the [juliaopt-notebooks](https://github.com/JuliaOpt/juliaopt-notebooks) repository.
-
-A good example to follow is the
-[Sudoku solver example](https://github.com/JuliaOpt/juliaopt-notebooks/blob/master/notebooks/JuMP-Sudoku.ipynb).
-
-You can upload a notebook using [this link](https://github.com/JuliaOpt/juliaopt-notebooks/upload/master),
-or by clicking on the `Upload files` button from the [repository page](https://github.com/JuliaOpt/juliaopt-notebooks).
-
 ## File a bug report
 
-A fourth way to contribute to JuMP is to file [bug reports](https://github.com/JuliaOpt/JuMP.jl/issues/new?template=bug_report.md).
+A third way to contribute to JuMP is to file [bug reports](https://github.com/JuliaOpt/JuMP.jl/issues/new?template=bug_report.md).
 
 (Make sure you read the info in the box where you write the body of the issue
 before posting. You can also find a copy of that info [here](https://github.com/JuliaOpt/JuMP.jl/blob/master/.github/ISSUE_TEMPLATE/bug_report.md).)
@@ -67,14 +56,14 @@ along the lines of the following:
 2. Discuss (in the issue, or on [Gitter](https://gitter.im/JuliaOpt/JuMP-dev))
 _before_ spending too much time on it to test the waters first and see if other
 contributors are fine with these changes or not
-3. Make your changes locally. (The Julia manual has a [guide ](https://docs.julialang.org/en/stable/manual/packages/#Making-changes-to-an-existing-package-1)
+3. Make your changes locally. (The Julia manual has a [guide](https://docs.julialang.org/en/stable/manual/packages/#Making-changes-to-an-existing-package-1)
 on how to do this.) Make sure you:
     - Follow the [style guide](http://www.juliaopt.org/JuMP.jl/latest/style.html)
     - Add tests and documentation for any changes or new features
 4. Submit a pull request to Github
 5. Update your pull request, responding to any comments
 
-Remember to be patient and polite; you may get _alot_ of comments on your PR!
+Remember to be patient and polite; you may get a _lot_ of comments on your PR!
 However, don't be afraid! A lot of comments means that people are willing to
 help you improve the code that you are contributing to JuMP.
 
