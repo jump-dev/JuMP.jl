@@ -77,6 +77,15 @@ const MOIBIN = MOICON{MOI.SingleVariable,MOI.ZeroOne}
 
 @MOIU.model JuMPMOIModel (ZeroOne, Integer) (EqualTo, GreaterThan, LessThan, Interval) (Zeros, Nonnegatives, Nonpositives, SecondOrderCone, RotatedSecondOrderCone, GeometricMeanCone, PositiveSemidefiniteConeTriangle, PositiveSemidefiniteConeSquare, RootDetConeTriangle, RootDetConeSquare, LogDetConeTriangle, LogDetConeSquare) () (SingleVariable,) (ScalarAffineFunction,ScalarQuadraticFunction) (VectorOfVariables,) (VectorAffineFunction,)
 
+struct Factory
+    ModelType::DataType
+    args::Tuple
+    kwargs # type changes from Julia v0.6 to v0.7
+end
+function create_model(factory::Factory)
+    return factory.ModelType(factory.args...; factory.kwargs...)
+end
+
 ###############################################################################
 # Model
 
@@ -107,6 +116,7 @@ mutable struct Model <: AbstractModel
 
     customnames::Vector
 
+    factory::Factory
     # In Manual and Automatic modes, LazyBridgeOptimizer{CachingOptimizer}.
     # In Direct mode, will hold an AbstractOptimizer.
     moibackend::MOI.AbstractOptimizer
@@ -124,12 +134,9 @@ mutable struct Model <: AbstractModel
     # using an extension-specific symbol as a key.
     ext::Dict{Symbol, Any}
 
-    # Default constructor.
-    function Model(;
-            mode::ModelMode=Automatic,
-            backend=nothing,
-            optimizer=nothing,
-            bridge_constraints=true)
+    # Inner constructor
+    function Model(factory::Factory, moibackend::MOI.ModelLike)
+        @assert MOI.isempty(moibackend)
         model = new()
         model.variabletolowerbound = Dict{MOIVAR, MOILB}()
         model.variabletoupperbound = Dict{MOIVAR, MOIUB}()
@@ -137,29 +144,8 @@ mutable struct Model <: AbstractModel
         model.variabletointegrality = Dict{MOIVAR, MOIINT}()
         model.variabletozeroone = Dict{MOIVAR, MOIBIN}()
         model.customnames = VariableRef[]
-        if backend != nothing
-            # TODO: It would make more sense to not force users to specify
-            # Direct mode if they also provide a backend.
-            @assert mode == Direct
-            @assert optimizer === nothing
-            @assert MOI.isempty(backend)
-            model.moibackend = backend
-        else
-            @assert mode != Direct
-            universal_fallback = MOIU.UniversalFallback(JuMPMOIModel{Float64}())
-            caching_mode = (mode == Automatic) ? MOIU.Automatic : MOIU.Manual
-            caching_opt = MOIU.CachingOptimizer(universal_fallback,
-                                                caching_mode)
-            if bridge_constraints
-                model.moibackend = MOI.Bridges.fullbridgeoptimizer(caching_opt,
-                                                                   Float64)
-            else
-                model.moibackend = caching_opt
-            end
-            if optimizer !== nothing
-                MOIU.resetoptimizer!(model, optimizer)
-            end
-        end
+        model.factory = factory
+        model.moibackend = moibackend
         model.optimizehook = nothing
         model.nlpdata = nothing
         model.objdict = Dict{Symbol, Any}()
@@ -167,6 +153,35 @@ mutable struct Model <: AbstractModel
         model.ext = Dict{Symbol, Any}()
         return model
     end
+end
+
+# TODO doc
+function Model(; caching_mode::MOIU.CachingOptimizerMode=MOIU.Automatic,
+                 bridge_constraints::Bool=true)
+    universal_fallback = MOIU.UniversalFallback(JuMPMOIModel{Float64}())
+    caching_opt = MOIU.CachingOptimizer(universal_fallback,
+                                        caching_mode)
+    if bridge_constraints
+        backend = MOI.Bridges.fullbridgeoptimizer(caching_opt,
+                                                  Float64)
+    else
+        backend = caching_opt
+    end
+    return Model(nothing, backend)
+end
+
+# TODO doc
+function Model(factory::Factory; kwargs...)
+    model = Model(; kwargs...)
+    model.factory = factory # useful for implementing Base.copy
+    optimizer = create_model(factory)
+    MOIU.resetoptimizer!(model.moibackend, optimizer)
+    return model
+end
+
+# TODO doc
+function direct_model(backend::MOI.ModelLike)
+    return Model(nothing, backend)
 end
 
 # In Automatic and Manual mode, `model.moibackend` is either directly the
