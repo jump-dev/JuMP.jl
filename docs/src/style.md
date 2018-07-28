@@ -83,7 +83,43 @@ empty vector with element type `T`. Prefer `T[]` because it is more concise.
 Both `1.0` and `1.` create a `Float64` with value `1.0`. Prefer `1.0` over
 `1.` because it is more easily distinguished from the integer constant `1`.
 
+### Miscellaneous
 
+(TODO: Rethink categories.)
+
+#### User-facing `MethodError`
+
+Specifying argument types for methods is mostly optional in Julia, which means
+that it's possible to find out that you are working with unexpected types deep in
+the call chain. Avoid this situation or handle it with a helpful error message.
+*A user should see a `MethodError` only for methods that they called directly.*
+
+Bad:
+```julia
+internal_function(x::Integer) = x + 1
+# The user sees a MethodError for internal_function when calling
+# public_function("a string"). This is not very helpful.
+public_function(x) = internal_function(x)
+```
+
+Good:
+```julia
+internal_function(x::Integer) = x + 1
+# The user sees a MethodError for public_function when calling
+# public_function("a string"). This is easy to understand.
+public_function(x::Integer) = internal_function(x)
+```
+
+If it is hard to provide an error message at the top of the call chain,
+then the following pattern is also ok:
+```julia
+internal_function(x::Integer) = x + 1
+function internal_function(x)
+    error("Internal error. This probably means that you called " *
+          "public_function() with the wrong type.")
+end
+public_function(x) = internal_function(x)
+```
 
 Design principles
 -----------------
