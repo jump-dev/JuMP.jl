@@ -28,97 +28,136 @@ abstract type REPLMode <: PrintMode end
 abstract type IJuliaMode <: PrintMode end
 
 # Whether something is zero or not for the purposes of printing it
-# oneunit is useful e.g. if coef is a Unitful quantity
-iszeroforprinting(coef) = abs(coef) < 1e-10 * oneunit(coef)
-# Whether something is one or not for the purposes of printing it
-isoneforprinting(coef) = iszeroforprinting(abs(coef) - oneunit(coef))
-str_sign(coef) = coef < zero(coef) ? " - " : " + "
-
-# List of indices available for variable printing
-const DIMS = ["i","j","k","l","m","n"]
+# oneunit is useful e.g. if coef is a Unitful quantity.
+is_zero_for_printing(coef) = abs(coef) < 1e-10 * oneunit(coef)
+# Whether something is one or not for the purposes of printing it.
+is_one_for_printing(coef) = is_zero_for_printing(abs(coef) - oneunit(coef))
+sign_string(coef) = coef < zero(coef) ? " - " : " + "
 
 # Helper function that rounds carefully for the purposes of printing
 # e.g.   5.3  =>  5.3
 #        1.0  =>  1
-function str_round(f::Float64)
+function string_round(f::Float64)
     iszero(f) && return "0" # strip sign off zero
     str = string(f)
     length(str) >= 2 && str[end-1:end] == ".0" ? str[1:end-2] : str
 end
-str_round(f) = string(f)
-
-# TODO: get rid of this! This is only a helper, and should be Base.values
-# (and probably live there, as well)
-_values(x::Array) = x
-_values(x) = Base.values(x)
+string_round(f) = string(f)
 
 # REPL-specific symbols
 # Anything here: https://en.wikipedia.org/wiki/Windows-1252
 # should probably work fine on Windows
-const repl = Dict{Symbol,String}(
-    :leq        => (Compat.Sys.iswindows() ? "<=" : "≤"),
-    :geq        => (Compat.Sys.iswindows() ? ">=" : "≥"),
-    :eq         => (Compat.Sys.iswindows() ? "==" : "="),
-    :times      => "*",
-    :sq         => "²",
-    :ind_open   => "[",
-    :ind_close  => "]",
-    :for_all    => (Compat.Sys.iswindows() ? "for all" : "∀"),
-    :in         => (Compat.Sys.iswindows() ? "in" : "∈"),
-    :open_set   => "{",
-    :dots       => (Compat.Sys.iswindows() ? ".." : "…"),
-    :close_set  => "}",
-    :union      => (Compat.Sys.iswindows() ? "or" : "∪"),
-    :infty      => (Compat.Sys.iswindows() ? "Inf" : "∞"),
-    :open_rng   => "[",
-    :close_rng  => "]",
-    :integer    => "integer",
-    :succeq0    => " is semidefinite",
-    :Vert       => (Compat.Sys.iswindows() ? "||" : "‖"),
-    :sub2       => (Compat.Sys.iswindows() ? "_2" : "₂"))
+function math_symbol(::Type{REPLMode}, name::Symbol)
+    if name == :leq
+        return Compat.Sys.iswindows() ? "<=" : "≤"
+    elseif name == :geq
+        return Compat.Sys.iswindows() ? ">=" : "≥"
+    elseif name == :eq
+        return Compat.Sys.iswindows() ? "==" : "="
+    elseif name == :times
+        return "*"
+    elseif name == :sq
+        return "²"
+    elseif name == :ind_open
+        return "["
+    elseif name == :ind_close
+        return "]"
+    elseif name == :for_all
+        return Compat.Sys.iswindows() ? "for all" : "∀"
+    elseif name == :in
+        return Compat.Sys.iswindows() ? "in" : "∈"
+    elseif name == :open_set
+        return "{"
+    elseif name == :dots
+        return Compat.Sys.iswindows() ? ".." : "…"
+    elseif name == :close_set
+        return "}"
+    elseif name == :union
+        return Compat.Sys.iswindows() ? "or" : "∪"
+    elseif name == :infty
+        return Compat.Sys.iswindows() ? "Inf" : "∞"
+    elseif name == :open_rng
+        return "["
+    elseif name == :close_rng
+        return "]"
+    elseif name == :integer
+        return "integer"
+    elseif name == :succeq0
+        return " is semidefinite"
+    elseif name == :Vert
+        return Compat.Sys.iswindows() ? "||" : "‖"
+    elseif name == :sub2
+        return Compat.Sys.iswindows() ? "_2" : "₂"
+    else
+        error("Internal error: Unrecognized symbol $name.")
+    end
+end
 
-# IJulia-specific symbols
-const ijulia = Dict{Symbol,String}(
-    :leq        => "\\leq",
-    :geq        => "\\geq",
-    :eq         => "=",
-    :times      => "\\times ",
-    :sq         => "^2",
-    :ind_open   => "_{",
-    :ind_close  => "}",
-    :for_all    => "\\quad\\forall",
-    :in         => "\\in",
-    :open_set   => "\\{",
-    :dots       => "\\dots",
-    :close_set  => "\\}",
-    :union      => "\\cup",
-    :infty      => "\\infty",
-    :open_rng   => "\\[",
-    :close_rng  => "\\]",
-    :integer    => "\\in \\mathbb{Z}",
-    :succeq0    => "\\succeq 0",
-    :Vert       => "\\Vert",
-    :sub2       => "_2")
+# IJulia-specific symbols.
+function math_symbol(::Type{IJuliaMode}, name::Symbol)
+    if name == :leq
+        return "\\leq"
+    elseif name == :geq
+        return "\\geq"
+    elseif name == :eq
+        return "="
+    elseif name == :times
+        return "\\times "
+    elseif name == :sq
+        return "^2"
+    elseif name == :ind_open
+        return "_{"
+    elseif name == :ind_close
+        return "}"
+    elseif name == :for_all
+        return "\\quad\\forall"
+    elseif name == :in
+        return "\\in"
+    elseif name == :open_set
+        return "\\{"
+    elseif name == :dots
+        return "\\dots"
+    elseif name == :close_set
+        return "\\}"
+    elseif name == :union
+        return "\\cup"
+    elseif name == :infty
+        return "\\infty"
+    elseif name == :open_rng
+        return "\\["
+    elseif name == :close_rng
+        return "\\]"
+    elseif name == :integer
+        return "\\in \\mathbb{Z}"
+    elseif name == :succeq0
+        return "\\succeq 0"
+    elseif name == :Vert
+        return "\\Vert"
+    elseif name == :sub2
+        return "_2"
+    else
+        error("Internal error: Unrecognized symbol $name.")
+    end
+end
 
-const PrintSymbols = Dict{Symbol,String}
-
-# If not already mathmode, then wrap in MathJax start/close tags
-math(s,mathmode) = mathmode ? s : "\$\$ $s \$\$"
+wrap_in_math_mode(str) = "\$\$ $str \$\$"
+wrap_in_inline_math_mode(str) = "\$ $str \$"
 
 #------------------------------------------------------------------------
 ## Model
 #------------------------------------------------------------------------
-function Base.show(io::IO, m::Model) # TODO temporary
+function Base.show(io::IO, model::Model) # TODO temporary
     print(io, "A JuMP Model")
 end
 
 #------------------------------------------------------------------------
 ## VariableRef
 #------------------------------------------------------------------------
-Base.show(io::IO, v::AbstractVariableRef) = print(io, var_str(REPLMode,v))
-Base.show(io::IO, ::MIME"text/latex", v::AbstractVariableRef) =
-    print(io, var_str(IJuliaMode,v,mathmode=false))
-function var_str(::Type{REPLMode}, v::AbstractVariableRef; mathmode=true)
+Base.show(io::IO, v::AbstractVariableRef) = print(io, var_string(REPLMode, v))
+function Base.show(io::IO, ::MIME"text/latex", v::AbstractVariableRef)
+    print(io, wrap_in_math_mode(var_string(IJuliaMode, v)))
+end
+function var_string(::Type{REPLMode}, v::AbstractVariableRef)
     var_name = name(v)
     if !isempty(var_name)
         return var_name
@@ -126,84 +165,86 @@ function var_str(::Type{REPLMode}, v::AbstractVariableRef; mathmode=true)
         return "noname"
     end
 end
-function var_str(::Type{IJuliaMode}, v::AbstractVariableRef; mathmode=true)
+function var_string(::Type{IJuliaMode}, v::AbstractVariableRef)
     var_name = name(v)
     if !isempty(var_name)
         # TODO: This is wrong if variable name constains extra "]"
-        return math(replace(replace(var_name,"[","_{",1),"]","}"), mathmode)
+        return replace(replace(var_name,"[","_{",1),"]","}")
     else
-        return math("noname", mathmode)
+        return "noname"
     end
 end
 
-Base.show(io::IO, a::GenericAffExpr) = print(io, aff_str(REPLMode,a))
-Base.show(io::IO, ::MIME"text/latex", a::GenericAffExpr) =
-    print(io, math(aff_str(IJuliaMode,a),false))
-# Generic string converter, called by mode-specific handlers
-function aff_str(mode, a::GenericAffExpr{C, V}, show_constant=true) where {C, V}
+Base.show(io::IO, a::GenericAffExpr) = print(io, aff_string(REPLMode,a))
+function Base.show(io::IO, ::MIME"text/latex", a::GenericAffExpr)
+    print(io, wrap_in_math_mode(aff_string(IJuliaMode,a)))
+end
+
+function aff_string(mode, a::GenericAffExpr, show_constant=true)
     # If the expression is empty, return the constant (or 0)
     if length(linearterms(a)) == 0
-        return show_constant ? str_round(a.constant) : "0"
+        return show_constant ? string_round(a.constant) : "0"
     end
 
     term_str = Array{String}(undef,2*length(linearterms(a)))
     elm = 1
     # For each non-zero for this model
     for (coef, var) in linearterms(a)
-        iszeroforprinting(coef) && continue  # e.g. x - x
+        is_zero_for_printing(coef) && continue  # e.g. x - x
 
-        pre = isoneforprinting(coef) ? "" : str_round(abs(coef)) * " "
+        pre = is_one_for_printing(coef) ? "" : string_round(abs(coef)) * " "
 
-        term_str[2*elm-1] = str_sign(coef)
-        term_str[2*elm  ] = string(pre, var_str(mode, var))
+        term_str[2*elm-1] = sign_string(coef)
+        term_str[2*elm  ] = string(pre, var_string(mode, var))
         elm += 1
     end
 
     if elm == 1
         # Will happen with cancellation of all terms
         # We should just return the constant, if its desired
-        return show_constant ? str_round(a.constant) : "0"
+        return show_constant ? string_round(a.constant) : "0"
     else
         # Correction for very first term - don't want a " + "/" - "
         term_str[1] = (term_str[1] == " - ") ? "-" : ""
         ret = join(term_str[1:2*(elm-1)])
-        if !iszeroforprinting(a.constant) && show_constant
-            ret = string(ret, str_sign(a.constant), str_round(abs(a.constant)))
+        if !is_zero_for_printing(a.constant) && show_constant
+            ret = string(ret, sign_string(a.constant),
+                         string_round(abs(a.constant)))
         end
         return ret
     end
 end
-# Precompile for faster boot times
-Base.precompile(aff_str, (Type{JuMP.REPLMode}, AffExpr, Bool))
-Base.precompile(aff_str, (Type{JuMP.IJuliaMode}, AffExpr, Bool))
-Base.precompile(aff_str, (Type{JuMP.REPLMode}, AffExpr))
-Base.precompile(aff_str, (Type{JuMP.IJuliaMode}, AffExpr))
-
 
 #------------------------------------------------------------------------
 ## GenericQuadExpr
 #------------------------------------------------------------------------
-Base.show(io::IO, q::GenericQuadExpr) = print(io, quad_str(REPLMode,q))
-Base.show(io::IO, ::MIME"text/latex", q::GenericQuadExpr) =
-    print(io, quad_str(IJuliaMode,q,mathmode=false))
-# Generic string converter, called by mode-specific handlers
-function quad_str(mode, q::GenericQuadExpr, sym)
-    length(quadterms(q)) == 0 && return aff_str(mode,q.aff)
+Base.show(io::IO, q::GenericQuadExpr) = print(io, quad_string(REPLMode,q))
+function Base.show(io::IO, ::MIME"text/latex", q::GenericQuadExpr)
+    print(io, wrap_in_math_mode(quad_string(IJuliaMode,q)))
+end
+
+function quad_string(mode, q::GenericQuadExpr)
+    length(quadterms(q)) == 0 && return aff_string(mode,q.aff)
 
     # Odd terms are +/i, even terms are the variables/coeffs
     term_str = Array{String}(undef,2*length(quadterms(q)))
     elm = 1
     if length(term_str) > 0
         for (coef, var1, var2) in quadterms(q)
-            iszeroforprinting(coef) && continue  # e.g. x - x
+            is_zero_for_printing(coef) && continue  # e.g. x - x
 
-            pre = isoneforprinting(coef) ? "" : str_round(abs(coef)) * " "
+            pre = is_one_for_printing(coef) ? "" : string_round(abs(coef)) * " "
 
-            x = var_str(mode,var1)
-            y = var_str(mode,var2)
+            x = var_string(mode,var1)
+            y = var_string(mode,var2)
 
-            term_str[2*elm-1] = str_sign(coef)
-            term_str[2*elm  ] = "$pre$x" * (x == y ? sym[:sq] : "$(sym[:times])$y")
+            term_str[2*elm-1] = sign_string(coef)
+            term_str[2*elm  ] = "$pre$x"
+            if x == y
+                term_str[2*elm] *= math_symbol(mode, :sq)
+            else
+                term_str[2*elm] *= string(math_symbol(mode, :times), y)
+            end
             if elm == 1
                 # Correction for first term as there is no space
                 # between - and variable coefficient/name
@@ -214,65 +255,154 @@ function quad_str(mode, q::GenericQuadExpr, sym)
     end
     ret = join(term_str[1:2*(elm-1)])
 
-    aff_string = aff_str(mode, q.aff)
-    if aff_string == "0"
+    aff_str = aff_string(mode, q.aff)
+    if aff_str == "0"
         return ret
     else
-        if aff_string[1] == '-'
-            return string(ret, " - ", aff_string[2:end])
+        if aff_str[1] == '-'
+            return string(ret, " - ", aff_str[2:end])
         else
-            return string(ret, " + ", aff_string)
+            return string(ret, " + ", aff_str)
         end
     end
 end
 
-# Handlers to use correct symbols
-quad_str(::Type{REPLMode}, q::GenericQuadExpr) =
-    quad_str(REPLMode, q, repl)
-quad_str(::Type{IJuliaMode}, q::GenericQuadExpr; mathmode=true) =
-    math(quad_str(IJuliaMode, q, ijulia), mathmode)
 
 #------------------------------------------------------------------------
-## NonlinearExprData
+## Constraints
 #------------------------------------------------------------------------
-#Base.show(io::IO, c::NonlinearExprData) = print(io, expr_str(REPLMode, c))
-#Base.show(io::IO, ::MIME"text/latex", c::NonlinearExprData) =
-#    print(io, expr_str(IJuliaMode, c))
-function expr_str(m::Model, mode, c::NonlinearExprData)
-    return string(tapeToExpr(m, 1, c.nd, adjmat(c.nd), c.const_values, [], [], m.nlpdata.user_operators, false, false, mode))
+
+function Base.show(io::IO, ref::ConstraintRef{Model})
+    constraint_object = constraintobject(ref)
+    constraint_name = name(ref)
+    print(io, constraint_string(REPLMode, constraint_name, constraint_object))
+end
+function Base.show(io::IO, ::MIME"text/latex", ref::ConstraintRef{Model})
+    constraint_object = constraintobject(ref)
+    constraint_name = name(ref)
+    print(io, constraint_string(IJuliaMode, constraint_name, constraint_object))
 end
 
 # TODO: Print SingleVariableConstraint, VectorOfVariablesConstraint, AffExprConstraint, VectorAffExprConstraint, QuadExprConstraint
 
+function function_string(print_mode, variable::AbstractVariableRef)
+    return var_string(print_mode, variable)
+end
+
+function function_string(print_mode,
+                         variable_vector::Vector{<:AbstractVariableRef})
+    return "[" * join(var_string.(print_mode, variable_vector), ", ") * "]"
+end
+
+function function_string(print_mode, aff::GenericAffExpr)
+    return aff_string(print_mode, aff)
+end
+
+function function_string(print_mode, aff_vector::Vector{<:GenericAffExpr})
+    return "[" * join(aff_string.(print_mode, aff_vector), ", ") * "]"
+end
+
+function function_string(print_mode, quad::GenericQuadExpr)
+    return quad_string(print_mode, quad)
+end
+
+function function_string(print_mode, quad_vector::Vector{<:GenericQuadExpr})
+    return "[" * join(quad_string.(print_mode, quad_vector), ", ") * "]"
+end
+
+function in_set_string(print_mode, set::MOI.LessThan)
+    return string(math_symbol(print_mode, :leq), " ", set.upper)
+end
+
+function in_set_string(print_mode, set::MOI.GreaterThan)
+    return string(math_symbol(print_mode, :geq), " ", set.lower)
+end
+
+function in_set_string(print_mode, set::MOI.EqualTo)
+    return string(math_symbol(print_mode, :eq), " ", set.value)
+end
+
+function in_set_string(print_mode, set::MOI.Interval)
+    return string(math_symbol(print_mode, :in), " ",
+                  math_symbol(print_mode, :open_rng), set.lower, ", ",
+                  set.upper, math_symbol(print_mode, :close_rng))
+end
+
+# TODO: Convert back to JuMP types for sets like PSDCone.
+# TODO: Consider fancy latex names for some sets. They're currently printed as
+# regular text in math mode which looks a bit awkward.
+function in_set_string(print_mode, set::MOI.AbstractSet)
+    return string(math_symbol(print_mode, :in), " ", set)
+end
+
+# constraint_object is a JuMP constraint object like AffExprConstraint.
+# Assumes a .func and .set member.
+function constraint_string(print_mode, constraint_name, constraint_object)
+    func_str = function_string(print_mode, constraint_object.func)
+    in_set_str = in_set_string(print_mode, constraint_object.set)
+    constraint_without_name = func_str * " " * in_set_str
+    if print_mode == IJuliaMode
+        constraint_without_name = wrap_in_inline_math_mode(constraint_without_name)
+    end
+    if isempty(constraint_name)
+        return constraint_without_name
+    else
+        return constraint_name * " : " * constraint_without_name
+    end
+end
+
+#------------------------------------------------------------------------
+## NonlinearExprData
+#------------------------------------------------------------------------
+function nl_expr_string(model::Model, mode, c::NonlinearExprData)
+    return string(tape_to_expr(model, 1, c.nd, adjmat(c.nd), c.const_values, [],
+                             [], model.nlpdata.user_operators, false, false,
+                             mode))
+end
 
 #------------------------------------------------------------------------
 ## NonlinearConstraint
 #------------------------------------------------------------------------
-Base.show(io::IO, c::NonlinearConstraint) = print(io, con_str(REPLMode,c))
-Base.show(io::IO, ::MIME"text/latex", c::NonlinearConstraint) =
-    print(io, con_str(IJuliaMode,c,mathmode=false))
-# Generic string converter, called by mode-specific handlers
-function con_str(m::Model, mode, c::NonlinearConstraint, sym)
-    s = sense(c)
-    nl = expr_str(m, mode, c.terms)
-    if s == :range
-        out_str = "$(str_round(c.lb)) $(sym[:leq]) $nl $(sym[:leq]) $(str_round(c.ub))"
-    else
-        rel = s == :<= ? sym[:leq] : (s == :>= ? sym[:geq] : sym[:eq])
-        out_str = string(nl," ",rel," ",str_round(rhs(c)))
-    end
-    out_str
-end
-# Handlers to use correct symbols
-# con_str(m::Model, ::Type{REPLMode}, c::GenericRangeConstraint; args...) =
-#     con_str(m, REPLMode, c, repl)
-# con_str(m::Model, ::Type{IJuliaMode}, c::GenericRangeConstraint; mathmode=true) =
-#     math(con_str(m, IJuliaMode, c, ijulia), mathmode)
+const NonlinearConstraintRef = ConstraintRef{Model, NonlinearConstraintIndex}
 
-# TODO: Print ConstraintRef
+function Base.show(io::IO, c::NonlinearConstraintRef)
+    print(io, nl_constraint_string(c.m, REPLMode,
+                                   c.m.nlpdata.nlconstr[c.index.value]))
+end
+
+function Base.show(io::IO, ::MIME"text/latex", c::NonlinearConstraintRef)
+    constraint = c.m.nlpdata.nlconstr[c.index.value]
+    print(io, wrap_in_math_mode(nl_constraint_string(c.m, IJuliaMode,
+                                                    constraint)))
+end
+
+# TODO: Printing is inconsistent between regular constraints and nonlinear
+# constraints because nonlinear constraints don't have names.
+function nl_constraint_string(model::Model, mode, c::NonlinearConstraint)
+    s = sense(c)
+    nl = nl_expr_string(model, mode, c.terms)
+    if s == :range
+        out_str = "$(string_round(c.lb)) " * math_symbol(mode, :leq) * " $nl " *
+                  math_symbol(mode, :leq) * " " * string_round(c.ub)
+    else
+        if s == :<=
+            rel = math_symbol(mode, :leq)
+        elseif s == :>=
+            rel = math_symbol(mode, :geq)
+        else
+            rel = math_symbol(mode, :eq)
+        end
+        out_str = string(nl," ",rel," ",string_round(rhs(c)))
+    end
+    return out_str
+end
 
 #------------------------------------------------------------------------
 ## Nonlinear expression/parameter reference
 #------------------------------------------------------------------------
-Base.show(io::IO, ex::NonlinearExpression) = Base.show(io, "Reference to nonlinear expression #$(ex.index)")
-Base.show(io::IO, p::NonlinearParameter) = Base.show(io, "Reference to nonlinear parameter #$(p.index)")
+function Base.show(io::IO, ex::NonlinearExpression)
+    Base.show(io, "Reference to nonlinear expression #$(ex.index)")
+end
+function Base.show(io::IO, p::NonlinearParameter)
+    Base.show(io, "Reference to nonlinear parameter #$(p.index)")
+end

@@ -11,15 +11,13 @@
 # Testing for VariableRef
 #############################################################################
 using JuMP
-import JuMP.repl
 using Compat
 using Compat.Test
 
 function variables_test(ModelType::Type{<:JuMP.AbstractModel}, VariableRefType::Type{<:JuMP.AbstractVariableRef})
     AffExprType = JuMP.GenericAffExpr{Float64, VariableRefType}
 
-    @testset "constructors" begin
-        # Constructors
+    @testset "Constructors" begin
         mcon = ModelType()
 
         @testset "No bound" begin

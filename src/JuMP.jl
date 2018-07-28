@@ -281,6 +281,7 @@ Base.isempty(::AbstractJuMPScalar) = false
 ##########################################################################
 # Constraint
 # Holds the index of a constraint in a Model.
+# TODO: Rename "m" field (breaks style guidelines).
 struct ConstraintRef{M<:AbstractModel,C}
     m::M
     index::C
