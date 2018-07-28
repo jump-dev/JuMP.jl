@@ -441,6 +441,22 @@ var documenterSearchIndex = {"docs": [
 },
 
 {
+    "location": "style.html#Miscellaneous-1",
+    "page": "Style Guide",
+    "title": "Miscellaneous",
+    "category": "section",
+    "text": "(TODO: Rethink categories.)"
+},
+
+{
+    "location": "style.html#User-facing-MethodError-1",
+    "page": "Style Guide",
+    "title": "User-facing MethodError",
+    "category": "section",
+    "text": "Specifying argument types for methods is mostly optional in Julia, which means that it\'s possible to find out that you are working with unexpected types deep in the call chain. Avoid this situation or handle it with a helpful error message. A user should see a MethodError only for methods that they called directly.Bad:internal_function(x::Integer) = x + 1\n# The user sees a MethodError for internal_function when calling\n# public_function(\"a string\"). This is not very helpful.\npublic_function(x) = internal_function(x)Good:internal_function(x::Integer) = x + 1\n# The user sees a MethodError for public_function when calling\n# public_function(\"a string\"). This is easy to understand.\npublic_function(x::Integer) = internal_function(x)If it is hard to provide an error message at the top of the call chain, then the following pattern is also ok:internal_function(x::Integer) = x + 1\nfunction internal_function(x)\n    error(\"Internal error. This probably means that you called \" *\n          \"public_function() with the wrong type.\")\nend\npublic_function(x) = internal_function(x)"
+},
+
+{
     "location": "style.html#Design-principles-1",
     "page": "Style Guide",
     "title": "Design principles",
