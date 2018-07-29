@@ -283,8 +283,6 @@ function Base.show(io::IO, ::MIME"text/latex", ref::ConstraintRef{Model})
     print(io, constraint_string(IJuliaMode, constraint_name, constraint_object))
 end
 
-# TODO: Print SingleVariableConstraint, VectorOfVariablesConstraint, AffExprConstraint, VectorAffExprConstraint, QuadExprConstraint
-
 function function_string(print_mode, variable::AbstractVariableRef)
     return var_string(print_mode, variable)
 end
