@@ -146,7 +146,7 @@ wrap_in_inline_math_mode(str) = "\$ $str \$"
 #------------------------------------------------------------------------
 ## Model
 #------------------------------------------------------------------------
-function Base.show(io::IO, model::Model) # TODO temporary
+function Base.show(io::IO, model::Model) # TODO(#1180) temporary
     print(io, "A JuMP Model")
 end
 
@@ -169,7 +169,7 @@ function var_string(::Type{IJuliaMode}, v::AbstractVariableRef)
     var_name = name(v)
     if !isempty(var_name)
         # TODO: This is wrong if variable name constains extra "]"
-        return replace(replace(var_name,"[","_{",1),"]","}")
+        return replace(replace(var_name, "[", "_{", 1), "]", "}")
     else
         return "noname"
     end
@@ -177,7 +177,7 @@ end
 
 Base.show(io::IO, a::GenericAffExpr) = print(io, aff_string(REPLMode,a))
 function Base.show(io::IO, ::MIME"text/latex", a::GenericAffExpr)
-    print(io, wrap_in_math_mode(aff_string(IJuliaMode,a)))
+    print(io, wrap_in_math_mode(aff_string(IJuliaMode, a)))
 end
 
 function aff_string(mode, a::GenericAffExpr, show_constant=true)
@@ -186,7 +186,7 @@ function aff_string(mode, a::GenericAffExpr, show_constant=true)
         return show_constant ? string_round(a.constant) : "0"
     end
 
-    term_str = Array{String}(undef,2*length(linearterms(a)))
+    term_str = Array{String}(undef, 2 * length(linearterms(a)))
     elm = 1
     # For each non-zero for this model
     for (coef, var) in linearterms(a)
@@ -194,8 +194,8 @@ function aff_string(mode, a::GenericAffExpr, show_constant=true)
 
         pre = is_one_for_printing(coef) ? "" : string_round(abs(coef)) * " "
 
-        term_str[2*elm-1] = sign_string(coef)
-        term_str[2*elm  ] = string(pre, var_string(mode, var))
+        term_str[2 * elm - 1] = sign_string(coef)
+        term_str[2 * elm] = string(pre, var_string(mode, var))
         elm += 1
     end
 
@@ -206,7 +206,7 @@ function aff_string(mode, a::GenericAffExpr, show_constant=true)
     else
         # Correction for very first term - don't want a " + "/" - "
         term_str[1] = (term_str[1] == " - ") ? "-" : ""
-        ret = join(term_str[1:2*(elm-1)])
+        ret = join(term_str[1 : 2 * (elm - 1)])
         if !is_zero_for_printing(a.constant) && show_constant
             ret = string(ret, sign_string(a.constant),
                          string_round(abs(a.constant)))
@@ -220,14 +220,14 @@ end
 #------------------------------------------------------------------------
 Base.show(io::IO, q::GenericQuadExpr) = print(io, quad_string(REPLMode,q))
 function Base.show(io::IO, ::MIME"text/latex", q::GenericQuadExpr)
-    print(io, wrap_in_math_mode(quad_string(IJuliaMode,q)))
+    print(io, wrap_in_math_mode(quad_string(IJuliaMode, q)))
 end
 
 function quad_string(mode, q::GenericQuadExpr)
-    length(quadterms(q)) == 0 && return aff_string(mode,q.aff)
+    length(quadterms(q)) == 0 && return aff_string(mode, q.aff)
 
     # Odd terms are +/i, even terms are the variables/coeffs
-    term_str = Array{String}(undef,2*length(quadterms(q)))
+    term_str = Array{String}(undef, 2 * length(quadterms(q)))
     elm = 1
     if length(term_str) > 0
         for (coef, var1, var2) in quadterms(q)
@@ -238,12 +238,12 @@ function quad_string(mode, q::GenericQuadExpr)
             x = var_string(mode,var1)
             y = var_string(mode,var2)
 
-            term_str[2*elm-1] = sign_string(coef)
-            term_str[2*elm  ] = "$pre$x"
+            term_str[2 * elm - 1] = sign_string(coef)
+            term_str[2 * elm] = "$pre$x"
             if x == y
-                term_str[2*elm] *= math_symbol(mode, :sq)
+                term_str[2 * elm] *= math_symbol(mode, :sq)
             else
-                term_str[2*elm] *= string(math_symbol(mode, :times), y)
+                term_str[2 * elm] *= string(math_symbol(mode, :times), y)
             end
             if elm == 1
                 # Correction for first term as there is no space
@@ -253,14 +253,14 @@ function quad_string(mode, q::GenericQuadExpr)
             elm += 1
         end
     end
-    ret = join(term_str[1:2*(elm-1)])
+    ret = join(term_str[1 : 2 * (elm - 1)])
 
     aff_str = aff_string(mode, q.aff)
     if aff_str == "0"
         return ret
     else
         if aff_str[1] == '-'
-            return string(ret, " - ", aff_str[2:end])
+            return string(ret, " - ", aff_str[2 : end])
         else
             return string(ret, " + ", aff_str)
         end
@@ -354,8 +354,8 @@ end
 #------------------------------------------------------------------------
 function nl_expr_string(model::Model, mode, c::NonlinearExprData)
     return string(tape_to_expr(model, 1, c.nd, adjmat(c.nd), c.const_values, [],
-                             [], model.nlpdata.user_operators, false, false,
-                             mode))
+                               [], model.nlpdata.user_operators, false, false,
+                               mode))
 end
 
 #------------------------------------------------------------------------
