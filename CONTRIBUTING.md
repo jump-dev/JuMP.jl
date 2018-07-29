@@ -45,17 +45,17 @@ channel and we will walk you through the process.
 
 A third way to contribute to JuMP is to file [bug reports](https://github.com/JuliaOpt/JuMP.jl/issues/new?template=bug_report.md).
 
-(Make sure you read the info in the box where you write the body of the issue
-before posting. You can also find a copy of that info [here](https://github.com/JuliaOpt/JuMP.jl/blob/master/.github/ISSUE_TEMPLATE/bug_report.md).)
+Make sure you read the info in the box where you write the body of the issue
+before posting. You can also find a copy of that info [here](https://github.com/JuliaOpt/JuMP.jl/blob/master/.github/ISSUE_TEMPLATE/bug_report.md).
 
 ## Contribute code to JuMP
 
 Finally, you can also contribute code to JuMP!
 
-If you don't have experience with Git, Github, and Julia development, the first
+If you do not have experience with Git, Github, and Julia development, the first
 steps can be a little daunting. However, there are lots of tutorials available
 online (such as [this](http://try.github.io/), [this](https://guides.github.com/activities/hello-world/),
-and [this](https://docs.julialang.org/en/stable/manual/packages/#Making-changes-to-an-existing-package-1)).
+[this](https://git-scm.com/book/en/v2), and [this](https://docs.julialang.org/en/stable/manual/packages/#Making-changes-to-an-existing-package-1)).
 If you need any help, come join our [Gitter](https://gitter.im/JuliaOpt/JuMP-dev)
 channel and we will walk you through the process.
 
@@ -64,17 +64,17 @@ along the lines of the following:
 1. Find an [open issue](https://github.com/JuliaOpt/JuMP.jl/issues) (or open a
     new one) for the problem you want to solve
 2. Discuss (in the issue, or on [Gitter](https://gitter.im/JuliaOpt/JuMP-dev))
-_before_ spending too much time on it to test the waters first and see if other
-contributors are fine with these changes or not
+    _before_ spending too much time on it to test the waters first and see if
+    other contributors are fine with these changes or not
 3. Make your changes locally. (The Julia manual has a [guide](https://docs.julialang.org/en/stable/manual/packages/#Making-changes-to-an-existing-package-1)
-on how to do this.) Make sure you:
+    on how to do this.) Make sure you:
     - Follow the [style guide](http://www.juliaopt.org/JuMP.jl/latest/style.html)
     - Add tests and documentation for any changes or new features
 4. Submit a pull request to Github
 5. Update your pull request, responding to any comments
 
 Remember to be patient and polite; you may get a _lot_ of comments on your pull
-request! However, don't be afraid! A lot of comments means that people are
+request! However, do not be afraid! A lot of comments means that people are
 willing to help you improve the code that you are contributing to JuMP.
 
 Thanks for contributing to JuMP!
