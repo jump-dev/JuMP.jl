@@ -1444,10 +1444,9 @@ macro NLparameter(m, ex, extra...)
 
     extra, kwargs, requestedcontainer = extract_kwargs(extra)
     (length(extra) == 0 && length(kwargs) == 0) || error("in @NLperameter: too many arguments.")
-    m = esc(m)
-    @assert isexpr(ex, :call)
-    @assert length(ex.args) == 3
-    @assert ex.args[1] == :(==)
+    if !isexpr(ex, :call) || length(ex.args) != 3 || ex.args[1] != :(==)
+        error("In @NLparameter($m, $ex): syntax error.")
+    end
     c = ex.args[2]
     x = ex.args[3]
 
@@ -1455,11 +1454,16 @@ macro NLparameter(m, ex, extra...)
     if anonvar
         error("In @NLparameter($m, $ex): Anonymous nonlinear parameter syntax is not currently supported")
     end
+    m = esc(m)
     variable = gensym()
     escvarname  = anonvar ? variable : esc(getname(c))
 
     refcall, idxvars, idxsets, condition = buildrefsets(c, variable)
     code = quote
+        if !isa($(esc(x)), Number)
+            error(string("in @NLparameter (", $(string(ex)), "): expected ",
+                         $(string(x))," to be a number."))
+        end
         $(refcall) = newparameter($m, $(esc(x)))
     end
     return assert_validmodel(m, quote
