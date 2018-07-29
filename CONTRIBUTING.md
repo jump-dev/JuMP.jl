@@ -16,8 +16,12 @@ help answer questions on Discourse!
 ## Improve the documentation
 
 Chances are, if you asked (or answered) a question on Discourse, then it is
-usually a sign that the documentation could be improved. Moreover, since it is
-your question, you are probably the best-placed person to improve it!
+usually a sign that the [documentation](http://www.juliaopt.org/JuMP.jl/latest/)
+could be improved. Moreover, since it is your question, you are probably the
+best-placed person to improve it!
+
+The docs are written in Markdown and are built using [Documenter.jl](https://github.com/JuliaDocs/Documenter.jl).
+You can find the source of all the docs [here](https://github.com/JuliaOpt/JuMP.jl/tree/master/docs).
 
 If your change is small (like fixing typos, or one or two sentence corrections),
 the easiest way to do this is via Github's online editor. (Github has
@@ -63,8 +67,8 @@ on how to do this.) Make sure you:
 4. Submit a pull request to Github
 5. Update your pull request, responding to any comments
 
-Remember to be patient and polite; you may get a _lot_ of comments on your PR!
-However, don't be afraid! A lot of comments means that people are willing to
-help you improve the code that you are contributing to JuMP.
+Remember to be patient and polite; you may get a _lot_ of comments on your pull
+request! However, don't be afraid! A lot of comments means that people are
+willing to help you improve the code that you are contributing to JuMP.
 
 Thanks for contributing to JuMP!
