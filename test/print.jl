@@ -14,7 +14,6 @@ using JuMP
 using Compat
 using Compat.Test
 import JuMP.REPLMode, JuMP.IJuliaMode
-import JuMP.repl, JuMP.ijulia
 
 # Helper function to test IO methods work correctly
 function io_test(mode, obj, exp_str; repl=:both)
@@ -44,7 +43,8 @@ Base.isless(u::UnitNumber, v::UnitNumber) = isless(u.α, v.α)
     @testset "expressions" begin
         # Most of the expression logic is well covered by test/operator.jl
         # This is really just to check IJulia printing for expressions
-        le, ge = repl[:leq], repl[:geq]
+        le = JuMP.math_symbol(REPLMode, :leq)
+        ge = JuMP.math_symbol(REPLMode, :geq)
 
         #------------------------------------------------------------------
         mod = Model()
@@ -71,8 +71,10 @@ Base.isless(u::UnitNumber, v::UnitNumber) = isless(u.α, v.α)
         io_test(IJuliaMode, ex, "y_{2,2}\\times x_{1} + y_{2,2}\\times x_{2} + 3 x_{1} + 3 x_{2}")
 
         ex = @expression(mod, (x[1]+x[2])*(y[2,2]+3.0) + z^2 - 1)
-        io_test(REPLMode, ex, "x[1]*y[2,2] + x[2]*y[2,2] + z$(repl[:sq]) + 3 x[1] + 3 x[2] - 1")
-        io_test(IJuliaMode, ex, "x_{1}\\times y_{2,2} + x_{2}\\times y_{2,2} + z$(ijulia[:sq]) + 3 x_{1} + 3 x_{2} - 1")
+        repl_sq = JuMP.math_symbol(REPLMode, :sq)
+        io_test(REPLMode, ex, "x[1]*y[2,2] + x[2]*y[2,2] + z$repl_sq + 3 x[1] + 3 x[2] - 1")
+        ijulia_sq = JuMP.math_symbol(IJuliaMode, :sq)
+        io_test(IJuliaMode, ex, "x_{1}\\times y_{2,2} + x_{2}\\times y_{2,2} + z$ijulia_sq + 3 x_{1} + 3 x_{2} - 1")
 
         ex = @expression(mod, -z*x[1] - x[1]*z + x[1]*x[2] + 0*z^2)
         io_test(REPLMode, ex, "-2 x[1]*z + x[1]*x[2]")
@@ -168,5 +170,139 @@ Base.isless(u::UnitNumber, v::UnitNumber) = isless(u.α, v.α)
         quad = aff * x
         io_test(REPLMode,   quad, "UnitNumber(2.0) x² + UnitNumber(0.0)")
         io_test(IJuliaMode, quad, "UnitNumber(2.0) x^2 + UnitNumber(0.0)")
+    end
+
+    @testset "SingleVariable constraints" begin
+        ge = JuMP.math_symbol(REPLMode, :geq)
+        in_sym = JuMP.math_symbol(REPLMode, :in)
+        model = Model()
+        @variable(model, x >= 10)
+        zero_one = @constraint(model, x in MathOptInterface.ZeroOne())
+
+        io_test(REPLMode, JuMP.LowerBoundRef(x), "x $ge 10.0")
+        io_test(REPLMode, zero_one, "x $in_sym MathOptInterface.ZeroOne()")
+        # TODO: Test in IJulia mode and do nice printing for {0, 1}.
+    end
+
+    @testset "VectorOfVariable constraints" begin
+        ge = JuMP.math_symbol(REPLMode, :geq)
+        in_sym = JuMP.math_symbol(REPLMode, :in)
+        model = Model()
+        @variable(model, x)
+        @variable(model, y)
+        zero_constr = @constraint(model, [x, y] in MathOptInterface.Zeros(2))
+
+        io_test(REPLMode, zero_constr,
+                "[x, y] $in_sym MathOptInterface.Zeros(2)")
+        # TODO: Test in IJulia mode and do nice printing for Zeros().
+    end
+
+    @testset "Scalar AffExpr constraints" begin
+        le = JuMP.math_symbol(REPLMode, :leq)
+        ge = JuMP.math_symbol(REPLMode, :geq)
+        eq = JuMP.math_symbol(REPLMode, :eq)
+        in_sym = JuMP.math_symbol(REPLMode, :in)
+
+        model = Model()
+        @variable(model, x)
+        @constraint(model, linear_le, x + 0 <= 1)
+        @constraint(model, linear_ge, x + 0 >= 1)
+        @constraint(model, linear_eq, x + 0 == 1)
+        @constraint(model, linear_range, -1 <= x + 0 <= 1)
+        linear_noname = @constraint(model, x + 0 <= 1)
+
+        io_test(REPLMode, linear_le, "linear_le : x $le 1.0")
+        io_test(REPLMode, linear_eq, "linear_eq : x $eq 1.0")
+        io_test(REPLMode, linear_range, "linear_range : x $in_sym [-1.0, 1.0]")
+        io_test(REPLMode, linear_noname, "x $le 1.0")
+
+        # io_test doesn't work here because constraints print with a mix of math
+        # and non-math.
+        @test sprint(show, "text/latex", linear_le) ==
+              "linear_le : \$ x \\leq 1.0 \$"
+        @test sprint(show, "text/latex", linear_ge) ==
+              "linear_ge : \$ x \\geq 1.0 \$"
+        @test sprint(show, "text/latex", linear_eq) ==
+              "linear_eq : \$ x = 1.0 \$"
+        @test sprint(show, "text/latex", linear_range) ==
+              "linear_range : \$ x \\in \\[-1.0, 1.0\\] \$"
+        @test sprint(show, "text/latex", linear_noname) == "\$ x \\leq 1.0 \$"
+    end
+
+    @testset "Vector AffExpr constraints" begin
+        in_sym = JuMP.math_symbol(REPLMode, :in)
+
+        model = Model()
+        @variable(model, x)
+        @constraint(model, soc_constr, [x - 1, x + 1] in SecondOrderCone())
+
+        io_test(REPLMode, soc_constr, "soc_constr : " *
+                   "[x - 1, x + 1] $in_sym MathOptInterface.SecondOrderCone(2)")
+
+        # TODO: Test in IJulia mode.
+    end
+
+    @testset "Scalar QuadExpr constraints" begin
+        in_sym = JuMP.math_symbol(REPLMode, :in)
+        le = JuMP.math_symbol(REPLMode, :leq)
+        sq = JuMP.math_symbol(REPLMode, :sq)
+
+        model = Model()
+        @variable(model, x)
+        quad_constr = @constraint(model, 2x^2 <= 1)
+
+        io_test(REPLMode, quad_constr, "2 x$sq $le 1.0")
+        # TODO: Test in IJulia mode.
+    end
+
+    @testset "Nonlinear expressions" begin
+        model = Model()
+        @variable(model, x)
+        expr = @NLexpression(model, x + 1)
+        io_test(REPLMode, expr, "\"Reference to nonlinear expression #1\"")
+    end
+
+    @testset "Nonlinear parameters" begin
+        model = Model()
+        @NLparameter(model, param == 1.0)
+        io_test(REPLMode, param, "\"Reference to nonlinear parameter #1\"")
+    end
+
+    @testset "Nonlinear constraints" begin
+        le = JuMP.math_symbol(REPLMode, :leq)
+        ge = JuMP.math_symbol(REPLMode, :geq)
+        eq = JuMP.math_symbol(REPLMode, :eq)
+
+        model = Model()
+        @variable(model, x)
+        constr_le = @NLconstraint(model, sin(x) <= 1)
+        constr_ge = @NLconstraint(model, sin(x) >= 1)
+        constr_eq = @NLconstraint(model, sin(x) == 1)
+        constr_range = @NLconstraint(model, 0 <= sin(x) <= 1)
+
+        io_test(REPLMode, constr_le, "sin(x) - 1.0 $le 0")
+        io_test(REPLMode, constr_ge, "sin(x) - 1.0 $ge 0")
+        io_test(REPLMode, constr_eq, "sin(x) - 1.0 $eq 0")
+        # Note: This is inconsistent with the "x in [-1, 1]" printing for
+        # regular constraints.
+        io_test(REPLMode, constr_range, "0 $le sin(x) $le 1")
+
+        io_test(IJuliaMode, constr_le, "sin(x) - 1.0 \\leq 0")
+        io_test(IJuliaMode, constr_ge, "sin(x) - 1.0 \\geq 0")
+        io_test(IJuliaMode, constr_eq, "sin(x) - 1.0 = 0")
+        io_test(IJuliaMode, constr_range, "0 \\leq sin(x) \\leq 1")
+    end
+
+    @testset "Nonlinear constraints with embedded parameters/expressions" begin
+        le = JuMP.math_symbol(REPLMode, :leq)
+
+        model = Model()
+        @variable(model, x)
+        expr = @NLexpression(model, x + 1)
+        @NLparameter(model, param == 1.0)
+
+        constr = @NLconstraint(model, expr - param <= 0)
+        io_test(REPLMode, constr, "(subexpression[1] - parameter[1]) - 0.0 $le 0")
+        io_test(IJuliaMode, constr, "(subexpression_{1} - parameter_{1}) - 0.0 \\leq 0")
     end
 end

@@ -441,47 +441,6 @@ end
      * 1 linear constraint
      * 1 variable
     Solver is default solver""", repl=:show)
-
-        #------------------------------------------------------------------
-
-        mod_3 = Model()
-
-        @variable(mod_3, y[1:5])
-        @NLparameter(mod_3, p == 10)
-        @NLexpression(mod_3, ex, y[2])
-        @NLconstraint(mod_3, y[1]*y[2] == 1)
-        @NLconstraint(mod_3, y[3]*y[4] == 1)
-        @NLconstraint(mod_3, y[5]*y[1] - ex == 1)
-
-        @NLobjective(mod_3, Min, y[1]*y[3] - p)
-
-        io_test(REPLMode, p, "\"Reference to nonlinear parameter #1\"")
-        io_test(REPLMode, ex, "\"Reference to nonlinear expression #1\"")
-
-        io_test(REPLMode, mod_3, """
-    Min y[1] * y[3] - parameter[1]
-    Subject to
-     y[1] * y[2] - 1.0 $eq 0
-     y[3] * y[4] - 1.0 $eq 0
-     (y[5] * y[1] - subexpression[1]) - 1.0 $eq 0
-     y[i] $fa i $inset {1,2,3,4,5}
-    subexpression[1]: y[2]
-    """, repl=:print)
-        io_test(REPLMode, mod_3, """
-    Minimization problem with:
-     * 0 linear constraints
-     * 3 nonlinear constraints
-     * 5 variables
-    Solver is default solver""", repl=:show)
-        io_test(IJuliaMode, mod_3, """
-    \\begin{alignat*}{1}\\min\\quad & y_{1} * y_{3} - parameter_{1}\\\\
-    \\text{Subject to} \\quad & y_{1} * y_{2} - 1.0 = 0\\\\
-     & y_{3} * y_{4} - 1.0 = 0\\\\
-     & (y_{5} * y_{1} - subexpression_{1}) - 1.0 = 0\\\\
-     & y_{i} \\quad\\forall i \\in \\{1,2,3,4,5\\}\\\\
-    subexpression_{1} = \\quad &y_{2}\\\\
-    \\end{alignat*}
-    """, repl=:print)
     end
 
     @testset "changing variable categories" begin

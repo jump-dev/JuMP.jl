@@ -362,7 +362,7 @@ function MOI.initialize!(d::NLPEvaluator, requested_features::Vector{Symbol})
         d.subexpressions_as_julia_expressions = Array{Any}(undef,length(subexpr))
         for k in d.subexpression_order
             ex = d.subexpressions[k]
-            d.subexpressions_as_julia_expressions[k] = tapeToExpr(d.m, 1, nldata.nlexpr[k].nd, ex.adj, ex.const_values, d.parameter_values, d.subexpressions_as_julia_expressions, nldata.user_operators, true, true)
+            d.subexpressions_as_julia_expressions[k] = tape_to_expr(d.m, 1, nldata.nlexpr[k].nd, ex.adj, ex.const_values, d.parameter_values, d.subexpressions_as_julia_expressions, nldata.user_operators, true, true)
         end
     end
 
@@ -837,7 +837,7 @@ mutable struct VariablePrintWrapper
     v::VariableRef
     mode
 end
-Base.show(io::IO,v::VariablePrintWrapper) = print(io,var_str(v.mode,v.v))
+Base.show(io::IO,v::VariablePrintWrapper) = print(io,var_string(v.mode,v.v))
 mutable struct ParameterPrintWrapper
     idx::Int
     mode
@@ -862,7 +862,7 @@ function Base.show(io::IO,s::SubexpressionPrintWrapper)
 end
 
 # we splat in the subexpressions (for now)
-function tapeToExpr(m::Model, k, nd::Vector{NodeData}, adj, const_values, parameter_values, subexpressions::Vector{Any},user_operators::Derivatives.UserOperatorRegistry, generic_variable_names::Bool, splat_subexpressions::Bool, print_mode=REPLMode)
+function tape_to_expr(m::Model, k, nd::Vector{NodeData}, adj, const_values, parameter_values, subexpressions::Vector{Any},user_operators::Derivatives.UserOperatorRegistry, generic_variable_names::Bool, splat_subexpressions::Bool, print_mode=REPLMode)
 
     children_arr = rowvals(adj)
 
@@ -909,7 +909,7 @@ function tapeToExpr(m::Model, k, nd::Vector{NodeData}, adj, const_values, parame
         end
         ex = Expr(:call,opsymbol)
         for cidx in children_idx
-            push!(ex.args, tapeToExpr(m, children_arr[cidx], nd, adj, const_values, parameter_values, subexpressions, user_operators, generic_variable_names, splat_subexpressions, print_mode))
+            push!(ex.args, tape_to_expr(m, children_arr[cidx], nd, adj, const_values, parameter_values, subexpressions, user_operators, generic_variable_names, splat_subexpressions, print_mode))
         end
         return ex
     elseif nod.nodetype == CALLUNIVAR
@@ -926,7 +926,7 @@ function tapeToExpr(m::Model, k, nd::Vector{NodeData}, adj, const_values, parame
         end
         @assert opsymbol != :error
         cidx = first(nzrange(adj,k))
-        return Expr(:call,opsymbol,tapeToExpr(m, children_arr[cidx], nd, adj, const_values, parameter_values, subexpressions, user_operators, generic_variable_names, splat_subexpressions, print_mode))
+        return Expr(:call,opsymbol,tape_to_expr(m, children_arr[cidx], nd, adj, const_values, parameter_values, subexpressions, user_operators, generic_variable_names, splat_subexpressions, print_mode))
     elseif nod.nodetype == COMPARISON
         op = nod.index
         opsymbol = comparison_operators[op]
@@ -934,22 +934,22 @@ function tapeToExpr(m::Model, k, nd::Vector{NodeData}, adj, const_values, parame
         if length(children_idx) > 2
             ex = Expr(:comparison)
             for cidx in children_idx
-                push!(ex.args, tapeToExpr(m, children_arr[cidx], nd, adj, const_values, parameter_values, subexpressions, user_operators, generic_variable_names, splat_subexpressions, print_mode))
+                push!(ex.args, tape_to_expr(m, children_arr[cidx], nd, adj, const_values, parameter_values, subexpressions, user_operators, generic_variable_names, splat_subexpressions, print_mode))
                 push!(ex.args, opsymbol)
             end
             pop!(ex.args)
         else
             ex = Expr(:call, opsymbol)
-            push!(ex.args, tapeToExpr(m, children_arr[children_idx[1]], nd, adj, const_values, parameter_values, subexpressions, user_operators, generic_variable_names, splat_subexpressions, print_mode))
-            push!(ex.args, tapeToExpr(m, children_arr[children_idx[2]], nd, adj, const_values, parameter_values, subexpressions, user_operators, generic_variable_names, splat_subexpressions, print_mode))
+            push!(ex.args, tape_to_expr(m, children_arr[children_idx[1]], nd, adj, const_values, parameter_values, subexpressions, user_operators, generic_variable_names, splat_subexpressions, print_mode))
+            push!(ex.args, tape_to_expr(m, children_arr[children_idx[2]], nd, adj, const_values, parameter_values, subexpressions, user_operators, generic_variable_names, splat_subexpressions, print_mode))
         end
         return ex
     elseif nod.nodetype == LOGIC
         op = nod.index
         opsymbol = logic_operators[op]
         children_idx = nzrange(adj,k)
-        lhs = tapeToExpr(m, children_arr[first(children_idx)], nd, adj, const_values, parameter_values, subexpressions, user_operators, generic_variable_names, splat_subexpressions, print_mode)
-        rhs = tapeToExpr(m, children_arr[last(children_idx)], nd, adj, const_values, parameter_values, subexpressions, user_operators, generic_variable_names, splat_subexpressions, print_mode)
+        lhs = tape_to_expr(m, children_arr[first(children_idx)], nd, adj, const_values, parameter_values, subexpressions, user_operators, generic_variable_names, splat_subexpressions, print_mode)
+        rhs = tape_to_expr(m, children_arr[last(children_idx)], nd, adj, const_values, parameter_values, subexpressions, user_operators, generic_variable_names, splat_subexpressions, print_mode)
         return Expr(opsymbol, lhs, rhs)
     end
     error()
@@ -961,7 +961,7 @@ end
 function MOI.objective_expr(d::NLPEvaluator)
     if d.has_nlobj
         ex = d.objective
-        return tapeToExpr(d.m, 1, d.m.nlpdata.nlobj.nd, ex.adj, ex.const_values, d.parameter_values, d.subexpressions_as_julia_expressions,d.m.nlpdata.user_operators, true, true)
+        return tape_to_expr(d.m, 1, d.m.nlpdata.nlobj.nd, ex.adj, ex.const_values, d.parameter_values, d.subexpressions_as_julia_expressions,d.m.nlpdata.user_operators, true, true)
     else
         error("No nonlinear objective present")
     end
@@ -970,7 +970,7 @@ end
 function MOI.constraint_expr(d::NLPEvaluator,i::Integer)
     ex = d.constraints[i]
     constr = d.m.nlpdata.nlconstr[i]
-    julia_expr = tapeToExpr(d.m, 1, constr.terms.nd, ex.adj, ex.const_values, d.parameter_values, d.subexpressions_as_julia_expressions,d.m.nlpdata.user_operators, true, true)
+    julia_expr = tape_to_expr(d.m, 1, constr.terms.nd, ex.adj, ex.const_values, d.parameter_values, d.subexpressions_as_julia_expressions,d.m.nlpdata.user_operators, true, true)
     if sense(constr) == :range
         return Expr(:comparison, constr.lb, :(<=), julia_expr, :(<=), constr.ub)
     else
