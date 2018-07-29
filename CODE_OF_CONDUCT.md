@@ -34,7 +34,7 @@ aware that most community members contribute on a voluntary basis, so ideas and
 bug reports are ok, but demands are not. Along these lines, it's important to
 keep in mind that, unless stated otherwise, JuMP's interfaces to commercial
 solvers are maintained by volunteers who find them useful. Pull requests are
-always welcomed, please check out our [contributing guide](https://github.com/JuliaOpt/JuMP.jl/tree/master/.github/CONTRIBUTING.md).
+always welcomed. Please check out our [contributing guide](https://github.com/JuliaOpt/JuMP.jl/tree/master/.github/CONTRIBUTING.md).
 You can also reach out in the [developer chatroom](https://gitter.im/JuliaOpt/JuMP-dev)
 with questions about how to get started.
 

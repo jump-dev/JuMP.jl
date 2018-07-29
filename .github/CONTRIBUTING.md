@@ -6,8 +6,7 @@ Welcome! This document explains some of the ways you can contribute to JuMP.
 
 This project and everyone participating in it is governed by the
 [JuMP Code of Conduct](https://github.com/JuliaOpt/JuMP.jl/blob/master/CODE_OF_CONDUCT.md).
-By participating, you are expected to uphold this code. Please report
-unacceptable behavior to the [Julia Community Stewards](https://julialang.org/community/stewards/).
+By participating, you are expected to uphold this code.
 
 ## Join the Discourse forum
 
