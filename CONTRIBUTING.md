@@ -35,8 +35,8 @@ the easiest way to do this is via Github's online editor. (Github has
 on how to do this.)
 
 If your change is larger, or touches multiple files, you will need to make the
-change locally and then use Git to submit a pull request. (See [Contribute code to JuMP](#Contribute code to JuMP)
-below for more on this.)
+change locally and then use Git to submit a pull request. (See *Contribute code
+to JuMP* below for more on this.)
 
 If you need any help, come join our [Gitter](https://gitter.im/JuliaOpt/JuMP-dev)
 channel and we will walk you through the process.
@@ -65,7 +65,7 @@ along the lines of the following:
     new one) for the problem you want to solve
 2. Discuss (in the issue, or on [Gitter](https://gitter.im/JuliaOpt/JuMP-dev))
     _before_ spending too much time on it to test the waters first and see if
-    other contributors are fine with these changes or not
+    other contributors are fine with your proposed changes
 3. Make your changes locally. (The Julia manual has a [guide](https://docs.julialang.org/en/stable/manual/packages/#Making-changes-to-an-existing-package-1)
     on how to do this.) Make sure you:
     - Follow the [style guide](http://www.juliaopt.org/JuMP.jl/latest/style.html)
