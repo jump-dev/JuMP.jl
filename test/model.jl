@@ -33,13 +33,12 @@ end
         @test model.moibackend isa MOIU.CachingOptimizer
         @test model.moibackend === JuMP.caching_optimizer(model)
         @variable model x
-        @constraint model 0 <= x + 1 <= 1
-        @test_throws ErrorException JuMP.optimize(model)
+        @test_throws ErrorException @constraint model 0 <= x + 1 <= 1
     end
     @testset "No bridge automatically added in Direct mode" begin
         optimizer = MOIU.MockOptimizer(LPModel{Float64}());
         model = Model(backend=optimizer, mode=JuMP.Direct)
         @variable model x
-        @test_throws MethodError @constraint model 0 <= x + 1 <= 1
+        @test_throws ErrorException @constraint model 0 <= x + 1 <= 1
     end
 end
