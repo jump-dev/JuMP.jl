@@ -68,7 +68,8 @@ JuMP.setoptimizer
 
 New JuMP models are created using the [`Model`](@ref) constructor:
 ```@docs
-Model
+Model()
+Model(::JuMP.Factory)
 ```
 
 ## Direct mode
