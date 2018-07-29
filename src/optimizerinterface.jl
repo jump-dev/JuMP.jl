@@ -19,7 +19,7 @@ setoptimizer(model, with_optimizer(IpoptOptimizer, print_level=0))
 ```
 """
 function setoptimizer(model::Model, factory::Factory)
-    model.factory = factory # useful for implementing Base.copy
+    model.factory = factory
     optimizer = create_model(factory)
     MOIU.resetoptimizer!(model, optimizer)
 end

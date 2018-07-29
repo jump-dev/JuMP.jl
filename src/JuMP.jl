@@ -145,6 +145,11 @@ mutable struct Model <: AbstractModel
 
     customnames::Vector
 
+    # Factory used to create a new optimizer, it is kept as it might be needed
+    # again if the user requests a copy of the model using `Base.copy`.
+    # In Manual and Automatic mode: Factory used to create the optimizer or
+    #                               Nothing if it has not already been set
+    # In Direct mode: Nothing
     factory::Union{Nothing, Factory}
     # In Manual and Automatic modes, LazyBridgeOptimizer{CachingOptimizer}.
     # In Direct mode, will hold an AbstractOptimizer.
