@@ -1,10 +1,12 @@
 Interacting with solvers
 ========================
 
-A JuMP model stores a
+A JuMP model keeps a
 [MathOptInterface (MOI)](https://github.com/JuliaOpt/MathOptInterface.jl)
-backend internally that contains the optimization solver. The JuMP layer on top
-of this MOI backend is aimed to be as lightweight as possible:
+backend internally that stores the optimization problem and act as the
+optimization solver (the backend can also not support optimization, e.g. it can
+simply store the model in a file). JuMP can be viewed as a lightweight
+user-friendly layer on top of the MOI backend:
 
 * JuMP does not maintain any copy of the model outside this MOI backend.
 * JuMP variable (resp. constraint) references are simple structures containing
@@ -17,7 +19,7 @@ of this MOI backend is aimed to be as lightweight as possible:
   backend to support such modifications.
 
 While this allows JuMP API to to be a thin wrapper on top of the solver API,
-as mentionned in the last point above, this seems rather demanding on the
+as mentioned in the last point above, this seems rather demanding on the
 solver. Indeed, while some solvers support incremental building of the model and
 modifications before and after solve, other solvers only support the model being
 copied at once before solve. Moreover it seems to require all solvers to
@@ -38,9 +40,9 @@ In Automatic and Manual modes, two MOI layers are automatically applied to the
 optimizer:
 
 * `CachingOptimizer`: it maintain a cache of the model so that when the
-  the optimizer does not support a modification of the model, the optimizer's
-  internal model can be discarded and restored from the cache just before
-  optimization. The `CachingOptimizer` has two different modes: Automatic
+  the optimizer does not support an incremental change to the model, the
+  optimizer's internal model can be discarded and restored from the cache just
+  before optimization. The `CachingOptimizer` has two different modes: Automatic
   and Manual corresponding to the two JuMP modes with the same names.
 * `LazyBridgeOptimizer`: when a constraint added is not supported by the
   optimizer, it tries transform the constraint into an equivalent form,
@@ -69,7 +71,7 @@ JuMP.setoptimizer
 New JuMP models are created using the [`Model`](@ref) constructor:
 ```@docs
 Model()
-Model(::JuMP.Factory)
+Model(::JuMP.OptimizerFactory)
 ```
 
 ## Direct mode

@@ -78,7 +78,14 @@ const MOIBIN = MOICON{MOI.SingleVariable,MOI.ZeroOne}
 
 @MOIU.model JuMPMOIModel (ZeroOne, Integer) (EqualTo, GreaterThan, LessThan, Interval) (Zeros, Nonnegatives, Nonpositives, SecondOrderCone, RotatedSecondOrderCone, GeometricMeanCone, PositiveSemidefiniteConeTriangle, PositiveSemidefiniteConeSquare, RootDetConeTriangle, RootDetConeSquare, LogDetConeTriangle, LogDetConeSquare) () (SingleVariable,) (ScalarAffineFunction,ScalarQuadraticFunction) (VectorOfVariables,) (VectorAffineFunction,)
 
-struct Factory
+"""
+    OptimizerFactory
+
+User-friendly closure that creates new MOI models. New `OptimizerFactory`s are
+created with [`with_optimizer`](@ref) and new models are created from the
+factory with [`create_model`](@ref).
+"""
+struct OptimizerFactory
     # The constructor can be
     # * `Function`: a function, or
     # * `DataType`: a type, or
@@ -103,15 +110,15 @@ with_optimizer(IpoptOptimizer, print_level=0)
 ```
 """
 function with_optimizer(constructor::Type, args...; kwargs...)
-    return Factory(constructor, args, kwargs)
+    return OptimizerFactory(constructor, args, kwargs)
 end
 
 """
-    create_model(factory::Factory)
+    create_model(factory::OptimizerFactory)
 
 Creates a new model with the factory `factory`.
 """
-function create_model(factory::Factory)
+function create_model(factory::OptimizerFactory)
     return factory.constructor(factory.args...; factory.kwargs...)
 end
 
@@ -145,12 +152,12 @@ mutable struct Model <: AbstractModel
 
     customnames::Vector
 
-    # Factory used to create a new optimizer, it is kept as it might be needed
+    # OptimizerFactory used to create a new optimizer, it is kept as it might be needed
     # again if the user requests a copy of the model using `Base.copy`.
-    # In Manual and Automatic mode: Factory used to create the optimizer or
+    # In Manual and Automatic mode: OptimizerFactory used to create the optimizer or
     #                               Nothing if it has not already been set
     # In Direct mode: Nothing
-    factory::Union{Nothing, Factory}
+    factory::Union{Nothing, OptimizerFactory}
     # In Manual and Automatic modes, LazyBridgeOptimizer{CachingOptimizer}.
     # In Direct mode, will hold an AbstractOptimizer.
     moibackend::MOI.AbstractOptimizer
@@ -167,26 +174,30 @@ mutable struct Model <: AbstractModel
     # Enable extensions to attach arbitrary information to a JuMP model by
     # using an extension-specific symbol as a key.
     ext::Dict{Symbol, Any}
+end
 
-    # Inner constructor
-    function Model(factory::Union{Nothing, Factory}, moibackend::MOI.ModelLike)
-        @assert MOI.isempty(moibackend)
-        model = new()
-        model.variabletolowerbound = Dict{MOIVAR, MOILB}()
-        model.variabletoupperbound = Dict{MOIVAR, MOIUB}()
-        model.variabletofix = Dict{MOIVAR, MOIFIX}()
-        model.variabletointegrality = Dict{MOIVAR, MOIINT}()
-        model.variabletozeroone = Dict{MOIVAR, MOIBIN}()
-        model.customnames = VariableRef[]
-        model.factory = factory
-        model.moibackend = moibackend
-        model.optimizehook = nothing
-        model.nlpdata = nothing
-        model.objdict = Dict{Symbol, Any}()
-        model.operator_counter = 0
-        model.ext = Dict{Symbol, Any}()
-        return model
-    end
+"""
+    Model(factory::Union{Nothing, OptimizerFactory}, moibackend::MOI.ModelLike)
+
+Return a new JuMP model with factory `factory` and MOI backend `moibackend`.
+This constructor is a low-level constructor used by [`Model()`](@ref),
+[`Model(::OptimizerFactory)`](@ref) and [`direct_model`](@ref).
+"""
+function Model(factory::Union{Nothing, OptimizerFactory}, moibackend::MOI.ModelLike)
+    @assert MOI.isempty(moibackend)
+    return Model(Dict{MOIVAR, MOILB}(),
+                 Dict{MOIVAR, MOIUB}(),
+                 Dict{MOIVAR, MOIFIX}(),
+                 Dict{MOIVAR, MOIINT}(),
+                 Dict{MOIVAR, MOIBIN}(),
+                 VariableRef[],
+                 factory,
+                 moibackend,
+                 nothing,
+                 nothing,
+                 Dict{Symbol, Any}(),
+                 0,
+                 Dict{Symbol, Any}())
 end
 
 """
@@ -195,7 +206,7 @@ end
 
 Return a new JuMP model without any optimizer storing the model in a cache.
 The mode of the `CachingOptimizer` storing this cache is `caching_mode`.
-The optimizer can be set later with [`setoptimizer`](@ref). If
+The optimizer can be set later with [`set_optimizer`](@ref). If
 `bridge_constraints` is true, constraints that are not supported by the
 optimizer are automatically bridged to equivalent supported constraints when
 an appropriate is defined in the `MathOptInterface.Bridges` module or is
@@ -216,13 +227,13 @@ function Model(; caching_mode::MOIU.CachingOptimizerMode=MOIU.Automatic,
 end
 
 """
-    Model(factory::Factory;
+    Model(factory::OptimizerFactory;
           caching_mode::MOIU.CachingOptimizerMode=MOIU.Automatic,
           bridge_constraints::Bool=true)
 
 Return a new JuMP model using the factory `factory` to create the optimizer.
 This is equivalent to calling `Model` with the same keyword arguments and then
-calling [`setoptimizer`](@ref) on the created model with the `factory`. The
+calling [`set_optimizer`](@ref) on the created model with the `factory`. The
 factory can be created by the [`with_optimizer`](@ref) function.
 
 ## Examples
@@ -233,9 +244,9 @@ The following creates a model using the optimizer
 model = JuMP.Model(with_optimizer(IpoptOptimizer, print_level=0))
 ```
 """
-function Model(factory::Factory; kwargs...)
+function Model(factory::OptimizerFactory; kwargs...)
     model = Model(; kwargs...)
-    setoptimizer(model, factory)
+    set_optimizer(model, factory)
     return model
 end
 

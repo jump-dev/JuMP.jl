@@ -39,7 +39,7 @@
         MOIU.loadfromstring!(model, modelstring)
         MOIU.test_models_equal(JuMP.caching_optimizer(m).model_cache, model, ["x","y"], ["c", "xub", "ylb"])
 
-        JuMP.setoptimizer(m, with_optimizer(MOIU.MockOptimizer, JuMP.JuMPMOIModel{Float64}(), evalobjective=false))
+        JuMP.set_optimizer(m, with_optimizer(MOIU.MockOptimizer, JuMP.JuMPMOIModel{Float64}(), evalobjective=false))
         MOIU.attachoptimizer!(m)
 
         mockoptimizer = JuMP.caching_optimizer(m).optimizer

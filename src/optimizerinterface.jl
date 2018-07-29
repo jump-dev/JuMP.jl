@@ -4,7 +4,7 @@
 #  file, You can obtain one at http://mozilla.org/MPL/2.0/.
 
 """
-    setoptimizer(model::Model, factory::Factory)
+    set_optimizer(model::Model, factory::OptimizerFactory)
 
 Sets the optimizer of the model `model` as the optimizers created by the
 factory `factory`. The factory can be created by the [`with_optimizer`](@ref)
@@ -15,10 +15,10 @@ function.
 The following sets the optimizer of `model` to be
 `IpoptOptimizer(print_level=0)`:
 ```julia
-setoptimizer(model, with_optimizer(IpoptOptimizer, print_level=0))
+set_optimizer(model, with_optimizer(IpoptOptimizer, print_level=0))
 ```
 """
-function setoptimizer(model::Model, factory::Factory)
+function set_optimizer(model::Model, factory::OptimizerFactory)
     model.factory = factory
     optimizer = create_model(factory)
     MOIU.resetoptimizer!(model, optimizer)
