@@ -1,8 +1,7 @@
 Interacting with solvers
 ========================
 
-A JuMP model keeps a
-[MathOptInterface (MOI)](https://github.com/JuliaOpt/MathOptInterface.jl)
+A JuMP model keeps a [MathOptInterface (MOI)](https://github.com/JuliaOpt/MathOptInterface.jl)
 backend internally that stores the optimization problem and act as the
 optimization solver (the backend can also not support optimization, e.g. it can
 simply store the model in a file). JuMP can be viewed as a lightweight
