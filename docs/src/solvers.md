@@ -38,11 +38,11 @@ Direct.
 In Automatic and Manual modes, two MOI layers are automatically applied to the
 optimizer:
 
-* `CachingOptimizer`: it maintain a cache of the model so that when the
-  the optimizer does not support an incremental change to the model, the
-  optimizer's internal model can be discarded and restored from the cache just
-  before optimization. The `CachingOptimizer` has two different modes: Automatic
-  and Manual corresponding to the two JuMP modes with the same names.
+* `CachingOptimizer`: maintains a cache of the model so that when the optimizer
+  does not support an incremental change to the model, the optimizer's internal
+  model can be discarded and restored from the cache just before optimization.
+  The `CachingOptimizer` has two different modes: Automatic and Manual
+  corresponding to the two JuMP modes with the same names.
 * `LazyBridgeOptimizer`: when a constraint added is not supported by the
   optimizer, it tries transform the constraint into an equivalent form,
   possibly adding new variables and constraints that are supported by the
