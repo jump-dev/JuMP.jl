@@ -19,6 +19,7 @@ set_optimizer(model, with_optimizer(IpoptOptimizer, print_level=0))
 ```
 """
 function set_optimizer(model::Model, factory::OptimizerFactory)
+    @assert mode(model) != Direct
     model.factory = factory
     optimizer = create_model(factory)
     MOIU.resetoptimizer!(model, optimizer)
