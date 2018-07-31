@@ -39,8 +39,7 @@
         MOIU.loadfromstring!(model, modelstring)
         MOIU.test_models_equal(JuMP.caching_optimizer(m).model_cache, model, ["x","y"], ["c", "xub", "ylb"])
 
-        JuMP.set_optimizer(m, with_optimizer(MOIU.MockOptimizer, JuMP.JuMPMOIModel{Float64}(), evalobjective=false))
-        MOIU.attachoptimizer!(m)
+        JuMP.optimize(m, with_optimizer(MOIU.MockOptimizer, JuMP.JuMPMOIModel{Float64}(), evalobjective=false))
 
         mockoptimizer = JuMP.caching_optimizer(m).optimizer
         MOI.set!(mockoptimizer, MOI.TerminationStatus(), MOI.Success)
@@ -53,8 +52,6 @@
         MOI.set!(mockoptimizer, MOI.ConstraintDual(), JuMP.optimizerindex(c), -1.0)
         MOI.set!(mockoptimizer, MOI.ConstraintDual(), JuMP.optimizerindex(JuMP.UpperBoundRef(x)), 0.0)
         MOI.set!(mockoptimizer, MOI.ConstraintDual(), JuMP.optimizerindex(JuMP.LowerBoundRef(y)), 1.0)
-
-        JuMP.optimize(m)
 
         #@test JuMP.isattached(m)
         @test JuMP.hasresultvalues(m)
