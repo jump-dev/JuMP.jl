@@ -56,18 +56,18 @@ optimizer:
 See the [MOI documentation](http://www.juliaopt.org/MathOptInterface.jl/stable/)
 for more details on these two MOI layers.
 
-To create a fresh new JuMP model (or a fresh new copy of a JuMP model), JuMP
-needs to create a new empty optimizer instance. New optimizer instances can
-be obtained using an [`OptimizerFactory`](@ref) that can be created using the
+To create a fresh new JuMP model, JuMP needs to create a new empty optimizer
+instance. New optimizer instances can be obtained using an
+[`OptimizerFactory`](@ref) that can be created using the
 [`with_optimizer`](@ref) function:
 ```@docs
 with_optimizer
 ```
 
-The factory can be set to the JuMP model using the [`JuMP.setoptimizer`](@ref)
+The factory can be set to the JuMP model in the [`JuMP.optimize`](@ref)
 function:
 ```@docs
-JuMP.setoptimizer
+JuMP.optimize
 ```
 
 New JuMP models are created using the [`Model`](@ref) constructor:

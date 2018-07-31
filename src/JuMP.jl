@@ -162,12 +162,6 @@ mutable struct Model <: AbstractModel
 
     customnames::Vector
 
-    # OptimizerFactory used to create a new optimizer, it is kept as it might be needed
-    # again if the user requests a copy of the model using `Base.copy`.
-    # In Manual and Automatic mode: OptimizerFactory used to create the optimizer or
-    #                               Nothing if it has not already been set
-    # In Direct mode: Nothing
-    factory::Union{Nothing, OptimizerFactory}
     # In Manual and Automatic modes, LazyBridgeOptimizer{CachingOptimizer}.
     # In Direct mode, will hold an AbstractOptimizer.
     moibackend::MOI.AbstractOptimizer
@@ -187,13 +181,13 @@ mutable struct Model <: AbstractModel
 end
 
 """
-    Model(factory::Union{Nothing, OptimizerFactory}, moibackend::MOI.ModelLike)
+    Model(moibackend::MOI.ModelLike)
 
-Return a new JuMP model with factory `factory` and MOI backend `moibackend`.
-This constructor is a low-level constructor used by [`Model()`](@ref),
+Return a new JuMP model with MOI backend `moibackend`. This constructor is a
+low-level constructor used by [`Model()`](@ref),
 [`Model(::OptimizerFactory)`](@ref) and [`direct_model`](@ref).
 """
-function Model(factory::Union{Nothing, OptimizerFactory}, moibackend::MOI.ModelLike)
+function Model(moibackend::MOI.ModelLike)
     @assert MOI.isempty(moibackend)
     return Model(Dict{MOIVAR, MOILB}(),
                  Dict{MOIVAR, MOIUB}(),
@@ -201,7 +195,6 @@ function Model(factory::Union{Nothing, OptimizerFactory}, moibackend::MOI.ModelL
                  Dict{MOIVAR, MOIINT}(),
                  Dict{MOIVAR, MOIBIN}(),
                  VariableRef[],
-                 factory,
                  moibackend,
                  nothing,
                  nothing,
@@ -214,9 +207,9 @@ end
     Model(; caching_mode::MOIU.CachingOptimizerMode=MOIU.Automatic,
             bridge_constraints::Bool=true)
 
-Return a new JuMP model without any optimizer storing the model in a cache.
-The mode of the `CachingOptimizer` storing this cache is `caching_mode`.
-The optimizer can be set later with [`set_optimizer`](@ref). If
+Return a new JuMP model without any optimizer; the model is stored the model in
+a cache. The mode of the `CachingOptimizer` storing this cache is
+`caching_mode`. The optimizer can be set later with [`set_optimizer`](@ref). If
 `bridge_constraints` is true, constraints that are not supported by the
 optimizer are automatically bridged to equivalent supported constraints when
 an appropriate is defined in the `MathOptInterface.Bridges` module or is
@@ -256,7 +249,8 @@ model = JuMP.Model(with_optimizer(IpoptOptimizer, print_level=0))
 """
 function Model(factory::OptimizerFactory; kwargs...)
     model = Model(; kwargs...)
-    set_optimizer(model, factory)
+    optimizer = create_model(factory)
+    MOIU.resetoptimizer!(model, optimizer)
     return model
 end
 
@@ -266,22 +260,16 @@ end
 Return a new JuMP model using `backend` to store the model and solve it. As
 opposed to the [`Model`](@ref) constructor, no cache of the model is stored
 outside of `backend` and no bridges are automatically applied to `backend`.
-The absence of cache reduces the memory footprint but it is importnat to bear
+The absence of cache reduces the memory footprint but it is important to bear
 in mind the following implications of creating models using this *direct* mode:
 
 * When `backend` does not support an operation such as adding
   variables/constraints after solver or modifying constraints, an error is
   thrown. With models created using the [`Model`](@ref) constructor, such
-  situations can be dealt with modifying the cache only and copying the model
-  cache once `JuMP.optimize` is called.
-* When `backend` does not support a constraint type, the constraint is not
-  automatically bridged to constraints supported by `backend`.
-* The optimizer used cannot be changed. With models created using the
-  [`Model`](@ref) constuctor, the variable and constraint indices used
-  are the indices corresponding to the cached model so the optimizer can be
-  changed but in direct mode, changing the backend would render all variable
-  and constraint references invalid are their internal indices corresponds to
-  the previous backend.
+  situations can be dealt with by storing the modifications in a cache and
+  loading them into the optimizer when `JuMP.optimize` is called.
+* No constraint bridging is supported by default.
+* The optimizer used cannot be changed the model is constructed.
 * The model created cannot be copied.
 """
 function direct_model(backend::MOI.ModelLike)

@@ -3,28 +3,6 @@
 #  License, v. 2.0. If a copy of the MPL was not distributed with this
 #  file, You can obtain one at http://mozilla.org/MPL/2.0/.
 
-"""
-    set_optimizer(model::Model, factory::OptimizerFactory)
-
-Sets the optimizer of the model `model` as the optimizers created by the
-factory `factory`. The factory can be created by the [`with_optimizer`](@ref)
-function.
-
-## Examples
-
-The following sets the optimizer of `model` to be
-`IpoptOptimizer(print_level=0)`:
-```julia
-set_optimizer(model, with_optimizer(IpoptOptimizer, print_level=0))
-```
-"""
-function set_optimizer(model::Model, factory::OptimizerFactory)
-    @assert mode(model) != Direct
-    model.factory = factory
-    optimizer = create_model(factory)
-    MOIU.resetoptimizer!(model, optimizer)
-end
-
 # These methods directly map to CachingOptimizer methods.
 # They cannot be called in Direct mode.
 function MOIU.resetoptimizer!(model::Model, optimizer::MOI.AbstractOptimizer)
@@ -52,13 +30,28 @@ function MOIU.attachoptimizer!(model::Model)
 end
 
 
-function optimize(model::Model;
-                ignore_optimize_hook=(model.optimizehook===nothing))
+"""
+    function optimize(model::Model,
+                      factory::Union{Nothing, OptimizerFactory} = nothing;
+                      ignore_optimize_hook=(model.optimizehook===nothing))
+
+Optimize the model. If `factory` is not `nothing`, it first set the optimizer
+to a new one created using the factory.
+"""
+function optimize(model::Model,
+                  factory::Union{Nothing, OptimizerFactory} = nothing;
+                  ignore_optimize_hook=(model.optimizehook===nothing))
     # The NLPData is not kept in sync, so re-set it here.
     # TODO: Consider how to handle incremental solves.
     if model.nlpdata !== nothing
         MOI.set!(model, MOI.NLPBlock(), create_nlp_block_data(model))
         empty!(model.nlpdata.nlconstr_duals)
+    end
+
+    if factory !== nothing
+        optimizer = create_model(factory)
+        MOIU.resetoptimizer!(model, optimizer)
+        MOIU.attachoptimizer!(model)
     end
 
     # If the user or an extension has provided an optimize hook, call
