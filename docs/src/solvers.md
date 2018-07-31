@@ -18,9 +18,9 @@ lightweight user-friendly layer on top of the MOI backend:
   modifications are directly applied to the MOI backend thus expecting the
   backend to support such modifications.
 
-While this allows JuMP API to to be a thin wrapper on top of the solver API,
-as mentioned in the last point above, this seems rather demanding on the
-solver. Indeed, while some solvers support incremental building of the model and
+While this allows JuMP to be a thin wrapper on top of the solver API, as
+mentioned in the last point above, this seems rather demanding on the solver.
+Indeed, while some solvers support incremental building of the model and
 modifications before and after solve, other solvers only support the model being
 copied at once before solve. Moreover it seems to require all solvers to
 implement all possible reformulations independently which seems both very
