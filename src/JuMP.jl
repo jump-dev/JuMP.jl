@@ -84,6 +84,16 @@ const MOIBIN = MOICON{MOI.SingleVariable,MOI.ZeroOne}
 User-friendly closure that creates new MOI models. New `OptimizerFactory`s are
 created with [`with_optimizer`](@ref) and new models are created from the
 factory with [`create_model`](@ref).
+
+## Examples
+
+The following construct a factory and then use it to create two independent
+`IpoptOptimizer`s:
+```julia
+factory = with_optimizer(IpoptOptimizer, print_level=0)
+optimizer1 = JuMP.create_model(factory)
+optimizer2 = JuMP.create_model(factory)
+```
 """
 struct OptimizerFactory
     # The constructor can be
