@@ -226,7 +226,7 @@ function Model(; caching_mode::MOIU.CachingOptimizerMode=MOIU.Automatic,
     else
         backend = caching_opt
     end
-    return Model(nothing, backend)
+    return Model(backend)
 end
 
 """
@@ -273,7 +273,7 @@ in mind the following implications of creating models using this *direct* mode:
 * The model created cannot be copied.
 """
 function direct_model(backend::MOI.ModelLike)
-    return Model(nothing, backend)
+    return Model(backend)
 end
 
 # In Automatic and Manual mode, `model.moibackend` is either directly the
