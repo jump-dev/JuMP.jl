@@ -32,14 +32,14 @@ end
 
 """
     function optimize(model::Model,
-                      factory::Union{Nothing, OptimizerFactory} = nothing;
+                      optimizer_factory::Union{Nothing, OptimizerFactory} = nothing;
                       ignore_optimize_hook=(model.optimizehook===nothing))
 
-Optimize the model. If `factory` is not `nothing`, it first set the optimizer
-to a new one created using the factory.
+Optimize the model. If `optimizer_factory` is not `nothing`, it first set the
+optimizer to a new one created using the optimizer factory.
 """
 function optimize(model::Model,
-                  factory::Union{Nothing, OptimizerFactory} = nothing;
+                  optimizer_factory::Union{Nothing, OptimizerFactory} = nothing;
                   ignore_optimize_hook=(model.optimizehook===nothing))
     # The NLPData is not kept in sync, so re-set it here.
     # TODO: Consider how to handle incremental solves.
@@ -48,8 +48,8 @@ function optimize(model::Model,
         empty!(model.nlpdata.nlconstr_duals)
     end
 
-    if factory !== nothing
-        optimizer = create_model(factory)
+    if optimizer_factory !== nothing
+        optimizer = optimizer_factory()
         MOIU.resetoptimizer!(model, optimizer)
         MOIU.attachoptimizer!(model)
     end

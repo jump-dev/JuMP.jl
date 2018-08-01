@@ -83,16 +83,16 @@ const MOIBIN = MOICON{MOI.SingleVariable,MOI.ZeroOne}
 
 User-friendly closure that creates new MOI models. New `OptimizerFactory`s are
 created with [`with_optimizer`](@ref) and new models are created from the
-factory with [`create_model`](@ref).
+optimizer factory `optimizer_factory` with `optimizer_factory()`.
 
 ## Examples
 
-The following construct a factory and then use it to create two independent
-`IpoptOptimizer`s:
+The following construct an optimizer factory and then use it to create two
+independent `IpoptOptimizer`s:
 ```julia
-factory = with_optimizer(IpoptOptimizer, print_level=0)
-optimizer1 = JuMP.create_model(factory)
-optimizer2 = JuMP.create_model(factory)
+optimizer_factory = with_optimizer(IpoptOptimizer, print_level=0)
+optimizer1 = optimizer_factory()
+optimizer2 = optimizer_factory()
 ```
 """
 struct OptimizerFactory
@@ -108,13 +108,13 @@ end
 """
     with_optimizer(constructor::Type, args...; kwargs...)
 
-Return a factory that creates optimizers using the constructor `constructor`
-with positional arguments `args` and keyword arguments `kwargs`.
+Return an `OptimizerFactory` that creates optimizers using the constructor
+`constructor` with positional arguments `args` and keyword arguments `kwargs`.
 
 ## Examples
 
-The following returns a factory that creates `IpoptOptimizer`s using the
-constructor call `IpoptOptimizer(print_level=0)`:
+The following returns an optimizer factory that creates `IpoptOptimizer`s using
+the constructor call `IpoptOptimizer(print_level=0)`:
 ```julia
 with_optimizer(IpoptOptimizer, print_level=0)
 ```
@@ -123,13 +123,9 @@ function with_optimizer(constructor::Type, args...; kwargs...)
     return OptimizerFactory(constructor, args, kwargs)
 end
 
-"""
-    create_model(factory::OptimizerFactory)
-
-Creates a new model with the factory `factory`.
-"""
-function create_model(factory::OptimizerFactory)
-    return factory.constructor(factory.args...; factory.kwargs...)
+function (optimizer_factory::OptimizerFactory)()
+    return optimizer_factory.constructor(optimizer_factory.args...;
+                                         optimizer_factory.kwargs...)
 end
 
 ###############################################################################
@@ -209,8 +205,8 @@ end
 
 Return a new JuMP model without any optimizer; the model is stored the model in
 a cache. The mode of the `CachingOptimizer` storing this cache is
-`caching_mode`. The optimizer can be set later with [`set_optimizer`](@ref). If
-`bridge_constraints` is true, constraints that are not supported by the
+`caching_mode`. The optimizer can be set later in the [`JuMP.optimize`](@ref)
+call. If `bridge_constraints` is true, constraints that are not supported by the
 optimizer are automatically bridged to equivalent supported constraints when
 an appropriate is defined in the `MathOptInterface.Bridges` module or is
 defined in another module and is explicitely added.
@@ -230,14 +226,13 @@ function Model(; caching_mode::MOIU.CachingOptimizerMode=MOIU.Automatic,
 end
 
 """
-    Model(factory::OptimizerFactory;
+    Model(optimizer_factory::OptimizerFactory;
           caching_mode::MOIU.CachingOptimizerMode=MOIU.Automatic,
           bridge_constraints::Bool=true)
 
-Return a new JuMP model using the factory `factory` to create the optimizer.
-This is equivalent to calling `Model` with the same keyword arguments and then
-calling [`set_optimizer`](@ref) on the created model with the `factory`. The
-factory can be created by the [`with_optimizer`](@ref) function.
+Return a new JuMP model using the optimizer factory `optimizer_factory` to
+create the optimizer. The optimizer factory can be created by the
+[`with_optimizer`](@ref) function.
 
 ## Examples
 
@@ -247,9 +242,9 @@ The following creates a model using the optimizer
 model = JuMP.Model(with_optimizer(IpoptOptimizer, print_level=0))
 ```
 """
-function Model(factory::OptimizerFactory; kwargs...)
+function Model(optimizer_factory::OptimizerFactory; kwargs...)
     model = Model(; kwargs...)
-    optimizer = create_model(factory)
+    optimizer = optimizer_factory()
     MOIU.resetoptimizer!(model, optimizer)
     return model
 end

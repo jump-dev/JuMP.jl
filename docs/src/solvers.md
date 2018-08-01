@@ -58,14 +58,14 @@ for more details on these two MOI layers.
 
 To create a fresh new JuMP model, JuMP needs to create a new empty optimizer
 instance. New optimizer instances can be obtained using an
-[`OptimizerFactory`](@ref) that can be created using the
-[`with_optimizer`](@ref) function:
+`OptimizerFactory` that can be created using the [`with_optimizer`](@ref)
+function:
 ```@docs
 with_optimizer
 ```
 
-The factory can be set to the JuMP model in the [`JuMP.optimize`](@ref)
-function:
+The optimizer factory can be set to the JuMP model in the
+[`JuMP.optimize`](@ref) function:
 ```@docs
 JuMP.optimize
 ```
