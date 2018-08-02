@@ -90,7 +90,6 @@
         MOI.set!(mockoptimizer, MOI.ConstraintDual(), JuMP.optimizerindex(JuMP.UpperBoundRef(x)), 0.0)
         MOI.set!(mockoptimizer, MOI.ConstraintDual(), JuMP.optimizerindex(JuMP.LowerBoundRef(y)), 1.0)
 
-        @test_throws ErrorException JuMP.optimize(m, with_optimizer(MOIU.MockOptimizer, JuMP.JuMPMOIModel{Float64}()))
         JuMP.optimize(m)
 
         #@test JuMP.isattached(m)
@@ -145,7 +144,6 @@
         MOI.set!(mockoptimizer, MOI.VariablePrimal(), JuMP.optimizerindex(x), 1.0)
         MOI.set!(mockoptimizer, MOI.VariablePrimal(), JuMP.optimizerindex(y), 0.0)
 
-        @test_throws ErrorException JuMP.optimize(m, with_optimizer(MOIU.MockOptimizer, JuMP.JuMPMOIModel{Float64}()))
         JuMP.optimize(m)
 
         #@test JuMP.isattached(m)
@@ -324,5 +322,16 @@
         @test JuMP.hasresultdual(m, typeof(conpsd))
         @test JuMP.resultdual(conpsd) == [4.0,5.0,6.0]
 
+    end
+
+    @testset "Provide factory in `optimize` in Direct mode" begin
+        mockoptimizer = MOIU.MockOptimizer(JuMP.JuMPMOIModel{Float64}())
+        model = JuMP.direct_model(mockoptimizer)
+        @test_throws ErrorException JuMP.optimize(model, with_optimizer(MOIU.MockOptimizer, JuMP.JuMPMOIModel{Float64}()))
+    end
+
+    @testset "Provide factory both in `Model` and `optimize`" begin
+        model = Model(with_optimizer(MOIU.MockOptimizer, JuMP.JuMPMOIModel{Float64}()))
+        @test_throws ErrorException JuMP.optimize(model, with_optimizer(MOIU.MockOptimizer, JuMP.JuMPMOIModel{Float64}()))
     end
 end
