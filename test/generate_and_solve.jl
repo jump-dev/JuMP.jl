@@ -90,6 +90,7 @@
         MOI.set!(mockoptimizer, MOI.ConstraintDual(), JuMP.optimizerindex(JuMP.UpperBoundRef(x)), 0.0)
         MOI.set!(mockoptimizer, MOI.ConstraintDual(), JuMP.optimizerindex(JuMP.LowerBoundRef(y)), 1.0)
 
+        @test_throws ErrorException JuMP.optimize(m, with_optimizer(MOIU.MockOptimizer, JuMP.JuMPMOIModel{Float64}()))
         JuMP.optimize(m)
 
         #@test JuMP.isattached(m)
@@ -144,6 +145,7 @@
         MOI.set!(mockoptimizer, MOI.VariablePrimal(), JuMP.optimizerindex(x), 1.0)
         MOI.set!(mockoptimizer, MOI.VariablePrimal(), JuMP.optimizerindex(y), 0.0)
 
+        @test_throws ErrorException JuMP.optimize(m, with_optimizer(MOIU.MockOptimizer, JuMP.JuMPMOIModel{Float64}()))
         JuMP.optimize(m)
 
         #@test JuMP.isattached(m)
