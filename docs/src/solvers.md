@@ -76,6 +76,8 @@ Model()
 Model(::JuMP.OptimizerFactory)
 ```
 
+TODO: how to control the caching optimizer states
+
 ## Direct mode
 
 JuMP models can be created in Direct mode using the [`JuMP.direct_model`](@ref)
