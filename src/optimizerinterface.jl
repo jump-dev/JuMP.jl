@@ -49,6 +49,12 @@ function optimize(model::Model,
     end
 
     if optimizer_factory !== nothing
+        if mode(model) == Direct
+            error("An optimizer factory cannot be provided at the `optimize` call in Direct mode")
+        end
+        if MOIU.state(caching_optimizer(model)) != MOIU.NoOptimizer
+            error("An optimizer factory cannot both be provided in the `Model` constructor and at the `optimize` call.")
+        end
         optimizer = optimizer_factory()
         MOIU.resetoptimizer!(model, optimizer)
         MOIU.attachoptimizer!(model)
