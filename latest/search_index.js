@@ -293,7 +293,63 @@ var documenterSearchIndex = {"docs": [
     "page": "Solvers",
     "title": "Interacting with solvers",
     "category": "section",
-    "text": "TODO: Describe the connection between JuMP and solvers. Automatic vs. Manual mode. CachingOptimizer. How to set/change solvers. How to set parameters (solver specific and generic). Status codes. Accessing the result. How to accurately measure the solve time."
+    "text": "A JuMP model keeps a MathOptInterface (MOI) backend of type MOI.ModelLike internally that stores the optimization problem and acts as the optimization solver. We call it an MOI backend and not optimizer as it can also be a wrapper around an optimization file format such as MPS that writes the JuMP model in a file. JuMP can be viewed as a lightweight user-friendly layer on top of the MOI backend:JuMP does not maintain any copy of the model outside this MOI backend.\nJuMP variable (resp. constraint) references are simple structures containing both a reference to the JuMP model and the MOI index of the variable (resp. constraint).\nJuMP gives the constraints to the MOI backend in the form provided by the user without doing any automatic reformulation.\nvariables additions, constraints additions/modifications and objective modifications are directly applied to the MOI backend thus expecting the backend to support such modifications.While this allows JuMP to be a thin wrapper on top of the solver API, as mentioned in the last point above, this seems rather demanding on the solver. Indeed, while some solvers support incremental building of the model and modifications before and after solve, other solvers only support the model being copied at once before solve. Moreover it seems to require all solvers to implement all possible reformulations independently which seems both very ambitious and might generate a lot of duplicated code.These apparent limitations are in fact addressed at the MOI level in a manner that is completely transparent to JuMP. While the MOI API may seem very demanding, it allows MOI models to be a succession of lightweight MOI layers that fill the gap between JuMP requirements and the solver capabilities.JuMP models can be created in three different modes: Automatic, Manual and Direct."
+},
+
+{
+    "location": "solvers.html#JuMP.with_optimizer",
+    "page": "Solvers",
+    "title": "JuMP.with_optimizer",
+    "category": "function",
+    "text": "with_optimizer(constructor::Type, args...; kwargs...)\n\nReturn an OptimizerFactory that creates optimizers using the constructor constructor with positional arguments args and keyword arguments kwargs.\n\nExamples\n\nThe following returns an optimizer factory that creates IpoptOptimizers using the constructor call IpoptOptimizer(print_level=0):\n\nwith_optimizer(IpoptOptimizer, print_level=0)\n\n\n\n"
+},
+
+{
+    "location": "solvers.html#JuMP.optimize",
+    "page": "Solvers",
+    "title": "JuMP.optimize",
+    "category": "function",
+    "text": "function optimize(model::Model,\n                  optimizer_factory::Union{Nothing, OptimizerFactory} = nothing;\n                  ignore_optimize_hook=(model.optimizehook===nothing))\n\nOptimize the model. If optimizer_factory is not nothing, it first set the optimizer to a new one created using the optimizer factory.\n\n\n\n"
+},
+
+{
+    "location": "solvers.html#JuMP.Model-Tuple{}",
+    "page": "Solvers",
+    "title": "JuMP.Model",
+    "category": "method",
+    "text": "Model(; caching_mode::MOIU.CachingOptimizerMode=MOIU.Automatic,\n        bridge_constraints::Bool=true)\n\nReturn a new JuMP model without any optimizer; the model is stored the model in a cache. The mode of the CachingOptimizer storing this cache is caching_mode. The optimizer can be set later in the JuMP.optimize call. If bridge_constraints is true, constraints that are not supported by the optimizer are automatically bridged to equivalent supported constraints when an appropriate is defined in the MathOptInterface.Bridges module or is defined in another module and is explicitely added.\n\n\n\n"
+},
+
+{
+    "location": "solvers.html#JuMP.Model-Tuple{JuMP.OptimizerFactory}",
+    "page": "Solvers",
+    "title": "JuMP.Model",
+    "category": "method",
+    "text": "Model(optimizer_factory::OptimizerFactory;\n      caching_mode::MOIU.CachingOptimizerMode=MOIU.Automatic,\n      bridge_constraints::Bool=true)\n\nReturn a new JuMP model using the optimizer factory optimizer_factory to create the optimizer. The optimizer factory can be created by the with_optimizer function.\n\nExamples\n\nThe following creates a model using the optimizer IpoptOptimizer(print_level=0):\n\nmodel = JuMP.Model(with_optimizer(IpoptOptimizer, print_level=0))\n\n\n\n"
+},
+
+{
+    "location": "solvers.html#Automatic-and-Manual-modes-1",
+    "page": "Solvers",
+    "title": "Automatic and Manual modes",
+    "category": "section",
+    "text": "In Automatic and Manual modes, two MOI layers are automatically applied to the optimizer:CachingOptimizer: maintains a cache of the model so that when the optimizer does not support an incremental change to the model, the optimizer\'s internal model can be discarded and restored from the cache just before optimization. The CachingOptimizer has two different modes: Automatic and Manual corresponding to the two JuMP modes with the same names.\nLazyBridgeOptimizer (this can be disabled using the bridge_constraints keyword argument to Model constructor): when a constraint added is not supported by the optimizer, it tries transform the constraint into an equivalent form, possibly adding new variables and constraints that are supported by the optimizer. The applied transformations are selected among known recipes which are called bridges. A few default bridges are defined in MOI but new ones can be defined and added to the LazyBridgeOptimizer used by JuMP.See the MOI documentation for more details on these two MOI layers.To attach an optimizer to a JuMP model, JuMP needs to create a new empty optimizer instance. New optimizer instances can be obtained using an OptimizerFactory that can be created using the with_optimizer function:with_optimizerThe factory can be provided either at model construction time or at JuMP.optimize time:JuMP.optimizeNew JuMP models are created using the Model constructor:Model()\nModel(::JuMP.OptimizerFactory)TODO: how to control the caching optimizer states"
+},
+
+{
+    "location": "solvers.html#JuMP.direct_model",
+    "page": "Solvers",
+    "title": "JuMP.direct_model",
+    "category": "function",
+    "text": "direct_model(backend::MOI.ModelLike)\n\nReturn a new JuMP model using backend to store the model and solve it. As opposed to the Model constructor, no cache of the model is stored outside of backend and no bridges are automatically applied to backend. The absence of cache reduces the memory footprint but it is important to bear in mind the following implications of creating models using this direct mode:\n\nWhen backend does not support an operation such as adding variables/constraints after solver or modifying constraints, an error is thrown. With models created using the Model constructor, such situations can be dealt with by storing the modifications in a cache and loading them into the optimizer when JuMP.optimize is called.\nNo constraint bridging is supported by default.\nThe optimizer used cannot be changed the model is constructed.\nThe model created cannot be copied.\n\n\n\n"
+},
+
+{
+    "location": "solvers.html#Direct-mode-1",
+    "page": "Solvers",
+    "title": "Direct mode",
+    "category": "section",
+    "text": "JuMP models can be created in Direct mode using the JuMP.direct_model function.JuMP.direct_modelTODO: How to set parameters (solver specific and generic). Status codes. Accessing the result. How to accurately measure the solve time."
 },
 
 {
