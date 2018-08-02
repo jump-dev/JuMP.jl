@@ -29,6 +29,7 @@ using .Derivatives
 export
 # Objects
     Model, VariableRef, Norm, AffExpr, QuadExpr,
+    with_optimizer,
     # LinearConstraint, QuadConstraint, SDConstraint,
     NonlinearConstraint,
     ConstraintRef,
@@ -77,6 +78,56 @@ const MOIBIN = MOICON{MOI.SingleVariable,MOI.ZeroOne}
 
 @MOIU.model JuMPMOIModel (ZeroOne, Integer) (EqualTo, GreaterThan, LessThan, Interval) (Zeros, Nonnegatives, Nonpositives, SecondOrderCone, RotatedSecondOrderCone, GeometricMeanCone, PositiveSemidefiniteConeTriangle, PositiveSemidefiniteConeSquare, RootDetConeTriangle, RootDetConeSquare, LogDetConeTriangle, LogDetConeSquare) () (SingleVariable,) (ScalarAffineFunction,ScalarQuadraticFunction) (VectorOfVariables,) (VectorAffineFunction,)
 
+"""
+    OptimizerFactory
+
+User-friendly closure that creates new MOI models. New `OptimizerFactory`s are
+created with [`with_optimizer`](@ref) and new models are created from the
+optimizer factory `optimizer_factory` with `optimizer_factory()`.
+
+## Examples
+
+The following construct an optimizer factory and then use it to create two
+independent `IpoptOptimizer`s:
+```julia
+optimizer_factory = with_optimizer(IpoptOptimizer, print_level=0)
+optimizer1 = optimizer_factory()
+optimizer2 = optimizer_factory()
+```
+"""
+struct OptimizerFactory
+    # The constructor can be
+    # * `Function`: a function, or
+    # * `DataType`: a type, or
+    # * `UnionAll`: a type with missing parameters.
+    constructor::Union{Function, DataType, UnionAll}
+    args::Tuple
+    kwargs # type changes from Julia v0.6 to v0.7 so we leave it untyped for now
+end
+
+"""
+    with_optimizer(constructor::Type, args...; kwargs...)
+
+Return an `OptimizerFactory` that creates optimizers using the constructor
+`constructor` with positional arguments `args` and keyword arguments `kwargs`.
+
+## Examples
+
+The following returns an optimizer factory that creates `IpoptOptimizer`s using
+the constructor call `IpoptOptimizer(print_level=0)`:
+```julia
+with_optimizer(IpoptOptimizer, print_level=0)
+```
+"""
+function with_optimizer(constructor::Type, args...; kwargs...)
+    return OptimizerFactory(constructor, args, kwargs)
+end
+
+function (optimizer_factory::OptimizerFactory)()
+    return optimizer_factory.constructor(optimizer_factory.args...;
+                                         optimizer_factory.kwargs...)
+end
+
 ###############################################################################
 # Model
 
@@ -123,50 +174,101 @@ mutable struct Model <: AbstractModel
     # Enable extensions to attach arbitrary information to a JuMP model by
     # using an extension-specific symbol as a key.
     ext::Dict{Symbol, Any}
+end
 
-    # Default constructor.
-    function Model(;
-            mode::ModelMode=Automatic,
-            backend=nothing,
-            optimizer=nothing,
-            bridge_constraints=true)
-        model = new()
-        model.variabletolowerbound = Dict{MOIVAR, MOILB}()
-        model.variabletoupperbound = Dict{MOIVAR, MOIUB}()
-        model.variabletofix = Dict{MOIVAR, MOIFIX}()
-        model.variabletointegrality = Dict{MOIVAR, MOIINT}()
-        model.variabletozeroone = Dict{MOIVAR, MOIBIN}()
-        model.customnames = VariableRef[]
-        if backend != nothing
-            # TODO: It would make more sense to not force users to specify
-            # Direct mode if they also provide a backend.
-            @assert mode == Direct
-            @assert optimizer === nothing
-            @assert MOI.isempty(backend)
-            model.moibackend = backend
-        else
-            @assert mode != Direct
-            universal_fallback = MOIU.UniversalFallback(JuMPMOIModel{Float64}())
-            caching_mode = (mode == Automatic) ? MOIU.Automatic : MOIU.Manual
-            caching_opt = MOIU.CachingOptimizer(universal_fallback,
-                                                caching_mode)
-            if bridge_constraints
-                model.moibackend = MOI.Bridges.fullbridgeoptimizer(caching_opt,
-                                                                   Float64)
-            else
-                model.moibackend = caching_opt
-            end
-            if optimizer !== nothing
-                MOIU.resetoptimizer!(model, optimizer)
-            end
-        end
-        model.optimizehook = nothing
-        model.nlpdata = nothing
-        model.objdict = Dict{Symbol, Any}()
-        model.operator_counter = 0
-        model.ext = Dict{Symbol, Any}()
-        return model
+"""
+    Model(moibackend::MOI.ModelLike)
+
+Return a new JuMP model with MOI backend `moibackend`. This constructor is a
+low-level constructor used by [`Model()`](@ref),
+[`Model(::OptimizerFactory)`](@ref) and [`direct_model`](@ref).
+"""
+function Model(moibackend::MOI.ModelLike)
+    @assert MOI.isempty(moibackend)
+    return Model(Dict{MOIVAR, MOILB}(),
+                 Dict{MOIVAR, MOIUB}(),
+                 Dict{MOIVAR, MOIFIX}(),
+                 Dict{MOIVAR, MOIINT}(),
+                 Dict{MOIVAR, MOIBIN}(),
+                 VariableRef[],
+                 moibackend,
+                 nothing,
+                 nothing,
+                 Dict{Symbol, Any}(),
+                 0,
+                 Dict{Symbol, Any}())
+end
+
+"""
+    Model(; caching_mode::MOIU.CachingOptimizerMode=MOIU.Automatic,
+            bridge_constraints::Bool=true)
+
+Return a new JuMP model without any optimizer; the model is stored the model in
+a cache. The mode of the `CachingOptimizer` storing this cache is
+`caching_mode`. The optimizer can be set later in the [`JuMP.optimize`](@ref)
+call. If `bridge_constraints` is true, constraints that are not supported by the
+optimizer are automatically bridged to equivalent supported constraints when
+an appropriate is defined in the `MathOptInterface.Bridges` module or is
+defined in another module and is explicitely added.
+"""
+function Model(; caching_mode::MOIU.CachingOptimizerMode=MOIU.Automatic,
+                 bridge_constraints::Bool=true)
+    universal_fallback = MOIU.UniversalFallback(JuMPMOIModel{Float64}())
+    caching_opt = MOIU.CachingOptimizer(universal_fallback,
+                                        caching_mode)
+    if bridge_constraints
+        backend = MOI.Bridges.fullbridgeoptimizer(caching_opt,
+                                                  Float64)
+    else
+        backend = caching_opt
     end
+    return Model(backend)
+end
+
+"""
+    Model(optimizer_factory::OptimizerFactory;
+          caching_mode::MOIU.CachingOptimizerMode=MOIU.Automatic,
+          bridge_constraints::Bool=true)
+
+Return a new JuMP model using the optimizer factory `optimizer_factory` to
+create the optimizer. The optimizer factory can be created by the
+[`with_optimizer`](@ref) function.
+
+## Examples
+
+The following creates a model using the optimizer
+`IpoptOptimizer(print_level=0)`:
+```julia
+model = JuMP.Model(with_optimizer(IpoptOptimizer, print_level=0))
+```
+"""
+function Model(optimizer_factory::OptimizerFactory; kwargs...)
+    model = Model(; kwargs...)
+    optimizer = optimizer_factory()
+    MOIU.resetoptimizer!(model, optimizer)
+    return model
+end
+
+"""
+    direct_model(backend::MOI.ModelLike)
+
+Return a new JuMP model using `backend` to store the model and solve it. As
+opposed to the [`Model`](@ref) constructor, no cache of the model is stored
+outside of `backend` and no bridges are automatically applied to `backend`.
+The absence of cache reduces the memory footprint but it is important to bear
+in mind the following implications of creating models using this *direct* mode:
+
+* When `backend` does not support an operation such as adding
+  variables/constraints after solver or modifying constraints, an error is
+  thrown. With models created using the [`Model`](@ref) constructor, such
+  situations can be dealt with by storing the modifications in a cache and
+  loading them into the optimizer when `JuMP.optimize` is called.
+* No constraint bridging is supported by default.
+* The optimizer used cannot be changed the model is constructed.
+* The model created cannot be copied.
+"""
+function direct_model(backend::MOI.ModelLike)
+    return Model(backend)
 end
 
 # In Automatic and Manual mode, `model.moibackend` is either directly the

@@ -30,13 +30,34 @@ function MOIU.attachoptimizer!(model::Model)
 end
 
 
-function optimize(model::Model;
-                ignore_optimize_hook=(model.optimizehook===nothing))
+"""
+    function optimize(model::Model,
+                      optimizer_factory::Union{Nothing, OptimizerFactory} = nothing;
+                      ignore_optimize_hook=(model.optimizehook===nothing))
+
+Optimize the model. If `optimizer_factory` is not `nothing`, it first set the
+optimizer to a new one created using the optimizer factory.
+"""
+function optimize(model::Model,
+                  optimizer_factory::Union{Nothing, OptimizerFactory} = nothing;
+                  ignore_optimize_hook=(model.optimizehook===nothing))
     # The NLPData is not kept in sync, so re-set it here.
     # TODO: Consider how to handle incremental solves.
     if model.nlpdata !== nothing
         MOI.set!(model, MOI.NLPBlock(), create_nlp_block_data(model))
         empty!(model.nlpdata.nlconstr_duals)
+    end
+
+    if optimizer_factory !== nothing
+        if mode(model) == Direct
+            error("An optimizer factory cannot be provided at the `optimize` call in Direct mode.")
+        end
+        if MOIU.state(caching_optimizer(model)) != MOIU.NoOptimizer
+            error("An optimizer factory cannot both be provided in the `Model` constructor and at the `optimize` call.")
+        end
+        optimizer = optimizer_factory()
+        MOIU.resetoptimizer!(model, optimizer)
+        MOIU.attachoptimizer!(model)
     end
 
     # If the user or an extension has provided an optimize hook, call
