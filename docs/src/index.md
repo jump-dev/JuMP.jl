@@ -1,5 +1,7 @@
-JuMP
-====
+![JuMP logo](assets/jump-logo-with-text.svg)
+===
+
+[![Powered by NumFOCUS](https://img.shields.io/badge/powered%20by-NumFOCUS-orange.svg?style=flat&colorA=E1523D&colorB=007D8A)](http://numfocus.org)
 
 ```@meta
 # These comments do not display in the HTML output.
@@ -141,3 +143,11 @@ doi = {10.1287/ijoc.2014.0623},
 ```
 
 A preprint of this paper is [freely available](http://arxiv.org/abs/1312.1431).
+
+---
+
+![NumFOCUS logo](assets/numfocus-logo.png)
+
+JuMP is a fiscally sponsored project of [NumFOCUS](https://numfocus.org), a
+nonprofit dedicated to supporting the open source scientific computing
+community.
