@@ -318,9 +318,11 @@
 
         @test JuMP.resultvalue.(x) == [1.0 2.0; 2.0 4.0]
         @test JuMP.hasresultdual(m, typeof(varpsd))
-        @test JuMP.resultdual(varpsd) == [1.0,2.0,3.0]
+        @test JuMP.resultdual(varpsd) isa Symmetric
+        @test JuMP.resultdual(varpsd) == [1.0 2.0; 2.0 3.0]
         @test JuMP.hasresultdual(m, typeof(conpsd))
-        @test JuMP.resultdual(conpsd) == [4.0,5.0,6.0]
+        @test JuMP.resultdual(conpsd) isa Symmetric
+        @test JuMP.resultdual(conpsd) == [4.0 5.0; 5.0 6.0]
 
     end
 

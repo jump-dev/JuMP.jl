@@ -303,23 +303,34 @@ function Base.copy(a::GenericAffExpr, new_model::Model)
     return result
 end
 
-struct AffExprConstraint{V <: AbstractVariableRef, S <: MOI.AbstractScalarSet} <: AbstractConstraint
+struct AffExprConstraint{V <: AbstractVariableRef,
+                         S <: MOI.AbstractScalarSet} <: AbstractConstraint
     func::GenericAffExpr{Float64, V}
     set::S
 end
 
 moi_function_and_set(c::AffExprConstraint) = (MOI.ScalarAffineFunction(c.func), c.set)
+shape(::AffExprConstraint) = ScalarShape()
 
 # TODO: Find somewhere to put this error message.
 #addconstraint(m::Model, c::Array{AffExprConstraint}) =
 #    error("The operators <=, >=, and == can only be used to specify scalar constraints. If you are trying to add a vectorized constraint, use the element-wise dot comparison operators (.<=, .>=, or .==) instead")
 
-struct VectorAffExprConstraint{V <: AbstractVariableRef, S <: MOI.AbstractVectorSet} <: AbstractConstraint
+struct VectorAffExprConstraint{V <: AbstractVariableRef,
+                               S <: MOI.AbstractVectorSet,
+                               Shape <: AbstractShape} <: AbstractConstraint
     func::Vector{GenericAffExpr{Float64, V}}
     set::S
+    shape::Shape
+end
+function VectorAffExprConstraint(func::Vector{GenericAffExpr{Float64, V}},
+                                     set::MOI.AbstractVectorSet) where V <: AbstractVariableRef
+    VectorAffExprConstraint(func, set, VectorShape())
 end
 
+
 moi_function_and_set(c::VectorAffExprConstraint) = (MOI.VectorAffineFunction(c.func), c.set)
+shape(c::VectorAffExprConstraint) = c.shape
 
 function constraintobject(ref::ConstraintRef{Model, MOICON{FuncType, SetType}}) where
         {FuncType <: MOI.ScalarAffineFunction, SetType <: MOI.AbstractScalarSet}
@@ -334,5 +345,7 @@ function constraintobject(ref::ConstraintRef{Model, MOICON{FuncType, SetType}}) 
     model = ref.m
     f = MOI.get(model, MOI.ConstraintFunction(), ref)::MOI.VectorAffineFunction
     s = MOI.get(model, MOI.ConstraintSet(), ref)::SetType
-    return VectorAffExprConstraint(map(f -> AffExpr(model, f), MOIU.eachscalar(f)), s)
+    return VectorAffExprConstraint(map(f -> AffExpr(model, f),
+                                       MOIU.eachscalar(f)),
+                                   s, ref.shape)
 end
