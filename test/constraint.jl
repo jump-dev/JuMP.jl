@@ -191,7 +191,7 @@ function constraints_test(ModelType::Type{<:JuMP.AbstractModel})
         @test JuMP.isequal_canonical(c.func[2], 1-x)
         @test JuMP.isequal_canonical(c.func[3], 2-y)
         @test c.set == MOI.PositiveSemidefiniteConeTriangle(2)
-        @test c.shape isa JuMP.SymmetricMatrix
+        @test c.shape isa JuMP.SymmetricMatrixShape
 
         @SDconstraint(m, iref[i=1:2], 0 ⪯ [x+i x+y; x+y -y])
         for i in 1:2
@@ -201,7 +201,7 @@ function constraints_test(ModelType::Type{<:JuMP.AbstractModel})
             @test JuMP.isequal_canonical(c.func[2], x+y)
             @test JuMP.isequal_canonical(c.func[3], -y)
             @test c.set == MOI.PositiveSemidefiniteConeTriangle(2)
-            @test c.shape isa JuMP.SymmetricMatrix
+            @test c.shape isa JuMP.SymmetricMatrixShape
         end
 
         # Should throw "ERROR: function JuMP.addconstraint does not accept keyword arguments"
