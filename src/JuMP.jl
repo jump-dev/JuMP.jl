@@ -577,7 +577,7 @@ false if not.
 MOI.canget(m::Model, attr::MOI.AbstractModelAttribute) = MOI.canget(m.moibackend, attr)
 MOI.canget(m::Model, attr::MOI.AbstractVariableAttribute, ::Type{VariableRef}) = MOI.canget(m.moibackend, attr, MOIVAR)
 function MOI.canget(model::Model, attr::MOI.AbstractConstraintAttribute,
-                    ::Type{<:ConstraintRef{Model, T, Shape}}) where {T <: MOICON}
+                    ::Type{<:ConstraintRef{Model, T}}) where {T <: MOICON}
     return MOI.canget(model.moibackend, attr, T)
 end
 
