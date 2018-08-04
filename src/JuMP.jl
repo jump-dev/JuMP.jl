@@ -123,6 +123,15 @@ function with_optimizer(constructor::Type, args...; kwargs...)
     return OptimizerFactory(constructor, args, kwargs)
 end
 
+"""
+    with_optimizer(mod::Module, args...; kwargs...)
+
+Shortcut for `with_optimizer(mod.Optimizer, args..., kwargs...)`.
+"""
+function with_optimizer(mod::Module, args...; kwargs...)
+    return with_optimizer(mod.Optimizer, args...; kwargs...)
+end
+
 function (optimizer_factory::OptimizerFactory)()
     return optimizer_factory.constructor(optimizer_factory.args...;
                                          optimizer_factory.kwargs...)
