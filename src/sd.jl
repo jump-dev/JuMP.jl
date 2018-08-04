@@ -2,17 +2,17 @@
 struct PSDCone end
 
 """
-    SymmetricMatrix
+    SymmetricMatrixShape
 
-Symmetric square matrix of `side_dimension` rows and columns. The vectorized
-form contains the entries of the upper-right triangular part of the matrix given
-column by column (or equivalently, the entries of the lower-left triangular part
-given row by row).
+Shape object for a symmetric square matrix of `side_dimension` rows and columns.
+The vectorized form contains the entries of the upper-right triangular part of
+the matrix given column by column (or equivalently, the entries of the
+lower-left triangular part given row by row).
 """
-struct SymmetricMatrix <: AbstractShape
+struct SymmetricMatrixShape <: AbstractShape
     side_dimension::Int
 end
-function reshape(vectorized_form::Vector{T}, shape::SymmetricMatrix) where T
+function reshape(vectorized_form::Vector{T}, shape::SymmetricMatrixShape) where T
     matrix = Matrix{T}(undef, shape.side_dimension, shape.side_dimension)
     k = 0
     for j in 1:shape.side_dimension
@@ -25,16 +25,17 @@ function reshape(vectorized_form::Vector{T}, shape::SymmetricMatrix) where T
 end
 
 """
-    SquareMatrix
+    SquareMatrixShape
 
-Square matrix of `side_dimension` rows and columns. The vectorized form contains
-the entries of the the matrix given column by column (or equivalently, the
-entries of the lower-left triangular part given row by row).
+Shape object for a square matrix of `side_dimension` rows and columns. The
+vectorized form contains the entries of the the matrix given column by column
+(or equivalently, the entries of the lower-left triangular part given row by
+row).
 """
-struct SquareMatrix <: AbstractShape
+struct SquareMatrixShape <: AbstractShape
     side_dimension::Int
 end
-function reshape(vectorized_form::Vector{T}, shape::SquareMatrix) where T
+function reshape(vectorized_form::Vector{T}, shape::SquareMatrixShape) where T
     return Base.reshape(vectorized_form,
                         shape.side_dimension,
                         shape.side_dimension)
@@ -48,7 +49,7 @@ function buildconstraint(_error::Function, Q::Symmetric{V, Matrix{V}}, ::PSDCone
     n = Base.LinAlg.checksquare(Q)
     VectorOfVariablesConstraint([Q[i, j] for j in 1:n for i in 1:j],
                                 MOI.PositiveSemidefiniteConeTriangle(n),
-                                SymmetricMatrix(n))
+                                SymmetricMatrixShape(n))
 end
 # @variable model x[1:2,1:2] # x is Matrix{VariableRef}
 # varpsd = @constraint model x in PSDCone()
@@ -56,7 +57,7 @@ function buildconstraint(_error::Function, Q::Matrix{<:AbstractVariableRef}, ::P
     n = Base.LinAlg.checksquare(Q)
     VectorOfVariablesConstraint(vec(Q),
                                 MOI.PositiveSemidefiniteConeSquare(n),
-                                SquareMatrix(n))
+                                SquareMatrixShape(n))
 end
 
 function buildconstraint(_error::Function, x::AbstractMatrix, ::PSDCone)
@@ -69,5 +70,5 @@ function buildconstraint(_error::Function, x::AbstractMatrix, ::PSDCone)
     aff = [x[i, j] for j in 1:n for i in 1:j]
     return VectorAffExprConstraint(aff,
                                    MOI.PositiveSemidefiniteConeTriangle(n),
-                                   SymmetricMatrix(n))
+                                   SymmetricMatrixShape(n))
 end

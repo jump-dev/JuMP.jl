@@ -370,7 +370,7 @@ Base.isempty(::AbstractJuMPScalar) = false
 """
     AbstractShape
 
-Abstract vectorizable shape. Given a vectorized form of an object of shape
+Abstract vectorizable shape. Given a flat vector form of an object of shape
 `shape`, the original object can be obtained by [`reshape`](@ref).
 """
 abstract type AbstractShape end
@@ -425,10 +425,10 @@ Return an object in it original shape `shape` given its vectorized form
 
 ## Examples
 
-Given a [`SymmetricMatrix`](@ref) of vectorized form `[1, 2, 3]`, the following
-code retrieve the matrix `Symmetric(Matrix[1 2; 2 3])`:
+Given a [`SymmetricMatrixShape`](@ref) of vectorized form `[1, 2, 3]`, the
+following code retrieve the matrix `Symmetric(Matrix[1 2; 2 3])`:
 ```julia
-reshape([1, 2, 3], SymmetricMatrix(2))
+reshape([1, 2, 3], SymmetricMatrixShape(2))
 ```
 """
 function reshape end
@@ -577,8 +577,7 @@ false if not.
 MOI.canget(m::Model, attr::MOI.AbstractModelAttribute) = MOI.canget(m.moibackend, attr)
 MOI.canget(m::Model, attr::MOI.AbstractVariableAttribute, ::Type{VariableRef}) = MOI.canget(m.moibackend, attr, MOIVAR)
 function MOI.canget(model::Model, attr::MOI.AbstractConstraintAttribute,
-                    ::Type{ConstraintRef{Model, T, Shape}}) where {T <: MOICON,
-                                                                   Shape}
+                    ::Type{<:ConstraintRef{Model, T, Shape}}) where {T <: MOICON}
     return MOI.canget(model.moibackend, attr, T)
 end
 
