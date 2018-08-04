@@ -1443,7 +1443,7 @@ macro NLconstraint(m, x, extra...)
         code = quote
             c = NonlinearConstraint($(processNLExpr(m, lhs)), $lb, $ub)
             push!($esc_m.nlpdata.nlconstr, c)
-            $(refcall) = ConstraintRef($esc_m, NonlinearConstraintIndex(length($esc_m.nlpdata.nlconstr)))
+            $(refcall) = ConstraintRef($esc_m, NonlinearConstraintIndex(length($esc_m.nlpdata.nlconstr)), ScalarShape())
         end
     elseif isexpr(x, :comparison)
         # ranged row
@@ -1460,7 +1460,7 @@ macro NLconstraint(m, x, extra...)
             end
             c = NonlinearConstraint($(processNLExpr(m, x.args[3])), $(esc(lb)), $(esc(ub)))
             push!($esc_m.nlpdata.nlconstr, c)
-            $(refcall) = ConstraintRef($esc_m, NonlinearConstraintIndex(length($esc_m.nlpdata.nlconstr)))
+            $(refcall) = ConstraintRef($esc_m, NonlinearConstraintIndex(length($esc_m.nlpdata.nlconstr)), ScalarShape())
         end
     else
         # Unknown
