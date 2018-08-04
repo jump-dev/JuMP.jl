@@ -123,20 +123,6 @@ Base.isless(u::UnitNumber, v::UnitNumber) = isless(u.α, v.α)
         io_test(IJuliaMode, a_v, "v_{4,5,2,3,2,2,4}")
     end
 
-    @testset "User-created Array{VariableRef}" begin
-        m = Model()
-        @variable(m, x)
-        @variable(m, y)
-
-        v = [x,y,x]
-        A = [x y; y x]
-        io_test(REPLMode,   v, "JuMP.VariableRef[x, y, x]")
-        #io_test(IJuliaMode, v, "JuMP.VariableRef[x, y, x]")
-
-        io_test(REPLMode,   A, "JuMP.VariableRef[x y; y x]")
-        #io_test(IJuliaMode, A, "JuMP.VariableRef[x y; y x]")
-    end
-
     @testset "basename keyword argument" begin
         m = Model()
         @variable(m, x, basename="foo")

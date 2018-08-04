@@ -20,16 +20,48 @@ function buildrefsets(expr::Expr, cname)
     idxsets = Any[]
     # Creating an indexed set of refs
     refcall = Expr(:ref, cname)
-    if isexpr(c, :typed_vcat) || isexpr(c, :ref)
-        popfirst!(c.args)
-    end
-    condition = :()
-    if isexpr(c, :vcat) || isexpr(c, :typed_vcat)
-        if isexpr(c.args[1], :parameters)
-            @assert length(c.args[1].args) == 1
-            condition = popfirst!(c.args).args[1]
-        else
-            condition = pop!(c.args)
+    @static if VERSION >= v"0.7-"
+        # On 0.7, :(t[i;j]) is a :ref, while t[i,j;j] is a :typed_vcat.
+        # In both cases :t is the first arg.
+        if isexpr(c, :typed_vcat) || isexpr(c, :ref)
+            popfirst!(c.args)
+        end
+        condition = :()
+        if isexpr(c, :vcat) || isexpr(c, :typed_vcat)
+            # Parameters appear as plain args at the end.
+            if length(c.args) > 2
+                error("Unsupported syntax $c.")
+            elseif length(c.args) == 2
+                condition = pop!(c.args)
+            end # else no condition.
+        elseif isexpr(c, :ref) || isexpr(c, :vect)
+            # Parameters appear at the front.
+            if isexpr(c.args[1], :parameters)
+                if length(c.args[1].args) != 1
+                    error("Invalid syntax: $c. Multiple semicolons are not " *
+                          "supported.")
+                end
+                condition = popfirst!(c.args).args[1]
+            end
+        end
+        if isexpr(c, :vcat) || isexpr(c, :typed_vcat) || isexpr(c, :ref)
+            if isexpr(c.args[1], :parameters)
+                @assert length(c.args[1].args) == 1
+                condition = popfirst!(c.args).args[1]
+            end # else no condition.
+        end
+    else
+        if isexpr(c, :typed_vcat) || isexpr(c, :ref)
+            popfirst!(c.args)
+        end
+        condition = :()
+        if isexpr(c, :vcat) || isexpr(c, :typed_vcat)
+            if isexpr(c.args[1], :parameters)
+                @assert length(c.args[1].args) == 1
+                condition = popfirst!(c.args).args[1]
+            else
+                condition = pop!(c.args)
+            end
         end
     end
 
@@ -717,35 +749,69 @@ for (mac,sym) in [(:constraints,  Symbol("@constraint")),
                   (:variables,Symbol("@variable")),
                   (:expressions, Symbol("@expression")),
                   (:NLexpressions, Symbol("@NLexpression"))]
-    @eval begin
-        macro $mac(m, x)
-            x.head == :block || error("Invalid syntax for @",$(string(mac)))
-            @assert x.args[1].head == :line
-            code = quote end
-            for it in x.args
-                if isexpr(it, :line)
-                    # do nothing
-                elseif isexpr(it, :tuple) # line with commas
-                    args = []
-                    for ex in it.args
-                        if isexpr(ex, :tuple) # embedded tuple
-                            append!(args, ex.args)
-                        else
-                            push!(args, ex)
+    if VERSION >= v"0.7-"
+        @eval begin
+            macro $mac(m, x)
+                x.head == :block || error("Invalid syntax for @",$(string(mac)))
+                @assert isa(x.args[1], LineNumberNode)
+                lastline = x.args[1]
+                code = quote end
+                for it in x.args
+                    if isa(it, LineNumberNode)
+                        lastline = it
+                    elseif isexpr(it, :tuple) # line with commas
+                        args = []
+                        # Keyword arguments have to appear like:
+                        # x, (start = 10, lowerbound = 5)
+                        # because of the precedence of "=".
+                        for ex in it.args
+                            if isexpr(ex, :tuple) # embedded tuple
+                                append!(args, ex.args)
+                            else
+                                push!(args, ex)
+                            end
                         end
+                        mac = esc(Expr(:macrocall, $(quot(sym)), lastline, m, args...))
+                        push!(code.args, mac)
+                    else # stand-alone symbol or expression
+                        push!(code.args, esc(Expr(:macrocall, $(quot(sym)), lastline, m, it)))
                     end
-                    args_esc = []
-                    for ex in args
-                        push!(args_esc, esc(ex))
-                    end
-                    mac = Expr(:macrocall,$(quot(sym)), esc(m), args_esc...)
-                    push!(code.args, mac)
-                else # stand-alone symbol or expression
-                    push!(code.args,Expr(:macrocall,$(quot(sym)), esc(m), esc(it)))
                 end
+                push!(code.args, :(nothing))
+                return code
             end
-            push!(code.args, :(nothing))
-            return code
+        end
+    else
+        @eval begin
+            macro $mac(m, x)
+                x.head == :block || error("Invalid syntax for @",$(string(mac)))
+                @assert x.args[1].head == :line
+                code = quote end
+                for it in x.args
+                    if isexpr(it, :line)
+                        # do nothing
+                    elseif isexpr(it, :tuple) # line with commas
+                        args = []
+                        for ex in it.args
+                            if isexpr(ex, :tuple) # embedded tuple
+                                append!(args, ex.args)
+                            else
+                                push!(args, ex)
+                            end
+                        end
+                        args_esc = []
+                        for ex in args
+                            push!(args_esc, esc(ex))
+                        end
+                        mac = Expr(:macrocall,$(quot(sym)), esc(m), args_esc...)
+                        push!(code.args, mac)
+                    else # stand-alone symbol or expression
+                        push!(code.args,Expr(:macrocall,$(quot(sym)), esc(m), esc(it)))
+                    end
+                end
+                push!(code.args, :(nothing))
+                return code
+            end
         end
     end
 end
@@ -1264,8 +1330,17 @@ macro variable(args...)
             if infoexpr.haslb || infoexpr.hasub
                 _error("Semidefinite or symmetric variables cannot be provided bounds")
             end
+            @static if VERSION >= v"0.7-"
+                # 1:3 is parsed as (:call, :, 1, 3)
+                dimension_check = :($(esc(idxsets[1].args[1].args[3])) ==
+                                    $(esc(idxsets[2].args[1].args[3])))
+            else
+                # 1:3 is parsed as (:, 1, 3)
+                dimension_check = :($(esc(idxsets[1].args[1].args[2])) ==
+                                    $(esc(idxsets[2].args[1].args[2])))
+            end
             creationcode = quote
-                $(esc(idxsets[1].args[1].args[2])) == $(esc(idxsets[2].args[1].args[2])) || error("Cannot construct symmetric variables with nonsquare dimensions")
+                $dimension_check || error("Cannot construct symmetric variables with nonsquare dimensions.")
                 $(getloopedcode(variable, code, condition, idxvars, idxsets, vartype, requestedcontainer; lowertri=symmetric))
                 $(if sdp
                     quote
@@ -1320,18 +1395,17 @@ end
 # end
 
 macro NLobjective(m, sense, x)
-    m = esc(m)
     if sense == :Min || sense == :Max
         sense = Expr(:quote,sense)
     end
-    return assert_validmodel(m, quote
-        ex = @processNLExpr($m, $(esc(x)))
-        setobjective($m, $(esc(sense)), ex)
+    return assert_validmodel(esc(m), quote
+        ex = $(processNLExpr(m, x))
+        setobjective($(esc(m)), $(esc(sense)), ex)
     end)
 end
 
 macro NLconstraint(m, x, extra...)
-    m = esc(m)
+    esc_m = esc(m)
     # Two formats:
     # - @NLconstraint(m, a*x <= 5)
     # - @NLconstraint(m, myref[a=1:5], sin(x^a) <= 5)
@@ -1367,9 +1441,9 @@ macro NLconstraint(m, x, extra...)
         end
         lhs = :($(x.args[2]) - $(x.args[3]))
         code = quote
-            c = NonlinearConstraint(@processNLExpr($m, $(esc(lhs))), $lb, $ub)
-            push!($m.nlpdata.nlconstr, c)
-            $(refcall) = ConstraintRef($m, NonlinearConstraintIndex(length($m.nlpdata.nlconstr)))
+            c = NonlinearConstraint($(processNLExpr(m, lhs)), $lb, $ub)
+            push!($esc_m.nlpdata.nlconstr, c)
+            $(refcall) = ConstraintRef($esc_m, NonlinearConstraintIndex(length($esc_m.nlpdata.nlconstr)))
         end
     elseif isexpr(x, :comparison)
         # ranged row
@@ -1384,9 +1458,9 @@ macro NLconstraint(m, x, extra...)
             elseif !isa($(esc(ub)),Number)
                 error(string("in @NLconstraint (",$(string(x)),"): expected ",$(string(ub))," to be a number."))
             end
-            c = NonlinearConstraint(@processNLExpr($m, $(esc(x.args[3]))), $(esc(lb)), $(esc(ub)))
-            push!($m.nlpdata.nlconstr, c)
-            $(refcall) = ConstraintRef($m, NonlinearConstraintIndex(length($m.nlpdata.nlconstr)))
+            c = NonlinearConstraint($(processNLExpr(m, x.args[3])), $(esc(lb)), $(esc(ub)))
+            push!($esc_m.nlpdata.nlconstr, c)
+            $(refcall) = ConstraintRef($esc_m, NonlinearConstraintIndex(length($esc_m.nlpdata.nlconstr)))
         end
     else
         # Unknown
@@ -1395,14 +1469,14 @@ macro NLconstraint(m, x, extra...)
               "       expr1 == expr2")
     end
     looped = getloopedcode(variable, code, condition, idxvars, idxsets, :(ConstraintRef{Model,NonlinearConstraintIndex}), requestedcontainer)
-    return assert_validmodel(m, quote
-        initNLP($m)
+    return assert_validmodel(esc_m, quote
+        initNLP($esc_m)
         $looped
         $(if anonvar
             variable
         else
             quote
-                registercon($m, $quotvarname, $variable)
+                registercon($esc_m, $quotvarname, $variable)
                 $escvarname = $variable
             end
         end)
@@ -1415,11 +1489,9 @@ macro NLexpression(args...)
         error("in @NLexpression: To few arguments ($(length(args))); must pass the model and nonlinear expression as arguments.")
     elseif length(args) == 2
         m, x = args
-        m = esc(m)
         c = gensym()
     elseif length(args) == 3
         m, c, x = args
-        m = esc(m)
     end
     if length(args) > 3 || length(kwargs) > 0
         error("in @NLexpression: To many arguments ($(length(args))).")
@@ -1431,9 +1503,9 @@ macro NLexpression(args...)
 
     refcall, idxvars, idxsets, condition = buildrefsets(c, variable)
     code = quote
-        $(refcall) = NonlinearExpression($m, @processNLExpr($m, $(esc(x))))
+        $(refcall) = NonlinearExpression($(esc(m)), $(processNLExpr(m, x)))
     end
-    return assert_validmodel(m, quote
+    return assert_validmodel(esc(m), quote
         $(getloopedcode(variable, code, condition, idxvars, idxsets, :NonlinearExpression, requestedcontainer))
         $(anonvar ? variable : :($escvarname = $variable))
     end)

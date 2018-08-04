@@ -10,7 +10,12 @@
 # a general DAG. If we have a DAG, then need to associate storage with each edge of the DAG.
 # user_input_buffer and user_output_buffer are used as temporary storage
 # when handling user-defined functions
-function forward_eval(storage::Vector{T},partials_storage::Vector{T},nd::Vector{NodeData},adj,const_values,parameter_values,x_values::Vector{T},subexpression_values,user_input_buffer=[],user_output_buffer=[];user_operators::UserOperatorRegistry=UserOperatorRegistry()) where T
+function forward_eval(storage::Vector{T}, partials_storage::AbstractVector{T},
+                      nd::AbstractVector{NodeData}, adj, const_values,
+                      parameter_values, x_values::Vector{T},
+                      subexpression_values, user_input_buffer=[],
+                      user_output_buffer=[];
+                      user_operators::UserOperatorRegistry=UserOperatorRegistry()) where T
 
     @assert length(storage) >= length(nd)
     @assert length(partials_storage) >= length(nd)
@@ -213,7 +218,13 @@ export forward_eval
 # need to recompute the real components.
 # Computes partials_storage_ϵ as well
 # We assume that forward_eval has already been called.
-function forward_eval_ϵ(storage::Vector{T},storage_ϵ::DenseVector{ForwardDiff.Partials{N,T}},partials_storage::Vector{T},partials_storage_ϵ::DenseVector{ForwardDiff.Partials{N,T}},nd::Vector{NodeData},adj,x_values_ϵ,subexpression_values_ϵ;user_operators::UserOperatorRegistry=UserOperatorRegistry()) where {N,T}
+function forward_eval_ϵ(storage::Vector{T},
+                        storage_ϵ::AbstractVector{ForwardDiff.Partials{N, T}},
+                        partials_storage::AbstractVector{T},
+                        partials_storage_ϵ::AbstractVector{ForwardDiff.Partials{N, T}},
+                        nd::Vector{NodeData}, adj, x_values_ϵ,
+                        subexpression_values_ϵ;
+                        user_operators::UserOperatorRegistry=UserOperatorRegistry()) where {N, T}
 
     @assert length(storage_ϵ) >= length(nd)
     @assert length(partials_storage_ϵ) >= length(nd)

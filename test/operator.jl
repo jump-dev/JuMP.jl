@@ -16,6 +16,9 @@ Base.zero(::Type{MySumType{T}}) where {T} = MySumType(zero(T))
 Base.zero(::MySumType{T}) where {T} = MySumType(zero(T))
 Base.transpose(t::MyType) = MyType(t.a)
 Base.transpose(t::MySumType) = MySumType(t.a)
+if VERSION >= v"0.7-"
+    Compat.LinearAlgebra.adjoint(t::MySumType) = t
+end
 +(t1::MyT, t2::MyS) where {MyT<:Union{MyType, MySumType}, MyS<:Union{MyType, MySumType}} = MySumType(t1.a+t2.a)
 *(t1::MyType{S}, t2::T) where {S, T} = MyType(t1.a*t2)
 *(t1::S, t2::MyType{T}) where {S, T} = MyType(t1*t2.a)
