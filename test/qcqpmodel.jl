@@ -11,9 +11,6 @@
 # Testing quadratic models (objective and constraints)
 # Must be run as part of runtests.jl, as it needs a list of solvers.
 #############################################################################
-using JuMP
-using Base.Test
-
 # If solvers not loaded, load them (i.e running just these tests)
 !isdefined(:lp_solvers) && include("solvers.jl")
 

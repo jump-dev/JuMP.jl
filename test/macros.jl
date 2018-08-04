@@ -1,9 +1,6 @@
 # test/macros.jl
 # Testing macros work correctly
 #############################################################################
-using JuMP
-using Base.Test
-
 # To ensure the tests work on Windows and Linux/OSX, we need
 # to use the correct comparison operators
 const leq = JuMP.repl[:leq]

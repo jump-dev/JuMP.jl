@@ -39,9 +39,20 @@ end
 
 linearterms(aff::GenericAffExpr) = LinearTermIterator(aff)
 
-Base.start(lti::LinearTermIterator) = 1
-Base.done( lti::LinearTermIterator, state::Int) = state > length(lti.aff.vars)
-Base.next( lti::LinearTermIterator, state::Int) = ((lti.aff.coeffs[state], lti.aff.vars[state]), state+1)
+function Base.iterate(lti::LinearTermIterator) 
+    if length(lti.aff.vars) ≥ 1
+        ((lti.aff.coeffs[1], lti.aff.vars[1]), 2)
+    else
+        nothing
+    end
+end
+function Base.iterate(lti::LinearTermIterator, state::Int)
+    if state ≤ length(lti.aff.vars)
+        ((lti.affs.coeffs[state], lti.affs.vars[state]), state+1)
+    else
+        nothing
+    end
+end
 
 # More efficient ways to grow an affine expression
 # Add a single term to an affine expression

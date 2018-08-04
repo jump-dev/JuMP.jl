@@ -10,8 +10,7 @@
 # test/callback.jl
 # Testing callbacks
 #############################################################################
-using JuMP, MathProgBase
-using Base.Test
+using MathProgBase
 
 !isdefined(:lp_solvers) && include("solvers.jl")
 

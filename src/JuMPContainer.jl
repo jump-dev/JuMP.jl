@@ -202,10 +202,9 @@ Base.values(d::JuMPArray) = ValueIterator(d.innerArray)
 mutable struct ValueIterator{T,N}
     x::Array{T,N}
 end
-Base.start(it::ValueIterator)   =  start(it.x)
-Base.next(it::ValueIterator, k) =   next(it.x, k)
-Base.done(it::ValueIterator, k) =   done(it.x, k)
-Base.length(it::ValueIterator)  = length(it.x)
+Base.iterate(it::ValueIterator) = iterate(it.x)
+Base.iterate(it::ValueIterator, k) = iterate(it.x, k)
+Base.length(it::ValueIterator) = length(it.x)
 
 mutable struct KeyIterator{JA<:JuMPArray}
     x::JA

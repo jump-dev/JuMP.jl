@@ -27,8 +27,8 @@ Base.copy(sos::SOSConstraint, new_model::Model) =
 # variable in each expression and a vector of their coefficients
 function constructSOS(m::Model, coll::Vector{AffExpr})
     nvar = length(coll)
-    vars = Array{Variable}(nvar)
-    weight = Array{Float64}(nvar)
+    vars = Array{Variable}(undef, nvar)
+    weight = Array{Float64}(undef, nvar)
     for (i,aff) in enumerate(coll)
         if (length(aff.vars) != 1) || (aff.constant != 0)
             error("Must specify set in terms of single variables")

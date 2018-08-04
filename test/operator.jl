@@ -10,8 +10,6 @@
 # test/operator.jl
 # Testing operator overloading is correct
 #############################################################################
-using JuMP
-using Base.Test
 using OffsetArrays
 
 # To ensure the tests work on both Windows and Linux/OSX, we need

@@ -1,6 +1,3 @@
-using JuMP
-using Base.Test
-
 !isdefined(:conic_solvers_with_duals) && include("solvers.jl")
 
 const TOL = 1e-4

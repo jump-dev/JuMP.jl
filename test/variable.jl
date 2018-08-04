@@ -12,7 +12,6 @@
 #############################################################################
 using JuMP
 import JuMP.repl
-using Base.Test
 
 @testset "Variables" begin
     @testset "constructors" begin
