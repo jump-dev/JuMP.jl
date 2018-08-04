@@ -182,7 +182,7 @@ function constraints_test(ModelType::Type{<:JuMP.AbstractModel})
         c = JuMP.constraintobject(cref)
         @test c.func == [x, z, y, w]
         @test c.set == MOI.PositiveSemidefiniteConeSquare(2)
-        @test c.shape isa JuMP.SquareMatrix
+        @test c.shape isa JuMP.SquareMatrixShape
 
         @SDconstraint(m, cref, [x 1; 1 -y] ⪰ [1 x; x -2])
         @test JuMP.name(cref) == "cref"
