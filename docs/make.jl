@@ -21,6 +21,10 @@ makedocs(
         "Extensions" => "extensions.md",
         "Updating Guide" => "updating.md",
         "How do I ...? (FAQ)" => "howdoi.md"
+    ],
+    assets = [
+        "assets/jump-logo-with-text.svg",
+        "assets/numfocus-logo.png"
     ]
 )
 
