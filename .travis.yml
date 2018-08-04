@@ -4,10 +4,10 @@ os:
     - osx
 julia:
     - 0.6
-    - nightly
+    - 0.7
 matrix:
     allow_failures:
-        - julia: nightly
+        - julia: 0.7
 notifications:
     email: false
 sudo: false
