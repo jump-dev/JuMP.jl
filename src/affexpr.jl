@@ -146,6 +146,8 @@ product of two variables.
 """
 function add_to_expression! end
 
+# TODO: add deprecations for Base.push! and Base.append!
+
 function add_to_expression!(aff::GenericAffExpr{C,V}, new_coef::C, new_var::V) where {C,V}
     add_or_set!(aff.terms, new_var, new_coef)
     aff
