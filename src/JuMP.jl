@@ -27,32 +27,15 @@ include("Derivatives/Derivatives.jl")
 using .Derivatives
 
 export
-# Objects
-    Model, VariableRef, Norm, AffExpr, QuadExpr,
+    Model, VariableRef, AffExpr, QuadExpr,
     with_optimizer,
-    # LinearConstraint, QuadConstraint, SDConstraint,
     NonlinearConstraint,
     ConstraintRef,
-# Cones
     SecondOrderCone, RotatedSecondOrderCone, PSDCone,
-# Functions
-    # Model related
-    setobjectivesense,
-    writeLP, writeMPS,
-    #addSOS1, addSOS2,
     optimize,
-    internalmodel,
-    # VariableRef
     setname,
-    #getname,
     setlowerbound, setupperbound,
-    #getlowerbound, getupperbound,
-    #getvalue, setvalue,
-    #getdual,
-    #setcategory, getcategory,
     setstartvalue,
-    linearindex,
-    # Expressions and constraints
     linearterms,
 
 # Macros and support functions
@@ -649,7 +632,6 @@ end
 # TODO why do we need this?
 const JuMPTypes = Union{AbstractJuMPScalar,
                         NonlinearExpression}
-                    #    Norm,
                     #    QuadExpr,
                     #    SOCExpr}
 const JuMPScalars = Union{Number,JuMPTypes}
