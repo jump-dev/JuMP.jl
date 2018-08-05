@@ -621,10 +621,8 @@ end
 ##########################################################################
 include("containers.jl")
 include("operators.jl")
-# include("writers.jl")
 include("macros.jl")
 include("optimizerinterface.jl")
-# include("callbacks.jl")
 include("nlp.jl")
 include("print.jl")
 
