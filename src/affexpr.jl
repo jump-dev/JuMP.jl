@@ -24,6 +24,8 @@ mutable struct GenericAffExpr{CoefType,VarType} <: AbstractJuMPScalar
     coeffs::Vector{CoefType}
     constant::CoefType
 end
+GenericAffExpr(a::GenericAffExpr) = GenericAffExpr(a.vars, a.coeffs, a.constant)
+
 coeftype(::GenericAffExpr{C,V}) where {C,V} = C
 
 Base.zero(::Type{GenericAffExpr{C,V}}) where {C,V} = GenericAffExpr{C,V}(V[],C[],zero(C))
@@ -39,7 +41,7 @@ end
 
 linearterms(aff::GenericAffExpr) = LinearTermIterator(aff)
 
-function Base.iterate(lti::LinearTermIterator) 
+function Base.iterate(lti::LinearTermIterator)
     if length(lti.aff.vars) ≥ 1
         ((lti.aff.coeffs[1], lti.aff.vars[1]), 2)
     else
@@ -94,10 +96,12 @@ end
 # Alias for (Float64, Variable), the specific GenericAffExpr used by JuMP
 const AffExpr = GenericAffExpr{Float64,Variable}
 AffExpr() = zero(AffExpr)
+AffExpr(v::Variable) = AffExpr([v], [1.], 0.)
+AffExpr(v::Real) = AffExpr(Variable[], Float64[], v)
+AffExpr(a::AffExpr) = AffExpr(a.vars, a.coeffs, a.constant)
 
 Base.isempty(a::AffExpr) = (length(a.vars) == 0 && a.constant == 0.)
-Base.convert(::Type{AffExpr}, v::Variable) = AffExpr([v], [1.], 0.)
-Base.convert(::Type{AffExpr}, v::Real) = AffExpr(Variable[], Float64[], v)
+Base.convert(::Type{AffExpr}, v::Union{Variable,<:Real}) = AffExpr(v)
 
 # Check all coefficients are finite, i.e. not NaN, not Inf, not -Inf
 function assert_isfinite(a::AffExpr)

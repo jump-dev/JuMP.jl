@@ -396,7 +396,7 @@ exprstr(n::Norm) = norm_str(REPLMode, n)
 #------------------------------------------------------------------------
 ## JuMPContainer{Variable}
 #------------------------------------------------------------------------
-Base.show(io::IO, j::Union{JuMPContainer{Variable}, Array{Variable}}) = print(io, cont_str(REPLMode,j))
+Base.show(io::IO, j::JuMPContainer{Variable}) = print(io, cont_str(REPLMode,j))
 Base.show(io::IO, ::MIME"text/latex", j::Union{JuMPContainer{Variable},Array{Variable}}) =
     print(io, cont_str(IJuliaMode,j,mathmode=false))
 # Generic string converter, called by mode-specific handlers
@@ -444,7 +444,7 @@ function cont_str(mode, j, sym::PrintSymbols)
                 dimidx += 1
             end
             if dimidx > length(DIMS)
-                error("Unexpectedly ran out of indices")
+                throw(ErrorException("Unexpectedly ran out of indices"))
             end
             idxvars[i] = DIMS[dimidx]
             dimidx += 1
@@ -627,7 +627,7 @@ function val_str(mode, dict::JuMPDict{Float64,N}) where N
 
     ndim = length(first(keys(dict.tupledict)))
 
-    key_strs = Array{String}(length(dict), ndim)
+    key_strs = Array{String}(undef, length(dict), ndim)
     for (i, key) in enumerate(sortedkeys)
         for j in 1:ndim
             key_strs[i,j] = string(key[j])
