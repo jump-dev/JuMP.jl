@@ -607,7 +607,7 @@ end
     operator_warn(model::Model)
 
 This function is called on the model whenever two affine expressions are added
-together wthiout using `destructive_add!`, and at least one of the two
+together without using `destructive_add!`, and at least one of the two
 expressions has more than 50 terms.
 
 For the case of `Model`, if this function is called more than 20,000 times then
