@@ -151,7 +151,11 @@ end
 Base.:/(lhs::GenericAffExpr, rhs::AbstractVariableRef) = error("Cannot divide affine expression by a variable")
 # AffExpr--AffExpr
 function Base.:+(lhs::GenericAffExpr{C,V}, rhs::GenericAffExpr{C,V}) where {C,V<:JuMPTypes}
-    operator_warn(lhs,rhs)
+    if length(linearterms(lhs)) > 50 || length(linearterms(rhs)) > 50
+        if length(linearterms(lhs)) > 1
+            operator_warn(owner_model(first(linearterms(lhs))[2]))
+        end
+    end
     result_terms = copy(lhs.terms)
     # merge() returns a Dict(), so we need to call merge!() instead.
     # Note: merge!() doesn't appear to call sizehint!(). Is this important?
