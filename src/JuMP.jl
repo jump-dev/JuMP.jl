@@ -22,7 +22,7 @@ const MOIU = MOI.Utilities
 
 import Calculus
 import DataStructures.OrderedDict
-using ForwardDiff
+import ForwardDiff
 include("Derivatives/Derivatives.jl")
 using .Derivatives
 
