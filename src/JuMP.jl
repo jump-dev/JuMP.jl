@@ -122,7 +122,8 @@ end
 @enum ModelMode Automatic Manual Direct
 
 abstract type AbstractModel end
-# All `AbstractModels` must define `num_variables`.
+# All `AbstractModel`s must define methods for these functions:
+# num_variables, object_dictionary
 
 """
     Model
@@ -336,6 +337,7 @@ end
 
 # TODO(IainNZ): Document these too.
 # TODO(#1381): Implement Base.copy for Model.
+object_dictionary(model::Model) = model.objdict
 terminationstatus(m::Model) = MOI.get(m, MOI.TerminationStatus())
 primalstatus(m::Model) = MOI.get(m, MOI.PrimalStatus())
 dualstatus(m::Model) = MOI.get(m, MOI.DualStatus())
@@ -539,9 +541,6 @@ function registercon(m::AbstractModel, conname::Symbol, value)
     registerobject(m, conname, value, "A variable or constraint named $conname is already attached to this model. If creating constraints programmatically, use the anonymous constraint syntax con = @constraint(m, ...).")
 end
 registercon(m::AbstractModel, conname, value) = error("Invalid constraint name $conname")
-
-# This function needs to be implemented by all `AbstractModel`s
-object_dictionary(m::Model) = m.objdict
 
 function registerobject(m::AbstractModel, name::Symbol, value, errorstring::String)
     objdict = object_dictionary(m)
