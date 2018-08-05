@@ -8,14 +8,14 @@ import JuMP.Derivatives.Coloring: acyclic_coloring, recovery_preprocess,
                                   seed_matrix
 
 struct Graph
-  num_vertices::Int
-  edges::Vector{Tuple{Int, Int}}
+    num_vertices::Int
+    edges::Vector{Tuple{Int, Int}}
 end
 
 function to_adjlist(graph::Graph)
-  I = [i for (i, j) in graph.edges]
-  J = [j for (i, j) in graph.edges]
-  return gen_adjlist(I, J, graph.num_vertices)
+    I = [i for (i, j) in graph.edges]
+    J = [j for (i, j) in graph.edges]
+    return gen_adjlist(I, J, graph.num_vertices)
 end
 
 # tests for acyclic coloring
