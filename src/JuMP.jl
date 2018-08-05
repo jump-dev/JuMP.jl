@@ -603,32 +603,30 @@ function Base.setindex!(m::JuMP.Model, value, name::Symbol)
 end
 
 """
-    operator_warn(m::AbstractModel)
+    operator_warn(model::AbstractModel)
+    operator_warn(model::Model)
 
-Everytime two expressions are summed not using `destructive_add!` and one of
-the two expressions have more than 50 terms, this function is called on the model.
+This function is called on the model whenever two affine expressions are added
+together wthiout using `destructive_add!`, and at least one of the two
+expressions has more than 50 terms.
 
-## Notes for extensions
-
-By default this method does nothing so every new model type must implement this
-function in order to print a warning.
+For the case of `Model`, if this function is called more than 20,000 times then
+a warning is generated once.
 """
 function operator_warn(::AbstractModel) end
-function operator_warn(m::Model)
-    m.operator_counter += 1
-    if m.operator_counter > 20000
-        Base.warn_once("The addition operator has been used on JuMP expressions a large number of times. This warning is safe to ignore but may indicate that model generation is slower than necessary. For performance reasons, you should not add expressions in a loop. Instead of x += y, use append!(x,y) to modify x in place. If y is a single variable, you may also use push!(x, coef, y) in place of x += coef*y.")
+function operator_warn(model::Model)
+    model.operator_counter += 1
+    if model.operator_counter > 20000
+        Base.warn_once(
+            "The addition operator has been used on JuMP expressions a large " *
+            "number of times. This warning is safe to ignore but may " *
+            "indicate that model generation is slower than necessary. For " *
+            "performance reasons, you should not add expressions in a loop. " *
+            "Instead of x += y, use add_to_expression!(x,y) to modify x in " *
+            "place. If y is a single variable, you may also use " *
+            "add_to_expression!(x, coef, y) for x += coef*y.")
     end
 end
-function operator_warn(lhs::GenericAffExpr,rhs::GenericAffExpr)
-    if length(linearterms(lhs)) > 50 || length(linearterms(rhs)) > 50
-        if length(linearterms(lhs)) > 1
-            operator_warn(owner_model(first(linearterms(lhs))[2]))
-        end
-    end
-    return
-end
-operator_warn(lhs,rhs) = nothing
 
 ##########################################################################
 # Types used in the nonlinear code
