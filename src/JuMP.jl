@@ -131,7 +131,6 @@ abstract type AbstractModel end
 A mathematical model of an optimization problem.
 """
 mutable struct Model <: AbstractModel
-
     # Special variablewise properties that we keep track of:
     # lower bound, upper bound, fixed, integrality, binary
     variabletolowerbound::Dict{MOIVAR, MOILB}
@@ -139,9 +138,6 @@ mutable struct Model <: AbstractModel
     variabletofix::Dict{MOIVAR, MOIFIX}
     variabletointegrality::Dict{MOIVAR, MOIINT}
     variabletozeroone::Dict{MOIVAR, MOIBIN}
-
-    customnames::Vector
-
     # In Manual and Automatic modes, LazyBridgeOptimizer{CachingOptimizer}.
     # In Direct mode, will hold an AbstractOptimizer.
     moibackend::MOI.AbstractOptimizer
@@ -174,7 +170,6 @@ function Model(moibackend::MOI.ModelLike)
                  Dict{MOIVAR, MOIFIX}(),
                  Dict{MOIVAR, MOIINT}(),
                  Dict{MOIVAR, MOIBIN}(),
-                 VariableRef[],
                  moibackend,
                  nothing,
                  nothing,
