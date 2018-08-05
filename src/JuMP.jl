@@ -347,7 +347,6 @@ setoptimizehook(m::Model, f) = (m.optimizehook = f)
 # Abstract base type for all constraint types
 abstract type AbstractConstraint end
 # Abstract base type for all scalar types
-# In JuMP, used only for VariableRef. Useful primarily for extensions
 abstract type AbstractJuMPScalar end
 
 
@@ -624,24 +623,6 @@ struct NonlinearParameter <: AbstractJuMPScalar
     m::Model
     index::Int
 end
-
-
-##########################################################################
-# Behavior that's uniform across all JuMP "scalar" objects
-
-# TODO why do we need this?
-const JuMPTypes = Union{AbstractJuMPScalar,
-                        NonlinearExpression}
-                    #    QuadExpr,
-                    #    SOCExpr}
-const JuMPScalars = Union{Number,JuMPTypes}
-
-# would really want to do this on ::Type{T}, but doesn't work on v0.4
-Base.eltype(::T) where {T<:JuMPTypes} = T
-Base.size(::JuMPTypes) = ()
-Base.size(x::JuMPTypes,d::Int) = 1
-Base.ndims(::JuMPTypes) = 0
-
 
 ##########################################################################
 include("containers.jl")

@@ -8,6 +8,8 @@
 # See http://github.com/JuliaOpt/JuMP.jl
 #############################################################################
 
+const JuMPTypes = Union{AbstractJuMPScalar, NonlinearExpression}
+
 # Overloads
 #
 # Different objects that must all interact:
