@@ -161,7 +161,7 @@ end
 
     @testset "Warn on unexpected assignmnet" begin
         should_warn = () -> macroexpand(:(@constraint(m, x[i=1] <= 1)))
-        if VERSION >= v"0.7-"
+        @static if VERSION >= v"0.7-"
             # https://github.com/JuliaLang/julia/issues/25612
             @test_logs (:warn, r"Unexpected assignment") should_warn()
         else
