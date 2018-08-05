@@ -22,37 +22,20 @@ const MOIU = MOI.Utilities
 
 import Calculus
 import DataStructures.OrderedDict
-using ForwardDiff
+import ForwardDiff
 include("Derivatives/Derivatives.jl")
 using .Derivatives
 
 export
-# Objects
-    Model, VariableRef, Norm, AffExpr, QuadExpr,
+    Model, VariableRef, AffExpr, QuadExpr,
     with_optimizer,
-    # LinearConstraint, QuadConstraint, SDConstraint,
     NonlinearConstraint,
     ConstraintRef,
-# Cones
     SecondOrderCone, RotatedSecondOrderCone, PSDCone,
-# Functions
-    # Model related
-    setobjectivesense,
-    writeLP, writeMPS,
-    #addSOS1, addSOS2,
     optimize,
-    internalmodel,
-    # VariableRef
     setname,
-    #getname,
     setlowerbound, setupperbound,
-    #getlowerbound, getupperbound,
-    #getvalue, setvalue,
-    #getdual,
-    #setcategory, getcategory,
     setstartvalue,
-    linearindex,
-    # Expressions and constraints
     linearterms,
 
 # Macros and support functions
@@ -139,7 +122,8 @@ end
 @enum ModelMode Automatic Manual Direct
 
 abstract type AbstractModel end
-# All `AbstractModels` must define `num_variables`.
+# All `AbstractModel`s must define methods for these functions:
+# num_variables, object_dictionary
 
 """
     Model
@@ -147,7 +131,6 @@ abstract type AbstractModel end
 A mathematical model of an optimization problem.
 """
 mutable struct Model <: AbstractModel
-
     # Special variablewise properties that we keep track of:
     # lower bound, upper bound, fixed, integrality, binary
     variabletolowerbound::Dict{MOIVAR, MOILB}
@@ -155,9 +138,6 @@ mutable struct Model <: AbstractModel
     variabletofix::Dict{MOIVAR, MOIFIX}
     variabletointegrality::Dict{MOIVAR, MOIINT}
     variabletozeroone::Dict{MOIVAR, MOIBIN}
-
-    customnames::Vector
-
     # In Manual and Automatic modes, LazyBridgeOptimizer{CachingOptimizer}.
     # In Direct mode, will hold an AbstractOptimizer.
     moibackend::MOI.AbstractOptimizer
@@ -190,7 +170,6 @@ function Model(moibackend::MOI.ModelLike)
                  Dict{MOIVAR, MOIFIX}(),
                  Dict{MOIVAR, MOIINT}(),
                  Dict{MOIVAR, MOIBIN}(),
-                 VariableRef[],
                  moibackend,
                  nothing,
                  nothing,
@@ -353,6 +332,7 @@ end
 
 # TODO(IainNZ): Document these too.
 # TODO(#1381): Implement Base.copy for Model.
+object_dictionary(model::Model) = model.objdict
 terminationstatus(m::Model) = MOI.get(m, MOI.TerminationStatus())
 primalstatus(m::Model) = MOI.get(m, MOI.PrimalStatus())
 dualstatus(m::Model) = MOI.get(m, MOI.DualStatus())
@@ -364,7 +344,6 @@ setoptimizehook(m::Model, f) = (m.optimizehook = f)
 # Abstract base type for all constraint types
 abstract type AbstractConstraint end
 # Abstract base type for all scalar types
-# In JuMP, used only for VariableRef. Useful primarily for extensions
 abstract type AbstractJuMPScalar end
 
 
@@ -558,9 +537,6 @@ function registercon(m::AbstractModel, conname::Symbol, value)
 end
 registercon(m::AbstractModel, conname, value) = error("Invalid constraint name $conname")
 
-# This function needs to be implemented by all `AbstractModel`s
-object_dictionary(m::Model) = m.objdict
-
 function registerobject(m::AbstractModel, name::Symbol, value, errorstring::String)
     objdict = object_dictionary(m)
     if haskey(objdict, name)
@@ -642,32 +618,11 @@ struct NonlinearParameter <: AbstractJuMPScalar
     index::Int
 end
 
-
-##########################################################################
-# Behavior that's uniform across all JuMP "scalar" objects
-
-# TODO why do we need this?
-const JuMPTypes = Union{AbstractJuMPScalar,
-                        NonlinearExpression}
-                    #    Norm,
-                    #    QuadExpr,
-                    #    SOCExpr}
-const JuMPScalars = Union{Number,JuMPTypes}
-
-# would really want to do this on ::Type{T}, but doesn't work on v0.4
-Base.eltype(::T) where {T<:JuMPTypes} = T
-Base.size(::JuMPTypes) = ()
-Base.size(x::JuMPTypes,d::Int) = 1
-Base.ndims(::JuMPTypes) = 0
-
-
 ##########################################################################
 include("containers.jl")
 include("operators.jl")
-# include("writers.jl")
 include("macros.jl")
 include("optimizerinterface.jl")
-# include("callbacks.jl")
 include("nlp.jl")
 include("print.jl")
 
