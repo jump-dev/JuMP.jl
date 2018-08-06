@@ -336,8 +336,14 @@ abstract type AbstractConstraint end
 # In JuMP, used only for Variable. Useful primarily for extensions
 abstract type AbstractJuMPScalar end
 
-Base.iterate(x::AbstractJuMPScalar) = (x, true)
-Base.iterate(x::AbstractJuMPScalar, state) = nothing
+if VERSION < v"0.7-"
+    Base.start(::AbstractJuMPScalar) = false
+    Base.next(x::AbstractJuMPScalar, state) = (x, true)
+    Base.done(::AbstractJuMPScalar, state) = state
+else
+    Base.iterate(x::AbstractJuMPScalar) = (x, true)
+    Base.iterate(x::AbstractJuMPScalar, state) = nothing
+end
 Base.isempty(::AbstractJuMPScalar) = false
 
 #############################################################################

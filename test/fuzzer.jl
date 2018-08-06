@@ -95,7 +95,7 @@ function test_approx_equal_exprs(ex1, ex2)
     end
     if !res
         str = "The following expression did not pass the fuzzer:\n    ex1 = QuadExpr($(ex1.qvars1),$(ex1.qvars2),$(ex1.qcoeffs),AffExpr($(ex1.aff.vars),$(ex1.aff.coeffs),$(ex1.aff.constant)))\n    ex2 = QuadExpr($(ex2.qvars1),$(ex2.qvars2),$(ex2.qcoeffs),AffExpr($(ex2.aff.vars),$(ex2.aff.coeffs),$(ex2.aff.constant)))"
-        warn(str)
+        @warn(str)
     end
     return res
 end

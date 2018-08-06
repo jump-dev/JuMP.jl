@@ -13,6 +13,10 @@
 using JuMP
 using Compat.Test, Compat.LinearAlgebra
 
+if VERSION < v"0.7-"
+    using Compat: @warn
+end
+
 # Load solvers
 include("solvers.jl")
 
