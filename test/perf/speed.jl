@@ -1,6 +1,6 @@
 #############################################################################
 # JuMP
-# An algebraic modelling langauge for Julia
+# An algebraic modelling language for Julia
 # See http://github.com/JuliaOpt/JuMP.jl
 #############################################################################
 # speed.jl
