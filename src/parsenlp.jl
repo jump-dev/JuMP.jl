@@ -3,6 +3,17 @@
 #  License, v. 2.0. If a copy of the MPL was not distributed with this
 #  file, You can obtain one at http://mozilla.org/MPL/2.0/.
 
+# Returns the block expression inside a :let that holds the code to be run.
+# The other block (not returned) is for declaring variables in the scope of the
+# let.
+function let_code_block(ex::Expr)
+    @assert isexpr(ex, :let)
+    @static if VERSION >= v"0.7-"
+        return ex.args[2]
+    else
+        return ex.args[1]
+    end
+end
 
 # generates code which converts an expression into a NodeData array (tape)
 # parent is the index of the parent expression
@@ -18,7 +29,7 @@ function parseNLExpr(m, x, tapevar, parent, values)
             error("Unrecognized expression $header(...)")
         end
         codeblock = :(let; end)
-        block = codeblock.args[1]
+        block = let_code_block(codeblock)
         push!(block.args, :(push!($tapevar, NodeData(CALL, $operatorid, $parent))))
         parentvar = gensym()
         push!(block.args, :($parentvar = length($tapevar)))
@@ -39,7 +50,7 @@ function parseNLExpr(m, x, tapevar, parent, values)
         end
         if length(x.args) == 2 # univariate
             code = :(let; end)
-            block = code.args[1]
+            block = let_code_block(code)
             @assert isexpr(block, :block)
             if haskey(univariate_operator_to_id,x.args[1])
                 operatorid = univariate_operator_to_id[x.args[1]]
@@ -69,7 +80,7 @@ function parseNLExpr(m, x, tapevar, parent, values)
             return code
         else
             code = :(let; end)
-            block = code.args[1]
+            block = let_code_block(code)
             @assert isexpr(block, :block)
             if haskey(operator_to_id,x.args[1]) # fast compile-time lookup
                 operatorid = operator_to_id[x.args[1]]
@@ -106,7 +117,7 @@ function parseNLExpr(m, x, tapevar, parent, values)
     end
     if isexpr(x, :comparison)
         code = :(let; end)
-        block = code.args[1]
+        block = let_code_block(code)
         op = x.args[2]
         operatorid = comparison_operator_to_id[op]
         for k in 2:2:length(x.args)-1
@@ -122,7 +133,7 @@ function parseNLExpr(m, x, tapevar, parent, values)
     end
     if isexpr(x, :&&) || isexpr(x, :||)
         code = :(let; end)
-        block = code.args[1]
+        block = let_code_block(code)
         op = x.head
         operatorid = logic_operator_to_id[op]
         parentvar = gensym()
@@ -166,12 +177,24 @@ function parseNLExpr_runtime(m::Model, x::AbstractArray, tape, parent, values)
     error("Unexpected array $x in nonlinear expression. Nonlinear expressions may contain only scalar expressions.")
 end
 
+function parseNLExpr_runtime(m::Model, x::GenericQuadExpr, tape, parent, values)
+    error("Unexpected quadratic expression $x in nonlinear expression. " *
+          "Quadratic expressions (e.g., created using @expression) and " *
+          "nonlinear expression cannot be mixed.")
+end
+
+function parseNLExpr_runtime(m::Model, x, tape, parent, values)
+    error("Unexpected object $x in nonlinear expression.")
+end
+
 function expression_complexity(ex::Expr)
     return isempty(ex.args) ? 1 : sum(expression_complexity, ex.args)
 end
 expression_complexity(other) = 1
 
-macro processNLExpr(m, ex)
+# This is separated from the macro version to make it available for other @NL*
+# macros.
+function processNLExpr(model, ex)
     # This is an arbitrary cutoff. See issue #1355.
     if expression_complexity(ex) > 5000
         Compat.@warn "Processing a very large nonlinear expression with " *
@@ -182,13 +205,17 @@ macro processNLExpr(m, ex)
                      "to make them more compact. The macros are designed to " *
                      "process smaller, human-readable expressions."
     end
-    parsed = parseNLExpr(m, ex, :tape, -1, :values)
-    quote
+    parsed = parseNLExpr(model, ex, :tape, -1, :values)
+    return quote
         tape = NodeData[]
         values = Float64[]
         $parsed
         NonlinearExprData(tape, values)
     end
+end
+
+macro processNLExpr(model, ex)
+    return processNLExpr(model, ex)
 end
 
 function Derivatives.expr_to_nodedata(ex::VariableRef,nd::Vector{NodeData},values::Vector{Float64},parentid,r::Derivatives.UserOperatorRegistry)

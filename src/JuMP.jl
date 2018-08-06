@@ -347,6 +347,14 @@ abstract type AbstractConstraint end
 abstract type AbstractJuMPScalar end
 
 
+@static if VERSION >= v"0.7-"
+    # These are required to create symmetric containers of AbstractJuMPScalars.
+    Compat.LinearAlgebra.symmetric_type(::Type{T}) where T <: AbstractJuMPScalar = T
+    Compat.LinearAlgebra.symmetric(scalar::AbstractJuMPScalar, ::Symbol) = scalar
+    # This is required for linear algebra operations involving transposes.
+    Compat.LinearAlgebra.adjoint(scalar::AbstractJuMPScalar) = scalar
+end
+
 """
     owner_model(s::AbstractJuMPScalar)
 

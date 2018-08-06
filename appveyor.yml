@@ -5,10 +5,11 @@ environment:
   - JULIA_URL: "https://julialang-s3.julialang.org/bin/winnt/x86/0.7/julia-0.7-latest-win32.exe"
   - JULIA_URL: "https://julialang-s3.julialang.org/bin/winnt/x64/0.7/julia-0.7-latest-win64.exe"
 
-matrix:
-  allow_failures:
-  - JULIA_URL: "https://julialang-s3.julialang.org/bin/winnt/x86/0.7/julia-0.7-latest-win32.exe"
-  - JULIA_URL: "https://julialang-s3.julialang.org/bin/winnt/x64/0.7/julia-0.7-latest-win64.exe"
+# This is left as an example for the next big version switch.
+# matrix:
+#   allow_failures:
+#   - JULIA_URL: "https://julialang-s3.julialang.org/bin/winnt/x86/0.7/julia-0.7-latest-win32.exe"
+#   - JULIA_URL: "https://julialang-s3.julialang.org/bin/winnt/x64/0.7/julia-0.7-latest-win64.exe"
 
 branches:
   only:
@@ -31,9 +32,10 @@ install:
 
 build_script:
 # Need to convert from shallow to complete for Pkg.clone to work
-#  - git fetch --unshallow
-  - C:\projects\julia\bin\julia -e "versioninfo(); Pkg.init();
-        Pkg.clone(pwd(), \"JuMP\");"
+  - IF EXIST .git\shallow (git fetch --unshallow)
+  - C:\projects\julia\bin\julia -e "versioninfo();
+        Pkg.clone(pwd(), \"JuMP\");
+        Pkg.build(\"JuMP\")"
 
 test_script:
   - C:\projects\julia\bin\julia -e "Pkg.test(\"JuMP\")"

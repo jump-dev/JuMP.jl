@@ -229,17 +229,47 @@ function variables_test(ModelType::Type{<:JuMP.AbstractModel}, VariableRefType::
         @test JuMP.name(z[3]) == "t[3]"
     end
 
-    # TODO reenable when printing comes back
-    # @testset "condition in indexing" begin
-    #    fa = repl[:for_all]
-    #    inset, dots = repl[:in], repl[:dots]
-    #    condmod = ModelType()
-    #    @variable(condmod, x[i=1:10; iseven(i)])
-    #    @variable(condmod, y[j=1:10,k=3:2:9; isodd(j+k) && k <= 8])
-    #    @test length(x.tupledict) == 5
-    #    @test length(y.tupledict) == 15
-    #    @test string(condmod) == "Min 0\nSubject to\n x[i] $fa i $inset {1,2,$dots,9,10} s.t. iseven(i)\n y[j,k] $fa j $inset {1,2,$dots,9,10}, k $inset {3,5,7,9} s.t. isodd(j + k) and k <= 8\n"
-    # end
+    @testset "condition in indexing" begin
+        function test_one_dim(x)
+            @test length(x) == 5
+            for i in 1:10
+                if iseven(i)
+                    @test haskey(x, i)
+                else
+                    @test !haskey(x, i)
+                end
+            end
+        end
+
+        function test_two_dim(y)
+            @test length(y) == 15
+            for j in 1:10, k in 3:2:9
+                if isodd(j+k) && k <= 8
+                    @test haskey(y, (j,k))
+                else
+                    @test !haskey(y, (j,k))
+                end
+            end
+        end
+
+
+        model = ModelType()
+        # Parses as ref on 0.7.
+        @variable(model, named_one_dim[i = 1:10; iseven(i)])
+        # Parses as vcat on 0.7.
+        anon_one_dim = @variable(model, [i = 1:10; iseven(i)])
+        # Parses as typed_vcat on 0.7.
+        @variable(model, named_two_dim[j = 1:10, k=3:2:9;
+                                       isodd(j + k) && k <= 8])
+        # Parses as vect on 0.7.
+        anon_two_dim = @variable(model, [j = 1:10, k=3:2:9;
+                                         isodd(j + k) && k <= 8])
+
+        test_one_dim(named_one_dim)
+        test_one_dim(anon_one_dim)
+        test_two_dim(named_two_dim)
+        test_two_dim(anon_two_dim)
+    end
 
     @testset "@variable returning Array{VariableRef}" begin
         m = ModelType()
@@ -341,17 +371,23 @@ end
         # @test_throws ErrorException w[1:2,:,[:red,"blue"]]
     end
 
-    @testset "Can't use end for indexing a JuMPArray or Dict" begin
-        m = ModelType()
-        @variable(m, x[0:2,1:4])
-        @variable(m, y[i=1:4,j=1:4;true])
-        @variable(m, z[0:2])
-        @test_throws ErrorException x[end,1]
-        @test_throws ErrorException x[end-1]
-        @test_throws ErrorException x[0,end-1]
-        @test_throws MethodError y[end,end-1]
-        @test_throws MethodError y[end,1]
-        @test_throws ErrorException z[end]
+    @testset "end for indexing a JuMPArray" begin
+        model = ModelType()
+        @variable(model, x[0:2,1:4])
+        @variable(model, z[0:2])
+
+        if VERSION >= v"0.7-"
+            @test x[end,1] == x[2,1]
+            @test x[0,end-1] == x[0,3]
+            @test z[end] == z[2]
+            # TODO: This probably isn't hard to make work.
+            @test_throws ErrorException x[end-1]
+        else
+            @test_throws ErrorException x[end,1]
+            @test_throws ErrorException x[end-1]
+            @test_throws ErrorException x[0,end-1]
+            @test_throws ErrorException z[end]
+        end
     end
 
     @testset "Unsigned dimension lengths" begin

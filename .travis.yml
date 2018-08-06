@@ -5,9 +5,10 @@ os:
 julia:
     - 0.6
     - 0.7
-matrix:
-    allow_failures:
-        - julia: 0.7
+# This is left as an example for the next big version switch.
+# matrix:
+#     allow_failures:
+#         - julia: 0.7
 notifications:
     email: false
 sudo: false

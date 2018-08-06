@@ -293,7 +293,14 @@ _sizehint_expr!(q, n) = nothing
 
 # TODO: specialize sum for Dict and JuMPArray of JuMP objects?
 Base.sum(vars::Array{<:AbstractVariableRef}) = GenericAffExpr(0.0, [v => 1.0 for v in vars])
-Base.sum(j::AbstractArray{<:AbstractVariableRef}) = sum([j[i] for i in eachindex(j)]) # to handle non-one-indexed arrays.
+function Base.sum(array::AbstractArray{<:AbstractVariableRef})
+    result_expression = zero(eltype(array))
+    for variable in array
+        add_to_expression!(result_expression, variable)
+    end
+    return result_expression
+end
+# TODO: Specialize for iterables.
 function Base.sum(affs::AbstractArray{T}) where T<:GenericAffExpr
     new_aff = zero(T)
     for aff in affs
@@ -457,23 +464,163 @@ end
 _multiply!(ret::AbstractArray{T}, lhs::SparseMatrixCSC, rhs::SparseMatrixCSC) where {T<:JuMPTypes} = _multiply!(ret, lhs, Matrix(rhs))
 _multiplyt!(ret::AbstractArray{T}, lhs::SparseMatrixCSC, rhs::SparseMatrixCSC) where {T<:JuMPTypes} = _multiplyt!(ret, lhs, Matrix(rhs))
 
-_multiply!(ret, lhs, rhs) = A_mul_B!(ret, lhs, rhs)
-_multiplyt!(ret, lhs, rhs) = At_mul_B!(ret, lhs, rhs)
+function Base.:*(A::Union{Matrix{T}, SparseMatrixCSC{T}},
+                 x::Union{Matrix, Vector, SparseMatrixCSC}
+                 ) where {T <: JuMPTypes}
+    return _matmul(A, x)
+end
+function Base.:*(A::Union{Matrix{T}, SparseMatrixCSC{T}},
+                 x::Union{Matrix{R}, Vector{R}, SparseMatrixCSC{R}}
+                 ) where {T <: JuMPTypes, R <: JuMPTypes}
+    return _matmul(A, x)
+end
+function Base.:*(A::Union{Matrix, SparseMatrixCSC},
+                 x::Union{Matrix{T}, Vector{T}, SparseMatrixCSC{T}}
+                 ) where {T <: JuMPTypes}
+    return _matmul(A, x)
+end
 
-Base.:*(             A::Union{Matrix{T},SparseMatrixCSC{T}}, x::Union{Matrix,   Vector,   SparseMatrixCSC}) where {T<:JuMPTypes}    = _matmul(A, x)
-Base.:*(A::Union{Matrix{T},SparseMatrixCSC{T}}, x::Union{Matrix{R},Vector{R},SparseMatrixCSC{R}}) where {T<:JuMPTypes,R<:JuMPTypes} = _matmul(A, x)
-Base.:*(             A::Union{Matrix,   SparseMatrixCSC},    x::Union{Matrix{T},Vector{T},SparseMatrixCSC{T}}) where {T<:JuMPTypes} = _matmul(A, x)
+if VERSION >= v"0.7-"
+    # This is a stopgap solution to get (most) tests passing on Julia 0.7. A lot
+    # of cases probably still don't work. (Like A * A where A is a sparse matrix
+    # of a JuMP type). This code needs a big refactor.
+    function Base.:*(adjA::Adjoint{<:JuMPTypes,<:SparseMatrixCSC},
+                     x::Vector)
+        A = adjA.parent
+        ret = _return_arrayt(A, x)
+        return mul!(ret, adjoint(A), x)
+    end
+    function Base.:*(adjA::Adjoint{<:Any,<:SparseMatrixCSC},
+                     x::Vector{<:JuMPTypes})
+        A = adjA.parent
+        ret = _return_arrayt(A, x)
+        return mul!(ret, adjoint(A), x)
+    end
+    function Base.:*(adjA::Adjoint{<:JuMPTypes,<:SparseMatrixCSC},
+                     x::Vector{<:JuMPTypes})
+        A = adjA.parent
+        ret = _return_arrayt(A, x)
+        return mul!(ret, adjoint(A), x)
+    end
+    function Base.:*(adjA::Transpose{<:JuMPTypes,<:SparseMatrixCSC},
+                     x::Vector)
+        A = adjA.parent
+        ret = _return_arrayt(A, x)
+        return mul!(ret, transpose(A), x)
+    end
+    function Base.:*(adjA::Transpose{<:Any,<:SparseMatrixCSC},
+                     x::Vector{<:JuMPTypes})
+        A = adjA.parent
+        ret = _return_arrayt(A, x)
+        return mul!(ret, transpose(A), x)
+    end
+    function Base.:*(adjA::Transpose{<:JuMPTypes,<:SparseMatrixCSC},
+                     x::Vector{<:JuMPTypes})
+        A = adjA.parent
+        ret = _return_arrayt(A, x)
+        return mul!(ret, transpose(A), x)
+    end
+    # Matrix versions.
+    function Base.:*(adjA::Adjoint{<:JuMPTypes,<:SparseMatrixCSC},
+                     x::Matrix)
+        A = adjA.parent
+        ret = _return_arrayt(A, x)
+        return mul!(ret, adjoint(A), x)
+    end
+    function Base.:*(adjA::Adjoint{<:Any,<:SparseMatrixCSC},
+                     x::Matrix{<:JuMPTypes})
+        A = adjA.parent
+        ret = _return_arrayt(A, x)
+        return mul!(ret, adjoint(A), x)
+    end
+    function Base.:*(adjA::Adjoint{<:JuMPTypes,<:SparseMatrixCSC},
+                     x::Matrix{<:JuMPTypes})
+        A = adjA.parent
+        ret = _return_arrayt(A, x)
+        return mul!(ret, adjoint(A), x)
+    end
+    function Base.:*(adjA::Transpose{<:JuMPTypes,<:SparseMatrixCSC},
+                     x::Matrix)
+        A = adjA.parent
+        ret = _return_arrayt(A, x)
+        return mul!(ret, transpose(A), x)
+    end
+    function Base.:*(adjA::Transpose{<:Any,<:SparseMatrixCSC},
+                     x::Matrix{<:JuMPTypes})
+        A = adjA.parent
+        ret = _return_arrayt(A, x)
+        return mul!(ret, transpose(A), x)
+    end
+    function Base.:*(adjA::Transpose{<:JuMPTypes,<:SparseMatrixCSC},
+                     x::Matrix{<:JuMPTypes})
+        A = adjA.parent
+        ret = _return_arrayt(A, x)
+        return mul!(ret, transpose(A), x)
+    end
+    # mul! is adapted from upstream Julia.
+    #=
+    > Copyright (c) 2009-2018: Jeff Bezanson, Stefan Karpinski, Viral B. Shah,
+    > and other contributors:
+    >
+    > https://github.com/JuliaLang/julia/contributors
+    >
+    > Permission is hereby granted, free of charge, to any person obtaining
+    > a copy of this software and associated documentation files (the
+    > "Software"), to deal in the Software without restriction, including
+    > without limitation the rights to use, copy, modify, merge, publish,
+    > distribute, sublicense, and/or sell copies of the Software, and to
+    > permit persons to whom the Software is furnished to do so, subject to
+    > the following conditions:
+    >
+    > The above copyright notice and this permission notice shall be
+    > included in all copies or substantial portions of the Software.
+    >
+    > THE SOFTWARE IS PROVIDED "AS IS", WITHOUT WARRANTY OF ANY KIND,
+    > EXPRESS OR IMPLIED, INCLUDING BUT NOT LIMITED TO THE WARRANTIES OF
+    > MERCHANTABILITY, FITNESS FOR A PARTICULAR PURPOSE AND
+    > NONINFRINGEMENT. IN NO EVENT SHALL THE AUTHORS OR COPYRIGHT HOLDERS BE
+    > LIABLE FOR ANY CLAIM, DAMAGES OR OTHER LIABILITY, WHETHER IN AN ACTION
+    > OF CONTRACT, TORT OR OTHERWISE, ARISING FROM, OUT OF OR IN CONNECTION
+    > WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN THE SOFTWARE.
+    =#
+    # We confuse transpose with adjoint because they're the same for all JuMP
+    # types. Note this doesn't extend the LinearAlgebra version. It assumes
+    # that C is already filled with zeros.
+    function mul!(C::StridedVecOrMat,
+                                       adjA::Union{Adjoint{<:Any,<:SparseMatrixCSC},
+                                                   Transpose{<:Any,<:SparseMatrixCSC}},
+                                       B::StridedVecOrMat)
+        A = adjA.parent
+        A.n == size(C, 1) || throw(DimensionMismatch())
+        A.m == size(B, 1) || throw(DimensionMismatch())
+        size(B, 2) == size(C, 2) || throw(DimensionMismatch())
+        nzv = A.nzval
+        rv = A.rowval
+        # C is already filled with zeros by _return_arrayt.
+        for k = 1:size(C, 2)
+            @inbounds for col = 1:A.n
+                tmp = zero(eltype(C))
+                for j = A.colptr[col]:(A.colptr[col + 1] - 1)
+                    tmp += adjoint(nzv[j])*B[rv[j],k]
+                end
+                C[col,k] += tmp
+            end
+        end
+        C
+    end
+else
+    _multiply!(ret, lhs, rhs) = A_mul_B!(ret, lhs, rhs)
+    _multiplyt!(ret, lhs, rhs) = At_mul_B!(ret, lhs, rhs)
 
-import Base.At_mul_B
-import Base.Ac_mul_B
-# these methods are called when one does A.'*v or A'*v respectively
-At_mul_B(A::Union{Matrix{T},SparseMatrixCSC{T}}, x::Union{Matrix, Vector, SparseMatrixCSC}) where {T<:JuMPTypes} = _matmult(A, x)
-At_mul_B(A::Union{Matrix{T},SparseMatrixCSC{T}}, x::Union{Matrix{R}, Vector{R}, SparseMatrixCSC{R}}) where {T<:JuMPTypes,R<:JuMPTypes} = _matmult(A, x)
-At_mul_B(A::Union{Matrix,SparseMatrixCSC}, x::Union{Matrix{T}, Vector{T}, SparseMatrixCSC{T}}) where {T<:JuMPTypes} = _matmult(A, x)
-# these methods are the same as above since complex numbers are not implemented in JuMP
-Ac_mul_B(A::Union{Matrix{T},SparseMatrixCSC{T}}, x::Union{Matrix, Vector, SparseMatrixCSC}) where {T<:JuMPTypes} = _matmult(A, x)
-Ac_mul_B(A::Union{Matrix{T},SparseMatrixCSC{T}}, x::Union{Matrix{R}, Vector{R}, SparseMatrixCSC{R}}) where {T<:JuMPTypes,R<:JuMPTypes} = _matmult(A, x)
-Ac_mul_B(A::Union{Matrix,SparseMatrixCSC}, x::Union{Matrix{T}, Vector{T}, SparseMatrixCSC{T}}) where {T<:JuMPTypes} = _matmult(A, x)
+    # these methods are called when one does A.'*v or A'*v respectively
+    Base.At_mul_B(A::Union{Matrix{T},SparseMatrixCSC{T}}, x::Union{Matrix, Vector, SparseMatrixCSC}) where {T<:JuMPTypes} = _matmult(A, x)
+    Base.At_mul_B(A::Union{Matrix{T},SparseMatrixCSC{T}}, x::Union{Matrix{R}, Vector{R}, SparseMatrixCSC{R}}) where {T<:JuMPTypes,R<:JuMPTypes} = _matmult(A, x)
+    Base.At_mul_B(A::Union{Matrix,SparseMatrixCSC}, x::Union{Matrix{T}, Vector{T}, SparseMatrixCSC{T}}) where {T<:JuMPTypes} = _matmult(A, x)
+    # these methods are the same as above since complex numbers are not implemented in JuMP
+    Base.Ac_mul_B(A::Union{Matrix{T},SparseMatrixCSC{T}}, x::Union{Matrix, Vector, SparseMatrixCSC}) where {T<:JuMPTypes} = _matmult(A, x)
+    Base.Ac_mul_B(A::Union{Matrix{T},SparseMatrixCSC{T}}, x::Union{Matrix{R}, Vector{R}, SparseMatrixCSC{R}}) where {T<:JuMPTypes,R<:JuMPTypes} = _matmult(A, x)
+    Base.Ac_mul_B(A::Union{Matrix,SparseMatrixCSC}, x::Union{Matrix{T}, Vector{T}, SparseMatrixCSC{T}}) where {T<:JuMPTypes} = _matmult(A, x)
+end
 
 function _matmul(A, x)
     m, n = size(A,1), size(A,2)
