@@ -10,6 +10,7 @@
 # test/nonlinear.jl
 # Test general nonlinear
 #############################################################################
+using JuMP, Compat.Test
 # If solvers not loaded, load them (i.e running just these tests)
 !isdefined(:nlp_solvers) && include("solvers.jl")
 

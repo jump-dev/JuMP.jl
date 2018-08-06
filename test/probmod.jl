@@ -11,6 +11,7 @@
 # Testing problem modification
 # Must be run as part of runtests.jl, as it needs a list of solvers.
 #############################################################################
+using JuMP, Compat.Test
 # If solvers not loaded, load them (i.e running just these tests)
 !isdefined(:lp_solvers) && include("solvers.jl")
 

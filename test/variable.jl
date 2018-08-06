@@ -10,7 +10,7 @@
 # test/variable.jl
 # Testing for Variable
 #############################################################################
-using JuMP
+using JuMP, Compat.Test
 import JuMP.repl
 
 @testset "Variables" begin
