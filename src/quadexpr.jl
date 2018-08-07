@@ -97,9 +97,19 @@ function reorder_iterator(p::Pair{UnorderedPair{V},C}, state::Int) where {C,V}
     return ((p.second, p.first.a, p.first.b), state)
 end
 
-Base.start(qti::QuadTermIterator) = start(qti.quad.terms)
-Base.done(qti::QuadTermIterator, state::Int) = done(qti.quad.terms, state)
-Base.next(qti::QuadTermIterator, state::Int) = reorder_iterator(next(qti.quad.terms, state)...)
+if VERSION < v"0.7-"
+    Base.start(qti::QuadTermIterator) = start(qti.quad.terms)
+    Base.done(qti::QuadTermIterator, state::Int) = done(qti.quad.terms, state)
+    Base.next(qti::QuadTermIterator, state::Int) = reorder_iterator(next(qti.quad.terms, state)...)
+else
+    function reorder_iterator(t::Tuple{Pair{<:UnorderedPair,<:Any},Int})
+        ((first(t).second, first(t).first.a, first(t).first.b), last(t))
+    end
+    Base.iterate(qti::QuadTermIterator) = reorder_iterator(iterate(qti.quad.terms))
+    function Base.iterate(qti::QuadTermIterator, state)
+        reorder_iterator(iterate(qti.quad.terms, state))
+    end
+end
 Base.length(qti::QuadTermIterator) = length(qti.quad.terms)
 
 function add_to_expression!(quad::GenericQuadExpr{C,V}, new_coef::C, new_var1::V, new_var2::V) where {C,V}
@@ -135,7 +145,7 @@ end
 
 Base.hash(quad::GenericQuadExpr, h::UInt) = hash(quad.aff, hash(quad.terms, h))
 
-function Base.dropzeros(quad::GenericQuadExpr)
+function Compat.SparseArrays.dropzeros(quad::GenericQuadExpr)
     quad_terms = copy(quad.terms)
     for (key, value) in quad.terms
         if iszero(value)

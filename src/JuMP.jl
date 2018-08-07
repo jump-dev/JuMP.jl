@@ -8,7 +8,7 @@
 # See http://github.com/JuliaOpt/JuMP.jl
 #############################################################################
 
-__precompile__()
+VERSION < v"0.7.0-beta2.199" && __precompile__()
 
 module JuMP
 
@@ -362,9 +362,14 @@ Return the model owning the scalar `s`.
 """
 function owner_model end
 
-Base.start(::AbstractJuMPScalar) = false
-Base.next(x::AbstractJuMPScalar, state) = (x, true)
-Base.done(::AbstractJuMPScalar, state) = state
+if VERSION < v"0.7-"
+    Base.start(::AbstractJuMPScalar) = false
+    Base.next(x::AbstractJuMPScalar, state) = (x, true)
+    Base.done(::AbstractJuMPScalar, state) = state
+else
+    Base.iterate(x::AbstractJuMPScalar) = (x, true)
+    Base.iterate(::AbstractJuMPScalar, state) = nothing
+end
 Base.isempty(::AbstractJuMPScalar) = false
 
 """
