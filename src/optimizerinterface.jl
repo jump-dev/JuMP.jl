@@ -22,11 +22,7 @@ end
 
 function MOIU.attachoptimizer!(model::Model)
     @assert mode(model) != Direct
-    copyresult = MOIU.attachoptimizer!(caching_optimizer(model))
-    # TODO: more reliable error reporting
-    @assert copyresult.status == MOI.CopySuccess
-    @assert caching_optimizer(model).state == MOIU.AttachedOptimizer
-    return copyresult
+    MOIU.attachoptimizer!(caching_optimizer(model))
 end
 
 
