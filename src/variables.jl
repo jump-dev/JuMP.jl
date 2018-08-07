@@ -207,19 +207,27 @@ function objectivefunction(m::Model, ::Type{VariableRef})
     return VariableRef(m, f)
 end
 
-struct SingleVariableConstraint{V <: AbstractVariableRef, S <: MOI.AbstractScalarSet} <: AbstractConstraint
+struct SingleVariableConstraint{V <: AbstractVariableRef,
+                                S <: MOI.AbstractScalarSet} <: AbstractConstraint
     func::V
     set::S
 end
 
 moi_function_and_set(c::SingleVariableConstraint) = (MOI.SingleVariable(c.func), c.set)
+shape(::SingleVariableConstraint) = ScalarShape()
 
-struct VectorOfVariablesConstraint{V <: AbstractVariableRef, S <: MOI.AbstractVectorSet} <: AbstractConstraint
+struct VectorOfVariablesConstraint{V <: AbstractVariableRef, S <: MOI.AbstractVectorSet, Shape <: AbstractShape} <: AbstractConstraint
     func::Vector{V}
     set::S
+    shape::Shape
+end
+function VectorOfVariablesConstraint(func::Vector{<:AbstractVariableRef},
+                                     set::MOI.AbstractVectorSet)
+    VectorOfVariablesConstraint(func, set, VectorShape())
 end
 
 moi_function_and_set(c::VectorOfVariablesConstraint) = (MOI.VectorOfVariables(c.func), c.set)
+shape(c::VectorOfVariablesConstraint) = c.shape
 
 function constraintobject(ref::ConstraintRef{Model, MOICON{FuncType, SetType}}) where
         {FuncType <: MOI.SingleVariable, SetType <: MOI.AbstractScalarSet}
@@ -234,7 +242,8 @@ function constraintobject(ref::ConstraintRef{Model, MOICON{FuncType, SetType}}) 
     model = ref.m
     f = MOI.get(model, MOI.ConstraintFunction(), ref)::FuncType
     s = MOI.get(model, MOI.ConstraintSet(), ref)::SetType
-    return VectorOfVariablesConstraint(map(v -> VariableRef(model, v), f.variables), s)
+    return VectorOfVariablesConstraint(map(v -> VariableRef(model, v), f.variables),
+                                       s, ref.shape)
 end
 
 
@@ -272,7 +281,8 @@ function setlowerbound(v::VariableRef,lower::Number)
 end
 
 function LowerBoundRef(v::VariableRef)
-    return ConstraintRef{Model, MOILB}(v.m, lowerboundindex(v))
+    return ConstraintRef{Model, MOILB, ScalarShape}(v.m, lowerboundindex(v),
+                                                    ScalarShape())
 end
 
 """
@@ -328,7 +338,8 @@ function setupperbound(v::VariableRef,upper::Number)
 end
 
 function UpperBoundRef(v::VariableRef)
-    return ConstraintRef{Model, MOIUB}(v.m, upperboundindex(v))
+    return ConstraintRef{Model, MOIUB, ScalarShape}(v.m, upperboundindex(v),
+                                                    ScalarShape())
 end
 
 """
@@ -405,7 +416,8 @@ function fixvalue(v::VariableRef)
 end
 
 function FixRef(v::VariableRef)
-    return ConstraintRef{Model,MOIFIX}(v.m, fixindex(v))
+    return ConstraintRef{Model, MOIFIX, ScalarShape}(v.m, fixindex(v),
+                                                     ScalarShape())
 end
 
 # integer and binary constraints
@@ -439,7 +451,8 @@ function unsetinteger(v::VariableRef)
 end
 
 function IntegerRef(v::VariableRef)
-    return ConstraintRef{Model,MOIINT}(v.m, integerindex(v))
+    return ConstraintRef{Model, MOIINT, ScalarShape}(v.m, integerindex(v),
+                                                     ScalarShape())
 end
 
 isbinary(v::VariableRef) = haskey(v.m.variabletozeroone,index(v))
@@ -471,7 +484,8 @@ function unsetbinary(v::VariableRef)
 end
 
 function BinaryRef(v::VariableRef)
-    return ConstraintRef{Model,MOIBIN}(v.m, binaryindex(v))
+    return ConstraintRef{Model, MOIBIN, ScalarShape}(v.m, binaryindex(v),
+                                                     ScalarShape())
 end
 
 

@@ -226,6 +226,7 @@ struct QuadExprConstraint{V <: AbstractVariableRef, S <: MOI.AbstractScalarSet} 
 end
 
 moi_function_and_set(c::QuadExprConstraint) = (MOI.ScalarQuadraticFunction(c.func), c.set)
+shape(::QuadExprConstraint) = ScalarShape()
 
 function constraintobject(ref::ConstraintRef{Model, MOICON{FuncType, SetType}}) where
         {FuncType <: MOI.ScalarQuadraticFunction, SetType <: MOI.AbstractScalarSet}
