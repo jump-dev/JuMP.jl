@@ -122,11 +122,20 @@ linear part of the affine expression.
 """
 linearterms(aff::GenericAffExpr) = LinearTermIterator(aff)
 
-reorder_iterator(p::Pair, state::Int) = ((p.second, p.first), state)
 
-Base.start(lti::LinearTermIterator) = start(lti.aff.terms)
-Base.done( lti::LinearTermIterator, state::Int) = done(lti.aff.terms, state)
-Base.next( lti::LinearTermIterator, state::Int) = reorder_iterator(next(lti.aff.terms, state)...)
+if VERSION < v"0.7-"
+    reorder_iterator(p::Pair, state::Int) = ((p.second, p.first), state)
+    Base.start(lti::LinearTermIterator) = start(lti.aff.terms)
+    Base.done( lti::LinearTermIterator, state::Int) = done(lti.aff.terms, state)
+    Base.next( lti::LinearTermIterator, state::Int) = reorder_iterator(next(lti.aff.terms, state)...)
+else
+    reorder_iterator(::Nothing) = nothing
+    reorder_iterator(t::Tuple{Pair,Int}) = ((first(t).second, first(t).first), last(t))
+    Base.iterate(lti::LinearTermIterator) = reorder_iterator(iterate(lti.aff.terms))
+    function Base.iterate(lti::LinearTermIterator, state)
+        reorder_iterator(iterate(lti.aff.terms, state))
+    end
+end
 Base.length(lti::LinearTermIterator) = length(lti.aff.terms)
 
 """
@@ -179,7 +188,7 @@ end
 
 Base.hash(aff::GenericAffExpr, h::UInt) = hash(aff.constant, hash(aff.terms, h))
 
-function Base.dropzeros(aff::GenericAffExpr)
+function Compat.SparseArrays.dropzeros(aff::GenericAffExpr)
     result = copy(aff)
     for (coef, var) in linearterms(aff)
         if iszero(coef)
