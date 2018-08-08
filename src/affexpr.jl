@@ -267,8 +267,8 @@ end
 
 function MOI.VectorAffineFunction(affs::Vector{AffExpr})
     len = sum(aff -> length(linearterms(aff)), affs)
-    terms = Vector{MOI.VectorAffineTerm{Float64}}(len)
-    constant = Vector{Float64}(length(affs))
+    terms = Vector{MOI.VectorAffineTerm{Float64}}(undef, len)
+    constant = Vector{Float64}(undef, length(affs))
     offset = 0
     for (i, aff) in enumerate(affs)
         constant[i] = aff.constant

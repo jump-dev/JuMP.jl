@@ -286,15 +286,15 @@ function operators_test(ModelType::Type{<:JuMP.AbstractModel}, VariableRefType::
 
             A = [1 3 ; 2 4]
             @variable(dot_m, 1 ≤ y[1:2,1:2] ≤ 1)
-            @test_expression_with_string vecdot(A,y) "y[1,1] + 2 y[2,1] + 3 y[1,2] + 4 y[2,2]"
-            @test_expression_with_string vecdot(y,A) "y[1,1] + 2 y[2,1] + 3 y[1,2] + 4 y[2,2]"
+            @test_expression_with_string Compat.dot(A,y) "y[1,1] + 2 y[2,1] + 3 y[1,2] + 4 y[2,2]"
+            @test_expression_with_string Compat.dot(y,A) "y[1,1] + 2 y[2,1] + 3 y[1,2] + 4 y[2,2]"
 
             B = ones(2,2,2)
             @variable(dot_m, 0 ≤ z[1:2,1:2,1:2] ≤ 1)
-            @test_expression_with_string vecdot(B,z) "z[1,1,1] + z[2,1,1] + z[1,2,1] + z[2,2,1] + z[1,1,2] + z[2,1,2] + z[1,2,2] + z[2,2,2]"
-            @test_expression_with_string vecdot(z,B) "z[1,1,1] + z[2,1,1] + z[1,2,1] + z[2,2,1] + z[1,1,2] + z[2,1,2] + z[1,2,2] + z[2,2,2]"
+            @test_expression_with_string Compat.dot(B,z) "z[1,1,1] + z[2,1,1] + z[1,2,1] + z[2,2,1] + z[1,1,2] + z[2,1,2] + z[1,2,2] + z[2,2,2]"
+            @test_expression_with_string Compat.dot(z,B) "z[1,1,1] + z[2,1,1] + z[1,2,1] + z[2,2,1] + z[1,1,2] + z[2,1,2] + z[1,2,2] + z[2,2,2]"
 
-            @objective(dot_m, Max, dot(x, ones(3)) - vecdot(y, ones(2,2)))
+            @objective(dot_m, Max, dot(x, ones(3)) - Compat.dot(y, ones(2,2)))
             for i in 1:3
                 JuMP.setstartvalue(x[i], 1)
             end
@@ -305,8 +305,8 @@ function operators_test(ModelType::Type{<:JuMP.AbstractModel}, VariableRefType::
                 JuMP.setstartvalue(z[i,j,k], 1)
             end
             @test dot(c, JuMP.startvalue.(x)) ≈ 6
-            @test vecdot(A, JuMP.startvalue.(y)) ≈ 10
-            @test vecdot(B, JuMP.startvalue.(z)) ≈ 8
+            @test Compat.dot(A, JuMP.startvalue.(y)) ≈ 10
+            @test Compat.dot(B, JuMP.startvalue.(z)) ≈ 8
 
             @testset "JuMP issue #656" begin
                 issue656 = ModelType()

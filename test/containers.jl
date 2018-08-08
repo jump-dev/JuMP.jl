@@ -214,7 +214,7 @@ And data, a 2×2×2×2 Array{Float64,4}:
     end
 
     @testset "0-dimensional JuMPArray" begin
-        a = Array{Int,0}()
+        a = Array{Int,0}(undef)
         a[] = 10
         A = JuMPArray(a)
         @test A[] == 10

@@ -27,7 +27,7 @@ function solve_maxcut_sdp(n, W)
     # Solve the SDP relaxation
     m = Model(solver=solver)
     @variable(m, X[1:n,1:n], SDP)
-    @objective(m, Max, vecdot(L,X))
+    @objective(m, Max, Compat.dot(L,X))
     @constraint(m, diag(X) .== 1)
     solve(m)
 

@@ -13,28 +13,25 @@ function test(n::Int)
     @constraint(m,sum(c[i]*z[i] for i=1:n)<=0)
 
     #Vector
-    tic()
-    @constraint(m,sum(c[i]*z[i] for i=1:n)<=1)
-    println("Vector with sum(): $(toq())")
-    tic()
-    @constraint(m,vecdot(c,z) <= 1)
-    println("Vector with vecdot() : $(toq())")
+    elpsd = @elapsed @constraint(m,sum(c[i]*z[i] for i=1:n)<=1)
+    println("Vector with sum(): $(elpsd)")
+
+    elpsd = @elapsed @constraint(m,Compat.dot(c,z) <= 1)
+    println("Vector with vecdot() : $(elpsd)")
 
     #2D Matrix
-    tic()
-    @constraint(m,sum(a[i,j]*x[i,j] for i=1:n,j=1:n)<=1)
-    println("2D Matrix with sum(): $(toq())")
-    tic()
-    @constraint(m,vecdot(a,x)<=1)
-    println("2D Matrix with bigvecdot(): $(toq())")
+    elpsd = @elapsed @constraint(m,sum(a[i,j]*x[i,j] for i=1:n,j=1:n)<=1)
+    println("2D Matrix with sum(): $(elpsd)")
+
+    elpsd = @elapsed @constraint(m,Compat.dot(a,x)<=1)
+    println("2D Matrix with bigvecdot(): $(elpsd)")
 
     #3D Matrix
-    tic()
-    @constraint(m,sum(b[i,j,k]*y[i,j,k] for i=1:n,j=1:n,k=1:n)<=1)
-    println("3D Matrix with sum(): $(toq())")
-    tic()
-    @constraint(m,vecdot(b,y)<=1)
-    println("3D Matrix with vecdot(): $(toq())")
+    elpsd = @elapsed @constraint(m,sum(b[i,j,k]*y[i,j,k] for i=1:n,j=1:n,k=1:n)<=1)
+    println("3D Matrix with sum(): $(elpsd)")
+
+    elpsd = @elapsed @constraint(m,Compat.dot(b,y)<=1)
+    println("3D Matrix with vecdot(): $(elpsd)")
     return 0
 end
 
