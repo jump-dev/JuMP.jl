@@ -391,43 +391,43 @@ function operators_test(ModelType::Type{<:JuMP.AbstractModel}, VariableRefType::
             @test JuMP.isequal_canonical(-y, [-2x[1] -  x[2]
                                -x[1] - 2x[2] -  x[3]
                                        -x[2] - 2x[3]])
-            @test JuMP.isequal_canonical(y + 1, [2x[1] +  x[2]         + 1
+            @test JuMP.isequal_canonical(y .+ 1, [2x[1] +  x[2]         + 1
                                   x[1] + 2x[2] +  x[3] + 1
                                   x[2] + 2x[3] + 1])
-            @test JuMP.isequal_canonical(y - 1, [2x[1] +  x[2]         - 1
+            @test JuMP.isequal_canonical(y .- 1, [2x[1] +  x[2]         - 1
                                   x[1] + 2x[2] +  x[3] - 1
                                           x[2] + 2x[3] - 1])
-            @test JuMP.isequal_canonical(y + 2ones(3), [2x[1] +  x[2]         + 2
+            @test JuMP.isequal_canonical(y .+ 2ones(3), [2x[1] +  x[2]         + 2
                                          x[1] + 2x[2] +  x[3] + 2
                                          x[2] + 2x[3] + 2])
-            @test JuMP.isequal_canonical(y - 2ones(3), [2x[1] +  x[2]         - 2
+            @test JuMP.isequal_canonical(y .- 2ones(3), [2x[1] +  x[2]         - 2
                                          x[1] + 2x[2] +  x[3] - 2
                                          x[2] + 2x[3] - 2])
-            @test JuMP.isequal_canonical(2ones(3) + y, [2x[1] +  x[2]         + 2
+            @test JuMP.isequal_canonical(2ones(3) .+ y, [2x[1] +  x[2]         + 2
                                          x[1] + 2x[2] +  x[3] + 2
                                          x[2] + 2x[3] + 2])
-            @test JuMP.isequal_canonical(2ones(3) - y, [-2x[1] -  x[2]         + 2
+            @test JuMP.isequal_canonical(2ones(3) .- y, [-2x[1] -  x[2]         + 2
                                          -x[1] - 2x[2] -  x[3] + 2
                                          -x[2] - 2x[3] + 2])
-            @test JuMP.isequal_canonical(y + x, [3x[1] +  x[2]
+            @test JuMP.isequal_canonical(y .+ x, [3x[1] +  x[2]
                                   x[1] + 3x[2] +  x[3]
                                           x[2] + 3x[3]])
-            @test JuMP.isequal_canonical(x + y, [3x[1] +  x[2]
+            @test JuMP.isequal_canonical(x .+ y, [3x[1] +  x[2]
                                   x[1] + 3x[2] +  x[3]
                                   x[2] + 3x[3]])
-            @test JuMP.isequal_canonical(2y + 2x, [6x[1] + 2x[2]
+            @test JuMP.isequal_canonical(2y .+ 2x, [6x[1] + 2x[2]
                                    2x[1] + 6x[2] + 2x[3]
                                    2x[2] + 6x[3]])
-            @test JuMP.isequal_canonical(y - x, [ x[1] + x[2]
+            @test JuMP.isequal_canonical(y .- x, [ x[1] + x[2]
                                   x[1] + x[2] + x[3]
                                          x[2] + x[3]])
-            @test JuMP.isequal_canonical(x - y, [-x[1] - x[2]
+            @test JuMP.isequal_canonical(x .- y, [-x[1] - x[2]
                                  -x[1] - x[2] - x[3]
                                  -x[2] - x[3]])
-            @test JuMP.isequal_canonical(y + x[:], [3x[1] +  x[2]
+            @test JuMP.isequal_canonical(y .+ x[:], [3x[1] +  x[2]
                                      x[1] + 3x[2] +  x[3]
                                              x[2] + 3x[3]])
-            @test JuMP.isequal_canonical(x[:] + y, [3x[1] +  x[2]
+            @test JuMP.isequal_canonical(x[:] .+ y, [3x[1] +  x[2]
                                      x[1] + 3x[2] +  x[3]
                                              x[2] + 3x[3]])
 
@@ -525,9 +525,9 @@ function operators_test(ModelType::Type{<:JuMP.AbstractModel}, VariableRefType::
             @test_throws ErrorException A./y
             @test_throws ErrorException B./y
 
-            @test JuMP.isequal_canonical((2*x) / 3, Matrix((2*y) / 3))
-            @test JuMP.isequal_canonical(2 * (x/3), Matrix(2 * (y/3)))
-            @test JuMP.isequal_canonical(x[1,1] .* A, Matrix(x[1,1] .* B))
+            @test JuMP.isequal_canonical((2 .* x) ./ 3, Matrix((2 .* y) ./ 3))
+            @test JuMP.isequal_canonical(2 .* (x ./ 3), Matrix(2 * (y ./ 3)))
+            @test JuMP.isequal_canonical((x[1,1],) .* A, Matrix((x[1,1],) .* B))
         end
 
         @testset "Vectorized comparisons" begin
