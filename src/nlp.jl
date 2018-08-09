@@ -202,7 +202,7 @@ mutable struct NLPEvaluator <: MOI.AbstractNLPEvaluator
 end
 
 function replace_moi_variables(nd::Vector{NodeData}, moi_index_to_consecutive_index)
-    new_nd = Vector{NodeData}(length(nd))
+    new_nd = Vector{NodeData}(undef, length(nd))
     for i in 1:length(nd)
         node = nd[i]
         if node.nodetype == MOIVARIABLE
@@ -308,115 +308,111 @@ function MOI.initialize!(d::NLPEvaluator, requested_features::Vector{Symbol})
 
     d.parameter_values = nldata.nlparamvalues
 
-    tprep = @elapsed begin
-        d.want_hess = (:Hess in requested_features)
-        want_hess_storage = (:HessVec in requested_features) || d.want_hess
-        coloring_storage = Derivatives.Coloring.IndexedSet(num_variables_)
+    d.want_hess = (:Hess in requested_features)
+    want_hess_storage = (:HessVec in requested_features) || d.want_hess
+    coloring_storage = Derivatives.Coloring.IndexedSet(num_variables_)
 
-        d.has_nlobj = isa(nldata.nlobj, NonlinearExprData)
-        max_expr_length = 0
-        main_expressions = Array{Vector{NodeData}}(undef,0)
-        subexpr = Array{Vector{NodeData}}(undef,0)
-        for nlexpr in nldata.nlexpr
-            push!(subexpr, nlexpr.nd)
-        end
-        if d.has_nlobj
-            push!(main_expressions,nldata.nlobj.nd)
-        end
-        for nlconstr in nldata.nlconstr
-            push!(main_expressions,nlconstr.terms.nd)
-        end
-        d.subexpression_order, individual_order = order_subexpressions(main_expressions,subexpr)
-
-        d.subexpression_linearity = Array{Linearity}(undef,length(nldata.nlexpr))
-        subexpression_variables = Array{Vector{Int}}(undef,length(nldata.nlexpr))
-        subexpression_edgelist = Array{Set{Tuple{Int,Int}}}(undef,length(nldata.nlexpr))
-        d.subexpressions = Array{SubexpressionStorage}(undef,length(nldata.nlexpr))
-        d.subexpression_forward_values = Array{Float64}(undef,length(d.subexpressions))
-        d.subexpression_reverse_values = Array{Float64}(undef,length(d.subexpressions))
-
-        empty_edgelist = Set{Tuple{Int,Int}}()
-        for k in d.subexpression_order # only load expressions which actually are used
-            d.subexpression_forward_values[k] = NaN
-            d.subexpressions[k] = SubexpressionStorage(nldata.nlexpr[k].nd, nldata.nlexpr[k].const_values, num_variables_, d.subexpression_linearity, moi_index_to_consecutive_index)
-            subex = d.subexpressions[k]
-            d.subexpression_linearity[k] = subex.linearity
-            @assert subex.linearity != CONSTANT
-            if d.want_hess
-                empty!(coloring_storage)
-                compute_gradient_sparsity!(coloring_storage,subex.nd)
-                # union with all dependent expressions
-                for idx in list_subexpressions(subex.nd)
-                    union!(coloring_storage, subexpression_variables[idx])
-                end
-                subexpression_variables[k] = collect(coloring_storage)
-                empty!(coloring_storage)
-                linearity = classify_linearity(subex.nd, subex.adj, d.subexpression_linearity)
-                edgelist = compute_hessian_sparsity(subex.nd, subex.adj, linearity,coloring_storage,subexpression_edgelist, subexpression_variables)
-                subexpression_edgelist[k] = edgelist
-            end
-        end
-
-        if :ExprGraph in requested_features
-            d.subexpressions_as_julia_expressions = Array{Any}(undef,length(subexpr))
-            for k in d.subexpression_order
-                ex = d.subexpressions[k]
-                d.subexpressions_as_julia_expressions[k] = tape_to_expr(d.m, 1, nldata.nlexpr[k].nd, ex.adj, ex.const_values, d.parameter_values, d.subexpressions_as_julia_expressions, nldata.user_operators, true, true)
-            end
-        end
-
-        max_chunk = 1
-
-        if d.has_nlobj
-            nd = main_expressions[1]
-            d.objective = FunctionStorage(nd, nldata.nlobj.const_values, num_variables_, coloring_storage, d.want_hess, d.subexpressions, individual_order[1], d.subexpression_linearity, subexpression_edgelist, subexpression_variables, moi_index_to_consecutive_index)
-            max_expr_length = max(max_expr_length, length(d.objective.nd))
-            max_chunk = max(max_chunk, size(d.objective.seed_matrix,2))
-        end
-
-        for k in 1:length(nldata.nlconstr)
-            nlconstr = nldata.nlconstr[k]
-            idx = (d.has_nlobj) ? k+1 : k
-            nd = main_expressions[idx]
-            push!(d.constraints, FunctionStorage(nd, nlconstr.terms.const_values, num_variables_, coloring_storage, d.want_hess, d.subexpressions, individual_order[idx], d.subexpression_linearity, subexpression_edgelist, subexpression_variables, moi_index_to_consecutive_index))
-            max_expr_length = max(max_expr_length, length(d.constraints[end].nd))
-            max_chunk = max(max_chunk, size(d.constraints[end].seed_matrix,2))
-        end
-
-        max_chunk = min(max_chunk, 10) # 10 is hardcoded upper bound to avoid excess memory allocation
-
-        if d.want_hess || want_hess_storage # storage for Hess or HessVec
-            d.input_ϵ = Array{Float64}(undef,max_chunk*num_variables_)
-            d.output_ϵ = Array{Float64}(undef,max_chunk*num_variables_)
-            d.forward_storage_ϵ = Array{Float64}(undef,max_chunk*max_expr_length)
-            d.partials_storage_ϵ = Array{Float64}(undef,max_chunk*max_expr_length)
-            d.reverse_storage_ϵ = Array{Float64}(undef,max_chunk*max_expr_length)
-            d.subexpression_forward_values_ϵ = Array{Float64}(undef,max_chunk*length(d.subexpressions))
-            d.subexpression_reverse_values_ϵ = Array{Float64}(undef,max_chunk*length(d.subexpressions))
-            for k in d.subexpression_order
-                subex = d.subexpressions[k]
-                subex.forward_storage_ϵ = zeros(Float64,max_chunk*length(subex.nd))
-                subex.partials_storage_ϵ = zeros(Float64,max_chunk*length(subex.nd))
-                subex.reverse_storage_ϵ = zeros(Float64,max_chunk*length(subex.nd))
-            end
-            d.max_chunk = max_chunk
-            if d.want_hess
-                d.hessian_sparsity = _hessian_lagrangian_structure(d)
-                # JIT warm-up
-                # TODO: rewrite without MPB
-                #MathProgBase.eval_hessian_lagrangian(d, Array{Float64}(undef,length(d.hess_I)), d.m.colVal, 1.0, ones(MathProgBase.numconstr(d.m)))
-            end
-        end
-
-        # JIT warm-up
-        # TODO: rewrite without MPB
-        # if :Grad in requested_features
-        #     MOI.eval_objective_gradient(d, zeros(numVar), d.m.colVal)
-        #     MOI.eval_constraint(d, zeros(MathProgBase.numconstr(d.m)), d.m.colVal)
-        # end
-
+    d.has_nlobj = isa(nldata.nlobj, NonlinearExprData)
+    max_expr_length = 0
+    main_expressions = Array{Vector{NodeData}}(undef,0)
+    subexpr = Array{Vector{NodeData}}(undef,0)
+    for nlexpr in nldata.nlexpr
+        push!(subexpr, nlexpr.nd)
     end
-    #println("Prep time: $tprep")
+    if d.has_nlobj
+        push!(main_expressions,nldata.nlobj.nd)
+    end
+    for nlconstr in nldata.nlconstr
+        push!(main_expressions,nlconstr.terms.nd)
+    end
+    d.subexpression_order, individual_order = order_subexpressions(main_expressions,subexpr)
+
+    d.subexpression_linearity = Array{Linearity}(undef,length(nldata.nlexpr))
+    subexpression_variables = Array{Vector{Int}}(undef,length(nldata.nlexpr))
+    subexpression_edgelist = Array{Set{Tuple{Int,Int}}}(undef,length(nldata.nlexpr))
+    d.subexpressions = Array{SubexpressionStorage}(undef,length(nldata.nlexpr))
+    d.subexpression_forward_values = Array{Float64}(undef,length(d.subexpressions))
+    d.subexpression_reverse_values = Array{Float64}(undef,length(d.subexpressions))
+
+    empty_edgelist = Set{Tuple{Int,Int}}()
+    for k in d.subexpression_order # only load expressions which actually are used
+        d.subexpression_forward_values[k] = NaN
+        d.subexpressions[k] = SubexpressionStorage(nldata.nlexpr[k].nd, nldata.nlexpr[k].const_values, num_variables_, d.subexpression_linearity, moi_index_to_consecutive_index)
+        subex = d.subexpressions[k]
+        d.subexpression_linearity[k] = subex.linearity
+        @assert subex.linearity != CONSTANT
+        if d.want_hess
+            empty!(coloring_storage)
+            compute_gradient_sparsity!(coloring_storage,subex.nd)
+            # union with all dependent expressions
+            for idx in list_subexpressions(subex.nd)
+                union!(coloring_storage, subexpression_variables[idx])
+            end
+            subexpression_variables[k] = collect(coloring_storage)
+            empty!(coloring_storage)
+            linearity = classify_linearity(subex.nd, subex.adj, d.subexpression_linearity)
+            edgelist = compute_hessian_sparsity(subex.nd, subex.adj, linearity,coloring_storage,subexpression_edgelist, subexpression_variables)
+            subexpression_edgelist[k] = edgelist
+        end
+    end
+
+    if :ExprGraph in requested_features
+        d.subexpressions_as_julia_expressions = Array{Any}(undef,length(subexpr))
+        for k in d.subexpression_order
+            ex = d.subexpressions[k]
+            d.subexpressions_as_julia_expressions[k] = tape_to_expr(d.m, 1, nldata.nlexpr[k].nd, ex.adj, ex.const_values, d.parameter_values, d.subexpressions_as_julia_expressions, nldata.user_operators, true, true)
+        end
+    end
+
+    max_chunk = 1
+
+    if d.has_nlobj
+        nd = main_expressions[1]
+        d.objective = FunctionStorage(nd, nldata.nlobj.const_values, num_variables_, coloring_storage, d.want_hess, d.subexpressions, individual_order[1], d.subexpression_linearity, subexpression_edgelist, subexpression_variables, moi_index_to_consecutive_index)
+        max_expr_length = max(max_expr_length, length(d.objective.nd))
+        max_chunk = max(max_chunk, size(d.objective.seed_matrix,2))
+    end
+
+    for k in 1:length(nldata.nlconstr)
+        nlconstr = nldata.nlconstr[k]
+        idx = (d.has_nlobj) ? k+1 : k
+        nd = main_expressions[idx]
+        push!(d.constraints, FunctionStorage(nd, nlconstr.terms.const_values, num_variables_, coloring_storage, d.want_hess, d.subexpressions, individual_order[idx], d.subexpression_linearity, subexpression_edgelist, subexpression_variables, moi_index_to_consecutive_index))
+        max_expr_length = max(max_expr_length, length(d.constraints[end].nd))
+        max_chunk = max(max_chunk, size(d.constraints[end].seed_matrix,2))
+    end
+
+    max_chunk = min(max_chunk, 10) # 10 is hardcoded upper bound to avoid excess memory allocation
+
+    if d.want_hess || want_hess_storage # storage for Hess or HessVec
+        d.input_ϵ = Array{Float64}(undef,max_chunk*num_variables_)
+        d.output_ϵ = Array{Float64}(undef,max_chunk*num_variables_)
+        d.forward_storage_ϵ = Array{Float64}(undef,max_chunk*max_expr_length)
+        d.partials_storage_ϵ = Array{Float64}(undef,max_chunk*max_expr_length)
+        d.reverse_storage_ϵ = Array{Float64}(undef,max_chunk*max_expr_length)
+        d.subexpression_forward_values_ϵ = Array{Float64}(undef,max_chunk*length(d.subexpressions))
+        d.subexpression_reverse_values_ϵ = Array{Float64}(undef,max_chunk*length(d.subexpressions))
+        for k in d.subexpression_order
+            subex = d.subexpressions[k]
+            subex.forward_storage_ϵ = zeros(Float64,max_chunk*length(subex.nd))
+            subex.partials_storage_ϵ = zeros(Float64,max_chunk*length(subex.nd))
+            subex.reverse_storage_ϵ = zeros(Float64,max_chunk*length(subex.nd))
+        end
+        d.max_chunk = max_chunk
+        if d.want_hess
+            d.hessian_sparsity = _hessian_lagrangian_structure(d)
+            # JIT warm-up
+            # TODO: rewrite without MPB
+            #MathProgBase.eval_hessian_lagrangian(d, Array{Float64}(undef,length(d.hess_I)), d.m.colVal, 1.0, ones(MathProgBase.numconstr(d.m)))
+        end
+    end
+
+    # JIT warm-up
+    # TODO: rewrite without MPB
+    # if :Grad in requested_features
+    #     MOI.eval_objective_gradient(d, zeros(numVar), d.m.colVal)
+    #     MOI.eval_constraint(d, zeros(MathProgBase.numconstr(d.m)), d.m.colVal)
+    # end
 
     # reset timers
     d.eval_objective_timer = 0
@@ -472,7 +468,7 @@ function reverse_eval_all(d::NLPEvaluator,x)
     for ex in d.constraints
         reverse_eval(ex.reverse_storage,ex.partials_storage,ex.nd,ex.adj)
     end
-    copy!(d.last_x,x)
+    copyto!(d.last_x,x)
 end
 
 function MOI.eval_objective(d::NLPEvaluator, x)
@@ -501,7 +497,7 @@ function MOI.eval_objective_gradient(d::NLPEvaluator, g, x)
             fill!(g,0.0)
             ex = d.objective
             subexpr_reverse_values = d.subexpression_reverse_values
-            subexpr_reverse_values[ex.dependent_subexpressions] = 0.0
+            subexpr_reverse_values[ex.dependent_subexpressions] .= 0.0
             reverse_extract(g,ex.reverse_storage,ex.nd,ex.adj,subexpr_reverse_values,1.0)
             for i in length(ex.dependent_subexpressions):-1:1
                 k = ex.dependent_subexpressions[i]
@@ -541,8 +537,8 @@ function MOI.eval_constraint_jacobian(d::NLPEvaluator, J, x)
         idx = 0
         for ex in d.constraints
             nzidx = ex.grad_sparsity
-            grad_storage[nzidx] = 0.0
-            subexpr_reverse_values[ex.dependent_subexpressions] = 0.0
+            grad_storage[nzidx] .= 0.0
+            subexpr_reverse_values[ex.dependent_subexpressions] .= 0.0
 
             reverse_extract(grad_storage,ex.reverse_storage,ex.nd,ex.adj,subexpr_reverse_values,1.0)
             for i in length(ex.dependent_subexpressions):-1:1
@@ -700,7 +696,7 @@ function hessian_slice_inner(d, ex, R, input_ϵ, output_ϵ, ::Type{Val{CHUNK}}) 
 
     # do a reverse pass
     subexpr_reverse_values_ϵ[ex.dependent_subexpressions] = zero_ϵ
-    d.subexpression_reverse_values[ex.dependent_subexpressions] = 0.0
+    d.subexpression_reverse_values[ex.dependent_subexpressions] .= 0.0
 
     reverse_eval_ϵ(output_ϵ, ex.reverse_storage, reverse_storage_ϵ,ex.partials_storage, partials_storage_ϵ,ex.nd,ex.adj,d.subexpression_reverse_values,subexpr_reverse_values_ϵ, 1.0, zero_ϵ)
     for i in length(ex.dependent_subexpressions):-1:1
@@ -795,7 +791,7 @@ function hessian_slice(d, ex, x, H, scale, nzcount, recovery_tmp_storage,::Type{
     #output_slice = view(H, (nzcount+1):(nzcount+nzthis))
     output_slice = VectorView(nzcount, nzthis, pointer(H))
     Coloring.recover_from_matmat!(output_slice, R, ex.rinfo, recovery_tmp_storage)
-    scale!(output_slice, scale)
+    Compat.rmul!(output_slice, scale)
     return nzthis
 
 end

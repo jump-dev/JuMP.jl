@@ -66,7 +66,7 @@ end
     end
 
     @testset "ifelse with $nlp_solver" for nlp_solver in nlp_solvers
-        (contains("$(typeof(nlp_solver))", "OsilSolver") || contains("$(typeof(nlp_solver))", "NLoptSolver") || contains("$(typeof(nlp_solver))", "BaronSolver")) && continue
+        (occursin("OsilSolver", "$(typeof(nlp_solver))") || occursin("NLoptSolver", "$(typeof(nlp_solver))") || occursin("BaronSolver", "$(typeof(nlp_solver))")) && continue
         m = Model(solver=nlp_solver)
         @variable(m, x, start = 2)
         # minimizer at smooth point, solvers should be okay
@@ -207,8 +207,8 @@ end
 
 
     @testset "Infeasibility detection with $nlp_solver" for nlp_solver in convex_nlp_solvers
-        contains(string(typeof(nlp_solver)),"NLoptSolver") && continue
-        contains(string(typeof(nlp_solver)),"MosekSolver") && continue
+        occursin("NLoptSolver",string(typeof(nlp_solver))) && continue
+        occursin("MosekSolver",string(typeof(nlp_solver))) && continue
         # (Attempt to) solve an infeasible problem
         m = Model(solver=nlp_solver)
         n = 10
@@ -222,7 +222,7 @@ end
 
 
     @testset "Unboundedness detection with $nlp_solver" for nlp_solver in convex_nlp_solvers
-        contains(string(typeof(nlp_solver)),"NLoptSolver") && continue
+        occursin("NLoptSolver",string(typeof(nlp_solver))) && continue
         # (Attempt to) solve an unbounded problem
         m = Model(solver=nlp_solver)
         @variable(m, x >= 0)

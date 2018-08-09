@@ -22,7 +22,7 @@ using SCS
 solver = SCSSolver(eps=1e-6)
 
 function solve_maxcut_sdp(n, W)
-    L = 0.25 * (diagm(W*ones(n)) - W)
+    L = 0.25 * (diagm(0=>W*ones(n)) - W)
 
     # Solve the SDP relaxation
     m = Model(solver=solver)

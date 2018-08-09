@@ -357,10 +357,10 @@ function Compat.LinearAlgebra.issymmetric(x::Matrix{T}) where T<:JuMPTypes
 end
 
 # Special-case because the the base version wants to do fill!(::Array{AbstractVariableRef}, zero(GenericAffExpr{Float64,eltype(x)}))
-one_indexed(A) = all(x -> isa(x, Base.OneTo), indices(A))
+one_indexed(A) = all(x -> isa(x, Base.OneTo), Compat.axes(A))
 function Compat.LinearAlgebra.diagm(x::AbstractVector{<:AbstractVariableRef})
     @assert one_indexed(x) # Base.diagm doesn't work for non-one-indexed arrays in general.
-    diagm(copy!(similar(x, GenericAffExpr{Float64,eltype(x)}), x))
+    diagm(0=>copyto!(similar(x, GenericAffExpr{Float64,eltype(x)}), x))
 end
 
 ###############

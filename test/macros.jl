@@ -6,7 +6,7 @@ mutable struct MyVariable
 end
 
 @testset "Extension of @variable with buildvariable #1029" begin
-    const MyVariable = Tuple{JuMP.VariableInfo, Int}
+    local MyVariable = Tuple{JuMP.VariableInfo, Int}
     JuMP.variabletype(m::Model, ::Type{MyVariable}) = MyVariable
     names = Dict{MyVariable, String}()
     function JuMP.addvariable(m::Model, v::MyVariable, name::String="")

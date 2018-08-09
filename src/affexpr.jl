@@ -102,7 +102,7 @@ Evaluate `a` given the value `map(v)` for each variable `v`.
 function value(a::GenericAffExpr{T, V}, map::Function) where {T, V}
     S = Base.promote_op(map, V)
     U = Base.promote_op(*, T, S)
-    ret = U(a.constant)
+    ret = convert(U, a.constant)
     for (var, coef) in a.terms
         ret += coef * map(var)
     end

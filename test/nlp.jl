@@ -140,7 +140,7 @@
         I = [i for (i,j) in hessian_sparsity]
         J = [j for (i,j) in hessian_sparsity]
         raw = sparse(I, J, V, n, n)
-        return full(raw + raw' - sparse(diagm(diag(raw))))
+        return Matrix(raw + raw' - sparse(diagm(0=>diag(raw))))
     end
 
     @testset "Hessian evaluation (Issue #435)" begin
@@ -355,13 +355,13 @@
         V = zeros(length(hessian_sparsity))
         values = ones(18)
         MOI.eval_hessian_lagrangian(d, V, values, 1.0, Float64[])
-        @test isapprox(dense_hessian(hessian_sparsity, V, 18), ones(18,18)-diagm(ones(18)))
+        @test isapprox(dense_hessian(hessian_sparsity, V, 18), ones(18,18)-diagm(0=>ones(18)))
 
         values[1] = 0.5
         MOI.eval_hessian_lagrangian(d, V, values, 1.0, Float64[])
         @test isapprox(dense_hessian(hessian_sparsity, V, 18),
                        [0 ones(17)'
-                        ones(17)  (ones(17,17) - diagm(ones(17)))/2 ])
+                        ones(17)  (ones(17,17) - diagm(0=>ones(17)))/2 ])
     end
 
     @testset "eval_objective and eval_objective_gradient" begin

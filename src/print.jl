@@ -169,7 +169,7 @@ function var_string(::Type{IJuliaMode}, v::AbstractVariableRef)
     var_name = name(v)
     if !isempty(var_name)
         # TODO: This is wrong if variable name constains extra "]"
-        return replace(replace(var_name, "[", "_{", 1), "]", "}")
+        return replace(replace(var_name, "[" => "_{", count = 1), "]" => "}")
     else
         return "noname"
     end

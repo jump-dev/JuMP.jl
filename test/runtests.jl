@@ -13,7 +13,8 @@
 using JuMP
 
 using Compat
-using Compat.LinearAlgebra # for dot
+using Compat.LinearAlgebra  # for dot
+using Compat.SparseArrays # for sparse
 using Compat.Test
 
 using MathOptInterface
