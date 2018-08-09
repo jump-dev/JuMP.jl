@@ -309,12 +309,12 @@ function Base.sum(affs::AbstractArray{T}) where T<:GenericAffExpr
     return new_aff
 end
 
-# Base Julia's generic fallback vecdot, aka Compat.dot, requires that dot be defined
+# Base Julia's generic fallback vecdot, aka Compat.dot, requires that dot, aka Compat.LinearAlgebra.dot, be defined
 # for scalars, so instead of defining them one-by-one, we will
 # fallback to the multiplication operator
-Compat.dot(lhs::JuMPTypes, rhs::JuMPTypes) = lhs*rhs
-Compat.dot(lhs::JuMPTypes, rhs::Number)    = lhs*rhs
-Compat.dot(lhs::Number,    rhs::JuMPTypes) = lhs*rhs
+Compat.LinearAlgebra.dot(lhs::JuMPTypes, rhs::JuMPTypes) = lhs*rhs
+Compat.LinearAlgebra.dot(lhs::JuMPTypes, rhs::Number)    = lhs*rhs
+Compat.LinearAlgebra.dot(lhs::Number,    rhs::JuMPTypes) = lhs*rhs
 
 Compat.dot(lhs::AbstractVector{T},rhs::AbstractVector{S}) where {T<:JuMPTypes,S<:JuMPTypes} = _dot(lhs,rhs)
 Compat.dot(lhs::AbstractVector{T},rhs::AbstractVector{S}) where {T<:JuMPTypes,S} = _dot(lhs,rhs)
