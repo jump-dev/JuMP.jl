@@ -43,7 +43,7 @@ Our documentation includes an installation guide, quick-start guide, and referen
 
 **The latest release of JuMP (based on MathProgBase) is not compatible with
 Julia 0.7 or 1.0. We encourage users to continue to use Julia 0.6 for a stable
-environment. The developmental version of JuMP (based on MOI) supports both
+environment. The development version of JuMP (based on MOI) supports both
 Julia 0.6 and Julia 0.7 but is alpha-quality with breaking changes in still
 progress. See the Discourse
 [post](https://discourse.julialang.org/t/jump-and-julia-0-7-1-0) for more
