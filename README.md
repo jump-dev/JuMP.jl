@@ -39,6 +39,9 @@ Our documentation includes an installation guide, quick-start guide, and referen
 
 [juliaopt-notebooks]: https://github.com/JuliaOpt/juliaopt-notebooks
 
+**Read about the upcoming transition to MathOptInterface (MOI) and breaking changes in JuMP 0.19 [here](https://discourse.julialang.org/t/mathoptinterface-and-upcoming-breaking-changes-in-jump-0-19).**
+
+**The latest release of JuMP (based on MathProgBase) is not compatible with Julia 0.7 or 1.0. We encourage users to continue to use Julia 0.6 for a stable environment. The developmental version of JuMP (based on MOI) supports both Julia 0.6 and Julia 0.7 but is alpha-quality with breaking changes in still progress. See the Discourse [post](https://discourse.julialang.org/t/jump-and-julia-0-7-1-0) for more information on Julia 0.7/1.0 support.**
 
 **Latest Release**: 0.18.2 (`release-0.18` branch)
   * [Documentation](http://www.juliaopt.org/JuMP.jl/0.18/)
@@ -48,10 +51,6 @@ Our documentation includes an installation guide, quick-start guide, and referen
     * PackageEvaluator:
       [![JuMP](http://pkg.julialang.org/badges/JuMP_0.6.svg)](http://pkg.julialang.org/?pkg=JuMP&ver=0.6)
 
-
-**Read about the upcoming transition to MathOptInterface (MOI) and breaking changes in JuMP 0.19 [here](https://discourse.julialang.org/t/mathoptinterface-and-upcoming-breaking-changes-in-jump-0-19).**
-
-The `master` branch now includes these breaking changes, but **we do not yet recommend using this branch unless you are a JuMP developer or solver developer**.
 
 **Development version** (`master` branch):
   * [Documentation](http://www.juliaopt.org/JuMP.jl/latest/)
