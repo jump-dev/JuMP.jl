@@ -4,4 +4,4 @@ ForwardDiff 0.5 0.9
 Calculus
 DataStructures
 NaNMath 0.2.1
-Compat 0.59
+Compat 1.0.1

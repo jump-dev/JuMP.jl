@@ -260,7 +260,7 @@ struct RecoveryInfo
     local_indices::Vector{Int} # map back to global indices
 end
 
-RecoveryInfo() = RecoveryInfo(Vector{Vector{Int}}(0),Vector{Vector{Int}}(0),Vector{Vector{Int}}(0),Vector{Int}(0),0,0,Vector{Int}(0))
+RecoveryInfo() = RecoveryInfo(Vector{Vector{Int}}(undef, 0),Vector{Vector{Int}}(undef, 0),Vector{Vector{Int}}(undef, 0),Vector{Int}(undef,0),0,0,Vector{Int}(undef, 0))
 
 function recovery_preprocess(g::UndirectedGraph,color,num_colors, local_indices)
     # represent two-color subgraph as:

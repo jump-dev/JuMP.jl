@@ -13,7 +13,8 @@
 using JuMP
 
 using Compat
-using Compat.LinearAlgebra # for dot
+using Compat.LinearAlgebra  # for dot and tr
+using Compat.SparseArrays # for sparse
 using Compat.Test
 
 using MathOptInterface
@@ -51,7 +52,6 @@ include("JuMPExtension.jl")
 include("derivatives.jl")
 include("derivatives_coloring.jl")
 
-#include("print.jl")
 include("containers.jl")
 include("model.jl")
 include("variable.jl")
@@ -61,7 +61,6 @@ include("constraint.jl")
 include("nlp.jl")
 include("generate_and_solve.jl")
 include("print.jl")
-#include("expr.jl")
 include("operator.jl")
 include("macros.jl")
 

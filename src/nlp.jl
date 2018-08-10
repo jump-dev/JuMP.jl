@@ -202,7 +202,7 @@ mutable struct NLPEvaluator <: MOI.AbstractNLPEvaluator
 end
 
 function replace_moi_variables(nd::Vector{NodeData}, moi_index_to_consecutive_index)
-    new_nd = Vector{NodeData}(length(nd))
+    new_nd = Vector{NodeData}(undef, length(nd))
     for i in 1:length(nd)
         node = nd[i]
         if node.nodetype == MOIVARIABLE
@@ -307,8 +307,6 @@ function MOI.initialize!(d::NLPEvaluator, requested_features::Vector{Symbol})
     d.last_x = fill(NaN, num_variables_)
 
     d.parameter_values = nldata.nlparamvalues
-
-    tic()
 
     d.want_hess = (:Hess in requested_features)
     want_hess_storage = (:HessVec in requested_features) || d.want_hess
@@ -416,9 +414,6 @@ function MOI.initialize!(d::NLPEvaluator, requested_features::Vector{Symbol})
     #     MOI.eval_constraint(d, zeros(MathProgBase.numconstr(d.m)), d.m.colVal)
     # end
 
-    tprep = toq()
-    #println("Prep time: $tprep")
-
     # reset timers
     d.eval_objective_timer = 0
     d.eval_objective_gradient_timer = 0
@@ -473,92 +468,91 @@ function reverse_eval_all(d::NLPEvaluator,x)
     for ex in d.constraints
         reverse_eval(ex.reverse_storage,ex.partials_storage,ex.nd,ex.adj)
     end
-    copy!(d.last_x,x)
+    copyto!(d.last_x,x)
 end
 
 function MOI.eval_objective(d::NLPEvaluator, x)
-    tic()
-    if d.last_x != x
-        forward_eval_all(d,x)
-        reverse_eval_all(d,x)
+    d.eval_objective_timer += @elapsed begin
+        if d.last_x != x
+            forward_eval_all(d,x)
+            reverse_eval_all(d,x)
+        end
+        val = zero(eltype(x))
+        if d.has_nlobj
+            val = d.objective.forward_storage[1]
+        else
+            error("No nonlinar objective.")
+        end
     end
-    val = zero(eltype(x))
-    if d.has_nlobj
-        val = d.objective.forward_storage[1]
-    else
-        error("No nonlinar objective.")
-    end
-    d.eval_objective_timer += toq()
     return val
 end
 
 function MOI.eval_objective_gradient(d::NLPEvaluator, g, x)
-    tic()
-    if d.last_x != x
-        forward_eval_all(d,x)
-        reverse_eval_all(d,x)
-    end
-    if d.has_nlobj
-        fill!(g,0.0)
-        ex = d.objective
-        subexpr_reverse_values = d.subexpression_reverse_values
-        subexpr_reverse_values[ex.dependent_subexpressions] = 0.0
-        reverse_extract(g,ex.reverse_storage,ex.nd,ex.adj,subexpr_reverse_values,1.0)
-        for i in length(ex.dependent_subexpressions):-1:1
-            k = ex.dependent_subexpressions[i]
-            subexpr = d.subexpressions[k]
-            reverse_extract(g,subexpr.reverse_storage,subexpr.nd,subexpr.adj,subexpr_reverse_values,subexpr_reverse_values[k])
+    d.eval_objective_gradient_timer += @elapsed begin
+        if d.last_x != x
+            forward_eval_all(d,x)
+            reverse_eval_all(d,x)
         end
-    else
-        error("No nonlinear objective.")
+        if d.has_nlobj
+            fill!(g,0.0)
+            ex = d.objective
+            subexpr_reverse_values = d.subexpression_reverse_values
+            subexpr_reverse_values[ex.dependent_subexpressions] .= 0.0
+            reverse_extract(g,ex.reverse_storage,ex.nd,ex.adj,subexpr_reverse_values,1.0)
+            for i in length(ex.dependent_subexpressions):-1:1
+                k = ex.dependent_subexpressions[i]
+                subexpr = d.subexpressions[k]
+                reverse_extract(g,subexpr.reverse_storage,subexpr.nd,subexpr.adj,subexpr_reverse_values,subexpr_reverse_values[k])
+            end
+        else
+            error("No nonlinear objective.")
+        end
     end
-    d.eval_objective_gradient_timer += toq()
     return
 end
 
 function MOI.eval_constraint(d::NLPEvaluator, g, x)
-    tic()
-    if d.last_x != x
-        forward_eval_all(d,x)
-        reverse_eval_all(d,x)
-    end
+    d.eval_constraint_timer += @elapsed begin
+        if d.last_x != x
+            forward_eval_all(d,x)
+            reverse_eval_all(d,x)
+        end
 
-    for i in 1:length(d.constraints)
-        g[i] = d.constraints[i].forward_storage[1]
+        for i in 1:length(d.constraints)
+            g[i] = d.constraints[i].forward_storage[1]
+        end
     end
-    d.eval_constraint_timer += toq()
     return
 end
 
 function MOI.eval_constraint_jacobian(d::NLPEvaluator, J, x)
-    tic()
-    if d.last_x != x
-        forward_eval_all(d,x)
-        reverse_eval_all(d,x)
-    end
-    fill!(J,0.0)
-    grad_storage = d.jac_storage
-    subexpr_reverse_values = d.subexpression_reverse_values
-    idx = 0
-    for ex in d.constraints
-        nzidx = ex.grad_sparsity
-        grad_storage[nzidx] = 0.0
-        subexpr_reverse_values[ex.dependent_subexpressions] = 0.0
-
-        reverse_extract(grad_storage,ex.reverse_storage,ex.nd,ex.adj,subexpr_reverse_values,1.0)
-        for i in length(ex.dependent_subexpressions):-1:1
-            k = ex.dependent_subexpressions[i]
-            subexpr = d.subexpressions[k]
-            reverse_extract(grad_storage,subexpr.reverse_storage,subexpr.nd,subexpr.adj,subexpr_reverse_values,subexpr_reverse_values[k])
+    d.eval_constraint_jacobian_timer += @elapsed begin
+        if d.last_x != x
+            forward_eval_all(d,x)
+            reverse_eval_all(d,x)
         end
+        fill!(J,0.0)
+        grad_storage = d.jac_storage
+        subexpr_reverse_values = d.subexpression_reverse_values
+        idx = 0
+        for ex in d.constraints
+            nzidx = ex.grad_sparsity
+            grad_storage[nzidx] .= 0.0
+            subexpr_reverse_values[ex.dependent_subexpressions] .= 0.0
 
-        for k in 1:length(nzidx)
-            J[idx+k] = grad_storage[nzidx[k]]
+            reverse_extract(grad_storage,ex.reverse_storage,ex.nd,ex.adj,subexpr_reverse_values,1.0)
+            for i in length(ex.dependent_subexpressions):-1:1
+                k = ex.dependent_subexpressions[i]
+                subexpr = d.subexpressions[k]
+                reverse_extract(grad_storage,subexpr.reverse_storage,subexpr.nd,subexpr.adj,subexpr_reverse_values,subexpr_reverse_values[k])
+            end
+
+            for k in 1:length(nzidx)
+                J[idx+k] = grad_storage[nzidx[k]]
+            end
+            idx += length(nzidx)
         end
-        idx += length(nzidx)
     end
-
-    d.eval_constraint_jacobian_timer += toq()
     return
 end
 
@@ -649,38 +643,36 @@ function MOI.eval_hessian_lagrangian(
         reverse_eval_all(d,x)
     end
 
-    tic()
+    d.eval_hessian_lagrangian_timer += @elapsed begin
+        fill!(d.input_ϵ,0.0)
+        recovery_tmp_storage = d.output_ϵ
+        nzcount = 0
 
-    fill!(d.input_ϵ,0.0)
-    recovery_tmp_storage = d.output_ϵ
-    nzcount = 0
+        if d.has_nlobj
+            ex = d.objective
+            chunk = min(size(ex.seed_matrix,2),d.max_chunk)
+            if chunk == 1
+                # skip dynamic dispatch
+                nzthis = hessian_slice(d, ex, x, H, obj_factor, nzcount, recovery_tmp_storage, Val{1})::Int
+            else
+                nzthis = hessian_slice(d, ex, x, H, obj_factor, nzcount, recovery_tmp_storage, Val{chunk})::Int
+            end
+            nzcount += nzthis
+        end # else, obj_factor is ignored.
 
-    if d.has_nlobj
-        ex = d.objective
-        chunk = min(size(ex.seed_matrix,2),d.max_chunk)
-        if chunk == 1
-            # skip dynamic dispatch
-            nzthis = hessian_slice(d, ex, x, H, obj_factor, nzcount, recovery_tmp_storage, Val{1})::Int
-        else
-            nzthis = hessian_slice(d, ex, x, H, obj_factor, nzcount, recovery_tmp_storage, Val{chunk})::Int
+        for i in 1:length(d.constraints)
+            ex = d.constraints[i]
+            chunk = min(size(ex.seed_matrix,2),d.max_chunk)
+            if chunk == 1
+                nzthis = hessian_slice(d, ex, x, H, lambda[i], nzcount, recovery_tmp_storage, Val{1})::Int
+            else
+                nzthis = hessian_slice(d, ex, x, H, lambda[i], nzcount, recovery_tmp_storage, Val{chunk})::Int
+            end
+            nzcount += nzthis
         end
-        nzcount += nzthis
-    end # else, obj_factor is ignored.
-
-    for i in 1:length(d.constraints)
-        ex = d.constraints[i]
-        chunk = min(size(ex.seed_matrix,2),d.max_chunk)
-        if chunk == 1
-            nzthis = hessian_slice(d, ex, x, H, lambda[i], nzcount, recovery_tmp_storage, Val{1})::Int
-        else
-            nzthis = hessian_slice(d, ex, x, H, lambda[i], nzcount, recovery_tmp_storage, Val{chunk})::Int
-        end
-        nzcount += nzthis
     end
 
-    d.eval_hessian_lagrangian_timer += toq()
     return
-
 end
 
 function hessian_slice_inner(d, ex, R, input_ϵ, output_ϵ, ::Type{Val{CHUNK}}) where CHUNK
@@ -704,7 +696,7 @@ function hessian_slice_inner(d, ex, R, input_ϵ, output_ϵ, ::Type{Val{CHUNK}}) 
 
     # do a reverse pass
     subexpr_reverse_values_ϵ[ex.dependent_subexpressions] = zero_ϵ
-    d.subexpression_reverse_values[ex.dependent_subexpressions] = 0.0
+    d.subexpression_reverse_values[ex.dependent_subexpressions] .= 0.0
 
     reverse_eval_ϵ(output_ϵ, ex.reverse_storage, reverse_storage_ϵ,ex.partials_storage, partials_storage_ϵ,ex.nd,ex.adj,d.subexpression_reverse_values,subexpr_reverse_values_ϵ, 1.0, zero_ϵ)
     for i in length(ex.dependent_subexpressions):-1:1
@@ -799,7 +791,7 @@ function hessian_slice(d, ex, x, H, scale, nzcount, recovery_tmp_storage,::Type{
     #output_slice = view(H, (nzcount+1):(nzcount+nzthis))
     output_slice = VectorView(nzcount, nzthis, pointer(H))
     Coloring.recover_from_matmat!(output_slice, R, ex.rinfo, recovery_tmp_storage)
-    scale!(output_slice, scale)
+    Compat.rmul!(output_slice, scale)
     return nzthis
 
 end

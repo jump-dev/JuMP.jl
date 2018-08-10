@@ -213,7 +213,7 @@ function variables_test(ModelType::Type{<:JuMP.AbstractModel}, VariableRefType::
         @test size(x) == (3,2)
         x = @variable(m, [Base.OneTo(3), 1:2], container=JuMPArray)
         @test x isa JuMPArray{VariableRefType}
-        @test length.(indices(x)) == (3,2)
+        @test length.(Compat.axes(x)) == (3,2)
     end
 
     @testset "basename= in @variable" begin
@@ -293,7 +293,7 @@ function variables_test(ModelType::Type{<:JuMP.AbstractModel}, VariableRefType::
         @variable(m, y[1:4,  2:1,1:3], start = 0) # JuMPArray
         @variable(m, z[1:4,Set(),1:3], start = 0) # Dict
 
-        @test JuMP.startvalue.(x) == Array{Float64}(4, 0, 3)
+        @test JuMP.startvalue.(x) == Array{Float64}(undef, 4, 0, 3)
         # TODO: Decide what to do here. I don't know if we still need to test this given broadcast syntax.
         # @test typeof(JuMP.startvalue(y)) <: JuMP.JuMPArray{Float64}
         # @test JuMP.size(JuMP.startvalue(y)) == (4,0,3)
@@ -304,7 +304,7 @@ function variables_test(ModelType::Type{<:JuMP.AbstractModel}, VariableRefType::
 # Slices three-dimensional JuMPArray x[I,J,K]
 # I,J,K can be singletons, ranges, colons, etc.
 function sliceof(x, I, J, K)
-    y = Array{VariableRefType}(length(I), length(J), length(K))
+    y = Array{VariableRefType}(undef, length(I), length(J), length(K))
 
     ii = 1
     jj = 1
@@ -322,7 +322,11 @@ function sliceof(x, I, J, K)
         jj = 1
     end
     idx = [length(I)==1, length(J)==1, length(K)==1]
-    squeeze(y, tuple(find(idx)...))
+    @static if VERSION < v"0.7.0-"
+        squeeze(y, tuple(findall(idx)...))
+    else
+        dropdims(y, dims=tuple(findall(idx)...))
+    end
 end
 
     @testset "Slices of JuMPArray (#684)" begin

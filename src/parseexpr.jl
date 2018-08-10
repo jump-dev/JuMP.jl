@@ -52,7 +52,7 @@ end
 function destructive_add!(ex::Number, c::Number, x::T) where T<:GenericQuadExpr
     # It's only safe to mutate the first argument.
     if iszero(c)
-        T(ex)
+        convert(T, ex)
     else
         result = c*x
         result.aff.constant += ex
@@ -262,6 +262,9 @@ function destructive_add!(ex::AbstractArray{T}, c::Number, x::AbstractArray) whe
 end
 
 destructive_add!(ex, c, x) = ex + c*x
+destructive_add!(ex, c, x::AbstractArray) = (ex,) .+ c*x
+destructive_add!(ex::AbstractArray, c, x) = ex .+ (c*x,)
+destructive_add!(ex::AbstractArray, c, x::AbstractArray) = ex .+ c*x
 
 destructive_add_with_reorder!(ex, arg) = destructive_add!(ex, 1.0, arg)
 # Special case because "Val{false}()" is used as the default empty expression.
@@ -280,7 +283,7 @@ end
 @generated function destructive_add_with_reorder!(ex, args...)
     n = length(args)
     @assert n ≥ 3
-    varidx = find(t -> (t <: AbstractVariableRef || t <: GenericAffExpr), collect(args))
+    varidx = findall(t -> (t <: AbstractVariableRef || t <: GenericAffExpr), collect(args))
     allscalar = all(t -> (t <: Number), args[setdiff(1:n, varidx)])
     idx = (allscalar && length(varidx) == 1) ? varidx[1] : n
     coef = Expr(:call, :*, [:(args[$i]) for i in setdiff(1:n,idx)]...)

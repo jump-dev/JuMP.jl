@@ -264,8 +264,8 @@ function operators_test(ModelType::Type{<:JuMP.AbstractModel}, VariableRefType::
             @testset "sum(j::JuMPDict{VariableRef})" begin
                 @test_expression sum(x)
                 @test length(string(sum(x))) == 11 # order depends on hashing
-                @test contains(string(sum(x)),"x[1]")
-                @test contains(string(sum(x)),"x[3]")
+                @test occursin("x[1]",string(sum(x)))
+                @test occursin("x[3]",string(sum(x)))
             end
             @testset "sum(j::JuMPDict{T}) where T<:Real" begin
                 @test sum(JuMP.startvalue.(x)) == 2
@@ -286,15 +286,15 @@ function operators_test(ModelType::Type{<:JuMP.AbstractModel}, VariableRefType::
 
             A = [1 3 ; 2 4]
             @variable(dot_m, 1 ≤ y[1:2,1:2] ≤ 1)
-            @test_expression_with_string vecdot(A,y) "y[1,1] + 2 y[2,1] + 3 y[1,2] + 4 y[2,2]"
-            @test_expression_with_string vecdot(y,A) "y[1,1] + 2 y[2,1] + 3 y[1,2] + 4 y[2,2]"
+            @test_expression_with_string Compat.dot(A,y) "y[1,1] + 2 y[2,1] + 3 y[1,2] + 4 y[2,2]"
+            @test_expression_with_string Compat.dot(y,A) "y[1,1] + 2 y[2,1] + 3 y[1,2] + 4 y[2,2]"
 
             B = ones(2,2,2)
             @variable(dot_m, 0 ≤ z[1:2,1:2,1:2] ≤ 1)
-            @test_expression_with_string vecdot(B,z) "z[1,1,1] + z[2,1,1] + z[1,2,1] + z[2,2,1] + z[1,1,2] + z[2,1,2] + z[1,2,2] + z[2,2,2]"
-            @test_expression_with_string vecdot(z,B) "z[1,1,1] + z[2,1,1] + z[1,2,1] + z[2,2,1] + z[1,1,2] + z[2,1,2] + z[1,2,2] + z[2,2,2]"
+            @test_expression_with_string Compat.dot(B,z) "z[1,1,1] + z[2,1,1] + z[1,2,1] + z[2,2,1] + z[1,1,2] + z[2,1,2] + z[1,2,2] + z[2,2,2]"
+            @test_expression_with_string Compat.dot(z,B) "z[1,1,1] + z[2,1,1] + z[1,2,1] + z[2,2,1] + z[1,1,2] + z[2,1,2] + z[1,2,2] + z[2,2,2]"
 
-            @objective(dot_m, Max, dot(x, ones(3)) - vecdot(y, ones(2,2)))
+            @objective(dot_m, Max, dot(x, ones(3)) - Compat.dot(y, ones(2,2)))
             for i in 1:3
                 JuMP.setstartvalue(x[i], 1)
             end
@@ -305,8 +305,8 @@ function operators_test(ModelType::Type{<:JuMP.AbstractModel}, VariableRefType::
                 JuMP.setstartvalue(z[i,j,k], 1)
             end
             @test dot(c, JuMP.startvalue.(x)) ≈ 6
-            @test vecdot(A, JuMP.startvalue.(y)) ≈ 10
-            @test vecdot(B, JuMP.startvalue.(z)) ≈ 8
+            @test Compat.dot(A, JuMP.startvalue.(y)) ≈ 10
+            @test Compat.dot(B, JuMP.startvalue.(z)) ≈ 8
 
             @testset "JuMP issue #656" begin
                 issue656 = ModelType()
@@ -338,11 +338,11 @@ function operators_test(ModelType::Type{<:JuMP.AbstractModel}, VariableRefType::
             @variable(m, y[1:2,1:3])
             @variable(m, z[2:5])
             @test JuMP.isequal_canonical(x', [x[1] x[2] x[3]])
-            @test JuMP.isequal_canonical(transpose(x), [x[1] x[2] x[3]])
+            @test JuMP.isequal_canonical(copy(transpose(x)), [x[1] x[2] x[3]])
             @test JuMP.isequal_canonical(y', [y[1,1] y[2,1]
                               y[1,2] y[2,2]
                               y[1,3] y[2,3]])
-            @test JuMP.isequal_canonical(transpose(y),
+            @test JuMP.isequal_canonical(copy(transpose(y)),
                          [y[1,1] y[2,1]
                           y[1,2] y[2,2]
                           y[1,3] y[2,3]])
@@ -391,52 +391,52 @@ function operators_test(ModelType::Type{<:JuMP.AbstractModel}, VariableRefType::
             @test JuMP.isequal_canonical(-y, [-2x[1] -  x[2]
                                -x[1] - 2x[2] -  x[3]
                                        -x[2] - 2x[3]])
-            @test JuMP.isequal_canonical(y + 1, [2x[1] +  x[2]         + 1
+            @test JuMP.isequal_canonical(y .+ 1, [2x[1] +  x[2]         + 1
                                   x[1] + 2x[2] +  x[3] + 1
                                   x[2] + 2x[3] + 1])
-            @test JuMP.isequal_canonical(y - 1, [2x[1] +  x[2]         - 1
+            @test JuMP.isequal_canonical(y .- 1, [2x[1] +  x[2]         - 1
                                   x[1] + 2x[2] +  x[3] - 1
                                           x[2] + 2x[3] - 1])
-            @test JuMP.isequal_canonical(y + 2ones(3), [2x[1] +  x[2]         + 2
+            @test JuMP.isequal_canonical(y .+ 2ones(3), [2x[1] +  x[2]         + 2
                                          x[1] + 2x[2] +  x[3] + 2
                                          x[2] + 2x[3] + 2])
-            @test JuMP.isequal_canonical(y - 2ones(3), [2x[1] +  x[2]         - 2
+            @test JuMP.isequal_canonical(y .- 2ones(3), [2x[1] +  x[2]         - 2
                                          x[1] + 2x[2] +  x[3] - 2
                                          x[2] + 2x[3] - 2])
-            @test JuMP.isequal_canonical(2ones(3) + y, [2x[1] +  x[2]         + 2
+            @test JuMP.isequal_canonical(2ones(3) .+ y, [2x[1] +  x[2]         + 2
                                          x[1] + 2x[2] +  x[3] + 2
                                          x[2] + 2x[3] + 2])
-            @test JuMP.isequal_canonical(2ones(3) - y, [-2x[1] -  x[2]         + 2
+            @test JuMP.isequal_canonical(2ones(3) .- y, [-2x[1] -  x[2]         + 2
                                          -x[1] - 2x[2] -  x[3] + 2
                                          -x[2] - 2x[3] + 2])
-            @test JuMP.isequal_canonical(y + x, [3x[1] +  x[2]
+            @test JuMP.isequal_canonical(y .+ x, [3x[1] +  x[2]
                                   x[1] + 3x[2] +  x[3]
                                           x[2] + 3x[3]])
-            @test JuMP.isequal_canonical(x + y, [3x[1] +  x[2]
+            @test JuMP.isequal_canonical(x .+ y, [3x[1] +  x[2]
                                   x[1] + 3x[2] +  x[3]
                                   x[2] + 3x[3]])
-            @test JuMP.isequal_canonical(2y + 2x, [6x[1] + 2x[2]
+            @test JuMP.isequal_canonical(2y .+ 2x, [6x[1] + 2x[2]
                                    2x[1] + 6x[2] + 2x[3]
                                    2x[2] + 6x[3]])
-            @test JuMP.isequal_canonical(y - x, [ x[1] + x[2]
+            @test JuMP.isequal_canonical(y .- x, [ x[1] + x[2]
                                   x[1] + x[2] + x[3]
                                          x[2] + x[3]])
-            @test JuMP.isequal_canonical(x - y, [-x[1] - x[2]
+            @test JuMP.isequal_canonical(x .- y, [-x[1] - x[2]
                                  -x[1] - x[2] - x[3]
                                  -x[2] - x[3]])
-            @test JuMP.isequal_canonical(y + x[:], [3x[1] +  x[2]
+            @test JuMP.isequal_canonical(y .+ x[:], [3x[1] +  x[2]
                                      x[1] + 3x[2] +  x[3]
                                              x[2] + 3x[3]])
-            @test JuMP.isequal_canonical(x[:] + y, [3x[1] +  x[2]
+            @test JuMP.isequal_canonical(x[:] .+ y, [3x[1] +  x[2]
                                      x[1] + 3x[2] +  x[3]
                                              x[2] + 3x[3]])
 
             @test JuMP.isequal_canonical(@JuMP.Expression(A*x/2), A*x/2)
             @test JuMP.isequal_canonical(X*v,  [4X11; 6X23; 0])
             @test JuMP.isequal_canonical(v'*X,  [4X11  0   5X23])
-            @test JuMP.isequal_canonical(v.'*X, [4X11  0   5X23])
+            @test JuMP.isequal_canonical(copy(transpose(v))*X, [4X11  0   5X23])
             @test JuMP.isequal_canonical(X'*v,  [4X11;  0;  5X23])
-            @test JuMP.isequal_canonical(X.'*v, [4X11; 0;  5X23])
+            @test JuMP.isequal_canonical(copy(transpose(X))*v, [4X11; 0;  5X23])
             @test JuMP.isequal_canonical(X*A,  [2X11  X11  0
                                 0     X23  2X23
                                 0     0    0   ])
@@ -449,28 +449,28 @@ function operators_test(ModelType::Type{<:JuMP.AbstractModel}, VariableRefType::
             @test JuMP.isequal_canonical(X'*A, [2X11  X11  0
                                 0     0    0
                                 X23   2X23 X23])
-            @test JuMP.isequal_canonical(X.'*A, [2X11 X11  0
+            @test JuMP.isequal_canonical(copy(transpose(X))*A, [2X11 X11  0
                                  0    0    0
                                  X23  2X23 X23])
             @test JuMP.isequal_canonical(A'*X, [2X11  0 X23
                                 X11   0 2X23
                                 0     0 X23])
-            @test JuMP.isequal_canonical(X.'*A, X'*A)
-            @test JuMP.isequal_canonical(A.'*X, A'*X)
+            @test JuMP.isequal_canonical(copy(transpose(X))*A, X'*A)
+            @test JuMP.isequal_canonical(copy(transpose(A))*X, A'*X)
             @test JuMP.isequal_canonical(X*A, X*B)
-            @test JuMP.isequal_canonical(Y'*A, Y.'*A)
-            @test JuMP.isequal_canonical(A*Y', A*Y.')
-            @test JuMP.isequal_canonical(Z'*A, Z.'*A)
-            @test JuMP.isequal_canonical(Xd'*Y, Xd.'*Y)
-            @test JuMP.isequal_canonical(Y'*Xd, Y.'*Xd)
-            @test JuMP.isequal_canonical(Xd'*Xd, Xd.'*Xd)
+            @test JuMP.isequal_canonical(Y'*A, copy(transpose(Y))*A)
+            @test JuMP.isequal_canonical(A*Y', A*copy(transpose(Y)))
+            @test JuMP.isequal_canonical(Z'*A, copy(transpose(Z))*A)
+            @test JuMP.isequal_canonical(Xd'*Y, copy(transpose(Xd))*Y)
+            @test JuMP.isequal_canonical(Y'*Xd, copy(transpose(Y))*Xd)
+            @test JuMP.isequal_canonical(Xd'*Xd, copy(transpose(Xd))*Xd)
             @test JuMP.isequal_canonical(A*X, B*X)
             @test_broken JuMP.isequal_canonical(A*X', B*X') # See https://github.com/JuliaOpt/JuMP.jl/issues/1276
             # TODO: Sparse matrix multiplication of JuMP objects doesn't work
             # yet.
             if VERSION < v"0.7-"
                 @test JuMP.isequal_canonical(X'*A, X'*B)
-                @test JuMP.isequal_canonical(X'*X, X.'*X)
+                @test JuMP.isequal_canonical(X'*X, copy(transpose(X))*X)
             end
         end
 
@@ -525,9 +525,9 @@ function operators_test(ModelType::Type{<:JuMP.AbstractModel}, VariableRefType::
             @test_throws ErrorException A./y
             @test_throws ErrorException B./y
 
-            @test JuMP.isequal_canonical((2*x) / 3, full((2*y) / 3))
-            @test JuMP.isequal_canonical(2 * (x/3), full(2 * (y/3)))
-            @test JuMP.isequal_canonical(x[1,1] .* A, full(x[1,1] .* B))
+            @test JuMP.isequal_canonical((2 .* x) ./ 3, Matrix((2 .* y) ./ 3))
+            @test JuMP.isequal_canonical(2 .* (x ./ 3), Matrix(2 * (y ./ 3)))
+            @test JuMP.isequal_canonical((x[1,1],) .* A, Matrix((x[1,1],) .* B))
         end
 
         @testset "Vectorized comparisons" begin
@@ -605,12 +605,12 @@ function operators_test(ModelType::Type{<:JuMP.AbstractModel}, VariableRefType::
         for x2 in (OffsetArray(x, -length(x)), view(x, :), sparse(x))
             @test elements_equal(+x, +x2)
             @test elements_equal(-x, -x2)
-            @test elements_equal(x .+ first(x), x2 .+ first(x2))
-            @test elements_equal(x .- first(x), x2 .- first(x2))
-            @test elements_equal(first(x) .- x, first(x2) .- x2)
-            @test elements_equal(first(x) .+ x, first(x2) .+ x2)
+            @test elements_equal(x .+ (first(x),), x2 .+ (first(x2),))
+            @test elements_equal(x .- (first(x),), x2 .- (first(x2),))
+            @test elements_equal((first(x),) .- x, (first(x2),) .- x2)
+            @test elements_equal((first(x),) .+ x, (first(x2),) .+ x2)
             @test elements_equal(2 .* x, 2 .* x2)
-            @test elements_equal(first(x) .+ x2, first(x2) .+ x)
+            @test elements_equal((first(x),) .+ x2, (first(x2),) .+ x)
             @test sum(x) == sum(x2)
             if !JuMP.one_indexed(x2)
                 @test_throws DimensionMismatch x + x2

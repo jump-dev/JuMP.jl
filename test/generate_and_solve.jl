@@ -277,7 +277,11 @@
         setname(x[1,1], "x11")
         setname(x[1,2], "x12")
         setname(x[2,2], "x22")
-        @objective(m, Max, trace(x))
+        @static if VERSION < v"0.7-"
+            @objective(m, Max, trace(x))
+        else
+            @objective(m, Max, tr(x))
+        end
         varpsd = @constraint(m, x in PSDCone())
         setname(varpsd, "varpsd")
         conpsd = @SDconstraint(m, x ⪰ [1.0 0.0; 0.0 1.0])

@@ -52,12 +52,8 @@ for N in [20,50,100]
     N1_times = Any[]
     N2_times = Any[]
     for iter in 1:10
-        tic()
-        test_linear(N)
-        push!(N1_times, toq())
-        tic()
-        test_quad(N)
-        push!(N2_times, toq())
+        push!(N1_times, @elapsed test_linear(N))
+        push!(N2_times, @elapsed test_quad(N))
     end
     println("    N=$(N) min $(minimum(N1_times))")
     println("    N=$(N) min $(minimum(N2_times))")
