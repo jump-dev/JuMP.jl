@@ -89,7 +89,7 @@ struct OptimizerFactory
 end
 
 """
-    with_optimizer(constructor::Type, args...; kwargs...)
+    with_optimizer(constructor, args...; kwargs...)
 
 Return an `OptimizerFactory` that creates optimizers using the constructor
 `constructor` with positional arguments `args` and keyword arguments `kwargs`.
@@ -102,7 +102,8 @@ the constructor call `IpoptOptimizer(print_level=0)`:
 with_optimizer(IpoptOptimizer, print_level=0)
 ```
 """
-function with_optimizer(constructor::Type, args...; kwargs...)
+function with_optimizer(constructor::Union{Function, DataType, UnionAll},
+                        args...; kwargs...)
     return OptimizerFactory(constructor, args, kwargs)
 end
 
