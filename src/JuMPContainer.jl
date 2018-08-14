@@ -19,7 +19,7 @@ mutable struct JuMPDict{T,N} <: JuMPContainer{T,N}
     tupledict::Dict{NTuple{N,Any},T}
     meta::Dict{Symbol,Any}
 
-    (::Type{JuMPDict{T,N}})() where {T,N} = new{T,N}(Dict{NTuple{N,Any},T}(), Dict{Symbol,Any}())
+    JuMPDict{T,N}() where {T,N} = new{T,N}(Dict{NTuple{N,Any},T}(), Dict{Symbol,Any}())
 end
 
 function JuMPDict(d::Dict{NTuple{N,Any},T}) where {T,N}

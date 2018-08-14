@@ -119,7 +119,7 @@ getvalue(n::GenericNormExpr) = n.coeff * getvalue(n.norm) + getvalue(n.aff)
 # α||Ax-b||₂ + cᵀx + d ≤ 0
 mutable struct GenericSOCConstraint{T<:GenericSOCExpr} <: AbstractConstraint
     normexpr::T
-    function (::Type{GenericSOCConstraint{T}})(normexpr::T) where T
+    function GenericSOCConstraint{T}(normexpr::T) where T
         if normexpr.coeff < 0
             # The coefficient in front of the norm is negative, which
             # means we have `norm >= c`, which is not convex.
