@@ -396,7 +396,7 @@ exprstr(n::Norm) = norm_str(REPLMode, n)
 #------------------------------------------------------------------------
 ## JuMPContainer{Variable}
 #------------------------------------------------------------------------
-Base.show(io::IO, j::JuMPContainer{Variable}) = print(io, cont_str(REPLMode,j))
+Base.show(io::IO, j::Union{JuMPContainer{Variable}, Array{Variable}}) = print(io, cont_str(REPLMode,j))
 Base.show(io::IO, ::MIME"text/latex", j::Union{JuMPContainer{Variable},Array{Variable}}) =
     print(io, cont_str(IJuliaMode,j,mathmode=false))
 # Generic string converter, called by mode-specific handlers
@@ -404,6 +404,13 @@ Base.show(io::IO, ::MIME"text/latex", j::Union{JuMPContainer{Variable},Array{Var
 # Assumes that !isempty(j)
 _getmodel(j::Array{Variable}) = first(j).m
 _getmodel(j::JuMPContainer) = getmeta(j, :model)
+
+# 0.7 compat
+const _print_array = if VERSION < v"0.7-"
+    Base.showarray
+else
+    Base.print_array
+end
 
 function cont_str(mode, j, sym::PrintSymbols)
     # Check if anything in the container
@@ -420,7 +427,7 @@ function cont_str(mode, j, sym::PrintSymbols)
         if ndims(j) == 1
             return sprint((io,v) -> Base.show_vector(io, v, "[", "]"), j)
         else
-            return sprint((io,X) -> Base.show(io, X), j)
+            return sprint((io,X) -> _print_array(io, X), j)
         end
     end
 
