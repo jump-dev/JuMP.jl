@@ -451,7 +451,7 @@ function cont_str(mode, j, sym::PrintSymbols)
                 dimidx += 1
             end
             if dimidx > length(DIMS)
-                throw(ErrorException("Unexpectedly ran out of indices"))
+                error("Unexpectedly ran out of indices")
             end
             idxvars[i] = DIMS[dimidx]
             dimidx += 1
