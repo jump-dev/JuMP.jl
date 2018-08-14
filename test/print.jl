@@ -11,7 +11,8 @@
 # Testing $fa pretty-printing-related functionality
 #############################################################################
 using JuMP
-using Base.Test
+using Compat.Test
+
 import JuMP.REPLMode, JuMP.IJuliaMode
 import JuMP.repl, JuMP.ijulia
 
@@ -179,6 +180,7 @@ end
         @testset "Empty JuMPContainer printing (#124)" begin
         m = Model()
         @variable(m, empty_free[1:0])
+        # TODO! tests returning "empty_free (no indices)", why is that not desired behavior?
         io_test(REPLMode, empty_free, "Empty Array{Variable} (no indices)")
         io_test(IJuliaMode, empty_free, "Empty Array{Variable} (no indices)")
         @variable(m, empty_set[[]])
@@ -610,12 +612,12 @@ end
             io_test(REPLMode,   v, "JuMP.Variable[x,y,x]")
             io_test(IJuliaMode, v, "JuMP.Variable[x,y,x]")
         else
-            io_test(REPLMode,   v, "JuMP.Variable[x, y, x]")
-            io_test(IJuliaMode, v, "JuMP.Variable[x, y, x]")
+            io_test(REPLMode,   v, "$Variable[x, y, x]")
+            io_test(IJuliaMode, v, "$Variable[x, y, x]")
         end
 
-        io_test(REPLMode,   A, "JuMP.Variable[x y; y x]")
-        io_test(IJuliaMode, A, "JuMP.Variable[x y; y x]")
+        io_test(REPLMode,   A, "$Variable[x y; y x]")
+        io_test(IJuliaMode, A, "$Variable[x y; y x]")
     end
 
     @testset "basename keyword argument" begin

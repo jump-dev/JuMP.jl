@@ -7,9 +7,7 @@
 # An algebraic modeling language for Julia
 # See http://github.com/JuliaOpt/JuMP.jl
 #############################################################################
-
-__precompile__()
-
+VERSION < v"0.7.0-beta2.199" && __precompile__()
 module JuMP
 
 import Base.map
@@ -338,9 +336,14 @@ abstract type AbstractConstraint end
 # In JuMP, used only for Variable. Useful primarily for extensions
 abstract type AbstractJuMPScalar end
 
-Base.start(::AbstractJuMPScalar) = false
-Base.next(x::AbstractJuMPScalar, state) = (x, true)
-Base.done(::AbstractJuMPScalar, state) = state
+if VERSION < v"0.7-"
+    Base.start(::AbstractJuMPScalar) = false
+    Base.next(x::AbstractJuMPScalar, state) = (x, true)
+    Base.done(::AbstractJuMPScalar, state) = state
+else
+    Base.iterate(x::AbstractJuMPScalar) = (x, true)
+    Base.iterate(x::AbstractJuMPScalar, state) = nothing
+end
 Base.isempty(::AbstractJuMPScalar) = false
 
 #############################################################################

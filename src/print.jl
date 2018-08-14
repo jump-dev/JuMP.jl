@@ -405,6 +405,13 @@ Base.show(io::IO, ::MIME"text/latex", j::Union{JuMPContainer{Variable},Array{Var
 _getmodel(j::Array{Variable}) = first(j).m
 _getmodel(j::JuMPContainer) = getmeta(j, :model)
 
+# 0.7 compat
+const _print_array = if VERSION < v"0.7-"
+    Base.showarray
+else
+    Base.print_array
+end
+
 function cont_str(mode, j, sym::PrintSymbols)
     # Check if anything in the container
     if isempty(j)
@@ -420,7 +427,7 @@ function cont_str(mode, j, sym::PrintSymbols)
         if ndims(j) == 1
             return sprint((io,v) -> Base.show_vector(io, v, "[", "]"), j)
         else
-            return sprint((io,X) -> Base.showarray(io, X), j)
+            return sprint((io,X) -> _print_array(io, X), j)
         end
     end
 
@@ -436,7 +443,7 @@ function cont_str(mode, j, sym::PrintSymbols)
         end
     end
     num_dims = length(data.indexsets)
-    idxvars = Array{String}(num_dims)
+    idxvars = Array{String}(undef, num_dims)
     dimidx = 1
     for i in 1:num_dims
         if data.indexexprs[i].idxvar == nothing
@@ -569,7 +576,7 @@ function val_str(mode, j::JuMPArray{Float64,N}) where N
         # Determine longest index so we can align columns
         max_index_len = 0
         for index_str in index_strs
-            max_index_len = max(max_index_len, strwidth(index_str))
+            max_index_len = max(max_index_len, textwidth(index_str))
         end
 
         # If have recursed, we need to prepend the parent's index strings
@@ -627,7 +634,7 @@ function val_str(mode, dict::JuMPDict{Float64,N}) where N
 
     ndim = length(first(keys(dict.tupledict)))
 
-    key_strs = Array{String}(length(dict), ndim)
+    key_strs = Array{String}(undef, length(dict), ndim)
     for (i, key) in enumerate(sortedkeys)
         for j in 1:ndim
             key_strs[i,j] = string(key[j])
@@ -679,7 +686,7 @@ function aff_str(mode, a::AffExpr, show_constant=true)
     end
 
     elm = 1
-    term_str = Array{String}(2*length(a.vars))
+    term_str = Array{String}(undef, 2*length(a.vars))
     # For each model
     for m in keys(moddict)
         indvec = moddict[m]
@@ -741,7 +748,7 @@ function quad_str(mode, q::GenericQuadExpr, sym)
     Qnnz = length(V)
 
     # Odd terms are +/i, even terms are the variables/coeffs
-    term_str = Array{String}(2*Qnnz)
+    term_str = Array{String}(undef, 2*Qnnz)
     if Qnnz > 0
         for ind in 1:Qnnz
             val = abs(V[ind])

@@ -287,7 +287,7 @@ end
 @generated function addtoexpr_reorder(ex, args...)
     n = length(args)
     @assert n ≥ 3
-    varidx = find(t -> (t == Variable || t == AffExpr), collect(args))
+    varidx = findall(t -> (t == Variable || t == AffExpr), collect(args))
     allscalar = all(t -> (t <: Number), args[setdiff(1:n, varidx)])
     idx = (allscalar && length(varidx) == 1) ? varidx[1] : n
     coef = Expr(:call, :*, [:(args[$i]) for i in setdiff(1:n,idx)]...)

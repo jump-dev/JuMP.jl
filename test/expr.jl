@@ -10,8 +10,7 @@
 # test/expr.jl
 # Testing for AffExpr and QuadExpr
 #############################################################################
-using JuMP
-using Base.Test
+using JuMP, Compat.Test
 
 @testset "Expressions" begin
 

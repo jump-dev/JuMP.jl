@@ -1,5 +1,4 @@
-using JuMP
-using Base.Test
+using JuMP, Compat.Test
 
 !isdefined(:sdp_solvers) && include("solvers.jl")
 

@@ -1,5 +1,4 @@
-using JuMP
-using Base.Test
+using JuMP, Compat.Test
 
 !isdefined(:conic_solvers_with_duals) && include("solvers.jl")
 
