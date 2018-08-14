@@ -83,7 +83,7 @@ struct OptimizerFactory
     # * `Function`: a function, or
     # * `DataType`: a type, or
     # * `UnionAll`: a type with missing parameters.
-    constructor::Union{Function, DataType, UnionAll}
+    constructor
     args::Tuple
     kwargs # type changes from Julia v0.6 to v0.7 so we leave it untyped for now
 end
@@ -102,8 +102,13 @@ the constructor call `IpoptOptimizer(print_level=0)`:
 with_optimizer(IpoptOptimizer, print_level=0)
 ```
 """
-function with_optimizer(constructor::Union{Function, DataType, UnionAll},
+function with_optimizer(constructor,
                         args...; kwargs...)
+    if !applicable(constructor, args...)
+        error("$constructor is does not have any method with arguments $args.",
+              "The first argument of `with_optimizer` should be callable with",
+              " the other argument of `with_optimizer`.")
+    end
     return OptimizerFactory(constructor, args, kwargs)
 end
 

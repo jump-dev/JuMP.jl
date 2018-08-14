@@ -57,6 +57,7 @@ end
     @test optimizer isa Optimizer
     @test optimizer.a == 1
     @test optimizer.b == 2
+    @test_throws ErrorException factory = with_optimizer(f, 1, 2)
     factory = with_optimizer(f, 1, b = 2)
     @test factory.constructor == f
     @test factory.args == (1,)
