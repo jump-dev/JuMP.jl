@@ -79,12 +79,21 @@ end
 # the following types of index sets are allowed:
 # 0:K -- range with compile-time starting index
 # S -- general iterable set
+if VERSION < v"0.7-"
+    function _gendict_checkgen(s::Expr)
+        isexpr(s,:(:)) && length(s.args) == 2 && s.args[1] == 1
+    end
+else
+    function _gendict_checkgen(s::Expr)
+        isexpr(s,:call) && s.args[1] == :(:) && length(s.args) == 3 && s.args[2] == 1
+    end
+end
 function gendict(instancename,T,idxsets...)
     N = length(idxsets)
     truearray = true
     for idxset in idxsets
         s = isexpr(idxset,:escape) ? idxset.args[1] : idxset
-        if !(isexpr(s,:(:)) && length(s.args) == 2 && s.args[1] == 1)
+        if !_gendict_checkgen(s)
             truearray = false
             break
         end
@@ -97,6 +106,7 @@ function gendict(instancename,T,idxsets...)
         :($instancename = JuMPArray(Array{$T}(undef, $sizes...), $indexsets))
     end
 end
+
 
 metadata(x::Union{JuMPArray,JuMPDict}) = x.meta
 metadata(::T) where {T<:JuMPContainer} = error("Type $T has no field meta. This field is used to store metadata such as the JuMP.Model at the key :model.")
@@ -320,7 +330,7 @@ end
 
 @generated __next(x::JuMPArray{T,N,NT}, k::Integer) where {T,N,NT} =
     quote
-        subidx = ind2sub(size(x),k)
+        subidx = Tuple(JuMP.CartesianIndex(size(x))[k])
         $(Expr(:tuple, [:(x.indexsets[$i][subidx[$i]]) for i in 1:N]...)), next(x.innerArray,k)[2]
     end
 

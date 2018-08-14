@@ -30,6 +30,11 @@ if VERSION < v"0.7-"
     const Printf = Compat.Printf
     const Sys = Compat.Sys
     using Compat: rmul!
+    # because iteration of CartesianIndex is broken in 0.6
+    Base.Tuple(idx::CartesianIndex{1}) = (idx[1],)
+    Base.Tuple(idx::CartesianIndex{2}) = (idx[1], idx[2])
+    Base.Tuple(idx::CartesianIndex{3}) = (idx[1], idx[2], idx[3])
+    Base.Tuple(idx::CartesianIndex{4}) = (idx[1], idx[2], idx[3], idx[4])
 end
 
 export
