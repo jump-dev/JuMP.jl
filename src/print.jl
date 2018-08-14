@@ -396,7 +396,8 @@ exprstr(n::Norm) = norm_str(REPLMode, n)
 #------------------------------------------------------------------------
 ## JuMPContainer{Variable}
 #------------------------------------------------------------------------
-Base.show(io::IO, j::Union{JuMPContainer{Variable}, Array{Variable}}) = print(io, cont_str(REPLMode,j))
+Base.show(io::IO, j::JuMPContainer{Variable}) = print(io, cont_str(REPLMode,j))
+Base.show(io::IO, j::Array{Variable}) = print(io, cont_str(REPLMode,j))
 Base.show(io::IO, ::MIME"text/latex", j::Union{JuMPContainer{Variable},Array{Variable}}) =
     print(io, cont_str(IJuliaMode,j,mathmode=false))
 # Generic string converter, called by mode-specific handlers

@@ -132,7 +132,7 @@ function fillConicDuals(m::Model)
 
     if numRows == 0 || isfinite(m.conicconstrDuals[1]) # NaN could mean unavailable
         if m.objSense == :Min
-            scale!(m.conicconstrDuals, -1)
+            rmul!(m.conicconstrDuals, -1)
         end
         m.linconstrDuals = m.conicconstrDuals[1:numLinRows]
         m.redCosts = zeros(numCols)
@@ -1010,7 +1010,7 @@ function conicdata(m::Model)
 
     # The conic MPB interface defines conic problems as
     # always being minimization problems, so flip if needed
-    m.objSense == :Max && scale!(f, -1.0)
+    m.objSense == :Max && rmul!(f, -1.0)
 
     rescaleSDcols!(f, J, V, m)
 

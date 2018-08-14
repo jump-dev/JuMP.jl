@@ -174,7 +174,7 @@ Base.length(x::JuMPDict) = length(x.tupledict)
 Base.ndims(x::JuMPDict{T,N}) where {T,N} = N
 Base.abs(x::JuMPDict) = map(abs, x)
 # avoid dangerous behavior with "end" (#730)
-Base.endof(x::JuMPArray) = error("endof() (and \"end\" syntax) not implemented for JuMPArray objects.")
+Compat.lastindex(x::JuMPArray) = error("lastindex() (and \"end\" syntax) not implemented for JuMPArray objects.")
 Base.size(x::JuMPArray) = error(string("size (and \"end\" syntax) not implemented for JuMPArray objects.",
 "Use JuMP.size if you want to access the dimensions."))
 Base.size(x::JuMPArray,k) = error(string("size (and \"end\" syntax) not implemented for JuMPArray objects.",
@@ -188,8 +188,6 @@ size(x,k) = Base.size(x,k)
 LinearAlgebra.issymmetric(x::JuMPArray) = issymmetric(x.innerArray)
 
 Base.eltype(x::JuMPContainer{T}) where {T} = T
-
-Base.full(x::JuMPContainer) = x
 
 # keys/vals iterations for JuMPContainers
 Base.keys(d::JuMPDict)    = keys(d.tupledict)
@@ -234,11 +232,21 @@ function indexability(x::JuMPArray)
     return true
 end
 
-function Base.start(it::KeyIterator)
-    if indexability(it.x)
-        return start(it.x.innerArray)
-    else
-        return notindexable_start(it.x)
+if VERSION < v"0.7-"
+    function Base.start(it::KeyIterator)
+        if indexability(it.x)
+            return start(it.x.innerArray)
+        else
+            return notindexable_start(it.x)
+        end
+    end
+else
+    function Base.iterate(it::KeyIterator)
+        if indexability(it.x)
+            return iterate(it.x.innerArray)
+        else
+            return notindexable_start(it.x)
+        end
     end
 end
 
@@ -254,40 +262,76 @@ end
     end
 end
 
-function Base.next(it::KeyIterator, k::Tuple)
-    cartesian_key = _next(it.x, k)
-    pos = -1
-    for i in 1:it.dim
-        if !done(it.x.indexsets[i], next(it.x.indexsets[i], k[i+1])[2] )
-            pos = i
-            break
+if VERSION < v"0.7-"
+    function Base.next(it::KeyIterator, k::Tuple)
+        cartesian_key = _next(it.x, k)
+        pos = -1
+        for i in 1:it.dim
+            if !done(it.x.indexsets[i], next(it.x.indexsets[i], k[i+1])[2] )
+                pos = i
+                break
+            end
         end
-    end
-    if pos == - 1
-        it.next_k_cache[1] = 1
-        return cartesian_key, tuple(it.next_k_cache...)
-    end
-    it.next_k_cache[1] = 0
-    for i in 1:it.dim
-        if i < pos
-            it.next_k_cache[i+1] = start(it.x.indexsets[i])
-        elseif i == pos
-            it.next_k_cache[i+1] = next(it.x.indexsets[i], k[i+1])[2]
-        else
-            it.next_k_cache[i+1] = k[i+1]
+        if pos == - 1
+            it.next_k_cache[1] = 1
+            return cartesian_key, tuple(it.next_k_cache...)
         end
+        it.next_k_cache[1] = 0
+        for i in 1:it.dim
+            if i < pos
+                it.next_k_cache[i+1] = start(it.x.indexsets[i])
+            elseif i == pos
+                it.next_k_cache[i+1] = next(it.x.indexsets[i], k[i+1])[2]
+            else
+                it.next_k_cache[i+1] = k[i+1]
+            end
+        end
+        cartesian_key, tuple(it.next_k_cache...)
     end
-    cartesian_key, tuple(it.next_k_cache...)
+    Base.done(it::KeyIterator, k::Tuple) = (k[1] == 1)
+else
+    function Base.iterate(it::KeyIterator, k::Tuple)
+        k[1] == 1 && (return nothing)
+        cartesian_key = _next(it.x, k)
+        pos = -1
+        for i in 1:it.dim
+            if iterate(it.x.indexsets[i], iterate(it.x.indexsets[i], k[i+1])[2]) ≠ nothing
+                pos = i
+                break
+            end
+        end
+        if pos == - 1
+            it.next_k_cache[1] = 1
+            return cartesian_key, tuple(it.next_k_cache...)
+        end
+        it.next_k_cache[1] = 0
+        for i in 1:it.dim
+            if i < pos
+                it.next_k_cache[i+1] = iterate(it.x.indexsets[i])
+            elseif i == pos
+                it.next_k_cache[i+1] = iterate(it.x.indexsets[i], k[i+1])[2]
+            else
+                it.next_k_cache[i+1] = k[i+1]
+            end
+        end
+        cartesian_key, tuple(it.next_k_cache...)
+    end
 end
-
-Base.done(it::KeyIterator, k::Tuple) = (k[1] == 1)
 
 @generated __next(x::JuMPArray{T,N,NT}, k::Integer) where {T,N,NT} =
     quote
         subidx = ind2sub(size(x),k)
         $(Expr(:tuple, [:(x.indexsets[$i][subidx[$i]]) for i in 1:N]...)), next(x.innerArray,k)[2]
     end
-Base.next(it::KeyIterator, k) = __next(it.x,k::Integer)
-Base.done(it::KeyIterator, k) = done(it.x.innerArray, k::Integer)
+
+if VERSION < v"0.7-"
+    Base.next(it::KeyIterator, k) = __next(it.x,k::Integer)
+    Base.done(it::KeyIterator, k) = done(it.x.innerArray, k::Integer)
+else
+    function Base.iterate(it::KeyIterator, k)
+        iterate(it.x.innerArray, k::Integer) ≡ nothing && (return nothing)
+        __next(it.x, k::Integer)
+    end
+end
 
 Base.length(it::KeyIterator)  = length(it.x.innerArray)

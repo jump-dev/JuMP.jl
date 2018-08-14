@@ -34,7 +34,7 @@ function addtoexpr(ex::Number, c::Number, x::T) where T<:GenericAffExpr
         T(ex)
     else
         x = copy(x)
-        scale!(x.coeffs, c)
+        rmul!(x.coeffs, c)
         x.constant *= c
         x.constant += ex
         x
@@ -47,8 +47,8 @@ function addtoexpr(ex::Number, c::Number, x::T) where T<:GenericQuadExpr
         T(ex)
     else
         x = copy(x)
-        scale!(x.qcoeffs, c)
-        scale!(x.aff.coeffs, c)
+        rmul!(x.qcoeffs, c)
+        rmul!(x.aff.coeffs, c)
         x.aff.constant *= c
         x.aff.constant += ex
         x

@@ -29,6 +29,7 @@ if VERSION < v"0.7-"
     const SparseArrays = Compat.SparseArrays
     const Printf = Compat.Printf
     const Sys = Compat.Sys
+    using Compat: rmul!
 end
 
 export

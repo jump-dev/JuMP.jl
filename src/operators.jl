@@ -285,8 +285,6 @@ function Base.sum(affs::AbstractArray{T}) where T<:GenericAffExpr
     return new_aff
 end
 
-_dot_depr() = warn("dot is deprecated for multidimensional arrays. Use vecdot instead.")
-
 # Base Julia's generic fallback vecdot requires that dot be defined
 # for scalars, so instead of defining them one-by-one, we will
 # fallback to the multiplication operator
@@ -294,21 +292,26 @@ LinearAlgebra.dot(lhs::JuMPTypes, rhs::JuMPTypes) = lhs*rhs
 LinearAlgebra.dot(lhs::JuMPTypes, rhs::Number)    = lhs*rhs
 LinearAlgebra.dot(lhs::Number,    rhs::JuMPTypes) = lhs*rhs
 
-LinearAlgebra.dot(lhs::AbstractArray{T,N}, rhs::JuMPArray{S,N}) where {T,S,N}    = begin _dot_depr(); vecdot(lhs,rhs); end
-LinearAlgebra.dot(lhs::JuMPArray{T,N},rhs::AbstractArray{S,N}) where {T,S,N}     = begin _dot_depr(); vecdot(lhs,rhs); end
-LinearAlgebra.dot(lhs::JuMPArray{T,N},rhs::JuMPArray{S,N}) where {T,S,N} = begin _dot_depr(); vecdot(lhs,rhs); end
-LinearAlgebra.dot(lhs::AbstractArray{T,N}, rhs::AbstractArray{S,N}) where {T<:JuMPTypes,S,N} = begin _dot_depr(); vecdot(lhs,rhs); end
-LinearAlgebra.dot(lhs::AbstractArray{T,N}, rhs::AbstractArray{S,N}) where {T<:JuMPTypes,S<:JuMPTypes,N} = begin _dot_depr(); vecdot(lhs,rhs); end
-LinearAlgebra.dot(lhs::AbstractArray{T,N}, rhs::AbstractArray{S,N}) where {T,S<:JuMPTypes,N} = begin _dot_depr(); vecdot(lhs,rhs); end
+LinearAlgebra.dot(lhs::AbstractArray{T,N}, rhs::JuMPArray{S,N}) where {T,S,N}    = vecdot(lhs,rhs)
+LinearAlgebra.dot(lhs::JuMPArray{T,N},rhs::AbstractArray{S,N}) where {T,S,N}     = vecdot(lhs,rhs)
+LinearAlgebra.dot(lhs::JuMPArray{T,N},rhs::JuMPArray{S,N}) where {T,S,N} = vecdot(lhs,rhs)
+LinearAlgebra.dot(lhs::AbstractArray{T,N}, rhs::AbstractArray{S,N}) where {T<:JuMPTypes,S,N} = vecdot(lhs,rhs)
+LinearAlgebra.dot(lhs::AbstractArray{T,N}, rhs::AbstractArray{S,N}) where {T<:JuMPTypes,S<:JuMPTypes,N} = vecdot(lhs,rhs)
+LinearAlgebra.dot(lhs::AbstractArray{T,N}, rhs::AbstractArray{S,N}) where {T,S<:JuMPTypes,N} = vecdot(lhs,rhs)
 
 LinearAlgebra.dot(lhs::AbstractVector{T},rhs::AbstractVector{S}) where {T<:JuMPTypes,S<:JuMPTypes} = _dot(lhs,rhs)
 LinearAlgebra.dot(lhs::AbstractVector{T},rhs::AbstractVector{S}) where {T<:JuMPTypes,S} = _dot(lhs,rhs)
 LinearAlgebra.dot(lhs::AbstractVector{T},rhs::AbstractVector{S}) where {T,S<:JuMPTypes} = _dot(lhs,rhs)
 
-# TODO: qualify Base.vecdot once v0.3 support is dropped
-LinearAlgebra.vecdot(lhs::AbstractArray{T,N},rhs::AbstractArray{S,N}) where {T<:JuMPTypes,S,N} = _dot(lhs,rhs)
-LinearAlgebra.vecdot(lhs::AbstractArray{T,N},rhs::AbstractArray{S,N}) where {T<:JuMPTypes,S<:JuMPTypes,N} = _dot(lhs,rhs)
-LinearAlgebra.vecdot(lhs::AbstractArray{T,N},rhs::AbstractArray{S,N}) where {T,S<:JuMPTypes,N} = _dot(lhs,rhs)
+if VERSION < v"0.7-"
+    LinearAlgebra.vecdot(lhs::AbstractArray{T,N},rhs::AbstractArray{S,N}) where {T<:JuMPTypes,S,N} = _dot(lhs,rhs)
+    LinearAlgebra.vecdot(lhs::AbstractArray{T,N},rhs::AbstractArray{S,N}) where {T<:JuMPTypes,S<:JuMPTypes,N} = _dot(lhs,rhs)
+    LinearAlgebra.vecdot(lhs::AbstractArray{T,N},rhs::AbstractArray{S,N}) where {T,S<:JuMPTypes,N} = _dot(lhs,rhs)
+else
+    vecdot(lhs::AbstractArray{T,N},rhs::AbstractArray{S,N}) where {T<:JuMPTypes,S,N} = _dot(lhs,rhs)
+    vecdot(lhs::AbstractArray{T,N},rhs::AbstractArray{S,N}) where {T<:JuMPTypes,S<:JuMPTypes,N} = _dot(lhs,rhs)
+    vecdot(lhs::AbstractArray{T,N},rhs::AbstractArray{S,N}) where {T,S<:JuMPTypes,N} = _dot(lhs,rhs)
+end
 
 function _dot(lhs::AbstractArray{T}, rhs::AbstractArray{S}) where {T,S}
     size(lhs) == size(rhs) || error("Incompatible dimensions")
@@ -333,7 +336,7 @@ Base.promote_rule(::Type{QuadExpr},::Type{R}       ) where {R<:Real} = QuadExpr
 _throw_transpose_error() = error("Transpose not currently implemented for JuMPArrays with arbitrary index sets.")
 Base.transpose(x::AbstractJuMPScalar) = x
 Base.transpose( x::JuMPArray) = _throw_transpose_error()
-Base.ctranspose(x::JuMPArray) = _throw_transpose_error()
+Compat.adjoint(x::JuMPArray) = _throw_transpose_error()
 
 # Can remove the following code once == overloading is removed
 
@@ -448,8 +451,10 @@ Base.:*(             A::Union{Matrix{T},SparseMatrixCSC{T}}, x::Union{Matrix,   
 Base.:*(A::Union{Matrix{T},SparseMatrixCSC{T}}, x::Union{Matrix{R},Vector{R},SparseMatrixCSC{R}}) where {T<:JuMPTypes,R<:JuMPTypes} = _matmul(A, x)
 Base.:*(             A::Union{Matrix,   SparseMatrixCSC},    x::Union{Matrix{T},Vector{T},SparseMatrixCSC{T}}) where {T<:JuMPTypes} = _matmul(A, x)
 
-import Base.At_mul_B
-import Base.Ac_mul_B
+if VERSION < v"0.7-"
+    import Base.At_mul_B
+    import Base.Ac_mul_B
+end
 # these methods are called when one does A.'*v or A'*v respectively
 At_mul_B(A::Union{Matrix{T},SparseMatrixCSC{T}}, x::Union{Matrix, Vector, SparseMatrixCSC}) where {T<:JuMPTypes} = _matmult(A, x)
 At_mul_B(A::Union{Matrix{T},SparseMatrixCSC{T}}, x::Union{Matrix{R}, Vector{R}, SparseMatrixCSC{R}}) where {T<:JuMPTypes,R<:JuMPTypes} = _matmult(A, x)
