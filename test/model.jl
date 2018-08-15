@@ -40,3 +40,29 @@ end
         @test_throws ErrorException @constraint model 0 <= x + 1 <= 1
     end
 end
+
+struct Optimizer
+    a::Int
+    b::Int
+end
+function f(a::Int; b::Int = 1)
+    return Optimizer(a, b)
+end
+
+@testset "Factories" begin
+    factory = with_optimizer(Optimizer, 1, 2)
+    @test factory.constructor == Optimizer
+    @test factory.args == (1, 2)
+    optimizer = factory()
+    @test optimizer isa Optimizer
+    @test optimizer.a == 1
+    @test optimizer.b == 2
+    @test_throws ErrorException factory = with_optimizer(f, 1, 2)
+    factory = with_optimizer(f, 1, b = 2)
+    @test factory.constructor == f
+    @test factory.args == (1,)
+    optimizer = factory()
+    @test optimizer isa Optimizer
+    @test optimizer.a == 1
+    @test optimizer.b == 2
+end
