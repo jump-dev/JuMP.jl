@@ -356,7 +356,7 @@ function fill_var_names(mode, colNames, v::Array{Variable})
     name = m.varData[v].name
     for (ii,var) in enumerate(v)
         @assert var.m === m
-        ind = Tuple(CartesianIndices(sizes)[ii])
+        ind = _ind2sub(sizes, ii)
         colNames[var.col] = if mode === IJuliaMode
             string(name, "_{", join(ind, ","), "}")
         else

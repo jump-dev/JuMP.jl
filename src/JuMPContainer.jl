@@ -331,7 +331,7 @@ end
 
 @generated __next(x::JuMPArray{T,N,NT}, k::Integer) where {T,N,NT} =
     quote
-        subidx = Tuple(JuMP.CartesianIndices(size(x))[k])
+        subidx = _ind2sub(size(x), k)
         $(Expr(:tuple, [:(x.indexsets[$i][subidx[$i]]) for i in 1:N]...)), next(x.innerArray,k)[2]
     end
 

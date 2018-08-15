@@ -31,7 +31,9 @@ if VERSION < v"0.7-"
     const Sys = Compat.Sys
     using Compat: rmul!
     # because iteration of CartesianIndex is broken in 0.6
-    Base.Tuple(idx::CartesianIndex{N}) where {N} = tuple((idx[i] for i ∈ 1:N)...)
+    const _ind2sub = Base.ind2sub
+else
+    _ind2sub(tpl, k) = Tuple(CartesianIndex(tpl)[k])
 end
 
 export
