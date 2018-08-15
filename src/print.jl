@@ -356,7 +356,7 @@ function fill_var_names(mode, colNames, v::Array{Variable})
     name = m.varData[v].name
     for (ii,var) in enumerate(v)
         @assert var.m === m
-        ind = ind2sub(sizes, ii)
+        ind = _ind2sub(sizes, ii)
         colNames[var.col] = if mode === IJuliaMode
             string(name, "_{", join(ind, ","), "}")
         else
@@ -396,7 +396,8 @@ exprstr(n::Norm) = norm_str(REPLMode, n)
 #------------------------------------------------------------------------
 ## JuMPContainer{Variable}
 #------------------------------------------------------------------------
-Base.show(io::IO, j::Union{JuMPContainer{Variable}, Array{Variable}}) = print(io, cont_str(REPLMode,j))
+Base.show(io::IO, j::JuMPContainer{Variable}) = print(io, cont_str(REPLMode,j))
+Base.show(io::IO, j::Array{Variable}) = print(io, cont_str(REPLMode,j))
 Base.show(io::IO, ::MIME"text/latex", j::Union{JuMPContainer{Variable},Array{Variable}}) =
     print(io, cont_str(IJuliaMode,j,mathmode=false))
 # Generic string converter, called by mode-specific handlers

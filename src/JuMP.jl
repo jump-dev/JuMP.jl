@@ -29,6 +29,11 @@ if VERSION < v"0.7-"
     const SparseArrays = Compat.SparseArrays
     const Printf = Compat.Printf
     const Sys = Compat.Sys
+    using Compat: rmul!
+    # because iteration of CartesianIndex is broken in 0.6
+    const _ind2sub = Base.ind2sub
+else
+    _ind2sub(tpl, k) = Tuple(CartesianIndex(tpl)[k])
 end
 
 export
