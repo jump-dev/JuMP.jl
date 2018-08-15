@@ -88,7 +88,7 @@ else
         isexpr(s,:call) && s.args[1] == :(:) && length(s.args) == 3 && s.args[2] == 1
     end
 end
-_gendict_checkgen(::Symbol) = false
+_gendict_checkgen(::Any) = false
 function gendict(instancename,T,idxsets...)
     N = length(idxsets)
     truearray = true
