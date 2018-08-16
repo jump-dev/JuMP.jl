@@ -224,7 +224,7 @@ function _localvar(x::Expr)
 end
 
 function addkwargs!(call, kwargs)
-    kwsymbol = VERSION < v"0.6.0-dev.1934" ? :kw : :(=) # changed by julia PR #19868
+    kwsymbol = :(=) # changed by julia PR #19868
     for kw in kwargs
         @assert isexpr(kw, kwsymbol)
         push!(call.args, esc(Expr(:kw, kw.args...)))
@@ -356,7 +356,7 @@ macro constraint(args...)
     else
         kwargs = Expr(:parameters)
     end
-    kwsymbol = VERSION < v"0.6.0-dev.1934" ? :kw : :(=) # changed by julia PR #19868
+    kwsymbol = :(=) # changed by julia PR #19868
     append!(kwargs.args, filter(x -> isexpr(x, kwsymbol), collect(args))) # comma separated
     args = filter(x->!isexpr(x, kwsymbol), collect(args))
 
@@ -685,11 +685,8 @@ for (mac,sym) in [(:constraints,  Symbol("@constraint")),
                     end
                     args_esc = []
                     for ex in args
-                        if isexpr(ex, :(=)) && VERSION < v"0.6.0-dev.1934"
-                            push!(args_esc,Expr(:kw, ex.args[1], esc(ex.args[2])))
-                        else
-                            push!(args_esc, esc(ex))
-                        end
+                        isexpr(ex, :(=))
+                        push!(args_esc, esc(ex))
                     end
                     mac = Expr(:macrocall,$(quot(sym)), esc(m), args_esc...)
                     push!(code.args, mac)
@@ -874,7 +871,7 @@ macro variable(args...)
 
     extra = vcat(args[2:end]...)
     # separate out keyword arguments
-    kwsymbol = VERSION < v"0.6.0-dev.1934" ? :kw : :(=)
+    kwsymbol = :(=)
     kwargs = filter(ex->isexpr(ex,kwsymbol), extra)
     extra = filter(ex->!isexpr(ex,kwsymbol), extra)
 

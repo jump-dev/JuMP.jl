@@ -95,51 +95,27 @@ end
         #####################################################################
         # Test LP writer (given names)
         writeLP(modA, modPath * "A.lp", genericnames=false)
-        modALP = if VERSION >= v"0.5.0-dev+1866" # leading zero, base Julia PR #14377
-            String[
-            "Maximize",
-            "obj: 0.16666666666666666 col_1 + 0.16666666666666666 y + 1 z + 1 r_3",
-            "Subject To",
-            "c1: 1 col_1 + 1 y >= 2",
-            "c2: 1 col_1 + 1 y <= 4",
-            "c3: 1 r_3 + 1 r_4 + 1 r_5 + 0.5 col_1 <= 1",
-            "c4: 6 y + 1 y - 1 z - 0.5263157894736842 r_6 <= 0",
-            "c5: S1:: col_1:1 y:2 z:3",
-            "c6: S2:: col_1:30 y:20 z:10",
-            "Bounds",
-            "0 <= col_1 <= +inf",
-            "-inf <= y <= 5",
-            "2 <= z <= 4",
-            "0 <= r_3 <= 3",
-            "0 <= r_4 <= 4",
-            "0 <= r_5 <= 5",
-            "0 <= r_6 <= 6",
-            "General",
-            "y",
-            "End"]
-        else
-            String[
-            "Maximize",
-            "obj: .16666666666666666 col_1 + .16666666666666666 y + 1 z + 1 r_3",
-            "Subject To",
-            "c1: 1 col_1 + 1 y >= 2",
-            "c2: 1 col_1 + 1 y <= 4",
-            "c3: 1 r_3 + 1 r_4 + 1 r_5 + .5 col_1 <= 1",
-            "c4: 6 y + 1 y - 1 z - .5263157894736842 r_6 <= 0",
-            "c5: S1:: col_1:1 y:2 z:3",
-            "c6: S2:: col_2:30 y:20 z:10",
-            "Bounds",
-            "0 <= col_1 <= +inf",
-            "-inf <= y <= 5",
-            "2 <= z <= 4",
-            "0 <= r_3 <= 3",
-            "0 <= r_4 <= 4",
-            "0 <= r_5 <= 5",
-            "0 <= r_6 <= 6",
-            "General",
-            "y",
-            "End"]
-        end
+        modALP = String[
+                 "Maximize",
+                 "obj: 0.16666666666666666 col_1 + 0.16666666666666666 y + 1 z + 1 r_3",
+                 "Subject To",
+                 "c1: 1 col_1 + 1 y >= 2",
+                 "c2: 1 col_1 + 1 y <= 4",
+                 "c3: 1 r_3 + 1 r_4 + 1 r_5 + 0.5 col_1 <= 1",
+                 "c4: 6 y + 1 y - 1 z - 0.5263157894736842 r_6 <= 0",
+                 "c5: S1:: col_1:1 y:2 z:3",
+                 "c6: S2:: col_1:30 y:20 z:10",
+                 "Bounds",
+                 "0 <= col_1 <= +inf",
+                 "-inf <= y <= 5",
+                 "2 <= z <= 4",
+                 "0 <= r_3 <= 3",
+                 "0 <= r_4 <= 4",
+                 "0 <= r_5 <= 5",
+                 "0 <= r_6 <= 6",
+                 "General",
+                 "y",
+                 "End"]
         modAfp = open(modPath * "A.lp")
         lineInd = 1
         while !eof(modAfp)
@@ -559,11 +535,7 @@ end
         @variable(mod, 0 <= x <= 1)
         @variable(mod, 0 <= y <= 1)
         obj = [5,1]'*[x,y]
-        if VERSION < v"0.6.0-dev.2074" # julia PR #19670
-            @objective(mod, Max, obj[1])
-        else
-            @objective(mod, Max, obj)
-        end
+        @objective(mod, Max, obj)
         A = [1 1
              2 1]
         @constraint(mod, A*[x,y] .<= [6,7])
@@ -711,11 +683,7 @@ end
         @variable(modV, y[1:7])
         @constraint(modV, A*x + B*y .<= 1)
         obj = (x'*2A')*(2A*x) + (B*2y)'*(B*(2y))
-        if VERSION < v"0.6.0-dev.2074" # julia PR #19670
-            @objective(modV, Max, obj[1])
-        else
-            @objective(modV, Max, obj)
-        end
+        @objective(modV, Max, obj)
 
         modS = Model()
         @variable(modS, x[1:10])
@@ -743,11 +711,7 @@ end
                 @variable(mod, 0 <= z[1:p] <= 1)
             end
             obj = (y-X*β)'*(y-X*β)
-            if VERSION < v"0.6.0-dev.2074" # julia PR #19670
-                @objective(mod, Min, obj[1])
-            else
-                @objective(mod, Min, obj)
-            end
+            @objective(mod, Min, obj)
             @constraint(mod, eye(p)*β .<=  M*eye(p)*z)
             @constraint(mod, eye(p)*β .>= -M*eye(p)*z)
             @constraint(mod, sum(z) == K)

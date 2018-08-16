@@ -33,7 +33,7 @@ if VERSION < v"0.7-"
     # because iteration of CartesianIndex is broken in 0.6
     const _ind2sub = Base.ind2sub
 else
-    _ind2sub(tpl, k) = Tuple(CartesianIndex(tpl)[k])
+    _ind2sub(tpl, k) = Tuple(CartesianIndices(tpl)[k])
 end
 
 export
