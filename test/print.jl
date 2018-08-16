@@ -11,7 +11,7 @@
 # Testing $fa pretty-printing-related functionality
 #############################################################################
 using JuMP
-using Compat.Test
+using Compat.Test, Compat.LinearAlgebra
 
 import JuMP.REPLMode, JuMP.IJuliaMode
 import JuMP.repl, JuMP.ijulia

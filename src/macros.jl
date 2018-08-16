@@ -86,16 +86,48 @@ function buildrefsets(expr::Expr, cname)
     idxpairs = IndexPair[]
     # Creating an indexed set of refs
     refcall = Expr(:ref, cname)
-    if isexpr(c, :typed_vcat) || isexpr(c, :ref)
-        popfirst!(c.args)
-    end
-    condition = :()
-    if isexpr(c, :vcat) || isexpr(c, :typed_vcat)
-        if isexpr(c.args[1], :parameters)
-            @assert length(c.args[1].args) == 1
-            condition = popfirst!(c.args).args[1]
-        else
-            condition = pop!(c.args)
+    @static if VERSION >= v"0.7-"
+        # On 0.7, :(t[i;j]) is a :ref, while t[i,j;j] is a :typed_vcat.
+        # In both cases :t is the first arg.
+        if isexpr(c, :typed_vcat) || isexpr(c, :ref)
+            popfirst!(c.args)
+        end
+        condition = :()
+        if isexpr(c, :vcat) || isexpr(c, :typed_vcat)
+            # Parameters appear as plain args at the end.
+            if length(c.args) > 2
+                error("Unsupported syntax $c.")
+            elseif length(c.args) == 2
+                condition = pop!(c.args)
+            end # else no condition.
+        elseif isexpr(c, :ref) || isexpr(c, :vect)
+            # Parameters appear at the front.
+            if isexpr(c.args[1], :parameters)
+                if length(c.args[1].args) != 1
+                    error("Invalid syntax: $c. Multiple semicolons are not " *
+                          "supported.")
+                end
+                condition = popfirst!(c.args).args[1]
+            end
+        end
+        if isexpr(c, :vcat) || isexpr(c, :typed_vcat) || isexpr(c, :ref)
+            if isexpr(c.args[1], :parameters)
+                @assert length(c.args[1].args) == 1
+                condition = popfirst!(c.args).args[1]
+            end # else no condition.
+        end
+    else
+        if isexpr(c, :typed_vcat) || isexpr(c, :ref)
+            popfirst!(c.args)
+        end
+        condition = :()
+        if isexpr(c, :vcat) || isexpr(c, :typed_vcat)
+            if isexpr(c.args[1], :parameters)
+                @assert length(c.args[1].args) == 1
+                condition = popfirst!(c.args).args[1]
+            else
+                condition = pop!(c.args)
+            end
         end
     end
 
