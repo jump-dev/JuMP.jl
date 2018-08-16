@@ -180,7 +180,7 @@ function solve(m::Model; suppress_warnings=false,
     m.objBound = NaN
     m.objVal = NaN
     m.colVal = fill(NaN, numCols)
-    m.linconstrDuals = Array{Float64}(0)
+    m.linconstrDuals = Array{Float64}(undef, 0)
 
     discrete = !relaxation && (traits.int || traits.sos)
     if stat == :Optimal
@@ -541,11 +541,11 @@ function prepConstrMatrix(m::Model)
         nnz += length(linconstr[c].terms.coeffs)
     end
     # Non-zero row indices
-    I = Array{Int}(nnz)
+    I = Array{Int}(undef, nnz)
     # Non-zero column indices
-    J = Array{Int}(nnz)
+    J = Array{Int}(undef, nnz)
     # Non-zero values
-    V = Array{Float64}(nnz)
+    V = Array{Float64}(undef, nnz)
 
     # Fill it up!
     # Number of nonzeros seen so far
@@ -845,7 +845,7 @@ end
 function fillconstr!(I, J, V, b, con_cones, tmprow::IndexedVector, constr_to_row, c, d, constrs::Vector{SDConstraint}, m::Model, ignore_not_owned::Bool=false)
     tmpelts = tmprow.elts
     tmpnzidx = tmprow.nzidx
-    sdpconstr_sym = Vector{Vector{Tuple{Int,Int}}}(length(constrs))
+    sdpconstr_sym = Vector{Vector{Tuple{Int,Int}}}(undef, length(constrs))
     sdpidx = 0
     for con in constrs
         sdpidx += 1
@@ -968,9 +968,9 @@ function conicdata(m::Model)
 
     # should maintain the order of constraints in the above form
     # throughout the code c is the conic constraint index
-    constr_to_row = Array{Vector{Int}}(numLinRows + numBounds + numNormRows + 2*length(m.sdpconstr))
+    constr_to_row = Array{Vector{Int}}(undef, numLinRows + numBounds + numNormRows + 2*length(m.sdpconstr))
 
-    b = Array{Float64}(numRows)
+    b = Array{Float64}(undef, numRows)
 
     I = Int[]
     J = Int[]
@@ -1094,8 +1094,8 @@ function merge_duplicates(::Type{IntType},aff::GenericAffExpr{CoefType,Variable}
         addelt!(v, aff.vars[ind].col, aff.coeffs[ind])
     end
     rmz!(v)
-    indices = Array{IntType}(v.nnz)
-    coeffs = Array{CoefType}(v.nnz)
+    indices = Array{IntType}(undef, v.nnz)
+    coeffs = Array{CoefType}(undef, v.nnz)
     for i in 1:v.nnz
         idx = v.nzidx[i]
         indices[i] = idx
