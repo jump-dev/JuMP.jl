@@ -287,6 +287,9 @@ destructive_add_with_reorder!(ex, arg) = destructive_add!(ex, 1.0, arg)
 destructive_add_with_reorder!(ex::Val{false}, arg) = copy(arg)
 # Calling `copy` on the matrix will not copy the entries
 destructive_add_with_reorder!(ex::Val{false}, arg::AbstractArray) = copy.(arg)
+function destructive_add_with_reorder!(ex::Val{false}, arg::Symmetric)
+    Symmetric(copy.(arg))
+end
 destructive_add_with_reorder!(ex::Val{false}, args...) = (*)(args...)
 
 
