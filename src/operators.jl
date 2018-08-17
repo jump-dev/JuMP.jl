@@ -334,8 +334,9 @@ Base.promote_rule(         ::Type{AffExpr}, ::Type{QuadExpr}) = QuadExpr
 Base.promote_rule(::Type{QuadExpr},::Type{R}       ) where {R<:Real} = QuadExpr
 
 _throw_transpose_error() = error("Transpose not currently implemented for JuMPArrays with arbitrary index sets.")
-Base.transpose(x::AbstractJuMPScalar) = x
-Base.transpose( x::JuMPArray) = _throw_transpose_error()
+Compat.LinearAlgebra.transpose(x::AbstractJuMPScalar) = x
+Compat.LinearAlgebra.transpose( x::JuMPArray) = _throw_transpose_error()
+Compat.adjoint(x::AbstractJuMPScalar) = x
 Compat.adjoint(x::JuMPArray) = _throw_transpose_error()
 
 # Can remove the following code once == overloading is removed
