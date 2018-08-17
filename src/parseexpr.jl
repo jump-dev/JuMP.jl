@@ -146,8 +146,8 @@ function destructive_add!(aff::GenericAffExpr{C,V}, c::GenericQuadExpr{C,V}, x::
         GenericQuadExpr{C,V}(aff)
     else
         result = c*x
-        add_to_expression!(result.aff, aff)
-        result
+        add_to_expression!(result, aff)
+        return result
     end
 end
 
@@ -156,8 +156,8 @@ function destructive_add!(aff::GenericAffExpr{C,V}, c::Number, x::GenericQuadExp
         GenericQuadExpr{C,V}(aff)
     else
         result = c*x
-        add_to_expression!(result.aff, aff)
-        result
+        add_to_expression!(result, aff)
+        return result
     end
 end
 
@@ -261,14 +261,32 @@ function destructive_add!(ex::AbstractArray{T}, c::Number, x::AbstractArray) whe
     add_to_expression!.(ex, c*x)
 end
 
+function destructive_add!(ex::AbstractArray{<:GenericAffExpr},
+                          c::AbstractArray{<:GenericQuadExpr},
+                          x::Number)
+    result = c*x
+    add_to_expression!.(result, ex)
+    return result
+end
+function destructive_add!(ex::AbstractArray{<:GenericAffExpr}, c::Number,
+                          x::AbstractArray{<:GenericQuadExpr})
+    result = c*x
+    add_to_expression!.(result, ex)
+    return result
+end
+
+
 destructive_add!(ex, c, x) = ex + c*x
 destructive_add!(ex, c, x::AbstractArray) = (ex,) .+ c*x
 destructive_add!(ex::AbstractArray, c, x) = ex .+ (c*x,)
+destructive_add!(ex::AbstractArray, c::AbstractArray, x) = ex .+ c*x
 destructive_add!(ex::AbstractArray, c, x::AbstractArray) = ex .+ c*x
 
 destructive_add_with_reorder!(ex, arg) = destructive_add!(ex, 1.0, arg)
 # Special case because "Val{false}()" is used as the default empty expression.
 destructive_add_with_reorder!(ex::Val{false}, arg) = copy(arg)
+# Calling `copy` on the matrix will not copy the entries
+destructive_add_with_reorder!(ex::Val{false}, arg::AbstractArray) = copy.(arg)
 destructive_add_with_reorder!(ex::Val{false}, args...) = (*)(args...)
 
 

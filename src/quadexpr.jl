@@ -126,6 +126,11 @@ function add_to_expression!(quad::GenericQuadExpr{C, V}, new_coef::C, new_var::V
     quad
 end
 
+function add_to_expression!(q::GenericQuadExpr{T,S}, other::GenericAffExpr{T,S}) where {T,S}
+    add_to_expression!(q.aff, other)
+    return q
+end
+
 function add_to_expression!(q::GenericQuadExpr{T,S}, other::GenericQuadExpr{T,S}) where {T,S}
     merge!(+, q.terms, other.terms)
     add_to_expression!(q.aff, other.aff)
