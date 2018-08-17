@@ -3,6 +3,17 @@
 #  License, v. 2.0. If a copy of the MPL was not distributed with this
 #  file, You can obtain one at http://mozilla.org/MPL/2.0/.
 
+# Returns the block expression inside a :let that holds the code to be run.
+# The other block (not returned) is for declaring variables in the scope of the
+# let.
+function let_code_block(ex::Expr)
+    @assert isexpr(ex, :let)
+    @static if VERSION ≥ v"0.7-"
+        return ex.args[2]
+    else
+        return ex.args[1]
+    end
+end
 
 # generates code which converts an expression into a NodeData array (tape)
 # parent is the index of the parent expression
@@ -18,7 +29,7 @@ function parseNLExpr(m, x, tapevar, parent, values)
             error("Unrecognized expression $header(...)")
         end
         codeblock = :(let; end)
-        block = codeblock.args[1]
+        block = let_code_block(codeblock)
         push!(block.args, :(push!($tapevar, NodeData(CALL, $operatorid, $parent))))
         parentvar = gensym()
         push!(block.args, :($parentvar = length($tapevar)))
@@ -32,7 +43,7 @@ function parseNLExpr(m, x, tapevar, parent, values)
     if isexpr(x, :call)
         if length(x.args) == 2 # univariate
             code = :(let; end)
-            block = code.args[1]
+            block = let_code_block(code)
             @assert isexpr(block, :block)
             if haskey(univariate_operator_to_id,x.args[1])
                 operatorid = univariate_operator_to_id[x.args[1]]
@@ -62,7 +73,7 @@ function parseNLExpr(m, x, tapevar, parent, values)
             return code
         else
             code = :(let; end)
-            block = code.args[1]
+            block = let_code_block(code)
             @assert isexpr(block, :block)
             if haskey(operator_to_id,x.args[1]) # fast compile-time lookup
                 operatorid = operator_to_id[x.args[1]]
@@ -99,7 +110,7 @@ function parseNLExpr(m, x, tapevar, parent, values)
     end
     if isexpr(x, :comparison)
         code = :(let; end)
-        block = code.args[1]
+        block = let_code_block(code)
         op = x.args[2]
         operatorid = comparison_operator_to_id[op]
         for k in 2:2:length(x.args)-1
@@ -115,7 +126,7 @@ function parseNLExpr(m, x, tapevar, parent, values)
     end
     if isexpr(x, :&&) || isexpr(x, :||)
         code = :(let; end)
-        block = code.args[1]
+        block = let_code_block(code)
         op = x.head
         operatorid = logic_operator_to_id[op]
         parentvar = gensym()
@@ -192,6 +203,16 @@ function parseNLExpr(m, x, tapevar, parent, values)
 
 end
 
+function parseNLExpr_runtime(m::Model, x, tape, parent, values)
+    error("Unexpected object $x in nonlinear expression.")
+end
+
+function parseNLExpr_runtime(m::Model, x::GenericQuadExpr, tape, parent, values)
+    error("Unexpected quadratic expression $x in nonlinear expression. " *
+          "Quadratic expressions (e.g., created using @expression) and " *
+          "nonlinear expression cannot be mixed.")
+end
+
 function parseNLExpr_runtime(m::Model, x::Number, tape, parent, values)
     push!(values, x)
     push!(tape, NodeData(VALUE, length(values), parent))
@@ -218,14 +239,20 @@ function parseNLExpr_runtime(m::Model, x::Vector, tape, parent, values)
     error("Unexpected vector $x in nonlinear expression. Nonlinear expressions may contain only scalar expressions.")
 end
 
-macro processNLExpr(m, ex)
-    parsed = parseNLExpr(m, ex, :tape, -1, :values)
+# This is separated from the macro version to make it available for other @NL*
+# macros
+function processNLExpr(model, ex)
+    parsed = parseNLExpr(model, ex, :tape, -1, :values)
     quote
         tape = NodeData[]
         values = Float64[]
         $parsed
         NonlinearExprData(tape, values)
     end
+end
+
+macro processNLExpr(m, ex)
+    processNLExpr(m, ex)
 end
 
 # Construct a NonlinearExprData from a Julia expression.
