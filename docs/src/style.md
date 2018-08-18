@@ -121,19 +121,13 @@ the latter is ambiguous when multiple arguments are present. Never use `!!`.
 #### Abbreviations
 
 Abbreviate names to make the code more readable, not to save typing.
-Don't arbitrarily delete letters from a word to abbreviate it (e.g., `indx` or
-`idx`). Use abbreviations consistently within a body of code (e.g., do not mix
-`con` and `constr`).
+Don't arbitrarily delete letters from a word to abbreviate it (e.g., `indx`).
+Use abbreviations consistently within a body of code (e.g., do not mix
+`con` and `constr`, `idx` and `indx`).
 
 Common abbreviations:
 
 - `num` for `number`
-
-TODO: add more
-
-Don't abbreviate:
-
-- `index`
 
 TODO: add more
 
