@@ -437,7 +437,7 @@ var documenterSearchIndex = {"docs": [
     "page": "Style Guide",
     "title": "Style guide",
     "category": "section",
-    "text": "This section describes the coding style rules that apply to JuMP code and that we recommend for JuMP models and surrounding Julia code. The motivations for a style guide include:conveying best practices for writing readable and maintainable code\nreducing the amount of time spent on bike-shedding by establishing basic naming and formatting conventions\nlowering the barrier for new contributors by codifying the existing practices (e.g., you can be more confident your code will pass review if you follow the style guide)In some cases, the JuMP style guide diverges from the Julia style guide. All such cases will be explicitly noted and justified.info: Info\nThe style guide is always a work in progress, and not all JuMP code follows the rules. When modifying JuMP, please fix the style violations of the surrounding code (i.e., leave the code tidier than when you started). If large changes are needed, consider separating them into another PR."
+    "text": "This section describes the coding style rules that apply to JuMP code and that we recommend for JuMP models and surrounding Julia code. The motivations for a style guide include:conveying best practices for writing readable and maintainable code\nreducing the amount of time spent on bike-shedding by establishing basic naming and formatting conventions\nlowering the barrier for new contributors by codifying the existing practices (e.g., you can be more confident your code will pass review if you follow the style guide)In some cases, the JuMP style guide diverges from the Julia style guide. All such cases will be explicitly noted and justified.The JuMP style guide adopts many recommendations from the Google style guides.info: Info\nThe style guide is always a work in progress, and not all JuMP code follows the rules. When modifying JuMP, please fix the style violations of the surrounding code (i.e., leave the code tidier than when you started). If large changes are needed, consider separating them into another PR."
 },
 
 {
@@ -494,6 +494,38 @@ var documenterSearchIndex = {"docs": [
     "title": "Trailing periods in floating-point constants",
     "category": "section",
     "text": "Both 1.0 and 1. create a Float64 with value 1.0. Prefer 1.0 over 1. because it is more easily distinguished from the integer constant 1."
+},
+
+{
+    "location": "style.html#Naming-1",
+    "page": "Style Guide",
+    "title": "Naming",
+    "category": "section",
+    "text": "module SomeModule end\nfunction some_function end\nconst SOME_CONSTANT = ...\nstruct SomeStruct end\nsome_local_variable = ..."
+},
+
+{
+    "location": "style.html#Use-of-underscores-1",
+    "page": "Style Guide",
+    "title": "Use of underscores",
+    "category": "section",
+    "text": "The Julia style guide recommends avoiding underscores \"when readable\", for example, haskey, isequal, remotecall, and remotecall_fetch. This convention creates the potential for unnecessary bikeshedding and also forces the user to recall the presence/absence of an underscore, e.g., \"was that argument named basename or base_name?\". For consistency, always use underscores in variable names and function names to separate words."
+},
+
+{
+    "location": "style.html#Use-of-!-1",
+    "page": "Style Guide",
+    "title": "Use of !",
+    "category": "section",
+    "text": "Julia has a convention of appending ! to a function name if the function modifies its arguments. We recommend that this be omitted when the name otherwise makes it clear that modification is taking place, e.g., add_constraint and set_name. We allow ! when it is used to distinguish between modifying and non-modifying variants of the same function like scale and scale!. In general, it is more important to clearly document which arguments are modified rather than adding ! to the function name since the latter is ambiguous when multiple arguments are present. Never use !!."
+},
+
+{
+    "location": "style.html#Abbreviations-1",
+    "page": "Style Guide",
+    "title": "Abbreviations",
+    "category": "section",
+    "text": "Abbreviate names to make the code more readable, not to save typing. Don\'t arbitrarily delete letters from a word to abbreviate it (e.g., indx). Use abbreviations consistently within a body of code (e.g., do not mix con and constr, idx and indx).Common abbreviations:num for numberTODO: add more"
 },
 
 {
