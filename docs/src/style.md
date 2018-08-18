@@ -15,7 +15,12 @@ a style guide include:
 - lowering the barrier for new contributors by codifying the existing practices
   (e.g., you can be more confident your code will pass review if you follow the style guide)
 
-In some cases, the JuMP style guide diverges from the [Julia style guide](https://docs.julialang.org/en/v0.6.4/manual/style-guide/). All such cases will be explicitly noted and justified.
+In some cases, the JuMP style guide diverges from the
+[Julia style guide](https://docs.julialang.org/en/v0.6.4/manual/style-guide/).
+All such cases will be explicitly noted and justified.
+
+The JuMP style guide adopts many recommendations from the
+[Google style guides](https://github.com/google/styleguide).
 
 !!! info
     The style guide is always a work in progress, and not all JuMP code
@@ -82,6 +87,49 @@ empty vector with element type `T`. Prefer `T[]` because it is more concise.
 
 Both `1.0` and `1.` create a `Float64` with value `1.0`. Prefer `1.0` over
 `1.` because it is more easily distinguished from the integer constant `1`.
+
+### Naming
+
+```julia
+module SomeModule end
+function some_function end
+const SOME_CONSTANT = ...
+struct SomeStruct end
+some_local_variable = ...
+```
+
+#### Use of underscores
+
+The Julia style guide recommends avoiding underscores "when readable", for
+example, `haskey`, `isequal`, `remotecall`, and `remotecall_fetch`. This
+convention creates the potential for unnecessary bikeshedding and also forces
+the user to recall the presence/absence of an underscore, e.g., "was that
+argument named `basename` or `base_name`?". For consistency, *always use
+underscores* in variable names and function names to separate words.
+
+#### Use of `!`
+
+Julia has a convention of appending `!` to a function name if the function
+modifies its arguments. We recommend that this be omitted when the name
+otherwise makes it clear that modification is taking place, e.g.,
+`add_constraint` and `set_name`. We allow `!` when it is used to distinguish
+between modifying and non-modifying variants of the same function like
+`scale` and `scale!`. In general, it is more important to clearly document
+which arguments are modified rather than adding `!` to the function name since
+the latter is ambiguous when multiple arguments are present. Never use `!!`.
+
+#### Abbreviations
+
+Abbreviate names to make the code more readable, not to save typing.
+Don't arbitrarily delete letters from a word to abbreviate it (e.g., `indx`).
+Use abbreviations consistently within a body of code (e.g., do not mix
+`con` and `constr`, `idx` and `indx`).
+
+Common abbreviations:
+
+- `num` for `number`
+
+TODO: add more
 
 ### Miscellaneous
 
