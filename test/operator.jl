@@ -371,6 +371,28 @@ function operators_test(ModelType::Type{<:JuMP.AbstractModel}, VariableRefType::
                   0     0 2X23^2
                   0     0      0]
             v = [4, 5, 6]
+
+            @testset "Sum of matrices" begin
+                @test_expression(Xd + Yd)
+                @test_expression(Xd + 2Yd)
+                @test_expression(Xd + Yd * 2)
+                @test_expression(Yd + Xd)
+                @test_expression(Yd + 2Xd)
+                @test_expression(Yd + Xd * 2)
+                @test_expression(Yd + Zd)
+                @test_expression(Yd + 2Zd)
+                @test_expression(Yd + Zd * 2)
+                @test_expression(Zd + Yd)
+                @test_expression(Zd + 2Yd)
+                @test_expression(Zd + Yd * 2)
+                @test_expression(Zd + Xd)
+                @test_expression(Zd + 2Xd)
+                @test_expression(Zd + Xd * 2)
+                @test_expression(Xd + Zd)
+                @test_expression(Xd + 2Zd)
+                @test_expression(Xd + Zd * 2)
+            end
+
             @test JuMP.isequal_canonical(A*x, [2x[1] +  x[2]
                                2x[2] +  x[1] + x[3]
                                 x[2] + 2x[3]])
