@@ -34,10 +34,10 @@ function Compat.rmul!(v::VectorView{T},value::T) where T<:Number
     end
     nothing
 end
-function reinterpret_unsafe(::Type{T},x::Vector{R}) where {T,R}
+function reinterpret_unsafe(::Type{T}, x::Vector{R}) where {T, R}
     # how many T's fit into x?
-    @assert isbits(T) && isbits(R)
-    len = length(x)*sizeof(R)
-    p = reinterpret(Ptr{T},pointer(x))
-    return VectorView(0,div(len,sizeof(T)),p)
+    @assert isbitstype(T) && isbitstype(R)
+    len = length(x) * sizeof(R)
+    p = reinterpret(Ptr{T}, pointer(x))
+    return VectorView(0, div(len, sizeof(T)), p)
 end
