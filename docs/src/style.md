@@ -115,7 +115,7 @@ modifies its arguments. We recommend to:
 - Omit `!` when the name itself makes it clear that modification is taking
   place, e.g., `add_constraint` and `set_name`. We depart from the Julia style
   guide because `!` does not provide a reader with any additional information
-  in this case, and adherence to the this convention is not uniform even in base
+  in this case, and adherence to this convention is not uniform even in base
   Julia itself (consider `Base.println`).
 - Use `!` in all other cases. In particular it can be used to distinguish
   between modifying and non-modifying variants of the same function like `scale`
