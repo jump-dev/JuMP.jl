@@ -16,7 +16,7 @@ a style guide include:
   (e.g., you can be more confident your code will pass review if you follow the style guide)
 
 In some cases, the JuMP style guide diverges from the
-[Julia style guide](https://docs.julialang.org/en/v0.6.4/manual/style-guide/).
+[Julia style guide](https://docs.julialang.org/en/v1.0.0/manual/style-guide/).
 All such cases will be explicitly noted and justified.
 
 The JuMP style guide adopts many recommendations from the
@@ -110,13 +110,23 @@ underscores* in variable names and function names to separate words.
 #### Use of `!`
 
 Julia has a convention of appending `!` to a function name if the function
-modifies its arguments. We recommend that this be omitted when the name
-otherwise makes it clear that modification is taking place, e.g.,
-`add_constraint` and `set_name`. We allow `!` when it is used to distinguish
-between modifying and non-modifying variants of the same function like
-`scale` and `scale!`. In general, it is more important to clearly document
-which arguments are modified rather than adding `!` to the function name since
-the latter is ambiguous when multiple arguments are present. Never use `!!`.
+modifies its arguments. We recommend to:
+
+- Omit `!` when the name itself makes it clear that modification is taking
+  place, e.g., `add_constraint` and `set_name`. We depart from the Julia style
+  guide because `!` does not provide a reader with any additional information
+  in this case, and adherence to this convention is not uniform even in base
+  Julia itself (consider `Base.println`).
+- Use `!` in all other cases. In particular it can be used to distinguish
+  between modifying and non-modifying variants of the same function like `scale`
+  and `scale!`.
+
+Note that `!` is *not* a self-documenting feature because it is still
+ambiguous which arguments are modified when multiple arguments are present.
+Be sure to document which arguments are modified in the method's docstring.
+
+See also the Julia style guide recommendations for
+[ordering of function arguments](https://docs.julialang.org/en/v1.0.0/manual/style-guide/#Write-functions-with-argument-ordering-similar-to-Julia's-Base-1).
 
 #### Abbreviations
 
