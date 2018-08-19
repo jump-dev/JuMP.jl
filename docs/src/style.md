@@ -110,11 +110,13 @@ underscores* in variable names and function names to separate words.
 #### Use of `!`
 
 Julia has a convention of appending `!` to a function name if the function
-modifies its arguments. (This convention isn't always applied, however.
-Consider `println`.) We recommend to:
+modifies its arguments. We recommend to:
 
 - Omit `!` when the name itself makes it clear that modification is taking
-  place, e.g., `add_constraint` and `set_name`.
+  place, e.g., `add_constraint` and `set_name`. We depart from the Julia style
+  guide because `!` does not provide a reader with any additional information
+  in this case, and adherence to the this convention is not uniform even in base
+  Julia itself (consider `Base.println`).
 - Use `!` in all other cases. In particular it can be used to distinguish
   between modifying and non-modifying variants of the same function like `scale`
   and `scale!`.
