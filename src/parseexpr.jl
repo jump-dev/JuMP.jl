@@ -4,10 +4,10 @@
 #  file, You can obtain one at http://mozilla.org/MPL/2.0/.
 
 function tryParseIdxSet(arg::Expr)
-    if arg.head === :kw  # Julia 1.0 onwards.
-        @assert length(arg.args) == 2
-        return true, arg.args[1], arg.args[2]
-    # TODO(IainNZ): Remove after dropping support for pre-1.0 Julia?
+    is_julia_v1 = @static (VERSION >= v"1.0-" ? true : false)
+    if is_julia_v1 && arg.head === :kw
+            @assert length(arg.args) == 2
+            return true, arg.args[1], arg.args[2]
     elseif arg.head === :(=)
         @assert length(arg.args) == 2
         return true, arg.args[1], arg.args[2]
