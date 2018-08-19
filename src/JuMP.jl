@@ -163,28 +163,6 @@ mutable struct Model <: AbstractModel
 end
 
 """
-    Model(moibackend::MOI.ModelLike)
-
-Return a new JuMP model with MOI backend `moibackend`. This constructor is a
-low-level constructor used by [`Model()`](@ref),
-[`Model(::OptimizerFactory)`](@ref) and [`direct_model`](@ref).
-"""
-function Model(moibackend::MOI.ModelLike)
-    @assert MOI.isempty(moibackend)
-    return Model(Dict{MOIVAR, MOILB}(),
-                 Dict{MOIVAR, MOIUB}(),
-                 Dict{MOIVAR, MOIFIX}(),
-                 Dict{MOIVAR, MOIINT}(),
-                 Dict{MOIVAR, MOIBIN}(),
-                 moibackend,
-                 nothing,
-                 nothing,
-                 Dict{Symbol, Any}(),
-                 0,
-                 Dict{Symbol, Any}())
-end
-
-"""
     Model(; caching_mode::MOIU.CachingOptimizerMode=MOIU.Automatic,
             bridge_constraints::Bool=true)
 
@@ -207,7 +185,7 @@ function Model(; caching_mode::MOIU.CachingOptimizerMode=MOIU.Automatic,
     else
         backend = caching_opt
     end
-    return Model(backend)
+    return direct_model(backend)
 end
 
 """
@@ -253,7 +231,18 @@ in mind the following implications of creating models using this *direct* mode:
 * The model created cannot be copied.
 """
 function direct_model(backend::MOI.ModelLike)
-    return Model(backend)
+    @assert MOI.isempty(backend)
+    return Model(Dict{MOIVAR, MOILB}(),
+                 Dict{MOIVAR, MOIUB}(),
+                 Dict{MOIVAR, MOIFIX}(),
+                 Dict{MOIVAR, MOIINT}(),
+                 Dict{MOIVAR, MOIBIN}(),
+                 backend,
+                 nothing,
+                 nothing,
+                 Dict{Symbol, Any}(),
+                 0,
+                 Dict{Symbol, Any}())
 end
 
 # In Automatic and Manual mode, `model.moibackend` is either directly the
