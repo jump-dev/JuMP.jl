@@ -119,7 +119,7 @@ Consider `println`.) We recommend to:
   between modifying and non-modifying variants of the same function like `scale`
   and `scale!`.
 
-Note that `!` is *not* a self-documenting convention because it is still
+Note that `!` is *not* a self-documenting feature because it is still
 ambiguous which arguments are modified when multiple arguments are present.
 Be sure to document which arguments are modified in the method's docstring.
 
