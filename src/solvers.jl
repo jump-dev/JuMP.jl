@@ -346,7 +346,7 @@ function build(m::Model; suppress_warnings=false, relaxation=false, traits=Probl
                 # The solver doesn't support changing bounds/objective
                 # We need to build the model from scratch
                 if !suppress_warnings
-                    Base.warn_once("Solver does not appear to support hot-starts. Model will be built from scratch.")
+                    warn_once("Solver does not appear to support hot-starts. Model will be built from scratch.")
                 end
                 m.internalModelLoaded = false
             end
@@ -409,7 +409,7 @@ function build(m::Model; suppress_warnings=false, relaxation=false, traits=Probl
                 MathProgBase.setwarmstart!(m.internalModel, m.colVal)
             end
         else
-            suppress_warnings || Base.warn_once("Solver does not appear to support providing initial feasible solutions.")
+            suppress_warnings || warn_once("Solver does not appear to support providing initial feasible solutions.")
         end
     end
 

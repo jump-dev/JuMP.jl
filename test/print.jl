@@ -593,20 +593,6 @@ end
         io_test(IJuliaMode, a_v, "v_{4,5,2,3,2,2,4}")
     end
 
-    @testset "User-created Array{Variable}" begin
-        m = Model()
-        @variable(m, x)
-        @variable(m, y)
-
-        v = [x,y,x]
-        A = [x y; y x]
-        io_test(REPLMode,   v, "$Variable[x, y, x]")
-        io_test(IJuliaMode, v, "$Variable[x, y, x]")
-
-        io_test(REPLMode,   A, "$Variable[x y; y x]")
-        io_test(IJuliaMode, A, "$Variable[x y; y x]")
-    end
-
     @testset "basename keyword argument" begin
         m = Model()
         @variable(m, x, basename="foo")

@@ -42,6 +42,7 @@ function parseNLExpr(m, x, tapevar, parent, values)
 
     if isexpr(x, :call)
         if length(x.args) == 2 # univariate
+            println("hello!")
             code = :(let; end)
             block = let_code_block(code)
             @assert isexpr(block, :block)
@@ -150,11 +151,11 @@ function parseNLExpr(m, x, tapevar, parent, values)
             error("Unrecognized expression $header{...}")
         end
         codeblock = :(let; end)
-        block = codeblock.args[1]
+        block = let_code_block(codeblock)
         push!(block.args, :(push!($tapevar, NodeData(CALL, $operatorid, $parent))))
         parentvar = gensym()
         push!(block.args, :($parentvar = length($tapevar)))
-        
+
         # we have a filter condition
         if isexpr(x.args[2],:parameters)
             cond = x.args[2]

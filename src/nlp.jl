@@ -1216,11 +1216,11 @@ function MathProgBase.constr_expr(d::NLPEvaluator,i::Integer)
 end
 
 function EnableNLPResolve()
-    Base.warn_once("NLP resolve is now enabled by default. The EnableNLPResolve() method will be removed in a future release.")
+    warn_once("NLP resolve is now enabled by default. The EnableNLPResolve() method will be removed in a future release.")
     return
 end
 function DisableNLPResolve()
-    Base.warn_once("NLP resolve is now enabled by default. The DisableNLPResolve() method will be removed in a future release.")
+    warn_once("NLP resolve is now enabled by default. The DisableNLPResolve() method will be removed in a future release.")
     return
 end
 export EnableNLPResolve, DisableNLPResolve
@@ -1294,7 +1294,7 @@ function solvenlp(m::Model, traits; suppress_warnings=false)
             m.nlpdata.nlconstrDuals = nlduals[length(m.linconstr)+length(m.quadconstr)+1:end]
             m.redCosts = MathProgBase.getreducedcosts(m.internalModel)
         else
-            suppress_warnings || Base.warn_once("Nonlinear solver does not provide dual solutions")
+            suppress_warnings || warn_once("Nonlinear solver does not provide dual solutions")
         end
     end
 
@@ -1313,7 +1313,7 @@ function _getValue(x::NonlinearExpression)
     # could be smarter and cache
 
     nldata::NLPData = m.nlpdata
-    subexpr = Array{Vector{NodeData}}(0)
+    subexpr = Array{Vector{NodeData}}(undef, 0)
     for nlexpr in nldata.nlexpr
         push!(subexpr, nlexpr.nd)
     end
@@ -1324,14 +1324,14 @@ function _getValue(x::NonlinearExpression)
 
     subexpression_order, individual_order = order_subexpressions(Vector{NodeData}[this_subexpr.nd],subexpr)
 
-    subexpr_values = Array{Float64}(length(subexpr))
+    subexpr_values = Array{Float64}(undef, length(subexpr))
 
     for k in subexpression_order
         max_len = max(max_len, length(nldata.nlexpr[k].nd))
     end
 
-    forward_storage = Array{Float64}(max_len)
-    partials_storage = Array{Float64}(max_len)
+    forward_storage = Array{Float64}(undef, max_len)
+    partials_storage = Array{Float64}(undef, max_len)
     user_input_buffer = zeros(nldata.largest_user_input_dimension)
     user_output_buffer = zeros(nldata.largest_user_input_dimension)
 
@@ -1390,7 +1390,7 @@ function register(m::Model, s::Symbol, dimension::Integer, f::Function, ∇f::Fu
         fprimeprime = x -> ForwardDiff.derivative(∇f, x)
         ReverseDiffSparse.register_univariate_operator!(m.nlpdata.user_operators, s, f, ∇f, fprimeprime)
     else
-        autodiff == false || Base.warn_once("autodiff=true ignored since gradient is already provided.")
+        autodiff == false || warn_once("autodiff=true ignored since gradient is already provided.")
         m.nlpdata.largest_user_input_dimension = max(m.nlpdata.largest_user_input_dimension,dimension)
         d = UserFunctionEvaluator(x -> f(x...), (g,x)->∇f(g,x...), dimension)
         ReverseDiffSparse.register_multivariate_operator!(m.nlpdata.user_operators, s, d)

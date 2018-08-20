@@ -76,7 +76,7 @@ function setobjective(m::Model, sense::Symbol, q::QuadExpr)
             verify_ownership(m, m.obj.qvars2)
             MathProgBase.setquadobjterms!(m.internalModel, Cint[v.col for v in m.obj.qvars1], Cint[v.col for v in m.obj.qvars2], m.obj.qcoeffs)
         else
-            isa(m.internalModel, MathProgBase.AbstractLinearQuadraticModel) && Base.warn_once("Solver does not support adding a quadratic objective to an existing model. JuMP's internal model will be discarded.")
+            isa(m.internalModel, MathProgBase.AbstractLinearQuadraticModel) && warn_once("Solver does not support adding a quadratic objective to an existing model. JuMP's internal model will be discarded.")
             m.internalModelLoaded = false
         end
     end
@@ -145,7 +145,7 @@ function addconstraint(m::Model, c::QuadConstraint)
                                         s,
                                         -c.terms.aff.constant)
         else
-            Base.warn_once("Solver does not appear to support adding quadratic constraints to an existing model. JuMP's internal model will be discarded.")
+            warn_once("Solver does not appear to support adding quadratic constraints to an existing model. JuMP's internal model will be discarded.")
             m.internalModelLoaded = false
         end
     end
