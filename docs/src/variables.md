@@ -103,9 +103,8 @@ The `@variable` macro
 ---------------------
 
 We have already seen the basic usage of the `@variable` macro. The next
-extension is to add lower and upper bounds to each optimization variable. This
+extension is to add lower- and upper-bounds to each optimization variable. This
 can be done as follows:
-
 ```jldoctest variables
 julia> @variable(model, a)
 a
@@ -120,7 +119,18 @@ julia> @variable(model, 2 <= d <= 3)
 d
 ```
 
-We can query whether an optimization variable has a lower or upper bound via the `JuMP.haslowerbound` and `JuMP.hasupperbound` functions. For example:
+!!! note
+    When creating a variable with only a lower-bound or an upper-bound, the name
+    must appear on the left-hand side. Putting the name on the right-hand side
+    (e.g., `@variable(model, 0 <= x)`) will result in an error.
+
+    **Extra for experts:** the reason for this is that at compile time, JuMP
+    does not type and value information. Therefore, the case `@variable(model,
+    a <= b)` is ambiguous as JuMP cannot infer whether `a` is a constant and
+    `b` is the intended variable name, or vice-versa.
+
+We can query whether an optimization variable has a lower- or upper-bound via
+the `JuMP.haslowerbound` and `JuMP.hasupperbound` functions. For example:
 ```jldoctest variables
 julia> JuMP.haslowerbound(a)
 false
@@ -129,7 +139,8 @@ julia> JuMP.hasupperbound(c)
 true
 ```
 
-If a variable has a lower or upper bound, we can query the value of it via the `JuMP.lowerbound` and `JuMP.upperbound` functions. For example:
+If a variable has a lower or upper bound, we can query the value of it via the
+`JuMP.lowerbound` and `JuMP.upperbound` functions. For example:
 ```jldoctest variables
 julia> JuMP.lowerbound(d)
 2.0
@@ -139,7 +150,8 @@ julia> JuMP.upperbound(d)
 ```
 Querying the value of a bound that does not exist will result in an error.
 
-Instead of using the `<=` and `>=` syntax, we can also use the `lowerbound` and `upperbound` keyword arguments. For example:
+Instead of using the `<=` and `>=` syntax, we can also use the `lowerbound` and
+`upperbound` keyword arguments. For example:
 ```jldoctest variables
 julia> @variable(model, kw_var, lowerbound=1, upperbound=2)
 kw_var
@@ -148,33 +160,131 @@ julia> JuMP.lowerbound(kw_var)
 1.0
 ```
 
+!!! warn
+    If you create two JuMP variables with the same name, an error will be
+    thrown.
+
 ## Containers
 
+In the examples above, we have mostly created scalar variables. By scalar, we
+mean that the Julia variable is bound to exactly one JuMP variable. However,  it
+is often useful to create collections of JuMP variables inside more complicated
+datastructures.
+
+JuMP provides a mechanism for creating three types of these datastructures,
+which we refer to as *containers*. The three types are `Array`s, `JuMPArray`s,
+and `Dict`ionaries. We explain each of these in the following.
 
 ### Arrays
 
-```julia
+We have already seen the creation of an array of JuMP variables with the
+`x[1:2]` syntax. This can naturally be extended to create multi-dimensional
+arrays of JuMP variables. For example:
+```jldoctest variables_arrays; setup=:(model=Model())
 julia> @variable(model, x[1:2, 1:2])
-2x2 Array{JuMP.VariableRef,2}:
+2×2 Array{JuMP.VariableRef,2}:
  x[1,1]  x[1,2]
  x[2,1]  x[2,2]
 ```
 
+Arrays of JuMP variables can be indexed and sliced as follows:
+```jldoctest variables_arrays
+julia> x[1, 2]
+x[1,2]
+
+julia> x[2, :]
+2-element Array{JuMP.VariableRef,1}:
+ x[2,1]
+ x[2,2]
+```
+
+We can also name each index, and variable bounds can depend upon the indices:
+```jldoctest variables_arrays_2; setup=:(model=Model())
+julia> @variable(model, x[i=1:2, j=1:2] >= 2i + j)
+2×2 Array{JuMP.VariableRef,2}:
+ x[1,1]  x[1,2]
+ x[2,1]  x[2,2]
+
+julia> JuMP.lowerbound.(x)
+2×2 Array{Float64,2}:
+ 3.0  4.0
+ 5.0  6.0
+```
+
+JuMP will form an `Array` of JuMP variables when it can determine at compile
+time that the indices are one-based integer ranges. Therefore `x[1:b]` will
+work, but `x[a:b]` will throw an error.
+
 ### JuMPArrays
 
-```julia
+We often want to create arrays where the indices are not one-based integer
+ranges. For example, we may want to create a variable indexed by the name of a
+product or a location. The syntax is the same as that above, except with an
+arbitrary vector as an index as opposed to a one-based range. The biggest
+difference is that instead of returning an `Array` of JuMP variables, JuMP will
+return a `JuMPArray`. For example:
+```jldoctest variables_jump_arrays; setup=:(model=Model())
 julia> @variable(model, x[1:2, [:A,:B]])
-2-dimensional JuMPArray{JuMP.Variableref,2,...} with index sets:
+2-dimensional JuMPArray{JuMP.VariableRef,2,...} with index sets:
     Dimension 1, 1:2
     Dimension 2, Symbol[:A, :B]
-And data, a 2x2 Array{JuMP.Variableref,2}:
+And data, a 2×2 Array{JuMP.VariableRef,2}:
  x[1,A]  x[1,B]
  x[2,A]  x[2,B]
 ```
 
+JuMPArray's can be indexed and sliced as follows:
+```jldoctest variables_jump_arrays
+julia> x[1, :A]
+x[1,A]
+
+julia> x[2, :]
+1-dimensional JuMPArray{JuMP.VariableRef,1,...} with index sets:
+    Dimension 1, Symbol[:A, :B]
+And data, a 2-element Array{JuMP.VariableRef,1}:
+ x[2,A]
+ x[2,B]
+```
+
+Similarly to the `Array` case, the indices in a `JuMPArray` can be named, and
+the bounds can depend upon these names. For example:
+```jldocttest variables_jump_arrays_2; setup=:(model=Model())
+julia> @variable(model, x[i=2:3, j=1:2:3] >= 0.5i + j)
+2-dimensional JuMPArray{JuMP.VariableRef,2,...} with index sets:
+    Dimension 1, 2:3
+    Dimension 2, 1:2:3
+And data, a 2×2 Array{JuMP.VariableRef,2}:
+ x[2,1]  x[2,3]
+ x[3,1]  x[3,3]
+
+julia> JuMP.lowerbound.(x)
+2-dimensional JuMPArray{JuMP.VariableRef,2,...} with index sets:
+    Dimension 1, 2:3
+    Dimension 2, 1:2:3
+And data, a 2×2 Array{Float64,2}:
+ 2.0  4.0
+ 2.5  4.5
+```
+
 ### Dictionaries
 
-```julia
+The third datatype that JuMP supports the efficient creation of are
+dictionaries. These dictionaries are created when the indices do not form a
+rectangular set. One example is when indices have a dependence upon previous
+indices (called *triangular indexing*). JuMP supports this as follows:
+```jldocttest variables_dict; setup=:(model=Model())
+julia> @variable(model, x[i=1:2, j=i:2])
+ Dict{Any,JuMP.VariableRef} with 3 entries:
+  (1,2) => y[1,2]
+  (2,2) => y[2,2]
+  (1,1) => y[1,1]
+```
+`x` is a standard Julia dictionary. Therefore, slicing cannot be performed.
+
+We can also conditionally create variables via a JuMP-specific syntax. This
+sytax appends a comparison check that depends upon the named indices and is
+separated from the indices by a semi-colon (`;`). For example:
+```jldocttest variables_dict_2; setup=:(model=Model())
 julia> @variable(model, x[i=1:4; mod(i, 2)==0])
 Dict{Any,JuMP.VariableRef} with 2 entries:
  4 => x[4]
@@ -183,28 +293,102 @@ Dict{Any,JuMP.VariableRef} with 2 entries:
 
 ### Forcing the container type
 
-```julia
+When creating a container of JuMP variables, JuMP will attempt to choose the
+tightest container type that can store the JuMP variables. Thus, it will prefer
+to create an Array before a JuMPArray, and a JuMPArray before a dictionary.
+However, because this happens at compile time, it does not always make the best
+choice. To illustrate this, consider the following example:
+```jldoctest variable_force_container; setup=:(model=Model())
 julia> A = 1:2
 1:2
 
 julia> @variable(model, x[A])
-1-dimensional JuMPArray{JuMP.Variableref,1,...} with index sets:
+1-dimensional JuMPArray{JuMP.VariableRef,1,...} with index sets:
     Dimension 1, 1:2
 And data, a 2-element Array{JuMP.VariableRef,1}:
  x[1]
  x[2]
+```
+Since the value (and type) of `A` is unknown at compile time, JuMP is unable to
+infer that `A` is a one-based integer range. Therefore, JuMP creates a
+`JuMPArray`, even though it could store these two variables in a standard
+one-dimensional `Array`.
 
-julia> @variable(model, x[A], container=Array)
+We can share our knowledge that it is possible to store these JuMP variables as
+an array by setting the `container` keyword:
+```jldoctest variable_force_container
+julia> @variable(model, y[A], container=Array)
+2-element Array{JuMP.VariableRef,1}:
+ y[1]
+ y[2]
+```
+JuMP now creates a vector of JuMP variables, instead of a JuMPArray. Note that
+choosing an invalid container type will throw an error.
+
+## Variable types
+
+`Symmetric`, `PSD`
+
+```julia
+julia> @variable(model, x, Bin)
+x
+
+julia> @variable(model, x, binary=true)
+x
+```
+
+
+```julia
+julia> @variable(model, x, Int)
+x
+
+julia> @variable(model, x, integer=true)
+x
+```
+
+## Anonymous variables
+
+In all of the above examples, we have created *named* JuMP variables. However,
+it is also possible to create so called *anonymous* JuMP variables.
+
+```jldoctest anon_variables; setup=:(model=Model())
+julia> x = @variable(model)
+noname
+```
+
+If necessary, you can store `x` in `model`
+```
+julia> model[:x] = x
+```
+
+The `<=` and `>=` short-hand cannot be used to set bounds on anonymous JuMP
+variables. Instead, you should use the `lowerbound` and `upperbound` keywords.
+Passing the variable type is also invalid. Instead, you should use the
+`variabletype` keyword.
+
+Thus, the anonymous variant of `@variable(model, x[i=1:2] >= i, Int)` is:
+```jldoctest anon_variables
+julia> x = @variable(model, [i=1:2], basename="x", lowerbound=i, integer=true)
 2-element Array{JuMP.VariableRef,1}:
  x[1]
  x[2]
 ```
 
-## Variable types
+## User-defined collections
 
-`Bin`, `Int`, `Symmetric`, `PSD`
+```jldoctest user_defined_collections; setup=:(model=Model())
+julia> variables = Dict{Symbol,JuMP.VariableRef}()
+Dict{Symbol,JuMP.VariableRef} with 0 entries
 
-## Anonymous variables
+julia> for key in [:A, :B]
+           variables[key] = @variable(model)
+       end
+
+julia> variables
+Dict{Symbol,JuMP.VariableRef} with 2 entries:
+  :A => noname
+  :B => noname
+```
 
 
 ```@docs
