@@ -23,8 +23,9 @@ using Compat.LinearAlgebra
 using Compat.SparseArrays
 using Compat.Printf
 
+using Compat: @info, @warn
+
 if VERSION < v"0.7-"
-    using Compat: @info, @warn
     const IdDict = Base.ObjectIdDict
     const LinearAlgebra = Compat.LinearAlgebra
     const SparseArrays = Compat.SparseArrays
@@ -366,6 +367,9 @@ end
 
 linearindex(x::Variable) = x.col
 Base.isequal(x::Variable,y::Variable) = (x.col == y.col) && (x.m === y.m)
+
+# requirement that variables are ∈ ℝ (adjoint on arrays is recursive)
+Compat.adjoint(x::Variable) = x
 
 Variable(m::Model, lower, upper, cat::Symbol, name::AbstractString="", value::Number=NaN) =
     error("Attempt to create scalar Variable with lower bound of type $(typeof(lower)) and upper bound of type $(typeof(upper)). Bounds must be scalars in Variable constructor.")

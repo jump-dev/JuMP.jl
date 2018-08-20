@@ -62,14 +62,14 @@ function _to_cartesian(d,NT,idx...)
                 push!(indexing, quote
                     rng = d.indexsets[$i]
                     I = idx[$i]
-                    I - (first(rng) - 1)
+                    I .- (first(rng) .- 1)
                 end)
             else
                 push!(indexing, quote
                     rng = d.indexsets[$i]
                     I = idx[$i]
                     first(rng) <= I <= last(rng) || error("Failed attempt to index JuMPArray along dimension $($i): $I ∉ $(d.indexsets[$i])")
-                    I - (first(rng) - 1)
+                    I .- (first(rng) .- 1)
                 end)
             end
         elseif S == StepRange{Int}

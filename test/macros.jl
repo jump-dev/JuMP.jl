@@ -1,8 +1,9 @@
 # test/macros.jl
 # Testing macros work correctly
 #############################################################################
-using JuMP
+using JuMP, Compat
 using Compat.Test
+import MathProgBase
 # To ensure the tests work on Windows and Linux/OSX, we need
 # to use the correct comparison operators
 const leq = JuMP.repl[:leq]
@@ -90,8 +91,13 @@ end
         @constraint(m, -1 <= x <= sum(0.5 for i = 1:2))
         @test string(m.linconstr[end]) == "-1 $leq x $leq 1"
         @test_throws ErrorException @constraint(m, x <= t <= y)
-        @test macroexpand(:(@constraint(m, 1 >= x >= 0))).head == :error
-        @test macroexpand(:(@constraint(1 <= x <= 2, foo=:bar))).head == :error
+        if VERSION < v"0.7"
+            @test macroexpand(:(@constraint(m, 1 >= x >= 0))).head == :error
+            @test macroexpand(:(@constraint(1 <= x <= 2, foo=:bar))).head == :error
+        else
+            @test_throws LoadError @macroexpand @constraint(m, 1 ≥ x ≥ 0)
+            @test_throws LoadError @macroexpand @constraint(1 ≤ x ≤ 2, foo=:bar)
+        end
 
         @expression(m, aff, 3x - y - 3.3(w + 2z) + 5)
         @test string(aff) == "3 x - y - 3.3 w - 6.6 z + 5"
@@ -421,11 +427,19 @@ end
         @test ex.args == [:x, 12, 3]
 
         ex = :(x[i=1:3,j=S;isodd(i) && i+j>=2])
-        @test ex.head == :typed_vcat
-        @test ex.args == [:x,
-                          Expr(:parameters, Expr(:&&, :(isodd(i)), :(i+j>=2))),
-                          Expr(:(=), :i, :(1:3)),
-                          Expr(:(=), :j, :S)]
+        if VERSION ≤ v"0.7-"
+            @test ex.head == :typed_vcat
+            @test ex.args == [:x,
+                              Expr(:parameters, Expr(:&&, :(isodd(i)), :(i+j>=2))),
+                              Expr(:(=), :i, :(1:3)),
+                              Expr(:(=), :j, :S)]
+        else
+            @test ex.head == :ref
+            @test ex.args == [:x,
+                              Expr(:parameters, Expr(:&&, :(isodd(i)), :(i+j>=2))),
+                              Expr(:kw, :i, :(1:3)),
+                              Expr(:kw, :j, :S)]
+        end
     end
 
     @testset "Curly norm parsing (deprecated)" begin
@@ -583,12 +597,21 @@ end
     @testset "No bare symbols in constraint macros" begin
         m = Model()
         @variable(m, x)
-        @test macroexpand(:(@constraint(m, x))).head == :error
-        @test macroexpand(:(@constraint(m, :foo))).head == :error
-        @test macroexpand(:(@SDconstraint(m, x))).head == :error
-        @test macroexpand(:(@SDconstraint(m, :foo))).head == :error
-        @test macroexpand(:(@NLconstraint(m, x))).head == :error
-        @test macroexpand(:(@NLconstraint(m, :foo))).head == :error
+        if VERSION < v"0.7-"
+            @test macroexpand(:(@constraint(m, x))).head == :error
+            @test macroexpand(:(@constraint(m, :foo))).head == :error
+            @test macroexpand(:(@SDconstraint(m, x))).head == :error
+            @test macroexpand(:(@SDconstraint(m, :foo))).head == :error
+            @test macroexpand(:(@NLconstraint(m, x))).head == :error
+            @test macroexpand(:(@NLconstraint(m, :foo))).head == :error
+        else
+            @test_throws LoadError @macroexpand @constraint(m, x)
+            @test_throws LoadError @macroexpand @constraint(m, :foo)
+            @test_throws LoadError @macroexpand @SDconstraint(m, x)
+            @test_throws LoadError @macroexpand @SDconstraint(m, :foo)
+            @test_throws LoadError @macroexpand @NLconstraint(m, x)
+            @test_throws LoadError @macroexpand @NLconstraint(m, :foo)
+        end
     end
 
     @testset "LB/UB kwargs" begin
@@ -602,10 +625,17 @@ end
         @test m.colLower == [0,0,0,-Inf,0,0]
         @test m.colUpper == [Inf,1,1,1,1,1]
 
-        @test macroexpand(:(@variable(m, g >= 0, lowerbound=1))).head == :error
-        @test macroexpand(:(@variable(m, h <= 1, upperbound=1))).head == :error
-        @test macroexpand(:(@variable(m, 0 <= i <= 1, lowerbound=1))).head == :error
-        @test macroexpand(:(@variable(m, 0 <= j <= 1, upperbound=1))).head == :error
+        if VERSION < v"0.7-"
+            @test macroexpand(:(@variable(m, g >= 0, lowerbound=1))).head == :error
+            @test macroexpand(:(@variable(m, h <= 1, upperbound=1))).head == :error
+            @test macroexpand(:(@variable(m, 0 <= i <= 1, lowerbound=1))).head == :error
+            @test macroexpand(:(@variable(m, 0 <= j <= 1, upperbound=1))).head == :error
+        else
+            @test_throws LoadError @macroexpand @variable(m, g >= 0, lowerbound=1)
+            @test_throws LoadError @macroexpand @variable(m, h <= 1, upperbound=1)
+            @test_throws LoadError @macroexpand @variable(m, 0 <= i <= 1, lowerbound=1)
+            @test_throws LoadError @macroexpand @variable(m, 0 <= j <= 1, upperbound=1)
+        end
     end
 
     @testset "Anonymous versions of macros" begin
@@ -617,7 +647,11 @@ end
         w = @variable(m, [i=1:4,j=1:4;isodd(i+j)], SemiCont)
         # v = @variable(m, [i=1:3,j=1:3], Symmetric, lowerbound = eye(3)[i,j])
         u = @variable(m, [1:4,1:4], SDP)
-        @test macroexpand(:(@variable(m, [1:3] <= 1))).head == :error
+        if VERSION < v"0.7-"
+            @test macroexpand(:(@variable(m, [1:3] <= 1))).head == :error
+        else
+            @test_throws LoadError @macroexpand @variable(m, [1:3] <= 1)
+        end
 
         @test getlowerbound(x[1]) == 1.0
         @test getupperbound(x[1]) == Inf
@@ -681,11 +715,19 @@ end
 
     @testset "Invalid variable names" begin
         m = Model()
-        @test macroexpand(:(@variable(m, Bin))).head == :error
-        @test macroexpand(:(@variable(m, Int))).head == :error
-        @test macroexpand(:(@variable(m, Cont))).head == :error
-        @test macroexpand(:(@variable(m, SemiCont))).head == :error
-        @test macroexpand(:(@variable(m, SemiInt))).head == :error
+        if VERSION < v"0.7-"
+            @test macroexpand(:(@variable(m, Bin))).head == :error
+            @test macroexpand(:(@variable(m, Int))).head == :error
+            @test macroexpand(:(@variable(m, Cont))).head == :error
+            @test macroexpand(:(@variable(m, SemiCont))).head == :error
+            @test macroexpand(:(@variable(m, SemiInt))).head == :error
+        else
+            @test_throws LoadError @macroexpand @variable(m, Bin)
+            @test_throws LoadError @macroexpand @variable(m, Int)
+            @test_throws LoadError @macroexpand @variable(m, Cont)
+            @test_throws LoadError @macroexpand @variable(m, SemiCont)
+            @test_throws LoadError @macroexpand @variable(m, SemiInt)
+        end
     end
 
     @testset "Invalid lb/ub in ranged row" begin

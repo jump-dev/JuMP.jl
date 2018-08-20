@@ -663,31 +663,63 @@ end
 for (mac,sym) in [(:LinearConstraints, Symbol("@LinearConstraint")),
                   (:QuadConstraints,   Symbol("@QuadConstraint")),
                   (:SOCConstraints,    Symbol("@SOCConstraint"))]
-    @eval begin
-        macro $mac(x)
-            x.head == :block || error(string("Invalid syntax for @", $(string(mac))))
-            @assert x.args[1].head == :line
-            code = Expr(:vect)
-            for it in x.args
-                if it.head == :line
-                    # do nothing
-                elseif it.head == :comparison || (it.head == :call && it.args[1] in (:<=,:≤,:>=,:≥,:(==))) # regular constraint
-                    push!(code.args, Expr(:macrocall, $sym, esc(it)))
-                elseif it.head == :tuple # constraint ref
-                    if all([isexpr(arg,:comparison) for arg in it.args]...)
-                        # the user probably had trailing commas at end of lines, e.g.
-                        # @LinearConstraints(m, begin
-                        #     x <= 1,
-                        #     x >= 1
-                        # end)
-                        error(string("Invalid syntax in @", $(string(mac)), ". Do you have commas at the end of a line specifying a constraint?"))
+    if VERSION ≥ v"0.7-"
+        @eval begin
+            macro $mac(x)
+                x.head == :block || error(string("Invalid syntax for @", $(string(mac))))
+                @assert x.args[1] isa LineNumberNode || x.args[1].head == :line
+                lastline = x.args[1]
+                code = Expr(:vect)
+                for it in x.args
+                    if it isa LineNumberNode
+                        lastline = it
+                    elseif it.head == :comparison || (it.head == :call && it.args[1] in (:<=,:≤,:>=,:≥,:(==))) # regular constraint
+                        mac = esc(Expr(:macrocall, $(quot(sym)), lastline, it))
+                        push!(code.args, mac)
+                    elseif it.head == :tuple # constraint ref
+                        if all([isexpr(arg,:comparison) for arg in it.args]...)
+                            # the user probably had trailing commas at end of lines, e.g.
+                            # @LinearConstraints(m, begin
+                            #     x <= 1,
+                            #     x >= 1
+                            # end)
+                            error(string("Invalid syntax in @", $(string(mac)), ". Do you have commas at the end of a line specifying a constraint?"))
+                        end
+                        error("@", string($(string(mac)), " does not currently support the two argument syntax for specifying groups of constraints in one line."))
+                    else
+                        error("Unexpected constraint expression $it")
                     end
-                    error("@", string($(string(mac)), " does not currently support the two argument syntax for specifying groups of constraints in one line."))
-                else
-                    error("Unexpected constraint expression $it")
                 end
+                return code
             end
-            return code
+        end
+    else
+        @eval begin
+            macro $mac(x)
+                x.head == :block || error(string("Invalid syntax for @", $(string(mac))))
+                @assert x.args[1] isa LineNumberNode || x.args[1].head == :line
+                code = Expr(:vect)
+                for it in x.args
+                    if it isa LineNumberNode || it.head == :line
+                        # do nothing
+                    elseif it.head == :comparison || (it.head == :call && it.args[1] in (:<=,:≤,:>=,:≥,:(==))) # regular constraint
+                        push!(code.args, Expr(:macrocall, $sym, esc(it)))
+                    elseif it.head == :tuple # constraint ref
+                        if all([isexpr(arg,:comparison) for arg in it.args]...)
+                            # the user probably had trailing commas at end of lines, e.g.
+                            # @LinearConstraints(m, begin
+                            #     x <= 1,
+                            #     x >= 1
+                            # end)
+                            error(string("Invalid syntax in @", $(string(mac)), ". Do you have commas at the end of a line specifying a constraint?"))
+                        end
+                        error("@", string($(string(mac)), " does not currently support the two argument syntax for specifying groups of constraints in one line."))
+                    else
+                        error("Unexpected constraint expression $it")
+                    end
+                end
+                return code
+            end
         end
     end
 end

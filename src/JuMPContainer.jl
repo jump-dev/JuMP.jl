@@ -185,7 +185,7 @@ Base.length(x::JuMPDict) = length(x.tupledict)
 Base.ndims(x::JuMPDict{T,N}) where {T,N} = N
 Base.abs(x::JuMPDict) = map(abs, x)
 # avoid dangerous behavior with "end" (#730)
-Compat.lastindex(x::JuMPArray) = error("lastindex() (and \"end\" syntax) not implemented for JuMPArray objects.")
+Compat.lastindex(x::JuMPArray,d=1) = error("lastindex() (and \"end\" syntax) not implemented for JuMPArray objects.")
 Base.size(x::JuMPArray) = error(string("size (and \"end\" syntax) not implemented for JuMPArray objects.",
 "Use JuMP.size if you want to access the dimensions."))
 Base.size(x::JuMPArray,k) = error(string("size (and \"end\" syntax) not implemented for JuMPArray objects.",

@@ -10,8 +10,12 @@
 # test/variable.jl
 # Testing for Variable
 #############################################################################
-using JuMP, Compat.Test
-import JuMP.repl
+using JuMP, Compat, Compat.Test, Compat.SparseArrays
+import JuMP.repl, MathProgBase
+
+if VERSION ≤ v"0.7-"
+    dropdims(v; dims=nothing) = squeeze(v, dims)
+end
 
 @testset "Variables" begin
     @testset "constructors" begin
@@ -126,7 +130,7 @@ import JuMP.repl
         @variable(m, y[1:4,  2:1,1:3]) # JuMPArray
         @variable(m, z[1:4,Set(),1:3]) # JuMPDict
 
-        @test getvalue(x) == Array{Float64}(4, 0, 3)
+        @test getvalue(x) == Array{Float64}(undef, 4, 0, 3)
         @test typeof(getvalue(y)) <: JuMP.JuMPArray{Float64}
         @test JuMP.size(getvalue(y)) == (4,0,3)
         @test typeof(getvalue(z)) == JuMP.JuMPArray{Float64,3,Tuple{UnitRange{Int},Set{Any},UnitRange{Int}}}
@@ -136,7 +140,7 @@ import JuMP.repl
 # Slices three-dimensional JuMPContainer x[I,J,K]
 # I,J,K can be singletons, ranges, colons, etc.
 function sliceof(x, I, J, K)
-    y = Array{Variable}(length(I), length(J), length(K))
+    y = Array{Variable}(undef, length(I), length(J), length(K))
 
     ii = 1
     jj = 1
@@ -154,7 +158,7 @@ function sliceof(x, I, J, K)
         jj = 1
     end
     idx = [length(I)==1, length(J)==1, length(K)==1]
-    squeeze(y, tuple(find(idx)...))
+    dropdims(y, dims=tuple(findall(idx)...))
 end
 
     @testset "Slices of JuMPArray (#684)" begin

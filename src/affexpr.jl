@@ -28,6 +28,12 @@ GenericAffExpr(a::GenericAffExpr) = GenericAffExpr(a.vars, a.coeffs, a.constant)
 
 coeftype(::GenericAffExpr{C,V}) where {C,V} = C
 
+# variables must be ∈ ℝ but coeffs can be ∈ ℂ
+Compat.adjoint(a::GenericAffExpr{<:Real}) = a
+function Compat.adjoint(a::GenericAffExpr)
+    GenericAffExpr(a.vars, [z' for z ∈ a.coeffs], a.constant')
+end
+
 Base.zero(::Type{GenericAffExpr{C,V}}) where {C,V} = GenericAffExpr{C,V}(V[],C[],zero(C))
 Base.one(::Type{GenericAffExpr{C,V}}) where { C,V} = GenericAffExpr{C,V}(V[],C[], one(C))
 Base.zero(a::GenericAffExpr) = zero(typeof(a))
@@ -55,7 +61,7 @@ else
     end
     function Base.iterate(lti::LinearTermIterator, state::Int)
         if state ≤ length(lti.aff.vars)
-            ((lti.affs.coeffs[state], lti.affs.vars[state]), state+1)
+            ((lti.aff.coeffs[state], lti.aff.vars[state]), state+1)
         else
             nothing
         end
@@ -210,7 +216,7 @@ addconstraint(m::Model, c::Array{LinearConstraint}) =
     error("The operators <=, >=, and == can only be used to specify scalar constraints. If you are trying to add a vectorized constraint, use the element-wise dot comparison operators (.<=, .>=, or .==) instead")
 
 function addVectorizedConstraint(m::Model, v::Array{LinearConstraint})
-    ret = Array{LinConstrRef}(size(v))
+    ret = Array{LinConstrRef}(undef, size(v))
     for I in eachindex(v)
         ret[I] = addconstraint(m, v[I])
     end

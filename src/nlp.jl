@@ -152,12 +152,12 @@ mutable struct NLPEvaluator <: MathProgBase.AbstractNLPEvaluator
                 has_user_mv_operator |= ReverseDiffSparse.has_user_multivariate_operators(nlconstr.terms.nd)
             end
             d.disable_2ndorder = has_user_mv_operator
-            d.user_output_buffer = Array{Float64}(m.nlpdata.largest_user_input_dimension)
-            d.jac_storage = Array{Float64}(max(numVar,m.nlpdata.largest_user_input_dimension))
+            d.user_output_buffer = Array{Float64}(undef, m.nlpdata.largest_user_input_dimension)
+            d.jac_storage = Array{Float64}(undef, max(numVar,m.nlpdata.largest_user_input_dimension))
         else
             d.disable_2ndorder = false
-            d.user_output_buffer = Array{Float64}(0)
-            d.jac_storage = Array{Float64}(numVar)
+            d.user_output_buffer = Array{Float64}(undef, 0)
+            d.jac_storage = Array{Float64}(undef, numVar)
         end
 
         d.eval_f_timer = 0
@@ -207,7 +207,7 @@ function FunctionStorage(nd::Vector{NodeData}, const_values,numVar, coloring_sto
     else
         hess_I = hess_J = Int[]
         rinfo = Coloring.RecoveryInfo()
-        seed_matrix = Array{Float64}(0,0)
+        seed_matrix = Array{Float64}(undef, 0,0)
         linearity = [NONLINEAR]
     end
 
@@ -223,7 +223,7 @@ function SubexpressionStorage(nd::Vector{NodeData}, const_values,numVar, fixed_v
     reverse_storage = zeros(length(nd))
     linearity = classify_linearity(nd, adj, subexpression_linearity, fixed_variables)
 
-    empty_arr = Array{Float64}(0)
+    empty_arr = Array{Float64}(undef, 0)
 
     return SubexpressionStorage(nd, adj, const_values, forward_storage, partials_storage, reverse_storage, empty_arr, empty_arr, empty_arr, linearity[1])
 
@@ -256,7 +256,7 @@ function MathProgBase.initialize(d::NLPEvaluator, requested_features::Vector{Sym
 
     d.parameter_values = nldata.nlparamvalues
 
-    tic()
+    #tic()
 
     d.linobj = prepAffObjective(d.m)
     linrowlb, linrowub = prepConstrBounds(d.m)
@@ -268,8 +268,8 @@ function MathProgBase.initialize(d::NLPEvaluator, requested_features::Vector{Sym
 
     d.has_nlobj = isa(nldata.nlobj, NonlinearExprData)
     max_expr_length = 0
-    main_expressions = Array{Vector{NodeData}}(0)
-    subexpr = Array{Vector{NodeData}}(0)
+    main_expressions = Array{Vector{NodeData}}(undef, 0)
+    subexpr = Array{Vector{NodeData}}(undef, 0)
     for nlexpr in nldata.nlexpr
         push!(subexpr, nlexpr.nd)
     end
@@ -281,12 +281,12 @@ function MathProgBase.initialize(d::NLPEvaluator, requested_features::Vector{Sym
     end
     d.subexpression_order, individual_order = order_subexpressions(main_expressions,subexpr)
 
-    d.subexpression_linearity = Array{Linearity}(length(nldata.nlexpr))
-    subexpression_variables = Array{Vector{Int}}(length(nldata.nlexpr))
-    subexpression_edgelist = Array{Set{Tuple{Int,Int}}}(length(nldata.nlexpr))
-    d.subexpressions = Array{SubexpressionStorage}(length(nldata.nlexpr))
-    d.subexpression_forward_values = Array{Float64}(length(d.subexpressions))
-    d.subexpression_reverse_values = Array{Float64}(length(d.subexpressions))
+    d.subexpression_linearity = Array{Linearity}(undef, length(nldata.nlexpr))
+    subexpression_variables = Array{Vector{Int}}(undef, length(nldata.nlexpr))
+    subexpression_edgelist = Array{Set{Tuple{Int,Int}}}(undef, length(nldata.nlexpr))
+    d.subexpressions = Array{SubexpressionStorage}(undef, length(nldata.nlexpr))
+    d.subexpression_forward_values = Array{Float64}(undef, length(d.subexpressions))
+    d.subexpression_reverse_values = Array{Float64}(undef, length(d.subexpressions))
 
     empty_edgelist = Set{Tuple{Int,Int}}()
     for k in d.subexpression_order # only load expressions which actually are used
@@ -324,7 +324,7 @@ function MathProgBase.initialize(d::NLPEvaluator, requested_features::Vector{Sym
     end
 
     if :ExprGraph in requested_features
-        d.subexpressions_as_julia_expressions = Array{Any}(length(subexpr))
+        d.subexpressions_as_julia_expressions = Array{Any}(undef, length(subexpr))
         for k in d.subexpression_order
             if d.subexpression_linearity[k] != CONSTANT || !SIMPLIFY
                 ex = d.subexpressions[k]
@@ -336,7 +336,7 @@ function MathProgBase.initialize(d::NLPEvaluator, requested_features::Vector{Sym
     end
 
     if SIMPLIFY
-        main_expressions = Array{Vector{NodeData}}(0)
+        main_expressions = Array{Vector{NodeData}}(undef, 0)
 
         # simplify objective and constraint expressions
         if d.has_nlobj
@@ -406,7 +406,7 @@ function MathProgBase.initialize(d::NLPEvaluator, requested_features::Vector{Sym
         MathProgBase.eval_g(d, zeros(MathProgBase.numconstr(d.m)), d.m.colVal)
     end
 
-    tprep = toq()
+    #tprep = toq()
     #println("Prep time: $tprep")
 
     # reset timers
@@ -475,7 +475,7 @@ function reverse_eval_all(d::NLPEvaluator,x)
 end
 
 function MathProgBase.eval_f(d::NLPEvaluator, x)
-    tic()
+    #tic()
     if d.last_x != x
         forward_eval_all(d,x)
         reverse_eval_all(d,x)
@@ -495,7 +495,7 @@ function MathProgBase.eval_f(d::NLPEvaluator, x)
 end
 
 function MathProgBase.eval_grad_f(d::NLPEvaluator, g, x)
-    tic()
+    #tic()
     if d.last_x != x
         forward_eval_all(d,x)
         reverse_eval_all(d,x)
@@ -530,7 +530,7 @@ function MathProgBase.eval_grad_f(d::NLPEvaluator, g, x)
 end
 
 function MathProgBase.eval_g(d::NLPEvaluator, g, x)
-    tic()
+    #tic()
     if d.last_x != x
         forward_eval_all(d,x)
         reverse_eval_all(d,x)
@@ -565,7 +565,7 @@ function MathProgBase.eval_g(d::NLPEvaluator, g, x)
 end
 
 function MathProgBase.eval_jac_g(d::NLPEvaluator, J, x)
-    tic()
+    #tic()
     if d.last_x != x
         forward_eval_all(d,x)
         reverse_eval_all(d,x)
@@ -755,7 +755,7 @@ function MathProgBase.eval_hesslag(
         reverse_eval_all(d,x)
     end
 
-    tic()
+    #tic()
 
     # quadratic objective
     nzcount = 1

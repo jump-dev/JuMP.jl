@@ -42,7 +42,6 @@ function parseNLExpr(m, x, tapevar, parent, values)
 
     if isexpr(x, :call)
         if length(x.args) == 2 # univariate
-            println("hello!")
             code = :(let; end)
             block = let_code_block(code)
             @assert isexpr(block, :block)

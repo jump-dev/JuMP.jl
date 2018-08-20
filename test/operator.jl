@@ -10,7 +10,7 @@
 # test/operator.jl
 # Testing operator overloading is correct
 #############################################################################
-using JuMP, Compat.Test
+using JuMP, Compat.Test, Compat, Compat.LinearAlgebra, Compat.SparseArrays
 using OffsetArrays
 
 # To ensure the tests work on both Windows and Linux/OSX, we need
@@ -40,7 +40,7 @@ Base.transpose(t::MySumType) = MySumType(t.a)
 *(t1::MyType{S}, t2::MyType{T}) where {S, T} = MyType(t1.a*t2.a)
 
 
-@testset "Operator overloads" begin
+#@testset "Operator overloads" begin
 
     _lt(x,y) = (x.col < y.col)
     function sort_expr!(x::AffExpr)
@@ -193,9 +193,9 @@ Base.transpose(t::MySumType) = MySumType(t.a)
         @test string(z * aff) == "7.1 x*z + 2.5 z"
         @test_throws ErrorException z / aff
         @test_throws MethodError z ≤ aff
-        @test string(@LinearConstraint(z ≤ aff)) == "z - 7.1 x $leq 2.5"
-        @test string(@LinearConstraint(z == aff)) == "z - 7.1 x $eq 2.5"
-        @test string(@LinearConstraint(z ≥ aff)) == "z - 7.1 x $geq 2.5"
+        @test string(@LinearConstraint(z ≤ aff)) ∈ ["z - 7.1 x $leq 2.5", "-7.1 x + z $leq 2.5"]
+        @test string(@LinearConstraint(z == aff)) ∈ ["z - 7.1 x $eq 2.5", "-7.1 x + z $eq 2.5"]
+        @test string(@LinearConstraint(z ≥ aff)) ∈ ["z - 7.1 x $geq 2.5", "-7.1 x + z $geq 2.5"]
         @test string(@LinearConstraint(7.1 * x - aff ≤ 0)) == "0 $leq 2.5"
         @test string(@LinearConstraint(7.1 * x - aff == 0)) == "0 $eq 2.5"
         @test string(@LinearConstraint(7.1 * x - aff ≥ 0)) == "0 $geq 2.5"
@@ -204,9 +204,9 @@ Base.transpose(t::MySumType) = MySumType(t.a)
         @test string(w - q) == "-2.5 y*z - 7.1 x + w - 2.5"
         @test_throws ErrorException w*q
         @test_throws ErrorException w/q
-        @test string(@QuadConstraint(w ≤ q)) == "-2.5 y*z + w - 7.1 x - 2.5 $leq 0"
-        @test string(@QuadConstraint(w == q)) == "-2.5 y*z + w - 7.1 x - 2.5 $eq 0"
-        @test string(@QuadConstraint(w ≥ q)) == "-2.5 y*z + w - 7.1 x - 2.5 $geq 0"
+        @test string(@QuadConstraint(w ≤ q)) ∈ ["-2.5 y*z + w - 7.1 x - 2.5 $leq 0", "-2.5 y*z - 7.1 x + w - 2.5 $leq 0"]
+        @test string(@QuadConstraint(w == q)) ∈  ["-2.5 y*z + w - 7.1 x - 2.5 $eq 0", "-2.5 y*z - 7.1 x + w - 2.5 $eq 0"]
+        @test string(@QuadConstraint(w ≥ q)) ∈  ["-2.5 y*z + w - 7.1 x - 2.5 $geq 0", "-2.5 y*z - 7.1 x + w - 2.5 $geq 0"]
         # 2-6 Variable--SOCExpr
         @test string(y + socexpr) == "1.5 $Vert[w,-w + 1]$Vert$sub2 - w + y - 2"
         @test string(y - socexpr) == "-1.5 $Vert[w,-w + 1]$Vert$sub2 + w + y + 2"
@@ -214,7 +214,8 @@ Base.transpose(t::MySumType) = MySumType(t.a)
         @test_throws MethodError y / socexpr
         @test_throws ErrorException @SOCConstraint(y ≤ socexpr)
         @test_throws ErrorException @SOCConstraint(y == socexpr)
-        @test string(@SOCConstraint(y ≥ socexpr)) == "1.5 $Vert[w,-w + 1]$Vert$sub2 $leq y + w + 2"
+        @test string(@SOCConstraint(y ≥ socexpr)) ∈ ["1.5 $Vert[w,-w + 1]$Vert$sub2 $leq y + w + 2", "1.5 $Vert[w,-w + 1]$Vert$sub2 $leq w + y + 2"]
+
         end
 
         # 3. Norm tests
@@ -470,8 +471,8 @@ Base.transpose(t::MySumType) = MySumType(t.a)
         @variable(sum_m, x[S], start=1)
         # sum(j::JuMPDict{Variable})
         @test length(string(sum(x))) == 11 # order depends on hashing
-        @test contains(string(sum(x)),"x[1]") == true
-        @test contains(string(sum(x)),"x[3]") == true
+        @test occursin("x[1]",string(sum(x))) == true
+        @test occursin("x[3]",string(sum(x))) == true
         # sum{T<:Real}(j::JuMPDict{T})
         @test sum(getvalue(x)) == 2
     end
@@ -485,15 +486,15 @@ Base.transpose(t::MySumType) = MySumType(t.a)
 
         A = [1 3 ; 2 4]
         @variable(dot_m, 1 ≤ y[1:2,1:2] ≤ 1)
-        @test string(vecdot(A,y)) == "y[1,1] + 2 y[2,1] + 3 y[1,2] + 4 y[2,2]"
-        @test string(vecdot(y,A)) == "y[1,1] + 2 y[2,1] + 3 y[1,2] + 4 y[2,2]"
+        @test string(dot(A,y)) == "y[1,1] + 2 y[2,1] + 3 y[1,2] + 4 y[2,2]"
+        @test string(dot(y,A)) == "y[1,1] + 2 y[2,1] + 3 y[1,2] + 4 y[2,2]"
 
         B = ones(2,2,2)
         @variable(dot_m, 0 ≤ z[1:2,1:2,1:2] ≤ 1)
-        @test string(vecdot(B,z)) == "z[1,1,1] + z[2,1,1] + z[1,2,1] + z[2,2,1] + z[1,1,2] + z[2,1,2] + z[1,2,2] + z[2,2,2]"
-        @test string(vecdot(z,B)) == "z[1,1,1] + z[2,1,1] + z[1,2,1] + z[2,2,1] + z[1,1,2] + z[2,1,2] + z[1,2,2] + z[2,2,2]"
+        @test string(dot(B,z)) == "z[1,1,1] + z[2,1,1] + z[1,2,1] + z[2,2,1] + z[1,1,2] + z[2,1,2] + z[1,2,2] + z[2,2,2]"
+        @test string(dot(z,B)) == "z[1,1,1] + z[2,1,1] + z[1,2,1] + z[2,2,1] + z[1,1,2] + z[2,1,2] + z[1,2,2] + z[2,2,2]"
 
-        @objective(dot_m, Max, dot(x, ones(3)) - vecdot(y, ones(2,2)) )
+        @objective(dot_m, Max, dot(x, ones(3)) - dot(y, ones(2,2)) )
         #solve(dot_m)
         for i in 1:3
             setvalue(x[i], 1)
@@ -502,13 +503,13 @@ Base.transpose(t::MySumType) = MySumType(t.a)
             setvalue(y[i,j], 1)
         end
         @test isapprox(dot(c, getvalue(x)), 6.0)
-        @test isapprox(vecdot(A, getvalue(y)), 10.0)
+        @test isapprox(dot(A, getvalue(y)), 10.0)
 
         # https://github.com/JuliaOpt/JuMP.jl/issues/656
         issue656 = Model()
         @variable(issue656, x)
         floats = Float64[i for i in 1:2]
-        anys   = Array{Any}(2)
+        anys   = Array{Any}(undef, 2)
         anys[1] = 10
         anys[2] = 20 + x
         @test dot(floats, anys) == 10 + 40 + 2x
@@ -628,9 +629,9 @@ Base.transpose(t::MySumType) = MySumType(t.a)
         @test vec_eq(@JuMP.Expression(A*x/2), A*x/2)
         @test vec_eq(X*v,  [4X11; 6X23; 0])
         @test vec_eq(v'*X,  [4X11  0   5X23])
-        @test vec_eq(v.'*X, [4X11  0   5X23])
+        @test vec_eq(transpose(v)*X, [4X11  0   5X23])
         @test vec_eq(X'*v,  [4X11;  0;  5X23])
-        @test vec_eq(X.'*v, [4X11; 0;  5X23])
+        @test vec_eq(transpose(X)*v, [4X11; 0;  5X23])
         @test vec_eq(X*A,  [2X11  X11  0
                             0     X23  2X23
                             0     0    0   ])
@@ -643,25 +644,25 @@ Base.transpose(t::MySumType) = MySumType(t.a)
         @test vec_eq(X'*A, [2X11  X11  0
                             0     0    0
                             X23   2X23 X23])
-        @test vec_eq(X.'*A, [2X11 X11  0
+        @test vec_eq(transpose(X)*A, [2X11 X11  0
                              0    0    0
                              X23  2X23 X23])
         @test vec_eq(A'*X, [2X11  0 X23
                             X11   0 2X23
                             0     0 X23])
-        @test vec_eq(X.'*A, X'*A)
-        @test vec_eq(A.'*X, A'*X)
+        @test vec_eq(transpose(X)*A, X'*A)
+        @test vec_eq(transpose(A)*X, A'*X)
         @test vec_eq(X*A, X*B)
-        @test vec_eq(Y'*A, Y.'*A)
-        @test vec_eq(A*Y', A*Y.')
-        @test vec_eq(Z'*A, Z.'*A)
-        @test vec_eq(Xd'*Y, Xd.'*Y)
-        @test vec_eq(Y'*Xd, Y.'*Xd)
-        @test vec_eq(Xd'*Xd, Xd.'*Xd)
+        @test vec_eq(Y'*A, transpose(Y)*A)
+        @test vec_eq(A*Y', A*transpose(Y))
+        @test vec_eq(Z'*A, transpose(Z)*A)
+        @test vec_eq(Xd'*Y, transpose(Xd)*Y)
+        @test vec_eq(Y'*Xd, transpose(Y)*Xd)
+        @test vec_eq(Xd'*Xd, transpose(Xd)*Xd)
         # @test_broken vec_eq(A*X, B*X)
         # @test_broken vec_eq(A*X', B*X')
         @test vec_eq(X'*A, X'*B)
-        # @test_broken(X'*X, X.'*X) # sparse quadratic known to be broken, see #912
+        # @test_broken(X'*X, transpose(X)*X) # sparse quadratic known to be broken, see #912
     end
 
     @testset "Dot-ops" begin
@@ -889,4 +890,4 @@ Base.transpose(t::MySumType) = MySumType(t.a)
             @test z[i].a == y[i].a == a
         end
     end
-end
+#end
