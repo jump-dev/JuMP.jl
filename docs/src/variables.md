@@ -105,7 +105,7 @@ The `@variable` macro
 We have already seen the basic usage of the `@variable` macro. The next
 extension is to add lower- and upper-bounds to each optimization variable. This
 can be done as follows:
-```jldoctest variables
+```jldoctest variables_2; setup=:(model=Model())
 julia> @variable(model, a)
 a
 
@@ -131,7 +131,7 @@ d
 
 We can query whether an optimization variable has a lower- or upper-bound via
 the `JuMP.haslowerbound` and `JuMP.hasupperbound` functions. For example:
-```jldoctest variables
+```jldoctest variables_2
 julia> JuMP.haslowerbound(a)
 false
 
@@ -141,7 +141,7 @@ true
 
 If a variable has a lower or upper bound, we can query the value of it via the
 `JuMP.lowerbound` and `JuMP.upperbound` functions. For example:
-```jldoctest variables
+```jldoctest variables_2
 julia> JuMP.lowerbound(d)
 2.0
 
@@ -164,7 +164,7 @@ julia> JuMP.lowerbound(kw_var)
     If you create two JuMP variables with the same name, an error will be
     thrown.
 
-## Containers
+## Variable containers
 
 In the examples above, we have mostly created scalar variables. By scalar, we
 mean that the Julia variable is bound to exactly one JuMP variable. However,  it
@@ -327,44 +327,115 @@ choosing an invalid container type will throw an error.
 
 ## Variable types
 
-`Symmetric`, `PSD`
+JuMP supports four types of optimization variables: binary, integer, symmetric
+(matrix), and positive semi-definite variables. (This process is extensible, so
+JuMP extensions may provide new types of optimization variables.)
 
-```julia
+In the following, we explain each of these four types.
+
+**TODO(@odow):** semi-integer and semicontinuous variables?
+
+#### Binary variables
+
+The first type of optimization variables are binary variables, which are
+constrained to the set ``x \in {0, 1}``. These can be created in JuMP by passing
+`Bin` as an optional positional argument:
+```jldoctest; setup=:(model=Model())
 julia> @variable(model, x, Bin)
 x
-
+```
+Binary optimization variables can also be created by setting the `binary`
+keyword to `true`.
+```jldoctest variables_binary; setup=:(model=Model())
 julia> @variable(model, x, binary=true)
 x
 ```
+Finally, we can check if an optimization variable is binary by calling
+`JuMP.isbinary` on the JuMP variable:
+```jldoctest variables_binary
+julia> JuMP.isbinary(x)
+true
+```
 
+#### Integer variables
 
-```julia
+The second type of optimization variables are integer variables, which are
+constrained to the set ``x \in \mathbb{Z}``. These can be created in JuMP by
+passing `Int` as an optional positional argument:
+```jldoctest; setup=:(model=Model())
 julia> @variable(model, x, Int)
 x
-
+```
+Integer optimization variables can also be created by setting the `integer`
+keyword to `true`.
+```jldoctest variables_integer; setup=:(model=Model())
 julia> @variable(model, x, integer=true)
 x
 ```
+Finally, we can check if an optimization variable is integer by calling
+`JuMP.isinteger` on the JuMP variable:
+```jldoctest variables_integer
+julia> JuMP.isinteger(x)
+true
+```
 
-## Anonymous variables
+#### Semidefinite variables
+
+JuMP also supports modeling with semidefinite variables. A square symmetric
+matrix ``X`` is positive semidefinite if all eigenvalues are nonnegative. We can
+declare a matrix of JuMP variables to be positive semidefinite as follows:
+```jldoctest variables_symmetric; setup=:(model=Model())
+julia> @variable(model, x[1:2, 1:2], PSD)
+2×2 Symmetric{JuMP.VariableRef,Array{JuMP.VariableRef,2}}:
+ x[1,1]  x[1,2]
+ x[1,2]  x[2,2]
+```
+
+Note that `x` must be a square 2-dimensional `Array` of JuMP variables; it
+cannot be a JuMP array or a dictionary. (See [Variable containers](@ref), above,
+for more on this.)
+
+You can also impose a slightly weaker constraint that the square matrix is only
+symmetric (instead of positive semidefinite) as follows:
+```jldoctest variables_symmetric; setup=:(model=Model())
+julia> @variable(model, x[1:2, 1:2], Symmetric)
+2×2 Symmetric{JuMP.VariableRef,Array{JuMP.VariableRef,2}}:
+ x[1,1]  x[1,2]
+ x[1,2]  x[2,2]
+```
+## Anonymous JuMP variables
 
 In all of the above examples, we have created *named* JuMP variables. However,
-it is also possible to create so called *anonymous* JuMP variables.
-
+it is also possible to create so called *anonymous* JuMP variables. To create an
+anonymous JuMP variable, we drop the name of the variable from the macro call.
+This means dropping the second positional argument if the JuMP variable is a
+scalar, or dropping the name before the square bracket (`[`) if a container is
+being created. For example:
 ```jldoctest anon_variables; setup=:(model=Model())
 julia> x = @variable(model)
 noname
 ```
-
-If necessary, you can store `x` in `model`
+This shows how `@variable(model, x)` is really short for:
+```jldoctest anon_variables; setup=:(model=Model())
+julia> x = model[:x] = @variable(model, basename="x")               
+x
+```
+An `Array` of anonymous JuMP variables can be created as follows:
+```jldoctest anon_variables; setup=:(model=Model())
+julia> y = @variable(model, [i=1:2])
+2-element Array{JuMP.VariableRef,1}:
+ noname
+ noname
+```
+If necessary, you can store `x` in `model` as follows:
 ```
 julia> model[:x] = x
 ```
-
 The `<=` and `>=` short-hand cannot be used to set bounds on anonymous JuMP
 variables. Instead, you should use the `lowerbound` and `upperbound` keywords.
-Passing the variable type is also invalid. Instead, you should use the
-`variabletype` keyword.
+
+Passing the `Bin` and `Int` variable types are also invalid. Instead, you should
+use the `binary` and `integer` keywords.
 
 Thus, the anonymous variant of `@variable(model, x[i=1:2] >= i, Int)` is:
 ```jldoctest anon_variables
@@ -374,25 +445,34 @@ julia> x = @variable(model, [i=1:2], basename="x", lowerbound=i, integer=true)
  x[2]
 ```
 
-## User-defined collections
+## User-defined containers
 
+Finally, in the section [Variable containers](@ref), we explained how JuMP
+supports the efficient creation of collections of JuMP variables in three types
+of containers. However, users are also free to create collections of JuMP
+variables in their own datastructures. For example, the following code creates a
+dictionary with symmetric matrices as the values:
 ```jldoctest user_defined_collections; setup=:(model=Model())
-julia> variables = Dict{Symbol,JuMP.VariableRef}()
-Dict{Symbol,JuMP.VariableRef} with 0 entries
+julia> variables = Dict{Symbol, Symmetric{JuMP.VariableRef,
+                                          Array{JuMP.VariableRef,2}}}()
+Dict{Symbol,Symmetric{JuMP.VariableRef,Array{JuMP.VariableRef,2}}} with 0 entries
 
 julia> for key in [:A, :B]
-           variables[key] = @variable(model)
+           variables[key] = @variable(model, [1:2, 1:2], Symmetric)
        end
 
 julia> variables
-Dict{Symbol,JuMP.VariableRef} with 2 entries:
-  :A => noname
-  :B => noname
+Dict{Symbol,Symmetric{JuMP.VariableRef,Array{JuMP.VariableRef,2}}} with 2 entries:
+  :A => JuMP.VariableRef[noname noname; noname noname]
+  :B => JuMP.VariableRef[noname noname; noname noname]
 ```
 
+## Deleting variables
+
+**TODO(@odow):** explain how to delete variables.
+
+## Reference
 
 ```@docs
 @variable
 ```
-
-How to delete variables.
