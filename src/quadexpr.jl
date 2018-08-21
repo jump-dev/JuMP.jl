@@ -43,6 +43,8 @@ Base.zero(q::GenericQuadExpr) = zero(typeof(q))
 Base.one(q::GenericQuadExpr)  =  one(typeof(q))
 Base.copy(q::GenericQuadExpr) = GenericQuadExpr(copy(q.qvars1),copy(q.qvars2),copy(q.qcoeffs),copy(q.aff))
 
+Base.convert(::Type{GenericQuadExpr{C,V}}, q::GenericQuadExpr{C,V}) where {C,V} = q
+
 function Base.append!(q::GenericQuadExpr{T,S}, other::GenericQuadExpr{T,S}) where {T,S}
     append!(q.qvars1, other.qvars1)
     append!(q.qvars2, other.qvars2)
@@ -161,7 +163,7 @@ addconstraint(m::Model, c::Array{QuadConstraint}) =
     error("Vectorized constraint added without elementwise comparisons. Try using one of (.<=,.>=,.==).")
 
 function addVectorizedConstraint(m::Model, v::Array{QuadConstraint})
-    ret = Array{ConstraintRef{Model,QuadConstraint}}(size(v))
+    ret = Array{ConstraintRef{Model,QuadConstraint}}(undef, size(v))
     for I in eachindex(v)
         ret[I] = addconstraint(m, v[I])
     end

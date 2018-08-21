@@ -23,7 +23,7 @@ using Compat.LinearAlgebra
 using Compat.SparseArrays
 using Compat.Printf
 
-using Compat: @info, @warn
+using Compat: @info, @warn, axes
 
 if VERSION < v"0.7-"
     const IdDict = Base.ObjectIdDict
@@ -529,6 +529,7 @@ function verify_ownership(m::Model, vec::Vector{Variable})
 end
 
 Base.copy(v::Variable, new_model::Model) = Variable(new_model, v.col)
+Base.copy(v::Variable) = copy(v, v.m)
 Base.copy(x::Nothing, new_model::Model) = nothing
 Base.copy(v::AbstractArray{Variable}, new_model::Model) = (var -> Variable(new_model, var.col)).(v)
 

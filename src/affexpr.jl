@@ -40,6 +40,8 @@ Base.zero(a::GenericAffExpr) = zero(typeof(a))
 Base.one( a::GenericAffExpr) =  one(typeof(a))
 Base.copy(a::GenericAffExpr) = GenericAffExpr(copy(a.vars),copy(a.coeffs),copy(a.constant))
 
+Base.convert(::Type{GenericAffExpr{C,V}}, a::GenericAffExpr{C,V}) where {C,V} = a
+
 # Old iterator protocol - iterates over tuples (aᵢ,xᵢ)
 struct LinearTermIterator{GAE<:GenericAffExpr}
     aff::GAE
