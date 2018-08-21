@@ -11,12 +11,12 @@ Variables
 What is a JuMP variable?
 ---------------------------
 
-The term *variable* in computational optimization has many meanings. Here, we
+The term *variable* in mathematical optimization has many meanings. Here, we
 distinguish between the following three types of variables:
 1. *optimization* variables, which are the mathematical ``x`` in the problem
    ``\max{f_0(x) | f_i(x) \in S_i}``.
 2. *Julia* variables, which are bindings between a name and a value, for example
-   `x = 1`. (See [here](https://docs.julialang.org/en/stable/manual/variables/)
+   `x = 1`. (See [here](https://docs.julialang.org/en/v1.0.0/manual/variables/)
    for the Julia docs.)
 3. *JuMP* variables, which are instances of the `JuMP.VariableRef` struct
    defined by JuMP that contains a reference to an optimization variable in a
@@ -97,32 +97,35 @@ end
 ```
 
 Now that we understand the different between *optimization*, *JuMP*, and *Julia*
-variables, we can properly introduce the `@variable` macro.
+variables, we can introduce more of the functionality of the `@variable` macro.
 
-The `@variable` macro
----------------------
+## Variable bounds
 
 We have already seen the basic usage of the `@variable` macro. The next
 extension is to add lower- and upper-bounds to each optimization variable. This
 can be done as follows:
 ```jldoctest variables_2; setup=:(model=Model())
-julia> @variable(model, a)
-a
+julia> @variable(model, x_free)
+x_free
 
-julia> @variable(model, b >= 0)
-b
+julia> @variable(model, x_lower >= 0)
+x_lower
 
-julia> @variable(model, c <= 1)
-c
+julia> @variable(model, x_upper <= 1)
+x_upper
 
-julia> @variable(model, 2 <= d <= 3)
-d
+julia> @variable(model, 2 <= x_interval <= 3)
+x_interval
+
+julia> @variable(model, x_fixed == 4)
+x_fixed
 ```
 
 !!! note
-    When creating a variable with only a lower-bound or an upper-bound, the name
-    must appear on the left-hand side. Putting the name on the right-hand side
-    (e.g., `@variable(model, 0 <= x)`) will result in an error.
+    When creating a variable with only a lower-bound or an upper-bound, and the
+    value of the bound is not a numeric literal, the name must appear on the
+    left-hand side. Putting the name on the right-hand side (e.g., `a=1`,
+    `@variable(model, a <= x)`) will result in an error.
 
     **Extra for experts:** the reason for this is that at compile time, JuMP
     does not type and value information. Therefore, the case `@variable(model,
@@ -132,20 +135,20 @@ d
 We can query whether an optimization variable has a lower- or upper-bound via
 the `JuMP.haslowerbound` and `JuMP.hasupperbound` functions. For example:
 ```jldoctest variables_2
-julia> JuMP.haslowerbound(a)
+julia> JuMP.haslowerbound(x_free)
 false
 
-julia> JuMP.hasupperbound(c)
+julia> JuMP.hasupperbound(x_upper)
 true
 ```
 
 If a variable has a lower or upper bound, we can query the value of it via the
 `JuMP.lowerbound` and `JuMP.upperbound` functions. For example:
 ```jldoctest variables_2
-julia> JuMP.lowerbound(d)
+julia> JuMP.lowerbound(x_interval)
 2.0
 
-julia> JuMP.upperbound(d)
+julia> JuMP.upperbound(x_interval)
 3.0
 ```
 Querying the value of a bound that does not exist will result in an error.
@@ -325,43 +328,39 @@ julia> @variable(model, y[A], container=Array)
 JuMP now creates a vector of JuMP variables, instead of a JuMPArray. Note that
 choosing an invalid container type will throw an error.
 
-## Variable types
+## Integrality shortcuts
 
-JuMP supports four types of optimization variables: binary, integer, symmetric
-(matrix), and positive semi-definite variables. (This process is extensible, so
-JuMP extensions may provide new types of optimization variables.)
+Adding integrality constraints to a model such as `@constraint(model, x in MOI.ZeroOne())`
+and `@constraint(model, x in MOI.Integer())` is a common operation. Therefore,
+JuMP supports two shortcuts for adding such constraints.
 
-In the following, we explain each of these four types.
+#### Binary (ZeroOne) constraints
 
-**TODO(@odow):** semi-integer and semicontinuous variables?
-
-#### Binary variables
-
-The first type of optimization variables are binary variables, which are
-constrained to the set ``x \in {0, 1}``. These can be created in JuMP by passing
-`Bin` as an optional positional argument:
-```jldoctest; setup=:(model=Model())
+Binary optimization variables are constrained to the set ``x \in {0, 1}``. (The
+`MOI.ZeroOne` set in MathOptInterface.) Binary optimization variables can be
+created in JuMP by passing `Bin` as an optional positional argument:
+```jldoctest variables_binary; setup=:(model=Model())
 julia> @variable(model, x, Bin)
 x
 ```
-Binary optimization variables can also be created by setting the `binary`
-keyword to `true`.
-```jldoctest variables_binary; setup=:(model=Model())
-julia> @variable(model, x, binary=true)
-x
-```
-Finally, we can check if an optimization variable is binary by calling
-`JuMP.isbinary` on the JuMP variable:
+We can check if an optimization variable is binary by calling `JuMP.isbinary` on
+the JuMP variable:
 ```jldoctest variables_binary
 julia> JuMP.isbinary(x)
 true
 ```
+Binary optimization variables can also be created by setting the `binary`
+keyword to `true`.
+```jldoctest; setup=:(model=Model())
+julia> @variable(model, x, binary=true)
+x
+```
 
-#### Integer variables
+#### Integer constraints
 
-The second type of optimization variables are integer variables, which are
-constrained to the set ``x \in \mathbb{Z}``. These can be created in JuMP by
-passing `Int` as an optional positional argument:
+Integer optimization variables are constrained to the set ``x \in \mathbb{Z}``.
+(The `MOI.Integer` set in MathOptInterface.) Integer optimization variables can
+be created in JuMP by passing `Int` as an optional positional argument:
 ```jldoctest; setup=:(model=Model())
 julia> @variable(model, x, Int)
 x
@@ -372,14 +371,14 @@ keyword to `true`.
 julia> @variable(model, x, integer=true)
 x
 ```
-Finally, we can check if an optimization variable is integer by calling
-`JuMP.isinteger` on the JuMP variable:
+We can check if an optimization variable is integer by calling `JuMP.isinteger`
+on the JuMP variable:
 ```jldoctest variables_integer
 julia> JuMP.isinteger(x)
 true
 ```
 
-#### Semidefinite variables
+## Semidefinite variables
 
 JuMP also supports modeling with semidefinite variables. A square symmetric
 matrix ``X`` is positive semidefinite if all eigenvalues are nonnegative. We can
