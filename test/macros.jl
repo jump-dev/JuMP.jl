@@ -433,6 +433,12 @@ end
                               Expr(:parameters, Expr(:&&, :(isodd(i)), :(i+j>=2))),
                               Expr(:(=), :i, :(1:3)),
                               Expr(:(=), :j, :S)]
+        elseif VERSION < v"1.0-"
+            @test ex.head == :ref
+            @test ex.args == [:x,
+                              Expr(:parameters, Expr(:&&, :(isodd(i)), :(i+j>=2))),
+                              Expr(:(=), :i, :(1:3)),
+                              Expr(:(=), :j, :S)]
         else
             @test ex.head == :ref
             @test ex.args == [:x,
