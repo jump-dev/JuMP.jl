@@ -38,9 +38,14 @@ Base.transpose(t::MySumType) = MySumType(t.a)
 *(t1::MyType{S}, t2::T) where {S, T} = MyType(t1.a*t2)
 *(t1::S, t2::MyType{T}) where {S, T} = MyType(t1*t2.a)
 *(t1::MyType{S}, t2::MyType{T}) where {S, T} = MyType(t1.a*t2.a)
+if VERSION ≥ v"0.7-"
+    Base.adjoint(t::MyType) = t
+    Base.adjoint(t::MySumType) = t
+    Base.convert(::Type{MySumType{T}}, t::MyType{T}) where {T} = MySumType(t.a)
+end
 
 
-#@testset "Operator overloads" begin
+@testset "Operator overloads" begin
 
     _lt(x,y) = (x.col < y.col)
     function sort_expr!(x::AffExpr)
@@ -878,7 +883,11 @@ Base.transpose(t::MySumType) = MySumType(t.a)
         ElemT = MySumType{JuMP.GenericAffExpr{Float64,JuMP.Variable}}
         @test typeof(y) == Vector{ElemT}
         @test size(y) == (3,)
-        @test typeof(z) == (isdefined(Base, :RowVector) ? RowVector{ElemT, ConjArray{ElemT, 1, Vector{ElemT}}} : Matrix{ElemT})
+        if VERSION ≤ v"0.7-"
+            @test typeof(z) == (isdefined(Base, :RowVector) ? RowVector{ElemT, ConjArray{ElemT, 1, Vector{ElemT}}} : Matrix{ElemT})
+        else
+            @test typeof(z) == Adjoint{ElemT,Vector{ElemT}}
+        end
         @test size(z) == (1, 3)
         for i in 1:3
             # Q is symmetric
@@ -890,4 +899,4 @@ Base.transpose(t::MySumType) = MySumType(t.a)
             @test z[i].a == y[i].a == a
         end
     end
-#end
+end

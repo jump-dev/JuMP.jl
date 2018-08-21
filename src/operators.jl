@@ -288,30 +288,17 @@ end
 # Base Julia's generic fallback vecdot requires that dot be defined
 # for scalars, so instead of defining them one-by-one, we will
 # fallback to the multiplication operator
-LinearAlgebra.dot(lhs::JuMPTypes, rhs::JuMPTypes) = lhs*rhs
-LinearAlgebra.dot(lhs::JuMPTypes, rhs::Number)    = lhs*rhs
-LinearAlgebra.dot(lhs::Number,    rhs::JuMPTypes) = lhs*rhs
+Compat.LinearAlgebra.dot(lhs::JuMPTypes, rhs::JuMPTypes) = lhs*rhs
+Compat.LinearAlgebra.dot(lhs::JuMPTypes, rhs::Number)    = lhs*rhs
+Compat.LinearAlgebra.dot(lhs::Number,    rhs::JuMPTypes) = lhs*rhs
 
-LinearAlgebra.dot(lhs::AbstractArray{T,N}, rhs::JuMPArray{S,N}) where {T,S,N}    = vecdot(lhs,rhs)
-LinearAlgebra.dot(lhs::JuMPArray{T,N},rhs::AbstractArray{S,N}) where {T,S,N}     = vecdot(lhs,rhs)
-LinearAlgebra.dot(lhs::JuMPArray{T,N},rhs::JuMPArray{S,N}) where {T,S,N} = vecdot(lhs,rhs)
-LinearAlgebra.dot(lhs::AbstractArray{T,N}, rhs::AbstractArray{S,N}) where {T<:JuMPTypes,S,N} = vecdot(lhs,rhs)
-LinearAlgebra.dot(lhs::AbstractArray{T,N}, rhs::AbstractArray{S,N}) where {T<:JuMPTypes,S<:JuMPTypes,N} = vecdot(lhs,rhs)
-LinearAlgebra.dot(lhs::AbstractArray{T,N}, rhs::AbstractArray{S,N}) where {T,S<:JuMPTypes,N} = vecdot(lhs,rhs)
+Compat.dot(lhs::AbstractVector{T},rhs::AbstractVector{S}) where {T<:JuMPTypes,S<:JuMPTypes} = _dot(lhs,rhs)
+Compat.dot(lhs::AbstractVector{T},rhs::AbstractVector{S}) where {T<:JuMPTypes,S} = _dot(lhs,rhs)
+Compat.dot(lhs::AbstractVector{T},rhs::AbstractVector{S}) where {T,S<:JuMPTypes} = _dot(lhs,rhs)
 
-LinearAlgebra.dot(lhs::AbstractVector{T},rhs::AbstractVector{S}) where {T<:JuMPTypes,S<:JuMPTypes} = _dot(lhs,rhs)
-LinearAlgebra.dot(lhs::AbstractVector{T},rhs::AbstractVector{S}) where {T<:JuMPTypes,S} = _dot(lhs,rhs)
-LinearAlgebra.dot(lhs::AbstractVector{T},rhs::AbstractVector{S}) where {T,S<:JuMPTypes} = _dot(lhs,rhs)
-
-if VERSION < v"0.7-"
-    LinearAlgebra.vecdot(lhs::AbstractArray{T,N},rhs::AbstractArray{S,N}) where {T<:JuMPTypes,S,N} = _dot(lhs,rhs)
-    LinearAlgebra.vecdot(lhs::AbstractArray{T,N},rhs::AbstractArray{S,N}) where {T<:JuMPTypes,S<:JuMPTypes,N} = _dot(lhs,rhs)
-    LinearAlgebra.vecdot(lhs::AbstractArray{T,N},rhs::AbstractArray{S,N}) where {T,S<:JuMPTypes,N} = _dot(lhs,rhs)
-else
-    vecdot(lhs::AbstractArray{T,N},rhs::AbstractArray{S,N}) where {T<:JuMPTypes,S,N} = _dot(lhs,rhs)
-    vecdot(lhs::AbstractArray{T,N},rhs::AbstractArray{S,N}) where {T<:JuMPTypes,S<:JuMPTypes,N} = _dot(lhs,rhs)
-    vecdot(lhs::AbstractArray{T,N},rhs::AbstractArray{S,N}) where {T,S<:JuMPTypes,N} = _dot(lhs,rhs)
-end
+Compat.dot(lhs::AbstractArray{T,N},rhs::AbstractArray{S,N}) where {T<:JuMPTypes,S<:JuMPTypes,N} = _dot(lhs,rhs)
+Compat.dot(lhs::AbstractArray{T,N},rhs::AbstractArray{S,N}) where {T<:JuMPTypes,S,N} = _dot(lhs,rhs)
+Compat.dot(lhs::AbstractArray{T,N},rhs::AbstractArray{S,N}) where {T,S<:JuMPTypes,N} = _dot(lhs,rhs)
 
 function _dot(lhs::AbstractArray{T}, rhs::AbstractArray{S}) where {T,S}
     size(lhs) == size(rhs) || error("Incompatible dimensions")
@@ -340,7 +327,7 @@ Compat.adjoint(x::JuMPArray) = _throw_transpose_error()
 
 # Can remove the following code once == overloading is removed
 
-function LinearAlgebra.issymmetric(x::Matrix{T}) where T<:JuMPTypes
+function Compat.LinearAlgebra.issymmetric(x::Matrix{T}) where T<:JuMPTypes
     (n = size(x,1)) == size(x,2) || return false
     for i in 1:n, j in (i+1):n
         isequal(x[i,j], x[j,i]) || return false
@@ -349,7 +336,7 @@ function LinearAlgebra.issymmetric(x::Matrix{T}) where T<:JuMPTypes
 end
 
 # Special-case because the the base version wants to do fill!(::Array{Variable}, zero(AffExpr))
-function LinearAlgebra.diagm(x::AbstractVector{Variable})
+function Compat.LinearAlgebra.diagm(x::AbstractVector{Variable})
     @assert one_indexed(x) # Base.diagm doesn't work for non-one-indexed arrays in general.
     diagm(copyto!(similar(x, AffExpr), x))
 end
@@ -358,6 +345,21 @@ end
 # The _multiply!(buf,y,z) adds the results of y*z into the buffer buf. No bounds/size
 # checks are performed; it is expected that the caller has done this, has ensured
 # that the eltype of buf is appropriate, and has zeroed the elements of buf (if desired).
+
+# this is a generic fallback
+function _multiply!(ret::Array{T}, lhs::Array, rhs::Array) where T
+    #@warn("A terrible fallback is being called!")  # occasionally check for this in testing
+    m, n = size(lhs,1), size(lhs,2)
+    r, s = size(rhs,1), size(rhs,2)
+    for i ∈ 1:m, j ∈ 1:s
+        for k ∈ 1:n
+            tmp = convert(T, lhs[i,k]*rhs[k,j])
+            ret[i,j] += tmp
+        end
+    end
+    ret
+end
+
 
 function _multiply!(ret::Array{T}, lhs::Array, rhs::Array) where T<:JuMPTypes
     m, n = size(lhs,1), size(lhs,2)
@@ -440,9 +442,22 @@ function _multiplyt!(ret::Array{T}, lhs::Matrix, rhs::SparseMatrixCSC) where T<:
 end
 
 
+function Base.Matrix(S::SparseMatrixCSC{V}) where V<:Variable
+    A = zeros(GenericAffExpr{Float64, V}, S.m, S.n)
+    for Sj ∈ 1:S.n
+        for Sk ∈ nzrange(S, Sj)
+            Si = S.rowval[Sk]
+            Sv = S.nzval[Sk]
+            A[Si, Sj] = Sv
+        end
+    end
+    A
+end
+
+
 # TODO: implement sparse * sparse code as in base/sparse/linalg.jl (spmatmul)
-_multiply!(ret::AbstractArray{T}, lhs::SparseMatrixCSC, rhs::SparseMatrixCSC) where {T<:JuMPTypes} = _multiply!(ret, lhs, Array(rhs))
-_multiplyt!(ret::AbstractArray{T}, lhs::SparseMatrixCSC, rhs::SparseMatrixCSC) where {T<:JuMPTypes} = _multiplyt!(ret, lhs, Array(rhs))
+_multiply!(ret::AbstractArray{T}, lhs::SparseMatrixCSC, rhs::SparseMatrixCSC) where {T<:JuMPTypes} = _multiply!(ret, lhs, Matrix(rhs))
+_multiplyt!(ret::AbstractArray{T}, lhs::SparseMatrixCSC, rhs::SparseMatrixCSC) where {T<:JuMPTypes} = _multiplyt!(ret, lhs, Matrix(rhs))
 
 function Base.:*(A::Union{Matrix{T},SparseMatrixCSC{T}},
                  x::Union{Matrix,Vector,SparseMatrixCSC}) where {T<:JuMPTypes}
@@ -453,45 +468,10 @@ function Base.:*(A::Union{Matrix{T},SparseMatrixCSC{T}},
     _matmul(A, x)
 end
 function Base.:*(A::Union{Matrix,SparseMatrixCSC},
-        x::Union{Matrix{T},Vector{T},SparseMatrixCSC{T}}) where {T<:JuMPTypes}
+                 x::Union{Matrix{T},Vector{T},SparseMatrixCSC{T}}) where {T<:JuMPTypes}
     _matmul(A, x)
 end
 
-
-function _matmul(A, x)
-    m, n = size(A,1), size(A,2)
-    r, s = size(x,1), size(x,2)
-    n == r || error("Incompatible sizes")
-    ret = _return_array(A, x)
-    _multiply!(ret, A, x)
-    ret
-end
-
-function _matmult(A, x)
-    m, n = size(A,2), size(A,1) # transpose
-    r, s = size(x,1), size(x,2)
-    n == r || error("Incompatible sizes")
-    ret = _return_arrayt(A, x)
-    _multiplyt!(ret, A, x)
-    ret
-end
-
-# See https://github.com/JuliaLang/julia/pull/18218
-_matprod_type(R, S) = typeof(one(R) * one(S) + one(R) * one(S))
-# Don't do size checks here in _return_array, defer that to (*)
-_return_array(A::AbstractMatrix{R}, x::AbstractVector{S}) where {R,S} = _fillwithzeros(Array{_matprod_type(R,S)}(undef, size(A,1)))
-_return_array(A::AbstractMatrix{R}, x::AbstractMatrix{S}) where {R,S} = _fillwithzeros(Array{_matprod_type(R,S)}(undef, size(A,1), size(x,2)))
-# these are for transpose return matrices
-_return_arrayt(A::AbstractMatrix{R}, x::AbstractVector{S}) where {R,S} = _fillwithzeros(Array{_matprod_type(R,S)}(undef, size(A,2)))
-_return_arrayt(A::AbstractMatrix{R}, x::AbstractMatrix{S}) where {R,S} = _fillwithzeros(Array{_matprod_type(R,S)}(undef, size(A,2), size(x, 2)))
-
-# helper so we don't fill the buffer array with the same object
-function _fillwithzeros(arr::AbstractArray{T}) where T
-    for I in eachindex(arr)
-        arr[I] = zero(T)
-    end
-    arr
-end
 
 for op in [:+, :-]; @eval begin
     function Base.$op(lhs::Number,rhs::AbstractArray{T}) where T<:JuMPTypes
@@ -632,11 +612,20 @@ if VERSION ≥ v"0.7-"
         ret = _return_arrayt(A, x)
         return mul!(ret, transpose(A), x)
     end
+    # WARNING these are inefficient fallbacks
     function Base.:*(adjA::Adjoint{<:JuMPTypes,<:SparseMatrixCSC},
                      x::SparseMatrixCSC)
-        # WARNING this is an inefficient hack
-        adjA * Array(x)
+        adjA * Matrix(x)
     end
+    function Base.:*(adjA::Transpose{<:JuMPTypes,<:SparseMatrixCSC},
+                     x::SparseMatrixCSC)
+        adjA * Matrix(x)
+    end
+    #function Base.:*(adjA::Adjoint{<:JuMPTypes,<:SparseMatrixCSC},
+    #                 x::SparseMatrixCSC)
+    #    # WARNING this is an inefficient hack
+    #    adjA * Array(x)
+    #end
     # mul! is adapted from upstream Julia.
     #=
     > Copyright (c) 2009-2018: Jeff Bezanson, Stefan Karpinski, Viral B. Shah,
@@ -702,11 +691,46 @@ else
     Base.Ac_mul_B(A::Union{Matrix,SparseMatrixCSC}, x::Union{Matrix{T}, Vector{T}, SparseMatrixCSC{T}}) where {T<:JuMPTypes} = _matmult(A, x)
 end
 
+function _matmul(A, x)
+    m, n = size(A,1), size(A,2)
+    r, s = size(x,1), size(x,2)
+    n == r || error("Incompatible sizes")
+    ret = _return_array(A, x)
+    _multiply!(ret, A, x)
+    ret
+end
+
+function _matmult(A, x)
+    m, n = size(A,2), size(A,1) # transpose
+    r, s = size(x,1), size(x,2)
+    n == r || error("Incompatible sizes")
+    ret = _return_arrayt(A, x)
+    _multiplyt!(ret, A, x)
+    ret
+end
+
+# See https://github.com/JuliaLang/julia/pull/18218
+_matprod_type(R, S) = typeof(one(R) * one(S) + one(R) * one(S))
+# Don't do size checks here in _return_array, defer that to (*)
+_return_array(A::AbstractMatrix{R}, x::AbstractVector{S}) where {R,S} = _fillwithzeros(Array{_matprod_type(R,S)}(undef, size(A,1)))
+_return_array(A::AbstractMatrix{R}, x::AbstractMatrix{S}) where {R,S} = _fillwithzeros(Array{_matprod_type(R,S)}(undef, size(A,1), size(x,2)))
+# these are for transpose return matrices
+_return_arrayt(A::AbstractMatrix{R}, x::AbstractVector{S}) where {R,S} = _fillwithzeros(Array{_matprod_type(R,S)}(undef, size(A,2)))
+_return_arrayt(A::AbstractMatrix{R}, x::AbstractMatrix{S}) where {R,S} = _fillwithzeros(Array{_matprod_type(R,S)}(undef, size(A,2), size(x, 2)))
+
+# helper so we don't fill the buffer array with the same object
+function _fillwithzeros(arr::AbstractArray{T}) where T
+    for I in eachindex(arr)
+        arr[I] = zero(T)
+    end
+    arr
+end
+
 # Special-case sparse matrix scalar multiplication/division
 Base.:*(lhs::Number, rhs::SparseMatrixCSC{T}) where {T<:JuMPTypes} =
     SparseMatrixCSC(rhs.m, rhs.n, copy(rhs.colptr), copy(rhs.rowval), lhs .* rhs.nzval)
 Base.:*(lhs::JuMPTypes, rhs::SparseMatrixCSC) =
-    SparseMatrixCSC(rhs.m, rhs.n, copy(rhs.colptr), copy(rhs.rowval), lhs * rhs.nzval)
+    SparseMatrixCSC(rhs.m, rhs.n, copy(rhs.colptr), copy(rhs.rowval), lhs .* rhs.nzval)
 Base.:*(lhs::SparseMatrixCSC{T}, rhs::Number) where {T<:JuMPTypes} =
     SparseMatrixCSC(lhs.m, lhs.n, copy(lhs.colptr), copy(lhs.rowval), lhs.nzval .* rhs)
 Base.:*(lhs::SparseMatrixCSC, rhs::JuMPTypes) =
@@ -714,13 +738,17 @@ Base.:*(lhs::SparseMatrixCSC, rhs::JuMPTypes) =
 Base.:/(lhs::SparseMatrixCSC{T}, rhs::Number) where {T<:JuMPTypes} =
     SparseMatrixCSC(lhs.m, lhs.n, copy(lhs.colptr), copy(lhs.rowval), lhs.nzval ./ rhs)
 
-for (op,opsymbol) in [(+,:+), (-,:-), (*,:*), (/,:/)]
-    @eval begin
-        Base.broadcast(::typeof($op),lhs::Number,rhs::JuMPTypes) = $opsymbol(lhs,rhs)
-        Base.broadcast(::typeof($op),lhs::JuMPTypes,rhs::Number) = $opsymbol(lhs,rhs)
+if VERSION ≥ v"0.7-"
+    Base.BroadcastStyle(::Type{<:JuMPTypes}) = Base.Broadcast.DefaultArrayStyle{0}()
+    Base.broadcastable(x::JuMPTypes) = fill(x, ())
+else
+    for (op,opsymbol) in [(+,:+), (-,:-), (*,:*), (/,:/)]
+        @eval begin
+            Base.broadcast(::typeof($op),lhs::Number,rhs::JuMPTypes) = $opsymbol(lhs,rhs)
+            Base.broadcast(::typeof($op),lhs::JuMPTypes,rhs::Number) = $opsymbol(lhs,rhs)
+        end
     end
 end
-
 
 Base.:+(x::AbstractArray{T}) where {T<:JuMPTypes} = x
 function Base.:-(x::AbstractArray{T}) where T<:JuMPTypes
