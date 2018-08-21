@@ -14,7 +14,7 @@ What is a JuMP variable?
 The term *variable* in computational optimization has many meanings. Here, we
 distinguish between the following three types of variables:
 1. *optimization* variables, which are the mathematical ``x`` in the problem
-   ``\\max\{c^\\top x | Ax = b\}``.
+   ``\max{f_0(x) | f_i(x) \in S_i}``.
 2. *Julia* variables, which are bindings between a name and a value, for example
    `x = 1`. (See [here](https://docs.julialang.org/en/stable/manual/variables/)
    for the Julia docs.)
@@ -152,11 +152,11 @@ Querying the value of a bound that does not exist will result in an error.
 
 Instead of using the `<=` and `>=` syntax, we can also use the `lowerbound` and
 `upperbound` keyword arguments. For example:
-```jldoctest variables
-julia> @variable(model, kw_var, lowerbound=1, upperbound=2)
-kw_var
+```jldoctest; setup=:(model=Model())
+julia> @variable(model, x, lowerbound=1, upperbound=2)
+x
 
-julia> JuMP.lowerbound(kw_var)
+julia> JuMP.lowerbound(x)
 1.0
 ```
 
@@ -199,7 +199,7 @@ julia> x[2, :]
 ```
 
 We can also name each index, and variable bounds can depend upon the indices:
-```jldoctest variables_arrays_2; setup=:(model=Model())
+```jldoctest; setup=:(model=Model())
 julia> @variable(model, x[i=1:2, j=1:2] >= 2i + j)
 2×2 Array{JuMP.VariableRef,2}:
  x[1,1]  x[1,2]
@@ -248,7 +248,7 @@ And data, a 2-element Array{JuMP.VariableRef,1}:
 
 Similarly to the `Array` case, the indices in a `JuMPArray` can be named, and
 the bounds can depend upon these names. For example:
-```jldocttest variables_jump_arrays_2; setup=:(model=Model())
+```jldoctest; setup=:(model=Model())
 julia> @variable(model, x[i=2:3, j=1:2:3] >= 0.5i + j)
 2-dimensional JuMPArray{JuMP.VariableRef,2,...} with index sets:
     Dimension 1, 2:3
@@ -258,7 +258,7 @@ And data, a 2×2 Array{JuMP.VariableRef,2}:
  x[3,1]  x[3,3]
 
 julia> JuMP.lowerbound.(x)
-2-dimensional JuMPArray{JuMP.VariableRef,2,...} with index sets:
+2-dimensional JuMPArray{Float64,2,...} with index sets:
     Dimension 1, 2:3
     Dimension 2, 1:2:3
 And data, a 2×2 Array{Float64,2}:
@@ -272,23 +272,23 @@ The third datatype that JuMP supports the efficient creation of are
 dictionaries. These dictionaries are created when the indices do not form a
 rectangular set. One example is when indices have a dependence upon previous
 indices (called *triangular indexing*). JuMP supports this as follows:
-```jldocttest variables_dict; setup=:(model=Model())
+```jldoctest; setup=:(model=Model())
 julia> @variable(model, x[i=1:2, j=i:2])
- Dict{Any,JuMP.VariableRef} with 3 entries:
-  (1,2) => y[1,2]
-  (2,2) => y[2,2]
-  (1,1) => y[1,1]
+Dict{Any,JuMP.VariableRef} with 3 entries:
+  (1, 2) => x[1,2]
+  (2, 2) => x[2,2]
+  (1, 1) => x[1,1]
 ```
 `x` is a standard Julia dictionary. Therefore, slicing cannot be performed.
 
 We can also conditionally create variables via a JuMP-specific syntax. This
 sytax appends a comparison check that depends upon the named indices and is
 separated from the indices by a semi-colon (`;`). For example:
-```jldocttest variables_dict_2; setup=:(model=Model())
+```jldoctest; setup=:(model=Model())
 julia> @variable(model, x[i=1:4; mod(i, 2)==0])
 Dict{Any,JuMP.VariableRef} with 2 entries:
- 4 => x[4]
- 2 => x[2]
+  4 => x[4]
+  2 => x[2]
 ```
 
 ### Forcing the container type
@@ -384,7 +384,7 @@ true
 JuMP also supports modeling with semidefinite variables. A square symmetric
 matrix ``X`` is positive semidefinite if all eigenvalues are nonnegative. We can
 declare a matrix of JuMP variables to be positive semidefinite as follows:
-```jldoctest variables_symmetric; setup=:(model=Model())
+```jldoctest; setup=:(model=Model())
 julia> @variable(model, x[1:2, 1:2], PSD)
 2×2 Symmetric{JuMP.VariableRef,Array{JuMP.VariableRef,2}}:
  x[1,1]  x[1,2]
@@ -397,7 +397,7 @@ for more on this.)
 
 You can also impose a slightly weaker constraint that the square matrix is only
 symmetric (instead of positive semidefinite) as follows:
-```jldoctest variables_symmetric; setup=:(model=Model())
+```jldoctest; setup=:(model=Model())
 julia> @variable(model, x[1:2, 1:2], Symmetric)
 2×2 Symmetric{JuMP.VariableRef,Array{JuMP.VariableRef,2}}:
  x[1,1]  x[1,2]
@@ -411,17 +411,17 @@ anonymous JuMP variable, we drop the name of the variable from the macro call.
 This means dropping the second positional argument if the JuMP variable is a
 scalar, or dropping the name before the square bracket (`[`) if a container is
 being created. For example:
-```jldoctest anon_variables; setup=:(model=Model())
+```jldoctest; setup=:(model=Model())
 julia> x = @variable(model)
 noname
 ```
-This shows how `@variable(model, x)` is really short for:
+This shows how `(model, x)` is really short for:
 ```jldoctest anon_variables; setup=:(model=Model())
 julia> x = model[:x] = @variable(model, basename="x")               
 x
 ```
 An `Array` of anonymous JuMP variables can be created as follows:
-```jldoctest anon_variables; setup=:(model=Model())
+```jldoctest; setup=:(model=Model())
 julia> y = @variable(model, [i=1:2])
 2-element Array{JuMP.VariableRef,1}:
  noname
@@ -438,7 +438,7 @@ Passing the `Bin` and `Int` variable types are also invalid. Instead, you should
 use the `binary` and `integer` keywords.
 
 Thus, the anonymous variant of `@variable(model, x[i=1:2] >= i, Int)` is:
-```jldoctest anon_variables
+```jldoctest; setup=:(model=Model())
 julia> x = @variable(model, [i=1:2], basename="x", lowerbound=i, integer=true)
 2-element Array{JuMP.VariableRef,1}:
  x[1]
@@ -452,7 +452,7 @@ supports the efficient creation of collections of JuMP variables in three types
 of containers. However, users are also free to create collections of JuMP
 variables in their own datastructures. For example, the following code creates a
 dictionary with symmetric matrices as the values:
-```jldoctest user_defined_collections; setup=:(model=Model())
+```jldoctest; setup=:(model=Model())
 julia> variables = Dict{Symbol, Symmetric{JuMP.VariableRef,
                                           Array{JuMP.VariableRef,2}}}()
 Dict{Symbol,Symmetric{JuMP.VariableRef,Array{JuMP.VariableRef,2}}} with 0 entries
