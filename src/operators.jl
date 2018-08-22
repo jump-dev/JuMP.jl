@@ -309,25 +309,6 @@ function _dot(lhs::AbstractArray{T}, rhs::AbstractArray{S}) where {T,S}
     ret
 end
 
-# this is a generic fallback from stdlib LinearAlgebra that's needed for tests to pass on 0.6
-# for example, dot(::Array{Float64,3}, ::Array{Int,3}) is not defined in 0.6
-if VERSION < v"0.7-"
-    function Base.dot(x::AbstractArray, y::AbstractArray)
-        lx = length(x)
-        if lx != length(y)
-            throw(DimensionMismatch("first array has length $(lx) which does not match the length of the second, $(length(y))."))
-        end
-        if lx == 0
-            return dot(zero(eltype(x)), zero(eltype(y)))
-        end
-        s = zero(dot(first(x), first(y)))
-        for (Ix, Iy) in zip(eachindex(x), eachindex(y))
-            @inbounds s += dot(x[Ix], y[Iy])
-        end
-        s
-    end
-end
-
 ###############################################################################
 # A bunch of operator junk to make matrix multiplication and friends act
 # reasonably sane with JuMP types
