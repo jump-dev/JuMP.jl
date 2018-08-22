@@ -146,6 +146,9 @@ function parseNLExpr(m, x, tapevar, parent, values)
     if isexpr(x, :curly)
         error_curly(x)
     end
+    if isexpr(x, :...)
+        error("The splatting syntax $x is not supported.")
+    end
     # at the lowest level?
     return :( parseNLExpr_runtime($(esc(m)),$(esc(x)), $tapevar, $parent, $values) )
 
