@@ -441,7 +441,7 @@ function _multiplyt!(ret::Array{T}, lhs::Matrix, rhs::SparseMatrixCSC) where T<:
     ret
 end
 
-
+# See https://github.com/JuliaLang/julia/issues/27015
 function Base.Matrix(S::SparseMatrixCSC{V}) where V<:Variable
     A = zeros(GenericAffExpr{Float64, V}, S.m, S.n)
     for Sj ∈ 1:S.n
