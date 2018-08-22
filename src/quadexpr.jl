@@ -33,7 +33,7 @@ coeftype(::GenericQuadExpr{C,V}) where {C,V} = C
 # variables are ∈ ℝ but coeffs can be ∈ ℂ
 Compat.adjoint(q::GenericQuadExpr{<:Real}) = q
 function Compat.adjoint(q::GenericQuadExpr)
-    GenericQuadExpr(q.qvars1, q.qvars2, [z' for z ∈ q.qcoeffs], aff')
+    GenericQuadExpr(q.qvars1, q.qvars2, adjoint.(q.qcoeffs), aff')
 end
 
 Base.isempty(q::GenericQuadExpr) = (length(q.qvars1) == 0 && isempty(q.aff))

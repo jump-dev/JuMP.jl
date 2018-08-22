@@ -45,7 +45,7 @@ if VERSION ≥ v"0.7-"
 end
 
 
-@testset "Operator overloads" begin
+#@testset "Operator overloads" begin
 
     _lt(x,y) = (x.col < y.col)
     function sort_expr!(x::AffExpr)
@@ -899,4 +899,4 @@ end
             @test z[i].a == y[i].a == a
         end
     end
-end
+#end

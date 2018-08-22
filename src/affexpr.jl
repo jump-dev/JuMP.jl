@@ -31,7 +31,7 @@ coeftype(::GenericAffExpr{C,V}) where {C,V} = C
 # variables must be ∈ ℝ but coeffs can be ∈ ℂ
 Compat.adjoint(a::GenericAffExpr{<:Real}) = a
 function Compat.adjoint(a::GenericAffExpr)
-    GenericAffExpr(a.vars, [z' for z ∈ a.coeffs], a.constant')
+    GenericAffExpr(a.vars, adjoint.(a.coeffs), a.constant')
 end
 
 Base.zero(::Type{GenericAffExpr{C,V}}) where {C,V} = GenericAffExpr{C,V}(V[],C[],zero(C))
