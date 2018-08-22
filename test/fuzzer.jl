@@ -4,6 +4,10 @@
 #  file, You can obtain one at http://mozilla.org/MPL/2.0/.
 using JuMP, Compat.Test, Compat, Compat.Random
 
+if VERSION < v"0.7-"
+    using Compat: @warn
+end
+
 function random_aff_expr(N, vars::Vector)
     ex = Expr(:call, :+)
     for _ in 1:N

@@ -50,6 +50,15 @@ end
     Expr(:call, :setindex!, :(d.innerArray), :v, _to_cartesian(d,NT,idx)...)
 end
 
+# Note that this is needed because automatic broadcasting of addition operators is deprecated in 1.0.
+# The explicitly broadcasted version ought to work in 0.6, but causes a mysterious generated function
+# related error because of the presence of this function in `@generated Base.setindex!`.
+if VERSION < v"0.7-"
+    _to_cartesian_range_sub(I, rng) = I - (first(rng) - 1)
+else
+    _to_cartesian_range_sub(I, rng) = I .- (first(rng) .- 1)
+end
+
 function _to_cartesian(d,NT,idx...)
     indexing = Any[]
     for (i,S) in enumerate(NT.parameters)
@@ -62,14 +71,14 @@ function _to_cartesian(d,NT,idx...)
                 push!(indexing, quote
                     rng = d.indexsets[$i]
                     I = idx[$i]
-                    I .- (first(rng) .- 1)
+                    _to_cartesian_range_sub(I, rng)
                 end)
             else
                 push!(indexing, quote
                     rng = d.indexsets[$i]
                     I = idx[$i]
                     first(rng) <= I <= last(rng) || error("Failed attempt to index JuMPArray along dimension $($i): $I ∉ $(d.indexsets[$i])")
-                    I .- (first(rng) .- 1)
+                    _to_cartesian_range_sub(I, rng)
                 end)
             end
         elseif S == StepRange{Int}
