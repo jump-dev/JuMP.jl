@@ -104,22 +104,30 @@
     end
 
     @testset "Parse user-defined function (univariate)" begin
-        m = Model()
-        @variable(m, x)
-        f(x) = x
-        JuMP.register(m, :f, 1, f, autodiff=true)
-        @test expressions_equal(@JuMP.processNLExpr(m, f(x)),
-                                NonlinearExprData(m, :(f($x))))
+        model = Model()
+        @variable(model, x)
+        user_function = x -> x
+        JuMP.register(model, :f, 1, user_function, autodiff=true)
+        @test expressions_equal(@JuMP.processNLExpr(model, f(x)),
+                                NonlinearExprData(model, :(f($x))))
     end
 
     @testset "Parse user-defined function (multivariate)" begin
-        m = Model()
-        @variable(m, x)
-        @variable(m, y)
-        f(x,y) = x
-        JuMP.register(m, :f, 2, f, autodiff=true)
-        @test expressions_equal(@JuMP.processNLExpr(m, f(x,y)),
-                                NonlinearExprData(m, :(f($x,$y))))
+        model = Model()
+        @variable(model, x)
+        @variable(model, y)
+        user_function = (x, y) -> x
+        JuMP.register(model, :f, 2, user_function, autodiff=true)
+        @test expressions_equal(@JuMP.processNLExpr(model, f(x,y)),
+                                NonlinearExprData(model, :(f($x,$y))))
+    end
+
+    @testset "Error on splatting" begin
+        model = Model()
+        @variable(model, x[1:2])
+        user_function = (x, y) -> x
+        JuMP.register(model, :f, 2, user_function, autodiff=true)
+        @test_macro_throws ErrorException @NLexpression(model, f(x...))
     end
 
     @testset "Error on sum(x)" begin
