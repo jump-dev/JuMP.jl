@@ -256,7 +256,7 @@ function MathProgBase.initialize(d::NLPEvaluator, requested_features::Vector{Sym
 
     d.parameter_values = nldata.nlparamvalues
 
-    #tic()
+    VERSION < v"0.7-" && tic()
 
     d.linobj = prepAffObjective(d.m)
     linrowlb, linrowub = prepConstrBounds(d.m)
@@ -475,7 +475,7 @@ function reverse_eval_all(d::NLPEvaluator,x)
 end
 
 function MathProgBase.eval_f(d::NLPEvaluator, x)
-    #tic()
+    VERSION < v"0.7-" && tic()
     if d.last_x != x
         forward_eval_all(d,x)
         reverse_eval_all(d,x)
@@ -495,7 +495,7 @@ function MathProgBase.eval_f(d::NLPEvaluator, x)
 end
 
 function MathProgBase.eval_grad_f(d::NLPEvaluator, g, x)
-    #tic()
+    VERSION < v"0.7-" && tic()
     if d.last_x != x
         forward_eval_all(d,x)
         reverse_eval_all(d,x)
@@ -530,7 +530,7 @@ function MathProgBase.eval_grad_f(d::NLPEvaluator, g, x)
 end
 
 function MathProgBase.eval_g(d::NLPEvaluator, g, x)
-    #tic()
+    VERSION < v"0.7-" && tic()
     if d.last_x != x
         forward_eval_all(d,x)
         reverse_eval_all(d,x)
@@ -565,7 +565,7 @@ function MathProgBase.eval_g(d::NLPEvaluator, g, x)
 end
 
 function MathProgBase.eval_jac_g(d::NLPEvaluator, J, x)
-    #tic()
+    VERSION < v"0.7-" && tic()
     if d.last_x != x
         forward_eval_all(d,x)
         reverse_eval_all(d,x)
@@ -755,7 +755,7 @@ function MathProgBase.eval_hesslag(
         reverse_eval_all(d,x)
     end
 
-    #tic()
+    VERSION < v"0.7-" && tic()
 
     # quadratic objective
     nzcount = 1
