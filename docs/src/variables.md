@@ -44,6 +44,10 @@ This code does three things:
 To reduce confusion, we will attempt, where possible, to always refer to
 variables with their corresponding prefix.
 
+!!! warn
+    If you create two JuMP variables with the same name, an error will be
+    thrown.
+
 JuMP variables can have attributes, such as names or an initial primal start
 value. We illustrate the name attribute in the following example:
 ```jldoctest variables
@@ -165,9 +169,44 @@ julia> JuMP.lower_bound(x)
 1.0
 ```
 
-!!! warn
-    If you create two JuMP variables with the same name, an error will be
-    thrown.
+Another option is to use the `JuMP.setlowerbound` and `JuMP.setupperbound`
+functions. These can also be used to modify an existing variable bound. For
+example:
+```jldoctest; setup=:(model=Model())
+julia> @variable(model, x >= 1)
+x
+
+julia> JuMP.lowerbound(x)
+1.0
+
+julia> JuMP.setlowerbound(x, 2)
+
+julia> JuMP.lowerbound(x)
+2.0
+```
+
+Finally, we can delete variable bounds using `JuMP.deletelowerbound` and
+`JuMP.deleteupperbound`:
+```jldoctest; setup=:(model=Model())
+julia> @variable(model, 1 <= x <= 2)
+x
+
+julia> JuMP.lowerbound(x)
+1.0
+
+julia> JuMP.deletelowerbound(x)
+
+julia> JuMP.haslowerbound(x)
+false
+
+julia> JuMP.upperbound(x)
+2.0
+
+julia> JuMP.deleteupperbound(x)
+
+julia> JuMP.hasupperbound(x)
+false
+```
 
 ## Variable containers
 
@@ -470,7 +509,7 @@ Dict{Symbol,Symmetric{JuMP.VariableRef,Array{JuMP.VariableRef,2}}} with 2 entrie
 
 ## Deleting variables
 
-JuMP supports the deletion of optimization variables. To delete variables, we
+JuMP supports the deletion of optimization variables.  To delete variables, we
 can use the `JuMP.delete` method. We can also check whether `x` is a valid JuMP
 variable in `model` using the `JuMP.is_valid` method:
 ```jldoctest variables_delete
