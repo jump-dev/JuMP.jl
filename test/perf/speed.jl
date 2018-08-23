@@ -49,6 +49,11 @@
 #############################################################################
 
 using JuMP
+using Compat
+using Compat.Random
+@static if VERSION >= v"0.7.0-DEV.3406"
+    srand(seed) = Random.seed!(seed)
+end
 
 function pMedian(numFacility::Int,numCustomer::Int,numLocation::Int,useMPS)
     srand(10)
