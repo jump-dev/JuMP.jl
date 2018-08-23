@@ -141,7 +141,7 @@ var documenterSearchIndex = {"docs": [
     "page": "Variables",
     "title": "Variables",
     "category": "page",
-    "text": ""
+    "text": "CurrentModule = JuMP\nDocTestSetup = quote\n    using JuMP\nend"
 },
 
 {
@@ -153,11 +153,115 @@ var documenterSearchIndex = {"docs": [
 },
 
 {
-    "location": "variables.html#What-is-a-JuMP-VariableRef?-1",
+    "location": "variables.html#What-is-a-JuMP-variable?-1",
     "page": "Variables",
-    "title": "What is a JuMP VariableRef?",
+    "title": "What is a JuMP variable?",
     "category": "section",
-    "text": "DRAFT: A JuMP variable is a reference to an index in a model. It\'s a thin wrapper around MOI.VariableIndex. Variables have (1) names, and (2) attributes. Describe the different scopes of a variable (e.g., as Julia variables, lookup by string name, and lookup by symbol)."
+    "text": "The term variable in mathematical optimization has many meanings. Here, we distinguish between the following three types of variables:optimization variables, which are the mathematical x in the problem maxf_0(x)  f_i(x) in S_i.\nJulia variables, which are bindings between a name and a value, for example x = 1. (See here for the Julia docs.)\nJuMP variables, which are instances of the JuMP.VariableRef struct defined by JuMP that contains a reference to an optimization variable in a model. (Extra for experts: the VariableRef struct is a thin wrapper around a MOI.VariableIndex, and also contains a reference to the JuMP model.)To illustrate these three types of variables, consider the following JuMP code (the full syntax is explained below):julia> model = Model()\nA JuMP Model\n\njulia> @variable(model, x[1:2])\n2-element Array{JuMP.VariableRef,1}:\n x[1]\n x[2]This code does three things:it adds two optimization variables to model\nit creates two JuMP variables that act as references to those optimization variables\nit binds those JuMP variables as a vector with two elements to the Julia variable x.To reduce confusion, we will attempt, where possible, to always refer to variables with their corresponding prefix.JuMP variables can have attributes, such as names or an initial primal start value. We illustrate the name attribute in the following example:julia> @variable(model, y, basename=\"decision variable\")\ndecision variableThis code does four things:it adds one optimization variable to model\nit creates one JuMP variable that acts as a reference to that optimization variable\nit binds the JuMP variable to the Julia variable y\nit tells JuMP that the name attribute of this JuMP variable is \"decisionvariable\". JuMP uses the value of basename when it has to print the variable as a string.For example, when we print y at the REPL we get:julia> y\ndecision variableBecause y is a JuMP variable, I can bind it to a different value. For example, if I go:julia> y = 1\n1y is no longer a binding to a JuMP variable. This does not mean that the JuMP variable has been destroyed. It still exists and is still a reference to the same optimization variable. The binding can be reset by querying the model for the symbol as it was written in the @variable macro. For example:julia> model[:y]\ndecision variableThis act of looking up the JuMP variable by using the symbol is most useful when composing JuMP models across multiple functions, as illustrated by the following example:function add_component_to_model(model::JuMP.Model)\n    x = model[:x]\n    # ... code that uses x\nend\nfunction build_model()\n    model = Model()\n    @variable(model, x)\n    add_component_to_model(model)\nend\n# TODO(@odow): add a section on looking up by stringNow that we understand the different between optimization, JuMP, and Julia variables, we can introduce more of the functionality of the @variable macro."
+},
+
+{
+    "location": "variables.html#Variable-bounds-1",
+    "page": "Variables",
+    "title": "Variable bounds",
+    "category": "section",
+    "text": "We have already seen the basic usage of the @variable macro. The next extension is to add lower- and upper-bounds to each optimization variable. This can be done as follows:julia> @variable(model, x_free)\nx_free\n\njulia> @variable(model, x_lower >= 0)\nx_lower\n\njulia> @variable(model, x_upper <= 1)\nx_upper\n\njulia> @variable(model, 2 <= x_interval <= 3)\nx_interval\n\njulia> @variable(model, x_fixed == 4)\nx_fixednote: Note\nWhen creating a variable with only a lower-bound or an upper-bound, and the value of the bound is not a numeric literal, the name must appear on the left-hand side. Putting the name on the right-hand side (e.g., a=1, @variable(model, a <= x)) will result in an error.Extra for experts: the reason for this is that at compile time, JuMP does not type and value information. Therefore, the case @variable(model, a <= b) is ambiguous as JuMP cannot infer whether a is a constant and b is the intended variable name, or vice-versa.We can query whether an optimization variable has a lower- or upper-bound via the JuMP.haslowerbound and JuMP.hasupperbound functions. For example:julia> JuMP.haslowerbound(x_free)\nfalse\n\njulia> JuMP.hasupperbound(x_upper)\ntrueIf a variable has a lower or upper bound, we can query the value of it via the JuMP.lowerbound and JuMP.upperbound functions. For example:julia> JuMP.lowerbound(x_interval)\n2.0\n\njulia> JuMP.upperbound(x_interval)\n3.0Querying the value of a bound that does not exist will result in an error.Instead of using the <= and >= syntax, we can also use the lowerbound and upperbound keyword arguments. For example:julia> @variable(model, x, lowerbound=1, upperbound=2)\nx\n\njulia> JuMP.lowerbound(x)\n1.0warn: Warn\nIf you create two JuMP variables with the same name, an error will be thrown."
+},
+
+{
+    "location": "variables.html#Variable-containers-1",
+    "page": "Variables",
+    "title": "Variable containers",
+    "category": "section",
+    "text": "In the examples above, we have mostly created scalar variables. By scalar, we mean that the Julia variable is bound to exactly one JuMP variable. However,  it is often useful to create collections of JuMP variables inside more complicated datastructures.JuMP provides a mechanism for creating three types of these datastructures, which we refer to as containers. The three types are Arrays, JuMPArrays, and Dictionaries. We explain each of these in the following."
+},
+
+{
+    "location": "variables.html#Arrays-1",
+    "page": "Variables",
+    "title": "Arrays",
+    "category": "section",
+    "text": "We have already seen the creation of an array of JuMP variables with the x[1:2] syntax. This can naturally be extended to create multi-dimensional arrays of JuMP variables. For example:julia> @variable(model, x[1:2, 1:2])\n2×2 Array{JuMP.VariableRef,2}:\n x[1,1]  x[1,2]\n x[2,1]  x[2,2]Arrays of JuMP variables can be indexed and sliced as follows:julia> x[1, 2]\nx[1,2]\n\njulia> x[2, :]\n2-element Array{JuMP.VariableRef,1}:\n x[2,1]\n x[2,2]We can also name each index, and variable bounds can depend upon the indices:julia> @variable(model, x[i=1:2, j=1:2] >= 2i + j)\n2×2 Array{JuMP.VariableRef,2}:\n x[1,1]  x[1,2]\n x[2,1]  x[2,2]\n\njulia> JuMP.lowerbound.(x)\n2×2 Array{Float64,2}:\n 3.0  4.0\n 5.0  6.0JuMP will form an Array of JuMP variables when it can determine at compile time that the indices are one-based integer ranges. Therefore x[1:b] will work, but x[a:b] will throw an error."
+},
+
+{
+    "location": "variables.html#JuMPArrays-1",
+    "page": "Variables",
+    "title": "JuMPArrays",
+    "category": "section",
+    "text": "We often want to create arrays where the indices are not one-based integer ranges. For example, we may want to create a variable indexed by the name of a product or a location. The syntax is the same as that above, except with an arbitrary vector as an index as opposed to a one-based range. The biggest difference is that instead of returning an Array of JuMP variables, JuMP will return a JuMPArray. For example:julia> @variable(model, x[1:2, [:A,:B]])\n2-dimensional JuMPArray{JuMP.VariableRef,2,...} with index sets:\n    Dimension 1, 1:2\n    Dimension 2, Symbol[:A, :B]\nAnd data, a 2×2 Array{JuMP.VariableRef,2}:\n x[1,A]  x[1,B]\n x[2,A]  x[2,B]JuMPArray\'s can be indexed and sliced as follows:julia> x[1, :A]\nx[1,A]\n\njulia> x[2, :]\n1-dimensional JuMPArray{JuMP.VariableRef,1,...} with index sets:\n    Dimension 1, Symbol[:A, :B]\nAnd data, a 2-element Array{JuMP.VariableRef,1}:\n x[2,A]\n x[2,B]Similarly to the Array case, the indices in a JuMPArray can be named, and the bounds can depend upon these names. For example:julia> @variable(model, x[i=2:3, j=1:2:3] >= 0.5i + j)\n2-dimensional JuMPArray{JuMP.VariableRef,2,...} with index sets:\n    Dimension 1, 2:3\n    Dimension 2, 1:2:3\nAnd data, a 2×2 Array{JuMP.VariableRef,2}:\n x[2,1]  x[2,3]\n x[3,1]  x[3,3]\n\njulia> JuMP.lowerbound.(x)\n2-dimensional JuMPArray{Float64,2,...} with index sets:\n    Dimension 1, 2:3\n    Dimension 2, 1:2:3\nAnd data, a 2×2 Array{Float64,2}:\n 2.0  4.0\n 2.5  4.5"
+},
+
+{
+    "location": "variables.html#Dictionaries-1",
+    "page": "Variables",
+    "title": "Dictionaries",
+    "category": "section",
+    "text": "The third datatype that JuMP supports the efficient creation of are dictionaries. These dictionaries are created when the indices do not form a rectangular set. One example is when indices have a dependence upon previous indices (called triangular indexing). JuMP supports this as follows:julia> @variable(model, x[i=1:2, j=i:2])\nDict{Any,JuMP.VariableRef} with 3 entries:\n  (1, 2) => x[1,2]\n  (2, 2) => x[2,2]\n  (1, 1) => x[1,1]x is a standard Julia dictionary. Therefore, slicing cannot be performed.We can also conditionally create variables via a JuMP-specific syntax. This sytax appends a comparison check that depends upon the named indices and is separated from the indices by a semi-colon (;). For example:julia> @variable(model, x[i=1:4; mod(i, 2)==0])\nDict{Any,JuMP.VariableRef} with 2 entries:\n  4 => x[4]\n  2 => x[2]"
+},
+
+{
+    "location": "variables.html#Forcing-the-container-type-1",
+    "page": "Variables",
+    "title": "Forcing the container type",
+    "category": "section",
+    "text": "When creating a container of JuMP variables, JuMP will attempt to choose the tightest container type that can store the JuMP variables. Thus, it will prefer to create an Array before a JuMPArray, and a JuMPArray before a dictionary. However, because this happens at compile time, it does not always make the best choice. To illustrate this, consider the following example:julia> A = 1:2\n1:2\n\njulia> @variable(model, x[A])\n1-dimensional JuMPArray{JuMP.VariableRef,1,...} with index sets:\n    Dimension 1, 1:2\nAnd data, a 2-element Array{JuMP.VariableRef,1}:\n x[1]\n x[2]Since the value (and type) of A is unknown at compile time, JuMP is unable to infer that A is a one-based integer range. Therefore, JuMP creates a JuMPArray, even though it could store these two variables in a standard one-dimensional Array.We can share our knowledge that it is possible to store these JuMP variables as an array by setting the container keyword:julia> @variable(model, y[A], container=Array)\n2-element Array{JuMP.VariableRef,1}:\n y[1]\n y[2]JuMP now creates a vector of JuMP variables, instead of a JuMPArray. Note that choosing an invalid container type will throw an error."
+},
+
+{
+    "location": "variables.html#Integrality-shortcuts-1",
+    "page": "Variables",
+    "title": "Integrality shortcuts",
+    "category": "section",
+    "text": "Adding integrality constraints to a model such as @constraint(model, x in MOI.ZeroOne()) and @constraint(model, x in MOI.Integer()) is a common operation. Therefore, JuMP supports two shortcuts for adding such constraints."
+},
+
+{
+    "location": "variables.html#Binary-(ZeroOne)-constraints-1",
+    "page": "Variables",
+    "title": "Binary (ZeroOne) constraints",
+    "category": "section",
+    "text": "Binary optimization variables are constrained to the set x in 0 1. (The MOI.ZeroOne set in MathOptInterface.) Binary optimization variables can be created in JuMP by passing Bin as an optional positional argument:julia> @variable(model, x, Bin)\nxWe can check if an optimization variable is binary by calling JuMP.isbinary on the JuMP variable:julia> JuMP.isbinary(x)\ntrueBinary optimization variables can also be created by setting the binary keyword to true.julia> @variable(model, x, binary=true)\nx"
+},
+
+{
+    "location": "variables.html#Integer-constraints-1",
+    "page": "Variables",
+    "title": "Integer constraints",
+    "category": "section",
+    "text": "Integer optimization variables are constrained to the set x in mathbbZ. (The MOI.Integer set in MathOptInterface.) Integer optimization variables can be created in JuMP by passing Int as an optional positional argument:julia> @variable(model, x, Int)\nxInteger optimization variables can also be created by setting the integer keyword to true.julia> @variable(model, x, integer=true)\nxWe can check if an optimization variable is integer by calling JuMP.isinteger on the JuMP variable:julia> JuMP.isinteger(x)\ntrue"
+},
+
+{
+    "location": "variables.html#Semidefinite-variables-1",
+    "page": "Variables",
+    "title": "Semidefinite variables",
+    "category": "section",
+    "text": "JuMP also supports modeling with semidefinite variables. A square symmetric matrix X is positive semidefinite if all eigenvalues are nonnegative. We can declare a matrix of JuMP variables to be positive semidefinite as follows:julia> @variable(model, x[1:2, 1:2], PSD)\n2×2 Symmetric{JuMP.VariableRef,Array{JuMP.VariableRef,2}}:\n x[1,1]  x[1,2]\n x[1,2]  x[2,2]Note that x must be a square 2-dimensional Array of JuMP variables; it cannot be a JuMP array or a dictionary. (See Variable containers, above, for more on this.)You can also impose a slightly weaker constraint that the square matrix is only symmetric (instead of positive semidefinite) as follows:julia> @variable(model, x[1:2, 1:2], Symmetric)\n2×2 Symmetric{JuMP.VariableRef,Array{JuMP.VariableRef,2}}:\n x[1,1]  x[1,2]\n x[1,2]  x[2,2]"
+},
+
+{
+    "location": "variables.html#Anonymous-JuMP-variables-1",
+    "page": "Variables",
+    "title": "Anonymous JuMP variables",
+    "category": "section",
+    "text": "In all of the above examples, we have created named JuMP variables. However, it is also possible to create so called anonymous JuMP variables. To create an anonymous JuMP variable, we drop the name of the variable from the macro call. This means dropping the second positional argument if the JuMP variable is a scalar, or dropping the name before the square bracket ([) if a container is being created. For example:julia> x = @variable(model)\nnonameThis shows how (model, x) is really short for:julia> x = model[:x] = @variable(model, basename=\"x\")               \nxAn Array of anonymous JuMP variables can be created as follows:julia> y = @variable(model, [i=1:2])\n2-element Array{JuMP.VariableRef,1}:\n noname\n nonameIf necessary, you can store x in model as follows:julia> model[:x] = xThe <= and >= short-hand cannot be used to set bounds on anonymous JuMP variables. Instead, you should use the lowerbound and upperbound keywords.Passing the Bin and Int variable types are also invalid. Instead, you should use the binary and integer keywords.Thus, the anonymous variant of @variable(model, x[i=1:2] >= i, Int) is:julia> x = @variable(model, [i=1:2], basename=\"x\", lowerbound=i, integer=true)\n2-element Array{JuMP.VariableRef,1}:\n x[1]\n x[2]"
+},
+
+{
+    "location": "variables.html#User-defined-containers-1",
+    "page": "Variables",
+    "title": "User-defined containers",
+    "category": "section",
+    "text": "Finally, in the section Variable containers, we explained how JuMP supports the efficient creation of collections of JuMP variables in three types of containers. However, users are also free to create collections of JuMP variables in their own datastructures. For example, the following code creates a dictionary with symmetric matrices as the values:julia> variables = Dict{Symbol, Symmetric{JuMP.VariableRef,\n                                          Array{JuMP.VariableRef,2}}}()\nDict{Symbol,Symmetric{JuMP.VariableRef,Array{JuMP.VariableRef,2}}} with 0 entries\n\njulia> for key in [:A, :B]\n           variables[key] = @variable(model, [1:2, 1:2], Symmetric)\n       end\n\njulia> variables\nDict{Symbol,Symmetric{JuMP.VariableRef,Array{JuMP.VariableRef,2}}} with 2 entries:\n  :A => JuMP.VariableRef[noname noname; noname noname]\n  :B => JuMP.VariableRef[noname noname; noname noname]"
+},
+
+{
+    "location": "variables.html#Deleting-variables-1",
+    "page": "Variables",
+    "title": "Deleting variables",
+    "category": "section",
+    "text": "TODO(@odow): explain how to delete variables."
 },
 
 {
@@ -169,11 +273,11 @@ var documenterSearchIndex = {"docs": [
 },
 
 {
-    "location": "variables.html#The-@variable-macro-1",
+    "location": "variables.html#Reference-1",
     "page": "Variables",
-    "title": "The @variable macro",
+    "title": "Reference",
     "category": "section",
-    "text": "DRAFT: Describe the complete syntax of the @variable macro. Anonymous versus named variables. Describe the three possible container types returned and how to use them (Array, JuMPArray, and Dict).@variableHow to delete variables."
+    "text": "@variable"
 },
 
 {
