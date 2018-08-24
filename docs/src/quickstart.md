@@ -75,7 +75,7 @@ julia> @objective(model, Max, 5x + 3*y)
 Adding constraints is a lot like setting the objective. Here we create a
 less-than-or-equal-to constraint using `<=`, but we can also create equality
 constraints using `==` and greater-than-or-equal-to constraints with `>=`:
-```jldoctest quickstart_example
+```jldoctest quickstart_example; filter=r"≤|<="
 julia> con = @constraint(model, 1x + 5y <= 3)
 x + 5 y <= 3.0
 ```
@@ -162,13 +162,16 @@ julia> JuMP.resultdual(con)
 
 To query the dual variables associated with the variable bounds, things are a
 little trickier as we first need to obtain a reference to the constraint:
-```jldoctest quickstart_example
+```jldoctest quickstart_example; filter=r"≤|<="
 julia> x_upper = JuMP.UpperBoundRef(x)
 x <= 2.0
 
 julia> JuMP.resultdual(x_upper)
 -4.4
-
+```
+A similar process can be followed to obtain the dual of the lower bound
+constraint on `y`:
+```jldoctest quickstart_example; filter=r"≥|>="
 julia> y_lower = JuMP.LowerBoundRef(y)
 y >= 0.0
 
