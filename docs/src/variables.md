@@ -120,7 +120,8 @@ x_interval
 julia> @variable(model, x_fixed == 4)
 x_fixed
 ```
-In the above examples, `x_free` represents an unbounded optimization variable, `x_lower` represents an optimization variable with a lower bound and so forth.
+In the above examples, `x_free` represents an unbounded optimization variable,
+`x_lower` represents an optimization variable with a lower bound and so forth.
 
 !!! note
     When creating a variable with only a lower-bound or an upper-bound, and the
