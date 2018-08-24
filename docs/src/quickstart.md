@@ -19,15 +19,26 @@ julia> using JuMP
 
 We also need to include a Julia package which provides an appropriate solver. In
 this case, we will use GLPK:
-```jldoctest quickstart_example
+```julia
 julia> using GLPK
 ```
 
 Models are created with the `Model()` function. The `with_optimizer` syntax is
 used to specify the optimizer to be used:
-```jldoctest quickstart_example
+```julia
 julia> model = Model(with_optimizer(GLPK.Optimizer))
 A JuMP Model
+```
+
+```@meta
+DocTestSetup = quote
+    # Using a caching optimizer removes the need to # load a solver such as GLPK
+    # for building the documentation.
+    const MOI = JuMP.MathOptInterface
+    model = Model(with_optimizer(MOI.Utilities.MockOptimizer,
+                                 JuMP.JuMPMOIModel{Float64}(),
+                                 evalobjective=false))
+end
 ```
 !!! note
     Your model doesn't have to be called `model` - it's just a name. However,
@@ -46,6 +57,10 @@ julia> @variable(model, 0 <= y <= 30)
 y
 ```
 See the [Variables](@ref) section for more information on creating variables.
+
+```@meta
+DocTestSetup = nothing
+```
 
 Next we'll set our objective. Note again the `model`, so we know which model's
 objective we are setting! The objective sense, `Max` or `Min`, should be
@@ -71,6 +86,24 @@ Models are solved with the `JuMP.optimize` function:
 julia> JuMP.optimize(model)
 ```
 
+```@meta
+DocTestSetup = quote
+    # Now we load in the solution. Using a caching optimizer removes the need to
+    # load a solver such as GLPK for building the documentation.
+    mock = JuMP.caching_optimizer(model).optimizer
+    MOI.set!(mock, MOI.TerminationStatus(), MOI.Success)
+    MOI.set!(mock, MOI.PrimalStatus(), MOI.FeasiblePoint)
+    MOI.set!(mock, MOI.DualStatus(), MOI.FeasiblePoint)
+    MOI.set!(mock, MOI.ResultCount(), 1)
+    MOI.set!(mock, MOI.ObjectiveValue(), 10.6)
+    MOI.set!(mock, MOI.VariablePrimal(), JuMP.optimizerindex(x), 2.0)
+    MOI.set!(mock, MOI.VariablePrimal(), JuMP.optimizerindex(y), 0.2)
+    MOI.set!(mock, MOI.ConstraintDual(), JuMP.optimizerindex(con), -0.6)
+    MOI.set!(mock, MOI.ConstraintDual(), JuMP.optimizerindex(JuMP.UpperBoundRef(x)), -4.4)
+    MOI.set!(mock, MOI.ConstraintDual(), JuMP.optimizerindex(JuMP.LowerBoundRef(y)), 0.0)
+end
+```
+
 After the call to `JuMP.optimize` has finished, we need to understand why the
 optimizer stopped. This can be for a number of reasons. First, the solver might
 have found the optimal solution, or proved that the problem is infeasible.
@@ -84,6 +117,10 @@ Success::MathOptInterface.TerminationStatusCode = 0
 In this case, `GLPK` returned `Success`. This does not mean that it has found
 the optimal solution. Instead, it indicates that GLPK has finished running and
 did not encounter any errors or termination limits.
+
+```@meta
+DocTestSetup = nothing
+```
 
 To understand the reason for termination in more detail, we need to query
 `JuMP.primalstatus`:
