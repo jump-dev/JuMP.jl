@@ -892,9 +892,10 @@ function operator_warn(lhs::AffExpr,rhs::AffExpr)
         if length(lhs.vars) > 1
             m = lhs.vars[1].m
             m.operator_counter += 1
-            if m.operator_counter > 20000
-                warn_once("The addition operator has been used on JuMP expressions a large number of times. This warning is safe to ignore but may indicate that model generation is slower than necessary. For performance reasons, you should not add expressions in a loop. Instead of x += y, use append!(x,y) to modify x in place. If y is a single variable, you may also use push!(x, coef, y) in place of x += coef*y.")
-            end
+            # TODO this is printing an unlimited number of times due to https://github.com/JuliaLang/julia/issues/28786, re-enable when fixed
+            # if m.operator_counter > 20000
+            #     warn_once("The addition operator has been used on JuMP expressions a large number of times. This warning is safe to ignore but may indicate that model generation is slower than necessary. For performance reasons, you should not add expressions in a loop. Instead of x += y, use append!(x,y) to modify x in place. If y is a single variable, you may also use push!(x, coef, y) in place of x += coef*y.")
+            # end
         end
     end
     return
