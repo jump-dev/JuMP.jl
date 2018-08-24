@@ -25,8 +25,11 @@ mutable struct MyModel <: JuMP.AbstractModel
             Dict{Symbol, Any}())
     end
 end
+if VERSION >= v"0.7-"
+    Base.broadcastable(model::MyModel) = Ref(model)
+end
 
-JuMP.object_dictionary(m::MyModel) = m.objdict
+JuMP.object_dictionary(model::MyModel) = model.objdict
 
 # Variables
 struct MyVariableRef <: JuMP.AbstractVariableRef
@@ -35,6 +38,9 @@ struct MyVariableRef <: JuMP.AbstractVariableRef
 end
 Base.copy(v::MyVariableRef) = v
 Base.:(==)(v::MyVariableRef, w::MyVariableRef) = v.model === w.model && v.idx == w.idx
+if VERSION >= v"0.7-"
+    Base.broadcastable(v::MyVariableRef) = Ref(v)
+end
 JuMP.owner_model(v::MyVariableRef) = v.model
 JuMP.isequal_canonical(v::MyVariableRef, w::MyVariableRef) = v == w
 JuMP.variabletype(::MyModel) = MyVariableRef
@@ -102,6 +108,9 @@ struct MyConstraintRef
     idx::Int       # Index in `model.constraints`
 end
 JuMP.constrainttype(::MyModel) = MyConstraintRef
+if VERSION >= v"0.7-"
+    Base.broadcastable(cref::MyConstraintRef) = Ref(cref)
+end
 function JuMP.addconstraint(m::MyModel, c::JuMP.AbstractConstraint, name::String="")
     m.nextconidx += 1
     cref = MyConstraintRef(m, m.nextconidx)

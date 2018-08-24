@@ -59,6 +59,9 @@ end
 Base.zero(q::GenericQuadExpr) = zero(typeof(q))
 Base.one(q::GenericQuadExpr)  = one(typeof(q))
 Base.copy(q::GenericQuadExpr) = GenericQuadExpr(copy(q.aff), copy(q.terms))
+if VERSION >= v"0.7-"
+    Base.broadcastable(q::GenericQuadExpr) = Ref(q)
+end
 
 function map_coefficients_inplace!(f::Function, q::GenericQuadExpr)
     # The iterator remains valid if existing elements are updated.

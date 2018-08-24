@@ -280,11 +280,7 @@ function destructive_add!(ex::AbstractArray{<:GenericAffExpr}, c::Number,
 end
 
 
-destructive_add!(ex, c, x) = ex + c*x
-destructive_add!(ex, c, x::AbstractArray) = (ex,) .+ c*x
-destructive_add!(ex::AbstractArray, c, x) = ex .+ (c*x,)
-destructive_add!(ex::AbstractArray, c::AbstractArray, x) = ex .+ c*x
-destructive_add!(ex::AbstractArray, c, x::AbstractArray) = ex .+ c*x
+destructive_add!(ex, c, x) = ex .+ c * x
 
 destructive_add_with_reorder!(ex, arg) = destructive_add!(ex, 1.0, arg)
 # Special case because "Val{false}()" is used as the default empty expression.

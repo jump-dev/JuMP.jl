@@ -5,6 +5,7 @@ os:
 julia:
     - 0.6
     - 0.7
+    - 1.0
 # This is left as an example for the next big version switch.
 # matrix:
 #     allow_failures:
@@ -17,10 +18,10 @@ addons:
         - gfortran
         - liblapack-dev
         - libblas-dev
-script:
-    - if [[ -a .git/shallow ]]; then git fetch --unshallow; fi
-    - julia -e 'Pkg.clone(pwd())'
-    - julia -e 'Pkg.test("JuMP", coverage=true)'
+#script:
+#    - if [[ -a .git/shallow ]]; then git fetch --unshallow; fi
+#    - julia -e 'Pkg.clone(pwd())'
+#    - julia -e 'Pkg.test("JuMP", coverage=true)'
 #    - julia test/hygiene.jl
 #    - julia -e 'Pkg.add("Ipopt")' # needed for below tests
 #    - julia test/hockschittkowski/runhs.jl
