@@ -125,12 +125,12 @@ mutable struct NLPEvaluator <: MathProgBase.AbstractNLPEvaluator
     hess_I::Vector{Int}
     hess_J::Vector{Int}
     max_chunk::Int # chunk size for which we've allocated storage
-    # timers
-    eval_f_timer::Float64
-    eval_g_timer::Float64
-    eval_grad_f_timer::Float64
-    eval_jac_g_timer::Float64
-    eval_hesslag_timer::Float64
+    # init flags
+    eval_f_init::Bool
+    eval_g_init::Bool
+    eval_grad_f_init::Bool
+    eval_jac_g_init::Bool
+    eval_hesslag_init::Bool
     function NLPEvaluator(m::Model)
         d = new(m)
         numVar = m.numCols
@@ -160,11 +160,11 @@ mutable struct NLPEvaluator <: MathProgBase.AbstractNLPEvaluator
             d.jac_storage = Array{Float64}(undef, numVar)
         end
 
-        d.eval_f_timer = 0
-        d.eval_g_timer = 0
-        d.eval_grad_f_timer = 0
-        d.eval_jac_g_timer = 0
-        d.eval_hesslag_timer = 0
+        d.eval_f_init = false
+        d.eval_g_init = false
+        d.eval_grad_f_init = false
+        d.eval_jac_g_init = false
+        d.eval_hesslag_init = false
         return d
     end
 end
@@ -237,7 +237,7 @@ function MathProgBase.initialize(d::NLPEvaluator, requested_features::Vector{Sym
             # for solvers that need them
         end
     end
-    if d.eval_f_timer != 0
+    if d.eval_f_init
         # we've already been initialized
         # assume no new features are being requested.
         return
@@ -255,8 +255,6 @@ function MathProgBase.initialize(d::NLPEvaluator, requested_features::Vector{Sym
     d.m.colVal[fixed_variables] = d.m.colLower[fixed_variables]
 
     d.parameter_values = nldata.nlparamvalues
-
-    VERSION < v"0.7-" && tic()
 
     d.linobj = prepAffObjective(d.m)
     linrowlb, linrowub = prepConstrBounds(d.m)
@@ -409,12 +407,12 @@ function MathProgBase.initialize(d::NLPEvaluator, requested_features::Vector{Sym
     #tprep = toq()
     #println("Prep time: $tprep")
 
-    # reset timers
-    d.eval_f_timer = 0
-    d.eval_grad_f_timer = 0
-    d.eval_g_timer = 0
-    d.eval_jac_g_timer = 0
-    d.eval_hesslag_timer = 0
+    # init flags
+    d.eval_f_init = false
+    d.eval_grad_f_init = false
+    d.eval_g_init = false
+    d.eval_jac_g_init = false
+    d.eval_hesslag_init = false
 
     nothing
 end
@@ -475,7 +473,6 @@ function reverse_eval_all(d::NLPEvaluator,x)
 end
 
 function MathProgBase.eval_f(d::NLPEvaluator, x)
-    VERSION < v"0.7-" && tic()
     if d.last_x != x
         forward_eval_all(d,x)
         reverse_eval_all(d,x)
@@ -490,12 +487,11 @@ function MathProgBase.eval_f(d::NLPEvaluator, x)
             val += qobj.qcoeffs[k]*x[qobj.qvars1[k].col]*x[qobj.qvars2[k].col]
         end
     end
-    d.eval_f_timer += toq()
+    d.eval_f_init = true
     return val
 end
 
 function MathProgBase.eval_grad_f(d::NLPEvaluator, g, x)
-    VERSION < v"0.7-" && tic()
     if d.last_x != x
         forward_eval_all(d,x)
         reverse_eval_all(d,x)
@@ -525,12 +521,11 @@ function MathProgBase.eval_grad_f(d::NLPEvaluator, g, x)
             g[qobj.qvars2[k].col] += coef*x[qobj.qvars1[k].col]
         end
     end
-    d.eval_grad_f_timer += toq()
+    d.eval_grad_f_init = true
     return
 end
 
 function MathProgBase.eval_g(d::NLPEvaluator, g, x)
-    VERSION < v"0.7-" && tic()
     if d.last_x != x
         forward_eval_all(d,x)
         reverse_eval_all(d,x)
@@ -558,14 +553,13 @@ function MathProgBase.eval_g(d::NLPEvaluator, g, x)
         idx += 1
     end
 
-    d.eval_g_timer += toq()
+    d.eval_g_init = true
     #print("x = ");show(x);println()
     #println(size(A,1), " g(x) = ");show(g);println()
     return
 end
 
 function MathProgBase.eval_jac_g(d::NLPEvaluator, J, x)
-    VERSION < v"0.7-" && tic()
     if d.last_x != x
         forward_eval_all(d,x)
         reverse_eval_all(d,x)
@@ -620,7 +614,7 @@ function MathProgBase.eval_jac_g(d::NLPEvaluator, J, x)
         idx += length(nzidx)
     end
 
-    d.eval_jac_g_timer += toq()
+    d.eval_jac_g_init = true
     #print("x = ");show(x);println()
     #print("V ");show(J);println()
     return
@@ -755,8 +749,6 @@ function MathProgBase.eval_hesslag(
         reverse_eval_all(d,x)
     end
 
-    VERSION < v"0.7-" && tic()
-
     # quadratic objective
     nzcount = 1
     for k in 1:length(qobj.qvars1)
@@ -809,7 +801,7 @@ function MathProgBase.eval_hesslag(
         nzcount += nzthis
     end
 
-    d.eval_hesslag_timer += toq()
+    d.eval_hesslag_init = true
     return
 
 end
