@@ -99,6 +99,9 @@ owner_model(v::VariableRef) = v.m
 
 Base.iszero(::VariableRef) = false
 Base.copy(v::VariableRef) = VariableRef(v.m, v.index)
+if VERSION >= v"0.7-"
+    Base.broadcastable(v::VariableRef) = Ref(v)
+end
 
 isequal_canonical(v::VariableRef, other::VariableRef) = isequal(v, other)
 

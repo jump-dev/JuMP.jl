@@ -285,7 +285,7 @@ function parse_one_operator_constraint(_error::Function, vectorized::Bool, ::Val
     newaff, parseaff = parseExprToplevel(aff, :q)
     parsecode = :(q = Val{false}(); $parseaff)
     if vectorized
-        buildcall = :(buildconstraint.($_error, $newaff, $(esc(set))))
+        buildcall = :(buildconstraint.($_error, $newaff, Ref($(esc(set)))))
     else
         buildcall = :(buildconstraint($_error, $newaff, $(esc(set))))
     end

@@ -245,6 +245,11 @@ function direct_model(backend::MOI.ModelLike)
                  Dict{Symbol, Any}())
 end
 
+if VERSION >= v"0.7-"
+    Base.broadcastable(model::Model) = Ref(model)
+end
+
+
 # In Automatic and Manual mode, `model.moibackend` is either directly the
 # `CachingOptimizer` if `bridge_constraints=false` was passed in the constructor
 # or it is a `LazyBridgeOptimizer` and the `CachingOptimizer` is stored in the
@@ -464,6 +469,10 @@ struct ConstraintRef{M <: AbstractModel, C, Shape <: AbstractShape}
     m::M
     index::C
     shape::Shape
+end
+
+if VERSION >= v"0.7-"
+    Base.broadcastable(cref::ConstraintRef) = Ref(cref)
 end
 
 # TODO: should model be a parameter here?

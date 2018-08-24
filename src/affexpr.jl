@@ -76,6 +76,9 @@ Base.one(::Type{GenericAffExpr{C,V}}) where {C,V}  = GenericAffExpr{C,V}(one(C),
 Base.zero(a::GenericAffExpr) = zero(typeof(a))
 Base.one( a::GenericAffExpr) =  one(typeof(a))
 Base.copy(a::GenericAffExpr) = GenericAffExpr(copy(a.constant), copy(a.terms))
+if VERSION >= v"0.7-"
+    Base.broadcastable(a::GenericAffExpr) = Ref(a)
+end
 
 GenericAffExpr{C, V}() where {C, V} = zero(GenericAffExpr{C, V})
 
