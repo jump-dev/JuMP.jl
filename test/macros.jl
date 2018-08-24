@@ -162,7 +162,7 @@ end
     @testset "Warn on unexpected assignment" begin
         m = Model()
         @variable(m, x)
-        @static if VERSION <= v"1.0"
+        @static if VERSION >= v"1.0"
             # function getindex does not accept keyword arguments
             @test_throws ErrorException x[i=1]
             @test_throws ErrorException @constraint(m, x[i=1] <= 1)
