@@ -3,6 +3,7 @@ CurrentModule = JuMP
 DocTestSetup = quote
     using JuMP
 end
+DocTestFilters = r"JuMP\."
 ```
 
 Variables
@@ -69,8 +70,8 @@ julia> y
 decision variable
 ```
 
-Because `y` is a Julia variable, I can bind it to a different value. For example,
-if I go:
+Because `y` is a JuMP variable, we can bind it to a different value. For
+example, if we go:
 ```jldoctest variables
 julia> y = 1
 1
@@ -134,9 +135,9 @@ In the above examples, `x_free` represents an unbounded optimization variable,
     `@variable(model, a <= x)`) will result in an error.
 
     **Extra for experts:** the reason for this is that at compile time, JuMP
-    does not type and value information. Therefore, the case `@variable(model,
-    a <= b)` is ambiguous as JuMP cannot infer whether `a` is a constant and
-    `b` is the intended variable name, or vice-versa.
+    does not have type and value information. Therefore, the case
+    `@variable(model, a <= b)` is ambiguous as JuMP cannot infer whether `a` is
+    a constant and `b` is the intended variable name, or vice-versa.
 
 We can query whether an optimization variable has a lower- or upper-bound via
 the `JuMP.has_lower_bound` and `JuMP.has_upper_bound` functions. For example:
