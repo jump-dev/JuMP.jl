@@ -284,11 +284,11 @@ destructive_add!(ex, c, x) = ex .+ c * x
 
 destructive_add_with_reorder!(ex, arg) = destructive_add!(ex, 1.0, arg)
 # Special case because "Val{false}()" is used as the default empty expression.
-destructive_add_with_reorder!(ex::Val{false}, arg) = copy(arg)
-# Calling `copy` on the matrix will not copy the entries
-destructive_add_with_reorder!(ex::Val{false}, arg::AbstractArray) = copy.(arg)
+destructive_add_with_reorder!(ex::Val{false}, arg) = Base.copy(arg)
+# Calling `Base.copy` on the matrix will not copy the entries
+destructive_add_with_reorder!(ex::Val{false}, arg::AbstractArray) = Base.copy.(arg)
 function destructive_add_with_reorder!(ex::Val{false}, arg::Symmetric)
-    Symmetric(copy.(arg))
+    Symmetric(Base.copy.(arg))
 end
 destructive_add_with_reorder!(ex::Val{false}, args...) = (*)(args...)
 

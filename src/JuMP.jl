@@ -245,6 +245,7 @@ function direct_model(backend::MOI.ModelLike)
                  Dict{Symbol, Any}())
 end
 
+
 if VERSION >= v"0.7-"
     Base.broadcastable(model::Model) = Ref(model)
 end
@@ -331,8 +332,6 @@ function objective_sense(model::Model)
 end
 
 # TODO(IainNZ): Document these too.
-# TODO(#1381): Implement Base.copy for Model.
-object_dictionary(model::Model) = model.obj_dict
 termination_status(model::Model) = MOI.get(model, MOI.TerminationStatus())
 primal_status(model::Model) = MOI.get(model, MOI.PrimalStatus())
 dual_status(model::Model) = MOI.get(model, MOI.DualStatus())
@@ -733,13 +732,13 @@ struct NonlinearParameter <: AbstractJuMPScalar
 end
 
 ##########################################################################
+include("copy.jl")
 include("containers.jl")
 include("operators.jl")
 include("macros.jl")
 include("optimizerinterface.jl")
 include("nlp.jl")
 include("print.jl")
-
 
 ##########################################################################
 end
