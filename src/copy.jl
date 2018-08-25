@@ -99,6 +99,8 @@ function copy(model::Model)
     # `model.moibackend` and the indices of `new_model.moibackend`.
     index_map = MOI.copy!(new_model.moibackend, model.moibackend,
                           copynames = true)
+    # TODO copynames is needed because of https://github.com/JuliaOpt/MathOptInterface.jl/issues/494
+    #      we can remove it when this is fixed and released
 
     copy_variablewise_constraints(new_model.variabletolowerbound,
                                   model.variabletolowerbound, index_map)
