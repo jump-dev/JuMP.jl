@@ -1442,8 +1442,8 @@ macro NLconstraint(m, x, extra...)
         lhs = :($(x.args[2]) - $(x.args[3]))
         code = quote
             c = NonlinearConstraint($(processNLExpr(m, lhs)), $lb, $ub)
-            push!($esc_m.nlpdata.nlconstr, c)
-            $(refcall) = ConstraintRef($esc_m, NonlinearConstraintIndex(length($esc_m.nlpdata.nlconstr)), ScalarShape())
+            push!($esc_m.nlp_data.nlconstr, c)
+            $(refcall) = ConstraintRef($esc_m, NonlinearConstraintIndex(length($esc_m.nlp_data.nlconstr)), ScalarShape())
         end
     elseif isexpr(x, :comparison)
         # ranged row
@@ -1459,8 +1459,8 @@ macro NLconstraint(m, x, extra...)
                 error(string("in @NLconstraint (",$(string(x)),"): expected ",$(string(ub))," to be a number."))
             end
             c = NonlinearConstraint($(processNLExpr(m, x.args[3])), $(esc(lb)), $(esc(ub)))
-            push!($esc_m.nlpdata.nlconstr, c)
-            $(refcall) = ConstraintRef($esc_m, NonlinearConstraintIndex(length($esc_m.nlpdata.nlconstr)), ScalarShape())
+            push!($esc_m.nlp_data.nlconstr, c)
+            $(refcall) = ConstraintRef($esc_m, NonlinearConstraintIndex(length($esc_m.nlp_data.nlconstr)), ScalarShape())
         end
     else
         # Unknown

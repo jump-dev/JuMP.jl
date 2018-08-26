@@ -1,11 +1,11 @@
-@testset "optimizehook" begin
+@testset "optimize_hook" begin
     m = Model()
-    @test m.optimizehook === nothing
+    @test m.optimize_hook === nothing
     called = false
     function hook(m)
         called = true
     end
-    JuMP.setoptimizehook(m, hook)
+    JuMP.set_optimize_hook(m, hook)
     @test !called
     optimize(m)
     @test called
@@ -28,8 +28,8 @@ end
     end
     @testset "Automatic bridging disabled with `bridge_constraints` keyword" begin
         model = Model(with_optimizer(MOIU.MockOptimizer, LPModel{Float64}()), bridge_constraints=false)
-        @test model.moibackend isa MOIU.CachingOptimizer
-        @test model.moibackend === JuMP.caching_optimizer(model)
+        @test model.moi_backend isa MOIU.CachingOptimizer
+        @test model.moi_backend === JuMP.caching_optimizer(model)
         @variable model x
         @test_throws ErrorException @constraint model 0 <= x + 1 <= 1
     end

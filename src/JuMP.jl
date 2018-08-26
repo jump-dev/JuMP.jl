@@ -121,9 +121,9 @@ end
 # Model
 
 # Model has three modes:
-# 1) Automatic: moibackend field holds a LazyBridgeOptimizer{CachingOptimizer} in Automatic mode.
-# 2) Manual: moibackend field holds a LazyBridgeOptimizer{CachingOptimizer} in Manual mode.
-# 3) Direct: moibackend field holds an AbstractOptimizer. No extra copy of the model is stored. The moibackend must support addconstraint! etc.
+# 1) Automatic: moi_backend field holds a LazyBridgeOptimizer{CachingOptimizer} in Automatic mode.
+# 2) Manual: moi_backend field holds a LazyBridgeOptimizer{CachingOptimizer} in Manual mode.
+# 3) Direct: moi_backend field holds an AbstractOptimizer. No extra copy of the model is stored. The moi_backend must support addconstraint! etc.
 # Methods to interact with the CachingOptimizer are defined in solverinterface.jl.
 @enum ModelMode Automatic Manual Direct
 
@@ -139,21 +139,21 @@ A mathematical model of an optimization problem.
 mutable struct Model <: AbstractModel
     # Special variablewise properties that we keep track of:
     # lower bound, upper bound, fixed, integrality, binary
-    variabletolowerbound::Dict{MOIVAR, MOILB}
-    variabletoupperbound::Dict{MOIVAR, MOIUB}
-    variabletofix::Dict{MOIVAR, MOIFIX}
-    variabletointegrality::Dict{MOIVAR, MOIINT}
-    variabletozeroone::Dict{MOIVAR, MOIBIN}
+    variable_to_lower_bound::Dict{MOIVAR, MOILB}
+    variable_to_upper_bound::Dict{MOIVAR, MOIUB}
+    variable_to_fix::Dict{MOIVAR, MOIFIX}
+    variable_to_integrality::Dict{MOIVAR, MOIINT}
+    variable_to_zero_one::Dict{MOIVAR, MOIBIN}
     # In Manual and Automatic modes, LazyBridgeOptimizer{CachingOptimizer}.
     # In Direct mode, will hold an AbstractOptimizer.
-    moibackend::MOI.AbstractOptimizer
+    moi_backend::MOI.AbstractOptimizer
     # Hook into a solve call...function of the form f(m::Model; kwargs...),
     # where kwargs get passed along to subsequent solve calls.
-    optimizehook
+    optimize_hook
     # TODO: Document.
-    nlpdata#::NLPData
+    nlp_data
     # Dictionary from variable and constraint names to objects.
-    objdict::Dict{Symbol, Any}
+    obj_dict::Dict{Symbol, Any}
     # Number of times we add large expressions. Incremented and checked by
     # the `operator_warn` method.
     operator_counter::Int
@@ -250,16 +250,16 @@ if VERSION >= v"0.7-"
 end
 
 
-# In Automatic and Manual mode, `model.moibackend` is either directly the
+# In Automatic and Manual mode, `model.moi_backend` is either directly the
 # `CachingOptimizer` if `bridge_constraints=false` was passed in the constructor
 # or it is a `LazyBridgeOptimizer` and the `CachingOptimizer` is stored in the
 # `model` field
 function caching_optimizer(model::Model)
-    if model.moibackend isa MOIU.CachingOptimizer
-        return model.moibackend
-    elseif (model.moibackend isa
+    if model.moi_backend isa MOIU.CachingOptimizer
+        return model.moi_backend
+    elseif (model.moi_backend isa
             MOI.Bridges.LazyBridgeOptimizer{<:MOIU.CachingOptimizer})
-        return model.moibackend.model
+        return model.moi_backend.model
     else
         error("The function `caching_optimizer` cannot be called on a model " *
               "in `Direct` mode.")
@@ -272,8 +272,8 @@ end
 Return mode (Direct, Automatic, Manual) of model.
 """
 function mode(model::Model)
-    if !(model.moibackend isa MOI.Bridges.LazyBridgeOptimizer{<:MOIU.CachingOptimizer} ||
-         model.moibackend isa MOIU.CachingOptimizer)
+    if !(model.moi_backend isa MOI.Bridges.LazyBridgeOptimizer{<:MOIU.CachingOptimizer} ||
+         model.moi_backend isa MOIU.CachingOptimizer)
         return Direct
     elseif caching_optimizer(model).mode == MOIU.Automatic
         return Automatic
@@ -295,7 +295,7 @@ num_variables(model::Model) = MOI.get(model, MOI.NumberOfVariables())
 Returns the number of nonlinear constraints associated with the `model`.
 """
 function numnlconstr(model::Model)
-    return model.nlpdata !== nothing ? length(model.nlpdata.nlconstr) : 0
+    return model.nlp_data !== nothing ? length(model.nlp_data.nlconstr) : 0
 end
 
 """
@@ -332,11 +332,11 @@ end
 
 # TODO(IainNZ): Document these too.
 # TODO(#1381): Implement Base.copy for Model.
-object_dictionary(model::Model) = model.objdict
+object_dictionary(model::Model) = model.obj_dict
 terminationstatus(m::Model) = MOI.get(m, MOI.TerminationStatus())
 primalstatus(m::Model) = MOI.get(m, MOI.PrimalStatus())
 dualstatus(m::Model) = MOI.get(m, MOI.DualStatus())
-setoptimizehook(m::Model, f) = (m.optimizehook = f)
+set_optimize_hook(m::Model, f) = (m.optimize_hook = f)
 
 
 #############################################################################
@@ -478,10 +478,10 @@ end
 # TODO: should model be a parameter here?
 function MOI.delete!(m::Model, cr::ConstraintRef{Model})
     @assert m === cr.m
-    MOI.delete!(m.moibackend, index(cr))
+    MOI.delete!(m.moi_backend, index(cr))
 end
 
-MOI.isvalid(m::Model, cr::ConstraintRef{Model}) = cr.m === m && MOI.isvalid(m.moibackend, cr.index)
+MOI.isvalid(m::Model, cr::ConstraintRef{Model}) = cr.m === m && MOI.isvalid(m.moi_backend, cr.index)
 
 """
     addconstraint(m::Model, c::AbstractConstraint, name::String="")
@@ -490,15 +490,15 @@ Add a constraint `c` to `Model m` and sets its name.
 """
 function addconstraint(m::Model, c::AbstractConstraint, name::String="")
     f, s = moi_function_and_set(c)
-    if !MOI.supportsconstraint(m.moibackend, typeof(f), typeof(s))
-        if m.moibackend isa MOI.Bridges.LazyBridgeOptimizer
+    if !MOI.supportsconstraint(m.moi_backend, typeof(f), typeof(s))
+        if m.moi_backend isa MOI.Bridges.LazyBridgeOptimizer
             bridge_message = " and there are no bridges that can reformulate it into supported constraints."
         else
             bridge_message = ", try using `bridge_constraints=true` in the `JuMP.Model` constructor if you believe the constraint can be reformulated to constraints supported by the solver."
         end
         error("Constraints of type $(typeof(f))-in-$(typeof(s)) are not supported by the solver" * bridge_message)
     end
-    cindex = MOI.addconstraint!(m.moibackend, f, s)
+    cindex = MOI.addconstraint!(m.moi_backend, f, s)
     cref = ConstraintRef(m, cindex, shape(c))
     if !isempty(name)
         setname(cref, name)
@@ -583,11 +583,11 @@ setname(cr::ConstraintRef{Model,<:MOICON}, s::String) = MOI.set!(cr.m, MOI.Const
 Return `true` if one may query the attribute `attr` from the model's MOI backend.
 false if not.
 """
-MOI.canget(m::Model, attr::MOI.AbstractModelAttribute) = MOI.canget(m.moibackend, attr)
-MOI.canget(m::Model, attr::MOI.AbstractVariableAttribute, ::Type{VariableRef}) = MOI.canget(m.moibackend, attr, MOIVAR)
+MOI.canget(m::Model, attr::MOI.AbstractModelAttribute) = MOI.canget(m.moi_backend, attr)
+MOI.canget(m::Model, attr::MOI.AbstractVariableAttribute, ::Type{VariableRef}) = MOI.canget(m.moi_backend, attr, MOIVAR)
 function MOI.canget(model::Model, attr::MOI.AbstractConstraintAttribute,
                     ::Type{<:ConstraintRef{Model, T}}) where {T <: MOICON}
-    return MOI.canget(model.moibackend, attr, T)
+    return MOI.canget(model.moi_backend, attr, T)
 end
 
 """
@@ -595,24 +595,24 @@ end
 
 Return the value of the attribute `attr` from model's MOI backend.
 """
-MOI.get(m::Model, attr::MOI.AbstractModelAttribute) = MOI.get(m.moibackend, attr)
+MOI.get(m::Model, attr::MOI.AbstractModelAttribute) = MOI.get(m.moi_backend, attr)
 function MOI.get(m::Model, attr::MOI.AbstractVariableAttribute, v::VariableRef)
     @assert m === v.m
-    MOI.get(m.moibackend, attr, index(v))
+    MOI.get(m.moi_backend, attr, index(v))
 end
 function MOI.get(m::Model, attr::MOI.AbstractConstraintAttribute, cr::ConstraintRef)
     @assert m === cr.m
-    MOI.get(m.moibackend, attr, index(cr))
+    MOI.get(m.moi_backend, attr, index(cr))
 end
 
-MOI.set!(m::Model, attr::MOI.AbstractModelAttribute, value) = MOI.set!(m.moibackend, attr, value)
+MOI.set!(m::Model, attr::MOI.AbstractModelAttribute, value) = MOI.set!(m.moi_backend, attr, value)
 function MOI.set!(m::Model, attr::MOI.AbstractVariableAttribute, v::VariableRef, value)
     @assert m === v.m
-    MOI.set!(m.moibackend, attr, index(v), value)
+    MOI.set!(m.moi_backend, attr, index(v), value)
 end
 function MOI.set!(m::Model, attr::MOI.AbstractConstraintAttribute, cr::ConstraintRef, value)
     @assert m === cr.m
-    MOI.set!(m.moibackend, attr, index(cr), value)
+    MOI.set!(m.moi_backend, attr, index(cr), value)
 end
 
 ###############################################################################
@@ -648,12 +648,12 @@ end
 registercon(m::AbstractModel, conname, value) = error("Invalid constraint name $conname")
 
 function registerobject(m::AbstractModel, name::Symbol, value, errorstring::String)
-    objdict = object_dictionary(m)
-    if haskey(objdict, name)
+    obj_dict = object_dictionary(m)
+    if haskey(obj_dict, name)
         error(errorstring)
-        objdict[name] = nothing
+        obj_dict[name] = nothing
     else
-        objdict[name] = value
+        obj_dict[name] = value
     end
     return value
 end
@@ -666,13 +666,13 @@ To allow easy accessing of JuMP tVariables and Constraints via `[]` syntax.
 Returns the variable, or group of variables, or constraint, or group of constraints, of the given name which were added to the model. This errors if multiple variables or constraints share the same name.
 """
 function Base.getindex(m::JuMP.AbstractModel, name::Symbol)
-    objdict = object_dictionary(m)
-    if !haskey(objdict, name)
+    obj_dict = object_dictionary(m)
+    if !haskey(obj_dict, name)
         throw(KeyError("No object with name $name"))
-    elseif objdict[name] === nothing
+    elseif obj_dict[name] === nothing
         error("There are multiple variables and/or constraints named $name that are already attached to this model. If creating variables programmatically, use the anonymous variable syntax x = @variable(m, [1:N], ...). If creating constraints programmatically, use the anonymous constraint syntax con = @constraint(m, ...).")
     else
-        return objdict[name]
+        return obj_dict[name]
     end
 end
 
@@ -682,10 +682,10 @@ end
 stores the object `value` in the model `m` using so that it can be accessed via `getindex`.  Can be called with `[]` syntax.
 """
 function Base.setindex!(m::JuMP.Model, value, name::Symbol)
-    # if haskey(m.objdict, name)
+    # if haskey(m.obj_dict, name)
     #     warn("Overwriting the object $name stored in the model. Consider using anonymous variables and constraints instead")
     # end
-    m.objdict[name] = value
+    m.obj_dict[name] = value
 end
 
 """

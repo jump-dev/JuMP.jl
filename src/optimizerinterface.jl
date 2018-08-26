@@ -29,19 +29,19 @@ end
 """
     function optimize(model::Model,
                       optimizer_factory::Union{Nothing, OptimizerFactory} = nothing;
-                      ignore_optimize_hook=(model.optimizehook===nothing))
+                      ignore_optimize_hook=(model.optimize_hook===nothing))
 
 Optimize the model. If `optimizer_factory` is not `nothing`, it first set the
 optimizer to a new one created using the optimizer factory.
 """
 function optimize(model::Model,
                   optimizer_factory::Union{Nothing, OptimizerFactory} = nothing;
-                  ignore_optimize_hook=(model.optimizehook===nothing))
-    # The NLPData is not kept in sync, so re-set it here.
+                  ignore_optimize_hook=(model.optimize_hook===nothing))
+    # The nlp_data is not kept in sync, so re-set it here.
     # TODO: Consider how to handle incremental solves.
-    if model.nlpdata !== nothing
+    if model.nlp_data !== nothing
         MOI.set!(model, MOI.NLPBlock(), create_nlp_block_data(model))
-        empty!(model.nlpdata.nlconstr_duals)
+        empty!(model.nlp_data.nlconstr_duals)
     end
 
     if optimizer_factory !== nothing
@@ -59,10 +59,10 @@ function optimize(model::Model,
     # If the user or an extension has provided an optimize hook, call
     # that instead of solving the model ourselves
     if !ignore_optimize_hook
-        return model.optimizehook(model)
+        return model.optimize_hook(model)
     end
 
-    MOI.optimize!(model.moibackend)
+    MOI.optimize!(model.moi_backend)
 
     return
 end

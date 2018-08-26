@@ -354,7 +354,7 @@ end
 #------------------------------------------------------------------------
 function nl_expr_string(model::Model, mode, c::NonlinearExprData)
     return string(tape_to_expr(model, 1, c.nd, adjmat(c.nd), c.const_values, [],
-                               [], model.nlpdata.user_operators, false, false,
+                               [], model.nlp_data.user_operators, false, false,
                                mode))
 end
 
@@ -365,11 +365,11 @@ const NonlinearConstraintRef = ConstraintRef{Model, NonlinearConstraintIndex}
 
 function Base.show(io::IO, c::NonlinearConstraintRef)
     print(io, nl_constraint_string(c.m, REPLMode,
-                                   c.m.nlpdata.nlconstr[c.index.value]))
+                                   c.m.nlp_data.nlconstr[c.index.value]))
 end
 
 function Base.show(io::IO, ::MIME"text/latex", c::NonlinearConstraintRef)
-    constraint = c.m.nlpdata.nlconstr[c.index.value]
+    constraint = c.m.nlp_data.nlconstr[c.index.value]
     print(io, wrap_in_math_mode(nl_constraint_string(c.m, IJuliaMode,
                                                     constraint)))
 end

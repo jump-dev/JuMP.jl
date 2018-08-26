@@ -17,8 +17,8 @@ function setobjective(m::Model, sense::Symbol, ex::NonlinearExprData)
         @assert sense == :Max
         moisense = MOI.MaxSense
     end
-    MOI.set!(m.moibackend, MOI.ObjectiveSense(), moisense)
-    m.nlpdata.nlobj = ex
+    MOI.set!(m.moi_backend, MOI.ObjectiveSense(), moisense)
+    m.nlp_data.nlobj = ex
     # TODO: what do we do about existing objectives in the MOI backend?
     return
 end
@@ -77,45 +77,49 @@ mutable struct NLPData
 end
 
 function create_nlp_block_data(m::Model)
-    @assert m.nlpdata !== nothing
+    @assert m.nlp_data !== nothing
     bounds = MOI.NLPBoundsPair[]
-    for constr in m.nlpdata.nlconstr
+    for constr in m.nlp_data.nlconstr
         push!(bounds, MOI.NLPBoundsPair(constr.lb, constr.ub))
     end
-    return MOI.NLPBlockData(bounds, NLPEvaluator(m), isa(m.nlpdata.nlobj, NonlinearExprData))
+    return MOI.NLPBlockData(bounds, NLPEvaluator(m), isa(m.nlp_data.nlobj, NonlinearExprData))
 end
 
 function NonlinearExpression(m::Model,ex::NonlinearExprData)
     initNLP(m)
-    nldata::NLPData = m.nlpdata
+    nldata::NLPData = m.nlp_data
     push!(nldata.nlexpr, ex)
     return NonlinearExpression(m, length(nldata.nlexpr))
 end
 
 function newparameter(m::Model,value::Number)
     initNLP(m)
-    nldata::NLPData = m.nlpdata
+    nldata::NLPData = m.nlp_data
     push!(nldata.nlparamvalues, value)
     return NonlinearParameter(m, length(nldata.nlparamvalues))
 end
 
-getvalue(p::NonlinearParameter) = p.m.nlpdata.nlparamvalues[p.index]::Float64
+getvalue(p::NonlinearParameter) = p.m.nlp_data.nlparamvalues[p.index]::Float64
 
-setvalue(p::NonlinearParameter,v::Number) = (p.m.nlpdata.nlparamvalues[p.index] = v)
+setvalue(p::NonlinearParameter,v::Number) = (p.m.nlp_data.nlparamvalues[p.index] = v)
 
-NLPData() = NLPData(nothing, NonlinearConstraint[], NonlinearExprData[], Float64[], Float64[], Derivatives.UserOperatorRegistry(), 0, nothing)
+function NLPData()
+    return NLPData(nothing, NonlinearConstraint[], NonlinearExprData[],
+                   Float64[], Float64[], Derivatives.UserOperatorRegistry(),
+                   0, nothing)
+end
 
 Base.copy(::NLPData) = error("Copying nonlinear problems not yet implemented")
 
 function initNLP(m::Model)
-    if m.nlpdata === nothing
-        m.nlpdata = NLPData()
+    if m.nlp_data === nothing
+        m.nlp_data = NLPData()
     end
 end
 
 function resultdual(c::ConstraintRef{Model,NonlinearConstraintIndex})
     initNLP(c.m)
-    nldata::NLPData = c.m.nlpdata
+    nldata::NLPData = c.m.nlp_data
     if !MOI.canget(c.m, MOI.NLPBlockDual())
         error("Duals not available.")
     end
@@ -266,7 +270,7 @@ function SubexpressionStorage(nd::Vector{NodeData}, const_values, num_variables,
 end
 
 function MOI.initialize!(d::NLPEvaluator, requested_features::Vector{Symbol})
-    nldata::NLPData = d.m.nlpdata
+    nldata::NLPData = d.m.nlp_data
 
     # Check if we have any user-defined operators, in which case we need to
     # disable hessians. The result of features_available depends on this.
@@ -300,8 +304,8 @@ function MOI.initialize!(d::NLPEvaluator, requested_features::Vector{Symbol})
 
     moi_index_to_consecutive_index = Dict(moi_index => consecutive_index for (consecutive_index, moi_index) in enumerate(MOI.get(d.m, MOI.ListOfVariableIndices())))
 
-    d.user_output_buffer = Array{Float64}(undef,d.m.nlpdata.largest_user_input_dimension)
-    d.jac_storage = Array{Float64}(undef,max(num_variables_, d.m.nlpdata.largest_user_input_dimension))
+    d.user_output_buffer = Array{Float64}(undef,d.m.nlp_data.largest_user_input_dimension)
+    d.jac_storage = Array{Float64}(undef,max(num_variables_, d.m.nlp_data.largest_user_input_dimension))
 
     d.constraints = FunctionStorage[]
     d.last_x = fill(NaN, num_variables_)
@@ -436,7 +440,7 @@ end
 function forward_eval_all(d::NLPEvaluator,x)
     # do a forward pass on all expressions at x
     subexpr_values = d.subexpression_forward_values
-    user_operators = d.m.nlpdata.user_operators::Derivatives.UserOperatorRegistry
+    user_operators = d.m.nlp_data.user_operators::Derivatives.UserOperatorRegistry
     user_input_buffer = d.jac_storage
     user_output_buffer = d.user_output_buffer
     for k in d.subexpression_order
@@ -566,7 +570,7 @@ function MOI.eval_hessian_lagrangian_product(
     σ::Float64,         # multiplier for objective
     μ::AbstractVector{Float64}) # multipliers for each constraint
 
-    nldata = d.m.nlpdata::NLPData
+    nldata = d.m.nlp_data::NLPData
 
     if d.last_x != x
         forward_eval_all(d,x)
@@ -634,7 +638,7 @@ function MOI.eval_hessian_lagrangian(
     obj_factor::Float64,             # Lagrangian multiplier for objective
     lambda::AbstractVector{Float64}) # Multipliers for each constraint
 
-    nldata = d.m.nlpdata::NLPData
+    nldata = d.m.nlp_data::NLPData
 
     d.want_hess || error("Hessian computations were not requested on the call to initialize!.")
 
@@ -684,7 +688,7 @@ function hessian_slice_inner(d, ex, R, input_ϵ, output_ϵ, ::Type{Val{CHUNK}}) 
     partials_storage_ϵ = reinterpret_unsafe(ForwardDiff.Partials{CHUNK,Float64},d.partials_storage_ϵ)
     zero_ϵ = zero(ForwardDiff.Partials{CHUNK,Float64})
 
-    user_operators = d.m.nlpdata.user_operators::Derivatives.UserOperatorRegistry
+    user_operators = d.m.nlp_data.user_operators::Derivatives.UserOperatorRegistry
     # do a forward pass
     for expridx in ex.dependent_subexpressions
         subexpr = d.subexpressions[expridx]
@@ -953,7 +957,7 @@ end
 function MOI.objective_expr(d::NLPEvaluator)
     if d.has_nlobj
         ex = d.objective
-        return tape_to_expr(d.m, 1, d.m.nlpdata.nlobj.nd, ex.adj, ex.const_values, d.parameter_values, d.subexpressions_as_julia_expressions,d.m.nlpdata.user_operators, true, true)
+        return tape_to_expr(d.m, 1, d.m.nlp_data.nlobj.nd, ex.adj, ex.const_values, d.parameter_values, d.subexpressions_as_julia_expressions,d.m.nlp_data.user_operators, true, true)
     else
         error("No nonlinear objective present")
     end
@@ -961,8 +965,8 @@ end
 
 function MOI.constraint_expr(d::NLPEvaluator,i::Integer)
     ex = d.constraints[i]
-    constr = d.m.nlpdata.nlconstr[i]
-    julia_expr = tape_to_expr(d.m, 1, constr.terms.nd, ex.adj, ex.const_values, d.parameter_values, d.subexpressions_as_julia_expressions,d.m.nlpdata.user_operators, true, true)
+    constr = d.m.nlp_data.nlconstr[i]
+    julia_expr = tape_to_expr(d.m, 1, constr.terms.nd, ex.adj, ex.const_values, d.parameter_values, d.subexpressions_as_julia_expressions,d.m.nlp_data.user_operators, true, true)
     if sense(constr) == :range
         return Expr(:comparison, constr.lb, :(<=), julia_expr, :(<=), constr.ub)
     else
@@ -977,7 +981,7 @@ function _getValue(x::NonlinearExpression)
     # recompute EVERYTHING here
     # could be smarter and cache
 
-    nldata::NLPData = m.nlpdata
+    nldata::NLPData = m.nlp_data
     subexpr = Array{Vector{NodeData}}(undef,0)
     for nlexpr in nldata.nlexpr
         push!(subexpr, nlexpr.nd)
@@ -1042,10 +1046,10 @@ function register(m::Model, s::Symbol, dimension::Integer, f::Function; autodiff
     if dimension == 1
         fprime = x -> ForwardDiff.derivative(f, x)
         fprimeprime = x -> ForwardDiff.derivative(fprime, x)
-        Derivatives.register_univariate_operator!(m.nlpdata.user_operators, s, f, fprime, fprimeprime)
+        Derivatives.register_univariate_operator!(m.nlp_data.user_operators, s, f, fprime, fprimeprime)
     else
-        m.nlpdata.largest_user_input_dimension = max(m.nlpdata.largest_user_input_dimension,dimension)
-        Derivatives.register_multivariate_operator!(m.nlpdata.user_operators, s, UserAutoDiffEvaluator(dimension, f))
+        m.nlp_data.largest_user_input_dimension = max(m.nlp_data.largest_user_input_dimension,dimension)
+        Derivatives.register_multivariate_operator!(m.nlp_data.user_operators, s, UserAutoDiffEvaluator(dimension, f))
     end
 
 end
@@ -1055,12 +1059,12 @@ function register(m::Model, s::Symbol, dimension::Integer, f::Function, ∇f::Fu
     if dimension == 1
         autodiff == true || error("Currently must provide 2nd order derivatives of univariate functions. Try setting autodiff=true.")
         fprimeprime = x -> ForwardDiff.derivative(∇f, x)
-        Derivatives.register_univariate_operator!(m.nlpdata.user_operators, s, f, ∇f, fprimeprime)
+        Derivatives.register_univariate_operator!(m.nlp_data.user_operators, s, f, ∇f, fprimeprime)
     else
         autodiff == false || Base.warn_once("autodiff=true ignored since gradient is already provided.")
-        m.nlpdata.largest_user_input_dimension = max(m.nlpdata.largest_user_input_dimension,dimension)
+        m.nlp_data.largest_user_input_dimension = max(m.nlp_data.largest_user_input_dimension,dimension)
         d = UserFunctionEvaluator(x -> f(x...), (g,x)->∇f(g,x...), dimension)
-        Derivatives.register_multivariate_operator!(m.nlpdata.user_operators, s, d)
+        Derivatives.register_multivariate_operator!(m.nlp_data.user_operators, s, d)
     end
 
 end
@@ -1068,7 +1072,7 @@ end
 function register(m::Model, s::Symbol, dimension::Integer, f::Function, ∇f::Function, ∇²f::Function)
     dimension == 1 || error("Providing hessians for multivariate functions is not yet supported")
     initNLP(m)
-    Derivatives.register_univariate_operator!(m.nlpdata.user_operators, s, f, ∇f, ∇²f)
+    Derivatives.register_univariate_operator!(m.nlp_data.user_operators, s, f, ∇f, ∇²f)
 end
 
 # Ex: setNLobjective(m, :Min, :($x + $y^2))
@@ -1094,8 +1098,8 @@ function addNLconstraint(m::Model, ex::Expr)
         end
         lhs = :($(ex.args[2]) - $(ex.args[3]))
         c = NonlinearConstraint(NonlinearExprData(m, lhs), lb, ub)
-        push!(m.nlpdata.nlconstr, c)
-        return ConstraintRef(m, NonlinearConstraintIndex(length(m.nlpdata.nlconstr)))
+        push!(m.nlp_data.nlconstr, c)
+        return ConstraintRef(m, NonlinearConstraintIndex(length(m.nlp_data.nlconstr)))
     elseif isexpr(ex, :comparison)
         # ranged row
         if (ex.args[2] != :<= && ex.args[2] != :≤) || (ex.args[4] != :<= && ex.args[4] != :≤)
@@ -1109,8 +1113,8 @@ function addNLconstraint(m::Model, ex::Expr)
             error(string("in addNLconstraint (",ex,"): expected ",ub," to be a number."))
         end
         c = NonlinearConstraint(NonlinearExprData(m, ex.args[3]), lb, ub)
-        push!(m.nlpdata.nlconstr, c)
-        return ConstraintRef(m, NonlinearConstraintIndex(length(m.nlpdata.nlconstr)))
+        push!(m.nlp_data.nlconstr, c)
+        return ConstraintRef(m, NonlinearConstraintIndex(length(m.nlp_data.nlconstr)))
     else
         # Unknown
         error("in addNLconstraint ($ex): constraints must be in one of the following forms:\n" *

@@ -212,7 +212,7 @@ end
             x + y[1] * y[2] * y[3] <= 0.5
         end)
 
-        @test length(m.nlpdata.nlconstr) == 4
+        @test length(m.nlp_data.nlconstr) == 4
         d = JuMP.NLPEvaluator(m)
         MathProgBase.initialize(d, [:ExprGraph])
 
@@ -345,7 +345,7 @@ end
         @test string(model.linconstr[3]) == "x[5] + x[6] $leq 1"
         @test string(model.linconstr[4]) == "x[7] + x[8] $leq 1"
         @test string(model.linconstr[5]) == "x[9] + x[10] $leq 1"
-        @test length(model.nlpdata.nlconstr) == 10
+        @test length(model.nlp_data.nlconstr) == 10
     end
 
     @testset "Test changes in condition parsing" begin

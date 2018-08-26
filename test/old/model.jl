@@ -301,7 +301,7 @@ end
         dest = copy(source)
 
         # uncomment when NLP copying is implemented
-        # for name in source.nlpdata
+        # for name in source.nlp_data
         #     @test source.name == dest.name == true
         # end
 
@@ -336,12 +336,12 @@ end
 
         @test dest.solvehook(dest) == :Optimal
 
-        @test Set(collect(keys(dest.objDict))) == Set([:x,:y,:z,:w,:v])
-        @test isequal(dest.objDict[:x], Variable(dest, 1))
-        @test isequal(dest.objDict[:y], Variable(dest, 2))
-        @test all(t -> isequal(t[1], t[2]), zip(dest.objDict[:z], [Variable(dest, 3), Variable(dest, 4), Variable(dest, 5)]))
-        @test all(t -> isequal(t[1], t[2]), zip(dest.objDict[:w].innerArray, [Variable(dest, 6), Variable(dest, 7), Variable(dest, 8)]))
-        td = dest.objDict[:v].tupledict
+        @test Set(collect(keys(dest.obj_dict))) == Set([:x,:y,:z,:w,:v])
+        @test isequal(dest.obj_dict[:x], Variable(dest, 1))
+        @test isequal(dest.obj_dict[:y], Variable(dest, 2))
+        @test all(t -> isequal(t[1], t[2]), zip(dest.obj_dict[:z], [Variable(dest, 3), Variable(dest, 4), Variable(dest, 5)]))
+        @test all(t -> isequal(t[1], t[2]), zip(dest.obj_dict[:w].innerArray, [Variable(dest, 6), Variable(dest, 7), Variable(dest, 8)]))
+        td = dest.obj_dict[:v].tupledict
         @test length(td) == 2
         @test isequal(td[:red,1], Variable(dest, 9))
         @test isequal(td[:red,3], Variable(dest, 10))
