@@ -413,7 +413,7 @@ var documenterSearchIndex = {"docs": [
     "page": "Solvers",
     "title": "JuMP.optimize",
     "category": "function",
-    "text": "function optimize(model::Model,\n                  optimizer_factory::Union{Nothing, OptimizerFactory} = nothing;\n                  ignore_optimize_hook=(model.optimizehook===nothing))\n\nOptimize the model. If optimizer_factory is not nothing, it first set the optimizer to a new one created using the optimizer factory.\n\n\n\n"
+    "text": "function optimize(model::Model,\n                  optimizer_factory::Union{Nothing, OptimizerFactory} = nothing;\n                  ignore_optimize_hook=(model.optimize_hook===nothing))\n\nOptimize the model. If optimizer_factory is not nothing, it first set the optimizer to a new one created using the optimizer factory.\n\n\n\n"
 },
 
 {
