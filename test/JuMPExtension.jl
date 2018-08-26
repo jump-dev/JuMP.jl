@@ -1,7 +1,7 @@
 module JuMPExtension
 # Simple example of JuMP extension used in the tests to check that JuMP works well with extensions
 # The main difference between `JuMP.Model` and `JuMPExtension.MyModel` is the fact that in `addvariable` (resp. `addconstraint`),
-# `JuMP.Model` applies the modification to its `moibackend` field while
+# `JuMP.Model` applies the modification to its `moi_backend` field while
 # `JuMPExtension.MyModel` stores the `AbstractVariable` (resp. `AbstractConstraint`) in a list.
 
 using MathOptInterface
@@ -17,7 +17,7 @@ mutable struct MyModel <: JuMP.AbstractModel
     connames::Dict{Int, String}                     # Map varidx -> name
     objectivesense::Symbol
     objectivefunction::JuMP.AbstractJuMPScalar
-    objdict::Dict{Symbol, Any}                      # Same that JuMP.Model's field `objdict`
+    obj_dict::Dict{Symbol, Any}                     # Same that JuMP.Model's field `obj_dict`
     function MyModel()
         new(0, Dict{Int, JuMP.AbstractVariable}(),   Dict{Int, String}(), # Variables
             0, Dict{Int, JuMP.AbstractConstraint}(), Dict{Int, String}(), # Constraints
@@ -29,7 +29,7 @@ if VERSION >= v"0.7-"
     Base.broadcastable(model::MyModel) = Ref(model)
 end
 
-JuMP.object_dictionary(model::MyModel) = model.objdict
+JuMP.object_dictionary(model::MyModel) = model.obj_dict
 
 # Variables
 struct MyVariableRef <: JuMP.AbstractVariableRef

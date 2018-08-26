@@ -107,10 +107,10 @@ isequal_canonical(v::VariableRef, other::VariableRef) = isequal(v, other)
 
 function MOI.delete!(m::Model, v::VariableRef)
     @assert m === v.m
-    MOI.delete!(m.moibackend, v.index)
+    MOI.delete!(m.moi_backend, v.index)
 end
 
-MOI.isvalid(m::Model, v::VariableRef) = (v.m === m) && MOI.isvalid(m.moibackend, v.index)
+MOI.isvalid(m::Model, v::VariableRef) = (v.m === m) && MOI.isvalid(m.moi_backend, v.index)
 
 # The default hash is slow. It's important for the performance of AffExpr to
 # define our own.
@@ -160,7 +160,7 @@ Base.haskey(vm::VariableToValueMap, v::VariableRef) = (vm.m === v.m) && haskey(v
 index(v::VariableRef) = v.index
 
 function VariableRef(m::Model)
-    index = MOI.addvariable!(m.moibackend)
+    index = MOI.addvariable!(m.moi_backend)
     return VariableRef(m, index)
 end
 
@@ -195,8 +195,8 @@ function setobjective(m::Model, sense::Symbol, x::VariableRef)
         @assert sense == :Max
         moisense = MOI.MaxSense
     end
-    MOI.set!(m.moibackend, MOI.ObjectiveSense(), moisense)
-    MOI.set!(m.moibackend, MOI.ObjectiveFunction{MOI.SingleVariable}(), MOI.SingleVariable(x))
+    MOI.set!(m.moi_backend, MOI.ObjectiveSense(), moisense)
+    MOI.set!(m.moi_backend, MOI.ObjectiveFunction{MOI.SingleVariable}(), MOI.SingleVariable(x))
 end
 
 """
@@ -206,7 +206,7 @@ Return a `VariableRef` object representing the objective function.
 Error if the objective is not a `SingleVariable`.
 """
 function objectivefunction(m::Model, ::Type{VariableRef})
-    f = MOI.get(m.moibackend, MOI.ObjectiveFunction{MOI.SingleVariable}())::MOI.SingleVariable
+    f = MOI.get(m.moi_backend, MOI.ObjectiveFunction{MOI.SingleVariable}())::MOI.SingleVariable
     return VariableRef(m, f)
 end
 
@@ -254,14 +254,14 @@ end
 
 # lower bounds
 
-haslowerbound(v::VariableRef) = haskey(v.m.variabletolowerbound,index(v))
+haslowerbound(v::VariableRef) = haskey(v.m.variable_to_lower_bound,index(v))
 
 function lowerboundindex(v::VariableRef)
     @assert haslowerbound(v) # TODO error message
-    return v.m.variabletolowerbound[index(v)]
+    return v.m.variable_to_lower_bound[index(v)]
 end
 function setlowerboundindex(v::VariableRef, cindex::MOILB)
-    v.m.variabletolowerbound[index(v)] = cindex
+    v.m.variable_to_lower_bound[index(v)] = cindex
 end
 
 """
@@ -274,10 +274,10 @@ function setlowerbound(v::VariableRef,lower::Number)
     # do we have a lower bound already?
     if haslowerbound(v)
         cindex = lowerboundindex(v)
-        MOI.set!(v.m.moibackend, MOI.ConstraintSet(), cindex, newset)
+        MOI.set!(v.m.moi_backend, MOI.ConstraintSet(), cindex, newset)
     else
         @assert !isfixed(v)
-        cindex = MOI.addconstraint!(v.m.moibackend, MOI.SingleVariable(index(v)), newset)
+        cindex = MOI.addconstraint!(v.m.moi_backend, MOI.SingleVariable(index(v)), newset)
         setlowerboundindex(v, cindex)
     end
     nothing
@@ -295,7 +295,7 @@ Delete the lower bound constraint of a variable.
 """
 function deletelowerbound(v::VariableRef)
     MOI.delete!(v.m, LowerBoundRef(v))
-    delete!(v.m.variabletolowerbound, index(v))
+    delete!(v.m.variable_to_lower_bound, index(v))
     nothing
 end
 
@@ -311,14 +311,14 @@ end
 
 # upper bounds
 
-hasupperbound(v::VariableRef) = haskey(v.m.variabletoupperbound,index(v))
+hasupperbound(v::VariableRef) = haskey(v.m.variable_to_upper_bound,index(v))
 
 function upperboundindex(v::VariableRef)
     @assert hasupperbound(v) # TODO error message
-    return v.m.variabletoupperbound[index(v)]
+    return v.m.variable_to_upper_bound[index(v)]
 end
 function setupperboundindex(v::VariableRef, cindex::MOIUB)
-    v.m.variabletoupperbound[index(v)] = cindex
+    v.m.variable_to_upper_bound[index(v)] = cindex
 end
 
 """
@@ -331,10 +331,10 @@ function setupperbound(v::VariableRef,upper::Number)
     # do we have an upper bound already?
     if hasupperbound(v)
         cindex = upperboundindex(v)
-        MOI.set!(v.m.moibackend, MOI.ConstraintSet(), cindex, newset)
+        MOI.set!(v.m.moi_backend, MOI.ConstraintSet(), cindex, newset)
     else
         @assert !isfixed(v)
-        cindex = MOI.addconstraint!(v.m.moibackend, MOI.SingleVariable(index(v)), newset)
+        cindex = MOI.addconstraint!(v.m.moi_backend, MOI.SingleVariable(index(v)), newset)
         setupperboundindex(v, cindex)
     end
     nothing
@@ -352,7 +352,7 @@ Delete the upper bound constraint of a variable.
 """
 function deleteupperbound(v::VariableRef)
     MOI.delete!(v.m, UpperBoundRef(v))
-    delete!(v.m.variabletoupperbound, index(v))
+    delete!(v.m.variable_to_upper_bound, index(v))
     nothing
 end
 
@@ -368,14 +368,14 @@ end
 
 # fixed value
 
-isfixed(v::VariableRef) = haskey(v.m.variabletofix,index(v))
+isfixed(v::VariableRef) = haskey(v.m.variable_to_fix,index(v))
 
 function fixindex(v::VariableRef)
     @assert isfixed(v) # TODO error message
-    return v.m.variabletofix[index(v)]
+    return v.m.variable_to_fix[index(v)]
 end
 function setfixindex(v::VariableRef, cindex::MOIFIX)
-    v.m.variabletofix[index(v)] = cindex
+    v.m.variable_to_fix[index(v)] = cindex
 end
 
 """
@@ -388,10 +388,10 @@ function fix(v::VariableRef,upper::Number)
     # are we already fixed?
     if isfixed(v)
         cindex = fixindex(v)
-        MOI.set!(v.m.moibackend, MOI.ConstraintSet(), cindex, newset)
+        MOI.set!(v.m.moi_backend, MOI.ConstraintSet(), cindex, newset)
     else
         @assert !hasupperbound(v) && !haslowerbound(v) # Do we want to remove these instead of throwing an error?
-        cindex = MOI.addconstraint!(v.m.moibackend, MOI.SingleVariable(index(v)), newset)
+        cindex = MOI.addconstraint!(v.m.moi_backend, MOI.SingleVariable(index(v)), newset)
         setfixindex(v, cindex)
     end
     nothing
@@ -404,7 +404,7 @@ Delete the fixing constraint of a variable.
 """
 function unfix(v::VariableRef)
     MOI.delete!(v.m, FixRef(v))
-    delete!(v.m.variabletofix, index(v))
+    delete!(v.m.variable_to_fix, index(v))
     nothing
 end
 
@@ -425,14 +425,14 @@ end
 
 # integer and binary constraints
 
-isinteger(v::VariableRef) = haskey(v.m.variabletointegrality,index(v))
+isinteger(v::VariableRef) = haskey(v.m.variable_to_integrality,index(v))
 
 function integerindex(v::VariableRef)
     @assert isinteger(v) # TODO error message
-    return v.m.variabletointegrality[index(v)]
+    return v.m.variable_to_integrality[index(v)]
 end
 function setintegerindex(v::VariableRef, cindex::MOIINT)
-    v.m.variabletointegrality[index(v)] = cindex
+    v.m.variable_to_integrality[index(v)] = cindex
 end
 
 """
@@ -443,14 +443,14 @@ Add an integrality constraint on the variable `v`.
 function setinteger(v::VariableRef)
     isinteger(v) && return
     @assert !isbinary(v) # TODO error message
-    cindex = MOI.addconstraint!(v.m.moibackend, MOI.SingleVariable(index(v)), MOI.Integer())
+    cindex = MOI.addconstraint!(v.m.moi_backend, MOI.SingleVariable(index(v)), MOI.Integer())
     setintegerindex(v, cindex)
     nothing
 end
 
 function unsetinteger(v::VariableRef)
     MOI.delete!(v.m, IntegerRef(v))
-    delete!(v.m.variabletointegrality, index(v))
+    delete!(v.m.variable_to_integrality, index(v))
 end
 
 function IntegerRef(v::VariableRef)
@@ -458,14 +458,14 @@ function IntegerRef(v::VariableRef)
                                                      ScalarShape())
 end
 
-isbinary(v::VariableRef) = haskey(v.m.variabletozeroone,index(v))
+isbinary(v::VariableRef) = haskey(v.m.variable_to_zero_one,index(v))
 
 function binaryindex(v::VariableRef)
     @assert isbinary(v) # TODO error message
-    return v.m.variabletozeroone[index(v)]
+    return v.m.variable_to_zero_one[index(v)]
 end
 function setbinaryindex(v::VariableRef, cindex::MOIBIN)
-    v.m.variabletozeroone[index(v)] = cindex
+    v.m.variable_to_zero_one[index(v)] = cindex
 end
 
 """
@@ -476,14 +476,14 @@ Add a constraint on the variable `v` that it must take values in the set ``\\{0,
 function setbinary(v::VariableRef)
     isbinary(v) && return
     @assert !isinteger(v) # TODO error message
-    cindex = MOI.addconstraint!(v.m.moibackend, MOI.SingleVariable(index(v)), MOI.ZeroOne())
+    cindex = MOI.addconstraint!(v.m.moi_backend, MOI.SingleVariable(index(v)), MOI.ZeroOne())
     setbinaryindex(v, cindex)
     nothing
 end
 
 function unsetbinary(v::VariableRef)
     MOI.delete!(v.m, BinaryRef(v))
-    delete!(v.m.variabletozeroone, index(v))
+    delete!(v.m.variable_to_zero_one, index(v))
 end
 
 function BinaryRef(v::VariableRef)

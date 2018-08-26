@@ -210,8 +210,8 @@ function setobjective(m::Model, sense::Symbol, a::QuadExpr)
         @assert sense == :Max
         moisense = MOI.MaxSense
     end
-    MOI.set!(m.moibackend, MOI.ObjectiveSense(), moisense)
-    MOI.set!(m.moibackend, MOI.ObjectiveFunction{MOI.ScalarQuadraticFunction{Float64}}(), MOI.ScalarQuadraticFunction(a))
+    MOI.set!(m.moi_backend, MOI.ObjectiveSense(), moisense)
+    MOI.set!(m.moi_backend, MOI.ObjectiveFunction{MOI.ScalarQuadraticFunction{Float64}}(), MOI.ScalarQuadraticFunction(a))
     nothing
 end
 
@@ -222,7 +222,7 @@ Return a `QuadExpr` object representing the objective function.
 Error if the objective is not quadratic.
 """
 function objectivefunction(m::Model, ::Type{QuadExpr})
-    f = MOI.get(m.moibackend, MOI.ObjectiveFunction{MOI.ScalarQuadraticFunction{Float64}}())::MOI.ScalarQuadraticFunction
+    f = MOI.get(m.moi_backend, MOI.ObjectiveFunction{MOI.ScalarQuadraticFunction{Float64}}())::MOI.ScalarQuadraticFunction
     return QuadExpr(m, f)
 end
 

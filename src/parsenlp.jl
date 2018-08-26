@@ -60,17 +60,17 @@ function parseNLExpr(m, x, tapevar, parent, values)
                 errorstring = "Unrecognized function \"$(x.args[1])\" used in nonlinear expression."
                 errorstring2 = "Incorrect number of arguments for \"$(x.args[1])\" in nonlinear expression."
                 lookupcode = quote
-                    if $(esc(m)).nlpdata === nothing
+                    if $(esc(m)).nlp_data === nothing
                         error($errorstring)
                     end
-                    if !haskey($(esc(m)).nlpdata.user_operators.univariate_operator_to_id,$opname)
-                        if haskey($(esc(m)).nlpdata.user_operators.multivariate_operator_to_id,$opname)
+                    if !haskey($(esc(m)).nlp_data.user_operators.univariate_operator_to_id,$opname)
+                        if haskey($(esc(m)).nlp_data.user_operators.multivariate_operator_to_id,$opname)
                             error($errorstring2)
                         else
                             error($errorstring)
                         end
                     end
-                    operatorid = $(esc(m)).nlpdata.user_operators.univariate_operator_to_id[$opname] + Derivatives.USER_UNIVAR_OPERATOR_ID_START - 1
+                    operatorid = $(esc(m)).nlp_data.user_operators.univariate_operator_to_id[$opname] + Derivatives.USER_UNIVAR_OPERATOR_ID_START - 1
                 end
                 push!(block.args, :($lookupcode; push!($tapevar, NodeData(CALLUNIVAR, operatorid, $parent))))
             end
@@ -93,17 +93,17 @@ function parseNLExpr(m, x, tapevar, parent, values)
                 errorstring = "Unrecognized function \"$(x.args[1])\" used in nonlinear expression."
                 errorstring2 = "Incorrect number of arguments for \"$(x.args[1])\" in nonlinear expression."
                 lookupcode = quote
-                    if $(esc(m)).nlpdata === nothing
+                    if $(esc(m)).nlp_data === nothing
                         error($errorstring)
                     end
-                    if !haskey($(esc(m)).nlpdata.user_operators.multivariate_operator_to_id,$opname)
-                        if haskey($(esc(m)).nlpdata.user_operators.univariate_operator_to_id,$opname)
+                    if !haskey($(esc(m)).nlp_data.user_operators.multivariate_operator_to_id,$opname)
+                        if haskey($(esc(m)).nlp_data.user_operators.univariate_operator_to_id,$opname)
                             error($errorstring2)
                         else
                             error($errorstring)
                         end
                     end
-                    operatorid = $(esc(m)).nlpdata.user_operators.multivariate_operator_to_id[$opname] + Derivatives.USER_OPERATOR_ID_START - 1
+                    operatorid = $(esc(m)).nlp_data.user_operators.multivariate_operator_to_id[$opname] + Derivatives.USER_OPERATOR_ID_START - 1
                 end
                 push!(block.args, :($lookupcode; push!($tapevar, NodeData(CALL, operatorid, $parent))))
             end
@@ -241,7 +241,7 @@ end
 function NonlinearExprData(m::Model, ex::Expr)
     initNLP(m)
     checkexpr(m,ex)
-    nd, values = Derivatives.expr_to_nodedata(ex,m.nlpdata.user_operators)
+    nd, values = Derivatives.expr_to_nodedata(ex,m.nlp_data.user_operators)
     return NonlinearExprData(nd, values)
 end
 NonlinearExprData(m::Model, ex) = NonlinearExprData(m, :($ex + 0))
