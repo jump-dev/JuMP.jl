@@ -65,9 +65,9 @@ with_optimizer
 ```
 
 The factory can be provided either at model construction time or at
-[`JuMP.optimize`](@ref) time:
+[`JuMP.optimize!`](@ref) time:
 ```@docs
-JuMP.optimize
+JuMP.optimize!
 ```
 
 New JuMP models are created using the [`Model`](@ref) constructor:

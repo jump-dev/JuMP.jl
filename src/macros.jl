@@ -68,7 +68,7 @@ function buildrefsets(expr::Expr, cname)
     for s in c.args
         parse_done = false
         if isa(s, Expr)
-            parse_done, idxvar, _idxset = tryParseIdxSet(s::Expr)
+            parse_done, idxvar, _idxset = try_parse_idx_set(s::Expr)
             if parse_done
                 idxset = esc(_idxset)
             end
@@ -420,7 +420,7 @@ Returns the code for the macro `@constraint_like args...` of syntax
 where `@constraint_like` is either `@constraint` or `@SDconstraint`.
 The expression `con` is parsed by `parsefun` which returns a code that, when
 executed, returns an `AbstractConstraint`. This `AbstractConstraint` is passed
-to `addconstraint` with the macro keyword arguments (except the `container`
+to `add_constraint` with the macro keyword arguments (except the `container`
 keyword argument which is used to determine the container type).
 """
 function constraint_macro(args, macro_name::Symbol, parsefun::Function)
@@ -462,16 +462,16 @@ function constraint_macro(args, macro_name::Symbol, parsefun::Function)
     (x.head == :block) &&
         _error("Code block passed as constraint. Perhaps you meant to use @constraints instead?")
 
-    # Strategy: build up the code for addconstraint, and if needed
+    # Strategy: build up the code for add_constraint, and if needed
     # we will wrap in loops to assign to the ConstraintRefs
     refcall, idxvars, idxsets, condition = buildrefsets(c, variable)
 
     vectorized, parsecode, buildcall = parsefun(_error, x.args...)
     if vectorized
         # TODO: Pass through names here.
-        constraintcall = :(addconstraint.($m, $buildcall))
+        constraintcall = :(add_constraint.($m, $buildcall))
     else
-        constraintcall = :(addconstraint($m, $buildcall, $(namecall(basename, idxvars))))
+        constraintcall = :(add_constraint($m, $buildcall, $(namecall(basename, idxvars))))
     end
     addkwargs!(constraintcall, kwargs)
     code = quote
@@ -479,11 +479,11 @@ function constraint_macro(args, macro_name::Symbol, parsefun::Function)
         $(refcall) = $constraintcall
     end
 
-    # Determine the return type of addconstraint. This is needed for JuMP extensions for which this is different than ConstraintRef
+    # Determine the return type of add_constraint. This is needed for JuMP extensions for which this is different than ConstraintRef
     if vectorized
-        contype = :( AbstractArray{constrainttype($m)} ) # TODO use a concrete type instead of AbstractArray, see #525, #1310
+        contype = :( AbstractArray{constraint_type($m)} ) # TODO use a concrete type instead of AbstractArray, see #525, #1310
     else
-        contype = :( constrainttype($m) )
+        contype = :( constraint_type($m) )
     end
     creationcode = getloopedcode(variable, code, condition, idxvars, idxsets, contype, requestedcontainer)
 
@@ -508,7 +508,7 @@ function constraint_macro(args, macro_name::Symbol, parsefun::Function)
 end
 
 # This function needs to be implemented by all `AbstractModel`s
-constrainttype(m::Model) = ConstraintRef{typeof(m)}
+constraint_type(m::Model) = ConstraintRef{typeof(m)}
 
 """
     @constraint(m::Model, expr)
@@ -539,7 +539,7 @@ The expression `expr` can either be
 ## Note for extending the constraint macro
 
 Each constraint will be created using
-`addconstraint(m, buildconstraint(_error, func, set))` where
+`add_constraint(m, buildconstraint(_error, func, set))` where
 * `_error` is an error function showing the constraint call in addition to the
   error message given as argument,
 * `func` is the expression that is constrained
@@ -549,7 +549,7 @@ For `expr` of the first type (i.e. `@constraint(m, func in set)`), `func` and
 `set` are passed unchanged to `buildconstraint` but for the other types, they
 are determined from the expressions and signs. For instance,
 `@constraint(m, x^2 + y^2 == 1)` is transformed into
-`addconstraint(m, buildconstraint(_error, x^2 + y^2, MOI.EqualTo(1.0)))`.
+`add_constraint(m, buildconstraint(_error, x^2 + y^2, MOI.EqualTo(1.0)))`.
 
 To extend JuMP to accept new constraints of this form, it is necessary to add
 the corresponding methods to `buildconstraint`. Note that this will likely mean
@@ -762,7 +762,7 @@ for (mac,sym) in [(:constraints,  Symbol("@constraint")),
                     elseif isexpr(it, :tuple) # line with commas
                         args = []
                         # Keyword arguments have to appear like:
-                        # x, (start = 10, lowerbound = 5)
+                        # x, (start = 10, lower_bound = 5)
                         # because of the precedence of "=".
                         for ex in it.args
                             if isexpr(ex, :tuple) # embedded tuple
@@ -861,7 +861,7 @@ macro objective(m, args...)
     code = quote
         q = Val{false}()
         $parsecode
-        setobjective($m, $(esc(sense)), $newaff)
+        set_objective($m, $(esc(sense)), $newaff)
     end
     return assert_validmodel(m, code)
 end
@@ -979,7 +979,7 @@ esc_nonconstant(x::Number) = x
 esc_nonconstant(x::Expr) = isexpr(x,:quote) ? x : esc(x)
 esc_nonconstant(x) = esc(x)
 
-# Returns the type of what `addvariable(::Model, buildvariable(...))` would return where `...` represents the positional arguments.
+# Returns the type of what `add_variable(::Model, buildvariable(...))` would return where `...` represents the positional arguments.
 # Example: `@variable m [1:3] foo` will allocate an vector of element type `variabletype(m, foo)`
 # Note: it needs to be implemented by all `AbstractModel`s
 variabletype(m::Model) = VariableRef
@@ -1023,8 +1023,8 @@ reverse_sense(::Val{:(==)}) = Val(:(==))
 
 Update `infoexr` for a variable expression in the `@variable` macro of the form `variable name S value`.
 """
-parse_one_operator_variable(_error::Function, infoexpr::VariableInfoExpr, ::Union{Val{:<=}, Val{:≤}}, upper) = setupperbound_or_error(_error, infoexpr, upper)
-parse_one_operator_variable(_error::Function, infoexpr::VariableInfoExpr, ::Union{Val{:>=}, Val{:≥}}, lower) = setlowerbound_or_error(_error, infoexpr, lower)
+parse_one_operator_variable(_error::Function, infoexpr::VariableInfoExpr, ::Union{Val{:<=}, Val{:≤}}, upper) = set_upper_bound_or_error(_error, infoexpr, upper)
+parse_one_operator_variable(_error::Function, infoexpr::VariableInfoExpr, ::Union{Val{:>=}, Val{:≥}}, lower) = set_lower_bound_or_error(_error, infoexpr, lower)
 parse_one_operator_variable(_error::Function, infoexpr::VariableInfoExpr, ::Val{:(==)}, value) = fix_or_error(_error, infoexpr, value)
 parse_one_operator_variable(_error::Function, infoexpr::VariableInfoExpr, ::Val{S}, value) where S = _error("Unknown sense $S.")
 
@@ -1050,8 +1050,8 @@ end
 function parseternaryvariable(_error::Function, infoexpr::VariableInfoExpr,
                               ::Union{Val{:<=}, Val{:≤}}, lower,
                               ::Union{Val{:<=}, Val{:≤}}, upper)
-    setlowerbound_or_error(_error, infoexpr, lower)
-    setupperbound_or_error(_error, infoexpr, upper)
+    set_lower_bound_or_error(_error, infoexpr, lower)
+    set_upper_bound_or_error(_error, infoexpr, upper)
 end
 function parseternaryvariable(_error::Function, infoexpr::VariableInfoExpr,
                               ::Union{Val{:>=}, Val{:≥}}, upper,
@@ -1114,8 +1114,8 @@ The recognized keyword arguments in `kwargs` are the following:
 * `basename`: Sets the base name used to generate variable names. It
   corresponds to the variable name for scalar variable, otherwise, the
   variable names are `basename[...]` for each indices `...` of the axes `axes`.
-* `lowerbound`: Sets the value of the variable lower bound.
-* `upperbound`: Sets the value of the variable upper bound.
+* `lower_bound`: Sets the value of the variable lower bound.
+* `upper_bound`: Sets the value of the variable upper bound.
 * `start`: Sets the variable starting value used as initial guess in optimization.
 * `binary`: Sets whether the variable is binary or not.
 * `integer`: Sets whether the variable is integer or not.
@@ -1125,14 +1125,14 @@ The recognized keyword arguments in `kwargs` are the following:
 ## Examples
 
 The following are equivalent ways of creating a variable `x` of name `x` with
-lowerbound 0:
+lower bound 0:
 ```julia
 # Specify everything in `expr`
 @variable(model, x >= 0)
 # Specify the lower bound using a keyword argument
-@variable(model, x, lowerbound=0)
+@variable(model, x, lower_bound=0)
 # Specify everything in `kwargs`
-x = @variable(model, basename="x", lowerbound=0)
+x = @variable(model, basename="x", lower_bound=0)
 ```
 
 The following are equivalent ways of creating a `JuMPArray` of index set
@@ -1142,13 +1142,13 @@ ub = Dict(:a => 2, :b => 3)
 # Specify everything in `expr`
 @variable(model, x[i=keys(ub)] <= ub[i])
 # Specify the upper bound using a keyword argument
-@variable(model, x[i=keys(ub)], upperbound=ub[i])
+@variable(model, x[i=keys(ub)], upper_bound=ub[i])
 ```
 
 ## Note for extending the variable macro
 
 The single scalar variable or each scalar variable of the container are created
-using `addvariable(model, buildvariable(_error, info, extra_args...;
+using `add_variable(model, buildvariable(_error, info, extra_args...;
 extra_kwargs...))` where
 
 * `model` is the model passed to the `@variable` macro;
@@ -1169,11 +1169,11 @@ extra_kwargs...))` where
 
 ## Examples
 
-The following creates a variable `x` of name `x` with lowerbound 0 as with the first
+The following creates a variable `x` of name `x` with lower_bound 0 as with the first
 example above but does it without using the `@variable` macro
 ```julia
 info = VariableInfo(true, 0, false, NaN, false, NaN, false, NaN, false, false)
-JuMP.addvariable(model, JuMP.buildvariable(error, info), "x")
+JuMP.add_variable(model, JuMP.buildvariable(error, info), "x")
 ```
 
 The following creates a `JuMPArray` of index set `[:a, :b]` and with respective
@@ -1185,7 +1185,7 @@ data = Vector{JuMP.variabletype(model)}(undef, length(keys(ub)))
 x = JuMPArray(data, keys(ub))
 for i in keys(ub)
     info = VariableInfo(false, NaN, true, ub[i], false, NaN, false, NaN, false, false)
-    x[i] = JuMP.addvariable(model, JuMP.buildvariable(error, info), "x[\$i]")
+    x[i] = JuMP.add_variable(model, JuMP.buildvariable(error, info), "x[\$i]")
 end
 ```
 
@@ -1199,7 +1199,7 @@ the `Poly(X)` positional argument to specify its variables:
 x = Matrix{JuMP.variabletype(model, Poly(X))}(N, N)
 info = VariableInfo(false, NaN, false, NaN, false, NaN, false, NaN, false, false)
 for i in 1:N, j in i:N
-    x[i,j] = x[j,i] = JuMP.addvariable(model, buildvariable(error, info, Poly(X)), "x[\$i,\$j]")
+    x[i,j] = x[j,i] = JuMP.add_variable(model, buildvariable(error, info, Poly(X)), "x[\$i,\$j]")
 end
 ```
 """
@@ -1223,8 +1223,8 @@ macro variable(args...)
         anon_singleton = false
     end
 
-    info_kwargs = filter(isinfokeyword, kwargs)
-    extra_kwargs = filter(kw -> kw.args[1] != :basename && kw.args[1] != :variabletype && !isinfokeyword(kw), kwargs)
+    info_kwargs = filter(is_info_keyword, kwargs)
+    extra_kwargs = filter(kw -> kw.args[1] != :basename && kw.args[1] != :variabletype && !is_info_keyword(kw), kwargs)
     basename_kwargs = filter(kw -> kw.args[1] == :basename, kwargs)
     variabletype_kwargs = filter(kw -> kw.args[1] == :variabletype, kwargs)
     infoexpr = VariableInfoExpr(; keywordify.(info_kwargs)...)
@@ -1268,9 +1268,9 @@ macro variable(args...)
     extra = filter(x -> (x != :PSD && x != :Symmetric), extra) # filter out PSD and sym tag
     for ex in extra
         if ex == :Int
-            setinteger_or_error(_error, infoexpr)
+            set_integer_or_error(_error, infoexpr)
         elseif ex == :Bin
-            setbinary_or_error(_error, infoexpr)
+            set_binary_or_error(_error, infoexpr)
         end
     end
     extra = esc.(filter(ex -> !(ex in [:Int,:Bin]), extra))
@@ -1284,7 +1284,7 @@ macro variable(args...)
         sdp && _error("Cannot add a semidefinite scalar variable")
         buildcall = :( buildvariable($_error, $info, $(extra...)) )
         addkwargs!(buildcall, extra_kwargs)
-        variablecall = :( addvariable($model, $buildcall, $basename) )
+        variablecall = :( add_variable($model, $buildcall, $basename) )
         # The looped code is trivial here since there is a single variable
         creationcode = :($variable = $variablecall)
         finalvariable = variable
@@ -1299,7 +1299,7 @@ macro variable(args...)
         # Code to be used to create each variable of the container.
         buildcall = :( buildvariable($_error, $info, $(extra...)) )
         addkwargs!(buildcall, extra_kwargs)
-        variablecall = :( addvariable($model, $buildcall, $(namecall(basename, idxvars))) )
+        variablecall = :( add_variable($model, $buildcall, $(namecall(basename, idxvars))) )
         code = :( $(refcall) = $variablecall )
         # Determine the return type of addvariable. This is needed to create the container holding them.
         vartype = :( variabletype($model, $(extra...)) )
@@ -1327,7 +1327,7 @@ macro variable(args...)
                 end
             end
 
-            if infoexpr.haslb || infoexpr.hasub
+            if infoexpr.has_lb || infoexpr.has_ub
                 _error("Semidefinite or symmetric variables cannot be provided bounds")
             end
             @static if VERSION >= v"0.7-"
@@ -1344,7 +1344,7 @@ macro variable(args...)
                 $(getloopedcode(variable, code, condition, idxvars, idxsets, vartype, requestedcontainer; lowertri=symmetric))
                 $(if sdp
                     quote
-                        JuMP.addconstraint($model, JuMP.buildconstraint($_error, Symmetric($variable), JuMP.PSDCone()))
+                        JuMP.add_constraint($model, JuMP.buildconstraint($_error, Symmetric($variable), JuMP.PSDCone()))
                     end
                 end)
             end
@@ -1400,7 +1400,7 @@ macro NLobjective(m, sense, x)
     end
     return assert_validmodel(esc(m), quote
         ex = $(processNLExpr(m, x))
-        setobjective($(esc(m)), $(esc(sense)), ex)
+        set_objective($(esc(m)), $(esc(sense)), ex)
     end)
 end
 
@@ -1420,7 +1420,7 @@ macro NLconstraint(m, x, extra...)
     quotvarname = anonvar ? :(:__anon__) : quot(getname(c))
     escvarname  = anonvar ? variable : esc(getname(c))
 
-    # Strategy: build up the code for non-macro addconstraint, and if needed
+    # Strategy: build up the code for non-macro add_constraint, and if needed
     # we will wrap in loops to assign to the ConstraintRefs
     refcall, idxvars, idxsets, condition = buildrefsets(c, variable)
     # Build the constraint

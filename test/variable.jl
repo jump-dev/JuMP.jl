@@ -22,9 +22,9 @@ function variables_test(ModelType::Type{<:JuMP.AbstractModel}, VariableRefType::
 
         @testset "No bound" begin
             @variable(mcon, nobounds)
-            @test !JuMP.haslowerbound(nobounds)
-            @test !JuMP.hasupperbound(nobounds)
-            @test !JuMP.isfixed(nobounds)
+            @test !JuMP.has_lower_bound(nobounds)
+            @test !JuMP.has_upper_bound(nobounds)
+            @test !JuMP.is_fixed(nobounds)
             @test JuMP.name(nobounds) == "nobounds"
 
             @test zero(nobounds) isa AffExprType
@@ -33,12 +33,12 @@ function variables_test(ModelType::Type{<:JuMP.AbstractModel}, VariableRefType::
 
         @testset "Lower bound" begin
             @variable(mcon, lbonly >= 0, Bin)
-            @test JuMP.haslowerbound(lbonly)
-            @test JuMP.lowerbound(lbonly) == 0.0
-            @test !JuMP.hasupperbound(lbonly)
-            @test !JuMP.isfixed(lbonly)
-            @test JuMP.isbinary(lbonly)
-            @test !JuMP.isinteger(lbonly)
+            @test JuMP.has_lower_bound(lbonly)
+            @test JuMP.lower_bound(lbonly) == 0.0
+            @test !JuMP.has_upper_bound(lbonly)
+            @test !JuMP.is_fixed(lbonly)
+            @test JuMP.is_binary(lbonly)
+            @test !JuMP.is_integer(lbonly)
             @test isequal(mcon[:lbonly],lbonly)
             # Name already used
             @test_throws ErrorException @variable(mcon, lbonly)
@@ -46,44 +46,44 @@ function variables_test(ModelType::Type{<:JuMP.AbstractModel}, VariableRefType::
 
         @testset "Lower bound with constant on lhs" begin
             @variable(mcon, 0 <= lblhs, Bin)
-            @test JuMP.haslowerbound(lblhs)
-            @test JuMP.lowerbound(lblhs) == 0.0
-            @test !JuMP.hasupperbound(lblhs)
-            @test !JuMP.isfixed(lblhs)
-            @test JuMP.isbinary(lblhs)
-            @test !JuMP.isinteger(lblhs)
+            @test JuMP.has_lower_bound(lblhs)
+            @test JuMP.lower_bound(lblhs) == 0.0
+            @test !JuMP.has_upper_bound(lblhs)
+            @test !JuMP.is_fixed(lblhs)
+            @test JuMP.is_binary(lblhs)
+            @test !JuMP.is_integer(lblhs)
             @test isequal(mcon[:lblhs],lblhs)
         end
 
         @testset "Upper bound" begin
             @variable(mcon, ubonly <= 1, Int)
-            @test !JuMP.haslowerbound(ubonly)
-            @test JuMP.hasupperbound(ubonly)
-            @test JuMP.upperbound(ubonly) == 1.0
-            @test !JuMP.isfixed(ubonly)
-            @test !JuMP.isbinary(ubonly)
-            @test JuMP.isinteger(ubonly)
+            @test !JuMP.has_lower_bound(ubonly)
+            @test JuMP.has_upper_bound(ubonly)
+            @test JuMP.upper_bound(ubonly) == 1.0
+            @test !JuMP.is_fixed(ubonly)
+            @test !JuMP.is_binary(ubonly)
+            @test JuMP.is_integer(ubonly)
             @test isequal(mcon[:ubonly],ubonly)
         end
 
         @testset "Upper bound" begin
             @variable(mcon, 1 >= ublhs, Int)
-            @test !JuMP.haslowerbound(ublhs)
-            @test JuMP.hasupperbound(ublhs)
-            @test JuMP.upperbound(ublhs) == 1.0
-            @test !JuMP.isfixed(ublhs)
-            @test !JuMP.isbinary(ublhs)
-            @test JuMP.isinteger(ublhs)
+            @test !JuMP.has_lower_bound(ublhs)
+            @test JuMP.has_upper_bound(ublhs)
+            @test JuMP.upper_bound(ublhs) == 1.0
+            @test !JuMP.is_fixed(ublhs)
+            @test !JuMP.is_binary(ublhs)
+            @test JuMP.is_integer(ublhs)
             @test isequal(mcon[:ublhs],ublhs)
         end
 
         @testset "Interval" begin
             function has_bounds(var, lb, ub)
-                @test JuMP.haslowerbound(var)
-                @test JuMP.lowerbound(var) == lb
-                @test JuMP.hasupperbound(var)
-                @test JuMP.upperbound(var) == ub
-                @test !JuMP.isfixed(var)
+                @test JuMP.has_lower_bound(var)
+                @test JuMP.lower_bound(var) == lb
+                @test JuMP.has_upper_bound(var)
+                @test JuMP.upper_bound(var) == ub
+                @test !JuMP.is_fixed(var)
             end
 
             @variable(mcon, 0 <= bothb1 <= 1)
@@ -100,25 +100,25 @@ function variables_test(ModelType::Type{<:JuMP.AbstractModel}, VariableRefType::
 
         @testset "Fix" begin
             @variable(mcon, fixed == 1.0)
-            @test !JuMP.haslowerbound(fixed)
-            @test !JuMP.hasupperbound(fixed)
-            @test JuMP.isfixed(fixed)
-            @test JuMP.fixvalue(fixed) == 1.0
+            @test !JuMP.has_lower_bound(fixed)
+            @test !JuMP.has_upper_bound(fixed)
+            @test JuMP.is_fixed(fixed)
+            @test JuMP.fix_value(fixed) == 1.0
         end
 
         @testset "Custom index sets" begin
             @variable(mcon, onerangeub[-7:1] <= 10, Int)
             @variable(mcon, manyrangelb[0:1,10:20,1:1] >= 2)
-            @test JuMP.haslowerbound(manyrangelb[0,15,1])
-            @test JuMP.lowerbound(manyrangelb[0,15,1]) == 2
-            @test !JuMP.hasupperbound(manyrangelb[0,15,1])
+            @test JuMP.has_lower_bound(manyrangelb[0,15,1])
+            @test JuMP.lower_bound(manyrangelb[0,15,1]) == 2
+            @test !JuMP.has_upper_bound(manyrangelb[0,15,1])
 
             s = ["Green","Blue"]
             @variable(mcon, x[i=-10:10,s] <= 5.5, Int, start=i+1)
-            @test JuMP.upperbound(x[-4,"Green"]) == 5.5
+            @test JuMP.upper_bound(x[-4,"Green"]) == 5.5
             @test JuMP.name(x[-10,"Green"]) == "x[-10,Green]"
             # TODO: broken because of https://github.com/JuliaOpt/MathOptInterface.jl/issues/302
-            #@test JuMP.startvalue(x[-3,"Blue"]) == -2
+            #@test JuMP.start_value(x[-3,"Blue"]) == -2
             @test isequal(mcon[:onerangeub][-7],onerangeub[-7])
             @test_throws KeyError mcon[:foo]
         end
@@ -143,54 +143,54 @@ function variables_test(ModelType::Type{<:JuMP.AbstractModel}, VariableRefType::
     @testset "get and set bounds" begin
         m = ModelType()
         @variable(m, 0 <= x <= 2)
-        @test JuMP.lowerbound(x) == 0
-        @test JuMP.upperbound(x) == 2
-        setlowerbound(x, 1)
-        @test JuMP.lowerbound(x) == 1
-        setupperbound(x, 3)
-        @test JuMP.upperbound(x) == 3
+        @test JuMP.lower_bound(x) == 0
+        @test JuMP.upper_bound(x) == 2
+        set_lower_bound(x, 1)
+        @test JuMP.lower_bound(x) == 1
+        set_upper_bound(x, 3)
+        @test JuMP.upper_bound(x) == 3
         @variable(m, q, Bin)
-        @test !JuMP.haslowerbound(q)
-        @test !JuMP.hasupperbound(q)
+        @test !JuMP.has_lower_bound(q)
+        @test !JuMP.has_upper_bound(q)
 
         @variable(m, 0 <= y <= 1, Bin)
-        @test JuMP.lowerbound(y) == 0
-        @test JuMP.upperbound(y) == 1
+        @test JuMP.lower_bound(y) == 0
+        @test JuMP.upper_bound(y) == 1
 
         @variable(m, fixedvar == 2)
-        @test JuMP.fixvalue(fixedvar) == 2.0
+        @test JuMP.fix_value(fixedvar) == 2.0
         JuMP.fix(fixedvar, 5)
-        @test JuMP.fixvalue(fixedvar) == 5
-        @test_throws AssertionError JuMP.lowerbound(fixedvar)
-        @test_throws AssertionError JuMP.upperbound(fixedvar)
+        @test JuMP.fix_value(fixedvar) == 5
+        @test_throws AssertionError JuMP.lower_bound(fixedvar)
+        @test_throws AssertionError JuMP.upper_bound(fixedvar)
     end
 
     @testset "get and set start" begin
         m = ModelType()
         @variable(m, x[1:3])
         x0 = collect(1:3)
-        JuMP.setstartvalue.(x, x0)
-        @test JuMP.startvalue.(x) == x0
-        @test JuMP.startvalue.([x[1],x[2],x[3]]) == x0
+        JuMP.set_start_value.(x, x0)
+        @test JuMP.start_value.(x) == x0
+        @test JuMP.start_value.([x[1],x[2],x[3]]) == x0
 
         @variable(m, y[1:3,1:2])
-        @test_throws DimensionMismatch JuMP.setstartvalue.(y, collect(1:6))
+        @test_throws DimensionMismatch JuMP.set_start_value.(y, collect(1:6))
     end
 
     @testset "get and set integer/binary" begin
         m = ModelType()
         @variable(m, x[1:3])
 
-        JuMP.setinteger(x[2])
-        @test JuMP.isinteger(x[2])
-        JuMP.unsetinteger(x[2])
-        @test !JuMP.isinteger(x[2])
+        JuMP.set_integer(x[2])
+        @test JuMP.is_integer(x[2])
+        JuMP.unset_integer(x[2])
+        @test !JuMP.is_integer(x[2])
 
-        JuMP.setbinary(x[1])
-        @test JuMP.isbinary(x[1])
-        @test_throws AssertionError JuMP.setinteger(x[1])
-        JuMP.unsetbinary(x[1])
-        @test !JuMP.isbinary(x[1])
+        JuMP.set_binary(x[1])
+        @test JuMP.is_binary(x[1])
+        @test_throws AssertionError JuMP.set_integer(x[1])
+        JuMP.unset_binary(x[1])
+        @test !JuMP.is_binary(x[1])
         # TODO test binary/integer keyword arguments
     end
 
@@ -281,24 +281,24 @@ function variables_test(ModelType::Type{<:JuMP.AbstractModel}, VariableRefType::
         @test typeof(y) == Vector{VariableRefType}
         @test typeof(z) == Vector{VariableRefType}
 
-        @test typeof(JuMP.startvalue.(x)) == Array{Float64,3}
+        @test typeof(JuMP.start_value.(x)) == Array{Float64,3}
         # No type to infer for an empty collection.
-        @test typeof(JuMP.startvalue.(y)) == Array{Any,1}
-        @test typeof(JuMP.startvalue.(z)) == Array{Float64,1}
+        @test typeof(JuMP.start_value.(y)) == Array{Any,1}
+        @test typeof(JuMP.start_value.(z)) == Array{Float64,1}
     end
 
-    @testset "startvalue on empty things" begin
+    @testset "start_value on empty things" begin
         m = ModelType()
         @variable(m, x[1:4,  1:0,1:3], start = 0) # Array{VariableRef}
         @variable(m, y[1:4,  2:1,1:3], start = 0) # JuMPArray
         @variable(m, z[1:4,Set(),1:3], start = 0) # Dict
 
-        @test JuMP.startvalue.(x) == Array{Float64}(undef, 4, 0, 3)
+        @test JuMP.start_value.(x) == Array{Float64}(undef, 4, 0, 3)
         # TODO: Decide what to do here. I don't know if we still need to test this given broadcast syntax.
-        # @test typeof(JuMP.startvalue(y)) <: JuMP.JuMPArray{Float64}
-        # @test JuMP.size(JuMP.startvalue(y)) == (4,0,3)
-        # @test typeof(JuMP.startvalue(z)) == JuMP.JuMPArray{Float64,3,Tuple{UnitRange{Int},Set{Any},UnitRange{Int}}}
-        # @test length(JuMP.startvalue(z)) == 0
+        # @test typeof(JuMP.start_value(y)) <: JuMP.JuMPArray{Float64}
+        # @test JuMP.size(JuMP.start_value(y)) == (4,0,3)
+        # @test typeof(JuMP.start_value(z)) == JuMP.JuMPArray{Float64,3,Tuple{UnitRange{Int},Set{Any},UnitRange{Int}}}
+        # @test length(JuMP.start_value(z)) == 0
     end
 
 # Slices three-dimensional JuMPArray x[I,J,K]

@@ -7,12 +7,12 @@ function objectives_test(ModelType::Type{<:JuMP.AbstractModel}, VariableRefType:
         @variable(m, x)
 
         @objective(m, Min, x)
-        @test JuMP.objectivesense(m) == :Min
-        @test JuMP.objectivefunction(m, VariableRefType) == x
+        @test JuMP.objective_sense(m) == :Min
+        @test JuMP.objective_function(m, VariableRefType) == x
 
         @objective(m, Max, x)
-        @test JuMP.objectivesense(m) == :Max
-        @test JuMP.objectivefunction(m, VariableRefType) == x
+        @test JuMP.objective_sense(m) == :Max
+        @test JuMP.objective_function(m, VariableRefType) == x
     end
 
     @testset "Linear objectives" begin
@@ -20,12 +20,12 @@ function objectives_test(ModelType::Type{<:JuMP.AbstractModel}, VariableRefType:
         @variable(m, x)
 
         @objective(m, Min, 2x)
-        @test JuMP.objectivesense(m) == :Min
-        @test JuMP.isequal_canonical(JuMP.objectivefunction(m, AffExprType), 2x)
+        @test JuMP.objective_sense(m) == :Min
+        @test JuMP.isequal_canonical(JuMP.objective_function(m, AffExprType), 2x)
 
         @objective(m, Max, x + 3x + 1)
-        @test JuMP.objectivesense(m) == :Max
-        @test JuMP.isequal_canonical(JuMP.objectivefunction(m, AffExprType), 4x + 1)
+        @test JuMP.objective_sense(m) == :Max
+        @test JuMP.isequal_canonical(JuMP.objective_function(m, AffExprType), 4x + 1)
     end
 
     @testset "Quadratic objectives" begin
@@ -33,9 +33,9 @@ function objectives_test(ModelType::Type{<:JuMP.AbstractModel}, VariableRefType:
         @variable(m, x)
 
         @objective(m, Min, x^2 + 2x)
-        @test JuMP.objectivesense(m) == :Min
-        @test JuMP.isequal_canonical(JuMP.objectivefunction(m, QuadExprType), x^2 + 2x)
-        @test_throws ErrorException JuMP.objectivefunction(m, AffExprType)
+        @test JuMP.objective_sense(m) == :Min
+        @test JuMP.isequal_canonical(JuMP.objective_function(m, QuadExprType), x^2 + 2x)
+        @test_throws ErrorException JuMP.objective_function(m, AffExprType)
     end
 end
 

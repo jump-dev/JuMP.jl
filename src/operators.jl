@@ -66,9 +66,9 @@ function Base.:+(lhs::V, rhs::GenericAffExpr{C,V}) where {C, V <: AbstractVariab
     # For the variables to have the proper order in the result, we need to add the lhs first.
     result = zero(rhs)
     result.constant = rhs.constant
-    sizehint!(result, length(linearterms(rhs)) + 1)
+    sizehint!(result, length(linear_terms(rhs)) + 1)
     add_to_expression!(result, one(C), lhs)
-    for (coef, var) in linearterms(rhs)
+    for (coef, var) in linear_terms(rhs)
         add_to_expression!(result, coef, var)
     end
     return result
@@ -78,9 +78,9 @@ function Base.:-(lhs::V, rhs::GenericAffExpr{C,V}) where {C,V <: AbstractVariabl
     # For the variables to have the proper order in the result, we need to add the lhs first.
     result = zero(rhs)
     result.constant = -rhs.constant
-    sizehint!(result, length(linearterms(rhs)) + 1)
+    sizehint!(result, length(linear_terms(rhs)) + 1)
     add_to_expression!(result, one(C), lhs)
-    for (coef, var) in linearterms(rhs)
+    for (coef, var) in linear_terms(rhs)
         add_to_expression!(result, -coef, var)
     end
     return result
@@ -92,7 +92,7 @@ function Base.:*(lhs::V, rhs::GenericAffExpr{C,V}) where {C, V <: AbstractVariab
     else
         result = zero(GenericQuadExpr{C,V})
     end
-    for (coef, var) in linearterms(rhs)
+    for (coef, var) in linear_terms(rhs)
         add_to_expression!(result, coef, lhs, var)
     end
     return result
@@ -120,9 +120,9 @@ function Base.:^(lhs::Union{AbstractVariableRef,GenericAffExpr}, rhs::Integer)
     if rhs == 2
         return lhs*lhs
     elseif rhs == 1
-        return convert(GenericQuadExpr{Float64, variablereftype(lhs)}, lhs)
+        return convert(GenericQuadExpr{Float64, variable_ref_type(lhs)}, lhs)
     elseif rhs == 0
-        return one(GenericQuadExpr{Float64, variablereftype(lhs)})
+        return one(GenericQuadExpr{Float64, variable_ref_type(lhs)})
     else
         error("Only exponents of 0, 1, or 2 are currently supported. Are you trying to build a nonlinear problem? Make sure you use @NLconstraint/@NLobjective.")
     end
@@ -143,7 +143,7 @@ function Base.:*(lhs::GenericAffExpr{C,V}, rhs::V) where {C, V <: AbstractVariab
     else
         result = zero(GenericQuadExpr{C,V})
     end
-    for (coef, var) in linearterms(lhs)
+    for (coef, var) in linear_terms(lhs)
         add_to_expression!(result, coef, var, rhs)
     end
     return result
@@ -151,9 +151,9 @@ end
 Base.:/(lhs::GenericAffExpr, rhs::AbstractVariableRef) = error("Cannot divide affine expression by a variable")
 # AffExpr--AffExpr
 function Base.:+(lhs::GenericAffExpr{C,V}, rhs::GenericAffExpr{C,V}) where {C,V<:JuMPTypes}
-    if length(linearterms(lhs)) > 50 || length(linearterms(rhs)) > 50
-        if length(linearterms(lhs)) > 1
-            operator_warn(owner_model(first(linearterms(lhs))[2]))
+    if length(linear_terms(lhs)) > 50 || length(linear_terms(rhs)) > 50
+        if length(linear_terms(lhs)) > 1
+            operator_warn(owner_model(first(linear_terms(lhs))[2]))
         end
     end
     result_terms = copy(lhs.terms)
@@ -166,8 +166,8 @@ end
 function Base.:-(lhs::GenericAffExpr{C,V}, rhs::GenericAffExpr{C,V}) where {C,V<:JuMPTypes}
     result = copy(lhs)
     result.constant -= rhs.constant
-    sizehint!(result, length(linearterms(lhs)) + length(linearterms(rhs)))
-    for (coef, var) in linearterms(rhs)
+    sizehint!(result, length(linear_terms(lhs)) + length(linear_terms(rhs)))
+    for (coef, var) in linear_terms(rhs)
         add_to_expression!(result, -coef, var)
     end
     return result
@@ -176,12 +176,12 @@ end
 function Base.:*(lhs::GenericAffExpr{C,V}, rhs::GenericAffExpr{C,V}) where {C,V<:JuMPTypes}
     result = zero(GenericQuadExpr{C,V})
 
-    lhs_length = length(linearterms(lhs))
-    rhs_length = length(linearterms(rhs))
+    lhs_length = length(linear_terms(lhs))
+    rhs_length = length(linear_terms(rhs))
 
     # Quadratic terms
-    for (lhscoef, lhsvar) in linearterms(lhs)
-        for (rhscoef, rhsvar) in linearterms(rhs)
+    for (lhscoef, lhsvar) in linear_terms(lhs)
+        for (rhscoef, rhsvar) in linear_terms(rhs)
             add_to_expression!(result, lhscoef*rhscoef, lhsvar, rhsvar)
         end
     end
@@ -198,7 +198,7 @@ function Base.:*(lhs::GenericAffExpr{C,V}, rhs::GenericAffExpr{C,V}) where {C,V<
     # [LHS constant] * [RHS linear terms]
     if !iszero(lhs.constant)
         c = lhs.constant
-        for (rhscoef, rhsvar) in linearterms(rhs)
+        for (rhscoef, rhsvar) in linear_terms(rhs)
             add_to_expression!(result.aff, c*rhscoef, rhsvar)
         end
     end
@@ -206,7 +206,7 @@ function Base.:*(lhs::GenericAffExpr{C,V}, rhs::GenericAffExpr{C,V}) where {C,V<
     # [RHS constant] * [LHS linear terms]
     if !iszero(rhs.constant)
         c = rhs.constant
-        for (lhscoef, lhsvar) in linearterms(lhs)
+        for (lhscoef, lhsvar) in linear_terms(lhs)
             add_to_expression!(result.aff, c*lhscoef, lhsvar)
         end
     end
@@ -249,7 +249,7 @@ function Base.:+(q1::GenericQuadExpr, q2::GenericQuadExpr)
     for (coef, var1, var2) in quadterms(q2)
         add_to_expression!(result, coef, var1, var2)
     end
-    for (coef, var) in linearterms(q2)
+    for (coef, var) in linear_terms(q2)
         add_to_expression!(result, coef, var)
     end
     result.aff.constant += q2.aff.constant
@@ -260,7 +260,7 @@ function Base.:-(q1::GenericQuadExpr, q2::GenericQuadExpr)
     for (coef, var1, var2) in quadterms(q2)
         add_to_expression!(result, -coef, var1, var2)
     end
-    for (coef, var) in linearterms(q2)
+    for (coef, var) in linear_terms(q2)
         add_to_expression!(result, -coef, var)
     end
     result.aff.constant -= q2.aff.constant

@@ -89,12 +89,12 @@ Base.isless(u::UnitNumber, v::UnitNumber) = isless(u.α, v.α)
         io_test(REPLMode,   x, "x")
         io_test(IJuliaMode, x, "x")
 
-        JuMP.setname(x, "x2")
+        JuMP.set_name(x, "x2")
         @test    JuMP.name(x) == "x2"
         io_test(REPLMode,   x, "x2")
         io_test(IJuliaMode, x, "x2")
 
-        JuMP.setname(x, "")
+        JuMP.set_name(x, "")
         @test    JuMP.name(x) == ""
         io_test(REPLMode,   x, "noname")
         io_test(IJuliaMode, x, "noname")

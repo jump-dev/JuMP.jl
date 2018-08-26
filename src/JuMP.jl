@@ -32,11 +32,11 @@ export
     NonlinearConstraint,
     ConstraintRef,
     SecondOrderCone, RotatedSecondOrderCone, PSDCone,
-    optimize,
-    setname,
-    setlowerbound, setupperbound,
-    setstartvalue,
-    linearterms,
+    optimize!,
+    set_name,
+    set_lower_bound, set_upper_bound,
+    set_start_value,
+    linear_terms,
 
 # Macros and support functions
     @LinearConstraint, @LinearConstraints, @QuadConstraint, @QuadConstraints,
@@ -168,7 +168,7 @@ end
 
 Return a new JuMP model without any optimizer; the model is stored the model in
 a cache. The mode of the `CachingOptimizer` storing this cache is
-`caching_mode`. The optimizer can be set later in the [`JuMP.optimize`](@ref)
+`caching_mode`. The optimizer can be set later in the [`JuMP.optimize!`](@ref)
 call. If `bridge_constraints` is true, constraints that are not supported by the
 optimizer are automatically bridged to equivalent supported constraints when
 an appropriate is defined in the `MathOptInterface.Bridges` module or is
@@ -225,7 +225,7 @@ in mind the following implications of creating models using this *direct* mode:
   variables/constraints after solver or modifying constraints, an error is
   thrown. With models created using the [`Model`](@ref) constructor, such
   situations can be dealt with by storing the modifications in a cache and
-  loading them into the optimizer when `JuMP.optimize` is called.
+  loading them into the optimizer when `JuMP.optimize!` is called.
 * No constraint bridging is supported by default.
 * The optimizer used cannot be changed the model is constructed.
 * The model created cannot be copied.
@@ -290,35 +290,35 @@ Returns number of variables in `model`.
 num_variables(model::Model) = MOI.get(model, MOI.NumberOfVariables())
 
 """
-    numnlconstr(model::Model)
+    num_nl_constraints(model::Model)
 
 Returns the number of nonlinear constraints associated with the `model`.
 """
-function numnlconstr(model::Model)
+function num_nl_constraints(model::Model)
     return model.nlp_data !== nothing ? length(model.nlp_data.nlconstr) : 0
 end
 
 """
-    objectivebound(model::Model)
+    objective_bound(model::Model)
 
 Return the best known bound on the optimal objective value after a call to
-`optimize(model)`.
+`optimize!model)`.
 """
-objectivebound(model::Model) = MOI.get(model, MOI.ObjectiveBound())
+objective_bound(model::Model) = MOI.get(model, MOI.ObjectiveBound())
 
 """
-    objectivevalue(model::Model)
+    objective_value(model::Model)
 
-Return the objective value after a call to `optimize(model)`.
+Return the objective value after a call to `optimize!model)`.
 """
-objectivevalue(model::Model) = MOI.get(model, MOI.ObjectiveValue())
+objective_value(model::Model) = MOI.get(model, MOI.ObjectiveValue())
 
 """
-    objectivesense(model::Model)
+    objective_sense(model::Model)
 
 Return the objective sense, `:Min`, `:Max`, or `:Feasibility`.
 """
-function objectivesense(model::Model)
+function objective_sense(model::Model)
     moisense = MOI.get(model, MOI.ObjectiveSense())
     if moisense == MOI.MinSense
         return :Min
@@ -333,10 +333,10 @@ end
 # TODO(IainNZ): Document these too.
 # TODO(#1381): Implement Base.copy for Model.
 object_dictionary(model::Model) = model.obj_dict
-terminationstatus(m::Model) = MOI.get(m, MOI.TerminationStatus())
-primalstatus(m::Model) = MOI.get(m, MOI.PrimalStatus())
-dualstatus(m::Model) = MOI.get(m, MOI.DualStatus())
-set_optimize_hook(m::Model, f) = (m.optimize_hook = f)
+termination_status(model::Model) = MOI.get(model, MOI.TerminationStatus())
+primal_status(model::Model) = MOI.get(model, MOI.PrimalStatus())
+dual_status(model::Model) = MOI.get(model, MOI.DualStatus())
+set_optimize_hook(model::Model, f) = (model.optimize_hook = f)
 
 
 #############################################################################
@@ -484,11 +484,11 @@ end
 MOI.isvalid(m::Model, cr::ConstraintRef{Model}) = cr.m === m && MOI.isvalid(m.moi_backend, cr.index)
 
 """
-    addconstraint(m::Model, c::AbstractConstraint, name::String="")
+    add_constraint(m::Model, c::AbstractConstraint, name::String="")
 
 Add a constraint `c` to `Model m` and sets its name.
 """
-function addconstraint(m::Model, c::AbstractConstraint, name::String="")
+function add_constraint(m::Model, c::AbstractConstraint, name::String="")
     f, s = moi_function_and_set(c)
     if !MOI.supportsconstraint(m.moi_backend, typeof(f), typeof(s))
         if m.moi_backend isa MOI.Bridges.LazyBridgeOptimizer
@@ -501,7 +501,7 @@ function addconstraint(m::Model, c::AbstractConstraint, name::String="")
     cindex = MOI.addconstraint!(m.moi_backend, f, s)
     cref = ConstraintRef(m, cindex, shape(c))
     if !isempty(name)
-        setname(cref, name)
+        set_name(cref, name)
     end
     return cref
 end
@@ -533,7 +533,7 @@ Base.copy(x::Nothing, new_model::Model) = nothing
 # TODO: Replace with vectorized copy?
 Base.copy(v::AbstractArray{VariableRef}, new_model::Model) = (var -> VariableRef(new_model, var.index)).(v)
 
-function optimizerindex(v::VariableRef)
+function optimizer_index(v::VariableRef)
     if mode(v.m) == Direct
         return index(v)
     else
@@ -542,7 +542,7 @@ function optimizerindex(v::VariableRef)
     end
 end
 
-function optimizerindex(cr::ConstraintRef{Model})
+function optimizer_index(cr::ConstraintRef{Model})
     if mode(cr.m) == Direct
         return index(cr)
     else
@@ -553,18 +553,18 @@ end
 
 index(cr::ConstraintRef) = cr.index
 
-function hasresultdual(m::Model, REF::Type{<:ConstraintRef{Model, T}}) where {T <: MOICON}
+function has_result_dual(m::Model, REF::Type{<:ConstraintRef{Model, T}}) where {T <: MOICON}
     MOI.canget(m, MOI.ConstraintDual(), REF)
 end
 
 """
-    resultdual(cr::ConstraintRef)
+    result_dual(cr::ConstraintRef)
 
 Get the dual value of this constraint in the result returned by a solver.
-Use `hasresultdual` to check if a result exists before asking for values.
+Use `has_result_dual` to check if a result exists before asking for values.
 Replaces `getdual` for most use cases.
 """
-function resultdual(cr::ConstraintRef{Model, <:MOICON})
+function result_dual(cr::ConstraintRef{Model, <:MOICON})
     reshape(MOI.get(cr.m, MOI.ConstraintDual(), cr), dual_shape(cr.shape))
 end
 
@@ -575,7 +575,7 @@ Get a constraint's name.
 """
 name(cr::ConstraintRef{Model,<:MOICON}) = MOI.get(cr.m, MOI.ConstraintName(), cr)
 
-setname(cr::ConstraintRef{Model,<:MOICON}, s::String) = MOI.set!(cr.m, MOI.ConstraintName(), cr, s)
+set_name(cr::ConstraintRef{Model,<:MOICON}, s::String) = MOI.set!(cr.m, MOI.ConstraintName(), cr, s)
 
 """
     canget(m::JuMP.Model, attr::MathOptInterface.AbstractModelAttribute)::Bool
