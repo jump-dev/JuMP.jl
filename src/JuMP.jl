@@ -39,7 +39,9 @@ if VERSION < v"0.7-"
 else
     _ind2sub(tpl, k) = Tuple(CartesianIndices(tpl)[k])
 
-    warn_once(str) = @warn str maxlog=1
+    # TODO maxlog is currently broken. restore the below when it gets fixed
+    #warn_once(str) = @warn str maxlog=1
+    warn_once(str) = nothing
 end
 
 export
@@ -893,9 +895,9 @@ function operator_warn(lhs::AffExpr,rhs::AffExpr)
             m = lhs.vars[1].m
             m.operator_counter += 1
             # TODO this is printing an unlimited number of times due to https://github.com/JuliaLang/julia/issues/28786, re-enable when fixed
-            # if m.operator_counter > 20000
-            #     warn_once("The addition operator has been used on JuMP expressions a large number of times. This warning is safe to ignore but may indicate that model generation is slower than necessary. For performance reasons, you should not add expressions in a loop. Instead of x += y, use append!(x,y) to modify x in place. If y is a single variable, you may also use push!(x, coef, y) in place of x += coef*y.")
-            # end
+            if m.operator_counter > 20000
+                warn_once("The addition operator has been used on JuMP expressions a large number of times. This warning is safe to ignore but may indicate that model generation is slower than necessary. For performance reasons, you should not add expressions in a loop. Instead of x += y, use append!(x,y) to modify x in place. If y is a single variable, you may also use push!(x, coef, y) in place of x += coef*y.")
+            end
         end
     end
     return
