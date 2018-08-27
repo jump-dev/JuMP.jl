@@ -476,9 +476,12 @@ is a valid JuMP variable in `model` using the `JuMP.is_valid` method:
 ```jldoctest variables_delete
 julia> @variable(model, x)
 x
+
 julia> JuMP.is_valid(model, x)
 true
+
 julia> JuMP.delete(model, x)
+
 julia> JuMP.is_valid(model, x)
 false
 ```
