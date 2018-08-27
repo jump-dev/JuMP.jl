@@ -135,33 +135,33 @@ In the above examples, `x_free` represents an unbounded optimization variable,
     `b` is the intended variable name, or vice-versa.
 
 We can query whether an optimization variable has a lower- or upper-bound via
-the `JuMP.haslowerbound` and `JuMP.hasupperbound` functions. For example:
+the `JuMP.has_lower_bound` and `JuMP.has_upper_bound` functions. For example:
 ```jldoctest variables_2
-julia> JuMP.haslowerbound(x_free)
+julia> JuMP.has_lower_bound(x_free)
 false
 
-julia> JuMP.hasupperbound(x_upper)
+julia> JuMP.has_upper_bound(x_upper)
 true
 ```
 
 If a variable has a lower or upper bound, we can query the value of it via the
-`JuMP.lowerbound` and `JuMP.upperbound` functions. For example:
+`JuMP.lower_bound` and `JuMP.upper_bound` functions. For example:
 ```jldoctest variables_2
-julia> JuMP.lowerbound(x_interval)
+julia> JuMP.lower_bound(x_interval)
 2.0
 
-julia> JuMP.upperbound(x_interval)
+julia> JuMP.upper_bound(x_interval)
 3.0
 ```
 Querying the value of a bound that does not exist will result in an error.
 
-Instead of using the `<=` and `>=` syntax, we can also use the `lowerbound` and
-`upperbound` keyword arguments. For example:
+Instead of using the `<=` and `>=` syntax, we can also use the `lower_bound` and
+`upper_bound` keyword arguments. For example:
 ```jldoctest; setup=:(model=Model())
-julia> @variable(model, x, lowerbound=1, upperbound=2)
+julia> @variable(model, x, lower_bound=1, upper_bound=2)
 x
 
-julia> JuMP.lowerbound(x)
+julia> JuMP.lower_bound(x)
 1.0
 ```
 
@@ -210,7 +210,7 @@ julia> @variable(model, x[i=1:2, j=1:2] >= 2i + j)
  x[1,1]  x[1,2]
  x[2,1]  x[2,2]
 
-julia> JuMP.lowerbound.(x)
+julia> JuMP.lower_bound.(x)
 2×2 Array{Float64,2}:
  3.0  4.0
  5.0  6.0
@@ -262,7 +262,7 @@ And data, a 2×2 Array{JuMP.VariableRef,2}:
  x[2,1]  x[2,3]
  x[3,1]  x[3,3]
 
-julia> JuMP.lowerbound.(x)
+julia> JuMP.lower_bound.(x)
 2-dimensional JuMPArray{Float64,2,...} with index sets:
     Dimension 1, 2:3
     Dimension 2, 1:2:3
@@ -345,10 +345,10 @@ created in JuMP by passing `Bin` as an optional positional argument:
 julia> @variable(model, x, Bin)
 x
 ```
-We can check if an optimization variable is binary by calling `JuMP.isbinary` on
+We can check if an optimization variable is binary by calling `JuMP.is_binary` on
 the JuMP variable:
 ```jldoctest variables_binary
-julia> JuMP.isbinary(x)
+julia> JuMP.is_binary(x)
 true
 ```
 Binary optimization variables can also be created by setting the `binary`
@@ -373,10 +373,10 @@ keyword to `true`.
 julia> @variable(model, x, integer=true)
 x
 ```
-We can check if an optimization variable is integer by calling `JuMP.isinteger`
+We can check if an optimization variable is integer by calling `JuMP.is_integer`
 on the JuMP variable:
 ```jldoctest variables_integer
-julia> JuMP.isinteger(x)
+julia> JuMP.is_integer(x)
 true
 ```
 
@@ -433,14 +433,14 @@ If necessary, you can store `x` in `model` as follows:
 julia> model[:x] = x
 ```
 The `<=` and `>=` short-hand cannot be used to set bounds on anonymous JuMP
-variables. Instead, you should use the `lowerbound` and `upperbound` keywords.
+variables. Instead, you should use the `lower_bound` and `upper_bound` keywords.
 
 Passing the `Bin` and `Int` variable types are also invalid. Instead, you should
 use the `binary` and `integer` keywords.
 
 Thus, the anonymous variant of `@variable(model, x[i=1:2] >= i, Int)` is:
 ```jldoctest; setup=:(model=Model())
-julia> x = @variable(model, [i=1:2], basename="x", lowerbound=i, integer=true)
+julia> x = @variable(model, [i=1:2], basename="x", lower_bound=i, integer=true)
 2-element Array{JuMP.VariableRef,1}:
  x[1]
  x[2]

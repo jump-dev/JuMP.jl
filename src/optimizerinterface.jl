@@ -27,16 +27,16 @@ end
 
 
 """
-    function optimize(model::Model,
-                      optimizer_factory::Union{Nothing, OptimizerFactory} = nothing;
-                      ignore_optimize_hook=(model.optimize_hook===nothing))
+    function optimize!(model::Model,
+                       optimizer_factory::Union{Nothing, OptimizerFactory}=nothing;
+                       ignore_optimize_hook=(model.optimize_hook === nothing))
 
 Optimize the model. If `optimizer_factory` is not `nothing`, it first set the
 optimizer to a new one created using the optimizer factory.
 """
-function optimize(model::Model,
-                  optimizer_factory::Union{Nothing, OptimizerFactory} = nothing;
-                  ignore_optimize_hook=(model.optimize_hook===nothing))
+function optimize!(model::Model,
+                   optimizer_factory::Union{Nothing, OptimizerFactory}=nothing;
+                   ignore_optimize_hook=(model.optimize_hook === nothing))
     # The nlp_data is not kept in sync, so re-set it here.
     # TODO: Consider how to handle incremental solves.
     if model.nlp_data !== nothing

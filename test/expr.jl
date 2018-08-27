@@ -54,14 +54,14 @@ function expressions_test(ModelType::Type{<:JuMP.AbstractModel}, VariableRefType
                                      JuMP.GenericAffExpr(2.0, :a => 2.0))
     end
 
-    @testset "linearterms(::AffExpr)" begin
+    @testset "linear_terms(::AffExpr)" begin
         m = Model()
         @variable(m, x[1:10])
 
         aff = 1*x[1] + 2*x[2]
         k = 0
-        @test length(linearterms(aff)) == 2
-        for (coeff, var) in linearterms(aff)
+        @test length(linear_terms(aff)) == 2
+        for (coeff, var) in linear_terms(aff)
             if k == 0
                 @test coeff == 1
                 @test var === x[1]
@@ -74,11 +74,11 @@ function expressions_test(ModelType::Type{<:JuMP.AbstractModel}, VariableRefType
         @test k == 2
     end
 
-    @testset "linearterms(::AffExpr) for empty expression" begin
+    @testset "linear_terms(::AffExpr) for empty expression" begin
         k = 0
         aff = zero(AffExprType)
-        @test length(linearterms(aff)) == 0
-        for (coeff, var) in linearterms(aff)
+        @test length(linear_terms(aff)) == 0
+        for (coeff, var) in linear_terms(aff)
             k += 1
         end
         @test k == 0

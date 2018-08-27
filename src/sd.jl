@@ -45,7 +45,7 @@ end
 # this allows to get the constraint reference, e.g.
 # @variable model x[1:2,1:2] Symmetric # x is Symmetric{VariableRef,Matrix{VariableRef}}
 # varpsd = @constraint model x in PSDCone()
-function buildconstraint(_error::Function, Q::Symmetric{V, Matrix{V}}, ::PSDCone) where V<:AbstractVariableRef
+function build_constraint(_error::Function, Q::Symmetric{V, Matrix{V}}, ::PSDCone) where V<:AbstractVariableRef
     n = Compat.LinearAlgebra.checksquare(Q)
     VectorOfVariablesConstraint([Q[i, j] for j in 1:n for i in 1:j],
                                 MOI.PositiveSemidefiniteConeTriangle(n),
@@ -53,14 +53,14 @@ function buildconstraint(_error::Function, Q::Symmetric{V, Matrix{V}}, ::PSDCone
 end
 # @variable model x[1:2,1:2] # x is Matrix{VariableRef}
 # varpsd = @constraint model x in PSDCone()
-function buildconstraint(_error::Function, Q::Matrix{<:AbstractVariableRef}, ::PSDCone)
+function build_constraint(_error::Function, Q::Matrix{<:AbstractVariableRef}, ::PSDCone)
     n = Compat.LinearAlgebra.checksquare(Q)
     VectorOfVariablesConstraint(vec(Q),
                                 MOI.PositiveSemidefiniteConeSquare(n),
                                 SquareMatrixShape(n))
 end
 
-function buildconstraint(_error::Function, x::AbstractMatrix, ::PSDCone)
+function build_constraint(_error::Function, x::AbstractMatrix, ::PSDCone)
     n = Compat.LinearAlgebra.checksquare(x)
     # Support for non-symmetric matrices as done prior to JuMP v0.19
     # will be added once the appropriate cone has been added in MathOptInterface

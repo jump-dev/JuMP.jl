@@ -7,14 +7,14 @@ function constraints_test(ModelType::Type{<:JuMP.AbstractModel})
         # the LHS is first subtracted to form x - 10.0 <= 0.
         @constraint(m, cref, x in MOI.LessThan(10.0))
         @test JuMP.name(cref) == "cref"
-        c = JuMP.constraintobject(cref)
+        c = JuMP.constraint_object(cref)
         @test c.func == x
         @test c.set == MOI.LessThan(10.0)
 
         @variable(m, y[1:2])
         @constraint(m, cref2[i=1:2], y[i] in MOI.LessThan(float(i)))
         @test JuMP.name(cref2[1]) == "cref2[1]"
-        c = JuMP.constraintobject(cref2[1])
+        c = JuMP.constraint_object(cref2[1])
         @test c.func == y[1]
         @test c.set == MOI.LessThan(1.0)
     end
@@ -24,12 +24,12 @@ function constraints_test(ModelType::Type{<:JuMP.AbstractModel})
         @variable(m, x[1:2])
 
         cref = @constraint(m, x in MOI.Zeros(2))
-        c = JuMP.constraintobject(cref)
+        c = JuMP.constraint_object(cref)
         @test c.func == x
         @test c.set == MOI.Zeros(2)
 
         cref = @constraint(m, [x[2],x[1]] in MOI.Zeros(2))
-        c = JuMP.constraintobject(cref)
+        c = JuMP.constraint_object(cref)
         @test c.func == [x[2],x[1]]
         @test c.set == MOI.Zeros(2)
     end
@@ -40,27 +40,27 @@ function constraints_test(ModelType::Type{<:JuMP.AbstractModel})
 
         cref = @constraint(m, 2x <= 10)
         @test JuMP.name(cref) == ""
-        JuMP.setname(cref, "c")
+        JuMP.set_name(cref, "c")
         @test JuMP.name(cref) == "c"
 
-        c = JuMP.constraintobject(cref)
+        c = JuMP.constraint_object(cref)
         @test JuMP.isequal_canonical(c.func, 2x)
         @test c.set == MOI.LessThan(10.0)
 
         cref = @constraint(m, 3x + 1 ≥ 10)
-        c = JuMP.constraintobject(cref)
+        c = JuMP.constraint_object(cref)
         @test JuMP.isequal_canonical(c.func, 3x)
         @test c.set == MOI.GreaterThan(9.0)
 
         cref = @constraint(m, 1 == -x)
-        c = JuMP.constraintobject(cref)
+        c = JuMP.constraint_object(cref)
         @test JuMP.isequal_canonical(c.func, 1.0x)
         @test c.set == MOI.EqualTo(-1.0)
 
         @test_throws ErrorException @constraint(m, [x, 2x] == [1-x, 3])
         @test_macro_throws ErrorException @constraint(m, [x == 1-x, 2x == 3])
         cref = @constraint(m, [x, 2x] .== [1-x, 3])
-        c = JuMP.constraintobject.(cref)
+        c = JuMP.constraint_object.(cref)
         @test JuMP.isequal_canonical(c[1].func, 2.0x)
         @test c[1].set == MOI.EqualTo(1.0)
         @test JuMP.isequal_canonical(c[2].func, 2.0x)
@@ -79,7 +79,7 @@ function constraints_test(ModelType::Type{<:JuMP.AbstractModel})
         @constraint(m, cref, 1.0 <= x + y + 1.0 <= 2.0)
         @test JuMP.name(cref) == "cref"
 
-        c = JuMP.constraintobject(cref)
+        c = JuMP.constraint_object(cref)
         @test JuMP.isequal_canonical(c.func, x + y)
         @test c.set == MOI.Interval(0.0, 1.0)
     end
@@ -94,10 +94,10 @@ function constraints_test(ModelType::Type{<:JuMP.AbstractModel})
         cref = @constraint(m, A*x .== b)
         @test size(cref) == (2,)
 
-        c1 = JuMP.constraintobject(cref[1])
+        c1 = JuMP.constraint_object(cref[1])
         @test JuMP.isequal_canonical(c1.func, x[1] + 2x[2])
         @test c1.set == MOI.EqualTo(4.0)
-        c2 = JuMP.constraintobject(cref[2])
+        c2 = JuMP.constraint_object(cref[2])
         @test JuMP.isequal_canonical(c2.func, 3x[1] + 4x[2])
         @test c2.set == MOI.EqualTo(5.0)
     end
@@ -112,7 +112,7 @@ function constraints_test(ModelType::Type{<:JuMP.AbstractModel})
         @test size(cref) == (2,2)
         for i in 1:2
             for j in 1:2
-                c = JuMP.constraintobject(cref[i,j])
+                c = JuMP.constraint_object(cref[i,j])
                 @test JuMP.isequal_canonical(c.func, x[i,j] + 0)
                 @test c.set == MOI.LessThan(UB[i,j] - 1)
             end
@@ -130,7 +130,7 @@ function constraints_test(ModelType::Type{<:JuMP.AbstractModel})
         @test size(cref) == (2,)
 
         for i in 1:2
-            c = JuMP.constraintobject(cref[i])
+            c = JuMP.constraint_object(cref[i])
             @test JuMP.isequal_canonical(c.func, x[i] + y[i])
             @test c.set == MOI.Interval(l[i]-1, u[i]-1)
         end
@@ -155,18 +155,18 @@ function constraints_test(ModelType::Type{<:JuMP.AbstractModel})
         @variable(m, y)
 
         cref = @constraint(m, x^2 + x <= 1)
-        c = JuMP.constraintobject(cref)
+        c = JuMP.constraint_object(cref)
         @test JuMP.isequal_canonical(c.func, x^2 + x)
         @test c.set == MOI.LessThan(1.0)
 
         cref = @constraint(m, y*x - 1.0 == 0.0)
-        c = JuMP.constraintobject(cref)
+        c = JuMP.constraint_object(cref)
         @test JuMP.isequal_canonical(c.func, x*y)
         @test c.set == MOI.EqualTo(1.0)
 
         # TODO: VectorQuadraticFunctions
         # cref = @constraint(m, [x^2 - 1] in MOI.SecondOrderCone(1))
-        # c = JuMP.constraintobject(cref)
+        # c = JuMP.constraint_object(cref)
         # @test JuMP.isequal_canonical(c.func, -1 + x^2)
         # @test c.set == MOI.SecondOrderCone(1)
     end
@@ -179,14 +179,14 @@ function constraints_test(ModelType::Type{<:JuMP.AbstractModel})
         @variable(m, w)
 
         cref = @constraint(m, [x y; z w] in PSDCone())
-        c = JuMP.constraintobject(cref)
+        c = JuMP.constraint_object(cref)
         @test c.func == [x, z, y, w]
         @test c.set == MOI.PositiveSemidefiniteConeSquare(2)
         @test c.shape isa JuMP.SquareMatrixShape
 
         @SDconstraint(m, cref, [x 1; 1 -y] ⪰ [1 x; x -2])
         @test JuMP.name(cref) == "cref"
-        c = JuMP.constraintobject(cref)
+        c = JuMP.constraint_object(cref)
         @test JuMP.isequal_canonical(c.func[1], x-1)
         @test JuMP.isequal_canonical(c.func[2], 1-x)
         @test JuMP.isequal_canonical(c.func[3], 2-y)
@@ -196,7 +196,7 @@ function constraints_test(ModelType::Type{<:JuMP.AbstractModel})
         @SDconstraint(m, iref[i=1:2], 0 ⪯ [x+i x+y; x+y -y])
         for i in 1:2
             @test JuMP.name(iref[i]) == "iref[$i]"
-            c = JuMP.constraintobject(iref[i])
+            c = JuMP.constraint_object(iref[i])
             @test JuMP.isequal_canonical(c.func[1], x+i)
             @test JuMP.isequal_canonical(c.func[2], x+y)
             @test JuMP.isequal_canonical(c.func[3], -y)
@@ -204,8 +204,8 @@ function constraints_test(ModelType::Type{<:JuMP.AbstractModel})
             @test c.shape isa JuMP.SymmetricMatrixShape
         end
 
-        # Should throw "ERROR: function JuMP.addconstraint does not accept keyword arguments"
-        # This tests that the keyword arguments are passed to addconstraint
+        # Should throw "ERROR: function JuMP.add_constraint does not accept keyword arguments"
+        # This tests that the keyword arguments are passed to add_constraint
         @test_macro_throws ErrorException @SDconstraint(m, [x 1; 1 -y] ⪰ [1 x; x -2], unknown_kw=1)
         # Invalid sense == in SDP constraint
         @test_macro_throws ErrorException @SDconstraint(m, [x 1; 1 -y] == [1 x; x -2])

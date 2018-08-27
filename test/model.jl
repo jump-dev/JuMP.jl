@@ -7,7 +7,7 @@
     end
     JuMP.set_optimize_hook(m, hook)
     @test !called
-    optimize(m)
+    optimize!(m)
     @test called
 end
 @testset "UniversalFallback" begin
@@ -24,7 +24,7 @@ end
         @variable model x
         cref = @constraint model 0 <= x + 1 <= 1
         @test cref isa JuMP.ConstraintRef{JuMP.Model,MOI.ConstraintIndex{MOI.ScalarAffineFunction{Float64},MOI.Interval{Float64}}}
-        JuMP.optimize(model)
+        JuMP.optimize!(model)
     end
     @testset "Automatic bridging disabled with `bridge_constraints` keyword" begin
         model = Model(with_optimizer(MOIU.MockOptimizer, LPModel{Float64}()), bridge_constraints=false)

@@ -52,7 +52,7 @@ mutable struct GenericAffExpr{CoefType,VarType} <: AbstractJuMPScalar
     terms::OrderedDict{VarType,CoefType}
 end
 
-variablereftype(::GenericAffExpr{C, V}) where {C, V} = V
+variable_ref_type(::GenericAffExpr{C, V}) where {C, V} = V
 
 function GenericAffExpr(constant::V, kv::AbstractArray{Pair{K,V}}) where {K,V}
     return GenericAffExpr{V,K}(constant, new_ordered_dict(K, V, kv))
@@ -84,7 +84,7 @@ GenericAffExpr{C, V}() where {C, V} = zero(GenericAffExpr{C, V})
 
 function map_coefficients_inplace!(f::Function, a::GenericAffExpr)
     # The iterator remains valid if existing elements are updated.
-    for (coef, var) in linearterms(a)
+    for (coef, var) in linear_terms(a)
         a.terms[var] = f(coef)
     end
     a.constant = f(a.constant)
@@ -118,12 +118,12 @@ struct LinearTermIterator{GAE<:GenericAffExpr}
 end
 
 """
-    linearterms(aff::GenericAffExpr{C, V})
+    linear_terms(aff::GenericAffExpr{C, V})
 
 Provides an iterator over coefficient-variable tuples `(a_i::C, x_i::V)` in the
 linear part of the affine expression.
 """
-linearterms(aff::GenericAffExpr) = LinearTermIterator(aff)
+linear_terms(aff::GenericAffExpr) = LinearTermIterator(aff)
 
 
 if VERSION < v"0.7-"
@@ -193,7 +193,7 @@ Base.hash(aff::GenericAffExpr, h::UInt) = hash(aff.constant, hash(aff.terms, h))
 
 function Compat.SparseArrays.dropzeros(aff::GenericAffExpr)
     result = copy(aff)
-    for (coef, var) in linearterms(aff)
+    for (coef, var) in linear_terms(aff)
         if iszero(coef)
             delete!(result.terms, var)
         end
@@ -223,24 +223,24 @@ const AffExpr = GenericAffExpr{Float64,VariableRef}
 
 # Check all coefficients are finite, i.e. not NaN, not Inf, not -Inf
 function assert_isfinite(a::AffExpr)
-    for (coef, var) in linearterms(a)
+    for (coef, var) in linear_terms(a)
         isfinite(coef) || error("Invalid coefficient $coef on variable $var.")
     end
 end
 
 """
-    resultvalue(v::GenericAffExpr)
+    result_value(v::GenericAffExpr)
 
 Evaluate an `GenericAffExpr` given the result returned by a solver.
 Replaces `getvalue` for most use cases.
 """
-resultvalue(a::GenericAffExpr) = value(a, resultvalue)
+result_value(a::GenericAffExpr) = value(a, result_value)
 
 # Note: No validation is performed that the variables in the AffExpr belong to
 # the same model.
 function MOI.ScalarAffineFunction(a::AffExpr)
     assert_isfinite(a)
-    terms = map(t -> MOI.ScalarAffineTerm(t[1], index(t[2])), linearterms(a))
+    terms = map(t -> MOI.ScalarAffineTerm(t[1], index(t[2])), linear_terms(a))
     return MOI.ScalarAffineFunction(terms, a.constant)
 end
 
@@ -261,15 +261,15 @@ The output index for all terms is `oi`.
 """
 function _fillvaf!(terms, offset::Int, oi::Int, aff::AffExpr)
     i = 1
-    for (coef, var) in linearterms(aff)
+    for (coef, var) in linear_terms(aff)
         terms[offset+i] = MOI.VectorAffineTerm(Int64(oi), MOI.ScalarAffineTerm(coef, index(var)))
         i += 1
     end
-    offset + length(linearterms(aff))
+    offset + length(linear_terms(aff))
 end
 
 function MOI.VectorAffineFunction(affs::Vector{AffExpr})
-    len = sum(aff -> length(linearterms(aff)), affs)
+    len = sum(aff -> length(linear_terms(aff)), affs)
     terms = Vector{MOI.VectorAffineTerm{Float64}}(undef, len)
     constant = Vector{Float64}(undef, length(affs))
     offset = 0
@@ -280,7 +280,7 @@ function MOI.VectorAffineFunction(affs::Vector{AffExpr})
     MOI.VectorAffineFunction(terms, constant)
 end
 
-function setobjective(m::Model, sense::Symbol, a::AffExpr)
+function set_objective(m::Model, sense::Symbol, a::AffExpr)
     if sense == :Min
         moisense = MOI.MinSense
     else
@@ -293,12 +293,12 @@ function setobjective(m::Model, sense::Symbol, a::AffExpr)
 end
 
 """
-    objectivefunction(m::Model, ::Type{AffExpr})
+    objective_function(m::Model, ::Type{AffExpr})
 
 Return an `AffExpr` object representing the objective function.
 Error if the objective is not linear.
 """
-function objectivefunction(m::Model, ::Type{AffExpr})
+function objective_function(m::Model, ::Type{AffExpr})
     f = MOI.get(m.moi_backend, MOI.ObjectiveFunction{MOI.ScalarAffineFunction{Float64}}())::MOI.ScalarAffineFunction
     return AffExpr(m, f)
 end
@@ -308,7 +308,7 @@ end
 # variables to the new model's variables
 function Base.copy(a::GenericAffExpr, new_model::Model)
     result = zero(a)
-    for (coef, var) in linearterms(a)
+    for (coef, var) in linear_terms(a)
         add_to_expression!(result, coef, copy(var, new_model))
     end
     result.constant = a.constant
@@ -325,7 +325,7 @@ moi_function_and_set(c::AffExprConstraint) = (MOI.ScalarAffineFunction(c.func), 
 shape(::AffExprConstraint) = ScalarShape()
 
 # TODO: Find somewhere to put this error message.
-#addconstraint(m::Model, c::Array{AffExprConstraint}) =
+#add_constraint(m::Model, c::Array{AffExprConstraint}) =
 #    error("The operators <=, >=, and == can only be used to specify scalar constraints. If you are trying to add a vectorized constraint, use the element-wise dot comparison operators (.<=, .>=, or .==) instead")
 
 struct VectorAffExprConstraint{V <: AbstractVariableRef,
@@ -344,7 +344,7 @@ end
 moi_function_and_set(c::VectorAffExprConstraint) = (MOI.VectorAffineFunction(c.func), c.set)
 shape(c::VectorAffExprConstraint) = c.shape
 
-function constraintobject(ref::ConstraintRef{Model, MOICON{FuncType, SetType}}) where
+function constraint_object(ref::ConstraintRef{Model, MOICON{FuncType, SetType}}) where
         {FuncType <: MOI.ScalarAffineFunction, SetType <: MOI.AbstractScalarSet}
     model = ref.m
     f = MOI.get(model, MOI.ConstraintFunction(), ref)::FuncType
@@ -352,7 +352,7 @@ function constraintobject(ref::ConstraintRef{Model, MOICON{FuncType, SetType}}) 
     return AffExprConstraint(AffExpr(model, f), s)
 end
 
-function constraintobject(ref::ConstraintRef{Model, MOICON{FuncType, SetType}}) where
+function constraint_object(ref::ConstraintRef{Model, MOICON{FuncType, SetType}}) where
         {FuncType <: MOI.VectorAffineFunction, SetType <: MOI.AbstractVectorSet}
     model = ref.m
     f = MOI.get(model, MOI.ConstraintFunction(), ref)::MOI.VectorAffineFunction
