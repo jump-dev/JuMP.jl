@@ -744,7 +744,7 @@ function quad_str(mode, q::GenericQuadExpr, sym)
         end
     end
     # Merge duplicates
-    Q = sparse([v.col for v in q.qvars1], [v.col for v in q.qvars2], q.qcoeffs)
+    Q = dropzeros(sparse([v.col for v in q.qvars1], [v.col for v in q.qvars2], q.qcoeffs))
     I,J,V = findnz(Q)
     Qnnz = length(V)
 
@@ -773,6 +773,8 @@ function quad_str(mode, q::GenericQuadExpr, sym)
         aff = aff_str(mode,q.aff)
         if aff[1] == '-'
             return string(ret, " - ", aff[2:end])
+        elseif length(ret) == 0
+            return string(aff)
         else
             return string(ret, " + ", aff)
         end

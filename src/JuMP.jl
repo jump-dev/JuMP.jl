@@ -23,6 +23,8 @@ using Compat.LinearAlgebra
 using Compat.SparseArrays
 using Compat.Printf
 
+using Compat: @info, @warn, axes
+
 if VERSION < v"0.7-"
     const IdDict = Base.ObjectIdDict
     const LinearAlgebra = Compat.LinearAlgebra
@@ -32,8 +34,14 @@ if VERSION < v"0.7-"
     using Compat: rmul!
     # because iteration of CartesianIndex is broken in 0.6
     const _ind2sub = Base.ind2sub
+
+    using Base: warn_once
 else
     _ind2sub(tpl, k) = Tuple(CartesianIndices(tpl)[k])
+
+    # TODO maxlog is currently broken. restore the below when it gets fixed
+    #warn_once(str) = @warn str maxlog=1
+    warn_once(str) = nothing
 end
 
 export
@@ -362,6 +370,9 @@ end
 linearindex(x::Variable) = x.col
 Base.isequal(x::Variable,y::Variable) = (x.col == y.col) && (x.m === y.m)
 
+# requirement that variables are ∈ ℝ (adjoint on arrays is recursive)
+Compat.adjoint(x::Variable) = x
+
 Variable(m::Model, lower, upper, cat::Symbol, name::AbstractString="", value::Number=NaN) =
     error("Attempt to create scalar Variable with lower bound of type $(typeof(lower)) and upper bound of type $(typeof(upper)). Bounds must be scalars in Variable constructor.")
 
@@ -387,7 +398,7 @@ function Variable(m::Model,lower::Number,upper::Number,cat::Symbol,name::Abstrac
         if method_exists(MathProgBase.addvar!, (typeof(m.internalModel),Vector{Int},Vector{Float64},Float64,Float64,Float64))
             MathProgBase.addvar!(m.internalModel,float(lower),float(upper),0.0)
         else
-            Base.warn_once("Solver does not appear to support adding variables to an existing model. JuMP's internal model will be discarded.")
+            warn_once("Solver does not appear to support adding variables to an existing model. JuMP's internal model will be discarded.")
             m.internalModelLoaded = false
         end
     end
@@ -434,7 +445,7 @@ end
 # internal method that doesn't print a warning if the value is NaN
 _getValue(v::Variable) = v.m.colVal[v.col]
 
-getvaluewarn(v) = Base.warn("Variable value not defined for $(getname(v)). Check that the model was properly solved.")
+getvaluewarn(v) = @warn("Variable value not defined for $(getname(v)). Check that the model was properly solved.")
 
 function getvalue(v::Variable)
     ret = _getValue(v)
@@ -461,10 +472,10 @@ function getvalue(arr::Array{Variable})
         ret[I] = value
         if !warnedyet && isnan(value)
             if registered
-                Base.warn("Variable value not defined for component of $(m.varData[arr].name). Check that the model was properly solved.")
+                @warn("Variable value not defined for component of $(m.varData[arr].name). Check that the model was properly solved.")
                 warnedyet = true
             else
-                Base.warn("Variable value not defined for $(m.colNames[v.col]). Check that the model was properly solved.")
+                @warn("Variable value not defined for $(m.colNames[v.col]). Check that the model was properly solved.")
             end
         end
     end
@@ -480,7 +491,7 @@ end
 # internal method that doesn't print a warning if the value is NaN
 _getDual(v::Variable) = v.m.redCosts[v.col]
 
-getdualwarn(::Variable) = warn("Variable bound duals (reduced costs) not available. Check that the model was properly solved and no integer variables are present.")
+getdualwarn(::Variable) = @warn("Variable bound duals (reduced costs) not available. Check that the model was properly solved and no integer variables are present.")
 
 function getdual(v::Variable)
     if length(v.m.redCosts) < MathProgBase.numvar(v.m)
@@ -520,6 +531,7 @@ function verify_ownership(m::Model, vec::Vector{Variable})
 end
 
 Base.copy(v::Variable, new_model::Model) = Variable(new_model, v.col)
+Base.copy(v::Variable) = copy(v, v.m)
 Base.copy(x::Nothing, new_model::Model) = nothing
 Base.copy(v::AbstractArray{Variable}, new_model::Model) = (var -> Variable(new_model, var.col)).(v)
 
@@ -600,7 +612,7 @@ linearindex(x::ConstraintRef) = x.idx
 # internal method that doesn't print a warning if the value is NaN
 _getDual(c::LinConstrRef) = c.m.linconstrDuals[c.idx]
 
-getdualwarn(::T) where {T<:Union{ConstraintRef, Int}} = warn("Dual solution not available. Check that the model was properly solved and no integer variables are present.")
+getdualwarn(::T) where {T<:Union{ConstraintRef, Int}} = @warn("Dual solution not available. Check that the model was properly solved and no integer variables are present.")
 
 function getdual(c::LinConstrRef)
     if length(c.m.linconstrDuals) != MathProgBase.numlinconstr(c.m)
@@ -816,7 +828,7 @@ function Variable(m::Model,lower::Number,upper::Number,cat::Symbol,objcoef::Numb
         if method_exists(MathProgBase.addvar!, (typeof(m.internalModel),Vector{Int},Vector{Float64},Float64,Float64,Float64))
             MathProgBase.addvar!(m.internalModel,Int[c.idx for c in constraints],coefficients,float(lower),float(upper),float(objcoef))
         else
-            Base.warn_once("Solver does not appear to support adding variables to an existing model. JuMP's internal model will be discarded.")
+            warn_once("Solver does not appear to support adding variables to an existing model. JuMP's internal model will be discarded.")
             m.internalModelLoaded = false
         end
     end
@@ -837,7 +849,7 @@ registercon(m::Model, conname, value) = value # constraint name isn't a simple s
 
 function registerobject(m::Model, name::Symbol, value, warnstring::String)
     if haskey(m.objDict, name)
-        warn(warnstring)
+        @warn(warnstring)
         m.objDict[name] = nothing
     else
         m.objDict[name] = value
@@ -857,7 +869,7 @@ function Base.getindex(m::JuMP.Model, name::Symbol)
 end
 function Base.setindex!(m::JuMP.Model, value, name::Symbol)
     # if haskey(m.objDict, name)
-    #     warn("Overwriting the object $name stored in the model. Consider using anonymous variables and constraints instead")
+    #     @warn("Overwriting the object $name stored in the model. Consider using anonymous variables and constraints instead")
     # end
     m.objDict[name] = value
 end
@@ -870,7 +882,7 @@ function mapcontainer_warn(f, x::JuMPContainer, var_or_expr)
     m.map_counter += 1
     if m.map_counter > 400
         # It might not be f that was called the 400 first times but most probably it is f
-        Base.warn_once("$f has been called on a collection of $(var_or_expr)s a large number of times. For performance reasons, this should be avoided. Instead of $f(x)[a,b,c], use $f(x[a,b,c]) to avoid temporary allocations.")
+        warn_once("$f has been called on a collection of $(var_or_expr)s a large number of times. For performance reasons, this should be avoided. Instead of $f(x)[a,b,c], use $f(x[a,b,c]) to avoid temporary allocations.")
     end
 end
 mapcontainer_warn(f, x::JuMPContainer{Variable}) = mapcontainer_warn(f, x, "variable")
@@ -882,8 +894,9 @@ function operator_warn(lhs::AffExpr,rhs::AffExpr)
         if length(lhs.vars) > 1
             m = lhs.vars[1].m
             m.operator_counter += 1
+            # TODO this is printing an unlimited number of times due to https://github.com/JuliaLang/julia/issues/28786, re-enable when fixed
             if m.operator_counter > 20000
-                Base.warn_once("The addition operator has been used on JuMP expressions a large number of times. This warning is safe to ignore but may indicate that model generation is slower than necessary. For performance reasons, you should not add expressions in a loop. Instead of x += y, use append!(x,y) to modify x in place. If y is a single variable, you may also use push!(x, coef, y) in place of x += coef*y.")
+                warn_once("The addition operator has been used on JuMP expressions a large number of times. This warning is safe to ignore but may indicate that model generation is slower than necessary. For performance reasons, you should not add expressions in a loop. Instead of x += y, use append!(x,y) to modify x in place. If y is a single variable, you may also use push!(x, coef, y) in place of x += coef*y.")
             end
         end
     end

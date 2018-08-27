@@ -30,12 +30,20 @@ GenericQuadExpr(q::GenericQuadExpr) = GenericQuadExpr(q.qvars1, q.qvars2, q.qcoe
 
 coeftype(::GenericQuadExpr{C,V}) where {C,V} = C
 
+# variables are ∈ ℝ but coeffs can be ∈ ℂ
+Compat.adjoint(q::GenericQuadExpr{<:Real}) = q
+function Compat.adjoint(q::GenericQuadExpr)
+    GenericQuadExpr(q.qvars1, q.qvars2, adjoint.(q.qcoeffs), aff')
+end
+
 Base.isempty(q::GenericQuadExpr) = (length(q.qvars1) == 0 && isempty(q.aff))
 Base.zero(::Type{GenericQuadExpr{C,V}}) where {C,V} = GenericQuadExpr(V[], V[], C[], zero(GenericAffExpr{C,V}))
 Base.one(::Type{GenericQuadExpr{C,V}}) where {C,V}  = GenericQuadExpr(V[], V[], C[],  one(GenericAffExpr{C,V}))
 Base.zero(q::GenericQuadExpr) = zero(typeof(q))
 Base.one(q::GenericQuadExpr)  =  one(typeof(q))
 Base.copy(q::GenericQuadExpr) = GenericQuadExpr(copy(q.qvars1),copy(q.qvars2),copy(q.qcoeffs),copy(q.aff))
+
+Base.convert(::Type{GenericQuadExpr{C,V}}, q::GenericQuadExpr{C,V}) where {C,V} = q
 
 function Base.append!(q::GenericQuadExpr{T,S}, other::GenericQuadExpr{T,S}) where {T,S}
     append!(q.qvars1, other.qvars1)
@@ -76,7 +84,7 @@ function setobjective(m::Model, sense::Symbol, q::QuadExpr)
             verify_ownership(m, m.obj.qvars2)
             MathProgBase.setquadobjterms!(m.internalModel, Cint[v.col for v in m.obj.qvars1], Cint[v.col for v in m.obj.qvars2], m.obj.qcoeffs)
         else
-            isa(m.internalModel, MathProgBase.AbstractLinearQuadraticModel) && Base.warn_once("Solver does not support adding a quadratic objective to an existing model. JuMP's internal model will be discarded.")
+            isa(m.internalModel, MathProgBase.AbstractLinearQuadraticModel) && warn_once("Solver does not support adding a quadratic objective to an existing model. JuMP's internal model will be discarded.")
             m.internalModelLoaded = false
         end
     end
@@ -145,7 +153,7 @@ function addconstraint(m::Model, c::QuadConstraint)
                                         s,
                                         -c.terms.aff.constant)
         else
-            Base.warn_once("Solver does not appear to support adding quadratic constraints to an existing model. JuMP's internal model will be discarded.")
+            warn_once("Solver does not appear to support adding quadratic constraints to an existing model. JuMP's internal model will be discarded.")
             m.internalModelLoaded = false
         end
     end
@@ -155,7 +163,7 @@ addconstraint(m::Model, c::Array{QuadConstraint}) =
     error("Vectorized constraint added without elementwise comparisons. Try using one of (.<=,.>=,.==).")
 
 function addVectorizedConstraint(m::Model, v::Array{QuadConstraint})
-    ret = Array{ConstraintRef{Model,QuadConstraint}}(size(v))
+    ret = Array{ConstraintRef{Model,QuadConstraint}}(undef, size(v))
     for I in eachindex(v)
         ret[I] = addconstraint(m, v[I])
     end

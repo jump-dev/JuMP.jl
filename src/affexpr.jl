@@ -28,11 +28,19 @@ GenericAffExpr(a::GenericAffExpr) = GenericAffExpr(a.vars, a.coeffs, a.constant)
 
 coeftype(::GenericAffExpr{C,V}) where {C,V} = C
 
+# variables must be ∈ ℝ but coeffs can be ∈ ℂ
+Compat.adjoint(a::GenericAffExpr{<:Real}) = a
+function Compat.adjoint(a::GenericAffExpr)
+    GenericAffExpr(a.vars, adjoint.(a.coeffs), a.constant')
+end
+
 Base.zero(::Type{GenericAffExpr{C,V}}) where {C,V} = GenericAffExpr{C,V}(V[],C[],zero(C))
 Base.one(::Type{GenericAffExpr{C,V}}) where { C,V} = GenericAffExpr{C,V}(V[],C[], one(C))
 Base.zero(a::GenericAffExpr) = zero(typeof(a))
 Base.one( a::GenericAffExpr) =  one(typeof(a))
 Base.copy(a::GenericAffExpr) = GenericAffExpr(copy(a.vars),copy(a.coeffs),copy(a.constant))
+
+Base.convert(::Type{GenericAffExpr{C,V}}, a::GenericAffExpr{C,V}) where {C,V} = a
 
 # Old iterator protocol - iterates over tuples (aᵢ,xᵢ)
 struct LinearTermIterator{GAE<:GenericAffExpr}
@@ -55,7 +63,7 @@ else
     end
     function Base.iterate(lti::LinearTermIterator, state::Int)
         if state ≤ length(lti.aff.vars)
-            ((lti.affs.coeffs[state], lti.affs.vars[state]), state+1)
+            ((lti.aff.coeffs[state], lti.aff.vars[state]), state+1)
         else
             nothing
         end
@@ -200,7 +208,7 @@ function addconstraint(m::Model, c::LinearConstraint)
             indices, coeffs = merge_duplicates(Cint, c.terms, m.indexedVector, m)
             MathProgBase.addconstr!(m.internalModel,indices,coeffs,c.lb,c.ub)
         else
-            Base.warn_once("Solver does not appear to support adding constraints to an existing model. JuMP's internal model will be discarded.")
+            warn_once("Solver does not appear to support adding constraints to an existing model. JuMP's internal model will be discarded.")
             m.internalModelLoaded = false
         end
     end

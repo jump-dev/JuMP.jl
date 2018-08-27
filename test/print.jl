@@ -11,7 +11,7 @@
 # Testing $fa pretty-printing-related functionality
 #############################################################################
 using JuMP
-using Compat.Test
+using Compat.Test, Compat.LinearAlgebra
 
 import JuMP.REPLMode, JuMP.IJuliaMode
 import JuMP.repl, JuMP.ijulia
@@ -593,20 +593,6 @@ end
         io_test(IJuliaMode, a_v, "v_{4,5,2,3,2,2,4}")
     end
 
-    @testset "User-created Array{Variable}" begin
-        m = Model()
-        @variable(m, x)
-        @variable(m, y)
-
-        v = [x,y,x]
-        A = [x y; y x]
-        io_test(REPLMode,   v, "$Variable[x, y, x]")
-        io_test(IJuliaMode, v, "$Variable[x, y, x]")
-
-        io_test(REPLMode,   A, "$Variable[x y; y x]")
-        io_test(IJuliaMode, A, "$Variable[x y; y x]")
-    end
-
     @testset "basename keyword argument" begin
         m = Model()
         @variable(m, x, basename="foo")
@@ -633,7 +619,7 @@ end
         A = [2.0  0.0;
              0.0  1.0]
         @variable(m, X[1:2,1:2], SDP)
-        s = @SDconstraint(m, X >= A)
+        s = @SDconstraint(m, X .>= A)
         io_test(REPLMode, s, " X[1,1] - 2  X[1,2]     is semidefinite\n X[1,2]      X[2,2] - 1")
     end
 

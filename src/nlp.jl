@@ -125,12 +125,12 @@ mutable struct NLPEvaluator <: MathProgBase.AbstractNLPEvaluator
     hess_I::Vector{Int}
     hess_J::Vector{Int}
     max_chunk::Int # chunk size for which we've allocated storage
-    # timers
-    eval_f_timer::Float64
-    eval_g_timer::Float64
-    eval_grad_f_timer::Float64
-    eval_jac_g_timer::Float64
-    eval_hesslag_timer::Float64
+    # init flags
+    eval_f_init::Bool
+    eval_g_init::Bool
+    eval_grad_f_init::Bool
+    eval_jac_g_init::Bool
+    eval_hesslag_init::Bool
     function NLPEvaluator(m::Model)
         d = new(m)
         numVar = m.numCols
@@ -152,19 +152,19 @@ mutable struct NLPEvaluator <: MathProgBase.AbstractNLPEvaluator
                 has_user_mv_operator |= ReverseDiffSparse.has_user_multivariate_operators(nlconstr.terms.nd)
             end
             d.disable_2ndorder = has_user_mv_operator
-            d.user_output_buffer = Array{Float64}(m.nlpdata.largest_user_input_dimension)
-            d.jac_storage = Array{Float64}(max(numVar,m.nlpdata.largest_user_input_dimension))
+            d.user_output_buffer = Array{Float64}(undef, m.nlpdata.largest_user_input_dimension)
+            d.jac_storage = Array{Float64}(undef, max(numVar,m.nlpdata.largest_user_input_dimension))
         else
             d.disable_2ndorder = false
-            d.user_output_buffer = Array{Float64}(0)
-            d.jac_storage = Array{Float64}(numVar)
+            d.user_output_buffer = Array{Float64}(undef, 0)
+            d.jac_storage = Array{Float64}(undef, numVar)
         end
 
-        d.eval_f_timer = 0
-        d.eval_g_timer = 0
-        d.eval_grad_f_timer = 0
-        d.eval_jac_g_timer = 0
-        d.eval_hesslag_timer = 0
+        d.eval_f_init = false
+        d.eval_g_init = false
+        d.eval_grad_f_init = false
+        d.eval_jac_g_init = false
+        d.eval_hesslag_init = false
         return d
     end
 end
@@ -207,7 +207,7 @@ function FunctionStorage(nd::Vector{NodeData}, const_values,numVar, coloring_sto
     else
         hess_I = hess_J = Int[]
         rinfo = Coloring.RecoveryInfo()
-        seed_matrix = Array{Float64}(0,0)
+        seed_matrix = Array{Float64}(undef, 0,0)
         linearity = [NONLINEAR]
     end
 
@@ -223,7 +223,7 @@ function SubexpressionStorage(nd::Vector{NodeData}, const_values,numVar, fixed_v
     reverse_storage = zeros(length(nd))
     linearity = classify_linearity(nd, adj, subexpression_linearity, fixed_variables)
 
-    empty_arr = Array{Float64}(0)
+    empty_arr = Array{Float64}(undef, 0)
 
     return SubexpressionStorage(nd, adj, const_values, forward_storage, partials_storage, reverse_storage, empty_arr, empty_arr, empty_arr, linearity[1])
 
@@ -237,7 +237,7 @@ function MathProgBase.initialize(d::NLPEvaluator, requested_features::Vector{Sym
             # for solvers that need them
         end
     end
-    if d.eval_f_timer != 0
+    if d.eval_f_init
         # we've already been initialized
         # assume no new features are being requested.
         return
@@ -256,8 +256,6 @@ function MathProgBase.initialize(d::NLPEvaluator, requested_features::Vector{Sym
 
     d.parameter_values = nldata.nlparamvalues
 
-    tic()
-
     d.linobj = prepAffObjective(d.m)
     linrowlb, linrowub = prepConstrBounds(d.m)
     numVar = length(d.linobj)
@@ -268,8 +266,8 @@ function MathProgBase.initialize(d::NLPEvaluator, requested_features::Vector{Sym
 
     d.has_nlobj = isa(nldata.nlobj, NonlinearExprData)
     max_expr_length = 0
-    main_expressions = Array{Vector{NodeData}}(0)
-    subexpr = Array{Vector{NodeData}}(0)
+    main_expressions = Array{Vector{NodeData}}(undef, 0)
+    subexpr = Array{Vector{NodeData}}(undef, 0)
     for nlexpr in nldata.nlexpr
         push!(subexpr, nlexpr.nd)
     end
@@ -281,12 +279,12 @@ function MathProgBase.initialize(d::NLPEvaluator, requested_features::Vector{Sym
     end
     d.subexpression_order, individual_order = order_subexpressions(main_expressions,subexpr)
 
-    d.subexpression_linearity = Array{Linearity}(length(nldata.nlexpr))
-    subexpression_variables = Array{Vector{Int}}(length(nldata.nlexpr))
-    subexpression_edgelist = Array{Set{Tuple{Int,Int}}}(length(nldata.nlexpr))
-    d.subexpressions = Array{SubexpressionStorage}(length(nldata.nlexpr))
-    d.subexpression_forward_values = Array{Float64}(length(d.subexpressions))
-    d.subexpression_reverse_values = Array{Float64}(length(d.subexpressions))
+    d.subexpression_linearity = Array{Linearity}(undef, length(nldata.nlexpr))
+    subexpression_variables = Array{Vector{Int}}(undef, length(nldata.nlexpr))
+    subexpression_edgelist = Array{Set{Tuple{Int,Int}}}(undef, length(nldata.nlexpr))
+    d.subexpressions = Array{SubexpressionStorage}(undef, length(nldata.nlexpr))
+    d.subexpression_forward_values = Array{Float64}(undef, length(d.subexpressions))
+    d.subexpression_reverse_values = Array{Float64}(undef, length(d.subexpressions))
 
     empty_edgelist = Set{Tuple{Int,Int}}()
     for k in d.subexpression_order # only load expressions which actually are used
@@ -324,7 +322,7 @@ function MathProgBase.initialize(d::NLPEvaluator, requested_features::Vector{Sym
     end
 
     if :ExprGraph in requested_features
-        d.subexpressions_as_julia_expressions = Array{Any}(length(subexpr))
+        d.subexpressions_as_julia_expressions = Array{Any}(undef, length(subexpr))
         for k in d.subexpression_order
             if d.subexpression_linearity[k] != CONSTANT || !SIMPLIFY
                 ex = d.subexpressions[k]
@@ -336,7 +334,7 @@ function MathProgBase.initialize(d::NLPEvaluator, requested_features::Vector{Sym
     end
 
     if SIMPLIFY
-        main_expressions = Array{Vector{NodeData}}(0)
+        main_expressions = Array{Vector{NodeData}}(undef, 0)
 
         # simplify objective and constraint expressions
         if d.has_nlobj
@@ -406,15 +404,15 @@ function MathProgBase.initialize(d::NLPEvaluator, requested_features::Vector{Sym
         MathProgBase.eval_g(d, zeros(MathProgBase.numconstr(d.m)), d.m.colVal)
     end
 
-    tprep = toq()
+    #tprep = toq()
     #println("Prep time: $tprep")
 
-    # reset timers
-    d.eval_f_timer = 0
-    d.eval_grad_f_timer = 0
-    d.eval_g_timer = 0
-    d.eval_jac_g_timer = 0
-    d.eval_hesslag_timer = 0
+    # init flags
+    d.eval_f_init = false
+    d.eval_grad_f_init = false
+    d.eval_g_init = false
+    d.eval_jac_g_init = false
+    d.eval_hesslag_init = false
 
     nothing
 end
@@ -475,7 +473,6 @@ function reverse_eval_all(d::NLPEvaluator,x)
 end
 
 function MathProgBase.eval_f(d::NLPEvaluator, x)
-    tic()
     if d.last_x != x
         forward_eval_all(d,x)
         reverse_eval_all(d,x)
@@ -490,12 +487,11 @@ function MathProgBase.eval_f(d::NLPEvaluator, x)
             val += qobj.qcoeffs[k]*x[qobj.qvars1[k].col]*x[qobj.qvars2[k].col]
         end
     end
-    d.eval_f_timer += toq()
+    d.eval_f_init = true
     return val
 end
 
 function MathProgBase.eval_grad_f(d::NLPEvaluator, g, x)
-    tic()
     if d.last_x != x
         forward_eval_all(d,x)
         reverse_eval_all(d,x)
@@ -525,12 +521,11 @@ function MathProgBase.eval_grad_f(d::NLPEvaluator, g, x)
             g[qobj.qvars2[k].col] += coef*x[qobj.qvars1[k].col]
         end
     end
-    d.eval_grad_f_timer += toq()
+    d.eval_grad_f_init = true
     return
 end
 
 function MathProgBase.eval_g(d::NLPEvaluator, g, x)
-    tic()
     if d.last_x != x
         forward_eval_all(d,x)
         reverse_eval_all(d,x)
@@ -558,14 +553,13 @@ function MathProgBase.eval_g(d::NLPEvaluator, g, x)
         idx += 1
     end
 
-    d.eval_g_timer += toq()
+    d.eval_g_init = true
     #print("x = ");show(x);println()
     #println(size(A,1), " g(x) = ");show(g);println()
     return
 end
 
 function MathProgBase.eval_jac_g(d::NLPEvaluator, J, x)
-    tic()
     if d.last_x != x
         forward_eval_all(d,x)
         reverse_eval_all(d,x)
@@ -620,7 +614,7 @@ function MathProgBase.eval_jac_g(d::NLPEvaluator, J, x)
         idx += length(nzidx)
     end
 
-    d.eval_jac_g_timer += toq()
+    d.eval_jac_g_init = true
     #print("x = ");show(x);println()
     #print("V ");show(J);println()
     return
@@ -755,8 +749,6 @@ function MathProgBase.eval_hesslag(
         reverse_eval_all(d,x)
     end
 
-    tic()
-
     # quadratic objective
     nzcount = 1
     for k in 1:length(qobj.qvars1)
@@ -809,7 +801,7 @@ function MathProgBase.eval_hesslag(
         nzcount += nzthis
     end
 
-    d.eval_hesslag_timer += toq()
+    d.eval_hesslag_init = true
     return
 
 end
@@ -1216,11 +1208,11 @@ function MathProgBase.constr_expr(d::NLPEvaluator,i::Integer)
 end
 
 function EnableNLPResolve()
-    Base.warn_once("NLP resolve is now enabled by default. The EnableNLPResolve() method will be removed in a future release.")
+    warn_once("NLP resolve is now enabled by default. The EnableNLPResolve() method will be removed in a future release.")
     return
 end
 function DisableNLPResolve()
-    Base.warn_once("NLP resolve is now enabled by default. The DisableNLPResolve() method will be removed in a future release.")
+    warn_once("NLP resolve is now enabled by default. The DisableNLPResolve() method will be removed in a future release.")
     return
 end
 export EnableNLPResolve, DisableNLPResolve
@@ -1294,7 +1286,7 @@ function solvenlp(m::Model, traits; suppress_warnings=false)
             m.nlpdata.nlconstrDuals = nlduals[length(m.linconstr)+length(m.quadconstr)+1:end]
             m.redCosts = MathProgBase.getreducedcosts(m.internalModel)
         else
-            suppress_warnings || Base.warn_once("Nonlinear solver does not provide dual solutions")
+            suppress_warnings || warn_once("Nonlinear solver does not provide dual solutions")
         end
     end
 
@@ -1313,7 +1305,7 @@ function _getValue(x::NonlinearExpression)
     # could be smarter and cache
 
     nldata::NLPData = m.nlpdata
-    subexpr = Array{Vector{NodeData}}(0)
+    subexpr = Array{Vector{NodeData}}(undef, 0)
     for nlexpr in nldata.nlexpr
         push!(subexpr, nlexpr.nd)
     end
@@ -1324,14 +1316,14 @@ function _getValue(x::NonlinearExpression)
 
     subexpression_order, individual_order = order_subexpressions(Vector{NodeData}[this_subexpr.nd],subexpr)
 
-    subexpr_values = Array{Float64}(length(subexpr))
+    subexpr_values = Array{Float64}(undef, length(subexpr))
 
     for k in subexpression_order
         max_len = max(max_len, length(nldata.nlexpr[k].nd))
     end
 
-    forward_storage = Array{Float64}(max_len)
-    partials_storage = Array{Float64}(max_len)
+    forward_storage = Array{Float64}(undef, max_len)
+    partials_storage = Array{Float64}(undef, max_len)
     user_input_buffer = zeros(nldata.largest_user_input_dimension)
     user_output_buffer = zeros(nldata.largest_user_input_dimension)
 
@@ -1390,7 +1382,7 @@ function register(m::Model, s::Symbol, dimension::Integer, f::Function, ∇f::Fu
         fprimeprime = x -> ForwardDiff.derivative(∇f, x)
         ReverseDiffSparse.register_univariate_operator!(m.nlpdata.user_operators, s, f, ∇f, fprimeprime)
     else
-        autodiff == false || Base.warn_once("autodiff=true ignored since gradient is already provided.")
+        autodiff == false || warn_once("autodiff=true ignored since gradient is already provided.")
         m.nlpdata.largest_user_input_dimension = max(m.nlpdata.largest_user_input_dimension,dimension)
         d = UserFunctionEvaluator(x -> f(x...), (g,x)->∇f(g,x...), dimension)
         ReverseDiffSparse.register_multivariate_operator!(m.nlpdata.user_operators, s, d)
