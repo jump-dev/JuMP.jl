@@ -49,20 +49,20 @@ end
 
 include("JuMPExtension.jl")
 
-include("derivatives.jl")
-include("derivatives_coloring.jl")
+# include("derivatives.jl")
+# include("derivatives_coloring.jl")
 
-include("containers.jl")
-include("model.jl")
-include("variable.jl")
-include("expr.jl")
-include("objective.jl")
-include("constraint.jl")
-include("nlp.jl")
-include("generate_and_solve.jl")
-include("print.jl")
+# include("containers.jl")
+# include("model.jl")
+# include("variable.jl")
+# include("expr.jl")
+# include("objective.jl")
+# include("constraint.jl")
+# include("nlp.jl")
+# include("generate_and_solve.jl")
+# include("print.jl")
 include("operator.jl")
-include("macros.jl")
+# include("macros.jl")
 
 # Fuzzer of macros to build expressions
 #include("fuzzer.jl")

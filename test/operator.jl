@@ -28,7 +28,8 @@ function operators_test(ModelType::Type{<:JuMP.AbstractModel}, VariableRefType::
     AffExprType = JuMP.GenericAffExpr{Float64, VariableRefType}
     QuadExprType = JuMP.GenericQuadExpr{Float64, VariableRefType}
 
-    @testset "Promotion" begin
+    println("Promotion")
+    @time @testset "Promotion" begin
         m = ModelType()
         I = Int
         V = VariableRefType
@@ -50,7 +51,8 @@ function operators_test(ModelType::Type{<:JuMP.AbstractModel}, VariableRefType::
         @test promote_type(A, Q) == Q
     end
 
-    @testset "Basic operator overloads" begin
+    println("Basic operator overloads")
+    @time @testset "Basic operator overloads" begin
         m = ModelType()
         @variable(m, w)
         @variable(m, x)
@@ -240,7 +242,8 @@ function operators_test(ModelType::Type{<:JuMP.AbstractModel}, VariableRefType::
         end
     end
 
-    @testset "Higher-level operators" begin
+    println("Higher-level operators")
+    @time @testset "Higher-level operators" begin
         m = ModelType()
         @testset "sum" begin
             sum_m = ModelType()
@@ -331,7 +334,8 @@ function operators_test(ModelType::Type{<:JuMP.AbstractModel}, VariableRefType::
         end
     end
 
-    @testset "Vectorized operations" begin
+    println("Vectorized operations")
+    @time @testset "Vectorized operations" begin
         @testset "Transpose" begin
             m = ModelType()
             @variable(m, x[1:3])
@@ -617,7 +621,8 @@ function operators_test(ModelType::Type{<:JuMP.AbstractModel}, VariableRefType::
         end
     end
 
-    @testset "Operators for non-Array AbstractArrays" begin
+    println("Operators for non-Array AbstractArrays")
+    @time @testset "Operators for non-Array AbstractArrays" begin
         m = ModelType()
         @variable(m, x[1:3])
 
@@ -640,7 +645,8 @@ function operators_test(ModelType::Type{<:JuMP.AbstractModel}, VariableRefType::
         end
     end
 
-    @testset "diagm for non-Array AbstractArrays" begin
+    println("diagm for non-Array AbstractArrays")
+    @time @testset "diagm for non-Array AbstractArrays" begin
         m = ModelType()
         @variable(m, x[1:3])
 
@@ -653,7 +659,8 @@ function operators_test(ModelType::Type{<:JuMP.AbstractModel}, VariableRefType::
         end
     end
 
-    @testset "DimensionMismatch when performing vector-matrix multiplication with custom types #988" begin
+    println("988")
+    @time @testset "DimensionMismatch when performing vector-matrix multiplication with custom types #988" begin
         m = ModelType()
         @variable m Q[1:3, 1:3] PSD
 
@@ -680,7 +687,8 @@ function operators_test(ModelType::Type{<:JuMP.AbstractModel}, VariableRefType::
         end
     end
 
-    @testset "operator_warn" begin
+    println("operator_warn")
+    @time @testset "operator_warn" begin
         m = ModelType()
         @variable m x[1:51]
         # JuMPExtension does not have the `operator_counter` field
