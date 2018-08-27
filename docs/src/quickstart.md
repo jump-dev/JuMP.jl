@@ -4,24 +4,24 @@ Quick Start Guide
 This quick start guide will introduce the main concepts of JuMP. If you are
 familiar with another modeling language embedded in a high-level language such
 as PuLP (Python) or a solver-specific interface you will find most of this
-familiar, with the exception of *macros*. A deep understanding of macros is not
-essential, but if you would like to know more please see the
-[Julia documentation](http://docs.julialang.org/en/latest/manual/metaprogramming/).
-If you are coming from an AMPL or similar background, you may find some of the
-concepts novel but the general appearance will still be familiar.
+familiar. If you are coming from an AMPL or similar background, you may find
+some of the concepts novel but the general appearance will still be familiar.
 
-There are more complex examples in the [`JuMP/examples/` folder](https://github.com/JuliaOpt/JuMP.jl/tree/master/examples).
+The example in this guide is deliberately kept simple. There are more complex
+examples in the [`JuMP/examples/` folder](https://github.com/JuliaOpt/JuMP.jl/tree/master/examples).
 
 Once JuMP is installed, to use JuMP in your programs, you just need to say:
 ```jldoctest quickstart_example
 julia> using JuMP
 ```
 
-We also need to include a Julia package which provides an appropriate solver. In
-this case, we will use GLPK:
+You also need to include a Julia package which provides an appropriate solver.
+One such solver is `GLPK.Optimizer`, which is provided by the
+[GLPK.jl package](https://github.com/JuliaOpt/GLPK.jl).
 ```julia
 julia> using GLPK
 ```
+See [Installation Guide](@ref) for a list of other solvers you can use.
 
 Models are created with the `Model()` function. The `with_optimizer` syntax is
 used to specify the optimizer to be used:
@@ -39,12 +39,12 @@ DocTestSetup = quote
                                  JuMP.JuMPMOIModel{Float64}(),
                                  evalobjective=false))
 end
-# v0.6 prepends JuMP. to printed type information, whereas v0.7 does not.
-DocTestFilters = r"JuMP\."
+# v0.6 prepends the module name to printed type information, whereas v0.7 does
+# not.
+DocTestFilters = [r"JuMP\.", r"MathOptInterface\."]
 ```
 !!! note
-    Your model doesn't have to be called `model` - it's just a name. However,
-    the JuMP style guide prefers `model`.
+    Your model doesn't have to be called `model` - it's just a name.
 
 There are a few options for defining a variable, depending on whether you want
 to have lower bounds, upper bounds, both bounds, or even no bounds. The
@@ -69,9 +69,9 @@ objective we are setting! The objective sense, `Max` or `Min`, should be
 provided as the second argument. Note also that we don't have a multiplication
 `*` symbol between `5` and our variable `x` - Julia is smart enough to not need
 it! Feel free to stick with `*` if it makes you feel more comfortable, as we
-have done with `3*y`:
+have done with `3 * y`:
 ```jldoctest quickstart_example
-julia> @objective(model, Max, 5x + 3*y)
+julia> @objective(model, Max, 5x + 3 * y)
 ```
 
 Adding constraints is a lot like setting the objective. Here we create a
@@ -118,7 +118,7 @@ Success::MathOptInterface.TerminationStatusCode = 0
 ```
 In this case, `GLPK` returned `Success`. This does not mean that it has found
 the optimal solution. Instead, it indicates that GLPK has finished running and
-did not encounter any errors or termination limits.
+did not encounter any errors or user-provided termination limits.
 
 ```@meta
 DocTestSetup = nothing
