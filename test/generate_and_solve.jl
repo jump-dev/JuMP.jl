@@ -23,9 +23,9 @@
 
         c = @constraint(m, x + y <= 1)
 
-        JuMP.setname(JuMP.UpperBoundRef(x), "xub")
-        JuMP.setname(JuMP.LowerBoundRef(y), "ylb")
-        JuMP.setname(c, "c")
+        JuMP.set_name(JuMP.UpperBoundRef(x), "xub")
+        JuMP.set_name(JuMP.LowerBoundRef(y), "ylb")
+        JuMP.set_name(c, "c")
 
         modelstring = """
         variables: x, y
@@ -39,7 +39,7 @@
         MOIU.loadfromstring!(model, modelstring)
         MOIU.test_models_equal(JuMP.caching_optimizer(m).model_cache, model, ["x","y"], ["c", "xub", "ylb"])
 
-        JuMP.optimize(m, with_optimizer(MOIU.MockOptimizer, JuMP.JuMPMOIModel{Float64}(), evalobjective=false))
+        JuMP.optimize!(m, with_optimizer(MOIU.MockOptimizer, JuMP.JuMPMOIModel{Float64}(), evalobjective=false))
 
         mockoptimizer = JuMP.caching_optimizer(m).optimizer
         MOI.set!(mockoptimizer, MOI.TerminationStatus(), MOI.Success)
@@ -47,27 +47,27 @@
         MOI.set!(mockoptimizer, MOI.ResultCount(), 1)
         MOI.set!(mockoptimizer, MOI.PrimalStatus(), MOI.FeasiblePoint)
         MOI.set!(mockoptimizer, MOI.DualStatus(), MOI.FeasiblePoint)
-        MOI.set!(mockoptimizer, MOI.VariablePrimal(), JuMP.optimizerindex(x), 1.0)
-        MOI.set!(mockoptimizer, MOI.VariablePrimal(), JuMP.optimizerindex(y), 0.0)
-        MOI.set!(mockoptimizer, MOI.ConstraintDual(), JuMP.optimizerindex(c), -1.0)
-        MOI.set!(mockoptimizer, MOI.ConstraintDual(), JuMP.optimizerindex(JuMP.UpperBoundRef(x)), 0.0)
-        MOI.set!(mockoptimizer, MOI.ConstraintDual(), JuMP.optimizerindex(JuMP.LowerBoundRef(y)), 1.0)
+        MOI.set!(mockoptimizer, MOI.VariablePrimal(), JuMP.optimizer_index(x), 1.0)
+        MOI.set!(mockoptimizer, MOI.VariablePrimal(), JuMP.optimizer_index(y), 0.0)
+        MOI.set!(mockoptimizer, MOI.ConstraintDual(), JuMP.optimizer_index(c), -1.0)
+        MOI.set!(mockoptimizer, MOI.ConstraintDual(), JuMP.optimizer_index(JuMP.UpperBoundRef(x)), 0.0)
+        MOI.set!(mockoptimizer, MOI.ConstraintDual(), JuMP.optimizer_index(JuMP.LowerBoundRef(y)), 1.0)
 
         #@test JuMP.isattached(m)
-        @test JuMP.hasresultvalues(m)
+        @test JuMP.has_result_values(m)
 
-        @test JuMP.terminationstatus(m) == MOI.Success
-        @test JuMP.primalstatus(m) == MOI.FeasiblePoint
+        @test JuMP.termination_status(m) == MOI.Success
+        @test JuMP.primal_status(m) == MOI.FeasiblePoint
 
-        @test JuMP.resultvalue(x) == 1.0
-        @test JuMP.resultvalue(y) == 0.0
-        @test JuMP.resultvalue(x + y) == 1.0
-        @test JuMP.objectivevalue(m) == -1.0
+        @test JuMP.result_value(x) == 1.0
+        @test JuMP.result_value(y) == 0.0
+        @test JuMP.result_value(x + y) == 1.0
+        @test JuMP.objective_value(m) == -1.0
 
-        @test JuMP.dualstatus(m) == MOI.FeasiblePoint
-        @test JuMP.resultdual(c) == -1
-        @test JuMP.resultdual(JuMP.UpperBoundRef(x)) == 0.0
-        @test JuMP.resultdual(JuMP.LowerBoundRef(y)) == 1.0
+        @test JuMP.dual_status(m) == MOI.FeasiblePoint
+        @test JuMP.result_dual(c) == -1
+        @test JuMP.result_dual(JuMP.UpperBoundRef(x)) == 0.0
+        @test JuMP.result_dual(JuMP.LowerBoundRef(y)) == 1.0
     end
 
     @testset "LP (Direct mode)" begin
@@ -84,29 +84,29 @@
         MOI.set!(mockoptimizer, MOI.ResultCount(), 1)
         MOI.set!(mockoptimizer, MOI.PrimalStatus(), MOI.FeasiblePoint)
         MOI.set!(mockoptimizer, MOI.DualStatus(), MOI.FeasiblePoint)
-        MOI.set!(mockoptimizer, MOI.VariablePrimal(), JuMP.optimizerindex(x), 1.0)
-        MOI.set!(mockoptimizer, MOI.VariablePrimal(), JuMP.optimizerindex(y), 0.0)
-        MOI.set!(mockoptimizer, MOI.ConstraintDual(), JuMP.optimizerindex(c), -1.0)
-        MOI.set!(mockoptimizer, MOI.ConstraintDual(), JuMP.optimizerindex(JuMP.UpperBoundRef(x)), 0.0)
-        MOI.set!(mockoptimizer, MOI.ConstraintDual(), JuMP.optimizerindex(JuMP.LowerBoundRef(y)), 1.0)
+        MOI.set!(mockoptimizer, MOI.VariablePrimal(), JuMP.optimizer_index(x), 1.0)
+        MOI.set!(mockoptimizer, MOI.VariablePrimal(), JuMP.optimizer_index(y), 0.0)
+        MOI.set!(mockoptimizer, MOI.ConstraintDual(), JuMP.optimizer_index(c), -1.0)
+        MOI.set!(mockoptimizer, MOI.ConstraintDual(), JuMP.optimizer_index(JuMP.UpperBoundRef(x)), 0.0)
+        MOI.set!(mockoptimizer, MOI.ConstraintDual(), JuMP.optimizer_index(JuMP.LowerBoundRef(y)), 1.0)
 
-        JuMP.optimize(m)
+        JuMP.optimize!(m)
 
         #@test JuMP.isattached(m)
-        @test JuMP.hasresultvalues(m)
+        @test JuMP.has_result_values(m)
 
-        @test JuMP.terminationstatus(m) == MOI.Success
-        @test JuMP.primalstatus(m) == MOI.FeasiblePoint
+        @test JuMP.termination_status(m) == MOI.Success
+        @test JuMP.primal_status(m) == MOI.FeasiblePoint
 
-        @test JuMP.resultvalue(x) == 1.0
-        @test JuMP.resultvalue(y) == 0.0
-        @test JuMP.resultvalue(x + y) == 1.0
-        @test JuMP.objectivevalue(m) == -1.0
+        @test JuMP.result_value(x) == 1.0
+        @test JuMP.result_value(y) == 0.0
+        @test JuMP.result_value(x + y) == 1.0
+        @test JuMP.objective_value(m) == -1.0
 
-        @test JuMP.dualstatus(m) == MOI.FeasiblePoint
-        @test JuMP.resultdual(c) == -1
-        @test JuMP.resultdual(JuMP.UpperBoundRef(x)) == 0.0
-        @test JuMP.resultdual(JuMP.LowerBoundRef(y)) == 1.0
+        @test JuMP.dual_status(m) == MOI.FeasiblePoint
+        @test JuMP.result_dual(c) == -1
+        @test JuMP.result_dual(JuMP.UpperBoundRef(x)) == 0.0
+        @test JuMP.result_dual(JuMP.LowerBoundRef(y)) == 1.0
     end
 
     # TODO: test Manual mode
@@ -118,9 +118,9 @@
         @variable(m, y, Bin)
         @objective(m, Max, x)
 
-        JuMP.setname(JuMP.FixRef(x), "xfix")
-        JuMP.setname(JuMP.IntegerRef(x), "xint")
-        JuMP.setname(JuMP.BinaryRef(y), "ybin")
+        JuMP.set_name(JuMP.FixRef(x), "xfix")
+        JuMP.set_name(JuMP.IntegerRef(x), "xint")
+        JuMP.set_name(JuMP.BinaryRef(y), "ybin")
 
         modelstring = """
         variables: x, y
@@ -141,24 +141,24 @@
         MOI.set!(mockoptimizer, MOI.ObjectiveValue(), 1.0)
         MOI.set!(mockoptimizer, MOI.ResultCount(), 1)
         MOI.set!(mockoptimizer, MOI.PrimalStatus(), MOI.FeasiblePoint)
-        MOI.set!(mockoptimizer, MOI.VariablePrimal(), JuMP.optimizerindex(x), 1.0)
-        MOI.set!(mockoptimizer, MOI.VariablePrimal(), JuMP.optimizerindex(y), 0.0)
+        MOI.set!(mockoptimizer, MOI.VariablePrimal(), JuMP.optimizer_index(x), 1.0)
+        MOI.set!(mockoptimizer, MOI.VariablePrimal(), JuMP.optimizer_index(y), 0.0)
 
-        JuMP.optimize(m)
+        JuMP.optimize!(m)
 
         #@test JuMP.isattached(m)
-        @test JuMP.hasresultvalues(m)
+        @test JuMP.has_result_values(m)
 
-        @test JuMP.terminationstatus(m) == MOI.Success
-        @test JuMP.primalstatus(m) == MOI.FeasiblePoint
+        @test JuMP.termination_status(m) == MOI.Success
+        @test JuMP.primal_status(m) == MOI.FeasiblePoint
 
-        @test JuMP.resultvalue(x) == 1.0
-        @test JuMP.resultvalue(y) == 0.0
-        @test JuMP.objectivevalue(m) == 1.0
+        @test JuMP.result_value(x) == 1.0
+        @test JuMP.result_value(y) == 0.0
+        @test JuMP.objective_value(m) == 1.0
 
-        @test !JuMP.hasresultdual(m, typeof(JuMP.FixRef(x)))
-        @test !JuMP.hasresultdual(m, typeof(JuMP.IntegerRef(x)))
-        @test !JuMP.hasresultdual(m, typeof(JuMP.BinaryRef(y)))
+        @test !JuMP.has_result_dual(m, typeof(JuMP.FixRef(x)))
+        @test !JuMP.has_result_dual(m, typeof(JuMP.IntegerRef(x)))
+        @test !JuMP.has_result_dual(m, typeof(JuMP.BinaryRef(y)))
     end
 
     @testset "QCQP" begin
@@ -183,7 +183,7 @@
         MOIU.loadfromstring!(model, modelstring)
         MOIU.test_models_equal(JuMP.caching_optimizer(m).model_cache, model, ["x","y"], ["c1", "c2", "c3"])
 
-        JuMP.optimize(m, with_optimizer(MOIU.MockOptimizer, JuMP.JuMPMOIModel{Float64}(), evalobjective=false))
+        JuMP.optimize!(m, with_optimizer(MOIU.MockOptimizer, JuMP.JuMPMOIModel{Float64}(), evalobjective=false))
 
         mockoptimizer = JuMP.caching_optimizer(m).optimizer
         MOI.set!(mockoptimizer, MOI.TerminationStatus(), MOI.Success)
@@ -191,26 +191,26 @@
         MOI.set!(mockoptimizer, MOI.ResultCount(), 1)
         MOI.set!(mockoptimizer, MOI.PrimalStatus(), MOI.FeasiblePoint)
         MOI.set!(mockoptimizer, MOI.DualStatus(), MOI.FeasiblePoint)
-        MOI.set!(mockoptimizer, MOI.VariablePrimal(), JuMP.optimizerindex(x), 1.0)
-        MOI.set!(mockoptimizer, MOI.VariablePrimal(), JuMP.optimizerindex(y), 0.0)
-        MOI.set!(mockoptimizer, MOI.ConstraintDual(), JuMP.optimizerindex(c1), -1.0)
-        MOI.set!(mockoptimizer, MOI.ConstraintDual(), JuMP.optimizerindex(c2), 2.0)
-        MOI.set!(mockoptimizer, MOI.ConstraintDual(), JuMP.optimizerindex(c3), 3.0)
+        MOI.set!(mockoptimizer, MOI.VariablePrimal(), JuMP.optimizer_index(x), 1.0)
+        MOI.set!(mockoptimizer, MOI.VariablePrimal(), JuMP.optimizer_index(y), 0.0)
+        MOI.set!(mockoptimizer, MOI.ConstraintDual(), JuMP.optimizer_index(c1), -1.0)
+        MOI.set!(mockoptimizer, MOI.ConstraintDual(), JuMP.optimizer_index(c2), 2.0)
+        MOI.set!(mockoptimizer, MOI.ConstraintDual(), JuMP.optimizer_index(c3), 3.0)
 
         #@test JuMP.isattached(m)
-        @test JuMP.hasresultvalues(m)
+        @test JuMP.has_result_values(m)
 
-        @test JuMP.terminationstatus(m) == MOI.Success
-        @test JuMP.primalstatus(m) == MOI.FeasiblePoint
+        @test JuMP.termination_status(m) == MOI.Success
+        @test JuMP.primal_status(m) == MOI.FeasiblePoint
 
-        @test JuMP.resultvalue(x) == 1.0
-        @test JuMP.resultvalue(y) == 0.0
-        @test JuMP.objectivevalue(m) == -1.0
+        @test JuMP.result_value(x) == 1.0
+        @test JuMP.result_value(y) == 0.0
+        @test JuMP.objective_value(m) == -1.0
 
-        @test JuMP.dualstatus(m) == MOI.FeasiblePoint
-        @test JuMP.resultdual(c1) == -1.0
-        @test JuMP.resultdual(c2) == 2.0
-        @test JuMP.resultdual(c3) == 3.0
+        @test JuMP.dual_status(m) == MOI.FeasiblePoint
+        @test JuMP.result_dual(c1) == -1.0
+        @test JuMP.result_dual(c2) == 2.0
+        @test JuMP.result_dual(c3) == 3.0
     end
 
     @testset "SOC" begin
@@ -246,46 +246,46 @@
         MOI.set!(mockoptimizer, MOI.ResultCount(), 1)
         MOI.set!(mockoptimizer, MOI.PrimalStatus(), MOI.FeasiblePoint)
         MOI.set!(mockoptimizer, MOI.DualStatus(), MOI.FeasiblePoint)
-        MOI.set!(mockoptimizer, MOI.VariablePrimal(), JuMP.optimizerindex(x), 1.0)
-        MOI.set!(mockoptimizer, MOI.VariablePrimal(), JuMP.optimizerindex(y), 0.0)
-        MOI.set!(mockoptimizer, MOI.VariablePrimal(), JuMP.optimizerindex(z), 0.0)
-        MOI.set!(mockoptimizer, MOI.ConstraintDual(), JuMP.optimizerindex(varsoc), [-1.0,-2.0,-3.0])
-        MOI.set!(mockoptimizer, MOI.ConstraintDual(), JuMP.optimizerindex(affsoc), [1.0,2.0,3.0])
+        MOI.set!(mockoptimizer, MOI.VariablePrimal(), JuMP.optimizer_index(x), 1.0)
+        MOI.set!(mockoptimizer, MOI.VariablePrimal(), JuMP.optimizer_index(y), 0.0)
+        MOI.set!(mockoptimizer, MOI.VariablePrimal(), JuMP.optimizer_index(z), 0.0)
+        MOI.set!(mockoptimizer, MOI.ConstraintDual(), JuMP.optimizer_index(varsoc), [-1.0,-2.0,-3.0])
+        MOI.set!(mockoptimizer, MOI.ConstraintDual(), JuMP.optimizer_index(affsoc), [1.0,2.0,3.0])
 
-        JuMP.optimize(m)
+        JuMP.optimize!(m)
 
         #@test JuMP.isattached(m)
-        @test JuMP.hasresultvalues(m)
+        @test JuMP.has_result_values(m)
 
-        @test JuMP.terminationstatus(m) == MOI.Success
-        @test JuMP.primalstatus(m) == MOI.FeasiblePoint
+        @test JuMP.termination_status(m) == MOI.Success
+        @test JuMP.primal_status(m) == MOI.FeasiblePoint
 
-        @test JuMP.resultvalue(x) == 1.0
-        @test JuMP.resultvalue(y) == 0.0
-        @test JuMP.resultvalue(z) == 0.0
+        @test JuMP.result_value(x) == 1.0
+        @test JuMP.result_value(y) == 0.0
+        @test JuMP.result_value(z) == 0.0
 
-        @test JuMP.hasresultdual(m, typeof(varsoc))
-        @test JuMP.resultdual(varsoc) == [-1.0, -2.0, -3.0]
+        @test JuMP.has_result_dual(m, typeof(varsoc))
+        @test JuMP.result_dual(varsoc) == [-1.0, -2.0, -3.0]
 
-        @test JuMP.hasresultdual(m, typeof(affsoc))
-        @test JuMP.resultdual(affsoc) == [1.0, 2.0, 3.0]
+        @test JuMP.has_result_dual(m, typeof(affsoc))
+        @test JuMP.result_dual(affsoc) == [1.0, 2.0, 3.0]
     end
 
     @testset "SDP" begin
         m = Model()
         @variable(m, x[1:2,1:2], Symmetric)
-        setname(x[1,1], "x11")
-        setname(x[1,2], "x12")
-        setname(x[2,2], "x22")
+        set_name(x[1,1], "x11")
+        set_name(x[1,2], "x12")
+        set_name(x[2,2], "x22")
         @static if VERSION < v"0.7-"
             @objective(m, Max, trace(x))
         else
             @objective(m, Max, tr(x))
         end
         varpsd = @constraint(m, x in PSDCone())
-        setname(varpsd, "varpsd")
+        set_name(varpsd, "varpsd")
         conpsd = @SDconstraint(m, x ⪰ [1.0 0.0; 0.0 1.0])
-        setname(conpsd, "conpsd")
+        set_name(conpsd, "conpsd")
 
         modelstring = """
         variables: x11, x12, x22
@@ -306,38 +306,38 @@
         MOI.set!(mockoptimizer, MOI.ResultCount(), 1)
         MOI.set!(mockoptimizer, MOI.PrimalStatus(), MOI.FeasiblePoint)
         MOI.set!(mockoptimizer, MOI.DualStatus(), MOI.FeasiblePoint)
-        MOI.set!(mockoptimizer, MOI.VariablePrimal(), JuMP.optimizerindex(x[1,1]), 1.0)
-        MOI.set!(mockoptimizer, MOI.VariablePrimal(), JuMP.optimizerindex(x[1,2]), 2.0)
-        MOI.set!(mockoptimizer, MOI.VariablePrimal(), JuMP.optimizerindex(x[2,2]), 4.0)
-        MOI.set!(mockoptimizer, MOI.ConstraintDual(), JuMP.optimizerindex(varpsd), [1.0,2.0,3.0])
-        MOI.set!(mockoptimizer, MOI.ConstraintDual(), JuMP.optimizerindex(conpsd), [4.0,5.0,6.0])
+        MOI.set!(mockoptimizer, MOI.VariablePrimal(), JuMP.optimizer_index(x[1,1]), 1.0)
+        MOI.set!(mockoptimizer, MOI.VariablePrimal(), JuMP.optimizer_index(x[1,2]), 2.0)
+        MOI.set!(mockoptimizer, MOI.VariablePrimal(), JuMP.optimizer_index(x[2,2]), 4.0)
+        MOI.set!(mockoptimizer, MOI.ConstraintDual(), JuMP.optimizer_index(varpsd), [1.0,2.0,3.0])
+        MOI.set!(mockoptimizer, MOI.ConstraintDual(), JuMP.optimizer_index(conpsd), [4.0,5.0,6.0])
 
-        JuMP.optimize(m)
+        JuMP.optimize!(m)
 
         #@test JuMP.isattached(m)
-        @test JuMP.hasresultvalues(m)
+        @test JuMP.has_result_values(m)
 
-        @test JuMP.terminationstatus(m) == MOI.Success
-        @test JuMP.primalstatus(m) == MOI.FeasiblePoint
+        @test JuMP.termination_status(m) == MOI.Success
+        @test JuMP.primal_status(m) == MOI.FeasiblePoint
 
-        @test JuMP.resultvalue.(x) == [1.0 2.0; 2.0 4.0]
-        @test JuMP.hasresultdual(m, typeof(varpsd))
-        @test JuMP.resultdual(varpsd) isa Symmetric
-        @test JuMP.resultdual(varpsd) == [1.0 2.0; 2.0 3.0]
-        @test JuMP.hasresultdual(m, typeof(conpsd))
-        @test JuMP.resultdual(conpsd) isa Symmetric
-        @test JuMP.resultdual(conpsd) == [4.0 5.0; 5.0 6.0]
+        @test JuMP.result_value.(x) == [1.0 2.0; 2.0 4.0]
+        @test JuMP.has_result_dual(m, typeof(varpsd))
+        @test JuMP.result_dual(varpsd) isa Symmetric
+        @test JuMP.result_dual(varpsd) == [1.0 2.0; 2.0 3.0]
+        @test JuMP.has_result_dual(m, typeof(conpsd))
+        @test JuMP.result_dual(conpsd) isa Symmetric
+        @test JuMP.result_dual(conpsd) == [4.0 5.0; 5.0 6.0]
 
     end
 
     @testset "Provide factory in `optimize` in Direct mode" begin
         mockoptimizer = MOIU.MockOptimizer(JuMP.JuMPMOIModel{Float64}())
         model = JuMP.direct_model(mockoptimizer)
-        @test_throws ErrorException JuMP.optimize(model, with_optimizer(MOIU.MockOptimizer, JuMP.JuMPMOIModel{Float64}()))
+        @test_throws ErrorException JuMP.optimize!(model, with_optimizer(MOIU.MockOptimizer, JuMP.JuMPMOIModel{Float64}()))
     end
 
     @testset "Provide factory both in `Model` and `optimize`" begin
         model = Model(with_optimizer(MOIU.MockOptimizer, JuMP.JuMPMOIModel{Float64}()))
-        @test_throws ErrorException JuMP.optimize(model, with_optimizer(MOIU.MockOptimizer, JuMP.JuMPMOIModel{Float64}()))
+        @test_throws ErrorException JuMP.optimize!(model, with_optimizer(MOIU.MockOptimizer, JuMP.JuMPMOIModel{Float64}()))
     end
 end

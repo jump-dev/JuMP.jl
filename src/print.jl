@@ -182,14 +182,14 @@ end
 
 function aff_string(mode, a::GenericAffExpr, show_constant=true)
     # If the expression is empty, return the constant (or 0)
-    if length(linearterms(a)) == 0
+    if length(linear_terms(a)) == 0
         return show_constant ? string_round(a.constant) : "0"
     end
 
-    term_str = Array{String}(undef, 2 * length(linearterms(a)))
+    term_str = Array{String}(undef, 2 * length(linear_terms(a)))
     elm = 1
     # For each non-zero for this model
-    for (coef, var) in linearterms(a)
+    for (coef, var) in linear_terms(a)
         is_zero_for_printing(coef) && continue  # e.g. x - x
 
         pre = is_one_for_printing(coef) ? "" : string_round(abs(coef)) * " "
@@ -273,14 +273,10 @@ end
 #------------------------------------------------------------------------
 
 function Base.show(io::IO, ref::ConstraintRef{Model})
-    constraint_object = constraintobject(ref)
-    constraint_name = name(ref)
-    print(io, constraint_string(REPLMode, constraint_name, constraint_object))
+    print(io, constraint_string(REPLMode, name(ref), constraint_object(ref)))
 end
 function Base.show(io::IO, ::MIME"text/latex", ref::ConstraintRef{Model})
-    constraint_object = constraintobject(ref)
-    constraint_name = name(ref)
-    print(io, constraint_string(IJuliaMode, constraint_name, constraint_object))
+    print(io, constraint_string(IJuliaMode, name(ref), constraint_object(ref)))
 end
 
 function function_string(print_mode, variable::AbstractVariableRef)

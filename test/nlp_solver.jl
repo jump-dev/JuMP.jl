@@ -45,13 +45,13 @@ const MOI = MathOptInterface
         @NLconstraint(m, x[1]*x[2]*x[3]*x[4] >= 25)
         @NLconstraint(m, sum(x[i]^2 for i=1:4) == 40)
 
-        JuMP.optimize(m)
+        JuMP.optimize!(m)
 
-        @test JuMP.hasresultvalues(m)
-        @test JuMP.terminationstatus(m) == MOI.Success
-        @test JuMP.primalstatus(m) == MOI.FeasiblePoint
+        @test JuMP.has_result_values(m)
+        @test JuMP.termination_status(m) == MOI.Success
+        @test JuMP.primal_status(m) == MOI.FeasiblePoint
 
-        @test JuMP.resultvalue.(x) ≈ [1.000000, 4.742999, 3.821150, 1.379408] atol=1e-3
+        @test JuMP.result_value.(x) ≈ [1.000000, 4.742999, 3.821150, 1.379408] atol=1e-3
     end
 
     @testset "HS071 (no macros)" begin
@@ -71,13 +71,13 @@ const MOI = MathOptInterface
         JuMP.addNLconstraint(m, :($(x[1])^2+$(x[2])^2+$(x[3])^2+$(x[4])^2 == 40))
         @test_throws ErrorException JuMP.addNLconstraint(m, :(x[1]^2+x[2]^2+x[3]^2+x[4]^2 == 40))
 
-        JuMP.optimize(m)
+        JuMP.optimize!(m)
 
-        @test JuMP.hasresultvalues(m)
-        @test JuMP.terminationstatus(m) == MOI.Success
-        @test JuMP.primalstatus(m) == MOI.FeasiblePoint
+        @test JuMP.has_result_values(m)
+        @test JuMP.termination_status(m) == MOI.Success
+        @test JuMP.primal_status(m) == MOI.FeasiblePoint
 
-        @test JuMP.resultvalue.(x) ≈ [1.000000, 4.742999, 3.821150, 1.379408] atol=1e-3
+        @test JuMP.result_value.(x) ≈ [1.000000, 4.742999, 3.821150, 1.379408] atol=1e-3
     end
 
     @testset "HS109" begin
@@ -119,13 +119,13 @@ const MOI = MathOptInterface
             x[5] * x[7] * cos(x[4] - .25) + x[6] * x[7] * cos(x[4] - x[3] - .25) -
             2 * c * x[7]^2 + 22.938 * a + .7533e-3 * a * x[7] ^2 == 0)
 
-        JuMP.optimize(m)
+        JuMP.optimize!m)
 
-        @test JuMP.hasresultvalues(m)
-        @test JuMP.terminationstatus(m) == MOI.Success
-        @test JuMP.primalstatus(m) == MOI.FeasiblePoint
+        @test JuMP.has_result_values(m)
+        @test JuMP.termination_status(m) == MOI.Success
+        @test JuMP.primal_status(m) == MOI.FeasiblePoint
 
-        @test JuMP.objectivevalue(m) ≈ 5326.851310161077 atol=1e-5
+        @test JuMP.objective_value(m) ≈ 5326.851310161077 atol=1e-5
     end
 
     @testset "HS110" begin
@@ -137,14 +137,14 @@ const MOI = MathOptInterface
             prod( x[i] for i=1:10) ^ 0.2
         )
 
-        JuMP.optimize(m)
+        JuMP.optimize!(m)
 
-        @test JuMP.hasresultvalues(m)
+        @test JuMP.has_result_values(m)
         # Ipopt returns AlmostSuccess and NearlyFeasiblePoint on this instance.
-        # @test JuMP.terminationstatus(m) == MOI.Success
-        # @test JuMP.primalstatus(m) == MOI.FeasiblePoint
+        # @test JuMP.termination_status(m) == MOI.Success
+        # @test JuMP.primal_status(m) == MOI.FeasiblePoint
 
-        @test JuMP.objectivevalue(m) ≈ -45.77846971 atol=1e-5
+        @test JuMP.objective_value(m) ≈ -45.77846971 atol=1e-5
     end
 
     @testset "HS111" begin
@@ -160,13 +160,13 @@ const MOI = MathOptInterface
         @NLconstraint(m, exp(x[4]) + 2*exp(x[5]) +   exp(x[6]) +   exp(x[7])              == 1)
         @NLconstraint(m, exp(x[3]) +   exp(x[7]) +   exp(x[8]) + 2*exp(x[9]) + exp(x[10]) == 1)
 
-        JuMP.optimize(m)
+        JuMP.optimize!m)
 
-        @test JuMP.hasresultvalues(m)
-        @test JuMP.terminationstatus(m) == MOI.Success
-        @test JuMP.primalstatus(m) == MOI.FeasiblePoint
+        @test JuMP.has_result_values(m)
+        @test JuMP.termination_status(m) == MOI.Success
+        @test JuMP.primal_status(m) == MOI.FeasiblePoint
 
-        @test JuMP.objectivevalue(m) ≈ -47.76109026 atol=1e-5
+        @test JuMP.objective_value(m) ≈ -47.76109026 atol=1e-5
     end
 
     @testset "HS112" begin
@@ -181,13 +181,13 @@ const MOI = MathOptInterface
         @NLconstraint(m, x[4] + 2*x[5] + x[6] + x[7] == 1)
         @NLconstraint(m, x[3] + x[7] + x[8] + 2*x[9] + x[10] == 1)
 
-        JuMP.optimize(m)
+        JuMP.optimize!m)
 
-        @test JuMP.hasresultvalues(m)
-        @test JuMP.terminationstatus(m) == MOI.Success
-        @test JuMP.primalstatus(m) == MOI.FeasiblePoint
+        @test JuMP.has_result_values(m)
+        @test JuMP.termination_status(m) == MOI.Success
+        @test JuMP.primal_status(m) == MOI.FeasiblePoint
 
-        @test JuMP.objectivevalue(m) ≈ -47.76109026 atol=1e-5
+        @test JuMP.objective_value(m) ≈ -47.76109026 atol=1e-5
     end
 
     @testset "HS114" begin
@@ -216,13 +216,13 @@ const MOI = MathOptInterface
         @NLconstraint(m, 98000*x[3]/(x[4]*x[9] + 1000*x[3]) - x[6] == 0)
         @NLconstraint(m, (x[2] + x[5])/x[1] - x[8] == 0)
 
-        JuMP.optimize(m)
+        JuMP.optimize!m)
 
-        @test JuMP.hasresultvalues(m)
-        @test JuMP.terminationstatus(m) == MOI.Success
-        @test JuMP.primalstatus(m) == MOI.FeasiblePoint
+        @test JuMP.has_result_values(m)
+        @test JuMP.termination_status(m) == MOI.Success
+        @test JuMP.primal_status(m) == MOI.FeasiblePoint
 
-        @test JuMP.objectivevalue(m) ≈ -1768.80696 atol=1e-3
+        @test JuMP.objective_value(m) ≈ -1768.80696 atol=1e-3
     end
 
     @testset "HS116" begin
@@ -262,14 +262,14 @@ const MOI = MathOptInterface
             x[11] + x[12] + x[13] <= 250
         end
 
-        JuMP.optimize(m)
+        JuMP.optimize!(m)
 
-        @test JuMP.hasresultvalues(m)
-        @test JuMP.terminationstatus(m) == MOI.Success
-        @test JuMP.primalstatus(m) == MOI.FeasiblePoint
+        @test JuMP.has_result_values(m)
+        @test JuMP.termination_status(m) == MOI.Success
+        @test JuMP.primal_status(m) == MOI.FeasiblePoint
 
         # This test occasionally fails, for unknown reasons.
-        @test JuMP.objectivevalue(m) ≈ 97.588409 atol=1e-3
+        @test JuMP.objective_value(m) ≈ 97.588409 atol=1e-3
     end
 
     @testset "HS118" begin
@@ -296,7 +296,7 @@ const MOI = MathOptInterface
         @variable(m, L[i] <= x[i=1:15] <= U[i])
 
         # Initial solution (could also use 'start' keyword in @variable)
-        JuMP.setstartvalue.(x, start)
+        JuMP.set_start_value.(x, start)
 
         @NLobjective(m, Min,
             sum(2.3     * x[3*k+1]   +
@@ -330,14 +330,14 @@ const MOI = MathOptInterface
         @constraint(m, x[10] + x[11] + x[12] >= 85)
         @constraint(m, x[13] + x[14] + x[15] >= 100)
 
-        JuMP.optimize(m)
+        JuMP.optimize!(m)
 
-        @test JuMP.hasresultvalues(m)
-        @test JuMP.terminationstatus(m) == MOI.Success
-        @test JuMP.primalstatus(m) == MOI.FeasiblePoint
+        @test JuMP.has_result_values(m)
+        @test JuMP.termination_status(m) == MOI.Success
+        @test JuMP.primal_status(m) == MOI.FeasiblePoint
 
-        @test JuMP.resultvalue.(x[1:4]) ≈ [8.0, 49.0, 3.0, 1.0] atol=1e-4
-        @test JuMP.objectivevalue(m) ≈ 664.82045 atol=1e-5
+        @test JuMP.result_value.(x[1:4]) ≈ [8.0, 49.0, 3.0, 1.0] atol=1e-4
+        @test JuMP.objective_value(m) ≈ 664.82045 atol=1e-5
     end
 
     @testset "Two-sided constraints" begin
@@ -347,20 +347,20 @@ const MOI = MathOptInterface
         l = -1
         u = 1
         @NLconstraint(m, l <= x <= u)
-        JuMP.optimize(m)
+        JuMP.optimize!(m)
 
-        @test JuMP.hasresultvalues(m)
-        @test JuMP.terminationstatus(m) == MOI.Success
-        @test JuMP.primalstatus(m) == MOI.FeasiblePoint
-        @test JuMP.objectivevalue(m) ≈ u atol=1e-6
+        @test JuMP.has_result_values(m)
+        @test JuMP.termination_status(m) == MOI.Success
+        @test JuMP.primal_status(m) == MOI.FeasiblePoint
+        @test JuMP.objective_value(m) ≈ u atol=1e-6
 
         @NLobjective(m, Min, x)
-        JuMP.optimize(m)
+        JuMP.optimize!(m)
 
-        @test JuMP.hasresultvalues(m)
-        @test JuMP.terminationstatus(m) == MOI.Success
-        @test JuMP.primalstatus(m) == MOI.FeasiblePoint
-        @test JuMP.objectivevalue(m) ≈ l atol=1e-6
+        @test JuMP.has_result_values(m)
+        @test JuMP.termination_status(m) == MOI.Success
+        @test JuMP.primal_status(m) == MOI.FeasiblePoint
+        @test JuMP.objective_value(m) ≈ l atol=1e-6
     end
 
     @testset "Two-sided constraints (no macros)" begin
@@ -370,20 +370,20 @@ const MOI = MathOptInterface
         l = -1
         u = 1
         JuMP.addNLconstraint(m, :($l <= $x <= $u))
-        JuMP.optimize(m)
+        JuMP.optimize!(m)
 
-        @test JuMP.hasresultvalues(m)
-        @test JuMP.terminationstatus(m) == MOI.Success
-        @test JuMP.primalstatus(m) == MOI.FeasiblePoint
-        @test JuMP.objectivevalue(m) ≈ u atol=1e-6
+        @test JuMP.has_result_values(m)
+        @test JuMP.termination_status(m) == MOI.Success
+        @test JuMP.primal_status(m) == MOI.FeasiblePoint
+        @test JuMP.objective_value(m) ≈ u atol=1e-6
 
         JuMP.setNLobjective(m, :Min, x)
-        JuMP.optimize(m)
+        JuMP.optimize!(m)
 
-        @test JuMP.hasresultvalues(m)
-        @test JuMP.terminationstatus(m) == MOI.Success
-        @test JuMP.primalstatus(m) == MOI.FeasiblePoint
-        @test JuMP.objectivevalue(m) ≈ l atol=1e-6
+        @test JuMP.has_result_values(m)
+        @test JuMP.termination_status(m) == MOI.Success
+        @test JuMP.primal_status(m) == MOI.FeasiblePoint
+        @test JuMP.objective_value(m) ≈ l atol=1e-6
     end
 
     @testset "Duals" begin
@@ -398,48 +398,48 @@ const MOI = MathOptInterface
         @NLconstraint(m, cons3, 7.0*y <= z + r[6]/1.9)
 
         function test_result()
-            @test JuMP.hasresultvalues(m)
-            @test JuMP.terminationstatus(m) == MOI.Success
-            @test JuMP.primalstatus(m) == MOI.FeasiblePoint
+            @test JuMP.has_result_values(m)
+            @test JuMP.termination_status(m) == MOI.Success
+            @test JuMP.primal_status(m) == MOI.FeasiblePoint
 
 
-            @test JuMP.resultvalue(x) ≈ 0.9774436 atol=1e-6
-            @test JuMP.resultvalue(y) ≈ 1.0225563 atol=1e-6
-            @test JuMP.resultvalue(z) ≈ 4.0 atol=1e-6
-            @test JuMP.resultvalue(r[3]) ≈ 0.5112781 atol=1e-6
-            @test JuMP.resultvalue(r[4]) ≈ 0.0 atol=1e-6
-            @test JuMP.resultvalue(r[5]) ≈ 0.0 atol=1e-6
-            @test JuMP.resultvalue(r[6]) ≈ 6.0 atol=1e-6
-            @test JuMP.dualstatus(m) == MOI.FeasiblePoint
+            @test JuMP.result_value(x) ≈ 0.9774436 atol=1e-6
+            @test JuMP.result_value(y) ≈ 1.0225563 atol=1e-6
+            @test JuMP.result_value(z) ≈ 4.0 atol=1e-6
+            @test JuMP.result_value(r[3]) ≈ 0.5112781 atol=1e-6
+            @test JuMP.result_value(r[4]) ≈ 0.0 atol=1e-6
+            @test JuMP.result_value(r[5]) ≈ 0.0 atol=1e-6
+            @test JuMP.result_value(r[6]) ≈ 6.0 atol=1e-6
+            @test JuMP.dual_status(m) == MOI.FeasiblePoint
             # Reduced costs
-            @test JuMP.resultdual(JuMP.LowerBoundRef(x)) ≈ 0.0 atol=1e-6
-            @test JuMP.resultdual(JuMP.UpperBoundRef(y)) ≈ 0.0 atol=1e-6
-            @test JuMP.resultdual(JuMP.UpperBoundRef(z)) ≈ -1.0714286 atol=1e-6
-            @test JuMP.resultdual(JuMP.LowerBoundRef(r[3])) ≈ 0.0 atol=1e-6
-            @test JuMP.resultdual(JuMP.UpperBoundRef(r[3])) ≈ 0.0 atol=1e-6
-            @test JuMP.resultdual(JuMP.LowerBoundRef(r[4])) ≈ 1.0 atol=1e-6
-            @test JuMP.resultdual(JuMP.UpperBoundRef(r[4])) ≈ 0.0 atol=1e-6
-            @test JuMP.resultdual(JuMP.LowerBoundRef(r[5])) ≈ 1.0 atol=1e-6
-            @test JuMP.resultdual(JuMP.UpperBoundRef(r[5])) ≈ 0.0 atol=1e-6
-            @test JuMP.resultdual(JuMP.UpperBoundRef(r[6])) ≈ -0.03759398 atol=1e-6
-            @test JuMP.resultdual(JuMP.LowerBoundRef(r[6])) ≈ 0.0 atol=1e-6
+            @test JuMP.result_dual(JuMP.LowerBoundRef(x)) ≈ 0.0 atol=1e-6
+            @test JuMP.result_dual(JuMP.UpperBoundRef(y)) ≈ 0.0 atol=1e-6
+            @test JuMP.result_dual(JuMP.UpperBoundRef(z)) ≈ -1.0714286 atol=1e-6
+            @test JuMP.result_dual(JuMP.LowerBoundRef(r[3])) ≈ 0.0 atol=1e-6
+            @test JuMP.result_dual(JuMP.UpperBoundRef(r[3])) ≈ 0.0 atol=1e-6
+            @test JuMP.result_dual(JuMP.LowerBoundRef(r[4])) ≈ 1.0 atol=1e-6
+            @test JuMP.result_dual(JuMP.UpperBoundRef(r[4])) ≈ 0.0 atol=1e-6
+            @test JuMP.result_dual(JuMP.LowerBoundRef(r[5])) ≈ 1.0 atol=1e-6
+            @test JuMP.result_dual(JuMP.UpperBoundRef(r[5])) ≈ 0.0 atol=1e-6
+            @test JuMP.result_dual(JuMP.UpperBoundRef(r[6])) ≈ -0.03759398 atol=1e-6
+            @test JuMP.result_dual(JuMP.LowerBoundRef(r[6])) ≈ 0.0 atol=1e-6
 
             # Constraint duals
-            @test JuMP.resultdual(cons1) ≈ 0.333333 atol=1e-6
-            @test JuMP.resultdual(cons2) ≈ -1.0 atol=1e-6
-            @test JuMP.resultdual(cons3) ≈ -0.0714286 atol=1e-6
+            @test JuMP.result_dual(cons1) ≈ 0.333333 atol=1e-6
+            @test JuMP.result_dual(cons2) ≈ -1.0 atol=1e-6
+            @test JuMP.result_dual(cons3) ≈ -0.0714286 atol=1e-6
         end
 
-        JuMP.optimize(m)
+        JuMP.optimize!(m)
         test_result()
-        @test JuMP.objectivevalue(m) ≈ -5.8446115 atol=1e-6
+        @test JuMP.objective_value(m) ≈ -5.8446115 atol=1e-6
 
         # Same objective with sense/sign flipped.
         @NLobjective(m, Max, ((x + y)/2.0 + 3.0)/3.0 + z + r[3])
 
-        JuMP.optimize(m)
+        JuMP.optimize!(m)
         test_result()
-        @test JuMP.objectivevalue(m) ≈ 5.8446115 atol=1e-6
+        @test JuMP.objective_value(m) ≈ 5.8446115 atol=1e-6
     end
 
     @testset "Quadratic inequality constraints, linear objective" begin
@@ -448,13 +448,13 @@ const MOI = MathOptInterface
         @variable(m, -2 <= y <= 2)
         @objective(m, Min, x - y)
         @constraint(m, x + x^2 + x*y + y^2 <= 1)
-        JuMP.optimize(m)
+        JuMP.optimize!(m)
 
-        @test JuMP.hasresultvalues(m)
-        @test JuMP.terminationstatus(m) == MOI.Success
-        @test JuMP.primalstatus(m) == MOI.FeasiblePoint
-        @test JuMP.objectivevalue(m) ≈ -1-4/sqrt(3) atol=1e-6
-        @test JuMP.resultvalue(x) + JuMP.resultvalue(y) ≈ -1/3 atol=1e-3
+        @test JuMP.has_result_values(m)
+        @test JuMP.termination_status(m) == MOI.Success
+        @test JuMP.primal_status(m) == MOI.FeasiblePoint
+        @test JuMP.objective_value(m) ≈ -1-4/sqrt(3) atol=1e-6
+        @test JuMP.result_value(x) + JuMP.result_value(y) ≈ -1/3 atol=1e-3
     end
 
     @testset "Quadratic inequality constraints, NL objective" begin
@@ -463,13 +463,13 @@ const MOI = MathOptInterface
         @variable(m, -2 <= y <= 2)
         @NLobjective(m, Min, x - y)
         @constraint(m, x + x^2 + x*y + y^2 <= 1)
-        JuMP.optimize(m)
+        JuMP.optimize!(m)
 
-        @test JuMP.hasresultvalues(m)
-        @test JuMP.terminationstatus(m) == MOI.Success
-        @test JuMP.primalstatus(m) == MOI.FeasiblePoint
-        @test JuMP.objectivevalue(m) ≈ -1-4/sqrt(3) atol=1e-6
-        @test JuMP.resultvalue(x) + JuMP.resultvalue(y) ≈ -1/3 atol=1e-3
+        @test JuMP.has_result_values(m)
+        @test JuMP.termination_status(m) == MOI.Success
+        @test JuMP.primal_status(m) == MOI.FeasiblePoint
+        @test JuMP.objective_value(m) ≈ -1-4/sqrt(3) atol=1e-6
+        @test JuMP.result_value(x) + JuMP.result_value(y) ≈ -1/3 atol=1e-3
     end
 
     @testset "Quadratic equality constraints" begin
@@ -477,13 +477,13 @@ const MOI = MathOptInterface
         @variable(m, 0 <= x[1:2] <= 1)
         @constraint(m, x[1]^2 + x[2]^2 == 1/2)
         @NLobjective(m, Max, x[1] - x[2])
-        JuMP.optimize(m)
+        JuMP.optimize!(m)
 
-        @test JuMP.hasresultvalues(m)
-        @test JuMP.terminationstatus(m) == MOI.Success
-        @test JuMP.primalstatus(m) == MOI.FeasiblePoint
-        @test JuMP.objectivevalue(m) ≈ sqrt(1/2) atol=1e-6
-        @test JuMP.resultvalue.(x) ≈ [sqrt(1/2), 0] atol=1e-6
+        @test JuMP.has_result_values(m)
+        @test JuMP.termination_status(m) == MOI.Success
+        @test JuMP.primal_status(m) == MOI.FeasiblePoint
+        @test JuMP.objective_value(m) ≈ sqrt(1/2) atol=1e-6
+        @test JuMP.result_value.(x) ≈ [sqrt(1/2), 0] atol=1e-6
     end
 
     @testset "Fixed variables" begin
@@ -494,8 +494,8 @@ const MOI = MathOptInterface
         @NLconstraint(m, y ≥ x^2)
         for α in 1:4
             JuMP.fix(x, α)
-            JuMP.optimize(m)
-            @test JuMP.resultvalue(y) ≈ α^2 atol=1e-6
+            JuMP.optimize!(m)
+            @test JuMP.result_value(y) ≈ α^2 atol=1e-6
         end
     end
 end

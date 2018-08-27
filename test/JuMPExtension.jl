@@ -16,7 +16,7 @@ mutable struct MyModel <: JuMP.AbstractModel
     constraints::Dict{Int, JuMP.AbstractConstraint} # Map conidx -> variable
     connames::Dict{Int, String}                     # Map varidx -> name
     objectivesense::Symbol
-    objectivefunction::JuMP.AbstractJuMPScalar
+    objective_function::JuMP.AbstractJuMPScalar
     obj_dict::Dict{Symbol, Any}                     # Same that JuMP.Model's field `obj_dict`
     function MyModel()
         new(0, Dict{Int, JuMP.AbstractVariable}(),   Dict{Int, String}(), # Variables
@@ -44,11 +44,11 @@ end
 JuMP.owner_model(v::MyVariableRef) = v.model
 JuMP.isequal_canonical(v::MyVariableRef, w::MyVariableRef) = v == w
 JuMP.variabletype(::MyModel) = MyVariableRef
-function JuMP.addvariable(m::MyModel, v::JuMP.AbstractVariable, name::String="")
+function JuMP.add_variable(m::MyModel, v::JuMP.AbstractVariable, name::String="")
     m.nextvaridx += 1
     vref = MyVariableRef(m, m.nextvaridx)
     m.variables[vref.idx] = v
-    JuMP.setname(vref, name)
+    JuMP.set_name(vref, name)
     vref
 end
 function MOI.delete!(m::MyModel, vref::MyVariableRef)
@@ -58,47 +58,47 @@ end
 MOI.isvalid(m::MyModel, vref::MyVariableRef) = vref.idx in keys(m.variables)
 JuMP.num_variables(m::MyModel) = length(m.variables)
 
-JuMP.haslowerbound(vref::MyVariableRef) = vref.model.variables[vref.idx].info.haslb
-function JuMP.lowerbound(vref::MyVariableRef)
-    @assert !JuMP.isfixed(vref)
-    vref.model.variables[vref.idx].info.lowerbound
+JuMP.has_lower_bound(vref::MyVariableRef) = vref.model.variables[vref.idx].info.has_lb
+function JuMP.lower_bound(vref::MyVariableRef)
+    @assert !JuMP.is_fixed(vref)
+    vref.model.variables[vref.idx].info.lower_bound
 end
-function JuMP.setlowerbound(vref::MyVariableRef, lower)
-    vref.model.variables[vref.idx].info.haslb = true
-    vref.model.variables[vref.idx].info.lowerbound = lower
+function JuMP.set_lower_bound(vref::MyVariableRef, lower)
+    vref.model.variables[vref.idx].info.has_lb = true
+    vref.model.variables[vref.idx].info.lower_bound = lower
 end
-JuMP.hasupperbound(vref::MyVariableRef) = vref.model.variables[vref.idx].info.hasub
-function JuMP.upperbound(vref::MyVariableRef)
-    @assert !JuMP.isfixed(vref)
-    vref.model.variables[vref.idx].info.upperbound
+JuMP.has_upper_bound(vref::MyVariableRef) = vref.model.variables[vref.idx].info.has_ub
+function JuMP.upper_bound(vref::MyVariableRef)
+    @assert !JuMP.is_fixed(vref)
+    vref.model.variables[vref.idx].info.upper_bound
 end
-function JuMP.setupperbound(vref::MyVariableRef, upper)
-    vref.model.variables[vref.idx].info.hasub = true
-    vref.model.variables[vref.idx].info.upperbound = upper
+function JuMP.set_upper_bound(vref::MyVariableRef, upper)
+    vref.model.variables[vref.idx].info.has_ub = true
+    vref.model.variables[vref.idx].info.upper_bound = upper
 end
-JuMP.isfixed(vref::MyVariableRef) = vref.model.variables[vref.idx].info.hasfix
-JuMP.fixvalue(vref::MyVariableRef) = vref.model.variables[vref.idx].info.fixedvalue
+JuMP.is_fixed(vref::MyVariableRef) = vref.model.variables[vref.idx].info.has_fix
+JuMP.fix_value(vref::MyVariableRef) = vref.model.variables[vref.idx].info.fixed_value
 function JuMP.fix(vref::MyVariableRef, value)
-    vref.model.variables[vref.idx].info.fixedvalue = value
+    vref.model.variables[vref.idx].info.fixed_value = value
 end
-JuMP.startvalue(vref::MyVariableRef) = vref.model.variables[vref.idx].info.start
-function JuMP.setstartvalue(vref::MyVariableRef, start)
+JuMP.start_value(vref::MyVariableRef) = vref.model.variables[vref.idx].info.start
+function JuMP.set_start_value(vref::MyVariableRef, start)
     vref.model.variables[vref.idx].info.start = start
 end
-JuMP.isbinary(vref::MyVariableRef) = vref.model.variables[vref.idx].info.binary
-function JuMP.setbinary(vref::MyVariableRef)
-    @assert !JuMP.isinteger(vref)
+JuMP.is_binary(vref::MyVariableRef) = vref.model.variables[vref.idx].info.binary
+function JuMP.set_binary(vref::MyVariableRef)
+    @assert !JuMP.is_integer(vref)
     vref.model.variables[vref.idx].info.binary = true
 end
-function JuMP.unsetbinary(vref::MyVariableRef)
+function JuMP.unset_binary(vref::MyVariableRef)
     vref.model.variables[vref.idx].info.binary = false
 end
-JuMP.isinteger(vref::MyVariableRef) = vref.model.variables[vref.idx].info.integer
-function JuMP.setinteger(vref::MyVariableRef)
-    @assert !JuMP.isbinary(vref)
+JuMP.is_integer(vref::MyVariableRef) = vref.model.variables[vref.idx].info.integer
+function JuMP.set_integer(vref::MyVariableRef)
+    @assert !JuMP.is_binary(vref)
     vref.model.variables[vref.idx].info.integer = true
 end
-function JuMP.unsetinteger(vref::MyVariableRef)
+function JuMP.unset_integer(vref::MyVariableRef)
     vref.model.variables[vref.idx].info.integer = false
 end
 
@@ -107,15 +107,15 @@ struct MyConstraintRef
     model::MyModel # `model` owning the constraint
     idx::Int       # Index in `model.constraints`
 end
-JuMP.constrainttype(::MyModel) = MyConstraintRef
+JuMP.constraint_type(::MyModel) = MyConstraintRef
 if VERSION >= v"0.7-"
     Base.broadcastable(cref::MyConstraintRef) = Ref(cref)
 end
-function JuMP.addconstraint(m::MyModel, c::JuMP.AbstractConstraint, name::String="")
+function JuMP.add_constraint(m::MyModel, c::JuMP.AbstractConstraint, name::String="")
     m.nextconidx += 1
     cref = MyConstraintRef(m, m.nextconidx)
     m.constraints[cref.idx] = c
-    JuMP.setname(cref, name)
+    JuMP.set_name(cref, name)
     cref
 end
 function MOI.delete!(m::MyModel, cref::MyConstraintRef)
@@ -123,29 +123,29 @@ function MOI.delete!(m::MyModel, cref::MyConstraintRef)
     delete!(m.connames, cref.idx)
 end
 MOI.isvalid(m::MyModel, cref::MyConstraintRef) = cref.idx in keys(m.constraints)
-function JuMP.constraintobject(cref::MyConstraintRef)
+function JuMP.constraint_object(cref::MyConstraintRef)
     return cref.model.constraints[cref.idx]
 end
 
 # Objective
-function JuMP.setobjective(m::MyModel, sense::Symbol, f::JuMP.AbstractJuMPScalar)
+function JuMP.set_objective(m::MyModel, sense::Symbol, f::JuMP.AbstractJuMPScalar)
     m.objectivesense = sense
-    m.objectivefunction = f
+    m.objective_function = f
 end
-JuMP.objectivesense(m::MyModel) = m.objectivesense
-function JuMP.objectivefunction(m::MyModel, FT::Type)
+JuMP.objective_sense(m::MyModel) = m.objectivesense
+function JuMP.objective_function(m::MyModel, FT::Type)
     # ErrorException should be thrown, this is needed in `objective.jl`
-    m.objectivefunction isa FT || error("The objective function is not of type $FT")
-    m.objectivefunction
+    m.objective_function isa FT || error("The objective function is not of type $FT")
+    m.objective_function
 end
 
 # Names
 JuMP.name(vref::MyVariableRef) = vref.model.varnames[vref.idx]
-function JuMP.setname(vref::MyVariableRef, name::String)
+function JuMP.set_name(vref::MyVariableRef, name::String)
     vref.model.varnames[vref.idx] = name
 end
 JuMP.name(cref::MyConstraintRef) = cref.model.connames[cref.idx]
-function JuMP.setname(cref::MyConstraintRef, name::String)
+function JuMP.set_name(cref::MyConstraintRef, name::String)
     cref.model.connames[cref.idx] = name
 end
 

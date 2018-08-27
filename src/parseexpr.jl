@@ -3,7 +3,7 @@
 #  License, v. 2.0. If a copy of the MPL was not distributed with this
 #  file, You can obtain one at http://mozilla.org/MPL/2.0/.
 
-function tryParseIdxSet(arg::Expr)
+function try_parse_idx_set(arg::Expr)
     is_julia_v1 = @static (VERSION >= v"1.0-" ? true : false)
     if is_julia_v1 && arg.head === :kw
             @assert length(arg.args) == 2
@@ -18,8 +18,8 @@ function tryParseIdxSet(arg::Expr)
     end
 end
 
-function parseIdxSet(arg::Expr)
-    parse_done, idxvar, idxset = tryParseIdxSet(arg)
+function parse_idx_set(arg::Expr)
+    parse_done, idxvar, idxset = try_parse_idx_set(arg)
     if parse_done
         return idxvar, idxset
     end
@@ -104,8 +104,8 @@ end
 
 function destructive_add!(aff::GenericAffExpr{C,V},c::Number,x::GenericAffExpr{C,V}) where {C,V}
     if !iszero(c)
-        sizehint!(aff, length(linearterms(aff)) + length(linearterms(x)))
-        for (coef, var) in linearterms(x)
+        sizehint!(aff, length(linear_terms(aff)) + length(linear_terms(x)))
+        for (coef, var) in linear_terms(x)
             add_to_expression!(aff, c*coef, var)
         end
         aff.constant += c*x.constant
@@ -198,7 +198,7 @@ function destructive_add!(quad::GenericQuadExpr{C,V},c::GenericAffExpr{C,V},x::N
 end
 
 function destructive_add!(quad::GenericQuadExpr{C,V},c::GenericAffExpr{C,V},x::V) where {C,V}
-    for (coef, var) in linearterms(c)
+    for (coef, var) in linear_terms(c)
         add_to_expression!(quad, coef, var, x)
     end
     if !iszero(c.constant)
@@ -208,7 +208,7 @@ function destructive_add!(quad::GenericQuadExpr{C,V},c::GenericAffExpr{C,V},x::V
 end
 
 function destructive_add!(quad::GenericQuadExpr{C,V},c::V,x::GenericAffExpr{C,V}) where {C,V}
-    for (coef, var) in linearterms(x)
+    for (coef, var) in linear_terms(x)
         add_to_expression!(quad, coef, c, var)
     end
     if !iszero(x.constant)
@@ -336,14 +336,14 @@ function parsegen(ex,atleaf)
                     Expr(:if,esc(ex.args[2].args[1]),
                           parsegen(ex.args[1],atleaf)))
         for idxset in ex.args[2].args[2:end]
-            idxvar, s = parseIdxSet(idxset)
+            idxvar, s = parse_idx_set(idxset)
             push!(idxvars,idxvar)
         end
     else
         loop = Expr(:for,esc(itrsets(ex.args[2:end])),
                          parsegen(ex.args[1],atleaf))
         for idxset in ex.args[2:end]
-            idxvar, s = parseIdxSet(idxset)
+            idxvar, s = parse_idx_set(idxset)
             push!(idxvars,idxvar)
         end
     end

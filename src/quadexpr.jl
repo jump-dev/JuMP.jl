@@ -77,12 +77,12 @@ function map_coefficients(f::Function, q::GenericQuadExpr)
 end
 
 """
-    linearterms(aff::GenericQuadExpr{C, V})
+    linear_terms(aff::GenericQuadExpr{C, V})
 
 Provides an iterator over tuples `(coefficient::C, variable::V)` in the
 linear part of the quadratic expression.
 """
-linearterms(quad::GenericQuadExpr) = LinearTermIterator(quad.aff)
+linear_terms(quad::GenericQuadExpr) = LinearTermIterator(quad.aff)
 
 struct QuadTermIterator{GQE<:GenericQuadExpr}
     quad::GQE
@@ -203,7 +203,7 @@ function QuadExpr(m::Model, f::MOI.ScalarQuadraticFunction)
     return quad
 end
 
-function setobjective(m::Model, sense::Symbol, a::QuadExpr)
+function set_objective(m::Model, sense::Symbol, a::QuadExpr)
     if sense == :Min
         moisense = MOI.MinSense
     else
@@ -216,12 +216,12 @@ function setobjective(m::Model, sense::Symbol, a::QuadExpr)
 end
 
 """
-    objectivefunction(m::Model, ::Type{QuadExpr})
+    objective_function(m::Model, ::Type{QuadExpr})
 
 Return a `QuadExpr` object representing the objective function.
 Error if the objective is not quadratic.
 """
-function objectivefunction(m::Model, ::Type{QuadExpr})
+function objective_function(m::Model, ::Type{QuadExpr})
     f = MOI.get(m.moi_backend, MOI.ObjectiveFunction{MOI.ScalarQuadraticFunction{Float64}}())::MOI.ScalarQuadraticFunction
     return QuadExpr(m, f)
 end
@@ -233,7 +233,7 @@ function Base.copy(q::GenericQuadExpr, new_model::Model)
                 copy(q.qcoeffs), copy(q.aff, new_model))
 end
 
-# TODO: resultvalue for QuadExpr
+# TODO: result_value for QuadExpr
 
 ##########################################################################
 # TODO: GenericQuadExprConstraint
@@ -246,7 +246,7 @@ end
 moi_function_and_set(c::QuadExprConstraint) = (MOI.ScalarQuadraticFunction(c.func), c.set)
 shape(::QuadExprConstraint) = ScalarShape()
 
-function constraintobject(ref::ConstraintRef{Model, MOICON{FuncType, SetType}}) where
+function constraint_object(ref::ConstraintRef{Model, MOICON{FuncType, SetType}}) where
         {FuncType <: MOI.ScalarQuadraticFunction, SetType <: MOI.AbstractScalarSet}
     model = ref.m
     f = MOI.get(model, MOI.ConstraintFunction(), ref)::FuncType

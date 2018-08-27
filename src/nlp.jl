@@ -9,7 +9,7 @@ mutable struct NonlinearExprData
     const_values::Vector{Float64}
 end
 
-function setobjective(m::Model, sense::Symbol, ex::NonlinearExprData)
+function set_objective(m::Model, sense::Symbol, ex::NonlinearExprData)
     initNLP(m)
     if sense == :Min
         moisense = MOI.MinSense
@@ -117,7 +117,7 @@ function initNLP(m::Model)
     end
 end
 
-function resultdual(c::ConstraintRef{Model,NonlinearConstraintIndex})
+function result_dual(c::ConstraintRef{Model,NonlinearConstraintIndex})
     initNLP(c.m)
     nldata::NLPData = c.m.nlp_data
     if !MOI.canget(c.m, MOI.NLPBlockDual())
@@ -1076,7 +1076,7 @@ function register(m::Model, s::Symbol, dimension::Integer, f::Function, ∇f::Fu
 end
 
 # Ex: setNLobjective(m, :Min, :($x + $y^2))
-setNLobjective(m::Model, sense::Symbol, x) = setobjective(m, sense, NonlinearExprData(m, x))
+setNLobjective(m::Model, sense::Symbol, x) = set_objective(m, sense, NonlinearExprData(m, x))
 
 # Ex: addNLconstraint(m, :($x + $y^2 <= 1))
 function addNLconstraint(m::Model, ex::Expr)
