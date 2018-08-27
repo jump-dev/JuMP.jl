@@ -105,12 +105,25 @@ end
 
 isequal_canonical(v::VariableRef, other::VariableRef) = isequal(v, other)
 
-function MOI.delete!(m::Model, v::VariableRef)
-    @assert m === v.m
-    MOI.delete!(m.moi_backend, v.index)
+"""
+    delete(model::Model, variable_ref::VariableRef)
+
+Delete the variable associated with `variable_ref` from the model `model`.
+"""
+function delete(model::Model, variable_ref::VariableRef)
+    @assert model === variable_ref.m
+    MOI.delete!(model.moi_backend, variable_ref.index)
 end
 
-MOI.isvalid(m::Model, v::VariableRef) = (v.m === m) && MOI.isvalid(m.moi_backend, v.index)
+"""
+    is_valid(model::Model, variable_ref::VariableRef)
+
+Return `true` if `variable` refers to a valid variable in `model`.
+"""
+function is_valid(model::Model, variable_ref::VariableRef)
+    return (model === variable_ref.m &&
+            MOI.isvalid(model.moi_backend, variable_ref.index))
+end
 
 # The default hash is slow. It's important for the performance of AffExpr to
 # define our own.
@@ -293,10 +306,10 @@ end
 
 Delete the lower bound constraint of a variable.
 """
-function deletelowerbound(v::VariableRef)
-    MOI.delete!(v.m, LowerBoundRef(v))
-    delete!(v.m.variable_to_lower_bound, index(v))
-    nothing
+function deletelowerbound(variable_ref::VariableRef)
+    JuMP.delete(variable_ref.m, LowerBoundRef(variable_ref))
+    delete!(variable_ref.m.variable_to_lower_bound, index(variable_ref))
+    return nothing
 end
 
 """
@@ -350,10 +363,10 @@ end
 
 Delete the upper bound constraint of a variable.
 """
-function deleteupperbound(v::VariableRef)
-    MOI.delete!(v.m, UpperBoundRef(v))
-    delete!(v.m.variable_to_upper_bound, index(v))
-    nothing
+function deleteupperbound(variable_ref::VariableRef)
+    JuMP.delete(variable_ref.m, UpperBoundRef(variable_ref))
+    delete!(variable_ref.m.variable_to_upper_bound, index(variable_ref))
+    return nothing
 end
 
 """
@@ -402,10 +415,10 @@ end
 
 Delete the fixing constraint of a variable.
 """
-function unfix(v::VariableRef)
-    MOI.delete!(v.m, FixRef(v))
-    delete!(v.m.variable_to_fix, index(v))
-    nothing
+function unfix(variable_ref::VariableRef)
+    JuMP.delete(variable_ref.m, FixRef(variable_ref))
+    delete!(variable_ref.m.variable_to_fix, index(variable_ref))
+    return nothing
 end
 
 """
@@ -448,9 +461,10 @@ function setinteger(v::VariableRef)
     nothing
 end
 
-function unsetinteger(v::VariableRef)
-    MOI.delete!(v.m, IntegerRef(v))
-    delete!(v.m.variable_to_integrality, index(v))
+function unsetinteger(variable_ref::VariableRef)
+    JuMP.delete(variable_ref.m, IntegerRef(variable_ref))
+    delete!(variable_ref.m.variable_to_integrality, index(variable_ref))
+    return nothing
 end
 
 function IntegerRef(v::VariableRef)
@@ -481,9 +495,10 @@ function setbinary(v::VariableRef)
     nothing
 end
 
-function unsetbinary(v::VariableRef)
-    MOI.delete!(v.m, BinaryRef(v))
-    delete!(v.m.variable_to_zero_one, index(v))
+function unsetbinary(variable_ref::VariableRef)
+    JuMP.delete(variable_ref.m, BinaryRef(variable_ref))
+    delete!(variable_ref.m.variable_to_zero_one, index(variable_ref))
+    return nothing
 end
 
 function BinaryRef(v::VariableRef)

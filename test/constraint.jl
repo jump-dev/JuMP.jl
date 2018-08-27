@@ -66,9 +66,9 @@ function constraints_test(ModelType::Type{<:JuMP.AbstractModel})
         @test JuMP.isequal_canonical(c[2].func, 2.0x)
         @test c[2].set == MOI.EqualTo(3.0)
 
-        @test MOI.isvalid(m, cref[1])
-        MOI.delete!(m, cref[1])
-        @test !MOI.isvalid(m, cref[1])
+        @test JuMP.is_valid(m, cref[1])
+        JuMP.delete(m, cref[1])
+        @test !JuMP.is_valid(m, cref[1])
     end
 
     @testset "Two-sided constraints" begin

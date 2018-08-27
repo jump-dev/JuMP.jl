@@ -475,13 +475,26 @@ if VERSION >= v"0.7-"
     Base.broadcastable(cref::ConstraintRef) = Ref(cref)
 end
 
-# TODO: should model be a parameter here?
-function MOI.delete!(m::Model, cr::ConstraintRef{Model})
-    @assert m === cr.m
-    MOI.delete!(m.moi_backend, index(cr))
+"""
+    delete(model::Model, constraint_ref::ConstraintRef)
+
+Delete the constraint associated with `constraint_ref` from the model `model`.
+"""
+function delete(model::Model, constraint_ref::ConstraintRef{Model})
+    # TODO: should model be a parameter in the constraint_ref?
+    @assert model === constraint_ref.m
+    MOI.delete!(model.moi_backend, index(constraint_ref))
 end
 
-MOI.isvalid(m::Model, cr::ConstraintRef{Model}) = cr.m === m && MOI.isvalid(m.moi_backend, cr.index)
+"""
+    is_valid(model::Model, constraint_ref::ConstraintRef{Model})
+
+Return `true` if `constraint_ref` refers to a valid constraint in `model`.
+"""
+function is_valid(model::Model, constraint_ref::ConstraintRef{Model})
+    return (model === constraint_ref.m &&
+            MOI.isvalid(model.moi_backend, constraint_ref.index))
+end
 
 """
     addconstraint(m::Model, c::AbstractConstraint, name::String="")

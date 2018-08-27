@@ -134,9 +134,9 @@ function variables_test(ModelType::Type{<:JuMP.AbstractModel}, VariableRefType::
     @testset "isvalid and delete variable" begin
         m = ModelType()
         @variable(m, x)
-        @test MOI.isvalid(m, x)
-        MOI.delete!(m, x)
-        @test !MOI.isvalid(m, x)
+        @test JuMP.is_valid(m, x)
+        JuMP.delete(m, x)
+        @test !JuMP.is_valid(m, x)
     end
 
 

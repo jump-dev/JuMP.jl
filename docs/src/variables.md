@@ -470,7 +470,18 @@ Dict{Symbol,Symmetric{JuMP.VariableRef,Array{JuMP.VariableRef,2}}} with 2 entrie
 
 ## Deleting variables
 
-**TODO(@odow):** explain how to delete variables.
+Finally, JuMP supports the deletion of optimization variables. To delete
+variables, we can use the `JuMP.delete` method. We can also check whether `x`
+is a valid JuMP variable in `model` using the `JuMP.is_valid` method:
+```jldoctest variables_delete
+julia> @variable(model, x)
+x
+julia> JuMP.is_valid(model, x)
+true
+julia> JuMP.delete(model, x)
+julia> JuMP.is_valid(model, x)
+false
+```
 
 ## Reference
 
