@@ -299,12 +299,12 @@ function parse_one_operator_constraint(_error::Function, vectorized::Bool, sense
     parse_one_operator_constraint(_error, vectorized, Val(:in), aff, set)
 end
 
-function parseconstraint(_error::Function, sense::Symbol, lhs, rhs)
+function parse_constraint(_error::Function, sense::Symbol, lhs, rhs)
     (sense, vectorized) = _check_vectorized(sense)
     vectorized, parse_one_operator_constraint(_error, vectorized, Val(sense), lhs, rhs)...
 end
 
-function parseternaryconstraint(_error::Function, vectorized::Bool, lb, ::Union{Val{:(<=)}, Val{:(≤)}}, aff, rsign::Union{Val{:(<=)}, Val{:(≤)}}, ub)
+function parse_ternary_constraint(_error::Function, vectorized::Bool, lb, ::Union{Val{:(<=)}, Val{:(≤)}}, aff, rsign::Union{Val{:(<=)}, Val{:(≤)}}, ub)
     newaff, parseaff = parseExprToplevel(aff, :aff)
     newlb, parselb = parseExprToplevel(lb, :lb)
     newub, parseub = parseExprToplevel(ub, :ub)
@@ -316,19 +316,19 @@ function parseternaryconstraint(_error::Function, vectorized::Bool, lb, ::Union{
     parseaff, parselb, parseub, buildcall
 end
 
-function parseternaryconstraint(_error::Function, vectorized::Bool, ub, ::Union{Val{:(>=)}, Val{:(≥)}}, aff, rsign::Union{Val{:(>=)}, Val{:(≥)}}, lb)
-    parseternaryconstraint(_error, vectorized, lb, Val(:(<=)), aff, Val(:(<=)), ub)
+function parse_ternary_constraint(_error::Function, vectorized::Bool, ub, ::Union{Val{:(>=)}, Val{:(≥)}}, aff, rsign::Union{Val{:(>=)}, Val{:(≥)}}, lb)
+    parse_ternary_constraint(_error, vectorized, lb, Val(:(<=)), aff, Val(:(<=)), ub)
 end
 
-function parseternaryconstraint(_error::Function, args...)
+function parse_ternary_constraint(_error::Function, args...)
     _error("Only two-sided rows of the form lb <= expr <= ub or ub >= expr >= lb are supported.")
 end
 
-function parseconstraint(_error::Function, lb, lsign::Symbol, aff, rsign::Symbol, ub)
+function parse_constraint(_error::Function, lb, lsign::Symbol, aff, rsign::Symbol, ub)
     (lsign, lvectorized) = _check_vectorized(lsign)
     (rsign, rvectorized) = _check_vectorized(rsign)
     ((vectorized = lvectorized) == rvectorized) || _error("Signs are inconsistently vectorized")
-    parseaff, parselb, parseub, buildcall = parseternaryconstraint(_error, vectorized, lb, Val(lsign), aff, Val(rsign), ub)
+    parseaff, parselb, parseub, buildcall = parse_ternary_constraint(_error, vectorized, lb, Val(lsign), aff, Val(rsign), ub)
     parsecode = quote
         aff = Val{false}()
         $parseaff
@@ -340,7 +340,7 @@ function parseconstraint(_error::Function, lb, lsign::Symbol, aff, rsign::Symbol
     vectorized, parsecode, buildcall
 end
 
-function parseconstraint(_error::Function, args...)
+function parse_constraint(_error::Function, args...)
     # Unknown
     _error("Constraints must be in one of the following forms:\n" *
           "       expr1 <= expr2\n" * "       expr1 >= expr2\n" *
@@ -558,7 +558,7 @@ that either `func` or `set` will be some custom type, rather than e.g. a
 set appearing in the constraint.
 """
 macro constraint(args...)
-    constraint_macro(args, :constraint, parseconstraint)
+    constraint_macro(args, :constraint, parse_constraint)
 end
 
 function parseSDconstraint(_error::Function, sense::Symbol, lhs, rhs)
@@ -1035,37 +1035,37 @@ parse_one_operator_variable(_error::Function, infoexpr::VariableInfoExpr, ::Val{
 # that `x` is the variable name but at parse time there is now way to know
 # that `a` has a value.
 # In that case we assume the variable is the lhs.
-function parsevariable(_error::Function, infoexpr::VariableInfoExpr, sense::Symbol, var, value)
+function parse_variable(_error::Function, infoexpr::VariableInfoExpr, sense::Symbol, var, value)
     parse_one_operator_variable(_error, infoexpr, Val(sense), esc_nonconstant(value))
     var
 end
 
 # If the lhs is a number and not the rhs, we can deduce that the rhs is
 # the variable.
-function parsevariable(_error::Function, infoexpr::VariableInfoExpr, sense::Symbol, value::Number, var)
+function parse_variable(_error::Function, infoexpr::VariableInfoExpr, sense::Symbol, value::Number, var)
     parse_one_operator_variable(_error, infoexpr, reverse_sense(Val(sense)), esc_nonconstant(value))
     var
 end
 
-function parseternaryvariable(_error::Function, infoexpr::VariableInfoExpr,
+function parse_ternary_variable(_error::Function, infoexpr::VariableInfoExpr,
                               ::Union{Val{:<=}, Val{:≤}}, lower,
                               ::Union{Val{:<=}, Val{:≤}}, upper)
     set_lower_bound_or_error(_error, infoexpr, lower)
     set_upper_bound_or_error(_error, infoexpr, upper)
 end
-function parseternaryvariable(_error::Function, infoexpr::VariableInfoExpr,
+function parse_ternary_variable(_error::Function, infoexpr::VariableInfoExpr,
                               ::Union{Val{:>=}, Val{:≥}}, upper,
                               ::Union{Val{:>=}, Val{:≥}}, lower)
-    parseternaryvariable(_error, infoexpr, Val(:≤), lower, Val(:≤), upper)
+    parse_ternary_variable(_error, infoexpr, Val(:≤), lower, Val(:≤), upper)
 end
-function parseternaryvariable(_error::Function, infoexpr::VariableInfoExpr,
+function parse_ternary_variable(_error::Function, infoexpr::VariableInfoExpr,
                               ::Val, lvalue,
                               ::Val, rvalue)
     _error("Use the form lb <= ... <= ub.")
 end
-function parsevariable(_error::Function, infoexpr::VariableInfoExpr, lvalue, lsign::Symbol, var, rsign::Symbol, rvalue)
+function parse_variable(_error::Function, infoexpr::VariableInfoExpr, lvalue, lsign::Symbol, var, rsign::Symbol, rvalue)
     # lvalue lsign var rsign rvalue
-    parseternaryvariable(_error, infoexpr, Val(lsign), esc_nonconstant(lvalue), Val(rsign), esc_nonconstant(rvalue))
+    parse_ternary_variable(_error, infoexpr, Val(lsign), esc_nonconstant(lvalue), Val(rsign), esc_nonconstant(rvalue))
     var
 end
 
@@ -1236,10 +1236,10 @@ macro variable(args...)
     # var[1:2]                                | Expr      | :ref
     # var <= ub or var[1:2] <= ub             | Expr      | :call
     # lb <= var <= ub or lb <= var[1:2] <= ub | Expr      | :comparison
-    # In the two last cases, we call parsevariable
+    # In the two last cases, we call parse_variable
     explicit_comparison = isexpr(x, :comparison) || isexpr(x, :call)
     if explicit_comparison
-        var = parsevariable(_error, infoexpr, x.args...)
+        var = parse_variable(_error, infoexpr, x.args...)
     else
         var = x
     end
