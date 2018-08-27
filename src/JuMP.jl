@@ -372,6 +372,12 @@ else
 end
 Base.isempty(::AbstractJuMPScalar) = false
 
+# Check if two arrays of AbstractJuMPScalars are equal. Useful for testing.
+function isequal_canonical(x::AbstractArray{<:JuMP.AbstractJuMPScalar},
+                           y::AbstractArray{<:JuMP.AbstractJuMPScalar})
+    return size(x) == size(y) && all(JuMP.isequal_canonical.(x, y))
+end
+
 """
     AbstractShape
 
