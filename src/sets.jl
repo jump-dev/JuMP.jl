@@ -8,9 +8,9 @@ Returns the MOI set of dimension `dim` corresponding to the JuMP set `s`.
 function moi_set end
 
 # Used in `@constraint model f in s`
-function buildconstraint(_error::Function, f::AbstractVector,
+function build_constraint(_error::Function, f::AbstractVector,
                          s::AbstractVectorSet)
-    return buildconstraint(_error, f, moi_set(s, length(f)))
+    return build_constraint(_error, f, moi_set(s, length(f)))
 end
 
 struct SecondOrderCone <: AbstractVectorSet end

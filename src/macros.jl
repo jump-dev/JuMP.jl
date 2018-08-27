@@ -274,7 +274,7 @@ function _check_vectorized(sense::Symbol)
     end
 end
 
-# two-argument buildconstraint is used for one-sided constraints.
+# two-argument build_constraint is used for one-sided constraints.
 # Right-hand side is zero.
 sense_to_set(_error::Function, ::Union{Val{:(<=)}, Val{:(≤)}}) = MOI.LessThan(0.0)
 sense_to_set(_error::Function, ::Union{Val{:(>=)}, Val{:(≥)}}) = MOI.GreaterThan(0.0)
@@ -285,9 +285,9 @@ function parse_one_operator_constraint(_error::Function, vectorized::Bool, ::Val
     newaff, parseaff = parseExprToplevel(aff, :q)
     parsecode = :(q = Val{false}(); $parseaff)
     if vectorized
-        buildcall = :(buildconstraint.($_error, $newaff, Ref($(esc(set)))))
+        buildcall = :(build_constraint.($_error, $newaff, Ref($(esc(set)))))
     else
-        buildcall = :(buildconstraint($_error, $newaff, $(esc(set))))
+        buildcall = :(build_constraint($_error, $newaff, $(esc(set))))
     end
     parsecode, buildcall
 end
@@ -299,36 +299,36 @@ function parse_one_operator_constraint(_error::Function, vectorized::Bool, sense
     parse_one_operator_constraint(_error, vectorized, Val(:in), aff, set)
 end
 
-function parseconstraint(_error::Function, sense::Symbol, lhs, rhs)
+function parse_constraint(_error::Function, sense::Symbol, lhs, rhs)
     (sense, vectorized) = _check_vectorized(sense)
     vectorized, parse_one_operator_constraint(_error, vectorized, Val(sense), lhs, rhs)...
 end
 
-function parseternaryconstraint(_error::Function, vectorized::Bool, lb, ::Union{Val{:(<=)}, Val{:(≤)}}, aff, rsign::Union{Val{:(<=)}, Val{:(≤)}}, ub)
+function parse_ternary_constraint(_error::Function, vectorized::Bool, lb, ::Union{Val{:(<=)}, Val{:(≤)}}, aff, rsign::Union{Val{:(<=)}, Val{:(≤)}}, ub)
     newaff, parseaff = parseExprToplevel(aff, :aff)
     newlb, parselb = parseExprToplevel(lb, :lb)
     newub, parseub = parseExprToplevel(ub, :ub)
     if vectorized
-        buildcall = :(buildconstraint.($_error, $newaff, $newlb, $newub))
+        buildcall = :(build_constraint.($_error, $newaff, $newlb, $newub))
     else
-        buildcall = :(buildconstraint($_error, $newaff, $newlb, $newub))
+        buildcall = :(build_constraint($_error, $newaff, $newlb, $newub))
     end
     parseaff, parselb, parseub, buildcall
 end
 
-function parseternaryconstraint(_error::Function, vectorized::Bool, ub, ::Union{Val{:(>=)}, Val{:(≥)}}, aff, rsign::Union{Val{:(>=)}, Val{:(≥)}}, lb)
-    parseternaryconstraint(_error, vectorized, lb, Val(:(<=)), aff, Val(:(<=)), ub)
+function parse_ternary_constraint(_error::Function, vectorized::Bool, ub, ::Union{Val{:(>=)}, Val{:(≥)}}, aff, rsign::Union{Val{:(>=)}, Val{:(≥)}}, lb)
+    parse_ternary_constraint(_error, vectorized, lb, Val(:(<=)), aff, Val(:(<=)), ub)
 end
 
-function parseternaryconstraint(_error::Function, args...)
+function parse_ternary_constraint(_error::Function, args...)
     _error("Only two-sided rows of the form lb <= expr <= ub or ub >= expr >= lb are supported.")
 end
 
-function parseconstraint(_error::Function, lb, lsign::Symbol, aff, rsign::Symbol, ub)
+function parse_constraint(_error::Function, lb, lsign::Symbol, aff, rsign::Symbol, ub)
     (lsign, lvectorized) = _check_vectorized(lsign)
     (rsign, rvectorized) = _check_vectorized(rsign)
     ((vectorized = lvectorized) == rvectorized) || _error("Signs are inconsistently vectorized")
-    parseaff, parselb, parseub, buildcall = parseternaryconstraint(_error, vectorized, lb, Val(lsign), aff, Val(rsign), ub)
+    parseaff, parselb, parseub, buildcall = parse_ternary_constraint(_error, vectorized, lb, Val(lsign), aff, Val(rsign), ub)
     parsecode = quote
         aff = Val{false}()
         $parseaff
@@ -340,7 +340,7 @@ function parseconstraint(_error::Function, lb, lsign::Symbol, aff, rsign::Symbol
     vectorized, parsecode, buildcall
 end
 
-function parseconstraint(_error::Function, args...)
+function parse_constraint(_error::Function, args...)
     # Unknown
     _error("Constraints must be in one of the following forms:\n" *
           "       expr1 <= expr2\n" * "       expr1 >= expr2\n" *
@@ -349,25 +349,25 @@ end
 
 const ScalarPolyhedralSets = Union{MOI.LessThan,MOI.GreaterThan,MOI.EqualTo,MOI.Interval}
 
-buildconstraint(_error::Function, v::AbstractVariableRef, set::MOI.AbstractScalarSet) = SingleVariableConstraint(v, set)
-buildconstraint(_error::Function, v::Vector{<:AbstractVariableRef}, set::MOI.AbstractVectorSet) = VectorOfVariablesConstraint(v, set)
+build_constraint(_error::Function, v::AbstractVariableRef, set::MOI.AbstractScalarSet) = SingleVariableConstraint(v, set)
+build_constraint(_error::Function, v::Vector{<:AbstractVariableRef}, set::MOI.AbstractVectorSet) = VectorOfVariablesConstraint(v, set)
 
-buildconstraint(_error::Function, α::Number, set::MOI.AbstractScalarSet) = buildconstraint(_error, convert(AffExpr, α), set)
-function buildconstraint(_error::Function, aff::GenericAffExpr, set::S) where S <: Union{MOI.LessThan,MOI.GreaterThan,MOI.EqualTo}
+build_constraint(_error::Function, α::Number, set::MOI.AbstractScalarSet) = build_constraint(_error, convert(AffExpr, α), set)
+function build_constraint(_error::Function, aff::GenericAffExpr, set::S) where S <: Union{MOI.LessThan,MOI.GreaterThan,MOI.EqualTo}
     offset = aff.constant
     aff.constant = 0.0
     return AffExprConstraint(aff, S(MOIU.getconstant(set)-offset))
 end
 
-buildconstraint(_error::Function, x::AbstractArray, set::MOI.AbstractScalarSet) = _error("Unexpected vector in scalar constraint. Did you mean to use the dot comparison operators like .==, .<=, and .>= instead?")
-buildconstraint(_error::Function, x::Vector{<:GenericAffExpr}, set::MOI.AbstractVectorSet) = VectorAffExprConstraint(x, set)
+build_constraint(_error::Function, x::AbstractArray, set::MOI.AbstractScalarSet) = _error("Unexpected vector in scalar constraint. Did you mean to use the dot comparison operators like .==, .<=, and .>= instead?")
+build_constraint(_error::Function, x::Vector{<:GenericAffExpr}, set::MOI.AbstractVectorSet) = VectorAffExprConstraint(x, set)
 
-function buildconstraint(_error::Function, quad::GenericQuadExpr, set::S) where S <: Union{MOI.LessThan,MOI.GreaterThan,MOI.EqualTo}
+function build_constraint(_error::Function, quad::GenericQuadExpr, set::S) where S <: Union{MOI.LessThan,MOI.GreaterThan,MOI.EqualTo}
     offset = quad.aff.constant
     quad.aff.constant = 0.0
     return QuadExprConstraint(quad, S(MOIU.getconstant(set)-offset))
 end
-#buildconstraint(x::Vector{<:GenericQuadExpr}, set::MOI.AbstractVectorSet) = VectorQuadExprConstraint(x, set)
+#build_constraint(x::Vector{<:GenericQuadExpr}, set::MOI.AbstractVectorSet) = VectorQuadExprConstraint(x, set)
 
 
 # _vectorize_like(x::Number, y::AbstractArray{AffExpr}) = (ret = similar(y, typeof(x)); fill!(ret, x))
@@ -378,28 +378,28 @@ end
 #     x
 # end
 #
-# function buildconstraint(x::AbstractArray{AffExpr}, lb, ub)
+# function build_constraint(x::AbstractArray{AffExpr}, lb, ub)
 #     LB = _vectorize_like(lb,x)
 #     UB = _vectorize_like(ub,x)
 #     ret = similar(x, AffExprConstraint)
 #     map!(ret, eachindex(ret)) do i
-#         buildconstraint(x[i], LB[i], UB[i])
+#         build_constraint(x[i], LB[i], UB[i])
 #     end
 # end
 
-# TODO replace these with buildconstraint(_error, fun, ::Interval) for more consistency, quad exprs in Interval should now be supported with MOI anyway
-# three-argument buildconstraint is used for two-sided constraints.
-buildconstraint(_error::Function, v::AbstractVariableRef, lb::Real, ub::Real) = SingleVariableConstraint(v, MOI.Interval(lb, ub))
+# TODO replace these with build_constraint(_error, fun, ::Interval) for more consistency, quad exprs in Interval should now be supported with MOI anyway
+# three-argument build_constraint is used for two-sided constraints.
+build_constraint(_error::Function, v::AbstractVariableRef, lb::Real, ub::Real) = SingleVariableConstraint(v, MOI.Interval(lb, ub))
 
-function buildconstraint(_error::Function, aff::GenericAffExpr, lb::Real, ub::Real)
+function build_constraint(_error::Function, aff::GenericAffExpr, lb::Real, ub::Real)
     offset = aff.constant
     aff.constant = 0.0
     AffExprConstraint(aff,MOI.Interval(lb-offset,ub-offset))
 end
 
-buildconstraint(_error::Function, q::GenericQuadExpr, lb, ub) = _error("Two-sided quadratic constraints not supported. (Try @NLconstraint instead.)")
+build_constraint(_error::Function, q::GenericQuadExpr, lb, ub) = _error("Two-sided quadratic constraints not supported. (Try @NLconstraint instead.)")
 
-function buildconstraint(_error::Function, expr, lb, ub)
+function build_constraint(_error::Function, expr, lb, ub)
     lb isa Number || _error(string("Expected $lb to be a number."))
     ub isa Number || _error(string("Expected $ub to be a number."))
     if lb isa Number && ub isa Number
@@ -539,26 +539,26 @@ The expression `expr` can either be
 ## Note for extending the constraint macro
 
 Each constraint will be created using
-`add_constraint(m, buildconstraint(_error, func, set))` where
+`add_constraint(m, build_constraint(_error, func, set))` where
 * `_error` is an error function showing the constraint call in addition to the
   error message given as argument,
 * `func` is the expression that is constrained
 * and `set` is the set in which it is constrained to belong.
 
 For `expr` of the first type (i.e. `@constraint(m, func in set)`), `func` and
-`set` are passed unchanged to `buildconstraint` but for the other types, they
+`set` are passed unchanged to `build_constraint` but for the other types, they
 are determined from the expressions and signs. For instance,
 `@constraint(m, x^2 + y^2 == 1)` is transformed into
-`add_constraint(m, buildconstraint(_error, x^2 + y^2, MOI.EqualTo(1.0)))`.
+`add_constraint(m, build_constraint(_error, x^2 + y^2, MOI.EqualTo(1.0)))`.
 
 To extend JuMP to accept new constraints of this form, it is necessary to add
-the corresponding methods to `buildconstraint`. Note that this will likely mean
+the corresponding methods to `build_constraint`. Note that this will likely mean
 that either `func` or `set` will be some custom type, rather than e.g. a
 `Symbol`, since we will likely want to dispatch on the type of the function or
 set appearing in the constraint.
 """
 macro constraint(args...)
-    constraint_macro(args, :constraint, parseconstraint)
+    constraint_macro(args, :constraint, parse_constraint)
 end
 
 function parseSDconstraint(_error::Function, sense::Symbol, lhs, rhs)
@@ -619,7 +619,7 @@ end
 #         lhs = :($(x.args[2]) - $(x.args[3]))
 #         return quote
 #             newaff = @Expression($(esc(lhs)))
-#             c = buildconstraint(newaff,$(quot(sense)))
+#             c = build_constraint(newaff,$(quot(sense)))
 #             isa(c, LinearConstraint) ||
 #                 error("Constraint in @LinearConstraint is really a $(typeof(c))")
 #             c
@@ -672,7 +672,7 @@ end
 #         lhs = :($(x.args[2]) - $(x.args[3]))
 #         return quote
 #             newaff = @Expression($(esc(lhs)))
-#             q = buildconstraint(newaff,$(quot(sense)))
+#             q = build_constraint(newaff,$(quot(sense)))
 #             isa(q, QuadConstraint) || error("Constraint in @QuadConstraint is really a $(typeof(q))")
 #             q
 #         end
@@ -698,7 +698,7 @@ end
 #         lhs = :($(x.args[2]) - $(x.args[3]))
 #         return quote
 #             newaff = @Expression($(esc(lhs)))
-#             q = buildconstraint(newaff,$(quot(sense)))
+#             q = build_constraint(newaff,$(quot(sense)))
 #             isa(q, SOCConstraint) || error("Constraint in @SOCConstraint is really a $(typeof(q))")
 #             q
 #         end
@@ -979,14 +979,14 @@ esc_nonconstant(x::Number) = x
 esc_nonconstant(x::Expr) = isexpr(x,:quote) ? x : esc(x)
 esc_nonconstant(x) = esc(x)
 
-# Returns the type of what `add_variable(::Model, buildvariable(...))` would return where `...` represents the positional arguments.
+# Returns the type of what `add_variable(::Model, build_variable(...))` would return where `...` represents the positional arguments.
 # Example: `@variable m [1:3] foo` will allocate an vector of element type `variabletype(m, foo)`
 # Note: it needs to be implemented by all `AbstractModel`s
 variabletype(m::Model) = VariableRef
 # Returns a new variable. Additional positional arguments can be used to dispatch the call to a different method.
 # The return type should only depends on the positional arguments for `variabletype` to make sense. See the @variable macro doc for more details.
-# Example: `@variable m x` foo will call `buildvariable(_error, info, foo)`
-function buildvariable(_error::Function, info::VariableInfo; extra_kwargs...)
+# Example: `@variable m x` foo will call `build_variable(_error, info, foo)`
+function build_variable(_error::Function, info::VariableInfo; extra_kwargs...)
     for (kwarg, _) in extra_kwargs
         _error("Unrecognized keyword argument $kwarg")
     end
@@ -1035,37 +1035,37 @@ parse_one_operator_variable(_error::Function, infoexpr::VariableInfoExpr, ::Val{
 # that `x` is the variable name but at parse time there is now way to know
 # that `a` has a value.
 # In that case we assume the variable is the lhs.
-function parsevariable(_error::Function, infoexpr::VariableInfoExpr, sense::Symbol, var, value)
+function parse_variable(_error::Function, infoexpr::VariableInfoExpr, sense::Symbol, var, value)
     parse_one_operator_variable(_error, infoexpr, Val(sense), esc_nonconstant(value))
     var
 end
 
 # If the lhs is a number and not the rhs, we can deduce that the rhs is
 # the variable.
-function parsevariable(_error::Function, infoexpr::VariableInfoExpr, sense::Symbol, value::Number, var)
+function parse_variable(_error::Function, infoexpr::VariableInfoExpr, sense::Symbol, value::Number, var)
     parse_one_operator_variable(_error, infoexpr, reverse_sense(Val(sense)), esc_nonconstant(value))
     var
 end
 
-function parseternaryvariable(_error::Function, infoexpr::VariableInfoExpr,
+function parse_ternary_variable(_error::Function, infoexpr::VariableInfoExpr,
                               ::Union{Val{:<=}, Val{:≤}}, lower,
                               ::Union{Val{:<=}, Val{:≤}}, upper)
     set_lower_bound_or_error(_error, infoexpr, lower)
     set_upper_bound_or_error(_error, infoexpr, upper)
 end
-function parseternaryvariable(_error::Function, infoexpr::VariableInfoExpr,
+function parse_ternary_variable(_error::Function, infoexpr::VariableInfoExpr,
                               ::Union{Val{:>=}, Val{:≥}}, upper,
                               ::Union{Val{:>=}, Val{:≥}}, lower)
-    parseternaryvariable(_error, infoexpr, Val(:≤), lower, Val(:≤), upper)
+    parse_ternary_variable(_error, infoexpr, Val(:≤), lower, Val(:≤), upper)
 end
-function parseternaryvariable(_error::Function, infoexpr::VariableInfoExpr,
+function parse_ternary_variable(_error::Function, infoexpr::VariableInfoExpr,
                               ::Val, lvalue,
                               ::Val, rvalue)
     _error("Use the form lb <= ... <= ub.")
 end
-function parsevariable(_error::Function, infoexpr::VariableInfoExpr, lvalue, lsign::Symbol, var, rsign::Symbol, rvalue)
+function parse_variable(_error::Function, infoexpr::VariableInfoExpr, lvalue, lsign::Symbol, var, rsign::Symbol, rvalue)
     # lvalue lsign var rsign rvalue
-    parseternaryvariable(_error, infoexpr, Val(lsign), esc_nonconstant(lvalue), Val(rsign), esc_nonconstant(rvalue))
+    parse_ternary_variable(_error, infoexpr, Val(lsign), esc_nonconstant(lvalue), Val(rsign), esc_nonconstant(rvalue))
     var
 end
 
@@ -1148,7 +1148,7 @@ ub = Dict(:a => 2, :b => 3)
 ## Note for extending the variable macro
 
 The single scalar variable or each scalar variable of the container are created
-using `add_variable(model, buildvariable(_error, info, extra_args...;
+using `add_variable(model, build_variable(_error, info, extra_args...;
 extra_kwargs...))` where
 
 * `model` is the model passed to the `@variable` macro;
@@ -1161,9 +1161,9 @@ extra_kwargs...))` where
 * `extra_args` are the unrecognized positional arguments of `args` plus the
   value of the `variabletype` keyword argument if present. The `variabletype`
   keyword argument allows the user to pass a position argument to
-  `buildvariable` without the need to give a positional argument to
+  `build_variable` without the need to give a positional argument to
   `@variable`. In particular, this allows the user to give a positional
-  argument to the `buildvariable` call when using the anonymous single variable
+  argument to the `build_variable` call when using the anonymous single variable
   syntax `@variable(model, kwargs...)`; and
 * `extra_kwargs` are the unrecognized keyword argument of `kwargs`.
 
@@ -1173,7 +1173,7 @@ The following creates a variable `x` of name `x` with lower_bound 0 as with the 
 example above but does it without using the `@variable` macro
 ```julia
 info = VariableInfo(true, 0, false, NaN, false, NaN, false, NaN, false, false)
-JuMP.add_variable(model, JuMP.buildvariable(error, info), "x")
+JuMP.add_variable(model, JuMP.build_variable(error, info), "x")
 ```
 
 The following creates a `JuMPArray` of index set `[:a, :b]` and with respective
@@ -1185,7 +1185,7 @@ data = Vector{JuMP.variabletype(model)}(undef, length(keys(ub)))
 x = JuMPArray(data, keys(ub))
 for i in keys(ub)
     info = VariableInfo(false, NaN, true, ub[i], false, NaN, false, NaN, false, false)
-    x[i] = JuMP.add_variable(model, JuMP.buildvariable(error, info), "x[\$i]")
+    x[i] = JuMP.add_variable(model, JuMP.build_variable(error, info), "x[\$i]")
 end
 ```
 
@@ -1199,7 +1199,7 @@ the `Poly(X)` positional argument to specify its variables:
 x = Matrix{JuMP.variabletype(model, Poly(X))}(N, N)
 info = VariableInfo(false, NaN, false, NaN, false, NaN, false, NaN, false, false)
 for i in 1:N, j in i:N
-    x[i,j] = x[j,i] = JuMP.add_variable(model, buildvariable(error, info, Poly(X)), "x[\$i,\$j]")
+    x[i,j] = x[j,i] = JuMP.add_variable(model, build_variable(error, info, Poly(X)), "x[\$i,\$j]")
 end
 ```
 """
@@ -1236,10 +1236,10 @@ macro variable(args...)
     # var[1:2]                                | Expr      | :ref
     # var <= ub or var[1:2] <= ub             | Expr      | :call
     # lb <= var <= ub or lb <= var[1:2] <= ub | Expr      | :comparison
-    # In the two last cases, we call parsevariable
+    # In the two last cases, we call parse_variable
     explicit_comparison = isexpr(x, :comparison) || isexpr(x, :call)
     if explicit_comparison
-        var = parsevariable(_error, infoexpr, x.args...)
+        var = parse_variable(_error, infoexpr, x.args...)
     else
         var = x
     end
@@ -1282,7 +1282,7 @@ macro variable(args...)
     if isa(var,Symbol)
         # Easy case - a single variable
         sdp && _error("Cannot add a semidefinite scalar variable")
-        buildcall = :( buildvariable($_error, $info, $(extra...)) )
+        buildcall = :( build_variable($_error, $info, $(extra...)) )
         addkwargs!(buildcall, extra_kwargs)
         variablecall = :( add_variable($model, $buildcall, $basename) )
         # The looped code is trivial here since there is a single variable
@@ -1297,7 +1297,7 @@ macro variable(args...)
         clear_dependencies(i) = (isdependent(idxvars,idxsets[i],i) ? () : idxsets[i])
 
         # Code to be used to create each variable of the container.
-        buildcall = :( buildvariable($_error, $info, $(extra...)) )
+        buildcall = :( build_variable($_error, $info, $(extra...)) )
         addkwargs!(buildcall, extra_kwargs)
         variablecall = :( add_variable($model, $buildcall, $(namecall(basename, idxvars))) )
         code = :( $(refcall) = $variablecall )
@@ -1344,7 +1344,7 @@ macro variable(args...)
                 $(getloopedcode(variable, code, condition, idxvars, idxsets, vartype, requestedcontainer; lowertri=symmetric))
                 $(if sdp
                     quote
-                        JuMP.add_constraint($model, JuMP.buildconstraint($_error, Symmetric($variable), JuMP.PSDCone()))
+                        JuMP.add_constraint($model, JuMP.build_constraint($_error, Symmetric($variable), JuMP.PSDCone()))
                     end
                 end)
             end

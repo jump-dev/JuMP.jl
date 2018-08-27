@@ -5,7 +5,7 @@ mutable struct MyVariable
     info::JuMP.VariableInfo
 end
 
-@testset "Extension of @variable with buildvariable #1029" begin
+@testset "Extension of @variable with build_variable #1029" begin
     local MyVariable = Tuple{JuMP.VariableInfo, Int}
     JuMP.variabletype(m::Model, ::Type{MyVariable}) = MyVariable
     names = Dict{MyVariable, String}()
@@ -13,7 +13,7 @@ end
         names[v] = name
         v
     end
-    function JuMP.buildvariable(_error::Function, info::JuMP.VariableInfo, ::Type{MyVariable}; test_kw::Int = 0)
+    function JuMP.build_variable(_error::Function, info::JuMP.VariableInfo, ::Type{MyVariable}; test_kw::Int = 0)
         (info, test_kw)
     end
     m = Model()
@@ -72,12 +72,12 @@ end
 end
 
 function macros_test(ModelType::Type{<:JuMP.AbstractModel}, VariableRefType::Type{<:JuMP.AbstractVariableRef})
-    @testset "buildconstraint on variable" begin
+    @testset "build_constraint on variable" begin
         m = ModelType()
         @variable(m, x)
-        @test JuMP.buildconstraint(error, x, MOI.GreaterThan(0.0)) isa JuMP.SingleVariableConstraint{VariableRefType, MOI.GreaterThan{Float64}}
-        @test JuMP.buildconstraint(error, x, MOI.LessThan(0.0)) isa JuMP.SingleVariableConstraint{VariableRefType, MOI.LessThan{Float64}}
-        @test JuMP.buildconstraint(error, x, MOI.EqualTo(0)) isa JuMP.SingleVariableConstraint{VariableRefType, MOI.EqualTo{Int}}
+        @test JuMP.build_constraint(error, x, MOI.GreaterThan(0.0)) isa JuMP.SingleVariableConstraint{VariableRefType, MOI.GreaterThan{Float64}}
+        @test JuMP.build_constraint(error, x, MOI.LessThan(0.0)) isa JuMP.SingleVariableConstraint{VariableRefType, MOI.LessThan{Float64}}
+        @test JuMP.build_constraint(error, x, MOI.EqualTo(0)) isa JuMP.SingleVariableConstraint{VariableRefType, MOI.EqualTo{Int}}
     end
 
     @testset "Check @constraint basics" begin
