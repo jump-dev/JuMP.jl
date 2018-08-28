@@ -69,6 +69,9 @@ function JuMP.set_lower_bound(vref::MyVariableRef, lower)
     vref.model.variables[vref.idx].info.has_lb = true
     vref.model.variables[vref.idx].info.lower_bound = lower
 end
+function JuMP.delete_lower_bound(variable_ref::MyVariableRef)
+    variable_ref.model.variables[variable_ref.idx].info.has_lb = false
+end
 JuMP.has_upper_bound(vref::MyVariableRef) = vref.model.variables[vref.idx].info.has_ub
 function JuMP.upper_bound(vref::MyVariableRef)
     @assert !JuMP.is_fixed(vref)
@@ -78,10 +81,17 @@ function JuMP.set_upper_bound(vref::MyVariableRef, upper)
     vref.model.variables[vref.idx].info.has_ub = true
     vref.model.variables[vref.idx].info.upper_bound = upper
 end
+function JuMP.delete_upper_bound(variable_ref::MyVariableRef)
+    variable_ref.model.variables[variable_ref.idx].info.has_ub = false
+end
 JuMP.is_fixed(vref::MyVariableRef) = vref.model.variables[vref.idx].info.has_fix
 JuMP.fix_value(vref::MyVariableRef) = vref.model.variables[vref.idx].info.fixed_value
-function JuMP.fix(vref::MyVariableRef, value)
-    vref.model.variables[vref.idx].info.fixed_value = value
+function JuMP.fix(variable_ref::MyVariableRef, value)
+    variable_ref.model.variables[variable_ref.idx].info.has_fix = true
+    variable_ref.model.variables[variable_ref.idx].info.fixed_value = value
+end
+function JuMP.unfix(variable_ref::MyVariableRef)
+    variable_ref.model.variables[variable_ref.idx].info.has_fix = false
 end
 JuMP.start_value(vref::MyVariableRef) = vref.model.variables[vref.idx].info.start
 function JuMP.set_start_value(vref::MyVariableRef, start)

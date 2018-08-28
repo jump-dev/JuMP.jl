@@ -117,7 +117,10 @@ isequal_canonical(v::VariableRef, other::VariableRef) = isequal(v, other)
 Delete the variable associated with `variable_ref` from the model `model`.
 """
 function delete(model::Model, variable_ref::VariableRef)
-    @assert model === variable_ref.m
+    if model !== variable_ref.m
+        error("The variable reference you are trying to delete does not " *
+              "belong to the model.")
+    end
     MOI.delete!(model.moi_backend, variable_ref.index)
 end
 
@@ -316,7 +319,7 @@ Delete the lower bound constraint of a variable.
 function delete_lower_bound(variable_ref::VariableRef)
     JuMP.delete(variable_ref.m, LowerBoundRef(variable_ref))
     delete!(variable_ref.m.variable_to_lower_bound, index(variable_ref))
-    return nothing
+    return
 end
 
 """
@@ -373,7 +376,7 @@ Delete the upper bound constraint of a variable.
 function delete_upper_bound(variable_ref::VariableRef)
     JuMP.delete(variable_ref.m, UpperBoundRef(variable_ref))
     delete!(variable_ref.m.variable_to_upper_bound, index(variable_ref))
-    return nothing
+    return
 end
 
 """
@@ -425,7 +428,7 @@ Delete the fixing constraint of a variable.
 function unfix(variable_ref::VariableRef)
     JuMP.delete(variable_ref.m, FixRef(variable_ref))
     delete!(variable_ref.m.variable_to_fix, index(variable_ref))
-    return nothing
+    return
 end
 
 """
@@ -456,22 +459,28 @@ function set_integer_index(v::VariableRef, cindex::MOIINT)
 end
 
 """
-    set_integer(v::VariableRef)
+    set_integer(variable_ref::VariableRef)
 
-Add an integrality constraint on the variable `v`.
+Add an integrality constraint on the variable `variable_ref`.
 """
-function set_integer(v::VariableRef)
-    is_integer(v) && return
-    @assert !is_binary(v) # TODO error message
-    cindex = MOI.addconstraint!(v.m.moi_backend, MOI.SingleVariable(index(v)), MOI.Integer())
-    set_integer_index(v, cindex)
-    nothing
+function set_integer(variable_ref::VariableRef)
+    if is_integer(variable_ref)
+        return
+    elseif is_binary(variable_ref)
+        error("Cannot set the variable_ref $(variable_ref) to integer as it " *
+              "is already binary.")
+    end
+    constraint_ref = MOI.addconstraint!(variable_ref.m.moi_backend,
+                                MOI.SingleVariable(index(variable_ref)),
+                                MOI.Integer())
+    set_integer_index(variable_ref, constraint_ref)
+    return
 end
 
 function unset_integer(variable_ref::VariableRef)
     JuMP.delete(variable_ref.m, IntegerRef(variable_ref))
     delete!(variable_ref.m.variable_to_integrality, index(variable_ref))
-    return nothing
+    return
 end
 
 function IntegerRef(v::VariableRef)
@@ -494,18 +503,24 @@ end
 
 Add a constraint on the variable `v` that it must take values in the set ``\\{0,1\\}``.
 """
-function set_binary(v::VariableRef)
-    is_binary(v) && return
-    @assert !is_integer(v) # TODO error message
-    cindex = MOI.addconstraint!(v.m.moi_backend, MOI.SingleVariable(index(v)), MOI.ZeroOne())
-    set_binary_index(v, cindex)
-    nothing
+function set_binary(variable_ref::VariableRef)
+    if is_binary(variable_ref)
+        return
+    elseif is_integer(variable_ref)
+        error("Cannot set the variable_ref $(variable_ref) to binary as it " *
+              "is already integer.")
+    end
+    constraint_ref = MOI.addconstraint!(variable_ref.m.moi_backend,
+                                MOI.SingleVariable(index(variable_ref)),
+                                MOI.ZeroOne())
+    set_binary_index(variable_ref, constraint_ref)
+    return
 end
 
 function unset_binary(variable_ref::VariableRef)
     JuMP.delete(variable_ref.m, BinaryRef(variable_ref))
     delete!(variable_ref.m.variable_to_zero_one, index(variable_ref))
-    return nothing
+    return
 end
 
 function BinaryRef(v::VariableRef)

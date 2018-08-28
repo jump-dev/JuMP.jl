@@ -448,10 +448,10 @@ julia> x = @variable(model, [i=1:2], basename="x", lower_bound=i, integer=true)
 
 ## User-defined containers
 
-Finally, in the section [Variable containers](@ref), we explained how JuMP
-supports the efficient creation of collections of JuMP variables in three types
-of containers. However, users are also free to create collections of JuMP
-variables in their own datastructures. For example, the following code creates a
+In the section [Variable containers](@ref), we explained how JuMP supports the
+efficient creation of collections of JuMP variables in three types of
+containers. However, users are also free to create collections of JuMP variables
+in their own datastructures. For example, the following code creates a
 dictionary with symmetric matrices as the values:
 ```jldoctest; setup=:(model=Model())
 julia> variables = Dict{Symbol, Symmetric{JuMP.VariableRef,
@@ -470,9 +470,9 @@ Dict{Symbol,Symmetric{JuMP.VariableRef,Array{JuMP.VariableRef,2}}} with 2 entrie
 
 ## Deleting variables
 
-Finally, JuMP supports the deletion of optimization variables. To delete
-variables, we can use the `JuMP.delete` method. We can also check whether `x`
-is a valid JuMP variable in `model` using the `JuMP.is_valid` method:
+JuMP supports the deletion of optimization variables. To delete variables, we
+can use the `JuMP.delete` method. We can also check whether `x` is a valid JuMP
+variable in `model` using the `JuMP.is_valid` method:
 ```jldoctest variables_delete
 julia> @variable(model, x)
 x

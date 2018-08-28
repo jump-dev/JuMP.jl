@@ -39,7 +39,9 @@ function variables_test(ModelType::Type{<:JuMP.AbstractModel}, VariableRefType::
             @test !JuMP.is_fixed(lbonly)
             @test JuMP.is_binary(lbonly)
             @test !JuMP.is_integer(lbonly)
-            @test isequal(mcon[:lbonly],lbonly)
+            @test isequal(mcon[:lbonly], lbonly)
+            JuMP.delete_lower_bound(lbonly)
+            @test !JuMP.has_lower_bound(lbonly)
             # Name already used
             @test_throws ErrorException @variable(mcon, lbonly)
         end
@@ -63,7 +65,9 @@ function variables_test(ModelType::Type{<:JuMP.AbstractModel}, VariableRefType::
             @test !JuMP.is_fixed(ubonly)
             @test !JuMP.is_binary(ubonly)
             @test JuMP.is_integer(ubonly)
-            @test isequal(mcon[:ubonly],ubonly)
+            @test isequal(mcon[:ubonly], ubonly)
+            JuMP.delete_upper_bound(ubonly)
+            @test !JuMP.has_upper_bound(ubonly)
         end
 
         @testset "Upper bound" begin
@@ -104,6 +108,8 @@ function variables_test(ModelType::Type{<:JuMP.AbstractModel}, VariableRefType::
             @test !JuMP.has_upper_bound(fixed)
             @test JuMP.is_fixed(fixed)
             @test JuMP.fix_value(fixed) == 1.0
+            JuMP.unfix(fixed)
+            @test !JuMP.is_fixed(fixed)
         end
 
         @testset "Custom index sets" begin
@@ -188,10 +194,21 @@ function variables_test(ModelType::Type{<:JuMP.AbstractModel}, VariableRefType::
 
         JuMP.set_binary(x[1])
         @test JuMP.is_binary(x[1])
-        @test_throws AssertionError JuMP.set_integer(x[1])
+        @test_throws Exception JuMP.set_integer(x[1])
         JuMP.unset_binary(x[1])
         @test !JuMP.is_binary(x[1])
-        # TODO test binary/integer keyword arguments
+
+        @variable(m, y, binary = true)
+        @test JuMP.is_binary(y)
+        @test_throws Exception JuMP.set_integer(y)
+        JuMP.unset_binary(y)
+        @test !JuMP.is_binary(y)
+
+        @variable(m, z, integer = true)
+        @test JuMP.is_integer(z)
+        @test_throws Exception JuMP.set_binary(z)
+        JuMP.unset_integer(z)
+        @test !JuMP.is_integer(z)
     end
 
     @testset "repeated elements in index set (issue #199)" begin

@@ -487,8 +487,10 @@ end
 Delete the constraint associated with `constraint_ref` from the model `model`.
 """
 function delete(model::Model, constraint_ref::ConstraintRef{Model})
-    # TODO: should model be a parameter in the constraint_ref?
-    @assert model === constraint_ref.m
+    if model !== constraint_ref.m
+        error("The constraint reference you are trying to delete does not " *
+              "belong to the model.")
+    end
     MOI.delete!(model.moi_backend, index(constraint_ref))
 end
 
