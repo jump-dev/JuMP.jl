@@ -138,11 +138,14 @@ function variables_test(ModelType::Type{<:JuMP.AbstractModel}, VariableRefType::
     end
 
     @testset "isvalid and delete variable" begin
-        m = ModelType()
-        @variable(m, x)
-        @test JuMP.is_valid(m, x)
-        JuMP.delete(m, x)
-        @test !JuMP.is_valid(m, x)
+        model = ModelType()
+        @variable(model, x)
+        @test JuMP.is_valid(model, x)
+        JuMP.delete(model, x)
+        @test !JuMP.is_valid(model, x)
+        second_model = ModelType()
+        @test_throws Exception JuMP.delete(second_model, x)
+
     end
 
 
@@ -188,11 +191,13 @@ function variables_test(ModelType::Type{<:JuMP.AbstractModel}, VariableRefType::
         @variable(m, x[1:3])
 
         JuMP.set_integer(x[2])
+        JuMP.set_integer(x[2])  # test duplicated call
         @test JuMP.is_integer(x[2])
         JuMP.unset_integer(x[2])
         @test !JuMP.is_integer(x[2])
 
         JuMP.set_binary(x[1])
+        JuMP.set_binary(x[1])  # test duplicated call
         @test JuMP.is_binary(x[1])
         @test_throws Exception JuMP.set_integer(x[1])
         JuMP.unset_binary(x[1])

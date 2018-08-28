@@ -52,11 +52,13 @@ function JuMP.add_variable(m::MyModel, v::JuMP.AbstractVariable, name::String=""
     vref
 end
 function JuMP.delete(model::MyModel, variable_ref::MyVariableRef)
+    @assert JuMP.is_valid(model, variable_ref)
     delete!(model.variables, variable_ref.idx)
     delete!(model.varnames, variable_ref.idx)
 end
 function JuMP.is_valid(model::MyModel, variable_ref::MyVariableRef)
-    return variable_ref.idx in keys(model.variables)
+    return (model === variable_ref.model &&
+            variable_ref.idx in keys(model.variables))
 end
 JuMP.num_variables(m::MyModel) = length(m.variables)
 
@@ -131,11 +133,13 @@ function JuMP.add_constraint(m::MyModel, c::JuMP.AbstractConstraint, name::Strin
     cref
 end
 function JuMP.delete(model::MyModel, constraint_ref::MyConstraintRef)
+    @assert JuMP.is_valid(model, constraint_ref)
     delete!(model.constraints, constraint_ref.idx)
     delete!(model.connames, constraint_ref.idx)
 end
 function JuMP.is_valid(model::MyModel, constraint_ref::MyConstraintRef)
-    return constraint_ref.idx in keys(model.constraints)
+    return (model === constraint_ref.model &&
+            constraint_ref.idx in keys(model.constraints))
 end
 function JuMP.constraint_object(cref::MyConstraintRef)
     return cref.model.constraints[cref.idx]
