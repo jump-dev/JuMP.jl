@@ -363,201 +363,163 @@ function Compat.LinearAlgebra.diagm(x::AbstractVector{<:AbstractVariableRef})
     diagm(0=>copyto!(similar(x, GenericAffExpr{Float64,eltype(x)}), x))
 end
 
-###############
-# The _multiply!(buf,y,z) adds the results of y*z into the buffer buf. No bounds/size
-# checks are performed; it is expected that the caller has done this, has ensured
-# that the eltype of buf is appropriate, and has zeroed the elements of buf (if desired).
+###############################################################################
+# Matrix/Vector Arithmetic with JuMP eltypes
+###############################################################################
 
-function _multiply!(ret::Array{T}, lhs::Array, rhs::Array) where T<:JuMPTypes
-    m, n = size(lhs,1), size(lhs,2)
-    r, s = size(rhs,1), size(rhs,2)
-    for i ∈ 1:m, j ∈ 1:s
-        q = ret[i,j]
-        _sizehint_expr!(q, n)
-        for k ∈ 1:n
-            tmp = convert(T, lhs[i,k]*rhs[k,j])
-            add_to_expression!(q, tmp)
-        end
+###############################################################################
+# convenience/utility definitions
+
+const GenericAffOrQuadExpr = Union{GenericAffExpr,GenericQuadExpr}
+
+densify_with_jump_eltype(x::AbstractMatrix) = convert(Matrix, x)
+
+function densify_with_jump_eltype(x::SparseMatrixCSC{V}) where V<:AbstractVariableRef
+    return convert(Matrix{GenericAffExpr{Float64,V}}, x)
+end
+
+# see https://github.com/JuliaLang/julia/pull/18218
+_A_mul_B_eltype(::Type{R}, ::Type{S}) where {R,S} = typeof(one(R) * one(S) + one(R) * one(S))
+
+_A_mul_B_ret_dims(A::AbstractMatrix, B::AbstractVector) = (size(A, 1),)
+_A_mul_B_ret_dims(A::AbstractMatrix, B::AbstractMatrix) = (size(A, 1), size(B, 2))
+
+# don't do size checks here; defer that to `_A_mul_B(A, B)`
+function _A_mul_B_ret(A, B, dims...)
+    T = _A_mul_B_eltype(eltype(A), eltype(B))
+    ret = Array{T}(undef, _A_mul_B_ret_dims(A, B))
+    return fillwithzeros!(ret, T)
+end
+
+if VERSION < v"0.7-"
+    _At_mul_B_ret_dims(A::AbstractMatrix, B::AbstractVector) = (size(A, 2),)
+    _At_mul_B_ret_dims(A::AbstractMatrix, B::AbstractMatrix) = (size(A, 2), size(B, 2))
+    function _At_mul_B_ret(A, B, dims...)
+        T = _A_mul_B_eltype(eltype(A), eltype(B))
+        ret = Array{T}(undef, _At_mul_B_ret_dims(A, B))
+        return fillwithzeros!(ret, T)
     end
-    ret
 end
 
-# this computes lhs.'*rhs and places it in ret
-function _multiplyt!(ret::Array{T}, lhs::Array, rhs::Array) where T<:JuMPTypes
-    m, n = size(lhs,2), size(lhs,1) # transpose
-    r, s = size(rhs,1), size(rhs,2)
-    for i ∈ 1:m, j ∈ 1:s
-        q = ret[i,j]
-        _sizehint_expr!(q, n)
-        for k ∈ 1:n
-            tmp = convert(T, lhs[k,i]*rhs[k,j]) # transpose
-            add_to_expression!(q, tmp)
-        end
-    end
-    ret
-end
-
-function _multiply!(ret::Array{T}, lhs::SparseMatrixCSC, rhs::Array) where T<:Union{GenericAffExpr,GenericQuadExpr}
-    nzv = nonzeros(lhs)
-    rv  = rowvals(lhs)
-    for col ∈ 1:lhs.n
-        for k ∈ 1:size(ret, 2)
-            for j ∈ nzrange(lhs, col)
-                add_to_expression!(ret[rv[j], k], nzv[j] * rhs[col,k])
-            end
-        end
-    end
-    ret
-end
-
-# this computes lhs.'*rhs and places it in ret
-function _multiplyt!(ret::Array{T}, lhs::SparseMatrixCSC, rhs::Array) where T<:Union{GenericAffExpr,GenericQuadExpr}
-    _multiply!(ret, transpose(lhs), rhs) # TODO fully implement
-end
-
-function _multiply!(ret::Array{T}, lhs::Matrix, rhs::SparseMatrixCSC) where T<:Union{GenericAffExpr,GenericQuadExpr}
-    rowval = rowvals(rhs)
-    nzval  = nonzeros(rhs)
-    for multivec_row in 1:size(lhs,1)
-        for col ∈ 1:rhs.n
-            idxset = nzrange(rhs, col)
-            q = ret[multivec_row, col]
-            _sizehint_expr!(q, length(idxset))
-            for k ∈ idxset
-                add_to_expression!(q, lhs[multivec_row, rowval[k]] * nzval[k])
-            end
-        end
-    end
-    ret
-end
-
-# this computes lhs.'*rhs and places it in ret
-function _multiplyt!(ret::Array{T}, lhs::Matrix, rhs::SparseMatrixCSC) where T<:Union{GenericAffExpr,GenericQuadExpr}
-    rowval = rowvals(rhs)
-    nzval  = nonzeros(rhs)
-    for multivec_row ∈ 1:size(lhs,2) # transpose
-        for col ∈ 1:rhs.n
-            idxset = nzrange(rhs, col)
-            q = ret[multivec_row, col]
-            _sizehint_expr!(q, length(idxset))
-            for k ∈ idxset
-                add_to_expression!(q, lhs[rowval[k], multivec_row] * nzval[k]) # transpose
-            end
-        end
-    end
-    ret
-end
-
-# See https://github.com/JuliaLang/julia/issues/27015
-function Base.Matrix(S::SparseMatrixCSC{V}) where V<:AbstractVariableRef
-    A = zeros(GenericAffExpr{Float64, V}, S.m, S.n)
-    for Sj in 1:S.n
-        for Sk in nzrange(S, Sj)
-            Si = S.rowval[Sk]
-            Sv = S.nzval[Sk]
-            A[Si, Sj] = Sv
-        end
+function fillwithzeros!(A, ::Type{T}) where {T}
+    for I in eachindex(A)
+        A[I] = zero(T)
     end
     return A
 end
+
+###############################################################################
+# `_A_mul_B!(ret, A, B)` adds the result of `A*B` into the buffer `ret`. We roll our own
+# matmul here (instead of using Julia's generic fallbacks) because doing so allows us to
+# accumulate the expressions for the inner loops in-place. Additionally, Julia's generic
+# fallbacks can be finnicky when your array elements aren't `<:Number`.
+#
+# No bounds/size checks are performed; it is expected that the caller has done this, has
+# ensured that the eltype of `ret` is appropriate, and has zeroed the elements of `ret` (if
+# desired).
+
+function _A_mul_B!(ret::AbstractArray{T}, A, B) where {T<:JuMPTypes}
+    for i ∈ 1:size(A, 1), j ∈ 1:size(B, 2)
+        q = ret[i, j]
+        _sizehint_expr!(q, size(A, 2))
+        for k ∈ 1:size(A, 2)
+            tmp = convert(T, A[i, k] * B[k, j])
+            add_to_expression!(q, tmp)
+        end
+    end
+    ret
+end
+
+function _A_mul_B!(ret::AbstractArray{<:GenericAffOrQuadExpr}, A::SparseMatrixCSC, B)
+    nzv = nonzeros(A)
+    rv  = rowvals(A)
+    for col ∈ 1:size(A, 2)
+        for k ∈ 1:size(ret, 2)
+            for j ∈ nzrange(A, col)
+                add_to_expression!(ret[rv[j], k], nzv[j] * B[col, k])
+            end
+        end
+    end
+    ret
+end
+
+function _A_mul_B!(ret::AbstractArray{<:GenericAffOrQuadExpr}, A::AbstractMatrix, B::SparseMatrixCSC)
+    rowval = rowvals(B)
+    nzval  = nonzeros(B)
+    for multivec_row in 1:size(A, 1)
+        for col ∈ 1:size(B, 2)
+            idxset = nzrange(B, col)
+            q = ret[multivec_row, col]
+            _sizehint_expr!(q, length(idxset))
+            for k ∈ idxset
+                add_to_expression!(q, A[multivec_row, rowval[k]] * nzval[k])
+            end
+        end
+    end
+    ret
+end
+
 # TODO: implement sparse * sparse code as in base/sparse/linalg.jl (spmatmul)
-_multiply!(ret::AbstractArray{T}, lhs::SparseMatrixCSC, rhs::SparseMatrixCSC) where {T<:JuMPTypes} = _multiply!(ret, lhs, Matrix(rhs))
-_multiplyt!(ret::AbstractArray{T}, lhs::SparseMatrixCSC, rhs::SparseMatrixCSC) where {T<:JuMPTypes} = _multiplyt!(ret, lhs, Matrix(rhs))
+_A_mul_B!(ret::AbstractArray{<:JuMPTypes}, A::SparseMatrixCSC, B::SparseMatrixCSC) = _A_mul_B!(ret, A, densify_with_jump_eltype(B))
 
-function Base.:*(A::Union{Matrix{T}, SparseMatrixCSC{T}},
-                 x::Union{Matrix, Vector, SparseMatrixCSC}
-                 ) where {T <: JuMPTypes}
-    return _matmul(A, x)
-end
-function Base.:*(A::Union{Matrix{T}, SparseMatrixCSC{T}},
-                 x::Union{Matrix{R}, Vector{R}, SparseMatrixCSC{R}}
-                 ) where {T <: JuMPTypes, R <: JuMPTypes}
-    return _matmul(A, x)
-end
-function Base.:*(A::Union{Matrix, SparseMatrixCSC},
-                 x::Union{Matrix{T}, Vector{T}, SparseMatrixCSC{T}}
-                 ) where {T <: JuMPTypes}
-    return _matmul(A, x)
+function _A_mul_B(A, B)
+    size(A, 2) == size(B, 1) || error("Incompatible sizes")
+    ret = _A_mul_B_ret(A, B)
+    _A_mul_B!(ret, A, B)
+    ret
 end
 
-if VERSION >= v"0.7-"
-    # This is a stopgap solution to get (most) tests passing on Julia 0.7. A lot
-    # of cases probably still don't work. (Like A * A where A is a sparse matrix
-    # of a JuMP type). This code needs a big refactor.
-    function Base.:*(adjA::Adjoint{<:JuMPTypes,<:SparseMatrixCSC},
-                     x::Vector)
-        A = adjA.parent
-        ret = _return_arrayt(A, x)
-        return mul!(ret, adjoint(A), x)
+###############################################################################
+# `_At_mul_B!(ret, A, B)` stores the result of `Aᵀ * B` into the buffer `ret`. We roll our
+# own version here (instead of working with Julia's generic fallbacks) for the same reasons
+# as above.
+
+function _At_mul_B!(ret::AbstractArray{T}, A, B) where {T<:JuMPTypes}
+    for i ∈ 1:size(A, 2), j ∈ 1:size(B, 2)
+        q = ret[i, j]
+        _sizehint_expr!(q, size(A, 1))
+        for k ∈ 1:size(A, 1)
+            tmp = convert(T, A[k, i] * B[k, j]) # transpose
+            add_to_expression!(q, tmp)
+        end
     end
-    function Base.:*(adjA::Adjoint{<:Any,<:SparseMatrixCSC},
-                     x::Vector{<:JuMPTypes})
-        A = adjA.parent
-        ret = _return_arrayt(A, x)
-        return mul!(ret, adjoint(A), x)
+    ret
+end
+
+if VERSION < v"0.7-"
+    function _At_mul_B!(ret::AbstractArray{<:GenericAffOrQuadExpr}, A::SparseMatrixCSC, B)
+        _A_mul_B!(ret, transpose(A), B) # TODO fully implement
     end
-    function Base.:*(adjA::Adjoint{<:JuMPTypes,<:SparseMatrixCSC},
-                     x::Vector{<:JuMPTypes})
-        A = adjA.parent
-        ret = _return_arrayt(A, x)
-        return mul!(ret, adjoint(A), x)
+    function _At_mul_B!(ret::AbstractArray{<:GenericAffOrQuadExpr}, A::AbstractMatrix, B::SparseMatrixCSC)
+        rowval = rowvals(A)
+        nzval  = nonzeros(A)
+        for multivec_row ∈ 1:size(B, 2) # transpose
+            for col ∈ 1:size(A, 2)
+                idxset = nzrange(A, col)
+                q = ret[multivec_row, col]
+                _sizehint_expr!(q, length(idxset))
+                for k ∈ idxset
+                    add_to_expression!(q, B[rowval[k], multivec_row] * nzval[k]) # transpose
+                end
+            end
+        end
+        ret
     end
-    function Base.:*(adjA::Transpose{<:JuMPTypes,<:SparseMatrixCSC},
-                     x::Vector)
-        A = adjA.parent
-        ret = _return_arrayt(A, x)
-        return mul!(ret, transpose(A), x)
+    function _At_mul_B(A, B)
+        size(A, 1) == size(B, 1) || error("Incompatible sizes")
+        ret = _At_mul_B_ret(A, B)
+        _At_mul_B!(ret, A, B)
+        ret
     end
-    function Base.:*(adjA::Transpose{<:Any,<:SparseMatrixCSC},
-                     x::Vector{<:JuMPTypes})
-        A = adjA.parent
-        ret = _return_arrayt(A, x)
-        return mul!(ret, transpose(A), x)
+else
+    function _At_mul_B!(ret::AbstractArray{<:GenericAffOrQuadExpr}, A::SparseMatrixCSC, B)
+        _A_mul_B!(ret, copy(transpose(A)), B) # TODO fully implement
     end
-    function Base.:*(adjA::Transpose{<:JuMPTypes,<:SparseMatrixCSC},
-                     x::Vector{<:JuMPTypes})
-        A = adjA.parent
-        ret = _return_arrayt(A, x)
-        return mul!(ret, transpose(A), x)
+    function _At_mul_B!(ret::AbstractArray{<:GenericAffOrQuadExpr}, A::AbstractMatrix, B::SparseMatrixCSC)
+        _A_mul_B!(ret, transpose(A), B)
     end
-    # Matrix versions.
-    function Base.:*(adjA::Adjoint{<:JuMPTypes,<:SparseMatrixCSC},
-                     x::Matrix)
-        A = adjA.parent
-        ret = _return_arrayt(A, x)
-        return mul!(ret, adjoint(A), x)
-    end
-    function Base.:*(adjA::Adjoint{<:Any,<:SparseMatrixCSC},
-                     x::Matrix{<:JuMPTypes})
-        A = adjA.parent
-        ret = _return_arrayt(A, x)
-        return mul!(ret, adjoint(A), x)
-    end
-    function Base.:*(adjA::Adjoint{<:JuMPTypes,<:SparseMatrixCSC},
-                     x::Matrix{<:JuMPTypes})
-        A = adjA.parent
-        ret = _return_arrayt(A, x)
-        return mul!(ret, adjoint(A), x)
-    end
-    function Base.:*(adjA::Transpose{<:JuMPTypes,<:SparseMatrixCSC},
-                     x::Matrix)
-        A = adjA.parent
-        ret = _return_arrayt(A, x)
-        return mul!(ret, transpose(A), x)
-    end
-    function Base.:*(adjA::Transpose{<:Any,<:SparseMatrixCSC},
-                     x::Matrix{<:JuMPTypes})
-        A = adjA.parent
-        ret = _return_arrayt(A, x)
-        return mul!(ret, transpose(A), x)
-    end
-    function Base.:*(adjA::Transpose{<:JuMPTypes,<:SparseMatrixCSC},
-                     x::Matrix{<:JuMPTypes})
-        A = adjA.parent
-        ret = _return_arrayt(A, x)
-        return mul!(ret, transpose(A), x)
-    end
-    # mul! is adapted from upstream Julia.
+    # This method of `_At_mul_B!` is adapted from upstream Julia. Note that we
+    # confuse transpose with adjoint because they're the same for all JuMP types.
     #=
     > Copyright (c) 2009-2018: Jeff Bezanson, Stefan Karpinski, Viral B. Shah,
     > and other contributors:
@@ -583,102 +545,102 @@ if VERSION >= v"0.7-"
     > OF CONTRACT, TORT OR OTHERWISE, ARISING FROM, OUT OF OR IN CONNECTION
     > WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN THE SOFTWARE.
     =#
-    # We confuse transpose with adjoint because they're the same for all JuMP
-    # types. Note this doesn't extend the LinearAlgebra version. It assumes
-    # that C is already filled with zeros.
-    function mul!(C::StridedVecOrMat,
-                                       adjA::Union{Adjoint{<:Any,<:SparseMatrixCSC},
-                                                   Transpose{<:Any,<:SparseMatrixCSC}},
-                                       B::StridedVecOrMat)
-        A = adjA.parent
-        A.n == size(C, 1) || throw(DimensionMismatch())
+    function _At_mul_B!(ret::StridedVecOrMat{<:GenericAffOrQuadExpr}, A::SparseMatrixCSC, B::StridedVecOrMat)
+        A.n == size(ret, 1) || throw(DimensionMismatch())
         A.m == size(B, 1) || throw(DimensionMismatch())
-        size(B, 2) == size(C, 2) || throw(DimensionMismatch())
+        size(B, 2) == size(ret, 2) || throw(DimensionMismatch())
         nzv = A.nzval
         rv = A.rowval
-        # C is already filled with zeros by _return_arrayt.
-        for k = 1:size(C, 2)
+        # ret is already filled with zeros by _return_arrayt.
+        for k = 1:size(ret, 2)
             @inbounds for col = 1:A.n
-                tmp = zero(eltype(C))
+                tmp = zero(eltype(ret))
                 for j = A.colptr[col]:(A.colptr[col + 1] - 1)
-                    tmp += adjoint(nzv[j])*B[rv[j],k]
+                    tmp += adjoint(nzv[j]) * B[rv[j],k]
                 end
-                C[col,k] += tmp
+                ret[col,k] += tmp
             end
         end
-        C
+        ret
     end
-else
-    _multiply!(ret, lhs, rhs) = A_mul_B!(ret, lhs, rhs)
-    _multiplyt!(ret, lhs, rhs) = At_mul_B!(ret, lhs, rhs)
+    function _At_mul_B(A, B)
+        size(A, 1) == size(B, 1) || error("Incompatible sizes")
+        ret = _A_mul_B_ret(transpose(A), B)
+        _At_mul_B!(ret, A, B)
+        ret
+    end
+end
 
-    # these methods are called when one does A.'*v or A'*v respectively
-    Base.At_mul_B(A::Union{Matrix{T},SparseMatrixCSC{T}}, x::Union{Matrix, Vector, SparseMatrixCSC}) where {T<:JuMPTypes} = _matmult(A, x)
-    Base.At_mul_B(A::Union{Matrix{T},SparseMatrixCSC{T}}, x::Union{Matrix{R}, Vector{R}, SparseMatrixCSC{R}}) where {T<:JuMPTypes,R<:JuMPTypes} = _matmult(A, x)
-    Base.At_mul_B(A::Union{Matrix,SparseMatrixCSC}, x::Union{Matrix{T}, Vector{T}, SparseMatrixCSC{T}}) where {T<:JuMPTypes} = _matmult(A, x)
+# TODO: implement sparse * sparse code as in base/sparse/linalg.jl (spmatmul)
+_At_mul_B!(ret::AbstractArray{<:JuMPTypes}, A::SparseMatrixCSC, B::SparseMatrixCSC) = _At_mul_B!(ret, A, densify_with_jump_eltype(B))
+
+###############################################################################
+# Interception of Base's matrix/vector arithmetic machinery
+
+# TODO: Intercepting "externally owned" method calls by dispatching on type parameters
+# (rather than outermost wrapper type) is generally bad practice, but refactoring this code
+# to use a different mechanism would be a lot of work. In the future, this interception code
+# would be more easily/robustly replaced by using a tool like
+# https://github.com/jrevels/Cassette.jl.
+
+function Base.:*(A::Union{Matrix{<:JuMPTypes},SparseMatrixCSC{<:JuMPTypes}},
+                 B::Union{Matrix,Vector,SparseMatrixCSC})
+    return _A_mul_B(A, B)
+end
+
+function Base.:*(A::Union{Matrix{<:JuMPTypes},SparseMatrixCSC{<:JuMPTypes}},
+                 B::Union{Matrix{<:JuMPTypes},Vector{<:JuMPTypes},SparseMatrixCSC{<:JuMPTypes}})
+    return _A_mul_B(A, B)
+end
+
+function Base.:*(A::Union{Matrix,SparseMatrixCSC},
+                 B::Union{Matrix{<:JuMPTypes},Vector{<:JuMPTypes},SparseMatrixCSC{<:JuMPTypes}})
+    return _A_mul_B(A, B)
+end
+
+if VERSION < v"0.7-"
+    # these methods are called when one does A.'*B
+    Base.At_mul_B(A::Union{Matrix{T},SparseMatrixCSC{T}}, B::Union{Matrix, Vector, SparseMatrixCSC}) where {T<:JuMPTypes} = _At_mul_B(A, B)
+    Base.At_mul_B(A::Union{Matrix{T},SparseMatrixCSC{T}}, B::Union{Matrix{R}, Vector{R}, SparseMatrixCSC{R}}) where {T<:JuMPTypes,R<:JuMPTypes} = _At_mul_B(A, B)
+    Base.At_mul_B(A::Union{Matrix,SparseMatrixCSC}, B::Union{Matrix{T}, Vector{T}, SparseMatrixCSC{T}}) where {T<:JuMPTypes} = _At_mul_B(A, B)
+
+    # these methods are called when one does A'*B
     # these methods are the same as above since complex numbers are not implemented in JuMP
-    Base.Ac_mul_B(A::Union{Matrix{T},SparseMatrixCSC{T}}, x::Union{Matrix, Vector, SparseMatrixCSC}) where {T<:JuMPTypes} = _matmult(A, x)
-    Base.Ac_mul_B(A::Union{Matrix{T},SparseMatrixCSC{T}}, x::Union{Matrix{R}, Vector{R}, SparseMatrixCSC{R}}) where {T<:JuMPTypes,R<:JuMPTypes} = _matmult(A, x)
-    Base.Ac_mul_B(A::Union{Matrix,SparseMatrixCSC}, x::Union{Matrix{T}, Vector{T}, SparseMatrixCSC{T}}) where {T<:JuMPTypes} = _matmult(A, x)
+    Base.Ac_mul_B(A::Union{Matrix{T},SparseMatrixCSC{T}}, B::Union{Matrix, Vector, SparseMatrixCSC}) where {T<:JuMPTypes} = _At_mul_B(A, B)
+    Base.Ac_mul_B(A::Union{Matrix{T},SparseMatrixCSC{T}}, B::Union{Matrix{R}, Vector{R}, SparseMatrixCSC{R}}) where {T<:JuMPTypes,R<:JuMPTypes} = _At_mul_B(A, B)
+    Base.Ac_mul_B(A::Union{Matrix,SparseMatrixCSC}, B::Union{Matrix{T}, Vector{T}, SparseMatrixCSC{T}}) where {T<:JuMPTypes} = _At_mul_B(A, B)
+else
+    # TODO: This is a stopgap solution to get (most) tests passing on Julia 0.7. A lot of
+    # cases probably still don't work. (Like A * A where A is a sparse matrix of a JuMP
+    # type). This code needs a big refactor.
+    Base.:*(A::Adjoint{<:JuMPTypes,<:SparseMatrixCSC}, B::Vector) = _At_mul_B(parent(A), B)
+    Base.:*(A::Adjoint{<:Any,<:SparseMatrixCSC}, B::Vector{<:JuMPTypes}) = _At_mul_B(parent(A), B)
+    Base.:*(A::Adjoint{<:JuMPTypes,<:SparseMatrixCSC}, B::Vector{<:JuMPTypes}) = _At_mul_B(parent(A), B)
+
+    Base.:*(A::Transpose{<:JuMPTypes,<:SparseMatrixCSC}, B::Vector) = _At_mul_B(parent(A), B)
+    Base.:*(A::Transpose{<:Any,<:SparseMatrixCSC}, B::Vector{<:JuMPTypes}) = _At_mul_B(parent(A), B)
+    Base.:*(A::Transpose{<:JuMPTypes,<:SparseMatrixCSC}, B::Vector{<:JuMPTypes}) = _At_mul_B(parent(A), B)
+
+    Base.:*(A::Adjoint{<:JuMPTypes,<:SparseMatrixCSC}, B::Matrix) = _At_mul_B(parent(A), B)
+    Base.:*(A::Adjoint{<:Any,<:SparseMatrixCSC}, B::Matrix{<:JuMPTypes}) = _At_mul_B(parent(A), B)
+    Base.:*(A::Adjoint{<:JuMPTypes,<:SparseMatrixCSC}, B::Matrix{<:JuMPTypes}) = _At_mul_B(parent(A), B)
+
+    Base.:*(A::Transpose{<:JuMPTypes,<:SparseMatrixCSC}, B::Matrix) = _At_mul_B(parent(A), B)
+    Base.:*(A::Transpose{<:Any,<:SparseMatrixCSC}, B::Matrix{<:JuMPTypes}) = _At_mul_B(parent(A), B)
+    Base.:*(A::Transpose{<:JuMPTypes,<:SparseMatrixCSC}, B::Matrix{<:JuMPTypes}) = _At_mul_B(parent(A), B)
 end
 
-function _matmul(A, x)
-    m, n = size(A,1), size(A,2)
-    r, s = size(x,1), size(x,2)
-    n == r || error("Incompatible sizes")
-    ret = _return_array(A, x)
-    _multiply!(ret, A, x)
-    ret
-end
+Base.:*(A::Number, B::SparseMatrixCSC{T}) where {T<:JuMPTypes} = SparseMatrixCSC(B.m, B.n, copy(B.colptr), copy(B.rowval), A .* B.nzval)
+Base.:*(A::JuMPTypes, B::SparseMatrixCSC) = SparseMatrixCSC(B.m, B.n, copy(B.colptr), copy(B.rowval), A .* B.nzval)
+Base.:*(A::SparseMatrixCSC{T}, B::Number) where {T<:JuMPTypes} = SparseMatrixCSC(A.m, A.n, copy(A.colptr), copy(A.rowval), A.nzval .* B)
+Base.:*(A::SparseMatrixCSC, B::JuMPTypes) = SparseMatrixCSC(A.m, A.n, copy(A.colptr), copy(A.rowval), A.nzval .* B)
 
-function _matmult(A, x)
-    m, n = size(A,2), size(A,1) # transpose
-    r, s = size(x,1), size(x,2)
-    n == r || error("Incompatible sizes")
-    ret = _return_arrayt(A, x)
-    _multiplyt!(ret, A, x)
-    ret
-end
+Base.:*(x::AbstractArray{T}) where {T<:JuMPTypes} = x
 
-# See https://github.com/JuliaLang/julia/pull/18218
-_matprod_type(R, S) = typeof(one(R) * one(S) + one(R) * one(S))
-# Don't do size checks here in _return_array, defer that to (*)
-_return_array(A::AbstractMatrix{R}, x::AbstractVector{S}) where {R,S} = _fillwithzeros(Array{_matprod_type(R,S)}(undef,size(A,1)))
-_return_array(A::AbstractMatrix{R}, x::AbstractMatrix{S}) where {R,S} = _fillwithzeros(Array{_matprod_type(R,S)}(undef,size(A,1), size(x,2)))
-# these are for transpose return matrices
-_return_arrayt(A::AbstractMatrix{R}, x::AbstractVector{S}) where {R,S} = _fillwithzeros(Array{_matprod_type(R,S)}(undef,size(A,2)))
-_return_arrayt(A::AbstractMatrix{R}, x::AbstractMatrix{S}) where {R,S} = _fillwithzeros(Array{_matprod_type(R,S)}(undef,size(A,2), size(x, 2)))
-
-# helper so we don't fill the buffer array with the same object
-function _fillwithzeros(arr::AbstractArray{T}) where T
-    for I in eachindex(arr)
-        arr[I] = zero(T)
-    end
-    arr
-end
-
-# Special-case sparse matrix scalar multiplication/division
-Base.:*(lhs::Number, rhs::SparseMatrixCSC{T}) where {T<:JuMPTypes} =
-    SparseMatrixCSC(rhs.m, rhs.n, copy(rhs.colptr), copy(rhs.rowval), lhs .* rhs.nzval)
-Base.:*(lhs::JuMPTypes, rhs::SparseMatrixCSC) =
-    SparseMatrixCSC(rhs.m, rhs.n, copy(rhs.colptr), copy(rhs.rowval), lhs .* rhs.nzval)
-Base.:*(lhs::SparseMatrixCSC{T}, rhs::Number) where {T<:JuMPTypes} =
-    SparseMatrixCSC(lhs.m, lhs.n, copy(lhs.colptr), copy(lhs.rowval), lhs.nzval .* rhs)
-Base.:*(lhs::SparseMatrixCSC, rhs::JuMPTypes) =
-    SparseMatrixCSC(lhs.m, lhs.n, copy(lhs.colptr), copy(lhs.rowval), lhs.nzval .* rhs)
-Base.:/(lhs::SparseMatrixCSC{T}, rhs::Number) where {T<:JuMPTypes} =
-    SparseMatrixCSC(lhs.m, lhs.n, copy(lhs.colptr), copy(lhs.rowval), lhs.nzval ./ rhs)
-
-
-for (op,opsymbol) in [(+,:+), (-,:-), (*,:*), (/,:/)]
-    @eval begin
-        Base.broadcast(::typeof($op),lhs::Number,rhs::JuMPTypes) = $opsymbol(lhs,rhs)
-        Base.broadcast(::typeof($op),lhs::JuMPTypes,rhs::Number) = $opsymbol(lhs,rhs)
-    end
-end
-
+Base.:/(A::SparseMatrixCSC{T}, B::Number) where {T<:JuMPTypes} = SparseMatrixCSC(A.m, A.n, copy(A.colptr), copy(A.rowval), A.nzval ./ B)
 
 Base.:+(x::AbstractArray{T}) where {T<:JuMPTypes} = x
+
 function Base.:-(x::AbstractArray{T}) where T<:JuMPTypes
     ret = similar(x, typeof(-one(T)))
     for I in eachindex(ret)
@@ -686,10 +648,20 @@ function Base.:-(x::AbstractArray{T}) where T<:JuMPTypes
     end
     ret
 end
-Base.:*(x::AbstractArray{T}) where {T<:JuMPTypes} = x
+
+# TODO This will interact poorly with other packages that overload broadcast on Julia >v0.7;
+# we should be using the new broadcast interface instead.
+for (op, opsymbol) in [(+, :+), (-, :-), (*, :*), (/, :/)]
+    @eval begin
+        Base.broadcast(::typeof($op), x::Number, y::JuMPTypes) = $opsymbol(x, y)
+        Base.broadcast(::typeof($op), x::JuMPTypes, y::Number) = $opsymbol(x, y)
+    end
+end
 
 ###############################################################################
-# Add nonlinear function fallbacks for JuMP built-in types
+# nonlinear function fallbacks for JuMP built-in types
+###############################################################################
+
 const op_hint = "Are you trying to build a nonlinear problem? Make sure you use @NLconstraint/@NLobjective."
 for (func,_) in Calculus.symbolic_derivatives_1arg(), typ in [:AbstractVariableRef,:GenericAffExpr,:GenericQuadExpr]
     errstr = "$func is not defined for type $typ. $op_hint"
