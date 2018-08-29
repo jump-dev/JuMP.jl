@@ -253,7 +253,7 @@ var documenterSearchIndex = {"docs": [
     "page": "Variables",
     "title": "User-defined containers",
     "category": "section",
-    "text": "Finally, in the section Variable containers, we explained how JuMP supports the efficient creation of collections of JuMP variables in three types of containers. However, users are also free to create collections of JuMP variables in their own datastructures. For example, the following code creates a dictionary with symmetric matrices as the values:julia> variables = Dict{Symbol, Symmetric{JuMP.VariableRef,\n                                          Array{JuMP.VariableRef,2}}}()\nDict{Symbol,Symmetric{JuMP.VariableRef,Array{JuMP.VariableRef,2}}} with 0 entries\n\njulia> for key in [:A, :B]\n           variables[key] = @variable(model, [1:2, 1:2], Symmetric)\n       end\n\njulia> variables\nDict{Symbol,Symmetric{JuMP.VariableRef,Array{JuMP.VariableRef,2}}} with 2 entries:\n  :A => JuMP.VariableRef[noname noname; noname noname]\n  :B => JuMP.VariableRef[noname noname; noname noname]"
+    "text": "In the section Variable containers, we explained how JuMP supports the efficient creation of collections of JuMP variables in three types of containers. However, users are also free to create collections of JuMP variables in their own datastructures. For example, the following code creates a dictionary with symmetric matrices as the values:julia> variables = Dict{Symbol, Symmetric{JuMP.VariableRef,\n                                          Array{JuMP.VariableRef,2}}}()\nDict{Symbol,Symmetric{JuMP.VariableRef,Array{JuMP.VariableRef,2}}} with 0 entries\n\njulia> for key in [:A, :B]\n           variables[key] = @variable(model, [1:2, 1:2], Symmetric)\n       end\n\njulia> variables\nDict{Symbol,Symmetric{JuMP.VariableRef,Array{JuMP.VariableRef,2}}} with 2 entries:\n  :A => JuMP.VariableRef[noname noname; noname noname]\n  :B => JuMP.VariableRef[noname noname; noname noname]"
 },
 
 {
@@ -261,7 +261,7 @@ var documenterSearchIndex = {"docs": [
     "page": "Variables",
     "title": "Deleting variables",
     "category": "section",
-    "text": "TODO(@odow): explain how to delete variables."
+    "text": "JuMP supports the deletion of optimization variables. To delete variables, we can use the JuMP.delete method. We can also check whether x is a valid JuMP variable in model using the JuMP.is_valid method:julia> @variable(model, x)\nx\n\njulia> JuMP.is_valid(model, x)\ntrue\n\njulia> JuMP.delete(model, x)\n\njulia> JuMP.is_valid(model, x)\nfalse"
 },
 
 {
