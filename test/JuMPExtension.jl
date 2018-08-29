@@ -51,11 +51,15 @@ function JuMP.add_variable(m::MyModel, v::JuMP.AbstractVariable, name::String=""
     JuMP.set_name(vref, name)
     vref
 end
-function MOI.delete!(m::MyModel, vref::MyVariableRef)
-    delete!(m.variables, vref.idx)
-    delete!(m.varnames, vref.idx)
+function JuMP.delete(model::MyModel, variable_ref::MyVariableRef)
+    @assert JuMP.is_valid(model, variable_ref)
+    delete!(model.variables, variable_ref.idx)
+    delete!(model.varnames, variable_ref.idx)
 end
-MOI.isvalid(m::MyModel, vref::MyVariableRef) = vref.idx in keys(m.variables)
+function JuMP.is_valid(model::MyModel, variable_ref::MyVariableRef)
+    return (model === variable_ref.model &&
+            variable_ref.idx in keys(model.variables))
+end
 JuMP.num_variables(m::MyModel) = length(m.variables)
 
 JuMP.has_lower_bound(vref::MyVariableRef) = vref.model.variables[vref.idx].info.has_lb
@@ -67,6 +71,9 @@ function JuMP.set_lower_bound(vref::MyVariableRef, lower)
     vref.model.variables[vref.idx].info.has_lb = true
     vref.model.variables[vref.idx].info.lower_bound = lower
 end
+function JuMP.delete_lower_bound(variable_ref::MyVariableRef)
+    variable_ref.model.variables[variable_ref.idx].info.has_lb = false
+end
 JuMP.has_upper_bound(vref::MyVariableRef) = vref.model.variables[vref.idx].info.has_ub
 function JuMP.upper_bound(vref::MyVariableRef)
     @assert !JuMP.is_fixed(vref)
@@ -76,10 +83,17 @@ function JuMP.set_upper_bound(vref::MyVariableRef, upper)
     vref.model.variables[vref.idx].info.has_ub = true
     vref.model.variables[vref.idx].info.upper_bound = upper
 end
+function JuMP.delete_upper_bound(variable_ref::MyVariableRef)
+    variable_ref.model.variables[variable_ref.idx].info.has_ub = false
+end
 JuMP.is_fixed(vref::MyVariableRef) = vref.model.variables[vref.idx].info.has_fix
 JuMP.fix_value(vref::MyVariableRef) = vref.model.variables[vref.idx].info.fixed_value
-function JuMP.fix(vref::MyVariableRef, value)
-    vref.model.variables[vref.idx].info.fixed_value = value
+function JuMP.fix(variable_ref::MyVariableRef, value)
+    variable_ref.model.variables[variable_ref.idx].info.has_fix = true
+    variable_ref.model.variables[variable_ref.idx].info.fixed_value = value
+end
+function JuMP.unfix(variable_ref::MyVariableRef)
+    variable_ref.model.variables[variable_ref.idx].info.has_fix = false
 end
 JuMP.start_value(vref::MyVariableRef) = vref.model.variables[vref.idx].info.start
 function JuMP.set_start_value(vref::MyVariableRef, start)
@@ -118,11 +132,15 @@ function JuMP.add_constraint(m::MyModel, c::JuMP.AbstractConstraint, name::Strin
     JuMP.set_name(cref, name)
     cref
 end
-function MOI.delete!(m::MyModel, cref::MyConstraintRef)
-    delete!(m.constraints, cref.idx)
-    delete!(m.connames, cref.idx)
+function JuMP.delete(model::MyModel, constraint_ref::MyConstraintRef)
+    @assert JuMP.is_valid(model, constraint_ref)
+    delete!(model.constraints, constraint_ref.idx)
+    delete!(model.connames, constraint_ref.idx)
 end
-MOI.isvalid(m::MyModel, cref::MyConstraintRef) = cref.idx in keys(m.constraints)
+function JuMP.is_valid(model::MyModel, constraint_ref::MyConstraintRef)
+    return (model === constraint_ref.model &&
+            constraint_ref.idx in keys(model.constraints))
+end
 function JuMP.constraint_object(cref::MyConstraintRef)
     return cref.model.constraints[cref.idx]
 end
