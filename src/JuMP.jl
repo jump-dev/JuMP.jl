@@ -332,6 +332,7 @@ function objective_sense(model::Model)
 end
 
 # TODO(IainNZ): Document these too.
+object_dictionary(model::Model) = model.obj_dict
 termination_status(model::Model) = MOI.get(model, MOI.TerminationStatus())
 primal_status(model::Model) = MOI.get(model, MOI.PrimalStatus())
 dual_status(model::Model) = MOI.get(model, MOI.DualStatus())

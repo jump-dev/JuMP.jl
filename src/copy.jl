@@ -116,7 +116,10 @@ function copy(model::Model)
     new_model.optimizehook = model.optimizehook
 
     # TODO copy NLP data
-    @assert model.nlpdata === nothing
+    if model.nlpdata !== nothing
+        error("copy is not supported yet for models with nonlinear constraints",
+              " and/or nonlinear objective function")
+    end
 
     # TODO copy objdict
 

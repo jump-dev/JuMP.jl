@@ -308,13 +308,8 @@ end
 # variables to the new model's variables
 function Base.copy(a::GenericAffExpr, new_model::Model)
     result = zero(a)
-<<<<<<< HEAD
     for (coef, var) in linear_terms(a)
         add_to_expression!(result, coef, copy(var, new_model))
-=======
-    for (coef, var) in linearterms(a)
-        add_to_expression!(result, coef, Base.copy(var, new_model))
->>>>>>> Implement model copy
     end
     result.constant = a.constant
     return result
