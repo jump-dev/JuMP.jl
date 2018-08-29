@@ -133,13 +133,13 @@ In the above examples, `x_free` represents an unbounded optimization variable,
 !!! note
     When creating a variable with only a lower-bound or an upper-bound, and the
     value of the bound is not a numeric literal, the name must appear on the
-    left-hand side. Putting the name on the right-hand side (e.g., `a=1`,
-    `@variable(model, a <= x)`) will result in an error.
-
-    **Extra for experts:** the reason for this is that at compile time, JuMP
-    does not have type and value information. Therefore, the case
-    `@variable(model, a <= b)` is ambiguous as JuMP cannot infer whether `a` is
-    a constant and `b` is the intended variable name, or vice-versa.
+    left-hand side. Putting the name on the right-hand side will result in an
+    error. For example:
+    ```julia
+    @variable(model, 1 <= x)  # works
+    a = 1
+    @variable(model, a <= x)  # errors
+    ```
 
 We can query whether an optimization variable has a lower- or upper-bound via
 the `JuMP.has_lower_bound` and `JuMP.has_upper_bound` functions. For example:
@@ -172,42 +172,42 @@ julia> JuMP.lower_bound(x)
 1.0
 ```
 
-Another option is to use the `JuMP.setlowerbound` and `JuMP.setupperbound`
+Another option is to use the `JuMP.set_lower_bound` and `JuMP.set_upper_bound`
 functions. These can also be used to modify an existing variable bound. For
 example:
 ```jldoctest; setup=:(model=Model())
 julia> @variable(model, x >= 1)
 x
 
-julia> JuMP.lowerbound(x)
+julia> JuMP.lower_bound(x)
 1.0
 
-julia> JuMP.setlowerbound(x, 2)
+julia> JuMP.set_lower_bound(x, 2)
 
-julia> JuMP.lowerbound(x)
+julia> JuMP.lower_bound(x)
 2.0
 ```
 
-Finally, we can delete variable bounds using `JuMP.deletelowerbound` and
-`JuMP.deleteupperbound`:
+Finally, we can delete variable bounds using `JuMP.delete_lower_bound` and
+`JuMP.delete_upper_bound`:
 ```jldoctest; setup=:(model=Model())
 julia> @variable(model, 1 <= x <= 2)
 x
 
-julia> JuMP.lowerbound(x)
+julia> JuMP.lower_bound(x)
 1.0
 
-julia> JuMP.deletelowerbound(x)
+julia> JuMP.delete_lower_bound(x)
 
-julia> JuMP.haslowerbound(x)
+julia> JuMP.has_lower_bound(x)
 false
 
-julia> JuMP.upperbound(x)
+julia> JuMP.upper_bound(x)
 2.0
 
-julia> JuMP.deleteupperbound(x)
+julia> JuMP.delete_upper_bound(x)
 
-julia> JuMP.hasupperbound(x)
+julia> JuMP.has_upper_bound(x)
 false
 ```
 
@@ -515,7 +515,7 @@ Dict{Symbol,Symmetric{JuMP.VariableRef,Array{JuMP.VariableRef,2}}} with 2 entrie
 JuMP supports the deletion of optimization variables.  To delete variables, we
 can use the `JuMP.delete` method. We can also check whether `x` is a valid JuMP
 variable in `model` using the `JuMP.is_valid` method:
-```jldoctest variables_delete
+```jldoctest variables_delete; setup=:(model=Model())
 julia> @variable(model, x)
 x
 

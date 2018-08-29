@@ -83,9 +83,9 @@ x + 5 y <= 3.0
 ```
 Note that we bind the constraint to the Julia variable `con` for later analysis.
 
-Models are solved with the `JuMP.optimize` function:
+Models are solved with the `JuMP.optimize!` function:
 ```jldoctest quickstart_example
-julia> JuMP.optimize(model)
+julia> JuMP.optimize!(model)
 ```
 
 ```@meta
@@ -98,22 +98,22 @@ DocTestSetup = quote
     MOI.set!(mock, MOI.DualStatus(), MOI.FeasiblePoint)
     MOI.set!(mock, MOI.ResultCount(), 1)
     MOI.set!(mock, MOI.ObjectiveValue(), 10.6)
-    MOI.set!(mock, MOI.VariablePrimal(), JuMP.optimizerindex(x), 2.0)
-    MOI.set!(mock, MOI.VariablePrimal(), JuMP.optimizerindex(y), 0.2)
-    MOI.set!(mock, MOI.ConstraintDual(), JuMP.optimizerindex(con), -0.6)
-    MOI.set!(mock, MOI.ConstraintDual(), JuMP.optimizerindex(JuMP.UpperBoundRef(x)), -4.4)
-    MOI.set!(mock, MOI.ConstraintDual(), JuMP.optimizerindex(JuMP.LowerBoundRef(y)), 0.0)
+    MOI.set!(mock, MOI.VariablePrimal(), JuMP.optimizer_index(x), 2.0)
+    MOI.set!(mock, MOI.VariablePrimal(), JuMP.optimizer_index(y), 0.2)
+    MOI.set!(mock, MOI.ConstraintDual(), JuMP.optimizer_index(con), -0.6)
+    MOI.set!(mock, MOI.ConstraintDual(), JuMP.optimizer_index(JuMP.UpperBoundRef(x)), -4.4)
+    MOI.set!(mock, MOI.ConstraintDual(), JuMP.optimizer_index(JuMP.LowerBoundRef(y)), 0.0)
 end
 ```
 
-After the call to `JuMP.optimize` has finished, we need to understand why the
+After the call to `JuMP.optimize!` has finished, we need to understand why the
 optimizer stopped. This can be for a number of reasons. First, the solver might
 have found the optimal solution, or proved that the problem is infeasible.
 However, it might also have run into numerical difficulties, or terminated due
 to a setting such as a time limit. We can ask the solver why it stopped using
-the `JuMP.terminationstatus` function:
+the `JuMP.termination_status` function:
 ```jldoctest quickstart_example
-julia> JuMP.terminationstatus(model)
+julia> JuMP.termination_status(model)
 Success::MathOptInterface.TerminationStatusCode = 0
 ```
 In this case, `GLPK` returned `Success`. This does not mean that it has found
@@ -127,38 +127,38 @@ DocTestSetup = nothing
 To understand the reason for termination in more detail, we need to query
 `JuMP.primalstatus`:
 ```jldoctest quickstart_example
-julia> JuMP.primalstatus(model)
+julia> JuMP.primal_status(model)
 FeasiblePoint::MathOptInterface.ResultStatusCode = 0
 ```
 This indicates that GLPK has found a `FeasiblePoint` to the primal problem.
-Coupled with the `Success` from `JuMP.terminationstatus`, we can infer that GLPK
-has indeed found the optimal solution. We can also query `JuMP.dualstatus`:
+Coupled with the `Success` from `JuMP.termination_status`, we can infer that GLPK
+has indeed found the optimal solution. We can also query `JuMP.dual_status`:
 ```jldoctest quickstart_example
-julia> JuMP.dualstatus(model)
+julia> JuMP.dual_status(model)
 FeasiblePoint::MathOptInterface.ResultStatusCode = 0
 ```
-Like the `primalstatus`, GLPK indicates that it has found a `FeasiblePoint` to
-the  dual problem.
+Like the `primal_status`, GLPK indicates that it has found a `FeasiblePoint` to
+the dual problem.
 
 Finally, we can query the result of the optimization. First, we can query the
 objective value:
 ```jldoctest quickstart_example
-julia> JuMP.objectivevalue(model)
+julia> JuMP.objective_value(model)
 10.6
 ```
 We can also query the primal result values of the `x` and `y` variables:
 ```jldoctest quickstart_example
-julia> JuMP.resultvalue(x)
+julia> JuMP.result_value(x)
 2.0
 
-julia> JuMP.resultvalue(y)
+julia> JuMP.result_value(y)
 0.2
 ```
 
 We can also query the value of the dual variable associated with the constraint
 `con` (which we bound to a Julia variable when defining the constraint):
 ```jldoctest quickstart_example
-julia> JuMP.resultdual(con)
+julia> JuMP.result_dual(con)
 -0.6
 ```
 
@@ -168,7 +168,7 @@ little trickier as we first need to obtain a reference to the constraint:
 julia> x_upper = JuMP.UpperBoundRef(x)
 x <= 2.0
 
-julia> JuMP.resultdual(x_upper)
+julia> JuMP.result_dual(x_upper)
 -4.4
 ```
 A similar process can be followed to obtain the dual of the lower bound
@@ -177,6 +177,6 @@ constraint on `y`:
 julia> y_lower = JuMP.LowerBoundRef(y)
 y >= 0.0
 
-julia> JuMP.resultdual(y_lower)
+julia> JuMP.result_dual(y_lower)
 0.0
 ```
