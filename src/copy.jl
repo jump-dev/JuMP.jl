@@ -52,9 +52,13 @@ function Base.getindex(reference_map::ReferenceMap, cref::ConstraintRef)
                          reference_map.index_map[index(cref)],
                          cref.shape)
 end
+if VERSION >= v"0.7-"
+    Base.broadcastable(reference_map::ReferenceMap) = Ref(reference_map)
+end
+
 
 """
-    copy(model::Model)
+    copy_model(model::Model)
 
 Return a copy of the model `model` and a [`ReferenceMap`](@ref) that can be used
 to obtain the variable and constraint reference of the new model corresponding
@@ -76,12 +80,12 @@ model = Model()
 @variable(model, x)
 @constraint(model, cref, x == 2)
 
-new_model, reference_map = JuMP.copy(model)
+new_model, reference_map = JuMP.copy_model(model)
 x_new = reference_map[x]
 cref_new = reference_map[cref]
 ```
 """
-function copy(model::Model)
+function copy_model(model::Model)
     if mode(model) == Direct
         error("Cannot copy a model in Direct mode. Use the `Model` constructor",
               " instead of the `direct_model` constructor to be able to copy",
@@ -90,42 +94,79 @@ function copy(model::Model)
     caching_mode = caching_optimizer(model).mode
     # TODO add bridges added to the bridge optimizer that are not part of the
     #      fullbridgeoptimizer
-    bridge_constraints = model.moibackend isa MOI.Bridges.LazyBridgeOptimizer{<:MOIU.CachingOptimizer}
+    bridge_constraints = model.moi_backend isa MOI.Bridges.LazyBridgeOptimizer{<:MOIU.CachingOptimizer}
     new_model = Model(caching_mode = caching_mode,
                       bridge_constraints = bridge_constraints)
 
     # Copy the MOI backend, note that variable and constraint indices may have
     # changed, the `index_map` gives the map between the indices of
-    # `model.moibackend` and the indices of `new_model.moibackend`.
-    index_map = MOI.copy!(new_model.moibackend, model.moibackend,
+    # `model.moi_backend` and the indices of `new_model.moi_backend`.
+    index_map = MOI.copy!(new_model.moi_backend, model.moi_backend,
                           copynames = true)
     # TODO copynames is needed because of https://github.com/JuliaOpt/MathOptInterface.jl/issues/494
     #      we can remove it when this is fixed and released
 
-    copy_variablewise_constraints(new_model.variabletolowerbound,
-                                  model.variabletolowerbound, index_map)
-    copy_variablewise_constraints(new_model.variabletoupperbound,
-                                  model.variabletoupperbound, index_map)
-    copy_variablewise_constraints(new_model.variabletofix,
-                                  model.variabletofix, index_map)
-    copy_variablewise_constraints(new_model.variabletointegrality,
-                                  model.variabletointegrality, index_map)
-    copy_variablewise_constraints(new_model.variabletozeroone,
-                                  model.variabletozeroone, index_map)
+    copy_variablewise_constraints(new_model.variable_to_lower_bound,
+                                  model.variable_to_lower_bound, index_map)
+    copy_variablewise_constraints(new_model.variable_to_upper_bound,
+                                  model.variable_to_upper_bound, index_map)
+    copy_variablewise_constraints(new_model.variable_to_fix,
+                                  model.variable_to_fix, index_map)
+    copy_variablewise_constraints(new_model.variable_to_integrality,
+                                  model.variable_to_integrality, index_map)
+    copy_variablewise_constraints(new_model.variable_to_zero_one,
+                                  model.variable_to_zero_one, index_map)
 
-    new_model.optimizehook = model.optimizehook
+    new_model.optimize_hook = model.optimize_hook
 
     # TODO copy NLP data
-    if model.nlpdata !== nothing
+    if model.nlp_data !== nothing
         error("copy is not supported yet for models with nonlinear constraints",
               " and/or nonlinear objective function")
     end
 
-    # TODO copy objdict
+    reference_map = ReferenceMap(new_model, index_map)
+
+    for (name, value) in object_dictionary(model)
+        new_model.obj_dict[name] = getindex.(reference_map, value)
+    end
 
     for (key, data) in model.ext
         new_model.ext[key] = copy_extension_data(data, new_model, model)
     end
 
-    return new_model, ReferenceMap(new_model, index_map)
+    return new_model, reference_map
+end
+
+"""
+    copy(model::AbstractModel)
+
+Return a copy of the model `model`. It is similar to [`copy_model`](@ref)
+except that it does not return the mapping between the references of `model`
+and its copy.
+
+## Note
+
+Model copy is not supported in Direct mode, i.e. when a model is constructed
+using the [`direct_model`](@ref) constructor instead of the [`Model`](@ref)
+constructor.
+
+## Examples
+
+In the following example, a model `model` is constructed with a variable `x` and
+a constraint `cref`. It is then copied into a model `new_model` with the new
+references assigned to `x_new` and `cref_new`.
+```julia
+model = Model()
+@variable(model, x)
+@constraint(model, cref, x == 2)
+
+new_model = copy(model)
+x_new = model[:x]
+cref_new = model[:cref]
+```
+"""
+function Base.copy(model::AbstractModel)
+    new_model, _ = copy_model(model)
+    return new_model
 end
