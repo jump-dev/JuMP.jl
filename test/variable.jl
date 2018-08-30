@@ -137,7 +137,7 @@ function variables_test(ModelType::Type{<:JuMP.AbstractModel}, VariableRefType::
         end
     end
 
-    @testset "isvalid and delete variable" begin
+    @testset "is_valid and delete variable" begin
         model = ModelType()
         @variable(model, x)
         @test JuMP.is_valid(model, x)

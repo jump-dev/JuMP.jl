@@ -35,7 +35,7 @@ function objectives_test(ModelType::Type{<:JuMP.AbstractModel}, VariableRefType:
         @objective(m, Min, x^2 + 2x)
         @test JuMP.objective_sense(m) == :Min
         @test JuMP.isequal_canonical(JuMP.objective_function(m, QuadExprType), x^2 + 2x)
-        @test_throws ErrorException JuMP.objective_function(m, AffExprType)
+        @test_throws InexactError JuMP.objective_function(m, AffExprType)
     end
 end
 

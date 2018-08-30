@@ -59,7 +59,20 @@ const MOIFIX = MOICON{MOI.SingleVariable,MOI.EqualTo{Float64}}
 const MOIINT = MOICON{MOI.SingleVariable,MOI.Integer}
 const MOIBIN = MOICON{MOI.SingleVariable,MOI.ZeroOne}
 
-@MOIU.model JuMPMOIModel (ZeroOne, Integer) (EqualTo, GreaterThan, LessThan, Interval) (Zeros, Nonnegatives, Nonpositives, SecondOrderCone, RotatedSecondOrderCone, GeometricMeanCone, PositiveSemidefiniteConeTriangle, PositiveSemidefiniteConeSquare, RootDetConeTriangle, RootDetConeSquare, LogDetConeTriangle, LogDetConeSquare) () (SingleVariable,) (ScalarAffineFunction,ScalarQuadraticFunction) (VectorOfVariables,) (VectorAffineFunction,)
+@MOIU.model(JuMPMOIModel,
+            (MOI.ZeroOne, MOI.Integer),
+            (MOI.EqualTo, MOI.GreaterThan, MOI.LessThan, MOI.Interval),
+            (MOI.Zeros, MOI.Nonnegatives, MOI.Nonpositives, MOI.SecondOrderCone,
+             MOI.RotatedSecondOrderCone, MOI.GeometricMeanCone,
+             MOI.PositiveSemidefiniteConeTriangle,
+             MOI.PositiveSemidefiniteConeSquare,
+             MOI.RootDetConeTriangle, MOI.RootDetConeSquare,
+             MOI.LogDetConeTriangle, MOI.LogDetConeSquare),
+            (),
+            (MOI.SingleVariable,),
+            (MOI.ScalarAffineFunction, MOI.ScalarQuadraticFunction),
+            (MOI.VectorOfVariables,),
+            (MOI.VectorAffineFunction,))
 
 """
     OptimizerFactory
@@ -123,7 +136,7 @@ end
 # Model has three modes:
 # 1) Automatic: moi_backend field holds a LazyBridgeOptimizer{CachingOptimizer} in Automatic mode.
 # 2) Manual: moi_backend field holds a LazyBridgeOptimizer{CachingOptimizer} in Manual mode.
-# 3) Direct: moi_backend field holds an AbstractOptimizer. No extra copy of the model is stored. The moi_backend must support addconstraint! etc.
+# 3) Direct: moi_backend field holds an AbstractOptimizer. No extra copy of the model is stored. The moi_backend must support add_constraint etc.
 # Methods to interact with the CachingOptimizer are defined in solverinterface.jl.
 @enum ModelMode Automatic Manual Direct
 
@@ -231,7 +244,7 @@ in mind the following implications of creating models using this *direct* mode:
 * The model created cannot be copied.
 """
 function direct_model(backend::MOI.ModelLike)
-    @assert MOI.isempty(backend)
+    @assert MOI.is_empty(backend)
     return Model(Dict{MOIVAR, MOILB}(),
                  Dict{MOIVAR, MOIUB}(),
                  Dict{MOIVAR, MOIFIX}(),
@@ -491,7 +504,7 @@ function delete(model::Model, constraint_ref::ConstraintRef{Model})
         error("The constraint reference you are trying to delete does not " *
               "belong to the model.")
     end
-    MOI.delete!(model.moi_backend, index(constraint_ref))
+    MOI.delete(model.moi_backend, index(constraint_ref))
 end
 
 """
@@ -501,7 +514,7 @@ Return `true` if `constraint_ref` refers to a valid constraint in `model`.
 """
 function is_valid(model::Model, constraint_ref::ConstraintRef{Model})
     return (model === constraint_ref.m &&
-            MOI.isvalid(model.moi_backend, constraint_ref.index))
+            MOI.is_valid(model.moi_backend, constraint_ref.index))
 end
 
 """
@@ -511,7 +524,7 @@ Add a constraint `c` to `Model m` and sets its name.
 """
 function add_constraint(m::Model, c::AbstractConstraint, name::String="")
     f, s = moi_function_and_set(c)
-    if !MOI.supportsconstraint(m.moi_backend, typeof(f), typeof(s))
+    if !MOI.supports_constraint(m.moi_backend, typeof(f), typeof(s))
         if m.moi_backend isa MOI.Bridges.LazyBridgeOptimizer
             bridge_message = " and there are no bridges that can reformulate it into supported constraints."
         else
@@ -519,7 +532,7 @@ function add_constraint(m::Model, c::AbstractConstraint, name::String="")
         end
         error("Constraints of type $(typeof(f))-in-$(typeof(s)) are not supported by the solver" * bridge_message)
     end
-    cindex = MOI.addconstraint!(m.moi_backend, f, s)
+    cindex = MOI.add_constraint(m.moi_backend, f, s)
     cref = ConstraintRef(m, cindex, shape(c))
     if !isempty(name)
         set_name(cref, name)
@@ -574,8 +587,9 @@ end
 
 index(cr::ConstraintRef) = cr.index
 
-function has_result_dual(m::Model, REF::Type{<:ConstraintRef{Model, T}}) where {T <: MOICON}
-    MOI.canget(m, MOI.ConstraintDual(), REF)
+function has_result_dual(model::Model,
+                         REF::Type{<:ConstraintRef{Model, T}}) where {T <: MOICON}
+    MOI.get(model, MOI.DualStatus()) != MOI.NoSolution
 end
 
 """
@@ -596,20 +610,7 @@ Get a constraint's name.
 """
 name(cr::ConstraintRef{Model,<:MOICON}) = MOI.get(cr.m, MOI.ConstraintName(), cr)
 
-set_name(cr::ConstraintRef{Model,<:MOICON}, s::String) = MOI.set!(cr.m, MOI.ConstraintName(), cr, s)
-
-"""
-    canget(m::JuMP.Model, attr::MathOptInterface.AbstractModelAttribute)::Bool
-
-Return `true` if one may query the attribute `attr` from the model's MOI backend.
-false if not.
-"""
-MOI.canget(m::Model, attr::MOI.AbstractModelAttribute) = MOI.canget(m.moi_backend, attr)
-MOI.canget(m::Model, attr::MOI.AbstractVariableAttribute, ::Type{VariableRef}) = MOI.canget(m.moi_backend, attr, MOIVAR)
-function MOI.canget(model::Model, attr::MOI.AbstractConstraintAttribute,
-                    ::Type{<:ConstraintRef{Model, T}}) where {T <: MOICON}
-    return MOI.canget(model.moi_backend, attr, T)
-end
+set_name(cr::ConstraintRef{Model,<:MOICON}, s::String) = MOI.set(cr.m, MOI.ConstraintName(), cr, s)
 
 """
     get(m::JuMP.Model, attr::MathOptInterface.AbstractModelAttribute)
@@ -626,14 +627,14 @@ function MOI.get(m::Model, attr::MOI.AbstractConstraintAttribute, cr::Constraint
     MOI.get(m.moi_backend, attr, index(cr))
 end
 
-MOI.set!(m::Model, attr::MOI.AbstractModelAttribute, value) = MOI.set!(m.moi_backend, attr, value)
-function MOI.set!(m::Model, attr::MOI.AbstractVariableAttribute, v::VariableRef, value)
+MOI.set(m::Model, attr::MOI.AbstractModelAttribute, value) = MOI.set(m.moi_backend, attr, value)
+function MOI.set(m::Model, attr::MOI.AbstractVariableAttribute, v::VariableRef, value)
     @assert m === v.m
-    MOI.set!(m.moi_backend, attr, index(v), value)
+    MOI.set(m.moi_backend, attr, index(v), value)
 end
-function MOI.set!(m::Model, attr::MOI.AbstractConstraintAttribute, cr::ConstraintRef, value)
+function MOI.set(m::Model, attr::MOI.AbstractConstraintAttribute, cr::ConstraintRef, value)
     @assert m === cr.m
-    MOI.set!(m.moi_backend, attr, index(cr), value)
+    MOI.set(m.moi_backend, attr, index(cr), value)
 end
 
 ###############################################################################

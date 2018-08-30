@@ -241,7 +241,7 @@ function destructive_add!(ex::GenericQuadExpr{C,V}, c::GenericAffExpr{C,V}, x::G
     destructive_add!(ex, 1.0, c*x)
 end
 
-# Catch nonlinear expressions and parameters being used in addconstraint, etc.
+# Catch nonlinear expressions and parameters being used in add_constraint, etc.
 
 const _NLExpr = Union{NonlinearExpression,NonlinearParameter}
 _nlexprerr() = error("""Cannot use nonlinear expression or parameter in @constraint or @objective.

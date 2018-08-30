@@ -161,7 +161,7 @@
 
         @NLobjective(m, Min, foo)
         d = JuMP.NLPEvaluator(m)
-        MOI.initialize!(d, [:Hess])
+        MOI.initialize(d, [:Hess])
         hessian_sparsity = MOI.hessian_lagrangian_structure(d)
         V = zeros(length(hessian_sparsity))
         values = [1.0, 2.0, 3.0] # Values for a, b, and c, respectively.
@@ -171,14 +171,14 @@
         # make sure we don't get NaNs in this case
         @NLobjective(m, Min, a * b + 3*c^2)
         d = JuMP.NLPEvaluator(m)
-        MOI.initialize!(d, [:Hess])
+        MOI.initialize(d, [:Hess])
         values = [1.0, 2.0, -1.0]
         V = zeros(length(hessian_sparsity))
         MOI.eval_hessian_lagrangian(d, V, values, 1.0, Float64[])
         @test isapprox(dense_hessian(hessian_sparsity, V, 3), [0.0 1.0 0.0; 1.0 0.0 0.0; 0.0 0.0 6.0])
 
         # Initialize again
-        MOI.initialize!(d, [:Hess])
+        MOI.initialize(d, [:Hess])
         V = zeros(length(hessian_sparsity))
         MOI.eval_hessian_lagrangian(d, V, values, 1.0, Float64[])
         @test isapprox(dense_hessian(hessian_sparsity, V, 3), [0.0 1.0 0.0; 1.0 0.0 0.0; 0.0 0.0 6.0])
@@ -194,7 +194,7 @@
         @NLobjective(m, Min, (x - x0) /(sqrt(y0) + sqrt(y)))
 
         d = JuMP.NLPEvaluator(m)
-        MOI.initialize!(d, [:HessVec])
+        MOI.initialize(d, [:HessVec])
         h = ones(2)
         v = [2.4,3.5]
         values = [1.0, 2.0] # For x and y.
@@ -210,7 +210,7 @@
         @NLobjective(m, Min, x^1.0)
 
         d = JuMP.NLPEvaluator(m)
-        MOI.initialize!(d, [:Hess])
+        MOI.initialize(d, [:Hess])
         hessian_sparsity = MOI.hessian_lagrangian_structure(d)
         V = zeros(length(hessian_sparsity))
         values = zeros(1)
@@ -225,7 +225,7 @@
         @NLobjective(m, Min, ifelse(true, x, x^1.0))
 
         d = JuMP.NLPEvaluator(m)
-        MOI.initialize!(d, [:Hess])
+        MOI.initialize(d, [:Hess])
         hessian_sparsity = MOI.hessian_lagrangian_structure(d)
         V = zeros(length(hessian_sparsity))
         values = zeros(1)
@@ -243,7 +243,7 @@
         @NLconstraint(m, c*b <= 1)
         @NLconstraint(m, a^2/2 <= 1)
         d = JuMP.NLPEvaluator(m)
-        MOI.initialize!(d, [:HessVec, :Hess])
+        MOI.initialize(d, [:HessVec, :Hess])
 
         values = [1.0, 2.0, 3.0] # For a, b, c.
         hessian_sparsity = MOI.hessian_lagrangian_structure(d)
@@ -269,7 +269,7 @@
         @NLconstraint(m, c*b <= 1)
         @NLconstraint(m, a^2/2 <= 1)
         d = JuMP.NLPEvaluator(m)
-        MOI.initialize!(d, [:HessVec, :Hess])
+        MOI.initialize(d, [:HessVec, :Hess])
 
         values = [1.0, 2.0, 3.0] # For a, b, c.
         hessian_sparsity = MOI.hessian_lagrangian_structure(d)
@@ -294,7 +294,7 @@
         @NLconstraint(m, ex + 1 == 0)
 
         d = JuMP.NLPEvaluator(m)
-        MOI.initialize!(d, [:ExprGraph])
+        MOI.initialize(d, [:ExprGraph])
         xidx = x.index
         yidx = y.index
         @test MOI.objective_expr(d) == :(x[$xidx]^2.0 + x[$yidx]^2.0)
@@ -319,7 +319,7 @@
         @NLconstraint(m, ψ(x) + t(x,y) <= 3)
 
         d = JuMP.NLPEvaluator(m)
-        MOI.initialize!(d, [:ExprGraph])
+        MOI.initialize(d, [:ExprGraph])
         xidx = x.index
         yidx = y.index
         @test MOI.objective_expr(d) == :(x[$xidx]^x[$yidx])
@@ -335,7 +335,7 @@
         @variable(m, x)
         @NLobjective(m, Min, ifelse( x <= 1, x^2, x) )
         d = JuMP.NLPEvaluator(m)
-        MOI.initialize!(d, [:ExprGraph])
+        MOI.initialize(d, [:ExprGraph])
         xidx = x.index
         @test MOI.objective_expr(d) == :(ifelse( x[$xidx] <= 1, x[$xidx]^2, x[$xidx]))
     end
@@ -345,7 +345,7 @@
         @variable(m, x)
         @NLconstraint(m, x <= sum(0 for i in []) + prod(1 for i in []))
         d = JuMP.NLPEvaluator(m)
-        MOI.initialize!(d, [:ExprGraph])
+        MOI.initialize(d, [:ExprGraph])
         xidx = x.index
         @test MOI.constraint_expr(d,1) == :(x[$xidx] - (0 + 1) <= 0.0)
     end
@@ -358,7 +358,7 @@
         @NLobjective(m, Min, prod(x[i] for i=1:18))
 
         d = JuMP.NLPEvaluator(m)
-        MOI.initialize!(d, [:Hess])
+        MOI.initialize(d, [:Hess])
         hessian_sparsity = MOI.hessian_lagrangian_structure(d)
         V = zeros(length(hessian_sparsity))
         values = ones(18)
@@ -385,7 +385,7 @@
 
         @NLobjective(m, Min, ex/2 + sin(x[2])/ψ(x[2]) + t(x[3],x[4]))
         d = JuMP.NLPEvaluator(m)
-        MOI.initialize!(d, [:Grad])
+        MOI.initialize(d, [:Grad])
         variable_values = fill(2.0, (4,))
         @test isapprox(MOI.eval_objective(d, variable_values), variable_values[1] + 1 + variable_values[3] + 3variable_values[4])
         grad = zeros(4)
@@ -406,7 +406,7 @@
 
         @NLconstraint(m, Min, ex/2 + sin(x[2])/ψ(x[2]) + t(x[3],x[4]) <= 0.0)
         d = JuMP.NLPEvaluator(m)
-        MOI.initialize!(d, [:Jac])
+        MOI.initialize(d, [:Jac])
         variable_values = fill(2.0, (4,))
         constraint_value = zeros(1)
         MOI.eval_constraint(d, constraint_value, variable_values)

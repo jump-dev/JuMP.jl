@@ -121,7 +121,7 @@ function delete(model::Model, variable_ref::VariableRef)
         error("The variable reference you are trying to delete does not " *
               "belong to the model.")
     end
-    MOI.delete!(model.moi_backend, variable_ref.index)
+    MOI.delete(model.moi_backend, variable_ref.index)
 end
 
 """
@@ -131,7 +131,7 @@ Return `true` if `variable` refers to a valid variable in `model`.
 """
 function is_valid(model::Model, variable_ref::VariableRef)
     return (model === variable_ref.m &&
-            MOI.isvalid(model.moi_backend, variable_ref.index))
+            MOI.is_valid(model.moi_backend, variable_ref.index))
 end
 
 # The default hash is slow. It's important for the performance of AffExpr to
@@ -182,7 +182,7 @@ Base.haskey(vm::VariableToValueMap, v::VariableRef) = (vm.m === v.m) && haskey(v
 index(v::VariableRef) = v.index
 
 function VariableRef(m::Model)
-    index = MOI.addvariable!(m.moi_backend)
+    index = MOI.add_variable(m.moi_backend)
     return VariableRef(m, index)
 end
 
@@ -200,7 +200,7 @@ name(v::VariableRef) = MOI.get(v.m, MOI.VariableName(), v)
 
 Set a variable's name.
 """
-set_name(v::VariableRef, s::String) = MOI.set!(v.m, MOI.VariableName(), v, s)
+set_name(v::VariableRef, s::String) = MOI.set(v.m, MOI.VariableName(), v, s)
 
 MOI.SingleVariable(v::VariableRef) = MOI.SingleVariable(index(v))
 
@@ -217,8 +217,8 @@ function set_objective(m::Model, sense::Symbol, x::VariableRef)
         @assert sense == :Max
         moisense = MOI.MaxSense
     end
-    MOI.set!(m.moi_backend, MOI.ObjectiveSense(), moisense)
-    MOI.set!(m.moi_backend, MOI.ObjectiveFunction{MOI.SingleVariable}(),
+    MOI.set(m.moi_backend, MOI.ObjectiveSense(), moisense)
+    MOI.set(m.moi_backend, MOI.ObjectiveFunction{MOI.SingleVariable}(),
              MOI.SingleVariable(x))
 end
 
@@ -297,10 +297,10 @@ function set_lower_bound(v::VariableRef,lower::Number)
     # do we have a lower bound already?
     if has_lower_bound(v)
         cindex = lower_bound_index(v)
-        MOI.set!(v.m.moi_backend, MOI.ConstraintSet(), cindex, newset)
+        MOI.set(v.m.moi_backend, MOI.ConstraintSet(), cindex, newset)
     else
         @assert !is_fixed(v)
-        cindex = MOI.addconstraint!(v.m.moi_backend, MOI.SingleVariable(index(v)), newset)
+        cindex = MOI.add_constraint(v.m.moi_backend, MOI.SingleVariable(index(v)), newset)
         set_lower_bound_index(v, cindex)
     end
     nothing
@@ -354,10 +354,10 @@ function set_upper_bound(v::VariableRef,upper::Number)
     # do we have an upper bound already?
     if has_upper_bound(v)
         cindex = upper_bound_index(v)
-        MOI.set!(v.m.moi_backend, MOI.ConstraintSet(), cindex, newset)
+        MOI.set(v.m.moi_backend, MOI.ConstraintSet(), cindex, newset)
     else
         @assert !is_fixed(v)
-        cindex = MOI.addconstraint!(v.m.moi_backend, MOI.SingleVariable(index(v)), newset)
+        cindex = MOI.add_constraint(v.m.moi_backend, MOI.SingleVariable(index(v)), newset)
         set_upper_bound_index(v, cindex)
     end
     nothing
@@ -411,10 +411,10 @@ function fix(v::VariableRef,upper::Number)
     # are we already fixed?
     if is_fixed(v)
         cindex = fix_index(v)
-        MOI.set!(v.m.moi_backend, MOI.ConstraintSet(), cindex, newset)
+        MOI.set(v.m.moi_backend, MOI.ConstraintSet(), cindex, newset)
     else
         @assert !has_upper_bound(v) && !has_lower_bound(v) # Do we want to remove these instead of throwing an error?
-        cindex = MOI.addconstraint!(v.m.moi_backend, MOI.SingleVariable(index(v)), newset)
+        cindex = MOI.add_constraint(v.m.moi_backend, MOI.SingleVariable(index(v)), newset)
         set_fix_index(v, cindex)
     end
     nothing
@@ -470,7 +470,7 @@ function set_integer(variable_ref::VariableRef)
         error("Cannot set the variable_ref $(variable_ref) to integer as it " *
               "is already binary.")
     end
-    constraint_ref = MOI.addconstraint!(variable_ref.m.moi_backend,
+    constraint_ref = MOI.add_constraint(variable_ref.m.moi_backend,
                                 MOI.SingleVariable(index(variable_ref)),
                                 MOI.Integer())
     set_integer_index(variable_ref, constraint_ref)
@@ -510,7 +510,7 @@ function set_binary(variable_ref::VariableRef)
         error("Cannot set the variable_ref $(variable_ref) to binary as it " *
               "is already integer.")
     end
-    constraint_ref = MOI.addconstraint!(variable_ref.m.moi_backend,
+    constraint_ref = MOI.add_constraint(variable_ref.m.moi_backend,
                                 MOI.SingleVariable(index(variable_ref)),
                                 MOI.ZeroOne())
     set_binary_index(variable_ref, constraint_ref)
@@ -530,7 +530,7 @@ end
 
 
 start_value(v::VariableRef) = MOI.get(v.m, MOI.VariablePrimalStart(), v)
-set_start_value(v::VariableRef, val::Number) = MOI.set!(v.m, MOI.VariablePrimalStart(), v, val)
+set_start_value(v::VariableRef, val::Number) = MOI.set(v.m, MOI.VariablePrimalStart(), v, val)
 
 """
     result_value(v::VariableRef)
@@ -540,7 +540,9 @@ Use `has_result_values` to check if a result exists before asking for values.
 Replaces `getvalue` for most use cases.
 """
 result_value(v::VariableRef) = MOI.get(v.m, MOI.VariablePrimal(), v)
-has_result_values(m::Model) = MOI.canget(m, MOI.VariablePrimal(), VariableRef)
+function has_result_values(model::Model)
+    return MOI.get(model, MOI.PrimalStatus()) != MOI.NoSolution
+end
 
 @Base.deprecate setvalue(v::VariableRef, val::Number) set_start_value(v, val)
 

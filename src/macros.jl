@@ -1301,7 +1301,7 @@ macro variable(args...)
         addkwargs!(buildcall, extra_kwargs)
         variablecall = :( add_variable($model, $buildcall, $(namecall(basename, idxvars))) )
         code = :( $(refcall) = $variablecall )
-        # Determine the return type of addvariable. This is needed to create the container holding them.
+        # Determine the return type of add_variable. This is needed to create the container holding them.
         vartype = :( variabletype($model, $(extra...)) )
 
         if symmetric

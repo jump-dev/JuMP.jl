@@ -18,6 +18,8 @@ addons:
         - gfortran
         - liblapack-dev
         - libblas-dev
+before_script:
+    - julia -e 'if VERSION >= v"0.7.0-DEV.5183" using Pkg end; Pkg.clone("MathOptInterface")'
 after_success:
     - echo $TRAVIS_JULIA_VERSION
     - julia -e 'Pkg.add("Coverage"); cd(Pkg.dir("JuMP")); using Coverage; Coveralls.submit(process_folder()); Codecov.submit(process_folder())'

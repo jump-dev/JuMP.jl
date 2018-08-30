@@ -12,11 +12,13 @@
 end
 @testset "UniversalFallback" begin
     m = Model()
-    MOI.set!(m, MOIT.UnknownModelAttribute(), 1)
+    MOI.set(m, MOIT.UnknownModelAttribute(), 1)
     @test MOI.get(m, MOIT.UnknownModelAttribute()) == 1
 end
 # Simple LP model not supporting Interval
-@MOIU.model LPModel () (EqualTo, GreaterThan, LessThan) () () (SingleVariable,) (ScalarAffineFunction,) () ()
+@MOIU.model(LPModel,
+            (), (MOI.EqualTo, MOI.GreaterThan, MOI.LessThan), (), (),
+            (MOI.SingleVariable,), (MOI.ScalarAffineFunction,), (), ())
 @testset "Bridges" begin
     @testset "Automatic bridging" begin
         # optimizer not supporting Interval
