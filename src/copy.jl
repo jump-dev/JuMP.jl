@@ -64,7 +64,9 @@ end
 
 Return a copy of the model `model` and a [`ReferenceMap`](@ref) that can be used
 to obtain the variable and constraint reference of the new model corresponding
-to a given `model`'s reference.
+to a given `model`'s reference. A [`Base.copy(::AbstractModel)`](@ref) method
+has also been implemented, it is similar to `copy_model` but does not return
+the reference map.
 
 ## Note
 
