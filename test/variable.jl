@@ -10,11 +10,20 @@
 # test/variable.jl
 # Testing for VariableRef
 #############################################################################
+
 using JuMP
+
 using Compat
+import Compat.LinearAlgebra: Symmetric
 using Compat.Test
 
-function variables_test(ModelType::Type{<:JuMP.AbstractModel}, VariableRefType::Type{<:JuMP.AbstractVariableRef})
+include("utilities.jl")
+@static if !(:JuMPExtension in names(Main))
+    include("JuMPExtension.jl")
+end
+
+function variables_test(ModelType::Type{<:JuMP.AbstractModel},
+                        VariableRefType::Type{<:JuMP.AbstractVariableRef})
     AffExprType = JuMP.GenericAffExpr{Float64, VariableRefType}
 
     @testset "Constructors" begin
@@ -323,33 +332,33 @@ function variables_test(ModelType::Type{<:JuMP.AbstractModel}, VariableRefType::
         # @test length(JuMP.start_value(z)) == 0
     end
 
-# Slices three-dimensional JuMPArray x[I,J,K]
-# I,J,K can be singletons, ranges, colons, etc.
-function sliceof(x, I, J, K)
-    y = Array{VariableRefType}(undef, length(I), length(J), length(K))
+    # Slices three-dimensional JuMPArray x[I,J,K]
+    # I,J,K can be singletons, ranges, colons, etc.
+    function sliceof(x, I, J, K)
+        y = Array{VariableRefType}(undef, length(I), length(J), length(K))
 
-    ii = 1
-    jj = 1
-    kk = 1
-    for i in I
-        for j in J
-            for k in K
-                y[ii,jj,kk] = x[i,j,k]
-                kk += 1
-            end
-            jj += 1
-            kk = 1
-        end
-        ii += 1
+        ii = 1
         jj = 1
+        kk = 1
+        for i in I
+            for j in J
+                for k in K
+                    y[ii,jj,kk] = x[i,j,k]
+                    kk += 1
+                end
+                jj += 1
+                kk = 1
+            end
+            ii += 1
+            jj = 1
+        end
+        idx = [length(I)==1, length(J)==1, length(K)==1]
+        @static if VERSION < v"0.7.0-"
+            squeeze(y, tuple(findall(idx)...))
+        else
+            dropdims(y, dims=tuple(findall(idx)...))
+        end
     end
-    idx = [length(I)==1, length(J)==1, length(K)==1]
-    @static if VERSION < v"0.7.0-"
-        squeeze(y, tuple(findall(idx)...))
-    else
-        dropdims(y, dims=tuple(findall(idx)...))
-    end
-end
 
     @testset "Slices of JuMPArray (#684)" begin
         m = ModelType()
