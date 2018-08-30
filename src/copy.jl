@@ -13,20 +13,22 @@ extension storing data in the `ext` field.
 function copy_extension_data end
 
 """
-    copy_variablewise_constraints(dest::Dict{MOIVAR,
-                                             MOICON{MOI.SingleVariable, S}},
-                                  src::Dict{MOIVAR,
-                                            MOICON{MOI.SingleVariable, S}},
-                                  index_map) where S
+    copy_single_variable_constraints(dest::Dict{MOI.VariableIndex,
+                                                MOICON{MOI.SingleVariable, S}},
+                                     src::Dict{MOI.VariableIndex,
+                                               MOICON{MOI.SingleVariable, S}},
+                                     index_map) where S
 
-Copy the variablewise constraint indices of `src` into `dest` mapping variable
-and constraint indices using `index_map`.
+Copy the single variable constraint indices of `src` into `dest` mapping
+variable and constraint indices using `index_map`.
 """
-function copy_variablewise_constraints(dest::Dict{MOIVAR,
-                                                  MOICON{MOI.SingleVariable, S}},
-                                       src::Dict{MOIVAR,
-                                                 MOICON{MOI.SingleVariable, S}},
-                                       index_map) where S
+function copy_single_variable_constraints(dest::Dict{MOI.VariableIndex,
+                                                     MOICON{MOI.SingleVariable,
+                                                            S}},
+                                          src::Dict{MOI.VariableIndex,
+                                                    MOICON{MOI.SingleVariable,
+                                                           S}},
+                                          index_map) where S
     for (variable_index, constraint_index) in src
         dest[index_map[variable_index]] = index_map[constraint_index]
     end
@@ -106,15 +108,15 @@ function copy_model(model::Model)
     # TODO copynames is needed because of https://github.com/JuliaOpt/MathOptInterface.jl/issues/494
     #      we can remove it when this is fixed and released
 
-    copy_variablewise_constraints(new_model.variable_to_lower_bound,
+    copy_single_variable_constraints(new_model.variable_to_lower_bound,
                                   model.variable_to_lower_bound, index_map)
-    copy_variablewise_constraints(new_model.variable_to_upper_bound,
+    copy_single_variable_constraints(new_model.variable_to_upper_bound,
                                   model.variable_to_upper_bound, index_map)
-    copy_variablewise_constraints(new_model.variable_to_fix,
+    copy_single_variable_constraints(new_model.variable_to_fix,
                                   model.variable_to_fix, index_map)
-    copy_variablewise_constraints(new_model.variable_to_integrality,
+    copy_single_variable_constraints(new_model.variable_to_integrality,
                                   model.variable_to_integrality, index_map)
-    copy_variablewise_constraints(new_model.variable_to_zero_one,
+    copy_single_variable_constraints(new_model.variable_to_zero_one,
                                   model.variable_to_zero_one, index_map)
 
     new_model.optimize_hook = model.optimize_hook
