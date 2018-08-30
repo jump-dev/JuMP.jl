@@ -70,7 +70,9 @@ to a given `model`'s reference.
 
 Model copy is not supported in Direct mode, i.e. when a model is constructed
 using the [`direct_model`](@ref) constructor instead of the [`Model`](@ref)
-constructor.
+constructor. Moreover, independently on whether an optimizer was provided at
+model construction, the new model will have no optimizer, i.e., an optimizer
+will have to be provided to the new model in the [`optimize!`](@ref) call.
 
 ## Examples
 
@@ -151,7 +153,9 @@ and its copy.
 
 Model copy is not supported in Direct mode, i.e. when a model is constructed
 using the [`direct_model`](@ref) constructor instead of the [`Model`](@ref)
-constructor.
+constructor. Moreover, independently on whether an optimizer was provided at
+model construction, the new model will have no optimizer, i.e., an optimizer
+will have to be provided to the new model in the [`optimize!`](@ref) call.
 
 ## Examples
 
