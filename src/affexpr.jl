@@ -75,7 +75,7 @@ Base.zero(::Type{GenericAffExpr{C,V}}) where {C,V} = GenericAffExpr{C,V}(zero(C)
 Base.one(::Type{GenericAffExpr{C,V}}) where {C,V}  = GenericAffExpr{C,V}(one(C), OrderedDict{V,C}())
 Base.zero(a::GenericAffExpr) = zero(typeof(a))
 Base.one( a::GenericAffExpr) =  one(typeof(a))
-Base.copy(a::GenericAffExpr) = GenericAffExpr(Base.copy(a.constant), Base.copy(a.terms))
+Base.copy(a::GenericAffExpr) = GenericAffExpr(copy(a.constant), copy(a.terms))
 if VERSION >= v"0.7-"
     Base.broadcastable(a::GenericAffExpr) = Ref(a)
 end
@@ -92,7 +92,7 @@ function map_coefficients_inplace!(f::Function, a::GenericAffExpr)
 end
 
 function map_coefficients(f::Function, a::GenericAffExpr)
-    return map_coefficients_inplace!(f, Base.copy(a))
+    return map_coefficients_inplace!(f, copy(a))
 end
 
 Base.sizehint!(a::GenericAffExpr, n::Int) = sizehint!(a.terms, n)
@@ -192,7 +192,7 @@ end
 Base.hash(aff::GenericAffExpr, h::UInt) = hash(aff.constant, hash(aff.terms, h))
 
 function Compat.SparseArrays.dropzeros(aff::GenericAffExpr)
-    result = Base.copy(aff)
+    result = copy(aff)
     for (coef, var) in linear_terms(aff)
         if iszero(coef)
             delete!(result.terms, var)

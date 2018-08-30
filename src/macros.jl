@@ -15,7 +15,7 @@ end
 include("parseexpr.jl")
 
 function buildrefsets(expr::Expr, cname)
-    c = Base.copy(expr)
+    c = copy(expr)
     idxvars = Any[]
     idxsets = Any[]
     # Creating an indexed set of refs
@@ -138,7 +138,7 @@ function getloopedcode(varname, code, condition, idxvars, idxsets, sym, requeste
         @assert !hasdependentsets(idxvars, idxsets)
 
         i, j = esc(idxvars[1]), esc(idxvars[2])
-        expr = Base.copy(code)
+        expr = copy(code)
         vname = expr.args[1].args[1]
         tmp = gensym()
         expr.args[1] = tmp

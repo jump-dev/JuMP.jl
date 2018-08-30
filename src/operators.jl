@@ -26,7 +26,7 @@ Base.:-(lhs::Number, rhs::AbstractVariableRef) = GenericAffExpr(convert(Float64,
 Base.:*(lhs::Number, rhs::AbstractVariableRef) = GenericAffExpr(0.0, rhs => convert(Float64,lhs))
 # Number--GenericAffExpr
 function Base.:+(lhs::Number, rhs::GenericAffExpr)
-    result = Base.copy(rhs)
+    result = copy(rhs)
     result.constant += lhs
     return result
 end
@@ -37,7 +37,7 @@ function Base.:-(lhs::Number, rhs::GenericAffExpr)
 end
 Base.:*(lhs::Number, rhs::GenericAffExpr) = map_coefficients(c -> lhs * c, rhs)
 # Number--QuadExpr
-Base.:+(lhs::Number, rhs::GenericQuadExpr) = GenericQuadExpr(lhs+rhs.aff, Base.copy(rhs.terms))
+Base.:+(lhs::Number, rhs::GenericQuadExpr) = GenericQuadExpr(lhs+rhs.aff, copy(rhs.terms))
 function Base.:-(lhs::Number, rhs::GenericQuadExpr)
     result = -rhs
     result.aff.constant += lhs
@@ -99,7 +99,7 @@ function Base.:*(lhs::V, rhs::GenericAffExpr{C,V}) where {C, V <: AbstractVariab
 end
 Base.:/(lhs::AbstractVariableRef, rhs::GenericAffExpr) = error("Cannot divide a variable by an affine expression")
 # AbstractVariableRef--GenericQuadExpr
-Base.:+(v::AbstractVariableRef, q::GenericQuadExpr) = GenericQuadExpr(v+q.aff, Base.copy(q.terms))
+Base.:+(v::AbstractVariableRef, q::GenericQuadExpr) = GenericQuadExpr(v+q.aff, copy(q.terms))
 function Base.:-(v::AbstractVariableRef, q::GenericQuadExpr)
     result = -q
     # This makes an unnecessary copy of aff, but it's important for v to appear
@@ -130,10 +130,10 @@ end
 Base.:^(lhs::Union{AbstractVariableRef,GenericAffExpr}, rhs::Number) = error("Only exponents of 0, 1, or 2 are currently supported. Are you trying to build a nonlinear problem? Make sure you use @NLconstraint/@NLobjective.")
 # GenericAffExpr--AbstractVariableRef
 function Base.:+(lhs::GenericAffExpr{C,V}, rhs::V) where {C, V <: AbstractVariableRef}
-    return add_to_expression!(Base.copy(lhs), one(C), rhs)
+    return add_to_expression!(copy(lhs), one(C), rhs)
 end
 function Base.:-(lhs::GenericAffExpr{C,V}, rhs::V) where {C, V <: AbstractVariableRef}
-    return add_to_expression!(Base.copy(lhs), -one(C), rhs)
+    return add_to_expression!(copy(lhs), -one(C), rhs)
 end
 # Don't fall back on AbstractVariableRef*GenericAffExpr to preserve lhs/rhs
 # consistency (appears in printing).
@@ -156,7 +156,7 @@ function Base.:+(lhs::GenericAffExpr{C,V}, rhs::GenericAffExpr{C,V}) where {C,V<
             operator_warn(owner_model(first(linear_terms(lhs))[2]))
         end
     end
-    result_terms = Base.copy(lhs.terms)
+    result_terms = copy(lhs.terms)
     # merge() returns a Dict(), so we need to call merge!() instead.
     # Note: merge!() doesn't appear to call sizehint!(). Is this important?
     merge!(+, result_terms, rhs.terms)
@@ -164,7 +164,7 @@ function Base.:+(lhs::GenericAffExpr{C,V}, rhs::GenericAffExpr{C,V}) where {C,V<
 end
 
 function Base.:-(lhs::GenericAffExpr{C,V}, rhs::GenericAffExpr{C,V}) where {C,V<:JuMPTypes}
-    result = Base.copy(lhs)
+    result = copy(lhs)
     result.constant -= rhs.constant
     sizehint!(result, length(linear_terms(lhs)) + length(linear_terms(rhs)))
     for (coef, var) in linear_terms(rhs)
@@ -216,7 +216,7 @@ function Base.:*(lhs::GenericAffExpr{C,V}, rhs::GenericAffExpr{C,V}) where {C,V<
     return result
 end
 # GenericAffExpr--GenericQuadExpr
-Base.:+(a::GenericAffExpr, q::GenericQuadExpr) = GenericQuadExpr(a+q.aff, Base.copy(q.terms))
+Base.:+(a::GenericAffExpr, q::GenericQuadExpr) = GenericQuadExpr(a+q.aff, copy(q.terms))
 function Base.:-(a::GenericAffExpr, q::GenericQuadExpr)
     result = -q
     # This makes an unnecessary copy of aff, but it's important for a to appear
@@ -234,18 +234,18 @@ Base.:-(lhs::GenericQuadExpr, rhs::Number) = (+)(-rhs,lhs)
 Base.:*(lhs::GenericQuadExpr, rhs::Number) = (*)(rhs,lhs)
 Base.:/(lhs::GenericQuadExpr, rhs::Number) = (*)(inv(rhs),lhs)
 # GenericQuadExpr--AbstractVariableRef
-Base.:+(q::GenericQuadExpr, v::AbstractVariableRef) = GenericQuadExpr(q.aff+v, Base.copy(q.terms))
-Base.:-(q::GenericQuadExpr, v::AbstractVariableRef) = GenericQuadExpr(q.aff-v, Base.copy(q.terms))
+Base.:+(q::GenericQuadExpr, v::AbstractVariableRef) = GenericQuadExpr(q.aff+v, copy(q.terms))
+Base.:-(q::GenericQuadExpr, v::AbstractVariableRef) = GenericQuadExpr(q.aff-v, copy(q.terms))
 Base.:*(q::GenericQuadExpr, v::AbstractVariableRef) = error("Cannot multiply a quadratic expression by a variable")
 Base.:/(q::GenericQuadExpr, v::AbstractVariableRef) = error("Cannot divide a quadratic expression by a variable")
 # GenericQuadExpr--GenericAffExpr
-Base.:+(q::GenericQuadExpr, a::GenericAffExpr) = GenericQuadExpr(q.aff+a, Base.copy(q.terms))
-Base.:-(q::GenericQuadExpr, a::GenericAffExpr) = GenericQuadExpr(q.aff-a, Base.copy(q.terms))
+Base.:+(q::GenericQuadExpr, a::GenericAffExpr) = GenericQuadExpr(q.aff+a, copy(q.terms))
+Base.:-(q::GenericQuadExpr, a::GenericAffExpr) = GenericQuadExpr(q.aff-a, copy(q.terms))
 Base.:*(q::GenericQuadExpr, a::GenericAffExpr) = error("Cannot multiply a quadratic expression by an aff. expression")
 Base.:/(q::GenericQuadExpr, a::GenericAffExpr) = error("Cannot divide a quadratic expression by an aff. expression")
 # GenericQuadExpr--GenericQuadExpr
 function Base.:+(q1::GenericQuadExpr, q2::GenericQuadExpr)
-    result = Base.copy(q1)
+    result = copy(q1)
     for (coef, var1, var2) in quadterms(q2)
         add_to_expression!(result, coef, var1, var2)
     end
@@ -256,7 +256,7 @@ function Base.:+(q1::GenericQuadExpr, q2::GenericQuadExpr)
     return result
 end
 function Base.:-(q1::GenericQuadExpr, q2::GenericQuadExpr)
-    result = Base.copy(q1)
+    result = copy(q1)
     for (coef, var1, var2) in quadterms(q2)
         add_to_expression!(result, -coef, var1, var2)
     end
@@ -659,15 +659,15 @@ end
 
 # Special-case sparse matrix scalar multiplication/division
 Base.:*(lhs::Number, rhs::SparseMatrixCSC{T}) where {T<:JuMPTypes} =
-    SparseMatrixCSC(rhs.m, rhs.n, Base.copy(rhs.colptr), Base.copy(rhs.rowval), lhs .* rhs.nzval)
+    SparseMatrixCSC(rhs.m, rhs.n, copy(rhs.colptr), copy(rhs.rowval), lhs .* rhs.nzval)
 Base.:*(lhs::JuMPTypes, rhs::SparseMatrixCSC) =
-    SparseMatrixCSC(rhs.m, rhs.n, Base.copy(rhs.colptr), Base.copy(rhs.rowval), lhs .* rhs.nzval)
+    SparseMatrixCSC(rhs.m, rhs.n, copy(rhs.colptr), copy(rhs.rowval), lhs .* rhs.nzval)
 Base.:*(lhs::SparseMatrixCSC{T}, rhs::Number) where {T<:JuMPTypes} =
-    SparseMatrixCSC(lhs.m, lhs.n, Base.copy(lhs.colptr), Base.copy(lhs.rowval), lhs.nzval .* rhs)
+    SparseMatrixCSC(lhs.m, lhs.n, copy(lhs.colptr), copy(lhs.rowval), lhs.nzval .* rhs)
 Base.:*(lhs::SparseMatrixCSC, rhs::JuMPTypes) =
-    SparseMatrixCSC(lhs.m, lhs.n, Base.copy(lhs.colptr), Base.copy(lhs.rowval), lhs.nzval .* rhs)
+    SparseMatrixCSC(lhs.m, lhs.n, copy(lhs.colptr), copy(lhs.rowval), lhs.nzval .* rhs)
 Base.:/(lhs::SparseMatrixCSC{T}, rhs::Number) where {T<:JuMPTypes} =
-    SparseMatrixCSC(lhs.m, lhs.n, Base.copy(lhs.colptr), Base.copy(lhs.rowval), lhs.nzval ./ rhs)
+    SparseMatrixCSC(lhs.m, lhs.n, copy(lhs.colptr), copy(lhs.rowval), lhs.nzval ./ rhs)
 
 
 for (op,opsymbol) in [(+,:+), (-,:-), (*,:*), (/,:/)]

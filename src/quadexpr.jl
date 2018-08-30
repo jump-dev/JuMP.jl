@@ -58,7 +58,7 @@ function Base.one(::Type{GenericQuadExpr{C,V}}) where {C,V}
 end
 Base.zero(q::GenericQuadExpr) = zero(typeof(q))
 Base.one(q::GenericQuadExpr)  = one(typeof(q))
-Base.copy(q::GenericQuadExpr) = GenericQuadExpr(Base.copy(q.aff), Base.copy(q.terms))
+Base.copy(q::GenericQuadExpr) = GenericQuadExpr(copy(q.aff), copy(q.terms))
 if VERSION >= v"0.7-"
     Base.broadcastable(q::GenericQuadExpr) = Ref(q)
 end
@@ -73,7 +73,7 @@ function map_coefficients_inplace!(f::Function, q::GenericQuadExpr)
 end
 
 function map_coefficients(f::Function, q::GenericQuadExpr)
-    return map_coefficients_inplace!(f, Base.copy(q))
+    return map_coefficients_inplace!(f, copy(q))
 end
 
 """
@@ -154,7 +154,7 @@ end
 Base.hash(quad::GenericQuadExpr, h::UInt) = hash(quad.aff, hash(quad.terms, h))
 
 function Compat.SparseArrays.dropzeros(quad::GenericQuadExpr)
-    quad_terms = Base.copy(quad.terms)
+    quad_terms = copy(quad.terms)
     for (key, value) in quad.terms
         if iszero(value)
             delete!(quad_terms, key)
@@ -229,8 +229,8 @@ end
 # Copy a quadratic expression to a new model by converting all the
 # variables to the new model's variables
 function Base.copy(q::GenericQuadExpr, new_model::Model)
-    GenericQuadExpr(Base.copy(q.qvars1, new_model), Base.copy(q.qvars2, new_model),
-                Base.copy(q.qcoeffs), Base.copy(q.aff, new_model))
+    GenericQuadExpr(copy(q.qvars1, new_model), copy(q.qvars2, new_model),
+                    copy(q.qcoeffs), copy(q.aff, new_model))
 end
 
 # TODO: result_value for QuadExpr
