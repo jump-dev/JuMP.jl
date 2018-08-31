@@ -209,7 +209,7 @@ function solve(m::Model; suppress_warnings=false,
     else
         # Problem was not solved to optimality, attempt to extract useful
         # information anyway
-        suppress_warnings || warn("Not solved to optimality, status: $stat")
+        suppress_warnings || Compat.@warn("Not solved to optimality, status: $stat")
         # Some solvers provide infeasibility rays (dual) or unbounded
         # rays (primal) for linear problems. Store these as the solution
         # if the exist.
@@ -220,7 +220,7 @@ function solve(m::Model; suppress_warnings=false,
                     @assert length(infray) == numRows
                     infray
                 catch
-                    suppress_warnings || warn("Infeasibility ray (Farkas proof) not available")
+                    suppress_warnings || Compat.@warn("Infeasibility ray (Farkas proof) not available")
                     fill(NaN, numRows)
                 end
             elseif stat == :Unbounded
@@ -229,7 +229,7 @@ function solve(m::Model; suppress_warnings=false,
                     @assert length(unbdray) == numCols
                     unbdray
                 catch
-                    suppress_warnings || warn("Unbounded ray not available")
+                    suppress_warnings || Compat.@warn("Unbounded ray not available")
                     fill(NaN, numCols)
                 end
             end

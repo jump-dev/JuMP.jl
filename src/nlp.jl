@@ -1276,7 +1276,7 @@ function solvenlp(m::Model, traits; suppress_warnings=false)
     end
 
     if stat != :Optimal
-        suppress_warnings || warn("Not solved to optimality, status: $stat")
+        suppress_warnings || Compat.@warn("Not solved to optimality, status: $stat")
     end
     if stat == :Optimal && !traits.int
         if applicable(MathProgBase.getconstrduals, m.internalModel) && applicable(MathProgBase.getreducedcosts, m.internalModel)
