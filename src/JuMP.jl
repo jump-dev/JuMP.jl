@@ -331,7 +331,6 @@ function objective_sense(model::Model)
 end
 
 # TODO(IainNZ): Document these too.
-# TODO(#1381): Implement Base.copy for Model.
 object_dictionary(model::Model) = model.obj_dict
 termination_status(model::Model) = MOI.get(model, MOI.TerminationStatus())
 primal_status(model::Model) = MOI.get(model, MOI.PrimalStatus())
@@ -748,6 +747,7 @@ struct NonlinearParameter <: AbstractJuMPScalar
 end
 
 ##########################################################################
+include("copy.jl")
 include("containers.jl")
 include("operators.jl")
 include("macros.jl")
