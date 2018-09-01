@@ -39,9 +39,6 @@ DocTestSetup = quote
                                  JuMP.JuMPMOIModel{Float64}(),
                                  evalobjective=false))
 end
-# v0.6 prepends the module name to printed type information, whereas v0.7 does
-# not.
-DocTestFilters = [r"JuMP\.", r"MathOptInterface\."]
 ```
 !!! note
     Your model doesn't have to be called `model` - it's just a name.

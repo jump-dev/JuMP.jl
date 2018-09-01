@@ -3,9 +3,6 @@ CurrentModule = JuMP
 DocTestSetup = quote
     using JuMP
 end
-# v0.6 prepends the module name to printed type information, whereas v0.7 does
-# not.
-DocTestFilters = [r"JuMP\.", r"MathOptInterface\.", r"LinearAlgebra\."]
 ```
 
 Variables
