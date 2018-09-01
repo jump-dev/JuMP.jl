@@ -107,8 +107,8 @@ function copy_model(model::Model)
     # Copy the MOI backend, note that variable and constraint indices may have
     # changed, the `index_map` gives the map between the indices of
     # `model.moi_backend` and the indices of `new_model.moi_backend`.
-    index_map = MOI.copy!(new_model.moi_backend, model.moi_backend,
-                          copynames = true)
+    index_map = MOI.copy_to(new_model.moi_backend, model.moi_backend,
+                            copy_names = true)
     # TODO copynames is needed because of https://github.com/JuliaOpt/MathOptInterface.jl/issues/494
     #      we can remove it when this is fixed and released
 

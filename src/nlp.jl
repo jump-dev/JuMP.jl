@@ -17,7 +17,7 @@ function set_objective(m::Model, sense::Symbol, ex::NonlinearExprData)
         @assert sense == :Max
         moisense = MOI.MaxSense
     end
-    MOI.set!(m.moi_backend, MOI.ObjectiveSense(), moisense)
+    MOI.set(m.moi_backend, MOI.ObjectiveSense(), moisense)
     m.nlp_data.nlobj = ex
     # TODO: what do we do about existing objectives in the MOI backend?
     return
@@ -120,9 +120,6 @@ end
 function result_dual(c::ConstraintRef{Model,NonlinearConstraintIndex})
     initNLP(c.m)
     nldata::NLPData = c.m.nlp_data
-    if !MOI.canget(c.m, MOI.NLPBlockDual())
-        error("Duals not available.")
-    end
     # The array is cleared on every solve.
     if length(nldata.nlconstr_duals) != length(nldata.nlconstr)
         nldata.nlconstr_duals = MOI.get(c.m, MOI.NLPBlockDual())
@@ -269,7 +266,7 @@ function SubexpressionStorage(nd::Vector{NodeData}, const_values, num_variables,
 
 end
 
-function MOI.initialize!(d::NLPEvaluator, requested_features::Vector{Symbol})
+function MOI.initialize(d::NLPEvaluator, requested_features::Vector{Symbol})
     nldata::NLPData = d.m.nlp_data
 
     # Check if we have any user-defined operators, in which case we need to

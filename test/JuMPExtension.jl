@@ -152,8 +152,14 @@ function JuMP.set_objective(m::MyModel, sense::Symbol, f::JuMP.AbstractJuMPScala
 end
 JuMP.objective_sense(m::MyModel) = m.objectivesense
 function JuMP.objective_function(m::MyModel, FT::Type)
-    # ErrorException should be thrown, this is needed in `objective.jl`
-    m.objective_function isa FT || error("The objective function is not of type $FT")
+    # InexactError should be thrown, this is needed in `objective.jl`
+    if !(m.objective_function isa FT)
+        if VERSION < v"0.7-"
+            throw(InexactError())
+        else
+            throw(InexactError(:objective_function, FT, typeof(m.objective_function)))
+        end
+    end
     m.objective_function
 end
 

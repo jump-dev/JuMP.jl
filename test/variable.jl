@@ -356,7 +356,7 @@ function test_variable_start_value_on_empty(ModelType)
     #       given broadcast syntax.
     # @test typeof(JuMP.start_value(y)) <: JuMP.JuMPArray{Float64}
     # @test JuMP.size(JuMP.start_value(y)) == (4,0,3)
-    # @test typeof(JuMP.start_value(z)) == 
+    # @test typeof(JuMP.start_value(z)) ==
     #   JuMP.JuMPArray{Float64,3,Tuple{UnitRange{Int},Set{Any},UnitRange{Int}}}
     # @test length(JuMP.start_value(z)) == 0
 end

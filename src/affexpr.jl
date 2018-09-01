@@ -287,8 +287,8 @@ function set_objective(m::Model, sense::Symbol, a::AffExpr)
         @assert sense == :Max
         moisense = MOI.MaxSense
     end
-    MOI.set!(m.moi_backend, MOI.ObjectiveSense(), moisense)
-    MOI.set!(m.moi_backend, MOI.ObjectiveFunction{MOI.ScalarAffineFunction{Float64}}(), MOI.ScalarAffineFunction(a))
+    MOI.set(m.moi_backend, MOI.ObjectiveSense(), moisense)
+    MOI.set(m.moi_backend, MOI.ObjectiveFunction{MOI.ScalarAffineFunction{Float64}}(), MOI.ScalarAffineFunction(a))
     nothing
 end
 

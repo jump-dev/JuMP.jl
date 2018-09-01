@@ -21,7 +21,15 @@ const MOIT = MOI.Test
 const MOIU = MOI.Utilities
 
 # Simple LP model not supporting Interval
-@MOIU.model SimpleLPModel () (EqualTo, GreaterThan, LessThan) () () (SingleVariable,) (ScalarAffineFunction,) () ()
+@MOIU.model(SimpleLPModel,
+            (),
+            (MOI.EqualTo, MOI.GreaterThan, MOI.LessThan),
+            (),
+            (),
+            (MOI.SingleVariable,),
+            (MOI.ScalarAffineFunction,),
+            (),
+            ())
 
 struct Optimizer
     a::Int
@@ -47,7 +55,7 @@ function test_model()
 
     @testset "UniversalFallback" begin
         m = Model()
-        MOI.set!(m, MOIT.UnknownModelAttribute(), 1)
+        MOI.set(m, MOIT.UnknownModelAttribute(), 1)
         @test MOI.get(m, MOIT.UnknownModelAttribute()) == 1
     end
 

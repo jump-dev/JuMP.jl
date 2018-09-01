@@ -210,8 +210,8 @@ function set_objective(m::Model, sense::Symbol, a::QuadExpr)
         @assert sense == :Max
         moisense = MOI.MaxSense
     end
-    MOI.set!(m.moi_backend, MOI.ObjectiveSense(), moisense)
-    MOI.set!(m.moi_backend, MOI.ObjectiveFunction{MOI.ScalarQuadraticFunction{Float64}}(), MOI.ScalarQuadraticFunction(a))
+    MOI.set(m.moi_backend, MOI.ObjectiveSense(), moisense)
+    MOI.set(m.moi_backend, MOI.ObjectiveFunction{MOI.ScalarQuadraticFunction{Float64}}(), MOI.ScalarQuadraticFunction(a))
     nothing
 end
 
