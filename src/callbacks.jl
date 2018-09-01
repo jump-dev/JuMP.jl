@@ -43,7 +43,7 @@ function addheuristiccallback(m::Model, f::Function)
 end
 
 function _unspecifiedstate()
-    warn("""Info Callbacks without a when clause will currently default
+    Compat.@warn("""Info Callbacks without a when clause will currently default
          to fire only in the :Intermediate state to preserve its behavior
          with previous versions of JuMP.
 
