@@ -230,7 +230,7 @@ end
 # variables to the new model's variables
 function Base.copy(q::GenericQuadExpr, new_model::Model)
     GenericQuadExpr(copy(q.qvars1, new_model), copy(q.qvars2, new_model),
-                copy(q.qcoeffs), copy(q.aff, new_model))
+                    copy(q.qcoeffs), copy(q.aff, new_model))
 end
 
 # TODO: result_value for QuadExpr
