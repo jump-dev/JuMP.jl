@@ -50,7 +50,7 @@ function sliceof(VariableRefType, x, I, J, K)
     end
 end
 
-function test_variable_no_bound(ModelType, VariableRefType)
+@test_func function test_variable_no_bound(ModelType, VariableRefType)
     model = ModelType()
     @variable(model, nobounds)
     @test !JuMP.has_lower_bound(nobounds)
@@ -61,7 +61,7 @@ function test_variable_no_bound(ModelType, VariableRefType)
     @test one(nobounds) isa JuMP.GenericAffExpr{Float64, VariableRefType}
 end
 
-function test_variable_lower_bound_rhs(ModelType)
+@test_func function test_variable_lower_bound_rhs(ModelType)
     model = ModelType()
     @variable(model, lbonly >= 0, Bin)
     @test JuMP.has_lower_bound(lbonly)
@@ -77,7 +77,7 @@ function test_variable_lower_bound_rhs(ModelType)
     @test_throws ErrorException @variable(model, lbonly)
 end
 
-function test_variable_lower_bound_lhs(ModelType)
+@test_func function test_variable_lower_bound_lhs(ModelType)
     model = ModelType()
     @variable(model, 0 <= lblhs, Bin)
     @test JuMP.has_lower_bound(lblhs)
@@ -89,7 +89,7 @@ function test_variable_lower_bound_lhs(ModelType)
     @test isequal(model[:lblhs], lblhs)
 end
 
-function test_variable_upper_bound_rhs(ModelType)
+@test_func function test_variable_upper_bound_rhs(ModelType)
     model = ModelType()
     @variable(model, ubonly <= 1, Int)
     @test !JuMP.has_lower_bound(ubonly)
@@ -103,7 +103,7 @@ function test_variable_upper_bound_rhs(ModelType)
     @test !JuMP.has_upper_bound(ubonly)
 end
 
-function test_variable_upper_bound_lhs(ModelType)
+@test_func function test_variable_upper_bound_lhs(ModelType)
     model = ModelType()
     @variable(model, 1 >= ublhs, Int)
     @test !JuMP.has_lower_bound(ublhs)
@@ -115,7 +115,7 @@ function test_variable_upper_bound_lhs(ModelType)
     @test isequal(model[:ublhs],ublhs)
 end
 
-function test_variable_interval(ModelType)
+@test_func function test_variable_interval(ModelType)
     function has_bounds(var, lb, ub)
         @test JuMP.has_lower_bound(var)
         @test JuMP.lower_bound(var) == lb
@@ -136,7 +136,7 @@ function test_variable_interval(ModelType)
     @test_macro_throws ErrorException @variable(model, 1 ≤ bothb6 ≥ 0)
 end
 
-function test_variable_fix(ModelType)
+@test_func function test_variable_fix(ModelType)
     model = ModelType()
     @variable(model, fixed == 1.0)
     @test !JuMP.has_lower_bound(fixed)
@@ -147,7 +147,7 @@ function test_variable_fix(ModelType)
     @test !JuMP.is_fixed(fixed)
 end
 
-function test_variable_custom_index_sets(ModelType)
+@test_func function test_variable_custom_index_sets(ModelType)
     model = ModelType()
     @variable(model, onerangeub[-7:1] <= 10, Int)
     @variable(model, manyrangelb[0:1, 10:20, 1:1] >= 2)
@@ -166,7 +166,7 @@ function test_variable_custom_index_sets(ModelType)
     @test_throws KeyError model[:foo]
 end
 
-function test_variable_anonymous(ModelType)
+@test_func function test_variable_anonymous(ModelType)
     model = ModelType()
     @test_throws ErrorException @variable(model, [(0, 0)])  # #922
     x = @variable(model, [(0, 2)])
@@ -174,7 +174,7 @@ function test_variable_anonymous(ModelType)
     @test JuMP.name(x[2]) == ""
 end
 
-function test_variable_is_valid_delete(ModelType)
+@test_func function test_variable_is_valid_delete(ModelType)
     model = ModelType()
     @variable(model, x)
     @test JuMP.is_valid(model, x)
@@ -184,7 +184,7 @@ function test_variable_is_valid_delete(ModelType)
     @test_throws Exception JuMP.delete(second_model, x)
 end
 
-function test_variable_bounds_set_get(ModelType)
+@test_func function test_variable_bounds_set_get(ModelType)
     model = ModelType()
     @variable(model, 0 <= x <= 2)
     @test JuMP.lower_bound(x) == 0
@@ -209,7 +209,7 @@ function test_variable_bounds_set_get(ModelType)
     @test_throws AssertionError JuMP.upper_bound(fixedvar)
 end
 
-function test_variable_starts_set_get(ModelType)
+@test_func function test_variable_starts_set_get(ModelType)
     model = ModelType()
     @variable(model, x[1:3])
     x0 = collect(1:3)
@@ -221,7 +221,7 @@ function test_variable_starts_set_get(ModelType)
     @test_throws DimensionMismatch JuMP.set_start_value.(y, collect(1:6))
 end
 
-function test_variable_integrality_set_get(ModelType)
+@test_func function test_variable_integrality_set_get(ModelType)
     model = ModelType()
     @variable(model, x[1:3])
 
@@ -251,7 +251,7 @@ function test_variable_integrality_set_get(ModelType)
     @test !JuMP.is_integer(z)
 end
 
-function test_variable_repeated_elements(ModelType)
+@test_func function test_variable_repeated_elements(ModelType)
     # Tests repeated elements in index set throw error (JuMP issue #199).
     model = ModelType()
     index_set = [:x,:x,:y]
@@ -265,7 +265,7 @@ function test_variable_repeated_elements(ModelType)
         @variable(model, unused_variable[index_set, [1]], container=Dict))
 end
 
-function test_variable_oneto_index_set(ModelType, VariableRefType)
+@test_func function test_variable_oneto_index_set(ModelType, VariableRefType)
     # Tests that Base.OneTo can be used in index set (JuMP issue #933).
     model = ModelType()
     auto_var = @variable(model, [Base.OneTo(3), 1:2], container=Auto)
@@ -279,7 +279,7 @@ function test_variable_oneto_index_set(ModelType, VariableRefType)
     @test length.(Compat.axes(jumparray_var)) == (3, 2)
 end
 
-function test_variable_basename_in_macro(ModelType)
+@test_func function test_variable_basename_in_macro(ModelType)
     model = ModelType()
     @variable(model, normal_var)
     @test JuMP.name(normal_var) == "normal_var"
@@ -291,7 +291,7 @@ function test_variable_basename_in_macro(ModelType)
     @test JuMP.name(indices[3]) == "t[3]"
 end
 
-function test_variable_condition_in_indexing(ModelType)
+@test_func function test_variable_condition_in_indexing(ModelType)
     function test_one_dim(x)
         @test length(x) == 5
         for i in 1:10
@@ -329,7 +329,7 @@ function test_variable_condition_in_indexing(ModelType)
     test_two_dim(anon_two_dim)
 end
 
-function test_variable_macro_return_type(ModelType, VariableRefType)
+@test_func function test_variable_macro_return_type(ModelType, VariableRefType)
     model = ModelType()
     @variable(model, x[1:3, 1:4, 1:2], start=0.0)
     @test typeof(x) == Array{VariableRefType,3}
@@ -345,7 +345,7 @@ function test_variable_macro_return_type(ModelType, VariableRefType)
     @test typeof(JuMP.start_value.(z)) == Array{Float64,1}
 end
 
-function test_variable_start_value_on_empty(ModelType)
+@test_func function test_variable_start_value_on_empty(ModelType)
     model = ModelType()
     @variable(model, x[1:4,  1:0,1:3], start = 0)  # Array{VariableRef}
     @variable(model, y[1:4,  2:1,1:3], start = 0)  # JuMPArray
@@ -361,7 +361,7 @@ function test_variable_start_value_on_empty(ModelType)
     # @test length(JuMP.start_value(z)) == 0
 end
 
-function test_variable_jumparray_slices(ModelType, VariableRefType)
+@test_func function test_variable_jumparray_slices(ModelType, VariableRefType)
     # Test slicing JuMPArrays (JuMP issue #684).
     model = ModelType()
     @variable(model, x[1:3, 1:4, 1:2], container=JuMPArray)
@@ -408,7 +408,7 @@ function test_variable_jumparray_slices(ModelType, VariableRefType)
     # @test_throws ErrorException w[1:2,:,[:red,"blue"]]
 end
 
-function test_variable_end_indexing(ModelType)
+@test_func function test_variable_end_indexing(ModelType)
     model = ModelType()
     @variable(model, x[0:2, 1:4])
     @variable(model, z[0:2])
@@ -426,7 +426,7 @@ function test_variable_end_indexing(ModelType)
     end
 end
 
-function test_variable_unsigned_index(ModelType)
+@test_func function test_variable_unsigned_index(ModelType)
     # Tests unsigned int can be used to construct index set (JuMP issue #857).
     model = ModelType()
     t = UInt(4)
@@ -434,7 +434,7 @@ function test_variable_unsigned_index(ModelType)
     @test JuMP.num_variables(model) == 4
 end
 
-function test_variable_symmetric(ModelType)
+@test_func function test_variable_symmetric(ModelType)
     model = ModelType()
 
     @variable model x[1:2, 1:2] Symmetric
@@ -459,59 +459,21 @@ function variables_test(ModelType::Type{<:JuMP.AbstractModel},
         test_variable_custom_index_sets(ModelType)
         test_variable_anonymous(ModelType)
     end
-
-    @testset "isvalid and delete variable" begin
-        test_variable_is_valid_delete(ModelType)
-    end
-
-    @testset "get and set bounds" begin
-        test_variable_bounds_set_get(ModelType)
-    end
-
-    @testset "get and set start" begin
-        test_variable_starts_set_get(ModelType)
-    end
-
-    @testset "get and set integer/binary" begin
-        test_variable_integrality_set_get(ModelType)
-    end
-
-    @testset "repeated elements in index set (issue #199)" begin
-        test_variable_repeated_elements(ModelType)
-    end
-
-    @testset "Base.OneTo as index set (#933)" begin
-        test_variable_oneto_index_set(ModelType, VariableRefType)
-    end
-
-    @testset "basename= in @variable" begin
-        test_variable_basename_in_macro(ModelType)
-    end
-
-    @testset "condition in indexing" begin
-        test_variable_condition_in_indexing(ModelType)
-    end
-
-    @testset "@variable returning Array{VariableRef}" begin
-        test_variable_macro_return_type(ModelType, VariableRefType)
-    end
-
-    @testset "start_value on empty things" begin
-        test_variable_start_value_on_empty(ModelType)
-    end
-
-    @testset "Slices of JuMPArray (#684)" begin
-        test_variable_jumparray_slices(ModelType, VariableRefType)
-    end
-
-    @testset "end for indexing a JuMPArray" begin
-        test_variable_end_indexing(ModelType)
-    end
-
-    @testset "Unsigned dimension lengths (#857)" begin
-        test_variable_unsigned_index(ModelType)
-    end
-
+    test_variable_is_valid_delete(ModelType)
+    test_variable_bounds_set_get(ModelType)
+    test_variable_starts_set_get(ModelType)
+    test_variable_integrality_set_get(ModelType)
+    test_variable_repeated_elements(ModelType)
+    test_variable_oneto_index_set(ModelType, VariableRefType)
+    test_variable_basename_in_macro(ModelType)
+    test_variable_condition_in_indexing(ModelType)
+    test_variable_macro_return_type(ModelType, VariableRefType)
+    test_variable_start_value_on_empty(ModelType)
+    test_variable_jumparray_slices(ModelType, VariableRefType)
+    test_variable_end_indexing(ModelType)
+    test_variable_unsigned_index(ModelType)
+    test_variable_symmetric(ModelType)
+    
     # TODO(#1448): Decide what to do here.
     # @testset "getstart on sparse array (#889)" begin
     #     model = ModelType()
@@ -528,16 +490,13 @@ function variables_test(ModelType::Type{<:JuMP.AbstractModel},
     #     @test typeof(Y) == SparseMatrixCSC{Float64, Int}
     #     @test Y == sparse([1, 3], [2, 3], [1, 2])
     # end
+end
 
-    @testset "Symmetric variable" begin
-        test_variable_symmetric(ModelType)
+@testset "Variables" begin
+    @testset "Variables for JuMP.Model" begin
+        variables_test(Model, VariableRef)
     end
-end
-
-@testset "Variables for JuMP.Model" begin
-    variables_test(Model, VariableRef)
-end
-
-@testset "Variables for JuMPExtension.MyModel" begin
-    variables_test(JuMPExtension.MyModel, JuMPExtension.MyVariableRef)
+    @testset "Variables for JuMPExtension.MyModel" begin
+        variables_test(JuMPExtension.MyModel, JuMPExtension.MyVariableRef)
+    end
 end

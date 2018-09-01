@@ -29,3 +29,35 @@ macro test_macro_throws(errortype, m)
     # See https://discourse.julialang.org/t/test-throws-with-macros-after-pr-23533/5878
     :(@test_throws $errortype try @eval $m catch err; throw(err.error) end)
 end
+
+macro test_func(test_function)
+    if test_function.head != :function
+        error("test_block wraps a function")
+    end
+    @assert test_function.args[1].head == :call
+    test_time = "--test_time" in Base.ARGS
+    test_match = ""
+    for arg in Base.ARGS
+        if occursin("--test_match", arg)
+            test_match = split(arg, "=")[2]
+        end
+    end
+    function_name = string(test_function.args[1].args[1])
+    test_function.args[1].args = esc.(test_function.args[1].args)
+    if test_match != "" && !occursin(test_match, function_name)
+        test_function.args[2] = vcat(Any[:(return nothing)],
+                                     test_function.args[2])
+        
+    else
+        test_function.args[2] = quote
+            _, time, bytes, _, _ = @timed @testset $(function_name) begin
+                $(esc(test_function.args[2]))
+            end
+            @static if $(test_time)
+                println(string($(function_name), ": ", time, " s (", bytes,
+                            " bytes)"))
+            end
+        end
+    end
+    return test_function
+end
