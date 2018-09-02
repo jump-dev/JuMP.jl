@@ -111,7 +111,7 @@ to a setting such as a time limit. We can ask the solver why it stopped using
 the `JuMP.termination_status` function:
 ```jldoctest quickstart_example
 julia> JuMP.termination_status(model)
-Success::MathOptInterface.TerminationStatusCode = 0
+Success::TerminationStatusCode = 0
 ```
 In this case, `GLPK` returned `Success`. This does not mean that it has found
 the optimal solution. Instead, it indicates that GLPK has finished running and
@@ -125,14 +125,14 @@ To understand the reason for termination in more detail, we need to query
 `JuMP.primalstatus`:
 ```jldoctest quickstart_example
 julia> JuMP.primal_status(model)
-FeasiblePoint::MathOptInterface.ResultStatusCode = 0
+FeasiblePoint::ResultStatusCode = 0
 ```
 This indicates that GLPK has found a `FeasiblePoint` to the primal problem.
 Coupled with the `Success` from `JuMP.termination_status`, we can infer that GLPK
 has indeed found the optimal solution. We can also query `JuMP.dual_status`:
 ```jldoctest quickstart_example
 julia> JuMP.dual_status(model)
-FeasiblePoint::MathOptInterface.ResultStatusCode = 0
+FeasiblePoint::ResultStatusCode = 0
 ```
 Like the `primal_status`, GLPK indicates that it has found a `FeasiblePoint` to
 the dual problem.

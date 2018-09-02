@@ -20,6 +20,6 @@ addons:
         - libblas-dev
 after_success:
     - echo $TRAVIS_JULIA_VERSION
-    - julia -e 'Pkg.add("Coverage"); cd(Pkg.dir("JuMP")); using Coverage; Coveralls.submit(process_folder()); Codecov.submit(process_folder())'
-    - julia -e 'Pkg.add("Documenter")'
-    - julia -e 'cd(Pkg.dir("JuMP")); include(joinpath("docs", "make.jl"))'
+    - julia -e '(VERSION >= v"0.7" && using Pkg); Pkg.add("Coverage"); cd(Pkg.dir("JuMP")); using Coverage; Coveralls.submit(process_folder()); Codecov.submit(process_folder())'
+    - julia -e '(VERSION >= v"0.7" && using Pkg); Pkg.add("Documenter")'
+    - julia -e 'VERSION == v"1.0" && (using Pkg; cd(Pkg.dir("JuMP")); include(joinpath("docs", "make.jl")))'
