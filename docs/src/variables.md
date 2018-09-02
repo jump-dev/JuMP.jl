@@ -69,7 +69,7 @@ julia> y
 decision variable
 ```
 
-Because `y` is a JuMP variable, we can bind it to a different value. For
+Because `y` is a Julia variable, we can bind it to a different value. For
 example, if we go:
 ```jldoctest variables
 julia> y = 1
