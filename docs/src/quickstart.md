@@ -37,7 +37,8 @@ DocTestSetup = quote
     const MOI = JuMP.MathOptInterface
     model = Model(with_optimizer(MOI.Utilities.MockOptimizer,
                                  JuMP.JuMPMOIModel{Float64}(),
-                                 evalobjective=false))
+                                 eval_objective_value = false,
+                                 eval_variable_constraint_dual = false))
 end
 ```
 !!! note
@@ -90,16 +91,16 @@ DocTestSetup = quote
     # Now we load in the solution. Using a caching optimizer removes the need to
     # load a solver such as GLPK for building the documentation.
     mock = JuMP.caching_optimizer(model).optimizer
-    MOI.set!(mock, MOI.TerminationStatus(), MOI.Success)
-    MOI.set!(mock, MOI.PrimalStatus(), MOI.FeasiblePoint)
-    MOI.set!(mock, MOI.DualStatus(), MOI.FeasiblePoint)
-    MOI.set!(mock, MOI.ResultCount(), 1)
-    MOI.set!(mock, MOI.ObjectiveValue(), 10.6)
-    MOI.set!(mock, MOI.VariablePrimal(), JuMP.optimizer_index(x), 2.0)
-    MOI.set!(mock, MOI.VariablePrimal(), JuMP.optimizer_index(y), 0.2)
-    MOI.set!(mock, MOI.ConstraintDual(), JuMP.optimizer_index(con), -0.6)
-    MOI.set!(mock, MOI.ConstraintDual(), JuMP.optimizer_index(JuMP.UpperBoundRef(x)), -4.4)
-    MOI.set!(mock, MOI.ConstraintDual(), JuMP.optimizer_index(JuMP.LowerBoundRef(y)), 0.0)
+    MOI.set(mock, MOI.TerminationStatus(), MOI.Success)
+    MOI.set(mock, MOI.PrimalStatus(), MOI.FeasiblePoint)
+    MOI.set(mock, MOI.DualStatus(), MOI.FeasiblePoint)
+    MOI.set(mock, MOI.ResultCount(), 1)
+    MOI.set(mock, MOI.ObjectiveValue(), 10.6)
+    MOI.set(mock, MOI.VariablePrimal(), JuMP.optimizer_index(x), 2.0)
+    MOI.set(mock, MOI.VariablePrimal(), JuMP.optimizer_index(y), 0.2)
+    MOI.set(mock, MOI.ConstraintDual(), JuMP.optimizer_index(con), -0.6)
+    MOI.set(mock, MOI.ConstraintDual(), JuMP.optimizer_index(JuMP.UpperBoundRef(x)), -4.4)
+    MOI.set(mock, MOI.ConstraintDual(), JuMP.optimizer_index(JuMP.LowerBoundRef(y)), 0.0)
 end
 ```
 
@@ -125,14 +126,14 @@ To understand the reason for termination in more detail, we need to query
 `JuMP.primalstatus`:
 ```jldoctest quickstart_example
 julia> JuMP.primal_status(model)
-FeasiblePoint::ResultStatusCode = 0
+FeasiblePoint::ResultStatusCode = 1
 ```
 This indicates that GLPK has found a `FeasiblePoint` to the primal problem.
 Coupled with the `Success` from `JuMP.termination_status`, we can infer that GLPK
 has indeed found the optimal solution. We can also query `JuMP.dual_status`:
 ```jldoctest quickstart_example
 julia> JuMP.dual_status(model)
-FeasiblePoint::ResultStatusCode = 0
+FeasiblePoint::ResultStatusCode = 1
 ```
 Like the `primal_status`, GLPK indicates that it has found a `FeasiblePoint` to
 the dual problem.
