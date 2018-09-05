@@ -360,7 +360,7 @@ function operators_test(ModelType::Type{<:JuMP.AbstractModel}, VariableRefType::
             @variable(m, X11)
             @variable(m, X23)
             X = sparse([1, 2], [1, 3], [X11, X23], 3, 3) # for testing Variable
-            @test JuMP.isequal_canonical([X11 0. 0.; 0. 0. X23; 0. 0. 0.], @inferred Matrix(X))
+            @test JuMP.isequal_canonical([X11 0. 0.; 0. 0. X23; 0. 0. 0.], @inferred JuMP.densify_with_jump_eltype(X))
             @variable(m, Xd[1:3, 1:3])
             Y = sparse([1, 2], [1, 3], [2X11, 4X23], 3, 3) # for testing GenericAffExpr
             Yd = [2X11 0    0
@@ -547,9 +547,9 @@ function operators_test(ModelType::Type{<:JuMP.AbstractModel}, VariableRefType::
             @test_throws ErrorException A./y
             @test_throws ErrorException B./y
 
-            @test JuMP.isequal_canonical((2 .* x) ./ 3, Matrix((2 .* y) ./ 3))
-            @test JuMP.isequal_canonical(2 .* (x ./ 3), Matrix(2 * (y ./ 3)))
-            @test JuMP.isequal_canonical((x[1,1],) .* A, Matrix((x[1,1],) .* B))
+            @test JuMP.isequal_canonical((2 .* x) ./ 3, JuMP.densify_with_jump_eltype((2 .* y) ./ 3))
+            @test JuMP.isequal_canonical(2 .* (x ./ 3), JuMP.densify_with_jump_eltype(2 * (y ./ 3)))
+            @test JuMP.isequal_canonical((x[1,1],) .* A, JuMP.densify_with_jump_eltype((x[1,1],) .* B))
         end
 
         @testset "Vectorized comparisons" begin
