@@ -460,7 +460,7 @@ function _A_mul_B!(ret::AbstractArray{<:GenericAffOrQuadExpr}, A::AbstractMatrix
 end
 
 # TODO: implement sparse * sparse code as in base/sparse/linalg.jl (spmatmul)
-_A_mul_B!(ret::AbstractArray{<:JuMPTypes}, A::SparseMatrixCSC, B::SparseMatrixCSC) = _A_mul_B!(ret, A, densify_with_jump_eltype(B))
+_A_mul_B!(ret::AbstractArray{<:GenericAffOrQuadExpr}, A::SparseMatrixCSC, B::SparseMatrixCSC) = _A_mul_B!(ret, A, densify_with_jump_eltype(B))
 
 function _A_mul_B(A, B)
     size(A, 2) == size(B, 1) || error("Incompatible sizes")
@@ -572,7 +572,7 @@ else
 end
 
 # TODO: implement sparse * sparse code as in base/sparse/linalg.jl (spmatmul)
-_At_mul_B!(ret::AbstractArray{<:JuMPTypes}, A::SparseMatrixCSC, B::SparseMatrixCSC) = _At_mul_B!(ret, A, densify_with_jump_eltype(B))
+_At_mul_B!(ret::AbstractArray{<:GenericAffOrQuadExpr}, A::SparseMatrixCSC, B::SparseMatrixCSC) = _At_mul_B!(ret, A, densify_with_jump_eltype(B))
 
 ###############################################################################
 # Interception of Base's matrix/vector arithmetic machinery
