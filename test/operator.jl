@@ -547,9 +547,12 @@ function operators_test(ModelType::Type{<:JuMP.AbstractModel}, VariableRefType::
             @test_throws ErrorException A./y
             @test_throws ErrorException B./y
 
-            @test JuMP.isequal_canonical((2 .* x) ./ 3, JuMP.densify_with_jump_eltype((2 .* y) ./ 3))
-            @test JuMP.isequal_canonical(2 .* (x ./ 3), JuMP.densify_with_jump_eltype(2 * (y ./ 3)))
-            @test JuMP.isequal_canonical((x[1,1],) .* A, JuMP.densify_with_jump_eltype((x[1,1],) .* B))
+            z = JuMP.densify_with_jump_eltype((2 .* y) ./ 3)
+            @test JuMP.isequal_canonical((2 .* x) ./ 3, z)
+            z = JuMP.densify_with_jump_eltype(2 * (y ./ 3))
+            @test JuMP.isequal_canonical(2 .* (x ./ 3), z)
+            z = JuMP.densify_with_jump_eltype((x[1,1],) .* B)
+            @test JuMP.isequal_canonical((x[1,1],) .* A, z)
         end
 
         @testset "Vectorized comparisons" begin
