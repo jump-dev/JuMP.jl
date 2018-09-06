@@ -30,7 +30,7 @@ julia> model = Model()
 A JuMP Model
 
 julia> @variable(model, x[1:2])
-2-element Array{JuMP.VariableRef,1}:
+2-element Array{VariableRef,1}:
  x[1]
  x[2]
 ```
@@ -43,6 +43,9 @@ This code does three things:
 
 To reduce confusion, we will attempt, where possible, to always refer to
 variables with their corresponding prefix.
+
+!!! warn
+    Creating two JuMP variables with the same name results in an error at runtime.
 
 JuMP variables can have attributes, such as names or an initial primal start
 value. We illustrate the name attribute in the following example:
@@ -65,8 +68,8 @@ julia> y
 decision variable
 ```
 
-Because `y` is a Julia variable, I can bind it to a different value. For example,
-if I go:
+Because `y` is a Julia variable, we can bind it to a different value. For
+example, if we write:
 ```jldoctest variables
 julia> y = 1
 1
@@ -126,13 +129,13 @@ In the above examples, `x_free` represents an unbounded optimization variable,
 !!! note
     When creating a variable with only a lower-bound or an upper-bound, and the
     value of the bound is not a numeric literal, the name must appear on the
-    left-hand side. Putting the name on the right-hand side (e.g., `a=1`,
-    `@variable(model, a <= x)`) will result in an error.
-
-    **Extra for experts:** the reason for this is that at compile time, JuMP
-    does not type and value information. Therefore, the case `@variable(model,
-    a <= b)` is ambiguous as JuMP cannot infer whether `a` is a constant and
-    `b` is the intended variable name, or vice-versa.
+    left-hand side. Putting the name on the right-hand side will result in an
+    error. For example:
+    ```julia
+    @variable(model, 1 <= x)  # works
+    a = 1
+    @variable(model, a <= x)  # errors
+    ```
 
 We can query whether an optimization variable has a lower- or upper-bound via
 the `JuMP.has_lower_bound` and `JuMP.has_upper_bound` functions. For example:
@@ -165,9 +168,44 @@ julia> JuMP.lower_bound(x)
 1.0
 ```
 
-!!! warn
-    If you create two JuMP variables with the same name, an error will be
-    thrown.
+Another option is to use the `JuMP.set_lower_bound` and `JuMP.set_upper_bound`
+functions. These can also be used to modify an existing variable bound. For
+example:
+```jldoctest; setup=:(model=Model())
+julia> @variable(model, x >= 1)
+x
+
+julia> JuMP.lower_bound(x)
+1.0
+
+julia> JuMP.set_lower_bound(x, 2)
+
+julia> JuMP.lower_bound(x)
+2.0
+```
+
+Finally, we can delete variable bounds using `JuMP.delete_lower_bound` and
+`JuMP.delete_upper_bound`:
+```jldoctest; setup=:(model=Model())
+julia> @variable(model, 1 <= x <= 2)
+x
+
+julia> JuMP.lower_bound(x)
+1.0
+
+julia> JuMP.delete_lower_bound(x)
+
+julia> JuMP.has_lower_bound(x)
+false
+
+julia> JuMP.upper_bound(x)
+2.0
+
+julia> JuMP.delete_upper_bound(x)
+
+julia> JuMP.has_upper_bound(x)
+false
+```
 
 ## Variable containers
 
@@ -187,7 +225,7 @@ We have already seen the creation of an array of JuMP variables with the
 arrays of JuMP variables. For example:
 ```jldoctest variables_arrays; setup=:(model=Model())
 julia> @variable(model, x[1:2, 1:2])
-2×2 Array{JuMP.VariableRef,2}:
+2×2 Array{VariableRef,2}:
  x[1,1]  x[1,2]
  x[2,1]  x[2,2]
 ```
@@ -198,7 +236,7 @@ julia> x[1, 2]
 x[1,2]
 
 julia> x[2, :]
-2-element Array{JuMP.VariableRef,1}:
+2-element Array{VariableRef,1}:
  x[2,1]
  x[2,2]
 ```
@@ -206,7 +244,7 @@ julia> x[2, :]
 We can also name each index, and variable bounds can depend upon the indices:
 ```jldoctest; setup=:(model=Model())
 julia> @variable(model, x[i=1:2, j=1:2] >= 2i + j)
-2×2 Array{JuMP.VariableRef,2}:
+2×2 Array{VariableRef,2}:
  x[1,1]  x[1,2]
  x[2,1]  x[2,2]
 
@@ -230,10 +268,10 @@ difference is that instead of returning an `Array` of JuMP variables, JuMP will
 return a `JuMPArray`. For example:
 ```jldoctest variables_jump_arrays; setup=:(model=Model())
 julia> @variable(model, x[1:2, [:A,:B]])
-2-dimensional JuMPArray{JuMP.VariableRef,2,...} with index sets:
+2-dimensional JuMPArray{VariableRef,2,...} with index sets:
     Dimension 1, 1:2
     Dimension 2, Symbol[:A, :B]
-And data, a 2×2 Array{JuMP.VariableRef,2}:
+And data, a 2×2 Array{VariableRef,2}:
  x[1,A]  x[1,B]
  x[2,A]  x[2,B]
 ```
@@ -244,9 +282,9 @@ julia> x[1, :A]
 x[1,A]
 
 julia> x[2, :]
-1-dimensional JuMPArray{JuMP.VariableRef,1,...} with index sets:
+1-dimensional JuMPArray{VariableRef,1,...} with index sets:
     Dimension 1, Symbol[:A, :B]
-And data, a 2-element Array{JuMP.VariableRef,1}:
+And data, a 2-element Array{VariableRef,1}:
  x[2,A]
  x[2,B]
 ```
@@ -255,10 +293,10 @@ Similarly to the `Array` case, the indices in a `JuMPArray` can be named, and
 the bounds can depend upon these names. For example:
 ```jldoctest; setup=:(model=Model())
 julia> @variable(model, x[i=2:3, j=1:2:3] >= 0.5i + j)
-2-dimensional JuMPArray{JuMP.VariableRef,2,...} with index sets:
+2-dimensional JuMPArray{VariableRef,2,...} with index sets:
     Dimension 1, 2:3
     Dimension 2, 1:2:3
-And data, a 2×2 Array{JuMP.VariableRef,2}:
+And data, a 2×2 Array{VariableRef,2}:
  x[2,1]  x[2,3]
  x[3,1]  x[3,3]
 
@@ -279,7 +317,7 @@ rectangular set. One example is when indices have a dependence upon previous
 indices (called *triangular indexing*). JuMP supports this as follows:
 ```jldoctest; setup=:(model=Model())
 julia> @variable(model, x[i=1:2, j=i:2])
-Dict{Any,JuMP.VariableRef} with 3 entries:
+Dict{Any,VariableRef} with 3 entries:
   (1, 2) => x[1,2]
   (2, 2) => x[2,2]
   (1, 1) => x[1,1]
@@ -291,7 +329,7 @@ sytax appends a comparison check that depends upon the named indices and is
 separated from the indices by a semi-colon (`;`). For example:
 ```jldoctest; setup=:(model=Model())
 julia> @variable(model, x[i=1:4; mod(i, 2)==0])
-Dict{Any,JuMP.VariableRef} with 2 entries:
+Dict{Any,VariableRef} with 2 entries:
   4 => x[4]
   2 => x[2]
 ```
@@ -308,9 +346,9 @@ julia> A = 1:2
 1:2
 
 julia> @variable(model, x[A])
-1-dimensional JuMPArray{JuMP.VariableRef,1,...} with index sets:
+1-dimensional JuMPArray{VariableRef,1,...} with index sets:
     Dimension 1, 1:2
-And data, a 2-element Array{JuMP.VariableRef,1}:
+And data, a 2-element Array{VariableRef,1}:
  x[1]
  x[2]
 ```
@@ -323,7 +361,7 @@ We can share our knowledge that it is possible to store these JuMP variables as
 an array by setting the `container` keyword:
 ```jldoctest variable_force_container
 julia> @variable(model, y[A], container=Array)
-2-element Array{JuMP.VariableRef,1}:
+2-element Array{VariableRef,1}:
  y[1]
  y[2]
 ```
@@ -387,7 +425,7 @@ matrix ``X`` is positive semidefinite if all eigenvalues are nonnegative. We can
 declare a matrix of JuMP variables to be positive semidefinite as follows:
 ```jldoctest; setup=:(model=Model())
 julia> @variable(model, x[1:2, 1:2], PSD)
-2×2 Symmetric{JuMP.VariableRef,Array{JuMP.VariableRef,2}}:
+2×2 LinearAlgebra.Symmetric{VariableRef,Array{VariableRef,2}}:
  x[1,1]  x[1,2]
  x[1,2]  x[2,2]
 ```
@@ -400,7 +438,7 @@ You can also impose a slightly weaker constraint that the square matrix is only
 symmetric (instead of positive semidefinite) as follows:
 ```jldoctest; setup=:(model=Model())
 julia> @variable(model, x[1:2, 1:2], Symmetric)
-2×2 Symmetric{JuMP.VariableRef,Array{JuMP.VariableRef,2}}:
+2×2 LinearAlgebra.Symmetric{VariableRef,Array{VariableRef,2}}:
  x[1,1]  x[1,2]
  x[1,2]  x[2,2]
 ```
@@ -424,7 +462,7 @@ x
 An `Array` of anonymous JuMP variables can be created as follows:
 ```jldoctest; setup=:(model=Model())
 julia> y = @variable(model, [i=1:2])
-2-element Array{JuMP.VariableRef,1}:
+2-element Array{VariableRef,1}:
  noname
  noname
 ```
@@ -441,7 +479,7 @@ use the `binary` and `integer` keywords.
 Thus, the anonymous variant of `@variable(model, x[i=1:2] >= i, Int)` is:
 ```jldoctest; setup=:(model=Model())
 julia> x = @variable(model, [i=1:2], basename="x", lower_bound=i, integer=true)
-2-element Array{JuMP.VariableRef,1}:
+2-element Array{VariableRef,1}:
  x[1]
  x[2]
 ```
@@ -454,26 +492,25 @@ containers. However, users are also free to create collections of JuMP variables
 in their own datastructures. For example, the following code creates a
 dictionary with symmetric matrices as the values:
 ```jldoctest; setup=:(model=Model())
-julia> variables = Dict{Symbol, Symmetric{JuMP.VariableRef,
-                                          Array{JuMP.VariableRef,2}}}()
-Dict{Symbol,Symmetric{JuMP.VariableRef,Array{JuMP.VariableRef,2}}} with 0 entries
+julia> variables = Dict{Symbol, Array{VariableRef,2}}()
+Dict{Symbol,Array{VariableRef,2}} with 0 entries
 
 julia> for key in [:A, :B]
-           variables[key] = @variable(model, [1:2, 1:2], Symmetric)
+           global variables[key] = @variable(model, [1:2, 1:2])
        end
 
 julia> variables
-Dict{Symbol,Symmetric{JuMP.VariableRef,Array{JuMP.VariableRef,2}}} with 2 entries:
-  :A => JuMP.VariableRef[noname noname; noname noname]
-  :B => JuMP.VariableRef[noname noname; noname noname]
+Dict{Symbol,Array{VariableRef,2}} with 2 entries:
+  :A => VariableRef[noname noname; noname noname]
+  :B => VariableRef[noname noname; noname noname]
 ```
 
 ## Deleting variables
 
-JuMP supports the deletion of optimization variables. To delete variables, we
+JuMP supports the deletion of optimization variables.  To delete variables, we
 can use the `JuMP.delete` method. We can also check whether `x` is a valid JuMP
 variable in `model` using the `JuMP.is_valid` method:
-```jldoctest variables_delete
+```jldoctest variables_delete; setup=:(model=Model())
 julia> @variable(model, x)
 x
 
