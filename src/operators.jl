@@ -689,12 +689,12 @@ function Base.:-(x::AbstractArray{T}) where T<:JuMPTypes
     ret
 end
 
-# TODO This will interact poorly with other packages that overload broadcast on Julia >v0.7;
-# we should be using the new broadcast interface instead.
-for (op, opsymbol) in [(+, :+), (-, :-), (*, :*), (/, :/)]
-    @eval begin
-        Base.broadcast(::typeof($op), x::Number, y::JuMPTypes) = $opsymbol(x, y)
-        Base.broadcast(::typeof($op), x::JuMPTypes, y::Number) = $opsymbol(x, y)
+if VERSION < v"0.7-"
+    for (op, opsymbol) in [(+, :+), (-, :-), (*, :*), (/, :/)]
+        @eval begin
+            Base.broadcast(::typeof($op), x::Number, y::JuMPTypes) = $opsymbol(x, y)
+            Base.broadcast(::typeof($op), x::JuMPTypes, y::Number) = $opsymbol(x, y)
+        end
     end
 end
 
