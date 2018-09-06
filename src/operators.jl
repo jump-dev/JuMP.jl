@@ -378,17 +378,17 @@ function densify_with_jump_eltype(x::SparseMatrixCSC{V}) where V<:AbstractVariab
     return convert(Matrix{GenericAffExpr{Float64,V}}, x)
 end
 
-# see https://github.com/JuliaLang/julia/pull/18218
+# See https://github.com/JuliaLang/julia/pull/18218.
 _A_mul_B_eltype(::Type{R}, ::Type{S}) where {R,S} = typeof(one(R) * one(S) + one(R) * one(S))
 
 _A_mul_B_ret_dims(A::AbstractMatrix, B::AbstractVector) = (size(A, 1),)
 _A_mul_B_ret_dims(A::AbstractMatrix, B::AbstractMatrix) = (size(A, 1), size(B, 2))
 
-# don't do size checks here; defer that to `_A_mul_B(A, B)`
+# Don't do size checks here; defer that to `_A_mul_B(A, B)`.
 function _A_mul_B_ret(A, B, dims...)
     T = _A_mul_B_eltype(eltype(A), eltype(B))
     ret = Array{T}(undef, _A_mul_B_ret_dims(A, B))
-    return fillwithzeros!(ret, T)
+    return fill_with_zeros!(ret, T)
 end
 
 if VERSION < v"0.7-"
@@ -397,11 +397,11 @@ if VERSION < v"0.7-"
     function _At_mul_B_ret(A, B, dims...)
         T = _A_mul_B_eltype(eltype(A), eltype(B))
         ret = Array{T}(undef, _At_mul_B_ret_dims(A, B))
-        return fillwithzeros!(ret, T)
+        return fill_with_zeros!(ret, T)
     end
 end
 
-function fillwithzeros!(A, ::Type{T}) where {T}
+function fill_with_zeros!(A, ::Type{T}) where {T}
     for I in eachindex(A)
         A[I] = zero(T)
     end
@@ -459,8 +459,10 @@ function _A_mul_B!(ret::AbstractArray{<:GenericAffOrQuadExpr}, A::AbstractMatrix
     ret
 end
 
-# TODO: implement sparse * sparse code as in base/sparse/linalg.jl (spmatmul)
-_A_mul_B!(ret::AbstractArray{<:GenericAffOrQuadExpr}, A::SparseMatrixCSC, B::SparseMatrixCSC) = _A_mul_B!(ret, A, densify_with_jump_eltype(B))
+# TODO: Implement sparse * sparse code as in base/sparse/linalg.jl (spmatmul).
+function _A_mul_B!(ret::AbstractArray{<:GenericAffOrQuadExpr}, A::SparseMatrixCSC, B::SparseMatrixCSC)
+    return _A_mul_B!(ret, A, densify_with_jump_eltype(B))
+end
 
 function _A_mul_B(A, B)
     size(A, 2) == size(B, 1) || error("Incompatible sizes")
@@ -488,7 +490,7 @@ end
 
 if VERSION < v"0.7-"
     function _At_mul_B!(ret::AbstractArray{<:GenericAffOrQuadExpr}, A::SparseMatrixCSC, B)
-        _A_mul_B!(ret, transpose(A), B) # TODO fully implement
+        _A_mul_B!(ret, transpose(A), B) # TODO Fully implement this.
     end
     function _At_mul_B!(ret::AbstractArray{<:GenericAffOrQuadExpr}, A::AbstractMatrix, B::SparseMatrixCSC)
         rowval = rowvals(A)
@@ -571,8 +573,10 @@ else
     end
 end
 
-# TODO: implement sparse * sparse code as in base/sparse/linalg.jl (spmatmul)
-_At_mul_B!(ret::AbstractArray{<:GenericAffOrQuadExpr}, A::SparseMatrixCSC, B::SparseMatrixCSC) = _At_mul_B!(ret, A, densify_with_jump_eltype(B))
+# TODO: Implement sparse * sparse code as in base/sparse/linalg.jl (spmatmul).
+function _At_mul_B!(ret::AbstractArray{<:GenericAffOrQuadExpr}, A::SparseMatrixCSC, B::SparseMatrixCSC)
+    return _At_mul_B!(ret, A, densify_with_jump_eltype(B))
+end
 
 ###############################################################################
 # Interception of Base's matrix/vector arithmetic machinery
@@ -599,16 +603,39 @@ function Base.:*(A::Union{Matrix,SparseMatrixCSC},
 end
 
 if VERSION < v"0.7-"
-    # these methods are called when one does A.'*B
-    Base.At_mul_B(A::Union{Matrix{T},SparseMatrixCSC{T}}, B::Union{Matrix, Vector, SparseMatrixCSC}) where {T<:JuMPTypes} = _At_mul_B(A, B)
-    Base.At_mul_B(A::Union{Matrix{T},SparseMatrixCSC{T}}, B::Union{Matrix{R}, Vector{R}, SparseMatrixCSC{R}}) where {T<:JuMPTypes,R<:JuMPTypes} = _At_mul_B(A, B)
-    Base.At_mul_B(A::Union{Matrix,SparseMatrixCSC}, B::Union{Matrix{T}, Vector{T}, SparseMatrixCSC{T}}) where {T<:JuMPTypes} = _At_mul_B(A, B)
+    # These methods are called when one does A.'*B.
+    function Base.At_mul_B(A::Union{Matrix{T},SparseMatrixCSC{T}},
+                           B::Union{Matrix, Vector, SparseMatrixCSC}) where {T<:JuMPTypes}
+        return _At_mul_B(A, B)
+    end
 
-    # these methods are called when one does A'*B
-    # these methods are the same as above since complex numbers are not implemented in JuMP
-    Base.Ac_mul_B(A::Union{Matrix{T},SparseMatrixCSC{T}}, B::Union{Matrix, Vector, SparseMatrixCSC}) where {T<:JuMPTypes} = _At_mul_B(A, B)
-    Base.Ac_mul_B(A::Union{Matrix{T},SparseMatrixCSC{T}}, B::Union{Matrix{R}, Vector{R}, SparseMatrixCSC{R}}) where {T<:JuMPTypes,R<:JuMPTypes} = _At_mul_B(A, B)
-    Base.Ac_mul_B(A::Union{Matrix,SparseMatrixCSC}, B::Union{Matrix{T}, Vector{T}, SparseMatrixCSC{T}}) where {T<:JuMPTypes} = _At_mul_B(A, B)
+    function Base.At_mul_B(A::Union{Matrix{T},SparseMatrixCSC{T}},
+                           B::Union{Matrix{R}, Vector{R}, SparseMatrixCSC{R}}) where {T<:JuMPTypes,R<:JuMPTypes}
+        return _At_mul_B(A, B)
+    end
+
+    function Base.At_mul_B(A::Union{Matrix,SparseMatrixCSC},
+                           B::Union{Matrix{T}, Vector{T}, SparseMatrixCSC{T}}) where {T<:JuMPTypes}
+        return _At_mul_B(A, B)
+    end
+
+    # These methods are called when one does A'*B.
+    # These methods are the same as above since complex numbers are not implemented in JuMP.
+    function Base.Ac_mul_B(A::Union{Matrix{T},SparseMatrixCSC{T}},
+                           B::Union{Matrix, Vector, SparseMatrixCSC}) where {T<:JuMPTypes}
+        return _At_mul_B(A, B)
+    end
+
+    function Base.Ac_mul_B(A::Union{Matrix{T},SparseMatrixCSC{T}},
+                           B::Union{Matrix{R}, Vector{R}, SparseMatrixCSC{R}}) where {T<:JuMPTypes,R<:JuMPTypes}
+        return _At_mul_B(A, B)
+    end
+
+    function Base.Ac_mul_B(A::Union{Matrix,SparseMatrixCSC},
+                           B::Union{Matrix{T}, Vector{T}, SparseMatrixCSC{T}}) where {T<:JuMPTypes}
+        return _At_mul_B(A, B)
+    end
+
 else
     # TODO: This is a stopgap solution to get (most) tests passing on Julia 0.7. A lot of
     # cases probably still don't work. (Like A * A where A is a sparse matrix of a JuMP
@@ -630,14 +657,27 @@ else
     Base.:*(A::Transpose{<:JuMPTypes,<:SparseMatrixCSC}, B::Matrix{<:JuMPTypes}) = _At_mul_B(parent(A), B)
 end
 
-Base.:*(A::Number, B::SparseMatrixCSC{T}) where {T<:JuMPTypes} = SparseMatrixCSC(B.m, B.n, copy(B.colptr), copy(B.rowval), A .* B.nzval)
-Base.:*(A::JuMPTypes, B::SparseMatrixCSC) = SparseMatrixCSC(B.m, B.n, copy(B.colptr), copy(B.rowval), A .* B.nzval)
-Base.:*(A::SparseMatrixCSC{T}, B::Number) where {T<:JuMPTypes} = SparseMatrixCSC(A.m, A.n, copy(A.colptr), copy(A.rowval), A.nzval .* B)
-Base.:*(A::SparseMatrixCSC, B::JuMPTypes) = SparseMatrixCSC(A.m, A.n, copy(A.colptr), copy(A.rowval), A.nzval .* B)
+function Base.:*(A::Number, B::SparseMatrixCSC{T}) where {T<:JuMPTypes}
+    return SparseMatrixCSC(B.m, B.n, copy(B.colptr), copy(B.rowval), A .* B.nzval)
+end
+
+function Base.:*(A::JuMPTypes, B::SparseMatrixCSC)
+    return SparseMatrixCSC(B.m, B.n, copy(B.colptr), copy(B.rowval), A .* B.nzval)
+end
+
+function Base.:*(A::SparseMatrixCSC{T}, B::Number) where {T<:JuMPTypes}
+    return SparseMatrixCSC(A.m, A.n, copy(A.colptr), copy(A.rowval), A.nzval .* B)
+end
+
+function Base.:*(A::SparseMatrixCSC, B::JuMPTypes)
+    return SparseMatrixCSC(A.m, A.n, copy(A.colptr), copy(A.rowval), A.nzval .* B)
+end
 
 Base.:*(x::AbstractArray{T}) where {T<:JuMPTypes} = x
 
-Base.:/(A::SparseMatrixCSC{T}, B::Number) where {T<:JuMPTypes} = SparseMatrixCSC(A.m, A.n, copy(A.colptr), copy(A.rowval), A.nzval ./ B)
+function Base.:/(A::SparseMatrixCSC{T}, B::Number) where {T<:JuMPTypes}
+    return SparseMatrixCSC(A.m, A.n, copy(A.colptr), copy(A.rowval), A.nzval ./ B)
+end
 
 Base.:+(x::AbstractArray{T}) where {T<:JuMPTypes} = x
 
