@@ -432,7 +432,7 @@ end
 
 function _A_mul_B!(ret::AbstractArray{<:GenericAffOrQuadExpr}, A::SparseMatrixCSC, B)
     nzv = nonzeros(A)
-    rv  = rowvals(A)
+    rv = rowvals(A)
     for col ∈ 1:size(A, 2)
         for k ∈ 1:size(ret, 2)
             for j ∈ nzrange(A, col)
@@ -445,7 +445,7 @@ end
 
 function _A_mul_B!(ret::AbstractArray{<:GenericAffOrQuadExpr}, A::AbstractMatrix, B::SparseMatrixCSC)
     rowval = rowvals(B)
-    nzval  = nonzeros(B)
+    nzval = nonzeros(B)
     for multivec_row in 1:size(A, 1)
         for col ∈ 1:size(B, 2)
             idxset = nzrange(B, col)
@@ -493,15 +493,15 @@ if VERSION < v"0.7-"
         _A_mul_B!(ret, transpose(A), B) # TODO Fully implement this.
     end
     function _At_mul_B!(ret::AbstractArray{<:GenericAffOrQuadExpr}, A::AbstractMatrix, B::SparseMatrixCSC)
-        rowval = rowvals(A)
-        nzval  = nonzeros(A)
-        for multivec_row ∈ 1:size(B, 2) # transpose
-            for col ∈ 1:size(A, 2)
-                idxset = nzrange(A, col)
+        rowval = rowvals(B)
+        nzval = nonzeros(B)
+        for multivec_row ∈ 1:size(A, 2) # transpose
+            for col ∈ 1:size(B, 2)
+                idxset = nzrange(B, col)
                 q = ret[multivec_row, col]
                 _sizehint_expr!(q, length(idxset))
                 for k ∈ idxset
-                    add_to_expression!(q, B[rowval[k], multivec_row] * nzval[k]) # transpose
+                    add_to_expression!(q, A[rowval[k], multivec_row] * nzval[k]) # transpose
                 end
             end
         end
