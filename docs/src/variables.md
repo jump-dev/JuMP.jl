@@ -45,8 +45,7 @@ To reduce confusion, we will attempt, where possible, to always refer to
 variables with their corresponding prefix.
 
 !!! warn
-    If you create two JuMP variables with the same name, an error will be
-    thrown.
+    Creating two JuMP variables with the same name results in an error at runtime.
 
 JuMP variables can have attributes, such as names or an initial primal start
 value. We illustrate the name attribute in the following example:
@@ -70,7 +69,7 @@ decision variable
 ```
 
 Because `y` is a Julia variable, we can bind it to a different value. For
-example, if we go:
+example, if we write:
 ```jldoctest variables
 julia> y = 1
 1

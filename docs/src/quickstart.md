@@ -67,7 +67,7 @@ objective we are setting! The objective sense, `Max` or `Min`, should be
 provided as the second argument. Note also that we don't have a multiplication
 `*` symbol between `5` and our variable `x` - Julia is smart enough to not need
 it! Feel free to stick with `*` if it makes you feel more comfortable, as we
-have done with `3 * y`:
+have done with `3 * y`. (We have been intentionally inconsistent here to demonstrate different syntax; however, it is good practice to pick one way or the other consistently in your code.)
 ```jldoctest quickstart_example
 julia> @objective(model, Max, 5x + 3 * y)
 ```
@@ -76,10 +76,12 @@ Adding constraints is a lot like setting the objective. Here we create a
 less-than-or-equal-to constraint using `<=`, but we can also create equality
 constraints using `==` and greater-than-or-equal-to constraints with `>=`:
 ```jldoctest quickstart_example; filter=r"≤|<="
-julia> con = @constraint(model, 1x + 5y <= 3)
+julia> @constraint(model, con, 1x + 5y <= 3)
 x + 5 y <= 3.0
 ```
-Note that we bind the constraint to the Julia variable `con` for later analysis.
+Note that in a similar manner to the `@variable` macro, we have named the
+constraint `con`. This will bind the constraint to the Julia variable `con` for
+later analysis.
 
 Models are solved with the `JuMP.optimize!` function:
 ```jldoctest quickstart_example
@@ -114,7 +116,7 @@ the `JuMP.termination_status` function:
 julia> JuMP.termination_status(model)
 Success::TerminationStatusCode = 0
 ```
-In this case, `GLPK` returned `Success`. This does not mean that it has found
+In this case, `GLPK` returned `Success`. This does *not* mean that it has found
 the optimal solution. Instead, it indicates that GLPK has finished running and
 did not encounter any errors or user-provided termination limits.
 
