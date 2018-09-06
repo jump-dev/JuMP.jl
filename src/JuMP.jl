@@ -118,7 +118,7 @@ with_optimizer(IpoptOptimizer, print_level=0)
 function with_optimizer(constructor,
                         args...; kwargs...)
     if !applicable(constructor, args...)
-        error("$constructor is does not have any method with arguments $args.",
+        error("$constructor does not have any method with arguments $args.",
               "The first argument of `with_optimizer` should be callable with",
               " the other argument of `with_optimizer`.")
     end
