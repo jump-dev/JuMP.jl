@@ -657,11 +657,11 @@ else
     Base.:*(A::Transpose{<:JuMPTypes,<:SparseMatrixCSC}, B::Matrix{<:JuMPTypes}) = _At_mul_B(parent(A), B)
 end
 
-function Base.:*(A::Number, B::SparseMatrixCSC{T}) where {T<:JuMPTypes}
-    return SparseMatrixCSC(B.m, B.n, copy(B.colptr), copy(B.rowval), A .* B.nzval)
-end
+# Base doesn't define efficient fallbacks for sparse array arithmetic involving
+# non-`<:Number` scalar elements, so we define some of these for `<:JuMPType` scalar
+# elements here.
 
-function Base.:*(A::JuMPTypes, B::SparseMatrixCSC)
+function Base.:*(A::Number, B::SparseMatrixCSC{T}) where {T<:JuMPTypes}
     return SparseMatrixCSC(B.m, B.n, copy(B.colptr), copy(B.rowval), A .* B.nzval)
 end
 
@@ -669,15 +669,19 @@ function Base.:*(A::SparseMatrixCSC{T}, B::Number) where {T<:JuMPTypes}
     return SparseMatrixCSC(A.m, A.n, copy(A.colptr), copy(A.rowval), A.nzval .* B)
 end
 
+function Base.:*(A::JuMPTypes, B::SparseMatrixCSC)
+    return SparseMatrixCSC(B.m, B.n, copy(B.colptr), copy(B.rowval), A .* B.nzval)
+end
+
 function Base.:*(A::SparseMatrixCSC, B::JuMPTypes)
     return SparseMatrixCSC(A.m, A.n, copy(A.colptr), copy(A.rowval), A.nzval .* B)
 end
 
-Base.:*(x::AbstractArray{T}) where {T<:JuMPTypes} = x
-
 function Base.:/(A::SparseMatrixCSC{T}, B::Number) where {T<:JuMPTypes}
     return SparseMatrixCSC(A.m, A.n, copy(A.colptr), copy(A.rowval), A.nzval ./ B)
 end
+
+Base.:*(x::AbstractArray{T}) where {T<:JuMPTypes} = x
 
 Base.:+(x::AbstractArray{T}) where {T<:JuMPTypes} = x
 
