@@ -318,15 +318,23 @@ function operators_test(ModelType::Type{<:JuMP.AbstractModel}, VariableRefType::
                 @test dot(floats, anys) == 10 + 40 + 2x
             end
 
-            @testset "JuMP PR #943" begin
-                pull943 = ModelType()
-                @variable(pull943, x[1 : 10^6]);
-                JuMP.set_start_value.(x, 1 : 10^6)
-                @expression(pull943, testsum, sum(x[i] * i for i = 1 : 10^6))
-                @expression(pull943, testdot1, dot(x, 1 : 10^6))
-                @expression(pull943, testdot2, dot(1 : 10^6, x))
-                @test JuMP.value(testsum, JuMP.start_value) ≈ JuMP.value(testdot1, JuMP.start_value)
-                @test JuMP.value(testsum, JuMP.start_value) ≈ JuMP.value(testdot2, JuMP.start_value)
+            if ModelType <: Model
+                # Only `Model` guaranteed to have `operator_counter`, so
+                # only test for that case.
+                @testset "JuMP PR #943" begin
+                    pull943 = ModelType()
+                    @test pull943.operator_counter == 0
+                    @variable(pull943, x[1:100])
+                    JuMP.set_start_value.(x, 1:100)
+                    @expression(pull943, testsum, sum(x[i] * i for i in 1:100))
+                    @expression(pull943, testdot1, dot(x, 1:100))
+                    @expression(pull943, testdot2, dot(1:100, x))
+                    @test pull943.operator_counter == 0
+                    testadd = testdot1 + testdot2
+                    @test pull943.operator_counter == 1  # Check triggerable.
+                    @test JuMP.value(testsum, JuMP.start_value) ≈ JuMP.value(testdot1, JuMP.start_value)
+                    @test JuMP.value(testsum, JuMP.start_value) ≈ JuMP.value(testdot2, JuMP.start_value)
+                end
             end
         end
     end
