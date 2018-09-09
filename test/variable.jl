@@ -11,16 +11,20 @@
 # Testing for VariableRef
 #############################################################################
 
+module VariableTests
+
 using JuMP
 
 using Compat
 import Compat.LinearAlgebra: Symmetric
-using Compat.Test
+using Pukeko
 
 include("utilities.jl")
-@static if !(:JuMPExtension in names(Main))
-    include("JuMPExtension.jl")
-end
+include("JuMPExtension.jl")
+const BOTH_MODEL_AND_VAR = [
+    (Model, VariableRef),
+    (JuMPExtension.MyModel, JuMPExtension.MyVariableRef)]
+const BOTH_MODEL = [Model, JuMPExtension.MyModel]
 
 # Slices three-dimensional JuMPArray x[I,J,K]
 # I,J,K can be singletons, ranges, colons, etc.
@@ -50,7 +54,7 @@ function sliceof(VariableRefType, x, I, J, K)
     end
 end
 
-@test_func function test_variable_no_bound(ModelType, VariableRefType)
+function variable_no_bound(ModelType, VariableRefType)
     model = ModelType()
     @variable(model, nobounds)
     @test !JuMP.has_lower_bound(nobounds)
@@ -60,8 +64,9 @@ end
     @test zero(nobounds) isa JuMP.GenericAffExpr{Float64, VariableRefType}
     @test one(nobounds) isa JuMP.GenericAffExpr{Float64, VariableRefType}
 end
+@parametric variable_no_bound BOTH_MODEL_AND_VAR
 
-@test_func function test_variable_lower_bound_rhs(ModelType)
+function variable_lower_bound_rhs(ModelType)
     model = ModelType()
     @variable(model, lbonly >= 0, Bin)
     @test JuMP.has_lower_bound(lbonly)
@@ -76,8 +81,9 @@ end
     # Name already used
     @test_throws ErrorException @variable(model, lbonly)
 end
+@parametric variable_lower_bound_rhs BOTH_MODEL
 
-@test_func function test_variable_lower_bound_lhs(ModelType)
+function variable_lower_bound_lhs(ModelType)
     model = ModelType()
     @variable(model, 0 <= lblhs, Bin)
     @test JuMP.has_lower_bound(lblhs)
@@ -88,8 +94,9 @@ end
     @test !JuMP.is_integer(lblhs)
     @test isequal(model[:lblhs], lblhs)
 end
+@parametric variable_lower_bound_lhs BOTH_MODEL
 
-@test_func function test_variable_upper_bound_rhs(ModelType)
+function variable_upper_bound_rhs(ModelType)
     model = ModelType()
     @variable(model, ubonly <= 1, Int)
     @test !JuMP.has_lower_bound(ubonly)
@@ -102,8 +109,9 @@ end
     JuMP.delete_upper_bound(ubonly)
     @test !JuMP.has_upper_bound(ubonly)
 end
+@parametric variable_upper_bound_rhs BOTH_MODEL
 
-@test_func function test_variable_upper_bound_lhs(ModelType)
+function variable_upper_bound_lhs(ModelType)
     model = ModelType()
     @variable(model, 1 >= ublhs, Int)
     @test !JuMP.has_lower_bound(ublhs)
@@ -114,8 +122,9 @@ end
     @test JuMP.is_integer(ublhs)
     @test isequal(model[:ublhs],ublhs)
 end
+@parametric variable_upper_bound_lhs BOTH_MODEL
 
-@test_func function test_variable_interval(ModelType)
+function variable_interval(ModelType)
     function has_bounds(var, lb, ub)
         @test JuMP.has_lower_bound(var)
         @test JuMP.lower_bound(var) == lb
@@ -135,8 +144,9 @@ end
     @test_macro_throws ErrorException @variable(model, 1 ≥ bothb5 ≤ 0)
     @test_macro_throws ErrorException @variable(model, 1 ≤ bothb6 ≥ 0)
 end
+@parametric variable_interval BOTH_MODEL
 
-@test_func function test_variable_fix(ModelType)
+function variable_fix(ModelType)
     model = ModelType()
     @variable(model, fixed == 1.0)
     @test !JuMP.has_lower_bound(fixed)
@@ -146,8 +156,9 @@ end
     JuMP.unfix(fixed)
     @test !JuMP.is_fixed(fixed)
 end
+@parametric variable_fix BOTH_MODEL
 
-@test_func function test_variable_custom_index_sets(ModelType)
+function variable_custom_index_sets(ModelType)
     model = ModelType()
     @variable(model, onerangeub[-7:1] <= 10, Int)
     @variable(model, manyrangelb[0:1, 10:20, 1:1] >= 2)
@@ -165,16 +176,18 @@ end
     @test isequal(model[:onerangeub][-7], onerangeub[-7])
     @test_throws KeyError model[:foo]
 end
+@parametric variable_custom_index_sets BOTH_MODEL
 
-@test_func function test_variable_anonymous(ModelType)
+function variable_anonymous(ModelType)
     model = ModelType()
     @test_throws ErrorException @variable(model, [(0, 0)])  # #922
     x = @variable(model, [(0, 2)])
     @test JuMP.name(x[0]) == ""
     @test JuMP.name(x[2]) == ""
 end
+@parametric variable_anonymous BOTH_MODEL
 
-@test_func function test_variable_is_valid_delete(ModelType)
+function variable_is_valid_delete(ModelType)
     model = ModelType()
     @variable(model, x)
     @test JuMP.is_valid(model, x)
@@ -183,8 +196,9 @@ end
     second_model = ModelType()
     @test_throws Exception JuMP.delete(second_model, x)
 end
+@parametric variable_is_valid_delete BOTH_MODEL
 
-@test_func function test_variable_bounds_set_get(ModelType)
+function variable_bounds_set_get(ModelType)
     model = ModelType()
     @variable(model, 0 <= x <= 2)
     @test JuMP.lower_bound(x) == 0
@@ -208,8 +222,9 @@ end
     @test_throws AssertionError JuMP.lower_bound(fixedvar)
     @test_throws AssertionError JuMP.upper_bound(fixedvar)
 end
+@parametric variable_bounds_set_get BOTH_MODEL
 
-@test_func function test_variable_starts_set_get(ModelType)
+function variable_starts_set_get(ModelType)
     model = ModelType()
     @variable(model, x[1:3])
     x0 = collect(1:3)
@@ -220,8 +235,9 @@ end
     @variable(model, y[1:3,1:2])
     @test_throws DimensionMismatch JuMP.set_start_value.(y, collect(1:6))
 end
+@parametric variable_starts_set_get BOTH_MODEL
 
-@test_func function test_variable_integrality_set_get(ModelType)
+function variable_integrality_set_get(ModelType)
     model = ModelType()
     @variable(model, x[1:3])
 
@@ -250,8 +266,9 @@ end
     JuMP.unset_integer(z)
     @test !JuMP.is_integer(z)
 end
+@parametric variable_integrality_set_get BOTH_MODEL
 
-@test_func function test_variable_repeated_elements(ModelType)
+function variable_repeated_elements(ModelType)
     # Tests repeated elements in index set throw error (JuMP issue #199).
     model = ModelType()
     index_set = [:x,:x,:y]
@@ -264,8 +281,9 @@ end
     @test_throws ErrorException (
         @variable(model, unused_variable[index_set, [1]], container=Dict))
 end
+@parametric variable_repeated_elements BOTH_MODEL
 
-@test_func function test_variable_oneto_index_set(ModelType, VariableRefType)
+function variable_oneto_index_set(ModelType, VariableRefType)
     # Tests that Base.OneTo can be used in index set (JuMP issue #933).
     model = ModelType()
     auto_var = @variable(model, [Base.OneTo(3), 1:2], container=Auto)
@@ -278,8 +296,9 @@ end
     @test jumparray_var isa JuMPArray{VariableRefType}
     @test length.(Compat.axes(jumparray_var)) == (3, 2)
 end
+@parametric variable_oneto_index_set BOTH_MODEL_AND_VAR
 
-@test_func function test_variable_basename_in_macro(ModelType)
+function variable_basename_in_macro(ModelType)
     model = ModelType()
     @variable(model, normal_var)
     @test JuMP.name(normal_var) == "normal_var"
@@ -290,8 +309,9 @@ end
     @test JuMP.name(indices[2]) == "t[2]"
     @test JuMP.name(indices[3]) == "t[3]"
 end
+@parametric variable_basename_in_macro BOTH_MODEL
 
-@test_func function test_variable_condition_in_indexing(ModelType)
+function variable_condition_in_indexing(ModelType)
     function test_one_dim(x)
         @test length(x) == 5
         for i in 1:10
@@ -328,8 +348,9 @@ end
     anon_two_dim = @variable(model, [j=1:10, k=3:2:9; isodd(j + k) && k <= 8])
     test_two_dim(anon_two_dim)
 end
+@parametric variable_condition_in_indexing BOTH_MODEL
 
-@test_func function test_variable_macro_return_type(ModelType, VariableRefType)
+function variable_macro_return_type(ModelType, VariableRefType)
     model = ModelType()
     @variable(model, x[1:3, 1:4, 1:2], start=0.0)
     @test typeof(x) == Array{VariableRefType,3}
@@ -344,8 +365,9 @@ end
     @test typeof(z) == Vector{VariableRefType}
     @test typeof(JuMP.start_value.(z)) == Array{Float64,1}
 end
+@parametric variable_macro_return_type BOTH_MODEL_AND_VAR
 
-@test_func function test_variable_start_value_on_empty(ModelType)
+function variable_start_value_on_empty(ModelType)
     model = ModelType()
     @variable(model, x[1:4,  1:0,1:3], start = 0)  # Array{VariableRef}
     @variable(model, y[1:4,  2:1,1:3], start = 0)  # JuMPArray
@@ -360,8 +382,9 @@ end
     #   JuMP.JuMPArray{Float64,3,Tuple{UnitRange{Int},Set{Any},UnitRange{Int}}}
     # @test length(JuMP.start_value(z)) == 0
 end
+@parametric variable_start_value_on_empty BOTH_MODEL
 
-@test_func function test_variable_jumparray_slices(ModelType, VariableRefType)
+function variable_jumparray_slices(ModelType, VariableRefType)
     # Test slicing JuMPArrays (JuMP issue #684).
     model = ModelType()
     @variable(model, x[1:3, 1:4, 1:2], container=JuMPArray)
@@ -407,8 +430,9 @@ end
     # @test w[1:2,:,"blue"] == sliceof(VariableRefType, w, 1:2, -1:2, ["blue"])
     # @test_throws ErrorException w[1:2,:,[:red,"blue"]]
 end
+@parametric variable_jumparray_slices BOTH_MODEL_AND_VAR
 
-@test_func function test_variable_end_indexing(ModelType)
+function variable_end_indexing(ModelType)
     model = ModelType()
     @variable(model, x[0:2, 1:4])
     @variable(model, z[0:2])
@@ -425,16 +449,18 @@ end
         @test_throws ErrorException z[end]
     end
 end
+@parametric variable_end_indexing BOTH_MODEL
 
-@test_func function test_variable_unsigned_index(ModelType)
+function variable_unsigned_index(ModelType)
     # Tests unsigned int can be used to construct index set (JuMP issue #857).
     model = ModelType()
     t = UInt(4)
     @variable(model, x[1:t])
     @test JuMP.num_variables(model) == 4
 end
+@parametric variable_unsigned_index BOTH_MODEL
 
-@test_func function test_variable_symmetric(ModelType)
+function variable_symmetric(ModelType)
     model = ModelType()
 
     @variable model x[1:2, 1:2] Symmetric
@@ -445,58 +471,26 @@ end
     @test y isa Symmetric
     @test y[1, 2] === y[2, 1]
 end
+@parametric variable_symmetric BOTH_MODEL
 
-function variables_test(ModelType::Type{<:JuMP.AbstractModel},
-                        VariableRefType::Type{<:JuMP.AbstractVariableRef})
-    @testset "Constructors" begin
-        test_variable_no_bound(ModelType, VariableRefType)
-        test_variable_lower_bound_rhs(ModelType)
-        test_variable_lower_bound_lhs(ModelType)
-        test_variable_upper_bound_rhs(ModelType)
-        test_variable_upper_bound_lhs(ModelType)
-        test_variable_interval(ModelType)
-        test_variable_fix(ModelType)
-        test_variable_custom_index_sets(ModelType)
-        test_variable_anonymous(ModelType)
-    end
-    test_variable_is_valid_delete(ModelType)
-    test_variable_bounds_set_get(ModelType)
-    test_variable_starts_set_get(ModelType)
-    test_variable_integrality_set_get(ModelType)
-    test_variable_repeated_elements(ModelType)
-    test_variable_oneto_index_set(ModelType, VariableRefType)
-    test_variable_basename_in_macro(ModelType)
-    test_variable_condition_in_indexing(ModelType)
-    test_variable_macro_return_type(ModelType, VariableRefType)
-    test_variable_start_value_on_empty(ModelType)
-    test_variable_jumparray_slices(ModelType, VariableRefType)
-    test_variable_end_indexing(ModelType)
-    test_variable_unsigned_index(ModelType)
-    test_variable_symmetric(ModelType)
-    
-    # TODO(#1448): Decide what to do here.
-    # @testset "getstart on sparse array (#889)" begin
-    #     model = ModelType()
-    #     @variable(model, x)
-    #     @variable(model, y)
-    #     X = sparse([1, 3], [2, 3], [x, y])
-    #
-    #     @test typeof(X) == SparseMatrixCSC{VariableRefType, Int}
-    #
-    #     setstart(x, 1)
-    #     setstart(y, 2)
-    #
-    #     Y = getstart.(X)
-    #     @test typeof(Y) == SparseMatrixCSC{Float64, Int}
-    #     @test Y == sparse([1, 3], [2, 3], [1, 2])
-    # end
-end
+# TODO(#1448): Decide what to do here.
+# @testset "getstart on sparse array (#889)" begin
+#     model = ModelType()
+#     @variable(model, x)
+#     @variable(model, y)
+#     X = sparse([1, 3], [2, 3], [x, y])
+#
+#     @test typeof(X) == SparseMatrixCSC{VariableRefType, Int}
+#
+#     setstart(x, 1)
+#     setstart(y, 2)
+#
+#     Y = getstart.(X)
+#     @test typeof(Y) == SparseMatrixCSC{Float64, Int}
+#     @test Y == sparse([1, 3], [2, 3], [1, 2])
+# end
 
-@testset "Variables" begin
-    @testset "Variables for JuMP.Model" begin
-        variables_test(Model, VariableRef)
-    end
-    @testset "Variables for JuMPExtension.MyModel" begin
-        variables_test(JuMPExtension.MyModel, JuMPExtension.MyVariableRef)
-    end
-end
+end  # module VariableTests.
+
+import Pukeko
+Pukeko.run_tests(VariableTests)
