@@ -318,15 +318,26 @@ function operators_test(ModelType::Type{<:JuMP.AbstractModel}, VariableRefType::
                 @test dot(floats, anys) == 10 + 40 + 2x
             end
 
-            @testset "JuMP PR #943" begin
-                pull943 = ModelType()
-                @variable(pull943, x[1 : 10^6]);
-                JuMP.set_start_value.(x, 1 : 10^6)
-                @expression(pull943, testsum, sum(x[i] * i for i = 1 : 10^6))
-                @expression(pull943, testdot1, dot(x, 1 : 10^6))
-                @expression(pull943, testdot2, dot(1 : 10^6, x))
-                @test JuMP.value(testsum, JuMP.start_value) ≈ JuMP.value(testdot1, JuMP.start_value)
-                @test JuMP.value(testsum, JuMP.start_value) ≈ JuMP.value(testdot2, JuMP.start_value)
+            if ModelType <: Model
+                # Only `Model` is guaranteed to have `operator_counter`, so
+                # only test for that case.
+                @testset "dot doesn't trigger operator_counter" begin
+                    # Check that dot is not falling back to default, inefficient
+                    # addition (JuMP PR #943).
+                    model = ModelType()
+                    @test model.operator_counter == 0
+                    @variable(model, x[1:100])
+                    JuMP.set_start_value.(x, 1:100)
+                    @expression(model, test_sum, sum(x[i] * i for i in 1:100))
+                    @expression(model, test_dot1, dot(x, 1:100))
+                    @expression(model, test_dot2, dot(1:100, x))
+                    @test model.operator_counter == 0
+                    test_add = test_dot1 + test_dot2
+                    @test model.operator_counter == 1  # Check triggerable.
+                    test_sum_value = JuMP.value(test_sum, JuMP.start_value)
+                    @test test_sum_value ≈ JuMP.value(test_dot1, JuMP.start_value)
+                    @test test_sum_value ≈ JuMP.value(test_dot2, JuMP.start_value)
+                end
             end
         end
     end

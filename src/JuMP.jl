@@ -724,14 +724,16 @@ function operator_warn(::AbstractModel) end
 function operator_warn(model::Model)
     model.operator_counter += 1
     if model.operator_counter > 20000
-        Base.warn_once(
+        Compat.@warn(
             "The addition operator has been used on JuMP expressions a large " *
             "number of times. This warning is safe to ignore but may " *
             "indicate that model generation is slower than necessary. For " *
             "performance reasons, you should not add expressions in a loop. " *
             "Instead of x += y, use add_to_expression!(x,y) to modify x in " *
             "place. If y is a single variable, you may also use " *
-            "add_to_expression!(x, coef, y) for x += coef*y.")
+            "add_to_expression!(x, coef, y) for x += coef*y.", maxlog=1)
+        # NOTE: On Julia 1.0 (at least), maxlog=1 does not work correctly.
+        # See https://github.com/JuliaLang/julia/issues/28786.
     end
 end
 
