@@ -321,7 +321,7 @@ function operators_test(ModelType::Type{<:JuMP.AbstractModel}, VariableRefType::
             if ModelType <: Model
                 # Only `Model` is guaranteed to have `operator_counter`, so
                 # only test for that case.
-                @testset "dot not using inefficient addition" begin
+                @testset "dot doesn't trigger operator_counter" begin
                     # Check that dot is not falling back to default, inefficient
                     # addition (JuMP PR #943).
                     model = ModelType()
