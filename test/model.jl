@@ -183,3 +183,20 @@ function dummy_optimizer_hook(::JuMP.AbstractModel) end
         @test_throws ErrorException JuMP.copy(model)
     end
 end
+
+module TestOptimizerModule
+struct Optimizer
+    a::Int
+    b::Int
+end
+end
+
+@testset "Factories" begin
+    factory = with_optimizer(TestOptimizerModule, 1, 2)
+    @test factory.constructor == TestOptimizerModule.Optimizer
+    @test factory.args == (1, 2)
+    optimizer = factory()
+    @test optimizer isa TestOptimizerModule.Optimizer
+    @test optimizer.a == 1
+    @test optimizer.b == 2
+end
