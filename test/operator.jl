@@ -547,11 +547,8 @@ function operators_test(ModelType::Type{<:JuMP.AbstractModel}, VariableRefType::
             @test_throws ErrorException A./y
             @test_throws ErrorException B./y
 
-            # TODO: `densify_with_jump_eltype` used to be a pirated call to `Matrix`,
-            # obscuring the fact that these tests were actually using internal mechanisms
-            # to construct test state. Now that we know where this is happening in the tests,
-            # we should eventually refactor these tests to not use internal mechanisms to
-            # construct test state.
+            # TODO: Refactor to avoid calling the internal JuMP function
+            # `densify_with_jump_eltype`.
             z = JuMP.densify_with_jump_eltype((2 .* y) ./ 3)
             @test JuMP.isequal_canonical((2 .* x) ./ 3, z)
             z = JuMP.densify_with_jump_eltype(2 * (y ./ 3))
