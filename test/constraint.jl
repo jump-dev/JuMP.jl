@@ -190,14 +190,24 @@ function constraints_test(ModelType::Type{<:JuMP.AbstractModel})
         @test c.set == MOI.PositiveSemidefiniteConeSquare(2)
         @test c.shape isa JuMP.SquareMatrixShape
 
-        @SDconstraint(m, cref, [x 1; 1 -y] ⪰ [1 x; x -2])
-        @test JuMP.name(cref) == "cref"
-        c = JuMP.constraint_object(cref)
+        @constraint(m, symref, Symmetric([x 1; 1 -y] - [1 x; x -2]) in PSDCone())
+        @test JuMP.name(symref) == "symref"
+        c = JuMP.constraint_object(symref)
         @test JuMP.isequal_canonical(c.func[1], x-1)
         @test JuMP.isequal_canonical(c.func[2], 1-x)
         @test JuMP.isequal_canonical(c.func[3], 2-y)
         @test c.set == MOI.PositiveSemidefiniteConeTriangle(2)
         @test c.shape isa JuMP.SymmetricMatrixShape
+
+        @SDconstraint(m, cref, [x 1; 1 -y] ⪰ [1 x; x -2])
+        @test JuMP.name(cref) == "cref"
+        c = JuMP.constraint_object(cref)
+        @test JuMP.isequal_canonical(c.func[1], x-1)
+        @test JuMP.isequal_canonical(c.func[2], 1-x)
+        @test JuMP.isequal_canonical(c.func[3], 1-x)
+        @test JuMP.isequal_canonical(c.func[4], 2-y)
+        @test c.set == MOI.PositiveSemidefiniteConeSquare(2)
+        @test c.shape isa JuMP.SquareMatrixShape
 
         @SDconstraint(m, iref[i=1:2], 0 ⪯ [x+i x+y; x+y -y])
         for i in 1:2
@@ -205,9 +215,10 @@ function constraints_test(ModelType::Type{<:JuMP.AbstractModel})
             c = JuMP.constraint_object(iref[i])
             @test JuMP.isequal_canonical(c.func[1], x+i)
             @test JuMP.isequal_canonical(c.func[2], x+y)
-            @test JuMP.isequal_canonical(c.func[3], -y)
-            @test c.set == MOI.PositiveSemidefiniteConeTriangle(2)
-            @test c.shape isa JuMP.SymmetricMatrixShape
+            @test JuMP.isequal_canonical(c.func[3], x+y)
+            @test JuMP.isequal_canonical(c.func[4], -y)
+            @test c.set == MOI.PositiveSemidefiniteConeSquare(2)
+            @test c.shape isa JuMP.SquareMatrixShape
         end
 
         # Should throw "ERROR: function JuMP.add_constraint does not accept keyword arguments"
