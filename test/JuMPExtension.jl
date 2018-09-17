@@ -43,7 +43,7 @@ if VERSION >= v"0.7-"
 end
 JuMP.owner_model(v::MyVariableRef) = v.model
 JuMP.isequal_canonical(v::MyVariableRef, w::MyVariableRef) = v == w
-JuMP.variabletype(::MyModel) = MyVariableRef
+JuMP.variable_type(::MyModel) = MyVariableRef
 function JuMP.add_variable(m::MyModel, v::JuMP.AbstractVariable, name::String="")
     m.nextvaridx += 1
     vref = MyVariableRef(m, m.nextvaridx)

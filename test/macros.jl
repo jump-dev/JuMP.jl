@@ -7,7 +7,7 @@ end
 
 @testset "Extension of @variable with build_variable #1029" begin
     local MyVariable = Tuple{JuMP.VariableInfo, Int}
-    JuMP.variabletype(m::Model, ::Type{MyVariable}) = MyVariable
+    JuMP.variable_type(m::Model, ::Type{MyVariable}) = MyVariable
     names = Dict{MyVariable, String}()
     function JuMP.add_variable(m::Model, v::MyVariable, name::String="")
         names[v] = name
@@ -53,7 +53,7 @@ end
         @test test_kw == 2
     end
 
-    z = @variable(m, variabletype=MyVariable, upper_bound=3, test_kw=5)
+    z = @variable(m, variable_type=MyVariable, upper_bound=3, test_kw=5)
     info = z[1]
     test_kw = z[2]
     @test isa(z, MyVariable)

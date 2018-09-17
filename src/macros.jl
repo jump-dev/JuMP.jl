@@ -980,11 +980,11 @@ esc_nonconstant(x::Expr) = isexpr(x,:quote) ? x : esc(x)
 esc_nonconstant(x) = esc(x)
 
 # Returns the type of what `add_variable(::Model, build_variable(...))` would return where `...` represents the positional arguments.
-# Example: `@variable m [1:3] foo` will allocate an vector of element type `variabletype(m, foo)`
+# Example: `@variable m [1:3] foo` will allocate an vector of element type `variable_type(m, foo)`
 # Note: it needs to be implemented by all `AbstractModel`s
-variabletype(m::Model) = VariableRef
+variable_type(m::Model) = VariableRef
 # Returns a new variable. Additional positional arguments can be used to dispatch the call to a different method.
-# The return type should only depends on the positional arguments for `variabletype` to make sense. See the @variable macro doc for more details.
+# The return type should only depends on the positional arguments for `variable_type` to make sense. See the @variable macro doc for more details.
 # Example: `@variable m x` foo will call `build_variable(_error, info, foo)`
 function build_variable(_error::Function, info::VariableInfo; extra_kwargs...)
     for (kwarg, _) in extra_kwargs
@@ -1119,7 +1119,7 @@ The recognized keyword arguments in `kwargs` are the following:
 * `start`: Sets the variable starting value used as initial guess in optimization.
 * `binary`: Sets whether the variable is binary or not.
 * `integer`: Sets whether the variable is integer or not.
-* `variabletype`: See the "Note for extending the variable macro" section below.
+* `variable_type`: See the "Note for extending the variable macro" section below.
 * `container`: Specify the container type, see [Containers in macro](@ref).
 
 ## Examples
@@ -1156,10 +1156,10 @@ extra_kwargs...))` where
   `@variable` call in addition to the error message given as argument;
 * `info` is the `VariableInfo` struct containing the information gathered in
   `expr`, the recognized keyword arguments (except `basename` and
-  `variabletype`) and the recognized positional arguments (except `Symmetric`
+  `variable_type`) and the recognized positional arguments (except `Symmetric`
   and `PSD`);
 * `extra_args` are the unrecognized positional arguments of `args` plus the
-  value of the `variabletype` keyword argument if present. The `variabletype`
+  value of the `variable_type` keyword argument if present. The `variable_type`
   keyword argument allows the user to pass a position argument to
   `build_variable` without the need to give a positional argument to
   `@variable`. In particular, this allows the user to give a positional
@@ -1181,7 +1181,7 @@ upper bounds 2 and 3 and names `x[a]` and `x[b]` as with the second example
 above but does it without using the `@variable` macro
 ```julia
 # Without the `@variable` macro
-data = Vector{JuMP.variabletype(model)}(undef, length(keys(ub)))
+data = Vector{JuMP.variable_type(model)}(undef, length(keys(ub)))
 x = JuMPArray(data, keys(ub))
 for i in keys(ub)
     info = VariableInfo(false, NaN, true, ub[i], false, NaN, false, NaN, false, false)
@@ -1196,7 +1196,7 @@ the `Poly(X)` positional argument to specify its variables:
 # Using the `@variable` macro
 @variable(model, x[1:N,1:N], Symmetric, Poly(X))
 # Without the `@variable` macro
-x = Matrix{JuMP.variabletype(model, Poly(X))}(N, N)
+x = Matrix{JuMP.variable_type(model, Poly(X))}(N, N)
 info = VariableInfo(false, NaN, false, NaN, false, NaN, false, NaN, false, false)
 for i in 1:N, j in i:N
     x[i,j] = x[j,i] = JuMP.add_variable(model, build_variable(error, info, Poly(X)), "x[\$i,\$j]")
@@ -1224,9 +1224,9 @@ macro variable(args...)
     end
 
     info_kwargs = filter(is_info_keyword, kwargs)
-    extra_kwargs = filter(kw -> kw.args[1] != :basename && kw.args[1] != :variabletype && !is_info_keyword(kw), kwargs)
+    extra_kwargs = filter(kw -> kw.args[1] != :basename && kw.args[1] != :variable_type && !is_info_keyword(kw), kwargs)
     basename_kwargs = filter(kw -> kw.args[1] == :basename, kwargs)
-    variabletype_kwargs = filter(kw -> kw.args[1] == :variabletype, kwargs)
+    variable_type_kwargs = filter(kw -> kw.args[1] == :variable_type, kwargs)
     infoexpr = VariableInfoExpr(; keywordify.(info_kwargs)...)
 
     # There are four cases to consider:
@@ -1274,8 +1274,8 @@ macro variable(args...)
         end
     end
     extra = esc.(filter(ex -> !(ex in [:Int,:Bin]), extra))
-    if !isempty(variabletype_kwargs)
-        push!(extra, esc(variabletype_kwargs[1].args[2]))
+    if !isempty(variable_type_kwargs)
+        push!(extra, esc(variable_type_kwargs[1].args[2]))
     end
 
     info = constructor_expr(infoexpr)
@@ -1302,7 +1302,7 @@ macro variable(args...)
         variablecall = :( add_variable($model, $buildcall, $(namecall(basename, idxvars))) )
         code = :( $(refcall) = $variablecall )
         # Determine the return type of add_variable. This is needed to create the container holding them.
-        vartype = :( variabletype($model, $(extra...)) )
+        vartype = :( variable_type($model, $(extra...)) )
 
         if symmetric
             # Sanity checks on PSD input stuff
