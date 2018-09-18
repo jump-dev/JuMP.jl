@@ -293,21 +293,26 @@
         else
             @objective(m, Max, tr(x))
         end
-        varpsd = @constraint(m, x in PSDCone())
-        set_name(varpsd, "varpsd")
-        conpsd = @SDconstraint(m, x ⪰ [1.0 0.0; 0.0 1.0])
-        set_name(conpsd, "conpsd")
+        var_psd = @constraint(m, x in PSDCone())
+        set_name(var_psd, "var_psd")
+        sym_psd = @constraint(m, Symmetric(x - [1.0 0.0; 0.0 1.0]) in PSDCone())
+        set_name(sym_psd, "sym_psd")
+        con_psd = @SDconstraint(m, x ⪰ [1.0 0.0; 0.0 1.0])
+        set_name(con_psd, "con_psd")
 
         modelstring = """
         variables: x11, x12, x22
         maxobjective: 1.0*x11 + 1.0*x22
-        varpsd: [x11,x12,x22] in PositiveSemidefiniteConeTriangle(2)
-        conpsd: [x11 + -1.0,x12,x22 + -1.0] in PositiveSemidefiniteConeTriangle(2)
+        var_psd: [x11,x12,x22] in PositiveSemidefiniteConeTriangle(2)
+        sym_psd: [x11 + -1.0,x12,x22 + -1.0] in PositiveSemidefiniteConeTriangle(2)
+        con_psd: [x11 + -1.0,x12,x12,x22 + -1.0] in PositiveSemidefiniteConeSquare(2)
         """
 
         model = JuMP.JuMPMOIModel{Float64}()
         MOIU.loadfromstring!(model, modelstring)
-        MOIU.test_models_equal(JuMP.caching_optimizer(m).model_cache, model, ["x11","x12","x22"], ["varpsd", "conpsd"])
+        MOIU.test_models_equal(JuMP.caching_optimizer(m).model_cache, model,
+                               ["x11","x12","x22"],
+                               ["var_psd", "sym_psd", "con_psd"])
 
         mockoptimizer = MOIU.MockOptimizer(JuMP.JuMPMOIModel{Float64}(),
                                            eval_objective_value=false,
@@ -322,8 +327,12 @@
         MOI.set(mockoptimizer, MOI.VariablePrimal(), JuMP.optimizer_index(x[1,1]), 1.0)
         MOI.set(mockoptimizer, MOI.VariablePrimal(), JuMP.optimizer_index(x[1,2]), 2.0)
         MOI.set(mockoptimizer, MOI.VariablePrimal(), JuMP.optimizer_index(x[2,2]), 4.0)
-        MOI.set(mockoptimizer, MOI.ConstraintDual(), JuMP.optimizer_index(varpsd), [1.0,2.0,3.0])
-        MOI.set(mockoptimizer, MOI.ConstraintDual(), JuMP.optimizer_index(conpsd), [4.0,5.0,6.0])
+        MOI.set(mockoptimizer, MOI.ConstraintDual(),
+                JuMP.optimizer_index(var_psd), [1.0, 2.0, 3.0])
+        MOI.set(mockoptimizer, MOI.ConstraintDual(),
+                JuMP.optimizer_index(sym_psd), [4.0, 5.0, 6.0])
+        MOI.set(mockoptimizer, MOI.ConstraintDual(),
+                JuMP.optimizer_index(con_psd), [7.0, 8.0, 9.0, 10.0])
 
         JuMP.optimize!(m)
 
@@ -334,12 +343,15 @@
         @test JuMP.primal_status(m) == MOI.FeasiblePoint
 
         @test JuMP.result_value.(x) == [1.0 2.0; 2.0 4.0]
-        @test JuMP.has_result_dual(m, typeof(varpsd))
-        @test JuMP.result_dual(varpsd) isa Symmetric
-        @test JuMP.result_dual(varpsd) == [1.0 2.0; 2.0 3.0]
-        @test JuMP.has_result_dual(m, typeof(conpsd))
-        @test JuMP.result_dual(conpsd) isa Symmetric
-        @test JuMP.result_dual(conpsd) == [4.0 5.0; 5.0 6.0]
+        @test JuMP.has_result_dual(m, typeof(var_psd))
+        @test JuMP.result_dual(var_psd) isa Symmetric
+        @test JuMP.result_dual(var_psd) == [1.0 2.0; 2.0 3.0]
+        @test JuMP.has_result_dual(m, typeof(sym_psd))
+        @test JuMP.result_dual(sym_psd) isa Symmetric
+        @test JuMP.result_dual(sym_psd) == [4.0 5.0; 5.0 6.0]
+        @test JuMP.has_result_dual(m, typeof(con_psd))
+        @test JuMP.result_dual(con_psd) isa Matrix
+        @test JuMP.result_dual(con_psd) == [7.0 9.0; 8.0 10.0]
 
     end
 

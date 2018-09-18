@@ -45,7 +45,9 @@ end
 # this allows to get the constraint reference, e.g.
 # @variable model x[1:2,1:2] Symmetric # x is Symmetric{VariableRef,Matrix{VariableRef}}
 # varpsd = @constraint model x in PSDCone()
-function build_constraint(_error::Function, Q::Symmetric{V, Matrix{V}}, ::PSDCone) where V<:AbstractVariableRef
+function build_constraint(_error::Function, Q::Symmetric{V, M},
+                          ::PSDCone) where {V <: AbstractVariableRef,
+                                            M <: AbstractMatrix{V}}
     n = Compat.LinearAlgebra.checksquare(Q)
     VectorOfVariablesConstraint([Q[i, j] for j in 1:n for i in 1:j],
                                 MOI.PositiveSemidefiniteConeTriangle(n),
@@ -53,22 +55,29 @@ function build_constraint(_error::Function, Q::Symmetric{V, Matrix{V}}, ::PSDCon
 end
 # @variable model x[1:2,1:2] # x is Matrix{VariableRef}
 # varpsd = @constraint model x in PSDCone()
-function build_constraint(_error::Function, Q::Matrix{<:AbstractVariableRef}, ::PSDCone)
+function build_constraint(_error::Function,
+                          Q::AbstractMatrix{<:AbstractVariableRef},
+                          ::PSDCone)
     n = Compat.LinearAlgebra.checksquare(Q)
     VectorOfVariablesConstraint(vec(Q),
                                 MOI.PositiveSemidefiniteConeSquare(n),
                                 SquareMatrixShape(n))
 end
 
-function build_constraint(_error::Function, x::AbstractMatrix, ::PSDCone)
-    n = Compat.LinearAlgebra.checksquare(x)
-    # Support for non-symmetric matrices as done prior to JuMP v0.19
-    # will be added once the appropriate cone has been added in MathOptInterface
-    # as discussed in the following PR:
-    # https://github.com/JuliaOpt/JuMP.jl/pull/1122#issuecomment-344980944
-    @assert issymmetric(x)
-    aff = [x[i, j] for j in 1:n for i in 1:j]
-    return VectorAffExprConstraint(aff,
-                                   MOI.PositiveSemidefiniteConeTriangle(n),
-                                   SymmetricMatrixShape(n))
+# @constraint(model, Symmetric(x) in PSDCone())
+function build_constraint(_error::Function, Q::Symmetric{A, M},
+                          ::PSDCone) where {A <: GenericAffExpr,
+                                            M <: AbstractMatrix{A}}
+    n = Compat.LinearAlgebra.checksquare(Q)
+    VectorAffExprConstraint([Q[i, j] for j in 1:n for i in 1:j],
+                            MOI.PositiveSemidefiniteConeTriangle(n),
+                            SymmetricMatrixShape(n))
+end
+# @SDconstraint(model, x ⪰ y) or @constraint(model, x in PSDCone())
+function build_constraint(_error::Function, Q::AbstractMatrix{<:GenericAffExpr},
+                          ::PSDCone)
+    n = Compat.LinearAlgebra.checksquare(Q)
+    VectorAffExprConstraint(vec(Q),
+                            MOI.PositiveSemidefiniteConeSquare(n),
+                            SquareMatrixShape(n))
 end
