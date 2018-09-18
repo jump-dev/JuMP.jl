@@ -76,8 +76,10 @@ function map_coefficients(f::Function, q::GenericQuadExpr)
     return map_coefficients_inplace!(f, copy(q))
 end
 
+constant(quad::GenericQuadExpr) = constant(quad.aff)
+
 """
-    linear_terms(aff::GenericQuadExpr{C, V})
+    linear_terms(quad::GenericQuadExpr{C, V})
 
 Provides an iterator over tuples `(coefficient::C, variable::V)` in the
 linear part of the quadratic expression.
@@ -140,6 +142,11 @@ function add_to_expression!(q::GenericQuadExpr{T,S}, other::GenericQuadExpr{T,S}
     q
 end
 
+function add_to_expression!(quad::GenericQuadExpr{C}, other::C) where C
+    return add_to_expression!(quad.aff, other)
+end
+
+
 function assert_isfinite(q::GenericQuadExpr)
     assert_isfinite(q.aff)
     for (coef, var1, var2) in quadterms(q)
@@ -187,6 +194,9 @@ function MOI.ScalarQuadraticFunction(q::QuadExpr)
     return MOI.ScalarQuadraticFunction(moi_aff.terms,
                                        qterms, moi_aff.constant)
 end
+function moi_function(aff::GenericQuadExpr)
+    return MOI.ScalarQuadraticFunction(aff)
+end
 
 function QuadExpr(m::Model, f::MOI.ScalarQuadraticFunction)
     quad = QuadExpr(AffExpr(m, MOI.ScalarAffineFunction(f.affine_terms,
@@ -201,6 +211,9 @@ function QuadExpr(m::Model, f::MOI.ScalarQuadraticFunction)
         add_to_expression!(quad, coef, VariableRef(m, v1), VariableRef(m, v2))
     end
     return quad
+end
+function jump_function(model::AbstractModel, aff::MOI.ScalarQuadraticFunction)
+    return QuadExpr(model, aff)
 end
 
 function set_objective(m::Model, sense::Symbol, a::QuadExpr)
@@ -234,24 +247,3 @@ function Base.copy(q::GenericQuadExpr, new_model::Model)
 end
 
 # TODO: result_value for QuadExpr
-
-##########################################################################
-# TODO: GenericQuadExprConstraint
-
-struct QuadExprConstraint{V <: AbstractVariableRef, S <: MOI.AbstractScalarSet} <: AbstractConstraint
-    func::GenericQuadExpr{Float64, V}
-    set::S
-end
-
-moi_function_and_set(c::QuadExprConstraint) = (MOI.ScalarQuadraticFunction(c.func), c.set)
-shape(::QuadExprConstraint) = ScalarShape()
-
-function constraint_object(ref::ConstraintRef{Model, MOICON{FuncType, SetType}}) where
-        {FuncType <: MOI.ScalarQuadraticFunction, SetType <: MOI.AbstractScalarSet}
-    model = ref.m
-    f = MOI.get(model, MOI.ConstraintFunction(), ref)::FuncType
-    s = MOI.get(model, MOI.ConstraintSet(), ref)::SetType
-    return QuadExprConstraint(QuadExpr(model, f), s)
-end
-
-# TODO: VectorQuadExprConstraint

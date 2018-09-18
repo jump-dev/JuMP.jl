@@ -41,43 +41,31 @@ function reshape(vectorized_form::Vector{T}, shape::SquareMatrixShape) where T
                         shape.side_dimension)
 end
 
-# Used by the @variable macro. It can also be used with the @constraint macro,
-# this allows to get the constraint reference, e.g.
-# @variable model x[1:2,1:2] Symmetric # x is Symmetric{VariableRef,Matrix{VariableRef}}
-# varpsd = @constraint model x in PSDCone()
+# * If `eltype(Q)` is `AbstractVariableRef`:
+#   Used by the @variable macro. It can also be used with the @constraint macro,
+#   this allows to get the constraint reference, e.g.
+#   @variable model x[1:2,1:2] Symmetric # x is Symmetric{VariableRef,Matrix{VariableRef}}
+#   varpsd = @constraint model x in PSDCone()
+# * Otherwise:
+#   @constraint(model, Symmetric(x) in PSDCone())
 function build_constraint(_error::Function, Q::Symmetric{V, M},
-                          ::PSDCone) where {V <: AbstractVariableRef,
+                          ::PSDCone) where {V <: AbstractJuMPScalar,
                                             M <: AbstractMatrix{V}}
     n = Compat.LinearAlgebra.checksquare(Q)
-    VectorOfVariablesConstraint([Q[i, j] for j in 1:n for i in 1:j],
-                                MOI.PositiveSemidefiniteConeTriangle(n),
-                                SymmetricMatrixShape(n))
+    VectorConstraint([Q[i, j] for j in 1:n for i in 1:j],
+                     MOI.PositiveSemidefiniteConeTriangle(n),
+                     SymmetricMatrixShape(n))
 end
-# @variable model x[1:2,1:2] # x is Matrix{VariableRef}
-# varpsd = @constraint model x in PSDCone()
+# * If `eltype(Q)` is `AbstractVariableRef`:
+#   @variable model x[1:2,1:2] # x is Matrix{VariableRef}
+#   varpsd = @constraint model x in PSDCone()
+# * Otherwise:
+#   @SDconstraint(model, x ⪰ y) or @constraint(model, x in PSDCone())
 function build_constraint(_error::Function,
-                          Q::AbstractMatrix{<:AbstractVariableRef},
+                          Q::AbstractMatrix{<:AbstractJuMPScalar},
                           ::PSDCone)
     n = Compat.LinearAlgebra.checksquare(Q)
-    VectorOfVariablesConstraint(vec(Q),
-                                MOI.PositiveSemidefiniteConeSquare(n),
-                                SquareMatrixShape(n))
-end
-
-# @constraint(model, Symmetric(x) in PSDCone())
-function build_constraint(_error::Function, Q::Symmetric{A, M},
-                          ::PSDCone) where {A <: GenericAffExpr,
-                                            M <: AbstractMatrix{A}}
-    n = Compat.LinearAlgebra.checksquare(Q)
-    VectorAffExprConstraint([Q[i, j] for j in 1:n for i in 1:j],
-                            MOI.PositiveSemidefiniteConeTriangle(n),
-                            SymmetricMatrixShape(n))
-end
-# @SDconstraint(model, x ⪰ y) or @constraint(model, x in PSDCone())
-function build_constraint(_error::Function, Q::AbstractMatrix{<:GenericAffExpr},
-                          ::PSDCone)
-    n = Compat.LinearAlgebra.checksquare(Q)
-    VectorAffExprConstraint(vec(Q),
-                            MOI.PositiveSemidefiniteConeSquare(n),
-                            SquareMatrixShape(n))
+    VectorConstraint(vec(Q),
+                     MOI.PositiveSemidefiniteConeSquare(n),
+                     SquareMatrixShape(n))
 end

@@ -347,28 +347,21 @@ function parse_constraint(_error::Function, args...)
           "       expr1 == expr2\n" * "       lb <= expr <= ub")
 end
 
-const ScalarPolyhedralSets = Union{MOI.LessThan,MOI.GreaterThan,MOI.EqualTo,MOI.Interval}
-
-build_constraint(_error::Function, v::AbstractVariableRef, set::MOI.AbstractScalarSet) = SingleVariableConstraint(v, set)
-build_constraint(_error::Function, v::Vector{<:AbstractVariableRef}, set::MOI.AbstractVectorSet) = VectorOfVariablesConstraint(v, set)
-
+function build_constraint(_error::Function, v::AbstractJuMPScalar,
+                          set::MOI.AbstractScalarSet)
+    return ScalarConstraint(v, set)
+end
+function build_constraint(_error::Function,
+                          expr::Union{GenericAffExpr, GenericQuadExpr},
+                          set::MOI.AbstractScalarSet)
+    offset = constant(expr)
+    add_to_expression!(expr, -offset)
+    return ScalarConstraint(expr, MOIU.shift_constant(set, -offset))
+end
 build_constraint(_error::Function, α::Number, set::MOI.AbstractScalarSet) = build_constraint(_error, convert(AffExpr, α), set)
-function build_constraint(_error::Function, aff::GenericAffExpr, set::S) where S <: Union{MOI.LessThan,MOI.GreaterThan,MOI.EqualTo}
-    offset = aff.constant
-    aff.constant = 0.0
-    return AffExprConstraint(aff, S(MOIU.getconstant(set)-offset))
-end
 
+build_constraint(_error::Function, x::Vector{<:AbstractJuMPScalar}, set::MOI.AbstractVectorSet) = VectorConstraint(x, set)
 build_constraint(_error::Function, x::AbstractArray, set::MOI.AbstractScalarSet) = _error("Unexpected vector in scalar constraint. Did you mean to use the dot comparison operators like .==, .<=, and .>= instead?")
-build_constraint(_error::Function, x::Vector{<:GenericAffExpr}, set::MOI.AbstractVectorSet) = VectorAffExprConstraint(x, set)
-
-function build_constraint(_error::Function, quad::GenericQuadExpr, set::S) where S <: Union{MOI.LessThan,MOI.GreaterThan,MOI.EqualTo}
-    offset = quad.aff.constant
-    quad.aff.constant = 0.0
-    return QuadExprConstraint(quad, S(MOIU.getconstant(set)-offset))
-end
-#build_constraint(x::Vector{<:GenericQuadExpr}, set::MOI.AbstractVectorSet) = VectorQuadExprConstraint(x, set)
-
 
 # _vectorize_like(x::Number, y::AbstractArray{AffExpr}) = (ret = similar(y, typeof(x)); fill!(ret, x))
 # function _vectorize_like{R<:Number}(x::AbstractArray{R}, y::AbstractArray{AffExpr})
@@ -387,17 +380,8 @@ end
 #     end
 # end
 
-# TODO replace these with build_constraint(_error, fun, ::Interval) for more consistency, quad exprs in Interval should now be supported with MOI anyway
 # three-argument build_constraint is used for two-sided constraints.
-build_constraint(_error::Function, v::AbstractVariableRef, lb::Real, ub::Real) = SingleVariableConstraint(v, MOI.Interval(lb, ub))
-
-function build_constraint(_error::Function, aff::GenericAffExpr, lb::Real, ub::Real)
-    offset = aff.constant
-    aff.constant = 0.0
-    AffExprConstraint(aff,MOI.Interval(lb-offset,ub-offset))
-end
-
-build_constraint(_error::Function, q::GenericQuadExpr, lb, ub) = _error("Two-sided quadratic constraints not supported. (Try @NLconstraint instead.)")
+build_constraint(_error::Function, func::AbstractJuMPScalar, lb::Real, ub::Real) = build_constraint(_error, func, MOI.Interval(lb, ub))
 
 function build_constraint(_error::Function, expr, lb, ub)
     lb isa Number || _error(string("Expected $lb to be a number."))

@@ -75,9 +75,9 @@ function macros_test(ModelType::Type{<:JuMP.AbstractModel}, VariableRefType::Typ
     @testset "build_constraint on variable" begin
         m = ModelType()
         @variable(m, x)
-        @test JuMP.build_constraint(error, x, MOI.GreaterThan(0.0)) isa JuMP.SingleVariableConstraint{VariableRefType, MOI.GreaterThan{Float64}}
-        @test JuMP.build_constraint(error, x, MOI.LessThan(0.0)) isa JuMP.SingleVariableConstraint{VariableRefType, MOI.LessThan{Float64}}
-        @test JuMP.build_constraint(error, x, MOI.EqualTo(0)) isa JuMP.SingleVariableConstraint{VariableRefType, MOI.EqualTo{Int}}
+        @test JuMP.build_constraint(error, x, MOI.GreaterThan(0.0)) isa JuMP.ScalarConstraint{VariableRefType, MOI.GreaterThan{Float64}}
+        @test JuMP.build_constraint(error, x, MOI.LessThan(0.0)) isa JuMP.ScalarConstraint{VariableRefType, MOI.LessThan{Float64}}
+        @test JuMP.build_constraint(error, x, MOI.EqualTo(0)) isa JuMP.ScalarConstraint{VariableRefType, MOI.EqualTo{Int}}
     end
 
     @testset "Check @constraint basics" begin

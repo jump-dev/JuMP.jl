@@ -203,11 +203,23 @@ Set a variable's name.
 set_name(v::VariableRef, s::String) = MOI.set(v.m, MOI.VariableName(), v, s)
 
 MOI.SingleVariable(v::VariableRef) = MOI.SingleVariable(index(v))
+function moi_function(variable::AbstractVariableRef)
+    return MOI.SingleVariable(variable)
+end
 
 # Note: No validation is performed that the variables belong to the same model.
 MOI.VectorOfVariables(vars::Vector{VariableRef}) = MOI.VectorOfVariables(index.(vars))
+function moi_function(variables::Vector{<:AbstractVariableRef})
+    return MOI.VectorOfVariables(variables)
+end
+function jump_function(model::AbstractModel, variables::MOI.VectorOfVariables)
+    return map(v -> VariableRef(model, v), variables.variables)
+end
 
 VariableRef(m::Model, f::MOI.SingleVariable) = VariableRef(m, f.variable)
+function jump_function(model::AbstractModel, variable::MOI.SingleVariable)
+    return VariableRef(model, variable)
+end
 
 function set_objective(m::Model, sense::Symbol, x::VariableRef)
     # TODO: This code is repeated here, for GenericAffExpr, and for GenericQuadExpr.
@@ -232,46 +244,6 @@ function objective_function(m::Model, ::Type{VariableRef})
     f = MOI.get(m.moi_backend, MOI.ObjectiveFunction{MOI.SingleVariable}())::MOI.SingleVariable
     return VariableRef(m, f)
 end
-
-struct SingleVariableConstraint{V <: AbstractVariableRef,
-                                S <: MOI.AbstractScalarSet} <: AbstractConstraint
-    func::V
-    set::S
-end
-
-moi_function_and_set(c::SingleVariableConstraint) = (MOI.SingleVariable(c.func), c.set)
-shape(::SingleVariableConstraint) = ScalarShape()
-
-struct VectorOfVariablesConstraint{V <: AbstractVariableRef, S <: MOI.AbstractVectorSet, Shape <: AbstractShape} <: AbstractConstraint
-    func::Vector{V}
-    set::S
-    shape::Shape
-end
-function VectorOfVariablesConstraint(func::Vector{<:AbstractVariableRef},
-                                     set::MOI.AbstractVectorSet)
-    VectorOfVariablesConstraint(func, set, VectorShape())
-end
-
-moi_function_and_set(c::VectorOfVariablesConstraint) = (MOI.VectorOfVariables(c.func), c.set)
-shape(c::VectorOfVariablesConstraint) = c.shape
-
-function constraint_object(ref::ConstraintRef{Model, MOICON{FuncType, SetType}}) where
-        {FuncType <: MOI.SingleVariable, SetType <: MOI.AbstractScalarSet}
-    model = ref.m
-    f = MOI.get(model, MOI.ConstraintFunction(), ref)::FuncType
-    s = MOI.get(model, MOI.ConstraintSet(), ref)::SetType
-    return SingleVariableConstraint(VariableRef(model, f), s)
-end
-
-function constraint_object(ref::ConstraintRef{Model, MOICON{FuncType, SetType}}) where
-        {FuncType <: MOI.VectorOfVariables, SetType <: MOI.AbstractVectorSet}
-    model = ref.m
-    f = MOI.get(model, MOI.ConstraintFunction(), ref)::FuncType
-    s = MOI.get(model, MOI.ConstraintSet(), ref)::SetType
-    return VectorOfVariablesConstraint(map(v -> VariableRef(model, v), f.variables),
-                                       s, ref.shape)
-end
-
 
 ## Bound setter/getters
 
