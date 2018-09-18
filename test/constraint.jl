@@ -190,9 +190,9 @@ function constraints_test(ModelType::Type{<:JuMP.AbstractModel})
         @test c.set == MOI.PositiveSemidefiniteConeSquare(2)
         @test c.shape isa JuMP.SquareMatrixShape
 
-        @constraint(m, symref, Symmetric([x 1; 1 -y] - [1 x; x -2]) in PSDCone())
-        @test JuMP.name(symref) == "symref"
-        c = JuMP.constraint_object(symref)
+        @constraint(m, sym_ref, Symmetric([x 1; 1 -y] - [1 x; x -2]) in PSDCone())
+        @test JuMP.name(sym_ref) == "sym_ref"
+        c = JuMP.constraint_object(sym_ref)
         @test JuMP.isequal_canonical(c.func[1], x-1)
         @test JuMP.isequal_canonical(c.func[2], 1-x)
         @test JuMP.isequal_canonical(c.func[3], 2-y)
