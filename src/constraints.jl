@@ -186,10 +186,6 @@ function constraint_object(ref::ConstraintRef{Model, MOICON{FuncType, SetType}})
     return VectorConstraint(jump_function(model, f), s, ref.shape)
 end
 
-# TODO: Find somewhere to put this error message.
-#add_constraint(m::Model, c::Array{AffExprConstraint}) =
-#    error("The operators <=, >=, and == can only be used to specify scalar constraints. If you are trying to add a vectorized constraint, use the element-wise dot comparison operators (.<=, .>=, or .==) instead")
-
 """
     add_constraint(m::Model, c::AbstractConstraint, name::String="")
 
