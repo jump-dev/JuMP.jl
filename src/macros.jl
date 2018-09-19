@@ -358,10 +358,21 @@ function build_constraint(_error::Function,
     add_to_expression!(expr, -offset)
     return ScalarConstraint(expr, MOIU.shift_constant(set, -offset))
 end
-build_constraint(_error::Function, α::Number, set::MOI.AbstractScalarSet) = build_constraint(_error, convert(AffExpr, α), set)
+function build_constraint(_error::Function, α::Number,
+                          set::MOI.AbstractScalarSet)
+    return build_constraint(_error, convert(AffExpr, α), set)
+end
 
-build_constraint(_error::Function, x::Vector{<:AbstractJuMPScalar}, set::MOI.AbstractVectorSet) = VectorConstraint(x, set)
-build_constraint(_error::Function, x::AbstractArray, set::MOI.AbstractScalarSet) = _error("Unexpected vector in scalar constraint. Did you mean to use the dot comparison operators like .==, .<=, and .>= instead?")
+function build_constraint(_error::Function, x::Vector{<:AbstractJuMPScalar},
+                          set::MOI.AbstractVectorSet)
+    return VectorConstraint(x, set)
+end
+function build_constraint(_error::Function, x::AbstractArray,
+                          set::MOI.AbstractScalarSet)
+    return _error("Unexpected vector in scalar constraint. Did you mean to use",
+                  " the dot comparison operators like .==, .<=, and .>=",
+                  " instead?")
+end
 
 # _vectorize_like(x::Number, y::AbstractArray{AffExpr}) = (ret = similar(y, typeof(x)); fill!(ret, x))
 # function _vectorize_like{R<:Number}(x::AbstractArray{R}, y::AbstractArray{AffExpr})
@@ -408,7 +419,7 @@ to `add_constraint` with the macro keyword arguments (except the `container`
 keyword argument which is used to determine the container type).
 """
 function constraint_macro(args, macro_name::Symbol, parsefun::Function)
-    _error(str) = macro_error(macro_name, args, str)
+    _error(str...) = macro_error(macro_name, args, str...)
 
     args, kwargs, requestedcontainer = extract_kwargs(args)
 
@@ -979,7 +990,9 @@ end
 
 const EMPTYSTRING = ""
 
-macro_error(macroname, args, str) = error("In @$macroname($(join(args,","))): ", str)
+function macro_error(macroname, args, str...)
+    error("In @$macroname($(join(args,","))): ", str...)
+end
 
 # Given a basename and idxvars, returns an expression that constructs the name
 # of the object. For use within macros only.
@@ -1188,7 +1201,7 @@ end
 ```
 """
 macro variable(args...)
-    _error(str) = macro_error(:variable, args, str)
+    _error(str...) = macro_error(:variable, args, str...)
 
     model = esc(args[1])
 
