@@ -76,6 +76,11 @@ function map_coefficients(f::Function, q::GenericQuadExpr)
     return map_coefficients_inplace!(f, copy(q))
 end
 
+"""
+    constant(aff::GenericQuadExpr{C, V})::C
+
+Return the constant of the quadratic expression.
+"""
 constant(quad::GenericQuadExpr) = constant(quad.aff)
 
 """

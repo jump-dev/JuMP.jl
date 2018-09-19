@@ -112,6 +112,11 @@ function value(a::GenericAffExpr{T, V}, map::Function) where {T, V}
     ret
 end
 
+"""
+    constant(aff::GenericAffExpr{C, V})::C
+
+Return the constant of the affine expression.
+"""
 constant(aff::GenericAffExpr) = aff.constant
 
 # Iterator protocol - iterates over tuples (aᵢ,xᵢ)
