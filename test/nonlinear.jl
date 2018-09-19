@@ -11,8 +11,12 @@
 # Test general nonlinear
 #############################################################################
 using JuMP, Compat.Test
+
 # If solvers not loaded, load them (i.e running just these tests)
-!isdefined(:nlp_solvers) && include("solvers.jl")
+if ((VERSION >= v"0.7-" && !(@isdefined nlp_solvers)) ||
+    (VERSION < v"0.7-" && !isdefined(:nlp_solvers)))
+    include("solvers.jl")
+end
 
 mutable struct DummyNLPSolver <: MathProgBase.AbstractMathProgSolver
 end
