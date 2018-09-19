@@ -15,7 +15,10 @@ using JuMP, Compat.Test
 using OffsetArrays
 
 # If solvers not loaded, load them (i.e running just these tests)
-!isdefined(:lp_solvers) && include("solvers.jl")
+if ((VERSION >= v"0.7-" && !(@isdefined lp_solvers)) ||
+    (VERSION < v"0.7-" && !isdefined(:lp_solvers)))
+    include("solvers.jl")
+end
 
 # To ensure the tests work on Windows and Linux/OSX, we need
 # to use the correct comparison operators

@@ -1,6 +1,10 @@
 using JuMP, Compat.Test
 
-!isdefined(:sdp_solvers) && include("solvers.jl")
+# If solvers not loaded, load them (i.e running just these tests)
+if ((VERSION >= v"0.7-" && !(@isdefined sdp_solvers)) ||
+    (VERSION < v"0.7-" && !isdefined(:sdp_solvers)))
+    include("solvers.jl")
+end
 
 const TOL = 1e-4
 
