@@ -41,13 +41,30 @@ function reshape(vectorized_form::Vector{T}, shape::SquareMatrixShape) where T
                         shape.side_dimension)
 end
 
-# * If `eltype(Q)` is `AbstractVariableRef`:
-#   Used by the @variable macro. It can also be used with the @constraint macro,
-#   this allows to get the constraint reference, e.g.
-#   @variable model x[1:2,1:2] Symmetric # x is Symmetric{VariableRef,Matrix{VariableRef}}
-#   varpsd = @constraint model x in PSDCone()
-# * Otherwise:
-#   @constraint(model, Symmetric(x) in PSDCone())
+"""
+    function build_constraint(_error::Function, Q::Symmetric{V, M},
+                              ::PSDCone) where {V <: AbstractJuMPScalar,
+                                                M <: AbstractMatrix{V}}
+
+Return a `VectorConstraint` of shape [`SymmetricMatrixShape`](@ref) constraining
+the matrix `Q` to be positive semidefinite.
+
+This function is used by the [`@variable`](@ref) macro to create a symmetric
+semidefinite matrix of variables and by the [`@constraint`](@ref) macros as
+follows:
+```julia
+@constraint(model, Symmetric(Q) in PSDCone())
+```
+The form above is usually used when the entries of `Q` are affine or quadratic
+expressions but it can also be used when the entries are variables to get the
+reference of the semidefinite constraint, e.g.,
+```julia
+@variable model Q[1:2,1:2] Symmetric
+# The type of `Q` is `Symmetric{VariableRef, Matrix{VariableRef}}`
+var_psd = @constraint model Q in PSDCone()
+# The `var_psd` variable contains a reference to the constraint
+```
+"""
 function build_constraint(_error::Function, Q::Symmetric{V, M},
                           ::PSDCone) where {V <: AbstractJuMPScalar,
                                             M <: AbstractMatrix{V}}
@@ -56,11 +73,31 @@ function build_constraint(_error::Function, Q::Symmetric{V, M},
                      MOI.PositiveSemidefiniteConeTriangle(n),
                      SymmetricMatrixShape(n))
 end
-# * If `eltype(Q)` is `AbstractVariableRef`:
-#   @variable model x[1:2,1:2] # x is Matrix{VariableRef}
-#   varpsd = @constraint model x in PSDCone()
-# * Otherwise:
-#   @SDconstraint(model, x ⪰ y) or @constraint(model, x in PSDCone())
+
+"""
+    function build_constraint(_error::Function,
+                              Q::AbstractMatrix{<:AbstractJuMPScalar},
+                              ::PSDCone)
+
+Return a `VectorConstraint` of shape [`SquareMatrixShape`](@ref) constraining
+the matrix `Q` to be symmetric and positive semidefinite.
+
+This function is used by the [`@constraint`](@ref) and [`@SDconstraint`](@ref)
+macros as follows:
+```julia
+@constraint(model, Q in PSDCone())
+@SDconstraint(model, P ⪰ Q)
+```
+The [`@constraint`](@ref) call above is usually used when the entries of `Q` are
+affine or quadratic expressions but it can also be used when the entries are
+variables to get the reference of the semidefinite constraint, e.g.,
+```julia
+@variable model Q[1:2,1:2]
+# The type of `Q` is `Matrix{VariableRef}`
+var_psd = @constraint model Q in PSDCone()
+# The `var_psd` variable contains a reference to the constraint
+```
+"""
 function build_constraint(_error::Function,
                           Q::AbstractMatrix{<:AbstractJuMPScalar},
                           ::PSDCone)
