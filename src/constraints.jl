@@ -61,13 +61,13 @@ dual_shape(shape::AbstractShape) = shape
 """
     reshape(vectorized_form::Vector, shape::AbstractShape)
 
-Return an object in it original shape `shape` given its vectorized form
+Return an object in its original shape `shape` given its vectorized form
 `vectorized_form`.
 
 ## Examples
 
 Given a [`SymmetricMatrixShape`](@ref) of vectorized form `[1, 2, 3]`, the
-following code retrieve the matrix `Symmetric(Matrix[1 2; 2 3])`:
+following code returns the matrix `Symmetric(Matrix[1 2; 2 3])`:
 ```julia
 reshape([1, 2, 3], SymmetricMatrixShape(2))
 ```
