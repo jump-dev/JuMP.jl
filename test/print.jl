@@ -524,7 +524,7 @@ end
      & y_{3,3}\\\\
     \\end{alignat*}
     """)
-    # end
+    end
 
     @testset "expressions" begin
         # Most of the expression logic is well covered by test/operator.jl
