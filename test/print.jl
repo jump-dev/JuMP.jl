@@ -29,7 +29,8 @@ end
 mutable struct NoMetaContainer{T,N} <: JuMP.JuMPContainer{T,N}
 end
 
-@testset "Printing" begin
+# TODO the outer macro has been removed to investigate a mysterious segfault
+# @testset "Printing" begin
     @testset "JuMPContainer with no field meta" begin
         @test_throws ErrorException JuMP.metadata(NoMetaContainer{Float64,2}())
     end
@@ -682,4 +683,4 @@ end
         io_test(REPLMode, m2.objDict[:x], "x[i] $ge 0 $for_all i $inset {a,b}")
         io_test(REPLMode, n2.objDict[:x], "x[i] $ge 0 $for_all i $inset {a,b}")
     end
-end
+# end
