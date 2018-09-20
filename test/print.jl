@@ -370,6 +370,7 @@ end
         @constraint(mod_1, a*b <= 2)
         println("!!!!!!!!!!!! GOT HERE !!!!!!!!!!!!  ", @__LINE__)
         addSOS1(mod_1, [i*sos[i] for i in 1:3])
+        println("!!!!!!!!!!!! GOT HERE !!!!!!!!!!!!  ", @__LINE__)
         @constraint(mod_1, norm(sos) + a <= 1)
         println("!!!!!!!!!!!! GOT HERE !!!!!!!!!!!!  ", @__LINE__)
 
