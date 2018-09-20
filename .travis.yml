@@ -19,12 +19,12 @@ addons:
         - libglpk-dev
 script:
     - if [[ -a .git/shallow ]]; then git fetch --unshallow; fi
-    - julia -e 'using Pkg; Pkg.clone(pwd())'
-    - julia -e 'using Pkg; Pkg.test("JuMP", coverage=true)'
-    - julia -e 'using Pkg; Pkg.add("Compat")' # needed by hygiene.jl
+    - julia -e 'import Pkg; Pkg.clone(pwd())'
+    - julia -e 'import Pkg; Pkg.test("JuMP", coverage=true)'
+    - julia -e 'import Pkg; Pkg.add("Compat")' # needed by hygiene.jl
     - julia test/hygiene.jl
-    - julia -e 'using Pkg; Pkg.add("Ipopt")' # needed for below tests
+    - julia -e 'import Pkg; Pkg.add("Ipopt")' # needed for below tests
     - julia test/hockschittkowski/runhs.jl
 after_success:
     - echo $TRAVIS_JULIA_VERSION
-    - julia -e 'using Pkg; Pkg.add("Coverage"); cd(Pkg.dir("JuMP")); using Coverage; Coveralls.submit(process_folder()); Codecov.submit(process_folder())'
+    - julia -e 'import Pkg; Pkg.add("Coverage"); cd(Pkg.dir("JuMP")); import Coverage; Coveralls.submit(process_folder()); Codecov.submit(process_folder())'
