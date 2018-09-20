@@ -1,6 +1,6 @@
-using JuMP, Compat.Test
+using JuMP, Compat.Test, Compat
 
-!isdefined(:sdp_solvers) && include("solvers.jl")
+!isdefined(Compat.@__MODULE__, :sdp_solvers) && include("solvers.jl")
 
 const TOL = 1e-4
 
