@@ -112,6 +112,13 @@ function value(a::GenericAffExpr{T, V}, map::Function) where {T, V}
     ret
 end
 
+"""
+    constant(aff::GenericAffExpr{C, V})::C
+
+Return the constant of the affine expression.
+"""
+constant(aff::GenericAffExpr) = aff.constant
+
 # Iterator protocol - iterates over tuples (aᵢ,xᵢ)
 struct LinearTermIterator{GAE<:GenericAffExpr}
     aff::GAE
@@ -243,6 +250,7 @@ function MOI.ScalarAffineFunction(a::AffExpr)
     terms = map(t -> MOI.ScalarAffineTerm(t[1], index(t[2])), linear_terms(a))
     return MOI.ScalarAffineFunction(terms, a.constant)
 end
+moi_function(a::GenericAffExpr) = MOI.ScalarAffineFunction(a)
 
 function AffExpr(m::Model, f::MOI.ScalarAffineFunction)
     aff = AffExpr()
@@ -251,6 +259,12 @@ function AffExpr(m::Model, f::MOI.ScalarAffineFunction)
     end
     aff.constant = f.constant
     return aff
+end
+function jump_function(model::AbstractModel, f::MOI.ScalarAffineFunction)
+    return AffExpr(model, f)
+end
+function jump_function(model::AbstractModel, f::MOI.VectorAffineFunction)
+    return map(f -> AffExpr(model, f), MOIU.eachscalar(f))
 end
 
 """
@@ -279,6 +293,7 @@ function MOI.VectorAffineFunction(affs::Vector{AffExpr})
     end
     MOI.VectorAffineFunction(terms, constant)
 end
+moi_function(a::Vector{<:GenericAffExpr}) = MOI.VectorAffineFunction(a)
 
 function set_objective(m::Model, sense::Symbol, a::AffExpr)
     if sense == :Min
@@ -315,49 +330,6 @@ function Base.copy(a::GenericAffExpr, new_model::Model)
     return result
 end
 
-struct AffExprConstraint{V <: AbstractVariableRef,
-                         S <: MOI.AbstractScalarSet} <: AbstractConstraint
-    func::GenericAffExpr{Float64, V}
-    set::S
-end
-
-moi_function_and_set(c::AffExprConstraint) = (MOI.ScalarAffineFunction(c.func), c.set)
-shape(::AffExprConstraint) = ScalarShape()
-
 # TODO: Find somewhere to put this error message.
 #add_constraint(m::Model, c::Array{AffExprConstraint}) =
 #    error("The operators <=, >=, and == can only be used to specify scalar constraints. If you are trying to add a vectorized constraint, use the element-wise dot comparison operators (.<=, .>=, or .==) instead")
-
-struct VectorAffExprConstraint{V <: AbstractVariableRef,
-                               S <: MOI.AbstractVectorSet,
-                               Shape <: AbstractShape} <: AbstractConstraint
-    func::Vector{GenericAffExpr{Float64, V}}
-    set::S
-    shape::Shape
-end
-function VectorAffExprConstraint(func::Vector{GenericAffExpr{Float64, V}},
-                                     set::MOI.AbstractVectorSet) where V <: AbstractVariableRef
-    VectorAffExprConstraint(func, set, VectorShape())
-end
-
-
-moi_function_and_set(c::VectorAffExprConstraint) = (MOI.VectorAffineFunction(c.func), c.set)
-shape(c::VectorAffExprConstraint) = c.shape
-
-function constraint_object(ref::ConstraintRef{Model, MOICON{FuncType, SetType}}) where
-        {FuncType <: MOI.ScalarAffineFunction, SetType <: MOI.AbstractScalarSet}
-    model = ref.m
-    f = MOI.get(model, MOI.ConstraintFunction(), ref)::FuncType
-    s = MOI.get(model, MOI.ConstraintSet(), ref)::SetType
-    return AffExprConstraint(AffExpr(model, f), s)
-end
-
-function constraint_object(ref::ConstraintRef{Model, MOICON{FuncType, SetType}}) where
-        {FuncType <: MOI.VectorAffineFunction, SetType <: MOI.AbstractVectorSet}
-    model = ref.m
-    f = MOI.get(model, MOI.ConstraintFunction(), ref)::MOI.VectorAffineFunction
-    s = MOI.get(model, MOI.ConstraintSet(), ref)::SetType
-    return VectorAffExprConstraint(map(f -> AffExpr(model, f),
-                                       MOIU.eachscalar(f)),
-                                   s, ref.shape)
-end
