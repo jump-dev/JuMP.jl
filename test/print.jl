@@ -338,20 +338,23 @@ end
     end
 
 
-    # TODO this test has been deleted to investigate a mysterious segfault
-    #= @testset "Model" begin
+    # TODO all these silly print statements are in an attempt to find a mysterious segfault
+    @testset "Model" begin
         le, ge, eq, fa = repl[:leq], repl[:geq], repl[:eq], repl[:for_all]
         inset, dots = repl[:in], repl[:dots]
         infty, union = repl[:infty], repl[:union]
         Vert, sub2 = repl[:Vert], repl[:sub2]
+        println("!!!!!!!!!!!! GOT HERE !!!!!!!!!!!!  ", @__LINE__)
 
         #------------------------------------------------------------------
 
         mod_1 = Model()
         @variable(mod_1, a>=1)
+        println("!!!!!!!!!!!! GOT HERE !!!!!!!!!!!!  ", @__LINE__)
         @variable(mod_1, b<=1)
         @variable(mod_1, -1<=c<=1)
         @variable(mod_1, a1>=1,Int)
+        println("!!!!!!!!!!!! GOT HERE !!!!!!!!!!!!  ", @__LINE__)
         @variable(mod_1, b1<=1,Int)
         @variable(mod_1, -1<=c1<=1,Int)
         @variable(mod_1, x, Bin)
@@ -361,11 +364,14 @@ end
         @variable(mod_1, 2 <= si <= 3, SemiInt)
         @variable(mod_1, 2 <= sc <= 3, SemiCont)
         @variable(mod_1, fi == 9)
+        println("!!!!!!!!!!!! GOT HERE !!!!!!!!!!!!  ", @__LINE__)
         @objective(mod_1, Max, a - b + 2a1 - 10x)
         @constraint(mod_1, a + b - 10c - 2x + c1 <= 1)
         @constraint(mod_1, a*b <= 2)
+        println("!!!!!!!!!!!! GOT HERE !!!!!!!!!!!!  ", @__LINE__)
         addSOS1(mod_1, [i*sos[i] for i in 1:3])
         @constraint(mod_1, norm(sos) + a <= 1)
+        println("!!!!!!!!!!!! GOT HERE !!!!!!!!!!!!  ", @__LINE__)
 
         io_test(REPLMode, mod_1, """
     Max a - b + 2 a1 - 10 x
@@ -389,6 +395,7 @@ end
      fi = 9
     """, repl=:print)
 
+        println("!!!!!!!!!!!! GOT HERE !!!!!!!!!!!!  ", @__LINE__)
         io_test(REPLMode, mod_1, """
     Maximization problem with:
      * 1 linear constraint
@@ -398,6 +405,7 @@ end
      * 15 variables: 4 binary, 4 integer, 1 semicontinuous, 1 semi-integer
     Solver is default solver""", repl=:show)
 
+        println("!!!!!!!!!!!! GOT HERE !!!!!!!!!!!!  ", @__LINE__)
         io_test(IJuliaMode, mod_1, """
     \\begin{alignat*}{1}\\max\\quad & a - b + 2 a1 - 10 x\\\\
     \\text{Subject to} \\quad & a + b - 10 c - 2 x + c1 \\leq 1\\\\
@@ -422,11 +430,13 @@ end
 
         #------------------------------------------------------------------
 
+        println("!!!!!!!!!!!! GOT HERE !!!!!!!!!!!!  ", @__LINE__)
         mod_2 = Model()
         @variable(mod_2, x, Bin)
         @variable(mod_2, y, Int)
         @constraint(mod_2, x*y <= 1)
 
+        println("!!!!!!!!!!!! GOT HERE !!!!!!!!!!!!  ", @__LINE__)
         io_test(REPLMode, mod_2, """
     Feasibility problem with:
      * 0 linear constraints
@@ -447,6 +457,7 @@ end
         #------------------------------------------------------------------
 
         mod_3 = Model()
+        println("!!!!!!!!!!!! GOT HERE !!!!!!!!!!!!  ", @__LINE__)
 
         @variable(mod_3, y[1:5])
         @NLparameter(mod_3, p == 10)
@@ -454,11 +465,13 @@ end
         @NLconstraint(mod_3, y[1]*y[2] == 1)
         @NLconstraint(mod_3, y[3]*y[4] == 1)
         @NLconstraint(mod_3, y[5]*y[1] - ex == 1)
+        println("!!!!!!!!!!!! GOT HERE !!!!!!!!!!!!  ", @__LINE__)
 
         @NLobjective(mod_3, Min, y[1]*y[3] - p)
 
         io_test(REPLMode, p, "\"Reference to nonlinear parameter #1\"")
         io_test(REPLMode, ex, "\"Reference to nonlinear expression #1\"")
+        println("!!!!!!!!!!!! GOT HERE !!!!!!!!!!!!  ", @__LINE__)
 
         io_test(REPLMode, mod_3, """
     Min y[1] * y[3] - parameter[1]
@@ -484,7 +497,7 @@ end
     subexpression_{1} = \\quad &y_{2}\\\\
     \\end{alignat*}
     """, repl=:print)
-    end =#
+    end
 
     @testset "changing variable categories" begin
         le, ge, fa = repl[:leq], repl[:geq], repl[:for_all]
