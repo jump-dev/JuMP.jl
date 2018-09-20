@@ -93,7 +93,9 @@ end
         q3 = 2 * x * x + 1 * y * y + z + 3
         @test string(q3) == "2 x² + y² + z + 3"
 
+        prinltn("!!!!!!!!!!!!!!!! GOT HERE !!!!!!!!!!!!!!!! ", @__LINE__)
         nrm = norm([w,1-w])
+        prinltn("!!!!!!!!!!!!!!!! GOT HERE !!!!!!!!!!!!!!!! ", @__LINE__)
         @test string(nrm) == "$Vert[w,-w + 1]$Vert$sub2"
         socexpr = 1.5*nrm - 2 - w
         @test string(socexpr) == "1.5 $Vert[w,-w + 1]$Vert$sub2 - w - 2"
