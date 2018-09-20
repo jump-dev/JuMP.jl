@@ -338,8 +338,8 @@ end
     end
 
 
-    # TODO the containing macro has been deleted to investigate a mysterious segfault
-    # @testset "Model" begin
+    # TODO this test has been deleted to investigate a mysterious segfault
+    #= @testset "Model" begin
         le, ge, eq, fa = repl[:leq], repl[:geq], repl[:eq], repl[:for_all]
         inset, dots = repl[:in], repl[:dots]
         infty, union = repl[:infty], repl[:union]
@@ -484,7 +484,7 @@ end
     subexpression_{1} = \\quad &y_{2}\\\\
     \\end{alignat*}
     """, repl=:print)
-    # end
+    end =#
 
     @testset "changing variable categories" begin
         le, ge, fa = repl[:leq], repl[:geq], repl[:for_all]
