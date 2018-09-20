@@ -15,7 +15,7 @@ using JuMP, Compat.Test, Compat
 using OffsetArrays
 
 # If solvers not loaded, load them (i.e running just these tests)
-!isdefined(Compat.@__MODULE__, :lp_solvers) && include("solvers.jl")
+!isdefined(@__MODULE__, :lp_solvers) && include("solvers.jl")
 
 # To ensure the tests work on Windows and Linux/OSX, we need
 # to use the correct comparison operators

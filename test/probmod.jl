@@ -13,7 +13,7 @@
 #############################################################################
 using JuMP, Compat.Test, Compat
 # If solvers not loaded, load them (i.e running just these tests)
-!isdefined(Compat.@__MODULE__, :lp_solvers) && include("solvers.jl")
+!isdefined(@__MODULE__, :lp_solvers) && include("solvers.jl")
 
 const TOL = 1e-4
 

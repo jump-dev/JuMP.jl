@@ -13,7 +13,7 @@
 using JuMP, Compat.Test, Compat
 using MathProgBase
 
-!isdefined(Compat.@__MODULE__, :lp_solvers) && include("solvers.jl")
+!isdefined(@__MODULE__, :lp_solvers) && include("solvers.jl")
 
 @testset "Callbacks" begin
 
