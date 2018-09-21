@@ -363,11 +363,9 @@ end
         @constraint(mod_1, a + b - 10c - 2x + c1 <= 1)
         @constraint(mod_1, a*b <= 2)
         addSOS1(mod_1, [i*sos[i] for i in 1:3])
-        # TODO the below constraint appears to be triggering a segfault
-        # associated tests are commented out for the time being
-        # @constraint(mod_1, norm(sos) + a <= 1)
+        @constraint(mod_1, norm(sos) + a <= 1)
 
-        #=io_test(REPLMode, mod_1, """
+        io_test(REPLMode, mod_1, """
     Max a - b + 2 a1 - 10 x
     Subject to
      a + b - 10 c - 2 x + c1 $le 1
@@ -387,18 +385,18 @@ end
      si $inset {2,$dots,3} $union {0}
      sc $inset [2,3] $union {0}
      fi = 9
-    """, repl=:print)=#
+    """, repl=:print)
 
-        #=io_test(REPLMode, mod_1, """
+        io_test(REPLMode, mod_1, """
     Maximization problem with:
      * 1 linear constraint
      * 1 quadratic constraint
      * 1 SOS constraint
      * 1 SOC constraint
      * 15 variables: 4 binary, 4 integer, 1 semicontinuous, 1 semi-integer
-    Solver is default solver""", repl=:show)=#
+    Solver is default solver""", repl=:show)
 
-        #=io_test(IJuliaMode, mod_1, """
+        io_test(IJuliaMode, mod_1, """
     \\begin{alignat*}{1}\\max\\quad & a - b + 2 a1 - 10 x\\\\
     \\text{Subject to} \\quad & a + b - 10 c - 2 x + c1 \\leq 1\\\\
      & a\\times b - 2 \\leq 0\\\\
@@ -418,7 +416,7 @@ end
      & sc \\in \\[2,3\\] \\cup \\{0\\}\\\\
      & fi = 9\\\\
     \\end{alignat*}
-    """)=#
+    """)
 
         #------------------------------------------------------------------
 
