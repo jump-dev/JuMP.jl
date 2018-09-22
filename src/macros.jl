@@ -12,7 +12,7 @@ function error_curly(x)
     Base.error("The curly syntax (sum{},prod{},norm2{}) is no longer supported. Expression: $x.")
 end
 
-include("parseexpr.jl")
+include("parse_expr.jl")
 
 function buildrefsets(expr::Expr, cname)
     c = copy(expr)

@@ -23,7 +23,7 @@ function set_objective(m::Model, sense::Symbol, ex::NonlinearExprData)
     return
 end
 
-include("parsenlp.jl")
+include("parse_nlp.jl")
 
 # GenericRangeConstraint
 # l ≤ ∑ aᵢ xᵢ ≤ u

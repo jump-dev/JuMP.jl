@@ -7,7 +7,7 @@
 # An algebraic modeling language for Julia
 # See http://github.com/JuliaOpt/JuMP.jl
 #############################################################################
-# src/affexpr.jl
+# src/aff_expr.jl
 # Defines all types relating to affine expressions
 # - GenericAffExpr              ∑ aᵢ xᵢ  +  c
 #   - AffExpr                   Alias for (Float64, VariableRef)
