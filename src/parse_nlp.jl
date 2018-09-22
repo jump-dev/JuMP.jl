@@ -161,7 +161,10 @@ function parseNLExpr_runtime(m::Model, x::Number, tape, parent, values)
 end
 
 function parseNLExpr_runtime(m::Model, x::VariableRef, tape, parent, values)
-    x.m === m || error("Variable in nonlinear expression does not belong to corresponding model")
+    if owner_model(x) !== m
+        error("Variable in nonlinear expression does not belong to the " *
+              "corresponding model")
+    end
     push!(tape, NodeData(MOIVARIABLE, x.index.value, parent))
     nothing
 end
@@ -259,7 +262,7 @@ function checkexpr(m::Model, ex::Expr)
     return
 end
 function checkexpr(m::Model, v::VariableRef)
-    v.m === m || error("Variable $v does not belong to this model")
+    owner_model(v) === m || error("Variable $v does not belong to this model.")
     return
 end
 checkexpr(m::Model, ex) = nothing

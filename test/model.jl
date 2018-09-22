@@ -154,13 +154,13 @@ function dummy_optimizer_hook(::JuMP.AbstractModel) end
                         @test new_model.optimize_hook === dummy_optimizer_hook
                         @test new_model.ext[:dummy].model === new_model
                         x_new = reference_map[x]
-                        @test x_new.m === new_model
+                        @test JuMP.owner_model(x_new) === new_model
                         @test JuMP.name(x_new) == "x"
                         y_new = reference_map[y]
-                        @test y_new.m === new_model
+                        @test JuMP.owner_model(y_new) === new_model
                         @test JuMP.name(y_new) == "y"
                         z_new = reference_map[z]
-                        @test z_new.m === new_model
+                        @test JuMP.owner_model(z_new) === new_model
                         @test JuMP.name(z_new) == "z"
                         if copy_model
                             @test JuMP.LowerBoundRef(x_new) == reference_map[JuMP.LowerBoundRef(x)]
