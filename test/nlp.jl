@@ -422,5 +422,26 @@
         @test isapprox(jac_values, [1.0, 0.0, 1.0, 3.0])
     end
 
+    @testset "set_NL_objective and add_NL_constraint" begin
+        model = Model()
+        @variable(model, x)
+        @variable(model, y)
+        JuMP.set_NL_objective(model, :Min, :($x^2 + $y^2))
+        JuMP.add_NL_constraint(model, :($x + $y <= 1))
+        JuMP.add_NL_constraint(model, :($x + $y >= 1))
+        JuMP.add_NL_constraint(model, :($x + $y == 1))
+        JuMP.add_NL_constraint(model, :(0 <= $x + $y <= 1))
+
+        d = JuMP.NLPEvaluator(model)
+        MOI.initialize(d, [:ExprGraph])
+        xidx = x.index
+        yidx = y.index
+        @test MOI.objective_expr(d) == :(x[$xidx]^2.0 + x[$yidx]^2.0)
+        @test MOI.constraint_expr(d,1) == :((x[$xidx] + x[$yidx]) - 1.0 <= 0.0)
+        @test MOI.constraint_expr(d,2) == :((x[$xidx] + x[$yidx]) - 1.0 >= 0.0)
+        @test MOI.constraint_expr(d,3) == :((x[$xidx] + x[$yidx]) - 1.0 == 0.0)
+        @test MOI.constraint_expr(d,4) == :(0.0 <= x[$xidx] + x[$yidx] <= 1.0)
+    end
+
 
 end
