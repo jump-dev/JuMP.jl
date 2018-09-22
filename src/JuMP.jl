@@ -477,14 +477,14 @@ end
 
 ###############################################################################
 # GenericAffineExpression, AffExpr, AffExprConstraint
-include("affexpr.jl")
+include("aff_expr.jl")
 
 
 
 ###############################################################################
 # GenericQuadExpr, QuadExpr
 # GenericQuadConstraint, QuadConstraint
-include("quadexpr.jl")
+include("quad_expr.jl")
 
 ##########################################################################
 # SOSConstraint  (special ordered set constraints)
@@ -593,7 +593,7 @@ include("copy.jl")
 include("containers.jl")
 include("operators.jl")
 include("macros.jl")
-include("optimizerinterface.jl")
+include("optimizer_interface.jl")
 include("nlp.jl")
 include("print.jl")
 

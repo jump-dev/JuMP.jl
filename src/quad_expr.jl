@@ -7,7 +7,7 @@
 # An algebraic modeling language for Julia
 # See http://github.com/JuliaOpt/JuMP.jl
 #############################################################################
-# src/quadexpr.jl
+# src/quad_expr.jl
 # Defines all types relating to expressions with a quadratic and affine part
 # - GenericQuadExpr             ∑qᵢⱼ xᵢⱼ  +  ∑ aᵢ xᵢ  +  c
 #   - QuadExpr                  Alias for (Float64, VariableRef)
