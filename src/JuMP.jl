@@ -415,11 +415,12 @@ Base.copy(x::Nothing, new_model::Model) = nothing
 Base.copy(v::AbstractArray{VariableRef}, new_model::Model) = (var -> VariableRef(new_model, var.index)).(v)
 
 function optimizer_index(v::VariableRef)
-    if mode(v.m) == Direct
+    model = owner_model(v)
+    if mode(model) == Direct
         return index(v)
     else
-        @assert caching_optimizer(v.m).state == MOIU.AttachedOptimizer
-        return caching_optimizer(v.m).model_to_optimizer_map[index(v)]
+        @assert caching_optimizer(model).state == MOIU.AttachedOptimizer
+        return caching_optimizer(model).model_to_optimizer_map[index(v)]
     end
 end
 
@@ -457,21 +458,21 @@ Return the value of the attribute `attr` from model's MOI backend.
 """
 MOI.get(m::Model, attr::MOI.AbstractModelAttribute) = MOI.get(m.moi_backend, attr)
 function MOI.get(m::Model, attr::MOI.AbstractVariableAttribute, v::VariableRef)
-    @assert m === v.m
+    @assert m === owner_model(v) # TODO: Improve the error message.
     MOI.get(m.moi_backend, attr, index(v))
 end
 function MOI.get(m::Model, attr::MOI.AbstractConstraintAttribute, cr::ConstraintRef)
-    @assert m === cr.m
+    @assert m === cr.m # TODO: Improve the error message.
     MOI.get(m.moi_backend, attr, index(cr))
 end
 
 MOI.set(m::Model, attr::MOI.AbstractModelAttribute, value) = MOI.set(m.moi_backend, attr, value)
 function MOI.set(m::Model, attr::MOI.AbstractVariableAttribute, v::VariableRef, value)
-    @assert m === v.m
+    @assert m === owner_model(v) # TODO: Improve the error message.
     MOI.set(m.moi_backend, attr, index(v), value)
 end
 function MOI.set(m::Model, attr::MOI.AbstractConstraintAttribute, cr::ConstraintRef, value)
-    @assert m === cr.m
+    @assert m === cr.m # TODO: Improve the error message.
     MOI.set(m.moi_backend, attr, index(cr), value)
 end
 
