@@ -1514,8 +1514,8 @@ end
 """
     @NLparameter(model, param == value)
 
-Creates and returns a nonlinear parameter `param` attached to the model `model`
-with initial value set to `value`. Nonlinear paramters may be used only in
+Create and return a nonlinear parameter `param` attached to the model `model`
+with initial value set to `value`. Nonlinear parameters may be used only in
 nonlinear expressions.
 
 # Example
@@ -1530,7 +1530,7 @@ JuMP.value(x)
 
     @NLparameter(model, param_collection[...] == value_expr)
 
-Creates and returns a collection of nonlinear parameters `param_collection`
+Create and return a collection of nonlinear parameters `param_collection`
 attached to the model `model` with initial value set to `value_expr` (may
 depend on index sets).
 Uses the same syntax for specifying index sets as [`@variable`](@ref).

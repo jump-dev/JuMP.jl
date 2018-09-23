@@ -102,7 +102,7 @@ end
 """
     value(p::NonlinearParameter)
 
-Returns the current value stored in the nonlinear parameter `p`.
+Return the current value stored in the nonlinear parameter `p`.
 
 # Example
 ```jldoctest
@@ -119,7 +119,7 @@ value(p::NonlinearParameter) = p.m.nlp_data.nlparamvalues[p.index]::Float64
 """
     set_value(p::NonlinearParameter, v::Number)
 
-Stores the value `v` in the nonlinear parameter `p`.
+Store the value `v` in the nonlinear parameter `p`.
 
 # Example
 ```jldoctest
