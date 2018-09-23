@@ -102,7 +102,7 @@ end
 
 # owner_model should be implemented by all `AbstractVariableRef`.
 """
-    owner_model(v::VariableRef)
+    owner_model(v::AbstractVariableRef)
 
 Returns the model to which `v` belongs.
 
@@ -115,6 +115,8 @@ julia> x = @variable(model)
 julia> JuMP.owner_model(x) === model
 true
 """
+function owner_model end
+
 owner_model(v::VariableRef) = v.model
 
 Base.iszero(::VariableRef) = false
