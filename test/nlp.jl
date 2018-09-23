@@ -96,7 +96,7 @@
                                 NonlinearExprData(m, :($ex + 1)))
     end
 
-    @testset "Parse subexpressions" begin
+    @testset "Parse parameters" begin
         m = Model()
         @NLparameter(m, param == 10)
         @test expressions_equal(@JuMP.processNLExpr(m, param + 1),
@@ -348,6 +348,19 @@
         MOI.initialize(d, [:ExprGraph])
         xidx = x.index
         @test MOI.constraint_expr(d,1) == :(x[$xidx] - (0 + 1) <= 0.0)
+    end
+
+    @testset "NLparameter" begin
+        model = Model()
+        @NLparameter(model, p == 1.0)
+        @test JuMP.value(p) == 1.0
+    end
+
+    @testset "NLparameter set_value" begin
+        model = Model()
+        @NLparameter(model, p == 1.0)
+        JuMP.set_value(p, 10.0)
+        @test JuMP.value(p) == 10.0
     end
 
     # This covers the code that computes Hessians in odd chunks of Hess-vec

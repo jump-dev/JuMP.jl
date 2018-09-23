@@ -99,9 +99,42 @@ function newparameter(m::Model,value::Number)
     return NonlinearParameter(m, length(nldata.nlparamvalues))
 end
 
-getvalue(p::NonlinearParameter) = p.m.nlp_data.nlparamvalues[p.index]::Float64
+"""
+    value(p::NonlinearParameter)
 
-setvalue(p::NonlinearParameter,v::Number) = (p.m.nlp_data.nlparamvalues[p.index] = v)
+Return the current value stored in the nonlinear parameter `p`.
+
+# Example
+```jldoctest
+model = Model()
+@NLparameter(model, p == 10)
+JuMP.value(p)
+
+# output
+10.0
+```
+"""
+value(p::NonlinearParameter) = p.m.nlp_data.nlparamvalues[p.index]::Float64
+
+"""
+    set_value(p::NonlinearParameter, v::Number)
+
+Store the value `v` in the nonlinear parameter `p`.
+
+# Example
+```jldoctest
+model = Model()
+@NLparameter(model, p == 0)
+JuMP.set_value(p, 5)
+JuMP.value(p)
+
+# output
+5.0
+```
+"""
+function set_value(p::NonlinearParameter, v::Number)
+    p.m.nlp_data.nlparamvalues[p.index] = v
+end
 
 function NLPData()
     return NLPData(nothing, NonlinearConstraint[], NonlinearExprData[],
@@ -971,46 +1004,47 @@ function MOI.constraint_expr(d::NLPEvaluator,i::Integer)
     end
 end
 
+# TODO: This code hasn't been updated for MOI.
 # getvalue for nonlinear subexpressions
-getvalue(x::NonlinearExpression) = _getValue(x)
-function _getValue(x::NonlinearExpression)
-    m = x.m
-    # recompute EVERYTHING here
-    # could be smarter and cache
-
-    nldata::NLPData = m.nlp_data
-    subexpr = Array{Vector{NodeData}}(undef,0)
-    for nlexpr in nldata.nlexpr
-        push!(subexpr, nlexpr.nd)
-    end
-
-    this_subexpr = nldata.nlexpr[x.index]
-
-    max_len = length(this_subexpr.nd)
-
-    subexpression_order, individual_order = order_subexpressions(Vector{NodeData}[this_subexpr.nd],subexpr)
-
-    subexpr_values = Array{Float64}(undef,length(subexpr))
-
-    for k in subexpression_order
-        max_len = max(max_len, length(nldata.nlexpr[k].nd))
-    end
-
-    forward_storage = Array{Float64}(undef,max_len)
-    partials_storage = Array{Float64}(undef,max_len)
-    user_input_buffer = zeros(nldata.largest_user_input_dimension)
-    user_output_buffer = zeros(nldata.largest_user_input_dimension)
-
-    for k in subexpression_order # compute value of dependent subexpressions
-        ex = nldata.nlexpr[k]
-        adj = adjmat(ex.nd)
-        subexpr_values[k] = forward_eval(forward_storage,partials_storage,ex.nd,adj,ex.const_values,nldata.nlparamvalues,m.colVal,subexpr_values,user_input_buffer,user_output_buffer)
-    end
-
-    adj = adjmat(this_subexpr.nd)
-
-    return forward_eval(forward_storage,partials_storage,this_subexpr.nd,adj,this_subexpr.const_values,nldata.nlparamvalues,m.colVal,subexpr_values,user_input_buffer,user_output_buffer)
-end
+# getvalue(x::NonlinearExpression) = _getValue(x)
+# function _getValue(x::NonlinearExpression)
+#     m = x.m
+#     # recompute EVERYTHING here
+#     # could be smarter and cache
+#
+#     nldata::NLPData = m.nlp_data
+#     subexpr = Array{Vector{NodeData}}(undef,0)
+#     for nlexpr in nldata.nlexpr
+#         push!(subexpr, nlexpr.nd)
+#     end
+#
+#     this_subexpr = nldata.nlexpr[x.index]
+#
+#     max_len = length(this_subexpr.nd)
+#
+#     subexpression_order, individual_order = order_subexpressions(Vector{NodeData}[this_subexpr.nd],subexpr)
+#
+#     subexpr_values = Array{Float64}(undef,length(subexpr))
+#
+#     for k in subexpression_order
+#         max_len = max(max_len, length(nldata.nlexpr[k].nd))
+#     end
+#
+#     forward_storage = Array{Float64}(undef,max_len)
+#     partials_storage = Array{Float64}(undef,max_len)
+#     user_input_buffer = zeros(nldata.largest_user_input_dimension)
+#     user_output_buffer = zeros(nldata.largest_user_input_dimension)
+#
+#     for k in subexpression_order # compute value of dependent subexpressions
+#         ex = nldata.nlexpr[k]
+#         adj = adjmat(ex.nd)
+#         subexpr_values[k] = forward_eval(forward_storage,partials_storage,ex.nd,adj,ex.const_values,nldata.nlparamvalues,m.colVal,subexpr_values,user_input_buffer,user_output_buffer)
+#     end
+#
+#     adj = adjmat(this_subexpr.nd)
+#
+#     return forward_eval(forward_storage,partials_storage,this_subexpr.nd,adj,this_subexpr.const_values,nldata.nlparamvalues,m.colVal,subexpr_values,user_input_buffer,user_output_buffer)
+# end
 
 mutable struct UserFunctionEvaluator <: MOI.AbstractNLPEvaluator
     f
@@ -1036,6 +1070,7 @@ function UserAutoDiffEvaluator(dimension::Integer, f::Function, ::Type{T} = Floa
     return UserFunctionEvaluator(g, ∇f, dimension)
 end
 
+# TODO: Add a docstring.
 function register(m::Model, s::Symbol, dimension::Integer, f::Function; autodiff::Bool=false)
     autodiff == true || error("If only the function is provided, must set autodiff=true")
     initNLP(m)
@@ -1051,6 +1086,7 @@ function register(m::Model, s::Symbol, dimension::Integer, f::Function; autodiff
 
 end
 
+# TODO: Add a docstring.
 function register(m::Model, s::Symbol, dimension::Integer, f::Function, ∇f::Function; autodiff::Bool=false)
     initNLP(m)
     if dimension == 1
@@ -1066,17 +1102,20 @@ function register(m::Model, s::Symbol, dimension::Integer, f::Function, ∇f::Fu
 
 end
 
+# TODO: Add a docstring.
 function register(m::Model, s::Symbol, dimension::Integer, f::Function, ∇f::Function, ∇²f::Function)
     dimension == 1 || error("Providing hessians for multivariate functions is not yet supported")
     initNLP(m)
     Derivatives.register_univariate_operator!(m.nlp_data.user_operators, s, f, ∇f, ∇²f)
 end
 
+# TODO: Add a docstring.
 # Ex: set_NL_objective(model, :Min, :($x + $y^2))
 function set_NL_objective(model::Model, sense::Symbol, x)
     return set_objective(model, sense, NonlinearExprData(model, x))
 end
 
+# TODO: Add a docstring.
 # Ex: add_NL_constraint(m, :($x + $y^2 <= 1))
 function add_NL_constraint(model::Model, ex::Expr)
     initNLP(model)

@@ -1391,6 +1391,7 @@ end
 #     end
 # end
 
+# TODO: Add a docstring.
 macro NLobjective(m, sense, x)
     if sense == :Min || sense == :Max
         sense = Expr(:quote,sense)
@@ -1401,6 +1402,7 @@ macro NLobjective(m, sense, x)
     end)
 end
 
+# TODO: Add a docstring.
 macro NLconstraint(m, x, extra...)
     esc_m = esc(m)
     # Two formats:
@@ -1480,6 +1482,7 @@ macro NLconstraint(m, x, extra...)
     end)
 end
 
+# TODO: Add a docstring.
 macro NLexpression(args...)
     args, kwargs, requestedcontainer = extract_kwargs(args)
     if length(args) <= 1
@@ -1508,7 +1511,40 @@ macro NLexpression(args...)
     end)
 end
 
-# syntax is @NLparameter(m, p[i=1] == 2i)
+"""
+    @NLparameter(model, param == value)
+
+Create and return a nonlinear parameter `param` attached to the model `model`
+with initial value set to `value`. Nonlinear parameters may be used only in
+nonlinear expressions.
+
+# Example
+```jldoctest
+model = Model()
+@NLparameter(model, x == 10)
+JuMP.value(x)
+
+# output
+10.0
+```
+
+    @NLparameter(model, param_collection[...] == value_expr)
+
+Create and return a collection of nonlinear parameters `param_collection`
+attached to the model `model` with initial value set to `value_expr` (may
+depend on index sets).
+Uses the same syntax for specifying index sets as [`@variable`](@ref).
+
+# Example
+```jldoctest
+model = Model()
+@NLparameter(model, y[i = 1:10] == 2 * i)
+JuMP.value(y[9])
+
+# output
+18.0
+```
+"""
 macro NLparameter(m, ex, extra...)
 
     extra, kwargs, requestedcontainer = extract_kwargs(extra)
