@@ -273,11 +273,19 @@ var documenterSearchIndex = {"docs": [
 },
 
 {
+    "location": "variables.html#JuMP.owner_model",
+    "page": "Variables",
+    "title": "JuMP.owner_model",
+    "category": "function",
+    "text": "owner_model(v::AbstractVariableRef)\n\nReturns the model to which v belongs.\n\nExample\n\n```jldoctest julia> model = Model()\n\njulia> x = @variable(model)\n\njulia> JuMP.owner_model(x) === model true\n\n\n\n\n\n"
+},
+
+{
     "location": "variables.html#Reference-1",
     "page": "Variables",
     "title": "Reference",
     "category": "section",
-    "text": "@variable"
+    "text": "@variable\nowner_model"
 },
 
 {
