@@ -77,7 +77,7 @@ less-than-or-equal-to constraint using `<=`, but we can also create equality
 constraints using `==` and greater-than-or-equal-to constraints with `>=`:
 ```jldoctest quickstart_example; filter=r"≤|<="
 julia> @constraint(model, con, 1x + 5y <= 3)
-x + 5 y <= 3.0
+con : x + 5 y <= 3.0
 ```
 Note that in a similar manner to the `@variable` macro, we have named the
 constraint `con`. This will bind the constraint to the Julia variable `con` for
