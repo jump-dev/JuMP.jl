@@ -1072,13 +1072,16 @@ function register(m::Model, s::Symbol, dimension::Integer, f::Function, ∇f::Fu
     Derivatives.register_univariate_operator!(m.nlp_data.user_operators, s, f, ∇f, ∇²f)
 end
 
-# Ex: setNLobjective(m, :Min, :($x + $y^2))
-setNLobjective(m::Model, sense::Symbol, x) = set_objective(m, sense, NonlinearExprData(m, x))
+# Ex: set_NL_objective(model, :Min, :($x + $y^2))
+function set_NL_objective(model::Model, sense::Symbol, x)
+    return set_objective(model, sense, NonlinearExprData(model, x))
+end
 
-# Ex: addNLconstraint(m, :($x + $y^2 <= 1))
-function addNLconstraint(m::Model, ex::Expr)
-    initNLP(m)
-    if isexpr(ex, :call) # one-sided constraint
+# Ex: add_NL_constraint(m, :($x + $y^2 <= 1))
+function add_NL_constraint(model::Model, ex::Expr)
+    initNLP(model)
+    nl_constraints = model.nlp_data.nlconstr
+    if isexpr(ex, :call) # One-sided constraint.
         # Simple comparison - move everything to the LHS
         op = ex.args[1]
         if op == :(==)
@@ -1091,31 +1094,39 @@ function addNLconstraint(m::Model, ex::Expr)
             lb = 0.0
             ub = Inf
         else
-            error("in addNLconstraint ($ex): expected comparison operator (<=, >=, or ==).")
+            error("In expression ($ex): expected comparison operator (<=, >=," *
+                  " or ==).")
         end
         lhs = :($(ex.args[2]) - $(ex.args[3]))
-        c = NonlinearConstraint(NonlinearExprData(m, lhs), lb, ub)
-        push!(m.nlp_data.nlconstr, c)
-        return ConstraintRef(m, NonlinearConstraintIndex(length(m.nlp_data.nlconstr)))
+        c = NonlinearConstraint(NonlinearExprData(model, lhs), lb, ub)
+        push!(nl_constraints, c)
+        return ConstraintRef(model,
+                             NonlinearConstraintIndex(length(nl_constraints)),
+                             ScalarShape())
     elseif isexpr(ex, :comparison)
         # ranged row
-        if (ex.args[2] != :<= && ex.args[2] != :≤) || (ex.args[4] != :<= && ex.args[4] != :≤)
-            error("in addNLconstraint ($ex): only ranged rows of the form lb <= expr <= ub are supported.")
+        if (ex.args[2] != :<= && ex.args[2] != :≤) ||
+            (ex.args[4] != :<= && ex.args[4] != :≤)
+            error("In expression ($ex): only ranged rows of the form lb <= " *
+                  "expr <= ub are supported.")
         end
         lb = ex.args[1]
         ub = ex.args[5]
-        if !isa(lb,Number)
-            error(string("in addNLconstraint (",ex,"): expected ",lb," to be a number."))
-        elseif !isa(ub,Number)
-            error(string("in addNLconstraint (",ex,"): expected ",ub," to be a number."))
+        if !isa(lb, Number)
+            error(string("In (", ex,"): expected ", lb," to be a number."))
+        elseif !isa(ub, Number)
+            error(string("In (", ex,"): expected ", ub," to be a number."))
         end
-        c = NonlinearConstraint(NonlinearExprData(m, ex.args[3]), lb, ub)
-        push!(m.nlp_data.nlconstr, c)
-        return ConstraintRef(m, NonlinearConstraintIndex(length(m.nlp_data.nlconstr)))
+        c = NonlinearConstraint(NonlinearExprData(model, ex.args[3]), lb, ub)
+        push!(nl_constraints, c)
+        return ConstraintRef(model,
+                             NonlinearConstraintIndex(length(nl_constraints)),
+                             ScalarShape())
     else
         # Unknown
-        error("in addNLconstraint ($ex): constraints must be in one of the following forms:\n" *
-              "       expr1 <= expr2\n" * "       expr1 >= expr2\n" *
+        error("In expression ($ex): constraints must be in one of the "*
+              "following forms:\n" *
+              "       expr1 <= expr2\n       expr1 >= expr2\n" *
               "       expr1 == expr2")
     end
 end
