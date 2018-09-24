@@ -728,16 +728,32 @@ function _fillwithzeros(arr::AbstractArray{T}) where T
 end
 
 # Special-case sparse matrix scalar multiplication/division
-Base.:*(lhs::Number, rhs::SparseMatrixCSC{T}) where {T<:JuMPTypes} =
-    SparseMatrixCSC(rhs.m, rhs.n, copy(rhs.colptr), copy(rhs.rowval), lhs .* rhs.nzval)
-Base.:*(lhs::JuMPTypes, rhs::SparseMatrixCSC) =
-    SparseMatrixCSC(rhs.m, rhs.n, copy(rhs.colptr), copy(rhs.rowval), lhs .* rhs.nzval)
-Base.:*(lhs::SparseMatrixCSC{T}, rhs::Number) where {T<:JuMPTypes} =
-    SparseMatrixCSC(lhs.m, lhs.n, copy(lhs.colptr), copy(lhs.rowval), lhs.nzval .* rhs)
-Base.:*(lhs::SparseMatrixCSC, rhs::JuMPTypes) =
-    SparseMatrixCSC(lhs.m, lhs.n, copy(lhs.colptr), copy(lhs.rowval), lhs.nzval .* rhs)
-Base.:/(lhs::SparseMatrixCSC{T}, rhs::Number) where {T<:JuMPTypes} =
-    SparseMatrixCSC(lhs.m, lhs.n, copy(lhs.colptr), copy(lhs.rowval), lhs.nzval ./ rhs)
+# Apply op to nzval entries
+function _sparse_scalar_op(op::Function, A::SparseMatrixCSC)
+    # rowval and nzval can have more elements than rhs.colptr[end]-1,
+    # e.g. when starting with a zero sparse matrix and filling it with setindex,
+    # in which case these elements are #undef or garbage.
+    # We need to cut out these elements to avoid accessing undefined reference.
+    num_elements = A.colptr[end]-1 # Number of elements defined.
+    return SparseMatrixCSC(A.m, A.n, copy(A.colptr),
+                           A.rowval[1:num_elements],
+                           op.(A.nzval[1:num_elements]))
+end
+function Base.:*(lhs::Number, rhs::SparseMatrixCSC{T}) where {T<:JuMPTypes}
+    return _sparse_scalar_op(nzval -> lhs * nzval, rhs)
+end
+function Base.:*(lhs::JuMPTypes, rhs::SparseMatrixCSC)
+    return _sparse_scalar_op(nzval -> lhs * nzval, rhs)
+end
+function Base.:*(lhs::SparseMatrixCSC{T}, rhs::Number) where {T<:JuMPTypes}
+    return _sparse_scalar_op(nzval -> nzval * lhs, rhs)
+end
+function Base.:*(lhs::SparseMatrixCSC, rhs::JuMPTypes)
+    return _sparse_scalar_op(nzval -> nzval * lhs, rhs)
+end
+function Base.:/(lhs::SparseMatrixCSC{T}, rhs::Number) where {T<:JuMPTypes}
+    return _sparse_scalar_op(nzval -> nzval / lhs, rhs)
+end
 
 if VERSION ≥ v"0.7-"
     Base.BroadcastStyle(::Type{<:JuMPTypes}) = Base.Broadcast.DefaultArrayStyle{0}()
