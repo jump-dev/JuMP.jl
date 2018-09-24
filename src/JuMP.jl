@@ -395,7 +395,7 @@ function Variable(m::Model,lower::Number,upper::Number,cat::Symbol,name::Abstrac
     push!(m.colCat, cat)
     push!(m.colVal,value)
     if m.internalModelLoaded
-        if method_exists(MathProgBase.addvar!, (typeof(m.internalModel),Vector{Int},Vector{Float64},Float64,Float64,Float64))
+        if hasmethod(MathProgBase.addvar!, (typeof(m.internalModel),Vector{Int},Vector{Float64},Float64,Float64,Float64))
             MathProgBase.addvar!(m.internalModel,float(lower),float(upper),0.0)
         else
             warn_once("Solver does not appear to support adding variables to an existing model. JuMP's internal model will be discarded.")
@@ -825,7 +825,7 @@ function Variable(m::Model,lower::Number,upper::Number,cat::Symbol,objcoef::Numb
     push!(m.obj.aff.coeffs,objcoef)
 
     if m.internalModelLoaded
-        if method_exists(MathProgBase.addvar!, (typeof(m.internalModel),Vector{Int},Vector{Float64},Float64,Float64,Float64))
+        if hasmethod(MathProgBase.addvar!, (typeof(m.internalModel),Vector{Int},Vector{Float64},Float64,Float64,Float64))
             MathProgBase.addvar!(m.internalModel,Int[c.idx for c in constraints],coefficients,float(lower),float(upper),float(objcoef))
         else
             warn_once("Solver does not appear to support adding variables to an existing model. JuMP's internal model will be discarded.")
