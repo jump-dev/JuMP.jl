@@ -70,6 +70,7 @@ Where:
 To install Gurobi, for example, and use it with a JuMP model `model`, run:
 
 ```julia
+import Pkg
 Pkg.add("Gurobi")
 using JuMP
 using Gurobi
