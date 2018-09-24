@@ -96,6 +96,7 @@ function some_function end
 const SOME_CONSTANT = ...
 struct SomeStruct end
 some_local_variable = ...
+some_file.jl # Except for ModuleName.jl.
 ```
 
 #### Use of underscores
