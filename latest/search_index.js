@@ -637,7 +637,7 @@ var documenterSearchIndex = {"docs": [
     "page": "Style Guide",
     "title": "Naming",
     "category": "section",
-    "text": "module SomeModule end\nfunction some_function end\nconst SOME_CONSTANT = ...\nstruct SomeStruct end\nsome_local_variable = ..."
+    "text": "module SomeModule end\nfunction some_function end\nconst SOME_CONSTANT = ...\nstruct SomeStruct end\nsome_local_variable = ...\nsome_file.jl # Except for ModuleName.jl."
 },
 
 {
