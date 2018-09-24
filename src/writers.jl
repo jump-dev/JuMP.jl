@@ -186,7 +186,7 @@ function varname_given(m::Model, col::Integer)
     # TODO: deal with non-ascii characters?
     name = getname(m, col)
     for (pat, sub) in [("[", "_"), ("]", ""), (",", "_")]
-        name = replace(name, pat, sub)
+        name = replace(name, pat => sub)
     end
     name
 end

@@ -11,7 +11,7 @@
 # Testing Model printing, basic solving
 # Must be run as part of runtests.jl, as it needs a list of solvers.
 #############################################################################
-using JuMP, Compat.Test, Compat, Compat.SparseArrays
+using JuMP, Compat.Test, Compat, Compat.SparseArrays, Compat.LinearAlgebra
 using OffsetArrays
 
 # If solvers not loaded, load them (i.e running just these tests)
@@ -388,7 +388,7 @@ end
         @constraint(source, x + 2.0*y <= 6)
         @constraint(source, x*x <= 1)
         addSOS2(source, [x, 2y])
-        @SDconstraint(source, x*ones(3,3) >= eye(3,3))
+        @SDconstraint(source, x*ones(3,3) >= Matrix(1.0I, 3, 3))
         @SDconstraint(source, ones(3,3) <= 0)
         @variable(source, z[1:3])
         @variable(source, w[2:4]) # JuMPArray
@@ -431,7 +431,7 @@ end
         @test dest.sosconstr[1].sostype == :SOS2
         @test length(dest.sdpconstr) == 2
         xx = copy(x, dest)
-        @test all(t -> isequal(t[1],t[2]), zip(dest.sdpconstr[1].terms, xx*ones(3,3) - eye(3,3)))
+        @test all(t -> isequal(t[1],t[2]), zip(dest.sdpconstr[1].terms, xx*ones(3, 3) - Matrix(1.0I, 3, 3)))
         @test all(t -> isequal(t[1],t[2]), zip(dest.sdpconstr[2].terms, convert(Matrix{AffExpr}, -ones(3,3))))
 
         @test dest.solvehook(dest) == :Optimal
@@ -712,8 +712,8 @@ end
             end
             obj = (y-X*β)'*(y-X*β)
             @objective(mod, Min, obj)
-            @constraint(mod, eye(p)*β .<=  M*eye(p)*z)
-            @constraint(mod, eye(p)*β .>= -M*eye(p)*z)
+            @constraint(mod, I*β .<=  M*I*z)
+            @constraint(mod, I*β .>= -M*I*z)
             @constraint(mod, sum(z) == K)
             solve(mod)
             return getvalue(β)
@@ -759,7 +759,11 @@ end
         JuMP.setsolvehook(m, solvehook)
         solve(m)
         @test dummy == [2]
-        @test kwarglist == Any[(:suppress_warnings,false)]
+        if VERSION >= v"0.7-"
+            @test kwarglist == Any[:suppress_warnings => false]
+        else
+            @test kwarglist == Any[(:suppress_warnings,false)]
+        end
     end
 
     @testset "Setting print hook" begin
@@ -885,7 +889,7 @@ end
         @test m.quadconstr[1].terms == x^2 + x
         @test m.quadconstr[2].terms == x^2 + x^2 - x - x - x - x + x + 1
         @test m.quadconstr[3].terms == x^2 + x^2 + x^2 + x^2 + x^2 + x^2 + x^2 + x^2 + x^2 - 1
-        @test m.quadconstr[4].terms == QuadExpr(x + x + x - 1)
+        @test m.quadconstr[4].terms == convert(QuadExpr, x + x + x - 1)
     end
 
     if length(ip_solvers) > 0

@@ -308,7 +308,7 @@ function Base.copy(source::Model)
 
     # variable/extension dicts
     if !isempty(source.ext)
-        dest.ext = similar(source.ext)
+        dest.ext = Dict{Symbol, Any}()
         for (key, val) in source.ext
             dest.ext[key] = try
                 copy(source.ext[key])
