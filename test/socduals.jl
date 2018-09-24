@@ -1,6 +1,6 @@
-using JuMP, Compat.Test
+using JuMP, Compat.Test, Compat
 
-!isdefined(:conic_solvers_with_duals) && include("solvers.jl")
+!isdefined(@__MODULE__, :conic_solvers_with_duals) && include("solvers.jl")
 
 const TOL = 1e-4
 

@@ -11,9 +11,9 @@
 # Testing quadratic models (objective and constraints)
 # Must be run as part of runtests.jl, as it needs a list of solvers.
 #############################################################################
-using JuMP, Compat.Test
+using JuMP, Compat.Test, Compat
 # If solvers not loaded, load them (i.e running just these tests)
-!isdefined(:lp_solvers) && include("solvers.jl")
+!isdefined(@__MODULE__, :lp_solvers) && include("solvers.jl")
 
 @testset "Quadratics" begin
     @testset "Quad objective (discrete) with $solver" for solver in quad_mip_solvers

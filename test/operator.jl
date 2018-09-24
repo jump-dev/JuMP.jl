@@ -92,7 +92,6 @@ end
         @test string(q2) == "8 x*z + 1.2 y + 1.2"
         q3 = 2 * x * x + 1 * y * y + z + 3
         @test string(q3) == "2 x² + y² + z + 3"
-
         nrm = norm([w,1-w])
         @test string(nrm) == "$Vert[w,-w + 1]$Vert$sub2"
         socexpr = 1.5*nrm - 2 - w

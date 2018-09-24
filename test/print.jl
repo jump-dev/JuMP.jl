@@ -337,7 +337,6 @@ end
     end
 
 
-
     @testset "Model" begin
         le, ge, eq, fa = repl[:leq], repl[:geq], repl[:eq], repl[:for_all]
         inset, dots = repl[:in], repl[:dots]

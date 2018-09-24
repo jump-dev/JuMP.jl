@@ -1,5 +1,5 @@
 Cbc
-Clp
+Clp 0.4.0 0.5.0 # this cap is to investigate bug
 GLPKMathProgInterface
 Ipopt
 ECOS

@@ -10,9 +10,9 @@
 # test/nonlinear.jl
 # Test general nonlinear
 #############################################################################
-using JuMP, Compat.Test
+using JuMP, Compat.Test, Compat
 # If solvers not loaded, load them (i.e running just these tests)
-!isdefined(:nlp_solvers) && include("solvers.jl")
+!isdefined(@__MODULE__, :nlp_solvers) && include("solvers.jl")
 
 mutable struct DummyNLPSolver <: MathProgBase.AbstractMathProgSolver
 end

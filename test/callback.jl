@@ -10,10 +10,10 @@
 # test/callback.jl
 # Testing callbacks
 #############################################################################
-using JuMP, Compat.Test
+using JuMP, Compat.Test, Compat
 using MathProgBase
 
-!isdefined(:lp_solvers) && include("solvers.jl")
+!isdefined(@__MODULE__, :lp_solvers) && include("solvers.jl")
 
 @testset "Callbacks" begin
 
