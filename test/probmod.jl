@@ -283,7 +283,7 @@ const TOL = 1e-4
         for (it,(meth, args)) in enumerate(mpb_methods)
             if supp[it]
                 @test applicable(meth, internal_mod, args...)
-                @test method_exists(meth, map(typeof, tuple(internal_mod, args...)))
+                @test hasmethod(meth, map(typeof, tuple(internal_mod, args...)))
             end
         end
     end

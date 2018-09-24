@@ -79,7 +79,7 @@ QuadExpr() = zero(QuadExpr)
 function setobjective(m::Model, sense::Symbol, q::QuadExpr)
     m.obj = q
     if m.internalModelLoaded
-        if method_exists(MathProgBase.setquadobjterms!, (typeof(m.internalModel), Vector{Cint}, Vector{Cint}, Vector{Float64}))
+        if hasmethod(MathProgBase.setquadobjterms!, (typeof(m.internalModel), Vector{Cint}, Vector{Cint}, Vector{Float64}))
             verify_ownership(m, m.obj.qvars1)
             verify_ownership(m, m.obj.qvars2)
             MathProgBase.setquadobjterms!(m.internalModel, Cint[v.col for v in m.obj.qvars1], Cint[v.col for v in m.obj.qvars2], m.obj.qcoeffs)
@@ -130,7 +130,7 @@ end
 function addconstraint(m::Model, c::QuadConstraint)
     push!(m.quadconstr,c)
     if m.internalModelLoaded
-        if method_exists(MathProgBase.addquadconstr!, (typeof(m.internalModel),
+        if hasmethod(MathProgBase.addquadconstr!, (typeof(m.internalModel),
                                                        Vector{Cint},
                                                        Vector{Float64},
                                                        Vector{Cint},

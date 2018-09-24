@@ -235,7 +235,7 @@ KeyIterator(d::JA) where {JA} = KeyIterator{JA}(d)
 
 function indexability(x::JuMPArray)
     for i in  1:length(x.indexsets)
-        if !method_exists(getindex, (typeof(x.indexsets[i]),))
+        if !hasmethod(getindex, (typeof(x.indexsets[i]),))
             return false
         end
     end

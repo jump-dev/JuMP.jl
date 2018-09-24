@@ -116,9 +116,9 @@ function Base.:^(lhs::Union{Variable,AffExpr}, rhs::Integer)
     if rhs == 2
         return lhs*lhs
     elseif rhs == 1
-        return QuadExpr(lhs)
+        return convert(QuadExpr, lhs)
     elseif rhs == 0
-        return QuadExpr(1)
+        return convert(QuadExpr, 1)
     else
         error("Only exponents of 0, 1, or 2 are currently supported. Are you trying to build a nonlinear problem? Make sure you use @NLconstraint/@NLobjective.")
     end

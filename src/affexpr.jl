@@ -203,7 +203,7 @@ end
 function addconstraint(m::Model, c::LinearConstraint)
     push!(m.linconstr,c)
     if m.internalModelLoaded
-        if method_exists(MathProgBase.addconstr!, (typeof(m.internalModel),Vector{Int},Vector{Float64},Float64,Float64))
+        if hasmethod(MathProgBase.addconstr!, (typeof(m.internalModel),Vector{Int},Vector{Float64},Float64,Float64))
             assert_isfinite(c.terms)
             indices, coeffs = merge_duplicates(Cint, c.terms, m.indexedVector, m)
             MathProgBase.addconstr!(m.internalModel,indices,coeffs,c.lb,c.ub)
