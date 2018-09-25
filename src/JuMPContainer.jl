@@ -227,7 +227,7 @@ mutable struct KeyIterator{JA<:JuMPArray}
     next_k_cache::Array{Any,1}
     function KeyIterator{JA}(d) where JA
         n = ndims(d.innerArray)
-        new{JA}(d, n, Array{Any}(undef, n+1))
+        new{JA}(d, n, Array{Any}(undef, VERSION < v"0.7-" ? n+1 : n))
     end
 end
 
@@ -261,15 +261,29 @@ else
     end
 end
 
-@generated function notindexable_start(x::JuMPArray{T,N,NT}) where {T,N,NT}
-    quote
-        $(Expr(:tuple, 0, [:(start(x.indexsets[$i])) for i in 1:N]...))
+if VERSION < v"0.7-"
+    @generated function notindexable_start(x::JuMPArray{T,N,NT}) where {T,N,NT}
+        quote
+            $(Expr(:tuple, 0, [:(start(x.indexsets[$i])) for i in 1:N]...))
+        end
+    end
+else
+    _add_zero(item_state::Tuple) = (item_state[1], (0, item_state[2]...))
+    function notindexable_start(x::JuMPArray{T,N,NT}) where {T,N,NT}
+        item_states = ntuple(i -> iterate(x.indexsets[i]), Val(N))
+        map(item_state -> item_state[1], item_states), item_states
     end
 end
 
-@generated function _next(x::JuMPArray{T,N,NT}, k::Tuple) where {T,N,NT}
-    quote
-        $(Expr(:tuple, [:(next(x.indexsets[$i], k[$i+1])[1]) for i in 1:N]...))
+if VERSION < v"0.7-"
+    @generated function _next(x::JuMPArray{T,N,NT}, k::Tuple) where {T,N,NT}
+        quote
+            $(Expr(:tuple, [:(next(x.indexsets[$i], k[$i+1])[1]) for i in 1:N]...))
+        end
+    end
+else
+    function _next(x::JuMPArray{T,N,NT}, k::Tuple) where {T,N,NT}
+        map(item_state -> item_state[1], k)
     end
 end
 
@@ -302,30 +316,27 @@ if VERSION < v"0.7-"
     Base.done(it::KeyIterator, k::Tuple) = (k[1] == 1)
 else
     function Base.iterate(it::KeyIterator, k::Tuple)
-        k[1] == 1 && (return nothing)
-        cartesian_key = _next(it.x, k)
         pos = -1
         for i in 1:it.dim
-            if iterate(it.x.indexsets[i], iterate(it.x.indexsets[i], k[i+1])[2]) ≠ nothing
+            if iterate(it.x.indexsets[i], k[i][2]) ≠ nothing
                 pos = i
                 break
             end
         end
-        if pos == - 1
-            it.next_k_cache[1] = 1
-            return cartesian_key, tuple(it.next_k_cache...)
+        if pos == -1
+            return nothing
         end
-        it.next_k_cache[1] = 0
         for i in 1:it.dim
             if i < pos
-                it.next_k_cache[i+1] = iterate(it.x.indexsets[i])
+                it.next_k_cache[i] = iterate(it.x.indexsets[i])
             elseif i == pos
-                it.next_k_cache[i+1] = iterate(it.x.indexsets[i], k[i+1])[2]
+                it.next_k_cache[i] = iterate(it.x.indexsets[i], k[i][2])
             else
-                it.next_k_cache[i+1] = k[i+1]
+                it.next_k_cache[i] = k[i]
             end
         end
-        cartesian_key, tuple(it.next_k_cache...)
+        next_k = tuple(it.next_k_cache...)
+        _next(it.x, next_k), next_k
     end
 end
 
