@@ -227,7 +227,7 @@ mutable struct KeyIterator{JA<:JuMPArray}
     next_k_cache::Array{Any,1}
     function KeyIterator{JA}(d) where JA
         n = ndims(d.innerArray)
-        new{JA}(d, n, Array{Any}(n+1))
+        new{JA}(d, n, Array{Any}(undef, n+1))
     end
 end
 
