@@ -746,7 +746,7 @@ end
 function getdual(c::ConstraintRef{Model,SDConstraint})
     dual, symdual = getconicdualaux(c.m, c.idx, true)
     n = size(c.m.sdpconstr[c.idx].terms, 1)
-    X = Matrix{eltype(dual)}(n, n)
+    X = Matrix{eltype(dual)}(undef, n, n)
     @assert length(dual) == convert(Int, n*(n+1)/2)
     idx = 0
     for i in 1:n
