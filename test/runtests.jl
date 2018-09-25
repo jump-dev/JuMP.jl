@@ -17,6 +17,8 @@ if VERSION < v"0.7-"
     using Compat: @warn
 end
 
+include("utilities.jl")
+
 # Load solvers
 include("solvers.jl")
 
