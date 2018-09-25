@@ -233,7 +233,7 @@ for f in MathProgBase.SolverInterface.methods_by_tag[:rewrap]
         if !m.internalModelLoaded
             error("Model not solved")
         else
-            return $f(internalmodel(m))
+            return MathProgBase.SolverInterface.$f(internalmodel(m))
         end
     end
     eval(Expr(:export,f))
