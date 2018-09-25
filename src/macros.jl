@@ -1185,8 +1185,17 @@ macro variable(args...)
         if !(lb == -Inf && ub == Inf)
             _error("Semidefinite or symmetric variables cannot be provided bounds")
         end
+        @static if VERSION >= v"0.7-"
+            # 1:3 is parsed as (:call, :, 1, 3)
+            dimension_check = :($(esc(idxsets[1].args[1].args[3])) ==
+                                $(esc(idxsets[2].args[1].args[3])))
+        else
+            # 1:3 is parsed as (:, 1, 3)
+            dimension_check = :($(esc(idxsets[1].args[1].args[2])) ==
+                                $(esc(idxsets[2].args[1].args[2])))
+        end
         return assert_validmodel(m, quote
-            $(esc(idxsets[1].args[1].args[2])) == $(esc(idxsets[2].args[1].args[2])) || error("Cannot construct symmetric variables with nonsquare dimensions")
+            $dimension_check || error("Cannot construct symmetric variables with nonsquare dimensions")
             (issymmetric($lb) && issymmetric($ub)) || error("Bounds on symmetric  variables must be symmetric")
             $(getloopedcode(variable, code, condition, idxvars, idxsets, idxpairs, vartype; lowertri=symmetric))
             $(if sdp

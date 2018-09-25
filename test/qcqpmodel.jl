@@ -247,7 +247,7 @@ using JuMP, Compat.Test, Compat
     end
 
     @testset "SOC duals with $solver" for solver in soc_solvers
-        contains("$(typeof(solver))", "MosekSolver") && continue # Mosek doesn't support duals with conic-through-quadratic
+        occursin("$(typeof(solver))", "MosekSolver") && continue # Mosek doesn't support duals with conic-through-quadratic
 
         modQ = Model(solver=solver)
         @variable(modQ, x >= 0)

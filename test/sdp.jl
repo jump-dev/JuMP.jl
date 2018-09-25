@@ -1,4 +1,4 @@
-using JuMP, Compat.Test, Compat
+using JuMP, Compat, Compat.Test, Compat.SparseArrays, JuMP
 
 !isdefined(@__MODULE__, :sdp_solvers) && include("solvers.jl")
 
@@ -10,10 +10,10 @@ ispsd(x::Matrix) = minimum(eigvals(x)) ≥ -1e-3
 ispsd(x::JuMP.JuMPArray) = ispsd(x.innerArray)
 
     @testset "Simple SDP with $solver" for solver in sdp_solvers
-        contains(string(typeof(solver)),"SCSSolver") && continue
+        occursin(string(typeof(solver)),"SCSSolver") && continue
         m = Model(solver=solver)
         @variable(m, X[1:3,1:3], SDP)
-        @SDconstraint(m, X <= 1/2*eye(3,3))
+        @SDconstraint(m, X <= 1/2*I)
         @variable(m, Y[1:5,1:5], Symmetric)
         @SDconstraint(m, -ones(5,5) <= Y)
         @SDconstraint(m, Y <= 2*ones(5,5))
@@ -44,7 +44,7 @@ ispsd(x::JuMP.JuMPArray) = ispsd(x.innerArray)
         @test isapprox(YY, Ytrue, atol=1e-2)
         @test isapprox(ZZ, Ztrue, atol=1e-2)
         @test ispsd(XX)
-        @test ispsd(1/2*eye(3,3)-XX)
+        @test ispsd(1/2*I-XX)
         @test ispsd(YY+ones(5,5))
         @test ispsd(2*ones(5,5)-YY)
         @test ispsd(ones(4,4)-ZZ)
@@ -70,7 +70,7 @@ ispsd(x::JuMP.JuMPArray) = ispsd(x.innerArray)
         @test isapprox(YY, Ytrue, atol=1e-2)
         @test isapprox(ZZ, Ztrue, atol=1e-2)
         @test ispsd(XX)
-        @test ispsd(1/2*eye(3,3)-XX)
+        @test ispsd(1/2*I-XX)
         @test ispsd(YY+ones(5,5))
         @test ispsd(2*ones(5,5)-YY)
         @test ispsd(ones(4,4)-ZZ)
@@ -96,14 +96,14 @@ ispsd(x::JuMP.JuMPArray) = ispsd(x.innerArray)
         @variable(m, X[1:3,1:3], SDP)
         @variable(m, Y[1:2,1:2], SDP)
 
-        C = eye(3,3)
+        C = I
         A1 = zeros(3,3)
         A1[1,1] = 1.0
         A2 = zeros(3,3)
         A2[2,2] = 1.0
         A3 = zeros(3,3)
         A3[3,3] = 1.0
-        D = eye(2,2)
+        D = I
         B1 = ones(2,2)
         B2 = zeros(2,2)
         B2[1,1] = 1
@@ -111,7 +111,7 @@ ispsd(x::JuMP.JuMPArray) = ispsd(x.innerArray)
         B3[1,2] = B3[2,1] = 2
 
         @objective(m, Min, trace(C*X)+1+trace(D*Y))
-        @constraint(m, trace(A1*X-eye(3,3)/3) == 0)
+        @constraint(m, trace(A1*X-I/3) == 0)
         @constraint(m, 2*trace(A2*X) == 1)
         @constraint(m, trace(A3*X) >= 2)
         @constraint(m, trace(B1*Y) == 1)
@@ -123,7 +123,7 @@ ispsd(x::JuMP.JuMPArray) = ispsd(x.innerArray)
         stat = solve(m)
         @test stat == :Optimal
         XX, YY = getvalue(X), getvalue(Y)
-        @test isapprox(trace(A1*XX-eye(3,3)/3), 0, atol=1e-5)
+        @test isapprox(trace(A1*XX-I/3), 0, atol=1e-5)
         @test isapprox(2*trace(A2*XX), 1, atol=1e-5)
         @test trace(A3*XX) >= 2 - 1e-5
         @test isapprox(trace(B1*YY), 1, atol=1e-5)
@@ -131,7 +131,7 @@ ispsd(x::JuMP.JuMPArray) = ispsd(x.innerArray)
         @test trace(B3*YY) <= 1e-3
         @test trace(A1*XX)+trace(B1*YY) >= 1
         @test isapprox(YY[2,2], 1, atol=1e-5)
-        @test isapprox(XX, diagm([1,.5,2]), atol=1e-3)
+        @test isapprox(XX, Diagonal([1,.5,2]), atol=1e-3)
         @test isapprox(YY, [0 0;0 1], atol=1e-3)
     end
 
@@ -139,14 +139,14 @@ ispsd(x::JuMP.JuMPArray) = ispsd(x.innerArray)
         m = Model()
         @test_throws ErrorException @variable(m, unequal[1:5,1:6], SDP)
         # Some of these errors happen at compile time, so we can't use @test_throws
-        @test macroexpand(:(@variable(m, notone[1:5,2:6], SDP))).head == :error
-        @test macroexpand(:(@variable(m, oneD[1:5], SDP))).head == :error
-        @test macroexpand(:(@variable(m, threeD[1:5,1:5,1:5], SDP))).head == :error
-        @test macroexpand(:(@variable(m, psd[2] <= rand(2,2), SDP))).head == :error
-        @test macroexpand(:(@variable(m, -ones(3,4) <= foo[1:4,1:4] <= ones(4,4), SDP))).head == :error
-        @test macroexpand(:(@variable(m, -ones(3,4) <= foo[1:4,1:4] <= ones(4,4), Symmetric))).head == :error
-        @test macroexpand(:(@variable(m, -ones(4,4) <= foo[1:4,1:4] <= ones(4,5), Symmetric))).head == :error
-        @test macroexpand(:(@variable(m, -rand(5,5) <= nonsymmetric[1:5,1:5] <= rand(5,5), Symmetric))).head == :error
+        @test_macro_throws ErrorException @variable(m, notone[1:5,2:6], SDP)
+        @test_macro_throws ErrorException @variable(m, oneD[1:5], SDP)
+        @test_macro_throws ErrorException @variable(m, threeD[1:5,1:5,1:5], SDP)
+        @test_macro_throws ErrorException @variable(m, psd[2] <= rand(2,2), SDP)
+        @test_macro_throws ErrorException @variable(m, -ones(3,4) <= foo[1:4,1:4] <= ones(4,4), SDP)
+        @test_macro_throws ErrorException @variable(m, -ones(3,4) <= foo[1:4,1:4] <= ones(4,4), Symmetric)
+        @test_macro_throws ErrorException @variable(m, -ones(4,4) <= foo[1:4,1:4] <= ones(4,5), Symmetric)
+        @test_macro_throws ErrorException @variable(m, -rand(5,5) <= nonsymmetric[1:5,1:5] <= rand(5,5), Symmetric)
     end
 
     @testset "SDP with SOC with $solver" for solver in sdp_solvers
@@ -154,7 +154,7 @@ ispsd(x::JuMP.JuMPArray) = ispsd(x.innerArray)
         @variable(m, X[1:2,1:2], SDP)
         @variable(m, y[0:2])
         @constraint(m, norm([y[1],y[2]]) <= y[0])
-        @SDconstraint(m, X <= eye(2))
+        @SDconstraint(m, X <= I)
         @constraint(m, X[1,1] + X[1,2] == y[1] + y[2])
         @objective(m, Max, trace(X) - y[0])
         stat = solve(m)
@@ -164,9 +164,9 @@ ispsd(x::JuMP.JuMPArray) = ispsd(x.innerArray)
         @test ispsd(XX)
         @test (yy[0] >= 0)
         @test (yy[1]^2 + yy[2]^2 <= yy[0]^2 + 1e-4)
-        @test ispsd(eye(2)-XX)
+        @test ispsd(I-XX)
         @test isapprox(XX[1,1] + XX[1,2], yy[1] + yy[2], atol=1e-4)
-        @test isapprox(XX, eye(2), atol=1e-4)
+        @test isapprox(XX, I, atol=1e-4)
         @test isapprox(yy[:], [1/sqrt(2), 0.5, 0.5], atol=1e-4)
         @test isapprox(getobjectivevalue(m), 1.293, atol=1e-2)
     end
@@ -174,11 +174,11 @@ ispsd(x::JuMP.JuMPArray) = ispsd(x.innerArray)
     @testset "Trivial symmetry constraints are removed (#766, #972)" begin
         q = 2
         m = 3
-        angles1 = linspace(3*pi/4, pi, m)
-        angles2 = linspace(0, -pi/2, m)
-        V = [3.*cos.(angles1)' 1.5.*cos.(angles2)';
-             3.*sin.(angles1)' 1.5.*sin.(angles2)']
-        V[abs.(V) .< 1e-10] = 0.0
+        angles1 = range(3*pi/4, stop=pi, length=m)
+        angles2 = range(0, stop=-pi/2, length=m)
+        V = [3 .* cos.(angles1)' 1.5 .* cos.(angles2)';
+             3 .* sin.(angles1)' 1.5 .* sin.(angles2)']
+        V[abs.(V) .< 1e-10] .= 0.0
         p = 2*m
         n = 100
 
@@ -188,7 +188,7 @@ ispsd(x::JuMP.JuMPArray) = ispsd(x.innerArray)
         @objective(mod, Min, sum(u))
         @constraint(mod, sum(x) <= n)
         for i=1:q
-            @SDconstraint(mod, [V*diagm(x./n)*V' eye(q)[:,i] ; eye(q)[i:i,:] u[i]] >= 0)
+            @SDconstraint(mod, [V*Matrix(Diagonal(x./n))*V' Matrix(1.0I, q, q)[:,i] ; Matrix(1.0I, q, q)[i:i,:] u[i]] >= 0)
         end
         f, A, b, var_cones, con_cones = JuMP.conicdata(mod)
         @test length(f) == 8
@@ -334,7 +334,7 @@ ispsd(x::JuMP.JuMPArray) = ispsd(x.innerArray)
     function operator_norm(model, A)
         m, n = size(A,1), size(A,2)
         @variable(model, t >= 0)
-        @SDconstraint(model, [t*eye(n) A; A' eye(n)*t] >= 0)
+        @SDconstraint(model, [t*I A; A' I*t] >= 0)
         return t
     end
 
@@ -353,7 +353,7 @@ ispsd(x::JuMP.JuMPArray) = ispsd(x.innerArray)
     function lambda_max(model, A)
         m, n = size(A,1), size(A,2)
         @variable(model, t)
-        @SDconstraint(model, speye(n)*t - A ⪰ 0)
+        @SDconstraint(model, SparseMatrixCSC(1.0I, n, n)*t - A ⪰ 0)
         @SDconstraint(model, A >= 0)
         return t
     end
@@ -371,7 +371,7 @@ ispsd(x::JuMP.JuMPArray) = ispsd(x.innerArray)
     function lambda_min(model, A)
         m, n = size(A,1), size(A,2)
         @variable(model, t)
-        @SDconstraint(model, A - eye(n)*t >= 0)
+        @SDconstraint(model, A - I*t >= 0)
         @SDconstraint(model, A >= 0)
         return t
     end
@@ -400,8 +400,8 @@ ispsd(x::JuMP.JuMPArray) = ispsd(x.innerArray)
         m = Model(solver=solver)
         n = 3
         x = [1,2,3]
-        lb = 0.5eye(n)
-        ub = 2eye(n)
+        lb = 0.5*I
+        ub = 2*I
         @variable(m, lb[i,j] <= P[i=1:n,j=1:n] <= ub[i,j])
         @objective(m, Min, matrix_frac(m, x, P))
         stat = solve(m)
@@ -479,7 +479,7 @@ ispsd(x::JuMP.JuMPArray) = ispsd(x.innerArray)
             stat = solve(m)
 
             object = getobjectivevalue(m)
-            exact = dot(μhat,c) + Γ1(𝛿/2,N)*norm(c) + sqrt((1-ɛ)/ɛ)*sqrt(dot(c,(Σhat+Γ2(𝛿/2,N)*eye(d,d))*c))
+            exact = dot(μhat,c) + Γ1(𝛿/2,N)*norm(c) + sqrt((1-ɛ)/ɛ)*sqrt(dot(c,(Σhat+Γ2(𝛿/2,N)*Matrix(1.0I, d, d))*c))
             @test stat == :Optimal
             @test isapprox(object, exact, atol=1e-5)
         end
@@ -521,7 +521,7 @@ ispsd(x::JuMP.JuMPArray) = ispsd(x.innerArray)
             stat = solve(m)
 
             object = getobjectivevalue(m)
-            exact = dot(μhat,c) + Γ1(𝛿/2,N)*norm(c) + sqrt((1-ɛ)/ɛ)*sqrt(dot(c,(Σhat+Γ2(𝛿/2,N)*eye(d,d))*c))
+            exact = dot(μhat,c) + Γ1(𝛿/2,N)*norm(c) + sqrt((1-ɛ)/ɛ)*sqrt(dot(c,(Σhat+Γ2(𝛿/2,N)*Matrix(1.0I, d, d))*c))
             @test stat == :Optimal
             @test isapprox(object, exact, atol=1e-5)
         end
@@ -630,7 +630,7 @@ ispsd(x::JuMP.JuMPArray) = ispsd(x.innerArray)
         @test all(isnan, getdual(c))
         status = solve(m)
 
-        if contains(string(typeof(solver)),"MosekSolver")
+        if occursin(string(typeof(solver)),"MosekSolver")
             # Mosek returns Stall on this instance
             # Hack until we fix statuses in MPB
             JuMP.fillConicDuals(m)
@@ -680,7 +680,7 @@ ispsd(x::JuMP.JuMPArray) = ispsd(x.innerArray)
         @objective(m, Max, y/2+z/2)
         status = solve(m)
 
-        if contains(string(typeof(solver)),"MosekSolver")
+        if occursin(string(typeof(solver)),"MosekSolver")
             # Mosek returns Stall on this instance
             # Hack until we fix statuses in MPB
             JuMP.fillConicDuals(m)
@@ -712,7 +712,7 @@ ispsd(x::JuMP.JuMPArray) = ispsd(x.innerArray)
         @objective(m, Max, y)
         status = solve(m)
 
-        if contains(string(typeof(solver)),"MosekSolver")
+        if occursin(string(typeof(solver)),"MosekSolver")
             # Mosek returns Stall on this instance
             # Hack until we fix statuses in MPB
             JuMP.fillConicDuals(m)
@@ -764,6 +764,6 @@ ispsd(x::JuMP.JuMPArray) = ispsd(x.innerArray)
         @test status == :Optimal
         @test abs(getobjectivevalue(m)) < 1e-5
         @test norm(getvalue(X)) < 1e-5
-        @test isapprox(getdual(X), eye(3), atol=1e-5)
+        @test isapprox(getdual(X), Matrix(1.0I, 3, 3), atol=1e-5)
     end
 end
