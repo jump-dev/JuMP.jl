@@ -174,8 +174,8 @@ ispsd(x::JuMP.JuMPArray) = ispsd(x.innerArray)
     @testset "Trivial symmetry constraints are removed (#766, #972)" begin
         q = 2
         m = 3
-        angles1 = range(3*pi/4, stop=pi, length=m)
-        angles2 = range(0, stop=-pi/2, length=m)
+        angles1 = Compat.range(3*pi/4, stop=pi, length=m)
+        angles2 = Compat.range(0, stop=-pi/2, length=m)
         V = [3 .* cos.(angles1)' 1.5 .* cos.(angles2)';
              3 .* sin.(angles1)' 1.5 .* sin.(angles2)']
         V[abs.(V) .< 1e-10] .= 0.0

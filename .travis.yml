@@ -21,8 +21,8 @@ addons:
         - libglpk-dev
 script:
     - if [[ -a .git/shallow ]]; then git fetch --unshallow; fi
-    - julia -e 'VERSION >= v"0.7-" && import Pkg; Pkg.add(PackageSpec(url="https://github.com/blegat/ReverseDiffSparse.jl", rev="backport"))'
     - julia -e 'VERSION > v"0.7-" && import Pkg; Pkg.clone(pwd())'
+    - julia -e 'VERSION >= v"0.7-" && import Pkg; Pkg.add(PackageSpec(url="https://github.com/blegat/ReverseDiffSparse.jl", rev="backport"))'
     - julia -e 'VERSION > v"0.7-" && import Pkg; Pkg.test("JuMP", coverage=true)'
     - julia -e 'VERSION > v"0.7-" && import Pkg; Pkg.add("Compat")' # needed by hygiene.jl
     - julia test/hygiene.jl
