@@ -894,11 +894,11 @@ end
 
     if length(ip_solvers) > 0
         @testset "sets used as indexsets in JuMPArray" begin
-            set = IntSet()
+            set = BitSet()
             for i in 4:5
                 push!(set, i)
             end
-            set2 = IntSet()
+            set2 = BitSet()
             for i in 21:23
                 push!(set2, i)
             end

@@ -728,16 +728,21 @@ function _fillwithzeros(arr::AbstractArray{T}) where T
 end
 
 # Special-case sparse matrix scalar multiplication/division
-Base.:*(lhs::Number, rhs::SparseMatrixCSC{T}) where {T<:JuMPTypes} =
-    SparseMatrixCSC(rhs.m, rhs.n, copy(rhs.colptr), copy(rhs.rowval), lhs .* rhs.nzval)
-Base.:*(lhs::JuMPTypes, rhs::SparseMatrixCSC) =
-    SparseMatrixCSC(rhs.m, rhs.n, copy(rhs.colptr), copy(rhs.rowval), lhs .* rhs.nzval)
-Base.:*(lhs::SparseMatrixCSC{T}, rhs::Number) where {T<:JuMPTypes} =
-    SparseMatrixCSC(lhs.m, lhs.n, copy(lhs.colptr), copy(lhs.rowval), lhs.nzval .* rhs)
-Base.:*(lhs::SparseMatrixCSC, rhs::JuMPTypes) =
-    SparseMatrixCSC(lhs.m, lhs.n, copy(lhs.colptr), copy(lhs.rowval), lhs.nzval .* rhs)
-Base.:/(lhs::SparseMatrixCSC{T}, rhs::Number) where {T<:JuMPTypes} =
-    SparseMatrixCSC(lhs.m, lhs.n, copy(lhs.colptr), copy(lhs.rowval), lhs.nzval ./ rhs)
+function Base.:*(lhs::Number, rhs::SparseMatrixCSC{T}) where {T<:JuMPTypes}
+    return map(x -> lhs * x, rhs)
+end
+function Base.:*(lhs::JuMPTypes, rhs::SparseMatrixCSC)
+    return map(x -> lhs * x, rhs)
+end
+function Base.:*(lhs::SparseMatrixCSC{T}, rhs::Number) where {T<:JuMPTypes}
+    return map(x -> x * rhs, lhs)
+end
+function Base.:*(lhs::SparseMatrixCSC, rhs::JuMPTypes)
+    return map(x -> x * rhs, lhs)
+end
+function Base.:/(lhs::SparseMatrixCSC{T}, rhs::Number) where {T<:JuMPTypes}
+    return map(x -> x / rhs, lhs)
+end
 
 if VERSION ≥ v"0.7-"
     Base.BroadcastStyle(::Type{<:JuMPTypes}) = Base.Broadcast.DefaultArrayStyle{0}()
