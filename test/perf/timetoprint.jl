@@ -64,8 +64,8 @@ test4_time = @elapsed begin
 end
 
 println("Julia ", VERSION)
-println("Current branch: $(chomp(readstring(`git rev-parse --abbrev-ref HEAD`)))")
-println("Current commit: $(chomp(readstring(`git rev-parse HEAD`)))")
+println("Current branch: $(chomp(read(`git rev-parse --abbrev-ref HEAD`, String)))")
+println("Current commit: $(chomp(read(`git rev-parse HEAD`, String)))")
 @printf("Test 1: %7.2f s\n", test1_time)
 @printf("Test 2: %7.2f s\n", test2_time)
 @printf("Test 3: %7.2f s\n", test3_time)

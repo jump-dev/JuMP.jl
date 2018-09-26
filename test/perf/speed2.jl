@@ -108,7 +108,7 @@ function RunTests()
         print("PMEDIAN BUILD MIN=",minimum(pmedian_build),"  MED=",pmedian_build[5],"\n")
         print("PMEDIAN INTRN MIN=",minimum(pmedian_write),"  MED=",pmedian_write[5],"\n")
     else
-        warn("PMEDIAN NOT RUN!")
+        @warn("PMEDIAN NOT RUN!")
     end
 
     # Cont5
@@ -125,7 +125,7 @@ function RunTests()
         print("CONT5 BUILD   MIN=",minimum(cont5_build),"  MED=",cont5_build[5],"\n")
         print("CONT5 INTRN   MIN=",minimum(cont5_write),"  MED=",cont5_write[5],"\n")
     else
-        warn("CONT5 NOT RUN!")
+        @warn("CONT5 NOT RUN!")
     end
 
 end
