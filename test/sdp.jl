@@ -10,7 +10,6 @@ ispsd(x::Matrix) = minimum(eigvals(x)) ≥ -1e-3
 ispsd(x::JuMP.JuMPArray) = ispsd(x.innerArray)
 
     @testset "Simple SDP with $solver" for solver in sdp_solvers
-        occursin(string(typeof(solver)),"SCSSolver") && continue
         m = Model(solver=solver)
         @variable(m, X[1:3,1:3], SDP)
         @SDconstraint(m, X <= 1/2*Matrix(1.0I, 3, 3))
@@ -629,7 +628,7 @@ ispsd(x::JuMP.JuMPArray) = ispsd(x.innerArray)
         @test all(isnan, getdual(c))
         status = solve(m)
 
-        if occursin(string(typeof(solver)),"MosekSolver")
+        if occursin("MosekSolver", string(typeof(solver)))
             # Mosek returns Stall on this instance
             # Hack until we fix statuses in MPB
             JuMP.fillConicDuals(m)
@@ -679,7 +678,7 @@ ispsd(x::JuMP.JuMPArray) = ispsd(x.innerArray)
         @objective(m, Max, y/2+z/2)
         status = solve(m)
 
-        if occursin(string(typeof(solver)),"MosekSolver")
+        if occursin("MosekSolver", string(typeof(solver)))
             # Mosek returns Stall on this instance
             # Hack until we fix statuses in MPB
             JuMP.fillConicDuals(m)
@@ -711,7 +710,7 @@ ispsd(x::JuMP.JuMPArray) = ispsd(x.innerArray)
         @objective(m, Max, y)
         status = solve(m)
 
-        if occursin(string(typeof(solver)),"MosekSolver")
+        if occursin("MosekSolver", string(typeof(solver)))
             # Mosek returns Stall on this instance
             # Hack until we fix statuses in MPB
             JuMP.fillConicDuals(m)

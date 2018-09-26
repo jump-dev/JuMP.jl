@@ -37,6 +37,6 @@ files = readdir(HS_path)
 
 println("Running HS Tests")
 for file in files
-    occursin(file, "runhs") && continue
+    occursin("runhs", file) && continue
     include(file)
 end
