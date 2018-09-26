@@ -116,7 +116,13 @@ function getloopedcode(varname, code, condition, idxvars, idxsets, sym, requeste
 
     # if we don't have indexing, just return to avoid allocating stuff
     if isempty(idxsets)
-        return code
+        # See comment for the return at the end of the function
+        return quote
+            $varname = let
+                $code
+                $varname
+            end
+        end
     end
 
     hascond = (condition != :())
@@ -188,9 +194,16 @@ function getloopedcode(varname, code, condition, idxvars, idxsets, sym, requeste
 
 
     return quote
-        $varname = $containercode
-        $code
-        nothing
+        $varname = let
+            # The let block ensures that all variables create behaves like
+            # local variables, see https://github.com/JuliaOpt/JuMP.jl/issues/1496
+            # To make $varname accessible from outside we need to return it at
+            # the end of the block ant to assign it to a $varname variable in the
+            # outer scope
+            $varname = $containercode
+            $code
+            $varname
+        end
     end
 end
 

@@ -5,7 +5,6 @@
 
 # hygiene.jl
 # Make sure that our macros have good hygiene
-using Base.Test
 
 module M
 import JuMP
