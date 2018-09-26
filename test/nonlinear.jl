@@ -10,7 +10,8 @@
 # test/nonlinear.jl
 # Test general nonlinear
 #############################################################################
-using JuMP, Compat.Test, Compat
+using Compat, Compat.LinearAlgebra, Compat.SparseArrays, Compat.Test
+using MathProgBase, JuMP
 # If solvers not loaded, load them (i.e running just these tests)
 !isdefined(@__MODULE__, :nlp_solvers) && include("solvers.jl")
 
@@ -112,7 +113,7 @@ end
     end
 
     @testset "ifelse with $nlp_solver" for nlp_solver in nlp_solvers
-        (contains("$(typeof(nlp_solver))", "OsilSolver") || contains("$(typeof(nlp_solver))", "NLoptSolver") || contains("$(typeof(nlp_solver))", "BaronSolver")) && continue
+        (occursin("OsilSolver", "$(typeof(nlp_solver))") || occursin("NLoptSolver", "$(typeof(nlp_solver))") || occursin("BaronSolver", "$(typeof(nlp_solver))")) && continue
         m = Model(solver=nlp_solver)
         @variable(m, x, start = 2)
         # minimizer at smooth point, solvers should be okay
@@ -348,8 +349,8 @@ end
 
 
     @testset "Infeasibility detection with $nlp_solver" for nlp_solver in convex_nlp_solvers
-        contains(string(typeof(nlp_solver)),"NLoptSolver") && continue
-        contains(string(typeof(nlp_solver)),"MosekSolver") && continue
+        occursin("NLoptSolver", string(typeof(nlp_solver))) && continue
+        occursin("MosekSolver", string(typeof(nlp_solver))) && continue
         # (Attempt to) solve an infeasible problem
         m = Model(solver=nlp_solver)
         n = 10
@@ -363,7 +364,7 @@ end
 
 
     @testset "Unboundedness detection with $nlp_solver" for nlp_solver in convex_nlp_solvers
-        contains(string(typeof(nlp_solver)),"NLoptSolver") && continue
+        occursin("NLoptSolver", string(typeof(nlp_solver))) && continue
         # (Attempt to) solve an unbounded problem
         m = Model(solver=nlp_solver)
         @variable(m, x >= 0)
@@ -647,7 +648,7 @@ end
         MathProgBase.eval_hesslag(d, V, m.colVal, 1.0, Float64[])
         hess_raw = sparse(I,J,V)
         # Convert from lower triangular
-        hess_sparse = hess_raw + hess_raw' - sparse(diagm(diag(hess_raw)))
+        hess_sparse = hess_raw + hess_raw' - sparse(Diagonal(diag(hess_raw)))
         @test isapprox(hess_sparse, [0.0 1.0 0.0; 1.0 0.0 0.0; 0.0 0.0 2.0])
 
         # make sure we don't get NaNs in this case
@@ -658,7 +659,7 @@ end
         V = zeros(length(I))
         MathProgBase.eval_hesslag(d, V, m.colVal, 1.0, Float64[])
         hess_raw = sparse(I,J,V)
-        hess_sparse = hess_raw + hess_raw' - sparse(diagm(diag(hess_raw)))
+        hess_sparse = hess_raw + hess_raw' - sparse(Diagonal(diag(hess_raw)))
         @test isapprox(hess_sparse, [0.0 1.0 0.0; 1.0 0.0 0.0; 0.0 0.0 6.0])
 
         # Initialize again
@@ -666,7 +667,7 @@ end
         V = zeros(length(I))
         MathProgBase.eval_hesslag(d, V, m.colVal, 1.0, Float64[])
         hess_raw = sparse(I,J,V)
-        hess_sparse = hess_raw + hess_raw' - sparse(diagm(diag(hess_raw)))
+        hess_sparse = hess_raw + hess_raw' - sparse(Diagonal(diag(hess_raw)))
         @test isapprox(hess_sparse, [0.0 1.0 0.0; 1.0 0.0 0.0; 0.0 0.0 6.0])
     end
 

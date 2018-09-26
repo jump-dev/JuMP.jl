@@ -280,7 +280,7 @@ using MathProgBase
     # throw CallbackAbort is somewhat broken on OS X due to upstream Julia issue
     # https://github.com/JuliaOpt/Gurobi.jl/issues/47
     # https://github.com/JuliaLang/julia/issues/14284
-    is_apple() || @testset "Callback exit on throw CallbackAbort (deprecated) with $solver" for solver in lazy_solvers
+    Compat.Sys.isapple() || @testset "Callback exit on throw CallbackAbort (deprecated) with $solver" for solver in lazy_solvers
         mod = Model(solver=solver)
         @variable(mod, 0 <= x <= 2, Int)
         @variable(mod, 0 <= y <= 2, Int)

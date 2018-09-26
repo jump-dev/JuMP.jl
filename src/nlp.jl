@@ -348,7 +348,7 @@ function MathProgBase.initialize(d::NLPEvaluator, requested_features::Vector{Sym
         # recompute dependencies after simplification
         d.subexpression_order, individual_order = order_subexpressions(main_expressions,subexpr)
 
-        subexpr = Array{Vector{NodeData}}(length(d.subexpressions))
+        subexpr = Array{Vector{NodeData}}(undef, length(d.subexpressions))
         for k in d.subexpression_order
             subexpr[k] = d.subexpressions[k].nd
         end
@@ -377,13 +377,13 @@ function MathProgBase.initialize(d::NLPEvaluator, requested_features::Vector{Sym
     max_chunk = min(max_chunk, 10) # 10 is hardcoded upper bound to avoid excess memory allocation
 
     if d.want_hess || want_hess_storage # storage for Hess or HessVec
-        d.input_ϵ = Array{Float64}(max_chunk*d.m.numCols)
-        d.output_ϵ = Array{Float64}(max_chunk*d.m.numCols)
-        d.forward_storage_ϵ = Array{Float64}(max_chunk*max_expr_length)
-        d.partials_storage_ϵ = Array{Float64}(max_chunk*max_expr_length)
-        d.reverse_storage_ϵ = Array{Float64}(max_chunk*max_expr_length)
-        d.subexpression_forward_values_ϵ = Array{Float64}(max_chunk*length(d.subexpressions))
-        d.subexpression_reverse_values_ϵ = Array{Float64}(max_chunk*length(d.subexpressions))
+        d.input_ϵ = Array{Float64}(undef, max_chunk*d.m.numCols)
+        d.output_ϵ = Array{Float64}(undef, max_chunk*d.m.numCols)
+        d.forward_storage_ϵ = Array{Float64}(undef, max_chunk*max_expr_length)
+        d.partials_storage_ϵ = Array{Float64}(undef, max_chunk*max_expr_length)
+        d.reverse_storage_ϵ = Array{Float64}(undef, max_chunk*max_expr_length)
+        d.subexpression_forward_values_ϵ = Array{Float64}(undef, max_chunk*length(d.subexpressions))
+        d.subexpression_reverse_values_ϵ = Array{Float64}(undef, max_chunk*length(d.subexpressions))
         for k in d.subexpression_order
             subex = d.subexpressions[k]
             subex.forward_storage_ϵ = zeros(Float64,max_chunk*length(subex.nd))
@@ -394,7 +394,7 @@ function MathProgBase.initialize(d::NLPEvaluator, requested_features::Vector{Sym
         if d.want_hess
             d.hess_I, d.hess_J = _hesslag_structure(d)
             # JIT warm-up
-            MathProgBase.eval_hesslag(d, Array{Float64}(length(d.hess_I)), d.m.colVal, 1.0, ones(MathProgBase.numconstr(d.m)))
+            MathProgBase.eval_hesslag(d, Array{Float64}(undef, length(d.hess_I)), d.m.colVal, 1.0, ones(MathProgBase.numconstr(d.m)))
         end
     end
 
@@ -469,7 +469,7 @@ function reverse_eval_all(d::NLPEvaluator,x)
     for ex in d.constraints
         reverse_eval(ex.reverse_storage,ex.partials_storage,ex.nd,ex.adj)
     end
-    copy!(d.last_x,x)
+    copyto!(d.last_x,x)
 end
 
 function MathProgBase.eval_f(d::NLPEvaluator, x)
@@ -501,7 +501,7 @@ function MathProgBase.eval_grad_f(d::NLPEvaluator, g, x)
         fill!(g,0.0)
         ex = d.objective
         subexpr_reverse_values = d.subexpression_reverse_values
-        subexpr_reverse_values[ex.dependent_subexpressions] = 0.0
+        subexpr_reverse_values[ex.dependent_subexpressions] .= 0.0
         reverse_extract(g,ex.reverse_storage,ex.nd,ex.adj,subexpr_reverse_values,1.0)
         for i in length(ex.dependent_subexpressions):-1:1
             k = ex.dependent_subexpressions[i]
@@ -513,7 +513,7 @@ function MathProgBase.eval_grad_f(d::NLPEvaluator, g, x)
 
         end
     else
-        copy!(g,d.linobj)
+        copyto!(g,d.linobj)
         qobj::QuadExpr = d.m.obj
         for k in 1:length(qobj.qvars1)
             coef = qobj.qcoeffs[k]
@@ -533,7 +533,11 @@ function MathProgBase.eval_g(d::NLPEvaluator, g, x)
     A = d.A
     for i in 1:size(A,1); g[i] = 0.0; end
     #fill!(view(g,1:size(A,1)), 0.0)
-    A_mul_B!(view(g,1:size(A,1)),A,x)
+    if VERSION >= v"0.7-"
+        g[1:size(A,1)] .= A * x
+    else
+        A_mul_B!(view(g,1:size(A,1)),A,x)
+    end
     idx = size(A,1)+1
     quadconstr = d.m.quadconstr::Vector{QuadConstraint}
     for c::QuadConstraint in quadconstr
@@ -595,8 +599,8 @@ function MathProgBase.eval_jac_g(d::NLPEvaluator, J, x)
     SIMPLIFY = d.m.simplify_nonlinear_expressions
     for ex in d.constraints
         nzidx = ex.grad_sparsity
-        grad_storage[nzidx] = 0.0
-        subexpr_reverse_values[ex.dependent_subexpressions] = 0.0
+        grad_storage[nzidx] .= 0.0
+        subexpr_reverse_values[ex.dependent_subexpressions] .= 0.0
 
         reverse_extract(grad_storage,ex.reverse_storage,ex.nd,ex.adj,subexpr_reverse_values,1.0)
         for i in length(ex.dependent_subexpressions):-1:1
@@ -831,7 +835,7 @@ function hessian_slice_inner(d, ex, R, input_ϵ, output_ϵ, ::Type{Val{CHUNK}}) 
 
     # do a reverse pass
     subexpr_reverse_values_ϵ[ex.dependent_subexpressions] = zero_ϵ
-    d.subexpression_reverse_values[ex.dependent_subexpressions] = 0.0
+    d.subexpression_reverse_values[ex.dependent_subexpressions] .= 0.0
 
     reverse_eval_ϵ(output_ϵ, ex.reverse_storage, reverse_storage_ϵ,ex.partials_storage, partials_storage_ϵ,ex.nd,ex.adj,d.subexpression_reverse_values,subexpr_reverse_values_ϵ, 1.0, zero_ϵ)
     for i in length(ex.dependent_subexpressions):-1:1

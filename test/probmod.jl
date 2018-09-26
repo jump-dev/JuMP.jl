@@ -288,7 +288,7 @@ const TOL = 1e-4
         end
     end
 
-    const mpb_methods =
+    mpb_methods =
         [(MathProgBase.addquadconstr!, (Cint[1],Float64[1.0],Cint[1],Cint[1],Float64[1],'>',1.0)),
          (MathProgBase.setquadobjterms!, (Cint[1], Cint[1], Float64[1.0])),
          (MathProgBase.addconstr!,   ([1],[1.0],1.0,1.0)),

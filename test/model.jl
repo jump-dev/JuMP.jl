@@ -11,7 +11,8 @@
 # Testing Model printing, basic solving
 # Must be run as part of runtests.jl, as it needs a list of solvers.
 #############################################################################
-using JuMP, Compat.Test, Compat, Compat.SparseArrays, Compat.LinearAlgebra
+using Compat, Compat.LinearAlgebra, Compat.SparseArrays, Compat.Test
+using MathProgBase, JuMP
 using OffsetArrays
 
 # If solvers not loaded, load them (i.e running just these tests)

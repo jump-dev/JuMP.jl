@@ -1078,7 +1078,7 @@ function tidy_warmstart(m::Model)
         return m.colVal
     else
         initval = copy(m.colVal)
-        initval[isnan.(m.colVal)] = 0
+        initval[isnan.(m.colVal)] .= 0
         return initval
     end
 end

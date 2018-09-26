@@ -18,11 +18,17 @@
 # This file will run all the HS test problems, allowing for easy testing
 #############################################################################
 
-if Pkg.installed("Ipopt") == nothing
+if VERSION >= v"0.7-"
+    import Pkg
+    ipt = "Ipopt" in keys(Pkg.installed())
+else
+    ipt = Pkg.installed("Ipopt") !== nothing
+end
+if !ipt
     println("Cannot run NLP tests because Ipopt is not installed.")
     exit(1)
 end
-using Ipopt, JuMP, Compat.Test
+using Ipopt, JuMP, Compat, Compat.Test
 nlp_solver = IpoptSolver(print_level=0)
 
 HS_path = dirname(@__FILE__)
@@ -31,6 +37,6 @@ files = readdir(HS_path)
 
 println("Running HS Tests")
 for file in files
-    contains(file, "runhs") && continue
+    occursin("runhs", file) && continue
     include(file)
 end

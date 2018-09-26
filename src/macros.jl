@@ -174,7 +174,13 @@ function getloopedcode(varname, code, condition, idxvars, idxsets, idxpairs, sym
 
     # if we don't have indexing, just return to avoid allocating stuff
     if isempty(idxsets)
-        return code
+        # See comment for the return at the end of the function
+        return quote
+            $varname = let
+                $code
+                $varname
+            end
+        end
     end
 
     hascond = (condition != :())
@@ -228,9 +234,16 @@ function getloopedcode(varname, code, condition, idxvars, idxsets, idxpairs, sym
         mac = gendict(varname, sym, idxsets...)
     end
     return quote
-        $mac
-        $code
-        nothing
+        $varname = let
+            # The let block ensures that all variables create behaves like
+            # local variables, see https://github.com/JuliaOpt/JuMP.jl/issues/1496
+            # To make $varname accessible from outside we need to return it at
+            # the end of the block ant to assign it to a $varname variable in the
+            # outer scope
+            $mac
+            $code
+            $varname
+        end
     end
 end
 
@@ -1185,8 +1198,17 @@ macro variable(args...)
         if !(lb == -Inf && ub == Inf)
             _error("Semidefinite or symmetric variables cannot be provided bounds")
         end
+        @static if VERSION >= v"0.7-"
+            # 1:3 is parsed as (:call, :, 1, 3)
+            dimension_check = :($(esc(idxsets[1].args[1].args[3])) ==
+                                $(esc(idxsets[2].args[1].args[3])))
+        else
+            # 1:3 is parsed as (:, 1, 3)
+            dimension_check = :($(esc(idxsets[1].args[1].args[2])) ==
+                                $(esc(idxsets[2].args[1].args[2])))
+        end
         return assert_validmodel(m, quote
-            $(esc(idxsets[1].args[1].args[2])) == $(esc(idxsets[2].args[1].args[2])) || error("Cannot construct symmetric variables with nonsquare dimensions")
+            $dimension_check || error("Cannot construct symmetric variables with nonsquare dimensions")
             (issymmetric($lb) && issymmetric($ub)) || error("Bounds on symmetric  variables must be symmetric")
             $(getloopedcode(variable, code, condition, idxvars, idxsets, idxpairs, vartype; lowertri=symmetric))
             $(if sdp
