@@ -38,22 +38,20 @@ is often more complex. We list below the currently available solvers.
     with any questions about connecting new solvers with JuMP.
 
 
-| Solver                                                                         | Julia Package                                       | License | Supports                    |
-| ------------------------------------------------------------------------------ | --------------------------------------------------- | ------- | --------------------------- |
-| [Artelys Knitro](http://artelys.com/en/optimization-tools/knitro)              | [KNITRO.jl](https://github.com/JuliaOpt/KNITRO.jl)  | Comm.   | NLP, MINLP                  |
-| [BARON](http://archimedes.cheme.cmu.edu/?q=baron>)                             | [BARON.jl](https://github.com/joehuchette/BARON.jl) | Comm.   | MINLP                       |
-| [Cbc](https://projects.coin-or.org/Cbc)                                        | [Cbc.jl](https://github.com/JuliaOpt/Cbc.jl)        | EPL     | MILP                        |
-| [Clp](https://projects.coin-or.org/Clp)                                        | [Clp.jl](https://github.com/JuliaOpt/Clp.jl)        | EPL     | LP                          |
-| [CPLEX](http://www-01.ibm.com/software/commerce/optimization/cplex-optimizer/) | [CPLEX.jl](https://github.com/JuliaOpt/CPLEX.jl)    | Comm.   | LP, MILP, SOCP, MISOCP      |
-| [CSDP](https://projects.coin-or.org/Csdp/)                                     | [CSDP.jl](https://github.com/JuliaOpt/CSDP.jl)      | EPL     | SDP                         |
-| [ECOS](https://github.com/ifa-ethz/ecos)                                       | [ECOS.jl](https://github.com/JuliaOpt/ECOS.jl)      | GPL     | SOCP                        |
-| [FICO Xpress](http://www.fico.com/en/products/fico-xpress-optimization-suite)  | [Xpress.jl](https://github.com/JuliaOpt/Xpress.jl)  | Comm.   | LP, MILP, SOCP, MISOCP      |
-| [GLPK](http://www.gnu.org/software/glpk/)                                      | [GLPK](https://github.com/JuliaOpt/GLPK.jl)         | GPL     | LP, MILP                    |
-| [Gurobi](http://gurobi.com)                                                    | [Gurobi.jl](https://github.com/JuliaOpt/Gurobi.jl)  | Comm.   | LP, MILP, SOCP, MISOCP      |
-| [Ipopt](https://projects.coin-or.org/Ipopt)                                    | [Ipopt.jl](https://github.com/JuliaOpt/Ipopt.jl)    | EPL     | LP, QP, NLP                 |
-| [MOSEK](http://www.mosek.com/)                                                 | [Mosek.jl](https://github.com/JuliaOpt/Mosek.jl)    | Comm.   | LP, MILP, SOCP, MISOCP, SDP |
-| [OSQP](https://osqp.org/)                                                      | [OSQP.jl](https://github.com/oxfordcontrol/OSQP.jl) | Apache  | LP, QP                      |
-| [SCS](https://github.com/cvxgrp/scs>)                                          | [SCS.jl](https://github.com/JuliaOpt/SCS.jl)        | MIT     | LP, SOCP, SDP               |
+| Solver                                                                         | Julia Package                                                                    | License | Supports                    |
+| ------------------------------------------------------------------------------ | -------------------------------------------------------------------------------- | ------- | --------------------------- |
+| [Cbc](https://projects.coin-or.org/Cbc)                                        | [Cbc.jl](https://github.com/JuliaOpt/Cbc.jl)                                     | EPL     | MILP                        |
+| [Clp](https://projects.coin-or.org/Clp)                                        | [Clp.jl](https://github.com/JuliaOpt/Clp.jl)                                     | EPL     | LP                          |
+| [CPLEX](http://www-01.ibm.com/software/commerce/optimization/cplex-optimizer/) | [CPLEX.jl](https://github.com/JuliaOpt/CPLEX.jl)                                 | Comm.   | LP, MILP, SOCP, MISOCP      |
+| [CSDP](https://projects.coin-or.org/Csdp/)                                     | [CSDP.jl](https://github.com/JuliaOpt/CSDP.jl)                                   | EPL     | LP, SDP                     |
+| [ECOS](https://github.com/ifa-ethz/ecos)                                       | [ECOS.jl](https://github.com/JuliaOpt/ECOS.jl)                                   | GPL     | LP, SOCP                    |
+| [FICO Xpress](http://www.fico.com/en/products/fico-xpress-optimization-suite)  | [Xpress.jl](https://github.com/JuliaOpt/Xpress.jl)                               | Comm.   | LP, MILP, SOCP, MISOCP      |
+| [GLPK](http://www.gnu.org/software/glpk/)                                      | [GLPK](https://github.com/JuliaOpt/GLPK.jl)                                      | GPL     | LP, MILP                    |
+| [Gurobi](http://gurobi.com)                                                    | [Gurobi.jl](https://github.com/JuliaOpt/Gurobi.jl)                               | Comm.   | LP, MILP, SOCP, MISOCP      |
+| [Ipopt](https://projects.coin-or.org/Ipopt)                                    | [Ipopt.jl](https://github.com/JuliaOpt/Ipopt.jl)                                 | EPL     | LP, QP, NLP                 |
+| [MOSEK](http://www.mosek.com/)                                                 | [MathOptInterfaceMosek.jl](https://github.com/JuliaOpt/MathOptInterfaceMosek.jl) | Comm.   | LP, MILP, SOCP, MISOCP, SDP |
+| [OSQP](https://osqp.org/)                                                      | [OSQP.jl](https://github.com/oxfordcontrol/OSQP.jl)                              | Apache  | LP, QP                      |
+| [SCS](https://github.com/cvxgrp/scs>)                                          | [SCS.jl](https://github.com/JuliaOpt/SCS.jl)                                     | MIT     | LP, SOCP, SDP               |
 
 
 Where:
@@ -87,6 +85,8 @@ The following solvers were compatible with JuMP up to release 0.18 but are
 not yet compatible with the latest version because they do not implement the
 new MathOptInterface API:
 
+- [Artelys Knitro](https://github.com/JuliaOpt/KNITRO.jl)
+- [BARON](https://github.com/joehuchette/BARON.jl)
 - [Bonmin](https://projects.coin-or.org/Bonmin) and
   [Couenne](https://projects.coin-or.org/Couenne) via
   [AmplNLWriter.jl](https://github.com/JuliaOpt/AmplNLWriter.jl)
