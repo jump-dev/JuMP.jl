@@ -161,7 +161,7 @@ function fixscs(solver, max_iters)
         solver
     end
 end
-scs && push!(sdp_solvers, SCS.SCSSolver(eps=1e-6,verbose=0))
+scs && push!(sdp_solvers, SCS.SCSSolver(eps=1e-4,verbose=0))
 
 const error_map = Dict()
 grb && (error_map[Gurobi.GurobiSolver] = Gurobi.GurobiError)
