@@ -83,7 +83,7 @@ function lazycallback(d::MathProgBase.MathProgCallbackData, m::Model, cbs::Vecto
         end
     catch y
         if isa(y, CallbackAbort)
-            Base.warn_once("Throwing CallbackAbort() from a callback is deprecated. Use \"return JuMP.StopTheSolver\" instead.")
+            @Compat.warn "Throwing CallbackAbort() from a callback is deprecated. Use \"return JuMP.StopTheSolver\" instead."
             return :Exit
         else
             rethrow(y)

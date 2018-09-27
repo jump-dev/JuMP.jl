@@ -151,7 +151,7 @@ using MathProgBase
         addcutcallback(mod, cb -> (entered[2] = true))
         @test solve(mod) == :Optimal
         @test entered == [true,true]
-        @test find(getvalue(x)) == [35,38,283,305,359,397,419,426,442,453,526,553,659,751,840,865,878,978]
+        @test findall(!iszero, getvalue(x)) == [35,38,283,305,359,397,419,426,442,453,526,553,659,751,840,865,878,978]
     end
 
     @testset "Local user cuts with $cutlocalsolver" for cutlocalsolver in cutlocal_solvers
@@ -210,7 +210,7 @@ using MathProgBase
         addheuristiccallback(mod, cb -> (entered[2] = true))
         @test solve(mod) == :Optimal
         @test entered == [true,true]
-        @test find(getvalue(x)) == setdiff(1:N,[9,10,11,14,15,16,25,30,32,41,44,49,50,53,54,98,100])
+        @test findall(!iszero, getvalue(x)) == setdiff(1:N,[9,10,11,14,15,16,25,30,32,41,44,49,50,53,54,98,100])
 
         empty!(mod.callbacks)
         entered[1] = false
@@ -228,7 +228,7 @@ using MathProgBase
         addheuristiccallback(mod, cb -> (entered[2] = true))
         @test solve(mod) == :Optimal
         @test entered == [true,true]
-        @test find(getvalue(x)) == setdiff(1:N,[9,10,11,14,15,16,25,30,32,41,44,49,50,53,54,98,100])
+        @test findall(!iszero, getvalue(x)) == setdiff(1:N,[9,10,11,14,15,16,25,30,32,41,44,49,50,53,54,98,100])
     end
 
     @testset "Informational callback with $infosolver" for infosolver in info_solvers
