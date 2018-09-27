@@ -274,7 +274,7 @@ ispsd(x::JuMP.JuMPArray) = ispsd(x.innerArray)
     #     Y >= 0              y free
     #     x >= 0              z <= 0
     @testset "Test problem #4 with $solver" for solver in sdp_solvers
-        occursin("SCSSolver", string(typeof(nlp_solver)))  && continue
+        occursin("SCSSolver", string(typeof(solver))) && continue
         m = Model(solver=solver)
         @variable(m, x >= 0)
         @variable(m, Y[1:3,1:3], SDP)
