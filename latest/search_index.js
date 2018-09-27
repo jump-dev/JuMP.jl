@@ -45,7 +45,7 @@ var documenterSearchIndex = {"docs": [
     "page": "Installation Guide",
     "title": "Installation Guide",
     "category": "section",
-    "text": "DRAFT: Install Julia. Install JuMP."
+    "text": "JuMP is a package for Julia. To use JuMP, first download and install Julia or open up a remote notebook at JuliaBox or similar services.JuMP is compatible with both Julia 1.0 and 0.6. The compatibility with 0.6 is intended to facilitate upgrading from previous JuMP and Julia releases. The following instructions assume Julia 1.0.From Julia, JuMP is installed by using the built-in package manager:import Pkg\nPkg.add(\"JuMP\")note: Note\nThe installation instructions above assume that JuMP 0.19 has already been released. Until that time, see the JuMP README for instructions on installing a development release that\'s compatible with Julia 1.0."
 },
 
 {
@@ -53,7 +53,7 @@ var documenterSearchIndex = {"docs": [
     "page": "Installation Guide",
     "title": "Getting Solvers",
     "category": "section",
-    "text": "TODO: Not yet updated for MOI.Solver support in Julia is currently provided by writing a solver-specific package that provides a very thin wrapper around the solver\'s C interface and providing a standard interface that JuMP can call. If you are interested in providing an interface to your solver, please get in touch. The table below lists the currently supported solvers and their capabilities.Solver Julia Package solver= License LP SOCP MILP NLP MINLP SDP\nArtelys Knitro KNITRO.jl KnitroSolver() Comm.    X X \nBARON BARON.jl BaronSolver() Comm.    X X \nBonmin AmplNLWriter.jl AmplNLWriter(CoinOptServices.bonmin) * EPL X  X X X \n\'\' CoinOptServices.jl OsilBonminSolver() \'\'      \nCbc Cbc.jl CbcSolver() EPL   X   \nClp Clp.jl ClpSolver() EPL X     \nCouenne AmplNLWriter.jl AmplNLWriter(CoinOptServices.couenne) * EPL X  X X X \n\'\' CoinOptServices.jl OsilCouenneSolver() \'\'      \nCPLEX CPLEX.jl CplexSolver() Comm. X X X   \nECOS ECOS.jl ECOSSolver() GPL X X    \nFICO Xpress Xpress.jl XpressSolver() Comm. X X X   \nGLPK GLPKMath... GLPKSolver[LP|MIP]() GPL X  X   \nGurobi Gurobi.jl GurobiSolver() Comm. X X X   \nIpopt Ipopt.jl IpoptSolver() EPL X   X  \nMOSEK Mosek.jl MosekSolver() Comm. X X X X  X\nNLopt NLopt.jl NLoptSolver() LGPL    X  \nSCS SCS.jl SCSSolver() MIT X X    XWhere:LP = Linear programming\nSOCP = Second-order conic programming (including problems with convex quadratic constraints and/or objective)\nMILP = Mixed-integer linear programming\nNLP = Nonlinear programming\nMINLP = Mixed-integer nonlinear programming\nSDP = Semidefinite programming* requires CoinOptServices installed, see below.To install Gurobi, for example, and use it with a JuMP model m, run:Pkg.add(\"Gurobi\")\nusing JuMP\nusing Gurobi\n\nm = Model(solver=GurobiSolver())Setting solver options is discussed in the Model &lt;ref-model&gt; section.Solver-specific notes follow below."
+    "text": "JuMP depends on solvers to solve optimization problems. Most solvers are not written in Julia, and some require commercial licenses to use, so installation is often more complex. We list below the currently available solvers.note: Note\nThis list is open for new contributions. See also Interacting with solvers and the MathOptInterface docs for more details on how JuMP interacts with solvers. Please get in touch with any questions about connecting new solvers with JuMP.Solver Julia Package License Supports\nCbc Cbc.jl EPL MILP\nClp Clp.jl EPL LP\nCPLEX CPLEX.jl Comm. LP, MILP, SOCP, MISOCP\nCSDP CSDP.jl EPL LP, SDP\nECOS ECOS.jl GPL LP, SOCP\nFICO Xpress Xpress.jl Comm. LP, MILP, SOCP, MISOCP\nGLPK GLPK GPL LP, MILP\nGurobi Gurobi.jl Comm. LP, MILP, SOCP, MISOCP\nIpopt Ipopt.jl EPL LP, QP, NLP\nMOSEK MathOptInterfaceMosek.jl Comm. LP, MILP, SOCP, MISOCP, SDP\nOSQP OSQP.jl Apache LP, QP\nSCS SCS.jl MIT LP, SOCP, SDPWhere:LP = Linear programming\nQP = Quadratic programming\nSOCP = Second-order conic programming (including problems with convex quadratic constraints and/or objective)\nMILP = Mixed-integer linear programming\nNLP = Nonlinear programming\nMINLP = Mixed-integer nonlinear programming\nSDP = Semidefinite programming\nMISDP = Mixed-integer semidefinite programmingTo install Gurobi, for example, and use it with a JuMP model model, run:import Pkg\nPkg.add(\"Gurobi\")\nusing JuMP\nusing Gurobi\nmodel = Model(with_optimizer(Gurobi.Optimizer))Most packages follow the ModuleName.Optimizer naming convention, but exceptions may exist. See the corresponding Julia package README for more details on how to use the solver.TODO: Discuss setting solver options.The following solvers were compatible with JuMP up to release 0.18 but are not yet compatible with the latest version because they do not implement the new MathOptInterface API:Artelys Knitro\nBARON\nBonmin and Couenne via AmplNLWriter.jl\nCDD\nNLopt\nPavito\nPajarito\nSCIPSolver-specific notes follow below."
 },
 
 {
@@ -73,11 +73,11 @@ var documenterSearchIndex = {"docs": [
 },
 
 {
-    "location": "installation.html#COIN-OR-Clp-and-Cbc-1",
+    "location": "installation.html#COIN-OR-Cbc-1",
     "page": "Installation Guide",
-    "title": "COIN-OR Clp and Cbc",
+    "title": "COIN-OR Cbc",
     "category": "section",
-    "text": "Binaries for Clp and Cbc are provided on OS X and Windows (32- and 64-bit) by default. On Linux, they will be compiled from source (be sure to have a C++ compiler installed). Cbc supports \"SOS\" constraints but does not support MIP callbacks."
+    "text": "Cbc supports \"SOS\" constraints."
 },
 
 {
@@ -85,7 +85,7 @@ var documenterSearchIndex = {"docs": [
     "page": "Installation Guide",
     "title": "CPLEX",
     "category": "section",
-    "text": "Requires a working installation of CPLEX with a license (free for faculty members and graduate teaching assistants). The interface requires using CPLEX as a shared library, which is unsupported by the CPLEX developers. Special installation steps are required on OS X. CPLEX supports MIP callbacks and \"SOS\" constraints."
+    "text": "Requires a working installation of CPLEX with a license (free for faculty members and graduate teaching assistants). The interface requires using CPLEX as a shared library, which is unsupported by the CPLEX developers. Special installation steps are required on Mac OS. CPLEX supports \"SOS\" constraints."
 },
 
 {
@@ -93,7 +93,15 @@ var documenterSearchIndex = {"docs": [
     "page": "Installation Guide",
     "title": "ECOS",
     "category": "section",
-    "text": "ECOS can be used by JuMP to solve LPs and SOCPs. ECOS does not support general quadratic objectives or constraints, only second-order conic constraints specified by using norm or the quadratic form x\'x <= y^2."
+    "text": "ECOS can be used by JuMP to solve LPs and SOCPs. ECOS does not support general quadratic objectives or constraints, only second-order conic constraints specified by using the SecondOrderCone set."
+},
+
+{
+    "location": "installation.html#Gurobi-1",
+    "page": "Installation Guide",
+    "title": "Gurobi",
+    "category": "section",
+    "text": "￼Requires a working installation of Gurobi with an activated license (free for academic use). Gurobi supports \"SOS\" constraints."
 },
 
 {
@@ -101,7 +109,23 @@ var documenterSearchIndex = {"docs": [
     "page": "Installation Guide",
     "title": "FICO Xpress",
     "category": "section",
-    "text": "Requires a working installation of Xpress with an active license (it is possible to get license for academic use, see FICO Academic Partner Program). Supports SOCP and \"SOS\" constraints. The interface is experimental, but it does pass all JuMP and MathProgBase tests. Callbacks are not yet supported.warning: Warning\nIf you are using 64-bit Xpress, you must use 64-bit Julia (and similarly with 32-bit Xpress)."
+    "text": "Requires a working installation of Xpress with an active license (it is possible to get a license for academic use, see FICO Academic Partner Program). Supports SOCP and \"SOS\" constraints."
+},
+
+{
+    "location": "installation.html#MOSEK-1",
+    "page": "Installation Guide",
+    "title": "MOSEK",
+    "category": "section",
+    "text": "￼Requires a license (free for academic use). The Mosek interface is maintained by the Mosek team. (Thanks!)"
+},
+
+{
+    "location": "installation.html#SCS-1",
+    "page": "Installation Guide",
+    "title": "SCS",
+    "category": "section",
+    "text": "SCS can be used by JuMP to solve LPs and SOCPs, and SDPs. SCS is a first order solver and has low accuracy (10^4) by default; see the SCS.jl documentation for more information."
 },
 
 {
