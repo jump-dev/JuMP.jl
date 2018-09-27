@@ -559,9 +559,11 @@ ispsd(x::JuMP.JuMPArray) = ispsd(x.innerArray)
         @test isapprox(getdual(c2), [-1 1; 1 -1], atol=1e-3) # X
     end
 
-    if length(lp_solvers) > 0
+    # SCS does not work with this tests, it segfaults because there are no constraints
+    lp_solvers_without_scs = filter(solver -> !occursin("SCSSolver", string(typeof(solver))), lp_solvers)
+    if length(lp_solvers_without_scs) > 0
         @testset "Internal Model unloaded when SDP constraint added (#830)" begin
-            model = Model(solver=lp_solvers[1])
+            model = Model(solver=first(lp_solvers_without_scs))
             @variable(model, x)
             solve(model)
             T = [1 x; -x 1]
