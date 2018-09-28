@@ -4,6 +4,10 @@ using Compat, Compat.LinearAlgebra, Compat.SparseArrays, Compat.Test, JuMP
 
 const TOL = 1e-4
 
+@static if VERSION < v"0.7-"
+    const tr = trace
+end
+
 @testset "Semidefinite" begin
 
 ispsd(x::Matrix) = minimum(eigvals(x)) ≥ -1e-2
