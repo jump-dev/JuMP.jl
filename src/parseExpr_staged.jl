@@ -152,12 +152,12 @@ end
 
 function addtoexpr(aff::GenericAffExpr{C,V}, c::Number, x::GenericQuadExpr{C,V}) where {C,V}
     if c == 0
-        GenericQuadExpr{C,V}(aff)
+        convert(GenericQuadExpr{C,V}, aff)
     else
         GenericQuadExpr{C,V}(copy(x.qvars1),
-                            copy(x.qvars2),
-                            c*x.qcoeffs,
-                            addtoexpr(aff,c,x.aff))
+                             copy(x.qvars2),
+                             c*x.qcoeffs,
+                             addtoexpr(aff,c,x.aff))
     end
 end
 
