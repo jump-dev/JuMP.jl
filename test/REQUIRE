@@ -3,5 +3,5 @@
 #GLPKMathProgInterface
 #Ipopt
 #ECOS
-#SCS
+SCS
 OffsetArrays 0.2.13

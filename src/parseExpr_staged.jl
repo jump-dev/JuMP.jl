@@ -271,7 +271,13 @@ addtoexpr(ex::AbstractArray{T}, c::AbstractArray, x::AbstractArray) where {T<:Ge
 addtoexpr(ex::AbstractArray{T}, c::AbstractArray, x::Number) where {T<:GenericAffExpr} = append!.(ex, c*x)
 addtoexpr(ex::AbstractArray{T}, c::Number, x::AbstractArray) where {T<:GenericAffExpr} = append!.(ex, c*x)
 
-addtoexpr(ex, c, x) = ex .+ c*x
+@static if VERSION >= v"0.7-"
+    addtoexpr(ex, c, x) = ex .+ c*x
+else
+    addtoexpr(ex::Number, c::Number, x::AbstractArray) = ex .+ c*x
+
+    addtoexpr(ex, c, x) = ex + c*x
+end
 
 @generated addtoexpr_reorder(ex, arg) = :(addtoexpr(ex, 1.0, arg))
 
