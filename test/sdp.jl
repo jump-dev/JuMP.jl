@@ -356,7 +356,7 @@ ispsd(x::JuMP.JuMPArray) = ispsd(x.innerArray)
     function lambda_max(model, A)
         m, n = size(A,1), size(A,2)
         @variable(model, t)
-        @SDconstraint(model, SparseMatrixCSC(1.0I, n, n)*t - A ⪰ 0)
+        @SDconstraint(model, (VERSION < v"0.7-" ? eye(n) : SparseMatrixCSC(1.0I, n, n)) * t - A ⪰ 0)
         @SDconstraint(model, A >= 0)
         return t
     end
