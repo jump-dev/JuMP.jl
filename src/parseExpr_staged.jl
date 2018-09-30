@@ -271,6 +271,20 @@ addtoexpr(ex::AbstractArray{T}, c::AbstractArray, x::AbstractArray) where {T<:Ge
 addtoexpr(ex::AbstractArray{T}, c::AbstractArray, x::Number) where {T<:GenericAffExpr} = append!.(ex, c*x)
 addtoexpr(ex::AbstractArray{T}, c::Number, x::AbstractArray) where {T<:GenericAffExpr} = append!.(ex, c*x)
 
+function addtoexpr(ex::AbstractArray{<:GenericAffExpr},
+                   c::AbstractArray{<:GenericQuadExpr},
+                   x::Number)
+    result = c * x
+    append!.(result, ex)
+    return result
+end
+function addtoexpr(ex::AbstractArray{<:GenericAffExpr}, c::Number,
+                   x::AbstractArray{<:GenericQuadExpr})
+    result = c * x
+    append!.(result, ex)
+    return result
+end
+
 @static if VERSION >= v"0.7-"
     addtoexpr(ex, c, x) = ex .+ c*x
 else

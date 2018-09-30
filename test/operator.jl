@@ -570,6 +570,28 @@ end
               0     0 2X23^2
               0     0      0]
         v = [4, 5, 6]
+
+        @testset "Sum of matrices" begin
+            @test vec_eq(JuMP.@Expression(Xd + Yd),     Xd + Yd)
+            @test vec_eq(JuMP.@Expression(Xd + 2Yd),    Xd + 2Yd)
+            @test vec_eq(JuMP.@Expression(Xd + Yd * 2), Xd + Yd * 2)
+            @test vec_eq(JuMP.@Expression(Yd + Xd),     Yd + Xd)
+            @test vec_eq(JuMP.@Expression(Yd + 2Xd),    Yd + 2Xd)
+            @test vec_eq(JuMP.@Expression(Yd + Xd * 2), Yd + Xd * 2)
+            @test vec_eq(JuMP.@Expression(Yd + Zd),     Yd + Zd)
+            @test vec_eq(JuMP.@Expression(Yd + 2Zd),    Yd + 2Zd)
+            @test vec_eq(JuMP.@Expression(Yd + Zd * 2), Yd + Zd * 2)
+            @test vec_eq(JuMP.@Expression(Zd + Yd),     Zd + Yd)
+            @test vec_eq(JuMP.@Expression(Zd + 2Yd),    Zd + 2Yd)
+            @test vec_eq(JuMP.@Expression(Zd + Yd * 2), Zd + Yd * 2)
+            @test vec_eq(JuMP.@Expression(Zd + Xd),     Zd + Xd)
+            @test vec_eq(JuMP.@Expression(Zd + 2Xd),    Zd + 2Xd)
+            @test vec_eq(JuMP.@Expression(Zd + Xd * 2), Zd + Xd * 2)
+            @test vec_eq(JuMP.@Expression(Xd + Zd),     Xd + Zd)
+            @test vec_eq(JuMP.@Expression(Xd + 2Zd),    Xd + 2Zd)
+            @test vec_eq(JuMP.@Expression(Xd + Zd * 2), Xd + Zd * 2)
+        end
+
         @test vec_eq(A*x, [2x[1] +  x[2]
                             2x[2] + x[1] + x[3]
                             x[2] + 2x[3]])
