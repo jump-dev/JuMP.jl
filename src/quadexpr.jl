@@ -45,6 +45,12 @@ Base.copy(q::GenericQuadExpr) = GenericQuadExpr(copy(q.qvars1),copy(q.qvars2),co
 
 Base.convert(::Type{GenericQuadExpr{C,V}}, q::GenericQuadExpr{C,V}) where {C,V} = q
 
+function Base.append!(q::GenericQuadExpr{T,S},
+                      other::GenericAffExpr{T,S}) where {T,S}
+    append!(q.aff, other)
+    return q
+end
+
 function Base.append!(q::GenericQuadExpr{T,S}, other::GenericQuadExpr{T,S}) where {T,S}
     append!(q.qvars1, other.qvars1)
     append!(q.qvars2, other.qvars2)
