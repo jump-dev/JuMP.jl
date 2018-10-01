@@ -49,7 +49,7 @@ progress. See the Discourse
 [post](https://discourse.julialang.org/t/jump-and-julia-0-7-1-0) for more
 information on Julia 0.7/1.0 support.**
 
-**Latest Release**: 0.18.2 (`release-0.18` branch)
+**Latest Release**: 0.18.3 (`release-0.18` branch)
   * [Documentation](http://www.juliaopt.org/JuMP.jl/0.18/)
   * [Examples](https://github.com/JuliaOpt/JuMP.jl/tree/release-0.18/examples)
   * Testing status:
