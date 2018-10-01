@@ -1,6 +1,12 @@
 JuMP release notes
 ==================
 
+Version 0.18.3 (October 1, 2018)
+------------------------------
+
+   * Add support for Julia v1.0
+   * Fix matrix expressions with quadratic functions (#1508)
+
 Version 0.18.2 (June 10, 2018)
 ------------------------------
 
