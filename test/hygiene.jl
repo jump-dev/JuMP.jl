@@ -9,15 +9,17 @@
 module M
 import JuMP
 
-mymod = JuMP.Model()
-mysense = :Min
-JuMP.@variable(mymod, x >= 0)
+model = JuMP.Model()
+sense = :Min
+JuMP.@variable(model, x >= 0)
 r = 3:5
-JuMP.@variable(mymod, y[i=r] <= i)
-JuMP.@constraint(mymod, x + sum( j*y[j] for j=r ) <= 1)
-JuMP.@constraint(mymod, sum( y[j] for j=r if j == 4) <= 1)
-JuMP.@constraint(mymod, -1 <= x + y[3] <= 1)
-JuMP.@objective(mymod, mysense, y[4])
-JuMP.@NLconstraint(mymod, y[3] == 1)
+JuMP.@variable(model, y[i=r] <= i)
+JuMP.@constraint(model, x + sum( j*y[j] for j=r ) <= 1)
+JuMP.@constraint(model, sum( y[j] for j=r if j == 4) <= 1)
+JuMP.@constraint(model, -1 <= x + y[3] <= 1)
+JuMP.@objective(model, sense, y[4])
+JuMP.@NLconstraint(model, y[3] == 1)
+        
+# TODO: Add tests for the content of the model.
 
 end
