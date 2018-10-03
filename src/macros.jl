@@ -1509,7 +1509,7 @@ macro NLconstraint(m, x, extra...)
               "       expr1 == expr2")
     end
     looped = getloopedcode(variable, code, condition, idxvars, idxsets, :(ConstraintRef{Model,NonlinearConstraintIndex}), requestedcontainer)
-    create_code = quote
+    creation_code = quote
         initNLP($esc_m)
         $looped
     end
