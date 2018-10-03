@@ -867,9 +867,11 @@ macro objective(m, args...)
     end
     newaff, parsecode = parseExprToplevel(x, :q)
     code = quote
-        q = Val{false}()
-        $parsecode
-        set_objective($m, $(esc(sense)), $newaff)
+        let
+            q = Val{false}()
+            $parsecode
+            set_objective($m, $(esc(sense)), $newaff)
+        end
     end
     return assert_validmodel(m, code)
 end
