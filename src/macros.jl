@@ -116,13 +116,7 @@ function getloopedcode(varname, code, condition, idxvars, idxsets, sym, requeste
 
     # if we don't have indexing, just return to avoid allocating stuff
     if isempty(idxsets)
-        # See comment for the return at the end of the function
-        return quote
-            $varname = let
-                $code
-                $varname
-            end
-        end
+        return code
     end
 
     hascond = (condition != :())
@@ -194,16 +188,9 @@ function getloopedcode(varname, code, condition, idxvars, idxsets, sym, requeste
 
 
     return quote
-        $varname = let
-            # The let block ensures that all variables create behaves like
-            # local variables, see https://github.com/JuliaOpt/JuMP.jl/issues/1496
-            # To make $varname accessible from outside we need to return it at
-            # the end of the block ant to assign it to a $varname variable in the
-            # outer scope
-            $varname = $containercode
-            $code
-            $varname
-        end
+        $varname = $containercode
+        $code
+        nothing
     end
 end
 
@@ -275,6 +262,50 @@ function assert_validmodel(m, macrocode)
     quote
         validmodel($m, $(quot(m.args[1])))
         $macrocode
+    end
+end
+
+"""
+    macro_return(model, code, variable)
+
+Return a code that runs `code` in a local scope which returns the value of `variable`.
+"""
+function macro_return(code, variable)
+    return quote
+        let
+            $code
+            $variable
+        end
+    end
+end
+
+"""
+    macro_assign_and_return(model, code, variable, registerfun::Function,
+                            quotvarname, escvarname, final_variable=variable)
+
+Return runs `code` in a local scope which returns the value of `variable`
+and then assign `final_variable` to `escvarname`.
+If `registerfun` is given, it registers the value returned by the local scope
+to `quotvarname`.
+"""
+function macro_assign_and_return(code, variable, escvarname;
+                                 final_variable=variable,
+                                 registerfun::Union{Nothing, Function}=nothing,
+                                 model=nothing,
+                                 quotvarname=nothing)
+    return quote
+        $variable = let
+            $code
+            $variable
+        end
+        $(if registerfun !== nothing
+              :($registerfun($model, $quotvarname, $variable))
+          else
+              :()
+          end
+         )
+        # escvarname should be set in the scope calling the macr
+        $escvarname = $variable
     end
 end
 
@@ -499,20 +530,16 @@ function constraint_macro(args, macro_name::Symbol, parsefun::Function)
         # Anonymous constraint, no need to register it in the model-level
         # dictionary nor to assign it to a variable in the user scope.
         # We simply return the constraint reference
-        assignmentcode = variable
+        macro_code = macro_return(creationcode, variable)
     else
         # We register the constraint reference to its name and
         # we assign it to a variable in the local scope of this name
-        assignmentcode = quote
-            registercon($m, $quotvarname, $variable)
-            $escvarname = $variable
-        end
+        macro_code = macro_assign_and_return(creationcode, variable, escvarname,
+                                             registerfun=registercon,
+                                             quotvarname=quotvarname,
+                                             model = m)
     end
-
-    return assert_validmodel(m, quote
-        $creationcode
-        $assignmentcode
-    end)
+    return assert_validmodel(m, macro_code)
 end
 
 # This function needs to be implemented by all `AbstractModel`s
@@ -867,13 +894,11 @@ macro objective(m, args...)
     end
     newaff, parsecode = parseExprToplevel(x, :q)
     code = quote
-        let
-            q = Val{false}()
-            $parsecode
-            set_objective($m, $(esc(sense)), $newaff)
-        end
+        q = Val{false}()
+        $parsecode
+        set_objective($m, $(esc(sense)), $newaff)
     end
-    return assert_validmodel(m, code)
+    return assert_validmodel(m, macro_return(code, newaff))
 end
 
 # Return a standalone, unnamed expression
@@ -881,11 +906,11 @@ end
 # Currently for internal use only.
 macro Expression(x)
     newaff, parsecode = parseExprToplevel(x, :q)
-    return quote
+    code = quote
         q = Val{false}()
         $parsecode
-        $newaff
     end
+    return macro_return(code, newaff)
 end
 
 
@@ -950,10 +975,12 @@ macro expression(args...)
     end
     code = getloopedcode(variable, code, condition, idxvars, idxsets, :AffExpr, requestedcontainer)
     # don't do anything with the model, but check that it's valid anyway
-    return assert_validmodel(m, quote
-        $code
-        $(anonvar ? variable : :($escvarname = $variable))
-    end)
+    if anonvar
+        macro_code = macro_return(code, variable)
+    else
+        macro_code = macro_assign_and_return(code, variable, escvarname)
+    end
+    return assert_validmodel(m, macro_code)
 end
 
 function hasdependentsets(idxvars, idxsets)
@@ -1299,7 +1326,7 @@ macro variable(args...)
         variablecall = :( add_variable($model, $buildcall, $basename) )
         # The looped code is trivial here since there is a single variable
         creationcode = :($variable = $variablecall)
-        finalvariable = variable
+        final_variable = variable
     else
         isa(var,Expr) || _error("Expected $var to be a variable name")
 
@@ -1360,29 +1387,27 @@ macro variable(args...)
                     end
                 end)
             end
-            finalvariable = :(Symmetric($variable))
+            final_variable = :(Symmetric($variable))
         else
             creationcode = getloopedcode(variable, code, condition, idxvars, idxsets, vartype, requestedcontainer)
-            finalvariable = variable
+            final_variable = variable
         end
     end
     if anonvar
         # Anonymous variable, no need to register it in the model-level
         # dictionary nor to assign it to a variable in the user scope.
         # We simply return the variable
-        assignmentcode = finalvariable
+        macro_code = macro_return(creationcode, final_variable)
     else
         # We register the variable reference to its name and
         # we assign it to a variable in the local scope of this name
-        assignmentcode = quote
-            registervar($model, $quotvarname, $variable)
-            $escvarname = $finalvariable
-        end
+        macro_code = macro_assign_and_return(creationcode, variable, escvarname,
+                                             final_variable=final_variable,
+                                             registerfun=registervar,
+                                             quotvarname=quotvarname,
+                                             model = model)
     end
-    return assert_validmodel(model, quote
-        $creationcode
-        $assignmentcode
-    end)
+    return assert_validmodel(model, macro_code)
 end
 
 # TODO: replace with a general macro that can construct any container type
@@ -1411,10 +1436,11 @@ macro NLobjective(m, sense, x)
     if sense == :Min || sense == :Max
         sense = Expr(:quote,sense)
     end
-    return assert_validmodel(esc(m), quote
+    code = quote
         ex = $(processNLExpr(m, x))
         set_objective($(esc(m)), $(esc(sense)), ex)
-    end)
+    end
+    return assert_validmodel(esc(m), macro_return(code, ex))
 end
 
 # TODO: Add a docstring.
@@ -1483,18 +1509,19 @@ macro NLconstraint(m, x, extra...)
               "       expr1 == expr2")
     end
     looped = getloopedcode(variable, code, condition, idxvars, idxsets, :(ConstraintRef{Model,NonlinearConstraintIndex}), requestedcontainer)
-    return assert_validmodel(esc_m, quote
+    create_code = quote
         initNLP($esc_m)
         $looped
-        $(if anonvar
-            variable
-        else
-            quote
-                registercon($esc_m, $quotvarname, $variable)
-                $escvarname = $variable
-            end
-        end)
-    end)
+    end
+    if anonvar
+        macro_code = macro_return(creation_code, variable)
+    else
+        macro_code = macro_assign_and_return(creation_code, variable, escvarname,
+                                             registerfun = registercon,
+                                             quotvarname = quotvarname,
+                                             model = esc_m)
+    end
+    return assert_validmodel(esc_m, macro_code)
 end
 
 # TODO: Add a docstring.
@@ -1520,10 +1547,13 @@ macro NLexpression(args...)
     code = quote
         $(refcall) = NonlinearExpression($(esc(m)), $(processNLExpr(m, x)))
     end
-    return assert_validmodel(esc(m), quote
-        $(getloopedcode(variable, code, condition, idxvars, idxsets, :NonlinearExpression, requestedcontainer))
-        $(anonvar ? variable : :($escvarname = $variable))
-    end)
+    creation_code = getloopedcode(variable, code, condition, idxvars, idxsets, :NonlinearExpression, requestedcontainer)
+    if anonvar
+        macro_code = macro_return(creation_code, variable)
+    else
+        macro_code = macro_assign_and_return(creation_code, variable, escvarname)
+    end
+    return assert_validmodel(esc(m), macro_code)
 end
 
 """
@@ -1586,8 +1616,11 @@ macro NLparameter(m, ex, extra...)
         end
         $(refcall) = newparameter($m, $(esc(x)))
     end
-    return assert_validmodel(m, quote
-        $(getloopedcode(variable, code, condition, idxvars, idxsets, :NonlinearParameter, :Auto))
-        $(anonvar ? variable : :($escvarname = $variable))
-    end)
+    creation_code = getloopedcode(variable, code, condition, idxvars, idxsets, :NonlinearParameter, :Auto)
+    if anonvar
+        macro_code = macro_return(creation_code, variable)
+    else
+        macro_code = macro_assign_and_return(creation_code, variable, escvarname)
+    end
+    return assert_validmodel(m, macro_code)
 end

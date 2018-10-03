@@ -19,6 +19,8 @@ JuMP.@constraint(model, sum( y[j] for j=r if j == 4) <= 1)
 JuMP.@constraint(model, -1 <= x + y[3] <= 1)
 JuMP.@objective(model, sense, y[4])
 JuMP.@NLconstraint(model, y[3] == 1)
+JuMP.@objective(model, Min, x + sum( j*y[j] for j=r ))
+JuMP.@objective(model, Max, sum( y[j] for j=r if j == 4))
         
 # TODO: Add tests for the content of the model.
 
