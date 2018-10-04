@@ -41,7 +41,6 @@ Base.:(==)(v::MyVariableRef, w::MyVariableRef) = v.model === w.model && v.idx ==
 if VERSION >= v"0.7-"
     Base.broadcastable(v::MyVariableRef) = Ref(v)
 end
-JuMP.owner_model(v::MyVariableRef) = v.model
 JuMP.isequal_canonical(v::MyVariableRef, w::MyVariableRef) = v == w
 JuMP.variable_type(::MyModel) = MyVariableRef
 function JuMP.add_variable(m::MyModel, v::JuMP.AbstractVariable, name::String="")

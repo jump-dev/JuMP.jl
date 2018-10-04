@@ -100,7 +100,8 @@ struct VariableRef <: AbstractVariableRef
     index::MOI.VariableIndex
 end
 
-# owner_model should be implemented by all `AbstractVariableRef`.
+# `AbstractVariableRef` types must override the default `owner_model` if the field
+#  name is not `model`.
 """
     owner_model(v::AbstractVariableRef)
 
@@ -115,9 +116,7 @@ julia> x = @variable(model)
 julia> JuMP.owner_model(x) === model
 true
 """
-function owner_model end
-
-owner_model(v::VariableRef) = v.model
+owner_model(v::AbstractVariableRef) = v.model
 
 Base.iszero(::VariableRef) = false
 Base.copy(v::VariableRef) = VariableRef(v.model, v.index)
