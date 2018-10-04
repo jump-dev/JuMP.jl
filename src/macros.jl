@@ -1438,9 +1438,10 @@ macro NLobjective(m, sense, x)
     if sense == :Min || sense == :Max
         sense = Expr(:quote,sense)
     end
+    ex = gensym()
     code = quote
-        ex = $(processNLExpr(m, x))
-        set_objective($(esc(m)), $(esc(sense)), ex)
+        $ex = $(processNLExpr(m, x))
+        set_objective($(esc(m)), $(esc(sense)), $ex)
     end
     return assert_validmodel(esc(m), macro_return(code, ex))
 end
