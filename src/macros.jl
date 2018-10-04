@@ -778,6 +778,8 @@ end
 #     end
 # end
 
+add_JuMP_prefix(s::Symbol) = Expr(:., JuMP, :($(QuoteNode(s))))
+
 for (mac,sym) in [(:constraints,  Symbol("@constraint")),
                   (:NLconstraints,Symbol("@NLconstraint")),
                   (:SDconstraints,Symbol("@SDconstraint")),
@@ -806,10 +808,10 @@ for (mac,sym) in [(:constraints,  Symbol("@constraint")),
                                 push!(args, ex)
                             end
                         end
-                        mac = esc(Expr(:macrocall, $(quot(sym)), lastline, m, args...))
+                        mac = esc(Expr(:macrocall, $(add_JuMP_prefix(sym)), lastline, m, args...))
                         push!(code.args, mac)
                     else # stand-alone symbol or expression
-                        push!(code.args, esc(Expr(:macrocall, $(quot(sym)), lastline, m, it)))
+                        push!(code.args, esc(Expr(:macrocall, $(add_JuMP_prefix(sym)), lastline, m, it)))
                     end
                 end
                 push!(code.args, :(nothing))
