@@ -303,7 +303,7 @@ function macro_assign_and_return(code, variable, escvarname;
         $(if registerfun !== nothing
               :($registerfun($model, $quotvarname, $variable))
           end)
-        # escvarname should be set in the scope calling the macr
+        # escvarname should be set in the scope calling the macro
         $escvarname = $final_variable
     end
 end
