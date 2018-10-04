@@ -284,30 +284,27 @@ function macro_return(code, variable)
 end
 
 """
-    macro_assign_and_return(code, variable, escvarname;
+    macro_assign_and_return(code, variable, name;
                             final_variable=variable,
                             registerfun::Union{Nothing, Function}=nothing,
-                            model=nothing,
-                            quotvarname=nothing)
+                            model=nothing)
 
 Return runs `code` in a local scope which returns the value of `variable`
-and then assign `final_variable` to `escvarname`.
-If `registerfun` is given, `registerfun(model, quotvarname, variable)` is
-called.
+and then assign `final_variable` to `name`.
+If `registerfun` is given, `registerfun(model, name, variable)` is called.
 """
-function macro_assign_and_return(code, variable, escvarname;
+function macro_assign_and_return(code, variable, name;
                                  final_variable=variable,
                                  registerfun::Union{Nothing, Function}=nothing,
-                                 model=nothing,
-                                 quotvarname=nothing)
+                                 model=nothing)
     macro_code = macro_return(code, variable)
     return quote
         $variable = $macro_code
         $(if registerfun !== nothing
-              :($registerfun($model, $quotvarname, $variable))
+              :($registerfun($model, $(quot(name)), $variable))
           end)
-        # escvarname should be set in the scope calling the macro
-        $escvarname = $final_variable
+        # This assignment should be in the scope calling the macro
+        $(esc(name)) = $final_variable
     end
 end
 
@@ -491,9 +488,8 @@ function constraint_macro(args, macro_name::Symbol, parsefun::Function)
 
     anonvar = isexpr(c, :vect) || isexpr(c, :vcat) || length(extra) != 1
     variable = gensym()
-    quotvarname = quot(getname(c))
-    escvarname  = anonvar ? variable : esc(getname(c))
-    basename = anonvar ? "" : string(getname(c))
+    name = getname(c)
+    basename = anonvar ? "" : string(name)
     # TODO: support the basename keyword argument
 
     if isa(x, Symbol)
@@ -536,9 +532,8 @@ function constraint_macro(args, macro_name::Symbol, parsefun::Function)
     else
         # We register the constraint reference to its name and
         # we assign it to a variable in the local scope of this name
-        macro_code = macro_assign_and_return(creationcode, variable, escvarname,
+        macro_code = macro_assign_and_return(creationcode, variable, name,
                                              registerfun=registercon,
-                                             quotvarname=quotvarname,
                                              model = m)
     end
     return assert_validmodel(m, macro_code)
@@ -959,7 +954,6 @@ macro expression(args...)
 
     anonvar = isexpr(c, :vect) || isexpr(c, :vcat)
     variable = gensym()
-    escvarname  = anonvar ? variable : esc(getname(c))
 
     refcall, idxvars, idxsets, condition = buildrefsets(c, variable)
     newaff, parsecode = parseExprToplevel(x, :q)
@@ -982,7 +976,7 @@ macro expression(args...)
     if anonvar
         macro_code = macro_return(code, variable)
     else
-        macro_code = macro_assign_and_return(code, variable, escvarname)
+        macro_code = macro_assign_and_return(code, variable, getname(c))
     end
     return assert_validmodel(m, macro_code)
 end
@@ -1290,17 +1284,16 @@ macro variable(args...)
     anonvar = isexpr(var, :vect) || isexpr(var, :vcat) || anon_singleton
     anonvar && explicit_comparison && error("Cannot use explicit bounds via >=, <= with an anonymous variable")
     variable = gensym()
-    quotvarname = anonvar ? :(:__anon__) : quot(getname(var))
-    escvarname  = anonvar ? variable     : esc(getname(var))
     # TODO: Should we generate non-empty default names for variables?
+    name = getname(var)
     if isempty(basename_kwargs)
-        basename = anonvar ? "" : string(getname(var))
+        basename = anonvar ? "" : string(name)
     else
         basename = esc(basename_kwargs[1].args[2])
     end
 
-    if !isa(getname(var),Symbol) && !anonvar
-        Base.error("Expression $(getname(var)) should not be used as a variable name. Use the \"anonymous\" syntax $(getname(var)) = @variable(model, ...) instead.")
+    if !isa(name, Symbol) && !anonvar
+        Base.error("Expression $name should not be used as a variable name. Use the \"anonymous\" syntax $name = @variable(model, ...) instead.")
     end
 
     # process keyword arguments
@@ -1405,10 +1398,9 @@ macro variable(args...)
     else
         # We register the variable reference to its name and
         # we assign it to a variable in the local scope of this name
-        macro_code = macro_assign_and_return(creationcode, variable, escvarname,
+        macro_code = macro_assign_and_return(creationcode, variable, name,
                                              final_variable=final_variable,
                                              registerfun=registervar,
-                                             quotvarname=quotvarname,
                                              model = model)
     end
     return assert_validmodel(model, macro_code)
@@ -1462,8 +1454,6 @@ macro NLconstraint(m, x, extra...)
 
     anonvar = isexpr(c, :vect) || isexpr(c, :vcat) || length(extra) != 1
     variable = gensym()
-    quotvarname = anonvar ? :(:__anon__) : quot(getname(c))
-    escvarname  = anonvar ? variable : esc(getname(c))
 
     # Strategy: build up the code for non-macro add_constraint, and if needed
     # we will wrap in loops to assign to the ConstraintRefs
@@ -1521,9 +1511,8 @@ macro NLconstraint(m, x, extra...)
     if anonvar
         macro_code = macro_return(creation_code, variable)
     else
-        macro_code = macro_assign_and_return(creation_code, variable, escvarname,
+        macro_code = macro_assign_and_return(creation_code, variable, getname(c),
                                              registerfun = registercon,
-                                             quotvarname = quotvarname,
                                              model = esc_m)
     end
     return assert_validmodel(esc_m, macro_code)
@@ -1546,7 +1535,6 @@ macro NLexpression(args...)
 
     anonvar = isexpr(c, :vect) || isexpr(c, :vcat)
     variable = gensym()
-    escvarname  = anonvar ? variable : esc(getname(c))
 
     refcall, idxvars, idxsets, condition = buildrefsets(c, variable)
     code = quote
@@ -1556,7 +1544,7 @@ macro NLexpression(args...)
     if anonvar
         macro_code = macro_return(creation_code, variable)
     else
-        macro_code = macro_assign_and_return(creation_code, variable, escvarname)
+        macro_code = macro_assign_and_return(creation_code, variable, getname(c))
     end
     return assert_validmodel(esc(m), macro_code)
 end
@@ -1611,7 +1599,6 @@ macro NLparameter(m, ex, extra...)
     end
     m = esc(m)
     variable = gensym()
-    escvarname  = anonvar ? variable : esc(getname(c))
 
     refcall, idxvars, idxsets, condition = buildrefsets(c, variable)
     code = quote
@@ -1625,7 +1612,7 @@ macro NLparameter(m, ex, extra...)
     if anonvar
         macro_code = macro_return(creation_code, variable)
     else
-        macro_code = macro_assign_and_return(creation_code, variable, escvarname)
+        macro_code = macro_assign_and_return(creation_code, variable, getname(c))
     end
     return assert_validmodel(m, macro_code)
 end
