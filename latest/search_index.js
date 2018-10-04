@@ -301,7 +301,7 @@ var documenterSearchIndex = {"docs": [
     "page": "Variables",
     "title": "JuMP.owner_model",
     "category": "function",
-    "text": "owner_model(v::AbstractVariableRef)\n\nReturns the model to which v belongs.\n\nExample\n\n```jldoctest julia> model = Model()\n\njulia> x = @variable(model)\n\njulia> JuMP.owner_model(x) === model true\n\n\n\n\n\n"
+    "text": "owner_model(s::AbstractJuMPScalar)\n\nReturn the model owning the scalar s.\n\n\n\n\n\n"
 },
 
 {
