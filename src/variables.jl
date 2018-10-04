@@ -100,8 +100,8 @@ struct VariableRef <: AbstractVariableRef
     index::MOI.VariableIndex
 end
 
-# owner_model should be implemented by an `AbstractVariableRef` if the field
-# name is not `model`.
+# `AbstractVariableRef` types must override the default `owner_model` if the field
+#  name is not `model`.
 """
     owner_model(v::AbstractVariableRef)
 
