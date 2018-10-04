@@ -293,17 +293,12 @@ function macro_assign_and_return(code, variable, escvarname;
                                  registerfun::Union{Nothing, Function}=nothing,
                                  model=nothing,
                                  quotvarname=nothing)
+    macro_code = macro_return(code, variable)
     return quote
-        $variable = let
-            $code
-            $variable
-        end
+        $variable = $macro_code
         $(if registerfun !== nothing
               :($registerfun($model, $quotvarname, $variable))
-          else
-              :()
-          end
-         )
+          end)
         # escvarname should be set in the scope calling the macr
         $escvarname = $final_variable
     end
