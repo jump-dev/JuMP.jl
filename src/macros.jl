@@ -284,13 +284,16 @@ function macro_return(code, variable)
 end
 
 """
-    macro_assign_and_return(model, code, variable, registerfun::Function,
-                            quotvarname, escvarname, final_variable=variable)
+    macro_assign_and_return(code, variable, escvarname;
+                            final_variable=variable,
+                            registerfun::Union{Nothing, Function}=nothing,
+                            model=nothing,
+                            quotvarname=nothing)
 
 Return runs `code` in a local scope which returns the value of `variable`
 and then assign `final_variable` to `escvarname`.
-If `registerfun` is given, it registers the value returned by the local scope
-to `quotvarname`.
+If `registerfun` is given, `registerfun(model, quotvarname, variable)` is
+called.
 """
 function macro_assign_and_return(code, variable, escvarname;
                                  final_variable=variable,
