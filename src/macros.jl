@@ -268,7 +268,7 @@ end
 """
     macro_return(model, code, variable)
 
-Return a code that runs `code` in a local scope which returns the value of `variable`.
+Return a block of code that 1. runs the code block `code` in a local scope and 2. returns the value of a local variable named `variable`. `variable` must reference a variable defined by `code`.
 """
 function macro_return(code, variable)
     return quote
