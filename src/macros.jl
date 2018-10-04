@@ -305,7 +305,7 @@ function macro_assign_and_return(code, variable, escvarname;
           end
          )
         # escvarname should be set in the scope calling the macr
-        $escvarname = $variable
+        $escvarname = $final_variable
     end
 end
 
