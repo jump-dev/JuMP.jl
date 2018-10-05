@@ -286,22 +286,22 @@ end
 """
     macro_assign_and_return(code, variable, name;
                             final_variable=variable,
-                            registerfun::Union{Nothing, Function}=nothing,
+                            register_fun::Union{Nothing, Function}=nothing,
                             model=nothing)
 
 Return runs `code` in a local scope which returns the value of `variable`
 and then assign `final_variable` to `name`.
-If `registerfun` is given, `registerfun(model, name, variable)` is called.
+If `register_fun` is given, `register_fun(model, name, variable)` is called.
 """
 function macro_assign_and_return(code, variable, name;
                                  final_variable=variable,
-                                 registerfun::Union{Nothing, Function}=nothing,
+                                 register_fun::Union{Nothing, Function}=nothing,
                                  model=nothing)
     macro_code = macro_return(code, variable)
     return quote
         $variable = $macro_code
-        $(if registerfun !== nothing
-              :($registerfun($model, $(quot(name)), $variable))
+        $(if register_fun !== nothing
+              :($register_fun($model, $(quot(name)), $variable))
           end)
         # This assignment should be in the scope calling the macro
         $(esc(name)) = $final_variable
@@ -533,7 +533,7 @@ function constraint_macro(args, macro_name::Symbol, parsefun::Function)
         # We register the constraint reference to its name and
         # we assign it to a variable in the local scope of this name
         macro_code = macro_assign_and_return(creationcode, variable, name,
-                                             registerfun=registercon,
+                                             register_fun=registercon,
                                              model = m)
     end
     return assert_validmodel(m, macro_code)
@@ -1400,7 +1400,7 @@ macro variable(args...)
         # we assign it to a variable in the local scope of this name
         macro_code = macro_assign_and_return(creationcode, variable, name,
                                              final_variable=final_variable,
-                                             registerfun=registervar,
+                                             register_fun=registervar,
                                              model = model)
     end
     return assert_validmodel(model, macro_code)
@@ -1512,7 +1512,7 @@ macro NLconstraint(m, x, extra...)
         macro_code = macro_return(creation_code, variable)
     else
         macro_code = macro_assign_and_return(creation_code, variable, getname(c),
-                                             registerfun = registercon,
+                                             register_fun = registercon,
                                              model = esc_m)
     end
     return assert_validmodel(esc_m, macro_code)
