@@ -553,9 +553,9 @@ macro constraint(args...)
     end
     creation_code = getloopedcode(variable, code, condition, idxvars, idxsets, idxpairs, :ConstraintRef)
     if anonvar
-        macro_code = macro_return(code, variable)
+        macro_code = macro_return(creation_code, variable)
     else
-        macro_code = macro_assign_and_return(code, variable, getname(c),
+        macro_code = macro_assign_and_return(creation_code, variable, getname(c),
                                              register_fun = registercon,
                                              model = m)
     end
