@@ -1168,7 +1168,7 @@ macro variable(args...)
         if anonvar
             macro_code = macro_return(code, variable)
         else
-            macro_code = macro_assign_and_return(code, variable, getname(c))
+            macro_code = macro_assign_and_return(code, variable, getname(var))
         end
         return assert_validmodel(m, macro_code)
     end
