@@ -174,13 +174,7 @@ function getloopedcode(varname, code, condition, idxvars, idxsets, idxpairs, sym
 
     # if we don't have indexing, just return to avoid allocating stuff
     if isempty(idxsets)
-        # See comment for the return at the end of the function
-        return quote
-            $varname = let
-                $code
-                $varname
-            end
-        end
+        return code
     end
 
     hascond = (condition != :())
@@ -234,16 +228,9 @@ function getloopedcode(varname, code, condition, idxvars, idxsets, idxpairs, sym
         mac = gendict(varname, sym, idxsets...)
     end
     return quote
-        $varname = let
-            # The let block ensures that all variables create behaves like
-            # local variables, see https://github.com/JuliaOpt/JuMP.jl/issues/1496
-            # To make $varname accessible from outside we need to return it at
-            # the end of the block ant to assign it to a $varname variable in the
-            # outer scope
-            $mac
-            $code
-            $varname
-        end
+        $varname = $mac
+        $code
+        nothing
     end
 end
 
@@ -314,6 +301,47 @@ function _canonicalize_sense(sns::Symbol)
         return (:(<=),true)
     else
         error("Unrecognized sense $sns")
+    end
+end
+
+"""
+    macro_return(model, code, variable)
+
+Return a block of code that 1. runs the code block `code` in a local scope and 2. returns the value of a local variable named `variable`. `variable` must reference a variable defined by `code`.
+"""
+function macro_return(code, variable)
+    return quote
+        let
+            # The let block ensures that all variables created behaves like
+            # local variables, see https://github.com/JuliaOpt/JuMP.jl/issues/1496
+            # To make $variable accessible from outside we need to return it at
+            # the end of the block
+            $code
+            $variable
+        end
+    end
+end
+
+"""
+    macro_assign_and_return(code, variable, name;
+                            register_fun::Union{Nothing, Function}=nothing,
+                            model=nothing)
+
+Return runs `code` in a local scope which returns the value of `variable`
+and then assign `variable` to `name`.
+If `register_fun` is given, `register_fun(model, name, variable)` is called.
+"""
+function macro_assign_and_return(code, variable, name;
+                                 register_fun::Union{Nothing, Function}=nothing,
+                                 model=nothing)
+    macro_code = macro_return(code, variable)
+    return quote
+        $variable = $macro_code
+        $(if register_fun !== nothing
+              :($register_fun($model, $(quot(name)), $variable))
+          end)
+        # This assignment should be in the scope calling the macro
+        $(esc(name)) = $variable
     end
 end
 
@@ -427,8 +455,6 @@ macro constraint(args...)
 
     anonvar = isexpr(c, :vect) || isexpr(c, :vcat) || length(extra) != 1
     variable = gensym()
-    quotvarname = quot(getname(c))
-    escvarname  = anonvar ? variable : esc(getname(c))
 
     if isa(x, Symbol)
         constraint_error(args, "Incomplete constraint specification $x. Are you missing a comparison (<=, >=, or ==)?")
@@ -525,17 +551,14 @@ macro constraint(args...)
               "       expr1 <= expr2\n" * "       expr1 >= expr2\n" *
               "       expr1 == expr2\n" * "       lb <= expr <= ub"))
     end
-    return assert_validmodel(m, quote
-        $(getloopedcode(variable, code, condition, idxvars, idxsets, idxpairs, :ConstraintRef))
-        $(if anonvar
-            variable
-        else
-            quote
-                registercon($m, $quotvarname, $variable)
-                $escvarname = $variable
-            end
-        end)
-    end)
+    creation_code = getloopedcode(variable, code, condition, idxvars, idxsets, idxpairs, :ConstraintRef)
+    if anonvar
+        macro_code = macro_return(code, variable)
+    else
+        macro_code = macro_assign_and_return(code, variable, getname(c),
+                                             register_fun = registercon,
+                                             model = m)
+    end
 end
 
 macro SDconstraint(m, x)
@@ -567,11 +590,12 @@ macro SDconstraint(m, x)
         error("Invalid sense $sense in SDP constraint")
     end
     newaff, parsecode = parseExprToplevel(lhs, :q)
-    assert_validmodel(m, quote
+    code = quote
         q = zero(AffExpr)
         $parsecode
         addconstraint($m, constructconstraint!($newaff, PSDCone()))
-    end)
+    end
+    assert_validmodel(m, macro_return(code, newaff))
 end
 
 macro LinearConstraint(x)
@@ -584,13 +608,14 @@ macro LinearConstraint(x)
         vectorized &&
             error("in @LinearConstraint ($(string(x))): Cannot add vectorized constraints")
         lhs = :($(x.args[2]) - $(x.args[3]))
-        return quote
+        c = gensym()
+        code = quote
             newaff = @Expression($(esc(lhs)))
-            c = constructconstraint!(newaff,$(quot(sense)))
-            isa(c, LinearConstraint) ||
-                error("Constraint in @LinearConstraint is really a $(typeof(c))")
-            c
+            $c = constructconstraint!(newaff,$(quot(sense)))
+            isa($c, LinearConstraint) ||
+                error("Constraint in @LinearConstraint is really a $(typeof($c))")
         end
+        return macro_return(code, c)
     elseif isexpr(x, :comparison)
         # Ranged row
         (lsense,lvectorized) = _canonicalize_sense(x.args[2])
@@ -602,7 +627,8 @@ macro LinearConstraint(x)
             error("in @LinearConstraint ($(string(x))): Cannot add vectorized constraints")
         lb = x.args[1]
         ub = x.args[5]
-        return quote
+        c = gensym()
+        code = quote
             if !isa($(esc(lb)),Number)
                 error(string("in @LinearConstraint (",$(string(x)),"): expected ",$(string(lb))," to be a number."))
             elseif !isa($(esc(ub)),Number)
@@ -612,8 +638,9 @@ macro LinearConstraint(x)
             offset = newaff.constant
             newaff.constant = 0.0
             isa(newaff,AffExpr) || error("Ranged quadratic constraints are not allowed")
-            LinearConstraint(newaff,$(esc(lb))-offset,$(esc(ub))-offset)
+            $c = LinearConstraint(newaff,$(esc(lb))-offset,$(esc(ub))-offset)
         end
+        return macro_return(code, c)
     else
         # Unknown
         error("in @LinearConstraint ($(string(x))): constraints must be in one of the following forms:\n" *
@@ -632,12 +659,13 @@ macro QuadConstraint(x)
         vectorized &&
             error("in @QuadConstraint ($(string(x))): Cannot add vectorized constraints")
         lhs = :($(x.args[2]) - $(x.args[3]))
-        return quote
+        q = gensym()
+        code = quote
             newaff = @Expression($(esc(lhs)))
-            q = constructconstraint!(newaff,$(quot(sense)))
-            isa(q, QuadConstraint) || error("Constraint in @QuadConstraint is really a $(typeof(q))")
-            q
+            $q = constructconstraint!(newaff,$(quot(sense)))
+            isa($q, QuadConstraint) || error("Constraint in @QuadConstraint is really a $(typeof($q))")
         end
+        return macro_return(code, q)
     elseif isexpr(x, :comparison)
         error("Ranged quadratic constraints are not allowed")
     else
@@ -658,12 +686,13 @@ macro SOCConstraint(x)
         vectorized &&
             error("in @SOCConstraint ($(string(x))): Cannot add vectorized constraints")
         lhs = :($(x.args[2]) - $(x.args[3]))
-        return quote
+        q = gensym()
+        code = quote
             newaff = @Expression($(esc(lhs)))
-            q = constructconstraint!(newaff,$(quot(sense)))
-            isa(q, SOCConstraint) || error("Constraint in @SOCConstraint is really a $(typeof(q))")
-            q
+            $q = constructconstraint!(newaff,$(quot(sense)))
+            isa($q, SOCConstraint) || error("Constraint in @SOCConstraint is really a $(typeof($q))")
         end
+        return macro_return(code, q)
     elseif isexpr(x, :comparison)
         error("Ranged second-order cone constraints are not allowed")
     else
@@ -737,6 +766,8 @@ for (mac,sym) in [(:LinearConstraints, Symbol("@LinearConstraint")),
     end
 end
 
+add_JuMP_prefix(s::Symbol) = Expr(:., JuMP, :($(QuoteNode(s))))
+
 for (mac,sym) in [(:constraints,  Symbol("@constraint")),
                   (:NLconstraints,Symbol("@NLconstraint")),
                   (:SDconstraints,Symbol("@SDconstraint")),
@@ -765,10 +796,10 @@ for (mac,sym) in [(:constraints,  Symbol("@constraint")),
                                 push!(args, ex)
                             end
                         end
-                        mac = esc(Expr(:macrocall, $(quot(sym)), lastline, m, args...))
+                        mac = esc(Expr(:macrocall, $(add_JuMP_prefix(sym)), lastline, m, args...))
                         push!(code.args, mac)
                     else # stand-alone symbol or expression
-                        push!(code.args, esc(Expr(:macrocall, $(quot(sym)), lastline, m, it)))
+                        push!(code.args, esc(Expr(:macrocall, $(add_JuMP_prefix(sym)), lastline, m, it)))
                     end
                 end
                 push!(code.args, :(nothing))
@@ -827,7 +858,7 @@ macro objective(m, args...)
         $parsecode
         setobjective($m, $(esc(sense)), $newaff)
     end
-    return assert_validmodel(m, code)
+    return assert_validmodel(m, macro_return(code, newaff))
 end
 
 # Return a standalone, unnamed expression
@@ -835,11 +866,11 @@ end
 # Currently for internal use only.
 macro Expression(x)
     newaff, parsecode = parseExprToplevel(x, :q)
-    return quote
+    code = quote
         q = 0.0
         $parsecode
-        $newaff
     end
+    return macro_return(code, newaff)
 end
 
 
@@ -858,7 +889,6 @@ macro expression(args...)
 
     anonvar = isexpr(c, :vect) || isexpr(c, :vcat)
     variable = gensym()
-    escvarname  = anonvar ? variable : esc(getname(c))
 
     refcall, idxvars, idxsets, idxpairs, condition = buildrefsets(c, variable)
     newaff, parsecode = parseExprToplevel(x, :q)
@@ -877,17 +907,15 @@ macro expression(args...)
         $(refcall) = $newaff
     end
     code = getloopedcode(variable, code, condition, idxvars, idxsets, idxpairs, :AffExpr)
-    if m === nothing # deprecated usage
-        return quote
-            $code
-            $(anonvar ? variable : :($escvarname = $variable))
-        end
+    if anonvar
+        macro_code = macro_return(code, variable)
     else
-        # don't do anything with the model, but check that it's valid anyway
-        return assert_validmodel(m, quote
-            $code
-            $(anonvar ? variable : :($escvarname = $variable))
-        end)
+        macro_code = macro_assign_and_return(code, variable, getname(c))
+    end
+    if m === nothing # deprecated usage
+        macro_code
+    else
+        return assert_validmodel(m, macro_code)
     end
 end
 
@@ -1070,7 +1098,6 @@ macro variable(args...)
     anonvar && explicit_comparison && error("Cannot use explicit bounds via >=, <= with an anonymous variable")
     variable = gensym()
     quotvarname = anonvar ? :(:__anon__) : quot(getname(var))
-    escvarname  = anonvar ? variable     : esc(getname(var))
 
     if !isa(getname(var),Symbol) && !anonvar
         warn_once("Expression $(getname(var)) should not be used as a variable name. Use the \"anonymous\" syntax $(getname(var)) = @variable(m, ...) instead.")
@@ -1137,10 +1164,13 @@ macro variable(args...)
 
         variablecall = :( constructvariable!($m, $(extra...), $_error, $lb, $ub, $t, $obj, $inconstraints, $coefficients, string($quotvarname), $value) )
         addkwargs!(variablecall, extra_kwargs)
-        return assert_validmodel(m, quote
-            $variable = $variablecall
-            $(anonvar ? variable : :($escvarname = $variable))
-        end)
+        code = :($variable = $variablecall)
+        if anonvar
+            macro_code = macro_return(code, variable)
+        else
+            macro_code = macro_assign_and_return(code, variable, getname(c))
+        end
+        return assert_validmodel(m, macro_code)
     end
 
     if isa(var,Symbol)
@@ -1149,14 +1179,15 @@ macro variable(args...)
         variablecall = :( constructvariable!($m, $(extra...), $_error, $lb, $ub, $t, string($quotvarname), $value) )
         addkwargs!(variablecall, extra_kwargs)
         code = :($variable = $variablecall)
-        if !anonvar
-            code = quote
-                $code
-                registervar($m, $quotvarname, $variable)
-                $escvarname = $variable
-            end
+        code = :($variable = $variablecall)
+        if anonvar
+            macro_code = macro_return(code, variable)
+        else
+            macro_code = macro_assign_and_return(code, variable, getname(var),
+                                                 register_fun = registervar,
+                                                 model = m)
         end
-        return assert_validmodel(m, code)
+        return assert_validmodel(m, macro_code)
     end
     isa(var,Expr) || _error("Expected $var to be a variable name")
 
@@ -1207,7 +1238,7 @@ macro variable(args...)
             dimension_check = :($(esc(idxsets[1].args[1].args[2])) ==
                                 $(esc(idxsets[2].args[1].args[2])))
         end
-        return assert_validmodel(m, quote
+        creation_code = quote
             $dimension_check || error("Cannot construct symmetric variables with nonsquare dimensions")
             (issymmetric($lb) && issymmetric($ub)) || error("Bounds on symmetric  variables must be symmetric")
             $(getloopedcode(variable, code, condition, idxvars, idxsets, idxpairs, vartype; lowertri=symmetric))
@@ -1221,12 +1252,11 @@ macro variable(args...)
             storecontainerdata($m, $variable, $quotvarname,
                                $(Expr(:tuple,idxsets...)),
                                $idxpairs, $(quot(condition)))
-            $(anonvar ? variable : :($escvarname = $variable))
-        end)
+        end
     else
         coloncheckcode = Expr(:call,:coloncheck,refcall.args[2:end]...)
         code = :($coloncheckcode; $code)
-        return assert_validmodel(m, quote
+        creation_code = quote
             $(getloopedcode(variable, code, condition, idxvars, idxsets, idxpairs, vartype))
             isa($variable, JuMPContainer) && pushmeta!($variable, :model, $m)
             push!($(m).dictList, $variable)
@@ -1234,9 +1264,14 @@ macro variable(args...)
             storecontainerdata($m, $variable, $quotvarname,
                                $(Expr(:tuple,map(clear_dependencies,1:length(idxsets))...)),
                                $idxpairs, $(quot(condition)))
-            $(anonvar ? variable : :($escvarname = $variable))
-        end)
+        end
     end
+    if anonvar
+        macro_code = macro_return(creation_code, variable)
+    else
+        macro_code = macro_assign_and_return(creation_code, variable, getname(var))
+    end
+    return assert_validmodel(m, macro_code)
 end
 
 storecontainerdata(m::Model, variable, varname, idxsets, idxpairs, condition) =
@@ -1267,15 +1302,16 @@ macro NLobjective(m, sense, x)
     if sense == :Min || sense == :Max
         sense = Expr(:quote,sense)
     end
-    return assert_validmodel(esc(m), quote
+    ex = gensym()
+    code = quote
         initNLP($(esc(m)))
         setobjectivesense($(esc(m)), $(esc(sense)))
-        ex = $(processNLExpr(m, x))
-        $(esc(m)).nlpdata.nlobj = ex
+        $ex = $(processNLExpr(m, x))
+        $(esc(m)).nlpdata.nlobj = $ex
         $(esc(m)).obj = zero(QuadExpr)
         $(esc(m)).internalModelLoaded = false
-        nothing
-    end)
+    end
+    return assert_validmodel(esc(m), macro_return(code, ex))
 end
 
 macro NLconstraint(m, x, extra...)
@@ -1290,8 +1326,6 @@ macro NLconstraint(m, x, extra...)
 
     anonvar = isexpr(c, :vect) || isexpr(c, :vcat) || length(extra) != 1
     variable = gensym()
-    quotvarname = anonvar ? :(:__anon__) : quot(getname(c))
-    escvarname  = anonvar ? variable : esc(getname(c))
 
     # Strategy: build up the code for non-macro addconstraint, and if needed
     # we will wrap in loops to assign to the ConstraintRefs
@@ -1342,19 +1376,19 @@ macro NLconstraint(m, x, extra...)
               "       expr1 == expr2")
     end
     looped = getloopedcode(variable, code, condition, idxvars, idxsets, idxpairs, :(ConstraintRef{Model,NonlinearConstraint}))
-    return assert_validmodel(esc_m, quote
+    creation_code = quote
         initNLP($esc_m)
         $esc_m.internalModelLoaded = false
         $looped
-        $(if anonvar
-            variable
-        else
-            quote
-                registercon($esc_m, $quotvarname, $variable)
-                $escvarname = $variable
-            end
-        end)
-    end)
+    end
+    if anonvar
+        macro_code = macro_return(creation_code, variable)
+    else
+        macro_code = macro_assign_and_return(creation_code, variable, getname(c),
+                                             register_fun = registercon,
+                                             model = esc_m)
+    end
+    return assert_validmodel(esc_m, macro_code)
 end
 
 macro NLexpression(args...)
@@ -1371,16 +1405,18 @@ macro NLexpression(args...)
 
     anonvar = isexpr(c, :vect) || isexpr(c, :vcat)
     variable = gensym()
-    escvarname  = anonvar ? variable : esc(getname(c))
 
     refcall, idxvars, idxsets, idxpairs, condition = buildrefsets(c, variable)
     code = quote
         $(refcall) = NonlinearExpression($(esc(m)), $(processNLExpr(m, x)))
     end
-    return assert_validmodel(esc(m), quote
-        $(getloopedcode(variable, code, condition, idxvars, idxsets, idxpairs, :NonlinearExpression))
-        $(anonvar ? variable : :($escvarname = $variable))
-    end)
+    creation_code = getloopedcode(variable, code, condition, idxvars, idxsets, idxpairs, :NonlinearExpression)
+    if anonvar
+        macro_code = macro_return(creation_code, variable)
+    else
+        macro_code = macro_assign_and_return(creation_code, variable, getname(c))
+    end
+    return assert_validmodel(esc(m), macro_code)
 end
 
 # syntax is @NLparameter(m, p[i=1] == 2i)
@@ -1397,14 +1433,16 @@ macro NLparameter(m, ex)
         error("In @NLparameter($m, $ex): Anonymous nonlinear parameter syntax is not currently supported")
     end
     variable = gensym()
-    escvarname  = anonvar ? variable : esc(getname(c))
 
     refcall, idxvars, idxsets, idxpairs, condition = buildrefsets(c, variable)
     code = quote
         $(refcall) = newparameter($m, $(esc(x)))
     end
-    return assert_validmodel(m, quote
-        $(getloopedcode(variable, code, condition, idxvars, idxsets, idxpairs, :NonlinearParameter))
-        $(anonvar ? variable : :($escvarname = $variable))
-    end)
+    creation_code = getloopedcode(variable, code, condition, idxvars, idxsets, idxpairs, :NonlinearParameter)
+    if anonvar
+        macro_code = macro_return(creation_code, variable)
+    else
+        macro_code = macro_assign_and_return(creation_code, variable, getname(c))
+    end
+    return assert_validmodel(m, macro_code)
 end
