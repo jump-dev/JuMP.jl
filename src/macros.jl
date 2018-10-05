@@ -590,12 +590,13 @@ macro SDconstraint(m, x)
         error("Invalid sense $sense in SDP constraint")
     end
     newaff, parsecode = parseExprToplevel(lhs, :q)
+    cref = gensym()
     code = quote
         q = zero(AffExpr)
         $parsecode
-        addconstraint($m, constructconstraint!($newaff, PSDCone()))
+        $cref = addconstraint($m, constructconstraint!($newaff, PSDCone()))
     end
-    assert_validmodel(m, macro_return(code, newaff))
+    assert_validmodel(m, macro_return(code, cref))
 end
 
 macro LinearConstraint(x)
