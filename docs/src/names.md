@@ -26,7 +26,7 @@ a container with the syntax `name[...]` or when creating a constraint with
 `@constraint(m, name, expr)`, the name used is `name`.
 
 The name of the variable/constraint used for printing is based on the base name
-which is specified by the `basename` keyword argument. When the `basename`
+which is specified by the `base_name` keyword argument. When the `base_name`
 keyword argument is not specified, the name depends on whether the variable is
 anonymous:
 
@@ -38,5 +38,5 @@ anonymous:
 
 The name of the variable/constraint set to the
 `MOI.VariableName`/`MOI.ConstraintName` attribute and used for printing is then
-`basename` for single variable/constraint and `basename[i1,i2,...,in]` for the
+`base_name` for single variable/constraint and `base_name[i1,i2,...,in]` for the
 reference at indices `i1`, `i2`, ..., `in` in a container.

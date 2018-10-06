@@ -279,14 +279,14 @@ function test_variable_oneto_index_set(ModelType, VariableRefType)
     @test length.(Compat.axes(jumparray_var)) == (3, 2)
 end
 
-function test_variable_basename_in_macro(ModelType)
+function test_variable_base_name_in_macro(ModelType)
     model = ModelType()
     @variable(model, normal_var)
     @test JuMP.name(normal_var) == "normal_var"
-    no_indices = @variable(model, basename="foo")
+    no_indices = @variable(model, base_name="foo")
     @test JuMP.name(no_indices) == "foo"
     # Note that `z` will be ignored in name.
-    indices = @variable(model, z[i=2:3], basename="t")
+    indices = @variable(model, z[i=2:3], base_name="t")
     @test JuMP.name(indices[2]) == "t[2]"
     @test JuMP.name(indices[3]) == "t[3]"
 end
@@ -484,8 +484,8 @@ function variables_test(ModelType::Type{<:JuMP.AbstractModel},
         test_variable_oneto_index_set(ModelType, VariableRefType)
     end
 
-    @testset "basename= in @variable" begin
-        test_variable_basename_in_macro(ModelType)
+    @testset "base_name= in @variable" begin
+        test_variable_base_name_in_macro(ModelType)
     end
 
     @testset "condition in indexing" begin

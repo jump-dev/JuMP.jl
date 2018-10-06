@@ -489,8 +489,8 @@ function constraint_macro(args, macro_name::Symbol, parsefun::Function)
     anonvar = isexpr(c, :vect) || isexpr(c, :vcat) || length(extra) != 1
     variable = gensym()
     name = getname(c)
-    basename = anonvar ? "" : string(name)
-    # TODO: support the basename keyword argument
+    base_name = anonvar ? "" : string(name)
+    # TODO: support the base_name keyword argument
 
     if isa(x, Symbol)
         _error("Incomplete constraint specification $x. Are you missing a comparison (<=, >=, or ==)?")
@@ -508,7 +508,7 @@ function constraint_macro(args, macro_name::Symbol, parsefun::Function)
         # TODO: Pass through names here.
         constraintcall = :(add_constraint.($m, $buildcall))
     else
-        constraintcall = :(add_constraint($m, $buildcall, $(namecall(basename, idxvars))))
+        constraintcall = :(add_constraint($m, $buildcall, $(namecall(base_name, idxvars))))
     end
     addkwargs!(constraintcall, kwargs)
     code = quote
@@ -1034,13 +1034,13 @@ function macro_error(macroname, args, str...)
     error("In @$macroname($(join(args,","))): ", str...)
 end
 
-# Given a basename and idxvars, returns an expression that constructs the name
+# Given a base_name and idxvars, returns an expression that constructs the name
 # of the object. For use within macros only.
-function namecall(basename, idxvars)
-    if length(idxvars) == 0 || basename == ""
-        return basename
+function namecall(base_name, idxvars)
+    if length(idxvars) == 0 || base_name == ""
+        return base_name
     end
-    ex = Expr(:call,:string,basename,"[")
+    ex = Expr(:call,:string,base_name,"[")
     for i in 1:length(idxvars)
         push!(ex.args, esc(idxvars[i]))
         i < length(idxvars) && push!(ex.args,",")
@@ -1148,9 +1148,10 @@ The recognized positional arguments in `args` are the following:
 
 The recognized keyword arguments in `kwargs` are the following:
 
-* `basename`: Sets the base name used to generate variable names. It
+* `base_name`: Sets the name prefix used to generate variable names. It
   corresponds to the variable name for scalar variable, otherwise, the
-  variable names are `basename[...]` for each indices `...` of the axes `axes`.
+  variable names are set to `base_name[...]` for each index `...` of the axes
+  `axes`.
 * `lower_bound`: Sets the value of the variable lower bound.
 * `upper_bound`: Sets the value of the variable upper bound.
 * `start`: Sets the variable starting value used as initial guess in optimization.
@@ -1169,7 +1170,7 @@ lower bound 0:
 # Specify the lower bound using a keyword argument
 @variable(model, x, lower_bound=0)
 # Specify everything in `kwargs`
-x = @variable(model, basename="x", lower_bound=0)
+x = @variable(model, base_name="x", lower_bound=0)
 ```
 
 The following are equivalent ways of creating a `JuMPArray` of index set
@@ -1192,7 +1193,7 @@ extra_kwargs...))` where
 * `_error` is an error function with a single `String` argument showing the
   `@variable` call in addition to the error message given as argument;
 * `info` is the `VariableInfo` struct containing the information gathered in
-  `expr`, the recognized keyword arguments (except `basename` and
+  `expr`, the recognized keyword arguments (except `base_name` and
   `variable_type`) and the recognized positional arguments (except `Symmetric`
   and `PSD`);
 * `extra_args` are the unrecognized positional arguments of `args` plus the
@@ -1261,8 +1262,8 @@ macro variable(args...)
     end
 
     info_kwargs = filter(is_info_keyword, kwargs)
-    extra_kwargs = filter(kw -> kw.args[1] != :basename && kw.args[1] != :variable_type && !is_info_keyword(kw), kwargs)
-    basename_kwargs = filter(kw -> kw.args[1] == :basename, kwargs)
+    extra_kwargs = filter(kw -> kw.args[1] != :base_name && kw.args[1] != :variable_type && !is_info_keyword(kw), kwargs)
+    base_name_kwargs = filter(kw -> kw.args[1] == :base_name, kwargs)
     variable_type_kwargs = filter(kw -> kw.args[1] == :variable_type, kwargs)
     infoexpr = VariableInfoExpr(; keywordify.(info_kwargs)...)
 
@@ -1286,10 +1287,10 @@ macro variable(args...)
     variable = gensym()
     # TODO: Should we generate non-empty default names for variables?
     name = getname(var)
-    if isempty(basename_kwargs)
-        basename = anonvar ? "" : string(name)
+    if isempty(base_name_kwargs)
+        base_name = anonvar ? "" : string(name)
     else
-        basename = esc(basename_kwargs[1].args[2])
+        base_name = esc(base_name_kwargs[1].args[2])
     end
 
     if !isa(name, Symbol) && !anonvar
@@ -1320,7 +1321,7 @@ macro variable(args...)
         sdp && _error("Cannot add a semidefinite scalar variable")
         buildcall = :( build_variable($_error, $info, $(extra...)) )
         addkwargs!(buildcall, extra_kwargs)
-        variablecall = :( add_variable($model, $buildcall, $basename) )
+        variablecall = :( add_variable($model, $buildcall, $base_name) )
         # The looped code is trivial here since there is a single variable
         creationcode = :($variable = $variablecall)
         final_variable = variable
@@ -1335,7 +1336,7 @@ macro variable(args...)
         # Code to be used to create each variable of the container.
         buildcall = :( build_variable($_error, $info, $(extra...)) )
         addkwargs!(buildcall, extra_kwargs)
-        variablecall = :( add_variable($model, $buildcall, $(namecall(basename, idxvars))) )
+        variablecall = :( add_variable($model, $buildcall, $(namecall(base_name, idxvars))) )
         code = :( $(refcall) = $variablecall )
         # Determine the return type of add_variable. This is needed to create the container holding them.
         vartype = :( variable_type($model, $(extra...)) )
