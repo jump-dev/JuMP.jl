@@ -9,15 +9,10 @@ mutable struct NonlinearExprData
     const_values::Vector{Float64}
 end
 
-function set_objective(m::Model, sense::Symbol, ex::NonlinearExprData)
+function set_objective(m::Model, sense::MOI.OptimizationSense,
+                       ex::NonlinearExprData)
     initNLP(m)
-    if sense == :Min
-        moisense = MOI.MinSense
-    else
-        @assert sense == :Max
-        moisense = MOI.MaxSense
-    end
-    MOI.set(m.moi_backend, MOI.ObjectiveSense(), moisense)
+    set_objective_sense(m, sense)
     m.nlp_data.nlobj = ex
     # TODO: what do we do about existing objectives in the MOI backend?
     return
@@ -1110,8 +1105,8 @@ function register(m::Model, s::Symbol, dimension::Integer, f::Function, ∇f::Fu
 end
 
 # TODO: Add a docstring.
-# Ex: set_NL_objective(model, :Min, :($x + $y^2))
-function set_NL_objective(model::Model, sense::Symbol, x)
+# Ex: set_NL_objective(model, MOI.MinSense, :($x + $y^2))
+function set_NL_objective(model::Model, sense::MOI.OptimizationSense, x)
     return set_objective(model, sense, NonlinearExprData(model, x))
 end
 

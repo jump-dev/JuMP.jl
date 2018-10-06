@@ -327,20 +327,21 @@ Return the objective value after a call to `optimize!model)`.
 objective_value(model::Model) = MOI.get(model, MOI.ObjectiveValue())
 
 """
-    objective_sense(model::Model)
+    objective_sense(model::Model)::MathOptInterface.OptimizationSense
 
-Return the objective sense, `:Min`, `:Max`, or `:Feasibility`.
+Return the objective sense.
 """
 function objective_sense(model::Model)
-    moisense = MOI.get(model, MOI.ObjectiveSense())
-    if moisense == MOI.MinSense
-        return :Min
-    elseif moisense == MOI.MaxSense
-        return :Max
-    else
-        @assert moisense == MOI.FeasibilitySense
-        return :Feasibility
-    end
+    return MOI.get(model, MOI.ObjectiveSense())
+end
+
+"""
+    set_objective_sense(model::Model, sense::MathOptInterface.OptimizationSense)
+
+Sets the objective sense of the model to the given sense.
+"""
+function set_objective_sense(model::Model, sense::MOI.OptimizationSense)
+    MOI.set(model, MOI.ObjectiveSense(), sense)
 end
 
 # TODO(IainNZ): Document these too.

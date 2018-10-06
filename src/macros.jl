@@ -888,14 +888,19 @@ macro objective(m, args...)
         error("in @objective: needs three arguments: model, objective sense (Max or Min) and expression.")
     end
     sense, x = args
-    if sense == :Min || sense == :Max
-        sense = Expr(:quote,sense)
+    if sense == :Min
+        sense = MOI.MinSense
+    elseif sense == :Max
+        sense = MOI.MaxSense
+    else
+        # Refers to a variable that holds the sense.
+        sense = esc(sense)
     end
     newaff, parsecode = parseExprToplevel(x, :q)
     code = quote
         q = Val{false}()
         $parsecode
-        set_objective($m, $(esc(sense)), $newaff)
+        set_objective($m, $sense, $newaff)
     end
     return assert_validmodel(m, macro_return(code, newaff))
 end
@@ -1429,13 +1434,18 @@ end
 
 # TODO: Add a docstring.
 macro NLobjective(m, sense, x)
-    if sense == :Min || sense == :Max
-        sense = Expr(:quote,sense)
+    if sense == :Min
+        sense = MOI.MinSense
+    elseif sense == :Max
+        sense = MOI.MaxSense
+    else
+        # Refers to a variable that holds the sense.
+        sense = esc(sense)
     end
     ex = gensym()
     code = quote
         $ex = $(processNLExpr(m, x))
-        set_objective($(esc(m)), $(esc(sense)), $ex)
+        set_objective($(esc(m)), $sense, $ex)
     end
     return assert_validmodel(esc(m), macro_return(code, ex))
 end
