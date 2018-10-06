@@ -1,6 +1,102 @@
 JuMP release notes
 ==================
 
+Version 0.19 (unreleased)
+-------------------------
+
+**JuMP 0.19 contains significant breaking changes.**
+
+We will tag alpha and beta versions of 0.19 as appropriate to make it easier to
+test JuMP 0.19 before the final release. These are preview releases for early
+adopters. Additional breaking changes may occur between development tags.
+The documentation has known gaps. When using a development tag, be prepared to
+peek into the JuMP source code and tests for examples of how things work.
+
+Latest development tag: `v0.19-alpha` (`] add JuMP#v0.19-alpha`).
+
+
+
+Breaking changes:
+
+- JuMP's abstraction layer for communicating with solvers changed from
+  [MathProgBase](https://github.com/JuliaOpt/MathProgBase.jl) (MPB) to
+  [MathOptInterface](https://github.com/JuliaOpt/MathOptInterface.jl)
+  (MOI). MOI addresses many longstanding design issues. (See @mlubin's
+  [slides](http://www.juliaopt.org/meetings/bordeaux2018/lubin.pdf) from
+  JuMP-dev 2018.) JuMP 0.19 is compatible only with solvers that have been
+  updated for MOI. See the
+  [installation guide](http://www.juliaopt.org/JuMP.jl/latest/installation.html)
+  for a list of solvers that have and have not yet been updated.
+
+- JuMP containers (e.g., the objects returned by `@variable`) have been
+  redesigned. `Base.Dict` replaces `JuMPDict`, `JuMPArray` was rewritten
+  (inspired by `AxisArrays`), and you can now request a container type with the
+  `container=` keyword to the macros. See the corresponding
+  [documentation](http://www.juliaopt.org/JuMP.jl/latest/variables.html#Variable-containers-1)
+  for more details.
+
+- The statuses returned by solvers have changed. See the possible status
+  values
+  [here](http://www.juliaopt.org/MathOptInterface.jl/stable/apireference.html#Termination-Status-1).
+  The MOI statuses are much richer than the MPB statuses and can be used to
+  distinguish between previously indistinguishable cases (e.g. did the solver
+  have a feasible solution when it stopped because of the time limit?).
+
+- Starting values are separate from result values. Use `result_value` to query
+  the value of a variable in a solution. Use `start_value` and `set_start_value`
+  to get and set an initial starting point provided to the solver.
+
+- The data structures for affine and quadratic expressions `AffExpr` and
+  `QuadExpr` have changed. Internally, terms are stored in dictionaries instead
+  of lists. Duplicate coefficients can no longer exist. Accessors and iteration
+  methods have changed.
+
+- `JuMPNLPEvaluator` no longer includes the the linear and quadratic and
+  quadratic parts of the model in the evaluation calls. These are now handled
+  separately to allow NLP solvers that support various types of constraints.
+
+- JuMP solver-independent callbacks have been replaced by solver-specific
+  callbacks. See your favorite solver for more details. (TODO: No
+  solver-specific callbacks are implemented yet.)
+
+- The `norm()` syntax is no longer recognized inside macros. Use the
+  `SecondOrderCone()` set instead. (TODO: This syntax is undocumented.)
+
+New features:
+
+- Support for deleting constraints and variables
+
+- The documentation has been completely rewritten using docstrings and
+  Documenter.
+
+- Explicit control of whether symmetry-enforcing constraints are added to PSD
+  PSD constraints (TODO: This is undocumented.)
+
+- Support for modeling exponential cones
+
+- Significant improvements in internal code quality and testing
+
+- Style and naming guidelines
+
+- Direct mode and manual mode provide explicit control over when copies of a
+  model are stored and/or regenerated. See the corresponding
+  [documentation](http://www.juliaopt.org/JuMP.jl/latest/solvers.html).
+
+
+Known issues:
+
+- Model printing is not yet implemented. ([issue](https://github.com/JuliaOpt/JuMP.jl/issues/1180))
+
+- There are known performance regressions. ([issue](https://github.com/JuliaOpt/JuMP.jl/issues/1403))
+
+- We do not yet have an implementation of solver-specific callbacks.
+
+- Example files (under `examples/`) have not yet been updated.
+
+See the
+[0.19 issue milestone](https://github.com/JuliaOpt/JuMP.jl/issues?q=is%3Aopen+is%3Aissue+milestone%3A0.19)
+for a complete list of issues blocking the 0.19 release.
+
 Version 0.18.4 (October 8, 2018)
 --------------------------------
 
