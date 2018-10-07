@@ -877,14 +877,11 @@ Constructs a vector of `QuadConstraint` objects. Similar to `@QuadConstraint`, e
 """ :(@QuadConstraints)
 
 
-
-
-
-
+# TODO: Add a docstring.
 macro objective(m, args...)
     m = esc(m)
     if length(args) != 2
-        # Either just an objective sene, or just an expression.
+        # Either just an objective sense, or just an expression.
         error("in @objective: needs three arguments: model, objective sense (Max or Min) and expression.")
     end
     sense, x = args
@@ -894,6 +891,8 @@ macro objective(m, args...)
         sense = MOI.MaxSense
     else
         # Refers to a variable that holds the sense.
+        # TODO: Better document this behavior and consider splitting some of the
+        # logic into a method that's reused by @NLobjective.
         sense = esc(sense)
     end
     newaff, parsecode = parseExprToplevel(x, :q)
