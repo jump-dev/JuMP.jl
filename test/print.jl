@@ -123,14 +123,14 @@ Base.isless(u::UnitNumber, v::UnitNumber) = isless(u.α, v.α)
         io_test(IJuliaMode, a_v, "v_{4,5,2,3,2,2,4}")
     end
 
-    @testset "basename keyword argument" begin
+    @testset "base_name keyword argument" begin
         m = Model()
-        @variable(m, x, basename="foo")
-        @variable(m, y[1:3], basename="bar")
+        @variable(m, x, base_name="foo")
+        @variable(m, y[1:3], base_name="bar")
         num = 123
-        @variable(m, z[[:red,:blue]], basename="color_$num")
-        @variable(m, v[1:2,1:2], PSD, basename=string("i","$num",num))
-        @variable(m, w[1:3,1:3], Symmetric, basename="symm")
+        @variable(m, z[[:red,:blue]], base_name="color_$num")
+        @variable(m, v[1:2,1:2], PSD, base_name=string("i","$num",num))
+        @variable(m, w[1:3,1:3], Symmetric, base_name="symm")
 
         io_test(REPLMode,   x, "foo")
         io_test(IJuliaMode, x, "foo")

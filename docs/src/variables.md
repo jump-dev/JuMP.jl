@@ -50,7 +50,7 @@ variables with their corresponding prefix.
 JuMP variables can have attributes, such as names or an initial primal start
 value. We illustrate the name attribute in the following example:
 ```jldoctest variables
-julia> @variable(model, y, basename="decision variable")
+julia> @variable(model, y, base_name="decision variable")
 decision variable
 ```
 This code does four things:
@@ -59,7 +59,7 @@ This code does four things:
    variable
 3. it binds the JuMP variable to the Julia variable `y`
 4. it tells JuMP that the *name* attribute of this JuMP variable is "decision
-variable". JuMP uses the value of `basename` when it has to print the variable
+variable". JuMP uses the value of `base_name` when it has to print the variable
 as a string.
 
 For example, when we print `y` at the REPL we get:
@@ -456,7 +456,7 @@ noname
 ```
 This shows how `(model, x)` is really short for:
 ```jldoctest anon_variables; setup=:(model=Model())
-julia> x = model[:x] = @variable(model, basename="x")               
+julia> x = model[:x] = @variable(model, base_name="x")
 x
 ```
 An `Array` of anonymous JuMP variables can be created as follows:
@@ -478,7 +478,7 @@ use the `binary` and `integer` keywords.
 
 Thus, the anonymous variant of `@variable(model, x[i=1:2] >= i, Int)` is:
 ```jldoctest; setup=:(model=Model())
-julia> x = @variable(model, [i=1:2], basename="x", lower_bound=i, integer=true)
+julia> x = @variable(model, [i=1:2], base_name="x", lower_bound=i, integer=true)
 2-element Array{VariableRef,1}:
  x[1]
  x[2]
