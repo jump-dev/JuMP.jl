@@ -295,16 +295,11 @@ function MOI.VectorAffineFunction(affs::Vector{AffExpr})
 end
 moi_function(a::Vector{<:GenericAffExpr}) = MOI.VectorAffineFunction(a)
 
-function set_objective(m::Model, sense::Symbol, a::AffExpr)
-    if sense == :Min
-        moisense = MOI.MinSense
-    else
-        @assert sense == :Max
-        moisense = MOI.MaxSense
-    end
-    MOI.set(m.moi_backend, MOI.ObjectiveSense(), moisense)
-    MOI.set(m.moi_backend, MOI.ObjectiveFunction{MOI.ScalarAffineFunction{Float64}}(), MOI.ScalarAffineFunction(a))
-    nothing
+function set_objective(model::Model, sense::MOI.OptimizationSense, a::AffExpr)
+    set_objective_sense(model, sense)
+    MOI.set(model, MOI.ObjectiveFunction{MOI.ScalarAffineFunction{Float64}}(),
+            MOI.ScalarAffineFunction(a))
+    return nothing
 end
 
 """

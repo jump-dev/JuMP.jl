@@ -439,7 +439,7 @@
         model = Model()
         @variable(model, x)
         @variable(model, y)
-        JuMP.set_NL_objective(model, :Min, :($x^2 + $y^2))
+        JuMP.set_NL_objective(model, MOI.MinSense, :($x^2 + $y^2))
         JuMP.add_NL_constraint(model, :($x + $y <= 1))
         JuMP.add_NL_constraint(model, :($x + $y >= 1))
         JuMP.add_NL_constraint(model, :($x + $y == 1))

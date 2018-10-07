@@ -12,7 +12,7 @@ using Compat.Test
 import JuMP
 
 model = JuMP.Model()
-sense = :Min
+sense = JuMP.MathOptInterface.MinSense
 JuMP.@variable(model, x >= 0)
 r = 3:5
 JuMP.@variable(model, y[i=r] <= i)

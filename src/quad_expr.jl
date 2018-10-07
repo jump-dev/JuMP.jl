@@ -221,16 +221,12 @@ function jump_function(model::AbstractModel, aff::MOI.ScalarQuadraticFunction)
     return QuadExpr(model, aff)
 end
 
-function set_objective(m::Model, sense::Symbol, a::QuadExpr)
-    if sense == :Min
-        moisense = MOI.MinSense
-    else
-        @assert sense == :Max
-        moisense = MOI.MaxSense
-    end
-    MOI.set(m.moi_backend, MOI.ObjectiveSense(), moisense)
-    MOI.set(m.moi_backend, MOI.ObjectiveFunction{MOI.ScalarQuadraticFunction{Float64}}(), MOI.ScalarQuadraticFunction(a))
-    nothing
+function set_objective(model::Model, sense::MOI.OptimizationSense, a::QuadExpr)
+    set_objective_sense(model, sense)
+    MOI.set(model,
+            MOI.ObjectiveFunction{MOI.ScalarQuadraticFunction{Float64}}(),
+            MOI.ScalarQuadraticFunction(a))
+    return nothing
 end
 
 """

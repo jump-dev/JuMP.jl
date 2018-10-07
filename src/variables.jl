@@ -244,17 +244,12 @@ function jump_function(model::AbstractModel, variable::MOI.SingleVariable)
     return VariableRef(model, variable)
 end
 
-function set_objective(m::Model, sense::Symbol, x::VariableRef)
-    # TODO: This code is repeated here, for GenericAffExpr, and for GenericQuadExpr.
-    if sense == :Min
-        moisense = MOI.MinSense
-    else
-        @assert sense == :Max
-        moisense = MOI.MaxSense
-    end
-    MOI.set(m.moi_backend, MOI.ObjectiveSense(), moisense)
-    MOI.set(m.moi_backend, MOI.ObjectiveFunction{MOI.SingleVariable}(),
-             MOI.SingleVariable(x))
+function set_objective(model::Model, sense::MOI.OptimizationSense,
+                       x::VariableRef)
+    set_objective_sense(model, sense)
+    MOI.set(model, MOI.ObjectiveFunction{MOI.SingleVariable}(),
+            MOI.SingleVariable(x))
+    return nothing
 end
 
 """

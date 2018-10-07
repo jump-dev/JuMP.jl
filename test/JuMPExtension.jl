@@ -15,13 +15,13 @@ mutable struct MyModel <: JuMP.AbstractModel
     nextconidx::Int                                 # Next constraint index is nextconidx+1
     constraints::Dict{Int, JuMP.AbstractConstraint} # Map conidx -> variable
     connames::Dict{Int, String}                     # Map varidx -> name
-    objectivesense::Symbol
+    objectivesense::MOI.OptimizationSense
     objective_function::JuMP.AbstractJuMPScalar
     obj_dict::Dict{Symbol, Any}                     # Same that JuMP.Model's field `obj_dict`
     function MyModel()
         new(0, Dict{Int, JuMP.AbstractVariable}(),   Dict{Int, String}(), # Variables
             0, Dict{Int, JuMP.AbstractConstraint}(), Dict{Int, String}(), # Constraints
-            :Min, zero(JuMP.GenericAffExpr{Float64, MyVariableRef}),
+            MOI.MinSense, zero(JuMP.GenericAffExpr{Float64, MyVariableRef}),
             Dict{Symbol, Any}())
     end
 end
@@ -145,11 +145,15 @@ function JuMP.constraint_object(cref::MyConstraintRef)
 end
 
 # Objective
-function JuMP.set_objective(m::MyModel, sense::Symbol, f::JuMP.AbstractJuMPScalar)
+function JuMP.set_objective(m::MyModel, sense::MOI.OptimizationSense,
+                            f::JuMP.AbstractJuMPScalar)
     m.objectivesense = sense
     m.objective_function = f
 end
-JuMP.objective_sense(m::MyModel) = m.objectivesense
+JuMP.objective_sense(model::MyModel) = model.objectivesense
+function JuMP.set_objective_sense(model::MyModel, sense)
+    model.objectivesense = sense
+end
 function JuMP.objective_function(m::MyModel, FT::Type)
     # InexactError should be thrown, this is needed in `objective.jl`
     if !(m.objective_function isa FT)
