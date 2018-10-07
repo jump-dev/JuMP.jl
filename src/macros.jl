@@ -1037,15 +1037,18 @@ end
 # Given a base_name and idxvars, returns an expression that constructs the name
 # of the object. For use within macros only.
 function namecall(base_name, idxvars)
-    if length(idxvars) == 0 || base_name == ""
+    if isempty(idxvars) || base_name == ""
         return base_name
     end
-    ex = Expr(:call,:string,base_name,"[")
+    ex = Expr(:call, :string, base_name, "[")
     for i in 1:length(idxvars)
-        push!(ex.args, esc(idxvars[i]))
-        i < length(idxvars) && push!(ex.args,",")
+        # Converting the arguments to strings before concatenating is faster:
+        # https://github.com/JuliaLang/julia/issues/29550.
+        esc_idxvar = esc(idxvars[i])
+        push!(ex.args, :(string($esc_idxvar)))
+        i < length(idxvars) && push!(ex.args, ",")
     end
-    push!(ex.args,"]")
+    push!(ex.args, "]")
     return ex
 end
 
