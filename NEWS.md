@@ -14,8 +14,6 @@ peek into the JuMP source code and tests for examples of how things work.
 
 Latest development tag: `v0.19-alpha` (`] add JuMP#v0.19-alpha`).
 
-
-
 Breaking changes:
 
 - JuMP's abstraction layer for communicating with solvers changed from
@@ -51,9 +49,9 @@ Breaking changes:
   of lists. Duplicate coefficients can no longer exist. Accessors and iteration
   methods have changed.
 
-- `JuMPNLPEvaluator` no longer includes the the linear and quadratic and
-  quadratic parts of the model in the evaluation calls. These are now handled
-  separately to allow NLP solvers that support various types of constraints.
+- `JuMPNLPEvaluator` no longer includes the linear and quadratic parts of the
+  model in the evaluation calls. These are now handled separately to allow NLP
+  solvers that support various types of constraints.
 
 - JuMP solver-independent callbacks have been replaced by solver-specific
   callbacks. See your favorite solver for more details. (TODO: No
@@ -64,7 +62,7 @@ Breaking changes:
 
 New features:
 
-- Support for deleting constraints and variables
+- Support for deleting constraints and variables.
 
 - The documentation has been completely rewritten using docstrings and
   Documenter.
@@ -72,11 +70,11 @@ New features:
 - Explicit control of whether symmetry-enforcing constraints are added to PSD
   PSD constraints (TODO: This is undocumented.)
 
-- Support for modeling exponential cones
+- Support for modeling exponential cones.
 
-- Significant improvements in internal code quality and testing
+- Significant improvements in internal code quality and testing.
 
-- Style and naming guidelines
+- Style and naming guidelines.
 
 - Direct mode and manual mode provide explicit control over when copies of a
   model are stored and/or regenerated. See the corresponding
