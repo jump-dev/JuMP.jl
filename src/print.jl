@@ -163,8 +163,10 @@ function Base.show(io::IO, m::Model)
     print(io, "Solver is ")
     if isa(m.solver, UnsetSolver)
         print(io, "default solver")
-    else
+    elseif VERSION < v"0.7-"
         print(io, split(split(string(m.solver), "Solver")[1], ".")[2])
+    else
+        print(io, split(string(m.solver), "Solver")[1])
     end
 end
 Base.show(io::IO, ::MIME"text/latex", m::Model) =
