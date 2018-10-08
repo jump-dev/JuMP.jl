@@ -1,6 +1,11 @@
 JuMP release notes
 ==================
 
+Version 0.18.4 (October 8, 2018)
+--------------------------------
+
+   * Fix a bug in model printing on Julia 0.7 and 1.0.
+
 Version 0.18.3 (October 1, 2018)
 ------------------------------
 
