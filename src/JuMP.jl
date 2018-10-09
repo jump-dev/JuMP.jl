@@ -498,26 +498,23 @@ include("sets.jl")
 # SDConstraint
 include("sd.jl")
 
-# handle dictionary of variables
-function registervar(m::AbstractModel, varname::Symbol, value)
-    registerobject(m, varname, value, "A variable or constraint named $varname is already attached to this model. If creating variables programmatically, use the anonymous variable syntax x = @variable(m, [1:N], ...).")
-end
-registervar(m::AbstractModel, varname, value) = error("Invalid variable name $varname")
-
-function registercon(m::AbstractModel, conname::Symbol, value)
-    registerobject(m, conname, value, "A variable or constraint named $conname is already attached to this model. If creating constraints programmatically, use the anonymous constraint syntax con = @constraint(m, ...).")
-end
-registercon(m::AbstractModel, conname, value) = error("Invalid constraint name $conname")
-
-function registerobject(m::AbstractModel, name::Symbol, value, errorstring::String)
-    obj_dict = object_dictionary(m)
+# Internal functions for registering objects in the scope of the model.
+function register_object(model::AbstractModel, name::Symbol, value)
+    obj_dict = object_dictionary(model)
     if haskey(obj_dict, name)
-        error(errorstring)
+        error("An object of name $name is already attached to this model. " *
+              "If this is intended, consider using the anonymous construction" *
+              " syntax, e.g., x = @variable(model, [1:N], ...) where the " *
+              "name of the object does not appear inside the macro.")
         obj_dict[name] = nothing
     else
         obj_dict[name] = value
     end
     return value
+end
+
+function register_object(model::AbstractModel, name, value)
+    error("Invalid name $name.")
 end
 
 
@@ -530,7 +527,7 @@ Returns the variable, or group of variables, or constraint, or group of constrai
 function Base.getindex(m::JuMP.AbstractModel, name::Symbol)
     obj_dict = object_dictionary(m)
     if !haskey(obj_dict, name)
-        throw(KeyError("No object with name $name"))
+        throw(KeyError(name))
     elseif obj_dict[name] === nothing
         error("There are multiple variables and/or constraints named $name that are already attached to this model. If creating variables programmatically, use the anonymous variable syntax x = @variable(m, [1:N], ...). If creating constraints programmatically, use the anonymous constraint syntax con = @constraint(m, ...).")
     else
