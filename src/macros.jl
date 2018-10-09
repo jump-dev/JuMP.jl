@@ -286,22 +286,22 @@ end
 """
     macro_assign_and_return(code, variable, name;
                             final_variable=variable,
-                            register_fun::Union{Nothing, Function}=nothing,
-                            model=nothing)
+                            model_for_registering=nothing)
 
 Return runs `code` in a local scope which returns the value of `variable`
 and then assign `final_variable` to `name`.
-If `register_fun` is given, `register_fun(model, name, variable)` is called.
+If `model_for_registering` is given, `register_object(model, name, variable)` is
+called in the generated code.
 """
 function macro_assign_and_return(code, variable, name;
                                  final_variable=variable,
-                                 register_fun::Union{Nothing, Function}=nothing,
-                                 model=nothing)
+                                 model_for_registering=nothing)
     macro_code = macro_return(code, variable)
     return quote
         $variable = $macro_code
-        $(if register_fun !== nothing
-              :($register_fun($model, $(quot(name)), $variable))
+        $(if model_for_registering !== nothing
+              :(register_object($model_for_registering, $(quot(name)),
+                $variable))
           end)
         # This assignment should be in the scope calling the macro
         $(esc(name)) = $final_variable
@@ -533,8 +533,7 @@ function constraint_macro(args, macro_name::Symbol, parsefun::Function)
         # We register the constraint reference to its name and
         # we assign it to a variable in the local scope of this name
         macro_code = macro_assign_and_return(creationcode, variable, name,
-                                             register_fun=registercon,
-                                             model = m)
+                                             model_for_registering = m)
     end
     return assert_validmodel(m, macro_code)
 end
@@ -980,7 +979,8 @@ macro expression(args...)
     if anonvar
         macro_code = macro_return(code, variable)
     else
-        macro_code = macro_assign_and_return(code, variable, getname(c))
+        macro_code = macro_assign_and_return(code, variable, getname(c),
+                                             model_for_registering = m)
     end
     return assert_validmodel(m, macro_code)
 end
@@ -1408,8 +1408,7 @@ macro variable(args...)
         # we assign it to a variable in the local scope of this name
         macro_code = macro_assign_and_return(creationcode, variable, name,
                                              final_variable=final_variable,
-                                             register_fun=registervar,
-                                             model = model)
+                                             model_for_registering = model)
     end
     return assert_validmodel(model, macro_code)
 end
@@ -1524,9 +1523,9 @@ macro NLconstraint(m, x, extra...)
     if anonvar
         macro_code = macro_return(creation_code, variable)
     else
-        macro_code = macro_assign_and_return(creation_code, variable, getname(c),
-                                             register_fun = registercon,
-                                             model = esc_m)
+        macro_code = macro_assign_and_return(creation_code, variable,
+                                             getname(c),
+                                             model_for_registering = esc_m)
     end
     return assert_validmodel(esc_m, macro_code)
 end
@@ -1557,7 +1556,9 @@ macro NLexpression(args...)
     if anonvar
         macro_code = macro_return(creation_code, variable)
     else
-        macro_code = macro_assign_and_return(creation_code, variable, getname(c))
+        macro_code = macro_assign_and_return(creation_code, variable,
+                                             getname(c),
+                                             model_for_registering = esc(m))
     end
     return assert_validmodel(esc(m), macro_code)
 end
@@ -1622,10 +1623,10 @@ macro NLparameter(m, ex, extra...)
         $(refcall) = newparameter($m, $(esc(x)))
     end
     creation_code = getloopedcode(variable, code, condition, idxvars, idxsets, :NonlinearParameter, :Auto)
-    if anonvar
-        macro_code = macro_return(creation_code, variable)
-    else
-        macro_code = macro_assign_and_return(creation_code, variable, getname(c))
-    end
+
+    # TODO: NLparameters are not registered in the model because we don't yet
+    # have an anonymous version.
+    macro_code = macro_assign_and_return(creation_code, variable,
+                                         getname(c))
     return assert_validmodel(m, macro_code)
 end

@@ -1,6 +1,9 @@
 Names
 =====
 
+TODO: This discussion is redundant with and inconsistent with the discussion of
+names for variables. Also mention that expressions can be anonymous or named.
+
 There a two different naming aspects that need to be distinguished when
 creating variables/contraints (resp. a container of variables/constraints):
 

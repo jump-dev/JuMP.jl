@@ -176,6 +176,46 @@ end
             end
         end
     end
+
+    @testset "Lookup in model scope: @variable" begin
+        model = Model()
+        @variable(model, x)
+        @test x === model[:x]
+    end
+
+    @testset "Lookup in model scope: @constraint" begin
+        model = Model()
+        @variable(model, x)
+        @constraint(model, con, x + 1 <= 2)
+        @test con === model[:con]
+    end
+
+    @testset "Lookup in model scope: @expression" begin
+        model = Model()
+        @variable(model, x)
+        @expression(model, expr, 2x)
+        @test expr === model[:expr]
+    end
+
+    @testset "Lookup in model scope: @NLexpression" begin
+        model = Model()
+        @variable(model, x)
+        @NLexpression(model, nl_expr, sin(x))
+        @test nl_expr === model[:nl_expr]
+    end
+
+    @testset "Lookup in model scope: @NLconstraint" begin
+        model = Model()
+        @variable(model, x)
+        @NLconstraint(model, nl_con, sin(x) == 1.0)
+        @test nl_con === model[:nl_con]
+    end
+
+    @testset "Error on duplicate names in model scope" begin
+        model = Model()
+        y = @variable(model, x)
+        @test_throws ErrorException @constraint(model, x, 2y <= 1)
+    end
 end
 
 @testset "Macros for JuMPExtension.MyModel" begin
