@@ -188,7 +188,13 @@ an appropriate is defined in the `MathOptInterface.Bridges` module or is
 defined in another module and is explicitely added.
 """
 function Model(; caching_mode::MOIU.CachingOptimizerMode=MOIU.Automatic,
-                 bridge_constraints::Bool=true)
+                 bridge_constraints::Bool=true,
+                 solver=nothing)
+    if solver !== nothing
+        error("The solver= keyword is no longer available in JuMP 0.19 and " *
+              "later. See the JuMP documentation " *
+              "(http://www.juliaopt.org/JuMP.jl/latest/) for latest syntax.")
+    end
     universal_fallback = MOIU.UniversalFallback(JuMPMOIModel{Float64}())
     caching_opt = MOIU.CachingOptimizer(universal_fallback,
                                         caching_mode)
