@@ -60,12 +60,27 @@ Breaking changes:
 - The `norm()` syntax is no longer recognized inside macros. Use the
   `SecondOrderCone()` set instead. (TODO: This syntax is undocumented.)
 
+- JuMP no longer performs automatic transformation between special quadratic
+  forms and second-order cone constraints is no longer. Support for these
+  constraint classes depends on the solver.
+
 New features:
 
 - Support for deleting constraints and variables.
 
 - The documentation has been completely rewritten using docstrings and
   Documenter.
+
+- Support for modeling mixed conic and quadratic models (e.g., conic models
+  with quadratic objectives and bi-linear matrix inequalities).
+
+- Significantly improved support for modeling new types of constraints and for
+  extending JuMP's macros.
+
+- Support for providing dual warm starts.
+
+- Improved support for accessing solver-specific attributes (e.g., the
+  irreducible inconsistent subsystem).
 
 - Explicit control of whether symmetry-enforcing constraints are added to PSD
   PSD constraints (TODO: This is undocumented.)
