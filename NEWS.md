@@ -61,7 +61,7 @@ Breaking changes:
   `SecondOrderCone()` set instead. (TODO: This syntax is undocumented.)
 
 - JuMP no longer performs automatic transformation between special quadratic
-  forms and second-order cone constraints is no longer. Support for these
+  forms and second-order cone constraints. Support for these
   constraint classes depends on the solver.
 
 New features:
