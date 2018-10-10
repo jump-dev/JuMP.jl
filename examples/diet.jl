@@ -14,15 +14,16 @@
 #  http://www.gurobi.com/documentation/5.6/example-tour/diet_cpp_cpp
 #############################################################################
 
-using JuMP, Clp
+using JuMP, GLPK, LinearAlgebra
+const MOI = JuMP.MathOptInterface
 
-solver = ClpSolver()
+solver = GLPK.Optimizer
 
 function PrintSolution(status, foods, buy)
     println("RESULTS:")
     if status == :Optimal
         for i = 1:length(foods)
-            println("  $(foods[i]) = $(getvalue(buy[i]))")
+            println("  $(foods[i]) = $(JuMP.result_value(buy[i]))")
         end
     else
         println("  No solution")
@@ -54,7 +55,7 @@ function SolveDiet()
                        330  8 10 180]
 
     # Build model
-    m = Model(solver=solver)
+    m = Model(with_optimizer(solver))
 
     # Variables for nutrition info
     @variable(m, minNutrition[i] <= nutrition[i=1:numCategories] <= maxNutrition[i])
@@ -71,16 +72,30 @@ function SolveDiet()
 
     # Solve
     println("Solving original problem...")
-    status = solve(m)
-    PrintSolution(status, foods, buy)
+    JuMP.optimize!(m)
+    term_status = JuMP.termination_status(m)
+    primal_status = JuMP.primal_status(m)
+
+    if term_status == MOI.Success && primal_status == MOI.FeasiblePoint
+        PrintSolution(:Optimal, foods, buy)
+    else
+        PrintSolution(:NoSolution, foods, buy)
+    end
+
 
     # Limit dairy
     @constraint(m, buy[8] + buy[9] <= 6)
     println("Solving dairy-limited problem...")
-    status = solve(m)
-    PrintSolution(status, foods, buy)
+    JuMP.optimize!(m)
+    term_status = JuMP.termination_status(m)
+    primal_status = JuMP.primal_status(m)
+
+    if term_status == MOI.Success && primal_status == MOI.FeasiblePoint
+        PrintSolution(:Optimal, foods, buy)
+    else
+        PrintSolution(:NoSolution, foods, buy)
+    end
 
 end
 
 SolveDiet()
-

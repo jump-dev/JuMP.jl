@@ -15,10 +15,10 @@
 #     x binary
 #############################################################################
 
-using JuMP, Cbc
+using JuMP, GLPK, LinearAlgebra
 
 # Maximization problem
-m = Model(solver=CbcSolver())
+m = Model(with_optimizer(GLPK.Optimizer))
 
 @variable(m, x[1:5], Bin)
 
@@ -33,11 +33,11 @@ capacity = 10
 @constraint(m, dot(weight, x) <= capacity)
 
 # Solve problem using MIP solver
-status = solve(m)
+JuMP.optimize!(m)
 
-println("Objective is: ", getobjectivevalue(m))
+println("Objective is: ", JuMP.objective_value(m))
 println("Solution is:")
 for i = 1:5
-    print("x[$i] = ", getvalue(x[i]))
+    print("x[$i] = ", JuMP.result_value(x[i]))
     println(", p[$i]/w[$i] = ", profit[i]/weight[i])
 end

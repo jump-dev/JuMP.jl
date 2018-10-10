@@ -13,8 +13,9 @@
 
 using JuMP
 using SCS
+using LinearAlgebra
 
-solver = SCSSolver()
+solver = SCS.Optimizer
 
 # Data points
 n = 2
@@ -33,14 +34,14 @@ for i = 1:m
     end
 end
 
-mod = Model(solver=SCSSolver())
+mod = Model(with_optimizer(solver))
 
 # Z >= 0, PSD
-@variable(mod, Z[1:m,1:m], SDP)
+@variable(mod, Z[1:m,1:m], PSD)
 @constraint(mod, Z .>= 0)
 
 # min Tr(W(I-Z))
-@objective(mod, Min, trace(W * (eye(m,m) - Z)))
+@objective(mod, Min, tr(W * (Matrix(1.0I,m,m) - Z)))
 
 # Z e = e
 @constraint(mod, Z*ones(m) .== ones(m))
@@ -49,13 +50,13 @@ mod = Model(solver=SCSSolver())
 #end
 
 # Tr(Z) = k
-@constraint(mod, trace(Z) == k)
+@constraint(mod, tr(Z) == k)
 
-solve(mod)
+JuMP.optimize!(mod)
 
-Z_val = getvalue(Z)[:,:]
+Z_val = JuMP.result_value.(Z)[:,:]
 println("Raw solution")
-println(round(Z_val,4))
+println(round.(Z_val, digits=4))
 
 # A simple rounding scheme
 which_cluster = zeros(Int,m)
@@ -64,8 +65,8 @@ for i = 1:m
     Z_val[i,i] <= 1e-6 && continue
 
     if which_cluster[i] == 0
-        num_clusters += 1
-        which_cluster[i] = num_clusters
+        global num_clusters += 1
+        global which_cluster[i] = num_clusters
         for j = i+1:m
             if norm(Z_val[i,j] - Z_val[i,i]) <= 1e-6
                 which_cluster[j] = num_clusters
