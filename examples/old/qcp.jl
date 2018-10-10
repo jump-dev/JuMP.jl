@@ -16,7 +16,7 @@
 using JuMP, Gurobi
 
 # Will require either Gurobi.jl, CPLEX.jl, or Mosek.jl to run
-m = Model(solver=GurobiSolver())
+m = Model(with_optimizer(Gurobi.Optimizer))
 
 # Need nonnegativity for (rotated) second-order cone
 @variable(m, x)
@@ -35,9 +35,9 @@ m = Model(solver=GurobiSolver())
 print(m)
 
 # Solve with Gurobi
-status = solve(m)
+JuMP.optimize!(m)
 
 # Solution
-println("Objective value: ", getobjectivevalue(m))
-println("x = ", getvalue(x))
-println("y = ", getvalue(y))
+println("Objective value: ", JuMP.objective_value(m))
+println("x = ", JuMP.result_value(x))
+println("y = ", JuMP.result_value(y))

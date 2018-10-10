@@ -109,7 +109,7 @@ function solveTSP(n, cities)
     end
 
     # Create a model that will use Gurobi to solve
-    m = Model(solver=GurobiSolver())
+    m = Model(with_optimizer(Gurobi.Optimizer))
 
     # x[i,j] is 1 iff we travel between i and j, 0 otherwise
     # Although we define all n^2 variables, we will only use
@@ -117,7 +117,7 @@ function solveTSP(n, cities)
     @variable(m, x[1:n,1:n], Bin)
 
     # Minimize length of tour
-    @objective(m, Min, sum(dist[i,j]*x[i,j] for i=1:n for j=i:n))
+    @objective(m, Min, sum(dist[i,j]*x[i,j] for i in 1:n for j in i:n))
 
     # Make x_ij and x_ji be the same thing (undirectional)
     # Don't allow self-arcs
@@ -182,7 +182,7 @@ function solveTSP(n, cities)
 
     # Solve the problem with our cut generator
     addlazycallback(m, subtour)
-    solve(m)
+    JuMP.optimize!(m)
 
     # Return best tour
     return extractTour(n, getvalue(x))

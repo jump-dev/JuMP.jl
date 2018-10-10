@@ -7,15 +7,15 @@ using JuMP, Ipopt
 
 let
 
-    m = Model(solver=IpoptSolver(print_level=0))
+    m = Model(with_optimizer(Ipopt.Optimizer), print_level=0)
 
     @variable(m, x)
     @variable(m, y)
 
     @NLobjective(m, Min, (1-x)^2 + 100(y-x^2)^2)
 
-    solve(m)
+    JuMP.optimize!(m)
 
-    println("x = ", getvalue(x), " y = ", getvalue(y))
+    println("x = ", JuMP.result_value(x), " y = ", JuMP.result_value(y))
 
 end

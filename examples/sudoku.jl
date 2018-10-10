@@ -20,9 +20,10 @@
 # We will take the initial grid as a CSV file, where 0s are "blanks
 #############################################################################
 
-using JuMP, Cbc
+using JuMP, GLPK
+const MOI = JuMP.MathOptInterface
 
-solver = CbcSolver()
+solver = GLPK.Optimizer
 
 # Load data
 function LoadData(filepath)
@@ -37,7 +38,7 @@ end
 
 # Solve model
 function SolveModel(initgrid)
-    m = Model(solver=solver)
+    m = Model(with_optimizer(solver))
 
     @variable(m, x[1:9, 1:9, 1:9], Bin)
 
@@ -60,13 +61,16 @@ function SolveModel(initgrid)
     end
 
     # Solve it
-    status = solve(m)
+    JuMP.optimize!(m)
+
+    status = JuMP.termination_status(m)
+    primal_status = JuMP.primal_status(m)
+
+
 
     # Check solution
-    if status == :Infeasible
-        error("No solution found!")
-    else
-        mipSol = getvalue(x)
+    if status == MOI.Success && primal_status == MOI.FeasiblePoint
+        mipSol = JuMP.result_value.(x)
         sol = zeros(Int,9,9)
         for row in 1:9, col in 1:9, val in 1:9
             if mipSol[row, col, val] >= 0.9
@@ -74,6 +78,8 @@ function SolveModel(initgrid)
             end
         end
         return sol
+    else
+        error("No solution found!")
     end
 
 end
@@ -102,4 +108,3 @@ for row in 1:9
         println("[-----------------------]")
     end
 end
-

@@ -18,21 +18,20 @@
 #############################################################################
 using JuMP
 using SCS
-
-solver = SCSSolver(eps=1e-6)
+using LinearAlgebra
 
 function solve_maxcut_sdp(n, W)
     L = 0.25 * (diagm(0=>W*ones(n)) - W)
 
     # Solve the SDP relaxation
-    m = Model(solver=solver)
-    @variable(m, X[1:n,1:n], SDP)
-    @objective(m, Max, Compat.dot(L,X))
+    m = Model(with_optimizer(SCS.Optimizer, eps=1e-6))
+    @variable(m, X[1:n,1:n], PSD)
+    @objective(m, Max, dot(L,X))
     @constraint(m, diag(X) .== 1)
-    solve(m)
+    JuMP.optimize!(m)
 
     # Cholesky the result
-    F = cholfact(getvalue(X)[:,:], :U, Val{true})
+    F = cholfact(Hermitian(JuMP.result_value.(X)[:,:], :U), Val(true))
     V = (F[:P]*F[:L])'
 
     # Normalize columns

@@ -13,9 +13,10 @@
 #   Programming, http://www.ampl.com/REFS/amplmod.ps.gz
 #   Appendix D
 #############################################################################
-using JuMP, Clp
+using JuMP, Clp, Printf
+const MOI = JuMP.MathOptInterface
 
-solver = ClpSolver()
+solver = Clp.Optimizer
 
 ORIG = ["GARY", "CLEV", "PITT"];
 DEST = ["FRA", "DET", "LAN", "WIN", "STL", "FRE", "LAF"];
@@ -31,7 +32,7 @@ cost = [
 24   14   17   13   28   99   20
 ]
 
-m = Model(solver=solver);
+m = Model(with_optimizer(solver));
 
 @variable(m, Trans[i=1:length(ORIG), j=1:length(DEST)] >= 0);
 
@@ -43,11 +44,13 @@ m = Model(solver=solver);
 @constraint(m, [j = 1:length(DEST)], sum(Trans[i,j] for i=1:length(ORIG)) == demand[j]);
 
 println("Solving original problem...")
-status = solve(m);
+JuMP.optimize!(m)
+status = JuMP.termination_status(m)
+primal_status = JuMP.primal_status(m)
 
-if status == :Optimal
+if status == MOI.Success && primal_status == MOI.FeasiblePoint
 	@printf("Optimal!\n");
-	@printf("Objective value: %d\n", getobjectivevalue(m));
+	@printf("Objective value: %d\n", JuMP.objective_value(m));
 	@printf("Transpotation:\n");
 	for j = 1:length(DEST)
 		@printf("\t%s", DEST[j]);
@@ -56,7 +59,7 @@ if status == :Optimal
 	for i = 1:length(ORIG)
 		@printf("%s", ORIG[i]);
 		for j = 1:length(DEST)
-			@printf("\t%d", getvalue(Trans[i,j]));
+			@printf("\t%d", JuMP.result_value(Trans[i,j]));
 		end
 		@printf("\n");
 	end
