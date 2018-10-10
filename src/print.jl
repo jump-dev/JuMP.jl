@@ -1,4 +1,4 @@
-#  Copyright 2016, Iain Dunning, Joey Huchette, Miles Lubin, and contributors
+#  Copyright 2017, Iain Dunning, Joey Huchette, Miles Lubin, and contributors
 #  This Source Code Form is subject to the terms of the Mozilla Public
 #  License, v. 2.0. If a copy of the MPL was not distributed with this
 #  file, You can obtain one at http://mozilla.org/MPL/2.0/.
@@ -18,914 +18,385 @@
 #   within reason as this code is thorny enough as it is.
 # - Corresponding tests are in test/print.jl, although test/operator.jl
 #   is also testing the constraint/expression code extensively as well.
+# - Base.print and Base.string both delegate to Base.show, if they are not
+#   separately defined.
 #############################################################################
 
 # Used for dispatching
-abstract PrintMode
-abstract REPLMode <: PrintMode
-abstract IJuliaMode <: PrintMode
+abstract type PrintMode end
+abstract type REPLMode <: PrintMode end
+abstract type IJuliaMode <: PrintMode end
 
 # Whether something is zero or not for the purposes of printing it
-const PRINT_ZERO_TOL = 1e-10
-
-# List of indices available for variable printing
-const DIMS = ["i","j","k","l","m","n"]
+# oneunit is useful e.g. if coef is a Unitful quantity.
+is_zero_for_printing(coef) = abs(coef) < 1e-10 * oneunit(coef)
+# Whether something is one or not for the purposes of printing it.
+is_one_for_printing(coef) = is_zero_for_printing(abs(coef) - oneunit(coef))
+sign_string(coef) = coef < zero(coef) ? " - " : " + "
 
 # Helper function that rounds carefully for the purposes of printing
 # e.g.   5.3  =>  5.3
 #        1.0  =>  1
-function str_round(f::Float64)
-    abs(f) == 0.0 && return "0" # strip sign off zero
+function string_round(f::Float64)
+    iszero(f) && return "0" # strip sign off zero
     str = string(f)
     length(str) >= 2 && str[end-1:end] == ".0" ? str[1:end-2] : str
 end
-
-# TODO: get rid of this! This is only a helper, and should be Base.values
-# (and probably live there, as well)
-_values(x::Array) = x
-_values(x) = Base.values(x)
+string_round(f) = string(f)
 
 # REPL-specific symbols
 # Anything here: https://en.wikipedia.org/wiki/Windows-1252
 # should probably work fine on Windows
-const repl = Dict{Symbol,UTF8String}(
-    :leq        => (OS_NAME == :Windows ? "<=" : "≤"),
-    :geq        => (OS_NAME == :Windows ? ">=" : "≥"),
-    :eq         => (OS_NAME == :Windows ? "==" : "="),
-    :times      => "*",
-    :sq         => "²",
-    :ind_open   => "[",
-    :ind_close  => "]",
-    :for_all    => (OS_NAME == :Windows ? "for all" : "∀"),
-    :in         => (OS_NAME == :Windows ? "in" : "∈"),
-    :open_set   => "{",
-    :dots       => (OS_NAME == :Windows ? ".." : "…"),
-    :close_set  => "}",
-    :union      => (OS_NAME == :Windows ? "or" : "∪"),
-    :infty      => (OS_NAME == :Windows ? "Inf" : "∞"),
-    :open_rng   => "[",
-    :close_rng  => "]",
-    :integer    => "integer",
-    :succeq0    => " is semidefinite",
-    :Vert       => (OS_NAME == :Windows ? "||" : "‖"),
-    :sub2       => (OS_NAME == :Windows ? "_2" : "₂"))
-
-# IJulia-specific symbols
-const ijulia = Dict{Symbol,UTF8String}(
-    :leq        => "\\leq",
-    :geq        => "\\geq",
-    :eq         => "=",
-    :times      => "\\times ",
-    :sq         => "^2",
-    :ind_open   => "_{",
-    :ind_close  => "}",
-    :for_all    => "\\quad\\forall",
-    :in         => "\\in",
-    :open_set   => "\\{",
-    :dots       => "\\dots",
-    :close_set  => "\\}",
-    :union      => "\\cup",
-    :infty      => "\\infty",
-    :open_rng   => "\\[",
-    :close_rng  => "\\]",
-    :integer    => "\\in \\mathbb{Z}",
-    :succeq0    => "\\succeq 0",
-    :Vert       => "\\Vert",
-    :sub2       => "_2")
-
-typealias PrintSymbols Dict{Symbol,UTF8String}
-
-# If not already mathmode, then wrap in MathJax start/close tags
-math(s,mathmode) = mathmode ? s : "\$\$ $s \$\$"
-
-# helper to look up corresponding JuMPContainerData
-printdata(v::JuMPContainer) = getmeta(v, :model).varData[v]
-function printdata(v::Array{Variable})
-    if isempty(v)
-        error("Cannot locate printing data for an empty array")
+function math_symbol(::Type{REPLMode}, name::Symbol)
+    if name == :leq
+        return Compat.Sys.iswindows() ? "<=" : "≤"
+    elseif name == :geq
+        return Compat.Sys.iswindows() ? ">=" : "≥"
+    elseif name == :eq
+        return Compat.Sys.iswindows() ? "==" : "="
+    elseif name == :times
+        return "*"
+    elseif name == :sq
+        return "²"
+    elseif name == :ind_open
+        return "["
+    elseif name == :ind_close
+        return "]"
+    elseif name == :for_all
+        return Compat.Sys.iswindows() ? "for all" : "∀"
+    elseif name == :in
+        return Compat.Sys.iswindows() ? "in" : "∈"
+    elseif name == :open_set
+        return "{"
+    elseif name == :dots
+        return Compat.Sys.iswindows() ? ".." : "…"
+    elseif name == :close_set
+        return "}"
+    elseif name == :union
+        return Compat.Sys.iswindows() ? "or" : "∪"
+    elseif name == :infty
+        return Compat.Sys.iswindows() ? "Inf" : "∞"
+    elseif name == :open_rng
+        return "["
+    elseif name == :close_rng
+        return "]"
+    elseif name == :integer
+        return "integer"
+    elseif name == :succeq0
+        return " is semidefinite"
+    elseif name == :Vert
+        return Compat.Sys.iswindows() ? "||" : "‖"
+    elseif name == :sub2
+        return Compat.Sys.iswindows() ? "_2" : "₂"
+    else
+        error("Internal error: Unrecognized symbol $name.")
     end
-    m = first(v).m
-    m.varData[v]
 end
+
+# IJulia-specific symbols.
+function math_symbol(::Type{IJuliaMode}, name::Symbol)
+    if name == :leq
+        return "\\leq"
+    elseif name == :geq
+        return "\\geq"
+    elseif name == :eq
+        return "="
+    elseif name == :times
+        return "\\times "
+    elseif name == :sq
+        return "^2"
+    elseif name == :ind_open
+        return "_{"
+    elseif name == :ind_close
+        return "}"
+    elseif name == :for_all
+        return "\\quad\\forall"
+    elseif name == :in
+        return "\\in"
+    elseif name == :open_set
+        return "\\{"
+    elseif name == :dots
+        return "\\dots"
+    elseif name == :close_set
+        return "\\}"
+    elseif name == :union
+        return "\\cup"
+    elseif name == :infty
+        return "\\infty"
+    elseif name == :open_rng
+        return "\\["
+    elseif name == :close_rng
+        return "\\]"
+    elseif name == :integer
+        return "\\in \\mathbb{Z}"
+    elseif name == :succeq0
+        return "\\succeq 0"
+    elseif name == :Vert
+        return "\\Vert"
+    elseif name == :sub2
+        return "_2"
+    else
+        error("Internal error: Unrecognized symbol $name.")
+    end
+end
+
+wrap_in_math_mode(str) = "\$\$ $str \$\$"
+wrap_in_inline_math_mode(str) = "\$ $str \$"
 
 #------------------------------------------------------------------------
 ## Model
 #------------------------------------------------------------------------
-function Base.print(io::IO, m::Model; ignore_print_hook=(m.printhook==nothing))
-    ignore_print_hook || return m.printhook(io, m)
-    print(io, model_str(REPLMode,m))
+function Base.show(io::IO, model::Model) # TODO(#1180) temporary
+    print(io, "A JuMP Model")
 end
 
-function Base.show(io::IO, m::Model)
-    plural(n) = (n==1 ? "" : "s")
-    print(io, m.objSense == :Max ? "Maximization" : ((m.objSense == :Min && (!isempty(m.obj) || (m.nlpdata !== nothing && isa(m.nlpdata.nlobj, NonlinearExprData)))) ? "Minimization" : "Feasibility"))
-    println(io, " problem with:")
-    nlin = length(m.linconstr)
-    println(io, " * $(nlin) linear constraint$(plural(nlin))")
-    nquad = length(m.quadconstr)
-    if nquad > 0
-        println(io, " * $(nquad) quadratic constraint$(plural(nquad))")
-    end
-    nsos = length(m.sosconstr)
-    if nsos > 0
-        println(io, " * $(nsos) SOS constraint$(plural(nsos))")
-    end
-    nsoc = length(m.socconstr)
-    if nsoc > 0
-        println(io, " * $(nsoc) SOC constraint$(plural(nsoc))")
-    end
-    nsdp = length(m.sdpconstr)
-    if nsdp > 0
-        println(io, " * $(nsdp) semidefinite constraint$(plural(nsdp))")
-    end
-    nlp = m.nlpdata
-    if nlp !== nothing && length(nlp.nlconstr) > 0
-        println(io, " * $(length(nlp.nlconstr)) nonlinear constraint$(plural(length(nlp.nlconstr)))")
-    end
-    print(io, " * $(m.numCols) variable$(plural(m.numCols))")
-    nbin = sum(m.colCat .== :Bin)
-    nint = sum(m.colCat .== :Int)
-    nsc = sum(m.colCat .== :SemiCont)
-    nsi = sum(m.colCat .== :SemiInt)
-    varstr = Any[]
-    nbin == 0 || push!(varstr, "$nbin binary")
-    nint == 0 || push!(varstr, "$nint integer")
-    nsc  == 0 || push!(varstr, "$nsc semicontinuous")
-    nsi  == 0 || push!(varstr, "$nsi semi-integer")
-    if isempty(varstr)
-        println(io,)
+#------------------------------------------------------------------------
+## VariableRef
+#------------------------------------------------------------------------
+Base.show(io::IO, v::AbstractVariableRef) = print(io, var_string(REPLMode, v))
+function Base.show(io::IO, ::MIME"text/latex", v::AbstractVariableRef)
+    print(io, wrap_in_math_mode(var_string(IJuliaMode, v)))
+end
+function var_string(::Type{REPLMode}, v::AbstractVariableRef)
+    var_name = name(v)
+    if !isempty(var_name)
+        return var_name
     else
-        println(io, ": $(join(varstr, ", "))")
+        return "noname"
     end
-    print(io, "Solver is ")
-    if isa(m.solver, UnsetSolver)
-        print(io, "default solver")
+end
+function var_string(::Type{IJuliaMode}, v::AbstractVariableRef)
+    var_name = name(v)
+    if !isempty(var_name)
+        # TODO: This is wrong if variable name constains extra "]"
+        return replace(replace(var_name, "[" => "_{", count = 1), "]" => "}")
     else
-        print(io, split(split(string(m.solver), "Solver")[1], ".")[2])
+        return "noname"
     end
 end
-Base.writemime(io::IO, ::MIME"text/latex", m::Model) =
-    print(io, model_str(IJuliaMode,m))
-function model_str(mode, m::Model, sym::PrintSymbols)
-    ijl = mode == IJuliaMode
-    sep = ijl ? " & " : " "
-    eol = ijl ? "\\\\\n" : "\n"
-    nlp = m.nlpdata
 
-    # Objective
-    qobj_str = quad_str(mode, m.obj)
-    obj_sense = ijl ? (m.objSense == :Max ? "\\max" : "\\min")*"\\quad" :
-                      (m.objSense == :Max ? "Max" : "Min")
-    str = obj_sense * sep
-    if nlp !== nothing && nlp.nlobj !== nothing
-        str *= (qobj_str=="0"?"":"$qobj_str + ") * "(nonlinear expression)"
-    else
-        str *= qobj_str
-    end
-    str *= eol
-
-    # Constraints
-    str *= ijl ? "\\text{Subject to} \\quad" : "Subject to" * eol
-    for c in m.linconstr
-        str *= sep * con_str(mode,c,mathmode=true) * eol
-    end
-    for c in m.quadconstr
-        str *= sep * con_str(mode,c,mathmode=true) * eol
-    end
-    for c in m.sosconstr
-        str *= sep * con_str(mode,c,mathmode=true) * eol
-    end
-    for c in m.socconstr
-        str *= sep * con_str(mode,c,mathmode=true) * eol
-    end
-    if nlp !== nothing && length(nlp.nlconstr) > 0
-        num = length(nlp.nlconstr)
-        str *= sep * string("$num nonlinear constraint", num>1?"s":"") * eol
-    end
-
-    # Display indexed variables
-    in_dictlist = falses(m.numCols)
-    for d in m.dictList
-        # make sure that you haven't changed a variable type in the collection
-        firstval = first(_values(d))
-        cat = getCategory(firstval)
-        lb, ub = getLower(firstval), getUpper(firstval)
-        allsame = true
-        for v in _values(d)
-            if !(getCategory(v) == cat && getLower(v) == lb && getUpper(v) == ub)
-                allsame = false
-                break
-            elseif v in m.customNames
-                allsame = false
-                break
-            end
-        end
-        if allsame
-            for it in _values(d)  # Mark variables in JuMPContainer as printed
-                in_dictlist[it.col] = true
-            end
-            str *= sep * cont_str(mode,d,mathmode=true)  * eol
-        end
-    end
-
-    # Display non-indexed variables
-    for i in 1:m.numCols
-        in_dictlist[i] && continue
-        var_name = var_str(mode,m,i)
-        var_lb, var_ub = m.colLower[i], m.colUpper[i]
-        str_lb = var_lb == -Inf ? "-"*sym[:infty] : str_round(var_lb)
-        str_ub = var_ub == +Inf ?     sym[:infty] : str_round(var_ub)
-        var_cat = m.colCat[i]
-        if var_cat == :Bin  # x binary
-            str *= string(sep, var_name,
-                            " ", sym[:in],
-                            " ", sym[:open_set],
-                            "0,1", sym[:close_set])
-        elseif var_cat == :SemiInt  # x in union of 0 and {lb,...,ub}
-            str *= string(sep, var_name,
-                            " ", sym[:in],
-                            " ", sym[:open_set],
-                            str_lb, ",", sym[:dots], ",", str_ub,
-                            sym[:close_set],
-                            " ", sym[:union], " ",
-                            sym[:open_set], "0", sym[:close_set])
-        elseif var_cat == :SemiCont  # x in union of 0 and [lb,ub]
-            str *= string(sep, var_name,
-                            " ", sym[:in],
-                            " ", sym[:open_rng],
-                            str_lb, ",", str_ub,
-                            sym[:close_rng],
-                            " ", sym[:union], " ",
-                            sym[:open_set], "0", sym[:close_set])
-        elseif var_cat == :Fixed
-            str *= string(sep, var_name, " = ", str_lb)
-        elseif var_lb == -Inf && var_ub == +Inf # Free variable
-            str *= string(sep, var_name, " free")
-        elseif var_lb == -Inf  # No lower bound
-            str *= string(sep, var_name, " ", sym[:leq], " ", str_ub)
-        elseif var_ub == +Inf  # No upper bound
-            str *= string(sep, var_name, " ", sym[:geq], " ", str_lb)
-        else
-            str *= string(sep, str_lb, " ", sym[:leq],
-                            " ", var_name, " ",
-                            sym[:leq], " ", str_ub)
-        end
-        if var_cat == :Int
-            str *= string(", ", sym[:integer])
-        end
-        str *= eol
-    end
-
-    ijl ? "\$\$ \\begin{alignat*}{1}"*str*"\\end{alignat*}\n \$\$" :
-          str
+Base.show(io::IO, a::GenericAffExpr) = print(io, aff_string(REPLMode,a))
+function Base.show(io::IO, ::MIME"text/latex", a::GenericAffExpr)
+    print(io, wrap_in_math_mode(aff_string(IJuliaMode, a)))
 end
 
-# Handlers to use correct symbols
-model_str(::Type{REPLMode}, m::Model) =
-    model_str(REPLMode, m, repl)
-model_str(::Type{IJuliaMode}, m::Model; mathmode=true) =
-    math(model_str(IJuliaMode, m, ijulia), mathmode)
-
-
-#------------------------------------------------------------------------
-## Variable
-#------------------------------------------------------------------------
-Base.print(io::IO, v::Variable) = print(io, var_str(REPLMode,v))
-Base.show( io::IO, v::Variable) = print(io, var_str(REPLMode,v))
-Base.writemime(io::IO, ::MIME"text/latex", v::Variable) =
-    print(io, var_str(IJuliaMode,v,mathmode=false))
-function var_str(mode, m::Model, col::Int; mathmode=true)
-    colNames = mode == REPLMode ? m.colNames : m.colNamesIJulia
-    if colNames[col] === EMPTYSTRING
-        for cont in m.dictList
-            fill_var_names(mode, colNames, cont)
-        end
-    end
-    return math(colNames[col] == "" ? "col_$col" : colNames[col], mathmode)
-end
-function fill_var_names{N}(mode, colNames, v::JuMPArray{Variable,N})
-    data = printdata(v)
-    idxsets = data.indexsets
-    lengths = map(length, idxsets)
-    name = data.name
-    cprod = cumprod([lengths...])
-    for (ind,var) in enumerate(v.innerArray)
-        idx_strs = [string( idxsets[1][mod1(ind,lengths[1])] )]
-        for i = 2:N
-            push!(idx_strs, string(idxsets[i][Int(ceil(mod1(ind,cprod[i]) / cprod[i-1]))]))
-        end
-        if mode == IJuliaMode
-            colNames[var.col] = string(name, "_{", join(idx_strs,",") , "}")
-        else
-            colNames[var.col] = string(name,  "[", join(idx_strs,",") , "]")
-        end
-    end
-end
-function fill_var_names(mode, colNames, v::JuMPDict{Variable})
-    name = printdata(v).name
-    for (ind,var) in zip(keys(v),values(v))
-        if mode == IJuliaMode
-            colNames[var.col] = string(name, "_{", join([string(i) for i in ind],","), "}")
-        else
-            colNames[var.col] = string(name,  "[", join([string(i) for i in ind],","), "]")
-        end
-    end
-end
-function fill_var_names(mode, colNames, v::Array{Variable})
-    isempty(v) && return
-    sizes = size(v)
-    m = first(v).m
-    if !haskey(m.varData, v)
-        return
-    end
-    name = m.varData[v].name
-    for (ii,var) in enumerate(v)
-        @assert var.m === m
-        ind = ind2sub(sizes, ii)
-        colNames[var.col] = if mode === IJuliaMode
-            string(name, "_{", join(ind, ","), "}")
-        else
-            string(name,  "[", join(ind, ","), "]")
-        end
-    end
-    return
-end
-
-# Handlers to use correct symbols
-var_str(::Type{REPLMode}, v::Variable) =
-    var_str(REPLMode, v.m, v.col)
-var_str(::Type{IJuliaMode}, v::Variable; mathmode=true) =
-    var_str(IJuliaMode, v.m, v.col, mathmode=mathmode)
-
-#------------------------------------------------------------------------
-## Norm
-#------------------------------------------------------------------------
-Base.print(io::IO, j::Norm) = print(io, norm_str(REPLMode,j))
-Base.show( io::IO, j::Norm) = print(io, norm_str(REPLMode,j))
-Base.writemime(io::IO, ::MIME"text/latex", j::Norm) =
-    print(io, norm_str(IJuliaMode,j))
-
-function norm_str(mode, n::Norm, sym::PrintSymbols)
-    string(sym[:Vert], "[",
-            join(map(t->aff_str(mode,t),n.terms),","),
-            "]", sym[:Vert], sym[:sub2])
-end
-
-# Handlers to use correct symbols
-norm_str(::Type{REPLMode}, n::Norm) =
-    norm_str(REPLMode, n, repl)
-norm_str(::Type{IJuliaMode}, n::Norm; mathmode=true) =
-    math(norm_str(IJuliaMode, n, ijulia), mathmode)
-
-exprToStr(n::Norm) = norm_str(REPLMode, n)
-
-#------------------------------------------------------------------------
-## JuMPContainer{Variable}
-#------------------------------------------------------------------------
-Base.print(io::IO, j::Union{JuMPContainer{Variable}, Array{Variable}}) = print(io, cont_str(REPLMode,j))
-Base.show( io::IO, j::Union{JuMPContainer{Variable}, Array{Variable}}) = print(io, cont_str(REPLMode,j))
-Base.writemime(io::IO, ::MIME"text/latex", j::Union{JuMPContainer{Variable},Array{Variable}}) =
-    print(io, cont_str(IJuliaMode,j,mathmode=false))
-# Generic string converter, called by mode-specific handlers
-
-# Assumes that !isempty(j)
-_getmodel(j::Array{Variable}) = first(j).m
-_getmodel(j::JuMPContainer) = getmeta(j, :model)
-
-function cont_str(mode, j, sym::PrintSymbols)
-    # Check if anything in the container
-    if isempty(j)
-        name = isa(j, JuMPContainer) ? printdata(j).name : "Empty Array{Variable}"
-        return "$name (no indices)"
-    end
-
-    m = _getmodel(j)
-
-    # If this looks like a user-created Array, then defer to base printing
-    if !haskey(m.varData, j)
-        @assert isa(j, Array{Variable})
-        if ndims(j) == 1
-            return sprint((io,v) -> Base.show_vector(io, v, "[", "]"), j)
-        else
-            return sprint((io,X) -> Base.showarray(io, X), j)
-        end
-    end
-
-    data = printdata(j)
-
-    # 1. construct the part with variable name and indexing
-    locvars = map(data.indexexprs) do tmp
-        var = tmp.idxvar
-        if var == nothing
-            return ""
-        else
-            return string(var)
-        end
-    end
-    num_dims = length(data.indexsets)
-    idxvars = Array(UTF8String, num_dims)
-    dimidx = 1
-    for i in 1:num_dims
-        if data.indexexprs[i].idxvar == nothing
-            while DIMS[dimidx] in locvars
-                dimidx += 1
-            end
-            if dimidx > length(DIMS)
-                error("Unexpectedly ran out of indices")
-            end
-            idxvars[i] = DIMS[dimidx]
-            dimidx += 1
-        else
-            idxvars[i] = locvars[i]
-        end
-    end
-    name_idx = string(data.name, sym[:ind_open], join(idxvars,","), sym[:ind_close])
-    # 2. construct part with what we index over
-    idx_sets = sym[:for_all]*" "*join(map(dim->string(idxvars[dim], " ", sym[:in],
-                                " ", sym[:open_set],
-                                cont_str_set(data.indexsets[dim],sym[:dots]),
-                                sym[:close_set]), 1:num_dims), ", ")
-    # 3. Handle any conditions
-    if isa(j, JuMPDict) && data.condition != :()
-       idx_sets *= string(" s.t. ",join(parse_conditions(data.condition), " and "))
-    end
-
-    # 4. Bounds and category, if possible, and return final string
-    a_var = first(_values(j))
-    model = a_var.m
-    var_cat = model.colCat[a_var.col]
-    var_lb  = model.colLower[a_var.col]
-    var_ub  = model.colUpper[a_var.col]
-    # Variables may have different bounds, so we can't really print nicely
-    # at this time (possibly ever, as they could have been changed post
-    # creation, which we'd never be able to handle.
-    all_same_lb = true
-    all_same_ub = true
-    for var in _values(j)
-        all_same_lb &= model.colLower[var.col] == var_lb
-        all_same_ub &= model.colUpper[var.col] == var_ub
-    end
-    str_lb = var_lb == -Inf ? "-"*sym[:infty] : str_round(var_lb)
-    str_ub = var_ub == +Inf ?     sym[:infty] : str_round(var_ub)
-
-    # Special case bounds printing based on the category
-    if var_cat == :Bin  # x in {0,1}
-        return "$name_idx $(sym[:in]) $(sym[:open_set])0,1$(sym[:close_set]) $idx_sets"
-    elseif var_cat == :SemiInt  # x in union of 0 and {lb,...,ub}
-        si_lb = all_same_lb ? str_lb : sym[:dots]
-        si_ub = all_same_ub ? str_ub : sym[:dots]
-        return "$name_idx $(sym[:in]) $(sym[:open_set])$si_lb,$(sym[:dots]),$si_ub$(sym[:close_set]) $(sym[:union]) $(sym[:open_set])0$(sym[:close_set]) $idx_sets"
-    elseif var_cat == :SemiCont  # x in union of 0 and [lb,ub]
-        si_lb = all_same_lb ? str_lb : sym[:dots]
-        si_ub = all_same_ub ? str_ub : sym[:dots]
-        return "$name_idx $(sym[:in]) $(sym[:open_rng])$si_lb,$si_ub$(sym[:close_rng]) $(sym[:union]) $(sym[:open_set])0$(sym[:close_set]) $idx_sets"
-    elseif var_cat == :Fixed
-        si_bnd = all_same_lb ? str_lb : sym[:dots]
-        return "$name_idx = $si_bnd $idx_sets"
-    end
-    # Continuous and Integer
-    idx_sets = var_cat == :Int ? ", $(sym[:integer]), $idx_sets" : " $idx_sets"
-    if all_same_lb && all_same_ub
-        # Free variable
-        var_lb == -Inf && var_ub == +Inf && return "$name_idx free$idx_sets"
-        # No lower bound
-        var_lb == -Inf && return "$name_idx $(sym[:leq]) $str_ub$idx_sets"
-        # No upper bound
-        var_ub == +Inf && return "$name_idx $(sym[:geq]) $str_lb$idx_sets"
-        # Range
-        return "$str_lb $(sym[:leq]) $name_idx $(sym[:leq]) $str_ub$idx_sets"
-    end
-    if all_same_lb && !all_same_ub
-        var_lb == -Inf && return "$name_idx $(sym[:leq]) $(sym[:dots])$idx_sets"
-        return "$str_lb $(sym[:leq]) $name_idx $(sym[:leq]) $(sym[:dots])$idx_sets"
-    end
-    if !all_same_lb && all_same_ub
-        var_ub == +Inf && return "$name_idx $(sym[:geq]) $(sym[:dots])$idx_sets"
-        return "$(sym[:dots]) $(sym[:leq]) $name_idx $(sym[:leq]) $str_ub$idx_sets"
-    end
-    return "$(sym[:dots]) $(sym[:leq]) $name_idx $(sym[:leq]) $(sym[:dots])$idx_sets"
-end
-
-# UTILITY FUNCTIONS FOR cont_str
-function cont_str_set(idxset::Union{Range,Array}, dots)  # 2:2:20 -> {2,4..18,20}
-    length(idxset) == 1 && return string(idxset[1])
-    length(idxset) == 2 && return string(idxset[1],",",idxset[2])
-    length(idxset) == 3 && return string(idxset[1],",",idxset[2],",",idxset[3])
-    length(idxset) == 4 && return string(idxset[1],",",idxset[2],",",idxset[3],",",idxset[4])
-    return string(idxset[1],",",idxset[2],",",dots,",",idxset[end-1],",",idxset[end])
-end
-cont_str_set(idxset, dots) = return dots # Fallback
-# parse_conditions
-# Not exported. Traverses an expression and constructs an array with entries
-# corresponding to each condition. More specifically, if the condition is
-# a && (b || c) && (d && e), it returns [a, b || c, d, e].
-parse_conditions(not_an_expr) = not_an_expr
-function parse_conditions(expr::Expr)
-    ret = Any[]
-    if expr.head != :&&
-        return push!(ret, expr)
-    end
-    recurse = map(parse_conditions, expr.args)
-    vcat(ret, recurse...)
-end
-
-# Handlers to use correct symbols
-cont_str(::Type{REPLMode}, j; mathmode=false) =
-    cont_str(REPLMode, j, repl)
-cont_str(::Type{IJuliaMode}, j; mathmode=true) =
-    math(cont_str(IJuliaMode, j, ijulia), mathmode)
-
-#------------------------------------------------------------------------
-## JuMPContainer{Float64}
-#------------------------------------------------------------------------
-Base.print(io::IO, j::JuMPContainer{Float64}) = print(io, val_str(REPLMode,j))
-Base.show( io::IO, j::JuMPContainer{Float64}) = print(io, val_str(REPLMode,j))
-function val_str{N}(mode, j::JuMPArray{Float64,N})
-    m = _getmodel(j)
-    data = printdata(j)
-    out_str = "$(data.name): $N dimensions:\n"
-    if isempty(j)
-        return out_str * "  (no entries)"
-    end
-
-    function val_str_rec(depth, parent_index::Vector{Any}, parent_str::AbstractString)
-        # Turn index set into strings
-        indexset = data.indexsets[depth]
-        index_strs = map(string, indexset)
-
-        # Determine longest index so we can align columns
-        max_index_len = 0
-        for index_str in index_strs
-            max_index_len = max(max_index_len, strwidth(index_str))
-        end
-
-        # If have recursed, we need to prepend the parent's index strings
-        # accumulated, as well as white space so the alignment works.
-        for i = 1:length(index_strs)
-            index_strs[i] = parent_str * lpad(index_strs[i],max_index_len," ")
-        end
-
-        # Create a string for the number of spaces we need to indent
-        indent = " "^(2*(depth-1))
-
-        # Determine the need to recurse
-        if depth == N
-            # Deepest level
-            for i = 1:length(indexset)
-                value = length(parent_index) == 0 ?
-                            j[indexset[i]] :
-                            j[parent_index...,indexset[i]]
-                out_str *= indent * "[" * index_strs[i] * "] = $value\n"
-            end
-        else
-            # At least one more layer to go
-            for i = 1:length(indexset)
-                index = indexset[i]
-                # Print the ":" version of indices we will recurse over
-                out_str *= indent * "[" * index_strs[i] * ",:"^(N-depth) * "]\n"
-                val_str_rec(depth+1,
-                     length(parent_index) == 0 ? Any[index] : Any[parent_index...,index],
-                    index_strs[i] * ",")
-            end
-        end
-    end
-    val_str_rec(1,Any[],"")
-    return out_str
-end
-# support types that don't have built-in comparison
-function _isless(t1::Tuple, t2::Tuple)
-    n1, n2 = length(t1), length(t2)
-    for i = 1:min(n1, n2)
-        a, b = t1[i], t2[i]
-        if !isequal(a, b)
-            return applicable(isless,a,b) ? isless(a, b) : isless(hash(a),hash(b))
-        end
-    end
-    return n1 < n2
-end
-function val_str(mode, dict::JuMPDict{Float64})
-    nelem = length(dict.tupledict)
-    isempty(dict) && return ""
-    m = _getmodel(dict)
-    data = printdata(dict)
-    out_str  = "$(data.name): $(length(data.indexsets)) dimensions, $nelem "
-    out_str *= nelem == 1 ? "entry" : "entries"
-    out_str *= ":"
-
-    sortedkeys = sort(collect(keys(dict.tupledict)), lt = _isless)
-
-    ndim = length(first(keys(dict.tupledict)))
-
-    key_strs = Array(AbstractString, length(dict), ndim)
-    for (i, key) in enumerate(sortedkeys)
-        for j in 1:ndim
-            key_strs[i,j] = string(key[j])
-        end
-    end
-    max_dim_lens = map(1:ndim) do i
-        maximum(map(length,key_strs[:,i]))
-    end
-    key_str = map(1:length(dict)) do i
-        join(map(1:ndim) do j
-            lpad(key_strs[i,j], max_dim_lens[j])
-        end, ",")
-    end
-    max_key_len = maximum(map(length,key_str))
-
-    for (i,key) in enumerate(sortedkeys)
-        val = dict[key...]
-        out_str *= "\n" * lpad("[$(key_str[i])]", max_key_len+3)
-        out_str *= " = $val"
-    end
-    return out_str
-end
-
-
-#------------------------------------------------------------------------
-## AffExpr  (not GenericAffExpr)
-#------------------------------------------------------------------------
-Base.print(io::IO, a::AffExpr) = print(io, aff_str(REPLMode,a))
-Base.show( io::IO, a::AffExpr) = print(io, aff_str(REPLMode,a))
-Base.writemime(io::IO, ::MIME"text/latex", a::AffExpr) =
-    print(io, math(aff_str(IJuliaMode,a),false))
-# Generic string converter, called by mode-specific handlers
-function aff_str(mode, a::AffExpr, show_constant=true)
+function aff_string(mode, a::GenericAffExpr, show_constant=true)
     # If the expression is empty, return the constant (or 0)
-    if length(a.vars) == 0
-        return show_constant ? str_round(a.constant) : "0"
+    if length(linear_terms(a)) == 0
+        return show_constant ? string_round(a.constant) : "0"
     end
 
-    # Get reference to models included in this expression
-    moddict = Dict{Model,IndexedVector{Float64}}()
-    for var in a.vars
-        if !haskey(moddict, var.m)
-            moddict[var.m] = IndexedVector(Float64,var.m.numCols)
-        end
-    end
-
-    # Collect like terms
-    for ind in 1:length(a.vars)
-        addelt!(moddict[a.vars[ind].m], a.vars[ind].col, a.coeffs[ind])
-    end
-
+    term_str = Array{String}(undef, 2 * length(linear_terms(a)))
     elm = 1
-    term_str = Array(UTF8String, 2*length(a.vars))
-    # For each model
-    for m in keys(moddict)
-        indvec = moddict[m]
-        # For each non-zero for this model
-        for i in 1:indvec.nnz
-            idx = indvec.nzidx[i]
-            elt = indvec.elts[idx]
-            abs(elt) < PRINT_ZERO_TOL && continue  # e.g. x - x
+    # For each non-zero for this model
+    for (coef, var) in linear_terms(a)
+        is_zero_for_printing(coef) && continue  # e.g. x - x
 
-            pre = abs(abs(elt)-1) < PRINT_ZERO_TOL ? "" : str_round(abs(elt)) * " "
-            var = var_str(mode,m,idx)
+        pre = is_one_for_printing(coef) ? "" : string_round(abs(coef)) * " "
 
-            term_str[2*elm-1] = elt < 0 ? " - " : " + "
-            term_str[2*elm  ] = "$pre$var"
-            elm += 1
-        end
+        term_str[2 * elm - 1] = sign_string(coef)
+        term_str[2 * elm] = string(pre, var_string(mode, var))
+        elm += 1
     end
 
     if elm == 1
         # Will happen with cancellation of all terms
         # We should just return the constant, if its desired
-        return show_constant ? str_round(a.constant) : "0"
+        return show_constant ? string_round(a.constant) : "0"
     else
         # Correction for very first term - don't want a " + "/" - "
         term_str[1] = (term_str[1] == " - ") ? "-" : ""
-        ret = join(term_str[1:2*(elm-1)])
-        if abs(a.constant) >= PRINT_ZERO_TOL && show_constant
-            ret = string(ret, a.constant < 0 ? " - " : " + ", str_round(abs(a.constant)))
+        ret = join(term_str[1 : 2 * (elm - 1)])
+        if !is_zero_for_printing(a.constant) && show_constant
+            ret = string(ret, sign_string(a.constant),
+                         string_round(abs(a.constant)))
         end
         return ret
     end
 end
-# Backwards compatability shim
-affToStr(a::AffExpr) = aff_str(REPLMode,a)
-
-# Precompile for faster boot times
-Base.precompile(aff_str, (Type{JuMP.REPLMode}, AffExpr, Bool))
-Base.precompile(aff_str, (Type{JuMP.IJuliaMode}, AffExpr, Bool))
-Base.precompile(aff_str, (Type{JuMP.REPLMode}, AffExpr))
-Base.precompile(aff_str, (Type{JuMP.IJuliaMode}, AffExpr))
-
 
 #------------------------------------------------------------------------
 ## GenericQuadExpr
 #------------------------------------------------------------------------
-Base.print(io::IO, q::GenericQuadExpr) = print(io, quad_str(REPLMode,q))
-Base.show( io::IO, q::GenericQuadExpr) = print(io, quad_str(REPLMode,q))
-Base.writemime(io::IO, ::MIME"text/latex", q::GenericQuadExpr) =
-    print(io, quad_str(IJuliaMode,q,mathmode=false))
-# Generic string converter, called by mode-specific handlers
-function quad_str(mode, q::GenericQuadExpr, sym)
-    length(q.qvars1) == 0 && return aff_str(mode,q.aff)
+Base.show(io::IO, q::GenericQuadExpr) = print(io, quad_string(REPLMode,q))
+function Base.show(io::IO, ::MIME"text/latex", q::GenericQuadExpr)
+    print(io, wrap_in_math_mode(quad_string(IJuliaMode, q)))
+end
 
-    # Canonicalize x_i * x_j so i <= j
-    for ind in 1:length(q.qvars1)
-        if q.qvars2[ind].col < q.qvars1[ind].col
-            q.qvars1[ind],q.qvars2[ind] = q.qvars2[ind],q.qvars1[ind]
-        end
-    end
-    # Merge duplicates
-    Q = sparse([v.col for v in q.qvars1], [v.col for v in q.qvars2], q.qcoeffs)
-    I,J,V = findnz(Q)
-    Qnnz = length(V)
+function quad_string(mode, q::GenericQuadExpr)
+    length(quadterms(q)) == 0 && return aff_string(mode, q.aff)
 
     # Odd terms are +/i, even terms are the variables/coeffs
-    term_str = Array(UTF8String, 2*Qnnz)
-    if Qnnz > 0
-        for ind in 1:Qnnz
-            val = abs(V[ind])
-            pre = (val == 1.0 ? "" : str_round(val)*" ")
+    term_str = Array{String}(undef, 2 * length(quadterms(q)))
+    elm = 1
+    if length(term_str) > 0
+        for (coef, var1, var2) in quadterms(q)
+            is_zero_for_printing(coef) && continue  # e.g. x - x
 
-            x = var_str(mode,q.qvars1[ind].m,I[ind])
-            y = var_str(mode,q.qvars1[ind].m,J[ind])
+            pre = is_one_for_printing(coef) ? "" : string_round(abs(coef)) * " "
 
-            term_str[2*ind-1] = V[ind] < 0 ? " - " : " + "
-            term_str[2*ind  ] = "$pre$x" * (x == y ? sym[:sq] : "$(sym[:times])$y")
+            x = var_string(mode,var1)
+            y = var_string(mode,var2)
+
+            term_str[2 * elm - 1] = sign_string(coef)
+            term_str[2 * elm] = "$pre$x"
+            if x == y
+                term_str[2 * elm] *= math_symbol(mode, :sq)
+            else
+                term_str[2 * elm] *= string(math_symbol(mode, :times), y)
+            end
+            if elm == 1
+                # Correction for first term as there is no space
+                # between - and variable coefficient/name
+                term_str[1] = coef < zero(coef) ? "-" : ""
+            end
+            elm += 1
         end
-        # Correction for first term as there is no space
-        # between - and variable coefficient/name
-        term_str[1] = V[1] < 0 ? "-" : ""
     end
-    ret = join(term_str)
+    ret = join(term_str[1 : 2 * (elm - 1)])
 
-    if q.aff.constant == 0 && length(q.aff.vars) == 0
+    aff_str = aff_string(mode, q.aff)
+    if aff_str == "0"
         return ret
     else
-        aff = aff_str(mode,q.aff)
-        if aff[1] == '-'
-            return string(ret, " - ", aff[2:end])
+        if aff_str[1] == '-'
+            return string(ret, " - ", aff_str[2 : end])
         else
-            return string(ret, " + ", aff)
+            return string(ret, " + ", aff_str)
         end
     end
 end
 
-# Backwards compatability shim
-quadToStr(q::GenericQuadExpr) = quad_str(REPLMode,q)
-# Handlers to use correct symbols
-quad_str(::Type{REPLMode}, q::GenericQuadExpr) =
-    quad_str(REPLMode, q, repl)
-quad_str(::Type{IJuliaMode}, q::GenericQuadExpr; mathmode=true) =
-    math(quad_str(IJuliaMode, q, ijulia), mathmode)
 
 #------------------------------------------------------------------------
-## SOCExpr
+## Constraints
 #------------------------------------------------------------------------
-Base.print(io::IO, c::SOCExpr) = print(io, expr_str(REPLMode,c))
-Base.show( io::IO, c::SOCExpr) = print(io, expr_str(REPLMode,c))
-Base.writemime(io::IO, ::MIME"text/latex", c::SOCExpr) =
-    print(io, expr_str(IJuliaMode,c))
 
-function expr_str(mode, c::SOCExpr)
-    coeff = c.coeff == 1 ? "" : string(c.coeff, " ")
-    nrm   = norm_str(mode, c.norm)
-    aff   = aff_str(mode, c.aff)
-    if aff[1] == '-'
-        chain = " - "
-        aff = aff[2:end]
-    elseif aff == "0"
-        aff = ""
-        chain = ""
-    else
-        chain = " + "
-    end
-    string(coeff, nrm, chain, aff)
+function Base.show(io::IO, ref::ConstraintRef{Model})
+    print(io, constraint_string(REPLMode, name(ref), constraint_object(ref)))
+end
+function Base.show(io::IO, ::MIME"text/latex", ref::ConstraintRef{Model})
+    print(io, constraint_string(IJuliaMode, name(ref), constraint_object(ref)))
 end
 
-exprToStr(c::SOCExpr) = expr_str(REPLMode, c)
+function function_string(print_mode, variable::AbstractVariableRef)
+    return var_string(print_mode, variable)
+end
+
+function function_string(print_mode,
+                         variable_vector::Vector{<:AbstractVariableRef})
+    return "[" * join(var_string.(print_mode, variable_vector), ", ") * "]"
+end
+
+function function_string(print_mode, aff::GenericAffExpr)
+    return aff_string(print_mode, aff)
+end
+
+function function_string(print_mode, aff_vector::Vector{<:GenericAffExpr})
+    return "[" * join(aff_string.(print_mode, aff_vector), ", ") * "]"
+end
+
+function function_string(print_mode, quad::GenericQuadExpr)
+    return quad_string(print_mode, quad)
+end
+
+function function_string(print_mode, quad_vector::Vector{<:GenericQuadExpr})
+    return "[" * join(quad_string.(print_mode, quad_vector), ", ") * "]"
+end
+
+function in_set_string(print_mode, set::MOI.LessThan)
+    return string(math_symbol(print_mode, :leq), " ", set.upper)
+end
+
+function in_set_string(print_mode, set::MOI.GreaterThan)
+    return string(math_symbol(print_mode, :geq), " ", set.lower)
+end
+
+function in_set_string(print_mode, set::MOI.EqualTo)
+    return string(math_symbol(print_mode, :eq), " ", set.value)
+end
+
+function in_set_string(print_mode, set::MOI.Interval)
+    return string(math_symbol(print_mode, :in), " ",
+                  math_symbol(print_mode, :open_rng), set.lower, ", ",
+                  set.upper, math_symbol(print_mode, :close_rng))
+end
+
+# TODO: Convert back to JuMP types for sets like PSDCone.
+# TODO: Consider fancy latex names for some sets. They're currently printed as
+# regular text in math mode which looks a bit awkward.
+function in_set_string(print_mode, set::MOI.AbstractSet)
+    return string(math_symbol(print_mode, :in), " ", set)
+end
+
+# constraint_object is a JuMP constraint object like AffExprConstraint.
+# Assumes a .func and .set member.
+function constraint_string(print_mode, constraint_name, constraint_object)
+    func_str = function_string(print_mode, constraint_object.func)
+    in_set_str = in_set_string(print_mode, constraint_object.set)
+    constraint_without_name = func_str * " " * in_set_str
+    if print_mode == IJuliaMode
+        constraint_without_name = wrap_in_inline_math_mode(constraint_without_name)
+    end
+    if isempty(constraint_name)
+        return constraint_without_name
+    else
+        return constraint_name * " : " * constraint_without_name
+    end
+end
 
 #------------------------------------------------------------------------
-## GenericRangeConstraint
+## NonlinearExprData
 #------------------------------------------------------------------------
-Base.print(io::IO, c::GenericRangeConstraint) = print(io, con_str(REPLMode,c))
-Base.show( io::IO, c::GenericRangeConstraint) = print(io, con_str(REPLMode,c))
-Base.writemime(io::IO, ::MIME"text/latex", c::GenericRangeConstraint) =
-    print(io, con_str(IJuliaMode,c,mathmode=false))
-# Generic string converter, called by mode-specific handlers
-function con_str(mode, c::GenericRangeConstraint, sym)
+function nl_expr_string(model::Model, mode, c::NonlinearExprData)
+    return string(tape_to_expr(model, 1, c.nd, adjmat(c.nd), c.const_values, [],
+                               [], model.nlp_data.user_operators, false, false,
+                               mode))
+end
+
+#------------------------------------------------------------------------
+## NonlinearConstraint
+#------------------------------------------------------------------------
+const NonlinearConstraintRef = ConstraintRef{Model, NonlinearConstraintIndex}
+
+function Base.show(io::IO, c::NonlinearConstraintRef)
+    print(io, nl_constraint_string(c.m, REPLMode,
+                                   c.m.nlp_data.nlconstr[c.index.value]))
+end
+
+function Base.show(io::IO, ::MIME"text/latex", c::NonlinearConstraintRef)
+    constraint = c.m.nlp_data.nlconstr[c.index.value]
+    print(io, wrap_in_math_mode(nl_constraint_string(c.m, IJuliaMode,
+                                                    constraint)))
+end
+
+# TODO: Printing is inconsistent between regular constraints and nonlinear
+# constraints because nonlinear constraints don't have names.
+function nl_constraint_string(model::Model, mode, c::NonlinearConstraint)
     s = sense(c)
-    a = aff_str(mode,c.terms,false)
+    nl = nl_expr_string(model, mode, c.terms)
     if s == :range
-        out_str = "$(str_round(c.lb)) $(sym[:leq]) $a $(sym[:leq]) $(str_round(c.ub))"
+        out_str = "$(string_round(c.lb)) " * math_symbol(mode, :leq) * " $nl " *
+                  math_symbol(mode, :leq) * " " * string_round(c.ub)
     else
-        rel = s == :<= ? sym[:leq] : (s == :>= ? sym[:geq] : sym[:eq])
-        out_str = string(a," ",rel," ",str_round(rhs(c)))
+        if s == :<=
+            rel = math_symbol(mode, :leq)
+        elseif s == :>=
+            rel = math_symbol(mode, :geq)
+        else
+            rel = math_symbol(mode, :eq)
+        end
+        out_str = string(nl," ",rel," ",string_round(rhs(c)))
     end
-    out_str
+    return out_str
 end
-# Backwards compatability shim
-conToStr(c::GenericRangeConstraint) = con_str(REPLMode,c)
-# Handlers to use correct symbols
-con_str(::Type{REPLMode}, c::GenericRangeConstraint; args...) =
-    con_str(REPLMode, c, repl)
-con_str(::Type{IJuliaMode}, c::GenericRangeConstraint; mathmode=true) =
-    math(con_str(IJuliaMode, c, ijulia), mathmode)
-
 
 #------------------------------------------------------------------------
-## QuadConstraint
+## Nonlinear expression/parameter reference
 #------------------------------------------------------------------------
-Base.print(io::IO, c::QuadConstraint) = print(io, con_str(REPLMode,c))
-Base.show( io::IO, c::QuadConstraint) = print(io, con_str(REPLMode,c))
-Base.writemime(io::IO, ::MIME"text/latex", c::QuadConstraint) =
-    print(io, con_str(IJuliaMode,c,mathmode=false))
-# Generic string converter, called by mode-specific handlers
-function con_str(mode, c::QuadConstraint, sym)
-    s = c.sense
-    r = (s == :<=) ? sym[:leq] : (s == :>= ? sym[:geq] : sym[:eq])
-    "$(quad_str(mode,c.terms)) $r 0"
+function Base.show(io::IO, ex::NonlinearExpression)
+    Base.show(io, "Reference to nonlinear expression #$(ex.index)")
 end
-# Backwards compatability shim
-conToStr(c::QuadConstraint) = con_str(REPLMode,c)
-# Handlers to use correct symbols
-con_str(::Type{REPLMode}, c::QuadConstraint; args...) =
-    con_str(REPLMode, c, repl)
-con_str(::Type{IJuliaMode}, c::QuadConstraint; mathmode=true) =
-    math(con_str(IJuliaMode, c, ijulia), mathmode)
-
-#------------------------------------------------------------------------
-## SOCConstraint
-#------------------------------------------------------------------------
-Base.print(io::IO, c::SOCConstraint) = print(io, con_str(REPLMode,c))
-Base.show( io::IO, c::SOCConstraint) = print(io, con_str(REPLMode,c))
-Base.writemime(io::IO, ::MIME"text/latex", c::SOCConstraint) =
-    print(io, con_str(IJuliaMode,c))
-function con_str(mode, c::SOCConstraint, sym::PrintSymbols)
-    ne = c.normexpr
-    coeff = ne.coeff == 1 ? "" : string(ne.coeff, " ")
-    nrm   = norm_str(mode, ne.norm)
-    aff   = aff_str(mode, -ne.aff)
-    string(coeff, nrm, " $(repl[:leq]) ", aff)
+function Base.show(io::IO, p::NonlinearParameter)
+    Base.show(io, "Reference to nonlinear parameter #$(p.index)")
 end
-# Handlers to use correct symbols
-con_str(::Type{REPLMode}, c::SOCConstraint; args...) =
-    con_str(REPLMode, c, repl)
-con_str(::Type{IJuliaMode}, c::SOCConstraint; mathmode=true) =
-    math(con_str(IJuliaMode, c, ijulia), mathmode)
-# Backwards compatability shim
-conToStr(c::SOCConstraint) = con_str(REPLMode,c)
-
-#------------------------------------------------------------------------
-## SOSConstraint
-#------------------------------------------------------------------------
-Base.print(io::IO, c::SOSConstraint) = print(io, con_str(REPLMode,c))
-Base.show( io::IO, c::SOSConstraint) = print(io, con_str(REPLMode,c))
-Base.writemime(io::IO, ::MIME"text/latex", c::SOSConstraint) =
-    print(io, con_str(IJuliaMode,c,mathmode=false))
-# Generic string converter, called by mode-specific handlers
-function con_str(mode, c::SOSConstraint, sym::PrintSymbols)
-    term_str = [string(str_round(c.weights[i]), " ", c.terms[i])
-                    for i in 1:length(c.terms)]
-    "$(c.sostype): $(sym[:open_set])$(join(term_str,", "))$(sym[:close_set])"
-end
-# Handlers to use correct symbols
-con_str(::Type{REPLMode}, c::SOSConstraint; args...) =
-    con_str(REPLMode, c, repl)
-con_str(::Type{IJuliaMode}, c::SOSConstraint; mathmode=true) =
-    math(con_str(IJuliaMode, c, ijulia), mathmode)
-
-#------------------------------------------------------------------------
-## SDPConstraint
-#------------------------------------------------------------------------
-Base.print(io::IO, c::SDPConstraint) = print(io, con_str(REPLMode,c))
-Base.show( io::IO, c::SDPConstraint) = print(io, con_str(REPLMode,c))
-Base.writemime(io::IO, ::MIME"text/latex", c::SDPConstraint) =
-    print(io, con_str(IJuliaMode,c,mathmode=false))
-# Generic string converter, called by mode-specific handlers
-function con_str(mode, c::SDPConstraint, succeq0)
-    t = c.terms
-    str = sprint(print, t)
-    splitted = split(str, "\n")[2:end]
-    center = ceil(Int, length(splitted)/2)
-    splitted[center] *= succeq0
-    join(splitted, "\n")
-end
-# Handlers to use correct symbols
-con_str(::Type{REPLMode}, c::SDPConstraint; args...) =
-    con_str(REPLMode, c, repl[:succeq0])
-con_str(::Type{IJuliaMode}, c::SDPConstraint; mathmode=true) =
-    math(con_str(IJuliaMode, c, ijulia[:succeq0], mathmode))
-
-#------------------------------------------------------------------------
-## ConstraintRef
-#------------------------------------------------------------------------
-Base.print(io::IO, c::ConstraintRef{Model,LinearConstraint}) = print(io, con_str(REPLMode,c.m.linconstr[c.idx]))
-Base.print(io::IO, c::ConstraintRef{Model,QuadConstraint})   = print(io, con_str(REPLMode,c.m.quadconstr[c.idx]))
-Base.print(io::IO, c::ConstraintRef{Model,SOSConstraint})    = print(io, con_str(REPLMode,c.m.sosconstr[c.idx]))
-Base.print(io::IO, c::ConstraintRef{Model,SDPConstraint})    = print(io, con_str(REPLMode,c.m.sdpconstr[c.idx]))
-Base.show( io::IO, c::ConstraintRef{Model,LinearConstraint}) = print(io, con_str(REPLMode,c.m.linconstr[c.idx]))
-Base.show( io::IO, c::ConstraintRef{Model,QuadConstraint})   = print(io, con_str(REPLMode,c.m.quadconstr[c.idx]))
-Base.show( io::IO, c::ConstraintRef{Model,SOSConstraint})    = print(io, con_str(REPLMode,c.m.sosconstr[c.idx]))
-Base.show( io::IO, c::ConstraintRef{Model,SOCConstraint})    = print(io, con_str(REPLMode,c.m.socconstr[c.idx]))
-Base.show( io::IO, c::ConstraintRef{Model,SDPConstraint})    = print(io, con_str(REPLMode,c.m.sdpconstr[c.idx]))
-Base.writemime(io::IO, ::MIME"text/latex", c::ConstraintRef{Model,LinearConstraint}) =
-    print(io, con_str(IJuliaMode,c.m.linconstr[c.idx],mathmode=false))
-Base.writemime(io::IO, ::MIME"text/latex", c::ConstraintRef{Model,QuadConstraint}) =
-    print(io, con_str(IJuliaMode,c.m.quadconstr[c.idx],mathmode=false))
-Base.writemime(io::IO, ::MIME"text/latex", c::ConstraintRef{Model,SOSConstraint}) =
-    print(io, con_str(IJuliaMode,c.m.sosconstr[c.idx],mathmode=false))

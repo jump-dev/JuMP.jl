@@ -1,5 +1,7 @@
-julia 0.4
-MathProgBase 0.4.3 0.5.0-
-ReverseDiffSparse 0.5.3 0.6
-ForwardDiff 0.1 0.2
+julia 0.6
+MathOptInterface 0.6 0.7
+ForwardDiff 0.5 0.10
 Calculus
+DataStructures
+NaNMath 0.2.1
+Compat 1.0.0

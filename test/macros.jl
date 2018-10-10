@@ -1,487 +1,223 @@
-# test/macros.jl
-# Testing macros work correctly
-#############################################################################
-using JuMP, FactCheck
-using Base.Test
+# TODO: Copy over tests that are still relevant from old/macros.jl.
 
-# To ensure the tests work on Windows and Linux/OSX, we need
-# to use the correct comparison operators
-const leq = JuMP.repl[:leq]
-const geq = JuMP.repl[:geq]
-const  eq = JuMP.repl[:eq]
-const Vert = JuMP.repl[:Vert]
-const sub2 = JuMP.repl[:sub2]
+mutable struct MyVariable
+    test_kw::Int
+    info::JuMP.VariableInfo
+end
 
-facts("[macros] Check Julia expression parsing") do
-    sumexpr = :(sum{x[i,j] * y[i,j], i = 1:N, j in 1:M; i != j})
-    @fact sumexpr.head --> :curly
-    @fact length(sumexpr.args) --> 5
-    @fact sumexpr.args[1] --> :sum
-    @fact sumexpr.args[2].head --> :parameters
-    @fact sumexpr.args[3] --> :(x[i,j] * y[i,j])
-    @fact sumexpr.args[4].head --> :(=)
-    if VERSION < v"0.5.0-dev+3231"
-        @fact sumexpr.args[5].head --> :in
-    else
-        @fact sumexpr.args[5].head --> :call
-        @fact sumexpr.args[5].args[1] --> :in
+@testset "Extension of @variable with build_variable #1029" begin
+    local MyVariable = Tuple{JuMP.VariableInfo, Int}
+    JuMP.variable_type(m::Model, ::Type{MyVariable}) = MyVariable
+    names = Dict{MyVariable, String}()
+    function JuMP.add_variable(m::Model, v::MyVariable, name::String="")
+        names[v] = name
+        v
+    end
+    function JuMP.build_variable(_error::Function, info::JuMP.VariableInfo, ::Type{MyVariable}; test_kw::Int = 0)
+        (info, test_kw)
+    end
+    m = Model()
+    @variable(m, 1 <= x <= 2, MyVariable, binary = true, test_kw = 1, start = 3)
+    @test isa(x, MyVariable)
+    info = x[1]
+    test_kw = x[2]
+    @test info.has_lb
+    @test info.lower_bound == 1
+    @test info.has_ub
+    @test info.upper_bound == 2
+    @test !info.has_fix
+    @test isnan(info.fixed_value)
+    @test info.binary
+    @test !info.integer
+    @test info.has_start
+    @test info.start == 3
+    @test names[x] == "x"
+    @test test_kw == 1
+
+    @variable(m, y[1:3] >= 0, MyVariable, test_kw = 2)
+    @test isa(y, Vector{MyVariable})
+    for i in 1:3
+        info = y[i][1]
+        test_kw = y[i][2]
+        @test info.has_lb
+        @test info.lower_bound == 0
+        @test !info.has_ub
+        @test isnan(info.upper_bound)
+        @test !info.has_fix
+        @test isnan(info.fixed_value)
+        @test !info.binary
+        @test !info.integer
+        @test !info.has_start
+        @test isnan(info.start)
+        @test names[y[i]] == "y[$i]"
+        @test test_kw == 2
     end
 
-    sumexpr = :(sum{x[i,j] * y[i,j], i in 1:N, j = 1:M})
-    @fact sumexpr.head --> :curly
-    @fact length(sumexpr.args) --> 4
-    @fact sumexpr.args[1] --> :sum
-    @fact sumexpr.args[2] --> :(x[i,j] * y[i,j])
-    if VERSION < v"0.5.0-dev+3231"
-        @fact sumexpr.args[3].head --> :in
-    else
-        @fact sumexpr.args[3].head --> :call
-        @fact sumexpr.args[3].args[1] --> :in
+    z = @variable(m, variable_type=MyVariable, upper_bound=3, test_kw=5)
+    info = z[1]
+    test_kw = z[2]
+    @test isa(z, MyVariable)
+    @test !info.has_lb
+    @test isnan(info.lower_bound)
+    @test info.has_ub
+    @test info.upper_bound == 3
+    @test !info.has_fix
+    @test isnan(info.fixed_value)
+    @test !info.binary
+    @test !info.integer
+    @test !info.has_start
+    @test isnan(info.start)
+    @test names[z] == ""
+    @test test_kw == 5
+end
+
+function macros_test(ModelType::Type{<:JuMP.AbstractModel}, VariableRefType::Type{<:JuMP.AbstractVariableRef})
+    @testset "build_constraint on variable" begin
+        m = ModelType()
+        @variable(m, x)
+        @test JuMP.build_constraint(error, x, MOI.GreaterThan(0.0)) isa JuMP.ScalarConstraint{VariableRefType, MOI.GreaterThan{Float64}}
+        @test JuMP.build_constraint(error, x, MOI.LessThan(0.0)) isa JuMP.ScalarConstraint{VariableRefType, MOI.LessThan{Float64}}
+        @test JuMP.build_constraint(error, x, MOI.EqualTo(0)) isa JuMP.ScalarConstraint{VariableRefType, MOI.EqualTo{Int}}
     end
 
-    @fact sumexpr.args[4].head --> :(=)
-end
+    @testset "Check @constraint basics" begin
+        m = ModelType()
+        @variable(m, w)
+        @variable(m, x)
+        @variable(m, y)
+        @variable(m, z)
+        t = 10.0
 
-facts("[macros] Check @addConstraint basics") do
-    m = Model()
-    @defVar(m, w)
-    @defVar(m, x)
-    @defVar(m, y)
-    @defVar(m, z)
-    t = 10
+        cref = @constraint(m, 3x - y == 3.3(w + 2z) + 5)
+        c = JuMP.constraint_object(cref)
+        @test JuMP.isequal_canonical(c.func, 3*x - y - 3.3*w - 6.6*z)
+        @test c.set == MOI.EqualTo(5.0)
 
-    @addConstraint(m, 3x - y == 3.3(w + 2z) + 5)
-    @fact conToStr(m.linconstr[end]) --> "3 x - y - 3.3 w - 6.6 z $eq 5"
-    @addConstraint(m, 3x - y == (w + 2z)*3.3 + 5)
-    @fact conToStr(m.linconstr[end]) --> "3 x - y - 3.3 w - 6.6 z $eq 5"
-    @addConstraint(m, (x+y)/2 == 1)
-    @fact conToStr(m.linconstr[end]) --> "0.5 x + 0.5 y $eq 1"
-    @addConstraint(m, -1 <= x-y <= t)
-    @fact conToStr(m.linconstr[end]) --> "-1 $leq x - y $leq 10"
-    @addConstraint(m, -1 <= x+1 <= 1)
-    @fact conToStr(m.linconstr[end]) --> "-2 $leq x $leq 0"
-    @addConstraint(m, -1 <= x <= 1)
-    @fact conToStr(m.linconstr[end]) --> "-1 $leq x $leq 1"
-    @addConstraint(m, -1 <= x <= sum{0.5, i = 1:2})
-    @fact conToStr(m.linconstr[end]) --> "-1 $leq x $leq 1"
-    @fact_throws @addConstraint(m, x <= t <= y)
+        cref = @constraint(m, 3x - y == (w + 2z)*3.3 + 5)
+        c = JuMP.constraint_object(cref)
+        @test JuMP.isequal_canonical(c.func, 3*x - y - 3.3*w - 6.6*z)
+        @test c.set == MOI.EqualTo(5.0)
 
-    @defExpr(m, aff, 3x - y - 3.3(w + 2z) + 5)
-    @fact affToStr(aff) --> "3 x - y - 3.3 w - 6.6 z + 5"
+        cref = @constraint(m, (x+y)/2 == 1)
+        c = JuMP.constraint_object(cref)
+        @test JuMP.isequal_canonical(c.func, 0.5*x + 0.5*y)
+        @test c.set == MOI.EqualTo(1.0)
 
-    @addConstraint(m, 3 + 5*7 <= 0)
-    @fact conToStr(m.linconstr[end]) --> "0 $leq -38"
+        cref = @constraint(m, -1 <= x-y <= t)
+        c = JuMP.constraint_object(cref)
+        @test JuMP.isequal_canonical(c.func, x - y)
+        @test c.set == MOI.Interval(-1.0, t)
 
-    @defExpr(m, qaff, (w+3)*(2x+1)+10)
-    @fact quadToStr(qaff) --> "2 w*x + 6 x + w + 13"
-end
+        cref = @constraint(m, -1 <= x+1 <= 1)
+        c = JuMP.constraint_object(cref)
+        @test JuMP.isequal_canonical(c.func, 1x)
+        @test c.set == MOI.Interval(-2.0, 0.0)
 
-facts("[macros] Checking @defVar with reverse direction bounds") do
-    m = Model()
-    @defVar(m, 3.2 >= x >= 1)
-    @fact m.colLower --> [1.0]
-    @fact m.colUpper --> [3.2]
-end
+        cref = @constraint(m, -1 <= x <= 1)
+        c = JuMP.constraint_object(cref)
+        @test c.func == x
+        @test c.set == MOI.Interval(-1.0, 1.0)
 
-facts("[macros] sum{}") do
-    m = Model()
-    @defVar(m, x[1:3,1:3])
-    @defVar(m, y)
-    C = [1 2 3; 4 5 6; 7 8 9]
-    @addConstraint(m, sum{ C[i,j]*x[i,j], i in 1:2, j = 2:3 } <= 1)
-    @fact conToStr(m.linconstr[end]) --> "2 x[1,2] + 3 x[1,3] + 5 x[2,2] + 6 x[2,3] $leq 1"
-    @addConstraint(m, sum{ C[i,j]*x[i,j], i = 1:3, j in 1:3; i != j} == y)
-    @fact conToStr(m.linconstr[end]) --> "2 x[1,2] + 3 x[1,3] + 4 x[2,1] + 6 x[2,3] + 7 x[3,1] + 8 x[3,2] - y $eq 0"
+        cref = @constraint(m, -1 <= x <= sum(0.5 for i = 1:2))
+        c = JuMP.constraint_object(cref)
+        @test c.func == x
+        @test c.set == MOI.Interval(-1.0, 1.0)
 
-    @addConstraint(m, sum{ C[i,j]*x[i,j], i = 1:3, j = 1:i} == 0);
-    @fact conToStr(m.linconstr[end]) --> "x[1,1] + 4 x[2,1] + 5 x[2,2] + 7 x[3,1] + 8 x[3,2] + 9 x[3,3] $eq 0"
+        cref = @constraint(m, 1 >= x >= 0)
+        c = JuMP.constraint_object(cref)
+        @test c.func == x
+        @test c.set == MOI.Interval(0.0, 1.0)
 
-    @addConstraint(m, sum{ 0*x[i,1], i=1:3} == 0)
-    @fact conToStr(m.linconstr[end]) --> "0 $eq 0"
+        @test_throws ErrorException @constraint(m, x <= t <= y)
+        @test_throws ErrorException @constraint(m, 0 <= Dict() <= 1)
+        @test_macro_throws ErrorException @constraint(1 <= x <= 2, foo=:bar)
 
-    @addConstraint(m, sum{ 0*x[i,1] + y, i=1:3} == 0)
-    @fact conToStr(m.linconstr[end]) --> "3 y $eq 0"
+        @test JuMP.isequal_canonical(@expression(m, 3x - y - 3.3(w + 2z) + 5), 3*x - y - 3.3*w - 6.6*z + 5)
+        @test JuMP.isequal_canonical(@expression(m, quad, (w+3)*(2x+1)+10), 2*w*x + 6*x + w + 13)
 
-end
-
-facts("[macros] Problem modification") do
-    m = Model()
-    @defVar(m, x[1:3,1:3])
-    C = [1 2 3; 4 5 6; 7 8 9]
-
-    @addConstraint(m, sum{ x[i,j]*(C[i,j]-1), i in 1:3, j = 1:3; i != j} == 0)
-    @fact conToStr(m.linconstr[end]) --> "x[1,2] + 2 x[1,3] + 3 x[2,1] + 5 x[2,3] + 6 x[3,1] + 7 x[3,2] $eq 0"
-
-    con = @addConstraint(m, sum{ C[i,j]*x[i,j], i = 1:3, j = 1:3; i != j} == 0)
-    @fact conToStr(m.linconstr[end]) --> "2 x[1,2] + 3 x[1,3] + 4 x[2,1] + 6 x[2,3] + 7 x[3,1] + 8 x[3,2] $eq 0"
-
-    @defVar(m, y, objective = 0, inconstraints = [con], coefficients = [-1.0])
-    @fact conToStr(m.linconstr[end]) --> "2 x[1,2] + 3 x[1,3] + 4 x[2,1] + 6 x[2,3] + 7 x[3,1] + 8 x[3,2] - y $eq 0"
-
-    chgConstrRHS(con, 3)
-    @fact conToStr(m.linconstr[end]) --> "2 x[1,2] + 3 x[1,3] + 4 x[2,1] + 6 x[2,3] + 7 x[3,1] + 8 x[3,2] - y $eq 3"
-end
-
-facts("[macros] Using pre-built affine is OK in macro") do
-    m = Model()
-    @defVar(m, x)
-    @defVar(m, y)
-    temp = x + 2y + 1
-    @addConstraint(m, 3*temp - x - 2 >= 0)
-    @fact conToStr(m.linconstr[end]) --> "6 y + 2 x $geq -1"
-    # More complex expression
-    a = 1.0*x
-    @addConstraint(m, (2+2)*((3+4)*(1+a)) == 0)
-    @fact conToStr(m.linconstr[end]) --> "28 x $eq -28"
-    @fact affToStr(a) --> "x"
-
-    @fact conToStr(@LinearConstraint(1 + 0*temp == 0)) --> "0 $eq -1"
-end
-
-facts("[macros] Test ranges in @defVar") do
-    m = Model()
-    @defVar(m, x[1:5])
-    @defVar(m, y[3:2:9])
-    @defVar(m, z[4:3:8])
-    @defVar(m, w[6:5])
-
-    @fact length(x) --> 5
-    @fact length(y) --> 4
-    @fact length(z) --> 2
-    @fact length(w) --> 0
-
-    @fact x[end].col --> x[5].col
-    @fact y[3].m --> y[5].m
-    @fact y[3].m --> y[7].m
-    @fact y[3].m --> y[9].m
-    @fact_throws z[8].col  # KeyError
-    @fact_throws w[end]  # BoundsError
-end
-
-facts("[macros] Unicode comparisons") do
-    m = Model()
-    @defVar(m, 0 ≤ x ≤ 1)
-    @defVar(m, y ≥ 2)
-    @defVar(m, z ≤ 3)
-    @fact m.colUpper --> [1.0, Inf,  3.0]
-    @fact m.colLower --> [0.0, 2.0, -Inf]
-    @addConstraint(m, 0 ≤ x + y ≤ 1)
-    @addConstraint(m, x + z ≤ 2)
-    @addConstraint(m, y + z ≥ 3)
-    @addConstraint(m, y*z ≤ 1)
-    @fact m.linconstr[1].lb --> 0.0
-    @fact m.linconstr[1].ub --> 1.0
-    @fact m.linconstr[2].lb --> -Inf
-    @fact m.linconstr[2].ub --> 2.0
-    @fact m.linconstr[3].lb --> 3.0
-    @fact m.linconstr[3].ub --> Inf
-    @fact m.quadconstr[1].sense --> :(<=)
-end
-
-facts("[macros] Three argument @addConstraint") do
-    m = Model()
-    @defVar(m, x[1:5])
-    @defVar(m, y[2:2:6])
-
-    @addConstraint(m, c, x[4] - y[4] == 1)
-    @fact conToStr(m.linconstr[c.idx]) --> "x[4] - y[4] $eq 1"
-
-    @addConstraint(m, d[i in 1:5,j=6:-2:2], x[i] - y[j] == 2)
-    @fact conToStr(m.linconstr[d[4,4].idx]) --> "x[4] - y[4] $eq 2"
-
-    @addConstraint(m, q[i=1:5], x[i]^2 == 1)
-    @fact conToStr(m.quadconstr[q[5].idx]) --> "x[5]² - 1 $eq 0"
-end
-
-facts("[macros] @addConstraints") do
-    m = Model()
-    @defVar(m, x)
-    @defVar(m, y[1:3])
-
-    @addConstraints(m, begin
-        x + y[1] == 1
-        ref[i=1:3], y[1] + y[i] >= i
-    end)
-
-    @fact conToStr(m.linconstr[1]) --> "x + y[1] $eq 1"
-    @fact conToStr(m.linconstr[2]) --> "2 y[1] $geq 1"
-    @fact conToStr(m.linconstr[3]) --> "y[1] + y[2] $geq 2"
-    @fact conToStr(m.linconstr[4]) --> "y[1] + y[3] $geq 3"
-end
-
-facts("[macros] @addNLConstraints") do
-    m = Model()
-    @defVar(m, 0 <= x <= 1)
-    @defVar(m, y[1:3])
-    @setObjective(m, Max, x)
-
-    @addNLConstraints(m, begin
-        ref[i=1:3], y[i] == 0
-        x + y[1] * y[2] * y[3] <= 0.5
-    end)
-
-    @fact length(m.nlpdata.nlconstr) --> 4
-    d = JuMPNLPEvaluator(m)
-    MathProgBase.initialize(d, [:ExprGraph])
-
-    @fact MathProgBase.constr_expr(d,1) --> :(x[2] - 0.0 == 0.0)
-    @fact MathProgBase.constr_expr(d,2) --> :(x[3] - 0.0 == 0.0)
-    @fact MathProgBase.constr_expr(d,3) --> :(x[4] - 0.0 == 0.0)
-    @fact MathProgBase.constr_expr(d,4) --> :((x[1] + x[2] * x[3] * x[4]) - 0.5 <= 0.0)
-
-end
-
-facts("[macros] Vectors in nonlinear expressions") do
-    m = Model()
-    @defVar(m, x[1:3])
-    @fact_throws ErrorException @setNLObjective(m, Min, x)
-    @fact_throws ErrorException @setNLObjective(m, Min, [1,2,3])
-end
-
-facts("[macros] @setObjective with quadratic") do
-    m = Model()
-    @defVar(m, x[1:5])
-    @setObjective(m, Max, sum{i*x[i]*x[j], i=1:5, j=5:-1:1; isodd(i) && iseven(j)} + 2x[5])
-
-    @fact quadToStr(m.obj) --> "x[1]*x[2] + 3 x[2]*x[3] + x[1]*x[4] + 3 x[3]*x[4] + 5 x[2]*x[5] + 5 x[4]*x[5] + 2 x[5]"
-end
-
-facts("[macros] @addConstraint with quadratic") do
-    m = Model()
-    @defVar(m, x[1:5])
-
-    @addConstraint(m, x[3]*x[1] + sum{x[i]*x[5-i+1], i=1:5; 2 <= i <= 4} + 4x[5] == 1)
-    @fact conToStr(m.quadconstr[end]) --> "x[1]*x[3] + x[3]² + 2 x[2]*x[4] + 4 x[5] - 1 $eq 0"
-
-    @addConstraint(m, sum{sum{(x[i] - 2)*x[j],j=4:5},i=2:3} >= -3*x[2]*2*x[4])
-    @fact conToStr(m.quadconstr[end]) --> "7 x[2]*x[4] + x[3]*x[4] + x[2]*x[5] + x[3]*x[5] - 4 x[4] - 4 x[5] $geq 0"
-
-    foo(x) = x
-    @addConstraint(m, x[1] ≤ foo(x[1])^2)
-    @fact conToStr(m.quadconstr[end]) --> "-x[1]² + x[1] $leq 0"
-
-    @addConstraint(m, sum{x[i],i=1:2}*sum{x[i],i=2:3} >= 0)
-    @fact conToStr(m.quadconstr[end]) --> "x[1]*x[2] + x[2]² + x[1]*x[3] + x[2]*x[3] $geq 0"
-    @addConstraint(m, x[1]^2 + x[2]*x[3] >= 0)
-    @fact conToStr(m.quadconstr[end]) --> "x[1]² + x[2]*x[3] $geq 0"
-    @addConstraint(m, x[1]^2 + (x[2]+3)*(x[3]-1) >= 0)
-    @fact conToStr(m.quadconstr[end]) --> "x[1]² + x[2]*x[3] + 3 x[3] - x[2] - 3 $geq 0"
-    @addConstraint(m, sum{x[i],i=1:2}^2 >= 0)
-    @fact conToStr(m.quadconstr[end]) --> "x[1]² + 2 x[1]*x[2] + x[2]² $geq 0"
-
-    myquadexpr = x[1]*x[2]
-    @addConstraint(m, sum{i*myquadexpr + x[i], i=1:3} + sum{x[i] + myquadexpr*i, i=1:3} == 0)
-    @fact conToStr(m.quadconstr[end]) --> "12 x[1]*x[2] + 2 x[1] + 2 x[2] + 2 x[3] $eq 0"
-
-    @addConstraint(m, (x[1] + x[2])*sum{ 0*x[i] + x[3], i=1:3} == 0)
-    @fact conToStr(m.quadconstr[end]) --> "3 x[1]*x[3] + 3 x[2]*x[3] $eq 0"
-
-    @fact conToStr(@QuadConstraint(1 + 0*myquadexpr == 0)) --> "1 $eq 0"
-
-    @defVar(m, y)
-    @fact conToStr(@QuadConstraint(1 + (2y)*y   == 0)) --> "2 y² + 1 $eq 0"
-    @fact conToStr(@QuadConstraint(1 +   y *y*2 == 0)) --> "2 y² + 1 $eq 0"
-    z = 2y
-    @fact conToStr(@QuadConstraint(y*y + y*z == 0)) --> "3 y² $eq 0"
-end
-
-facts("[macros] Triangular indexing, iteration") do
-    n = 10
-    trimod = Model()
-    @defVar(trimod, x[i=1:n,j=i:n])
-    @defVar(trimod, y[i=3:2:7,j=-i])
-    @fact MathProgBase.numvar(trimod) --> n*(n+1)/2 + 3
-    S = Any[(i,i+2) for i in 1:5]
-    @defVar(trimod, z[(i,j)=S,k=i:j])
-    @fact length(z.tupledict) --> 15
-    @addConstraint(trimod, cref[i=1:n,j=i:n], x[i,j] + y[5,-5] == 1)
-    @fact MathProgBase.numconstr(trimod) --> n*(n+1)/2
-
-    cntr = zeros(Bool, n, n)
-    for ((i,j),var) in zip(keys(x),values(x))
-        @fact x[i,j] --> exactly(var)
-        cntr[i,j] = true
+        cref = @constraint(m, 3 + 5*7 <= 0)
+        c = JuMP.constraint_object(cref)
+        @test JuMP.isequal_canonical(c.func, zero(AffExpr))
+        @test c.set == MOI.LessThan(-38.0)
     end
-    for i in 1:n, j in 1:n
-        @fact cntr[i,j] --> (j >= i)
+
+end
+
+@testset "Macros for JuMP.Model" begin
+    macros_test(Model, VariableRef)
+
+    @testset "Nested tuple destructuring" begin
+        m = Model()
+        d = Dict((1,2) => 3)
+        ex = @expression(m, sum(i+j+k for ((i,j),k) in d))
+        @test ex == 6
+    end
+
+    @testset "Error on unexpected comparison" begin
+        m = Model()
+        @variable(m, x)
+        @test_macro_throws ErrorException @expression(m, x <= 1)
+    end
+
+    @testset "Warn on unexpected assignment" begin
+        m = Model()
+        @variable(m, x)
+        @static if VERSION >= v"1.0"
+            # function getindex does not accept keyword arguments
+            @test_throws ErrorException x[i=1]
+            @test_throws ErrorException @constraint(m, x[i=1] <= 1)
+        else
+            @static if VERSION >= v"0.7-"
+                # https://github.com/JuliaLang/julia/issues/25612
+                @test_logs((:warn, r"Unexpected assignment"),
+                           macroexpand(JuMP, :(@constraint(m, x[i=1] <= 1))))
+            else
+                @test_warn "Unexpected assignment" macroexpand(:(@constraint(m, x[i=1] <= 1)))
+            end
+        end
+    end
+
+    @testset "Lookup in model scope: @variable" begin
+        model = Model()
+        @variable(model, x)
+        @test x === model[:x]
+    end
+
+    @testset "Lookup in model scope: @constraint" begin
+        model = Model()
+        @variable(model, x)
+        @constraint(model, con, x + 1 <= 2)
+        @test con === model[:con]
+    end
+
+    @testset "Lookup in model scope: @expression" begin
+        model = Model()
+        @variable(model, x)
+        @expression(model, expr, 2x)
+        @test expr === model[:expr]
+    end
+
+    @testset "Lookup in model scope: @NLexpression" begin
+        model = Model()
+        @variable(model, x)
+        @NLexpression(model, nl_expr, sin(x))
+        @test nl_expr === model[:nl_expr]
+    end
+
+    @testset "Lookup in model scope: @NLconstraint" begin
+        model = Model()
+        @variable(model, x)
+        @NLconstraint(model, nl_con, sin(x) == 1.0)
+        @test nl_con === model[:nl_con]
+    end
+
+    @testset "Error on duplicate names in model scope" begin
+        model = Model()
+        y = @variable(model, x)
+        @test_throws ErrorException @constraint(model, x, 2y <= 1)
     end
 end
 
-facts("[macros] Multidimensional indexing") do
-    model = Model()
-    I1 = 1:5
-    I2 = 2:8
-    I3 = 5:6
-    @defVar(model, x[1:5,2:8,5:6])
-    coll = Int[]
-    for v in values(x)
-        push!(coll, v.col)
-    end
-    p = 1
-    match = true
-    for v in x.innerArray
-        match &= (coll[p] == v.col)
-        p += 1
-    end
-    @fact match --> true
-end
-
-facts("[macros] @defExpr") do
-    model = Model()
-    @defVar(model, x[1:3,1:3])
-    @defExpr(model, expr, sum{i*x[i,j] + j, i=1:3,j in 1:3})
-    @fact affToStr(expr) --> "x[1,1] + x[1,2] + x[1,3] + 2 x[2,1] + 2 x[2,2] + 2 x[2,3] + 3 x[3,1] + 3 x[3,2] + 3 x[3,3] + 18"
-
-    @fact_throws @defExpr(model, blah[i=1:3], x[i,1]^2)
-
-    @defExpr(model, y[i=1:2], sum{x[i,1]; i == 1})
-    @fact affToStr(y[1]) --> "x[1,1]"
-    @fact affToStr(y[2]) --> "0"
-
-    # deprecated versions
-    @defExpr(expr2, sum{i*x[i,j] + j, i=1:3,j in 1:3})
-    @fact affToStr(expr2) --> "x[1,1] + x[1,2] + x[1,3] + 2 x[2,1] + 2 x[2,2] + 2 x[2,3] + 3 x[3,1] + 3 x[3,2] + 3 x[3,3] + 18"
-    expr2 = @defExpr(sum{i*x[i,j] + j, i=1:3,j in 1:3})
-    @fact affToStr(expr2) --> "x[1,1] + x[1,2] + x[1,3] + 2 x[2,1] + 2 x[2,2] + 2 x[2,3] + 3 x[3,1] + 3 x[3,2] + 3 x[3,3] + 18"
-end
-
-facts("[macros] Conditions in constraint indexing") do
-    model = Model()
-    @defVar(model, x[1:10])
-    @addConstraint(model, c1[i=1:9;isodd(i)], x[i] + x[i+1] <= 1)
-    @addNLConstraint(model, c2[i=["red","blue","green"], k=9:-2:2; (i == "red" && isodd(k)) || (k >=4 && (i == "blue" || i == "green"))], x[k]^3 <= 1)
-    @fact length(model.linconstr) --> 5
-    @fact conToStr(model.linconstr[1]) --> "x[1] + x[2] $leq 1"
-    @fact conToStr(model.linconstr[2]) --> "x[3] + x[4] $leq 1"
-    @fact conToStr(model.linconstr[3]) --> "x[5] + x[6] $leq 1"
-    @fact conToStr(model.linconstr[4]) --> "x[7] + x[8] $leq 1"
-    @fact conToStr(model.linconstr[5]) --> "x[9] + x[10] $leq 1"
-    @fact length(model.nlpdata.nlconstr) --> 10
-end
-
-facts("[macros] Test changes in condition parsing") do
-    ex = :(x[12;3])
-    @fact ex.head --> :typed_vcat
-    @fact ex.args --> [:x, 12, 3]
-
-    ex = :(x[i=1:3,j=S;isodd(i) && i+j>=2])
-    @fact ex.head --> :typed_vcat
-    @fact ex.args --> [:x,
-                      Expr(:parameters, Expr(:&&, :(isodd(i)), :(i+j>=2))),
-                      Expr(:(=), :i, :(1:3)),
-                      Expr(:(=), :j, :S)]
-end
-
-facts("[macros] Norm parsing") do
-    model = Model()
-    @defVar(model, x[1:2,1:2])
-    @addConstraint(model, -2norm2{x[i,j], i in 1:2, j=1:2} + x[1,2] >= -1)
-    @addConstraint(model, -2norm2{x[i,j], i=1:2, j in 1:2; iseven(i+j)} + x[1,2] >= -1)
-    @addConstraint(model, 1 >= 2*norm2{x[i,1], i in 1:2})
-    @fact conToStr(model.socconstr[1]) --> "2.0 $Vert[x[1,1],x[1,2],x[2,1],x[2,2]]$Vert$sub2 $leq x[1,2] + 1"
-    @fact conToStr(model.socconstr[2]) --> "2.0 $Vert[x[1,1],x[2,2]]$Vert$sub2 $leq x[1,2] + 1"
-    @fact conToStr(model.socconstr[3]) --> "2.0 $Vert[x[1,1],x[2,1]]$Vert$sub2 $leq 1"
-    @fact_throws @addConstraint(model, (x[1,1]+1)*norm2{x[i,j], i=1:2, j=1:2} + x[1,2] >= -1)
-    @fact_throws @addConstraint(model, norm2{x[i,j], i=1:2, j=1:2} + x[1,2] >= -1)
-end
-
-facts("[macros] Extraneous terms in QuadExpr (#535)") do
-    model = Model()
-    @defVar(model, x)
-    @defVar(model, y)
-    @addConstraint(model, x*x <= y*y)
-    @fact conToStr(model.quadconstr[1]) --> "x² - y² $leq 0"
-end
-
-facts("[macros] Special-case binary multiplication in addToExpression_reorder (#537)") do
-    dual = Model()
-    @defVar(dual, α[1:3] <= 0)
-    @defVar(dual, γ >= 0)
-    @addConstraint(dual, ones(3)*γ .<= α)
-    @fact conToStr(dual.linconstr[1]) --> "γ - α[1] $leq 0"
-    @fact conToStr(dual.linconstr[2]) --> "γ - α[2] $leq 0"
-    @fact conToStr(dual.linconstr[3]) --> "γ - α[3] $leq 0"
-end
-
-facts("[macros] Indices in macros don't leak out of scope (#582)") do
-    m = Model()
-    cnt = 4
-    for i in 5:8
-        @defVar(m, x[i=1:3,j=1:3] ≤ i)
-        cnt += 1
-        @fact i --> cnt
-    end
-    cnt = 4
-    for i in 5:8
-        @defVar(m, y[i=2:4,j=1:3] ≤ i)
-        cnt += 1
-        @fact i --> cnt
-    end
-    cnt = 4
-    for i in 5:8
-        @defVar(m, z[i=[1:3;],j=1:3] ≤ i)
-        cnt += 1
-        @fact i --> cnt
-    end
-    @fact m.colUpper --> vcat(repeat([1.0,2.0,3.0], inner=[3], outer=[4]),
-                              repeat([2.0,3.0,4.0], inner=[3], outer=[4]),
-                              repeat([1.0,2.0,3.0], inner=[3], outer=[4]))
-    @defVar(m, x[i=1:3] ≤ i)
-    cnt = 4
-    for i in 5:8
-        @addConstraint(m, sum{x[i], i=1, j=1, k=1} == 1)
-        cnt += 1
-        @fact i --> cnt
-    end
-    cnt = 4
-    for i in 5:8
-        @addConstraint(m, norm2{x[i], i=1, j=1, k=1} <= 1)
-        cnt += 1
-        @fact i --> cnt
-    end
-    cnt = 4
-    for i in 5:8
-        @addConstraint(m, c[i=1:3,j=1:3], x[i] == 1)
-        cnt += 1
-        @fact i --> cnt
-    end
-end
-
-facts("[macros] Issue #621") do
-    m = Model()
-    @defVar(m, x)
-
-    q = x^2
-    a = x+1
-    con = @QuadConstraint(a+q*3 <= 0)
-    @fact conToStr(con) --> "3 x² + x + 1 $leq 0"
-end
-
-facts("[macros] @defVars and @addConstraints") do
-    m = Model()
-    @defVars m begin
-        0 ≤ x[i=1:2] ≤ i
-        y ≥ 2, Int, (start = 0.7)
-        z ≤ 3, (start=10)
-        q, (Bin, start=0.5)
-    end
-    @addConstraints m begin
-        0 ≤ x[1] + y ≤ 1
-        x[1] + z ≤ 2
-        y + z ≥ 3
-        y*z ≤ 1
-    end
-    @fact m.colUpper --> [1.0, 2.0, Inf,  3.0, 1.0]
-    @fact m.colLower --> [0.0, 0.0, 2.0, -Inf, 0.0]
-    @fact m.colCat --> [:Cont, :Cont, :Int, :Cont, :Bin]
-    @fact getValue(y) --> 0.7
-    @fact getValue(z) --> 10
-    @fact getValue(q) --> 0.5
-    @fact m.linconstr[1].lb --> 0.0
-    @fact m.linconstr[1].ub --> 1.0
-    @fact m.linconstr[2].lb --> -Inf
-    @fact m.linconstr[2].ub --> 2.0
-    @fact m.linconstr[3].lb --> 3.0
-    @fact m.linconstr[3].ub --> Inf
-    @fact m.quadconstr[1].sense --> :(<=)
+@testset "Macros for JuMPExtension.MyModel" begin
+    macros_test(JuMPExtension.MyModel, JuMPExtension.MyVariableRef)
 end

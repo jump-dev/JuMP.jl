@@ -1,6 +1,6 @@
 #############################################################################
 # JuMP
-# An algebraic modelling langauge for Julia
+# An algebraic modelling language for Julia
 # See http://github.com/JuliaOpt/JuMP.jl
 #############################################################################
 # speed.jl
@@ -49,44 +49,49 @@
 #############################################################################
 
 using JuMP
+using Compat
+using Compat.Random
+@static if VERSION >= v"0.7.0-DEV.3406"
+    srand(seed) = Random.seed!(seed)
+end
 
 function pMedian(numFacility::Int,numCustomer::Int,numLocation::Int,useMPS)
     srand(10)
     customerLocations = [rand(1:numLocation) for a = 1:numCustomer ]
 
-    tic()
-    m = Model()
+    buildTime = @elapsed begin
+        m = Model()
 
-    # Facility locations
-    @defVar(m, 0 <= s[1:numLocation] <= 1)
+        # Facility locations
+        @variable(m, 0 <= s[1:numLocation] <= 1)
 
-    # Aux. variable: x_a,i = 1 iff the closest facility to a is at i
-    @defVar(m, 0 <= x[1:numLocation,1:numCustomer] <= 1)
+        # Aux. variable: x_a,i = 1 iff the closest facility to a is at i
+        @variable(m, 0 <= x[1:numLocation,1:numCustomer] <= 1)
 
-    # Objective: min distance
-    @setObjective(m, Max, sum{abs(customerLocations[a]-i)*x[i,a], a = 1:numCustomer, i = 1:numLocation} )
+        # Objective: min distance
+        @objective(m, Max, sum(abs(customerLocations[a]-i)*x[i,a] for a = 1:numCustomer, i = 1:numLocation) )
 
-    # Constraints
-    for a in 1:numCustomer
-        # Subject to linking x with s
-        for i in 1:numLocation
-            @addConstraint(m, x[i,a] - s[i] <= 0)
+        # Constraints
+        for a in 1:numCustomer
+            # Subject to linking x with s
+            for i in 1:numLocation
+                @constraint(m, x[i,a] - s[i] <= 0)
+            end
+            # Subject to one of x must be 1
+            @constraint(m, sum(x[i,a] for i=1:numLocation) == 1 )
         end
-        # Subject to one of x must be 1
-        @addConstraint(m, sum{x[i,a],i=1:numLocation} == 1 )
+
+        # Subject to must allocate all facilities
+        @constraint(m, sum(s[i] for i=1:numLocation) == numFacility )
     end
 
-    # Subject to must allocate all facilities
-    @addConstraint(m, sum{s[i],i=1:numLocation} == numFacility )
-    buildTime = toq()
-
-    tic()
-    if useMPS
-        writeMPS(m,"/dev/null")
-    else
-        writeLP(m,"/dev/null")
+    writeTime = @elapsed begin
+        if useMPS
+            writeMPS(m,"/dev/null")
+        else
+            writeLP(m,"/dev/null")
+        end
     end
-    writeTime = toq()
 
     return buildTime, writeTime
 end
@@ -102,39 +107,39 @@ function cont5(n,useMPS)
     a = 0.001
     yt = [0.5*(1 - (j*dx)^2) for j=0:n]
 
-    tic()
-    mod = Model()
-    @defVar(mod,  0 <= y[0:m,0:n] <= 1)
-    @defVar(mod, -1 <= u[1:m] <= 1)
-    @setObjective(mod, Min, y[0,0])
+    buildTime = @elapsed begin
+        mod = Model()
+        @variable(mod,  0 <= y[0:m,0:n] <= 1)
+        @variable(mod, -1 <= u[1:m] <= 1)
+        @objective(mod, Min, y[0,0])
 
-    # PDE
-    for i = 0:m1
-        for j = 1:n1
-            @addConstraint(mod, h2*(y[i+1,j] - y[i,j]) == 0.5*dt*(y[i,j-1] - 2*y[i,j] + y[i,j+1] + y[i+1,j-1] - 2*y[i+1,j] + y[i+1,j+1]) )
+        # PDE
+        for i = 0:m1
+            for j = 1:n1
+                @constraint(mod, h2*(y[i+1,j] - y[i,j]) == 0.5*dt*(y[i,j-1] - 2*y[i,j] + y[i,j+1] + y[i+1,j-1] - 2*y[i+1,j] + y[i+1,j+1]) )
+            end
+        end
+
+        # IC
+        for j = 0:n
+            @constraint(mod, y[0,j] == 0)
+        end
+
+        # BC
+        for i = 1:m
+            @constraint(mod, y[i,2]   - 4*y[i,1]  + 3*y[i,0] == 0)
+            @constraint(mod, y[i,n-2] - 4*y[i,n1] + 3*y[i,n] == (2*dx)*(u[i] - y[i,n]))
         end
     end
 
-    # IC
-    for j = 0:n
-        @addConstraint(mod, y[0,j] == 0)
+    writeTime = @elapsed begin
+        if !useMPS
+            writeLP(mod, "/dev/null")
+        else
+            writeMPS(mod, "/dev/null")
+        end
     end
-
-    # BC
-    for i = 1:m
-        @addConstraint(mod, y[i,2]   - 4*y[i,1]  + 3*y[i,0] == 0)
-        @addConstraint(mod, y[i,n-2] - 4*y[i,n1] + 3*y[i,n] == (2*dx)*(u[i] - y[i,n]))
-    end
-    buildTime = toq()
-
-    tic()
-    if !useMPS
-        writeLP(mod, "/dev/null")
-    else
-        writeMPS(mod, "/dev/null")
-    end
-    writeTime = toq()
-
+        
     return buildTime, writeTime
 end
 
@@ -169,4 +174,3 @@ function RunTests()
 end
 
 RunTests()
-

@@ -3,8 +3,13 @@ os:
     - linux
     - osx
 julia:
-    - 0.4
-    - nightly
+    - 0.6
+    - 0.7
+    - 1.0
+# This is left as an example for the next big version switch.
+# matrix:
+#     allow_failures:
+#         - julia: 0.7
 notifications:
     email: false
 sudo: false
@@ -12,15 +17,15 @@ addons:
     apt_packages:
         - gfortran
         - liblapack-dev
-        - libgmp-dev
-        - libglpk-dev
-script:
-    - if [[ -a .git/shallow ]]; then git fetch --unshallow; fi
-    - julia -e 'Pkg.clone(pwd())'
-    - julia -e 'Pkg.test("JuMP", coverage=true)'
-    - julia test/hygiene.jl
-    - julia -e 'Pkg.add("Ipopt")' # needed for below tests
-    - julia test/hockschittkowski/runhs.jl
+        - libblas-dev
 after_success:
-    - echo $TRAVIS_JULIA_VERSION
-    - julia -e 'Pkg.add("Coverage"); cd(Pkg.dir("JuMP")); using Coverage; Coveralls.submit(process_folder()); Codecov.submit(process_folder())'
+    - julia -e '(VERSION >= v"0.7" && using Pkg); Pkg.add("Coverage"); cd(Pkg.dir("JuMP")); using Coverage; Coveralls.submit(process_folder()); Codecov.submit(process_folder())'
+jobs:
+  include:
+    - stage: "Documentation"
+      julia: 1.0
+      os: linux
+      script:
+        - julia --project=docs -e 'using Pkg; Pkg.instantiate(); Pkg.add(PackageSpec(path=pwd()))'
+        - julia --project=docs --color=yes docs/make.jl
+      after_success: skip

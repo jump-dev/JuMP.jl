@@ -1,0 +1,8 @@
+This note serves as developer documentation for the JuMP release process, which has accumulated a number of manual steps.
+
+Steps for a new major (0.xx) release:
+
+- Update NEWS.md
+- Create release-0.xx branch
+- Update version and branches in README.md
+- Check that CI passes on release branch
