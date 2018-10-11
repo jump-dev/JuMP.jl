@@ -45,9 +45,6 @@ mod = Model(with_optimizer(solver))
 
 # Z e = e
 @constraint(mod, Z*ones(m) .== ones(m))
-#for i = 1:m
-#    addConstraint(mod, sum([ Z[i,j] for j in 1:m]) == 1)
-#end
 
 # Tr(Z) = k
 @constraint(mod, tr(Z) == k)
