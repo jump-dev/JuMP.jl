@@ -1,6 +1,8 @@
-# Workaround for JuliaLang/julia/pull/28625
-if Base.HOME_PROJECT[] !== nothing
-    Base.HOME_PROJECT[] = abspath(Base.HOME_PROJECT[])
+if VERSION < v"1.0.1"
+    # Workaround for JuliaLang/julia/pull/28625
+    if Base.HOME_PROJECT[] !== nothing
+        Base.HOME_PROJECT[] = abspath(Base.HOME_PROJECT[])
+    end
 end
 
 using Documenter, JuMP
