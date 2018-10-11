@@ -16,9 +16,9 @@
 # To determine bounds on ρ_AC by solving a SDP
 #############################################################################
 
-using JuMP, SCS
+using JuMP, CSDP
 
-m = Model(with_optimizer(SCS.Optimizer))
+m = Model(with_optimizer(CSDP.Optimizer))
 
 @variable(m, X[1:3,1:3], PSD)
 

@@ -32,10 +32,10 @@
 # For more detail, see
 # "Lectures on discrete geometry" by J. Matoušek, Springer, 2002, pp. 378-379.
 
-using JuMP, SCS
+using JuMP, CSDP
 
 
-m = Model(with_optimizer(SCS.Optimizer))
+m = Model(with_optimizer(CSDP.Optimizer))
 
 D = [0.0 1.0 1.0 1.0
      1.0 0.0 2.0 2.0
