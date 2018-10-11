@@ -180,6 +180,21 @@ end
 public_function(x) = internal_function(x)
 ```
 
+#### `@enum` vs. `Symbol`
+
+The `@enum` macro lets you define types with a finite number of values that
+are explicitly enumerated (like `enum` in C/C++). `Symbol`s are lightweight
+strings that are used to represent identifiers in Julia (for example, `:x`).
+
+`@enum` provides type safety and can have docstrings attached to explain the
+possible values. Use `@enum`s when applicable, e.g., for reporting statuses.
+Use strings to provide long-form additional information like error messages.
+
+Use of `Symbol` should typically be reserved for to identifiers, e.g, for lookup
+in the JuMP model (`model[:my_variable]`).
+
+
+
 Design principles
 -----------------
 
