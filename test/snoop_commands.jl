@@ -11,7 +11,7 @@
 # Illustrative uses of JuMP for compilation snooping. Reproduced from model.jl.
 # Should be referenced in tests in compilation.jl, not included directly in runtests.jl.
 #############################################################################
-using JuMP
+using JuMP, Compat
 
 # If solvers not loaded, load them (i.e running just these tests)
 !isdefined(@__MODULE__, :lp_solvers) && include("solvers.jl")
