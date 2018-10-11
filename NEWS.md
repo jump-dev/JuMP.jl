@@ -66,6 +66,9 @@ Breaking changes:
 
 - The symbols `:Min` and `:Max` are no longer used as optimization senses.
   Instead, JuMP uses the `OptimizationSense` enum from MathOptInterface.
+  `@objective(model, Max, ...)`, `@objective(model, Min, ...)`,
+  `@NLobjective(model, Max, ...)`, and `@objective(model, Min, ...)` remain
+  valid, but `@objective(m, :Max, ...)` is no longer accepted.
 
 New features:
 
