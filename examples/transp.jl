@@ -45,10 +45,12 @@ m = Model(with_optimizer(solver));
 
 println("Solving original problem...")
 JuMP.optimize!(m)
+
 status = JuMP.termination_status(m)
 primal_status = JuMP.primal_status(m)
+isoptimal = status == MOI.Success && primal_status == MOI.FeasiblePoint
 
-if status == MOI.Success && primal_status == MOI.FeasiblePoint
+if isoptimal
 	@printf("Optimal!\n");
 	@printf("Objective value: %d\n", JuMP.objective_value(m));
 	@printf("Transpotation:\n");

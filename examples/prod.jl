@@ -16,22 +16,22 @@
 # and Kernighan, A Modeling Language for Mathematical Programming
 #############################################################################
 
-function PrintSolution(status, CREWS, HIRE, LAYOFF)
+function PrintSolution(isoptimal, CREWS, HIRE, LAYOFF)
     println("RESULTS:")
-    if status == :Optimal
+    if isoptimal
       println("Crews")
-      for t = 0:length(CREWS)-1
-        print(" $(getvalue(CREWS[t])) ")
+      for t = 0:length(CREWS.data)-1
+        print(" $(JuMP.result_value(CREWS[t])) ")
       end
       println()
       println("Hire")
-      for t = 1:length(HIRE)
-        print(" $(getvalue(HIRE[t])) ")
+      for t = 1:length(HIRE.data)
+        print(" $(JuMP.result_value(HIRE[t])) ")
       end
       println()
       println("Layoff")
-      for t = 1:length(LAYOFF)
-        print(" $(getvalue(LAYOFF[t])) ")
+      for t = 1:length(LAYOFF.data)
+        print(" $(JuMP.result_value(LAYOFF[t])) ")
       end
       println()
     else
@@ -42,8 +42,9 @@ end
 
 
 using JuMP, Clp
+const MOI = JuMP.MathOptInterface
 
-solver = ClpSolver()
+solver = Clp.Optimizer
 
 ####  PRODUCTION SETS AND PARAMETERS  ###
 
@@ -142,7 +143,7 @@ end
 minv = [[dem[p][t+1] * checkpro(p,t, pro, pir, rir) for t=numperiods] for p=1:numprd]
 # Lower limit on inventory at end of period t
 
-prod = Model(solver=ClpSolver())
+prod = Model(with_optimizer(solver))
 
 ###  VARIABLES  ###
 @variable(prod, Crews[0:lastperiod] >= 0)
@@ -249,7 +250,10 @@ secondperiod = firstperiod + 1
 # and so are not included explicitly.)
 
 
-production = solve(prod)
+JuMP.optimize!(prod)
 
-PrintSolution(production, Crews, Hire, Layoff)
+status = JuMP.termination_status(prod)
+primal_status = JuMP.primal_status(prod)
+isoptimal = status == MOI.Success && primal_status == MOI.FeasiblePoint
 
+PrintSolution(isoptimal, Crews, Hire, Layoff)

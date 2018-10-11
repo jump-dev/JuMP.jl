@@ -19,9 +19,9 @@ const MOI = JuMP.MathOptInterface
 
 solver = GLPK.Optimizer
 
-function PrintSolution(status, foods, buy)
+function PrintSolution(isoptimal, foods, buy)
     println("RESULTS:")
-    if status == :Optimal
+    if isoptimal
         for i = 1:length(foods)
             println("  $(foods[i]) = $(JuMP.result_value(buy[i]))")
         end
@@ -73,29 +73,23 @@ function SolveDiet()
     # Solve
     println("Solving original problem...")
     JuMP.optimize!(m)
-    term_status = JuMP.termination_status(m)
-    primal_status = JuMP.primal_status(m)
 
-    if term_status == MOI.Success && primal_status == MOI.FeasiblePoint
-        PrintSolution(:Optimal, foods, buy)
-    else
-        PrintSolution(:NoSolution, foods, buy)
-    end
+    status = JuMP.termination_status(m)
+    primal_status = JuMP.primal_status(m)
+    isoptimal = status == MOI.Success && primal_status == MOI.FeasiblePoint
+
+    PrintSolution(isoptimal, foods, buy)
 
 
     # Limit dairy
     @constraint(m, buy[8] + buy[9] <= 6)
     println("Solving dairy-limited problem...")
     JuMP.optimize!(m)
-    term_status = JuMP.termination_status(m)
+    status = JuMP.termination_status(m)
     primal_status = JuMP.primal_status(m)
+    isoptimal = status == MOI.Success && primal_status == MOI.FeasiblePoint
 
-    if term_status == MOI.Success && primal_status == MOI.FeasiblePoint
-        PrintSolution(:Optimal, foods, buy)
-    else
-        PrintSolution(:NoSolution, foods, buy)
-    end
-
+    PrintSolution(isoptimal, foods, buy)
 end
 
 SolveDiet()

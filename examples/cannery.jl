@@ -17,9 +17,9 @@ const MOI = JuMP.MathOptInterface
 
 solver = Clp.Optimizer
 
-function PrintSolution(status, plants, markets, ship)
+function PrintSolution(isoptimal, plants, markets, ship)
     println("RESULTS:")
-    if status == :Optimal
+    if isoptimal
       for i = 1:length(plants)
         for j in 1:length(markets)
           println("  $(plants[i]) $(markets[j]) = $(JuMP.result_value(ship[i,j]))")
@@ -51,17 +51,13 @@ function solveCannery(plants, markets, capacity, demand, distance, freight)
               sum(distance[i,j]* freight * ship[i,j] for i=1:numplants, j=1:nummarkets))
 
   JuMP.optimize!(cannery)
+
   status = JuMP.termination_status(cannery)
   primal_status = JuMP.primal_status(cannery)
+  isoptimal = status == MOI.Success && primal_status == MOI.FeasiblePoint
 
-  if status == MOI.Success && primal_status == MOI.FeasiblePoint
-    result = ship
-    PrintSolution(:Optimal, plants, markets, ship)
-  else
-    result = status
-    print("No solution")
-  end
-  result
+  PrintSolution(isoptimal, plants, markets, ship)
+  return isoptimal
 end
 
 

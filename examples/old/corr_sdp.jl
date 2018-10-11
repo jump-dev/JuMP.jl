@@ -37,10 +37,10 @@ m = Model(with_optimizer(SCS.Optimizer))
 @objective(m, Max, X[1,3])
 JuMP.optimize!(m)
 println("Maximum value is ", JuMP.result_value.(X)[1,3])
-@assert +0.8719 <= result_value.(X)[1,3] <= +0.8720
+@assert +0.8719 <= JuMP.result_value.(X)[1,3] <= +0.8720
 
 # Find lower bound
 @objective(m, Min, X[1,3])
-solve(m)
+JuMP.optimize!(m)
 println("Minimum value is ", JuMP.result_value.(X)[1,3])
 @assert -0.9779 >= JuMP.result_value.(X)[1,3] >= -0.9799

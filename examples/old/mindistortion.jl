@@ -35,7 +35,7 @@
 using JuMP, SCS
 
 
-m = Model(solver=SCSSolver())
+m = Model(with_optimizer(SCS.Optimizer))
 
 D = [0.0 1.0 1.0 1.0
      1.0 0.0 2.0 2.0
@@ -44,7 +44,7 @@ D = [0.0 1.0 1.0 1.0
 
 @variable(m, cSq >= 1.0)
 
-@variable(m, Q[1:4,1:4], SDP)
+@variable(m, Q[1:4,1:4], PSD)
 
 for i in 1:4
     for j in (i+1):4
@@ -55,6 +55,6 @@ end
 
 @objective(m, Min, cSq)
 
-solve(m)
+JuMP.optimize!(m)
 
-println(getvalue(cSq))
+println(JuMP.result_value.(cSq))

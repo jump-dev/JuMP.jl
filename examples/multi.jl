@@ -13,13 +13,13 @@
 #   4-1 multi.mod and multi.dat
 #############################################################################
 
-function PrintSolution(status, Trans, ORIG, DEST, PROD)
+function PrintSolution(isoptimal, Trans, ORIG, DEST, PROD)
     println("RESULTS:")
-    if status == :Optimal
+    if isoptimal
       for i = 1:length(ORIG)
         for j = 1:length(DEST)
           for p = 1:length(PROD)
-            print(" $(PROD[p]) $(ORIG[i]) $(DEST[j]) = $(getvalue(Trans[i,j, p])) \t")
+            print(" $(PROD[p]) $(ORIG[i]) $(DEST[j]) = $(JuMP.result_value(Trans[i,j, p])) \t")
           end
           println()
         end
@@ -31,8 +31,9 @@ function PrintSolution(status, Trans, ORIG, DEST, PROD)
 end
 
 using JuMP, Clp
+const MOI = JuMP.MathOptInterface
 
-solver = ClpSolver()
+solver = Clp.Optimizer
 
 
 # PARAMETERS
@@ -73,7 +74,7 @@ cost = reshape([[[  30,   10,   8 ,  10,   11 ,  71,    6];
 
 #  DECLARE MODEL
 
-multi = Model(solver=solver)
+multi = Model(with_optimizer(solver))
 
 #  VARIABLES
 
@@ -101,14 +102,11 @@ length(cost)
 @constraint(multi, total_con[i=1:numorig, j=1:numdest],
                sum(Trans[i,j,p] for p=1:numprod) - limit[i][j] <= 0)
 limit[2][3]
-status = solve(multi)
-if status == :Optimal
-  result = Trans
-  PrintSolution(status, Trans, orig, dest, prod)
-else
-  result = status
-end
 
+JuMP.optimize!(multi)
 
+status = JuMP.termination_status(multi)
+primal_status = JuMP.primal_status(multi)
+isoptimal = status == MOI.Success && primal_status == MOI.FeasiblePoint
 
-
+PrintSolution(isoptimal, Trans, orig, dest, prod)

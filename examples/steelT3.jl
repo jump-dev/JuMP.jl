@@ -14,8 +14,8 @@
 ################################################################################
 
 using JuMP, Clp
-
-solver = ClpSolver()
+const MOI = JuMP.MathOptInterface
+solver = Clp.Optimizer
 
 # Data
 
@@ -53,7 +53,7 @@ market = Dict("bands" => Dict("east" => [2000  2000  1500  2000],
 
 # Model
 
-Prod = Model(solver=solver)
+Prod = Model(with_optimizer(solver))
 print(area["bands"])
 print(market["coils"]["west"][1])
 
@@ -92,24 +92,24 @@ print(market["coils"]["west"][1])
 #maximize Total_Profit:
 # Total revenue less costs for all products in all weeks
 
-function PrintSolution(status, area, Make, Inventory, Sell, product, Time)
+function PrintSolution(isoptimal, area, Make, Inventory, Sell, product, Time)
     println("RESULTS:")
-    if status == :Optimal
+    if isoptimal
       for p = product
         println("Make $(p)")
         for t = 1:T
-          print("$(getvalue(Make[p,t]))\t")
+          print("$(JuMP.result_value(Make[p,t]))\t")
         end
         println()
         println("Inventory $(p)")
         for t=1:T
-          print("$(getvalue(Inventory[p,t]))\t")
+          print("$(JuMP.result_value(Inventory[p,t]))\t")
         end
         println()
         for a = area[p]
           println("Sell $(p) $(a)")
           for t=1:T
-            print("$(getvalue(Sell[p,a,t])) \t")
+            print("$(JuMP.result_value(Sell[p,a,t])) \t")
           end
         println()
         end
@@ -120,6 +120,10 @@ function PrintSolution(status, area, Make, Inventory, Sell, product, Time)
     println("")
 end
 
-status = solve(Prod)
-PrintSolution(status, area, Make, Inv, Sell, prod, T)
+JuMP.optimize!(Prod)
 
+status = JuMP.termination_status(Prod)
+primal_status = JuMP.primal_status(Prod)
+isoptimal = status == MOI.Success && primal_status == MOI.FeasiblePoint
+
+PrintSolution(isoptimal, area, Make, Inv, Sell, prod, T)

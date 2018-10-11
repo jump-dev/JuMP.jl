@@ -1,6 +1,6 @@
 #############################################################################
 # JuMP
-# An algebraic modeling langauge for Julia
+# An algebraic modeleling langauge for Julia
 # See http://github.com/JuliaOpt/JuMP.jl
 #############################################################################
 # minellipse.jl
@@ -22,9 +22,10 @@
 
 using JuMP
 using SCS
+using LinearAlgebra
 #using PyPlot  # Comment out if not installed
 
-solver = SCSSolver(eps=1e-6)
+# solver = SCSSolver(eps=1e-6)
 
 # We will use three ellipses
 m = 3
@@ -41,15 +42,15 @@ push!(As, (randA' * randA) * (rand()*2+1))
 W = [1.0 0.0
      0.0 1.0];
 
-mod = Model(solver=solver)
-@variable(mod, X[1:2,1:2], SDP)
-@objective(mod, Min, trace(W*X))
+model = Model(with_optimizer(SCS.Optimizer))
+@variable(model, X[1:2,1:2], PSD)
+@objective(model, Min, trace(W*X))
 for i = 1:m
-    @SDconstraint(mod, X >= As[i])
+    @SDconstraint(model, X >= As[i])
 end
-solve(mod)
+JuMP.optimize!(model)
 
-X_val = getvalue(X)
+X_val = JuMP.result_value.(X)
 println(X_val)
 
 #= This code no longer seems to be working.

@@ -14,13 +14,14 @@
 #  http://www.puzzlor.com/2013-08_UrbanPlanning.html
 #############################################################################
 
-using JuMP, Cbc
+using JuMP, GLPK
+const MOI = JuMP.MathOptInterface
 
-solver = CbcSolver()
+solver = GLPK.Optimizer
 
 function SolveUrban()
 
-    m = Model(solver=solver)
+    m = Model(with_optimizer(solver))
 
     # x is indexed by row and column
     @variable(m, 0 <= x[1:5,1:5] <= 1, Int)
@@ -65,14 +66,19 @@ function SolveUrban()
     end
 
     # Solve it with the default solver (CBC)
-    status = solve(m)
-    if status == :Infeasible
-        error("Solver couldn't find solution!")
+    JuMP.optimize!(m)
+
+    status = JuMP.termination_status(m)
+    primal_status = JuMP.primal_status(m)
+    isoptimal = status == MOI.Success && primal_status == MOI.FeasiblePoint
+
+    if ! isoptimal
+        error("Solver couldn't find a solution!")
     end
 
     # Print results
-    println("Best objective: $(round(getobjectivevalue(m)))")
-    println(getvalue(x))
+    println("Best objective: $(round(JuMP.objective_value(m)))")
+    println(JuMP.result_value.(x))
 end
 
 SolveUrban()
