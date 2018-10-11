@@ -43,6 +43,28 @@ function objectives_test(ModelType::Type{<:JuMP.AbstractModel}, VariableRefType:
         @test JuMP.isequal_canonical(JuMP.objective_function(m, QuadExprType), x^2 + 2x)
         @test_throws InexactError JuMP.objective_function(m, AffExprType)
     end
+
+    @testset "Sense as symbol" begin
+        m = ModelType()
+        @variable(m, x)
+
+        @objective(m, :Min, 2x)
+        @test JuMP.objective_sense(m) == MOI.MinSense
+        @test JuMP.isequal_canonical(JuMP.objective_function(m, AffExprType), 2x)
+    end
+
+    @testset "Sense in variable" begin
+        m = ModelType()
+        @variable(m, x)
+
+        sense = :Min
+        @objective(m, sense, 2x)
+        @test JuMP.objective_sense(m) == MOI.MinSense
+        @test JuMP.isequal_canonical(JuMP.objective_function(m, AffExprType), 2x)
+
+        sense = :Man
+        @test_throws ErrorException @objective(m, sense, 2x)
+    end
 end
 
 

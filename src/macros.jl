@@ -875,32 +875,64 @@ Constructs a vector of `LinearConstraint` objects. Similar to `@LinearConstraint
 Constructs a vector of `QuadConstraint` objects. Similar to `@QuadConstraint`, except it accepts multiple constraints as input as long as they are separated by newlines.
 """ :(@QuadConstraints)
 
+"""
+    moi_sense_expr(_error::Function, sense)
+
+Return an expression whose value is an `MOI.OptimizationSense` corresponding
+to `sense`. Sense is either the symbol `:Min` or `:Max`, corresponding
+respectively to `MOI.MinSense` and `MOI.MaxSense` or it is another symbol,
+which should be the name of a variable whose value is `:Min` or `:Max` or it is
+an expression whose value is `:Min` or `:Max`, e.g. `:(:Min)` or `:(:Max)`.
+In the last two cases, the expression throws an error using the `_error`
+function in case the value is not `:Min` nor `:Max`.
+"""
+function moi_sense_expr(_error::Function, sense)
+    if sense == :Min || sense == :Max
+        expr = Expr(:quote, sense)
+    else
+        # Refers to a variable that holds the sense or is `:(:Min)` or `:(:Max))`
+        # TODO: Better document this behavior
+        expr = esc(sense)
+    end
+    return :(moi_sense($_error, $expr))
+end
+
+"""
+    sense_expr(_error::Function, sense::Symbol)
+
+Return anan `MOI.OptimizationSense` corresponding to the sense `sense`, i.e.,
+returns `MOI.MinSense` if `sense` is `:Min`, `MOI.MaxSense` if `sense` is `:Max`
+throws an error using the `_error` function otherwise.
+"""
+function moi_sense(_error::Function, sense::Symbol)
+    if sense == :Min
+        return MOI.MinSense
+    elseif sense == :Max
+        return MOI.MaxSense
+    else
+        _error("Invalid optimization sense \"$sense\": either \"Min\" or",
+               " \"Max\" is expected.")
+    end
+end
 
 # TODO: Add a docstring.
-macro objective(m, args...)
-    m = esc(m)
+macro objective(model, args...)
+    _error(str...) = macro_error(:objective, (model, args...), str...)
+
+    model = esc(model)
     if length(args) != 2
         # Either just an objective sense, or just an expression.
-        error("in @objective: needs three arguments: model, objective sense (Max or Min) and expression.")
+        _error("needs three arguments: model, objective sense (Max or Min) and expression.")
     end
     sense, x = args
-    if sense == :Min
-        sense = MOI.MinSense
-    elseif sense == :Max
-        sense = MOI.MaxSense
-    else
-        # Refers to a variable that holds the sense.
-        # TODO: Better document this behavior and consider splitting some of the
-        # logic into a method that's reused by @NLobjective.
-        sense = esc(sense)
-    end
+    sense_expr = moi_sense_expr(_error, sense)
     newaff, parsecode = parseExprToplevel(x, :q)
     code = quote
         q = Val{false}()
         $parsecode
-        set_objective($m, $sense, $newaff)
+        set_objective($model, $sense_expr, $newaff)
     end
-    return assert_validmodel(m, macro_return(code, newaff))
+    return assert_validmodel(model, macro_return(code, newaff))
 end
 
 # Return a standalone, unnamed expression
@@ -1435,21 +1467,15 @@ end
 # end
 
 # TODO: Add a docstring.
-macro NLobjective(m, sense, x)
-    if sense == :Min
-        sense = MOI.MinSense
-    elseif sense == :Max
-        sense = MOI.MaxSense
-    else
-        # Refers to a variable that holds the sense.
-        sense = esc(sense)
-    end
+macro NLobjective(model, sense, x)
+    _error(str...) = macro_error(:NLobjective, (model, sense, x), str...)
+    sense_expr = moi_sense_expr(_error, sense)
     ex = gensym()
     code = quote
-        $ex = $(processNLExpr(m, x))
-        set_objective($(esc(m)), $sense, $ex)
+        $ex = $(processNLExpr(model, x))
+        set_objective($(esc(model)), $sense_expr, $ex)
     end
-    return assert_validmodel(esc(m), macro_return(code, ex))
+    return assert_validmodel(esc(model), macro_return(code, ex))
 end
 
 # TODO: Add a docstring.
