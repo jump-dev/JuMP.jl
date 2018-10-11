@@ -59,26 +59,26 @@ print(market["coils"]["west"][1])
 
 # Decision Variables
 
-@variable(Prod, Make[p=prod, t=1:T] >= 0); # tons produced
-@variable(Prod, Inv[p=prod, t=0:T] >= 0); # tons inventoried
-@variable(Prod, market[p][a][t] >= Sell[p=prod, a=area[p],t=1:T] >= 0); # tons sold
+@variable(Prod, Make[p in prod, t in 1:T] >= 0); # tons produced
+@variable(Prod, Inv[p in prod, t in 0:T] >= 0); # tons inventoried
+@variable(Prod, market[p][a][t] >= Sell[p in prod, a in area[p], t in 1:T] >= 0); # tons sold
 
-@constraint(Prod, [p=prod, a=area[p], t=1:T],
+@constraint(Prod, [p in prod, a in area[p], t in 1:T],
                Sell[p, a, t] - market[p][a][t] <= 0)
 
 
-@constraint(Prod, [t=1:T],
-               sum((1/rate[p]) * Make[p,t] for p=prod) <= avail[t])
+@constraint(Prod, [t in 1:T],
+               sum((1/rate[p]) * Make[p,t] for p in prod) <= avail[t])
 
 # Total of hours used by all products
 # may not exceed hours available, in each week
 
-@constraint(Prod, [p=prod],
+@constraint(Prod, [p in prod],
                Inv[p,0] == inv0[p])
 # Initial inventory must equal given value
 
-@constraint(Prod, [p=prod, t=1:T],
-               Make[p,t] + Inv[p, t-1] == sum(Sell[p,a,t] for a=area[p]) + Inv[p,t])
+@constraint(Prod, [p in prod, t in 1:T],
+               Make[p,t] + Inv[p, t-1] == sum(Sell[p,a,t] for a in area[p]) + Inv[p,t])
 
 # Tons produced and taken from inventory
 # must equal tons sold and put into inventory
@@ -88,42 +88,41 @@ print(market["coils"]["west"][1])
               sum( sum(
                    revenue[p][a][t] * Sell[p, a, t] -
                    prodcost[p] * Make[p,t] -
-                   invcost[p]*Inv[p,t] for a in area[p]) for p=prod, t=1:T))
+                   invcost[p]*Inv[p,t] for a in area[p]) for p in prod, t in 1:T))
 #maximize Total_Profit:
 # Total revenue less costs for all products in all weeks
 
-function PrintSolution(isoptimal, area, Make, Inventory, Sell, product, Time)
+function PrintSolution(is_optimal, area, Make, Inventory, Sell, product, Time)
     println("RESULTS:")
-    if isoptimal
-      for p = product
+    if is_optimal
+      for p in product
         println("Make $(p)")
-        for t = 1:T
+        for t in 1:T
           print("$(JuMP.result_value(Make[p,t]))\t")
         end
         println()
         println("Inventory $(p)")
-        for t=1:T
+        for t in 1:T
           print("$(JuMP.result_value(Inventory[p,t]))\t")
         end
         println()
-        for a = area[p]
+        for a in area[p]
           println("Sell $(p) $(a)")
-          for t=1:T
+          for t in 1:T
             print("$(JuMP.result_value(Sell[p,a,t])) \t")
           end
         println()
         end
       end
     else
-        println("  No solution")
+      println("  No solution")
     end
-    println("")
 end
 
 JuMP.optimize!(Prod)
 
 status = JuMP.termination_status(Prod)
 primal_status = JuMP.primal_status(Prod)
-isoptimal = status == MOI.Success && primal_status == MOI.FeasiblePoint
+is_optimal = status == MOI.Success && primal_status == MOI.FeasiblePoint
 
-PrintSolution(isoptimal, area, Make, Inv, Sell, prod, T)
+PrintSolution(is_optimal, area, Make, Inv, Sell, prod, T)

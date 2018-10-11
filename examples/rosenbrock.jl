@@ -7,7 +7,7 @@ using JuMP, Ipopt
 
 let
 
-    m = Model(with_optimizer(Ipopt.Optimizer), print_level=0)
+    m = Model(with_optimizer(Ipopt.Optimizer, print_level=0))
 
     @variable(m, x)
     @variable(m, y)

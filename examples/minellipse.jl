@@ -43,9 +43,9 @@ W = [1.0 0.0
      0.0 1.0];
 
 model = Model(with_optimizer(SCS.Optimizer))
-@variable(model, X[1:2,1:2], PSD)
-@objective(model, Min, trace(W*X))
-for i = 1:m
+@variable(model, X[1:2, 1:2], PSD)
+@objective(model, Min, tr(W*X))
+for i in 1:m
     @SDconstraint(model, X >= As[i])
 end
 JuMP.optimize!(model)

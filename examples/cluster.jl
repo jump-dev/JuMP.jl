@@ -26,8 +26,8 @@ k = 2
 
 # Weight matrix
 W = zeros(m,m)
-for i = 1:m
-    for j = i+1:m
+for i in 1:m
+    for j in i+1:m
         dist = exp(-norm(a[i] - a[j])/1.0)
         W[i,j] = dist
         W[j,i] = dist
@@ -46,7 +46,7 @@ mod = Model(with_optimizer(solver))
 # Z e = e
 @constraint(mod, Z*ones(m) .== ones(m))
 #for i = 1:m
-#    addConstraint(mod, sum([ Z[i,j] for j = 1:m]) == 1)
+#    addConstraint(mod, sum([ Z[i,j] for j in 1:m]) == 1)
 #end
 
 # Tr(Z) = k
@@ -54,20 +54,20 @@ mod = Model(with_optimizer(solver))
 
 JuMP.optimize!(mod)
 
-Z_val = JuMP.result_value.(Z)[:,:]
+Z_val = JuMP.result_value.(Z)
 println("Raw solution")
 println(round.(Z_val, digits=4))
 
 # A simple rounding scheme
 which_cluster = zeros(Int,m)
 num_clusters = 0
-for i = 1:m
+for i in 1:m
     Z_val[i,i] <= 1e-6 && continue
 
     if which_cluster[i] == 0
         global num_clusters += 1
         global which_cluster[i] = num_clusters
-        for j = i+1:m
+        for j in i+1:m
             if norm(Z_val[i,j] - Z_val[i,i]) <= 1e-6
                 which_cluster[j] = num_clusters
             end
@@ -76,9 +76,9 @@ for i = 1:m
 end
 
 # Print results
-for cluster = 1:k
+for cluster in 1:k
     println("Cluster $cluster")
-    for i = 1:m
+    for i in 1:m
         if which_cluster[i] == cluster
             println(a[i])
         end

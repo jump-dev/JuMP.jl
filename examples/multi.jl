@@ -13,21 +13,20 @@
 #   4-1 multi.mod and multi.dat
 #############################################################################
 
-function PrintSolution(isoptimal, Trans, ORIG, DEST, PROD)
+function PrintSolution(is_optimal, Trans, ORIG, DEST, PROD)
     println("RESULTS:")
-    if isoptimal
-      for i = 1:length(ORIG)
-        for j = 1:length(DEST)
-          for p = 1:length(PROD)
-            print(" $(PROD[p]) $(ORIG[i]) $(DEST[j]) = $(JuMP.result_value(Trans[i,j, p])) \t")
+    if is_optimal
+      for i in 1:length(ORIG)
+        for j in 1:length(DEST)
+          for p in 1:length(PROD)
+            print(" $(PROD[p]) $(ORIG[i]) $(DEST[j]) = $(JuMP.result_value(Trans[i,j, p]))\t")
           end
           println()
         end
       end
     else
-        println("  No solution")
+      println("  No solution")
     end
-    println("")
 end
 
 using JuMP, Clp
@@ -62,14 +61,14 @@ limit = [[defaultlimit for j=1:numdest] for i=1:numorig]
 
 # cost(dest, orig, prod) Shipment cost per unit
 cost = reshape([[[  30,   10,   8 ,  10,   11 ,  71,    6];
-         [  22,    7,   10,    7,   21,   82,   13];
-         [  19,   11,   12,   10,   25,   83,   15]];
-        [[  39,   14,   11,   14,   16,   82,    8];
-         [  27,    9,   12,    9,   26,   95,   17];
-         [  24,   14,   17,   13,   28,   99,   20]];
-        [[  41,   15,   12,   16,   17,   86,    8];
-         [  29,    9,   13,    9,   28,   99,   18];
-         [  26,   14,   17,   13,   31,  104,   20]]],
+                 [  22,    7,   10,    7,   21,   82,   13];
+                 [  19,   11,   12,   10,   25,   83,   15]];
+                [[  39,   14,   11,   14,   16,   82,    8];
+                 [  27,    9,   12,    9,   26,   95,   17];
+                 [  24,   14,   17,   13,   28,   99,   20]];
+                [[  41,   15,   12,   16,   17,   86,    8];
+                 [  29,    9,   13,    9,   28,   99,   18];
+                 [  26,   14,   17,   13,   31,  104,   20]]],
                7, 3, 3)
 
 #  DECLARE MODEL
@@ -86,27 +85,26 @@ length(cost)
 
 @objective(multi, Max,
               sum(cost[j, i, p] * Trans[i,j, p] for
-                  i=1:numorig, j=1:numdest, p=1:numprod))
+                  i in 1:numorig, j in 1:numdest, p in 1:numprod))
 
 #  CONSTRAINTS
 
 # Supply constraint
-@constraint(multi, supply_con[i=1:numorig, p=1:numprod],
-               sum(Trans[i,j,p] for j=1:numdest) == supply[p,i])
+@constraint(multi, supply_con[i in 1:numorig, p in 1:numprod],
+               sum(Trans[i,j,p] for j in 1:numdest) == supply[p,i])
 
 # Demand constraint
-@constraint(multi, demand_con[j=1:numdest, p=1:numprod],
-               sum(Trans[i,j,p] for i=1:numorig) == demand[p,j])
+@constraint(multi, demand_con[j in 1:numdest, p in 1:numprod],
+               sum(Trans[i,j,p] for i in 1:numorig) == demand[p,j])
 
 # Total shipment constraint
-@constraint(multi, total_con[i=1:numorig, j=1:numdest],
-               sum(Trans[i,j,p] for p=1:numprod) - limit[i][j] <= 0)
-limit[2][3]
+@constraint(multi, total_con[i in 1:numorig, j in 1:numdest],
+               sum(Trans[i,j,p] for p in 1:numprod) - limit[i][j] <= 0)
 
 JuMP.optimize!(multi)
 
 status = JuMP.termination_status(multi)
 primal_status = JuMP.primal_status(multi)
-isoptimal = status == MOI.Success && primal_status == MOI.FeasiblePoint
+is_optimal = status == MOI.Success && primal_status == MOI.FeasiblePoint
 
-PrintSolution(isoptimal, Trans, orig, dest, prod)
+PrintSolution(is_optimal, Trans, orig, dest, prod)

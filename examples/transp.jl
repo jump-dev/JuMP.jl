@@ -34,33 +34,33 @@ cost = [
 
 m = Model(with_optimizer(solver));
 
-@variable(m, Trans[i=1:length(ORIG), j=1:length(DEST)] >= 0);
+@variable(m, Trans[i in 1:length(ORIG), j in 1:length(DEST)] >= 0);
 
 
-@objective(m, Min, sum(cost[i,j] * Trans[i,j] for i=1:length(ORIG), j=1:length(DEST)));
+@objective(m, Min, sum(cost[i,j] * Trans[i,j] for i in 1:length(ORIG), j in 1:length(DEST)));
 
-@constraint(m, [i=1:1:length(ORIG)], sum(Trans[i,j] for j=1:length(DEST)) == supply[i]);
+@constraint(m, [i in 1:length(ORIG)], sum(Trans[i,j] for j in 1:length(DEST)) == supply[i]);
 
-@constraint(m, [j = 1:length(DEST)], sum(Trans[i,j] for i=1:length(ORIG)) == demand[j]);
+@constraint(m, [j in 1:length(DEST)], sum(Trans[i,j] for i in 1:length(ORIG)) == demand[j]);
 
 println("Solving original problem...")
 JuMP.optimize!(m)
 
 status = JuMP.termination_status(m)
 primal_status = JuMP.primal_status(m)
-isoptimal = status == MOI.Success && primal_status == MOI.FeasiblePoint
+is_optimal = status == MOI.Success && primal_status == MOI.FeasiblePoint
 
-if isoptimal
+if is_optimal
 	@printf("Optimal!\n");
 	@printf("Objective value: %d\n", JuMP.objective_value(m));
 	@printf("Transpotation:\n");
-	for j = 1:length(DEST)
+	for j in 1:length(DEST)
 		@printf("\t%s", DEST[j]);
 	end
 	@printf("\n");
-	for i = 1:length(ORIG)
+	for i in 1:length(ORIG)
 		@printf("%s", ORIG[i]);
-		for j = 1:length(DEST)
+		for j in 1:length(DEST)
 			@printf("\t%d", JuMP.result_value(Trans[i,j]));
 		end
 		@printf("\n");

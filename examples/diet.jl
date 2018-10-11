@@ -19,16 +19,15 @@ const MOI = JuMP.MathOptInterface
 
 solver = GLPK.Optimizer
 
-function PrintSolution(isoptimal, foods, buy)
+function PrintSolution(is_optimal, foods, buy)
     println("RESULTS:")
-    if isoptimal
+    if is_optimal
         for i = 1:length(foods)
             println("  $(foods[i]) = $(JuMP.result_value(buy[i]))")
         end
     else
-        println("  No solution")
+        println("The solver did not find an optimal solution.")
     end
-    println("")
 end
 
 function SolveDiet()
@@ -58,27 +57,26 @@ function SolveDiet()
     m = Model(with_optimizer(solver))
 
     # Variables for nutrition info
-    @variable(m, minNutrition[i] <= nutrition[i=1:numCategories] <= maxNutrition[i])
+    @variable(m, minNutrition[i] <= nutrition[i in 1:numCategories] <= maxNutrition[i])
     # Variables for which foods to buy
-    @variable(m, buy[i=1:numFoods] >= 0)
+    @variable(m, buy[i in 1:numFoods] >= 0)
 
     # Objective - minimize cost
     @objective(m, Min, dot(cost, buy))
 
     # Nutrition constraints
     for j = 1:numCategories
-        @constraint(m, sum(nutritionValues[i,j]*buy[i] for i=1:numFoods) == nutrition[j])
+        @constraint(m, sum(nutritionValues[i,j]*buy[i] for i in 1:numFoods) == nutrition[j])
     end
 
     # Solve
     println("Solving original problem...")
     JuMP.optimize!(m)
-
     status = JuMP.termination_status(m)
     primal_status = JuMP.primal_status(m)
-    isoptimal = status == MOI.Success && primal_status == MOI.FeasiblePoint
+    is_optimal = status == MOI.Success && primal_status == MOI.FeasiblePoint
 
-    PrintSolution(isoptimal, foods, buy)
+    PrintSolution(is_optimal, foods, buy)
 
 
     # Limit dairy
@@ -87,9 +85,9 @@ function SolveDiet()
     JuMP.optimize!(m)
     status = JuMP.termination_status(m)
     primal_status = JuMP.primal_status(m)
-    isoptimal = status == MOI.Success && primal_status == MOI.FeasiblePoint
+    is_optimal = status == MOI.Success && primal_status == MOI.FeasiblePoint
 
-    PrintSolution(isoptimal, foods, buy)
+    PrintSolution(is_optimal, foods, buy)
 end
 
 SolveDiet()

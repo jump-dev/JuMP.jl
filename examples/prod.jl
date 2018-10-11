@@ -16,9 +16,9 @@
 # and Kernighan, A Modeling Language for Mathematical Programming
 #############################################################################
 
-function PrintSolution(isoptimal, CREWS, HIRE, LAYOFF)
+function PrintSolution(is_optimal, CREWS, HIRE, LAYOFF)
     println("RESULTS:")
-    if isoptimal
+    if is_optimal
       println("Crews")
       for t = 0:length(CREWS.data)-1
         print(" $(JuMP.result_value(CREWS[t])) ")
@@ -35,9 +35,8 @@ function PrintSolution(isoptimal, CREWS, HIRE, LAYOFF)
       end
       println()
     else
-        println("  No solution")
+      println("  No solution")
     end
-    println("")
 end
 
 
@@ -94,7 +93,7 @@ lc =	 [7500,	7500,	7500,	7500,	15000,	15000,	15000,	15000,	15000,	15000,	7500,	7
 
 ###  DEMAND PARAMETERS  ###
 
-d18REG=[63.8,	76,	88.4,	913.8,	115,	133.8,	79.6,	111,	121.6,	470,	78.4,	99.4,	140.4,	63.8]
+d18REG = [63.8,	76,	88.4,	913.8,	115,	133.8,	79.6,	111,	121.6,	470,	78.4,	99.4,	140.4,	63.8]
 d24REG = [1212,	306.2,	319,	208.4,	298,	328.2,	959.6,	257.6,	335.6,	118,	284.8,	970,	343.8,	1212]
 d24PRO = [0,	0,	0,	0,	0,	0,	0,	0,	0,	1102,	0,	0,	0,	0]
 dem = Array[d18REG, d24REG, d24PRO]
@@ -127,9 +126,9 @@ crs	=[1.1,	1.1,	1.1]
 # crs times nominal production cost
 iinv	=[82,	792.2,	0]
 # Inventory at start of first period; age unknown
-iil = [[max(0,iinv[p] - sum([dem[p][v] for v=firstperiod:t]))
-        for t = numperiods]
-        for p=1:numprd]
+iil = [[max(0,iinv[p] - sum([dem[p][v] for v in firstperiod:t]))
+        for t in numperiods]
+        for p in 1:numprd]
 # Initial inventory still available for allocation
 # at end of period t
 function checkpro(product, timeperiod, production, promotionalrate, regularrate)
@@ -140,7 +139,7 @@ function checkpro(product, timeperiod, production, promotionalrate, regularrate)
   end
   value
 end
-minv = [[dem[p][t+1] * checkpro(p,t, pro, pir, rir) for t=numperiods] for p=1:numprd]
+minv = [[dem[p][t+1] * checkpro(p,t, pro, pir, rir) for t in numperiods] for p in 1:numprd]
 # Lower limit on inventory at end of period t
 
 prod = Model(with_optimizer(solver))
@@ -170,62 +169,62 @@ prod = Model(with_optimizer(solver))
 ###  CONSTRAINTS  ###
 
 @constraint(prod, [t=numperiods],
-               sum(pt[p] * Rprd[p,t] for p=1:numprd) <= sl * dpp[t] * Crews[t])
+               sum(pt[p] * Rprd[p,t] for p in 1:numprd) <= sl * dpp[t] * Crews[t])
 # Hours needed to accomplish all regular-time
 # production in a period must not exceed
 # hours available on all shifts
 
 @constraint(prod, [t=numperiods],
-               sum(pt[p] * Oprd[p,t] for p=1:numprd)  <= ol[t])
+               sum(pt[p] * Oprd[p,t] for p in 1:numprd)  <= ol[t])
 # Hours needed to accomplish all overtime
 # production in a period must not exceed
 # the specified overtime limit
 
-@constraint(prod, Crews[firstperiod-1]==iw)
+@constraint(prod, Crews[firstperiod-1] == iw)
 # Use given initial workforce
 
-@constraint(prod,[t=numperiods],
-               Crews[t]== Crews[t-1] + Hire[t]-Layoff[t])
+@constraint(prod,[t in numperiods],
+               Crews[t] == Crews[t-1] + Hire[t] - Layoff[t])
 # Workforce changes by hiring or layoffs
 
-@constraint(prod, [t=numperiods], cmin[t] <= Crews[t])
-@constraint(prod, [t=numperiods], Crews[t] <= cmax[t])
+@constraint(prod, [t in numperiods], cmin[t] <= Crews[t])
+@constraint(prod, [t in numperiods], Crews[t] <= cmax[t])
 # Workforce must remain within specified bounds
 
-@constraint(prod, [p=1:numprd],
-               Rprd[p, firstperiod] + Oprd[p,firstperiod] + Short[p, firstperiod]-Inv[p, firstperiod, 1]
-                 == max(0,dem[p][firstperiod]-iinv[p]))
+@constraint(prod, [p in 1:numprd],
+               Rprd[p, firstperiod] + Oprd[p,firstperiod] + Short[p, firstperiod] - Inv[p, firstperiod, 1]
+                 == max(0, dem[p][firstperiod] - iinv[p]))
 # 'first demand requirement
 
 # NOTE: JuMP xyconstr[] requires that indices be integer at compile time,
 # so firstperiod +1 could not be an index within xycontr or triconstr
-for t=(firstperiod+1:lastperiod)
-  @constraint(prod, [p=1:numprd],
+for t  in (firstperiod+1:lastperiod)
+  @constraint(prod, [p in 1:numprd],
                  Rprd[p,t] + Oprd[p,t] + Short[p,t] - Short[p,t-1] +
-                   sum(Inv[p, t-1, a] - Inv[p,t,a] for a=1:life) ==
-                   max(0, dem[p][t]-iil[p][t-1]))
+                   sum(Inv[p, t-1, a] - Inv[p,t,a] for a in 1:life) ==
+                   max(0, dem[p][t] - iil[p][t-1]))
 end
 # Production plus increase in shortage plus
 # decrease in inventory must equal demand
 
-@constraint(prod, [p=1:numprd, t=numperiods],
-               sum(Inv[p,t,a] + iil[p][t] for a=1:life) >= minv[p][t])
+@constraint(prod, [p in 1:numprd, t in numperiods],
+               sum(Inv[p,t,a] + iil[p][t] for a in 1:life) >= minv[p][t])
 # Inventory in storage at end of period t
 # must meet specified minimum
 
-@constraint(prod, [p=1:numprd, v=1:(life-1), a=v+1:life], Inv[p, firstperiod+v-1, a] ==0)
+@constraint(prod, [p in 1:numprd, v in 1:(life-1), a in v+1:life], Inv[p, firstperiod+v-1, a] ==0)
 
 # In the vth period (starting from first)
 # no inventory may be more than v numperiods old
 # (initial inventories are handled separately)
 
-@constraint(prod, [p=1:numprd, t=numperiods],
-               Inv[p,t,1] <= Rprd[p,t]+Oprd[p,t])
+@constraint(prod, [p in 1:numprd, t in numperiods],
+               Inv[p,t,1] <= Rprd[p,t] + Oprd[p,t])
 # New inventory cannot exceed
 # production in the most recent period
 
 secondperiod = firstperiod + 1
-@constraint(prod, [p=1:numprd, t=2:lastperiod, a=2:life],
+@constraint(prod, [p in 1:numprd, t in 2:lastperiod, a in 2:life],
                      Inv[p,t,a] <= Inv[p,t-1,a-1])
 # Inventory left from period (t+1)-p
 # can only decrease as time goes on
@@ -233,12 +232,12 @@ secondperiod = firstperiod + 1
 ###  OBJECTIVE  ###
 
 @objective(prod, Min,
-                sum(rtr * sl * dpp[t] * cs * Crews[t] for t=numperiods) +
-                sum(hc[t] * Hire[t] for t=numperiods) +
-                sum(lc[t] * Layoff[t] for t=numperiods) +
-                sum(otr * cs * pt[p] * Oprd[p,t] for t=numperiods, p=1:numprd) +
-                sum(cri[p] * pc[p] * Inv[p,t,a] for t=numperiods, p=1:numprd, a=1:life) +
-                sum(crs[p] * pc[p] * Short[p,t] for t=numperiods,p=1:numprd))
+                sum(rtr * sl * dpp[t] * cs * Crews[t] for t in numperiods) +
+                sum(hc[t] * Hire[t] for t in numperiods) +
+                sum(lc[t] * Layoff[t] for t in numperiods) +
+                sum(otr * cs * pt[p] * Oprd[p,t] for t in numperiods, p in 1:numprd) +
+                sum(cri[p] * pc[p] * Inv[p,t,a] for t in numperiods, p in 1:numprd, a in 1:life) +
+                sum(crs[p] * pc[p] * Short[p,t] for t in numperiods, p in 1:numprd))
 
 # Full regular wages for all crews employed, plus
 # penalties for hiring and layoffs, plus
@@ -254,6 +253,6 @@ JuMP.optimize!(prod)
 
 status = JuMP.termination_status(prod)
 primal_status = JuMP.primal_status(prod)
-isoptimal = status == MOI.Success && primal_status == MOI.FeasiblePoint
+is_optimal = status == MOI.Success && primal_status == MOI.FeasiblePoint
 
-PrintSolution(isoptimal, Crews, Hire, Layoff)
+PrintSolution(is_optimal, Crews, Hire, Layoff)
