@@ -881,10 +881,10 @@ Constructs a vector of `QuadConstraint` objects. Similar to `@QuadConstraint`, e
 Return an expression whose value is an `MOI.OptimizationSense` corresponding
 to `sense`. Sense is either the symbol `:Min` or `:Max`, corresponding
 respectively to `MOI.MinSense` and `MOI.MaxSense` or it is another symbol,
-which should be the name of a variable whose value is `:Min` or `:Max` or it is
-an expression whose value is `:Min` or `:Max`, e.g. `:(:Min)` or `:(:Max)`.
-In the last two cases, the expression throws an error using the `_error`
-function in case the value is not `:Min` nor `:Max`.
+which should be the name of a variable or expression whose value is `:Min`,
+`:Max` or an `MOI.OptimizationSense`.
+In the last case, the expression throws an error using the `_error`
+function in case the value is a symbol which is not `:Min` nor `:Max`.
 """
 function moi_sense_expr(_error::Function, sense)
     if sense == :Min || sense == :Max
@@ -898,9 +898,9 @@ function moi_sense_expr(_error::Function, sense)
 end
 
 """
-    sense_expr(_error::Function, sense::Symbol)
+    moi_sense(_error::Function, sense::Symbol)
 
-Return anan `MOI.OptimizationSense` corresponding to the sense `sense`, i.e.,
+Return an `MOI.OptimizationSense` corresponding to the sense `sense`, i.e.,
 returns `MOI.MinSense` if `sense` is `:Min`, `MOI.MaxSense` if `sense` is `:Max`
 throws an error using the `_error` function otherwise.
 """
@@ -914,6 +914,13 @@ function moi_sense(_error::Function, sense::Symbol)
                " \"Max\" is expected.")
     end
 end
+
+"""
+    moi_sense(_error::Function, sense::MOI.OptimizationSense)
+
+Return `sense`.
+"""
+moi_sense(_error::Function, sense::MOI.OptimizationSense) = sense
 
 # TODO: Add a docstring.
 macro objective(model, args...)
