@@ -21,7 +21,7 @@ mutable struct MyModel <: JuMP.AbstractModel
     function MyModel()
         new(0, Dict{Int, JuMP.AbstractVariable}(),   Dict{Int, String}(), # Variables
             0, Dict{Int, JuMP.AbstractConstraint}(), Dict{Int, String}(), # Constraints
-            MOI.MinSense, zero(JuMP.GenericAffExpr{Float64, MyVariableRef}),
+            MOI.FeasibilitySense, zero(JuMP.GenericAffExpr{Float64, MyVariableRef}),
             Dict{Symbol, Any}())
     end
 end
