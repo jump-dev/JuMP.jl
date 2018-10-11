@@ -72,9 +72,9 @@ function SolveDiet()
     # Solve
     println("Solving original problem...")
     JuMP.optimize!(m)
-    status = JuMP.termination_status(m)
+    term_status = JuMP.termination_status(m)
     primal_status = JuMP.primal_status(m)
-    is_optimal = status == MOI.Success && primal_status == MOI.FeasiblePoint
+    is_optimal = term_status == MOI.Success && primal_status == MOI.FeasiblePoint
 
     PrintSolution(is_optimal, foods, buy)
 
@@ -83,9 +83,9 @@ function SolveDiet()
     @constraint(m, buy[8] + buy[9] <= 6)
     println("Solving dairy-limited problem...")
     JuMP.optimize!(m)
-    status = JuMP.termination_status(m)
+    term_status = JuMP.termination_status(m)
     primal_status = JuMP.primal_status(m)
-    is_optimal = status == MOI.Success && primal_status == MOI.FeasiblePoint
+    is_optimal = term_status == MOI.Success && primal_status == MOI.FeasiblePoint
 
     PrintSolution(is_optimal, foods, buy)
 end

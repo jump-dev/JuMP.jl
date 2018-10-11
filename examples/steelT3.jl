@@ -121,7 +121,7 @@ end
 
 JuMP.optimize!(Prod)
 
-status = JuMP.termination_status(Prod)
+term_status = JuMP.termination_status(Prod)
 primal_status = JuMP.primal_status(Prod)
 is_optimal = status == MOI.Success && primal_status == MOI.FeasiblePoint
 

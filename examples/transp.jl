@@ -46,9 +46,9 @@ m = Model(with_optimizer(solver));
 println("Solving original problem...")
 JuMP.optimize!(m)
 
-status = JuMP.termination_status(m)
+term_status = JuMP.termination_status(m)
 primal_status = JuMP.primal_status(m)
-is_optimal = status == MOI.Success && primal_status == MOI.FeasiblePoint
+is_optimal = term_status == MOI.Success && primal_status == MOI.FeasiblePoint
 
 if is_optimal
 	@printf("Optimal!\n");

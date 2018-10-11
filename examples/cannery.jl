@@ -51,9 +51,9 @@ function solveCannery(plants, markets, capacity, demand, distance, freight)
 
   JuMP.optimize!(cannery)
 
-  status = JuMP.termination_status(cannery)
+  term_status = JuMP.termination_status(cannery)
   primal_status = JuMP.primal_status(cannery)
-  is_optimal = status == MOI.Success && primal_status == MOI.FeasiblePoint
+  is_optimal = term_status == MOI.Success && primal_status == MOI.FeasiblePoint
 
   PrintSolution(is_optimal, plants, markets, ship)
   return is_optimal

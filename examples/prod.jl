@@ -251,7 +251,7 @@ secondperiod = firstperiod + 1
 
 JuMP.optimize!(prod)
 
-status = JuMP.termination_status(prod)
+term_status = JuMP.termination_status(prod)
 primal_status = JuMP.primal_status(prod)
 is_optimal = status == MOI.Success && primal_status == MOI.FeasiblePoint
 

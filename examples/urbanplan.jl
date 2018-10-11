@@ -65,12 +65,12 @@ function SolveUrban()
         @constraint(m, y["C",-5,j] >= 1-1/1*sum(x[i,j] for i in 1:5)) # sum = 0
     end
 
-    # Solve it with the default solver (CBC)
+    # Solve it 
     JuMP.optimize!(m)
 
-    status = JuMP.termination_status(m)
+    term_status = JuMP.termination_status(m)
     primal_status = JuMP.primal_status(m)
-    is_optimal = status == MOI.Success && primal_status == MOI.FeasiblePoint
+    is_optimal = term_status == MOI.Success && primal_status == MOI.FeasiblePoint
 
     if ! is_optimal
         error("The solver did not find an optimal solution.")

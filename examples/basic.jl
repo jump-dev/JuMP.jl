@@ -29,7 +29,6 @@ m = Model(with_optimizer(Clp.Optimizer))
 print(m)
 
 JuMP.optimize!(m)
-status = JuMP.termination_status(m)
 
 println("Objective value: ", JuMP.objective_value(m))
 println("x = ", JuMP.result_value(x))

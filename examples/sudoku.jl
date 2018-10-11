@@ -63,9 +63,9 @@ function SolveModel(initgrid)
     # Solve it
     JuMP.optimize!(m)
 
-    status = JuMP.termination_status(m)
+    term_status = JuMP.termination_status(m)
     primal_status = JuMP.primal_status(m)
-    is_optimal = status == MOI.Success && primal_status == MOI.FeasiblePoint
+    is_optimal = term_status == MOI.Success && primal_status == MOI.FeasiblePoint
 
     # Check solution
     if is_optimal
