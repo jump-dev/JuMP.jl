@@ -208,3 +208,43 @@ function add_constraint(m::Model, c::AbstractConstraint, name::String="")
     end
     return cref
 end
+
+"""
+    set_rhs(constraint, value)
+
+Set the right-hand side of a constraint. Supported constraints are
+ - ScalarAffineFunction -in- LessThan
+ - ScalarAffineFunction -in- GreaterThan
+ - ScalarAffineFunction -in- EqualTo.
+
+Interval sets are *not* supported.
+
+Note that prior to this step, JuMP will move all variable terms onto the
+left-hand side, and all constant terms onto the right-hand side. For example,
+given a constraint `2x + 1 <= 2`, `JuMP.set_constant(c, 3)` will create the
+constraint `2x <= 3`, not `2x + 1 <= 3`.
+"""
+function set_rhs(constraint::ConstraintRef{Model, MOICON{F, SetType}},
+                 value) where {F <: MOI.ScalarAffineFunction,
+                               SetType <: Union{MOI.LessThan, MOI.GreaterThan,
+                                                MOI.EqualTo}}
+    MOI.set(constraint.m.moi_backend, MOI.ConstraintSet(), index(constraint),
+            SetType(value))
+end
+
+"""
+    set_coefficient(constraint::ConstraitRef, variable::VariableRef, value)
+
+Set the coefficient of `variable` in the constraint `constraint` to `value`.
+
+Note that prior to this step, JuMP will aggregate multiple terms containing the
+same variable. For example, given a constraint `2x + 3x <= 2`,
+`JuMP.set_coefficient(c, x, 4)` will create the constraint `4x <= 2`.
+"""
+function set_coefficient(constraint::ConstraintRef{Model, MOICON{F}},
+                         variable, value) where {T, F <: Union{
+                             MOI.ScalarAffineFunction{T},
+                             MOI.ScalarQuadraticFunction{T}}}
+    MOI.modify(con_ref.m.moi_backend, index(con_ref),
+        MOI.ScalarCoefficientChange(index(variable), convert(T, value)))
+end

@@ -268,3 +268,59 @@ end
 @testset "Constraints for JuMPExtension.MyModel" begin
     constraints_test(JuMPExtension.MyModel)
 end
+
+@testset "Modifications" begin
+    @testset "Change <=" begin
+        model = JuMP.Model()
+        x = @variable(model)
+        con_ref = @constraint(model, 2 * x <= 1)
+        con_obj = JuMP.constraint_object(con_ref)
+        @test con_obj.set == MOI.LessThan(1.0)
+        JuMP.set_constant(con_ref, 2)
+        con_obj = JuMP.constraint_object(con_ref)
+        @test con_obj.set == MOI.LessThan(2.0)
+    end
+
+    @testset "Change <=" begin
+        model = JuMP.Model()
+        x = @variable(model)
+        con_ref = @constraint(model, 2 * x >= -1)
+        con_obj = JuMP.constraint_object(con_ref)
+        @test con_obj.set == MOI.GreaterThan(-1.0)
+        JuMP.set_constant(con_ref, -2)
+        con_obj = JuMP.constraint_object(con_ref)
+        @test con_obj.set == MOI.GreaterThan(-2.0)
+    end
+
+    @testset "Change ==" begin
+        model = JuMP.Model()
+        x = @variable(model)
+        con_ref = @constraint(model, 2 * x == -1)
+        con_obj = JuMP.constraint_object(con_ref)
+        @test con_obj.set == MOI.EqualTo(-1.0)
+        JuMP.set_constant(con_ref, -2)
+        con_obj = JuMP.constraint_object(con_ref)
+        @test con_obj.set == MOI.EqualTo(-2.0)
+    end
+
+    @testset "Change [l, u]" begin
+        model = JuMP.Model()
+        x = @variable(model)
+        con_ref = @constraint(model, 0 <= 2 * x <= 1)
+        @test_throws Exception JuMP.set_constant(con_ref, -2)
+    end
+
+    @testset "Change coefficient" begin
+        model = JuMP.Model()
+        x = @variable(model)
+        con_ref = @constraint(model, 2 * x == -1)
+        con_obj = JuMP.constraint_object(con_ref)
+        @test con_obj.func == 2 * x
+        JuMP.set_coefficient(con_ref, x, 1.0)
+        con_obj = JuMP.constraint_object(con_ref)
+        @test con_obj.func == 1 * x
+        JuMP.set_coefficient(con_ref, x, 3)  # Check type promotion.
+        con_obj = JuMP.constraint_object(con_ref)
+        @test con_obj.func == 3 * x
+    end
+end
