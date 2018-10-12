@@ -190,7 +190,7 @@ strings that are used to represent identifiers in Julia (for example, `:x`).
 possible values. Use `@enum`s when applicable, e.g., for reporting statuses.
 Use strings to provide long-form additional information like error messages.
 
-Use of `Symbol` should typically be reserved for to identifiers, e.g, for lookup
+Use of `Symbol` should typically be reserved for identifiers, e.g, for lookup
 in the JuMP model (`model[:my_variable]`).
 
 
