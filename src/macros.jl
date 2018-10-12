@@ -876,7 +876,7 @@ Constructs a vector of `QuadConstraint` objects. Similar to `@QuadConstraint`, e
 """ :(@QuadConstraints)
 
 """
-    moi_sense_expr(_error::Function, sense)
+    moi_sense(_error::Function, sense)
 
 Return an expression whose value is an `MOI.OptimizationSense` corresponding
 to `sense`. Sense is either the symbol `:Min` or `:Max`, corresponding
@@ -886,60 +886,53 @@ which should be the name of a variable or expression whose value is `:Min`,
 In the last case, the expression throws an error using the `_error`
 function in case the value is a symbol which is not `:Min` nor `:Max`.
 """
-function moi_sense_expr(_error::Function, sense)
-    if sense == :Min || sense == :Max
-        expr = Expr(:quote, sense)
+function moi_sense(_error::Function, sense)
+    if sense == :Min
+        expr = MOI.MinSense
+    elseif sense == :Max
+        expr = MOI.MaxSense
     else
-        # Refers to a variable that holds the sense or is `:(:Min)` or `:(:Max))`
+        # Refers to a variable that holds the sense.
         # TODO: Better document this behavior
         expr = esc(sense)
     end
-    return :(moi_sense($_error, $expr))
+    return :(throw_error_for_symbol_sense($_error, $expr))
 end
 
-"""
-    moi_sense(_error::Function, sense::Symbol)
-
-Return an `MOI.OptimizationSense` corresponding to the sense `sense`, i.e.,
-returns `MOI.MinSense` if `sense` is `:Min`, `MOI.MaxSense` if `sense` is `:Max`
-throws an error using the `_error` function otherwise.
-"""
-function moi_sense(_error::Function, sense::Symbol)
-    if sense == :Min
-        return MOI.MinSense
-    elseif sense == :Max
-        return MOI.MaxSense
-    else
-        _error("Invalid optimization sense \"$sense\": either \"Min\" or",
-               " \"Max\" is expected.")
-    end
+# TODO remove for JuMP v0.20
+function throw_error_for_symbol_sense(_error::Function,
+                                      sense::Symbol)
+    _error("The `@objective(model, :Min, ...)` and",
+           " `@objective(model, :Max, ...)` are no longer available in JuMP",
+           " 0.19 and later. Use `@objective(model, Min, ...)`," *
+           " `@objective(model, Max, ...)`,",
+           " `@objective(model, MOI.MinSense, ...)` or " *
+           " `@objective(model, MOI.MaxSense, ...)` instead.")
 end
-
-"""
-    moi_sense(_error::Function, sense::MOI.OptimizationSense)
-
-Return `sense`.
-"""
-moi_sense(_error::Function, sense::MOI.OptimizationSense) = sense
+function throw_error_for_symbol_sense(_error::Function,
+                                      sense::MOI.OptimizationSense)
+    return sense
+end
 
 # TODO: Add a docstring.
 macro objective(model, args...)
     _error(str...) = macro_error(:objective, (model, args...), str...)
 
-    model = esc(model)
+    # We don't overwrite `model` as it is used in `_error`
+    esc_model = esc(model)
     if length(args) != 2
         # Either just an objective sense, or just an expression.
         _error("needs three arguments: model, objective sense (Max or Min) and expression.")
     end
     sense, x = args
-    sense_expr = moi_sense_expr(_error, sense)
+    sense_expr = moi_sense(_error, sense)
     newaff, parsecode = parseExprToplevel(x, :q)
     code = quote
         q = Val{false}()
         $parsecode
-        set_objective($model, $sense_expr, $newaff)
+        set_objective($esc_model, $sense_expr, $newaff)
     end
-    return assert_validmodel(model, macro_return(code, newaff))
+    return assert_validmodel(esc_model, macro_return(code, newaff))
 end
 
 # Return a standalone, unnamed expression
@@ -1476,7 +1469,7 @@ end
 # TODO: Add a docstring.
 macro NLobjective(model, sense, x)
     _error(str...) = macro_error(:NLobjective, (model, sense, x), str...)
-    sense_expr = moi_sense_expr(_error, sense)
+    sense_expr = moi_sense(_error, sense)
     ex = gensym()
     code = quote
         $ex = $(processNLExpr(model, x))

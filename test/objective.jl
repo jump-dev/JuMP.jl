@@ -48,21 +48,19 @@ function objectives_test(ModelType::Type{<:JuMP.AbstractModel}, VariableRefType:
         m = ModelType()
         @variable(m, x)
 
-        @objective(m, :Min, 2x)
-        @test JuMP.objective_sense(m) == MOI.MinSense
-        @test JuMP.isequal_canonical(JuMP.objective_function(m, AffExprType), 2x)
+        @test_throws ErrorException @objective(m, :Min, 2x)
     end
 
     @testset "Sense in variable" begin
         m = ModelType()
         @variable(m, x)
 
-        sense = :Min
+        sense = MOI.MinSense
         @objective(m, sense, 2x)
         @test JuMP.objective_sense(m) == MOI.MinSense
         @test JuMP.isequal_canonical(JuMP.objective_function(m, AffExprType), 2x)
 
-        sense = :Man
+        sense = :Min
         @test_throws ErrorException @objective(m, sense, 2x)
     end
 end
