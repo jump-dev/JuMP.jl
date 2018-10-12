@@ -64,6 +64,12 @@ Breaking changes:
   forms and second-order cone constraints. Support for these
   constraint classes depends on the solver.
 
+- The symbols `:Min` and `:Max` are no longer used as optimization senses.
+  Instead, JuMP uses the `OptimizationSense` enum from MathOptInterface.
+  `@objective(model, Max, ...)`, `@objective(model, Min, ...)`,
+  `@NLobjective(model, Max, ...)`, and `@objective(model, Min, ...)` remain
+  valid, but `@objective(m, :Max, ...)` is no longer accepted.
+
 New features:
 
 - Support for deleting constraints and variables.
