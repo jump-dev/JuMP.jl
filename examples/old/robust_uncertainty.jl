@@ -26,15 +26,14 @@ N = ceil((2+2log(2/𝛿))^2) + 1
 M = rand(d,d)
 Σhat = 1/(d-1)*(M-ones(d)*μhat')'*(M-ones(d)*μhat')
 
-# m = Model(with_optimizer(SCS.Optimizer, eps=1e-8))
 m = Model(with_optimizer(SCS.Optimizer))
 
 @variable(m, Σ[1:d, 1:d], PSD)
 @variable(m, u[1:d])
 @variable(m, μ[1:d])
 
-@constraint(m, norm(μ-μhat) <= Γ1(𝛿/2,N))
-@constraint(m, opnorm(Σ-Σhat) <= Γ2(𝛿/2,N))
+@constraint(m, [Γ1(𝛿/2,N);      μ-μhat] in SecondOrderCone())
+@constraint(m, [Γ2(𝛿/2,N); vec(Σ-Σhat)] in SecondOrderCone())
 
 A = [(1-ɛ)/ɛ (u-μ)';
      (u-μ)     Σ   ]
