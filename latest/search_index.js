@@ -705,6 +705,14 @@ var documenterSearchIndex = {"docs": [
 },
 
 {
+    "location": "style.html#@enum-vs.-Symbol-1",
+    "page": "Style Guide",
+    "title": "@enum vs. Symbol",
+    "category": "section",
+    "text": "The @enum macro lets you define types with a finite number of values that are explicitly enumerated (like enum in C/C++). Symbols are lightweight strings that are used to represent identifiers in Julia (for example, :x).@enum provides type safety and can have docstrings attached to explain the possible values. Use @enums when applicable, e.g., for reporting statuses. Use strings to provide long-form additional information like error messages.Use of Symbol should typically be reserved for identifiers, e.g., for lookup in the JuMP model (model[:my_variable])."
+},
+
+{
     "location": "style.html#Design-principles-1",
     "page": "Style Guide",
     "title": "Design principles",
