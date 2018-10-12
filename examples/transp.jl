@@ -18,13 +18,13 @@ const MOI = JuMP.MathOptInterface
 
 solver = Clp.Optimizer
 
-ORIG = ["GARY", "CLEV", "PITT"];
-DEST = ["FRA", "DET", "LAN", "WIN", "STL", "FRE", "LAF"];
+ORIG = ["GARY", "CLEV", "PITT"]
+DEST = ["FRA", "DET", "LAN", "WIN", "STL", "FRE", "LAF"]
 
-supply = [1400 2600 2900];
-demand = [ 900 1200  600 400 1700 1100 1000];
+supply = [1400 2600 2900]
+demand = [ 900 1200  600 400 1700 1100 1000]
 
-@assert sum(supply) == sum(demand);
+@assert sum(supply) == sum(demand)
 
 cost = [
 39   14   11   14   16   82    8;
@@ -32,16 +32,16 @@ cost = [
 24   14   17   13   28   99   20
 ]
 
-m = Model(with_optimizer(solver));
+m = Model(with_optimizer(solver))
 
-@variable(m, Trans[i in 1:length(ORIG), j in 1:length(DEST)] >= 0);
+@variable(m, Trans[i in 1:length(ORIG), j in 1:length(DEST)] >= 0)
 
 
-@objective(m, Min, sum(cost[i,j] * Trans[i,j] for i in 1:length(ORIG), j in 1:length(DEST)));
+@objective(m, Min, sum(cost[i,j] * Trans[i,j] for i in 1:length(ORIG), j in 1:length(DEST)))
 
-@constraint(m, [i in 1:length(ORIG)], sum(Trans[i,j] for j in 1:length(DEST)) == supply[i]);
+@constraint(m, [i in 1:length(ORIG)], sum(Trans[i,j] for j in 1:length(DEST)) == supply[i])
 
-@constraint(m, [j in 1:length(DEST)], sum(Trans[i,j] for i in 1:length(ORIG)) == demand[j]);
+@constraint(m, [j in 1:length(DEST)], sum(Trans[i,j] for i in 1:length(ORIG)) == demand[j])
 
 println("Solving original problem...")
 JuMP.optimize!(m)
@@ -51,20 +51,20 @@ primal_status = JuMP.primal_status(m)
 is_optimal = term_status == MOI.Success && primal_status == MOI.FeasiblePoint
 
 if is_optimal
-	@printf("Optimal!\n");
-	@printf("Objective value: %d\n", JuMP.objective_value(m));
-	@printf("Transpotation:\n");
+	@printf("Optimal!\n")
+	@printf("Objective value: %d\n", JuMP.objective_value(m))
+	@printf("Transpotation:\n")
 	for j in 1:length(DEST)
-		@printf("\t%s", DEST[j]);
+		@printf("\t%s", DEST[j])
 	end
-	@printf("\n");
+	@printf("\n")
 	for i in 1:length(ORIG)
-		@printf("%s", ORIG[i]);
+		@printf("%s", ORIG[i])
 		for j in 1:length(DEST)
-			@printf("\t%d", JuMP.result_value(Trans[i,j]));
+			@printf("\t%d", JuMP.result_value(Trans[i,j]))
 		end
-		@printf("\n");
+		@printf("\n")
 	end
 else
-    @printf("No solution\n");
+    @printf("No solution\n")
 end

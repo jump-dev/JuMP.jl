@@ -24,15 +24,15 @@ function solve_maxcut_sdp(n, W)
     L = 0.25 * (diagm(0=>W*ones(n)) - W)
 
     # Solve the SDP relaxation
-    m = Model(with_optimizer(SCS.Optimizer, eps=1e-6))
+    m = Model(with_optimizer(SCS.Optimizer))
     @variable(m, X[1:n,1:n], PSD)
-    @objective(m, Max, dot(L,X))
+    @objective(m, Max, dot(L, X))
     @constraint(m, diag(X) .== 1)
     JuMP.optimize!(m)
 
     # Cholesky the result
-    F = cholfact(Hermitian(JuMP.result_value.(X)[:,:], :U), Val(true))
-    V = (F[:P]*F[:L])'
+    F = cholesky(Hermitian(JuMP.result_value.(X), :U), Val(true); check = false)
+    V = (F.P * F.L)'
 
     # Normalize columns
     for i = 1:n

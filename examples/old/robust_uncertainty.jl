@@ -11,7 +11,7 @@
 #############################################################################
 
 
-using JuMP, SCS
+using JuMP, SCS, LinearAlgebra
 
 R = 1
 d = 3
@@ -26,14 +26,15 @@ N = ceil((2+2log(2/𝛿))^2) + 1
 M = rand(d,d)
 Σhat = 1/(d-1)*(M-ones(d)*μhat')'*(M-ones(d)*μhat')
 
-m = Model(solver=SCSSolver(eps=1e-8))
+# m = Model(with_optimizer(SCS.Optimizer, eps=1e-8))
+m = Model(with_optimizer(SCS.Optimizer))
 
-@variable(m, Σ[1:d,1:d], SDP)
+@variable(m, Σ[1:d, 1:d], PSD)
 @variable(m, u[1:d])
 @variable(m, μ[1:d])
 
 @constraint(m, norm(μ-μhat) <= Γ1(𝛿/2,N))
-@constraint(m, vecnorm(Σ-Σhat) <= Γ2(𝛿/2,N))
+@constraint(m, opnorm(Σ-Σhat) <= Γ2(𝛿/2,N))
 
 A = [(1-ɛ)/ɛ (u-μ)';
      (u-μ)     Σ   ]
@@ -42,10 +43,10 @@ A = [(1-ɛ)/ɛ (u-μ)';
 c = randn(d)
 @objective(m, Max, dot(c,u))
 
-solve(m)
+JuMP.optimize!(m)
 
-object = getobjectivevalue(m)
-exact = dot(μhat,c) + Γ1(𝛿/2,N)*norm(c) + sqrt((1-ɛ)/ɛ)*sqrt(dot(c,(Σhat+Γ2(𝛿/2,N)*eye(d,d))*c))
+object = JuMP.objective_value(m)
+exact = dot(μhat,c) + Γ1(𝛿/2,N)*norm(c) + sqrt((1-ɛ)/ɛ)*sqrt(dot(c,(Σhat+Γ2(𝛿/2,N)*Matrix(1.0I,d,d))*c))
 
 println("objective value:  $(object)")
 println("error from exact: $(abs(exact-object))")

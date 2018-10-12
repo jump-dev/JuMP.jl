@@ -59,9 +59,9 @@ print(market["coils"]["west"][1])
 
 # Decision Variables
 
-@variable(Prod, Make[p in prod, t in 1:T] >= 0); # tons produced
-@variable(Prod, Inv[p in prod, t in 0:T] >= 0); # tons inventoried
-@variable(Prod, market[p][a][t] >= Sell[p in prod, a in area[p], t in 1:T] >= 0); # tons sold
+@variable(Prod, Make[p in prod, t in 1:T] >= 0) # tons produced
+@variable(Prod, Inv[p in prod, t in 0:T] >= 0) # tons inventoried
+@variable(Prod, market[p][a][t] >= Sell[p in prod, a in area[p], t in 1:T] >= 0) # tons sold
 
 @constraint(Prod, [p in prod, a in area[p], t in 1:T],
                Sell[p, a, t] - market[p][a][t] <= 0)

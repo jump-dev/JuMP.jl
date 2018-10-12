@@ -17,6 +17,7 @@
 
 using JuMP
 using MathProgBase
+using LinearAlgebra
 
 using Gurobi
 mod = Model(solver=GurobiSolver(PreCrush=1, Cuts=0, Presolve=0, Heuristics=0.0, DisplayInterval=1))
