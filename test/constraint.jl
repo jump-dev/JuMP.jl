@@ -276,7 +276,7 @@ end
         con_ref = @constraint(model, 2 * x <= 1)
         con_obj = JuMP.constraint_object(con_ref)
         @test con_obj.set == MOI.LessThan(1.0)
-        JuMP.set_constant(con_ref, 2)
+        JuMP.set_rhs(con_ref, 2)
         con_obj = JuMP.constraint_object(con_ref)
         @test con_obj.set == MOI.LessThan(2.0)
     end
@@ -287,7 +287,7 @@ end
         con_ref = @constraint(model, 2 * x >= -1)
         con_obj = JuMP.constraint_object(con_ref)
         @test con_obj.set == MOI.GreaterThan(-1.0)
-        JuMP.set_constant(con_ref, -2)
+        JuMP.set_rhs(con_ref, -2)
         con_obj = JuMP.constraint_object(con_ref)
         @test con_obj.set == MOI.GreaterThan(-2.0)
     end
@@ -298,7 +298,7 @@ end
         con_ref = @constraint(model, 2 * x == -1)
         con_obj = JuMP.constraint_object(con_ref)
         @test con_obj.set == MOI.EqualTo(-1.0)
-        JuMP.set_constant(con_ref, -2)
+        JuMP.set_rhs(con_ref, -2)
         con_obj = JuMP.constraint_object(con_ref)
         @test con_obj.set == MOI.EqualTo(-2.0)
     end
@@ -307,7 +307,7 @@ end
         model = JuMP.Model()
         x = @variable(model)
         con_ref = @constraint(model, 0 <= 2 * x <= 1)
-        @test_throws Exception JuMP.set_constant(con_ref, -2)
+        @test_throws Exception JuMP.set_rhs(con_ref, -2)
     end
 
     @testset "Change coefficient" begin

@@ -221,7 +221,7 @@ Interval sets are *not* supported.
 
 Note that prior to this step, JuMP will move all variable terms onto the
 left-hand side, and all constant terms onto the right-hand side. For example,
-given a constraint `2x + 1 <= 2`, `JuMP.set_constant(c, 3)` will create the
+given a constraint `2x + 1 <= 2`, `JuMP.set_rhs(c, 3)` will create the
 constraint `2x <= 3`, not `2x + 1 <= 3`.
 """
 function set_rhs(constraint::ConstraintRef{Model, MOICON{F, SetType}},
@@ -233,18 +233,32 @@ function set_rhs(constraint::ConstraintRef{Model, MOICON{F, SetType}},
 end
 
 """
-    set_coefficient(constraint::ConstraitRef, variable::VariableRef, value)
+    set_coefficient(constraint::ConstraintRef, variable::VariableRef, value)
 
 Set the coefficient of `variable` in the constraint `constraint` to `value`.
 
 Note that prior to this step, JuMP will aggregate multiple terms containing the
 same variable. For example, given a constraint `2x + 3x <= 2`,
 `JuMP.set_coefficient(c, x, 4)` will create the constraint `4x <= 2`.
+
+
+```jldoctest
+model = Model()
+@variable(model, x)
+@constraint(model, con, 2x + 3x <= 2)
+JuMP.set_coefficient(con, x, 4)
+con
+
+# output
+
+con : 4x <= 2.0
+```
 """
-function set_coefficient(constraint::ConstraintRef{Model, MOICON{F}},
-                         variable, value) where {T, F <: Union{
+function set_coefficient(constraint::ConstraintRef{Model, MOICON{F, S}},
+                         variable, value) where {S, T, F <: Union{
                              MOI.ScalarAffineFunction{T},
                              MOI.ScalarQuadraticFunction{T}}}
-    MOI.modify(con_ref.m.moi_backend, index(con_ref),
+    MOI.modify(constraint.m.moi_backend, index(constraint),
         MOI.ScalarCoefficientChange(index(variable), convert(T, value)))
+    return
 end
