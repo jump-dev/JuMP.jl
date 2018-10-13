@@ -896,21 +896,16 @@ function moi_sense(_error::Function, sense)
         # TODO: Better document this behavior
         expr = esc(sense)
     end
-    return :(throw_error_for_symbol_sense($_error, $expr))
+    return :(throw_error_for_invalid_sense($_error, $expr))
 end
 
-# TODO remove for JuMP v0.20
-function throw_error_for_symbol_sense(_error::Function,
-                                      sense::Symbol)
-    _error("The `@objective(model, :Min, ...)` and",
-           " `@objective(model, :Max, ...)` are no longer available in JuMP",
-           " 0.19 and later. Use `@objective(model, Min, ...)`," *
-           " `@objective(model, Max, ...)`,",
-           " `@objective(model, MOI.MinSense, ...)` or " *
-           " `@objective(model, MOI.MaxSense, ...)` instead.")
+function throw_error_for_invalid_sense(_error::Function,
+                                       sense)
+    _error("Unexpected sense `$value`. The sense must be an",
+           " `MOI.OptimizatonSense`, `Min` or `Max`.")
 end
-function throw_error_for_symbol_sense(_error::Function,
-                                      sense::MOI.OptimizationSense)
+function throw_error_for_invalid_sense(_error::Function,
+                                       sense::MOI.OptimizationSense)
     return sense
 end
 
