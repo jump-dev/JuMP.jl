@@ -881,10 +881,10 @@ Constructs a vector of `QuadConstraint` objects. Similar to `@QuadConstraint`, e
 Return an expression whose value is an `MOI.OptimizationSense` corresponding
 to `sense`. Sense is either the symbol `:Min` or `:Max`, corresponding
 respectively to `MOI.MinSense` and `MOI.MaxSense` or it is another symbol,
-which should be the name of a variable or expression whose value is `:Min`,
-`:Max` or an `MOI.OptimizationSense`.
+which should be the name of a variable or expression whose value is an
+`MOI.OptimizationSense`.
 In the last case, the expression throws an error using the `_error`
-function in case the value is a symbol which is not `:Min` nor `:Max`.
+function in case the value is not an `MOI.OptimizationSense`.
 """
 function moi_sense(_error::Function, sense)
     if sense == :Min
