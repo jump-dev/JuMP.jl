@@ -210,29 +210,6 @@ function add_constraint(m::Model, c::AbstractConstraint, name::String="")
 end
 
 """
-    set_rhs(constraint, value)
-
-Set the right-hand side of a constraint. Supported constraints are
- - ScalarAffineFunction -in- LessThan
- - ScalarAffineFunction -in- GreaterThan
- - ScalarAffineFunction -in- EqualTo.
-
-Interval sets are *not* supported.
-
-Note that prior to this step, JuMP will move all variable terms onto the
-left-hand side, and all constant terms onto the right-hand side. For example,
-given a constraint `2x + 1 <= 2`, `JuMP.set_rhs(c, 3)` will create the
-constraint `2x <= 3`, not `2x + 1 <= 3`.
-"""
-function set_rhs(constraint::ConstraintRef{Model, MOICON{F, SetType}},
-                 value) where {F <: MOI.ScalarAffineFunction,
-                               SetType <: Union{MOI.LessThan, MOI.GreaterThan,
-                                                MOI.EqualTo}}
-    MOI.set(constraint.m.moi_backend, MOI.ConstraintSet(), index(constraint),
-            SetType(value))
-end
-
-"""
     set_coefficient(constraint::ConstraintRef, variable::VariableRef, value)
 
 Set the coefficient of `variable` in the constraint `constraint` to `value`.
@@ -242,7 +219,7 @@ same variable. For example, given a constraint `2x + 3x <= 2`,
 `JuMP.set_coefficient(c, x, 4)` will create the constraint `4x <= 2`.
 
 
-```jldoctest
+```jldoctest; setup = :(using JuMP)
 model = Model()
 @variable(model, x)
 @constraint(model, con, 2x + 3x <= 2)
@@ -251,7 +228,7 @@ con
 
 # output
 
-con : 4x <= 2.0
+con : 4 x <= 2.0
 ```
 """
 function set_coefficient(constraint::ConstraintRef{Model, MOICON{F, S}},
