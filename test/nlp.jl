@@ -456,5 +456,41 @@
         @test MOI.constraint_expr(d,4) == :(0.0 <= x[$xidx] + x[$yidx] <= 1.0)
     end
 
+    @testset "Test views on Hessian functions" begin
+        m = Model()
+        @variable(m, a)
+        @variable(m, b)
+        @variable(m, c)
+
+        @NLexpression(m, foo, a * b + c^2)
+
+        @NLobjective(m, Min, foo)
+        d = JuMP.NLPEvaluator(m)
+        MOI.initialize(d, [:Hess, :HessVec])
+        hessian_sparsity = MOI.hessian_lagrangian_structure(d)
+
+        V = zeros(4)
+        values = [1.0, 2.0, 3.0] # Values for a, b, and c, respectively.
+        MOI.eval_hessian_lagrangian(d, V, values, 1.0, Float64[])
+        h = ones(3)
+        v = [2.4; 3.5; 4.6]
+        MOI.eval_hessian_lagrangian_product(d, h, values, v, 1.0, Float64[])
+
+        values2 = zeros(10)
+        values2[5:7] = values
+        values_view = @view values2[5:7]
+        V2 = zeros(10)
+        V_view = @view V2[4:7]
+        MOI.eval_hessian_lagrangian(d, V_view, values_view, 1.0, Float64[])
+        @test V_view == V
+
+        h2 = zeros(10)
+        h_view = @view h2[3:5]
+        v2 = zeros(10)
+        v2[4:6] = v
+        v_view = @view v2[4:6]
+        MOI.eval_hessian_lagrangian_product(d, h_view, values_view, v_view, 1.0, Float64[])
+        @test h_view == h
+    end
 
 end
