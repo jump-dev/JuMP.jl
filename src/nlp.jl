@@ -628,11 +628,11 @@ end
 
 function MathProgBase.eval_hesslag_prod(
     d::NLPEvaluator,
-    h::Vector{Float64}, # output vector
-    x::Vector{Float64}, # current solution
-    v::Vector{Float64}, # rhs vector
-    σ::Float64,         # multiplier for objective
-    μ::Vector{Float64}) # multipliers for each constraint
+    h::AbstractVector{Float64}, # output vector
+    x::AbstractVector{Float64}, # current solution
+    v::AbstractVector{Float64}, # rhs vector
+    σ::Float64,                 # multiplier for objective
+    μ::AbstractVector{Float64}) # multipliers for each constraint
 
     nldata = d.m.nlpdata::NLPData
 
@@ -738,10 +738,10 @@ end
 
 function MathProgBase.eval_hesslag(
     d::NLPEvaluator,
-    H::Vector{Float64},         # Sparse hessian entry vector
-    x::Vector{Float64},         # Current solution
-    obj_factor::Float64,        # Lagrangian multiplier for objective
-    lambda::Vector{Float64})    # Multipliers for each constraint
+    H::AbstractVector{Float64},         # Sparse hessian entry vector
+    x::AbstractVector{Float64},         # Current solution
+    obj_factor::Float64,                # Lagrangian multiplier for objective
+    lambda::AbstractVector{Float64})    # Multipliers for each constraint
 
     qobj = d.m.obj::QuadExpr
     nldata = d.m.nlpdata::NLPData
