@@ -651,6 +651,19 @@ end
         hess_sparse = hess_raw + hess_raw' - sparse(Diagonal(diag(hess_raw)))
         @test isapprox(hess_sparse, [0.0 1.0 0.0; 1.0 0.0 0.0; 0.0 0.0 2.0])
 
+        # test view
+        x = zeros(length(m.colVal) + 10)
+        x[6:length(m.colVal)+5] = m.colVal
+        xv = @view x[6:length(m.colVal)+5]
+        Vv = zeros(length(I))
+        MathProgBase.eval_hesslag(d, Vv, xv, 1.0, Float64[])
+        @test Vv == V
+
+        V2 = zeros(length(I) + 10)
+        Vv = @view V2[6:length(I)+5]
+        MathProgBase.eval_hesslag(d, Vv, m.colVal, 1.0, Float64[])
+        @test Vv == V
+
         # make sure we don't get NaNs in this case
         @NLobjective(m, Min, a * b + 3*c^2)
         d = JuMP.NLPEvaluator(m)
@@ -687,6 +700,22 @@ end
         MathProgBase.eval_hesslag_prod(d, h, m.colVal, v, 1.0, [2.0,3.0])
         correct = [3.0 1.0 0.0; 1.0 0.0 2.0; 0.0 2.0 2.0]*v
         @test isapprox(h, correct)
+
+        # test view
+        h2 = zeros(10)
+        hv = @view h2[3:5]
+        MathProgBase.eval_hesslag_prod(d, hv, m.colVal, v, 1.0, [2.0,3.0])
+        @test hv == h
+
+        x = zeros(length(m.colVal) + 10)
+        x[6:length(m.colVal)+5] = m.colVal
+        xv = @view x[6:length(m.colVal)+5]
+        vv = zeros(13)
+        vv[6:8] = v
+        vw = @view vv[6:8]
+        h2 = zeros(3)
+        MathProgBase.eval_hesslag_prod(d, h2, xv, vw, 1.0, [2.0,3.0])
+        @test h2 == h
     end
 
     @testset "Hess-vec through MPB with subexpressions" begin
