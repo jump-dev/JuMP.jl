@@ -14,20 +14,20 @@
 #  http://www.gurobi.com/documentation/5.6/example-tour/diet_cpp_cpp
 #############################################################################
 
-using JuMP, Clp
+using JuMP, GLPK, LinearAlgebra
+const MOI = JuMP.MathOptInterface
 
-solver = ClpSolver()
+solver = GLPK.Optimizer
 
-function PrintSolution(status, foods, buy)
+function PrintSolution(is_optimal, foods, buy)
     println("RESULTS:")
-    if status == :Optimal
+    if is_optimal
         for i = 1:length(foods)
-            println("  $(foods[i]) = $(getvalue(buy[i]))")
+            println("  $(foods[i]) = $(JuMP.result_value(buy[i]))")
         end
     else
-        println("  No solution")
+        println("The solver did not find an optimal solution.")
     end
-    println("")
 end
 
 function SolveDiet()
@@ -54,33 +54,40 @@ function SolveDiet()
                        330  8 10 180]
 
     # Build model
-    m = Model(solver=solver)
+    m = Model(with_optimizer(solver))
 
     # Variables for nutrition info
-    @variable(m, minNutrition[i] <= nutrition[i=1:numCategories] <= maxNutrition[i])
+    @variable(m, minNutrition[i] <= nutrition[i in 1:numCategories] <= maxNutrition[i])
     # Variables for which foods to buy
-    @variable(m, buy[i=1:numFoods] >= 0)
+    @variable(m, buy[i in 1:numFoods] >= 0)
 
     # Objective - minimize cost
     @objective(m, Min, dot(cost, buy))
 
     # Nutrition constraints
     for j = 1:numCategories
-        @constraint(m, sum(nutritionValues[i,j]*buy[i] for i=1:numFoods) == nutrition[j])
+        @constraint(m, sum(nutritionValues[i,j]*buy[i] for i in 1:numFoods) == nutrition[j])
     end
 
     # Solve
     println("Solving original problem...")
-    status = solve(m)
-    PrintSolution(status, foods, buy)
+    JuMP.optimize!(m)
+    term_status = JuMP.termination_status(m)
+    primal_status = JuMP.primal_status(m)
+    is_optimal = term_status == MOI.Success && primal_status == MOI.FeasiblePoint
+
+    PrintSolution(is_optimal, foods, buy)
+
 
     # Limit dairy
     @constraint(m, buy[8] + buy[9] <= 6)
     println("Solving dairy-limited problem...")
-    status = solve(m)
-    PrintSolution(status, foods, buy)
+    JuMP.optimize!(m)
+    term_status = JuMP.termination_status(m)
+    primal_status = JuMP.primal_status(m)
+    is_optimal = term_status == MOI.Success && primal_status == MOI.FeasiblePoint
 
+    PrintSolution(is_optimal, foods, buy)
 end
 
 SolveDiet()
-

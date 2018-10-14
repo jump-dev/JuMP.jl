@@ -18,7 +18,7 @@
 
 using JuMP, Clp
 
-m = Model(solver = ClpSolver())
+m = Model(with_optimizer(Clp.Optimizer))
 
 @variable(m, 0 <= x <= 2)
 @variable(m, 0 <= y <= 30)
@@ -28,8 +28,8 @@ m = Model(solver = ClpSolver())
 
 print(m)
 
-status = solve(m)
+JuMP.optimize!(m)
 
-println("Objective value: ", getobjectivevalue(m))
-println("x = ", getvalue(x))
-println("y = ", getvalue(y))
+println("Objective value: ", JuMP.objective_value(m))
+println("x = ", JuMP.result_value(x))
+println("y = ", JuMP.result_value(y))

@@ -16,11 +16,11 @@
 # To determine bounds on ρ_AC by solving a SDP
 #############################################################################
 
-using JuMP, SCS
+using JuMP, CSDP
 
-m = Model(solver=SCSSolver())
+m = Model(with_optimizer(CSDP.Optimizer))
 
-@variable(m, X[1:3,1:3], SDP)
+@variable(m, X[1:3,1:3], PSD)
 
 # Diagonal is 1s
 @constraint(m, X[1,1] == 1)
@@ -35,12 +35,12 @@ m = Model(solver=SCSSolver())
 
 # Find upper bound
 @objective(m, Max, X[1,3])
-solve(m)
-println("Maximum value is ", getvalue(X)[1,3])
-@assert +0.8719 <= getvalue(X)[1,3] <= +0.8720
+JuMP.optimize!(m)
+println("Maximum value is ", JuMP.result_value.(X)[1,3])
+@assert +0.8719 <= JuMP.result_value.(X)[1,3] <= +0.8720
 
 # Find lower bound
 @objective(m, Min, X[1,3])
-solve(m)
-println("Minimum value is ", getvalue(X)[1,3])
-@assert -0.9779 >= getvalue(X)[1,3] >= -0.9799
+JuMP.optimize!(m)
+println("Minimum value is ", JuMP.result_value.(X)[1,3])
+@assert -0.9779 >= JuMP.result_value.(X)[1,3] >= -0.9799

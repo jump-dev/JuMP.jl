@@ -4,7 +4,7 @@
 #  file, You can obtain one at http://mozilla.org/MPL/2.0/.
 using JuMP, Ipopt
 
-solver = IpoptSolver()
+solver = Ipopt.Optimizer
 
 # clnlbeam
 # Based on AMPL model
@@ -27,13 +27,13 @@ let
     h     = 1/ni
     alpha = 350
 
-    m = Model(solver=solver)
+    m = Model(with_optimizer(solver))
 
     @variable(m, -1 <= t[1:(ni+1)] <= 1)
     @variable(m, -0.05 <= x[1:(ni+1)] <= 0.05)
     @variable(m, u[1:(ni+1)])
 
-    @NLobjective(m, Min, sum( 0.5*h*(u[i+1]^2 + u[i]^2) + 0.5*alpha*h*(cos(t[i+1]) + cos(t[i])) for i = 1:ni))
+    @NLobjective(m, Min, sum( 0.5*h*(u[i+1]^2 + u[i]^2) + 0.5*alpha*h*(cos(t[i+1]) + cos(t[i])) for i in 1:ni))
 
     # cons1
     for i in 1:ni
@@ -44,6 +44,5 @@ let
         @constraint(m, t[i+1] - t[i] - (0.5h)*u[i+1] - (0.5h)*u[i] == 0)
     end
 
-    solve(m)
-
+    JuMP.optimize!(m)
 end

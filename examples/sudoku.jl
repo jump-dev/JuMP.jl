@@ -20,9 +20,10 @@
 # We will take the initial grid as a CSV file, where 0s are "blanks
 #############################################################################
 
-using JuMP, Cbc
+using JuMP, GLPK
+const MOI = JuMP.MathOptInterface
 
-solver = CbcSolver()
+solver = GLPK.Optimizer
 
 # Load data
 function LoadData(filepath)
@@ -37,7 +38,7 @@ end
 
 # Solve model
 function SolveModel(initgrid)
-    m = Model(solver=solver)
+    m = Model(with_optimizer(solver))
 
     @variable(m, x[1:9, 1:9, 1:9], Bin)
 
@@ -45,9 +46,9 @@ function SolveModel(initgrid)
         # Constraint 1 - Only one value appears in each cell
         # Constraint 2 - Each value appears in each row once only
         # Constraint 3 - Each value appears in each column once only
-        cell[i=1:9, j=1:9], sum(x[i,j,:]) == 1
-         row[i=1:9, k=1:9], sum(x[i,:,k]) == 1
-         col[j=1:9, k=1:9], sum(x[:,j,k]) == 1
+        cell[i in 1:9, j in 1:9], sum(x[i,j,:]) == 1
+         row[i in 1:9, k in 1:9], sum(x[i,:,k]) == 1
+         col[j in 1:9, k in 1:9], sum(x[:,j,k]) == 1
         # Constraint 4 - Each value appears in each 3x3 subgrid once only
         subgrid[i=1:3:7,j=1:3:7,val=1:9], sum(x[i:i+2,j:j+2,val]) == 1
     end
@@ -60,13 +61,15 @@ function SolveModel(initgrid)
     end
 
     # Solve it
-    status = solve(m)
+    JuMP.optimize!(m)
+
+    term_status = JuMP.termination_status(m)
+    primal_status = JuMP.primal_status(m)
+    is_optimal = term_status == MOI.Success && primal_status == MOI.FeasiblePoint
 
     # Check solution
-    if status == :Infeasible
-        error("No solution found!")
-    else
-        mipSol = getvalue(x)
+    if is_optimal
+        mipSol = JuMP.result_value.(x)
         sol = zeros(Int,9,9)
         for row in 1:9, col in 1:9, val in 1:9
             if mipSol[row, col, val] >= 0.9
@@ -74,6 +77,8 @@ function SolveModel(initgrid)
             end
         end
         return sol
+    else
+        error("The solver did not find an optimal solution.")
     end
 
 end
@@ -102,4 +107,3 @@ for row in 1:9
         println("[-----------------------]")
     end
 end
-
