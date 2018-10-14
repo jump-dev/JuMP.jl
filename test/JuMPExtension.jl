@@ -4,8 +4,6 @@ module JuMPExtension
 # `JuMP.Model` applies the modification to its `moi_backend` field while
 # `JuMPExtension.MyModel` stores the `AbstractVariable` (resp. `AbstractConstraint`) in a list.
 
-using MathOptInterface
-const MOI = MathOptInterface
 using JuMP
 
 mutable struct MyModel <: JuMP.AbstractModel

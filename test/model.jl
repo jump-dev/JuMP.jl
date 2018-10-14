@@ -10,13 +10,10 @@
 # test/model.jl
 #############################################################################
 
-using JuMP
-
 using Compat
 using Compat.Test
 
-using MathOptInterface
-const MOI = MathOptInterface
+using JuMP
 const MOIT = MOI.Test
 const MOIU = MOI.Utilities
 

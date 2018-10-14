@@ -18,6 +18,7 @@ using Compat.SparseArrays
 
 import MathOptInterface
 const MOI = MathOptInterface
+export MOI
 const MOIU = MOI.Utilities
 
 import Calculus

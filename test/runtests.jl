@@ -10,15 +10,12 @@
 # test/runtests.jl
 #############################################################################
 
-using JuMP
-
 using Compat
 using Compat.LinearAlgebra  # for dot and tr
 using Compat.SparseArrays # for sparse
 using Compat.Test
 
-using MathOptInterface
-const MOI = MathOptInterface
+using JuMP
 const MOIT = MOI.Test
 const MOIU = MOI.Utilities
 
