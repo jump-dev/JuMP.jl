@@ -41,9 +41,8 @@ include("nonlinear.jl");    length(  nlp_solvers) == 0 && @warn("Nonlinear tests
                             length(minlp_solvers) == 0 && @warn("Mixed-integer Nonlinear tests not run!")
 include("sdp.jl");          length(  sdp_solvers) == 0 && @warn("Semidefinite tests not run!")
 include("socduals.jl");     length(conic_solvers_with_duals) == 0 && @warn("Conic solvers with duals tests not run!")
-include("compilation.jl")
 # Throw an error if anything failed
 #FactCheck.exitstatus()
 
-# hygiene.jl should be run separately
+# hygiene.jl and compilation.jl should be run separately
 # hockschittkowski/runhs.jl has additional nonlinear tests

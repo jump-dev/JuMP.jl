@@ -9,7 +9,7 @@
 #############################################################################
 # test/compilation.jl
 # Testing ahead-of-time compilation of JuMP using PackageCompiler.
-# Intended to be run as part of runtests.jl.
+# Intended to be run separately from runtests.jl.
 #############################################################################
 
 using Compat.Test, PackageCompiler
