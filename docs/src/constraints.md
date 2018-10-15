@@ -14,3 +14,11 @@ nonlinear constraints.
 @constraint
 @SDconstraint
 ```
+
+## Constraint modifications
+
+`JuMP.set_coefficient(constraint, variable, value)`
+
+```@docs
+JuMP.set_coefficient
+```

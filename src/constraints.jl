@@ -208,3 +208,34 @@ function add_constraint(m::Model, c::AbstractConstraint, name::String="")
     end
     return cref
 end
+
+"""
+    set_coefficient(constraint::ConstraintRef, variable::VariableRef, value)
+
+Set the coefficient of `variable` in the constraint `constraint` to `value`.
+
+Note that prior to this step, JuMP will aggregate multiple terms containing the
+same variable. For example, given a constraint `2x + 3x <= 2`,
+`JuMP.set_coefficient(c, x, 4)` will create the constraint `4x <= 2`.
+
+
+```jldoctest; setup = :(using JuMP)
+model = Model()
+@variable(model, x)
+@constraint(model, con, 2x + 3x <= 2)
+JuMP.set_coefficient(con, x, 4)
+con
+
+# output
+
+con : 4 x <= 2.0
+```
+"""
+function set_coefficient(constraint::ConstraintRef{Model, MOICON{F, S}},
+                         variable, value) where {S, T, F <: Union{
+                             MOI.ScalarAffineFunction{T},
+                             MOI.ScalarQuadraticFunction{T}}}
+    MOI.modify(constraint.m.moi_backend, index(constraint),
+        MOI.ScalarCoefficientChange(index(variable), convert(T, value)))
+    return
+end
