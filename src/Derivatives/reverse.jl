@@ -5,7 +5,7 @@
 # assumes partials_storage is already updated
 # dense gradient output, assumes initialized to zero
 # if subexpressions are present, must run reverse_eval on subexpression tapes afterwards
-function reverse_eval(reverse_storage::Vector{T}, partials_storage::Vector{T},
+function reverse_eval(reverse_storage::AbstractVector{T}, partials_storage::AbstractVector{T},
                       nd::Vector{NodeData}, adj) where T
 
     @assert length(reverse_storage) >= length(nd)
@@ -38,7 +38,7 @@ export reverse_eval
 
 # assume we've already run the reverse pass, now just extract the answer
 # given the scaling value
-function reverse_extract(output::Vector{T},reverse_storage::Vector{T},nd::Vector{NodeData},adj,subexpression_output,scale_value::T) where T
+function reverse_extract(output::AbstractVector{T},reverse_storage::AbstractVector{T},nd::Vector{NodeData},adj,subexpression_output,scale_value::T) where T
 
     @assert length(reverse_storage) >= length(nd)
 
@@ -61,8 +61,8 @@ export reverse_extract
 # Compute directional derivatives of the reverse pass, goes with forward_eval_ϵ
 # to compute hessian-vector products.
 function reverse_eval_ϵ(output_ϵ::AbstractVector{ForwardDiff.Partials{N, T}},
-                        reverse_storage::Vector{T}, reverse_storage_ϵ,
-                        partials_storage::Vector{T}, partials_storage_ϵ,
+                        reverse_storage::AbstractVector{T}, reverse_storage_ϵ,
+                        partials_storage::AbstractVector{T}, partials_storage_ϵ,
                         nd::Vector{NodeData}, adj, subexpression_output,
                         subexpression_output_ϵ, scale_value::T,
                         scale_value_ϵ::ForwardDiff.Partials{N, T}) where {N, T}

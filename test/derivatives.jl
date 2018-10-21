@@ -32,6 +32,23 @@ reverse_extract(grad,reverse_storage,nd,adj,[],1.0)
 true_grad = [2*x[1]*cos(x[1]^2), -4*sin(x[2]*4)/5]
 @test isapprox(grad,true_grad)
 
+# Testing view
+xx = [1.0,2.0,3.0,4.0,5.0]
+xv = @view xx[2:3]
+fval_view = forward_eval(storage,partials_storage,nd,adj,const_values,[],xv,[])
+@test fval_view == fval
+
+grad_view = zeros(2)
+reverse_eval(reverse_storage,partials_storage,nd,adj)
+reverse_extract(grad_view,reverse_storage,nd,adj,[],1.0)
+@test grad_view == grad
+
+grad_view = zeros(5)
+gv = @view grad_view[2:2:end]
+reverse_eval(reverse_storage,partials_storage,nd,adj)
+reverse_extract(gv,reverse_storage,nd,adj,[],1.0)
+@test gv == grad
+
 # subexpressions
 
 nd_outer = [NodeData(SUBEXPRESSION,1,-1)]

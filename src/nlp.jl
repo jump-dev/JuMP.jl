@@ -590,9 +590,9 @@ end
 function MOI.eval_hessian_lagrangian_product(
     d::NLPEvaluator,
     h::AbstractVector{Float64}, # output vector
-    x::Vector{Float64}, # current solution
-    v::Vector{Float64}, # rhs vector
-    σ::Float64,         # multiplier for objective
+    x::AbstractVector{Float64}, # current solution
+    v::AbstractVector{Float64}, # rhs vector
+    σ::Float64,                 # multiplier for objective
     μ::AbstractVector{Float64}) # multipliers for each constraint
 
     nldata = d.m.nlp_data::NLPData
@@ -659,7 +659,7 @@ end
 function MOI.eval_hessian_lagrangian(
     d::NLPEvaluator,
     H::AbstractVector{Float64},      # Sparse hessian entry vector
-    x::Vector{Float64},              # Current solution
+    x::AbstractVector{Float64},      # Current solution
     obj_factor::Float64,             # Lagrangian multiplier for objective
     lambda::AbstractVector{Float64}) # Multipliers for each constraint
 
