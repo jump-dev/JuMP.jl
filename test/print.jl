@@ -254,6 +254,12 @@ Base.isless(u::UnitNumber, v::UnitNumber) = isless(u.α, v.α)
         io_test(REPLMode, param, "\"Reference to nonlinear parameter #1\"")
     end
 
+    @testset "NLPEvaluator" begin
+        model = Model()
+        evaluator = JuMP.NLPEvaluator(model)
+        io_test(REPLMode, evaluator, "\"A JuMP.NLPEvaluator\"")
+    end
+
     @testset "Nonlinear constraints" begin
         le = JuMP.math_symbol(REPLMode, :leq)
         ge = JuMP.math_symbol(REPLMode, :geq)

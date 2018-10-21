@@ -392,11 +392,18 @@ function nl_constraint_string(model::Model, mode, c::NonlinearConstraint)
 end
 
 #------------------------------------------------------------------------
-## Nonlinear expression/parameter reference
+## Opaque nonlinear objects
 #------------------------------------------------------------------------
+# TODO: This could be pretty printed.
 function Base.show(io::IO, ex::NonlinearExpression)
     Base.show(io, "Reference to nonlinear expression #$(ex.index)")
 end
+
 function Base.show(io::IO, p::NonlinearParameter)
     Base.show(io, "Reference to nonlinear parameter #$(p.index)")
+end
+
+# TODO: Print the status of the NLPEvaluator, features available, etc.
+function Base.show(io::IO, evaluator::NLPEvaluator)
+    Base.show(io, "A JuMP.NLPEvaluator")
 end
