@@ -89,7 +89,7 @@ New features:
   irreducible inconsistent subsystem).
 
 - Explicit control of whether symmetry-enforcing constraints are added to PSD
-  PSD constraints (TODO: This is undocumented.)
+  constraints (TODO: This is undocumented.)
 
 - Support for modeling exponential cones.
 
