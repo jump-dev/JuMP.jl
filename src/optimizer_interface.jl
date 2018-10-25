@@ -27,12 +27,24 @@ end
 
 
 """
-    function optimize!(model::Model,
-                       optimizer_factory::Union{Nothing, OptimizerFactory}=nothing;
-                       ignore_optimize_hook=(model.optimize_hook === nothing))
+    optimize!(model::Model,
+              optimizer_factory::Union{Nothing, OptimizerFactory}=nothing;
+              ignore_optimize_hook=(model.optimize_hook === nothing))
 
-Optimize the model. If `optimizer_factory` is not `nothing`, it first set the
-optimizer to a new one created using the optimizer factory.
+Optimize the model. If `optimizer_factory` is not `nothing`, it first sets the
+optimizer to a new one created using the optimizer factory. The factory can be
+created using the [`with_optimizer`](@ref) function.
+
+## Examples
+
+```julia
+model = Model()
+# ...fill model with variables, constraints and objectives...
+# Solve the model with GLPK
+JuMP.optimize!(model, with_optimizer(GLPK.Optimizer))
+# Solve the model with Clp
+JuMP.optimize!(model, with_optimizer(Clp.Optimizer))
+```
 """
 function optimize!(model::Model,
                    optimizer_factory::Union{Nothing, OptimizerFactory}=nothing;
