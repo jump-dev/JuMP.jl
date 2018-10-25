@@ -37,6 +37,15 @@ created using the [`with_optimizer`](@ref) function.
 
 ## Examples
 
+The optimizer factory can either be given in the [`Model`](@ref) constructor
+as follows:
+```julia
+model = Model(with_optimizer(GLPK.Optimizer))
+# ...fill model with variables, constraints and objectives...
+# Solve the model with GLPK
+JuMP.optimize!(model)
+```
+or in the `optimize!` call as follows:
 ```julia
 model = Model()
 # ...fill model with variables, constraints and objectives...
