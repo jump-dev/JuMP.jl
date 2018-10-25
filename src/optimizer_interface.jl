@@ -51,8 +51,6 @@ model = Model()
 # ...fill model with variables, constraints and objectives...
 # Solve the model with GLPK
 JuMP.optimize!(model, with_optimizer(GLPK.Optimizer))
-# Solve the model with Clp
-JuMP.optimize!(model, with_optimizer(Clp.Optimizer))
 ```
 """
 function optimize!(model::Model,
