@@ -44,5 +44,5 @@ include("socduals.jl");     length(conic_solvers_with_duals) == 0 && @warn("Coni
 # Throw an error if anything failed
 #FactCheck.exitstatus()
 
-# hygiene.jl should be run separately
+# hygiene.jl and compilation.jl should be run separately
 # hockschittkowski/runhs.jl has additional nonlinear tests

@@ -34,22 +34,6 @@ end
     :(JuMPArray(innerArray, indexsets, $dicttuple, Dict{Symbol,Any}()))
 end
 
-Base.getindex(d::JuMPArray, ::Colon) = d.innerArray[:]
-
-@generated function Base.getindex(d::JuMPArray{T,N,NT}, idx...) where {T,N,NT}
-    if N != length(idx)
-        error("Indexed into a JuMPArray with $(length(idx)) indices (expected $N indices)")
-    end
-    Expr(:call, :getindex, :(d.innerArray), _to_cartesian(d,NT,idx)...)
-end
-
-@generated function Base.setindex!(d::JuMPArray{T,N,NT}, v, idx...) where {T,N,NT}
-    if N != length(idx)
-        error("Indexed into a JuMPArray with $(length(idx)) indices (expected $N indices)")
-    end
-    Expr(:call, :setindex!, :(d.innerArray), :v, _to_cartesian(d,NT,idx)...)
-end
-
 # Note that this is needed because automatic broadcasting of addition operators is deprecated in 1.0.
 # The explicitly broadcasted version ought to work in 0.6, but causes a mysterious generated function
 # related error because of the presence of this function in `@generated Base.setindex!`.
@@ -104,4 +88,20 @@ function _to_cartesian(d,NT,idx...)
         end
     end
     indexing
+end
+
+Base.getindex(d::JuMPArray, ::Colon) = d.innerArray[:]
+
+@generated function Base.getindex(d::JuMPArray{T,N,NT}, idx...) where {T,N,NT}
+    if N != length(idx)
+        error("Indexed into a JuMPArray with $(length(idx)) indices (expected $N indices)")
+    end
+    Expr(:call, :getindex, :(d.innerArray), _to_cartesian(d,NT,idx)...)
+end
+
+@generated function Base.setindex!(d::JuMPArray{T,N,NT}, v, idx...) where {T,N,NT}
+    if N != length(idx)
+        error("Indexed into a JuMPArray with $(length(idx)) indices (expected $N indices)")
+    end
+    Expr(:call, :setindex!, :(d.innerArray), :v, _to_cartesian(d,NT,idx)...)
 end
