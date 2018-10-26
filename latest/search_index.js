@@ -461,7 +461,7 @@ var documenterSearchIndex = {"docs": [
     "page": "Solvers",
     "title": "JuMP.optimize!",
     "category": "function",
-    "text": "function optimize!(model::Model,\n                   optimizer_factory::Union{Nothing, OptimizerFactory}=nothing;\n                   ignore_optimize_hook=(model.optimize_hook === nothing))\n\nOptimize the model. If optimizer_factory is not nothing, it first set the optimizer to a new one created using the optimizer factory.\n\n\n\n\n\n"
+    "text": "optimize!(model::Model,\n          optimizer_factory::Union{Nothing, OptimizerFactory}=nothing;\n          ignore_optimize_hook=(model.optimize_hook === nothing))\n\nOptimize the model. If optimizer_factory is not nothing, it first sets the optimizer to a new one created using the optimizer factory. The factory can be created using the with_optimizer function.\n\nExamples\n\nThe optimizer factory can either be given in the Model constructor as follows:\n\nmodel = Model(with_optimizer(GLPK.Optimizer))\n# ...fill model with variables, constraints and objectives...\n# Solve the model with GLPK\nJuMP.optimize!(model)\n\nor in the optimize! call as follows:\n\nmodel = Model()\n# ...fill model with variables, constraints and objectives...\n# Solve the model with GLPK\nJuMP.optimize!(model, with_optimizer(GLPK.Optimizer))\n\n\n\n\n\n"
 },
 
 {
