@@ -369,7 +369,6 @@ function MOI.initialize(d::NLPEvaluator, requested_features::Vector{Symbol})
         d.subexpressions[k] = SubexpressionStorage(nldata.nlexpr[k].nd, nldata.nlexpr[k].const_values, num_variables_, d.subexpression_linearity, moi_index_to_consecutive_index)
         subex = d.subexpressions[k]
         d.subexpression_linearity[k] = subex.linearity
-        @assert subex.linearity != CONSTANT
         if d.want_hess
             empty!(coloring_storage)
             compute_gradient_sparsity!(coloring_storage,subex.nd)
