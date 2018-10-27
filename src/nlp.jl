@@ -469,14 +469,23 @@ function forward_eval_all(d::NLPEvaluator,x)
     user_output_buffer = d.user_output_buffer
     for k in d.subexpression_order
         ex = d.subexpressions[k]
-        subexpr_values[k] = forward_eval(ex.forward_storage,ex.partials_storage,ex.nd,ex.adj,ex.const_values,d.parameter_values,x,subexpr_values,user_input_buffer,user_output_buffer, user_operators=user_operators)
+        subexpr_values[k] = forward_eval(ex.forward_storage,
+                                         ex.partials_storage, ex.nd, ex.adj,
+                                         ex.const_values, d.parameter_values, x,
+                                         subexpr_values, user_input_buffer,
+                                         user_output_buffer,
+                                         user_operators)
     end
     if d.has_nlobj
-        ex = d.objective
-        forward_eval(ex.forward_storage,ex.partials_storage,ex.nd,ex.adj,ex.const_values,d.parameter_values,x,subexpr_values,user_input_buffer,user_output_buffer,user_operators=user_operators)
+        obj = d.objective
+        forward_eval(obj.forward_storage, obj.partials_storage, obj.nd, obj.adj,
+                     obj.const_values, d.parameter_values, x, subexpr_values,
+                     user_input_buffer, user_output_buffer, user_operators)
     end
-    for ex in d.constraints
-        forward_eval(ex.forward_storage,ex.partials_storage,ex.nd,ex.adj,ex.const_values,d.parameter_values,x,subexpr_values,user_input_buffer,user_output_buffer,user_operators=user_operators)
+    for con in d.constraints
+        forward_eval(con.forward_storage, con.partials_storage, con.nd, con.adj,
+                     con.const_values, d.parameter_values, x, subexpr_values,
+                     user_input_buffer, user_output_buffer, user_operators)
     end
 end
 
@@ -487,14 +496,14 @@ function reverse_eval_all(d::NLPEvaluator,x)
     grad_storage = d.jac_storage
     for k in d.subexpression_order
         ex = d.subexpressions[k]
-        reverse_eval(ex.reverse_storage,ex.partials_storage,ex.nd,ex.adj)
+        reverse_eval(ex.reverse_storage, ex.partials_storage, ex.nd, ex.adj)
     end
     if d.has_nlobj
-        ex = d.objective
-        reverse_eval(ex.reverse_storage,ex.partials_storage,ex.nd,ex.adj)
+        obj = d.objective
+        reverse_eval(obj.reverse_storage, obj.partials_storage, obj.nd, obj.adj)
     end
-    for ex in d.constraints
-        reverse_eval(ex.reverse_storage,ex.partials_storage,ex.nd,ex.adj)
+    for con in d.constraints
+        reverse_eval(con.reverse_storage, con.partials_storage, con.nd, con.adj)
     end
     copyto!(d.last_x,x)
 end
@@ -565,8 +574,12 @@ function MOI.eval_constraint_jacobian(d::NLPEvaluator, J, x)
         idx = 0
         for ex in d.constraints
             nzidx = ex.grad_sparsity
-            grad_storage[nzidx] .= 0.0
-            subexpr_reverse_values[ex.dependent_subexpressions] .= 0.0
+            for i in nzidx
+                @inbounds grad_storage[i] = 0.0
+            end
+            for idx in ex.dependent_subexpressions
+                @inbounds subexpr_reverse_values[idx] = 0.0
+            end
 
             reverse_extract(grad_storage,ex.reverse_storage,ex.nd,ex.adj,subexpr_reverse_values,1.0)
             for i in length(ex.dependent_subexpressions):-1:1
@@ -619,7 +632,7 @@ function MOI.eval_hessian_lagrangian_product(
         subexpr = d.subexpressions[expridx]
         sub_forward_storage_ϵ = reinterpret(ForwardDiff.Partials{1,Float64},subexpr.forward_storage_ϵ)
         sub_partials_storage_ϵ = reinterpret(ForwardDiff.Partials{1,Float64},subexpr.partials_storage_ϵ)
-        subexpr_forward_values_ϵ[expridx] = forward_eval_ϵ(subexpr.forward_storage,sub_forward_storage_ϵ, subexpr.partials_storage, sub_partials_storage_ϵ, subexpr.nd, subexpr.adj, input_ϵ, subexpr_forward_values_ϵ,user_operators=nldata.user_operators)
+        subexpr_forward_values_ϵ[expridx] = forward_eval_ϵ(subexpr.forward_storage, sub_forward_storage_ϵ, subexpr.partials_storage, sub_partials_storage_ϵ, subexpr.nd, subexpr.adj, input_ϵ, subexpr_forward_values_ϵ, nldata.user_operators)
     end
     # we only need to do one reverse pass through the subexpressions as well
     zero_ϵ = zero(ForwardDiff.Partials{1,Float64})
@@ -629,16 +642,26 @@ function MOI.eval_hessian_lagrangian_product(
     fill!(output_ϵ,zero_ϵ)
     if d.has_nlobj
         ex = d.objective
-        forward_eval_ϵ(ex.forward_storage, forward_storage_ϵ, ex.partials_storage, partials_storage_ϵ, ex.nd,ex.adj,input_ϵ, subexpr_forward_values_ϵ,user_operators=nldata.user_operators)
-        reverse_eval_ϵ(output_ϵ,ex.reverse_storage, reverse_storage_ϵ,ex.partials_storage, partials_storage_ϵ,ex.nd,ex.adj,d.subexpression_reverse_values,subexpr_reverse_values_ϵ, σ, zero_ϵ)
+        forward_eval_ϵ(ex.forward_storage, forward_storage_ϵ,
+                       ex.partials_storage, partials_storage_ϵ, ex.nd, ex.adj,
+                       input_ϵ, subexpr_forward_values_ϵ, nldata.user_operators)
+        reverse_eval_ϵ(output_ϵ, ex.reverse_storage, reverse_storage_ϵ,
+                       ex.partials_storage, partials_storage_ϵ, ex.nd, ex.adj,
+                       d.subexpression_reverse_values, subexpr_reverse_values_ϵ,
+                       σ, zero_ϵ)
     end
 
 
     for i in 1:length(d.constraints)
         ex = d.constraints[i]
         l = μ[i]
-        forward_eval_ϵ(ex.forward_storage, forward_storage_ϵ, ex.partials_storage, partials_storage_ϵ, ex.nd,ex.adj, input_ϵ,subexpr_forward_values_ϵ,user_operators=nldata.user_operators)
-        reverse_eval_ϵ(output_ϵ, ex.reverse_storage, reverse_storage_ϵ, ex.partials_storage, partials_storage_ϵ, ex.nd,ex.adj,d.subexpression_reverse_values,subexpr_reverse_values_ϵ, l, zero_ϵ)
+        forward_eval_ϵ(ex.forward_storage, forward_storage_ϵ,
+                       ex.partials_storage, partials_storage_ϵ, ex.nd,ex.adj,
+                       input_ϵ, subexpr_forward_values_ϵ, nldata.user_operators)
+        reverse_eval_ϵ(output_ϵ, ex.reverse_storage, reverse_storage_ϵ,
+                       ex.partials_storage, partials_storage_ϵ, ex.nd, ex.adj,
+                       d.subexpression_reverse_values,subexpr_reverse_values_ϵ,
+                       l, zero_ϵ)
     end
 
     for i in length(d.subexpression_order):-1:1
@@ -718,13 +741,17 @@ function hessian_slice_inner(d, ex, R, input_ϵ, output_ϵ, ::Type{Val{CHUNK}}) 
         subexpr = d.subexpressions[expridx]
         sub_forward_storage_ϵ = reinterpret_unsafe(ForwardDiff.Partials{CHUNK,Float64},subexpr.forward_storage_ϵ)
         sub_partials_storage_ϵ = reinterpret_unsafe(ForwardDiff.Partials{CHUNK,Float64},subexpr.partials_storage_ϵ)
-        subexpr_forward_values_ϵ[expridx] = forward_eval_ϵ(subexpr.forward_storage,sub_forward_storage_ϵ,subexpr.partials_storage,sub_partials_storage_ϵ, subexpr.nd, subexpr.adj, input_ϵ, subexpr_forward_values_ϵ,user_operators=user_operators)
+        subexpr_forward_values_ϵ[expridx] = forward_eval_ϵ(subexpr.forward_storage, sub_forward_storage_ϵ, subexpr.partials_storage, sub_partials_storage_ϵ, subexpr.nd, subexpr.adj, input_ϵ, subexpr_forward_values_ϵ, user_operators)
     end
-    forward_eval_ϵ(ex.forward_storage,forward_storage_ϵ,ex.partials_storage, partials_storage_ϵ,ex.nd,ex.adj,input_ϵ, subexpr_forward_values_ϵ,user_operators=user_operators)
+    forward_eval_ϵ(ex.forward_storage, forward_storage_ϵ, ex.partials_storage,
+                   partials_storage_ϵ, ex.nd, ex.adj, input_ϵ,
+                   subexpr_forward_values_ϵ, user_operators)
 
     # do a reverse pass
-    subexpr_reverse_values_ϵ[ex.dependent_subexpressions] = zero_ϵ
-    d.subexpression_reverse_values[ex.dependent_subexpressions] .= 0.0
+    @inbounds for idx in ex.dependent_subexpressions
+        subexpr_reverse_values_ϵ[idx] = zero_ϵ
+        d.subexpression_reverse_values[idx] = 0.0
+    end
 
     reverse_eval_ϵ(output_ϵ, ex.reverse_storage, reverse_storage_ϵ,ex.partials_storage, partials_storage_ϵ,ex.nd,ex.adj,d.subexpression_reverse_values,subexpr_reverse_values_ϵ, 1.0, zero_ϵ)
     for i in length(ex.dependent_subexpressions):-1:1

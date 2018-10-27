@@ -13,9 +13,9 @@
 function forward_eval(storage::AbstractVector{T}, partials_storage::AbstractVector{T},
                       nd::AbstractVector{NodeData}, adj, const_values,
                       parameter_values, x_values::AbstractVector{T},
-                      subexpression_values, user_input_buffer=[],
-                      user_output_buffer=[];
-                      user_operators::UserOperatorRegistry=UserOperatorRegistry()) where T
+                      subexpression_values, user_input_buffer,
+                      user_output_buffer,
+                      user_operators::UserOperatorRegistry) where T
 
     @assert length(storage) >= length(nd)
     @assert length(partials_storage) >= length(nd)
@@ -223,8 +223,8 @@ function forward_eval_ϵ(storage::AbstractVector{T},
                         partials_storage::AbstractVector{T},
                         partials_storage_ϵ::AbstractVector{ForwardDiff.Partials{N, T}},
                         nd::Vector{NodeData}, adj, x_values_ϵ,
-                        subexpression_values_ϵ;
-                        user_operators::UserOperatorRegistry=UserOperatorRegistry()) where {N, T}
+                        subexpression_values_ϵ,
+                        user_operators::UserOperatorRegistry) where {N, T}
 
     @assert length(storage_ϵ) >= length(nd)
     @assert length(partials_storage_ϵ) >= length(nd)
@@ -252,12 +252,15 @@ function forward_eval_ϵ(storage::AbstractVector{T},
             ϵtmp = zero_ϵ
             @inbounds children_idx = nzrange(adj,k)
             for c_idx in children_idx
-                ix = children_arr[c_idx]
+                @inbounds ix = children_arr[c_idx]
                 @inbounds partial = partials_storage[ix]
-                if !isfinite(partials_storage[ix]) && storage_ϵ[ix] == zero_ϵ
+                @inbounds storage_val = storage_ϵ[ix]
+                # TODO: This "if" statement can take 8% of the hessian
+                # evaluation time! Find a more efficient way.
+                if !isfinite(partial) && storage_val == zero_ϵ
                     continue
                 end
-                ϵtmp += storage_ϵ[ix]*partials_storage[ix]
+                ϵtmp += storage_val * partials_storage[ix]
             end
             storage_ϵ[k] = ϵtmp
 

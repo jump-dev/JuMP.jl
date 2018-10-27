@@ -61,7 +61,7 @@ export comparison_operator_to_id, comparison_operators
 
 
 # user-provided operators
-mutable struct UserOperatorRegistry
+struct UserOperatorRegistry
     multivariate_operator_to_id::Dict{Symbol,Int}
     multivariate_operator_evaluator::Vector{MOI.AbstractNLPEvaluator}
     univariate_operator_to_id::Dict{Symbol,Int}
