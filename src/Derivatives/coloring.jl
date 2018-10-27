@@ -172,7 +172,7 @@ end
 # "New Acyclic and Star Coloring Algorithms with Application to Computing Hessians"
 # SIAM J. Sci. Comput. 2007
 function acyclic_coloring(g::UndirectedGraph)
-    
+
     if num_edges(g) == 0
         return fill(1,num_vertices(g)), 1
     end
@@ -390,10 +390,10 @@ end
 function indirect_recover_structure(rinfo::RecoveryInfo)
     N = length(rinfo.color)
     nnz = rinfo.nnz
-    
+
     I = zeros(Int, nnz+N)
     J = zeros(Int, nnz+N)
-    
+
     # diagonal entries
     k = 0
     for i in 1:N
@@ -498,10 +498,10 @@ export prepare_seed_matrix!
 function recover_from_matmat!(V, R, rinfo::RecoveryInfo, stored_values)
     N = length(rinfo.color) # number of local variables
     nnz = rinfo.nnz
-    
+
     @assert length(V) == nnz+N
     @assert length(stored_values) >= length(rinfo.local_indices)
-    
+
     # diagonal entries
     k = 0
 
@@ -514,13 +514,16 @@ function recover_from_matmat!(V, R, rinfo::RecoveryInfo, stored_values)
         vmap = rinfo.vertexmap[t]
         order = rinfo.postorder[t]
         parent = rinfo.parents[t]
-        stored_values[1:length(order)] .= 0.0
+
+        for z in 1:length(order)
+            @inbounds stored_values[z] = 0.0
+        end
 
         @inbounds for z in 1:length(order)
             v = order[z]
             p = parent[v]
             (p == 0) && continue
-            
+
             i = vmap[v]
             j = vmap[p]
 

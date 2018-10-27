@@ -8,6 +8,8 @@ end
 
 @testset "Derivatives" begin
 
+NO_USER_OPS = JuMP.Derivatives.UserOperatorRegistry()
+
 ex = :(sin(x[1]^2) + cos(x[2]*4)/5-2.0)
 
 nd,const_values = expr_to_nodedata(ex)
@@ -21,7 +23,8 @@ reverse_storage = zeros(length(nd))
 
 x = [2.0,3.0]
 #@show x
-fval = forward_eval(storage,partials_storage,nd,adj,const_values,[],x,[])
+fval = forward_eval(storage, partials_storage, nd, adj, const_values, [], x, [],
+                    [], [], NO_USER_OPS)
 true_val = sin(x[1]^2) + cos(x[2]*4)/5 -2.0
 @test isapprox(fval,true_val)
 
@@ -35,7 +38,8 @@ true_grad = [2*x[1]*cos(x[1]^2), -4*sin(x[2]*4)/5]
 # Testing view
 xx = [1.0,2.0,3.0,4.0,5.0]
 xv = @view xx[2:3]
-fval_view = forward_eval(storage,partials_storage,nd,adj,const_values,[],xv,[])
+fval_view = forward_eval(storage, partials_storage, nd, adj, const_values, [],
+                         xv, [], [], [], NO_USER_OPS)
 @test fval_view == fval
 
 grad_view = zeros(2)
@@ -68,7 +72,8 @@ li,li_individual = order_subexpressions(Vector{NodeData}[nd_outer2], Vector{Node
 adj_outer = adjmat(nd_outer)
 outer_storage = zeros(1)
 outer_storage_partials = zeros(1)
-fval = forward_eval(outer_storage,outer_storage_partials,nd_outer,adj_outer,[],[],x,[fval])
+fval = forward_eval(outer_storage, outer_storage_partials, nd_outer, adj_outer,
+                    [], [], x, [fval], [], [], NO_USER_OPS)
 @test isapprox(fval,true_val)
 
 outer_reverse_storage = zeros(1)
@@ -93,7 +98,8 @@ reverse_storage = zeros(length(nd))
 
 x = [2.5,3.5,1.0]
 #@show x
-fval = forward_eval(storage,partials_storage,nd,adj,const_values,[],x,[])
+fval = forward_eval(storage, partials_storage, nd, adj, const_values, [], x, [],
+                    [], [], NO_USER_OPS)
 true_val = (1/x[1])^x[2]-x[3]
 @test isapprox(fval,true_val)
 
@@ -110,9 +116,11 @@ nd,const_values = expr_to_nodedata(ex)
 adj = adjmat(nd)
 storage = zeros(length(nd))
 partials_storage = zeros(length(nd))
-fval = forward_eval(storage,partials_storage,nd,adj,const_values,[],[1.5],[])
+fval = forward_eval(storage, partials_storage, nd, adj, const_values, [], [1.5],
+                    [], [], [], NO_USER_OPS)
 @test fval == 0
-fval = forward_eval(storage,partials_storage,nd,adj,const_values,[],[0.6],[])
+fval = forward_eval(storage, partials_storage, nd, adj, const_values, [], [0.6],
+                    [], [], [], NO_USER_OPS)
 @test fval == 1
 
 ex = :(ifelse(x[1] >= 0.5 || x[1] <= 0.1,x[1],5))
@@ -122,20 +130,23 @@ storage = zeros(length(nd))
 partials_storage = zeros(length(nd))
 reverse_storage = zeros(length(nd))
 grad = zeros(1)
-fval = forward_eval(storage,partials_storage,nd,adj,const_values,[],[1.5],[])
+fval = forward_eval(storage, partials_storage, nd, adj, const_values, [], [1.5],
+                    [], [], [], NO_USER_OPS)
 @test fval == 1.5
 reverse_eval(reverse_storage,partials_storage,nd,adj)
 reverse_extract(grad,reverse_storage,nd,adj,[],1.0)
 @test grad[1] == 1
 
-fval = forward_eval(storage,partials_storage,nd,adj,const_values,[],[-0.1],[])
+fval = forward_eval(storage, partials_storage, nd, adj, const_values, [],
+                    [-0.1], [], [], [], NO_USER_OPS)
 @test fval == -0.1
 fill!(grad,0)
 reverse_eval(reverse_storage,partials_storage,nd,adj)
 reverse_extract(grad,reverse_storage,nd,adj,[],1.0)
 @test grad[1] == 1
 
-fval = forward_eval(storage,partials_storage,nd,adj,const_values,[],[0.2],[])
+fval = forward_eval(storage, partials_storage, nd, adj, const_values, [], [0.2],
+                    [], [], [], NO_USER_OPS)
 @test fval == 5
 fill!(grad,0)
 reverse_eval(reverse_storage,partials_storage,nd,adj)
@@ -149,7 +160,8 @@ storage = zeros(length(nd))
 partials_storage = zeros(length(nd))
 reverse_storage = zeros(length(nd))
 grad = zeros(1)
-fval = forward_eval(storage,partials_storage,nd,adj,const_values,[],[-1.5],[])
+fval = forward_eval(storage, partials_storage, nd, adj, const_values, [],
+                    [-1.5], [], [], [], NO_USER_OPS)
 @test isnan(fval)
 reverse_eval(reverse_storage,partials_storage,nd,adj)
 reverse_extract(grad,reverse_storage,nd,adj,[],1.0)
@@ -161,7 +173,8 @@ nd = [NodeData(PARAMETER,1,-1)]
 adj = adjmat(nd)
 storage = zeros(length(nd))
 partials_storage = zeros(length(nd))
-fval = forward_eval(storage,partials_storage,nd,adj,[],[105.2],[-0.1],[])
+fval = forward_eval(storage, partials_storage, nd, adj, [], [105.2], [-0.1],
+                    [], [], [], NO_USER_OPS)
 @test fval == 105.2
 
 # abs
@@ -173,7 +186,8 @@ adj = adjmat(nd)
 storage = zeros(length(nd))
 partials_storage = zeros(length(nd))
 reverse_storage = zeros(length(nd))
-fval = forward_eval(storage,partials_storage,nd,adj,const_values,[],[2.0],[])
+fval = forward_eval(storage, partials_storage, nd, adj, const_values, [], [2.0],
+                    [], [], [], NO_USER_OPS)
 @test fval == 2.0
 grad = zeros(1)
 reverse_eval(reverse_storage,partials_storage,nd,adj)
@@ -181,7 +195,8 @@ reverse_extract(grad,reverse_storage,nd,adj,[],1.0)
 @test grad[1] == 1.0
 
 
-fval = forward_eval(storage,partials_storage,nd,adj,const_values,[],[-2.0],[])
+fval = forward_eval(storage, partials_storage, nd, adj, const_values, [],
+                    [-2.0], [], [], [], NO_USER_OPS)
 @test fval == 2.0
 grad = zeros(1)
 reverse_eval(reverse_storage,partials_storage,nd,adj)
@@ -197,14 +212,16 @@ adj = adjmat(nd)
 storage = zeros(length(nd))
 partials_storage = zeros(length(nd))
 reverse_storage = zeros(length(nd))
-fval = forward_eval(storage,partials_storage,nd,adj,const_values,[],[-1.0],[])
+fval = forward_eval(storage, partials_storage, nd, adj, const_values, [],
+                    [-1.0], [], [], [], NO_USER_OPS)
 @test fval == 9.0
 grad = zeros(1)
 reverse_eval(reverse_storage,partials_storage,nd,adj)
 reverse_extract(grad,reverse_storage,nd,adj,[],1.0)
 @test grad[1] == -6.0
 
-fval = forward_eval(storage,partials_storage,nd,adj,const_values,[],[2.0],[])
+fval = forward_eval(storage, partials_storage, nd, adj, const_values, [], [2.0],
+                    [], [], [], NO_USER_OPS)
 @test fval == 0.0
 grad = zeros(1)
 reverse_eval(reverse_storage,partials_storage,nd,adj)
@@ -276,7 +293,8 @@ storage = zeros(length(nd))
 partials_storage = zeros(length(nd))
 reverse_storage = zeros(length(nd))
 x = [2.0,3.0,4.0]
-fval = forward_eval(storage,partials_storage,nd,adj,const_values,[],x,[],zeros(2),zeros(2),user_operators=r)
+fval = forward_eval(storage, partials_storage, nd, adj, const_values, [], x, [],
+                    zeros(2), zeros(2), r)
 true_val = Φ(x[2],x[1]-1)*cos(x[3])
 @test isapprox(fval,true_val)
 grad = zeros(3)
@@ -299,7 +317,8 @@ function dualforward(ex, x; ignore_nan=false)
     partials_storage = zeros(length(nd))
     reverse_storage = zeros(length(nd))
 
-    fval = forward_eval(forward_storage,partials_storage,nd,adj,const_values,[],x,[])
+    fval = forward_eval(forward_storage, partials_storage, nd, adj,
+                        const_values, [], x, [], [], [], NO_USER_OPS)
     grad = zeros(length(x))
     reverse_eval(reverse_storage,partials_storage,nd,adj)
     reverse_extract(grad,reverse_storage,nd,adj,[],1.0)
@@ -310,7 +329,9 @@ function dualforward(ex, x; ignore_nan=false)
     x_values_ϵ = fill(ForwardDiff.Partials((1.0,)),length(x))
     reverse_storage_ϵ = fill(zero_ϵ,length(nd))
     output_ϵ = fill(zero_ϵ,length(x))
-    fval_ϵ = forward_eval_ϵ(forward_storage,forward_storage_ϵ,partials_storage,partials_storage_ϵ,nd,adj,x_values_ϵ,[])
+    fval_ϵ = forward_eval_ϵ(forward_storage, forward_storage_ϵ,
+                            partials_storage, partials_storage_ϵ, nd, adj,
+                            x_values_ϵ, [], NO_USER_OPS)
     reverse_eval_ϵ(output_ϵ,reverse_storage,reverse_storage_ϵ,partials_storage,partials_storage_ϵ,nd,adj,[],[],2.0,zero_ϵ)
     @test isapprox(fval_ϵ[1], dot(grad,ones(length(x))))
 
@@ -320,7 +341,8 @@ function dualforward(ex, x; ignore_nan=false)
     output_dual_storage = zeros(DualNumbers.Dual{Float64},length(x))
     reverse_dual_storage = zeros(DualNumbers.Dual{Float64},length(nd))
     x_dual = [DualNumbers.Dual(x[i],1.0) for i in 1:length(x)]
-    fval = forward_eval(forward_dual_storage,partials_dual_storage,nd,adj,const_values,[],x_dual,[])
+    fval = forward_eval(forward_dual_storage, partials_dual_storage, nd, adj,
+                        const_values, [], x_dual, [], [], [], NO_USER_OPS)
     reverse_eval(reverse_dual_storage,partials_dual_storage,nd,adj)
     reverse_extract(output_dual_storage,reverse_dual_storage,nd,adj,[],DualNumbers.Dual(2.0))
     for k in 1:length(nd)
