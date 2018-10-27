@@ -253,7 +253,7 @@ For linear constraints, the shadow prices differ at most in sign from the
 
 - The function simply translates signs from `result_dual` and does not validate
   the conditions needed to guarantee the sensitivity interpretation of the
-  shadow price. The user is responsible, e.g., for checking whether the solver
+  shadow price. The caller is responsible, e.g., for checking whether the solver
   converged to an optimal primal-dual pair or a proof of infeasibility.
 - The computation is based on the current objective sense of the model. If this
   has changed since the last solve, the results will be incorrect.
