@@ -577,8 +577,8 @@ function MOI.eval_constraint_jacobian(d::NLPEvaluator, J, x)
             for i in nzidx
                 @inbounds grad_storage[i] = 0.0
             end
-            for idx in ex.dependent_subexpressions
-                @inbounds subexpr_reverse_values[idx] = 0.0
+            for i in ex.dependent_subexpressions
+                @inbounds subexpr_reverse_values[i] = 0.0
             end
 
             reverse_extract(grad_storage,ex.reverse_storage,ex.nd,ex.adj,subexpr_reverse_values,1.0)
