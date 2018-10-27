@@ -493,4 +493,15 @@
         @test h_view == h
     end
 
+    @testset "Constant expressions" begin
+        model = Model()
+        @variable(model, x)
+        @NLexpression(model, expr, 10)
+        @NLobjective(model, Min, expr + x)
+        d = JuMP.NLPEvaluator(model)
+        MOI.initialize(d, [:Grad])
+        grad = zeros(1)
+        MOI.eval_objective_gradient(d, grad, [2.0])
+        @test grad == [1.0]
+    end
 end
