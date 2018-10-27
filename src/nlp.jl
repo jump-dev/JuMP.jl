@@ -518,7 +518,7 @@ function MOI.eval_objective(d::NLPEvaluator, x)
         if d.has_nlobj
             val = d.objective.forward_storage[1]
         else
-            error("No nonlinar objective.")
+            error("No nonlinear objective.")
         end
     end
     return val
