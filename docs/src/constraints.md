@@ -22,3 +22,11 @@ nonlinear constraints.
 ```@docs
 JuMP.set_coefficient
 ```
+
+## Duals
+
+```@docs
+JuMP.has_result_dual
+JuMP.result_dual
+JuMP.shadow_price
+```
