@@ -346,7 +346,7 @@ end
 
 Sets the objective sense of the model to the given sense. See
 [`set_objective_function`](@ref) to set the objective function. These are
-low-level functions, the recommended way to set the objective is with the
+low-level functions; the recommended way to set the objective is with the
 [`@objective`](@ref) macro.
 """
 function set_objective_sense(model::Model, sense::MOI.OptimizationSense)
@@ -359,7 +359,7 @@ end
 
 Sets the objective function of the model to the given function. See
 [`set_objective_sense`](@ref) to set the objective sense. These are low-level
-functions, the recommended way to set the objective is with the
+functions; the recommended way to set the objective is with the
 [`@objective`](@ref) macro.
 """
 function set_objective_function(model::Model, func::MOI.AbstractScalarFunction)
