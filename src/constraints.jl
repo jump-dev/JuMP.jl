@@ -260,7 +260,7 @@ most in sign from the `result_dual` value depending on the objective sense.
 - Relaxation of equality constraints (and hence the shadow price) is defined
   based on which sense of the equality constraint is active.
 """
-function shadow_price(constraint::ConstraintRef{Model, MOICON})
+function shadow_price(constraint::ConstraintRef{Model, <:MOICON})
     error("The shadow price is not defined or not implemented for this type " *
           "of constraint.")
 end
