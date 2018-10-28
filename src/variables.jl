@@ -247,9 +247,7 @@ end
 function set_objective(model::Model, sense::MOI.OptimizationSense,
                        x::VariableRef)
     set_objective_sense(model, sense)
-    MOI.set(model, MOI.ObjectiveFunction{MOI.SingleVariable}(),
-            MOI.SingleVariable(x))
-    return nothing
+    set_objective_function(model, MOI.SingleVariable(x))
 end
 
 """

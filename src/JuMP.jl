@@ -344,10 +344,27 @@ end
 """
     set_objective_sense(model::Model, sense::MathOptInterface.OptimizationSense)
 
-Sets the objective sense of the model to the given sense.
+Sets the objective sense of the model to the given sense. See
+[`set_objective_function`](@ref) to set the objective function.
 """
 function set_objective_sense(model::Model, sense::MOI.OptimizationSense)
     MOI.set(model, MOI.ObjectiveSense(), sense)
+end
+
+"""
+    set_objective_function(model::Model,
+                           func::MathOptInterface.AbstractScalarFunction)
+
+Sets the objective function of the model to the given function. See
+[`set_objective_sense`](@ref) to set the objective sense.
+"""
+function set_objective_function(model::Model, func::MOI.AbstractScalarFunction)
+    attr = MOI.ObjectiveFunction{typeof(func)}()
+    if !MOI.supports(model.moi_backend, attr)
+        error("The solver does not support an objective function of type ",
+              typeof(func), ".")
+    end
+    MOI.set(model, attr, func)
 end
 
 # TODO(IainNZ): Document these too.

@@ -223,10 +223,7 @@ end
 
 function set_objective(model::Model, sense::MOI.OptimizationSense, a::QuadExpr)
     set_objective_sense(model, sense)
-    MOI.set(model,
-            MOI.ObjectiveFunction{MOI.ScalarQuadraticFunction{Float64}}(),
-            MOI.ScalarQuadraticFunction(a))
-    return nothing
+    set_objective_function(model, MOI.ScalarQuadraticFunction(a))
 end
 
 """

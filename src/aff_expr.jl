@@ -297,9 +297,7 @@ moi_function(a::Vector{<:GenericAffExpr}) = MOI.VectorAffineFunction(a)
 
 function set_objective(model::Model, sense::MOI.OptimizationSense, a::AffExpr)
     set_objective_sense(model, sense)
-    MOI.set(model, MOI.ObjectiveFunction{MOI.ScalarAffineFunction{Float64}}(),
-            MOI.ScalarAffineFunction(a))
-    return nothing
+    set_objective_function(model, MOI.ScalarAffineFunction(a))
 end
 
 """
