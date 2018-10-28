@@ -13,7 +13,7 @@ end
         names[v] = name
         v
     end
-    # Since `VariableInfo` is an un-mutable struct, two objects with the same
+    # Since `VariableInfo` is an immutable struct, two objects with the same
     # fields have the same hash hence we need to add an id to distinguish
     # variables in the `names` dictionary.
     id = 0

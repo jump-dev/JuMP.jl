@@ -70,7 +70,7 @@ end
 JuMP.has_lower_bound(vref::MyVariableRef) = variable_info(vref).has_lb
 function JuMP.lower_bound(vref::MyVariableRef)
     @assert !JuMP.is_fixed(vref)
-    variable_info(vref).lower_bound
+    return variable_info(vref).lower_bound
 end
 function JuMP.set_lower_bound(vref::MyVariableRef, lower)
     info = variable_info(vref)
@@ -93,7 +93,7 @@ end
 JuMP.has_upper_bound(vref::MyVariableRef) = variable_info(vref).has_ub
 function JuMP.upper_bound(vref::MyVariableRef)
     @assert !JuMP.is_fixed(vref)
-    variable_info(vref).upper_bound
+    return variable_info(vref).upper_bound
 end
 function JuMP.set_upper_bound(vref::MyVariableRef, upper)
     info = variable_info(vref)
