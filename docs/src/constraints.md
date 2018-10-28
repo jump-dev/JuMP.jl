@@ -19,7 +19,7 @@ nonlinear constraints.
 
 As mentioned in the documentation of the [`@constraint`](@ref) and
 [`@SDconstraint`](@ref) macros, the following sets can be used to create
-constraints.
+constraints in addition to [any MOI set](http://www.juliaopt.org/MathOptInterface.jl/stable/apireference.html#Sets-1).
 
 ```@docs
 SecondOrderCone

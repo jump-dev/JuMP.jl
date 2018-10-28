@@ -554,9 +554,9 @@ Add a group of constraints described by the expression `expr` parametrized by
 The expression `expr` can either be
 
 * of the form `func in set` constraining the function `func` to belong to the
-  set `set` which is either a `MathOptInterface.AbstractSet` or one of the JuMP
-  shortcuts [`SecondOrderCone`](@ref), [`RotatedSecondOrderCone`](@ref) and
-  [`PSDCone`](@ref), e.g.
+  set `set` which is either a [`MathOptInterface.AbstractSet`](http://www.juliaopt.org/MathOptInterface.jl/stable/apireference.html#Sets-1)
+  or one of the JuMP shortcuts [`SecondOrderCone`](@ref),
+  [`RotatedSecondOrderCone`](@ref) and [`PSDCone`](@ref), e.g.
   `@constraint(model, [1, x-1, y-2] in SecondOrderCone())` constrains the norm
   of `[x-1, y-2]` be less than 1;
 * of the form `a sign b`, where `sign` is one of `==`, `≥`, `>=`, `≤` and
@@ -631,9 +631,10 @@ The expression `expr` needs to be of the form `a sign b` where `sign` is `⪰`,
 constrains the matrix `x = a - b` (or `x = b - a` if the sign is `⪯`, `≤` or
 `<=`) to be symmetric and positive semidefinite.
 
-If `x` is already symmetric, use `@constraint(model, Symmetric(x) in PSDCone())`
-instead to remove the need to compare the corresponding off-diagonal entries
-and add equality constraints if they contain different expression; see
+By default, we check numerical symmetry of the matrix `x`, and if symmetry is
+violated by some arbitrary amount, we add explicit equality constraints.
+You can use `Symmetric(x) in PSDCone()` with the [`@constraint`](@ref) macro to
+skip these checks if you know the matrix must be symmetric; see
 [`PSDCone`](@ref) for more information.
 
 ## Examples

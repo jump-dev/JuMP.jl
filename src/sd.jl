@@ -3,9 +3,10 @@
 
 Positive semidefinite cone object that can be used to constrain a square matrix
 to be positive semidefinite in the [`@constraint`](@ref) macro. If the matrix
-has type `Symmetric` then the columns vectorization of its upper triangular
-part is constrained to belong to the `MOI.PositiveSemidefiniteConeTriangle` set,
-otherwise it column vectorization is constrained to belong to the
+has type `Symmetric` then the columns vectorization (the vector obtained by
+concatenating the columns) of its upper triangular part is constrained to belong
+to the `MOI.PositiveSemidefiniteConeTriangle` set, otherwise its column
+vectorization is constrained to belong to the
 `MOI.PositiveSemidefiniteConeTriangle` set.
 
 ## Examples
