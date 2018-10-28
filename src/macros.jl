@@ -554,8 +554,11 @@ Add a group of constraints described by the expression `expr` parametrized by
 The expression `expr` can either be
 
 * of the form `func in set` constraining the function `func` to belong to the
-  set `set`, e.g. `@constraint(m, [1, x-1, y-2] in MOI.SecondOrderCone(3))`
-  constrains the norm of `[x-1, y-2]` be less than 1;
+  set `set` which is either a `MathOptInterface.AbstractSet` or one of the JuMP
+  shortcuts [`SecondOrderCone`](@ref), [`RotatedSecondOrderCone`](@ref) and
+  [`PSDCone`](@ref), e.g.
+  `@constraint(model, [1, x-1, y-2] in SecondOrderCone())` constrains the norm
+  of `[x-1, y-2]` be less than 1;
 * of the form `a sign b`, where `sign` is one of `==`, `≥`, `>=`, `≤` and
   `<=` building the single constraint enforcing the comparison to hold for the
   expression `a` and `b`, e.g. `@constraint(m, x^2 + y^2 == 1)` constrains `x`
@@ -630,14 +633,15 @@ constrains the matrix `x = a - b` (or `x = b - a` if the sign is `⪯`, `≤` or
 
 If `x` is already symmetric, use `@constraint(model, Symmetric(x) in PSDCone())`
 instead to remove the need to compare the corresponding off-diagonal entries
-and add equality constraints if they contain different expression.
+and add equality constraints if they contain different expression; see
+[`PSDCone`](@ref) for more information.
 
 ## Examples
 
 The following constrains the matrix `[x-1 2x-2; -3 x-4]` to be symmetric and
 positive semidefinite, that is, it constrains `2x-2` to be equal to `-3` and
 constrains all eigenvalues of the matrix to be nonnegative.
-```jldoctest SDconstraint
+```jldoctest
 julia> using JuMP
 
 julia> model = Model();
@@ -658,26 +662,8 @@ In the set `PositiveSemidefiniteConeSquare(2)` in the last output, `Square`
 means that the matrix is passed as a square matrix as the corresponding
 off-diagonal entries need to be constrained to be equal. A similar set
 `PositiveSemidefiniteConeTriangle` exists which only uses the upper triangular
-part of the matrix assuming that it is symmetric. As mentioned above, use
-`@constraint(model, Symmetric(x) in PSDCone())` to construct such constraint
-where `x` is known to be symmetric as in the following example:
-```jldoctest SDconstraint
-julia> a = [ x 2x
-            2x  x];
-
-julia> b = [1 2
-            2 4];
-
-julia> @SDconstraint(model, a ⪰ b)
-[x - 1, 2 x - 2, 2 x - 2, x - 4] ∈ MathOptInterface.PositiveSemidefiniteConeSquare(2)
-
-julia> using LinearAlgebra # For Symmetric
-
-julia> @constraint(model, Symmetric(a - b) in PSDCone())
-[x - 1, 2 x - 2, x - 4] ∈ MathOptInterface.PositiveSemidefiniteConeTriangle(2)
-```
-As we see in the output of the `@constraint`, only the upper triangular part
-of the matrix is passed.
+part of the matrix assuming that it is symmetric, see [`PSDCone`](@ref) to see
+how to use it.
 """
 macro SDconstraint(args...)
     constraint_macro(args, :SDconstraint, parseSDconstraint)

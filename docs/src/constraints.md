@@ -15,6 +15,18 @@ nonlinear constraints.
 @SDconstraint
 ```
 
+## Sets
+
+As mentioned in the documentation of the [`@constraint`](@ref) and
+[`@SDconstraint`](@ref) macros, the following sets can be used to create
+constraints.
+
+```@docs
+SecondOrderCone
+RotatedSecondOrderCone
+PSDCone
+```
+
 ## Constraint modifications
 
 `JuMP.set_coefficient(constraint, variable, value)`
