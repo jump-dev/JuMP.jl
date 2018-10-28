@@ -247,9 +247,10 @@ end
 function set_objective(model::Model, sense::MOI.OptimizationSense,
                        x::VariableRef)
     set_objective_sense(model, sense)
-    MOI.set(model, MOI.ObjectiveFunction{MOI.SingleVariable}(),
-            MOI.SingleVariable(x))
-    return nothing
+    set_objective_function(model, MOI.SingleVariable(x))
+    # Keeping the explicit `return` is helpful for type inference because we
+    # don't know what `MOI.set` will return.
+    return
 end
 
 """

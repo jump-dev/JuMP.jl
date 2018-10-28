@@ -1,3 +1,12 @@
+struct DummyOptimizer <: MOI.AbstractOptimizer end
+MOI.is_empty(::DummyOptimizer) = true
+
+@testset "Unsupported objective_function" begin
+    model = Model(with_optimizer(DummyOptimizer))
+    func = MOI.SingleVariable(MOI.VariableIndex(1))
+    @test_throws ErrorException JuMP.set_objective_function(model, func)
+end
+
 function objectives_test(ModelType::Type{<:JuMP.AbstractModel}, VariableRefType::Type{<:JuMP.AbstractVariableRef})
     AffExprType = JuMP.GenericAffExpr{Float64, VariableRefType}
     QuadExprType = JuMP.GenericQuadExpr{Float64, VariableRefType}
