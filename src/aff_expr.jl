@@ -298,6 +298,9 @@ moi_function(a::Vector{<:GenericAffExpr}) = MOI.VectorAffineFunction(a)
 function set_objective(model::Model, sense::MOI.OptimizationSense, a::AffExpr)
     set_objective_sense(model, sense)
     set_objective_function(model, MOI.ScalarAffineFunction(a))
+    # Keeping the explicit `return` is helpful for type inference because we
+    # don't know what `MOI.set` will return.
+    return
 end
 
 """
