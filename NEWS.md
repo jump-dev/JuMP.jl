@@ -58,7 +58,7 @@ Breaking changes:
   solver-specific callbacks are implemented yet.)
 
 - The `norm()` syntax is no longer recognized inside macros. Use the
-  `SecondOrderCone()` set instead. (TODO: This syntax is undocumented.)
+  `SecondOrderCone()` set instead.
 
 - JuMP no longer performs automatic transformation between special quadratic
   forms and second-order cone constraints. Support for these
