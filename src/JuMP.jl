@@ -345,7 +345,9 @@ end
     set_objective_sense(model::Model, sense::MathOptInterface.OptimizationSense)
 
 Sets the objective sense of the model to the given sense. See
-[`set_objective_function`](@ref) to set the objective function.
+[`set_objective_function`](@ref) to set the objective function. These are
+low-level functions, the recommended way to set the objective is with the
+[`@objective`](@ref) macro.
 """
 function set_objective_sense(model::Model, sense::MOI.OptimizationSense)
     MOI.set(model, MOI.ObjectiveSense(), sense)
@@ -356,7 +358,9 @@ end
                            func::MathOptInterface.AbstractScalarFunction)
 
 Sets the objective function of the model to the given function. See
-[`set_objective_sense`](@ref) to set the objective sense.
+[`set_objective_sense`](@ref) to set the objective sense. These are low-level
+functions, the recommended way to set the objective is with the
+[`@objective`](@ref) macro.
 """
 function set_objective_function(model::Model, func::MOI.AbstractScalarFunction)
     attr = MOI.ObjectiveFunction{typeof(func)}()
