@@ -245,9 +245,9 @@ end
 
 The change in the objective from an infinitesimal relaxation of the constraint.
 This value is computed from [`result_dual`](@ref) and can be queried only when
-`has_result_dual` is `true` and the objective sense is `MinSense` or `MaxSense`.
-For linear constraints, the shadow prices differ at most in sign from the
-`result_dual` value depending on the objective sense.
+`has_result_dual` is `true` and the objective sense is `MinSense` or `MaxSense`
+(not `FeasibilitySense`). For linear constraints, the shadow prices differ at
+most in sign from the `result_dual` value depending on the objective sense.
 
 ## Notes
 
