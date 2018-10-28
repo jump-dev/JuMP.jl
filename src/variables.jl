@@ -56,7 +56,7 @@ function VariableInfoExpr(; lower_bound=NaN, upper_bound=NaN, start=NaN, binary=
     VariableInfoExpr(lower_bound !== NaN, lower_bound, upper_bound !== NaN, upper_bound, false, NaN, start !== NaN, start, binary, integer)
 end
 
-mutable struct VariableInfo{S, T, U, V}
+struct VariableInfo{S, T, U, V}
     has_lb::Bool
     lower_bound::S
     has_ub::Bool
