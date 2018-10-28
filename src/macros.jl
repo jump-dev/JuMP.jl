@@ -554,8 +554,11 @@ Add a group of constraints described by the expression `expr` parametrized by
 The expression `expr` can either be
 
 * of the form `func in set` constraining the function `func` to belong to the
-  set `set`, e.g. `@constraint(m, [1, x-1, y-2] in MOI.SecondOrderCone(3))`
-  constrains the norm of `[x-1, y-2]` be less than 1;
+  set `set` which is either a [`MathOptInterface.AbstractSet`](http://www.juliaopt.org/MathOptInterface.jl/v0.6.2/apireference.html#Sets-1)
+  or one of the JuMP shortcuts [`SecondOrderCone`](@ref),
+  [`RotatedSecondOrderCone`](@ref) and [`PSDCone`](@ref), e.g.
+  `@constraint(model, [1, x-1, y-2] in SecondOrderCone())` constrains the norm
+  of `[x-1, y-2]` be less than 1;
 * of the form `a sign b`, where `sign` is one of `==`, `≥`, `>=`, `≤` and
   `<=` building the single constraint enforcing the comparison to hold for the
   expression `a` and `b`, e.g. `@constraint(m, x^2 + y^2 == 1)` constrains `x`
@@ -614,19 +617,54 @@ function parseSDconstraint(_error::Function, args...)
 end
 
 """
-    @SDconstraint(m::Model, expr)
+    @SDconstraint(model::Model, expr)
 
 Add a semidefinite constraint described by the expression `expr`.
 
-    @SDconstraint(m::Model, ref[i=..., j=..., ...], expr)
+    @SDconstraint(model::Model, ref[i=..., j=..., ...], expr)
 
 Add a group of semidefinite constraints described by the expression `expr`
 parametrized by `i`, `j`, ...
 
 The expression `expr` needs to be of the form `a sign b` where `sign` is `⪰`,
 `≥`, `>=`, `⪯`, `≤` or `<=` and `a` and `b` are `square` matrices. It
-constrains that `a - b` (or `b - a` if the sign is `⪯`, `≤` or `<=`) is
-positive semidefinite.
+constrains the matrix `x = a - b` (or `x = b - a` if the sign is `⪯`, `≤` or
+`<=`) to be symmetric and positive semidefinite.
+
+By default, we check numerical symmetry of the matrix `x`, and if symmetry is
+violated by some arbitrary amount, we add explicit equality constraints.
+You can use `Symmetric(x) in PSDCone()` with the [`@constraint`](@ref) macro to
+skip these checks if you know the matrix must be symmetric; see
+[`PSDCone`](@ref) for more information.
+
+## Examples
+
+The following constrains the matrix `[x-1 2x-2; -3 x-4]` to be symmetric and
+positive semidefinite, that is, it constrains `2x-2` to be equal to `-3` and
+constrains all eigenvalues of the matrix to be nonnegative.
+```jldoctest
+julia> using JuMP
+
+julia> model = Model();
+
+julia> @variable(model, x)
+x
+
+julia> a = [x 2x
+            0  x];
+
+julia> b = [1 2
+            3 4];
+
+julia> @SDconstraint(model, a ⪰ b)
+[x - 1, -3, 2 x - 2, x - 4] ∈ MathOptInterface.PositiveSemidefiniteConeSquare(2)
+```
+In the set `PositiveSemidefiniteConeSquare(2)` in the last output, `Square`
+means that the matrix is passed as a square matrix as the corresponding
+off-diagonal entries need to be constrained to be equal. A similar set
+`PositiveSemidefiniteConeTriangle` exists which only uses the upper triangular
+part of the matrix assuming that it is symmetric, see [`PSDCone`](@ref) to see
+how to use it.
 """
 macro SDconstraint(args...)
     constraint_macro(args, :SDconstraint, parseSDconstraint)

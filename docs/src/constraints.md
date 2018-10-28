@@ -15,6 +15,18 @@ nonlinear constraints.
 @SDconstraint
 ```
 
+## Sets
+
+As mentioned in the documentation of the [`@constraint`](@ref) and
+[`@SDconstraint`](@ref) macros, the following sets can be used to create
+constraints in addition to [any MOI set](http://www.juliaopt.org/MathOptInterface.jl/v0.6.2/apireference.html#Sets-1).
+
+```@docs
+SecondOrderCone
+RotatedSecondOrderCone
+PSDCone
+```
+
 ## Constraint modifications
 
 `JuMP.set_coefficient(constraint, variable, value)`
