@@ -349,7 +349,7 @@ var documenterSearchIndex = {"docs": [
     "page": "Constraints",
     "title": "JuMP.@constraint",
     "category": "macro",
-    "text": "@constraint(m::Model, expr)\n\nAdd a constraint described by the expression expr.\n\n@constraint(m::Model, ref[i=..., j=..., ...], expr)\n\nAdd a group of constraints described by the expression expr parametrized by i, j, ...\n\nThe expression expr can either be\n\nof the form func in set constraining the function func to belong to the set set, e.g. @constraint(m, [1, x-1, y-2] in MOI.SecondOrderCone(3)) constrains the norm of [x-1, y-2] be less than 1;\nof the form a sign b, where sign is one of ==, ≥, >=, ≤ and <= building the single constraint enforcing the comparison to hold for the expression a and b, e.g. @constraint(m, x^2 + y^2 == 1) constrains x and y to lie on the unit circle;\nof the form a ≤ b ≤ c or a ≥ b ≥ c (where ≤ and <= (resp. ≥ and >=) can be used interchangeably) constraining the paired the expression b to lie between a and c;\nof the forms @constraint(m, a .sign b) or @constraint(m, a .sign b .sign c) which broadcast the constraint creation to each element of the vectors.\n\nNote for extending the constraint macro\n\nEach constraint will be created using add_constraint(m, build_constraint(_error, func, set)) where\n\n_error is an error function showing the constraint call in addition to the error message given as argument,\nfunc is the expression that is constrained\nand set is the set in which it is constrained to belong.\n\nFor expr of the first type (i.e. @constraint(m, func in set)), func and set are passed unchanged to build_constraint but for the other types, they are determined from the expressions and signs. For instance, @constraint(m, x^2 + y^2 == 1) is transformed into add_constraint(m, build_constraint(_error, x^2 + y^2, MOI.EqualTo(1.0))).\n\nTo extend JuMP to accept new constraints of this form, it is necessary to add the corresponding methods to build_constraint. Note that this will likely mean that either func or set will be some custom type, rather than e.g. a Symbol, since we will likely want to dispatch on the type of the function or set appearing in the constraint.\n\n\n\n\n\n"
+    "text": "@constraint(m::Model, expr)\n\nAdd a constraint described by the expression expr.\n\n@constraint(m::Model, ref[i=..., j=..., ...], expr)\n\nAdd a group of constraints described by the expression expr parametrized by i, j, ...\n\nThe expression expr can either be\n\nof the form func in set constraining the function func to belong to the set set which is either a MathOptInterface.AbstractSet or one of the JuMP shortcuts SecondOrderCone, RotatedSecondOrderCone and PSDCone, e.g. @constraint(model, [1, x-1, y-2] in SecondOrderCone()) constrains the norm of [x-1, y-2] be less than 1;\nof the form a sign b, where sign is one of ==, ≥, >=, ≤ and <= building the single constraint enforcing the comparison to hold for the expression a and b, e.g. @constraint(m, x^2 + y^2 == 1) constrains x and y to lie on the unit circle;\nof the form a ≤ b ≤ c or a ≥ b ≥ c (where ≤ and <= (resp. ≥ and >=) can be used interchangeably) constraining the paired the expression b to lie between a and c;\nof the forms @constraint(m, a .sign b) or @constraint(m, a .sign b .sign c) which broadcast the constraint creation to each element of the vectors.\n\nNote for extending the constraint macro\n\nEach constraint will be created using add_constraint(m, build_constraint(_error, func, set)) where\n\n_error is an error function showing the constraint call in addition to the error message given as argument,\nfunc is the expression that is constrained\nand set is the set in which it is constrained to belong.\n\nFor expr of the first type (i.e. @constraint(m, func in set)), func and set are passed unchanged to build_constraint but for the other types, they are determined from the expressions and signs. For instance, @constraint(m, x^2 + y^2 == 1) is transformed into add_constraint(m, build_constraint(_error, x^2 + y^2, MOI.EqualTo(1.0))).\n\nTo extend JuMP to accept new constraints of this form, it is necessary to add the corresponding methods to build_constraint. Note that this will likely mean that either func or set will be some custom type, rather than e.g. a Symbol, since we will likely want to dispatch on the type of the function or set appearing in the constraint.\n\n\n\n\n\n"
 },
 
 {
@@ -357,7 +357,7 @@ var documenterSearchIndex = {"docs": [
     "page": "Constraints",
     "title": "JuMP.@SDconstraint",
     "category": "macro",
-    "text": "@SDconstraint(m::Model, expr)\n\nAdd a semidefinite constraint described by the expression expr.\n\n@SDconstraint(m::Model, ref[i=..., j=..., ...], expr)\n\nAdd a group of semidefinite constraints described by the expression expr parametrized by i, j, ...\n\nThe expression expr needs to be of the form a sign b where sign is ⪰, ≥, >=, ⪯, ≤ or <= and a and b are square matrices. It constrains that a - b (or b - a if the sign is ⪯, ≤ or <=) is positive semidefinite.\n\n\n\n\n\n"
+    "text": "@SDconstraint(model::Model, expr)\n\nAdd a semidefinite constraint described by the expression expr.\n\n@SDconstraint(model::Model, ref[i=..., j=..., ...], expr)\n\nAdd a group of semidefinite constraints described by the expression expr parametrized by i, j, ...\n\nThe expression expr needs to be of the form a sign b where sign is ⪰, ≥, >=, ⪯, ≤ or <= and a and b are square matrices. It constrains the matrix x = a - b (or x = b - a if the sign is ⪯, ≤ or <=) to be symmetric and positive semidefinite.\n\nBy default, we check numerical symmetry of the matrix x, and if symmetry is violated by some arbitrary amount, we add explicit equality constraints. You can use Symmetric(x) in PSDCone() with the @constraint macro to skip these checks if you know the matrix must be symmetric; see PSDCone for more information.\n\nExamples\n\nThe following constrains the matrix [x-1 2x-2; -3 x-4] to be symmetric and positive semidefinite, that is, it constrains 2x-2 to be equal to -3 and constrains all eigenvalues of the matrix to be nonnegative.\n\njulia> using JuMP\n\njulia> model = Model();\n\njulia> @variable(model, x)\nx\n\njulia> a = [x 2x\n            0  x];\n\njulia> b = [1 2\n            3 4];\n\njulia> @SDconstraint(model, a ⪰ b)\n[x - 1, -3, 2 x - 2, x - 4] ∈ MathOptInterface.PositiveSemidefiniteConeSquare(2)\n\nIn the set PositiveSemidefiniteConeSquare(2) in the last output, Square means that the matrix is passed as a square matrix as the corresponding off-diagonal entries need to be constrained to be equal. A similar set PositiveSemidefiniteConeTriangle exists which only uses the upper triangular part of the matrix assuming that it is symmetric, see PSDCone to see how to use it.\n\n\n\n\n\n"
 },
 
 {
@@ -366,6 +366,38 @@ var documenterSearchIndex = {"docs": [
     "title": "Constraints",
     "category": "section",
     "text": "DRAFT: Describe how constraints are represented (link to MOI docs). Constraints are very similar to variables in (1) how names work (2) how attributes work, and (3) the macro syntax for constructing them. They\'re a bit different because they\'re parameterized by function-set type. Describe constraints vs. ConstraintRefs. Describe JuMP.constraint_object. How to delete constraints. How to modify constraints by setting attributes and MOI.modifyconstraint!. Describe semidefinite constraints and symmetry handling. Refer to NLP docs for nonlinear constraints.@constraint\n@SDconstraint"
+},
+
+{
+    "location": "constraints.html#JuMP.SecondOrderCone",
+    "page": "Constraints",
+    "title": "JuMP.SecondOrderCone",
+    "category": "type",
+    "text": "SecondOrderCone\n\nSecond order cone object that can be used to constrain the euclidean norm of a vector x to be less than or euqal to a nonnegative scalar t. This is a shortcut for the MathOptInterface.SecondOrderCone.\n\nExamples\n\nThe following constrains (x-1 x-2)_2 le t and t ge 0:\n\njulia> model = Model();\n\njulia> @variable(model, x)\nx\n\njulia> @variable(model, t)\nt\n\njulia> @constraint(model, [t, x-1, x-2] in SecondOrderCone())\n[t, x - 1, x - 2] ∈ MathOptInterface.SecondOrderCone(3)\n\n\n\n\n\n"
+},
+
+{
+    "location": "constraints.html#JuMP.RotatedSecondOrderCone",
+    "page": "Constraints",
+    "title": "JuMP.RotatedSecondOrderCone",
+    "category": "type",
+    "text": "RotatedSecondOrderCone\n\nRotated second order cone object that can be used to constrain the square of the euclidean norm of a vector x to be less than or equal to 2tu where t and u are nonnegative scalars. This is a shortcut for the MathOptInterface.RotatedSecondOrderCone.\n\nExamples\n\nThe following constrains (x-1 x-2)_2 le 2tx and t x ge 0:\n\njulia> model = Model();\n\njulia> @variable(model, x)\nx\n\njulia> @variable(model, t)\nt\n\njulia> @constraint(model, [t, x, x-1, x-2] in RotatedSecondOrderCone())\n[t, x, x - 1, x - 2] ∈ MathOptInterface.RotatedSecondOrderCone(4)\n\n\n\n\n\n"
+},
+
+{
+    "location": "constraints.html#JuMP.PSDCone",
+    "page": "Constraints",
+    "title": "JuMP.PSDCone",
+    "category": "type",
+    "text": "PSDCone\n\nPositive semidefinite cone object that can be used to constrain a square matrix to be positive semidefinite in the @constraint macro. If the matrix has type Symmetric then the columns vectorization (the vector obtained by concatenating the columns) of its upper triangular part is constrained to belong to the MOI.PositiveSemidefiniteConeTriangle set, otherwise its column vectorization is constrained to belong to the MOI.PositiveSemidefiniteConeTriangle set.\n\nExamples\n\nConsider the following example:\n\njulia> model = Model();\n\njulia> @variable(model, x)\nx\n\njulia> a = [ x 2x\n            2x  x];\n\njulia> b = [1 2\n            2 4];\n\njulia> @SDconstraint(model, a ⪰ b)\n[x - 1, 2 x - 2, 2 x - 2, x - 4] ∈ MathOptInterface.PositiveSemidefiniteConeSquare(2)\n\nWe see in the output of the last command that the matrix the vectorization of the matrix is constrained to belong to the PositiveSemidefiniteConeSquare.\n\njulia> using LinearAlgebra # For Symmetric\n\njulia> @constraint(model, Symmetric(a - b) in PSDCone())\n[x - 1, 2 x - 2, x - 4] ∈ MathOptInterface.PositiveSemidefiniteConeTriangle(2)\n\nAs we see in the output of the last command, the vectorization of only the upper triangular part of the matrix is constrained to belong to the PositiveSemidefiniteConeSquare.\n\n\n\n\n\n"
+},
+
+{
+    "location": "constraints.html#Sets-1",
+    "page": "Constraints",
+    "title": "Sets",
+    "category": "section",
+    "text": "As mentioned in the documentation of the @constraint and @SDconstraint macros, the following sets can be used to create constraints in addition to any MOI set.SecondOrderCone\nRotatedSecondOrderCone\nPSDCone"
 },
 
 {
