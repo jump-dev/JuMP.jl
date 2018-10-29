@@ -221,14 +221,6 @@ function jump_function(model::AbstractModel, aff::MOI.ScalarQuadraticFunction)
     return QuadExpr(model, aff)
 end
 
-function set_objective(model::Model, sense::MOI.OptimizationSense, a::QuadExpr)
-    set_objective_sense(model, sense)
-    set_objective_function(model, MOI.ScalarQuadraticFunction(a))
-    # Keeping the explicit `return` is helpful for type inference because we
-    # don't know what `MOI.set` will return.
-    return
-end
-
 """
     objective_function(m::Model, ::Type{QuadExpr})
 
