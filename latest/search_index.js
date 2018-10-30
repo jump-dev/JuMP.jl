@@ -417,6 +417,14 @@ var documenterSearchIndex = {"docs": [
 },
 
 {
+    "location": "constraints.html#Duals-1",
+    "page": "Constraints",
+    "title": "Duals",
+    "category": "section",
+    "text": "JuMP.has_result_dual\nJuMP.result_dual\nJuMP.shadow_price"
+},
+
+{
     "location": "containers.html#",
     "page": "Containers",
     "title": "Containers",
