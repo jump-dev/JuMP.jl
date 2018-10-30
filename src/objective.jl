@@ -97,21 +97,21 @@ x
 julia> @objective(model, Min, 2x + 1)
 2 x + 1
 
-julia> JuMP.objective_function(model, JuMP.GenericAffExpr{Float64})
+julia> JuMP.objective_function(model, JuMP.AffExpr)
 2 x + 1
 
-julia> JuMP.objective_function(model, JuMP.GenericQuadExpr{Float64})
+julia> JuMP.objective_function(model, JuMP.QuadExpr)
 2 x + 1
 
-julia> typeof(JuMP.objective_function(model, JuMP.GenericQuadExpr{Float64}))
+julia> typeof(JuMP.objective_function(model, JuMP.QuadExpr))
 JuMP.GenericQuadExpr{Float64,VariableRef}
 ```
-We see with the last two command that even if the objective function is affine,
+We see with the last two commands that even if the objective function is affine,
 as it is convertible to a quadratic function, it can be queried as a quadratic
 function and the result is quadratic.
 
 However, it is not convertible to a variable.
-```
+```julia
 julia> JuMP.objective_function(model, JuMP.VariableRef)
 ERROR: InexactError: convert(MathOptInterface.SingleVariable, MathOptInterface.ScalarAffineFunction{Float64}(MathOptInterface.ScalarAffineTerm{Float64}[ScalarAffineTerm{Float64}(2.0, VariableIndex(1))], 1.0))
 Stacktrace: ...
