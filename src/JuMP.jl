@@ -317,60 +317,6 @@ function num_nl_constraints(model::Model)
     return model.nlp_data !== nothing ? length(model.nlp_data.nlconstr) : 0
 end
 
-"""
-    objective_bound(model::Model)
-
-Return the best known bound on the optimal objective value after a call to
-`optimize!model)`.
-"""
-objective_bound(model::Model) = MOI.get(model, MOI.ObjectiveBound())
-
-"""
-    objective_value(model::Model)
-
-Return the objective value after a call to `optimize!model)`.
-"""
-objective_value(model::Model) = MOI.get(model, MOI.ObjectiveValue())
-
-"""
-    objective_sense(model::Model)::MathOptInterface.OptimizationSense
-
-Return the objective sense.
-"""
-function objective_sense(model::Model)
-    return MOI.get(model, MOI.ObjectiveSense())
-end
-
-"""
-    set_objective_sense(model::Model, sense::MathOptInterface.OptimizationSense)
-
-Sets the objective sense of the model to the given sense. See
-[`set_objective_function`](@ref) to set the objective function. These are
-low-level functions; the recommended way to set the objective is with the
-[`@objective`](@ref) macro.
-"""
-function set_objective_sense(model::Model, sense::MOI.OptimizationSense)
-    MOI.set(model, MOI.ObjectiveSense(), sense)
-end
-
-"""
-    set_objective_function(model::Model,
-                           func::MathOptInterface.AbstractScalarFunction)
-
-Sets the objective function of the model to the given function. See
-[`set_objective_sense`](@ref) to set the objective sense. These are low-level
-functions; the recommended way to set the objective is with the
-[`@objective`](@ref) macro.
-"""
-function set_objective_function(model::Model, func::MOI.AbstractScalarFunction)
-    attr = MOI.ObjectiveFunction{typeof(func)}()
-    if !MOI.supports(model.moi_backend, attr)
-        error("The solver does not support an objective function of type ",
-              typeof(func), ".")
-    end
-    MOI.set(model, attr, func)
-end
-
 # TODO(IainNZ): Document these too.
 object_dictionary(model::Model) = model.obj_dict
 termination_status(model::Model) = MOI.get(model, MOI.TerminationStatus())
@@ -416,6 +362,7 @@ end
 
 include("constraints.jl")
 include("variables.jl")
+include("objective.jl")
 
 Base.zero(::Type{V}) where V<:AbstractVariableRef = zero(GenericAffExpr{Float64, V})
 Base.zero(v::AbstractVariableRef) = zero(typeof(v))
