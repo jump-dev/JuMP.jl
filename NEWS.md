@@ -70,6 +70,13 @@ Breaking changes:
   `@NLobjective(model, Max, ...)`, and `@objective(model, Min, ...)` remain
   valid, but `@objective(m, :Max, ...)` is no longer accepted.
 
+- The sign conventions for duals has changed in some cases for consistency with
+  conic duality (see the
+  [documentation](http://www.juliaopt.org/MathOptInterface.jl/v0.6.2/apimanual.html#Duals-1)).
+  The `shadow_price` helper method returns duals with signs that match
+  conventional LP interpretations of dual values as sensitivities of the
+  objective value to relaxations of constraints.
+
 New features:
 
 - Support for deleting constraints and variables.

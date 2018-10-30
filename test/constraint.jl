@@ -284,3 +284,86 @@ end
         @test con_obj.func == 3 * x
     end
 end
+
+function test_shadow_price(model_string, constraint_dual, constraint_shadow)
+    model = JuMP.Model()
+    MOIU.loadfromstring!(model.moi_backend, model_string)
+    JuMP.optimize!(model, with_optimizer(MOIU.MockOptimizer,
+                                         JuMP.JuMPMOIModel{Float64}(),
+                                         eval_objective_value=false,
+                                         eval_variable_constraint_dual=false))
+    mock_optimizer = JuMP.caching_optimizer(model).optimizer
+    MOI.set(mock_optimizer, MOI.TerminationStatus(), MOI.Success)
+    MOI.set(mock_optimizer, MOI.DualStatus(), MOI.FeasiblePoint)
+    JuMP.optimize!(model)
+
+    @testset "shadow price of $constraint_name" for constraint_name in keys(constraint_dual)
+        ci = MOI.get(JuMP.caching_optimizer(model), MOI.ConstraintIndex,
+                     constraint_name)
+        constraint_ref = JuMP.ConstraintRef(model, ci, JuMP.ScalarShape())
+        MOI.set(mock_optimizer, MOI.ConstraintDual(),
+                JuMP.optimizer_index(constraint_ref),
+                constraint_dual[constraint_name])
+        @test JuMP.result_dual(constraint_ref) ==
+              constraint_dual[constraint_name]
+        @test JuMP.shadow_price(constraint_ref) ==
+              constraint_shadow[constraint_name]
+    end
+end
+
+@testset "shadow_price" begin
+    test_shadow_price("""
+    variables: x, y
+    minobjective: -1.0*x
+    xub: x <= 2.0
+    ylb: y >= 0.0
+    c: x + y <= 1.0
+    """,
+    # Optimal duals
+    Dict("xub" => 0.0, "ylb" => 1.0, "c" => -1.0),
+    # Expected shadow prices
+    Dict("xub" => 0.0, "ylb" => -1.0, "c" => -1.0))
+
+    test_shadow_price("""
+    variables: x, y
+    maxobjective: 1.0*x
+    xub: x <= 2.0
+    ylb: y >= 0.0
+    c: x + y <= 1.0
+    """,
+    # Optimal duals
+    Dict("xub" => 0.0, "ylb" => 1.0, "c" => -1.0),
+    # Expected shadow prices
+    Dict("xub" => 0.0, "ylb" => 1.0, "c" => 1.0))
+
+    test_shadow_price("""
+    variables: x, y
+    maxobjective: 1.0*x
+    xub: x <= 2.0
+    ylb: y >= 0.0
+    """,
+    # Optimal duals
+    Dict("xub" => -1.0, "ylb" => 0.0),
+    # Expected shadow prices
+    Dict("xub" => 1.0, "ylb" => 0.0))
+
+    test_shadow_price("""
+    variables: x
+    maxobjective: 1.0*x
+    xeq: x == 2.0
+    """,
+    # Optimal duals
+    Dict("xeq" => -1.0),
+    # Expected shadow prices
+    Dict("xeq" => 1.0))
+
+    test_shadow_price("""
+    variables: x
+    minobjective: 1.0*x
+    xeq: x == 2.0
+    """,
+    # Optimal duals
+    Dict("xeq" => 1.0),
+    # Expected shadow prices
+    Dict("xeq" => -1.0))
+end
