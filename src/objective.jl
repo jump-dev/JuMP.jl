@@ -78,3 +78,48 @@ function set_objective(model::Model, sense::MOI.OptimizationSense,
     set_objective_sense(model, sense)
     set_objective_function(model, func)
 end
+
+"""
+    objective_function(m::Model, T::Type{<:AbstractJuMPScalar})
+
+Return a object of type `T` representing the objective function.
+Error if the objective is not convertible to type `T`.
+
+## Examples
+
+```jldoctest; setup = :(using JuMP)
+julia> model = Model()
+A JuMP Model
+
+julia> @variable(model, x)
+x
+
+julia> @objective(model, Min, 2x + 1)
+2 x + 1
+
+julia> JuMP.objective_function(model, JuMP.GenericAffExpr{Float64})
+2 x + 1
+
+julia> JuMP.objective_function(model, JuMP.GenericQuadExpr{Float64})
+2 x + 1
+
+julia> typeof(JuMP.objective_function(model, JuMP.GenericQuadExpr{Float64}))
+JuMP.GenericQuadExpr{Float64,VariableRef}
+```
+We see with the last two command that even if the objective function is affine,
+as it is convertible to a quadratic function, it can be queried as a quadratic
+function and the result is quadratic.
+
+However, it is not convertible to a variable.
+```
+julia> JuMP.objective_function(model, JuMP.VariableRef)
+ERROR: InexactError: convert(MathOptInterface.SingleVariable, MathOptInterface.ScalarAffineFunction{Float64}(MathOptInterface.ScalarAffineTerm{Float64}[ScalarAffineTerm{Float64}(2.0, VariableIndex(1))], 1.0))
+Stacktrace: ...
+```
+"""
+function objective_function(model::Model, FunType::Type{<:AbstractJuMPScalar})
+    MOIFunType = moi_function_type(FunType)
+    func = MOI.get(model.moi_backend,
+                   MOI.ObjectiveFunction{MOIFunType}())::MOIFunType
+    return jump_function(model, func)
+end

@@ -202,6 +202,10 @@ end
 function moi_function(aff::GenericQuadExpr)
     return MOI.ScalarQuadraticFunction(aff)
 end
+function moi_function_type(::Type{<:GenericQuadExpr{T}}) where T
+    return MOI.ScalarQuadraticFunction{T}
+end
+
 
 function QuadExpr(m::Model, f::MOI.ScalarQuadraticFunction)
     quad = QuadExpr(AffExpr(m, MOI.ScalarAffineFunction(f.affine_terms,
@@ -219,17 +223,6 @@ function QuadExpr(m::Model, f::MOI.ScalarQuadraticFunction)
 end
 function jump_function(model::AbstractModel, aff::MOI.ScalarQuadraticFunction)
     return QuadExpr(model, aff)
-end
-
-"""
-    objective_function(m::Model, ::Type{QuadExpr})
-
-Return a `QuadExpr` object representing the objective function.
-Error if the objective is not quadratic.
-"""
-function objective_function(m::Model, ::Type{QuadExpr})
-    f = MOI.get(m.moi_backend, MOI.ObjectiveFunction{MOI.ScalarQuadraticFunction{Float64}}())::MOI.ScalarQuadraticFunction
-    return QuadExpr(m, f)
 end
 
 # Copy a quadratic expression to a new model by converting all the

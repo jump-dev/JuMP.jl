@@ -251,6 +251,9 @@ function MOI.ScalarAffineFunction(a::AffExpr)
     return MOI.ScalarAffineFunction(terms, a.constant)
 end
 moi_function(a::GenericAffExpr) = MOI.ScalarAffineFunction(a)
+function moi_function_type(::Type{<:GenericAffExpr{T}}) where T
+    return MOI.ScalarAffineFunction{T}
+end
 
 function AffExpr(m::Model, f::MOI.ScalarAffineFunction)
     aff = AffExpr()
@@ -294,18 +297,6 @@ function MOI.VectorAffineFunction(affs::Vector{AffExpr})
     MOI.VectorAffineFunction(terms, constant)
 end
 moi_function(a::Vector{<:GenericAffExpr}) = MOI.VectorAffineFunction(a)
-
-"""
-    objective_function(m::Model, ::Type{AffExpr})
-
-Return an `AffExpr` object representing the objective function.
-Error if the objective is not linear.
-"""
-function objective_function(m::Model, ::Type{AffExpr})
-    f = MOI.get(m.moi_backend, MOI.ObjectiveFunction{MOI.ScalarAffineFunction{Float64}}())::MOI.ScalarAffineFunction
-    return AffExpr(m, f)
-end
-
 
 # Copy an affine expression to a new model by converting all the
 # variables to the new model's variables
