@@ -7,7 +7,7 @@ has type `Symmetric` then the columns vectorization (the vector obtained by
 concatenating the columns) of its upper triangular part is constrained to belong
 to the `MOI.PositiveSemidefiniteConeTriangle` set, otherwise its column
 vectorization is constrained to belong to the
-`MOI.PositiveSemidefiniteConeTriangle` set.
+`MOI.PositiveSemidefiniteConeSquare` set.
 
 ## Examples
 
