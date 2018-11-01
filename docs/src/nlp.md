@@ -58,7 +58,8 @@ Syntax notes
 The syntax accepted in nonlinear expressions is more restricted than the syntax
 for linear and quadratic expressions. We note some important points below.
 
-- All expressions must be simple scalar operations. You cannot use `dot`,
+- With the exception of the splatting syntax discussed below, all expressions
+  must be simple scalar operations. You cannot use `dot`,
   matrix-vector products, vector slices, etc. Translate vector operations into
   explicit `sum()` operations or use the `AffExpr` plus auxiliary variable trick
   described below.
@@ -106,6 +107,23 @@ ERROR: Unrecognized function "my_function" used in nonlinear expression.
 ```julia
     my_expr = @NLexpression(model, [i = 1:n], sin(x[i]))
     my_constr = @NLconstraint(model, [i = 1:n], my_expr[i] <= 0.5)
+```
+
+- The [splatting operator](https://docs.julialang.org/en/v1/manual/faq/#...-splits-one-argument-into-many-different-arguments-in-function-calls-1)
+  `...` is recognized in a very restricted setting for expanding function
+  arguments. The expression splatted can be *only* a symbol. More complex
+  expressions are not recognized.
+
+```jldoctest; filter=r"≤|<="
+julia> model = Model();
+
+julia> @variable(model, x[1:3]);
+
+julia> @NLconstraint(model, *(x...) <= 1.0)
+x[1] * x[2] * x[3] - 1.0 ≤ 0
+
+julia> @NLconstraint(model, *((x / 2)...) <= 0.0)
+ERROR: LoadError: Unexpected expression in (*)(x / 2...). JuMP supports splatting only symbols. For example, x... is ok, but (x + 1)..., [x; y]... and g(f(y)...) are not.
 ```
 
 Nonlinear Parameters
