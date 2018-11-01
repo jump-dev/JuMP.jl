@@ -8,7 +8,6 @@ end
 using Documenter, JuMP
 
 makedocs(
-    format = :html,
     sitename = "JuMP",
     authors = "Miles Lubin, Iain Dunning, and Joey Huchette",
     analytics = "UA-44252521-1",
@@ -37,9 +36,4 @@ makedocs(
 
 deploydocs(
     repo   = "github.com/JuliaOpt/JuMP.jl.git",
-    target = "build",
-    osname = "linux",
-    julia  = "1.0",
-    deps   = nothing,
-    make   = nothing
 )
