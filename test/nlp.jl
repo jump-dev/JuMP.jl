@@ -148,6 +148,12 @@
         @test_macro_throws ErrorException @NLexpression(model, (*)((x / 2)...))
     end
 
+    @testset "Error on unexpected splatting" begin
+        model = Model()
+        @variable(model, x[1:2])
+        @test_macro_throws ErrorException @NLexpression(model, x...)
+    end
+
     @testset "Error on sum(x)" begin
         m = Model()
         x = [1,2,3]
