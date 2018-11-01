@@ -122,12 +122,36 @@
                                 NonlinearExprData(model, :(f($x,$y))))
     end
 
-    @testset "Error on splatting" begin
+    @testset "Parse splatting" begin
         model = Model()
         @variable(model, x[1:2])
         user_function = (x, y) -> x
         JuMP.register(model, :f, 2, user_function, autodiff=true)
-        @test_macro_throws ErrorException @NLexpression(model, f(x...))
+        @test expressions_equal(@JuMP.processNLExpr(model, f(x...)),
+                                NonlinearExprData(model, :(f($(x[1]),$(x[2])))))
+    end
+
+    @testset "Parse mixed splatting" begin
+        model = Model()
+        @variable(model, x[1:2])
+        @variable(model, y)
+        @variable(model, z[1:1])
+        @test expressions_equal(@JuMP.processNLExpr(model, (*)(x..., y, z...)),
+                                NonlinearExprData(model,
+                                                  :((*)($(x[1]), $(x[2]),
+                                                        $y, $(z[1])))))
+    end
+
+    @testset "Error on splatting non-symbols" begin
+        model = Model()
+        @variable(model, x[1:2])
+        @test_macro_throws ErrorException @NLexpression(model, (*)((x / 2)...))
+    end
+
+    @testset "Error on unexpected splatting" begin
+        model = Model()
+        @variable(model, x[1:2])
+        @test_macro_throws ErrorException @NLexpression(model, x...)
     end
 
     @testset "Error on sum(x)" begin

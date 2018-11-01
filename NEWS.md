@@ -79,6 +79,9 @@ Breaking changes:
 
 New features:
 
+- Splatting (like `f(x...)`) is recognized in restricted settings in nonlinear
+  expressions.
+
 - Support for deleting constraints and variables.
 
 - The documentation has been completely rewritten using docstrings and

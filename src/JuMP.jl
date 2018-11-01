@@ -411,6 +411,7 @@ end
 index(cr::ConstraintRef) = cr.index
 
 # TODO: Why does this method depend on the type of the constraint?
+# TODO: docstring
 function has_result_dual(model::Model,
                          REF::Type{<:ConstraintRef{Model, T}}) where {T <: MOICON}
     MOI.get(model, MOI.DualStatus()) != MOI.NoSolution

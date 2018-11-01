@@ -48,7 +48,7 @@ function parseNLExpr(m, x, tapevar, parent, values)
             "$opname(x[i] for i in 1:N)."
             return :(error($errorstring))
         end
-        if length(x.args) == 2 # univariate
+        if length(x.args) == 2 && !isexpr(x.args[2], :...) # univariate
             code = :(let; end)
             block = let_code_block(code)
             @assert isexpr(block, :block)
@@ -110,7 +110,24 @@ function parseNLExpr(m, x, tapevar, parent, values)
             parentvar = gensym()
             push!(block.args, :($parentvar = length($tapevar)))
             for i in 1:length(x.args)-1
-                push!(block.args, parseNLExpr(m, x.args[i+1], tapevar, parentvar, values))
+                arg = x.args[i + 1]
+                if isexpr(arg, :...)
+                    if !isa(arg.args[1], Symbol)
+                        error("Unexpected expression in $x. JuMP supports " *
+                              "splatting only symbols. For example, x... is " *
+                              "ok, but (x + 1)..., [x; y]... and g(f(y)...) " *
+                              "are not.")
+                    end
+                    push!(block.args, quote
+                        for val in $(esc(arg.args[1]))
+                            parseNLExpr_runtime($(esc(m)), val,
+                                                $tapevar, $parentvar, $values)
+                        end
+                    end)
+                else
+                    push!(block.args, parseNLExpr(m, arg, tapevar, parentvar,
+                                                  values))
+                end
             end
             return code
         end
@@ -147,7 +164,7 @@ function parseNLExpr(m, x, tapevar, parent, values)
         error_curly(x)
     end
     if isexpr(x, :...)
-        error("The splatting syntax $x is not supported.")
+        error("Unexpected splatting expression $x.")
     end
     # at the lowest level?
     return :( parseNLExpr_runtime($(esc(m)),$(esc(x)), $tapevar, $parent, $values) )

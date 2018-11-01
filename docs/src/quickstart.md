@@ -70,6 +70,7 @@ it! Feel free to stick with `*` if it makes you feel more comfortable, as we
 have done with `3 * y`. (We have been intentionally inconsistent here to demonstrate different syntax; however, it is good practice to pick one way or the other consistently in your code.)
 ```jldoctest quickstart_example
 julia> @objective(model, Max, 5x + 3 * y)
+5 x + 3 y
 ```
 
 Adding constraints is a lot like setting the objective. Here we create a

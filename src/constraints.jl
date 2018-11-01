@@ -219,7 +219,7 @@ same variable. For example, given a constraint `2x + 3x <= 2`,
 `JuMP.set_coefficient(c, x, 4)` will create the constraint `4x <= 2`.
 
 
-```jldoctest; setup = :(using JuMP)
+```jldoctest; setup = :(using JuMP), filter=r"≤|<="
 model = Model()
 @variable(model, x)
 @constraint(model, con, 2x + 3x <= 2)
