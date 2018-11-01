@@ -947,7 +947,55 @@ function throw_error_for_invalid_sense(_error::Function,
     return sense
 end
 
-# TODO: Add a docstring.
+"""
+    @objective(model::Model, sense, func)
+
+Set the objective sense to `sense` and objective function to `func`. The
+objective sense can be either `Min`, `Max`, `MathOptInterface.MinSense`,
+`MathOptInterface.MaxSense` or `MathOptInterface.FeasibilitySense`; see
+[`MathOptInterface.ObjectiveSense`](http://www.juliaopt.org/MathOptInterface.jl/v0.6/apireference.html#MathOptInterface.ObjectiveSense).
+In order to set the sense programatically, i.e., when `sense` is a Julia
+variable whose value is the sense, one of the three
+`MathOptInterface.ObjectiveSense` should be used. Using the symbols `:Min` or
+`:Max` is not supported anymore (it was supported up to JuMP v0.18). The
+function can either be a single JuMP variable, an affine expression of JuMP
+variables or a quadratic expression of JuMP variables.
+
+## Examples
+
+To minimize the value of the variable `x`, do as follows:
+```jldoctest @objective; setup = :(using JuMP)
+julia> model = Model()
+A JuMP Model
+
+julia> @variable(model, x)
+x
+
+julia> @objective(model, Min, x)
+x
+```
+
+To maximize the value of the affine expression `2x - 1`, do as follows:
+```jldoctest @objective
+julia> @objective(model, Max, 2x - 1)
+2 x - 1
+```
+
+To set a quadratic objective and set the objective sense programatically, do
+as follows:
+```jldoctest @objective
+julia> using MathOptInterface
+
+julia> const MOI = MathOptInterface
+MathOptInterface
+
+julia> sense = MOI.MinSense
+MinSense::OptimizationSense = 0
+
+julia> @objective(model, sense, x^2 - 2x + 1)
+x² - 2 x + 1
+```
+"""
 macro objective(model, args...)
     _error(str...) = macro_error(:objective, (model, args...), str...)
 

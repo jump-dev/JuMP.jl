@@ -20,6 +20,7 @@ makedocs(
         "Concepts" => "concepts.md",
         "Variables" => "variables.md",
         "Expressions" => "expressions.md",
+        "Objective" => "objective.md",
         "Constraints" => "constraints.md",
         "Containers" => "containers.md",
         "Names" => "names.md",
