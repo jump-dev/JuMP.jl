@@ -51,7 +51,7 @@ Our documentation includes an installation guide, quick-start guide, and referen
 
 
 **Development version** (`master` branch):
-  * [Documentation](http://www.juliaopt.org/JuMP.jl/latest/)
+  * [Documentation](http://www.juliaopt.org/JuMP.jl/dev/)
   * [Examples](https://github.com/JuliaOpt/JuMP.jl/tree/master/examples)
   * Testing status:
     * TravisCI: [![Build Status](https://travis-ci.org/JuliaOpt/JuMP.jl.svg?branch=master)](https://travis-ci.org/JuliaOpt/JuMP.jl)
@@ -140,7 +140,7 @@ A preprint of this paper is [freely available](http://arxiv.org/abs/1312.1431).
 
 ---
 
-![NumFOCUS logo](http://www.juliaopt.org/JuMP.jl/latest/assets/numfocus-logo.png)
+![NumFOCUS logo](http://www.juliaopt.org/JuMP.jl/dev/assets/numfocus-logo.png)
 
 JuMP is a fiscally sponsored project of [NumFOCUS](https://numfocus.org), a nonprofit
 dedicated to supporting the open source scientific computing community.

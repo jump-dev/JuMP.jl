@@ -8,8 +8,9 @@ end
 using Documenter, JuMP
 
 makedocs(
-    format = :html,
     sitename = "JuMP",
+    # See https://github.com/JuliaDocs/Documenter.jl/issues/868
+    html_prettyurls = get(ENV, "CI", nothing) == "true",
     authors = "Miles Lubin, Iain Dunning, and Joey Huchette",
     analytics = "UA-44252521-1",
     pages = [
@@ -37,9 +38,4 @@ makedocs(
 
 deploydocs(
     repo   = "github.com/JuliaOpt/JuMP.jl.git",
-    target = "build",
-    osname = "linux",
-    julia  = "1.0",
-    deps   = nothing,
-    make   = nothing
 )
