@@ -984,12 +984,7 @@ julia> @objective(model, Max, 2x - 1)
 To set a quadratic objective and set the objective sense programatically, do
 as follows:
 ```jldoctest @objective
-julia> using MathOptInterface
-
-julia> const MOI = MathOptInterface
-MathOptInterface
-
-julia> sense = MOI.MinSense
+julia> sense = JuMP.MOI.MinSense
 MinSense::OptimizationSense = 0
 
 julia> @objective(model, sense, x^2 - 2x + 1)
