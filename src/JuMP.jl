@@ -400,11 +400,11 @@ function optimizer_index(v::VariableRef)
 end
 
 function optimizer_index(cr::ConstraintRef{Model})
-    if mode(cr.m) == Direct
+    if mode(cr.model) == Direct
         return index(cr)
     else
-        @assert caching_optimizer(cr.m).state == MOIU.AttachedOptimizer
-        return caching_optimizer(cr.m).model_to_optimizer_map[index(cr)]
+        @assert caching_optimizer(cr.model).state == MOIU.AttachedOptimizer
+        return caching_optimizer(cr.model).model_to_optimizer_map[index(cr)]
     end
 end
 
@@ -425,7 +425,7 @@ Use `has_result_dual` to check if a result exists before asking for values.
 See also [`shadow_price`](@ref).
 """
 function result_dual(cr::ConstraintRef{Model, <:MOICON})
-    reshape(MOI.get(cr.m, MOI.ConstraintDual(), cr), dual_shape(cr.shape))
+    reshape(MOI.get(cr.model, MOI.ConstraintDual(), cr), dual_shape(cr.shape))
 end
 
 """
@@ -439,7 +439,7 @@ function MOI.get(m::Model, attr::MOI.AbstractVariableAttribute, v::VariableRef)
     MOI.get(m.moi_backend, attr, index(v))
 end
 function MOI.get(m::Model, attr::MOI.AbstractConstraintAttribute, cr::ConstraintRef)
-    @assert m === cr.m # TODO: Improve the error message.
+    @assert m === cr.model # TODO: Improve the error message.
     MOI.get(m.moi_backend, attr, index(cr))
 end
 
@@ -449,7 +449,7 @@ function MOI.set(m::Model, attr::MOI.AbstractVariableAttribute, v::VariableRef, 
     MOI.set(m.moi_backend, attr, index(v), value)
 end
 function MOI.set(m::Model, attr::MOI.AbstractConstraintAttribute, cr::ConstraintRef, value)
-    @assert m === cr.m # TODO: Improve the error message.
+    @assert m === cr.model # TODO: Improve the error message.
     MOI.set(m.moi_backend, attr, index(cr), value)
 end
 

@@ -170,7 +170,7 @@ function dummy_optimizer_hook(::JuMP.AbstractModel) end
                             @test JuMP.FixRef(z_new) == reference_map[JuMP.FixRef(z)]
                         end
                         cref_new = reference_map[cref]
-                        @test cref_new.m === new_model
+                        @test cref_new.model === new_model
                         @test JuMP.name(cref_new) == "cref"
                     end
                 end
