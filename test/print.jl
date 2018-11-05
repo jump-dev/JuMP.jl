@@ -81,6 +81,79 @@ Base.isless(u::UnitNumber, v::UnitNumber) = isless(u.α, v.α)
         io_test(IJuliaMode, ex, "-2 x_{1}\\times z + x_{1}\\times x_{2}")
     end
 
+    # See https://github.com/JuliaOpt/JuMP.jl/pull/1352
+    @testset "Expression of coefficient type with unit" begin
+        m = Model()
+        @variable m x
+        @variable m y
+        u = UnitNumber(2.0)
+        aff = JuMP.GenericAffExpr(zero(u), x => u, y => zero(u))
+        io_test(REPLMode,   aff, "UnitNumber(2.0) x")
+        io_test(IJuliaMode, aff, "UnitNumber(2.0) x")
+        quad = aff * x
+        io_test(REPLMode,   quad, "UnitNumber(2.0) x² + UnitNumber(0.0)")
+        io_test(IJuliaMode, quad, "UnitNumber(2.0) x^2 + UnitNumber(0.0)")
+    end
+
+    @testset "Nonlinear expressions" begin
+        model = Model()
+        @variable(model, x)
+        expr = @NLexpression(model, x + 1)
+        io_test(REPLMode, expr, "\"Reference to nonlinear expression #1\"")
+    end
+
+    @testset "Nonlinear parameters" begin
+        model = Model()
+        @NLparameter(model, param == 1.0)
+        io_test(REPLMode, param, "\"Reference to nonlinear parameter #1\"")
+    end
+
+    @testset "NLPEvaluator" begin
+        model = Model()
+        evaluator = JuMP.NLPEvaluator(model)
+        io_test(REPLMode, evaluator, "\"A JuMP.NLPEvaluator\"")
+    end
+
+    @testset "Nonlinear constraints" begin
+        le = JuMP.math_symbol(REPLMode, :leq)
+        ge = JuMP.math_symbol(REPLMode, :geq)
+        eq = JuMP.math_symbol(REPLMode, :eq)
+
+        model = Model()
+        @variable(model, x)
+        constr_le = @NLconstraint(model, sin(x) <= 1)
+        constr_ge = @NLconstraint(model, sin(x) >= 1)
+        constr_eq = @NLconstraint(model, sin(x) == 1)
+        constr_range = @NLconstraint(model, 0 <= sin(x) <= 1)
+
+        io_test(REPLMode, constr_le, "sin(x) - 1.0 $le 0")
+        io_test(REPLMode, constr_ge, "sin(x) - 1.0 $ge 0")
+        io_test(REPLMode, constr_eq, "sin(x) - 1.0 $eq 0")
+        # Note: This is inconsistent with the "x in [-1, 1]" printing for
+        # regular constraints.
+        io_test(REPLMode, constr_range, "0 $le sin(x) $le 1")
+
+        io_test(IJuliaMode, constr_le, "sin(x) - 1.0 \\leq 0")
+        io_test(IJuliaMode, constr_ge, "sin(x) - 1.0 \\geq 0")
+        io_test(IJuliaMode, constr_eq, "sin(x) - 1.0 = 0")
+        io_test(IJuliaMode, constr_range, "0 \\leq sin(x) \\leq 1")
+    end
+
+    @testset "Nonlinear constraints with embedded parameters/expressions" begin
+        le = JuMP.math_symbol(REPLMode, :leq)
+
+        model = Model()
+        @variable(model, x)
+        expr = @NLexpression(model, x + 1)
+        @NLparameter(model, param == 1.0)
+
+        constr = @NLconstraint(model, expr - param <= 0)
+        io_test(REPLMode, constr, "(subexpression[1] - parameter[1]) - 0.0 $le 0")
+        io_test(IJuliaMode, constr, "(subexpression_{1} - parameter_{1}) - 0.0 \\leq 0")
+    end
+end
+
+function printing_test(ModelType::Type{<:JuMP.AbstractModel})
     @testset "VariableRef" begin
         m = Model()
         @variable(m, 0 <= x <= 2)
@@ -142,20 +215,6 @@ Base.isless(u::UnitNumber, v::UnitNumber) = isless(u.α, v.α)
         io_test(IJuliaMode, v[2,1], "i123123_{1,2}")
         io_test(REPLMode,   w[1,3], "symm[1,3]")
         io_test(IJuliaMode, w[1,3], "symm_{1,3}")
-    end
-
-    # See https://github.com/JuliaOpt/JuMP.jl/pull/1352
-    @testset "Expression of coefficient type with unit" begin
-        m = Model()
-        @variable m x
-        @variable m y
-        u = UnitNumber(2.0)
-        aff = JuMP.GenericAffExpr(zero(u), x => u, y => zero(u))
-        io_test(REPLMode,   aff, "UnitNumber(2.0) x")
-        io_test(IJuliaMode, aff, "UnitNumber(2.0) x")
-        quad = aff * x
-        io_test(REPLMode,   quad, "UnitNumber(2.0) x² + UnitNumber(0.0)")
-        io_test(IJuliaMode, quad, "UnitNumber(2.0) x^2 + UnitNumber(0.0)")
     end
 
     @testset "SingleVariable constraints" begin
@@ -240,61 +299,12 @@ Base.isless(u::UnitNumber, v::UnitNumber) = isless(u.α, v.α)
         io_test(REPLMode, quad_constr, "2 x$sq $le 1.0")
         # TODO: Test in IJulia mode.
     end
+end
 
-    @testset "Nonlinear expressions" begin
-        model = Model()
-        @variable(model, x)
-        expr = @NLexpression(model, x + 1)
-        io_test(REPLMode, expr, "\"Reference to nonlinear expression #1\"")
-    end
+@testset "Printing for JuMP.Model" begin
+    printing_test(Model)
+end
 
-    @testset "Nonlinear parameters" begin
-        model = Model()
-        @NLparameter(model, param == 1.0)
-        io_test(REPLMode, param, "\"Reference to nonlinear parameter #1\"")
-    end
-
-    @testset "NLPEvaluator" begin
-        model = Model()
-        evaluator = JuMP.NLPEvaluator(model)
-        io_test(REPLMode, evaluator, "\"A JuMP.NLPEvaluator\"")
-    end
-
-    @testset "Nonlinear constraints" begin
-        le = JuMP.math_symbol(REPLMode, :leq)
-        ge = JuMP.math_symbol(REPLMode, :geq)
-        eq = JuMP.math_symbol(REPLMode, :eq)
-
-        model = Model()
-        @variable(model, x)
-        constr_le = @NLconstraint(model, sin(x) <= 1)
-        constr_ge = @NLconstraint(model, sin(x) >= 1)
-        constr_eq = @NLconstraint(model, sin(x) == 1)
-        constr_range = @NLconstraint(model, 0 <= sin(x) <= 1)
-
-        io_test(REPLMode, constr_le, "sin(x) - 1.0 $le 0")
-        io_test(REPLMode, constr_ge, "sin(x) - 1.0 $ge 0")
-        io_test(REPLMode, constr_eq, "sin(x) - 1.0 $eq 0")
-        # Note: This is inconsistent with the "x in [-1, 1]" printing for
-        # regular constraints.
-        io_test(REPLMode, constr_range, "0 $le sin(x) $le 1")
-
-        io_test(IJuliaMode, constr_le, "sin(x) - 1.0 \\leq 0")
-        io_test(IJuliaMode, constr_ge, "sin(x) - 1.0 \\geq 0")
-        io_test(IJuliaMode, constr_eq, "sin(x) - 1.0 = 0")
-        io_test(IJuliaMode, constr_range, "0 \\leq sin(x) \\leq 1")
-    end
-
-    @testset "Nonlinear constraints with embedded parameters/expressions" begin
-        le = JuMP.math_symbol(REPLMode, :leq)
-
-        model = Model()
-        @variable(model, x)
-        expr = @NLexpression(model, x + 1)
-        @NLparameter(model, param == 1.0)
-
-        constr = @NLconstraint(model, expr - param <= 0)
-        io_test(REPLMode, constr, "(subexpression[1] - parameter[1]) - 0.0 $le 0")
-        io_test(IJuliaMode, constr, "(subexpression_{1} - parameter_{1}) - 0.0 \\leq 0")
-    end
+@testset "Printing for JuMPExtension.MyModel" begin
+    printing_test(JuMPExtension.MyModel)
 end
