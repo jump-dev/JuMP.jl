@@ -44,11 +44,11 @@ struct CustomConstraint{S <: JuMP.AbstractShape} <: JuMP.AbstractConstraint
     in_set_str::String
     shape::S
 end
-function JuMP.function_string(print_mode::JuMP.PrintMode,
+function JuMP.function_string(print_mode,
                               constraint::CustomConstraint)
     return constraint.function_str
 end
-function JuMP.in_set_string(print_mode::JuMP.PrintMode,
+function JuMP.in_set_string(print_mode,
                             constraint::CustomConstraint)
     return constraint.in_set_str
 end
@@ -195,7 +195,7 @@ end
             constraint = CustomConstraint(function_str, in_set_str,
                                           JuMP.ScalarShape())
             cref = JuMP.add_constraint(model, constraint, name)
-            @show string(cref)
+            @test string(cref) == "$name : $function_str $in_set_str"
         end
         test_constraint("fun", "set", "name")
         test_constraint("a", "b", "c")

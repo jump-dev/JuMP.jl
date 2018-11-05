@@ -280,7 +280,7 @@ function Base.show(io::IO, ::MIME"text/latex", ref::ConstraintRef)
 end
 
 """
-    function_string(print_mode::JuMP.PrintMode,
+    function_string(print_mode::Type{<:JuMP.PrintMode},
                     func::Union{JuMP.AbstractJuMPScalar,
                                 Vector{<:JuMP.AbstractJuMPScalar}})
 
@@ -315,13 +315,13 @@ function function_string(print_mode, quad_vector::Vector{<:GenericQuadExpr})
 end
 
 """
-    function_string(print_mode::JuMP.PrintMode,
+    function_string(print_mode::{<:JuMP.PrintMode},
                     constraint::JuMP.AbstractConstraint)
 
 Return a `String` representing the function of the constraint `constraint`
 using print mode `print_mode`.
 """
-function function_string(print_mode::PrintMode, constraint::AbstractConstraint)
+function function_string(print_mode, constraint::AbstractConstraint)
     return function_string(print_mode, jump_function(constraint))
 end
 
@@ -347,7 +347,7 @@ end
 # TODO: Consider fancy latex names for some sets. They're currently printed as
 # regular text in math mode which looks a bit awkward.
 """
-    in_set_string(print_mode::JuMP.PrintMode,
+    in_set_string(print_mode::Type{<:JuMP.PrintMode},
                   set::Union{JuMP.AbstractJuMPScalar,
                              Vector{<:JuMP.AbstractJuMPScalar}})
 
@@ -359,7 +359,7 @@ function in_set_string(print_mode, set::MOI.AbstractSet)
 end
 
 """
-    in_set_string(print_mode::JuMP.PrintMode,
+    in_set_string(print_mode::Type{<:JuMP.PrintMode},
                   constraint::JuMP.AbstractConstraint)
 
 Return a `String` representing the membership to the set of the constraint
@@ -372,8 +372,8 @@ end
 # constraint_object is a JuMP constraint object like AffExprConstraint.
 # Assumes a .func and .set member.
 function constraint_string(print_mode, constraint_name, constraint_object)
-    func_str = function_string(print_mode, constraint_object.func)
-    in_set_str = in_set_string(print_mode, constraint_object.set)
+    func_str = function_string(print_mode, constraint_object)
+    in_set_str = in_set_string(print_mode, constraint_object)
     constraint_without_name = func_str * " " * in_set_str
     if print_mode == IJuliaMode
         constraint_without_name = wrap_in_inline_math_mode(constraint_without_name)
