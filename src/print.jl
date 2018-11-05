@@ -322,7 +322,7 @@ Return a `String` representing the function of the constraint `constraint`
 using print mode `print_mode`.
 """
 function function_string(print_mode::PrintMode, constraint::AbstractConstraint)
-    return function_string(print_mode, function_object(constraint))
+    return function_string(print_mode, jump_function(constraint))
 end
 
 function in_set_string(print_mode, set::MOI.LessThan)
@@ -366,7 +366,7 @@ Return a `String` representing the membership to the set of the constraint
 `constraint` using print mode `print_mode`.
 """
 function in_set_string(print_mode, constraint::AbstractConstraint)
-    return in_set_string(print_mode, set_object(constraint))
+    return in_set_string(print_mode, moi_set(constraint))
 end
 
 # constraint_object is a JuMP constraint object like AffExprConstraint.

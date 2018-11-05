@@ -1,12 +1,5 @@
 abstract type AbstractVectorSet end
 
-"""
-    moi_set(s::AbstractVectorSet, dim::Int)
-
-Returns the MOI set of dimension `dim` corresponding to the JuMP set `s`.
-"""
-function moi_set end
-
 # Used in `@constraint model f in s`
 function build_constraint(_error::Function, f::AbstractVector,
                          s::AbstractVectorSet)
