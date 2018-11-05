@@ -272,12 +272,22 @@ end
 ## Constraints
 #------------------------------------------------------------------------
 
-function Base.show(io::IO, ref::ConstraintRef{Model})
+function Base.show(io::IO, ref::ConstraintRef)
     print(io, constraint_string(REPLMode, name(ref), constraint_object(ref)))
 end
-function Base.show(io::IO, ::MIME"text/latex", ref::ConstraintRef{Model})
+function Base.show(io::IO, ::MIME"text/latex", ref::ConstraintRef)
     print(io, constraint_string(IJuliaMode, name(ref), constraint_object(ref)))
 end
+
+"""
+    function_string(print_mode::JuMP.PrintMode,
+                    func::Union{JuMP.AbstractJuMPScalar,
+                                Vector{<:JuMP.AbstractJuMPScalar}})
+
+Return a `String` representing the function `func` using print mode
+`print_mode`.
+"""
+function function_string end
 
 function function_string(print_mode, variable::AbstractVariableRef)
     return var_string(print_mode, variable)
@@ -304,6 +314,17 @@ function function_string(print_mode, quad_vector::Vector{<:GenericQuadExpr})
     return "[" * join(quad_string.(print_mode, quad_vector), ", ") * "]"
 end
 
+"""
+    function_string(print_mode::JuMP.PrintMode,
+                    constraint::JuMP.AbstractConstraint)
+
+Return a `String` representing the function of the constraint `constraint`
+using print mode `print_mode`.
+"""
+function function_string(print_mode::PrintMode, constraint::AbstractConstraint)
+    return function_string(print_mode, function_object(constraint))
+end
+
 function in_set_string(print_mode, set::MOI.LessThan)
     return string(math_symbol(print_mode, :leq), " ", set.upper)
 end
@@ -325,8 +346,27 @@ end
 # TODO: Convert back to JuMP types for sets like PSDCone.
 # TODO: Consider fancy latex names for some sets. They're currently printed as
 # regular text in math mode which looks a bit awkward.
+"""
+    in_set_string(print_mode::JuMP.PrintMode,
+                  set::Union{JuMP.AbstractJuMPScalar,
+                             Vector{<:JuMP.AbstractJuMPScalar}})
+
+Return a `String` representing the membership to the set `set` using print mode
+`print_mode`.
+"""
 function in_set_string(print_mode, set::MOI.AbstractSet)
     return string(math_symbol(print_mode, :in), " ", set)
+end
+
+"""
+    in_set_string(print_mode::JuMP.PrintMode,
+                  constraint::JuMP.AbstractConstraint)
+
+Return a `String` representing the membership to the set of the constraint
+`constraint` using print mode `print_mode`.
+"""
+function in_set_string(print_mode, constraint::AbstractConstraint)
+    return in_set_string(print_mode, set_object(constraint))
 end
 
 # constraint_object is a JuMP constraint object like AffExprConstraint.

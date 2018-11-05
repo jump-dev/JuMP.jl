@@ -147,13 +147,32 @@ end
 # Abstract base type for all constraint types
 abstract type AbstractConstraint end
 
+"""
+    function_object(constraint::AbstractConstraint)
+
+Return the function of the constraint `constraint` in the function-in-set form.
+"""
+function function_object end
+
+"""
+    set_object(constraint::AbstractConstraint)
+
+Return the set of the constraint `constraint` in the function-in-set form.
+"""
+function set_object end
+
+function moi_function_and_set(c::ScalarConstraint)
+    return (moi_function(function_object(constraint)), set_object(constraint))
+end
+
 struct ScalarConstraint{F <: AbstractJuMPScalar,
                         S <: MOI.AbstractScalarSet} <: AbstractConstraint
     func::F
     set::S
 end
 
-moi_function_and_set(c::ScalarConstraint) = (moi_function(c.func), c.set)
+function_object(constraint::ScalarConstraint) = c.func
+set_object(constraint::ScalarConstraint) = c.set
 shape(::ScalarConstraint) = ScalarShape()
 function constraint_object(ref::ConstraintRef{Model, MOICON{FuncType, SetType}}) where
         {FuncType <: MOI.AbstractScalarFunction, SetType <: MOI.AbstractScalarSet}
@@ -175,7 +194,8 @@ function VectorConstraint(func::Vector{<:AbstractJuMPScalar},
     VectorConstraint(func, set, VectorShape())
 end
 
-moi_function_and_set(c::VectorConstraint) = (moi_function(c.func), c.set)
+function_object(constraint::VectorConstraint) = c.func
+set_object(constraint::VectorConstraint) = c.set
 shape(c::VectorConstraint) = c.shape
 function constraint_object(ref::ConstraintRef{Model, MOICON{FuncType, SetType}}) where
         {FuncType <: MOI.AbstractVectorFunction, SetType <: MOI.AbstractVectorSet}
