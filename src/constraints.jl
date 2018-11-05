@@ -102,7 +102,7 @@ reshape(vectorized_form, ::VectorShape) = vectorized_form
 # Holds the index of a constraint in a Model.
 # TODO: Rename "m" field (breaks style guidelines).
 struct ConstraintRef{M <: AbstractModel, C, Shape <: AbstractShape}
-    m::M
+    model::M
     index::C
     shape::Shape
 end
@@ -116,9 +116,9 @@ end
 
 Get a constraint's name.
 """
-name(cr::ConstraintRef{Model,<:MOICON}) = MOI.get(cr.m, MOI.ConstraintName(), cr)
+name(cr::ConstraintRef{Model,<:MOICON}) = MOI.get(cr.model, MOI.ConstraintName(), cr)
 
-set_name(cr::ConstraintRef{Model,<:MOICON}, s::String) = MOI.set(cr.m, MOI.ConstraintName(), cr, s)
+set_name(cr::ConstraintRef{Model,<:MOICON}, s::String) = MOI.set(cr.model, MOI.ConstraintName(), cr, s)
 
 """
     delete(model::Model, constraint_ref::ConstraintRef)
@@ -126,7 +126,7 @@ set_name(cr::ConstraintRef{Model,<:MOICON}, s::String) = MOI.set(cr.m, MOI.Const
 Delete the constraint associated with `constraint_ref` from the model `model`.
 """
 function delete(model::Model, constraint_ref::ConstraintRef{Model})
-    if model !== constraint_ref.m
+    if model !== constraint_ref.model
         error("The constraint reference you are trying to delete does not " *
               "belong to the model.")
     end
@@ -139,7 +139,7 @@ end
 Return `true` if `constraint_ref` refers to a valid constraint in `model`.
 """
 function is_valid(model::Model, constraint_ref::ConstraintRef{Model})
-    return (model === constraint_ref.m &&
+    return (model === constraint_ref.model &&
             MOI.is_valid(model.moi_backend, constraint_ref.index))
 end
 
@@ -158,7 +158,7 @@ moi_function_and_set(c::ScalarConstraint) = (moi_function(c.func), c.set)
 shape(::ScalarConstraint) = ScalarShape()
 function constraint_object(ref::ConstraintRef{Model, MOICON{FuncType, SetType}}) where
         {FuncType <: MOI.AbstractScalarFunction, SetType <: MOI.AbstractScalarSet}
-    model = ref.m
+    model = ref.model
     f = MOI.get(model, MOI.ConstraintFunction(), ref)::FuncType
     s = MOI.get(model, MOI.ConstraintSet(), ref)::SetType
     return ScalarConstraint(jump_function(model, f), s)
@@ -180,7 +180,7 @@ moi_function_and_set(c::VectorConstraint) = (moi_function(c.func), c.set)
 shape(c::VectorConstraint) = c.shape
 function constraint_object(ref::ConstraintRef{Model, MOICON{FuncType, SetType}}) where
         {FuncType <: MOI.AbstractVectorFunction, SetType <: MOI.AbstractVectorSet}
-    model = ref.m
+    model = ref.model
     f = MOI.get(model, MOI.ConstraintFunction(), ref)::FuncType
     s = MOI.get(model, MOI.ConstraintSet(), ref)::SetType
     return VectorConstraint(jump_function(model, f), s, ref.shape)
@@ -235,7 +235,7 @@ function set_coefficient(constraint::ConstraintRef{Model, MOICON{F, S}},
                          variable, value) where {S, T, F <: Union{
                              MOI.ScalarAffineFunction{T},
                              MOI.ScalarQuadraticFunction{T}}}
-    MOI.modify(constraint.m.moi_backend, index(constraint),
+    MOI.modify(constraint.model.moi_backend, index(constraint),
         MOI.ScalarCoefficientChange(index(variable), convert(T, value)))
     return
 end
@@ -297,7 +297,7 @@ end
 
 function shadow_price(constraint::ConstraintRef{Model, MOICON{F, S}}
                       ) where {S <: MOI.LessThan, F}
-    model = constraint.m
+    model = constraint.model
     if !has_result_dual(model, typeof(constraint))
         error("The shadow price is not available because no dual result is " *
               "available.")
@@ -308,7 +308,7 @@ end
 
 function shadow_price(constraint::ConstraintRef{Model, MOICON{F, S}}
                       ) where {S <: MOI.GreaterThan, F}
-    model = constraint.m
+    model = constraint.model
     if !has_result_dual(model, typeof(constraint))
         error("The shadow price is not available because no dual result is " *
               "available.")
@@ -319,7 +319,7 @@ end
 
 function shadow_price(constraint::ConstraintRef{Model, MOICON{F, S}}
                       ) where {S <: MOI.EqualTo, F}
-    model = constraint.m
+    model = constraint.model
     if !has_result_dual(model, typeof(constraint))
         error("The shadow price is not available because no dual result is " *
               "available.")

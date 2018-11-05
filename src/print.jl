@@ -360,13 +360,13 @@ end
 const NonlinearConstraintRef = ConstraintRef{Model, NonlinearConstraintIndex}
 
 function Base.show(io::IO, c::NonlinearConstraintRef)
-    print(io, nl_constraint_string(c.m, REPLMode,
-                                   c.m.nlp_data.nlconstr[c.index.value]))
+    print(io, nl_constraint_string(c.model, REPLMode,
+                                   c.model.nlp_data.nlconstr[c.index.value]))
 end
 
 function Base.show(io::IO, ::MIME"text/latex", c::NonlinearConstraintRef)
-    constraint = c.m.nlp_data.nlconstr[c.index.value]
-    print(io, wrap_in_math_mode(nl_constraint_string(c.m, IJuliaMode,
+    constraint = c.model.nlp_data.nlconstr[c.index.value]
+    print(io, wrap_in_math_mode(nl_constraint_string(c.model, IJuliaMode,
                                                     constraint)))
 end
 
