@@ -210,7 +210,7 @@ function JuMP.delete(model::MyModel, constraint_ref::MyConstraintRef)
 end
 function JuMP.is_valid(model::MyModel, constraint_ref::MyConstraintRef)
     return (model === constraint_ref.model &&
-            constraint_ref in keys(model.constraints))
+            constraint_ref.index in keys(model.constraints))
 end
 function JuMP.constraint_object(cref::MyConstraintRef)
     return cref.model.constraints[cref.index]
