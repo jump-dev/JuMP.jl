@@ -21,7 +21,7 @@ var documenterSearchIndex = {"docs": [
     "page": "Introduction",
     "title": "Contents",
     "category": "section",
-    "text": "Pages = [\"installation.md\",\n    \"quickstart.md\",\n    \"concepts.md\",\n    \"variables.md\",\n    \"expressions.md\",\n    \"constraints.md\",\n    \"containers.md\",\n    \"names.md\",\n    \"solvers.md\",\n    \"nlp.md\",\n    \"style.md\",\n    \"extensions.md\",\n    \"updating.md\",\n    \"howdoi.md\"]\nDepth = 2"
+    "text": "Pages = [\"installation.md\",\n    \"quickstart.md\",\n    \"concepts.md\",\n    \"variables.md\",\n    \"expressions.md\",\n    \"objective.md\",\n    \"constraints.md\",\n    \"containers.md\",\n    \"names.md\",\n    \"solvers.md\",\n    \"nlp.md\",\n    \"style.md\",\n    \"extensions.md\",\n    \"updating.md\",\n    \"howdoi.md\"]\nDepth = 2"
 },
 
 {
@@ -334,6 +334,78 @@ var documenterSearchIndex = {"docs": [
     "title": "Objective functions",
     "category": "section",
     "text": "TODO: Describe how JuMP expressions relate to MOI functions. How to set, query, and modify an objective function."
+},
+
+{
+    "location": "objective/#",
+    "page": "Objective",
+    "title": "Objective",
+    "category": "page",
+    "text": ""
+},
+
+{
+    "location": "objective/#JuMP.@objective",
+    "page": "Objective",
+    "title": "JuMP.@objective",
+    "category": "macro",
+    "text": "@objective(model::Model, sense, func)\n\nSet the objective sense to sense and objective function to func. The objective sense can be either Min, Max, MathOptInterface.MinSense, MathOptInterface.MaxSense or MathOptInterface.FeasibilitySense; see MathOptInterface.ObjectiveSense. In order to set the sense programatically, i.e., when sense is a Julia variable whose value is the sense, one of the three MathOptInterface.ObjectiveSense should be used. Using the symbols :Min or :Max is not supported anymore (it was supported up to JuMP v0.18). The function can either be a single JuMP variable, an affine expression of JuMP variables or a quadratic expression of JuMP variables.\n\nExamples\n\nTo minimize the value of the variable x, do as follows:\n\njulia> model = Model()\nA JuMP Model\n\njulia> @variable(model, x)\nx\n\njulia> @objective(model, Min, x)\nx\n\nTo maximize the value of the affine expression 2x - 1, do as follows:\n\njulia> @objective(model, Max, 2x - 1)\n2 x - 1\n\nTo set a quadratic objective and set the objective sense programatically, do as follows:\n\njulia> sense = JuMP.MOI.MinSense\nMinSense::OptimizationSense = 0\n\njulia> @objective(model, sense, x^2 - 2x + 1)\nx² - 2 x + 1\n\n\n\n\n\n"
+},
+
+{
+    "location": "objective/#JuMP.set_objective_sense",
+    "page": "Objective",
+    "title": "JuMP.set_objective_sense",
+    "category": "function",
+    "text": "set_objective_sense(model::Model, sense::MathOptInterface.OptimizationSense)\n\nSets the objective sense of the model to the given sense. See set_objective_function to set the objective function. These are low-level functions; the recommended way to set the objective is with the @objective macro.\n\n\n\n\n\n"
+},
+
+{
+    "location": "objective/#JuMP.set_objective_function",
+    "page": "Objective",
+    "title": "JuMP.set_objective_function",
+    "category": "function",
+    "text": "set_objective_function(model::Model,\n                       func::Union{AbstractJuMPScalar,\n                                   MathOptInterface.AbstractScalarFunction})\n\nSets the objective function of the model to the given function. See set_objective_sense to set the objective sense. These are low-level functions; the recommended way to set the objective is with the @objective macro.\n\n\n\n\n\n"
+},
+
+{
+    "location": "objective/#JuMP.objective_sense",
+    "page": "Objective",
+    "title": "JuMP.objective_sense",
+    "category": "function",
+    "text": "objective_sense(model::Model)::MathOptInterface.OptimizationSense\n\nReturn the objective sense.\n\n\n\n\n\n"
+},
+
+{
+    "location": "objective/#JuMP.objective_function",
+    "page": "Objective",
+    "title": "JuMP.objective_function",
+    "category": "function",
+    "text": "objective_function(m::Model, T::Type{<:AbstractJuMPScalar})\n\nReturn a object of type T representing the objective function. Error if the objective is not convertible to type T.\n\nExamples\n\njulia> model = Model()\nA JuMP Model\n\njulia> @variable(model, x)\nx\n\njulia> @objective(model, Min, 2x + 1)\n2 x + 1\n\njulia> JuMP.objective_function(model, JuMP.AffExpr)\n2 x + 1\n\njulia> JuMP.objective_function(model, JuMP.QuadExpr)\n2 x + 1\n\njulia> typeof(JuMP.objective_function(model, JuMP.QuadExpr))\nJuMP.GenericQuadExpr{Float64,VariableRef}\n\nWe see with the last two commands that even if the objective function is affine, as it is convertible to a quadratic function, it can be queried as a quadratic function and the result is quadratic.\n\nHowever, it is not convertible to a variable.\n\njulia> JuMP.objective_function(model, JuMP.VariableRef)\nERROR: InexactError: convert(MathOptInterface.SingleVariable, MathOptInterface.ScalarAffineFunction{Float64}(MathOptInterface.ScalarAffineTerm{Float64}[ScalarAffineTerm{Float64}(2.0, VariableIndex(1))], 1.0))\nStacktrace:\n [1] convert at /home/blegat/.julia/dev/MathOptInterface/src/functions.jl:393 [inlined]\n [2] get(::JuMP.JuMPMOIModel{Float64}, ::MathOptInterface.ObjectiveFunction{MathOptInterface.SingleVariable}) at /home/blegat/.julia/dev/MathOptInterface/src/Utilities/model.jl:259\n [3] get at /home/blegat/.julia/dev/MathOptInterface/src/Utilities/universalfallback.jl:105 [inlined]\n [4] get at /home/blegat/.julia/dev/MathOptInterface/src/Utilities/cachingoptimizer.jl:436 [inlined]\n [5] get(::MathOptInterface.Bridges.LazyBridgeOptimizer{MathOptInterface.Utilities.CachingOptimizer{MathOptInterface.AbstractOptimizer,MathOptInterface.Utilities.UniversalFallback{JuMP.JuMPMOIModel{Float64}}},MathOptInterface.Bridges.AllBridgedConstraints{Float64}}, ::MathOptInterface.ObjectiveFunction{MathOptInterface.SingleVariable}) at /home/blegat/.julia/dev/MathOptInterface/src/Bridges/bridgeoptimizer.jl:172\n [6] objective_function(::Model, ::Type{VariableRef}) at /home/blegat/.julia/dev/JuMP/src/objective.jl:121\n [7] top-level scope at none:0\n\n\n\n\n\n"
+},
+
+{
+    "location": "objective/#JuMP.objective_bound",
+    "page": "Objective",
+    "title": "JuMP.objective_bound",
+    "category": "function",
+    "text": "objective_bound(model::Model)\n\nReturn the best known bound on the optimal objective value after a call to optimize!model).\n\n\n\n\n\n"
+},
+
+{
+    "location": "objective/#JuMP.objective_value",
+    "page": "Objective",
+    "title": "JuMP.objective_value",
+    "category": "function",
+    "text": "objective_value(model::Model)\n\nReturn the objective value after a call to optimize!model).\n\n\n\n\n\n"
+},
+
+{
+    "location": "objective/#Objective-1",
+    "page": "Objective",
+    "title": "Objective",
+    "category": "section",
+    "text": "TODO: Describe how the objective is represented (link to MOI docs)Setting the objective function and objective sense:@objective\nJuMP.set_objective_sense\nJuMP.set_objective_functionQuerying the objective function and objective sense:JuMP.objective_sense\nJuMP.objective_functionQuerying the objective value and bound:JuMP.objective_bound\nJuMP.objective_value"
 },
 
 {
