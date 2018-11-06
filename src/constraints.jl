@@ -100,7 +100,6 @@ reshape(vectorized_form, ::VectorShape) = vectorized_form
 ##########################################################################
 # Constraint Reference
 # Holds the index of a constraint in a Model.
-# TODO: Rename "m" field (breaks style guidelines).
 struct ConstraintRef{M <: AbstractModel, C, Shape <: AbstractShape}
     model::M
     index::C
