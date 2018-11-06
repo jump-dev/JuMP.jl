@@ -8,19 +8,26 @@ using MathOptInterface
 const MOI = MathOptInterface
 using JuMP
 
+struct ConstraintIndex
+    value::Int # Index in `model.constraints`
+end
+
 mutable struct MyModel <: JuMP.AbstractModel
     nextvaridx::Int                                 # Next variable index is nextvaridx+1
     variables::Dict{Int, JuMP.ScalarVariable}       # Map varidx -> variable
     varnames::Dict{Int, String}                     # Map varidx -> name
     nextconidx::Int                                 # Next constraint index is nextconidx+1
-    constraints::Dict{Int, JuMP.AbstractConstraint} # Map conidx -> variable
-    connames::Dict{Int, String}                     # Map varidx -> name
+    constraints::Dict{ConstraintIndex,
+                      JuMP.AbstractConstraint}      # Map conidx -> variable
+    connames::Dict{ConstraintIndex, String}         # Map conidx -> name
     objectivesense::MOI.OptimizationSense
     objective_function::JuMP.AbstractJuMPScalar
     obj_dict::Dict{Symbol, Any}                     # Same that JuMP.Model's field `obj_dict`
     function MyModel()
-        new(0, Dict{Int, JuMP.AbstractVariable}(),   Dict{Int, String}(), # Variables
-            0, Dict{Int, JuMP.AbstractConstraint}(), Dict{Int, String}(), # Constraints
+        new(0, Dict{Int, JuMP.AbstractVariable}(),
+            Dict{Int, String}(),                                 # Variables
+            0, Dict{ConstraintIndex, JuMP.AbstractConstraint}(),
+            Dict{ConstraintIndex, String}(),                     # Constraints
             MOI.FeasibilitySense, zero(JuMP.GenericAffExpr{Float64, MyVariableRef}),
             Dict{Symbol, Any}())
     end
@@ -185,32 +192,28 @@ function JuMP.unset_integer(vref::MyVariableRef)
 end
 
 # Constraints
-struct MyConstraintRef
-    model::MyModel # `model` owning the constraint
-    idx::Int       # Index in `model.constraints`
-end
+const MyConstraintRef = JuMP.ConstraintRef{MyModel, ConstraintIndex}
 JuMP.constraint_type(::MyModel) = MyConstraintRef
-if VERSION >= v"0.7-"
-    Base.broadcastable(cref::MyConstraintRef) = Ref(cref)
-end
-function JuMP.add_constraint(m::MyModel, c::JuMP.AbstractConstraint, name::String="")
-    m.nextconidx += 1
-    cref = MyConstraintRef(m, m.nextconidx)
-    m.constraints[cref.idx] = c
+function JuMP.add_constraint(model::MyModel, c::JuMP.AbstractConstraint,
+                             name::String="")
+    model.nextconidx += 1
+    index = ConstraintIndex(model.nextconidx)
+    cref = JuMP.ConstraintRef(model, index, JuMP.shape(c))
+    model.constraints[index] = c
     JuMP.set_name(cref, name)
-    cref
+    return cref
 end
 function JuMP.delete(model::MyModel, constraint_ref::MyConstraintRef)
     @assert JuMP.is_valid(model, constraint_ref)
-    delete!(model.constraints, constraint_ref.idx)
-    delete!(model.connames, constraint_ref.idx)
+    delete!(model.constraints, constraint_ref.index)
+    delete!(model.connames, constraint_ref.index)
 end
 function JuMP.is_valid(model::MyModel, constraint_ref::MyConstraintRef)
     return (model === constraint_ref.model &&
-            constraint_ref.idx in keys(model.constraints))
+            constraint_ref.index in keys(model.constraints))
 end
 function JuMP.constraint_object(cref::MyConstraintRef)
-    return cref.model.constraints[cref.idx]
+    return cref.model.constraints[cref.index]
 end
 
 # Objective
@@ -240,9 +243,9 @@ JuMP.name(vref::MyVariableRef) = vref.model.varnames[vref.idx]
 function JuMP.set_name(vref::MyVariableRef, name::String)
     vref.model.varnames[vref.idx] = name
 end
-JuMP.name(cref::MyConstraintRef) = cref.model.connames[cref.idx]
+JuMP.name(cref::MyConstraintRef) = cref.model.connames[cref.index]
 function JuMP.set_name(cref::MyConstraintRef, name::String)
-    cref.model.connames[cref.idx] = name
+    cref.model.connames[cref.index] = name
 end
 
 end
