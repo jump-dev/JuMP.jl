@@ -78,3 +78,55 @@ function set_objective(model::Model, sense::MOI.OptimizationSense,
     set_objective_sense(model, sense)
     set_objective_function(model, func)
 end
+
+"""
+    objective_function(m::Model, T::Type{<:AbstractJuMPScalar})
+
+Return a object of type `T` representing the objective function.
+Error if the objective is not convertible to type `T`.
+
+## Examples
+
+```jldoctest objective_function; setup = :(using JuMP)
+julia> model = Model()
+A JuMP Model
+
+julia> @variable(model, x)
+x
+
+julia> @objective(model, Min, 2x + 1)
+2 x + 1
+
+julia> JuMP.objective_function(model, JuMP.AffExpr)
+2 x + 1
+
+julia> JuMP.objective_function(model, JuMP.QuadExpr)
+2 x + 1
+
+julia> typeof(JuMP.objective_function(model, JuMP.QuadExpr))
+JuMP.GenericQuadExpr{Float64,VariableRef}
+```
+We see with the last two commands that even if the objective function is affine,
+as it is convertible to a quadratic function, it can be queried as a quadratic
+function and the result is quadratic.
+
+However, it is not convertible to a variable.
+```jldoctest objective_function; filter = r"\\[[0-9]\\].*"
+julia> JuMP.objective_function(model, JuMP.VariableRef)
+ERROR: InexactError: convert(MathOptInterface.SingleVariable, MathOptInterface.ScalarAffineFunction{Float64}(MathOptInterface.ScalarAffineTerm{Float64}[ScalarAffineTerm{Float64}(2.0, VariableIndex(1))], 1.0))
+Stacktrace:
+ [1] convert at /home/blegat/.julia/dev/MathOptInterface/src/functions.jl:393 [inlined]
+ [2] get(::JuMP.JuMPMOIModel{Float64}, ::MathOptInterface.ObjectiveFunction{MathOptInterface.SingleVariable}) at /home/blegat/.julia/dev/MathOptInterface/src/Utilities/model.jl:259
+ [3] get at /home/blegat/.julia/dev/MathOptInterface/src/Utilities/universalfallback.jl:105 [inlined]
+ [4] get at /home/blegat/.julia/dev/MathOptInterface/src/Utilities/cachingoptimizer.jl:436 [inlined]
+ [5] get(::MathOptInterface.Bridges.LazyBridgeOptimizer{MathOptInterface.Utilities.CachingOptimizer{MathOptInterface.AbstractOptimizer,MathOptInterface.Utilities.UniversalFallback{JuMP.JuMPMOIModel{Float64}}},MathOptInterface.Bridges.AllBridgedConstraints{Float64}}, ::MathOptInterface.ObjectiveFunction{MathOptInterface.SingleVariable}) at /home/blegat/.julia/dev/MathOptInterface/src/Bridges/bridgeoptimizer.jl:172
+ [6] objective_function(::Model, ::Type{VariableRef}) at /home/blegat/.julia/dev/JuMP/src/objective.jl:121
+ [7] top-level scope at none:0
+```
+"""
+function objective_function(model::Model, FunType::Type{<:AbstractJuMPScalar})
+    MOIFunType = moi_function_type(FunType)
+    func = MOI.get(model.moi_backend,
+                   MOI.ObjectiveFunction{MOIFunType}())::MOIFunType
+    return jump_function(model, func)
+end

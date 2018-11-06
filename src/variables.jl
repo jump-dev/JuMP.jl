@@ -229,6 +229,10 @@ MOI.SingleVariable(v::VariableRef) = MOI.SingleVariable(index(v))
 function moi_function(variable::AbstractVariableRef)
     return MOI.SingleVariable(variable)
 end
+function moi_function_type(::Type{<:AbstractVariableRef})
+    return MOI.SingleVariable
+end
+
 
 # Note: No validation is performed that the variables belong to the same model.
 MOI.VectorOfVariables(vars::Vector{VariableRef}) = MOI.VectorOfVariables(index.(vars))
@@ -242,17 +246,6 @@ end
 VariableRef(m::Model, f::MOI.SingleVariable) = VariableRef(m, f.variable)
 function jump_function(model::AbstractModel, variable::MOI.SingleVariable)
     return VariableRef(model, variable)
-end
-
-"""
-    objective_function(m::Model, ::Type{VariableRef})
-
-Return a `VariableRef` object representing the objective function.
-Error if the objective is not a `SingleVariable`.
-"""
-function objective_function(m::Model, ::Type{VariableRef})
-    f = MOI.get(m.moi_backend, MOI.ObjectiveFunction{MOI.SingleVariable}())::MOI.SingleVariable
-    return VariableRef(m, f)
 end
 
 ## Bound setter/getters
