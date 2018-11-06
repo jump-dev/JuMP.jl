@@ -272,6 +272,14 @@ end
 ## Constraints
 #------------------------------------------------------------------------
 
+## Notes for extensions
+# For a `ConstraintRef{ModelType, IndexType}` where `ModelType` is not
+# `JuMP.Model` or `IndexType` is not `MathOptInterface.ConstraintIndex`, the
+# methods `JuMP.name` and `JuMP.constraint_object` should be implemented for
+# printing to work. If the `AbstractConstraint` returned by `constraint_object`
+# is not `JuMP.ScalarConstraint` nor `JuMP.VectorConstraint`, then either
+# `JuMP.jump_function` or `JuMP.function_string` and either `JuMP.moi_set` or
+# `JuMP.in_set_string` should be implemented.
 function Base.show(io::IO, ref::ConstraintRef)
     print(io, constraint_string(REPLMode, name(ref), constraint_object(ref)))
 end
