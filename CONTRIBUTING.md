@@ -22,7 +22,7 @@ help answer questions on Discourse!
 ## Improve the documentation
 
 Chances are, if you asked (or answered) a question on Discourse, then it is
-usually a sign that the [documentation](http://www.juliaopt.org/JuMP.jl/latest/)
+usually a sign that the [documentation](https://www.juliaopt.org/JuMP.jl/latest/)
 could be improved. Moreover, since it is your question, you are probably the
 best-placed person to improve it!
 
@@ -54,8 +54,8 @@ Finally, you can also contribute code to JuMP!
 
 If you do not have experience with Git, Github, and Julia development, the first
 steps can be a little daunting. However, there are lots of tutorials available
-online (such as [this](http://try.github.io/), [this](https://guides.github.com/activities/hello-world/),
-[this](https://git-scm.com/book/en/v2), and [this](https://docs.julialang.org/en/stable/manual/packages/#Making-changes-to-an-existing-package-1)).
+online (such as [this](https://try.github.io/), [this](https://guides.github.com/activities/hello-world/),
+[this](https://git-scm.com/book/en/v2), and [this](https://docs.julialang.org/en/stable/stdlib/Pkg/#Developing-packages-1)).
 If you need any help, come join our [Gitter](https://gitter.im/JuliaOpt/JuMP-dev)
 channel and we will walk you through the process.
 
@@ -66,9 +66,9 @@ along the lines of the following:
 2. Discuss (in the issue, or on [Gitter](https://gitter.im/JuliaOpt/JuMP-dev))
     _before_ spending too much time on it to test the waters first and see if
     other contributors are fine with your proposed changes
-3. Make your changes locally. (The Julia manual has a [guide](https://docs.julialang.org/en/stable/manual/packages/#Making-changes-to-an-existing-package-1)
+3. Make your changes locally. (The Julia manual has a [guide](https://docs.julialang.org/en/stable/stdlib/Pkg/#Developing-packages-1)
     on how to do this.) Make sure you:
-    - Follow the [style guide](http://www.juliaopt.org/JuMP.jl/latest/style.html)
+    - Follow the [style guide](https://www.juliaopt.org/JuMP.jl/latest/style/)
     - Add tests and documentation for any changes or new features
 4. Submit a pull request to Github
 5. Update your pull request, responding to any comments
