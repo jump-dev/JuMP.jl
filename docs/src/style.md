@@ -40,7 +40,7 @@ autoformatting tool is available, we adopt the following conventions.
 Julia is mostly insensitive to whitespace characters within lines.
 For consistency:
 
-- Use spaces between binary operators
+- Use spaces between binary operators (with some exceptions, see below)
 - Use a single space after commas and semicolons
 - Do not use extra spaces for unary operators, parentheses, or braces
 - Indent within new blocks (except `module`) using 4 spaces
@@ -64,6 +64,52 @@ function f(x)
 end
 
 end # module Foo
+```
+
+##### Exceptions
+
+For aesthetic reasons, we make an exception for whitespace surrounding the
+exponential operator `^`.
+
+Good:
+```julia
+f(x) = x^2
+```
+
+Bad:
+```julia
+f(x) = x ^ 2
+```
+
+We also make an exception for the `:` operator when it is used to form a range.
+
+Good:
+```julia
+x = 1:5
+```
+
+Bad:
+```julia
+x = 1 : 5
+```
+
+One reason is that it can be confused with Julia's conditional statement:
+`cond ? x : y` which requires whitespace around the `:`.
+
+We also make an exception for juxtaposed multiplication (i.e. dropping the `*`
+between a numeric literal and an expression) when the right-hand side is a
+symbol.
+
+Good:
+```julia
+2x  # Acceptable if there are space constraints.
+2 * x  # This preferred if space is not an issue.
+2 * (x + 1)
+```
+
+Bad:
+```julia
+2(x + 1)
 ```
 
 #### TODO: Line breaks
