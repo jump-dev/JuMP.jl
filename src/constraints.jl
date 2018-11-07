@@ -129,7 +129,7 @@ function delete(model::Model, constraint_ref::ConstraintRef{Model})
         error("The constraint reference you are trying to delete does not " *
               "belong to the model.")
     end
-    MOI.delete(model.moi_backend, index(constraint_ref))
+    MOI.delete(backend(model), index(constraint_ref))
 end
 
 """
@@ -139,7 +139,7 @@ Return `true` if `constraint_ref` refers to a valid constraint in `model`.
 """
 function is_valid(model::Model, constraint_ref::ConstraintRef{Model})
     return (model === constraint_ref.model &&
-            MOI.is_valid(model.moi_backend, constraint_ref.index))
+            MOI.is_valid(backend(model), constraint_ref.index))
 end
 
 #############################################################################
@@ -225,15 +225,15 @@ Add a constraint `c` to `Model m` and sets its name.
 function add_constraint(m::Model, c::AbstractConstraint, name::String="")
     f = moi_function(c)
     s = moi_set(c)
-    if !MOI.supports_constraint(m.moi_backend, typeof(f), typeof(s))
-        if m.moi_backend isa MOI.Bridges.LazyBridgeOptimizer
+    if !MOI.supports_constraint(backend(m), typeof(f), typeof(s))
+        if backend(m) isa MOI.Bridges.LazyBridgeOptimizer
             bridge_message = " and there are no bridges that can reformulate it into supported constraints."
         else
             bridge_message = ", try using `bridge_constraints=true` in the `JuMP.Model` constructor if you believe the constraint can be reformulated to constraints supported by the solver."
         end
         error("Constraints of type $(typeof(f))-in-$(typeof(s)) are not supported by the solver" * bridge_message)
     end
-    cindex = MOI.add_constraint(m.moi_backend, f, s)
+    cindex = MOI.add_constraint(backend(m), f, s)
     cref = ConstraintRef(m, cindex, shape(c))
     if !isempty(name)
         set_name(cref, name)
@@ -267,7 +267,7 @@ function set_coefficient(constraint::ConstraintRef{Model, MOICON{F, S}},
                          variable, value) where {S, T, F <: Union{
                              MOI.ScalarAffineFunction{T},
                              MOI.ScalarQuadraticFunction{T}}}
-    MOI.modify(constraint.model.moi_backend, index(constraint),
+    MOI.modify(backend(constraint.model), index(constraint),
         MOI.ScalarCoefficientChange(index(variable), convert(T, value)))
     return
 end

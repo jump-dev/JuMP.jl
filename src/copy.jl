@@ -100,14 +100,14 @@ function copy_model(model::Model)
     caching_mode = caching_optimizer(model).mode
     # TODO add bridges added to the bridge optimizer that are not part of the
     #      fullbridgeoptimizer
-    bridge_constraints = model.moi_backend isa MOI.Bridges.LazyBridgeOptimizer{<:MOIU.CachingOptimizer}
+    bridge_constraints = backend(model) isa MOI.Bridges.LazyBridgeOptimizer{<:MOIU.CachingOptimizer}
     new_model = Model(caching_mode = caching_mode,
                       bridge_constraints = bridge_constraints)
 
     # Copy the MOI backend, note that variable and constraint indices may have
     # changed, the `index_map` gives the map between the indices of
-    # `model.moi_backend` and the indices of `new_model.moi_backend`.
-    index_map = MOI.copy_to(new_model.moi_backend, model.moi_backend,
+    # `backend(model` and the indices of `backend(new_model)`.
+    index_map = MOI.copy_to(backend(new_model), backend(model),
                             copy_names = true)
     # TODO copynames is needed because of https://github.com/JuliaOpt/MathOptInterface.jl/issues/494
     #      we can remove it when this is fixed and released

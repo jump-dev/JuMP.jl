@@ -269,16 +269,16 @@ if VERSION >= v"0.7-"
 end
 
 
-# In Automatic and Manual mode, `model.moi_backend` is either directly the
+# In Automatic and Manual mode, `backend(model)` is either directly the
 # `CachingOptimizer` if `bridge_constraints=false` was passed in the constructor
 # or it is a `LazyBridgeOptimizer` and the `CachingOptimizer` is stored in the
 # `model` field
 function caching_optimizer(model::Model)
-    if model.moi_backend isa MOIU.CachingOptimizer
-        return model.moi_backend
-    elseif (model.moi_backend isa
+    if backend(model) isa MOIU.CachingOptimizer
+        return backend(model)
+    elseif (backend(model) isa
             MOI.Bridges.LazyBridgeOptimizer{<:MOIU.CachingOptimizer})
-        return model.moi_backend.model
+        return backend(model).model
     else
         error("The function `caching_optimizer` cannot be called on a model " *
               "in `Direct` mode.")
@@ -299,8 +299,8 @@ backend(model::Model) = model.moi_backend
 Return mode (Direct, Automatic, Manual) of model.
 """
 function mode(model::Model)
-    if !(model.moi_backend isa MOI.Bridges.LazyBridgeOptimizer{<:MOIU.CachingOptimizer} ||
-         model.moi_backend isa MOIU.CachingOptimizer)
+    if !(backend(model) isa MOI.Bridges.LazyBridgeOptimizer{<:MOIU.CachingOptimizer} ||
+         backend(model) isa MOIU.CachingOptimizer)
         return Direct
     elseif caching_optimizer(model).mode == MOIU.Automatic
         return Automatic
@@ -441,24 +441,24 @@ end
 
 Return the value of the attribute `attr` from model's MOI backend.
 """
-MOI.get(m::Model, attr::MOI.AbstractModelAttribute) = MOI.get(m.moi_backend, attr)
+MOI.get(m::Model, attr::MOI.AbstractModelAttribute) = MOI.get(backend(m), attr)
 function MOI.get(m::Model, attr::MOI.AbstractVariableAttribute, v::VariableRef)
     @assert m === owner_model(v) # TODO: Improve the error message.
-    MOI.get(m.moi_backend, attr, index(v))
+    MOI.get(backend(m), attr, index(v))
 end
 function MOI.get(m::Model, attr::MOI.AbstractConstraintAttribute, cr::ConstraintRef)
     @assert m === cr.model # TODO: Improve the error message.
-    MOI.get(m.moi_backend, attr, index(cr))
+    MOI.get(backend(m), attr, index(cr))
 end
 
-MOI.set(m::Model, attr::MOI.AbstractModelAttribute, value) = MOI.set(m.moi_backend, attr, value)
+MOI.set(m::Model, attr::MOI.AbstractModelAttribute, value) = MOI.set(backend(m), attr, value)
 function MOI.set(m::Model, attr::MOI.AbstractVariableAttribute, v::VariableRef, value)
     @assert m === owner_model(v) # TODO: Improve the error message.
-    MOI.set(m.moi_backend, attr, index(v), value)
+    MOI.set(backend(m), attr, index(v), value)
 end
 function MOI.set(m::Model, attr::MOI.AbstractConstraintAttribute, cr::ConstraintRef, value)
     @assert m === cr.model # TODO: Improve the error message.
-    MOI.set(m.moi_backend, attr, index(cr), value)
+    MOI.set(backend(m), attr, index(cr), value)
 end
 
 ###############################################################################

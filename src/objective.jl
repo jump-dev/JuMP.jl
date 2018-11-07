@@ -59,7 +59,7 @@ function set_objective_function end
 
 function set_objective_function(model::Model, func::MOI.AbstractScalarFunction)
     attr = MOI.ObjectiveFunction{typeof(func)}()
-    if !MOI.supports(model.moi_backend, attr)
+    if !MOI.supports(backend(model), attr)
         error("The solver does not support an objective function of type ",
               typeof(func), ".")
     end
@@ -126,7 +126,7 @@ Stacktrace:
 """
 function objective_function(model::Model, FunType::Type{<:AbstractJuMPScalar})
     MOIFunType = moi_function_type(FunType)
-    func = MOI.get(model.moi_backend,
+    func = MOI.get(backend(model),
                    MOI.ObjectiveFunction{MOIFunType}())::MOIFunType
     return jump_function(model, func)
 end

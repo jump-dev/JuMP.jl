@@ -136,7 +136,7 @@ function delete(model::Model, variable_ref::VariableRef)
         error("The variable reference you are trying to delete does not " *
               "belong to the model.")
     end
-    MOI.delete(model.moi_backend, variable_ref.index)
+    MOI.delete(backend(model), variable_ref.index)
 end
 
 """
@@ -146,7 +146,7 @@ Return `true` if `variable` refers to a valid variable in `model`.
 """
 function is_valid(model::Model, variable_ref::VariableRef)
     return (model === owner_model(variable_ref) &&
-            MOI.is_valid(model.moi_backend, variable_ref.index))
+            MOI.is_valid(backend(model), variable_ref.index))
 end
 
 # The default hash is slow. It's important for the performance of AffExpr to
@@ -203,7 +203,7 @@ end
 index(v::VariableRef) = v.index
 
 function VariableRef(m::Model)
-    index = MOI.add_variable(m.moi_backend)
+    index = MOI.add_variable(backend(m))
     return VariableRef(m, index)
 end
 
@@ -274,10 +274,10 @@ function set_lower_bound(v::VariableRef,lower::Number)
     # do we have a lower bound already?
     if has_lower_bound(v)
         cindex = lower_bound_index(v)
-        MOI.set(owner_model(v).moi_backend, MOI.ConstraintSet(), cindex, newset)
+        MOI.set(backend(owner_model(v)), MOI.ConstraintSet(), cindex, newset)
     else
         @assert !is_fixed(v)
-        cindex = MOI.add_constraint(owner_model(v).moi_backend,
+        cindex = MOI.add_constraint(backend(owner_model(v)),
                                     MOI.SingleVariable(index(v)), newset)
         set_lower_bound_index(v, cindex)
     end
@@ -337,10 +337,10 @@ function set_upper_bound(v::VariableRef,upper::Number)
     # do we have an upper bound already?
     if has_upper_bound(v)
         cindex = upper_bound_index(v)
-        MOI.set(owner_model(v).moi_backend, MOI.ConstraintSet(), cindex, newset)
+        MOI.set(backend(owner_model(v)), MOI.ConstraintSet(), cindex, newset)
     else
         @assert !is_fixed(v)
-        cindex = MOI.add_constraint(owner_model(v).moi_backend,
+        cindex = MOI.add_constraint(backend(owner_model(v)),
                                     MOI.SingleVariable(index(v)), newset)
         set_upper_bound_index(v, cindex)
     end
@@ -398,10 +398,10 @@ function fix(v::VariableRef,upper::Number)
     # are we already fixed?
     if is_fixed(v)
         cindex = fix_index(v)
-        MOI.set(owner_model(v).moi_backend, MOI.ConstraintSet(), cindex, newset)
+        MOI.set(backend(owner_model(v)), MOI.ConstraintSet(), cindex, newset)
     else
         @assert !has_upper_bound(v) && !has_lower_bound(v) # Do we want to remove these instead of throwing an error?
-        cindex = MOI.add_constraint(owner_model(v).moi_backend,
+        cindex = MOI.add_constraint(backend(owner_model(v)),
                                     MOI.SingleVariable(index(v)), newset)
         set_fix_index(v, cindex)
     end
@@ -461,7 +461,7 @@ function set_integer(variable_ref::VariableRef)
         error("Cannot set the variable_ref $(variable_ref) to integer as it " *
               "is already binary.")
     end
-    constraint_ref = MOI.add_constraint(owner_model(variable_ref).moi_backend,
+    constraint_ref = MOI.add_constraint(backend(owner_model(variable_ref)),
                                         MOI.SingleVariable(index(variable_ref)),
                                         MOI.Integer())
     set_integer_index(variable_ref, constraint_ref)
@@ -505,7 +505,7 @@ function set_binary(variable_ref::VariableRef)
         error("Cannot set the variable_ref $(variable_ref) to binary as it " *
               "is already integer.")
     end
-    constraint_ref = MOI.add_constraint(owner_model(variable_ref).moi_backend,
+    constraint_ref = MOI.add_constraint(backend(owner_model(variable_ref)),
                                         MOI.SingleVariable(index(variable_ref)),
                                         MOI.ZeroOne())
     set_binary_index(variable_ref, constraint_ref)

@@ -81,7 +81,7 @@ function optimize!(model::Model,
         return model.optimize_hook(model)
     end
 
-    MOI.optimize!(model.moi_backend)
+    MOI.optimize!(backend(model))
 
     return
 end

@@ -73,8 +73,8 @@ function test_model()
             model = Model(with_optimizer(MOIU.MockOptimizer,
                                          SimpleLPModel{Float64}()),
                           bridge_constraints=false)
-            @test model.moi_backend isa MOIU.CachingOptimizer
-            @test model.moi_backend === JuMP.caching_optimizer(model)
+            @test JuMP.backend(model) isa MOIU.CachingOptimizer
+            @test JuMP.backend(model) === JuMP.caching_optimizer(model)
             @variable model x
             @test_throws ErrorException @constraint model 0 <= x + 1 <= 1
         end
@@ -150,7 +150,7 @@ function dummy_optimizer_hook(::JuMP.AbstractModel) end
                             reference_map[cref] = new_model[:cref]
                         end
                         @test MOIU.mode(JuMP.caching_optimizer(new_model)) == caching_mode
-                        @test bridge_constraints == (new_model.moi_backend isa MOI.Bridges.LazyBridgeOptimizer)
+                        @test bridge_constraints == (JuMP.backend(new_model) isa MOI.Bridges.LazyBridgeOptimizer)
                         @test new_model.optimize_hook === dummy_optimizer_hook
                         @test new_model.ext[:dummy].model === new_model
                         x_new = reference_map[x]

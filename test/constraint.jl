@@ -287,7 +287,7 @@ end
 
 function test_shadow_price(model_string, constraint_dual, constraint_shadow)
     model = JuMP.Model()
-    MOIU.loadfromstring!(model.moi_backend, model_string)
+    MOIU.loadfromstring!(JuMP.backend(model), model_string)
     JuMP.optimize!(model, with_optimizer(MOIU.MockOptimizer,
                                          JuMP.JuMPMOIModel{Float64}(),
                                          eval_objective_value=false,
