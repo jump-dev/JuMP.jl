@@ -286,6 +286,14 @@ function caching_optimizer(model::Model)
 end
 
 """
+    backend(model::Model)
+
+Return the MathOptInterface model. This should only be used by advanced users
+looking to access low-level MathOptInterface or solver-specific functionality.
+"""
+backend(model::Model) = model.moi_backend
+
+"""
     mode(model::Model)
 
 Return mode (Direct, Automatic, Manual) of model.
