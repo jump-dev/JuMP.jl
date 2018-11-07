@@ -272,12 +272,30 @@ end
 ## Constraints
 #------------------------------------------------------------------------
 
-function Base.show(io::IO, ref::ConstraintRef{Model})
+## Notes for extensions
+# For a `ConstraintRef{ModelType, IndexType}` where `ModelType` is not
+# `JuMP.Model` or `IndexType` is not `MathOptInterface.ConstraintIndex`, the
+# methods `JuMP.name` and `JuMP.constraint_object` should be implemented for
+# printing to work. If the `AbstractConstraint` returned by `constraint_object`
+# is not `JuMP.ScalarConstraint` nor `JuMP.VectorConstraint`, then either
+# `JuMP.jump_function` or `JuMP.function_string` and either `JuMP.moi_set` or
+# `JuMP.in_set_string` should be implemented.
+function Base.show(io::IO, ref::ConstraintRef)
     print(io, constraint_string(REPLMode, name(ref), constraint_object(ref)))
 end
-function Base.show(io::IO, ::MIME"text/latex", ref::ConstraintRef{Model})
+function Base.show(io::IO, ::MIME"text/latex", ref::ConstraintRef)
     print(io, constraint_string(IJuliaMode, name(ref), constraint_object(ref)))
 end
+
+"""
+    function_string(print_mode::Type{<:JuMP.PrintMode},
+                    func::Union{JuMP.AbstractJuMPScalar,
+                                Vector{<:JuMP.AbstractJuMPScalar}})
+
+Return a `String` representing the function `func` using print mode
+`print_mode`.
+"""
+function function_string end
 
 function function_string(print_mode, variable::AbstractVariableRef)
     return var_string(print_mode, variable)
@@ -304,6 +322,17 @@ function function_string(print_mode, quad_vector::Vector{<:GenericQuadExpr})
     return "[" * join(quad_string.(print_mode, quad_vector), ", ") * "]"
 end
 
+"""
+    function_string(print_mode::{<:JuMP.PrintMode},
+                    constraint::JuMP.AbstractConstraint)
+
+Return a `String` representing the function of the constraint `constraint`
+using print mode `print_mode`.
+"""
+function function_string(print_mode, constraint::AbstractConstraint)
+    return function_string(print_mode, jump_function(constraint))
+end
+
 function in_set_string(print_mode, set::MOI.LessThan)
     return string(math_symbol(print_mode, :leq), " ", set.upper)
 end
@@ -325,15 +354,34 @@ end
 # TODO: Convert back to JuMP types for sets like PSDCone.
 # TODO: Consider fancy latex names for some sets. They're currently printed as
 # regular text in math mode which looks a bit awkward.
+"""
+    in_set_string(print_mode::Type{<:JuMP.PrintMode},
+                  set::Union{JuMP.AbstractJuMPScalar,
+                             Vector{<:JuMP.AbstractJuMPScalar}})
+
+Return a `String` representing the membership to the set `set` using print mode
+`print_mode`.
+"""
 function in_set_string(print_mode, set::MOI.AbstractSet)
     return string(math_symbol(print_mode, :in), " ", set)
+end
+
+"""
+    in_set_string(print_mode::Type{<:JuMP.PrintMode},
+                  constraint::JuMP.AbstractConstraint)
+
+Return a `String` representing the membership to the set of the constraint
+`constraint` using print mode `print_mode`.
+"""
+function in_set_string(print_mode, constraint::AbstractConstraint)
+    return in_set_string(print_mode, moi_set(constraint))
 end
 
 # constraint_object is a JuMP constraint object like AffExprConstraint.
 # Assumes a .func and .set member.
 function constraint_string(print_mode, constraint_name, constraint_object)
-    func_str = function_string(print_mode, constraint_object.func)
-    in_set_str = in_set_string(print_mode, constraint_object.set)
+    func_str = function_string(print_mode, constraint_object)
+    in_set_str = in_set_string(print_mode, constraint_object)
     constraint_without_name = func_str * " " * in_set_str
     if print_mode == IJuliaMode
         constraint_without_name = wrap_in_inline_math_mode(constraint_without_name)

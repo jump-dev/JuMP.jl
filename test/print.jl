@@ -38,6 +38,43 @@ Base.:(*)(α::Float64, u::UnitNumber) = UnitNumber(α * u.α)
 Base.abs(u::UnitNumber) = UnitNumber(abs(u.α))
 Base.isless(u::UnitNumber, v::UnitNumber) = isless(u.α, v.α)
 
+# Used to test extensibility of JuMP printing for `JuMP.AbstractConstraint`
+struct CustomConstraint{S <: JuMP.AbstractShape} <: JuMP.AbstractConstraint
+    function_str::String
+    in_set_str::String
+    shape::S
+end
+function JuMP.function_string(print_mode,
+                              constraint::CustomConstraint)
+    return constraint.function_str
+end
+function JuMP.in_set_string(print_mode,
+                            constraint::CustomConstraint)
+    return constraint.in_set_str
+end
+struct CustomIndex
+    value::Int
+end
+function JuMP.add_constraint(model::JuMP.Model, constraint::CustomConstraint,
+                             name::String)
+    if !haskey(model.ext, :custom)
+        model.ext[:custom_constraints] = CustomConstraint[]
+        model.ext[:custom_names] = String[]
+    end
+    constraints = model.ext[:custom_constraints]
+    push!(constraints, constraint)
+    push!(model.ext[:custom_names], name)
+    return JuMP.ConstraintRef(model, CustomIndex(length(constraints)),
+                              constraint.shape)
+end
+function JuMP.constraint_object(cref::JuMP.ConstraintRef{JuMP.Model,
+                                                         CustomIndex})
+    return cref.model.ext[:custom_constraints][cref.index.value]
+end
+function JuMP.name(cref::JuMP.ConstraintRef{JuMP.Model, CustomIndex})
+    return cref.model.ext[:custom_names][cref.index.value]
+end
+
 @testset "Printing" begin
 
     @testset "expressions" begin
@@ -150,6 +187,18 @@ Base.isless(u::UnitNumber, v::UnitNumber) = isless(u.α, v.α)
         constr = @NLconstraint(model, expr - param <= 0)
         io_test(REPLMode, constr, "(subexpression[1] - parameter[1]) - 0.0 $le 0")
         io_test(IJuliaMode, constr, "(subexpression_{1} - parameter_{1}) - 0.0 \\leq 0")
+    end
+
+    @testset "Custom constraint" begin
+        model = Model()
+        function test_constraint(function_str, in_set_str, name)
+            constraint = CustomConstraint(function_str, in_set_str,
+                                          JuMP.ScalarShape())
+            cref = JuMP.add_constraint(model, constraint, name)
+            @test string(cref) == "$name : $function_str $in_set_str"
+        end
+        test_constraint("fun", "set", "name")
+        test_constraint("a", "b", "c")
     end
 end
 

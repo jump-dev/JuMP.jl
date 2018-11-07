@@ -147,13 +147,44 @@ end
 # Abstract base type for all constraint types
 abstract type AbstractConstraint end
 
+"""
+    jump_function(constraint::JuMP.AbstractConstraint)
+
+Return the function of the constraint `constraint` in the function-in-set form
+as a `JuMP.AbstractJuMPScalar` or `Vector{JuMP.AbstractJuMPScalar}`.
+"""
+function jump_function end
+
+"""
+    moi_function(constraint::JuMP.AbstractConstraint)
+
+Return the function of the constraint `constraint` in the function-in-set form
+as a `MathOptInterface.AbstractFunction`.
+"""
+function moi_function(constraint::JuMP.AbstractConstraint)
+    return moi_function(jump_function(constraint))
+end
+
+"""
+    moi_set(constraint::AbstractConstraint)
+
+Return the set of the constraint `constraint` in the function-in-set form as a
+`MathOptInterface.AbstractSet`.
+
+    moi_set(s::AbstractVectorSet, dim::Int)
+
+Returns the MOI set of dimension `dim` corresponding to the JuMP set `s`.
+"""
+function moi_set end
+
 struct ScalarConstraint{F <: AbstractJuMPScalar,
                         S <: MOI.AbstractScalarSet} <: AbstractConstraint
     func::F
     set::S
 end
 
-moi_function_and_set(c::ScalarConstraint) = (moi_function(c.func), c.set)
+jump_function(constraint::ScalarConstraint) = constraint.func
+moi_set(constraint::ScalarConstraint) = constraint.set
 shape(::ScalarConstraint) = ScalarShape()
 function constraint_object(ref::ConstraintRef{Model, MOICON{FuncType, SetType}}) where
         {FuncType <: MOI.AbstractScalarFunction, SetType <: MOI.AbstractScalarSet}
@@ -175,7 +206,8 @@ function VectorConstraint(func::Vector{<:AbstractJuMPScalar},
     VectorConstraint(func, set, VectorShape())
 end
 
-moi_function_and_set(c::VectorConstraint) = (moi_function(c.func), c.set)
+jump_function(constraint::VectorConstraint) = constraint.func
+moi_set(constraint::VectorConstraint) = constraint.set
 shape(c::VectorConstraint) = c.shape
 function constraint_object(ref::ConstraintRef{Model, MOICON{FuncType, SetType}}) where
         {FuncType <: MOI.AbstractVectorFunction, SetType <: MOI.AbstractVectorSet}
@@ -191,7 +223,8 @@ end
 Add a constraint `c` to `Model m` and sets its name.
 """
 function add_constraint(m::Model, c::AbstractConstraint, name::String="")
-    f, s = moi_function_and_set(c)
+    f = moi_function(c)
+    s = moi_set(c)
     if !MOI.supports_constraint(m.moi_backend, typeof(f), typeof(s))
         if m.moi_backend isa MOI.Bridges.LazyBridgeOptimizer
             bridge_message = " and there are no bridges that can reformulate it into supported constraints."
