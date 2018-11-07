@@ -205,8 +205,8 @@ function test_variable_bounds_set_get(ModelType)
     @test JuMP.fix_value(fixedvar) == 2.0
     JuMP.fix(fixedvar, 5)
     @test JuMP.fix_value(fixedvar) == 5
-    @test_throws AssertionError JuMP.lower_bound(fixedvar)
-    @test_throws AssertionError JuMP.upper_bound(fixedvar)
+    @test_throws Exception JuMP.lower_bound(fixedvar)
+    @test_throws Exception JuMP.upper_bound(fixedvar)
 end
 
 function test_variable_starts_set_get(ModelType)
