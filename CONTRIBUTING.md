@@ -22,7 +22,7 @@ help answer questions on Discourse!
 ## Improve the documentation
 
 Chances are, if you asked (or answered) a question on Discourse, then it is
-usually a sign that the [documentation](https://www.juliaopt.org/JuMP.jl/latest/)
+usually a sign that the [documentation](https://www.juliaopt.org/JuMP.jl/dev/)
 could be improved. Moreover, since it is your question, you are probably the
 best-placed person to improve it!
 
@@ -68,7 +68,7 @@ along the lines of the following:
     other contributors are fine with your proposed changes
 3. Make your changes locally. (The Julia manual has a [guide](https://docs.julialang.org/en/stable/stdlib/Pkg/#Developing-packages-1)
     on how to do this.) Make sure you:
-    - Follow the [style guide](https://www.juliaopt.org/JuMP.jl/latest/style/)
+    - Follow the [style guide](https://www.juliaopt.org/JuMP.jl/dev/style/)
     - Add tests and documentation for any changes or new features
 4. Submit a pull request to Github
 5. Update your pull request, responding to any comments
