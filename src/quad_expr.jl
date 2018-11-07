@@ -232,4 +232,20 @@ function Base.copy(q::GenericQuadExpr, new_model::Model)
                     copy(q.qcoeffs), copy(q.aff, new_model))
 end
 
-# TODO: result_value for QuadExpr
+# Requires that foo(::GenericAffExpr) is defined.
+function value(ex::GenericQuadExpr{CoefType, VarType},
+               foo::Function) where {CoefType, VarType}
+    # The return type of appling map to ::VarType.
+    MapVarType = Base.promote_op(foo, VarType)
+    # Later, we're going to multiply two MapVarType together
+    MapVarType2 = Base.promote_op(*, MapVarType, MapVarType)
+    # We're also going to multiply a constant with ::MapVarType2
+    RetType = Base.promote_op(*, CoefType, MapVarType2)
+    ret = convert(RetType, foo(ex.aff))
+    for (vars, coef) in ex.terms
+        ret += coef * foo(vars.a) * foo(vars.b)
+    end
+    return ret
+end
+
+JuMP.result_value(ex::JuMP.GenericQuadExpr) = value(ex, JuMP.result_value)

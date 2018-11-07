@@ -42,6 +42,19 @@ function expressions_test(ModelType::Type{<:JuMP.AbstractModel}, VariableRefType
         @test @inferred(JuMP.value(expr2, i -> 1.0)) == 2.0
     end
 
+    @testset "value for GenericQuadExpr" begin
+        # 1 + 2x(1) + 3x(2)
+        affine_term = JuMP.GenericAffExpr(1.0, 1 => 2.0, 2 => 3.0)
+        # 1 + 2x(1) + 3x(2) + 4x(1)^2 + 5x(1)*x(2) + 6x(2)^2
+        expr = JuMP.GenericQuadExpr(affine_term,
+            JuMP.UnorderedPair(1, 1) => 4.0,
+            JuMP.UnorderedPair(1, 2) => 5.0,
+            JuMP.UnorderedPair(2, 2) => 6.0)
+        @test typeof(@inferred(JuMP.value(expr, i -> 1.0))) == Float64
+        @test @inferred(JuMP.value(expr, i -> 1.0)) == 16
+        @test @inferred(JuMP.value(expr, i -> 2.0)) == 62
+    end
+
     @testset "add_to_expression!(::GenericAffExpr{C,V}, ::V)" begin
         aff = JuMP.GenericAffExpr(1.0, :a => 2.0)
         @test JuMP.isequal_canonical(JuMP.add_to_expression!(aff, :b),

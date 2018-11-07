@@ -220,6 +220,8 @@
         @test JuMP.result_dual(c1) == -1.0
         @test JuMP.result_dual(c2) == 2.0
         @test JuMP.result_dual(c3) == 3.0
+
+        @test JuMP.result_value(2 * x + 3 * y * x) == 2.0
     end
 
     @testset "SOC" begin
