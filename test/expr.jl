@@ -51,8 +51,8 @@ function expressions_test(ModelType::Type{<:JuMP.AbstractModel}, VariableRefType
             JuMP.UnorderedPair(1, 2) => 5.0,
             JuMP.UnorderedPair(2, 2) => 6.0)
         @test typeof(@inferred(JuMP.value(expr, i -> 1.0))) == Float64
-        @test @inferred(JuMP.value(expr, i -> 1.0)) == 16
-        @test @inferred(JuMP.value(expr, i -> 2.0)) == 62
+        @test @inferred(JuMP.value(expr, i -> 1.0)) == 21
+        @test @inferred(JuMP.value(expr, i -> 2.0)) == 71
     end
 
     @testset "add_to_expression!(::GenericAffExpr{C,V}, ::V)" begin
