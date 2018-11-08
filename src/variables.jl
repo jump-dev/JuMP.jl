@@ -257,7 +257,9 @@ function has_lower_bound(v::VariableRef)
 end
 
 function lower_bound_index(v::VariableRef)
-    @assert has_lower_bound(v) # TODO error message
+    if !has_lower_bound(v)
+        error("Variable $(v) does not have a lower bound.")
+    end
     return owner_model(v).variable_to_lower_bound[index(v)]
 end
 function set_lower_bound_index(v::VariableRef, cindex::MOILB)
@@ -320,7 +322,9 @@ function has_upper_bound(v::VariableRef)
 end
 
 function upper_bound_index(v::VariableRef)
-    @assert has_upper_bound(v) # TODO error message
+    if !has_upper_bound(v)
+        error("Variable $(v) does not have an upper bound.")
+    end
     return owner_model(v).variable_to_upper_bound[index(v)]
 end
 function set_upper_bound_index(v::VariableRef, cindex::MOIUB)
