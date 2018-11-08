@@ -288,8 +288,18 @@ end
 """
     backend(model::Model)
 
-Return the MathOptInterface model. This should only be used by advanced users
-looking to access low-level MathOptInterface or solver-specific functionality.
+Return the lower-level MathOptInterface model that sits underneath JuMP. This
+model depends on which operating mode JuMP is in (manual, automatic, or direct),
+and whether there are any bridges in the model.
+
+If JuMP is in direct mode (i.e., the model was created using `direct_model`),
+the backend with be the optimizer passed to `direct_model`. If JuMP is in manual
+or automatic mode, the backend will either be a
+[@ref](`MOI.Utilities.CachingOptimizer`) or a
+[@ref](`MOI.Bridges.LazyBridgeOptimizer`).
+
+This function should only be used by advanced users looking to access low-level
+MathOptInterface or solver-specific functionality.
 """
 backend(model::Model) = model.moi_backend
 
