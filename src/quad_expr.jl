@@ -232,14 +232,15 @@ function Base.copy(q::GenericQuadExpr, new_model::Model)
                     copy(q.qcoeffs), copy(q.aff, new_model))
 end
 
-# Requires that foo(::VarType) is defined.
+# Requires that value_func(::VarType) is defined.
 function value(ex::GenericQuadExpr{CoefType, VarType},
-               foo::Function) where {CoefType, VarType}
+               value_func::Function) where {CoefType, VarType}
     RetType = Base.promote_op(
-        (ctype, vtype) -> ctype * foo(vtype) * foo(vtype), CoefType, VarType)
-    ret = convert(RetType, value(ex.aff, foo))
+        (ctype, vtype) -> ctype * value_func(vtype) * value_func(vtype),
+        CoefType, VarType)
+    ret = convert(RetType, value(ex.aff, value_func))
     for (vars, coef) in ex.terms
-        ret += coef * foo(vars.a) * foo(vars.b)
+        ret += coef * value_func(vars.a) * value_func(vars.b)
     end
     return ret
 end
