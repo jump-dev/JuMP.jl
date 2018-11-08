@@ -757,7 +757,15 @@ var documenterSearchIndex = {"docs": [
     "page": "Style Guide",
     "title": "Whitespace",
     "category": "section",
-    "text": "Julia is mostly insensitive to whitespace characters within lines. For consistency:Use spaces between binary operators\nUse a single space after commas and semicolons\nDo not use extra spaces for unary operators, parentheses, or braces\nIndent within new blocks (except module) using 4 spacesGood:f(x, y) = [3 * dot(x, y); x\']Bad:f(x,y) = [ 3*dot(x,y) ; x\' ]Good:module Foo\n\nfunction f(x)\n    return x + 1\nend\n\nend # module Foo"
+    "text": "Julia is mostly insensitive to whitespace characters within lines. For consistency:Use spaces between binary operators (with some exceptions, see below)\nUse a single space after commas and semicolons\nDo not use extra spaces for unary operators, parentheses, or braces\nIndent within new blocks (except module) using 4 spacesGood:f(x, y) = [3 * dot(x, y); x\']Bad:f(x,y) = [ 3*dot(x,y) ; x\' ]Good:module Foo\n\nfunction f(x)\n    return x + 1\nend\n\nend # module Foo"
+},
+
+{
+    "location": "style/#Exceptions-1",
+    "page": "Style Guide",
+    "title": "Exceptions",
+    "category": "section",
+    "text": "For aesthetic reasons, we make an exception for whitespace surrounding the exponential operator ^.Good:f(x) = x^2Bad:f(x) = x ^ 2We also make an exception for the : operator when it is used to form a range.Good:x = 1:5Bad:x = 1 : 5One reason is that it can be confused with Julia\'s conditional statement: cond ? x : y which requires whitespace around the :.We also make an exception for juxtaposed multiplication (i.e. dropping the * between a numeric literal and an expression) when the right-hand side is a symbol.Good:2x  # Acceptable if there are space constraints.\n2 * x  # This preferred if space is not an issue.\n2 * (x + 1)Bad:2(x + 1)"
 },
 
 {
