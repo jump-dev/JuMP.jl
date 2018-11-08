@@ -3,10 +3,11 @@ Interacting with solvers
 
 A JuMP model keeps a [MathOptInterface (MOI)](https://github.com/JuliaOpt/MathOptInterface.jl)
 *backend* of type `MOI.ModelLike` internally that stores the optimization
-problem and acts as the optimization solver. We call it an MOI *backend* and
-not optimizer as it can also be a wrapper around an optimization file format
-such as MPS that writes the JuMP model in a file. JuMP can be viewed as a
-lightweight user-friendly layer on top of the MOI backend:
+problem and acts as the optimization solver. We call it an MOI *backend* and not
+optimizer as it can also be a wrapper around an optimization file format such as
+MPS that writes the JuMP model in a file. From JuMP, the MathOptInterface
+backend can be accessed using the [`JuMP.backend`](@ref) function. JuMP can be
+viewed as a lightweight user-friendly layer on top of the MOI backend:
 
 * JuMP does not maintain any copy of the model outside this MOI backend.
 * JuMP variable (resp. constraint) references are simple structures containing
@@ -85,6 +86,11 @@ function.
 ```@docs
 JuMP.direct_model
 ```
+
+```@docs
+JuMP.backend
+```
+
 
 TODO: How to set parameters (solver
 specific and generic). Status codes. Accessing the result.
