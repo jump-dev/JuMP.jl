@@ -573,7 +573,7 @@ var documenterSearchIndex = {"docs": [
     "page": "Solvers",
     "title": "Interacting with solvers",
     "category": "section",
-    "text": "A JuMP model keeps a MathOptInterface (MOI) backend of type MOI.ModelLike internally that stores the optimization problem and acts as the optimization solver. We call it an MOI backend and not optimizer as it can also be a wrapper around an optimization file format such as MPS that writes the JuMP model in a file. JuMP can be viewed as a lightweight user-friendly layer on top of the MOI backend:JuMP does not maintain any copy of the model outside this MOI backend.\nJuMP variable (resp. constraint) references are simple structures containing both a reference to the JuMP model and the MOI index of the variable (resp. constraint).\nJuMP gives the constraints to the MOI backend in the form provided by the user without doing any automatic reformulation.\nvariables additions, constraints additions/modifications and objective modifications are directly applied to the MOI backend thus expecting the backend to support such modifications.While this allows JuMP to be a thin wrapper on top of the solver API, as mentioned in the last point above, this seems rather demanding on the solver. Indeed, while some solvers support incremental building of the model and modifications before and after solve, other solvers only support the model being copied at once before solve. Moreover it seems to require all solvers to implement all possible reformulations independently which seems both very ambitious and might generate a lot of duplicated code.These apparent limitations are in fact addressed at the MOI level in a manner that is completely transparent to JuMP. While the MOI API may seem very demanding, it allows MOI models to be a succession of lightweight MOI layers that fill the gap between JuMP requirements and the solver capabilities.JuMP models can be created in three different modes: Automatic, Manual and Direct."
+    "text": "A JuMP model keeps a MathOptInterface (MOI) backend of type MOI.ModelLike internally that stores the optimization problem and acts as the optimization solver. We call it an MOI backend and not optimizer as it can also be a wrapper around an optimization file format such as MPS that writes the JuMP model in a file. From JuMP, the MathOptInterface backend can be accessed using the JuMP.backend function. JuMP can be viewed as a lightweight user-friendly layer on top of the MOI backend:JuMP does not maintain any copy of the model outside this MOI backend.\nJuMP variable (resp. constraint) references are simple structures containing both a reference to the JuMP model and the MOI index of the variable (resp. constraint).\nJuMP gives the constraints to the MOI backend in the form provided by the user without doing any automatic reformulation.\nvariables additions, constraints additions/modifications and objective modifications are directly applied to the MOI backend thus expecting the backend to support such modifications.While this allows JuMP to be a thin wrapper on top of the solver API, as mentioned in the last point above, this seems rather demanding on the solver. Indeed, while some solvers support incremental building of the model and modifications before and after solve, other solvers only support the model being copied at once before solve. Moreover it seems to require all solvers to implement all possible reformulations independently which seems both very ambitious and might generate a lot of duplicated code.These apparent limitations are in fact addressed at the MOI level in a manner that is completely transparent to JuMP. While the MOI API may seem very demanding, it allows MOI models to be a succession of lightweight MOI layers that fill the gap between JuMP requirements and the solver capabilities.JuMP models can be created in three different modes: Automatic, Manual and Direct."
 },
 
 {
@@ -625,11 +625,19 @@ var documenterSearchIndex = {"docs": [
 },
 
 {
+    "location": "solvers/#JuMP.backend",
+    "page": "Solvers",
+    "title": "JuMP.backend",
+    "category": "function",
+    "text": "backend(model::Model)\n\nReturn the lower-level MathOptInterface model that sits underneath JuMP. This model depends on which operating mode JuMP is in (manual, automatic, or direct), and whether there are any bridges in the model.\n\nIf JuMP is in direct mode (i.e., the model was created using JuMP.direct_model), the backend with be the optimizer passed to direct_model. If JuMP is in manual or automatic mode, the backend will either be a MOI.Utilities.CachingOptimizer or a MOI.Bridges.LazyBridgeOptimizer.\n\nThis function should only be used by advanced users looking to access low-level MathOptInterface or solver-specific functionality.\n\n\n\n\n\n"
+},
+
+{
     "location": "solvers/#Direct-mode-1",
     "page": "Solvers",
     "title": "Direct mode",
     "category": "section",
-    "text": "JuMP models can be created in Direct mode using the JuMP.direct_model function.JuMP.direct_modelTODO: How to set parameters (solver specific and generic). Status codes. Accessing the result. How to accurately measure the solve time."
+    "text": "JuMP models can be created in Direct mode using the JuMP.direct_model function.JuMP.direct_modelJuMP.backendTODO: How to set parameters (solver specific and generic). Status codes. Accessing the result. How to accurately measure the solve time."
 },
 
 {
