@@ -232,4 +232,17 @@ function Base.copy(q::GenericQuadExpr, new_model::Model)
                     copy(q.qcoeffs), copy(q.aff, new_model))
 end
 
-# TODO: result_value for QuadExpr
+# Requires that value_func(::VarType) is defined.
+function value(ex::GenericQuadExpr{CoefType, VarType},
+               value_func::Function) where {CoefType, VarType}
+    RetType = Base.promote_op(
+        (ctype, vtype) -> ctype * value_func(vtype) * value_func(vtype),
+        CoefType, VarType)
+    ret = convert(RetType, value(ex.aff, value_func))
+    for (vars, coef) in ex.terms
+        ret += coef * value_func(vars.a) * value_func(vars.b)
+    end
+    return ret
+end
+
+JuMP.result_value(ex::JuMP.GenericQuadExpr) = value(ex, JuMP.result_value)
