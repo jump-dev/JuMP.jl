@@ -435,11 +435,21 @@ end
 # end
 
 # three-argument build_constraint is used for two-sided constraints.
-build_constraint(_error::Function, func::AbstractJuMPScalar, lb::Real, ub::Real) = build_constraint(_error, func, MOI.Interval(lb, ub))
-# To create `MOI.SingleVariable`-in-`MOI.Interval`, use
-# `@constraint(model, var in MOI.Interval(lb, ub)`.
-# See https://github.com/JuliaOpt/JuMP.jl/issues/1586
-build_constraint(_error::Function, func::AbstractVariableRef, lb::Real, ub::Real) = build_constraint(_error, 1.0func, lb, ub)
+function build_constraint(_error::Function, func::AbstractJuMPScalar,
+                          lb::Real, ub::Real)
+    return build_constraint(_error, func, MOI.Interval(lb, ub))
+end
+
+# This method intercepts `@constraint(model, lb <= var <= ub)` and promotes
+# `var` to an `AffExpr` to form a `ScalarAffineFunction-in-Interval` instead of
+# `SingleVariable-in-Interval`. To create a
+# `MOI.SingleVariable`-in-`MOI.Interval`, use
+# `@constraint(model, var in MOI.Interval(lb, ub))`. We do this for consistency
+# with how one-sided (in)equality constraints are parsed.
+function build_constraint(_error::Function, func::AbstractVariableRef,
+                          lb::Real, ub::Real)
+    return build_constraint(_error, 1.0func, lb, ub)
+end
 
 function build_constraint(_error::Function, expr, lb, ub)
     lb isa Number || _error(string("Expected $lb to be a number."))

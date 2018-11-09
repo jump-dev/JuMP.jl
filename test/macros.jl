@@ -119,19 +119,19 @@ function macros_test(ModelType::Type{<:JuMP.AbstractModel}, VariableRefType::Typ
 
         cref = @constraint(m, -1 <= x <= 1)
         c = JuMP.constraint_object(cref)
-        @test c.func isa JuMP.GenericAffExpr # see #1586
+        @test c.func isa JuMP.GenericAffExpr
         @test JuMP.isequal_canonical(c.func, 1x)
         @test c.set == MOI.Interval(-1.0, 1.0)
 
         cref = @constraint(m, -1 <= x <= sum(0.5 for i = 1:2))
         c = JuMP.constraint_object(cref)
-        @test c.func isa JuMP.GenericAffExpr # see #1586
+        @test c.func isa JuMP.GenericAffExpr
         @test JuMP.isequal_canonical(c.func, 1x)
         @test c.set == MOI.Interval(-1.0, 1.0)
 
         cref = @constraint(m, 1 >= x >= 0)
         c = JuMP.constraint_object(cref)
-        @test c.func isa JuMP.GenericAffExpr # see #1586
+        @test c.func isa JuMP.GenericAffExpr
         @test JuMP.isequal_canonical(c.func, 1x)
         @test c.set == MOI.Interval(0.0, 1.0)
 
