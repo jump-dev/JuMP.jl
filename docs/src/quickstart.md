@@ -149,17 +149,17 @@ julia> JuMP.objective_value(model)
 ```
 We can also query the primal result values of the `x` and `y` variables:
 ```jldoctest quickstart_example
-julia> JuMP.result_value(x)
+julia> JuMP.value(x)
 2.0
 
-julia> JuMP.result_value(y)
+julia> JuMP.value(y)
 0.2
 ```
 
 We can also query the value of the dual variable associated with the constraint
 `con` (which we bound to a Julia variable when defining the constraint):
 ```jldoctest quickstart_example
-julia> JuMP.result_dual(con)
+julia> JuMP.dual(con)
 -0.6
 ```
 
@@ -169,7 +169,7 @@ little trickier as we first need to obtain a reference to the constraint:
 julia> x_upper = JuMP.UpperBoundRef(x)
 x <= 2.0
 
-julia> JuMP.result_dual(x_upper)
+julia> JuMP.dual(x_upper)
 -4.4
 ```
 A similar process can be followed to obtain the dual of the lower bound
@@ -178,6 +178,6 @@ constraint on `y`:
 julia> y_lower = JuMP.LowerBoundRef(y)
 y >= 0.0
 
-julia> JuMP.result_dual(y_lower)
+julia> JuMP.dual(y_lower)
 0.0
 ```

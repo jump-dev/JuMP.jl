@@ -61,7 +61,7 @@ if is_optimal
 	for i in 1:length(ORIG)
 		@printf("%s", ORIG[i])
 		for j in 1:length(DEST)
-			@printf("\t%d", JuMP.result_value(Trans[i,j]))
+			@printf("\t%d", JuMP.value(Trans[i,j]))
 		end
 		@printf("\n")
 	end

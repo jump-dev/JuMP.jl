@@ -51,7 +51,7 @@ mod = Model(with_optimizer(solver))
 
 JuMP.optimize!(mod)
 
-Z_val = JuMP.result_value.(Z)
+Z_val = JuMP.value.(Z)
 println("Raw solution")
 println(round.(Z_val, digits=4))
 

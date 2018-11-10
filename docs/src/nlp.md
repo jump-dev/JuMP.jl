@@ -39,12 +39,12 @@ model = Model(with_optimizer(Ipopt.Optimizer))
 @NLobjective(model, Min, (1 - x) ^ 2 + 100 * (y - x ^ 2) ^ 2)
 
 JuMP.optimize!(model)
-println("x = ", JuMP.result_value(x), " y = ", JuMP.result_value(y))
+println("x = ", JuMP.value(x), " y = ", JuMP.value(y))
 
 # adding a (linear) constraint
 @constraint(model, x + y == 10)
 JuMP.optimize!(model)
-println("x = ", JuMP.result_value(x), " y = ", JuMP.result_value(y))
+println("x = ", JuMP.value(x), " y = ", JuMP.value(y))
 ```
 
 TODO: Add links to NLP examples after they are updated.
@@ -166,12 +166,12 @@ model = Model(with_optimizer(Ipopt.Optimizer))
 @NLparameter(model, x == 1.0)
 @NLobjective(model, Min, (z - x) ^ 2)
 JuMP.optimize!(model)
-JuMP.result_value(z) # Equals 1.0.
+JuMP.value(z) # Equals 1.0.
 
 # Now, update the value of x to solve a different problem.
 JuMP.set_value(x, 5.0)
 JuMP.optimize!(model)
-JuMP.result_value(z) # Equals 5.0
+JuMP.value(z) # Equals 5.0
 ```
 
 Using nonlinear parameters can be faster than creating a new model from scratch

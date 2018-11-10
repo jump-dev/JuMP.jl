@@ -50,5 +50,5 @@ for i in 1:m
 end
 JuMP.optimize!(model)
 
-X_val = JuMP.result_value.(X)
+X_val = JuMP.value.(X)
 println(X_val)

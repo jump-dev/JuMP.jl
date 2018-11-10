@@ -57,4 +57,4 @@ end
 
 JuMP.optimize!(m)
 
-println(JuMP.result_value.(cSq))
+println(JuMP.value.(cSq))

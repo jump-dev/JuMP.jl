@@ -19,7 +19,7 @@ function PrintSolution(is_optimal, Trans, ORIG, DEST, PROD)
       for i in 1:length(ORIG)
         for j in 1:length(DEST)
           for p in 1:length(PROD)
-            print(" $(PROD[p]) $(ORIG[i]) $(DEST[j]) = $(JuMP.result_value(Trans[i,j, p]))\t")
+            print(" $(PROD[p]) $(ORIG[i]) $(DEST[j]) = $(JuMP.value(Trans[i,j, p]))\t")
           end
           println()
         end

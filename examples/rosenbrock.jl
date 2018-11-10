@@ -16,6 +16,6 @@ let
 
     JuMP.optimize!(m)
 
-    println("x = ", JuMP.result_value(x), " y = ", JuMP.result_value(y))
+    println("x = ", JuMP.value(x), " y = ", JuMP.value(y))
 
 end

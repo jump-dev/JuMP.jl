@@ -21,17 +21,17 @@ function PrintSolution(is_optimal, CREWS, HIRE, LAYOFF)
     if is_optimal
       println("Crews")
       for t = 0:length(CREWS.data)-1
-        print(" $(JuMP.result_value(CREWS[t])) ")
+        print(" $(JuMP.value(CREWS[t])) ")
       end
       println()
       println("Hire")
       for t = 1:length(HIRE.data)
-        print(" $(JuMP.result_value(HIRE[t])) ")
+        print(" $(JuMP.value(HIRE[t])) ")
       end
       println()
       println("Layoff")
       for t = 1:length(LAYOFF.data)
-        print(" $(JuMP.result_value(LAYOFF[t])) ")
+        print(" $(JuMP.value(LAYOFF[t])) ")
       end
       println()
     else

@@ -69,7 +69,7 @@ function SolveModel(initgrid)
 
     # Check solution
     if is_optimal
-        mipSol = JuMP.result_value.(x)
+        mipSol = JuMP.value.(x)
         sol = zeros(Int,9,9)
         for row in 1:9, col in 1:9, val in 1:9
             if mipSol[row, col, val] >= 0.9

@@ -78,7 +78,7 @@ function SolveUrban()
 
     # Print results
     println("Best objective: $(round(JuMP.objective_value(m)))")
-    println(JuMP.result_value.(x))
+    println(JuMP.value.(x))
 end
 
 SolveUrban()
