@@ -87,6 +87,14 @@ julia> @constraint(model, 1 <= 2x <= 3)
 2 x ∈ [1.0, 3.0]
 ```
 
+Note that JuMP normalizes the constraints given by the user by moving all of the
+terms containing variables to the left-hand side, and all of the constant terms
+to the right-hand side. Thus, we get:
+```jldoctest; setup=:(model=Model(); @variable(model, x))
+julia> @constraint(model, 2x + 1 <= 4x + 4)
+-2 x <= 3.0
+```
+
 ## Constraint containers
 
 So far, we've adding constraints one-by-one. However, just like
@@ -196,7 +204,52 @@ choosing an invalid container type will throw an error.
 
 ## Quadratic constraints
 
-`@constraint(model, x^2 + y^2 <= z^2)`
+All of the examples above have focused on the affine function `2x`. However,
+JuMP also supports quadratic constraints. For example:
+```jldoctest con_quadratic; setup=:(model=Model())
+julia> @variable(model, x[i=1:2])
+2-element Array{VariableRef,1}:
+ x[1]
+ x[2]
+
+julia> @variable(model, t)
+t
+
+julia> @constraint(model, x[1]^2 + x[2]^2 <= t^2)
+x[1]² + x[2]² - t² <= 0.0
+```
+Note that this quadratic constraint is equivalent to a second order cone
+constraint where `||x[1]^2 + x[2]^2||\_2 ≤ t` and `t ≥ 0`. Instead of writing
+out the quadratic expansion, we can pass JuMP the constraint in
+*function*-in-*set* form. To do so, we need to define the function and the set.
+
+The function is a vector of variables:
+```jldoctest con_quadratic
+julia> [t, x[1], x[2]]
+3-element Array{VariableRef,1}:
+ t
+ x[1]
+ x[2]
+```
+Note that the variable `t` comes first, followed by the `x` arguments. The set
+is an instance of [`JuMP.SecondOrderCone`](@ref): `JuMP.SecondOrderCone()`.
+Thus, we can add the second order cone constraint as follows:
+```jldoctest con_quadratic
+julia> @constraint(model, [t, x[1], x[2]] in JuMP.SecondOrderCone())
+[t, x[1], x[2]] in MathOptInterface.SecondOrderCone(3)
+```
+
+JuMP also supports the [`RotatedSecondOrderCone`](@ref) which requires the
+addition of a perspective variable `u`. The rotated second order cone
+constraints the variables `t`, `u`, and `x` such that: `||x[1]^2 + x[2]^2||\_2 ≤
+t × u` and `t, u ≥ 0`. It can be added as follows:
+```jldoctest con_quadratic
+julia> @variable(model, u)
+u
+
+julia> @constraint(model, [t, u, x[1], x[2]] in JuMP.RotatedSecondOrderCone())
+[t, u, x[1], x[2]] in MathOptInterface.RotatedSecondOrderCone(4)
+```
 
 ## Constraints of a collection of variables
 
