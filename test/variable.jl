@@ -416,8 +416,9 @@ function test_variable_end_indexing(ModelType)
         @test x[end,1] == x[2, 1]
         @test x[0, end-1] == x[0, 3]
         @test z[end] == z[2]
-        # TODO: This probably isn't hard to make work.
-        @test_throws ErrorException x[end-1]
+        # TODO: It is redirected to x[11] as it is the 11th element but linear
+        #       indexing is not supported
+        @test_throws KeyError x[end-1]
     else
         @test_throws ErrorException x[end,1]
         @test_throws ErrorException x[end-1]
