@@ -40,7 +40,7 @@ Breaking changes:
   distinguish between previously indistinguishable cases (e.g. did the solver
   have a feasible solution when it stopped because of the time limit?).
 
-- Starting values are separate from result values. Use `result_value` to query
+- Starting values are separate from result values. Use `value` to query
   the value of a variable in a solution. Use `start_value` and `set_start_value`
   to get and set an initial starting point provided to the solver.
 

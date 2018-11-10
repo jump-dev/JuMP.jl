@@ -429,19 +429,19 @@ index(cr::ConstraintRef) = cr.index
 
 # TODO: Why does this method depend on the type of the constraint?
 # TODO: docstring
-function has_result_dual(model::Model,
+function has_dual(model::Model,
                          REF::Type{<:ConstraintRef{Model, T}}) where {T <: MOICON}
     MOI.get(model, MOI.DualStatus()) != MOI.NoSolution
 end
 
 """
-    result_dual(cr::ConstraintRef)
+    dual(cr::ConstraintRef)
 
 Get the dual value of this constraint in the result returned by a solver.
-Use `has_result_dual` to check if a result exists before asking for values.
+Use `has_dual` to check if a result exists before asking for values.
 See also [`shadow_price`](@ref).
 """
-function result_dual(cr::ConstraintRef{Model, <:MOICON})
+function dual(cr::ConstraintRef{Model, <:MOICON})
     reshape(MOI.get(cr.model, MOI.ConstraintDual(), cr), dual_shape(cr.shape))
 end
 

@@ -56,20 +56,20 @@
         MOI.set(mockoptimizer, MOI.ConstraintDual(), JuMP.optimizer_index(JuMP.LowerBoundRef(y)), 1.0)
 
         #@test JuMP.isattached(m)
-        @test JuMP.has_result_values(m)
+        @test JuMP.has_values(m)
 
         @test JuMP.termination_status(m) == MOI.Success
         @test JuMP.primal_status(m) == MOI.FeasiblePoint
 
-        @test JuMP.result_value(x) == 1.0
-        @test JuMP.result_value(y) == 0.0
-        @test JuMP.result_value(x + y) == 1.0
+        @test JuMP.value(x) == 1.0
+        @test JuMP.value(y) == 0.0
+        @test JuMP.value(x + y) == 1.0
         @test JuMP.objective_value(m) == -1.0
 
         @test JuMP.dual_status(m) == MOI.FeasiblePoint
-        @test JuMP.result_dual(c) == -1
-        @test JuMP.result_dual(JuMP.UpperBoundRef(x)) == 0.0
-        @test JuMP.result_dual(JuMP.LowerBoundRef(y)) == 1.0
+        @test JuMP.dual(c) == -1
+        @test JuMP.dual(JuMP.UpperBoundRef(x)) == 0.0
+        @test JuMP.dual(JuMP.LowerBoundRef(y)) == 1.0
     end
 
     @testset "LP (Direct mode)" begin
@@ -96,20 +96,20 @@
         JuMP.optimize!(m)
 
         #@test JuMP.isattached(m)
-        @test JuMP.has_result_values(m)
+        @test JuMP.has_values(m)
 
         @test JuMP.termination_status(m) == MOI.Success
         @test JuMP.primal_status(m) == MOI.FeasiblePoint
 
-        @test JuMP.result_value(x) == 1.0
-        @test JuMP.result_value(y) == 0.0
-        @test JuMP.result_value(x + y) == 1.0
+        @test JuMP.value(x) == 1.0
+        @test JuMP.value(y) == 0.0
+        @test JuMP.value(x + y) == 1.0
         @test JuMP.objective_value(m) == -1.0
 
         @test JuMP.dual_status(m) == MOI.FeasiblePoint
-        @test JuMP.result_dual(c) == -1
-        @test JuMP.result_dual(JuMP.UpperBoundRef(x)) == 0.0
-        @test JuMP.result_dual(JuMP.LowerBoundRef(y)) == 1.0
+        @test JuMP.dual(c) == -1
+        @test JuMP.dual(JuMP.UpperBoundRef(x)) == 0.0
+        @test JuMP.dual(JuMP.LowerBoundRef(y)) == 1.0
     end
 
     # TODO: test Manual mode
@@ -154,18 +154,18 @@
         JuMP.optimize!(m)
 
         #@test JuMP.isattached(m)
-        @test JuMP.has_result_values(m)
+        @test JuMP.has_values(m)
 
         @test JuMP.termination_status(m) == MOI.Success
         @test JuMP.primal_status(m) == MOI.FeasiblePoint
 
-        @test JuMP.result_value(x) == 1.0
-        @test JuMP.result_value(y) == 0.0
+        @test JuMP.value(x) == 1.0
+        @test JuMP.value(y) == 0.0
         @test JuMP.objective_value(m) == 1.0
 
-        @test !JuMP.has_result_dual(m, typeof(JuMP.FixRef(x)))
-        @test !JuMP.has_result_dual(m, typeof(JuMP.IntegerRef(x)))
-        @test !JuMP.has_result_dual(m, typeof(JuMP.BinaryRef(y)))
+        @test !JuMP.has_dual(m, typeof(JuMP.FixRef(x)))
+        @test !JuMP.has_dual(m, typeof(JuMP.IntegerRef(x)))
+        @test !JuMP.has_dual(m, typeof(JuMP.BinaryRef(y)))
     end
 
     @testset "QCQP" begin
@@ -207,21 +207,21 @@
         MOI.set(mockoptimizer, MOI.ConstraintDual(), JuMP.optimizer_index(c3), 3.0)
 
         #@test JuMP.isattached(m)
-        @test JuMP.has_result_values(m)
+        @test JuMP.has_values(m)
 
         @test JuMP.termination_status(m) == MOI.Success
         @test JuMP.primal_status(m) == MOI.FeasiblePoint
 
-        @test JuMP.result_value(x) == 1.0
-        @test JuMP.result_value(y) == 0.0
+        @test JuMP.value(x) == 1.0
+        @test JuMP.value(y) == 0.0
         @test JuMP.objective_value(m) == -1.0
 
         @test JuMP.dual_status(m) == MOI.FeasiblePoint
-        @test JuMP.result_dual(c1) == -1.0
-        @test JuMP.result_dual(c2) == 2.0
-        @test JuMP.result_dual(c3) == 3.0
+        @test JuMP.dual(c1) == -1.0
+        @test JuMP.dual(c2) == 2.0
+        @test JuMP.dual(c3) == 3.0
 
-        @test JuMP.result_value(2 * x + 3 * y * x) == 2.0
+        @test JuMP.value(2 * x + 3 * y * x) == 2.0
     end
 
     @testset "SOC" begin
@@ -268,20 +268,20 @@
         JuMP.optimize!(m)
 
         #@test JuMP.isattached(m)
-        @test JuMP.has_result_values(m)
+        @test JuMP.has_values(m)
 
         @test JuMP.termination_status(m) == MOI.Success
         @test JuMP.primal_status(m) == MOI.FeasiblePoint
 
-        @test JuMP.result_value(x) == 1.0
-        @test JuMP.result_value(y) == 0.0
-        @test JuMP.result_value(z) == 0.0
+        @test JuMP.value(x) == 1.0
+        @test JuMP.value(y) == 0.0
+        @test JuMP.value(z) == 0.0
 
-        @test JuMP.has_result_dual(m, typeof(varsoc))
-        @test JuMP.result_dual(varsoc) == [-1.0, -2.0, -3.0]
+        @test JuMP.has_dual(m, typeof(varsoc))
+        @test JuMP.dual(varsoc) == [-1.0, -2.0, -3.0]
 
-        @test JuMP.has_result_dual(m, typeof(affsoc))
-        @test JuMP.result_dual(affsoc) == [1.0, 2.0, 3.0]
+        @test JuMP.has_dual(m, typeof(affsoc))
+        @test JuMP.dual(affsoc) == [1.0, 2.0, 3.0]
     end
 
     @testset "SDP" begin
@@ -339,21 +339,21 @@
         JuMP.optimize!(m)
 
         #@test JuMP.isattached(m)
-        @test JuMP.has_result_values(m)
+        @test JuMP.has_values(m)
 
         @test JuMP.termination_status(m) == MOI.Success
         @test JuMP.primal_status(m) == MOI.FeasiblePoint
 
-        @test JuMP.result_value.(x) == [1.0 2.0; 2.0 4.0]
-        @test JuMP.has_result_dual(m, typeof(var_psd))
-        @test JuMP.result_dual(var_psd) isa Symmetric
-        @test JuMP.result_dual(var_psd) == [1.0 2.0; 2.0 3.0]
-        @test JuMP.has_result_dual(m, typeof(sym_psd))
-        @test JuMP.result_dual(sym_psd) isa Symmetric
-        @test JuMP.result_dual(sym_psd) == [4.0 5.0; 5.0 6.0]
-        @test JuMP.has_result_dual(m, typeof(con_psd))
-        @test JuMP.result_dual(con_psd) isa Matrix
-        @test JuMP.result_dual(con_psd) == [7.0 9.0; 8.0 10.0]
+        @test JuMP.value.(x) == [1.0 2.0; 2.0 4.0]
+        @test JuMP.has_dual(m, typeof(var_psd))
+        @test JuMP.dual(var_psd) isa Symmetric
+        @test JuMP.dual(var_psd) == [1.0 2.0; 2.0 3.0]
+        @test JuMP.has_dual(m, typeof(sym_psd))
+        @test JuMP.dual(sym_psd) isa Symmetric
+        @test JuMP.dual(sym_psd) == [4.0 5.0; 5.0 6.0]
+        @test JuMP.has_dual(m, typeof(con_psd))
+        @test JuMP.dual(con_psd) isa Matrix
+        @test JuMP.dual(con_psd) == [7.0 9.0; 8.0 10.0]
 
     end
 

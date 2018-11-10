@@ -38,6 +38,6 @@ JuMP.optimize!(m)
 println("Objective is: ", JuMP.objective_value(m))
 println("Solution is:")
 for i = 1:5
-    print("x[$i] = ", JuMP.result_value(x[i]))
+    print("x[$i] = ", JuMP.value(x[i]))
     println(", p[$i]/w[$i] = ", profit[i]/weight[i])
 end

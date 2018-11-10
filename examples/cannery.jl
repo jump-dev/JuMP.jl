@@ -22,7 +22,7 @@ function PrintSolution(is_optimal, plants, markets, ship)
     if is_optimal
       for i in 1:length(plants)
         for j in 1:length(markets)
-          println("  $(plants[i]) $(markets[j]) = $(JuMP.result_value(ship[i,j]))")
+          println("  $(plants[i]) $(markets[j]) = $(JuMP.value(ship[i,j]))")
         end
       end
     else

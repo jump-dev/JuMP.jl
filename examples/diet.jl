@@ -23,7 +23,7 @@ function PrintSolution(is_optimal, foods, buy)
     println("RESULTS:")
     if is_optimal
         for i = 1:length(foods)
-            println("  $(foods[i]) = $(JuMP.result_value(buy[i]))")
+            println("  $(foods[i]) = $(JuMP.value(buy[i]))")
         end
     else
         println("The solver did not find an optimal solution.")

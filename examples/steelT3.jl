@@ -98,18 +98,18 @@ function PrintSolution(is_optimal, area, Make, Inventory, Sell, product, Time)
       for p in product
         println("Make $(p)")
         for t in 1:T
-          print("$(JuMP.result_value(Make[p,t]))\t")
+          print("$(JuMP.value(Make[p,t]))\t")
         end
         println()
         println("Inventory $(p)")
         for t in 1:T
-          print("$(JuMP.result_value(Inventory[p,t]))\t")
+          print("$(JuMP.value(Inventory[p,t]))\t")
         end
         println()
         for a in area[p]
           println("Sell $(p) $(a)")
           for t in 1:T
-            print("$(JuMP.result_value(Sell[p,a,t])) \t")
+            print("$(JuMP.value(Sell[p,a,t])) \t")
           end
         println()
         end

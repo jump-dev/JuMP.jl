@@ -38,6 +38,6 @@ JuMP.set_coefficient
 ## Duals
 
 ```@docs
-JuMP.result_dual
+JuMP.dual
 JuMP.shadow_price
 ```

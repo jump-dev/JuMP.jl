@@ -145,7 +145,7 @@ function initNLP(m::Model)
     end
 end
 
-function result_dual(c::ConstraintRef{Model,NonlinearConstraintIndex})
+function dual(c::ConstraintRef{Model,NonlinearConstraintIndex})
     initNLP(c.m)
     nldata::NLPData = c.m.nlp_data
     # The array is cleared on every solve.

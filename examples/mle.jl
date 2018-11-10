@@ -20,9 +20,9 @@ m = Model(with_optimizer(Ipopt.Optimizer, print_level=0))
 
 JuMP.optimize!(m)
 
-println("μ = ", JuMP.result_value(μ))
+println("μ = ", JuMP.value(μ))
 println("mean(data) = ", mean(data))
-println("σ^2 = ", JuMP.result_value(σ)^2)
+println("σ^2 = ", JuMP.value(σ)^2)
 println("var(data) = ", var(data))
 println("MLE objective: ", JuMP.objective_value(m))
 
@@ -31,7 +31,7 @@ println("MLE objective: ", JuMP.objective_value(m))
 
 JuMP.optimize!(m)
 println("\nWith constraint μ == σ^2:")
-println("μ = ", JuMP.result_value(μ))
-println("σ^2 = ", JuMP.result_value(σ)^2)
+println("μ = ", JuMP.value(μ))
+println("σ^2 = ", JuMP.value(σ)^2)
 
 println("Constrained MLE objective: ", JuMP.objective_value(m))

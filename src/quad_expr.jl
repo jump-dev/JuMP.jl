@@ -245,4 +245,4 @@ function value(ex::GenericQuadExpr{CoefType, VarType},
     return ret
 end
 
-JuMP.result_value(ex::JuMP.GenericQuadExpr) = value(ex, JuMP.result_value)
+JuMP.value(ex::JuMP.GenericQuadExpr) = value(ex, JuMP.value)

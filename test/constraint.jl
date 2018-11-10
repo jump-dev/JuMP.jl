@@ -304,7 +304,7 @@ function test_shadow_price(model_string, constraint_dual, constraint_shadow)
         MOI.set(mock_optimizer, MOI.ConstraintDual(),
                 JuMP.optimizer_index(constraint_ref),
                 constraint_dual[constraint_name])
-        @test JuMP.result_dual(constraint_ref) ==
+        @test JuMP.dual(constraint_ref) ==
               constraint_dual[constraint_name]
         @test JuMP.shadow_price(constraint_ref) ==
               constraint_shadow[constraint_name]

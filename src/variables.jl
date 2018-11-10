@@ -537,14 +537,14 @@ function set_start_value(v::VariableRef, val::Number)
 end
 
 """
-    result_value(v::VariableRef)
+    value(v::VariableRef)
 
 Get the value of this variable in the result returned by a solver.
-Use `has_result_values` to check if a result exists before asking for values.
+Use `has_values` to check if a result exists before asking for values.
 Replaces `getvalue` for most use cases.
 """
-result_value(v::VariableRef) = MOI.get(owner_model(v), MOI.VariablePrimal(), v)
-function has_result_values(model::Model)
+value(v::VariableRef) = MOI.get(owner_model(v), MOI.VariablePrimal(), v)
+function has_values(model::Model)
     return MOI.get(model, MOI.PrimalStatus()) != MOI.NoSolution
 end
 

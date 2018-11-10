@@ -236,12 +236,12 @@ function assert_isfinite(a::AffExpr)
 end
 
 """
-    result_value(v::GenericAffExpr)
+    value(v::GenericAffExpr)
 
 Evaluate an `GenericAffExpr` given the result returned by a solver.
 Replaces `getvalue` for most use cases.
 """
-result_value(a::GenericAffExpr) = value(a, result_value)
+value(a::GenericAffExpr) = value(a, value)
 
 # Note: No validation is performed that the variables in the AffExpr belong to
 # the same model.
