@@ -5,58 +5,71 @@
 #############################################################################
 # maxcut_sdp.jl
 #
-# Solves the SDP relaxation of the classic MAXCUT problem:
-# max   L•X
-# s.t.  diag(X) == e
-#       X ≽ 0
-# where
-#  L = 1/4(Diag(W e) - W)
-#  W = edge-weight matrix
-#  e = vector of 1s
-#
-# then applies the Goemans-Williamson algorithm
+# Demonstrates applying the SDP relaxation to the classic MAXCUT problem.
 #############################################################################
+
+using LinearAlgebra
+import Random
+
 using JuMP
-using SCS
+import SCS
 
-solver = SCSSolver(eps=1e-6)
 
-function solve_maxcut_sdp(n, W)
-    L = 0.25 * (diagm(0=>W*ones(n)) - W)
+"""
+    solve_maxcut_sdp(num_vertex, weights)
+
+Solves a semidefinite programming relaxation of the MAXCUT graph problem:
+
+    max   0.25 * L•X
+    s.t.  diag(X) == e
+          X ≽ 0
+
+Where `L` is the weighted graph Laplacian. Uses this relaxation to generate
+a solution to the original MAXCUT problem using the method from the paper:
+
+    Goemans, M. X., & Williamson, D. P. (1995).
+    Improved approximation algorithms for maximum cut and satisfiability
+    problems using semidefinite programming.
+    Journal of the ACM (JACM), 42(6), 1115-1145.
+"""
+function solve_maxcut_sdp(num_vertex, weights)
+    # Calculate the (weighted) Lapacian of the graph: L = D - W.
+    laplacian = diagm(0 => weights * ones(num_vertex)) - weights
 
     # Solve the SDP relaxation
-    m = Model(solver=solver)
-    @variable(m, X[1:n,1:n], SDP)
-    @objective(m, Max, Compat.dot(L,X))
-    @constraint(m, diag(X) .== 1)
-    solve(m)
+    model = Model(with_optimizer(SCS.Optimizer))
+    @variable(model, X[1:num_vertex, 1:num_vertex], PSD)
+    @objective(model, Max, 1/4 * dot(laplacian, X))
+    @constraint(model, diag(X) .== 1)
+    JuMP.optimize!(model)
+ 
+    # Compute the Cholesky factorization of X, i.e., X = V^T V.
+    opt_X = Hermitian(JuMP.result_value.(X), :U)  # Tell Julia its PSD.
+    factorization = cholesky(opt_X, Val(true); check = false)
+    V = (factorization.P * factorization.L)'
 
-    # Cholesky the result
-    F = cholfact(getvalue(X)[:,:], :U, Val{true})
-    V = (F[:P]*F[:L])'
-
-    # Normalize columns
-    for i = 1:n
-        V[:,i] ./= norm(V[:,i])
+    # Normalize columns.
+    for i in 1:num_vertex
+        V[:, i] ./= norm(V[:, i])
     end
 
-    # Generate "random" vector
-    # - seeded on problem size for repeatability
-    # - for all the problems in this file, the
-    #   solutions are "integral" anyway so there
-    #   isn't really a need for this
-    r = rand(n)
-    cut = ones(n)
-    for i = 1:n
-        if sum(r' * V[:,i]) <= 0
+    # Generate random vector on unit sphere.
+    Random.seed!(num_vertex)
+    r = rand(num_vertex)
+    r /= norm(r)
+    
+    # Iterate over vertices, and assign each vertex to a side of cut.
+    cut = ones(num_vertex)
+    for i in 1:num_vertex
+        if dot(r, V[:, i]) <= 0
             cut[i] = -1
         end
     end
 
-    return cut, sum(L.*(cut*cut'))
+    return cut, 0.25 * sum(laplacian .* (cut * cut'))
 end
 
-function test0()
+function test1()
     #   [1] --- 5 --- [2]
     #
     # Solution:
@@ -69,11 +82,11 @@ function test0()
 
     @assert cut[1] != cut[2]
 
-    println("Solution for Graph 0 = $cutval")
+    println("Solution for Graph 1 = $cutval")
     println(cut)
 end
 
-function test1()
+function test2()
     #   [1] --- 5 --- [2]
     #    |  \          |
     #    |    \        |
@@ -91,39 +104,40 @@ function test1()
          7.0 0.0 0.0 1.0;
          6.0 1.0 1.0 0.0]
     cut, cutval = solve_maxcut_sdp(n, W)
-    @assert (v = cut[2]) == cut[3] == cut[4]
-    @assert cut[1] != v
-
-    println("Solution for Graph 1 = $cutval")
-    println(cut)
-end
-
-function test2()
-    #   [1] --- 1 --- [2]
-    #    |             |
-    #    |             |
-    #    9             9
-    #    |             |
-    #    |             |
-    #   [3] --- 1 --- [4]
-    #
-    # Solution:
-    #  S  = {2,3}
-    #  S' = {1,4}
-    n = 4
-    W = [0.0 1.0 9.0 0.0;
-         1.0 0.0 0.0 9.0;
-         9.0 0.0 0.0 1.0;
-         0.0 9.0 1.0 0.0]
-    cut, cutval = solve_maxcut_sdp(n, W)
-    @assert (v = cut[1]) == cut[4]
-    @assert (w = cut[2]) == cut[3]
-    @assert v != w
+    @assert cut[2] != cut[1]
+    @assert cut[2] == cut[3]
+    @assert cut[2] == cut[4]
 
     println("Solution for Graph 2 = $cutval")
     println(cut)
 end
 
-test0()
+function test3()
+    #   [1] --- 1 --- [2]
+    #    |             |
+    #    |             |
+    #    5             9
+    #    |             |
+    #    |             |
+    #   [3] --- 2 --- [4]
+    #
+    # Solution:
+    #  S  = {2,3}
+    #  S' = {1,4}
+    n = 4
+    W = [0.0 1.0 5.0 0.0;
+         1.0 0.0 0.0 9.0;
+         5.0 0.0 0.0 2.0;
+         0.0 9.0 2.0 0.0]
+    cut, cutval = solve_maxcut_sdp(n, W)
+    @assert cut[1] == cut[4]
+    @assert cut[2] == cut[3]
+    @assert cut[1] != cut[2]
+
+    println("Solution for Graph 3 = $cutval")
+    println(cut)
+end
+
 test1()
 test2()
+test3()
