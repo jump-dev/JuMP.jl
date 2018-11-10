@@ -97,6 +97,20 @@ else
     Base.size(A::JuMPArray) = size(A.data)
     Base.LinearIndices(A::JuMPArray) = error("JuMPArray does not support this operation.")
     Base.axes(A::JuMPArray) = A.axes
+    Base.CartesianIndices(a::JuMPArray) = CartesianIndices(a.data)
+    struct JuMPArrayKey{T<:Tuple}
+        I::T
+    end
+    Base.getindex(k::JuMPArrayKey, index::Int) = getindex(k.I, index)
+    function JuMPArrayKey(ci::CartesianIndex, axes_array)
+        return JuMPArrayKey(Tuple(map(x->axes_array[x[1]][x[2]],
+                            enumerate(ci.I))))
+    end
+    function Base.keys(a::JuMPArray)
+        axes_array = map(x->collect(x), a.axes)
+        return map(x->JuMPArrayKey(x, axes_array), CartesianIndices(a))
+    end
+    Base.getindex(a::JuMPArray, k::JuMPArrayKey) = a[k.I...]
 end
 
 # Arbitrary typed indices. Linear indexing not supported.
