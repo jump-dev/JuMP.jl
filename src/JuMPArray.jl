@@ -98,16 +98,26 @@ else
     Base.LinearIndices(A::JuMPArray) = error("JuMPArray does not support this operation.")
     Base.axes(A::JuMPArray) = A.axes
     Base.CartesianIndices(a::JuMPArray) = CartesianIndices(a.data)
+    """
+        JuMPArrayKey
+
+    Structure to hold a JuMPArray key when it is viewed as key-value collection
+    """
     struct JuMPArrayKey{T<:Tuple}
         I::T
     end
     Base.getindex(k::JuMPArrayKey, index::Int) = getindex(k.I, index)
     function JuMPArrayKey(ci::CartesianIndex, axes_array)
+        # using axes_arrays to translate elements of an index of
+        # JuMPArray data into elements of its axes, in order
+        # to create the JuMPArrayKey.
         return JuMPArrayKey(Tuple(map(x->axes_array[x[1]][x[2]],
                             enumerate(ci.I))))
     end
+    as_array(collection) = collect(collection)
+    as_array(collection::AbstractArray) = collection
     function Base.keys(a::JuMPArray)
-        axes_array = map(x->collect(x), a.axes)
+        axes_array = map(as_array, a.axes)
         return map(x->JuMPArrayKey(x, axes_array), CartesianIndices(a))
     end
     Base.getindex(a::JuMPArray, k::JuMPArrayKey) = a[k.I...]

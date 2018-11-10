@@ -248,14 +248,23 @@ And data, a 0-dimensional Array{$Int,0}:
 1"""
     end
 
-    @testset "JuMPArray keys" begin
-        A = JuMPArray([5.0 6.0; 7.0 8.0], 2:3, [:a,:b])
-        A_keys = keys(A)
-        @test A[A_keys[1,2]] == 6.0
-        @test A[A_keys[2,2]] == 8.0
-        @test A_keys[1,2][1] == 2
-        @test A_keys[1,2][2] == :b
-        @test A_keys[2,2][1] == 3
-        @test A_keys[2,2][2] == :b
+    if VERSION >= v"0.7-"
+        @testset "JuMPArray keys" begin
+            A = JuMPArray([5.0 6.0; 7.0 8.0], 2:3, [:a,:b])
+            A_keys = keys(A)
+            @test A[A_keys[1,2]] == 6.0
+            @test A[A_keys[2,2]] == 8.0
+            @test A_keys[1,2][1] == 2
+            @test A_keys[1,2][2] == :b
+            @test A_keys[2,2][1] == 3
+            @test A_keys[2,2][2] == :b
+
+            B = JuMPArray([5.0 6.0; 7.0 8.0], 2:3, Set([:a,:b]))
+            B_keys = keys(B)
+            @test JuMP.JuMPArrayKey((2, :a)) in B_keys
+            @test JuMP.JuMPArrayKey((2, :b)) in B_keys
+            @test JuMP.JuMPArrayKey((3, :a)) in B_keys
+            @test JuMP.JuMPArrayKey((3, :b)) in B_keys
+        end
     end
 end
