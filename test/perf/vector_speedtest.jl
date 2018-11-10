@@ -1,3 +1,4 @@
+import Compat
 using JuMP
 
 function test(n::Int)
