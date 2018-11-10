@@ -251,13 +251,13 @@ And data, a 0-dimensional Array{$Int,0}:
     if VERSION >= v"0.7-"
         @testset "JuMPArray keys" begin
             A = JuMPArray([5.0 6.0; 7.0 8.0], 2:3, [:a,:b])
-            A_keys = keys(A)
-            @test A[A_keys[1,2]] == 6.0
-            @test A[A_keys[2,2]] == 8.0
-            @test A_keys[1,2][1] == 2
-            @test A_keys[1,2][2] == :b
-            @test A_keys[2,2][1] == 3
-            @test A_keys[2,2][2] == :b
+            A_keys = collect(keys(A))
+            @test A[A_keys[3]] == 6.0
+            @test A[A_keys[4]] == 8.0
+            @test A_keys[3][1] == 2
+            @test A_keys[3][2] == :b
+            @test A_keys[4][1] == 3
+            @test A_keys[4][2] == :b
 
             B = JuMPArray([5.0 6.0; 7.0 8.0], 2:3, Set([:a,:b]))
             B_keys = keys(B)

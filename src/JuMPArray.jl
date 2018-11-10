@@ -101,7 +101,7 @@ else
     """
         JuMPArrayKey
 
-    Structure to hold a JuMPArray key when it is viewed as key-value collection
+    Structure to hold a JuMPArray key when it is viewed as key-value collection.
     """
     struct JuMPArrayKey{T<:Tuple}
         I::T
@@ -116,9 +116,27 @@ else
     end
     as_array(collection) = collect(collection)
     as_array(collection::AbstractArray) = collection
+    struct JuMPArrayKeys{T<:Tuple, C<:CartesianIndices}
+        axes_array::T
+        cartesian_indices::C
+    end
+    function Base.iterate(iter::JuMPArrayKeys)
+        next = iterate(iter.cartesian_indices)
+        return next == nothing ? nothing :
+               (JuMPArrayKey(next[1], iter.axes_array), next[2])
+    end
+    function Base.iterate(iter::JuMPArrayKeys, state)
+        next = iterate(iter.cartesian_indices, state)
+        return next == nothing ? nothing :
+               (JuMPArrayKey(next[1], iter.axes_array), next[2])
+    end
+    Base.length(iter::JuMPArrayKeys) = length(iter.cartesian_indices)
+    function Base.eltype(iter::JuMPArrayKeys)
+        return JuMPArrayKey{Tuple{eltype.(iter.axes_array)...}}
+    end
     function Base.keys(a::JuMPArray)
         axes_array = map(as_array, a.axes)
-        return map(x->JuMPArrayKey(x, axes_array), CartesianIndices(a))
+        return JuMPArrayKeys(axes_array, CartesianIndices(a))
     end
     Base.getindex(a::JuMPArray, k::JuMPArrayKey) = a[k.I...]
 end
