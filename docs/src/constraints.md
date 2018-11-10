@@ -2,6 +2,7 @@
 CurrentModule = JuMP
 DocTestSetup = quote
     using JuMP
+    const MOI = JuMP.MathOptInterface
 end
 DocTestFilters = [r"≤|<=", r"≥|>=", r" == | = ", r" ∈ | in "]
 ```
@@ -26,12 +27,17 @@ types of functions and sets that JuMP knows about as needed. You can also more
 details about this *function-in-set* concept in the MathOptInterface
 documentation.
 
+!!! note
+    Throughout this page (and these docs), we use `MOI` as a shorthand for the
+    `MathOptInterface` module. This can be created by including the line `const
+    MOI = JuMP.MathOptInterface` after `using JuMP` in your code.
+
 ## The `@constraint` macro
 
 Constraints are added to a JuMP model using the [`@constraint`](@ref) macro. It
 is similar to the [`@variable`](@ref) macro. Here is an example of how to add
 the constraint ``2x \le 1`` to a JuMP model:
-```jldoctest con1; setup = :(model = JuMP.Model(); @variable(model, x))
+```jldoctest con1; setup = :(model = Model(); @variable(model, x))
 julia> @constraint(model, con, 2x <= 1)
 con : 2 x <= 1.0
 ```
@@ -136,9 +142,9 @@ julia> @constraint(model, [i = 1:2], i * x <= i + 1)
 
 Just like [`@variable`](@ref), JuMP will form an `Array` of constraints when it
 can determine at compile time that the indices are one-based integer ranges.
-Therefore `con[1:b]` will work, but `con[a:b]` will throw an error. If JuMP
-cannot determine that the indices are one-based integer ranges, JuMP will
-constraint a `JuMPArray` instead.
+Therefore `con[1:b]` will work, but `con[a:b]` will not. If JuMP cannot
+determine that the indices are one-based integer ranges (e.g., in the case of
+`con[a:b]`), JuMP will create a `JuMPArray` instead.
 
 ### JuMPArrays
 
@@ -170,37 +176,50 @@ Dict{Any,ConstraintRef{Model,C,Shape} where Shape<:JuMP.AbstractShape where C} w
 ### Forcing the container type
 
 When creating a container of constraints, JuMP will attempt to choose the
-tightest container type that can store the constraints. Thus, it will prefer
-to create an Array before a JuMPArray, and a JuMPArray before a dictionary.
-However, because this happens at compile time, it does not always make the best
-choice. To illustrate this, consider the following example:
-```jldoctest con_force_container; setup=:(model=Model(); @variable(model, x))
-julia> A = 1:2
-1:2
+tightest container type that can store the constraints. However, because this
+happens at compile time, it does not always make the best choice. Just like in
+[`@variable`](@ref), we can force the type of container using the `container`
+keyword. For syntax and the reason behind this, take a look at the
+[variable docs](@ref variable_forcing).
 
-julia> @constraint(model, con[i=A], i * x <= i + 1)
-1-dimensional JuMPArray{ConstraintRef{Model,C,Shape} where Shape<:JuMP.AbstractShape where C,1,...} with index sets:
-    Dimension 1, 1:2
-And data, a 2-element Array{ConstraintRef{Model,C,Shape} where Shape<:JuMP.AbstractShape where C,1}:
- con[1] : x <= 2.0
- con[2] : 2 x <= 3.0
+## Vectorized constraints
+
+We can also add constraints to JuMP using vectorized linear algebra. For
+example:
+
+```jldoctest con_vector; setup=:(model = Model())
+julia> @variable(model, x[i=1:2])
+2-element Array{VariableRef,1}:
+ x[1]
+ x[2]
+
+julia> A = [1 2; 3 4]
+2×2 Array{Int64,2}:
+ 1  2
+ 3  4
+
+julia> b = [5, 6]
+2-element Array{Int64,1}:
+ 5
+ 6
+
+julia> @constraint(model, con, A * x .== b)
+2-element Array{ConstraintRef{Model,MathOptInterface.ConstraintIndex{MathOptInterface.ScalarAffineFunction{Float64},MathOptInterface.EqualTo{Float64}},JuMP.ScalarShape},1}:
+ x[1] + 2 x[2] == 5.0
+ 3 x[1] + 4 x[2] == 6.0
 ```
 
-Since the value (and type) of `A` is unknown at compile time, JuMP is unable to
-infer that `A` is a one-based integer range. Therefore, JuMP creates a
-`JuMPArray`, even though it could store these constraints in a standard
-one-dimensional `Array`.
+!!! note
+    Make sure to use the broadcasting syntax `.==` (or `.>=` and `.<=`). If you
+    use a standard comparison, an error will be thrown.
 
-We can share our knowledge that it is possible to store these constraints as
-an array by setting the `container` keyword:
-```jldoctest con_force_container
-julia> @constraint(model, con2[i=A], i * x <= i + 1, container=Array)
-2-element Array{ConstraintRef{Model,C,Shape} where Shape<:JuMP.AbstractShape where C,1}:
- con2[1] : x <= 2.0
- con2[2] : 2 x <= 3.0
+Instead of adding an array of `ScalarAffineFunction-in-EqualTo` constraints, we
+can instead construct a `VectorAffineFunction-in-Nonnegatives` constraint as
+follows:
+```jldoctest con_vector
+julia> @constraint(model, A * x - b in MOI.Nonnegatives(2))
+[x[1] + 2 x[2] - 5, 3 x[1] + 4 x[2] - 6] in MathOptInterface.Nonnegatives(2)
 ```
-JuMP now creates an Array of constraints instead of a JuMPArray. Note that
-choosing an invalid container type will throw an error.
 
 ## Quadratic constraints
 
@@ -251,11 +270,71 @@ julia> @constraint(model, [t, u, x[1], x[2]] in JuMP.RotatedSecondOrderCone())
 [t, u, x[1], x[2]] in MathOptInterface.RotatedSecondOrderCone(4)
 ```
 
-## Constraints of a collection of variables
+## Constraints on a single variable
 
-Cones, SOS1, SO2, etc
+In [Variables](@ref), we saw how to modify the variable bounds, as well as add
+binary and integer restrictions to the domain of each variable. This can also be
+achieved using the [`@constraint`](@ref) macro. For example, `MOI.ZeroOne()`
+restricts the domain to ``\{0, 1\}:
+```jldoctest; setup = :(model = Model(); @variable(model, x))
+julia> @constraint(model, x in MOI.ZeroOne())
+x in MathOptInterface.ZeroOne()
+```
+and `MOI.Integer()` restricts to the domain to the integers ``\mathbb{Z}``:
+```jldoctest; setup = :(model = Model(); @variable(model, x))
+julia> @constraint(model, x in MOI.Integer())
+x in MathOptInterface.Integer()
+```    
 
+JuMP also supports modeling semi-continuous variables, whose domain is ``\{0\} ∪
+[l, u]``, using the `MOI.Semicontinuous` set:
+```jldoctest; setup = :(model = Model(); @variable(model, x))
+julia> @constraint(model, x in MOI.Semicontinuous(1.5, 3.5))
+x in MathOptInterface.Semicontinuous{Float64}(1.5, 3.5)
+```
+as well as semi-integer variables, whose domain is ``{0} ∪ {l, l+1, \dots, u}``,
+using the `MOI.Semiinteger` set:
+```jldoctest; setup = :(model = Model(); @variable(model, x))
+julia> @constraint(model, x in MOI.Semiinteger(1.0, 3.0))
+x in MathOptInterface.Semiinteger{Float64}(1.0, 3.0)
+```
 
+## Constraints on a collection of variables
+
+In addition to constraining the domain of a single variable, JuMP supports
+placing constraints of a subset of the variables. We already saw an example of
+this in the [Quadratic constraints](@ref) section when we constrained a vector
+of variables to belong to the second order cone.
+
+In a special ordered set of type I (often denoted SOS-I), at most one variable
+can take a non-zero value. We can construct SOS-I constraints using the
+`MOI.SOS1` set:
+```jldoctest con_sos; setup=:(model = Model())
+julia> @variable(model, x[1:3])
+3-element Array{VariableRef,1}:
+ x[1]
+ x[2]
+ x[3]
+
+julia> @constraint(model, x in MOI.SOS1([1.0, 2.0, 3.0]))
+[x[1], x[2], x[3]] in MathOptInterface.SOS1{Float64}([1.0, 2.0, 3.0])
+```
+Note that we have to pass `MOI.SOS1` a *weight* vector. This vector implies an
+ordering on the variables. If the decision variables are related and have a
+physical ordering (e.g., they correspond to the size of a factory to be built,
+and the SOS-I constraint enforces that only one factory can be built), then the
+weight vector, although not used directly in the constraint, can help the solver
+make better decision in the solution process.
+
+This ordering is more important in a special ordered set of type II (SOS-II), in
+which at most two values can be non-zero, and if there are two non-zeros, they
+must be consecutive according to the ordering. For example, in the following
+constraint, the possible non-zero pairs are (`x[1]` and `x[3]`) and (`x[2]` and
+`x[3]`):
+```jldoctest con_sos
+julia> @constraint(model, x in MOI.SOS2([3.0, 1.0, 2.0]))
+[x[1], x[2], x[3]] in MathOptInterface.SOS2{Float64}([3.0, 1.0, 2.0])
+```
 
 DRAFT: Describe how constraints are represented (link to MOI docs). Constraints
 are very similar to variables in (1) how names work (2) how attributes work, and

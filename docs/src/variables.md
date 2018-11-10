@@ -261,7 +261,9 @@ julia> JuMP.lower_bound.(x)
 
 JuMP will form an `Array` of JuMP variables when it can determine at compile
 time that the indices are one-based integer ranges. Therefore `x[1:b]` will
-work, but `x[a:b]` will throw an error.
+work, but `x[a:b]` will not. If JuMP cannot determine that the indices are
+one-based integer ranges (e.g., in the case of `x[a:b]`), JuMP will create a
+`JuMPArray` instead.
 
 ### [JuMPArrays](@id variable_jump_arrays)
 
@@ -339,7 +341,7 @@ Dict{Any,VariableRef} with 2 entries:
   2 => x[2]
 ```
 
-### Forcing the container type
+### [Forcing the container type](@id variable_forcing)
 
 When creating a container of JuMP variables, JuMP will attempt to choose the
 tightest container type that can store the JuMP variables. Thus, it will prefer
