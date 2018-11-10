@@ -21,9 +21,6 @@ import BenchmarkTools: @benchmark, allocs
 using Compat
 using Compat.Random
 using JuMP
-@static if VERSION >= v"0.7.0-DEV.3406"
-    srand(seed) = Random.seed!(seed)
-end
 
 """
     p_median(num_facility, num_customer, num_location)
@@ -38,7 +35,7 @@ We use anonymous variables to remove the cost of name generation from the
 benchmark.
 """
 function p_median(num_facilities, num_customers, num_locations)
-    srand(10)
+    Random.seed!(10)
     customer_locations = [rand(1:num_locations) for _ in 1:num_customers]
 
     model = Model()
