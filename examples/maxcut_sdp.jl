@@ -1,3 +1,7 @@
+#  Copyright 2017, Iain Dunning, Joey Huchette, Miles Lubin, and contributors
+#  This Source Code Form is subject to the terms of the Mozilla Public
+#  License, v. 2.0. If a copy of the MPL was not distributed with this
+#  file, You can obtain one at http://mozilla.org/MPL/2.0/.
 #############################################################################
 # JuMP
 # An algebraic modeling langauge for Julia
@@ -44,7 +48,7 @@ function solve_maxcut_sdp(num_vertex, weights)
     JuMP.optimize!(model)
  
     # Compute the Cholesky factorization of X, i.e., X = V^T V.
-    opt_X = Hermitian(JuMP.result_value.(X), :U)  # Tell Julia its PSD.
+    opt_X = Hermitian(JuMP.value.(X), :U)  # Tell Julia its PSD.
     factorization = cholesky(opt_X, Val(true); check = false)
     V = (factorization.P * factorization.L)'
 
