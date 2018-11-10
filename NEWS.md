@@ -23,14 +23,14 @@ Breaking changes:
   [slides](http://www.juliaopt.org/meetings/bordeaux2018/lubin.pdf) from
   JuMP-dev 2018.) JuMP 0.19 is compatible only with solvers that have been
   updated for MOI. See the
-  [installation guide](http://www.juliaopt.org/JuMP.jl/latest/installation.html)
+  [installation guide](http://www.juliaopt.org/JuMP.jl/dev/installation/)
   for a list of solvers that have and have not yet been updated.
 
 - JuMP containers (e.g., the objects returned by `@variable`) have been
   redesigned. `Base.Dict` replaces `JuMPDict`, `JuMPArray` was rewritten
   (inspired by `AxisArrays`), and you can now request a container type with the
   `container=` keyword to the macros. See the corresponding
-  [documentation](http://www.juliaopt.org/JuMP.jl/latest/variables.html#Variable-containers-1)
+  [documentation](http://www.juliaopt.org/JuMP.jl/dev/variables/#Variable-containers-1)
   for more details.
 
 - The statuses returned by solvers have changed. See the possible status
@@ -109,7 +109,7 @@ New features:
 
 - Direct mode and manual mode provide explicit control over when copies of a
   model are stored and/or regenerated. See the corresponding
-  [documentation](http://www.juliaopt.org/JuMP.jl/latest/solvers.html).
+  [documentation](http://www.juliaopt.org/JuMP.jl/dev/solvers/).
 
 
 Known issues:
