@@ -134,6 +134,19 @@ function test_model()
         @test optimizer.a == 1
         @test optimizer.b == 2
     end
+
+    @testset "solver_name" begin
+        @testset "Not attached" begin
+            model = Model()
+            @test JuMP.solver_name(model) == "No optimizer attached."
+        end
+
+        @testset "Mock" begin
+            model = Model(with_optimizer(MOIU.MockOptimizer,
+                                         SimpleLPModel{Float64}()))
+            @test JuMP.solver_name(model) == "Mock"
+        end
+    end
 end
 
 @testset "Model" begin

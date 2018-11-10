@@ -146,8 +146,35 @@ wrap_in_inline_math_mode(str) = "\$ $str \$"
 #------------------------------------------------------------------------
 ## Model
 #------------------------------------------------------------------------
-function Base.show(io::IO, model::Model) # TODO(#1180) temporary
-    print(io, "A JuMP Model")
+function Base.show(io::IO, model::Model)
+    println(io, "A JuMP Model")
+    # TODO: Consider allowing a JuMP model to have a string name.
+    println(io, "Variables: ", num_variables(model))
+    # https://github.com/JuliaOpt/JuMP.jl/issues/1556
+    # TODO: This doesn't account for nonlinear objectives
+    # println(io, "\tObjective function type:",
+    #            MOI.get(model, MOI.ObjectiveFunctionType()))
+    constraint_types = MOI.get(model, MOI.ListOfConstraints())
+    for (F, S) in MOI.get(model, MOI.ListOfConstraints())
+        num_constraints = MOI.get(model, MOI.NumberOfConstraints{F, S}())
+        println(io, "`$F`-in-`$S`: $num_constraints constraints")
+    end
+    if !iszero(num_nl_constraints(model))
+        println(io, "Nonlinear: ", num_nl_constraints(model), " constraints")
+    end
+    model_mode = mode(model)
+    println(io, "Model mode: ", model_mode)
+    if model_mode == Manual || model_mode == Automatic
+        println(io, "CachingOptimizer state: ",
+                MOIU.state(caching_optimizer(model)))
+    end
+    println(io, "Solver name: ", solver_name(model))
+    names_in_scope = collect(keys(object_dictionary(model)))
+    if !isempty(names_in_scope)
+        println(io, "Names registered in the model: ",
+                    join(string.(names_in_scope), ", "))
+    end
+    # TODO: The last print shouldn't have a new line
 end
 
 #------------------------------------------------------------------------
