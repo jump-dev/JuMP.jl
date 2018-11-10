@@ -90,6 +90,10 @@ end
 @testset "JuMPArray" begin
     @testset "Range index set" begin
         A = @inferred JuMPArray([1.0,2.0], 2:3)
+        if VERSION >= v"0.7-"
+            @test size(A) == (2,)
+            @test size(A, 1) == 2
+        end
         @test @inferred A[2] == 1.0
         @test A[3] == 2.0
         @test A[2,1] == 1.0
@@ -111,6 +115,10 @@ And data, a 2-element Array{Float64,1}:
 
     @testset "Symbol index set" begin
         A = @inferred JuMPArray([1.0,2.0], [:a, :b])
+        if VERSION >= v"0.7-"
+            @test size(A) == (2,)
+            @test size(A, 1) == 2
+        end
         @test @inferred A[:a] == 1.0
         @test A[:b] == 2.0
         @test length.(Compat.axes(A)) == (2,)
@@ -128,6 +136,11 @@ And data, a 2-element Array{Float64,1}:
 
     @testset "Mixed range/symbol index sets" begin
         A = @inferred JuMPArray([1 2; 3 4], 2:3, [:a, :b])
+        if VERSION >= v"0.7-"
+            @test size(A) == (2, 2)
+            @test size(A, 1) == 2
+            @test size(A, 2) == 2
+        end
         @test length.(Compat.axes(A)) == (2,2)
         @test @inferred A[2,:a] == 1
         @test A[3,:a] == 3
@@ -154,6 +167,13 @@ And data, a 2×2 Array{$Int,2}:
         else
             A = @inferred JuMPArray(zeros(2,2,2,2), 2:3, [:a, :b], -1:0,
                                     ["a","b"])
+        end
+        if VERSION >= v"0.7-"
+            @test size(A) == (2, 2, 2, 2)
+            @test size(A, 1) == 2
+            @test size(A, 2) == 2
+            @test size(A, 3) == 2
+            @test size(A, 4) == 2
         end
         A[2,:a,-1,"a"] = 1.0
         f = 0.0
@@ -217,6 +237,9 @@ And data, a 2×2×2×2 Array{Float64,4}:
         a = Array{Int,0}(undef)
         a[] = 10
         A = JuMPArray(a)
+        if VERSION >= v"0.7-"
+            @test size(A) == tuple()
+        end
         @test A[] == 10
         A[] = 1
         @test sprint(show, A) == """
