@@ -17,17 +17,17 @@ con : x + 5 y &lt;= 3.0</code></pre><p>Note that in a similar manner to the <cod
 Success::TerminationStatusCode = 0</code></pre><p>In this case, <code>GLPK</code> returned <code>Success</code>. This does <em>not</em> mean that it has found the optimal solution. Instead, it indicates that GLPK has finished running and did not encounter any errors or user-provided termination limits.</p><p>To understand the reason for termination in more detail, we need to query <code>JuMP.primalstatus</code>:</p><pre><code class="language-julia-repl">julia&gt; JuMP.primal_status(model)
 FeasiblePoint::ResultStatusCode = 1</code></pre><p>This indicates that GLPK has found a <code>FeasiblePoint</code> to the primal problem. Coupled with the <code>Success</code> from <code>JuMP.termination_status</code>, we can infer that GLPK has indeed found the optimal solution. We can also query <code>JuMP.dual_status</code>:</p><pre><code class="language-julia-repl">julia&gt; JuMP.dual_status(model)
 FeasiblePoint::ResultStatusCode = 1</code></pre><p>Like the <code>primal_status</code>, GLPK indicates that it has found a <code>FeasiblePoint</code> to the dual problem.</p><p>Finally, we can query the result of the optimization. First, we can query the objective value:</p><pre><code class="language-julia-repl">julia&gt; JuMP.objective_value(model)
-10.6</code></pre><p>We can also query the primal result values of the <code>x</code> and <code>y</code> variables:</p><pre><code class="language-julia-repl">julia&gt; JuMP.result_value(x)
+10.6</code></pre><p>We can also query the primal result values of the <code>x</code> and <code>y</code> variables:</p><pre><code class="language-julia-repl">julia&gt; JuMP.value(x)
 2.0
 
-julia&gt; JuMP.result_value(y)
-0.2</code></pre><p>We can also query the value of the dual variable associated with the constraint <code>con</code> (which we bound to a Julia variable when defining the constraint):</p><pre><code class="language-julia-repl">julia&gt; JuMP.result_dual(con)
+julia&gt; JuMP.value(y)
+0.2</code></pre><p>We can also query the value of the dual variable associated with the constraint <code>con</code> (which we bound to a Julia variable when defining the constraint):</p><pre><code class="language-julia-repl">julia&gt; JuMP.dual(con)
 -0.6</code></pre><p>To query the dual variables associated with the variable bounds, things are a little trickier as we first need to obtain a reference to the constraint:</p><pre><code class="language-julia-repl">julia&gt; x_upper = JuMP.UpperBoundRef(x)
 x &lt;= 2.0
 
-julia&gt; JuMP.result_dual(x_upper)
+julia&gt; JuMP.dual(x_upper)
 -4.4</code></pre><p>A similar process can be followed to obtain the dual of the lower bound constraint on <code>y</code>:</p><pre><code class="language-julia-repl">julia&gt; y_lower = JuMP.LowerBoundRef(y)
 y &gt;= 0.0
 
-julia&gt; JuMP.result_dual(y_lower)
+julia&gt; JuMP.dual(y_lower)
 0.0</code></pre><footer><hr/><a class="previous" href="../installation/"><span class="direction">Previous</span><span class="title">Installation Guide</span></a><a class="next" href="../concepts/"><span class="direction">Next</span><span class="title">Concepts</span></a></footer></article></body></html>
