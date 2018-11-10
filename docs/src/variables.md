@@ -263,7 +263,7 @@ JuMP will form an `Array` of JuMP variables when it can determine at compile
 time that the indices are one-based integer ranges. Therefore `x[1:b]` will
 work, but `x[a:b]` will throw an error.
 
-### JuMPArrays
+### [JuMPArrays](@id variable_jump_arrays)
 
 We often want to create arrays where the indices are not one-based integer
 ranges. For example, we may want to create a variable indexed by the name of a
@@ -314,7 +314,7 @@ And data, a 2×2 Array{Float64,2}:
  2.5  4.5
 ```
 
-### Dictionaries
+### [Dictionaries](@id variable_dictionaries)
 
 The third datatype that JuMP supports the efficient creation of are
 dictionaries. These dictionaries are created when the indices do not form a
