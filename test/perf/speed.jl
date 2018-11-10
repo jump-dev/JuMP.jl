@@ -1,3 +1,7 @@
+#  Copyright 2017, Iain Dunning, Joey Huchette, Miles Lubin, and contributors
+#  This Source Code Form is subject to the terms of the Mozilla Public
+#  License, v. 2.0. If a copy of the MPL was not distributed with this
+#  file, You can obtain one at http://mozilla.org/MPL/2.0/.
 #############################################################################
 # JuMP
 # An algebraic modelling language for Julia
@@ -5,98 +9,78 @@
 #############################################################################
 # speed.jl
 #
-# Runs some JuMP benchmarks to test for speed-related regressions.
-# Examples taken from the Lubin, Dunning paper.
+# Benchmarks model building time to test for performance regressions.
+# Based on the models benchmarked in the paper:
+#   Lubin, M., & Dunning, I. (2015).
+#   Computing in operations research using Julia.
+#   INFORMS Journal on Computing, 27(2), 238-248.
 #
-# Post past results here
-# ---------------------------------------------------------------------------
-# Iain's Dell Laptop
-# 2013/10/05  ee443c8d6a779ff74373178dbd6086b1912c5f5e
-# Run 1
-# PMEDIAN BUILD MIN=0.37519394   MED=0.72586158
-# PMEDIAN WRITE MIN=1.551488986  MED=1.62851847
-# CONT5 BUILD   MIN=0.254537676  MED=0.454625898
-# CONT5 WRITE   MIN=1.581302132  MED=1.639451427
-# Run 2
-# PMEDIAN BUILD MIN=0.381689249  MED=0.745308535
-# PMEDIAN WRITE MIN=1.55169788   MED=1.580791808
-# CONT5 BUILD   MIN=0.248255523  MED=0.454527841
-# CONT5 WRITE   MIN=1.60369395   MED=1.638122135
-# 2013/11/10  042144bf304af0c6f672c87040edf3cffa5890a3
-# Run 1
-# PMEDIAN BUILD MIN=0.386472824  MED=0.577460239
-# PMEDIAN WRITE MIN=1.487720674  MED=1.573461681
-# CONT5 BUILD   MIN=0.237566804  MED=0.43350331
-# CONT5 WRITE   MIN=1.554705597  MED=1.566282347
-# ---------------------------------------------------------------------------
-# Iain's Desktop
-# 2013/10/23  d8c64fd341801a5c266597df4ec52377f42a5260
-# Run 1
-# PMEDIAN BUILD MIN=0.267263966  MED=0.272618701
-# PMEDIAN WRITE MIN=1.263382472  MED=1.26997836
-# CONT5 BUILD   MIN=0.118468756  MED=0.18796253
-# CONT5 WRITE   MIN=1.309088036  MED=1.325527758
-# Run 2
-# PMEDIAN BUILD MIN=0.271933082  MED=0.274442777
-# PMEDIAN WRITE MIN=1.29212427   MED=1.30086527
-# CONT5 BUILD   MIN=0.123911798  MED=0.193959468
-# CONT5 WRITE   MIN=1.293636495  MED=1.305372909
-# 2014/02/09  8e96ed879a58134207e4d61dc03766bd67d72523
-# PMEDIAN BUILD MIN=0.199827121  MED=0.309448725
-# PMEDIAN WRITE MIN=1.159296703  MED=1.167277902
-# CONT5 BUILD   MIN=0.12434096   MED=0.19083312
-# CONT5 WRITE   MIN=1.142068783  MED=1.149582037
 #############################################################################
 
-using JuMP
+import BenchmarkTools: @benchmark, allocs
 using Compat
 using Compat.Random
+using JuMP
 @static if VERSION >= v"0.7.0-DEV.3406"
     srand(seed) = Random.seed!(seed)
 end
 
-function pMedian(numFacility::Int,numCustomer::Int,numLocation::Int,useMPS)
+"""
+    p_median(num_facility, num_customer, num_location)
+
+Implements the "p-median" facility location problem. We try to locate N
+facilities such that we minimize the distance any given customer has to travel
+to reach their closest facility. In this simple instance we will operate
+in a 1D world with L possible locations for facilities, and customers being
+located at random locations along the number line from 1 to D.
+
+We use anonymous variables to remove the cost of name generation from the
+benchmark.
+"""
+function p_median(num_facilities, num_customers, num_locations)
     srand(10)
-    customerLocations = [rand(1:numLocation) for a = 1:numCustomer ]
+    customer_locations = [rand(1:num_locations) for _ in 1:num_customers]
 
-    buildTime = @elapsed begin
-        m = Model()
+    model = Model()
+    has_facility = @variable(model, [1:num_locations], Bin)
+    is_closest = @variable(model, [1:num_locations, 1:num_customers], Bin)
 
-        # Facility locations
-        @variable(m, 0 <= s[1:numLocation] <= 1)
+    @objective(model, Min,
+        sum(abs(customer_locations[customer] - location)
+            * is_closest[location, customer]
+            for customer in 1:num_customers, location in 1:num_locations))
 
-        # Aux. variable: x_a,i = 1 iff the closest facility to a is at i
-        @variable(m, 0 <= x[1:numLocation,1:numCustomer] <= 1)
-
-        # Objective: min distance
-        @objective(m, Max, sum(abs(customerLocations[a]-i)*x[i,a] for a = 1:numCustomer, i = 1:numLocation) )
-
-        # Constraints
-        for a in 1:numCustomer
-            # Subject to linking x with s
-            for i in 1:numLocation
-                @constraint(m, x[i,a] - s[i] <= 0)
-            end
-            # Subject to one of x must be 1
-            @constraint(m, sum(x[i,a] for i=1:numLocation) == 1 )
-        end
-
-        # Subject to must allocate all facilities
-        @constraint(m, sum(s[i] for i=1:numLocation) == numFacility )
+    for customer in 1:num_customers
+        # `location` can't be closest for `customer` if there is no facility.
+        @constraint(model,
+            [location in 1:num_locations],
+            is_closest[location, customer] <= has_facility[location])
+        # One facility must be the closest for `customer`.
+        @constraint(model,
+            sum(is_closest[location, customer]
+                for location in 1:num_locations) == 1)
     end
 
-    writeTime = @elapsed begin
-        if useMPS
-            writeMPS(m,"/dev/null")
-        else
-            writeLP(m,"/dev/null")
-        end
-    end
-
-    return buildTime, writeTime
+    # Must place all facilities.
+    @constraint(model, sum(has_facility) == num_facilities)
 end
 
-function cont5(n,useMPS)
+println("P-Median(100 facilities, 100 customers, 5000 locations) benchmark:")
+result = @benchmark p_median(100, 100, 5000)
+display(result)
+println()
+
+
+"""
+    cont5(n)
+
+Based on a linear-Quadratic control problem (cont5_2_1) from one of Hans
+Mittleman's instance collections.
+
+We use anonymous variables to remove the cost of name generation from the
+benchmark.
+"""
+function cont5(n)
     m = n
     n1 = n-1
     m1 = m-1
@@ -105,72 +89,39 @@ function cont5(n,useMPS)
     dt = T/m
     h2 = dx^2
     a = 0.001
-    yt = [0.5*(1 - (j*dx)^2) for j=0:n]
+    yt = [0.5*(1 - (j*dx)^2) for j in 0:n]
 
-    buildTime = @elapsed begin
-        mod = Model()
-        @variable(mod,  0 <= y[0:m,0:n] <= 1)
-        @variable(mod, -1 <= u[1:m] <= 1)
-        @objective(mod, Min, y[0,0])
+    model = Model()
+    y = @variable(model, [0:m,0:n], lower_bound=0, upper_bound=1)
+    u = @variable(model, [1:m], lower_bound=-1, upper_bound=1)
 
-        # PDE
-        for i = 0:m1
-            for j = 1:n1
-                @constraint(mod, h2*(y[i+1,j] - y[i,j]) == 0.5*dt*(y[i,j-1] - 2*y[i,j] + y[i,j+1] + y[i+1,j-1] - 2*y[i+1,j] + y[i+1,j+1]) )
-            end
-        end
+    @objective(model, Min, y[0,0])
 
-        # IC
-        for j = 0:n
-            @constraint(mod, y[0,j] == 0)
-        end
-
-        # BC
-        for i = 1:m
-            @constraint(mod, y[i,2]   - 4*y[i,1]  + 3*y[i,0] == 0)
-            @constraint(mod, y[i,n-2] - 4*y[i,n1] + 3*y[i,n] == (2*dx)*(u[i] - y[i,n]))
+    # PDE
+    for i in 0:m1
+        for j in 1:n1
+            @constraint(model,
+                h2*(y[i+1,j] - y[i,j])
+                == 0.5*dt*(y[i,j-1] - 2*y[i,j] +
+                    y[i,j+1] + y[i+1,j-1] - 2*y[i+1,j] + y[i+1,j+1]) )
         end
     end
 
-    writeTime = @elapsed begin
-        if !useMPS
-            writeLP(mod, "/dev/null")
-        else
-            writeMPS(mod, "/dev/null")
-        end
+    # Initial conditions.
+    for j in 0:n
+        @constraint(model, y[0,j] == 0)
     end
-        
-    return buildTime, writeTime
+
+    # Boundary conditions.
+    for i in 1:m
+        @constraint(model,
+            y[i,2]   - 4*y[i,1]  + 3*y[i,0] == 0)
+        @constraint(model,
+            y[i,n-2] - 4*y[i,n1] + 3*y[i,n]== (2*dx)*(u[i] - y[i,n]))
+    end
 end
 
-
-function RunTests()
-    # Pmedian
-    pmedian_build = Float64[]
-    pmedian_write = Float64[]
-    for runs = 1:9
-        bt, wt = pMedian(100,100,5000,false)
-        push!(pmedian_build, bt)
-        push!(pmedian_write, wt)
-    end
-    sort!(pmedian_build)
-    sort!(pmedian_write)
-    print("PMEDIAN BUILD MIN=",minimum(pmedian_build),"  MED=",pmedian_build[5],"\n")
-    print("PMEDIAN WRITE MIN=",minimum(pmedian_write),"  MED=",pmedian_write[5],"\n")
-
-    # Cont5
-    cont5_build = Float64[]
-    cont5_write = Float64[]
-    for runs = 1:9
-        bt, wt = cont5(500,false)
-        push!(cont5_build, bt)
-        push!(cont5_write, wt)
-    end
-    sort!(cont5_build)
-    sort!(cont5_write)
-    print("CONT5 BUILD   MIN=",minimum(cont5_build),"  MED=",cont5_build[5],"\n")
-    print("CONT5 WRITE   MIN=",minimum(cont5_write),"  MED=",cont5_write[5],"\n")
-
-end
-
-RunTests()
+println("Cont5(n=500) benchmark:")
+result = @benchmark cont5(500)
+display(result)
+println()
