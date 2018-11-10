@@ -345,17 +345,69 @@ How to modify constraints by setting attributes and `MOI.modifyconstraint!`.
 Describe semidefinite constraints and symmetry handling. Refer to NLP docs for
 nonlinear constraints.
 
+## Constraint modifications
+
+A common paradigm, especially in linear programming, is to repeatedly solve a
+model with different coefficients. Most often, this involves changing the
+"right-hand side" of a linear constraint. This presents a challenge for JuMP
+because it leads to ambiguities. For example, what is the right-hand side term
+of  `@constraint(model, 2x + 1 <= x - 3)`?
+
+To avoid these ambiguities, JuMP includes the ability to *fix* variables to a
+value using the [`JuMP.fix`](@ref) function. Fixing a variable sets its lower
+and upper bound to the same value. Thus, changes in the right-hand side can be
+simulated by adding a dummy variable and fixing it to different values. Here is
+an example:
+
+```jldoctest con_fix; setup = :(model = Model(); @variable(model, x))
+julia> @variable(model, rhs_term)
+rhs_term
+
+julia> @constraint(model, con, 2x <= rhs_term)
+con : 2 x - rhs_term <= 0.0
+
+julia> JuMP.fix(rhs_term, 1.0)
+```
+!!! note
+    Even though `rhs_term` is fixed, it is still a decision variable. Thus, `x *
+    rhs_term` is bilinear.
+
+It is also possible to modify the scalar coefficients (but notably *not* the
+quadratic coefficients) using the [`JuMP.set_coefficient`](@ref) function. Here
+is an example:
+```jldoctest; setup = :(model = Model(); @variable(model, x))
+julia> @constraint(model, con, 2x <= 1)
+con : 2 x <= 1.0
+
+julia> JuMP.set_coefficient(con, x, 3)
+
+julia> con
+con : 3 x <= 1.0
+```
+
+## Constraint deletion
+
+Constraints can be deleted from a model using [`JuMP.delete`](@ref). Just like
+variable references, it is possible to check if a constraint reference is valid
+using [`JuMP.is_valid`](@ref). Here is an example of deleting a constraint:
+```jldoctest; setup = :(model=Model(); @variable(model, x))
+julia> @constraint(model, con, 2x <= 1)
+con : 2 x <= 1.0
+
+julia> JuMP.is_valid(model, con)
+true
+
+julia> JuMP.delete(model, con)
+
+julia> JuMP.is_valid(model, con)
+false
+```
+
 ## Sets
 
 As mentioned in the documentation of the [`@constraint`](@ref) and
 [`@SDconstraint`](@ref) macros, the following sets can be used to create
 constraints in addition to [any MOI set](http://www.juliaopt.org/MathOptInterface.jl/v0.6.2/apireference.html#Sets-1).
-
-## Constraint modifications
-
-`JuMP.fix`
-
-`JuMP.set_coefficient(constraint, variable, value)`
 
 ## Duals
 
@@ -370,6 +422,9 @@ PSDCone
 JuMP.set_coefficient
 JuMP.dual
 JuMP.shadow_price
+JuMP.fix
+JuMP.delete
+JuMP.is_valid
 ```
 
 ## Constructing constraints without adding them to the model
