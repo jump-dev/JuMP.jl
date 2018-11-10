@@ -3,7 +3,7 @@ CurrentModule = JuMP
 DocTestSetup = quote
     using JuMP
 end
-DocTestFilters = [r"≤|<=", r"≥|>=", r" ∈ | in "]
+DocTestFilters = [r"≤|<=", r"≥|>=", r" == | = ", r" ∈ | in "]
 ```
 
 # Constraints
@@ -81,7 +81,7 @@ julia> @constraint(model, 2x >= 1)
 2 x >= 1.0
 
 julia> @constraint(model, 2x == 1)
-2 x == 1.0
+2 x = 1.0
 
 julia> @constraint(model, 1 <= 2x <= 3)
 2 x ∈ [1.0, 3.0]
