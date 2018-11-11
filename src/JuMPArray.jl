@@ -106,37 +106,25 @@ else
     struct JuMPArrayKey{T<:Tuple}
         I::T
     end
-    Base.getindex(k::JuMPArrayKey, index::Int) = getindex(k.I, index)
-    function JuMPArrayKey(ci::CartesianIndex, axes_array)
-        # using axes_arrays to translate elements of an index of
-        # JuMPArray data into elements of its axes, in order
-        # to create the JuMPArrayKey.
-        return JuMPArrayKey(Tuple(map(x->axes_array[x[1]][x[2]],
-                            enumerate(ci.I))))
-    end
-    as_array(collection) = collect(collection)
-    as_array(collection::AbstractArray) = collection
-    struct JuMPArrayKeys{T<:Tuple, C<:CartesianIndices}
-        axes_array::T
-        cartesian_indices::C
+    Base.getindex(k::JuMPArrayKey, args...) = getindex(k.I, args...)
+
+    struct JuMPArrayKeys{T<:Tuple}
+        product_iter::Base.Iterators.ProductIterator{T}
     end
     function Base.iterate(iter::JuMPArrayKeys)
-        next = iterate(iter.cartesian_indices)
-        return next == nothing ? nothing :
-               (JuMPArrayKey(next[1], iter.axes_array), next[2])
+        next = iterate(iter.product_iter)
+        return next == nothing ? nothing : (JuMPArrayKey(next[1]), next[2])
     end
     function Base.iterate(iter::JuMPArrayKeys, state)
-        next = iterate(iter.cartesian_indices, state)
-        return next == nothing ? nothing :
-               (JuMPArrayKey(next[1], iter.axes_array), next[2])
+        next = iterate(iter.product_iter, state)
+        return next == nothing ? nothing : (JuMPArrayKey(next[1]), next[2])
     end
-    Base.length(iter::JuMPArrayKeys) = length(iter.cartesian_indices)
+    Base.length(iter::JuMPArrayKeys) = length(iter.product_iter)
     function Base.eltype(iter::JuMPArrayKeys)
-        return JuMPArrayKey{Tuple{eltype.(iter.axes_array)...}}
+        return JuMPArrayKey{eltype(iter.product_iter)}
     end
     function Base.keys(a::JuMPArray)
-        axes_array = map(as_array, a.axes)
-        return JuMPArrayKeys(axes_array, CartesianIndices(a))
+        return JuMPArrayKeys(Base.Iterators.product(a.axes...))
     end
     Base.getindex(a::JuMPArray, k::JuMPArrayKey) = a[k.I...]
 end
