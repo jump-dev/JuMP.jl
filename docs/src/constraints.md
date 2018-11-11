@@ -101,6 +101,97 @@ julia> @constraint(model, 2x + 1 <= 4x + 4)
 -2 x <= 3.0
 ```
 
+## [Duality](@id constraint_duality)
+
+JuMP adopts the notion of duality from MathOptInterface. Roughly speaking, the
+dual variable associated with a constraint can be viewed as the decrease in the
+value of the objective given an infinitesimal relaxation of the constraint.  For
+example, in a linear constraint, this relaxation is equivalent to `2x <= 1 + δ`
+and `2x >= 1 - δ`. If the constraint is an equality constraint, it depends on
+which direction is binding.
+
+Notably, this definition is independent of the objective sense. That is, the
+dual associated with a constraint is the same when the objective is a
+maximization and when it is a minimization. **This is different to traditional
+duality in linear programming.**
+
+The dual value associated with a constraint can be accessed using the
+[`JuMP.dual`](@ref) function. For example:
+
+```jldoctest
+julia> model = Model()
+A JuMP Model
+
+julia> @variable(model, x)
+x
+
+julia> @constraint(model, con, x <= 1)
+con : x <= 1.0
+```
+
+```@meta
+DocTestSetup = quote
+    using JuMP
+    const MOI = JuMP.MathOptInterface
+    model = Model(
+        with_optimizer(
+            MOI.Utilities.MockOptimizer,
+            JuMP.JuMPMOIModel{Float64}(),
+            eval_objective_value = false,
+            eval_variable_constraint_dual = false));
+    @variable(model, x);
+    @constraint(model, con, x <= 1);
+    @objective(model, Max, -2x);
+    JuMP.optimize!(model);
+    mock = JuMP.caching_optimizer(model).optimizer;
+    MOI.set(mock, MOI.ConstraintDual(), JuMP.optimizer_index(con), -2.0)
+end
+```
+
+```jldoctest con_duality
+julia> @objective(model, Min, -2x)
+-2 x
+
+julia> JuMP.optimize!(model)
+
+julia> JuMP.dual(con)
+-2.0
+
+julia> @objective(model, Max, 2x)
+2 x
+
+julia> JuMP.optimize!(model)
+
+julia> JuMP.dual(con)
+-2.0
+```
+
+To help users who may be less familiar with conic duality, JuMP provides the
+[`JuMP.shadow_price`](@ref) function which returns a value that can be
+interpreted as the improvement in the objective given a 1-unit change in the
+right-hand side of the constraint. [`JuMP.shadow_price`](@ref) can only be used
+on linear constraints with a `<=`, `>=`, or `==` comparison operator.
+
+In the example above, `JuMP.dual(con)` returned `-2.0` regardless of the
+optimization sense. However, in the second case when the optimization sense is
+`Max`, [`JuMP.shadow_price`](@ref) returns:
+```jldoctest con_duality
+julia> JuMP.shadow_price(con)
+2.0
+```
+
+To query the dual variables associated a variable bounds, first obtain a
+constraint reference using one of [`JuMP.UpperBoundRef`](@ref),
+[`JuMP.LowerBoundRef`](@ref), or [`JuMP.FixRef`](@ref), and then call
+[`JuMP.dual`](@ref) on the returned constraint reference.
+
+```@meta
+DocTestSetup = quote
+    using JuMP
+    const MOI = JuMP.MathOptInterface
+end
+```
+
 ## Constraint containers
 
 So far, we've adding constraints one-by-one. However, just like
@@ -221,54 +312,14 @@ julia> @constraint(model, A * x - b in MOI.Nonnegatives(2))
 [x[1] + 2 x[2] - 5, 3 x[1] + 4 x[2] - 6] in MathOptInterface.Nonnegatives(2)
 ```
 
-## Quadratic constraints
+In addition to the `Nonnegatives` set, MathOptInterface defines a number of
+other vector-valued sets such as `Nonpositives`. See the [MathOptInterface
+documentation](http://www.juliaopt.org/MathOptInterface.jl/dev/apireference/#Sets-1)
+for more information.
 
-All of the examples above have focused on the affine function `2x`. However,
-JuMP also supports quadratic constraints. For example:
-```jldoctest con_quadratic; setup=:(model=Model())
-julia> @variable(model, x[i=1:2])
-2-element Array{VariableRef,1}:
- x[1]
- x[2]
-
-julia> @variable(model, t)
-t
-
-julia> @constraint(model, x[1]^2 + x[2]^2 <= t^2)
-x[1]² + x[2]² - t² <= 0.0
-```
-Note that this quadratic constraint is equivalent to a second order cone
-constraint where `||x[1]^2 + x[2]^2||\_2 ≤ t` and `t ≥ 0`. Instead of writing
-out the quadratic expansion, we can pass JuMP the constraint in
-*function*-in-*set* form. To do so, we need to define the function and the set.
-
-The function is a vector of variables:
-```jldoctest con_quadratic
-julia> [t, x[1], x[2]]
-3-element Array{VariableRef,1}:
- t
- x[1]
- x[2]
-```
-Note that the variable `t` comes first, followed by the `x` arguments. The set
-is an instance of [`JuMP.SecondOrderCone`](@ref): `JuMP.SecondOrderCone()`.
-Thus, we can add the second order cone constraint as follows:
-```jldoctest con_quadratic
-julia> @constraint(model, [t, x[1], x[2]] in JuMP.SecondOrderCone())
-[t, x[1], x[2]] in MathOptInterface.SecondOrderCone(3)
-```
-
-JuMP also supports the [`RotatedSecondOrderCone`](@ref) which requires the
-addition of a perspective variable `u`. The rotated second order cone
-constraints the variables `t`, `u`, and `x` such that: `||x[1]^2 + x[2]^2||\_2 ≤
-t × u` and `t, u ≥ 0`. It can be added as follows:
-```jldoctest con_quadratic
-julia> @variable(model, u)
-u
-
-julia> @constraint(model, [t, u, x[1], x[2]] in JuMP.RotatedSecondOrderCone())
-[t, u, x[1], x[2]] in MathOptInterface.RotatedSecondOrderCone(4)
-```
+Note also that for the first time we have used an explicit *function-in-set*
+description of the constraint. Read more about this below in the [Function-Set
+pairs](@ref) section of this documentation.
 
 ## Constraints on a single variable
 
@@ -336,6 +387,65 @@ julia> @constraint(model, x in MOI.SOS2([3.0, 1.0, 2.0]))
 [x[1], x[2], x[3]] in MathOptInterface.SOS2{Float64}([3.0, 1.0, 2.0])
 ```
 
+## Quadratic constraints
+
+In addition to affine functions, JuMP also supports constraints with quadratic
+terms. (For more general nonlinear functions, read [Nonlinear Modeling](@ref).)
+For example:
+```jldoctest con_quadratic; setup=:(model=Model())
+julia> @variable(model, x[i=1:2])
+2-element Array{VariableRef,1}:
+ x[1]
+ x[2]
+
+julia> @variable(model, t)
+t
+
+julia> @constraint(model, x[1]^2 + x[2]^2 <= t^2)
+x[1]² + x[2]² - t² <= 0.0
+```
+Note that this quadratic constraint is equivalent to a second order cone
+constraint where `||x[1]^2 + x[2]^2||\_2 ≤ t` and `t ≥ 0`. Instead of writing
+out the quadratic expansion, we can pass JuMP the constraint in
+*function*-in-*set* form. To do so, we need to define the function and the set.
+
+The function is a vector of variables:
+```jldoctest con_quadratic
+julia> [t, x[1], x[2]]
+3-element Array{VariableRef,1}:
+ t
+ x[1]
+ x[2]
+```
+Note that the variable `t` comes first, followed by the `x` arguments. The set
+is an instance of [`JuMP.SecondOrderCone`](@ref): `JuMP.SecondOrderCone()`.
+Thus, we can add the second order cone constraint as follows:
+```jldoctest con_quadratic
+julia> @constraint(model, [t, x[1], x[2]] in JuMP.SecondOrderCone())
+[t, x[1], x[2]] in MathOptInterface.SecondOrderCone(3)
+```
+
+JuMP also supports the [`RotatedSecondOrderCone`](@ref) which requires the
+addition of a perspective variable `u`. The rotated second order cone
+constraints the variables `t`, `u`, and `x` such that: `||x[1]^2 + x[2]^2||\_2 ≤
+t × u` and `t, u ≥ 0`. It can be added as follows:
+```jldoctest con_quadratic
+julia> @variable(model, u)
+u
+
+julia> @constraint(model, [t, u, x[1], x[2]] in JuMP.RotatedSecondOrderCone())
+[t, u, x[1], x[2]] in MathOptInterface.RotatedSecondOrderCone(4)
+```
+
+In addition to the second order cone and rotated second order cone,
+MathOptInterface defines a number of other conic sets such as the exponential
+and power cones. See the [MathOptInterface documentation](http://www.juliaopt.org/MathOptInterface.jl/dev/apireference/#Sets-1)
+for more information.
+
+## Semidefinite constraints
+
+TODO: discuss [`@SDconstraint`] and [`PSDCone`].
+
 ## Constraint modifications
 
 A common paradigm, especially in linear programming, is to repeatedly solve a
@@ -394,7 +504,7 @@ julia> JuMP.is_valid(model, con)
 false
 ```
 
-## Sets
+## Function-Set pairs
 
 DRAFT: Describe how constraints are represented (link to MOI docs). Constraints
 are very similar to variables in (1) how names work (2) how attributes work, and
@@ -405,100 +515,6 @@ How to modify constraints by setting attributes and `MOI.modifyconstraint!`.
 Describe semidefinite constraints and symmetry handling. Refer to NLP docs for
 nonlinear constraints.
 
-As mentioned in the documentation of the [`@constraint`](@ref) and
-[`@SDconstraint`](@ref) macros, the following sets can be used to create
-constraints in addition to [any MOI set](http://www.juliaopt.org/MathOptInterface.jl/v0.6.2/apireference.html#Sets-1).
-
-## [Duality](@id constraint_duality)
-
-JuMP adopts the notion of duality from MathOptInterface. Roughly speaking, the
-dual variable associated with a constraint can be viewed as the decrease in the
-value of the objective given an infinitesimal relaxation of the constraint.  For
-example, in a linear constraint, this relaxation is equivalent to `2x <= 1 + δ`
-and `2x >= 1 - δ`. If the constraint is an equality constraint, it depends on
-which direction is binding.
-
-Notably, this definition is independent of the objective sense. That is, the
-dual associated with a constraint is the same when the objective is a
-maximization and when it is a minimization. **This is different to traditional
-duality in linear programming.**
-
-The dual value associated with a constraint can be accessed using the
-[`JuMP.dual`](@ref) function. For example:
-
-```jldoctest
-julia> model = Model()
-A JuMP Model
-
-julia> @variable(model, x)
-x
-
-julia> @constraint(model, con, x <= 1)
-con : x <= 1.0
-```
-
-```@meta
-DocTestSetup = quote
-    using JuMP
-    const MOI = JuMP.MathOptInterface
-    model = Model(
-        with_optimizer(
-            MOI.Utilities.MockOptimizer,
-            JuMP.JuMPMOIModel{Float64}(),
-            eval_objective_value = false,
-            eval_variable_constraint_dual = false));
-    @variable(model, x);
-    @constraint(model, con, x <= 1);
-    @objective(model, Max, -2x);
-    JuMP.optimize!(model);
-    mock = JuMP.caching_optimizer(model).optimizer;
-    MOI.set(mock, MOI.ConstraintDual(), JuMP.optimizer_index(con), -2.0)
-end
-```
-
-```jldoctest con_duality
-julia> @objective(model, Min, -2x)
--2 x
-
-julia> JuMP.optimize!(model)
-
-julia> JuMP.dual(con)
--2.0
-
-julia> @objective(model, Max, 2x)
-2 x
-
-julia> JuMP.optimize!(model)
-
-julia> JuMP.dual(con)
--2.0
-```
-
-To help users who may be less familiar with conic duality, JuMP provides the
-[`JuMP.shadow_price`](@ref) function which returns a value that can be
-interpreted as the improvement in the objective given a 1-unit change in the
-right-hand side of the constraint. [`JuMP.shadow_price`](@ref) can only be used
-on linear constraints with a `<=`, `>=`, or `==` comparison operator.
-
-In the example above, `JuMP.dual(con)` returned `-2.0` regardless of the
-optimization sense. However, in the second case when the optimization sense is
-`Max`, [`JuMP.shadow_price`](@ref) returns:
-```jldoctest con_duality
-julia> JuMP.shadow_price(con)
-2.0
-```
-
-To query the dual variables associated a variable bounds, first obtain a
-constraint reference using one of [`JuMP.UpperBoundRef`](@ref),
-[`JuMP.LowerBoundRef`](@ref), or [`JuMP.FixRef`](@ref), and then call
-[`JuMP.dual`](@ref) on the returned constraint reference.
-
-```@meta
-DocTestSetup = quote
-    using JuMP
-    const MOI = JuMP.MathOptInterface
-end
-```
 
 ## Reference
 
@@ -514,6 +530,9 @@ JuMP.shadow_price
 JuMP.fix
 JuMP.delete
 JuMP.is_valid
+JuMP.LowerBoundRef
+JuMP.UpperBoundRef
+JuMP.FixRef
 ```
 
 ## Constructing constraints without adding them to the model
