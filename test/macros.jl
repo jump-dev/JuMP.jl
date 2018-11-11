@@ -223,6 +223,20 @@ end
         y = @variable(model, x)
         @test_throws ErrorException @constraint(model, x, 2y <= 1)
     end
+
+    @testset "Anonymous expressions aren't registered" begin
+        model = Model()
+        x = @variable(model)
+        ex = @expression(model, x + 1)
+        @test length(JuMP.object_dictionary(model)) == 0
+    end
+
+    @testset "Anonymous NLexpressions aren't registered" begin
+        model = Model()
+        x = @variable(model)
+        ex = @NLexpression(model, x + 1)
+        @test length(JuMP.object_dictionary(model)) == 0
+    end
 end
 
 @testset "Macros for JuMPExtension.MyModel" begin
