@@ -409,7 +409,7 @@ As mentioned in the documentation of the [`@constraint`](@ref) and
 [`@SDconstraint`](@ref) macros, the following sets can be used to create
 constraints in addition to [any MOI set](http://www.juliaopt.org/MathOptInterface.jl/v0.6.2/apireference.html#Sets-1).
 
-## Duality
+## [Duality](@id constraint_duality)
 
 JuMP adopts the notion of duality from MathOptInterface. Roughly speaking, the
 dual variable associated with a constraint can be viewed as the decrease in the
@@ -487,6 +487,11 @@ optimization sense. However, in the second case when the optimization sense is
 julia> JuMP.shadow_price(con)
 2.0
 ```
+
+To query the dual variables associated a variable bounds, first obtain a
+constraint reference using one of [`JuMP.UpperBoundRef`](@ref),
+[`JuMP.LowerBoundRef`](@ref), or [`JuMP.FixRef`](@ref), and then call
+[`JuMP.dual`](@ref) on the returned constraint reference.
 
 ```@meta
 DocTestSetup = quote
