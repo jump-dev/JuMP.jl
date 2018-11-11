@@ -139,14 +139,29 @@ if VERSION < v"0.7-"
     Base.done( lti::LinearTermIterator, state::Int) = done(lti.aff.terms, state)
     Base.next( lti::LinearTermIterator, state::Int) = reorder_iterator(next(lti.aff.terms, state)...)
 else
-    reorder_iterator(::Nothing) = nothing
-    reorder_iterator(t::Tuple{Pair,Int}) = ((first(t).second, first(t).first), last(t))
-    Base.iterate(lti::LinearTermIterator) = reorder_iterator(iterate(lti.aff.terms))
+    reverse_pair_to_tuple(p::Pair) = (p.second, p.first)
+    function Base.iterate(lti::LinearTermIterator)
+        ret = iterate(lti.aff.terms)
+        if ret === nothing
+            return nothing
+        else
+            return reverse_pair_to_tuple(ret[1]), ret[2]
+        end
+    end
     function Base.iterate(lti::LinearTermIterator, state)
-        reorder_iterator(iterate(lti.aff.terms, state))
+        ret = iterate(lti.aff.terms, state)
+        if ret === nothing
+            return nothing
+        else
+            return reverse_pair_to_tuple(ret[1]), ret[2]
+        end
     end
 end
 Base.length(lti::LinearTermIterator) = length(lti.aff.terms)
+function Base.eltype(lti::LinearTermIterator{GenericAffExpr{C, V}}
+                    ) where {C, V}
+    return Tuple{C, V}
+end
 
 """
     add_to_expression!(expression, terms...)
