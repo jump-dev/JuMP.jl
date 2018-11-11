@@ -336,15 +336,6 @@ julia> @constraint(model, x in MOI.SOS2([3.0, 1.0, 2.0]))
 [x[1], x[2], x[3]] in MathOptInterface.SOS2{Float64}([3.0, 1.0, 2.0])
 ```
 
-DRAFT: Describe how constraints are represented (link to MOI docs). Constraints
-are very similar to variables in (1) how names work (2) how attributes work, and
-(3) the macro syntax for constructing them. They're a bit different because
-they're parameterized by function-set type. Describe constraints vs.
-`ConstraintRefs`. Describe `JuMP.constraint_object`. How to delete constraints.
-How to modify constraints by setting attributes and `MOI.modifyconstraint!`.
-Describe semidefinite constraints and symmetry handling. Refer to NLP docs for
-nonlinear constraints.
-
 ## Constraint modifications
 
 A common paradigm, especially in linear programming, is to repeatedly solve a
@@ -405,11 +396,104 @@ false
 
 ## Sets
 
+DRAFT: Describe how constraints are represented (link to MOI docs). Constraints
+are very similar to variables in (1) how names work (2) how attributes work, and
+(3) the macro syntax for constructing them. They're a bit different because
+they're parameterized by function-set type. Describe constraints vs.
+`ConstraintRefs`. Describe `JuMP.constraint_object`. How to delete constraints.
+How to modify constraints by setting attributes and `MOI.modifyconstraint!`.
+Describe semidefinite constraints and symmetry handling. Refer to NLP docs for
+nonlinear constraints.
+
 As mentioned in the documentation of the [`@constraint`](@ref) and
 [`@SDconstraint`](@ref) macros, the following sets can be used to create
 constraints in addition to [any MOI set](http://www.juliaopt.org/MathOptInterface.jl/v0.6.2/apireference.html#Sets-1).
 
-## Duals
+## Duality
+
+JuMP adopts the notion of duality from MathOptInterface. Roughly speaking, the
+dual variable associated with a constraint can be viewed as the decrease in the
+value of the objective given an infinitesimal relaxation of the constraint.  For
+example, in a linear constraint, this relaxation is equivalent to `2x <= 1 + δ`
+and `2x >= 1 - δ`. If the constraint is an equality constraint, it depends on
+which direction is binding.
+
+Notably, this definition is independent of the objective sense. That is, the
+dual associated with a constraint is the same when the objective is a
+maximization and when it is a minimization. **This is different to traditional
+duality in linear programming.**
+
+The dual value associated with a constraint can be accessed using the
+[`JuMP.dual`](@ref) function. For example:
+
+```jldoctest
+julia> model = Model()
+A JuMP Model
+
+julia> @variable(model, x)
+x
+
+julia> @constraint(model, con, x <= 1)
+con : x <= 1.0
+```
+
+```@meta
+DocTestSetup = quote
+    using JuMP
+    const MOI = JuMP.MathOptInterface
+    model = Model(
+        with_optimizer(
+            MOI.Utilities.MockOptimizer,
+            JuMP.JuMPMOIModel{Float64}(),
+            eval_objective_value = false,
+            eval_variable_constraint_dual = false));
+    @variable(model, x);
+    @constraint(model, con, x <= 1);
+    @objective(model, Max, -2x);
+    JuMP.optimize!(model);
+    mock = JuMP.caching_optimizer(model).optimizer;
+    MOI.set(mock, MOI.ConstraintDual(), JuMP.optimizer_index(con), -2.0)
+end
+```
+
+```jldoctest con_duality
+julia> @objective(model, Min, -2x)
+-2 x
+
+julia> JuMP.optimize!(model)
+
+julia> JuMP.dual(con)
+-2.0
+
+julia> @objective(model, Max, 2x)
+2 x
+
+julia> JuMP.optimize!(model)
+
+julia> JuMP.dual(con)
+-2.0
+```
+
+To help users who may be less familiar with conic duality, JuMP provides the
+[`JuMP.shadow_price`](@ref) function which returns a value that can be
+interpreted as the improvement in the objective given a 1-unit change in the
+right-hand side of the constraint. [`JuMP.shadow_price`](@ref) can only be used
+on linear constraints with a `<=`, `>=`, or `==` comparison operator.
+
+In the example above, `JuMP.dual(con)` returned `-2.0` regardless of the
+optimization sense. However, in the second case when the optimization sense is
+`Max`, [`JuMP.shadow_price`](@ref) returns:
+```jldoctest con_duality
+julia> JuMP.shadow_price(con)
+2.0
+```
+
+```@meta
+DocTestSetup = quote
+    using JuMP
+    const MOI = JuMP.MathOptInterface
+end
+```
 
 ## Reference
 
