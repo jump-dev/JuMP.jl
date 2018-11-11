@@ -278,6 +278,12 @@ JuMP.register(model, :my_square, 1, my_square, my_square_prime,
 @NLobjective(model, Min, my_f(x[1], my_square(x[2])))
 ```
 
+Once registered, user-defined functions can also be used in constraints. For
+example:
+```julia
+@NLconstraint(model, my_square(x[1]) <= 2.0)
+```
+
 Factors affecting solution time
 -------------------------------
 
