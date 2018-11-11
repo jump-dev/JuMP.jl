@@ -16,21 +16,25 @@ reading further, please make sure you are familiar with JuMP models, and JuMP
 
 JuMP is based on the MathOptInterface API. Because of this, JuMP thinks of a
 constraint as a *function* belonging to a *set*. For example, instead of
-thinking  about a constraint ``a^\top x \le b`` as a *less-than-or-equal-to*
+thinking about a constraint ``a^\top x \le b`` as a *less-than-or-equal-to*
 constraint, JuMP thinks about this as the *scalar affine* function ``a^\top x``
 belonging to the *less-than* set ``(-\infty, b]``. Thus, instead of a
-*less-than-or-equal-to* constraint, we consider this constraint to be a  *scalar
+*less-than-or-equal-to* constraint, we consider this constraint to be a *scalar
 affine -in- less than* constraint. More generally, we use the shorthand
 *function-in-set* to refer to constraints composed of different types of
 functions and sets. In the rest of this page, we will introduce the different
-types of functions and sets that JuMP knows about as needed. You can also more
+types of functions and sets that JuMP knows about as needed. You can read more
 details about this *function-in-set* concept in the MathOptInterface
 documentation.
 
 !!! note
     Throughout this page (and these docs), we use `MOI` as a shorthand for the
-    `MathOptInterface` module. This can be created by including the line `const
-    MOI = JuMP.MathOptInterface` after `using JuMP` in your code.
+    `MathOptInterface` module. This can be created by including the following
+    lines after `using JuMP` in your code.
+    ```julia
+    using MathOptInterface
+    const MOI = MathOptInterface
+    ```
 
 ## The `@constraint` macro
 
@@ -105,7 +109,7 @@ julia> @constraint(model, 2x + 1 <= 4x + 4)
 
 JuMP adopts the notion of duality from MathOptInterface. Roughly speaking, the
 dual variable associated with a constraint can be viewed as the decrease in the
-value of the objective given an infinitesimal relaxation of the constraint.  For
+value of the objective given an infinitesimal relaxation of the constraint. For
 example, in a linear constraint, this relaxation is equivalent to `2x <= 1 + δ`
 and `2x >= 1 - δ`. If the constraint is an equality constraint, it depends on
 which direction is binding.
@@ -335,7 +339,7 @@ and `MOI.Integer()` restricts to the domain to the integers ``\mathbb{Z}``:
 ```jldoctest; setup = :(model = Model(); @variable(model, x))
 julia> @constraint(model, x in MOI.Integer())
 x in MathOptInterface.Integer()
-```    
+```
 
 JuMP also supports modeling semi-continuous variables, whose domain is ``\{0\} ∪
 [l, u]``, using the `MOI.Semicontinuous` set:
@@ -452,7 +456,7 @@ A common paradigm, especially in linear programming, is to repeatedly solve a
 model with different coefficients. Most often, this involves changing the
 "right-hand side" of a linear constraint. This presents a challenge for JuMP
 because it leads to ambiguities. For example, what is the right-hand side term
-of  `@constraint(model, 2x + 1 <= x - 3)`?
+of `@constraint(model, 2x + 1 <= x - 3)`?
 
 To avoid these ambiguities, JuMP includes the ability to *fix* variables to a
 value using the [`JuMP.fix`](@ref) function. Fixing a variable sets its lower
