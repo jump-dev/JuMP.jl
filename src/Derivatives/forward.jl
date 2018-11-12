@@ -4,9 +4,13 @@
 function eval_and_check_return_type(func::Function, RetType, args...)
     ret = func(args...)
     if !isa(ret, RetType)
-        error("Expected return type of $(RetType), but got $(typeof(ret)). " *
-              "Make sure your user-defined function only depends on variables" *
-              " passed as arguments.")
+        message = "Expected return type of $(RetType) from a user-defined " *
+                  "function, but got $(typeof(ret))."
+        if isa(ret, JuMP.AbstractJuMPScalar)
+            message *= " Make sure your user-defined function only depends on" *
+                       " variables passed as arguments."
+        end
+        error(message)
     end
     return ret
 end

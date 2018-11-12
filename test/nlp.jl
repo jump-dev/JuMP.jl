@@ -538,11 +538,26 @@
         d = JuMP.NLPEvaluator(model)
         MOI.initialize(d, [:Grad])
         expected_exception = ErrorException(
-            "Expected return type of Float64, but got " *
-            "JuMP.GenericAffExpr{Float64,VariableRef}. Make sure your " *
-            "user-defined function only depends on variables passed as " *
+            "Expected return type of Float64 from a user-defined function, " *
+            "but got JuMP.GenericAffExpr{Float64,VariableRef}. Make sure your" *
+            " user-defined function only depends on variables passed as " *
             "arguments."
         )
         @test_throws expected_exception MOI.eval_objective(d, [1.0, 1.0])
+    end
+
+    @testset "User-defined function returning bad type" begin
+        model = Model()
+        @variable(model, x)
+        f(x) = string(x)
+        JuMP.register(model, :f, 1, f; autodiff = true)
+        @NLobjective(model, Min, f(x))
+        d = JuMP.NLPEvaluator(model)
+        MOI.initialize(d, [:Grad])
+        expected_exception = ErrorException(
+            "Expected return type of Float64 from a user-defined function, " *
+            "but got String."
+        )
+        @test_throws expected_exception MOI.eval_objective(d, [1.0])
     end
 end
