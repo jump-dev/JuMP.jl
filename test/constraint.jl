@@ -235,12 +235,20 @@ function constraints_test(ModelType::Type{<:JuMP.AbstractModel})
             "In @constraint(model,X in MOI.PositiveSemidefiniteConeSquare(2)):" *
             " instead of `MathOptInterface.PositiveSemidefiniteConeSquare(2)`," *
             " use `JuMP.PSDCone()`.")
-        @test_throws err @constraint(model, X in MOI.PositiveSemidefiniteConeSquare(2))
+        if VERSION < v"0.7"
+            @test_throws ErrorException @constraint(model, X in MOI.PositiveSemidefiniteConeSquare(2))
+        else
+            @test_throws err @constraint(model, X in MOI.PositiveSemidefiniteConeSquare(2))
+        end
         err = ErrorException(
             "In @constraint(model,X in MOI.PositiveSemidefiniteConeTriangle(2)):" *
             " instead of `MathOptInterface.PositiveSemidefiniteConeTriangle(2)`," *
             " use `JuMP.PSDCone()`.")
-        @test_throws err @constraint(model, X in MOI.PositiveSemidefiniteConeTriangle(2))
+        if VERSION < v"0.7"
+            @test_throws ErrorException @constraint(model, X in MOI.PositiveSemidefiniteConeTriangle(2))
+        else
+            @test_throws err @constraint(model, X in MOI.PositiveSemidefiniteConeTriangle(2))
+        end
     end
 
     @testset "Useful Matrix error message" begin
@@ -252,7 +260,11 @@ function constraints_test(ModelType::Type{<:JuMP.AbstractModel})
             "into a vector using `vec()`?")
         # Note: this should apply to any MOI.AbstractVectorSet. We just pick
         # SecondOrderCone for convenience.
-        @test_throws err @constraint(model, X in MOI.SecondOrderCone(4))
+        if VERSION < v"0.7"
+            @test_throws ErrorException @constraint(model, X in MOI.SecondOrderCone(4))
+        else
+            @test_throws err @constraint(model, X in MOI.SecondOrderCone(4))
+        end
     end
 
     @testset "Nonsensical SDPs" begin
