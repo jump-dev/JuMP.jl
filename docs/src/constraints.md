@@ -134,7 +134,7 @@ x
 julia> @constraint(model, con, x <= 1)
 con : x <= 1.0
 
-julia> JuMP.has_dual(con)
+julia> JuMP.has_dual(model, con)
 false
 ```
 ```@meta
@@ -162,7 +162,7 @@ julia> @objective(model, Min, -2x)
 
 julia> JuMP.optimize!(model)
 
-julia> JuMP.has_dual(con)
+julia> JuMP.has_dual(model, con)
 true
 
 julia> JuMP.dual(con)
