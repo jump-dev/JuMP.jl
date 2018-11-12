@@ -228,6 +228,33 @@ function constraints_test(ModelType::Type{<:JuMP.AbstractModel})
         @test_macro_throws ErrorException @SDconstraint(m, [x 1; 1 -y] == [1 x; x -2])
     end
 
+    @testset "Useful PSD error message" begin
+        model = ModelType()
+        @variable(model, X[1:2, 1:2])
+        err = ErrorException(
+            "In @constraint(model,X in MOI.PositiveSemidefiniteConeSquare(2)):" *
+            " instead of `MathOptInterface.PositiveSemidefiniteConeSquare(2)`," *
+            " use `JuMP.PSD()`.")
+        @test_throws err @constraint(model, X in MOI.PositiveSemidefiniteConeSquare(2))
+        err = ErrorException(
+            "In @constraint(model,X in MOI.PositiveSemidefiniteConeTriangle(2)):" *
+            " instead of `MathOptInterface.PositiveSemidefiniteConeTriangle(2)`," *
+            " use `JuMP.PSD()`.")
+        @test_throws err @constraint(model, X in MOI.PositiveSemidefiniteConeTriangle(2))
+    end
+
+    @testset "Useful Matrix error message" begin
+        model = ModelType()
+        @variable(model, X[1:2, 1:2])
+        err = ErrorException(
+            "In @constraint(model,X in MOI.SecondOrderCone(4)): unexpected " *
+            "matrix in vector constraint. Do you need to flatten the matrix " *
+            "into a vector using `vec()`?")
+        # Note: this should apply to any MOI.AbstractVectorSet. We just pick
+        # SecondOrderCone for convenience.
+        @test_throws err @constraint(model, X in MOI.SecondOrderCone(4))
+    end
+
     @testset "Nonsensical SDPs" begin
         m = ModelType()
         @test_throws ErrorException @variable(m, unequal[1:5,1:6], PSD)
