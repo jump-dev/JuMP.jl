@@ -181,9 +181,9 @@ function constraints_test(ModelType::Type{<:JuMP.AbstractModel})
         model = ModelType()
         @variable(model, x[1:2])
         err = ErrorException(
-            "In @constraint(model,[3, x] in SecondOrderCone()): unable to add " *
-            "the constraint because we don't recognise " *
-            "Any[3, VariableRef[x[1], x[2]]] as a valid JuMP function."
+            "In @constraint(model,[3, x] in SecondOrderCone()): unable to add" *
+            " the constraint because we don't recognise $([3, x]) as a valid " *
+            "JuMP function."
         )
         if VERSION < v"0.7"
             @test_throws ErrorException @constraint(model, [3, x] in SecondOrderCone())
