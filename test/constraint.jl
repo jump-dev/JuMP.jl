@@ -234,12 +234,12 @@ function constraints_test(ModelType::Type{<:JuMP.AbstractModel})
         err = ErrorException(
             "In @constraint(model,X in MOI.PositiveSemidefiniteConeSquare(2)):" *
             " instead of `MathOptInterface.PositiveSemidefiniteConeSquare(2)`," *
-            " use `JuMP.PSD()`.")
+            " use `JuMP.PSDCone()`.")
         @test_throws err @constraint(model, X in MOI.PositiveSemidefiniteConeSquare(2))
         err = ErrorException(
             "In @constraint(model,X in MOI.PositiveSemidefiniteConeTriangle(2)):" *
             " instead of `MathOptInterface.PositiveSemidefiniteConeTriangle(2)`," *
-            " use `JuMP.PSD()`.")
+            " use `JuMP.PSDCone()`.")
         @test_throws err @constraint(model, X in MOI.PositiveSemidefiniteConeTriangle(2))
     end
 

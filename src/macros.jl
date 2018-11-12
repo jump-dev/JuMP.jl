@@ -426,7 +426,7 @@ end
 
 function build_constraint(_error::Function, ::Matrix, T::Union{
     MOI.PositiveSemidefiniteConeSquare, MOI.PositiveSemidefiniteConeTriangle})
-    return _error("instead of `$(T)`, use `JuMP.PSD()`.")
+    return _error("instead of `$(T)`, use `JuMP.PSDCone()`.")
 end
 
 # _vectorize_like(x::Number, y::AbstractArray{AffExpr}) = (ret = similar(y, typeof(x)); fill!(ret, x))
