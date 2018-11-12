@@ -261,9 +261,9 @@ julia> JuMP.lower_bound.(x)
 
 JuMP will form an `Array` of JuMP variables when it can determine at compile
 time that the indices are one-based integer ranges. Therefore `x[1:b]` will
-work, but `x[a:b]` will not. If JuMP cannot determine that the indices are
-one-based integer ranges (e.g., in the case of `x[a:b]`), JuMP will create a
-`JuMPArray` instead.
+create an `Array` of JuMP variables, but `x[a:b]` will not. If JuMP cannot
+determine that the indices are one-based integer ranges (e.g., in the case of
+`x[a:b]`), JuMP will create a `JuMPArray` instead.
 
 ### [JuMPArrays](@id variable_jump_arrays)
 

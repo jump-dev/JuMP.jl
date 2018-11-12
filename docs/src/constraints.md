@@ -107,20 +107,22 @@ julia> @constraint(model, 2x + 1 <= 4x + 4)
 
 ## [Duality](@id constraint_duality)
 
-JuMP adopts the notion of duality from MathOptInterface. Roughly speaking, the
-dual variable associated with a constraint can be viewed as the decrease in the
-value of the objective given an infinitesimal relaxation of the constraint. For
-example, in a linear constraint, this relaxation is equivalent to `2x <= 1 + δ`
-and `2x >= 1 - δ`. If the constraint is an equality constraint, it depends on
-which direction is binding.
+JuMP adopts the notion of [conic duality from MathOptInterface](http://www.juliaopt.org/MathOptInterface.jl/v0.6.2/apimanual.html#Duals-1).
+For linear programs, a feasible dual on a `>=` constraint is nonnegative and a
+feasible dual on a `<=` constraint is nonpositive. If the constraint is an
+equality constraint, it depends on which direction is binding.
 
-Notably, this definition is independent of the objective sense. That is, the
-dual associated with a constraint is the same when the objective is a
-maximization and when it is a minimization. **This is different to traditional
-duality in linear programming.**
+!!! note
+    JuMP's definition of duality is independent of the objective sense. That is,
+    the sign of the dual associated with a constraint depends on the direction
+    of the constraint and not whether the problem is maximization or
+    minimization. **This is different to traditional duality in linear
+    programming.**
 
-The dual value associated with a constraint can be accessed using the
-[`JuMP.dual`](@ref) function. For example:
+The dual value associated with a constraint in the most recent solution can be
+accessed using the [`JuMP.dual`](@ref) function. You can use the
+[`JuMP.has_dual`](@ref) function to check whether it is possible to query the
+dual. For example:
 
 ```jldoctest
 julia> model = Model()
@@ -131,8 +133,10 @@ x
 
 julia> @constraint(model, con, x <= 1)
 con : x <= 1.0
-```
 
+julia> JuMP.has_dual(con)
+false
+```
 ```@meta
 DocTestSetup = quote
     using JuMP
@@ -158,6 +162,9 @@ julia> @objective(model, Min, -2x)
 
 julia> JuMP.optimize!(model)
 
+julia> JuMP.has_dual(con)
+true
+
 julia> JuMP.dual(con)
 -2.0
 
@@ -172,9 +179,10 @@ julia> JuMP.dual(con)
 
 To help users who may be less familiar with conic duality, JuMP provides the
 [`JuMP.shadow_price`](@ref) function which returns a value that can be
-interpreted as the improvement in the objective given a 1-unit change in the
-right-hand side of the constraint. [`JuMP.shadow_price`](@ref) can only be used
-on linear constraints with a `<=`, `>=`, or `==` comparison operator.
+interpreted as the improvement in the objective an infinitesimal relaxation (on
+the scale of one unit) in the right-hand side of the constraint.
+[`JuMP.shadow_price`](@ref) can only be used on linear constraints with a `<=`,
+`>=`, or `==` comparison operator.
 
 In the example above, `JuMP.dual(con)` returned `-2.0` regardless of the
 optimization sense. However, in the second case when the optimization sense is
@@ -184,7 +192,7 @@ julia> JuMP.shadow_price(con)
 2.0
 ```
 
-To query the dual variables associated a variable bounds, first obtain a
+To query the dual variables associated a variable bound, first obtain a
 constraint reference using one of [`JuMP.UpperBoundRef`](@ref),
 [`JuMP.LowerBoundRef`](@ref), or [`JuMP.FixRef`](@ref), and then call
 [`JuMP.dual`](@ref) on the returned constraint reference.
@@ -198,16 +206,15 @@ end
 
 ## Constraint containers
 
-So far, we've adding constraints one-by-one. However, just like
+So far, we've added constraints one-by-one. However, just like
 [Variable containers](@ref), JuMP provides a mechanism for building groups of
-constraints in *containers*. Three types of constraint containers are supported:
-`Array`s, `JuMPArray`s, and `Dict`ionaries. We explain each of these in the
-following.
+constraints compactly. References to these groups of constraints are returned in
+*containers*. Three types of constraint containers are supported: `Array`s,
+`JuMPArray`s, and `Dict`ionaries. We explain each of these in the following.
 
 ### [Arrays](@id constraint_arrays)
 
-The syntax for adding `Array`s of JuMP constraints is very similar to the
-[syntax for creating `Array`s of JuMP variables](@ref Arrays):
+One way of adding a group of constraints compactly is the following:
 ```jldoctest constraint_arrays; setup=:(model=Model(); @variable(model, x))
 julia> @constraint(model, con[i = 1:3], i * x <= i + 1)
 3-element Array{ConstraintRef{Model,C,Shape} where Shape<:JuMP.AbstractShape where C,1}:
@@ -215,7 +222,9 @@ julia> @constraint(model, con[i = 1:3], i * x <= i + 1)
  con[2] : 2 x <= 3.0
  con[3] : 3 x <= 4.0
 ```
-These arrays can be accessed and sliced like normal Julia arrays:
+JuMP returns references to the three constraints in an `Array` that is bound to
+the Julia variable `con`. This array can be accessed and sliced just like a
+normal Julia array:
 ```jldoctest constraint_arrays
 julia> con[1]
 con[1] : x <= 2.0
@@ -237,9 +246,9 @@ julia> @constraint(model, [i = 1:2], i * x <= i + 1)
 
 Just like [`@variable`](@ref), JuMP will form an `Array` of constraints when it
 can determine at compile time that the indices are one-based integer ranges.
-Therefore `con[1:b]` will work, but `con[a:b]` will not. If JuMP cannot
-determine that the indices are one-based integer ranges (e.g., in the case of
-`con[a:b]`), JuMP will create a `JuMPArray` instead.
+Therefore `con[1:b]` will create an `Array`, but `con[a:b]` will not. If JuMP
+cannot determine that the indices are one-based integer ranges (e.g., in the
+case of `con[a:b]`), JuMP will create a `JuMPArray` instead.
 
 ### JuMPArrays
 
@@ -305,8 +314,9 @@ julia> @constraint(model, con, A * x .== b)
 ```
 
 !!! note
-    Make sure to use the broadcasting syntax `.==` (or `.>=` and `.<=`). If you
-    use a standard comparison, an error will be thrown.
+    Make sure to use [Julia's dot syntax](https://docs.julialang.org/en/v1/manual/functions/index.html#man-vectorized-1)
+    in front of the comparison operators (e.g. `.==`, `.>=`, and `.<=`). If you
+    use a comparison without the dot, an error will be thrown.
 
 Instead of adding an array of `ScalarAffineFunction-in-EqualTo` constraints, we
 can instead construct a `VectorAffineFunction-in-Nonnegatives` constraint as
@@ -318,7 +328,7 @@ julia> @constraint(model, A * x - b in MOI.Nonnegatives(2))
 
 In addition to the `Nonnegatives` set, MathOptInterface defines a number of
 other vector-valued sets such as `Nonpositives`. See the [MathOptInterface
-documentation](http://www.juliaopt.org/MathOptInterface.jl/dev/apireference/#Sets-1)
+documentation](http://www.juliaopt.org/MathOptInterface.jl/v0.6.2/apireference/#Sets-1)
 for more information.
 
 Note also that for the first time we have used an explicit *function-in-set*
@@ -443,7 +453,7 @@ julia> @constraint(model, [t, u, x[1], x[2]] in JuMP.RotatedSecondOrderCone())
 
 In addition to the second order cone and rotated second order cone,
 MathOptInterface defines a number of other conic sets such as the exponential
-and power cones. See the [MathOptInterface documentation](http://www.juliaopt.org/MathOptInterface.jl/dev/apireference/#Sets-1)
+and power cones. See the [MathOptInterface documentation](http://www.juliaopt.org/MathOptInterface.jl/v0.6.2/apireference/#Sets-1)
 for more information.
 
 ## Semidefinite constraints
@@ -453,29 +463,36 @@ TODO: discuss [`@SDconstraint`] and [`PSDCone`].
 ## Constraint modifications
 
 A common paradigm, especially in linear programming, is to repeatedly solve a
-model with different coefficients. Most often, this involves changing the
-"right-hand side" of a linear constraint. This presents a challenge for JuMP
-because it leads to ambiguities. For example, what is the right-hand side term
-of `@constraint(model, 2x + 1 <= x - 3)`?
+model with different coefficients.
+
+### Modifying a constant term
+
+Most often, modifications involve changing the "right-hand side" of a linear
+constraint. This presents a challenge for JuMP because it leads to ambiguities.
+For example, what is the right-hand side term of
+`@constraint(model, 2x + 1 <= x - 3)`? This applies more generally to any
+constant term in a function appearing in the objective or a constraint.
 
 To avoid these ambiguities, JuMP includes the ability to *fix* variables to a
 value using the [`JuMP.fix`](@ref) function. Fixing a variable sets its lower
-and upper bound to the same value. Thus, changes in the right-hand side can be
+and upper bound to the same value. Thus, changes in a constant term can be
 simulated by adding a dummy variable and fixing it to different values. Here is
 an example:
 
 ```jldoctest con_fix; setup = :(model = Model(); @variable(model, x))
-julia> @variable(model, rhs_term)
-rhs_term
+julia> @variable(model, const_term)
+const_term
 
-julia> @constraint(model, con, 2x <= rhs_term)
-con : 2 x - rhs_term <= 0.0
+julia> @constraint(model, con, 2x <= const_term)
+con : 2 x - const_term <= 0.0
 
-julia> JuMP.fix(rhs_term, 1.0)
+julia> JuMP.fix(const_term, 1.0)
 ```
 !!! note
-    Even though `rhs_term` is fixed, it is still a decision variable. Thus, `x *
-    rhs_term` is bilinear.
+    Even though `const_term` is fixed, it is still a decision variable. Thus,
+    `const_term * x` is bilinear.
+
+### Modifying a variable coefficient
 
 It is also possible to modify the scalar coefficients (but notably *not* the
 quadratic coefficients) using the [`JuMP.set_coefficient`](@ref) function. Here
@@ -529,6 +546,7 @@ SecondOrderCone
 RotatedSecondOrderCone
 PSDCone
 JuMP.set_coefficient
+JuMP.has_dual
 JuMP.dual
 JuMP.shadow_price
 JuMP.fix
