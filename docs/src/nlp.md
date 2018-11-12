@@ -1,5 +1,4 @@
-Nonlinear Modeling
-==================
+# Nonlinear Modeling
 
 ```@meta
 CurrentModule = JuMP
@@ -52,8 +51,7 @@ TODO: Add links to NLP examples after they are updated.
 The [NLP solver tests](https://github.com/JuliaOpt/JuMP.jl/blob/2ae979eec4aeac1b6dc76d614b79c3c99c3dacc5/test/nlp_solver.jl)
 contain additional examples.
 
-Syntax notes
-------------
+## Syntax notes
 
 The syntax accepted in nonlinear expressions is more restricted than the syntax
 for linear and quadratic expressions. We note some important points below.
@@ -126,8 +124,7 @@ julia> @NLconstraint(model, *((x / 2)...) <= 0.0)
 ERROR: LoadError: Unexpected expression in (*)(x / 2...). JuMP supports splatting only symbols. For example, x... is ok, but (x + 1)..., [x; y]... and g(f(y)...) are not.
 ```
 
-Nonlinear Parameters
---------------------
+## Nonlinear Parameters
 
 For nonlinear models only, JuMP offers a syntax for explicit "parameter" objects
 which can be used to modify a model in-place just by updating the value of the
@@ -178,8 +175,7 @@ Using nonlinear parameters can be faster than creating a new model from scratch
 with updated data because JuMP is able to avoid repeating a number of steps in
 processing the model before handing it off to the solver.
 
-User-defined Functions
-----------------------
+## User-defined Functions
 
 JuMP's library of recognized univariate functions is derived from the
 [Calculus.jl](https://github.com/johnmyleswhite/Calculus.jl) package. If you
@@ -284,8 +280,29 @@ example:
 @NLconstraint(model, my_square(x[1]) <= 2.0)
 ```
 
-Factors affecting solution time
--------------------------------
+### User-defined functions with vector inputs
+
+User-defined functions which take vectors as input arguments (e.g.
+`f(x::Vector)`) are *not* supported. Instead, use Julia's splatting syntax to
+create a function with scalar arguments. For example, instead of
+```julia
+f(x::Vector) = sum(x[i]^i for i in 1:length(x))
+```
+define:
+```julia
+f(x...) = sum(x[i]^i for i in 1:length(x))
+```
+
+This function `f` can be used in a JuMP model as follows:
+```julia
+model = Model()
+@variable(model, x[1:5] >= 0)
+f(x...) = sum(x[i]^i for i in 1:length(x))
+JuMP.register(model, :f, 5, f; autodiff = true)
+@NLobjective(model, Min, f(x...))
+```
+
+## Factors affecting solution time
 
 The execution time when solving a nonlinear programming problem can be divided
 into two parts, the time spent in the optimization algorithm (the solver) and
@@ -307,8 +324,7 @@ differentiation with graph coloring methods for exploiting sparsity of the
 Hessian matrix [^1]. As a conservative bound, JuMP's performance here currently
 may be expected to be within a factor of 5 of AMPL's.
 
-Querying derivatives from a JuMP model
---------------------------------------
+## Querying derivatives from a JuMP model
 
 TODO: This section is out of date and hasn't been updated yet for MOI.
 
@@ -390,8 +406,7 @@ of specific variables. For example, in statistical maximum likelihood estimation
 problems, one is often interested in the Hessian matrix at the optimal solution,
 which can be queried using the `JuMP.NLPEvaluator`.
 
-Raw expression input
---------------------
+# Raw expression input
 
 In addition to the `@NLobjective` and `@NLconstraint` macros, it is also
 possible to provide Julia `Expr` objects directly by using
