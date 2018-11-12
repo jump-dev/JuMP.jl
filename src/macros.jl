@@ -390,6 +390,14 @@ function parse_constraint(_error::Function, args...)
           "       expr1 == expr2\n" * "       lb <= expr <= ub")
 end
 
+# Generic fallback.
+function build_constraint(_error::Function, func,
+        set::Union{MOI.AbstractScalarSet, MOI.AbstractVectorSet})
+    return _error("unable to add the constraint because something is wrong " *
+                  "with your syntax.")
+end
+
+
 function build_constraint(_error::Function, v::AbstractJuMPScalar,
                           set::MOI.AbstractScalarSet)
     return ScalarConstraint(v, set)

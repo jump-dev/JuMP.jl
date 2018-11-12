@@ -177,6 +177,16 @@ function constraints_test(ModelType::Type{<:JuMP.AbstractModel})
         # @test c.set == MOI.SecondOrderCone(1)
     end
 
+    @testset "Syntax error" begin
+        model = ModelType()
+        @variable(model, x[1:2])
+        err = ErrorException(
+            "In @constraint(model,[3, x] in SecondOrderCone()): unable to add " *
+            "the constraint because something is wrong with your syntax."
+        )
+        @test_throws err @constraint(model, [3, x] in SecondOrderCone())
+    end
+
     @testset "SDP constraint" begin
         m = ModelType()
         @variable(m, x)
