@@ -1,3 +1,15 @@
+# Internal function: evaluates `func` at `args` and checks that the return type
+# is `RetType`. This is a catch to provide the user with a nice error message if
+# their user-defined function returns unexpected results.
+function eval_and_check_return_type(func::Function, RetType, args...)
+    ret = func(args...)
+    if !isa(ret, RetType)
+        error("Expected return type of $(RetType), but got $(typeof(ret)). " *
+              "Make sure your user-defined function only depends on variables" *
+              " passed as arguments.")
+    end
+    return ret
+end
 
 
 # forward-mode evaluation of an expression tree
@@ -135,7 +147,8 @@ function forward_eval(storage::AbstractVector{T}, partials_storage::AbstractVect
                 end
                 # TODO: The function names are confusing here. This just
                 # evaluates the function value and gradient.
-                fval = MOI.eval_objective(evaluator, f_input)::T
+                fval = eval_and_check_return_type(
+                    MOI.eval_objective, T, evaluator, f_input)::T
                 MOI.eval_objective_gradient(evaluator, grad_output, f_input)
                 storage[k] = fval
                 r = 1
@@ -156,8 +169,8 @@ function forward_eval(storage::AbstractVector{T}, partials_storage::AbstractVect
                 userop = op - USER_UNIVAR_OPERATOR_ID_START + 1
                 f = user_operators.univariate_operator_f[userop]
                 fprime = user_operators.univariate_operator_fprime[userop]
-                fval = f(child_val)::T
-                fprimeval = fprime(child_val)::T
+                fval = eval_and_check_return_type(f, T, child_val)::T
+                fprimeval = eval_and_check_return_type(fprime, T, child_val)::T
             else
                 fval, fprimeval = eval_univariate(op, child_val)
             end
@@ -341,18 +354,17 @@ function forward_eval_ϵ(storage::AbstractVector{T},
                 child_val = storage[child_idx]
                 if op >= USER_UNIVAR_OPERATOR_ID_START
                     userop = op - USER_UNIVAR_OPERATOR_ID_START + 1
-                    fprimeprime = user_operators.univariate_operator_fprimeprime[userop](child_val)::T
+                    fprimeprime = eval_and_check_return_type(
+                        user_operators.univariate_operator_fprimeprime[userop],
+                        T, child_val)::T
                 else
                     fprimeprime = eval_univariate_2nd_deriv(op, child_val,storage[k])
                 end
                 partials_storage_ϵ[child_idx] = fprimeprime*storage_ϵ[child_idx]
             end
         end
-
     end
-
     return storage_ϵ[1]
-
 end
 
 export forward_eval_ϵ
