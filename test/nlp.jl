@@ -543,7 +543,11 @@
             " user-defined function only depends on variables passed as " *
             "arguments."
         )
-        @test_throws expected_exception MOI.eval_objective(d, [1.0, 1.0])
+        if VERSION < v"0.7"
+            @test_throws ErrorException MOI.eval_objective(d, [1.0, 1.0])
+        else
+            @test_throws expected_exception MOI.eval_objective(d, [1.0, 1.0])
+        end
     end
 
     @testset "User-defined function returning bad type" begin
@@ -558,6 +562,10 @@
             "Expected return type of Float64 from a user-defined function, " *
             "but got String."
         )
-        @test_throws expected_exception MOI.eval_objective(d, [1.0])
+        if VERSION < v"0.7"
+            @test_throws ErrorException MOI.eval_objective(d, [1.0, 1.0])
+        else
+            @test_throws expected_exception MOI.eval_objective(d, [1.0, 1.0])
+        end
     end
 end
