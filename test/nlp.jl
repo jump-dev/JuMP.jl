@@ -529,7 +529,7 @@
         @test grad == [1.0]
     end
 
-    @testset "" begin
+    @testset "User-defined function with variable closure" begin
         model = Model()
         @variable(model, x[1:2])
         f(x1) = x1 + x[2]
