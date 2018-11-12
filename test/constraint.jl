@@ -184,7 +184,11 @@ function constraints_test(ModelType::Type{<:JuMP.AbstractModel})
             "In @constraint(model,[3, x] in SecondOrderCone()): unable to add " *
             "the constraint because something is wrong with your syntax."
         )
-        @test_throws err @constraint(model, [3, x] in SecondOrderCone())
+        if VERSION < v"0.7"
+            @test_throws ErrorException @constraint(model, [3, x] in SecondOrderCone())
+        else
+            @test_throws err @constraint(model, [3, x] in SecondOrderCone())
+        end
     end
 
     @testset "SDP constraint" begin
