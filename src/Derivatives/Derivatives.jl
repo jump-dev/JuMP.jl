@@ -9,6 +9,7 @@ using ForwardDiff
 import Calculus
 import MathOptInterface
 const MOI = MathOptInterface
+using ..JuMP
 
 const TAG = :rds_tag
 
