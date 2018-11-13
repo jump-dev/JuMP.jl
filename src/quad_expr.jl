@@ -94,7 +94,7 @@ linear_terms(quad::GenericQuadExpr) = LinearTermIterator(quad.aff)
 struct QuadTermIterator{GQE<:GenericQuadExpr}
     quad::GQE
 end
-
+# TODO: rename to quad_terms
 """
     quadterms(quad::GenericQuadExpr{C, V})
 
@@ -112,15 +112,31 @@ if VERSION < v"0.7-"
     Base.done(qti::QuadTermIterator, state::Int) = done(qti.quad.terms, state)
     Base.next(qti::QuadTermIterator, state::Int) = reorder_iterator(next(qti.quad.terms, state)...)
 else
-    function reorder_iterator(t::Tuple{Pair{<:UnorderedPair,<:Any},Int})
-        ((first(t).second, first(t).first.a, first(t).first.b), last(t))
+    function reorder_and_flatten(p::Pair{<:UnorderedPair})
+        return (p.second, p.first.a, p.first.b)
     end
-    Base.iterate(qti::QuadTermIterator) = reorder_iterator(iterate(qti.quad.terms))
+    function Base.iterate(qti::QuadTermIterator)
+        ret = iterate(qti.quad.terms)
+        if ret === nothing
+            return nothing
+        else
+            return reorder_and_flatten(ret[1]), ret[2]
+        end
+    end
     function Base.iterate(qti::QuadTermIterator, state)
-        reorder_iterator(iterate(qti.quad.terms, state))
+        ret = iterate(qti.quad.terms, state)
+        if ret === nothing
+            return nothing
+        else
+            return reorder_and_flatten(ret[1]), ret[2]
+        end
     end
 end
 Base.length(qti::QuadTermIterator) = length(qti.quad.terms)
+function Base.eltype(qti::QuadTermIterator{GenericQuadExpr{C, V}}
+                    ) where {C, V}
+    return Tuple{C, V, V}
+end
 
 function add_to_expression!(quad::GenericQuadExpr{C,V}, new_coef::C, new_var1::V, new_var2::V) where {C,V}
     # Node: OrderedDict updates the *key* as well. That is, if there was a
