@@ -112,7 +112,7 @@ if VERSION < v"0.7-"
     Base.done(qti::QuadTermIterator, state::Int) = done(qti.quad.terms, state)
     Base.next(qti::QuadTermIterator, state::Int) = reorder_iterator(next(qti.quad.terms, state)...)
 else
-    function reorder_and_flatten(p::Pair{<:UnorderedPair,<:Any})
+    function reorder_and_flatten(p::Pair{<:UnorderedPair})
         return (p.second, p.first.a, p.first.b)
     end
     function Base.iterate(qti::QuadTermIterator)
