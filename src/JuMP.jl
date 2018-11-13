@@ -427,11 +427,18 @@ end
 
 index(cr::ConstraintRef) = cr.index
 
-# TODO: Why does this method depend on the type of the constraint?
-# TODO: docstring
-function has_dual(model::Model,
-                         REF::Type{<:ConstraintRef{Model, T}}) where {T <: MOICON}
-    MOI.get(model, MOI.DualStatus()) != MOI.NoSolution
+"""
+    has_dual(con_ref::ConstraintRef)
+
+Return true if the solver has a dual solution available to query, otherwise
+return false.
+
+See also [`dual`](@ref) and [`shadow_price`](@ref).
+"""
+function has_dual(con_ref::ConstraintRef{Model, <:MOICON})
+    # TODO(odow): should we be more clever here? What about solvers that only
+    # support duals on a subset of their constraints?
+    return MOI.get(con_ref.model, MOI.DualStatus()) != MOI.NoSolution
 end
 
 """

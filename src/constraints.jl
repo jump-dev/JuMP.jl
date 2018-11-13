@@ -330,7 +330,7 @@ end
 function shadow_price(constraint::ConstraintRef{Model, MOICON{F, S}}
                       ) where {S <: MOI.LessThan, F}
     model = constraint.model
-    if !has_dual(model, typeof(constraint))
+    if !has_dual(constraint)
         error("The shadow price is not available because no dual result is " *
               "available.")
     end
@@ -341,7 +341,7 @@ end
 function shadow_price(constraint::ConstraintRef{Model, MOICON{F, S}}
                       ) where {S <: MOI.GreaterThan, F}
     model = constraint.model
-    if !has_dual(model, typeof(constraint))
+    if !has_dual(constraint)
         error("The shadow price is not available because no dual result is " *
               "available.")
     end
@@ -352,7 +352,7 @@ end
 function shadow_price(constraint::ConstraintRef{Model, MOICON{F, S}}
                       ) where {S <: MOI.EqualTo, F}
     model = constraint.model
-    if !has_dual(model, typeof(constraint))
+    if !has_dual(constraint)
         error("The shadow price is not available because no dual result is " *
               "available.")
     end

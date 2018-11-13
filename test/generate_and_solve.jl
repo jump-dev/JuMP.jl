@@ -163,9 +163,9 @@
         @test JuMP.value(y) == 0.0
         @test JuMP.objective_value(m) == 1.0
 
-        @test !JuMP.has_dual(m, typeof(JuMP.FixRef(x)))
-        @test !JuMP.has_dual(m, typeof(JuMP.IntegerRef(x)))
-        @test !JuMP.has_dual(m, typeof(JuMP.BinaryRef(y)))
+        @test !JuMP.has_dual(JuMP.FixRef(x))
+        @test !JuMP.has_dual(JuMP.IntegerRef(x))
+        @test !JuMP.has_dual(JuMP.BinaryRef(y))
     end
 
     @testset "QCQP" begin
@@ -277,10 +277,10 @@
         @test JuMP.value(y) == 0.0
         @test JuMP.value(z) == 0.0
 
-        @test JuMP.has_dual(m, typeof(varsoc))
+        @test JuMP.has_dual(varsoc)
         @test JuMP.dual(varsoc) == [-1.0, -2.0, -3.0]
 
-        @test JuMP.has_dual(m, typeof(affsoc))
+        @test JuMP.has_dual(affsoc)
         @test JuMP.dual(affsoc) == [1.0, 2.0, 3.0]
     end
 
@@ -345,13 +345,13 @@
         @test JuMP.primal_status(m) == MOI.FeasiblePoint
 
         @test JuMP.value.(x) == [1.0 2.0; 2.0 4.0]
-        @test JuMP.has_dual(m, typeof(var_psd))
+        @test JuMP.has_dual(var_psd)
         @test JuMP.dual(var_psd) isa Symmetric
         @test JuMP.dual(var_psd) == [1.0 2.0; 2.0 3.0]
-        @test JuMP.has_dual(m, typeof(sym_psd))
+        @test JuMP.has_dual(sym_psd)
         @test JuMP.dual(sym_psd) isa Symmetric
         @test JuMP.dual(sym_psd) == [4.0 5.0; 5.0 6.0]
-        @test JuMP.has_dual(m, typeof(con_psd))
+        @test JuMP.has_dual(con_psd)
         @test JuMP.dual(con_psd) isa Matrix
         @test JuMP.dual(con_psd) == [7.0 9.0; 8.0 10.0]
 
