@@ -48,7 +48,7 @@ con : 2 x <= 1.0
 Wasn't that easy! Let's unpack what happened, because just like
 [`@variable`](@ref) there are a few subtle things going on.
  1. The mathematical constraint ``2x \le 1`` was added to the model.
- 2. A JuMP called `con` was created that acts as a reference to the
+ 2. A Julia variable called `con` was created that is a reference to the
     constraint.
  3. JuMP set the *name* of the constraint to `"con"`.
 
@@ -245,7 +245,7 @@ julia> @constraint(model, [i = 1:2], i * x <= i + 1)
 ```
 
 Just like [`@variable`](@ref), JuMP will form an `Array` of constraints when it
-can determine at compile time that the indices are one-based integer ranges.
+can determine at parse time that the indices are one-based integer ranges.
 Therefore `con[1:b]` will create an `Array`, but `con[a:b]` will not. If JuMP
 cannot determine that the indices are one-based integer ranges (e.g., in the
 case of `con[a:b]`), JuMP will create a `JuMPArray` instead.
@@ -281,7 +281,7 @@ Dict{Any,ConstraintRef{Model,C,Shape} where Shape<:JuMP.AbstractShape where C} w
 
 When creating a container of constraints, JuMP will attempt to choose the
 tightest container type that can store the constraints. However, because this
-happens at compile time, it does not always make the best choice. Just like in
+happens at parse time, it does not always make the best choice. Just like in
 [`@variable`](@ref), we can force the type of container using the `container`
 keyword. For syntax and the reason behind this, take a look at the
 [variable docs](@ref variable_forcing).
