@@ -393,7 +393,7 @@ end
 # Generic fallback.
 function build_constraint(_error::Function, func,
         set::Union{MOI.AbstractScalarSet, MOI.AbstractVectorSet})
-    return _error("unable to add the constraint because we don't recognise " *
+    return _error("unable to add the constraint because we don't recognize " *
                   "$(func) as a valid JuMP function.")
 end
 
