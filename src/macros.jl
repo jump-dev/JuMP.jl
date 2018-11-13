@@ -417,6 +417,18 @@ function build_constraint(_error::Function, x::AbstractArray,
                   " instead?")
 end
 
+function build_constraint(
+        _error::Function, x::Matrix, set::MOI.AbstractVectorSet)
+    return _error(
+        "unexpected matrix in vector constraint. Do you need to flatten the " *
+        "matrix into a vector using `vec()`?")
+end
+
+function build_constraint(_error::Function, ::Matrix, T::Union{
+    MOI.PositiveSemidefiniteConeSquare, MOI.PositiveSemidefiniteConeTriangle})
+    return _error("instead of `$(T)`, use `JuMP.PSDCone()`.")
+end
+
 # _vectorize_like(x::Number, y::AbstractArray{AffExpr}) = (ret = similar(y, typeof(x)); fill!(ret, x))
 # function _vectorize_like{R<:Number}(x::AbstractArray{R}, y::AbstractArray{AffExpr})
 #     for i in 1:max(ndims(x),ndims(y))
