@@ -182,7 +182,7 @@ function constraints_test(ModelType::Type{<:JuMP.AbstractModel})
         @variable(model, x[1:2])
         err = ErrorException(
             "In @constraint(model,[3, x] in SecondOrderCone()): unable to add" *
-            " the constraint because we don't recognise $([3, x]) as a valid " *
+            " the constraint because we don't recognize $([3, x]) as a valid " *
             "JuMP function."
         )
         if VERSION < v"0.7"
