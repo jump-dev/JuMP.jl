@@ -336,9 +336,36 @@ end
 
 # TODO(IainNZ): Document these too.
 object_dictionary(model::Model) = model.obj_dict
-termination_status(model::Model) = MOI.get(model, MOI.TerminationStatus())
-primal_status(model::Model) = MOI.get(model, MOI.PrimalStatus())
-dual_status(model::Model) = MOI.get(model, MOI.DualStatus())
+"""
+    termination_status(model::Model)
+
+Return the reason why the solver stopped (i.e., the MathOptInterface model
+attribute `TerminationStatus`).
+"""
+function termination_status(model::Model)
+    return MOI.get(model, MOI.TerminationStatus())
+end
+
+"""
+    primal_status(model::Model)
+
+Return the status of the most recent primal solution of the solver (i.e., the
+MathOptInterface model attribute `PrimalStatus`).
+"""
+function primal_status(model::Model)
+    return MOI.get(model, MOI.PrimalStatus())
+end
+
+"""
+    dual_status(model::Model)
+
+Return the status of the most recent dual solution of the solver (i.e., the
+MathOptInterface model attribute `DualStatus`).
+"""
+function dual_status(model::Model)
+    return MOI.get(model, MOI.DualStatus())
+end
+
 set_optimize_hook(model::Model, f) = (model.optimize_hook = f)
 
 
