@@ -1077,7 +1077,7 @@ macro expression(args...)
     end
     length(kwargs) == 0 || error("@expression: unrecognized keyword argument")
 
-    anonvar = isexpr(c, :vect) || isexpr(c, :vcat)
+    anonvar = isexpr(c, :vect) || isexpr(c, :vcat) || length(args) == 2
     variable = gensym()
 
     refcall, idxvars, idxsets, condition = buildrefsets(c, variable)
@@ -1661,7 +1661,7 @@ macro NLexpression(args...)
         error("in @NLexpression: To many arguments ($(length(args))).")
     end
 
-    anonvar = isexpr(c, :vect) || isexpr(c, :vcat)
+    anonvar = isexpr(c, :vect) || isexpr(c, :vcat) || length(args) == 2
     variable = gensym()
 
     refcall, idxvars, idxsets, condition = buildrefsets(c, variable)
