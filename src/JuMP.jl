@@ -336,6 +336,7 @@ end
 
 # TODO(IainNZ): Document these too.
 object_dictionary(model::Model) = model.obj_dict
+
 """
     termination_status(model::Model)
 
