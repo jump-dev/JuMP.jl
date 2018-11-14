@@ -428,18 +428,14 @@ end
 index(cr::ConstraintRef) = cr.index
 
 """
-    has_dual(con_ref::ConstraintRef)
+    has_duals(model::Model)
 
 Return true if the solver has a dual solution available to query, otherwise
 return false.
 
 See also [`dual`](@ref) and [`shadow_price`](@ref).
 """
-function has_dual(con_ref::ConstraintRef{Model, <:MOICON})
-    # TODO(odow): should we be more clever here? What about solvers that only
-    # support duals on a subset of their constraints?
-    return MOI.get(con_ref.model, MOI.DualStatus()) != MOI.NoSolution
-end
+has_duals(model::Model) = dual_status(model) != MOI.NoSolution
 
 """
     dual(cr::ConstraintRef)

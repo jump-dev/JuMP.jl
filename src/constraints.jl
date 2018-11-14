@@ -277,7 +277,7 @@ end
 
 The change in the objective from an infinitesimal relaxation of the constraint.
 This value is computed from [`dual`](@ref) and can be queried only when
-`has_dual` is `true` and the objective sense is `MinSense` or `MaxSense`
+`has_duals` is `true` and the objective sense is `MinSense` or `MaxSense`
 (not `FeasibilitySense`). For linear constraints, the shadow prices differ at
 most in sign from the `dual` value depending on the objective sense.
 
@@ -330,7 +330,7 @@ end
 function shadow_price(constraint::ConstraintRef{Model, MOICON{F, S}}
                       ) where {S <: MOI.LessThan, F}
     model = constraint.model
-    if !has_dual(constraint)
+    if !has_duals(model)
         error("The shadow price is not available because no dual result is " *
               "available.")
     end
@@ -341,7 +341,7 @@ end
 function shadow_price(constraint::ConstraintRef{Model, MOICON{F, S}}
                       ) where {S <: MOI.GreaterThan, F}
     model = constraint.model
-    if !has_dual(constraint)
+    if !has_duals(model)
         error("The shadow price is not available because no dual result is " *
               "available.")
     end
@@ -352,7 +352,7 @@ end
 function shadow_price(constraint::ConstraintRef{Model, MOICON{F, S}}
                       ) where {S <: MOI.EqualTo, F}
     model = constraint.model
-    if !has_dual(constraint)
+    if !has_duals(model)
         error("The shadow price is not available because no dual result is " *
               "available.")
     end
