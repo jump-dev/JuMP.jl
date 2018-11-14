@@ -324,7 +324,8 @@ sense_to_set(_error::Function, ::Union{Val{:(>=)}, Val{:(≥)}}) = MOI.GreaterTh
 sense_to_set(_error::Function, ::Val{:(==)}) = MOI.EqualTo(0.0)
 sense_to_set(_error::Function, ::Val{S}) where S = _error("Unrecognized sense $S")
 
-function parse_one_operator_constraint(_error::Function, vectorized::Bool, ::Val{:in}, aff, set)
+function parse_one_operator_constraint(_error::Function, vectorized::Bool,
+                                       ::Union{Val{:in}, Val{:∈}}, aff, set)
     newaff, parseaff = parseExprToplevel(aff, :q)
     parsecode = :(q = Val{false}(); $parseaff)
     if vectorized
