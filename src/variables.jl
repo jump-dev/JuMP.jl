@@ -544,9 +544,16 @@ Use `has_values` to check if a result exists before asking for values.
 Replaces `getvalue` for most use cases.
 """
 value(v::VariableRef) = MOI.get(owner_model(v), MOI.VariablePrimal(), v)
-function has_values(model::Model)
-    return MOI.get(model, MOI.PrimalStatus()) != MOI.NoSolution
-end
+
+"""
+    has_values(model::Model)
+
+Return true if the solver has a primal solution available to query, otherwise
+return false.
+
+See also [`value`](@ref).
+"""
+has_values(model::Model) = primal_status(model) != MOI.NoSolution
 
 @Base.deprecate setvalue(v::VariableRef, val::Number) set_start_value(v, val)
 
