@@ -88,6 +88,13 @@ function constraints_test(ModelType::Type{<:JuMP.AbstractModel})
         c = JuMP.constraint_object(cref)
         @test JuMP.isequal_canonical(c.func, x + y)
         @test c.set == MOI.Interval(0.0, 1.0)
+
+        cref = @constraint(m, 2x - y + 2.0 ∈ MOI.Interval(-1.0, 1.0))
+        @test JuMP.name(cref) == ""
+
+        c = JuMP.constraint_object(cref)
+        @test JuMP.isequal_canonical(c.func, 2x - y)
+        @test c.set == MOI.Interval(-3.0, -1.0)
     end
 
     @testset "Broadcasted constraint (.==)" begin
