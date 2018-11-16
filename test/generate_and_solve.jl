@@ -37,13 +37,13 @@
 
         model = JuMP.JuMPMOIModel{Float64}()
         MOIU.loadfromstring!(model, modelstring)
-        MOIU.test_models_equal(JuMP.caching_optimizer(m).model_cache, model, ["x","y"], ["c", "xub", "ylb"])
+        MOIU.test_models_equal(JuMP.backend(m).model_cache, model, ["x","y"], ["c", "xub", "ylb"])
 
         JuMP.optimize!(m, with_optimizer(MOIU.MockOptimizer,
                                          JuMP.JuMPMOIModel{Float64}(),
                                          eval_objective_value=false))
 
-        mockoptimizer = JuMP.caching_optimizer(m).optimizer
+        mockoptimizer = JuMP.backend(m).optimizer.model
         MOI.set(mockoptimizer, MOI.TerminationStatus(), MOI.Success)
         MOI.set(mockoptimizer, MOI.ObjectiveValue(), -1.0)
         MOI.set(mockoptimizer, MOI.ResultCount(), 1)
@@ -138,11 +138,11 @@
 
         model = JuMP.JuMPMOIModel{Float64}()
         MOIU.loadfromstring!(model, modelstring)
-        MOIU.test_models_equal(JuMP.caching_optimizer(m).model_cache, model, ["x","y"], ["xfix", "xint", "ybin"])
+        MOIU.test_models_equal(JuMP.backend(m).model_cache, model, ["x","y"], ["xfix", "xint", "ybin"])
 
         MOIU.attachoptimizer!(m)
 
-        mockoptimizer = JuMP.caching_optimizer(m).optimizer
+        mockoptimizer = JuMP.backend(m).optimizer.model
         MOI.set(mockoptimizer, MOI.TerminationStatus(), MOI.Success)
         MOI.set(mockoptimizer, MOI.ObjectiveValue(), 1.0)
         MOI.set(mockoptimizer, MOI.ResultCount(), 1)
@@ -186,13 +186,13 @@
 
         model = JuMP.JuMPMOIModel{Float64}()
         MOIU.loadfromstring!(model, modelstring)
-        MOIU.test_models_equal(JuMP.caching_optimizer(m).model_cache, model, ["x","y"], ["c1", "c2", "c3"])
+        MOIU.test_models_equal(JuMP.backend(m).model_cache, model, ["x","y"], ["c1", "c2", "c3"])
 
         JuMP.optimize!(m, with_optimizer(MOIU.MockOptimizer,
                                          JuMP.JuMPMOIModel{Float64}(),
                                          eval_objective_value=false))
 
-        mockoptimizer = JuMP.caching_optimizer(m).optimizer
+        mockoptimizer = JuMP.backend(m).optimizer.model
         MOI.set(mockoptimizer, MOI.TerminationStatus(), MOI.Success)
         MOI.set(mockoptimizer, MOI.ObjectiveValue(), -1.0)
         MOI.set(mockoptimizer, MOI.ResultCount(), 1)
@@ -245,7 +245,7 @@
 
         model = JuMP.JuMPMOIModel{Float64}()
         MOIU.loadfromstring!(model, modelstring)
-        MOIU.test_models_equal(JuMP.caching_optimizer(m).model_cache, model, ["x","y","z"], ["varsoc", "affsoc", "rotsoc"])
+        MOIU.test_models_equal(JuMP.backend(m).model_cache, model, ["x","y","z"], ["varsoc", "affsoc", "rotsoc"])
 
         mockoptimizer = MOIU.MockOptimizer(JuMP.JuMPMOIModel{Float64}(),
                                            eval_objective_value=false,
@@ -308,7 +308,7 @@
 
         model = JuMP.JuMPMOIModel{Float64}()
         MOIU.loadfromstring!(model, modelstring)
-        MOIU.test_models_equal(JuMP.caching_optimizer(m).model_cache, model,
+        MOIU.test_models_equal(JuMP.backend(m).model_cache, model,
                                ["x11","x12","x22"],
                                ["var_psd", "sym_psd", "con_psd"])
 

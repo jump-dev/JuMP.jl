@@ -218,23 +218,25 @@ function constraint_object(ref::ConstraintRef{Model, MOICON{FuncType, SetType}})
 end
 
 """
-    add_constraint(m::Model, c::AbstractConstraint, name::String="")
+    add_constraint(model::Model, c::AbstractConstraint, name::String="")
 
-Add a constraint `c` to `Model m` and sets its name.
+Add a constraint `c` to `Model model` and sets its name.
 """
-function add_constraint(m::Model, c::AbstractConstraint, name::String="")
+function add_constraint(model::Model, c::AbstractConstraint, name::String="")
     f = moi_function(c)
     s = moi_set(c)
-    if !MOI.supports_constraint(backend(m), typeof(f), typeof(s))
-        if backend(m) isa MOI.Bridges.LazyBridgeOptimizer
+    if !MOI.supports_constraint(backend(model), typeof(f), typeof(s))
+        if mode(model) == Direct
+            bridge_message = "."
+        elseif bridge_constraints(model)
             bridge_message = " and there are no bridges that can reformulate it into supported constraints."
         else
             bridge_message = ", try using `bridge_constraints=true` in the `JuMP.Model` constructor if you believe the constraint can be reformulated to constraints supported by the solver."
         end
         error("Constraints of type $(typeof(f))-in-$(typeof(s)) are not supported by the solver" * bridge_message)
     end
-    cindex = MOI.add_constraint(backend(m), f, s)
-    cref = ConstraintRef(m, cindex, shape(c))
+    cindex = MOI.add_constraint(backend(model), f, s)
+    cref = ConstraintRef(model, cindex, shape(c))
     if !isempty(name)
         set_name(cref, name)
     end

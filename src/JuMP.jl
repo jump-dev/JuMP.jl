@@ -134,8 +134,8 @@ end
 # Model
 
 # Model has three modes:
-# 1) Automatic: moi_backend field holds a LazyBridgeOptimizer{CachingOptimizer} in Automatic mode.
-# 2) Manual: moi_backend field holds a LazyBridgeOptimizer{CachingOptimizer} in Manual mode.
+# 1) Automatic: moi_backend field holds a CachingOptimizer in Automatic mode.
+# 2) Manual: moi_backend field holds a CachingOptimizer in Manual mode.
 # 3) Direct: moi_backend field holds an AbstractOptimizer. No extra copy of the model is stored. The moi_backend must support add_constraint etc.
 # Methods to interact with the CachingOptimizer are defined in solverinterface.jl.
 @enum ModelMode Automatic Manual Direct
@@ -157,7 +157,7 @@ mutable struct Model <: AbstractModel
     variable_to_fix::Dict{MOIVAR, MOIFIX}
     variable_to_integrality::Dict{MOIVAR, MOIINT}
     variable_to_zero_one::Dict{MOIVAR, MOIBIN}
-    # In Manual and Automatic modes, LazyBridgeOptimizer{CachingOptimizer}.
+    # In Manual and Automatic modes, CachingOptimizer.
     # In Direct mode, will hold an AbstractOptimizer.
     moi_backend::MOI.AbstractOptimizer
     # Hook into a solve call...function of the form f(m::Model; kwargs...),
@@ -184,11 +184,10 @@ a cache. The mode of the `CachingOptimizer` storing this cache is
 `caching_mode`. The optimizer can be set later in the [`JuMP.optimize!`](@ref)
 call. If `bridge_constraints` is true, constraints that are not supported by the
 optimizer are automatically bridged to equivalent supported constraints when
-an appropriate is defined in the `MathOptInterface.Bridges` module or is
-defined in another module and is explicitely added.
+an appropriate transformation is defined in the `MathOptInterface.Bridges`
+module or is defined in another module and is explicitely added.
 """
 function Model(; caching_mode::MOIU.CachingOptimizerMode=MOIU.Automatic,
-                 bridge_constraints::Bool=true,
                  solver=nothing)
     if solver !== nothing
         error("The solver= keyword is no longer available in JuMP 0.19 and " *
@@ -198,13 +197,7 @@ function Model(; caching_mode::MOIU.CachingOptimizerMode=MOIU.Automatic,
     universal_fallback = MOIU.UniversalFallback(JuMPMOIModel{Float64}())
     caching_opt = MOIU.CachingOptimizer(universal_fallback,
                                         caching_mode)
-    if bridge_constraints
-        backend = MOI.Bridges.fullbridgeoptimizer(caching_opt,
-                                                  Float64)
-    else
-        backend = caching_opt
-    end
-    return direct_model(backend)
+    return direct_model(caching_opt)
 end
 
 """
@@ -224,10 +217,11 @@ The following creates a model using the optimizer
 model = JuMP.Model(with_optimizer(IpoptOptimizer, print_level=0))
 ```
 """
-function Model(optimizer_factory::OptimizerFactory; kwargs...)
+function Model(optimizer_factory::OptimizerFactory;
+               bridge_constraints::Bool=true, kwargs...)
     model = Model(; kwargs...)
-    optimizer = optimizer_factory()
-    MOIU.resetoptimizer!(model, optimizer)
+    set_optimizer(model, optimizer_factory,
+                  bridge_constraints=bridge_constraints)
     return model
 end
 
@@ -269,22 +263,6 @@ if VERSION >= v"0.7-"
 end
 
 
-# In Automatic and Manual mode, `backend(model)` is either directly the
-# `CachingOptimizer` if `bridge_constraints=false` was passed in the constructor
-# or it is a `LazyBridgeOptimizer` and the `CachingOptimizer` is stored in the
-# `model` field
-function caching_optimizer(model::Model)
-    if backend(model) isa MOIU.CachingOptimizer
-        return backend(model)
-    elseif (backend(model) isa
-            MOI.Bridges.LazyBridgeOptimizer{<:MOIU.CachingOptimizer})
-        return backend(model).model
-    else
-        error("The function `caching_optimizer` cannot be called on a model " *
-              "in `Direct` mode.")
-    end
-end
-
 """
     backend(model::Model)
 
@@ -294,8 +272,7 @@ and whether there are any bridges in the model.
 
 If JuMP is in direct mode (i.e., the model was created using [`JuMP.direct_model`](@ref)),
 the backend with be the optimizer passed to `direct_model`. If JuMP is in manual
-or automatic mode, the backend will either be a `MOI.Utilities.CachingOptimizer`
-or a `MOI.Bridges.LazyBridgeOptimizer`.
+or automatic mode, the backend is a `MOI.Utilities.CachingOptimizer`.
 
 This function should only be used by advanced users looking to access low-level
 MathOptInterface or solver-specific functionality.
@@ -308,15 +285,33 @@ backend(model::Model) = model.moi_backend
 Return mode (Direct, Automatic, Manual) of model.
 """
 function mode(model::Model)
-    if !(backend(model) isa MOI.Bridges.LazyBridgeOptimizer{<:MOIU.CachingOptimizer} ||
-         backend(model) isa MOIU.CachingOptimizer)
+    if !(backend(model) isa MOIU.CachingOptimizer)
         return Direct
-    elseif caching_optimizer(model).mode == MOIU.Automatic
+    elseif backend(model).mode == MOIU.Automatic
         return Automatic
     else
         return Manual
     end
 end
+
+"""
+    bridge_constraints(model::Model)
+
+Return a `Bool` indicating whether the model `model` is in manual or automatic
+mode, the optimizer is set and unsupported constraints are automatically bridged
+to equivalent supported constraints when an appropriate transformation is
+available.
+"""
+function bridge_constraints(model::Model)
+    caching_optimizer = backend(model)
+    if caching_optimizer isa MOIU.CachingOptimizer
+        return caching_optimizer.optimizer isa MOI.Bridges.LazyBridgeOptimizer
+    else
+        # Direct mode
+        return false
+    end
+end
+
 
 """
     num_variables(model::Model)
@@ -439,8 +434,8 @@ function optimizer_index(v::VariableRef)
     if mode(model) == Direct
         return index(v)
     else
-        @assert caching_optimizer(model).state == MOIU.AttachedOptimizer
-        return caching_optimizer(model).model_to_optimizer_map[index(v)]
+        @assert backend(model).state == MOIU.AttachedOptimizer
+        return backend(model).model_to_optimizer_map[index(v)]
     end
 end
 
@@ -448,8 +443,8 @@ function optimizer_index(cr::ConstraintRef{Model})
     if mode(cr.model) == Direct
         return index(cr)
     else
-        @assert caching_optimizer(cr.model).state == MOIU.AttachedOptimizer
-        return caching_optimizer(cr.model).model_to_optimizer_map[index(cr)]
+        @assert backend(cr.model).state == MOIU.AttachedOptimizer
+        return backend(cr.model).model_to_optimizer_map[index(cr)]
     end
 end
 
