@@ -121,8 +121,8 @@ equality constraint, it depends on which direction is binding.
 
 The dual value associated with a constraint in the most recent solution can be
 accessed using the [`JuMP.dual`](@ref) function. You can use the
-`JuMP.has_dual` function to check whether it is possible to query the
-dual. For example:
+[`JuMP.has_duals`](@ref) function to check whether the model has a dual solution
+available to query. For example:
 
 ```jldoctest
 julia> model = Model()
@@ -134,7 +134,7 @@ x
 julia> @constraint(model, con, x <= 1)
 con : x <= 1.0
 
-julia> JuMP.has_dual(model, typeof(con))
+julia> JuMP.has_duals(model)
 false
 ```
 ```@meta
@@ -162,7 +162,7 @@ julia> @objective(model, Min, -2x)
 
 julia> JuMP.optimize!(model)
 
-julia> JuMP.has_dual(model, typeof(con))
+julia> JuMP.has_duals(model)
 true
 
 julia> JuMP.dual(con)
@@ -545,12 +545,13 @@ nonlinear constraints.
 SecondOrderCone
 RotatedSecondOrderCone
 PSDCone
-JuMP.set_coefficient
+JuMP.has_duals
 JuMP.dual
 JuMP.shadow_price
 JuMP.fix
-JuMP.delete
+JuMP.set_coefficient
 JuMP.is_valid
+JuMP.delete
 JuMP.LowerBoundRef
 JuMP.UpperBoundRef
 JuMP.FixRef
