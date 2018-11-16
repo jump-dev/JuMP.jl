@@ -47,8 +47,8 @@ optimizer:
   corresponding to the two JuMP modes with the same names.
 * `LazyBridgeOptimizer` (this can be disabled using the `bridge_constraints`
   keyword argument to [`Model`](@ref) constructor): when a constraint added is
-  not supported by the optimizer, it tries transform the constraint into an
-  equivalent form, possibly adding new variables and constraints that are
+  not supported by the optimizer, it attempts to transform the constraint into
+  an equivalent form, possibly adding new variables and constraints that are
   supported by the optimizer. The applied transformations are selected among
   known recipes which are called bridges. A few default bridges are defined in
   MOI but new ones can be defined and added to the `LazyBridgeOptimizer` used by
