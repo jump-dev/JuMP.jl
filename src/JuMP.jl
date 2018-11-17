@@ -303,9 +303,9 @@ to equivalent supported constraints when an appropriate transformation is
 available.
 """
 function bridge_constraints(model::Model)
-    caching_optimizer = backend(model)
-    if caching_optimizer isa MOIU.CachingOptimizer
-        return caching_optimizer.optimizer isa MOI.Bridges.LazyBridgeOptimizer
+    moi_backend = backend(model)
+    if moi_backend isa MOIU.CachingOptimizer
+        return moi_backend.optimizer isa MOI.Bridges.LazyBridgeOptimizer
     else
         # Direct mode
         return false
