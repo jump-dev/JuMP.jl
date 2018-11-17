@@ -41,3 +41,11 @@ JuMP.set_coefficient
 JuMP.dual
 JuMP.shadow_price
 ```
+
+## Constructing constraints without adding them to the model
+
+For advanced use cases.
+
+```@docs
+JuMP.@build_constraint
+```

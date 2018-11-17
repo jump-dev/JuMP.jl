@@ -148,6 +148,35 @@ function macros_test(ModelType::Type{<:JuMP.AbstractModel}, VariableRefType::Typ
         @test c.set == MOI.LessThan(-38.0)
     end
 
+    @testset "@build_constraint (scalar inequality)" begin
+        model = ModelType()
+        @variable(model, x)
+        con = JuMP.@build_constraint(3x == 1)
+        @test con isa JuMP.ScalarConstraint
+        @test JuMP.isequal_canonical(con.func, 3x)
+        @test con.set == MOI.EqualTo(1.0)
+    end
+
+    @testset "@build_constraint (function-in-set)" begin
+        model = ModelType()
+        @variable(model, x[1:2])
+        con = JuMP.@build_constraint(x in JuMP.SecondOrderCone())
+        @test con isa JuMP.VectorConstraint
+        @test con.func == x
+        @test con.set == MOI.SecondOrderCone(2)
+    end
+
+    @testset "@build_constraint (broadcast)" begin
+        model = ModelType()
+        @variable(model, x[1:2])
+        ub = [1.0, 2.0]
+        con = JuMP.@build_constraint(x .<= ub)
+        @test con isa Vector{<:JuMP.ScalarConstraint}
+        @test JuMP.isequal_canonical(con[1].func, 1.0x[1])
+        @test JuMP.isequal_canonical(con[2].func, 1.0x[2])
+        @test con[1].set == MOI.LessThan(1.0)
+        @test con[2].set == MOI.LessThan(2.0)
+    end
 end
 
 @testset "Macros for JuMP.Model" begin
