@@ -268,15 +268,20 @@ end
 """
     macro_return(model, code, variable)
 
-Return a block of code that 1. runs the code block `code` in a local scope and 2. returns the value of a local variable named `variable`. `variable` must reference a variable defined by `code`.
+Return a block of code that
+
+1. runs the code block `code` in a local scope and
+2. returns the value of a local variable named `variable`. `variable` must
+   reference a variable defined by `code`.
 """
 function macro_return(code, variable)
     return quote
         let
-            # The let block ensures that all variables created behaves like
-            # local variables, see https://github.com/JuliaOpt/JuMP.jl/issues/1496
+            # The let block ensures that all variables created behave like
+            # local variables, see
+            # https://github.com/JuliaOpt/JuMP.jl/issues/1496.
             # To make $variable accessible from outside we need to return it at
-            # the end of the block
+            # the end of the block.
             $code
             $variable
         end
