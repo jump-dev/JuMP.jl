@@ -116,7 +116,8 @@ Known issues:
 
 - Model printing is not yet implemented. ([issue](https://github.com/JuliaOpt/JuMP.jl/issues/1180))
 
-- There are known performance regressions. ([issue](https://github.com/JuliaOpt/JuMP.jl/issues/1403))
+- There are known performance regressions ([issue](https://github.com/JuliaOpt/JuMP.jl/issues/1403)).
+  Fast incremental NLP solves are not yet reimplemented ([issue](https://github.com/JuliaOpt/JuMP.jl/issues/1185)).
 
 - We do not yet have an implementation of solver-specific callbacks.
 
