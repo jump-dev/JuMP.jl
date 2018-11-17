@@ -326,8 +326,6 @@ may be expected to be within a factor of 5 of AMPL's.
 
 ## Querying derivatives from a JuMP model
 
-TODO: This section is out of date and hasn't been updated yet for MOI.
-
 For some advanced use cases, one may want to directly query the derivatives of a JuMP model instead of handing the problem off to a solver.
 Internally, JuMP implements the `AbstractNLPEvaluator` interface from
 [MathOptInterface](http://www.juliaopt.org/MathOptInterface.jl/v0.6.1/apireference.html#NLP-evaluator-methods-1).

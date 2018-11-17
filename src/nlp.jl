@@ -1025,47 +1025,68 @@ function MOI.constraint_expr(d::NLPEvaluator,i::Integer)
     end
 end
 
-# TODO: This code hasn't been updated for MOI.
-# getvalue for nonlinear subexpressions
-# getvalue(x::NonlinearExpression) = _getValue(x)
-# function _getValue(x::NonlinearExpression)
-#     m = x.m
-#     # recompute EVERYTHING here
-#     # could be smarter and cache
-#
-#     nldata::NLPData = m.nlp_data
-#     subexpr = Array{Vector{NodeData}}(undef,0)
-#     for nlexpr in nldata.nlexpr
-#         push!(subexpr, nlexpr.nd)
-#     end
-#
-#     this_subexpr = nldata.nlexpr[x.index]
-#
-#     max_len = length(this_subexpr.nd)
-#
-#     subexpression_order, individual_order = order_subexpressions(Vector{NodeData}[this_subexpr.nd],subexpr)
-#
-#     subexpr_values = Array{Float64}(undef,length(subexpr))
-#
-#     for k in subexpression_order
-#         max_len = max(max_len, length(nldata.nlexpr[k].nd))
-#     end
-#
-#     forward_storage = Array{Float64}(undef,max_len)
-#     partials_storage = Array{Float64}(undef,max_len)
-#     user_input_buffer = zeros(nldata.largest_user_input_dimension)
-#     user_output_buffer = zeros(nldata.largest_user_input_dimension)
-#
-#     for k in subexpression_order # compute value of dependent subexpressions
-#         ex = nldata.nlexpr[k]
-#         adj = adjmat(ex.nd)
-#         subexpr_values[k] = forward_eval(forward_storage,partials_storage,ex.nd,adj,ex.const_values,nldata.nlparamvalues,m.colVal,subexpr_values,user_input_buffer,user_output_buffer)
-#     end
-#
-#     adj = adjmat(this_subexpr.nd)
-#
-#     return forward_eval(forward_storage,partials_storage,this_subexpr.nd,adj,this_subexpr.const_values,nldata.nlparamvalues,m.colVal,subexpr_values,user_input_buffer,user_output_buffer)
-# end
+# NOTE: This is a slow approach that does *a lot* of setup work on each call.
+# See https://github.com/JuliaOpt/JuMP.jl/issues/746.
+"""
+    value(ex::NonlinearExpression, map::Function)
+
+Evaluate `ex` given the value `map(v)` for each variable `v`.
+"""
+function value(ex::NonlinearExpression, map::Function)
+    model = ex.m
+
+    nlp_data::NLPData = model.nlp_data
+
+    moi_index_to_consecutive_index = Dict{MOI.VariableIndex, Int}()
+    variable_indices = MOI.get(model, MOI.ListOfVariableIndices())
+    variable_values = Array{Float64}(undef, length(variable_indices))
+    for (consecutive_index, moi_index) in enumerate(variable_indices)
+        moi_index_to_consecutive_index[moi_index] = consecutive_index
+        variable_values[consecutive_index] = map(VariableRef(model, moi_index))
+    end
+
+    subexpressions = Array{Vector{NodeData}}(undef,0)
+    for nl_expr in nlp_data.nlexpr
+        push!(subexpressions,
+              replace_moi_variables(nl_expr.nd,
+                                    moi_index_to_consecutive_index))
+    end
+
+    original_ex = nlp_data.nlexpr[ex.index]
+    ex_nd = replace_moi_variables(original_ex.nd,
+                                  moi_index_to_consecutive_index)
+    main_expressions = Vector{NodeData}[ex_nd]
+    subexpression_order, _ = order_subexpressions(main_expressions,
+                                                  subexpressions)
+
+    max_len = length(ex_nd)
+    for k in subexpression_order
+        max_len = max(max_len, length(subexpressions[k]))
+    end
+
+    subexpr_values = Array{Float64}(undef, length(subexpressions))
+    forward_storage = Array{Float64}(undef, max_len)
+    partials_storage = Array{Float64}(undef, max_len)
+    user_input_buffer = zeros(nlp_data.largest_user_input_dimension)
+    user_output_buffer = zeros(nlp_data.largest_user_input_dimension)
+
+    for k in subexpression_order # Compute value of dependent subexpressions.
+        subexpr_nd = subexpressions[k]
+        original_subexpr = nlp_data.nlexpr[k]
+        subexpr_values[k] = forward_eval(forward_storage, partials_storage,
+                                         subexpr_nd, adjmat(subexpr_nd),
+                                         original_subexpr.const_values,
+                                         nlp_data.nlparamvalues,
+                                         variable_values, subexpr_values,
+                                         user_input_buffer, user_output_buffer,
+                                         nlp_data.user_operators)
+    end
+
+    return forward_eval(forward_storage, partials_storage, ex_nd, adjmat(ex_nd),
+                        original_ex.const_values, nlp_data.nlparamvalues,
+                        variable_values, subexpr_values, user_input_buffer,
+                        user_output_buffer, nlp_data.user_operators)
+end
 
 mutable struct UserFunctionEvaluator <: MOI.AbstractNLPEvaluator
     f

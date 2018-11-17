@@ -601,6 +601,7 @@ end
 
 ##########################################################################
 # Types used in the nonlinear code
+# TODO: rename "m" field to "model" for style compliance
 struct NonlinearExpression
     m::Model
     index::Int

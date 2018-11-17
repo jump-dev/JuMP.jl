@@ -15,7 +15,6 @@ function eval_and_check_return_type(func::Function, RetType, args...)
     return ret
 end
 
-
 # forward-mode evaluation of an expression tree
 # tree is represented as Vector{NodeData} and adjacency matrix from adjmat()
 # assumes values of expressions have already been computed
@@ -26,6 +25,8 @@ end
 # a general DAG. If we have a DAG, then need to associate storage with each edge of the DAG.
 # user_input_buffer and user_output_buffer are used as temporary storage
 # when handling user-defined functions
+# TODO: These methods have a crazy number of arguments. Consider refactoring to
+# group the different types of storage, input vectors, and tape structures.
 function forward_eval(storage::AbstractVector{T}, partials_storage::AbstractVector{T},
                       nd::AbstractVector{NodeData}, adj, const_values,
                       parameter_values, x_values::AbstractVector{T},
