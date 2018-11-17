@@ -24,13 +24,11 @@ end
 
 function MOIU.dropoptimizer!(model::Model)
     error_if_direct_mode(model, :dropoptimizer!)
-    @assert mode(model) != Direct
     MOIU.dropoptimizer!(backend(model))
 end
 
 function MOIU.attachoptimizer!(model::Model)
     error_if_direct_mode(model, :attachoptimizer!)
-    @assert mode(model) != Direct
     MOIU.attachoptimizer!(backend(model))
 end
 
