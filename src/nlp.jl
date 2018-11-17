@@ -146,11 +146,11 @@ function initNLP(m::Model)
 end
 
 function dual(c::ConstraintRef{Model,NonlinearConstraintIndex})
-    initNLP(c.m)
-    nldata::NLPData = c.m.nlp_data
+    initNLP(c.model)
+    nldata::NLPData = c.model.nlp_data
     # The array is cleared on every solve.
     if length(nldata.nlconstr_duals) != length(nldata.nlconstr)
-        nldata.nlconstr_duals = MOI.get(c.m, MOI.NLPBlockDual())
+        nldata.nlconstr_duals = MOI.get(c.model, MOI.NLPBlockDual())
     end
     return nldata.nlconstr_duals[c.index.value]
 end
