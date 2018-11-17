@@ -438,23 +438,6 @@ function build_constraint(_error::Function, ::Matrix, T::Union{
     return _error("instead of `$(T)`, use `JuMP.PSDCone()`.")
 end
 
-# _vectorize_like(x::Number, y::AbstractArray{AffExpr}) = (ret = similar(y, typeof(x)); fill!(ret, x))
-# function _vectorize_like{R<:Number}(x::AbstractArray{R}, y::AbstractArray{AffExpr})
-#     for i in 1:max(ndims(x),ndims(y))
-#         _size(x,i) == _size(y,i) || error("Unequal sizes for ranged constraint")
-#     end
-#     x
-# end
-#
-# function build_constraint(x::AbstractArray{AffExpr}, lb, ub)
-#     LB = _vectorize_like(lb,x)
-#     UB = _vectorize_like(ub,x)
-#     ret = similar(x, AffExprConstraint)
-#     map!(ret, eachindex(ret)) do i
-#         build_constraint(x[i], LB[i], UB[i])
-#     end
-# end
-
 # three-argument build_constraint is used for two-sided constraints.
 function build_constraint(_error::Function, func::AbstractJuMPScalar,
                           lb::Real, ub::Real)
