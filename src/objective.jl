@@ -111,7 +111,7 @@ as it is convertible to a quadratic function, it can be queried as a quadratic
 function and the result is quadratic.
 
 However, it is not convertible to a variable.
-```jldoctest objective_function; filter = r"^Stacktrace:.*"s
+```jldoctest objective_function; filter = r"Stacktrace:.*"s
 julia> JuMP.objective_function(model, JuMP.VariableRef)
 ERROR: InexactError: convert(MathOptInterface.SingleVariable, MathOptInterface.ScalarAffineFunction{Float64}(MathOptInterface.ScalarAffineTerm{Float64}[ScalarAffineTerm{Float64}(2.0, VariableIndex(1))], 1.0))
 Stacktrace:
