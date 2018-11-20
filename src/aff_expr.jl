@@ -262,7 +262,9 @@ value(a::GenericAffExpr) = value(a, value)
 # the same model.
 function MOI.ScalarAffineFunction(a::AffExpr)
     assert_isfinite(a)
-    terms = map(t -> MOI.ScalarAffineTerm(t[1], index(t[2])), linear_terms(a))
+    terms = MOI.ScalarAffineTerm{Float64}[MOI.ScalarAffineTerm(t[1],
+                                                               index(t[2]))
+                                          for t in linear_terms(a)]
     return MOI.ScalarAffineFunction(terms, a.constant)
 end
 moi_function(a::GenericAffExpr) = MOI.ScalarAffineFunction(a)
@@ -282,7 +284,7 @@ function jump_function(model::AbstractModel, f::MOI.ScalarAffineFunction)
     return AffExpr(model, f)
 end
 function jump_function(model::AbstractModel, f::MOI.VectorAffineFunction)
-    return map(f -> AffExpr(model, f), MOIU.eachscalar(f))
+    return AffExpr[AffExpr(model, f) for f in MOIU.eachscalar(f)]
 end
 
 """

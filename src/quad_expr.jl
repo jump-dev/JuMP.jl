@@ -208,9 +208,11 @@ GenericQuadExpr{C, V}() where {C, V} = zero(GenericQuadExpr{C, V})
 
 function MOI.ScalarQuadraticFunction(q::QuadExpr)
     assert_isfinite(q)
-    qterms = map(t -> MOI.ScalarQuadraticTerm(t[2] == t[3] ? 2t[1] : t[1],
-                                              index(t[2]),
-                                              index(t[3])), quadterms(q))
+    qterms = MOI.ScalarQuadraticTerm{Float64}[MOI.ScalarQuadraticTerm(
+                                               t[2] == t[3] ? 2t[1] : t[1],
+                                               index(t[2]),
+                                               index(t[3]))
+                                               for t in quadterms(q)]
     moi_aff = MOI.ScalarAffineFunction(q.aff)
     return MOI.ScalarQuadraticFunction(moi_aff.terms,
                                        qterms, moi_aff.constant)
