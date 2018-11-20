@@ -41,6 +41,18 @@ function new_ordered_dict(::Type{K}, ::Type{V}, kv::Pair...) where {K,V}
     end
     return dict
 end
+# Shortcut for one and two arguments to avoid creating an empty dict and add
+# elements one by one with `JuMP.add_or_set!`
+function new_ordered_dict(::Type{K}, ::Type{V}, kv::Pair) where {K, V}
+    return OrderedDict{K, V}(kv)
+end
+function new_ordered_dict(::Type{K}, ::Type{V}, kv1::Pair, kv2::Pair) where {K, V}
+    if isequal(kv1.first, kv2.first)
+        return OrderedDict{K, V}(kv1.first => kv1.second + kv2.second)
+    else
+        return OrderedDict{K, V}(kv1, kv2)
+    end
+end
 
 
 
