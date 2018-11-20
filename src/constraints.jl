@@ -238,8 +238,8 @@ end
 Add a constraint `c` to `Model model` and sets its name.
 """
 function add_constraint(model::Model, c::AbstractConstraint, name::String="")
-    # the type of backend(model) is unknown so we directly redirects to another
-    # function
+    # The type of backend(model) is unknown so we directly redirect to another
+    # function.
     cindex = moi_add_constraint(backend(model), moi_function(c), moi_set(c))
     cref = ConstraintRef(model, cindex, shape(c))
     if !isempty(name)

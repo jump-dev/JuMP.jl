@@ -294,8 +294,8 @@ end
 Return mode (Direct, Automatic, Manual) of model.
 """
 mode(model::Model) = moi_mode(backend(model))
-# the type of backend(model) is unknown so we directly redirects to another
-# function
+# The type of backend(model) is unknown so we directly redirect to another
+# function.
 
 # Direct mode
 moi_bridge_constraints(model::MOI.ModelLike) = false
@@ -313,8 +313,8 @@ to equivalent supported constraints when an appropriate transformation is
 available.
 """
 bridge_constraints(model::Model) = moi_bridge_constraints(backend(model))
-# the type of backend(model) is unknown so we directly redirects to another
-# function
+# The type of backend(model) is unknown so we directly redirect to another
+# function.
 
 
 """
