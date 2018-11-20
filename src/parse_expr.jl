@@ -92,6 +92,10 @@ function destructive_add!(ex::Number, c::T, x::Number) where T<:GenericQuadExpr
     end
 end
 
+function destructive_add!(ex::VariableRef, c::Number, x::VariableRef)
+    return GenericAffExpr(0.0, ex => 1.0, x => convert(Float64, c))
+end
+
 function destructive_add!(aff::GenericAffExpr, c::Number, x::Number)
     aff.constant += c*x
     aff
