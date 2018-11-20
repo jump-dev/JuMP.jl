@@ -33,16 +33,9 @@ function new_ordered_dict(::Type{K}, ::Type{V}, kv::AbstractArray{<:Pair}) where
     return dict
 end
 
-function new_ordered_dict(::Type{K}, ::Type{V}, kv::Pair...) where {K,V}
-    dict = OrderedDict{K,V}()
-    sizehint!(dict, length(kv))
-    for pair in kv
-        add_or_set!(dict, convert(K, pair.first), convert(V, pair.second))
-    end
-    return dict
+function new_ordered_dict(::Type{K}, ::Type{V}, kv::Pair...) where {K, V}
+    return OrderedDict{K, V}(kv...)
 end
-
-
 
 #############################################################################
 # GenericAffExpr
