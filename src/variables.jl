@@ -240,7 +240,7 @@ function moi_function(variables::Vector{<:AbstractVariableRef})
     return MOI.VectorOfVariables(variables)
 end
 function jump_function(model::AbstractModel, variables::MOI.VectorOfVariables)
-    return map(v -> VariableRef(model, v), variables.variables)
+    return VariableRef[VariableRef(model, v) for v in variables.variables]
 end
 
 VariableRef(m::Model, f::MOI.SingleVariable) = VariableRef(m, f.variable)
