@@ -217,25 +217,30 @@ function constraint_object(ref::ConstraintRef{Model, MOICON{FuncType, SetType}})
     return VectorConstraint(jump_function(model, f), s, ref.shape)
 end
 
-"""
-    add_constraint(model::Model, c::AbstractConstraint, name::String="")
-
-Add a constraint `c` to `Model model` and sets its name.
-"""
-function add_constraint(model::Model, c::AbstractConstraint, name::String="")
-    f = moi_function(c)
-    s = moi_set(c)
-    if !MOI.supports_constraint(backend(model), typeof(f), typeof(s))
-        if mode(model) == Direct
+function moi_add_constraint(model::MOI.ModelLike, f::MOI.AbstractFunction,
+                            s::MOI.AbstractSet)
+    if !MOI.supports_constraint(model, typeof(f), typeof(s))
+        if moi_mode(model) == Direct
             bridge_message = "."
-        elseif bridge_constraints(model)
+        elseif moi_bridge_constraints(model)
             bridge_message = " and there are no bridges that can reformulate it into supported constraints."
         else
             bridge_message = ", try using `bridge_constraints=true` in the `JuMP.Model` constructor if you believe the constraint can be reformulated to constraints supported by the solver."
         end
         error("Constraints of type $(typeof(f))-in-$(typeof(s)) are not supported by the solver" * bridge_message)
     end
-    cindex = MOI.add_constraint(backend(model), f, s)
+    return MOI.add_constraint(model, f, s)
+end
+
+"""
+    add_constraint(model::Model, c::AbstractConstraint, name::String="")
+
+Add a constraint `c` to `Model model` and sets its name.
+"""
+function add_constraint(model::Model, c::AbstractConstraint, name::String="")
+    # the type of backend(model) is unknown so we directly redirects to another
+    # function
+    cindex = moi_add_constraint(backend(model), moi_function(c), moi_set(c))
     cref = ConstraintRef(model, cindex, shape(c))
     if !isempty(name)
         set_name(cref, name)

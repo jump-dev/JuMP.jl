@@ -279,19 +279,28 @@ MathOptInterface or solver-specific functionality.
 """
 backend(model::Model) = model.moi_backend
 
+moi_mode(model::MOI.ModelLike) = Direct
+function moi_mode(model::MOIU.CachingOptimizer)
+    if model.mode == MOIU.Automatic
+        return Automatic
+    else
+        return Manual
+    end
+end
+
 """
     mode(model::Model)
 
 Return mode (Direct, Automatic, Manual) of model.
 """
-function mode(model::Model)
-    if !(backend(model) isa MOIU.CachingOptimizer)
-        return Direct
-    elseif backend(model).mode == MOIU.Automatic
-        return Automatic
-    else
-        return Manual
-    end
+mode(model::Model) = moi_mode(backend(model))
+# the type of backend(model) is unknown so we directly redirects to another
+# function
+
+# Direct mode
+moi_bridge_constraints(model::MOI.ModelLike) = false
+function moi_bridge_constraints(model::MOIU.CachingOptimizer)
+    return model.optimizer isa MOI.Bridges.LazyBridgeOptimizer
 end
 
 """
@@ -303,15 +312,9 @@ optimizer is set and unsupported constraints are automatically bridged
 to equivalent supported constraints when an appropriate transformation is
 available.
 """
-function bridge_constraints(model::Model)
-    moi_backend = backend(model)
-    if moi_backend isa MOIU.CachingOptimizer
-        return moi_backend.optimizer isa MOI.Bridges.LazyBridgeOptimizer
-    else
-        # Direct mode
-        return false
-    end
-end
+bridge_constraints(model::Model) = moi_bridge_constraints(backend(model))
+# the type of backend(model) is unknown so we directly redirects to another
+# function
 
 
 """
