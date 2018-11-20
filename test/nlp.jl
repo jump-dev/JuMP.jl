@@ -574,7 +574,7 @@
         @variable(model, x)
         @NLexpression(model, ex1, sin(x))
         @NLexpression(model, ex2, ex1 + x^2)
-        @NLexpression(model, ex3, 2ex1 + ex2/2)
+        @NLexpression(model, ex3, 2ex1 + ex2 / 2)
         JuMP.set_start_value(x, 2.0)
         @test JuMP.value(ex1, JuMP.start_value) ≈ sin(2.0)
         @test JuMP.value(ex2, JuMP.start_value) ≈ sin(2.0) + 4.0

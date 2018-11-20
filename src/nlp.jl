@@ -1028,11 +1028,11 @@ end
 # NOTE: This is a slow approach that does *a lot* of setup work on each call.
 # See https://github.com/JuliaOpt/JuMP.jl/issues/746.
 """
-    value(ex::NonlinearExpression, map::Function)
+    value(ex::NonlinearExpression, var_value::Function)
 
-Evaluate `ex` given the value `map(v)` for each variable `v`.
+Evaluate `ex` using `var_value(v)` as the value for each variable `v`.
 """
-function value(ex::NonlinearExpression, map::Function)
+function value(ex::NonlinearExpression, var_value::Function)
     model = ex.m
 
     nlp_data::NLPData = model.nlp_data
@@ -1042,10 +1042,11 @@ function value(ex::NonlinearExpression, map::Function)
     variable_values = Array{Float64}(undef, length(variable_indices))
     for (consecutive_index, moi_index) in enumerate(variable_indices)
         moi_index_to_consecutive_index[moi_index] = consecutive_index
-        variable_values[consecutive_index] = map(VariableRef(model, moi_index))
+        jump_var = VariableRef(model, moi_index)
+        variable_values[consecutive_index] = var_value(jump_var)
     end
 
-    subexpressions = Array{Vector{NodeData}}(undef,0)
+    subexpressions = Array{Vector{NodeData}}(undef, 0)
     for nl_expr in nlp_data.nlexpr
         push!(subexpressions,
               replace_moi_variables(nl_expr.nd,
