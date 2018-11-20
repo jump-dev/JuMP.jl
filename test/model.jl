@@ -64,6 +64,25 @@ function test_model()
             # optimizer not supporting Interval
             model = Model(with_optimizer(MOIU.MockOptimizer,
                                          SimpleLPModel{Float64}()))
+            @test JuMP.bridge_constraints(model)
+            @test JuMP.backend(model) isa MOIU.CachingOptimizer
+            @test JuMP.backend(model).optimizer isa MOI.Bridges.LazyBridgeOptimizer
+            @test JuMP.backend(model).optimizer.model isa MOIU.MockOptimizer
+            @variable model x
+            cref = @constraint model 0 <= x + 1 <= 1
+            @test cref isa JuMP.ConstraintRef{JuMP.Model,MOI.ConstraintIndex{MOI.ScalarAffineFunction{Float64},MOI.Interval{Float64}}}
+            JuMP.optimize!(model)
+        end
+        @testset "Automatic bridging with cache for bridged model" begin
+            # optimizer not supporting Interval and not supporting `default_copy_to`
+            model = Model(with_optimizer(MOIU.MockOptimizer,
+                                         SimpleLPModel{Float64}(),
+                                         needs_allocate_load=true))
+            @test JuMP.bridge_constraints(model)
+            @test JuMP.backend(model) isa MOIU.CachingOptimizer
+            @test JuMP.backend(model).optimizer isa MOI.Bridges.LazyBridgeOptimizer
+            @test JuMP.backend(model).optimizer.model isa MOIU.CachingOptimizer
+            @test JuMP.backend(model).optimizer.model.optimizer isa MOIU.MockOptimizer
             @variable model x
             cref = @constraint model 0 <= x + 1 <= 1
             @test cref isa JuMP.ConstraintRef{JuMP.Model,MOI.ConstraintIndex{MOI.ScalarAffineFunction{Float64},MOI.Interval{Float64}}}
@@ -73,16 +92,28 @@ function test_model()
             model = Model(with_optimizer(MOIU.MockOptimizer,
                                          SimpleLPModel{Float64}()),
                           bridge_constraints=false)
+            @test !JuMP.bridge_constraints(model)
             @test JuMP.backend(model) isa MOIU.CachingOptimizer
-            @test JuMP.backend(model) === JuMP.caching_optimizer(model)
+            @test !(JuMP.backend(model).optimizer isa MOI.Bridges.LazyBridgeOptimizer)
             @variable model x
-            @test_throws ErrorException @constraint model 0 <= x + 1 <= 1
+            if VERSION < v"0.7-"
+                @test_throws ErrorException @constraint model 0 <= x + 1 <= 1
+            else
+                err = ErrorException("Constraints of type MathOptInterface.ScalarAffineFunction{Float64}-in-MathOptInterface.Interval{Float64} are not supported by the solver, try using `bridge_constraints=true` in the `JuMP.Model` constructor if you believe the constraint can be reformulated to constraints supported by the solver.")
+                @test_throws err @constraint model 0 <= x + 1 <= 1
+            end
         end
         @testset "No bridge automatically added in Direct mode" begin
             optimizer = MOIU.MockOptimizer(SimpleLPModel{Float64}())
             model = JuMP.direct_model(optimizer)
+            @test !JuMP.bridge_constraints(model)
             @variable model x
-            @test_throws ErrorException @constraint model 0 <= x + 1 <= 1
+            if VERSION < v"0.7-"
+                @test_throws ErrorException @constraint model 0 <= x + 1 <= 1
+            else
+                err = ErrorException("Constraints of type MathOptInterface.ScalarAffineFunction{Float64}-in-MathOptInterface.Interval{Float64} are not supported by the solver.")
+                @test_throws err @constraint model 0 <= x + 1 <= 1
+            end
         end
     end
 
@@ -125,54 +156,50 @@ function dummy_optimizer_hook(::JuMP.AbstractModel) end
         @testset "Using $(copy_model ? "JuMP.copy_model" : "Base.copy")" begin
             for caching_mode in (MOIU.Automatic, MOIU.Manual)
                 @testset "In $caching_mode mode" begin
-                    for bridge_constraints in (false, true)
-                        model = Model(caching_mode = caching_mode,
-                                      bridge_constraints = bridge_constraints)
-                        model.optimize_hook = dummy_optimizer_hook
-                        data = DummyExtensionData(model)
-                        model.ext[:dummy] = data
-                        @variable(model, x ≥ 0, Bin)
-                        @variable(model, y ≤ 1, Int)
-                        @variable(model, z == 0)
-                        @constraint(model, cref, x + y == 1)
+                    model = Model(caching_mode = caching_mode)
+                    model.optimize_hook = dummy_optimizer_hook
+                    data = DummyExtensionData(model)
+                    model.ext[:dummy] = data
+                    @variable(model, x ≥ 0, Bin)
+                    @variable(model, y ≤ 1, Int)
+                    @variable(model, z == 0)
+                    @constraint(model, cref, x + y == 1)
 
-                        if copy_model
-                            new_model, reference_map = JuMP.copy_model(model)
-                        else
-                            new_model = copy(model)
-                            reference_map = Dict{Union{JuMP.VariableRef,
-                                                       JuMP.ConstraintRef},
-                                                 Union{JuMP.VariableRef,
-                                                       JuMP.ConstraintRef}}()
-                            reference_map[x] = new_model[:x]
-                            reference_map[y] = new_model[:y]
-                            reference_map[z] = new_model[:z]
-                            reference_map[cref] = new_model[:cref]
-                        end
-                        @test MOIU.mode(JuMP.caching_optimizer(new_model)) == caching_mode
-                        @test bridge_constraints == (JuMP.backend(new_model) isa MOI.Bridges.LazyBridgeOptimizer)
-                        @test new_model.optimize_hook === dummy_optimizer_hook
-                        @test new_model.ext[:dummy].model === new_model
-                        x_new = reference_map[x]
-                        @test JuMP.owner_model(x_new) === new_model
-                        @test JuMP.name(x_new) == "x"
-                        y_new = reference_map[y]
-                        @test JuMP.owner_model(y_new) === new_model
-                        @test JuMP.name(y_new) == "y"
-                        z_new = reference_map[z]
-                        @test JuMP.owner_model(z_new) === new_model
-                        @test JuMP.name(z_new) == "z"
-                        if copy_model
-                            @test JuMP.LowerBoundRef(x_new) == reference_map[JuMP.LowerBoundRef(x)]
-                            @test JuMP.BinaryRef(x_new) == reference_map[JuMP.BinaryRef(x)]
-                            @test JuMP.UpperBoundRef(y_new) == reference_map[JuMP.UpperBoundRef(y)]
-                            @test JuMP.IntegerRef(y_new) == reference_map[JuMP.IntegerRef(y)]
-                            @test JuMP.FixRef(z_new) == reference_map[JuMP.FixRef(z)]
-                        end
-                        cref_new = reference_map[cref]
-                        @test cref_new.model === new_model
-                        @test JuMP.name(cref_new) == "cref"
+                    if copy_model
+                        new_model, reference_map = JuMP.copy_model(model)
+                    else
+                        new_model = copy(model)
+                        reference_map = Dict{Union{JuMP.VariableRef,
+                                                   JuMP.ConstraintRef},
+                                             Union{JuMP.VariableRef,
+                                                   JuMP.ConstraintRef}}()
+                        reference_map[x] = new_model[:x]
+                        reference_map[y] = new_model[:y]
+                        reference_map[z] = new_model[:z]
+                        reference_map[cref] = new_model[:cref]
                     end
+                    @test MOIU.mode(JuMP.backend(new_model)) == caching_mode
+                    @test new_model.optimize_hook === dummy_optimizer_hook
+                    @test new_model.ext[:dummy].model === new_model
+                    x_new = reference_map[x]
+                    @test JuMP.owner_model(x_new) === new_model
+                    @test JuMP.name(x_new) == "x"
+                    y_new = reference_map[y]
+                    @test JuMP.owner_model(y_new) === new_model
+                    @test JuMP.name(y_new) == "y"
+                    z_new = reference_map[z]
+                    @test JuMP.owner_model(z_new) === new_model
+                    @test JuMP.name(z_new) == "z"
+                    if copy_model
+                        @test JuMP.LowerBoundRef(x_new) == reference_map[JuMP.LowerBoundRef(x)]
+                        @test JuMP.BinaryRef(x_new) == reference_map[JuMP.BinaryRef(x)]
+                        @test JuMP.UpperBoundRef(y_new) == reference_map[JuMP.UpperBoundRef(y)]
+                        @test JuMP.IntegerRef(y_new) == reference_map[JuMP.IntegerRef(y)]
+                        @test JuMP.FixRef(z_new) == reference_map[JuMP.FixRef(z)]
+                    end
+                    cref_new = reference_map[cref]
+                    @test cref_new.model === new_model
+                    @test JuMP.name(cref_new) == "cref"
                 end
             end
         end

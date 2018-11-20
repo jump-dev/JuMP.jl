@@ -97,12 +97,8 @@ function copy_model(model::Model)
               " instead of the `direct_model` constructor to be able to copy",
               " the constructed model.")
     end
-    caching_mode = caching_optimizer(model).mode
-    # TODO add bridges added to the bridge optimizer that are not part of the
-    #      fullbridgeoptimizer
-    bridge_constraints = backend(model) isa MOI.Bridges.LazyBridgeOptimizer{<:MOIU.CachingOptimizer}
-    new_model = Model(caching_mode = caching_mode,
-                      bridge_constraints = bridge_constraints)
+    caching_mode = backend(model).mode
+    new_model = Model(caching_mode = caching_mode)
 
     # Copy the MOI backend, note that variable and constraint indices may have
     # changed, the `index_map` gives the map between the indices of

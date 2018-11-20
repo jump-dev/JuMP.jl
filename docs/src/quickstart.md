@@ -93,7 +93,7 @@ julia> JuMP.optimize!(model)
 DocTestSetup = quote
     # Now we load in the solution. Using a caching optimizer removes the need to
     # load a solver such as GLPK for building the documentation.
-    mock = JuMP.caching_optimizer(model).optimizer
+    mock = JuMP.backend(model).optimizer.model
     MOI.set(mock, MOI.TerminationStatus(), MOI.Success)
     MOI.set(mock, MOI.PrimalStatus(), MOI.FeasiblePoint)
     MOI.set(mock, MOI.DualStatus(), MOI.FeasiblePoint)
