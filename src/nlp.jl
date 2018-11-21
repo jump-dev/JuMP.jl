@@ -1039,14 +1039,14 @@ function value(ex::NonlinearExpression, var_value::Function)
 
     moi_index_to_consecutive_index = Dict{MOI.VariableIndex, Int}()
     variable_indices = MOI.get(model, MOI.ListOfVariableIndices())
-    variable_values = Array{Float64}(undef, length(variable_indices))
+    variable_values = Vector{Float64}(undef, length(variable_indices))
     for (consecutive_index, moi_index) in enumerate(variable_indices)
         moi_index_to_consecutive_index[moi_index] = consecutive_index
         jump_var = VariableRef(model, moi_index)
         variable_values[consecutive_index] = var_value(jump_var)
     end
 
-    subexpressions = Array{Vector{NodeData}}(undef, 0)
+    subexpressions = Vector{Vector{NodeData}}(undef, 0)
     for nl_expr in nlp_data.nlexpr
         push!(subexpressions,
               replace_moi_variables(nl_expr.nd,
@@ -1065,9 +1065,9 @@ function value(ex::NonlinearExpression, var_value::Function)
         max_len = max(max_len, length(subexpressions[k]))
     end
 
-    subexpr_values = Array{Float64}(undef, length(subexpressions))
-    forward_storage = Array{Float64}(undef, max_len)
-    partials_storage = Array{Float64}(undef, max_len)
+    subexpr_values = Vector{Float64}(undef, length(subexpressions))
+    forward_storage = Vector{Float64}(undef, max_len)
+    partials_storage = Vector{Float64}(undef, max_len)
     user_input_buffer = zeros(nlp_data.largest_user_input_dimension)
     user_output_buffer = zeros(nlp_data.largest_user_input_dimension)
 
