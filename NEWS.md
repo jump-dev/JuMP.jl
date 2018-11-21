@@ -42,7 +42,9 @@ Breaking changes:
 
 - Starting values are separate from result values. Use `value` to query
   the value of a variable in a solution. Use `start_value` and `set_start_value`
-  to get and set an initial starting point provided to the solver.
+  to get and set an initial starting point provided to the solver. The solutions
+  from previous solves are no longer automatically set as the starting points
+  for the next solve.
 
 - The data structures for affine and quadratic expressions `AffExpr` and
   `QuadExpr` have changed. Internally, terms are stored in dictionaries instead
