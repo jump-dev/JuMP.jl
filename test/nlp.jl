@@ -568,4 +568,16 @@
             @test_throws expected_exception MOI.eval_objective(d, [1.0, 1.0])
         end
     end
+
+    @testset "JuMP.value on NonlinearExpressions" begin
+        model = Model()
+        @variable(model, x)
+        @NLexpression(model, ex1, sin(x))
+        @NLexpression(model, ex2, ex1 + x^2)
+        @NLexpression(model, ex3, 2ex1 + ex2 / 2)
+        JuMP.set_start_value(x, 2.0)
+        @test JuMP.value(ex1, JuMP.start_value) ≈ sin(2.0)
+        @test JuMP.value(ex2, JuMP.start_value) ≈ sin(2.0) + 4.0
+        @test JuMP.value(ex3, JuMP.start_value) ≈ 2.5 * sin(2.0) + 2.0
+    end
 end

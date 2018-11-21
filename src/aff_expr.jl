@@ -110,16 +110,16 @@ end
 Base.sizehint!(a::GenericAffExpr, n::Int) = sizehint!(a.terms, n)
 
 """
-    value(a::GenericAffExpr, map::Function)
+    value(ex::GenericAffExpr, var_value::Function)
 
-Evaluate `a` given the value `map(v)` for each variable `v`.
+Evaluate `ex` using `var_value(v)` as the value for each variable `v`.
 """
-function value(a::GenericAffExpr{T, V}, map::Function) where {T, V}
-    S = Base.promote_op(map, V)
+function value(ex::GenericAffExpr{T, V}, var_value::Function) where {T, V}
+    S = Base.promote_op(var_value, V)
     U = Base.promote_op(*, T, S)
-    ret = convert(U, a.constant)
-    for (var, coef) in a.terms
-        ret += coef * map(var)
+    ret = convert(U, ex.constant)
+    for (var, coef) in ex.terms
+        ret += coef * var_value(var)
     end
     ret
 end
