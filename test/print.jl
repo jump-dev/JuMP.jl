@@ -10,6 +10,7 @@
 # test/print.jl
 # Testing $fa pretty-printing-related functionality
 #############################################################################
+using MathOptInterface
 using JuMP
 using Compat
 using Compat.Test
@@ -347,6 +348,134 @@ function printing_test(ModelType::Type{<:JuMP.AbstractModel})
 
         io_test(REPLMode, quad_constr, "2 x$sq $le 1.0")
         # TODO: Test in IJulia mode.
+    end
+    @testset "Model" begin
+        repl(s) = JuMP.math_symbol(REPLMode, s)
+        le, ge, eq, fa = repl(:leq), repl(:geq), repl(:eq), repl(:for_all)
+        inset, dots = repl(:in), repl(:dots)
+        infty, union = repl(:infty), repl(:union)
+        Vert, sub2 = repl(:Vert), repl(:sub2)
+        for_all = repl(:for_all)
+
+        #------------------------------------------------------------------
+
+        model_1 = Model()
+        @variable(model_1, a>=1)
+        @variable(model_1, b<=1)
+        @variable(model_1, -1<=c<=1)
+        @variable(model_1, a1>=1,Int)
+        @variable(model_1, b1<=1,Int)
+        @variable(model_1, -1<=c1<=1,Int)
+        @variable(model_1, x, Bin)
+        @variable(model_1, y)
+        @variable(model_1, z, Int)
+        @variable(model_1, u[1:3], Bin)
+        @variable(model_1, fi == 9)
+        @objective(model_1, Max, a - b + 2a1 - 10x)
+        @constraint(model_1, a + b - 10c - 2x + c1 <= 1)
+        @constraint(model_1, a*b <= 2)
+        @constraint(model_1, [1 - a; u] in SecondOrderCone())
+
+        io_test(REPLMode, model_1, """
+    Max a - b + 2 a1 - 10 x
+    Subject to
+     x $inset MathOptInterface.ZeroOne()
+     u[1] $inset MathOptInterface.ZeroOne()
+     u[2] $inset MathOptInterface.ZeroOne()
+     u[3] $inset MathOptInterface.ZeroOne()
+     a1 $inset MathOptInterface.Integer()
+     b1 $inset MathOptInterface.Integer()
+     c1 $inset MathOptInterface.Integer()
+     z $inset MathOptInterface.Integer()
+     fi = 9.0
+     a $ge 1.0
+     c $ge -1.0
+     a1 $ge 1.0
+     c1 $ge -1.0
+     b $le 1.0
+     c $le 1.0
+     b1 $le 1.0
+     c1 $le 1.0
+     a + b - 10 c - 2 x + c1 $le 1.0
+     a*b $le 2.0
+     [-a + 1, u[1], u[2], u[3]] $inset MathOptInterface.SecondOrderCone(4)
+    """, repl=:print)
+
+
+        io_test(REPLMode, model_1, """
+    A JuMP Model
+    Maximization problem with:
+    Variables: 13
+    `MathOptInterface.SingleVariable`-in-`MathOptInterface.ZeroOne`: 4 constraints
+    `MathOptInterface.SingleVariable`-in-`MathOptInterface.Integer`: 4 constraints
+    `MathOptInterface.SingleVariable`-in-`MathOptInterface.EqualTo{Float64}`: 1 constraint
+    `MathOptInterface.SingleVariable`-in-`MathOptInterface.GreaterThan{Float64}`: 4 constraints
+    `MathOptInterface.SingleVariable`-in-`MathOptInterface.LessThan{Float64}`: 4 constraints
+    `MathOptInterface.ScalarAffineFunction{Float64}`-in-`MathOptInterface.LessThan{Float64}`: 1 constraint
+    `MathOptInterface.ScalarQuadraticFunction{Float64}`-in-`MathOptInterface.LessThan{Float64}`: 1 constraint
+    `MathOptInterface.VectorAffineFunction{Float64}`-in-`MathOptInterface.SecondOrderCone`: 1 constraint
+    Model mode: Automatic
+    CachingOptimizer state: NoOptimizer
+    Solver name: No optimizer attached.
+    Names registered in the model: b, c, c1, b1, a1, x, fi, z, u, a, y""", repl=:show)
+
+        io_test(IJuliaMode, model_1, """
+    \\begin{alignat*}{1}\\max\\quad & a - b + 2 a1 - 10 x\\\\
+    \\text{Subject to} \\quad & x \\in MathOptInterface.ZeroOne()\\\\
+     & u_{1} \\in MathOptInterface.ZeroOne()\\\\
+     & u_{2} \\in MathOptInterface.ZeroOne()\\\\
+     & u_{3} \\in MathOptInterface.ZeroOne()\\\\
+     & a1 \\in MathOptInterface.Integer()\\\\
+     & b1 \\in MathOptInterface.Integer()\\\\
+     & c1 \\in MathOptInterface.Integer()\\\\
+     & z \\in MathOptInterface.Integer()\\\\
+     & fi = 9.0\\\\
+     & a \\geq 1.0\\\\
+     & c \\geq -1.0\\\\
+     & a1 \\geq 1.0\\\\
+     & c1 \\geq -1.0\\\\
+     & b \\leq 1.0\\\\
+     & c \\leq 1.0\\\\
+     & b1 \\leq 1.0\\\\
+     & c1 \\leq 1.0\\\\
+     & a + b - 10 c - 2 x + c1 \\leq 1.0\\\\
+     & a\\times b \\leq 2.0\\\\
+     & [-a + 1, u_{1}, u_{2}, u_{3}] \\in MathOptInterface.SecondOrderCone(4)\\\\
+    \\end{alignat*}
+    """)
+
+        #------------------------------------------------------------------
+
+        model_2 = Model()
+        @variable(model_2, x, Bin)
+        @variable(model_2, y, Int)
+        @constraint(model_2, x*y <= 1)
+
+        io_test(REPLMode, model_2, """
+    A JuMP Model
+    Feasibility problem with:
+    Variables: 2
+    `MathOptInterface.SingleVariable`-in-`MathOptInterface.ZeroOne`: 1 constraint
+    `MathOptInterface.SingleVariable`-in-`MathOptInterface.Integer`: 1 constraint
+    `MathOptInterface.ScalarQuadraticFunction{Float64}`-in-`MathOptInterface.LessThan{Float64}`: 1 constraint
+    Model mode: Automatic
+    CachingOptimizer state: NoOptimizer
+    Solver name: No optimizer attached.
+    Names registered in the model: y, x""", repl=:show)
+
+        model_2 = Model()
+        @variable(model_2, x)
+        @constraint(model_2, x <= 3)
+
+        io_test(REPLMode, model_2, """
+    A JuMP Model
+    Feasibility problem with:
+    Variable: 1
+    `MathOptInterface.ScalarAffineFunction{Float64}`-in-`MathOptInterface.LessThan{Float64}`: 1 constraint
+    Model mode: Automatic
+    CachingOptimizer state: NoOptimizer
+    Solver name: No optimizer attached.
+    Names registered in the model: x""", repl=:show)
     end
 end
 

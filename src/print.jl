@@ -147,9 +147,20 @@ wrap_in_inline_math_mode(str) = "\$ $str \$"
 ## Model
 #------------------------------------------------------------------------
 function Base.show(io::IO, model::Model)
+    plural(n) = (n==1 ? "" : "s")
     println(io, "A JuMP Model")
+    sense = objective_sense(model)
+    if sense == MOI.MaxSense
+        print(io, "Maximization")
+    elseif sense == MOI.MinSense
+        print(io, "Minimization")
+    else
+        print(io, "Feasibility")
+    end
+    println(io, " problem with:")
     # TODO: Consider allowing a JuMP model to have a string name.
-    println(io, "Variables: ", num_variables(model))
+    println(io, "Variable", plural(num_variables(model)), ": ",
+            num_variables(model))
     # https://github.com/JuliaOpt/JuMP.jl/issues/1556
     # TODO: This doesn't account for nonlinear objectives
     # println(io, "\tObjective function type:",
@@ -157,10 +168,12 @@ function Base.show(io::IO, model::Model)
     constraint_types = MOI.get(model, MOI.ListOfConstraints())
     for (F, S) in MOI.get(model, MOI.ListOfConstraints())
         num_constraints = MOI.get(model, MOI.NumberOfConstraints{F, S}())
-        println(io, "`$F`-in-`$S`: $num_constraints constraints")
+        println(io, "`$F`-in-`$S`: $num_constraints constraint",
+                plural(num_constraints))
     end
     if !iszero(num_nl_constraints(model))
-        println(io, "Nonlinear: ", num_nl_constraints(model), " constraints")
+        println(io, "Nonlinear: ", num_nl_constraints(model), " constraint",
+                plural(num_nl_constraints(model)))
     end
     model_mode = mode(model)
     println(io, "Model mode: ", model_mode)
@@ -168,13 +181,58 @@ function Base.show(io::IO, model::Model)
         println(io, "CachingOptimizer state: ",
                 MOIU.state(backend(model)))
     end
-    println(io, "Solver name: ", solver_name(model))
+    # The last print shouldn't have a new line
+    print(io, "Solver name: ", solver_name(model))
     names_in_scope = collect(keys(object_dictionary(model)))
     if !isempty(names_in_scope)
-        println(io, "Names registered in the model: ",
-                    join(string.(names_in_scope), ", "))
+        println(io)
+        print(io, "Names registered in the model: ",
+              join(string.(names_in_scope), ", "))
     end
-    # TODO: The last print shouldn't have a new line
+end
+
+function Base.print(io::IO, model::Model)
+    print(io, model_string(REPLMode, model))
+end
+function Base.show(io::IO, ::MIME"text/latex", model::Model)
+    print(io, wrap_in_math_mode(model_string(IJuliaMode, model)))
+end
+function model_string(print_mode, model::Model)
+    ijl = print_mode == IJuliaMode
+    sep = ijl ? " & " : " "
+    eol = ijl ? "\\\\\n" : "\n"
+    sense = objective_sense(model)
+    str = ""
+    if sense == MOI.MaxSense
+        str *= ijl ? "\\max" : "Max"
+    elseif sense == MOI.MinSense
+        str *= ijl ? "\\min" : "Min"
+    else
+        str *= ijl ? "\\text{feasibility}" : "Feasibility"
+    end
+    if sense != MOI.FeasibilitySense
+        if ijl
+            str *= "\\quad"
+        end
+        str *= sep
+        str *= function_string(print_mode,
+                               objective_function(model, QuadExpr))
+    end
+    str *= eol
+    str *= ijl ? "\\text{Subject to} \\quad" : "Subject to" * eol
+    for (F, S) in MOI.get(model, MOI.ListOfConstraints())
+        for idx in MOI.get(model, MOI.ListOfConstraintIndices{F, S}())
+            # FIXME the shape may be incorrect here
+            shape = S <: MOI.AbstractScalarSet ? ScalarShape() : VectorShape()
+            cref = ConstraintRef(model, idx, shape)
+            con = constraint_object(cref)
+            str *= sep * constraint_string(print_mode, con) * eol
+        end
+    end
+    if ijl
+        str = "\\begin{alignat*}{1}" * str * "\\end{alignat*}\n"
+    end
+    return str
 end
 
 #------------------------------------------------------------------------
@@ -308,10 +366,10 @@ end
 # `JuMP.jump_function` or `JuMP.function_string` and either `JuMP.moi_set` or
 # `JuMP.in_set_string` should be implemented.
 function Base.show(io::IO, ref::ConstraintRef)
-    print(io, constraint_string(REPLMode, name(ref), constraint_object(ref)))
+    print(io, constraint_string(REPLMode, ref))
 end
 function Base.show(io::IO, ::MIME"text/latex", ref::ConstraintRef)
-    print(io, constraint_string(IJuliaMode, name(ref), constraint_object(ref)))
+    print(io, constraint_string(IJuliaMode, ref))
 end
 
 """
@@ -404,12 +462,14 @@ function in_set_string(print_mode, constraint::AbstractConstraint)
     return in_set_string(print_mode, moi_set(constraint))
 end
 
-# constraint_object is a JuMP constraint object like AffExprConstraint.
-# Assumes a .func and .set member.
-function constraint_string(print_mode, constraint_name, constraint_object)
+function constraint_string(print_mode, constraint_object::AbstractConstraint)
     func_str = function_string(print_mode, constraint_object)
     in_set_str = in_set_string(print_mode, constraint_object)
-    constraint_without_name = func_str * " " * in_set_str
+    return func_str * " " * in_set_str
+end
+function constraint_string(print_mode, constraint_name,
+                           constraint_object::AbstractConstraint)
+    constraint_without_name = constraint_string(print_mode, constraint_object)
     if print_mode == IJuliaMode
         constraint_without_name = wrap_in_inline_math_mode(constraint_without_name)
     end
@@ -418,6 +478,9 @@ function constraint_string(print_mode, constraint_name, constraint_object)
     else
         return constraint_name * " : " * constraint_without_name
     end
+end
+function constraint_string(print_mode, ref::ConstraintRef)
+    return constraint_string(print_mode, name(ref), constraint_object(ref))
 end
 
 #------------------------------------------------------------------------
