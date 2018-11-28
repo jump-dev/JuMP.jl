@@ -28,6 +28,7 @@ To illustrate these three types of variables, consider the following JuMP code
 ```jldoctest variables
 julia> model = Model()
 A JuMP Model
+Feasibility problem with:
 Variables: 0
 Model mode: Automatic
 CachingOptimizer state: NoOptimizer
