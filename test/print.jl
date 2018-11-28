@@ -387,7 +387,7 @@ function printing_test(ModelType::Type{<:JuMP.AbstractModel})
      b1 $inset MathOptInterface.Integer()
      c1 $inset MathOptInterface.Integer()
      z $inset MathOptInterface.Integer()
-     fi = 9.0
+     fi $eq 9.0
      a $ge 1.0
      c $ge -1.0
      a1 $ge 1.0
