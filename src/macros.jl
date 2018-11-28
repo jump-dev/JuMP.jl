@@ -990,6 +990,10 @@ To minimize the value of the variable `x`, do as follows:
 ```jldoctest @objective; setup = :(using JuMP)
 julia> model = Model()
 A JuMP Model
+Variables: 0
+Model mode: Automatic
+CachingOptimizer state: NoOptimizer
+Solver name: No optimizer attached.
 
 julia> @variable(model, x)
 x

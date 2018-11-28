@@ -28,6 +28,10 @@ To illustrate these three types of variables, consider the following JuMP code
 ```jldoctest variables
 julia> model = Model()
 A JuMP Model
+Variables: 0
+Model mode: Automatic
+CachingOptimizer state: NoOptimizer
+Solver name: No optimizer attached.
 
 julia> @variable(model, x[1:2])
 2-element Array{VariableRef,1}:
