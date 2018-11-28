@@ -327,7 +327,7 @@ not implemented.
 """
 function solver_name(model::Model)
     if mode(model) != Direct &&
-        caching_optimizer(model).state == MOIU.NoOptimizer
+        MOIU.state(backend(model)) == MOIU.NoOptimizer
         return "No optimizer attached."
     else
         return try_get_solver_name(backend(model))

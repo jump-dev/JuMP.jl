@@ -166,7 +166,7 @@ function Base.show(io::IO, model::Model)
     println(io, "Model mode: ", model_mode)
     if model_mode == Manual || model_mode == Automatic
         println(io, "CachingOptimizer state: ",
-                MOIU.state(caching_optimizer(model)))
+                MOIU.state(backend(model)))
     end
     println(io, "Solver name: ", solver_name(model))
     names_in_scope = collect(keys(object_dictionary(model)))
