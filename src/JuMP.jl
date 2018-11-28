@@ -303,6 +303,37 @@ function moi_bridge_constraints(model::MOIU.CachingOptimizer)
     return model.optimizer isa MOI.Bridges.LazyBridgeOptimizer
 end
 
+# Internal function.
+function try_get_solver_name(model_like)
+    try
+        return MOI.get(model_like, MOI.SolverName())
+    catch ex
+        if isa(ex, ArgumentError)
+            return "SolverName() attribute not implemented by the optimizer."
+        else
+            rethrow(ex)
+        end
+    end
+end
+
+"""
+    solver_name(model::Model)
+
+If available, returns the `SolverName` property of the underlying optimizer.
+Returns `"No optimizer attached"` in `Automatic` or `Manual` modes when no
+optimizer is attached. Returns
+"SolverName() attribute not implemented by the optimizer." if the attribute is
+not implemented.
+"""
+function solver_name(model::Model)
+    if mode(model) != Direct &&
+        MOIU.state(backend(model)) == MOIU.NoOptimizer
+        return "No optimizer attached."
+    else
+        return try_get_solver_name(backend(model))
+    end
+end
+
 """
     bridge_constraints(model::Model)
 

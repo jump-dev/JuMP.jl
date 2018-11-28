@@ -90,6 +90,10 @@ Error if the objective is not convertible to type `T`.
 ```jldoctest objective_function; setup = :(using JuMP)
 julia> model = Model()
 A JuMP Model
+Variables: 0
+Model mode: Automatic
+CachingOptimizer state: NoOptimizer
+Solver name: No optimizer attached.
 
 julia> @variable(model, x)
 x

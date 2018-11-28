@@ -115,7 +115,7 @@ to a setting such as a time limit. We can ask the solver why it stopped using
 the `JuMP.termination_status` function:
 ```jldoctest quickstart_example
 julia> JuMP.termination_status(model)
-Success::TerminationStatusCode = 0
+Success::TerminationStatusCode = 1
 ```
 In this case, `GLPK` returned `Success`. This does *not* mean that it has found
 the optimal solution. Instead, it indicates that GLPK has finished running and
