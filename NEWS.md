@@ -1,6 +1,12 @@
 JuMP release notes
 ==================
 
+Version 0.18.5 (December 1, 2018)
+---------------------------------
+
+   * Support views in some derivative evaluation functions.
+   * Improved compatibility with PackageCompiler.
+
 Version 0.18.4 (October 8, 2018)
 --------------------------------
 
