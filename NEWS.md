@@ -129,6 +129,12 @@ See the
 [0.19 issue milestone](https://github.com/JuliaOpt/JuMP.jl/issues?q=is%3Aopen+is%3Aissue+milestone%3A0.19)
 for a complete list of issues blocking the 0.19 release.
 
+Version 0.18.5 (December 1, 2018)
+---------------------------------
+
+   * Support views in some derivative evaluation functions.
+   * Improved compatibility with PackageCompiler.
+
 Version 0.18.4 (October 8, 2018)
 --------------------------------
 
