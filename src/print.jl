@@ -154,7 +154,6 @@ function Base.show(io::IO, model::Model)
     # TODO: This doesn't account for nonlinear objectives
     # println(io, "\tObjective function type:",
     #            MOI.get(model, MOI.ObjectiveFunctionType()))
-    constraint_types = MOI.get(model, MOI.ListOfConstraints())
     for (F, S) in MOI.get(model, MOI.ListOfConstraints())
         num_constraints = MOI.get(model, MOI.NumberOfConstraints{F, S}())
         println(io, "`$F`-in-`$S`: $num_constraints constraints")
