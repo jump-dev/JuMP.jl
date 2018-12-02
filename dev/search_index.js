@@ -429,7 +429,7 @@ var documenterSearchIndex = {"docs": [
     "page": "Constraints",
     "title": "JuMP.@SDconstraint",
     "category": "macro",
-    "text": "@SDconstraint(model::Model, expr)\n\nAdd a semidefinite constraint described by the expression expr.\n\n@SDconstraint(model::Model, ref[i=..., j=..., ...], expr)\n\nAdd a group of semidefinite constraints described by the expression expr parametrized by i, j, ...\n\nThe expression expr needs to be of the form a sign b where sign is ⪰, ≥, >=, ⪯, ≤ or <= and a and b are square matrices. It constrains the matrix x = a - b (or x = b - a if the sign is ⪯, ≤ or <=) to be symmetric and positive semidefinite.\n\nBy default, we check numerical symmetry of the matrix x, and if symmetry is violated by some arbitrary amount, we add explicit equality constraints. You can use Symmetric(x) in PSDCone() with the @constraint macro to skip these checks if you know the matrix must be symmetric; see PSDCone for more information.\n\nExamples\n\nThe following constrains the matrix [x-1 2x-2; -3 x-4] to be symmetric and positive semidefinite, that is, it constrains 2x-2 to be equal to -3 and constrains all eigenvalues of the matrix to be nonnegative.\n\njulia> using JuMP\n\njulia> model = Model();\n\njulia> @variable(model, x)\nx\n\njulia> a = [x 2x\n            0  x];\n\njulia> b = [1 2\n            3 4];\n\njulia> @SDconstraint(model, a ⪰ b)\n[x - 1, -3, 2 x - 2, x - 4] ∈ MathOptInterface.PositiveSemidefiniteConeSquare(2)\n\nIn the set PositiveSemidefiniteConeSquare(2) in the last output, Square means that the matrix is passed as a square matrix as the corresponding off-diagonal entries need to be constrained to be equal. A similar set PositiveSemidefiniteConeTriangle exists which only uses the upper triangular part of the matrix assuming that it is symmetric, see PSDCone to see how to use it.\n\n\n\n\n\n"
+    "text": "@SDconstraint(model::Model, expr)\n\nAdd a semidefinite constraint described by the expression expr.\n\n@SDconstraint(model::Model, ref[i=..., j=..., ...], expr)\n\nAdd a group of semidefinite constraints described by the expression expr parametrized by i, j, ...\n\nThe expression expr needs to be of the form a sign b where sign is ⪰, ≥, >=, ⪯, ≤ or <= and a and b are square matrices. It constrains the matrix x = a - b (or x = b - a if the sign is ⪯, ≤ or <=) to be symmetric and positive semidefinite.\n\nBy default, we check numerical symmetry of the matrix x, and if symmetry is violated by some arbitrary amount, we add explicit equality constraints. You can use Symmetric(x) in PSDCone() with the @constraint macro to skip these checks if you know the matrix must be symmetric; see PSDCone for more information.\n\nExamples\n\nThe following constrains the matrix [x-1 2x-2; -3 x-4] to be symmetric and positive semidefinite, that is, it constrains 2x-2 to be equal to -3 and constrains all eigenvalues of the matrix to be nonnegative.\n\njulia> model = Model();\n\njulia> @variable(model, x)\nx\n\njulia> a = [x 2x\n            0  x];\n\njulia> b = [1 2\n            3 4];\n\njulia> @SDconstraint(model, a ⪰ b)\n[x - 1, -3, 2 x - 2, x - 4] ∈ MathOptInterface.PositiveSemidefiniteConeSquare(2)\n\nIn the set PositiveSemidefiniteConeSquare(2) in the last output, Square means that the matrix is passed as a square matrix as the corresponding off-diagonal entries need to be constrained to be equal. A similar set PositiveSemidefiniteConeTriangle exists which only uses the upper triangular part of the matrix assuming that it is symmetric, see PSDCone to see how to use it.\n\n\n\n\n\n"
 },
 
 {
@@ -510,6 +510,22 @@ var documenterSearchIndex = {"docs": [
     "title": "Duals",
     "category": "section",
     "text": "JuMP.dual\nJuMP.shadow_price"
+},
+
+{
+    "location": "constraints/#JuMP.@build_constraint",
+    "page": "Constraints",
+    "title": "JuMP.@build_constraint",
+    "category": "macro",
+    "text": "@build_constraint(constraint_expr)\n\nConstructs a JuMP.ScalarConstraint or JuMP.VectorConstraint using the same machinery as @constraint but without adding the constraint to a model.\n\nConstraints using broadcast operators like x .<= 1 are also supported and will create arrays of JuMP.ScalarConstraint or JuMP.VectorConstraint.\n\nExamples\n\n```jldoctest; setup = :(using JuMP) model = Model(); @variable(model, x); JuMP.@build_constraint(2x >= 1)\n\noutput\n\nJuMP.ScalarConstraint{JuMP.GenericAffExpr{Float64,VariableRef},MathOptInterface.GreaterThan{Float64}}(2 x, MathOptInterface.GreaterThan{Float64}(1.0))\n\n\n\n\n\n"
+},
+
+{
+    "location": "constraints/#Constructing-constraints-without-adding-them-to-the-model-1",
+    "page": "Constraints",
+    "title": "Constructing constraints without adding them to the model",
+    "category": "section",
+    "text": "For advanced use cases.JuMP.@build_constraint"
 },
 
 {
