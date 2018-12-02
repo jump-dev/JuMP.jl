@@ -79,6 +79,15 @@ Breaking changes:
   conventional LP interpretations of dual values as sensitivities of the
   objective value to relaxations of constraints.
 
+- `@constraintref` is no longer defined. Instead, create the appropriate
+  container to hold constraint references manually. For example,
+  ```julia
+  constraints = Dict() # Optionally, specify types for improved performance.
+  for i in 1:N
+    constraints[i] = @constraint(model, ...)
+  end
+  ```
+
 New features:
 
 - Splatting (like `f(x...)`) is recognized in restricted settings in nonlinear
