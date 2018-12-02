@@ -88,6 +88,18 @@ containermatches(c1, c2) = false
 end
 
 @testset "JuMPArray" begin
+    @testset "undef constructor" begin
+        A = @inferred JuMPArray{Int}(undef, [:a, :b], 1:2)
+        A[:a, 1] = 1
+        A[:b, 1] = 2
+        A[:a, 2] = 3
+        A[:b, 2] = 4
+        @test A[:a, 1] == 1
+        @test A[:b, 1] == 2
+        @test A[:a, 2] == 3
+        @test A[:b, 2] == 4
+    end
+
     @testset "Range index set" begin
         A = @inferred JuMPArray([1.0,2.0], 2:3)
         if VERSION >= v"0.7-"

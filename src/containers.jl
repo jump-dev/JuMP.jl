@@ -36,7 +36,7 @@ automatically checks for duplicate terms in the index sets and `false` otherwise
 
     generatecontainer(VariableRef, [:i,:j], [:(1:N), :(2:T)], :Auto)
     # Returns code equivalent to:
-    # :(JuMPArray(Array{VariableRef}(length(1:N), length(2:T)), \$indexvars...))
+    # :(JuMPArray(undef, 1:N, 2:T))
 
     generatecontainer(VariableRef, [:i,:j], [:(1:N), :(S)], :Auto)
     # Returns code that generates an Array if S is of type Base.OneTo,
@@ -85,7 +85,7 @@ function generatecontainer(T, indexvars, indexsets, requestedtype)
         end
     end
 
-    axisexpr = :(JuMP.JuMPArray(Array{$T}(undef, $sizes...)))
+    axisexpr = :(JuMP.JuMPArray{$T}(undef))
     append!(axisexpr.args, indexsets)
 
     if requestedtype == :JuMPArray
