@@ -36,7 +36,7 @@ end
 
 Construct a JuMP array with the underlying data specified by the `data` array
 and the given axes. Exactly `N` axes must be provided, and their lengths must
-match the corresponding lengths of the axes of the `data` array.
+match `size(data)` in the corresponding dimensions.
 
 # Example
 ```jldoctest
