@@ -39,8 +39,6 @@ export
     linear_terms,
 
 # Macros and support functions
-    @LinearConstraint, @LinearConstraints, @QuadConstraint, @QuadConstraints,
-    @SOCConstraint, @SOCConstraints,
     @expression, @expressions, @NLexpression, @NLexpressions,
     @variable, @variables, @constraint, @constraints,
     @NLconstraint, @NLconstraints,

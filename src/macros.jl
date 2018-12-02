@@ -665,9 +665,7 @@ skip these checks if you know the matrix must be symmetric; see
 The following constrains the matrix `[x-1 2x-2; -3 x-4]` to be symmetric and
 positive semidefinite, that is, it constrains `2x-2` to be equal to `-3` and
 constrains all eigenvalues of the matrix to be nonnegative.
-```jldoctest
-julia> using JuMP
-
+```jldoctest; setup = :(using JuMP)
 julia> model = Model();
 
 julia> @variable(model, x)
@@ -693,147 +691,43 @@ macro SDconstraint(args...)
     constraint_macro(args, :SDconstraint, parseSDconstraint)
 end
 
+"""
+    @build_constraint(constraint_expr)
 
-# """
-#     @LinearConstraint(x)
-#
-# Constructs a `LinearConstraint` instance efficiently by parsing the `x`. The same as `@constraint`, except it does not attach the constraint to any model.
-# """
-# macro LinearConstraint(x)
-#     (x.head == :block) &&
-#         error("Code block passed as constraint. Perhaps you meant to use @LinearConstraints instead?")
-#
-#     if isexpr(x, :call) && length(x.args) == 3
-#         (sense,vectorized) = _canonicalize_sense(x.args[1])
-#         # Simple comparison - move everything to the LHS
-#         vectorized &&
-#             error("in @LinearConstraint ($(string(x))): Cannot add vectorized constraints")
-#         lhs = :($(x.args[2]) - $(x.args[3]))
-#         return quote
-#             newaff = @Expression($(esc(lhs)))
-#             c = build_constraint(newaff,$(quot(sense)))
-#             isa(c, LinearConstraint) ||
-#                 error("Constraint in @LinearConstraint is really a $(typeof(c))")
-#             c
-#         end
-#     elseif isexpr(x, :comparison)
-#         # Ranged row
-#         (lsense,lvectorized) = _canonicalize_sense(x.args[2])
-#         (rsense,rvectorized) = _canonicalize_sense(x.args[4])
-#         if (lsense != :<=) || (rsense != :<=)
-#             error("in @constraint ($(string(x))): only ranged rows of the form lb <= expr <= ub are supported.")
-#         end
-#         (lvectorized || rvectorized) &&
-#             error("in @LinearConstraint ($(string(x))): Cannot add vectorized constraints")
-#         lb = x.args[1]
-#         ub = x.args[5]
-#         return quote
-#             if !isa($(esc(lb)),Number)
-#                 error(string("in @LinearConstraint (",$(string(x)),"): expected ",$(string(lb))," to be a number."))
-#             elseif !isa($(esc(ub)),Number)
-#                 error(string("in @LinearConstraint (",$(string(x)),"): expected ",$(string(ub))," to be a number."))
-#             end
-#             newaff = @Expression($(esc(x.args[3])))
-#             offset = newaff.constant
-#             newaff.constant = 0.0
-#             isa(newaff,AffExpr) || error("Ranged quadratic constraints are not allowed")
-#             LinearConstraint(newaff,$(esc(lb))-offset,$(esc(ub))-offset)
-#         end
-#     else
-#         # Unknown
-#         error("in @LinearConstraint ($(string(x))): constraints must be in one of the following forms:\n" *
-#               "       expr1 <= expr2\n" * "       expr1 >= expr2\n" *
-#               "       expr1 == expr2\n" * "       lb <= expr <= ub")
-#     end
-# end
+Constructs a `JuMP.ScalarConstraint` or `JuMP.VectorConstraint` using the same
+machinery as [`@constraint`](@ref) but without adding the constraint to a model.
 
-# """
-#     @QuadConstraint(x)
-#
-# Constructs a `QuadConstraint` instance efficiently by parsing the `x`. The same as `@constraint`, except it does not attach the constraint to any model.
-# """
-# macro QuadConstraint(x)
-#     (x.head == :block) &&
-#         error("Code block passed as constraint. Perhaps you meant to use @QuadConstraints instead?")
-#
-#     if isexpr(x, :call) && length(x.args) == 3
-#         (sense,vectorized) = _canonicalize_sense(x.args[1])
-#         # Simple comparison - move everything to the LHS
-#         vectorized &&
-#             error("in @QuadConstraint ($(string(x))): Cannot add vectorized constraints")
-#         lhs = :($(x.args[2]) - $(x.args[3]))
-#         return quote
-#             newaff = @Expression($(esc(lhs)))
-#             q = build_constraint(newaff,$(quot(sense)))
-#             isa(q, QuadConstraint) || error("Constraint in @QuadConstraint is really a $(typeof(q))")
-#             q
-#         end
-#     elseif isexpr(x, :comparison)
-#         error("Ranged quadratic constraints are not allowed")
-#     else
-#         # Unknown
-#         error("in @QuadConstraint ($(string(x))): constraints must be in one of the following forms:\n" *
-#               "       expr1 <= expr2\n" * "       expr1 >= expr2\n" *
-#               "       expr1 == expr2")
-#     end
-# end
+Constraints using broadcast operators like `x .<= 1` are also supported and will
+create arrays of `JuMP.ScalarConstraint` or `JuMP.VectorConstraint`.
 
-# macro SOCConstraint(x)
-#     (x.head == :block) &&
-#         error("Code block passed as constraint. Perhaps you meant to use @SOCConstraints instead?")
-#
-#     if isexpr(x, :call) && length(x.args) == 3
-#         (sense,vectorized) = _canonicalize_sense(x.args[1])
-#         # Simple comparison - move everything to the LHS
-#         vectorized &&
-#             error("in @SOCConstraint ($(string(x))): Cannot add vectorized constraints")
-#         lhs = :($(x.args[2]) - $(x.args[3]))
-#         return quote
-#             newaff = @Expression($(esc(lhs)))
-#             q = build_constraint(newaff,$(quot(sense)))
-#             isa(q, SOCConstraint) || error("Constraint in @SOCConstraint is really a $(typeof(q))")
-#             q
-#         end
-#     elseif isexpr(x, :comparison)
-#         error("Ranged second-order cone constraints are not allowed")
-#     else
-#         # Unknown
-#         error("in @SOCConstraint ($(string(x))): constraints must be in one of the following forms:\n" *
-#               "       expr1 <= expr2\n" * "       expr1 >= expr2")
-#     end
-# end
+## Examples
 
-# for (mac,sym) in [(:LinearConstraints, Symbol("@LinearConstraint")),
-#                   (:QuadConstraints,   Symbol("@QuadConstraint")),
-#                   (:SOCConstraints,    Symbol("@SOCConstraint"))]
-#     @eval begin
-#         macro $mac(x)
-#             x.head == :block || error(string("Invalid syntax for @", $(string(mac))))
-#             @assert x.args[1].head == :line
-#             code = Expr(:vect)
-#             for it in x.args
-#                 if it.head == :line
-#                     # do nothing
-#                 elseif it.head == :comparison || (it.head == :call && it.args[1] in (:<=,:≤,:>=,:≥,:(==))) # regular constraint
-#                     push!(code.args, Expr(:macrocall, $sym, esc(it)))
-#                 elseif it.head == :tuple # constraint ref
-#                     if all([isexpr(arg,:comparison) for arg in it.args]...)
-#                         # the user probably had trailing commas at end of lines, e.g.
-#                         # @LinearConstraints(m, begin
-#                         #     x <= 1,
-#                         #     x >= 1
-#                         # end)
-#                         error(string("Invalid syntax in @", $(string(mac)), ". Do you have commas at the end of a line specifying a constraint?"))
-#                     end
-#                     error("@", string($(string(mac)), " does not currently support the two argument syntax for specifying groups of constraints in one line."))
-#                 else
-#                     error("Unexpected constraint expression $it")
-#                 end
-#             end
-#             return code
-#         end
-#     end
-# end
+```jldoctest; setup = :(using JuMP)
+model = Model();
+@variable(model, x);
+JuMP.@build_constraint(2x >= 1)
+
+# output
+JuMP.ScalarConstraint{JuMP.GenericAffExpr{Float64,VariableRef},MathOptInterface.GreaterThan{Float64}}(2 x, MathOptInterface.GreaterThan{Float64}(1.0))
+"""
+macro build_constraint(constraint_expr)
+    _error(str...) = macro_error(:build_constraint, args, str...)
+
+    if isa(constraint_expr, Symbol)
+        _error("Incomplete constraint specification $constraint_expr. " *
+               "Are you missing a comparison (<=, >=, or ==)?")
+    end
+
+    is_vectorized, parse_code, build_call = parse_constraint(_error,
+                                                        constraint_expr.args...)
+    result_variable = gensym()
+    code = quote
+        $parse_code
+        $result_variable = $build_call
+    end
+
+    return macro_return(code, result_variable)
+end
 
 add_JuMP_prefix(s::Symbol) = Expr(:., JuMP, :($(QuoteNode(s))))
 
