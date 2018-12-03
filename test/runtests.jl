@@ -21,6 +21,8 @@ const MOI = MathOptInterface
 const MOIT = MOI.Test
 const MOIU = MOI.Utilities
 
+include("CustomIndexing.jl")
+
 include("utilities.jl")
 include("JuMPExtension.jl")
 
