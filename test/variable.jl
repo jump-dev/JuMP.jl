@@ -226,9 +226,9 @@ end
         @variable(m, z[-1:1,[:red,"blue"]])
         @variable(m, w[i=1:2,j=1:2 ; (j+i) % 2 == 1])
 
-        @test all(collect(keys(x)) .== [(2,1), (3,1), (2,2), (3,2)])
-        @test all(collect(keys(y)) .== [(2,), (3,)])
-        @test all(collect(keys(z)) .== [(-1,:red), (0,:red), (1,:red), (-1,"blue"), (0,"blue"), (1,"blue")])
+        @test collect(keys(x)) == [(2,1), (3,1), (2,2), (3,2)]
+        @test collect(keys(y)) == [(2,), (3,)]
+        @test collect(keys(z)) .== [(-1,:red), (0,:red), (1,:red), (-1,"blue"), (0,"blue"), (1,"blue")]
         @test Set(keys(w)) == Set([(1,2),(2,1)])
     end
 
