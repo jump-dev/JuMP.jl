@@ -135,7 +135,10 @@ Base.keys(::IndexAnyCartesian, d::SparseArray) = keys(d)
 Base.Broadcast.newindex(d::SparseArray, idx) = idx
 
 struct BroadcastStyle{N} <: Broadcast.BroadcastStyle end
-# TODO throw an helpful error when trying to mix SparseArray with a non-scalar
+function Base.BroadcastStyle(::BroadcastStyle, ::Base.BroadcastStyle)
+    throw(ArgumentError("Cannot broadcast Containers.SparseArray with another" *
+                        " array of different type"))
+end
 # Scalars can be used with SparseArray in broadcast
 Base.BroadcastStyle(::BroadcastStyle{N}, ::Base.Broadcast.DefaultArrayStyle{0}) where {N} = BroadcastStyle{N}()
 Base.BroadcastStyle(::Type{<:SparseArray{T, N}}) where {T, N} = BroadcastStyle{N}()
@@ -149,7 +152,8 @@ function check_same_eachindex(each_index) end
 check_same_eachindex(each_index, not_sa, args...) = check_same_eachindex(eachindex, args...)
 function check_same_eachindex(each_index, sa::SparseArray, args...)
     if Set(each_index) != Set(eachindex(sa))
-        throw(ArgumentError("Cannot broadcast Containers.SparseArray with different indices"))
+        throw(ArgumentError("Cannot broadcast Containers.SparseArray with" *
+                            " different indices"))
     end
     check_same_eachindex(eachindex, args...)
 end
