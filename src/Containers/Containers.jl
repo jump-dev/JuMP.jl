@@ -41,7 +41,13 @@ Base.IteratorSize(::Type{<:SparseArray}) = Base.HasLength()
 Base.IteratorSize(::Type{Base.Generator{<:SparseArray}}) = Base.HasLength()
 # Needed in `collect_to_with_first!`
 Base.eachindex(g::Base.Generator{<:SparseArray}) = eachindex(g.iter)
-Base.iterate(sa::SparseArray, args...) = iterate(values(sa.data), args...)
+@static if VERSION < v"0.7-"
+    Base.start(sa::SparseArray) = start(values(sa.data))
+    Base.next(sa::SparseArray, state) = start(values(sa.data), state)
+    Base.done(sa::SparseArray, state) = start(values(sa.data), state)
+else
+    Base.iterate(sa::SparseArray, args...) = iterate(values(sa.data), args...)
+end
 
 # A `length` argument can be given because `IteratorSize` is `HasLength`
 function Base.similar(sa::SparseArray{S,N}, ::Type{T},
@@ -58,7 +64,11 @@ function Base.collect_to_with_first!(dest::SparseArray, first_value, iterator,
     indices = eachindex(iterator)
     dest[first(indices)] = first_value
     for index in Iterators.drop(indices, 1)
-        element, state = iterate(iterator, state)
+        @static if VERSION < v"0.7-"
+            element, state = next(iterator, state)
+        else
+            element, state = iterate(iterator, state)
+        end
         dest[index] = element
     end
     return dest
