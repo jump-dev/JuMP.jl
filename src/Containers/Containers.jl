@@ -26,8 +26,7 @@ module Containers
 entries are defined. The entries with indices `idx = (i1, i2, ..., iN)` in
 `keys(data)` has value `data[idx]`. Note that as opposed to
 `SparseArrays.AbstractSparseArray`, the missing entries are not assumed to be
-`zero(T)`. The indexing structure of the array is not rectangular and the
-missing entries are simply not part of the array. This means that the result of
+`zero(T)`, they are simply not part of the array. This means that the result of
 `map(f, sa::SparseArray)` or `f.(sa::SparseArray)` has the same sparsity
 structure than `sa` even if `f(zero(T))` is not zero.
 """
@@ -36,7 +35,34 @@ struct SparseArray{T,N} <: AbstractArray{T,N}
 end
 
 Base.length(sa::SparseArray) = length(sa.data)
-Base.iterate(sa::SparseArray, args...) = iterate(sa, args...)
+Base.IteratorSize(::Type{<:SparseArray}) = Base.HasLength()
+# By default `IteratorSize` for `Generator{<:AbstractArray{T,N}}` is
+# `HasShape{N}`
+Base.IteratorSize(::Type{Base.Generator{<:SparseArray}}) = Base.HasLength()
+# Needed in `collect_to_with_first!`
+Base.eachindex(g::Base.Generator{<:SparseArray}) = eachindex(g.iter)
+Base.iterate(sa::SparseArray, args...) = iterate(values(sa.data), args...)
+
+# A `length` argument can be given because `IteratorSize` is `HasLength`
+function Base.similar(sa::SparseArray{S,N}, ::Type{T},
+                      length::Integer=0) where {S, T, N}
+    d = Dict{Tuple,T}()
+    if !iszero(length)
+        sizehint!(d, length)
+    end
+    return SparseArray{T,N}(d)
+end
+function Base.collect_to_with_first!(dest::SparseArray, first_value, iterator,
+                                     state)
+    indices = eachindex(iterator)
+    dest[first(indices)] = first_value
+    for index in Iterators.drop(indices, 1)
+        element, state = iterate(iterator, state)
+        dest[index] = element
+    end
+    return dest
+end
+
 function Base.mapreduce(f, op, sa::SparseArray)
     mapreduce(f, op, values(sa.data))
 end

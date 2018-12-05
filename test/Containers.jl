@@ -10,12 +10,16 @@ using JuMP
             @test sum(d) == 3
         end
         @testset "Broadcasting" begin
-            @test d .* d == SAInt1(Dict((:a,) => 1, (:b,) => 4))
-            @test d .+ d == SAInt1(Dict((:a,) => 2, (:b,) => 4))
-            @test d .* 3 == SAInt1(Dict((:a,) => 3, (:b,) => 6))
-            @test 3 .* d == SAInt1(Dict((:a,) => 3, (:b,) => 6))
+            @test (@inferred d .* d) == SAInt1(Dict((:a,) => 1, (:b,) => 4))
+            @test (@inferred d .+ d) == SAInt1(Dict((:a,) => 2, (:b,) => 4))
+            @test (@inferred map(x -> x * 3, d)) == SAInt1(Dict((:a,) => 3, (:b,) => 6))
+            @test (@inferred d .* 3) == SAInt1(Dict((:a,) => 3, (:b,) => 6))
+            @test (@inferred map(x -> 3 * x, d)) == SAInt1(Dict((:a,) => 3, (:b,) => 6))
+            @test (@inferred 3 .* d) == SAInt1(Dict((:a,) => 3, (:b,) => 6))
+            @test (@inferred map(identity, d)) == d
             @test identity.(d) == d
             sqr(x) = x^2
+            @test (@inferred map(sqr, d)) == SAInt1(Dict((:a,) => 1, (:b,) => 4))
             @test sqr.(d) == SAInt1(Dict((:a,) => 1, (:b,) => 4))
             @testset "Different indices" begin
                 dc = SAInt1(Dict((:a,) => 1, (:b,) => 2, (:c,) => 3))
