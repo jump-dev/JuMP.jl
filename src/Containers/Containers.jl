@@ -52,6 +52,7 @@ function Base.similar(sa::SparseArray{S,N}, ::Type{T},
     end
     return SparseArray{T,N}(d)
 end
+# The generic implementation uses `LinearIndices`
 function Base.collect_to_with_first!(dest::SparseArray, first_value, iterator,
                                      state)
     indices = eachindex(iterator)
@@ -162,12 +163,26 @@ end
 function Base.eachindex(bc::Base.Broadcast.Broadcasted{<:BroadcastStyle})
     return _eachindex(bc.args...)
 end
-# Need to define it as `axes` is not defined
+
+# The fallback uses `axes` but recommend in the docstring to create a custom
+# method for custom style if needed.
 Base.Broadcast.instantiate(bc::Base.Broadcast.Broadcasted{<:BroadcastStyle}) = bc
-# Need to define it as indices are not integers
+
+# The generic method in `Base` is `getindex(::Broadcasted, ::Union{Integer, CartesianIndex})`
+# which is not applicable here since the index is not integer
+# TODO make a change in `Base` so that we don't have to call a function starting
+# with an `_`.
+function Base.getindex(bc::Base.Broadcast.Broadcasted{<:BroadcastStyle}, I)
+    return Base.Broadcast._broadcast_getindex(bc, I)
+end
+
+# The generic implementation fall back to converting `bc` to
+# `Broadcasted{Nothing}`. It is advised in `Base` to define a custom method for
+# custom styles. The fallback for `Broadcasted{Nothing}` is not appropriate as
+# indices are not integers for `SparseArray`.
 function Base.copyto!(dest::SparseArray{T, N}, bc::Base.Broadcast.Broadcasted{BroadcastStyle{N}}) where {T, N}
     for key in eachindex(bc)
-        dest[key] = Base.Broadcast._broadcast_getindex(bc, key)
+        dest[key] = bc[key]
     end
     return dest
 end
