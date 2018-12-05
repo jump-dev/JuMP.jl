@@ -8,6 +8,13 @@
 # See http://github.com/JuliaOpt/JuMP.jl
 #############################################################################
 
+"""
+    Containers
+
+Module defining containers `DenseArray` and `SparseArray` that behaves as
+regular `AbstractArray` but with custom indexes that are not necessarily
+integers.
+"""
 module Containers
 
 """
@@ -15,12 +22,14 @@ module Containers
         data::Dict{Tuple,T}
     end
 
-`N`-dimensional array with elements of type `T` where only a subset of the entries are defined.
-The entries with indices `idx = (i1, i2, ..., iN)` in `keys(data)` has value `data[idx]`.
-Note that as opposed to `SparseArrays.AbstractSparseArray`, the missing entries are not assumed
-to be `zero(T)`. The indexing structure of the array is not rectangular and the missing entries
-are simply not part of the array. This means that the result of `map(f, sa::SparseArray)` or
-`f.(sa::SparseArray)` has the same sparsity structure than `sa` even if `f(zero(T))` is not zero.
+`N`-dimensional array with elements of type `T` where only a subset of the
+entries are defined. The entries with indices `idx = (i1, i2, ..., iN)` in
+`keys(data)` has value `data[idx]`. Note that as opposed to
+`SparseArrays.AbstractSparseArray`, the missing entries are not assumed to be
+`zero(T)`. The indexing structure of the array is not rectangular and the
+missing entries are simply not part of the array. This means that the result of
+`map(f, sa::SparseArray)` or `f.(sa::SparseArray)` has the same sparsity
+structure than `sa` even if `f(zero(T))` is not zero.
 """
 struct SparseArray{T,N} <: AbstractArray{T,N}
     data::Dict{Tuple,T}
