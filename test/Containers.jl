@@ -1,6 +1,10 @@
-@testset "CustomIndexing" begin
+using Compat
+using Compat.Test
+using JuMP
+
+@testset "Containers" begin
     @testset "SparseArray" begin
-        SAInt1 = JuMP.CustomIndexing.SparseArray{Int, 1}
+        SAInt1 = JuMP.Containers.SparseArray{Int, 1}
         d = SAInt1(Dict((:a,) => 1, (:b,) => 2))
         @testset "Reduce" begin
             @test sum(d) == 3
@@ -23,7 +27,7 @@
                     @test_throws ArgumentError d .+ da
                 else
                     err = ArgumentError("Cannot broadcast" *
-                        " CustomIndexing.SparseArray with different indices")
+                        " Containers.SparseArray with different indices")
                     @test_throws err dc .+ d
                     @test_throws err d .+ dc
                     @test_throws err da .+ d

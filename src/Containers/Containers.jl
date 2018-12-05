@@ -1,4 +1,4 @@
-module CustomIndexing
+module Containers
 
 """
     struct SparseArray{T,N} <: AbstractArray{T,N}
@@ -103,7 +103,7 @@ function check_same_eachindex(each_index) end
 check_same_eachindex(each_index, not_sa, args...) = check_same_eachindex(eachindex, args...)
 function check_same_eachindex(each_index, sa::SparseArray, args...)
     if Set(each_index) != Set(eachindex(sa))
-        throw(ArgumentError("Cannot broadcast CustomIndexing.SparseArray with different indices"))
+        throw(ArgumentError("Cannot broadcast Containers.SparseArray with different indices"))
     end
     check_same_eachindex(eachindex, args...)
 end
