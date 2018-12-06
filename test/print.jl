@@ -402,9 +402,6 @@ function printing_test(ModelType::Type{<:JuMP.AbstractModel})
     """, repl=:print)
 
 
-        names_in_scope = Set([:b, :c, :c1, :b1, :a1, :x, :fi, :z, :u, :a, :y])
-        # The order in which they appear varies between 32-bit and 64-bit
-        names_in_scope_str = join(names_in_scope, ", ")
         io_test(REPLMode, model_1, """
     A JuMP Model
     Maximization problem with:
@@ -420,7 +417,7 @@ function printing_test(ModelType::Type{<:JuMP.AbstractModel})
     Model mode: Automatic
     CachingOptimizer state: NoOptimizer
     Solver name: No optimizer attached.
-    Names registered in the model: $names_in_scope_str""", repl=:show)
+    Names registered in the model: a, a1, b, b1, c, c1, fi, u, x, y, z""", repl=:show)
 
         io_test(IJuliaMode, model_1, """
     \\begin{alignat*}{1}\\max\\quad & a - b + 2 a1 - 10 x\\\\
@@ -454,9 +451,6 @@ function printing_test(ModelType::Type{<:JuMP.AbstractModel})
         @variable(model_2, y, Int)
         @constraint(model_2, x*y <= 1)
 
-        names_in_scope = Set([:x, :y])
-        # The order in which they appear varies between 32-bit and 64-bit
-        names_in_scope_str = join(names_in_scope, ", ")
         io_test(REPLMode, model_2, """
     A JuMP Model
     Feasibility problem with:
@@ -467,7 +461,7 @@ function printing_test(ModelType::Type{<:JuMP.AbstractModel})
     Model mode: Automatic
     CachingOptimizer state: NoOptimizer
     Solver name: No optimizer attached.
-    Names registered in the model: $names_in_scope_str""", repl=:show)
+    Names registered in the model: x, y""", repl=:show)
 
         model_2 = Model()
         @variable(model_2, x)

@@ -183,7 +183,7 @@ function Base.show(io::IO, model::Model)
     end
     # The last print shouldn't have a new line
     print(io, "Solver name: ", solver_name(model))
-    names_in_scope = collect(keys(object_dictionary(model)))
+    names_in_scope = sort(collect(keys(object_dictionary(model))))
     if !isempty(names_in_scope)
         println(io)
         print(io, "Names registered in the model: ",
