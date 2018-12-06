@@ -13,9 +13,8 @@
 
 using JuMP
 
-using Compat
-import Compat.LinearAlgebra: Symmetric
-using Compat.Test
+import LinearAlgebra: Symmetric
+using Test
 
 include("utilities.jl")
 @static if !(:JuMPExtension in names(Main))
@@ -272,7 +271,7 @@ function test_variable_oneto_index_set(ModelType, VariableRefType)
     @test size(array_var) == (3, 2)
     jumparray_var = @variable(model, [Base.OneTo(3), 1:2], container=JuMPArray)
     @test jumparray_var isa JuMPArray{VariableRefType}
-    @test length.(Compat.axes(jumparray_var)) == (3, 2)
+    @test length.(axes(jumparray_var)) == (3, 2)
 end
 
 function test_variable_base_name_in_macro(ModelType)

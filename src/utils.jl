@@ -28,7 +28,7 @@ function Base.fill!(v::VectorView{T},value) where T
     end
     nothing
 end
-function Compat.rmul!(v::VectorView{T},value::T) where T<:Number
+function rmul!(v::VectorView{T},value::T) where T<:Number
     for i in 1:length(v)
         v[i] *= value
     end

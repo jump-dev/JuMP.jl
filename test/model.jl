@@ -12,8 +12,7 @@
 
 using JuMP
 
-using Compat
-using Compat.Test
+using Test
 
 using MathOptInterface
 const MOI = MathOptInterface

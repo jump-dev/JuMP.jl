@@ -1,6 +1,5 @@
 using JuMP
-using Compat
-using Compat.Test
+using Test
 using OffsetArrays
 
 # For "DimensionMismatch when performing vector-matrix multiplication with custom types #988"
@@ -16,7 +15,7 @@ Base.zero(::Type{MySumType{T}}) where {T} = MySumType(zero(T))
 Base.zero(::MySumType{T}) where {T} = MySumType(zero(T))
 Base.transpose(t::MyType) = MyType(t.a)
 Base.transpose(t::MySumType) = MySumType(t.a)
-Compat.LinearAlgebra.adjoint(t::MySumType) = t
+LinearAlgebra.adjoint(t::MySumType) = t
 +(t1::MyT, t2::MyS) where {MyT<:Union{MyType, MySumType}, MyS<:Union{MyType, MySumType}} = MySumType(t1.a+t2.a)
 *(t1::MyType{S}, t2::T) where {S, T} = MyType(t1.a*t2)
 *(t1::S, t2::MyType{T}) where {S, T} = MyType(t1*t2.a)
@@ -284,15 +283,15 @@ function operators_test(ModelType::Type{<:JuMP.AbstractModel}, VariableRefType::
 
             A = [1 3 ; 2 4]
             @variable(dot_m, 1 ≤ y[1:2,1:2] ≤ 1)
-            @test_expression_with_string Compat.dot(A,y) "y[1,1] + 2 y[2,1] + 3 y[1,2] + 4 y[2,2]"
-            @test_expression_with_string Compat.dot(y,A) "y[1,1] + 2 y[2,1] + 3 y[1,2] + 4 y[2,2]"
+            @test_expression_with_string dot(A,y) "y[1,1] + 2 y[2,1] + 3 y[1,2] + 4 y[2,2]"
+            @test_expression_with_string dot(y,A) "y[1,1] + 2 y[2,1] + 3 y[1,2] + 4 y[2,2]"
 
             B = ones(2,2,2)
             @variable(dot_m, 0 ≤ z[1:2,1:2,1:2] ≤ 1)
-            @test_expression_with_string Compat.dot(B,z) "z[1,1,1] + z[2,1,1] + z[1,2,1] + z[2,2,1] + z[1,1,2] + z[2,1,2] + z[1,2,2] + z[2,2,2]"
-            @test_expression_with_string Compat.dot(z,B) "z[1,1,1] + z[2,1,1] + z[1,2,1] + z[2,2,1] + z[1,1,2] + z[2,1,2] + z[1,2,2] + z[2,2,2]"
+            @test_expression_with_string dot(B,z) "z[1,1,1] + z[2,1,1] + z[1,2,1] + z[2,2,1] + z[1,1,2] + z[2,1,2] + z[1,2,2] + z[2,2,2]"
+            @test_expression_with_string dot(z,B) "z[1,1,1] + z[2,1,1] + z[1,2,1] + z[2,2,1] + z[1,1,2] + z[2,1,2] + z[1,2,2] + z[2,2,2]"
 
-            @objective(dot_m, Max, dot(x, ones(3)) - Compat.dot(y, ones(2,2)))
+            @objective(dot_m, Max, dot(x, ones(3)) - dot(y, ones(2,2)))
             for i in 1:3
                 JuMP.set_start_value(x[i], 1)
             end
@@ -303,8 +302,8 @@ function operators_test(ModelType::Type{<:JuMP.AbstractModel}, VariableRefType::
                 JuMP.set_start_value(z[i,j,k], 1)
             end
             @test dot(c, JuMP.start_value.(x)) ≈ 6
-            @test Compat.dot(A, JuMP.start_value.(y)) ≈ 10
-            @test Compat.dot(B, JuMP.start_value.(z)) ≈ 8
+            @test dot(A, JuMP.start_value.(y)) ≈ 10
+            @test dot(B, JuMP.start_value.(z)) ≈ 8
 
             @testset "JuMP issue #656" begin
                 issue656 = ModelType()

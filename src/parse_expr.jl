@@ -501,8 +501,8 @@ function parseExpr(x, aff::Symbol, lcoeffs::Vector, rcoeffs::Vector, newaff::Sym
                 error("Unexpected comparison in expression $x.")
             end
             if has_assignment_in_ref(x)
-                Compat.@warn "Unexpected assignment in expression $x. This " *
-                             "will become a syntax error in a future release."
+                @warn "Unexpected assignment in expression $x. This will" *
+                             " become a syntax error in a future release."
             end
             callexpr = Expr(:call,:destructive_add_with_reorder!,aff,lcoeffs...,esc(x),rcoeffs...)
             return newaff, :($newaff = $callexpr)

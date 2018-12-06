@@ -173,7 +173,7 @@ end
 
 Base.hash(quad::GenericQuadExpr, h::UInt) = hash(quad.aff, hash(quad.terms, h))
 
-function Compat.SparseArrays.dropzeros(quad::GenericQuadExpr)
+function SparseArrays.dropzeros(quad::GenericQuadExpr)
     quad_terms = copy(quad.terms)
     for (key, value) in quad.terms
         if iszero(value)

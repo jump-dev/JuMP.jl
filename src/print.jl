@@ -49,11 +49,11 @@ string_round(f) = string(f)
 # should probably work fine on Windows
 function math_symbol(::Type{REPLMode}, name::Symbol)
     if name == :leq
-        return Compat.Sys.iswindows() ? "<=" : "≤"
+        return Sys.iswindows() ? "<=" : "≤"
     elseif name == :geq
-        return Compat.Sys.iswindows() ? ">=" : "≥"
+        return Sys.iswindows() ? ">=" : "≥"
     elseif name == :eq
-        return Compat.Sys.iswindows() ? "==" : "="
+        return Sys.iswindows() ? "==" : "="
     elseif name == :times
         return "*"
     elseif name == :sq
@@ -63,19 +63,19 @@ function math_symbol(::Type{REPLMode}, name::Symbol)
     elseif name == :ind_close
         return "]"
     elseif name == :for_all
-        return Compat.Sys.iswindows() ? "for all" : "∀"
+        return Sys.iswindows() ? "for all" : "∀"
     elseif name == :in
-        return Compat.Sys.iswindows() ? "in" : "∈"
+        return Sys.iswindows() ? "in" : "∈"
     elseif name == :open_set
         return "{"
     elseif name == :dots
-        return Compat.Sys.iswindows() ? ".." : "…"
+        return Sys.iswindows() ? ".." : "…"
     elseif name == :close_set
         return "}"
     elseif name == :union
-        return Compat.Sys.iswindows() ? "or" : "∪"
+        return Sys.iswindows() ? "or" : "∪"
     elseif name == :infty
-        return Compat.Sys.iswindows() ? "Inf" : "∞"
+        return Sys.iswindows() ? "Inf" : "∞"
     elseif name == :open_rng
         return "["
     elseif name == :close_rng
@@ -85,9 +85,9 @@ function math_symbol(::Type{REPLMode}, name::Symbol)
     elseif name == :succeq0
         return " is semidefinite"
     elseif name == :Vert
-        return Compat.Sys.iswindows() ? "||" : "‖"
+        return Sys.iswindows() ? "||" : "‖"
     elseif name == :sub2
-        return Compat.Sys.iswindows() ? "_2" : "₂"
+        return Sys.iswindows() ? "_2" : "₂"
     else
         error("Internal error: Unrecognized symbol $name.")
     end

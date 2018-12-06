@@ -4,8 +4,7 @@
 #  file, You can obtain one at http://mozilla.org/MPL/2.0/.
 
 using JuMP
-using Compat # For undef
-using Compat.Test
+using Test
 
 macro dummycontainer(expr, requestedtype)
     name = gensym()
@@ -25,7 +24,7 @@ function containermatches(c1::AbstractArray,c2::AbstractArray)
 end
 
 function containermatches(c1::JuMPArray,c2::JuMPArray)
-    return typeof(c1) == typeof(c2) && Compat.axes(c1) == Compat.axes(c2)
+    return typeof(c1) == typeof(c2) && axes(c1) == axes(c2)
 end
 
 containermatches(c1::Dict, c2::Dict) = (eltype(c1) == eltype(c2))
@@ -110,7 +109,7 @@ end
         @test A[3,1,1,1,1] == 2.0
         @test isassigned(A, 2)
         @test !isassigned(A, 1)
-        @test length.(Compat.axes(A)) == (2,)
+        @test length.(axes(A)) == (2,)
         plus1(x) = x + 1
         B = plus1.(A)
         @test B[2] == 2.0
@@ -129,7 +128,7 @@ And data, a 2-element Array{Float64,1}:
         @test size(A, 1) == 2
         @test @inferred A[:a] == 1.0
         @test A[:b] == 2.0
-        @test length.(Compat.axes(A)) == (2,)
+        @test length.(axes(A)) == (2,)
         plus1(x) = x + 1
         B = plus1.(A)
         @test B[:a] == 2.0
@@ -147,7 +146,7 @@ And data, a 2-element Array{Float64,1}:
         @test size(A) == (2, 2)
         @test size(A, 1) == 2
         @test size(A, 2) == 2
-        @test length.(Compat.axes(A)) == (2,2)
+        @test length.(axes(A)) == (2,2)
         @test @inferred A[2,:a] == 1
         @test A[3,:a] == 3
         @test A[2,:b] == 2

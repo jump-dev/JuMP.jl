@@ -281,7 +281,7 @@ function Base.show_nd(io::IO, a::JuMPArray, print_matrix::Function, label_slices
     if isempty(a)
         return
     end
-    tailinds = Base.tail(Base.tail(Compat.axes(a.data)))
+    tailinds = Base.tail(Base.tail(axes(a.data)))
     nd = ndims(a)-2
     for I in CartesianIndices(tailinds)
         idxs = I.I
@@ -314,7 +314,7 @@ function Base.show_nd(io::IO, a::JuMPArray, print_matrix::Function, label_slices
             show(io, a.axes[end][idxs[end]])
             println(io, "] =")
         end
-        slice = view(a.data, Compat.axes(a.data,1), Compat.axes(a.data,2),
+        slice = view(a.data, axes(a.data,1), axes(a.data,2),
                      idxs...)
         Base.print_matrix(io, slice)
         print(io, idxs == map(last,tailinds) ? "" : "\n\n")

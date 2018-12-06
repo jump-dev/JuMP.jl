@@ -216,7 +216,7 @@ end
 
 Base.hash(aff::GenericAffExpr, h::UInt) = hash(aff.constant, hash(aff.terms, h))
 
-function Compat.SparseArrays.dropzeros(aff::GenericAffExpr)
+function SparseArrays.dropzeros(aff::GenericAffExpr)
     result = copy(aff)
     for (coef, var) in linear_terms(aff)
         if iszero(coef)
