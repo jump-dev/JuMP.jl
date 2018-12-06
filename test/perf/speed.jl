@@ -18,8 +18,7 @@
 #############################################################################
 
 import BenchmarkTools: @benchmark, allocs
-using Compat
-using Compat.Random
+using Random
 using JuMP
 
 """
