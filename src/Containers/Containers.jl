@@ -17,8 +17,8 @@ Module defining the containers `SparseAxisArray` that behaves as a regular
 module Containers
 
 """
-    struct SparseAxisArray{T,N} <: AbstractArray{T,N}
-        data::Dict{Tuple,T}
+    struct SparseAxisArray{T,N,K<:NTuple{N, Any}} <: AbstractArray{T,N}
+        data::Dict{K,T}
     end
 
 `N`-dimensional array with elements of type `T` where only a subset of the
@@ -29,8 +29,8 @@ entries are defined. The entries with indices `idx = (i1, i2, ..., iN)` in
 `map(f, sa::SparseAxisArray)` or `f.(sa::SparseAxisArray)` has the same sparsity
 structure than `sa` even if `f(zero(T))` is not zero.
 """
-struct SparseAxisArray{T,N} <: AbstractArray{T,N}
-    data::Dict{Tuple,T}
+struct SparseAxisArray{T,N,K<:NTuple{N, Any}} <: AbstractArray{T,N}
+    data::Dict{K,T}
 end
 
 Base.length(sa::SparseAxisArray) = length(sa.data)
@@ -49,13 +49,13 @@ else
 end
 
 # A `length` argument can be given because `IteratorSize` is `HasLength`
-function Base.similar(sa::SparseAxisArray{S,N}, ::Type{T},
-                      length::Integer=0) where {S, T, N}
-    d = Dict{Tuple,T}()
+function Base.similar(sa::SparseAxisArray{S,N,K}, ::Type{T},
+                      length::Integer=0) where {S, T, N, K}
+    d = Dict{K, T}()
     if !iszero(length)
         sizehint!(d, length)
     end
-    return SparseAxisArray{T,N}(d)
+    return SparseAxisArray(d)
 end
 # The generic implementation uses `LinearIndices`
 function Base.collect_to_with_first!(dest::SparseAxisArray, first_value, iterator,
@@ -129,9 +129,17 @@ function _colon_error(::Colon, args...)
                         " Containers.SparseAxisArray"))
 end
 _colon_error(arg, args...) = _colon_error(args...)
+function Base.setindex!(d::SparseAxisArray{T, N, K}, value,
+                        idx::K) where {T, N, K<:NTuple{N, Any}}
+    setindex!(d, value, idx...)
+end
 function Base.setindex!(d::SparseAxisArray, value, idx...)
     _colon_error(idx...)
     setindex!(d.data, value, idx)
+end
+function Base.getindex(d::SparseAxisArray{T, N, K},
+                       idx::K) where {T, N, K<:NTuple{N, Any}}
+    getindex(d, idx...)
 end
 function Base.getindex(d::SparseAxisArray, idx...)
     _colon_error(idx...)
@@ -156,16 +164,22 @@ Base.keys(::IndexAnyCartesian, d::SparseAxisArray) = keys(d)
 # Need to define it as indices may be non-integers
 Base.Broadcast.newindex(d::SparseAxisArray, idx) = idx
 
-struct BroadcastStyle{N} <: Broadcast.BroadcastStyle end
+struct BroadcastStyle{N, K} <: Broadcast.BroadcastStyle end
 function Base.BroadcastStyle(::BroadcastStyle, ::Base.BroadcastStyle)
-    throw(ArgumentError("Cannot broadcast Containers.SparseAxisArray with another" *
-                        " array of different type"))
+    throw(ArgumentError("Cannot broadcast Containers.SparseAxisArray with" *
+                        " another array of different type"))
 end
 # Scalars can be used with SparseAxisArray in broadcast
-Base.BroadcastStyle(::BroadcastStyle{N}, ::Base.Broadcast.DefaultArrayStyle{0}) where {N} = BroadcastStyle{N}()
-Base.BroadcastStyle(::Type{<:SparseAxisArray{T, N}}) where {T, N} = BroadcastStyle{N}()
-function Base.similar(b::Base.Broadcast.Broadcasted{BroadcastStyle{N}}, ::Type{T}) where {T, N, Ax}
-    SparseAxisArray{T, N}(Dict{Tuple, T}())
+function Base.BroadcastStyle(::BroadcastStyle{N, K},
+                             ::Base.Broadcast.DefaultArrayStyle{0}) where {N, K}
+    return BroadcastStyle{N, K}()
+end
+function Base.BroadcastStyle(::Type{<:SparseAxisArray{T, N, K}}) where {T, N, K}
+    return BroadcastStyle{N, K}()
+end
+function Base.similar(b::Base.Broadcast.Broadcasted{BroadcastStyle{N, K}},
+                      ::Type{T}) where {T, N, K}
+    SparseAxisArray(Dict{K, T}())
 end
 
 # Check that all `SparseAxisArray`s involved have the same indices. The other
@@ -206,8 +220,8 @@ end
 # `Broadcasted{Nothing}`. It is advised in `Base` to define a custom method for
 # custom styles. The fallback for `Broadcasted{Nothing}` is not appropriate as
 # indices are not integers for `SparseAxisArray`.
-function Base.copyto!(dest::SparseAxisArray{T, N},
-                      bc::Base.Broadcast.Broadcasted{BroadcastStyle{N}}) where {T, N}
+function Base.copyto!(dest::SparseAxisArray{T, N, K},
+                      bc::Base.Broadcast.Broadcasted{BroadcastStyle{N, K}}) where {T, N, K}
     for key in eachindex(bc)
         dest[key] = bc[key]
     end
