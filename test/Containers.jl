@@ -4,7 +4,7 @@ using JuMP
 
 @testset "Containers" begin
     @testset "SparseAxisArray" begin
-        function sparse_test(d, d2, d3, dsqr, da, dc)
+        function sparse_test(d, sum_d, d2, d3, dsqr, d_bads)
             sqr(x) = x^2
             @testset "Colon indexing" begin
                 if VERSION < v"0.7-"
@@ -24,7 +24,7 @@ using JuMP
                 @test d3 == @inferred map(x -> 3 * x, d)
             end
             @testset "Reduce" begin
-                @test 3 == @inferred sum(d)
+                @test sum_d == @inferred sum(d)
             end
             @testset "Broadcasting" begin
                 @test dsqr == @inferred d .* d
@@ -47,29 +47,44 @@ using JuMP
                 end
                 @testset "Different indices" begin
                     if VERSION < v"0.7-"
-                        @test_throws ArgumentError dc .+ d
-                        @test_throws ArgumentError d .+ dc
-                        @test_throws ArgumentError da .+ d
-                        @test_throws ArgumentError d .+ da
+                        for d_bad in d_bads
+                            @test_throws ArgumentError d_bad .+ d
+                            @test_throws ArgumentError d .+ d_bad
+                        end
                     else
                         err = ArgumentError("Cannot broadcast" *
                             " Containers.SparseAxisArray with different indices")
-                        @test_throws err dc .+ d
-                        @test_throws err d .+ dc
-                        @test_throws err da .+ d
-                        @test_throws err d .+ da
+                        for d_bad in d_bads
+                            @test_throws err d_bad .+ d
+                            @test_throws err d .+ d_bad
+                        end
                     end
                 end
             end
         end
-        SA = JuMP.Containers.SparseAxisArray
-        d = @inferred SA(Dict((:a,) => 1, (:b,) => 2))
-        @test d isa SA{Int, 1, Tuple{Symbol}}
-        d2 = @inferred SA(Dict((:a,) => 2, (:b,) => 4))
-        d3 = @inferred SA(Dict((:a,) => 3, (:b,) => 6))
-        dsqr = @inferred SA(Dict((:a,) => 1, (:b,) => 4))
-        da = @inferred SA(Dict((:b,) => 2))
-        dc = @inferred SA(Dict((:a,) => 1, (:b,) => 2, (:c,) => 3))
-        sparse_test(d, d2, d3, dsqr, da, dc)
+        @testset "1-dimensional" begin
+            SA = JuMP.Containers.SparseAxisArray
+            d = @inferred SA(Dict((:a,) => 1, (:b,) => 2))
+            @test d isa SA{Int, 1, Tuple{Symbol}}
+            d2 = @inferred SA(Dict((:a,) => 2, (:b,) => 4))
+            d3 = @inferred SA(Dict((:a,) => 3, (:b,) => 6))
+            dsqr = @inferred SA(Dict((:a,) => 1, (:b,) => 4))
+            da = @inferred SA(Dict((:b,) => 2))
+            dc = @inferred SA(Dict((:a,) => 1, (:b,) => 2, (:c,) => 3))
+            sparse_test(d, 3, d2, d3, dsqr, [da, dc])
+        end
+        @testset "2-dimensional" begin
+            SA = JuMP.Containers.SparseAxisArray
+            d = @inferred SA(Dict((:a, 'u') => 2.0, (:b, 'v') => 0.5))
+            @test d isa SA{Float64, 2, Tuple{Symbol, Char}}
+            d2 = @inferred SA(Dict((:b, 'v') => 1.0, (:a, 'u') => 4.0))
+            d3 = @inferred SA(Dict((:a, 'u') => 6.0, (:b, 'v') => 1.5))
+            dsqr = @inferred SA(Dict((:a, 'u') => 4.0, (:b, 'v') => 0.25))
+            da = @inferred SA(Dict((:b, 'v') => 2.0))
+            db = @inferred SA(Dict((:a, 'u') => 1.0, (:b, 'u') => 2.0))
+            dc = @inferred SA(Dict((:a, 'u') => 1.0, (:b, 'v') => 2.0,
+                                   (:c, 'w') => 3.0))
+            sparse_test(d, 2.5, d2, d3, dsqr, [da, db, dc])
+        end
     end
 end
