@@ -169,8 +169,8 @@ julia> JuMP.dual(con)
 ```
 
 !!! info
-    If you're confused about the sign associated with the dual value, read the
-    [constraint duality section](@ref constraint_duality) of this manual.
+    See [constraint duality section](@ref constraint_duality) for a discussion
+    of the convention that JuMP uses for signs of duals.
 
 To query the dual variables associated with the variable bounds, things are a
 little trickier as we first need to obtain a reference to the constraint:

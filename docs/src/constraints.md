@@ -15,14 +15,14 @@ reading further, please make sure you are familiar with JuMP models, and JuMP
 [Nonlinear Modeling](@ref) instead.
 
 JuMP is based on the MathOptInterface API. Because of this, JuMP thinks of a
-constraint as a *function* belonging to a *set*. For example, instead of
-thinking about a constraint ``a^\top x \le b`` as a *less-than-or-equal-to*
-constraint, JuMP thinks about this as the *scalar affine* function ``a^\top x``
-belonging to the *less-than* set ``(-\infty, b]``. Thus, instead of a
-*less-than-or-equal-to* constraint, we consider this constraint to be a *scalar
-affine -in- less than* constraint. More generally, we use the shorthand
-*function-in-set* to refer to constraints composed of different types of
-functions and sets. In the rest of this page, we will introduce the different
+constraint as the restriction that the output of a *function* belongs to a
+*set*. For example, instead of representing a constraint ``a^\top x \le b`` as a
+*less-than-or-equal-to* constraint, JuMP models this as the *scalar affine*
+function ``a^\top x`` belonging to the *less-than* set ``(-\infty, b]``. Thus,
+instead of a *less-than-or-equal-to* constraint, we consider this constraint to
+be a *scalar affine -in- less than* constraint. More generally, we use the
+shorthand *function-in-set* to refer to constraints composed of different types
+of functions and sets. In the rest of this page, we will introduce the different
 types of functions and sets that JuMP knows about as needed. You can read more
 details about this *function-in-set* concept in the MathOptInterface
 documentation.
@@ -50,7 +50,10 @@ Wasn't that easy! Let's unpack what happened, because just like
  1. The mathematical constraint ``2x \le 1`` was added to the model.
  2. A Julia variable called `con` was created that is a reference to the
     constraint.
- 3. JuMP set the *name* of the constraint to `"con"`.
+ 3. This Julia variable was stored in `model` and can be accessed by
+    `model[:con]`.
+ 4. JuMP set the name (the one that is shown when printing) of the constraint to
+    `"con"`.
 
 Just like the Julia variables created in [`@variable`](@ref), `con` can be bound
 to a different value. For example:
@@ -114,10 +117,10 @@ equality constraint, it depends on which direction is binding.
 
 !!! note
     JuMP's definition of duality is independent of the objective sense. That is,
-    the sign of the dual associated with a constraint depends on the direction
-    of the constraint and not whether the problem is maximization or
-    minimization. **This is different to traditional duality in linear
-    programming.**
+    the sign of feasible duals associated with a constraint depends on the
+    direction of the constraint and not whether the problem is maximization or
+    minimization. **This is different to linear programming duality in some
+    common textbooks.**
 
 The dual value associated with a constraint in the most recent solution can be
 accessed using the [`JuMP.dual`](@ref) function. You can use the
@@ -179,8 +182,8 @@ julia> JuMP.dual(con)
 
 To help users who may be less familiar with conic duality, JuMP provides the
 [`JuMP.shadow_price`](@ref) function which returns a value that can be
-interpreted as the improvement in the objective an infinitesimal relaxation (on
-the scale of one unit) in the right-hand side of the constraint.
+interpreted as the improvement in the objective in response to an infinitesimal
+relaxation (on the scale of one unit) in the right-hand side of the constraint.
 [`JuMP.shadow_price`](@ref) can only be used on linear constraints with a `<=`,
 `>=`, or `==` comparison operator.
 
@@ -195,7 +198,9 @@ julia> JuMP.shadow_price(con)
 To query the dual variables associated a variable bound, first obtain a
 constraint reference using one of [`JuMP.UpperBoundRef`](@ref),
 [`JuMP.LowerBoundRef`](@ref), or [`JuMP.FixRef`](@ref), and then call
-[`JuMP.dual`](@ref) on the returned constraint reference.
+[`JuMP.dual`](@ref) on the returned constraint reference. Note that in linear
+programming, the duals on variable bounds are also called the reduced costs
+(although the sign might differ from the one you expect).
 
 ```@meta
 DocTestSetup = quote
@@ -246,9 +251,10 @@ julia> @constraint(model, [i = 1:2], i * x <= i + 1)
 
 Just like [`@variable`](@ref), JuMP will form an `Array` of constraints when it
 can determine at parse time that the indices are one-based integer ranges.
-Therefore `con[1:b]` will create an `Array`, but `con[a:b]` will not. If JuMP
-cannot determine that the indices are one-based integer ranges (e.g., in the
-case of `con[a:b]`), JuMP will create a `JuMPArray` instead.
+Therefore `con[1:b]` will create an `Array`, but `con[a:b]` will not. A special
+case is `con[Base.OneTo(n)]` which will produce an `Array`. If JuMP cannot
+determine that the indices are one-based integer ranges (e.g., in the case of
+`con[a:b]`), JuMP will create a `JuMPArray` instead.
 
 ### JuMPArrays
 
@@ -404,7 +410,7 @@ julia> @constraint(model, x in MOI.SOS2([3.0, 1.0, 2.0]))
 ## Quadratic constraints
 
 In addition to affine functions, JuMP also supports constraints with quadratic
-terms. (For more general nonlinear functions, read [Nonlinear Modeling](@ref).)
+terms. (For more general nonlinear functions, see [Nonlinear Modeling](@ref).)
 For example:
 ```jldoctest con_quadratic; setup=:(model=Model())
 julia> @variable(model, x[i=1:2])
@@ -412,16 +418,17 @@ julia> @variable(model, x[i=1:2])
  x[1]
  x[2]
 
-julia> @variable(model, t)
+julia> @variable(model, t >= 0)
 t
 
 julia> @constraint(model, x[1]^2 + x[2]^2 <= t^2)
 x[1]² + x[2]² - t² <= 0.0
 ```
-Note that this quadratic constraint is equivalent to a second order cone
-constraint where `||x[1]^2 + x[2]^2||\_2 ≤ t` and `t ≥ 0`. Instead of writing
-out the quadratic expansion, we can pass JuMP the constraint in
-*function*-in-*set* form. To do so, we need to define the function and the set.
+Note that this quadratic constraint (including the lower bound on `t`) is
+equivalent to a second order cone constraint where `||x[1]^2 + x[2]^2||\_2 ≤ t`
+and `t ≥ 0`. Instead of writing out the quadratic expansion, we can pass JuMP
+the constraint in *function*-in-*set* form. To do so, we need to define the
+function and the set.
 
 The function is a vector of variables:
 ```jldoctest con_quadratic
