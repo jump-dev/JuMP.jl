@@ -4,10 +4,9 @@
 #  file, You can obtain one at http://mozilla.org/MPL/2.0/.
 
 function try_parse_idx_set(arg::Expr)
-    is_julia_v1 = @static (VERSION >= v"1.0-" ? true : false)
-    if is_julia_v1 && arg.head === :kw
-            @assert length(arg.args) == 2
-            return true, arg.args[1], arg.args[2]
+    if arg.head === :kw
+        @assert length(arg.args) == 2
+        return true, arg.args[1], arg.args[2]
     elseif arg.head === :(=)
         @assert length(arg.args) == 2
         return true, arg.args[1], arg.args[2]

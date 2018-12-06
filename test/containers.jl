@@ -102,10 +102,8 @@ end
 
     @testset "Range index set" begin
         A = @inferred JuMPArray([1.0,2.0], 2:3)
-        if VERSION >= v"0.7-"
-            @test size(A) == (2,)
-            @test size(A, 1) == 2
-        end
+        @test size(A) == (2,)
+        @test size(A, 1) == 2
         @test @inferred A[2] == 1.0
         @test A[3] == 2.0
         @test A[2,1] == 1.0
@@ -127,10 +125,8 @@ And data, a 2-element Array{Float64,1}:
 
     @testset "Symbol index set" begin
         A = @inferred JuMPArray([1.0,2.0], [:a, :b])
-        if VERSION >= v"0.7-"
-            @test size(A) == (2,)
-            @test size(A, 1) == 2
-        end
+        @test size(A) == (2,)
+        @test size(A, 1) == 2
         @test @inferred A[:a] == 1.0
         @test A[:b] == 2.0
         @test length.(Compat.axes(A)) == (2,)
@@ -148,11 +144,9 @@ And data, a 2-element Array{Float64,1}:
 
     @testset "Mixed range/symbol index sets" begin
         A = @inferred JuMPArray([1 2; 3 4], 2:3, [:a, :b])
-        if VERSION >= v"0.7-"
-            @test size(A) == (2, 2)
-            @test size(A, 1) == 2
-            @test size(A, 2) == 2
-        end
+        @test size(A) == (2, 2)
+        @test size(A, 1) == 2
+        @test size(A, 2) == 2
         @test length.(Compat.axes(A)) == (2,2)
         @test @inferred A[2,:a] == 1
         @test A[3,:a] == 3
@@ -173,20 +167,13 @@ And data, a 2×2 Array{$Int,2}:
     end
 
     @testset "4-dimensional JuMPArray" begin
-        if VERSION >= v"0.7-"
-            # TODO: This inference tests fails on 0.7. Investigate and fix.
-            A = JuMPArray(zeros(2,2,2,2), 2:3, [:a, :b], -1:0, ["a","b"])
-        else
-            A = @inferred JuMPArray(zeros(2,2,2,2), 2:3, [:a, :b], -1:0,
-                                    ["a","b"])
-        end
-        if VERSION >= v"0.7-"
-            @test size(A) == (2, 2, 2, 2)
-            @test size(A, 1) == 2
-            @test size(A, 2) == 2
-            @test size(A, 3) == 2
-            @test size(A, 4) == 2
-        end
+        # TODO: This inference tests fails on 0.7. Investigate and fix.
+        A = JuMPArray(zeros(2,2,2,2), 2:3, [:a, :b], -1:0, ["a","b"])
+        @test size(A) == (2, 2, 2, 2)
+        @test size(A, 1) == 2
+        @test size(A, 2) == 2
+        @test size(A, 3) == 2
+        @test size(A, 4) == 2
         A[2,:a,-1,"a"] = 1.0
         f = 0.0
         for I in eachindex(A)
@@ -196,8 +183,7 @@ And data, a 2×2 Array{$Int,2}:
         @test isassigned(A, 2, :a, -1, "a")
         @test A[:,:,-1,"a"] == JuMPArray([1.0 0.0; 0.0 0.0], 2:3, [:a,:b])
         @test_throws KeyError A[2,:a,-1,:a]
-        if VERSION >= v"0.7-"
-            @test sprint(show, A) == """
+        @test sprint(show, A) == """
 4-dimensional JuMPArray{Float64,4,...} with index sets:
     Dimension 1, 2:3
     Dimension 2, Symbol[:a, :b]
@@ -219,39 +205,13 @@ And data, a 2×2×2×2 Array{Float64,4}:
 [:, :, 0, "b"] =
  0.0  0.0
  0.0  0.0"""
-        else
-            @test sprint(show, A) == """
-4-dimensional JuMPArray{Float64,4,...} with index sets:
-    Dimension 1, 2:3
-    Dimension 2, Symbol[:a, :b]
-    Dimension 3, -1:0
-    Dimension 4, String["a", "b"]
-And data, a 2×2×2×2 Array{Float64,4}:
-[:, :, -1, "a"] =
- 1.0  0.0
- 0.0  0.0
-
-[:, :, 0, "a"] =
- 0.0  0.0
- 0.0  0.0
-
-[:, :, -1, "b"] =
- 0.0  0.0
- 0.0  0.0
-
-[:, :, 0, "b"] =
- 0.0  0.0
- 0.0  0.0"""
-        end
     end
 
     @testset "0-dimensional JuMPArray" begin
         a = Array{Int,0}(undef)
         a[] = 10
         A = JuMPArray(a)
-        if VERSION >= v"0.7-"
-            @test size(A) == tuple()
-        end
+        @test size(A) == tuple()
         @test A[] == 10
         A[] = 1
         @test sprint(show, A) == """
@@ -260,23 +220,21 @@ And data, a 0-dimensional Array{$Int,0}:
 1"""
     end
 
-    if VERSION >= v"0.7-"
-        @testset "JuMPArray keys" begin
-            A = JuMPArray([5.0 6.0; 7.0 8.0], 2:3, [:a,:b])
-            A_keys = collect(keys(A))
-            @test A[A_keys[3]] == 6.0
-            @test A[A_keys[4]] == 8.0
-            @test A_keys[3][1] == 2
-            @test A_keys[3][2] == :b
-            @test A_keys[4][1] == 3
-            @test A_keys[4][2] == :b
+    @testset "JuMPArray keys" begin
+        A = JuMPArray([5.0 6.0; 7.0 8.0], 2:3, [:a,:b])
+        A_keys = collect(keys(A))
+        @test A[A_keys[3]] == 6.0
+        @test A[A_keys[4]] == 8.0
+        @test A_keys[3][1] == 2
+        @test A_keys[3][2] == :b
+        @test A_keys[4][1] == 3
+        @test A_keys[4][2] == :b
 
-            B = JuMPArray([5.0 6.0; 7.0 8.0], 2:3, Set([:a,:b]))
-            B_keys = keys(B)
-            @test JuMP.JuMPArrayKey((2, :a)) in B_keys
-            @test JuMP.JuMPArrayKey((2, :b)) in B_keys
-            @test JuMP.JuMPArrayKey((3, :a)) in B_keys
-            @test JuMP.JuMPArrayKey((3, :b)) in B_keys
-        end
+        B = JuMPArray([5.0 6.0; 7.0 8.0], 2:3, Set([:a,:b]))
+        B_keys = keys(B)
+        @test JuMP.JuMPArrayKey((2, :a)) in B_keys
+        @test JuMP.JuMPArrayKey((2, :b)) in B_keys
+        @test JuMP.JuMPArrayKey((3, :a)) in B_keys
+        @test JuMP.JuMPArrayKey((3, :b)) in B_keys
     end
 end

@@ -8,11 +8,7 @@
 # let.
 function let_code_block(ex::Expr)
     @assert isexpr(ex, :let)
-    @static if VERSION >= v"0.7-"
-        return ex.args[2]
-    else
-        return ex.args[1]
-    end
+    return ex.args[2]
 end
 
 # generates code which converts an expression into a NodeData array (tape)

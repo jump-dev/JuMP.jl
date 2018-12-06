@@ -20,49 +20,34 @@ function buildrefsets(expr::Expr, cname)
     idxsets = Any[]
     # Creating an indexed set of refs
     refcall = Expr(:ref, cname)
-    @static if VERSION >= v"0.7-"
-        # On 0.7, :(t[i;j]) is a :ref, while t[i,j;j] is a :typed_vcat.
-        # In both cases :t is the first arg.
-        if isexpr(c, :typed_vcat) || isexpr(c, :ref)
-            popfirst!(c.args)
-        end
-        condition = :()
-        if isexpr(c, :vcat) || isexpr(c, :typed_vcat)
-            # Parameters appear as plain args at the end.
-            if length(c.args) > 2
-                error("Unsupported syntax $c.")
-            elseif length(c.args) == 2
-                condition = pop!(c.args)
-            end # else no condition.
-        elseif isexpr(c, :ref) || isexpr(c, :vect)
-            # Parameters appear at the front.
-            if isexpr(c.args[1], :parameters)
-                if length(c.args[1].args) != 1
-                    error("Invalid syntax: $c. Multiple semicolons are not " *
-                          "supported.")
-                end
-                condition = popfirst!(c.args).args[1]
+    # On 0.7, :(t[i;j]) is a :ref, while t[i,j;j] is a :typed_vcat.
+    # In both cases :t is the first arg.
+    if isexpr(c, :typed_vcat) || isexpr(c, :ref)
+        popfirst!(c.args)
+    end
+    condition = :()
+    if isexpr(c, :vcat) || isexpr(c, :typed_vcat)
+        # Parameters appear as plain args at the end.
+        if length(c.args) > 2
+            error("Unsupported syntax $c.")
+        elseif length(c.args) == 2
+            condition = pop!(c.args)
+        end # else no condition.
+    elseif isexpr(c, :ref) || isexpr(c, :vect)
+        # Parameters appear at the front.
+        if isexpr(c.args[1], :parameters)
+            if length(c.args[1].args) != 1
+                error("Invalid syntax: $c. Multiple semicolons are not " *
+                      "supported.")
             end
+            condition = popfirst!(c.args).args[1]
         end
-        if isexpr(c, :vcat) || isexpr(c, :typed_vcat) || isexpr(c, :ref)
-            if isexpr(c.args[1], :parameters)
-                @assert length(c.args[1].args) == 1
-                condition = popfirst!(c.args).args[1]
-            end # else no condition.
-        end
-    else
-        if isexpr(c, :typed_vcat) || isexpr(c, :ref)
-            popfirst!(c.args)
-        end
-        condition = :()
-        if isexpr(c, :vcat) || isexpr(c, :typed_vcat)
-            if isexpr(c.args[1], :parameters)
-                @assert length(c.args[1].args) == 1
-                condition = popfirst!(c.args).args[1]
-            else
-                condition = pop!(c.args)
-            end
-        end
+    end
+    if isexpr(c, :vcat) || isexpr(c, :typed_vcat) || isexpr(c, :ref)
+        if isexpr(c.args[1], :parameters)
+            @assert length(c.args[1].args) == 1
+            condition = popfirst!(c.args).args[1]
+        end # else no condition.
     end
 
     for s in c.args
@@ -737,69 +722,35 @@ for (mac,sym) in [(:constraints,  Symbol("@constraint")),
                   (:variables,Symbol("@variable")),
                   (:expressions, Symbol("@expression")),
                   (:NLexpressions, Symbol("@NLexpression"))]
-    if VERSION >= v"0.7-"
-        @eval begin
-            macro $mac(m, x)
-                x.head == :block || error("Invalid syntax for @",$(string(mac)))
-                @assert isa(x.args[1], LineNumberNode)
-                lastline = x.args[1]
-                code = quote end
-                for it in x.args
-                    if isa(it, LineNumberNode)
-                        lastline = it
-                    elseif isexpr(it, :tuple) # line with commas
-                        args = []
-                        # Keyword arguments have to appear like:
-                        # x, (start = 10, lower_bound = 5)
-                        # because of the precedence of "=".
-                        for ex in it.args
-                            if isexpr(ex, :tuple) # embedded tuple
-                                append!(args, ex.args)
-                            else
-                                push!(args, ex)
-                            end
+    @eval begin
+        macro $mac(m, x)
+            x.head == :block || error("Invalid syntax for @",$(string(mac)))
+            @assert isa(x.args[1], LineNumberNode)
+            lastline = x.args[1]
+            code = quote end
+            for it in x.args
+                if isa(it, LineNumberNode)
+                    lastline = it
+                elseif isexpr(it, :tuple) # line with commas
+                    args = []
+                    # Keyword arguments have to appear like:
+                    # x, (start = 10, lower_bound = 5)
+                    # because of the precedence of "=".
+                    for ex in it.args
+                        if isexpr(ex, :tuple) # embedded tuple
+                            append!(args, ex.args)
+                        else
+                            push!(args, ex)
                         end
-                        mac = esc(Expr(:macrocall, $(add_JuMP_prefix(sym)), lastline, m, args...))
-                        push!(code.args, mac)
-                    else # stand-alone symbol or expression
-                        push!(code.args, esc(Expr(:macrocall, $(add_JuMP_prefix(sym)), lastline, m, it)))
                     end
+                    mac = esc(Expr(:macrocall, $(add_JuMP_prefix(sym)), lastline, m, args...))
+                    push!(code.args, mac)
+                else # stand-alone symbol or expression
+                    push!(code.args, esc(Expr(:macrocall, $(add_JuMP_prefix(sym)), lastline, m, it)))
                 end
-                push!(code.args, :(nothing))
-                return code
             end
-        end
-    else
-        @eval begin
-            macro $mac(m, x)
-                x.head == :block || error("Invalid syntax for @",$(string(mac)))
-                @assert x.args[1].head == :line
-                code = quote end
-                for it in x.args
-                    if isexpr(it, :line)
-                        # do nothing
-                    elseif isexpr(it, :tuple) # line with commas
-                        args = []
-                        for ex in it.args
-                            if isexpr(ex, :tuple) # embedded tuple
-                                append!(args, ex.args)
-                            else
-                                push!(args, ex)
-                            end
-                        end
-                        args_esc = []
-                        for ex in args
-                            push!(args_esc, esc(ex))
-                        end
-                        mac = Expr(:macrocall,$(quot(sym)), esc(m), args_esc...)
-                        push!(code.args, mac)
-                    else # stand-alone symbol or expression
-                        push!(code.args,Expr(:macrocall,$(quot(sym)), esc(m), esc(it)))
-                    end
-                end
-                push!(code.args, :(nothing))
-                return code
-            end
+            push!(code.args, :(nothing))
+            return code
         end
     end
 end
@@ -1392,27 +1343,16 @@ macro variable(args...)
                 isexpr(_rng, :escape) ||
                     _error("Internal error 1")
                 rng = _rng.args[1] # undo escaping
-                if VERSION >= v"0.7-"
-                    (isexpr(rng,:call) && length(rng.args) == 3 && rng.args[1] == :(:) && rng.args[2] == 1) ||
-                        _error("Index sets for SDP variables must be ranges of the form 1:N")
-                else
-                    (isexpr(rng,:(:)) && rng.args[1] == 1 && length(rng.args) == 2) ||
-                        _error("Index sets for SDP variables must be ranges of the form 1:N")
-                end
+                (isexpr(rng,:call) && length(rng.args) == 3 && rng.args[1] == :(:) && rng.args[2] == 1) ||
+                    _error("Index sets for SDP variables must be ranges of the form 1:N")
             end
 
             if infoexpr.has_lb || infoexpr.has_ub
                 _error("Semidefinite or symmetric variables cannot be provided bounds")
             end
-            @static if VERSION >= v"0.7-"
-                # 1:3 is parsed as (:call, :, 1, 3)
-                dimension_check = :($(esc(idxsets[1].args[1].args[3])) ==
-                                    $(esc(idxsets[2].args[1].args[3])))
-            else
-                # 1:3 is parsed as (:, 1, 3)
-                dimension_check = :($(esc(idxsets[1].args[1].args[2])) ==
-                                    $(esc(idxsets[2].args[1].args[2])))
-            end
+            # 1:3 is parsed as (:call, :, 1, 3)
+            dimension_check = :($(esc(idxsets[1].args[1].args[3])) ==
+                                $(esc(idxsets[2].args[1].args[3])))
             creationcode = quote
                 $dimension_check || error("Cannot construct symmetric variables with nonsquare dimensions.")
                 $(getloopedcode(variable, code, condition, idxvars, idxsets, vartype, requestedcontainer; lowertri=symmetric))

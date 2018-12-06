@@ -51,14 +51,8 @@ function generatecontainer(T, indexvars, indexsets, requestedtype)
     onetosets = falses(length(indexsets))
     for (i,indexset) in enumerate(indexsets)
         s = isexpr(indexset,:escape) ? indexset.args[1] : indexset
-        if VERSION >= v"0.7-"
-            if isexpr(s,:call) && length(s.args) == 3 && s.args[1] == :(:) && s.args[2] == 1
-                onetosets[i] = true
-            end
-        else
-            if isexpr(s,:(:)) && length(s.args) == 2 && s.args[1] == 1
-                onetosets[i] = true
-            end
+        if isexpr(s,:call) && length(s.args) == 3 && s.args[1] == :(:) && s.args[2] == 1
+            onetosets[i] = true
         end
     end
 

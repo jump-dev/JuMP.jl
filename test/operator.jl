@@ -16,9 +16,7 @@ Base.zero(::Type{MySumType{T}}) where {T} = MySumType(zero(T))
 Base.zero(::MySumType{T}) where {T} = MySumType(zero(T))
 Base.transpose(t::MyType) = MyType(t.a)
 Base.transpose(t::MySumType) = MySumType(t.a)
-if VERSION >= v"0.7-"
-    Compat.LinearAlgebra.adjoint(t::MySumType) = t
-end
+Compat.LinearAlgebra.adjoint(t::MySumType) = t
 +(t1::MyT, t2::MyS) where {MyT<:Union{MyType, MySumType}, MyS<:Union{MyType, MySumType}} = MySumType(t1.a+t2.a)
 *(t1::MyType{S}, t2::T) where {S, T} = MyType(t1.a*t2)
 *(t1::S, t2::MyType{T}) where {S, T} = MyType(t1*t2.a)
@@ -501,10 +499,6 @@ function operators_test(ModelType::Type{<:JuMP.AbstractModel}, VariableRefType::
             @test_broken JuMP.isequal_canonical(A*X', B*X') # See https://github.com/JuliaOpt/JuMP.jl/issues/1276
             # TODO: Sparse matrix multiplication of JuMP objects doesn't work
             # yet.
-            if VERSION < v"0.7-"
-                @test JuMP.isequal_canonical(X'*A, X'*B)
-                @test JuMP.isequal_canonical(X'*X, copy(transpose(X))*X)
-            end
         end
 
         @testset "Dot-ops" begin
@@ -679,11 +673,7 @@ function operators_test(ModelType::Type{<:JuMP.AbstractModel}, VariableRefType::
         ElemT = MySumType{AffExprType}
         @test y isa Vector{ElemT}
         @test size(y) == (3,)
-        if VERSION >= v"0.7-"
-            @test z isa Adjoint{ElemT, <:Any}
-        else
-            @test z isa RowVector{ElemT, ConjArray{ElemT, 1, Vector{ElemT}}}
-        end
+        @test z isa Adjoint{ElemT, <:Any}
         @test size(z) == (1, 3)
         for i in 1:3
             # Q is symmetric

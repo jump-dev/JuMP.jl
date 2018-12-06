@@ -32,9 +32,7 @@ mutable struct MyModel <: JuMP.AbstractModel
             Dict{Symbol, Any}())
     end
 end
-if VERSION >= v"0.7-"
-    Base.broadcastable(model::MyModel) = Ref(model)
-end
+Base.broadcastable(model::MyModel) = Ref(model)
 
 JuMP.object_dictionary(model::MyModel) = model.obj_dict
 
@@ -45,9 +43,7 @@ struct MyVariableRef <: JuMP.AbstractVariableRef
 end
 Base.copy(v::MyVariableRef) = v
 Base.:(==)(v::MyVariableRef, w::MyVariableRef) = v.model === w.model && v.idx == w.idx
-if VERSION >= v"0.7-"
-    Base.broadcastable(v::MyVariableRef) = Ref(v)
-end
+Base.broadcastable(v::MyVariableRef) = Ref(v)
 JuMP.isequal_canonical(v::MyVariableRef, w::MyVariableRef) = v == w
 JuMP.variable_type(::MyModel) = MyVariableRef
 function JuMP.add_variable(m::MyModel, v::JuMP.AbstractVariable, name::String="")
@@ -229,11 +225,7 @@ end
 function JuMP.objective_function(m::MyModel, FT::Type)
     # InexactError should be thrown, this is needed in `objective.jl`
     if !(m.objective_function isa FT)
-        if VERSION < v"0.7-"
-            throw(InexactError())
-        else
-            throw(InexactError(:objective_function, FT, typeof(m.objective_function)))
-        end
+        throw(InexactError(:objective_function, FT, typeof(m.objective_function)))
     end
     m.objective_function
 end

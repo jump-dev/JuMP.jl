@@ -88,9 +88,7 @@ Base.one(::Type{GenericAffExpr{C,V}}) where {C,V}  = GenericAffExpr{C,V}(one(C),
 Base.zero(a::GenericAffExpr) = zero(typeof(a))
 Base.one( a::GenericAffExpr) =  one(typeof(a))
 Base.copy(a::GenericAffExpr) = GenericAffExpr(copy(a.constant), copy(a.terms))
-if VERSION >= v"0.7-"
-    Base.broadcastable(a::GenericAffExpr) = Ref(a)
-end
+Base.broadcastable(a::GenericAffExpr) = Ref(a)
 
 GenericAffExpr{C, V}() where {C, V} = zero(GenericAffExpr{C, V})
 
@@ -145,28 +143,21 @@ linear part of the affine expression.
 linear_terms(aff::GenericAffExpr) = LinearTermIterator(aff)
 
 
-if VERSION < v"0.7-"
-    reorder_iterator(p::Pair, state::Int) = ((p.second, p.first), state)
-    Base.start(lti::LinearTermIterator) = start(lti.aff.terms)
-    Base.done( lti::LinearTermIterator, state::Int) = done(lti.aff.terms, state)
-    Base.next( lti::LinearTermIterator, state::Int) = reorder_iterator(next(lti.aff.terms, state)...)
-else
-    reverse_pair_to_tuple(p::Pair) = (p.second, p.first)
-    function Base.iterate(lti::LinearTermIterator)
-        ret = iterate(lti.aff.terms)
-        if ret === nothing
-            return nothing
-        else
-            return reverse_pair_to_tuple(ret[1]), ret[2]
-        end
+reverse_pair_to_tuple(p::Pair) = (p.second, p.first)
+function Base.iterate(lti::LinearTermIterator)
+    ret = iterate(lti.aff.terms)
+    if ret === nothing
+        return nothing
+    else
+        return reverse_pair_to_tuple(ret[1]), ret[2]
     end
-    function Base.iterate(lti::LinearTermIterator, state)
-        ret = iterate(lti.aff.terms, state)
-        if ret === nothing
-            return nothing
-        else
-            return reverse_pair_to_tuple(ret[1]), ret[2]
-        end
+end
+function Base.iterate(lti::LinearTermIterator, state)
+    ret = iterate(lti.aff.terms, state)
+    if ret === nothing
+        return nothing
+    else
+        return reverse_pair_to_tuple(ret[1]), ret[2]
     end
 end
 Base.length(lti::LinearTermIterator) = length(lti.aff.terms)

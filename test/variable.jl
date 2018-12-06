@@ -43,11 +43,7 @@ function sliceof(VariableRefType, x, I, J, K)
         jj = 1
     end
     idx = [length(I)==1, length(J)==1, length(K)==1]
-    @static if VERSION < v"0.7.0-"
-        squeeze(y, tuple(findall(idx)...))
-    else
-        dropdims(y, dims=tuple(findall(idx)...))
-    end
+    dropdims(y, dims=tuple(findall(idx)...))
 end
 
 function test_variable_no_bound(ModelType, VariableRefType)
@@ -412,19 +408,12 @@ function test_variable_end_indexing(ModelType)
     model = ModelType()
     @variable(model, x[0:2, 1:4])
     @variable(model, z[0:2])
-    if VERSION >= v"0.7-"
-        @test x[end,1] == x[2, 1]
-        @test x[0, end-1] == x[0, 3]
-        @test z[end] == z[2]
-        # TODO: It is redirected to x[11] as it is the 11th element but linear
-        #       indexing is not supported
-        @test_throws KeyError x[end-1]
-    else
-        @test_throws ErrorException x[end,1]
-        @test_throws ErrorException x[end-1]
-        @test_throws ErrorException x[0, end-1]
-        @test_throws ErrorException z[end]
-    end
+    @test x[end,1] == x[2, 1]
+    @test x[0, end-1] == x[0, 3]
+    @test z[end] == z[2]
+    # TODO: It is redirected to x[11] as it is the 11th element but linear
+    #       indexing is not supported
+    @test_throws KeyError x[end-1]
 end
 
 function test_variable_unsigned_index(ModelType)

@@ -8,8 +8,6 @@
 # See http://github.com/JuliaOpt/JuMP.jl
 #############################################################################
 
-VERSION < v"0.7.0-beta2.199" && __precompile__()
-
 module JuMP
 
 using Compat
@@ -256,9 +254,7 @@ function direct_model(backend::MOI.ModelLike)
                  Dict{Symbol, Any}())
 end
 
-if VERSION >= v"0.7-"
-    Base.broadcastable(model::Model) = Ref(model)
-end
+Base.broadcastable(model::Model) = Ref(model)
 
 
 """
@@ -402,13 +398,11 @@ set_optimize_hook(model::Model, f) = (model.optimize_hook = f)
 abstract type AbstractJuMPScalar end
 
 
-@static if VERSION >= v"0.7-"
-    # These are required to create symmetric containers of AbstractJuMPScalars.
-    Compat.LinearAlgebra.symmetric_type(::Type{T}) where T <: AbstractJuMPScalar = T
-    Compat.LinearAlgebra.symmetric(scalar::AbstractJuMPScalar, ::Symbol) = scalar
-    # This is required for linear algebra operations involving transposes.
-    Compat.LinearAlgebra.adjoint(scalar::AbstractJuMPScalar) = scalar
-end
+# These are required to create symmetric containers of AbstractJuMPScalars.
+Compat.LinearAlgebra.symmetric_type(::Type{T}) where T <: AbstractJuMPScalar = T
+Compat.LinearAlgebra.symmetric(scalar::AbstractJuMPScalar, ::Symbol) = scalar
+# This is required for linear algebra operations involving transposes.
+Compat.LinearAlgebra.adjoint(scalar::AbstractJuMPScalar) = scalar
 
 """
     owner_model(s::AbstractJuMPScalar)
@@ -417,14 +411,8 @@ Return the model owning the scalar `s`.
 """
 function owner_model end
 
-if VERSION < v"0.7-"
-    Base.start(::AbstractJuMPScalar) = false
-    Base.next(x::AbstractJuMPScalar, state) = (x, true)
-    Base.done(::AbstractJuMPScalar, state) = state
-else
-    Base.iterate(x::AbstractJuMPScalar) = (x, true)
-    Base.iterate(::AbstractJuMPScalar, state) = nothing
-end
+Base.iterate(x::AbstractJuMPScalar) = (x, true)
+Base.iterate(::AbstractJuMPScalar, state) = nothing
 Base.isempty(::AbstractJuMPScalar) = false
 
 # Check if two arrays of AbstractJuMPScalars are equal. Useful for testing.
