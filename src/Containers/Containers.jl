@@ -11,14 +11,13 @@
 """
     Containers
 
-Module defining containers `DenseArray` and `SparseArray` that behaves as
-regular `AbstractArray` but with custom indexes that are not necessarily
-integers.
+Module defining the containers `SparseAxisArray` that behaves as a regular
+`AbstractArray` but with custom indexes that are not necessarily integers.
 """
 module Containers
 
 """
-    struct SparseArray{T,N} <: AbstractArray{T,N}
+    struct SparseAxisArray{T,N} <: AbstractArray{T,N}
         data::Dict{Tuple,T}
     end
 
@@ -27,39 +26,39 @@ entries are defined. The entries with indices `idx = (i1, i2, ..., iN)` in
 `keys(data)` has value `data[idx]`. Note that as opposed to
 `SparseArrays.AbstractSparseArray`, the missing entries are not assumed to be
 `zero(T)`, they are simply not part of the array. This means that the result of
-`map(f, sa::SparseArray)` or `f.(sa::SparseArray)` has the same sparsity
+`map(f, sa::SparseAxisArray)` or `f.(sa::SparseAxisArray)` has the same sparsity
 structure than `sa` even if `f(zero(T))` is not zero.
 """
-struct SparseArray{T,N} <: AbstractArray{T,N}
+struct SparseAxisArray{T,N} <: AbstractArray{T,N}
     data::Dict{Tuple,T}
 end
 
-Base.length(sa::SparseArray) = length(sa.data)
-Base.IteratorSize(::Type{<:SparseArray}) = Base.HasLength()
+Base.length(sa::SparseAxisArray) = length(sa.data)
+Base.IteratorSize(::Type{<:SparseAxisArray}) = Base.HasLength()
 # By default `IteratorSize` for `Generator{<:AbstractArray{T,N}}` is
 # `HasShape{N}`
-Base.IteratorSize(::Type{Base.Generator{<:SparseArray}}) = Base.HasLength()
+Base.IteratorSize(::Type{Base.Generator{<:SparseAxisArray}}) = Base.HasLength()
 # Needed in `collect_to_with_first!`
-Base.eachindex(g::Base.Generator{<:SparseArray}) = eachindex(g.iter)
+Base.eachindex(g::Base.Generator{<:SparseAxisArray}) = eachindex(g.iter)
 @static if VERSION < v"0.7-"
-    Base.start(sa::SparseArray) = start(values(sa.data))
-    Base.next(sa::SparseArray, state) = start(values(sa.data), state)
-    Base.done(sa::SparseArray, state) = start(values(sa.data), state)
+    Base.start(sa::SparseAxisArray) = start(values(sa.data))
+    Base.next(sa::SparseAxisArray, state) = start(values(sa.data), state)
+    Base.done(sa::SparseAxisArray, state) = start(values(sa.data), state)
 else
-    Base.iterate(sa::SparseArray, args...) = iterate(values(sa.data), args...)
+    Base.iterate(sa::SparseAxisArray, args...) = iterate(values(sa.data), args...)
 end
 
 # A `length` argument can be given because `IteratorSize` is `HasLength`
-function Base.similar(sa::SparseArray{S,N}, ::Type{T},
+function Base.similar(sa::SparseAxisArray{S,N}, ::Type{T},
                       length::Integer=0) where {S, T, N}
     d = Dict{Tuple,T}()
     if !iszero(length)
         sizehint!(d, length)
     end
-    return SparseArray{T,N}(d)
+    return SparseAxisArray{T,N}(d)
 end
 # The generic implementation uses `LinearIndices`
-function Base.collect_to_with_first!(dest::SparseArray, first_value, iterator,
+function Base.collect_to_with_first!(dest::SparseAxisArray, first_value, iterator,
                                      state)
     indices = eachindex(iterator)
     dest[first(indices)] = first_value
@@ -74,17 +73,17 @@ function Base.collect_to_with_first!(dest::SparseArray, first_value, iterator,
     return dest
 end
 
-function Base.mapreduce(f, op, sa::SparseArray)
+function Base.mapreduce(f, op, sa::SparseAxisArray)
     mapreduce(f, op, values(sa.data))
 end
-Base.:(==)(sa1::SparseArray, sa2::SparseArray) = sa1.data == sa2.data
+Base.:(==)(sa1::SparseAxisArray, sa2::SparseAxisArray) = sa1.data == sa2.data
 
 ########
 # Show #
 ########
 
-# Inspired from Julia SparseArrays stdlib package
-function Base.show(io::IO, ::MIME"text/plain", sa::SparseArray)
+# Inspired from Julia SparseAxisArrays stdlib package
+function Base.show(io::IO, ::MIME"text/plain", sa::SparseAxisArray)
     num_entries = length(sa.data)
     print(io, typeof(sa), " with ", num_entries, " stored ",
               isone(num_entries) ? "entry" : "entries")
@@ -93,8 +92,8 @@ function Base.show(io::IO, ::MIME"text/plain", sa::SparseArray)
         show(io, sa)
     end
 end
-Base.show(io::IO, x::SparseArray) = show(convert(IOContext, io), x)
-function Base.show(io::IOContext, x::SparseArray)
+Base.show(io::IO, x::SparseAxisArray) = show(convert(IOContext, io), x)
+function Base.show(io::IOContext, x::SparseAxisArray)
     # TODO: make this a one-line form
     if isempty(x)
         return show(io, MIME("text/plain"), x)
@@ -127,61 +126,61 @@ end
 function _colon_error() end
 function _colon_error(::Colon, args...)
     throw(ArgumentError("Indexing with `:` is not supported by" *
-                        " Containers.SparseArray"))
+                        " Containers.SparseAxisArray"))
 end
 _colon_error(arg, args...) = _colon_error(args...)
-function Base.setindex!(d::SparseArray, value, idx...)
+function Base.setindex!(d::SparseAxisArray, value, idx...)
     _colon_error(idx...)
     setindex!(d.data, value, idx)
 end
-function Base.getindex(d::SparseArray, idx...)
+function Base.getindex(d::SparseAxisArray, idx...)
     _colon_error(idx...)
     getindex(d.data, idx)
 end
-Base.eachindex(d::SparseArray) = keys(d.data)
+Base.eachindex(d::SparseAxisArray) = keys(d.data)
 
 # Need to define it as indices may be non-integers
-Base.to_index(d::SparseArray, idx) = idx
+Base.to_index(d::SparseAxisArray, idx) = idx
 
 # Arbitrary typed indices. Linear indexing not supported.
 struct IndexAnyCartesian <: Base.IndexStyle end
 Base.IndexStyle(::IndexAnyCartesian, ::IndexAnyCartesian) = IndexAnyCartesian()
-Base.IndexStyle(::Type{<:SparseArray}) = IndexAnyCartesian()
+Base.IndexStyle(::Type{<:SparseAxisArray}) = IndexAnyCartesian()
 # eachindex redirect to keys
-Base.keys(::IndexAnyCartesian, d::SparseArray) = keys(d)
+Base.keys(::IndexAnyCartesian, d::SparseAxisArray) = keys(d)
 
 ################
 # Broadcasting #
 ################
 
 # Need to define it as indices may be non-integers
-Base.Broadcast.newindex(d::SparseArray, idx) = idx
+Base.Broadcast.newindex(d::SparseAxisArray, idx) = idx
 
 struct BroadcastStyle{N} <: Broadcast.BroadcastStyle end
 function Base.BroadcastStyle(::BroadcastStyle, ::Base.BroadcastStyle)
-    throw(ArgumentError("Cannot broadcast Containers.SparseArray with another" *
+    throw(ArgumentError("Cannot broadcast Containers.SparseAxisArray with another" *
                         " array of different type"))
 end
-# Scalars can be used with SparseArray in broadcast
+# Scalars can be used with SparseAxisArray in broadcast
 Base.BroadcastStyle(::BroadcastStyle{N}, ::Base.Broadcast.DefaultArrayStyle{0}) where {N} = BroadcastStyle{N}()
-Base.BroadcastStyle(::Type{<:SparseArray{T, N}}) where {T, N} = BroadcastStyle{N}()
+Base.BroadcastStyle(::Type{<:SparseAxisArray{T, N}}) where {T, N} = BroadcastStyle{N}()
 function Base.similar(b::Base.Broadcast.Broadcasted{BroadcastStyle{N}}, ::Type{T}) where {T, N, Ax}
-    SparseArray{T, N}(Dict{Tuple, T}())
+    SparseAxisArray{T, N}(Dict{Tuple, T}())
 end
 
-# Check that all SparseArrays involved have the same indices. The other
+# Check that all `SparseAxisArray`s involved have the same indices. The other
 # arguments are scalars
 function check_same_eachindex(each_index) end
 check_same_eachindex(each_index, not_sa, args...) = check_same_eachindex(eachindex, args...)
-function check_same_eachindex(each_index, sa::SparseArray, args...)
+function check_same_eachindex(each_index, sa::SparseAxisArray, args...)
     if Set(each_index) != Set(eachindex(sa))
-        throw(ArgumentError("Cannot broadcast Containers.SparseArray with" *
+        throw(ArgumentError("Cannot broadcast Containers.SparseAxisArray with" *
                             " different indices"))
     end
     check_same_eachindex(eachindex, args...)
 end
 _eachindex(not_sa, args...) = _eachindex(args...)
-function _eachindex(sa::SparseArray, args...)
+function _eachindex(sa::SparseAxisArray, args...)
     each_index = eachindex(sa)
     check_same_eachindex(each_index, args...)
     return each_index
@@ -206,8 +205,9 @@ end
 # The generic implementation fall back to converting `bc` to
 # `Broadcasted{Nothing}`. It is advised in `Base` to define a custom method for
 # custom styles. The fallback for `Broadcasted{Nothing}` is not appropriate as
-# indices are not integers for `SparseArray`.
-function Base.copyto!(dest::SparseArray{T, N}, bc::Base.Broadcast.Broadcasted{BroadcastStyle{N}}) where {T, N}
+# indices are not integers for `SparseAxisArray`.
+function Base.copyto!(dest::SparseAxisArray{T, N},
+                      bc::Base.Broadcast.Broadcasted{BroadcastStyle{N}}) where {T, N}
     for key in eachindex(bc)
         dest[key] = bc[key]
     end

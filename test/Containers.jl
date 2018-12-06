@@ -3,8 +3,8 @@ using Compat.Test
 using JuMP
 
 @testset "Containers" begin
-    @testset "SparseArray" begin
-        SAInt1 = JuMP.Containers.SparseArray{Int, 1}
+    @testset "SparseAxisArray" begin
+        SAInt1 = JuMP.Containers.SparseAxisArray{Int, 1}
         d = SAInt1(Dict((:a,) => 1, (:b,) => 2))
         sqr(x) = x^2
         @testset "Colon indexing" begin
@@ -13,7 +13,7 @@ using JuMP
                 @test_throws ArgumentError d[:a, :]
             else
                 err = ArgumentError("Indexing with `:` is not supported by" *
-                                    " Containers.SparseArray")
+                                    " Containers.SparseAxisArray")
                 @test_throws err d[:, 1]
                 @test_throws err d[:a, :]
             end
@@ -39,8 +39,9 @@ using JuMP
                     @test_throws ArgumentError [1, 2] .+ d
                     @test_throws ArgumentError d .* [1, 2]
                 else
-                    err = ArgumentError("Cannot broadcast Containers.SparseArray" *
-                                        " with another array of different type")
+                    err = ArgumentError("Cannot broadcast" *
+                                        " Containers.SparseAxisArray with" *
+                                        " another array of different type")
                     @test_throws err [1, 2] .+ d
                     @test_throws err d .* [1, 2]
                 end
@@ -55,7 +56,7 @@ using JuMP
                     @test_throws ArgumentError d .+ da
                 else
                     err = ArgumentError("Cannot broadcast" *
-                        " Containers.SparseArray with different indices")
+                        " Containers.SparseAxisArray with different indices")
                     @test_throws err dc .+ d
                     @test_throws err d .+ dc
                     @test_throws err da .+ d
