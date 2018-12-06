@@ -1168,7 +1168,7 @@ The expression `varexpr` can either be
 
 * of the form `varname` creating a scalar real variable of name `varname`;
 * of the form `varname[...]` or `[...]` creating a container of variables (see
-  [Containers in macro](@ref).
+  [Containers in macros](@ref).
 
 The recognized positional arguments in `args` are the following:
 
@@ -1194,7 +1194,7 @@ The recognized keyword arguments in `kwargs` are the following:
 * `binary`: Sets whether the variable is binary or not.
 * `integer`: Sets whether the variable is integer or not.
 * `variable_type`: See the "Note for extending the variable macro" section below.
-* `container`: Specify the container type, see [Containers in macro](@ref).
+* `container`: Specify the container type, see [Containers in macros](@ref).
 
 ## Examples
 
@@ -1441,27 +1441,6 @@ macro variable(args...)
     end
     return assert_validmodel(model, macro_code)
 end
-
-# TODO: replace with a general macro that can construct any container type
-# macro constraintref(var)
-#     if isa(var,Symbol)
-#         # easy case
-#         return esc(:(local $var))
-#     else
-#         if !isexpr(var,:ref)
-#             error("Syntax error: Expected $var to be of form var[...]")
-#         end
-#
-#         varname = var.args[1]
-#         idxsets = var.args[2:end]
-#
-#         code = quote
-#             $(esc(gendict(varname, :ConstraintRef, idxsets...)))
-#             nothing
-#         end
-#         return code
-#     end
-# end
 
 # TODO: Add a docstring.
 macro NLobjective(model, sense, x)

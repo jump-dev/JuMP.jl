@@ -31,9 +31,72 @@ function build_lookup(ax)
     d
 end
 
+"""
+    JuMPArray(data::Array{T, N}, axes...) where {T, N}
+
+Construct a JuMP array with the underlying data specified by the `data` array
+and the given axes. Exactly `N` axes must be provided, and their lengths must
+match `size(data)` in the corresponding dimensions.
+
+# Example
+```jldoctest
+julia> array = JuMP.JuMPArray([1 2; 3 4], [:a, :b], 2:3)
+2-dimensional JuMPArray{Int64,2,...} with index sets:
+    Dimension 1, Symbol[:a, :b]
+    Dimension 2, 2:3
+And data, a 2×2 Array{Int64,2}:
+ 1  2
+ 3  4
+
+julia> array[:b, 3]
+4
+```
+"""
 function JuMPArray(data::Array{T,N}, axs...) where {T,N}
     @assert length(axs) == N
     return JuMPArray(data, axs, build_lookup.(axs))
+end
+
+"""
+    JuMPArray{T}(undef, axes...) where T
+
+Construct an uninitialized JuMPArray with element-type `T` indexed over the
+given axes.
+
+# Example
+```jldoctest
+julia> array = JuMP.JuMPArray{Float64}(undef, [:a, :b], 1:2);
+
+julia> fill!(array, 1.0)
+2-dimensional JuMPArray{Float64,2,...} with index sets:
+    Dimension 1, Symbol[:a, :b]
+    Dimension 2, 1:2
+And data, a 2×2 Array{Float64,2}:
+ 1.0  1.0
+ 1.0  1.0
+
+julia> array[:a, 2] = 5.0
+5.0
+
+julia> array[:a, 2]
+5.0
+
+julia> array
+2-dimensional JuMPArray{Float64,2,...} with index sets:
+    Dimension 1, Symbol[:a, :b]
+    Dimension 2, 1:2
+And data, a 2×2 Array{Float64,2}:
+ 1.0  5.0
+ 1.0  1.0
+```
+"""
+function JuMPArray{T}(::UndefInitializer, axs...) where T
+    return construct_undef_array(T, axs)
+end
+
+function construct_undef_array(::Type{T}, axs::Tuple{Vararg{Any, N}}
+                               ) where {T, N}
+    return JuMPArray(Array{T, N}(undef, length.(axs)...), axs...)
 end
 
 lookup_index(i, lookup::Dict) = isa(i, Colon) ? Colon() : lookup[i]
