@@ -19,22 +19,25 @@ using JuMP
                 @test_throws err d[:a, :]
             end
         end
+        d2 = @inferred SA(Dict((:a,) => 2, (:b,) => 4))
+        d3 = @inferred SA(Dict((:a,) => 3, (:b,) => 6))
+        dsqr = @inferred SA(Dict((:a,) => 1, (:b,) => 4))
         @testset "Map" begin
-            @test (@inferred map(x -> x * 3, d)) == SA(Dict((:a,) => 3, (:b,) => 6))
-            @test (@inferred map(x -> 3 * x, d)) == SA(Dict((:a,) => 3, (:b,) => 6))
-            @test (@inferred map(identity, d)) == d
-            @test (@inferred map(sqr, d)) == SA(Dict((:a,) => 1, (:b,) => 4))
+            @test d == @inferred map(identity, d)
+            @test dsqr == @inferred map(sqr, d)
+            @test d3 == @inferred map(x -> x * 3, d)
+            @test d3 == @inferred map(x -> 3 * x, d)
         end
         @testset "Reduce" begin
             @test 3 == @inferred sum(d)
         end
         @testset "Broadcasting" begin
-            @test (@inferred d .* d) == SA(Dict((:a,) => 1, (:b,) => 4))
-            @test (@inferred d .+ d) == SA(Dict((:a,) => 2, (:b,) => 4))
-            @test (@inferred d .* 3) == SA(Dict((:a,) => 3, (:b,) => 6))
-            @test (@inferred 3 .* d) == SA(Dict((:a,) => 3, (:b,) => 6))
-            @test identity.(d) == d
-            @test sqr.(d) == SA(Dict((:a,) => 1, (:b,) => 4))
+            @test dsqr == @inferred d .* d
+            @test d2 == @inferred d .+ d
+            @test d3 == @inferred d .* 3
+            @test d3 == @inferred 3 .* d
+            @test d == identity.(d)
+            @test dsqr == sqr.(d)
             @testset "Different array" begin
                 if VERSION < v"0.7-"
                     @test_throws ArgumentError [1, 2] .+ d
