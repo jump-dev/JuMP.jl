@@ -5,9 +5,12 @@
 
 function try_parse_idx_set(arg::Expr)
     # The parsing of `x[i=1]` changed from `i=1; getindex(x, 1)` to
-    # `getindex(x; i=1)` from Julia v0.7 to Julia v1
+    # `getindex(x; i=1)` from Julia v0.7 to Julia v1 so we need `:kw` for
+    # Julia v1.0 and :(=) for Julia v0.7
+    # The parsing of `[i=1]` is however still the same way so we need :(=) for
+    # both
     is_julia_v1 = @static (VERSION >= v"1.0-" ? true : false)
-    if (is_julia_v1 && arg.head === :kw) || (!is_julia_v1 && arg.head === :(=))
+    if (is_julia_v1 && arg.head === :kw) || arg.head === :(=)
         @assert length(arg.args) == 2
         return true, arg.args[1], arg.args[2]
     elseif isexpr(arg, :call) && arg.args[1] === :in
