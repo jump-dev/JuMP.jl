@@ -94,7 +94,7 @@ Helper function for macros to transform expression objects containing kernel cod
     4. `idxvars`: Names for the index variables for each loop, e.g. `[:i, gensym(), :k]`
     5. `idxsets`: Sets used to define iteration for each loop, e.g. `[1:3, [:red,:blue], S]`
     6. `sym`: A `Symbol`/`Expr` containing the element type of the container that is being iterated over, e.g. `:AffExpr` or `:VariableRef`
-    7. `requestedcontainer`: Argument that is passed through to `generatedcontainer`. Either `:Auto`, `:Array`, `:JuMPArray`, or `:Dict`.
+    7. `requestedcontainer`: Argument that is passed through to `generatedcontainer`. Either `:Auto`, `:Array`, `:JuMPArray`, or `:SparseAxisArray`.
     8. `lowertri`: `Bool` keyword argument that is `true` if the iteration is over a cartesian array and should only iterate over the lower triangular entries, filling upper triangular entries with copies, e.g. `x[1,3] === x[3,1]`, and `false` otherwise.
 """
 function getloopedcode(varname, code, condition, idxvars, idxsets, sym, requestedcontainer::Symbol; lowertri=false)
@@ -106,13 +106,17 @@ function getloopedcode(varname, code, condition, idxvars, idxsets, sym, requeste
 
     hascond = (condition != :())
 
-    requestedcontainer in [:Auto, :Array, :JuMPArray, :Dict] || return :(error("Invalid container type $container. Must be Auto, Array, JuMPArray, or Dict."))
+    if !(requestedcontainer in [:Auto, :Array, :JuMPArray, :SparseAxisArray])
+        return :(error("Invalid container type $container. Must be Auto, Array, JuMPArray, or SparseAxisArray."))
+    end
 
     if hascond
         if requestedcontainer == :Auto
-            requestedcontainer = :Dict
+            requestedcontainer = :SparseAxisArray
         elseif requestedcontainer == :Array || requestedcontainer == :JuMPArray
-            return :(error("Requested container type is incompatible with conditional indexing. Use :Dict or :Auto instead."))
+            return :(error("Requested container type is incompatible with ",
+                           "conditional indexing. Use :SparseAxisArray or ",
+                           ":Auto instead."))
         end
     end
     containercode, autoduplicatecheck = generatecontainer(sym, idxvars, idxsets, requestedcontainer)
@@ -1316,8 +1320,8 @@ macro variable(args...)
     else
         isa(var,Expr) || _error("Expected $var to be a variable name")
 
-        # We now build the code to generate the variables (and possibly the JuMPDict
-        # to contain them)
+        # We now build the code to generate the variables (and possibly the
+        # SparseAxisArray to contain them)
         refcall, idxvars, idxsets, condition = buildrefsets(var, variable)
         clear_dependencies(i) = (isdependent(idxvars,idxsets[i],i) ? () : idxsets[i])
 

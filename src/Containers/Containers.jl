@@ -40,13 +40,9 @@ Base.IteratorSize(::Type{<:SparseAxisArray}) = Base.HasLength()
 Base.IteratorSize(::Type{Base.Generator{<:SparseAxisArray}}) = Base.HasLength()
 # Needed in `collect_to_with_first!`
 Base.eachindex(g::Base.Generator{<:SparseAxisArray}) = eachindex(g.iter)
-@static if VERSION < v"0.7-"
-    Base.start(sa::SparseAxisArray) = start(values(sa.data))
-    Base.next(sa::SparseAxisArray, state) = start(values(sa.data), state)
-    Base.done(sa::SparseAxisArray, state) = start(values(sa.data), state)
-else
-    Base.iterate(sa::SparseAxisArray, args...) = iterate(values(sa.data), args...)
-end
+Base.iterate(sa::SparseAxisArray, args...) = iterate(values(sa.data), args...)
+# Used by JuMP.getloopedcode
+Base.haskey(sa::SparseAxisArray, idx) = haskey(sa.data, idx)
 
 # A `length` argument can be given because `IteratorSize` is `HasLength`
 function Base.similar(sa::SparseAxisArray{S,N,K}, ::Type{T},
@@ -63,11 +59,7 @@ function Base.collect_to_with_first!(dest::SparseAxisArray, first_value, iterato
     indices = eachindex(iterator)
     dest[first(indices)] = first_value
     for index in Iterators.drop(indices, 1)
-        @static if VERSION < v"0.7-"
-            element, state = next(iterator, state)
-        else
-            element, state = iterate(iterator, state)
-        end
+        element, state = iterate(iterator, state)
         dest[index] = element
     end
     return dest
