@@ -7,6 +7,7 @@
 # Make sure that our macros have good hygiene
 
 module M
+using LinearAlgebra
 using Test
 import JuMP
 
