@@ -123,8 +123,21 @@ end
 # Indexing #
 ############
 
-Base.setindex!(d::SparseArray, value, idx) = setindex!(d.data, value, idx)
-Base.getindex(d::SparseArray, idx) = getindex(d.data, idx)
+# Error for sa[..., :, ...]
+function _colon_error() end
+function _colon_error(::Colon, args...)
+    throw(ArgumentError("Indexing with `:` is not supported by" *
+                        " Containers.SparseArray"))
+end
+_colon_error(arg, args...) = _colon_error(args...)
+function Base.setindex!(d::SparseArray, value, idx...)
+    _colon_error(idx...)
+    setindex!(d.data, value, idx)
+end
+function Base.getindex(d::SparseArray, idx...)
+    _colon_error(idx...)
+    getindex(d.data, idx)
+end
 Base.eachindex(d::SparseArray) = keys(d.data)
 
 # Need to define it as indices may be non-integers

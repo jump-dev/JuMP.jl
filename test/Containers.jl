@@ -7,6 +7,17 @@ using JuMP
         SAInt1 = JuMP.Containers.SparseArray{Int, 1}
         d = SAInt1(Dict((:a,) => 1, (:b,) => 2))
         sqr(x) = x^2
+        @testset "Colon indexing" begin
+            if VERSION < v"0.7-"
+                @test_throws ArgumentError d[:, 1]
+                @test_throws ArgumentError d[:a, :]
+            else
+                err = ArgumentError("Indexing with `:` is not supported by" *
+                                    " Containers.SparseArray")
+                @test_throws err d[:, 1]
+                @test_throws err d[:a, :]
+            end
+        end
         @testset "Map" begin
             @test (@inferred map(x -> x * 3, d)) == SAInt1(Dict((:a,) => 3, (:b,) => 6))
             @test (@inferred map(x -> 3 * x, d)) == SAInt1(Dict((:a,) => 3, (:b,) => 6))
