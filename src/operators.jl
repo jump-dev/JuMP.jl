@@ -316,13 +316,13 @@ LinearAlgebra.dot(lhs::JuMPTypes, rhs::JuMPTypes) = lhs*rhs
 LinearAlgebra.dot(lhs::JuMPTypes, rhs::Number) = lhs*rhs
 LinearAlgebra.dot(lhs::Number, rhs::JuMPTypes) = lhs*rhs
 
-dot(lhs::AbstractVector{T}, rhs::AbstractVector{S}) where {T <: JuMPTypes, S <: JuMPTypes} = _dot(lhs,rhs)
-dot(lhs::AbstractVector{T}, rhs::AbstractVector{S}) where {T <: JuMPTypes, S} = _dot(lhs,rhs)
-dot(lhs::AbstractVector{T}, rhs::AbstractVector{S}) where {T, S <: JuMPTypes} = _dot(lhs,rhs)
+LinearAlgebra.dot(lhs::AbstractVector{T}, rhs::AbstractVector{S}) where {T <: JuMPTypes, S <: JuMPTypes} = _dot(lhs,rhs)
+LinearAlgebra.dot(lhs::AbstractVector{T}, rhs::AbstractVector{S}) where {T <: JuMPTypes, S} = _dot(lhs,rhs)
+LinearAlgebra.dot(lhs::AbstractVector{T}, rhs::AbstractVector{S}) where {T, S <: JuMPTypes} = _dot(lhs,rhs)
 
-dot(lhs::AbstractArray{T, N}, rhs::AbstractArray{S, N}) where {T <: JuMPTypes, S, N} = _dot(lhs,rhs)
-dot(lhs::AbstractArray{T, N}, rhs::AbstractArray{S, N}) where {T <: JuMPTypes, S <: JuMPTypes, N} = _dot(lhs,rhs)
-dot(lhs::AbstractArray{T, N}, rhs::AbstractArray{S, N}) where {T, S <: JuMPTypes, N} = _dot(lhs,rhs)
+LinearAlgebra.dot(lhs::AbstractArray{T, N}, rhs::AbstractArray{S, N}) where {T <: JuMPTypes, S, N} = _dot(lhs,rhs)
+LinearAlgebra.dot(lhs::AbstractArray{T, N}, rhs::AbstractArray{S, N}) where {T <: JuMPTypes, S <: JuMPTypes, N} = _dot(lhs,rhs)
+LinearAlgebra.dot(lhs::AbstractArray{T, N}, rhs::AbstractArray{S, N}) where {T, S <: JuMPTypes, N} = _dot(lhs,rhs)
 
 function _dot(lhs::AbstractArray{T}, rhs::AbstractArray{S}) where {T, S}
     size(lhs) == size(rhs) || error("Incompatible dimensions")
