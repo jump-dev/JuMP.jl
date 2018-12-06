@@ -28,6 +28,11 @@ used to specify the optimizer to be used:
 ```julia
 julia> model = Model(with_optimizer(GLPK.Optimizer))
 A JuMP Model
+Feasibility problem with:
+Variables: 0
+Model mode: Automatic
+CachingOptimizer state: NoOptimizer
+Solver name: No optimizer attached.
 ```
 
 ```@meta
