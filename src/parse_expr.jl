@@ -4,10 +4,10 @@
 #  file, You can obtain one at http://mozilla.org/MPL/2.0/.
 
 function try_parse_idx_set(arg::Expr)
-    if arg.head === :kw
-        @assert length(arg.args) == 2
-        return true, arg.args[1], arg.args[2]
-    elseif arg.head === :(=)
+    # The parsing of `x[i=1]` changed from `i=1; getindex(x, 1)` to
+    # `getindex(x; i=1)` from Julia v0.7 to Julia v1
+    is_julia_v1 = @static (VERSION >= v"1.0-" ? true : false)
+    if (is_julia_v1 && arg.head === :kw) || (!is_julia_v1 && arg.head === :(=))
         @assert length(arg.args) == 2
         return true, arg.args[1], arg.args[2]
     elseif isexpr(arg, :call) && arg.args[1] === :in
