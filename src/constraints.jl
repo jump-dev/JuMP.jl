@@ -106,9 +106,7 @@ struct ConstraintRef{M <: AbstractModel, C, Shape <: AbstractShape}
     shape::Shape
 end
 
-if VERSION >= v"0.7-"
-    Base.broadcastable(cref::ConstraintRef) = Ref(cref)
-end
+Base.broadcastable(cref::ConstraintRef) = Ref(cref)
 
 """
     name(v::ConstraintRef)

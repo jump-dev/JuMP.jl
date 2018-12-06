@@ -12,8 +12,7 @@
 
 using JuMP
 
-using Compat
-using Compat.Test
+using Test
 
 using MathOptInterface
 const MOI = MathOptInterface
@@ -96,24 +95,16 @@ function test_model()
             @test JuMP.backend(model) isa MOIU.CachingOptimizer
             @test !(JuMP.backend(model).optimizer isa MOI.Bridges.LazyBridgeOptimizer)
             @variable model x
-            if VERSION < v"0.7-"
-                @test_throws ErrorException @constraint model 0 <= x + 1 <= 1
-            else
-                err = ErrorException("Constraints of type MathOptInterface.ScalarAffineFunction{Float64}-in-MathOptInterface.Interval{Float64} are not supported by the solver, try using `bridge_constraints=true` in the `JuMP.Model` constructor if you believe the constraint can be reformulated to constraints supported by the solver.")
-                @test_throws err @constraint model 0 <= x + 1 <= 1
-            end
+            err = ErrorException("Constraints of type MathOptInterface.ScalarAffineFunction{Float64}-in-MathOptInterface.Interval{Float64} are not supported by the solver, try using `bridge_constraints=true` in the `JuMP.Model` constructor if you believe the constraint can be reformulated to constraints supported by the solver.")
+            @test_throws err @constraint model 0 <= x + 1 <= 1
         end
         @testset "No bridge automatically added in Direct mode" begin
             optimizer = MOIU.MockOptimizer(SimpleLPModel{Float64}())
             model = JuMP.direct_model(optimizer)
             @test !JuMP.bridge_constraints(model)
             @variable model x
-            if VERSION < v"0.7-"
-                @test_throws ErrorException @constraint model 0 <= x + 1 <= 1
-            else
-                err = ErrorException("Constraints of type MathOptInterface.ScalarAffineFunction{Float64}-in-MathOptInterface.Interval{Float64} are not supported by the solver.")
-                @test_throws err @constraint model 0 <= x + 1 <= 1
-            end
+            err = ErrorException("Constraints of type MathOptInterface.ScalarAffineFunction{Float64}-in-MathOptInterface.Interval{Float64} are not supported by the solver.")
+            @test_throws err @constraint model 0 <= x + 1 <= 1
         end
     end
 

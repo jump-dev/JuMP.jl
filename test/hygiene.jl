@@ -7,8 +7,8 @@
 # Make sure that our macros have good hygiene
 
 module M
-using Compat
-using Compat.Test
+using LinearAlgebra
+using Test
 import JuMP
 
 model = JuMP.Model()
@@ -17,7 +17,7 @@ JuMP.@variable(model, x >= 0)
 r = 3:5
 JuMP.@variable(model, y[i=r] <= i)
 JuMP.@variable(model, z[i=1:2, j=1:2], Symmetric)
-@test z isa Compat.LinearAlgebra.Symmetric
+@test z isa LinearAlgebra.Symmetric
 
 JuMP.@constraint(model, x + sum( j*y[j] for j=r ) <= 1)
 JuMP.@constraint(model, sum( y[j] for j=r if j == 4) <= 1)

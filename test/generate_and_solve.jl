@@ -286,11 +286,7 @@
         set_name(x[1,1], "x11")
         set_name(x[1,2], "x12")
         set_name(x[2,2], "x22")
-        @static if VERSION < v"0.7-"
-            @objective(m, Max, trace(x))
-        else
-            @objective(m, Max, tr(x))
-        end
+        @objective(m, Max, tr(x))
         var_psd = @constraint(m, x in PSDCone())
         set_name(var_psd, "var_psd")
         sym_psd = @constraint(m, Symmetric(x - [1.0 0.0; 0.0 1.0]) in PSDCone())

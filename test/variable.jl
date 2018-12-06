@@ -13,9 +13,8 @@
 
 using JuMP
 
-using Compat
-import Compat.LinearAlgebra: Symmetric
-using Compat.Test
+import LinearAlgebra: Symmetric
+using Test
 
 include("utilities.jl")
 @static if !(:JuMPExtension in names(Main))
@@ -43,11 +42,7 @@ function sliceof(VariableRefType, x, I, J, K)
         jj = 1
     end
     idx = [length(I)==1, length(J)==1, length(K)==1]
-    @static if VERSION < v"0.7.0-"
-        squeeze(y, tuple(findall(idx)...))
-    else
-        dropdims(y, dims=tuple(findall(idx)...))
-    end
+    dropdims(y, dims=tuple(findall(idx)...))
 end
 
 function test_variable_no_bound(ModelType, VariableRefType)
@@ -276,7 +271,7 @@ function test_variable_oneto_index_set(ModelType, VariableRefType)
     @test size(array_var) == (3, 2)
     jumparray_var = @variable(model, [Base.OneTo(3), 1:2], container=JuMPArray)
     @test jumparray_var isa JuMPArray{VariableRefType}
-    @test length.(Compat.axes(jumparray_var)) == (3, 2)
+    @test length.(axes(jumparray_var)) == (3, 2)
 end
 
 function test_variable_base_name_in_macro(ModelType)
@@ -412,19 +407,12 @@ function test_variable_end_indexing(ModelType)
     model = ModelType()
     @variable(model, x[0:2, 1:4])
     @variable(model, z[0:2])
-    if VERSION >= v"0.7-"
-        @test x[end,1] == x[2, 1]
-        @test x[0, end-1] == x[0, 3]
-        @test z[end] == z[2]
-        # TODO: It is redirected to x[11] as it is the 11th element but linear
-        #       indexing is not supported
-        @test_throws KeyError x[end-1]
-    else
-        @test_throws ErrorException x[end,1]
-        @test_throws ErrorException x[end-1]
-        @test_throws ErrorException x[0, end-1]
-        @test_throws ErrorException z[end]
-    end
+    @test x[end,1] == x[2, 1]
+    @test x[0, end-1] == x[0, 3]
+    @test z[end] == z[2]
+    # TODO: It is redirected to x[11] as it is the 11th element but linear
+    #       indexing is not supported
+    @test_throws KeyError x[end-1]
 end
 
 function test_variable_unsigned_index(ModelType)

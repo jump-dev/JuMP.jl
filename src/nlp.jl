@@ -846,7 +846,7 @@ function hessian_slice(d, ex, x, H, scale, nzcount, recovery_tmp_storage,::Type{
     #output_slice = view(H, (nzcount+1):(nzcount+nzthis))
     output_slice = VectorView(nzcount, nzthis, pointer(H))
     Coloring.recover_from_matmat!(output_slice, R, ex.rinfo, recovery_tmp_storage)
-    Compat.rmul!(output_slice, scale)
+    rmul!(output_slice, scale)
     return nzthis
 
 end

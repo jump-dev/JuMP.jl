@@ -59,9 +59,7 @@ end
 Base.zero(q::GenericQuadExpr) = zero(typeof(q))
 Base.one(q::GenericQuadExpr)  = one(typeof(q))
 Base.copy(q::GenericQuadExpr) = GenericQuadExpr(copy(q.aff), copy(q.terms))
-if VERSION >= v"0.7-"
-    Base.broadcastable(q::GenericQuadExpr) = Ref(q)
-end
+Base.broadcastable(q::GenericQuadExpr) = Ref(q)
 
 function map_coefficients_inplace!(f::Function, q::GenericQuadExpr)
     # The iterator remains valid if existing elements are updated.
@@ -107,29 +105,23 @@ function reorder_iterator(p::Pair{UnorderedPair{V},C}, state::Int) where {C,V}
     return ((p.second, p.first.a, p.first.b), state)
 end
 
-if VERSION < v"0.7-"
-    Base.start(qti::QuadTermIterator) = start(qti.quad.terms)
-    Base.done(qti::QuadTermIterator, state::Int) = done(qti.quad.terms, state)
-    Base.next(qti::QuadTermIterator, state::Int) = reorder_iterator(next(qti.quad.terms, state)...)
-else
-    function reorder_and_flatten(p::Pair{<:UnorderedPair})
-        return (p.second, p.first.a, p.first.b)
+function reorder_and_flatten(p::Pair{<:UnorderedPair})
+    return (p.second, p.first.a, p.first.b)
+end
+function Base.iterate(qti::QuadTermIterator)
+    ret = iterate(qti.quad.terms)
+    if ret === nothing
+        return nothing
+    else
+        return reorder_and_flatten(ret[1]), ret[2]
     end
-    function Base.iterate(qti::QuadTermIterator)
-        ret = iterate(qti.quad.terms)
-        if ret === nothing
-            return nothing
-        else
-            return reorder_and_flatten(ret[1]), ret[2]
-        end
-    end
-    function Base.iterate(qti::QuadTermIterator, state)
-        ret = iterate(qti.quad.terms, state)
-        if ret === nothing
-            return nothing
-        else
-            return reorder_and_flatten(ret[1]), ret[2]
-        end
+end
+function Base.iterate(qti::QuadTermIterator, state)
+    ret = iterate(qti.quad.terms, state)
+    if ret === nothing
+        return nothing
+    else
+        return reorder_and_flatten(ret[1]), ret[2]
     end
 end
 Base.length(qti::QuadTermIterator) = length(qti.quad.terms)
@@ -181,7 +173,7 @@ end
 
 Base.hash(quad::GenericQuadExpr, h::UInt) = hash(quad.aff, hash(quad.terms, h))
 
-function Compat.SparseArrays.dropzeros(quad::GenericQuadExpr)
+function SparseArrays.dropzeros(quad::GenericQuadExpr)
     quad_terms = copy(quad.terms)
     for (key, value) in quad.terms
         if iszero(value)

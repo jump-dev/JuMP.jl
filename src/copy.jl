@@ -54,9 +54,7 @@ function Base.getindex(reference_map::ReferenceMap, cref::ConstraintRef)
                          reference_map.index_map[index(cref)],
                          cref.shape)
 end
-if VERSION >= v"0.7-"
-    Base.broadcastable(reference_map::ReferenceMap) = Ref(reference_map)
-end
+Base.broadcastable(reference_map::ReferenceMap) = Ref(reference_map)
 
 
 """

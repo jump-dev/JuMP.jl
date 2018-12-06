@@ -4,11 +4,13 @@
 #  file, You can obtain one at http://mozilla.org/MPL/2.0/.
 
 function try_parse_idx_set(arg::Expr)
+    # The parsing of `x[i=1]` changed from `i=1; getindex(x, 1)` to
+    # `getindex(x; i=1)` from Julia v0.7 to Julia v1 so we need `:kw` for
+    # Julia v1.0 and :(=) for Julia v0.7
+    # The parsing of `[i=1]` is however still the same way so we need :(=) for
+    # both
     is_julia_v1 = @static (VERSION >= v"1.0-" ? true : false)
-    if is_julia_v1 && arg.head === :kw
-            @assert length(arg.args) == 2
-            return true, arg.args[1], arg.args[2]
-    elseif arg.head === :(=)
+    if (is_julia_v1 && arg.head === :kw) || arg.head === :(=)
         @assert length(arg.args) == 2
         return true, arg.args[1], arg.args[2]
     elseif isexpr(arg, :call) && arg.args[1] === :in
@@ -502,8 +504,8 @@ function parseExpr(x, aff::Symbol, lcoeffs::Vector, rcoeffs::Vector, newaff::Sym
                 error("Unexpected comparison in expression $x.")
             end
             if has_assignment_in_ref(x)
-                Compat.@warn "Unexpected assignment in expression $x. This " *
-                             "will become a syntax error in a future release."
+                @warn "Unexpected assignment in expression $x. This will" *
+                             " become a syntax error in a future release."
             end
             callexpr = Expr(:call,:destructive_add_with_reorder!,aff,lcoeffs...,esc(x),rcoeffs...)
             return newaff, :($newaff = $callexpr)

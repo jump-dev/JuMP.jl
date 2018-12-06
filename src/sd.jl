@@ -109,7 +109,7 @@ var_psd = @constraint model Q in PSDCone()
 function build_constraint(_error::Function, Q::Symmetric{V, M},
                           ::PSDCone) where {V <: AbstractJuMPScalar,
                                             M <: AbstractMatrix{V}}
-    n = Compat.LinearAlgebra.checksquare(Q)
+    n = LinearAlgebra.checksquare(Q)
     VectorConstraint([Q[i, j] for j in 1:n for i in 1:j],
                      MOI.PositiveSemidefiniteConeTriangle(n),
                      SymmetricMatrixShape(n))
@@ -142,7 +142,7 @@ var_psd = @constraint model Q in PSDCone()
 function build_constraint(_error::Function,
                           Q::AbstractMatrix{<:AbstractJuMPScalar},
                           ::PSDCone)
-    n = Compat.LinearAlgebra.checksquare(Q)
+    n = LinearAlgebra.checksquare(Q)
     VectorConstraint(vec(Q),
                      MOI.PositiveSemidefiniteConeSquare(n),
                      SquareMatrixShape(n))

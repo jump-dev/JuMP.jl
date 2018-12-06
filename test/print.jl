@@ -12,8 +12,7 @@
 #############################################################################
 using MathOptInterface
 using JuMP
-using Compat
-using Compat.Test
+using Test
 import JuMP.REPLMode, JuMP.IJuliaMode
 
 # Helper function to test IO methods work correctly

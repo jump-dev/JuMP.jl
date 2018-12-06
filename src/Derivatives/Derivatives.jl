@@ -1,8 +1,7 @@
 module Derivatives
 
-using Compat
-using Compat.LinearAlgebra
-using Compat.SparseArrays
+using LinearAlgebra
+using SparseArrays
 
 using Base.Meta
 using ForwardDiff

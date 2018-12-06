@@ -203,13 +203,9 @@ end
             @test_throws ErrorException x[i=1]
             @test_throws ErrorException @constraint(m, x[i=1] <= 1)
         else
-            @static if VERSION >= v"0.7-"
-                # https://github.com/JuliaLang/julia/issues/25612
-                @test_logs((:warn, r"Unexpected assignment"),
-                           macroexpand(JuMP, :(@constraint(m, x[i=1] <= 1))))
-            else
-                @test_warn "Unexpected assignment" macroexpand(:(@constraint(m, x[i=1] <= 1)))
-            end
+            # https://github.com/JuliaLang/julia/issues/25612
+            @test_logs((:warn, r"Unexpected assignment"),
+                       macroexpand(JuMP, :(@constraint(m, x[i=1] <= 1))))
         end
     end
 

@@ -4,7 +4,6 @@ os:
 #   - osx # Disable to speed up CI. JuMP has no binary dependency so the result
           # with osx and linux should be similar.
 julia:
-    - 0.6
     - 0.7
     - 1.0
 # This is left as an example for the next big version switch.

@@ -150,92 +150,80 @@ Base.setindex!(A::JuMPArray, v, idx::CartesianIndex) = A.data[idx] = v
 
 # AbstractArray interface
 
-if VERSION < v"0.7-"
-    # We don't define size because it causes 'end' to behave incorrectly. Better
-    # to error.
-    Base.size(A::JuMPArray) = error("JuMPArray does not define size().")
-    Base.linearindices(A::JuMPArray) = error("JuMPArray does not support this operation.")
-    Base.indices(A::JuMPArray) = A.axes
-else
-    Base.size(A::JuMPArray) = size(A.data)
-    Base.LinearIndices(A::JuMPArray) = error("JuMPArray does not support this operation.")
-    Base.axes(A::JuMPArray) = A.axes
-    Base.CartesianIndices(a::JuMPArray) = CartesianIndices(a.data)
-    """
-        JuMPArrayKey
+Base.size(A::JuMPArray) = size(A.data)
+Base.LinearIndices(A::JuMPArray) = error("JuMPArray does not support this operation.")
+Base.axes(A::JuMPArray) = A.axes
+Base.CartesianIndices(a::JuMPArray) = CartesianIndices(a.data)
+"""
+    JuMPArrayKey
 
-    Structure to hold a JuMPArray key when it is viewed as key-value collection.
-    """
-    struct JuMPArrayKey{T<:Tuple}
-        I::T
-    end
-    Base.getindex(k::JuMPArrayKey, args...) = getindex(k.I, args...)
-
-    struct JuMPArrayKeys{T<:Tuple}
-        product_iter::Base.Iterators.ProductIterator{T}
-    end
-    function Base.iterate(iter::JuMPArrayKeys)
-        next = iterate(iter.product_iter)
-        return next == nothing ? nothing : (JuMPArrayKey(next[1]), next[2])
-    end
-    function Base.iterate(iter::JuMPArrayKeys, state)
-        next = iterate(iter.product_iter, state)
-        return next == nothing ? nothing : (JuMPArrayKey(next[1]), next[2])
-    end
-    Base.length(iter::JuMPArrayKeys) = length(iter.product_iter)
-    function Base.eltype(iter::JuMPArrayKeys)
-        return JuMPArrayKey{eltype(iter.product_iter)}
-    end
-    function Base.keys(a::JuMPArray)
-        return JuMPArrayKeys(Base.Iterators.product(a.axes...))
-    end
-    Base.getindex(a::JuMPArray, k::JuMPArrayKey) = a[k.I...]
+Structure to hold a JuMPArray key when it is viewed as key-value collection.
+"""
+struct JuMPArrayKey{T<:Tuple}
+    I::T
 end
+Base.getindex(k::JuMPArrayKey, args...) = getindex(k.I, args...)
+
+struct JuMPArrayKeys{T<:Tuple}
+    product_iter::Base.Iterators.ProductIterator{T}
+end
+function Base.iterate(iter::JuMPArrayKeys)
+    next = iterate(iter.product_iter)
+    return next == nothing ? nothing : (JuMPArrayKey(next[1]), next[2])
+end
+function Base.iterate(iter::JuMPArrayKeys, state)
+    next = iterate(iter.product_iter, state)
+    return next == nothing ? nothing : (JuMPArrayKey(next[1]), next[2])
+end
+Base.length(iter::JuMPArrayKeys) = length(iter.product_iter)
+function Base.eltype(iter::JuMPArrayKeys)
+    return JuMPArrayKey{eltype(iter.product_iter)}
+end
+function Base.keys(a::JuMPArray)
+    return JuMPArrayKeys(Base.Iterators.product(a.axes...))
+end
+Base.getindex(a::JuMPArray, k::JuMPArrayKey) = a[k.I...]
 
 # Arbitrary typed indices. Linear indexing not supported.
 struct IndexAnyCartesian <: Base.IndexStyle end
 Base.IndexStyle(::Type{JuMPArray{T,N,Ax}}) where {T,N,Ax} = IndexAnyCartesian()
 
-@static if VERSION < v"0.7-"
-    Base.broadcast(f::Function, A::JuMPArray) = JuMPArray(broadcast(f, A.data), A.axes, A.lookup)
-else
-    # This implementation follows the instructions at
-    # https://docs.julialang.org/en/latest/manual/interfaces/#man-interfaces-broadcasting-1
-    # for implementing broadcast. We eagerly evaluate expressions involving
-    # JuMPArrays, overriding operation fusion.  For now, nested (fused)
-    # broadcasts like f.(A .+ 1) don't work, and we don't support broadcasts
-    # where multiple JuMPArrays appear. This is a stopgap solution to get tests
-    # passing on Julia 0.7 and leaves lots of room for improvement.
-    struct JuMPArrayBroadcastStyle <: Broadcast.BroadcastStyle end
-    Base.BroadcastStyle(::Type{<:JuMPArray}) = JuMPArrayBroadcastStyle()
-    function Base.Broadcast.broadcasted(::JuMPArrayBroadcastStyle, f, args...)
-        array = find_jump_array(args)
-        if sum(arg isa JuMPArray for arg in args) > 1
-            error("Broadcast operations with multiple JuMPArrays are not yet " *
-                  "supported.")
-        end
-        result_data = broadcast(f, unpack_jump_array(args)...)
-        return JuMPArray(result_data, array.axes, array.lookup)
+# This implementation follows the instructions at
+# https://docs.julialang.org/en/latest/manual/interfaces/#man-interfaces-broadcasting-1
+# for implementing broadcast. We eagerly evaluate expressions involving
+# JuMPArrays, overriding operation fusion.  For now, nested (fused)
+# broadcasts like f.(A .+ 1) don't work, and we don't support broadcasts
+# where multiple JuMPArrays appear. This is a stopgap solution to get tests
+# passing on Julia 0.7 and leaves lots of room for improvement.
+struct JuMPArrayBroadcastStyle <: Broadcast.BroadcastStyle end
+Base.BroadcastStyle(::Type{<:JuMPArray}) = JuMPArrayBroadcastStyle()
+function Base.Broadcast.broadcasted(::JuMPArrayBroadcastStyle, f, args...)
+    array = find_jump_array(args)
+    if sum(arg isa JuMPArray for arg in args) > 1
+        error("Broadcast operations with multiple JuMPArrays are not yet " *
+              "supported.")
     end
-    function find_jump_array(args::Tuple)
-        return find_jump_array(args[1], Base.tail(args))
-    end
-    find_jump_array(array::JuMPArray, rest) = array
-    find_jump_array(::Any, rest) = find_jump_array(rest)
-    function find_jump_array(broadcasted::Broadcast.Broadcasted)
-        error("Unsupported nested broadcast operation. JuMPArray supports " *
-              "only simple broadcast operations like f.(A) but not f.(A .+ 1).")
-    end
-
-    function unpack_jump_array(args::Tuple)
-        return unpack_jump_array(args[1], Base.tail(args))
-    end
-    unpack_jump_array(args::Tuple{}) = ()
-    function unpack_jump_array(array::JuMPArray, rest)
-        return (array.data, unpack_jump_array(rest)...)
-    end
-    unpack_jump_array(other::Any, rest) = (other, unpack_jump_array(rest)...)
+    result_data = broadcast(f, unpack_jump_array(args)...)
+    return JuMPArray(result_data, array.axes, array.lookup)
 end
+function find_jump_array(args::Tuple)
+    return find_jump_array(args[1], Base.tail(args))
+end
+find_jump_array(array::JuMPArray, rest) = array
+find_jump_array(::Any, rest) = find_jump_array(rest)
+function find_jump_array(broadcasted::Broadcast.Broadcasted)
+    error("Unsupported nested broadcast operation. JuMPArray supports " *
+          "only simple broadcast operations like f.(A) but not f.(A .+ 1).")
+end
+
+function unpack_jump_array(args::Tuple)
+    return unpack_jump_array(args[1], Base.tail(args))
+end
+unpack_jump_array(args::Tuple{}) = ()
+function unpack_jump_array(array::JuMPArray, rest)
+    return (array.data, unpack_jump_array(rest)...)
+end
+unpack_jump_array(other::Any, rest) = (other, unpack_jump_array(rest)...)
 
 Base.isempty(A::JuMPArray) = isempty(A.data)
 
@@ -293,7 +281,7 @@ function Base.show_nd(io::IO, a::JuMPArray, print_matrix::Function, label_slices
     if isempty(a)
         return
     end
-    tailinds = Base.tail(Base.tail(Compat.axes(a.data)))
+    tailinds = Base.tail(Base.tail(axes(a.data)))
     nd = ndims(a)-2
     for I in CartesianIndices(tailinds)
         idxs = I.I
@@ -326,7 +314,7 @@ function Base.show_nd(io::IO, a::JuMPArray, print_matrix::Function, label_slices
             show(io, a.axes[end][idxs[end]])
             println(io, "] =")
         end
-        slice = view(a.data, Compat.axes(a.data,1), Compat.axes(a.data,2),
+        slice = view(a.data, axes(a.data,1), axes(a.data,2),
                      idxs...)
         Base.print_matrix(io, slice)
         print(io, idxs == map(last,tailinds) ? "" : "\n\n")
@@ -334,54 +322,9 @@ function Base.show_nd(io::IO, a::JuMPArray, print_matrix::Function, label_slices
     end
 end
 
-@static if VERSION >= v"0.7-"
-    function Base.show(io::IO, array::JuMPArray)
-        summary(io, array)
-        isempty(array) && return
-        println(io, ":")
-        Base.print_array(io, array)
-    end
-else
-    function Base.showarray(io::IO, X::JuMPArray, repr::Bool = true; header = true)
-        repr = false
-        #if repr && ndims(X) == 1
-        #    return Base.show_vector(io, X, "[", "]")
-        #end
-        if !haskey(io, :compact)
-            io = IOContext(io, :compact => true)
-        end
-        if !repr && get(io, :limit, false) && eltype(X) === Method
-            # override usual show method for Vector{Method}: don't abbreviate long lists
-            io = IOContext(io, :limit => false)
-        end
-        (!repr && header) && print(io, summary(X))
-        if !isempty(X.data)
-            (!repr && header) && println(io, ":")
-            if ndims(X.data) == 0
-                if isassigned(X.data)
-                    return show(io, X.data[])
-                else
-                    return print(io, undef_ref_str)
-                end
-            end
-            #if repr
-            #    if ndims(X.data) <= 2
-            #        Base.print_matrix_repr(io, X)
-            #    else
-            #        show_nd(io, X, print_matrix_repr, false)
-            #    end
-            #else
-            punct = (" ", "  ", "")
-            if ndims(X.data) <= 2
-                Base.print_matrix(io, X.data, punct...)
-            else
-                Base.show_nd(io, X,
-                        (io, slice) -> Base.print_matrix(io, slice, punct...),
-                        !repr)
-            end
-            #end
-        elseif repr
-            Base.repremptyarray(io, X.data)
-        end
-    end
+function Base.show(io::IO, array::JuMPArray)
+    summary(io, array)
+    isempty(array) && return
+    println(io, ":")
+    Base.print_array(io, array)
 end

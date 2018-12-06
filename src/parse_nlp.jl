@@ -8,11 +8,7 @@
 # let.
 function let_code_block(ex::Expr)
     @assert isexpr(ex, :let)
-    @static if VERSION >= v"0.7-"
-        return ex.args[2]
-    else
-        return ex.args[1]
-    end
+    return ex.args[2]
 end
 
 # generates code which converts an expression into a NodeData array (tape)
@@ -220,13 +216,12 @@ expression_complexity(other) = 1
 function processNLExpr(model, ex)
     # This is an arbitrary cutoff. See issue #1355.
     if expression_complexity(ex) > 5000
-        Compat.@warn "Processing a very large nonlinear expression with " *
-                     "@NLexpression/@NLconstraint/@NLobjective. This may be " *
-                     "very slow. Consider using setNLobjective() and " *
-                     "addNLconstraint() instead of the macros or " *
-                     "reformulating the expressions using sum() and prod() " *
-                     "to make them more compact. The macros are designed to " *
-                     "process smaller, human-readable expressions."
+        @warn "Processing a very large nonlinear expression with " *
+              "@NLexpression/@NLconstraint/@NLobjective. This may be very " *
+              "slow. Consider using setNLobjective() and addNLconstraint() " *
+              "instead of the macros or reformulating the expressions using " *
+              "sum() and prod() to make them more compact. The macros are " *
+              "designed to process smaller, human-readable expressions."
     end
     parsed = parseNLExpr(model, ex, :tape, -1, :values)
     return quote

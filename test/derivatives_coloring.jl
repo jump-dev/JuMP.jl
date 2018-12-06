@@ -1,5 +1,4 @@
-using Compat
-using Compat.Test
+using Test
 
 import JuMP.Derivatives.Coloring: acyclic_coloring, recovery_preprocess,
                                   reverse_topological_sort_by_dfs,

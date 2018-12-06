@@ -22,8 +22,7 @@
 # separately from the solver, as it is for everything except NLP.
 
 using Ipopt, JuMP
-using Compat
-using Compat.Test
+using Test
 using MathOptInterface
 const MOI = MathOptInterface
 
