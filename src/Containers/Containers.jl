@@ -80,8 +80,8 @@ Base.:(==)(sa1::SparseAxisArray, sa2::SparseAxisArray) = sa1.data == sa2.data
 # Inspired from Julia SparseAxisArrays stdlib package
 function Base.show(io::IO, ::MIME"text/plain", sa::SparseAxisArray)
     num_entries = length(sa.data)
-    print(io, typeof(sa), " with ", num_entries, " stored ",
-              isone(num_entries) ? "entry" : "entries")
+    print(io, typeof(sa), " with ", num_entries,
+              isone(num_entries) ? " entry" : " entries")
     if !iszero(num_entries)
         println(io, ":")
         show(io, sa)
