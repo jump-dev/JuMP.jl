@@ -274,7 +274,7 @@ And data, a 2×2 Array{ConstraintRef{Model,C,Shape} where Shape<:JuMP.AbstractSh
 ### Dictionaries
 
 The syntax for constructing a dictionary of constraints is very similar to the
-[syntax for constructing](@ref variable_dictionaries) a dictionary of variables.
+[syntax for constructing](@ref sparseaxisarrays) a dictionary of variables.
 
 ```jldoctest constraint_jumparrays; setup=:(model=Model(); @variable(model, x))
 julia> @constraint(model, con[i = 1:2, j = 1:2; i != j], i * x <= j + 1)
