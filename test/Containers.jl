@@ -65,6 +65,12 @@ using JuMP
         @testset "1-dimensional" begin
             SA = JuMP.Containers.SparseAxisArray
             d = @inferred SA(Dict((:a,) => 1, (:b,) => 2))
+            @testset "Printing" begin
+                @test sprint(show, "text/plain", d) == """
+    JuMP.Containers.SparseAxisArray{Int64,1,Tuple{Symbol}} with 2 entries:
+      [a]  =  1
+      [b]  =  2"""
+            end
             @test d isa SA{Int, 1, Tuple{Symbol}}
             d2 = @inferred SA(Dict((:a,) => 2, (:b,) => 4))
             d3 = @inferred SA(Dict((:a,) => 3, (:b,) => 6))
@@ -77,6 +83,12 @@ using JuMP
             SA = JuMP.Containers.SparseAxisArray
             d = @inferred SA(Dict((:a, 'u') => 2.0, (:b, 'v') => 0.5))
             @test d isa SA{Float64, 2, Tuple{Symbol, Char}}
+            @testset "Printing" begin
+                @test sprint(show, "text/plain", d) == """
+    JuMP.Containers.SparseAxisArray{Float64,2,Tuple{Symbol,Char}} with 2 entries:
+      [b, v]  =  0.5
+      [a, u]  =  2.0"""
+            end
             d2 = @inferred SA(Dict((:b, 'v') => 1.0, (:a, 'u') => 4.0))
             d3 = @inferred SA(Dict((:a, 'u') => 6.0, (:b, 'v') => 1.5))
             dsqr = @inferred SA(Dict((:a, 'u') => 4.0, (:b, 'v') => 0.25))
