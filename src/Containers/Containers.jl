@@ -43,6 +43,9 @@ Base.eachindex(g::Base.Generator{<:SparseAxisArray}) = eachindex(g.iter)
 Base.iterate(sa::SparseAxisArray, args...) = iterate(values(sa.data), args...)
 # Used by JuMP.getloopedcode
 Base.haskey(sa::SparseAxisArray, idx) = haskey(sa.data, idx)
+function Base.haskey(sa::SparseAxisArray{T,1,Tuple{I}}, idx::I) where {T, I}
+    return haskey(sa.data, (idx,))
+end
 
 # A `length` argument can be given because `IteratorSize` is `HasLength`
 function Base.similar(sa::SparseAxisArray{S,N,K}, ::Type{T},
