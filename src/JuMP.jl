@@ -54,7 +54,7 @@ const MOIFIX = MOICON{MOI.SingleVariable,MOI.EqualTo{Float64}}
 const MOIINT = MOICON{MOI.SingleVariable,MOI.Integer}
 const MOIBIN = MOICON{MOI.SingleVariable,MOI.ZeroOne}
 
-@MOIU.model(JuMPMOIModel,
+MOIU.@model(JuMPMOIModel,
             (MOI.ZeroOne, MOI.Integer),
             (MOI.EqualTo, MOI.GreaterThan, MOI.LessThan, MOI.Interval),
             (MOI.Zeros, MOI.Nonnegatives, MOI.Nonpositives, MOI.SecondOrderCone,
