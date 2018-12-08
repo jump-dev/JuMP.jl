@@ -100,7 +100,7 @@ julia&gt; x[2, :]
 julia&gt; JuMP.lower_bound.(x)
 2×2 Array{Float64,2}:
  3.0  4.0
- 5.0  6.0</code></pre><p>JuMP will form an <code>Array</code> of JuMP variables when it can determine at compile time that the indices are one-based integer ranges. Therefore <code>x[1:b]</code> will work, but <code>x[a:b]</code> will throw an error.</p><h3><a class="nav-anchor" id="JuMPArrays-1" href="#JuMPArrays-1">JuMPArrays</a></h3><p>We often want to create arrays where the indices are not one-based integer ranges. For example, we may want to create a variable indexed by the name of a product or a location. The syntax is the same as that above, except with an arbitrary vector as an index as opposed to a one-based range. The biggest difference is that instead of returning an <code>Array</code> of JuMP variables, JuMP will return a <code>JuMPArray</code>. For example:</p><pre><code class="language-julia-repl">julia&gt; @variable(model, x[1:2, [:A,:B]])
+ 5.0  6.0</code></pre><p>JuMP will form an <code>Array</code> of JuMP variables when it can determine at compile time that the indices are one-based integer ranges. Therefore <code>x[1:b]</code> will create an <code>Array</code> of JuMP variables, but <code>x[a:b]</code> will not. If JuMP cannot determine that the indices are one-based integer ranges (e.g., in the case of <code>x[a:b]</code>), JuMP will create a <code>JuMPArray</code> instead.</p><h3><a class="nav-anchor" id="variable_jump_arrays-1" href="#variable_jump_arrays-1">JuMPArrays</a></h3><p>We often want to create arrays where the indices are not one-based integer ranges. For example, we may want to create a variable indexed by the name of a product or a location. The syntax is the same as that above, except with an arbitrary vector as an index as opposed to a one-based range. The biggest difference is that instead of returning an <code>Array</code> of JuMP variables, JuMP will return a <code>JuMPArray</code>. For example:</p><pre><code class="language-julia-repl">julia&gt; @variable(model, x[1:2, [:A,:B]])
 2-dimensional JuMPArray{VariableRef,2,...} with index sets:
     Dimension 1, 1:2
     Dimension 2, Symbol[:A, :B]
@@ -128,14 +128,14 @@ julia&gt; JuMP.lower_bound.(x)
     Dimension 2, 1:2:3
 And data, a 2×2 Array{Float64,2}:
  2.0  4.0
- 2.5  4.5</code></pre><h3><a class="nav-anchor" id="Dictionaries-1" href="#Dictionaries-1">Dictionaries</a></h3><p>The third datatype that JuMP supports the efficient creation of are dictionaries. These dictionaries are created when the indices do not form a rectangular set. One example is when indices have a dependence upon previous indices (called <em>triangular indexing</em>). JuMP supports this as follows:</p><pre><code class="language-julia-repl">julia&gt; @variable(model, x[i=1:2, j=i:2])
+ 2.5  4.5</code></pre><h3><a class="nav-anchor" id="variable_dictionaries-1" href="#variable_dictionaries-1">Dictionaries</a></h3><p>The third datatype that JuMP supports the efficient creation of are dictionaries. These dictionaries are created when the indices do not form a rectangular set. One example is when indices have a dependence upon previous indices (called <em>triangular indexing</em>). JuMP supports this as follows:</p><pre><code class="language-julia-repl">julia&gt; @variable(model, x[i=1:2, j=i:2])
 Dict{Any,VariableRef} with 3 entries:
   (1, 2) =&gt; x[1,2]
   (2, 2) =&gt; x[2,2]
   (1, 1) =&gt; x[1,1]</code></pre><p><code>x</code> is a standard Julia dictionary. Therefore, slicing cannot be performed.</p><p>We can also conditionally create variables via a JuMP-specific syntax. This sytax appends a comparison check that depends upon the named indices and is separated from the indices by a semi-colon (<code>;</code>). For example:</p><pre><code class="language-julia-repl">julia&gt; @variable(model, x[i=1:4; mod(i, 2)==0])
 Dict{Any,VariableRef} with 2 entries:
   4 =&gt; x[4]
-  2 =&gt; x[2]</code></pre><h3><a class="nav-anchor" id="Forcing-the-container-type-1" href="#Forcing-the-container-type-1">Forcing the container type</a></h3><p>When creating a container of JuMP variables, JuMP will attempt to choose the tightest container type that can store the JuMP variables. Thus, it will prefer to create an Array before a JuMPArray, and a JuMPArray before a dictionary. However, because this happens at compile time, it does not always make the best choice. To illustrate this, consider the following example:</p><pre><code class="language-julia-repl">julia&gt; A = 1:2
+  2 =&gt; x[2]</code></pre><h3><a class="nav-anchor" id="variable_forcing-1" href="#variable_forcing-1">Forcing the container type</a></h3><p>When creating a container of JuMP variables, JuMP will attempt to choose the tightest container type that can store the JuMP variables. Thus, it will prefer to create an Array before a JuMPArray, and a JuMPArray before a dictionary. However, because this happens at compile time, it does not always make the best choice. To illustrate this, consider the following example:</p><pre><code class="language-julia-repl">julia&gt; A = 1:2
 1:2
 
 julia&gt; @variable(model, x[A])

@@ -141,7 +141,7 @@ var documenterSearchIndex = {"docs": [
     "page": "Quick Start Guide",
     "title": "Quick Start Guide",
     "category": "section",
-    "text": "This quick start guide will introduce the main concepts of JuMP. If you are familiar with another modeling language embedded in a high-level language such as PuLP (Python) or a solver-specific interface you will find most of this familiar. If you are coming from an AMPL or similar background, you may find some of the concepts novel but the general appearance will still be familiar.The example in this guide is deliberately kept simple. There are more complex examples in the JuMP/examples/ folder.Once JuMP is installed, to use JuMP in your programs, you just need to say:julia> using JuMPYou also need to include a Julia package which provides an appropriate solver. One such solver is GLPK.Optimizer, which is provided by the GLPK.jl package.julia> using GLPKSee Installation Guide for a list of other solvers you can use.Models are created with the Model() function. The with_optimizer syntax is used to specify the optimizer to be used:julia> model = Model(with_optimizer(GLPK.Optimizer))\nA JuMP Model\nFeasibility problem with:\nVariables: 0\nModel mode: Automatic\nCachingOptimizer state: NoOptimizer\nSolver name: No optimizer attached.DocTestSetup = quote\n    # Using a caching optimizer removes the need to # load a solver such as GLPK\n    # for building the documentation.\n    const MOI = JuMP.MathOptInterface\n    model = Model(with_optimizer(MOI.Utilities.MockOptimizer,\n                                 JuMP.JuMPMOIModel{Float64}(),\n                                 eval_objective_value = false,\n                                 eval_variable_constraint_dual = false))\nendnote: Note\nYour model doesn\'t have to be called model - it\'s just a name.There are a few options for defining a variable, depending on whether you want to have lower bounds, upper bounds, both bounds, or even no bounds. The following commands will create two variables, x and y, with both lower and upper bounds. Note the first argument is our model variable model. These variables are associated with this model and cannot be used in another model.julia> @variable(model, 0 <= x <= 2)\nx\n\njulia> @variable(model, 0 <= y <= 30)\nySee the Variables section for more information on creating variables.DocTestSetup = nothingNext we\'ll set our objective. Note again the model, so we know which model\'s objective we are setting! The objective sense, Max or Min, should be provided as the second argument. Note also that we don\'t have a multiplication * symbol between 5 and our variable x - Julia is smart enough to not need it! Feel free to stick with * if it makes you feel more comfortable, as we have done with 3 * y. (We have been intentionally inconsistent here to demonstrate different syntax; however, it is good practice to pick one way or the other consistently in your code.)julia> @objective(model, Max, 5x + 3 * y)\n5 x + 3 yAdding constraints is a lot like setting the objective. Here we create a less-than-or-equal-to constraint using <=, but we can also create equality constraints using == and greater-than-or-equal-to constraints with >=:julia> @constraint(model, con, 1x + 5y <= 3)\ncon : x + 5 y <= 3.0Note that in a similar manner to the @variable macro, we have named the constraint con. This will bind the constraint to the Julia variable con for later analysis.Models are solved with the JuMP.optimize! function:julia> JuMP.optimize!(model)DocTestSetup = quote\n    # Now we load in the solution. Using a caching optimizer removes the need to\n    # load a solver such as GLPK for building the documentation.\n    mock = JuMP.backend(model).optimizer.model\n    MOI.set(mock, MOI.TerminationStatus(), MOI.Success)\n    MOI.set(mock, MOI.PrimalStatus(), MOI.FeasiblePoint)\n    MOI.set(mock, MOI.DualStatus(), MOI.FeasiblePoint)\n    MOI.set(mock, MOI.ResultCount(), 1)\n    MOI.set(mock, MOI.ObjectiveValue(), 10.6)\n    MOI.set(mock, MOI.VariablePrimal(), JuMP.optimizer_index(x), 2.0)\n    MOI.set(mock, MOI.VariablePrimal(), JuMP.optimizer_index(y), 0.2)\n    MOI.set(mock, MOI.ConstraintDual(), JuMP.optimizer_index(con), -0.6)\n    MOI.set(mock, MOI.ConstraintDual(), JuMP.optimizer_index(JuMP.UpperBoundRef(x)), -4.4)\n    MOI.set(mock, MOI.ConstraintDual(), JuMP.optimizer_index(JuMP.LowerBoundRef(y)), 0.0)\nendAfter the call to JuMP.optimize! has finished, we need to understand why the optimizer stopped. This can be for a number of reasons. First, the solver might have found the optimal solution, or proved that the problem is infeasible. However, it might also have run into numerical difficulties, or terminated due to a setting such as a time limit. We can ask the solver why it stopped using the JuMP.termination_status function:julia> JuMP.termination_status(model)\nSuccess::TerminationStatusCode = 1In this case, GLPK returned Success. This does not mean that it has found the optimal solution. Instead, it indicates that GLPK has finished running and did not encounter any errors or user-provided termination limits.DocTestSetup = nothingTo understand the reason for termination in more detail, we need to query JuMP.primalstatus:julia> JuMP.primal_status(model)\nFeasiblePoint::ResultStatusCode = 1This indicates that GLPK has found a FeasiblePoint to the primal problem. Coupled with the Success from JuMP.termination_status, we can infer that GLPK has indeed found the optimal solution. We can also query JuMP.dual_status:julia> JuMP.dual_status(model)\nFeasiblePoint::ResultStatusCode = 1Like the primal_status, GLPK indicates that it has found a FeasiblePoint to the dual problem.Finally, we can query the result of the optimization. First, we can query the objective value:julia> JuMP.objective_value(model)\n10.6We can also query the primal result values of the x and y variables:julia> JuMP.value(x)\n2.0\n\njulia> JuMP.value(y)\n0.2We can also query the value of the dual variable associated with the constraint con (which we bound to a Julia variable when defining the constraint):julia> JuMP.dual(con)\n-0.6To query the dual variables associated with the variable bounds, things are a little trickier as we first need to obtain a reference to the constraint:julia> x_upper = JuMP.UpperBoundRef(x)\nx <= 2.0\n\njulia> JuMP.dual(x_upper)\n-4.4A similar process can be followed to obtain the dual of the lower bound constraint on y:julia> y_lower = JuMP.LowerBoundRef(y)\ny >= 0.0\n\njulia> JuMP.dual(y_lower)\n0.0"
+    "text": "This quick start guide will introduce the main concepts of JuMP. If you are familiar with another modeling language embedded in a high-level language such as PuLP (Python) or a solver-specific interface you will find most of this familiar. If you are coming from an AMPL or similar background, you may find some of the concepts novel but the general appearance will still be familiar.The example in this guide is deliberately kept simple. There are more complex examples in the JuMP/examples/ folder.Once JuMP is installed, to use JuMP in your programs, you just need to say:julia> using JuMPYou also need to include a Julia package which provides an appropriate solver. One such solver is GLPK.Optimizer, which is provided by the GLPK.jl package.julia> using GLPKSee Installation Guide for a list of other solvers you can use.Models are created with the Model() function. The with_optimizer syntax is used to specify the optimizer to be used:julia> model = Model(with_optimizer(GLPK.Optimizer))\nA JuMP Model\nFeasibility problem with:\nVariables: 0\nModel mode: Automatic\nCachingOptimizer state: NoOptimizer\nSolver name: No optimizer attached.DocTestSetup = quote\n    # Using a caching optimizer removes the need to # load a solver such as GLPK\n    # for building the documentation.\n    const MOI = JuMP.MathOptInterface\n    model = Model(with_optimizer(MOI.Utilities.MockOptimizer,\n                                 JuMP.JuMPMOIModel{Float64}(),\n                                 eval_objective_value = false,\n                                 eval_variable_constraint_dual = false))\nendnote: Note\nYour model doesn\'t have to be called model - it\'s just a name.There are a few options for defining a variable, depending on whether you want to have lower bounds, upper bounds, both bounds, or even no bounds. The following commands will create two variables, x and y, with both lower and upper bounds. Note the first argument is our model variable model. These variables are associated with this model and cannot be used in another model.julia> @variable(model, 0 <= x <= 2)\nx\n\njulia> @variable(model, 0 <= y <= 30)\nySee the Variables section for more information on creating variables.DocTestSetup = nothingNext we\'ll set our objective. Note again the model, so we know which model\'s objective we are setting! The objective sense, Max or Min, should be provided as the second argument. Note also that we don\'t have a multiplication * symbol between 5 and our variable x - Julia is smart enough to not need it! Feel free to stick with * if it makes you feel more comfortable, as we have done with 3 * y. (We have been intentionally inconsistent here to demonstrate different syntax; however, it is good practice to pick one way or the other consistently in your code.)julia> @objective(model, Max, 5x + 3 * y)\n5 x + 3 yAdding constraints is a lot like setting the objective. Here we create a less-than-or-equal-to constraint using <=, but we can also create equality constraints using == and greater-than-or-equal-to constraints with >=:julia> @constraint(model, con, 1x + 5y <= 3)\ncon : x + 5 y <= 3.0Note that in a similar manner to the @variable macro, we have named the constraint con. This will bind the constraint to the Julia variable con for later analysis.Models are solved with the JuMP.optimize! function:julia> JuMP.optimize!(model)DocTestSetup = quote\n    # Now we load in the solution. Using a caching optimizer removes the need to\n    # load a solver such as GLPK for building the documentation.\n    mock = JuMP.backend(model).optimizer.model\n    MOI.set(mock, MOI.TerminationStatus(), MOI.Success)\n    MOI.set(mock, MOI.PrimalStatus(), MOI.FeasiblePoint)\n    MOI.set(mock, MOI.DualStatus(), MOI.FeasiblePoint)\n    MOI.set(mock, MOI.ResultCount(), 1)\n    MOI.set(mock, MOI.ObjectiveValue(), 10.6)\n    MOI.set(mock, MOI.VariablePrimal(), JuMP.optimizer_index(x), 2.0)\n    MOI.set(mock, MOI.VariablePrimal(), JuMP.optimizer_index(y), 0.2)\n    MOI.set(mock, MOI.ConstraintDual(), JuMP.optimizer_index(con), -0.6)\n    MOI.set(mock, MOI.ConstraintDual(), JuMP.optimizer_index(JuMP.UpperBoundRef(x)), -4.4)\n    MOI.set(mock, MOI.ConstraintDual(), JuMP.optimizer_index(JuMP.LowerBoundRef(y)), 0.0)\nendAfter the call to JuMP.optimize! has finished, we need to understand why the optimizer stopped. This can be for a number of reasons. First, the solver might have found the optimal solution, or proved that the problem is infeasible. However, it might also have run into numerical difficulties, or terminated due to a setting such as a time limit. We can ask the solver why it stopped using the JuMP.termination_status function:julia> JuMP.termination_status(model)\nSuccess::TerminationStatusCode = 1In this case, GLPK returned Success. This does not mean that it has found the optimal solution. Instead, it indicates that GLPK has finished running and did not encounter any errors or user-provided termination limits.DocTestSetup = nothingTo understand the reason for termination in more detail, we need to query JuMP.primalstatus:julia> JuMP.primal_status(model)\nFeasiblePoint::ResultStatusCode = 1This indicates that GLPK has found a FeasiblePoint to the primal problem. Coupled with the Success from JuMP.termination_status, we can infer that GLPK has indeed found the optimal solution. We can also query JuMP.dual_status:julia> JuMP.dual_status(model)\nFeasiblePoint::ResultStatusCode = 1Like the primal_status, GLPK indicates that it has found a FeasiblePoint to the dual problem.Finally, we can query the result of the optimization. First, we can query the objective value:julia> JuMP.objective_value(model)\n10.6We can also query the primal result values of the x and y variables:julia> JuMP.value(x)\n2.0\n\njulia> JuMP.value(y)\n0.2We can also query the value of the dual variable associated with the constraint con (which we bound to a Julia variable when defining the constraint):julia> JuMP.dual(con)\n-0.6info: Info\nSee constraint duality section for a discussion of the convention that JuMP uses for signs of duals.To query the dual variables associated with the variable bounds, things are a little trickier as we first need to obtain a reference to the constraint:julia> x_upper = JuMP.UpperBoundRef(x)\nx <= 2.0\n\njulia> JuMP.dual(x_upper)\n-4.4A similar process can be followed to obtain the dual of the lower bound constraint on y:julia> y_lower = JuMP.LowerBoundRef(y)\ny >= 0.0\n\njulia> JuMP.dual(y_lower)\n0.0"
 },
 
 {
@@ -205,11 +205,11 @@ var documenterSearchIndex = {"docs": [
     "page": "Variables",
     "title": "Arrays",
     "category": "section",
-    "text": "We have already seen the creation of an array of JuMP variables with the x[1:2] syntax. This can naturally be extended to create multi-dimensional arrays of JuMP variables. For example:julia> @variable(model, x[1:2, 1:2])\n2×2 Array{VariableRef,2}:\n x[1,1]  x[1,2]\n x[2,1]  x[2,2]Arrays of JuMP variables can be indexed and sliced as follows:julia> x[1, 2]\nx[1,2]\n\njulia> x[2, :]\n2-element Array{VariableRef,1}:\n x[2,1]\n x[2,2]We can also name each index, and variable bounds can depend upon the indices:julia> @variable(model, x[i=1:2, j=1:2] >= 2i + j)\n2×2 Array{VariableRef,2}:\n x[1,1]  x[1,2]\n x[2,1]  x[2,2]\n\njulia> JuMP.lower_bound.(x)\n2×2 Array{Float64,2}:\n 3.0  4.0\n 5.0  6.0JuMP will form an Array of JuMP variables when it can determine at compile time that the indices are one-based integer ranges. Therefore x[1:b] will work, but x[a:b] will throw an error."
+    "text": "We have already seen the creation of an array of JuMP variables with the x[1:2] syntax. This can naturally be extended to create multi-dimensional arrays of JuMP variables. For example:julia> @variable(model, x[1:2, 1:2])\n2×2 Array{VariableRef,2}:\n x[1,1]  x[1,2]\n x[2,1]  x[2,2]Arrays of JuMP variables can be indexed and sliced as follows:julia> x[1, 2]\nx[1,2]\n\njulia> x[2, :]\n2-element Array{VariableRef,1}:\n x[2,1]\n x[2,2]We can also name each index, and variable bounds can depend upon the indices:julia> @variable(model, x[i=1:2, j=1:2] >= 2i + j)\n2×2 Array{VariableRef,2}:\n x[1,1]  x[1,2]\n x[2,1]  x[2,2]\n\njulia> JuMP.lower_bound.(x)\n2×2 Array{Float64,2}:\n 3.0  4.0\n 5.0  6.0JuMP will form an Array of JuMP variables when it can determine at compile time that the indices are one-based integer ranges. Therefore x[1:b] will create an Array of JuMP variables, but x[a:b] will not. If JuMP cannot determine that the indices are one-based integer ranges (e.g., in the case of x[a:b]), JuMP will create a JuMPArray instead."
 },
 
 {
-    "location": "variables/#JuMPArrays-1",
+    "location": "variables/#variable_jump_arrays-1",
     "page": "Variables",
     "title": "JuMPArrays",
     "category": "section",
@@ -217,7 +217,7 @@ var documenterSearchIndex = {"docs": [
 },
 
 {
-    "location": "variables/#Dictionaries-1",
+    "location": "variables/#variable_dictionaries-1",
     "page": "Variables",
     "title": "Dictionaries",
     "category": "section",
@@ -225,7 +225,7 @@ var documenterSearchIndex = {"docs": [
 },
 
 {
-    "location": "variables/#Forcing-the-container-type-1",
+    "location": "variables/#variable_forcing-1",
     "page": "Variables",
     "title": "Forcing the container type",
     "category": "section",
@@ -413,7 +413,151 @@ var documenterSearchIndex = {"docs": [
     "page": "Constraints",
     "title": "Constraints",
     "category": "page",
-    "text": ""
+    "text": "CurrentModule = JuMP\nDocTestSetup = quote\n    using JuMP\n    const MOI = JuMP.MathOptInterface\nend\nDocTestFilters = [r\"≤|<=\", r\"≥|>=\", r\" == | = \", r\" ∈ | in \"]"
+},
+
+{
+    "location": "constraints/#Constraints-1",
+    "page": "Constraints",
+    "title": "Constraints",
+    "category": "section",
+    "text": "This page explains how to write various types of constraints in JuMP. Before reading further, please make sure you are familiar with JuMP models, and JuMP Variables. If you want to add nonlinear constraints, read Nonlinear Modeling instead.JuMP is based on the MathOptInterface API. Because of this, JuMP thinks of a constraint as the restriction that the output of a function belongs to a set. For example, instead of representing a constraint a^top x le b as a less-than-or-equal-to constraint, JuMP models this as the scalar affine function a^top x belonging to the less-than set (-infty b. Thus, instead of a less-than-or-equal-to constraint, we consider this constraint to be a scalar affine -in- less than constraint. More generally, we use the shorthand function-in-set to refer to constraints composed of different types of functions and sets. In the rest of this page, we will introduce the different types of functions and sets that JuMP knows about as needed. You can read more details about this function-in-set concept in the MathOptInterface documentation.note: Note\nThroughout this page (and these docs), we use MOI as a shorthand for the MathOptInterface module. This can be created by including the following lines after using JuMP in your code.using MathOptInterface\nconst MOI = MathOptInterface"
+},
+
+{
+    "location": "constraints/#The-@constraint-macro-1",
+    "page": "Constraints",
+    "title": "The @constraint macro",
+    "category": "section",
+    "text": "Constraints are added to a JuMP model using the @constraint macro. It is similar to the @variable macro. Here is an example of how to add the constraint 2x le 1 to a JuMP model:julia> @constraint(model, con, 2x <= 1)\ncon : 2 x <= 1.0Wasn\'t that easy! Let\'s unpack what happened, because just like @variable there are a few subtle things going on.The mathematical constraint 2x le 1 was added to the model.\nA Julia variable called con was created that is a reference to the constraint.\nThis Julia variable was stored in model and can be accessed by model[:con].\nJuMP set the name (the one that is shown when printing) of the constraint to \"con\".Just like the Julia variables created in @variable, con can be bound to a different value. For example:julia> con\ncon : 2 x <= 1.0\n\njulia> con = 1\n1\n\njulia> con\n1However, the reference can be retrieved by querying the model using the symbolic name:julia> con = model[:con]\ncon : 2 x <= 1.0\n\njulia> con\ncon : 2 x <= 1.0Because the named variables and constraints are stored in the same namespace, creating a constraint with the same name as a variable or an existing constraint will result in an error. To overcome this limitation, it is possible to create anonymous constraints, just like it is possible to create Anonymous JuMP variables. This is done by dropping the second argument to @constraint:julia> con = @constraint(model, 2x <= 1)\n2 x <= 1.0It is also possible use different comparison operators (e.g., >= and ==) to create the following types of constraints:julia> @constraint(model, 2x >= 1)\n2 x >= 1.0\n\njulia> @constraint(model, 2x == 1)\n2 x = 1.0\n\njulia> @constraint(model, 1 <= 2x <= 3)\n2 x ∈ [1.0, 3.0]Note that JuMP normalizes the constraints given by the user by moving all of the terms containing variables to the left-hand side, and all of the constant terms to the right-hand side. Thus, we get:julia> @constraint(model, 2x + 1 <= 4x + 4)\n-2 x <= 3.0"
+},
+
+{
+    "location": "constraints/#constraint_duality-1",
+    "page": "Constraints",
+    "title": "Duality",
+    "category": "section",
+    "text": "JuMP adopts the notion of conic duality from MathOptInterface. For linear programs, a feasible dual on a >= constraint is nonnegative and a feasible dual on a <= constraint is nonpositive. If the constraint is an equality constraint, it depends on which direction is binding.note: Note\nJuMP\'s definition of duality is independent of the objective sense. That is, the sign of feasible duals associated with a constraint depends on the direction of the constraint and not whether the problem is maximization or minimization. This is different to linear programming duality in some common textbooks.The dual value associated with a constraint in the most recent solution can be accessed using the JuMP.dual function. You can use the JuMP.has_duals function to check whether the model has a dual solution available to query. For example:julia> model = Model();\n\njulia> @variable(model, x)\nx\n\njulia> @constraint(model, con, x <= 1)\ncon : x <= 1.0\n\njulia> JuMP.has_duals(model)\nfalseDocTestSetup = quote\n    using JuMP\n    const MOI = JuMP.MathOptInterface\n    model = Model(\n        with_optimizer(\n            MOI.Utilities.MockOptimizer,\n            JuMP.JuMPMOIModel{Float64}(),\n            eval_objective_value = false,\n            eval_variable_constraint_dual = false));\n    @variable(model, x);\n    @constraint(model, con, x <= 1);\n    @objective(model, Max, -2x);\n    JuMP.optimize!(model);\n    mock = JuMP.backend(model).optimizer.model;\n    MOI.set(mock, MOI.DualStatus(), MOI.FeasiblePoint)\n    MOI.set(mock, MOI.ConstraintDual(), JuMP.optimizer_index(con), -2.0)\nendjulia> @objective(model, Min, -2x)\n-2 x\n\njulia> JuMP.optimize!(model)\n\njulia> JuMP.has_duals(model)\ntrue\n\njulia> JuMP.dual(con)\n-2.0\n\njulia> @objective(model, Max, 2x)\n2 x\n\njulia> JuMP.optimize!(model)\n\njulia> JuMP.dual(con)\n-2.0To help users who may be less familiar with conic duality, JuMP provides the JuMP.shadow_price function which returns a value that can be interpreted as the improvement in the objective in response to an infinitesimal relaxation (on the scale of one unit) in the right-hand side of the constraint. JuMP.shadow_price can only be used on linear constraints with a <=, >=, or == comparison operator.In the example above, JuMP.dual(con) returned -2.0 regardless of the optimization sense. However, in the second case when the optimization sense is Max, JuMP.shadow_price returns:julia> JuMP.shadow_price(con)\n2.0To query the dual variables associated a variable bound, first obtain a constraint reference using one of JuMP.UpperBoundRef, JuMP.LowerBoundRef, or JuMP.FixRef, and then call JuMP.dual on the returned constraint reference. Note that in linear programming, the duals on variable bounds are also called the reduced costs (although the sign might differ from the one you expect).DocTestSetup = quote\n    using JuMP\n    const MOI = JuMP.MathOptInterface\nend"
+},
+
+{
+    "location": "constraints/#Constraint-containers-1",
+    "page": "Constraints",
+    "title": "Constraint containers",
+    "category": "section",
+    "text": "So far, we\'ve added constraints one-by-one. However, just like Variable containers, JuMP provides a mechanism for building groups of constraints compactly. References to these groups of constraints are returned in containers. Three types of constraint containers are supported: Arrays, JuMPArrays, and Dictionaries. We explain each of these in the following."
+},
+
+{
+    "location": "constraints/#constraint_arrays-1",
+    "page": "Constraints",
+    "title": "Arrays",
+    "category": "section",
+    "text": "One way of adding a group of constraints compactly is the following:julia> @constraint(model, con[i = 1:3], i * x <= i + 1)\n3-element Array{ConstraintRef{Model,C,Shape} where Shape<:JuMP.AbstractShape where C,1}:\n con[1] : x <= 2.0\n con[2] : 2 x <= 3.0\n con[3] : 3 x <= 4.0JuMP returns references to the three constraints in an Array that is bound to the Julia variable con. This array can be accessed and sliced just like a normal Julia array:julia> con[1]\ncon[1] : x <= 2.0\n\njulia> con[2:3]\n2-element Array{ConstraintRef{Model,C,Shape} where Shape<:JuMP.AbstractShape where C,1}:\n con[2] : 2 x <= 3.0\n con[3] : 3 x <= 4.0Anonymous containers can also be constructed by dropping the name (e.g. con) before the square brackets:julia> @constraint(model, [i = 1:2], i * x <= i + 1)\n2-element Array{ConstraintRef{Model,C,Shape} where Shape<:JuMP.AbstractShape where C,1}:\n x <= 2.0\n 2 x <= 3.0Just like @variable, JuMP will form an Array of constraints when it can determine at parse time that the indices are one-based integer ranges. Therefore con[1:b] will create an Array, but con[a:b] will not. A special case is con[Base.OneTo(n)] which will produce an Array. If JuMP cannot determine that the indices are one-based integer ranges (e.g., in the case of con[a:b]), JuMP will create a JuMPArray instead."
+},
+
+{
+    "location": "constraints/#JuMPArrays-1",
+    "page": "Constraints",
+    "title": "JuMPArrays",
+    "category": "section",
+    "text": "The syntax for constructing a JuMPArray of constraints is very similar to the syntax for constructing a JuMPArray of variables.julia> @constraint(model, con[i = 1:2, j = 2:3], i * x <= j + 1)\n2-dimensional JuMPArray{ConstraintRef{Model,C,Shape} where Shape<:JuMP.AbstractShape where C,2,...} with index sets:\n    Dimension 1, 1:2\n    Dimension 2, 2:3\nAnd data, a 2×2 Array{ConstraintRef{Model,C,Shape} where Shape<:JuMP.AbstractShape where C,2}:\n con[1,2] : x <= 3.0    con[1,3] : x <= 4.0\n con[2,2] : 2 x <= 3.0  con[2,3] : 2 x <= 4.0"
+},
+
+{
+    "location": "constraints/#Dictionaries-1",
+    "page": "Constraints",
+    "title": "Dictionaries",
+    "category": "section",
+    "text": "The syntax for constructing a dictionary of constraints is very similar to the syntax for constructing a dictionary of variables.julia> @constraint(model, con[i = 1:2, j = 1:2; i != j], i * x <= j + 1)\nDict{Any,ConstraintRef{Model,C,Shape} where Shape<:JuMP.AbstractShape where C} with 2 entries:\n  (1, 2) => con[1,2] : x <= 3.0\n  (2, 1) => con[2,1] : 2 x <= 2.0"
+},
+
+{
+    "location": "constraints/#Forcing-the-container-type-1",
+    "page": "Constraints",
+    "title": "Forcing the container type",
+    "category": "section",
+    "text": "When creating a container of constraints, JuMP will attempt to choose the tightest container type that can store the constraints. However, because this happens at parse time, it does not always make the best choice. Just like in @variable, we can force the type of container using the container keyword. For syntax and the reason behind this, take a look at the variable docs."
+},
+
+{
+    "location": "constraints/#Vectorized-constraints-1",
+    "page": "Constraints",
+    "title": "Vectorized constraints",
+    "category": "section",
+    "text": "We can also add constraints to JuMP using vectorized linear algebra. For example:julia> @variable(model, x[i=1:2])\n2-element Array{VariableRef,1}:\n x[1]\n x[2]\n\njulia> A = [1 2; 3 4]\n2×2 Array{Int64,2}:\n 1  2\n 3  4\n\njulia> b = [5, 6]\n2-element Array{Int64,1}:\n 5\n 6\n\njulia> @constraint(model, con, A * x .== b)\n2-element Array{ConstraintRef{Model,MathOptInterface.ConstraintIndex{MathOptInterface.ScalarAffineFunction{Float64},MathOptInterface.EqualTo{Float64}},JuMP.ScalarShape},1}:\n x[1] + 2 x[2] == 5.0\n 3 x[1] + 4 x[2] == 6.0note: Note\nMake sure to use Julia\'s dot syntax in front of the comparison operators (e.g. .==, .>=, and .<=). If you use a comparison without the dot, an error will be thrown.Instead of adding an array of ScalarAffineFunction-in-EqualTo constraints, we can instead construct a VectorAffineFunction-in-Nonnegatives constraint as follows:julia> @constraint(model, A * x - b in MOI.Nonnegatives(2))\n[x[1] + 2 x[2] - 5, 3 x[1] + 4 x[2] - 6] in MathOptInterface.Nonnegatives(2)In addition to the Nonnegatives set, MathOptInterface defines a number of other vector-valued sets such as Nonpositives. See the MathOptInterface documentation for more information.Note also that for the first time we have used an explicit function-in-set description of the constraint. Read more about this below in the Function-Set pairs section of this documentation."
+},
+
+{
+    "location": "constraints/#Constraints-on-a-single-variable-1",
+    "page": "Constraints",
+    "title": "Constraints on a single variable",
+    "category": "section",
+    "text": "In Variables, we saw how to modify the variable bounds, as well as add binary and integer restrictions to the domain of each variable. This can also be achieved using the @constraint macro. For example, MOI.ZeroOne() restricts the domain to ``{0, 1}:julia> @constraint(model, x in MOI.ZeroOne())\nx in MathOptInterface.ZeroOne()and MOI.Integer() restricts to the domain to the integers mathbbZ:julia> @constraint(model, x in MOI.Integer())\nx in MathOptInterface.Integer()JuMP also supports modeling semi-continuous variables, whose domain is 0  l u, using the MOI.Semicontinuous set:julia> @constraint(model, x in MOI.Semicontinuous(1.5, 3.5))\nx in MathOptInterface.Semicontinuous{Float64}(1.5, 3.5)as well as semi-integer variables, whose domain is 0  l l+1 dots u, using the MOI.Semiinteger set:julia> @constraint(model, x in MOI.Semiinteger(1.0, 3.0))\nx in MathOptInterface.Semiinteger{Float64}(1.0, 3.0)"
+},
+
+{
+    "location": "constraints/#Constraints-on-a-collection-of-variables-1",
+    "page": "Constraints",
+    "title": "Constraints on a collection of variables",
+    "category": "section",
+    "text": "In addition to constraining the domain of a single variable, JuMP supports placing constraints of a subset of the variables. We already saw an example of this in the Quadratic constraints section when we constrained a vector of variables to belong to the second order cone.In a special ordered set of type I (often denoted SOS-I), at most one variable can take a non-zero value. We can construct SOS-I constraints using the MOI.SOS1 set:julia> @variable(model, x[1:3])\n3-element Array{VariableRef,1}:\n x[1]\n x[2]\n x[3]\n\njulia> @constraint(model, x in MOI.SOS1([1.0, 2.0, 3.0]))\n[x[1], x[2], x[3]] in MathOptInterface.SOS1{Float64}([1.0, 2.0, 3.0])Note that we have to pass MOI.SOS1 a weight vector. This vector implies an ordering on the variables. If the decision variables are related and have a physical ordering (e.g., they correspond to the size of a factory to be built, and the SOS-I constraint enforces that only one factory can be built), then the weight vector, although not used directly in the constraint, can help the solver make better decision in the solution process.This ordering is more important in a special ordered set of type II (SOS-II), in which at most two values can be non-zero, and if there are two non-zeros, they must be consecutive according to the ordering. For example, in the following constraint, the possible non-zero pairs are (x[1] and x[3]) and (x[2] and x[3]):julia> @constraint(model, x in MOI.SOS2([3.0, 1.0, 2.0]))\n[x[1], x[2], x[3]] in MathOptInterface.SOS2{Float64}([3.0, 1.0, 2.0])"
+},
+
+{
+    "location": "constraints/#Quadratic-constraints-1",
+    "page": "Constraints",
+    "title": "Quadratic constraints",
+    "category": "section",
+    "text": "In addition to affine functions, JuMP also supports constraints with quadratic terms. (For more general nonlinear functions, see Nonlinear Modeling.) For example:julia> @variable(model, x[i=1:2])\n2-element Array{VariableRef,1}:\n x[1]\n x[2]\n\njulia> @variable(model, t >= 0)\nt\n\njulia> @constraint(model, x[1]^2 + x[2]^2 <= t^2)\nx[1]² + x[2]² - t² <= 0.0Note that this quadratic constraint (including the lower bound on t) is equivalent to a second order cone constraint where ||x[1]^2 + x[2]^2||\\_2 ≤ t and t ≥ 0. Instead of writing out the quadratic expansion, we can pass JuMP the constraint in function-in-set form. To do so, we need to define the function and the set.The function is a vector of variables:julia> [t, x[1], x[2]]\n3-element Array{VariableRef,1}:\n t\n x[1]\n x[2]Note that the variable t comes first, followed by the x arguments. The set is an instance of JuMP.SecondOrderCone: JuMP.SecondOrderCone(). Thus, we can add the second order cone constraint as follows:julia> @constraint(model, [t, x[1], x[2]] in JuMP.SecondOrderCone())\n[t, x[1], x[2]] in MathOptInterface.SecondOrderCone(3)JuMP also supports the RotatedSecondOrderCone which requires the addition of a perspective variable u. The rotated second order cone constraints the variables t, u, and x such that: ||x[1]^2 + x[2]^2||\\_2 ≤ t × u and t, u ≥ 0. It can be added as follows:julia> @variable(model, u)\nu\n\njulia> @constraint(model, [t, u, x[1], x[2]] in JuMP.RotatedSecondOrderCone())\n[t, u, x[1], x[2]] in MathOptInterface.RotatedSecondOrderCone(4)In addition to the second order cone and rotated second order cone, MathOptInterface defines a number of other conic sets such as the exponential and power cones. See the MathOptInterface documentation for more information."
+},
+
+{
+    "location": "constraints/#Semidefinite-constraints-1",
+    "page": "Constraints",
+    "title": "Semidefinite constraints",
+    "category": "section",
+    "text": "TODO: discuss [@SDconstraint] and [PSDCone]."
+},
+
+{
+    "location": "constraints/#Constraint-modifications-1",
+    "page": "Constraints",
+    "title": "Constraint modifications",
+    "category": "section",
+    "text": "A common paradigm, especially in linear programming, is to repeatedly solve a model with different coefficients."
+},
+
+{
+    "location": "constraints/#Modifying-a-constant-term-1",
+    "page": "Constraints",
+    "title": "Modifying a constant term",
+    "category": "section",
+    "text": "Most often, modifications involve changing the \"right-hand side\" of a linear constraint. This presents a challenge for JuMP because it leads to ambiguities. For example, what is the right-hand side term of @constraint(model, 2x + 1 <= x - 3)? This applies more generally to any constant term in a function appearing in the objective or a constraint.To avoid these ambiguities, JuMP includes the ability to fix variables to a value using the JuMP.fix function. Fixing a variable sets its lower and upper bound to the same value. Thus, changes in a constant term can be simulated by adding a dummy variable and fixing it to different values. Here is an example:julia> @variable(model, const_term)\nconst_term\n\njulia> @constraint(model, con, 2x <= const_term)\ncon : 2 x - const_term <= 0.0\n\njulia> JuMP.fix(const_term, 1.0)note: Note\nEven though const_term is fixed, it is still a decision variable. Thus, const_term * x is bilinear."
+},
+
+{
+    "location": "constraints/#Modifying-a-variable-coefficient-1",
+    "page": "Constraints",
+    "title": "Modifying a variable coefficient",
+    "category": "section",
+    "text": "It is also possible to modify the scalar coefficients (but notably not the quadratic coefficients) using the JuMP.set_coefficient function. Here is an example:julia> @constraint(model, con, 2x <= 1)\ncon : 2 x <= 1.0\n\njulia> JuMP.set_coefficient(con, x, 3)\n\njulia> con\ncon : 3 x <= 1.0"
+},
+
+{
+    "location": "constraints/#Constraint-deletion-1",
+    "page": "Constraints",
+    "title": "Constraint deletion",
+    "category": "section",
+    "text": "Constraints can be deleted from a model using JuMP.delete. Just like variable references, it is possible to check if a constraint reference is valid using JuMP.is_valid. Here is an example of deleting a constraint:julia> @constraint(model, con, 2x <= 1)\ncon : 2 x <= 1.0\n\njulia> JuMP.is_valid(model, con)\ntrue\n\njulia> JuMP.delete(model, con)\n\njulia> JuMP.is_valid(model, con)\nfalse"
+},
+
+{
+    "location": "constraints/#Function-Set-pairs-1",
+    "page": "Constraints",
+    "title": "Function-Set pairs",
+    "category": "section",
+    "text": "DRAFT: Describe how constraints are represented (link to MOI docs). Constraints are very similar to variables in (1) how names work (2) how attributes work, and (3) the macro syntax for constructing them. They\'re a bit different because they\'re parameterized by function-set type. Describe constraints vs. ConstraintRefs. Describe JuMP.constraint_object. How to delete constraints. How to modify constraints by setting attributes and MOI.modifyconstraint!. Describe semidefinite constraints and symmetry handling. Refer to NLP docs for nonlinear constraints."
 },
 
 {
@@ -433,19 +577,11 @@ var documenterSearchIndex = {"docs": [
 },
 
 {
-    "location": "constraints/#Constraints-1",
-    "page": "Constraints",
-    "title": "Constraints",
-    "category": "section",
-    "text": "DRAFT: Describe how constraints are represented (link to MOI docs). Constraints are very similar to variables in (1) how names work (2) how attributes work, and (3) the macro syntax for constructing them. They\'re a bit different because they\'re parameterized by function-set type. Describe constraints vs. ConstraintRefs. Describe JuMP.constraint_object. How to delete constraints. How to modify constraints by setting attributes and MOI.modifyconstraint!. Describe semidefinite constraints and symmetry handling. Refer to NLP docs for nonlinear constraints.@constraint\n@SDconstraint"
-},
-
-{
     "location": "constraints/#JuMP.SecondOrderCone",
     "page": "Constraints",
     "title": "JuMP.SecondOrderCone",
     "category": "type",
-    "text": "SecondOrderCone\n\nSecond order cone object that can be used to constrain the euclidean norm of a vector x to be less than or euqal to a nonnegative scalar t. This is a shortcut for the MathOptInterface.SecondOrderCone.\n\nExamples\n\nThe following constrains (x-1 x-2)_2 le t and t ge 0:\n\njulia> model = Model();\n\njulia> @variable(model, x)\nx\n\njulia> @variable(model, t)\nt\n\njulia> @constraint(model, [t, x-1, x-2] in SecondOrderCone())\n[t, x - 1, x - 2] ∈ MathOptInterface.SecondOrderCone(3)\n\n\n\n\n\n"
+    "text": "SecondOrderCone\n\nSecond order cone object that can be used to constrain the euclidean norm of a vector x to be less than or equal to a nonnegative scalar t. This is a shortcut for the MathOptInterface.SecondOrderCone.\n\nExamples\n\nThe following constrains (x-1 x-2)_2 le t and t ge 0:\n\njulia> model = Model();\n\njulia> @variable(model, x)\nx\n\njulia> @variable(model, t)\nt\n\njulia> @constraint(model, [t, x-1, x-2] in SecondOrderCone())\n[t, x - 1, x - 2] ∈ MathOptInterface.SecondOrderCone(3)\n\n\n\n\n\n"
 },
 
 {
@@ -465,27 +601,11 @@ var documenterSearchIndex = {"docs": [
 },
 
 {
-    "location": "constraints/#Sets-1",
+    "location": "constraints/#JuMP.has_duals",
     "page": "Constraints",
-    "title": "Sets",
-    "category": "section",
-    "text": "As mentioned in the documentation of the @constraint and @SDconstraint macros, the following sets can be used to create constraints in addition to any MOI set.SecondOrderCone\nRotatedSecondOrderCone\nPSDCone"
-},
-
-{
-    "location": "constraints/#JuMP.set_coefficient",
-    "page": "Constraints",
-    "title": "JuMP.set_coefficient",
+    "title": "JuMP.has_duals",
     "category": "function",
-    "text": "set_coefficient(constraint::ConstraintRef, variable::VariableRef, value)\n\nSet the coefficient of variable in the constraint constraint to value.\n\nNote that prior to this step, JuMP will aggregate multiple terms containing the same variable. For example, given a constraint 2x + 3x <= 2, JuMP.set_coefficient(c, x, 4) will create the constraint 4x <= 2.\n\nmodel = Model()\n@variable(model, x)\n@constraint(model, con, 2x + 3x <= 2)\nJuMP.set_coefficient(con, x, 4)\ncon\n\n# output\n\ncon : 4 x <= 2.0\n\n\n\n\n\n"
-},
-
-{
-    "location": "constraints/#Constraint-modifications-1",
-    "page": "Constraints",
-    "title": "Constraint modifications",
-    "category": "section",
-    "text": "JuMP.set_coefficient(constraint, variable, value)JuMP.set_coefficient"
+    "text": "has_duals(model::Model)\n\nReturn true if the solver has a dual solution available to query, otherwise return false.\n\nSee also dual and shadow_price.\n\n\n\n\n\n"
 },
 
 {
@@ -505,11 +625,67 @@ var documenterSearchIndex = {"docs": [
 },
 
 {
-    "location": "constraints/#Duals-1",
+    "location": "constraints/#JuMP.fix",
     "page": "Constraints",
-    "title": "Duals",
+    "title": "JuMP.fix",
+    "category": "function",
+    "text": "fix(v::VariableRef,upper::Number)\n\nFix a variable to a value. Update the fixing constraint if one exists, otherwise create a new one.\n\n\n\n\n\n"
+},
+
+{
+    "location": "constraints/#JuMP.set_coefficient",
+    "page": "Constraints",
+    "title": "JuMP.set_coefficient",
+    "category": "function",
+    "text": "set_coefficient(constraint::ConstraintRef, variable::VariableRef, value)\n\nSet the coefficient of variable in the constraint constraint to value.\n\nNote that prior to this step, JuMP will aggregate multiple terms containing the same variable. For example, given a constraint 2x + 3x <= 2, JuMP.set_coefficient(c, x, 4) will create the constraint 4x <= 2.\n\nmodel = Model()\n@variable(model, x)\n@constraint(model, con, 2x + 3x <= 2)\nJuMP.set_coefficient(con, x, 4)\ncon\n\n# output\n\ncon : 4 x <= 2.0\n\n\n\n\n\n"
+},
+
+{
+    "location": "constraints/#JuMP.is_valid",
+    "page": "Constraints",
+    "title": "JuMP.is_valid",
+    "category": "function",
+    "text": "is_valid(model::Model, constraint_ref::ConstraintRef{Model})\n\nReturn true if constraint_ref refers to a valid constraint in model.\n\n\n\n\n\nis_valid(model::Model, variable_ref::VariableRef)\n\nReturn true if variable refers to a valid variable in model.\n\n\n\n\n\n"
+},
+
+{
+    "location": "constraints/#JuMP.delete",
+    "page": "Constraints",
+    "title": "JuMP.delete",
+    "category": "function",
+    "text": "delete(model::Model, constraint_ref::ConstraintRef)\n\nDelete the constraint associated with constraint_ref from the model model.\n\n\n\n\n\ndelete(model::Model, variable_ref::VariableRef)\n\nDelete the variable associated with variable_ref from the model model.\n\n\n\n\n\n"
+},
+
+{
+    "location": "constraints/#JuMP.LowerBoundRef",
+    "page": "Constraints",
+    "title": "JuMP.LowerBoundRef",
+    "category": "function",
+    "text": "LowerBoundRef(v::VariableRef)\n\nReturn a constraint reference to the lower bound constraint of v. Errors if one does not exist.\n\n\n\n\n\n"
+},
+
+{
+    "location": "constraints/#JuMP.UpperBoundRef",
+    "page": "Constraints",
+    "title": "JuMP.UpperBoundRef",
+    "category": "function",
+    "text": "UpperBoundRef(v::VariableRef)\n\nReturn a constraint reference to the upper bound constraint of v. Errors if one does not exist.\n\n\n\n\n\n"
+},
+
+{
+    "location": "constraints/#JuMP.FixRef",
+    "page": "Constraints",
+    "title": "JuMP.FixRef",
+    "category": "function",
+    "text": "LowerBoundRef(v::VariableRef)\n\nReturn a constraint reference to the constraint fixing the value of v. Errors if one does not exist.\n\n\n\n\n\n"
+},
+
+{
+    "location": "constraints/#Reference-1",
+    "page": "Constraints",
+    "title": "Reference",
     "category": "section",
-    "text": "JuMP.dual\nJuMP.shadow_price"
+    "text": "@constraint\n@SDconstraint\nSecondOrderCone\nRotatedSecondOrderCone\nPSDCone\nJuMP.has_duals\nJuMP.dual\nJuMP.shadow_price\nJuMP.fix\nJuMP.set_coefficient\nJuMP.is_valid\nJuMP.delete\nJuMP.LowerBoundRef\nJuMP.UpperBoundRef\nJuMP.FixRef"
 },
 
 {

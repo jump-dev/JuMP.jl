@@ -27,7 +27,7 @@ FeasiblePoint::ResultStatusCode = 1</code></pre><p>Like the <code>primal_status<
 
 julia&gt; JuMP.value(y)
 0.2</code></pre><p>We can also query the value of the dual variable associated with the constraint <code>con</code> (which we bound to a Julia variable when defining the constraint):</p><pre><code class="language-julia-repl">julia&gt; JuMP.dual(con)
--0.6</code></pre><p>To query the dual variables associated with the variable bounds, things are a little trickier as we first need to obtain a reference to the constraint:</p><pre><code class="language-julia-repl">julia&gt; x_upper = JuMP.UpperBoundRef(x)
+-0.6</code></pre><div class="admonition info"><div class="admonition-title">Info</div><div class="admonition-text"><p>See <a href="../constraints/#constraint_duality-1">constraint duality section</a> for a discussion of the convention that JuMP uses for signs of duals.</p></div></div><p>To query the dual variables associated with the variable bounds, things are a little trickier as we first need to obtain a reference to the constraint:</p><pre><code class="language-julia-repl">julia&gt; x_upper = JuMP.UpperBoundRef(x)
 x &lt;= 2.0
 
 julia&gt; JuMP.dual(x_upper)
