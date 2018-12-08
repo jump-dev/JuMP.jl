@@ -128,8 +128,7 @@ accessed using the [`JuMP.dual`](@ref) function. You can use the
 available to query. For example:
 
 ```jldoctest
-julia> model = Model()
-A JuMP Model
+julia> model = Model();
 
 julia> @variable(model, x)
 x
@@ -154,7 +153,7 @@ DocTestSetup = quote
     @constraint(model, con, x <= 1);
     @objective(model, Max, -2x);
     JuMP.optimize!(model);
-    mock = JuMP.caching_optimizer(model).optimizer;
+    mock = JuMP.backend(model).optimizer.model;
     MOI.set(mock, MOI.DualStatus(), MOI.FeasiblePoint)
     MOI.set(mock, MOI.ConstraintDual(), JuMP.optimizer_index(con), -2.0)
 end
