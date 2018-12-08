@@ -38,10 +38,8 @@ Base.IteratorSize(::Type{<:SparseAxisArray}) = Base.HasLength()
 # By default `IteratorSize` for `Generator{<:AbstractArray{T,N}}` is
 # `HasShape{N}`
 Base.IteratorSize(::Type{Base.Generator{<:SparseAxisArray}}) = Base.HasLength()
-# Needed in `collect_to_with_first!`
 Base.eachindex(g::Base.Generator{<:SparseAxisArray}) = eachindex(g.iter)
 Base.iterate(sa::SparseAxisArray, args...) = iterate(values(sa.data), args...)
-# Used by JuMP.getloopedcode
 Base.haskey(sa::SparseAxisArray, idx) = haskey(sa.data, idx)
 function Base.haskey(sa::SparseAxisArray{T,1,Tuple{I}}, idx::I) where {T, I}
     return haskey(sa.data, (idx,))
