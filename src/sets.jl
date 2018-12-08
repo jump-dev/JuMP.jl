@@ -10,7 +10,7 @@ end
     SecondOrderCone
 
 Second order cone object that can be used to constrain the euclidean norm of a
-vector `x` to be less than or euqal to a nonnegative scalar `t`. This is a
+vector `x` to be less than or equal to a nonnegative scalar `t`. This is a
 shortcut for the `MathOptInterface.SecondOrderCone`.
 
 ## Examples

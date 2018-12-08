@@ -261,9 +261,11 @@ julia> JuMP.lower_bound.(x)
 
 JuMP will form an `Array` of JuMP variables when it can determine at compile
 time that the indices are one-based integer ranges. Therefore `x[1:b]` will
-work, but `x[a:b]` will throw an error.
+create an `Array` of JuMP variables, but `x[a:b]` will not. If JuMP cannot
+determine that the indices are one-based integer ranges (e.g., in the case of
+`x[a:b]`), JuMP will create a `JuMPArray` instead.
 
-### JuMPArrays
+### [JuMPArrays](@id variable_jump_arrays)
 
 We often want to create arrays where the indices are not one-based integer
 ranges. For example, we may want to create a variable indexed by the name of a
@@ -314,7 +316,7 @@ And data, a 2×2 Array{Float64,2}:
  2.5  4.5
 ```
 
-### Dictionaries
+### [Dictionaries](@id variable_dictionaries)
 
 The third datatype that JuMP supports the efficient creation of are
 dictionaries. These dictionaries are created when the indices do not form a
@@ -339,7 +341,7 @@ Dict{Any,VariableRef} with 2 entries:
   2 => x[2]
 ```
 
-### Forcing the container type
+### [Forcing the container type](@id variable_forcing)
 
 When creating a container of JuMP variables, JuMP will attempt to choose the
 tightest container type that can store the JuMP variables. Thus, it will prefer

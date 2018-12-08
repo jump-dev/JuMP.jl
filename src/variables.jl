@@ -284,6 +284,12 @@ function set_lower_bound(v::VariableRef,lower::Number)
     nothing
 end
 
+"""
+    LowerBoundRef(v::VariableRef)
+
+Return a constraint reference to the lower bound constraint of `v`. Errors if
+one does not exist.
+"""
 function LowerBoundRef(v::VariableRef)
     return ConstraintRef{Model, MOILB, ScalarShape}(owner_model(v),
                                                     lower_bound_index(v),
@@ -349,6 +355,12 @@ function set_upper_bound(v::VariableRef,upper::Number)
     nothing
 end
 
+"""
+    UpperBoundRef(v::VariableRef)
+
+Return a constraint reference to the upper bound constraint of `v`. Errors if
+one does not exist.
+"""
 function UpperBoundRef(v::VariableRef)
     return ConstraintRef{Model, MOIUB, ScalarShape}(owner_model(v),
                                                     upper_bound_index(v),
@@ -431,6 +443,12 @@ function fix_value(v::VariableRef)
     return cset.value
 end
 
+"""
+    LowerBoundRef(v::VariableRef)
+
+Return a constraint reference to the constraint fixing the value of `v`. Errors
+if one does not exist.
+"""
 function FixRef(v::VariableRef)
     return ConstraintRef{Model, MOIFIX, ScalarShape}(owner_model(v),
                                                      fix_index(v),
