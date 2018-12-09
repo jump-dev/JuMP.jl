@@ -197,7 +197,7 @@ var documenterSearchIndex = {"docs": [
     "page": "Variables",
     "title": "Variable containers",
     "category": "section",
-    "text": "In the examples above, we have mostly created scalar variables. By scalar, we mean that the Julia variable is bound to exactly one JuMP variable. However,  it is often useful to create collections of JuMP variables inside more complicated datastructures.JuMP provides a mechanism for creating three types of these datastructures, which we refer to as containers. The three types are Arrays, JuMPArrays, and Dictionaries. We explain each of these in the following."
+    "text": "In the examples above, we have mostly created scalar variables. By scalar, we mean that the Julia variable is bound to exactly one JuMP variable. However,  it is often useful to create collections of JuMP variables inside more complicated datastructures.JuMP provides a mechanism for creating three types of these datastructures, which we refer to as containers. The three types are Arrays, JuMPArrays, and SparseAxisArrays. We explain each of these in the following."
 },
 
 {
@@ -217,11 +217,11 @@ var documenterSearchIndex = {"docs": [
 },
 
 {
-    "location": "variables/#variable_dictionaries-1",
+    "location": "variables/#variable_sparseaxisarrays-1",
     "page": "Variables",
-    "title": "Dictionaries",
+    "title": "SparseAxisArrays",
     "category": "section",
-    "text": "The third datatype that JuMP supports the efficient creation of are dictionaries. These dictionaries are created when the indices do not form a rectangular set. One example is when indices have a dependence upon previous indices (called triangular indexing). JuMP supports this as follows:julia> @variable(model, x[i=1:2, j=i:2])\nDict{Any,VariableRef} with 3 entries:\n  (1, 2) => x[1,2]\n  (2, 2) => x[2,2]\n  (1, 1) => x[1,1]x is a standard Julia dictionary. Therefore, slicing cannot be performed.We can also conditionally create variables via a JuMP-specific syntax. This sytax appends a comparison check that depends upon the named indices and is separated from the indices by a semi-colon (;). For example:julia> @variable(model, x[i=1:4; mod(i, 2)==0])\nDict{Any,VariableRef} with 2 entries:\n  4 => x[4]\n  2 => x[2]"
+    "text": "The third datatype that JuMP supports the efficient creation of are SparseAxisArrays. These arrays are created when the indices do not form a rectangular set. One example is when indices have a dependence upon previous indices (called triangular indexing). JuMP supports this as follows:julia> @variable(model, x[i=1:2, j=i:2])\nJuMP.Containers.SparseAxisArray{VariableRef,2,Tuple{Any,Any}} with 3 entries:\n  [1, 2]  =  x[1,2]\n  [2, 2]  =  x[2,2]\n  [1, 1]  =  x[1,1]x is a standard Julia dictionary. Therefore, slicing cannot be performed.We can also conditionally create variables via a JuMP-specific syntax. This sytax appends a comparison check that depends upon the named indices and is separated from the indices by a semi-colon (;). For example:julia> @variable(model, x[i=1:4; mod(i, 2)==0])\nJuMP.Containers.SparseAxisArray{VariableRef,1,Tuple{Any}} with 2 entries:\n  [4]  =  x[4]\n  [2]  =  x[2]"
 },
 
 {
@@ -469,7 +469,7 @@ var documenterSearchIndex = {"docs": [
     "page": "Constraints",
     "title": "Dictionaries",
     "category": "section",
-    "text": "The syntax for constructing a dictionary of constraints is very similar to the syntax for constructing a dictionary of variables.julia> @constraint(model, con[i = 1:2, j = 1:2; i != j], i * x <= j + 1)\nDict{Any,ConstraintRef{Model,C,Shape} where Shape<:JuMP.AbstractShape where C} with 2 entries:\n  (1, 2) => con[1,2] : x <= 3.0\n  (2, 1) => con[2,1] : 2 x <= 2.0"
+    "text": "The syntax for constructing a dictionary of constraints is very similar to the syntax for constructing a dictionary of variables.julia> @constraint(model, con[i = 1:2, j = 1:2; i != j], i * x <= j + 1)\nJuMP.Containers.SparseAxisArray{ConstraintRef{Model,C,Shape} where Shape<:JuMP.AbstractShape where C,2,Tuple{Any,Any}} with 2 entries:\n  [1, 2]  =  con[1,2] : x <= 3.0\n  [2, 1]  =  con[2,1] : 2 x <= 2.0"
 },
 
 {
@@ -733,7 +733,7 @@ var documenterSearchIndex = {"docs": [
     "page": "Containers",
     "title": "JuMP.generatecontainer",
     "category": "function",
-    "text": "generatecontainer(T, indexvars, indexsets, requestedtype)\n\nReturn a tuple, the first element of which is code that generates a container for objects of type T given the index variables, index sets, and requestedtype. requestedtype may be one of :Array, :JuMPArray, :Dict, or :Auto. Return error-producing code if requested type is incompatible. For the case of :Auto, the following rules are used to determine the appropriate container:\n\nIf all index sets are either explicit 1:B objects for any B or symbols which refer to objects of type Base.OneTo, then an Array is generated of the appropriate size. Types of symbols/expressions are not known at compile time, so we defer to type-safe functions to check the Base.OneTo condition.\nIf condition (1) does not hold, and the index sets are independent (the index variable for one set does not appear in the definition of another), then an JuMPArray is generated of the appropriate size.\nOtherwise, generate an empty Dict{Any,T}.\n\nThe second element of the return tuple is a Bool, true if the container type automatically checks for duplicate terms in the index sets and false otherwise.\n\nExamples\n\ngeneratecontainer(VariableRef, [:i,:j], [:(1:N), :(1:T)], :Auto)\n# Returns code equivalent to:\n# :(Array{VariableRef}(length(1:N), length(1:T))\n\ngeneratecontainer(VariableRef, [:i,:j], [:(1:N), :(2:T)], :Auto)\n# Returns code equivalent to:\n# :(JuMPArray(undef, 1:N, 2:T))\n\ngeneratecontainer(VariableRef, [:i,:j], [:(1:N), :(S)], :Auto)\n# Returns code that generates an Array if S is of type Base.OneTo,\n# otherwise an JuMPArray.\n\ngeneratecontainer(VariableRef, [:i,:j], [:(1:N), :(1:j)], :Auto)\n# Returns code equivalent to:\n# :(Dict{Any,VariableRef}())\n\n\n\n\n\n"
+    "text": "generatecontainer(T, indexvars, indexsets, requestedtype)\n\nReturn a tuple, the first element of which is code that generates a container for objects of type T given the index variables, index sets, and requestedtype. requestedtype may be one of :Array, :JuMPArray, :SparseAxisArray, or :Auto. Return error-producing code if requested type is incompatible. For the case of :Auto, the following rules are used to determine the appropriate container:\n\nIf all index sets are either explicit 1:B objects for any B or symbols which refer to objects of type Base.OneTo, then an Array is generated of the appropriate size. Types of symbols/expressions are not known at compile time, so we defer to type-safe functions to check the Base.OneTo condition.\nIf condition (1) does not hold, and the index sets are independent (the index variable for one set does not appear in the definition of another), then an JuMPArray is generated of the appropriate size.\nOtherwise, generate an empty SparseAxisArray{T,N,NTuple{N,Any}}.\n\nThe second element of the return tuple is a Bool, true if the container type automatically checks for duplicate terms in the index sets and false otherwise.\n\nExamples\n\ngeneratecontainer(VariableRef, [:i,:j], [:(1:N), :(1:T)], :Auto)\n# Returns code equivalent to:\n# :(Array{VariableRef}(length(1:N), length(1:T))\n\ngeneratecontainer(VariableRef, [:i,:j], [:(1:N), :(2:T)], :Auto)\n# Returns code equivalent to:\n# :(JuMPArray(undef, 1:N, 2:T))\n\ngeneratecontainer(VariableRef, [:i,:j], [:(1:N), :(S)], :Auto)\n# Returns code that generates an Array if S is of type Base.OneTo,\n# otherwise an JuMPArray.\n\ngeneratecontainer(VariableRef, [:i,:j], [:(1:N), :(1:j)], :Auto)\n# Returns code equivalent to:\n# :(Containers.SparseAxisArray(Dict{NTuple{N,Any},VariableRef}()))\n\n\n\n\n\n"
 },
 
 {
