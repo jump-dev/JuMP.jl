@@ -3,6 +3,7 @@
 #  License, v. 2.0. If a copy of the MPL was not distributed with this
 #  file, You can obtain one at http://mozilla.org/MPL/2.0/.
 
+include("Containers/Containers.jl")
 include("JuMPArray.jl")
 
 validarrayindexset(::Base.OneTo) = true
@@ -13,17 +14,22 @@ validarrayindexset(s) = false
     generatecontainer(T, indexvars, indexsets, requestedtype)
 
 Return a tuple, the first element of which is *code* that generates a container
-for objects of type `T` given the index variables,
-index sets, and `requestedtype`. `requestedtype` may be
-one of `:Array`, `:JuMPArray`, `:Dict`, or `:Auto`. Return error-producing code if
-requested type is incompatible. For the case of `:Auto`, the following rules are
-used to determine the appropriate container:
+for objects of type `T` given the index variables, index sets, and
+`requestedtype`. `requestedtype` may be one of `:Array`, `:JuMPArray`,
+`:SparseAxisArray`, or `:Auto`. Return error-producing code if requested type is
+incompatible. For the case of `:Auto`, the following rules are used to determine
+the appropriate container:
 
-1. If all index sets are either explicit `1:B` objects for any `B` or symbols which refer to objects of type `Base.OneTo`, then an `Array` is generated of the appropriate size. Types of symbols/expressions are not known at compile time, so we defer to type-safe functions to check the `Base.OneTo` condition.
+1. If all index sets are either explicit `1:B` objects for any `B` or symbols
+   which refer to objects of type `Base.OneTo`, then an `Array` is generated of
+   the appropriate size. Types of symbols/expressions are not known at compile
+   time, so we defer to type-safe functions to check the `Base.OneTo` condition.
 
-2. If condition (1) does not hold, and the index sets are independent (the index variable for one set does not appear in the definition of another), then an `JuMPArray` is generated of the appropriate size.
+2. If condition (1) does not hold, and the index sets are independent (the index
+   variable for one set does not appear in the definition of another), then an
+   `JuMPArray` is generated of the appropriate size.
 
-3. Otherwise, generate an empty `Dict{Any,T}`.
+3. Otherwise, generate an empty `SparseAxisArray{T,N,NTuple{N,Any}}`.
 
 The second element of the return tuple is a `Bool`, `true` if the container type
 automatically checks for duplicate terms in the index sets and `false` otherwise.
@@ -44,7 +50,7 @@ automatically checks for duplicate terms in the index sets and `false` otherwise
 
     generatecontainer(VariableRef, [:i,:j], [:(1:N), :(1:j)], :Auto)
     # Returns code equivalent to:
-    # :(Dict{Any,VariableRef}())
+    # :(Containers.SparseAxisArray(Dict{NTuple{N,Any},VariableRef}()))
 """
 function generatecontainer(T, indexvars, indexsets, requestedtype)
     hasdependent = hasdependentsets(indexvars,indexsets)
@@ -56,8 +62,11 @@ function generatecontainer(T, indexvars, indexsets, requestedtype)
         end
     end
 
-    if requestedtype == :Dict || (requestedtype == :Auto && hasdependent)
-        return :(Dict{Any,$T}()), false
+    if requestedtype == :SparseAxisArray || (requestedtype == :Auto &&
+                                             hasdependent)
+        N = length(indexvars)
+        @assert N == length(indexsets)
+        return :(JuMP.Containers.SparseAxisArray(Dict{NTuple{$N,Any},$T}())), false
     end
 
     sizes = Expr(:tuple, [:(length($rng)) for rng in indexsets]...)

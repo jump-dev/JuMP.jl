@@ -253,11 +253,11 @@ function test_variable_repeated_elements(ModelType)
     @test_throws ErrorException (
         @variable(model, unused_variable[index_set], container=JuMPArray))
     @test_throws ErrorException (
-        @variable(model, unused_variable[index_set], container=Dict))
+        @variable(model, unused_variable[index_set], container=SparseAxisArray))
     @test_throws ErrorException (
         @variable(model, unused_variable[index_set, [1]], container=JuMPArray))
     @test_throws ErrorException (
-        @variable(model, unused_variable[index_set, [1]], container=Dict))
+        @variable(model, unused_variable[index_set, [1]], container=SparseAxisArray))
 end
 
 function test_variable_oneto_index_set(ModelType, VariableRefType)
@@ -344,7 +344,7 @@ function test_variable_start_value_on_empty(ModelType)
     model = ModelType()
     @variable(model, x[1:4,  1:0,1:3], start = 0)  # Array{VariableRef}
     @variable(model, y[1:4,  2:1,1:3], start = 0)  # JuMPArray
-    @variable(model, z[1:4,Set(),1:3], start = 0)  # Dict
+    @variable(model, z[1:4,Set(),1:3], start = 0)  # SparseAxisArray
 
     @test JuMP.start_value.(x) == Array{Float64}(undef, 4, 0, 3)
     # TODO: Decide what to do here. I don't know if we still need to test this

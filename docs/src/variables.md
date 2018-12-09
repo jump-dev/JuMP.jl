@@ -221,7 +221,7 @@ datastructures.
 
 JuMP provides a mechanism for creating three types of these datastructures,
 which we refer to as *containers*. The three types are `Array`s, `JuMPArray`s,
-and `Dict`ionaries. We explain each of these in the following.
+and `SparseAxisArray`s. We explain each of these in the following.
 
 ### Arrays
 
@@ -316,18 +316,18 @@ And data, a 2×2 Array{Float64,2}:
  2.5  4.5
 ```
 
-### [Dictionaries](@id variable_dictionaries)
+### [SparseAxisArrays](@id variable_sparseaxisarrays)
 
 The third datatype that JuMP supports the efficient creation of are
-dictionaries. These dictionaries are created when the indices do not form a
+`SparseAxisArray`s. These arrays are created when the indices do not form a
 rectangular set. One example is when indices have a dependence upon previous
 indices (called *triangular indexing*). JuMP supports this as follows:
 ```jldoctest; setup=:(model=Model())
 julia> @variable(model, x[i=1:2, j=i:2])
-Dict{Any,VariableRef} with 3 entries:
-  (1, 2) => x[1,2]
-  (2, 2) => x[2,2]
-  (1, 1) => x[1,1]
+JuMP.Containers.SparseAxisArray{VariableRef,2,Tuple{Any,Any}} with 3 entries:
+  [1, 2]  =  x[1,2]
+  [2, 2]  =  x[2,2]
+  [1, 1]  =  x[1,1]
 ```
 `x` is a standard Julia dictionary. Therefore, slicing cannot be performed.
 
@@ -336,9 +336,9 @@ sytax appends a comparison check that depends upon the named indices and is
 separated from the indices by a semi-colon (`;`). For example:
 ```jldoctest; setup=:(model=Model())
 julia> @variable(model, x[i=1:4; mod(i, 2)==0])
-Dict{Any,VariableRef} with 2 entries:
-  4 => x[4]
-  2 => x[2]
+JuMP.Containers.SparseAxisArray{VariableRef,1,Tuple{Any}} with 2 entries:
+  [4]  =  x[4]
+  [2]  =  x[2]
 ```
 
 ### [Forcing the container type](@id variable_forcing)
