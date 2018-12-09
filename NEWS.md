@@ -90,7 +90,8 @@ Breaking changes:
   
 - The `lowerbound`, `upperbound`, and `basename` keyword arguments to the `@variable`
   macro have been renamed to `lower_bound`, `upper_bound`, and `base_name`,
-  for consistency with JuMP's new style recommendations.
+  for consistency with JuMP's new
+  [style recommendations](http://www.juliaopt.org/JuMP.jl/dev/style/).
 
 New features:
 
