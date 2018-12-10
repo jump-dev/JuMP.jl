@@ -94,7 +94,7 @@ Helper function for macros to transform expression objects containing kernel cod
     4. `idxvars`: Names for the index variables for each loop, e.g. `[:i, gensym(), :k]`
     5. `idxsets`: Sets used to define iteration for each loop, e.g. `[1:3, [:red,:blue], S]`
     6. `sym`: A `Symbol`/`Expr` containing the element type of the container that is being iterated over, e.g. `:AffExpr` or `:VariableRef`
-    7. `requestedcontainer`: Argument that is passed through to `generatedcontainer`. Either `:Auto`, `:Array`, `:JuMPArray`, or `:SparseAxisArray`.
+    7. `requestedcontainer`: Argument that is passed through to `generatedcontainer`. Either `:Auto`, `:Array`, `:DenseAxisArray`, or `:SparseAxisArray`.
     8. `lowertri`: `Bool` keyword argument that is `true` if the iteration is over a cartesian array and should only iterate over the lower triangular entries, filling upper triangular entries with copies, e.g. `x[1,3] === x[3,1]`, and `false` otherwise.
 """
 function getloopedcode(varname, code, condition, idxvars, idxsets, sym, requestedcontainer::Symbol; lowertri=false)
@@ -106,14 +106,14 @@ function getloopedcode(varname, code, condition, idxvars, idxsets, sym, requeste
 
     hascond = (condition != :())
 
-    if !(requestedcontainer in [:Auto, :Array, :JuMPArray, :SparseAxisArray])
-        return :(error("Invalid container type $container. Must be Auto, Array, JuMPArray, or SparseAxisArray."))
+    if !(requestedcontainer in [:Auto, :Array, :DenseAxisArray, :SparseAxisArray])
+        return :(error("Invalid container type $container. Must be Auto, Array, DenseAxisArray, or SparseAxisArray."))
     end
 
     if hascond
         if requestedcontainer == :Auto
             requestedcontainer = :SparseAxisArray
-        elseif requestedcontainer == :Array || requestedcontainer == :JuMPArray
+        elseif requestedcontainer == :Array || requestedcontainer == :DenseAxisArray
             return :(error("Requested container type is incompatible with ",
                            "conditional indexing. Use :SparseAxisArray or ",
                            ":Auto instead."))
@@ -1165,7 +1165,7 @@ lower bound 0:
 x = @variable(model, base_name="x", lower_bound=0)
 ```
 
-The following are equivalent ways of creating a `JuMPArray` of index set
+The following are equivalent ways of creating a `DenseAxisArray` of index set
 `[:a, :b]` and with respective upper bounds 2 and 3 and names `x[a]` and `x[b].
 ```julia
 ub = Dict(:a => 2, :b => 3)
@@ -1206,13 +1206,13 @@ info = VariableInfo(true, 0, false, NaN, false, NaN, false, NaN, false, false)
 JuMP.add_variable(model, JuMP.build_variable(error, info), "x")
 ```
 
-The following creates a `JuMPArray` of index set `[:a, :b]` and with respective
+The following creates a `DenseAxisArray` of index set `[:a, :b]` and with respective
 upper bounds 2 and 3 and names `x[a]` and `x[b]` as with the second example
 above but does it without using the `@variable` macro
 ```julia
 # Without the `@variable` macro
 data = Vector{JuMP.variable_type(model)}(undef, length(keys(ub)))
-x = JuMPArray(data, keys(ub))
+x = JuMP.Containers.DenseAxisArray(data, keys(ub))
 for i in keys(ub)
     info = VariableInfo(false, NaN, true, ub[i], false, NaN, false, NaN, false, false)
     x[i] = JuMP.add_variable(model, JuMP.build_variable(error, info), "x[\$i]")

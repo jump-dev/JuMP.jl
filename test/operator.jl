@@ -242,11 +242,11 @@ function operators_test(ModelType::Type{<:JuMP.AbstractModel}, VariableRefType::
         @testset "sum" begin
             sum_m = ModelType()
             @variable(sum_m, 0 ≤ matrix[1:3,1:3] ≤ 1, start = 1)
-            @testset "sum(j::JuMPArray{Variable})" begin
+            @testset "sum(j::DenseAxisArray{Variable})" begin
                 @test_expression_with_string sum(matrix) "matrix[1,1] + matrix[2,1] + matrix[3,1] + matrix[1,2] + matrix[2,2] + matrix[3,2] + matrix[1,3] + matrix[2,3] + matrix[3,3]"
             end
 
-            @testset "sum(j::JuMPArray{T}) where T<:Real" begin
+            @testset "sum(j::DenseAxisArray{T}) where T<:Real" begin
                 @test sum(JuMP.start_value.(matrix)) ≈ 9
             end
             @testset "sum(j::Array{VariableRef})" begin

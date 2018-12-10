@@ -14,7 +14,7 @@ by JuMP's macros. The following constructors can be used to create them
 manually.
 
 ```@docs
-JuMP.JuMPArray
+JuMP.Containers.DenseAxisArray
 ```
 
 Containers in macros

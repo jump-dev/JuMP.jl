@@ -220,7 +220,7 @@ is often useful to create collections of JuMP variables inside more complicated
 datastructures.
 
 JuMP provides a mechanism for creating three types of these datastructures,
-which we refer to as *containers*. The three types are `Array`s, `JuMPArray`s,
+which we refer to as *containers*. The three types are `Array`s, `DenseAxisArray`s,
 and `SparseAxisArray`s. We explain each of these in the following.
 
 ### Arrays
@@ -263,19 +263,19 @@ JuMP will form an `Array` of JuMP variables when it can determine at compile
 time that the indices are one-based integer ranges. Therefore `x[1:b]` will
 create an `Array` of JuMP variables, but `x[a:b]` will not. If JuMP cannot
 determine that the indices are one-based integer ranges (e.g., in the case of
-`x[a:b]`), JuMP will create a `JuMPArray` instead.
+`x[a:b]`), JuMP will create a `DenseAxisArray` instead.
 
-### [JuMPArrays](@id variable_jump_arrays)
+### [DenseAxisArrays](@id variable_jump_arrays)
 
 We often want to create arrays where the indices are not one-based integer
 ranges. For example, we may want to create a variable indexed by the name of a
 product or a location. The syntax is the same as that above, except with an
 arbitrary vector as an index as opposed to a one-based range. The biggest
 difference is that instead of returning an `Array` of JuMP variables, JuMP will
-return a `JuMPArray`. For example:
+return a `DenseAxisArray`. For example:
 ```jldoctest variables_jump_arrays; setup=:(model=Model())
 julia> @variable(model, x[1:2, [:A,:B]])
-2-dimensional JuMPArray{VariableRef,2,...} with index sets:
+2-dimensional DenseAxisArray{VariableRef,2,...} with index sets:
     Dimension 1, 1:2
     Dimension 2, Symbol[:A, :B]
 And data, a 2×2 Array{VariableRef,2}:
@@ -283,24 +283,24 @@ And data, a 2×2 Array{VariableRef,2}:
  x[2,A]  x[2,B]
 ```
 
-JuMPArray's can be indexed and sliced as follows:
+DenseAxisArray's can be indexed and sliced as follows:
 ```jldoctest variables_jump_arrays
 julia> x[1, :A]
 x[1,A]
 
 julia> x[2, :]
-1-dimensional JuMPArray{VariableRef,1,...} with index sets:
+1-dimensional DenseAxisArray{VariableRef,1,...} with index sets:
     Dimension 1, Symbol[:A, :B]
 And data, a 2-element Array{VariableRef,1}:
  x[2,A]
  x[2,B]
 ```
 
-Similarly to the `Array` case, the indices in a `JuMPArray` can be named, and
-the bounds can depend upon these names. For example:
+Similarly to the `Array` case, the indices in a `DenseAxisArray` can be named,
+and the bounds can depend upon these names. For example:
 ```jldoctest; setup=:(model=Model())
 julia> @variable(model, x[i=2:3, j=1:2:3] >= 0.5i + j)
-2-dimensional JuMPArray{VariableRef,2,...} with index sets:
+2-dimensional DenseAxisArray{VariableRef,2,...} with index sets:
     Dimension 1, 2:3
     Dimension 2, 1:2:3
 And data, a 2×2 Array{VariableRef,2}:
@@ -308,7 +308,7 @@ And data, a 2×2 Array{VariableRef,2}:
  x[3,1]  x[3,3]
 
 julia> JuMP.lower_bound.(x)
-2-dimensional JuMPArray{Float64,2,...} with index sets:
+2-dimensional DenseAxisArray{Float64,2,...} with index sets:
     Dimension 1, 2:3
     Dimension 2, 1:2:3
 And data, a 2×2 Array{Float64,2}:
@@ -345,15 +345,15 @@ JuMP.Containers.SparseAxisArray{VariableRef,1,Tuple{Any}} with 2 entries:
 
 When creating a container of JuMP variables, JuMP will attempt to choose the
 tightest container type that can store the JuMP variables. Thus, it will prefer
-to create an Array before a JuMPArray, and a JuMPArray before a dictionary.
-However, because this happens at compile time, it does not always make the best
-choice. To illustrate this, consider the following example:
+to create an Array before a DenseAxisArray, and a DenseAxisArray before a
+dictionary. However, because this happens at compile time, it does not always
+make the best choice. To illustrate this, consider the following example:
 ```jldoctest variable_force_container; setup=:(model=Model())
 julia> A = 1:2
 1:2
 
 julia> @variable(model, x[A])
-1-dimensional JuMPArray{VariableRef,1,...} with index sets:
+1-dimensional DenseAxisArray{VariableRef,1,...} with index sets:
     Dimension 1, 1:2
 And data, a 2-element Array{VariableRef,1}:
  x[1]
@@ -361,7 +361,7 @@ And data, a 2-element Array{VariableRef,1}:
 ```
 Since the value (and type) of `A` is unknown at compile time, JuMP is unable to
 infer that `A` is a one-based integer range. Therefore, JuMP creates a
-`JuMPArray`, even though it could store these two variables in a standard
+`DenseAxisArray`, even though it could store these two variables in a standard
 one-dimensional `Array`.
 
 We can share our knowledge that it is possible to store these JuMP variables as
@@ -372,8 +372,8 @@ julia> @variable(model, y[A], container=Array)
  y[1]
  y[2]
 ```
-JuMP now creates a vector of JuMP variables, instead of a JuMPArray. Note that
-choosing an invalid container type will throw an error.
+JuMP now creates a vector of JuMP variables, instead of a DenseAxisArray. Note
+that choosing an invalid container type will throw an error.
 
 ## Integrality shortcuts
 

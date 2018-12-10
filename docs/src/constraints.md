@@ -215,7 +215,7 @@ So far, we've added constraints one-by-one. However, just like
 [Variable containers](@ref), JuMP provides a mechanism for building groups of
 constraints compactly. References to these groups of constraints are returned in
 *containers*. Three types of constraint containers are supported: `Array`s,
-`JuMPArray`s, and `Dict`ionaries. We explain each of these in the following.
+`DenseAxisArray`s, and `Dict`ionaries. We explain each of these in the following.
 
 ### [Arrays](@id constraint_arrays)
 
@@ -254,16 +254,17 @@ can determine at parse time that the indices are one-based integer ranges.
 Therefore `con[1:b]` will create an `Array`, but `con[a:b]` will not. A special
 case is `con[Base.OneTo(n)]` which will produce an `Array`. If JuMP cannot
 determine that the indices are one-based integer ranges (e.g., in the case of
-`con[a:b]`), JuMP will create a `JuMPArray` instead.
+`con[a:b]`), JuMP will create a `DenseAxisArray` instead.
 
-### JuMPArrays
+### DenseAxisArrays
 
-The syntax for constructing a `JuMPArray` of constraints is very similar to the
-[syntax for constructing](@ref variable_jump_arrays) a JuMPArray of variables.
+The syntax for constructing a `DenseAxisArray` of constraints is very similar to
+the [syntax for constructing](@ref variable_jump_arrays) a DenseAxisArray of
+variables.
 
 ```jldoctest constraint_jumparrays; setup=:(model=Model(); @variable(model, x))
 julia> @constraint(model, con[i = 1:2, j = 2:3], i * x <= j + 1)
-2-dimensional JuMPArray{ConstraintRef{Model,C,Shape} where Shape<:JuMP.AbstractShape where C,2,...} with index sets:
+2-dimensional DenseAxisArray{ConstraintRef{Model,C,Shape} where Shape<:JuMP.AbstractShape where C,2,...} with index sets:
     Dimension 1, 1:2
     Dimension 2, 2:3
 And data, a 2×2 Array{ConstraintRef{Model,C,Shape} where Shape<:JuMP.AbstractShape where C,2}:

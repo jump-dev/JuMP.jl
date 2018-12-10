@@ -14,7 +14,7 @@ validarrayindexset(s) = false
 
 Return a tuple, the first element of which is *code* that generates a container
 for objects of type `T` given the index variables, index sets, and
-`requestedtype`. `requestedtype` may be one of `:Array`, `:JuMPArray`,
+`requestedtype`. `requestedtype` may be one of `:Array`, `:DenseAxisArray`,
 `:SparseAxisArray`, or `:Auto`. Return error-producing code if requested type is
 incompatible. For the case of `:Auto`, the following rules are used to determine
 the appropriate container:
@@ -26,7 +26,7 @@ the appropriate container:
 
 2. If condition (1) does not hold, and the index sets are independent (the index
    variable for one set does not appear in the definition of another), then an
-   `JuMPArray` is generated of the appropriate size.
+   `DenseAxisArray` is generated of the appropriate size.
 
 3. Otherwise, generate an empty `SparseAxisArray{T,N,NTuple{N,Any}}`.
 
@@ -41,11 +41,11 @@ automatically checks for duplicate terms in the index sets and `false` otherwise
 
     generatecontainer(VariableRef, [:i,:j], [:(1:N), :(2:T)], :Auto)
     # Returns code equivalent to:
-    # :(JuMPArray(undef, 1:N, 2:T))
+    # :(JuMP.Containers.DenseAxisArray(undef, 1:N, 2:T))
 
     generatecontainer(VariableRef, [:i,:j], [:(1:N), :(S)], :Auto)
     # Returns code that generates an Array if S is of type Base.OneTo,
-    # otherwise an JuMPArray.
+    # otherwise an DenseAxisArray.
 
     generatecontainer(VariableRef, [:i,:j], [:(1:N), :(1:j)], :Auto)
     # Returns code equivalent to:
@@ -87,11 +87,11 @@ function generatecontainer(T, indexvars, indexsets, requestedtype)
         end
     end
 
-    axisexpr = :(JuMP.JuMPArray{$T}(undef))
+    axisexpr = :(JuMP.Containers.DenseAxisArray{$T}(undef))
     append!(axisexpr.args, indexsets)
 
-    if requestedtype == :JuMPArray
-        hasdependent && return :(error("Unable to create requested JuMPArray because index sets are dependent.")), true
+    if requestedtype == :DenseAxisArray
+        hasdependent && return :(error("Unable to create requested DenseAxisArray because index sets are dependent.")), true
         return axisexpr, true
     end
 
