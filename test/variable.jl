@@ -21,7 +21,7 @@ include("utilities.jl")
     include("JuMPExtension.jl")
 end
 
-# Slices three-dimensional JuMPArray x[I,J,K]
+# Slices three-dimensional DenseAxisArray x[I,J,K]
 # I,J,K can be singletons, ranges, colons, etc.
 function sliceof(VariableRefType, x, I, J, K)
     y = Array{VariableRefType}(undef, length(I), length(J), length(K))
@@ -251,11 +251,11 @@ function test_variable_repeated_elements(ModelType)
     model = ModelType()
     index_set = [:x,:x,:y]
     @test_throws ErrorException (
-        @variable(model, unused_variable[index_set], container=JuMPArray))
+        @variable(model, unused_variable[index_set], container=DenseAxisArray))
     @test_throws ErrorException (
         @variable(model, unused_variable[index_set], container=SparseAxisArray))
     @test_throws ErrorException (
-        @variable(model, unused_variable[index_set, [1]], container=JuMPArray))
+        @variable(model, unused_variable[index_set, [1]], container=DenseAxisArray))
     @test_throws ErrorException (
         @variable(model, unused_variable[index_set, [1]], container=SparseAxisArray))
 end
@@ -269,9 +269,9 @@ function test_variable_oneto_index_set(ModelType, VariableRefType)
     array_var = @variable(model, [Base.OneTo(3), 1:2], container=Array)
     @test array_var isa Matrix{VariableRefType}
     @test size(array_var) == (3, 2)
-    jumparray_var = @variable(model, [Base.OneTo(3), 1:2], container=JuMPArray)
-    @test jumparray_var isa JuMPArray{VariableRefType}
-    @test length.(axes(jumparray_var)) == (3, 2)
+    denseaxisarray_var = @variable(model, [Base.OneTo(3), 1:2], container=DenseAxisArray)
+    @test denseaxisarray_var isa JuMP.Containers.DenseAxisArray{VariableRefType}
+    @test length.(axes(denseaxisarray_var)) == (3, 2)
 end
 
 function test_variable_base_name_in_macro(ModelType)
@@ -343,29 +343,29 @@ end
 function test_variable_start_value_on_empty(ModelType)
     model = ModelType()
     @variable(model, x[1:4,  1:0,1:3], start = 0)  # Array{VariableRef}
-    @variable(model, y[1:4,  2:1,1:3], start = 0)  # JuMPArray
+    @variable(model, y[1:4,  2:1,1:3], start = 0)  # DenseAxisArray
     @variable(model, z[1:4,Set(),1:3], start = 0)  # SparseAxisArray
 
     @test JuMP.start_value.(x) == Array{Float64}(undef, 4, 0, 3)
     # TODO: Decide what to do here. I don't know if we still need to test this
     #       given broadcast syntax.
-    # @test typeof(JuMP.start_value(y)) <: JuMP.JuMPArray{Float64}
+    # @test typeof(JuMP.start_value(y)) <: JuMP.DenseAxisArray{Float64}
     # @test JuMP.size(JuMP.start_value(y)) == (4,0,3)
     # @test typeof(JuMP.start_value(z)) ==
-    #   JuMP.JuMPArray{Float64,3,Tuple{UnitRange{Int},Set{Any},UnitRange{Int}}}
+    #   JuMP.DenseAxisArray{Float64,3,Tuple{UnitRange{Int},Set{Any},UnitRange{Int}}}
     # @test length(JuMP.start_value(z)) == 0
 end
 
-function test_variable_jumparray_slices(ModelType, VariableRefType)
-    # Test slicing JuMPArrays (JuMP issue #684).
+function test_variable_denseaxisarray_slices(ModelType, VariableRefType)
+    # Test slicing DenseAxisArrays (JuMP issue #684).
     model = ModelType()
-    @variable(model, x[1:3, 1:4, 1:2], container=JuMPArray)
+    @variable(model, x[1:3, 1:4, 1:2], container=DenseAxisArray)
     @variable(model, y[1:3, -1:2, 3:4])
     @variable(model, z[1:3, -1:2:4, 3:4])
     @variable(model, w[1:3, -1:2,[:red, "blue"]])
 
     #@test x[:] == vec(sliceof(VariableRefType, x, 1:3, 1:4, 1:2))
-    @test x isa JuMPArray
+    @test x isa JuMP.Containers.DenseAxisArray
     @test x[:, :, :].data == sliceof(VariableRefType, x, 1:3, 1:4, 1:2)
     @test x[1, :, :].data == sliceof(VariableRefType, x, 1, 1:4, 1:2)
     @test x[1, :, 2].data == sliceof(VariableRefType, x, 1, 1:4, 2)
@@ -489,11 +489,11 @@ function variables_test(ModelType::Type{<:JuMP.AbstractModel},
         test_variable_start_value_on_empty(ModelType)
     end
 
-    @testset "Slices of JuMPArray (#684)" begin
-        test_variable_jumparray_slices(ModelType, VariableRefType)
+    @testset "Slices of DenseAxisArray (#684)" begin
+        test_variable_denseaxisarray_slices(ModelType, VariableRefType)
     end
 
-    @testset "end for indexing a JuMPArray" begin
+    @testset "end for indexing a DenseAxisArray" begin
         test_variable_end_indexing(ModelType)
     end
 

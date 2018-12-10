@@ -154,7 +154,7 @@ function constraints_test(ModelType::Type{<:JuMP.AbstractModel})
         @variable m x[1:2]
         @constraint m cref1[i=2:4] x .== [i, i+1]
         ConstraintRefType = eltype(cref1[2])
-        @test cref1 isa JuMP.JuMPArray{AbstractArray{ConstraintRefType}}
+        @test cref1 isa JuMP.Containers.DenseAxisArray{AbstractArray{ConstraintRefType}}
         @constraint m cref2[i=1:3, j=1:4] x .≤ [i+j, i-j]
         @test cref2 isa Matrix{AbstractArray{ConstraintRefType}}
         @variable m y[1:2, 1:2]
