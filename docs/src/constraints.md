@@ -215,7 +215,8 @@ So far, we've added constraints one-by-one. However, just like
 [Variable containers](@ref), JuMP provides a mechanism for building groups of
 constraints compactly. References to these groups of constraints are returned in
 *containers*. Three types of constraint containers are supported: `Array`s,
-`DenseAxisArray`s, and `Dict`ionaries. We explain each of these in the following.
+`DenseAxisArray`s, and `SparseAxisArray`s. We explain each of these in the
+following.
 
 ### [Arrays](@id constraint_arrays)
 
