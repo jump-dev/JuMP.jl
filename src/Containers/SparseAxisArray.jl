@@ -1,3 +1,8 @@
+#  Copyright 2017, Iain Dunning, Joey Huchette, Miles Lubin, and contributors
+#  This Source Code Form is subject to the terms of the Mozilla Public
+#  License, v. 2.0. If a copy of the MPL was not distributed with this
+#  file, You can obtain one at http://mozilla.org/MPL/2.0/.
+
 """
     struct SparseAxisArray{T,N,K<:NTuple{N, Any}} <: AbstractArray{T,N}
         data::Dict{K,T}
@@ -20,12 +25,7 @@ Base.IteratorSize(::Type{<:SparseAxisArray}) = Base.HasLength()
 # By default `IteratorSize` for `Generator{<:AbstractArray{T,N}}` is
 # `HasShape{N}`
 Base.IteratorSize(::Type{Base.Generator{<:SparseAxisArray}}) = Base.HasLength()
-Base.eachindex(g::Base.Generator{<:SparseAxisArray}) = eachindex(g.iter)
 Base.iterate(sa::SparseAxisArray, args...) = iterate(values(sa.data), args...)
-Base.haskey(sa::SparseAxisArray, idx) = haskey(sa.data, idx)
-function Base.haskey(sa::SparseAxisArray{T,1,Tuple{I}}, idx::I) where {T, I}
-    return haskey(sa.data, (idx,))
-end
 
 # A `length` argument can be given because `IteratorSize` is `HasLength`
 function Base.similar(sa::SparseAxisArray{S,N,K}, ::Type{T},
@@ -53,49 +53,16 @@ function Base.mapreduce(f, op, sa::SparseAxisArray)
 end
 Base.:(==)(sa1::SparseAxisArray, sa2::SparseAxisArray) = sa1.data == sa2.data
 
-########
-# Show #
-########
-
-# Inspired from Julia SparseArrays stdlib package
-function Base.show(io::IO, ::MIME"text/plain", sa::SparseAxisArray)
-    num_entries = length(sa.data)
-    print(io, typeof(sa), " with ", num_entries,
-              isone(num_entries) ? " entry" : " entries")
-    if !iszero(num_entries)
-        println(io, ":")
-        show(io, sa)
-    end
-end
-Base.show(io::IO, x::SparseAxisArray) = show(convert(IOContext, io), x)
-function Base.show(io::IOContext, x::SparseAxisArray)
-    # TODO: make this a one-line form
-    if isempty(x)
-        return show(io, MIME("text/plain"), x)
-    end
-    limit::Bool = get(io, :limit, false)
-    half_screen_rows = limit ? div(displaysize(io)[1] - 8, 2) : typemax(Int)
-    key_string(key::Tuple) = join(key, ", ")
-    print_entry(i) = i < half_screen_rows || i > length(x) - half_screen_rows
-    pad = maximum(Int[print_entry(i) ? length(key_string(key)) : 0 for (i, key) in enumerate(keys(x.data))])
-    if !haskey(io, :compact)
-        io = IOContext(io, :compact => true)
-    end
-    for (i, (key, value)) = enumerate(x.data)
-        if print_entry(i)
-            print(io, "  ", '[', rpad(key_string(key), pad), "]  =  ", value)
-            if i != length(x)
-                println(io)
-            end
-        elseif i == half_screen_rows
-            println(io, "   ", " "^pad, "   \u22ee")
-        end
-    end
-end
-
 ############
 # Indexing #
 ############
+
+Base.haskey(sa::SparseAxisArray, idx) = haskey(sa.data, idx)
+function Base.haskey(sa::SparseAxisArray{T,1,Tuple{I}}, idx::I) where {T, I}
+    return haskey(sa.data, (idx,))
+end
+
+Base.eachindex(g::Base.Generator{<:SparseAxisArray}) = eachindex(g.iter)
 
 # Error for sa[..., :, ...]
 function _colon_error() end
@@ -125,9 +92,6 @@ Base.eachindex(d::SparseAxisArray) = keys(d.data)
 # Need to define it as indices may be non-integers
 Base.to_index(d::SparseAxisArray, idx) = idx
 
-# Arbitrary typed indices. Linear indexing not supported.
-struct IndexAnyCartesian <: Base.IndexStyle end
-Base.IndexStyle(::IndexAnyCartesian, ::IndexAnyCartesian) = IndexAnyCartesian()
 Base.IndexStyle(::Type{<:SparseAxisArray}) = IndexAnyCartesian()
 # eachindex redirect to keys
 Base.keys(::IndexAnyCartesian, d::SparseAxisArray) = keys(d)
@@ -201,4 +165,44 @@ function Base.copyto!(dest::SparseAxisArray{T, N, K},
         dest[key] = bc[key]
     end
     return dest
+end
+
+########
+# Show #
+########
+
+# Inspired from Julia SparseArrays stdlib package
+function Base.show(io::IO, ::MIME"text/plain", sa::SparseAxisArray)
+    num_entries = length(sa.data)
+    print(io, typeof(sa), " with ", num_entries,
+              isone(num_entries) ? " entry" : " entries")
+    if !iszero(num_entries)
+        println(io, ":")
+        show(io, sa)
+    end
+end
+Base.show(io::IO, x::SparseAxisArray) = show(convert(IOContext, io), x)
+function Base.show(io::IOContext, x::SparseAxisArray)
+    # TODO: make this a one-line form
+    if isempty(x)
+        return show(io, MIME("text/plain"), x)
+    end
+    limit::Bool = get(io, :limit, false)
+    half_screen_rows = limit ? div(displaysize(io)[1] - 8, 2) : typemax(Int)
+    key_string(key::Tuple) = join(key, ", ")
+    print_entry(i) = i < half_screen_rows || i > length(x) - half_screen_rows
+    pad = maximum(Int[print_entry(i) ? length(key_string(key)) : 0 for (i, key) in enumerate(keys(x.data))])
+    if !haskey(io, :compact)
+        io = IOContext(io, :compact => true)
+    end
+    for (i, (key, value)) = enumerate(x.data)
+        if print_entry(i)
+            print(io, "  ", '[', rpad(key_string(key), pad), "]  =  ", value)
+            if i != length(x)
+                println(io)
+            end
+        elseif i == half_screen_rows
+            println(io, "   ", " "^pad, "   \u22ee")
+        end
+    end
 end

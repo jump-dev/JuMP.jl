@@ -11,11 +11,17 @@
 """
     Containers
 
-Module defining the containers `SparseAxisArray` that behaves as a regular
-`AbstractArray` but with custom indexes that are not necessarily integers.
+Module defining the containers `DenseAxisArray` and `SparseAxisArray` that
+behaves as a regular `AbstractArray` but with custom indexes that are not
+necessarily integers.
 """
 module Containers
 
+# Arbitrary typed indices. Linear indexing not supported.
+struct IndexAnyCartesian <: Base.IndexStyle end
+Base.IndexStyle(::IndexAnyCartesian, ::IndexAnyCartesian) = IndexAnyCartesian()
+
+include("DenseAxisArray.jl")
 include("SparseAxisArray.jl")
 
 end
