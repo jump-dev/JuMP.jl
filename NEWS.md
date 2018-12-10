@@ -27,9 +27,10 @@ Breaking changes:
   for a list of solvers that have and have not yet been updated.
 
 - JuMP containers (e.g., the objects returned by `@variable`) have been
-  redesigned. `Base.Dict` replaces `JuMPDict`, `JuMPArray` was rewritten
-  (inspired by `AxisArrays`), and you can now request a container type with the
-  `container=` keyword to the macros. See the corresponding
+  redesigned. `Containers.SparseAxisArray` replaces `JuMPDict`, `JuMPArray` was
+  rewritten (inspired by `AxisArrays`) and renamed `Containers.DenseAxisArray`,
+  and you can now request a container type with the `container=` keyword to the
+  macros. See the corresponding
   [documentation](http://www.juliaopt.org/JuMP.jl/dev/variables/#Variable-containers-1)
   for more details.
 
