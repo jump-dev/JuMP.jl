@@ -13,14 +13,14 @@
     objective_bound(model::Model)
 
 Return the best known bound on the optimal objective value after a call to
-`optimize!model)`.
+`optimize!(model)`.
 """
 objective_bound(model::Model) = MOI.get(model, MOI.ObjectiveBound())
 
 """
     objective_value(model::Model)
 
-Return the objective value after a call to `optimize!model)`.
+Return the objective value after a call to `optimize!(model)`.
 """
 objective_value(model::Model) = MOI.get(model, MOI.ObjectiveValue())
 
@@ -82,7 +82,7 @@ end
 """
     objective_function(m::Model, T::Type{<:AbstractJuMPScalar})
 
-Return a object of type `T` representing the objective function.
+Return an object of type `T` representing the objective function.
 Error if the objective is not convertible to type `T`.
 
 ## Examples
