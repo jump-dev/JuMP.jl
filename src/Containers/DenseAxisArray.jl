@@ -15,8 +15,6 @@ struct DenseAxisArray{T,N,Ax,L<:NTuple{N,Dict}} <: AbstractArray{T,N}
     lookup::L
 end
 
-export DenseAxisArray
-
 function build_lookup(ax)
     d = Dict{eltype(ax),Int}()
     cnt = 1
