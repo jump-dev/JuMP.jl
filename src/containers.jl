@@ -4,7 +4,6 @@
 #  file, You can obtain one at http://mozilla.org/MPL/2.0/.
 
 include("Containers/Containers.jl")
-include("JuMPArray.jl")
 
 validarrayindexset(::Base.OneTo) = true
 validarrayindexset(r::UnitRange) = first(r) == 1
