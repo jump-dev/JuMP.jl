@@ -20,10 +20,10 @@ JuMP.Containers.DenseAxisArray
 Containers in macros
 --------------------
 
-The `generatecontainer` function encodes the logic for how containers are
+The `generate_container` function encodes the logic for how containers are
 constructed in JuMP's macros.
 ```@docs
-JuMP.generatecontainer
+JuMP.Containers.generate_container
 ```
 
 In the [`@variable`](@ref) (resp. [`@constraint`](@ref)) macro, containers of
