@@ -11,13 +11,14 @@ macro dummycontainer(expr, requestedtype)
     name = gensym()
     refcall, indexvars, indexsets, condition = JuMP.buildrefsets(expr, name)
     if condition == :()
-        return JuMP.generatecontainer(Bool, indexvars, indexsets, requestedtype)[1]
+        return Containers.generate_container(Bool, indexvars, indexsets,
+                                             requestedtype)[1]
     else
         if requestedtype != :Auto && requestedtype != :SparseAxisArray
             return :(error(""))
         end
-        return JuMP.generatecontainer(Bool, indexvars, indexsets,
-                                      :SparseAxisArray)[1]
+        return Containers.generate_container(Bool, indexvars, indexsets,
+                                             :SparseAxisArray)[1]
     end
 end
 

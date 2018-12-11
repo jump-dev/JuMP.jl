@@ -94,7 +94,7 @@ Helper function for macros to transform expression objects containing kernel cod
     4. `idxvars`: Names for the index variables for each loop, e.g. `[:i, gensym(), :k]`
     5. `idxsets`: Sets used to define iteration for each loop, e.g. `[1:3, [:red,:blue], S]`
     6. `sym`: A `Symbol`/`Expr` containing the element type of the container that is being iterated over, e.g. `:AffExpr` or `:VariableRef`
-    7. `requestedcontainer`: Argument that is passed through to `generatedcontainer`. Either `:Auto`, `:Array`, `:DenseAxisArray`, or `:SparseAxisArray`.
+    7. `requestedcontainer`: Argument that is passed through to `generate_container`. Either `:Auto`, `:Array`, `:DenseAxisArray`, or `:SparseAxisArray`.
     8. `lowertri`: `Bool` keyword argument that is `true` if the iteration is over a cartesian array and should only iterate over the lower triangular entries, filling upper triangular entries with copies, e.g. `x[1,3] === x[3,1]`, and `false` otherwise.
 """
 function getloopedcode(varname, code, condition, idxvars, idxsets, sym, requestedcontainer::Symbol; lowertri=false)
@@ -119,12 +119,13 @@ function getloopedcode(varname, code, condition, idxvars, idxsets, sym, requeste
                            ":Auto instead."))
         end
     end
-    containercode, autoduplicatecheck = generatecontainer(sym, idxvars, idxsets, requestedcontainer)
+    containercode, autoduplicatecheck = Containers.generate_container(sym,
+                                           idxvars, idxsets, requestedcontainer)
 
     if lowertri
         @assert !hascond
         @assert length(idxvars)  == 2
-        @assert !hasdependentsets(idxvars, idxsets)
+        @assert !Containers.has_dependent_sets(idxvars, idxsets)
 
         i, j = esc(idxvars[1]), esc(idxvars[2])
         expr = copy(code)
@@ -970,35 +971,6 @@ macro expression(args...)
     return assert_validmodel(m, macro_code)
 end
 
-function hasdependentsets(idxvars, idxsets)
-    # check if any index set depends on a previous index var
-    for i in 2:length(idxsets)
-        for v in idxvars[1:(i-1)]
-            if dependson(idxsets[i],v)
-                return true
-            end
-        end
-    end
-    return false
-end
-
-dependson(ex::Expr,s::Symbol) = any(a->dependson(a,s), ex.args)
-dependson(ex::Symbol,s::Symbol) = (ex == s)
-dependson(ex,s::Symbol) = false
-function dependson(ex1,ex2)
-    @assert isa(ex2, Expr)
-    @assert ex2.head == :tuple
-    any(s->dependson(ex1,s), ex2.args)
-end
-
-function isdependent(idxvars,idxset,i)
-    for (it,idx) in enumerate(idxvars)
-        it == i && continue
-        dependson(idxset, idx) && return true
-    end
-    return false
-end
-
 esc_nonconstant(x::Number) = x
 esc_nonconstant(x::Expr) = isexpr(x,:quote) ? x : esc(x)
 esc_nonconstant(x) = esc(x)
@@ -1323,7 +1295,7 @@ macro variable(args...)
         # We now build the code to generate the variables (and possibly the
         # SparseAxisArray to contain them)
         refcall, idxvars, idxsets, condition = buildrefsets(var, variable)
-        clear_dependencies(i) = (isdependent(idxvars,idxsets[i],i) ? () : idxsets[i])
+        clear_dependencies(i) = (Containers.is_dependent(idxvars,idxsets[i],i) ? () : idxsets[i])
 
         # Code to be used to create each variable of the container.
         buildcall = :( build_variable($_error, $info, $(extra...)) )
@@ -1341,7 +1313,7 @@ macro variable(args...)
                 _error("PSD variables must be 2-dimensional")
             !symmetric || (length(idxvars) == length(idxsets) == 2) ||
                 _error("Symmetric variables must be 2-dimensional")
-            hasdependentsets(idxvars, idxsets) &&
+            Containers.has_dependent_sets(idxvars, idxsets) &&
                 _error("Cannot have index dependencies in symmetric variables")
             for _rng in idxsets
                 isexpr(_rng, :escape) ||
