@@ -42,8 +42,9 @@ Each expression `index_set_i` can either be
   container is `index_set` and allowing values used in the macro expression and
   keyword arguments to be expressions depending on the `index_name`.
 
-The macro then creates the container using the [`JuMP.generatecontainer`](@ref)
-function with the following arguments:
+The macro then creates the container using the
+[`JuMP.Containers.generate_container`](@ref) function with the following
+arguments:
 
 1. `VariableRef` for the [`@variable`](@ref) macro and `ConstraintRef` for the
    [`@constraint`](@ref) macro.
