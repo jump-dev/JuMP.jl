@@ -28,7 +28,6 @@ include("JuMPExtension.jl")
 
 include("derivatives.jl")
 include("derivatives_coloring.jl")
-include("containers.jl")
 include("model.jl")
 include("variable.jl")
 include("expr.jl")
