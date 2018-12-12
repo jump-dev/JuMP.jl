@@ -23,15 +23,16 @@
         @test !isassigned(A, 1)
         @test length.(axes(A)) == (2,)
         plus1(x) = x + 1
-        B = plus1.(A)
-        @test B[2] == 2.0
-        @test B[3] == 3.0
-        @test sprint(show, B) == """
+        for B in [plus1.(A), A .+ 1, 1 .+ A]
+            @test B[2] == 2.0
+            @test B[3] == 3.0
+            @test sprint(show, B) == """
 1-dimensional DenseAxisArray{Float64,1,...} with index sets:
     Dimension 1, 2:3
 And data, a 2-element Array{Float64,1}:
  2.0
  3.0"""
+        end
     end
 
     @testset "Symbol index set" begin
@@ -42,15 +43,16 @@ And data, a 2-element Array{Float64,1}:
         @test A[:b] == 2.0
         @test length.(axes(A)) == (2,)
         plus1(x) = x + 1
-        B = plus1.(A)
-        @test B[:a] == 2.0
-        @test B[:b] == 3.0
-        @test sprint(show, B) == """
+        for B in [plus1.(A), A .+ 1, 1 .+ A]
+            @test B[:a] == 2.0
+            @test B[:b] == 3.0
+            @test sprint(show, B) == """
 1-dimensional DenseAxisArray{Float64,1,...} with index sets:
     Dimension 1, Symbol[:a, :b]
 And data, a 2-element Array{Float64,1}:
  2.0
  3.0"""
+         end
     end
 
     @testset "Mixed range/symbol index sets" begin
