@@ -3,14 +3,42 @@
 #  License, v. 2.0. If a copy of the MPL was not distributed with this
 #  file, You can obtain one at http://mozilla.org/MPL/2.0/.
 
-include("Containers/Containers.jl")
+# TODO add doc
+depends_on(ex::Expr,s::Symbol) = any(a->depends_on(a,s), ex.args)
+depends_on(ex::Symbol,s::Symbol) = (ex == s)
+depends_on(ex,s::Symbol) = false
+function depends_on(ex1,ex2)
+    @assert isa(ex2, Expr)
+    @assert ex2.head == :tuple
+    any(s->depends_on(ex1,s), ex2.args)
+end
 
-validarrayindexset(::Base.OneTo) = true
-validarrayindexset(r::UnitRange) = first(r) == 1
-validarrayindexset(s) = false
+function is_dependent(idxvars,idxset,i)
+    for (it,idx) in enumerate(idxvars)
+        it == i && continue
+        depends_on(idxset, idx) && return true
+    end
+    return false
+end
+
+function has_dependent_sets(idxvars, idxsets)
+    # check if any index set depends on a previous index var
+    for i in 2:length(idxsets)
+        for v in idxvars[1:(i-1)]
+            if depends_on(idxsets[i],v)
+                return true
+            end
+        end
+    end
+    return false
+end
+
+valid_array_index_set(::Base.OneTo) = true
+valid_array_index_set(r::UnitRange) = first(r) == 1
+valid_array_index_set(s) = false
 
 """
-    generatecontainer(T, indexvars, indexsets, requestedtype)
+    generate_container(T, indexvars, indexsets, requestedtype)
 
 Return a tuple, the first element of which is *code* that generates a container
 for objects of type `T` given the index variables, index sets, and
@@ -35,34 +63,34 @@ automatically checks for duplicate terms in the index sets and `false` otherwise
 
 ### Examples
 
-    generatecontainer(VariableRef, [:i,:j], [:(1:N), :(1:T)], :Auto)
+    generate_container(VariableRef, [:i,:j], [:(1:N), :(1:T)], :Auto)
     # Returns code equivalent to:
     # :(Array{VariableRef}(length(1:N), length(1:T))
 
-    generatecontainer(VariableRef, [:i,:j], [:(1:N), :(2:T)], :Auto)
+    generate_container(VariableRef, [:i,:j], [:(1:N), :(2:T)], :Auto)
     # Returns code equivalent to:
     # :(JuMP.Containers.DenseAxisArray(undef, 1:N, 2:T))
 
-    generatecontainer(VariableRef, [:i,:j], [:(1:N), :(S)], :Auto)
+    generate_container(VariableRef, [:i,:j], [:(1:N), :(S)], :Auto)
     # Returns code that generates an Array if S is of type Base.OneTo,
     # otherwise an DenseAxisArray.
 
-    generatecontainer(VariableRef, [:i,:j], [:(1:N), :(1:j)], :Auto)
+    generate_container(VariableRef, [:i,:j], [:(1:N), :(1:j)], :Auto)
     # Returns code equivalent to:
     # :(Containers.SparseAxisArray(Dict{NTuple{N,Any},VariableRef}()))
 """
-function generatecontainer(T, indexvars, indexsets, requestedtype)
-    hasdependent = hasdependentsets(indexvars,indexsets)
+function generate_container(T, indexvars, indexsets, requestedtype)
+    has_dependent = has_dependent_sets(indexvars,indexsets)
     onetosets = falses(length(indexsets))
     for (i,indexset) in enumerate(indexsets)
-        s = isexpr(indexset,:escape) ? indexset.args[1] : indexset
-        if isexpr(s,:call) && length(s.args) == 3 && s.args[1] == :(:) && s.args[2] == 1
+        s = Meta.isexpr(indexset,:escape) ? indexset.args[1] : indexset
+        if Meta.isexpr(s,:call) && length(s.args) == 3 && s.args[1] == :(:) && s.args[2] == 1
             onetosets[i] = true
         end
     end
 
     if requestedtype == :SparseAxisArray || (requestedtype == :Auto &&
-                                             hasdependent)
+                                             has_dependent)
         N = length(indexvars)
         @assert N == length(indexsets)
         return :(JuMP.Containers.SparseAxisArray(Dict{NTuple{$N,Any},$T}())), false
@@ -72,7 +100,7 @@ function generatecontainer(T, indexvars, indexsets, requestedtype)
     arrayexpr = :(Array{$T}(undef, $sizes...))
 
     if requestedtype == :Array
-        hasdependent && return :(error("Unable to create requested Array because index sets are dependent.")), true
+        has_dependent && return :(error("Unable to create requested Array because index sets are dependent.")), true
         if all(onetosets)
             return arrayexpr, true
         else
@@ -80,7 +108,9 @@ function generatecontainer(T, indexvars, indexsets, requestedtype)
             condition = Expr(:&&)
             for (i,indexset) in enumerate(indexsets)
                 if !onetosets[i]
-                    push!(condition.args, Expr(:call, :(JuMP.validarrayindexset), indexset))
+                    push!(condition.args,
+                          Expr(:call, :(JuMP.Containers.valid_array_index_set),
+                               indexset))
                 end
             end
             return :($condition || error("Index set for array is not one-based interval."); $arrayexpr), true
@@ -91,7 +121,7 @@ function generatecontainer(T, indexvars, indexsets, requestedtype)
     append!(axisexpr.args, indexsets)
 
     if requestedtype == :DenseAxisArray
-        hasdependent && return :(error("Unable to create requested DenseAxisArray because index sets are dependent.")), true
+        has_dependent && return :(error("Unable to create requested DenseAxisArray because index sets are dependent.")), true
         return axisexpr, true
     end
 

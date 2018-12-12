@@ -62,7 +62,7 @@
         d = @inferred SA(Dict((:a,) => 1, (:b,) => 2))
         @testset "Printing" begin
             @test sprint(show, "text/plain", d) == """
-SparseAxisArray{Int64,1,Tuple{Symbol}} with 2 entries:
+SparseAxisArray{$Int,1,Tuple{Symbol}} with 2 entries:
   [a]  =  1
   [b]  =  2"""
         end
