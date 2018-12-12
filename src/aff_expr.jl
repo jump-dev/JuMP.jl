@@ -283,6 +283,10 @@ function AffExpr(m::Model, f::MOI.ScalarAffineFunction)
     aff.constant = f.constant
     return aff
 end
+function jump_function_type(::AbstractModel,
+                            ::Type{MOI.ScalarAffineFunction{T}}) where T
+    return GenericAffExpr{T, VariableRef}
+end
 function jump_function(model::AbstractModel, f::MOI.ScalarAffineFunction)
     return AffExpr(model, f)
 end

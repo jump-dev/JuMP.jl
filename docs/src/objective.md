@@ -14,6 +14,7 @@ Querying the objective function and objective sense:
 ```@docs
 JuMP.objective_sense
 JuMP.objective_function
+JuMP.objective_function_type
 ```
 
 Querying the objective value and bound:
