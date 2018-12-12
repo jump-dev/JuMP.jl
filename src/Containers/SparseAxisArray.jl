@@ -110,6 +110,9 @@ Base.keys(::IndexAnyCartesian, d::SparseAxisArray) = keys(d)
 # applied on elements of `args`. If `ElType` is a concrete type, it returns:
 #
 #     copyto!(similar(bc, ElType), bc)
+#
+# Otherwise, it calls `extrude` on each `args`, maps the first element, set
+# `ElType` to its type and calls `copyto_nonleaf!`.
 
 Base.Broadcast.extrude(sa::SparseAxisArray) = sa
 
@@ -129,6 +132,7 @@ end
 function Base.BroadcastStyle(::Type{<:SparseAxisArray{T, N, K}}) where {T, N, K}
     return BroadcastStyle{N, K}()
 end
+
 function Base.similar(b::Base.Broadcast.Broadcasted{BroadcastStyle{N, K}},
                       ::Type{T}) where {T, N, K}
     SparseAxisArray(Dict{K, T}())
