@@ -242,6 +242,7 @@ function jump_function(model::AbstractModel, variables::MOI.VectorOfVariables)
 end
 
 VariableRef(m::Model, f::MOI.SingleVariable) = VariableRef(m, f.variable)
+jump_function_type(::AbstractModel, ::Type{MOI.SingleVariable}) = VariableRef
 function jump_function(model::AbstractModel, variable::MOI.SingleVariable)
     return VariableRef(model, variable)
 end

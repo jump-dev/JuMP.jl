@@ -222,12 +222,15 @@ JuMP.objective_sense(model::MyModel) = model.objectivesense
 function JuMP.set_objective_sense(model::MyModel, sense)
     model.objectivesense = sense
 end
-function JuMP.objective_function(m::MyModel, FT::Type)
+JuMP.objective_function_type(model::MyModel) = typeof(model.objective_function)
+JuMP.objective_function(model::MyModel) = model.objective_function
+function JuMP.objective_function(model::MyModel, FT::Type)
     # InexactError should be thrown, this is needed in `objective.jl`
-    if !(m.objective_function isa FT)
-        throw(InexactError(:objective_function, FT, typeof(m.objective_function)))
+    if !(model.objective_function isa FT)
+        throw(InexactError(:objective_function, FT,
+                           typeof(model.objective_function)))
     end
-    m.objective_function
+    model.objective_function
 end
 
 # Names

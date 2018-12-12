@@ -231,6 +231,10 @@ function QuadExpr(m::Model, f::MOI.ScalarQuadraticFunction)
     end
     return quad
 end
+function jump_function_type(::AbstractModel,
+                            ::Type{MOI.ScalarQuadraticFunction{T}}) where T
+    return GenericQuadExpr{T, VariableRef}
+end
 function jump_function(model::AbstractModel, aff::MOI.ScalarQuadraticFunction)
     return QuadExpr(model, aff)
 end

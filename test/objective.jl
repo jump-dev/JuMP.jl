@@ -23,10 +23,14 @@ function objectives_test(ModelType::Type{<:JuMP.AbstractModel}, VariableRefType:
 
         @objective(m, Min, x)
         @test JuMP.objective_sense(m) == MOI.MinSense
+        @test JuMP.objective_function_type(m) == VariableRefType
+        @test JuMP.objective_function(m) == x
         @test JuMP.objective_function(m, VariableRefType) == x
 
         @objective(m, Max, x)
         @test JuMP.objective_sense(m) == MOI.MaxSense
+        @test JuMP.objective_function_type(m) == VariableRefType
+        @test JuMP.objective_function(m) == x
         @test JuMP.objective_function(m, VariableRefType) == x
     end
 
@@ -36,10 +40,14 @@ function objectives_test(ModelType::Type{<:JuMP.AbstractModel}, VariableRefType:
 
         @objective(m, Min, 2x)
         @test JuMP.objective_sense(m) == MOI.MinSense
+        @test JuMP.objective_function_type(m) == AffExprType
+        @test JuMP.isequal_canonical(JuMP.objective_function(m), 2x)
         @test JuMP.isequal_canonical(JuMP.objective_function(m, AffExprType), 2x)
 
         @objective(m, Max, x + 3x + 1)
         @test JuMP.objective_sense(m) == MOI.MaxSense
+        @test JuMP.objective_function_type(m) == AffExprType
+        @test JuMP.isequal_canonical(JuMP.objective_function(m), 4x + 1)
         @test JuMP.isequal_canonical(JuMP.objective_function(m, AffExprType), 4x + 1)
     end
 
@@ -49,6 +57,8 @@ function objectives_test(ModelType::Type{<:JuMP.AbstractModel}, VariableRefType:
 
         @objective(m, Min, x^2 + 2x)
         @test JuMP.objective_sense(m) == MOI.MinSense
+        @test JuMP.objective_function_type(m) == QuadExprType
+        @test JuMP.isequal_canonical(JuMP.objective_function(m), x^2 + 2x)
         @test JuMP.isequal_canonical(JuMP.objective_function(m, QuadExprType), x^2 + 2x)
         @test_throws InexactError JuMP.objective_function(m, AffExprType)
     end

@@ -79,8 +79,19 @@ function set_objective(model::Model, sense::MOI.OptimizationSense,
     set_objective_function(model, func)
 end
 
+""""
+    objective_function_type(model::Model)::AbstractJuMPScalar
+
+Return the type of the objective function.
 """
-    objective_function(m::Model, T::Type{<:AbstractJuMPScalar})
+function objective_function_type(model::Model)
+    jump_function_type(model,
+                       MOI.get(backend(model), MOI.ObjectiveFunctionType()))
+end
+
+"""
+    objective_function(model::Model,
+                   T::Type{<:AbstractJuMPScalar}=objective_function_type(model))
 
 Return an object of type `T` representing the objective function.
 Error if the objective is not convertible to type `T`.
@@ -129,7 +140,8 @@ Stacktrace:
  [7] top-level scope at none:0
 ```
 """
-function objective_function(model::Model, FunType::Type{<:AbstractJuMPScalar})
+function objective_function(model::Model,
+             FunType::Type{<:AbstractJuMPScalar}=objective_function_type(model))
     MOIFunType = moi_function_type(FunType)
     func = MOI.get(backend(model),
                    MOI.ObjectiveFunction{MOIFunType}())::MOIFunType
