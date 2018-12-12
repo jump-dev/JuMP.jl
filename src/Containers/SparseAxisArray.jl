@@ -100,6 +100,19 @@ Base.keys(::IndexAnyCartesian, d::SparseAxisArray) = keys(d)
 # Broadcasting #
 ################
 
+# `broadcast(f, args...)` starts by creating an object:
+#
+#     bc = Broadcast.broadcasted(f, args...)
+#
+# If one of the arguments is `SparseAxisArray`, we want `bc` to be of type
+# `Broadcasted{BroadcastStyle)`. Then, the following functions is called:
+# `copy(bc)`. It first attempts to determine the return type `ElType` of `f` on
+# applied on elements of `args`. If `ElType` is a concrete type, it returns:
+#
+#     copyto!(similar(bc, ElType), bc)
+
+Base.Broadcast.extrude(sa::SparseAxisArray) = sa
+
 # Need to define it as indices may be non-integers
 Base.Broadcast.newindex(d::SparseAxisArray, idx) = idx
 
