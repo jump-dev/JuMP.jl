@@ -140,6 +140,13 @@ function test_variable_fix(ModelType)
     @test JuMP.fix_value(fixed) == 1.0
     JuMP.unfix(fixed)
     @test !JuMP.is_fixed(fixed)
+    JuMP.set_lower_bound(fixed, 0.0)
+    @test_throws Exception JuMP.fix(fixed, 1.0)
+    JuMP.fix(fixed, 1.0; force = true)
+    @test !JuMP.has_lower_bound(fixed)
+    @test !JuMP.has_upper_bound(fixed)
+    @test JuMP.is_fixed(fixed)
+    @test JuMP.fix_value(fixed) == 1.0
 end
 
 function test_variable_custom_index_sets(ModelType)

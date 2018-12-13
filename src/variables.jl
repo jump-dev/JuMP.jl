@@ -404,23 +404,40 @@ function set_fix_index(v::VariableRef, cindex::MOIFIX)
 end
 
 """
-    fix(v::VariableRef,upper::Number)
+    fix(v::VariableRef, value::Number; force::Bool = false)
 
-Fix a variable to a value. Update the fixing constraint if one exists, otherwise create a new one.
+Fix a variable to a value. Update the fixing constraint if one exists, otherwise
+create a new one.
+
+If the variable already has variable bounds and `force=false`, calling `fix`
+will throw an error. If `force=true`, existing variable bounds will be deleted,
+and the variable will be fixing constraint will be added.
 """
-function fix(v::VariableRef,upper::Number)
-    newset = MOI.EqualTo(convert(Float64,upper))
-    # are we already fixed?
-    if is_fixed(v)
-        cindex = fix_index(v)
-        MOI.set(backend(owner_model(v)), MOI.ConstraintSet(), cindex, newset)
-    else
-        @assert !has_upper_bound(v) && !has_lower_bound(v) # Do we want to remove these instead of throwing an error?
-        cindex = MOI.add_constraint(backend(owner_model(v)),
-                                    MOI.SingleVariable(index(v)), newset)
-        set_fix_index(v, cindex)
+function fix(variable::VariableRef, value::Number; force::Bool = false)
+    new_set = MOI.EqualTo(convert(Float64, value))
+    model = backend(owner_model(variable))
+    if is_fixed(variable)  # Update existing fixing constraint.
+        c_index = fix_index(variable)
+        MOI.set(model, MOI.ConstraintSet(), c_index, new_set)
+    else  # Add a new fixing constraint.
+        if has_upper_bound(variable) || has_lower_bound(variable)
+            if !force
+                error("Unable to fix $(variable) to $(value) because it has " *
+                      "existing variable bounds. Consider calling " *
+                      "`JuMP.fix(variable, value; force=true)` instead.")
+            end
+            if has_upper_bound(variable)
+                delete_upper_bound(variable)
+            end
+            if has_lower_bound(variable)
+                delete_lower_bound(variable)
+            end
+        end
+        c_index = MOI.add_constraint(
+            model, MOI.SingleVariable(index(variable)), new_set)
+        set_fix_index(variable, c_index)
     end
-    nothing
+    return
 end
 
 """
