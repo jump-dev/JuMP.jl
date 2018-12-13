@@ -22,16 +22,17 @@
         @test isassigned(A, 2)
         @test !isassigned(A, 1)
         @test length.(axes(A)) == (2,)
-        plus1(x) = x + 1
-        B = plus1.(A)
-        @test B[2] == 2.0
-        @test B[3] == 3.0
-        @test sprint(show, B) == """
+        correct_answer = DenseAxisArray([2.0, 3.0], 2:3)
+        @test sprint(show, correct_answer) == """
 1-dimensional DenseAxisArray{Float64,1,...} with index sets:
     Dimension 1, 2:3
 And data, a 2-element Array{Float64,1}:
  2.0
  3.0"""
+        plus1(x) = x + 1
+        @test plus1.(A) == correct_answer
+        @test A .+ 1 == correct_answer
+        @test 1 .+ A == correct_answer
     end
 
     @testset "Symbol index set" begin
@@ -41,16 +42,17 @@ And data, a 2-element Array{Float64,1}:
         @test @inferred A[:a] == 1.0
         @test A[:b] == 2.0
         @test length.(axes(A)) == (2,)
-        plus1(x) = x + 1
-        B = plus1.(A)
-        @test B[:a] == 2.0
-        @test B[:b] == 3.0
-        @test sprint(show, B) == """
+        correct_answer = DenseAxisArray([2.0, 3.0], [:a, :b])
+        @test sprint(show, correct_answer) == """
 1-dimensional DenseAxisArray{Float64,1,...} with index sets:
     Dimension 1, Symbol[:a, :b]
 And data, a 2-element Array{Float64,1}:
  2.0
  3.0"""
+        plus1(x) = x + 1
+        @test plus1.(A) == correct_answer
+        @test A .+ 1 == correct_answer
+        @test 1 .+ A == correct_answer
     end
 
     @testset "Mixed range/symbol index sets" begin

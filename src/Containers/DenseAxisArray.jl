@@ -214,6 +214,11 @@ Base.getindex(a::DenseAxisArray, k::DenseAxisArrayKey) = a[k.I...]
 # where multiple DenseAxisArrays appear. This is a stopgap solution to get tests
 # passing on Julia 0.7 and leaves lots of room for improvement.
 struct DenseAxisArrayBroadcastStyle <: Broadcast.BroadcastStyle end
+# Scalars can be used with DenseAxisArray in broadcast
+function Base.BroadcastStyle(::DenseAxisArrayBroadcastStyle,
+                             ::Base.Broadcast.DefaultArrayStyle{0})
+    return DenseAxisArrayBroadcastStyle()
+end
 Base.BroadcastStyle(::Type{<:DenseAxisArray}) = DenseAxisArrayBroadcastStyle()
 function Base.Broadcast.broadcasted(::DenseAxisArrayBroadcastStyle, f, args...)
     array = find_jump_array(args)
