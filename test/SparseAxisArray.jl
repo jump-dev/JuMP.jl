@@ -73,6 +73,20 @@ SparseAxisArray{$Int,1,Tuple{Symbol}} with 2 entries:
         da = @inferred SA(Dict((:b,) => 2))
         dc = @inferred SA(Dict((:a,) => 1, (:b,) => 2, (:c,) => 3))
         sparse_test(d, 3, d2, d3, dsqr, [da, dc])
+        @testset "Broadcasting with type unstability" begin
+            # f(::Int) has return type Union{Int, Float64}
+            f(x) = x == 1 ? 1 : 1 / x
+            fd = f.(d)
+            @test fd isa SparseAxisArray{Real,1,Tuple{Symbol}}
+            @test fd == SparseAxisArray(Dict((:a,) => 1, (:b,) => 0.5))
+            g(x, y) = f(x) + f(y)
+            fd = g.(d, 1)
+            @test fd isa SparseAxisArray{Real,1,Tuple{Symbol}}
+            @test fd == SparseAxisArray(Dict((:a,) => 2, (:b,) => 1.5))
+            fd = g.(1, d)
+            @test fd isa SparseAxisArray{Real,1,Tuple{Symbol}}
+            @test fd == SparseAxisArray(Dict((:a,) => 2, (:b,) => 1.5))
+        end
     end
     @testset "2-dimensional" begin
         SA = SparseAxisArray
