@@ -79,6 +79,13 @@ SparseAxisArray{$Int,1,Tuple{Symbol}} with 2 entries:
             fd = f.(d)
             @test fd isa SparseAxisArray{Real,1,Tuple{Symbol}}
             @test fd == SparseAxisArray(Dict((:a,) => 1, (:b,) => 0.5))
+            g(x, y) = f(x) + f(y)
+            fd = g.(d, 1)
+            @test fd isa SparseAxisArray{Real,1,Tuple{Symbol}}
+            @test fd == SparseAxisArray(Dict((:a,) => 2, (:b,) => 1.5))
+            fd = g.(1, d)
+            @test fd isa SparseAxisArray{Real,1,Tuple{Symbol}}
+            @test fd == SparseAxisArray(Dict((:a,) => 2, (:b,) => 1.5))
         end
     end
     @testset "2-dimensional" begin
