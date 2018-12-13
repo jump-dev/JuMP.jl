@@ -66,7 +66,7 @@ julia&gt; JuMP.lower_bound(x)
 julia&gt; JuMP.set_lower_bound(x, 2)
 
 julia&gt; JuMP.lower_bound(x)
-2.0</code></pre><p>Finally, we can delete variable bounds using <code>JuMP.delete_lower_bound</code> and <code>JuMP.delete_upper_bound</code>:</p><pre><code class="language-julia-repl">julia&gt; @variable(model, 1 &lt;= x &lt;= 2)
+2.0</code></pre><p>We can delete variable bounds using <code>JuMP.delete_lower_bound</code> and <code>JuMP.delete_upper_bound</code>:</p><pre><code class="language-julia-repl">julia&gt; @variable(model, 1 &lt;= x &lt;= 2)
 x
 
 julia&gt; JuMP.lower_bound(x)
@@ -83,7 +83,29 @@ julia&gt; JuMP.upper_bound(x)
 julia&gt; JuMP.delete_upper_bound(x)
 
 julia&gt; JuMP.has_upper_bound(x)
-false</code></pre><h2><a class="nav-anchor" id="Variable-containers-1" href="#Variable-containers-1">Variable containers</a></h2><p>In the examples above, we have mostly created scalar variables. By scalar, we mean that the Julia variable is bound to exactly one JuMP variable. However,  it is often useful to create collections of JuMP variables inside more complicated datastructures.</p><p>JuMP provides a mechanism for creating three types of these datastructures, which we refer to as <em>containers</em>. The three types are <code>Array</code>s, <code>DenseAxisArray</code>s, and <code>SparseAxisArray</code>s. We explain each of these in the following.</p><h3><a class="nav-anchor" id="Arrays-1" href="#Arrays-1">Arrays</a></h3><p>We have already seen the creation of an array of JuMP variables with the <code>x[1:2]</code> syntax. This can naturally be extended to create multi-dimensional arrays of JuMP variables. For example:</p><pre><code class="language-julia-repl">julia&gt; @variable(model, x[1:2, 1:2])
+false</code></pre><p>In addition to upper and lower bounds, JuMP variables can also be fixed to a value.</p><pre><code class="language-julia-repl">julia&gt; @variable(model, x == 1)
+x
+
+julia&gt; JuMP.is_fixed(x)
+true
+
+julia&gt; JuMP.fix_value(x)
+1.0
+
+julia&gt; JuMP.unfix(x)
+
+julia&gt; JuMP.is_fixed(x)
+false</code></pre><p>Fixing a variable with existing bounds will throw an error. To delete the bounds prior to fixing, use <code>JuMP.fix(variable, value; force = true)</code>.</p><pre><code class="language-julia-repl">julia&gt; @variable(model, x &gt;= 1)
+x
+
+julia&gt; JuMP.fix(x, 2)
+ERROR: Unable to fix x to 2 because it has existing variable bounds. Consider calling `JuMP.fix(variable, value; force=true)` which will delete existing bounds before fixing the variable.
+
+julia&gt; JuMP.fix(x, 2; force = true)
+
+
+julia&gt; JuMP.fix_value(x)
+2.0</code></pre><h2><a class="nav-anchor" id="Variable-containers-1" href="#Variable-containers-1">Variable containers</a></h2><p>In the examples above, we have mostly created scalar variables. By scalar, we mean that the Julia variable is bound to exactly one JuMP variable. However,  it is often useful to create collections of JuMP variables inside more complicated datastructures.</p><p>JuMP provides a mechanism for creating three types of these datastructures, which we refer to as <em>containers</em>. The three types are <code>Array</code>s, <code>DenseAxisArray</code>s, and <code>SparseAxisArray</code>s. We explain each of these in the following.</p><h3><a class="nav-anchor" id="Arrays-1" href="#Arrays-1">Arrays</a></h3><p>We have already seen the creation of an array of JuMP variables with the <code>x[1:2]</code> syntax. This can naturally be extended to create multi-dimensional arrays of JuMP variables. For example:</p><pre><code class="language-julia-repl">julia&gt; @variable(model, x[1:2, 1:2])
 2×2 Array{VariableRef,2}:
  x[1,1]  x[1,2]
  x[2,1]  x[2,2]</code></pre><p>Arrays of JuMP variables can be indexed and sliced as follows:</p><pre><code class="language-julia-repl">julia&gt; x[1, 2]
