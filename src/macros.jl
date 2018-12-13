@@ -107,7 +107,12 @@ function getloopedcode(varname, code, condition, idxvars, idxsets, sym, requeste
     hascond = (condition != :())
 
     if !(requestedcontainer in [:Auto, :Array, :DenseAxisArray, :SparseAxisArray])
-        return :(error("Invalid container type $container. Must be Auto, Array, DenseAxisArray, or SparseAxisArray."))
+        # We do this two-step interpolation, first into the string, and then
+        # into the expression because interpolating into a string inside an
+        # expression has scoping issues.
+        error_message = "Invalid container type $requestedcontainer. Must be " *
+                        "Auto, Array, DenseAxisArray, or SparseAxisArray."
+        return :(error($error_message))
     end
 
     if hascond

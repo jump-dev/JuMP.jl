@@ -262,6 +262,14 @@ end
         ex = @NLexpression(model, x + 1)
         @test length(JuMP.object_dictionary(model)) == 0
     end
+
+    @testset "Invalid container" begin
+        model = Model()
+        exception = ErrorException(
+            "Invalid container type Oops. Must be Auto, Array, " *
+            "DenseAxisArray, or SparseAxisArray.")
+        @test_throws exception @variable(model, x[1:3], container=Oops)
+    end
 end
 
 @testset "Macros for JuMPExtension.MyModel" begin
