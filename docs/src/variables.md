@@ -237,7 +237,7 @@ julia> @variable(model, x >= 1)
 x
 
 julia> JuMP.fix(x, 2)
-ERROR: Unable to fix x to 2 because it has existing variable bounds. Consider calling `JuMP.fix(variable, value; force=true)` instead.
+ERROR: Unable to fix x to 2 because it has existing variable bounds. Consider calling `JuMP.fix(variable, value; force=true)` which will delete existing bounds before fixing the variable.
 
 julia> JuMP.fix(x, 2; force = true)
 

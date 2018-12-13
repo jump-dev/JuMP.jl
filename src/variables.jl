@@ -424,7 +424,8 @@ function fix(variable::VariableRef, value::Number; force::Bool = false)
             if !force
                 error("Unable to fix $(variable) to $(value) because it has " *
                       "existing variable bounds. Consider calling " *
-                      "`JuMP.fix(variable, value; force=true)` instead.")
+                      "`JuMP.fix(variable, value; force=true)` which will " *
+                      "delete existing bounds before fixing the variable.")
             end
             if has_upper_bound(variable)
                 delete_upper_bound(variable)
