@@ -118,14 +118,16 @@ function JuMP.delete_upper_bound(vref::MyVariableRef)
 end
 JuMP.is_fixed(vref::MyVariableRef) = variable_info(vref).has_fix
 JuMP.fix_value(vref::MyVariableRef) = variable_info(vref).fixed_value
-function JuMP.fix(vref::MyVariableRef, value)
+function JuMP.fix(vref::MyVariableRef, value; force::Bool = false)
     info = variable_info(vref)
-    update_variable_info(vref,
-                         JuMP.VariableInfo(info.has_lb, info.lower_bound,
-                                           info.has_ub, info.upper_bound,
-                                           true, value,
-                                           info.has_start, info.start,
-                                           info.binary, info.integer))
+    if !force && (info.has_lb || info.has_ub)
+        error("Unable to fix $(vref) to $(value) because it has existing bounds.")
+    end
+    update_variable_info(vref, JuMP.VariableInfo(
+        false, info.lower_bound, false, info.upper_bound, true, value,
+        info.has_start, info.start, info.binary, info.integer)
+    )
+    return
 end
 function JuMP.unfix(vref::MyVariableRef)
     info = variable_info(vref)
