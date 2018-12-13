@@ -189,7 +189,7 @@ julia> JuMP.lower_bound(x)
 2.0
 ```
 
-Finally, we can delete variable bounds using `JuMP.delete_lower_bound` and
+We can delete variable bounds using `JuMP.delete_lower_bound` and
 `JuMP.delete_upper_bound`:
 ```jldoctest; setup=:(model=Model())
 julia> @variable(model, 1 <= x <= 2)
@@ -210,6 +210,40 @@ julia> JuMP.delete_upper_bound(x)
 
 julia> JuMP.has_upper_bound(x)
 false
+```
+
+In addition to upper and lower bounds, JuMP variables can also be fixed to a
+value.
+```jldoctest; setup=:(model=Model())
+julia> @variable(model, x == 1)
+x
+
+julia> JuMP.is_fixed(x)
+true
+
+julia> JuMP.fix_value(x)
+1.0
+
+julia> JuMP.unfix(x)
+
+julia> JuMP.is_fixed(x)
+false
+```
+Fixing a variable with existing bounds will throw an error. To delete the bounds
+prior to fixing, use `JuMP.fix(variable, value; force = true)`.
+
+```jldoctest; setup=:(model=Model())
+julia> @variable(model, x >= 1)
+x
+
+julia> JuMP.fix(x, 2)
+ERROR: Unable to fix x to 2 because it has existing variable bounds. Consider calling `JuMP.fix(variable, value; force=true)` which will delete existing bounds before fixing the variable.
+
+julia> JuMP.fix(x, 2; force = true)
+
+
+julia> JuMP.fix_value(x)
+2.0
 ```
 
 ## Variable containers
