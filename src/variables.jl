@@ -411,7 +411,9 @@ create a new one.
 
 If the variable already has variable bounds and `force=false`, calling `fix`
 will throw an error. If `force=true`, existing variable bounds will be deleted,
-and the variable will be fixing constraint will be added.
+and the fixing constraint will be added. Note that subsequently calling
+`JuMP.unfix` will not revert the variable to its previous bounds; users are
+expected to re-add these manually.
 """
 function fix(variable::VariableRef, value::Number; force::Bool = false)
     new_set = MOI.EqualTo(convert(Float64, value))
