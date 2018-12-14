@@ -70,7 +70,7 @@ function SolveUrban()
 
     term_status = JuMP.termination_status(m)
     primal_status = JuMP.primal_status(m)
-    is_optimal = term_status == MOI.Optimal && primal_status == MOI.FeasiblePoint
+    is_optimal = term_status == MOI.Optimal
 
     if ! is_optimal
         error("The solver did not find an optimal solution.")

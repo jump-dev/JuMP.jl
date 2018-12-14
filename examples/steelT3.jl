@@ -123,6 +123,6 @@ JuMP.optimize!(Prod)
 
 term_status = JuMP.termination_status(Prod)
 primal_status = JuMP.primal_status(Prod)
-is_optimal = status == MOI.Optimal && primal_status == MOI.FeasiblePoint
+is_optimal = status == MOI.Optimal
 
 PrintSolution(is_optimal, area, Make, Inv, Sell, prod, T)
