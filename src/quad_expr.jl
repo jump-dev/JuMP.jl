@@ -255,7 +255,8 @@ end
                quad::AbstractJuMPScalar)
 
 Fills the vectors terms at indices starting at `offset+1` with the quadratic
-terms of `quad`. The output index for all terms is `oi`.
+terms of `quad`. The output index for all terms is `oi`. Return the index of the
+last term added.
 """
 function _fill_vqf!(terms::Vector{<:MOI.VectorQuadraticTerm}, offset::Int,
                     oi::Int, aff::AbstractJuMPScalar)

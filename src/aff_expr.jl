@@ -299,7 +299,8 @@ end
                aff::AbstractJuMPScalar)
 
 Fills the vectors terms at indices starting at `offset+1` with the affine terms
-of `aff`. The output index for all terms is `oi`.
+of `aff`. The output index for all terms is `oi`. Return the index of the last
+term added.
 """
 function _fill_vaf!(terms::Vector{<:MOI.VectorAffineTerm}, offset::Int, oi::Int,
                     aff::AbstractJuMPScalar)
