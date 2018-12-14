@@ -142,5 +142,13 @@ A preprint of this paper is [freely available](http://arxiv.org/abs/1312.1431).
 
 ![NumFOCUS logo](http://www.juliaopt.org/JuMP.jl/dev/assets/numfocus-logo.png)
 
-JuMP is a fiscally sponsored project of [NumFOCUS](https://numfocus.org), a nonprofit
-dedicated to supporting the open source scientific computing community.
+JuMP is a fiscally sponsored project of [NumFOCUS](https://numfocus.org), a
+nonprofit dedicated to supporting the open source scientific computing
+community.
+
+You can support JuMP by
+[donating](https://www.flipcause.com/secure/cause_pdetails/MzkxMDU=). JuMP's
+largest expense is the
+[annual JuMP-dev workshop](http://www.juliaopt.org/meetings/santiago2019/).
+Donations will help us provide travel support for JuMP-dev attendees and address
+other opportunities that arise to support JuMP development.
