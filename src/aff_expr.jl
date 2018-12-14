@@ -306,7 +306,7 @@ function _fill_vaf!(terms, offset::Int, oi::Int, aff::AbstractJuMPScalar)
         terms[offset+i] = MOI.VectorAffineTerm(Int64(oi), MOI.ScalarAffineTerm(coef, index(var)))
         i += 1
     end
-    offset + length(linear_terms(aff))
+    return offset + length(linear_terms(aff))
 end
 
 function MOI.VectorAffineFunction(affs::Vector{AffExpr})

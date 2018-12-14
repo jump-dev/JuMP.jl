@@ -263,7 +263,7 @@ function _fill_vqf!(terms, offset::Int, oi::Int, aff::AbstractJuMPScalar)
                                                     moi_quadratic_term(term))
         i += 1
     end
-    offset + length(quadterms(aff))
+    return offset + length(quadterms(aff))
 end
 
 function MOI.VectorQuadraticFunction(quads::Vector{QuadExpr})
