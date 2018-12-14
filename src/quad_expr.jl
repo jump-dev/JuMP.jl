@@ -251,12 +251,14 @@ function jump_function(model::AbstractModel, f::MOI.VectorQuadraticFunction)
 end
 
 """
-    _fill_vqf!(terms, offset::Int, oi::Int, quad::AbstractJuMPScalar)
+    _fill_vqf!(terms::Vector{<:MOI.VectorQuadraticTerm}, offset::Int, oi::Int,
+               quad::AbstractJuMPScalar)
 
 Fills the vectors terms at indices starting at `offset+1` with the quadratic
 terms of `quad`. The output index for all terms is `oi`.
 """
-function _fill_vqf!(terms, offset::Int, oi::Int, aff::AbstractJuMPScalar)
+function _fill_vqf!(terms::Vector{<:MOI.VectorQuadraticTerm}, offset::Int,
+                    oi::Int, aff::AbstractJuMPScalar)
     i = 1
     for term in quadterms(aff)
         terms[offset + i] = MOI.VectorQuadraticTerm(Int64(oi),
