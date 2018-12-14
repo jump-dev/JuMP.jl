@@ -122,9 +122,8 @@ the `JuMP.termination_status` function:
 julia> JuMP.termination_status(model)
 Optimal::TerminationStatusCode = 1
 ```
-In this case, `GLPK` returned `Optimal`. This does *not* mean that it has found
-the optimal solution. Instead, it indicates that GLPK has finished running and
-did not encounter any errors or user-provided termination limits.
+In this case, `GLPK` returned `Optimal`, this mean that it has found the optimal
+solution.
 
 ```@meta
 DocTestSetup = nothing
@@ -137,8 +136,9 @@ julia> JuMP.primal_status(model)
 FeasiblePoint::ResultStatusCode = 1
 ```
 This indicates that GLPK has found a `FeasiblePoint` to the primal problem.
-Coupled with the `Optimal` from `JuMP.termination_status`, we can infer that GLPK
-has indeed found the optimal solution. We can also query `JuMP.dual_status`:
+Coupled with the `Optimal` from `JuMP.termination_status`, we can infer that
+this feasible solution is actually optimal. We can also query
+`JuMP.dual_status`:
 ```jldoctest quickstart_example
 julia> JuMP.dual_status(model)
 FeasiblePoint::ResultStatusCode = 1
