@@ -202,7 +202,8 @@ GenericQuadExpr{C, V}() where {C, V} = zero(GenericQuadExpr{C, V})
     moi_quadratic_term(t::Tuple)
 
 Return the MOI.ScalarQuadraticTerm for the quadratic term `t`, element of the
-[`quadterms`](@ref) iterator.
+[`quadterms`](@ref) iterator. Note that the `JuMP.VariableRef`s are transformed
+into `MOI.VariableIndex`s hence the owner model information is lost.
 """
 function moi_quadratic_term(t::Tuple)
     return MOI.ScalarQuadraticTerm(t[2] == t[3] ? 2t[1] : t[1], index(t[2]),
