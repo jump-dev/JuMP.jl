@@ -198,13 +198,21 @@ function Base.convert(::Type{GenericQuadExpr{C, V}}, v::Union{Real,AbstractVaria
 end
 GenericQuadExpr{C, V}() where {C, V} = zero(GenericQuadExpr{C, V})
 
+"""
+    moi_quadratic_term(t::Tuple)
+
+Return the MOI.ScalarQuadraticTerm for the quadratic term `t`, element of the
+[`quadterms`](@ref) iterator. Note that the `JuMP.VariableRef`s are transformed
+into `MOI.VariableIndex`s hence the owner model information is lost.
+"""
+function moi_quadratic_term(t::Tuple)
+    return MOI.ScalarQuadraticTerm(t[2] == t[3] ? 2t[1] : t[1], index(t[2]),
+                                   index(t[3]))
+end
 function MOI.ScalarQuadraticFunction(q::QuadExpr)
     assert_isfinite(q)
-    qterms = MOI.ScalarQuadraticTerm{Float64}[MOI.ScalarQuadraticTerm(
-                                               t[2] == t[3] ? 2t[1] : t[1],
-                                               index(t[2]),
-                                               index(t[3]))
-                                               for t in quadterms(q)]
+    qterms = MOI.ScalarQuadraticTerm{Float64}[moi_quadratic_term(t)
+                                              for t in quadterms(q)]
     moi_aff = MOI.ScalarAffineFunction(q.aff)
     return MOI.ScalarQuadraticFunction(moi_aff.terms,
                                        qterms, moi_aff.constant)
@@ -238,6 +246,46 @@ end
 function jump_function(model::AbstractModel, aff::MOI.ScalarQuadraticFunction)
     return QuadExpr(model, aff)
 end
+function jump_function(model::AbstractModel, f::MOI.VectorQuadraticFunction)
+    return QuadExpr[QuadExpr(model, f) for f in MOIU.eachscalar(f)]
+end
+
+"""
+    _fill_vqf!(terms::Vector{<:MOI.VectorQuadraticTerm}, offset::Int, oi::Int,
+               quad::AbstractJuMPScalar)
+
+Fills the vectors terms at indices starting at `offset+1` with the quadratic
+terms of `quad`. The output index for all terms is `oi`. Return the index of the
+last term added.
+"""
+function _fill_vqf!(terms::Vector{<:MOI.VectorQuadraticTerm}, offset::Int,
+                    oi::Int, aff::AbstractJuMPScalar)
+    i = 1
+    for term in quadterms(aff)
+        terms[offset + i] = MOI.VectorQuadraticTerm(Int64(oi),
+                                                    moi_quadratic_term(term))
+        i += 1
+    end
+    return offset + length(quadterms(aff))
+end
+
+function MOI.VectorQuadraticFunction(quads::Vector{QuadExpr})
+    num_quad_terms = sum(quad -> length(quadterms(quad)), quads)
+    quad_terms = Vector{MOI.VectorQuadraticTerm{Float64}}(undef, num_quad_terms)
+    num_aff_terms = sum(quad -> length(linear_terms(quad)), quads)
+    lin_terms = Vector{MOI.VectorAffineTerm{Float64}}(undef, num_aff_terms)
+    constants = Vector{Float64}(undef, length(quads))
+    quad_offset = 0
+    aff_offset = 0
+    for (i, quad) in enumerate(quads)
+        quad_offset = _fill_vqf!(quad_terms, quad_offset, i, quad)
+        aff_offset = _fill_vaf!(lin_terms, aff_offset, i, quad)
+        constants[i] = constant(quad)
+    end
+    MOI.VectorQuadraticFunction(lin_terms, quad_terms, constants)
+end
+moi_function(a::Vector{<:GenericQuadExpr}) = MOI.VectorQuadraticFunction(a)
+
 
 # Copy a quadratic expression to a new model by converting all the
 # variables to the new model's variables

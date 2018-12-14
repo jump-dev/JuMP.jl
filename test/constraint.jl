@@ -163,25 +163,26 @@ function constraints_test(ModelType::Type{<:JuMP.AbstractModel})
     end
 
     @testset "QuadExpr constraints" begin
-        m = ModelType()
-        @variable(m, x)
-        @variable(m, y)
+        model = ModelType()
+        @variable(model, x)
+        @variable(model, y)
 
-        cref = @constraint(m, x^2 + x <= 1)
+        cref = @constraint(model, x^2 + x <= 1)
         c = JuMP.constraint_object(cref)
         @test JuMP.isequal_canonical(c.func, x^2 + x)
         @test c.set == MOI.LessThan(1.0)
 
-        cref = @constraint(m, y*x - 1.0 == 0.0)
+        cref = @constraint(model, y*x - 1.0 == 0.0)
         c = JuMP.constraint_object(cref)
         @test JuMP.isequal_canonical(c.func, x*y)
         @test c.set == MOI.EqualTo(1.0)
 
-        # TODO: VectorQuadraticFunctions
-        # cref = @constraint(m, [x^2 - 1] in MOI.SecondOrderCone(1))
-        # c = JuMP.constraint_object(cref)
-        # @test JuMP.isequal_canonical(c.func, -1 + x^2)
-        # @test c.set == MOI.SecondOrderCone(1)
+        cref = @constraint(model, [ 2x - 4x*y + 3x^2 - 1,
+                                   -3y + 2x*y - 2x^2 + 1] in SecondOrderCone())
+        c = JuMP.constraint_object(cref)
+        @test JuMP.isequal_canonical(c.func[1], -1 + 3x^2 - 4x*y + 2x)
+        @test JuMP.isequal_canonical(c.func[2],  1 - 2x^2 + 2x*y - 3y)
+        @test c.set == MOI.SecondOrderCone(2)
     end
 
     @testset "Syntax error" begin

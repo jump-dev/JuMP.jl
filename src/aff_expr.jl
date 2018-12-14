@@ -295,18 +295,21 @@ function jump_function(model::AbstractModel, f::MOI.VectorAffineFunction)
 end
 
 """
-    _fillvaf!(terms, offset::Int, oi::Int, aff::AffExpr)
+    _fill_vaf!(terms::Vector{<:MOI.VectorAffineTerm}, offset::Int, oi::Int,
+               aff::AbstractJuMPScalar)
 
-Fills the vectors terms at indices starting at `offset+1` with the terms of `aff`.
-The output index for all terms is `oi`.
+Fills the vectors terms at indices starting at `offset+1` with the affine terms
+of `aff`. The output index for all terms is `oi`. Return the index of the last
+term added.
 """
-function _fillvaf!(terms, offset::Int, oi::Int, aff::AffExpr)
+function _fill_vaf!(terms::Vector{<:MOI.VectorAffineTerm}, offset::Int, oi::Int,
+                    aff::AbstractJuMPScalar)
     i = 1
     for (coef, var) in linear_terms(aff)
         terms[offset+i] = MOI.VectorAffineTerm(Int64(oi), MOI.ScalarAffineTerm(coef, index(var)))
         i += 1
     end
-    offset + length(linear_terms(aff))
+    return offset + length(linear_terms(aff))
 end
 
 function MOI.VectorAffineFunction(affs::Vector{AffExpr})
@@ -316,7 +319,7 @@ function MOI.VectorAffineFunction(affs::Vector{AffExpr})
     offset = 0
     for (i, aff) in enumerate(affs)
         constant[i] = aff.constant
-        offset = _fillvaf!(terms, offset, i, aff)
+        offset = _fill_vaf!(terms, offset, i, aff)
     end
     MOI.VectorAffineFunction(terms, constant)
 end
