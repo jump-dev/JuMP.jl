@@ -105,6 +105,6 @@ JuMP.optimize!(multi)
 
 term_status = JuMP.termination_status(multi)
 primal_status = JuMP.primal_status(multi)
-is_optimal = term_status == MOI.Success && primal_status == MOI.FeasiblePoint
+is_optimal = term_status == MOI.Optimal && primal_status == MOI.FeasiblePoint
 
 PrintSolution(is_optimal, Trans, orig, dest, prod)
