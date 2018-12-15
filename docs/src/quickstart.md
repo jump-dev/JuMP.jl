@@ -129,22 +129,19 @@ solution.
 DocTestSetup = nothing
 ```
 
-To understand the reason for termination in more detail, we need to query
-`JuMP.primalstatus`:
+As the solver found an optimal solution, we expect the solution returned to be
+a primal-dual pair of feasible solutions with zero duality gap.
+We can verify the primal and dual status as follows to confirm this:
 ```jldoctest quickstart_example
 julia> JuMP.primal_status(model)
 FeasiblePoint::ResultStatusCode = 1
-```
-This indicates that GLPK has found a `FeasiblePoint` to the primal problem.
-Coupled with the `Optimal` from `JuMP.termination_status`, we can infer that
-this feasible solution is actually optimal. We can also query
-`JuMP.dual_status`:
-```jldoctest quickstart_example
+
 julia> JuMP.dual_status(model)
 FeasiblePoint::ResultStatusCode = 1
 ```
-Like the `primal_status`, GLPK indicates that it has found a `FeasiblePoint` to
-the dual problem.
+Note that the primal and dual status only inform that the primal and dual
+solutions are feasible and it is only because we verified that the termination
+status is `Optimal` that we can conclude that they form an optimal solution.
 
 Finally, we can query the result of the optimization. First, we can query the
 objective value:
