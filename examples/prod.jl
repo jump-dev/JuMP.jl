@@ -253,6 +253,6 @@ JuMP.optimize!(prod)
 
 term_status = JuMP.termination_status(prod)
 primal_status = JuMP.primal_status(prod)
-is_optimal = status == MOI.Success && primal_status == MOI.FeasiblePoint
+is_optimal = status == MOI.Optimal
 
 PrintSolution(is_optimal, Crews, Hire, Layoff)

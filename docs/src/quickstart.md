@@ -99,7 +99,7 @@ DocTestSetup = quote
     # Now we load in the solution. Using a caching optimizer removes the need to
     # load a solver such as GLPK for building the documentation.
     mock = JuMP.backend(model).optimizer.model
-    MOI.set(mock, MOI.TerminationStatus(), MOI.Success)
+    MOI.set(mock, MOI.TerminationStatus(), MOI.Optimal)
     MOI.set(mock, MOI.PrimalStatus(), MOI.FeasiblePoint)
     MOI.set(mock, MOI.DualStatus(), MOI.FeasiblePoint)
     MOI.set(mock, MOI.ResultCount(), 1)
@@ -120,31 +120,28 @@ to a setting such as a time limit. We can ask the solver why it stopped using
 the `JuMP.termination_status` function:
 ```jldoctest quickstart_example
 julia> JuMP.termination_status(model)
-Success::TerminationStatusCode = 1
+Optimal::TerminationStatusCode = 1
 ```
-In this case, `GLPK` returned `Success`. This does *not* mean that it has found
-the optimal solution. Instead, it indicates that GLPK has finished running and
-did not encounter any errors or user-provided termination limits.
+In this case, `GLPK` returned `Optimal`, this mean that it has found the optimal
+solution.
 
 ```@meta
 DocTestSetup = nothing
 ```
 
-To understand the reason for termination in more detail, we need to query
-`JuMP.primalstatus`:
+As the solver found an optimal solution, we expect the solution returned to be
+a primal-dual pair of feasible solutions with zero duality gap.
+We can verify the primal and dual status as follows to confirm this:
 ```jldoctest quickstart_example
 julia> JuMP.primal_status(model)
 FeasiblePoint::ResultStatusCode = 1
-```
-This indicates that GLPK has found a `FeasiblePoint` to the primal problem.
-Coupled with the `Success` from `JuMP.termination_status`, we can infer that GLPK
-has indeed found the optimal solution. We can also query `JuMP.dual_status`:
-```jldoctest quickstart_example
+
 julia> JuMP.dual_status(model)
 FeasiblePoint::ResultStatusCode = 1
 ```
-Like the `primal_status`, GLPK indicates that it has found a `FeasiblePoint` to
-the dual problem.
+Note that the primal and dual status only inform that the primal and dual
+solutions are feasible and it is only because we verified that the termination
+status is `Optimal` that we can conclude that they form an optimal solution.
 
 Finally, we can query the result of the optimization. First, we can query the
 objective value:

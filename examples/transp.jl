@@ -48,7 +48,7 @@ JuMP.optimize!(m)
 
 term_status = JuMP.termination_status(m)
 primal_status = JuMP.primal_status(m)
-is_optimal = term_status == MOI.Success && primal_status == MOI.FeasiblePoint
+is_optimal = term_status == MOI.Optimal
 
 if is_optimal
 	@printf("Optimal!\n")
