@@ -58,3 +58,9 @@ julia> @constraint(model, [t, x, x-1, x-2] in RotatedSecondOrderCone())
 """
 struct RotatedSecondOrderCone <: AbstractVectorSet end
 moi_set(::RotatedSecondOrderCone, dim::Int) = MOI.RotatedSecondOrderCone(dim)
+
+# Deprecation for JuMP v0.18 -> JuMP v0.19 transition
+function LinearAlgebra.norm(::AbstractVector{<:AbstractJuMPScalar})
+    error("`@constraint(model, norm(x) <= t)` should now be written as " *
+          "`@constraint(model, [t; x] in SecondOrderCone())`")
+end
