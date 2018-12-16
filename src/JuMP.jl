@@ -44,7 +44,6 @@ export
     @NLparameter, @constraintref
 
 # Deprecations for JuMP v0.18 -> JuMP v0.19 transition
-Base.@deprecate(solve,             JuMP.optimize!)
 Base.@deprecate(getobjectivevalue, JuMP.objective_value)
 Base.@deprecate(getobjectivebound, JuMP.objective_bound)
 Base.@deprecate(getvalue,          JuMP.value)
