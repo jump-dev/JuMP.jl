@@ -61,6 +61,9 @@ moi_set(::RotatedSecondOrderCone, dim::Int) = MOI.RotatedSecondOrderCone(dim)
 
 # Deprecation for JuMP v0.18 -> JuMP v0.19 transition
 function LinearAlgebra.norm(::AbstractVector{<:AbstractJuMPScalar})
-    error("`@constraint(model, norm(x) <= t)` should now be written as " *
+    error("JuMP no longer performs automatic transformation of `norm()` ",
+          "expressions into second-order cone constraints. They should now ",
+          "be expressed using the SecondOrderCone() set. For example, ",
+          "`@constraint(model, norm(x) <= t)` should now be written as ",
           "`@constraint(model, [t; x] in SecondOrderCone())`")
 end
