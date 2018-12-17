@@ -60,7 +60,7 @@ function solve(::Model)
           "used to return a `Symbol` summarizing the solution while " *
           "`JuMP.optimize!` returns nothing and the status of the solution " *
           "is queried using `JuMP.termination_status`, `JuMP.primal_status` " *
-          "and JuMP.`dual_status`.")
+          "and `JuMP.dual_status`.")
 end
 
 
