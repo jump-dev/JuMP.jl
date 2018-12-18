@@ -12,7 +12,7 @@ using Test
 import JuMP
 
 model = JuMP.Model()
-sense = JuMP.MathOptInterface.MinSense
+sense = JuMP.MathOptInterface.MIN_SENSE
 JuMP.@variable(model, x >= 0)
 r = 3:5
 JuMP.@variable(model, y[i=r] <= i)

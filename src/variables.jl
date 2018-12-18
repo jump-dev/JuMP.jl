@@ -589,7 +589,7 @@ return false.
 
 See also [`value`](@ref).
 """
-has_values(model::Model) = primal_status(model) != MOI.NoSolution
+has_values(model::Model) = primal_status(model) != MOI.NO_SOLUTION
 
 @Base.deprecate setvalue(v::VariableRef, val::Number) set_start_value(v, val)
 

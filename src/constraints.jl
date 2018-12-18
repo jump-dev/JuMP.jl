@@ -218,7 +218,7 @@ end
 function moi_add_constraint(model::MOI.ModelLike, f::MOI.AbstractFunction,
                             s::MOI.AbstractSet)
     if !MOI.supports_constraint(model, typeof(f), typeof(s))
-        if moi_mode(model) == Direct
+        if moi_mode(model) == DIRECT
             bridge_message = "."
         elseif moi_bridge_constraints(model)
             bridge_message = " and there are no bridges that can reformulate it into supported constraints."
@@ -282,8 +282,8 @@ end
 
 The change in the objective from an infinitesimal relaxation of the constraint.
 This value is computed from [`dual`](@ref) and can be queried only when
-`has_duals` is `true` and the objective sense is `MinSense` or `MaxSense`
-(not `FeasibilitySense`). For linear constraints, the shadow prices differ at
+`has_duals` is `true` and the objective sense is `MIN_SENSE` or `MAX_SENSE`
+(not `FEASIBILITY_SENSE`). For linear constraints, the shadow prices differ at
 most in sign from the `dual` value depending on the objective sense.
 
 ## Notes
@@ -308,9 +308,9 @@ function shadow_price_less_than_(dual_value, sense::MOI.OptimizationSense)
     # shadow price is nonnegative (because relaxing a constraint can only
     # improve the objective). By MOI convention, a feasible dual on a LessThan
     # set is nonpositive, so we flip the sign when maximizing.
-    if sense == MOI.MaxSense
+    if sense == MOI.MAX_SENSE
         return -dual_value
-    elseif sense == MOI.MinSense
+    elseif sense == MOI.MIN_SENSE
         return dual_value
     else
         error("The shadow price is not available because the objective sense " *
@@ -322,9 +322,9 @@ end
 function shadow_price_greater_than_(dual_value, sense::MOI.OptimizationSense)
     # By MOI convention, a feasible dual on a GreaterThan set is nonnegative,
     # so we flip the sign when minimizing. (See comment in the method above).
-    if sense == MOI.MaxSense
+    if sense == MOI.MAX_SENSE
         return dual_value
-    elseif sense == MOI.MinSense
+    elseif sense == MOI.MIN_SENSE
         return -dual_value
     else
         error("The shadow price is not available because the objective sense " *

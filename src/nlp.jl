@@ -1153,7 +1153,7 @@ function register(m::Model, s::Symbol, dimension::Integer, f::Function, ∇f::Fu
 end
 
 # TODO: Add a docstring.
-# Ex: set_NL_objective(model, MOI.MinSense, :($x + $y^2))
+# Ex: set_NL_objective(model, MOI.MIN_SENSE, :($x + $y^2))
 function set_NL_objective(model::Model, sense::MOI.OptimizationSense, x)
     return set_objective(model, sense, NonlinearExprData(model, x))
 end

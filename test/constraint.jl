@@ -339,8 +339,8 @@ function test_shadow_price(model_string, constraint_dual, constraint_shadow)
                                          eval_objective_value=false,
                                          eval_variable_constraint_dual=false))
     mock_optimizer = JuMP.backend(model).optimizer.model
-    MOI.set(mock_optimizer, MOI.TerminationStatus(), MOI.Optimal)
-    MOI.set(mock_optimizer, MOI.DualStatus(), MOI.FeasiblePoint)
+    MOI.set(mock_optimizer, MOI.TerminationStatus(), MOI.OPTIMAL)
+    MOI.set(mock_optimizer, MOI.DualStatus(), MOI.FEASIBLE_POINT)
     JuMP.optimize!(model)
 
     @testset "shadow price of $constraint_name" for constraint_name in keys(constraint_dual)

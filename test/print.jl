@@ -413,8 +413,8 @@ function printing_test(ModelType::Type{<:JuMP.AbstractModel})
     `MathOptInterface.ScalarAffineFunction{Float64}`-in-`MathOptInterface.LessThan{Float64}`: 1 constraint
     `MathOptInterface.ScalarQuadraticFunction{Float64}`-in-`MathOptInterface.LessThan{Float64}`: 1 constraint
     `MathOptInterface.VectorAffineFunction{Float64}`-in-`MathOptInterface.SecondOrderCone`: 1 constraint
-    Model mode: Automatic
-    CachingOptimizer state: NoOptimizer
+    Model mode: AUTOMATIC
+    CachingOptimizer state: NO_OPTIMIZER
     Solver name: No optimizer attached.
     Names registered in the model: a, a1, b, b1, c, c1, fi, u, x, y, z""", repl=:show)
 
@@ -457,8 +457,8 @@ function printing_test(ModelType::Type{<:JuMP.AbstractModel})
     `MathOptInterface.SingleVariable`-in-`MathOptInterface.ZeroOne`: 1 constraint
     `MathOptInterface.SingleVariable`-in-`MathOptInterface.Integer`: 1 constraint
     `MathOptInterface.ScalarQuadraticFunction{Float64}`-in-`MathOptInterface.LessThan{Float64}`: 1 constraint
-    Model mode: Automatic
-    CachingOptimizer state: NoOptimizer
+    Model mode: AUTOMATIC
+    CachingOptimizer state: NO_OPTIMIZER
     Solver name: No optimizer attached.
     Names registered in the model: x, y""", repl=:show)
 
@@ -471,8 +471,8 @@ function printing_test(ModelType::Type{<:JuMP.AbstractModel})
     Feasibility problem with:
     Variable: 1
     `MathOptInterface.ScalarAffineFunction{Float64}`-in-`MathOptInterface.LessThan{Float64}`: 1 constraint
-    Model mode: Automatic
-    CachingOptimizer state: NoOptimizer
+    Model mode: AUTOMATIC
+    CachingOptimizer state: NO_OPTIMIZER
     Solver name: No optimizer attached.
     Names registered in the model: x""", repl=:show)
     end

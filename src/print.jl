@@ -150,9 +150,9 @@ function Base.show(io::IO, model::Model)
     plural(n) = (n==1 ? "" : "s")
     println(io, "A JuMP Model")
     sense = objective_sense(model)
-    if sense == MOI.MaxSense
+    if sense == MOI.MAX_SENSE
         print(io, "Maximization")
-    elseif sense == MOI.MinSense
+    elseif sense == MOI.MIN_SENSE
         print(io, "Minimization")
     else
         print(io, "Feasibility")
@@ -176,7 +176,7 @@ function Base.show(io::IO, model::Model)
     end
     model_mode = mode(model)
     println(io, "Model mode: ", model_mode)
-    if model_mode == Manual || model_mode == Automatic
+    if model_mode == MANUAL || model_mode == AUTOMATIC
         println(io, "CachingOptimizer state: ",
                 MOIU.state(backend(model)))
     end
@@ -202,14 +202,14 @@ function model_string(print_mode, model::Model)
     eol = ijl ? "\\\\\n" : "\n"
     sense = objective_sense(model)
     str = ""
-    if sense == MOI.MaxSense
+    if sense == MOI.MAX_SENSE
         str *= ijl ? "\\max" : "Max"
-    elseif sense == MOI.MinSense
+    elseif sense == MOI.MIN_SENSE
         str *= ijl ? "\\min" : "Min"
     else
         str *= ijl ? "\\text{feasibility}" : "Feasibility"
     end
-    if sense != MOI.FeasibilitySense
+    if sense != MOI.FEASIBILITY_SENSE
         if ijl
             str *= "\\quad"
         end
