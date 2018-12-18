@@ -32,18 +32,18 @@ that is completely transparent to JuMP. While the MOI API may seem very
 demanding, it allows MOI models to be a succession of lightweight MOI layers
 that fill the gap between JuMP requirements and the solver capabilities.
 
-JuMP models can be created in three different modes: Automatic, Manual and
-Direct.
+JuMP models can be created in three different modes: `AUTOMATIC`, `MANUAL` and
+`DIRECT`.
 
 ## Automatic and Manual modes
 
-In Automatic and Manual modes, two MOI layers are automatically applied to the
-optimizer:
+In `AUTOMATIC` and `MANUAL` modes, two MOI layers are automatically applied to
+the optimizer:
 
 * `CachingOptimizer`: maintains a cache of the model so that when the optimizer
   does not support an incremental change to the model, the optimizer's internal
   model can be discarded and restored from the cache just before optimization.
-  The `CachingOptimizer` has two different modes: Automatic and Manual
+  The `CachingOptimizer` has two different modes: `AUTOMATIC` and `MANUAL`
   corresponding to the two JuMP modes with the same names.
 * `LazyBridgeOptimizer` (this can be disabled using the `bridge_constraints`
   keyword argument to [`Model`](@ref) constructor): when a constraint added is
@@ -81,8 +81,8 @@ TODO: how to control the caching optimizer states
 
 ## Direct mode
 
-JuMP models can be created in Direct mode using the [`JuMP.direct_model`](@ref)
-function.
+JuMP models can be created in `DIRECT` mode using the
+[`JuMP.direct_model`](@ref) function.
 ```@docs
 JuMP.direct_model
 ```

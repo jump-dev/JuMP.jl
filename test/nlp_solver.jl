@@ -47,8 +47,8 @@ const MOI = MathOptInterface
         JuMP.optimize!(m)
 
         @test JuMP.has_values(m)
-        @test JuMP.termination_status(m) == MOI.LocallySolved
-        @test JuMP.primal_status(m) == MOI.FeasiblePoint
+        @test JuMP.termination_status(m) == MOI.LOCALLY_SOLVED
+        @test JuMP.primal_status(m) == MOI.FEASIBLE_POINT
 
         @test JuMP.value.(x) ≈ [1.000000, 4.742999, 3.821150, 1.379408] atol=1e-3
     end
@@ -65,7 +65,7 @@ const MOI = MathOptInterface
         m = Model(with_optimizer(Ipopt.Optimizer, print_level=0))
         initval = [1,5,5,1]
         @variable(m, 1 <= x[i=1:4] <= 5, start=initval[i])
-        JuMP.set_NL_objective(m, MOI.MinSense,
+        JuMP.set_NL_objective(m, MOI.MIN_SENSE,
                               :($(x[1]) * $(x[4]) *
                                 ($(x[1]) + $(x[2]) + $(x[3])) + $(x[3])))
         JuMP.add_NL_constraint(m,
@@ -78,8 +78,8 @@ const MOI = MathOptInterface
         JuMP.optimize!(m)
 
         @test JuMP.has_values(m)
-        @test JuMP.termination_status(m) == MOI.LocallySolved
-        @test JuMP.primal_status(m) == MOI.FeasiblePoint
+        @test JuMP.termination_status(m) == MOI.LOCALLY_SOLVED
+        @test JuMP.primal_status(m) == MOI.FEASIBLE_POINT
 
         @test JuMP.value.(x) ≈ [1.000000, 4.742999, 3.821150, 1.379408] atol=1e-3
     end
@@ -126,8 +126,8 @@ const MOI = MathOptInterface
         JuMP.optimize!(m)
 
         @test JuMP.has_values(m)
-        @test JuMP.termination_status(m) == MOI.LocallySolved
-        @test JuMP.primal_status(m) == MOI.FeasiblePoint
+        @test JuMP.termination_status(m) == MOI.LOCALLY_SOLVED
+        @test JuMP.primal_status(m) == MOI.FEASIBLE_POINT
 
         @test JuMP.objective_value(m) ≈ 5326.851310161077 atol=1e-5
     end
@@ -144,9 +144,9 @@ const MOI = MathOptInterface
         JuMP.optimize!(m)
 
         @test JuMP.has_values(m)
-        # Ipopt returns AlmostLocallySolved and NearlyFeasiblePoint on this instance.
-        # @test JuMP.termination_status(m) == MOI.LocallySolved
-        # @test JuMP.primal_status(m) == MOI.FeasiblePoint
+        # Ipopt returns AlmostLOCALLY_SOLVED and NearlyFEASIBLE_POINT on this instance.
+        # @test JuMP.termination_status(m) == MOI.LOCALLY_SOLVED
+        # @test JuMP.primal_status(m) == MOI.FEASIBLE_POINT
 
         @test JuMP.objective_value(m) ≈ -45.77846971 atol=1e-5
     end
@@ -167,8 +167,8 @@ const MOI = MathOptInterface
         JuMP.optimize!(m)
 
         @test JuMP.has_values(m)
-        @test JuMP.termination_status(m) == MOI.LocallySolved
-        @test JuMP.primal_status(m) == MOI.FeasiblePoint
+        @test JuMP.termination_status(m) == MOI.LOCALLY_SOLVED
+        @test JuMP.primal_status(m) == MOI.FEASIBLE_POINT
 
         @test JuMP.objective_value(m) ≈ -47.76109026 atol=1e-5
     end
@@ -188,8 +188,8 @@ const MOI = MathOptInterface
         JuMP.optimize!(m)
 
         @test JuMP.has_values(m)
-        @test JuMP.termination_status(m) == MOI.LocallySolved
-        @test JuMP.primal_status(m) == MOI.FeasiblePoint
+        @test JuMP.termination_status(m) == MOI.LOCALLY_SOLVED
+        @test JuMP.primal_status(m) == MOI.FEASIBLE_POINT
 
         @test JuMP.objective_value(m) ≈ -47.76109026 atol=1e-5
     end
@@ -223,8 +223,8 @@ const MOI = MathOptInterface
         JuMP.optimize!(m)
 
         @test JuMP.has_values(m)
-        @test JuMP.termination_status(m) == MOI.LocallySolved
-        @test JuMP.primal_status(m) == MOI.FeasiblePoint
+        @test JuMP.termination_status(m) == MOI.LOCALLY_SOLVED
+        @test JuMP.primal_status(m) == MOI.FEASIBLE_POINT
 
         @test JuMP.objective_value(m) ≈ -1768.80696 atol=1e-3
     end
@@ -269,8 +269,8 @@ const MOI = MathOptInterface
         JuMP.optimize!(m)
 
         @test JuMP.has_values(m)
-        @test JuMP.termination_status(m) == MOI.LocallySolved
-        @test JuMP.primal_status(m) == MOI.FeasiblePoint
+        @test JuMP.termination_status(m) == MOI.LOCALLY_SOLVED
+        @test JuMP.primal_status(m) == MOI.FEASIBLE_POINT
 
         # This test occasionally fails, for unknown reasons.
         @test JuMP.objective_value(m) ≈ 97.588409 atol=1e-3
@@ -337,8 +337,8 @@ const MOI = MathOptInterface
         JuMP.optimize!(m)
 
         @test JuMP.has_values(m)
-        @test JuMP.termination_status(m) == MOI.LocallySolved
-        @test JuMP.primal_status(m) == MOI.FeasiblePoint
+        @test JuMP.termination_status(m) == MOI.LOCALLY_SOLVED
+        @test JuMP.primal_status(m) == MOI.FEASIBLE_POINT
 
         @test JuMP.value.(x[1:4]) ≈ [8.0, 49.0, 3.0, 1.0] atol=1e-4
         @test JuMP.objective_value(m) ≈ 664.82045 atol=1e-5
@@ -354,39 +354,39 @@ const MOI = MathOptInterface
         JuMP.optimize!(m)
 
         @test JuMP.has_values(m)
-        @test JuMP.termination_status(m) == MOI.LocallySolved
-        @test JuMP.primal_status(m) == MOI.FeasiblePoint
+        @test JuMP.termination_status(m) == MOI.LOCALLY_SOLVED
+        @test JuMP.primal_status(m) == MOI.FEASIBLE_POINT
         @test JuMP.objective_value(m) ≈ u atol=1e-6
 
         @NLobjective(m, Min, x)
         JuMP.optimize!(m)
 
         @test JuMP.has_values(m)
-        @test JuMP.termination_status(m) == MOI.LocallySolved
-        @test JuMP.primal_status(m) == MOI.FeasiblePoint
+        @test JuMP.termination_status(m) == MOI.LOCALLY_SOLVED
+        @test JuMP.primal_status(m) == MOI.FEASIBLE_POINT
         @test JuMP.objective_value(m) ≈ l atol=1e-6
     end
 
     @testset "Two-sided constraints (no macros)" begin
         m = Model(with_optimizer(Ipopt.Optimizer, print_level=0))
         @variable(m, x)
-        JuMP.set_NL_objective(m, MOI.MaxSense, x)
+        JuMP.set_NL_objective(m, MOI.MAX_SENSE, x)
         l = -1
         u = 1
         JuMP.add_NL_constraint(m, :($l <= $x <= $u))
         JuMP.optimize!(m)
 
         @test JuMP.has_values(m)
-        @test JuMP.termination_status(m) == MOI.LocallySolved
-        @test JuMP.primal_status(m) == MOI.FeasiblePoint
+        @test JuMP.termination_status(m) == MOI.LOCALLY_SOLVED
+        @test JuMP.primal_status(m) == MOI.FEASIBLE_POINT
         @test JuMP.objective_value(m) ≈ u atol=1e-6
 
-        JuMP.set_NL_objective(m, MOI.MinSense, x)
+        JuMP.set_NL_objective(m, MOI.MIN_SENSE, x)
         JuMP.optimize!(m)
 
         @test JuMP.has_values(m)
-        @test JuMP.termination_status(m) == MOI.LocallySolved
-        @test JuMP.primal_status(m) == MOI.FeasiblePoint
+        @test JuMP.termination_status(m) == MOI.LOCALLY_SOLVED
+        @test JuMP.primal_status(m) == MOI.FEASIBLE_POINT
         @test JuMP.objective_value(m) ≈ l atol=1e-6
     end
 
@@ -403,8 +403,8 @@ const MOI = MathOptInterface
 
         function test_result()
             @test JuMP.has_values(m)
-            @test JuMP.termination_status(m) == MOI.LocallySolved
-            @test JuMP.primal_status(m) == MOI.FeasiblePoint
+            @test JuMP.termination_status(m) == MOI.LOCALLY_SOLVED
+            @test JuMP.primal_status(m) == MOI.FEASIBLE_POINT
 
 
             @test JuMP.value(x) ≈ 0.9774436 atol=1e-6
@@ -414,7 +414,7 @@ const MOI = MathOptInterface
             @test JuMP.value(r[4]) ≈ 0.0 atol=1e-6
             @test JuMP.value(r[5]) ≈ 0.0 atol=1e-6
             @test JuMP.value(r[6]) ≈ 6.0 atol=1e-6
-            @test JuMP.dual_status(m) == MOI.FeasiblePoint
+            @test JuMP.dual_status(m) == MOI.FEASIBLE_POINT
             # Reduced costs
             @test JuMP.dual(JuMP.LowerBoundRef(x)) ≈ 0.0 atol=1e-6
             @test JuMP.dual(JuMP.UpperBoundRef(y)) ≈ 0.0 atol=1e-6
@@ -455,8 +455,8 @@ const MOI = MathOptInterface
         JuMP.optimize!(m)
 
         @test JuMP.has_values(m)
-        @test JuMP.termination_status(m) == MOI.LocallySolved
-        @test JuMP.primal_status(m) == MOI.FeasiblePoint
+        @test JuMP.termination_status(m) == MOI.LOCALLY_SOLVED
+        @test JuMP.primal_status(m) == MOI.FEASIBLE_POINT
         @test JuMP.objective_value(m) ≈ -1-4/sqrt(3) atol=1e-6
         @test JuMP.value(x) + JuMP.value(y) ≈ -1/3 atol=1e-3
     end
@@ -470,8 +470,8 @@ const MOI = MathOptInterface
         JuMP.optimize!(m)
 
         @test JuMP.has_values(m)
-        @test JuMP.termination_status(m) == MOI.LocallySolved
-        @test JuMP.primal_status(m) == MOI.FeasiblePoint
+        @test JuMP.termination_status(m) == MOI.LOCALLY_SOLVED
+        @test JuMP.primal_status(m) == MOI.FEASIBLE_POINT
         @test JuMP.objective_value(m) ≈ -1-4/sqrt(3) atol=1e-6
         @test JuMP.value(x) + JuMP.value(y) ≈ -1/3 atol=1e-3
     end
@@ -484,8 +484,8 @@ const MOI = MathOptInterface
         JuMP.optimize!(m)
 
         @test JuMP.has_values(m)
-        @test JuMP.termination_status(m) == MOI.LocallySolved
-        @test JuMP.primal_status(m) == MOI.FeasiblePoint
+        @test JuMP.termination_status(m) == MOI.LOCALLY_SOLVED
+        @test JuMP.primal_status(m) == MOI.FEASIBLE_POINT
         @test JuMP.objective_value(m) ≈ sqrt(1/2) atol=1e-6
         @test JuMP.value.(x) ≈ [sqrt(1/2), 0] atol=1e-6
     end

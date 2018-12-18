@@ -68,7 +68,7 @@ the reference map.
 
 ## Note
 
-Model copy is not supported in Direct mode, i.e. when a model is constructed
+Model copy is not supported in `DIRECT` mode, i.e. when a model is constructed
 using the [`direct_model`](@ref) constructor instead of the [`Model`](@ref)
 constructor. Moreover, independently on whether an optimizer was provided at
 model construction, the new model will have no optimizer, i.e., an optimizer
@@ -90,10 +90,10 @@ cref_new = reference_map[cref]
 ```
 """
 function copy_model(model::Model)
-    if mode(model) == Direct
-        error("Cannot copy a model in Direct mode. Use the `Model` constructor",
-              " instead of the `direct_model` constructor to be able to copy",
-              " the constructed model.")
+    if mode(model) == DIRECT
+        error("Cannot copy a model in `DIRECT` mode. Use the `Model` ",
+              "constructor instead of the `direct_model` constructor to be ",
+              "able to copy the constructed model.")
     end
     caching_mode = backend(model).mode
     new_model = Model(caching_mode = caching_mode)
@@ -147,7 +147,7 @@ and its copy.
 
 ## Note
 
-Model copy is not supported in Direct mode, i.e. when a model is constructed
+Model copy is not supported in `DIRECT` mode, i.e. when a model is constructed
 using the [`direct_model`](@ref) constructor instead of the [`Model`](@ref)
 constructor. Moreover, independently on whether an optimizer was provided at
 model construction, the new model will have no optimizer, i.e., an optimizer

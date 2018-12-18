@@ -30,8 +30,8 @@ julia> model = Model()
 A JuMP Model
 Feasibility problem with:
 Variables: 0
-Model mode: Automatic
-CachingOptimizer state: NoOptimizer
+Model mode: AUTOMATIC
+CachingOptimizer state: NO_OPTIMIZER
 Solver name: No optimizer attached.
 
 julia> @variable(model, x[1:2])

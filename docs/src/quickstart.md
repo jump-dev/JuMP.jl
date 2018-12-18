@@ -30,8 +30,8 @@ julia> model = Model(with_optimizer(GLPK.Optimizer))
 A JuMP Model
 Feasibility problem with:
 Variables: 0
-Model mode: Automatic
-CachingOptimizer state: NoOptimizer
+Model mode: AUTOMATIC
+CachingOptimizer state: NO_OPTIMIZER
 Solver name: No optimizer attached.
 ```
 
@@ -99,9 +99,9 @@ DocTestSetup = quote
     # Now we load in the solution. Using a caching optimizer removes the need to
     # load a solver such as GLPK for building the documentation.
     mock = JuMP.backend(model).optimizer.model
-    MOI.set(mock, MOI.TerminationStatus(), MOI.Optimal)
-    MOI.set(mock, MOI.PrimalStatus(), MOI.FeasiblePoint)
-    MOI.set(mock, MOI.DualStatus(), MOI.FeasiblePoint)
+    MOI.set(mock, MOI.TerminationStatus(), MOI.OPTIMAL)
+    MOI.set(mock, MOI.PrimalStatus(), MOI.FEASIBLE_POINT)
+    MOI.set(mock, MOI.DualStatus(), MOI.FEASIBLE_POINT)
     MOI.set(mock, MOI.ResultCount(), 1)
     MOI.set(mock, MOI.ObjectiveValue(), 10.6)
     MOI.set(mock, MOI.VariablePrimal(), JuMP.optimizer_index(x), 2.0)
@@ -120,9 +120,9 @@ to a setting such as a time limit. We can ask the solver why it stopped using
 the `JuMP.termination_status` function:
 ```jldoctest quickstart_example
 julia> JuMP.termination_status(model)
-Optimal::TerminationStatusCode = 1
+OPTIMAL::TerminationStatusCode = 1
 ```
-In this case, `GLPK` returned `Optimal`, this mean that it has found the optimal
+In this case, `GLPK` returned `OPTIMAL`, this mean that it has found the optimal
 solution.
 
 ```@meta
@@ -134,14 +134,14 @@ a primal-dual pair of feasible solutions with zero duality gap.
 We can verify the primal and dual status as follows to confirm this:
 ```jldoctest quickstart_example
 julia> JuMP.primal_status(model)
-FeasiblePoint::ResultStatusCode = 1
+FEASIBLE_POINT::ResultStatusCode = 1
 
 julia> JuMP.dual_status(model)
-FeasiblePoint::ResultStatusCode = 1
+FEASIBLE_POINT::ResultStatusCode = 1
 ```
 Note that the primal and dual status only inform that the primal and dual
 solutions are feasible and it is only because we verified that the termination
-status is `Optimal` that we can conclude that they form an optimal solution.
+status is `OPTIMAL` that we can conclude that they form an optimal solution.
 
 Finally, we can query the result of the optimization. First, we can query the
 objective value:

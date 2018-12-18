@@ -796,7 +796,7 @@ Constructs a vector of `QuadConstraint` objects. Similar to `@QuadConstraint`, e
 
 Return an expression whose value is an `MOI.OptimizationSense` corresponding
 to `sense`. Sense is either the symbol `:Min` or `:Max`, corresponding
-respectively to `MOI.MinSense` and `MOI.MaxSense` or it is another symbol,
+respectively to `MOI.MIN_SENSE` and `MOI.MAX_SENSE` or it is another symbol,
 which should be the name of a variable or expression whose value is an
 `MOI.OptimizationSense`.
 In the last case, the expression throws an error using the `_error`
@@ -804,9 +804,9 @@ function in case the value is not an `MOI.OptimizationSense`.
 """
 function moi_sense(_error::Function, sense)
     if sense == :Min
-        expr = MOI.MinSense
+        expr = MOI.MIN_SENSE
     elseif sense == :Max
-        expr = MOI.MaxSense
+        expr = MOI.MAX_SENSE
     else
         # Refers to a variable that holds the sense.
         # TODO: Better document this behavior
@@ -829,8 +829,8 @@ end
     @objective(model::Model, sense, func)
 
 Set the objective sense to `sense` and objective function to `func`. The
-objective sense can be either `Min`, `Max`, `MathOptInterface.MinSense`,
-`MathOptInterface.MaxSense` or `MathOptInterface.FeasibilitySense`; see
+objective sense can be either `Min`, `Max`, `MathOptInterface.MIN_SENSE`,
+`MathOptInterface.MAX_SENSE` or `MathOptInterface.FEASIBILITY_SENSE`; see
 [`MathOptInterface.ObjectiveSense`](http://www.juliaopt.org/MathOptInterface.jl/v0.6/apireference.html#MathOptInterface.ObjectiveSense).
 In order to set the sense programatically, i.e., when `sense` is a Julia
 variable whose value is the sense, one of the three
@@ -847,8 +847,8 @@ julia> model = Model()
 A JuMP Model
 Feasibility problem with:
 Variables: 0
-Model mode: Automatic
-CachingOptimizer state: NoOptimizer
+Model mode: AUTOMATIC
+CachingOptimizer state: NO_OPTIMIZER
 Solver name: No optimizer attached.
 
 julia> @variable(model, x)
@@ -867,8 +867,8 @@ julia> @objective(model, Max, 2x - 1)
 To set a quadratic objective and set the objective sense programatically, do
 as follows:
 ```jldoctest @objective
-julia> sense = JuMP.MOI.MinSense
-MinSense::OptimizationSense = 0
+julia> sense = JuMP.MOI.MIN_SENSE
+MIN_SENSE::OptimizationSense = 0
 
 julia> @objective(model, sense, x^2 - 2x + 1)
 x² - 2 x + 1

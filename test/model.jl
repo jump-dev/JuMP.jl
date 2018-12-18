@@ -158,7 +158,7 @@ function dummy_optimizer_hook(::JuMP.AbstractModel) end
 @testset "Model copy" begin
     for copy_model in (true, true)
         @testset "Using $(copy_model ? "JuMP.copy_model" : "Base.copy")" begin
-            for caching_mode in (MOIU.Automatic, MOIU.Manual)
+            for caching_mode in (MOIU.AUTOMATIC, MOIU.MANUAL)
                 @testset "In $caching_mode mode" begin
                     model = Model(caching_mode = caching_mode)
                     model.optimize_hook = dummy_optimizer_hook

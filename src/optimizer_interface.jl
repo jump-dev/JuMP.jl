@@ -4,32 +4,32 @@
 #  file, You can obtain one at http://mozilla.org/MPL/2.0/.
 
 function error_if_direct_mode(model::Model, func::Symbol)
-    if mode(model) == Direct
-        error("The `$func` function is not supported in Direct mode.")
+    if mode(model) == DIRECT
+        error("The `$func` function is not supported in DIRECT mode.")
     end
 end
 
 # These methods directly map to CachingOptimizer methods.
 # They cannot be called in Direct mode.
-function MOIU.resetoptimizer!(model::Model, optimizer::MOI.AbstractOptimizer,
+function MOIU.reset_optimizer(model::Model, optimizer::MOI.AbstractOptimizer,
                               bridge_constraints::Bool=true)
-    error_if_direct_mode(model, :resetoptimizer!)
-    MOIU.resetoptimizer!(backend(model), optimizer)
+    error_if_direct_mode(model, :reset_optimizer)
+    MOIU.reset_optimizer(backend(model), optimizer)
 end
 
-function MOIU.resetoptimizer!(model::Model)
-    error_if_direct_mode(model, :resetoptimizer!)
-    MOIU.resetoptimizer!(backend(model))
+function MOIU.reset_optimizer(model::Model)
+    error_if_direct_mode(model, :reset_optimizer)
+    MOIU.reset_optimizer(backend(model))
 end
 
-function MOIU.dropoptimizer!(model::Model)
-    error_if_direct_mode(model, :dropoptimizer!)
-    MOIU.dropoptimizer!(backend(model))
+function MOIU.drop_optimizer(model::Model)
+    error_if_direct_mode(model, :drop_optimizer)
+    MOIU.drop_optimizer(backend(model))
 end
 
-function MOIU.attachoptimizer!(model::Model)
-    error_if_direct_mode(model, :attachoptimizer!)
-    MOIU.attachoptimizer!(backend(model))
+function MOIU.attach_optimizer(model::Model)
+    error_if_direct_mode(model, :attach_optimizer)
+    MOIU.attach_optimizer(backend(model))
 end
 
 function set_optimizer(model::Model, optimizer_factory::OptimizerFactory;
@@ -41,16 +41,17 @@ function set_optimizer(model::Model, optimizer_factory::OptimizerFactory;
         # If default_copy_to without names is supported, no need for a second
         # cache.
         if !MOIU.supports_default_copy_to(optimizer, false)
-            if mode(model) == Manual
+            if mode(model) == MANUAL
                 # TODO figure out what to do in manual mode with the two caches
-                error("Bridges in Manual mode with an optimizer not supporting `default_copy_to` is not supported yet")
+                error("Bridges in `MANUAL` mode with an optimizer not ",
+                      "supporting `default_copy_to` is not supported yet")
             end
             universal_fallback = MOIU.UniversalFallback(JuMPMOIModel{Float64}())
             optimizer = MOIU.CachingOptimizer(universal_fallback, optimizer)
         end
         optimizer = MOI.Bridges.fullbridgeoptimizer(optimizer, Float64)
     end
-    MOIU.resetoptimizer!(model, optimizer)
+    MOIU.reset_optimizer(model, optimizer)
 end
 
 """
@@ -92,15 +93,15 @@ function optimize!(model::Model,
     end
 
     if optimizer_factory !== nothing
-        if mode(model) == Direct
-            error("An optimizer factory cannot be provided at the `optimize` call in Direct mode.")
+        if mode(model) == DIRECT
+            error("An optimizer factory cannot be provided at the `optimize` call in DIRECT mode.")
         end
-        if MOIU.state(backend(model)) != MOIU.NoOptimizer
+        if MOIU.state(backend(model)) != MOIU.NO_OPTIMIZER
             error("An optimizer factory cannot both be provided in the `Model` constructor and at the `optimize` call.")
         end
         set_optimizer(model, optimizer_factory,
                       bridge_constraints=bridge_constraints)
-        MOIU.attachoptimizer!(model)
+        MOIU.attach_optimizer(model)
     end
 
     # If the user or an extension has provided an optimize hook, call

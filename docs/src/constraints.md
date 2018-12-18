@@ -154,7 +154,7 @@ DocTestSetup = quote
     @objective(model, Max, -2x);
     JuMP.optimize!(model);
     mock = JuMP.backend(model).optimizer.model;
-    MOI.set(mock, MOI.DualStatus(), MOI.FeasiblePoint)
+    MOI.set(mock, MOI.DualStatus(), MOI.FEASIBLE_POINT)
     MOI.set(mock, MOI.ConstraintDual(), JuMP.optimizer_index(con), -2.0)
 end
 ```

@@ -129,11 +129,11 @@ end
 # Model
 
 # Model has three modes:
-# 1) Automatic: moi_backend field holds a CachingOptimizer in Automatic mode.
-# 2) Manual: moi_backend field holds a CachingOptimizer in Manual mode.
-# 3) Direct: moi_backend field holds an AbstractOptimizer. No extra copy of the model is stored. The moi_backend must support add_constraint etc.
+# 1) AUTOMATIC: moi_backend field holds a CachingOptimizer in AUTOMATIC mode.
+# 2) MANUAL: moi_backend field holds a CachingOptimizer in MANUAL mode.
+# 3) DIRECT: moi_backend field holds an AbstractOptimizer. No extra copy of the model is stored. The moi_backend must support add_constraint etc.
 # Methods to interact with the CachingOptimizer are defined in solverinterface.jl.
-@enum ModelMode Automatic Manual Direct
+@enum ModelMode AUTOMATIC MANUAL DIRECT
 
 abstract type AbstractModel end
 # All `AbstractModel`s must define methods for these functions:
@@ -152,8 +152,8 @@ mutable struct Model <: AbstractModel
     variable_to_fix::Dict{MOIVAR, MOIFIX}
     variable_to_integrality::Dict{MOIVAR, MOIINT}
     variable_to_zero_one::Dict{MOIVAR, MOIBIN}
-    # In Manual and Automatic modes, CachingOptimizer.
-    # In Direct mode, will hold an AbstractOptimizer.
+    # In MANUAL and AUTOMATIC modes, CachingOptimizer.
+    # In DIRECT mode, will hold an AbstractOptimizer.
     moi_backend::MOI.AbstractOptimizer
     # Hook into a solve call...function of the form f(m::Model; kwargs...),
     # where kwargs get passed along to subsequent solve calls.
@@ -171,7 +171,7 @@ mutable struct Model <: AbstractModel
 end
 
 """
-    Model(; caching_mode::MOIU.CachingOptimizerMode=MOIU.Automatic,
+    Model(; caching_mode::MOIU.CachingOptimizerMode=MOIU.AUTOMATIC,
             bridge_constraints::Bool=true)
 
 Return a new JuMP model without any optimizer; the model is stored the model in
@@ -182,7 +182,7 @@ optimizer are automatically bridged to equivalent supported constraints when
 an appropriate transformation is defined in the `MathOptInterface.Bridges`
 module or is defined in another module and is explicitely added.
 """
-function Model(; caching_mode::MOIU.CachingOptimizerMode=MOIU.Automatic,
+function Model(; caching_mode::MOIU.CachingOptimizerMode=MOIU.AUTOMATIC,
                  solver=nothing)
     if solver !== nothing
         error("The solver= keyword is no longer available in JuMP 0.19 and " *
@@ -197,7 +197,7 @@ end
 
 """
     Model(optimizer_factory::OptimizerFactory;
-          caching_mode::MOIU.CachingOptimizerMode=MOIU.Automatic,
+          caching_mode::MOIU.CachingOptimizerMode=MOIU.AUTOMATIC,
           bridge_constraints::Bool=true)
 
 Return a new JuMP model using the optimizer factory `optimizer_factory` to
@@ -272,19 +272,19 @@ MathOptInterface or solver-specific functionality.
 """
 backend(model::Model) = model.moi_backend
 
-moi_mode(model::MOI.ModelLike) = Direct
+moi_mode(model::MOI.ModelLike) = DIRECT
 function moi_mode(model::MOIU.CachingOptimizer)
-    if model.mode == MOIU.Automatic
-        return Automatic
+    if model.mode == MOIU.AUTOMATIC
+        return AUTOMATIC
     else
-        return Manual
+        return MANUAL
     end
 end
 
 """
     mode(model::Model)
 
-Return mode (Direct, Automatic, Manual) of model.
+Return mode (DIRECT, AUTOMATIC, MANUAL) of model.
 """
 mode(model::Model) = moi_mode(backend(model))
 # The type of backend(model) is unknown so we directly redirect to another
@@ -313,14 +313,14 @@ end
     solver_name(model::Model)
 
 If available, returns the `SolverName` property of the underlying optimizer.
-Returns `"No optimizer attached"` in `Automatic` or `Manual` modes when no
+Returns `"No optimizer attached"` in `AUTOMATIC` or `MANUAL` modes when no
 optimizer is attached. Returns
 "SolverName() attribute not implemented by the optimizer." if the attribute is
 not implemented.
 """
 function solver_name(model::Model)
-    if mode(model) != Direct &&
-        MOIU.state(backend(model)) == MOIU.NoOptimizer
+    if mode(model) != DIRECT &&
+        MOIU.state(backend(model)) == MOIU.NO_OPTIMIZER
         return "No optimizer attached."
     else
         return try_get_solver_name(backend(model))
@@ -451,19 +451,19 @@ Base.copy(v::AbstractArray{VariableRef}, new_model::Model) = (var -> VariableRef
 
 function optimizer_index(v::VariableRef)
     model = owner_model(v)
-    if mode(model) == Direct
+    if mode(model) == DIRECT
         return index(v)
     else
-        @assert backend(model).state == MOIU.AttachedOptimizer
+        @assert backend(model).state == MOIU.ATTACHED_OPTIMIZER
         return backend(model).model_to_optimizer_map[index(v)]
     end
 end
 
 function optimizer_index(cr::ConstraintRef{Model})
-    if mode(cr.model) == Direct
+    if mode(cr.model) == DIRECT
         return index(cr)
     else
-        @assert backend(cr.model).state == MOIU.AttachedOptimizer
+        @assert backend(cr.model).state == MOIU.ATTACHED_OPTIMIZER
         return backend(cr.model).model_to_optimizer_map[index(cr)]
     end
 end
@@ -478,7 +478,7 @@ return false.
 
 See also [`dual`](@ref) and [`shadow_price`](@ref).
 """
-has_duals(model::Model) = dual_status(model) != MOI.NoSolution
+has_duals(model::Model) = dual_status(model) != MOI.NO_SOLUTION
 
 """
     dual(cr::ConstraintRef)
