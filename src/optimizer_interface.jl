@@ -54,6 +54,17 @@ function set_optimizer(model::Model, optimizer_factory::OptimizerFactory;
     MOIU.reset_optimizer(model, optimizer)
 end
 
+# Deprecation for JuMP v0.18 -> JuMP v0.19 transition
+export solve
+function solve(::Model)
+    error("`solve` has been replaced by `JuMP.optimize!`. Note that `solve` " *
+          "used to return a `Symbol` summarizing the solution while " *
+          "`JuMP.optimize!` returns nothing and the status of the solution " *
+          "is queried using `JuMP.termination_status`, `JuMP.primal_status` " *
+          "and `JuMP.dual_status`.")
+end
+
+
 """
     optimize!(model::Model,
               optimizer_factory::Union{Nothing, OptimizerFactory}=nothing;

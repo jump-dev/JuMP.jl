@@ -43,6 +43,16 @@ export
     @objective, @NLobjective,
     @NLparameter, @constraintref
 
+# Deprecations for JuMP v0.18 -> JuMP v0.19 transition
+Base.@deprecate(getobjectivevalue, JuMP.objective_value)
+Base.@deprecate(getobjectivebound, JuMP.objective_bound)
+Base.@deprecate(getvalue,          JuMP.value)
+Base.@deprecate(getdual,           JuMP.dual)
+Base.@deprecate(numvar,            JuMP.num_variables)
+Base.@deprecate(numnlconstr,       JuMP.num_nl_constraints)
+Base.@deprecate(setlowerbound,     JuMP.set_lower_bound)
+Base.@deprecate(setupperbound,     JuMP.set_upper_bound)
+Base.@deprecate(linearterms,       JuMP.linear_terms)
 
 include("utils.jl")
 
