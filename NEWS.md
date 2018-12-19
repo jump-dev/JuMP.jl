@@ -57,7 +57,7 @@ Breaking changes:
   solvers that support various types of constraints.
 
 - JuMP solver-independent callbacks have been replaced by solver-specific
-  callbacks. See your favorite solver for more details. (TODO: No
+  callbacks. See your favorite solver for more details. (See the note below: No
   solver-specific callbacks are implemented yet.)
 
 - The `norm()` syntax is no longer recognized inside macros. Use the
@@ -132,21 +132,23 @@ New features:
   model are stored and/or regenerated. See the corresponding
   [documentation](http://www.juliaopt.org/JuMP.jl/dev/solvers/).
 
+For known issues blocking the 0.19 release, see the
+[0.19 issue milestone](https://github.com/JuliaOpt/JuMP.jl/issues?q=is%3Aopen+is%3Aissue+milestone%3A0.19).
 
-Known issues:
+There are known regressions from JuMP 0.18 that will be addressed in a future
+release (0.19.x or later):
 
-- Model printing is not yet implemented. ([issue](https://github.com/JuliaOpt/JuMP.jl/issues/1180))
+- Performance regressions in model generation
+  ([issue](https://github.com/JuliaOpt/JuMP.jl/issues/1403)). Please file an
+  issue anyway if you notice a significant performance regression. We have
+  plans to address a number of performance issues, but we might not be aware of
+  all of them.
 
-- There are known performance regressions ([issue](https://github.com/JuliaOpt/JuMP.jl/issues/1403)).
-  Fast incremental NLP solves are not yet reimplemented ([issue](https://github.com/JuliaOpt/JuMP.jl/issues/1185)).
+- Fast incremental NLP solves are not yet reimplemented
+  ([issue](https://github.com/JuliaOpt/JuMP.jl/issues/1185)).
 
 - We do not yet have an implementation of solver-specific callbacks.
 
-- Example files (under `examples/`) have not yet been updated.
-
-See the
-[0.19 issue milestone](https://github.com/JuliaOpt/JuMP.jl/issues?q=is%3Aopen+is%3Aissue+milestone%3A0.19)
-for a complete list of issues blocking the 0.19 release.
 
 Version 0.18.5 (December 1, 2018)
 ---------------------------------
