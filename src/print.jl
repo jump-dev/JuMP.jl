@@ -435,6 +435,9 @@ function in_set_string(print_mode, set::MOI.Interval)
                   set.upper, math_symbol(print_mode, :close_rng))
 end
 
+in_set_string(print_mode, ::MOI.ZeroOne) = "binary"
+in_set_string(print_mode, ::MOI.Integer) = "integer"
+
 # TODO: Convert back to JuMP types for sets like PSDCone.
 # TODO: Consider fancy latex names for some sets. They're currently printed as
 # regular text in math mode which looks a bit awkward.

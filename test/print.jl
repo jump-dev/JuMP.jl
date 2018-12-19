@@ -274,7 +274,7 @@ function printing_test(ModelType::Type{<:JuMP.AbstractModel})
         zero_one = @constraint(model, x in MathOptInterface.ZeroOne())
 
         io_test(REPLMode, JuMP.LowerBoundRef(x), "x $ge 10.0")
-        io_test(REPLMode, zero_one, "x $in_sym MathOptInterface.ZeroOne()")
+        io_test(REPLMode, zero_one, "x binary")
         # TODO: Test in IJulia mode and do nice printing for {0, 1}.
     end
 
@@ -378,14 +378,14 @@ function printing_test(ModelType::Type{<:JuMP.AbstractModel})
         io_test(REPLMode, model_1, """
     Max a - b + 2 a1 - 10 x
     Subject to
-     x $inset MathOptInterface.ZeroOne()
-     u[1] $inset MathOptInterface.ZeroOne()
-     u[2] $inset MathOptInterface.ZeroOne()
-     u[3] $inset MathOptInterface.ZeroOne()
-     a1 $inset MathOptInterface.Integer()
-     b1 $inset MathOptInterface.Integer()
-     c1 $inset MathOptInterface.Integer()
-     z $inset MathOptInterface.Integer()
+     x binary
+     u[1] binary
+     u[2] binary
+     u[3] binary
+     a1 integer
+     b1 integer
+     c1 integer
+     z integer
      fi $eq 9.0
      a $ge 1.0
      c $ge -1.0
@@ -420,14 +420,14 @@ function printing_test(ModelType::Type{<:JuMP.AbstractModel})
 
         io_test(IJuliaMode, model_1, """
     \\begin{alignat*}{1}\\max\\quad & a - b + 2 a1 - 10 x\\\\
-    \\text{Subject to} \\quad & x \\in MathOptInterface.ZeroOne()\\\\
-     & u_{1} \\in MathOptInterface.ZeroOne()\\\\
-     & u_{2} \\in MathOptInterface.ZeroOne()\\\\
-     & u_{3} \\in MathOptInterface.ZeroOne()\\\\
-     & a1 \\in MathOptInterface.Integer()\\\\
-     & b1 \\in MathOptInterface.Integer()\\\\
-     & c1 \\in MathOptInterface.Integer()\\\\
-     & z \\in MathOptInterface.Integer()\\\\
+    \\text{Subject to} \\quad & x binary\\\\
+     & u_{1} binary\\\\
+     & u_{2} binary\\\\
+     & u_{3} binary\\\\
+     & a1 integer\\\\
+     & b1 integer\\\\
+     & c1 integer\\\\
+     & z integer\\\\
      & fi = 9.0\\\\
      & a \\geq 1.0\\\\
      & c \\geq -1.0\\\\
