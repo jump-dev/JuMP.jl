@@ -12,7 +12,7 @@ adopters. Additional breaking changes may occur between development tags.
 The documentation has known gaps. When using a development tag, be prepared to
 peek into the JuMP source code and tests for examples of how things work.
 
-Latest development tag: `v0.19-alpha` (`] add JuMP#v0.19-alpha`).
+Latest development tag: `v0.19-beta` (`] add JuMP#v0.19-beta`).
 
 Breaking changes:
 

@@ -39,7 +39,13 @@ Our documentation includes an installation guide, quick-start guide, and referen
 
 [juliaopt-notebooks]: https://github.com/JuliaOpt/juliaopt-notebooks
 
-**Read about the upcoming transition to [MathOptInterface](https://github.com/JuliaOpt/MathOptInterface.jl) (MOI) and breaking changes in JuMP 0.19 [here](https://discourse.julialang.org/t/mathoptinterface-and-upcoming-breaking-changes-in-jump-0-19). The development version of JuMP (`master` branch) supports MOI and is ready for early adopters to test out. Be aware that the development version is alpha quality and is still undergoing breaking changes.**
+**Read about the upcoming transition to [MathOptInterface](https://github.com/JuliaOpt/MathOptInterface.jl)
+(MOI) and breaking changes in JuMP 0.19
+[here](https://discourse.julialang.org/t/mathoptinterface-and-upcoming-breaking-changes-in-jump-0-19).
+The development version of JuMP (`master` branch) supports MOI and is ready for
+early adopters to test out. Be aware that the development version is beta
+quality. No further breaking changes are planned, but they may still occur
+before the 0.19 release.**
 
 **Latest Release**: 0.18.4 (`release-0.18` branch)
   * [Documentation](http://www.juliaopt.org/JuMP.jl/0.18/)
