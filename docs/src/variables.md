@@ -246,6 +246,21 @@ julia> JuMP.fix_value(x)
 2.0
 ```
 
+## Variable names
+
+The name of a variable can retrieved using [`JuMP.name`](@ref), set by
+[`JuMP.set_name`](@ref).
+```@docs
+name
+set_name
+```
+
+The variable can also be retrieved from its name using
+[`JuMP.variable_with_name`](@ref).
+```@docs
+variable_with_name
+```
+
 ## Variable containers
 
 In the examples above, we have mostly created scalar variables. By scalar, we

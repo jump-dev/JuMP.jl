@@ -15,17 +15,18 @@ end
 mutable struct MyModel <: JuMP.AbstractModel
     nextvaridx::Int                                 # Next variable index is nextvaridx+1
     variables::Dict{Int, JuMP.ScalarVariable}       # Map varidx -> variable
-    varnames::Dict{Int, String}                     # Map varidx -> name
+    var_to_name::Dict{Int, String}                  # Map varidx -> name
+    name_to_var::Dict{String, Int}                  # Map varidx -> name
     nextconidx::Int                                 # Next constraint index is nextconidx+1
     constraints::Dict{ConstraintIndex,
                       JuMP.AbstractConstraint}      # Map conidx -> variable
-    connames::Dict{ConstraintIndex, String}         # Map conidx -> name
+    con_to_name::Dict{ConstraintIndex, String}         # Map conidx -> name
     objectivesense::MOI.OptimizationSense
     objective_function::JuMP.AbstractJuMPScalar
     obj_dict::Dict{Symbol, Any}                     # Same that JuMP.Model's field `obj_dict`
     function MyModel()
         new(0, Dict{Int, JuMP.AbstractVariable}(),
-            Dict{Int, String}(),                                 # Variables
+            Dict{Int, String}(), Dict{String, Int}(),            # Variables
             0, Dict{ConstraintIndex, JuMP.AbstractConstraint}(),
             Dict{ConstraintIndex, String}(),                     # Constraints
             MOI.FEASIBILITY_SENSE,
@@ -57,7 +58,7 @@ end
 function JuMP.delete(model::MyModel, vref::MyVariableRef)
     @assert JuMP.is_valid(model, vref)
     delete!(model.variables, vref.idx)
-    delete!(model.varnames, vref.idx)
+    delete!(model.var_to_name, vref.idx)
 end
 function JuMP.is_valid(model::MyModel, vref::MyVariableRef)
     return (model === vref.model &&
@@ -205,7 +206,7 @@ end
 function JuMP.delete(model::MyModel, constraint_ref::MyConstraintRef)
     @assert JuMP.is_valid(model, constraint_ref)
     delete!(model.constraints, constraint_ref.index)
-    delete!(model.connames, constraint_ref.index)
+    delete!(model.con_to_name, constraint_ref.index)
 end
 function JuMP.is_valid(model::MyModel, constraint_ref::MyConstraintRef)
     return (model === constraint_ref.model &&
@@ -237,13 +238,17 @@ function JuMP.objective_function(model::MyModel, FT::Type)
 end
 
 # Names
-JuMP.name(vref::MyVariableRef) = vref.model.varnames[vref.idx]
+JuMP.name(vref::MyVariableRef) = vref.model.var_to_name[vref.idx]
 function JuMP.set_name(vref::MyVariableRef, name::String)
-    vref.model.varnames[vref.idx] = name
+    vref.model.var_to_name[vref.idx] = name
+    vref.model.name_to_var[name] = vref.idx
 end
-JuMP.name(cref::MyConstraintRef) = cref.model.connames[cref.index]
+function JuMP.variable_with_name(model::MyModel, name::String)
+    return MyVariableRef(model, model.name_to_var[name])
+end
+JuMP.name(cref::MyConstraintRef) = cref.model.con_to_name[cref.index]
 function JuMP.set_name(cref::MyConstraintRef, name::String)
-    cref.model.connames[cref.index] = name
+    cref.model.con_to_name[cref.index] = name
 end
 
 end

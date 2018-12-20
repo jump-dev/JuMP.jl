@@ -223,6 +223,52 @@ function set_name(v::VariableRef, s::String)
     return MOI.set(owner_model(v), MOI.VariableName(), v, s)
 end
 
+"""
+    variable_with_name(model::AbstractModel, name::String)::AbstractVariableRef
+
+Returns the reference of the variable with name `name`. Throws an error if
+several variables have the same name (even if it is different from `name`).
+
+```jldoctest objective_function; setup = :(using JuMP)
+julia> model = Model()
+A JuMP Model
+Feasibility problem with:
+Variables: 0
+Model mode: AUTOMATIC
+CachingOptimizer state: NO_OPTIMIZER
+Solver name: No optimizer attached.
+
+julia> @variable(model, x)
+x
+
+julia> JuMP.variable_with_name(model, "x")
+x
+
+julia> var = @variable(model, base_name="y")
+y
+
+julia> JuMP.variable_with_name(model, "y")
+y
+
+julia> JuMP.set_name(var, "z")
+
+julia> JuMP.variable_with_name(model, "z")
+z
+
+julia> @variable(model, u[1:2])
+2-element Array{VariableRef,1}:
+ u[1]
+ u[2]
+
+julia> JuMP.variable_with_name(model, "u[2]")
+u[2]
+```
+"""
+function variable_with_name(model::Model, name::String)::AbstractVariableRef
+    index = MOI.get(backend(model), MOI.VariableIndex, name)
+    return VariableRef(model, index)
+end
+
 MOI.SingleVariable(v::VariableRef) = MOI.SingleVariable(index(v))
 function moi_function(variable::AbstractVariableRef)
     return MOI.SingleVariable(variable)

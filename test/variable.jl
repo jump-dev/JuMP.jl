@@ -21,6 +21,11 @@ include("utilities.jl")
     include("JuMPExtension.jl")
 end
 
+function test_variable_name(variable, name)
+    @test JuMP.name(variable) == name
+    @test variable == JuMP.variable_with_name(JuMP.owner_model(variable), name)
+end
+
 # Slices three-dimensional DenseAxisArray x[I,J,K]
 # I,J,K can be singletons, ranges, colons, etc.
 function sliceof(VariableRefType, x, I, J, K)
@@ -51,7 +56,7 @@ function test_variable_no_bound(ModelType, VariableRefType)
     @test !JuMP.has_lower_bound(nobounds)
     @test !JuMP.has_upper_bound(nobounds)
     @test !JuMP.is_fixed(nobounds)
-    @test JuMP.name(nobounds) == "nobounds"
+    test_variable_name(nobounds, "nobounds")
     @test zero(nobounds) isa JuMP.GenericAffExpr{Float64, VariableRefType}
     @test one(nobounds) isa JuMP.GenericAffExpr{Float64, VariableRefType}
 end
@@ -160,7 +165,7 @@ function test_variable_custom_index_sets(ModelType)
     s = ["Green","Blue"]
     @variable(model, x[i=-10:10, s] <= 5.5, Int, start=i+1)
     @test JuMP.upper_bound(x[-4, "Green"]) == 5.5
-    @test JuMP.name(x[-10, "Green"]) == "x[-10,Green]"
+    test_variable_name(x[-10, "Green"], "x[-10,Green]")
     # TODO: broken because of
     #       https://github.com/JuliaOpt/MathOptInterface.jl/issues/302
     # @test JuMP.start_value(x[-3, "Blue"]) == -2
@@ -284,13 +289,13 @@ end
 function test_variable_base_name_in_macro(ModelType)
     model = ModelType()
     @variable(model, normal_var)
-    @test JuMP.name(normal_var) == "normal_var"
+    test_variable_name(normal_var, "normal_var")
     no_indices = @variable(model, base_name="foo")
-    @test JuMP.name(no_indices) == "foo"
+    test_variable_name(no_indices, "foo")
     # Note that `z` will be ignored in name.
     indices = @variable(model, z[i=2:3], base_name="t")
-    @test JuMP.name(indices[2]) == "t[2]"
-    @test JuMP.name(indices[3]) == "t[3]"
+    test_variable_name(indices[2], "t[2]")
+    test_variable_name(indices[3], "t[3]")
 end
 
 function test_variable_condition_in_indexing(ModelType)
