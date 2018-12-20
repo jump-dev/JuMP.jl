@@ -22,10 +22,9 @@
     This documentation is for the development branch of JuMP. JuMP is
     undergoing a [major
     transition](https://discourse.julialang.org/t/mathoptinterface-and-upcoming-breaking-changes-in-jump-0-19)
-    to MathOptInterface, and the documentation is in the process of being
-    rewritten. The development version is alpha-quality with breaking
-    changes still in progress. Please provide feedback and file issues if
-    you use this branch.
+    to MathOptInterface. The development version is beta quality and the
+    documentation has TODOs remaining before the release. Please provide
+    feedback and file issues if you use this branch.
 
 [JuMP](https://github.com/JuliaOpt/JuMP.jl) is a domain-specific modeling
 language for [mathematical
