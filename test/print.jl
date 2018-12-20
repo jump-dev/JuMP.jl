@@ -275,7 +275,7 @@ function printing_test(ModelType::Type{<:JuMP.AbstractModel})
 
         io_test(REPLMode, JuMP.LowerBoundRef(x), "x $ge 10.0")
         io_test(REPLMode, zero_one, "x binary")
-        # TODO: Test in IJulia mode and do nice printing for {0, 1}.
+        # TODO: Test in IJulia mode
     end
 
     @testset "VectorOfVariable constraints" begin
