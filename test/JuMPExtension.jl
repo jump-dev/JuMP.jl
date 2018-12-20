@@ -243,7 +243,7 @@ function JuMP.set_name(vref::MyVariableRef, name::String)
     vref.model.var_to_name[vref.idx] = name
     vref.model.name_to_var[name] = vref.idx
 end
-function JuMP.variable_with_name(model::MyModel, name::String)
+function JuMP.variable_by_name(model::MyModel, name::String)
     return MyVariableRef(model, model.name_to_var[name])
 end
 JuMP.name(cref::MyConstraintRef) = cref.model.con_to_name[cref.index]

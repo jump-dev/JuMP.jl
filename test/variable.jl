@@ -23,7 +23,7 @@ end
 
 function test_variable_name(variable, name)
     @test JuMP.name(variable) == name
-    @test variable == JuMP.variable_with_name(JuMP.owner_model(variable), name)
+    @test variable == JuMP.variable_by_name(JuMP.owner_model(variable), name)
 end
 
 # Slices three-dimensional DenseAxisArray x[I,J,K]

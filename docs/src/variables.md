@@ -256,9 +256,9 @@ set_name
 ```
 
 The variable can also be retrieved from its name using
-[`JuMP.variable_with_name`](@ref).
+[`JuMP.variable_by_name`](@ref).
 ```@docs
-variable_with_name
+variable_by_name
 ```
 
 ## Variable containers

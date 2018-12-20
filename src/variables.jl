@@ -224,7 +224,7 @@ function set_name(v::VariableRef, s::String)
 end
 
 """
-    variable_with_name(model::AbstractModel, name::String)::AbstractVariableRef
+    variable_by_name(model::AbstractModel, name::String)::AbstractVariableRef
 
 Returns the reference of the variable with name `name`. Throws an error if
 several variables have the same name (even if it is different from `name`).
@@ -241,18 +241,18 @@ Solver name: No optimizer attached.
 julia> @variable(model, x)
 x
 
-julia> JuMP.variable_with_name(model, "x")
+julia> JuMP.variable_by_name(model, "x")
 x
 
 julia> var = @variable(model, base_name="y")
 y
 
-julia> JuMP.variable_with_name(model, "y")
+julia> JuMP.variable_by_name(model, "y")
 y
 
 julia> JuMP.set_name(var, "z")
 
-julia> JuMP.variable_with_name(model, "z")
+julia> JuMP.variable_by_name(model, "z")
 z
 
 julia> @variable(model, u[1:2])
@@ -260,11 +260,11 @@ julia> @variable(model, u[1:2])
  u[1]
  u[2]
 
-julia> JuMP.variable_with_name(model, "u[2]")
+julia> JuMP.variable_by_name(model, "u[2]")
 u[2]
 ```
 """
-function variable_with_name(model::Model, name::String)::AbstractVariableRef
+function variable_by_name(model::Model, name::String)::AbstractVariableRef
     index = MOI.get(backend(model), MOI.VariableIndex, name)
     return VariableRef(model, index)
 end
