@@ -352,12 +352,12 @@ achieved using the [`@constraint`](@ref) macro. For example, `MOI.ZeroOne()`
 restricts the domain to ``\{0, 1\}:
 ```jldoctest; setup = :(model = Model(); @variable(model, x))
 julia> @constraint(model, x in MOI.ZeroOne())
-x in MathOptInterface.ZeroOne()
+x binary
 ```
 and `MOI.Integer()` restricts to the domain to the integers ``\mathbb{Z}``:
 ```jldoctest; setup = :(model = Model(); @variable(model, x))
 julia> @constraint(model, x in MOI.Integer())
-x in MathOptInterface.Integer()
+x integer
 ```
 
 JuMP also supports modeling semi-continuous variables, whose domain is ``\{0\} ∪
