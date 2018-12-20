@@ -227,9 +227,9 @@ end
     variable_by_name(model::AbstractModel,
                      name::String)::Union{AbstractVariableRef, Nothing}
 
-Returns the reference of the variable with name `name`. Throws an error if
-several variables have `name` as name. Returns `Nothing` of no variable have
-this name.
+Returns the reference of the variable with name attribute `name` or `Nothing` if
+no variable have this name attribute. Throws an error if several variables have
+`name` as name attribute.
 
 ```jldoctest objective_function; setup = :(using JuMP), filter = r"Stacktrace:.*"s
 julia> model = Model()
