@@ -223,6 +223,73 @@ function set_name(v::VariableRef, s::String)
     return MOI.set(owner_model(v), MOI.VariableName(), v, s)
 end
 
+"""
+    variable_by_name(model::AbstractModel,
+                     name::String)::Union{AbstractVariableRef, Nothing}
+
+Returns the reference of the variable with name attribute `name` or `Nothing` if
+no variable have this name attribute. Throws an error if several variables have
+`name` as name attribute.
+
+```jldoctest objective_function; setup = :(using JuMP), filter = r"Stacktrace:.*"s
+julia> model = Model()
+A JuMP Model
+Feasibility problem with:
+Variables: 0
+Model mode: AUTOMATIC
+CachingOptimizer state: NO_OPTIMIZER
+Solver name: No optimizer attached.
+
+julia> @variable(model, x)
+x
+
+julia> JuMP.variable_by_name(model, "x")
+x
+
+julia> @variable(model, base_name="x")
+x
+
+julia> JuMP.variable_by_name(model, "x")
+ERROR: Multiple variables have the name x.
+Stacktrace:
+ [1] error(::String) at ./error.jl:33
+ [2] get(::JuMP.JuMPMOIModel{Float64}, ::Type{MathOptInterface.VariableIndex}, ::String) at /home/blegat/.julia/dev/MathOptInterface/src/Utilities/model.jl:222
+ [3] get at /home/blegat/.julia/dev/MathOptInterface/src/Utilities/universalfallback.jl:201 [inlined]
+ [4] get(::MathOptInterface.Utilities.CachingOptimizer{MathOptInterface.AbstractOptimizer,MathOptInterface.Utilities.UniversalFallback{JuMP.JuMPMOIModel{Float64}}}, ::Type{MathOptInterface.VariableIndex}, ::String) at /home/blegat/.julia/dev/MathOptInterface/src/Utilities/cachingoptimizer.jl:490
+ [5] variable_by_name(::Model, ::String) at /home/blegat/.julia/dev/JuMP/src/variables.jl:268
+ [6] top-level scope at none:0
+
+julia> var = @variable(model, base_name="y")
+y
+
+julia> JuMP.variable_by_name(model, "y")
+y
+
+julia> JuMP.set_name(var, "z")
+
+julia> JuMP.variable_by_name(model, "y")
+
+julia> JuMP.variable_by_name(model, "z")
+z
+
+julia> @variable(model, u[1:2])
+2-element Array{VariableRef,1}:
+ u[1]
+ u[2]
+
+julia> JuMP.variable_by_name(model, "u[2]")
+u[2]
+```
+"""
+function variable_by_name(model::Model, name::String)
+    index = MOI.get(backend(model), MOI.VariableIndex, name)
+    if index isa Nothing
+        return nothing
+    else
+        return VariableRef(model, index)
+    end
+end
+
 MOI.SingleVariable(v::VariableRef) = MOI.SingleVariable(index(v))
 function moi_function(variable::AbstractVariableRef)
     return MOI.SingleVariable(variable)
