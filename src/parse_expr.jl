@@ -285,6 +285,12 @@ function destructive_add!(ex::AbstractArray{<:GenericAffExpr}, c::Number,
     return result
 end
 
+# For cases such as x' * x, broadcasting the ex .+ will cause the Adjoint to be
+# collected into an Array{T, 2}. The easiest way to work around this is to undo
+# the adjoint, perform the operation, and then re-apply the adjoint.
+function destructive_add!(ex::Number, c::Number, x::Adjoint{T, Vector{T}}) where {T}
+    return (ex .+ c * x')'
+end
 
 destructive_add!(ex, c, x) = ex .+ c * x
 
