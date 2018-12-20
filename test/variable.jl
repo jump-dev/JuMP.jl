@@ -298,6 +298,27 @@ function test_variable_base_name_in_macro(ModelType)
     test_variable_name(indices[3], "t[3]")
 end
 
+function test_variable_name(ModelType)
+    model = ModelType()
+    @variable(model, x)
+    test_variable_name(x, "x")
+    JuMP.set_name(x, "y")
+    @test JuMP.variable_by_name(model, "x") isa Nothing
+    test_variable_name(x, "y")
+    y = @variable(model, base_name="y")
+    err(name) = ErrorException("Multiple variables have the name $name.")
+    @test_throws err("y") JuMP.variable_by_name(model, "y")
+    JuMP.set_name(y, "x")
+    test_variable_name(x, "y")
+    test_variable_name(y, "x")
+    JuMP.set_name(x, "x")
+    @test_throws err("x") JuMP.variable_by_name(model, "x")
+    @test JuMP.variable_by_name(model, "y") isa Nothing
+    JuMP.set_name(y, "y")
+    test_variable_name(x, "x")
+    test_variable_name(y, "y")
+end
+
 function test_variable_condition_in_indexing(ModelType)
     function test_one_dim(x)
         @test length(x) == 5
@@ -449,6 +470,10 @@ end
 
 function variables_test(ModelType::Type{<:JuMP.AbstractModel},
                         VariableRefType::Type{<:JuMP.AbstractVariableRef})
+    @testset "Variable name" begin
+        test_variable_name(ModelType)
+    end
+
     @testset "Constructors" begin
         test_variable_no_bound(ModelType, VariableRefType)
         test_variable_lower_bound_rhs(ModelType)

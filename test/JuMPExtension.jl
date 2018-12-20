@@ -16,7 +16,7 @@ mutable struct MyModel <: JuMP.AbstractModel
     nextvaridx::Int                                 # Next variable index is nextvaridx+1
     variables::Dict{Int, JuMP.ScalarVariable}       # Map varidx -> variable
     var_to_name::Dict{Int, String}                  # Map varidx -> name
-    name_to_var::Dict{String, Int}                  # Map varidx -> name
+    name_to_var::Union{Dict{String, Int}, Nothing}  # Map varidx -> name
     nextconidx::Int                                 # Next constraint index is nextconidx+1
     constraints::Dict{ConstraintIndex,
                       JuMP.AbstractConstraint}      # Map conidx -> variable
@@ -241,10 +241,30 @@ end
 JuMP.name(vref::MyVariableRef) = vref.model.var_to_name[vref.idx]
 function JuMP.set_name(vref::MyVariableRef, name::String)
     vref.model.var_to_name[vref.idx] = name
-    vref.model.name_to_var[name] = vref.idx
+    vref.model.name_to_var = nothing
 end
 function JuMP.variable_by_name(model::MyModel, name::String)
-    return MyVariableRef(model, model.name_to_var[name])
+    if model.name_to_var === nothing
+        # Inspired from MOI/src/Utilities/model.jl
+        model.name_to_var = Dict{String, Int}()
+        for (var, var_name) in model.var_to_name
+            if haskey(model.name_to_var, var_name)
+                # -1 is a special value that means this string does not map to
+                # a unique variable name.
+                model.name_to_var[var_name] = -1
+            else
+                model.name_to_var[var_name] = var
+            end
+        end
+    end
+    index = get(model.name_to_var, name, nothing)
+    if index isa Nothing
+        return nothing
+    elseif index == -1
+        error("Multiple variables have the name $name.")
+    else
+        return MyVariableRef(model, index)
+    end
 end
 JuMP.name(cref::MyConstraintRef) = cref.model.con_to_name[cref.index]
 function JuMP.set_name(cref::MyConstraintRef, name::String)
