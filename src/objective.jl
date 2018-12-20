@@ -79,6 +79,10 @@ function set_objective(model::Model, sense::MOI.OptimizationSense,
     set_objective_function(model, func)
 end
 
+function set_objective(model::Model, sense::MOI.OptimizationSense, func)
+    error("The objective function `$(func)` is not supported by JuMP.")
+end
+
 """"
     objective_function_type(model::Model)::AbstractJuMPScalar
 
