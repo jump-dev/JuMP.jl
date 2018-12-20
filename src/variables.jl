@@ -227,7 +227,7 @@ end
     variable_by_name(model::AbstractModel, name::String)::AbstractVariableRef
 
 Returns the reference of the variable with name `name`. Throws an error if
-several variables have the same name (even if it is different from `name`).
+several variables have `name` as name.
 
 ```jldoctest objective_function; setup = :(using JuMP)
 julia> model = Model()
