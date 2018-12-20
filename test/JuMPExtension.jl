@@ -20,15 +20,17 @@ mutable struct MyModel <: JuMP.AbstractModel
     nextconidx::Int                                 # Next constraint index is nextconidx+1
     constraints::Dict{ConstraintIndex,
                       JuMP.AbstractConstraint}      # Map conidx -> variable
-    con_to_name::Dict{ConstraintIndex, String}         # Map conidx -> name
+    con_to_name::Dict{ConstraintIndex, String}      # Map conidx -> name
+    name_to_con::Union{Dict{String, ConstraintIndex},
+                       Nothing}                     # Map name -> conidx
     objectivesense::MOI.OptimizationSense
     objective_function::JuMP.AbstractJuMPScalar
     obj_dict::Dict{Symbol, Any}                     # Same that JuMP.Model's field `obj_dict`
     function MyModel()
         new(0, Dict{Int, JuMP.AbstractVariable}(),
-            Dict{Int, String}(), Dict{String, Int}(),            # Variables
+            Dict{Int, String}(), nothing,                        # Variables
             0, Dict{ConstraintIndex, JuMP.AbstractConstraint}(),
-            Dict{ConstraintIndex, String}(),                     # Constraints
+            Dict{ConstraintIndex, String}(), nothing,            # Constraints
             MOI.FEASIBILITY_SENSE,
             zero(JuMP.GenericAffExpr{Float64, MyVariableRef}),
             Dict{Symbol, Any}())
@@ -269,6 +271,32 @@ end
 JuMP.name(cref::MyConstraintRef) = cref.model.con_to_name[cref.index]
 function JuMP.set_name(cref::MyConstraintRef, name::String)
     cref.model.con_to_name[cref.index] = name
+    cref.model.name_to_con = nothing
+end
+function JuMP.constraint_by_name(model::MyModel, name::String)
+    if model.name_to_con === nothing
+        # Inspired from MOI/src/Utilities/model.jl
+        model.name_to_con = Dict{String, ConstraintIndex}()
+        for (con, con_name) in model.con_to_name
+            if haskey(model.name_to_con, con_name)
+                # -1 is a special value that means this string does not map to
+                # a unique constraint name.
+                model.name_to_con[con_name] = ConstraintIndex(-1)
+            else
+                model.name_to_con[con_name] = con
+            end
+        end
+    end
+    index = get(model.name_to_con, name, nothing)
+    if index isa Nothing
+        return nothing
+    elseif index.value == -1
+        error("Multiple constraints have the name $name.")
+    else
+        # We have no information on whether this is a vector constraint
+        # or a scalar constraint
+        return JuMP.ConstraintRef(model, index, JuMP.ScalarShape())
+    end
 end
 
 end

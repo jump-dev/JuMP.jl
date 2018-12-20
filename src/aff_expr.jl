@@ -324,6 +324,9 @@ function MOI.VectorAffineFunction(affs::Vector{AffExpr})
     MOI.VectorAffineFunction(terms, constant)
 end
 moi_function(a::Vector{<:GenericAffExpr}) = MOI.VectorAffineFunction(a)
+function moi_function_type(::Type{Vector{Aff}}) where {T, Aff <: GenericAffExpr{T}}
+    return MOI.VectorAffineFunction{T}
+end
 
 # Copy an affine expression to a new model by converting all the
 # variables to the new model's variables
