@@ -166,14 +166,9 @@ julia> JuMP.constraint_by_name(model, "kon")
 julia> JuMP.constraint_by_name(model, "con")
 con : x² = 1.0
 
-julia> using MathOptInterface
+julia> JuMP.constraint_by_name(model, "con", AffExpr, JuMP.MOI.EqualTo{Float64})
 
-julia> const MOI = MathOptInterface
-MathOptInterface
-
-julia> JuMP.constraint_by_name(model, "con", AffExpr, MOI.EqualTo{Float64})
-
-julia> JuMP.constraint_by_name(model, "con", QuadExpr, MOI.EqualTo{Float64})
+julia> JuMP.constraint_by_name(model, "con", QuadExpr, JuMP.MOI.EqualTo{Float64})
 con : x² = 1.0
 ```
 """
