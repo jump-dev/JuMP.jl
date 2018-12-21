@@ -189,9 +189,9 @@ function constraints_test(ModelType::Type{<:JuMP.AbstractModel})
         model = ModelType()
         @variable(model, x[1:2])
         err = ErrorException(
-            "In @constraint(model,[3, x] in SecondOrderCone()): unable to add" *
-            " the constraint because we don't recognize $([3, x]) as a valid " *
-            "JuMP function."
+            "In @constraint(model, [3, x] in SecondOrderCone()): unable to " *
+            "add the constraint because we don't recognize $([3, x]) as a " *
+            "valid JuMP function."
         )
         @test_throws err @constraint(model, [3, x] in SecondOrderCone())
     end
@@ -251,12 +251,12 @@ function constraints_test(ModelType::Type{<:JuMP.AbstractModel})
         model = ModelType()
         @variable(model, X[1:2, 1:2])
         err = ErrorException(
-            "In @constraint(model,X in MOI.PositiveSemidefiniteConeSquare(2)):" *
+            "In @constraint(model, X in MOI.PositiveSemidefiniteConeSquare(2)):" *
             " instead of `MathOptInterface.PositiveSemidefiniteConeSquare(2)`," *
             " use `JuMP.PSDCone()`.")
         @test_throws err @constraint(model, X in MOI.PositiveSemidefiniteConeSquare(2))
         err = ErrorException(
-            "In @constraint(model,X in MOI.PositiveSemidefiniteConeTriangle(2)):" *
+            "In @constraint(model, X in MOI.PositiveSemidefiniteConeTriangle(2)):" *
             " instead of `MathOptInterface.PositiveSemidefiniteConeTriangle(2)`," *
             " use `JuMP.PSDCone()`.")
         @test_throws err @constraint(model, X in MOI.PositiveSemidefiniteConeTriangle(2))
@@ -266,7 +266,7 @@ function constraints_test(ModelType::Type{<:JuMP.AbstractModel})
         model = ModelType()
         @variable(model, X[1:2, 1:2])
         err = ErrorException(
-            "In @constraint(model,X in MOI.SecondOrderCone(4)): unexpected " *
+            "In @constraint(model, X in MOI.SecondOrderCone(4)): unexpected " *
             "matrix in vector constraint. Do you need to flatten the matrix " *
             "into a vector using `vec()`?")
         # Note: this should apply to any MOI.AbstractVectorSet. We just pick
