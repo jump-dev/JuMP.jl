@@ -215,7 +215,7 @@ Get a variable's name.
 name(v::VariableRef) = MOI.get(owner_model(v), MOI.VariableName(), v)
 
 """
-    set_name(v::VariableRef,s::AbstractString)
+    set_name(v::VariableRef, s::AbstractString)
 
 Set a variable's name.
 """
