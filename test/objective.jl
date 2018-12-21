@@ -7,6 +7,14 @@ MOI.is_empty(::DummyOptimizer) = true
     @test_throws ErrorException JuMP.set_objective_function(model, func)
 end
 
+@testset "Unsupported function in macro" begin
+    model = Model()
+    @variable(model, x[1:2])
+    exception = ErrorException("The objective function `VariableRef[x[1]," *
+                               " x[2]]` is not supported by JuMP.")
+    @test_throws exception @objective(model, Min, x)
+end
+
 function objectives_test(ModelType::Type{<:JuMP.AbstractModel}, VariableRefType::Type{<:JuMP.AbstractVariableRef})
     AffExprType = JuMP.GenericAffExpr{Float64, VariableRefType}
     QuadExprType = JuMP.GenericQuadExpr{Float64, VariableRefType}
