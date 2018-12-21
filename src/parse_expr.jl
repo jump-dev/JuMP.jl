@@ -285,14 +285,12 @@ function destructive_add!(ex::AbstractArray{<:GenericAffExpr}, c::Number,
     return result
 end
 
-# For cases such as x' * x, broadcasting the ex .+ will cause the Adjoint to be
-# collected into an Array{T, 2}. The easiest way to work around this is to undo
-# the adjoint, perform the operation, and then re-apply the adjoint.
-function destructive_add!(ex::Number, c::Number, x::Adjoint{T, Vector{T}}) where {T}
-    return (ex .+ c * x')'
+# For some reason, the broadcast syntax `ex .+ c * x` fails if `x` is an
+# `Adjoint`. But if we explicitly call `broadcast` it seems to work.
+# See JuMP PR #1698 for more discussion.
+function destructive_add!(ex, c, x)
+    return Broadcast.materialize(Broadcast.broadcast(+, ex, c * x))
 end
-
-destructive_add!(ex, c, x) = ex .+ c * x
 
 destructive_add_with_reorder!(ex, arg) = destructive_add!(ex, 1.0, arg)
 # Special case because "Val{false}()" is used as the default empty expression.
