@@ -997,7 +997,7 @@ end
 const EMPTYSTRING = ""
 
 function macro_error(macroname, args, str...)
-    error("In @$macroname($(join(args,","))): ", str...)
+    error("In @$macroname($(join(args, ", "))): ", str...)
 end
 
 # Given a base_name and idxvars, returns an expression that constructs the name
