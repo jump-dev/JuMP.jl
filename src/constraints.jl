@@ -128,7 +128,7 @@ set_name(cr::ConstraintRef{Model,<:MOICON}, s::String) = MOI.set(cr.model, MOI.C
 
 Returns the reference of the constraint with name attribute `name` or `Nothing`
 if no constraint has this name attribute. Throws an error if several
-constraints have `name` as name attribute.
+constraints have `name` as their name attribute.
 
     constraint_by_name(model::AbstractModel,
                        name::String,
