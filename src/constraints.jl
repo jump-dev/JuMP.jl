@@ -137,12 +137,12 @@ constraints have `name` as their name attribute.
                                        MOI.AbstactFunction}},
                        S::Type{<:MOI.AbstractSet})::Union{ConstraintRef, Nothing}
 
-Same as method above except that it throws an error if the constraint is not an
-`F`-in-`S` contraint where `F` is either the JuMP or MOI type of the function
-and `S` is either the JuMP or MOI type of the set. This method is recommended
-if you know the typeof the function and set as its returned type can be
-inferred while for the method above, the exact return type of the constraint
-index cannot be inferred.
+Similar to the method above, except that it throws an error if the constraint is
+not an `F`-in-`S` contraint where `F` is either the JuMP or MOI type of the
+function, and `S` is the MOI type of the set. This method is recommended if you
+know the type of the function and set since its returned type can be inferred
+while for the method above (i.e. without `F` and `S`), the exact return type of
+the constraint index cannot be inferred.
 
 ```jldoctest objective_function; setup = :(using JuMP), filter = r"Stacktrace:.*"s
 julia> using JuMP
