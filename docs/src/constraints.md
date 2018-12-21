@@ -218,7 +218,6 @@ can be obtained by [`JuMP.name(::JuMP.ConstraintRef)`](@ref) and set by
 name(::JuMP.ConstraintRef{Model, <:JuMP.MOI.ConstraintIndex})
 set_name(::JuMP.ConstraintRef{Model, <:JuMP.MOI.ConstraintIndex}, ::String)
 ```
-.
 
 The constraint can also be retrieved from its name using
 [`JuMP.constraint_by_name`](@ref).
