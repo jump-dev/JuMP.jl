@@ -210,14 +210,14 @@ end
 """
     name(v::VariableRef)::String
 
-Get a variable's name.
+Get a variable's name attribute.
 """
 name(v::VariableRef) = MOI.get(owner_model(v), MOI.VariableName(), v)
 
 """
     set_name(v::VariableRef, s::AbstractString)
 
-Set a variable's name.
+Set a variable's name attribute.
 """
 function set_name(v::VariableRef, s::String)
     return MOI.set(owner_model(v), MOI.VariableName(), v, s)

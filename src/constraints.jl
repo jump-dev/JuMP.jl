@@ -111,14 +111,14 @@ Base.broadcastable(cref::ConstraintRef) = Ref(cref)
 """
     name(v::ConstraintRef)
 
-Get a constraint's name.
+Get a constraint's name attribute.
 """
 name(cr::ConstraintRef{Model,<:MOICON}) = MOI.get(cr.model, MOI.ConstraintName(), cr)
 
 """
     set_name(v::ConstraintRef, s::AbstractString)
 
-Set a constraint's name.
+Set a constraint's name attribute.
 """
 set_name(cr::ConstraintRef{Model,<:MOICON}, s::String) = MOI.set(cr.model, MOI.ConstraintName(), cr, s)
 
