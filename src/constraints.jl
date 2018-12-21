@@ -115,6 +115,11 @@ Get a constraint's name.
 """
 name(cr::ConstraintRef{Model,<:MOICON}) = MOI.get(cr.model, MOI.ConstraintName(), cr)
 
+"""
+    set_name(v::ConstraintRef, s::AbstractString)
+
+Set a constraint's name.
+"""
 set_name(cr::ConstraintRef{Model,<:MOICON}, s::String) = MOI.set(cr.model, MOI.ConstraintName(), cr, s)
 
 """
