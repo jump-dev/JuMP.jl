@@ -127,7 +127,7 @@ set_name(cr::ConstraintRef{Model,<:MOICON}, s::String) = MOI.set(cr.model, MOI.C
                        name::String)::Union{ConstraintRef, Nothing}
 
 Returns the reference of the constraint with name attribute `name` or `Nothing`
-if no constraint have this name attribute. Throws an error if several
+if no constraint has this name attribute. Throws an error if several
 constraints have `name` as name attribute.
 
     constraint_by_name(model::AbstractModel,
