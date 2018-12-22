@@ -125,7 +125,7 @@ specified by using the `SecondOrderCone` set.
 
 ### Gurobi
 
-￼Requires a working installation of Gurobi with an activated license (free for
+Requires a working installation of Gurobi with an activated license (free for
 academic use). Gurobi supports "SOS" constraints.
 
 ### FICO Xpress
@@ -137,7 +137,7 @@ Supports SOCP and "SOS" constraints.
 
 ### MOSEK
 
-￼Requires a license (free for academic use). The Mosek interface is maintained by
+Requires a license (free for academic use). The Mosek interface is maintained by
 the Mosek team. (Thanks!)
 
 ### SCS
