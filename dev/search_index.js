@@ -193,19 +193,19 @@ var documenterSearchIndex = {"docs": [
 },
 
 {
-    "location": "variables/#JuMP.name",
+    "location": "variables/#JuMP.name-Tuple{VariableRef}",
     "page": "Variables",
     "title": "JuMP.name",
-    "category": "function",
-    "text": "name(v::ConstraintRef)\n\nGet a constraint\'s name.\n\n\n\n\n\nname(v::VariableRef)::String\n\nGet a variable\'s name.\n\n\n\n\n\n"
+    "category": "method",
+    "text": "name(v::VariableRef)::String\n\nGet a variable\'s name attribute.\n\n\n\n\n\n"
 },
 
 {
-    "location": "variables/#JuMP.set_name",
+    "location": "variables/#JuMP.set_name-Tuple{VariableRef,String}",
     "page": "Variables",
     "title": "JuMP.set_name",
-    "category": "function",
-    "text": "set_name(v::VariableRef,s::AbstractString)\n\nSet a variable\'s name.\n\n\n\n\n\n"
+    "category": "method",
+    "text": "set_name(v::VariableRef, s::AbstractString)\n\nSet a variable\'s name attribute.\n\n\n\n\n\n"
 },
 
 {
@@ -213,7 +213,7 @@ var documenterSearchIndex = {"docs": [
     "page": "Variables",
     "title": "JuMP.variable_by_name",
     "category": "function",
-    "text": "variable_by_name(model::AbstractModel,\n                 name::String)::Union{AbstractVariableRef, Nothing}\n\nReturns the reference of the variable with name attribute name or Nothing if no variable have this name attribute. Throws an error if several variables have name as name attribute.\n\njulia> model = Model()\nA JuMP Model\nFeasibility problem with:\nVariables: 0\nModel mode: AUTOMATIC\nCachingOptimizer state: NO_OPTIMIZER\nSolver name: No optimizer attached.\n\njulia> @variable(model, x)\nx\n\njulia> JuMP.variable_by_name(model, \"x\")\nx\n\njulia> @variable(model, base_name=\"x\")\nx\n\njulia> JuMP.variable_by_name(model, \"x\")\nERROR: Multiple variables have the name x.\nStacktrace:\n [1] error(::String) at ./error.jl:33\n [2] get(::JuMP.JuMPMOIModel{Float64}, ::Type{MathOptInterface.VariableIndex}, ::String) at /home/blegat/.julia/dev/MathOptInterface/src/Utilities/model.jl:222\n [3] get at /home/blegat/.julia/dev/MathOptInterface/src/Utilities/universalfallback.jl:201 [inlined]\n [4] get(::MathOptInterface.Utilities.CachingOptimizer{MathOptInterface.AbstractOptimizer,MathOptInterface.Utilities.UniversalFallback{JuMP.JuMPMOIModel{Float64}}}, ::Type{MathOptInterface.VariableIndex}, ::String) at /home/blegat/.julia/dev/MathOptInterface/src/Utilities/cachingoptimizer.jl:490\n [5] variable_by_name(::Model, ::String) at /home/blegat/.julia/dev/JuMP/src/variables.jl:268\n [6] top-level scope at none:0\n\njulia> var = @variable(model, base_name=\"y\")\ny\n\njulia> JuMP.variable_by_name(model, \"y\")\ny\n\njulia> JuMP.set_name(var, \"z\")\n\njulia> JuMP.variable_by_name(model, \"y\")\n\njulia> JuMP.variable_by_name(model, \"z\")\nz\n\njulia> @variable(model, u[1:2])\n2-element Array{VariableRef,1}:\n u[1]\n u[2]\n\njulia> JuMP.variable_by_name(model, \"u[2]\")\nu[2]\n\n\n\n\n\n"
+    "text": "variable_by_name(model::AbstractModel,\n                 name::String)::Union{AbstractVariableRef, Nothing}\n\nReturns the reference of the variable with name attribute name or Nothing if no variable has this name attribute. Throws an error if several variables have name as their name attribute.\n\njulia> model = Model()\nA JuMP Model\nFeasibility problem with:\nVariables: 0\nModel mode: AUTOMATIC\nCachingOptimizer state: NO_OPTIMIZER\nSolver name: No optimizer attached.\n\njulia> @variable(model, x)\nx\n\njulia> JuMP.variable_by_name(model, \"x\")\nx\n\njulia> @variable(model, base_name=\"x\")\nx\n\njulia> JuMP.variable_by_name(model, \"x\")\nERROR: Multiple variables have the name x.\nStacktrace:\n [1] error(::String) at ./error.jl:33\n [2] get(::JuMP.JuMPMOIModel{Float64}, ::Type{MathOptInterface.VariableIndex}, ::String) at /home/blegat/.julia/dev/MathOptInterface/src/Utilities/model.jl:222\n [3] get at /home/blegat/.julia/dev/MathOptInterface/src/Utilities/universalfallback.jl:201 [inlined]\n [4] get(::MathOptInterface.Utilities.CachingOptimizer{MathOptInterface.AbstractOptimizer,MathOptInterface.Utilities.UniversalFallback{JuMP.JuMPMOIModel{Float64}}}, ::Type{MathOptInterface.VariableIndex}, ::String) at /home/blegat/.julia/dev/MathOptInterface/src/Utilities/cachingoptimizer.jl:490\n [5] variable_by_name(::Model, ::String) at /home/blegat/.julia/dev/JuMP/src/variables.jl:268\n [6] top-level scope at none:0\n\njulia> var = @variable(model, base_name=\"y\")\ny\n\njulia> JuMP.variable_by_name(model, \"y\")\ny\n\njulia> JuMP.set_name(var, \"z\")\n\njulia> JuMP.variable_by_name(model, \"y\")\n\njulia> JuMP.variable_by_name(model, \"z\")\nz\n\njulia> @variable(model, u[1:2])\n2-element Array{VariableRef,1}:\n u[1]\n u[2]\n\njulia> JuMP.variable_by_name(model, \"u[2]\")\nu[2]\n\n\n\n\n\n"
 },
 
 {
@@ -221,7 +221,7 @@ var documenterSearchIndex = {"docs": [
     "page": "Variables",
     "title": "Variable names",
     "category": "section",
-    "text": "The name, i.e. the value of the MOI.VariableName attribute, of a variable can obtained by JuMP.name and set by JuMP.set_name.name\nset_name.The variable can also be retrieved from its name using JuMP.variable_by_name.variable_by_name"
+    "text": "The name, i.e. the value of the MOI.VariableName attribute, of a variable can be obtained by JuMP.name(::JuMP.VariableRef) and set by JuMP.set_name(::JuMP.VariableRef, ::String).name(::JuMP.VariableRef)\nset_name(::JuMP.VariableRef, ::String).The variable can also be retrieved from its name using JuMP.variable_by_name.variable_by_name"
 },
 
 {
@@ -478,6 +478,38 @@ var documenterSearchIndex = {"docs": [
     "title": "Duality",
     "category": "section",
     "text": "JuMP adopts the notion of conic duality from MathOptInterface. For linear programs, a feasible dual on a >= constraint is nonnegative and a feasible dual on a <= constraint is nonpositive. If the constraint is an equality constraint, it depends on which direction is binding.note: Note\nJuMP\'s definition of duality is independent of the objective sense. That is, the sign of feasible duals associated with a constraint depends on the direction of the constraint and not whether the problem is maximization or minimization. This is different to linear programming duality in some common textbooks.The dual value associated with a constraint in the most recent solution can be accessed using the JuMP.dual function. You can use the JuMP.has_duals function to check whether the model has a dual solution available to query. For example:julia> model = Model();\n\njulia> @variable(model, x)\nx\n\njulia> @constraint(model, con, x <= 1)\ncon : x <= 1.0\n\njulia> JuMP.has_duals(model)\nfalseDocTestSetup = quote\n    using JuMP\n    const MOI = JuMP.MathOptInterface\n    model = Model(\n        with_optimizer(\n            MOI.Utilities.MockOptimizer,\n            JuMP.JuMPMOIModel{Float64}(),\n            eval_objective_value = false,\n            eval_variable_constraint_dual = false));\n    @variable(model, x);\n    @constraint(model, con, x <= 1);\n    @objective(model, Max, -2x);\n    JuMP.optimize!(model);\n    mock = JuMP.backend(model).optimizer.model;\n    MOI.set(mock, MOI.DualStatus(), MOI.FEASIBLE_POINT)\n    MOI.set(mock, MOI.ConstraintDual(), JuMP.optimizer_index(con), -2.0)\nendjulia> @objective(model, Min, -2x)\n-2 x\n\njulia> JuMP.optimize!(model)\n\njulia> JuMP.has_duals(model)\ntrue\n\njulia> JuMP.dual(con)\n-2.0\n\njulia> @objective(model, Max, 2x)\n2 x\n\njulia> JuMP.optimize!(model)\n\njulia> JuMP.dual(con)\n-2.0To help users who may be less familiar with conic duality, JuMP provides the JuMP.shadow_price function which returns a value that can be interpreted as the improvement in the objective in response to an infinitesimal relaxation (on the scale of one unit) in the right-hand side of the constraint. JuMP.shadow_price can only be used on linear constraints with a <=, >=, or == comparison operator.In the example above, JuMP.dual(con) returned -2.0 regardless of the optimization sense. However, in the second case when the optimization sense is Max, JuMP.shadow_price returns:julia> JuMP.shadow_price(con)\n2.0To query the dual variables associated a variable bound, first obtain a constraint reference using one of JuMP.UpperBoundRef, JuMP.LowerBoundRef, or JuMP.FixRef, and then call JuMP.dual on the returned constraint reference. Note that in linear programming, the duals on variable bounds are also called the reduced costs (although the sign might differ from the one you expect).DocTestSetup = quote\n    using JuMP\n    const MOI = JuMP.MathOptInterface\nend"
+},
+
+{
+    "location": "constraints/#JuMP.name-Tuple{ConstraintRef{Model,#s1,Shape} where Shape<:JuMP.AbstractShape where #s1<:MathOptInterface.ConstraintIndex}",
+    "page": "Constraints",
+    "title": "JuMP.name",
+    "category": "method",
+    "text": "name(v::ConstraintRef)\n\nGet a constraint\'s name attribute.\n\n\n\n\n\n"
+},
+
+{
+    "location": "constraints/#JuMP.set_name-Tuple{ConstraintRef{Model,#s1,Shape} where Shape<:JuMP.AbstractShape where #s1<:MathOptInterface.ConstraintIndex,String}",
+    "page": "Constraints",
+    "title": "JuMP.set_name",
+    "category": "method",
+    "text": "set_name(v::ConstraintRef, s::AbstractString)\n\nSet a constraint\'s name attribute.\n\n\n\n\n\n"
+},
+
+{
+    "location": "constraints/#JuMP.constraint_by_name",
+    "page": "Constraints",
+    "title": "JuMP.constraint_by_name",
+    "category": "function",
+    "text": "constraint_by_name(model::AbstractModel,\n                   name::String)::Union{ConstraintRef, Nothing}\n\nReturns the reference of the constraint with name attribute name or Nothing if no constraint has this name attribute. Throws an error if several constraints have name as their name attribute.\n\nconstraint_by_name(model::AbstractModel,\n                   name::String,\n                   F::Type{<:Union{AbstractJuMPScalar,\n                                   Vector{<:AbstractJuMPScalar},\n                                   MOI.AbstactFunction}},\n                   S::Type{<:MOI.AbstractSet})::Union{ConstraintRef, Nothing}\n\nSimilar to the method above, except that it throws an error if the constraint is not an F-in-S contraint where F is either the JuMP or MOI type of the function, and S is the MOI type of the set. This method is recommended if you know the type of the function and set since its returned type can be inferred while for the method above (i.e. without F and S), the exact return type of the constraint index cannot be inferred.\n\njulia> using JuMP\n\njulia> model = Model()\nA JuMP Model\nFeasibility problem with:\nVariables: 0\nModel mode: AUTOMATIC\nCachingOptimizer state: NO_OPTIMIZER\nSolver name: No optimizer attached.\n\njulia> @variable(model, x)\nx\n\njulia> @constraint(model, con, x^2 == 1)\ncon : x² = 1.0\n\njulia> JuMP.constraint_by_name(model, \"kon\")\n\njulia> JuMP.constraint_by_name(model, \"con\")\ncon : x² = 1.0\n\njulia> JuMP.constraint_by_name(model, \"con\", AffExpr, JuMP.MOI.EqualTo{Float64})\n\njulia> JuMP.constraint_by_name(model, \"con\", QuadExpr, JuMP.MOI.EqualTo{Float64})\ncon : x² = 1.0\n\n\n\n\n\n"
+},
+
+{
+    "location": "constraints/#Constraint-names-1",
+    "page": "Constraints",
+    "title": "Constraint names",
+    "category": "section",
+    "text": "The name, i.e. the value of the MOI.ConstraintName attribute, of a constraint can be obtained by JuMP.name(::JuMP.ConstraintRef) and set by JuMP.set_name(::JuMP.ConstraintRef, ::String).name(::JuMP.ConstraintRef{Model, <:JuMP.MOI.ConstraintIndex})\nset_name(::JuMP.ConstraintRef{Model, <:JuMP.MOI.ConstraintIndex}, ::String)The constraint can also be retrieved from its name using JuMP.constraint_by_name.constraint_by_name"
 },
 
 {
