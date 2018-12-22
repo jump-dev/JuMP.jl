@@ -285,6 +285,9 @@ function MOI.VectorQuadraticFunction(quads::Vector{QuadExpr})
     MOI.VectorQuadraticFunction(lin_terms, quad_terms, constants)
 end
 moi_function(a::Vector{<:GenericQuadExpr}) = MOI.VectorQuadraticFunction(a)
+function moi_function_type(::Type{Vector{Quad}}) where {T, Quad <: GenericQuadExpr{T}}
+    return MOI.VectorQuadraticFunction{T}
+end
 
 
 # Copy a quadratic expression to a new model by converting all the

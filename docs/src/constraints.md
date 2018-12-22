@@ -209,6 +209,22 @@ DocTestSetup = quote
 end
 ```
 
+## Constraint names
+
+The name, i.e. the value of the `MOI.ConstraintName` attribute, of a constraint
+can be obtained by [`JuMP.name(::JuMP.ConstraintRef)`](@ref) and set by
+[`JuMP.set_name(::JuMP.ConstraintRef, ::String)`](@ref).
+```@docs
+name(::JuMP.ConstraintRef{Model, <:JuMP.MOI.ConstraintIndex})
+set_name(::JuMP.ConstraintRef{Model, <:JuMP.MOI.ConstraintIndex}, ::String)
+```
+
+The constraint can also be retrieved from its name using
+[`JuMP.constraint_by_name`](@ref).
+```@docs
+constraint_by_name
+```
+
 ## Constraint containers
 
 So far, we've added constraints one-by-one. However, just like

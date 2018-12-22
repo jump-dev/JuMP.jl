@@ -210,14 +210,14 @@ end
 """
     name(v::VariableRef)::String
 
-Get a variable's name.
+Get a variable's name attribute.
 """
 name(v::VariableRef) = MOI.get(owner_model(v), MOI.VariableName(), v)
 
 """
-    set_name(v::VariableRef,s::AbstractString)
+    set_name(v::VariableRef, s::AbstractString)
 
-Set a variable's name.
+Set a variable's name attribute.
 """
 function set_name(v::VariableRef, s::String)
     return MOI.set(owner_model(v), MOI.VariableName(), v, s)
@@ -228,8 +228,8 @@ end
                      name::String)::Union{AbstractVariableRef, Nothing}
 
 Returns the reference of the variable with name attribute `name` or `Nothing` if
-no variable have this name attribute. Throws an error if several variables have
-`name` as name attribute.
+no variable has this name attribute. Throws an error if several variables have
+`name` as their name attribute.
 
 ```jldoctest objective_function; setup = :(using JuMP), filter = r"Stacktrace:.*"s
 julia> model = Model()

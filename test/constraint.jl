@@ -1,4 +1,17 @@
-function constraints_test(ModelType::Type{<:JuMP.AbstractModel})
+function test_constraint_name(constraint, name, F::Type, S::Type)
+    @test JuMP.name(constraint) == name
+    model = constraint.model
+    @test constraint.index == JuMP.constraint_by_name(model, name).index
+    if !(model isa JuMPExtension.MyModel)
+        @test constraint.index == JuMP.constraint_by_name(model, name, F, S).index
+    end
+end
+
+function constraints_test(ModelType::Type{<:JuMP.AbstractModel},
+                          VariableRefType::Type{<:JuMP.AbstractVariableRef})
+    AffExprType = JuMP.GenericAffExpr{Float64, VariableRefType}
+    QuadExprType = JuMP.GenericQuadExpr{Float64, VariableRefType}
+
     @testset "SingleVariable constraints" begin
         m = ModelType()
         @variable(m, x)
@@ -6,14 +19,16 @@ function constraints_test(ModelType::Type{<:JuMP.AbstractModel})
         # x <= 10.0 doesn't translate to a SingleVariable constraint because
         # the LHS is first subtracted to form x - 10.0 <= 0.
         @constraint(m, cref, x in MOI.LessThan(10.0))
-        @test JuMP.name(cref) == "cref"
+        test_constraint_name(cref, "cref", JuMP.VariableRef,
+                             MOI.LessThan{Float64})
         c = JuMP.constraint_object(cref)
         @test c.func == x
         @test c.set == MOI.LessThan(10.0)
 
         @variable(m, y[1:2])
         @constraint(m, cref2[i=1:2], y[i] in MOI.LessThan(float(i)))
-        @test JuMP.name(cref2[1]) == "cref2[1]"
+        test_constraint_name(cref2[1], "cref2[1]", JuMP.VariableRef,
+                             MOI.LessThan{Float64})
         c = JuMP.constraint_object(cref2[1])
         @test c.func == y[1]
         @test c.set == MOI.LessThan(1.0)
@@ -41,7 +56,7 @@ function constraints_test(ModelType::Type{<:JuMP.AbstractModel})
         cref = @constraint(m, 2x <= 10)
         @test JuMP.name(cref) == ""
         JuMP.set_name(cref, "c")
-        @test JuMP.name(cref) == "c"
+        test_constraint_name(cref, "c", JuMP.AffExpr, MOI.LessThan{Float64})
 
         c = JuMP.constraint_object(cref)
         @test JuMP.isequal_canonical(c.func, 2x)
@@ -83,7 +98,7 @@ function constraints_test(ModelType::Type{<:JuMP.AbstractModel})
         @variable(m, y)
 
         @constraint(m, cref, 1.0 <= x + y + 1.0 <= 2.0)
-        @test JuMP.name(cref) == "cref"
+        test_constraint_name(cref, "cref", JuMP.AffExpr, MOI.Interval{Float64})
 
         c = JuMP.constraint_object(cref)
         @test JuMP.isequal_canonical(c.func, x + y)
@@ -210,7 +225,8 @@ function constraints_test(ModelType::Type{<:JuMP.AbstractModel})
         @test c.shape isa JuMP.SquareMatrixShape
 
         @constraint(m, sym_ref, Symmetric([x 1; 1 -y] - [1 x; x -2]) in PSDCone())
-        @test JuMP.name(sym_ref) == "sym_ref"
+        test_constraint_name(sym_ref, "sym_ref", Vector{AffExpr},
+                             MOI.PositiveSemidefiniteConeTriangle)
         c = JuMP.constraint_object(sym_ref)
         @test JuMP.isequal_canonical(c.func[1], x-1)
         @test JuMP.isequal_canonical(c.func[2], 1-x)
@@ -219,7 +235,8 @@ function constraints_test(ModelType::Type{<:JuMP.AbstractModel})
         @test c.shape isa JuMP.SymmetricMatrixShape
 
         @SDconstraint(m, cref, [x 1; 1 -y] ⪰ [1 x; x -2])
-        @test JuMP.name(cref) == "cref"
+        test_constraint_name(cref, "cref", Vector{AffExpr},
+                             MOI.PositiveSemidefiniteConeSquare)
         c = JuMP.constraint_object(cref)
         @test JuMP.isequal_canonical(c.func[1], x-1)
         @test JuMP.isequal_canonical(c.func[2], 1-x)
@@ -230,7 +247,8 @@ function constraints_test(ModelType::Type{<:JuMP.AbstractModel})
 
         @SDconstraint(m, iref[i=1:2], 0 ⪯ [x+i x+y; x+y -y])
         for i in 1:2
-            @test JuMP.name(iref[i]) == "iref[$i]"
+            test_constraint_name(iref[i], "iref[$i]", Vector{AffExpr},
+                                 MOI.PositiveSemidefiniteConeSquare)
             c = JuMP.constraint_object(iref[i])
             @test JuMP.isequal_canonical(c.func[1], x+i)
             @test JuMP.isequal_canonical(c.func[2], x+y)
@@ -245,6 +263,30 @@ function constraints_test(ModelType::Type{<:JuMP.AbstractModel})
         @test_macro_throws ErrorException @SDconstraint(m, [x 1; 1 -y] ⪰ [1 x; x -2], unknown_kw=1)
         # Invalid sense == in SDP constraint
         @test_macro_throws ErrorException @SDconstraint(m, [x 1; 1 -y] == [1 x; x -2])
+    end
+
+    @testset "Constraint name" begin
+        model = ModelType()
+        @variable(model, x)
+        @constraint(model, con, x^2 == 1)
+        test_constraint_name(con, "con", QuadExprType, MOI.EqualTo{Float64})
+        JuMP.set_name(con, "kon")
+        @test JuMP.constraint_by_name(model, "con") isa Nothing
+        test_constraint_name(con, "kon", QuadExprType, MOI.EqualTo{Float64})
+        y = @constraint(model, kon, [x^2, x] in SecondOrderCone())
+        err(name) = ErrorException("Multiple constraints have the name $name.")
+        @test_throws err("kon") JuMP.constraint_by_name(model, "kon")
+        JuMP.set_name(kon, "con")
+        test_constraint_name(con, "kon", QuadExprType, MOI.EqualTo{Float64})
+        test_constraint_name(kon, "con", Vector{QuadExprType},
+                             MOI.SecondOrderCone)
+        JuMP.set_name(con, "con")
+        @test_throws err("con") JuMP.constraint_by_name(model, "con")
+        @test JuMP.constraint_by_name(model, "kon") isa Nothing
+        JuMP.set_name(kon, "kon")
+        test_constraint_name(con, "con", QuadExprType, MOI.EqualTo{Float64})
+        test_constraint_name(kon, "kon", Vector{QuadExprType},
+                             MOI.SecondOrderCone)
     end
 
     @testset "Useful PSD error message" begin
@@ -308,11 +350,11 @@ function constraints_test(ModelType::Type{<:JuMP.AbstractModel})
 end
 
 @testset "Constraints for JuMP.Model" begin
-    constraints_test(Model)
+    constraints_test(Model, JuMP.VariableRef)
 end
 
 @testset "Constraints for JuMPExtension.MyModel" begin
-    constraints_test(JuMPExtension.MyModel)
+    constraints_test(JuMPExtension.MyModel, JuMPExtension.MyVariableRef)
 end
 
 @testset "Modifications" begin

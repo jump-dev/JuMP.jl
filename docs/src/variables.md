@@ -249,10 +249,11 @@ julia> JuMP.fix_value(x)
 ## Variable names
 
 The name, i.e. the value of the `MOI.VariableName` attribute, of a variable can
-obtained by [`JuMP.name`](@ref) and set by [`JuMP.set_name`](@ref).
+be obtained by [`JuMP.name(::JuMP.VariableRef)`](@ref) and set by
+[`JuMP.set_name(::JuMP.VariableRef, ::String)`](@ref).
 ```@docs
-name
-set_name
+name(::JuMP.VariableRef)
+set_name(::JuMP.VariableRef, ::String)
 ```
 .
 
