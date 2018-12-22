@@ -405,6 +405,7 @@ function printing_test(ModelType::Type{<:JuMP.AbstractModel})
     A JuMP Model
     Maximization problem with:
     Variables: 13
+    Objective function type: MathOptInterface.ScalarAffineFunction{Float64}
     `MathOptInterface.SingleVariable`-in-`MathOptInterface.ZeroOne`: 4 constraints
     `MathOptInterface.SingleVariable`-in-`MathOptInterface.Integer`: 4 constraints
     `MathOptInterface.SingleVariable`-in-`MathOptInterface.EqualTo{Float64}`: 1 constraint
@@ -476,12 +477,44 @@ function printing_test(ModelType::Type{<:JuMP.AbstractModel})
     Solver name: No optimizer attached.
     Names registered in the model: x""", repl=:show)
     end
+
+    @testset "Model with nonlinear terms" begin
+        model = Model()
+        @variable(model, x)
+        @NLobjective(model, Max, sin(x))
+        @NLconstraint(model, cos(x) == 0)
+
+        io_test(REPLMode, model, """
+    A JuMP Model
+    Maximization problem with:
+    Variable: 1
+    Objective function type: Nonlinear
+    Nonlinear: 1 constraint
+    Model mode: AUTOMATIC
+    CachingOptimizer state: NO_OPTIMIZER
+    Solver name: No optimizer attached.
+    Names registered in the model: x""", repl=:show)
+
+        io_test(REPLMode, model, """
+    Max sin(x)
+    Subject to
+     cos(x) - 0.0 = 0
+    """, repl=:print)
+
+        io_test(IJuliaMode, model, """
+    \\begin{alignat*}{1}\\max\\quad & sin(x)\\\\
+    \\text{Subject to} \\quad & cos(x) - 0.0 = 0\\\\
+    \\end{alignat*}
+    """)
+    end
 end
 
 @testset "Printing for JuMP.Model" begin
     printing_test(Model)
 end
 
-@testset "Printing for JuMPExtension.MyModel" begin
-    printing_test(JuMPExtension.MyModel)
-end
+# TODO: This test doesn't cover anything because ModelType isn't used in
+# printing_test.
+# @testset "Printing for JuMPExtension.MyModel" begin
+#     printing_test(JuMPExtension.MyModel)
+# end

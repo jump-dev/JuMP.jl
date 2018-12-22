@@ -158,13 +158,17 @@ function Base.show(io::IO, model::Model)
         print(io, "Feasibility")
     end
     println(io, " problem with:")
-    # TODO: Consider allowing a JuMP model to have a string name.
+    # TODO: Use MOI.Name for the name of a JuMP model.
     println(io, "Variable", plural(num_variables(model)), ": ",
             num_variables(model))
-    # https://github.com/JuliaOpt/JuMP.jl/issues/1556
-    # TODO: This doesn't account for nonlinear objectives
-    # println(io, "\tObjective function type:",
-    #            MOI.get(model, MOI.ObjectiveFunctionType()))
+    if sense != MOI.FEASIBILITY_SENSE
+        if model.nlp_data !== nothing && model.nlp_data.nlobj !== nothing
+            println(io, "Objective function type: Nonlinear")
+        else
+            println(io, "Objective function type: ",
+                    MOI.get(model, MOI.ObjectiveFunctionType()))
+        end
+    end
     for (F, S) in MOI.get(model, MOI.ListOfConstraints())
         num_constraints = MOI.get(model, MOI.NumberOfConstraints{F, S}())
         println(io, "`$F`-in-`$S`: $num_constraints constraint",
@@ -214,8 +218,12 @@ function model_string(print_mode, model::Model)
             str *= "\\quad"
         end
         str *= sep
-        str *= function_string(print_mode,
-                               objective_function(model, QuadExpr))
+        if model.nlp_data !== nothing && model.nlp_data.nlobj !== nothing
+            str *= nl_expr_string(model, print_mode, model.nlp_data.nlobj)
+        else
+            str *= function_string(print_mode,
+                                   objective_function(model, QuadExpr))
+        end
     end
     str *= eol
     str *= ijl ? "\\text{Subject to} \\quad" : "Subject to" * eol
@@ -226,6 +234,12 @@ function model_string(print_mode, model::Model)
             cref = ConstraintRef(model, idx, shape)
             con = constraint_object(cref)
             str *= sep * constraint_string(print_mode, con) * eol
+        end
+    end
+    if model.nlp_data !== nothing
+        for nl_constraint in model.nlp_data.nlconstr
+            str *= sep * nl_constraint_string(model, print_mode, nl_constraint)
+            str *= eol
         end
     end
     if ijl

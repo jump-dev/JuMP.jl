@@ -61,7 +61,7 @@ function rhs(c::NonlinearConstraint)
 end
 
 mutable struct NLPData
-    nlobj
+    nlobj::Union{Nothing, NonlinearExprData}
     nlconstr::Vector{NonlinearConstraint}
     nlexpr::Vector{NonlinearExprData}
     nlconstr_duals::Vector{Float64}
@@ -299,7 +299,7 @@ function MOI.initialize(d::NLPEvaluator, requested_features::Vector{Symbol})
 
     # Check if we have any user-defined operators, in which case we need to
     # disable hessians. The result of features_available depends on this.
-    has_nlobj = isa(nldata.nlobj, NonlinearExprData)
+    has_nlobj = nldata.nlobj !== nothing
     has_user_mv_operator = false
     for nlexpr in nldata.nlexpr
         has_user_mv_operator |= Derivatives.has_user_multivariate_operators(nlexpr.nd)
@@ -341,7 +341,7 @@ function MOI.initialize(d::NLPEvaluator, requested_features::Vector{Symbol})
     want_hess_storage = (:HessVec in requested_features) || d.want_hess
     coloring_storage = Derivatives.Coloring.IndexedSet(num_variables_)
 
-    d.has_nlobj = isa(nldata.nlobj, NonlinearExprData)
+    d.has_nlobj = nldata.nlobj !== nothing
     max_expr_length = 0
     main_expressions = Array{Vector{NodeData}}(undef,0)
     subexpr = Array{Vector{NodeData}}(undef,0)
