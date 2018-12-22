@@ -538,23 +538,6 @@ function variables_test(ModelType::Type{<:JuMP.AbstractModel},
         test_variable_unsigned_index(ModelType)
     end
 
-    # TODO(#1448): Decide what to do here.
-    # @testset "getstart on sparse array (#889)" begin
-    #     model = ModelType()
-    #     @variable(model, x)
-    #     @variable(model, y)
-    #     X = sparse([1, 3], [2, 3], [x, y])
-    #
-    #     @test typeof(X) == SparseMatrixCSC{VariableRefType, Int}
-    #
-    #     setstart(x, 1)
-    #     setstart(y, 2)
-    #
-    #     Y = getstart.(X)
-    #     @test typeof(Y) == SparseMatrixCSC{Float64, Int}
-    #     @test Y == sparse([1, 3], [2, 3], [1, 2])
-    # end
-
     @testset "Symmetric variable" begin
         test_variable_symmetric(ModelType)
     end
