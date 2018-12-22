@@ -101,7 +101,7 @@ var documenterSearchIndex = {"docs": [
     "page": "Installation Guide",
     "title": "Gurobi",
     "category": "section",
-    "text": "￼Requires a working installation of Gurobi with an activated license (free for academic use). Gurobi supports \"SOS\" constraints."
+    "text": "Requires a working installation of Gurobi with an activated license (free for academic use). Gurobi supports \"SOS\" constraints."
 },
 
 {
@@ -117,7 +117,7 @@ var documenterSearchIndex = {"docs": [
     "page": "Installation Guide",
     "title": "MOSEK",
     "category": "section",
-    "text": "￼Requires a license (free for academic use). The Mosek interface is maintained by the Mosek team. (Thanks!)"
+    "text": "Requires a license (free for academic use). The Mosek interface is maintained by the Mosek team. (Thanks!)"
 },
 
 {
