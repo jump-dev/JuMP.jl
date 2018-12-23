@@ -288,9 +288,7 @@ end
 # For some reason, the broadcast syntax `ex .+ c * x` fails if `x` is an
 # `Adjoint`. But if we explicitly call `broadcast` it seems to work.
 # See JuMP PR #1698 for more discussion.
-function destructive_add!(ex, c, x)
-    return Broadcast.materialize(Broadcast.broadcast(+, ex, c * x))
-end
+destructive_add!(ex, c, x) = broadcast(+, ex, c * x)
 
 destructive_add_with_reorder!(ex, arg) = destructive_add!(ex, 1.0, arg)
 # Special case because "Val{false}()" is used as the default empty expression.
