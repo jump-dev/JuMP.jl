@@ -231,7 +231,7 @@ function extract_kwargs(args)
     return flat_args, kwargs, requestedcontainer
 end
 
-function addkwargs!(call, kwargs)
+function add_keyword_arguments(call, kwargs)
     for kw in kwargs
         @assert isexpr(kw, :(=))
         push!(call.args, esc(Expr(:kw, kw.args...)))
@@ -474,10 +474,12 @@ Returns the code for the macro `@constraint_like args...` of syntax
 @constraint_like ref con # group of constraints
 ```
 where `@constraint_like` is either `@constraint` or `@SDconstraint`.
-The expression `con` is parsed by `parsefun` which returns a code that, when
-executed, returns an `AbstractConstraint`. This `AbstractConstraint` is passed
-to `add_constraint` with the macro keyword arguments (except the `container`
-keyword argument which is used to determine the container type).
+The expression `con` is parsed by `parsefun` which returns a `build_constraint`
+call code that, when executed, returns an `AbstractConstraint`. The macro
+keyword arguments (except the `container` keyword argument which is used to
+determine the container type) are added to the `build_constraint` call. The
+returned value of this call is passed to µ `add_constraint` which returns a
+constraint reference.
 """
 function constraint_macro(args, macro_name::Symbol, parsefun::Function)
     _error(str...) = macro_error(macro_name, args, str...)
@@ -522,13 +524,13 @@ function constraint_macro(args, macro_name::Symbol, parsefun::Function)
     refcall, idxvars, idxsets, condition = buildrefsets(c, variable)
 
     vectorized, parsecode, buildcall = parsefun(_error, x.args...)
+    add_keyword_arguments(buildcall, kwargs)
     if vectorized
         # TODO: Pass through names here.
         constraintcall = :(add_constraint.($m, $buildcall))
     else
         constraintcall = :(add_constraint($m, $buildcall, $(namecall(base_name, idxvars))))
     end
-    addkwargs!(constraintcall, kwargs)
     code = quote
         $parsecode
         $(refcall) = $constraintcall
@@ -1289,7 +1291,7 @@ macro variable(args...)
         # Easy case - a single variable
         sdp && _error("Cannot add a semidefinite scalar variable")
         buildcall = :( build_variable($_error, $info, $(extra...)) )
-        addkwargs!(buildcall, extra_kwargs)
+        add_keyword_arguments(buildcall, extra_kwargs)
         variablecall = :( add_variable($model, $buildcall, $base_name) )
         # The looped code is trivial here since there is a single variable
         creationcode = :($variable = $variablecall)
@@ -1304,7 +1306,7 @@ macro variable(args...)
 
         # Code to be used to create each variable of the container.
         buildcall = :( build_variable($_error, $info, $(extra...)) )
-        addkwargs!(buildcall, extra_kwargs)
+        add_keyword_arguments(buildcall, extra_kwargs)
         variablecall = :( add_variable($model, $buildcall, $(namecall(base_name, idxvars))) )
         code = :( $(refcall) = $variablecall )
         # Determine the return type of add_variable. This is needed to create the container holding them.
