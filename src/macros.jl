@@ -506,7 +506,7 @@ The expression `con` is parsed by `parsefun` which returns a `build_constraint`
 call code that, when executed, returns an `AbstractConstraint`. The macro
 keyword arguments (except the `container` keyword argument which is used to
 determine the container type) are added to the `build_constraint` call. The
-returned value of this call is passed to µ `add_constraint` which returns a
+returned value of this call is passed to `add_constraint` which returns a
 constraint reference.
 """
 function constraint_macro(args, macro_name::Symbol, parsefun::Function)
