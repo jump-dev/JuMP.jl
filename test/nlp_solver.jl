@@ -121,7 +121,7 @@ const MOI = MathOptInterface
             .7533e-3 * a * x[6]^2 - 200 * a == 0)
         @NLconstraint(m,
             x[5] * x[7] * cos(x[4] - .25) + x[6] * x[7] * cos(x[4] - x[3] - .25) -
-            2 * c * x[7]^2 + 22.938 * a + .7533e-3 * a * x[7] ^2 == 0)
+            2 * c * x[7]^2 + 22.938 * a + .7533e-3 * a * x[7]^2 == 0)
 
         JuMP.optimize!(m)
 
@@ -137,8 +137,8 @@ const MOI = MathOptInterface
         @variable(m, -2.001 <= x[1:10] <= 9.999, start = 9)
 
         @NLobjective(m, Min,
-            sum( log(x[j] - 2)^2 + log(10 - x[j])^2 for j=1:10) -
-            prod( x[i] for i=1:10) ^ 0.2
+            sum(log(x[j] - 2)^2 + log(10 - x[j])^2 for j=1:10) -
+            prod(x[i] for i=1:10)^0.2
         )
 
         JuMP.optimize!(m)
