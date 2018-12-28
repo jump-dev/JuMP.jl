@@ -231,7 +231,35 @@ function extract_kwargs(args)
     return flat_args, kwargs, requestedcontainer
 end
 
-function add_keyword_arguments(call, kwargs)
+"""
+    add_kwargs(call, kwargs)
+
+Add the keyword arguments `kwargs` to the function call expression `call`,
+escaping the expressions. The keyword arguments can be obtained with
+[`extract_kwargs`](@ref).
+
+## Examples
+
+```jldoctest; setup = :(using JuMP)
+julia> call = :(f(1, a=2))
+:(f(1, a=2))
+
+julia> using JuMP
+
+julia> macro m(args...)
+           flag_args, kwargs, requested_container
+           JuMP.extract_kwargs(args); JuMP.add_keyword_arguments(call, kwargs)
+           return :()
+       end
+@m (macro with 1 method)
+
+julia> @m(b = 3)
+
+julia> call
+:(f(1, a=2, $(Expr(:escape, :(b=3)))))
+```
+"""
+function add_kwargs(call, kwargs)
     for kw in kwargs
         @assert isexpr(kw, :(=))
         push!(call.args, esc(Expr(:kw, kw.args...)))
@@ -524,7 +552,7 @@ function constraint_macro(args, macro_name::Symbol, parsefun::Function)
     refcall, idxvars, idxsets, condition = buildrefsets(c, variable)
 
     vectorized, parsecode, buildcall = parsefun(_error, x.args...)
-    add_keyword_arguments(buildcall, kwargs)
+    add_kwargs(buildcall, kwargs)
     if vectorized
         # TODO: Pass through names here.
         constraintcall = :(add_constraint.($m, $buildcall))
@@ -1291,7 +1319,7 @@ macro variable(args...)
         # Easy case - a single variable
         sdp && _error("Cannot add a semidefinite scalar variable")
         buildcall = :( build_variable($_error, $info, $(extra...)) )
-        add_keyword_arguments(buildcall, extra_kwargs)
+        add_kwargs(buildcall, extra_kwargs)
         variablecall = :( add_variable($model, $buildcall, $base_name) )
         # The looped code is trivial here since there is a single variable
         creationcode = :($variable = $variablecall)
@@ -1306,7 +1334,7 @@ macro variable(args...)
 
         # Code to be used to create each variable of the container.
         buildcall = :( build_variable($_error, $info, $(extra...)) )
-        add_keyword_arguments(buildcall, extra_kwargs)
+        add_kwargs(buildcall, extra_kwargs)
         variablecall = :( add_variable($model, $buildcall, $(namecall(base_name, idxvars))) )
         code = :( $(refcall) = $variablecall )
         # Determine the return type of add_variable. This is needed to create the container holding them.
