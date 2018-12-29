@@ -235,8 +235,9 @@ end
     add_kw_args(call, kw_args)
 
 Add the keyword arguments `kw_args` to the function call expression `call`,
-escaping the expressions. The keyword arguments can be obtained with
-[`extract_kw_args`](@ref).
+escaping the expressions. The elements of `kw_args` should be expressions of the
+form `:(key = value)`. The `kw_args` vector can be extracted from the arguments
+of a macro with [`extract_kw_args`](@ref).
 
 ## Examples
 
@@ -244,19 +245,10 @@ escaping the expressions. The keyword arguments can be obtained with
 julia> call = :(f(1, a=2))
 :(f(1, a=2))
 
-julia> using JuMP
-
-julia> macro m(args...)
-           flag_args, kw_args, requested_container
-           JuMP.extract_kw_args(args); JuMP.add_keyword_arguments(call, kw_args)
-           return :()
-       end
-@m (macro with 1 method)
-
-julia> @m(b = 3)
+julia> JuMP.add_kw_args(call, [:(b=3), :(c=4)])
 
 julia> call
-:(f(1, a=2, $(Expr(:escape, :(b=3)))))
+:(f(1, a=2, $(Expr(:escape, :(b=3))), $(Expr(:escape, :(c=4)))))
 ```
 """
 function add_kw_args(call, kw_args)
