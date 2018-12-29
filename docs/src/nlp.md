@@ -35,7 +35,7 @@ model = Model(with_optimizer(Ipopt.Optimizer))
 @variable(model, x, start = 0.0)
 @variable(model, y, start = 0.0)
 
-@NLobjective(model, Min, (1 - x) ^ 2 + 100 * (y - x ^ 2) ^ 2)
+@NLobjective(model, Min, (1 - x)^2 + 100 * (y - x^2)^2)
 
 JuMP.optimize!(model)
 println("x = ", JuMP.value(x), " y = ", JuMP.value(y))
@@ -150,8 +150,8 @@ Nonlinear parameters can be used *within nonlinear expressions* only:
 @variable(model, z)
 @objective(model, Max, x * z)               # Error: x is a nonlinear parameter.
 @NLobjective(model, Max, x * z)             # Ok.
-@expression(model, my_expr, x * z ^ 2)      # Error: x is a nonlinear parameter.
-@NLexpression(model, my_nl_expr, x * z ^ 2) # Ok.
+@expression(model, my_expr, x * z^2)      # Error: x is a nonlinear parameter.
+@NLexpression(model, my_nl_expr, x * z^2) # Ok.
 ```
 
 Nonlinear parameters are useful when solving nonlinear models in a sequence:
@@ -161,7 +161,7 @@ using Ipopt
 model = Model(with_optimizer(Ipopt.Optimizer))
 @variable(model, z)
 @NLparameter(model, x == 1.0)
-@NLobjective(model, Min, (z - x) ^ 2)
+@NLobjective(model, Min, (z - x)^2)
 JuMP.optimize!(model)
 JuMP.value(z) # Equals 1.0.
 
@@ -203,8 +203,8 @@ automatic differentiation, use the `JuMP.register` method as in the following
 example:
 
 ```julia
-my_square(x) = x ^ 2
-my_f(x,y) = (x - 1) ^ 2 + (y - 2) ^ 2
+my_square(x) = x^2
+my_f(x,y) = (x - 1)^2 + (y - 2)^2
 
 model = Model()
 
@@ -216,7 +216,7 @@ JuMP.register(model, :my_square, 1, my_square, autodiff=true)
 ```
 
 The above code creates a JuMP model with the objective function
-`(x[1] - 1) ^ 2 + (x[2] ^ 2 - 2) ^ 2`. The first argument to `JuMP.register` the
+`(x[1] - 1)^2 + (x[2]^2 - 2)^2`. The first argument to `JuMP.register` the
 model for which the functions are registered. The second argument is a Julia
 symbol object which serves as the name of the user-defined function in JuMP
 expressions; the JuMP name need not be the same as the name of the corresponding
@@ -254,11 +254,11 @@ optimization problem as before, but now we explicitly provide evaluation
 routines for the user-defined functions:
 
 ```julia
-my_square(x) = x ^ 2
+my_square(x) = x^2
 my_square_prime(x) = 2x
 my_square_prime_prime(x) = 2
 
-my_f(x, y) = (x - 1) ^ 2 + (y - 2) ^ 2
+my_f(x, y) = (x - 1)^2 + (y - 2)^2
 function ∇f(g, x, y)
     g[1] = 2 * (x - 1)
     g[2] = 2 * (y - 2)
