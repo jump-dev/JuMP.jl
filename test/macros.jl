@@ -75,6 +75,24 @@ end
     @test test_kw == 5
 end
 
+struct PowerCone{T}
+    exponent::T
+end
+function JuMP.build_constraint(_error::Function, f, set::PowerCone; dual=false)
+    moi_set = dual ? MOI.DualPowerCone(set.exponent) : MOI.PowerCone(set.exponent)
+    return JuMP.build_constraint(_error, f, moi_set)
+end
+function build_constraint_keyword_test(ModelType::Type{<:JuMP.AbstractModel})
+    @testset "build_constraint with keyword arguments" begin
+        model = ModelType()
+        @variable(model, x)
+        cref1 = @constraint(model, [1, x, x] in PowerCone(0.5))
+        @test JuMP.constraint_object(cref1).set isa MathOptInterface.PowerCone{Float64}
+        cref2 = @constraint(model, [1, x, x] in PowerCone(0.5), dual = true)
+        @test JuMP.constraint_object(cref2).set isa MathOptInterface.DualPowerCone{Float64}
+    end
+end
+
 function macros_test(ModelType::Type{<:JuMP.AbstractModel}, VariableRefType::Type{<:JuMP.AbstractVariableRef})
     @testset "build_constraint on variable" begin
         m = ModelType()
@@ -177,6 +195,8 @@ function macros_test(ModelType::Type{<:JuMP.AbstractModel}, VariableRefType::Typ
         @test con[1].set == MOI.LessThan(1.0)
         @test con[2].set == MOI.LessThan(2.0)
     end
+
+    build_constraint_keyword_test(ModelType)
 end
 
 @testset "Macros for JuMP.Model" begin
