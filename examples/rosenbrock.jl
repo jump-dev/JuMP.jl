@@ -2,20 +2,21 @@
 #  This Source Code Form is subject to the terms of the Mozilla Public
 #  License, v. 2.0. If a copy of the MPL was not distributed with this
 #  file, You can obtain one at http://mozilla.org/MPL/2.0/.
-using JuMP, Ipopt
-# rosenbrock
 
-let
+using JuMP, Ipopt, Test
 
-    m = Model(with_optimizer(Ipopt.Optimizer, print_level=0))
-
-    @variable(m, x)
-    @variable(m, y)
-
-    @NLobjective(m, Min, (1-x)^2 + 100(y-x^2)^2)
-
-    JuMP.optimize!(m)
-
-    println("x = ", JuMP.value(x), " y = ", JuMP.value(y))
-
+function example_rosekbrock(; verbose = true)
+    model = Model(with_optimizer(Ipopt.Optimizer, print_level=0))
+    @variable(model, x)
+    @variable(model, y)
+    @NLobjective(model, Min, (1 - x)^2 + 100 * (y - x^2)^2)
+    JuMP.optimize!(model)
+    if verbose
+        println("x = ", JuMP.value(x), " y = ", JuMP.value(y))
+    end
+    @test JuMP.termination_status(model) == MOI.LOCALLY_SOLVED
+    @test JuMP.primal_status(model) == MOI.FEASIBLE_POINT
+    @test JuMP.objective_value(model) ≈ 0.0 atol = 1e-10
+    @test JuMP.value(x) ≈ 1.0
+    @test JuMP.value(y) ≈ 1.0
 end
