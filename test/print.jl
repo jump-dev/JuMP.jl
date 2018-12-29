@@ -507,7 +507,7 @@ end
 
         io_test(IJuliaMode, model, """
     \\begin{alignat*}{1}\\max\\quad & sin(x)\\\\
-    \\text{Subject to} \\quad & cos(x) - 0.0 $eq 0\\\\
+    \\text{Subject to} \\quad & cos(x) - 0.0 = 0\\\\
     \\end{alignat*}
     """)
     end
