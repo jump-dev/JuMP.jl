@@ -204,7 +204,7 @@ end
 
 function printing_test(ModelType::Type{<:JuMP.AbstractModel})
     @testset "VariableRef" begin
-        m = Model()
+        m = ModelType()
         @variable(m, 0 <= x <= 2)
 
         @test    JuMP.name(x) == "x"
@@ -246,7 +246,7 @@ function printing_test(ModelType::Type{<:JuMP.AbstractModel})
     end
 
     @testset "base_name keyword argument" begin
-        m = Model()
+        m = ModelType()
         @variable(m, x, base_name="foo")
         @variable(m, y[1:3], base_name="bar")
         num = 123
@@ -269,7 +269,7 @@ function printing_test(ModelType::Type{<:JuMP.AbstractModel})
     @testset "SingleVariable constraints" begin
         ge = JuMP.math_symbol(REPLMode, :geq)
         in_sym = JuMP.math_symbol(REPLMode, :in)
-        model = Model()
+        model = ModelType()
         @variable(model, x >= 10)
         zero_one = @constraint(model, x in MathOptInterface.ZeroOne())
 
@@ -281,7 +281,7 @@ function printing_test(ModelType::Type{<:JuMP.AbstractModel})
     @testset "VectorOfVariable constraints" begin
         ge = JuMP.math_symbol(REPLMode, :geq)
         in_sym = JuMP.math_symbol(REPLMode, :in)
-        model = Model()
+        model = ModelType()
         @variable(model, x)
         @variable(model, y)
         zero_constr = @constraint(model, [x, y] in MathOptInterface.Zeros(2))
@@ -297,7 +297,7 @@ function printing_test(ModelType::Type{<:JuMP.AbstractModel})
         eq = JuMP.math_symbol(REPLMode, :eq)
         in_sym = JuMP.math_symbol(REPLMode, :in)
 
-        model = Model()
+        model = ModelType()
         @variable(model, x)
         @constraint(model, linear_le, x + 0 <= 1)
         @constraint(model, linear_ge, x + 0 >= 1)
@@ -326,7 +326,7 @@ function printing_test(ModelType::Type{<:JuMP.AbstractModel})
     @testset "Vector AffExpr constraints" begin
         in_sym = JuMP.math_symbol(REPLMode, :in)
 
-        model = Model()
+        model = ModelType()
         @variable(model, x)
         @constraint(model, soc_constr, [x - 1, x + 1] in SecondOrderCone())
 
@@ -341,7 +341,7 @@ function printing_test(ModelType::Type{<:JuMP.AbstractModel})
         le = JuMP.math_symbol(REPLMode, :leq)
         sq = JuMP.math_symbol(REPLMode, :sq)
 
-        model = Model()
+        model = ModelType()
         @variable(model, x)
         quad_constr = @constraint(model, 2x^2 <= 1)
 
@@ -358,7 +358,7 @@ function printing_test(ModelType::Type{<:JuMP.AbstractModel})
 
         #------------------------------------------------------------------
 
-        model_1 = Model()
+        model_1 = ModelType()
         @variable(model_1, a>=1)
         @variable(model_1, b<=1)
         @variable(model_1, -1<=c<=1)
@@ -446,7 +446,7 @@ function printing_test(ModelType::Type{<:JuMP.AbstractModel})
 
         #------------------------------------------------------------------
 
-        model_2 = Model()
+        model_2 = ModelType()
         @variable(model_2, x, Bin)
         @variable(model_2, y, Int)
         @constraint(model_2, x*y <= 1)
@@ -463,7 +463,7 @@ function printing_test(ModelType::Type{<:JuMP.AbstractModel})
     Solver name: No optimizer attached.
     Names registered in the model: x, y""", repl=:show)
 
-        model_2 = Model()
+        model_2 = ModelType()
         @variable(model_2, x)
         @constraint(model_2, x <= 3)
 
@@ -477,8 +477,12 @@ function printing_test(ModelType::Type{<:JuMP.AbstractModel})
     Solver name: No optimizer attached.
     Names registered in the model: x""", repl=:show)
     end
+end
 
+@testset "Printing for JuMP.Model" begin
+    printing_test(Model)
     @testset "Model with nonlinear terms" begin
+        eq = JuMP.math_symbol(REPLMode, :eq)
         model = Model()
         @variable(model, x)
         @NLobjective(model, Max, sin(x))
@@ -498,23 +502,18 @@ function printing_test(ModelType::Type{<:JuMP.AbstractModel})
         io_test(REPLMode, model, """
     Max sin(x)
     Subject to
-     cos(x) - 0.0 = 0
+     cos(x) - 0.0 $eq 0
     """, repl=:print)
 
         io_test(IJuliaMode, model, """
     \\begin{alignat*}{1}\\max\\quad & sin(x)\\\\
-    \\text{Subject to} \\quad & cos(x) - 0.0 = 0\\\\
+    \\text{Subject to} \\quad & cos(x) - 0.0 $eq 0\\\\
     \\end{alignat*}
     """)
     end
 end
 
-@testset "Printing for JuMP.Model" begin
-    printing_test(Model)
-end
-
-# TODO: This test doesn't cover anything because ModelType isn't used in
-# printing_test.
+# TODO: These tests are failing.
 # @testset "Printing for JuMPExtension.MyModel" begin
 #     printing_test(JuMPExtension.MyModel)
 # end
