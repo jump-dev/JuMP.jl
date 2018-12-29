@@ -213,14 +213,14 @@ function _localvar(x::Expr)
 end
 
 """
-    extract_kwargs(args)
+    extract_kw_args(args)
 
 Process the arguments to a macro, separating out the keyword arguments.
 Return a tuple of (flat_arguments, keyword arguments, and requestedcontainer),
 where `requestedcontainer` is a symbol to be passed to `getloopedcode`.
 """
-function extract_kwargs(args)
-    kwargs = filter(x -> isexpr(x, :(=)) && x.args[1] != :container , collect(args))
+function extract_kw_args(args)
+    kw_args = filter(x -> isexpr(x, :(=)) && x.args[1] != :container , collect(args))
     flat_args = filter(x->!isexpr(x, :(=)), collect(args))
     requestedcontainer = :Auto
     for kw in args
@@ -228,15 +228,15 @@ function extract_kwargs(args)
             requestedcontainer = kw.args[2]
         end
     end
-    return flat_args, kwargs, requestedcontainer
+    return flat_args, kw_args, requestedcontainer
 end
 
 """
-    add_kwargs(call, kwargs)
+    add_kw_args(call, kw_args)
 
-Add the keyword arguments `kwargs` to the function call expression `call`,
+Add the keyword arguments `kw_args` to the function call expression `call`,
 escaping the expressions. The keyword arguments can be obtained with
-[`extract_kwargs`](@ref).
+[`extract_kw_args`](@ref).
 
 ## Examples
 
@@ -247,8 +247,8 @@ julia> call = :(f(1, a=2))
 julia> using JuMP
 
 julia> macro m(args...)
-           flag_args, kwargs, requested_container
-           JuMP.extract_kwargs(args); JuMP.add_keyword_arguments(call, kwargs)
+           flag_args, kw_args, requested_container
+           JuMP.extract_kw_args(args); JuMP.add_keyword_arguments(call, kw_args)
            return :()
        end
 @m (macro with 1 method)
@@ -259,8 +259,8 @@ julia> call
 :(f(1, a=2, $(Expr(:escape, :(b=3)))))
 ```
 """
-function add_kwargs(call, kwargs)
-    for kw in kwargs
+function add_kw_args(call, kw_args)
+    for kw in kw_args
         @assert isexpr(kw, :(=))
         push!(call.args, esc(Expr(:kw, kw.args...)))
     end
@@ -512,10 +512,10 @@ constraint reference.
 function constraint_macro(args, macro_name::Symbol, parsefun::Function)
     _error(str...) = macro_error(macro_name, args, str...)
 
-    args, kwargs, requestedcontainer = extract_kwargs(args)
+    args, kw_args, requestedcontainer = extract_kw_args(args)
 
     if length(args) < 2
-        if length(kwargs) > 0
+        if length(kw_args) > 0
             _error("Not enough positional arguments")
         else
             _error("Not enough arguments")
@@ -552,7 +552,7 @@ function constraint_macro(args, macro_name::Symbol, parsefun::Function)
     refcall, idxvars, idxsets, condition = buildrefsets(c, variable)
 
     vectorized, parsecode, buildcall = parsefun(_error, x.args...)
-    add_kwargs(buildcall, kwargs)
+    add_kw_args(buildcall, kw_args)
     if vectorized
         # TODO: Pass through names here.
         constraintcall = :(add_constraint.($m, $buildcall))
@@ -962,7 +962,7 @@ expr = @expression(m, [i=1:3], i*sum(x[j] for j=1:3))
 """
 macro expression(args...)
 
-    args, kwargs, requestedcontainer = extract_kwargs(args)
+    args, kw_args, requestedcontainer = extract_kw_args(args)
     if length(args) == 3
         m = esc(args[1])
         c = args[2]
@@ -974,7 +974,7 @@ macro expression(args...)
     else
         error("@expression: needs at least two arguments.")
     end
-    length(kwargs) == 0 || error("@expression: unrecognized keyword argument")
+    length(kw_args) == 0 || error("@expression: unrecognized keyword argument")
 
     anonvar = isexpr(c, :vect) || isexpr(c, :vcat) || length(args) == 2
     variable = gensym()
@@ -1017,8 +1017,8 @@ variable_type(m::Model) = VariableRef
 # Returns a new variable. Additional positional arguments can be used to dispatch the call to a different method.
 # The return type should only depends on the positional arguments for `variable_type` to make sense. See the @variable macro doc for more details.
 # Example: `@variable m x` foo will call `build_variable(_error, info, foo)`
-function build_variable(_error::Function, info::VariableInfo; extra_kwargs...)
-    for (kwarg, _) in extra_kwargs
+function build_variable(_error::Function, info::VariableInfo; extra_kw_args...)
+    for (kwarg, _) in extra_kw_args
         _error("Unrecognized keyword argument $kwarg")
     end
     return ScalarVariable(info)
@@ -1106,15 +1106,15 @@ function parse_variable(_error::Function, infoexpr::VariableInfoExpr, lvalue, ls
 end
 
 """
-    @variable(model, kwargs...)
+    @variable(model, kw_args...)
 
 Add an *anonymous* (see [Names](@ref)) variable to the model `model` described
-by the keyword arguments `kwargs` and returns the variable.
+by the keyword arguments `kw_args` and returns the variable.
 
-    @variable(model, expr, args..., kwargs...)
+    @variable(model, expr, args..., kw_args...)
 
 Add a variable to the model `model` described by the expression `expr`, the
-positional arguments `args` and the keyword arguments `kwargs`. The expression
+positional arguments `args` and the keyword arguments `kw_args`. The expression
 `expr` can either be (note that in the following the symbol `<=` can be used
 instead of `≤` and the symbol `>=`can be used instead of `≥`)
 
@@ -1145,7 +1145,7 @@ The recognized positional arguments in `args` are the following:
 * `PSD`: The square matrix of variable is both `Symmetric` and constrained to be
   positive semidefinite.
 
-The recognized keyword arguments in `kwargs` are the following:
+The recognized keyword arguments in `kw_args` are the following:
 
 * `base_name`: Sets the name prefix used to generate variable names. It
   corresponds to the variable name for scalar variable, otherwise, the
@@ -1168,7 +1168,7 @@ lower bound 0:
 @variable(model, x >= 0)
 # Specify the lower bound using a keyword argument
 @variable(model, x, lower_bound=0)
-# Specify everything in `kwargs`
+# Specify everything in `kw_args`
 x = @variable(model, base_name="x", lower_bound=0)
 ```
 
@@ -1186,7 +1186,7 @@ ub = Dict(:a => 2, :b => 3)
 
 The single scalar variable or each scalar variable of the container are created
 using `add_variable(model, build_variable(_error, info, extra_args...;
-extra_kwargs...))` where
+extra_kw_args...))` where
 
 * `model` is the model passed to the `@variable` macro;
 * `_error` is an error function with a single `String` argument showing the
@@ -1201,8 +1201,8 @@ extra_kwargs...))` where
   `build_variable` without the need to give a positional argument to
   `@variable`. In particular, this allows the user to give a positional
   argument to the `build_variable` call when using the anonymous single variable
-  syntax `@variable(model, kwargs...)`; and
-* `extra_kwargs` are the unrecognized keyword argument of `kwargs`.
+  syntax `@variable(model, kw_args...)`; and
+* `extra_kw_args` are the unrecognized keyword argument of `kw_args`.
 
 ## Examples
 
@@ -1245,7 +1245,7 @@ macro variable(args...)
 
     model = esc(args[1])
 
-    extra, kwargs, requestedcontainer = extract_kwargs(args[2:end])
+    extra, kw_args, requestedcontainer = extract_kw_args(args[2:end])
 
     # if there is only a single non-keyword argument, this is an anonymous
     # variable spec and the one non-kwarg is the model
@@ -1260,11 +1260,11 @@ macro variable(args...)
         anon_singleton = false
     end
 
-    info_kwargs = filter(is_info_keyword, kwargs)
-    extra_kwargs = filter(kw -> kw.args[1] != :base_name && kw.args[1] != :variable_type && !is_info_keyword(kw), kwargs)
-    base_name_kwargs = filter(kw -> kw.args[1] == :base_name, kwargs)
-    variable_type_kwargs = filter(kw -> kw.args[1] == :variable_type, kwargs)
-    infoexpr = VariableInfoExpr(; keywordify.(info_kwargs)...)
+    info_kw_args = filter(is_info_keyword, kw_args)
+    extra_kw_args = filter(kw -> kw.args[1] != :base_name && kw.args[1] != :variable_type && !is_info_keyword(kw), kw_args)
+    base_name_kw_args = filter(kw -> kw.args[1] == :base_name, kw_args)
+    variable_type_kw_args = filter(kw -> kw.args[1] == :variable_type, kw_args)
+    infoexpr = VariableInfoExpr(; keywordify.(info_kw_args)...)
 
     # There are four cases to consider:
     # x                                       | type of x | x.head
@@ -1286,10 +1286,10 @@ macro variable(args...)
     variable = gensym()
     # TODO: Should we generate non-empty default names for variables?
     name = getname(var)
-    if isempty(base_name_kwargs)
+    if isempty(base_name_kw_args)
         base_name = anonvar ? "" : string(name)
     else
-        base_name = esc(base_name_kwargs[1].args[2])
+        base_name = esc(base_name_kw_args[1].args[2])
     end
 
     if !isa(name, Symbol) && !anonvar
@@ -1310,8 +1310,8 @@ macro variable(args...)
         end
     end
     extra = esc.(filter(ex -> !(ex in [:Int,:Bin]), extra))
-    if !isempty(variable_type_kwargs)
-        push!(extra, esc(variable_type_kwargs[1].args[2]))
+    if !isempty(variable_type_kw_args)
+        push!(extra, esc(variable_type_kw_args[1].args[2]))
     end
 
     info = constructor_expr(infoexpr)
@@ -1319,7 +1319,7 @@ macro variable(args...)
         # Easy case - a single variable
         sdp && _error("Cannot add a semidefinite scalar variable")
         buildcall = :( build_variable($_error, $info, $(extra...)) )
-        add_kwargs(buildcall, extra_kwargs)
+        add_kw_args(buildcall, extra_kw_args)
         variablecall = :( add_variable($model, $buildcall, $base_name) )
         # The looped code is trivial here since there is a single variable
         creationcode = :($variable = $variablecall)
@@ -1334,7 +1334,7 @@ macro variable(args...)
 
         # Code to be used to create each variable of the container.
         buildcall = :( build_variable($_error, $info, $(extra...)) )
-        add_kwargs(buildcall, extra_kwargs)
+        add_kw_args(buildcall, extra_kw_args)
         variablecall = :( add_variable($model, $buildcall, $(namecall(base_name, idxvars))) )
         code = :( $(refcall) = $variablecall )
         # Determine the return type of add_variable. This is needed to create the container holding them.
@@ -1412,8 +1412,8 @@ macro NLconstraint(m, x, extra...)
     # Two formats:
     # - @NLconstraint(m, a*x <= 5)
     # - @NLconstraint(m, myref[a=1:5], sin(x^a) <= 5)
-    extra, kwargs, requestedcontainer = extract_kwargs(extra)
-    (length(extra) > 1 || length(kwargs) > 0) && error("in @NLconstraint: too many arguments.")
+    extra, kw_args, requestedcontainer = extract_kw_args(extra)
+    (length(extra) > 1 || length(kw_args) > 0) && error("in @NLconstraint: too many arguments.")
     # Canonicalize the arguments
     c = length(extra) == 1 ? x        : gensym()
     x = length(extra) == 1 ? extra[1] : x
@@ -1486,7 +1486,7 @@ end
 
 # TODO: Add a docstring.
 macro NLexpression(args...)
-    args, kwargs, requestedcontainer = extract_kwargs(args)
+    args, kw_args, requestedcontainer = extract_kw_args(args)
     if length(args) <= 1
         error("in @NLexpression: To few arguments ($(length(args))); must pass the model and nonlinear expression as arguments.")
     elseif length(args) == 2
@@ -1495,7 +1495,7 @@ macro NLexpression(args...)
     elseif length(args) == 3
         m, c, x = args
     end
-    if length(args) > 3 || length(kwargs) > 0
+    if length(args) > 3 || length(kw_args) > 0
         error("in @NLexpression: To many arguments ($(length(args))).")
     end
 
@@ -1553,8 +1553,8 @@ JuMP.value(y[9])
 """
 macro NLparameter(m, ex, extra...)
 
-    extra, kwargs, requestedcontainer = extract_kwargs(extra)
-    (length(extra) == 0 && length(kwargs) == 0) || error("in @NLperameter: too many arguments.")
+    extra, kw_args, requestedcontainer = extract_kw_args(extra)
+    (length(extra) == 0 && length(kw_args) == 0) || error("in @NLperameter: too many arguments.")
     if !isexpr(ex, :call) || length(ex.args) != 3 || ex.args[1] != :(==)
         error("In @NLparameter($m, $ex): syntax error.")
     end
