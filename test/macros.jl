@@ -270,6 +270,20 @@ end
             "DenseAxisArray, or SparseAxisArray.")
         @test_throws exception @variable(model, x[1:3], container=Oops)
     end
+
+    @testset "Adjoints" begin
+        model = Model()
+        @variable(model, x[1:2])
+        obj = @objective(model, Min, x' * ones(2, 2) * x)
+        @test JuMP.isequal_canonical(obj, x[1]^2 + 2 * x[1] * x[2] + x[2]^2)
+        cref = @constraint(model, x' * ones(2, 2) * x <= 1)
+        c = JuMP.constraint_object(cref)
+        @test JuMP.isequal_canonical(c.func, x[1]^2 + 2 * x[1] * x[2] + x[2]^2)
+        @test c.set == MOI.LessThan(1.0)
+        @test JuMP.isequal_canonical(
+            JuMP.destructive_add!(0.0, x', ones(2, 2)), x' * ones(2, 2)
+        )
+    end
 end
 
 @testset "Macros for JuMPExtension.MyModel" begin
