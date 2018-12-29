@@ -1395,7 +1395,7 @@ macro NLobjective(model, sense, x)
         $ex = $(processNLExpr(model, x))
         set_objective($(esc(model)), $sense_expr, $ex)
     end
-    return assert_validmodel(esc(model), macro_return(code, ex))
+    return assert_validmodel(esc(model), macro_return(code, nothing))
 end
 
 # TODO: Add a docstring.
