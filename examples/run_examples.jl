@@ -13,7 +13,9 @@ using Test
 const EXAMPLES = [
     "basic.jl",
     "cannery.jl",
+    "minellipse.jl",
     "optcontrol.jl",
+    "qcp.jl",
     "rosenbrock.jl"
 ]
 
