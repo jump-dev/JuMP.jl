@@ -23,6 +23,7 @@ const EXAMPLES = [
     "min_ellipse.jl",
     "mle.jl",
     "multi.jl",
+    "prod.jl",
     "qcp.jl",
     "robust_uncertainty.jl",
     "rosenbrock.jl",
