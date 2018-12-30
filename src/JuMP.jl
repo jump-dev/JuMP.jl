@@ -618,9 +618,7 @@ function operator_warn(model::Model)
             "performance reasons, you should not add expressions in a loop. " *
             "Instead of x += y, use add_to_expression!(x,y) to modify x in " *
             "place. If y is a single variable, you may also use " *
-            "add_to_expression!(x, coef, y) for x += coef*y.", maxlog=1)
-        # NOTE: On Julia 1.0 (at least), maxlog=1 does not work correctly.
-        # See https://github.com/JuliaLang/julia/issues/28786.
+            "add_to_expression!(x, coef, y) for x += coef*y.", maxlog = 1)
     end
 end
 
