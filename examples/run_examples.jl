@@ -21,6 +21,7 @@ const EXAMPLES = [
     "mle.jl",
     "optcontrol.jl",
     "qcp.jl",
+    "robust_uncertainty.jl",
     "rosenbrock.jl",
     "sudoku.jl",
     "urbanplan.jl"
