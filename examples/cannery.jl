@@ -8,14 +8,15 @@
 using JuMP, GLPK, Test
 const MOI = JuMP.MathOptInterface
 
-#=
+"""
+    example_cannery(; verbose = true)
+    
 JuMP implementation of the cannery problem from Dantzig, Linear Programming and
 Extensions, Princeton University Press, Princeton, NJ, 1963.
 
 Author: Louis Luangkesorn
 Date: January 30, 2015
-=#
-
+"""
 function example_cannery(; verbose = true)
     plants = ["Seattle", "San-Diego"]
     markets = ["New-York", "Chicago", "Topeka"]
@@ -67,3 +68,5 @@ function example_cannery(; verbose = true)
     @test JuMP.primal_status(cannery) == MOI.FEASIBLE_POINT
     @test JuMP.objective_value(cannery) == 151200.0
 end
+
+example_cannery(verbose = false)

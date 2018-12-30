@@ -5,7 +5,7 @@
 
 using JuMP, Ipopt, Test
 
-#=
+"""
 clnlbeam
 Based on AMPL model
 Copyright (C) 2001 Princeton University
@@ -19,9 +19,8 @@ and this permission notice appear in all supporting documentation.
 Source: H. Maurer and H.D. Mittelman, "The non-linear beam via optimal control
 with bound state variables", Optimal Control Applications and Methods 12, pp.
 19-31, 1991.
-=#
-
-function example_optcontrol(; verbose = true)
+"""
+function example_optcontrol()
     N = 1000
     h = 1/N
     alpha = 350
@@ -46,3 +45,5 @@ function example_optcontrol(; verbose = true)
     @test JuMP.primal_status(model) == MOI.FEASIBLE_POINT
     @test JuMP.objective_value(model) ≈ 350.0
 end
+
+example_optcontrol()

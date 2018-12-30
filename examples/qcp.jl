@@ -10,11 +10,12 @@
 
 using JuMP, Ipopt, Test
 
-#=
+"""
+    example_qcp(; verbose = true)
+    
 A simple quadratically constrained program based on
 http://www.gurobi.com/documentation/5.5/example-tour/node25
-=#
-
+"""
 function example_qcp(; verbose = true)
     model = Model(with_optimizer(Ipopt.Optimizer, print_level = 0))
     @variable(model, x)
@@ -37,3 +38,5 @@ function example_qcp(; verbose = true)
     @test JuMP.value(x) ≈ 0.32699 atol = 1e-5
     @test JuMP.value(y) ≈ 0.25707 atol = 1e-5
 end
+
+example_qcp(verbose = false)

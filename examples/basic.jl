@@ -10,7 +10,7 @@
 
 using JuMP, GLPK, Test
 
-#=
+"""
     example_basic([; verbose = true])
 
 Formulate and solve a simple LP:
@@ -20,8 +20,7 @@ Formulate and solve a simple LP:
          0 <= y <= 30
 
 If `verbose = true`, print the model and the solution.
-=#
-
+"""
 function example_basic(; verbose = true)
     model = Model(with_optimizer(GLPK.Optimizer))
 
@@ -51,3 +50,5 @@ function example_basic(; verbose = true)
     @test x_value ≈ 2
     @test y_value ≈ 0.2
 end
+
+example_basic(verbose = false)

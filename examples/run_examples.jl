@@ -13,6 +13,8 @@ using Test
 const EXAMPLES = [
     "basic.jl",
     "cannery.jl",
+    "mindistortion.jl",
+    "knapsack.jl",
     "minellipse.jl",
     "optcontrol.jl",
     "qcp.jl",
@@ -22,8 +24,7 @@ const EXAMPLES = [
 @testset "run_examples.jl" begin
     for example in EXAMPLES
         @testset "$(example)" begin
-            example_function = include(example)
-            example_function(verbose = false)
+            include(example)
         end
     end
 end

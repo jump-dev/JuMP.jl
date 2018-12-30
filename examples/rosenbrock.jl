@@ -5,18 +5,18 @@
 
 using JuMP, Ipopt, Test
 
-function example_rosekbrock(; verbose = true)
+function example_rosenbrock()
     model = Model(with_optimizer(Ipopt.Optimizer, print_level=0))
     @variable(model, x)
     @variable(model, y)
     @NLobjective(model, Min, (1 - x)^2 + 100 * (y - x^2)^2)
     JuMP.optimize!(model)
-    if verbose
-        println("x = ", JuMP.value(x), " y = ", JuMP.value(y))
-    end
+
     @test JuMP.termination_status(model) == MOI.LOCALLY_SOLVED
     @test JuMP.primal_status(model) == MOI.FEASIBLE_POINT
     @test JuMP.objective_value(model) ≈ 0.0 atol = 1e-10
     @test JuMP.value(x) ≈ 1.0
     @test JuMP.value(y) ≈ 1.0
 end
+
+example_rosenbrock()

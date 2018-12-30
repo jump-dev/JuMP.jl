@@ -7,37 +7,40 @@
 # An algebraic modeling langauge for Julia
 # See http://github.com/JuliaOpt/JuMP.jl
 #############################################################################
-# knapsack.jl
-#
-# Solves a simple knapsack problem:
-# max sum(p_j x_j)
-#  st sum(w_j x_j) <= C
-#     x binary
-#############################################################################
 
-using JuMP, GLPK, LinearAlgebra
+using JuMP, GLPK, Test
 
-# Maximization problem
-m = Model(with_optimizer(GLPK.Optimizer))
-
-@variable(m, x[1:5], Bin)
-
-profit = [ 5, 3, 2, 7, 4 ]
-weight = [ 2, 8, 4, 2, 5 ]
-capacity = 10
-
-# Objective: maximize profit
-@objective(m, Max, dot(profit, x))
-
-# Constraint: can carry all
-@constraint(m, dot(weight, x) <= capacity)
-
-# Solve problem using MIP solver
-JuMP.optimize!(m)
-
-println("Objective is: ", JuMP.objective_value(m))
-println("Solution is:")
-for i = 1:5
-    print("x[$i] = ", JuMP.value(x[i]))
-    println(", p[$i]/w[$i] = ", profit[i]/weight[i])
+"""
+    example_knapsack(; verbose = true)
+    
+Formulate and solve a simple knapsack problem:
+    max sum(p_j x_j)
+     st sum(w_j x_j) <= C
+        x binary
+"""
+function example_knapsack(; verbose = true)
+    profit = [5, 3, 2, 7, 4]
+    weight = [2, 8, 4, 2, 5]
+    capacity = 10
+    model = Model(with_optimizer(GLPK.Optimizer))
+    @variable(model, x[1:5], Bin)
+    # Objective: maximize profit
+    @objective(model, Max, profit' * x)
+    # Constraint: can carry all
+    @constraint(model, weight' * x <= capacity)
+    # Solve problem using MIP solver
+    JuMP.optimize!(model)
+    if verbose
+        println("Objective is: ", JuMP.objective_value(model))
+        println("Solution is:")
+        for i in 1:5
+            print("x[$i] = ", JuMP.value(x[i]))
+            println(", p[$i]/w[$i] = ", profit[i] / weight[i])
+        end
+    end
+    @test JuMP.termination_status(model) == MOI.OPTIMAL
+    @test JuMP.primal_status(model) == MOI.FEASIBLE_POINT
+    @test JuMP.objective_value(model) == 16.0
 end
+
+example_knapsack(verbose = false)
