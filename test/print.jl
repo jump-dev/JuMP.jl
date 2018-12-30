@@ -202,7 +202,8 @@ end
     end
 end
 
-function printing_test(ModelType::Type{<:JuMP.AbstractModel})
+function printing_test(ModelType::Type{<:JuMP.AbstractModel},
+                       moi_backend::Bool)
     @testset "VariableRef" begin
         m = ModelType()
         @variable(m, 0 <= x <= 2)
@@ -264,18 +265,6 @@ function printing_test(ModelType::Type{<:JuMP.AbstractModel})
         io_test(IJuliaMode, v[2,1], "i123123_{1,2}")
         io_test(REPLMode,   w[1,3], "symm[1,3]")
         io_test(IJuliaMode, w[1,3], "symm_{1,3}")
-    end
-
-    @testset "SingleVariable constraints" begin
-        ge = JuMP.math_symbol(REPLMode, :geq)
-        in_sym = JuMP.math_symbol(REPLMode, :in)
-        model = ModelType()
-        @variable(model, x >= 10)
-        zero_one = @constraint(model, x in MathOptInterface.ZeroOne())
-
-        io_test(REPLMode, JuMP.LowerBoundRef(x), "x $ge 10.0")
-        io_test(REPLMode, zero_one, "x binary")
-        # TODO: Test in IJulia mode
     end
 
     @testset "VectorOfVariable constraints" begin
@@ -375,74 +364,107 @@ function printing_test(ModelType::Type{<:JuMP.AbstractModel})
         @constraint(model_1, a*b <= 2)
         @constraint(model_1, [1 - a; u] in SecondOrderCone())
 
-        io_test(REPLMode, model_1, """
-    Max a - b + 2 a1 - 10 x
-    Subject to
-     x binary
-     u[1] binary
-     u[2] binary
-     u[3] binary
-     a1 integer
-     b1 integer
-     c1 integer
-     z integer
-     fi $eq 9.0
-     a $ge 1.0
-     c $ge -1.0
-     a1 $ge 1.0
-     c1 $ge -1.0
-     b $le 1.0
-     c $le 1.0
-     b1 $le 1.0
-     c1 $le 1.0
-     a + b - 10 c - 2 x + c1 $le 1.0
-     a*b $le 2.0
-     [-a + 1, u[1], u[2], u[3]] $inset MathOptInterface.SecondOrderCone(4)
-    """, repl=:print)
+        VariableType = typeof(a)
+
+        if moi_backend
+            io_test(REPLMode, model_1, """
+        Max a - b + 2 a1 - 10 x
+        Subject to
+         x binary
+         u[1] binary
+         u[2] binary
+         u[3] binary
+         a1 integer
+         b1 integer
+         c1 integer
+         z integer
+         fi $eq 9.0
+         a $ge 1.0
+         c $ge -1.0
+         a1 $ge 1.0
+         c1 $ge -1.0
+         b $le 1.0
+         c $le 1.0
+         b1 $le 1.0
+         c1 $le 1.0
+         a + b - 10 c - 2 x + c1 $le 1.0
+         a*b $le 2.0
+         [-a + 1, u[1], u[2], u[3]] $inset MathOptInterface.SecondOrderCone(4)
+        """, repl=:print)
+        else
+            # TODO variable constraints
+            io_test(REPLMode, model_1, """
+        Max a - b + 2 a1 - 10 x
+        Subject to
+         a + b - 10 c - 2 x + c1 $le 1.0
+         a*b $le 2.0
+         [-a + 1, u[1], u[2], u[3]] $inset MathOptInterface.SecondOrderCone(4)
+        """, repl=:print)
+        end
 
 
-        io_test(REPLMode, model_1, """
-    A JuMP Model
-    Maximization problem with:
-    Variables: 13
-    Objective function type: MathOptInterface.ScalarAffineFunction{Float64}
-    `MathOptInterface.SingleVariable`-in-`MathOptInterface.ZeroOne`: 4 constraints
-    `MathOptInterface.SingleVariable`-in-`MathOptInterface.Integer`: 4 constraints
-    `MathOptInterface.SingleVariable`-in-`MathOptInterface.EqualTo{Float64}`: 1 constraint
-    `MathOptInterface.SingleVariable`-in-`MathOptInterface.GreaterThan{Float64}`: 4 constraints
-    `MathOptInterface.SingleVariable`-in-`MathOptInterface.LessThan{Float64}`: 4 constraints
-    `MathOptInterface.ScalarAffineFunction{Float64}`-in-`MathOptInterface.LessThan{Float64}`: 1 constraint
-    `MathOptInterface.ScalarQuadraticFunction{Float64}`-in-`MathOptInterface.LessThan{Float64}`: 1 constraint
-    `MathOptInterface.VectorAffineFunction{Float64}`-in-`MathOptInterface.SecondOrderCone`: 1 constraint
-    Model mode: AUTOMATIC
-    CachingOptimizer state: NO_OPTIMIZER
-    Solver name: No optimizer attached.
-    Names registered in the model: a, a1, b, b1, c, c1, fi, u, x, y, z""", repl=:show)
+        if moi_backend
+            io_test(REPLMode, model_1, """
+        A JuMP Model
+        Maximization problem with:
+        Variables: 13
+        Objective function type: JuMP.GenericAffExpr{Float64,$VariableType}
+        `MathOptInterface.SingleVariable`-in-`MathOptInterface.ZeroOne`: 4 constraints
+        `MathOptInterface.SingleVariable`-in-`MathOptInterface.Integer`: 4 constraints
+        `MathOptInterface.SingleVariable`-in-`MathOptInterface.EqualTo{Float64}`: 1 constraint
+        `MathOptInterface.SingleVariable`-in-`MathOptInterface.GreaterThan{Float64}`: 4 constraints
+        `MathOptInterface.SingleVariable`-in-`MathOptInterface.LessThan{Float64}`: 4 constraints
+        `MathOptInterface.ScalarAffineFunction{Float64}`-in-`MathOptInterface.LessThan{Float64}`: 1 constraint
+        `MathOptInterface.ScalarQuadraticFunction{Float64}`-in-`MathOptInterface.LessThan{Float64}`: 1 constraint
+        `MathOptInterface.VectorAffineFunction{Float64}`-in-`MathOptInterface.SecondOrderCone`: 1 constraint
+        Model mode: AUTOMATIC
+        CachingOptimizer state: NO_OPTIMIZER
+        Solver name: No optimizer attached.
+        Names registered in the model: a, a1, b, b1, c, c1, fi, u, x, y, z""", repl=:show)
+        else
+            io_test(REPLMode, model_1, """
+        A JuMP Model
+        Maximization problem with:
+        Variables: 13
+        Objective function type: JuMP.GenericAffExpr{Float64,$VariableType}
+        Constraints: 3
+        Names registered in the model: a, a1, b, b1, c, c1, fi, u, x, y, z""", repl=:show)
+        end
 
-        io_test(IJuliaMode, model_1, """
-    \\begin{alignat*}{1}\\max\\quad & a - b + 2 a1 - 10 x\\\\
-    \\text{Subject to} \\quad & x binary\\\\
-     & u_{1} binary\\\\
-     & u_{2} binary\\\\
-     & u_{3} binary\\\\
-     & a1 integer\\\\
-     & b1 integer\\\\
-     & c1 integer\\\\
-     & z integer\\\\
-     & fi = 9.0\\\\
-     & a \\geq 1.0\\\\
-     & c \\geq -1.0\\\\
-     & a1 \\geq 1.0\\\\
-     & c1 \\geq -1.0\\\\
-     & b \\leq 1.0\\\\
-     & c \\leq 1.0\\\\
-     & b1 \\leq 1.0\\\\
-     & c1 \\leq 1.0\\\\
-     & a + b - 10 c - 2 x + c1 \\leq 1.0\\\\
-     & a\\times b \\leq 2.0\\\\
-     & [-a + 1, u_{1}, u_{2}, u_{3}] \\in MathOptInterface.SecondOrderCone(4)\\\\
-    \\end{alignat*}
-    """)
+        if moi_backend
+            io_test(IJuliaMode, model_1, """
+        \\begin{alignat*}{1}\\max\\quad & a - b + 2 a1 - 10 x\\\\
+        \\text{Subject to} \\quad & x binary\\\\
+         & u_{1} binary\\\\
+         & u_{2} binary\\\\
+         & u_{3} binary\\\\
+         & a1 integer\\\\
+         & b1 integer\\\\
+         & c1 integer\\\\
+         & z integer\\\\
+         & fi = 9.0\\\\
+         & a \\geq 1.0\\\\
+         & c \\geq -1.0\\\\
+         & a1 \\geq 1.0\\\\
+         & c1 \\geq -1.0\\\\
+         & b \\leq 1.0\\\\
+         & c \\leq 1.0\\\\
+         & b1 \\leq 1.0\\\\
+         & c1 \\leq 1.0\\\\
+         & a + b - 10 c - 2 x + c1 \\leq 1.0\\\\
+         & a\\times b \\leq 2.0\\\\
+         & [-a + 1, u_{1}, u_{2}, u_{3}] \\in MathOptInterface.SecondOrderCone(4)\\\\
+        \\end{alignat*}
+        """)
+        else
+            io_test(IJuliaMode, model_1, """
+        \\begin{alignat*}{1}\\max\\quad & a - b + 2 a1 - 10 x\\\\
+        \\text{Subject to} \\quad & a + b - 10 c - 2 x + c1 \\leq 1.0\\\\
+         & a\\times b \\leq 2.0\\\\
+         & [-a + 1, u_{1}, u_{2}, u_{3}] \\in MathOptInterface.SecondOrderCone(4)\\\\
+        \\end{alignat*}
+        """)
+        end
 
         #------------------------------------------------------------------
 
@@ -451,36 +473,54 @@ function printing_test(ModelType::Type{<:JuMP.AbstractModel})
         @variable(model_2, y, Int)
         @constraint(model_2, x*y <= 1)
 
-        io_test(REPLMode, model_2, """
-    A JuMP Model
-    Feasibility problem with:
-    Variables: 2
-    `MathOptInterface.SingleVariable`-in-`MathOptInterface.ZeroOne`: 1 constraint
-    `MathOptInterface.SingleVariable`-in-`MathOptInterface.Integer`: 1 constraint
-    `MathOptInterface.ScalarQuadraticFunction{Float64}`-in-`MathOptInterface.LessThan{Float64}`: 1 constraint
-    Model mode: AUTOMATIC
-    CachingOptimizer state: NO_OPTIMIZER
-    Solver name: No optimizer attached.
-    Names registered in the model: x, y""", repl=:show)
+        if moi_backend
+            io_test(REPLMode, model_2, """
+        A JuMP Model
+        Feasibility problem with:
+        Variables: 2
+        `MathOptInterface.SingleVariable`-in-`MathOptInterface.ZeroOne`: 1 constraint
+        `MathOptInterface.SingleVariable`-in-`MathOptInterface.Integer`: 1 constraint
+        `MathOptInterface.ScalarQuadraticFunction{Float64}`-in-`MathOptInterface.LessThan{Float64}`: 1 constraint
+        Model mode: AUTOMATIC
+        CachingOptimizer state: NO_OPTIMIZER
+        Solver name: No optimizer attached.
+        Names registered in the model: x, y""", repl=:show)
+        else
+            io_test(REPLMode, model_2, """
+        A JuMP Model
+        Feasibility problem with:
+        Variables: 2
+        Constraint: 1
+        Names registered in the model: x, y""", repl=:show)
+        end
 
         model_2 = ModelType()
         @variable(model_2, x)
         @constraint(model_2, x <= 3)
 
-        io_test(REPLMode, model_2, """
-    A JuMP Model
-    Feasibility problem with:
-    Variable: 1
-    `MathOptInterface.ScalarAffineFunction{Float64}`-in-`MathOptInterface.LessThan{Float64}`: 1 constraint
-    Model mode: AUTOMATIC
-    CachingOptimizer state: NO_OPTIMIZER
-    Solver name: No optimizer attached.
-    Names registered in the model: x""", repl=:show)
+        if moi_backend
+            io_test(REPLMode, model_2, """
+        A JuMP Model
+        Feasibility problem with:
+        Variable: 1
+        `MathOptInterface.ScalarAffineFunction{Float64}`-in-`MathOptInterface.LessThan{Float64}`: 1 constraint
+        Model mode: AUTOMATIC
+        CachingOptimizer state: NO_OPTIMIZER
+        Solver name: No optimizer attached.
+        Names registered in the model: x""", repl=:show)
+        else
+            io_test(REPLMode, model_2, """
+        A JuMP Model
+        Feasibility problem with:
+        Variable: 1
+        Constraint: 1
+        Names registered in the model: x""", repl=:show)
+        end
     end
 end
 
 @testset "Printing for JuMP.Model" begin
-    printing_test(Model)
+    printing_test(Model, true)
     @testset "Model with nonlinear terms" begin
         eq = JuMP.math_symbol(REPLMode, :eq)
         model = Model()
@@ -511,9 +551,19 @@ end
     \\end{alignat*}
     """)
     end
+    @testset "SingleVariable constraints" begin
+        ge = JuMP.math_symbol(REPLMode, :geq)
+        in_sym = JuMP.math_symbol(REPLMode, :in)
+        model = Model()
+        @variable(model, x >= 10)
+        zero_one = @constraint(model, x in MathOptInterface.ZeroOne())
+
+        io_test(REPLMode, JuMP.LowerBoundRef(x), "x $ge 10.0")
+        io_test(REPLMode, zero_one, "x binary")
+        # TODO: Test in IJulia mode
+    end
 end
 
-# TODO: These tests are failing.
-# @testset "Printing for JuMPExtension.MyModel" begin
-#     printing_test(JuMPExtension.MyModel)
-# end
+@testset "Printing for JuMPExtension.MyModel" begin
+    printing_test(JuMPExtension.MyModel, false)
+end

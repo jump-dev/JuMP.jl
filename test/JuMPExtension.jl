@@ -219,6 +219,7 @@ function JuMP.constraint_object(cref::MyConstraintRef)
 end
 
 # Objective
+JuMP.nlp_objective_function(::MyModel) = nothing
 function JuMP.set_objective(m::MyModel, sense::MOI.OptimizationSense,
                             f::JuMP.AbstractJuMPScalar)
     m.objectivesense = sense
@@ -297,6 +298,22 @@ function JuMP.constraint_by_name(model::MyModel, name::String)
         # or a scalar constraint
         return JuMP.ConstraintRef(model, index, JuMP.ScalarShape())
     end
+end
+
+# Show
+function JuMP.show_constraints_summary(io::IO, model::MyModel)
+    n = length(model.constraints)
+    print(io, "Constraint", JuMP.plural(n), ": ", n)
+end
+function JuMP.show_backend_summary(io::IO, model::MyModel) end
+function JuMP.constraints_string(print_mode, model::MyModel, sep, eol)
+    str = ""
+    # Sort by creation order, i.e. ConstraintIndex value
+    constraints = sort(collect(model.constraints), by = c -> c.first.value)
+    for (index, constraint) in constraints
+        str *= sep * JuMP.constraint_string(print_mode, constraint) * eol
+    end
+    return str
 end
 
 end

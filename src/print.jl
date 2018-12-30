@@ -143,11 +143,12 @@ end
 wrap_in_math_mode(str) = "\$\$ $str \$\$"
 wrap_in_inline_math_mode(str) = "\$ $str \$"
 
+plural(n) = (n==1 ? "" : "s")
+
 #------------------------------------------------------------------------
 ## Model
 #------------------------------------------------------------------------
-function Base.show(io::IO, model::Model)
-    plural(n) = (n==1 ? "" : "s")
+function Base.show(io::IO, model::AbstractModel)
     println(io, "A JuMP Model")
     sense = objective_sense(model)
     if sense == MOI.MAX_SENSE
@@ -162,30 +163,16 @@ function Base.show(io::IO, model::Model)
     println(io, "Variable", plural(num_variables(model)), ": ",
             num_variables(model))
     if sense != MOI.FEASIBILITY_SENSE
-        if model.nlp_data !== nothing && model.nlp_data.nlobj !== nothing
-            println(io, "Objective function type: Nonlinear")
-        else
+        nlobj = nlp_objective_function(model)
+        if nlobj isa Nothing
             println(io, "Objective function type: ",
-                    MOI.get(model, MOI.ObjectiveFunctionType()))
+                    objective_function_type(model))
+        else
+            println(io, "Objective function type: Nonlinear")
         end
     end
-    for (F, S) in MOI.get(model, MOI.ListOfConstraints())
-        num_constraints = MOI.get(model, MOI.NumberOfConstraints{F, S}())
-        println(io, "`$F`-in-`$S`: $num_constraints constraint",
-                plural(num_constraints))
-    end
-    if !iszero(num_nl_constraints(model))
-        println(io, "Nonlinear: ", num_nl_constraints(model), " constraint",
-                plural(num_nl_constraints(model)))
-    end
-    model_mode = mode(model)
-    println(io, "Model mode: ", model_mode)
-    if model_mode == MANUAL || model_mode == AUTOMATIC
-        println(io, "CachingOptimizer state: ",
-                MOIU.state(backend(model)))
-    end
-    # The last print shouldn't have a new line
-    print(io, "Solver name: ", solver_name(model))
+    show_constraints_summary(io, model)
+    show_backend_summary(io, model)
     names_in_scope = sort(collect(keys(object_dictionary(model))))
     if !isempty(names_in_scope)
         println(io)
@@ -194,13 +181,24 @@ function Base.show(io::IO, model::Model)
     end
 end
 
-function Base.print(io::IO, model::Model)
+function show_backend_summary(io::IO, model::Model)
+    model_mode = mode(model)
+    println(io, "Model mode: ", model_mode)
+    if model_mode == MANUAL || model_mode == AUTOMATIC
+        println(io, "CachingOptimizer state: ",
+                MOIU.state(backend(model)))
+    end
+    # The last print shouldn't have a new line
+    print(io, "Solver name: ", solver_name(model))
+end
+
+function Base.print(io::IO, model::AbstractModel)
     print(io, model_string(REPLMode, model))
 end
-function Base.show(io::IO, ::MIME"text/latex", model::Model)
+function Base.show(io::IO, ::MIME"text/latex", model::AbstractModel)
     print(io, wrap_in_math_mode(model_string(IJuliaMode, model)))
 end
-function model_string(print_mode, model::Model)
+function model_string(print_mode, model::AbstractModel)
     ijl = print_mode == IJuliaMode
     sep = ijl ? " & " : " "
     eol = ijl ? "\\\\\n" : "\n"
@@ -218,30 +216,16 @@ function model_string(print_mode, model::Model)
             str *= "\\quad"
         end
         str *= sep
-        if model.nlp_data !== nothing && model.nlp_data.nlobj !== nothing
-            str *= nl_expr_string(model, print_mode, model.nlp_data.nlobj)
+        nlobj = nlp_objective_function(model)
+        if nlobj isa Nothing
+            str *= function_string(print_mode, objective_function(model))
         else
-            str *= function_string(print_mode,
-                                   objective_function(model, QuadExpr))
+            str *= nl_expr_string(model, print_mode, nlobj)
         end
     end
     str *= eol
     str *= ijl ? "\\text{Subject to} \\quad" : "Subject to" * eol
-    for (F, S) in MOI.get(model, MOI.ListOfConstraints())
-        for idx in MOI.get(model, MOI.ListOfConstraintIndices{F, S}())
-            # FIXME the shape may be incorrect here
-            shape = S <: MOI.AbstractScalarSet ? ScalarShape() : VectorShape()
-            cref = ConstraintRef(model, idx, shape)
-            con = constraint_object(cref)
-            str *= sep * constraint_string(print_mode, con) * eol
-        end
-    end
-    if model.nlp_data !== nothing
-        for nl_constraint in model.nlp_data.nlconstr
-            str *= sep * nl_constraint_string(model, print_mode, nl_constraint)
-            str *= eol
-        end
-    end
+    str *= constraints_string(print_mode, model, sep, eol)
     if ijl
         str = "\\begin{alignat*}{1}" * str * "\\end{alignat*}\n"
     end
@@ -369,6 +353,38 @@ end
 #------------------------------------------------------------------------
 ## Constraints
 #------------------------------------------------------------------------
+
+function show_constraints_summary(io::IO, model::Model)
+    for (F, S) in MOI.get(model, MOI.ListOfConstraints())
+        num_constraints = MOI.get(model, MOI.NumberOfConstraints{F, S}())
+        println(io, "`$F`-in-`$S`: $num_constraints constraint",
+                plural(num_constraints))
+    end
+    if !iszero(num_nl_constraints(model))
+        println(io, "Nonlinear: ", num_nl_constraints(model), " constraint",
+                plural(num_nl_constraints(model)))
+    end
+end
+
+function constraints_string(print_mode, model::Model, sep, eol)
+    str = ""
+    for (F, S) in MOI.get(model, MOI.ListOfConstraints())
+        for idx in MOI.get(model, MOI.ListOfConstraintIndices{F, S}())
+            # FIXME the shape may be incorrect here
+            shape = S <: MOI.AbstractScalarSet ? ScalarShape() : VectorShape()
+            cref = ConstraintRef(model, idx, shape)
+            con = constraint_object(cref)
+            str *= sep * constraint_string(print_mode, con) * eol
+        end
+    end
+    if model isa Model && model.nlp_data !== nothing
+        for nl_constraint in model.nlp_data.nlconstr
+            str *= sep * nl_constraint_string(model, print_mode, nl_constraint)
+            str *= eol
+        end
+    end
+    return str
+end
 
 ## Notes for extensions
 # For a `ConstraintRef{ModelType, IndexType}` where `ModelType` is not
