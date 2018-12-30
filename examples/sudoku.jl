@@ -99,7 +99,7 @@ if length(ARGS) == 1
     sol = example_sudoku(ARGS[1])
     print_sudoku_solution(sol)
 else
-    solution = example_sudoku("data/sudoku.csv")
+    solution = example_sudoku(joinpath(@__DIR__, "data/sudoku.csv"))
     @test solution == [
         3 1 7 9 5 8 2 6 4;
         4 6 9 3 2 7 8 1 5;

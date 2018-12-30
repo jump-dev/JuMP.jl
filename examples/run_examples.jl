@@ -13,6 +13,7 @@ using Test
 const EXAMPLES = [
     "basic.jl",
     "cannery.jl",
+    "cluster.jl",
     "corr_sdp.jl",
     "mindistortion.jl",
     "knapsack.jl",
@@ -24,13 +25,12 @@ const EXAMPLES = [
     "robust_uncertainty.jl",
     "rosenbrock.jl",
     "sudoku.jl",
+    "transp.jl",
     "urbanplan.jl"
 ]
 
 @testset "run_examples.jl" begin
-    for example in EXAMPLES
-        @testset "$(example)" begin
-            include(example)
-        end
+    @testset "$(example)" for example in EXAMPLES
+        include(example)
     end
 end
