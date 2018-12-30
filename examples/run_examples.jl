@@ -22,9 +22,11 @@ const EXAMPLES = [
     "min_distortion.jl",
     "min_ellipse.jl",
     "mle.jl",
+    "multi.jl",
     "qcp.jl",
     "robust_uncertainty.jl",
     "rosenbrock.jl",
+    "steelT3.jl",
     "sudoku.jl",
     "transp.jl",
     "urban_plan.jl"
