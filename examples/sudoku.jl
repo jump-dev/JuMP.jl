@@ -1,4 +1,4 @@
-#  Copyright 2017, Iain Dunning, Joey Huchette, Miles Lubin, and contributors
+#  Copyright 2017 Iain Dunning, Joey Huchette Miles Lubin, and contributors
 #  This Source Code Form is subject to the terms of the Mozilla Public
 #  License, v. 2.0. If a copy of the MPL was not distributed with this
 #  file, You can obtain one at http://mozilla.org/MPL/2.0/.
@@ -7,72 +7,67 @@
 # An algebraic modeling langauge for Julia
 # See http://github.com/JuliaOpt/JuMP.jl
 #############################################################################
-# sudoku.jl
-# A sudoku solver that uses a MIP to find solutions
-#
-# We have binary variables x[i,j,k] which, if = 1, say that cell (i,j)
-# contains the number k
-# The constraints are:
-# 1 - Each cell has one value only
-# 2 - Each row contains each number exactly once
-# 3 - Each column contains each number exactly once
-# 4 - Each 3x3 subgrid contains each number exactly once
-# We will take the initial grid as a CSV file, where 0s are "blanks
-#############################################################################
 
-using JuMP, GLPK
+using JuMP, GLPK, Test
 const MOI = JuMP.MathOptInterface
 
-solver = GLPK.Optimizer
+"""
+    example_sudoku(filepath)
 
-# Load data
-function LoadData(filepath)
-    fp = open(filepath, "r")
-    initgrid = zeros(Int,9,9)
-    for row in 1:9
-        line = readline(fp)
-        initgrid[row,:] = [parse(Int,s) for s in split(line,",")]
+A sudoku solver that uses a MIP to find solutions.
+
+We have binary variables x[i, j, k] which, if = 1, say that cell (i, j) contains
+the number k. The constraints are:
+ 1 - Each cell has one value only
+ 2 - Each row contains each number exactly once
+ 3 - Each column contains each number exactly once
+ 4 - Each 3x3 subgrid contains each number exactly once
+We will take the initial grid as a CSV file at `filepath`, where 0s are blanks.
+"""
+function example_sudoku(filepath)
+    initial_grid = zeros(Int, 9, 9)
+    open(filepath, "r") do fp
+        for row in 1:9
+            line = readline(fp)
+            initial_grid[row, :] .= parse.(Int, split(line, ","))
+        end
     end
-    return initgrid
-end
 
-# Solve model
-function SolveModel(initgrid)
-    m = Model(with_optimizer(solver))
+    model = Model(with_optimizer(GLPK.Optimizer))
 
-    @variable(m, x[1:9, 1:9, 1:9], Bin)
+    @variable(model, x[1:9, 1:9, 1:9], Bin)
 
-    @constraints m begin
+    @constraints(model, begin
         # Constraint 1 - Only one value appears in each cell
+        cell[i in 1:9, j in 1:9], sum(x[i, j, :]) == 1
         # Constraint 2 - Each value appears in each row once only
+        row[i in 1:9, k in 1:9], sum(x[i, :, k]) == 1
         # Constraint 3 - Each value appears in each column once only
-        cell[i in 1:9, j in 1:9], sum(x[i,j,:]) == 1
-         row[i in 1:9, k in 1:9], sum(x[i,:,k]) == 1
-         col[j in 1:9, k in 1:9], sum(x[:,j,k]) == 1
+        col[j in 1:9, k in 1:9], sum(x[:, j, k]) == 1
         # Constraint 4 - Each value appears in each 3x3 subgrid once only
-        subgrid[i=1:3:7,j=1:3:7,val=1:9], sum(x[i:i+2,j:j+2,val]) == 1
-    end
+        subgrid[i=1:3:7, j=1:3:7, val=1:9], sum(x[i:i + 2, j:j + 2, val]) == 1
+    end)
 
     # Initial solution
     for row in 1:9, col in 1:9
-        if initgrid[row,col] != 0
-            @constraint(m, x[row, col, initgrid[row, col]] == 1)
+        if initial_grid[row, col] != 0
+            @constraint(model, x[row, col, initial_grid[row, col]] == 1)
         end
     end
 
     # Solve it
-    JuMP.optimize!(m)
+    JuMP.optimize!(model)
 
-    term_status = JuMP.termination_status(m)
-    primal_status = JuMP.primal_status(m)
-    is_optimal = term_status == MOI.Optimal
+    term_status = JuMP.termination_status(model)
+    primal_status = JuMP.primal_status(model)
+    is_optimal = term_status == MOI.OPTIMAL
 
     # Check solution
     if is_optimal
-        mipSol = JuMP.value.(x)
-        sol = zeros(Int,9,9)
+        mip_solution = JuMP.value.(x)
+        sol = zeros(Int, 9, 9)
         for row in 1:9, col in 1:9, val in 1:9
-            if mipSol[row, col, val] >= 0.9
+            if mip_solution[row, col, val] >= 0.9
                 sol[row, col] = val
             end
         end
@@ -80,30 +75,39 @@ function SolveModel(initgrid)
     else
         error("The solver did not find an optimal solution.")
     end
-
 end
 
-# Initialization
-if length(ARGS) != 1
-    error("Expected one argument: the initial solution, e.g. julia sudoku.jl sudoku.csv")
-end
-
-# Solve
-sol = SolveModel(LoadData(ARGS[1]))
-
-# Display solution
-println("Solution:")
-println("[-----------------------]")
-for row in 1:9
-    print("[ ")
-    for col in 1:9
-        print("$(sol[row,col]) ")
-        if col % 3 == 0 && col < 9
-            print("| ")
+function print_sudoku_solution(solution)
+    println("Solution:")
+    println("[-----------------------]")
+    for row in 1:9
+        print("[ ")
+        for col in 1:9
+            print(solution[row, col], " ")
+            if col % 3 == 0 && col < 9
+                print("| ")
+            end
+        end
+        println("]")
+        if row % 3 == 0
+            println("[-----------------------]")
         end
     end
-    println("]")
-    if row % 3 == 0
-        println("[-----------------------]")
-    end
+end
+
+if length(ARGS) == 1
+    sol = example_sudoku(ARGS[1])
+    print_sudoku_solution(sol)
+else
+    solution = example_sudoku("data/sudoku.csv")
+    @test solution == [
+        3 1 7 9 5 8 2 6 4;
+        4 6 9 3 2 7 8 1 5;
+        8 2 5 1 6 4 7 9 3;
+        2 7 1 6 4 5 3 8 9;
+        9 3 8 7 1 2 5 4 6;
+        5 4 6 8 3 9 1 7 2;
+        1 8 4 2 9 3 6 5 7;
+        6 9 2 5 7 1 4 3 8;
+        7 5 3 4 8 6 9 2 1]
 end
