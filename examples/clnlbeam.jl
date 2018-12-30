@@ -20,7 +20,7 @@ Source: H. Maurer and H.D. Mittelman, "The non-linear beam via optimal control
 with bound state variables", Optimal Control Applications and Methods 12, pp.
 19-31, 1991.
 """
-function example_optcontrol()
+function example_clnlbeam()
     N = 1000
     h = 1/N
     alpha = 350
@@ -46,4 +46,4 @@ function example_optcontrol()
     @test JuMP.objective_value(model) ≈ 350.0
 end
 
-example_optcontrol()
+example_clnlbeam()

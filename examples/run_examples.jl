@@ -13,20 +13,20 @@ using Test
 const EXAMPLES = [
     "basic.jl",
     "cannery.jl",
+    "clnlbeam.jl",
     "cluster.jl",
     "corr_sdp.jl",
-    "mindistortion.jl",
     "knapsack.jl",
-    "maxcut_sdp.jl",
-    "minellipse.jl",
+    "max_cut_sdp.jl",
+    "min_distortion.jl",
+    "min_ellipse.jl",
     "mle.jl",
-    "optcontrol.jl",
     "qcp.jl",
     "robust_uncertainty.jl",
     "rosenbrock.jl",
     "sudoku.jl",
     "transp.jl",
-    "urbanplan.jl"
+    "urban_plan.jl"
 ]
 
 @testset "run_examples.jl" begin

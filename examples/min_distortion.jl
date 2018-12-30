@@ -7,7 +7,7 @@
 using JuMP, SCS, Test
 
 """
-    example_mindistortion()
+    example_min_distortion()
 
 This example arises from computational geometry, in particular the problem of
 embedding a general finite metric space into a euclidean space.
@@ -35,7 +35,7 @@ and minimize c^2, which gives us the SDP formulation below.
 For more detail, see "Lectures on discrete geometry" by J. Matoušek, Springer,
 2002, pp. 378-379.
 """
-function example_mindistortion()
+function example_min_distortion()
     model = Model(with_optimizer(SCS.Optimizer, verbose = 0))
     D = [0.0 1.0 1.0 1.0;
          1.0 0.0 2.0 2.0;
@@ -57,4 +57,4 @@ function example_mindistortion()
     @test JuMP.objective_value(model) ≈ 4/3 atol = 1e-4
 end
 
-example_mindistortion()
+example_min_distortion()

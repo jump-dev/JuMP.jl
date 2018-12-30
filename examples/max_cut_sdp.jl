@@ -12,7 +12,7 @@ using JuMP, SCS, Test, LinearAlgebra
 import Random
 
 """
-    solve_maxcut_sdp(num_vertex, weights)
+    solve_max_cut_sdp(num_vertex, weights)
 
 Solves a semidefinite programming relaxation of the MAXCUT graph problem:
 
@@ -26,7 +26,7 @@ Goemans, M. X., & Williamson, D. P. (1995). Improved approximation algorithms
 for maximum cut and satisfiability problems using semidefinite programming.
 Journal of the ACM (JACM), 42(6), 1115-1145.
 """
-function solve_maxcut_sdp(num_vertex, weights)
+function solve_max_cut_sdp(num_vertex, weights)
     # Calculate the (weighted) Lapacian of the graph: L = D - W.
     laplacian = diagm(0 => weights * ones(num_vertex)) - weights
 
@@ -63,12 +63,12 @@ function solve_maxcut_sdp(num_vertex, weights)
     return cut, 0.25 * sum(laplacian .* (cut * cut'))
 end
 
-function example_maxcut_sdp()
+function example_max_cut_sdp()
     #   [1] --- 5 --- [2]
     #
     # Solution:
     #  (S, S′)  = ({1}, {2})
-    cut, cutval = solve_maxcut_sdp(2, [0.0 5.0; 5.0 0.0])
+    cut, cutval = solve_max_cut_sdp(2, [0.0 5.0; 5.0 0.0])
     @test cut[1] != cut[2]
 
     #   [1] --- 5 --- [2]
@@ -85,7 +85,7 @@ function example_maxcut_sdp()
          5.0 0.0 0.0 1.0;
          7.0 0.0 0.0 1.0;
          6.0 1.0 1.0 0.0]
-    cut, cutval = solve_maxcut_sdp(4, W)
+    cut, cutval = solve_max_cut_sdp(4, W)
     @test cut[1] != cut[2]
     @test cut[2] == cut[3] == cut[4]
 
@@ -103,10 +103,10 @@ function example_maxcut_sdp()
          1.0 0.0 0.0 9.0;
          5.0 0.0 0.0 2.0;
          0.0 9.0 2.0 0.0]
-    cut, cutval = solve_maxcut_sdp(4, W)
+    cut, cutval = solve_max_cut_sdp(4, W)
     @test cut[1] == cut[4]
     @test cut[2] == cut[3]
     @test cut[1] != cut[2]
 end
 
-example_maxcut_sdp()
+example_max_cut_sdp()

@@ -7,7 +7,7 @@
 using JuMP, SCS, LinearAlgebra, Test
 
 """
-    example_minellipse()
+    example_min_ellipse()
 
 This example is from the Boyd & Vandenberghe book "Convex Optimization". Given a
 set of ellipses centered on the origin
@@ -20,7 +20,7 @@ We can formulate this as an SDP:
               X PSD
 where W is a PD matrix of weights to choose between different solutions.
 """
-function example_minellipse()
+function example_min_ellipse()
     # We will use three ellipses: two "simple" ones, and a random one.
     As = [
         [2.0  0.0; 0.0  1.0],
@@ -43,4 +43,4 @@ function example_minellipse()
     @test JuMP.value.(X) ≈ [2.0 0.0; 0.0 3.0] atol = 1e-4
 end
 
-example_minellipse()
+example_min_ellipse()

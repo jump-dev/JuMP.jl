@@ -12,19 +12,19 @@ using JuMP, GLPK, Test
 const MOI = JuMP.MathOptInterface
 
 """
-    example_urbanplan()
+    example_urban_plan()
 
 An "urban planning" problem. Based on
 http://www.puzzlor.com/2013-08_UrbanPlanning.html
 """
-function example_urbanplan()
+function example_urban_plan()
     model = Model(with_optimizer(GLPK.Optimizer))
 
     # x is indexed by row and column
     @variable(model, 0 <= x[1:5, 1:5] <= 1, Int)
 
-    # y is indexed by R or C, and the points JuMP allows indexing on arbitrary
-    # sets.
+    # y is indexed by R or C, the points, and an index in 1:5. Note how JuMP
+    # allows indexing on arbitrary sets.
     rowcol = ["R", "C"]
     points = [5, 4, 3, -3, -4, -5]
     @variable(model, 0 <= y[rowcol, points, 1:5] <= 1, Int)
@@ -71,4 +71,4 @@ function example_urbanplan()
     @test JuMP.objective_value(model) ≈ 14.0
 end
 
-example_urbanplan()
+example_urban_plan()
