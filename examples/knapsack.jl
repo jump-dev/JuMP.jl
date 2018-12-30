@@ -9,10 +9,11 @@
 #############################################################################
 
 using JuMP, GLPK, Test
+const MOI = JuMP.MathOptInterface
 
 """
     example_knapsack(; verbose = true)
-    
+
 Formulate and solve a simple knapsack problem:
     max sum(p_j x_j)
      st sum(w_j x_j) <= C

@@ -5,6 +5,7 @@
 #############################################################################
 
 using JuMP, SCS, LinearAlgebra, Test
+const MOI = JuMP.MathOptInterface
 
 """
     example_min_ellipse()
@@ -24,8 +25,8 @@ function example_min_ellipse()
     # We will use three ellipses: two "simple" ones, and a random one.
     As = [
         [2.0  0.0; 0.0  1.0],
-        [1.0  0.0; 0.0  3.0]  #,
-        # [2.86715 1.60645; 1.60645 1.12639]
+        [1.0  0.0; 0.0  3.0],
+        [2.86715 1.60645; 1.60645 1.12639]
     ]
     # We change the weights to see different solutions, if they exist
     weights = [1.0 0.0; 0.0 1.0]
@@ -39,8 +40,8 @@ function example_min_ellipse()
 
     @test JuMP.termination_status(model) == MOI.OPTIMAL
     @test JuMP.primal_status(model) == MOI.FEASIBLE_POINT
-    @test JuMP.objective_value(model) ≈ 5.0 atol = 1e-4
-    @test JuMP.value.(X) ≈ [2.0 0.0; 0.0 3.0] atol = 1e-4
+    @test JuMP.objective_value(model) ≈ 6.46233 atol = 1e-5
+    @test JuMP.value.(X) ≈ [3.1651 0.8022; 0.8022 3.2972] atol = 1e-4
 end
 
 example_min_ellipse()

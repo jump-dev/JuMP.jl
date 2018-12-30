@@ -5,6 +5,7 @@
 #############################################################################
 
 using JuMP, SCS, Test
+const MOI = JuMP.MathOptInterface
 
 """
     example_min_distortion()

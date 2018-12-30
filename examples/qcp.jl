@@ -9,10 +9,11 @@
 #############################################################################
 
 using JuMP, Ipopt, Test
+const MOI = JuMP.MathOptInterface
 
 """
     example_qcp(; verbose = true)
-    
+
 A simple quadratically constrained program based on
 http://www.gurobi.com/documentation/5.5/example-tour/node25
 """

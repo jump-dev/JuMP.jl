@@ -4,6 +4,7 @@
 #  file, You can obtain one at http://mozilla.org/MPL/2.0/.
 
 using JuMP, Ipopt, Test
+const MOI = JuMP.MathOptInterface
 
 function example_rosenbrock()
     model = Model(with_optimizer(Ipopt.Optimizer, print_level=0))
