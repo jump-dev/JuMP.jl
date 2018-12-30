@@ -43,7 +43,7 @@ function example_robust_uncertainty()
 
     exact = dot(μhat, c) + Γ1(𝛿 / 2, N) * norm(c) + sqrt((1 - ɛ) / ɛ) *
         sqrt(dot(c, (Σhat + Γ2(𝛿 / 2, N) * Matrix(1.0I, d, d)) * c))
-    @test JuMP.objective_value(model) ≈ exact atol = 1e-4
+    @test JuMP.objective_value(model) ≈ exact atol = 1e-3
 end
 
 example_robust_uncertainty()

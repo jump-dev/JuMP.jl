@@ -16,6 +16,7 @@ const EXAMPLES = [
     "clnlbeam.jl",
     "cluster.jl",
     "corr_sdp.jl",
+    "diet.jl",
     "knapsack.jl",
     "max_cut_sdp.jl",
     "min_distortion.jl",
