@@ -5,3 +5,4 @@
 *.sublime*
 *.opf
 *.cov
+examples/Manifest.toml
