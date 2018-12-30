@@ -21,7 +21,9 @@ const EXAMPLES = [
     "mle.jl",
     "optcontrol.jl",
     "qcp.jl",
-    "rosenbrock.jl"
+    "rosenbrock.jl",
+    "sudoku.jl",
+    "urbanplan.jl"
 ]
 
 @testset "run_examples.jl" begin
