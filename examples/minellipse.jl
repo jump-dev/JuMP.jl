@@ -22,11 +22,10 @@ where W is a PD matrix of weights to choose between different solutions.
 """
 function example_minellipse()
     # We will use three ellipses: two "simple" ones, and a random one.
-    rand_A = rand(2, 2)
     As = [
         [2.0  0.0; 0.0  1.0],
-        [1.0  0.0; 0.0  3.0],
-        (rand_A' * rand_A) * (2 * rand() + 1)
+        [1.0  0.0; 0.0  3.0]  #,
+        # [2.86715 1.60645; 1.60645 1.12639]
     ]
     # We change the weights to see different solutions, if they exist
     weights = [1.0 0.0; 0.0 1.0]

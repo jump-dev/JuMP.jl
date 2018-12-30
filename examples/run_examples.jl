@@ -13,9 +13,12 @@ using Test
 const EXAMPLES = [
     "basic.jl",
     "cannery.jl",
+    "corr_sdp.jl",
     "mindistortion.jl",
     "knapsack.jl",
+    "maxcut_sdp.jl",
     "minellipse.jl",
+    "mle.jl",
     "optcontrol.jl",
     "qcp.jl",
     "rosenbrock.jl"
