@@ -377,7 +377,7 @@ function constraints_string(print_mode, model::Model, sep, eol)
             str *= sep * constraint_string(print_mode, con) * eol
         end
     end
-    if model isa Model && model.nlp_data !== nothing
+    if model.nlp_data !== nothing
         for nl_constraint in model.nlp_data.nlconstr
             str *= sep * nl_constraint_string(model, print_mode, nl_constraint)
             str *= eol
