@@ -202,6 +202,15 @@ end
     end
 end
 
+"""
+    printing_test(ModelType::Type{<:JuMP.AbstractModel},
+                  moi_backend::Bool)
+
+Test printing of models of type `ModelType`. The expected model printing depends
+on `moi_backend` which indicates whether the model is stored in an MOI backend
+or is stored in its JuMP form (i.e. as `AbstractVariable`s,
+`AbstractConstraint`s and `AbstractJuMPScalar` for the objective function).
+"""
 function printing_test(ModelType::Type{<:JuMP.AbstractModel},
                        moi_backend::Bool)
     @testset "VariableRef" begin
