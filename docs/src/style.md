@@ -114,8 +114,10 @@ Bad:
 
 #### Return statements
 
-Use an explicit `return` statement to exit from a function.  If the return from
-a function is nothing, use `return` instead of `return nothing`.
+To avoid situations in which it is unclear whether the author intended to return
+a certain value or not, always use an explicit `return` statement to exit from a
+function. If the return from a function is `nothing`, use `return` instead of
+`return nothing`.
 
 We make an exception for assignment-form one-line functions (`f(x) = 2x`).
 
