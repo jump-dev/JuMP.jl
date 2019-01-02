@@ -4,7 +4,7 @@
 #  file, You can obtain one at http://mozilla.org/MPL/2.0/.
 #############################################################################
 # JuMP
-# An algebraic modeling langauge for Julia
+# An algebraic modeling language for Julia
 # See http://github.com/JuliaOpt/JuMP.jl
 #############################################################################
 # test/nonlinear.jl
