@@ -4,40 +4,40 @@
 #  file, You can obtain one at http://mozilla.org/MPL/2.0/.
 #############################################################################
 # JuMP
-# An algebraic modeling langauge for Julia
+# An algebraic modeling language for Julia
 # See http://github.com/JuliaOpt/JuMP.jl
 #############################################################################
-# qcp.jl
-#
-# A simple quadratically constrained probgram
-# Based on http://www.gurobi.com/documentation/5.5/example-tour/node25
-#############################################################################
 
-using JuMP, Gurobi
+using JuMP, Ipopt, Test
+const MOI = JuMP.MathOptInterface
 
-# Will require either Gurobi.jl, CPLEX.jl, or Mosek.jl to run
-m = Model(with_optimizer(Gurobi.Optimizer))
+"""
+    example_qcp(; verbose = true)
 
-# Need nonnegativity for (rotated) second-order cone
-@variable(m, x)
-@variable(m, y >= 0)
-@variable(m, z >= 0)
+A simple quadratically constrained program based on
+http://www.gurobi.com/documentation/5.5/example-tour/node25
+"""
+function example_qcp(; verbose = true)
+    model = Model(with_optimizer(Ipopt.Optimizer, print_level = 0))
+    @variable(model, x)
+    @variable(model, y >= 0)
+    @variable(model, z >= 0)
+    @objective(model, Max, x)
+    @constraint(model, x + y + z == 1)
+    @constraint(model, x * x + y * y - z * z <= 0)
+    @constraint(model, x * x - y * z <= 0)
+    JuMP.optimize!(model)
+    if verbose
+        print(model)
+        println("Objective value: ", JuMP.objective_value(model))
+        println("x = ", JuMP.value(x))
+        println("y = ", JuMP.value(y))
+    end
+    @test JuMP.termination_status(model) == MOI.LOCALLY_SOLVED
+    @test JuMP.primal_status(model) == MOI.FEASIBLE_POINT
+    @test JuMP.objective_value(model) ≈ 0.32699 atol = 1e-5
+    @test JuMP.value(x) ≈ 0.32699 atol = 1e-5
+    @test JuMP.value(y) ≈ 0.25707 atol = 1e-5
+end
 
-# Maximize x
-@objective(m, Max, x)
-
-# Subject to 1 linear and 2 nonlinear constraints
-@constraint(m, x + y + z == 1)
-@constraint(m, x*x + y*y - z*z <= 0)
-@constraint(m, x*x - y*z <= 0)
-
-# Print the model to check correctness
-print(m)
-
-# Solve with Gurobi
-JuMP.optimize!(m)
-
-# Solution
-println("Objective value: ", JuMP.objective_value(m))
-println("x = ", JuMP.value(x))
-println("y = ", JuMP.value(y))
+example_qcp(verbose = false)

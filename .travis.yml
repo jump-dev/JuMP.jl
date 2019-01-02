@@ -29,3 +29,9 @@ jobs:
         - julia --project=docs -e 'using Pkg; Pkg.instantiate(); Pkg.add(PackageSpec(path=pwd()))'
         - julia --project=docs --color=yes docs/make.jl
       after_success: skip
+    - stage: "Examples"
+      julia: 1.0
+      os: linux
+      script:
+        - julia --project=examples -e 'using Pkg; Pkg.instantiate(); Pkg.add(PackageSpec(path=pwd()))'
+        - julia --project=examples --color=yes examples/run_examples.jl

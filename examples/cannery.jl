@@ -1,79 +1,75 @@
-#############################################################################
 #  Copyright 2017, Iain Dunning, Joey Huchette, Miles Lubin, and contributors
 #  This Source Code Form is subject to the terms of the Mozilla Public
 #  License, v. 2.0. If a copy of the MPL was not distributed with this
 #  file, You can obtain one at http://mozilla.org/MPL/2.0/.
-#
-# JuMP implementation of the cannery problem
-# Dantzig, Linear Programming and Extensions,
-# Princeton University Press, Princeton, NJ, 1963.
-#
-# Author: Louis Luangkesorn
-# Date January 30, 2015
+#############################################################################
+# JuMP
+# An algebraic modeling language for Julia
+# See http://github.com/JuliaOpt/JuMP.jl
 #############################################################################
 
-using JuMP, Clp
+using JuMP, GLPK, Test
 const MOI = JuMP.MathOptInterface
 
-solver = Clp.Optimizer
+"""
+    example_cannery(; verbose = true)
 
-function PrintSolution(is_optimal, plants, markets, ship)
-    println("RESULTS:")
-    if is_optimal
-      for i in 1:length(plants)
-        for j in 1:length(markets)
-          println("  $(plants[i]) $(markets[j]) = $(JuMP.value(ship[i,j]))")
+JuMP implementation of the cannery problem from Dantzig, Linear Programming and
+Extensions, Princeton University Press, Princeton, NJ, 1963.
+
+Author: Louis Luangkesorn
+Date: January 30, 2015
+"""
+function example_cannery(; verbose = true)
+    plants = ["Seattle", "San-Diego"]
+    markets = ["New-York", "Chicago", "Topeka"]
+
+    # Capacity and demand in cases.
+    capacity = [350, 600]
+    demand = [300, 300, 300]
+
+    # Distance in thousand miles.
+    distance = [2.5 1.7 1.8; 2.5 1.8 1.4]
+
+    # Cost per case per thousand miles.
+    freight = 90
+
+    num_plants = length(plants)
+    num_markets = length(markets)
+
+    cannery = Model(with_optimizer(GLPK.Optimizer))
+
+    @variable(cannery, ship[1:num_plants, 1:num_markets] >= 0)
+
+    # Ship no more than plant capacity
+    @constraint(cannery, capacity_con[i in 1:num_plants],
+        sum(ship[i,j] for j in 1:num_markets) <= capacity[i]
+    )
+
+    # Ship at least market demand
+    @constraint(cannery, demand_con[j in 1:num_markets],
+        sum(ship[i,j] for i in 1:num_plants) >= demand[j]
+    )
+
+    # Minimize transporatation cost
+    @objective(cannery, Min, sum(distance[i, j] * freight * ship[i, j]
+        for i in 1:num_plants, j in 1:num_markets)
+    )
+
+    JuMP.optimize!(cannery)
+
+    if verbose
+        println("RESULTS:")
+        for i in 1:num_plants
+            for j in 1:num_markets
+                println("  $(plants[i]) $(markets[j]) = $(JuMP.value(ship[i, j]))")
+            end
         end
-      end
-    else
-      println("The solver did not find an optimal solution.")
     end
+
+    @test JuMP.termination_status(cannery) == MOI.OPTIMAL
+    @test JuMP.primal_status(cannery) == MOI.FEASIBLE_POINT
+    @test JuMP.objective_value(cannery) == 151200.0
 end
 
-function solveCannery(plants, markets, capacity, demand, distance, freight)
-  numplants = length(plants)
-  nummarkets = length(markets)
-  cannery = Model(with_optimizer(solver))
-
-  @variable(cannery, ship[1:numplants, 1:nummarkets] >= 0)
-
-  # Ship no more than plant capacity
-  @constraint(cannery, capacity_con[i in 1:numplants],
-               sum(ship[i,j] for j in 1:nummarkets) <= capacity[i])
-
-  # Ship at least market demand
-  @constraint(cannery, demand_con[j in 1:nummarkets],
-               sum(ship[i,j] for i in 1:numplants) >= demand[j])
-
-  # Minimize transporatation cost
-  @objective(cannery, Min,
-              sum(distance[i,j]* freight * ship[i,j] for i in 1:numplants, j in 1:nummarkets))
-
-  JuMP.optimize!(cannery)
-
-  term_status = JuMP.termination_status(cannery)
-  primal_status = JuMP.primal_status(cannery)
-  is_optimal = term_status == MOI.Optimal
-
-  PrintSolution(is_optimal, plants, markets, ship)
-  return is_optimal
-end
-
-
-# PARAMETERS
-
-plants = ["Seattle", "San-Diego"]
-markets = ["New-York", "Chicago", "Topeka"]
-
-# capacity and demand in cases
-capacitycases = [350, 600]
-demandcases = [300, 300, 300]
-
-# distance in thousand miles
-distanceKmiles = [2.5 1.7 1.8;
-                  2.5 1.8 1.4]
-
-# cost per case per thousand miles
-freightcost = 90
-
-solveCannery(plants, markets, capacitycases, demandcases, distanceKmiles, freightcost)
+example_cannery(verbose = false)

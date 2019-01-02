@@ -1,46 +1,53 @@
+#  Copyright 2017, Iain Dunning, Joey Huchette, Miles Lubin, and contributors
+#  This Source Code Form is subject to the terms of the Mozilla Public
+#  License, v. 2.0. If a copy of the MPL was not distributed with this
+#  file, You can obtain one at http://mozilla.org/MPL/2.0/.
 #############################################################################
 # JuMP
-# An algebraic modeling langauge for Julia
+# An algebraic modeling language for Julia
 # See http://github.com/JuliaOpt/JuMP.jl
 #############################################################################
-# corr_sdp.jl
-#
-# Given three random variables A,B,C and given bounds on two of the three
-# correlation coefficients:
-# -0.2 <= ρ_AB <= -0.1
-#  0.4 <= ρ_BC <=  0.5
-# We can use the following property of the correlations:
-# [  1    ρ_AB  ρ_AC ]
-# [ ρ_AB   1    ρ_BC ]  ≽ 0
-# [ ρ_AC  ρ_BC   1   ]
-# To determine bounds on ρ_AC by solving a SDP
-#############################################################################
 
-using JuMP, CSDP
+using JuMP, SCS, Test
 
-m = Model(with_optimizer(CSDP.Optimizer))
+"""
+    example_corr_sdp()
 
-@variable(m, X[1:3,1:3], PSD)
+Given three random variables A,B,C and given bounds on two of the three
+correlation coefficients:
+    -0.2 <= ρ_AB <= -0.1
+     0.4 <= ρ_BC <=  0.5
 
-# Diagonal is 1s
-@constraint(m, X[1,1] == 1)
-@constraint(m, X[2,2] == 1)
-@constraint(m, X[3,3] == 1)
+We can use the following property of the correlations to determine bounds on
+ρ_AC by solving a SDP:
+    |  1    ρ_AB  ρ_AC |
+    | ρ_AB   1    ρ_BC |  ≽ 0
+    | ρ_AC  ρ_BC   1   |
+"""
+function example_corr_sdp()
+    model = Model(with_optimizer(SCS.Optimizer, verbose = 0))
+    @variable(model, X[1:3, 1:3], PSD)
 
-# Bounds on the known correlations
-@constraint(m, X[1,2] >= -0.2)
-@constraint(m, X[1,2] <= -0.1)
-@constraint(m, X[2,3] >=  0.4)
-@constraint(m, X[2,3] <=  0.5)
+    # Diagonal is 1s
+    @constraint(model, X[1, 1] == 1)
+    @constraint(model, X[2, 2] == 1)
+    @constraint(model, X[3, 3] == 1)
 
-# Find upper bound
-@objective(m, Max, X[1,3])
-JuMP.optimize!(m)
-println("Maximum value is ", JuMP.value.(X)[1,3])
-@assert +0.8719 <= JuMP.value.(X)[1,3] <= +0.8720
+    # Bounds on the known correlations
+    @constraint(model, X[1, 2] >= -0.2)
+    @constraint(model, X[1, 2] <= -0.1)
+    @constraint(model, X[2, 3] >=  0.4)
+    @constraint(model, X[2, 3] <=  0.5)
 
-# Find lower bound
-@objective(m, Min, X[1,3])
-JuMP.optimize!(m)
-println("Minimum value is ", JuMP.value.(X)[1,3])
-@assert -0.9779 >= JuMP.value.(X)[1,3] >= -0.9799
+    # Find upper bound
+    @objective(model, Max, X[1, 3])
+    JuMP.optimize!(model)
+    @test JuMP.value(X[1, 3]) ≈ 0.87195 atol = 1e-4
+
+    # Find lower bound
+    @objective(model, Min, X[1, 3])
+    JuMP.optimize!(model)
+    @test JuMP.value(X[1, 3]) ≈ -0.978 atol = 1e-3
+end
+
+example_corr_sdp()
