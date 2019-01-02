@@ -94,6 +94,10 @@ Breaking changes:
   for consistency with JuMP's new
   [style recommendations](http://www.juliaopt.org/JuMP.jl/dev/style/).
 
+- The column generation syntax in `@variable` has been removed (i.e., the
+  `objective`, `coefficients`, and `inconstraints` keyword arguments). Support 
+  for column generation will be re-introduced in a future release.
+
 - We rely on broadcasting syntax to apply accessors to collections of
   variables, e.g., `value.(x)` instead of `getvalue(x)` for collections. (Use
   `value(x)` when `x` is a scalar object.)
