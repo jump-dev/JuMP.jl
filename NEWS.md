@@ -149,6 +149,9 @@ release (0.19.x or later):
 
 - We do not yet have an implementation of solver-specific callbacks.
 
+- The column generation syntax in `@variable` has been removed (i.e., the
+  `objective`, `coefficients`, and `inconstraints` keyword arguments). Support 
+  for column generation will be re-introduced in a future release.
 
 Version 0.18.5 (December 1, 2018)
 ---------------------------------
