@@ -163,13 +163,7 @@ function Base.show(io::IO, model::AbstractModel)
     println(io, "Variable", plural(num_variables(model)), ": ",
             num_variables(model))
     if sense != MOI.FEASIBILITY_SENSE
-        nlobj = nlp_objective_function(model)
-        if nlobj === nothing
-            println(io, "Objective function type: ",
-                    objective_function_type(model))
-        else
-            println(io, "Objective function type: Nonlinear")
-        end
+        show_objective_function_summary(io, model)
     end
     show_constraints_summary(io, model)
     show_backend_summary(io, model)
@@ -216,12 +210,7 @@ function model_string(print_mode, model::AbstractModel)
             str *= "\\quad"
         end
         str *= sep
-        nlobj = nlp_objective_function(model)
-        if nlobj === nothing
-            str *= function_string(print_mode, objective_function(model))
-        else
-            str *= nl_expr_string(model, print_mode, nlobj)
-        end
+        str *= objective_function_string(print_mode, model)
     end
     str *= eol
     str *= ijl ? "\\text{Subject to} \\quad" : "Subject to" * eol
@@ -230,6 +219,24 @@ function model_string(print_mode, model::AbstractModel)
         str = "\\begin{alignat*}{1}" * str * "\\end{alignat*}\n"
     end
     return str
+end
+
+function show_objective_function_summary(io::IO, model::Model)
+    nlobj = nlp_objective_function(model)
+    print(io, "Objective function type: ")
+    if nlobj === nothing
+        println(io, objective_function_type(model))
+    else
+        println(io, "Nonlinear")
+    end
+end
+function objective_function_string(print_mode, model::Model)
+   nlobj = nlp_objective_function(model)
+   if nlobj === nothing
+       return function_string(print_mode, objective_function(model))
+   else
+       return nl_expr_string(model, print_mode, nlobj)
+   end
 end
 
 #------------------------------------------------------------------------
