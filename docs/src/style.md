@@ -112,6 +112,39 @@ Bad:
 2(x + 1)
 ```
 
+#### Return statements
+
+To avoid situations in which it is unclear whether the author intended to return
+a certain value or not, always use an explicit `return` statement to exit from a
+function. If the return from a function is `nothing`, use `return` instead of
+`return nothing`.
+
+We make an exception for assignment-form one-line functions (`f(x) = 2x`).
+
+Good:
+```julia
+foo(x) = 2x  # Acceptable if one line
+function foo(x)
+    return 2x
+end
+function foo(x)
+    x[1] += 1
+    return
+end
+```
+
+Bad:
+```julia
+function foo(x)
+    2x
+end
+function foo(x)
+    x[1] += 1
+    return nothing
+end
+```
+
+
 #### TODO: Line breaks
 
 ### Syntax
