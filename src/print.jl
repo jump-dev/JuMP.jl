@@ -148,6 +148,9 @@ plural(n) = (n==1 ? "" : "s")
 #------------------------------------------------------------------------
 ## Model
 #------------------------------------------------------------------------
+
+# An `AbstractModel` subtype should implement `show_objective_function_summary`,
+# `show_constraints_summary` and `show_backend_summary` for this method to work.
 function Base.show(io::IO, model::AbstractModel)
     println(io, "A JuMP Model")
     sense = objective_sense(model)
@@ -192,6 +195,9 @@ end
 function Base.show(io::IO, ::MIME"text/latex", model::AbstractModel)
     print(io, wrap_in_math_mode(model_string(IJuliaMode, model)))
 end
+
+# An `AbstractModel` subtype should implement `objective_function_string` and
+# `constraints_string` for this method to work.
 function model_string(print_mode, model::AbstractModel)
     ijl = print_mode == IJuliaMode
     sep = ijl ? " & " : " "
