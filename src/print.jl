@@ -217,7 +217,7 @@ function model_string(print_mode, model::AbstractModel)
         end
         str *= sep
         nlobj = nlp_objective_function(model)
-        if nlobj isa Nothing
+        if nlobj === nothing
             str *= function_string(print_mode, objective_function(model))
         else
             str *= nl_expr_string(model, print_mode, nlobj)
