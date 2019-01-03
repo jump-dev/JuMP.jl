@@ -1057,6 +1057,14 @@ var documenterSearchIndex = {"docs": [
 },
 
 {
+    "location": "style/#Return-statements-1",
+    "page": "Style Guide",
+    "title": "Return statements",
+    "category": "section",
+    "text": "To avoid situations in which it is unclear whether the author intended to return a certain value or not, always use an explicit return statement to exit from a function. If the return from a function is nothing, use return instead of return nothing.We make an exception for assignment-form one-line functions (f(x) = 2x).Good:foo(x) = 2x  # Acceptable if one line\nfunction foo(x)\n    return 2x\nend\nfunction foo(x)\n    x[1] += 1\n    return\nendBad:function foo(x)\n    2x\nend\nfunction foo(x)\n    x[1] += 1\n    return nothing\nend"
+},
+
+{
     "location": "style/#TODO:-Line-breaks-1",
     "page": "Style Guide",
     "title": "TODO: Line breaks",
