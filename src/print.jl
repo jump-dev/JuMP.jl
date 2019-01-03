@@ -221,6 +221,11 @@ function model_string(print_mode, model::AbstractModel)
     return str
 end
 
+"""
+    show_objective_function_summary(io::IO, model::AbstractModel)
+
+Write to `io` a summary of the objective function type.
+"""
 function show_objective_function_summary(io::IO, model::Model)
     nlobj = nlp_objective_function(model)
     print(io, "Objective function type: ")
@@ -230,6 +235,12 @@ function show_objective_function_summary(io::IO, model::Model)
         println(io, "Nonlinear")
     end
 end
+
+"""
+    objective_function_string(print_mode, model::AbstractModel)::String
+
+Return a `String` describing the objective function of the model.
+"""
 function objective_function_string(print_mode, model::Model)
    nlobj = nlp_objective_function(model)
    if nlobj === nothing
@@ -362,7 +373,7 @@ end
 #------------------------------------------------------------------------
 
 """
-    show_constraints_summary(io::IO, model::Model)
+    show_constraints_summary(io::IO, model::AbstractModel)
 
 Write to `io` a summary of the number of constraints.
 """
@@ -379,9 +390,9 @@ function show_constraints_summary(io::IO, model::Model)
 end
 
 """
-    constraints_string(print_mode, model::Model, sep, eol)::String
+    constraints_string(print_mode, model::AbstractModel, sep, eol)::String
 
-Return a `String` containing the constraints of the model, each on a line
+Return a `String` describing the constraints of the model, each on a line
 starting with `sep` and ending with `eol` (which already contains `\n`).
 """
 function constraints_string(print_mode, model::Model, sep, eol)
