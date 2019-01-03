@@ -164,7 +164,7 @@ function Base.show(io::IO, model::AbstractModel)
             num_variables(model))
     if sense != MOI.FEASIBILITY_SENSE
         nlobj = nlp_objective_function(model)
-        if nlobj isa Nothing
+        if nlobj === nothing
             println(io, "Objective function type: ",
                     objective_function_type(model))
         else

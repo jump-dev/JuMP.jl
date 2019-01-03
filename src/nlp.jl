@@ -78,7 +78,7 @@ Returns the nonlinear objective function or `nothing` if no nonlinear objective
 function is set.
 """
 function nlp_objective_function(model::Model)
-    if model.nlp_data isa Nothing
+    if model.nlp_data === nothing
         return nothing
     else
         return model.nlp_data.nlobj
