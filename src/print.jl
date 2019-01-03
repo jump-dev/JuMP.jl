@@ -354,6 +354,11 @@ end
 ## Constraints
 #------------------------------------------------------------------------
 
+"""
+    show_constraints_summary(io::IO, model::Model)
+
+Write to `io` a summary of the number of constraints.
+"""
 function show_constraints_summary(io::IO, model::Model)
     for (F, S) in MOI.get(model, MOI.ListOfConstraints())
         num_constraints = MOI.get(model, MOI.NumberOfConstraints{F, S}())
@@ -366,6 +371,12 @@ function show_constraints_summary(io::IO, model::Model)
     end
 end
 
+"""
+    constraints_string(print_mode, model::Model, sep, eol)::String
+
+Return a `String` containing the constraints of the model, each on a line
+starting with `sep` and ending with `eol` (which already contains `\n`).
+"""
 function constraints_string(print_mode, model::Model, sep, eol)
     str = ""
     for (F, S) in MOI.get(model, MOI.ListOfConstraints())
