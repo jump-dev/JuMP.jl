@@ -153,6 +153,9 @@ release (0.19.x or later):
   `objective`, `coefficients`, and `inconstraints` keyword arguments). Support 
   for column generation will be re-introduced in a future release.
 
+- The ability to solve the continuous relaxation (i.e. via 
+  `solve(model; relaxation = true)`) is not yet reimplemented ([issue](https://github.com/JuliaOpt/JuMP.jl/issues/1611)).
+
 Version 0.18.5 (December 1, 2018)
 ---------------------------------
 
