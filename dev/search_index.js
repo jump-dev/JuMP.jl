@@ -45,7 +45,7 @@ var documenterSearchIndex = {"docs": [
     "page": "Installation Guide",
     "title": "Installation Guide",
     "category": "section",
-    "text": "JuMP is a package for Julia. To use JuMP, first download and install Julia or open up a remote notebook at JuliaBox or similar services.JuMP is compatible with both Julia 1.0 and 0.6. The compatibility with 0.6 is intended to facilitate upgrading from previous JuMP and Julia releases. The following instructions assume Julia 1.0.From Julia, JuMP is installed by using the built-in package manager:import Pkg\nPkg.add(\"JuMP\")note: Note\nThe installation instructions above assume that JuMP 0.19 has already been released. Until that time, see the JuMP README for instructions on installing a development release that\'s compatible with Julia 1.0."
+    "text": "JuMP is a package for Julia. To use JuMP, first download and install Julia or open up a remote notebook at JuliaBox or similar services.This version of JuMP is compatible with Julia 0.7 and later. The following instructions are based on Julia 1.0.From Julia, JuMP is installed by using the built-in package manager:import Pkg\nPkg.add(\"JuMP\")note: Note\nThe installation instructions above assume that JuMP 0.19 has already been released. Until that time, see the JuMP README for instructions on installing a development release that\'s compatible with Julia 1.0."
 },
 
 {
