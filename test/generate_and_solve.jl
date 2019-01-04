@@ -64,6 +64,7 @@
         @test JuMP.value(x) == 1.0
         @test JuMP.value(y) == 0.0
         @test JuMP.value(x + y) == 1.0
+        @test JuMP.value(c) == 1.0
         @test JuMP.objective_value(m) == -1.0
 
         @test JuMP.dual_status(m) == MOI.FEASIBLE_POINT
@@ -335,6 +336,12 @@
 
         @test JuMP.has_values(m)
         @test JuMP.value.(x) == [1.0 2.0; 2.0 4.0]
+        @test JuMP.value(var_psd) isa Symmetric
+        @test JuMP.value(var_psd) == [1.0 2.0; 2.0 4.0]
+        @test JuMP.value(sym_psd) isa Symmetric
+        @test JuMP.value(sym_psd) == [0.0 2.0; 2.0 3.0]
+        @test JuMP.value(con_psd) isa Matrix
+        @test JuMP.value(con_psd) == [0.0 2.0; 2.0 3.0]
 
         @test JuMP.has_duals(m)
         @test JuMP.dual(var_psd) isa Symmetric
