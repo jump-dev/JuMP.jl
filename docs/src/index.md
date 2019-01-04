@@ -99,6 +99,7 @@ Pages = [
     "constraints.md",
     "containers.md",
     "solvers.md",
+    "solutions.md",
     "nlp.md",
     "style.md",
     "extensions.md",
