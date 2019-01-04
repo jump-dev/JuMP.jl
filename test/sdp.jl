@@ -770,4 +770,32 @@ ispsd(x::JuMP.JuMPArray) = ispsd(x.innerArray)
         @test norm(getvalue(X)) < 1e-5
         @test isapprox(getdual(X), Matrix(1.0I, 3, 3), atol=1e-5)
     end
+    
+    @testset "Objective constants with $solver" for solver in sdp_solvers
+        # Test handling of constants in the objective. See JuMP issue #1390.
+        @testset "Minimize" begin
+            model = Model(solver = solver)
+            @variable(model, Xs1[1:3, 1:3], SDP)
+            @variable(model, Xs2[1:1, 1:1], SDP)
+            @variable(model, Xs3[1:1, 1:1], SDP)
+            @constraint(model, Xs1[1, 1] == 1)
+            @constraint(model, Xs2[1, 1] + Xs1[2, 2] + Xs1[3, 3] == 4)
+            @constraint(model, Xs3[1, 1] - Xs1[2, 1] - Xs1[3, 1] == 0)
+            @objective(model, Min, -Xs1[1, 3] + 0.5)
+            @test solve(model) == :Optimal
+            @test isapprox(getobjectivevalue(model), -1.5000, atol=1e-3)
+        end
+        @testset "Maximize" begin
+            model = Model(solver = solver)
+            @variable(model, Xs1[1:3, 1:3], SDP)
+            @variable(model, Xs2[1:1, 1:1], SDP)
+            @variable(model, Xs3[1:1, 1:1], SDP)
+            @constraint(model, Xs1[1, 1] == 1)
+            @constraint(model, Xs2[1, 1] + Xs1[2, 2] + Xs1[3, 3] == 4)
+            @constraint(model, Xs3[1, 1] - Xs1[2, 1] - Xs1[3, 1] == 0)
+            @objective(model, Max, -Xs1[1, 3] + 0.5)
+            @test solve(model) == :Optimal
+            @test isapprox(getobjectivevalue(model), 1.9142, atol=1e-3)
+        end
+    end
 end
