@@ -115,6 +115,7 @@ julia> x = @variable(model)
 
 julia> JuMP.owner_model(x) === model
 true
+```
 """
 owner_model(v::AbstractVariableRef) = v.model
 
