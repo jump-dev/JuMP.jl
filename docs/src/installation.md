@@ -46,7 +46,7 @@ is often more complex. We list below the currently available solvers.
 | [CSDP](https://projects.coin-or.org/Csdp/)                                     | [CSDP.jl](https://github.com/JuliaOpt/CSDP.jl)                                   | EPL     | LP, SDP                     |
 | [ECOS](https://github.com/ifa-ethz/ecos)                                       | [ECOS.jl](https://github.com/JuliaOpt/ECOS.jl)                                   | GPL     | LP, SOCP                    |
 | [FICO Xpress](http://www.fico.com/en/products/fico-xpress-optimization-suite)  | [Xpress.jl](https://github.com/JuliaOpt/Xpress.jl)                               | Comm.   | LP, MILP, SOCP, MISOCP      |
-| [GLPK](http://www.gnu.org/software/glpk/)                                      | [GLPK](https://github.com/JuliaOpt/GLPK.jl)                                      | GPL     | LP, MILP                    |
+| [GLPK](http://www.gnu.org/software/glpk/)                                      | [GLPK.jl](https://github.com/JuliaOpt/GLPK.jl)                                   | GPL     | LP, MILP                    |
 | [Gurobi](http://gurobi.com)                                                    | [Gurobi.jl](https://github.com/JuliaOpt/Gurobi.jl)                               | Comm.   | LP, MILP, SOCP, MISOCP      |
 | [Ipopt](https://projects.coin-or.org/Ipopt)                                    | [Ipopt.jl](https://github.com/JuliaOpt/Ipopt.jl)                                 | EPL     | LP, QP, NLP                 |
 | [MOSEK](http://www.mosek.com/)                                                 | [MathOptInterfaceMosek.jl](https://github.com/JuliaOpt/MathOptInterfaceMosek.jl) | Comm.   | LP, MILP, SOCP, MISOCP, SDP |
