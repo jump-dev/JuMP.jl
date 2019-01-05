@@ -498,7 +498,8 @@ Use `has_dual` to check if a result exists before asking for values.
 See also [`shadow_price`](@ref).
 """
 function dual(cr::ConstraintRef{Model, <:MOICON})
-    reshape(MOI.get(cr.model, MOI.ConstraintDual(), cr), dual_shape(cr.shape))
+    return reshape(MOI.get(cr.model, MOI.ConstraintDual(), cr),
+                   dual_shape(cr.shape))
 end
 
 """
@@ -509,11 +510,11 @@ Return the value of the attribute `attr` from model's MOI backend.
 MOI.get(m::Model, attr::MOI.AbstractModelAttribute) = MOI.get(backend(m), attr)
 function MOI.get(m::Model, attr::MOI.AbstractVariableAttribute, v::VariableRef)
     @assert m === owner_model(v) # TODO: Improve the error message.
-    MOI.get(backend(m), attr, index(v))
+    return MOI.get(backend(m), attr, index(v))
 end
 function MOI.get(m::Model, attr::MOI.AbstractConstraintAttribute, cr::ConstraintRef)
     @assert m === cr.model # TODO: Improve the error message.
-    MOI.get(backend(m), attr, index(cr))
+    return MOI.get(backend(m), attr, index(cr))
 end
 
 MOI.set(m::Model, attr::MOI.AbstractModelAttribute, value) = MOI.set(backend(m), attr, value)
