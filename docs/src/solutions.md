@@ -13,18 +13,18 @@ JuMP follows closely the concepts defined in [MathOptInterface (MOI)](https://gi
 to answer user questions about a finished call to `JuMP.optimize!(model)`.
 There are 4 main steps in querying a solution:
 
-* Firstly, we obtain the [`termination_status`](@ref)  which will tell the user the reason why
+* Firstly, we obtain the [`termination_status`](@ref) which will tell the user the reason why
 optimization stopped. An optimal solution could have been found, or the problem
 was proven to be infeasible, or the solver could not converge or JuMP got some
 solver specific error etc.
-* Secondly, we should figure out the [`primal_status`](@ref)  and [`dual_status`](@ref) , which will tell us what
+* Secondly, we should figure out the [`primal_status`](@ref) and [`dual_status`](@ref), which will tell us what
 kind of result do we have for our primal and dual solution. Maybe we have an
 optimal primal-dual pair, or maybe just primal variable, or nothing at all,
 or some infesability cetificate or even more.
 * The third step is more straight forward, we should figure out if there really
-is something available to be queryed in the primal solution with [`has_values`](@ref) 
-and in the dual soltion with [`has_duals`](@ref) .
-* Finally, we can [`JuMP.value`](@ref)  and [`JuMP.dual`](@ref)  to obtain primal and dual values of
+is something available to be queryed in the primal solution with [`has_values`](@ref)
+and in the dual soltion with [`has_duals`](@ref).
+* Finally, we can [`JuMP.value`](@ref) and [`JuMP.dual`](@ref) to obtain primal and dual values of
 the optimization variables and constraints.
 
 ## Termination Statuses
@@ -35,8 +35,16 @@ The possible reason why the optimization of `model` was finished is given by the
 JuMP.termination_status(model)
 ```
 
-This function will return an instance of the `MOI.TerminationStatus` `enum` with one of
-the following values:
+This function will return an instance of the `MOI.TerminationStatus` `enum`. All the possible outcome can be seen by calling help:
+
+```julia
+?MOI.TerminationStatus
+```
+
+```@docs
+JuMP.termination_status
+MOI.TerminationStatus
+```
 
 TODO
 Do we add an exautive table here?
@@ -54,8 +62,17 @@ JuMP.primal_status(model)
 JuMP.dual_status(model)
 ```
 
-Both will return an instance of the `MOI.ResultStatusCode` `enum` with one of
-the following values:
+Both will return an instance of the `MOI.ResultStatusCode` `enum`. All the possible outcome can be seen by calling help:
+
+```julia
+?MOI.ResultStatusCode
+```
+
+```@docs
+JuMP.primal_status
+JuMP.dual_status
+MOI.ResultStatusCode
+```
 
 TODO
 same as above
@@ -65,10 +82,19 @@ do we add the tables from MOI? (they are very useful)
 
 ## Obtaining solutions
 
-Solution are typically queried with the functions [`JuMP.value`](@ref)  and [`JuMP.dual`](@ref) .
-These functions should be applied to references: [`VariableRef`](@ref)  or a [`ConstraintRef`](@ref) .
+Solution are typically queried with the functions [`JuMP.value`](@ref) and [`JuMP.dual`](@ref).
+These functions should be applied to references: [`VariableRef`](@ref) or a [`ConstraintRef`](@ref).
 Depending on the type of variable and constraint associated with the reference the
 return of the function, it can be a scalar or an array.
 
-If we desire to obtain the [`JuMP.value`](@ref)  of a vector of [`VariableRef`](@ref)  we should use
-the broadcast syntax.
+!!! warn
+    If we desire to obtain the [`JuMP.value`](@ref)/[`JuMP.dual`](@ref)  of a container of [`VariableRef`](@ref)/[`ConstraintRef`](@ref)  we should use
+    the broadcast syntax.
+
+```@docs
+JuMP.has_values
+JuMP.value
+JuMP.has_duals
+JuMP.dual
+JuMP.shadow_price
+```
