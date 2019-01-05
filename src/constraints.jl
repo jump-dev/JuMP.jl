@@ -373,6 +373,29 @@ function set_coefficient(constraint::ConstraintRef{Model, MOICON{F, S}},
 end
 
 """
+    value(cref::ConstraintRef)
+
+Get the primal value of this constraint in the result returned by a solver. That
+is, if `cref` is the reference of a constraint `func`-in-`set`, it returns the
+value of `func` evaluated at the value of the variables (given by
+[`value(::VariableRef)`](@ref)).
+Use [`has_values`](@ref) to check if a result exists before asking for values.
+
+## Note
+
+For scalar contraints, the constant is moved to the `set` so it is not taken
+into account in the primal value of the constraint. For instance, the constraint
+`@constraint(model, 2x + 3y + 1 == 5)` is transformed into
+`2x + 3y`-in-`MOI.EqualTo(4)` so the value returned by this function is the
+evaluation of `2x + 3y`.
+```
+"""
+function value(cref::ConstraintRef{Model, <:MOICON})
+    return reshape(MOI.get(cref.model, MOI.ConstraintPrimal(), cref),
+                   cref.shape)
+end
+
+"""
     shadow_price(constraint::ConstraintRef)
 
 The change in the objective from an infinitesimal relaxation of the constraint.
