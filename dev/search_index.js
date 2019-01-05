@@ -221,7 +221,7 @@ var documenterSearchIndex = {"docs": [
     "page": "Variables",
     "title": "Variable names",
     "category": "section",
-    "text": "The name, i.e. the value of the MOI.VariableName attribute, of a variable can be obtained by JuMP.name(::JuMP.VariableRef) and set by JuMP.set_name(::JuMP.VariableRef, ::String).name(::JuMP.VariableRef)\nset_name(::JuMP.VariableRef, ::String).The variable can also be retrieved from its name using JuMP.variable_by_name.variable_by_name"
+    "text": "The name, i.e. the value of the MOI.VariableName attribute, of a variable can be obtained by JuMP.name(::JuMP.VariableRef) and set by JuMP.set_name(::JuMP.VariableRef, ::String).name(::JuMP.VariableRef)\nset_name(::JuMP.VariableRef, ::String)The variable can also be retrieved from its name using JuMP.variable_by_name.variable_by_name"
 },
 
 {
@@ -421,7 +421,7 @@ var documenterSearchIndex = {"docs": [
     "page": "Objective",
     "title": "JuMP.objective_function_type",
     "category": "function",
-    "text": "\"     objectivefunctiontype(model::Model)::AbstractJuMPScalar\n\nReturn the type of the objective function.\n\n\n\n\n\n"
+    "text": "objective_function_type(model::Model)::AbstractJuMPScalar\n\nReturn the type of the objective function.\n\n\n\n\n\n"
 },
 
 {
