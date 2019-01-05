@@ -165,6 +165,9 @@ mutable struct Model <: AbstractModel
     # In MANUAL and AUTOMATIC modes, CachingOptimizer.
     # In DIRECT mode, will hold an AbstractOptimizer.
     moi_backend::MOI.AbstractOptimizer
+    # List of additional bridges to add in addition to the ones added in
+    # `MOI.Bridges.fullbridgeoptimizer`.
+    bridge_types::Vector{Any}
     # Hook into a solve call...function of the form f(m::Model; kwargs...),
     # where kwargs get passed along to subsequent solve calls.
     optimize_hook
@@ -256,6 +259,7 @@ function direct_model(backend::MOI.ModelLike)
                  Dict{MOIVAR, MOIINT}(),
                  Dict{MOIVAR, MOIBIN}(),
                  backend,
+                 DataType[],
                  nothing,
                  nothing,
                  Dict{Symbol, Any}(),
@@ -350,6 +354,39 @@ bridge_constraints(model::Model) = moi_bridge_constraints(backend(model))
 # The type of backend(model) is unknown so we directly redirect to another
 # function.
 
+function moi_add_bridge(model::Nothing,
+                        BridgeType::Type{<:MOI.Bridges.AbstractBridge})
+    # No optimizer is attached, the bridge will be added when one is attached
+end
+function moi_add_bridge(model::MOI.ModelLike,
+                        BridgeType::Type{<:MOI.Bridges.AbstractBridge})
+    error("Cannot add bridge if `bridge_constraints` was set to `false` in the",
+          " `Model` constructor.")
+end
+function moi_add_bridge(bridge_opt::MOI.Bridges.LazyBridgeOptimizer,
+                        BridgeType::Type{<:MOI.Bridges.AbstractBridge})
+    MOI.Bridges.add_bridge(bridge_opt, BridgeType{Float64})
+end
+function moi_add_bridge(caching_opt::MOIU.CachingOptimizer,
+                        BridgeType::Type{<:MOI.Bridges.AbstractBridge})
+    moi_add_bridge(caching_opt.optimizer, BridgeType)
+end
+
+"""
+     add_bridge(model::Model,
+                BridgeType::Type{<:MOI.Bridges.AbstractBridge})
+
+Add `BridgeType` to the list of bridges that can be used to transform
+unsupported constraints into an equivalent formulation using only constraints
+supported by the optimizer.
+"""
+function add_bridge(model::Model,
+                    BridgeType::Type{<:MOI.Bridges.AbstractBridge})
+    push!(model.bridge_types, BridgeType)
+    moi_add_bridge(JuMP.backend(model), BridgeType)
+end
+# The type of backend(model) is unknown so we directly redirect to another
+# function.
 
 """
     num_variables(model::Model)

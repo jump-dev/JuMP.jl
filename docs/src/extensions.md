@@ -12,6 +12,10 @@ How to extend JuMP's macros and how to avoid doing this.
 
 TODO: Create new MOI function/sets, how to use it in JuMP, create new bridge
 
+```@docs
+add_bridge
+```
+
 ## Extending JuMP macros
 
 In order to provide a convenient syntax for the user to create variables,
