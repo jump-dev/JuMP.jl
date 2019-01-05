@@ -572,4 +572,14 @@
         @test JuMP.value(ex2, JuMP.start_value) ≈ sin(2.0) + 4.0
         @test JuMP.value(ex3, JuMP.start_value) ≈ 2.5 * sin(2.0) + 2.0
     end
+
+    @testset "Hessians disabled with user-defined multivariate functions" begin
+        model = Model()
+        my_f(x, y) = (x - 1)^2 + (y - 2)^2
+        JuMP.register(model, :my_f, 2, my_f, autodiff = true)
+        @variable(model, x[1:2])
+        @NLobjective(model, Min, my_f(x[1], x[2]))
+        evaluator = JuMP.NLPEvaluator(model)
+        @test !(:Hess in MOI.features_available(evaluator))
+    end
 end
