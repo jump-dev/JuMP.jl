@@ -70,7 +70,7 @@ Common status situations are described in [`MathOptInterface`'s docs](http://www
 Solution are typically queried with the functions [`JuMP.value`](@ref) and [`JuMP.dual`](@ref).
 These functions should be applied to references: [`VariableRef`](@ref) or a [`ConstraintRef`](@ref).
 Depending on the type of variable and constraint associated with the reference the
-return of the function can be a scalar, an array or an even more complex container (see [`AbstractShape`](@ref) and [`dual_shape`](@ref)).
+return of the function is typically a scalar or an array but it can be an arbitrary object (see [`AbstractShape`](@ref) and [`dual_shape`](@ref)).
 
 !!! warn
     If we desire to obtain the [`JuMP.value`](@ref)/[`JuMP.dual`](@ref) from a container of [`VariableRef`](@ref)/[`ConstraintRef`](@ref)  we should use
