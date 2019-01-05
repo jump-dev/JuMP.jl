@@ -29,10 +29,10 @@ JuMP.Containers.generate_container
 In the [`@variable`](@ref) (resp. [`@constraint`](@ref)) macro, containers of
 variables (resp. constraints) can be created the following syntax
 
-* `name[index_set_1,index_set_2,...,index_set_n]` creating an `n`-dimensional
+* `name[index_set_1, index_set_2, ..., index_set_n]` creating an `n`-dimensional
   container of name `name`; or
-* `[index_set_1,index_set_2,...,index_set_n]` creating an *anonymous* (see
-  [Names](@ref)) `n`-dimensional container.
+* `[index_set_1, index_set_2, ..., index_set_n]` creating an *anonymous*
+  `n`-dimensional container.
 
 Each expression `index_set_i` can either be
 
