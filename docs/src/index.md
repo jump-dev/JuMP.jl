@@ -80,7 +80,7 @@ JuMP's features include:
         it can be embedded in commercial software that complies with the terms
         of the license.
 
-While neither Julia nor JuMP have reached version 1.0 yet, the releases are
+Although JuMP has not reached version 1.0 yet, the releases are
 stable enough for everyday use and are being used in a number of research
 projects and neat applications by a growing community of users who are early
 adopters. JuMP remains under active development, and we welcome your feedback,
