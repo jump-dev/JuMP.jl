@@ -1,3 +1,10 @@
+```@meta
+CurrentModule = JuMP
+DocTestSetup = quote
+    using JuMP
+end
+```
+
 Querying Solutions
 ==================
 
