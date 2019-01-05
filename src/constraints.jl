@@ -391,7 +391,8 @@ evaluation of `2x + 3y`.
 ```
 """
 function value(cref::ConstraintRef{Model, <:MOICON})
-    reshape(MOI.get(cref.model, MOI.ConstraintPrimal(), cref), cref.shape)
+    return reshape(MOI.get(cref.model, MOI.ConstraintPrimal(), cref),
+                   cref.shape)
 end
 
 """
