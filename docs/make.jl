@@ -10,7 +10,7 @@ using Documenter, JuMP
 makedocs(
     sitename = "JuMP",
     # See https://github.com/JuliaDocs/Documenter.jl/issues/868
-    html_prettyurls = get(ENV, "CI", nothing) == "true",
+    format = Documenter.HTML(prettyurls = get(ENV, "CI", nothing) == "true"),
     # See https://github.com/JuliaOpt/JuMP.jl/issues/1576
     strict = true,
     authors = "Miles Lubin, Iain Dunning, and Joey Huchette",
