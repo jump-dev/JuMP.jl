@@ -30,13 +30,11 @@ the optimization variables and constraints.
 ## Termination Statuses
 
 The possible reason why the optimization of `model` was finished is given by the call
-
 ```julia
 JuMP.termination_status(model)
 ```
 
 This function will return an instance of the `MOI.TerminationStatus` `enum`. All the possible outcome can be seen by calling help:
-
 ```julia
 ?MOI.TerminationStatus
 ```
@@ -46,24 +44,15 @@ JuMP.termination_status
 MOI.TerminationStatus
 ```
 
-TODO
-Do we add an exautive table here?
-We can check the validity of the statuses with doctests
-but how do we make sure the list is complete?
-
-Or we put docstrings here?
-
 ## Primal and Dual Statuses
 
 We can obtain these statuses by callin the following functions on our model `model`:
-
 ```julia
 JuMP.primal_status(model)
 JuMP.dual_status(model)
 ```
 
 Both will return an instance of the `MOI.ResultStatusCode` `enum`. All the possible outcome can be seen by calling help:
-
 ```julia
 ?MOI.ResultStatusCode
 ```
@@ -74,21 +63,17 @@ JuMP.dual_status
 MOI.ResultStatusCode
 ```
 
-TODO
-same as above
-
-TODO
-do we add the tables from MOI? (they are very useful)
+Common status situations are described in [`MathOptInterface`'s docs](http://www.juliaopt.org/MathOptInterface.jl/stable/apimanual/#Common-status-situations-1).
 
 ## Obtaining solutions
 
 Solution are typically queried with the functions [`JuMP.value`](@ref) and [`JuMP.dual`](@ref).
 These functions should be applied to references: [`VariableRef`](@ref) or a [`ConstraintRef`](@ref).
 Depending on the type of variable and constraint associated with the reference the
-return of the function, it can be a scalar or an array.
+return of the function can be a scalar, an array or an even more complex container (see [`AbstractShape`](@ref) and [`dual_shape`](@ref)).
 
 !!! warn
-    If we desire to obtain the [`JuMP.value`](@ref)/[`JuMP.dual`](@ref)  of a container of [`VariableRef`](@ref)/[`ConstraintRef`](@ref)  we should use
+    If we desire to obtain the [`JuMP.value`](@ref)/[`JuMP.dual`](@ref) from a container of [`VariableRef`](@ref)/[`ConstraintRef`](@ref)  we should use
     the broadcast syntax.
 
 ```@docs
