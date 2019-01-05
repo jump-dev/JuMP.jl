@@ -475,6 +475,8 @@ end
 
 # Test printing of models of type `ModelType` for which the model is stored in
 # its JuMP form, e.g., as `AbstractVariable`s and `AbstractConstraint`s.
+# This is used by `JuMPExtension` but can also be used by external packages such
+# as `StructJuMP`, see https://github.com/JuliaOpt/JuMP.jl/issues/1711
 function model_extension_printing_test(ModelType::Type{<:JuMP.AbstractModel})
     @testset "Model" begin
         repl(s) = JuMP.math_symbol(REPLMode, s)
