@@ -255,7 +255,6 @@ be obtained by [`JuMP.name(::JuMP.VariableRef)`](@ref) and set by
 name(::JuMP.VariableRef)
 set_name(::JuMP.VariableRef, ::String)
 ```
-.
 
 The variable can also be retrieved from its name using
 [`JuMP.variable_by_name`](@ref).
