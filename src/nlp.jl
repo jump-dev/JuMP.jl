@@ -297,21 +297,6 @@ end
 function MOI.initialize(d::NLPEvaluator, requested_features::Vector{Symbol})
     nldata::NLPData = d.m.nlp_data
 
-    # Check if we have any user-defined operators, in which case we need to
-    # disable hessians. The result of features_available depends on this.
-    has_nlobj = nldata.nlobj !== nothing
-    has_user_mv_operator = false
-    for nlexpr in nldata.nlexpr
-        has_user_mv_operator |= Derivatives.has_user_multivariate_operators(nlexpr.nd)
-    end
-    if has_nlobj
-        has_user_mv_operator |= Derivatives.has_user_multivariate_operators(nldata.nlobj.nd)
-    end
-    for nlconstr in nldata.nlconstr
-        has_user_mv_operator |= Derivatives.has_user_multivariate_operators(nlconstr.terms.nd)
-    end
-    d.disable_2ndorder = has_user_mv_operator
-
     for feat in requested_features
         if !(feat in MOI.features_available(d))
             error("Unsupported feature $feat")
@@ -452,11 +437,34 @@ function MOI.initialize(d::NLPEvaluator, requested_features::Vector{Symbol})
     nothing
 end
 
+function recompute_disable_2ndorder(evaluator::NLPEvaluator)
+    # Check if we have any user-defined operators, in which case we need to
+    # disable hessians. The result of features_available depends on this.
+    nldata::NLPData = evaluator.m.nlp_data
+    has_nlobj = nldata.nlobj !== nothing
+    has_user_mv_operator = false
+    for nlexpr in nldata.nlexpr
+        has_user_mv_operator |= Derivatives.
+            has_user_multivariate_operators(nlexpr.nd)
+    end
+    if has_nlobj
+        has_user_mv_operator |= Derivatives.
+            has_user_multivariate_operators(nldata.nlobj.nd)
+    end
+    for nlconstr in nldata.nlconstr
+        has_user_mv_operator |= Derivatives.
+            has_user_multivariate_operators(nlconstr.terms.nd)
+    end
+    evaluator.disable_2ndorder = has_user_mv_operator
+    return
+end
+
 function MOI.features_available(d::NLPEvaluator)
+    recompute_disable_2ndorder(d)
     features = [:Grad, :Jac, :ExprGraph]
     if !d.disable_2ndorder
-        push!(features,:Hess)
-        push!(features,:HessVec)
+        push!(features, :Hess)
+        push!(features, :HessVec)
     end
     return features
 end
