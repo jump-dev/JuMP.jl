@@ -269,12 +269,13 @@ function solve(m::Model; suppress_warnings=false,
         end
     end
 
-    # The MathProgBase interface defines a conic problem to always be
-    # a minimization problem, so we need to flip the objective before
-    # reporting it to the user
+    # The MathProgBase interface defines a conic problem to always be a
+    # minimization problem, so we need to flip the objective before reporting it
+    # to the user. We also need to account for the objective constant which was
+    # added above by subtracting it prior to the flip and then re-adding it.
     if traits.conic && m.objSense == :Max
-        m.objBound *= -1
-        m.objVal *= -1
+        m.objBound = -1 * (m.objBound - m.obj.aff.constant) + m.obj.aff.constant
+        m.objVal = -1 * (m.objVal - m.obj.aff.constant) + m.obj.aff.constant
     end
 
     # If the solver was initially not set, we will restore this status
