@@ -266,18 +266,6 @@ function printing_test(ModelType::Type{<:JuMP.AbstractModel})
         io_test(IJuliaMode, w[1,3], "symm_{1,3}")
     end
 
-    @testset "SingleVariable constraints" begin
-        ge = JuMP.math_symbol(REPLMode, :geq)
-        in_sym = JuMP.math_symbol(REPLMode, :in)
-        model = ModelType()
-        @variable(model, x >= 10)
-        zero_one = @constraint(model, x in MathOptInterface.ZeroOne())
-
-        io_test(REPLMode, JuMP.LowerBoundRef(x), "x $ge 10.0")
-        io_test(REPLMode, zero_one, "x binary")
-        # TODO: Test in IJulia mode
-    end
-
     @testset "VectorOfVariable constraints" begin
         ge = JuMP.math_symbol(REPLMode, :geq)
         in_sym = JuMP.math_symbol(REPLMode, :in)
@@ -348,6 +336,11 @@ function printing_test(ModelType::Type{<:JuMP.AbstractModel})
         io_test(REPLMode, quad_constr, "2 x$sq $le 1.0")
         # TODO: Test in IJulia mode.
     end
+end
+
+# Test printing of models of type `ModelType` for which the model is stored in
+# an MOI backend
+function model_printing_test(ModelType::Type{<:JuMP.AbstractModel})
     @testset "Model" begin
         repl(s) = JuMP.math_symbol(REPLMode, s)
         le, ge, eq, fa = repl(:leq), repl(:geq), repl(:eq), repl(:for_all)
@@ -375,6 +368,8 @@ function printing_test(ModelType::Type{<:JuMP.AbstractModel})
         @constraint(model_1, a*b <= 2)
         @constraint(model_1, [1 - a; u] in SecondOrderCone())
 
+        VariableType = typeof(a)
+
         io_test(REPLMode, model_1, """
     Max a - b + 2 a1 - 10 x
     Subject to
@@ -400,12 +395,11 @@ function printing_test(ModelType::Type{<:JuMP.AbstractModel})
      [-a + 1, u[1], u[2], u[3]] $inset MathOptInterface.SecondOrderCone(4)
     """, repl=:print)
 
-
         io_test(REPLMode, model_1, """
     A JuMP Model
     Maximization problem with:
     Variables: 13
-    Objective function type: MathOptInterface.ScalarAffineFunction{Float64}
+    Objective function type: JuMP.GenericAffExpr{Float64,$VariableType}
     `MathOptInterface.SingleVariable`-in-`MathOptInterface.ZeroOne`: 4 constraints
     `MathOptInterface.SingleVariable`-in-`MathOptInterface.Integer`: 4 constraints
     `MathOptInterface.SingleVariable`-in-`MathOptInterface.EqualTo{Float64}`: 1 constraint
@@ -463,11 +457,11 @@ function printing_test(ModelType::Type{<:JuMP.AbstractModel})
     Solver name: No optimizer attached.
     Names registered in the model: x, y""", repl=:show)
 
-        model_2 = ModelType()
-        @variable(model_2, x)
-        @constraint(model_2, x <= 3)
+        model_3 = ModelType()
+        @variable(model_3, x)
+        @constraint(model_3, x <= 3)
 
-        io_test(REPLMode, model_2, """
+        io_test(REPLMode, model_3, """
     A JuMP Model
     Feasibility problem with:
     Variable: 1
@@ -479,8 +473,95 @@ function printing_test(ModelType::Type{<:JuMP.AbstractModel})
     end
 end
 
+# Test printing of models of type `ModelType` for which the model is stored in
+# its JuMP form, e.g., as `AbstractVariable`s and `AbstractConstraint`s.
+# This is used by `JuMPExtension` but can also be used by external packages such
+# as `StructJuMP`, see https://github.com/JuliaOpt/JuMP.jl/issues/1711
+function model_extension_printing_test(ModelType::Type{<:JuMP.AbstractModel})
+    @testset "Model" begin
+        repl(s) = JuMP.math_symbol(REPLMode, s)
+        le, ge, eq, fa = repl(:leq), repl(:geq), repl(:eq), repl(:for_all)
+        inset, dots = repl(:in), repl(:dots)
+        infty, union = repl(:infty), repl(:union)
+        Vert, sub2 = repl(:Vert), repl(:sub2)
+        for_all = repl(:for_all)
+
+        #------------------------------------------------------------------
+
+        model_1 = ModelType()
+        @variable(model_1, a>=1)
+        @variable(model_1, b<=1)
+        @variable(model_1, -1<=c<=1)
+        @variable(model_1, a1>=1,Int)
+        @variable(model_1, b1<=1,Int)
+        @variable(model_1, -1<=c1<=1,Int)
+        @variable(model_1, x, Bin)
+        @variable(model_1, y)
+        @variable(model_1, z, Int)
+        @variable(model_1, u[1:3], Bin)
+        @variable(model_1, fi == 9)
+        @objective(model_1, Max, a - b + 2a1 - 10x)
+        @constraint(model_1, a + b - 10c - 2x + c1 <= 1)
+        @constraint(model_1, a*b <= 2)
+        @constraint(model_1, [1 - a; u] in SecondOrderCone())
+
+        VariableType = typeof(a)
+
+        # TODO variable constraints
+        io_test(REPLMode, model_1, """
+    Max a - b + 2 a1 - 10 x
+    Subject to
+     a + b - 10 c - 2 x + c1 $le 1.0
+     a*b $le 2.0
+     [-a + 1, u[1], u[2], u[3]] $inset MathOptInterface.SecondOrderCone(4)
+    """, repl=:print)
+
+        io_test(REPLMode, model_1, """
+    A JuMP Model
+    Maximization problem with:
+    Variables: 13
+    Objective function type: JuMP.GenericAffExpr{Float64,$VariableType}
+    Constraints: 3
+    Names registered in the model: a, a1, b, b1, c, c1, fi, u, x, y, z""", repl=:show)
+
+        io_test(IJuliaMode, model_1, """
+    \\begin{alignat*}{1}\\max\\quad & a - b + 2 a1 - 10 x\\\\
+    \\text{Subject to} \\quad & a + b - 10 c - 2 x + c1 \\leq 1.0\\\\
+     & a\\times b \\leq 2.0\\\\
+     & [-a + 1, u_{1}, u_{2}, u_{3}] \\in MathOptInterface.SecondOrderCone(4)\\\\
+    \\end{alignat*}
+    """)
+
+        #------------------------------------------------------------------
+
+        model_2 = ModelType()
+        @variable(model_2, x, Bin)
+        @variable(model_2, y, Int)
+        @constraint(model_2, x*y <= 1)
+
+        io_test(REPLMode, model_2, """
+    A JuMP Model
+    Feasibility problem with:
+    Variables: 2
+    Constraint: 1
+    Names registered in the model: x, y""", repl=:show)
+
+        model_3 = ModelType()
+        @variable(model_3, x)
+        @constraint(model_3, x <= 3)
+
+        io_test(REPLMode, model_3, """
+    A JuMP Model
+    Feasibility problem with:
+    Variable: 1
+    Constraint: 1
+    Names registered in the model: x""", repl=:show)
+    end
+end
+
 @testset "Printing for JuMP.Model" begin
     printing_test(Model)
+    model_printing_test(Model)
     @testset "Model with nonlinear terms" begin
         eq = JuMP.math_symbol(REPLMode, :eq)
         model = Model()
@@ -511,9 +592,20 @@ end
     \\end{alignat*}
     """)
     end
+    @testset "SingleVariable constraints" begin
+        ge = JuMP.math_symbol(REPLMode, :geq)
+        in_sym = JuMP.math_symbol(REPLMode, :in)
+        model = Model()
+        @variable(model, x >= 10)
+        zero_one = @constraint(model, x in MathOptInterface.ZeroOne())
+
+        io_test(REPLMode, JuMP.LowerBoundRef(x), "x $ge 10.0")
+        io_test(REPLMode, zero_one, "x binary")
+        # TODO: Test in IJulia mode
+    end
 end
 
-# TODO: These tests are failing.
-# @testset "Printing for JuMPExtension.MyModel" begin
-#     printing_test(JuMPExtension.MyModel)
-# end
+@testset "Printing for JuMPExtension.MyModel" begin
+    printing_test(JuMPExtension.MyModel)
+    model_extension_printing_test(JuMPExtension.MyModel)
+end

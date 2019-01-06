@@ -71,6 +71,20 @@ mutable struct NLPData
     evaluator
 end
 
+"""
+    nlp_objective_function(model::Model)
+
+Returns the nonlinear objective function or `nothing` if no nonlinear objective
+function is set.
+"""
+function nlp_objective_function(model::Model)
+    if model.nlp_data === nothing
+        return nothing
+    else
+        return model.nlp_data.nlobj
+    end
+end
+
 function create_nlp_block_data(m::Model)
     @assert m.nlp_data !== nothing
     bounds = MOI.NLPBoundsPair[]
