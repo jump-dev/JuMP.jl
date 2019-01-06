@@ -84,6 +84,28 @@ const MOI = MathOptInterface
         @test JuMP.value.(x) ≈ [1.000000, 4.742999, 3.821150, 1.379408] atol=1e-3
     end
 
+    @testset "HS071 (epigraph)" begin
+        # hs071, with epigraph formulation
+        # Linear objective, nonlinear constraints
+        # min t
+        # st  t >= x1 * x4 * (x1 + x2 + x3) + x3
+        #     ...
+        model = Model(with_optimizer(Ipopt.Optimizer, print_level=0))
+        start = [1.0, 5.0, 5.0, 1.0]
+        @variable(model, 1 <= x[i=1:4] <= 5, start = start[i])
+        @variable(model, t, start = 100)
+        @objective(model, Min, t)
+        @NLconstraint(model, t >= x[1] * x[4] * (x[1] + x[2] + x[3]) + x[3])
+        @NLconstraint(model, x[1] * x[2] * x[3] * x[4] >= 25)
+        @NLconstraint(model, sum(x[i]^2 for i = 1:4) == 40)
+
+        JuMP.optimize!(model)
+        @test JuMP.termination_status(model) == MOI.LOCALLY_SOLVED
+        @test JuMP.primal_status(model) == MOI.FEASIBLE_POINT
+        @test JuMP.value.(x) ≈
+                [1.000000, 4.742999, 3.821150, 1.379408] atol=1e-3
+    end
+
     @testset "HS109" begin
         a  = 50.176
         b1 = 0.25
@@ -501,5 +523,151 @@ const MOI = MathOptInterface
             JuMP.optimize!(m)
             @test JuMP.value(y) ≈ α^2 atol=1e-6
         end
+    end
+
+    @testset "ifelse" begin
+        model = Model(with_optimizer(Ipopt.Optimizer, print_level=0))
+        @variable(model, x, start = 2)
+        # The minimizer is at smooth point, so solvers should be okay.
+        @NLobjective(model, Min, ifelse( x <= 1, x^2, x) )
+        JuMP.optimize!(model)
+
+        @test JuMP.termination_status(model) == MOI.LOCALLY_SOLVED
+        @test JuMP.primal_status(model) == MOI.FEASIBLE_POINT
+        @test JuMP.value(x) ≈ 0.0 atol=1e-5
+    end
+
+    @testset "infeasible problem" begin
+        # (Attempt to) solve an infeasible problem
+        model = Model(with_optimizer(Ipopt.Optimizer, print_level=0))
+        n = 10
+        @variable(model, 0 <= x[i=1:n] <= 1)
+        @NLobjective(model, Max, x[n])
+        for i in 1:n-1
+            @NLconstraint(model, x[i+1]-x[i] == 0.15)
+        end
+        JuMP.optimize!(model)
+
+        @test JuMP.termination_status(model) == MOI.LOCALLY_INFEASIBLE
+    end
+
+    @testset "unbounded problem" begin
+        model = Model(with_optimizer(Ipopt.Optimizer, print_level=0))
+        @variable(model, x >= 0)
+        @NLobjective(model, Max, x)
+        @NLconstraint(model, x >= 5)
+        JuMP.optimize!(model)
+        @test JuMP.termination_status(model) == MOI.NORM_LIMIT
+    end
+
+    @testset "Derivatives of x^4, x < 0" begin
+        model = Model(with_optimizer(Ipopt.Optimizer, print_level=0))
+        @variable(model, x >= -1, start = -0.5)
+        @NLobjective(model, Min, x^4)
+        JuMP.optimize!(model)
+
+        @test JuMP.termination_status(model) == MOI.LOCALLY_SOLVED
+        @test JuMP.primal_status(model) == MOI.FEASIBLE_POINT
+        @test JuMP.value(x) ≈ 0.0 atol=1e-2
+    end
+
+    # This test seems to be checking for a bug in expression handling.
+    @testset "Entropy maximization" begin
+        model = Model(with_optimizer(Ipopt.Optimizer, print_level=0))
+        @variable(model, x[1:4] >= 0, start = 1)
+        @variable(model, z[1:4], start = 0)
+        @NLexpression(model, entropy[i=1:4], -x[i] * log(x[i]))
+        @NLobjective(model, Max, sum(z[i] for i = 1:2) +
+                                 sum(z[i]/2 for i = 3:4))
+        @NLconstraint(model, z_constr1[i=1], z[i] <= entropy[i])
+        @NLconstraint(model, z_constr1_dup[i=2], z[i] <= entropy[i]) # duplicate expressions
+        @NLconstraint(model, z_constr2[i=3:4], z[i] <= 2 * entropy[i])
+        @constraint(model, sum(x) == 1)
+        JuMP.optimize!(model)
+
+        @test JuMP.termination_status(model) == MOI.LOCALLY_SOLVED
+        @test JuMP.primal_status(model) == MOI.FEASIBLE_POINT
+        @test JuMP.value.(x) ≈ [1/4, 1/4, 1/4, 1/4] atol=1e-3
+        @test JuMP.value(entropy[1]) ≈ -(1/4) * log(1/4) atol=1e-4
+    end
+
+    @testset "Changing objectives" begin
+        model = Model(with_optimizer(Ipopt.Optimizer, print_level=0))
+        @variable(model, x >= 0)
+        @variable(model, y >= 0)
+        @objective(model, Max, x + y)
+        @NLconstraint(model, x + 2y <= 1)
+        JuMP.optimize!(model)
+        @test JuMP.value(x) ≈ 1.0 atol=1e-4
+        @test JuMP.value(y) ≈ 0.0 atol=1e-4
+        @test JuMP.objective_value(model) ≈ 1.0 atol=1e-4
+
+        @objective(model, Max, 2x + y)
+        JuMP.optimize!(model)
+        @test JuMP.value(x) ≈ 1.0 atol=1e-4
+        @test JuMP.value(y) ≈ 0.0 atol=1e-4
+        @test JuMP.objective_value(model) ≈ 2.0 atol=1e-4
+    end
+
+    @testset "Setting NLobjective then objective" begin
+        model = Model(with_optimizer(Ipopt.Optimizer, print_level=0))
+        @variable(model, x >= 0)
+        @variable(model, y >= 0)
+        @NLobjective(model, Max, x + y)
+        @NLconstraint(model, x + 2y <= 1)
+        JuMP.optimize!(model)
+        @test JuMP.value(x) ≈ 1.0 atol=1e-4
+        @test JuMP.value(y) ≈ 0.0 atol=1e-4
+        @test JuMP.objective_value(model) ≈ 1.0 atol=1e-4
+
+        @objective(model, Max, 2x + y)
+        JuMP.optimize!(model)
+        @test JuMP.value(x) ≈ 1.0 atol=1e-4
+        @test JuMP.value(y) ≈ 0.0 atol=1e-4
+        @test JuMP.objective_value(model) ≈ 2.0 atol=1e-4
+    end
+
+    my_square(x) = x^2
+    function my_f(x,y)
+        return (x-1)^2+(y-2)^2
+    end
+
+    @testset "User-defined functions" begin
+        model = Model(with_optimizer(Ipopt.Optimizer, print_level=0))
+        JuMP.register(model, :my_f, 2, my_f, autodiff=true)
+        JuMP.register(model, :my_square, 1, my_square, autodiff=true)
+
+        @variable(model, x[1:2] >= 0.5)
+        @NLobjective(model, Min, my_f(x[1], my_square(x[2])))
+
+        JuMP.optimize!(model)
+        @test JuMP.termination_status(model) == MOI.LOCALLY_SOLVED
+        @test JuMP.primal_status(model) == MOI.FEASIBLE_POINT
+        @test JuMP.value.(x) ≈ [1, sqrt(2.0)]
+    end
+
+    @testset "Univariate user-defined functions" begin
+        model = Model(with_optimizer(Ipopt.Optimizer, print_level=0))
+        JuMP.register(model, :my_square, 1, my_square, autodiff=true)
+
+        # Test just univariate functions because this is a path where hessians
+        # are enabled.
+        @variable(model, x[1:2] >= 0.5)
+        @NLobjective(model, Min, my_square(x[1]-0.4) + my_square(x[2] - 2.0))
+        JuMP.optimize!(model)
+        @test JuMP.termination_status(model) == MOI.LOCALLY_SOLVED
+        @test JuMP.primal_status(model) == MOI.FEASIBLE_POINT
+        @test JuMP.value.(x) ≈ [0.5, 2.0] atol=1e-4
+    end
+
+    @testset "Issue #927" begin
+        model = Model(with_optimizer(Ipopt.Optimizer, print_level=0))
+        JuMP.register(model, :my_f, 2, my_f, autodiff=true)
+        @variable(model, x)
+        @NLobjective(model, Min, my_f(x, x))
+        JuMP.optimize!(model)
+        @test JuMP.termination_status(model) == MOI.LOCALLY_SOLVED
+        @test JuMP.primal_status(model) == MOI.FEASIBLE_POINT
+        @test JuMP.value.(x) ≈ 1.5 atol=1e-4
     end
 end

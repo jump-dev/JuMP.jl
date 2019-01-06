@@ -1111,6 +1111,13 @@ function value(ex::NonlinearExpression, var_value::Function)
                         user_output_buffer, nlp_data.user_operators)
 end
 
+"""
+    value(ex::NonlinearExpression)
+
+Evaluate `ex` using `JuMP.value` as the value for each variable `v`.
+"""
+value(ex::NonlinearExpression) = value(ex, value)
+
 mutable struct UserFunctionEvaluator <: MOI.AbstractNLPEvaluator
     f
     ∇f
