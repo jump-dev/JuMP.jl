@@ -14,7 +14,7 @@ TODO: Create new MOI function/sets, how to use it in JuMP, create new bridge
 
 ## Extending JuMP macros
 
-In order to provide the most convenient syntax for the user to create variables,
+In order to provide a convenient syntax for the user to create variables,
 constraints or set the objective of a JuMP extension, it might be required to
 use macros similar to [`@variable`](@ref), [`@constraint`](@ref) and
 [`@objective`](@ref).
@@ -54,12 +54,10 @@ build_constraint
 
 #### Shapes
 
-To convert the constraint to a `VectorConstraint`, it needs to be converted to
-"a vector"-in-"a set" but it might be desirable that [`value`](@ref) and
-[`dual`](@ref) return results in the original shape. For this reason, there is
-a `shape` field in `VectorConstraint` that can be set in
-[`build_constraint`](@ref) and that is used to reshape the result computed in
-[`value`](@ref) and [`dual`](@ref).
+Shapes allow vector constraints, which are represented as flat vectors in MOI,
+to retain a matrix shape at the JuMP level. There is a `shape` field in
+`VectorConstraint` that can be set in [`build_constraint`](@ref) and that is
+used to reshape the result computed in [`value`](@ref) and [`dual`](@ref).
 
 ```@docs
 AbstractShape
