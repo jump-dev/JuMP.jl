@@ -19,7 +19,7 @@ addons:
         - liblapack-dev
         - libblas-dev
 after_success:
-    - julia -e '(VERSION >= v"0.7" && using Pkg); Pkg.add("Coverage"); cd(Pkg.dir("JuMP")); using Coverage; Coveralls.submit(process_folder()); Codecov.submit(process_folder())'
+    - julia -e 'using Pkg; Pkg.add("Coverage"); cd(Pkg.dir("JuMP")); using Coverage; Coveralls.submit(process_folder()); Codecov.submit(process_folder())'
 jobs:
   include:
     - stage: "Documentation"
