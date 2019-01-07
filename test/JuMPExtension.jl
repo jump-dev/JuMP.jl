@@ -46,6 +46,8 @@ struct MyVariableRef <: JuMP.AbstractVariableRef
     idx::Int       # Index in `model.variables`
 end
 Base.copy(v::MyVariableRef) = v
+Base.copy(v::MyVariableRef, new_model::MyModel) = MyVariableRef(new_model, v.idx)
+
 Base.:(==)(v::MyVariableRef, w::MyVariableRef) = v.model === w.model && v.idx == w.idx
 Base.broadcastable(v::MyVariableRef) = Ref(v)
 JuMP.isequal_canonical(v::MyVariableRef, w::MyVariableRef) = v == w

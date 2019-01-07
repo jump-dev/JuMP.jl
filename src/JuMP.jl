@@ -455,9 +455,11 @@ function verify_ownership(m::Model, vec::Vector{VariableRef})
 end
 
 Base.copy(v::VariableRef, new_model::Model) = VariableRef(new_model, v.index)
-Base.copy(x::Nothing, new_model::Model) = nothing
+Base.copy(x::Nothing, new_model::AbstractModel) = nothing
 # TODO: Replace with vectorized copy?
-Base.copy(v::AbstractArray{VariableRef}, new_model::Model) = (var -> VariableRef(new_model, var.index)).(v)
+function Base.copy(v::AbstractArray{VariableRef}, new_model::AbstractModel)
+    return (var -> VariableRef(new_model, var.index)).(v)
+end
 
 function optimizer_index(v::VariableRef)
     model = owner_model(v)

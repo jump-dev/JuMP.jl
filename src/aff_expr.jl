@@ -330,7 +330,7 @@ end
 
 # Copy an affine expression to a new model by converting all the
 # variables to the new model's variables
-function Base.copy(a::GenericAffExpr, new_model::Model)
+function Base.copy(a::GenericAffExpr, new_model::AbstractModel)
     result = zero(a)
     for (coef, var) in linear_terms(a)
         add_to_expression!(result, coef, copy(var, new_model))
