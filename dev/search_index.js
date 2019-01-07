@@ -1173,7 +1173,7 @@ var documenterSearchIndex = {"docs": [
     "page": "Extensions",
     "title": "Extensions",
     "category": "page",
-    "text": ""
+    "text": "CurrentModule = JuMP"
 },
 
 {
@@ -1182,6 +1182,166 @@ var documenterSearchIndex = {"docs": [
     "title": "Extending JuMP",
     "category": "section",
     "text": "TODO: How to extend JuMP: discussion on different ways to build on top of JuMP. How to extend JuMP\'s macros and how to avoid doing this."
+},
+
+{
+    "location": "extensions/#Extending-MOI-1",
+    "page": "Extensions",
+    "title": "Extending MOI",
+    "category": "section",
+    "text": "TODO: Create new MOI function/sets, how to use it in JuMP, create new bridge"
+},
+
+{
+    "location": "extensions/#Extending-JuMP-macros-1",
+    "page": "Extensions",
+    "title": "Extending JuMP macros",
+    "category": "section",
+    "text": "In order to provide a convenient syntax for the user to create variables, constraints or set the objective of a JuMP extension, it might be required to use macros similar to @variable, @constraint and @objective. It is recommended to first check whether it is possible to extend one of these three macros before creating a new one so as to leverage all their features and provide a more consistent interface to the user."
+},
+
+{
+    "location": "extensions/#Extending-the-@variable-macro-1",
+    "page": "Extensions",
+    "title": "Extending the @variable macro",
+    "category": "section",
+    "text": "TODO: parse/build/add"
+},
+
+{
+    "location": "extensions/#Extending-the-@constraint-macro-1",
+    "page": "Extensions",
+    "title": "Extending the @constraint macro",
+    "category": "section",
+    "text": "The @constraint macro always calls the same three functions:parse_constraint: is called at parsing time, it parses the constraint expression and returns a build_constraint call expression;\nbuild_constraint: given the functions and sets involved in the constraints, it returns a AbstractConstraint;\nadd_constraint: given the model, the AbstractConstraint constructed in build_constraint and the constraint name, it stores them in the model and returns a ConstraintRef.Adding methods to these functions is the recommended way to extend the @constraint macro."
+},
+
+{
+    "location": "extensions/#JuMP.build_constraint",
+    "page": "Extensions",
+    "title": "JuMP.build_constraint",
+    "category": "function",
+    "text": "function build_constraint(_error::Function, Q::Symmetric{V, M},\n                          ::PSDCone) where {V <: AbstractJuMPScalar,\n                                            M <: AbstractMatrix{V}}\n\nReturn a VectorConstraint of shape SymmetricMatrixShape constraining the matrix Q to be positive semidefinite.\n\nThis function is used by the @variable macro to create a symmetric semidefinite matrix of variables and by the @constraint macros as follows:\n\n@constraint(model, Symmetric(Q) in PSDCone())\n\nThe form above is usually used when the entries of Q are affine or quadratic expressions but it can also be used when the entries are variables to get the reference of the semidefinite constraint, e.g.,\n\n@variable model Q[1:2,1:2] Symmetric\n# The type of `Q` is `Symmetric{VariableRef, Matrix{VariableRef}}`\nvar_psd = @constraint model Q in PSDCone()\n# The `var_psd` variable contains a reference to the constraint\n\n\n\n\n\nfunction build_constraint(_error::Function,\n                          Q::AbstractMatrix{<:AbstractJuMPScalar},\n                          ::PSDCone)\n\nReturn a VectorConstraint of shape SquareMatrixShape constraining the matrix Q to be symmetric and positive semidefinite.\n\nThis function is used by the @constraint and @SDconstraint macros as follows:\n\n@constraint(model, Q in PSDCone())\n@SDconstraint(model, P ⪰ Q)\n\nThe @constraint call above is usually used when the entries of Q are affine or quadratic expressions but it can also be used when the entries are variables to get the reference of the semidefinite constraint, e.g.,\n\n@variable model Q[1:2,1:2]\n# The type of `Q` is `Matrix{VariableRef}`\nvar_psd = @constraint model Q in PSDCone()\n# The `var_psd` variable contains a reference to the constraint\n\n\n\n\n\n"
+},
+
+{
+    "location": "extensions/#Adding-build_constraint-methods-1",
+    "page": "Extensions",
+    "title": "Adding build_constraint methods",
+    "category": "section",
+    "text": "There is typically two choices when creating a build_constraint method, either return an AbstractConstraint already supported by the model, i.e. ScalarConstraint or VectorConstraint, or a custom AbstractConstraint with a corresponding add_constraint method (see Adding add_constraint methods).build_constraint"
+},
+
+{
+    "location": "extensions/#JuMP.AbstractShape",
+    "page": "Extensions",
+    "title": "JuMP.AbstractShape",
+    "category": "type",
+    "text": "AbstractShape\n\nAbstract vectorizable shape. Given a flat vector form of an object of shape shape, the original object can be obtained by reshape.\n\n\n\n\n\n"
+},
+
+{
+    "location": "extensions/#JuMP.shape",
+    "page": "Extensions",
+    "title": "JuMP.shape",
+    "category": "function",
+    "text": "shape(c::AbstractConstraint)::AbstractShape\n\nReturn the shape of the constraint c.\n\n\n\n\n\n"
+},
+
+{
+    "location": "extensions/#JuMP.reshape",
+    "page": "Extensions",
+    "title": "JuMP.reshape",
+    "category": "function",
+    "text": "reshape(vectorized_form::Vector, shape::AbstractShape)\n\nReturn an object in its original shape shape given its vectorized form vectorized_form.\n\nExamples\n\nGiven a SymmetricMatrixShape of vectorized form [1, 2, 3], the following code returns the matrix Symmetric(Matrix[1 2; 2 3]):\n\nreshape([1, 2, 3], SymmetricMatrixShape(2))\n\n\n\n\n\n"
+},
+
+{
+    "location": "extensions/#JuMP.dual_shape",
+    "page": "Extensions",
+    "title": "JuMP.dual_shape",
+    "category": "function",
+    "text": "dual_shape(shape::AbstractShape)::AbstractShape\n\nReturns the shape of the dual space of the space of objects of shape shape. By default, the dual_shape of a shape is itself. See the examples section below for an example for which this is not the case.\n\nExamples\n\nConsider polynomial constraints for which the dual is moment constraints and moment constraints for which the dual is polynomial constraints. Shapes for polynomials can be defined as follows:\n\nstruct Polynomial\n    coefficients::Vector{Float64}\n    monomials::Vector{Monomial}\nend\nstruct PolynomialShape <: JuMP.AbstractShape\n    monomials::Vector{Monomial}\nend\nJuMP.reshape(x::Vector, shape::PolynomialShape) = Polynomial(x, shape.monomials)\n\nand a shape for moments can be defined as follows:\n\nstruct Moments\n    coefficients::Vector{Float64}\n    monomials::Vector{Monomial}\nend\nstruct MomentsShape <: JuMP.AbstractShape\n    monomials::Vector{Monomial}\nend\nJuMP.reshape(x::Vector, shape::MomentsShape) = Moments(x, shape.monomials)\n\nThe dual_shape allows to define the shape of the dual of polynomial and moment constraints:\n\ndual_shape(shape::PolynomialShape) = MomentsShape(shape.monomials)\ndual_shape(shape::MomentsShape) = PolynomialShape(shape.monomials)\n\n\n\n\n\n"
+},
+
+{
+    "location": "extensions/#JuMP.ScalarShape",
+    "page": "Extensions",
+    "title": "JuMP.ScalarShape",
+    "category": "type",
+    "text": "ScalarShape\n\nShape of scalar constraints.\n\n\n\n\n\n"
+},
+
+{
+    "location": "extensions/#JuMP.VectorShape",
+    "page": "Extensions",
+    "title": "JuMP.VectorShape",
+    "category": "type",
+    "text": "VectorShape\n\nVector for which the vectorized form corresponds exactly to the vector given.\n\n\n\n\n\n"
+},
+
+{
+    "location": "extensions/#JuMP.SquareMatrixShape",
+    "page": "Extensions",
+    "title": "JuMP.SquareMatrixShape",
+    "category": "type",
+    "text": "SquareMatrixShape\n\nShape object for a square matrix of side_dimension rows and columns. The vectorized form contains the entries of the the matrix given column by column (or equivalently, the entries of the lower-left triangular part given row by row).\n\n\n\n\n\n"
+},
+
+{
+    "location": "extensions/#JuMP.SymmetricMatrixShape",
+    "page": "Extensions",
+    "title": "JuMP.SymmetricMatrixShape",
+    "category": "type",
+    "text": "SymmetricMatrixShape\n\nShape object for a symmetric square matrix of side_dimension rows and columns. The vectorized form contains the entries of the upper-right triangular part of the matrix given column by column (or equivalently, the entries of the lower-left triangular part given row by row).\n\n\n\n\n\n"
+},
+
+{
+    "location": "extensions/#Shapes-1",
+    "page": "Extensions",
+    "title": "Shapes",
+    "category": "section",
+    "text": "Shapes allow vector constraints, which are represented as flat vectors in MOI, to retain a matrix shape at the JuMP level. There is a shape field in VectorConstraint that can be set in build_constraint and that is used to reshape the result computed in value and dual.AbstractShape\nshape\nreshape\ndual_shape\nScalarShape\nVectorShape\nSquareMatrixShape\nSymmetricMatrixShape"
+},
+
+{
+    "location": "extensions/#JuMP.add_constraint",
+    "page": "Extensions",
+    "title": "JuMP.add_constraint",
+    "category": "function",
+    "text": "add_constraint(model::Model, c::AbstractConstraint, name::String=\"\")\n\nAdd a constraint c to Model model and sets its name.\n\n\n\n\n\n"
+},
+
+{
+    "location": "extensions/#Adding-add_constraint-methods-1",
+    "page": "Extensions",
+    "title": "Adding add_constraint methods",
+    "category": "section",
+    "text": "TODOadd_constraint"
+},
+
+{
+    "location": "extensions/#Adding-parse_constraint-methods-1",
+    "page": "Extensions",
+    "title": "Adding parse_constraint methods",
+    "category": "section",
+    "text": "TODO"
+},
+
+{
+    "location": "extensions/#Extending-the-[@objective](@ref)-macro-1",
+    "page": "Extensions",
+    "title": "Extending the @objective macro",
+    "category": "section",
+    "text": "TODO"
+},
+
+{
+    "location": "extensions/#Defining-new-JuMP-models-1",
+    "page": "Extensions",
+    "title": "Defining new JuMP models",
+    "category": "section",
+    "text": "TODO"
 },
 
 {
