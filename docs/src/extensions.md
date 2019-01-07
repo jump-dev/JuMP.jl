@@ -34,7 +34,7 @@ The [`@constraint`](@ref) macro always calls the same three functions:
 * [`build_constraint`](@ref): given the functions and sets involved in the
   constraints, it returns a `AbstractConstraint`;
 * [`add_constraint`](@ref): given the model, the `AbstractConstraint`
-  constructedi in [`build_constraint`](@ref) and the constraint name, it stores
+  constructed in [`build_constraint`](@ref) and the constraint name, it stores
   them in the model and returns a `ConstraintRef`.
 
 Adding methods to these functions is the recommended way to extend the
