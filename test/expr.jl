@@ -97,6 +97,15 @@ function expressions_test(ModelType::Type{<:JuMP.AbstractModel}, VariableRefType
         @test k == 0
     end
 
+    @testset "Copy AffExpr between models" begin
+        m = ModelType()
+        @variable(m, x)
+        m2 = ModelType()
+        aff = copy(2x + 1, m2)
+        aff_expected = 2*copy(x, m2) + 1
+        @test JuMP.isequal_canonical(aff, aff_expected)
+    end
+
     @testset "destructive_add!(ex::Number, c::Number, x::GenericAffExpr)" begin
         aff = JuMP.destructive_add!(1.0, 2.0, JuMP.GenericAffExpr(1.0, :a => 1.0))
         @test JuMP.isequal_canonical(aff, JuMP.GenericAffExpr(3.0, :a => 2.0))
@@ -229,14 +238,6 @@ end
 
 @testset "Expressions for JuMP.Model" begin
     expressions_test(Model, VariableRef)
-    @testset "Copy AffExpr between models" begin
-        m = Model()
-        @variable(m, x)
-        m2 = Model()
-        aff = copy(2x + 1, m2)
-        aff_expected = 2*copy(x, m2) + 1
-        @test JuMP.isequal_canonical(aff, aff_expected)
-    end
 end
 
 @testset "Expressions for JuMPExtension.MyModel" begin
