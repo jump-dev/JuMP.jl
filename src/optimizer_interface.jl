@@ -49,7 +49,7 @@ function set_optimizer(model::Model, optimizer_factory::OptimizerFactory;
             universal_fallback = MOIU.UniversalFallback(JuMPMOIModel{Float64}())
             optimizer = MOIU.CachingOptimizer(universal_fallback, optimizer)
         end
-        optimizer = MOI.Bridges.fullbridgeoptimizer(optimizer, Float64)
+        optimizer = MOI.Bridges.full_bridge_optimizer(optimizer, Float64)
     end
     MOIU.reset_optimizer(model, optimizer)
 end
