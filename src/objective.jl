@@ -64,8 +64,11 @@ function set_objective_function(model::Model, func::MOI.AbstractScalarFunction)
               typeof(func), ".")
     end
     MOI.set(model, attr, func)
-    # Keeping the explicit `return` is helpful for type inference because we
-    # don't know what `MOI.set` will return.
+    # Nonlinear objectives override regular objectives, so if there was a
+    # nonlinear objective set, we must clear it.
+    if model.nlp_data !== nothing
+        model.nlp_data.nlobj = nothing
+    end
     return
 end
 

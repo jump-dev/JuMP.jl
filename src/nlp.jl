@@ -14,7 +14,6 @@ function set_objective(m::Model, sense::MOI.OptimizationSense,
     initNLP(m)
     set_objective_sense(m, sense)
     m.nlp_data.nlobj = ex
-    # TODO: what do we do about existing objectives in the MOI backend?
     return
 end
 
@@ -1110,6 +1109,13 @@ function value(ex::NonlinearExpression, var_value::Function)
                         variable_values, subexpr_values, user_input_buffer,
                         user_output_buffer, nlp_data.user_operators)
 end
+
+"""
+    value(ex::NonlinearExpression)
+
+Evaluate `ex` using `JuMP.value` as the value for each variable `v`.
+"""
+value(ex::NonlinearExpression) = value(ex, value)
 
 mutable struct UserFunctionEvaluator <: MOI.AbstractNLPEvaluator
     f
