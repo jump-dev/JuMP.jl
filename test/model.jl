@@ -128,7 +128,7 @@ function test_model()
                     c = @constraint(model, x in Nonnegative())
                     JuMP.optimize!(model)
                     @test JuMP.value(x) == 1.0
-                    #@test JuMP.value(c) == 1.0
+                    @test JuMP.value(c) == 1.0
                     @test JuMP.dual(c) == 2.0
                 end
                 @testset "with_optimizer at optimize!" begin
@@ -138,7 +138,7 @@ function test_model()
                     JuMP.add_bridge(model, NonnegativeBridge)
                     JuMP.optimize!(model, factory)
                     @test JuMP.value(x) == 1.0
-                    #@test JuMP.value(c) == 1.0
+                    @test JuMP.value(c) == 1.0
                     @test JuMP.dual(c) == 2.0
                 end
             end
@@ -155,7 +155,7 @@ function test_model()
                     c = @constraint(model, x in Nonnegative())
                     JuMP.optimize!(model)
                     @test JuMP.value(x) == 1.0
-                    #@test JuMP.value(c) == 1.0
+                    @test JuMP.value(c) == 1.0
                     @test JuMP.dual(c) == 2.0
                 end
                 @testset "with_optimizer at optimize!" begin
@@ -168,7 +168,7 @@ function test_model()
                     JuMP.add_bridge(model, NonnegativeBridge)
                     JuMP.optimize!(model)
                     @test JuMP.value(x) == 1.0
-                    #@test JuMP.value(c) == 1.0
+                    @test JuMP.value(c) == 1.0
                     @test JuMP.dual(c) == 2.0
                 end
             end
