@@ -301,9 +301,9 @@ end
 Return mode (DIRECT, AUTOMATIC, MANUAL) of model.
 """
 function mode(model::Model)
-    # The type of `backend(model)` is unknown so we directly redirect to another
-    # function.
-    moi_mode(backend(model))
+    # The type of `backend(model)` is not type-stable, so we use a function
+    # barrier (`moi_mode`) to improve performance.
+    return moi_mode(backend(model))
 end
 
 # Direct mode
@@ -353,14 +353,15 @@ to equivalent supported constraints when an appropriate transformation is
 available.
 """
 function bridge_constraints(model::Model)
-    # The type of `backend(model)` is unknown so we directly redirect to another
-    # function.
+    # The type of `backend(model)` is not type-stable, so we use a function
+    # barrier (`moi_bridge_constraints`) to improve performance.
     return moi_bridge_constraints(backend(model))
 end
 
 function moi_add_bridge(model::Nothing,
                         BridgeType::Type{<:MOI.Bridges.AbstractBridge})
     # No optimizer is attached, the bridge will be added when one is attached
+    return
 end
 function moi_add_bridge(model::MOI.ModelLike,
                         BridgeType::Type{<:MOI.Bridges.AbstractBridge})
@@ -387,8 +388,8 @@ supported by the optimizer.
 function add_bridge(model::Model,
                     BridgeType::Type{<:MOI.Bridges.AbstractBridge})
     push!(model.bridge_types, BridgeType)
-    # The type of `backend(model)` is unknown so we directly redirect to another
-    # function.
+    # The type of `backend(model)` is not type-stable, so we use a function
+    # barrier (`moi_add_bridge`) to improve performance.
     moi_add_bridge(JuMP.backend(model), BridgeType)
 end
 
