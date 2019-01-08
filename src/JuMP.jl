@@ -165,8 +165,8 @@ mutable struct Model <: AbstractModel
     # In MANUAL and AUTOMATIC modes, CachingOptimizer.
     # In DIRECT mode, will hold an AbstractOptimizer.
     moi_backend::MOI.AbstractOptimizer
-    # List of additional bridges to add in addition to the ones added in
-    # `MOI.Bridges.fullbridgeoptimizer`.
+    # List of bridges to add in addition to the ones added in
+    # `MOI.Bridges.full_bridge_optimizer`.
     bridge_types::Vector{Any}
     # Hook into a solve call...function of the form f(m::Model; kwargs...),
     # where kwargs get passed along to subsequent solve calls.
