@@ -8,6 +8,8 @@
 # See http://github.com/JuliaOpt/JuMP.jl
 #############################################################################
 
+# This file contains an example bridge used for tests.
+
 using MathOptInterface
 const MOI = MathOptInterface
 const MOIB = MOI.Bridges
