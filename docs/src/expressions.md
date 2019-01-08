@@ -1,4 +1,4 @@
-`JuMP.add_to_exp```@meta
+```@meta
 DocTestSetup = quote
     using JuMP
 end
@@ -13,8 +13,8 @@ particularly useful if an expression is used in multiple places in the model.
 ## Affine expressions
 
 There are four ways of constructing an affine expression in JuMP: using the
-[`@expression`](@ref) macro, by operator overloading, using the `AffExpr` and
-`QuadExpr` constructors, and via [`JuMP.add_to_expression!`](@ref).
+[`@expression`](@ref) macro, by operator overloading, using the `AffExpr`
+constructor, and via [`JuMP.add_to_expression!`](@ref).
 
 ### Macros
 
