@@ -14,7 +14,6 @@ function set_objective(m::Model, sense::MOI.OptimizationSense,
     initNLP(m)
     set_objective_sense(m, sense)
     m.nlp_data.nlobj = ex
-    # TODO: what do we do about existing objectives in the MOI backend?
     return
 end
 
