@@ -19,19 +19,16 @@ makedocs(
         "Introduction" => "index.md",
         "Installation Guide" => "installation.md",
         "Quick Start Guide" => "quickstart.md",
-        "Concepts" => "concepts.md",
         "Variables" => "variables.md",
         "Expressions" => "expressions.md",
         "Objective" => "objective.md",
         "Constraints" => "constraints.md",
         "Containers" => "containers.md",
-        "Names" => "names.md",
         "Solvers" => "solvers.md",
         "Nonlinear Modeling" => "nlp.md",
         "Style Guide" => "style.md",
         "Extensions" => "extensions.md",
-        "Updating Guide" => "updating.md",
-        "How do I ...? (FAQ)" => "howdoi.md"
+        "Updating Guide" => "updating.md"
     ],
     assets = [
         "assets/jump-logo-with-text.svg",

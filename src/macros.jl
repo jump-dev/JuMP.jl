@@ -1100,8 +1100,8 @@ end
 """
     @variable(model, kw_args...)
 
-Add an *anonymous* (see [Names](@ref)) variable to the model `model` described
-by the keyword arguments `kw_args` and returns the variable.
+Add an *anonymous* variable to the model `model` described by the keyword
+arguments `kw_args` and returns the variable.
 
     @variable(model, expr, args..., kw_args...)
 

@@ -90,21 +90,20 @@ Contents
 --------
 
 ```@contents
-Pages = ["installation.md",
+Pages = [
+    "installation.md",
     "quickstart.md",
-    "concepts.md",
     "variables.md",
     "expressions.md",
     "objective.md",
     "constraints.md",
     "containers.md",
-    "names.md",
     "solvers.md",
     "nlp.md",
     "style.md",
     "extensions.md",
-    "updating.md",
-    "howdoi.md"]
+    "updating.md"
+]
 Depth = 2
 ```
 
