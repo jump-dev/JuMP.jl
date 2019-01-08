@@ -39,7 +39,7 @@ function opt_build(a::Int; b::Int = 1)
 end
 
 # Custom set Nonnegative with bridge NonnegativeBridge
-include("nonnegative.jl")
+include("nonnegative_bridge.jl")
 
 function test_model()
     @testset "optimize_hook" begin
