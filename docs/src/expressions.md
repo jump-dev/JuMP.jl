@@ -10,8 +10,6 @@ JuMP has three types of expressions: affine, quadratic, and nonlinear.
 
 ## Affine expressions
 
-An affine expression is
-
 There are four ways of constructing an affine expression in JuMP: using macros,
 operator overloading, constructors, and via `JuMP.add_to_expression!`.
 
@@ -139,13 +137,12 @@ x² + 2 x*y + y² + x + y - 1
 
 ## Nonlinear expressions
 
-Nonlinear expressions can only be constructed using the [`@NLexpression`](@ref)
-macro. For more details, see the [Nonlinear Modelling](@ref) section.
+Nonlinear expressions can only be constructed using the `@NLexpression`
+macro. For more details, see the [Nonlinear Modeling](@ref) section.
 
 ## Reference
 
 ```@docs
 @expression
-@NLexpression
 JuMP.add_to_expression!
 ```
