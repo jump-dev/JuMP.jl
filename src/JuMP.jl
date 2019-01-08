@@ -371,10 +371,12 @@ end
 function moi_add_bridge(bridge_opt::MOI.Bridges.LazyBridgeOptimizer,
                         BridgeType::Type{<:MOI.Bridges.AbstractBridge})
     MOI.Bridges.add_bridge(bridge_opt, BridgeType{Float64})
+    return
 end
 function moi_add_bridge(caching_opt::MOIU.CachingOptimizer,
                         BridgeType::Type{<:MOI.Bridges.AbstractBridge})
     moi_add_bridge(caching_opt.optimizer, BridgeType)
+    return
 end
 
 """
@@ -391,6 +393,7 @@ function add_bridge(model::Model,
     # The type of `backend(model)` is not type-stable, so we use a function
     # barrier (`moi_add_bridge`) to improve performance.
     moi_add_bridge(JuMP.backend(model), BridgeType)
+    return
 end
 
 """
