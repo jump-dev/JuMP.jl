@@ -97,9 +97,11 @@ Vector for which the vectorized form corresponds exactly to the vector given.
 struct VectorShape <: AbstractShape end
 reshape(vectorized_form, ::VectorShape) = vectorized_form
 
-##########################################################################
-# Constraint Reference
-# Holds the index of a constraint in a Model.
+"""
+    ConstraintRef
+
+Holds a reference to the model and the corresponding MOI.ConstraintIndex.
+"""
 struct ConstraintRef{M <: AbstractModel, C, Shape <: AbstractShape}
     model::M
     index::C
