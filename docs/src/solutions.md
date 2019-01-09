@@ -115,7 +115,4 @@ JuMP.value
 JuMP.dual_status
 JuMP.has_duals
 JuMP.dual
-JuMP.AbstractShape
-JuMP.dual_shape
-JuMP.reshape
 ```
