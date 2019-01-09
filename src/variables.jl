@@ -694,3 +694,28 @@ function add_variable(m::Model, v::ScalarVariable, name::String="")
     end
     return vref
 end
+
+"""
+    all_variables(model::Model)::Vector{VariableRef}
+
+Returns a list of all variables currently in the model. The variables are
+ordered by creation time.
+
+# Example
+```jldoctest
+model = Model()
+@variable(model, x)
+@variable(model, y)
+JuMP.all_variables(model)
+
+# output
+
+2-element Array{VariableRef,1}:
+ x
+ y
+```
+"""
+function all_variables(model::Model)
+    return [VariableRef(model, idx) for idx in
+             MOI.get(model, MOI.ListOfVariableIndices())]
+end
