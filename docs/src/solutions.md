@@ -79,7 +79,7 @@ It is important to note that if `has_values` returns false, calls to
 [`JuMP.value`](@ref) and [`JuMP.dual`](@ref) might throw an error or return
 arbitrary values.
 
-The container type (e.g., scalar, vector, matrxix) of the returned solution
+The container type (e.g., scalar, vector, or matrix) of the returned solution
 (primal or dual) depends on the type of the variable or constraint. See
 [`AbstractShape`](@ref) and [`dual_shape`](@ref) for details.
 
