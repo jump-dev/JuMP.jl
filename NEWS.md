@@ -25,6 +25,9 @@ Breaking changes:
   updated for MOI. See the
   [installation guide](http://www.juliaopt.org/JuMP.jl/dev/installation/)
   for a list of solvers that have and have not yet been updated.
+  
+- Most solvers have been renamed to `PackageName.Optimizer`. For example, 
+  `GurobiSolver(OutputFlag=0)` is now `Gurobi.Optimizer(OutputFlag=0)`.
 
 - JuMP containers (e.g., the objects returned by `@variable`) have been
   redesigned. `Containers.SparseAxisArray` replaces `JuMPDict`, `JuMPArray` was
