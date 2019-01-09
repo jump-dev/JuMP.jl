@@ -1157,7 +1157,23 @@ var documenterSearchIndex = {"docs": [
     "page": "Extensions",
     "title": "Extending MOI",
     "category": "section",
-    "text": "TODO: Create new MOI function/sets, how to use it in JuMP, create new bridge"
+    "text": "TODO: Create new MOI function/sets, how to use it in JuMP"
+},
+
+{
+    "location": "extensions/#JuMP.add_bridge",
+    "page": "Extensions",
+    "title": "JuMP.add_bridge",
+    "category": "function",
+    "text": " add_bridge(model::Model,\n            BridgeType::Type{<:MOI.Bridges.AbstractBridge})\n\nAdd BridgeType to the list of bridges that can be used to transform unsupported constraints into an equivalent formulation using only constraints supported by the optimizer.\n\n\n\n\n\n"
+},
+
+{
+    "location": "extensions/#Adding-a-bridge-1",
+    "page": "Extensions",
+    "title": "Adding a bridge",
+    "category": "section",
+    "text": "TODO: create new bridgeSee the bridge section in the MOI manual.add_bridge"
 },
 
 {
