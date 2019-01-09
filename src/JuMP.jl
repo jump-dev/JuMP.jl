@@ -165,6 +165,9 @@ mutable struct Model <: AbstractModel
     # In MANUAL and AUTOMATIC modes, CachingOptimizer.
     # In DIRECT mode, will hold an AbstractOptimizer.
     moi_backend::MOI.AbstractOptimizer
+    # List of bridges to add in addition to the ones added in
+    # `MOI.Bridges.full_bridge_optimizer`.
+    bridge_types::Vector{Any}
     # Hook into a solve call...function of the form f(m::Model; kwargs...),
     # where kwargs get passed along to subsequent solve calls.
     optimize_hook
@@ -256,6 +259,7 @@ function direct_model(backend::MOI.ModelLike)
                  Dict{MOIVAR, MOIINT}(),
                  Dict{MOIVAR, MOIBIN}(),
                  backend,
+                 DataType[],
                  nothing,
                  nothing,
                  Dict{Symbol, Any}(),
@@ -296,9 +300,11 @@ end
 
 Return mode (DIRECT, AUTOMATIC, MANUAL) of model.
 """
-mode(model::Model) = moi_mode(backend(model))
-# The type of backend(model) is unknown so we directly redirect to another
-# function.
+function mode(model::Model)
+    # The type of `backend(model)` is not type-stable, so we use a function
+    # barrier (`moi_mode`) to improve performance.
+    return moi_mode(backend(model))
+end
 
 # Direct mode
 moi_bridge_constraints(model::MOI.ModelLike) = false
@@ -346,10 +352,49 @@ optimizer is set and unsupported constraints are automatically bridged
 to equivalent supported constraints when an appropriate transformation is
 available.
 """
-bridge_constraints(model::Model) = moi_bridge_constraints(backend(model))
-# The type of backend(model) is unknown so we directly redirect to another
-# function.
+function bridge_constraints(model::Model)
+    # The type of `backend(model)` is not type-stable, so we use a function
+    # barrier (`moi_bridge_constraints`) to improve performance.
+    return moi_bridge_constraints(backend(model))
+end
 
+function moi_add_bridge(model::Nothing,
+                        BridgeType::Type{<:MOI.Bridges.AbstractBridge})
+    # No optimizer is attached, the bridge will be added when one is attached
+    return
+end
+function moi_add_bridge(model::MOI.ModelLike,
+                        BridgeType::Type{<:MOI.Bridges.AbstractBridge})
+    error("Cannot add bridge if `bridge_constraints` was set to `false` in the",
+          " `Model` constructor.")
+end
+function moi_add_bridge(bridge_opt::MOI.Bridges.LazyBridgeOptimizer,
+                        BridgeType::Type{<:MOI.Bridges.AbstractBridge})
+    MOI.Bridges.add_bridge(bridge_opt, BridgeType{Float64})
+    return
+end
+function moi_add_bridge(caching_opt::MOIU.CachingOptimizer,
+                        BridgeType::Type{<:MOI.Bridges.AbstractBridge})
+    moi_add_bridge(caching_opt.optimizer, BridgeType)
+    return
+end
+
+"""
+     add_bridge(model::Model,
+                BridgeType::Type{<:MOI.Bridges.AbstractBridge})
+
+Add `BridgeType` to the list of bridges that can be used to transform
+unsupported constraints into an equivalent formulation using only constraints
+supported by the optimizer.
+"""
+function add_bridge(model::Model,
+                    BridgeType::Type{<:MOI.Bridges.AbstractBridge})
+    push!(model.bridge_types, BridgeType)
+    # The type of `backend(model)` is not type-stable, so we use a function
+    # barrier (`moi_add_bridge`) to improve performance.
+    moi_add_bridge(JuMP.backend(model), BridgeType)
+    return
+end
 
 """
     num_variables(model::Model)

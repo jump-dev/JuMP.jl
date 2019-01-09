@@ -50,6 +50,9 @@ function set_optimizer(model::Model, optimizer_factory::OptimizerFactory;
             optimizer = MOIU.CachingOptimizer(universal_fallback, optimizer)
         end
         optimizer = MOI.Bridges.full_bridge_optimizer(optimizer, Float64)
+        for bridge_type in model.bridge_types
+            moi_add_bridge(optimizer, bridge_type)
+        end
     end
     MOIU.reset_optimizer(model, optimizer)
 end

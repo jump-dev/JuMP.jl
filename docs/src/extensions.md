@@ -10,7 +10,17 @@ How to extend JuMP's macros and how to avoid doing this.
 
 ## Extending MOI
 
-TODO: Create new MOI function/sets, how to use it in JuMP, create new bridge
+TODO: Create new MOI function/sets, how to use it in JuMP
+
+### Adding a bridge
+
+TODO: create new bridge
+
+See the [bridge section in the MOI manual](http://www.juliaopt.org/MathOptInterface.jl/v0.8/apimanual/#Constraint-bridges-1).
+
+```@docs
+add_bridge
+```
 
 ## Extending JuMP macros
 

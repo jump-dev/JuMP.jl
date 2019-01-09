@@ -38,6 +38,9 @@ function opt_build(a::Int; b::Int = 1)
     return Optimizer(a, b)
 end
 
+# Custom set Nonnegative with bridge NonnegativeBridge
+include("nonnegative_bridge.jl")
+
 function test_model()
     @testset "optimize_hook" begin
         m = Model()
@@ -105,6 +108,70 @@ function test_model()
             @variable model x
             err = ErrorException("Constraints of type MathOptInterface.ScalarAffineFunction{Float64}-in-MathOptInterface.Interval{Float64} are not supported by the solver.")
             @test_throws err @constraint model 0 <= x + 1 <= 1
+        end
+
+        @testset "Add bridge" begin
+            function mock()
+                mock = MOIU.MockOptimizer(JuMP.JuMPMOIModel{Float64}(),
+                                          eval_variable_constraint_dual=false)
+                optimize!(mock) = MOIU.mock_optimize!(mock, [1.0],
+                        (MOI.SingleVariable, MOI.GreaterThan{Float64}) => [2.0])
+                MOIU.set_mock_optimize!(mock, optimize!)
+                return mock
+            end
+            factory = with_optimizer(mock)
+            @testset "before loading the constraint to the optimizer" begin
+                @testset "with_optimizer at Model" begin
+                    model = Model(factory)
+                    @variable(model, x)
+                    JuMP.add_bridge(model, NonnegativeBridge)
+                    c = @constraint(model, x in Nonnegative())
+                    JuMP.optimize!(model)
+                    @test JuMP.value(x) == 1.0
+                    @test JuMP.value(c) == 1.0
+                    @test JuMP.dual(c) == 2.0
+                end
+                @testset "with_optimizer at optimize!" begin
+                    model = Model()
+                    @variable(model, x)
+                    c = @constraint(model, x in Nonnegative())
+                    JuMP.add_bridge(model, NonnegativeBridge)
+                    JuMP.optimize!(model, factory)
+                    @test JuMP.value(x) == 1.0
+                    @test JuMP.value(c) == 1.0
+                    @test JuMP.dual(c) == 2.0
+                end
+            end
+            @testset "after loading the constraint to the optimizer" begin
+                @testset "with_optimizer at Model" begin
+                    err = ErrorException(string("Constraints of type ",
+                    "MathOptInterface.SingleVariable-in-Nonnegative are not ",
+                    "supported by the solver and there are no bridges that ",
+                    "can reformulate it into supported constraints."))
+                    model = Model(factory)
+                    @variable(model, x)
+                    @test_throws err @constraint(model, x in Nonnegative())
+                    JuMP.add_bridge(model, NonnegativeBridge)
+                    c = @constraint(model, x in Nonnegative())
+                    JuMP.optimize!(model)
+                    @test JuMP.value(x) == 1.0
+                    @test JuMP.value(c) == 1.0
+                    @test JuMP.dual(c) == 2.0
+                end
+                @testset "with_optimizer at optimize!" begin
+                    err = MOI.UnsupportedConstraint{MOI.SingleVariable,
+                                                    Nonnegative}()
+                    model = Model()
+                    @variable(model, x)
+                    c = @constraint(model, x in Nonnegative())
+                    @test_throws err JuMP.optimize!(model, factory)
+                    JuMP.add_bridge(model, NonnegativeBridge)
+                    JuMP.optimize!(model)
+                    @test JuMP.value(x) == 1.0
+                    @test JuMP.value(c) == 1.0
+                    @test JuMP.dual(c) == 2.0
+                end
+            end
         end
     end
 
