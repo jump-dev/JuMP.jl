@@ -22,22 +22,21 @@ JuMP follows closely the concepts defined in [MathOptInterface (MOI)](https://gi
 to answer user questions about a finished call to `JuMP.optimize!(model)`. There
 are three main steps in querying a solution:
 
- 1. First, we can query the [`termination_status`](@ref) which will tell us why
-    the optimization stopped. This could be due to a number of reasons. For
-    example, the solver found an optimal solution, the problem was proven to be
-    infeasible, or a user-provided limit such as a time limit was encountered.
-    For more information, see the [Termination statuses](@ref) section below.
+First, we can query the [`termination_status`](@ref) which will tell us why the
+optimization stopped. This could be due to a number of reasons. For example, the
+solver found an optimal solution, the problem was proven to be infeasible, or a
+user-provided limit such as a time limit was encountered. For more information,
+see the [Termination statuses](@ref) section below.
 
- 2. Second, we can query the [`primal_status`](@ref) and [`dual_status`](@ref),
-    which will tell us what kind of result do we have for our primal and dual
-    solution. This might be an optimal primal-dual pair, a primal solution
-    without a corresponding dual solution, or a certificate of primal or dual
-    infeasibility. For more information, see the [Solution statuses](@ref)
-    section below.
+Second, we can query the [`primal_status`](@ref) and [`dual_status`](@ref),
+which will tell us what kind of result do we have for our primal and dual
+solution. This might be an optimal primal-dual pair, a primal solution without a
+corresponding dual solution, or a certificate of primal or dual infeasibility.
+For more information, see the [Solution statuses](@ref) section below.
 
- 3. Third, we can query [`JuMP.value`](@ref) and [`JuMP.dual`](@ref) to obtain
-    the primal and dual values of the optimization variables and constraints (if
-    there are values to be queried).
+Third, we can query [`JuMP.value`](@ref) and [`JuMP.dual`](@ref) to obtain the
+primal and dual values of the optimization variables and constraints (if there
+are values to be queried).
 
 ## Termination statuses
 
@@ -46,10 +45,10 @@ The reason why the optimization of `model` was finished is given by
 JuMP.termination_status(model)
 ```
 
-This function will return an instance of the `MOI.TerminationStatus` `enum`.
+This function will return a `MOI.TerminationStatusCode` `enum`.
 
 ```@docs
-MOI.TerminationStatus
+MOI.TerminationStatusCode
 ```
 
 ## Solution statuses
@@ -60,7 +59,7 @@ is available to be queried.
 
 We can obtain these statuses by calling [`JuMP.primal_status`](@ref) for the
 primal status, and [`JuMP.dual_status`](@ref) for the dual status. Both will
-return an instance of the `MOI.ResultStatusCode` `enum`.
+return a `MOI.ResultStatusCode` `enum`.
 
 ```@docs
 MOI.ResultStatusCode
@@ -115,4 +114,5 @@ JuMP.value
 JuMP.dual_status
 JuMP.has_duals
 JuMP.dual
+MOI.optimize!
 ```
