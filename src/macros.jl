@@ -932,7 +932,9 @@ end
 """
     @expression(args...)
 
-Efficiently builds a linear, quadratic, or second-order cone expression but does not add to model immediately. Instead, returns the expression which can then be inserted in other constraints. For example:
+Efficiently builds a linear or quadratic expression but does not add to model
+immediately. Instead, returns the expression which can then be inserted in other
+constraints. For example:
 
 ```julia
 @expression(m, shared, sum(i*x[i] for i=1:5))
@@ -940,7 +942,8 @@ Efficiently builds a linear, quadratic, or second-order cone expression but does
 @constraint(m, shared + z <= 10)
 ```
 
-The `ref` accepts index sets in the same way as `@variable`, and those indices can be used in the construction of the expressions:
+The `ref` accepts index sets in the same way as `@variable`, and those indices
+can be used in the construction of the expressions:
 
 ```julia
 @expression(m, expr[i=1:3], i*sum(x[j] for j=1:3))
@@ -1498,7 +1501,8 @@ end
 """
     @NLexpression(args...)
 
-Efficiently build a nonlinear expression which can then be inserted in other nonlinear constraints and the objective. See also [`@expression`]. For example:
+Efficiently build a nonlinear expression which can then be inserted in other
+nonlinear constraints and the objective. See also [`@expression`]. For example:
 
 ```julia
 @NLexpression(model, my_expr, sin(x)^2 + cos(x^2))

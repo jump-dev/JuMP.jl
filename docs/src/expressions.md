@@ -61,9 +61,8 @@ expr
 
 ### Operator overloading
 
-Expressions can also be created outside the macro. However, not that this is
-much slower that constructing an expression using the macro. This should only be
-used if the performance is not critical.
+Expressions can also be created outside the macro. However, note that in some
+cases, this can be much slower that constructing an expression using the macro.
 
 ```jldoctest
 model = Model()
@@ -78,7 +77,7 @@ ex = 2x + y - 1
 
 ### Constructors
 
-A third was to create an affine expression is by the `AffExpr` constructor. The
+A third way to create an affine expression is by the `AffExpr` constructor. The
 first argument is the constant term, and the remaining arguments are
 variable-coefficient pairs.
 
@@ -195,7 +194,10 @@ x² + 2 x*y + y² + x + y - 1
 ## Nonlinear expressions
 
 Nonlinear expressions can only be constructed using the [`@NLexpression`](@ref)
-macro. For more details, see the [Nonlinear Modeling](@ref) section.
+macro, and nonlinear expressions can only be used in [`@NLobjective`](@ref) and
+[`@NLconstraint`](@ref). Moreover, quadratic and affine expressions cannot be
+used in the nonlinear macros. For more details, see the [Nonlinear Modeling](@ref)
+section.
 
 ## Reference
 
