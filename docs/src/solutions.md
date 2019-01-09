@@ -87,6 +87,10 @@ To call [`JuMP.value`](@ref) or [`JuMP.dual`](@ref) on container of
 [`VariableRef`](@ref) or [`ConstraintRef`](@ref), use the broadcast syntax,
 e.g., `JuMP.value.(x)`.
 
+The objective value of a solved problem can be obtained via
+[`JuMP.objective_value`](@ref). The best known bound on the optimal objective
+value can be obtained via [`JuMP.objective_bound`](@ref).
+
 A recommended workflow for solving a model and querying the solution is the
 following:
 ```julia
@@ -98,7 +102,9 @@ model = Model()
 JuMP.optimize!(model)
 
 if JuMP.termination_status(model) != MOI.OPTIMAL && JuMP.has_values(model)
-    solution = JuMP.value.(x)
+    primal_solution = JuMP.value.(x)
+    objective = JuMP.objective_value(model)
+
 else
     error("The model was not solved correctly.")
 end
