@@ -304,6 +304,22 @@ end
             JuMP.destructive_add!(0.0, x', ones(2, 2)), x' * ones(2, 2)
         )
     end
+
+    @testset "Nonliteral exponents in @constraint" begin
+        model = Model()
+        @variable(model, x)
+        foo() = 2
+        con1 = JuMP.@build_constraint(x^(foo()) + x^(foo()-1) +
+                                      x^(foo()-2) == 0)
+        con2 = JuMP.@build_constraint((x - 1)^(foo()) + (x - 1)^2 + (x - 1)^1 +
+                                      (x - 1)^0 == 0)
+        con3 = JuMP.@build_constraint(sum(x for i in 1:3)^(foo()) == 0)
+        con4 = JuMP.@build_constraint(sum(x for i in 1:3)^(foo() - 1) == 0)
+        @test con1.func == x^2 + x
+        @test con2.func == 2 * x^2 - 3 * x
+        @test con3.func == 9 * x^2
+        @test con4.func == convert(QuadExpr, 3 * x)
+    end
 end
 
 @testset "Macros for JuMPExtension.MyModel" begin
