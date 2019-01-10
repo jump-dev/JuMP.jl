@@ -580,10 +580,19 @@ julia> JuMP.is_valid(model, x)
 false
 ```
 
+## Listing all variables
+
+Use [`JuMP.all_variables`](@ref) to obtain a list of all variables present
+in the model. This is useful for performing operations like:
+
+- relaxing all integrality constraints in the model
+- setting the starting values for variables to the result of the last solve
+
 ## Reference
 
 ```@docs
 @variable
 owner_model
 VariableRef
+all_variables
 ```

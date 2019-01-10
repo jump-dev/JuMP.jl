@@ -545,6 +545,12 @@ end
 
 @testset "Variables for JuMP.Model" begin
     variables_test(Model, VariableRef)
+    @testset "all_variables" begin
+        model = Model()
+        @variable(model, x)
+        @variable(model, y)
+        @test JuMP.all_variables(model) == [x, y]
+    end
 end
 
 @testset "Variables for JuMPExtension.MyModel" begin

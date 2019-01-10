@@ -19,12 +19,15 @@
 ```
 
 !!! warning
-    This documentation is for the development branch of JuMP. JuMP is
-    undergoing a [major
-    transition](https://discourse.julialang.org/t/mathoptinterface-and-upcoming-breaking-changes-in-jump-0-19)
+    This documentation is for the development branch of JuMP. JuMP is undergoing
+    a [major transition](https://discourse.julialang.org/t/mathoptinterface-and-upcoming-breaking-changes-in-jump-0-19)
     to MathOptInterface. The development version is beta quality and the
     documentation has TODOs remaining before the release. Please provide
     feedback and file issues if you use this branch.
+
+    The [NEWS.md](https://github.com/JuliaOpt/JuMP.jl/blob/master/NEWS.md) file
+    contains a comprehensive list of the changes between JuMP 0.18 and JuMP 0.19
+    to aid users updating their existing models.
 
 [JuMP](https://github.com/JuliaOpt/JuMP.jl) is a domain-specific modeling
 language for [mathematical
@@ -102,8 +105,7 @@ Pages = [
     "solutions.md",
     "nlp.md",
     "style.md",
-    "extensions.md",
-    "updating.md"
+    "extensions.md"
 ]
 Depth = 2
 ```
