@@ -404,7 +404,7 @@ of specific variables. For example, in statistical maximum likelihood estimation
 problems, one is often interested in the Hessian matrix at the optimal solution,
 which can be queried using the `JuMP.NLPEvaluator`.
 
-# Raw expression input
+## Raw expression input
 
 In addition to the `@NLobjective` and `@NLconstraint` macros, it is also
 possible to provide Julia `Expr` objects directly by using
@@ -424,5 +424,13 @@ JuMP.add_NL_constraint(model, :($(x[1])*$(x[2])*$(x[3])*$(x[4]) >= 25))
 
 See the Julia documentation for more examples and description of Julia
 expressions.
+
+## Reference
+
+```@docs
+@NLconstraint
+@NLexpression
+@NLobjective
+```
 
 [^1]: Dunning, Huchette, and Lubin, "JuMP: A Modeling Language for Mathematical Optimization", [arXiv](http://arxiv.org/abs/1508.01982).

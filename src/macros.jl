@@ -932,7 +932,9 @@ end
 """
     @expression(args...)
 
-efficiently builds a linear, quadratic, or second-order cone expression but does not add to model immediately. Instead, returns the expression which can then be inserted in other constraints. For example:
+Efficiently builds a linear or quadratic expression but does not add to model
+immediately. Instead, returns the expression which can then be inserted in other
+constraints. For example:
 
 ```julia
 @expression(m, shared, sum(i*x[i] for i=1:5))
@@ -940,7 +942,8 @@ efficiently builds a linear, quadratic, or second-order cone expression but does
 @constraint(m, shared + z <= 10)
 ```
 
-The `ref` accepts index sets in the same way as `@variable`, and those indices can be used in the construction of the expressions:
+The `ref` accepts index sets in the same way as `@variable`, and those indices
+can be used in the construction of the expressions:
 
 ```julia
 @expression(m, expr[i=1:3], i*sum(x[j] for j=1:3))
@@ -1386,7 +1389,16 @@ macro variable(args...)
     return assert_validmodel(model, macro_code)
 end
 
-# TODO: Add a docstring.
+"""
+    @NLobjective(model, sense, expression)
+
+Add a nonlinear objective to `model` with optimization sense `sense`.
+`sense` must be `Max` or `Min`.
+
+# Example
+
+    @NLobjective(model, Max, 2x + 1 + sin(x))
+"""
 macro NLobjective(model, sense, x)
     _error(str...) = macro_error(:NLobjective, (model, sense, x), str...)
     sense_expr = moi_sense(_error, sense)
@@ -1398,7 +1410,17 @@ macro NLobjective(model, sense, x)
     return assert_validmodel(esc(model), macro_return(code, nothing))
 end
 
-# TODO: Add a docstring.
+"""
+    @NLconstraint(m::Model, expr)
+
+Add a constraint described by the nonlinear expression `expr`. See also
+[`@constraint`](@ref). For example:
+
+```julia
+@NLconstraint(model, sin(x) <= 1)
+@NLconstraint(model, [i = 1:3], sin(i * x) <= 1 / i)
+```
+"""
 macro NLconstraint(m, x, extra...)
     esc_m = esc(m)
     # Two formats:
@@ -1476,7 +1498,24 @@ macro NLconstraint(m, x, extra...)
     return assert_validmodel(esc_m, macro_code)
 end
 
-# TODO: Add a docstring.
+"""
+    @NLexpression(args...)
+
+Efficiently build a nonlinear expression which can then be inserted in other
+nonlinear constraints and the objective. See also [`@expression`]. For example:
+
+```julia
+@NLexpression(model, my_expr, sin(x)^2 + cos(x^2))
+@NLconstraint(model, my_expr + y >= 5)
+@NLobjective(model, Min, my_expr)
+```
+
+Indexing over sets and anonymous expressions are also supported:
+```julia
+@NLexpression(m, my_expr_1[i=1:3], sin(i * x))
+my_expr_2 = @NLexpression(m, log(1 + sum(exp(x[i])) for i in 1:2))
+```
+"""
 macro NLexpression(args...)
     args, kw_args, requestedcontainer = extract_kw_args(args)
     if length(args) <= 1
