@@ -101,10 +101,12 @@ model = Model()
 # ... other constraints ...
 JuMP.optimize!(model)
 
-if JuMP.termination_status(model) != MOI.OPTIMAL && JuMP.has_values(model)
-    primal_solution = JuMP.value.(x)
-    objective = JuMP.objective_value(model)
-
+if JuMP.termination_status(model) == MOI.OPTIMAL
+    optimal_solution = JuMP.value.(x)
+    optimal_objective = JuMP.objective_value(model)
+elseif JuMP.termination_status(model) == MOI.TIME_LIMIT && JuMP.has_values(model)
+    suboptimal_solution = JuMP.value.(x)
+    suboptimal_objective = JuMP.objective_value(model)
 else
     error("The model was not solved correctly.")
 end
