@@ -716,6 +716,6 @@ JuMP.all_variables(model)
 ```
 """
 function all_variables(model::Model)
-    return [VariableRef(model, idx) for idx in
-             MOI.get(model, MOI.ListOfVariableIndices())]
+    return VariableRef[VariableRef(model, idx) for idx in
+                        MOI.get(model, MOI.ListOfVariableIndices())]
 end
