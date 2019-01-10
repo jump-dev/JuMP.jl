@@ -269,7 +269,7 @@ end
 
 # Note: No validation is performed that the variables in the AffExpr belong to
 # the same model. The verification is done in `verify_ownership` which should be
-# called before calling `moi_function`.
+# called before calling `MOI.ScalarAffineFunction`.
 function MOI.ScalarAffineFunction(a::AffExpr)
     assert_isfinite(a)
     terms = MOI.ScalarAffineTerm{Float64}[MOI.ScalarAffineTerm(t[1],
