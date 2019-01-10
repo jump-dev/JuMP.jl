@@ -132,19 +132,19 @@ struct VariableNotOwned{V <: AbstractVariableRef} <: Exception
 end
 
 """
-    check_belongs_to_model(model::AbstractModel, func::AbstractJuMPScalar)
+    check_belongs_to_model(func::AbstractJuMPScalar, model::AbstractModel)
 
 Throw `VariableNotOwned` if the `owner_model` of one of the variables of the
 function `func` is not `model`.
 
-    check_belongs_to_model(model::AbstractModel, constraint::AbstractConstraint)
+    check_belongs_to_model(constraint::AbstractConstraint, model::AbstractModel)
 
 Throw `VariableNotOwned` if the `owner_model` of one of the variables of the
 constraint `constraint` is not `model`.
 """
 function check_belongs_to_model end
 
-function check_belongs_to_model(model::AbstractModel, v::AbstractVariableRef)
+function check_belongs_to_model(v::AbstractVariableRef, model::AbstractModel)
     if owner_model(v) !== model
         throw(VariableNotOwned(v))
     end
