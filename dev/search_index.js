@@ -305,6 +305,14 @@ var documenterSearchIndex = {"docs": [
 },
 
 {
+    "location": "variables/#Listing-all-variables-1",
+    "page": "Variables",
+    "title": "Listing all variables",
+    "category": "section",
+    "text": "Use JuMP.all_variables to obtain a list of all variables present in the model. This is useful for performing operations like:relaxing all integrality constraints in the model\nsetting the starting values for variables to the result of the last solve"
+},
+
+{
     "location": "variables/#JuMP.@variable",
     "page": "Variables",
     "title": "JuMP.@variable",
@@ -321,11 +329,19 @@ var documenterSearchIndex = {"docs": [
 },
 
 {
+    "location": "variables/#JuMP.all_variables",
+    "page": "Variables",
+    "title": "JuMP.all_variables",
+    "category": "function",
+    "text": "all_variables(model::Model)::Vector{VariableRef}\n\nReturns a list of all variables currently in the model. The variables are ordered by creation time.\n\nExample\n\nmodel = Model()\n@variable(model, x)\n@variable(model, y)\nJuMP.all_variables(model)\n\n# output\n\n2-element Array{VariableRef,1}:\n x\n y\n\n\n\n\n\n"
+},
+
+{
     "location": "variables/#Reference-1",
     "page": "Variables",
     "title": "Reference",
     "category": "section",
-    "text": "@variable\nowner_model"
+    "text": "@variable\nowner_model\nall_variables"
 },
 
 {
