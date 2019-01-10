@@ -261,8 +261,15 @@ Replaces `getvalue` for most use cases.
 """
 value(a::GenericAffExpr) = value(a, value)
 
+function verify_ownership(model::AbstractModel, a::GenericAffExpr)
+    for variable in keys(a.terms)
+        verify_ownership(model, variable)
+    end
+end
+
 # Note: No validation is performed that the variables in the AffExpr belong to
-# the same model.
+# the same model. The verification is done in `verify_ownership` which should be
+# called before calling `moi_function`.
 function MOI.ScalarAffineFunction(a::AffExpr)
     assert_isfinite(a)
     terms = MOI.ScalarAffineTerm{Float64}[MOI.ScalarAffineTerm(t[1],
@@ -274,6 +281,7 @@ moi_function(a::GenericAffExpr) = MOI.ScalarAffineFunction(a)
 function moi_function_type(::Type{<:GenericAffExpr{T}}) where T
     return MOI.ScalarAffineFunction{T}
 end
+
 
 function AffExpr(m::Model, f::MOI.ScalarAffineFunction)
     aff = AffExpr()

@@ -42,6 +42,54 @@ end
 include("nonnegative_bridge.jl")
 
 function test_model()
+    @testset "Test variable/model 'hygiene'" begin
+        model_x = Model()
+        @variable(model_x, x)
+        model_y = Model()
+        @variable(model_y, y)
+        err = JuMP.VariableNotOwned{JuMP.VariableRef}(y)
+        @testset "Variable" begin
+            @testset "constraint" begin
+                @test_throws err @constraint(model_x, y in MOI.EqualTo(1.0))
+                @test_throws err @constraint(model_x, [x, y] in MOI.Zeros(2))
+            end
+            @testset "objective" begin
+                @test_throws err @objective(model_x, Min, y)
+            end
+        end
+        @testset "Linear" begin
+            @testset "constraint" begin
+                @test_throws err @constraint(model_x, x + y == 1)
+                @test_throws err begin
+                    @constraint(model_x, [x, x + y] in MOI.Zeros(2))
+                end
+                @test_throws err begin
+                    @constraint(model_x, [x + y, x] in MOI.Zeros(2))
+                end
+            end
+            @testset "objective" begin
+                @test_throws err @objective(model_x, Min, x + y)
+            end
+        end
+        @testset "Quadratic" begin
+            @testset "constraint" begin
+                @test_throws err @constraint(model_x, x*y >= 1)
+                @test_throws err @constraint(model_x, [x, x*y] in MOI.Zeros(2))
+                @test_throws err @constraint(model_x, [x*y, x] in MOI.Zeros(2))
+                @test_throws err @constraint(model_x, y*y + x + y <= 1)
+                @test_throws err begin
+                    @constraint(model_x, [x, y*y + x + y] in MOI.Zeros(2))
+                end
+                @test_throws err begin
+                    @constraint(model_x, [y*y + x + y, x] in MOI.Zeros(2))
+                end
+            end
+            @testset "objective" begin
+                @test_throws err @objective(model_x, Min, x*y)
+            end
+        end
+    end
+
     @testset "optimize_hook" begin
         m = Model()
         @test m.optimize_hook === nothing

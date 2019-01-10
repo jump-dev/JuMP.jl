@@ -119,6 +119,37 @@ true
 """
 owner_model(v::AbstractVariableRef) = v.model
 
+"""
+    struct VariableNotOwned{V <: AbstractVariableRef} <: Exception
+        variable::V
+    end
+
+The variable `variable` was used in a model different to
+`owner_model(variable)`.
+"""
+struct VariableNotOwned{V <: AbstractVariableRef} <: Exception
+    variable::V
+end
+
+"""
+    verify_ownership(model::AbstractModel, func::AbstractJuMPScalar)
+
+Throw `VariableNotOwned` if the `owner_model` of one of the variables of the
+function `func` is not `model`.
+
+    verify_ownership(model::AbstractModel, constraint::AbstractConstraint)
+
+Throw `VariableNotOwned` if the `owner_model` of one of the variables of the
+constraint `constraint` is not `model`.
+"""
+function verify_ownership end
+
+function verify_ownership(model::AbstractModel, v::AbstractVariableRef)
+    if owner_model(v) !== model
+        throw(VariableNotOwned(v))
+    end
+end
+
 Base.iszero(::VariableRef) = false
 Base.copy(v::VariableRef) = VariableRef(v.model, v.index)
 Base.broadcastable(v::VariableRef) = Ref(v)

@@ -198,6 +198,14 @@ function Base.convert(::Type{GenericQuadExpr{C, V}}, v::Union{Real,AbstractVaria
 end
 GenericQuadExpr{C, V}() where {C, V} = zero(GenericQuadExpr{C, V})
 
+function verify_ownership(model::AbstractModel, q::GenericQuadExpr)
+    verify_ownership(model, q.aff)
+    for variable_pair in keys(q.terms)
+        verify_ownership(model, variable_pair.a)
+        verify_ownership(model, variable_pair.b)
+    end
+end
+
 """
     moi_quadratic_term(t::Tuple)
 

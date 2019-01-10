@@ -286,6 +286,9 @@ function constraint_object(ref::ConstraintRef{Model, MOICON{FuncType, SetType}})
     s = MOI.get(model, MOI.ConstraintSet(), ref)::SetType
     return ScalarConstraint(jump_function(model, f), s)
 end
+function verify_ownership(model, c::ScalarConstraint)
+    verify_ownership(model, c.func)
+end
 
 struct VectorConstraint{F <: AbstractJuMPScalar,
                         S <: MOI.AbstractVectorSet,
@@ -308,6 +311,11 @@ function constraint_object(ref::ConstraintRef{Model, MOICON{FuncType, SetType}})
     f = MOI.get(model, MOI.ConstraintFunction(), ref)::FuncType
     s = MOI.get(model, MOI.ConstraintSet(), ref)::SetType
     return VectorConstraint(jump_function(model, f), s, ref.shape)
+end
+function verify_ownership(model, c::VectorConstraint)
+    for func in c.func
+        verify_ownership(model, func)
+    end
 end
 
 function moi_add_constraint(model::MOI.ModelLike, f::MOI.AbstractFunction,
@@ -333,6 +341,7 @@ Add a constraint `c` to `Model model` and sets its name.
 function add_constraint(model::Model, c::AbstractConstraint, name::String="")
     # The type of backend(model) is unknown so we directly redirect to another
     # function.
+    verify_ownership(model, c)
     cindex = moi_add_constraint(backend(model), moi_function(c), moi_set(c))
     cref = ConstraintRef(model, cindex, shape(c))
     if !isempty(name)
