@@ -47,7 +47,7 @@ function test_model()
         @variable(model_x, x)
         model_y = Model()
         @variable(model_y, y)
-        err = JuMP.VariableNotOwned{JuMP.VariableRef}(y)
+        err = JuMP.VariableNotOwned(y)
         @testset "Variable" begin
             @testset "constraint" begin
                 @test_throws err @constraint(model_x, y in MOI.EqualTo(1.0))
@@ -86,6 +86,26 @@ function test_model()
             end
             @testset "objective" begin
                 @test_throws err @objective(model_x, Min, x*y)
+            end
+        end
+        @testset "Attribute" begin
+            cy = @constraint(model_y, y in MOI.EqualTo(1.0))
+            cerr = JuMP.ConstraintNotOwned(cy)
+            @testset "get" begin
+                @test_throws err begin
+                    MOI.get(model_x, MOI.VariablePrimalStart(), y)
+                end
+                @test_throws cerr begin
+                    MOI.get(model_x, MOI.ConstraintPrimalStart(), cy)
+                end
+            end
+            @testset "set" begin
+                @test_throws err begin
+                    MOI.set(model_x, MOI.VariablePrimalStart(), y, 1.0)
+                end
+                @test_throws cerr begin
+                    MOI.set(model_x, MOI.ConstraintPrimalStart(), cy, 1.0)
+                end
             end
         end
     end

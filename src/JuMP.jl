@@ -555,23 +555,27 @@ end
 Return the value of the attribute `attr` from model's MOI backend.
 """
 MOI.get(m::Model, attr::MOI.AbstractModelAttribute) = MOI.get(backend(m), attr)
-function MOI.get(m::Model, attr::MOI.AbstractVariableAttribute, v::VariableRef)
-    @assert m === owner_model(v) # TODO: Improve the error message.
-    return MOI.get(backend(m), attr, index(v))
+function MOI.get(model::Model, attr::MOI.AbstractVariableAttribute,
+                 v::VariableRef)
+    verify_ownership(model, v)
+    return MOI.get(backend(model), attr, index(v))
 end
-function MOI.get(m::Model, attr::MOI.AbstractConstraintAttribute, cr::ConstraintRef)
-    @assert m === cr.model # TODO: Improve the error message.
-    return MOI.get(backend(m), attr, index(cr))
+function MOI.get(model::Model, attr::MOI.AbstractConstraintAttribute,
+                 cr::ConstraintRef)
+    verify_ownership(model, cr)
+    return MOI.get(backend(model), attr, index(cr))
 end
 
 MOI.set(m::Model, attr::MOI.AbstractModelAttribute, value) = MOI.set(backend(m), attr, value)
-function MOI.set(m::Model, attr::MOI.AbstractVariableAttribute, v::VariableRef, value)
-    @assert m === owner_model(v) # TODO: Improve the error message.
-    MOI.set(backend(m), attr, index(v), value)
+function MOI.set(model::Model, attr::MOI.AbstractVariableAttribute,
+                 v::VariableRef, value)
+    verify_ownership(model, v)
+    MOI.set(backend(model), attr, index(v), value)
 end
-function MOI.set(m::Model, attr::MOI.AbstractConstraintAttribute, cr::ConstraintRef, value)
-    @assert m === cr.model # TODO: Improve the error message.
-    MOI.set(backend(m), attr, index(cr), value)
+function MOI.set(model::Model, attr::MOI.AbstractConstraintAttribute,
+                 cr::ConstraintRef, value)
+    verify_ownership(model, cr)
+    MOI.set(backend(model), attr, index(cr), value)
 end
 
 ###############################################################################

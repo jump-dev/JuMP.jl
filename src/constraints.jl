@@ -106,6 +106,36 @@ struct ConstraintRef{M <: AbstractModel, C, Shape <: AbstractShape}
     shape::Shape
 end
 
+"""
+    struct ConstraintNotOwned{C <: ConstraintRef} <: Exception
+        constraint_ref::C
+    end
+
+The constraint `constraint_ref` was used in a model different to
+`owner_model(constraint_ref)`.
+"""
+struct ConstraintNotOwned{C <: ConstraintRef} <: Exception
+    constraint_ref::C
+end
+
+"""
+    owner_model(cref::ConstraintRef)
+
+Returns the model to which `cref` belongs.
+"""
+owner_model(cref::ConstraintRef) = cref.model
+
+"""
+    verify_ownership(model::AbstractModel, cref::ConstraintRef)
+
+Throw `ConstraintNotOwned` if `owner_model(cref)` is not `model`.
+"""
+function verify_ownership(model::AbstractModel, cref::ConstraintRef)
+    if owner_model(cref) !== model
+        throw(ConstraintNotOwned(cref))
+    end
+end
+
 Base.broadcastable(cref::ConstraintRef) = Ref(cref)
 
 """
