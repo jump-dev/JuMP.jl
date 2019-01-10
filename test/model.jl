@@ -73,19 +73,24 @@ function test_model()
         end
         @testset "Quadratic" begin
             @testset "constraint" begin
-                @test_throws err @constraint(model_x, x*y >= 1)
-                @test_throws err @constraint(model_x, [x, x*y] in MOI.Zeros(2))
-                @test_throws err @constraint(model_x, [x*y, x] in MOI.Zeros(2))
-                @test_throws err @constraint(model_x, y*y + x + y <= 1)
+                @test_throws err @constraint(model_x, x * y >= 1)
                 @test_throws err begin
-                    @constraint(model_x, [x, y*y + x + y] in MOI.Zeros(2))
+                    @constraint(model_x, [x, x * y] in MOI.Zeros(2))
                 end
                 @test_throws err begin
-                    @constraint(model_x, [y*y + x + y, x] in MOI.Zeros(2))
+                    @constraint(model_x, [x * y, x] in MOI.Zeros(2))
+                end
+                @test_throws err @constraint(model_x, x * x + x + y <= 1)
+                @test_throws err begin
+                    @constraint(model_x, [x, x * x + x + y] in MOI.Zeros(2))
+                end
+                @test_throws err begin
+                    @constraint(model_x, [x * x + x + y, x] in MOI.Zeros(2))
                 end
             end
             @testset "objective" begin
-                @test_throws err @objective(model_x, Min, x*y)
+                @test_throws err @objective(model_x, Min, x * y)
+                @test_throws err @objective(model_x, Min, x * x + x + y)
             end
         end
         @testset "Attribute" begin
