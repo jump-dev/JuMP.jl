@@ -357,15 +357,119 @@ var documenterSearchIndex = {"docs": [
     "page": "Expressions",
     "title": "Expressions",
     "category": "section",
-    "text": "DRAFT: JuMP has multiple types of expressions: affine, quadratic, and nonlinear. Just talk about affine and quadratic here (see other section for nonlinear). Describe the basic data structures and ways to construct expressions (these are: constructors, operators, add_to_expression!, and macros).Example code with doc tests:m = Model()\n@variable(m, x)\n@variable(m, y)\nAffExpr(-1.0, x => 2.0, y => 1.0)\n\n# output\n\n2 x + y - 1"
+    "text": "JuMP has three types of expressions: affine, quadratic, and nonlinear. These expressions can be inserted into constraints or into the objective. This is particularly useful if an expression is used in multiple places in the model."
 },
 
 {
-    "location": "expressions/#Objective-functions-1",
+    "location": "expressions/#Affine-expressions-1",
     "page": "Expressions",
-    "title": "Objective functions",
+    "title": "Affine expressions",
     "category": "section",
-    "text": "TODO: Describe how JuMP expressions relate to MOI functions. How to set, query, and modify an objective function."
+    "text": "There are four ways of constructing an affine expression in JuMP: using the @expression macro, by operator overloading, using the AffExpr constructor, and via JuMP.add_to_expression!."
+},
+
+{
+    "location": "expressions/#Macros-1",
+    "page": "Expressions",
+    "title": "Macros",
+    "category": "section",
+    "text": "The recommended way to create an affine expression is via the @expression macro.model = Model()\n@variable(model, x)\n@variable(model, y)\nex = @expression(model, 2x + y - 1)\n\n# output\n\n2 x + y - 1This expression can be used in the objective, or added to a constraint. For example:@objective(model, Min, 2 * ex - 1)\nJuMP.objective_function(model)\n\n# output\n\n4 x + 2 y - 3Just like variables and constraints, named expressions can also be created. For examplemodel = Model()\n@variable(model, x[i = 1:3])\n@expression(model, expr[i=1:3], i * sum(x[j] for j in i:3))\nexpr\n\n# output\n\n3-element Array{JuMP.GenericAffExpr{Float64,VariableRef},1}:\n x[1] + x[2] + x[3]\n 2 x[2] + 2 x[3]\n 3 x[3]"
+},
+
+{
+    "location": "expressions/#Operator-overloading-1",
+    "page": "Expressions",
+    "title": "Operator overloading",
+    "category": "section",
+    "text": "Expressions can also be created outside the macro. However, note that in some cases, this can be much slower that constructing an expression using the macro.model = Model()\n@variable(model, x)\n@variable(model, y)\nex = 2x + y - 1\n\n# output\n\n2 x + y - 1"
+},
+
+{
+    "location": "expressions/#Constructors-1",
+    "page": "Expressions",
+    "title": "Constructors",
+    "category": "section",
+    "text": "A third way to create an affine expression is by the AffExpr constructor. The first argument is the constant term, and the remaining arguments are variable-coefficient pairs.model = Model()\n@variable(model, x)\n@variable(model, y)\nex = AffExpr(-1.0, x => 2.0, y => 1.0)\n\n# output\n\n2 x + y - 1"
+},
+
+{
+    "location": "expressions/#JuMP.add_to_expression!-1",
+    "page": "Expressions",
+    "title": "JuMP.add_to_expression!",
+    "category": "section",
+    "text": "The fourth way to create an affine expression is by using JuMP.add_to_expression!. Compared to the operator overloading method, this approach is fast, and is what the @expression macro implements behind-the-scenes.model = Model()\n@variable(model, x)\n@variable(model, y)\nex = JuMP.AffExpr(-1.0)\nJuMP.add_to_expression!(ex, 2.0, x)\nJuMP.add_to_expression!(ex, 1.0, y)\n\n# output\n\n2 x + y - 1"
+},
+
+{
+    "location": "expressions/#Quadratic-expressions-1",
+    "page": "Expressions",
+    "title": "Quadratic expressions",
+    "category": "section",
+    "text": "Like affine expressions, there are four ways of constructing a quadratic expression in JuMP: using macros, operator overloading, constructors, and via JuMP.add_to_expression!."
+},
+
+{
+    "location": "expressions/#Macros-2",
+    "page": "Expressions",
+    "title": "Macros",
+    "category": "section",
+    "text": "The @expression macro can be used to create quadratic expressions by including quadratic terms.model = Model()\n@variable(model, x)\n@variable(model, y)\nex = @expression(model, x^2 + 2 * x * y + y^2 + x + y - 1)\n\n# output\n\nx² + 2 x*y + y² + x + y - 1"
+},
+
+{
+    "location": "expressions/#Operator-overloading-2",
+    "page": "Expressions",
+    "title": "Operator overloading",
+    "category": "section",
+    "text": "Operator overloading can also be used to create quadratic expressions. The same performance warning (discussed in the affine expression section) applies.model = Model()\n@variable(model, x)\n@variable(model, y)\nex = x^2 + 2 * x * y + y^2 + x + y - 1\n\n# output\n\nx² + 2 x*y + y² + x + y - 1"
+},
+
+{
+    "location": "expressions/#Constructors-2",
+    "page": "Expressions",
+    "title": "Constructors",
+    "category": "section",
+    "text": "Quadratic expressions can also be created using the QuadExpr constructor. The first argument is an affine expression, and the remaining arguments are pairs, where the first term is a JuMP.UnorderedPair and the second term is the coefficient.model = Model()\n@variable(model, x)\n@variable(model, y)\naff_expr = AffExpr(-1.0, x => 1.0, y => 1.0)\nquad_expr = JuMP.QuadExpr(aff_expr,\n    JuMP.UnorderedPair(x, x) => 1.0,\n    JuMP.UnorderedPair(x, y) => 2.0,\n    JuMP.UnorderedPair(y, y) => 1.0\n)\n\n# output\n\nx² + 2 x*y + y² + x + y - 1"
+},
+
+{
+    "location": "expressions/#JuMP.add_to_expression!-2",
+    "page": "Expressions",
+    "title": "JuMP.add_to_expression!",
+    "category": "section",
+    "text": "Finally, JuMP.add_to_expression! can also be used to add quadratic terms.model = Model()\n@variable(model, x)\n@variable(model, y)\nex = JuMP.QuadExpr(x + y - 1.0)\nJuMP.add_to_expression!(ex, 1.0, x, x)\nJuMP.add_to_expression!(ex, 2.0, x, y)\nJuMP.add_to_expression!(ex, 1.0, y, y)\n\n# output\n\nx² + 2 x*y + y² + x + y - 1"
+},
+
+{
+    "location": "expressions/#Nonlinear-expressions-1",
+    "page": "Expressions",
+    "title": "Nonlinear expressions",
+    "category": "section",
+    "text": "Nonlinear expressions can be constructed only using the @NLexpression macro, and nonlinear expressions can be used only in @NLobjective, @NLconstraint, and other @NLexpressions. Moreover, quadratic and affine expressions cannot be used in the nonlinear macros. For more details, see the Nonlinear Modeling section."
+},
+
+{
+    "location": "expressions/#JuMP.@expression",
+    "page": "Expressions",
+    "title": "JuMP.@expression",
+    "category": "macro",
+    "text": "@expression(args...)\n\nEfficiently builds a linear or quadratic expression but does not add to model immediately. Instead, returns the expression which can then be inserted in other constraints. For example:\n\n@expression(m, shared, sum(i*x[i] for i=1:5))\n@constraint(m, shared + y >= 5)\n@constraint(m, shared + z <= 10)\n\nThe ref accepts index sets in the same way as @variable, and those indices can be used in the construction of the expressions:\n\n@expression(m, expr[i=1:3], i*sum(x[j] for j=1:3))\n\nAnonymous syntax is also supported:\n\nexpr = @expression(m, [i=1:3], i*sum(x[j] for j=1:3))\n\n\n\n\n\n"
+},
+
+{
+    "location": "expressions/#JuMP.add_to_expression!",
+    "page": "Expressions",
+    "title": "JuMP.add_to_expression!",
+    "category": "function",
+    "text": "add_to_expression!(expression, terms...)\n\nUpdates expression in place to expression + (*)(terms...). This is typically much more efficient than expression += (*)(terms...). For example, add_to_expression!(expression, a, b) produces the same result as expression += a*b, and add_to_expression!(expression, a) produces the same result as expression += a.\n\nOnly a few methods are defined, mostly for internal use, and only for the cases when (1) they can be implemented efficiently and (2) expression is capable of storing the result. For example, add_to_expression!(::AffExpr, ::VariableRef, ::VariableRef) is not defined because a GenericAffExpr cannot store the product of two variables.\n\n\n\n\n\n"
+},
+
+{
+    "location": "expressions/#Reference-1",
+    "page": "Expressions",
+    "title": "Reference",
+    "category": "section",
+    "text": "@expression\nJuMP.add_to_expression!"
 },
 
 {
@@ -374,6 +478,14 @@ var documenterSearchIndex = {"docs": [
     "title": "Objective",
     "category": "page",
     "text": ""
+},
+
+{
+    "location": "objective/#Objective-1",
+    "page": "Objective",
+    "title": "Objective",
+    "category": "section",
+    "text": "TODO: Describe how the objective is represented (link to MOI docs)"
 },
 
 {
@@ -441,11 +553,11 @@ var documenterSearchIndex = {"docs": [
 },
 
 {
-    "location": "objective/#Objective-1",
+    "location": "objective/#Objective-functions-1",
     "page": "Objective",
-    "title": "Objective",
+    "title": "Objective functions",
     "category": "section",
-    "text": "TODO: Describe how the objective is represented (link to MOI docs)Setting the objective function and objective sense:@objective\nJuMP.set_objective_sense\nJuMP.set_objective_functionQuerying the objective function and objective sense:JuMP.objective_sense\nJuMP.objective_function\nJuMP.objective_function_typeQuerying the objective value and bound:JuMP.objective_bound\nJuMP.objective_value"
+    "text": "TODO: Describe how JuMP expressions relate to MOI functions. How to set, query, and modify an objective function.Setting the objective function and objective sense:@objective\nJuMP.set_objective_sense\nJuMP.set_objective_functionQuerying the objective function and objective sense:JuMP.objective_sense\nJuMP.objective_function\nJuMP.objective_function_typeQuerying the objective value and bound:JuMP.objective_bound\nJuMP.objective_value"
 },
 
 {
@@ -989,7 +1101,39 @@ var documenterSearchIndex = {"docs": [
     "page": "Nonlinear Modeling",
     "title": "Raw expression input",
     "category": "section",
-    "text": "In addition to the @NLobjective and @NLconstraint macros, it is also possible to provide Julia Expr objects directly by using JuMP.set_NL_objective and JuMP.add_NL_constraint. This input form may be useful if the expressions are generated programmatically. JuMP variables should be spliced into the expression object. For example:@variable(model, 1 <= x[i = 1:4] <= 5)\nJuMP.set_NL_objective(model, :Min, :($(x[1])*$(x[4])*($(x[1])+$(x[2])+$(x[3])) + $(x[3])))\nJuMP.add_NL_constraint(model, :($(x[1])*$(x[2])*$(x[3])*$(x[4]) >= 25))\n\n# Equivalent form using traditional JuMP macros:\n@NLobjective(model, Min, x[1] * x[4] * (x[1] + x[2] + x[3]) + x[3])\n@NLconstraint(model, x[1] * x[2] * x[3] * x[4] >= 25)See the Julia documentation for more examples and description of Julia expressions.[1]: Dunning, Huchette, and Lubin, \"JuMP: A Modeling Language for Mathematical Optimization\", arXiv."
+    "text": "In addition to the @NLobjective and @NLconstraint macros, it is also possible to provide Julia Expr objects directly by using JuMP.set_NL_objective and JuMP.add_NL_constraint. This input form may be useful if the expressions are generated programmatically. JuMP variables should be spliced into the expression object. For example:@variable(model, 1 <= x[i = 1:4] <= 5)\nJuMP.set_NL_objective(model, :Min, :($(x[1])*$(x[4])*($(x[1])+$(x[2])+$(x[3])) + $(x[3])))\nJuMP.add_NL_constraint(model, :($(x[1])*$(x[2])*$(x[3])*$(x[4]) >= 25))\n\n# Equivalent form using traditional JuMP macros:\n@NLobjective(model, Min, x[1] * x[4] * (x[1] + x[2] + x[3]) + x[3])\n@NLconstraint(model, x[1] * x[2] * x[3] * x[4] >= 25)See the Julia documentation for more examples and description of Julia expressions."
+},
+
+{
+    "location": "nlp/#JuMP.@NLconstraint",
+    "page": "Nonlinear Modeling",
+    "title": "JuMP.@NLconstraint",
+    "category": "macro",
+    "text": "@NLconstraint(m::Model, expr)\n\nAdd a constraint described by the nonlinear expression expr. See also @constraint. For example:\n\n@NLconstraint(model, sin(x) <= 1)\n@NLconstraint(model, [i = 1:3], sin(i * x) <= 1 / i)\n\n\n\n\n\n"
+},
+
+{
+    "location": "nlp/#JuMP.@NLexpression",
+    "page": "Nonlinear Modeling",
+    "title": "JuMP.@NLexpression",
+    "category": "macro",
+    "text": "@NLexpression(args...)\n\nEfficiently build a nonlinear expression which can then be inserted in other nonlinear constraints and the objective. See also [@expression]. For example:\n\n@NLexpression(model, my_expr, sin(x)^2 + cos(x^2))\n@NLconstraint(model, my_expr + y >= 5)\n@NLobjective(model, Min, my_expr)\n\nIndexing over sets and anonymous expressions are also supported:\n\n@NLexpression(m, my_expr_1[i=1:3], sin(i * x))\nmy_expr_2 = @NLexpression(m, log(1 + sum(exp(x[i])) for i in 1:2))\n\n\n\n\n\n"
+},
+
+{
+    "location": "nlp/#JuMP.@NLobjective",
+    "page": "Nonlinear Modeling",
+    "title": "JuMP.@NLobjective",
+    "category": "macro",
+    "text": "@NLobjective(model, sense, expression)\n\nAdd a nonlinear objective to model with optimization sense sense. sense must be Max or Min.\n\nExample\n\n@NLobjective(model, Max, 2x + 1 + sin(x))\n\n\n\n\n\n"
+},
+
+{
+    "location": "nlp/#Reference-1",
+    "page": "Nonlinear Modeling",
+    "title": "Reference",
+    "category": "section",
+    "text": "@NLconstraint\n@NLexpression\n@NLobjective[1]: Dunning, Huchette, and Lubin, \"JuMP: A Modeling Language for Mathematical Optimization\", arXiv."
 },
 
 {
