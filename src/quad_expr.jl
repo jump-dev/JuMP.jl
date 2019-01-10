@@ -198,6 +198,14 @@ function Base.convert(::Type{GenericQuadExpr{C, V}}, v::Union{Real,AbstractVaria
 end
 GenericQuadExpr{C, V}() where {C, V} = zero(GenericQuadExpr{C, V})
 
+function check_belongs_to_model(q::GenericQuadExpr, model::AbstractModel)
+    check_belongs_to_model(q.aff, model)
+    for variable_pair in keys(q.terms)
+        check_belongs_to_model(variable_pair.a, model)
+        check_belongs_to_model(variable_pair.b, model)
+    end
+end
+
 """
     moi_quadratic_term(t::Tuple)
 

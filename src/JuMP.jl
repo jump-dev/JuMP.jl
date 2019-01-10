@@ -491,7 +491,7 @@ function Base.showerror(io::IO, ex::VariableNotOwnedError)
     print(io, "VariableNotOwnedError: Variable not owned by model present in $(ex.context)")
 end
 
-function verify_ownership(m::Model, vec::Vector{VariableRef})
+function check_belongs_to_model(vec::Vector{VariableRef}, m::Model)
     n = length(vec)
     @inbounds for i in 1:n
         vec[i].m !== m && return false
@@ -555,23 +555,27 @@ end
 Return the value of the attribute `attr` from model's MOI backend.
 """
 MOI.get(m::Model, attr::MOI.AbstractModelAttribute) = MOI.get(backend(m), attr)
-function MOI.get(m::Model, attr::MOI.AbstractVariableAttribute, v::VariableRef)
-    @assert m === owner_model(v) # TODO: Improve the error message.
-    return MOI.get(backend(m), attr, index(v))
+function MOI.get(model::Model, attr::MOI.AbstractVariableAttribute,
+                 v::VariableRef)
+    check_belongs_to_model(v, model)
+    return MOI.get(backend(model), attr, index(v))
 end
-function MOI.get(m::Model, attr::MOI.AbstractConstraintAttribute, cr::ConstraintRef)
-    @assert m === cr.model # TODO: Improve the error message.
-    return MOI.get(backend(m), attr, index(cr))
+function MOI.get(model::Model, attr::MOI.AbstractConstraintAttribute,
+                 cr::ConstraintRef)
+    check_belongs_to_model(cr, model)
+    return MOI.get(backend(model), attr, index(cr))
 end
 
 MOI.set(m::Model, attr::MOI.AbstractModelAttribute, value) = MOI.set(backend(m), attr, value)
-function MOI.set(m::Model, attr::MOI.AbstractVariableAttribute, v::VariableRef, value)
-    @assert m === owner_model(v) # TODO: Improve the error message.
-    MOI.set(backend(m), attr, index(v), value)
+function MOI.set(model::Model, attr::MOI.AbstractVariableAttribute,
+                 v::VariableRef, value)
+    check_belongs_to_model(v, model)
+    MOI.set(backend(model), attr, index(v), value)
 end
-function MOI.set(m::Model, attr::MOI.AbstractConstraintAttribute, cr::ConstraintRef, value)
-    @assert m === cr.model # TODO: Improve the error message.
-    MOI.set(backend(m), attr, index(cr), value)
+function MOI.set(model::Model, attr::MOI.AbstractConstraintAttribute,
+                 cr::ConstraintRef, value)
+    check_belongs_to_model(cr, model)
+    MOI.set(backend(model), attr, index(cr), value)
 end
 
 ###############################################################################

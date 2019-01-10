@@ -106,6 +106,36 @@ struct ConstraintRef{M <: AbstractModel, C, Shape <: AbstractShape}
     shape::Shape
 end
 
+"""
+    struct ConstraintNotOwned{C <: ConstraintRef} <: Exception
+        constraint_ref::C
+    end
+
+The constraint `constraint_ref` was used in a model different to
+`owner_model(constraint_ref)`.
+"""
+struct ConstraintNotOwned{C <: ConstraintRef} <: Exception
+    constraint_ref::C
+end
+
+"""
+    owner_model(cref::ConstraintRef)
+
+Returns the model to which `cref` belongs.
+"""
+owner_model(cref::ConstraintRef) = cref.model
+
+"""
+    check_belongs_to_model(cref::ConstraintRef, model::AbstractModel)
+
+Throw `ConstraintNotOwned` if `owner_model(cref)` is not `model`.
+"""
+function check_belongs_to_model(cref::ConstraintRef, model::AbstractModel)
+    if owner_model(cref) !== model
+        throw(ConstraintNotOwned(cref))
+    end
+end
+
 Base.broadcastable(cref::ConstraintRef) = Ref(cref)
 
 """
@@ -286,6 +316,9 @@ function constraint_object(ref::ConstraintRef{Model, MOICON{FuncType, SetType}})
     s = MOI.get(model, MOI.ConstraintSet(), ref)::SetType
     return ScalarConstraint(jump_function(model, f), s)
 end
+function check_belongs_to_model(c::ScalarConstraint, model)
+    check_belongs_to_model(c.func, model)
+end
 
 struct VectorConstraint{F <: AbstractJuMPScalar,
                         S <: MOI.AbstractVectorSet,
@@ -308,6 +341,11 @@ function constraint_object(ref::ConstraintRef{Model, MOICON{FuncType, SetType}})
     f = MOI.get(model, MOI.ConstraintFunction(), ref)::FuncType
     s = MOI.get(model, MOI.ConstraintSet(), ref)::SetType
     return VectorConstraint(jump_function(model, f), s, ref.shape)
+end
+function check_belongs_to_model(c::VectorConstraint, model)
+    for func in c.func
+        check_belongs_to_model(func, model)
+    end
 end
 
 function moi_add_constraint(model::MOI.ModelLike, f::MOI.AbstractFunction,
@@ -333,6 +371,7 @@ Add a constraint `c` to `Model model` and sets its name.
 function add_constraint(model::Model, c::AbstractConstraint, name::String="")
     # The type of backend(model) is unknown so we directly redirect to another
     # function.
+    check_belongs_to_model(c, model)
     cindex = moi_add_constraint(backend(model), moi_function(c), moi_set(c))
     cref = ConstraintRef(model, cindex, shape(c))
     if !isempty(name)
