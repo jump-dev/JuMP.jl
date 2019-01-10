@@ -73,7 +73,7 @@ function set_objective_function(model::Model, func::MOI.AbstractScalarFunction)
 end
 
 function set_objective_function(model::Model, func::AbstractJuMPScalar)
-    check_belongs_to_model(model, func)
+    check_belongs_to_model(func, model)
     set_objective_function(model, moi_function(func))
 end
 

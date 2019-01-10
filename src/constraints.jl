@@ -126,11 +126,11 @@ Returns the model to which `cref` belongs.
 owner_model(cref::ConstraintRef) = cref.model
 
 """
-    check_belongs_to_model(model::AbstractModel, cref::ConstraintRef)
+    check_belongs_to_model(cref::ConstraintRef, model::AbstractModel)
 
 Throw `ConstraintNotOwned` if `owner_model(cref)` is not `model`.
 """
-function check_belongs_to_model(model::AbstractModel, cref::ConstraintRef)
+function check_belongs_to_model(cref::ConstraintRef, model::AbstractModel)
     if owner_model(cref) !== model
         throw(ConstraintNotOwned(cref))
     end
@@ -316,8 +316,8 @@ function constraint_object(ref::ConstraintRef{Model, MOICON{FuncType, SetType}})
     s = MOI.get(model, MOI.ConstraintSet(), ref)::SetType
     return ScalarConstraint(jump_function(model, f), s)
 end
-function check_belongs_to_model(model, c::ScalarConstraint)
-    check_belongs_to_model(model, c.func)
+function check_belongs_to_model(c::ScalarConstraint, model)
+    check_belongs_to_model(c.func, model)
 end
 
 struct VectorConstraint{F <: AbstractJuMPScalar,
@@ -342,9 +342,9 @@ function constraint_object(ref::ConstraintRef{Model, MOICON{FuncType, SetType}})
     s = MOI.get(model, MOI.ConstraintSet(), ref)::SetType
     return VectorConstraint(jump_function(model, f), s, ref.shape)
 end
-function check_belongs_to_model(model, c::VectorConstraint)
+function check_belongs_to_model(c::VectorConstraint, model)
     for func in c.func
-        check_belongs_to_model(model, func)
+        check_belongs_to_model(func, model)
     end
 end
 
@@ -371,7 +371,7 @@ Add a constraint `c` to `Model model` and sets its name.
 function add_constraint(model::Model, c::AbstractConstraint, name::String="")
     # The type of backend(model) is unknown so we directly redirect to another
     # function.
-    check_belongs_to_model(model, c)
+    check_belongs_to_model(c, model)
     cindex = moi_add_constraint(backend(model), moi_function(c), moi_set(c))
     cref = ConstraintRef(model, cindex, shape(c))
     if !isempty(name)

@@ -261,9 +261,9 @@ Replaces `getvalue` for most use cases.
 """
 value(a::GenericAffExpr) = value(a, value)
 
-function check_belongs_to_model(model::AbstractModel, a::GenericAffExpr)
+function check_belongs_to_model(a::GenericAffExpr, model::AbstractModel)
     for variable in keys(a.terms)
-        check_belongs_to_model(model, variable)
+        check_belongs_to_model(variable, model)
     end
 end
 
