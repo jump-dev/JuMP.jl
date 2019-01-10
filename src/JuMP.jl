@@ -491,7 +491,7 @@ function Base.showerror(io::IO, ex::VariableNotOwnedError)
     print(io, "VariableNotOwnedError: Variable not owned by model present in $(ex.context)")
 end
 
-function verify_ownership(m::Model, vec::Vector{VariableRef})
+function check_belongs_to_model(m::Model, vec::Vector{VariableRef})
     n = length(vec)
     @inbounds for i in 1:n
         vec[i].m !== m && return false
@@ -557,24 +557,24 @@ Return the value of the attribute `attr` from model's MOI backend.
 MOI.get(m::Model, attr::MOI.AbstractModelAttribute) = MOI.get(backend(m), attr)
 function MOI.get(model::Model, attr::MOI.AbstractVariableAttribute,
                  v::VariableRef)
-    verify_ownership(model, v)
+    check_belongs_to_model(model, v)
     return MOI.get(backend(model), attr, index(v))
 end
 function MOI.get(model::Model, attr::MOI.AbstractConstraintAttribute,
                  cr::ConstraintRef)
-    verify_ownership(model, cr)
+    check_belongs_to_model(model, cr)
     return MOI.get(backend(model), attr, index(cr))
 end
 
 MOI.set(m::Model, attr::MOI.AbstractModelAttribute, value) = MOI.set(backend(m), attr, value)
 function MOI.set(model::Model, attr::MOI.AbstractVariableAttribute,
                  v::VariableRef, value)
-    verify_ownership(model, v)
+    check_belongs_to_model(model, v)
     MOI.set(backend(model), attr, index(v), value)
 end
 function MOI.set(model::Model, attr::MOI.AbstractConstraintAttribute,
                  cr::ConstraintRef, value)
-    verify_ownership(model, cr)
+    check_belongs_to_model(model, cr)
     MOI.set(backend(model), attr, index(cr), value)
 end
 

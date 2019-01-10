@@ -261,15 +261,15 @@ Replaces `getvalue` for most use cases.
 """
 value(a::GenericAffExpr) = value(a, value)
 
-function verify_ownership(model::AbstractModel, a::GenericAffExpr)
+function check_belongs_to_model(model::AbstractModel, a::GenericAffExpr)
     for variable in keys(a.terms)
-        verify_ownership(model, variable)
+        check_belongs_to_model(model, variable)
     end
 end
 
 # Note: No validation is performed that the variables in the AffExpr belong to
-# the same model. The verification is done in `verify_ownership` which should be
-# called before calling `MOI.ScalarAffineFunction`.
+# the same model. The verification is done in `check_belongs_to_model` which
+# should be called before calling `MOI.ScalarAffineFunction`.
 function MOI.ScalarAffineFunction(a::AffExpr)
     assert_isfinite(a)
     terms = MOI.ScalarAffineTerm{Float64}[MOI.ScalarAffineTerm(t[1],

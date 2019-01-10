@@ -73,7 +73,7 @@ function set_objective_function(model::Model, func::MOI.AbstractScalarFunction)
 end
 
 function set_objective_function(model::Model, func::AbstractJuMPScalar)
-    verify_ownership(model, func)
+    check_belongs_to_model(model, func)
     set_objective_function(model, moi_function(func))
 end
 
