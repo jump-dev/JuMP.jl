@@ -21,7 +21,7 @@ var documenterSearchIndex = {"docs": [
     "page": "Introduction",
     "title": "Contents",
     "category": "section",
-    "text": "Pages = [\n    \"installation.md\",\n    \"quickstart.md\",\n    \"variables.md\",\n    \"expressions.md\",\n    \"objective.md\",\n    \"constraints.md\",\n    \"containers.md\",\n    \"solvers.md\",\n    \"nlp.md\",\n    \"style.md\",\n    \"extensions.md\"\n]\nDepth = 2"
+    "text": "Pages = [\n    \"installation.md\",\n    \"quickstart.md\",\n    \"variables.md\",\n    \"expressions.md\",\n    \"objective.md\",\n    \"constraints.md\",\n    \"containers.md\",\n    \"solvers.md\",\n    \"solutions.md\",\n    \"nlp.md\",\n    \"style.md\",\n    \"extensions.md\"\n]\nDepth = 2"
 },
 
 {
@@ -329,6 +329,14 @@ var documenterSearchIndex = {"docs": [
 },
 
 {
+    "location": "variables/#JuMP.VariableRef",
+    "page": "Variables",
+    "title": "JuMP.VariableRef",
+    "category": "type",
+    "text": "VariableRef <: AbstractVariableRef\n\nHolds a reference to the model and the corresponding MOI.VariableIndex.\n\n\n\n\n\n"
+},
+
+{
     "location": "variables/#JuMP.all_variables",
     "page": "Variables",
     "title": "JuMP.all_variables",
@@ -341,7 +349,7 @@ var documenterSearchIndex = {"docs": [
     "page": "Variables",
     "title": "Reference",
     "category": "section",
-    "text": "@variable\nowner_model\nall_variables"
+    "text": "@variable\nowner_model\nVariableRef\nall_variables"
 },
 
 {
@@ -785,22 +793,6 @@ var documenterSearchIndex = {"docs": [
 },
 
 {
-    "location": "constraints/#JuMP.has_duals",
-    "page": "Constraints",
-    "title": "JuMP.has_duals",
-    "category": "function",
-    "text": "has_duals(model::Model)\n\nReturn true if the solver has a dual solution available to query, otherwise return false.\n\nSee also dual and shadow_price.\n\n\n\n\n\n"
-},
-
-{
-    "location": "constraints/#JuMP.dual",
-    "page": "Constraints",
-    "title": "JuMP.dual",
-    "category": "function",
-    "text": "dual(cr::ConstraintRef)\n\nGet the dual value of this constraint in the result returned by a solver. Use has_dual to check if a result exists before asking for values. See also shadow_price.\n\n\n\n\n\n"
-},
-
-{
     "location": "constraints/#JuMP.shadow_price",
     "page": "Constraints",
     "title": "JuMP.shadow_price",
@@ -865,11 +857,19 @@ var documenterSearchIndex = {"docs": [
 },
 
 {
+    "location": "constraints/#JuMP.ConstraintRef",
+    "page": "Constraints",
+    "title": "JuMP.ConstraintRef",
+    "category": "type",
+    "text": "ConstraintRef\n\nHolds a reference to the model and the corresponding MOI.ConstraintIndex.\n\n\n\n\n\n"
+},
+
+{
     "location": "constraints/#Reference-1",
     "page": "Constraints",
     "title": "Reference",
     "category": "section",
-    "text": "@constraint\n@SDconstraint\nSecondOrderCone\nRotatedSecondOrderCone\nPSDCone\nJuMP.has_duals\nJuMP.dual\nJuMP.shadow_price\nJuMP.fix\nJuMP.set_coefficient\nJuMP.is_valid\nJuMP.delete\nJuMP.LowerBoundRef\nJuMP.UpperBoundRef\nJuMP.FixRef"
+    "text": "@constraint\n@SDconstraint\nSecondOrderCone\nRotatedSecondOrderCone\nPSDCone\nJuMP.shadow_price\nJuMP.fix\nJuMP.set_coefficient\nJuMP.is_valid\nJuMP.delete\nJuMP.LowerBoundRef\nJuMP.UpperBoundRef\nJuMP.FixRef\nConstraintRef"
 },
 
 {
@@ -1006,6 +1006,134 @@ var documenterSearchIndex = {"docs": [
     "title": "Direct mode",
     "category": "section",
     "text": "JuMP models can be created in DIRECT mode using the JuMP.direct_model function.JuMP.direct_modelJuMP.backendTODO: How to set parameters (solver specific and generic). Status codes. Accessing the result. How to accurately measure the solve time."
+},
+
+{
+    "location": "solutions/#",
+    "page": "Query Solutions",
+    "title": "Query Solutions",
+    "category": "page",
+    "text": "CurrentModule = JuMP\nDocTestSetup = quote\n    using JuMP\n    const MOI = JuMP.MathOptInterface\nend"
+},
+
+{
+    "location": "solutions/#Querying-Solutions-1",
+    "page": "Query Solutions",
+    "title": "Querying Solutions",
+    "category": "section",
+    "text": "So far we have seen all the elements and constructs related to writing a JuMP optimization model. In this section we reach the point of what to do with a solved problem. Suppose your model is named model. Right after the call to JuMP.optimize!(model) (which might take a while) it\'s possible to ask JuMP questions about the finished optimization step. Typical questions include:Why has the optimization process stopped?\nDo I have a solution to my problem?\nIs it optimal?\nDo I have a dual solution?JuMP follows closely the concepts defined in MathOptInterface (MOI) to answer user questions about a finished call to JuMP.optimize!(model). There are three main steps in querying a solution:First, we can query the termination_status which will tell us why the optimization stopped. This could be due to a number of reasons. For example, the solver found an optimal solution, the problem was proven to be infeasible, or a user-provided limit such as a time limit was encountered. For more information, see the Termination statuses section below.Second, we can query the primal_status and dual_status, which will tell us what kind of result do we have for our primal and dual solution. This might be an optimal primal-dual pair, a primal solution without a corresponding dual solution, or a certificate of primal or dual infeasibility. For more information, see the Solution statuses section below.Third, we can query JuMP.value and JuMP.dual to obtain the primal and dual values of the optimization variables and constraints (if there are values to be queried)."
+},
+
+{
+    "location": "solutions/#MathOptInterface.TerminationStatusCode",
+    "page": "Query Solutions",
+    "title": "MathOptInterface.TerminationStatusCode",
+    "category": "type",
+    "text": "TerminationStatusCode\n\nAn Enum of possible values for the TerminationStatus attribute. This attribute is meant to explain the reason why the optimizer stopped executing in the most recent call to optimize!.\n\nIf no call has been made to optimize!, then the TerminationStatus is:\n\nOPTIMIZE_NOT_CALLED: The algorithm has not started.\n\nOK\n\nThese are generally OK statuses, i.e., the algorithm ran to completion normally.\n\nOPTIMAL: The algorithm found a globally optimal solution.\nINFEASIBLE: The algorithm concluded that no feasible solution exists.\nDUAL_INFEASIBLE: The algorithm concluded that no dual bound exists for the problem. If, additionally, a feasible (primal) solution is known to exist, this status typically implies that the problem is unbounded, with some technical exceptions.\nLOCALLY_SOLVED: The algorithm converged to a stationary point, local optimal solution, could not find directions for improvement, or otherwise completed its search without global guarantees.\nLOCALLY_INFEASIBLE: The algorithm converged to an infeasible point or otherwise completed its search without finding a feasible solution, without guarantees that no feasible solution exists.\nINFEASIBLE_OR_UNBOUNDED: The algorithm stopped because it decided that the problem is infeasible or unbounded; this occasionally happens during MIP presolve.\n\nSolved to relaxed tolerances\n\nALMOST_OPTIMAL: The algorithm found a globally optimal solution to relaxed tolerances.\nALMOST_INFEASIBLE: The algorithm concluded that no feasible solution exists within relaxed tolerances.\nALMOST_DUAL_INFEASIBLE: The algorithm concluded that no dual bound exists for the problem within relaxed tolerances.\nALMOST_LOCALLY_SOLVED: The algorithm converged to a stationary point, local optimal solution, or could not find directions for improvement within relaxed tolerances.\n\nLimits\n\nThe optimizer stopped because of some user-defined limit.\n\nITERATION_LIMIT: An iterative algorithm stopped after conducting the maximum number of iterations.\nTIME_LIMIT: The algorithm stopped after a user-specified computation time.\nNODE_LIMIT: A branch-and-bound algorithm stopped because it explored a maximum number of nodes in the branch-and-bound tree.\nSOLUTION_LIMIT: The algorithm stopped because it found the required number of solutions. This is often used in MIPs to get the solver to return the first feasible solution it encounters.\nMEMORY_LIMIT: The algorithm stopped because it ran out of memory.\nOBJECTIVE_LIMIT: The algorthm stopped because it found a solution better than a minimum limit set by the user.\nNORM_LIMIT: The algorithm stopped because the norm of an iterate became too large.\nOTHER_LIMIT: The algorithm stopped due to a limit not covered by one of the above.\n\nProblematic\n\nThis group of statuses means that something unexpected or problematic happened.\n\nSLOW_PROGRESS: The algorithm stopped because it was unable to continue making progress towards the solution.\nNUMERICAL_ERROR: The algorithm stopped because it encountered unrecoverable numerical error.\nINVALID_MODEL: The algorithm stopped because the model is invalid.\nINVALID_OPTION: The algorithm stopped because it was provided an invalid option.\nINTERRUPTED: The algorithm stopped because of an interrupt signal.\nOTHER_ERROR: The algorithm stopped because of an error not covered by one of the statuses defined above.\n\n\n\n\n\n"
+},
+
+{
+    "location": "solutions/#Termination-statuses-1",
+    "page": "Query Solutions",
+    "title": "Termination statuses",
+    "category": "section",
+    "text": "The reason why the optimization of model was finished is given byJuMP.termination_status(model)This function will return a MOI.TerminationStatusCode enum.MOI.TerminationStatusCode"
+},
+
+{
+    "location": "solutions/#MathOptInterface.ResultStatusCode",
+    "page": "Query Solutions",
+    "title": "MathOptInterface.ResultStatusCode",
+    "category": "type",
+    "text": "ResultStatusCode\n\nAn Enum of possible values for the PrimalStatus and DualStatus attributes. The values indicate how to interpret the result vector.\n\nNO_SOLUTION: the result vector is empty.\nFEASIBLE_POINT: the result vector is a feasible point.\nNEARLY_FEASIBLE_POINT: the result vector is feasible if some constraint tolerances are relaxed.\nINFEASIBLE_POINT: the result vector is an infeasible point.\nINFEASIBILITY_CERTIFICATE: the result vector is an infeasibility certificate. If the PrimalStatus is INFEASIBILITY_CERTIFICATE, then the primal result vector is a certificate of dual infeasibility. If the DualStatus is INFEASIBILITY_CERTIFICATE, then the dual result vector is a proof of primal infeasibility.\nNEARLY_INFEASIBILITY_CERTIFICATE: the result satisfies a relaxed criterion for a certificate of infeasibility.\nUNKNOWN_RESULT_STATUS: the result vector contains a solution with an unknown interpretation.\nOTHER_RESULT_STATUS: the result vector contains a solution with an interpretation not covered by one of the statuses defined above.\n\n\n\n\n\n"
+},
+
+{
+    "location": "solutions/#Solution-statuses-1",
+    "page": "Query Solutions",
+    "title": "Solution statuses",
+    "category": "section",
+    "text": "These statuses indicate what kind of result is available to be queried with JuMP.value and JuMP.dual. Its possible that no result is available to be queried.We can obtain these statuses by calling JuMP.primal_status for the primal status, and JuMP.dual_status for the dual status. Both will return a MOI.ResultStatusCode enum.MOI.ResultStatusCodeCommon status situations are described in the MathOptInterface docs."
+},
+
+{
+    "location": "solutions/#Obtaining-solutions-1",
+    "page": "Query Solutions",
+    "title": "Obtaining solutions",
+    "category": "section",
+    "text": "Provided the primal status is not (MOI.NO_SOLUTION), the primal solution can be obtained by calling JuMP.value. For the dual solution, the function is JuMP.dual. One fast way to check if the status is not MOI.NO_SOLUTION is via JuMP.has_values for the primal status and JuMP.has_duals for the dual solution.It is important to note that if has_values returns false, calls to JuMP.value and JuMP.dual might throw an error or return arbitrary values.The container type (e.g., scalar, vector, or matrix) of the returned solution (primal or dual) depends on the type of the variable or constraint. See AbstractShape and dual_shape for details.To call JuMP.value or JuMP.dual on container of VariableRef or ConstraintRef, use the broadcast syntax, e.g., JuMP.value.(x).The objective value of a solved problem can be obtained via JuMP.objective_value. The best known bound on the optimal objective value can be obtained via JuMP.objective_bound.A recommended workflow for solving a model and querying the solution is the following:using JuMP, MathOptInterface\nconst MOI = MathOptInterface\nmodel = Model()\n@variable(model, x[1:10] >= 0)\n# ... other constraints ...\nJuMP.optimize!(model)\n\nif JuMP.termination_status(model) == MOI.OPTIMAL\n    optimal_solution = JuMP.value.(x)\n    optimal_objective = JuMP.objective_value(model)\nelseif JuMP.termination_status(model) == MOI.TIME_LIMIT && JuMP.has_values(model)\n    suboptimal_solution = JuMP.value.(x)\n    suboptimal_objective = JuMP.objective_value(model)\nelse\n    error(\"The model was not solved correctly.\")\nend"
+},
+
+{
+    "location": "solutions/#JuMP.termination_status",
+    "page": "Query Solutions",
+    "title": "JuMP.termination_status",
+    "category": "function",
+    "text": "termination_status(model::Model)\n\nReturn the reason why the solver stopped (i.e., the MathOptInterface model attribute TerminationStatus).\n\n\n\n\n\n"
+},
+
+{
+    "location": "solutions/#JuMP.primal_status",
+    "page": "Query Solutions",
+    "title": "JuMP.primal_status",
+    "category": "function",
+    "text": "primal_status(model::Model)\n\nReturn the status of the most recent primal solution of the solver (i.e., the MathOptInterface model attribute PrimalStatus).\n\n\n\n\n\n"
+},
+
+{
+    "location": "solutions/#JuMP.has_values",
+    "page": "Query Solutions",
+    "title": "JuMP.has_values",
+    "category": "function",
+    "text": "has_values(model::Model)\n\nReturn true if the solver has a primal solution available to query, otherwise return false.\n\nSee also value.\n\n\n\n\n\n"
+},
+
+{
+    "location": "solutions/#JuMP.value",
+    "page": "Query Solutions",
+    "title": "JuMP.value",
+    "category": "function",
+    "text": "value(cref::ConstraintRef)\n\nGet the primal value of this constraint in the result returned by a solver. That is, if cref is the reference of a constraint func-in-set, it returns the value of func evaluated at the value of the variables (given by value(::VariableRef)). Use has_values to check if a result exists before asking for values.\n\nNote\n\nFor scalar contraints, the constant is moved to the set so it is not taken into account in the primal value of the constraint. For instance, the constraint @constraint(model, 2x + 3y + 1 == 5) is transformed into 2x + 3y-in-MOI.EqualTo(4) so the value returned by this function is the evaluation of 2x + 3y. ```\n\n\n\n\n\nvalue(v::VariableRef)\n\nGet the value of this variable in the result returned by a solver. Use has_values to check if a result exists before asking for values. Replaces getvalue for most use cases.\n\n\n\n\n\nvalue(ex::GenericAffExpr, var_value::Function)\n\nEvaluate ex using var_value(v) as the value for each variable v.\n\n\n\n\n\nvalue(v::GenericAffExpr)\n\nEvaluate an GenericAffExpr given the result returned by a solver. Replaces getvalue for most use cases.\n\n\n\n\n\nvalue(p::NonlinearParameter)\n\nReturn the current value stored in the nonlinear parameter p.\n\nExample\n\nmodel = Model()\n@NLparameter(model, p == 10)\nJuMP.value(p)\n\n# output\n10.0\n\n\n\n\n\nvalue(ex::NonlinearExpression, var_value::Function)\n\nEvaluate ex using var_value(v) as the value for each variable v.\n\n\n\n\n\nvalue(ex::NonlinearExpression)\n\nEvaluate ex using JuMP.value as the value for each variable v.\n\n\n\n\n\n"
+},
+
+{
+    "location": "solutions/#JuMP.dual_status",
+    "page": "Query Solutions",
+    "title": "JuMP.dual_status",
+    "category": "function",
+    "text": "dual_status(model::Model)\n\nReturn the status of the most recent dual solution of the solver (i.e., the MathOptInterface model attribute DualStatus).\n\n\n\n\n\n"
+},
+
+{
+    "location": "solutions/#JuMP.has_duals",
+    "page": "Query Solutions",
+    "title": "JuMP.has_duals",
+    "category": "function",
+    "text": "has_duals(model::Model)\n\nReturn true if the solver has a dual solution available to query, otherwise return false.\n\nSee also dual and shadow_price.\n\n\n\n\n\n"
+},
+
+{
+    "location": "solutions/#JuMP.dual",
+    "page": "Query Solutions",
+    "title": "JuMP.dual",
+    "category": "function",
+    "text": "dual(cr::ConstraintRef)\n\nGet the dual value of this constraint in the result returned by a solver. Use has_dual to check if a result exists before asking for values. See also shadow_price.\n\n\n\n\n\n"
+},
+
+{
+    "location": "solutions/#MathOptInterface.optimize!",
+    "page": "Query Solutions",
+    "title": "MathOptInterface.optimize!",
+    "category": "function",
+    "text": "optimize!(optimizer::AbstractOptimizer)\n\nStart the solution procedure.\n\n\n\n\n\n"
+},
+
+{
+    "location": "solutions/#Reference-1",
+    "page": "Query Solutions",
+    "title": "Reference",
+    "category": "section",
+    "text": "JuMP.termination_status\nJuMP.primal_status\nJuMP.has_values\nJuMP.value\nJuMP.dual_status\nJuMP.has_duals\nJuMP.dual\nMOI.optimize!"
 },
 
 {
