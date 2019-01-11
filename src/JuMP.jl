@@ -578,7 +578,10 @@ end
 Return the value of the attribute `attr` from model's MOI backend.
 """
 function MOI.get(model::Model, attr::MOI.AbstractModelAttribute)
-    if MOI.is_set_by_optimize(attr)
+    if MOI.is_set_by_optimize(attr) &&
+       !(attr isa MOI.TerminationStatus) && # Before `optimize!` is called, the
+       !(attr isa MOI.PrimalStatus) &&      # statuses are `OPTIMIZE_NOT_CALLED`
+       !(attr isa MOI.DualStatus)           # and `NO_SOLUTION`
         moi_get_result(backend(model), attr)
     else
         MOI.get(backend(model), attr)
