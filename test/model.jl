@@ -42,6 +42,19 @@ end
 include("nonnegative_bridge.jl")
 
 function test_model()
+    @testset "Result attributes" begin
+        err = JuMP.OptimizeNotCalled()
+        model = Model()
+        @variable(model, x)
+        c = @constraint(model, x ≤ 0)
+        @objective(model, Max, x)
+        @test_throws err JuMP.objective_value(model)
+        @test_throws err JuMP.objective_bound(model)
+        @test_throws err JuMP.value(x)
+        @test_throws err JuMP.value(c)
+        @test_throws err JuMP.dual(c)
+    end
+
     @testset "Test variable/model 'hygiene'" begin
         model_x = Model()
         @variable(model_x, x)

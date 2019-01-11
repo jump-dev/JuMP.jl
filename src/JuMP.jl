@@ -550,20 +550,60 @@ function dual(cr::ConstraintRef{Model, <:MOICON})
 end
 
 """
+    struct OptimizeNotCalled <: Exception end
+
+A result attribute cannot be queried before [`optimize!`](@ref) is called.
+"""
+struct OptimizeNotCalled <: Exception end
+
+# Throws an error if `optimize!` has not been called, i.e., if there is no
+# optimizer attached or if the termination statis is `MOI.OPTIMIZE_NOT_CALLED`.
+function moi_get_result(model::MOI.ModelLike, args...)
+    if MOI.get(model, MOI.TerminationStatus()) == MOI.OPTIMIZE_NOT_CALLED
+        throw(OptimizeNotCalled())
+    end
+    return MOI.get(model, args...)
+end
+function moi_get_result(model::MOIU.CachingOptimizer, args...)
+    if MOIU.state(model) == MOIU.NO_OPTIMIZER ||
+       MOI.get(model, MOI.TerminationStatus()) == MOI.OPTIMIZE_NOT_CALLED
+        throw(OptimizeNotCalled())
+    end
+    return MOI.get(model, args...)
+end
+
+"""
     get(m::JuMP.Model, attr::MathOptInterface.AbstractModelAttribute)
 
 Return the value of the attribute `attr` from model's MOI backend.
 """
-MOI.get(m::Model, attr::MOI.AbstractModelAttribute) = MOI.get(backend(m), attr)
+function MOI.get(model::Model, attr::MOI.AbstractModelAttribute)
+    if MOI.is_set_by_optimize(attr) &&
+       !(attr isa MOI.TerminationStatus) && # Before `optimize!` is called, the
+       !(attr isa MOI.PrimalStatus) &&      # statuses are `OPTIMIZE_NOT_CALLED`
+       !(attr isa MOI.DualStatus)           # and `NO_SOLUTION`
+        moi_get_result(backend(model), attr)
+    else
+        MOI.get(backend(model), attr)
+    end
+end
 function MOI.get(model::Model, attr::MOI.AbstractVariableAttribute,
                  v::VariableRef)
     check_belongs_to_model(v, model)
-    return MOI.get(backend(model), attr, index(v))
+    if MOI.is_set_by_optimize(attr)
+        return moi_get_result(backend(model), attr, index(v))
+    else
+        return MOI.get(backend(model), attr, index(v))
+    end
 end
 function MOI.get(model::Model, attr::MOI.AbstractConstraintAttribute,
                  cr::ConstraintRef)
     check_belongs_to_model(cr, model)
-    return MOI.get(backend(model), attr, index(cr))
+    if MOI.is_set_by_optimize(attr)
+        return moi_get_result(backend(model), attr, index(cr))
+    else
+        return MOI.get(backend(model), attr, index(cr))
+    end
 end
 
 MOI.set(m::Model, attr::MOI.AbstractModelAttribute, value) = MOI.set(backend(m), attr, value)
