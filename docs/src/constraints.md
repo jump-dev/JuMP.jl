@@ -571,8 +571,6 @@ nonlinear constraints.
 SecondOrderCone
 RotatedSecondOrderCone
 PSDCone
-JuMP.has_duals
-JuMP.dual
 JuMP.shadow_price
 JuMP.fix
 JuMP.set_coefficient
@@ -581,6 +579,7 @@ JuMP.delete
 JuMP.LowerBoundRef
 JuMP.UpperBoundRef
 JuMP.FixRef
+ConstraintRef
 ```
 
 ## Constructing constraints without adding them to the model

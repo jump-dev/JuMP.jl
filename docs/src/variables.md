@@ -593,5 +593,6 @@ in the model. This is useful for performing operations like:
 ```@docs
 @variable
 owner_model
+VariableRef
 all_variables
 ```

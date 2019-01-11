@@ -25,6 +25,7 @@ makedocs(
         "Constraints" => "constraints.md",
         "Containers" => "containers.md",
         "Solvers" => "solvers.md",
+        "Query Solutions" => "solutions.md",
         "Nonlinear Modeling" => "nlp.md",
         "Style Guide" => "style.md",
         "Extensions" => "extensions.md"
