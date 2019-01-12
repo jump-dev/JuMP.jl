@@ -551,6 +551,50 @@ end
         @variable(model, y)
         @test JuMP.all_variables(model) == [x, y]
     end
+    @testset "@variables" begin
+        model = Model()
+        @variables model begin
+            0 ≤ x[i=1:2] ≤ i
+            y ≥ 2, Int, (start = 0.7)
+            z ≤ 3, (start = 10)
+            q, (Bin, start = 0.5)
+        end
+
+        @test JuMP.name(x[1]) == "x[1]"
+        @test JuMP.lower_bound(x[1]) == 0
+        @test JuMP.upper_bound(x[1]) == 1
+        @test !JuMP.is_binary(x[1])
+        @test !JuMP.is_integer(x[1])
+        @test JuMP.start_value(x[1]) === nothing
+
+        @test JuMP.name(x[2]) == "x[2]"
+        @test JuMP.lower_bound(x[2]) == 0
+        @test JuMP.upper_bound(x[2]) == 2
+        @test !JuMP.is_binary(x[2])
+        @test !JuMP.is_integer(x[2])
+        @test JuMP.start_value(x[2]) === nothing
+
+        @test JuMP.name(y) == "y"
+        @test JuMP.lower_bound(y) == 2
+        @test !JuMP.has_upper_bound(y)
+        @test !JuMP.is_binary(y)
+        @test JuMP.is_integer(y)
+        @test JuMP.start_value(y) === 0.7
+
+        @test JuMP.name(z) == "z"
+        @test !JuMP.has_lower_bound(z)
+        @test JuMP.upper_bound(z) == 3
+        @test !JuMP.is_binary(z)
+        @test !JuMP.is_integer(z)
+        @test JuMP.start_value(z) === 10
+
+        @test JuMP.name(q) == "q"
+        @test !JuMP.has_lower_bound(q)
+        @test !JuMP.has_upper_bound(q)
+        @test JuMP.is_binary(q)
+        @test !JuMP.is_integer(q)
+        @test JuMP.start_value(q) === 0.5
+    end
 end
 
 @testset "Variables for JuMPExtension.MyModel" begin

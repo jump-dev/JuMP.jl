@@ -1,4 +1,50 @@
-# TODO: Copy over tests that are still relevant from old/macros.jl.
+#  Copyright 2017, Iain Dunning, Joey Huchette, Miles Lubin, and contributors
+#  This Source Code Form is subject to the terms of the Mozilla Public
+#  License, v. 2.0. If a copy of the MPL was not distributed with this
+#  file, You can obtain one at http://mozilla.org/MPL/2.0/.
+#############################################################################
+# JuMP
+# An algebraic modeling language for Julia
+# See http://github.com/JuliaOpt/JuMP.jl
+#############################################################################
+# test/macros.jl
+# Testing for macros
+#############################################################################
+
+@testset "Check Julia generator expression parsing" begin
+    sumexpr = :(sum(x[i,j] * y[i,j] for i = 1:N, j in 1:M if i != j))
+    @test sumexpr.head == :call
+    @test sumexpr.args[1] == :sum
+    @test sumexpr.args[2].head == :generator
+    @test sumexpr.args[2].args[1] == :(x[i,j] * y[i,j])
+    @test sumexpr.args[2].args[2].head == :filter
+    @test sumexpr.args[2].args[2].args[1] == :(i != j)
+    @test sumexpr.args[2].args[2].args[2] == :(i = 1:N)
+    @test sumexpr.args[2].args[2].args[3] == :(j = 1:M)
+
+    sumexpr = :(sum(x[i,j] * y[i,j] for i = 1:N, j in 1:M))
+    @test sumexpr.head == :call
+    @test sumexpr.args[1] == :sum
+    @test sumexpr.args[2].head == :generator
+    @test sumexpr.args[2].args[1] == :(x[i,j] * y[i,j])
+    @test sumexpr.args[2].args[2] == :(i = 1:N)
+    @test sumexpr.args[2].args[3] == :(j = 1:M)
+end
+
+@testset "Check Julia condition expression parsing" begin
+    ex = :(x[12;3])
+    @test ex.head == :typed_vcat
+    @test ex.args == [:x, 12, 3]
+
+    if VERSION >= v"1.0-"
+        ex = :(x[i=1:3, j=S; isodd(i) && i + j >= 2])
+        @test ex.head == :ref
+        @test ex.args == [:x,
+                      Expr(:parameters, Expr(:&&, :(isodd(i)), :(i + j >= 2))),
+                      Expr(:kw, :i, :(1:3)),
+                      Expr(:kw, :j, :S)]
+    end
+end
 
 mutable struct MyVariable
     test_kw::Int
@@ -166,6 +212,34 @@ function macros_test(ModelType::Type{<:JuMP.AbstractModel}, VariableRefType::Typ
         @test c.set == MOI.LessThan(-38.0)
     end
 
+    @testset "Unicode comparison operators" begin
+        model = ModelType()
+        @variable(model, x)
+        @variable(model, y)
+        t = 10.0
+
+        cref = @constraint(model, (x + y) / 2 ≥ 1)
+        c = JuMP.constraint_object(cref)
+        @test JuMP.isequal_canonical(c.func, 0.5 * x + 0.5 * y)
+        @test c.set == MOI.GreaterThan(1.0)
+
+        cref = @constraint(model, (x + y) / 2 ≤ 1)
+        c = JuMP.constraint_object(cref)
+        @test JuMP.isequal_canonical(c.func, 0.5 * x + 0.5 * y)
+        @test c.set == MOI.LessThan(1.0)
+
+        cref = @constraint(model, -1 ≤ x - y ≤ t)
+        c = JuMP.constraint_object(cref)
+        @test JuMP.isequal_canonical(c.func, x - y)
+        @test c.set == MOI.Interval(-1.0, t)
+
+        cref = @constraint(model, 1 ≥ x ≥ 0)
+        c = JuMP.constraint_object(cref)
+        @test c.func isa JuMP.GenericAffExpr
+        @test JuMP.isequal_canonical(c.func, 1 * x)
+        @test c.set == MOI.Interval(0.0, 1.0)
+    end
+
     @testset "@build_constraint (scalar inequality)" begin
         model = ModelType()
         @variable(model, x)
@@ -319,6 +393,46 @@ end
         @test con2.func == 2 * x^2 - 3 * x
         @test con3.func == 9 * x^2
         @test con4.func == convert(QuadExpr, 3 * x)
+    end
+
+    @testset "AffExpr in macros" begin
+        eq = JuMP.math_symbol(REPLMode, :eq)
+        ge = JuMP.math_symbol(REPLMode, :geq)
+
+        model = Model()
+        @variable(model, x)
+        @variable(model, y)
+        temp = x + 2 * y + 1
+        a = 1.0 * x
+        con1 = @constraint(model, 3 * temp - x - 2 >= 0)
+        con2 = @constraint(model, (2 + 2) * ((3 + 4) * (1 + a)) == 0)
+        con3 = @constraint(model, 1 + 0 * temp == 0)
+        @test string(con1) == "2 x + 6 y $ge -1.0"
+        @test string(con2) == "28 x $eq -28.0"
+        @test string(con3) == "0 $eq -1.0"
+    end
+
+    @testset "@constraints" begin
+        eq = JuMP.math_symbol(REPLMode, :eq)
+        ge = JuMP.math_symbol(REPLMode, :geq)
+
+        model = Model()
+        @variable(model, x)
+        @variable(model, y[1:3])
+
+        @constraints(model, begin
+            x + y[1] == 1
+            ref[i=1:3], y[1] + y[i] >= i
+        end)
+
+        @test string(model) == """
+        Feasibility
+        Subject to
+         x + y[1] $eq 1.0
+         2 y[1] $ge 1.0
+         y[1] + y[2] $ge 2.0
+         y[1] + y[3] $ge 3.0
+        """
     end
 end
 
