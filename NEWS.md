@@ -27,10 +27,10 @@ Breaking changes:
   for a list of solvers that have and have not yet been updated.
   
 - Most solvers have been renamed to `PackageName.Optimizer`. For example, 
-  `GurobiSolver(OutputFlag=0)` is now `Gurobi.Optimizer(OutputFlag=0)`.
+  `GurobiSolver()` is now `Gurobi.Optimizer`.
 
 - Solvers are no longer added to a model via `Model(solver = XXX(kwargs...))`. 
-  Instead use `Model(with_optimizer(XXX, kwargs...))`.
+  Instead use `Model(with_optimizer(XXX, kwargs...))`. For example, `Model(with_optimizer(Gurobi.Optimizer, OutputFlag=0))`.
 
 - JuMP containers (e.g., the objects returned by `@variable`) have been
   redesigned. `Containers.SparseAxisArray` replaces `JuMPDict`, `JuMPArray` was
