@@ -387,6 +387,30 @@
         @test JuMP.value(p) == 10.0
     end
 
+    @testset "@NLconstraints" begin
+        model = Model()
+        @variable(model, 0 <= x <= 1)
+        @variable(model, y[1:3])
+        @objective(model, Max, x)
+
+        @NLconstraints(model, begin
+            ref[i=1:3], y[i] == 0
+            x + y[1] * y[2] * y[3] <= 0.5
+        end)
+
+        @test JuMP.num_nl_constraints(model) == 4
+        evaluator = JuMP.NLPEvaluator(model)
+        MOI.initialize(evaluator, [:ExprGraph])
+
+        for i in 1:3
+            @test MOI.constraint_expr(evaluator, i) ==
+                    :(x[$(y[i].index)] - 0.0 == 0.0)
+        end
+        @test MOI.constraint_expr(evaluator, 4) ==
+               :((x[$(x.index)] + x[$(y[1].index)] * x[$(y[2].index)] *
+                  x[$(y[3].index)]) - 0.5 <= 0.0)
+    end
+
     # This covers the code that computes Hessians in odd chunks of Hess-vec
     # products.
     @testset "Dense Hessian" begin
