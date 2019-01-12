@@ -406,7 +406,7 @@ end
         a = 1.0 * x
         con1 = @constraint(model, 3 * temp - x - 2 >= 0)
         con2 = @constraint(model, (2 + 2) * ((3 + 4) * (1 + a)) == 0)
-        con3 = @constraint(model, 1 + 0*temp == 0)
+        con3 = @constraint(model, 1 + 0 * temp == 0)
         @test string(con1) == "2 x + 6 y $ge -1.0"
         @test string(con2) == "28 x $eq -28.0"
         @test string(con3) == "0 $eq -1.0"
