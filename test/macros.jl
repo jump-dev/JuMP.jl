@@ -413,6 +413,9 @@ end
     end
 
     @testset "@constraints" begin
+        eq = JuMP.math_symbol(REPLMode, :eq)
+        ge = JuMP.math_symbol(REPLMode, :geq)
+
         model = Model()
         @variable(model, x)
         @variable(model, y[1:3])
@@ -425,10 +428,10 @@ end
         @test string(model) == """
         Feasibility
         Subject to
-         x + y[1] = 1.0
-         2 y[1] ≥ 1.0
-         y[1] + y[2] ≥ 2.0
-         y[1] + y[3] ≥ 3.0
+         x + y[1] $eq 1.0
+         2 y[1] $ge 1.0
+         y[1] + y[2] $ge 2.0
+         y[1] + y[3] $ge 3.0
         """
     end
 end
