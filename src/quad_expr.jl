@@ -92,14 +92,14 @@ linear_terms(quad::GenericQuadExpr) = LinearTermIterator(quad.aff)
 struct QuadTermIterator{GQE<:GenericQuadExpr}
     quad::GQE
 end
-# TODO: rename to quad_terms
+
 """
-    quadterms(quad::GenericQuadExpr{C, V})
+    quad_terms(quad::GenericQuadExpr{C, V})
 
 Provides an iterator over tuples `(coefficient::C, var_1::V, var_2::V)` in the
 quadratic part of the quadratic expression.
 """
-quadterms(quad::GenericQuadExpr) = QuadTermIterator(quad)
+quad_terms(quad::GenericQuadExpr) = QuadTermIterator(quad)
 
 function reorder_iterator(p::Pair{UnorderedPair{V},C}, state::Int) where {C,V}
     return ((p.second, p.first.a, p.first.b), state)
@@ -162,7 +162,7 @@ end
 
 function assert_isfinite(q::GenericQuadExpr)
     assert_isfinite(q.aff)
-    for (coef, var1, var2) in quadterms(q)
+    for (coef, var1, var2) in quad_terms(q)
         isfinite(coef) || error("Invalid coefficient $coef on quadratic term $var1*$var2.")
     end
 end
@@ -210,7 +210,7 @@ end
     moi_quadratic_term(t::Tuple)
 
 Return the MOI.ScalarQuadraticTerm for the quadratic term `t`, element of the
-[`quadterms`](@ref) iterator. Note that the `JuMP.VariableRef`s are transformed
+[`quad_terms`](@ref) iterator. Note that the `JuMP.VariableRef`s are transformed
 into `MOI.VariableIndex`s hence the owner model information is lost.
 """
 function moi_quadratic_term(t::Tuple)
@@ -220,7 +220,7 @@ end
 function MOI.ScalarQuadraticFunction(q::QuadExpr)
     assert_isfinite(q)
     qterms = MOI.ScalarQuadraticTerm{Float64}[moi_quadratic_term(t)
-                                              for t in quadterms(q)]
+                                              for t in quad_terms(q)]
     moi_aff = MOI.ScalarAffineFunction(q.aff)
     return MOI.ScalarQuadraticFunction(moi_aff.terms,
                                        qterms, moi_aff.constant)
@@ -269,16 +269,16 @@ last term added.
 function _fill_vqf!(terms::Vector{<:MOI.VectorQuadraticTerm}, offset::Int,
                     oi::Int, aff::AbstractJuMPScalar)
     i = 1
-    for term in quadterms(aff)
+    for term in quad_terms(aff)
         terms[offset + i] = MOI.VectorQuadraticTerm(Int64(oi),
                                                     moi_quadratic_term(term))
         i += 1
     end
-    return offset + length(quadterms(aff))
+    return offset + length(quad_terms(aff))
 end
 
 function MOI.VectorQuadraticFunction(quads::Vector{QuadExpr})
-    num_quad_terms = sum(quad -> length(quadterms(quad)), quads)
+    num_quad_terms = sum(quad -> length(quad_terms(quad)), quads)
     quad_terms = Vector{MOI.VectorQuadraticTerm{Float64}}(undef, num_quad_terms)
     num_aff_terms = sum(quad -> length(linear_terms(quad)), quads)
     lin_terms = Vector{MOI.VectorAffineTerm{Float64}}(undef, num_aff_terms)

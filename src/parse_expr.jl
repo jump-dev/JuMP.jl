@@ -225,7 +225,7 @@ end
 
 function destructive_add!(quad::GenericQuadExpr{C,V},c::GenericQuadExpr{C,V},x::Number) where {C,V}
     if !iszero(x)
-        for (coef, var1, var2) in quadterms(c)
+        for (coef, var1, var2) in quad_terms(c)
             add_to_expression!(quad, x*coef, var1, var2)
         end
         quad.aff = destructive_add!(quad.aff,c.aff,x)
@@ -235,7 +235,7 @@ end
 
 function destructive_add!(quad::GenericQuadExpr{C,V},c::Number,x::GenericQuadExpr{C,V}) where {C,V}
     if !iszero(c)
-        for (coef, var1, var2) in quadterms(x)
+        for (coef, var1, var2) in quad_terms(x)
             add_to_expression!(quad, c*coef, var1, var2)
         end
         quad.aff = destructive_add!(quad.aff,c,x.aff)
