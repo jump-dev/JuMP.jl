@@ -32,7 +32,7 @@ function example_mle(; verbose = true)
         println("mean(data) = ", mean(data))
         println("σ^2 = ", JuMP.value(σ)^2)
         println("var(data) = ", var(data))
-        println("MLE objective: ", JuMP.objective_value(m))
+        println("MLE objective: ", JuMP.objective_value(model))
     end
     @test JuMP.value(μ) ≈ mean(data) atol = 1e-3
     @test JuMP.value(σ)^2 ≈ var(data) atol = 1e-2
