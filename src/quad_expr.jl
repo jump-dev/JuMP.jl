@@ -278,19 +278,19 @@ function _fill_vqf!(terms::Vector{<:MOI.VectorQuadraticTerm}, offset::Int,
 end
 
 function MOI.VectorQuadraticFunction(quads::Vector{QuadExpr})
-    num_quad_terms = sum(quad -> length(quad_terms(quad)), quads)
-    quad_terms = Vector{MOI.VectorQuadraticTerm{Float64}}(undef, num_quad_terms)
-    num_aff_terms = sum(quad -> length(linear_terms(quad)), quads)
-    lin_terms = Vector{MOI.VectorAffineTerm{Float64}}(undef, num_aff_terms)
+    num_qua_terms = sum(quad -> length(quad_terms(quad)), quads)
+    qua_terms = Vector{MOI.VectorQuadraticTerm{Float64}}(undef, num_qua_terms)
+    num_lin_terms = sum(quad -> length(linear_terms(quad)), quads)
+    lin_terms = Vector{MOI.VectorAffineTerm{Float64}}(undef, num_lin_terms)
     constants = Vector{Float64}(undef, length(quads))
     quad_offset = 0
-    aff_offset = 0
+    lin_offset = 0
     for (i, quad) in enumerate(quads)
-        quad_offset = _fill_vqf!(quad_terms, quad_offset, i, quad)
-        aff_offset = _fill_vaf!(lin_terms, aff_offset, i, quad)
+        quad_offset = _fill_vqf!(qua_terms, quad_offset, i, quad)
+        lin_offset = _fill_vaf!(lin_terms, lin_offset, i, quad)
         constants[i] = constant(quad)
     end
-    MOI.VectorQuadraticFunction(lin_terms, quad_terms, constants)
+    MOI.VectorQuadraticFunction(lin_terms, qua_terms, constants)
 end
 moi_function(a::Vector{<:GenericQuadExpr}) = MOI.VectorQuadraticFunction(a)
 function moi_function_type(::Type{Vector{Quad}}) where {T, Quad <: GenericQuadExpr{T}}
