@@ -35,9 +35,14 @@ CachingOptimizer state: NO_OPTIMIZER
 Solver name: No optimizer attached.
 ```
 
+!!! note
+    The term "solver" is used as a synonym for "optimizer". The convention in
+    code, however, is to always use "optimizer", e.g., `with_optimizer` and
+    `GLPK.Optimizer`.
+
 ```@meta
 DocTestSetup = quote
-    # Using a caching optimizer removes the need to # load a solver such as GLPK
+    # Using a caching optimizer removes the need to load a solver such as GLPK
     # for building the documentation.
     const MOI = JuMP.MathOptInterface
     model = Model(with_optimizer(MOI.Utilities.MockOptimizer,
@@ -49,10 +54,8 @@ end
 !!! note
     Your model doesn't have to be called `model` - it's just a name.
 
-There are a few options for defining a variable, depending on whether you want
-to have lower bounds, upper bounds, both bounds, or even no bounds. The
-following commands will create two variables, `x` and `y`, with both lower and
-upper bounds. Note the first argument is our model variable ``model``. These
+The following commands will create two variables, `x` and `y`, with both lower
+and upper bounds. Note the first argument is our model variable ``model``. These
 variables are associated with this model and cannot be used in another model.
 ```jldoctest quickstart_example
 julia> @variable(model, 0 <= x <= 2)
@@ -61,7 +64,9 @@ x
 julia> @variable(model, 0 <= y <= 30)
 y
 ```
-See the [Variables](@ref) section for more information on creating variables.
+See the [Variables](@ref) section for more information on creating variables,
+including the syntax for specifying different combinations of bounds, i.e.,
+only lower bounds, only upper bounds, or no bounds.
 
 ```@meta
 DocTestSetup = nothing
@@ -71,8 +76,10 @@ Next we'll set our objective. Note again the `model`, so we know which model's
 objective we are setting! The objective sense, `Max` or `Min`, should be
 provided as the second argument. Note also that we don't have a multiplication
 `*` symbol between `5` and our variable `x` - Julia is smart enough to not need
-it! Feel free to stick with `*` if it makes you feel more comfortable, as we
-have done with `3 * y`. (We have been intentionally inconsistent here to demonstrate different syntax; however, it is good practice to pick one way or the other consistently in your code.)
+it! Feel free to use `*` if it makes you feel more comfortable, as we have done
+with `3 * y`. (We have been intentionally inconsistent here to demonstrate
+different syntax; however, it is good practice to pick one way or the other
+consistently in your code.)
 ```jldoctest quickstart_example
 julia> @objective(model, Max, 5x + 3 * y)
 5 x + 3 y
@@ -112,8 +119,8 @@ DocTestSetup = quote
 end
 ```
 
-After the call to `JuMP.optimize!` has finished, we need to understand why the
-optimizer stopped. This can be for a number of reasons. First, the solver might
+After the call to `JuMP.optimize!` has finished, we need to query what happened.
+The solve could terminate for a number of reasons. First, the solver might
 have found the optimal solution, or proved that the problem is infeasible.
 However, it might also have run into numerical difficulties, or terminated due
 to a setting such as a time limit. We can ask the solver why it stopped using
@@ -166,7 +173,7 @@ julia> JuMP.dual(con)
 ```
 
 !!! info
-    See [constraint duality section](@ref constraint_duality) for a discussion
+    See the [duality section](@ref constraint_duality) for a discussion
     of the convention that JuMP uses for signs of duals.
 
 To query the dual variables associated with the variable bounds, things are a
