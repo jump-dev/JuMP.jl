@@ -246,7 +246,7 @@ Base.:/(q::GenericQuadExpr, a::GenericAffExpr) = error("Cannot divide a quadrati
 # GenericQuadExpr--GenericQuadExpr
 function Base.:+(q1::GenericQuadExpr, q2::GenericQuadExpr)
     result = copy(q1)
-    for (coef, var1, var2) in quadterms(q2)
+    for (coef, var1, var2) in quad_terms(q2)
         add_to_expression!(result, coef, var1, var2)
     end
     for (coef, var) in linear_terms(q2)
@@ -257,7 +257,7 @@ function Base.:+(q1::GenericQuadExpr, q2::GenericQuadExpr)
 end
 function Base.:-(q1::GenericQuadExpr, q2::GenericQuadExpr)
     result = copy(q1)
-    for (coef, var1, var2) in quadterms(q2)
+    for (coef, var1, var2) in quad_terms(q2)
         add_to_expression!(result, -coef, var1, var2)
     end
     for (coef, var) in linear_terms(q2)

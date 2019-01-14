@@ -330,13 +330,13 @@ function Base.show(io::IO, ::MIME"text/latex", q::GenericQuadExpr)
 end
 
 function quad_string(mode, q::GenericQuadExpr)
-    length(quadterms(q)) == 0 && return aff_string(mode, q.aff)
+    length(quad_terms(q)) == 0 && return aff_string(mode, q.aff)
 
     # Odd terms are +/i, even terms are the variables/coeffs
-    term_str = Array{String}(undef, 2 * length(quadterms(q)))
+    term_str = Array{String}(undef, 2 * length(quad_terms(q)))
     elm = 1
     if length(term_str) > 0
-        for (coef, var1, var2) in quadterms(q)
+        for (coef, var1, var2) in quad_terms(q)
             is_zero_for_printing(coef) && continue  # e.g. x - x
 
             pre = is_one_for_printing(coef) ? "" : string_round(abs(coef)) * " "
