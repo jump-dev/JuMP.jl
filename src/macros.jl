@@ -234,25 +234,30 @@ function getloopedcode(varname, code, condition, idxvars, idxsets, idxpairs, sym
     end
 end
 
-localvar(x::Symbol) = _localvar(x)
-localvar(x::Expr) = Expr(:block, _localvar(x)...)
-_localvar(x::Symbol) = :(local $(esc(x)))
-function _localvar(x::Expr)
-    @assert x.head in (:escape,:tuple)
-    args = Any[]
-    for t in x.args
-        if isa(t, Symbol)
-            push!(args, :(local $(esc(t))))
-        else
-            @assert isa(t, Expr)
-            if t.head == :tuple
-                append!(args, map(_localvar, t.args))
+# There is no need for localvar with >=0.7 since the loop variable are always local
+if VERSION < v"0.7"
+    localvar(x::Symbol) = _localvar(x)
+    localvar(x::Expr) = Expr(:block, _localvar(x)...)
+    _localvar(x::Symbol) = :(local $(esc(x)))
+    function _localvar(x::Expr)
+        @assert x.head in (:escape,:tuple)
+        args = Any[]
+        for t in x.args
+            if isa(t, Symbol)
+                push!(args, :(local $(esc(t))))
             else
-                error("Internal error defining local variables in macros; please file an issue at https://github.com/JuliaOpt/JuMP.jl/issues/new")
+                @assert isa(t, Expr)
+                if t.head == :tuple
+                    append!(args, map(_localvar, t.args))
+                else
+                    error("Internal error defining local variables in macros; please file an issue at https://github.com/JuliaOpt/JuMP.jl/issues/new")
+                end
             end
         end
+        args
     end
-    args
+else
+    localvar(x) = nothing
 end
 
 function addkwargs!(call, kwargs)
