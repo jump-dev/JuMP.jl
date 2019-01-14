@@ -498,12 +498,12 @@ julia> @SDconstraint(model, [x 2x; 3x 4x] >= ones(2, 2))
 [x - 1, 3 x - 1, 2 x - 1, 4 x - 1] ∈ MathOptInterface.PositiveSemidefiniteConeSquare(2)
 ```
 
-Solvers supporting such constraints usually expects to be given a matrix that
+Solvers supporting such constraints usually expect to be given a matrix that
 is *symbolically* symmetric, that is, for which the expression in corresponding
 off-diagonal entries are the same. In our example, the expressions of entries
 `(1, 2)` and `(2, 1)` are respectively `2x - 1` and `3x - 1` which are
 different. To bridge the gap between the constraint modeled and what the solver
-expects, JuMP creates an equality constraint `3x - 1 == 2x - 1` and constraint
+expects, JuMP creates an equality constraint `3x - 1 == 2x - 1` and constrains
 the symmetric matrix `[x - 1, 2 x - 1, 2 x - 1, 4 x - 1]` to be positive
 semidefinite.
 
