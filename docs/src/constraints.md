@@ -485,7 +485,50 @@ for more information.
 
 ## Semidefinite constraints
 
-TODO: discuss [`@SDconstraint`] and [`PSDCone`].
+JuMP provides a special syntax for constraining a matrix to be symmetric
+positive semidefinite with the [`@SDconstraint`](@ref) macro.
+In the context of this macro, the inequality `A >= B` between two square
+matrices `A` and `B` is understood as constraining `A - B` to be symmetric
+positive semidefinite.
+```jldoctest con_psd; setup=:(model = Model())
+julia> @variable(model, x)
+x
+
+julia> @SDconstraint(model, [x 2x; 3x 4x] >= ones(2, 2))
+[x - 1, 3 x - 1, 2 x - 1, 4 x - 1] ∈ MathOptInterface.PositiveSemidefiniteConeSquare(2)
+```
+
+Solvers supporting such constraints usually expect to be given a matrix that
+is *symbolically* symmetric, that is, for which the expression in corresponding
+off-diagonal entries are the same. In our example, the expressions of entries
+`(1, 2)` and `(2, 1)` are respectively `2x - 1` and `3x - 1` which are
+different. To bridge the gap between the constraint modeled and what the solver
+expects, JuMP creates an equality constraint `3x - 1 == 2x - 1` and constrains
+the symmetric matrix `[x - 1, 2 x - 1, 2 x - 1, 4 x - 1]` to be positive
+semidefinite.
+
+!!! note
+    If the matrix provided is already symbolically symmetric, the equality
+    constrains are equivalent to `0 = 0` and are not added. In practice, if
+    all coefficients are smaller than `1e-10`, the constraint is ignored, if
+    all coefficients are smaller than `1e-8` but some are larger than `1e-10`,
+    it is ignored but a warning is displayed, otherwise if at least one
+    coefficient is larger than `1e-8`, the constraint is added.
+
+If the matrix is known to be symmetric, it can be added as follows:
+```jldoctest con_psd
+julia> using LinearAlgebra
+
+julia> @constraint(model, Symmetric([x 2x; 2x 4x] - ones(2, 2)) in PSDCone())
+[x - 1, 2 x - 1, 4 x - 1] ∈ MathOptInterface.PositiveSemidefiniteConeTriangle(2)
+```
+
+Note that the lower triangular entries are silently ignored even if they are
+different so use it with caution:
+```jldoctest con_psd
+julia> @constraint(model, Symmetric([x 2x; 3x 4x]) in PSDCone())
+[x, 2 x, 4 x] ∈ MathOptInterface.PositiveSemidefiniteConeTriangle(2)
+```
 
 ## Constraint modifications
 
