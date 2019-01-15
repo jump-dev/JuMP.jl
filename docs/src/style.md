@@ -260,6 +260,12 @@ some_local_variable = ...
 some_file.jl # Except for ModuleName.jl.
 ```
 
+Never begin a variable name with an underscore. We make an exception for
+non-exported constants.
+```julia
+const _PRIVATE_JUMP_CONSTANT = 3.14159
+```
+
 #### Use of underscores
 
 The Julia style guide recommends avoiding underscores "when readable", for
