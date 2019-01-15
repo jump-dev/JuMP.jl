@@ -23,25 +23,7 @@ import ForwardDiff
 include("Derivatives/Derivatives.jl")
 using .Derivatives
 
-export
-    Model, VariableRef, AffExpr, QuadExpr,
-    with_optimizer,
-    NonlinearConstraint,
-    ConstraintRef,
-    SecondOrderCone, RotatedSecondOrderCone, PSDCone,
-    optimize!,
-    set_name,
-    set_lower_bound, set_upper_bound,
-    set_start_value,
-    linear_terms,
-
-# Macros and support functions
-    @expression, @expressions, @NLexpression, @NLexpressions,
-    @variable, @variables, @constraint, @constraints,
-    @NLconstraint, @NLconstraints,
-    @SDconstraint, @SDconstraints,
-    @objective, @NLobjective,
-    @NLparameter, @constraintref
+# Exports are listed at the end of the file.
 
 # Deprecations for JuMP v0.18 -> JuMP v0.19 transition
 Base.@deprecate(getobjectivevalue, JuMP.objective_value)
@@ -735,7 +717,26 @@ include("macros.jl")
 include("optimizer_interface.jl")
 include("nlp.jl")
 include("print.jl")
-
-
 ##########################################################################
+
+# JuMP exports everything except internal symbols, which are defined as those
+# whose name starts with an underscore. If you don't want all of these symbols
+# in your environment, then use `import JuMP` instead of `using JuMP`.
+
+# Do not add JuMP-defined symbols to this exclude list. Instead, rename them
+# with an underscore.
+const _EXCLUDE_SYMBOLS = [Symbol(@__MODULE__), :eval, :include]
+
+for sym in names(@__MODULE__, all=true)
+    sym_string = string(sym)
+    if sym in _EXCLUDE_SYMBOLS || startswith(sym_string, "_")
+        continue
+    end
+    if !(Base.isidentifier(sym) || (startswith(sym_string, "@") &&
+         Base.isidentifier(sym_string[2:end])))
+       continue
+    end
+    @eval export $sym
+end
+
 end

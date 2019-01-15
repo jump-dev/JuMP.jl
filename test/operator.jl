@@ -569,7 +569,7 @@ function operators_test(ModelType::Type{<:JuMP.AbstractModel}, VariableRefType::
                  6 0 7]
             B = sparse(A)
             # force vector output
-            cref1 = @constraint(m, reshape(x,(1,3))*A*x .>= 1)
+            cref1 = @constraint(m, Base.reshape(x, (1, 3)) * A * x .>= 1)
             c1 = JuMP.constraint_object.(cref1)
             f1 = map(c -> c.func, c1)
             @test JuMP.isequal_canonical(f1, [x[1]*x[1] + 2x[1]*x[2] + 4x[2]*x[2] + 9x[1]*x[3] + 5x[2]*x[3] + 7x[3]*x[3]])
