@@ -273,7 +273,19 @@ Use strings to provide long-form additional information like error messages.
 Use of `Symbol` should typically be reserved for identifiers, e.g., for lookup
 in the JuMP model (`model[:my_variable]`).
 
+#### `using` vs. `import`
 
+`using ModuleName` brings all symbols exported by the module `ModuleName`
+into scope, while `import ModuleName` brings only the module itself into scope.
+(See the Julia
+[manual](https://docs.julialang.org/en/v1/manual/modules/#modules-1)) for
+examples and more details.
+
+For the same reason that `from <module> import *` is not recommended in python
+([PEP 8](https://www.python.org/dev/peps/pep-0008/#imports)), avoid
+`using ModuleName` except in throw-away scripts or at the REPL. The `using`
+statement makes it harder to track where symbols come from and exposes the code
+to ambiguities when two modules export the same symbol.
 
 Design principles
 -----------------
