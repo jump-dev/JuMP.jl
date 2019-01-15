@@ -193,6 +193,44 @@ Bad:
 @constraint(model, x * 3 <= 1)
 ```
 
+In order to reduce boilerplate code, prefer the plural form of macros over lots
+of repeated calls to singular forms.
+
+Good:
+```julia
+@variables(model, begin
+    x >= 0
+    y >= 1
+    z <= 2
+end)
+```
+
+Bad:
+```julia
+@variable(model, x >= 0)
+@variable(model, y >= 1)
+@variable(model, z <= 2)
+```
+
+An exception is made for calls with many keyword arguments, since these need to
+be enclosed in parentheses in order to parse properly.
+
+Acceptable:
+```julia
+@variable(model, x >= 0, start = 0.0, base_name = "my_x")
+@variable(model, y >= 1, start = 2.0)
+@variable(model, z <= 2, start = -1.0)
+```
+
+Also acceptable:
+```julia
+@variables(model, begin
+    x >= 0, (start = 0.0, base_name = "my_x")
+    y >= 1, (start = 2.0)
+    z <= 2, (start = -1.0)
+end)
+```
+
 ### Naming
 
 ```julia
