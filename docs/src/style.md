@@ -260,6 +260,13 @@ some_local_variable = ...
 some_file.jl # Except for ModuleName.jl.
 ```
 
+Begin private functions and constants with an underscore. All other names should
+be exported.
+```julia
+function _private_jump_function end
+function public_jump_function end
+```
+
 Never begin a variable name with an underscore. We make an exception for
 non-exported constants.
 ```julia
