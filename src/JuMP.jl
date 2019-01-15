@@ -23,7 +23,7 @@ import ForwardDiff
 include("Derivatives/Derivatives.jl")
 using .Derivatives
 
-# Exports are listed at the end of the file.
+# Exports are at the end of the file.
 
 # Deprecations for JuMP v0.18 -> JuMP v0.19 transition
 Base.@deprecate(getobjectivevalue, JuMP.objective_value)
