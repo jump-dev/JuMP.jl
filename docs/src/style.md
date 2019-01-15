@@ -164,8 +164,10 @@ empty vector with element type `T`. Prefer `T[]` because it is more concise.
 
 #### Trailing periods in floating-point constants
 
-Both `1.0` and `1.` create a `Float64` with value `1.0`. Prefer `1.0` over
-`1.` because it is more easily distinguished from the integer constant `1`.
+Both `1.0` and `1.` create a `Float64` with value `1.0`. Prefer `1.0` over `1.`
+because it is more easily distinguished from the integer constant `1`.
+
+Moreover, as recommended by the [Julia style guide](https://docs.julialang.org/en/v1/manual/style-guide/index.html#Avoid-using-floats-for-numeric-literals-in-generic-code-when-possible-1), never use `1.0` when `1` is okay.
 
 #### Comments
 
