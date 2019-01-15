@@ -181,6 +181,18 @@ Bad:
 @variable model x >= 0
 ```
 
+Use `constant * variable` as opposed to `variable * constant`.
+
+Good:
+```julia
+@constraint(model, 3 * x <= 1)
+```
+
+Bad:
+```julia
+@constraint(model, x * 3 <= 1)
+```
+
 ### Naming
 
 ```julia
