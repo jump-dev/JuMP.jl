@@ -1357,7 +1357,15 @@ var documenterSearchIndex = {"docs": [
     "page": "Style Guide",
     "title": "Trailing periods in floating-point constants",
     "category": "section",
-    "text": "Both 1.0 and 1. create a Float64 with value 1.0. Prefer 1.0 over 1. because it is more easily distinguished from the integer constant 1."
+    "text": "Both 1.0 and 1. create a Float64 with value 1.0. Prefer 1.0 over 1. because it is more easily distinguished from the integer constant 1.Moreover, as recommended by the Julia style guide, never use 1.0 when 1 is okay."
+},
+
+{
+    "location": "style/#Comments-1",
+    "page": "Style Guide",
+    "title": "Comments",
+    "category": "section",
+    "text": "For non-native speakers and for general clarity, comments in code must be proper English sentences with appropriate punctuation.Good:# This is a comment demonstrating a good comment.Bad:# a bad comment"
 },
 
 {
