@@ -14,7 +14,7 @@ Building the documentation
 The documentation is built using the following command:
 
 ```julia
-julia --project=. make.jl
+julia --project=. --color=yes make.jl
 ```
 
 The compiled documents can be viewed at `build/index.html`.

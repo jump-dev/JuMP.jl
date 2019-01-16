@@ -116,7 +116,7 @@ Return the current value stored in the nonlinear parameter `p`.
 ```jldoctest
 model = Model()
 @NLparameter(model, p == 10)
-JuMP.value(p)
+value(p)
 
 # output
 10.0
@@ -133,8 +133,8 @@ Store the value `v` in the nonlinear parameter `p`.
 ```jldoctest
 model = Model()
 @NLparameter(model, p == 0)
-JuMP.set_value(p, 5)
-JuMP.value(p)
+set_value(p, 5)
+value(p)
 
 # output
 5.0
@@ -1113,7 +1113,7 @@ end
 """
     value(ex::NonlinearExpression)
 
-Evaluate `ex` using `JuMP.value` as the value for each variable `v`.
+Evaluate `ex` using `value` as the value for each variable `v`.
 """
 value(ex::NonlinearExpression) = value(ex, value)
 

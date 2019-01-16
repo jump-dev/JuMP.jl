@@ -37,13 +37,13 @@ model = Model(with_optimizer(Ipopt.Optimizer))
 
 @NLobjective(model, Min, (1 - x)^2 + 100 * (y - x^2)^2)
 
-JuMP.optimize!(model)
-println("x = ", JuMP.value(x), " y = ", JuMP.value(y))
+optimize!(model)
+println("x = ", value(x), " y = ", value(y))
 
 # adding a (linear) constraint
 @constraint(model, x + y == 10)
-JuMP.optimize!(model)
-println("x = ", JuMP.value(x), " y = ", JuMP.value(y))
+optimize!(model)
+println("x = ", value(x), " y = ", value(y))
 ```
 
 TODO: Add links to NLP examples after they are updated.
@@ -162,13 +162,13 @@ model = Model(with_optimizer(Ipopt.Optimizer))
 @variable(model, z)
 @NLparameter(model, x == 1.0)
 @NLobjective(model, Min, (z - x)^2)
-JuMP.optimize!(model)
-JuMP.value(z) # Equals 1.0.
+optimize!(model)
+value(z) # Equals 1.0.
 
 # Now, update the value of x to solve a different problem.
-JuMP.set_value(x, 5.0)
-JuMP.optimize!(model)
-JuMP.value(z) # Equals 5.0
+set_value(x, 5.0)
+optimize!(model)
+value(z) # Equals 5.0
 ```
 
 Using nonlinear parameters can be faster than creating a new model from scratch
@@ -208,8 +208,8 @@ my_f(x,y) = (x - 1)^2 + (y - 2)^2
 
 model = Model()
 
-JuMP.register(model, :my_f, 2, my_f, autodiff=true)
-JuMP.register(model, :my_square, 1, my_square, autodiff=true)
+register(model, :my_f, 2, my_f, autodiff=true)
+register(model, :my_square, 1, my_square, autodiff=true)
 
 @variable(model, x[1:2] >= 0.5)
 @NLobjective(model, Min, my_f(x[1], my_square(x[2])))
@@ -266,9 +266,9 @@ end
 
 model = Model()
 
-JuMP.register(model, :my_f, 2, my_f, ∇f)
-JuMP.register(model, :my_square, 1, my_square, my_square_prime,
-              my_square_prime_prime)
+register(model, :my_f, 2, my_f, ∇f)
+register(model, :my_square, 1, my_square, my_square_prime,
+         my_square_prime_prime)
 
 @variable(model, x[1:2] >= 0.5)
 @NLobjective(model, Min, my_f(x[1], my_square(x[2])))
@@ -298,7 +298,7 @@ This function `f` can be used in a JuMP model as follows:
 model = Model()
 @variable(model, x[1:5] >= 0)
 f(x...) = sum(x[i]^i for i in 1:length(x))
-JuMP.register(model, :f, 5, f; autodiff = true)
+register(model, :f, 5, f; autodiff = true)
 @NLobjective(model, Min, f(x...))
 ```
 
@@ -337,7 +337,6 @@ To obtain an NLP evaluator object from a JuMP model, use `JuMP.NLPEvaluator`.
 For example:
 
 ```jldoctest derivatives
-MOI = JuMP.MathOptInterface
 raw_index(v::MOI.VariableIndex) = v.value
 model = Model()
 @variable(model, x)
@@ -348,7 +347,7 @@ x_index = raw_index(JuMP.index(x))
 y_index = raw_index(JuMP.index(y))
 values[x_index] = 2.0
 values[y_index] = 3.0
-d = JuMP.NLPEvaluator(model)
+d = NLPEvaluator(model)
 MOI.initialize(d, [:Grad])
 MOI.eval_objective(d, values) # == sin(2.0) + sin(3.0)
 
@@ -382,13 +381,13 @@ julia> @NLconstraint(model, cons1, sin(x) <= 1);
 julia> @NLconstraint(model, cons2, x + 5 == 10);
 
 julia> typeof(cons1)
-ConstraintRef{Model,JuMP.NonlinearConstraintIndex,JuMP.ScalarShape}
+ConstraintRef{Model,NonlinearConstraintIndex,ScalarShape}
 
-julia> JuMP.index(cons1)
-JuMP.NonlinearConstraintIndex(1)
+julia> index(cons1)
+NonlinearConstraintIndex(1)
 
-julia> JuMP.index(cons2)
-JuMP.NonlinearConstraintIndex(2)
+julia> index(cons2)
+NonlinearConstraintIndex(2)
 ```
 
 TODO: Provide a link for how to access the linear and quadratic parts of the
@@ -414,8 +413,8 @@ be spliced into the expression object. For example:
 
 ```julia
 @variable(model, 1 <= x[i = 1:4] <= 5)
-JuMP.set_NL_objective(model, :Min, :($(x[1])*$(x[4])*($(x[1])+$(x[2])+$(x[3])) + $(x[3])))
-JuMP.add_NL_constraint(model, :($(x[1])*$(x[2])*$(x[3])*$(x[4]) >= 25))
+set_NL_objective(model, :Min, :($(x[1])*$(x[4])*($(x[1])+$(x[2])+$(x[3])) + $(x[3])))
+add_NL_constraint(model, :($(x[1])*$(x[2])*$(x[3])*$(x[4]) >= 25))
 
 # Equivalent form using traditional JuMP macros:
 @NLobjective(model, Min, x[1] * x[4] * (x[1] + x[2] + x[3]) + x[3])

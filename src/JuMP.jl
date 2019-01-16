@@ -171,7 +171,7 @@ end
 
 Return a new JuMP model without any optimizer; the model is stored the model in
 a cache. The mode of the `CachingOptimizer` storing this cache is
-`caching_mode`. The optimizer can be set later in the [`JuMP.optimize!`](@ref)
+`caching_mode`. The optimizer can be set later in the [`optimize!`](@ref)
 call. If `bridge_constraints` is true, constraints that are not supported by the
 optimizer are automatically bridged to equivalent supported constraints when
 an appropriate transformation is defined in the `MathOptInterface.Bridges`
@@ -204,7 +204,7 @@ create the optimizer. The optimizer factory can be created by the
 The following creates a model using the optimizer
 `IpoptOptimizer(print_level=0)`:
 ```julia
-model = JuMP.Model(with_optimizer(IpoptOptimizer, print_level=0))
+model = Model(with_optimizer(Ipopt.Optimizer, print_level=0))
 ```
 """
 function Model(optimizer_factory::OptimizerFactory;
@@ -228,7 +228,7 @@ in mind the following implications of creating models using this *direct* mode:
   variables/constraints after solver or modifying constraints, an error is
   thrown. With models created using the [`Model`](@ref) constructor, such
   situations can be dealt with by storing the modifications in a cache and
-  loading them into the optimizer when `JuMP.optimize!` is called.
+  loading them into the optimizer when `optimize!` is called.
 * No constraint bridging is supported by default.
 * The optimizer used cannot be changed the model is constructed.
 * The model created cannot be copied.
@@ -259,7 +259,7 @@ Return the lower-level MathOptInterface model that sits underneath JuMP. This
 model depends on which operating mode JuMP is in (manual, automatic, or direct),
 and whether there are any bridges in the model.
 
-If JuMP is in direct mode (i.e., the model was created using [`JuMP.direct_model`](@ref)),
+If JuMP is in direct mode (i.e., the model was created using [`direct_model`](@ref)),
 the backend with be the optimizer passed to `direct_model`. If JuMP is in manual
 or automatic mode, the backend is a `MOI.Utilities.CachingOptimizer`.
 
@@ -555,9 +555,9 @@ function moi_get_result(model::MOIU.CachingOptimizer, args...)
 end
 
 """
-    get(m::JuMP.Model, attr::MathOptInterface.AbstractModelAttribute)
+    get(model::Model, attr::MathOptInterface.AbstractModelAttribute)
 
-Return the value of the attribute `attr` from model's MOI backend.
+Return the value of the attribute `attr` from the model's MOI backend.
 """
 function MOI.get(model::Model, attr::MOI.AbstractModelAttribute)
     if MOI.is_set_by_optimize(attr) &&

@@ -91,7 +91,7 @@ later analysis.
 
 Models are solved with the `JuMP.optimize!` function:
 ```jldoctest quickstart_example
-julia> JuMP.optimize!(model)
+julia> optimize!(model)
 ```
 
 ```@meta
@@ -107,8 +107,8 @@ DocTestSetup = quote
     MOI.set(mock, MOI.VariablePrimal(), JuMP.optimizer_index(x), 2.0)
     MOI.set(mock, MOI.VariablePrimal(), JuMP.optimizer_index(y), 0.2)
     MOI.set(mock, MOI.ConstraintDual(), JuMP.optimizer_index(con), -0.6)
-    MOI.set(mock, MOI.ConstraintDual(), JuMP.optimizer_index(JuMP.UpperBoundRef(x)), -4.4)
-    MOI.set(mock, MOI.ConstraintDual(), JuMP.optimizer_index(JuMP.LowerBoundRef(y)), 0.0)
+    MOI.set(mock, MOI.ConstraintDual(), JuMP.optimizer_index(UpperBoundRef(x)), -4.4)
+    MOI.set(mock, MOI.ConstraintDual(), JuMP.optimizer_index(LowerBoundRef(y)), 0.0)
 end
 ```
 
@@ -119,7 +119,7 @@ However, it might also have run into numerical difficulties, or terminated due
 to a setting such as a time limit. We can ask the solver why it stopped using
 the `JuMP.termination_status` function:
 ```jldoctest quickstart_example
-julia> JuMP.termination_status(model)
+julia> termination_status(model)
 OPTIMAL::TerminationStatusCode = 1
 ```
 In this case, `GLPK` returned `OPTIMAL`, this mean that it has found the optimal
@@ -133,10 +133,10 @@ As the solver found an optimal solution, we expect the solution returned to be
 a primal-dual pair of feasible solutions with zero duality gap.
 We can verify the primal and dual status as follows to confirm this:
 ```jldoctest quickstart_example
-julia> JuMP.primal_status(model)
+julia> primal_status(model)
 FEASIBLE_POINT::ResultStatusCode = 1
 
-julia> JuMP.dual_status(model)
+julia> dual_status(model)
 FEASIBLE_POINT::ResultStatusCode = 1
 ```
 Note that the primal and dual status only inform that the primal and dual
@@ -146,22 +146,22 @@ status is `OPTIMAL` that we can conclude that they form an optimal solution.
 Finally, we can query the result of the optimization. First, we can query the
 objective value:
 ```jldoctest quickstart_example
-julia> JuMP.objective_value(model)
+julia> objective_value(model)
 10.6
 ```
 We can also query the primal result values of the `x` and `y` variables:
 ```jldoctest quickstart_example
-julia> JuMP.value(x)
+julia> value(x)
 2.0
 
-julia> JuMP.value(y)
+julia> value(y)
 0.2
 ```
 
 We can also query the value of the dual variable associated with the constraint
 `con` (which we bound to a Julia variable when defining the constraint):
 ```jldoctest quickstart_example
-julia> JuMP.dual(con)
+julia> dual(con)
 -0.6
 ```
 
@@ -172,18 +172,18 @@ julia> JuMP.dual(con)
 To query the dual variables associated with the variable bounds, things are a
 little trickier as we first need to obtain a reference to the constraint:
 ```jldoctest quickstart_example; filter=r"≤|<="
-julia> x_upper = JuMP.UpperBoundRef(x)
+julia> x_upper = UpperBoundRef(x)
 x <= 2.0
 
-julia> JuMP.dual(x_upper)
+julia> dual(x_upper)
 -4.4
 ```
 A similar process can be followed to obtain the dual of the lower bound
 constraint on `y`:
 ```jldoctest quickstart_example; filter=r"≥|>="
-julia> y_lower = JuMP.LowerBoundRef(y)
+julia> y_lower = LowerBoundRef(y)
 y >= 0.0
 
-julia> JuMP.dual(y_lower)
+julia> dual(y_lower)
 0.0
 ```

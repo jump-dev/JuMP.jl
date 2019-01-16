@@ -113,7 +113,7 @@ julia> model = Model()
 
 julia> x = @variable(model)
 
-julia> JuMP.owner_model(x) === model
+julia> owner_model(x) === model
 true
 ```
 """
@@ -275,13 +275,13 @@ Solver name: No optimizer attached.
 julia> @variable(model, x)
 x
 
-julia> JuMP.variable_by_name(model, "x")
+julia> variable_by_name(model, "x")
 x
 
 julia> @variable(model, base_name="x")
 x
 
-julia> JuMP.variable_by_name(model, "x")
+julia> variable_by_name(model, "x")
 ERROR: Multiple variables have the name x.
 Stacktrace:
  [1] error(::String) at ./error.jl:33
@@ -294,14 +294,14 @@ Stacktrace:
 julia> var = @variable(model, base_name="y")
 y
 
-julia> JuMP.variable_by_name(model, "y")
+julia> variable_by_name(model, "y")
 y
 
-julia> JuMP.set_name(var, "z")
+julia> set_name(var, "z")
 
-julia> JuMP.variable_by_name(model, "y")
+julia> variable_by_name(model, "y")
 
-julia> JuMP.variable_by_name(model, "z")
+julia> variable_by_name(model, "z")
 z
 
 julia> @variable(model, u[1:2])
@@ -309,7 +309,7 @@ julia> @variable(model, u[1:2])
  u[1]
  u[2]
 
-julia> JuMP.variable_by_name(model, "u[2]")
+julia> variable_by_name(model, "u[2]")
 u[2]
 ```
 """
@@ -737,7 +737,7 @@ ordered by creation time.
 model = Model()
 @variable(model, x)
 @variable(model, y)
-JuMP.all_variables(model)
+all_variables(model)
 
 # output
 

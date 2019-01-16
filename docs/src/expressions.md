@@ -36,7 +36,7 @@ This expression can be used in the objective, or added to a constraint. For
 example:
 ```jldoctest affine_macro
 @objective(model, Min, 2 * ex - 1)
-JuMP.objective_function(model)
+objective_function(model)
 
 # output
 
@@ -53,7 +53,7 @@ expr
 
 # output
 
-3-element Array{JuMP.GenericAffExpr{Float64,VariableRef},1}:
+3-element Array{GenericAffExpr{Float64,VariableRef},1}:
  x[1] + x[2] + x[3]
  2 x[2] + 2 x[3]
  3 x[3]
@@ -92,7 +92,7 @@ ex = AffExpr(-1.0, x => 2.0, y => 1.0)
 2 x + y - 1
 ```
 
-### `JuMP.add_to_expression!`
+### `add_to_expression!`
 
 The fourth way to create an affine expression is by using
 [`JuMP.add_to_expression!`](@ref). Compared to the operator overloading method,
@@ -102,9 +102,9 @@ behind-the-scenes.
 model = Model()
 @variable(model, x)
 @variable(model, y)
-ex = JuMP.AffExpr(-1.0)
-JuMP.add_to_expression!(ex, 2.0, x)
-JuMP.add_to_expression!(ex, 1.0, y)
+ex = AffExpr(-1.0)
+add_to_expression!(ex, 2.0, x)
+add_to_expression!(ex, 1.0, y)
 
 # output
 
@@ -161,11 +161,8 @@ model = Model()
 @variable(model, x)
 @variable(model, y)
 aff_expr = AffExpr(-1.0, x => 1.0, y => 1.0)
-quad_expr = JuMP.QuadExpr(aff_expr,
-    JuMP.UnorderedPair(x, x) => 1.0,
-    JuMP.UnorderedPair(x, y) => 2.0,
-    JuMP.UnorderedPair(y, y) => 1.0
-)
+quad_expr = QuadExpr(aff_expr, UnorderedPair(x, x) => 1.0,
+                     UnorderedPair(x, y) => 2.0, UnorderedPair(y, y) => 1.0)
 
 # output
 
@@ -181,10 +178,10 @@ terms.
 model = Model()
 @variable(model, x)
 @variable(model, y)
-ex = JuMP.QuadExpr(x + y - 1.0)
-JuMP.add_to_expression!(ex, 1.0, x, x)
-JuMP.add_to_expression!(ex, 2.0, x, y)
-JuMP.add_to_expression!(ex, 1.0, y, y)
+ex = QuadExpr(x + y - 1.0)
+add_to_expression!(ex, 1.0, x, x)
+add_to_expression!(ex, 2.0, x, y)
+add_to_expression!(ex, 1.0, y, y)
 
 # output
 

@@ -136,27 +136,26 @@ x
 julia> @constraint(model, con, x <= 1)
 con : x <= 1.0
 
-julia> JuMP.has_duals(model)
+julia> has_duals(model)
 false
 ```
 ```@meta
 DocTestSetup = quote
     using JuMP
-    const MOI = JuMP.MathOptInterface
     model = Model(
         with_optimizer(
             MOI.Utilities.MockOptimizer,
-            JuMP.JuMPMOIModel{Float64}(),
+            JuMPMOIModel{Float64}(),
             eval_objective_value = false,
             eval_variable_constraint_dual = false));
     @variable(model, x);
     @constraint(model, con, x <= 1);
     @objective(model, Max, -2x);
-    JuMP.optimize!(model);
-    mock = JuMP.backend(model).optimizer.model;
+    optimize!(model);
+    mock = backend(model).optimizer.model;
     MOI.set(mock, MOI.TerminationStatus(), MOI.OPTIMAL)
     MOI.set(mock, MOI.DualStatus(), MOI.FEASIBLE_POINT)
-    MOI.set(mock, MOI.ConstraintDual(), JuMP.optimizer_index(con), -2.0)
+    MOI.set(mock, MOI.ConstraintDual(), optimizer_index(con), -2.0)
 end
 ```
 
@@ -164,20 +163,20 @@ end
 julia> @objective(model, Min, -2x)
 -2 x
 
-julia> JuMP.optimize!(model)
+julia> optimize!(model)
 
-julia> JuMP.has_duals(model)
+julia> has_duals(model)
 true
 
-julia> JuMP.dual(con)
+julia> dual(con)
 -2.0
 
 julia> @objective(model, Max, 2x)
 2 x
 
-julia> JuMP.optimize!(model)
+julia> optimize!(model)
 
-julia> JuMP.dual(con)
+julia> dual(con)
 -2.0
 ```
 
@@ -192,7 +191,7 @@ In the example above, `JuMP.dual(con)` returned `-2.0` regardless of the
 optimization sense. However, in the second case when the optimization sense is
 `Max`, [`JuMP.shadow_price`](@ref) returns:
 ```jldoctest con_duality
-julia> JuMP.shadow_price(con)
+julia> shadow_price(con)
 2.0
 ```
 
@@ -240,7 +239,7 @@ following.
 One way of adding a group of constraints compactly is the following:
 ```jldoctest constraint_arrays; setup=:(model=Model(); @variable(model, x))
 julia> @constraint(model, con[i = 1:3], i * x <= i + 1)
-3-element Array{ConstraintRef{Model,C,Shape} where Shape<:JuMP.AbstractShape where C,1}:
+3-element Array{ConstraintRef{Model,C,Shape} where Shape<:AbstractShape where C,1}:
  con[1] : x <= 2.0
  con[2] : 2 x <= 3.0
  con[3] : 3 x <= 4.0
@@ -253,7 +252,7 @@ julia> con[1]
 con[1] : x <= 2.0
 
 julia> con[2:3]
-2-element Array{ConstraintRef{Model,C,Shape} where Shape<:JuMP.AbstractShape where C,1}:
+2-element Array{ConstraintRef{Model,C,Shape} where Shape<:AbstractShape where C,1}:
  con[2] : 2 x <= 3.0
  con[3] : 3 x <= 4.0
 ```
@@ -262,7 +261,7 @@ Anonymous containers can also be constructed by dropping the name (e.g. `con`)
 before the square brackets:
 ```jldoctest constraint_arrays
 julia> @constraint(model, [i = 1:2], i * x <= i + 1)
-2-element Array{ConstraintRef{Model,C,Shape} where Shape<:JuMP.AbstractShape where C,1}:
+2-element Array{ConstraintRef{Model,C,Shape} where Shape<:AbstractShape where C,1}:
  x <= 2.0
  2 x <= 3.0
 ```
@@ -282,10 +281,10 @@ variables.
 
 ```jldoctest constraint_jumparrays; setup=:(model=Model(); @variable(model, x))
 julia> @constraint(model, con[i = 1:2, j = 2:3], i * x <= j + 1)
-2-dimensional DenseAxisArray{ConstraintRef{Model,C,Shape} where Shape<:JuMP.AbstractShape where C,2,...} with index sets:
+2-dimensional DenseAxisArray{ConstraintRef{Model,C,Shape} where Shape<:AbstractShape where C,2,...} with index sets:
     Dimension 1, 1:2
     Dimension 2, 2:3
-And data, a 2×2 Array{ConstraintRef{Model,C,Shape} where Shape<:JuMP.AbstractShape where C,2}:
+And data, a 2×2 Array{ConstraintRef{Model,C,Shape} where Shape<:AbstractShape where C,2}:
  con[1,2] : x <= 3.0    con[1,3] : x <= 4.0
  con[2,2] : 2 x <= 3.0  con[2,3] : 2 x <= 4.0
 ```
@@ -298,7 +297,7 @@ variables.
 
 ```jldoctest constraint_jumparrays; setup=:(model=Model(); @variable(model, x))
 julia> @constraint(model, con[i = 1:2, j = 1:2; i != j], i * x <= j + 1)
-JuMP.Containers.SparseAxisArray{ConstraintRef{Model,C,Shape} where Shape<:JuMP.AbstractShape where C,2,Tuple{Any,Any}} with 2 entries:
+JuMP.Containers.SparseAxisArray{ConstraintRef{Model,C,Shape} where Shape<:AbstractShape where C,2,Tuple{Any,Any}} with 2 entries:
   [1, 2]  =  con[1,2] : x <= 3.0
   [2, 1]  =  con[2,1] : 2 x <= 2.0
 ```
@@ -334,7 +333,7 @@ julia> b = [5, 6]
  6
 
 julia> @constraint(model, con, A * x .== b)
-2-element Array{ConstraintRef{Model,MathOptInterface.ConstraintIndex{MathOptInterface.ScalarAffineFunction{Float64},MathOptInterface.EqualTo{Float64}},JuMP.ScalarShape},1}:
+2-element Array{ConstraintRef{Model,MathOptInterface.ConstraintIndex{MathOptInterface.ScalarAffineFunction{Float64},MathOptInterface.EqualTo{Float64}},ScalarShape},1}:
  x[1] + 2 x[2] == 5.0
  3 x[1] + 4 x[2] == 6.0
 ```
@@ -459,10 +458,10 @@ julia> [t, x[1], x[2]]
  x[2]
 ```
 Note that the variable `t` comes first, followed by the `x` arguments. The set
-is an instance of [`JuMP.SecondOrderCone`](@ref): `JuMP.SecondOrderCone()`.
+is an instance of [`JuMP.SecondOrderCone`](@ref): `SecondOrderCone()`.
 Thus, we can add the second order cone constraint as follows:
 ```jldoctest con_quadratic
-julia> @constraint(model, [t, x[1], x[2]] in JuMP.SecondOrderCone())
+julia> @constraint(model, [t, x[1], x[2]] in SecondOrderCone())
 [t, x[1], x[2]] in MathOptInterface.SecondOrderCone(3)
 ```
 
@@ -474,7 +473,7 @@ t × u` and `t, u ≥ 0`. It can be added as follows:
 julia> @variable(model, u)
 u
 
-julia> @constraint(model, [t, u, x[1], x[2]] in JuMP.RotatedSecondOrderCone())
+julia> @constraint(model, [t, u, x[1], x[2]] in RotatedSecondOrderCone())
 [t, u, x[1], x[2]] in MathOptInterface.RotatedSecondOrderCone(4)
 ```
 
@@ -556,7 +555,7 @@ const_term
 julia> @constraint(model, con, 2x <= const_term)
 con : 2 x - const_term <= 0.0
 
-julia> JuMP.fix(const_term, 1.0)
+julia> fix(const_term, 1.0)
 ```
 !!! note
     Even though `const_term` is fixed, it is still a decision variable. Thus,
@@ -571,7 +570,7 @@ is an example:
 julia> @constraint(model, con, 2x <= 1)
 con : 2 x <= 1.0
 
-julia> JuMP.set_coefficient(con, x, 3)
+julia> set_coefficient(con, x, 3)
 
 julia> con
 con : 3 x <= 1.0
@@ -586,12 +585,12 @@ using [`JuMP.is_valid`](@ref). Here is an example of deleting a constraint:
 julia> @constraint(model, con, 2x <= 1)
 con : 2 x <= 1.0
 
-julia> JuMP.is_valid(model, con)
+julia> is_valid(model, con)
 true
 
-julia> JuMP.delete(model, con)
+julia> delete(model, con)
 
-julia> JuMP.is_valid(model, con)
+julia> is_valid(model, con)
 false
 ```
 
