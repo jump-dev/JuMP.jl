@@ -145,7 +145,20 @@ end
 ```
 
 
-#### TODO: Line breaks
+#### Line breaks
+
+For readability, don't split a one-line function over multiple lines.
+
+Good:
+```julia
+f(x) = 1 + x + x^2 + x^3 + x^3
+```
+
+Bad:
+```julia
+f(x) = 1 + x +
+    x^2 + x^3
+```
 
 ### Syntax
 
