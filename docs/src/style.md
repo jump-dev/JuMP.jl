@@ -37,6 +37,25 @@ autoformatting tool is available, we adopt the following conventions.
 
 #### Whitespace
 
+For conciseness, never use more than one blank line within a function, and never
+begin a function with a blank line.
+
+Bad:
+```julia
+function foo(x)
+    y = 2 * x
+
+
+    return y
+end
+
+function foo(x)
+
+    y = 2 * x
+    return y
+end
+```
+
 Julia is mostly insensitive to whitespace characters within lines.
 For consistency:
 
