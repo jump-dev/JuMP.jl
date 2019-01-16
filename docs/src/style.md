@@ -144,8 +144,48 @@ function foo(x)
 end
 ```
 
+#### Line breaks
 
-#### TODO: Line breaks
+Following the Google style guide for [indentation](https://github.com/google/styleguide/blob/gh-pages/pyguide.md#34-indentation)
+in python, break lines that exceed the [Line length](@ref) as appropriate.
+
+Good:
+```julia
+function my_very_long_function_name(
+   with_lots_of_long_arguments_1, and_another_long_one)
+   # First line of the function begins here.
+end
+
+function my_very_long_function_name(with_lots_of_long_arguments_1,
+                                   and_another_long_one)
+   # First line of the function begins here.
+end
+```
+
+Bad:
+```julia
+function my_very_long_function_name(with_lots_of_long_arguments_1, and_another_long_one)
+   # First line of the function begins here.
+end
+
+function my_very_long_function_name(with_lots_of_long_arguments_1,
+   and_another_long_one)
+   # First line of the function begins here.
+end
+```
+
+For readability, don't split a one-line function over multiple lines.
+
+Good:
+```julia
+f(x) = 1 + x + x^2 + x^3 + x^3
+```
+
+Bad:
+```julia
+f(x) = 1 + x +
+    x^2 + x^3
+```
 
 ### Syntax
 
