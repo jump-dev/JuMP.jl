@@ -167,18 +167,21 @@ function my_very_long_function_name(
    # First line of the function begins here.
 end
 
+# Align arguments vertically.
 function my_very_long_function_name(with_lots_of_long_arguments_1,
-                                   and_another_long_one)
+                                    and_another_long_one)
    # First line of the function begins here.
 end
 ```
 
 Bad:
 ```julia
+# Line exceeds line length.
 function my_very_long_function_name(with_lots_of_long_arguments_1, and_another_long_one)
    # First line of the function begins here.
 end
 
+# When wrapping with a hanging indent, don't leave things on the first line.
 function my_very_long_function_name(with_lots_of_long_arguments_1,
    and_another_long_one)
    # First line of the function begins here.
