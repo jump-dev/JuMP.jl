@@ -167,6 +167,21 @@ empty vector with element type `T`. Prefer `T[]` because it is more concise.
 Both `1.0` and `1.` create a `Float64` with value `1.0`. Prefer `1.0` over
 `1.` because it is more easily distinguished from the integer constant `1`.
 
+#### Comments
+
+For non-native speakers and for general clarity, comments in code must be proper
+English sentences with appropriate punctuation.
+
+Good:
+```julia
+# This is a comment demonstrating a good comment.
+```
+
+Bad:
+```julia
+# a bad comment
+```
+
 ### Naming
 
 ```julia
