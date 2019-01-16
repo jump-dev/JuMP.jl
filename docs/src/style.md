@@ -147,16 +147,17 @@ end
 #### Line breaks
 
 Following the Google style guide for [indentation](https://github.com/google/styleguide/blob/gh-pages/pyguide.md#34-indentation)
-in python, break lines that exceed the [Line length](@ref) as appropriate.
+in python, break lines that exceed the line length as appropriate.
 
 Good:
 ```julia
+# Arguments to the function are listed on a new line and indented.
 function my_very_long_function_name(
    with_lots_of_long_arguments_1, and_another_long_one)
    # First line of the function begins here.
 end
 
-# Align arguments vertically.
+# Arguments to the function are aligned vertically.
 function my_very_long_function_name(with_lots_of_long_arguments_1,
                                     and_another_long_one)
    # First line of the function begins here.
@@ -165,12 +166,13 @@ end
 
 Bad:
 ```julia
-# Line exceeds line length.
+# The line exceeds the maximum line length (80 characters).
 function my_very_long_function_name(with_lots_of_long_arguments_1, and_another_long_one)
    # First line of the function begins here.
 end
 
-# When wrapping with a hanging indent, don't leave things on the first line.
+# If vertical alignment is not used, then the arguments should not begin
+# on the first line.
 function my_very_long_function_name(with_lots_of_long_arguments_1,
    and_another_long_one)
    # First line of the function begins here.
