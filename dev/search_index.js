@@ -1301,7 +1301,7 @@ var documenterSearchIndex = {"docs": [
     "page": "Style Guide",
     "title": "Whitespace",
     "category": "section",
-    "text": "Julia is mostly insensitive to whitespace characters within lines. For consistency:Use spaces between binary operators (with some exceptions, see below)\nUse a single space after commas and semicolons\nDo not use extra spaces for unary operators, parentheses, or braces\nIndent within new blocks (except module) using 4 spacesGood:f(x, y) = [3 * dot(x, y); x\']Bad:f(x,y) = [ 3*dot(x,y) ; x\' ]Good:module Foo\n\nfunction f(x)\n    return x + 1\nend\n\nend # module Foo"
+    "text": "For conciseness, never use more than one blank line within a function, and never begin a function with a blank line.Bad:function foo(x)\n    y = 2 * x\n\n\n    return y\nend\n\nfunction foo(x)\n\n    y = 2 * x\n    return y\nendJulia is mostly insensitive to whitespace characters within lines. For consistency:Use spaces between binary operators (with some exceptions, see below)\nUse a single space after commas and semicolons\nDo not use extra spaces for unary operators, parentheses, or braces\nIndent within new blocks (except module) using 4 spacesGood:f(x, y) = [3 * dot(x, y); x\']Bad:f(x,y) = [ 3*dot(x,y) ; x\' ]Good:module Foo\n\nfunction f(x)\n    return x + 1\nend\n\nend # module Foo"
 },
 
 {
