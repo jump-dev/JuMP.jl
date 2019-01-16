@@ -169,7 +169,7 @@ Both `1.0` and `1.` create a `Float64` with value `1.0`. Prefer `1.0` over
 
 #### JuMP macro syntax
 
-Always use parentheses.
+For consistency, always use parentheses.
 
 Good:
 ```julia
@@ -181,16 +181,22 @@ Bad:
 @variable model x >= 0
 ```
 
-Use `constant * variable` as opposed to `variable * constant`.
+For consistency, always use `constant * variable` as opposed to 
+`variable * constant`. This makes it easier to read models in 
+ambiguous cases like `a * x`.
 
 Good:
 ```julia
+a = 4
 @constraint(model, 3 * x <= 1)
+@constraint(model, a * x <= 1)
 ```
 
 Bad:
 ```julia
+a = 4
 @constraint(model, x * 3 <= 1)
+@constraint(model, x * a <= 1)
 ```
 
 In order to reduce boilerplate code, prefer the plural form of macros over lots
