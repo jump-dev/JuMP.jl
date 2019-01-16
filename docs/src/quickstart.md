@@ -42,8 +42,8 @@ Solver name: No optimizer attached.
 
 ```@meta
 DocTestSetup = quote
-    # Using a caching optimizer removes the need to load a solver such as GLPK
-    # for building the documentation.
+    # Using a mock optimizer removes the need to load a solver such as GLPK for
+    # building the documentation.
     const MOI = JuMP.MathOptInterface
     model = Model(with_optimizer(MOI.Utilities.MockOptimizer,
                                  JuMP.JuMPMOIModel{Float64}(),
@@ -55,8 +55,9 @@ end
     Your model doesn't have to be called `model` - it's just a name.
 
 The following commands will create two variables, `x` and `y`, with both lower
-and upper bounds. Note the first argument is our model variable `model`. These
-variables are associated with this model and cannot be used in another model.
+and upper bounds. Note the first argument is our model `model`. These variables
+(`x` and `y`) are associated with this model and cannot be used in another
+model.
 ```jldoctest quickstart_example
 julia> @variable(model, 0 <= x <= 2)
 x
