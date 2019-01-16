@@ -167,7 +167,7 @@ empty vector with element type `T`. Prefer `T[]` because it is more concise.
 Both `1.0` and `1.` create a `Float64` with value `1.0`. Prefer `1.0` over
 `1.` because it is more easily distinguished from the integer constant `1`.
 
-#### Macro syntax
+#### JuMP macro syntax
 
 Always use parentheses.
 
