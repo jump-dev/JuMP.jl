@@ -117,7 +117,6 @@ function (optimizer_factory::OptimizerFactory)()
                                          optimizer_factory.kwargs...)
 end
 
-###############################################################################
 # Model
 
 # Model has three modes:
@@ -600,24 +599,15 @@ function MOI.set(model::Model, attr::MOI.AbstractConstraintAttribute,
     MOI.set(backend(model), attr, index(cr), value)
 end
 
-###############################################################################
 # GenericAffineExpression, AffExpr, AffExprConstraint
 include("aff_expr.jl")
 
-
-
-###############################################################################
 # GenericQuadExpr, QuadExpr
 # GenericQuadConstraint, QuadConstraint
 include("quad_expr.jl")
 
-##########################################################################
-# SOSConstraint  (special ordered set constraints)
-# include("sos.jl")
-
 include("sets.jl")
 
-##########################################################################
 # SDConstraint
 include("sd.jl")
 
@@ -696,7 +686,6 @@ function operator_warn(model::Model)
     end
 end
 
-##########################################################################
 # Types used in the nonlinear code
 # TODO: rename "m" field to "model" for style compliance
 struct NonlinearExpression
@@ -709,7 +698,6 @@ struct NonlinearParameter <: AbstractJuMPScalar
     index::Int
 end
 
-##########################################################################
 include("copy.jl")
 include("Containers/Containers.jl")
 include("operators.jl")
@@ -717,7 +705,6 @@ include("macros.jl")
 include("optimizer_interface.jl")
 include("nlp.jl")
 include("print.jl")
-##########################################################################
 
 # JuMP exports everything except internal symbols, which are defined as those
 # whose name starts with an underscore. If you don't want all of these symbols
