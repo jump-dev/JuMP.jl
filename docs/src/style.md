@@ -144,8 +144,16 @@ function foo(x)
 end
 ```
 
+#### Line length
 
-#### Line breaks
+Following the Google style guide for [line length](https://github.com/google/styleguide/blob/gh-pages/pyguide.md#32-line-length)
+in python, keep lines under an 80 character limit.
+
+We make exceptions for
+ - URLs
+ - pathnames
+ - long string constants not containing whitespace that would be inconvenient to
+   split across multiple lines.
 
 For readability, don't split a one-line function over multiple lines.
 
