@@ -22,14 +22,14 @@ var_psd = @constraint model Q in PSDCone()
     coefficients::Vector{Float64}
     monomials::Vector{Monomial}
 end
-struct PolynomialShape &lt;: JuMP.AbstractShape
+struct PolynomialShape &lt;: AbstractShape
     monomials::Vector{Monomial}
 end
 JuMP.reshape(x::Vector, shape::PolynomialShape) = Polynomial(x, shape.monomials)</code></pre><p>and a shape for moments can be defined as follows:</p><pre><code class="language-julia">struct Moments
     coefficients::Vector{Float64}
     monomials::Vector{Monomial}
 end
-struct MomentsShape &lt;: JuMP.AbstractShape
+struct MomentsShape &lt;: AbstractShape
     monomials::Vector{Monomial}
 end
 JuMP.reshape(x::Vector, shape::MomentsShape) = Moments(x, shape.monomials)</code></pre><p>The <code>dual_shape</code> allows to define the shape of the dual of polynomial and moment constraints:</p><pre><code class="language-julia">dual_shape(shape::PolynomialShape) = MomentsShape(shape.monomials)

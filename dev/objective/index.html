@@ -19,7 +19,7 @@ x
 
 julia&gt; @objective(model, Min, x)
 x</code></pre><p>To maximize the value of the affine expression <code>2x - 1</code>, do as follows:</p><pre><code class="language-julia-repl">julia&gt; @objective(model, Max, 2x - 1)
-2 x - 1</code></pre><p>To set a quadratic objective and set the objective sense programatically, do as follows:</p><pre><code class="language-julia-repl">julia&gt; sense = JuMP.MOI.MIN_SENSE
+2 x - 1</code></pre><p>To set a quadratic objective and set the objective sense programatically, do as follows:</p><pre><code class="language-julia-repl">julia&gt; sense = MOI.MIN_SENSE
 MIN_SENSE::OptimizationSense = 0
 
 julia&gt; @objective(model, sense, x^2 - 2x + 1)
@@ -40,14 +40,14 @@ x
 julia&gt; @objective(model, Min, 2x + 1)
 2 x + 1
 
-julia&gt; JuMP.objective_function(model, JuMP.AffExpr)
+julia&gt; objective_function(model, AffExpr)
 2 x + 1
 
-julia&gt; JuMP.objective_function(model, JuMP.QuadExpr)
+julia&gt; objective_function(model, QuadExpr)
 2 x + 1
 
-julia&gt; typeof(JuMP.objective_function(model, JuMP.QuadExpr))
-JuMP.GenericQuadExpr{Float64,VariableRef}</code></pre><p>We see with the last two commands that even if the objective function is affine, as it is convertible to a quadratic function, it can be queried as a quadratic function and the result is quadratic.</p><p>However, it is not convertible to a variable.</p><pre><code class="language-julia-repl">julia&gt; JuMP.objective_function(model, JuMP.VariableRef)
+julia&gt; typeof(objective_function(model, QuadExpr))
+GenericQuadExpr{Float64,VariableRef}</code></pre><p>We see with the last two commands that even if the objective function is affine, as it is convertible to a quadratic function, it can be queried as a quadratic function and the result is quadratic.</p><p>However, it is not convertible to a variable.</p><pre><code class="language-julia-repl">julia&gt; objective_function(model, VariableRef)
 ERROR: InexactError: convert(MathOptInterface.SingleVariable, MathOptInterface.ScalarAffineFunction{Float64}(MathOptInterface.ScalarAffineTerm{Float64}[ScalarAffineTerm{Float64}(2.0, VariableIndex(1))], 1.0))
 Stacktrace:
  [1] convert at /home/blegat/.julia/dev/MathOptInterface/src/functions.jl:398 [inlined]
