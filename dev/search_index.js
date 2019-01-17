@@ -1369,6 +1369,14 @@ var documenterSearchIndex = {"docs": [
 },
 
 {
+    "location": "style/#JuMP-macro-syntax-1",
+    "page": "Style Guide",
+    "title": "JuMP macro syntax",
+    "category": "section",
+    "text": "For consistency, always use parentheses.Good:@variable(model, x >= 0)Bad:@variable model x >= 0For consistency, always use constant * variable as opposed to  variable * constant. This makes it easier to read models in  ambiguous cases like a * x.Good:a = 4\n@constraint(model, 3 * x <= 1)\n@constraint(model, a * x <= 1)Bad:a = 4\n@constraint(model, x * 3 <= 1)\n@constraint(model, x * a <= 1)In order to reduce boilerplate code, prefer the plural form of macros over lots of repeated calls to singular forms.Good:@variables(model, begin\n    x >= 0\n    y >= 1\n    z <= 2\nend)Bad:@variable(model, x >= 0)\n@variable(model, y >= 1)\n@variable(model, z <= 2)An exception is made for calls with many keyword arguments, since these need to be enclosed in parentheses in order to parse properly.Acceptable:@variable(model, x >= 0, start = 0.0, base_name = \"my_x\")\n@variable(model, y >= 1, start = 2.0)\n@variable(model, z <= 2, start = -1.0)Also acceptable:@variables(model, begin\n    x >= 0, (start = 0.0, base_name = \"my_x\")\n    y >= 1, (start = 2.0)\n    z <= 2, (start = -1.0)\nend)"
+},
+
+{
     "location": "style/#Naming-1",
     "page": "Style Guide",
     "title": "Naming",
