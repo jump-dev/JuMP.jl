@@ -563,8 +563,8 @@
         MOI.initialize(d, [:Grad])
         expected_exception = ErrorException(
             "Expected return type of Float64 from a user-defined function, " *
-            "but got JuMP.GenericAffExpr{Float64,VariableRef}. Make sure your" *
-            " user-defined function only depends on variables passed as " *
+            "but got GenericAffExpr{Float64,VariableRef}. Make sure your " *
+            "user-defined function only depends on variables passed as " *
             "arguments."
         )
         @test_throws expected_exception MOI.eval_objective(d, [1.0, 1.0])

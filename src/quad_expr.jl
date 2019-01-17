@@ -210,7 +210,7 @@ end
     moi_quadratic_term(t::Tuple)
 
 Return the MOI.ScalarQuadraticTerm for the quadratic term `t`, element of the
-[`quad_terms`](@ref) iterator. Note that the `JuMP.VariableRef`s are transformed
+[`quad_terms`](@ref) iterator. Note that the `VariableRef`s are transformed
 into `MOI.VariableIndex`s hence the owner model information is lost.
 """
 function moi_quadratic_term(t::Tuple)

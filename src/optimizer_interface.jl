@@ -60,11 +60,11 @@ end
 # Deprecation for JuMP v0.18 -> JuMP v0.19 transition
 export solve
 function solve(::Model)
-    error("`solve` has been replaced by `JuMP.optimize!`. Note that `solve` " *
+    error("`solve` has been replaced by `optimize!`. Note that `solve` " *
           "used to return a `Symbol` summarizing the solution while " *
-          "`JuMP.optimize!` returns nothing and the status of the solution " *
-          "is queried using `JuMP.termination_status`, `JuMP.primal_status` " *
-          "and `JuMP.dual_status`.")
+          "`optimize!` returns nothing and the status of the solution " *
+          "is queried using `termination_status`, `primal_status` " *
+          "and `dual_status`.")
 end
 
 
@@ -85,14 +85,14 @@ as follows:
 model = Model(with_optimizer(GLPK.Optimizer))
 # ...fill model with variables, constraints and objectives...
 # Solve the model with GLPK
-JuMP.optimize!(model)
+optimize!(model)
 ```
 or in the `optimize!` call as follows:
 ```julia
 model = Model()
 # ...fill model with variables, constraints and objectives...
 # Solve the model with GLPK
-JuMP.optimize!(model, with_optimizer(GLPK.Optimizer))
+optimize!(model, with_optimizer(GLPK.Optimizer))
 ```
 """
 function optimize!(model::Model,

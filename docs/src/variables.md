@@ -145,20 +145,20 @@ In the above examples, `x_free` represents an unbounded optimization variable,
 We can query whether an optimization variable has a lower- or upper-bound via
 the `JuMP.has_lower_bound` and `JuMP.has_upper_bound` functions. For example:
 ```jldoctest variables_2
-julia> JuMP.has_lower_bound(x_free)
+julia> has_lower_bound(x_free)
 false
 
-julia> JuMP.has_upper_bound(x_upper)
+julia> has_upper_bound(x_upper)
 true
 ```
 
 If a variable has a lower or upper bound, we can query the value of it via the
 `JuMP.lower_bound` and `JuMP.upper_bound` functions. For example:
 ```jldoctest variables_2
-julia> JuMP.lower_bound(x_interval)
+julia> lower_bound(x_interval)
 2.0
 
-julia> JuMP.upper_bound(x_interval)
+julia> upper_bound(x_interval)
 3.0
 ```
 Querying the value of a bound that does not exist will result in an error.
@@ -169,7 +169,7 @@ Instead of using the `<=` and `>=` syntax, we can also use the `lower_bound` and
 julia> @variable(model, x, lower_bound=1, upper_bound=2)
 x
 
-julia> JuMP.lower_bound(x)
+julia> lower_bound(x)
 1.0
 ```
 
@@ -180,12 +180,12 @@ example:
 julia> @variable(model, x >= 1)
 x
 
-julia> JuMP.lower_bound(x)
+julia> lower_bound(x)
 1.0
 
-julia> JuMP.set_lower_bound(x, 2)
+julia> set_lower_bound(x, 2)
 
-julia> JuMP.lower_bound(x)
+julia> lower_bound(x)
 2.0
 ```
 
@@ -195,20 +195,20 @@ We can delete variable bounds using `JuMP.delete_lower_bound` and
 julia> @variable(model, 1 <= x <= 2)
 x
 
-julia> JuMP.lower_bound(x)
+julia> lower_bound(x)
 1.0
 
-julia> JuMP.delete_lower_bound(x)
+julia> delete_lower_bound(x)
 
-julia> JuMP.has_lower_bound(x)
+julia> has_lower_bound(x)
 false
 
-julia> JuMP.upper_bound(x)
+julia> upper_bound(x)
 2.0
 
-julia> JuMP.delete_upper_bound(x)
+julia> delete_upper_bound(x)
 
-julia> JuMP.has_upper_bound(x)
+julia> has_upper_bound(x)
 false
 ```
 
@@ -218,15 +218,15 @@ value.
 julia> @variable(model, x == 1)
 x
 
-julia> JuMP.is_fixed(x)
+julia> is_fixed(x)
 true
 
-julia> JuMP.fix_value(x)
+julia> fix_value(x)
 1.0
 
-julia> JuMP.unfix(x)
+julia> unfix(x)
 
-julia> JuMP.is_fixed(x)
+julia> is_fixed(x)
 false
 ```
 Fixing a variable with existing bounds will throw an error. To delete the bounds
@@ -236,13 +236,13 @@ prior to fixing, use `JuMP.fix(variable, value; force = true)`.
 julia> @variable(model, x >= 1)
 x
 
-julia> JuMP.fix(x, 2)
+julia> fix(x, 2)
 ERROR: Unable to fix x to 2 because it has existing variable bounds. Consider calling `JuMP.fix(variable, value; force=true)` which will delete existing bounds before fixing the variable.
 
-julia> JuMP.fix(x, 2; force = true)
+julia> fix(x, 2; force = true)
 
 
-julia> JuMP.fix_value(x)
+julia> fix_value(x)
 2.0
 ```
 
@@ -303,7 +303,7 @@ julia> @variable(model, x[i=1:2, j=1:2] >= 2i + j)
  x[1,1]  x[1,2]
  x[2,1]  x[2,2]
 
-julia> JuMP.lower_bound.(x)
+julia> lower_bound.(x)
 2×2 Array{Float64,2}:
  3.0  4.0
  5.0  6.0
@@ -357,7 +357,7 @@ And data, a 2×2 Array{VariableRef,2}:
  x[2,1]  x[2,3]
  x[3,1]  x[3,3]
 
-julia> JuMP.lower_bound.(x)
+julia> lower_bound.(x)
 2-dimensional DenseAxisArray{Float64,2,...} with index sets:
     Dimension 1, 2:3
     Dimension 2, 1:2:3
@@ -443,7 +443,7 @@ x
 We can check if an optimization variable is binary by calling `JuMP.is_binary` on
 the JuMP variable:
 ```jldoctest variables_binary
-julia> JuMP.is_binary(x)
+julia> is_binary(x)
 true
 ```
 Binary optimization variables can also be created by setting the `binary`
@@ -471,7 +471,7 @@ x
 We can check if an optimization variable is integer by calling `JuMP.is_integer`
 on the JuMP variable:
 ```jldoctest variables_integer
-julia> JuMP.is_integer(x)
+julia> is_integer(x)
 true
 ```
 
@@ -571,12 +571,12 @@ variable in `model` using the `JuMP.is_valid` method:
 julia> @variable(model, x)
 x
 
-julia> JuMP.is_valid(model, x)
+julia> is_valid(model, x)
 true
 
-julia> JuMP.delete(model, x)
+julia> delete(model, x)
 
-julia> JuMP.is_valid(model, x)
+julia> is_valid(model, x)
 false
 ```
 

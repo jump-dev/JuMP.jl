@@ -399,7 +399,7 @@ function model_printing_test(ModelType::Type{<:JuMP.AbstractModel})
     A JuMP Model
     Maximization problem with:
     Variables: 13
-    Objective function type: JuMP.GenericAffExpr{Float64,$VariableType}
+    Objective function type: GenericAffExpr{Float64,$VariableType}
     `MathOptInterface.SingleVariable`-in-`MathOptInterface.ZeroOne`: 4 constraints
     `MathOptInterface.SingleVariable`-in-`MathOptInterface.Integer`: 4 constraints
     `MathOptInterface.SingleVariable`-in-`MathOptInterface.EqualTo{Float64}`: 1 constraint
@@ -520,7 +520,7 @@ function model_extension_printing_test(ModelType::Type{<:JuMP.AbstractModel})
     A JuMP Model
     Maximization problem with:
     Variables: 13
-    Objective function type: JuMP.GenericAffExpr{Float64,$VariableType}
+    Objective function type: GenericAffExpr{Float64,$VariableType}
     Constraints: 3
     Names registered in the model: a, a1, b, b1, c, c1, fi, u, x, y, z""", repl=:show)
 

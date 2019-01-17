@@ -42,7 +42,7 @@ are values to be queried).
 
 The reason why the optimization of `model` was finished is given by
 ```julia
-JuMP.termination_status(model)
+termination_status(model)
 ```
 
 This function will return a `MOI.TerminationStatusCode` `enum`.
@@ -94,19 +94,18 @@ value can be obtained via [`JuMP.objective_bound`](@ref).
 A recommended workflow for solving a model and querying the solution is the
 following:
 ```julia
-using JuMP, MathOptInterface
-const MOI = MathOptInterface
+using JuMP
 model = Model()
 @variable(model, x[1:10] >= 0)
 # ... other constraints ...
-JuMP.optimize!(model)
+optimize!(model)
 
-if JuMP.termination_status(model) == MOI.OPTIMAL
-    optimal_solution = JuMP.value.(x)
-    optimal_objective = JuMP.objective_value(model)
-elseif JuMP.termination_status(model) == MOI.TIME_LIMIT && JuMP.has_values(model)
-    suboptimal_solution = JuMP.value.(x)
-    suboptimal_objective = JuMP.objective_value(model)
+if termination_status(model) == MOI.OPTIMAL
+    optimal_solution = value.(x)
+    optimal_objective = objective_value(model)
+elseif termination_status(model) == MOI.TIME_LIMIT && has_values(model)
+    suboptimal_solution = value.(x)
+    suboptimal_objective = objective_value(model)
 else
     error("The model was not solved correctly.")
 end

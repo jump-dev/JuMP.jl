@@ -33,7 +33,7 @@ struct Polynomial
     coefficients::Vector{Float64}
     monomials::Vector{Monomial}
 end
-struct PolynomialShape <: JuMP.AbstractShape
+struct PolynomialShape <: AbstractShape
     monomials::Vector{Monomial}
 end
 JuMP.reshape(x::Vector, shape::PolynomialShape) = Polynomial(x, shape.monomials)
@@ -44,7 +44,7 @@ struct Moments
     coefficients::Vector{Float64}
     monomials::Vector{Monomial}
 end
-struct MomentsShape <: JuMP.AbstractShape
+struct MomentsShape <: AbstractShape
     monomials::Vector{Monomial}
 end
 JuMP.reshape(x::Vector, shape::MomentsShape) = Moments(x, shape.monomials)
@@ -193,14 +193,14 @@ x
 julia> @constraint(model, con, x^2 == 1)
 con : x² = 1.0
 
-julia> JuMP.constraint_by_name(model, "kon")
+julia> constraint_by_name(model, "kon")
 
-julia> JuMP.constraint_by_name(model, "con")
+julia> constraint_by_name(model, "con")
 con : x² = 1.0
 
-julia> JuMP.constraint_by_name(model, "con", AffExpr, JuMP.MOI.EqualTo{Float64})
+julia> constraint_by_name(model, "con", AffExpr, MOI.EqualTo{Float64})
 
-julia> JuMP.constraint_by_name(model, "con", QuadExpr, JuMP.MOI.EqualTo{Float64})
+julia> constraint_by_name(model, "con", QuadExpr, MOI.EqualTo{Float64})
 con : x² = 1.0
 ```
 """
@@ -273,20 +273,20 @@ end
 abstract type AbstractConstraint end
 
 """
-    jump_function(constraint::JuMP.AbstractConstraint)
+    jump_function(constraint::AbstractConstraint)
 
 Return the function of the constraint `constraint` in the function-in-set form
-as a `JuMP.AbstractJuMPScalar` or `Vector{JuMP.AbstractJuMPScalar}`.
+as a `AbstractJuMPScalar` or `Vector{AbstractJuMPScalar}`.
 """
 function jump_function end
 
 """
-    moi_function(constraint::JuMP.AbstractConstraint)
+    moi_function(constraint::AbstractConstraint)
 
 Return the function of the constraint `constraint` in the function-in-set form
 as a `MathOptInterface.AbstractFunction`.
 """
-function moi_function(constraint::JuMP.AbstractConstraint)
+function moi_function(constraint::AbstractConstraint)
     return moi_function(jump_function(constraint))
 end
 
@@ -389,14 +389,14 @@ Set the coefficient of `variable` in the constraint `constraint` to `value`.
 
 Note that prior to this step, JuMP will aggregate multiple terms containing the
 same variable. For example, given a constraint `2x + 3x <= 2`,
-`JuMP.set_coefficient(c, x, 4)` will create the constraint `4x <= 2`.
+`set_coefficient(c, x, 4)` will create the constraint `4x <= 2`.
 
 
 ```jldoctest; setup = :(using JuMP), filter=r"≤|<="
 model = Model()
 @variable(model, x)
 @constraint(model, con, 2x + 3x <= 2)
-JuMP.set_coefficient(con, x, 4)
+set_coefficient(con, x, 4)
 con
 
 # output

@@ -84,7 +84,7 @@ model = Model()
 @variable(model, x)
 @constraint(model, cref, x == 2)
 
-new_model, reference_map = JuMP.copy_model(model)
+new_model, reference_map = copy_model(model)
 x_new = reference_map[x]
 cref_new = reference_map[cref]
 ```

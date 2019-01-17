@@ -711,21 +711,21 @@ end
 """
     @build_constraint(constraint_expr)
 
-Constructs a `JuMP.ScalarConstraint` or `JuMP.VectorConstraint` using the same
+Constructs a `ScalarConstraint` or `VectorConstraint` using the same
 machinery as [`@constraint`](@ref) but without adding the constraint to a model.
 
 Constraints using broadcast operators like `x .<= 1` are also supported and will
-create arrays of `JuMP.ScalarConstraint` or `JuMP.VectorConstraint`.
+create arrays of `ScalarConstraint` or `VectorConstraint`.
 
 ## Examples
 
 ```jldoctest; setup = :(using JuMP)
 model = Model();
 @variable(model, x);
-JuMP.@build_constraint(2x >= 1)
+@build_constraint(2x >= 1)
 
 # output
-JuMP.ScalarConstraint{JuMP.GenericAffExpr{Float64,VariableRef},MathOptInterface.GreaterThan{Float64}}(2 x, MathOptInterface.GreaterThan{Float64}(1.0))
+ScalarConstraint{GenericAffExpr{Float64,VariableRef},MathOptInterface.GreaterThan{Float64}}(2 x, MathOptInterface.GreaterThan{Float64}(1.0))
 """
 macro build_constraint(constraint_expr)
     _error(str...) = macro_error(:build_constraint, args, str...)
@@ -889,7 +889,7 @@ julia> @objective(model, Max, 2x - 1)
 To set a quadratic objective and set the objective sense programatically, do
 as follows:
 ```jldoctest @objective
-julia> sense = JuMP.MOI.MIN_SENSE
+julia> sense = MOI.MIN_SENSE
 MIN_SENSE::OptimizationSense = 0
 
 julia> @objective(model, sense, x^2 - 2x + 1)
@@ -1559,7 +1559,7 @@ nonlinear expressions.
 ```jldoctest
 model = Model()
 @NLparameter(model, x == 10)
-JuMP.value(x)
+value(x)
 
 # output
 10.0
@@ -1576,7 +1576,7 @@ Uses the same syntax for specifying index sets as [`@variable`](@ref).
 ```jldoctest
 model = Model()
 @NLparameter(model, y[i = 1:10] == 2 * i)
-JuMP.value(y[9])
+value(y[9])
 
 # output
 18.0
