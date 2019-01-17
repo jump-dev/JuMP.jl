@@ -1425,6 +1425,14 @@ var documenterSearchIndex = {"docs": [
 },
 
 {
+    "location": "style/#using-vs.-import-1",
+    "page": "Style Guide",
+    "title": "using vs. import",
+    "category": "section",
+    "text": "using ModuleName brings all symbols exported by the module ModuleName into scope, while import ModuleName brings only the module itself into scope. (See the Julia manual) for examples and more details.For the same reason that from <module> import * is not recommended in python (PEP 8), avoid using ModuleName except in throw-away scripts or at the REPL. The using statement makes it harder to track where symbols come from and exposes the code to ambiguities when two modules export the same symbol.Prefer using ModuleName: x, p to import ModuleName.x, ModuleName.p and import MyModule: x, p because the import versions allow method extension without qualifying with the module name."
+},
+
+{
     "location": "style/#Design-principles-1",
     "page": "Style Guide",
     "title": "Design principles",
