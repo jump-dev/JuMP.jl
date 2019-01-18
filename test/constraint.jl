@@ -50,10 +50,10 @@ function constraints_test(ModelType::Type{<:JuMP.AbstractModel},
     end
 
     @testset "AffExpr constraints" begin
-        model = ModelType()
-        @variable(model, x)
-
         @testset "Scalar" begin
+            model = ModelType()
+            @variable(model, x)
+
             cref = @constraint(model, 2x <= 10)
             @test JuMP.name(cref) == ""
             JuMP.set_name(cref, "c")
@@ -80,6 +80,9 @@ function constraints_test(ModelType::Type{<:JuMP.AbstractModel},
         end
 
         @testset "Vectorized" begin
+            model = ModelType()
+            @variable(model, x)
+
             @test_throws ErrorException @constraint(model, [x, 2x] == [1-x, 3])
             @test_macro_throws ErrorException begin
                 @constraint(model, [x == 1-x, 2x == 3])
@@ -94,6 +97,8 @@ function constraints_test(ModelType::Type{<:JuMP.AbstractModel},
         end
 
         @testset "Vector" begin
+            model = ModelType()
+
             cref = @constraint(model, [1, 2] in MOI.Zeros(2))
             c = JuMP.constraint_object(cref)
             @test JuMP.isequal_canonical(c.func[1], zero(JuMP.AffExpr) + 1)
