@@ -439,6 +439,11 @@ function build_constraint(_error::Function, x::Vector{<:AbstractJuMPScalar},
                           set::MOI.AbstractVectorSet)
     return VectorConstraint(x, set)
 end
+function build_constraint(_error::Function, a::Vector{<:Number},
+                          set::MOI.AbstractVectorSet)
+    return build_constraint(_error, convert(Vector{AffExpr}, a), set)
+end
+
 function build_constraint(_error::Function, x::AbstractArray,
                           set::MOI.AbstractScalarSet)
     return _error("Unexpected vector in scalar constraint. Did you mean to use",

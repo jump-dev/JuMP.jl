@@ -50,36 +50,62 @@ function constraints_test(ModelType::Type{<:JuMP.AbstractModel},
     end
 
     @testset "AffExpr constraints" begin
-        m = ModelType()
-        @variable(m, x)
+        @testset "Scalar" begin
+            model = ModelType()
+            @variable(model, x)
 
-        cref = @constraint(m, 2x <= 10)
-        @test JuMP.name(cref) == ""
-        JuMP.set_name(cref, "c")
-        test_constraint_name(cref, "c", JuMP.AffExpr, MOI.LessThan{Float64})
+            cref = @constraint(model, 2x <= 10)
+            @test JuMP.name(cref) == ""
+            JuMP.set_name(cref, "c")
+            test_constraint_name(cref, "c", JuMP.AffExpr, MOI.LessThan{Float64})
 
-        c = JuMP.constraint_object(cref)
-        @test JuMP.isequal_canonical(c.func, 2x)
-        @test c.set == MOI.LessThan(10.0)
+            c = JuMP.constraint_object(cref)
+            @test JuMP.isequal_canonical(c.func, 2x)
+            @test c.set == MOI.LessThan(10.0)
 
-        cref = @constraint(m, 3x + 1 ≥ 10)
-        c = JuMP.constraint_object(cref)
-        @test JuMP.isequal_canonical(c.func, 3x)
-        @test c.set == MOI.GreaterThan(9.0)
+            cref = @constraint(model, 3x + 1 ≥ 10)
+            c = JuMP.constraint_object(cref)
+            @test JuMP.isequal_canonical(c.func, 3x)
+            @test c.set == MOI.GreaterThan(9.0)
 
-        cref = @constraint(m, 1 == -x)
-        c = JuMP.constraint_object(cref)
-        @test JuMP.isequal_canonical(c.func, 1.0x)
-        @test c.set == MOI.EqualTo(-1.0)
+            cref = @constraint(model, 1 == -x)
+            c = JuMP.constraint_object(cref)
+            @test JuMP.isequal_canonical(c.func, 1.0x)
+            @test c.set == MOI.EqualTo(-1.0)
 
-        @test_throws ErrorException @constraint(m, [x, 2x] == [1-x, 3])
-        @test_macro_throws ErrorException @constraint(m, [x == 1-x, 2x == 3])
-        cref = @constraint(m, [x, 2x] .== [1-x, 3])
-        c = JuMP.constraint_object.(cref)
-        @test JuMP.isequal_canonical(c[1].func, 2.0x)
-        @test c[1].set == MOI.EqualTo(1.0)
-        @test JuMP.isequal_canonical(c[2].func, 2.0x)
-        @test c[2].set == MOI.EqualTo(3.0)
+            cref = @constraint(model, 2 == 1)
+            c = JuMP.constraint_object(cref)
+            @test JuMP.isequal_canonical(c.func, zero(JuMP.AffExpr))
+            @test c.set == MOI.EqualTo(-1.0)
+        end
+
+        @testset "Vectorized" begin
+            model = ModelType()
+            @variable(model, x)
+
+            @test_throws ErrorException @constraint(model, [x, 2x] == [1-x, 3])
+            @test_macro_throws ErrorException begin
+                @constraint(model, [x == 1-x, 2x == 3])
+            end
+
+            cref = @constraint(model, [x, 2x] .== [1-x, 3])
+            c = JuMP.constraint_object.(cref)
+            @test JuMP.isequal_canonical(c[1].func, 2.0x)
+            @test c[1].set == MOI.EqualTo(1.0)
+            @test JuMP.isequal_canonical(c[2].func, 2.0x)
+            @test c[2].set == MOI.EqualTo(3.0)
+        end
+
+        @testset "Vector" begin
+            model = ModelType()
+
+            cref = @constraint(model, [1, 2] in MOI.Zeros(2))
+            c = JuMP.constraint_object(cref)
+            @test JuMP.isequal_canonical(c.func[1], zero(JuMP.AffExpr) + 1)
+            @test JuMP.isequal_canonical(c.func[2], zero(JuMP.AffExpr) + 2)
+            @test c.set == MOI.Zeros(2)
+            @test c.shape isa JuMP.VectorShape
+        end
     end
     @testset "delete / is_valid constraints" begin
         model = ModelType()
