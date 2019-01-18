@@ -14,11 +14,11 @@ What is a JuMP variable?
 The term *variable* in mathematical optimization has many meanings. Here, we
 distinguish between the following three types of variables:
 1. *optimization* variables, which are the mathematical ``x`` in the problem
-   ``\max{f_0(x) | f_i(x) \in S_i}``.
+   ``\max\{f_0(x) | f_i(x) \in S_i\}``.
 2. *Julia* variables, which are bindings between a name and a value, for example
    `x = 1`. (See [here](https://docs.julialang.org/en/v1.0.0/manual/variables/)
    for the Julia docs.)
-3. *JuMP* variables, which are instances of the `JuMP.VariableRef` struct
+3. *JuMP* variables, which are instances of the `VariableRef` struct
    defined by JuMP that contains a reference to an optimization variable in a
    model. (Extra for experts: the `VariableRef` struct is a thin wrapper around
    a `MOI.VariableIndex`, and also contains a reference to the JuMP model.)
@@ -48,9 +48,6 @@ This code does three things:
 
 To reduce confusion, we will attempt, where possible, to always refer to
 variables with their corresponding prefix.
-
-!!! warn
-    Creating two JuMP variables with the same name results in an error at runtime.
 
 JuMP variables can have attributes, such as names or an initial primal start
 value. We illustrate the name attribute in the following example:
@@ -101,7 +98,6 @@ function build_model()
     @variable(model, x)
     add_component_to_model(model)
 end
-# TODO(@odow): add a section on looking up by string
 ```
 
 Now that we understand the difference between *optimization*, *JuMP*, and *Julia*
@@ -143,7 +139,7 @@ In the above examples, `x_free` represents an unbounded optimization variable,
     ```
 
 We can query whether an optimization variable has a lower- or upper-bound via
-the `JuMP.has_lower_bound` and `JuMP.has_upper_bound` functions. For example:
+the `has_lower_bound` and `has_upper_bound` functions. For example:
 ```jldoctest variables_2
 julia> has_lower_bound(x_free)
 false
@@ -153,7 +149,7 @@ true
 ```
 
 If a variable has a lower or upper bound, we can query the value of it via the
-`JuMP.lower_bound` and `JuMP.upper_bound` functions. For example:
+`lower_bound` and `upper_bound` functions. For example:
 ```jldoctest variables_2
 julia> lower_bound(x_interval)
 2.0
@@ -173,9 +169,8 @@ julia> lower_bound(x)
 1.0
 ```
 
-Another option is to use the `JuMP.set_lower_bound` and `JuMP.set_upper_bound`
-functions. These can also be used to modify an existing variable bound. For
-example:
+Another option is to use the `set_lower_bound` and `set_upper_bound` functions.
+These can also be used to modify an existing variable bound. For example:
 ```jldoctest; setup=:(model=Model())
 julia> @variable(model, x >= 1)
 x
@@ -189,8 +184,8 @@ julia> lower_bound(x)
 2.0
 ```
 
-We can delete variable bounds using `JuMP.delete_lower_bound` and
-`JuMP.delete_upper_bound`:
+We can delete variable bounds using `delete_lower_bound` and
+`delete_upper_bound`:
 ```jldoctest; setup=:(model=Model())
 julia> @variable(model, 1 <= x <= 2)
 x
@@ -230,7 +225,7 @@ julia> is_fixed(x)
 false
 ```
 Fixing a variable with existing bounds will throw an error. To delete the bounds
-prior to fixing, use `JuMP.fix(variable, value; force = true)`.
+prior to fixing, use `fix(variable, value; force = true)`.
 
 ```jldoctest; setup=:(model=Model())
 julia> @variable(model, x >= 1)
@@ -265,7 +260,7 @@ variable_by_name
 ## Variable containers
 
 In the examples above, we have mostly created scalar variables. By scalar, we
-mean that the Julia variable is bound to exactly one JuMP variable. However,  it
+mean that the Julia variable is bound to exactly one JuMP variable. However, it
 is often useful to create collections of JuMP variables inside more complicated
 datastructures.
 
@@ -296,7 +291,7 @@ julia> x[2, :]
  x[2,2]
 ```
 
-We can also name each index, and variable bounds can depend upon the indices:
+Variable bounds can depend upon the indices:
 ```jldoctest; setup=:(model=Model())
 julia> @variable(model, x[i=1:2, j=1:2] >= 2i + j)
 2×2 Array{VariableRef,2}:
@@ -333,7 +328,7 @@ And data, a 2×2 Array{VariableRef,2}:
  x[2,A]  x[2,B]
 ```
 
-DenseAxisArray's can be indexed and sliced as follows:
+DenseAxisArrays can be indexed and sliced as follows:
 ```jldoctest variables_jump_arrays
 julia> x[1, :A]
 x[1,A]
@@ -346,8 +341,7 @@ And data, a 2-element Array{VariableRef,1}:
  x[2,B]
 ```
 
-Similarly to the `Array` case, the indices in a `DenseAxisArray` can be named,
-and the bounds can depend upon these names. For example:
+Similarly to the `Array` case, bounds can depend upon indices. For example:
 ```jldoctest; setup=:(model=Model())
 julia> @variable(model, x[i=2:3, j=1:2:3] >= 0.5i + j)
 2-dimensional DenseAxisArray{VariableRef,2,...} with index sets:
@@ -368,9 +362,9 @@ And data, a 2×2 Array{Float64,2}:
 
 ### [SparseAxisArrays](@id variable_sparseaxisarrays)
 
-The third datatype that JuMP supports the efficient creation of are
-`SparseAxisArray`s. These arrays are created when the indices do not form a
-rectangular set. One example is when indices have a dependence upon previous
+The third container type that JuMP natively supports is `SparseAxisArray`.
+These arrays are created when the indices do not form a rectangular set.
+An example where this applies is when indices have a dependence upon previous
 indices (called *triangular indexing*). JuMP supports this as follows:
 ```jldoctest; setup=:(model=Model())
 julia> @variable(model, x[i=1:2, j=i:2])
@@ -379,10 +373,9 @@ JuMP.Containers.SparseAxisArray{VariableRef,2,Tuple{Any,Any}} with 3 entries:
   [2, 2]  =  x[2,2]
   [1, 1]  =  x[1,1]
 ```
-`x` is a standard Julia dictionary. Therefore, slicing cannot be performed.
 
 We can also conditionally create variables via a JuMP-specific syntax. This
-sytax appends a comparison check that depends upon the named indices and is
+syntax appends a comparison check that depends upon the named indices and is
 separated from the indices by a semi-colon (`;`). For example:
 ```jldoctest; setup=:(model=Model())
 julia> @variable(model, x[i=1:4; mod(i, 2)==0])
@@ -396,8 +389,8 @@ JuMP.Containers.SparseAxisArray{VariableRef,1,Tuple{Any}} with 2 entries:
 When creating a container of JuMP variables, JuMP will attempt to choose the
 tightest container type that can store the JuMP variables. Thus, it will prefer
 to create an Array before a DenseAxisArray, and a DenseAxisArray before a
-dictionary. However, because this happens at compile time, it does not always
-make the best choice. To illustrate this, consider the following example:
+SparseAxisArray. However, because this happens at compile time, it does not
+always make the best choice. To illustrate this, consider the following example:
 ```jldoctest variable_force_container; setup=:(model=Model())
 julia> A = 1:2
 1:2
@@ -409,7 +402,7 @@ And data, a 2-element Array{VariableRef,1}:
  x[1]
  x[2]
 ```
-Since the value (and type) of `A` is unknown at compile time, JuMP is unable to
+Since the value (and type) of `A` is unknown at parsing time, JuMP is unable to
 infer that `A` is a one-based integer range. Therefore, JuMP creates a
 `DenseAxisArray`, even though it could store these two variables in a standard
 one-dimensional `Array`.
@@ -440,7 +433,7 @@ created in JuMP by passing `Bin` as an optional positional argument:
 julia> @variable(model, x, Bin)
 x
 ```
-We can check if an optimization variable is binary by calling `JuMP.is_binary` on
+We can check if an optimization variable is binary by calling `is_binary` on
 the JuMP variable:
 ```jldoctest variables_binary
 julia> is_binary(x)
@@ -468,8 +461,8 @@ keyword to `true`.
 julia> @variable(model, x, integer=true)
 x
 ```
-We can check if an optimization variable is integer by calling `JuMP.is_integer`
-on the JuMP variable:
+We can check if an optimization variable is integer by calling `is_integer` on
+the JuMP variable:
 ```jldoctest variables_integer
 julia> is_integer(x)
 true
@@ -488,11 +481,11 @@ julia> @variable(model, x[1:2, 1:2], PSD)
 ```
 
 Note that `x` must be a square 2-dimensional `Array` of JuMP variables; it
-cannot be a JuMP array or a dictionary. (See [Variable containers](@ref), above,
-for more on this.)
+cannot be a DenseAxisArray or a SparseAxisArray.
+(See [Variable containers](@ref), above, for more on this.)
 
-You can also impose a slightly weaker constraint that the square matrix is only
-symmetric (instead of positive semidefinite) as follows:
+You can also impose a weaker constraint that the square matrix is only symmetric
+(instead of positive semidefinite) as follows:
 ```jldoctest; setup=:(model=Model())
 julia> @variable(model, x[1:2, 1:2], Symmetric)
 2×2 LinearAlgebra.Symmetric{VariableRef,Array{VariableRef,2}}:
@@ -541,6 +534,10 @@ julia> x = @variable(model, [i=1:2], base_name="x", lower_bound=i, integer=true)
  x[2]
 ```
 
+!!! warn
+    Creating two named JuMP variables with the same name results in an error at
+    runtime. Use anonymous variables as an alternative.
+
 ## User-defined containers
 
 In the section [Variable containers](@ref), we explained how JuMP supports the
@@ -565,8 +562,8 @@ Dict{Symbol,Array{VariableRef,2}} with 2 entries:
 ## Deleting variables
 
 JuMP supports the deletion of optimization variables.  To delete variables, we
-can use the `JuMP.delete` method. We can also check whether `x` is a valid JuMP
-variable in `model` using the `JuMP.is_valid` method:
+can use the `delete` method. We can also check whether `x` is a valid JuMP
+variable in `model` using the `is_valid` method:
 ```jldoctest variables_delete; setup=:(model=Model())
 julia> @variable(model, x)
 x
