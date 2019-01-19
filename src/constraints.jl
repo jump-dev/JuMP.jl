@@ -273,6 +273,51 @@ end
 abstract type AbstractConstraint end
 
 """
+    struct BridgeableConstraint{C, B} <: AbstractConstraint
+        constraint::C
+        bridge_type::B
+    end
+
+Constraint `constraint` that can be bridged by the bridge of type `bridge_type`.
+Adding this constraint to a model is equivalent to
+```julia
+add_bridge(model, bridge_type)
+add_constraint(model, constraint)
+```
+
+## Examples
+
+Given a new scalar set type `CustomSet` with a bridge `CustomBridge` that can
+bridge `F`-in-`CustomSet` constraints, when the user does
+```julia
+model = Model()
+@variable(model, x)
+@constraint(model, x + 1 in CustomSet())
+optimize!(model)
+```
+with an optimizer that does not support `F`-in-`CustomSet` constraints, the
+constraint will not be bridge unless he manually calls `add_bridge(model,
+CustomBridge)`. In order to automatically add the `CustomBridge` to any model to
+which an `F`-in-`CustomSet` is added, simply add the following method:
+```julia
+function JuMP.build_constraint(_error::Function, func::AbstractJuMPScalar,
+                               set::CustomSet)
+    constraint = ScalarConstraint(func, set)
+    return JuMP.BridgeableConstraint(constraint, CustomBridge)
+end
+```
+"""
+struct BridgeableConstraint{C, B} <: AbstractConstraint
+    constraint::C
+    bridge_type::B
+end
+
+function add_constraint(model::Model, c::BridgeableConstraint, name::String="")
+    add_bridge(model, c.bridge_type)
+    return add_constraint(model, c.constraint, name)
+end
+
+"""
     jump_function(constraint::AbstractConstraint)
 
 Return the function of the constraint `constraint` in the function-in-set form

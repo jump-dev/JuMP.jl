@@ -258,6 +258,30 @@ function test_model()
                     @test JuMP.dual(c) == 2.0
                 end
             end
+            @testset "automatically with BridgeableConstraint" begin
+                @testset "with_optimizer at Model" begin
+                    model = Model(factory)
+                    @variable(model, x)
+                    constraint = ScalarConstraint(x, Nonnegative())
+                    bc = BridgeableConstraint(constraint, NonnegativeBridge)
+                    c = add_constraint(model, bc)
+                    JuMP.optimize!(model)
+                    @test JuMP.value(x) == 1.0
+                    @test JuMP.value(c) == 1.0
+                    @test JuMP.dual(c) == 2.0
+                end
+                @testset "with_optimizer at optimize!" begin
+                    model = Model()
+                    @variable(model, x)
+                    constraint = ScalarConstraint(x, Nonnegative())
+                    bc = BridgeableConstraint(constraint, NonnegativeBridge)
+                    c = add_constraint(model, bc)
+                    JuMP.optimize!(model, factory)
+                    @test JuMP.value(x) == 1.0
+                    @test JuMP.value(c) == 1.0
+                    @test JuMP.dual(c) == 2.0
+                end
+            end
         end
     end
 
