@@ -373,7 +373,7 @@ var documenterSearchIndex = {"docs": [
     "page": "Expressions",
     "title": "Affine expressions",
     "category": "section",
-    "text": "There are four ways of constructing an affine expression in JuMP: using the @expression macro, by operator overloading, using the AffExpr constructor, and via JuMP.add_to_expression!."
+    "text": "There are four ways of constructing an affine expression in JuMP: with the @expression macro, with operator overloading, with the AffExpr constructor, and with add_to_expression!."
 },
 
 {
@@ -381,7 +381,7 @@ var documenterSearchIndex = {"docs": [
     "page": "Expressions",
     "title": "Macros",
     "category": "section",
-    "text": "The recommended way to create an affine expression is via the @expression macro.model = Model()\n@variable(model, x)\n@variable(model, y)\nex = @expression(model, 2x + y - 1)\n\n# output\n\n2 x + y - 1This expression can be used in the objective, or added to a constraint. For example:@objective(model, Min, 2 * ex - 1)\nobjective_function(model)\n\n# output\n\n4 x + 2 y - 3Just like variables and constraints, named expressions can also be created. For examplemodel = Model()\n@variable(model, x[i = 1:3])\n@expression(model, expr[i=1:3], i * sum(x[j] for j in i:3))\nexpr\n\n# output\n\n3-element Array{GenericAffExpr{Float64,VariableRef},1}:\n x[1] + x[2] + x[3]\n 2 x[2] + 2 x[3]\n 3 x[3]"
+    "text": "The recommended way to create an affine expression is via the @expression macro.model = Model()\n@variable(model, x)\n@variable(model, y)\nex = @expression(model, 2x + y - 1)\n\n# output\n\n2 x + y - 1This expression can be used in the objective or added to a constraint. For example:@objective(model, Min, 2 * ex - 1)\nobjective_function(model)\n\n# output\n\n4 x + 2 y - 3Just like variables and constraints, named expressions can also be created. For examplemodel = Model()\n@variable(model, x[i = 1:3])\n@expression(model, expr[i=1:3], i * sum(x[j] for j in i:3))\nexpr\n\n# output\n\n3-element Array{GenericAffExpr{Float64,VariableRef},1}:\n x[1] + x[2] + x[3]\n 2 x[2] + 2 x[3]\n 3 x[3]"
 },
 
 {
@@ -389,7 +389,7 @@ var documenterSearchIndex = {"docs": [
     "page": "Expressions",
     "title": "Operator overloading",
     "category": "section",
-    "text": "Expressions can also be created outside the macro. However, note that in some cases, this can be much slower that constructing an expression using the macro.model = Model()\n@variable(model, x)\n@variable(model, y)\nex = 2x + y - 1\n\n# output\n\n2 x + y - 1"
+    "text": "Expressions can also be created without macros. However, note that in some cases, this can be much slower that constructing an expression using macros.model = Model()\n@variable(model, x)\n@variable(model, y)\nex = 2x + y - 1\n\n# output\n\n2 x + y - 1"
 },
 
 {
@@ -405,7 +405,7 @@ var documenterSearchIndex = {"docs": [
     "page": "Expressions",
     "title": "add_to_expression!",
     "category": "section",
-    "text": "The fourth way to create an affine expression is by using JuMP.add_to_expression!. Compared to the operator overloading method, this approach is fast, and is what the @expression macro implements behind-the-scenes.model = Model()\n@variable(model, x)\n@variable(model, y)\nex = AffExpr(-1.0)\nadd_to_expression!(ex, 2.0, x)\nadd_to_expression!(ex, 1.0, y)\n\n# output\n\n2 x + y - 1"
+    "text": "The fourth way to create an affine expression is by using add_to_expression!. Compared to the operator overloading method, this approach is faster because it avoids constructing temporary objects. The @expression macro uses add_to_expression! behind-the-scenes.model = Model()\n@variable(model, x)\n@variable(model, y)\nex = AffExpr(-1.0)\nadd_to_expression!(ex, 2.0, x)\nadd_to_expression!(ex, 1.0, y)\n\n# output\n\n2 x + y - 1"
 },
 
 {
@@ -413,7 +413,7 @@ var documenterSearchIndex = {"docs": [
     "page": "Expressions",
     "title": "Quadratic expressions",
     "category": "section",
-    "text": "Like affine expressions, there are four ways of constructing a quadratic expression in JuMP: using macros, operator overloading, constructors, and via JuMP.add_to_expression!."
+    "text": "Like affine expressions, there are four ways of constructing a quadratic expression in JuMP: macros, operator overloading, constructors, and add_to_expression!."
 },
 
 {
@@ -441,11 +441,11 @@ var documenterSearchIndex = {"docs": [
 },
 
 {
-    "location": "expressions/#JuMP.add_to_expression!-1",
+    "location": "expressions/#add_to_expression!-2",
     "page": "Expressions",
-    "title": "JuMP.add_to_expression!",
+    "title": "add_to_expression!",
     "category": "section",
-    "text": "Finally, JuMP.add_to_expression! can also be used to add quadratic terms.model = Model()\n@variable(model, x)\n@variable(model, y)\nex = QuadExpr(x + y - 1.0)\nadd_to_expression!(ex, 1.0, x, x)\nadd_to_expression!(ex, 2.0, x, y)\nadd_to_expression!(ex, 1.0, y, y)\n\n# output\n\nx² + 2 x*y + y² + x + y - 1"
+    "text": "Finally, add_to_expression! can also be used to add quadratic terms.model = Model()\n@variable(model, x)\n@variable(model, y)\nex = QuadExpr(x + y - 1.0)\nadd_to_expression!(ex, 1.0, x, x)\nadd_to_expression!(ex, 2.0, x, y)\nadd_to_expression!(ex, 1.0, y, y)\n\n# output\n\nx² + 2 x*y + y² + x + y - 1"
 },
 
 {
