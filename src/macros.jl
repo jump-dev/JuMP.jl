@@ -651,7 +651,7 @@ function parseSDconstraint(_error::Function, sense::Symbol, lhs, rhs)
         _error("Invalid sense $sense in SDP constraint")
     end
     vectorized = false
-    parsecode, buildcall = parse_one_operator_constraint(_error, false, Val(:in), aff, :(PSDCone()))
+    parsecode, buildcall = parse_one_operator_constraint(_error, false, Val(:in), aff, :(JuMP.PSDCone()))
     vectorized, parsecode, buildcall
 end
 

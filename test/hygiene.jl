@@ -27,6 +27,8 @@ JuMP.@constraints(model, begin
     sum( y[j] for j=r if j == 4) <= 1
 end)
 
+JuMP.@SDconstraint(model, [x x; -x x] ⪰ 0)
+
 JuMP.@objective(model, sense, y[4])
 JuMP.@objective(model, Min, x + sum( j*y[j] for j=r ))
 JuMP.@objective(model, Max, sum( y[j] for j=r if j == 4))
