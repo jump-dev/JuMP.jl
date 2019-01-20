@@ -1481,11 +1481,19 @@ var documenterSearchIndex = {"docs": [
 },
 
 {
+    "location": "extensions/#JuMP.BridgeableConstraint",
+    "page": "Extensions",
+    "title": "JuMP.BridgeableConstraint",
+    "category": "type",
+    "text": "struct BridgeableConstraint{C, B} <: AbstractConstraint\n    constraint::C\n    bridge_type::B\nend\n\nConstraint constraint that can be bridged by the bridge of type bridge_type. Adding this constraint to a model is equivalent to\n\nadd_bridge(model, bridge_type)\nadd_constraint(model, constraint)\n\nExamples\n\nGiven a new scalar set type CustomSet with a bridge CustomBridge that can bridge F-in-CustomSet constraints, when the user does\n\nmodel = Model()\n@variable(model, x)\n@constraint(model, x + 1 in CustomSet())\noptimize!(model)\n\nwith an optimizer that does not support F-in-CustomSet constraints, the constraint will not be bridge unless he manually calls add_bridge(model, CustomBridge). In order to automatically add the CustomBridge to any model to which an F-in-CustomSet is added, simply add the following method:\n\nfunction JuMP.build_constraint(_error::Function, func::AbstractJuMPScalar,\n                               set::CustomSet)\n    constraint = ScalarConstraint(func, set)\n    return JuMP.BridgeableConstraint(constraint, CustomBridge)\nend\n\n### Note\n\nJuMP extensions should extend `JuMP.build_constraint` only if they also defined\n`CustomSet`, for three\nreasons:\n1. It is problematic if multiple extensions overload the same JuMP method.\n2. A missing method will not inform the users that they forgot to load the\n   extension module defining the `build_constraint` method.\n3. Defining a method where neither the function nor any of the argument types\n   are defined in the package is called [*type piracy*](https://docs.julialang.org/en/v1/manual/style-guide/index.html#Avoid-type-piracy-1)\n   and is discouraged in the Julia style guide.\n\n\n\n\n\n"
+},
+
+{
     "location": "extensions/#Adding-a-bridge-1",
     "page": "Extensions",
     "title": "Adding a bridge",
     "category": "section",
-    "text": "TODO: create new bridgeSee the bridge section in the MOI manual.add_bridge"
+    "text": "TODO: create new bridgeSee the bridge section in the MOI manual.add_bridge\nBridgeableConstraint"
 },
 
 {
