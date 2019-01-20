@@ -308,7 +308,8 @@ end
 
 ### Note
 
-JuMP extensions should do this only if they also defined `CustomSet`, for three
+JuMP extensions should extend `JuMP.build_constraint` only if they also defined
+`CustomSet`, for three
 reasons:
 1. It is problematic if multiple extensions overload the same JuMP method.
 2. A missing method will not inform the users that they forgot to load the
