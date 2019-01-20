@@ -14,7 +14,7 @@ particularly useful if an expression is used in multiple places in the model.
 
 There are four ways of constructing an affine expression in JuMP: with the
 [`@expression`](@ref) macro, with operator overloading, with the `AffExpr`
-constructor, and with [`JuMP.add_to_expression!`](@ref).
+constructor, and with [`add_to_expression!`](@ref).
 
 ### Macros
 
@@ -95,9 +95,10 @@ ex = AffExpr(-1.0, x => 2.0, y => 1.0)
 ### `add_to_expression!`
 
 The fourth way to create an affine expression is by using
-[`JuMP.add_to_expression!`](@ref). Compared to the operator overloading method,
+[`add_to_expression!`](@ref). Compared to the operator overloading method,
 this approach is faster because it avoids constructing temporary objects.
-The [`@expression`](@ref) macro uses `add_to_expression!` behind-the-scenes.
+The [`@expression`](@ref) macro uses [`add_to_expression!`](@ref)
+behind-the-scenes.
 ```jldoctest
 model = Model()
 @variable(model, x)
@@ -115,7 +116,7 @@ add_to_expression!(ex, 1.0, y)
 
 Like affine expressions, there are four ways of constructing a quadratic
 expression in JuMP: macros, operator overloading, constructors, and
-[`JuMP.add_to_expression!`](@ref).
+[`add_to_expression!`](@ref).
 
 ### Macros
 
@@ -171,8 +172,7 @@ x² + 2 x*y + y² + x + y - 1
 
 ### `add_to_expression!`
 
-Finally, [`JuMP.add_to_expression!`](@ref) can also be used to add quadratic
-terms.
+Finally, [`add_to_expression!`](@ref) can also be used to add quadratic terms.
 
 ```jldoctest
 model = Model()
