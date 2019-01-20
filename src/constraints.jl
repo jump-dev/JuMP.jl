@@ -305,6 +305,17 @@ function JuMP.build_constraint(_error::Function, func::AbstractJuMPScalar,
     constraint = ScalarConstraint(func, set)
     return JuMP.BridgeableConstraint(constraint, CustomBridge)
 end
+
+### Note
+
+JuMP extensions should do this only if they also defined `CustomSet`, for three
+reasons:
+1. It is problematic if multiple extensions overload the same JuMP method.
+2. A missing method will not inform the users that they forgot to load the
+   extension module defining the `build_constraint` method.
+3. Defining a method where neither the function nor any of the argument types
+   are defined in the package is called [*type piracy*](https://docs.julialang.org/en/v1/manual/style-guide/index.html#Avoid-type-piracy-1)
+   and is discouraged in the Julia style guide.
 ```
 """
 struct BridgeableConstraint{C, B} <: AbstractConstraint
