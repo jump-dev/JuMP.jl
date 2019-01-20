@@ -20,6 +20,7 @@ See the [bridge section in the MOI manual](http://www.juliaopt.org/MathOptInterf
 
 ```@docs
 add_bridge
+BridgeableConstraint
 ```
 
 ## Extending JuMP macros

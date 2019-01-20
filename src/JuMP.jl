@@ -147,8 +147,10 @@ mutable struct Model <: AbstractModel
     # In DIRECT mode, will hold an AbstractOptimizer.
     moi_backend::MOI.AbstractOptimizer
     # List of bridges to add in addition to the ones added in
-    # `MOI.Bridges.full_bridge_optimizer`.
-    bridge_types::Vector{Any}
+    # `MOI.Bridges.full_bridge_optimizer`. With `BridgeableConstraint`, the
+    # same bridge may be added many times so we store them in a `Set` instead
+    # of, e.g., a `Vector`.
+    bridge_types::Set{Any}
     # Hook into a solve call...function of the form f(m::Model; kwargs...),
     # where kwargs get passed along to subsequent solve calls.
     optimize_hook
@@ -240,7 +242,7 @@ function direct_model(backend::MOI.ModelLike)
                  Dict{MOIVAR, MOIINT}(),
                  Dict{MOIVAR, MOIBIN}(),
                  backend,
-                 DataType[],
+                 Set{Any}(),
                  nothing,
                  nothing,
                  Dict{Symbol, Any}(),
