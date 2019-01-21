@@ -347,13 +347,14 @@ julia> @constraint(model, A * x - b in MOI.Nonnegatives(2))
 ```
 
 In addition to the `Nonnegatives` set, MOI defines a number of
-other vector-valued sets such as `Nonpositives`. See the [MathOptInterface
-documentation](http://www.juliaopt.org/MathOptInterface.jl/v0.8.1/apireference/#Sets-1)
+other vector-valued sets such as `Nonpositives`. See the
+[MOI documentation](http://www.juliaopt.org/MathOptInterface.jl/v0.8.1/apireference/#Sets-1)
 for more information.
 
 Note also that for the first time we have used an explicit *function-in-set*
-description of the constraint. Read more about this below in the [Function-Set
-pairs](@ref) section of this documentation.
+description of the constraint. Read more about this representation for
+constraints in the
+[MOI documentation](http://www.juliaopt.org/MathOptInterface.jl/v0.8.1/apimanual/#Constraints-by-function-set-pairs-1).
 
 ## Constraints on a single variable
 
