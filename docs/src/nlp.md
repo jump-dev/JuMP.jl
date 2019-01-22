@@ -19,12 +19,7 @@ the terms within. Note that the `@objective` and `@constraint` macros (and
 corresponding functions) do *not* currently support nonlinear expressions.
 However, a model can contain a mix of linear, quadratic, and nonlinear
 contraints or objective functions. Starting points may be provided by using the
-`start` keyword argument to `@variable`.  For nonconvex problems, the returned
-solution is only guaranteed to be locally optimal. Convexity detection is not
-currently provided.
-
-TODO(issue #1460): Describe how starting points are computed if none are
-provided.
+`start` keyword argument to `@variable`.
 
 For example, we can solve the classical Rosenbrock problem (with a twist) as
 follows:
@@ -46,9 +41,11 @@ optimize!(model)
 println("x = ", value(x), " y = ", value(y))
 ```
 
+See the JuMP [examples directory](https://github.com/JuliaOpt/JuMP.jl/tree/bff0916a2025df64e4a0be8933b58ea7bdc5eb0b/examples)
+for more examples (which include `mle.jl, `rosenbrock.jl`, and `clnlbeam.jl`).
 TODO: Add links to NLP examples after they are updated.
 
-The [NLP solver tests](https://github.com/JuliaOpt/JuMP.jl/blob/2ae979eec4aeac1b6dc76d614b79c3c99c3dacc5/test/nlp_solver.jl)
+The [NLP solver tests](https://github.com/JuliaOpt/JuMP.jl/blob/bff0916a2025df64e4a0be8933b58ea7bdc5eb0b/test/nlp_solver.jl)
 contain additional examples.
 
 ## Syntax notes
@@ -68,7 +65,7 @@ for linear and quadratic expressions. We note some important points below.
   inside of macros.
 - [User-defined Functions](@ref) may be used within nonlinear expressions only
   after they are registered. For example, the follow code results in an error
-  because `JuMP.register()` must be called first to register `my_function`.
+  because `register()` must be called first to register `my_function`.
 
 ```jldoctest
 model = Model()
@@ -148,8 +145,8 @@ Nonlinear parameters can be used *within nonlinear expressions* only:
 ```julia
 @NLparameter(model, x == 10)
 @variable(model, z)
-@objective(model, Max, x * z)               # Error: x is a nonlinear parameter.
-@NLobjective(model, Max, x * z)             # Ok.
+@objective(model, Max, x * z)             # Error: x is a nonlinear parameter.
+@NLobjective(model, Max, x * z)           # Ok.
 @expression(model, my_expr, x * z^2)      # Error: x is a nonlinear parameter.
 @NLexpression(model, my_nl_expr, x * z^2) # Ok.
 ```
@@ -189,17 +186,18 @@ functions must provide derivatives in some form. Fortunately, JuMP supports
 **automatic differentiation of user-defined functions**, a feature to our
 knowledge not available in any comparable modeling systems.
 
-Automatic differentiation is *not* finite differencing. JuMP's automatically
-computed derivatives are not subject to approximation error.
+!!! note
+    Automatic differentiation is *not* finite differencing. JuMP's automatically
+    computed derivatives are not subject to approximation error.
 
 JuMP uses [ForwardDiff.jl](https://github.com/JuliaDiff/ForwardDiff.jl) to
 perform automatic differentiation; see the ForwardDiff.jl
-[documentation](http://www.juliadiff.org/ForwardDiff.jl/v0.9.0/user/limitations.html)
+[documentation](http://www.juliadiff.org/ForwardDiff.jl/v0.10.2/user/limitations.html)
 for a description of how to write a function suitable for automatic
 differentiation. The general guideline is to write code that is generic with
 respect to the number type; don't assume that the input to the function is
 `Float64`. To register a user-defined function with derivatives computed by
-automatic differentiation, use the `JuMP.register` method as in the following
+automatic differentiation, use the `register` method as in the following
 example:
 
 ```julia
@@ -216,7 +214,7 @@ register(model, :my_square, 1, my_square, autodiff=true)
 ```
 
 The above code creates a JuMP model with the objective function
-`(x[1] - 1)^2 + (x[2]^2 - 2)^2`. The first argument to `JuMP.register` the
+`(x[1] - 1)^2 + (x[2]^2 - 2)^2`. The first argument to `register` the
 model for which the functions are registered. The second argument is a Julia
 symbol object which serves as the name of the user-defined function in JuMP
 expressions; the JuMP name need not be the same as the name of the corresponding
@@ -225,17 +223,12 @@ takes. The fourth argument is the name of the Julia method which computes the
 function, and `autodiff=true` instructs JuMP to compute exact gradients
 automatically.
 
-!!! note
-    All arguments to user-defined functions are scalars, not vectors. To define
-    a function which takes a large number of arguments, you may use the
-    splatting syntax `f(x...) = ...`.
-
 Forward-mode automatic differentiation as implemented by ForwardDiff.jl has a
 computational cost that scales linearly with the number of input dimensions. As
 such, it is not the most efficient way to compute gradients of user-defined
 functions if the number of input arguments is large. In this case, users may
 want to provide their own routines for evaluating gradients. The more general
-syntax for `JuMP.register` which accepts user-provided derivative evaluation
+syntax for `register` which accepts user-provided derivative evaluation
 routines is:
 
 ```julia
@@ -326,7 +319,8 @@ may be expected to be within a factor of 5 of AMPL's.
 
 ## Querying derivatives from a JuMP model
 
-For some advanced use cases, one may want to directly query the derivatives of a JuMP model instead of handing the problem off to a solver.
+For some advanced use cases, one may want to directly query the derivatives of a
+JuMP model instead of handing the problem off to a solver.
 Internally, JuMP implements the `AbstractNLPEvaluator` interface from
 [MathOptInterface](http://www.juliaopt.org/MathOptInterface.jl/v0.6.1/apireference.html#NLP-evaluator-methods-1).
 To obtain an NLP evaluator object from a JuMP model, use `JuMP.NLPEvaluator`.
@@ -401,13 +395,13 @@ This method of querying derivatives directly from a JuMP model is convenient for
 interacting with the model in a structured way, e.g., for accessing derivatives
 of specific variables. For example, in statistical maximum likelihood estimation
 problems, one is often interested in the Hessian matrix at the optimal solution,
-which can be queried using the `JuMP.NLPEvaluator`.
+which can be queried using the `NLPEvaluator`.
 
 ## Raw expression input
 
 In addition to the `@NLobjective` and `@NLconstraint` macros, it is also
 possible to provide Julia `Expr` objects directly by using
-`JuMP.set_NL_objective` and `JuMP.add_NL_constraint`. This input form may be
+`set_NL_objective` and `add_NL_constraint`. This input form may be
 useful if the expressions are generated programmatically. JuMP variables should
 be spliced into the expression object. For example:
 
@@ -432,4 +426,4 @@ expressions.
 @NLobjective
 ```
 
-[^1]: Dunning, Huchette, and Lubin, "JuMP: A Modeling Language for Mathematical Optimization", [arXiv](http://arxiv.org/abs/1508.01982).
+[^1]: Dunning, Huchette, and Lubin, "JuMP: A Modeling Language for Mathematical Optimization", SIAM Review, [PDF](https://mlubin.github.io/pdf/jump-sirev.pdf).
