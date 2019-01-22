@@ -179,17 +179,20 @@ some_local_variable = ...
 some_file.jl # Except for ModuleName.jl.
 ```
 
-#### Public and private names
+#### Exported and non-exported names
 
 Begin private module level functions and constants with an underscore. All other
-names should be exported. (See JuMP.jl for an example of how to do this.)
+objects in the scope of a module should be exported. (See JuMP.jl for an example
+of how to do this.)
 
 Names beginning with an underscore should only be used for distinguishing
-between exported and non-exported names. Therefore, never begin the name of a
-local variable with an underscore.
+between exported (public) and non-exported (private) objects. Therefore, never
+begin the name of a local variable with an underscore.
 
 ```julia
 module MyModule
+
+export public_function, PUBLIC_CONSTANT
 
 function _private_function()
     local_variable = 1
