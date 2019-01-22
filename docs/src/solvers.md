@@ -2,12 +2,13 @@ Interacting with solvers
 ========================
 
 A JuMP model keeps a [MathOptInterface (MOI)](https://github.com/JuliaOpt/MathOptInterface.jl)
-*backend* of type `MOI.ModelLike` internally that stores the optimization
+*backend* of type `MOI.ModelLike` that stores the optimization
 problem and acts as the optimization solver. We call it an MOI *backend* and not
 optimizer as it can also be a wrapper around an optimization file format such as
-MPS that writes the JuMP model in a file. From JuMP, the MathOptInterface
-backend can be accessed using the [`JuMP.backend`](@ref) function. JuMP can be
-viewed as a lightweight user-friendly layer on top of the MOI backend:
+MPS that writes the JuMP model in a file. From JuMP, the MOI
+backend can be accessed using the [`backend`](@ref) function. JuMP can be
+viewed as a lightweight user-friendly layer on top of the MOI backend, in the
+sense that:
 
 * JuMP does not maintain any copy of the model outside this MOI backend.
 * JuMP variable (resp. constraint) references are simple structures containing
@@ -27,10 +28,11 @@ copied at once before solve. Moreover it seems to require all solvers to
 implement all possible reformulations independently which seems both very
 ambitious and might generate a lot of duplicated code.
 
-These apparent limitations are in fact addressed at the MOI level in a manner
+These apparent limitations are addressed at level of MOI in a manner
 that is completely transparent to JuMP. While the MOI API may seem very
 demanding, it allows MOI models to be a succession of lightweight MOI layers
-that fill the gap between JuMP requirements and the solver capabilities.
+that fill the gap between JuMP requirements and the solver capabilities. The
+remainder of this section describes how JuMP interacts with the MOI backend.
 
 JuMP models can be created in three different modes: `AUTOMATIC`, `MANUAL` and
 `DIRECT`.
@@ -54,7 +56,7 @@ the optimizer:
   MOI but new ones can be defined and added to the `LazyBridgeOptimizer` used by
   JuMP.
 
-See the [MOI documentation](http://www.juliaopt.org/MathOptInterface.jl/stable/)
+See the [MOI documentation](http://www.juliaopt.org/MathOptInterface.jl/v0.8.1/)
 for more details on these two MOI layers.
 
 To attach an optimizer to a JuMP model, JuMP needs to create a new empty
@@ -66,7 +68,7 @@ with_optimizer
 ```
 
 The factory can be provided either at model construction time or at
-[`JuMP.optimize!`](@ref) time:
+[`optimize!`](@ref) time:
 ```@docs
 JuMP.optimize!
 ```
@@ -90,8 +92,3 @@ JuMP.direct_model
 ```@docs
 JuMP.backend
 ```
-
-
-TODO: How to set parameters (solver
-specific and generic). Status codes. Accessing the result.
-How to accurately measure the solve time.
