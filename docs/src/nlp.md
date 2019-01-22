@@ -43,7 +43,6 @@ println("x = ", value(x), " y = ", value(y))
 
 See the JuMP [examples directory](https://github.com/JuliaOpt/JuMP.jl/tree/bff0916a2025df64e4a0be8933b58ea7bdc5eb0b/examples)
 for more examples (which include `mle.jl`, `rosenbrock.jl`, and `clnlbeam.jl`).
-TODO: Add links to NLP examples after they are updated.
 
 The [NLP solver tests](https://github.com/JuliaOpt/JuMP.jl/blob/bff0916a2025df64e4a0be8933b58ea7bdc5eb0b/test/nlp_solver.jl)
 contain additional examples.
