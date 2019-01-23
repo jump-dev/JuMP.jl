@@ -235,7 +235,7 @@ function getloopedcode(varname, code, condition, idxvars, idxsets, idxpairs, sym
 end
 
 # There is no need for localvar with >=0.7 since the loop variable are always local
-if VERSION < v"0.7"
+if VERSION < v"1.0"
     localvar(x::Symbol) = _localvar(x)
     localvar(x::Expr) = Expr(:block, _localvar(x)...)
     _localvar(x::Symbol) = :(local $(esc(x)))
