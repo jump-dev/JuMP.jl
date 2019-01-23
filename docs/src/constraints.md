@@ -270,8 +270,9 @@ determine that the indices are one-based integer ranges (e.g., in the case of
 
 ### DenseAxisArrays
 
-The syntax for constructing a `DenseAxisArray` of constraints is very similar to
-the [syntax for constructing](@ref variable_jump_arrays) a DenseAxisArray of
+The syntax for constructing a [`DenseAxisArray`](@ref Containers.DenseAxisArray)
+of constraints is very similar to the
+[syntax for constructing](@ref variable_jump_arrays) a `DenseAxisArray` of
 variables.
 
 ```jldoctest constraint_jumparrays; setup=:(model=Model(); @variable(model, x))
@@ -286,9 +287,10 @@ And data, a 2×2 Array{ConstraintRef{Model,C,Shape} where Shape<:AbstractShape w
 
 ### SparseAxisArrays
 
-The syntax for constructing a [`SparseAxisArray`](@ref) of constraints is very
+The syntax for constructing a
+[`SparseAxisArray`](@ref Containers.SparseAxisArray) of constraints is very
 similar to the [syntax for constructing](@ref variable_sparseaxisarrays) a
-[`SparseAxisArray`](@ref) of variables.
+`SparseAxisArray` of variables.
 
 ```jldoctest constraint_jumparrays; setup=:(model=Model(); @variable(model, x))
 julia> @constraint(model, con[i = 1:2, j = 1:2; i != j], i * x <= j + 1)

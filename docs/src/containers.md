@@ -15,6 +15,7 @@ manually.
 
 ```@docs
 JuMP.Containers.DenseAxisArray
+JuMP.Containers.SparseAxisArray
 ```
 
 Containers in macros
