@@ -16,6 +16,10 @@
 # - Example code should be covered by doctests.
 #   - But it's unclear what to do if the code depends on a solver, see
 #     https://github.com/JuliaOpt/JuMP.jl/issues/1175.
+# - When a word is a Julia symbol and not an english word, enclose it with
+#   backsticks and add a `@ref` if it has a docstring in this doc. If it is a
+#   plural, add the "s" after the closing backstick. Example:
+#   [`VariableRef`](@ref)s, `Int`.
 ```
 
 !!! warning
