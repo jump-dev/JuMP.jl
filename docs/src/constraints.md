@@ -286,9 +286,9 @@ And data, a 2×2 Array{ConstraintRef{Model,C,Shape} where Shape<:AbstractShape w
 
 ### SparseAxisArrays
 
-The syntax for constructing a `SparseAxisArray` of constraints is very similar
-to the [syntax for constructing](@ref variable_sparseaxisarrays) a
-SparseAxisArray of variables.
+The syntax for constructing a [`SparseAxisArray`](@ref) of constraints is very
+similar to the [syntax for constructing](@ref variable_sparseaxisarrays) a
+[`SparseAxisArray`](@ref) of variables.
 
 ```jldoctest constraint_jumparrays; setup=:(model=Model(); @variable(model, x))
 julia> @constraint(model, con[i = 1:2, j = 1:2; i != j], i * x <= j + 1)
@@ -466,7 +466,7 @@ ordering on the variables. If the decision variables are related and have a
 physical ordering (e.g., they correspond to the size of a factory to be built,
 and the SOS-I constraint enforces that only one factory can be built), then the
 weight vector, although not used directly in the constraint, can help the solver
-make better decision in the solution process.
+make a better decision in the solution process.
 
 This ordering is more important in a special ordered set of type II (SOS-II), in
 which at most two values can be non-zero, and if there are two non-zeros, they
@@ -594,7 +594,7 @@ false
 
 ## Accessing constraints from a model
 
-TODO: Describe constraints vs. `ConstraintRefs`. Describe `JuMP.constraint_object`.
+TODO: Describe constraints vs. `ConstraintRef`s. Describe `JuMP.constraint_object`.
 Describe how to access all constraints in a model.
 
 
