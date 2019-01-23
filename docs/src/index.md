@@ -18,7 +18,7 @@
 #     https://github.com/JuliaOpt/JuMP.jl/issues/1175.
 # - When a word is a Julia symbol and not an English word, enclose it with
 #   backticks and add a `@ref` if it has a docstring in this doc. If it is a
-#   plural, add the "s" after the closing backstick. Example:
+#   plural, add the "s" after the closing backtick. Example:
 #   [`VariableRef`](@ref)s, `Int`.
 ```
 
