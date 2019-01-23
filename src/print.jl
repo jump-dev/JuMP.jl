@@ -386,6 +386,7 @@ Write to `io` a summary of the number of constraints.
 function show_constraints_summary(io::IO, model::Model)
     for (F, S) in MOI.get(model, MOI.ListOfConstraints())
         num_constraints = MOI.get(model, MOI.NumberOfConstraints{F, S}())
+        # TODO: Print jump_function_type(model, F) instead of F.
         println(io, "`$F`-in-`$S`: $num_constraints constraint",
                 plural(num_constraints))
     end
