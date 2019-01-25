@@ -286,7 +286,35 @@ some_local_variable = ...
 some_file.jl # Except for ModuleName.jl.
 ```
 
-#### Use of underscores
+#### Exported and non-exported names
+
+Begin private module level functions and constants with an underscore. All other
+objects in the scope of a module should be exported. (See JuMP.jl for an example
+of how to do this.)
+
+Names beginning with an underscore should only be used for distinguishing
+between exported (public) and non-exported (private) objects. Therefore, never
+begin the name of a local variable with an underscore.
+
+```julia
+module MyModule
+
+export public_function, PUBLIC_CONSTANT
+
+function _private_function()
+    local_variable = 1
+    return
+end
+
+function public_function end
+
+const _PRIVATE_CONSTANT = 3.14159
+const PUBLIC_CONSTANT = 1.41421
+
+end
+```
+
+#### Use of underscores within names
 
 The Julia style guide recommends avoiding underscores "when readable", for
 example, `haskey`, `isequal`, `remotecall`, and `remotecall_fetch`. This
