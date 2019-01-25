@@ -169,13 +169,13 @@ Good:
 # Arguments to the function are aligned vertically.
 function my_very_long_function_name(with_lots_of_long_arguments_1,
                                     and_another_long_one)
-   # First line of the function begins here.
+    # First line of the function begins here.
 end
 
 # Arguments to the function are listed on a new line and indented.
 function my_very_long_function_name(
-   with_lots_of_long_arguments_1, and_another_long_one)
-   # First line of the function begins here.
+    with_lots_of_long_arguments_1, and_another_long_one)
+    # First line of the function begins here.
 end
 ```
 
@@ -184,8 +184,8 @@ Bad:
 # When defining functions, if vertical alignment is not used, then the arguments
 # should not begin on the first line.
 function my_very_long_function_name(with_lots_of_long_arguments_1,
-   and_another_long_one)
-   # First line of the function begins here.
+    and_another_long_one)
+    # First line of the function begins here.
 end
 ```
 
@@ -203,20 +203,19 @@ a_very_long_variable_name = a_long_variable_name_with_arguments(
     first_argument, second_argument)
 ```
 
-Only use vertical alignment for function arguments. Don't use if in any other
+Only use vertical alignment for function arguments. Don't use it in any other
 situation.
 
 Bad:
 ```julia
+# Vertical alignment used in a non-function context. Also, indent is not a
+# multiple of 4 spaces.
 comprehension = [(first, second) for (first, second) in list_of_things
                  if isodd(first)]
 ```
 
-Beter
+Better
 ```julia
-comprehension = [(first, second) for (first, second) in list_of_things
-    if isodd(first)]
-
 comprehension = [
     (first, second) for (first, second) in list_of_things if isodd(first)
 ]
@@ -233,25 +232,23 @@ con_index = MOI.add_constraint(backend(owner_model(variable)),
 
 Better:
 ```julia
-con_index = MOI.add_constraint(backend(owner_model(variable)),
-    MOI.SingleVariable(index(variable)), set)
-
 con_index = MOI.add_constraint(
-    backend(owner_model(variable)), MOI.SingleVariable(index(variable)), set
-)
+    backend(owner_model(variable)), MOI.SingleVariable(index(variable)), set)
 ```
 
-Don't break at an inner function.
+Don't break lines at an inner-level of function nesting.
 
 Bad:
 ```julia
-con_index = MOI.add_constraint(backend(owner_model(
-    variable)), MOI.SingleVariable(index(variable)), new_set)
+con_index = MOI.add_constraint(
+    backend(owner_model(variable)), MOI.SingleVariable(
+    index(variable)), new_set)
 ```
 
 Better:
 ```julia
-con_index = MOI.add_constraint(backend(owner_model(variable)),
+con_index = MOI.add_constraint(
+    backend(owner_model(variable)),
     MOI.SingleVariable(index(variable)), new_set)
 ```
 
@@ -266,6 +263,21 @@ f(x) = 1 + x +
 Better:
 ```julia
 f(x) = 1 + x + x^2 + x^3 + x^3
+```
+
+Drop trailing parentheses onto a new line if it improves readability.
+
+Good:
+```julia
+con_index = MOI.add_constraint(
+    backend(owner_model(variable)), MOI.SingleVariable(index(variable)), set)
+```
+
+Also good:
+```julia
+con_index = MOI.add_constraint(
+    backend(owner_model(variable)), MOI.SingleVariable(index(variable)), set
+)
 ```
 
 ### Syntax
