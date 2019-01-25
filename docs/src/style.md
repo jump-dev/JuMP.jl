@@ -154,7 +154,14 @@ readable.
 
 Therefore, aim to keep line lengths under 80 characters by breaking lines
 for maximum readability (examples are given in the [Line breaks](@ref) section),
-but don't treat this as a hard  rule.
+but don't treat this as a hard rule.
+
+We make exceptions for
+
+ - URLs
+ - path names
+ - long string constants not containing whitespace
+ - lines for which breaking over multiple lines worsens readability
 
 #### Line breaks
 
