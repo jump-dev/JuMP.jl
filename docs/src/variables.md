@@ -5,11 +5,9 @@ DocTestSetup = quote
 end
 ```
 
-Variables
-=========
+# Variables
 
-What is a JuMP variable?
----------------------------
+## What is a JuMP variable?
 
 The term *variable* in mathematical optimization has many meanings. Here, we
 distinguish between the following three types of variables:
@@ -101,11 +99,12 @@ end
 ```
 
 Now that we understand the difference between *optimization*, *JuMP*, and *Julia*
-variables, we can introduce more of the functionality of the `@variable` macro.
+variables, we can introduce more of the functionality of the [`@variable`](@ref)
+macro.
 
 ## Variable bounds
 
-We have already seen the basic usage of the `@variable` macro. The next
+We have already seen the basic usage of the [`@variable`](@ref) macro. The next
 extension is to add lower- and upper-bounds to each optimization variable. This
 can be done as follows:
 ```jldoctest variables_2; setup=:(model=Model())
@@ -139,7 +138,8 @@ In the above examples, `x_free` represents an unbounded optimization variable,
     ```
 
 We can query whether an optimization variable has a lower- or upper-bound via
-the `has_lower_bound` and `has_upper_bound` functions. For example:
+the [`has_lower_bound`](@ref) and [`has_upper_bound`](@ref) functions. For
+example:
 ```jldoctest variables_2
 julia> has_lower_bound(x_free)
 false
@@ -149,7 +149,7 @@ true
 ```
 
 If a variable has a lower or upper bound, we can query the value of it via the
-`lower_bound` and `upper_bound` functions. For example:
+[`lower_bound`](@ref) and [`upper_bound`](@ref) functions. For example:
 ```jldoctest variables_2
 julia> lower_bound(x_interval)
 2.0
@@ -169,8 +169,9 @@ julia> lower_bound(x)
 1.0
 ```
 
-Another option is to use the `set_lower_bound` and `set_upper_bound` functions.
-These can also be used to modify an existing variable bound. For example:
+Another option is to use the [`set_lower_bound`](@ref) and
+[`set_upper_bound`](@ref) functions. These can also be used to modify an
+existing variable bound. For example:
 ```jldoctest; setup=:(model=Model())
 julia> @variable(model, x >= 1)
 x
@@ -184,8 +185,8 @@ julia> lower_bound(x)
 2.0
 ```
 
-We can delete variable bounds using `delete_lower_bound` and
-`delete_upper_bound`:
+We can delete variable bounds using [`delete_lower_bound`](@ref) and
+[`delete_upper_bound`](@ref):
 ```jldoctest; setup=:(model=Model())
 julia> @variable(model, 1 <= x <= 2)
 x
@@ -208,7 +209,8 @@ false
 ```
 
 In addition to upper and lower bounds, JuMP variables can also be fixed to a
-value.
+value using [`fix`](@ref). See also [`is_fixed`](@ref), [`fix_value`](@ref), and
+[`unfix`](@ref).
 ```jldoctest; setup=:(model=Model())
 julia> @variable(model, x == 1)
 x
@@ -433,19 +435,25 @@ created in JuMP by passing `Bin` as an optional positional argument:
 julia> @variable(model, x, Bin)
 x
 ```
-We can check if an optimization variable is binary by calling `is_binary` on
-the JuMP variable:
+We can check if an optimization variable is binary by calling
+[`is_binary`](@ref) on the JuMP variable, and binary constraints can be removed
+with [`unset_binary`](@ref).
 ```jldoctest variables_binary
 julia> is_binary(x)
 true
+
+julia> unset_binary(x)
+
+julia> is_binary(x)
+false
 ```
+
 Binary optimization variables can also be created by setting the `binary`
 keyword to `true`.
 ```jldoctest; setup=:(model=Model())
 julia> @variable(model, x, binary=true)
 x
 ```
-
 #### Integer constraints
 
 Integer optimization variables are constrained to the set ``x \in \mathbb{Z}``.
@@ -461,11 +469,17 @@ keyword to `true`.
 julia> @variable(model, x, integer=true)
 x
 ```
-We can check if an optimization variable is integer by calling `is_integer` on
-the JuMP variable:
+We can check if an optimization variable is integer by calling
+[`is_integer`](@ref) on the JuMP variable, and integer constraints can be
+removed with [`unset_integer`](@ref).
 ```jldoctest variables_integer
 julia> is_integer(x)
 true
+
+julia> unset_integer(x)
+
+julia> is_integer(x)
+false
 ```
 
 ## Semidefinite variables
@@ -562,8 +576,8 @@ Dict{Symbol,Array{VariableRef,2}} with 2 entries:
 ## Deleting variables
 
 JuMP supports the deletion of optimization variables.  To delete variables, we
-can use the `delete` method. We can also check whether `x` is a valid JuMP
-variable in `model` using the `is_valid` method:
+can use the [`delete`](@ref) method. We can also check whether `x` is a valid
+JuMP variable in `model` using the [`is_valid`](@ref) method:
 ```jldoctest variables_delete; setup=:(model=Model())
 julia> @variable(model, x)
 x
@@ -592,4 +606,29 @@ in the model. This is useful for performing operations like:
 owner_model
 VariableRef
 all_variables
+
+has_lower_bound
+lower_bound
+set_lower_bound
+delete_lower_bound
+
+has_upper_bound
+upper_bound
+set_upper_bound
+delete_upper_bound
+
+is_fixed
+fix_value
+fix
+unfix
+
+is_integer
+set_integer
+unset_integer
+IntegerRef
+
+is_binary
+set_binary
+unset_binary
+BinaryRef
 ```

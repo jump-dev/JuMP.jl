@@ -511,7 +511,7 @@ end
     is_fixed(v::VariableRef)
 
 Return `true` if `v` is a fixed variable. If `true`, the fixed value can be
-queried with [`fixed_value`](@ref). See also [`FixRef`](@ref).
+queried with [`fix_value`](@ref). See also [`FixRef`](@ref).
 """
 is_fixed(v::VariableRef) = haskey(owner_model(v).variable_to_fix, index(v))
 
@@ -532,7 +532,7 @@ create a new one. See also [`unfix`](@ref).
 If the variable already has variable bounds and `force=false`, calling `fix`
 will throw an error. If `force=true`, existing variable bounds will be deleted,
 and the fixing constraint will be added. Note a variable will have no bounds
-after a call to [`JuMP.unfix`](@ref).
+after a call to [`unfix`](@ref).
 """
 function fix(variable::VariableRef, value::Number; force::Bool = false)
     new_set = MOI.EqualTo(convert(Float64, value))
@@ -637,7 +637,7 @@ end
 """
     unset_integer(variable_ref::VariableRef)
 
-Remove an integrality constraint on the variable `variable_ref`.
+Remove the integrality constraint on the variable `variable_ref`.
 """
 function unset_integer(variable_ref::VariableRef)
     JuMP.delete(owner_model(variable_ref), IntegerRef(variable_ref))
