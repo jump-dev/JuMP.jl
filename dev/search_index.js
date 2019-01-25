@@ -1393,9 +1393,17 @@ var documenterSearchIndex = {"docs": [
 },
 
 {
-    "location": "style/#Use-of-underscores-1",
+    "location": "style/#Exported-and-non-exported-names-1",
     "page": "Style Guide",
-    "title": "Use of underscores",
+    "title": "Exported and non-exported names",
+    "category": "section",
+    "text": "Begin private module level functions and constants with an underscore. All other objects in the scope of a module should be exported. (See JuMP.jl for an example of how to do this.)Names beginning with an underscore should only be used for distinguishing between exported (public) and non-exported (private) objects. Therefore, never begin the name of a local variable with an underscore.module MyModule\n\nexport public_function, PUBLIC_CONSTANT\n\nfunction _private_function()\n    local_variable = 1\n    return\nend\n\nfunction public_function end\n\nconst _PRIVATE_CONSTANT = 3.14159\nconst PUBLIC_CONSTANT = 1.41421\n\nend"
+},
+
+{
+    "location": "style/#Use-of-underscores-within-names-1",
+    "page": "Style Guide",
+    "title": "Use of underscores within names",
     "category": "section",
     "text": "The Julia style guide recommends avoiding underscores \"when readable\", for example, haskey, isequal, remotecall, and remotecall_fetch. This convention creates the potential for unnecessary bikeshedding and also forces the user to recall the presence/absence of an underscore, e.g., \"was that argument named basename or base_name?\". For consistency, always use underscores in variable names and function names to separate words."
 },
