@@ -159,7 +159,7 @@ but don't treat this as a hard  rule.
 #### Line breaks
 
 The "readability" of a line is subjective. In this section we give suggestions
-of good and bad style of how to break a line. Some general rules
+of good and bad style of how to break a line.
 
 When defining functions, align arguments vertically after the opening
 parenthesis, or list all arguments on a new (indented) line.
