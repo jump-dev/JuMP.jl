@@ -660,7 +660,7 @@ end
 """
     is_binary(v::VariableRef)
 
-Return `true` if `v` is a binary variable. See also [`BinaryRef`](@ref).
+Return `true` if `v` is constrained to be binary. See also [`BinaryRef`](@ref).
 """
 function is_binary(v::VariableRef)
     return haskey(owner_model(v).variable_to_zero_one, index(v))
