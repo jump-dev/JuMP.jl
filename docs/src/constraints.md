@@ -2,7 +2,6 @@
 CurrentModule = JuMP
 DocTestSetup = quote
     using JuMP
-    const MOI = JuMP.MathOptInterface
 end
 DocTestFilters = [r"≤|<=", r"≥|>=", r" == | = ", r" ∈ | in "]
 ```
@@ -11,10 +10,10 @@ DocTestFilters = [r"≤|<=", r"≥|>=", r" == | = ", r" ∈ | in "]
 
 This page explains how to write various types of constraints in JuMP. Before
 reading further, please make sure you are familiar with JuMP models, and JuMP
-[Variables](@ref). If you want to add nonlinear constraints, read
-[Nonlinear Modeling](@ref) instead.
+[Variables](@ref). For nonlinear constraints, see [Nonlinear Modeling](@ref)
+instead.
 
-JuMP is based on the MathOptInterface API. Because of this, JuMP thinks of a
+JuMP is based on the MathOptInterface (MOI) API. Because of this, JuMP thinks of a
 constraint as the restriction that the output of a *function* belongs to a
 *set*. For example, instead of representing a constraint ``a^\top x \le b`` as a
 *less-than-or-equal-to* constraint, JuMP models this as the *scalar affine*
@@ -24,23 +23,20 @@ be a *scalar affine -in- less than* constraint. More generally, we use the
 shorthand *function-in-set* to refer to constraints composed of different types
 of functions and sets. In the rest of this page, we will introduce the different
 types of functions and sets that JuMP knows about as needed. You can read more
-details about this *function-in-set* concept in the MathOptInterface
-documentation.
+details about this *function-in-set* concept in the MOI documentation.
 
 !!! note
-    Throughout this page (and these docs), we use `MOI` as a shorthand for the
-    `MathOptInterface` module. This can be created by including the following
-    lines after `using JuMP` in your code.
+    The examples use `MOI` as an alias for the `MathOptInterface` module. This
+    alias is defined by `using JuMP`. You may also define it in your code by
     ```julia
-    using MathOptInterface
+    import MathOptInterface
     const MOI = MathOptInterface
     ```
 
 ## The `@constraint` macro
 
-Constraints are added to a JuMP model using the [`@constraint`](@ref) macro. It
-is similar to the [`@variable`](@ref) macro. Here is an example of how to add
-the constraint ``2x \le 1`` to a JuMP model:
+Constraints are added to a JuMP model using the [`@constraint`](@ref) macro.
+Here is an example of how to add the constraint ``2x \le 1`` to a JuMP model:
 ```jldoctest con1; setup = :(model = Model(); @variable(model, x))
 julia> @constraint(model, con, 2x <= 1)
 con : 2 x <= 1.0
@@ -52,8 +48,8 @@ Wasn't that easy! Let's unpack what happened, because just like
     constraint.
  3. This Julia variable was stored in `model` and can be accessed by
     `model[:con]`.
- 4. JuMP set the name (the one that is shown when printing) of the constraint to
-    `"con"`.
+ 4. JuMP set the name attribute (the one that is shown when printing) of the
+    constraint to `"con"`.
 
 Just like the Julia variables created in [`@variable`](@ref), `con` can be bound
 to a different value. For example:
@@ -100,9 +96,9 @@ julia> @constraint(model, 1 <= 2x <= 3)
 2 x ∈ [1.0, 3.0]
 ```
 
-Note that JuMP normalizes the constraints given by the user by moving all of the
-terms containing variables to the left-hand side, and all of the constant terms
-to the right-hand side. Thus, we get:
+Note that JuMP normalizes the constraints by moving all of the terms containing
+variables to the left-hand side, and all of the constant terms to the right-hand
+side. Thus, we get:
 ```jldoctest; setup=:(model=Model(); @variable(model, x))
 julia> @constraint(model, 2x + 1 <= 4x + 4)
 -2 x <= 3.0
@@ -110,7 +106,7 @@ julia> @constraint(model, 2x + 1 <= 4x + 4)
 
 ## [Duality](@id constraint_duality)
 
-JuMP adopts the notion of [conic duality from MathOptInterface](http://www.juliaopt.org/MathOptInterface.jl/v0.6.2/apimanual.html#Duals-1).
+JuMP adopts the notion of [conic duality from MOI](http://www.juliaopt.org/MathOptInterface.jl/v0.8.1/apimanual.html#Duals-1).
 For linear programs, a feasible dual on a `>=` constraint is nonnegative and a
 feasible dual on a `<=` constraint is nonpositive. If the constraint is an
 equality constraint, it depends on which direction is binding.
@@ -119,13 +115,13 @@ equality constraint, it depends on which direction is binding.
     JuMP's definition of duality is independent of the objective sense. That is,
     the sign of feasible duals associated with a constraint depends on the
     direction of the constraint and not whether the problem is maximization or
-    minimization. **This is different to linear programming duality in some
-    common textbooks.**
+    minimization. **This is a different convention from linear programming
+    duality in some common textbooks.**
 
 The dual value associated with a constraint in the most recent solution can be
-accessed using the [`JuMP.dual`](@ref) function. You can use the
-[`JuMP.has_duals`](@ref) function to check whether the model has a dual solution
-available to query. For example:
+accessed using the [`dual`](@ref) function. You can use the [`has_duals`](@ref)
+function to check whether the model has a dual solution available to query.
+For example:
 
 ```jldoctest
 julia> model = Model();
@@ -181,46 +177,45 @@ julia> dual(con)
 ```
 
 To help users who may be less familiar with conic duality, JuMP provides the
-[`JuMP.shadow_price`](@ref) function which returns a value that can be
+[`shadow_price`](@ref) function which returns a value that can be
 interpreted as the improvement in the objective in response to an infinitesimal
 relaxation (on the scale of one unit) in the right-hand side of the constraint.
-[`JuMP.shadow_price`](@ref) can only be used on linear constraints with a `<=`,
+[`shadow_price`](@ref) can be used only on linear constraints with a `<=`,
 `>=`, or `==` comparison operator.
 
-In the example above, `JuMP.dual(con)` returned `-2.0` regardless of the
+In the example above, `dual(con)` returned `-2.0` regardless of the
 optimization sense. However, in the second case when the optimization sense is
-`Max`, [`JuMP.shadow_price`](@ref) returns:
+`Max`, [`shadow_price`](@ref) returns:
 ```jldoctest con_duality
 julia> shadow_price(con)
 2.0
 ```
 
 To query the dual variables associated a variable bound, first obtain a
-constraint reference using one of [`JuMP.UpperBoundRef`](@ref),
-[`JuMP.LowerBoundRef`](@ref), or [`JuMP.FixRef`](@ref), and then call
-[`JuMP.dual`](@ref) on the returned constraint reference. Note that in linear
-programming, the duals on variable bounds are also called the reduced costs
+constraint reference using one of [`UpperBoundRef`](@ref),
+[`LowerBoundRef`](@ref), or [`FixRef`](@ref), and then call [`dual`](@ref) on
+the returned constraint reference. Note that in linear programming,
+the duals on variable bounds are also called the reduced costs
 (although the sign might differ from the one you expect).
 
 ```@meta
 DocTestSetup = quote
     using JuMP
-    const MOI = JuMP.MathOptInterface
 end
 ```
 
 ## Constraint names
 
 The name, i.e. the value of the `MOI.ConstraintName` attribute, of a constraint
-can be obtained by [`JuMP.name(::JuMP.ConstraintRef)`](@ref) and set by
-[`JuMP.set_name(::JuMP.ConstraintRef, ::String)`](@ref).
+can be obtained by [`name(::JuMP.ConstraintRef)`](@ref) and set by
+[`set_name(::JuMP.ConstraintRef, ::String)`](@ref).
 ```@docs
 name(::JuMP.ConstraintRef{Model, <:JuMP.MOI.ConstraintIndex})
 set_name(::JuMP.ConstraintRef{Model, <:JuMP.MOI.ConstraintIndex}, ::String)
 ```
 
 The constraint can also be retrieved from its name using
-[`JuMP.constraint_by_name`](@ref).
+[`constraint_by_name`](@ref).
 ```@docs
 constraint_by_name
 ```
@@ -245,8 +240,8 @@ julia> @constraint(model, con[i = 1:3], i * x <= i + 1)
  con[3] : 3 x <= 4.0
 ```
 JuMP returns references to the three constraints in an `Array` that is bound to
-the Julia variable `con`. This array can be accessed and sliced just like a
-normal Julia array:
+the Julia variable `con`. This array can be accessed and sliced as you would
+with any Julia array:
 ```jldoctest constraint_arrays
 julia> con[1]
 con[1] : x <= 2.0
@@ -275,8 +270,9 @@ determine that the indices are one-based integer ranges (e.g., in the case of
 
 ### DenseAxisArrays
 
-The syntax for constructing a `DenseAxisArray` of constraints is very similar to
-the [syntax for constructing](@ref variable_jump_arrays) a DenseAxisArray of
+The syntax for constructing a [`DenseAxisArray`](@ref Containers.DenseAxisArray)
+of constraints is very similar to the
+[syntax for constructing](@ref variable_jump_arrays) a `DenseAxisArray` of
 variables.
 
 ```jldoctest constraint_jumparrays; setup=:(model=Model(); @variable(model, x))
@@ -289,11 +285,12 @@ And data, a 2×2 Array{ConstraintRef{Model,C,Shape} where Shape<:AbstractShape w
  con[2,2] : 2 x <= 3.0  con[2,3] : 2 x <= 4.0
 ```
 
-### Dictionaries
+### SparseAxisArrays
 
-The syntax for constructing a dictionary of constraints is very similar to the
-[syntax for constructing](@ref variable_sparseaxisarrays) a dictionary of
-variables.
+The syntax for constructing a
+[`SparseAxisArray`](@ref Containers.SparseAxisArray) of constraints is very
+similar to the [syntax for constructing](@ref variable_sparseaxisarrays) a
+`SparseAxisArray` of variables.
 
 ```jldoctest constraint_jumparrays; setup=:(model=Model(); @variable(model, x))
 julia> @constraint(model, con[i = 1:2, j = 1:2; i != j], i * x <= j + 1)
@@ -351,14 +348,15 @@ julia> @constraint(model, A * x - b in MOI.Nonnegatives(2))
 [x[1] + 2 x[2] - 5, 3 x[1] + 4 x[2] - 6] in MathOptInterface.Nonnegatives(2)
 ```
 
-In addition to the `Nonnegatives` set, MathOptInterface defines a number of
-other vector-valued sets such as `Nonpositives`. See the [MathOptInterface
-documentation](http://www.juliaopt.org/MathOptInterface.jl/v0.6.2/apireference/#Sets-1)
+In addition to the `Nonnegatives` set, MOI defines a number of
+other vector-valued sets such as `Nonpositives`. See the
+[MOI documentation](http://www.juliaopt.org/MathOptInterface.jl/v0.8.1/apireference/#Sets-1)
 for more information.
 
 Note also that for the first time we have used an explicit *function-in-set*
-description of the constraint. Read more about this below in the [Function-Set
-pairs](@ref) section of this documentation.
+description of the constraint. Read more about this representation for
+constraints in the
+[MOI documentation](http://www.juliaopt.org/MathOptInterface.jl/v0.8.1/apimanual/#Constraints-by-function-set-pairs-1).
 
 ## Constraints on a single variable
 
@@ -387,43 +385,6 @@ using the `MOI.Semiinteger` set:
 ```jldoctest; setup = :(model = Model(); @variable(model, x))
 julia> @constraint(model, x in MOI.Semiinteger(1.0, 3.0))
 x in MathOptInterface.Semiinteger{Float64}(1.0, 3.0)
-```
-
-## Constraints on a collection of variables
-
-In addition to constraining the domain of a single variable, JuMP supports
-placing constraints of a subset of the variables. We already saw an example of
-this in the [Quadratic constraints](@ref) section when we constrained a vector
-of variables to belong to the second order cone.
-
-In a special ordered set of type I (often denoted SOS-I), at most one variable
-can take a non-zero value. We can construct SOS-I constraints using the
-`MOI.SOS1` set:
-```jldoctest con_sos; setup=:(model = Model())
-julia> @variable(model, x[1:3])
-3-element Array{VariableRef,1}:
- x[1]
- x[2]
- x[3]
-
-julia> @constraint(model, x in MOI.SOS1([1.0, 2.0, 3.0]))
-[x[1], x[2], x[3]] in MathOptInterface.SOS1{Float64}([1.0, 2.0, 3.0])
-```
-Note that we have to pass `MOI.SOS1` a *weight* vector. This vector implies an
-ordering on the variables. If the decision variables are related and have a
-physical ordering (e.g., they correspond to the size of a factory to be built,
-and the SOS-I constraint enforces that only one factory can be built), then the
-weight vector, although not used directly in the constraint, can help the solver
-make better decision in the solution process.
-
-This ordering is more important in a special ordered set of type II (SOS-II), in
-which at most two values can be non-zero, and if there are two non-zeros, they
-must be consecutive according to the ordering. For example, in the following
-constraint, the possible non-zero pairs are (`x[1]` and `x[3]`) and (`x[2]` and
-`x[3]`):
-```jldoctest con_sos
-julia> @constraint(model, x in MOI.SOS2([3.0, 1.0, 2.0]))
-[x[1], x[2], x[3]] in MathOptInterface.SOS2{Float64}([3.0, 1.0, 2.0])
 ```
 
 ## Quadratic constraints
@@ -458,7 +419,7 @@ julia> [t, x[1], x[2]]
  x[2]
 ```
 Note that the variable `t` comes first, followed by the `x` arguments. The set
-is an instance of [`JuMP.SecondOrderCone`](@ref): `SecondOrderCone()`.
+is an instance of [`SecondOrderCone`](@ref): `SecondOrderCone()`.
 Thus, we can add the second order cone constraint as follows:
 ```jldoctest con_quadratic
 julia> @constraint(model, [t, x[1], x[2]] in SecondOrderCone())
@@ -478,14 +439,51 @@ julia> @constraint(model, [t, u, x[1], x[2]] in RotatedSecondOrderCone())
 ```
 
 In addition to the second order cone and rotated second order cone,
-MathOptInterface defines a number of other conic sets such as the exponential
-and power cones. See the [MathOptInterface documentation](http://www.juliaopt.org/MathOptInterface.jl/v0.6.2/apireference/#Sets-1)
+MOI defines a number of other conic sets such as the exponential
+and power cones. See the [MathOptInterface documentation](http://www.juliaopt.org/MathOptInterface.jl/v0.8.1/apireference/#Sets-1)
 for more information.
+
+## Constraints on a collection of variables
+
+In addition to constraining the domain of a single variable, JuMP supports
+placing constraints of a subset of the variables. We already saw an example of
+this in the [Quadratic constraints](@ref) section when we constrained a vector
+of variables to belong to the second order cone.
+
+In a special ordered set of type I (often denoted SOS-I), at most one variable
+can take a non-zero value. We can construct SOS-I constraints using the
+`MOI.SOS1` set:
+```jldoctest con_sos; setup=:(model = Model())
+julia> @variable(model, x[1:3])
+3-element Array{VariableRef,1}:
+ x[1]
+ x[2]
+ x[3]
+
+julia> @constraint(model, x in MOI.SOS1([1.0, 2.0, 3.0]))
+[x[1], x[2], x[3]] in MathOptInterface.SOS1{Float64}([1.0, 2.0, 3.0])
+```
+Note that we have to pass `MOI.SOS1` a *weight* vector. This vector implies an
+ordering on the variables. If the decision variables are related and have a
+physical ordering (e.g., they correspond to the size of a factory to be built,
+and the SOS-I constraint enforces that only one factory can be built), then the
+weight vector, although not used directly in the constraint, can help the solver
+make a better decision in the solution process.
+
+This ordering is more important in a special ordered set of type II (SOS-II), in
+which at most two values can be non-zero, and if there are two non-zeros, they
+must be consecutive according to the ordering. For example, in the following
+constraint, the possible non-zero pairs are (`x[1]` and `x[3]`) and (`x[2]` and
+`x[3]`):
+```jldoctest con_sos
+julia> @constraint(model, x in MOI.SOS2([3.0, 1.0, 2.0]))
+[x[1], x[2], x[3]] in MathOptInterface.SOS2{Float64}([3.0, 1.0, 2.0])
+```
 
 ## Semidefinite constraints
 
 JuMP provides a special syntax for constraining a matrix to be symmetric
-positive semidefinite with the [`@SDconstraint`](@ref) macro.
+positive semidefinite (PSD) with the [`@SDconstraint`](@ref) macro.
 In the context of this macro, the inequality `A >= B` between two square
 matrices `A` and `B` is understood as constraining `A - B` to be symmetric
 positive semidefinite.
@@ -514,7 +512,8 @@ semidefinite.
     it is ignored but a warning is displayed, otherwise if at least one
     coefficient is larger than `1e-8`, the constraint is added.
 
-If the matrix is known to be symmetric, it can be added as follows:
+If the matrix is known to be symmetric, the PSD constraint can be added as
+follows:
 ```jldoctest con_psd
 julia> using LinearAlgebra
 
@@ -543,7 +542,7 @@ For example, what is the right-hand side term of
 constant term in a function appearing in the objective or a constraint.
 
 To avoid these ambiguities, JuMP includes the ability to *fix* variables to a
-value using the [`JuMP.fix`](@ref) function. Fixing a variable sets its lower
+value using the [`fix`](@ref) function. Fixing a variable sets its lower
 and upper bound to the same value. Thus, changes in a constant term can be
 simulated by adding a dummy variable and fixing it to different values. Here is
 an example:
@@ -559,12 +558,13 @@ julia> fix(const_term, 1.0)
 ```
 !!! note
     Even though `const_term` is fixed, it is still a decision variable. Thus,
-    `const_term * x` is bilinear.
+    `const_term * x` is bilinear. Fixed variables are not replaced with
+    constants when communicating the problem to a solver.
 
 ### Modifying a variable coefficient
 
-It is also possible to modify the scalar coefficients (but notably *not* the
-quadratic coefficients) using the [`JuMP.set_coefficient`](@ref) function. Here
+It is also possible to modify the scalar coefficients (but notably *not yet* the
+quadratic coefficients) using the [`set_coefficient`](@ref) function. Here
 is an example:
 ```jldoctest; setup = :(model = Model(); @variable(model, x))
 julia> @constraint(model, con, 2x <= 1)
@@ -578,9 +578,9 @@ con : 3 x <= 1.0
 
 ## Constraint deletion
 
-Constraints can be deleted from a model using [`JuMP.delete`](@ref). Just like
+Constraints can be deleted from a model using [`delete`](@ref). Just like
 variable references, it is possible to check if a constraint reference is valid
-using [`JuMP.is_valid`](@ref). Here is an example of deleting a constraint:
+using [`is_valid`](@ref). Here is an example of deleting a constraint:
 ```jldoctest; setup = :(model=Model(); @variable(model, x))
 julia> @constraint(model, con, 2x <= 1)
 con : 2 x <= 1.0
@@ -594,16 +594,10 @@ julia> is_valid(model, con)
 false
 ```
 
-## Function-Set pairs
+## Accessing constraints from a model
 
-DRAFT: Describe how constraints are represented (link to MOI docs). Constraints
-are very similar to variables in (1) how names work (2) how attributes work, and
-(3) the macro syntax for constructing them. They're a bit different because
-they're parameterized by function-set type. Describe constraints vs.
-`ConstraintRefs`. Describe `JuMP.constraint_object`. How to delete constraints.
-How to modify constraints by setting attributes and `MOI.modifyconstraint!`.
-Describe semidefinite constraints and symmetry handling. Refer to NLP docs for
-nonlinear constraints.
+TODO: Describe constraints vs. `ConstraintRef`s. Describe `JuMP.constraint_object`.
+Describe how to access all constraints in a model.
 
 
 ## Reference
