@@ -6,16 +6,6 @@
 ```@meta
 # These comments do not display in the HTML output.
 # See https://github.com/JuliaDocs/Documenter.jl/issues/674.
-
-# Style conventions for the JuMP documentation:
-# - Respect the 80-character line limit whenever possible.
-# - Be concise.
-# - Use lists instead of long sentences.
-#   - Use numbered lists when describing a sequence, e.g., (1) do X, (2) then Y.
-#   - Use bullet points when the items are not ordered.
-# - Example code should be covered by doctests.
-#   - But it's unclear what to do if the code depends on a solver, see
-#     https://github.com/JuliaOpt/JuMP.jl/issues/1175.
 ```
 
 !!! warning

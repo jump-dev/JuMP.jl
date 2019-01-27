@@ -1,8 +1,6 @@
-Style guide and design principles
-=================================
+# Style guide and design principles
 
-Style guide
------------
+## Style guide
 
 This section describes the coding style rules that apply to JuMP code and that
 we recommend for JuMP models and surrounding Julia code. The motivations for
@@ -218,8 +216,8 @@ Bad:
 @variable model x >= 0
 ```
 
-For consistency, always use `constant * variable` as opposed to 
-`variable * constant`. This makes it easier to read models in 
+For consistency, always use `constant * variable` as opposed to
+`variable * constant`. This makes it easier to read models in
 ambiguous cases like `a * x`.
 
 Good:
@@ -426,8 +424,30 @@ Prefer `using ModuleName: x, p` to `import ModuleName.x, ModuleName.p` and
 `import MyModule: x, p` because the `import` versions allow method extension
 without qualifying with the module name.
 
-Design principles
------------------
+## Documentation
+
+This section describes the writing style that should be used when writing
+documentation for JuMP (and supporting packages).
+
+We recommend the [https://developers.google.com/style/](Google documentation
+style guide) as general reading for those writing documentation. This guide
+reproduces some of the main points, and elaborates on the more Julia-specific
+points.
+
+ - Be concise.
+ - Use lists instead of long sentences.
+ - Use numbered lists when describing a sequence, e.g., (1) do X, (2) then Y.
+ - Use bullet points when the items are not ordered.
+ - Example code should be covered by doctests. (But it's unclear what to do if
+   the code depends on a solver. [issue](https://github.com/JuliaOpt/JuMP.jl/issues/1175))
+ - When a word is a Julia symbol and not an English word, enclose it with
+   backticks and add a `@ref` if it has a docstring in this doc. If it is a
+   plural, add the "s" after the closing backtick. For example,
+   ```
+   [`VariableRef`](@ref)s
+   ```
+
+## Design principles
 
 TODO: How to structure and test large JuMP models, libraries that use JuMP.
 
