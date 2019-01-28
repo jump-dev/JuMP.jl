@@ -367,7 +367,7 @@ function parseGenerator(x::Expr, aff::Symbol, lcoeffs, rcoeffs, newaff=gensym())
     @assert length(x.args) > 1
     @assert isexpr(x.args[2],:generator) || isexpr(x.args[2],:flatten)
     header = x.args[1]
-    if issum(header)
+    if _is_sum(header)
         parseGeneratorSum(x.args[2], aff, lcoeffs, rcoeffs, newaff)
     else
         error("Expected sum outside generator expression; got $header")
@@ -500,7 +500,7 @@ function parseExpr(x, aff::Symbol, lcoeffs::Vector, rcoeffs::Vector, newaff::Sym
         elseif isexpr(x,:call) && length(x.args) >= 2 && (isexpr(x.args[2],:generator) || isexpr(x.args[2],:flatten))
             return newaff, parseGenerator(x,aff,lcoeffs,rcoeffs,newaff)
         elseif x.head == :curly
-            error_curly(x)
+            _error_curly(x)
         else # at lowest level?
             if is_comparison(x)
                 error("Unexpected comparison in expression $x.")

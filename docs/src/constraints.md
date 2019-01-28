@@ -624,5 +624,5 @@ ConstraintRef
 For advanced use cases.
 
 ```@docs
-JuMP.@build_constraint
+JuMP.@_build_constraint
 ```

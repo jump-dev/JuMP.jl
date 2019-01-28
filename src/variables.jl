@@ -49,7 +49,7 @@ end
 # :(start = 0)     -> (:start, 0)
 # :(start = i + 1) -> (:start, :($(Expr(:escape, :(i + 1)))))
 function keywordify(kw::Expr)
-    (kw.args[1], esc_nonconstant(kw.args[2]))
+    (kw.args[1], _esc_non_constant(kw.args[2]))
 end
 function VariableInfoExpr(; lower_bound=NaN, upper_bound=NaN, start=NaN, binary=false, integer=false)
     # isnan(::Expr) is not defined so we need to do !== NaN

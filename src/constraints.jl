@@ -300,7 +300,7 @@ constraint will not be bridge unless he manually calls `add_bridge(model,
 CustomBridge)`. In order to automatically add the `CustomBridge` to any model to
 which an `F`-in-`CustomSet` is added, simply add the following method:
 ```julia
-function JuMP.build_constraint(_error::Function, func::AbstractJuMPScalar,
+function JuMP._build_constraint(_error::Function, func::AbstractJuMPScalar,
                                set::CustomSet)
     constraint = ScalarConstraint(func, set)
     return JuMP.BridgeableConstraint(constraint, CustomBridge)
@@ -308,12 +308,12 @@ end
 
 ### Note
 
-JuMP extensions should extend `JuMP.build_constraint` only if they also defined
+JuMP extensions should extend `JuMP._build_constraint` only if they also defined
 `CustomSet`, for three
 reasons:
 1. It is problematic if multiple extensions overload the same JuMP method.
 2. A missing method will not inform the users that they forgot to load the
-   extension module defining the `build_constraint` method.
+   extension module defining the `_build_constraint` method.
 3. Defining a method where neither the function nor any of the argument types
    are defined in the package is called [*type piracy*](https://docs.julialang.org/en/v1/manual/style-guide/index.html#Avoid-type-piracy-1)
    and is discouraged in the Julia style guide.

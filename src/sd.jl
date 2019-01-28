@@ -83,7 +83,7 @@ function reshape(vectorized_form::Vector{T}, shape::SquareMatrixShape) where T
 end
 
 """
-    function build_constraint(_error::Function, Q::Symmetric{V, M},
+    function _build_constraint(_error::Function, Q::Symmetric{V, M},
                               ::PSDCone) where {V <: AbstractJuMPScalar,
                                                 M <: AbstractMatrix{V}}
 
@@ -106,7 +106,7 @@ var_psd = @constraint model Q in PSDCone()
 # The `var_psd` variable contains a reference to the constraint
 ```
 """
-function build_constraint(_error::Function, Q::Symmetric{V, M},
+function _build_constraint(_error::Function, Q::Symmetric{V, M},
                           ::PSDCone) where {V <: AbstractJuMPScalar,
                                             M <: AbstractMatrix{V}}
     n = LinearAlgebra.checksquare(Q)
@@ -116,7 +116,7 @@ function build_constraint(_error::Function, Q::Symmetric{V, M},
 end
 
 """
-    function build_constraint(_error::Function,
+    function _build_constraint(_error::Function,
                               Q::AbstractMatrix{<:AbstractJuMPScalar},
                               ::PSDCone)
 
@@ -139,7 +139,7 @@ var_psd = @constraint model Q in PSDCone()
 # The `var_psd` variable contains a reference to the constraint
 ```
 """
-function build_constraint(_error::Function,
+function _build_constraint(_error::Function,
                           Q::AbstractMatrix{<:AbstractJuMPScalar},
                           ::PSDCone)
     n = LinearAlgebra.checksquare(Q)
