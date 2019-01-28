@@ -173,7 +173,7 @@ var documenterSearchIndex = {"docs": [
     "page": "Variables",
     "title": "Variable bounds",
     "category": "section",
-    "text": "We have already seen the basic usage of the @variable macro. The next extension is to add lower- and upper-bounds to each optimization variable. This can be done as follows:julia> @variable(model, x_free)\nx_free\n\njulia> @variable(model, x_lower >= 0)\nx_lower\n\njulia> @variable(model, x_upper <= 1)\nx_upper\n\njulia> @variable(model, 2 <= x_interval <= 3)\nx_interval\n\njulia> @variable(model, x_fixed == 4)\nx_fixedIn the above examples, x_free represents an unbounded optimization variable, x_lower represents an optimization variable with a lower bound and so forth.note: Note\nWhen creating a variable with only a lower-bound or an upper-bound, and the value of the bound is not a numeric literal, the name must appear on the left-hand side. Putting the name on the right-hand side will result in an error. For example:@variable(model, 1 <= x)  # works\na = 1\n@variable(model, a <= x)  # errorsWe can query whether an optimization variable has a lower- or upper-bound via the has_lower_bound and has_upper_bound functions. For example:julia> has_lower_bound(x_free)\nfalse\n\njulia> has_upper_bound(x_upper)\ntrueIf a variable has a lower or upper bound, we can query the value of it via the lower_bound and upper_bound functions. For example:julia> lower_bound(x_interval)\n2.0\n\njulia> upper_bound(x_interval)\n3.0Querying the value of a bound that does not exist will result in an error.Instead of using the <= and >= syntax, we can also use the lower_bound and upper_bound keyword arguments. For example:julia> @variable(model, x, lower_bound=1, upper_bound=2)\nx\n\njulia> lower_bound(x)\n1.0Another option is to use the set_lower_bound and set_upper_bound functions. These can also be used to modify an existing variable bound. For example:julia> @variable(model, x >= 1)\nx\n\njulia> lower_bound(x)\n1.0\n\njulia> set_lower_bound(x, 2)\n\njulia> lower_bound(x)\n2.0We can delete variable bounds using delete_lower_bound and delete_upper_bound:julia> @variable(model, 1 <= x <= 2)\nx\n\njulia> lower_bound(x)\n1.0\n\njulia> delete_lower_bound(x)\n\njulia> has_lower_bound(x)\nfalse\n\njulia> upper_bound(x)\n2.0\n\njulia> delete_upper_bound(x)\n\njulia> has_upper_bound(x)\nfalseIn addition to upper and lower bounds, JuMP variables can also be fixed to a value.julia> @variable(model, x == 1)\nx\n\njulia> is_fixed(x)\ntrue\n\njulia> fix_value(x)\n1.0\n\njulia> unfix(x)\n\njulia> is_fixed(x)\nfalseFixing a variable with existing bounds will throw an error. To delete the bounds prior to fixing, use fix(variable, value; force = true).julia> @variable(model, x >= 1)\nx\n\njulia> fix(x, 2)\nERROR: Unable to fix x to 2 because it has existing variable bounds. Consider calling `JuMP.fix(variable, value; force=true)` which will delete existing bounds before fixing the variable.\n\njulia> fix(x, 2; force = true)\n\n\njulia> fix_value(x)\n2.0"
+    "text": "We have already seen the basic usage of the @variable macro. The next extension is to add lower- and upper-bounds to each optimization variable. This can be done as follows:julia> @variable(model, x_free)\nx_free\n\njulia> @variable(model, x_lower >= 0)\nx_lower\n\njulia> @variable(model, x_upper <= 1)\nx_upper\n\njulia> @variable(model, 2 <= x_interval <= 3)\nx_interval\n\njulia> @variable(model, x_fixed == 4)\nx_fixedIn the above examples, x_free represents an unbounded optimization variable, x_lower represents an optimization variable with a lower bound and so forth.note: Note\nWhen creating a variable with only a lower-bound or an upper-bound, and the value of the bound is not a numeric literal, the name must appear on the left-hand side. Putting the name on the right-hand side will result in an error. For example:@variable(model, 1 <= x)  # works\na = 1\n@variable(model, a <= x)  # errorsWe can query whether an optimization variable has a lower- or upper-bound via the has_lower_bound and has_upper_bound functions. For example:julia> has_lower_bound(x_free)\nfalse\n\njulia> has_upper_bound(x_upper)\ntrueIf a variable has a lower or upper bound, we can query the value of it via the lower_bound and upper_bound functions. For example:julia> lower_bound(x_interval)\n2.0\n\njulia> upper_bound(x_interval)\n3.0Querying the value of a bound that does not exist will result in an error.Instead of using the <= and >= syntax, we can also use the lower_bound and upper_bound keyword arguments. For example:julia> @variable(model, x, lower_bound=1, upper_bound=2)\nx\n\njulia> lower_bound(x)\n1.0Another option is to use the set_lower_bound and set_upper_bound functions. These can also be used to modify an existing variable bound. For example:julia> @variable(model, x >= 1)\nx\n\njulia> lower_bound(x)\n1.0\n\njulia> set_lower_bound(x, 2)\n\njulia> lower_bound(x)\n2.0We can delete variable bounds using delete_lower_bound and delete_upper_bound:julia> @variable(model, 1 <= x <= 2)\nx\n\njulia> lower_bound(x)\n1.0\n\njulia> delete_lower_bound(x)\n\njulia> has_lower_bound(x)\nfalse\n\njulia> upper_bound(x)\n2.0\n\njulia> delete_upper_bound(x)\n\njulia> has_upper_bound(x)\nfalseIn addition to upper and lower bounds, JuMP variables can also be fixed to a value using fix. See also is_fixed, fix_value, and unfix.julia> @variable(model, x == 1)\nx\n\njulia> is_fixed(x)\ntrue\n\njulia> fix_value(x)\n1.0\n\njulia> unfix(x)\n\njulia> is_fixed(x)\nfalseFixing a variable with existing bounds will throw an error. To delete the bounds prior to fixing, use fix(variable, value; force = true).julia> @variable(model, x >= 1)\nx\n\njulia> fix(x, 2)\nERROR: Unable to fix x to 2 because it has existing variable bounds. Consider calling `JuMP.fix(variable, value; force=true)` which will delete existing bounds before fixing the variable.\n\njulia> fix(x, 2; force = true)\n\n\njulia> fix_value(x)\n2.0"
 },
 
 {
@@ -261,7 +261,7 @@ var documenterSearchIndex = {"docs": [
     "page": "Variables",
     "title": "Binary (ZeroOne) constraints",
     "category": "section",
-    "text": "Binary optimization variables are constrained to the set x in 0 1. (The MOI.ZeroOne set in MathOptInterface.) Binary optimization variables can be created in JuMP by passing Bin as an optional positional argument:julia> @variable(model, x, Bin)\nxWe can check if an optimization variable is binary by calling is_binary on the JuMP variable:julia> is_binary(x)\ntrueBinary optimization variables can also be created by setting the binary keyword to true.julia> @variable(model, x, binary=true)\nx"
+    "text": "Binary optimization variables are constrained to the set x in 0 1. (The MOI.ZeroOne set in MathOptInterface.) Binary optimization variables can be created in JuMP by passing Bin as an optional positional argument:julia> @variable(model, x, Bin)\nxWe can check if an optimization variable is binary by calling is_binary on the JuMP variable, and binary constraints can be removed with unset_binary.julia> is_binary(x)\ntrue\n\njulia> unset_binary(x)\n\njulia> is_binary(x)\nfalseBinary optimization variables can also be created by setting the binary keyword to true.julia> @variable(model, x, binary=true)\nx"
 },
 
 {
@@ -269,7 +269,7 @@ var documenterSearchIndex = {"docs": [
     "page": "Variables",
     "title": "Integer constraints",
     "category": "section",
-    "text": "Integer optimization variables are constrained to the set x in mathbbZ. (The MOI.Integer set in MathOptInterface.) Integer optimization variables can be created in JuMP by passing Int as an optional positional argument:julia> @variable(model, x, Int)\nxInteger optimization variables can also be created by setting the integer keyword to true.julia> @variable(model, x, integer=true)\nxWe can check if an optimization variable is integer by calling is_integer on the JuMP variable:julia> is_integer(x)\ntrue"
+    "text": "Integer optimization variables are constrained to the set x in mathbbZ. (The MOI.Integer set in MathOptInterface.) Integer optimization variables can be created in JuMP by passing Int as an optional positional argument:julia> @variable(model, x, Int)\nxInteger optimization variables can also be created by setting the integer keyword to true.julia> @variable(model, x, integer=true)\nxWe can check if an optimization variable is integer by calling is_integer on the JuMP variable, and integer constraints can be removed with unset_integer.julia> is_integer(x)\ntrue\n\njulia> unset_integer(x)\n\njulia> is_integer(x)\nfalse"
 },
 
 {
@@ -345,11 +345,171 @@ var documenterSearchIndex = {"docs": [
 },
 
 {
+    "location": "variables/#JuMP.has_lower_bound",
+    "page": "Variables",
+    "title": "JuMP.has_lower_bound",
+    "category": "function",
+    "text": "has_lower_bound(v::VariableRef)\n\nReturn true if v has a lower bound. If true, the lower bound can be queried with lower_bound. See also LowerBoundRef.\n\n\n\n\n\n"
+},
+
+{
+    "location": "variables/#JuMP.lower_bound",
+    "page": "Variables",
+    "title": "JuMP.lower_bound",
+    "category": "function",
+    "text": "lower_bound(v::VariableRef)\n\nReturn the lower bound of a variable. Error if one does not exist. See also has_lower_bound.\n\n\n\n\n\n"
+},
+
+{
+    "location": "variables/#JuMP.set_lower_bound",
+    "page": "Variables",
+    "title": "JuMP.set_lower_bound",
+    "category": "function",
+    "text": "set_lower_bound(v::VariableRef, lower::Number)\n\nSet the lower bound of a variable. If one does not exist, create a new lower bound constraint. See also delete_lower_bound.\n\n\n\n\n\n"
+},
+
+{
+    "location": "variables/#JuMP.delete_lower_bound",
+    "page": "Variables",
+    "title": "JuMP.delete_lower_bound",
+    "category": "function",
+    "text": "delete_lower_bound(v::VariableRef)\n\nDelete the lower bound constraint of a variable.\n\n\n\n\n\n"
+},
+
+{
+    "location": "variables/#JuMP.has_upper_bound",
+    "page": "Variables",
+    "title": "JuMP.has_upper_bound",
+    "category": "function",
+    "text": "has_upper_bound(v::VariableRef)\n\nReturn true if v has a upper bound. If true, the upper bound can be queried with upper_bound. See also UpperBoundRef.\n\n\n\n\n\n"
+},
+
+{
+    "location": "variables/#JuMP.upper_bound",
+    "page": "Variables",
+    "title": "JuMP.upper_bound",
+    "category": "function",
+    "text": "upper_bound(v::VariableRef)\n\nReturn the upper bound of a variable. Error if one does not exist. See also has_upper_bound.\n\n\n\n\n\n"
+},
+
+{
+    "location": "variables/#JuMP.set_upper_bound",
+    "page": "Variables",
+    "title": "JuMP.set_upper_bound",
+    "category": "function",
+    "text": "set_upper_bound(v::VariableRef,upper::Number)\n\nSet the upper bound of a variable. If one does not exist, create an upper bound constraint. See also delete_upper_bound.\n\n\n\n\n\n"
+},
+
+{
+    "location": "variables/#JuMP.delete_upper_bound",
+    "page": "Variables",
+    "title": "JuMP.delete_upper_bound",
+    "category": "function",
+    "text": "delete_upper_bound(v::VariableRef)\n\nDelete the upper bound constraint of a variable.\n\n\n\n\n\n"
+},
+
+{
+    "location": "variables/#JuMP.is_fixed",
+    "page": "Variables",
+    "title": "JuMP.is_fixed",
+    "category": "function",
+    "text": "is_fixed(v::VariableRef)\n\nReturn true if v is a fixed variable. If true, the fixed value can be queried with fix_value. See also FixRef.\n\n\n\n\n\n"
+},
+
+{
+    "location": "variables/#JuMP.fix_value",
+    "page": "Variables",
+    "title": "JuMP.fix_value",
+    "category": "function",
+    "text": "fix_value(v::VariableRef)\n\nReturn the value to which a variable is fixed. Error if one does not exist. See also is_fixed.\n\n\n\n\n\n"
+},
+
+{
+    "location": "variables/#JuMP.fix",
+    "page": "Variables",
+    "title": "JuMP.fix",
+    "category": "function",
+    "text": "fix(v::VariableRef, value::Number; force::Bool = false)\n\nFix a variable to a value. Update the fixing constraint if one exists, otherwise create a new one. See also unfix.\n\nIf the variable already has variable bounds and force=false, calling fix will throw an error. If force=true, existing variable bounds will be deleted, and the fixing constraint will be added. Note a variable will have no bounds after a call to unfix.\n\n\n\n\n\n"
+},
+
+{
+    "location": "variables/#JuMP.unfix",
+    "page": "Variables",
+    "title": "JuMP.unfix",
+    "category": "function",
+    "text": "unfix(v::VariableRef)\n\nDelete the fixing constraint of a variable.\n\n\n\n\n\n"
+},
+
+{
+    "location": "variables/#JuMP.is_integer",
+    "page": "Variables",
+    "title": "JuMP.is_integer",
+    "category": "function",
+    "text": "is_integer(v::VariableRef)\n\nReturn true if v is constrained to be integer. See also IntegerRef.\n\n\n\n\n\n"
+},
+
+{
+    "location": "variables/#JuMP.set_integer",
+    "page": "Variables",
+    "title": "JuMP.set_integer",
+    "category": "function",
+    "text": "set_integer(variable_ref::VariableRef)\n\nAdd an integrality constraint on the variable variable_ref. See also unset_integer.\n\n\n\n\n\n"
+},
+
+{
+    "location": "variables/#JuMP.unset_integer",
+    "page": "Variables",
+    "title": "JuMP.unset_integer",
+    "category": "function",
+    "text": "unset_integer(variable_ref::VariableRef)\n\nRemove the integrality constraint on the variable variable_ref.\n\n\n\n\n\n"
+},
+
+{
+    "location": "variables/#JuMP.IntegerRef",
+    "page": "Variables",
+    "title": "JuMP.IntegerRef",
+    "category": "function",
+    "text": "IntegerRef(v::VariableRef)\n\nReturn a constraint reference to the constraint constrainting v to be integer. Errors if one does not exist.\n\n\n\n\n\n"
+},
+
+{
+    "location": "variables/#JuMP.is_binary",
+    "page": "Variables",
+    "title": "JuMP.is_binary",
+    "category": "function",
+    "text": "is_binary(v::VariableRef)\n\nReturn true if v is constrained to be binary. See also BinaryRef.\n\n\n\n\n\n"
+},
+
+{
+    "location": "variables/#JuMP.set_binary",
+    "page": "Variables",
+    "title": "JuMP.set_binary",
+    "category": "function",
+    "text": "set_binary(v::VariableRef)\n\nAdd a constraint on the variable v that it must take values in the set 01. See also unset_binary.\n\n\n\n\n\n"
+},
+
+{
+    "location": "variables/#JuMP.unset_binary",
+    "page": "Variables",
+    "title": "JuMP.unset_binary",
+    "category": "function",
+    "text": "unset_binary(variable_ref::VariableRef)\n\nRemove the binary constraint on the variable variable_ref.\n\n\n\n\n\n"
+},
+
+{
+    "location": "variables/#JuMP.BinaryRef",
+    "page": "Variables",
+    "title": "JuMP.BinaryRef",
+    "category": "function",
+    "text": "BinaryRef(v::VariableRef)\n\nReturn a constraint reference to the constraint constrainting v to be binary. Errors if one does not exist.\n\n\n\n\n\n"
+},
+
+{
     "location": "variables/#Reference-1",
     "page": "Variables",
     "title": "Reference",
     "category": "section",
-    "text": "@variable\nowner_model\nVariableRef\nall_variables"
+    "text": "@variable\nowner_model\nVariableRef\nall_variables\n\nhas_lower_bound\nlower_bound\nset_lower_bound\ndelete_lower_bound\n\nhas_upper_bound\nupper_bound\nset_upper_bound\ndelete_upper_bound\n\nis_fixed\nfix_value\nfix\nunfix\n\nis_integer\nset_integer\nunset_integer\nIntegerRef\n\nis_binary\nset_binary\nunset_binary\nBinaryRef"
 },
 
 {
@@ -801,14 +961,6 @@ var documenterSearchIndex = {"docs": [
 },
 
 {
-    "location": "constraints/#JuMP.fix",
-    "page": "Constraints",
-    "title": "JuMP.fix",
-    "category": "function",
-    "text": "fix(v::VariableRef, value::Number; force::Bool = false)\n\nFix a variable to a value. Update the fixing constraint if one exists, otherwise create a new one.\n\nIf the variable already has variable bounds and force=false, calling fix will throw an error. If force=true, existing variable bounds will be deleted, and the fixing constraint will be added. Note a variable will have no bounds after a call to JuMP.unfix.\n\n\n\n\n\n"
-},
-
-{
     "location": "constraints/#JuMP.set_coefficient",
     "page": "Constraints",
     "title": "JuMP.set_coefficient",
@@ -853,7 +1005,7 @@ var documenterSearchIndex = {"docs": [
     "page": "Constraints",
     "title": "JuMP.FixRef",
     "category": "function",
-    "text": "LowerBoundRef(v::VariableRef)\n\nReturn a constraint reference to the constraint fixing the value of v. Errors if one does not exist.\n\n\n\n\n\n"
+    "text": "FixRef(v::VariableRef)\n\nReturn a constraint reference to the constraint fixing the value of v. Errors if one does not exist.\n\n\n\n\n\n"
 },
 
 {
@@ -869,7 +1021,7 @@ var documenterSearchIndex = {"docs": [
     "page": "Constraints",
     "title": "Reference",
     "category": "section",
-    "text": "@constraint\n@SDconstraint\nSecondOrderCone\nRotatedSecondOrderCone\nPSDCone\nJuMP.shadow_price\nJuMP.fix\nJuMP.set_coefficient\nJuMP.is_valid\nJuMP.delete\nJuMP.LowerBoundRef\nJuMP.UpperBoundRef\nJuMP.FixRef\nConstraintRef"
+    "text": "@constraint\n@SDconstraint\nSecondOrderCone\nRotatedSecondOrderCone\nPSDCone\nJuMP.shadow_price\nJuMP.set_coefficient\nJuMP.is_valid\nJuMP.delete\nJuMP.LowerBoundRef\nJuMP.UpperBoundRef\nJuMP.FixRef\nConstraintRef"
 },
 
 {
@@ -1093,7 +1245,7 @@ var documenterSearchIndex = {"docs": [
     "page": "Query Solutions",
     "title": "JuMP.has_values",
     "category": "function",
-    "text": "has_values(model::Model)\n\nReturn true if the solver has a primal solution available to query, otherwise return false.\n\nSee also value.\n\n\n\n\n\n"
+    "text": "has_values(model::Model)\n\nReturn true if the solver has a primal solution available to query, otherwise return false. See also value.\n\n\n\n\n\n"
 },
 
 {
@@ -1101,7 +1253,7 @@ var documenterSearchIndex = {"docs": [
     "page": "Query Solutions",
     "title": "JuMP.value",
     "category": "function",
-    "text": "value(cref::ConstraintRef)\n\nGet the primal value of this constraint in the result returned by a solver. That is, if cref is the reference of a constraint func-in-set, it returns the value of func evaluated at the value of the variables (given by value(::VariableRef)). Use has_values to check if a result exists before asking for values.\n\nNote\n\nFor scalar contraints, the constant is moved to the set so it is not taken into account in the primal value of the constraint. For instance, the constraint @constraint(model, 2x + 3y + 1 == 5) is transformed into 2x + 3y-in-MOI.EqualTo(4) so the value returned by this function is the evaluation of 2x + 3y. ```\n\n\n\n\n\nvalue(v::VariableRef)\n\nGet the value of this variable in the result returned by a solver. Use has_values to check if a result exists before asking for values. Replaces getvalue for most use cases.\n\n\n\n\n\nvalue(ex::GenericAffExpr, var_value::Function)\n\nEvaluate ex using var_value(v) as the value for each variable v.\n\n\n\n\n\nvalue(v::GenericAffExpr)\n\nEvaluate an GenericAffExpr given the result returned by a solver. Replaces getvalue for most use cases.\n\n\n\n\n\nvalue(p::NonlinearParameter)\n\nReturn the current value stored in the nonlinear parameter p.\n\nExample\n\nmodel = Model()\n@NLparameter(model, p == 10)\nvalue(p)\n\n# output\n10.0\n\n\n\n\n\nvalue(ex::NonlinearExpression, var_value::Function)\n\nEvaluate ex using var_value(v) as the value for each variable v.\n\n\n\n\n\nvalue(ex::NonlinearExpression)\n\nEvaluate ex using value as the value for each variable v.\n\n\n\n\n\n"
+    "text": "value(cref::ConstraintRef)\n\nGet the primal value of this constraint in the result returned by a solver. That is, if cref is the reference of a constraint func-in-set, it returns the value of func evaluated at the value of the variables (given by value(::VariableRef)). Use has_values to check if a result exists before asking for values.\n\nNote\n\nFor scalar contraints, the constant is moved to the set so it is not taken into account in the primal value of the constraint. For instance, the constraint @constraint(model, 2x + 3y + 1 == 5) is transformed into 2x + 3y-in-MOI.EqualTo(4) so the value returned by this function is the evaluation of 2x + 3y. ```\n\n\n\n\n\nvalue(v::VariableRef)\n\nGet the value of this variable in the result returned by a solver. Use has_values to check if a result exists before asking for values.\n\n\n\n\n\nvalue(ex::GenericAffExpr, var_value::Function)\n\nEvaluate ex using var_value(v) as the value for each variable v.\n\n\n\n\n\nvalue(v::GenericAffExpr)\n\nEvaluate an GenericAffExpr given the result returned by a solver. Replaces getvalue for most use cases.\n\n\n\n\n\nvalue(p::NonlinearParameter)\n\nReturn the current value stored in the nonlinear parameter p.\n\nExample\n\nmodel = Model()\n@NLparameter(model, p == 10)\nvalue(p)\n\n# output\n10.0\n\n\n\n\n\nvalue(ex::NonlinearExpression, var_value::Function)\n\nEvaluate ex using var_value(v) as the value for each variable v.\n\n\n\n\n\nvalue(ex::NonlinearExpression)\n\nEvaluate ex using value as the value for each variable v.\n\n\n\n\n\n"
 },
 
 {
