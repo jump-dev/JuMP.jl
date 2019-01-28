@@ -240,29 +240,29 @@ function macros_test(ModelType::Type{<:JuMP.AbstractModel}, VariableRefType::Typ
         @test c.set == MOI.Interval(0.0, 1.0)
     end
 
-    @testset "@_build_constraint (scalar inequality)" begin
+    @testset "@build_constraint (scalar inequality)" begin
         model = ModelType()
         @variable(model, x)
-        con = JuMP.@_build_constraint(3x == 1)
+        con = @build_constraint(3x == 1)
         @test con isa JuMP.ScalarConstraint
         @test JuMP.isequal_canonical(con.func, 3x)
         @test con.set == MOI.EqualTo(1.0)
     end
 
-    @testset "@_build_constraint (function-in-set)" begin
+    @testset "@build_constraint (function-in-set)" begin
         model = ModelType()
         @variable(model, x[1:2])
-        con = JuMP.@_build_constraint(x in JuMP.SecondOrderCone())
+        con = @build_constraint(x in JuMP.SecondOrderCone())
         @test con isa JuMP.VectorConstraint
         @test con.func == x
         @test con.set == MOI.SecondOrderCone(2)
     end
 
-    @testset "@_build_constraint (broadcast)" begin
+    @testset "@build_constraint (broadcast)" begin
         model = ModelType()
         @variable(model, x[1:2])
         ub = [1.0, 2.0]
-        con = JuMP.@_build_constraint(x .<= ub)
+        con = @build_constraint(x .<= ub)
         @test con isa Vector{<:JuMP.ScalarConstraint}
         @test JuMP.isequal_canonical(con[1].func, 1.0x[1])
         @test JuMP.isequal_canonical(con[2].func, 1.0x[2])
@@ -383,12 +383,12 @@ end
         model = Model()
         @variable(model, x)
         foo() = 2
-        con1 = JuMP.@_build_constraint(x^(foo()) + x^(foo()-1) +
+        con1 = @build_constraint(x^(foo()) + x^(foo()-1) +
                                       x^(foo()-2) == 0)
-        con2 = JuMP.@_build_constraint((x - 1)^(foo()) + (x - 1)^2 + (x - 1)^1 +
+        con2 = @build_constraint((x - 1)^(foo()) + (x - 1)^2 + (x - 1)^1 +
                                       (x - 1)^0 == 0)
-        con3 = JuMP.@_build_constraint(sum(x for i in 1:3)^(foo()) == 0)
-        con4 = JuMP.@_build_constraint(sum(x for i in 1:3)^(foo() - 1) == 0)
+        con3 = @build_constraint(sum(x for i in 1:3)^(foo()) == 0)
+        con4 = @build_constraint(sum(x for i in 1:3)^(foo() - 1) == 0)
         @test con1.func == x^2 + x
         @test con2.func == 2 * x^2 - 3 * x
         @test con3.func == 9 * x^2
