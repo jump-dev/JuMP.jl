@@ -609,7 +609,6 @@ SecondOrderCone
 RotatedSecondOrderCone
 PSDCone
 JuMP.shadow_price
-JuMP.fix
 JuMP.set_coefficient
 JuMP.is_valid
 JuMP.delete
