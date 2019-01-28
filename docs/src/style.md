@@ -430,9 +430,12 @@ This section describes the writing style that should be used when writing
 documentation for JuMP (and supporting packages).
 
 We recommend the [https://developers.google.com/style/](Google documentation
-style guide) as general reading for those writing documentation. This guide
-reproduces some of the main points, and elaborates on the more Julia-specific
-points.
+style guide) as general reading for those writing documentation. We can also
+recommend the guides by [Write the Docs](https://www.writethedocs.org/guide/)
+and [Divio](https://www.divio.com/blog/documentation/).
+
+This guide reproduces some of the main points, and elaborates on the more
+Julia-specific points.
 
  - Be concise.
  - Use lists instead of long sentences.
