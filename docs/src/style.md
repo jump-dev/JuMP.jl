@@ -429,23 +429,21 @@ without qualifying with the module name.
 This section describes the writing style that should be used when writing
 documentation for JuMP (and supporting packages).
 
-We recommend the [https://developers.google.com/style/](Google documentation
-style guide) as general reading for those writing documentation. We can also
-recommend the guides by [Write the Docs](https://www.writethedocs.org/guide/)
-and [Divio](https://www.divio.com/blog/documentation/).
-
-This guide reproduces some of the main points, and elaborates on the more
-Julia-specific points.
+We can recommend the documentation style guides by [Divio](https://www.divio.com/blog/documentation/),
+[Google](https://developers.google.com/style/), and [Write the Docs](https://www.writethedocs.org/guide/)
+as general reading for those writing documentation. This guide delegates a 
+thorough handling of the topic to those guides and instead elaborates on the 
+more Julia-specific points.
 
  - Be concise.
  - Use lists instead of long sentences.
  - Use numbered lists when describing a sequence, e.g., (1) do X, (2) then Y.
  - Use bullet points when the items are not ordered.
- - Example code should be covered by doctests. (But it's unclear what to do if
-   the code depends on a solver. [issue](https://github.com/JuliaOpt/JuMP.jl/issues/1175))
+ - Example code should be covered by doctests. (But it's [unclear what to do](https://github.com/JuliaOpt/JuMP.jl/issues/1175)
+   if the code depends on a solver.)
  - When a word is a Julia symbol and not an English word, enclose it with
-   backticks and add a `@ref` if it has a docstring in this doc. If it is a
-   plural, add the "s" after the closing backtick. For example,
+   backticks. In addition, if it has a docstring in this doc add a link using 
+   `@ref`. If it is a plural, add the "s" after the closing backtick. For example,
    ```
    [`VariableRef`](@ref)s
    ```
