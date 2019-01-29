@@ -189,47 +189,6 @@ function Base.isequal(v1::VariableRef, v2::VariableRef)
     return owner_model(v1) === owner_model(v2) && v1.index == v2.index
 end
 
-"""
-    VariableToValueMap{T}
-
-An object for storing a mapping from variables to a value of type `T`.
-"""
-struct VariableToValueMap{T}
-    model::Model
-    d::Dict{MOIVAR,T}
-end
-
-function VariableToValueMap{T}(m::Model) where T
-    return VariableToValueMap{T}(m, Dict{MOIVAR,T}())
-end
-
-function Base.getindex(vm::VariableToValueMap, v::VariableRef)
-    @assert owner_model(v) === vm.model # TODO: better error message
-    return vm.d[index(v)]
-end
-
-function Base.setindex!(vm::VariableToValueMap{T}, value::T, v::VariableRef) where T
-    @assert owner_model(v) === vm.model # TODO: better error message
-    vm.d[index(v)] = value
-end
-
-function Base.setindex!(vm::VariableToValueMap{T}, value, v::VariableRef) where T
-    setindex!(vm, convert(T, value), v)
-    return
-end
-
-function Base.delete!(vm::VariableToValueMap,v::VariableRef)
-    delete!(vm.d, index(v))
-    vm
-end
-
-Base.empty!(vm::VariableToValueMap) = empty!(vm.d)
-Base.isempty(vm::VariableToValueMap) = isempty(vm.d)
-
-function Base.haskey(vm::VariableToValueMap, v::VariableRef)
-    return (vm.model === owner_model(v)) && haskey(vm.d, index(v))
-end
-
 index(v::VariableRef) = v.index
 
 function VariableRef(m::Model)
