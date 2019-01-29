@@ -806,18 +806,6 @@ adds groups of constraints at once, in the same fashion as @constraint. The mode
     end)
 """ :(@constraints)
 
-@doc """
-    @LinearConstraints(m, args...)
-
-Constructs a vector of `LinearConstraint` objects. Similar to `@LinearConstraint`, except it accepts multiple constraints as input as long as they are separated by newlines.
-""" :(@LinearConstraints)
-
-@doc """
-    @QuadConstraints(m, args...)
-
-Constructs a vector of `QuadConstraint` objects. Similar to `@QuadConstraint`, except it accepts multiple constraints as input as long as they are separated by newlines.
-""" :(@QuadConstraints)
-
 """
     _moi_sense(_error::Function, sense)
 
