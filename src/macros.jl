@@ -563,9 +563,9 @@ function _constraint_macro(args, macro_name::Symbol, parsefun::Function)
 
     # Determine the return type of add_constraint. This is needed for JuMP extensions for which this is different than ConstraintRef
     if vectorized
-        contype = :( AbstractArray{constraint_type($m)} ) # TODO use a concrete type instead of AbstractArray, see #525, #1310
+        contype = :( AbstractArray{_constraint_type($m)} ) # TODO use a concrete type instead of AbstractArray, see #525, #1310
     else
-        contype = :( constraint_type($m) )
+        contype = :( _constraint_type($m) )
     end
     creationcode = _get_looped_code(variable, code, condition, idxvars, idxsets, contype, requestedcontainer)
 
@@ -584,7 +584,7 @@ function _constraint_macro(args, macro_name::Symbol, parsefun::Function)
 end
 
 # This function needs to be implemented by all `AbstractModel`s
-constraint_type(m::Model) = ConstraintRef{typeof(m)}
+_constraint_type(m::Model) = ConstraintRef{typeof(m)}
 
 """
     @constraint(m::Model, expr)
@@ -1010,9 +1010,9 @@ _esc_non_constant(x::Expr) = isexpr(x,:quote) ? x : esc(x)
 _esc_non_constant(x) = esc(x)
 
 # Returns the type of what `add_variable(::Model, _build_variable(...))` would return where `...` represents the positional arguments.
-# Example: `@variable m [1:3] foo` will allocate an vector of element type `variable_type(m, foo)`
+# Example: `@variable m [1:3] foo` will allocate an vector of element type `_variable_type(m, foo)`
 # Note: it needs to be implemented by all `AbstractModel`s
-variable_type(m::Model) = VariableRef
+_variable_type(m::Model) = VariableRef
 # Returns a new variable. Additional positional arguments can be used to dispatch the call to a different method.
 # The return type should only depends on the positional arguments for `variable_type` to make sense. See the @variable macro doc for more details.
 # Example: `@variable m x` foo will call `_build_variable(_error, info, foo)`
@@ -1214,7 +1214,7 @@ upper bounds 2 and 3 and names `x[a]` and `x[b]` as with the second example
 above but does it without using the `@variable` macro
 ```julia
 # Without the `@variable` macro
-data = Vector{JuMP.variable_type(model)}(undef, length(keys(ub)))
+data = Vector{JuMP._variable_type(model)}(undef, length(keys(ub)))
 x = JuMP.Containers.DenseAxisArray(data, keys(ub))
 for i in keys(ub)
     info = VariableInfo(false, NaN, true, ub[i], false, NaN, false, NaN, false, false)
@@ -1229,7 +1229,7 @@ the `Poly(X)` positional argument to specify its variables:
 # Using the `@variable` macro
 @variable(model, x[1:N,1:N], Symmetric, Poly(X))
 # Without the `@variable` macro
-x = Matrix{JuMP.variable_type(model, Poly(X))}(N, N)
+x = Matrix{JuMP._variable_type(model, Poly(X))}(N, N)
 info = VariableInfo(false, NaN, false, NaN, false, NaN, false, NaN, false, false)
 for i in 1:N, j in i:N
     x[i,j] = x[j,i] = JuMP.add_variable(model, _build_variable(error, info, Poly(X)), "x[\$i,\$j]")
@@ -1334,7 +1334,7 @@ macro variable(args...)
         variablecall = :( add_variable($model, $buildcall, $(_name_call(base_name, idxvars))) )
         code = :( $(refcall) = $variablecall )
         # Determine the return type of add_variable. This is needed to create the container holding them.
-        vartype = :( variable_type($model, $(extra...)) )
+        vartype = :( _variable_type($model, $(extra...)) )
 
         if symmetric
             # Sanity checks on PSD input stuff
