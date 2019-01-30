@@ -1,9 +1,9 @@
 abstract type AbstractVectorSet end
 
 # Used in `@constraint model f in s`
-function _build_constraint(_error::Function, f::AbstractVector,
+function build_constraint(_error::Function, f::AbstractVector,
                          s::AbstractVectorSet)
-    return _build_constraint(_error, f, moi_set(s, length(f)))
+    return build_constraint(_error, f, moi_set(s, length(f)))
 end
 
 """

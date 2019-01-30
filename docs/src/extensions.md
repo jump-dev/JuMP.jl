@@ -40,34 +40,34 @@ TODO: parse/build/add
 ## Extending the `@constraint` macro
 
 The [`@constraint`](@ref) macro always calls the same three functions:
-* `_parse_constraint`: is called at parsing time, it parses the constraint
-  expression and returns a [`_build_constraint`](@ref) call expression;
-* [`_build_constraint`](@ref): given the functions and sets involved in the
+* `parse_constraint`: is called at parsing time, it parses the constraint
+  expression and returns a [`build_constraint`](@ref) call expression;
+* [`build_constraint`](@ref): given the functions and sets involved in the
   constraints, it returns a `AbstractConstraint`;
 * [`add_constraint`](@ref): given the model, the `AbstractConstraint`
-  constructed in [`_build_constraint`](@ref) and the constraint name, it stores
+  constructed in [`build_constraint`](@ref) and the constraint name, it stores
   them in the model and returns a `ConstraintRef`.
 
 Adding methods to these functions is the recommended way to extend the
 [`@constraint`](@ref) macro.
 
-### Adding `_build_constraint` methods
+### Adding `build_constraint` methods
 
-There is typically two choices when creating a [`_build_constraint`](@ref)
+There is typically two choices when creating a [`build_constraint`](@ref)
 method, either return an `AbstractConstraint` already supported by the
 model, i.e. `ScalarConstraint` or `VectorConstraint`, or a custom
 `AbstractConstraint` with a corresponding [`add_constraint`](@ref) method (see
 [Adding `add_constraint` methods](@ref)).
 
 ```@docs
-_build_constraint
+build_constraint
 ```
 
 #### Shapes
 
 Shapes allow vector constraints, which are represented as flat vectors in MOI,
 to retain a matrix shape at the JuMP level. There is a `shape` field in
-`VectorConstraint` that can be set in [`_build_constraint`](@ref) and that is
+`VectorConstraint` that can be set in [`build_constraint`](@ref) and that is
 used to reshape the result computed in [`value`](@ref) and [`dual`](@ref).
 
 ```@docs
@@ -89,7 +89,7 @@ TODO
 add_constraint
 ```
 
-### Adding `_parse_constraint` methods
+### Adding `parse_constraint` methods
 
 TODO
 

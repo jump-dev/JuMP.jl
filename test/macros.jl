@@ -124,12 +124,12 @@ end
 struct PowerCone{T}
     exponent::T
 end
-function JuMP._build_constraint(_error::Function, f, set::PowerCone; dual=false)
+function JuMP.build_constraint(_error::Function, f, set::PowerCone; dual=false)
     moi_set = dual ? MOI.DualPowerCone(set.exponent) : MOI.PowerCone(set.exponent)
-    return JuMP._build_constraint(_error, f, moi_set)
+    return JuMP.build_constraint(_error, f, moi_set)
 end
-function _build_constraint_keyword_test(ModelType::Type{<:JuMP.AbstractModel})
-    @testset "_build_constraint with keyword arguments" begin
+function build_constraint_keyword_test(ModelType::Type{<:JuMP.AbstractModel})
+    @testset "build_constraint with keyword arguments" begin
         model = ModelType()
         @variable(model, x)
         cref1 = @constraint(model, [1, x, x] in PowerCone(0.5))
@@ -140,12 +140,12 @@ function _build_constraint_keyword_test(ModelType::Type{<:JuMP.AbstractModel})
 end
 
 function macros_test(ModelType::Type{<:JuMP.AbstractModel}, VariableRefType::Type{<:JuMP.AbstractVariableRef})
-    @testset "_build_constraint on variable" begin
+    @testset "build_constraint on variable" begin
         m = ModelType()
         @variable(m, x)
-        @test JuMP._build_constraint(error, x, MOI.GreaterThan(0.0)) isa JuMP.ScalarConstraint{VariableRefType, MOI.GreaterThan{Float64}}
-        @test JuMP._build_constraint(error, x, MOI.LessThan(0.0)) isa JuMP.ScalarConstraint{VariableRefType, MOI.LessThan{Float64}}
-        @test JuMP._build_constraint(error, x, MOI.EqualTo(0)) isa JuMP.ScalarConstraint{VariableRefType, MOI.EqualTo{Int}}
+        @test JuMP.build_constraint(error, x, MOI.GreaterThan(0.0)) isa JuMP.ScalarConstraint{VariableRefType, MOI.GreaterThan{Float64}}
+        @test JuMP.build_constraint(error, x, MOI.LessThan(0.0)) isa JuMP.ScalarConstraint{VariableRefType, MOI.LessThan{Float64}}
+        @test JuMP.build_constraint(error, x, MOI.EqualTo(0)) isa JuMP.ScalarConstraint{VariableRefType, MOI.EqualTo{Int}}
     end
 
     @testset "Check @constraint basics" begin
@@ -270,7 +270,7 @@ function macros_test(ModelType::Type{<:JuMP.AbstractModel}, VariableRefType::Typ
         @test con[2].set == MOI.LessThan(2.0)
     end
 
-    _build_constraint_keyword_test(ModelType)
+    build_constraint_keyword_test(ModelType)
 end
 
 @testset "Macros for JuMP.Model" begin

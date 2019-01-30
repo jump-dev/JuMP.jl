@@ -337,7 +337,7 @@ function _check_vectorized(sense::Symbol)
     end
 end
 
-# two-argument _build_constraint is used for one-sided constraints.
+# two-argument build_constraint is used for one-sided constraints.
 # Right-hand side is zero.
 _sense_to_set(_error::Function, ::Union{Val{:(<=)}, Val{:(≤)}}) = MOI.LessThan(0.0)
 _sense_to_set(_error::Function, ::Union{Val{:(>=)}, Val{:(≥)}}) = MOI.GreaterThan(0.0)
@@ -349,9 +349,9 @@ function _parse_one_operator_constraint(_error::Function, vectorized::Bool,
     newaff, parseaff = parseExprToplevel(aff, :q)
     parsecode = :(q = Val{false}(); $parseaff)
     if vectorized
-        buildcall = :(_build_constraint.($_error, $newaff, Ref($(esc(set)))))
+        buildcall = :(build_constraint.($_error, $newaff, Ref($(esc(set)))))
     else
-        buildcall = :(_build_constraint($_error, $newaff, $(esc(set))))
+        buildcall = :(build_constraint($_error, $newaff, $(esc(set))))
     end
     parsecode, buildcall
 end
@@ -363,7 +363,7 @@ function _parse_one_operator_constraint(_error::Function, vectorized::Bool, sens
     _parse_one_operator_constraint(_error, vectorized, Val(:in), aff, set)
 end
 
-function _parse_constraint(_error::Function, sense::Symbol, lhs, rhs)
+function parse_constraint(_error::Function, sense::Symbol, lhs, rhs)
     (sense, vectorized) = _check_vectorized(sense)
     vectorized, _parse_one_operator_constraint(_error, vectorized, Val(sense), lhs, rhs)...
 end
@@ -373,9 +373,9 @@ function _parse_ternary_constraint(_error::Function, vectorized::Bool, lb, ::Uni
     newlb, parselb = parseExprToplevel(lb, :lb)
     newub, parseub = parseExprToplevel(ub, :ub)
     if vectorized
-        buildcall = :(_build_constraint.($_error, $newaff, $newlb, $newub))
+        buildcall = :(build_constraint.($_error, $newaff, $newlb, $newub))
     else
-        buildcall = :(_build_constraint($_error, $newaff, $newlb, $newub))
+        buildcall = :(build_constraint($_error, $newaff, $newlb, $newub))
     end
     parseaff, parselb, parseub, buildcall
 end
@@ -388,7 +388,7 @@ function _parse_ternary_constraint(_error::Function, args...)
     _error("Only two-sided rows of the form lb <= expr <= ub or ub >= expr >= lb are supported.")
 end
 
-function _parse_constraint(_error::Function, lb, lsign::Symbol, aff, rsign::Symbol, ub)
+function parse_constraint(_error::Function, lb, lsign::Symbol, aff, rsign::Symbol, ub)
     (lsign, lvectorized) = _check_vectorized(lsign)
     (rsign, rvectorized) = _check_vectorized(rsign)
     ((vectorized = lvectorized) == rvectorized) || _error("Signs are inconsistently vectorized")
@@ -404,7 +404,7 @@ function _parse_constraint(_error::Function, lb, lsign::Symbol, aff, rsign::Symb
     vectorized, parsecode, buildcall
 end
 
-function _parse_constraint(_error::Function, args...)
+function parse_constraint(_error::Function, args...)
     # Unknown
     _error("Constraints must be in one of the following forms:\n" *
           "       expr1 <= expr2\n" * "       expr1 >= expr2\n" *
@@ -412,61 +412,61 @@ function _parse_constraint(_error::Function, args...)
 end
 
 # Generic fallback.
-function _build_constraint(_error::Function, func,
+function build_constraint(_error::Function, func,
         set::Union{MOI.AbstractScalarSet, MOI.AbstractVectorSet})
     return _error("unable to add the constraint because we don't recognize " *
                   "$(func) as a valid JuMP function.")
 end
 
 
-function _build_constraint(_error::Function, v::AbstractJuMPScalar,
+function build_constraint(_error::Function, v::AbstractJuMPScalar,
                           set::MOI.AbstractScalarSet)
     return ScalarConstraint(v, set)
 end
-function _build_constraint(_error::Function,
+function build_constraint(_error::Function,
                           expr::Union{GenericAffExpr, GenericQuadExpr},
                           set::MOI.AbstractScalarSet)
     offset = constant(expr)
     add_to_expression!(expr, -offset)
     return ScalarConstraint(expr, MOIU.shift_constant(set, -offset))
 end
-function _build_constraint(_error::Function, α::Number,
+function build_constraint(_error::Function, α::Number,
                           set::MOI.AbstractScalarSet)
-    return _build_constraint(_error, convert(AffExpr, α), set)
+    return build_constraint(_error, convert(AffExpr, α), set)
 end
 
-function _build_constraint(_error::Function, x::Vector{<:AbstractJuMPScalar},
+function build_constraint(_error::Function, x::Vector{<:AbstractJuMPScalar},
                           set::MOI.AbstractVectorSet)
     return VectorConstraint(x, set)
 end
-function _build_constraint(_error::Function, a::Vector{<:Number},
+function build_constraint(_error::Function, a::Vector{<:Number},
                           set::MOI.AbstractVectorSet)
-    return _build_constraint(_error, convert(Vector{AffExpr}, a), set)
+    return build_constraint(_error, convert(Vector{AffExpr}, a), set)
 end
 
-function _build_constraint(_error::Function, x::AbstractArray,
+function build_constraint(_error::Function, x::AbstractArray,
                           set::MOI.AbstractScalarSet)
     return _error("Unexpected vector in scalar constraint. Did you mean to use",
                   " the dot comparison operators like .==, .<=, and .>=",
                   " instead?")
 end
 
-function _build_constraint(
+function build_constraint(
         _error::Function, x::Matrix, set::MOI.AbstractVectorSet)
     return _error(
         "unexpected matrix in vector constraint. Do you need to flatten the " *
         "matrix into a vector using `vec()`?")
 end
 
-function _build_constraint(_error::Function, ::Matrix, T::Union{
+function build_constraint(_error::Function, ::Matrix, T::Union{
     MOI.PositiveSemidefiniteConeSquare, MOI.PositiveSemidefiniteConeTriangle})
     return _error("instead of `$(T)`, use `JuMP.PSDCone()`.")
 end
 
-# three-argument _build_constraint is used for two-sided constraints.
-function _build_constraint(_error::Function, func::AbstractJuMPScalar,
+# three-argument build_constraint is used for two-sided constraints.
+function build_constraint(_error::Function, func::AbstractJuMPScalar,
                           lb::Real, ub::Real)
-    return _build_constraint(_error, func, MOI.Interval(lb, ub))
+    return build_constraint(_error, func, MOI.Interval(lb, ub))
 end
 
 # This method intercepts `@constraint(model, lb <= var <= ub)` and promotes
@@ -475,12 +475,12 @@ end
 # `MOI.SingleVariable`-in-`MOI.Interval`, use
 # `@constraint(model, var in MOI.Interval(lb, ub))`. We do this for consistency
 # with how one-sided (in)equality constraints are parsed.
-function _build_constraint(_error::Function, func::AbstractVariableRef,
+function build_constraint(_error::Function, func::AbstractVariableRef,
                           lb::Real, ub::Real)
-    return _build_constraint(_error, 1.0func, lb, ub)
+    return build_constraint(_error, 1.0func, lb, ub)
 end
 
-function _build_constraint(_error::Function, expr, lb, ub)
+function build_constraint(_error::Function, expr, lb, ub)
     lb isa Number || _error(string("Expected $lb to be a number."))
     ub isa Number || _error(string("Expected $ub to be a number."))
     if lb isa Number && ub isa Number
@@ -499,10 +499,10 @@ Returns the code for the macro `@constraint_like args...` of syntax
 @constraint_like ref con # group of constraints
 ```
 where `@constraint_like` is either `@constraint` or `@SDconstraint`.
-The expression `con` is parsed by `parsefun` which returns a `_build_constraint`
+The expression `con` is parsed by `parsefun` which returns a `build_constraint`
 call code that, when executed, returns an `AbstractConstraint`. The macro
 keyword arguments (except the `container` keyword argument which is used to
-determine the container type) are added to the `_build_constraint` call. The
+determine the container type) are added to the `build_constraint` call. The
 returned value of this call is passed to `add_constraint` which returns a
 constraint reference.
 """
@@ -618,26 +618,26 @@ The expression `expr` can either be
 ## Note for extending the constraint macro
 
 Each constraint will be created using
-`add_constraint(m, _build_constraint(_error, func, set))` where
+`add_constraint(m, build_constraint(_error, func, set))` where
 * `_error` is an error function showing the constraint call in addition to the
   error message given as argument,
 * `func` is the expression that is constrained
 * and `set` is the set in which it is constrained to belong.
 
 For `expr` of the first type (i.e. `@constraint(m, func in set)`), `func` and
-`set` are passed unchanged to `_build_constraint` but for the other types, they
+`set` are passed unchanged to `build_constraint` but for the other types, they
 are determined from the expressions and signs. For instance,
 `@constraint(m, x^2 + y^2 == 1)` is transformed into
-`add_constraint(m, _build_constraint(_error, x^2 + y^2, MOI.EqualTo(1.0)))`.
+`add_constraint(m, build_constraint(_error, x^2 + y^2, MOI.EqualTo(1.0)))`.
 
 To extend JuMP to accept new constraints of this form, it is necessary to add
-the corresponding methods to `_build_constraint`. Note that this will likely mean
+the corresponding methods to `build_constraint`. Note that this will likely mean
 that either `func` or `set` will be some custom type, rather than e.g. a
 `Symbol`, since we will likely want to dispatch on the type of the function or
 set appearing in the constraint.
 """
 macro constraint(args...)
-    _constraint_macro(args, :constraint, _parse_constraint)
+    _constraint_macro(args, :constraint, parse_constraint)
 end
 
 function _parse_SD_constraint(_error::Function, sense::Symbol, lhs, rhs)
@@ -733,15 +733,15 @@ model = Model();
 ScalarConstraint{GenericAffExpr{Float64,VariableRef},MathOptInterface.GreaterThan{Float64}}(2 x, MathOptInterface.GreaterThan{Float64}(1.0))
 """
 macro build_constraint(constraint_expr)
-    _error(str...) = _macro_error(:_build_constraint, args, str...)
+    _error(str...) = _macro_error(:build_constraint, args, str...)
 
     if isa(constraint_expr, Symbol)
         _error("Incomplete constraint specification $constraint_expr. " *
                "Are you missing a comparison (<=, >=, or ==)?")
     end
 
-    is_vectorized, parse_code, build_call = _parse_constraint(_error,
-                                                        constraint_expr.args...)
+    is_vectorized, parse_code, build_call = parse_constraint(
+        _error, constraint_expr.args...)
     result_variable = gensym()
     code = quote
         $parse_code
@@ -1353,7 +1353,7 @@ macro variable(args...)
                 $(_get_looped_code(variable, code, condition, idxvars, idxsets, vartype, requestedcontainer; lowertri=symmetric))
                 $(if sdp
                     quote
-                        JuMP.add_constraint($model, JuMP._build_constraint($_error, Symmetric($variable), JuMP.PSDCone()))
+                        JuMP.add_constraint($model, JuMP.build_constraint($_error, Symmetric($variable), JuMP.PSDCone()))
                     end
                 end)
             end
