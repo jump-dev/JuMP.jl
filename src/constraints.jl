@@ -269,7 +269,6 @@ end
 
 #############################################################################
 # AbstractConstraint
-#
 """
     abstract type AbstractConstraint
 
