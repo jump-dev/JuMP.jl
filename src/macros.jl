@@ -909,9 +909,9 @@ macro objective(model, args...)
 end
 
 # Return a standalone, unnamed expression
-# ex = @_expression(2x + 3y)
+# ex = @_build_expression(2x + 3y)
 # Currently for internal use only.
-macro _expression(x)
+macro _build_expression(x)
     newaff, parsecode = parseExprToplevel(x, :q)
     code = quote
         q = Val{false}()
