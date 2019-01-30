@@ -377,6 +377,33 @@ end
 
 @testset "Constraints for JuMP.Model" begin
     constraints_test(Model, JuMP.VariableRef)
+    @testset "all_constraints (scalar)" begin
+        model = Model()
+        @variable(model, x >= 0)
+        ref = all_constraints(model, VariableRef, MOI.GreaterThan{Float64})
+        @test ref == [LowerBoundRef(x)]
+        aff_constraints = all_constraints(model, AffExpr,
+                                          MOI.GreaterThan{Float64})
+        @test isempty(aff_constraints)
+        err = ErrorException("`MathOptInterface.GreaterThan` is not a " *
+                             "concrete type. Did you miss a type parameter?")
+        @test_throws err all_constraints(model, AffExpr,
+                                                    MOI.GreaterThan)
+        err = ErrorException("`GenericAffExpr` is not a concrete type. " *
+                             "Did you miss a type parameter?")
+        @test_throws err all_constraints(model, GenericAffExpr,
+                                                    MOI.ZeroOne)
+    end
+    # TODO: all_constraints (vector)
+    @testset "list_of_constraint_types" begin
+        model = Model()
+        @variable(model, x >= 0, Bin)
+        @constraint(model, 2x <= 1)
+        constraint_types = list_of_constraint_types(model)
+        @test Set(constraint_types) == Set([(VariableRef, MOI.ZeroOne),
+            (VariableRef, MOI.GreaterThan{Float64}),
+            (AffExpr, MOI.LessThan{Float64})])
+    end
 end
 
 @testset "Constraints for JuMPExtension.MyModel" begin

@@ -596,8 +596,50 @@ false
 
 ## Accessing constraints from a model
 
-TODO: Describe constraints vs. `ConstraintRef`s. Describe `JuMP.constraint_object`.
-Describe how to access all constraints in a model.
+You can query the types of constraints currently present in the model by calling
+[`list_of_constraint_types`](@ref). Then, given a function and set type, use
+[`all_constraints`](@ref) to access a list of constraint references for
+constraints of this type. Then use [`constraint_object`](@ref) to get an
+instance of an [`AbstractConstraint`](@ref) object, either
+[`ScalarConstraint`](@ref) or [`VectorConstraint`](@ref) that stores the
+constraint data.
+
+```jldoctest
+julia> model = Model();
+
+julia> @variable(model, x[i=1:2] >= i, Int);
+
+julia> @constraint(model, x[1] + x[2] <= 1);
+
+julia> list_of_constraint_types(model)
+3-element Array{Tuple{DataType,DataType},1}:
+ (VariableRef, MathOptInterface.Integer)
+ (VariableRef, MathOptInterface.GreaterThan{Float64})
+ (GenericAffExpr{Float64,VariableRef}, MathOptInterface.LessThan{Float64})
+
+julia> all_constraints(model, VariableRef, MOI.Integer)
+2-element Array{ConstraintRef{Model,MathOptInterface.ConstraintIndex{MathOptInterface.SingleVariable,MathOptInterface.Integer},ScalarShape},1}:
+ x[1] integer
+ x[2] integer
+
+julia> all_constraints(model, VariableRef, MOI.GreaterThan{Float64})
+2-element Array{ConstraintRef{Model,MathOptInterface.ConstraintIndex{MathOptInterface.SingleVariable,MathOptInterface.GreaterThan{Float64}},ScalarShape},1}:
+ x[1] ≥ 1.0
+ x[2] ≥ 2.0
+
+julia> less_than_constraints = all_constraints(model, GenericAffExpr{Float64,VariableRef}, MOI.LessThan{Float64})
+1-element Array{ConstraintRef{Model,MathOptInterface.ConstraintIndex{MathOptInterface.ScalarAffineFunction{Float64},MathOptInterface.LessThan{Float64}},ScalarShape},1}:
+ x[1] + x[2] ≤ 1.0
+
+julia> con = constraint_object(less_than_constraints[1])
+ScalarConstraint{GenericAffExpr{Float64,VariableRef},MathOptInterface.LessThan{Float64}}(x[1] + x[2], MathOptInterface.LessThan{Float64}(1.0))
+
+julia> con.func
+x[1] + x[2]
+
+julia> con.set
+MathOptInterface.LessThan{Float64}(1.0)
+```
 
 
 ## Reference
@@ -608,14 +650,20 @@ Describe how to access all constraints in a model.
 SecondOrderCone
 RotatedSecondOrderCone
 PSDCone
-JuMP.shadow_price
-JuMP.set_coefficient
-JuMP.is_valid
+shadow_price
+set_coefficient
+is_valid
 JuMP.delete
-JuMP.LowerBoundRef
-JuMP.UpperBoundRef
-JuMP.FixRef
+LowerBoundRef
+UpperBoundRef
+FixRef
 ConstraintRef
+list_of_constraint_types
+all_constraints
+constraint_object
+AbstractConstraint
+ScalarConstraint
+VectorConstraint
 ```
 
 ## Constructing constraints without adding them to the model

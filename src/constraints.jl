@@ -269,7 +269,14 @@ end
 
 #############################################################################
 # AbstractConstraint
-# Abstract base type for all constraint types
+"""
+    abstract type AbstractConstraint
+
+An abstract base type for all constraint types. `AbstractConstraint`s store the
+function and set directly, unlike [`ConstraintRef`](@ref)s that are merely
+references to constraints stored in a model. `AbstractConstraint`s do not need
+to be attached to a model.
+"""
 abstract type AbstractConstraint end
 
 """
@@ -359,6 +366,21 @@ Returns the MOI set of dimension `dim` corresponding to the JuMP set `s`.
 """
 function moi_set end
 
+"""
+    constraint_object(ref::ConstraintRef)
+
+Return the underlying constraint data for the constraint referenced by `ref`.
+"""
+function constraint_object end
+
+"""
+    struct ScalarConstraint
+
+The data for a scalar constraint. The `func` field containts a JuMP object
+representing the function and the `set` field contains the MOI set.
+See also the [documentation](@ref Constraints) on JuMP's representation of
+constraints for more background.
+"""
 struct ScalarConstraint{F <: AbstractJuMPScalar,
                         S <: MOI.AbstractScalarSet} <: AbstractConstraint
     func::F
@@ -368,6 +390,7 @@ end
 jump_function(constraint::ScalarConstraint) = constraint.func
 moi_set(constraint::ScalarConstraint) = constraint.set
 shape(::ScalarConstraint) = ScalarShape()
+
 function constraint_object(ref::ConstraintRef{Model, MOICON{FuncType, SetType}}) where
         {FuncType <: MOI.AbstractScalarFunction, SetType <: MOI.AbstractScalarSet}
     model = ref.model
@@ -379,6 +402,16 @@ function check_belongs_to_model(c::ScalarConstraint, model)
     check_belongs_to_model(c.func, model)
 end
 
+"""
+    struct VectorConstraint
+
+The data for a vector constraint. The `func` field containts a JuMP object
+representing the function and the `set` field contains the MOI set. The
+`shape` field contains an [`AbstractShape`](@ref) matching the form in which
+the constraint was constructed (e.g., by using matrices or flat vectors).
+See also the [documentation](@ref Constraints) on JuMP's representation of
+constraints.
+"""
 struct VectorConstraint{F <: AbstractJuMPScalar,
                         S <: MOI.AbstractVectorSet,
                         Shape <: AbstractShape} <: AbstractConstraint
@@ -586,4 +619,86 @@ function shadow_price(constraint::ConstraintRef{Model, MOICON{F, S}}
         # Treat the equality constraint as if it were a LessThan constraint.
         return shadow_price_less_than_(dual_val, sense)
     end
+end
+
+function _error_if_not_concrete_type(t)
+    if !isconcretetype(t)
+        error("`$t` is not a concrete type. Did you miss a type parameter?")
+    end
+    return
+end
+
+"""
+    all_constraints(model::Model, function_type, set_type)::Vector{VariableRef}
+
+Return a list of all constraints currently in the model where the function
+has type `function_type` and the set has type `set_type`. The constraints are
+ordered by creation time.
+
+See also [`list_of_constraint_types`](@ref).
+
+# Example
+```jldoctest
+julia> model = Model();
+
+julia> @variable(model, x >= 0, Bin);
+
+julia> @constraint(model, 2x <= 1);
+
+julia> all_constraints(model, VariableRef, MOI.GreaterThan{Float64})
+1-element Array{ConstraintRef{Model,MathOptInterface.ConstraintIndex{MathOptInterface.SingleVariable,MathOptInterface.GreaterThan{Float64}},ScalarShape},1}:
+ x ≥ 0.0
+
+julia> all_constraints(model, VariableRef, MOI.ZeroOne)
+1-element Array{ConstraintRef{Model,MathOptInterface.ConstraintIndex{MathOptInterface.SingleVariable,MathOptInterface.ZeroOne},ScalarShape},1}:
+ x binary
+
+julia> all_constraints(model, AffExpr, MOI.LessThan{Float64})
+1-element Array{ConstraintRef{Model,MathOptInterface.ConstraintIndex{MathOptInterface.ScalarAffineFunction{Float64},MathOptInterface.LessThan{Float64}},ScalarShape},1}:
+ 2 x ≤ 1.0
+```
+"""
+function all_constraints(model::Model,
+                         function_type::Type{<:AbstractJuMPScalar},
+                         set_type::Type{<:MOI.AbstractSet})
+    _error_if_not_concrete_type(function_type)
+    _error_if_not_concrete_type(set_type)
+    # TODO: Support JuMP's set helpers like SecondOrderCone().
+    f_type = moi_function_type(function_type)
+    constraint_ref_type = ConstraintRef{Model, MOICON{f_type, set_type},
+                                        ScalarShape}
+    result = constraint_ref_type[]
+    for idx in MOI.get(model, MOI.ListOfConstraintIndices{f_type, set_type}())
+        push!(result, ConstraintRef(model, idx, ScalarShape()))
+    end
+    return result
+end
+
+# TODO: Support vector function types. This is blocked by not having the shape
+# information available.
+
+"""
+    list_of_constraint_types(model::Model)
+
+Return a list of tuples of the form `(F, S)` where `F` is a JuMP function type
+and `S` is an MOI set type such that `all_constraints(model, F, S)` returns
+a nonempty list.
+
+# Example
+```jldoctest
+julia> model = Model();
+
+julia> @variable(model, x >= 0, Bin);
+
+julia> @constraint(model, 2x <= 1);
+
+julia> list_of_constraint_types(model)
+3-element Array{Tuple{DataType,DataType},1}:
+ (VariableRef, MathOptInterface.ZeroOne)
+ (VariableRef, MathOptInterface.GreaterThan{Float64})
+ (GenericAffExpr{Float64,VariableRef}, MathOptInterface.LessThan{Float64})
+"""
+function list_of_constraint_types(model::Model)
+    list = MOI.get(model, MOI.ListOfConstraints())
+    return [(jump_function_type(model, f), s) for (f,s) in list]
 end
