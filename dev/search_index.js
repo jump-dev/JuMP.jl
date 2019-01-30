@@ -909,7 +909,7 @@ var documenterSearchIndex = {"docs": [
     "page": "Constraints",
     "title": "Accessing constraints from a model",
     "category": "section",
-    "text": "TODO: Describe constraints vs. ConstraintRefs. Describe JuMP.constraint_object. Describe how to access all constraints in a model."
+    "text": "You can query the types of constraints currently present in the model by calling list_of_constraint_types. Then, given a function and set type, use all_constraints to access a list of constraint references for constraints of this type. Then use constraint_object to get an instance of an AbstractConstraint object, either ScalarConstraint or VectorConstraint that stores the constraint data.julia> model = Model();\n\njulia> @variable(model, x[i=1:2] >= i, Int);\n\njulia> @constraint(model, x[1] + x[2] <= 1);\n\njulia> list_of_constraint_types(model)\n3-element Array{Tuple{DataType,DataType},1}:\n (VariableRef, MathOptInterface.Integer)\n (VariableRef, MathOptInterface.GreaterThan{Float64})\n (GenericAffExpr{Float64,VariableRef}, MathOptInterface.LessThan{Float64})\n\njulia> all_constraints(model, VariableRef, MOI.Integer)\n2-element Array{ConstraintRef{Model,MathOptInterface.ConstraintIndex{MathOptInterface.SingleVariable,MathOptInterface.Integer},ScalarShape},1}:\n x[1] integer\n x[2] integer\n\njulia> all_constraints(model, VariableRef, MOI.GreaterThan{Float64})\n2-element Array{ConstraintRef{Model,MathOptInterface.ConstraintIndex{MathOptInterface.SingleVariable,MathOptInterface.GreaterThan{Float64}},ScalarShape},1}:\n x[1] ≥ 1.0\n x[2] ≥ 2.0\n\njulia> less_than_constraints = all_constraints(model, GenericAffExpr{Float64,VariableRef}, MOI.LessThan{Float64})\n1-element Array{ConstraintRef{Model,MathOptInterface.ConstraintIndex{MathOptInterface.ScalarAffineFunction{Float64},MathOptInterface.LessThan{Float64}},ScalarShape},1}:\n x[1] + x[2] ≤ 1.0\n\njulia> con = constraint_object(less_than_constraints[1])\nScalarConstraint{GenericAffExpr{Float64,VariableRef},MathOptInterface.LessThan{Float64}}(x[1] + x[2], MathOptInterface.LessThan{Float64}(1.0))\n\njulia> con.func\nx[1] + x[2]\n\njulia> con.set\nMathOptInterface.LessThan{Float64}(1.0)"
 },
 
 {
@@ -1017,11 +1017,59 @@ var documenterSearchIndex = {"docs": [
 },
 
 {
+    "location": "constraints/#JuMP.list_of_constraint_types",
+    "page": "Constraints",
+    "title": "JuMP.list_of_constraint_types",
+    "category": "function",
+    "text": "list_of_constraint_types(model::Model)\n\nReturn a list of tuples of the form (F, S) where F is a JuMP function type and S is an MOI set type such that all_constraints(model, F, S) returns a nonempty list.\n\nExample\n\n```jldoctest julia> model = Model();\n\njulia> @variable(model, x >= 0, Bin);\n\njulia> @constraint(model, 2x <= 1);\n\njulia> listofconstraint_types(model) 3-element Array{Tuple{DataType,DataType},1}:  (VariableRef, MathOptInterface.ZeroOne)  (VariableRef, MathOptInterface.GreaterThan{Float64})  (GenericAffExpr{Float64,VariableRef}, MathOptInterface.LessThan{Float64})\n\n\n\n\n\n"
+},
+
+{
+    "location": "constraints/#JuMP.all_constraints",
+    "page": "Constraints",
+    "title": "JuMP.all_constraints",
+    "category": "function",
+    "text": "all_constraints(model::Model, function_type, set_type)::Vector{VariableRef}\n\nReturn a list of all constraints currently in the model where the function has type function_type and the set has type set_type. The constraints are ordered by creation time.\n\nSee also list_of_constraint_types.\n\nExample\n\njulia> model = Model();\n\njulia> @variable(model, x >= 0, Bin);\n\njulia> @constraint(model, 2x <= 1);\n\njulia> all_constraints(model, VariableRef, MOI.GreaterThan{Float64})\n1-element Array{ConstraintRef{Model,MathOptInterface.ConstraintIndex{MathOptInterface.SingleVariable,MathOptInterface.GreaterThan{Float64}},ScalarShape},1}:\n x ≥ 0.0\n\njulia> all_constraints(model, VariableRef, MOI.ZeroOne)\n1-element Array{ConstraintRef{Model,MathOptInterface.ConstraintIndex{MathOptInterface.SingleVariable,MathOptInterface.ZeroOne},ScalarShape},1}:\n x binary\n\njulia> all_constraints(model, AffExpr, MOI.LessThan{Float64})\n1-element Array{ConstraintRef{Model,MathOptInterface.ConstraintIndex{MathOptInterface.ScalarAffineFunction{Float64},MathOptInterface.LessThan{Float64}},ScalarShape},1}:\n 2 x ≤ 1.0\n\n\n\n\n\n"
+},
+
+{
+    "location": "constraints/#JuMP.constraint_object",
+    "page": "Constraints",
+    "title": "JuMP.constraint_object",
+    "category": "function",
+    "text": "constraint_object(ref::ConstraintRef)\n\nReturn the underlying constraint data for the constraint referenced by ref.\n\n\n\n\n\n"
+},
+
+{
+    "location": "constraints/#JuMP.AbstractConstraint",
+    "page": "Constraints",
+    "title": "JuMP.AbstractConstraint",
+    "category": "type",
+    "text": "abstract type AbstractConstraint\n\nAn abstract base type for all constraint types. AbstractConstraints store the function and set directly, unlike ConstraintRefs that are merely references to constraints stored in a model. AbstractConstraints do not need to be attached to a model.\n\n\n\n\n\n"
+},
+
+{
+    "location": "constraints/#JuMP.ScalarConstraint",
+    "page": "Constraints",
+    "title": "JuMP.ScalarConstraint",
+    "category": "type",
+    "text": "struct ScalarConstraint\n\nThe data for a scalar constraint. The func field containts a JuMP object representing the function and the set field contains the MOI set. See also the documentation on JuMP\'s representation of constraints for more background.\n\n\n\n\n\n"
+},
+
+{
+    "location": "constraints/#JuMP.VectorConstraint",
+    "page": "Constraints",
+    "title": "JuMP.VectorConstraint",
+    "category": "type",
+    "text": "struct VectorConstraint\n\nThe data for a vector constraint. The func field containts a JuMP object representing the function and the set field contains the MOI set. The shape field contains an AbstractShape matching the form in which the constraint was constructed (e.g., by using matrices or flat vectors). See also the documentation on JuMP\'s representation of constraints.\n\n\n\n\n\n"
+},
+
+{
     "location": "constraints/#Reference-1",
     "page": "Constraints",
     "title": "Reference",
     "category": "section",
-    "text": "@constraint\n@SDconstraint\nSecondOrderCone\nRotatedSecondOrderCone\nPSDCone\nJuMP.shadow_price\nJuMP.set_coefficient\nJuMP.is_valid\nJuMP.delete\nJuMP.LowerBoundRef\nJuMP.UpperBoundRef\nJuMP.FixRef\nConstraintRef"
+    "text": "@constraint\n@SDconstraint\nSecondOrderCone\nRotatedSecondOrderCone\nPSDCone\nshadow_price\nset_coefficient\nis_valid\nJuMP.delete\nLowerBoundRef\nUpperBoundRef\nFixRef\nConstraintRef\nlist_of_constraint_types\nall_constraints\nconstraint_object\nAbstractConstraint\nScalarConstraint\nVectorConstraint"
 },
 
 {
