@@ -693,12 +693,12 @@ julia> @variable(model, x >= 0, Bin);
 julia> @constraint(model, 2x <= 1);
 
 julia> list_of_constraint_types(model)
-3-element Array{Any,1}:
+3-element Array{Tuple{DataType,DataType},1}:
  (VariableRef, MathOptInterface.ZeroOne)
  (VariableRef, MathOptInterface.GreaterThan{Float64})
  (GenericAffExpr{Float64,VariableRef}, MathOptInterface.LessThan{Float64})
 """
 function list_of_constraint_types(model::Model)
     list = MOI.get(model, MOI.ListOfConstraints())
-    return Any[(jump_function_type(model, f), s) for (f,s) in list]
+    return [(jump_function_type(model, f), s) for (f,s) in list]
 end
