@@ -66,7 +66,7 @@ function parseNLExpr(m, x, tapevar, parent, values)
                             error($errorstring)
                         end
                     end
-                    operatorid = $(esc(m)).nlp_data.user_operators.univariate_operator_to_id[$opname] + Derivatives.USER_UNIVAR_OPERATOR_ID_START - 1
+                    operatorid = $(esc(m)).nlp_data.user_operators.univariate_operator_to_id[$opname] + _Derivatives.USER_UNIVAR_OPERATOR_ID_START - 1
                 end
                 push!(block.args, :($lookupcode; push!($tapevar, NodeData(CALLUNIVAR, operatorid, $parent))))
             end
@@ -99,7 +99,7 @@ function parseNLExpr(m, x, tapevar, parent, values)
                             error($errorstring)
                         end
                     end
-                    operatorid = $(esc(m)).nlp_data.user_operators.multivariate_operator_to_id[$opname] + Derivatives.USER_OPERATOR_ID_START - 1
+                    operatorid = $(esc(m)).nlp_data.user_operators.multivariate_operator_to_id[$opname] + _Derivatives.USER_OPERATOR_ID_START - 1
                 end
                 push!(block.args, :($lookupcode; push!($tapevar, NodeData(CALL, operatorid, $parent))))
             end
@@ -236,17 +236,26 @@ macro processNLExpr(model, ex)
     return processNLExpr(model, ex)
 end
 
-function Derivatives.expr_to_nodedata(ex::VariableRef,nd::Vector{NodeData},values::Vector{Float64},parentid,r::Derivatives.UserOperatorRegistry)
+function _Derivatives.expr_to_nodedata(ex::VariableRef,
+                                       nd::Vector{NodeData},
+                                       values::Vector{Float64}, parentid,
+                                       r::_Derivatives.UserOperatorRegistry)
     push!(nd, NodeData(MOIVARIABLE, ex.index.value, parentid))
     nothing
 end
 
-function Derivatives.expr_to_nodedata(ex::NonlinearExpression,nd::Vector{NodeData},values::Vector{Float64},parentid,r::Derivatives.UserOperatorRegistry)
+function _Derivatives.expr_to_nodedata(ex::NonlinearExpression,
+                                       nd::Vector{NodeData},
+                                       values::Vector{Float64}, parentid,
+                                       r::_Derivatives.UserOperatorRegistry)
     push!(nd, NodeData(SUBEXPRESSION, ex.index, parentid))
     nothing
 end
 
-function Derivatives.expr_to_nodedata(ex::NonlinearParameter,nd::Vector{NodeData},values::Vector{Float64},parentid,r::Derivatives.UserOperatorRegistry)
+function _Derivatives.expr_to_nodedata(ex::NonlinearParameter,
+                                       nd::Vector{NodeData},
+                                       values::Vector{Float64}, parentid,
+                                       r::_Derivatives.UserOperatorRegistry)
     push!(nd, NodeData(PARAMETER, ex.index, parentid))
     nothing
 end
@@ -256,7 +265,7 @@ end
 function NonlinearExprData(m::Model, ex::Expr)
     initNLP(m)
     checkexpr(m,ex)
-    nd, values = Derivatives.expr_to_nodedata(ex,m.nlp_data.user_operators)
+    nd, values = _Derivatives.expr_to_nodedata(ex,m.nlp_data.user_operators)
     return NonlinearExprData(nd, values)
 end
 NonlinearExprData(m::Model, ex) = NonlinearExprData(m, :($ex + 0))

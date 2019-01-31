@@ -1,4 +1,4 @@
-using JuMP.Derivatives
+using JuMP._Derivatives
 using Test
 using MathOptInterface
 
@@ -7,7 +7,7 @@ end
 
 @testset "Derivatives" begin
 
-NO_USER_OPS = JuMP.Derivatives.UserOperatorRegistry()
+NO_USER_OPS = JuMP._Derivatives.UserOperatorRegistry()
 
 ex = :(sin(x[1]^2) + cos(x[2]*4)/5-2.0)
 
@@ -280,13 +280,13 @@ function MathOptInterface.eval_objective_gradient(::ΦEvaluator,grad,x)
     grad[1] = -4x[1]
     grad[2] = x[2]^2
 end
-r = Derivatives.UserOperatorRegistry()
+r = _Derivatives.UserOperatorRegistry()
 register_multivariate_operator!(r,:Φ,ΦEvaluator())
 register_univariate_operator!(r,:c,cos,x->-sin(x),x->-cos(x))
 Φ(x,y) = MathOptInterface.eval_objective(ΦEvaluator(),[x,y])
 ex = :(Φ(x[2],x[1]-1)*c(x[3]))
 nd,const_values = expr_to_nodedata(ex,r)
-@test Derivatives.has_user_multivariate_operators(nd)
+@test _Derivatives.has_user_multivariate_operators(nd)
 adj = adjmat(nd)
 storage = zeros(length(nd))
 partials_storage = zeros(length(nd))

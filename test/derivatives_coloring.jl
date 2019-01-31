@@ -1,10 +1,10 @@
 using Test
 
-import JuMP.Derivatives.Coloring: acyclic_coloring, recovery_preprocess,
-                                  reverse_topological_sort_by_dfs,
-                                  gen_adjlist, hessian_color_preprocess,
-                                  prepare_seed_matrix!, recover_from_matmat!,
-                                  seed_matrix
+import JuMP._Derivatives.Coloring: acyclic_coloring, recovery_preprocess,
+                                   reverse_topological_sort_by_dfs,
+                                   gen_adjlist, hessian_color_preprocess,
+                                   prepare_seed_matrix!, recover_from_matmat!,
+                                   seed_matrix
 
 struct Graph
     num_vertices::Int
