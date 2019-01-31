@@ -83,7 +83,13 @@ function forward_eval(storage::AbstractVector{T}, partials_storage::AbstractVect
                 for c_idx in children_idx
                     @inbounds tmp_prod *= storage[children_arr[c_idx]]
                 end
-                if tmp_prod == zero(T) # inefficient
+                if tmp_prod == zero(T) || n_children <= 2
+                    # This is inefficient if there are a lot of children.
+                    # 2 is chosen as a limit because (x*y)/y does not always
+                    # equal x for floating-point numbers. This can produce
+                    # unexpected error in partials. There's still an error when
+                    # multiplying three or more terms, but users are less likely
+                    # to complain about it.
                     for c_idx in children_idx
                         prod_others = one(T)
                         for c_idx2 in children_idx
@@ -93,6 +99,8 @@ function forward_eval(storage::AbstractVector{T}, partials_storage::AbstractVect
                         partials_storage[children_arr[c_idx]] = prod_others
                     end
                 else
+                    # Compute all-minus-one partial derivatives by dividing from
+                    # the total product.
                     for c_idx in children_idx
                         ix = children_arr[c_idx]
                         partials_storage[ix] = tmp_prod/storage[ix]
@@ -286,7 +294,7 @@ function forward_eval_ϵ(storage::AbstractVector{T},
                 op = nod.index
                 n_children = length(children_idx)
                 if op == 3 # :*
-                    # Lazy approach for now
+                    # Lazy approach for now.
                     anyzero = false
                     tmp_prod = one(ForwardDiff.Dual{TAG,T,N})
                     for c_idx in children_idx
@@ -298,7 +306,7 @@ function forward_eval_ϵ(storage::AbstractVector{T},
                     end
                     # By a quirk of floating-point numbers, we can have
                     # anyzero == true && ForwardDiff.value(tmp_prod) != zero(T)
-                    if anyzero # inefficient
+                    if anyzero || n_children <= 2
                         for c_idx in children_idx
                             prod_others = one(ForwardDiff.Dual{TAG,T,N})
                             for c_idx2 in children_idx

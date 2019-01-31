@@ -257,6 +257,19 @@
         @test isapprox(dense_hessian(hessian_sparsity, V, 1), [0.0])
     end
 
+    @testset "Product corner case (issue #1181)" begin
+        model = Model()
+        @variable(model, x[1:2])
+
+        @NLobjective(model, Min, x[1] * x[2])
+        d = JuMP.NLPEvaluator(model)
+        MOI.initialize(d, [:Hess])
+        hessian_sparsity = MOI.hessian_lagrangian_structure(d)
+        V = zeros(length(hessian_sparsity))
+        MOI.eval_hessian_lagrangian(d, V, [0.659, 0.702], 1.0, Float64[])
+        @test V == [0.0, 0.0, 1.0]
+    end
+
     @testset "Hessians and Hess-vec" begin
         m = Model()
         @variable(m, a)
