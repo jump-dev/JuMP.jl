@@ -93,7 +93,7 @@ function example_steelT3(; verbose = true)
 
     if verbose
         println("RESULTS:")
-        for p in product
+        for p in prod
             println("make $(p)")
             for t in 1:T
                 print(JuMP.value(make[p, t]), "\t")
@@ -101,7 +101,7 @@ function example_steelT3(; verbose = true)
             println()
             println("Inventory $(p)")
             for t in 1:T
-                print(JuMP.value(Inventory[p, t]), "\t")
+                print(JuMP.value(inventory[p, t]), "\t")
             end
             println()
             for a in area[p]
