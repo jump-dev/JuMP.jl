@@ -305,8 +305,8 @@ end
 
 """
     _macro_assign_and_return(code, variable, name;
-                            final_variable=variable,
-                            model_for_registering=nothing)
+                             final_variable=variable,
+                             model_for_registering=nothing)
 
 Return runs `code` in a local scope which returns the value of `variable`
 and then assign `final_variable` to `name`.
@@ -339,12 +339,12 @@ end
 
 # two-argument build_constraint is used for one-sided constraints.
 # Right-hand side is zero.
-_sense_to_set(_error::Function, ::Union{Val{:(<=)}, Val{:(≤)}}) = MOI.LessThan(0.0)
-_sense_to_set(_error::Function, ::Union{Val{:(>=)}, Val{:(≥)}}) = MOI.GreaterThan(0.0)
-_sense_to_set(_error::Function, ::Val{:(==)}) = MOI.EqualTo(0.0)
-_sense_to_set(_error::Function, ::Val{S}) where S = _error("Unrecognized sense $S")
+sense_to_set(_error::Function, ::Union{Val{:(<=)}, Val{:(≤)}}) = MOI.LessThan(0.0)
+sense_to_set(_error::Function, ::Union{Val{:(>=)}, Val{:(≥)}}) = MOI.GreaterThan(0.0)
+sense_to_set(_error::Function, ::Val{:(==)}) = MOI.EqualTo(0.0)
+sense_to_set(_error::Function, ::Val{S}) where S = _error("Unrecognized sense $S")
 
-function _parse_one_operator_constraint(_error::Function, vectorized::Bool,
+function parse_one_operator_constraint(_error::Function, vectorized::Bool,
                                         ::Union{Val{:in}, Val{:∈}}, aff, set)
     newaff, parseaff = parseExprToplevel(aff, :q)
     parsecode = :(q = Val{false}(); $parseaff)
@@ -356,19 +356,19 @@ function _parse_one_operator_constraint(_error::Function, vectorized::Bool,
     parsecode, buildcall
 end
 
-function _parse_one_operator_constraint(_error::Function, vectorized::Bool, sense::Val, lhs, rhs)
+function parse_one_operator_constraint(_error::Function, vectorized::Bool, sense::Val, lhs, rhs)
     # Simple comparison - move everything to the LHS
     aff = :($lhs - $rhs)
-    set = _sense_to_set(_error, sense)
-    _parse_one_operator_constraint(_error, vectorized, Val(:in), aff, set)
+    set = sense_to_set(_error, sense)
+    parse_one_operator_constraint(_error, vectorized, Val(:in), aff, set)
 end
 
 function parse_constraint(_error::Function, sense::Symbol, lhs, rhs)
     (sense, vectorized) = _check_vectorized(sense)
-    vectorized, _parse_one_operator_constraint(_error, vectorized, Val(sense), lhs, rhs)...
+    vectorized, parse_one_operator_constraint(_error, vectorized, Val(sense), lhs, rhs)...
 end
 
-function _parse_ternary_constraint(_error::Function, vectorized::Bool, lb, ::Union{Val{:(<=)}, Val{:(≤)}}, aff, rsign::Union{Val{:(<=)}, Val{:(≤)}}, ub)
+function parse_ternary_constraint(_error::Function, vectorized::Bool, lb, ::Union{Val{:(<=)}, Val{:(≤)}}, aff, rsign::Union{Val{:(<=)}, Val{:(≤)}}, ub)
     newaff, parseaff = parseExprToplevel(aff, :aff)
     newlb, parselb = parseExprToplevel(lb, :lb)
     newub, parseub = parseExprToplevel(ub, :ub)
@@ -380,11 +380,11 @@ function _parse_ternary_constraint(_error::Function, vectorized::Bool, lb, ::Uni
     parseaff, parselb, parseub, buildcall
 end
 
-function _parse_ternary_constraint(_error::Function, vectorized::Bool, ub, ::Union{Val{:(>=)}, Val{:(≥)}}, aff, rsign::Union{Val{:(>=)}, Val{:(≥)}}, lb)
-    _parse_ternary_constraint(_error, vectorized, lb, Val(:(<=)), aff, Val(:(<=)), ub)
+function parse_ternary_constraint(_error::Function, vectorized::Bool, ub, ::Union{Val{:(>=)}, Val{:(≥)}}, aff, rsign::Union{Val{:(>=)}, Val{:(≥)}}, lb)
+    parse_ternary_constraint(_error, vectorized, lb, Val(:(<=)), aff, Val(:(<=)), ub)
 end
 
-function _parse_ternary_constraint(_error::Function, args...)
+function parse_ternary_constraint(_error::Function, args...)
     _error("Only two-sided rows of the form lb <= expr <= ub or ub >= expr >= lb are supported.")
 end
 
@@ -392,7 +392,7 @@ function parse_constraint(_error::Function, lb, lsign::Symbol, aff, rsign::Symbo
     (lsign, lvectorized) = _check_vectorized(lsign)
     (rsign, rvectorized) = _check_vectorized(rsign)
     ((vectorized = lvectorized) == rvectorized) || _error("Signs are inconsistently vectorized")
-    parseaff, parselb, parseub, buildcall = _parse_ternary_constraint(_error, vectorized, lb, Val(lsign), aff, Val(rsign), ub)
+    parseaff, parselb, parseub, buildcall = parse_ternary_constraint(_error, vectorized, lb, Val(lsign), aff, Val(rsign), ub)
     parsecode = quote
         aff = Val{false}()
         $parseaff
@@ -563,9 +563,9 @@ function _constraint_macro(args, macro_name::Symbol, parsefun::Function)
 
     # Determine the return type of add_constraint. This is needed for JuMP extensions for which this is different than ConstraintRef
     if vectorized
-        contype = :( AbstractArray{_constraint_type($m)} ) # TODO use a concrete type instead of AbstractArray, see #525, #1310
+        contype = :( AbstractArray{constraint_type($m)} ) # TODO use a concrete type instead of AbstractArray, see #525, #1310
     else
-        contype = :( _constraint_type($m) )
+        contype = :( constraint_type($m) )
     end
     creationcode = _get_looped_code(variable, code, condition, idxvars, idxsets, contype, requestedcontainer)
 
@@ -578,13 +578,13 @@ function _constraint_macro(args, macro_name::Symbol, parsefun::Function)
         # We register the constraint reference to its name and
         # we assign it to a variable in the local scope of this name
         macro_code = _macro_assign_and_return(creationcode, variable, name,
-                                             model_for_registering = m)
+                                              model_for_registering = m)
     end
     return _assert_valid_model(m, macro_code)
 end
 
 # This function needs to be implemented by all `AbstractModel`s
-_constraint_type(m::Model) = ConstraintRef{typeof(m)}
+constraint_type(m::Model) = ConstraintRef{typeof(m)}
 
 """
     @constraint(m::Model, expr)
@@ -640,7 +640,7 @@ macro constraint(args...)
     _constraint_macro(args, :constraint, parse_constraint)
 end
 
-function _parse_SD_constraint(_error::Function, sense::Symbol, lhs, rhs)
+function parse_SD_constraint(_error::Function, sense::Symbol, lhs, rhs)
     # Simple comparison - move everything to the LHS
     aff = :()
     if sense == :⪰ || sense == :(≥) || sense == :(>=)
@@ -651,11 +651,11 @@ function _parse_SD_constraint(_error::Function, sense::Symbol, lhs, rhs)
         _error("Invalid sense $sense in SDP constraint")
     end
     vectorized = false
-    parsecode, buildcall = _parse_one_operator_constraint(_error, false, Val(:in), aff, :(JuMP.PSDCone()))
+    parsecode, buildcall = parse_one_operator_constraint(_error, false, Val(:in), aff, :(JuMP.PSDCone()))
     vectorized, parsecode, buildcall
 end
 
-function _parse_SD_constraint(_error::Function, args...)
+function parse_SD_constraint(_error::Function, args...)
     _error("Constraints must be in one of the following forms:\n" *
            "       expr1 <= expr2\n" *
            "       expr1 >= expr2")
@@ -710,7 +710,7 @@ part of the matrix assuming that it is symmetric, see [`PSDCone`](@ref) to see
 how to use it.
 """
 macro SDconstraint(args...)
-    _constraint_macro(args, :SDconstraint, _parse_SD_constraint)
+    _constraint_macro(args, :SDconstraint, parse_SD_constraint)
 end
 
 """
@@ -988,7 +988,7 @@ macro expression(args...)
         macro_code = _macro_return(code, variable)
     else
         macro_code = _macro_assign_and_return(code, variable, _get_name(c),
-                                             model_for_registering = m)
+                                              model_for_registering = m)
     end
     return _assert_valid_model(m, macro_code)
 end
@@ -997,14 +997,14 @@ _esc_non_constant(x::Number) = x
 _esc_non_constant(x::Expr) = isexpr(x,:quote) ? x : esc(x)
 _esc_non_constant(x) = esc(x)
 
-# Returns the type of what `add_variable(::Model, _build_variable(...))` would return where `...` represents the positional arguments.
-# Example: `@variable m [1:3] foo` will allocate an vector of element type `_variable_type(m, foo)`
+# Returns the type of what `add_variable(::Model, build_variable(...))` would return where `...` represents the positional arguments.
+# Example: `@variable m [1:3] foo` will allocate an vector of element type `variable_type(m, foo)`
 # Note: it needs to be implemented by all `AbstractModel`s
-_variable_type(m::Model) = VariableRef
+variable_type(m::Model) = VariableRef
 # Returns a new variable. Additional positional arguments can be used to dispatch the call to a different method.
 # The return type should only depends on the positional arguments for `variable_type` to make sense. See the @variable macro doc for more details.
-# Example: `@variable m x` foo will call `_build_variable(_error, info, foo)`
-function _build_variable(_error::Function, info::VariableInfo; extra_kw_args...)
+# Example: `@variable m x` foo will call `build_variable(_error, info, foo)`
+function build_variable(_error::Function, info::VariableInfo; extra_kw_args...)
     for (kwarg, _) in extra_kw_args
         _error("Unrecognized keyword argument $kwarg")
     end
@@ -1033,21 +1033,21 @@ function _name_call(base_name, idxvars)
     return ex
 end
 
-_reverse_sense(::Val{:<=})   = Val(:>=)
-_reverse_sense(::Val{:≤})    = Val(:≥)
-_reverse_sense(::Val{:>=})   = Val(:<=)
-_reverse_sense(::Val{:≥})    = Val(:≤)
-_reverse_sense(::Val{:(==)}) = Val(:(==))
+reverse_sense(::Val{:<=})   = Val(:>=)
+reverse_sense(::Val{:≤})    = Val(:≥)
+reverse_sense(::Val{:>=})   = Val(:<=)
+reverse_sense(::Val{:≥})    = Val(:≤)
+reverse_sense(::Val{:(==)}) = Val(:(==))
 
 """
-    _parse_one_operator_variable(_error::Function, infoexpr::VariableInfoExpr, sense::Val{S}, value) where S
+    parse_one_operator_variable(_error::Function, infoexpr::VariableInfoExpr, sense::Val{S}, value) where S
 
 Update `infoexr` for a variable expression in the `@variable` macro of the form `variable name S value`.
 """
-_parse_one_operator_variable(_error::Function, infoexpr::VariableInfoExpr, ::Union{Val{:<=}, Val{:≤}}, upper) = set_upper_bound_or_error(_error, infoexpr, upper)
-_parse_one_operator_variable(_error::Function, infoexpr::VariableInfoExpr, ::Union{Val{:>=}, Val{:≥}}, lower) = set_lower_bound_or_error(_error, infoexpr, lower)
-_parse_one_operator_variable(_error::Function, infoexpr::VariableInfoExpr, ::Val{:(==)}, value) = fix_or_error(_error, infoexpr, value)
-_parse_one_operator_variable(_error::Function, infoexpr::VariableInfoExpr, ::Val{S}, value) where S = _error("Unknown sense $S.")
+parse_one_operator_variable(_error::Function, infoexpr::VariableInfoExpr, ::Union{Val{:<=}, Val{:≤}}, upper) = set_upper_bound_or_error(_error, infoexpr, upper)
+parse_one_operator_variable(_error::Function, infoexpr::VariableInfoExpr, ::Union{Val{:>=}, Val{:≥}}, lower) = set_lower_bound_or_error(_error, infoexpr, lower)
+parse_one_operator_variable(_error::Function, infoexpr::VariableInfoExpr, ::Val{:(==)}, value) = fix_or_error(_error, infoexpr, value)
+parse_one_operator_variable(_error::Function, infoexpr::VariableInfoExpr, ::Val{S}, value) where S = _error("Unknown sense $S.")
 
 # There is not way to determine at parsing time which of lhs or rhs is the
 # variable name and which is the value if both are symbols. For instance,
@@ -1056,36 +1056,36 @@ _parse_one_operator_variable(_error::Function, infoexpr::VariableInfoExpr, ::Val
 # that `x` is the variable name but at parse time there is now way to know
 # that `a` has a value.
 # In that case we assume the variable is the lhs.
-function _parse_variable(_error::Function, infoexpr::VariableInfoExpr, sense::Symbol, var, value)
-    _parse_one_operator_variable(_error, infoexpr, Val(sense), _esc_non_constant(value))
+function parse_variable(_error::Function, infoexpr::VariableInfoExpr, sense::Symbol, var, value)
+    parse_one_operator_variable(_error, infoexpr, Val(sense), _esc_non_constant(value))
     return var
 end
 
 # If the lhs is a number and not the rhs, we can deduce that the rhs is
 # the variable.
-function _parse_variable(_error::Function, infoexpr::VariableInfoExpr, sense::Symbol, value::Number, var)
-    _parse_one_operator_variable(_error, infoexpr, _reverse_sense(Val(sense)), _esc_non_constant(value))
+function parse_variable(_error::Function, infoexpr::VariableInfoExpr, sense::Symbol, value::Number, var)
+    parse_one_operator_variable(_error, infoexpr, reverse_sense(Val(sense)), _esc_non_constant(value))
     return var
 end
 
-function _parse_ternary_variable(_error::Function, infoexpr::VariableInfoExpr,
+function parse_ternary_variable(_error::Function, infoexpr::VariableInfoExpr,
                                  ::Union{Val{:<=}, Val{:≤}}, lower,
                                  ::Union{Val{:<=}, Val{:≤}}, upper)
     set_lower_bound_or_error(_error, infoexpr, lower)
     set_upper_bound_or_error(_error, infoexpr, upper)
 end
-function _parse_ternary_variable(_error::Function, infoexpr::VariableInfoExpr,
+function parse_ternary_variable(_error::Function, infoexpr::VariableInfoExpr,
                                  ::Union{Val{:>=}, Val{:≥}}, upper,
                                  ::Union{Val{:>=}, Val{:≥}}, lower)
-    _parse_ternary_variable(_error, infoexpr, Val(:≤), lower, Val(:≤), upper)
+    parse_ternary_variable(_error, infoexpr, Val(:≤), lower, Val(:≤), upper)
 end
-function _parse_ternary_variable(_error::Function, infoexpr::VariableInfoExpr,
+function parse_ternary_variable(_error::Function, infoexpr::VariableInfoExpr,
                                  ::Val, lvalue, ::Val, rvalue)
     _error("Use the form lb <= ... <= ub.")
 end
-function _parse_variable(_error::Function, infoexpr::VariableInfoExpr, lvalue, lsign::Symbol, var, rsign::Symbol, rvalue)
+function parse_variable(_error::Function, infoexpr::VariableInfoExpr, lvalue, lsign::Symbol, var, rsign::Symbol, rvalue)
     # lvalue lsign var rsign rvalue
-    _parse_ternary_variable(_error, infoexpr, Val(lsign), _esc_non_constant(lvalue), Val(rsign), _esc_non_constant(rvalue))
+    parse_ternary_variable(_error, infoexpr, Val(lsign), _esc_non_constant(lvalue), Val(rsign), _esc_non_constant(rvalue))
     return var
 end
 
@@ -1169,7 +1169,7 @@ ub = Dict(:a => 2, :b => 3)
 ## Note for extending the variable macro
 
 The single scalar variable or each scalar variable of the container are created
-using `add_variable(model, _build_variable(_error, info, extra_args...;
+using `add_variable(model, build_variable(_error, info, extra_args...;
 extra_kw_args...))` where
 
 * `model` is the model passed to the `@variable` macro;
@@ -1182,9 +1182,9 @@ extra_kw_args...))` where
 * `extra_args` are the unrecognized positional arguments of `args` plus the
   value of the `variable_type` keyword argument if present. The `variable_type`
   keyword argument allows the user to pass a position argument to
-  `_build_variable` without the need to give a positional argument to
+  `build_variable` without the need to give a positional argument to
   `@variable`. In particular, this allows the user to give a positional
-  argument to the `_build_variable` call when using the anonymous single variable
+  argument to the `build_variable` call when using the anonymous single variable
   syntax `@variable(model, kw_args...)`; and
 * `extra_kw_args` are the unrecognized keyword argument of `kw_args`.
 
@@ -1194,7 +1194,7 @@ The following creates a variable `x` of name `x` with lower_bound 0 as with the 
 example above but does it without using the `@variable` macro
 ```julia
 info = VariableInfo(true, 0, false, NaN, false, NaN, false, NaN, false, false)
-JuMP.add_variable(model, JuMP._build_variable(error, info), "x")
+JuMP.add_variable(model, JuMP.build_variable(error, info), "x")
 ```
 
 The following creates a `DenseAxisArray` of index set `[:a, :b]` and with respective
@@ -1202,11 +1202,11 @@ upper bounds 2 and 3 and names `x[a]` and `x[b]` as with the second example
 above but does it without using the `@variable` macro
 ```julia
 # Without the `@variable` macro
-data = Vector{JuMP._variable_type(model)}(undef, length(keys(ub)))
+data = Vector{JuMP.variable_type(model)}(undef, length(keys(ub)))
 x = JuMP.Containers.DenseAxisArray(data, keys(ub))
 for i in keys(ub)
     info = VariableInfo(false, NaN, true, ub[i], false, NaN, false, NaN, false, false)
-    x[i] = JuMP.add_variable(model, JuMP._build_variable(error, info), "x[\$i]")
+    x[i] = JuMP.add_variable(model, JuMP.build_variable(error, info), "x[\$i]")
 end
 ```
 
@@ -1217,10 +1217,10 @@ the `Poly(X)` positional argument to specify its variables:
 # Using the `@variable` macro
 @variable(model, x[1:N,1:N], Symmetric, Poly(X))
 # Without the `@variable` macro
-x = Matrix{JuMP._variable_type(model, Poly(X))}(N, N)
+x = Matrix{JuMP.variable_type(model, Poly(X))}(N, N)
 info = VariableInfo(false, NaN, false, NaN, false, NaN, false, NaN, false, false)
 for i in 1:N, j in i:N
-    x[i,j] = x[j,i] = JuMP.add_variable(model, _build_variable(error, info, Poly(X)), "x[\$i,\$j]")
+    x[i,j] = x[j,i] = JuMP.add_variable(model, build_variable(error, info, Poly(X)), "x[\$i,\$j]")
 end
 ```
 """
@@ -1257,10 +1257,10 @@ macro variable(args...)
     # var[1:2]                                | Expr      | :ref
     # var <= ub or var[1:2] <= ub             | Expr      | :call
     # lb <= var <= ub or lb <= var[1:2] <= ub | Expr      | :comparison
-    # In the two last cases, we call _parse_variable
+    # In the two last cases, we call parse_variable
     explicit_comparison = isexpr(x, :comparison) || isexpr(x, :call)
     if explicit_comparison
-        var = _parse_variable(_error, infoexpr, x.args...)
+        var = parse_variable(_error, infoexpr, x.args...)
     else
         var = x
     end
@@ -1302,7 +1302,7 @@ macro variable(args...)
     if isa(var,Symbol)
         # Easy case - a single variable
         sdp && _error("Cannot add a semidefinite scalar variable")
-        buildcall = :( _build_variable($_error, $info, $(extra...)) )
+        buildcall = :( build_variable($_error, $info, $(extra...)) )
         _add_kw_args(buildcall, extra_kw_args)
         variablecall = :( add_variable($model, $buildcall, $base_name) )
         # The looped code is trivial here since there is a single variable
@@ -1317,12 +1317,12 @@ macro variable(args...)
         clear_dependencies(i) = (Containers.is_dependent(idxvars,idxsets[i],i) ? () : idxsets[i])
 
         # Code to be used to create each variable of the container.
-        buildcall = :( _build_variable($_error, $info, $(extra...)) )
+        buildcall = :( build_variable($_error, $info, $(extra...)) )
         _add_kw_args(buildcall, extra_kw_args)
         variablecall = :( add_variable($model, $buildcall, $(_name_call(base_name, idxvars))) )
         code = :( $(refcall) = $variablecall )
         # Determine the return type of add_variable. This is needed to create the container holding them.
-        vartype = :( _variable_type($model, $(extra...)) )
+        vartype = :( variable_type($model, $(extra...)) )
 
         if symmetric
             # Sanity checks on PSD input stuff
@@ -1372,8 +1372,8 @@ macro variable(args...)
         # We register the variable reference to its name and
         # we assign it to a variable in the local scope of this name
         macro_code = _macro_assign_and_return(creationcode, variable, name,
-                                             final_variable=final_variable,
-                                             model_for_registering = model)
+                                              final_variable=final_variable,
+                                              model_for_registering = model)
     end
     return _assert_valid_model(model, macro_code)
 end
@@ -1481,8 +1481,8 @@ macro NLconstraint(m, x, extra...)
         macro_code = _macro_return(creation_code, variable)
     else
         macro_code = _macro_assign_and_return(creation_code, variable,
-                                             _get_name(c),
-                                             model_for_registering = esc_m)
+                                              _get_name(c),
+                                              model_for_registering = esc_m)
     end
     return _assert_valid_model(esc_m, macro_code)
 end
@@ -1531,8 +1531,8 @@ macro NLexpression(args...)
         macro_code = _macro_return(creation_code, variable)
     else
         macro_code = _macro_assign_and_return(creation_code, variable,
-                                             _get_name(c),
-                                             model_for_registering = esc(m))
+                                              _get_name(c),
+                                              model_for_registering = esc(m))
     end
     return _assert_valid_model(esc(m), macro_code)
 end
@@ -1601,6 +1601,6 @@ macro NLparameter(m, ex, extra...)
     # TODO: NLparameters are not registered in the model because we don't yet
     # have an anonymous version.
     macro_code = _macro_assign_and_return(creation_code, variable,
-                                         _get_name(c))
+                                          _get_name(c))
     return _assert_valid_model(m, macro_code)
 end
