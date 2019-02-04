@@ -312,6 +312,7 @@ function JuMP.build_constraint(_error::Function, func::AbstractJuMPScalar,
     constraint = ScalarConstraint(func, set)
     return JuMP.BridgeableConstraint(constraint, CustomBridge)
 end
+```
 
 ### Note
 
