@@ -53,7 +53,7 @@ end
 
 @testset "Extension of @variable with _build_variable #1029" begin
     local MyVariable = Tuple{JuMP.VariableInfo, Int, Int}
-    JuMP._variable_type(m::Model, ::Type{MyVariable}) = MyVariable
+    JuMP.variable_type(m::Model, ::Type{MyVariable}) = MyVariable
     names = Dict{MyVariable, String}()
     function JuMP.add_variable(m::Model, v::MyVariable, name::String="")
         names[v] = name
