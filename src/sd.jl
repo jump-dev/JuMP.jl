@@ -77,9 +77,7 @@ struct SquareMatrixShape <: AbstractShape
     side_dimension::Int
 end
 function reshape_result(vectorized_form::Vector{T}, shape::SquareMatrixShape) where T
-    return Base.reshape_result(vectorized_form,
-                               shape.side_dimension,
-                               shape.side_dimension)
+    return reshape(vectorized_form, shape.side_dimension, shape.side_dimension)
 end
 
 """
