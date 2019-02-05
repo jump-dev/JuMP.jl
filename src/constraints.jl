@@ -12,7 +12,7 @@
     AbstractShape
 
 Abstract vectorizable shape. Given a flat vector form of an object of shape
-`shape`, the original object can be obtained by [`reshape`](@ref).
+`shape`, the original object can be obtained by [`reshape_result`](@ref).
 """
 abstract type AbstractShape end
 
@@ -36,7 +36,7 @@ end
 struct PolynomialShape <: AbstractShape
     monomials::Vector{Monomial}
 end
-JuMP.reshape(x::Vector, shape::PolynomialShape) = Polynomial(x, shape.monomials)
+JuMP.reshape_result(x::Vector, shape::PolynomialShape) = Polynomial(x, shape.monomials)
 ```
 and a shape for moments can be defined as follows:
 ```julia
@@ -47,7 +47,7 @@ end
 struct MomentsShape <: AbstractShape
     monomials::Vector{Monomial}
 end
-JuMP.reshape(x::Vector, shape::MomentsShape) = Moments(x, shape.monomials)
+JuMP.reshape_result(x::Vector, shape::MomentsShape) = Moments(x, shape.monomials)
 ```
 The `dual_shape` allows to define the shape of the dual of polynomial and moment
 constraints:
@@ -59,7 +59,7 @@ dual_shape(shape::MomentsShape) = PolynomialShape(shape.monomials)
 dual_shape(shape::AbstractShape) = shape
 
 """
-    reshape(vectorized_form::Vector, shape::AbstractShape)
+    reshape_result(vectorized_form::Vector, shape::AbstractShape)
 
 Return an object in its original shape `shape` given its vectorized form
 `vectorized_form`.
@@ -69,10 +69,10 @@ Return an object in its original shape `shape` given its vectorized form
 Given a [`SymmetricMatrixShape`](@ref) of vectorized form `[1, 2, 3]`, the
 following code returns the matrix `Symmetric(Matrix[1 2; 2 3])`:
 ```julia
-reshape([1, 2, 3], SymmetricMatrixShape(2))
+reshape_result([1, 2, 3], SymmetricMatrixShape(2))
 ```
 """
-function reshape end
+function reshape_result end
 
 """
     shape(c::AbstractConstraint)::AbstractShape
@@ -87,7 +87,7 @@ function shape end
 Shape of scalar constraints.
 """
 struct ScalarShape <: AbstractShape end
-reshape(α, ::ScalarShape) = α
+reshape_result(α, ::ScalarShape) = α
 
 """
     VectorShape
@@ -95,7 +95,7 @@ reshape(α, ::ScalarShape) = α
 Vector for which the vectorized form corresponds exactly to the vector given.
 """
 struct VectorShape <: AbstractShape end
-reshape(vectorized_form, ::VectorShape) = vectorized_form
+reshape_result(vectorized_form, ::VectorShape) = vectorized_form
 
 """
     ConstraintRef
@@ -523,8 +523,8 @@ evaluation of `2x + 3y`.
 ```
 """
 function value(cref::ConstraintRef{Model, <:MOICON})
-    return reshape(MOI.get(cref.model, MOI.ConstraintPrimal(), cref),
-                   cref.shape)
+    return reshape_result(MOI.get(cref.model, MOI.ConstraintPrimal(), cref),
+                          cref.shape)
 end
 
 """

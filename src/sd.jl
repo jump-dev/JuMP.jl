@@ -53,7 +53,7 @@ lower-left triangular part given row by row).
 struct SymmetricMatrixShape <: AbstractShape
     side_dimension::Int
 end
-function reshape(vectorized_form::Vector{T}, shape::SymmetricMatrixShape) where T
+function reshape_result(vectorized_form::Vector{T}, shape::SymmetricMatrixShape) where T
     matrix = Matrix{T}(undef, shape.side_dimension, shape.side_dimension)
     k = 0
     for j in 1:shape.side_dimension
@@ -76,10 +76,10 @@ row).
 struct SquareMatrixShape <: AbstractShape
     side_dimension::Int
 end
-function reshape(vectorized_form::Vector{T}, shape::SquareMatrixShape) where T
-    return Base.reshape(vectorized_form,
-                        shape.side_dimension,
-                        shape.side_dimension)
+function reshape_result(vectorized_form::Vector{T}, shape::SquareMatrixShape) where T
+    return Base.reshape_result(vectorized_form,
+                               shape.side_dimension,
+                               shape.side_dimension)
 end
 
 """
