@@ -51,7 +51,7 @@ mutable struct MyVariable
     info::JuMP.VariableInfo
 end
 
-@testset "Extension of @variable with _build_variable #1029" begin
+@testset "Extension of @variable with build_variable #1029" begin
     local MyVariable = Tuple{JuMP.VariableInfo, Int, Int}
     JuMP.variable_type(m::Model, ::Type{MyVariable}) = MyVariable
     names = Dict{MyVariable, String}()
@@ -63,7 +63,7 @@ end
     # fields have the same hash hence we need to add an id to distinguish
     # variables in the `names` dictionary.
     id = 0
-    function JuMP._build_variable(_error::Function, info::JuMP.VariableInfo, ::Type{MyVariable}; test_kw::Int = 0)
+    function JuMP.build_variable(_error::Function, info::JuMP.VariableInfo, ::Type{MyVariable}; test_kw::Int = 0)
         (info, test_kw, id += 1)
     end
     m = Model()
