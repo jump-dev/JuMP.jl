@@ -528,8 +528,8 @@ Use `has_dual` to check if a result exists before asking for values.
 See also [`shadow_price`](@ref).
 """
 function dual(cr::ConstraintRef{Model, <:MOICON})
-    return reshape(MOI.get(cr.model, MOI.ConstraintDual(), cr),
-                   dual_shape(cr.shape))
+    return reshape_result(MOI.get(cr.model, MOI.ConstraintDual(), cr),
+                          dual_shape(cr.shape))
 end
 
 """

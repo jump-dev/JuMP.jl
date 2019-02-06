@@ -45,7 +45,7 @@ function example_multi(; verbose = true)
     limit = [625.0 for j in 1:numorig, i in 1:numdest]
 
     # cost(dest, orig, prod) Shipment cost per unit
-    cost = Base.reshape([
+    cost = reshape([
         [
             [  30,   10,    8,   10,   11,   71,    6];
             [  22,    7,   10,    7,   21,   82,   13];

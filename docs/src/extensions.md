@@ -73,7 +73,7 @@ used to reshape the result computed in [`value`](@ref) and [`dual`](@ref).
 ```@docs
 AbstractShape
 shape
-reshape
+reshape_result
 dual_shape
 ScalarShape
 VectorShape
