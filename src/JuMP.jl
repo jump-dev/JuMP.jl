@@ -475,11 +475,7 @@ function Base.showerror(io::IO, ex::VariableNotOwnedError)
 end
 
 function check_belongs_to_model(vec::Vector{VariableRef}, m::Model)
-    n = length(vec)
-    @inbounds for i in 1:n
-        vec[i].m !== m && return false
-    end
-    return true
+    @inbounds all(owner_model(m) === model for m in vec)
 end
 
 Base.copy(v::VariableRef, new_model::Model) = VariableRef(new_model, v.index)
