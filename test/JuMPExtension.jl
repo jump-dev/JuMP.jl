@@ -6,7 +6,7 @@ module JuMPExtension
 
 using MathOptInterface
 const MOI = MathOptInterface
-using JuMP
+import JuMP
 
 struct ConstraintIndex
     value::Int # Index in `model.constraints`

@@ -671,5 +671,5 @@ VectorConstraint
 For advanced use cases.
 
 ```@docs
-JuMP.@build_constraint
+@build_constraint
 ```

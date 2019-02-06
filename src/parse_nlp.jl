@@ -17,9 +17,9 @@ end
 function _parse_NL_expr(m, x, tapevar, parent, values)
     if isexpr(x,:call) && length(x.args) >= 2 && (isexpr(x.args[2],:generator) || isexpr(x.args[2],:flatten))
         header = x.args[1]
-        if issum(header)
+        if _is_sum(header)
             operatorid = operator_to_id[:+]
-        elseif isprod(header)
+        elseif _is_prod(header)
             operatorid = operator_to_id[:*]
         else
             error("Unrecognized expression $header(...)")
@@ -37,7 +37,7 @@ function _parse_NL_expr(m, x, tapevar, parent, values)
     end
 
     if isexpr(x, :call)
-        if issum(x.args[1]) || isprod(x.args[1])
+        if _is_sum(x.args[1]) || _is_prod(x.args[1])
             opname = x.args[1]
             errorstring = "$opname() can appear in nonlinear expressions " *
             " only if the argument is a generator statement, for example, " *
@@ -157,7 +157,7 @@ function _parse_NL_expr(m, x, tapevar, parent, values)
         return code
     end
     if isexpr(x, :curly)
-        error_curly(x)
+        _error_curly(x)
     end
     if isexpr(x, :...)
         error("Unexpected splatting expression $x.")

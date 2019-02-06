@@ -405,16 +405,16 @@ function operators_test(ModelType::Type{<:JuMP.AbstractModel}, VariableRefType::
                                2x[2] +  x[1] + x[3]
                                 x[2] + 2x[3]])
             @test JuMP.isequal_canonical(A*x, B*x)
-            @test JuMP.isequal_canonical(A*x, @JuMP.Expression(B*x))
-            @test JuMP.isequal_canonical(@JuMP.Expression(A*x), @JuMP.Expression(B*x))
+            @test JuMP.isequal_canonical(A*x, JuMP.@_build_expression(B*x))
+            @test JuMP.isequal_canonical(JuMP.@_build_expression(A*x), JuMP.@_build_expression(B*x))
             @test JuMP.isequal_canonical(x'*A, [2x[1]+x[2]; 2x[2]+x[1]+x[3]; x[2]+2x[3]]')
             @test JuMP.isequal_canonical(x'*A, x'*B)
-            @test JuMP.isequal_canonical(x'*A, @JuMP.Expression(x'*B))
-            @test JuMP.isequal_canonical(@JuMP.Expression(x'*A), @JuMP.Expression(x'*B))
+            @test JuMP.isequal_canonical(x'*A, JuMP.@_build_expression(x'*B))
+            @test JuMP.isequal_canonical(JuMP.@_build_expression(x'*A), JuMP.@_build_expression(x'*B))
             @test JuMP.isequal_canonical(x'*A*x, 2x[1]*x[1] + 2x[1]*x[2] + 2x[2]*x[2] + 2x[2]*x[3] + 2x[3]*x[3])
             @test JuMP.isequal_canonical(x'A*x, x'*B*x)
-            @test JuMP.isequal_canonical(x'*A*x, @JuMP.Expression(x'*B*x))
-            @test JuMP.isequal_canonical(@JuMP.Expression(x'*A*x), @JuMP.Expression(x'*B*x))
+            @test JuMP.isequal_canonical(x'*A*x, JuMP.@_build_expression(x'*B*x))
+            @test JuMP.isequal_canonical(JuMP.@_build_expression(x'*A*x), JuMP.@_build_expression(x'*B*x))
 
             y = A*x
             @test JuMP.isequal_canonical(-x, [-x[1], -x[2], -x[3]])
@@ -461,7 +461,7 @@ function operators_test(ModelType::Type{<:JuMP.AbstractModel}, VariableRefType::
                                      x[1] + 3x[2] +  x[3]
                                              x[2] + 3x[3]])
 
-            @test JuMP.isequal_canonical(@JuMP.Expression(A*x/2), A*x/2)
+            @test JuMP.isequal_canonical(JuMP.@_build_expression(A*x/2), A*x/2)
             @test JuMP.isequal_canonical(X*v,  [4X11; 6X23; 0])
             @test JuMP.isequal_canonical(v'*X,  [4X11  0   5X23])
             @test JuMP.isequal_canonical(copy(transpose(v))*X, [4X11  0   5X23])
@@ -591,10 +591,10 @@ function operators_test(ModelType::Type{<:JuMP.AbstractModel}, VariableRefType::
             @test JuMP.isequal_canonical((x'A)' + 2A*x, (x'A)' + 2B*x)
             @test JuMP.isequal_canonical((x'A)' + 2A*x, (x'B)' + 2A*x)
             @test JuMP.isequal_canonical((x'A)' + 2A*x, (x'B)' + 2B*x)
-            @test JuMP.isequal_canonical((x'A)' + 2A*x, @JuMP.Expression((x'A)' + 2A*x))
-            @test JuMP.isequal_canonical((x'A)' + 2A*x, @JuMP.Expression((x'B)' + 2A*x))
-            @test JuMP.isequal_canonical((x'A)' + 2A*x, @JuMP.Expression((x'A)' + 2B*x))
-            @test JuMP.isequal_canonical((x'A)' + 2A*x, @JuMP.Expression((x'B)' + 2B*x))
+            @test JuMP.isequal_canonical((x'A)' + 2A*x, JuMP.@_build_expression((x'A)' + 2A*x))
+            @test JuMP.isequal_canonical((x'A)' + 2A*x, JuMP.@_build_expression((x'B)' + 2A*x))
+            @test JuMP.isequal_canonical((x'A)' + 2A*x, JuMP.@_build_expression((x'A)' + 2B*x))
+            @test JuMP.isequal_canonical((x'A)' + 2A*x, JuMP.@_build_expression((x'B)' + 2B*x))
 
             cref4 = @constraint(m, -1 .<= (x'A)' + 2A*x .<= 1)
             c4 = JuMP.constraint_object.(cref4)

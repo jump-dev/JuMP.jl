@@ -5,16 +5,16 @@
 
 using Base.Meta
 
-issum(s::Symbol) = (s == :sum) || (s == :∑) || (s == :Σ)
-isprod(s::Symbol) = (s == :prod) || (s == :∏)
+_is_sum(s::Symbol) = (s == :sum) || (s == :∑) || (s == :Σ)
+_is_prod(s::Symbol) = (s == :prod) || (s == :∏)
 
-function error_curly(x)
+function _error_curly(x)
     Base.error("The curly syntax (sum{},prod{},norm2{}) is no longer supported. Expression: $x.")
 end
 
 include("parse_expr.jl")
 
-function buildrefsets(expr::Expr, cname)
+function _build_ref_sets(expr::Expr, cname)
     c = copy(expr)
     idxvars = Any[]
     idxsets = Any[]
@@ -69,10 +69,10 @@ function buildrefsets(expr::Expr, cname)
     return refcall, idxvars, idxsets, condition
 end
 
-buildrefsets(c, cname)  = (cname, Any[], Any[], :())
+_build_ref_sets(c, cname)  = (cname, Any[], Any[], :())
 
 """
-    JuMP.buildrefsets(expr::Expr)
+    JuMP._build_ref_sets(expr::Expr)
 
 Helper function for macros to construct container objects. Takes an `Expr` that specifies the container, e.g. `:(x[i=1:3,[:red,:blue]],k=S; i+k <= 6)`, and returns:
 
@@ -81,10 +81,10 @@ Helper function for macros to construct container objects. Takes an `Expr` that 
     3. `idxsets`: Sets used for indexing, e.g. `[1:3, [:red,:blue], S]`
     4. `condition`: Expr containing any conditional imposed on indexing, or `:()` if none is present
 """
-buildrefsets(c) = buildrefsets(c, getname(c))
+_build_ref_sets(c) = _build_ref_sets(c, _get_name(c))
 
 """
-    JuMP.getloopedcode(varname, code, condition, idxvars, idxsets, sym, requestedcontainer::Symbol; lowertri=false)
+    JuMP._get_looped_code(varname, code, condition, idxvars, idxsets, sym, requestedcontainer::Symbol; lowertri=false)
 
 Helper function for macros to transform expression objects containing kernel code, index sets, conditionals, etc. to an expression that performs the desired loops that iterate over the kernel code. Arguments to the function are:
 
@@ -97,7 +97,7 @@ Helper function for macros to transform expression objects containing kernel cod
     7. `requestedcontainer`: Argument that is passed through to `generate_container`. Either `:Auto`, `:Array`, `:DenseAxisArray`, or `:SparseAxisArray`.
     8. `lowertri`: `Bool` keyword argument that is `true` if the iteration is over a cartesian array and should only iterate over the lower triangular entries, filling upper triangular entries with copies, e.g. `x[1,3] === x[3,1]`, and `false` otherwise.
 """
-function getloopedcode(varname, code, condition, idxvars, idxsets, sym, requestedcontainer::Symbol; lowertri=false)
+function _get_looped_code(varname, code, condition, idxvars, idxsets, sym, requestedcontainer::Symbol; lowertri=false)
 
     # if we don't have indexing, just return to avoid allocating stuff
     if isempty(idxsets)
@@ -191,7 +191,7 @@ end
 
 # TODO: Remove all localvar calls for Julia 0.7. The scope of loop variables
 # has changed to match the behavior we enforce here.
- localvar(x::Symbol) = _localvar(x)
+localvar(x::Symbol) = _localvar(x)
 localvar(x::Expr) = Expr(:block, _localvar(x)...)
 _localvar(x::Symbol) = :(local $(esc(x)))
 function _localvar(x::Expr)
@@ -213,13 +213,13 @@ function _localvar(x::Expr)
 end
 
 """
-    extract_kw_args(args)
+    _extract_kw_args(args)
 
 Process the arguments to a macro, separating out the keyword arguments.
 Return a tuple of (flat_arguments, keyword arguments, and requestedcontainer),
-where `requestedcontainer` is a symbol to be passed to `getloopedcode`.
+where `requestedcontainer` is a symbol to be passed to `_get_looped_code`.
 """
-function extract_kw_args(args)
+function _extract_kw_args(args)
     kw_args = filter(x -> isexpr(x, :(=)) && x.args[1] != :container , collect(args))
     flat_args = filter(x->!isexpr(x, :(=)), collect(args))
     requestedcontainer = :Auto
@@ -232,12 +232,12 @@ function extract_kw_args(args)
 end
 
 """
-    add_kw_args(call, kw_args)
+    _add_kw_args(call, kw_args)
 
 Add the keyword arguments `kw_args` to the function call expression `call`,
 escaping the expressions. The elements of `kw_args` should be expressions of the
 form `:(key = value)`. The `kw_args` vector can be extracted from the arguments
-of a macro with [`extract_kw_args`](@ref).
+of a macro with [`_extract_kw_args`](@ref).
 
 ## Examples
 
@@ -245,23 +245,23 @@ of a macro with [`extract_kw_args`](@ref).
 julia> call = :(f(1, a=2))
 :(f(1, a=2))
 
-julia> JuMP.add_kw_args(call, [:(b=3), :(c=4)])
+julia> JuMP._add_kw_args(call, [:(b=3), :(c=4)])
 
 julia> call
 :(f(1, a=2, $(Expr(:escape, :(b=3))), $(Expr(:escape, :(c=4)))))
 ```
 """
-function add_kw_args(call, kw_args)
+function _add_kw_args(call, kw_args)
     for kw in kw_args
         @assert isexpr(kw, :(=))
         push!(call.args, esc(Expr(:kw, kw.args...)))
     end
 end
 
-getname(c::Symbol) = c
-getname(c::Nothing) = ()
-getname(c::AbstractString) = c
-function getname(c::Expr)
+_get_name(c::Symbol) = c
+_get_name(c::Nothing) = ()
+_get_name(c::AbstractString) = c
+function _get_name(c::Expr)
     if c.head == :string
         return c
     else
@@ -269,19 +269,19 @@ function getname(c::Expr)
     end
 end
 
-validmodel(m::AbstractModel, name) = nothing
-validmodel(m, name) = error("Expected $name to be a JuMP model, but it has type ", typeof(m))
+_valid_model(m::AbstractModel, name) = nothing
+_valid_model(m, name) = error("Expected $name to be a JuMP model, but it has type ", typeof(m))
 
-function assert_validmodel(m, macrocode)
+function _assert_valid_model(m, macrocode)
     # assumes m is already escaped
     quote
-        validmodel($m, $(quot(m.args[1])))
+        _valid_model($m, $(quot(m.args[1])))
         $macrocode
     end
 end
 
 """
-    macro_return(model, code, variable)
+    _macro_return(model, code, variable)
 
 Return a block of code that
 
@@ -289,7 +289,7 @@ Return a block of code that
 2. returns the value of a local variable named `variable`. `variable` must
    reference a variable defined by `code`.
 """
-function macro_return(code, variable)
+function _macro_return(code, variable)
     return quote
         let
             # The let block ensures that all variables created behave like
@@ -304,19 +304,19 @@ function macro_return(code, variable)
 end
 
 """
-    macro_assign_and_return(code, variable, name;
-                            final_variable=variable,
-                            model_for_registering=nothing)
+    _macro_assign_and_return(code, variable, name;
+                             final_variable=variable,
+                             model_for_registering=nothing)
 
 Return runs `code` in a local scope which returns the value of `variable`
 and then assign `final_variable` to `name`.
 If `model_for_registering` is given, `register_object(model, name, variable)` is
 called in the generated code.
 """
-function macro_assign_and_return(code, variable, name;
-                                 final_variable=variable,
-                                 model_for_registering=nothing)
-    macro_code = macro_return(code, variable)
+function _macro_assign_and_return(code, variable, name;
+                                  final_variable=variable,
+                                  model_for_registering=nothing)
+    macro_code = _macro_return(code, variable)
     return quote
         $variable = $macro_code
         $(if model_for_registering !== nothing
@@ -345,7 +345,7 @@ sense_to_set(_error::Function, ::Val{:(==)}) = MOI.EqualTo(0.0)
 sense_to_set(_error::Function, ::Val{S}) where S = _error("Unrecognized sense $S")
 
 function parse_one_operator_constraint(_error::Function, vectorized::Bool,
-                                       ::Union{Val{:in}, Val{:∈}}, aff, set)
+                                        ::Union{Val{:in}, Val{:∈}}, aff, set)
     newaff, parseaff = parseExprToplevel(aff, :q)
     parsecode = :(q = Val{false}(); $parseaff)
     if vectorized
@@ -491,7 +491,7 @@ end
 # TODO: update 3-argument @constraint macro to pass through names like @variable
 
 """
-    constraint_macro(args, macro_name::Symbol, parsefun::Function)
+    _constraint_macro(args, macro_name::Symbol, parsefun::Function)
 
 Returns the code for the macro `@constraint_like args...` of syntax
 ```julia
@@ -506,10 +506,10 @@ determine the container type) are added to the `build_constraint` call. The
 returned value of this call is passed to `add_constraint` which returns a
 constraint reference.
 """
-function constraint_macro(args, macro_name::Symbol, parsefun::Function)
-    _error(str...) = macro_error(macro_name, args, str...)
+function _constraint_macro(args, macro_name::Symbol, parsefun::Function)
+    _error(str...) = _macro_error(macro_name, args, str...)
 
-    args, kw_args, requestedcontainer = extract_kw_args(args)
+    args, kw_args, requestedcontainer = _extract_kw_args(args)
 
     if length(args) < 2
         if length(kw_args) > 0
@@ -533,7 +533,7 @@ function constraint_macro(args, macro_name::Symbol, parsefun::Function)
 
     anonvar = isexpr(c, :vect) || isexpr(c, :vcat) || length(extra) != 1
     variable = gensym()
-    name = getname(c)
+    name = _get_name(c)
     base_name = anonvar ? "" : string(name)
     # TODO: support the base_name keyword argument
 
@@ -546,15 +546,15 @@ function constraint_macro(args, macro_name::Symbol, parsefun::Function)
 
     # Strategy: build up the code for add_constraint, and if needed
     # we will wrap in loops to assign to the ConstraintRefs
-    refcall, idxvars, idxsets, condition = buildrefsets(c, variable)
+    refcall, idxvars, idxsets, condition = _build_ref_sets(c, variable)
 
     vectorized, parsecode, buildcall = parsefun(_error, x.args...)
-    add_kw_args(buildcall, kw_args)
+    _add_kw_args(buildcall, kw_args)
     if vectorized
         # TODO: Pass through names here.
         constraintcall = :(add_constraint.($m, $buildcall))
     else
-        constraintcall = :(add_constraint($m, $buildcall, $(namecall(base_name, idxvars))))
+        constraintcall = :(add_constraint($m, $buildcall, $(_name_call(base_name, idxvars))))
     end
     code = quote
         $parsecode
@@ -567,20 +567,20 @@ function constraint_macro(args, macro_name::Symbol, parsefun::Function)
     else
         contype = :( constraint_type($m) )
     end
-    creationcode = getloopedcode(variable, code, condition, idxvars, idxsets, contype, requestedcontainer)
+    creationcode = _get_looped_code(variable, code, condition, idxvars, idxsets, contype, requestedcontainer)
 
     if anonvar
         # Anonymous constraint, no need to register it in the model-level
         # dictionary nor to assign it to a variable in the user scope.
         # We simply return the constraint reference
-        macro_code = macro_return(creationcode, variable)
+        macro_code = _macro_return(creationcode, variable)
     else
         # We register the constraint reference to its name and
         # we assign it to a variable in the local scope of this name
-        macro_code = macro_assign_and_return(creationcode, variable, name,
-                                             model_for_registering = m)
+        macro_code = _macro_assign_and_return(creationcode, variable, name,
+                                              model_for_registering = m)
     end
-    return assert_validmodel(m, macro_code)
+    return _assert_valid_model(m, macro_code)
 end
 
 # This function needs to be implemented by all `AbstractModel`s
@@ -637,10 +637,10 @@ that either `func` or `set` will be some custom type, rather than e.g. a
 set appearing in the constraint.
 """
 macro constraint(args...)
-    constraint_macro(args, :constraint, parse_constraint)
+    _constraint_macro(args, :constraint, parse_constraint)
 end
 
-function parseSDconstraint(_error::Function, sense::Symbol, lhs, rhs)
+function parse_SD_constraint(_error::Function, sense::Symbol, lhs, rhs)
     # Simple comparison - move everything to the LHS
     aff = :()
     if sense == :⪰ || sense == :(≥) || sense == :(>=)
@@ -655,7 +655,7 @@ function parseSDconstraint(_error::Function, sense::Symbol, lhs, rhs)
     vectorized, parsecode, buildcall
 end
 
-function parseSDconstraint(_error::Function, args...)
+function parse_SD_constraint(_error::Function, args...)
     _error("Constraints must be in one of the following forms:\n" *
            "       expr1 <= expr2\n" *
            "       expr1 >= expr2")
@@ -710,7 +710,7 @@ part of the matrix assuming that it is symmetric, see [`PSDCone`](@ref) to see
 how to use it.
 """
 macro SDconstraint(args...)
-    constraint_macro(args, :SDconstraint, parseSDconstraint)
+    _constraint_macro(args, :SDconstraint, parse_SD_constraint)
 end
 
 """
@@ -733,25 +733,25 @@ model = Model();
 ScalarConstraint{GenericAffExpr{Float64,VariableRef},MathOptInterface.GreaterThan{Float64}}(2 x, MathOptInterface.GreaterThan{Float64}(1.0))
 """
 macro build_constraint(constraint_expr)
-    _error(str...) = macro_error(:build_constraint, args, str...)
+    _error(str...) = _macro_error(:build_constraint, args, str...)
 
     if isa(constraint_expr, Symbol)
         _error("Incomplete constraint specification $constraint_expr. " *
                "Are you missing a comparison (<=, >=, or ==)?")
     end
 
-    is_vectorized, parse_code, build_call = parse_constraint(_error,
-                                                        constraint_expr.args...)
+    is_vectorized, parse_code, build_call = parse_constraint(
+        _error, constraint_expr.args...)
     result_variable = gensym()
     code = quote
         $parse_code
         $result_variable = $build_call
     end
 
-    return macro_return(code, result_variable)
+    return _macro_return(code, result_variable)
 end
 
-add_JuMP_prefix(s::Symbol) = Expr(:., JuMP, :($(QuoteNode(s))))
+_add_JuMP_prefix(s::Symbol) = Expr(:., JuMP, :($(QuoteNode(s))))
 
 for (mac,sym) in [(:constraints,  Symbol("@constraint")),
                   (:NLconstraints,Symbol("@NLconstraint")),
@@ -780,10 +780,10 @@ for (mac,sym) in [(:constraints,  Symbol("@constraint")),
                             push!(args, ex)
                         end
                     end
-                    mac = esc(Expr(:macrocall, $(add_JuMP_prefix(sym)), lastline, m, args...))
+                    mac = esc(Expr(:macrocall, $(_add_JuMP_prefix(sym)), lastline, m, args...))
                     push!(code.args, mac)
                 else # stand-alone symbol or expression
-                    push!(code.args, esc(Expr(:macrocall, $(add_JuMP_prefix(sym)), lastline, m, it)))
+                    push!(code.args, esc(Expr(:macrocall, $(_add_JuMP_prefix(sym)), lastline, m, it)))
                 end
             end
             push!(code.args, :(nothing))
@@ -806,20 +806,8 @@ adds groups of constraints at once, in the same fashion as @constraint. The mode
     end)
 """ :(@constraints)
 
-@doc """
-    @LinearConstraints(m, args...)
-
-Constructs a vector of `LinearConstraint` objects. Similar to `@LinearConstraint`, except it accepts multiple constraints as input as long as they are separated by newlines.
-""" :(@LinearConstraints)
-
-@doc """
-    @QuadConstraints(m, args...)
-
-Constructs a vector of `QuadConstraint` objects. Similar to `@QuadConstraint`, except it accepts multiple constraints as input as long as they are separated by newlines.
-""" :(@QuadConstraints)
-
 """
-    moi_sense(_error::Function, sense)
+    _moi_sense(_error::Function, sense)
 
 Return an expression whose value is an `MOI.OptimizationSense` corresponding
 to `sense`. Sense is either the symbol `:Min` or `:Max`, corresponding
@@ -829,7 +817,7 @@ which should be the name of a variable or expression whose value is an
 In the last case, the expression throws an error using the `_error`
 function in case the value is not an `MOI.OptimizationSense`.
 """
-function moi_sense(_error::Function, sense)
+function _moi_sense(_error::Function, sense)
     if sense == :Min
         expr = MOI.MIN_SENSE
     elseif sense == :Max
@@ -839,16 +827,15 @@ function moi_sense(_error::Function, sense)
         # TODO: Better document this behavior
         expr = esc(sense)
     end
-    return :(throw_error_for_invalid_sense($_error, $expr))
+    return :(_throw_error_for_invalid_sense($_error, $expr))
 end
 
-function throw_error_for_invalid_sense(_error::Function,
-                                       sense)
+function _throw_error_for_invalid_sense(_error::Function, sense)
     _error("Unexpected sense `$value`. The sense must be an",
            " `MOI.OptimizatonSense`, `Min` or `Max`.")
 end
-function throw_error_for_invalid_sense(_error::Function,
-                                       sense::MOI.OptimizationSense)
+function _throw_error_for_invalid_sense(
+        _error::Function, sense::MOI.OptimizationSense)
     return sense
 end
 
@@ -902,7 +889,7 @@ x² - 2 x + 1
 ```
 """
 macro objective(model, args...)
-    _error(str...) = macro_error(:objective, (model, args...), str...)
+    _error(str...) = _macro_error(:objective, (model, args...), str...)
 
     # We don't overwrite `model` as it is used in `_error`
     esc_model = esc(model)
@@ -911,26 +898,26 @@ macro objective(model, args...)
         _error("needs three arguments: model, objective sense (Max or Min) and expression.")
     end
     sense, x = args
-    sense_expr = moi_sense(_error, sense)
+    sense_expr = _moi_sense(_error, sense)
     newaff, parsecode = parseExprToplevel(x, :q)
     code = quote
         q = Val{false}()
         $parsecode
         set_objective($esc_model, $sense_expr, $newaff)
     end
-    return assert_validmodel(esc_model, macro_return(code, newaff))
+    return _assert_valid_model(esc_model, _macro_return(code, newaff))
 end
 
 # Return a standalone, unnamed expression
-# ex = @Expression(2x + 3y)
+# ex = @_build_expression(2x + 3y)
 # Currently for internal use only.
-macro Expression(x)
+macro _build_expression(x)
     newaff, parsecode = parseExprToplevel(x, :q)
     code = quote
         q = Val{false}()
         $parsecode
     end
-    return macro_return(code, newaff)
+    return _macro_return(code, newaff)
 end
 
 
@@ -962,7 +949,7 @@ expr = @expression(m, [i=1:3], i*sum(x[j] for j=1:3))
 """
 macro expression(args...)
 
-    args, kw_args, requestedcontainer = extract_kw_args(args)
+    args, kw_args, requestedcontainer = _extract_kw_args(args)
     if length(args) == 3
         m = esc(args[1])
         c = args[2]
@@ -979,7 +966,7 @@ macro expression(args...)
     anonvar = isexpr(c, :vect) || isexpr(c, :vcat) || length(args) == 2
     variable = gensym()
 
-    refcall, idxvars, idxsets, condition = buildrefsets(c, variable)
+    refcall, idxvars, idxsets, condition = _build_ref_sets(c, variable)
     newaff, parsecode = parseExprToplevel(x, :q)
     code = quote
         q = Val{false}()
@@ -995,20 +982,20 @@ macro expression(args...)
         $code
         $(refcall) = $newaff
     end
-    code = getloopedcode(variable, code, condition, idxvars, idxsets, :AffExpr, requestedcontainer)
+    code = _get_looped_code(variable, code, condition, idxvars, idxsets, :AffExpr, requestedcontainer)
     # don't do anything with the model, but check that it's valid anyway
     if anonvar
-        macro_code = macro_return(code, variable)
+        macro_code = _macro_return(code, variable)
     else
-        macro_code = macro_assign_and_return(code, variable, getname(c),
-                                             model_for_registering = m)
+        macro_code = _macro_assign_and_return(code, variable, _get_name(c),
+                                              model_for_registering = m)
     end
-    return assert_validmodel(m, macro_code)
+    return _assert_valid_model(m, macro_code)
 end
 
-esc_nonconstant(x::Number) = x
-esc_nonconstant(x::Expr) = isexpr(x,:quote) ? x : esc(x)
-esc_nonconstant(x) = esc(x)
+_esc_non_constant(x::Number) = x
+_esc_non_constant(x::Expr) = isexpr(x,:quote) ? x : esc(x)
+_esc_non_constant(x) = esc(x)
 
 # Returns the type of what `add_variable(::Model, build_variable(...))` would return where `...` represents the positional arguments.
 # Example: `@variable m [1:3] foo` will allocate an vector of element type `variable_type(m, foo)`
@@ -1024,15 +1011,13 @@ function build_variable(_error::Function, info::VariableInfo; extra_kw_args...)
     return ScalarVariable(info)
 end
 
-const EMPTYSTRING = ""
-
-function macro_error(macroname, args, str...)
+function _macro_error(macroname, args, str...)
     error("In `@$macroname($(join(args, ", ")))`: ", str...)
 end
 
 # Given a base_name and idxvars, returns an expression that constructs the name
 # of the object. For use within macros only.
-function namecall(base_name, idxvars)
+function _name_call(base_name, idxvars)
     if isempty(idxvars) || base_name == ""
         return base_name
     end
@@ -1072,37 +1057,36 @@ parse_one_operator_variable(_error::Function, infoexpr::VariableInfoExpr, ::Val{
 # that `a` has a value.
 # In that case we assume the variable is the lhs.
 function parse_variable(_error::Function, infoexpr::VariableInfoExpr, sense::Symbol, var, value)
-    parse_one_operator_variable(_error, infoexpr, Val(sense), esc_nonconstant(value))
-    var
+    parse_one_operator_variable(_error, infoexpr, Val(sense), _esc_non_constant(value))
+    return var
 end
 
 # If the lhs is a number and not the rhs, we can deduce that the rhs is
 # the variable.
 function parse_variable(_error::Function, infoexpr::VariableInfoExpr, sense::Symbol, value::Number, var)
-    parse_one_operator_variable(_error, infoexpr, reverse_sense(Val(sense)), esc_nonconstant(value))
-    var
+    parse_one_operator_variable(_error, infoexpr, reverse_sense(Val(sense)), _esc_non_constant(value))
+    return var
 end
 
 function parse_ternary_variable(_error::Function, infoexpr::VariableInfoExpr,
-                              ::Union{Val{:<=}, Val{:≤}}, lower,
-                              ::Union{Val{:<=}, Val{:≤}}, upper)
+                                 ::Union{Val{:<=}, Val{:≤}}, lower,
+                                 ::Union{Val{:<=}, Val{:≤}}, upper)
     set_lower_bound_or_error(_error, infoexpr, lower)
     set_upper_bound_or_error(_error, infoexpr, upper)
 end
 function parse_ternary_variable(_error::Function, infoexpr::VariableInfoExpr,
-                              ::Union{Val{:>=}, Val{:≥}}, upper,
-                              ::Union{Val{:>=}, Val{:≥}}, lower)
+                                 ::Union{Val{:>=}, Val{:≥}}, upper,
+                                 ::Union{Val{:>=}, Val{:≥}}, lower)
     parse_ternary_variable(_error, infoexpr, Val(:≤), lower, Val(:≤), upper)
 end
 function parse_ternary_variable(_error::Function, infoexpr::VariableInfoExpr,
-                              ::Val, lvalue,
-                              ::Val, rvalue)
+                                 ::Val, lvalue, ::Val, rvalue)
     _error("Use the form lb <= ... <= ub.")
 end
 function parse_variable(_error::Function, infoexpr::VariableInfoExpr, lvalue, lsign::Symbol, var, rsign::Symbol, rvalue)
     # lvalue lsign var rsign rvalue
-    parse_ternary_variable(_error, infoexpr, Val(lsign), esc_nonconstant(lvalue), Val(rsign), esc_nonconstant(rvalue))
-    var
+    parse_ternary_variable(_error, infoexpr, Val(lsign), _esc_non_constant(lvalue), Val(rsign), _esc_non_constant(rvalue))
+    return var
 end
 
 """
@@ -1241,11 +1225,11 @@ end
 ```
 """
 macro variable(args...)
-    _error(str...) = macro_error(:variable, args, str...)
+    _error(str...) = _macro_error(:variable, args, str...)
 
     model = esc(args[1])
 
-    extra, kw_args, requestedcontainer = extract_kw_args(args[2:end])
+    extra, kw_args, requestedcontainer = _extract_kw_args(args[2:end])
 
     # if there is only a single non-keyword argument, this is an anonymous
     # variable spec and the one non-kwarg is the model
@@ -1285,7 +1269,7 @@ macro variable(args...)
     anonvar && explicit_comparison && error("Cannot use explicit bounds via >=, <= with an anonymous variable")
     variable = gensym()
     # TODO: Should we generate non-empty default names for variables?
-    name = getname(var)
+    name = _get_name(var)
     if isempty(base_name_kw_args)
         base_name = anonvar ? "" : string(name)
     else
@@ -1319,7 +1303,7 @@ macro variable(args...)
         # Easy case - a single variable
         sdp && _error("Cannot add a semidefinite scalar variable")
         buildcall = :( build_variable($_error, $info, $(extra...)) )
-        add_kw_args(buildcall, extra_kw_args)
+        _add_kw_args(buildcall, extra_kw_args)
         variablecall = :( add_variable($model, $buildcall, $base_name) )
         # The looped code is trivial here since there is a single variable
         creationcode = :($variable = $variablecall)
@@ -1329,13 +1313,13 @@ macro variable(args...)
 
         # We now build the code to generate the variables (and possibly the
         # SparseAxisArray to contain them)
-        refcall, idxvars, idxsets, condition = buildrefsets(var, variable)
+        refcall, idxvars, idxsets, condition = _build_ref_sets(var, variable)
         clear_dependencies(i) = (Containers.is_dependent(idxvars,idxsets[i],i) ? () : idxsets[i])
 
         # Code to be used to create each variable of the container.
         buildcall = :( build_variable($_error, $info, $(extra...)) )
-        add_kw_args(buildcall, extra_kw_args)
-        variablecall = :( add_variable($model, $buildcall, $(namecall(base_name, idxvars))) )
+        _add_kw_args(buildcall, extra_kw_args)
+        variablecall = :( add_variable($model, $buildcall, $(_name_call(base_name, idxvars))) )
         code = :( $(refcall) = $variablecall )
         # Determine the return type of add_variable. This is needed to create the container holding them.
         vartype = :( variable_type($model, $(extra...)) )
@@ -1366,7 +1350,7 @@ macro variable(args...)
                                 $(esc(idxsets[2].args[1].args[3])))
             creationcode = quote
                 $dimension_check || error("Cannot construct symmetric variables with nonsquare dimensions.")
-                $(getloopedcode(variable, code, condition, idxvars, idxsets, vartype, requestedcontainer; lowertri=symmetric))
+                $(_get_looped_code(variable, code, condition, idxvars, idxsets, vartype, requestedcontainer; lowertri=symmetric))
                 $(if sdp
                     quote
                         JuMP.add_constraint($model, JuMP.build_constraint($_error, Symmetric($variable), JuMP.PSDCone()))
@@ -1375,7 +1359,7 @@ macro variable(args...)
             end
             final_variable = :(Symmetric($variable))
         else
-            creationcode = getloopedcode(variable, code, condition, idxvars, idxsets, vartype, requestedcontainer)
+            creationcode = _get_looped_code(variable, code, condition, idxvars, idxsets, vartype, requestedcontainer)
             final_variable = variable
         end
     end
@@ -1383,15 +1367,15 @@ macro variable(args...)
         # Anonymous variable, no need to register it in the model-level
         # dictionary nor to assign it to a variable in the user scope.
         # We simply return the variable
-        macro_code = macro_return(creationcode, final_variable)
+        macro_code = _macro_return(creationcode, final_variable)
     else
         # We register the variable reference to its name and
         # we assign it to a variable in the local scope of this name
-        macro_code = macro_assign_and_return(creationcode, variable, name,
-                                             final_variable=final_variable,
-                                             model_for_registering = model)
+        macro_code = _macro_assign_and_return(creationcode, variable, name,
+                                              final_variable=final_variable,
+                                              model_for_registering = model)
     end
-    return assert_validmodel(model, macro_code)
+    return _assert_valid_model(model, macro_code)
 end
 
 """
@@ -1405,14 +1389,14 @@ Add a nonlinear objective to `model` with optimization sense `sense`.
     @NLobjective(model, Max, 2x + 1 + sin(x))
 """
 macro NLobjective(model, sense, x)
-    _error(str...) = macro_error(:NLobjective, (model, sense, x), str...)
-    sense_expr = moi_sense(_error, sense)
+    _error(str...) = _macro_error(:NLobjective, (model, sense, x), str...)
+    sense_expr = _moi_sense(_error, sense)
     ex = gensym()
     code = quote
         $ex = $(_process_NL_expr(model, x))
         set_objective($(esc(model)), $sense_expr, $ex)
     end
-    return assert_validmodel(esc(model), macro_return(code, nothing))
+    return _assert_valid_model(esc(model), _macro_return(code, nothing))
 end
 
 """
@@ -1431,7 +1415,7 @@ macro NLconstraint(m, x, extra...)
     # Two formats:
     # - @NLconstraint(m, a*x <= 5)
     # - @NLconstraint(m, myref[a=1:5], sin(x^a) <= 5)
-    extra, kw_args, requestedcontainer = extract_kw_args(extra)
+    extra, kw_args, requestedcontainer = _extract_kw_args(extra)
     (length(extra) > 1 || length(kw_args) > 0) && error("in @NLconstraint: too many arguments.")
     # Canonicalize the arguments
     c = length(extra) == 1 ? x        : gensym()
@@ -1442,7 +1426,7 @@ macro NLconstraint(m, x, extra...)
 
     # Strategy: build up the code for non-macro add_constraint, and if needed
     # we will wrap in loops to assign to the ConstraintRefs
-    refcall, idxvars, idxsets, condition = buildrefsets(c, variable)
+    refcall, idxvars, idxsets, condition = _build_ref_sets(c, variable)
     # Build the constraint
     if isexpr(x, :call) # one-sided constraint
         # Simple comparison - move everything to the LHS
@@ -1488,19 +1472,19 @@ macro NLconstraint(m, x, extra...)
               "       expr1 <= expr2\n" * "       expr1 >= expr2\n" *
               "       expr1 == expr2")
     end
-    looped = getloopedcode(variable, code, condition, idxvars, idxsets, :(ConstraintRef{Model,NonlinearConstraintIndex}), requestedcontainer)
+    looped = _get_looped_code(variable, code, condition, idxvars, idxsets, :(ConstraintRef{Model,NonlinearConstraintIndex}), requestedcontainer)
     creation_code = quote
         _init_NLP($esc_m)
         $looped
     end
     if anonvar
-        macro_code = macro_return(creation_code, variable)
+        macro_code = _macro_return(creation_code, variable)
     else
-        macro_code = macro_assign_and_return(creation_code, variable,
-                                             getname(c),
-                                             model_for_registering = esc_m)
+        macro_code = _macro_assign_and_return(creation_code, variable,
+                                              _get_name(c),
+                                              model_for_registering = esc_m)
     end
-    return assert_validmodel(esc_m, macro_code)
+    return _assert_valid_model(esc_m, macro_code)
 end
 
 """
@@ -1522,7 +1506,7 @@ my_expr_2 = @NLexpression(m, log(1 + sum(exp(x[i])) for i in 1:2))
 ```
 """
 macro NLexpression(args...)
-    args, kw_args, requestedcontainer = extract_kw_args(args)
+    args, kw_args, requestedcontainer = _extract_kw_args(args)
     if length(args) <= 1
         error("in @NLexpression: To few arguments ($(length(args))); must pass the model and nonlinear expression as arguments.")
     elseif length(args) == 2
@@ -1538,19 +1522,19 @@ macro NLexpression(args...)
     anonvar = isexpr(c, :vect) || isexpr(c, :vcat) || length(args) == 2
     variable = gensym()
 
-    refcall, idxvars, idxsets, condition = buildrefsets(c, variable)
+    refcall, idxvars, idxsets, condition = _build_ref_sets(c, variable)
     code = quote
         $(refcall) = NonlinearExpression($(esc(m)), $(_process_NL_expr(m, x)))
     end
-    creation_code = getloopedcode(variable, code, condition, idxvars, idxsets, :NonlinearExpression, requestedcontainer)
+    creation_code = _get_looped_code(variable, code, condition, idxvars, idxsets, :NonlinearExpression, requestedcontainer)
     if anonvar
-        macro_code = macro_return(creation_code, variable)
+        macro_code = _macro_return(creation_code, variable)
     else
-        macro_code = macro_assign_and_return(creation_code, variable,
-                                             getname(c),
-                                             model_for_registering = esc(m))
+        macro_code = _macro_assign_and_return(creation_code, variable,
+                                              _get_name(c),
+                                              model_for_registering = esc(m))
     end
-    return assert_validmodel(esc(m), macro_code)
+    return _assert_valid_model(esc(m), macro_code)
 end
 
 """
@@ -1589,7 +1573,7 @@ value(y[9])
 """
 macro NLparameter(m, ex, extra...)
 
-    extra, kw_args, requestedcontainer = extract_kw_args(extra)
+    extra, kw_args, requestedcontainer = _extract_kw_args(extra)
     (length(extra) == 0 && length(kw_args) == 0) || error("in @NLperameter: too many arguments.")
     if !isexpr(ex, :call) || length(ex.args) != 3 || ex.args[1] != :(==)
         error("In @NLparameter($m, $ex): syntax error.")
@@ -1604,7 +1588,7 @@ macro NLparameter(m, ex, extra...)
     m = esc(m)
     variable = gensym()
 
-    refcall, idxvars, idxsets, condition = buildrefsets(c, variable)
+    refcall, idxvars, idxsets, condition = _build_ref_sets(c, variable)
     code = quote
         if !isa($(esc(x)), Number)
             error(string("in @NLparameter (", $(string(ex)), "): expected ",
@@ -1612,11 +1596,11 @@ macro NLparameter(m, ex, extra...)
         end
         $(refcall) = _new_parameter($m, $(esc(x)))
     end
-    creation_code = getloopedcode(variable, code, condition, idxvars, idxsets, :NonlinearParameter, :Auto)
+    creation_code = _get_looped_code(variable, code, condition, idxvars, idxsets, :NonlinearParameter, :Auto)
 
     # TODO: NLparameters are not registered in the model because we don't yet
     # have an anonymous version.
-    macro_code = macro_assign_and_return(creation_code, variable,
-                                         getname(c))
-    return assert_validmodel(m, macro_code)
+    macro_code = _macro_assign_and_return(creation_code, variable,
+                                          _get_name(c))
+    return _assert_valid_model(m, macro_code)
 end
