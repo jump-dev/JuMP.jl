@@ -233,7 +233,7 @@ end
 Write to `io` a summary of the objective function type.
 """
 function show_objective_function_summary(io::IO, model::Model)
-    nlobj = nlp_objective_function(model)
+    nlobj = _nlp_objective_function(model)
     print(io, "Objective function type: ")
     if nlobj === nothing
         println(io, objective_function_type(model))
@@ -248,7 +248,7 @@ end
 Return a `String` describing the objective function of the model.
 """
 function objective_function_string(print_mode, model::Model)
-   nlobj = nlp_objective_function(model)
+   nlobj = _nlp_objective_function(model)
    if nlobj === nothing
        return function_string(print_mode, objective_function(model))
    else
@@ -552,16 +552,16 @@ function constraint_string(print_mode, ref::ConstraintRef)
 end
 
 #------------------------------------------------------------------------
-## NonlinearExprData
+## _NonlinearExprData
 #------------------------------------------------------------------------
-function nl_expr_string(model::Model, mode, c::NonlinearExprData)
-    return string(tape_to_expr(model, 1, c.nd, adjmat(c.nd), c.const_values, [],
-                               [], model.nlp_data.user_operators, false, false,
-                               mode))
+function nl_expr_string(model::Model, mode, c::_NonlinearExprData)
+    return string(_tape_to_expr(model, 1, c.nd, adjmat(c.nd), c.const_values,
+                                [], [], model.nlp_data.user_operators, false,
+                                false, mode))
 end
 
 #------------------------------------------------------------------------
-## NonlinearConstraint
+## _NonlinearConstraint
 #------------------------------------------------------------------------
 const NonlinearConstraintRef = ConstraintRef{Model, NonlinearConstraintIndex}
 
@@ -578,8 +578,8 @@ end
 
 # TODO: Printing is inconsistent between regular constraints and nonlinear
 # constraints because nonlinear constraints don't have names.
-function nl_constraint_string(model::Model, mode, c::NonlinearConstraint)
-    s = sense(c)
+function nl_constraint_string(model::Model, mode, c::_NonlinearConstraint)
+    s = _sense(c)
     nl = nl_expr_string(model, mode, c.terms)
     if s == :range
         out_str = "$(string_round(c.lb)) " * math_symbol(mode, :leq) * " $nl " *
@@ -592,7 +592,7 @@ function nl_constraint_string(model::Model, mode, c::NonlinearConstraint)
         else
             rel = math_symbol(mode, :eq)
         end
-        out_str = string(nl," ",rel," ",string_round(rhs(c)))
+        out_str = string(nl," ",rel," ",string_round(_rhs(c)))
     end
     return out_str
 end

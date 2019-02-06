@@ -4,14 +4,14 @@
 #  file, You can obtain one at http://mozilla.org/MPL/2.0/.
 
 
-mutable struct NonlinearExprData
+mutable struct _NonlinearExprData
     nd::Vector{NodeData}
     const_values::Vector{Float64}
 end
 
 function set_objective(m::Model, sense::MOI.OptimizationSense,
-                       ex::NonlinearExprData)
-    initNLP(m)
+                       ex::_NonlinearExprData)
+    _init_NLP(m)
     set_objective_sense(m, sense)
     m.nlp_data.nlobj = ex
     return
@@ -22,8 +22,8 @@ include("parse_nlp.jl")
 # GenericRangeConstraint
 # l ≤ ∑ aᵢ xᵢ ≤ u
 # The constant part of the internal expression is assumed to be zero
-mutable struct NonlinearConstraint <: AbstractConstraint
-    terms::NonlinearExprData
+mutable struct _NonlinearConstraint <: AbstractConstraint
+    terms::_NonlinearExprData
     lb::Float64
     ub::Float64
 end
@@ -36,7 +36,7 @@ end
 # -∞ ≤ expr ≤ u   →   <=
 #  l ≤ expr ≤ ∞   →   >=
 #  l ≤ expr ≤ u   →   range
-function sense(c::NonlinearConstraint)
+function _sense(c::_NonlinearConstraint)
     if c.lb != -Inf
         if c.ub != Inf
             if c.ub == c.lb
@@ -53,16 +53,16 @@ function sense(c::NonlinearConstraint)
     end
 end
 
-function rhs(c::NonlinearConstraint)
-    s = sense(c)
+function _rhs(c::_NonlinearConstraint)
+    s = _sense(c)
     s == :range && error("Range constraints do not have a well-defined RHS")
     s == :(<=) ? c.ub : c.lb
 end
 
-mutable struct NLPData
-    nlobj::Union{Nothing, NonlinearExprData}
-    nlconstr::Vector{NonlinearConstraint}
-    nlexpr::Vector{NonlinearExprData}
+mutable struct _NLPData
+    nlobj::Union{Nothing, _NonlinearExprData}
+    nlconstr::Vector{_NonlinearConstraint}
+    nlexpr::Vector{_NonlinearExprData}
     nlconstr_duals::Vector{Float64}
     nlparamvalues::Vector{Float64}
     user_operators::_Derivatives.UserOperatorRegistry
@@ -71,12 +71,12 @@ mutable struct NLPData
 end
 
 """
-    nlp_objective_function(model::Model)
+    _nlp_objective_function(model::Model)
 
 Returns the nonlinear objective function or `nothing` if no nonlinear objective
 function is set.
 """
-function nlp_objective_function(model::Model)
+function _nlp_objective_function(model::Model)
     if model.nlp_data === nothing
         return nothing
     else
@@ -84,25 +84,25 @@ function nlp_objective_function(model::Model)
     end
 end
 
-function create_nlp_block_data(m::Model)
+function _create_nlp_block_data(m::Model)
     @assert m.nlp_data !== nothing
     bounds = MOI.NLPBoundsPair[]
     for constr in m.nlp_data.nlconstr
         push!(bounds, MOI.NLPBoundsPair(constr.lb, constr.ub))
     end
-    return MOI.NLPBlockData(bounds, NLPEvaluator(m), isa(m.nlp_data.nlobj, NonlinearExprData))
+    return MOI.NLPBlockData(bounds, NLPEvaluator(m), isa(m.nlp_data.nlobj, _NonlinearExprData))
 end
 
-function NonlinearExpression(m::Model,ex::NonlinearExprData)
-    initNLP(m)
-    nldata::NLPData = m.nlp_data
+function NonlinearExpression(m::Model,ex::_NonlinearExprData)
+    _init_NLP(m)
+    nldata::_NLPData = m.nlp_data
     push!(nldata.nlexpr, ex)
     return NonlinearExpression(m, length(nldata.nlexpr))
 end
 
-function newparameter(m::Model,value::Number)
-    initNLP(m)
-    nldata::NLPData = m.nlp_data
+function _new_parameter(m::Model,value::Number)
+    _init_NLP(m)
+    nldata::_NLPData = m.nlp_data
     push!(nldata.nlparamvalues, value)
     return NonlinearParameter(m, length(nldata.nlparamvalues))
 end
@@ -144,23 +144,23 @@ function set_value(p::NonlinearParameter, v::Number)
     p.m.nlp_data.nlparamvalues[p.index] = v
 end
 
-function NLPData()
-    return NLPData(nothing, NonlinearConstraint[], NonlinearExprData[],
+function _NLPData()
+    return _NLPData(nothing, _NonlinearConstraint[], _NonlinearExprData[],
                    Float64[], Float64[], _Derivatives.UserOperatorRegistry(),
                    0, nothing)
 end
 
-Base.copy(::NLPData) = error("Copying nonlinear problems not yet implemented")
+Base.copy(::_NLPData) = error("Copying nonlinear problems not yet implemented")
 
-function initNLP(m::Model)
+function _init_NLP(m::Model)
     if m.nlp_data === nothing
-        m.nlp_data = NLPData()
+        m.nlp_data = _NLPData()
     end
 end
 
 function dual(c::ConstraintRef{Model,NonlinearConstraintIndex})
-    initNLP(c.model)
-    nldata::NLPData = c.model.nlp_data
+    _init_NLP(c.model)
+    nldata::_NLPData = c.model.nlp_data
     # The array is cleared on every solve.
     if length(nldata.nlconstr_duals) != length(nldata.nlconstr)
         nldata.nlconstr_duals = MOI.get(c.model, MOI.NLPBlockDual())
@@ -168,7 +168,7 @@ function dual(c::ConstraintRef{Model,NonlinearConstraintIndex})
     return nldata.nlconstr_duals[c.index.value]
 end
 
-mutable struct FunctionStorage
+mutable struct _FunctionStorage
     nd::Vector{NodeData}
     adj::SparseMatrixCSC{Bool,Int}
     const_values::Vector{Float64}
@@ -184,7 +184,7 @@ mutable struct FunctionStorage
     dependent_subexpressions::Vector{Int} # subexpressions which this function depends on, ordered for forward pass
 end
 
-mutable struct SubexpressionStorage
+mutable struct _SubexpressionStorage
     nd::Vector{NodeData}
     adj::SparseMatrixCSC{Bool,Int}
     const_values::Vector{Float64}
@@ -201,9 +201,9 @@ mutable struct NLPEvaluator <: MOI.AbstractNLPEvaluator
     m::Model
     parameter_values::Vector{Float64}
     has_nlobj::Bool
-    objective::FunctionStorage
-    constraints::Vector{FunctionStorage}
-    subexpressions::Vector{SubexpressionStorage}
+    objective::_FunctionStorage
+    constraints::Vector{_FunctionStorage}
+    subexpressions::Vector{_SubexpressionStorage}
     subexpression_order::Vector{Int}
     subexpression_forward_values::Vector{Float64}
     subexpression_reverse_values::Vector{Float64}
@@ -243,7 +243,7 @@ mutable struct NLPEvaluator <: MOI.AbstractNLPEvaluator
     end
 end
 
-function replace_moi_variables(nd::Vector{NodeData}, moi_index_to_consecutive_index)
+function _replace_moi_variables(nd::Vector{NodeData}, moi_index_to_consecutive_index)
     new_nd = Vector{NodeData}(undef, length(nd))
     for i in 1:length(nd)
         node = nd[i]
@@ -256,9 +256,9 @@ function replace_moi_variables(nd::Vector{NodeData}, moi_index_to_consecutive_in
     return new_nd
 end
 
-function FunctionStorage(nd::Vector{NodeData}, const_values, num_variables, coloring_storage, want_hess::Bool, subexpressions::Vector{SubexpressionStorage}, dependent_subexpressions, subexpression_linearity, subexpression_edgelist, subexpression_variables, moi_index_to_consecutive_index)
+function _FunctionStorage(nd::Vector{NodeData}, const_values, num_variables, coloring_storage, want_hess::Bool, subexpressions::Vector{_SubexpressionStorage}, dependent_subexpressions, subexpression_linearity, subexpression_edgelist, subexpression_variables, moi_index_to_consecutive_index)
 
-    nd = replace_moi_variables(nd, moi_index_to_consecutive_index)
+    nd = _replace_moi_variables(nd, moi_index_to_consecutive_index)
     adj = adjmat(nd)
     forward_storage = zeros(length(nd))
     partials_storage = zeros(length(nd))
@@ -288,13 +288,13 @@ function FunctionStorage(nd::Vector{NodeData}, const_values, num_variables, colo
         linearity = [NONLINEAR]
     end
 
-    return FunctionStorage(nd, adj, const_values, forward_storage, partials_storage, reverse_storage, grad_sparsity, hess_I, hess_J, rinfo, seed_matrix, linearity[1],dependent_subexpressions)
+    return _FunctionStorage(nd, adj, const_values, forward_storage, partials_storage, reverse_storage, grad_sparsity, hess_I, hess_J, rinfo, seed_matrix, linearity[1],dependent_subexpressions)
 
 end
 
-function SubexpressionStorage(nd::Vector{NodeData}, const_values, num_variables, subexpression_linearity, moi_index_to_consecutive_index)
+function _SubexpressionStorage(nd::Vector{NodeData}, const_values, num_variables, subexpression_linearity, moi_index_to_consecutive_index)
 
-    nd = replace_moi_variables(nd, moi_index_to_consecutive_index)
+    nd = _replace_moi_variables(nd, moi_index_to_consecutive_index)
     adj = adjmat(nd)
     forward_storage = zeros(length(nd))
     partials_storage = zeros(length(nd))
@@ -303,12 +303,12 @@ function SubexpressionStorage(nd::Vector{NodeData}, const_values, num_variables,
 
     empty_arr = Array{Float64}(undef,0)
 
-    return SubexpressionStorage(nd, adj, const_values, forward_storage, partials_storage, reverse_storage, empty_arr, empty_arr, empty_arr, linearity[1])
+    return _SubexpressionStorage(nd, adj, const_values, forward_storage, partials_storage, reverse_storage, empty_arr, empty_arr, empty_arr, linearity[1])
 
 end
 
 function MOI.initialize(d::NLPEvaluator, requested_features::Vector{Symbol})
-    nldata::NLPData = d.m.nlp_data
+    nldata::_NLPData = d.m.nlp_data
 
     for feat in requested_features
         if !(feat in MOI.features_available(d))
@@ -330,7 +330,7 @@ function MOI.initialize(d::NLPEvaluator, requested_features::Vector{Symbol})
     d.user_output_buffer = Array{Float64}(undef,d.m.nlp_data.largest_user_input_dimension)
     d.jac_storage = Array{Float64}(undef,max(num_variables_, d.m.nlp_data.largest_user_input_dimension))
 
-    d.constraints = FunctionStorage[]
+    d.constraints = _FunctionStorage[]
     d.last_x = fill(NaN, num_variables_)
 
     d.parameter_values = nldata.nlparamvalues
@@ -357,14 +357,14 @@ function MOI.initialize(d::NLPEvaluator, requested_features::Vector{Symbol})
     d.subexpression_linearity = Array{Linearity}(undef,length(nldata.nlexpr))
     subexpression_variables = Array{Vector{Int}}(undef,length(nldata.nlexpr))
     subexpression_edgelist = Array{Set{Tuple{Int,Int}}}(undef,length(nldata.nlexpr))
-    d.subexpressions = Array{SubexpressionStorage}(undef,length(nldata.nlexpr))
+    d.subexpressions = Array{_SubexpressionStorage}(undef,length(nldata.nlexpr))
     d.subexpression_forward_values = Array{Float64}(undef,length(d.subexpressions))
     d.subexpression_reverse_values = Array{Float64}(undef,length(d.subexpressions))
 
     empty_edgelist = Set{Tuple{Int,Int}}()
     for k in d.subexpression_order # only load expressions which actually are used
         d.subexpression_forward_values[k] = NaN
-        d.subexpressions[k] = SubexpressionStorage(nldata.nlexpr[k].nd, nldata.nlexpr[k].const_values, num_variables_, d.subexpression_linearity, moi_index_to_consecutive_index)
+        d.subexpressions[k] = _SubexpressionStorage(nldata.nlexpr[k].nd, nldata.nlexpr[k].const_values, num_variables_, d.subexpression_linearity, moi_index_to_consecutive_index)
         subex = d.subexpressions[k]
         d.subexpression_linearity[k] = subex.linearity
         if d.want_hess
@@ -386,7 +386,7 @@ function MOI.initialize(d::NLPEvaluator, requested_features::Vector{Symbol})
         d.subexpressions_as_julia_expressions = Array{Any}(undef,length(subexpr))
         for k in d.subexpression_order
             ex = d.subexpressions[k]
-            d.subexpressions_as_julia_expressions[k] = tape_to_expr(d.m, 1, nldata.nlexpr[k].nd, ex.adj, ex.const_values, d.parameter_values, d.subexpressions_as_julia_expressions, nldata.user_operators, true, true)
+            d.subexpressions_as_julia_expressions[k] = _tape_to_expr(d.m, 1, nldata.nlexpr[k].nd, ex.adj, ex.const_values, d.parameter_values, d.subexpressions_as_julia_expressions, nldata.user_operators, true, true)
         end
     end
 
@@ -394,7 +394,7 @@ function MOI.initialize(d::NLPEvaluator, requested_features::Vector{Symbol})
 
     if d.has_nlobj
         nd = main_expressions[1]
-        d.objective = FunctionStorage(nd, nldata.nlobj.const_values, num_variables_, coloring_storage, d.want_hess, d.subexpressions, individual_order[1], d.subexpression_linearity, subexpression_edgelist, subexpression_variables, moi_index_to_consecutive_index)
+        d.objective = _FunctionStorage(nd, nldata.nlobj.const_values, num_variables_, coloring_storage, d.want_hess, d.subexpressions, individual_order[1], d.subexpression_linearity, subexpression_edgelist, subexpression_variables, moi_index_to_consecutive_index)
         max_expr_length = max(max_expr_length, length(d.objective.nd))
         max_chunk = max(max_chunk, size(d.objective.seed_matrix,2))
     end
@@ -403,7 +403,7 @@ function MOI.initialize(d::NLPEvaluator, requested_features::Vector{Symbol})
         nlconstr = nldata.nlconstr[k]
         idx = (d.has_nlobj) ? k+1 : k
         nd = main_expressions[idx]
-        push!(d.constraints, FunctionStorage(nd, nlconstr.terms.const_values, num_variables_, coloring_storage, d.want_hess, d.subexpressions, individual_order[idx], d.subexpression_linearity, subexpression_edgelist, subexpression_variables, moi_index_to_consecutive_index))
+        push!(d.constraints, _FunctionStorage(nd, nlconstr.terms.const_values, num_variables_, coloring_storage, d.want_hess, d.subexpressions, individual_order[idx], d.subexpression_linearity, subexpression_edgelist, subexpression_variables, moi_index_to_consecutive_index))
         max_expr_length = max(max_expr_length, length(d.constraints[end].nd))
         max_chunk = max(max_chunk, size(d.constraints[end].seed_matrix,2))
     end
@@ -450,10 +450,10 @@ function MOI.initialize(d::NLPEvaluator, requested_features::Vector{Symbol})
     nothing
 end
 
-function recompute_disable_2ndorder(evaluator::NLPEvaluator)
+function _recompute_disable_2ndorder(evaluator::NLPEvaluator)
     # Check if we have any user-defined operators, in which case we need to
     # disable hessians. The result of features_available depends on this.
-    nldata::NLPData = evaluator.m.nlp_data
+    nldata::_NLPData = evaluator.m.nlp_data
     has_nlobj = nldata.nlobj !== nothing
     has_user_mv_operator = false
     for nlexpr in nldata.nlexpr
@@ -473,7 +473,7 @@ function recompute_disable_2ndorder(evaluator::NLPEvaluator)
 end
 
 function MOI.features_available(d::NLPEvaluator)
-    recompute_disable_2ndorder(d)
+    _recompute_disable_2ndorder(d)
     features = [:Grad, :Jac, :ExprGraph]
     if !d.disable_2ndorder
         push!(features, :Hess)
@@ -482,7 +482,7 @@ function MOI.features_available(d::NLPEvaluator)
     return features
 end
 
-function forward_eval_all(d::NLPEvaluator,x)
+function _forward_eval_all(d::NLPEvaluator,x)
     # do a forward pass on all expressions at x
     subexpr_values = d.subexpression_forward_values
     user_operators = d.m.nlp_data.user_operators::_Derivatives.UserOperatorRegistry
@@ -510,7 +510,7 @@ function forward_eval_all(d::NLPEvaluator,x)
     end
 end
 
-function reverse_eval_all(d::NLPEvaluator,x)
+function _reverse_eval_all(d::NLPEvaluator,x)
     # do a reverse pass on all expressions at x
     subexpr_reverse_values = d.subexpression_reverse_values
     subexpr_values = d.subexpression_forward_values
@@ -532,8 +532,8 @@ end
 function MOI.eval_objective(d::NLPEvaluator, x)
     d.eval_objective_timer += @elapsed begin
         if d.last_x != x
-            forward_eval_all(d,x)
-            reverse_eval_all(d,x)
+            _forward_eval_all(d,x)
+            _reverse_eval_all(d,x)
         end
         val = zero(eltype(x))
         if d.has_nlobj
@@ -548,8 +548,8 @@ end
 function MOI.eval_objective_gradient(d::NLPEvaluator, g, x)
     d.eval_objective_gradient_timer += @elapsed begin
         if d.last_x != x
-            forward_eval_all(d,x)
-            reverse_eval_all(d,x)
+            _forward_eval_all(d,x)
+            _reverse_eval_all(d,x)
         end
         if d.has_nlobj
             fill!(g,0.0)
@@ -572,8 +572,8 @@ end
 function MOI.eval_constraint(d::NLPEvaluator, g, x)
     d.eval_constraint_timer += @elapsed begin
         if d.last_x != x
-            forward_eval_all(d,x)
-            reverse_eval_all(d,x)
+            _forward_eval_all(d,x)
+            _reverse_eval_all(d,x)
         end
 
         for i in 1:length(d.constraints)
@@ -586,8 +586,8 @@ end
 function MOI.eval_constraint_jacobian(d::NLPEvaluator, J, x)
     d.eval_constraint_jacobian_timer += @elapsed begin
         if d.last_x != x
-            forward_eval_all(d,x)
-            reverse_eval_all(d,x)
+            _forward_eval_all(d,x)
+            _reverse_eval_all(d,x)
         end
         fill!(J,0.0)
         grad_storage = d.jac_storage
@@ -628,11 +628,11 @@ function MOI.eval_hessian_lagrangian_product(
     σ::Float64,                 # multiplier for objective
     μ::AbstractVector{Float64}) # multipliers for each constraint
 
-    nldata = d.m.nlp_data::NLPData
+    nldata = d.m.nlp_data::_NLPData
 
     if d.last_x != x
-        forward_eval_all(d,x)
-        reverse_eval_all(d,x)
+        _forward_eval_all(d,x)
+        _reverse_eval_all(d,x)
     end
 
     fill!(h, 0.0)
@@ -706,13 +706,13 @@ function MOI.eval_hessian_lagrangian(
     obj_factor::Float64,             # Lagrangian multiplier for objective
     lambda::AbstractVector{Float64}) # Multipliers for each constraint
 
-    nldata = d.m.nlp_data::NLPData
+    nldata = d.m.nlp_data::_NLPData
 
     d.want_hess || error("Hessian computations were not requested on the call to initialize!.")
 
     if d.last_x != x
-        forward_eval_all(d,x)
-        reverse_eval_all(d,x)
+        _forward_eval_all(d,x)
+        _reverse_eval_all(d,x)
     end
 
     d.eval_hessian_lagrangian_timer += @elapsed begin
@@ -725,9 +725,9 @@ function MOI.eval_hessian_lagrangian(
             chunk = min(size(ex.seed_matrix,2),d.max_chunk)
             if chunk == 1
                 # skip dynamic dispatch
-                nzthis = hessian_slice(d, ex, x, H, obj_factor, nzcount, recovery_tmp_storage, Val{1})::Int
+                nzthis = _hessian_slice(d, ex, x, H, obj_factor, nzcount, recovery_tmp_storage, Val{1})::Int
             else
-                nzthis = hessian_slice(d, ex, x, H, obj_factor, nzcount, recovery_tmp_storage, Val{chunk})::Int
+                nzthis = _hessian_slice(d, ex, x, H, obj_factor, nzcount, recovery_tmp_storage, Val{chunk})::Int
             end
             nzcount += nzthis
         end # else, obj_factor is ignored.
@@ -736,9 +736,9 @@ function MOI.eval_hessian_lagrangian(
             ex = d.constraints[i]
             chunk = min(size(ex.seed_matrix,2),d.max_chunk)
             if chunk == 1
-                nzthis = hessian_slice(d, ex, x, H, lambda[i], nzcount, recovery_tmp_storage, Val{1})::Int
+                nzthis = _hessian_slice(d, ex, x, H, lambda[i], nzcount, recovery_tmp_storage, Val{1})::Int
             else
-                nzthis = hessian_slice(d, ex, x, H, lambda[i], nzcount, recovery_tmp_storage, Val{chunk})::Int
+                nzthis = _hessian_slice(d, ex, x, H, lambda[i], nzcount, recovery_tmp_storage, Val{chunk})::Int
             end
             nzcount += nzthis
         end
@@ -747,7 +747,7 @@ function MOI.eval_hessian_lagrangian(
     return
 end
 
-function hessian_slice_inner(d, ex, R, input_ϵ, output_ϵ, ::Type{Val{CHUNK}}) where CHUNK
+function _hessian_slice_inner(d, ex, R, input_ϵ, output_ϵ, ::Type{Val{CHUNK}}) where CHUNK
 
     subexpr_forward_values_ϵ = _reinterpret_unsafe(ForwardDiff.Partials{CHUNK,Float64},d.subexpression_forward_values_ϵ)
     subexpr_reverse_values_ϵ = _reinterpret_unsafe(ForwardDiff.Partials{CHUNK,Float64},d.subexpression_reverse_values_ϵ)
@@ -784,7 +784,7 @@ function hessian_slice_inner(d, ex, R, input_ϵ, output_ϵ, ::Type{Val{CHUNK}}) 
     end
 end
 
-function hessian_slice(d, ex, x, H, scale, nzcount, recovery_tmp_storage,::Type{Val{CHUNK}}) where CHUNK
+function _hessian_slice(d, ex, x, H, scale, nzcount, recovery_tmp_storage,::Type{Val{CHUNK}}) where CHUNK
 
     nzthis = length(ex.hess_I)
     if ex.linearity == LINEAR
@@ -820,7 +820,7 @@ function hessian_slice(d, ex, x, H, scale, nzcount, recovery_tmp_storage,::Type{
             @inbounds output_ϵ[idx] = zero_ϵ
         end
 
-        hessian_slice_inner(d, ex, R, input_ϵ, output_ϵ, Val{CHUNK})
+        _hessian_slice_inner(d, ex, R, input_ϵ, output_ϵ, Val{CHUNK})
 
         # collect directional derivatives
         for r in 1:length(local_to_global_idx)
@@ -849,7 +849,7 @@ function hessian_slice(d, ex, x, H, scale, nzcount, recovery_tmp_storage,::Type{
             @inbounds output_ϵ[idx] = zero_ϵ
         end
 
-        hessian_slice_inner(d, ex, R, input_ϵ, output_ϵ, Val{CHUNK})
+        _hessian_slice_inner(d, ex, R, input_ϵ, output_ϵ, Val{CHUNK})
 
         # collect directional derivatives
         for r in 1:length(local_to_global_idx)
@@ -901,27 +901,27 @@ function _hessian_lagrangian_structure(d::NLPEvaluator)
     return hessian_sparsity
 end
 
-mutable struct VariablePrintWrapper
+mutable struct _VariablePrintWrapper
     v::VariableRef
     mode
 end
-Base.show(io::IO,v::VariablePrintWrapper) = print(io,var_string(v.mode,v.v))
-mutable struct ParameterPrintWrapper
+Base.show(io::IO,v::_VariablePrintWrapper) = print(io,var_string(v.mode,v.v))
+mutable struct _ParameterPrintWrapper
     idx::Int
     mode
 end
-function Base.show(io::IO,p::ParameterPrintWrapper)
+function Base.show(io::IO,p::_ParameterPrintWrapper)
     if p.mode == IJuliaMode
         print(io,"parameter_{$(p.idx)}")
     else
         print(io,"parameter[$(p.idx)]")
     end
 end
-mutable struct SubexpressionPrintWrapper
+mutable struct _SubexpressionPrintWrapper
     idx::Int
     mode
 end
-function Base.show(io::IO,s::SubexpressionPrintWrapper)
+function Base.show(io::IO,s::_SubexpressionPrintWrapper)
     if s.mode == IJuliaMode
         print(io,"subexpression_{$(s.idx)}")
     else
@@ -930,7 +930,7 @@ function Base.show(io::IO,s::SubexpressionPrintWrapper)
 end
 
 # we splat in the subexpressions (for now)
-function tape_to_expr(m::Model, k, nd::Vector{NodeData}, adj, const_values,
+function _tape_to_expr(m::Model, k, nd::Vector{NodeData}, adj, const_values,
                       parameter_values, subexpressions::Vector{Any},
                       user_operators::_Derivatives.UserOperatorRegistry,
                       generic_variable_names::Bool, splat_subexpressions::Bool,
@@ -943,7 +943,7 @@ function tape_to_expr(m::Model, k, nd::Vector{NodeData}, adj, const_values,
             return Expr(:ref,:x,MOIVAR(nod.index))
         else
             # mode only matters when generic_variable_names == false
-            return VariablePrintWrapper(VariableRef(m,MOIVAR(nod.index)),print_mode)
+            return _VariablePrintWrapper(VariableRef(m,MOIVAR(nod.index)),print_mode)
         end
     elseif nod.nodetype == VALUE
         return const_values[nod.index]
@@ -951,13 +951,13 @@ function tape_to_expr(m::Model, k, nd::Vector{NodeData}, adj, const_values,
         if splat_subexpressions
             return subexpressions[nod.index]
         else
-            return SubexpressionPrintWrapper(nod.index,print_mode)
+            return _SubexpressionPrintWrapper(nod.index,print_mode)
         end
     elseif nod.nodetype == PARAMETER
         if splat_subexpressions
             return parameter_values[nod.index]
         else
-            return ParameterPrintWrapper(nod.index,print_mode)
+            return _ParameterPrintWrapper(nod.index,print_mode)
         end
     elseif nod.nodetype == CALL
         op = nod.index
@@ -980,7 +980,7 @@ function tape_to_expr(m::Model, k, nd::Vector{NodeData}, adj, const_values,
         end
         ex = Expr(:call,opsymbol)
         for cidx in children_idx
-            push!(ex.args, tape_to_expr(m, children_arr[cidx], nd, adj, const_values, parameter_values, subexpressions, user_operators, generic_variable_names, splat_subexpressions, print_mode))
+            push!(ex.args, _tape_to_expr(m, children_arr[cidx], nd, adj, const_values, parameter_values, subexpressions, user_operators, generic_variable_names, splat_subexpressions, print_mode))
         end
         return ex
     elseif nod.nodetype == CALLUNIVAR
@@ -997,7 +997,7 @@ function tape_to_expr(m::Model, k, nd::Vector{NodeData}, adj, const_values,
         end
         @assert opsymbol != :error
         cidx = first(nzrange(adj,k))
-        return Expr(:call,opsymbol,tape_to_expr(m, children_arr[cidx], nd, adj, const_values, parameter_values, subexpressions, user_operators, generic_variable_names, splat_subexpressions, print_mode))
+        return Expr(:call,opsymbol,_tape_to_expr(m, children_arr[cidx], nd, adj, const_values, parameter_values, subexpressions, user_operators, generic_variable_names, splat_subexpressions, print_mode))
     elseif nod.nodetype == COMPARISON
         op = nod.index
         opsymbol = comparison_operators[op]
@@ -1005,22 +1005,22 @@ function tape_to_expr(m::Model, k, nd::Vector{NodeData}, adj, const_values,
         if length(children_idx) > 2
             ex = Expr(:comparison)
             for cidx in children_idx
-                push!(ex.args, tape_to_expr(m, children_arr[cidx], nd, adj, const_values, parameter_values, subexpressions, user_operators, generic_variable_names, splat_subexpressions, print_mode))
+                push!(ex.args, _tape_to_expr(m, children_arr[cidx], nd, adj, const_values, parameter_values, subexpressions, user_operators, generic_variable_names, splat_subexpressions, print_mode))
                 push!(ex.args, opsymbol)
             end
             pop!(ex.args)
         else
             ex = Expr(:call, opsymbol)
-            push!(ex.args, tape_to_expr(m, children_arr[children_idx[1]], nd, adj, const_values, parameter_values, subexpressions, user_operators, generic_variable_names, splat_subexpressions, print_mode))
-            push!(ex.args, tape_to_expr(m, children_arr[children_idx[2]], nd, adj, const_values, parameter_values, subexpressions, user_operators, generic_variable_names, splat_subexpressions, print_mode))
+            push!(ex.args, _tape_to_expr(m, children_arr[children_idx[1]], nd, adj, const_values, parameter_values, subexpressions, user_operators, generic_variable_names, splat_subexpressions, print_mode))
+            push!(ex.args, _tape_to_expr(m, children_arr[children_idx[2]], nd, adj, const_values, parameter_values, subexpressions, user_operators, generic_variable_names, splat_subexpressions, print_mode))
         end
         return ex
     elseif nod.nodetype == LOGIC
         op = nod.index
         opsymbol = logic_operators[op]
         children_idx = nzrange(adj,k)
-        lhs = tape_to_expr(m, children_arr[first(children_idx)], nd, adj, const_values, parameter_values, subexpressions, user_operators, generic_variable_names, splat_subexpressions, print_mode)
-        rhs = tape_to_expr(m, children_arr[last(children_idx)], nd, adj, const_values, parameter_values, subexpressions, user_operators, generic_variable_names, splat_subexpressions, print_mode)
+        lhs = _tape_to_expr(m, children_arr[first(children_idx)], nd, adj, const_values, parameter_values, subexpressions, user_operators, generic_variable_names, splat_subexpressions, print_mode)
+        rhs = _tape_to_expr(m, children_arr[last(children_idx)], nd, adj, const_values, parameter_values, subexpressions, user_operators, generic_variable_names, splat_subexpressions, print_mode)
         return Expr(opsymbol, lhs, rhs)
     end
     error()
@@ -1032,7 +1032,7 @@ end
 function MOI.objective_expr(d::NLPEvaluator)
     if d.has_nlobj
         ex = d.objective
-        return tape_to_expr(d.m, 1, d.m.nlp_data.nlobj.nd, ex.adj, ex.const_values, d.parameter_values, d.subexpressions_as_julia_expressions,d.m.nlp_data.user_operators, true, true)
+        return _tape_to_expr(d.m, 1, d.m.nlp_data.nlobj.nd, ex.adj, ex.const_values, d.parameter_values, d.subexpressions_as_julia_expressions,d.m.nlp_data.user_operators, true, true)
     else
         error("No nonlinear objective present")
     end
@@ -1041,11 +1041,11 @@ end
 function MOI.constraint_expr(d::NLPEvaluator,i::Integer)
     ex = d.constraints[i]
     constr = d.m.nlp_data.nlconstr[i]
-    julia_expr = tape_to_expr(d.m, 1, constr.terms.nd, ex.adj, ex.const_values, d.parameter_values, d.subexpressions_as_julia_expressions,d.m.nlp_data.user_operators, true, true)
-    if sense(constr) == :range
+    julia_expr = _tape_to_expr(d.m, 1, constr.terms.nd, ex.adj, ex.const_values, d.parameter_values, d.subexpressions_as_julia_expressions,d.m.nlp_data.user_operators, true, true)
+    if _sense(constr) == :range
         return Expr(:comparison, constr.lb, :(<=), julia_expr, :(<=), constr.ub)
     else
-        return Expr(:call, sense(constr), julia_expr, rhs(constr))
+        return Expr(:call, _sense(constr), julia_expr, _rhs(constr))
     end
 end
 
@@ -1059,7 +1059,7 @@ Evaluate `ex` using `var_value(v)` as the value for each variable `v`.
 function value(ex::NonlinearExpression, var_value::Function)
     model = ex.m
 
-    nlp_data::NLPData = model.nlp_data
+    nlp_data::_NLPData = model.nlp_data
 
     moi_index_to_consecutive_index = Dict{MOI.VariableIndex, Int}()
     variable_indices = MOI.get(model, MOI.ListOfVariableIndices())
@@ -1073,13 +1073,13 @@ function value(ex::NonlinearExpression, var_value::Function)
     subexpressions = Vector{Vector{NodeData}}(undef, 0)
     for nl_expr in nlp_data.nlexpr
         push!(subexpressions,
-              replace_moi_variables(nl_expr.nd,
-                                    moi_index_to_consecutive_index))
+              _replace_moi_variables(nl_expr.nd,
+                                     moi_index_to_consecutive_index))
     end
 
     original_ex = nlp_data.nlexpr[ex.index]
-    ex_nd = replace_moi_variables(original_ex.nd,
-                                  moi_index_to_consecutive_index)
+    ex_nd = _replace_moi_variables(original_ex.nd,
+                                   moi_index_to_consecutive_index)
     main_expressions = Vector{NodeData}[ex_nd]
     subexpression_order, _ = order_subexpressions(main_expressions,
                                                   subexpressions)
@@ -1120,7 +1120,7 @@ Evaluate `ex` using `value` as the value for each variable `v`.
 """
 value(ex::NonlinearExpression) = value(ex, value)
 
-mutable struct UserFunctionEvaluator <: MOI.AbstractNLPEvaluator
+mutable struct _UserFunctionEvaluator <: MOI.AbstractNLPEvaluator
     f
     ∇f
     len::Int
@@ -1128,26 +1128,26 @@ end
 
 # TODO: This is a slightly confusing use for AbstractNLPEvaluator. Switch to a
 # better data structure.
-function MOI.eval_objective(d::UserFunctionEvaluator,x)
+function MOI.eval_objective(d::_UserFunctionEvaluator,x)
     @assert length(x) == d.len
     return d.f(x)::eltype(x)
 end
-function MOI.eval_objective_gradient(d::UserFunctionEvaluator,grad,x)
+function MOI.eval_objective_gradient(d::_UserFunctionEvaluator,grad,x)
     d.∇f(grad,x)
     nothing
 end
 
-function UserAutoDiffEvaluator(dimension::Integer, f::Function, ::Type{T} = Float64) where T
+function _UserFunctionEvaluator(dimension::Integer, f::Function, ::Type{T} = Float64) where T
     g = x -> f(x...)
     cfg = ForwardDiff.GradientConfig(g, zeros(T, dimension))
     ∇f = (out, y) -> ForwardDiff.gradient!(out, g, y, cfg)
-    return UserFunctionEvaluator(g, ∇f, dimension)
+    return _UserFunctionEvaluator(g, ∇f, dimension)
 end
 
 # TODO: Add a docstring.
 function register(m::Model, s::Symbol, dimension::Integer, f::Function; autodiff::Bool=false)
     autodiff == true || error("If only the function is provided, must set autodiff=true")
-    initNLP(m)
+    _init_NLP(m)
 
     if dimension == 1
         fprime = x -> ForwardDiff.derivative(f, x)
@@ -1155,14 +1155,14 @@ function register(m::Model, s::Symbol, dimension::Integer, f::Function; autodiff
         _Derivatives.register_univariate_operator!(m.nlp_data.user_operators, s, f, fprime, fprimeprime)
     else
         m.nlp_data.largest_user_input_dimension = max(m.nlp_data.largest_user_input_dimension,dimension)
-        _Derivatives.register_multivariate_operator!(m.nlp_data.user_operators, s, UserAutoDiffEvaluator(dimension, f))
+        _Derivatives.register_multivariate_operator!(m.nlp_data.user_operators, s, _UserFunctionEvaluator(dimension, f))
     end
 
 end
 
 # TODO: Add a docstring.
 function register(m::Model, s::Symbol, dimension::Integer, f::Function, ∇f::Function; autodiff::Bool=false)
-    initNLP(m)
+    _init_NLP(m)
     if dimension == 1
         autodiff == true || error("Currently must provide 2nd order derivatives of univariate functions. Try setting autodiff=true.")
         fprimeprime = x -> ForwardDiff.derivative(∇f, x)
@@ -1170,7 +1170,7 @@ function register(m::Model, s::Symbol, dimension::Integer, f::Function, ∇f::Fu
     else
         autodiff == false || Base.warn_once("autodiff=true ignored since gradient is already provided.")
         m.nlp_data.largest_user_input_dimension = max(m.nlp_data.largest_user_input_dimension,dimension)
-        d = UserFunctionEvaluator(x -> f(x...), (g,x)->∇f(g,x...), dimension)
+        d = _UserFunctionEvaluator(x -> f(x...), (g,x)->∇f(g,x...), dimension)
         _Derivatives.register_multivariate_operator!(m.nlp_data.user_operators, s, d)
     end
 
@@ -1179,20 +1179,20 @@ end
 # TODO: Add a docstring.
 function register(m::Model, s::Symbol, dimension::Integer, f::Function, ∇f::Function, ∇²f::Function)
     dimension == 1 || error("Providing hessians for multivariate functions is not yet supported")
-    initNLP(m)
+    _init_NLP(m)
     _Derivatives.register_univariate_operator!(m.nlp_data.user_operators, s, f, ∇f, ∇²f)
 end
 
 # TODO: Add a docstring.
 # Ex: set_NL_objective(model, MOI.MIN_SENSE, :($x + $y^2))
 function set_NL_objective(model::Model, sense::MOI.OptimizationSense, x)
-    return set_objective(model, sense, NonlinearExprData(model, x))
+    return set_objective(model, sense, _NonlinearExprData(model, x))
 end
 
 # TODO: Add a docstring.
 # Ex: add_NL_constraint(m, :($x + $y^2 <= 1))
 function add_NL_constraint(model::Model, ex::Expr)
-    initNLP(model)
+    _init_NLP(model)
     nl_constraints = model.nlp_data.nlconstr
     if isexpr(ex, :call) # One-sided constraint.
         # Simple comparison - move everything to the LHS
@@ -1211,7 +1211,7 @@ function add_NL_constraint(model::Model, ex::Expr)
                   " or ==).")
         end
         lhs = :($(ex.args[2]) - $(ex.args[3]))
-        c = NonlinearConstraint(NonlinearExprData(model, lhs), lb, ub)
+        c = _NonlinearConstraint(_NonlinearExprData(model, lhs), lb, ub)
         push!(nl_constraints, c)
         return ConstraintRef(model,
                              NonlinearConstraintIndex(length(nl_constraints)),
@@ -1230,7 +1230,7 @@ function add_NL_constraint(model::Model, ex::Expr)
         elseif !isa(ub, Number)
             error(string("In (", ex,"): expected ", ub," to be a number."))
         end
-        c = NonlinearConstraint(NonlinearExprData(model, ex.args[3]), lb, ub)
+        c = _NonlinearConstraint(_NonlinearExprData(model, ex.args[3]), lb, ub)
         push!(nl_constraints, c)
         return ConstraintRef(model,
                              NonlinearConstraintIndex(length(nl_constraints)),

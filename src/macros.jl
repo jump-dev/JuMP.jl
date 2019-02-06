@@ -1409,7 +1409,7 @@ macro NLobjective(model, sense, x)
     sense_expr = moi_sense(_error, sense)
     ex = gensym()
     code = quote
-        $ex = $(processNLExpr(model, x))
+        $ex = $(_process_NL_expr(model, x))
         set_objective($(esc(model)), $sense_expr, $ex)
     end
     return assert_validmodel(esc(model), macro_return(code, nothing))
@@ -1461,7 +1461,7 @@ macro NLconstraint(m, x, extra...)
         end
         lhs = :($(x.args[2]) - $(x.args[3]))
         code = quote
-            c = NonlinearConstraint($(processNLExpr(m, lhs)), $lb, $ub)
+            c = _NonlinearConstraint($(_process_NL_expr(m, lhs)), $lb, $ub)
             push!($esc_m.nlp_data.nlconstr, c)
             $(refcall) = ConstraintRef($esc_m, NonlinearConstraintIndex(length($esc_m.nlp_data.nlconstr)), ScalarShape())
         end
@@ -1478,7 +1478,7 @@ macro NLconstraint(m, x, extra...)
             elseif !isa($(esc(ub)),Number)
                 error(string("in @NLconstraint (",$(string(x)),"): expected ",$(string(ub))," to be a number."))
             end
-            c = NonlinearConstraint($(processNLExpr(m, x.args[3])), $(esc(lb)), $(esc(ub)))
+            c = _NonlinearConstraint($(_process_NL_expr(m, x.args[3])), $(esc(lb)), $(esc(ub)))
             push!($esc_m.nlp_data.nlconstr, c)
             $(refcall) = ConstraintRef($esc_m, NonlinearConstraintIndex(length($esc_m.nlp_data.nlconstr)), ScalarShape())
         end
@@ -1490,7 +1490,7 @@ macro NLconstraint(m, x, extra...)
     end
     looped = getloopedcode(variable, code, condition, idxvars, idxsets, :(ConstraintRef{Model,NonlinearConstraintIndex}), requestedcontainer)
     creation_code = quote
-        initNLP($esc_m)
+        _init_NLP($esc_m)
         $looped
     end
     if anonvar
@@ -1540,7 +1540,7 @@ macro NLexpression(args...)
 
     refcall, idxvars, idxsets, condition = buildrefsets(c, variable)
     code = quote
-        $(refcall) = NonlinearExpression($(esc(m)), $(processNLExpr(m, x)))
+        $(refcall) = NonlinearExpression($(esc(m)), $(_process_NL_expr(m, x)))
     end
     creation_code = getloopedcode(variable, code, condition, idxvars, idxsets, :NonlinearExpression, requestedcontainer)
     if anonvar
@@ -1610,7 +1610,7 @@ macro NLparameter(m, ex, extra...)
             error(string("in @NLparameter (", $(string(ex)), "): expected ",
                          $(string(x))," to be a number."))
         end
-        $(refcall) = newparameter($m, $(esc(x)))
+        $(refcall) = _new_parameter($m, $(esc(x)))
     end
     creation_code = getloopedcode(variable, code, condition, idxvars, idxsets, :NonlinearParameter, :Auto)
 
