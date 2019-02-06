@@ -474,8 +474,14 @@ function Base.showerror(io::IO, ex::VariableNotOwnedError)
     print(io, "VariableNotOwnedError: Variable not owned by model present in $(ex.context)")
 end
 
-function check_belongs_to_model(vec::Vector{VariableRef}, m::Model)
-    @inbounds all(owner_model(m) === model for m in vec)
+function check_belongs_to_model(vec::Vector{VariableRef}, model::Model)
+        if  @inbounds all(owner_model(m) === model for m in vec)
+            return true
+            # return nothing #This would match the scalar implimentation
+        else
+            return false
+            # throw(VariableNotOwned(vec)) #This would match the scalar implimentation
+        end
 end
 
 Base.copy(v::VariableRef, new_model::Model) = VariableRef(new_model, v.index)
