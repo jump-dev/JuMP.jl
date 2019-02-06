@@ -1,14 +1,14 @@
 # TODO: Replace isapprox with ≈ everywhere.
 @testset "Nonlinear" begin
 
-    import JuMP: NonlinearExprData
+    import JuMP: _NonlinearExprData
 
-    function expressions_equal(ex1::NonlinearExprData, ex2::NonlinearExprData)
+    function expressions_equal(ex1::_NonlinearExprData, ex2::_NonlinearExprData)
         return ex1.nd == ex2.nd && ex1.const_values == ex2.const_values
     end
 
     # TODO: These are poorly designed tests because they would not catch errors
-    # that affect both processNLExpr and NonlinearExprData's parsing (although
+    # that affect both _process_NL_expr and _NonlinearExprData's parsing (although
     # they use different pathways). It would be better to check the NodeData
     # representation directly.
 
@@ -16,8 +16,8 @@
         m = Model()
         @variable(m, x)
         @variable(m, y)
-        @test expressions_equal(@JuMP.processNLExpr(m, x + y),
-                                NonlinearExprData(m, :($x + $y)))
+        @test expressions_equal(@JuMP._process_NL_expr(m, x + y),
+                                _NonlinearExprData(m, :($x + $y)))
     end
 
     @testset "Parse + (ternary)" begin
@@ -25,16 +25,16 @@
         @variable(m, x)
         @variable(m, y)
         @variable(m, z)
-        @test expressions_equal(@JuMP.processNLExpr(m, x + y + z),
-                                NonlinearExprData(m, :($x + $y + $z)))
+        @test expressions_equal(@JuMP._process_NL_expr(m, x + y + z),
+                                _NonlinearExprData(m, :($x + $y + $z)))
     end
 
     @testset "Parse * (binary)" begin
         m = Model()
         @variable(m, x)
         @variable(m, y)
-        @test expressions_equal(@JuMP.processNLExpr(m, x * y),
-                                NonlinearExprData(m, :($x * $y)))
+        @test expressions_equal(@JuMP._process_NL_expr(m, x * y),
+                                _NonlinearExprData(m, :($x * $y)))
     end
 
     @testset "Parse * (ternary)" begin
@@ -42,65 +42,65 @@
         @variable(m, x)
         @variable(m, y)
         @variable(m, z)
-        @test expressions_equal(@JuMP.processNLExpr(m, x * y * z),
-                                NonlinearExprData(m, :($x * $y * $z)))
+        @test expressions_equal(@JuMP._process_NL_expr(m, x * y * z),
+                                _NonlinearExprData(m, :($x * $y * $z)))
     end
 
     @testset "Parse ^ (binary)" begin
         m = Model()
         @variable(m, x)
-        @test expressions_equal(@JuMP.processNLExpr(m, x^3),
-                                NonlinearExprData(m, :($x^3)))
+        @test expressions_equal(@JuMP._process_NL_expr(m, x^3),
+                                _NonlinearExprData(m, :($x^3)))
     end
 
     @testset "Parse sin (univariate)" begin
         m = Model()
         @variable(m, x)
-        @test expressions_equal(@JuMP.processNLExpr(m, sin(x)),
-                                NonlinearExprData(m, :(sin($x))))
+        @test expressions_equal(@JuMP._process_NL_expr(m, sin(x)),
+                                _NonlinearExprData(m, :(sin($x))))
     end
 
     @testset "Parse ifelse" begin
         m = Model()
         @variable(m, x)
-        @test expressions_equal(@JuMP.processNLExpr(m, ifelse(1 == 2 || 3 == 4 && 5 == 6, x, 0.0)),
-                                NonlinearExprData(m, :(ifelse(1 == 2 || 3 == 4 && 5 == 6, $x, 0.0))))
+        @test expressions_equal(@JuMP._process_NL_expr(m, ifelse(1 == 2 || 3 == 4 && 5 == 6, x, 0.0)),
+                                _NonlinearExprData(m, :(ifelse(1 == 2 || 3 == 4 && 5 == 6, $x, 0.0))))
     end
 
     @testset "Parse ifelse (3-way comparison)" begin
         m = Model()
         @variable(m, x)
-        @test expressions_equal(@JuMP.processNLExpr(m, ifelse(1 <= 2 <= 3, x, 0.0)),
-                                NonlinearExprData(m, :(ifelse(1 <= 2 <= 3, $x, 0.0))))
+        @test expressions_equal(@JuMP._process_NL_expr(m, ifelse(1 <= 2 <= 3, x, 0.0)),
+                                _NonlinearExprData(m, :(ifelse(1 <= 2 <= 3, $x, 0.0))))
     end
 
     @testset "Parse sum" begin
         m = Model()
         @variable(m, x[1:2])
-        @test expressions_equal(@JuMP.processNLExpr(m, sum(x[i] for i in 1:2)),
-                                NonlinearExprData(m, :($(x[1]) + $(x[2]))))
+        @test expressions_equal(@JuMP._process_NL_expr(m, sum(x[i] for i in 1:2)),
+                                _NonlinearExprData(m, :($(x[1]) + $(x[2]))))
     end
 
     @testset "Parse prod" begin
         m = Model()
         @variable(m, x[1:2])
-        @test expressions_equal(@JuMP.processNLExpr(m, prod(x[i] for i in 1:2)),
-                                NonlinearExprData(m, :($(x[1]) * $(x[2]))))
+        @test expressions_equal(@JuMP._process_NL_expr(m, prod(x[i] for i in 1:2)),
+                                _NonlinearExprData(m, :($(x[1]) * $(x[2]))))
     end
 
     @testset "Parse subexpressions" begin
         m = Model()
         @variable(m, x)
         @NLexpression(m, ex, x^2)
-        @test expressions_equal(@JuMP.processNLExpr(m, ex + 1),
-                                NonlinearExprData(m, :($ex + 1)))
+        @test expressions_equal(@JuMP._process_NL_expr(m, ex + 1),
+                                _NonlinearExprData(m, :($ex + 1)))
     end
 
     @testset "Parse parameters" begin
         m = Model()
         @NLparameter(m, param == 10)
-        @test expressions_equal(@JuMP.processNLExpr(m, param + 1),
-                                NonlinearExprData(m, :($param + 1)))
+        @test expressions_equal(@JuMP._process_NL_expr(m, param + 1),
+                                _NonlinearExprData(m, :($param + 1)))
     end
 
     @testset "Parse user-defined function (univariate)" begin
@@ -108,8 +108,8 @@
         @variable(model, x)
         user_function = x -> x
         JuMP.register(model, :f, 1, user_function, autodiff=true)
-        @test expressions_equal(@JuMP.processNLExpr(model, f(x)),
-                                NonlinearExprData(model, :(f($x))))
+        @test expressions_equal(@JuMP._process_NL_expr(model, f(x)),
+                                _NonlinearExprData(model, :(f($x))))
     end
 
     @testset "Parse user-defined function (multivariate)" begin
@@ -118,8 +118,8 @@
         @variable(model, y)
         user_function = (x, y) -> x
         JuMP.register(model, :f, 2, user_function, autodiff=true)
-        @test expressions_equal(@JuMP.processNLExpr(model, f(x,y)),
-                                NonlinearExprData(model, :(f($x,$y))))
+        @test expressions_equal(@JuMP._process_NL_expr(model, f(x,y)),
+                                _NonlinearExprData(model, :(f($x,$y))))
     end
 
     @testset "Parse splatting" begin
@@ -127,8 +127,8 @@
         @variable(model, x[1:2])
         user_function = (x, y) -> x
         JuMP.register(model, :f, 2, user_function, autodiff=true)
-        @test expressions_equal(@JuMP.processNLExpr(model, f(x...)),
-                                NonlinearExprData(model, :(f($(x[1]),$(x[2])))))
+        @test expressions_equal(@JuMP._process_NL_expr(model, f(x...)),
+                                _NonlinearExprData(model, :(f($(x[1]),$(x[2])))))
     end
 
     @testset "Parse mixed splatting" begin
@@ -136,10 +136,10 @@
         @variable(model, x[1:2])
         @variable(model, y)
         @variable(model, z[1:1])
-        @test expressions_equal(@JuMP.processNLExpr(model, (*)(x..., y, z...)),
-                                NonlinearExprData(model,
-                                                  :((*)($(x[1]), $(x[2]),
-                                                        $y, $(z[1])))))
+        @test expressions_equal(@JuMP._process_NL_expr(model, (*)(x..., y, z...)),
+                                _NonlinearExprData(model,
+                                                   :((*)($(x[1]), $(x[2]),
+                                                         $y, $(z[1])))))
     end
 
     @testset "Error on splatting non-symbols" begin
