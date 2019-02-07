@@ -53,7 +53,7 @@ function _build_ref_sets(expr::Expr, cname)
     for s in c.args
         parse_done = false
         if isa(s, Expr)
-            parse_done, idxvar, _idxset = try_parse_idx_set(s::Expr)
+            parse_done, idxvar, _idxset = _try_parse_idx_set(s::Expr)
             if parse_done
                 idxset = esc(_idxset)
             end
@@ -346,7 +346,7 @@ sense_to_set(_error::Function, ::Val{S}) where S = _error("Unrecognized sense $S
 
 function parse_one_operator_constraint(_error::Function, vectorized::Bool,
                                         ::Union{Val{:in}, Val{:∈}}, aff, set)
-    newaff, parseaff = parseExprToplevel(aff, :q)
+    newaff, parseaff = _parse_expr_toplevel(aff, :q)
     parsecode = :(q = Val{false}(); $parseaff)
     if vectorized
         buildcall = :(build_constraint.($_error, $newaff, Ref($(esc(set)))))
@@ -369,9 +369,9 @@ function parse_constraint(_error::Function, sense::Symbol, lhs, rhs)
 end
 
 function parse_ternary_constraint(_error::Function, vectorized::Bool, lb, ::Union{Val{:(<=)}, Val{:(≤)}}, aff, rsign::Union{Val{:(<=)}, Val{:(≤)}}, ub)
-    newaff, parseaff = parseExprToplevel(aff, :aff)
-    newlb, parselb = parseExprToplevel(lb, :lb)
-    newub, parseub = parseExprToplevel(ub, :ub)
+    newaff, parseaff = _parse_expr_toplevel(aff, :aff)
+    newlb, parselb = _parse_expr_toplevel(lb, :lb)
+    newub, parseub = _parse_expr_toplevel(ub, :ub)
     if vectorized
         buildcall = :(build_constraint.($_error, $newaff, $newlb, $newub))
     else
@@ -899,7 +899,7 @@ macro objective(model, args...)
     end
     sense, x = args
     sense_expr = _moi_sense(_error, sense)
-    newaff, parsecode = parseExprToplevel(x, :q)
+    newaff, parsecode = _parse_expr_toplevel(x, :q)
     code = quote
         q = Val{false}()
         $parsecode
@@ -912,7 +912,7 @@ end
 # ex = @_build_expression(2x + 3y)
 # Currently for internal use only.
 macro _build_expression(x)
-    newaff, parsecode = parseExprToplevel(x, :q)
+    newaff, parsecode = _parse_expr_toplevel(x, :q)
     code = quote
         q = Val{false}()
         $parsecode
@@ -967,7 +967,7 @@ macro expression(args...)
     variable = gensym()
 
     refcall, idxvars, idxsets, condition = _build_ref_sets(c, variable)
-    newaff, parsecode = parseExprToplevel(x, :q)
+    newaff, parsecode = _parse_expr_toplevel(x, :q)
     code = quote
         q = Val{false}()
         $parsecode
