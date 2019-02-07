@@ -259,11 +259,13 @@ end
 #------------------------------------------------------------------------
 ## VariableRef
 #------------------------------------------------------------------------
-Base.show(io::IO, v::AbstractVariableRef) = print(io, var_string(REPLMode, v))
-function Base.show(io::IO, ::MIME"text/latex", v::AbstractVariableRef)
-    print(io, _wrap_in_math_mode(var_string(IJuliaMode, v)))
+function Base.show(io::IO, v::AbstractVariableRef)
+    print(io, function_string(REPLMode, v))
 end
-function var_string(::Type{REPLMode}, v::AbstractVariableRef)
+function Base.show(io::IO, ::MIME"text/latex", v::AbstractVariableRef)
+    print(io, _wrap_in_math_mode(function_string(IJuliaMode, v)))
+end
+function function_string(::Type{REPLMode}, v::AbstractVariableRef)
     var_name = name(v)
     if !isempty(var_name)
         return var_name
@@ -271,7 +273,7 @@ function var_string(::Type{REPLMode}, v::AbstractVariableRef)
         return "noname"
     end
 end
-function var_string(::Type{IJuliaMode}, v::AbstractVariableRef)
+function function_string(::Type{IJuliaMode}, v::AbstractVariableRef)
     var_name = name(v)
     if !isempty(var_name)
         # TODO: This is wrong if variable name constains extra "]"
@@ -281,12 +283,12 @@ function var_string(::Type{IJuliaMode}, v::AbstractVariableRef)
     end
 end
 
-Base.show(io::IO, a::GenericAffExpr) = print(io, aff_string(REPLMode,a))
+Base.show(io::IO, a::GenericAffExpr) = print(io, function_string(REPLMode, a))
 function Base.show(io::IO, ::MIME"text/latex", a::GenericAffExpr)
-    print(io, _wrap_in_math_mode(aff_string(IJuliaMode, a)))
+    print(io, _wrap_in_math_mode(function_string(IJuliaMode, a)))
 end
 
-function aff_string(mode, a::GenericAffExpr, show_constant=true)
+function function_string(mode, a::GenericAffExpr, show_constant=true)
     # If the expression is empty, return the constant (or 0)
     if length(linear_terms(a)) == 0
         return show_constant ? _string_round(a.constant) : "0"
@@ -301,7 +303,7 @@ function aff_string(mode, a::GenericAffExpr, show_constant=true)
         pre = _is_one_for_printing(coef) ? "" : _string_round(abs(coef)) * " "
 
         term_str[2 * elm - 1] = _sign_string(coef)
-        term_str[2 * elm] = string(pre, var_string(mode, var))
+        term_str[2 * elm] = string(pre, function_string(mode, var))
         elm += 1
     end
 
@@ -324,13 +326,13 @@ end
 #------------------------------------------------------------------------
 ## GenericQuadExpr
 #------------------------------------------------------------------------
-Base.show(io::IO, q::GenericQuadExpr) = print(io, quad_string(REPLMode,q))
+Base.show(io::IO, q::GenericQuadExpr) = print(io, function_string(REPLMode, q))
 function Base.show(io::IO, ::MIME"text/latex", q::GenericQuadExpr)
-    print(io, _wrap_in_math_mode(quad_string(IJuliaMode, q)))
+    print(io, _wrap_in_math_mode(function_string(IJuliaMode, q)))
 end
 
-function quad_string(mode, q::GenericQuadExpr)
-    length(quad_terms(q)) == 0 && return aff_string(mode, q.aff)
+function function_string(mode, q::GenericQuadExpr)
+    length(quad_terms(q)) == 0 && return function_string(mode, q.aff)
 
     # Odd terms are +/i, even terms are the variables/coeffs
     term_str = Array{String}(undef, 2 * length(quad_terms(q)))
@@ -341,8 +343,8 @@ function quad_string(mode, q::GenericQuadExpr)
 
             pre = _is_one_for_printing(coef) ? "" : _string_round(abs(coef)) * " "
 
-            x = var_string(mode,var1)
-            y = var_string(mode,var2)
+            x = function_string(mode, var1)
+            y = function_string(mode, var2)
 
             term_str[2 * elm - 1] = _sign_string(coef)
             term_str[2 * elm] = "$pre$x"
@@ -361,7 +363,7 @@ function quad_string(mode, q::GenericQuadExpr)
     end
     ret = join(term_str[1 : 2 * (elm - 1)])
 
-    aff_str = aff_string(mode, q.aff)
+    aff_str = function_string(mode, q.aff)
     if aff_str == "0"
         return ret
     else
@@ -447,29 +449,8 @@ Return a `String` representing the function `func` using print mode
 """
 function function_string end
 
-function function_string(print_mode, variable::AbstractVariableRef)
-    return var_string(print_mode, variable)
-end
-
-function function_string(print_mode,
-                         variable_vector::Vector{<:AbstractVariableRef})
-    return "[" * join(var_string.(print_mode, variable_vector), ", ") * "]"
-end
-
-function function_string(print_mode, aff::GenericAffExpr)
-    return aff_string(print_mode, aff)
-end
-
-function function_string(print_mode, aff_vector::Vector{<:GenericAffExpr})
-    return "[" * join(aff_string.(print_mode, aff_vector), ", ") * "]"
-end
-
-function function_string(print_mode, quad::GenericQuadExpr)
-    return quad_string(print_mode, quad)
-end
-
-function function_string(print_mode, quad_vector::Vector{<:GenericQuadExpr})
-    return "[" * join(quad_string.(print_mode, quad_vector), ", ") * "]"
+function function_string(print_mode, vector::Vector{<:AbstractJuMPScalar})
+    return "[" * join(function_string.(print_mode, vector), ", ") * "]"
 end
 
 """
