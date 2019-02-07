@@ -613,26 +613,6 @@ include("sets.jl")
 # SDConstraint
 include("sd.jl")
 
-# Internal functions for registering objects in the scope of the model.
-function register_object(model::AbstractModel, name::Symbol, value)
-    obj_dict = object_dictionary(model)
-    if haskey(obj_dict, name)
-        error("An object of name $name is already attached to this model. " *
-              "If this is intended, consider using the anonymous construction" *
-              " syntax, e.g., x = @variable(model, [1:N], ...) where the " *
-              "name of the object does not appear inside the macro.")
-        obj_dict[name] = nothing
-    else
-        obj_dict[name] = value
-    end
-    return value
-end
-
-function register_object(model::AbstractModel, name, value)
-    error("Invalid name $name.")
-end
-
-
 """
     Base.getindex(m::JuMP.AbstractModel, name::Symbol)
 

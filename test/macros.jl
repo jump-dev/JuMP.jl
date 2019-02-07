@@ -343,6 +343,13 @@ end
         @test_throws ErrorException @constraint(model, x, 2y <= 1)
     end
 
+    @testset "Duplicate variables are never created" begin
+        model = Model()
+        @variable(model, x)
+        @test_throws ErrorException @variables(model, x)
+        @test num_variables(model) == 1
+    end
+
     @testset "Anonymous expressions aren't registered" begin
         model = Model()
         x = @variable(model)

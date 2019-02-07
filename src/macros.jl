@@ -303,6 +303,21 @@ function _macro_return(code, variable)
     end
 end
 
+function _error_if_cannot_register(model::AbstractModel, name::Symbol)
+    obj_dict = object_dictionary(model)
+    if haskey(obj_dict, name)
+        error("An object of name $name is already attached to this model. " *
+              "If this is intended, consider using the anonymous construction" *
+              " syntax, e.g., x = @variable(model, [1:N], ...) where the " *
+              "name of the object does not appear inside the macro.")
+    end
+    return
+end
+
+function _error_if_cannot_register(model::AbstractModel, name)
+    error("Invalid name $name.")
+end
+
 """
     _macro_assign_and_return(code, variable, name;
                              final_variable=variable,
@@ -310,18 +325,22 @@ end
 
 Return runs `code` in a local scope which returns the value of `variable`
 and then assign `final_variable` to `name`.
-If `model_for_registering` is given, `register_object(model, name, variable)` is
-called in the generated code.
+If `model_for_registering` is given, the generated code assigns resulting the
+object to the model dictionary.
 """
 function _macro_assign_and_return(code, variable, name;
                                   final_variable=variable,
                                   model_for_registering=nothing)
     macro_code = _macro_return(code, variable)
     return quote
+        $(if model_for_registering !== nothing
+            :(_error_if_cannot_register($model_for_registering,
+                                        $(quot(name))))
+          end)
         $variable = $macro_code
         $(if model_for_registering !== nothing
-              :(register_object($model_for_registering, $(quot(name)),
-                $variable))
+            :(object_dictionary($model_for_registering)[$(quot(name))] =
+              $final_variable)
           end)
         # This assignment should be in the scope calling the macro
         $(esc(name)) = $final_variable
