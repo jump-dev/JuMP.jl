@@ -31,7 +31,7 @@ function _parse_NL_expr(m, x, tapevar, parent, values)
         push!(block.args, :($parentvar = length($tapevar)))
 
 
-        code = parsegen(x.args[2], t -> _parse_NL_expr(m, t, tapevar, parentvar, values))
+        code = _parse_gen(x.args[2], t -> _parse_NL_expr(m, t, tapevar, parentvar, values))
         push!(block.args, code)
         return codeblock
     end
