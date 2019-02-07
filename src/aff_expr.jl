@@ -16,7 +16,7 @@
 #############################################################################
 
 # Utilities for OrderedDict
-function add_or_set!(dict::OrderedDict{K,V}, k::K, v::V) where {K,V}
+function _add_or_set!(dict::OrderedDict{K,V}, k::K, v::V) where {K,V}
     # TODO: This unnecessarily requires two lookups for k.
     # TODO: Decide if we want to drop zeros here after understanding the
     # performance implications.
@@ -24,29 +24,29 @@ function add_or_set!(dict::OrderedDict{K,V}, k::K, v::V) where {K,V}
     return dict
 end
 
-function new_ordered_dict(::Type{K}, ::Type{V}, kv::AbstractArray{<:Pair}) where {K,V}
+function _new_ordered_dict(::Type{K}, ::Type{V}, kv::AbstractArray{<:Pair}) where {K,V}
     dict = OrderedDict{K,V}()
     sizehint!(dict, length(kv))
     for pair in kv
-        add_or_set!(dict, convert(K, pair.first), convert(V, pair.second))
+        _add_or_set!(dict, convert(K, pair.first), convert(V, pair.second))
     end
     return dict
 end
 
-function new_ordered_dict(::Type{K}, ::Type{V}, kv::Pair...) where {K,V}
+function _new_ordered_dict(::Type{K}, ::Type{V}, kv::Pair...) where {K,V}
     dict = OrderedDict{K,V}()
     sizehint!(dict, length(kv))
     for pair in kv
-        add_or_set!(dict, convert(K, pair.first), convert(V, pair.second))
+        _add_or_set!(dict, convert(K, pair.first), convert(V, pair.second))
     end
     return dict
 end
 # Shortcut for one and two arguments to avoid creating an empty dict and add
-# elements one by one with `JuMP.add_or_set!`
-function new_ordered_dict(::Type{K}, ::Type{V}, kv::Pair) where {K, V}
+# elements one by one with `JuMP._add_or_set!`
+function _new_ordered_dict(::Type{K}, ::Type{V}, kv::Pair) where {K, V}
     return OrderedDict{K, V}(kv)
 end
-function new_ordered_dict(::Type{K}, ::Type{V}, kv1::Pair, kv2::Pair) where {K, V}
+function _new_ordered_dict(::Type{K}, ::Type{V}, kv1::Pair, kv2::Pair) where {K, V}
     if isequal(kv1.first, kv2.first)
         return OrderedDict{K, V}(kv1.first => kv1.second + kv2.second)
     else
@@ -67,19 +67,19 @@ end
 variable_ref_type(::GenericAffExpr{C, V}) where {C, V} = V
 
 function GenericAffExpr(constant::V, kv::AbstractArray{Pair{K,V}}) where {K,V}
-    return GenericAffExpr{V,K}(constant, new_ordered_dict(K, V, kv))
+    return GenericAffExpr{V,K}(constant, _new_ordered_dict(K, V, kv))
 end
 
 function GenericAffExpr(constant::V, kv::Pair{K,V}...) where {K,V}
-    return GenericAffExpr{V,K}(constant, new_ordered_dict(K, V, kv...))
+    return GenericAffExpr{V,K}(constant, _new_ordered_dict(K, V, kv...))
 end
 
 function GenericAffExpr{V,K}(constant, kv::AbstractArray{<:Pair}) where {K,V}
-    return GenericAffExpr{V,K}(convert(V, constant), new_ordered_dict(K, V, kv))
+    return GenericAffExpr{V,K}(convert(V, constant), _new_ordered_dict(K, V, kv))
 end
 
 function GenericAffExpr{V,K}(constant, kv::Pair...) where {K,V}
-    return GenericAffExpr{V,K}(convert(V, constant), new_ordered_dict(K, V, kv...))
+    return GenericAffExpr{V,K}(convert(V, constant), _new_ordered_dict(K, V, kv...))
 end
 
 Base.iszero(a::GenericAffExpr) = isempty(a.terms) && iszero(a.constant)
@@ -143,13 +143,13 @@ linear part of the affine expression.
 linear_terms(aff::GenericAffExpr) = LinearTermIterator(aff)
 
 
-reverse_pair_to_tuple(p::Pair) = (p.second, p.first)
+_reverse_pair_to_tuple(p::Pair) = (p.second, p.first)
 function Base.iterate(lti::LinearTermIterator)
     ret = iterate(lti.aff.terms)
     if ret === nothing
         return nothing
     else
-        return reverse_pair_to_tuple(ret[1]), ret[2]
+        return _reverse_pair_to_tuple(ret[1]), ret[2]
     end
 end
 function Base.iterate(lti::LinearTermIterator, state)
@@ -157,7 +157,7 @@ function Base.iterate(lti::LinearTermIterator, state)
     if ret === nothing
         return nothing
     else
-        return reverse_pair_to_tuple(ret[1]), ret[2]
+        return _reverse_pair_to_tuple(ret[1]), ret[2]
     end
 end
 Base.length(lti::LinearTermIterator) = length(lti.aff.terms)
@@ -186,28 +186,28 @@ function add_to_expression! end
 # TODO: add deprecations for Base.push! and Base.append!
 
 function add_to_expression!(aff::GenericAffExpr{C,V}, new_coef::C, new_var::V) where {C,V}
-    add_or_set!(aff.terms, new_var, new_coef)
-    aff
+    _add_or_set!(aff.terms, new_var, new_coef)
+    return aff
 end
 
 function add_to_expression!(aff::GenericAffExpr{C,V}, new_var::V) where {C,V}
-    add_or_set!(aff.terms, new_var, one(C))
-    aff
+    _add_or_set!(aff.terms, new_var, one(C))
+    return aff
 end
 
 function add_to_expression!(aff::GenericAffExpr{C,V}, other::GenericAffExpr{C,V}) where {C,V}
     merge!(+, aff.terms, other.terms)
     aff.constant += other.constant
-    aff
+    return aff
 end
 
 function add_to_expression!(aff::GenericAffExpr{C,V}, other::C) where {C,V}
     aff.constant += other
-    aff
+    return aff
 end
 function add_to_expression!(aff::GenericAffExpr{C,V}, other::Real) where {C,V}
     aff.constant += other
-    aff
+    return aff
 end
 
 function Base.isequal(aff::GenericAffExpr{C,V},other::GenericAffExpr{C,V}) where {C,V}

@@ -34,19 +34,19 @@ mutable struct GenericQuadExpr{CoefType,VarType} <: AbstractJuMPScalar
 end
 
 function GenericQuadExpr(aff::GenericAffExpr{V,K}, kv::AbstractArray{Pair{UnorderedPair{K},V}}) where {K,V}
-    return GenericQuadExpr{V,K}(aff, new_ordered_dict(UnorderedPair{K}, V, kv))
+    return GenericQuadExpr{V,K}(aff, _new_ordered_dict(UnorderedPair{K}, V, kv))
 end
 
 function GenericQuadExpr(aff::GenericAffExpr{V,K}, kv::Pair{UnorderedPair{K},V}...) where {K,V}
-    return GenericQuadExpr{V,K}(aff, new_ordered_dict(UnorderedPair{K}, V, kv...))
+    return GenericQuadExpr{V,K}(aff, _new_ordered_dict(UnorderedPair{K}, V, kv...))
 end
 
 function GenericAffExpr{V,K}(aff::GenericAffExpr{V,K}, kv::AbstractArray{<:Pair}) where {K,V}
-    return GenericQuadExpr{V,K}(aff, new_ordered_dict(UnorderedPair{K}, V, kv))
+    return GenericQuadExpr{V,K}(aff, _new_ordered_dict(UnorderedPair{K}, V, kv))
 end
 
 function GenericQuadExpr{V,K}(aff::GenericAffExpr{V,K}, kv::Pair...) where {K,V}
-    return GenericQuadExpr{V,K}(aff, new_ordered_dict(UnorderedPair{K}, V, kv...))
+    return GenericQuadExpr{V,K}(aff, _new_ordered_dict(UnorderedPair{K}, V, kv...))
 end
 
 Base.iszero(q::GenericQuadExpr) = isempty(q.terms) && iszero(q.aff)
@@ -101,7 +101,7 @@ quadratic part of the quadratic expression.
 """
 quad_terms(quad::GenericQuadExpr) = QuadTermIterator(quad)
 
-function reorder_and_flatten(p::Pair{<:UnorderedPair})
+function _reorder_and_flatten(p::Pair{<:UnorderedPair})
     return (p.second, p.first.a, p.first.b)
 end
 function Base.iterate(qti::QuadTermIterator)
@@ -109,7 +109,7 @@ function Base.iterate(qti::QuadTermIterator)
     if ret === nothing
         return nothing
     else
-        return reorder_and_flatten(ret[1]), ret[2]
+        return _reorder_and_flatten(ret[1]), ret[2]
     end
 end
 function Base.iterate(qti::QuadTermIterator, state)
@@ -117,7 +117,7 @@ function Base.iterate(qti::QuadTermIterator, state)
     if ret === nothing
         return nothing
     else
-        return reorder_and_flatten(ret[1]), ret[2]
+        return _reorder_and_flatten(ret[1]), ret[2]
     end
 end
 Base.length(qti::QuadTermIterator) = length(qti.quad.terms)
@@ -131,13 +131,13 @@ function add_to_expression!(quad::GenericQuadExpr{C,V}, new_coef::C, new_var1::V
     # previous value for UnorderedPair(new_var2, new_var1), it's key will now be
     # UnorderedPair(new_var1, new_var2) (because these are defined as equal).
     key = UnorderedPair(new_var1, new_var2)
-    add_or_set!(quad.terms, key, new_coef)
-    quad
+    _add_or_set!(quad.terms, key, new_coef)
+    return quad
 end
 
 function add_to_expression!(quad::GenericQuadExpr{C, V}, new_coef::C, new_var::V) where {C,V}
     add_to_expression!(quad.aff, new_coef, new_var)
-    quad
+    return quad
 end
 
 function add_to_expression!(q::GenericQuadExpr{T,S}, other::GenericAffExpr{T,S}) where {T,S}
@@ -148,7 +148,7 @@ end
 function add_to_expression!(q::GenericQuadExpr{T,S}, other::GenericQuadExpr{T,S}) where {T,S}
     merge!(+, q.terms, other.terms)
     add_to_expression!(q.aff, other.aff)
-    q
+    return q
 end
 
 function add_to_expression!(quad::GenericQuadExpr{C}, other::C) where C
