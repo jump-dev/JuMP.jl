@@ -6,7 +6,7 @@
 abstract type AbstractVariable end
 
 # Any fields can usually be either a number or an expression
-mutable struct VariableInfoExpr
+mutable struct _VariableInfoExpr
     has_lb::Bool
     lower_bound::Any
     has_ub::Bool
@@ -19,41 +19,41 @@ mutable struct VariableInfoExpr
     integer::Any
 end
 
-function set_lower_bound_or_error(_error::Function, info::VariableInfoExpr, lower)
+function _set_lower_bound_or_error(_error::Function, info::_VariableInfoExpr, lower)
     info.has_lb && _error("Cannot specify variable lower_bound twice")
     info.has_lb = true
     info.lower_bound = lower
 end
-function set_upper_bound_or_error(_error::Function, info::VariableInfoExpr, upper)
+function _set_upper_bound_or_error(_error::Function, info::_VariableInfoExpr, upper)
     info.has_ub && _error("Cannot specify variable upper_bound twice")
     info.has_ub = true
     info.upper_bound = upper
 end
-function fix_or_error(_error::Function, info::VariableInfoExpr, value)
+function _fix_or_error(_error::Function, info::_VariableInfoExpr, value)
     info.has_fix && _error("Cannot specify variable fixed value twice")
     info.has_fix = true
     info.fixed_value = value
 end
-function set_binary_or_error(_error::Function, info::VariableInfoExpr)
+function _set_binary_or_error(_error::Function, info::_VariableInfoExpr)
     info.binary === false || _error("'Bin' and 'binary' keyword argument cannot both be specified.")
     info.binary = true
 end
-function set_integer_or_error(_error::Function, info::VariableInfoExpr)
+function _set_integer_or_error(_error::Function, info::_VariableInfoExpr)
     info.integer === false || _error("'Int' and 'integer' keyword argument cannot both be specified.")
     info.integer = true
 end
 
-function is_info_keyword(kw::Expr)
+function _is_info_keyword(kw::Expr)
     kw.args[1] in [:lower_bound, :upper_bound, :start, :binary, :integer]
 end
 # :(start = 0)     -> (:start, 0)
 # :(start = i + 1) -> (:start, :($(Expr(:escape, :(i + 1)))))
-function keywordify(kw::Expr)
+function _keywordify(kw::Expr)
     (kw.args[1], _esc_non_constant(kw.args[2]))
 end
-function VariableInfoExpr(; lower_bound=NaN, upper_bound=NaN, start=NaN, binary=false, integer=false)
+function _VariableInfoExpr(; lower_bound=NaN, upper_bound=NaN, start=NaN, binary=false, integer=false)
     # isnan(::Expr) is not defined so we need to do !== NaN
-    VariableInfoExpr(lower_bound !== NaN, lower_bound, upper_bound !== NaN, upper_bound, false, NaN, start !== NaN, start, binary, integer)
+    _VariableInfoExpr(lower_bound !== NaN, lower_bound, upper_bound !== NaN, upper_bound, false, NaN, start !== NaN, start, binary, integer)
 end
 
 struct VariableInfo{S, T, U, V}
@@ -69,7 +69,7 @@ struct VariableInfo{S, T, U, V}
     integer::Bool
 end
 
-function constructor_expr(info::VariableInfoExpr)
+function _constructor_expr(info::_VariableInfoExpr)
     return :(VariableInfo($(info.has_lb), $(info.lower_bound), $(info.has_ub),
              $(info.upper_bound), $(info.has_fix), $(info.fixed_value),
              $(info.has_start), $(info.start), $(info.binary), $(info.integer)))

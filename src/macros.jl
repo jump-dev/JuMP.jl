@@ -1040,14 +1040,30 @@ reverse_sense(::Val{:≥})    = Val(:≤)
 reverse_sense(::Val{:(==)}) = Val(:(==))
 
 """
-    parse_one_operator_variable(_error::Function, infoexpr::VariableInfoExpr, sense::Val{S}, value) where S
+    parse_one_operator_variable(_error::Function, infoexpr::_VariableInfoExpr, sense::Val{S}, value) where S
 
 Update `infoexr` for a variable expression in the `@variable` macro of the form `variable name S value`.
 """
-parse_one_operator_variable(_error::Function, infoexpr::VariableInfoExpr, ::Union{Val{:<=}, Val{:≤}}, upper) = set_upper_bound_or_error(_error, infoexpr, upper)
-parse_one_operator_variable(_error::Function, infoexpr::VariableInfoExpr, ::Union{Val{:>=}, Val{:≥}}, lower) = set_lower_bound_or_error(_error, infoexpr, lower)
-parse_one_operator_variable(_error::Function, infoexpr::VariableInfoExpr, ::Val{:(==)}, value) = fix_or_error(_error, infoexpr, value)
-parse_one_operator_variable(_error::Function, infoexpr::VariableInfoExpr, ::Val{S}, value) where S = _error("Unknown sense $S.")
+function parse_one_operator_variable end
+
+function parse_one_operator_variable(
+    _error::Function, infoexpr::_VariableInfoExpr, ::Union{Val{:<=}, Val{:≤}},
+    upper)
+    _set_upper_bound_or_error(_error, infoexpr, upper)
+end
+function parse_one_operator_variable(
+    _error::Function, infoexpr::_VariableInfoExpr, ::Union{Val{:>=}, Val{:≥}},
+    lower)
+    _set_lower_bound_or_error(_error, infoexpr, lower)
+end
+function parse_one_operator_variable(
+    _error::Function, infoexpr::_VariableInfoExpr, ::Val{:(==)}, value)
+    _fix_or_error(_error, infoexpr, value)
+end
+function parse_one_operator_variable(
+    _error::Function, infoexpr::_VariableInfoExpr, ::Val{S}, value) where S
+    _error("Unknown sense $S.")
+end
 
 # There is not way to determine at parsing time which of lhs or rhs is the
 # variable name and which is the value if both are symbols. For instance,
@@ -1056,36 +1072,43 @@ parse_one_operator_variable(_error::Function, infoexpr::VariableInfoExpr, ::Val{
 # that `x` is the variable name but at parse time there is now way to know
 # that `a` has a value.
 # In that case we assume the variable is the lhs.
-function parse_variable(_error::Function, infoexpr::VariableInfoExpr, sense::Symbol, var, value)
-    parse_one_operator_variable(_error, infoexpr, Val(sense), _esc_non_constant(value))
+function parse_variable(_error::Function, infoexpr::_VariableInfoExpr,
+                        sense::Symbol, var, value)
+    parse_one_operator_variable(_error, infoexpr, Val(sense),
+                                _esc_non_constant(value))
     return var
 end
 
 # If the lhs is a number and not the rhs, we can deduce that the rhs is
 # the variable.
-function parse_variable(_error::Function, infoexpr::VariableInfoExpr, sense::Symbol, value::Number, var)
-    parse_one_operator_variable(_error, infoexpr, reverse_sense(Val(sense)), _esc_non_constant(value))
+function parse_variable(_error::Function, infoexpr::_VariableInfoExpr,
+                        sense::Symbol, value::Number, var)
+    parse_one_operator_variable(_error, infoexpr, reverse_sense(Val(sense)),
+                                _esc_non_constant(value))
     return var
 end
 
-function parse_ternary_variable(_error::Function, infoexpr::VariableInfoExpr,
+function parse_ternary_variable(_error::Function, infoexpr::_VariableInfoExpr,
                                  ::Union{Val{:<=}, Val{:≤}}, lower,
                                  ::Union{Val{:<=}, Val{:≤}}, upper)
-    set_lower_bound_or_error(_error, infoexpr, lower)
-    set_upper_bound_or_error(_error, infoexpr, upper)
+    _set_lower_bound_or_error(_error, infoexpr, lower)
+    _set_upper_bound_or_error(_error, infoexpr, upper)
 end
-function parse_ternary_variable(_error::Function, infoexpr::VariableInfoExpr,
+function parse_ternary_variable(_error::Function, infoexpr::_VariableInfoExpr,
                                  ::Union{Val{:>=}, Val{:≥}}, upper,
                                  ::Union{Val{:>=}, Val{:≥}}, lower)
     parse_ternary_variable(_error, infoexpr, Val(:≤), lower, Val(:≤), upper)
 end
-function parse_ternary_variable(_error::Function, infoexpr::VariableInfoExpr,
+function parse_ternary_variable(_error::Function, infoexpr::_VariableInfoExpr,
                                  ::Val, lvalue, ::Val, rvalue)
     _error("Use the form lb <= ... <= ub.")
 end
-function parse_variable(_error::Function, infoexpr::VariableInfoExpr, lvalue, lsign::Symbol, var, rsign::Symbol, rvalue)
+function parse_variable(_error::Function, infoexpr::_VariableInfoExpr, lvalue,
+                        lsign::Symbol, var, rsign::Symbol, rvalue)
     # lvalue lsign var rsign rvalue
-    parse_ternary_variable(_error, infoexpr, Val(lsign), _esc_non_constant(lvalue), Val(rsign), _esc_non_constant(rvalue))
+    parse_ternary_variable(_error, infoexpr, Val(lsign),
+                           _esc_non_constant(lvalue), Val(rsign),
+                           _esc_non_constant(rvalue))
     return var
 end
 
@@ -1244,11 +1267,11 @@ macro variable(args...)
         anon_singleton = false
     end
 
-    info_kw_args = filter(is_info_keyword, kw_args)
-    extra_kw_args = filter(kw -> kw.args[1] != :base_name && kw.args[1] != :variable_type && !is_info_keyword(kw), kw_args)
+    info_kw_args = filter(_is_info_keyword, kw_args)
+    extra_kw_args = filter(kw -> kw.args[1] != :base_name && kw.args[1] != :variable_type && !_is_info_keyword(kw), kw_args)
     base_name_kw_args = filter(kw -> kw.args[1] == :base_name, kw_args)
     variable_type_kw_args = filter(kw -> kw.args[1] == :variable_type, kw_args)
-    infoexpr = VariableInfoExpr(; keywordify.(info_kw_args)...)
+    infoexpr = _VariableInfoExpr(; _keywordify.(info_kw_args)...)
 
     # There are four cases to consider:
     # x                                       | type of x | x.head
@@ -1288,9 +1311,9 @@ macro variable(args...)
     extra = filter(x -> (x != :PSD && x != :Symmetric), extra) # filter out PSD and sym tag
     for ex in extra
         if ex == :Int
-            set_integer_or_error(_error, infoexpr)
+            _set_integer_or_error(_error, infoexpr)
         elseif ex == :Bin
-            set_binary_or_error(_error, infoexpr)
+            _set_binary_or_error(_error, infoexpr)
         end
     end
     extra = esc.(filter(ex -> !(ex in [:Int,:Bin]), extra))
@@ -1298,7 +1321,7 @@ macro variable(args...)
         push!(extra, esc(variable_type_kw_args[1].args[2]))
     end
 
-    info = constructor_expr(infoexpr)
+    info = _constructor_expr(infoexpr)
     if isa(var,Symbol)
         # Easy case - a single variable
         sdp && _error("Cannot add a semidefinite scalar variable")
