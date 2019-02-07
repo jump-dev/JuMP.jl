@@ -1109,7 +1109,7 @@ var documenterSearchIndex = {"docs": [
     "page": "Containers",
     "title": "JuMP.Containers.SparseAxisArray",
     "category": "type",
-    "text": "struct SparseAxisArray{T,N,K<:NTuple{N, Any}} <: AbstractArray{T,N}\n    data::Dict{K,T}\nend\n\nN-dimensional array with elements of type T where only a subset of the entries are defined. The entries with indices idx = (i1, i2, ..., iN) in keys(data) has value data[idx]. Note that as opposed to SparseArrays.AbstractSparseArray, the missing entries are not assumed to be zero(T), they are simply not part of the array. This means that the result of map(f, sa::SparseAxisArray) or f.(sa::SparseAxisArray) has the same sparsity structure than sa even if f(zero(T)) is not zero.\n\n\n\n\n\n"
+    "text": "struct SparseAxisArray{T,N,K<:NTuple{N, Any}} <: AbstractArray{T,N}\n    data::Dict{K,T}\nend\n\nN-dimensional array with elements of type T where only a subset of the entries are defined. The entries with indices idx = (i1, i2, ..., iN) in keys(data) has value data[idx]. Note that as opposed to SparseArrays.AbstractSparseArray, the missing entries are not assumed to be zero(T), they are simply not part of the array. This means that the result of map(f, sa::SparseAxisArray) or f.(sa::SparseAxisArray) has the same sparsity structure than sa even if f(zero(T)) is not zero.\n\nExample\n\njulia> dict = Dict((:a, 2) => 1.0, (:a, 3) => 2.0, (:b, 3) => 3.0)\nDict{Tuple{Symbol,Int64},Float64} with 3 entries:\n  (:b, 3) => 3.0\n  (:a, 2) => 1.0\n  (:a, 3) => 2.0\n\njulia> array = JuMP.Containers.SparseAxisArray(dict)\nJuMP.Containers.SparseAxisArray{Float64,2,Tuple{Symbol,Int64}} with 3 entries:\n  [b, 3]  =  3.0\n  [a, 2]  =  1.0\n  [a, 3]  =  2.0\n\njulia> array[:b, 3]\n3.0\n\n\n\n\n\n"
 },
 
 {
