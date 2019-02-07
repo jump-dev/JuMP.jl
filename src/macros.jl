@@ -325,7 +325,7 @@ end
 
 Return runs `code` in a local scope which returns the value of `variable`
 and then assign `final_variable` to `name`.
-If `model_for_registering` is given, the generated code assigns resulting the
+If `model_for_registering` is given, the generated code assigns the resulting
 object to the model dictionary.
 """
 function _macro_assign_and_return(code, variable, name;
