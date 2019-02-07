@@ -101,10 +101,6 @@ quadratic part of the quadratic expression.
 """
 quad_terms(quad::GenericQuadExpr) = QuadTermIterator(quad)
 
-function reorder_iterator(p::Pair{UnorderedPair{V},C}, state::Int) where {C,V}
-    return ((p.second, p.first.a, p.first.b), state)
-end
-
 function reorder_and_flatten(p::Pair{<:UnorderedPair})
     return (p.second, p.first.a, p.first.b)
 end
