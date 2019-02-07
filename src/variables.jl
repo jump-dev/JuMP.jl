@@ -324,7 +324,7 @@ function lower_bound_index(v::VariableRef)
     end
     return owner_model(v).variable_to_lower_bound[index(v)]
 end
-function set_lower_bound_index(v::VariableRef, cindex::MOILB)
+function set_lower_bound_index(v::VariableRef, cindex::_MOILB)
     owner_model(v).variable_to_lower_bound[index(v)] = cindex
 end
 
@@ -356,9 +356,9 @@ Return a constraint reference to the lower bound constraint of `v`. Errors if
 one does not exist.
 """
 function LowerBoundRef(v::VariableRef)
-    return ConstraintRef{Model, MOILB, ScalarShape}(owner_model(v),
-                                                    lower_bound_index(v),
-                                                    ScalarShape())
+    return ConstraintRef{Model, _MOILB, ScalarShape}(owner_model(v),
+                                                     lower_bound_index(v),
+                                                     ScalarShape())
 end
 
 """
@@ -403,7 +403,7 @@ function upper_bound_index(v::VariableRef)
     end
     return owner_model(v).variable_to_upper_bound[index(v)]
 end
-function set_upper_bound_index(v::VariableRef, cindex::MOIUB)
+function set_upper_bound_index(v::VariableRef, cindex::_MOIUB)
     owner_model(v).variable_to_upper_bound[index(v)] = cindex
 end
 
@@ -435,9 +435,9 @@ Return a constraint reference to the upper bound constraint of `v`. Errors if
 one does not exist.
 """
 function UpperBoundRef(v::VariableRef)
-    return ConstraintRef{Model, MOIUB, ScalarShape}(owner_model(v),
-                                                    upper_bound_index(v),
-                                                    ScalarShape())
+    return ConstraintRef{Model, _MOIUB, ScalarShape}(owner_model(v),
+                                                     upper_bound_index(v),
+                                                     ScalarShape())
 end
 
 """
@@ -478,7 +478,7 @@ function fix_index(v::VariableRef)
     @assert is_fixed(v) # TODO error message
     return owner_model(v).variable_to_fix[index(v)]
 end
-function set_fix_index(v::VariableRef, cindex::MOIFIX)
+function set_fix_index(v::VariableRef, cindex::_MOIFIX)
     owner_model(v).variable_to_fix[index(v)] = cindex
 end
 
@@ -550,9 +550,9 @@ Return a constraint reference to the constraint fixing the value of `v`. Errors
 if one does not exist.
 """
 function FixRef(v::VariableRef)
-    return ConstraintRef{Model, MOIFIX, ScalarShape}(owner_model(v),
-                                                     fix_index(v),
-                                                     ScalarShape())
+    return ConstraintRef{Model, _MOIFIX, ScalarShape}(owner_model(v),
+                                                      fix_index(v),
+                                                      ScalarShape())
 end
 
 """
@@ -569,7 +569,7 @@ function integer_index(v::VariableRef)
     @assert is_integer(v) # TODO error message
     return owner_model(v).variable_to_integrality[index(v)]
 end
-function set_integer_index(v::VariableRef, cindex::MOIINT)
+function set_integer_index(v::VariableRef, cindex::_MOIINT)
     owner_model(v).variable_to_integrality[index(v)] = cindex
 end
 
@@ -612,7 +612,7 @@ Return a constraint reference to the constraint constrainting `v` to be integer.
 Errors if one does not exist.
 """
 function IntegerRef(v::VariableRef)
-    return ConstraintRef{Model, MOIINT, ScalarShape}(
+    return ConstraintRef{Model, _MOIINT, ScalarShape}(
         owner_model(v), integer_index(v), ScalarShape())
 end
 
@@ -629,7 +629,7 @@ function binary_index(v::VariableRef)
     @assert is_binary(v) # TODO error message
     return owner_model(v).variable_to_zero_one[index(v)]
 end
-function set_binary_index(v::VariableRef, cindex::MOIBIN)
+function set_binary_index(v::VariableRef, cindex::_MOIBIN)
     owner_model(v).variable_to_zero_one[index(v)] = cindex
 end
 
@@ -671,7 +671,7 @@ Return a constraint reference to the constraint constrainting `v` to be binary.
 Errors if one does not exist.
 """
 function BinaryRef(v::VariableRef)
-    return ConstraintRef{Model, MOIBIN, ScalarShape}(
+    return ConstraintRef{Model, _MOIBIN, ScalarShape}(
         owner_model(v), binary_index(v), ScalarShape())
 end
 

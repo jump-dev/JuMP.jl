@@ -145,14 +145,14 @@ Base.broadcastable(cref::ConstraintRef) = Ref(cref)
 
 Get a constraint's name attribute.
 """
-name(cr::ConstraintRef{Model,<:MOICON}) = MOI.get(cr.model, MOI.ConstraintName(), cr)
+name(cr::ConstraintRef{Model,<:_MOICON}) = MOI.get(cr.model, MOI.ConstraintName(), cr)
 
 """
     set_name(v::ConstraintRef, s::AbstractString)
 
 Set a constraint's name attribute.
 """
-set_name(cr::ConstraintRef{Model,<:MOICON}, s::String) = MOI.set(cr.model, MOI.ConstraintName(), cr, s)
+set_name(cr::ConstraintRef{Model,<:_MOICON}, s::String) = MOI.set(cr.model, MOI.ConstraintName(), cr, s)
 
 """
     constraint_by_name(model::AbstractModel,
@@ -392,7 +392,7 @@ jump_function(constraint::ScalarConstraint) = constraint.func
 moi_set(constraint::ScalarConstraint) = constraint.set
 shape(::ScalarConstraint) = ScalarShape()
 
-function constraint_object(ref::ConstraintRef{Model, MOICON{FuncType, SetType}}) where
+function constraint_object(ref::ConstraintRef{Model, _MOICON{FuncType, SetType}}) where
         {FuncType <: MOI.AbstractScalarFunction, SetType <: MOI.AbstractScalarSet}
     model = ref.model
     f = MOI.get(model, MOI.ConstraintFunction(), ref)::FuncType
@@ -428,7 +428,7 @@ end
 jump_function(constraint::VectorConstraint) = constraint.func
 moi_set(constraint::VectorConstraint) = constraint.set
 shape(c::VectorConstraint) = c.shape
-function constraint_object(ref::ConstraintRef{Model, MOICON{FuncType, SetType}}) where
+function constraint_object(ref::ConstraintRef{Model, _MOICON{FuncType, SetType}}) where
         {FuncType <: MOI.AbstractVectorFunction, SetType <: MOI.AbstractVectorSet}
     model = ref.model
     f = MOI.get(model, MOI.ConstraintFunction(), ref)::FuncType
@@ -495,7 +495,7 @@ con
 con : 4 x <= 2.0
 ```
 """
-function set_coefficient(constraint::ConstraintRef{Model, MOICON{F, S}},
+function set_coefficient(constraint::ConstraintRef{Model, _MOICON{F, S}},
                          variable, value) where {S, T, F <: Union{
                              MOI.ScalarAffineFunction{T},
                              MOI.ScalarQuadraticFunction{T}}}
@@ -522,7 +522,7 @@ into account in the primal value of the constraint. For instance, the constraint
 evaluation of `2x + 3y`.
 ```
 """
-function value(cref::ConstraintRef{Model, <:MOICON})
+function value(cref::ConstraintRef{Model, <:_MOICON})
     return reshape_result(MOI.get(cref.model, MOI.ConstraintPrimal(), cref),
                           cref.shape)
 end
@@ -547,7 +547,7 @@ most in sign from the `dual` value depending on the objective sense.
 - Relaxation of equality constraints (and hence the shadow price) is defined
   based on which sense of the equality constraint is active.
 """
-function shadow_price(constraint::ConstraintRef{Model, <:MOICON})
+function shadow_price(constraint::ConstraintRef{Model, <:_MOICON})
     error("The shadow price is not defined or not implemented for this type " *
           "of constraint.")
 end
@@ -582,7 +582,7 @@ function shadow_price_greater_than_(dual_value, sense::MOI.OptimizationSense)
     end
 end
 
-function shadow_price(constraint::ConstraintRef{Model, MOICON{F, S}}
+function shadow_price(constraint::ConstraintRef{Model, _MOICON{F, S}}
                       ) where {S <: MOI.LessThan, F}
     model = constraint.model
     if !has_duals(model)
@@ -593,7 +593,7 @@ function shadow_price(constraint::ConstraintRef{Model, MOICON{F, S}}
                                    objective_sense(model))
 end
 
-function shadow_price(constraint::ConstraintRef{Model, MOICON{F, S}}
+function shadow_price(constraint::ConstraintRef{Model, _MOICON{F, S}}
                       ) where {S <: MOI.GreaterThan, F}
     model = constraint.model
     if !has_duals(model)
@@ -604,7 +604,7 @@ function shadow_price(constraint::ConstraintRef{Model, MOICON{F, S}}
                                       objective_sense(model))
 end
 
-function shadow_price(constraint::ConstraintRef{Model, MOICON{F, S}}
+function shadow_price(constraint::ConstraintRef{Model, _MOICON{F, S}}
                       ) where {S <: MOI.EqualTo, F}
     model = constraint.model
     if !has_duals(model)
@@ -666,7 +666,7 @@ function all_constraints(model::Model,
     _error_if_not_concrete_type(set_type)
     # TODO: Support JuMP's set helpers like SecondOrderCone().
     f_type = moi_function_type(function_type)
-    constraint_ref_type = ConstraintRef{Model, MOICON{f_type, set_type},
+    constraint_ref_type = ConstraintRef{Model, _MOICON{f_type, set_type},
                                         ScalarShape}
     result = constraint_ref_type[]
     for idx in MOI.get(model, MOI.ListOfConstraintIndices{f_type, set_type}())

@@ -51,7 +51,7 @@ function set_optimizer(model::Model, optimizer_factory::OptimizerFactory;
         end
         optimizer = MOI.Bridges.full_bridge_optimizer(optimizer, Float64)
         for bridge_type in model.bridge_types
-            moi_add_bridge(optimizer, bridge_type)
+            _moi_add_bridge(optimizer, bridge_type)
         end
     end
     MOIU.reset_optimizer(model, optimizer)

@@ -248,7 +248,9 @@ function _replace_moi_variables(nd::Vector{NodeData}, moi_index_to_consecutive_i
     for i in 1:length(nd)
         node = nd[i]
         if node.nodetype == MOIVARIABLE
-            new_nd[i] = NodeData(VARIABLE, moi_index_to_consecutive_index[MOIVAR(node.index)], node.parent)
+            new_nd[i] = NodeData(
+                VARIABLE, moi_index_to_consecutive_index[_MOIVAR(node.index)],
+                node.parent)
         else
             new_nd[i] = node
         end
@@ -940,10 +942,11 @@ function _tape_to_expr(m::Model, k, nd::Vector{NodeData}, adj, const_values,
     nod = nd[k]
     if nod.nodetype == MOIVARIABLE
         if generic_variable_names
-            return Expr(:ref,:x,MOIVAR(nod.index))
+            return Expr(:ref, :x, _MOIVAR(nod.index))
         else
             # mode only matters when generic_variable_names == false
-            return _VariablePrintWrapper(VariableRef(m,MOIVAR(nod.index)),print_mode)
+            return _VariablePrintWrapper(VariableRef(m, _MOIVAR(nod.index)),
+                                         print_mode)
         end
     elseif nod.nodetype == VALUE
         return const_values[nod.index]
