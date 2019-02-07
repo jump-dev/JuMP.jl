@@ -1765,7 +1765,7 @@ var documenterSearchIndex = {"docs": [
     "page": "Extensions",
     "title": "JuMP.AbstractShape",
     "category": "type",
-    "text": "AbstractShape\n\nAbstract vectorizable shape. Given a flat vector form of an object of shape shape, the original object can be obtained by reshape.\n\n\n\n\n\n"
+    "text": "AbstractShape\n\nAbstract vectorizable shape. Given a flat vector form of an object of shape shape, the original object can be obtained by reshape_result.\n\n\n\n\n\n"
 },
 
 {
@@ -1777,11 +1777,11 @@ var documenterSearchIndex = {"docs": [
 },
 
 {
-    "location": "extensions/#JuMP.reshape",
+    "location": "extensions/#JuMP.reshape_result",
     "page": "Extensions",
-    "title": "JuMP.reshape",
+    "title": "JuMP.reshape_result",
     "category": "function",
-    "text": "reshape(vectorized_form::Vector, shape::AbstractShape)\n\nReturn an object in its original shape shape given its vectorized form vectorized_form.\n\nExamples\n\nGiven a SymmetricMatrixShape of vectorized form [1, 2, 3], the following code returns the matrix Symmetric(Matrix[1 2; 2 3]):\n\nreshape([1, 2, 3], SymmetricMatrixShape(2))\n\n\n\n\n\n"
+    "text": "reshape_result(vectorized_form::Vector, shape::AbstractShape)\n\nReturn an object in its original shape shape given its vectorized form vectorized_form.\n\nExamples\n\nGiven a SymmetricMatrixShape of vectorized form [1, 2, 3], the following code returns the matrix Symmetric(Matrix[1 2; 2 3]):\n\nreshape_result([1, 2, 3], SymmetricMatrixShape(2))\n\n\n\n\n\n"
 },
 
 {
@@ -1789,7 +1789,7 @@ var documenterSearchIndex = {"docs": [
     "page": "Extensions",
     "title": "JuMP.dual_shape",
     "category": "function",
-    "text": "dual_shape(shape::AbstractShape)::AbstractShape\n\nReturns the shape of the dual space of the space of objects of shape shape. By default, the dual_shape of a shape is itself. See the examples section below for an example for which this is not the case.\n\nExamples\n\nConsider polynomial constraints for which the dual is moment constraints and moment constraints for which the dual is polynomial constraints. Shapes for polynomials can be defined as follows:\n\nstruct Polynomial\n    coefficients::Vector{Float64}\n    monomials::Vector{Monomial}\nend\nstruct PolynomialShape <: AbstractShape\n    monomials::Vector{Monomial}\nend\nJuMP.reshape(x::Vector, shape::PolynomialShape) = Polynomial(x, shape.monomials)\n\nand a shape for moments can be defined as follows:\n\nstruct Moments\n    coefficients::Vector{Float64}\n    monomials::Vector{Monomial}\nend\nstruct MomentsShape <: AbstractShape\n    monomials::Vector{Monomial}\nend\nJuMP.reshape(x::Vector, shape::MomentsShape) = Moments(x, shape.monomials)\n\nThe dual_shape allows to define the shape of the dual of polynomial and moment constraints:\n\ndual_shape(shape::PolynomialShape) = MomentsShape(shape.monomials)\ndual_shape(shape::MomentsShape) = PolynomialShape(shape.monomials)\n\n\n\n\n\n"
+    "text": "dual_shape(shape::AbstractShape)::AbstractShape\n\nReturns the shape of the dual space of the space of objects of shape shape. By default, the dual_shape of a shape is itself. See the examples section below for an example for which this is not the case.\n\nExamples\n\nConsider polynomial constraints for which the dual is moment constraints and moment constraints for which the dual is polynomial constraints. Shapes for polynomials can be defined as follows:\n\nstruct Polynomial\n    coefficients::Vector{Float64}\n    monomials::Vector{Monomial}\nend\nstruct PolynomialShape <: AbstractShape\n    monomials::Vector{Monomial}\nend\nJuMP.reshape_result(x::Vector, shape::PolynomialShape) = Polynomial(x, shape.monomials)\n\nand a shape for moments can be defined as follows:\n\nstruct Moments\n    coefficients::Vector{Float64}\n    monomials::Vector{Monomial}\nend\nstruct MomentsShape <: AbstractShape\n    monomials::Vector{Monomial}\nend\nJuMP.reshape_result(x::Vector, shape::MomentsShape) = Moments(x, shape.monomials)\n\nThe dual_shape allows to define the shape of the dual of polynomial and moment constraints:\n\ndual_shape(shape::PolynomialShape) = MomentsShape(shape.monomials)\ndual_shape(shape::MomentsShape) = PolynomialShape(shape.monomials)\n\n\n\n\n\n"
 },
 
 {
@@ -1829,7 +1829,7 @@ var documenterSearchIndex = {"docs": [
     "page": "Extensions",
     "title": "Shapes",
     "category": "section",
-    "text": "Shapes allow vector constraints, which are represented as flat vectors in MOI, to retain a matrix shape at the JuMP level. There is a shape field in VectorConstraint that can be set in build_constraint and that is used to reshape the result computed in value and dual.AbstractShape\nshape\nreshape\ndual_shape\nScalarShape\nVectorShape\nSquareMatrixShape\nSymmetricMatrixShape"
+    "text": "Shapes allow vector constraints, which are represented as flat vectors in MOI, to retain a matrix shape at the JuMP level. There is a shape field in VectorConstraint that can be set in build_constraint and that is used to reshape the result computed in value and dual.AbstractShape\nshape\nreshape_result\ndual_shape\nScalarShape\nVectorShape\nSquareMatrixShape\nSymmetricMatrixShape"
 },
 
 {
