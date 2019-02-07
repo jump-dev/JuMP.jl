@@ -310,9 +310,10 @@ end
 function JuMP.objective_function_string(print_mode, model::MyModel)
     return JuMP.function_string(print_mode, JuMP.objective_function(model))
 end
+_plural(n) = (isone(n) ? "" : "s")
 function JuMP.show_constraints_summary(io::IO, model::MyModel)
     n = length(model.constraints)
-    print(io, "Constraint", JuMP.plural(n), ": ", n)
+    print(io, "Constraint", _plural(n), ": ", n)
 end
 function JuMP.constraints_string(print_mode, model::MyModel, sep, eol)
     str = ""

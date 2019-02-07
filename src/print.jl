@@ -143,7 +143,7 @@ end
 _wrap_in_math_mode(str) = "\$\$ $str \$\$"
 _wrap_in_inline_math_mode(str) = "\$ $str \$"
 
-plural(n) = (n == 1 ? "" : "s")
+_plural(n) = (isone(n) ? "" : "s")
 
 #------------------------------------------------------------------------
 ## Model
@@ -163,7 +163,7 @@ function Base.show(io::IO, model::AbstractModel)
     end
     println(io, " problem with:")
     # TODO: Use MOI.Name for the name of a JuMP model.
-    println(io, "Variable", plural(num_variables(model)), ": ",
+    println(io, "Variable", _plural(num_variables(model)), ": ",
             num_variables(model))
     if sense != MOI.FEASIBILITY_SENSE
         show_objective_function_summary(io, model)
@@ -388,11 +388,11 @@ function show_constraints_summary(io::IO, model::Model)
         num_constraints = MOI.get(model, MOI.NumberOfConstraints{F, S}())
         # TODO: Print jump_function_type(model, F) instead of F.
         println(io, "`$F`-in-`$S`: $num_constraints constraint",
-                plural(num_constraints))
+                _plural(num_constraints))
     end
     if !iszero(num_nl_constraints(model))
         println(io, "Nonlinear: ", num_nl_constraints(model), " constraint",
-                plural(num_nl_constraints(model)))
+                _plural(num_nl_constraints(model)))
     end
 end
 
