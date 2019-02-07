@@ -15,6 +15,24 @@ entries are defined. The entries with indices `idx = (i1, i2, ..., iN)` in
 `zero(T)`, they are simply not part of the array. This means that the result of
 `map(f, sa::SparseAxisArray)` or `f.(sa::SparseAxisArray)` has the same sparsity
 structure than `sa` even if `f(zero(T))` is not zero.
+
+# Example
+```jldoctest
+julia> dict = Dict((:a, 2) => 1.0, (:a, 3) => 2.0, (:b, 3) => 3.0)
+Dict{Tuple{Symbol,Int64},Float64} with 3 entries:
+  (:b, 3) => 3.0
+  (:a, 2) => 1.0
+  (:a, 3) => 2.0
+
+julia> array = JuMP.Containers.SparseAxisArray(dict)
+JuMP.Containers.SparseAxisArray{Float64,2,Tuple{Symbol,Int64}} with 3 entries:
+  [b, 3]  =  3.0
+  [a, 2]  =  1.0
+  [a, 3]  =  2.0
+
+julia> array[:b, 3]
+3.0
+```
 """
 struct SparseAxisArray{T,N,K<:NTuple{N, Any}} <: AbstractArray{T,N}
     data::Dict{K,T}
