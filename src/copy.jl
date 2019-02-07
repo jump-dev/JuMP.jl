@@ -13,22 +13,18 @@ extension storing data in the `ext` field.
 function copy_extension_data end
 
 """
-    copy_single_variable_constraints(dest::Dict{MOI.VariableIndex,
-                                                MOICON{MOI.SingleVariable, S}},
-                                     src::Dict{MOI.VariableIndex,
-                                               MOICON{MOI.SingleVariable, S}},
-                                     index_map) where S
+    _copy_single_variable_constraints(
+        dest::Dict{MOI.VariableIndex, MOICON{MOI.SingleVariable, S}},
+        src::Dict{MOI.VariableIndex, MOICON{MOI.SingleVariable, S}},
+        index_map) where S
 
 Copy the single variable constraint indices of `src` into `dest` mapping
 variable and constraint indices using `index_map`.
 """
-function copy_single_variable_constraints(dest::Dict{MOI.VariableIndex,
-                                                     MOICON{MOI.SingleVariable,
-                                                            S}},
-                                          src::Dict{MOI.VariableIndex,
-                                                    MOICON{MOI.SingleVariable,
-                                                           S}},
-                                          index_map) where S
+function _copy_single_variable_constraints(
+    dest::Dict{MOI.VariableIndex, MOICON{MOI.SingleVariable, S}},
+    src::Dict{MOI.VariableIndex, MOICON{MOI.SingleVariable, S}},
+    index_map) where S
     for (variable_index, constraint_index) in src
         dest[index_map[variable_index]] = index_map[constraint_index]
     end
@@ -104,16 +100,19 @@ function copy_model(model::Model)
     index_map = MOI.copy_to(backend(new_model), backend(model),
                             copy_names = true)
 
-    copy_single_variable_constraints(new_model.variable_to_lower_bound,
-                                  model.variable_to_lower_bound, index_map)
-    copy_single_variable_constraints(new_model.variable_to_upper_bound,
-                                  model.variable_to_upper_bound, index_map)
-    copy_single_variable_constraints(new_model.variable_to_fix,
-                                  model.variable_to_fix, index_map)
-    copy_single_variable_constraints(new_model.variable_to_integrality,
-                                  model.variable_to_integrality, index_map)
-    copy_single_variable_constraints(new_model.variable_to_zero_one,
-                                  model.variable_to_zero_one, index_map)
+    _copy_single_variable_constraints(
+        new_model.variable_to_lower_bound, model.variable_to_lower_bound,
+        index_map)
+    _copy_single_variable_constraints(
+        new_model.variable_to_upper_bound, model.variable_to_upper_bound,
+        index_map)
+    _copy_single_variable_constraints(
+        new_model.variable_to_fix, model.variable_to_fix, index_map)
+    _copy_single_variable_constraints(
+        new_model.variable_to_integrality, model.variable_to_integrality,
+        index_map)
+    _copy_single_variable_constraints(
+        new_model.variable_to_zero_one, model.variable_to_zero_one, index_map)
 
     new_model.optimize_hook = model.optimize_hook
 
