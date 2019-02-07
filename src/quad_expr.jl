@@ -156,8 +156,8 @@ function add_to_expression!(quad::GenericQuadExpr{C}, other::C) where C
 end
 
 
-function assert_isfinite(q::GenericQuadExpr)
-    assert_isfinite(q.aff)
+function _assert_isfinite(q::GenericQuadExpr)
+    _assert_isfinite(q.aff)
     for (coef, var1, var2) in quad_terms(q)
         isfinite(coef) || error("Invalid coefficient $coef on quadratic term $var1*$var2.")
     end
@@ -203,19 +203,19 @@ function check_belongs_to_model(q::GenericQuadExpr, model::AbstractModel)
 end
 
 """
-    moi_quadratic_term(t::Tuple)
+    _moi_quadratic_term(t::Tuple)
 
 Return the MOI.ScalarQuadraticTerm for the quadratic term `t`, element of the
 [`quad_terms`](@ref) iterator. Note that the `VariableRef`s are transformed
 into `MOI.VariableIndex`s hence the owner model information is lost.
 """
-function moi_quadratic_term(t::Tuple)
+function _moi_quadratic_term(t::Tuple)
     return MOI.ScalarQuadraticTerm(t[2] == t[3] ? 2t[1] : t[1], index(t[2]),
                                    index(t[3]))
 end
 function MOI.ScalarQuadraticFunction(q::QuadExpr)
-    assert_isfinite(q)
-    qterms = MOI.ScalarQuadraticTerm{Float64}[moi_quadratic_term(t)
+    _assert_isfinite(q)
+    qterms = MOI.ScalarQuadraticTerm{Float64}[_moi_quadratic_term(t)
                                               for t in quad_terms(q)]
     moi_aff = MOI.ScalarAffineFunction(q.aff)
     return MOI.ScalarQuadraticFunction(moi_aff.terms,
@@ -267,7 +267,7 @@ function _fill_vqf!(terms::Vector{<:MOI.VectorQuadraticTerm}, offset::Int,
     i = 1
     for term in quad_terms(aff)
         terms[offset + i] = MOI.VectorQuadraticTerm(Int64(oi),
-                                                    moi_quadratic_term(term))
+                                                    _moi_quadratic_term(term))
         i += 1
     end
     return offset + length(quad_terms(aff))

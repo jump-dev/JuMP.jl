@@ -247,7 +247,7 @@ Base.convert(::Type{GenericAffExpr{T,V}}, v::Real) where {T,V} = GenericAffExpr{
 const AffExpr = GenericAffExpr{Float64,VariableRef}
 
 # Check all coefficients are finite, i.e. not NaN, not Inf, not -Inf
-function assert_isfinite(a::AffExpr)
+function _assert_isfinite(a::AffExpr)
     for (coef, var) in linear_terms(a)
         isfinite(coef) || error("Invalid coefficient $coef on variable $var.")
     end
@@ -271,7 +271,7 @@ end
 # the same model. The verification is done in `check_belongs_to_model` which
 # should be called before calling `MOI.ScalarAffineFunction`.
 function MOI.ScalarAffineFunction(a::AffExpr)
-    assert_isfinite(a)
+    _assert_isfinite(a)
     terms = MOI.ScalarAffineTerm{Float64}[MOI.ScalarAffineTerm(t[1],
                                                                index(t[2]))
                                           for t in linear_terms(a)]
