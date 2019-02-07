@@ -396,8 +396,8 @@ end
     end
 
     @testset "AffExpr in macros" begin
-        eq = JuMP.math_symbol(REPLMode, :eq)
-        ge = JuMP.math_symbol(REPLMode, :geq)
+        eq = JuMP._math_symbol(REPLMode, :eq)
+        ge = JuMP._math_symbol(REPLMode, :geq)
 
         model = Model()
         @variable(model, x)
@@ -413,8 +413,8 @@ end
     end
 
     @testset "@constraints" begin
-        eq = JuMP.math_symbol(REPLMode, :eq)
-        ge = JuMP.math_symbol(REPLMode, :geq)
+        eq = JuMP._math_symbol(REPLMode, :eq)
+        ge = JuMP._math_symbol(REPLMode, :geq)
 
         model = Model()
         @variable(model, x)

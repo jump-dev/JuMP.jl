@@ -80,8 +80,8 @@ end
     @testset "expressions" begin
         # Most of the expression logic is well covered by test/operator.jl
         # This is really just to check IJulia printing for expressions
-        le = JuMP.math_symbol(REPLMode, :leq)
-        ge = JuMP.math_symbol(REPLMode, :geq)
+        le = JuMP._math_symbol(REPLMode, :leq)
+        ge = JuMP._math_symbol(REPLMode, :geq)
 
         #------------------------------------------------------------------
         mod = Model()
@@ -108,9 +108,9 @@ end
         io_test(IJuliaMode, ex, "y_{2,2}\\times x_{1} + y_{2,2}\\times x_{2} + 3 x_{1} + 3 x_{2}")
 
         ex = @expression(mod, (x[1]+x[2])*(y[2,2]+3.0) + z^2 - 1)
-        repl_sq = JuMP.math_symbol(REPLMode, :sq)
+        repl_sq = JuMP._math_symbol(REPLMode, :sq)
         io_test(REPLMode, ex, "x[1]*y[2,2] + x[2]*y[2,2] + z$repl_sq + 3 x[1] + 3 x[2] - 1")
-        ijulia_sq = JuMP.math_symbol(IJuliaMode, :sq)
+        ijulia_sq = JuMP._math_symbol(IJuliaMode, :sq)
         io_test(IJuliaMode, ex, "x_{1}\\times y_{2,2} + x_{2}\\times y_{2,2} + z$ijulia_sq + 3 x_{1} + 3 x_{2} - 1")
 
         ex = @expression(mod, -z*x[1] - x[1]*z + x[1]*x[2] + 0*z^2)
@@ -152,9 +152,9 @@ end
     end
 
     @testset "Nonlinear constraints" begin
-        le = JuMP.math_symbol(REPLMode, :leq)
-        ge = JuMP.math_symbol(REPLMode, :geq)
-        eq = JuMP.math_symbol(REPLMode, :eq)
+        le = JuMP._math_symbol(REPLMode, :leq)
+        ge = JuMP._math_symbol(REPLMode, :geq)
+        eq = JuMP._math_symbol(REPLMode, :eq)
 
         model = Model()
         @variable(model, x)
@@ -177,7 +177,7 @@ end
     end
 
     @testset "Nonlinear constraints with embedded parameters/expressions" begin
-        le = JuMP.math_symbol(REPLMode, :leq)
+        le = JuMP._math_symbol(REPLMode, :leq)
 
         model = Model()
         @variable(model, x)
@@ -267,8 +267,8 @@ function printing_test(ModelType::Type{<:JuMP.AbstractModel})
     end
 
     @testset "VectorOfVariable constraints" begin
-        ge = JuMP.math_symbol(REPLMode, :geq)
-        in_sym = JuMP.math_symbol(REPLMode, :in)
+        ge = JuMP._math_symbol(REPLMode, :geq)
+        in_sym = JuMP._math_symbol(REPLMode, :in)
         model = ModelType()
         @variable(model, x)
         @variable(model, y)
@@ -280,10 +280,10 @@ function printing_test(ModelType::Type{<:JuMP.AbstractModel})
     end
 
     @testset "Scalar AffExpr constraints" begin
-        le = JuMP.math_symbol(REPLMode, :leq)
-        ge = JuMP.math_symbol(REPLMode, :geq)
-        eq = JuMP.math_symbol(REPLMode, :eq)
-        in_sym = JuMP.math_symbol(REPLMode, :in)
+        le = JuMP._math_symbol(REPLMode, :leq)
+        ge = JuMP._math_symbol(REPLMode, :geq)
+        eq = JuMP._math_symbol(REPLMode, :eq)
+        in_sym = JuMP._math_symbol(REPLMode, :in)
 
         model = ModelType()
         @variable(model, x)
@@ -312,7 +312,7 @@ function printing_test(ModelType::Type{<:JuMP.AbstractModel})
     end
 
     @testset "Vector AffExpr constraints" begin
-        in_sym = JuMP.math_symbol(REPLMode, :in)
+        in_sym = JuMP._math_symbol(REPLMode, :in)
 
         model = ModelType()
         @variable(model, x)
@@ -325,9 +325,9 @@ function printing_test(ModelType::Type{<:JuMP.AbstractModel})
     end
 
     @testset "Scalar QuadExpr constraints" begin
-        in_sym = JuMP.math_symbol(REPLMode, :in)
-        le = JuMP.math_symbol(REPLMode, :leq)
-        sq = JuMP.math_symbol(REPLMode, :sq)
+        in_sym = JuMP._math_symbol(REPLMode, :in)
+        le = JuMP._math_symbol(REPLMode, :leq)
+        sq = JuMP._math_symbol(REPLMode, :sq)
 
         model = ModelType()
         @variable(model, x)
@@ -342,7 +342,7 @@ end
 # an MOI backend
 function model_printing_test(ModelType::Type{<:JuMP.AbstractModel})
     @testset "Model" begin
-        repl(s) = JuMP.math_symbol(REPLMode, s)
+        repl(s) = JuMP._math_symbol(REPLMode, s)
         le, ge, eq, fa = repl(:leq), repl(:geq), repl(:eq), repl(:for_all)
         inset, dots = repl(:in), repl(:dots)
         infty, union = repl(:infty), repl(:union)
@@ -479,7 +479,7 @@ end
 # as `StructJuMP`, see https://github.com/JuliaOpt/JuMP.jl/issues/1711
 function model_extension_printing_test(ModelType::Type{<:JuMP.AbstractModel})
     @testset "Model" begin
-        repl(s) = JuMP.math_symbol(REPLMode, s)
+        repl(s) = JuMP._math_symbol(REPLMode, s)
         le, ge, eq, fa = repl(:leq), repl(:geq), repl(:eq), repl(:for_all)
         inset, dots = repl(:in), repl(:dots)
         infty, union = repl(:infty), repl(:union)
@@ -563,7 +563,7 @@ end
     printing_test(Model)
     model_printing_test(Model)
     @testset "Model with nonlinear terms" begin
-        eq = JuMP.math_symbol(REPLMode, :eq)
+        eq = JuMP._math_symbol(REPLMode, :eq)
         model = Model()
         @variable(model, x)
         @NLobjective(model, Max, sin(x))
@@ -593,8 +593,8 @@ end
     """)
     end
     @testset "SingleVariable constraints" begin
-        ge = JuMP.math_symbol(REPLMode, :geq)
-        in_sym = JuMP.math_symbol(REPLMode, :in)
+        ge = JuMP._math_symbol(REPLMode, :geq)
+        in_sym = JuMP._math_symbol(REPLMode, :in)
         model = Model()
         @variable(model, x >= 10)
         zero_one = @constraint(model, x in MathOptInterface.ZeroOne())
