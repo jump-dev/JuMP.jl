@@ -643,7 +643,7 @@ function operators_test(ModelType::Type{<:JuMP.AbstractModel}, VariableRefType::
             @test elements_equal(2 .* x, 2 .* x2)
             @test elements_equal(first(x) .+ x2, first(x2) .+ x)
             @test sum(x) == sum(x2)
-            if !JuMP.one_indexed(x2)
+            if !JuMP._one_indexed(x2)
                 @test_throws DimensionMismatch x + x2
             end
         end
@@ -654,7 +654,7 @@ function operators_test(ModelType::Type{<:JuMP.AbstractModel}, VariableRefType::
         @variable(m, x[1:3])
 
         for x2 in (OffsetArray(x, -length(x)), view(x, :), sparse(x))
-            if !JuMP.one_indexed(x2)
+            if !JuMP._one_indexed(x2)
                 @test_throws AssertionError diagm(x2)
             else
                 @test diagm(x) == diagm(x2)
