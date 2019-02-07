@@ -3,7 +3,7 @@
 #  License, v. 2.0. If a copy of the MPL was not distributed with this
 #  file, You can obtain one at http://mozilla.org/MPL/2.0/.
 
-function try_parse_idx_set(arg::Expr)
+function _try_parse_idx_set(arg::Expr)
     # The parsing of `x[i=1]` changed from `i=1; getindex(x, 1)` to
     # `getindex(x; i=1)` from Julia v0.7 to Julia v1 so we need `:kw` for
     # Julia v1.0 and :(=) for Julia v0.7
@@ -20,8 +20,8 @@ function try_parse_idx_set(arg::Expr)
     end
 end
 
-function parse_idx_set(arg::Expr)
-    parse_done, idxvar, idxset = try_parse_idx_set(arg)
+function _parse_idx_set(arg::Expr)
+    parse_done, idxvar, idxset = _try_parse_idx_set(arg)
     if parse_done
         return idxvar, idxset
     end
@@ -250,15 +250,15 @@ end
 # Catch nonlinear expressions and parameters being used in add_constraint, etc.
 
 const _NLExpr = Union{NonlinearExpression,NonlinearParameter}
-_nlexprerr() = error("""Cannot use nonlinear expression or parameter in @constraint or @objective.
-                        Use @NLconstraint or @NLobjective instead.""")
+_nl_expr_err() = error("""Cannot use nonlinear expression or parameter in @constraint or @objective.
+                          Use @NLconstraint or @NLobjective instead.""")
 # Following three definitions avoid ambiguity warnings
-destructive_add!(expr::GenericQuadExpr{C,V}, c::GenericAffExpr{C,V}, x::V) where {C,V<:_NLExpr} = _nlexprerr()
-destructive_add!(expr::GenericQuadExpr{C,V}, c::Number, x::V) where {C,V<:_NLExpr} = _nlexprerr()
-destructive_add!(expr::GenericQuadExpr{C,V}, c::V, x::GenericAffExpr{C,V}) where {C,V<:_NLExpr} = _nlexprerr()
+destructive_add!(expr::GenericQuadExpr{C,V}, c::GenericAffExpr{C,V}, x::V) where {C,V<:_NLExpr} = _nl_expr_err()
+destructive_add!(expr::GenericQuadExpr{C,V}, c::Number, x::V) where {C,V<:_NLExpr} = _nl_expr_err()
+destructive_add!(expr::GenericQuadExpr{C,V}, c::V, x::GenericAffExpr{C,V}) where {C,V<:_NLExpr} = _nl_expr_err()
 for T1 in (GenericAffExpr,GenericQuadExpr), T2 in (Number,VariableRef,GenericAffExpr,GenericQuadExpr)
-    @eval destructive_add!(::$T1, ::$T2, ::_NLExpr) = _nlexprerr()
-    @eval destructive_add!(::$T1, ::_NLExpr, ::$T2) = _nlexprerr()
+    @eval destructive_add!(::$T1, ::$T2, ::_NLExpr) = _nl_expr_err()
+    @eval destructive_add!(::$T1, ::_NLExpr, ::$T2) = _nl_expr_err()
 end
 
 function destructive_add!(ex::AbstractArray{T}, c::AbstractArray, x::AbstractArray) where {T<:GenericAffExpr}
@@ -290,18 +290,18 @@ end
 # See JuMP PR #1698 for more discussion.
 destructive_add!(ex, c, x) = broadcast(+, ex, c * x)
 
-destructive_add_with_reorder!(ex, arg) = destructive_add!(ex, 1.0, arg)
+_destructive_add_with_reorder!(ex, arg) = destructive_add!(ex, 1.0, arg)
 # Special case because "Val{false}()" is used as the default empty expression.
-destructive_add_with_reorder!(ex::Val{false}, arg) = copy(arg)
+_destructive_add_with_reorder!(ex::Val{false}, arg) = copy(arg)
 # Calling `copy` on the matrix will not copy the entries
-destructive_add_with_reorder!(ex::Val{false}, arg::AbstractArray) = copy.(arg)
-function destructive_add_with_reorder!(ex::Val{false}, arg::Symmetric)
+_destructive_add_with_reorder!(ex::Val{false}, arg::AbstractArray) = copy.(arg)
+function _destructive_add_with_reorder!(ex::Val{false}, arg::Symmetric)
     Symmetric(copy.(arg))
 end
-destructive_add_with_reorder!(ex::Val{false}, args...) = (*)(args...)
+_destructive_add_with_reorder!(ex::Val{false}, args...) = (*)(args...)
 
 
-@generated function destructive_add_with_reorder!(ex, x, y)
+@generated function _destructive_add_with_reorder!(ex, x, y)
     if x <: Union{AbstractVariableRef,GenericAffExpr} && y <: Number
         :(destructive_add!(ex, y, x))
     else
@@ -309,7 +309,7 @@ destructive_add_with_reorder!(ex::Val{false}, args...) = (*)(args...)
     end
 end
 
-@generated function destructive_add_with_reorder!(ex, args...)
+@generated function _destructive_add_with_reorder!(ex, args...)
     n = length(args)
     @assert n ≥ 3
     varidx = findall(t -> (t <: AbstractVariableRef || t <: GenericAffExpr), collect(args))
@@ -321,15 +321,15 @@ end
 
 # takes a generator statement and returns a properly nested for loop
 # with nested filters as specified
-function parsegen(ex,atleaf)
-    if isexpr(ex,:flatten)
-        return parsegen(ex.args[1],atleaf)
+function _parse_gen(ex, atleaf)
+    if isexpr(ex, :flatten)
+        return _parse_gen(ex.args[1], atleaf)
     end
-    if !isexpr(ex,:generator)
+    if !isexpr(ex, :generator)
         return atleaf(ex)
     end
     function itrsets(sets)
-        if isa(sets,Expr)
+        if isa(sets, Expr)
             return sets
         elseif length(sets) == 1
             return sets[1]
@@ -340,19 +340,19 @@ function parsegen(ex,atleaf)
 
     idxvars = []
     if isexpr(ex.args[2], :filter) # if condition
-        loop = Expr(:for,esc(itrsets(ex.args[2].args[2:end])),
-                    Expr(:if,esc(ex.args[2].args[1]),
-                          parsegen(ex.args[1],atleaf)))
+        loop = Expr(:for, esc(itrsets(ex.args[2].args[2:end])),
+                    Expr(:if, esc(ex.args[2].args[1]),
+                          _parse_gen(ex.args[1], atleaf)))
         for idxset in ex.args[2].args[2:end]
-            idxvar, s = parse_idx_set(idxset)
-            push!(idxvars,idxvar)
+            idxvar, s = _parse_idx_set(idxset)
+            push!(idxvars, idxvar)
         end
     else
-        loop = Expr(:for,esc(itrsets(ex.args[2:end])),
-                         parsegen(ex.args[1],atleaf))
+        loop = Expr(:for, esc(itrsets(ex.args[2:end])),
+                         _parse_gen(ex.args[1], atleaf))
         for idxset in ex.args[2:end]
-            idxvar, s = parse_idx_set(idxset)
-            push!(idxvars,idxvar)
+            idxvar, s = _parse_idx_set(idxset)
+            push!(idxvars, idxvar)
         end
     end
     b = Expr(:block)
@@ -362,31 +362,31 @@ function parsegen(ex,atleaf)
     return :(let; $b; $loop; end)
 end
 
-function parseGenerator(x::Expr, aff::Symbol, lcoeffs, rcoeffs, newaff=gensym())
+function _parse_generator(x::Expr, aff::Symbol, lcoeffs, rcoeffs, newaff=gensym())
     @assert isexpr(x,:call)
     @assert length(x.args) > 1
     @assert isexpr(x.args[2],:generator) || isexpr(x.args[2],:flatten)
     header = x.args[1]
     if _is_sum(header)
-        parseGeneratorSum(x.args[2], aff, lcoeffs, rcoeffs, newaff)
+        _parse_generator_sum(x.args[2], aff, lcoeffs, rcoeffs, newaff)
     else
         error("Expected sum outside generator expression; got $header")
     end
 end
 
-function parseGeneratorSum(x::Expr, aff::Symbol, lcoeffs, rcoeffs, newaff)
+function _parse_generator_sum(x::Expr, aff::Symbol, lcoeffs, rcoeffs, newaff)
     # We used to preallocate the expression at the lowest level of the loop.
     # When rewriting this some benchmarks revealed that it actually doesn't
     # seem to help anymore, so might as well keep the code simple.
-    code = parsegen(x, t -> parseExpr(t, aff, lcoeffs, rcoeffs, aff)[2])
+    code = _parse_gen(x, t -> _parse_expr(t, aff, lcoeffs, rcoeffs, aff)[2])
     return :($code; $newaff=$aff)
 end
 
-is_complex_expr(ex) = isa(ex,Expr) && !isexpr(ex,:ref)
+_is_complex_expr(ex) = isa(ex,Expr) && !isexpr(ex,:ref)
 
-parseExprToplevel(x, aff::Symbol) = parseExpr(x, aff, [], [])
+_parse_expr_toplevel(x, aff::Symbol) = _parse_expr(x, aff, [], [])
 
-function is_comparison(ex::Expr)
+function _is_comparison(ex::Expr)
     if isexpr(ex, :comparison)
         return true
     elseif isexpr(ex, :call)
@@ -401,115 +401,125 @@ function is_comparison(ex::Expr)
 end
 
 # x[i=1] <= 2 is a somewhat common user error. Catch it here.
-function has_assignment_in_ref(ex::Expr)
+function _has_assignment_in_ref(ex::Expr)
     if isexpr(ex, :ref)
         return any(x -> isexpr(x, :(=)), ex.args)
     else
-        return any(has_assignment_in_ref, ex.args)
+        return any(_has_assignment_in_ref, ex.args)
     end
 end
-has_assignment_in_ref(other) = false
+_has_assignment_in_ref(other) = false
 
 # output is assigned to newaff
-function parseExpr(x, aff::Symbol, lcoeffs::Vector, rcoeffs::Vector, newaff::Symbol=gensym())
+function _parse_expr(x, aff::Symbol, lcoeffs::Vector, rcoeffs::Vector, newaff::Symbol=gensym())
     if !isa(x,Expr)
         # at the lowest level
-        callexpr = Expr(:call,:destructive_add_with_reorder!,aff,lcoeffs...,esc(x),rcoeffs...)
+        callexpr = Expr(:call, :_destructive_add_with_reorder!, aff,
+                        lcoeffs..., esc(x), rcoeffs...)
         return newaff, :($newaff = $callexpr)
     else
         if x.head == :call && x.args[1] == :+
             b = Expr(:block)
             aff_ = aff
             for arg in x.args[2:(end-1)]
-                aff_, code = parseExpr(arg, aff_, lcoeffs, rcoeffs)
+                aff_, code = _parse_expr(arg, aff_, lcoeffs, rcoeffs)
                 push!(b.args, code)
             end
-            newaff, code = parseExpr(x.args[end], aff_, lcoeffs, rcoeffs, newaff)
+            newaff, code = _parse_expr(x.args[end], aff_, lcoeffs, rcoeffs, newaff)
             push!(b.args, code)
             return newaff, b
         elseif x.head == :call && x.args[1] == :-
             if length(x.args) == 2 # unary subtraction
-                return parseExpr(x.args[2], aff, vcat(-1.0, lcoeffs), rcoeffs, newaff)
+                return _parse_expr(x.args[2], aff, vcat(-1.0, lcoeffs), rcoeffs, newaff)
             else # a - b - c ...
                 b = Expr(:block)
-                aff_, code = parseExpr(x.args[2], aff, lcoeffs, rcoeffs)
+                aff_, code = _parse_expr(x.args[2], aff, lcoeffs, rcoeffs)
                 push!(b.args, code)
                 for arg in x.args[3:(end-1)]
-                    aff_,code = parseExpr(arg, aff_, vcat(-1.0, lcoeffs), rcoeffs)
+                    aff_,code = _parse_expr(arg, aff_, vcat(-1.0, lcoeffs), rcoeffs)
                     push!(b.args, code)
                 end
-                newaff,code = parseExpr(x.args[end], aff_, vcat(-1.0, lcoeffs), rcoeffs, newaff)
+                newaff,code = _parse_expr(x.args[end], aff_, vcat(-1.0, lcoeffs), rcoeffs, newaff)
                 push!(b.args, code)
                 return newaff, b
             end
         elseif x.head == :call && x.args[1] == :*
             # we might need to recurse on multiple arguments, e.g.,
             # (x+y)*(x+y)
-            n_expr = mapreduce(is_complex_expr, +, x.args)
+            n_expr = mapreduce(_is_complex_expr, +, x.args)
             if n_expr == 1 # special case, only recurse on one argument and don't create temporary objects
                 which_idx = 0
                 for i in 2:length(x.args)
-                    if is_complex_expr(x.args[i])
+                    if _is_complex_expr(x.args[i])
                         which_idx = i
                     end
                 end
-                return parseExpr(x.args[which_idx], aff, vcat(lcoeffs, [esc(x.args[i]) for i in 2:(which_idx-1)]),
-                                                         vcat(rcoeffs, [esc(x.args[i]) for i in (which_idx+1):length(x.args)]),
-                                                         newaff)
+                return _parse_expr(
+                    x.args[which_idx], aff,
+                    vcat(lcoeffs, [esc(x.args[i]) for i in 2:(which_idx - 1)]),
+                    vcat(rcoeffs, [esc(x.args[i]) for i in (which_idx + 1):length(x.args)]),
+                    newaff)
             else
                 blk = Expr(:block)
                 for i in 2:length(x.args)
-                    if is_complex_expr(x.args[i])
+                    if _is_complex_expr(x.args[i])
                         s = gensym()
-                        newaff_, parsed = parseExprToplevel(x.args[i], s)
+                        newaff_, parsed = _parse_expr_toplevel(x.args[i], s)
                         push!(blk.args, :($s = 0.0; $parsed))
                         x.args[i] = newaff_
                     else
                         x.args[i] = esc(x.args[i])
                     end
                 end
-                callexpr = Expr(:call,:destructive_add_with_reorder!,aff,lcoeffs...,x.args[2:end]...,rcoeffs...)
+                callexpr = Expr(:call, :_destructive_add_with_reorder!, aff,
+                                lcoeffs..., x.args[2:end]..., rcoeffs...)
                 push!(blk.args, :($newaff = $callexpr))
                 return newaff, blk
             end
-        elseif x.head == :call && x.args[1] == :^ && is_complex_expr(x.args[2])
+        elseif x.head == :call && x.args[1] == :^ && _is_complex_expr(x.args[2])
             if x.args[3] == 2
                 blk = Expr(:block)
                 s = gensym()
-                newaff_, parsed = parseExprToplevel(x.args[2], s)
+                newaff_, parsed = _parse_expr_toplevel(x.args[2], s)
                 push!(blk.args, :($s = Val(false); $parsed))
-                push!(blk.args, :($newaff = destructive_add_with_reorder!($aff, $(Expr(:call,:*,lcoeffs...,newaff_,newaff_,rcoeffs...)))))
+                push!(blk.args, :($newaff = _destructive_add_with_reorder!(
+                    $aff, $(Expr(:call, :*, lcoeffs..., newaff_, newaff_,
+                                 rcoeffs...)))))
                 return newaff, blk
             elseif x.args[3] == 1
-                return parseExpr(:(JuMP.GenericQuadExpr($(x.args[2]))), aff, lcoeffs, rcoeffs)
+                return _parse_expr(:(JuMP.GenericQuadExpr($(x.args[2]))), aff, lcoeffs, rcoeffs)
             elseif x.args[3] == 0
-                return parseExpr(:(JuMP.GenericQuadExpr(one($(x.args[2])))), aff, lcoeffs, rcoeffs)
+                return _parse_expr(:(JuMP.GenericQuadExpr(one($(x.args[2])))), aff, lcoeffs, rcoeffs)
             else
                 blk = Expr(:block)
                 s = gensym()
-                newaff_, parsed = parseExprToplevel(x.args[2], s)
+                newaff_, parsed = _parse_expr_toplevel(x.args[2], s)
                 push!(blk.args, :($s = Val(false); $parsed))
-                push!(blk.args, :($newaff = destructive_add_with_reorder!($aff, $(Expr(:call,:*,lcoeffs...,Expr(:call,:^,newaff_,esc(x.args[3])),rcoeffs...)))))
+                push!(blk.args, :($newaff = _destructive_add_with_reorder!(
+                    $aff, $(Expr(:call, :*, lcoeffs...,
+                                 Expr(:call, :^, newaff_, esc(x.args[3])),
+                                      rcoeffs...)))))
                 return newaff, blk
             end
         elseif x.head == :call && x.args[1] == :/
             @assert length(x.args) == 3
             numerator = x.args[2]
             denom = x.args[3]
-            return parseExpr(numerator, aff, lcoeffs,vcat(esc(:(1/$denom)),rcoeffs),newaff)
+            return _parse_expr(numerator, aff, lcoeffs,vcat(esc(:(1/$denom)),rcoeffs),newaff)
         elseif isexpr(x,:call) && length(x.args) >= 2 && (isexpr(x.args[2],:generator) || isexpr(x.args[2],:flatten))
-            return newaff, parseGenerator(x,aff,lcoeffs,rcoeffs,newaff)
+            return newaff, _parse_generator(x,aff,lcoeffs,rcoeffs,newaff)
         elseif x.head == :curly
             _error_curly(x)
         else # at lowest level?
-            if is_comparison(x)
+            if _is_comparison(x)
                 error("Unexpected comparison in expression $x.")
             end
-            if has_assignment_in_ref(x)
+            if _has_assignment_in_ref(x)
                 @warn "Unexpected assignment in expression $x. This will" *
                              " become a syntax error in a future release."
             end
-            callexpr = Expr(:call,:destructive_add_with_reorder!,aff,lcoeffs...,esc(x),rcoeffs...)
+            callexpr = Expr(:call, :_destructive_add_with_reorder!, aff,
+                            lcoeffs..., esc(x), rcoeffs...)
             return newaff, :($newaff = $callexpr)
         end
     end
