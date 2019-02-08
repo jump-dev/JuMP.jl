@@ -198,7 +198,7 @@ function test_model()
 
         @testset "Add bridge" begin
             function mock()
-                mock = MOIU.MockOptimizer(JuMP.JuMPMOIModel{Float64}(),
+                mock = MOIU.MockOptimizer(JuMP._MOIModel{Float64}(),
                                           eval_variable_constraint_dual=false)
                 optimize!(mock) = MOIU.mock_optimize!(mock, [1.0],
                         (MOI.SingleVariable, MOI.GreaterThan{Float64}) => [2.0])
@@ -386,7 +386,7 @@ function dummy_optimizer_hook(::JuMP.AbstractModel) end
         end
     end
     @testset "In Direct mode" begin
-        mock = MOIU.MockOptimizer(JuMP.JuMPMOIModel{Float64}())
+        mock = MOIU.MockOptimizer(JuMP._MOIModel{Float64}())
         model = JuMP.direct_model(mock)
         @test_throws ErrorException JuMP.copy(model)
     end

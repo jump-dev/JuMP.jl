@@ -46,7 +46,7 @@ DocTestSetup = quote
     # building the documentation.
     const MOI = JuMP.MathOptInterface
     model = Model(with_optimizer(MOI.Utilities.MockOptimizer,
-                                 JuMP.JuMPMOIModel{Float64}(),
+                                 JuMP._MOIModel{Float64}(),
                                  eval_objective_value = false,
                                  eval_variable_constraint_dual = false))
 end

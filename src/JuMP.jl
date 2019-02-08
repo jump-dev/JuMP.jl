@@ -46,7 +46,7 @@ const _MOIFIX = _MOICON{MOI.SingleVariable,MOI.EqualTo{Float64}}
 const _MOIINT = _MOICON{MOI.SingleVariable,MOI.Integer}
 const _MOIBIN = _MOICON{MOI.SingleVariable,MOI.ZeroOne}
 
-MOIU.@model(JuMPMOIModel,
+MOIU.@model(_MOIModel,
             (MOI.ZeroOne, MOI.Integer),
             (MOI.EqualTo, MOI.GreaterThan, MOI.LessThan, MOI.Interval),
             (MOI.Zeros, MOI.Nonnegatives, MOI.Nonpositives, MOI.SecondOrderCone,
@@ -185,7 +185,7 @@ function Model(; caching_mode::MOIU.CachingOptimizerMode=MOIU.AUTOMATIC,
               "later. See the JuMP documentation " *
               "(http://www.juliaopt.org/JuMP.jl/latest/) for latest syntax.")
     end
-    universal_fallback = MOIU.UniversalFallback(JuMPMOIModel{Float64}())
+    universal_fallback = MOIU.UniversalFallback(_MOIModel{Float64}())
     caching_opt = MOIU.CachingOptimizer(universal_fallback,
                                         caching_mode)
     return direct_model(caching_opt)
