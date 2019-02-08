@@ -905,7 +905,9 @@ mutable struct _VariablePrintWrapper
     v::VariableRef
     mode
 end
-Base.show(io::IO,v::_VariablePrintWrapper) = print(io,var_string(v.mode,v.v))
+function Base.show(io::IO, v::_VariablePrintWrapper)
+    print(io, function_string(v.mode, v.v))
+end
 mutable struct _ParameterPrintWrapper
     idx::Int
     mode
