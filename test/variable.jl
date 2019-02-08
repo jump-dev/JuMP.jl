@@ -468,25 +468,6 @@ function test_variable_symmetric(ModelType)
     @test y[1, 2] === y[2, 1]
 end
 
-function test_check_belongs_to_model(ModelType)
-    model = ModelType()
-    different_model = ModelType()
-    @variable(model, x[1:2], start = 0.0)
-    @test JuMP.check_belongs_to_model(x[1], model) == nothing
-    @test JuMP.check_belongs_to_model(x, model) == true
-
-    @variable(different_model, y[1:2], start = 0.0)
-    @test_throws JuMP.VariableNotOwned JuMP.check_belongs_to_model(y[1], model)
-    @test JuMP.check_belongs_to_model(y, model) == false
-
-    z = [ x[1], y[1] ]
-    @show typeof(z)
-    @test JuMP.check_belongs_to_model(z[1], model) == nothing
-    @test_throws JuMP.VariableNotOwned  JuMP.check_belongs_to_model(z[2], model)
-    # @test_throws JuMP.VariableNotOwnedError  JuMP.check_belongs_to_model(z, model)
-    @test  JuMP.check_belongs_to_model(z, model) == false
-end
-
 function variables_test(ModelType::Type{<:JuMP.AbstractModel},
                         VariableRefType::Type{<:JuMP.AbstractVariableRef})
     @testset "Variable name" begin
@@ -613,9 +594,6 @@ end
         @test JuMP.is_binary(q)
         @test !JuMP.is_integer(q)
         @test JuMP.start_value(q) === 0.5
-    end
-    @testset "Variable Model Ownership" begin
-        test_check_belongs_to_model(Model)
     end
 
 end
