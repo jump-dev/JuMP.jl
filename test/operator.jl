@@ -368,7 +368,7 @@ function operators_test(ModelType::Type{<:JuMP.AbstractModel}, VariableRefType::
             @variable(m, X11)
             @variable(m, X23)
             X = sparse([1, 2], [1, 3], [X11, X23], 3, 3) # for testing Variable
-            @test JuMP.isequal_canonical([X11 0. 0.; 0. 0. X23; 0. 0. 0.], @inferred JuMP.densify_with_jump_eltype(X))
+            @test JuMP.isequal_canonical([X11 0. 0.; 0. 0. X23; 0. 0. 0.], @inferred JuMP._densify_with_jump_eltype(X))
             @variable(m, Xd[1:3, 1:3])
             Y = sparse([1, 2], [1, 3], [2X11, 4X23], 3, 3) # for testing GenericAffExpr
             Yd = [2X11 0    0
@@ -552,12 +552,12 @@ function operators_test(ModelType::Type{<:JuMP.AbstractModel}, VariableRefType::
             @test_throws ErrorException B./y
 
             # TODO: Refactor to avoid calling the internal JuMP function
-            # `densify_with_jump_eltype`.
-            z = JuMP.densify_with_jump_eltype((2 .* y) ./ 3)
+            # `_densify_with_jump_eltype`.
+            z = JuMP._densify_with_jump_eltype((2 .* y) ./ 3)
             @test JuMP.isequal_canonical((2 .* x) ./ 3, z)
-            z = JuMP.densify_with_jump_eltype(2 * (y ./ 3))
+            z = JuMP._densify_with_jump_eltype(2 * (y ./ 3))
             @test JuMP.isequal_canonical(2 .* (x ./ 3), z)
-            z = JuMP.densify_with_jump_eltype((x[1,1],) .* B)
+            z = JuMP._densify_with_jump_eltype((x[1,1],) .* B)
             @test JuMP.isequal_canonical((x[1,1],) .* A, z)
         end
 
@@ -643,7 +643,7 @@ function operators_test(ModelType::Type{<:JuMP.AbstractModel}, VariableRefType::
             @test elements_equal(2 .* x, 2 .* x2)
             @test elements_equal(first(x) .+ x2, first(x2) .+ x)
             @test sum(x) == sum(x2)
-            if !JuMP.one_indexed(x2)
+            if !JuMP._one_indexed(x2)
                 @test_throws DimensionMismatch x + x2
             end
         end
@@ -654,7 +654,7 @@ function operators_test(ModelType::Type{<:JuMP.AbstractModel}, VariableRefType::
         @variable(m, x[1:3])
 
         for x2 in (OffsetArray(x, -length(x)), view(x, :), sparse(x))
-            if !JuMP.one_indexed(x2)
+            if !JuMP._one_indexed(x2)
                 @test_throws AssertionError diagm(x2)
             else
                 @test diagm(x) == diagm(x2)
