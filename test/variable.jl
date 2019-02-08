@@ -595,7 +595,6 @@ end
         @test !JuMP.is_integer(q)
         @test JuMP.start_value(q) === 0.5
     end
-
 end
 
 @testset "Variables for JuMPExtension.MyModel" begin
